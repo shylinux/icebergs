@@ -1,0 +1,10 @@
+github.com/gorilla/websocket v1.4.1 h1:q7AeDBpnBk8AogcD4DSag/Ukw/KV+YhzLj2bP5HvKCM=
+github.com/gorilla/websocket v1.4.1/go.mod h1:YR8l580nyteQvAITg2hZ9XVh4b55+EU/adAjf1fMHhE=
+github.com/shylinux/icebergs v0.0.0-20191209060320-9f0b85bae35a h1:0RgyhBEPMnRwECFoDPYsz/FgB9yVA9/nJ+tJacwSAig=
+github.com/shylinux/icebergs v0.0.0-20191209060320-9f0b85bae35a/go.mod h1:FowoSa6syu4hP1QWT9UNoQICuIwfP2PGQ/ao1fSeoOc=
+github.com/shylinux/icebergs v0.0.0-20191212145348-fe6226481eaa h1:DcLg8BUz5a0ON2UICK7b61LPFJ2+HVC7E8vV5ItYABo=
+github.com/shylinux/icebergs v0.0.0-20191212145348-fe6226481eaa/go.mod h1:FowoSa6syu4hP1QWT9UNoQICuIwfP2PGQ/ao1fSeoOc=
+github.com/shylinux/toolkits v0.0.0-20191205193931-8b65f7e78477 h1:xwu6cGDBy/ZCrVklmCqSgx9O7Hr1v+hkzsIh1yc0hxg=
+github.com/shylinux/toolkits v0.0.0-20191205193931-8b65f7e78477/go.mod h1:e1dV0lMyoKz4Luib6XyMNpfpn5Sn7POnq7XTT4wfN7k=
+github.com/shylinux/toolkits v0.0.0-20191212145555-d32eaba90a9e h1:eFZMsw0LuDeeVgwYwNJISebbMUZCVHEdQRaYBNWvC9s=
+github.com/shylinux/toolkits v0.0.0-20191212145555-d32eaba90a9e/go.mod h1:e1dV0lMyoKz4Luib6XyMNpfpn5Sn7POnq7XTT4wfN7k=

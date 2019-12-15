@@ -3,12 +3,15 @@ package ice
 import (
 	"github.com/shylinux/toolkits"
 
+	"encoding/csv"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
 	"os"
+	"path"
 	"runtime"
+	"sort"
 	"strings"
 	"time"
 )
@@ -26,7 +29,8 @@ type Config struct {
 type Command struct {
 	Name string
 	Help interface{}
-	Form map[string]int
+	Meta map[string]interface{}
+	List []interface{}
 	Hand func(m *Message, c *Context, key string, arg ...string)
 }
 type Context struct {
@@ -183,7 +187,7 @@ func (m *Message) Spawn(arg ...interface{}) *Message {
 }
 func (m *Message) Spawns(arg ...interface{}) *Message {
 	msg := m.Spawn(arg...)
-	msg.code = Index.ID()
+	msg.code = m.target.root.ID()
 	m.messages = append(m.messages, msg)
 	return msg
 }
@@ -244,6 +248,9 @@ func (m *Message) Echo(str string, arg ...interface{}) *Message {
 func (m *Message) Option(key string, arg ...interface{}) string {
 	return kit.Select("", kit.Simple(m.Optionv(key, arg...)), 0)
 }
+func (m *Message) Options(key string, arg ...interface{}) bool {
+	return kit.Select("", kit.Simple(m.Optionv(key, arg...)), 0) != ""
+}
 func (m *Message) Optionv(key string, arg ...interface{}) interface{} {
 	if len(arg) > 0 {
 		if kit.IndexOf(m.meta["option"], key) == -1 {
@@ -269,6 +276,9 @@ func (m *Message) Optionv(key string, arg ...interface{}) interface{} {
 		}
 	}
 	return nil
+}
+func (m *Message) Append(key string, arg ...interface{}) string {
+	return kit.Select("", m.meta[key], 0)
 }
 func (m *Message) Resultv(arg ...interface{}) []string {
 	return m.meta["result"]
@@ -343,9 +353,11 @@ func (m *Message) Search(key interface{}, cb func(p *Context, s *Context, key st
 					break
 				}
 			}
-			if p != nil {
-				cb(p.context, p, list[len(list)-1])
+			if p == nil {
+				m.Log("warn", "not found %s", key)
+				break
 			}
+			cb(p.context, p, list[len(list)-1])
 		} else {
 			cb(m.target.context, m.target, key)
 		}
@@ -378,10 +390,197 @@ func (m *Message) Back(sub *Message) *Message {
 	return m
 }
 
+func (m *Message) Grow(key string, args interface{}, data interface{}) interface{} {
+	cache := m.Confm(key, args)
+	if cache == nil {
+		cache = map[string]interface{}{}
+	}
+	meta, ok := cache["meta"].(map[string]interface{})
+	if !ok {
+		meta = map[string]interface{}{}
+	}
+	list, _ := cache["list"].([]interface{})
+
+	list = append(list, data)
+	if len(list) > kit.Int(kit.Select(m.Conf("cache", "limit"), meta["limit"])) {
+		least := kit.Int(kit.Select(m.Conf("cache", "least"), meta["least"]))
+
+		// 创建文件
+		name := kit.Select(path.Join(m.Conf("cache", "store"), key+".csv"), meta["store"])
+		f, e := os.OpenFile(name, os.O_RDWR|os.O_APPEND|os.O_CREATE, 0666)
+		if e != nil {
+			f, _, e = kit.Create(name)
+		}
+		defer f.Close()
+		s, e := f.Stat()
+		m.Assert(e)
+
+		// 保存数据
+		keys := []string{}
+		w := csv.NewWriter(f)
+		if s.Size() == 0 {
+			for k := range list[0].(map[string]interface{}) {
+				keys = append(keys, k)
+			}
+			sort.Strings(keys)
+			w.Write(keys)
+			w.Flush()
+			s, e = f.Stat()
+		} else {
+			r := csv.NewReader(f)
+			keys, e = r.Read()
+		}
+
+		// 保存状态
+		count := len(list) - least
+		offset := kit.Int(meta["offset"])
+		record, _ := meta["record"].([]interface{})
+		meta["record"] = append(record, map[string]interface{}{
+			"time":     m.Time(),
+			"offset":   offset,
+			"position": s.Size(),
+			"count":    count,
+			"file":     name,
+		})
+
+		// 保存数据
+		for i, v := range list {
+			if i >= count {
+				break
+			}
+
+			val := v.(map[string]interface{})
+
+			values := []string{}
+			for _, k := range keys {
+				values = append(values, kit.Format(val[k]))
+			}
+			w.Write(values)
+
+			if i < least {
+				list[i] = list[count+i]
+			}
+		}
+
+		m.Log("info", "save %s offset %v+%v", name, offset, count)
+		meta["offset"] = offset + count
+		list = list[:least]
+		w.Flush()
+	}
+	cache["meta"] = meta
+	cache["list"] = list
+	if args == nil {
+		m.Conf(key, cache)
+	} else {
+		m.Conf(key, args, cache)
+	}
+	return list
+}
+func (m *Message) Grows(key string, args interface{}, cb interface{}) map[string]interface{} {
+	cache := m.Confm(key, args)
+	if cache == nil {
+		return nil
+	}
+	meta, ok := cache["meta"].(map[string]interface{})
+	if !ok {
+		return nil
+	}
+	list, ok := cache["list"].([]interface{})
+	if !ok {
+		return nil
+	}
+
+	offend := kit.Int(kit.Select("0", m.Option("cache.offend")))
+	limit := kit.Int(kit.Select("10", m.Option("cache.limit")))
+	match := kit.Select("", m.Option("cache.match"))
+	value := kit.Select("", m.Option("cache.value"))
+	current := kit.Int(meta["offset"])
+	end := current + len(list) - offend
+	begin := end - limit
+
+	data := make([]interface{}, 0, limit)
+	m.Log("info", "read %v-%v from %v-%v", begin, end, current, current+len(list))
+	if begin < current {
+		store, _ := meta["record"].([]interface{})
+		for s := len(store) - 1; s > -1; s-- {
+			item, _ := store[s].(map[string]interface{})
+			line := kit.Int(item["offset"])
+			m.Log("info", "check history %v %v %v", s, line, item)
+			if begin < line && s > 0 {
+				continue
+			}
+
+			for ; s < len(store); s++ {
+				if begin >= end {
+					break
+				}
+				item, _ := store[s].(map[string]interface{})
+				if line+kit.Int(item["count"]) < begin {
+					continue
+				}
+
+				name := kit.Format(item["file"])
+				pos := kit.Int(item["position"])
+				line := kit.Int(item["offset"])
+				m.Log("info", "load history %v %v %v", s, line, item)
+				if f, e := os.Open(name); m.Assert(e) {
+					defer f.Close()
+					r := csv.NewReader(f)
+					heads, _ := r.Read()
+					m.Log("info", "load head %v", heads)
+
+					f.Seek(int64(pos), os.SEEK_SET)
+					r = csv.NewReader(f)
+					for i := line; i < end; i++ {
+						lines, e := r.Read()
+						if e != nil {
+							break
+						}
+
+						if i >= begin {
+							item := map[string]interface{}{}
+							for i := range heads {
+								item[heads[i]] = lines[i]
+							}
+							m.Log("info", "load line %v %v %v", i, len(data), item)
+							if match == "" || strings.Contains(kit.Format(item[match]), value) {
+								data = append(data, item)
+							}
+							begin = i + 1
+						} else {
+							m.Log("info", "skip line %v", i)
+						}
+					}
+				}
+			}
+			break
+		}
+	}
+
+	if begin < current {
+		begin = current
+	}
+	m.Log("info", "cache %v-%v", begin-current, end-current)
+	for i := begin - current; i < end-current; i++ {
+		if match == "" || strings.Contains(kit.Format(kit.Value(list[i], match)), value) {
+			data = append(data, list[i])
+		}
+	}
+	val := map[string]interface{}{"meta": meta, "list": data}
+	kit.Fetch(val, cb)
+	return val
+}
+
 func (m *Message) Cmdy(arg ...interface{}) *Message {
 	msg := m.Cmd(arg...)
 	m.Copy(msg)
 	return m
+}
+func (m *Message) Cmdx(arg ...interface{}) string {
+	return kit.Select("", m.Cmd(arg...).meta["result"], 0)
+}
+func (m *Message) Cmds(arg ...interface{}) bool {
+	return kit.Select("", m.Cmd(arg...).meta["result"], 0) != ""
 }
 func (m *Message) Cmd(arg ...interface{}) *Message {
 	list := kit.Simple(arg...)
@@ -410,8 +609,11 @@ func (m *Message) Confv(arg ...interface{}) (val interface{}) {
 	m.Search(arg[0], func(p *Context, s *Context, key string) {
 		for c := s; c != nil; c = c.context {
 			if conf, ok := c.Configs[key]; ok {
-				if len(arg) > 0 {
-					val = kit.Value(conf.Value, arg[1:]...)
+				if len(arg) > 1 {
+					if len(arg) > 2 {
+						kit.Value(conf.Value, arg[1:]...)
+					}
+					val = kit.Value(conf.Value, arg[1])
 				} else {
 					val = conf.Value
 				}
@@ -423,15 +625,7 @@ func (m *Message) Confv(arg ...interface{}) (val interface{}) {
 func (m *Message) Confm(key string, chain interface{}, cbs ...interface{}) map[string]interface{} {
 	val := m.Confv(key, chain)
 	if len(cbs) > 0 {
-		switch val := val.(type) {
-		case map[string]interface{}:
-			switch cb := cbs[0].(type) {
-			case func(string, map[string]interface{}):
-				for k, v := range val {
-					cb(k, v.(map[string]interface{}))
-				}
-			}
-		}
+		kit.Fetch(val, cbs[0])
 	}
 	value, _ := val.(map[string]interface{})
 	return value

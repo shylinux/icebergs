@@ -1,2 +1,2 @@
 all:
-	go build main.go
+	sh build.sh build && sh build.sh restart

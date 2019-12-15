@@ -39,6 +39,7 @@ var Index = &ice.Context{Name: "cli", Help: "命令模块",
 			}
 
 			m.Conf("runtime", "node.type", "worker")
+			m.Conf("runtime", "node.name", m.Conf("runtime", "boot.pathname"))
 			m.Log("info", "runtime %v", kit.Formats(m.Confv("runtime")))
 		}},
 		"runtime": {Name: "runtime", Help: "hello", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {

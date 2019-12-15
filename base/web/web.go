@@ -1,15 +1,20 @@
 package web
 
 import (
-	"encoding/json"
 	"github.com/gorilla/websocket"
 	"github.com/shylinux/icebergs"
 	"github.com/shylinux/toolkits"
+
+	"bytes"
+	"encoding/json"
+	"math/rand"
 	"net"
 	"net/http"
 	"net/url"
 	"path"
 	"strings"
+	"text/template"
+	"time"
 )
 
 const (
@@ -24,6 +29,22 @@ type WEB struct {
 	send map[string]*ice.Message
 }
 
+func Cookie(msg *ice.Message, sessid string) string {
+	w := msg.Optionv("response").(http.ResponseWriter)
+	expire := time.Now().Add(kit.Duration(msg.Conf("aaa.sess", "meta.expire")))
+	msg.Log("cookie", "expire %v sessid %s", kit.Format(expire), sessid)
+	http.SetCookie(w, &http.Cookie{Name: "sessid", Value: sessid, Path: "/", Expires: expire})
+	return sessid
+}
+
+func (web *WEB) Login(msg *ice.Message, w http.ResponseWriter, r *http.Request) bool {
+	if msg.Options("sessid") {
+		sub := msg.Cmd("aaa.sess", "check", msg.Option("sessid"))
+		msg.Log("info", "user %s %s", msg.Option("userrole", sub.Append("userrole")),
+			msg.Option("username", sub.Append("username")))
+	}
+	return true
+}
 func (web *WEB) HandleWSS(m *ice.Message, safe bool, c *websocket.Conn) {
 	for {
 		if t, b, e := c.ReadMessage(); e != nil {
@@ -61,7 +82,11 @@ func (web *WEB) HandleWSS(m *ice.Message, safe bool, c *websocket.Conn) {
 				} else {
 					msg.Log("space", "run")
 					// 本地执行
-					msg = msg.Cmd()
+					if safe {
+						msg = msg.Cmd()
+					} else {
+						msg.Echo("no right")
+					}
 					msg.Optionv("_handle", "true")
 					kit.Revert(source)
 					source, target = []string{source[0]}, source[1:]
@@ -76,11 +101,53 @@ func (web *WEB) HandleWSS(m *ice.Message, safe bool, c *websocket.Conn) {
 		}
 	}
 }
+func (web *WEB) HandleCGI(m *ice.Message, which string) *template.Template {
+	cgi := template.FuncMap{
+		"result": func(msg *ice.Message) string {
+			return msg.Result()
+		},
+	}
+	tmpl := template.New("render")
+	for k, v := range m.Target().Commands {
+		m.Log("info", "%v, %v", k, v.Name)
+		if strings.HasPrefix(k, "/") || strings.HasPrefix(k, "_") {
+			continue
+		}
+
+		func(k string, v *ice.Command) {
+			cgi[k] = func(arg ...interface{}) (res interface{}) {
+				m.TryCatch(m.Spawn(), true, func(msg *ice.Message) {
+					msg.Option("render", "table")
+					v.Hand(msg, m.Target(), k, kit.Simple(arg)...)
+
+					buffer := bytes.NewBuffer([]byte{})
+					m.Assert(tmpl.ExecuteTemplate(buffer, msg.Option("render"), msg))
+					res = string(buffer.Bytes())
+				})
+				return
+			}
+		}(k, v)
+	}
+	tmpl = tmpl.Funcs(cgi)
+	tmpl = template.Must(tmpl.ParseGlob(path.Join(m.Conf("serve", "template.path"), "/*.tmpl")))
+	tmpl = template.Must(tmpl.ParseGlob(path.Join(m.Conf("serve", "template.path"), m.Target().Name, "/*.tmpl")))
+	tmpl = template.Must(tmpl.ParseFiles(which))
+	m.Confm("serve", "template.list", func(index int, value string) { tmpl = template.Must(tmpl.Parse(value)) })
+	for i, v := range tmpl.Templates() {
+		m.Log("info", "%v, %v", i, v.Name())
+	}
+	return tmpl
+}
 func (web *WEB) HandleCmd(m *ice.Message, key string, cmd *ice.Command) {
 	web.HandleFunc(key, func(w http.ResponseWriter, r *http.Request) {
 		m.TryCatch(m.Spawns(), true, func(msg *ice.Message) {
+			defer func() {
+				msg.Log("cost", msg.Format("cost"))
+			}()
+
 			msg.Optionv("request", r)
 			msg.Optionv("response", w)
+			msg.Option("remote_ip", r.Header.Get("remote_ip"))
 			msg.Option("agent", r.Header.Get("User-Agent"))
 			msg.Option("referer", r.Header.Get("Referer"))
 			msg.Option("accept", r.Header.Get("Accept"))
@@ -129,14 +196,12 @@ func (web *WEB) HandleCmd(m *ice.Message, key string, cmd *ice.Command) {
 				}
 			}
 
-			msg.Log("cmd", "%s %s", msg.Target().Name, key)
-			cmd.Hand(msg, msg.Target(), msg.Option("path"))
-			msg.Set("option")
-			if msg.Optionv("append") == nil {
-				msg.Result()
+			if web.Login(msg, w, r) {
+				msg.Log("cmd", "%s %s", msg.Target().Name, key)
+				cmd.Hand(msg, msg.Target(), msg.Option("path"), kit.Simple(msg.Optionv("cmds"))...)
+				msg.Set("option")
+				w.Write([]byte(msg.Formats("meta")))
 			}
-			w.Write([]byte(msg.Formats("meta")))
-			msg.Log("cost", msg.Format("cost"))
 		})
 	})
 }
@@ -176,16 +241,23 @@ func (web *WEB) Start(m *ice.Message, arg ...string) bool {
 			if w.ServeMux != nil {
 				return
 			}
-
-			msg := m.Spawns(s)
 			w.ServeMux = http.NewServeMux()
+			msg := m.Spawns(s)
 
+			// 级联路由
 			route := "/" + s.Name + "/"
 			if n, ok := p.Server().(*WEB); ok && n.ServeMux != nil {
 				msg.Log("route", "%s <- %s", p.Name, route)
 				n.Handle(route, http.StripPrefix(path.Dir(route), w))
 			}
 
+			// 静态路由
+			m.Confm("web.serve", "static", func(key string, value string) {
+				msg.Log("route", "%s <- %s <- %s", s.Name, key, value)
+				w.Handle(key, http.StripPrefix(key, http.FileServer(http.Dir(value))))
+			})
+
+			// 命令路由
 			for k, x := range s.Commands {
 				if k[0] == '/' {
 					msg.Log("route", "%s <- %s", s.Name, k)
@@ -212,9 +284,23 @@ var Index = &ice.Context{Name: "web", Help: "网页模块",
 		"spide": {Name: "客户端", Value: map[string]interface{}{
 			"self": map[string]interface{}{"port": ":9020"},
 		}},
-		"serve": {Name: "服务端", Value: map[string]interface{}{}},
+		"serve": {Name: "服务端", Value: map[string]interface{}{
+			"static": map[string]interface{}{"/": "usr/volcanos/",
+				"/static/volcanos/": "usr/volcanos/",
+			},
+			"template": map[string]interface{}{
+				"path": "usr/template",
+				"list": []interface{}{
+					`{{define "raw"}}{{.|result}}{{end}}`,
+					`{{define "title"}}{{.|result}}{{end}}`,
+					`{{define "chapter"}}{{.|result}}{{end}}`,
+					`{{define "section"}}{{.|result}}{{end}}`,
+					`{{define "block"}}<div>{{.|result}}<div>{{end}}`,
+				},
+			},
+		}},
 		"space": {Name: "空间端", Value: map[string]interface{}{
-			"meta": map[string]interface{}{"buffer": 4096},
+			"meta": map[string]interface{}{"buffer": 4096, "redial": 3000},
 			"hash": map[string]interface{}{},
 			"list": map[string]interface{}{},
 		}},
@@ -259,16 +345,22 @@ var Index = &ice.Context{Name: "web", Help: "网页模块",
 				host := kit.Select(m.Conf("web.spide", "self.port"), arg, 1)
 				p := "ws://" + host + kit.Select("/space", arg, 2) + "?node=" + node + "&name=" + name
 
-				if s, e := net.Dial("tcp", host); m.Assert(e) {
-					if u, e := url.Parse(p); m.Assert(e) {
-						if s, _, e := websocket.NewClient(s, u, nil, m.Confi("web.space", "meta.buffer"), m.Confi("web.space", "meta.buffer")); m.Assert(e) {
+				if u, e := url.Parse(p); m.Assert(e) {
+					m.TryCatch(m, true, func(m *ice.Message) {
+						for {
+							if s, e := net.Dial("tcp", host); e == nil {
+								if s, _, e := websocket.NewClient(s, u, nil, m.Confi("web.space", "meta.buffer"), m.Confi("web.space", "meta.buffer")); e == nil {
+									id := m.Option("_source", []string{kit.Format(c.ID()), "some"})
+									web.send[id] = m
+									s.WriteMessage(MSG_MAPS, []byte(m.Format("meta")))
 
-							id := m.Option("_source", []string{kit.Format(c.ID()), "some"})
-							web.send[id] = m
-							s.WriteMessage(MSG_MAPS, []byte(m.Format("meta")))
-							web.HandleWSS(m, true, s)
+									web.HandleWSS(m, true, s)
+								}
+							}
+							time.Sleep(time.Duration(rand.Intn(m.Confi("web.space", "meta.redial"))) * time.Millisecond)
+							m.Log("info", "reconnect %v", host)
 						}
-					}
+					})
 				}
 			default:
 				if arg[0] == "" {

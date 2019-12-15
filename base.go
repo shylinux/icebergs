@@ -1,6 +1,7 @@
 package ice
 
 import (
+	"github.com/shylinux/toolkits"
 	"os"
 	"time"
 )
@@ -34,7 +35,10 @@ func (f *Frame) Start(m *Message, arg ...string) bool {
 
 	// 启动服务
 	Index.begin.Cmd(arg)
-
+	return true
+}
+func (f *Frame) Close(m *Message, arg ...string) bool {
+	// 保存配置
 	m.Travel(func(p *Context, s *Context) {
 		if cmd, ok := s.Commands["_exit"]; ok {
 			msg := m.Spawns(s)
@@ -42,10 +46,7 @@ func (f *Frame) Start(m *Message, arg ...string) bool {
 			cmd.Hand(msg, s, "_exit", arg...)
 		}
 	})
-	// 保存配置
-	return true
-}
-func (f *Frame) Close(m *Message, arg ...string) bool {
+
 	list := map[*Context]*Message{m.target: m}
 	m.Travel(func(p *Context, s *Context) {
 		if msg, ok := list[p]; ok && msg != nil {
@@ -58,14 +59,22 @@ func (f *Frame) Close(m *Message, arg ...string) bool {
 }
 
 var Index = &Context{Name: "ice", Help: "冰山模块",
-	Caches:  map[string]*Cache{},
-	Configs: map[string]*Config{},
+	Caches: map[string]*Cache{},
+	Configs: map[string]*Config{
+		"cache": {Name: "数据缓存", Value: map[string]interface{}{
+			"store": "var/data",
+			"limit": "30",
+			"least": "10",
+		}},
+	},
 	Commands: map[string]*Command{
 		"_init": {Name: "_init", Help: "hello", Hand: func(m *Message, c *Context, cmd string, arg ...string) {
-			m.Echo("hello %s world", c.Name)
 		}},
-		"hi": {Name: "hi", Help: "hello", Hand: func(m *Message, c *Context, cmd string, arg ...string) {
-			m.Echo("hello %s world", c.Name)
+		"exit": {Name: "exit", Help: "hello", Hand: func(m *Message, c *Context, cmd string, arg ...string) {
+			c.Close(m.Spawn(c), arg...)
+			os.Exit(kit.Int(kit.Select("0", arg, 0)))
+		}},
+		"_exit": {Name: "_init", Help: "hello", Hand: func(m *Message, c *Context, cmd string, arg ...string) {
 		}},
 	},
 }
@@ -88,6 +97,9 @@ func init() {
 func Run(arg ...string) string {
 	if len(arg) == 0 {
 		arg = os.Args[1:]
+	}
+	if len(arg) == 0 {
+		arg = append(arg, os.Getenv("ice_serve"))
 	}
 
 	if Index.Begin(Pulse.Spawns(), arg...).Start(Index.begin.Spawns(), arg...) {

@@ -95,7 +95,6 @@ func (b *Chain) Init(m *ice.Message, arg ...string) Chart {
 	b.LineSize = kit.Int(kit.Select("12", arg, 4))
 	b.Padding = kit.Int(kit.Select("8", arg, 5))
 	b.Margin = kit.Int(kit.Select("8", arg, 6))
-	m.Log("info", "data %v", kit.Formats(b.data))
 
 	// 计算尺寸
 	b.max = map[int]int{}

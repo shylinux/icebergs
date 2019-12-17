@@ -60,9 +60,6 @@ var Index = &ice.Context{Name: "cli", Help: "命令模块",
 		}},
 		"timer": {Name: "timer", Help: "hello", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 		}},
-		"hi": {Name: "hi", Help: "hello", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			m.Echo("hello %s world", c.Name)
-		}},
 	},
 }
 

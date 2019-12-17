@@ -6,6 +6,7 @@ import (
 	_ "github.com/shylinux/icebergs/base/ctx"
 	_ "github.com/shylinux/icebergs/base/gdb"
 	_ "github.com/shylinux/icebergs/base/log"
+	_ "github.com/shylinux/icebergs/base/mdb"
 	_ "github.com/shylinux/icebergs/base/nfs"
 	_ "github.com/shylinux/icebergs/base/web"
 )

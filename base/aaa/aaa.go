@@ -70,7 +70,6 @@ var Index = &ice.Context{Name: "aaa", Help: "认证模块",
 		"sess": {Name: "sess check|login", Help: "会话", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			switch arg[0] {
 			case "check":
-
 				user := m.Conf("sess", "hash."+arg[1]+".username")
 				if user != "" {
 					m.Confm("user", "hash."+user, func(value map[string]interface{}) {

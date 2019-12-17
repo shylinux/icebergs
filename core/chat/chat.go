@@ -22,11 +22,29 @@ var Index = &ice.Context{Name: "chat", Help: "聊天模块",
 			m.Cmd("ctx.config", "load", "var/conf/aaa.json")
 			m.Cmd("ctx.config", "load", "var/conf/chat.json")
 		}},
+		"_login": {Name: "_login", Help: "hello", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			if cmd != "/login" {
+				if !m.Options("sessid") || !m.Options("username") {
+					m.Option("path", "")
+					m.Log("warn", "not login")
+					m.Echo("error").Echo("not login")
+					return
+				}
+			}
+			if len(arg) > 0 && m.Confs("group", "hash."+arg[0]) {
+				m.Option("sess.river", arg[0])
+				if len(arg) > 1 && m.Confs("group", "hash."+arg[0]+".tool.hash."+arg[1]) {
+					m.Option("sess.storm", arg[1])
+				}
+			}
+			m.Log("info", "river: %s storm: %s", m.Option("sess.river"), m.Option("sess.storm"))
+		}},
 		"_exit": {Name: "_init", Help: "hello", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			m.Cmd("ctx.config", "save", "var/conf/chat.json", "web.chat.group")
 			m.Cmd("ctx.config", "save", "var/conf/aaa.json", "aaa.role", "aaa.user", "aaa.sess")
 			m.Cmd("ctx.config", "save", "var/conf/cli.json", "cli.runtime")
 		}},
+
 		"/login": {Name: "/login", Help: "登录", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			switch arg[0] {
 			case "check":
@@ -40,6 +58,7 @@ var Index = &ice.Context{Name: "chat", Help: "聊天模块",
 		"/favor": {Name: "/favor", Help: "登录", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			m.Cmdy("cli.system", arg)
 		}},
+
 		"/ocean": {Name: "/ocean", Help: "hello", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			if len(arg) == 0 {
 				m.Confm("aaa.user", "hash", func(key string, value map[string]interface{}) {
@@ -98,6 +117,7 @@ var Index = &ice.Context{Name: "chat", Help: "聊天模块",
 		}},
 		"/action": {Name: "/action", Help: "hello", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			if len(arg) == 2 {
+				m.Set("option")
 				m.Confm("group", "hash."+arg[0]+".tool.hash."+arg[1]+".list", func(index int, value map[string]interface{}) {
 					m.Push("river", arg[0])
 					m.Push("storm", arg[1])
@@ -130,6 +150,8 @@ var Index = &ice.Context{Name: "chat", Help: "聊天模块",
 		}},
 		"/steam": {Name: "/steam", Help: "hello", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			if len(arg) < 2 {
+				m.Push("user", m.Conf("cli.runtime", "boot.username"))
+				m.Push("node", m.Conf("cli.runtime", "node.name"))
 				m.Confm("web.space", "hash", func(key string, value map[string]interface{}) {
 					m.Push("user", m.Conf("cli.runtime", "boot.username"))
 					m.Push("node", value["name"])
@@ -140,6 +162,9 @@ var Index = &ice.Context{Name: "chat", Help: "聊天模块",
 			case "spawn":
 				list := []interface{}{}
 				for i := 3; i < len(arg)-3; i += 4 {
+					if arg[i] == m.Conf("cli.runtime", "node.name") {
+						arg[i] = ""
+					}
 					list = append(list, map[string]interface{}{
 						"pod": arg[i],
 						"ctx": arg[i+1],
@@ -157,6 +182,9 @@ var Index = &ice.Context{Name: "chat", Help: "聊天模块",
 
 				m.Log("info", "steam spawn %v %v %v", arg[0], arg[2], list)
 			default:
+				if arg[2] == m.Conf("cli.runtime", "node.name") {
+					arg[2] = ""
+				}
 				m.Cmdy("web.space", arg[2], "ctx.command")
 			}
 		}},

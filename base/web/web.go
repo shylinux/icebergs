@@ -40,9 +40,11 @@ func Cookie(msg *ice.Message, sessid string) string {
 func (web *WEB) Login(msg *ice.Message, w http.ResponseWriter, r *http.Request) bool {
 	if msg.Options("sessid") {
 		sub := msg.Cmd("aaa.sess", "check", msg.Option("sessid"))
-		msg.Log("info", "user %s %s", msg.Option("userrole", sub.Append("userrole")),
+		msg.Log("info", "role: %s user: %s", msg.Option("userrole", sub.Append("userrole")),
 			msg.Option("username", sub.Append("username")))
 	}
+
+	msg.Runs("_login", msg.Option("path"), kit.Simple(msg.Optionv("cmds"))...)
 	return true
 }
 func (web *WEB) HandleWSS(m *ice.Message, safe bool, c *websocket.Conn) {
@@ -270,6 +272,7 @@ func (web *WEB) Start(m *ice.Message, arg ...string) bool {
 	port := kit.Select(m.Conf("spide", "self.port"), arg, 0)
 	web.m = m
 	web.Server = &http.Server{Addr: port, Handler: web}
+	m.Log("serve", "node %v", m.Conf("cli.runtime", "node"))
 	m.Log("serve", "listen %s", port)
 	m.Log("serve", "listen %s", web.Server.ListenAndServe())
 	return true
@@ -311,6 +314,7 @@ var Index = &ice.Context{Name: "web", Help: "网页模块",
 		}},
 		"serve": {Name: "hi", Help: "hello", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			m.Conf("cli.runtime", "node.type", "server")
+			m.Conf("cli.runtime", "node.name", m.Conf("cli.runtime", "boot.hostname"))
 			m.Run(arg...)
 		}},
 		"/space": &ice.Command{Name: "/space", Help: "", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {

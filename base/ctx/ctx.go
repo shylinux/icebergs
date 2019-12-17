@@ -41,10 +41,7 @@ var Index = &ice.Context{Name: "ctx", Help: "元始模块",
 					} else {
 						switch arg[2] {
 						case "run":
-							m.Log("info", "run %s %s %v", s.Name, key, arg[3:])
-							msg := m.Spawn(s)
-							i.Hand(msg, s, key, arg[3:]...)
-							m.Copy(msg)
+							m.Copy(m.Spawns(s).Runs(key, key, arg[3:]...))
 						}
 					}
 				}

@@ -115,8 +115,27 @@ type Message struct {
 	cb     func(*Message) *Message
 }
 
-func (m *Message) Time() string {
-	return m.time.Format("2006-01-02 15:04:05")
+func (m *Message) Time(args ...interface{}) string {
+	t := m.time
+	if len(args) > 0 {
+		switch arg := args[0].(type) {
+		case string:
+			if d, e := time.ParseDuration(arg); e == nil {
+				t, args = t.Add(d), args[1:]
+			}
+		}
+	}
+	f := "2006-01-02 15:04:05"
+	if len(args) > 0 {
+		switch arg := args[0].(type) {
+		case string:
+			f = arg
+			if len(args) > 1 {
+				f = fmt.Sprintf(f, args[1:]...)
+			}
+		}
+	}
+	return t.Format(f)
 }
 func (m *Message) Target() *Context {
 	return m.target
@@ -129,6 +148,51 @@ func (m *Message) Format(key interface{}) string {
 			return time.Now().Sub(m.time).String()
 		case "meta":
 			return kit.Format(m.meta)
+		case "time":
+			return m.Time()
+		case "ship":
+			return fmt.Sprintf("%s->%s", m.source.Name, m.target.Name)
+		case "prefix":
+			return fmt.Sprintf("%s %d %s->%s", m.Time(), m.code, m.source.Name, m.target.Name)
+		case "chain":
+			ms := []*Message{}
+			for msg := m; msg != nil; msg = msg.message {
+				ms = append(ms, msg)
+			}
+
+			meta := append([]string{}, "\n\n")
+			for i := len(ms) - 1; i >= 0; i-- {
+				msg := ms[i]
+
+				meta = append(meta, fmt.Sprintf("%s ", msg.Format("prefix")))
+				if len(msg.meta["detail"]) > 0 {
+					meta = append(meta, fmt.Sprintf("detail:%d %v", len(msg.meta["detail"]), msg.meta["detail"]))
+				}
+
+				if len(msg.meta["option"]) > 0 {
+					meta = append(meta, fmt.Sprintf("option:%d %v\n", len(msg.meta["option"]), msg.meta["option"]))
+					for _, k := range msg.meta["option"] {
+						if v, ok := msg.meta[k]; ok {
+							meta = append(meta, fmt.Sprintf("    %s: %d %v\n", k, len(v), v))
+						}
+					}
+				} else {
+					meta = append(meta, "\n")
+				}
+
+				if len(msg.meta["append"]) > 0 {
+					meta = append(meta, fmt.Sprintf("  append:%d %v\n", len(msg.meta["append"]), msg.meta["append"]))
+					for _, k := range msg.meta["append"] {
+						if v, ok := msg.meta[k]; ok {
+							meta = append(meta, fmt.Sprintf("    %s: %d %v\n", k, len(v), v))
+						}
+					}
+				}
+				if len(msg.meta["result"]) > 0 {
+					meta = append(meta, fmt.Sprintf("  result:%d %v\n", len(msg.meta["result"]), msg.meta["result"]))
+				}
+			}
+			return strings.Join(meta, "")
 		case "stack":
 			pc := make([]uintptr, 100)
 			pc = pc[:runtime.Callers(5, pc)]
@@ -238,7 +302,23 @@ func (m *Message) Copy(msg *Message) *Message {
 	}
 	return m
 }
-func (m *Message) Push(key string, value interface{}) *Message {
+func (m *Message) Push(key string, value interface{}, arg ...interface{}) *Message {
+	switch value := value.(type) {
+	case map[string]interface{}:
+		list := []string{}
+		if len(arg) > 0 {
+			list = kit.Simple(arg[0])
+		} else {
+			for k := range value {
+				list = append(list, k)
+			}
+			sort.Strings(list)
+		}
+		for _, k := range list {
+			m.Add("append", k, kit.Format(value[k]))
+		}
+		return m
+	}
 	return m.Add("append", key, kit.Format(value))
 }
 func (m *Message) Echo(str string, arg ...interface{}) *Message {
@@ -268,10 +348,10 @@ func (m *Message) Optionv(key string, arg ...interface{}) interface{} {
 	}
 
 	for msg := m; msg != nil; msg = msg.message {
-		if list, ok := m.meta[key]; ok {
+		if list, ok := msg.meta[key]; ok {
 			return list
 		}
-		if list, ok := m.data[key]; ok {
+		if list, ok := msg.data[key]; ok {
 			return list
 		}
 	}
@@ -288,7 +368,18 @@ func (m *Message) Result(arg ...interface{}) string {
 }
 
 func (m *Message) Log(level string, str string, arg ...interface{}) *Message {
-	fmt.Fprintf(os.Stderr, "%s %d %s->%s %s %s\n", time.Now().Format("2006-01-02 15:04:05"), m.code, m.source.Name, m.target.Name, level, fmt.Sprintf(str, arg...))
+	prefix, suffix := "", ""
+	switch level {
+	case "cmd":
+		prefix, suffix = "\033[32m", "\033[0m"
+	case "cost":
+		prefix, suffix = "\033[33m", "\033[0m"
+	case "warn":
+		prefix, suffix = "\033[31m", "\033[0m"
+	}
+	fmt.Fprintf(os.Stderr, "%s %d %s->%s %s%s %s%s\n",
+		time.Now().Format("2006-01-02 15:04:05"), m.code, m.source.Name, m.target.Name,
+		prefix, level, fmt.Sprintf(str, arg...), suffix)
 	return m
 }
 func (m *Message) Assert(arg interface{}) bool {
@@ -372,6 +463,14 @@ func (m *Message) Run(arg ...string) *Message {
 	m.target.server.Start(m, arg...)
 	return m
 }
+func (m *Message) Runs(key string, cmd string, arg ...string) *Message {
+	if s, ok := m.Target().Commands[key]; ok {
+		m.meta["detail"] = append([]string{cmd}, arg...)
+		m.Log("cmd", "%s.%s %s %v", m.Target().Name, key, cmd, arg)
+		s.Hand(m, m.Target(), cmd, arg...)
+	}
+	return m
+}
 func (m *Message) Call(sync bool, cb func(*Message) *Message) *Message {
 	if sync {
 		wait := make(chan bool)
@@ -390,7 +489,7 @@ func (m *Message) Back(sub *Message) *Message {
 	return m
 }
 
-func (m *Message) Grow(key string, args interface{}, data interface{}) interface{} {
+func (m *Message) Grow(key string, args interface{}, data interface{}) map[string]interface{} {
 	cache := m.Confm(key, args)
 	if cache == nil {
 		cache = map[string]interface{}{}
@@ -401,7 +500,12 @@ func (m *Message) Grow(key string, args interface{}, data interface{}) interface
 	}
 	list, _ := cache["list"].([]interface{})
 
+	// 添加数据
 	list = append(list, data)
+	meta["count"] = kit.Int(meta["count"]) + 1
+	kit.Value(data, "id", meta["count"])
+
+	// 保存数据
 	if len(list) > kit.Int(kit.Select(m.Conf("cache", "limit"), meta["limit"])) {
 		least := kit.Int(kit.Select(m.Conf("cache", "least"), meta["least"]))
 
@@ -415,7 +519,7 @@ func (m *Message) Grow(key string, args interface{}, data interface{}) interface
 		s, e := f.Stat()
 		m.Assert(e)
 
-		// 保存数据
+		// 保存表头
 		keys := []string{}
 		w := csv.NewWriter(f)
 		if s.Size() == 0 {
@@ -431,7 +535,7 @@ func (m *Message) Grow(key string, args interface{}, data interface{}) interface
 			keys, e = r.Read()
 		}
 
-		// 保存状态
+		// 保存记录
 		count := len(list) - least
 		offset := kit.Int(meta["offset"])
 		record, _ := meta["record"].([]interface{})
@@ -467,6 +571,8 @@ func (m *Message) Grow(key string, args interface{}, data interface{}) interface
 		list = list[:least]
 		w.Flush()
 	}
+
+	// 更新数据
 	cache["meta"] = meta
 	cache["list"] = list
 	if args == nil {
@@ -474,7 +580,7 @@ func (m *Message) Grow(key string, args interface{}, data interface{}) interface
 	} else {
 		m.Conf(key, args, cache)
 	}
-	return list
+	return meta
 }
 func (m *Message) Grows(key string, args interface{}, cb interface{}) map[string]interface{} {
 	cache := m.Confm(key, args)
@@ -566,9 +672,8 @@ func (m *Message) Grows(key string, args interface{}, cb interface{}) map[string
 			data = append(data, list[i])
 		}
 	}
-	val := map[string]interface{}{"meta": meta, "list": data}
-	kit.Fetch(val, cb)
-	return val
+	kit.Fetch(data, cb)
+	return meta
 }
 
 func (m *Message) Cmdy(arg ...interface{}) *Message {
@@ -596,6 +701,7 @@ func (m *Message) Cmd(arg ...interface{}) *Message {
 		for c := s; c != nil; c = c.context {
 			if cmd, ok := c.Commands[key]; ok {
 				msg = m.Spawns(s).Log("cmd", "%s.%s %v", c.Name, key, list[1:])
+				msg.meta["detail"] = list
 				msg.TryCatch(msg, true, func(msg *Message) {
 					cmd.Hand(msg, c, key, list[1:]...)
 				})

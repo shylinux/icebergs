@@ -26,10 +26,8 @@ func (f *Frame) Begin(m *Message, arg ...string) Server {
 func (f *Frame) Start(m *Message, arg ...string) bool {
 	// 加载配置
 	m.Travel(func(p *Context, s *Context) {
-		if cmd, ok := s.Commands["_init"]; ok {
-			msg := m.Spawns(s)
-			msg.Log("_init", s.Name)
-			cmd.Hand(msg, s, "_init", arg...)
+		if _, ok := s.Commands["_init"]; ok {
+			m.Spawns(s).Runs("_init", "_init", arg...)
 		}
 	})
 
@@ -40,10 +38,8 @@ func (f *Frame) Start(m *Message, arg ...string) bool {
 func (f *Frame) Close(m *Message, arg ...string) bool {
 	// 保存配置
 	m.Travel(func(p *Context, s *Context) {
-		if cmd, ok := s.Commands["_exit"]; ok {
-			msg := m.Spawns(s)
-			msg.Log("_exit", "some")
-			cmd.Hand(msg, s, "_exit", arg...)
+		if _, ok := s.Commands["_exit"]; ok {
+			m.Spawns(s).Runs("_exit", "_exit", arg...)
 		}
 	})
 

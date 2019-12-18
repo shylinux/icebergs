@@ -269,6 +269,7 @@ func (web *WEB) Start(m *ice.Message, arg ...string) bool {
 	})
 
 	port := kit.Select(m.Conf("spide", "self.port"), arg, 0)
+	m.Cap("stream", port)
 	web.m = m
 	web.Server = &http.Server{Addr: port, Handler: web}
 	m.Log("serve", "node %v", m.Conf("cli.runtime", "node"))
@@ -311,10 +312,13 @@ var Index = &ice.Context{Name: "web", Help: "网页模块",
 		"_init": {Name: "_init", Help: "hello", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			m.Echo("hello %s world", c.Name)
 		}},
+		"_exit": {Name: "_exit", Help: "hello", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			m.Target().Done()
+		}},
 		"serve": {Name: "hi", Help: "hello", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			m.Conf("cli.runtime", "node.type", "server")
 			m.Conf("cli.runtime", "node.name", m.Conf("cli.runtime", "boot.hostname"))
-			m.Run(arg...)
+			m.Target().Start(m, arg...)
 		}},
 		"/space": &ice.Command{Name: "/space", Help: "", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			r := m.Optionv("request").(*http.Request)

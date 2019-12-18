@@ -2,6 +2,7 @@
 
 export ice_app=${ice_app:="ice.app"}
 export ice_err=${ice_err:="boot.log"}
+export ice_conf=${ice_app:="var/conf"}
 export ice_serve=${ice_serve:="web.serve"}
 
 prepare() {
@@ -38,12 +39,15 @@ build() {
 start() {
     [ -d usr/volcanos ] || git clone https://github.com/shylinux/volcanos usr/volcanos
     while true; do
-        date && $ice_app $* 2>$ice_err && log "\n\nrestarting..." && sleep 1 || break
+        date && $ice_app $* 2>$ice_err && log "\n\nrestarting..." || break
     done
 }
 log() { echo -e $*; }
 restart() {
     kill -2 `cat var/run/shy.pid`
+}
+shutdown() {
+    kill -3 `cat var/run/shy.pid`
 }
 help() {
     echo "usage: $0 cmd arg"

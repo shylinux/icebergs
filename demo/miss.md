@@ -1,5 +1,16 @@
 # {{title "hello world"}}
 
+init.register
+ice.Begin
+ice.Start
+ice.Close
+
+{{chart "table" `
+ctx cli aaa web
+lex yac gdb log
+tcp nfs ssh mdb
+`}}
+
 {{chart "chain" `
 context
     volcanos

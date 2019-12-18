@@ -10,7 +10,7 @@ import (
 )
 
 type Frame struct {
-	signal chan os.Signal
+	p chan os.Signal
 }
 
 func (f *Frame) Spawn(m *ice.Message, c *ice.Context, arg ...string) ice.Server {
@@ -22,35 +22,37 @@ func (f *Frame) Begin(m *ice.Message, arg ...string) ice.Server {
 		f.WriteString(kit.Format(os.Getpid()))
 		m.Log("info", "pid %d %s", os.Getpid(), p)
 	}
-
-	f.signal = make(chan os.Signal, 10)
-	m.Confm("signal", nil, func(sig string, action string) {
-		m.Log("signal", "add %s: %s", sig, action)
-		signal.Notify(f.signal, syscall.Signal(kit.Int(sig)))
-	})
-
-	m.Gos(m, func(m *ice.Message) {
-		if s, ok := <-f.signal; ok {
-			m.Log("info", "signal %v", s)
-			m.Cmd(m.Confv("signal", kit.Format(s)))
-		}
-	})
-	m.Gos(m, func(m *ice.Message) {
-		for {
-			time.Sleep(100 * time.Millisecond)
-			now := int(time.Now().Unix())
-			m.Confm("timer", "hash", func(key string, value map[string]interface{}) {
-				if kit.Int(value["next"]) <= now {
-					m.Log("info", "timer %v %v", key, value["next"])
-					m.Cmd(value["cmd"])
-					value["next"] = now + int(kit.Duration(value["interval"]))/int(time.Second)
-				}
-			})
-		}
-	})
 	return f
 }
 func (f *Frame) Start(m *ice.Message, arg ...string) bool {
+	f.p = make(chan os.Signal, 10)
+	m.Confm("signal", nil, func(sig string, action string) {
+		m.Log("signal", "add %s: %s", sig, action)
+		signal.Notify(f.p, syscall.Signal(kit.Int(sig)))
+	})
+
+	m.Cap("stream", m.Conf("timer", "meta.tick"))
+	tick := time.Tick(kit.Duration(m.Conf("timer", "meta.tick")))
+	for {
+		select {
+		case sig, ok := <-f.p:
+			if !ok {
+				return true
+			}
+			m.Log("info", "signal %v", sig)
+			m.Cmd(m.Confv("signal", kit.Format(sig)))
+		case now, _ := <-tick:
+			// m.Log("info", "ticker %v", kit.Format(now))
+			stamp := int(now.Unix())
+			m.Confm("timer", "hash", func(key string, value map[string]interface{}) {
+				if kit.Int(value["next"]) <= stamp {
+					m.Log("info", "timer %v %v", key, value["next"])
+					m.Cmd(value["cmd"])
+					value["next"] = stamp + int(kit.Duration(value["interval"]))/int(time.Second)
+				}
+			})
+		}
+	}
 	return true
 }
 func (f *Frame) Close(m *ice.Message, arg ...string) bool {
@@ -62,18 +64,29 @@ var Index = &ice.Context{Name: "gdb", Help: "调试模块",
 	Configs: map[string]*ice.Config{
 		"logpid": &ice.Config{Name: "logpid", Value: "var/run/shy.pid", Help: ""},
 		"signal": &ice.Config{Name: "signal", Value: map[string]interface{}{
-			"2": []interface{}{"exit"}, "3": "QUIT", "15": "TERM",
+			"2":  []interface{}{"exit"},
+			"3":  []interface{}{"exit", "1"},
+			"15": []interface{}{"exit", "1"},
+			"30": []interface{}{"exit"},
+			"31": []interface{}{"exit", "1"},
 			"28": "WINCH",
-			"30": "restart",
-			"31": "upgrade",
 		}, Help: "信号"},
 		"timer": {Name: "定时器", Value: map[string]interface{}{
-			"meta": map[string]interface{}{},
+			"meta": map[string]interface{}{
+				"tick": "100ms",
+			},
 			"hash": map[string]interface{}{},
 			"list": map[string]interface{}{},
 		}},
 	},
 	Commands: map[string]*ice.Command{
+		"_init": {Name: "_init", Help: "hello", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			m.Echo("hello %s world", c.Name)
+		}},
+		"_exit": {Name: "_exit", Help: "hello", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			f := m.Target().Server().(*Frame)
+			close(f.p)
+		}},
 		"timer": {Name: "timer", Help: "hello", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			switch arg[0] {
 			case "start":

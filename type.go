@@ -13,6 +13,7 @@ import (
 	"runtime"
 	"sort"
 	"strings"
+	"sync"
 	"time"
 )
 
@@ -44,12 +45,13 @@ type Context struct {
 	contexts map[string]*Context
 	context  *Context
 	root     *Context
-	begin    *Message
-	start    *Message
 
-	exit   chan bool
+	begin  *Message
+	start  *Message
 	server Server
-	id     int
+
+	wg *sync.WaitGroup
+	id int
 }
 type Server interface {
 	Spawn(m *Message, c *Context, arg ...string) Server
@@ -61,6 +63,12 @@ type Server interface {
 func (c *Context) ID() int {
 	c.id++
 	return c.id
+}
+func (c *Context) Cap(key string, arg ...interface{}) string {
+	if len(arg) > 0 {
+		c.Caches[key].Value = kit.Format(arg[0])
+	}
+	return c.Caches[key].Value
 }
 func (c *Context) Server() Server {
 	return c.server
@@ -77,18 +85,43 @@ func (c *Context) Register(s *Context, x Server) *Context {
 	return s
 }
 
+func (c *Context) Done() bool {
+	if c.context != nil && c.context.wg != nil {
+		c.context.wg.Done()
+	} else {
+		c.root.wg.Done()
+	}
+	return true
+}
 func (c *Context) Begin(m *Message, arg ...string) *Context {
-	c.begin = m
+	c.Caches["status"] = &Cache{Name: "status", Value: ""}
+	c.Caches["stream"] = &Cache{Name: "stream", Value: ""}
+
 	m.Log("begin", "%s", c.Name)
-	if c.server != nil {
-		c.server.Begin(m, arg...)
+	if c.begin = m; c.server != nil {
+		m.TryCatch(m, true, func(m *Message) {
+			c.server.Begin(m, arg...)
+		})
 	}
 	return c
 }
 func (c *Context) Start(m *Message, arg ...string) bool {
 	c.start = m
-	m.Log("start", "%s", c.Name)
-	return c.server.Start(m, arg...)
+	if c.context != nil && c.context.wg != nil {
+		c.context.wg.Add(1)
+	} else {
+		c.root.wg.Add(1)
+	}
+
+	m.Gos(m, func(m *Message) {
+		m.Log("start", "%s", c.Name)
+
+		c.Cap("status", "start")
+		c.server.Start(m, arg...)
+		c.Cap("status", "close")
+		c.Done()
+	})
+	return true
 }
 func (c *Context) Close(m *Message, arg ...string) bool {
 	m.Log("close", "%s", c.Name)
@@ -347,6 +380,67 @@ func (m *Message) Table(cbs ...interface{}) *Message {
 				cb(i, line, m.meta["append"])
 			}
 		}
+		return m
+	}
+
+	//计算列宽
+	space := kit.Select(m.Conf("table", "space"), m.Option("table.space"))
+	depth, width := 0, map[string]int{}
+	for _, k := range m.meta["append"] {
+		if len(m.meta[k]) > depth {
+			depth = len(m.meta[k])
+		}
+		width[k] = kit.Width(k, len(space))
+		for _, v := range m.meta[k] {
+			if kit.Width(v, len(space)) > width[k] {
+				width[k] = kit.Width(v, len(space))
+			}
+		}
+	}
+
+	// 回调函数
+	rows := kit.Select(m.Conf("table", "row_sep"), m.Option("table.row_sep"))
+	cols := kit.Select(m.Conf("table", "col_sep"), m.Option("table.col_sep"))
+	compact := kit.Select(m.Conf("table", "compact"), m.Option("table.compact")) == "true"
+	cb := func(maps map[string]string, lists []string, line int) bool {
+		for i, v := range lists {
+			if k := m.meta["append"][i]; compact {
+				v = maps[k]
+			}
+
+			if m.Echo(v); i < len(lists)-1 {
+				m.Echo(cols)
+			}
+		}
+		m.Echo(rows)
+		return true
+	}
+
+	// 输出表头
+	row := map[string]string{}
+	wor := []string{}
+	for _, k := range m.meta["append"] {
+		row[k], wor = k, append(wor, k+strings.Repeat(space, width[k]-kit.Width(k, len(space))))
+	}
+	if !cb(row, wor, -1) {
+		return m
+	}
+
+	// 输出数据
+	for i := 0; i < depth; i++ {
+		row := map[string]string{}
+		wor := []string{}
+		for _, k := range m.meta["append"] {
+			data := ""
+			if i < len(m.meta[k]) {
+				data = m.meta[k][i]
+			}
+
+			row[k], wor = data, append(wor, data+strings.Repeat(space, width[k]-kit.Width(data, len(space))))
+		}
+		if !cb(row, wor, i) {
+			break
+		}
 	}
 	return m
 }
@@ -392,14 +486,19 @@ func (m *Message) Result(arg ...interface{}) string {
 	return strings.Join(m.Resultv(), "")
 }
 
+var Log func(*Message, string, string)
+
 func (m *Message) Log(level string, str string, arg ...interface{}) *Message {
+	if Log != nil {
+		Log(m, level, fmt.Sprintf(str, arg...))
+	}
 	prefix, suffix := "", ""
 	switch level {
-	case "cmd":
+	case "cmd", "start", "serve":
 		prefix, suffix = "\033[32m", "\033[0m"
 	case "cost":
 		prefix, suffix = "\033[33m", "\033[0m"
-	case "warn":
+	case "warn", "close":
 		prefix, suffix = "\033[31m", "\033[0m"
 	}
 	fmt.Fprintf(os.Stderr, "%s %d %s->%s %s%s %s%s\n",
@@ -446,8 +545,14 @@ func (m *Message) Travel(cb func(p *Context, s *Context)) *Message {
 	list := []*Context{m.target}
 	for i := 0; i < len(list); i++ {
 		cb(list[i].context, list[i])
-		for _, v := range list[i].contexts {
-			list = append(list, v)
+
+		ls := []string{}
+		for k := range list[i].contexts {
+			ls = append(ls, k)
+		}
+		sort.Strings(ls)
+		for _, k := range ls {
+			list = append(list, list[i].contexts[k])
 		}
 	}
 	return m
@@ -494,6 +599,14 @@ func (m *Message) Runs(key string, cmd string, arg ...string) *Message {
 		m.Log("cmd", "%s.%s %s %v", m.Target().Name, key, cmd, arg)
 		s.Hand(m, m.Target(), cmd, arg...)
 	}
+	return m
+}
+func (m *Message) Start(key string, arg ...string) *Message {
+	m.Travel(func(p *Context, s *Context) {
+		if s.Name == key {
+			s.Start(m.Spawns(s), arg...)
+		}
+	})
 	return m
 }
 func (m *Message) Call(sync bool, cb func(*Message) *Message) *Message {
@@ -721,20 +834,23 @@ func (m *Message) Cmd(arg ...interface{}) *Message {
 		return m
 	}
 
-	msg := m
 	m.Search(list[0], func(p *Context, s *Context, key string) {
 		for c := s; c != nil; c = c.context {
 			if cmd, ok := c.Commands[key]; ok {
-				msg = m.Spawns(s).Log("cmd", "%s.%s %v", c.Name, key, list[1:])
-				msg.meta["detail"] = list
-				msg.TryCatch(msg, true, func(msg *Message) {
+				m.TryCatch(m.Spawns(s), true, func(msg *Message) {
+
+					msg.Log("cmd", "%s.%s %v", c.Name, key, list[1:])
+					msg.meta["detail"] = list
 					cmd.Hand(msg, c, key, list[1:]...)
+					msg.Hand = true
+					m.Hand = true
+					m = msg
 				})
 				break
 			}
 		}
 	})
-	return msg
+	return m
 }
 func (m *Message) Confv(arg ...interface{}) (val interface{}) {
 	m.Search(arg[0], func(p *Context, s *Context, key string) {
@@ -780,7 +896,8 @@ func (m *Message) Capv(arg ...interface{}) interface{} {
 	for _, s := range []*Context{m.target} {
 		for c := s; c != nil; c = c.context {
 			if caps, ok := c.Caches[key]; ok {
-				return kit.Value(caps.Value, arg[0])
+				caps.Value = kit.Format(arg[0])
+				return caps.Value
 			}
 		}
 	}

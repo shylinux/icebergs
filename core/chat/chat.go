@@ -18,7 +18,6 @@ var Index = &ice.Context{Name: "chat", Help: "聊天模块",
 	},
 	Commands: map[string]*ice.Command{
 		"_init": {Name: "_init", Help: "hello", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			m.Cmd("ctx.config", "load", "var/conf/cli.json")
 			m.Cmd("ctx.config", "load", "var/conf/aaa.json")
 			m.Cmd("ctx.config", "load", "var/conf/chat.json")
 		}},
@@ -42,7 +41,6 @@ var Index = &ice.Context{Name: "chat", Help: "聊天模块",
 		"_exit": {Name: "_init", Help: "hello", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			m.Cmd("ctx.config", "save", "var/conf/chat.json", "web.chat.group")
 			m.Cmd("ctx.config", "save", "var/conf/aaa.json", "aaa.role", "aaa.user", "aaa.sess")
-			m.Cmd("ctx.config", "save", "var/conf/cli.json", "cli.runtime")
 		}},
 
 		"/login": {Name: "/login", Help: "登录", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {

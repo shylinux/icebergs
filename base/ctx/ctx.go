@@ -5,19 +5,40 @@ import (
 	"github.com/shylinux/icebergs"
 	"github.com/shylinux/toolkits"
 	"os"
+	"sort"
 )
 
 var Index = &ice.Context{Name: "ctx", Help: "元始模块",
 	Caches:  map[string]*ice.Cache{},
 	Configs: map[string]*ice.Config{},
 	Commands: map[string]*ice.Command{
+		"context": {Name: "context", Help: "模块", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			ice.Pulse.Travel(func(p *ice.Context, s *ice.Context) {
+				if p != nil {
+					m.Push("ups", p.Name)
+				} else {
+					m.Push("ups", "shy")
+				}
+				m.Push("name", s.Name)
+				m.Push("status", s.Cap("status"))
+				m.Push("stream", s.Cap("stream"))
+				m.Push("help", s.Help)
+			})
+		}},
 		"command": {Name: "command", Help: "命令", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			if len(arg) == 0 {
 				ice.Pulse.Travel(func(p *ice.Context, s *ice.Context) {
-					for k, v := range s.Commands {
+					list := []string{}
+					for k := range s.Commands {
 						if k[0] == '/' || k[0] == '_' {
 							continue
 						}
+						list = append(list, k)
+					}
+					sort.Strings(list)
+
+					for _, k := range list {
+						v := s.Commands[k]
 						if p != nil && p != ice.Index {
 							m.Push("key", p.Name+"."+s.Name)
 						} else {
@@ -39,10 +60,7 @@ var Index = &ice.Context{Name: "ctx", Help: "元始模块",
 						m.Push("meta", kit.Format(i.Meta))
 						m.Push("list", kit.Format(i.List))
 					} else {
-						switch arg[2] {
-						case "run":
-							m.Copy(m.Spawns(s).Runs(key, key, arg[3:]...))
-						}
+						m.Copy(m.Spawns(s).Runs(key, key, arg[3:]...))
 					}
 				}
 			})

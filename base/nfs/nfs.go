@@ -18,7 +18,7 @@ import (
 
 func dir(m *ice.Message, root string, name string, level int, deep bool, dir_type string, dir_reg *regexp.Regexp, fields []string, format string) {
 
-	if fs, e := ioutil.ReadDir(name); m.Assert(e) {
+	if fs, e := ioutil.ReadDir(path.Join(root, name)); m.Assert(e) {
 		for _, f := range fs {
 			if f.Name() == "." || f.Name() == ".." {
 				continue
@@ -27,7 +27,7 @@ func dir(m *ice.Message, root string, name string, level int, deep bool, dir_typ
 				continue
 			}
 
-			p := path.Join(name, f.Name())
+			p := path.Join(root, name, f.Name())
 			if f, e = os.Lstat(p); e != nil {
 				m.Log("info", "%s", e)
 				continue

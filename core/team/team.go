@@ -29,7 +29,7 @@ var Index = &ice.Context{Name: "team", Help: "团队模块",
 		}, List: []interface{}{
 			map[string]interface{}{"type": "text", "value": "", "name": "name"},
 			map[string]interface{}{"type": "text", "value": "", "name": "type"},
-			map[string]interface{}{"type": "button", "value": "创建"},
+			map[string]interface{}{"type": "button", "value": "创建", "action": "auto"},
 		}, Hand: func(m *ice.Message, c *ice.Context, key string, arg ...string) {
 			if len(arg) > 1 {
 				switch arg[1] {
@@ -57,46 +57,55 @@ var Index = &ice.Context{Name: "team", Help: "团队模块",
 				}
 			}
 
-			m.Cmdy("nfs.dir", "", m.Conf("miss", "meta.path"), "time name")
+			m.Cmdy("nfs.dir", m.Conf("miss", "meta.path"), "", "time name")
 			m.Table(func(index int, value map[string]string, head []string) {
 				m.Push("status", kit.Select("stop", "start", m.Confs("web.space", "hash."+value["name"])))
 			})
 		}},
-		"task": {Name: "task", Help: "任务", List: []interface{}{
-			map[string]interface{}{"type": "select", "value": "create", "values": "create action cancel finish"},
-			map[string]interface{}{"type": "text", "value": "", "name": "name"},
-			map[string]interface{}{"type": "text", "value": "", "name": "text"},
-			map[string]interface{}{"type": "button", "value": "创建"},
-		}, Hand: func(m *ice.Message, c *ice.Context, key string, arg ...string) {
-			switch arg[0] {
-			case "create":
-				meta := m.Grow("web.chat.group", []string{"hash", m.Option("sess.river"), "task"}, map[string]interface{}{
-					"name":       arg[1],
-					"text":       kit.Select("", arg, 2),
-					"status":     "准备",
-					"begin_time": m.Time(),
-					"close_time": m.Time("3h"),
-				})
-				m.Log("info", "create task %v", kit.Format(meta))
-				m.Echo("%v", meta["count"])
-			case "action":
-			case "cancel":
-			}
-		}},
+		"task": {Name: "task", Help: "任务",
+			Meta: map[string]interface{}{
+				"remote": "true",
+			},
+			List: []interface{}{
+				map[string]interface{}{"type": "select", "value": "create", "values": "create action cancel finish"},
+				map[string]interface{}{"type": "text", "value": "", "name": "name"},
+				map[string]interface{}{"type": "text", "value": "", "name": "text"},
+				map[string]interface{}{"type": "button", "value": "创建"},
+			}, Hand: func(m *ice.Message, c *ice.Context, key string, arg ...string) {
+				switch arg[0] {
+				case "create":
+					meta := m.Grow("web.chat.group", []string{"hash", m.Option("sess.river"), "task"}, map[string]interface{}{
+						"name":       arg[1],
+						"text":       kit.Select("", arg, 2),
+						"status":     "准备",
+						"begin_time": m.Time(),
+						"close_time": m.Time("3h"),
+					})
+					m.Log("info", "create task %v", kit.Format(meta))
+					m.Echo("%v", meta["count"])
+				case "action":
+				case "cancel":
+				}
+			}},
 		"process": {Name: "process", Help: "任务进度", Meta: map[string]interface{}{
-			"detail": []string{"准备", "开始", "取消", "完成"},
+			"remote": "true",
+			"detail": []string{"编辑", "准备", "开始", "取消", "完成"},
 		}, List: []interface{}{
 			map[string]interface{}{"type": "text", "value": "0", "name": "offend"},
 			map[string]interface{}{"type": "text", "value": "10", "name": "limit"},
 			map[string]interface{}{"type": "text", "value": "", "name": "match"},
 			map[string]interface{}{"type": "text", "value": "", "name": "value"},
-			map[string]interface{}{"type": "button", "value": "查看"},
+			map[string]interface{}{"type": "button", "value": "查看", "action": "auto"},
 		}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			msg := m.Cmd("mdb.select", "web.chat.group", "hash."+m.Option("sess.river")+".task", arg[0])
 
 			switch arg[1] {
+			case "modify":
+				prefix := []string{"mdb.update", "web.chat.group", "hash." + m.Option("sess.river") + ".task", arg[0], arg[2], arg[3]}
+				m.Cmd(prefix)
+				arg = arg[4:]
+
 			case "准备", "开始", "取消", "完成":
-				msg.Log("what", "%v %v", msg.Append("status"), arg[1])
+				msg := m.Cmd("mdb.select", "web.chat.group", "hash."+m.Option("sess.river")+".task", arg[0])
 				if msg.Append("status") == arg[1] {
 					arg = arg[4:]
 					break

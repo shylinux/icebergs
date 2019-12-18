@@ -85,14 +85,6 @@ func (c *Context) Register(s *Context, x Server) *Context {
 	return s
 }
 
-func (c *Context) Done() bool {
-	if c.context != nil && c.context.wg != nil {
-		c.context.wg.Done()
-	} else {
-		c.root.wg.Done()
-	}
-	return true
-}
 func (c *Context) Begin(m *Message, arg ...string) *Context {
 	c.Caches["status"] = &Cache{Name: "status", Value: ""}
 	c.Caches["stream"] = &Cache{Name: "stream", Value: ""}
@@ -113,14 +105,17 @@ func (c *Context) Start(m *Message, arg ...string) bool {
 		c.root.wg.Add(1)
 	}
 
+	wait := make(chan bool)
 	m.Gos(m, func(m *Message) {
 		m.Log("start", "%s", c.Name)
 
 		c.Cap("status", "start")
+		wait <- true
 		c.server.Start(m, arg...)
 		c.Cap("status", "close")
-		c.Done()
+		m.Done()
 	})
+	<-wait
 	return true
 }
 func (c *Context) Close(m *Message, arg ...string) bool {
@@ -485,6 +480,12 @@ func (m *Message) Resultv(arg ...interface{}) []string {
 func (m *Message) Result(arg ...interface{}) string {
 	return strings.Join(m.Resultv(), "")
 }
+func (m *Message) Detailv(arg ...interface{}) []string {
+	return m.meta["detail"]
+}
+func (m *Message) Detail(arg ...interface{}) string {
+	return kit.Select("", m.meta["detail"], 0)
+}
 
 var Log func(*Message, string, string)
 
@@ -541,10 +542,31 @@ func (m *Message) TryCatch(msg *Message, safe bool, hand ...func(msg *Message)) 
 	}
 	return m
 }
-func (m *Message) Travel(cb func(p *Context, s *Context)) *Message {
+func (m *Message) Travel(cb interface{}) *Message {
 	list := []*Context{m.target}
 	for i := 0; i < len(list); i++ {
-		cb(list[i].context, list[i])
+		switch cb := cb.(type) {
+		case func(*Context, *Context):
+			cb(list[i].context, list[i])
+		case func(*Context, *Context, string, *Command):
+			ls := []string{}
+			for k := range list[i].Commands {
+				ls = append(ls, k)
+			}
+			sort.Strings(ls)
+			for _, k := range ls {
+				cb(list[i].context, list[i], k, list[i].Commands[k])
+			}
+		case func(*Context, *Context, string, *Config):
+			ls := []string{}
+			for k := range list[i].Configs {
+				ls = append(ls, k)
+			}
+			sort.Strings(ls)
+			for _, k := range ls {
+				cb(list[i].context, list[i], k, list[i].Configs[k])
+			}
+		}
 
 		ls := []string{}
 		for k := range list[i].contexts {
@@ -600,6 +622,15 @@ func (m *Message) Runs(key string, cmd string, arg ...string) *Message {
 		s.Hand(m, m.Target(), cmd, arg...)
 	}
 	return m
+}
+func (m *Message) Done() bool {
+	defer func() { recover() }()
+	if m.target.context != nil && m.target.context.wg != nil {
+		m.target.context.wg.Done()
+	} else {
+		m.target.root.wg.Done()
+	}
+	return true
 }
 func (m *Message) Start(key string, arg ...string) *Message {
 	m.Travel(func(p *Context, s *Context) {

@@ -60,7 +60,11 @@ var Index = &ice.Context{Name: "ctx", Help: "元始模块",
 						m.Push("meta", kit.Format(i.Meta))
 						m.Push("list", kit.Format(i.List))
 					} else {
-						m.Copy(m.Spawns(s).Runs(key, key, arg[3:]...))
+						if i.Meta != nil && kit.Format(i.Meta["remote"]) == "true" && m.Option("you") != "" {
+							m.Copy(m.Spawns(s).Cmd("web.space", m.Option("you"), "ctx.command", arg[0], arg[1], "run", arg[3:]))
+						} else {
+							m.Copy(m.Spawns(s).Runs(key, key, arg[3:]...))
+						}
 					}
 				}
 			})

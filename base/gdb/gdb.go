@@ -17,20 +17,10 @@ func (f *Frame) Spawn(m *ice.Message, c *ice.Context, arg ...string) ice.Server 
 	return &Frame{}
 }
 func (f *Frame) Begin(m *ice.Message, arg ...string) ice.Server {
-	if f, p, e := kit.Create(m.Conf("logpid")); m.Assert(e) {
-		defer f.Close()
-		f.WriteString(kit.Format(os.Getpid()))
-		m.Log("info", "pid %d %s", os.Getpid(), p)
-	}
+	f.p = make(chan os.Signal, 10)
 	return f
 }
 func (f *Frame) Start(m *ice.Message, arg ...string) bool {
-	f.p = make(chan os.Signal, 10)
-	m.Confm("signal", nil, func(sig string, action string) {
-		m.Log("signal", "add %s: %s", sig, action)
-		signal.Notify(f.p, syscall.Signal(kit.Int(sig)))
-	})
-
 	m.Cap("stream", m.Conf("timer", "meta.tick"))
 	tick := time.Tick(kit.Duration(m.Conf("timer", "meta.tick")))
 	for {
@@ -42,7 +32,6 @@ func (f *Frame) Start(m *ice.Message, arg ...string) bool {
 			m.Log("info", "signal %v", sig)
 			m.Cmd(m.Confv("signal", kit.Format(sig)))
 		case now, _ := <-tick:
-			// m.Log("info", "ticker %v", kit.Format(now))
 			stamp := int(now.Unix())
 			m.Confm("timer", "hash", func(key string, value map[string]interface{}) {
 				if kit.Int(value["next"]) <= stamp {
@@ -81,7 +70,17 @@ var Index = &ice.Context{Name: "gdb", Help: "调试模块",
 	},
 	Commands: map[string]*ice.Command{
 		"_init": {Name: "_init", Help: "hello", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			m.Echo("hello %s world", c.Name)
+			if f, p, e := kit.Create(m.Conf("logpid")); m.Assert(e) {
+				defer f.Close()
+				f.WriteString(kit.Format(os.Getpid()))
+				m.Log("info", "pid %d %s", os.Getpid(), p)
+			}
+
+			f := m.Target().Server().(*Frame)
+			m.Confm("signal", nil, func(sig string, action string) {
+				m.Log("signal", "add %s: %s", sig, action)
+				signal.Notify(f.p, syscall.Signal(kit.Int(sig)))
+			})
 		}},
 		"_exit": {Name: "_exit", Help: "hello", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			f := m.Target().Server().(*Frame)

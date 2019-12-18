@@ -53,6 +53,7 @@ var Index = &ice.Context{Name: "cli", Help: "命令模块",
 			cmd := exec.Command(arg[0], arg[1:]...)
 			cmd.Dir = m.Option("cmd_dir")
 
+			m.Log("info", "dir: %s", cmd.Dir)
 			if m.Option("cmd_type") == "daemon" {
 				m.Gos(m, func(m *ice.Message) {
 					if e := cmd.Start(); e != nil {

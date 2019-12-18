@@ -15,6 +15,7 @@ var Index = &ice.Context{Name: "mdb", Help: "数据模块",
 			index := kit.Int(arg[2]) - kit.Int(meta["offset"]) - 1
 
 			data := m.Confm(arg[0], arg[1]+".list."+kit.Format(index))
+			m.Log("what", "%v %v", arg[0], arg[1]+".list."+kit.Format(index))
 			for i := 3; i < len(arg)-1; i += 2 {
 				kit.Value(data, arg[i], arg[i+1])
 			}

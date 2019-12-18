@@ -29,14 +29,6 @@ func (f *Frame) Begin(m *ice.Message, arg ...string) ice.Server {
 	return f
 }
 func (f *Frame) Start(m *ice.Message, arg ...string) bool {
-	m.Confm("file", nil, func(key string, value map[string]interface{}) {
-		if f, p, e := kit.Create(kit.Format(value["path"])); m.Assert(e) {
-			m.Cap("stream", path.Base(p))
-			m.Log("info", "log %s %s", key, p)
-			value["file"] = f
-		}
-	})
-
 	for {
 		if l, ok := <-f.p; !ok {
 			break
@@ -80,7 +72,13 @@ var Index = &ice.Context{Name: "log", Help: "日志模块",
 	},
 	Commands: map[string]*ice.Command{
 		"_init": {Name: "_init", Help: "hello", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			m.Echo("hello %s world", c.Name)
+			m.Confm("file", nil, func(key string, value map[string]interface{}) {
+				if f, p, e := kit.Create(kit.Format(value["path"])); m.Assert(e) {
+					m.Cap("stream", path.Base(p))
+					m.Log("info", "log %s %s", key, p)
+					value["file"] = f
+				}
+			})
 		}},
 		"_exit": {Name: "_exit", Help: "hello", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			f := m.Target().Server().(*Frame)

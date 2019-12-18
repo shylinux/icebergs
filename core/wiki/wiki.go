@@ -12,8 +12,16 @@ import (
 )
 
 var Index = &ice.Context{Name: "wiki", Help: "文档模块",
-	Caches:  map[string]*ice.Cache{},
-	Configs: map[string]*ice.Config{},
+	Caches: map[string]*ice.Cache{},
+	Configs: map[string]*ice.Config{
+		"note": {Name: "note", Value: map[string]interface{}{
+			"meta": map[string]interface{}{
+				"path": "usr/local/wiki",
+			},
+			"list": map[string]interface{}{},
+			"hash": map[string]interface{}{},
+		}},
+	},
 	Commands: map[string]*ice.Command{
 		"chart": {Name: "chart", Help: "绘图", List: []interface{}{
 			map[string]interface{}{"type": "select", "value": "chain", "values": "chain table"},
@@ -43,10 +51,10 @@ var Index = &ice.Context{Name: "wiki", Help: "文档模块",
 		}},
 
 		"_tree": {Name: "_tree", Help: "目录", Hand: func(m *ice.Message, c *ice.Context, key string, arg ...string) {
-			m.Cmdy("nfs.dir", "", arg[0])
+			m.Cmdy("nfs.dir", m.Conf("note", "meta.path"), kit.Select("", arg, 0), "time size line path")
 		}},
 		"_text": {Name: "_text", Help: "文章", Hand: func(m *ice.Message, c *ice.Context, key string, arg ...string) {
-			tmpl := m.Target().Server().(*web.WEB).HandleCGI(m, arg[0])
+			tmpl := m.Target().Server().(*web.WEB).HandleCGI(m, path.Join(m.Conf("note", "meta.path"), arg[0]))
 			m.Optionv("title", map[string]int{})
 
 			buffer := bytes.NewBuffer([]byte{})
@@ -64,9 +72,11 @@ var Index = &ice.Context{Name: "wiki", Help: "文档模块",
 		}},
 		"note": {Name: "note file|favor|commit", Help: "笔记", Meta: map[string]interface{}{
 			"display": "inner",
+			"remote":  "true",
 		}, List: []interface{}{
-			map[string]interface{}{"type": "text", "value": "miss.md"},
-			map[string]interface{}{"type": "button", "value": "执行"},
+			map[string]interface{}{"type": "text", "value": "miss.md", "name": "path"},
+			map[string]interface{}{"type": "button", "value": "执行", "action": "auto"},
+			map[string]interface{}{"type": "button", "value": "返回", "cb": "Last"},
 		}, Hand: func(m *ice.Message, c *ice.Context, key string, arg ...string) {
 			if len(arg) == 0 {
 				m.Cmdy("_tree")

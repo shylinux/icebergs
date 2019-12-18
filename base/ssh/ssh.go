@@ -66,7 +66,7 @@ var Index = &ice.Context{Name: "ssh", Help: "终端模块",
 		"_exit": {Name: "_exit", Help: "hello", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			f := m.Target().Server().(*Frame)
 			f.in.Close()
-			m.Target().Done()
+			m.Done()
 		}},
 	},
 }

@@ -47,7 +47,7 @@ func (web *WEB) Login(msg *ice.Message, w http.ResponseWriter, r *http.Request) 
 	msg.Runs("_login", msg.Option("url"), kit.Simple(msg.Optionv("cmds"))...)
 	return true
 }
-func (web *WEB) HandleWSS(m *ice.Message, safe bool, c *websocket.Conn) {
+func (web *WEB) HandleWSS(m *ice.Message, safe bool, c *websocket.Conn) bool {
 	for {
 		if t, b, e := c.ReadMessage(); e != nil {
 			m.Log("warn", "space recv %d msg %v", t, e)
@@ -86,6 +86,9 @@ func (web *WEB) HandleWSS(m *ice.Message, safe bool, c *websocket.Conn) {
 					// 本地执行
 					if safe {
 						msg = msg.Cmd()
+						if msg.Detail() == "exit" {
+							return true
+						}
 					} else {
 						msg.Echo("no right")
 					}
@@ -102,6 +105,7 @@ func (web *WEB) HandleWSS(m *ice.Message, safe bool, c *websocket.Conn) {
 			}
 		}
 	}
+	return false
 }
 func (web *WEB) HandleCGI(m *ice.Message, which string) *template.Template {
 	cgi := template.FuncMap{
@@ -131,8 +135,8 @@ func (web *WEB) HandleCGI(m *ice.Message, which string) *template.Template {
 		}(k, v)
 	}
 	tmpl = tmpl.Funcs(cgi)
-	tmpl = template.Must(tmpl.ParseGlob(path.Join(m.Conf("serve", "template.path"), "/*.tmpl")))
-	tmpl = template.Must(tmpl.ParseGlob(path.Join(m.Conf("serve", "template.path"), m.Target().Name, "/*.tmpl")))
+	// tmpl = template.Must(tmpl.ParseGlob(path.Join(m.Conf("serve", "template.path"), "/*.tmpl")))
+	// tmpl = template.Must(tmpl.ParseGlob(path.Join(m.Conf("serve", "template.path"), m.Target().Name, "/*.tmpl")))
 	tmpl = template.Must(tmpl.ParseFiles(which))
 	m.Confm("serve", "template.list", func(index int, value string) { tmpl = template.Must(tmpl.Parse(value)) })
 	for i, v := range tmpl.Templates() {
@@ -248,7 +252,7 @@ func (web *WEB) Start(m *ice.Message, arg ...string) bool {
 			// 级联路由
 			route := "/" + s.Name + "/"
 			if n, ok := p.Server().(*WEB); ok && n.ServeMux != nil {
-				msg.Log("route", "%s <- %s", p.Name, route)
+				msg.Log("route", "%s <= %s", p.Name, route)
 				n.Handle(route, http.StripPrefix(path.Dir(route), w))
 			}
 
@@ -259,12 +263,12 @@ func (web *WEB) Start(m *ice.Message, arg ...string) bool {
 			})
 
 			// 命令路由
-			for k, x := range s.Commands {
-				if k[0] == '/' {
+			m.Travel(func(p *ice.Context, sub *ice.Context, k string, x *ice.Command) {
+				if s == sub && k[0] == '/' {
 					msg.Log("route", "%s <- %s", s.Name, k)
 					w.HandleCmd(msg, k, x)
 				}
-			}
+			})
 		}
 	})
 
@@ -285,7 +289,7 @@ var Index = &ice.Context{Name: "web", Help: "网页模块",
 	Caches: map[string]*ice.Cache{},
 	Configs: map[string]*ice.Config{
 		"spide": {Name: "客户端", Value: map[string]interface{}{
-			"self": map[string]interface{}{"port": ":9020"},
+			"self": map[string]interface{}{"port": "127.0.0.1:9020"},
 		}},
 		"serve": {Name: "服务端", Value: map[string]interface{}{
 			"static": map[string]interface{}{"/": "usr/volcanos/",
@@ -313,7 +317,7 @@ var Index = &ice.Context{Name: "web", Help: "网页模块",
 			m.Echo("hello %s world", c.Name)
 		}},
 		"_exit": {Name: "_exit", Help: "hello", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			m.Target().Done()
+			m.Done()
 		}},
 		"serve": {Name: "hi", Help: "hello", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			m.Conf("cli.runtime", "node.type", "server")
@@ -350,6 +354,7 @@ var Index = &ice.Context{Name: "web", Help: "网页模块",
 				})
 				return
 			}
+
 			web := m.Target().Server().(*WEB)
 			switch arg[0] {
 			case "connect":
@@ -369,11 +374,17 @@ var Index = &ice.Context{Name: "web", Help: "网页模块",
 									web.send[id] = m
 									s.WriteMessage(MSG_MAPS, []byte(m.Format("meta")))
 
-									web.HandleWSS(m, true, s)
+									if web.HandleWSS(m, true, s) {
+										break
+									}
+								} else {
+									m.Log("warn", "wss %s", e)
 								}
+							} else {
+								m.Log("warn", "dial %s", e)
 							}
 							time.Sleep(time.Duration(rand.Intn(m.Confi("web.space", "meta.redial"))) * time.Millisecond)
-							m.Log("info", "reconnect %v", host)
+							m.Log("info", "reconnect %v", u)
 						}
 					})
 				}
@@ -382,6 +393,7 @@ var Index = &ice.Context{Name: "web", Help: "网页模块",
 					m.Cmdy(arg[1:])
 					break
 				}
+
 				target := strings.Split(arg[0], ".")
 				if socket, ok := m.Confv("space", "hash."+target[0]+".socket").(*websocket.Conn); !ok {
 					m.Echo("error").Echo("not found")
@@ -389,13 +401,16 @@ var Index = &ice.Context{Name: "web", Help: "网页模块",
 					id := kit.Format(c.ID())
 					m.Optionv("_source", []string{id, target[0]})
 					m.Optionv("_target", target[1:])
+					m.Set("detail", arg[1:]...)
 
 					web := m.Target().Server().(*WEB)
 					web.send[id] = m
-					m.Set("detail", arg[1:]...)
+
+					now := time.Now()
 					socket.WriteMessage(MSG_MAPS, []byte(m.Format("meta")))
 					m.Call(true, func(msg *ice.Message) *ice.Message {
 						m.Copy(msg)
+						m.Log("info", "cost %s", time.Now().Sub(now))
 						return nil
 					})
 				}

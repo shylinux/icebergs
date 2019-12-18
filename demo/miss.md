@@ -14,4 +14,7 @@ context
         cli.go
         ctx.go
     toolkits
+        type.go
+        core.go
+        misc.go
 `}}

@@ -315,7 +315,11 @@ func (m *Message) Push(key string, value interface{}, arg ...interface{}) *Messa
 			sort.Strings(list)
 		}
 		for _, k := range list {
-			m.Add("append", k, kit.Format(value[k]))
+			if k == "key" {
+				m.Add("append", k, k)
+			} else {
+				m.Add("append", k, kit.Format(value[k]))
+			}
 		}
 		return m
 	}
@@ -323,6 +327,27 @@ func (m *Message) Push(key string, value interface{}, arg ...interface{}) *Messa
 }
 func (m *Message) Echo(str string, arg ...interface{}) *Message {
 	m.meta["result"] = append(m.meta["result"], fmt.Sprintf(str, arg...))
+	return m
+}
+func (m *Message) Table(cbs ...interface{}) *Message {
+	if len(cbs) > 0 {
+		switch cb := cbs[0].(type) {
+		case func(int, map[string]string, []string):
+			nrow := 0
+			for _, k := range m.meta["append"] {
+				if len(m.meta[k]) > nrow {
+					nrow = len(m.meta[k])
+				}
+			}
+			for i := 0; i < nrow; i++ {
+				line := map[string]string{}
+				for _, k := range m.meta["append"] {
+					line[k] = kit.Select("", m.meta[k], i)
+				}
+				cb(i, line, m.meta["append"])
+			}
+		}
+	}
 	return m
 }
 func (m *Message) Option(key string, arg ...interface{}) string {

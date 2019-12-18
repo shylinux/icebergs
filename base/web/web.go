@@ -44,7 +44,7 @@ func (web *WEB) Login(msg *ice.Message, w http.ResponseWriter, r *http.Request) 
 			msg.Option("username", sub.Append("username")))
 	}
 
-	msg.Runs("_login", msg.Option("path"), kit.Simple(msg.Optionv("cmds"))...)
+	msg.Runs("_login", msg.Option("url"), kit.Simple(msg.Optionv("cmds"))...)
 	return true
 }
 func (web *WEB) HandleWSS(m *ice.Message, safe bool, c *websocket.Conn) {
@@ -154,7 +154,7 @@ func (web *WEB) HandleCmd(m *ice.Message, key string, cmd *ice.Command) {
 			msg.Option("referer", r.Header.Get("Referer"))
 			msg.Option("accept", r.Header.Get("Accept"))
 			msg.Option("method", r.Method)
-			msg.Option("path", r.URL.Path)
+			msg.Option("url", r.URL.Path)
 			msg.Option("sessid", "")
 
 			// 请求环境
@@ -200,8 +200,7 @@ func (web *WEB) HandleCmd(m *ice.Message, key string, cmd *ice.Command) {
 
 			if web.Login(msg, w, r) {
 				msg.Log("cmd", "%s %s", msg.Target().Name, key)
-				cmd.Hand(msg, msg.Target(), msg.Option("path"), kit.Simple(msg.Optionv("cmds"))...)
-				msg.Set("option")
+				cmd.Hand(msg, msg.Target(), msg.Option("url"), kit.Simple(msg.Optionv("cmds"))...)
 				w.Write([]byte(msg.Formats("meta")))
 			}
 		})
@@ -335,10 +334,18 @@ var Index = &ice.Context{Name: "web", Help: "网页模块",
 				web := m.Target().Server().(*WEB)
 				m.Gos(m, func(m *ice.Message) {
 					web.HandleWSS(m, false, s)
+					m.Log("space", "close %v %v", h, kit.Formats(m.Confv("space")))
+					m.Confv("space", []string{"hash", h}, "")
 				})
 			}
 		}},
 		"space": &ice.Command{Name: "space", Help: "", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			if len(arg) == 0 {
+				m.Conf("space", "hash", func(key string, value map[string]interface{}) {
+					m.Push(key, value)
+				})
+				return
+			}
 			web := m.Target().Server().(*WEB)
 			switch arg[0] {
 			case "connect":
@@ -381,7 +388,7 @@ var Index = &ice.Context{Name: "web", Help: "网页模块",
 
 					web := m.Target().Server().(*WEB)
 					web.send[id] = m
-					m.Add("detail", arg[1:]...)
+					m.Set("detail", arg[1:]...)
 					socket.WriteMessage(MSG_MAPS, []byte(m.Format("meta")))
 					m.Call(true, func(msg *ice.Message) *ice.Message {
 						m.Copy(msg)

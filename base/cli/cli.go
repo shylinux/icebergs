@@ -44,15 +44,30 @@ var Index = &ice.Context{Name: "cli", Help: "命令模块",
 		}},
 		"runtime": {Name: "runtime", Help: "hello", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 		}},
-		"system": {Name: "system", Help: "hello", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		"system": {Name: "system", Help: "hello", Hand: func(m *ice.Message, c *ice.Context, key string, arg ...string) {
+			cmd := exec.Command(arg[0], arg[1:]...)
+			cmd.Dir = m.Option("cmd_dir")
+
+			if m.Option("cmd_type") == "daemon" {
+				m.Gos(m, func(m *ice.Message) {
+					if e := cmd.Start(); e != nil {
+						m.Log("warn", "%v start %s", arg, e)
+					} else if e := cmd.Wait(); e != nil {
+						m.Log("warn", "%v wait %s", arg, e)
+					} else {
+						m.Log("info", "%v exit", arg)
+					}
+				})
+				return
+			}
+
 			out := bytes.NewBuffer(make([]byte, 0, 1024))
 			err := bytes.NewBuffer(make([]byte, 0, 1024))
 
-			sys := exec.Command(arg[0], arg[1:]...)
-			sys.Stdout = out
-			sys.Stderr = err
+			cmd.Stdout = out
+			cmd.Stderr = err
 
-			if e := sys.Run(); e != nil {
+			if e := cmd.Run(); e != nil {
 				m.Echo("error: ").Echo(kit.Select(e.Error(), err.String()))
 				return
 			}

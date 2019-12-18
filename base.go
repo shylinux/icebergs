@@ -70,6 +70,13 @@ var Index = &Context{Name: "ice", Help: "冰山模块",
 			c.Close(m.Spawn(c), arg...)
 			os.Exit(kit.Int(kit.Select("0", arg, 0)))
 		}},
+		"restart": {Name: "restart", Help: "hello", Hand: func(m *Message, c *Context, cmd string, arg ...string) {
+			switch kit.Select("0", arg, 0) {
+			case "0":
+				c.Close(m.Spawn(c), arg...)
+				os.Exit(kit.Int(kit.Select("0", arg, 0)))
+			}
+		}},
 		"_exit": {Name: "_init", Help: "hello", Hand: func(m *Message, c *Context, cmd string, arg ...string) {
 		}},
 	},

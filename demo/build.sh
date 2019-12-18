@@ -1,5 +1,6 @@
 #! /bin/sh
 
+export ice_app=${ice_app:="ice.app"}
 export ice_err=${ice_err:="boot.log"}
 export ice_serve=${ice_serve:="web.serve"}
 
@@ -37,7 +38,7 @@ build() {
 start() {
     [ -d usr/volcanos ] || git clone https://github.com/shylinux/volcanos usr/volcanos
     while true; do
-        date && bin/shy 2>$ice_err && log "\n\nrestarting..." && sleep 1 || break
+        date && $ice_app $* 2>$ice_err && log "\n\nrestarting..." && sleep 1 || break
     done
 }
 log() { echo -e $*; }

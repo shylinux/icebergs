@@ -19,6 +19,7 @@ func (f *Frame) Spawn(m *Message, c *Context, arg ...string) Server {
 func (f *Frame) Begin(m *Message, arg ...string) Server {
 	list := map[*Context]*Message{m.target: m}
 	m.Travel(func(p *Context, s *Context) {
+		s.root = m.target
 		if msg, ok := list[p]; ok && msg != nil {
 			sub := msg.Spawns(s)
 			s.Begin(sub, arg...)
@@ -92,7 +93,8 @@ var Index = &Context{Name: "ice", Help: "冰山模块",
 			m.Echo(strings.Join(kit.Simple(m.Confv("help", "index")), "\n"))
 		}},
 		"exit": {Name: "exit", Help: "hello", Hand: func(m *Message, c *Context, cmd string, arg ...string) {
-			Code = kit.Int(kit.Select("0", arg, 0))
+			f := m.root.target.server.(*Frame)
+			f.code = kit.Int(kit.Select("0", arg, 0))
 			m.root.Cmd("_exit")
 		}},
 		"_exit": {Name: "_init", Help: "hello", Hand: func(m *Message, c *Context, cmd string, arg ...string) {
@@ -116,14 +118,12 @@ var Pulse = &Message{
 	source: Index, target: Index, Hand: true,
 }
 
-func init() {
-	Index.root = Index
-	Pulse.root = Pulse
-}
-
-var Code = 0
+var Log func(*Message, string, string)
 
 func Run(arg ...string) string {
+	Index.root = Index
+	Pulse.root = Pulse
+
 	if len(arg) == 0 {
 		arg = os.Args[1:]
 	}
@@ -138,6 +138,6 @@ func Run(arg ...string) string {
 		frame.Close(Pulse.Spawns(), arg...)
 	}
 	time.Sleep(time.Second)
-	os.Exit(Code)
+	os.Exit(frame.code)
 	return Pulse.Result()
 }

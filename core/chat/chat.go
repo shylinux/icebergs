@@ -12,19 +12,24 @@ var Index = &ice.Context{Name: "chat", Help: "聊天模块",
 	Caches: map[string]*ice.Cache{},
 	Configs: map[string]*ice.Config{
 		"group": {Name: "group", Value: map[string]interface{}{
-			"meta": map[string]interface{}{},
-			"list": map[string]interface{}{},
-			"hash": map[string]interface{}{},
+			ice.MDB_META: map[string]interface{}{},
+			ice.MDB_LIST: map[string]interface{}{},
+			ice.MDB_HASH: map[string]interface{}{},
 		}},
 	},
 	Commands: map[string]*ice.Command{
-		"_init": {Name: "_init", Help: "hello", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		ice.ICE_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			m.Cmd("ctx.config", "load", "var/conf/aaa.json")
 			m.Cmd("ctx.config", "load", "var/conf/chat.json")
 		}},
+		ice.ICE_EXIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			m.Cmd("ctx.config", "save", "var/conf/chat.json", "web.chat.group")
+			m.Cmd("ctx.config", "save", "var/conf/aaa.json", "aaa.role", "aaa.user", "aaa.sess")
+		}},
+
 		"_login": {Name: "_login", Help: "hello", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			if cmd != "/login" {
-				if !m.Options("sessid") || !m.Options("username") {
+				if !m.Options(ice.WEB_SESS) || !m.Options("username") {
 					m.Option("path", "")
 					m.Log("warn", "not login")
 					m.Echo("error").Echo("not login")
@@ -38,10 +43,6 @@ var Index = &ice.Context{Name: "chat", Help: "聊天模块",
 				}
 			}
 			m.Log("info", "river: %s storm: %s", m.Option("sess.river"), m.Option("sess.storm"))
-		}},
-		"_exit": {Name: "_init", Help: "hello", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			m.Cmd("ctx.config", "save", "var/conf/chat.json", "web.chat.group")
-			m.Cmd("ctx.config", "save", "var/conf/aaa.json", "aaa.role", "aaa.user", "aaa.sess")
 		}},
 
 		"/login": {Name: "/login", Help: "登录", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
@@ -60,7 +61,7 @@ var Index = &ice.Context{Name: "chat", Help: "聊天模块",
 
 		"/ocean": {Name: "/ocean", Help: "hello", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			if len(arg) == 0 {
-				m.Confm("aaa.user", "hash", func(key string, value map[string]interface{}) {
+				m.Confm("aaa.user", ice.MDB_HASH, func(key string, value map[string]interface{}) {
 					m.Push("key", key)
 					m.Push("user.route", m.Conf("cli.runtime", "node.name"))
 				})
@@ -69,17 +70,17 @@ var Index = &ice.Context{Name: "chat", Help: "聊天模块",
 			switch arg[0] {
 			case "spawn":
 				if arg[1] == "" {
-					arg[1] = kit.ShortKey(m.Confm("group", "hash"), 6)
+					arg[1] = kit.ShortKey(m.Confm("group", ice.MDB_HASH), 6)
 				}
 				user := map[string]interface{}{
-					"meta": map[string]interface{}{},
-					"hash": map[string]interface{}{},
-					"list": []interface{}{},
+					ice.MDB_META: map[string]interface{}{},
+					ice.MDB_HASH: map[string]interface{}{},
+					ice.MDB_LIST: []interface{}{},
 				}
 				tool := map[string]interface{}{
-					"meta": map[string]interface{}{},
-					"hash": map[string]interface{}{},
-					"list": []interface{}{},
+					ice.MDB_META: map[string]interface{}{},
+					ice.MDB_HASH: map[string]interface{}{},
+					ice.MDB_LIST: []interface{}{},
 				}
 				for _, v := range arg[3:] {
 					kit.Value(user, "hash."+v, map[string]interface{}{
@@ -93,7 +94,7 @@ var Index = &ice.Context{Name: "chat", Help: "聊天模块",
 				}
 
 				m.Conf("group", "hash."+arg[1], map[string]interface{}{
-					"meta": map[string]interface{}{
+					ice.MDB_META: map[string]interface{}{
 						"create_time": m.Time(),
 						"name":        arg[2],
 					},
@@ -107,7 +108,7 @@ var Index = &ice.Context{Name: "chat", Help: "聊天模块",
 		}},
 		"/river": {Name: "/river", Help: "hello", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			if len(arg) == 0 {
-				m.Confm("group", "hash", func(key string, value map[string]interface{}) {
+				m.Confm("group", ice.MDB_HASH, func(key string, value map[string]interface{}) {
 					m.Push("key", key)
 					m.Push("name", kit.Value(value["meta"], "name"))
 				})
@@ -151,7 +152,7 @@ var Index = &ice.Context{Name: "chat", Help: "聊天模块",
 			if len(arg) < 2 {
 				m.Push("user", m.Conf("cli.runtime", "boot.username"))
 				m.Push("node", m.Conf("cli.runtime", "node.name"))
-				m.Confm("web.space", "hash", func(key string, value map[string]interface{}) {
+				m.Confm("web.space", ice.MDB_HASH, func(key string, value map[string]interface{}) {
 					m.Push("user", m.Conf("cli.runtime", "boot.username"))
 					m.Push("node", value["name"])
 				})
@@ -172,11 +173,11 @@ var Index = &ice.Context{Name: "chat", Help: "聊天模块",
 					})
 				}
 				m.Conf("group", "hash."+arg[0]+".tool.hash."+arg[2], map[string]interface{}{
-					"meta": map[string]interface{}{
+					ice.MDB_META: map[string]interface{}{
 						"create_time": m.Time(),
 					},
-					"hash": map[string]interface{}{},
-					"list": list,
+					ice.MDB_HASH: map[string]interface{}{},
+					ice.MDB_LIST: list,
 				})
 
 				m.Log("info", "steam spawn %v %v %v", arg[0], arg[2], list)

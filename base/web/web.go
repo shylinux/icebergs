@@ -33,13 +33,13 @@ func Cookie(msg *ice.Message, sessid string) string {
 	w := msg.Optionv("response").(http.ResponseWriter)
 	expire := time.Now().Add(kit.Duration(msg.Conf("aaa.sess", "meta.expire")))
 	msg.Log("cookie", "expire %v sessid %s", kit.Format(expire), sessid)
-	http.SetCookie(w, &http.Cookie{Name: "sessid", Value: sessid, Path: "/", Expires: expire})
+	http.SetCookie(w, &http.Cookie{Name: ice.WEB_SESS, Value: sessid, Path: "/", Expires: expire})
 	return sessid
 }
 
 func (web *WEB) Login(msg *ice.Message, w http.ResponseWriter, r *http.Request) bool {
-	if msg.Options("sessid") {
-		sub := msg.Cmd("aaa.sess", "check", msg.Option("sessid"))
+	if msg.Options(ice.WEB_SESS) {
+		sub := msg.Cmd("aaa.sess", "check", msg.Option(ice.WEB_SESS))
 		msg.Log("info", "role: %s user: %s", msg.Option("userrole", sub.Append("userrole")),
 			msg.Option("username", sub.Append("username")))
 	}
@@ -159,7 +159,7 @@ func (web *WEB) HandleCmd(m *ice.Message, key string, cmd *ice.Command) {
 			msg.Option("accept", r.Header.Get("Accept"))
 			msg.Option("method", r.Method)
 			msg.Option("url", r.URL.Path)
-			msg.Option("sessid", "")
+			msg.Option(ice.WEB_SESS, "")
 
 			// 请求环境
 			for _, v := range r.Cookies() {
@@ -273,7 +273,7 @@ func (web *WEB) Start(m *ice.Message, arg ...string) bool {
 	})
 
 	port := kit.Select(m.Conf("spide", "self.port"), arg, 0)
-	m.Cap("stream", port)
+	m.Cap(ice.CTX_STREAM, port)
 	web.m = m
 	web.Server = &http.Server{Addr: port, Handler: web}
 	m.Log("serve", "node %v", m.Conf("cli.runtime", "node"))
@@ -289,7 +289,7 @@ var Index = &ice.Context{Name: "web", Help: "网页模块",
 	Caches: map[string]*ice.Cache{},
 	Configs: map[string]*ice.Config{
 		"spide": {Name: "客户端", Value: map[string]interface{}{
-			"self": map[string]interface{}{"port": "127.0.0.1:9020"},
+			"self": map[string]interface{}{"port": ice.WEB_PORT},
 		}},
 		"serve": {Name: "服务端", Value: map[string]interface{}{
 			"static": map[string]interface{}{"/": "usr/volcanos/",
@@ -307,16 +307,16 @@ var Index = &ice.Context{Name: "web", Help: "网页模块",
 			},
 		}},
 		"space": {Name: "空间端", Value: map[string]interface{}{
-			"meta": map[string]interface{}{"buffer": 4096, "redial": 3000},
-			"hash": map[string]interface{}{},
-			"list": map[string]interface{}{},
+			ice.MDB_META: map[string]interface{}{"buffer": 4096, "redial": 3000},
+			ice.MDB_HASH: map[string]interface{}{},
+			ice.MDB_LIST: map[string]interface{}{},
 		}},
 	},
 	Commands: map[string]*ice.Command{
-		"_init": {Name: "_init", Help: "hello", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		ice.ICE_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			m.Echo("hello %s world", c.Name)
 		}},
-		"_exit": {Name: "_exit", Help: "hello", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		ice.ICE_EXIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			m.Done()
 		}},
 		"serve": {Name: "hi", Help: "hello", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
@@ -401,7 +401,7 @@ var Index = &ice.Context{Name: "web", Help: "网页模块",
 					id := kit.Format(c.ID())
 					m.Optionv("_source", []string{id, target[0]})
 					m.Optionv("_target", target[1:])
-					m.Set("detail", arg[1:]...)
+					m.Set(ice.MSG_DETAIL, arg[1:]...)
 
 					web := m.Target().Server().(*WEB)
 					web.send[id] = m

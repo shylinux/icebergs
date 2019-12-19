@@ -12,6 +12,7 @@ import (
 	"path"
 	"runtime"
 	"sort"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -357,6 +358,71 @@ func (m *Message) Echo(str string, arg ...interface{}) *Message {
 	m.meta["result"] = append(m.meta["result"], fmt.Sprintf(str, arg...))
 	return m
 }
+func (m *Message) Sort(key string, arg ...string) *Message {
+	cmp := "str"
+	if len(arg) > 0 && arg[0] != "" {
+		cmp = arg[0]
+	} else {
+		cmp = "int"
+		for _, v := range m.meta[key] {
+			if _, e := strconv.Atoi(v); e != nil {
+				cmp = "str"
+			}
+		}
+	}
+
+	number := map[int]int{}
+	table := []map[string]string{}
+	m.Table(func(index int, line map[string]string, head []string) {
+		table = append(table, line)
+		switch cmp {
+		case "int":
+			number[index] = kit.Int(line[key])
+		case "int_r":
+			number[index] = -kit.Int(line[key])
+		case "time":
+			number[index] = kit.Time(line[key])
+		case "time_r":
+			number[index] = -kit.Time(line[key])
+		}
+	})
+
+	for i := 0; i < len(table)-1; i++ {
+		for j := i + 1; j < len(table); j++ {
+			result := false
+			switch cmp {
+			case "", "str":
+				if table[i][key] > table[j][key] {
+					result = true
+				}
+			case "str_r":
+				if table[i][key] < table[j][key] {
+					result = true
+				}
+			default:
+				if number[i] > number[j] {
+					result = true
+				}
+			}
+
+			if result {
+				table[i], table[j] = table[j], table[i]
+				number[i], number[j] = number[j], number[i]
+			}
+		}
+	}
+
+	for _, k := range m.meta["append"] {
+		delete(m.meta, k)
+	}
+
+	for _, v := range table {
+		for _, k := range m.meta["append"] {
+			m.Add("append", k, v[k])
+		}
+	}
+	return m
+}
 func (m *Message) Table(cbs ...interface{}) *Message {
 	if len(cbs) > 0 {
 		switch cb := cbs[0].(type) {
@@ -473,6 +539,9 @@ func (m *Message) Optionv(key string, arg ...interface{}) interface{} {
 }
 func (m *Message) Append(key string, arg ...interface{}) string {
 	return kit.Select("", m.meta[key], 0)
+}
+func (m *Message) Appendv(key string, arg ...interface{}) []string {
+	return m.meta[key]
 }
 func (m *Message) Resultv(arg ...interface{}) []string {
 	return m.meta["result"]

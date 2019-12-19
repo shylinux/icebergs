@@ -1,10 +1,12 @@
 package mall
 
 import (
+	"github.com/shylinux/toolkits"
+
 	"github.com/shylinux/icebergs"
 	_ "github.com/shylinux/icebergs/base"
 	"github.com/shylinux/icebergs/base/web"
-	"github.com/shylinux/toolkits"
+
 	"os"
 	"path"
 	"strings"

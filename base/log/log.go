@@ -1,9 +1,10 @@
 package log
 
 import (
-	"fmt"
 	"github.com/shylinux/icebergs"
 	"github.com/shylinux/toolkits"
+
+	"fmt"
 	"os"
 	"path"
 )

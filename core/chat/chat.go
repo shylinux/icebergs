@@ -1,10 +1,11 @@
 package chat
 
 import (
+	"github.com/shylinux/toolkits"
+
 	"github.com/shylinux/icebergs"
 	_ "github.com/shylinux/icebergs/base"
 	"github.com/shylinux/icebergs/base/web"
-	"github.com/shylinux/toolkits"
 )
 
 var Index = &ice.Context{Name: "chat", Help: "聊天模块",

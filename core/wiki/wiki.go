@@ -1,12 +1,14 @@
 package wiki
 
 import (
-	"bytes"
 	"github.com/gomarkdown/markdown"
+	"github.com/shylinux/toolkits"
+
 	"github.com/shylinux/icebergs"
 	_ "github.com/shylinux/icebergs/base"
 	"github.com/shylinux/icebergs/base/web"
-	"github.com/shylinux/toolkits"
+
+	"bytes"
 	"path"
 	"strings"
 )

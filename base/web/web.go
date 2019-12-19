@@ -178,7 +178,7 @@ func (web *WEB) HandleCmd(m *ice.Message, key string, cmd *ice.Command) {
 			}
 			for k, v := range r.Form {
 				for _, v := range v {
-					msg.Add("option", k, v)
+					msg.Add(ice.MSG_OPTION, k, v)
 				}
 			}
 
@@ -196,7 +196,7 @@ func (web *WEB) HandleCmd(m *ice.Message, key string, cmd *ice.Command) {
 				case map[string]interface{}:
 					for k, v := range d {
 						for _, v := range kit.Simple(v) {
-							msg.Add("option", k, v)
+							msg.Add(ice.MSG_OPTION, k, v)
 						}
 					}
 				}
@@ -336,20 +336,20 @@ var Index = &ice.Context{Name: "web", Help: "网页模块",
 					"type":        m.Option("node"),
 					"name":        m.Option("name"),
 				}
-				m.Confv("space", []string{"hash", h}, meta)
+				m.Confv("space", []string{ice.MDB_HASH, h}, meta)
 				m.Log("space", "conn %v %v", h, kit.Formats(m.Confv("space")))
 
 				web := m.Target().Server().(*WEB)
 				m.Gos(m, func(m *ice.Message) {
 					web.HandleWSS(m, false, s)
 					m.Log("space", "close %v %v", h, kit.Formats(m.Confv("space")))
-					m.Confv("space", []string{"hash", h}, "")
+					m.Confv("space", []string{ice.MDB_HASH, h}, "")
 				})
 			}
 		}},
 		"space": &ice.Command{Name: "space", Help: "", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			if len(arg) == 0 {
-				m.Conf("space", "hash", func(key string, value map[string]interface{}) {
+				m.Conf("space", ice.MDB_HASH, func(key string, value map[string]interface{}) {
 					m.Push(key, value)
 				})
 				return

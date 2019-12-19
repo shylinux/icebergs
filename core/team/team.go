@@ -1,4 +1,4 @@
-package mall
+package team
 
 import (
 	"github.com/shylinux/toolkits"
@@ -12,16 +12,16 @@ import (
 	"strings"
 )
 
-var Index = &ice.Context{Name: "mall", Help: "商场模块",
+var Index = &ice.Context{Name: "team", Help: "团队模块",
 	Caches: map[string]*ice.Cache{},
 	Configs: map[string]*ice.Config{
 		"miss": {Value: map[string]interface{}{
-			"meta": map[string]interface{}{
+			ice.MDB_META: map[string]interface{}{
 				"path": "usr/local/work",
 				"cmd":  []interface{}{"cli.system", "sh", "ice.sh", "start", "web.space", "connect"},
 			},
-			"list": map[string]interface{}{},
-			"hash": map[string]interface{}{},
+			ice.MDB_LIST: map[string]interface{}{},
+			ice.MDB_HASH: map[string]interface{}{},
 		}},
 	},
 	Commands: map[string]*ice.Command{
@@ -38,6 +38,7 @@ var Index = &ice.Context{Name: "mall", Help: "商场模块",
 				case "启动":
 				case "停止":
 					m.Cmd("web.space", arg[0], "exit", "1")
+					m.Cmd(ice.GDB_EVENT, "action", "miss", "stop", arg[0])
 					return
 				}
 			}
@@ -55,6 +56,7 @@ var Index = &ice.Context{Name: "mall", Help: "商场模块",
 				if !m.Confs("web.space", "hash."+arg[0]) {
 					m.Option("cmd_dir", p)
 					m.Option("cmd_type", "daemon")
+					m.Cmd(ice.GDB_EVENT, "action", "miss", "start", arg[0])
 					m.Cmd(m.Confv("miss", "meta.cmd"))
 				}
 			}

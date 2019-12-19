@@ -17,11 +17,11 @@ var Index = &ice.Context{Name: "wiki", Help: "文档模块",
 	Caches: map[string]*ice.Cache{},
 	Configs: map[string]*ice.Config{
 		"note": {Name: "note", Value: map[string]interface{}{
-			"meta": map[string]interface{}{
+			ice.MDB_META: map[string]interface{}{
 				"path": "usr/local/wiki",
 			},
-			"list": map[string]interface{}{},
-			"hash": map[string]interface{}{},
+			ice.MDB_LIST: map[string]interface{}{},
+			ice.MDB_HASH: map[string]interface{}{},
 		}},
 	},
 	Commands: map[string]*ice.Command{

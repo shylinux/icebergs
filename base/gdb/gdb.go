@@ -11,35 +11,57 @@ import (
 )
 
 type Frame struct {
-	p chan os.Signal
+	s chan os.Signal
+	t <-chan time.Time
+	d chan []string
 }
 
 func (f *Frame) Spawn(m *ice.Message, c *ice.Context, arg ...string) ice.Server {
 	return &Frame{}
 }
 func (f *Frame) Begin(m *ice.Message, arg ...string) ice.Server {
-	f.p = make(chan os.Signal, 10)
 	return f
 }
 func (f *Frame) Start(m *ice.Message, arg ...string) bool {
-	m.Cap("stream", m.Conf("timer", "meta.tick"))
-	tick := time.Tick(kit.Duration(m.Conf("timer", "meta.tick")))
 	for {
 		select {
-		case sig, ok := <-f.p:
+		case s, ok := <-f.s:
 			if !ok {
 				return true
 			}
-			m.Log("info", "signal %v", sig)
-			m.Cmd(m.Confv("signal", kit.Format(sig)))
-		case now, _ := <-tick:
-			stamp := int(now.Unix())
-			m.Confm("timer", "hash", func(key string, value map[string]interface{}) {
+			m.Log(ice.LOG_INFO, "signal %v", s)
+			m.Cmd(m.Confv(ice.GDB_SIGNAL, kit.Keys(ice.MDB_HASH, s)))
+			m.Grow(ice.GDB_SIGNAL, nil, map[string]interface{}{
+				"create_time": m.Time(), "signal": kit.Format(s),
+				"cmd": m.Confv(ice.GDB_SIGNAL, kit.Format(s)),
+			})
+
+		case t, ok := <-f.t:
+			if !ok {
+				return true
+			}
+			break
+			stamp := int(t.Unix())
+			m.Confm(ice.GDB_TIMER, ice.MDB_HASH, func(key string, value map[string]interface{}) {
 				if kit.Int(value["next"]) <= stamp {
-					m.Log("info", "timer %v %v", key, value["next"])
-					m.Cmd(value["cmd"])
+					m.Log(ice.LOG_INFO, "timer %v %v", key, value["next"])
 					value["next"] = stamp + int(kit.Duration(value["interval"]))/int(time.Second)
+					m.Cmd(value["cmd"])
+					m.Grow(ice.GDB_TIMER, nil, map[string]interface{}{
+						"create_time": kit.Format(t), "interval": value["interval"],
+						"cmd": value["cmd"], "key": key,
+					})
 				}
+			})
+
+		case d, ok := <-f.d:
+			if !ok {
+				return true
+			}
+			m.Log(ice.LOG_INFO, "event %v", d)
+			m.Confm(ice.GDB_EVENT, kit.Keys(ice.MDB_HASH, d[0], d[1], ice.MDB_HASH), func(key string, value map[string]interface{}) {
+				m.Log(ice.LOG_INFO, "event %v %v", key, value)
+				m.Cmd(value["cmd"], d[2:])
 			})
 		}
 	}
@@ -49,59 +71,83 @@ func (f *Frame) Close(m *ice.Message, arg ...string) bool {
 	return true
 }
 
-var Index = &ice.Context{Name: "gdb", Help: "调试模块",
+var Index = &ice.Context{Name: "gdb", Help: "事件模块",
 	Caches: map[string]*ice.Cache{},
 	Configs: map[string]*ice.Config{
-		"logpid": &ice.Config{Name: "logpid", Value: "var/run/shy.pid", Help: ""},
-		"signal": &ice.Config{Name: "signal", Value: map[string]interface{}{
-			"2":  []interface{}{"exit"},
-			"3":  []interface{}{"exit", "1"},
-			"15": []interface{}{"exit", "1"},
-			"30": []interface{}{"exit"},
-			"31": []interface{}{"exit", "1"},
-			"28": "WINCH",
-		}, Help: "信号"},
-		"timer": {Name: "定时器", Value: map[string]interface{}{
-			"meta": map[string]interface{}{
+		ice.GDB_SIGNAL: {Name: "signal", Help: "信号器", Value: map[string]interface{}{
+			ice.MDB_META: map[string]interface{}{
+				"pid": "var/run/shy.pid",
+			},
+			ice.MDB_HASH: map[string]interface{}{
+				"2":  []interface{}{"exit"},
+				"3":  []interface{}{"exit", "1"},
+				"15": []interface{}{"exit", "1"},
+				"30": []interface{}{"exit"},
+				"31": []interface{}{"exit", "1"},
+				"28": "WINCH",
+			},
+			ice.MDB_LIST: map[string]interface{}{},
+		}},
+		ice.GDB_TIMER: {Name: "timer", Help: "定时器", Value: map[string]interface{}{
+			ice.MDB_META: map[string]interface{}{
 				"tick": "100ms",
 			},
-			"hash": map[string]interface{}{},
-			"list": map[string]interface{}{},
+			ice.MDB_HASH: map[string]interface{}{},
+			ice.MDB_LIST: map[string]interface{}{},
+		}},
+		ice.GDB_EVENT: {Name: "event", Help: "触发器", Value: map[string]interface{}{
+			ice.MDB_META: map[string]interface{}{},
+			ice.MDB_HASH: map[string]interface{}{},
+			ice.MDB_LIST: map[string]interface{}{},
 		}},
 	},
 	Commands: map[string]*ice.Command{
-		"_init": {Name: "_init", Help: "hello", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			if f, p, e := kit.Create(m.Conf("logpid")); m.Assert(e) {
+		ice.ICE_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			if f, p, e := kit.Create(m.Conf(ice.GDB_SIGNAL, kit.Keys(ice.MDB_META, "pid"))); m.Assert(e) {
 				defer f.Close()
 				f.WriteString(kit.Format(os.Getpid()))
-				m.Log("info", "pid %d %s", os.Getpid(), p)
+				m.Log("info", "pid %d: %s", os.Getpid(), p)
 			}
 
-			f := m.Target().Server().(*Frame)
-			m.Confm("signal", nil, func(sig string, action string) {
-				m.Log("signal", "add %s: %s", sig, action)
-				signal.Notify(f.p, syscall.Signal(kit.Int(sig)))
-			})
+			if f, ok := m.Target().Server().(*Frame); ok {
+				f.s = make(chan os.Signal, ice.ICE_CHAN)
+				m.Confm(ice.GDB_SIGNAL, ice.MDB_HASH, func(sig string, action string) {
+					m.Log(ice.GDB_SIGNAL, "add %s: %s", sig, action)
+					signal.Notify(f.s, syscall.Signal(kit.Int(sig)))
+				})
+
+				f.t = time.Tick(kit.Duration(m.Cap(ice.CTX_STREAM, m.Conf(ice.GDB_TIMER, kit.Keys(ice.MDB_META, "tick")))))
+				f.d = make(chan []string, ice.ICE_CHAN)
+			}
 		}},
-		"_exit": {Name: "_exit", Help: "hello", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			f := m.Target().Server().(*Frame)
-			close(f.p)
+		ice.ICE_EXIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			if f, ok := m.Target().Server().(*Frame); ok {
+				close(f.s)
+				close(f.d)
+			}
 		}},
-		"timer": {Name: "timer", Help: "hello", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		ice.GDB_SIGNAL: {Name: "signal", Help: "信号器", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			m.Conf(ice.GDB_SIGNAL, kit.Keys(ice.MDB_META, arg[0]), arg[1:])
+		}},
+		ice.GDB_TIMER: {Name: "timer", Help: "定时器", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			switch arg[0] {
 			case "start":
-				h := kit.ShortKey(m.Confm("timer", "hash"), 6)
-
-				next := time.Now().Add(kit.Duration(arg[1])).Unix()
-				m.Conf("timer", "hash."+h, map[string]interface{}{
-					"interval": arg[1],
-					"next":     next,
-					"cmd":      arg[2:],
+				m.Rich(ice.GDB_TIMER, nil, map[string]interface{}{
+					"next":     time.Now().Add(kit.Duration(arg[1])).Unix(),
+					"interval": arg[1], "cmd": arg[2:],
 				})
-				m.Echo(h)
-
-			case "stop":
-				m.Conf("timer", "hash."+arg[1], "")
+			}
+		}},
+		ice.GDB_EVENT: {Name: "event", Help: "触发器", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			switch arg[0] {
+			case "listen":
+				m.Rich(ice.GDB_EVENT, kit.Keys(ice.MDB_HASH, arg[1], arg[2]), map[string]interface{}{
+					"create_time": m.Time(), "cmd": arg[3:],
+				})
+			case "action":
+				if f, ok := m.Target().Server().(*Frame); ok {
+					f.d <- arg[1:]
+				}
 			}
 		}},
 	},

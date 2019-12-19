@@ -21,8 +21,8 @@ var Index = &ice.Context{Name: "ctx", Help: "元始模块",
 					m.Push("ups", "shy")
 				}
 				m.Push("name", s.Name)
-				m.Push("status", s.Cap("status"))
-				m.Push("stream", s.Cap("stream"))
+				m.Push(ice.CTX_STATUS, s.Cap(ice.CTX_STATUS))
+				m.Push(ice.CTX_STREAM, s.Cap(ice.CTX_STREAM))
 				m.Push("help", s.Help)
 			})
 		}},

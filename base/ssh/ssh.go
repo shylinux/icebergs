@@ -24,7 +24,7 @@ func (f *Frame) Begin(m *ice.Message, arg ...string) ice.Server {
 func (f *Frame) Start(m *ice.Message, arg ...string) bool {
 	f.in = os.Stdin
 	f.out = os.Stdout
-	m.Cap("stream", "stdio")
+	m.Cap(ice.CTX_STREAM, "stdio")
 
 	prompt := "%d[15:04:05]%s> "
 	target := m.Target()
@@ -60,10 +60,10 @@ var Index = &ice.Context{Name: "ssh", Help: "终端模块",
 	Caches:  map[string]*ice.Cache{},
 	Configs: map[string]*ice.Config{},
 	Commands: map[string]*ice.Command{
-		"_init": {Name: "_init", Help: "hello", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		ice.ICE_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			m.Echo("hello %s world", c.Name)
 		}},
-		"_exit": {Name: "_exit", Help: "hello", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		ice.ICE_EXIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			f := m.Target().Server().(*Frame)
 			f.in.Close()
 			m.Done()

@@ -55,6 +55,9 @@ var Index = &ice.Context{Name: "code", Help: "编程模块",
 		}},
 	},
 	Commands: map[string]*ice.Command{
+		ice.ICE_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			m.Cmd(ice.GDB_EVENT, "listen", "miss", "start", "web.code.docker", "image")
+		}},
 		"tmux": {Name: "tmux [session [window [pane cmd]]]", Help: "窗口", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			prefix := kit.Simple(m.Confv("prefix", "tmux"))
 			if len(arg) > 1 {
@@ -211,7 +214,7 @@ var Index = &ice.Context{Name: "code", Help: "编程模块",
 			if arg[0] != "" && kit.IndexOf(m.Appendv("session"), arg[0]) == -1 {
 				m.Cmdy(prefix, "new-session", "-ds", arg[0])
 			}
-			m.Set("append").Set("result")
+			m.Set(ice.MSG_APPEND).Set(ice.MSG_RESULT)
 
 			// 查看窗口
 			if m.Cmdy(prefix, "list-windows", "-t", arg[0], "-F", "#{window_id},#{window_active},#{window_name},#{window_panes},#{window_height},#{window_width}",
@@ -223,7 +226,7 @@ var Index = &ice.Context{Name: "code", Help: "编程模块",
 			if arg[1] != "" && kit.IndexOf(m.Appendv("window"), arg[1]) == -1 {
 				m.Cmdy(prefix, "new-window", "-dt", arg[0], "-n", arg[1])
 			}
-			m.Set("append").Set("result")
+			m.Set(ice.MSG_APPEND).Set(ice.MSG_RESULT)
 
 			// 查看面板
 			if len(arg) == 2 {
@@ -446,7 +449,7 @@ var Index = &ice.Context{Name: "code", Help: "编程模块",
 
 							if total {
 								if count++; i == 1 {
-									if t, e := time.Parse("2006-01-02", hs[0]); e == nil {
+									if t, e := time.Parse(ice.ICE_DATE, hs[0]); e == nil {
 										total_day = time.Now().Sub(t)
 										m.Append("from", hs[0])
 									}

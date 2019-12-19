@@ -30,7 +30,7 @@ func (f *Frame) Begin(m *Message, arg ...string) Server {
 	return f
 }
 func (f *Frame) Start(m *Message, arg ...string) bool {
-	m.Cmd("_init").Cmd("init", arg)
+	m.Cmd(ICE_INIT).Cmd("init", arg)
 	return true
 }
 func (f *Frame) Close(m *Message, arg ...string) bool {
@@ -48,8 +48,8 @@ func (f *Frame) Close(m *Message, arg ...string) bool {
 
 var Index = &Context{Name: "ice", Help: "冰山模块",
 	Caches: map[string]*Cache{
-		"status": {Value: "begin"},
-		"stream": {Value: "shy"},
+		CTX_STATUS: {Value: "begin"},
+		CTX_STREAM: {Value: "shy"},
 	},
 	Configs: map[string]*Config{
 		"table": {Name: "数据缓存", Value: map[string]interface{}{
@@ -76,10 +76,10 @@ var Index = &Context{Name: "ice", Help: "冰山模块",
 		}},
 	},
 	Commands: map[string]*Command{
-		"_init": {Name: "_init", Help: "hello", Hand: func(m *Message, c *Context, cmd string, arg ...string) {
+		ICE_INIT: {Hand: func(m *Message, c *Context, cmd string, arg ...string) {
 			m.Travel(func(p *Context, s *Context) {
-				if _, ok := s.Commands["_init"]; ok && p != nil {
-					m.Spawns(s).Runs("_init", "_init", arg...)
+				if _, ok := s.Commands[ICE_INIT]; ok && p != nil {
+					m.Spawns(s).Runs(ICE_INIT, ICE_INIT, arg...)
 				}
 			})
 		}},
@@ -95,13 +95,13 @@ var Index = &Context{Name: "ice", Help: "冰山模块",
 		"exit": {Name: "exit", Help: "hello", Hand: func(m *Message, c *Context, cmd string, arg ...string) {
 			f := m.root.target.server.(*Frame)
 			f.code = kit.Int(kit.Select("0", arg, 0))
-			m.root.Cmd("_exit")
+			m.root.Cmd(ICE_EXIT)
 		}},
-		"_exit": {Name: "_init", Help: "hello", Hand: func(m *Message, c *Context, cmd string, arg ...string) {
+		ICE_EXIT: {Hand: func(m *Message, c *Context, cmd string, arg ...string) {
 			m.root.Travel(func(p *Context, s *Context) {
-				if _, ok := s.Commands["_exit"]; ok && p != nil {
+				if _, ok := s.Commands[ICE_EXIT]; ok && p != nil {
 					m.TryCatch(m.Spawns(s), true, func(msg *Message) {
-						msg.Runs("_exit", "_exit", arg...)
+						msg.Runs(ICE_EXIT, ICE_EXIT, arg...)
 					})
 				}
 			})

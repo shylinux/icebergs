@@ -9,29 +9,29 @@ var Index = &ice.Context{Name: "aaa", Help: "认证模块",
 	Caches: map[string]*ice.Cache{},
 	Configs: map[string]*ice.Config{
 		"role": {Name: "role", Help: "角色", Value: map[string]interface{}{
-			"meta": map[string]interface{}{},
-			"hash": map[string]interface{}{
+			ice.MDB_META: map[string]interface{}{},
+			ice.MDB_HASH: map[string]interface{}{
 				"root": map[string]interface{}{},
 				"tech": map[string]interface{}{},
 				"void": map[string]interface{}{},
 			},
-			"list": map[string]interface{}{},
+			ice.MDB_LIST: map[string]interface{}{},
 		}},
 		"user": {Name: "user", Help: "用户", Value: map[string]interface{}{
-			"meta": map[string]interface{}{},
-			"hash": map[string]interface{}{},
-			"list": map[string]interface{}{},
+			ice.MDB_META: map[string]interface{}{},
+			ice.MDB_HASH: map[string]interface{}{},
+			ice.MDB_LIST: map[string]interface{}{},
 		}},
 		"sess": {Name: "sess", Help: "会话", Value: map[string]interface{}{
-			"meta": map[string]interface{}{"expire": "720h"},
-			"hash": map[string]interface{}{},
-			"list": map[string]interface{}{},
+			ice.MDB_META: map[string]interface{}{"expire": "720h"},
+			ice.MDB_HASH: map[string]interface{}{},
+			ice.MDB_LIST: map[string]interface{}{},
 		}},
 	},
 	Commands: map[string]*ice.Command{
-		"_init": {Name: "_init", Help: "加载", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		ice.ICE_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 		}},
-		"_exit": {Name: "_exit", Help: "加载", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		ice.ICE_EXIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 		}},
 		"role": {Name: "role", Help: "角色", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 		}},
@@ -52,7 +52,7 @@ var Index = &ice.Context{Name: "aaa", Help: "认证模块",
 					break
 				}
 
-				sessid := kit.Format(user["sessid"])
+				sessid := kit.Format(user[ice.WEB_SESS])
 				if sessid == "" {
 					sessid = m.Cmdx("aaa.sess", "login", arg[1])
 				}
@@ -61,7 +61,7 @@ var Index = &ice.Context{Name: "aaa", Help: "认证模块",
 					"create_time": m.Time(),
 					"remote_ip":   m.Option("remote_ip"),
 					"username":    arg[1],
-					"sessid":      sessid,
+					ice.WEB_SESS:  sessid,
 				})
 				// 登录成功
 				m.Echo(sessid)

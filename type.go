@@ -649,6 +649,11 @@ func (m *Message) Travel(cb interface{}) *Message {
 func (m *Message) Search(key interface{}, cb func(p *Context, s *Context, key string)) *Message {
 	switch key := key.(type) {
 	case string:
+		if k, ok := Alias[key]; ok {
+			key = k
+		}
+		fmt.Printf("%v fuck %v\n", m.Time(), key)
+
 		if strings.Contains(key, ":") {
 
 		} else if strings.Contains(key, ".") {
@@ -725,16 +730,42 @@ func (m *Message) Back(sub *Message) *Message {
 	return m
 }
 
+func (m *Message) Rich(key string, args interface{}, data interface{}) map[string]interface{} {
+	cache := m.Confm(key, args)
+	if cache == nil {
+		cache = map[string]interface{}{}
+	}
+	meta, ok := cache[MDB_META].(map[string]interface{})
+	if !ok {
+		meta = map[string]interface{}{}
+	}
+	hash, ok := cache[MDB_HASH].(map[string]interface{})
+	if !ok {
+		hash = map[string]interface{}{}
+	}
+
+	h := kit.ShortKey(hash, 6)
+	hash[h] = data
+
+	cache[MDB_HASH] = hash
+	cache[MDB_META] = meta
+	if args == nil {
+		m.Conf(key, cache)
+	} else {
+		m.Conf(key, args, cache)
+	}
+	return meta
+}
 func (m *Message) Grow(key string, args interface{}, data interface{}) map[string]interface{} {
 	cache := m.Confm(key, args)
 	if cache == nil {
 		cache = map[string]interface{}{}
 	}
-	meta, ok := cache["meta"].(map[string]interface{})
+	meta, ok := cache[MDB_META].(map[string]interface{})
 	if !ok {
 		meta = map[string]interface{}{}
 	}
-	list, _ := cache["list"].([]interface{})
+	list, _ := cache[MDB_LIST].([]interface{})
 
 	// 添加数据
 	list = append(list, data)
@@ -809,8 +840,8 @@ func (m *Message) Grow(key string, args interface{}, data interface{}) map[strin
 	}
 
 	// 更新数据
-	cache["meta"] = meta
-	cache["list"] = list
+	cache[MDB_LIST] = list
+	cache[MDB_META] = meta
 	if args == nil {
 		m.Conf(key, cache)
 	} else {
@@ -823,11 +854,11 @@ func (m *Message) Grows(key string, args interface{}, cb interface{}) map[string
 	if cache == nil {
 		return nil
 	}
-	meta, ok := cache["meta"].(map[string]interface{})
+	meta, ok := cache[MDB_META].(map[string]interface{})
 	if !ok {
 		return nil
 	}
-	list, ok := cache["list"].([]interface{})
+	list, ok := cache[MDB_LIST].([]interface{})
 	if !ok {
 		return nil
 	}
@@ -937,12 +968,12 @@ func (m *Message) Cmd(arg ...interface{}) *Message {
 			if cmd, ok := c.Commands[key]; ok {
 				m.TryCatch(m.Spawns(s), true, func(msg *Message) {
 
-					msg.Log(LOG_CMD, "%s.%s %v", c.Name, key, list[1:])
-					msg.meta[MSG_DETAIL] = list
-					cmd.Hand(msg, c, key, list[1:]...)
 					msg.Hand = true
 					m.Hand = true
 					m = msg
+					msg.Log(LOG_CMD, "%s.%s %v", c.Name, key, list[1:])
+					msg.meta[MSG_DETAIL] = list
+					cmd.Hand(msg, c, key, list[1:]...)
 				})
 				break
 			}

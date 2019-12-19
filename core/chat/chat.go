@@ -110,14 +110,14 @@ var Index = &ice.Context{Name: "chat", Help: "聊天模块",
 			if len(arg) == 0 {
 				m.Confm("group", ice.MDB_HASH, func(key string, value map[string]interface{}) {
 					m.Push("key", key)
-					m.Push("name", kit.Value(value["meta"], "name"))
+					m.Push("name", kit.Value(value[ice.MDB_META], "name"))
 				})
 				return
 			}
 		}},
 		"/action": {Name: "/action", Help: "hello", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			if len(arg) == 2 {
-				m.Set("option")
+				m.Set(ice.MSG_OPTION)
 				m.Confm("group", "hash."+arg[0]+".tool.hash."+arg[1]+".list", func(index int, value map[string]interface{}) {
 					m.Push("river", arg[0])
 					m.Push("storm", arg[1])
@@ -143,7 +143,7 @@ var Index = &ice.Context{Name: "chat", Help: "聊天模块",
 		"/storm": {Name: "/storm", Help: "hello", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			if len(arg) < 2 {
 				m.Confm("group", "hash."+arg[0]+".tool.hash", func(key string, value map[string]interface{}) {
-					m.Push("key", key).Push("count", len(value["list"].([]interface{})))
+					m.Push("key", key).Push("count", len(value[ice.MDB_LIST].([]interface{})))
 				})
 				return
 			}

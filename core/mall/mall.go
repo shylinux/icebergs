@@ -1,4 +1,4 @@
-package team
+package mall
 
 import (
 	"github.com/shylinux/toolkits"
@@ -12,16 +12,16 @@ import (
 	"strings"
 )
 
-var Index = &ice.Context{Name: "team", Help: "团队模块",
+var Index = &ice.Context{Name: "mall", Help: "团队模块",
 	Caches: map[string]*ice.Cache{},
 	Configs: map[string]*ice.Config{
 		"miss": {Value: map[string]interface{}{
-			"meta": map[string]interface{}{
+			ice.MDB_META: map[string]interface{}{
 				"path": "usr/local/work",
 				"cmd":  []interface{}{"cli.system", "sh", "ice.sh", "start", "web.space", "connect"},
 			},
-			"list": map[string]interface{}{},
-			"hash": map[string]interface{}{},
+			ice.MDB_LIST: map[string]interface{}{},
+			ice.MDB_HASH: map[string]interface{}{},
 		}},
 	},
 	Commands: map[string]*ice.Command{
@@ -76,7 +76,7 @@ var Index = &ice.Context{Name: "team", Help: "团队模块",
 			}, Hand: func(m *ice.Message, c *ice.Context, key string, arg ...string) {
 				switch arg[0] {
 				case "create":
-					meta := m.Grow("web.chat.group", []string{"hash", m.Option("sess.river"), "task"}, map[string]interface{}{
+					meta := m.Grow("web.chat.group", []string{ice.MDB_HASH, m.Option("sess.river"), "task"}, map[string]interface{}{
 						"name":       arg[1],
 						"text":       kit.Select("", arg, 2),
 						"status":     "准备",

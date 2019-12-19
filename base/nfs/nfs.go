@@ -134,7 +134,7 @@ var Index = &ice.Context{Name: "nfs", Help: "文件模块",
 		"dir": {Name: "dir", Help: "目录", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			rg, _ := regexp.Compile(m.Option("dir_reg"))
 			dir(m, arg[0], arg[1], 0, false, "both", rg,
-				strings.Split(kit.Select("time size line path", arg, 2), " "), "2006-01-02 15:04:05")
+				strings.Split(kit.Select("time size line path", arg, 2), " "), ice.ICE_TIME)
 		}},
 	},
 }

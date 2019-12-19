@@ -150,14 +150,14 @@ func (b *Chain) show(m *ice.Message, str string) (res []string) {
 
 		// 输出节点
 		word := kit.Split(line)
-		res = append(res, "{", "meta", "{", "text")
+		res = append(res, "{", ice.MDB_META, "{", "text")
 		res = append(res, word...)
-		res = append(res, "}", "list", "[")
+		res = append(res, "}", ice.MDB_LIST, "[")
 	}
 	return
 }
 func (b *Chain) size(m *ice.Message, root map[string]interface{}, depth int, width map[int]int) int {
-	meta := root["meta"].(map[string]interface{})
+	meta := root[ice.MDB_META].(map[string]interface{})
 
 	// 最大宽度
 	text := kit.Format(meta["text"])
@@ -167,8 +167,8 @@ func (b *Chain) size(m *ice.Message, root map[string]interface{}, depth int, wid
 
 	// 计算高度
 	height := 0
-	if list, ok := root["list"].([]interface{}); ok && len(list) > 0 {
-		kit.Fetch(root["list"], func(index int, value map[string]interface{}) {
+	if list, ok := root[ice.MDB_LIST].([]interface{}); ok && len(list) > 0 {
+		kit.Fetch(root[ice.MDB_LIST], func(index int, value map[string]interface{}) {
 			height += b.size(m, value, depth+1, width)
 		})
 	} else {
@@ -179,7 +179,7 @@ func (b *Chain) size(m *ice.Message, root map[string]interface{}, depth int, wid
 	return height
 }
 func (b *Chain) draw(m *ice.Message, root map[string]interface{}, depth int, width map[int]int, x, y int, p *Block) Chart {
-	meta := root["meta"].(map[string]interface{})
+	meta := root[ice.MDB_META].(map[string]interface{})
 	b.Width, b.Height = 0, 0
 
 	// 当前节点
@@ -193,11 +193,11 @@ func (b *Chain) draw(m *ice.Message, root map[string]interface{}, depth int, wid
 		Width:      b.GetWidth(strings.Repeat(" ", width[depth])),
 	}
 
-	block.Data(root["meta"])
+	block.Data(root[ice.MDB_META])
 	block.Init(m, kit.Format(meta["text"])).Draw(m, x, y+(kit.Int(meta["height"])-1)*b.GetHeights()/2)
 
 	// 递归节点
-	kit.Fetch(root["list"], func(index int, value map[string]interface{}) {
+	kit.Fetch(root[ice.MDB_LIST], func(index int, value map[string]interface{}) {
 		b.draw(m, value, depth+1, width, x+b.GetWidths(strings.Repeat(" ", width[depth])), y, block)
 		y += kit.Int(kit.Value(value, "meta.height")) * b.GetHeights()
 	})

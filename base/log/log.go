@@ -72,16 +72,16 @@ var Index = &ice.Context{Name: "log", Help: "日志模块",
 		}, Help: "信号"},
 	},
 	Commands: map[string]*ice.Command{
-		"_init": {Name: "_init", Help: "hello", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		ice.ICE_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			m.Confm("file", nil, func(key string, value map[string]interface{}) {
 				if f, p, e := kit.Create(kit.Format(value["path"])); m.Assert(e) {
-					m.Cap("stream", path.Base(p))
+					m.Cap(ice.CTX_STREAM, path.Base(p))
 					m.Log("info", "log %s %s", key, p)
 					value["file"] = f
 				}
 			})
 		}},
-		"_exit": {Name: "_exit", Help: "hello", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		ice.ICE_EXIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			f := m.Target().Server().(*Frame)
 			ice.Log = nil
 			close(f.p)

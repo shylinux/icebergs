@@ -69,4 +69,4 @@ var Index = &ice.Context{Name: "team", Help: "团队模块",
 	},
 }
 
-func init() { web.Index.Register(Index, &web.WEB{}) }
+func init() { web.Index.Register(Index, &web.Frame{}) }

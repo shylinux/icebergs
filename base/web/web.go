@@ -21,7 +21,7 @@ const (
 	MSG_MAPS = 1
 )
 
-type WEB struct {
+type Frame struct {
 	*http.Client
 	*http.Server
 	*http.ServeMux
@@ -37,7 +37,7 @@ func Cookie(msg *ice.Message, sessid string) string {
 	return sessid
 }
 
-func (web *WEB) Login(msg *ice.Message, w http.ResponseWriter, r *http.Request) bool {
+func (web *Frame) Login(msg *ice.Message, w http.ResponseWriter, r *http.Request) bool {
 	if msg.Options(ice.WEB_SESS) {
 		sub := msg.Cmd("aaa.sess", "check", msg.Option(ice.WEB_SESS))
 		msg.Log("info", "role: %s user: %s", msg.Option("userrole", sub.Append("userrole")),
@@ -47,7 +47,7 @@ func (web *WEB) Login(msg *ice.Message, w http.ResponseWriter, r *http.Request) 
 	msg.Runs("_login", msg.Option("url"), kit.Simple(msg.Optionv("cmds"))...)
 	return true
 }
-func (web *WEB) HandleWSS(m *ice.Message, safe bool, c *websocket.Conn) bool {
+func (web *Frame) HandleWSS(m *ice.Message, safe bool, c *websocket.Conn) bool {
 	for {
 		if t, b, e := c.ReadMessage(); e != nil {
 			m.Log("warn", "space recv %d msg %v", t, e)
@@ -107,44 +107,52 @@ func (web *WEB) HandleWSS(m *ice.Message, safe bool, c *websocket.Conn) bool {
 	}
 	return false
 }
-func (web *WEB) HandleCGI(m *ice.Message, which string) *template.Template {
+func (web *Frame) HandleCGI(m *ice.Message, alias map[string]interface{}, which string) *template.Template {
 	cgi := template.FuncMap{
 		"result": func(msg *ice.Message) string {
 			return msg.Result()
 		},
 	}
-	tmpl := template.New("render")
+
+	tmpl := template.New(ice.WEB_TMPL)
+	cb := func(k string, p []string, v *ice.Command) {
+		cgi[k] = func(arg ...interface{}) (res interface{}) {
+			m.TryCatch(m.Spawn(), true, func(msg *ice.Message) {
+				v.Hand(msg, m.Target(), k, kit.Simple(p, arg)...)
+
+				buffer := bytes.NewBuffer([]byte{})
+				m.Assert(tmpl.ExecuteTemplate(buffer, msg.Option(ice.WEB_TMPL), msg))
+				res = string(buffer.Bytes())
+			})
+			return
+		}
+	}
+	for k, v := range alias {
+		list := kit.Simple(v)
+		if v, ok := m.Target().Commands[list[0]]; ok {
+			m.Log("info", "%v, %v", k, v.Name)
+			cb(k, list[1:], v)
+		}
+	}
 	for k, v := range m.Target().Commands {
 		m.Log("info", "%v, %v", k, v.Name)
 		if strings.HasPrefix(k, "/") || strings.HasPrefix(k, "_") {
 			continue
 		}
-
-		func(k string, v *ice.Command) {
-			cgi[k] = func(arg ...interface{}) (res interface{}) {
-				m.TryCatch(m.Spawn(), true, func(msg *ice.Message) {
-					msg.Option("render", "table")
-					v.Hand(msg, m.Target(), k, kit.Simple(arg)...)
-
-					buffer := bytes.NewBuffer([]byte{})
-					m.Assert(tmpl.ExecuteTemplate(buffer, msg.Option("render"), msg))
-					res = string(buffer.Bytes())
-				})
-				return
-			}
-		}(k, v)
+		cb(k, nil, v)
 	}
+
 	tmpl = tmpl.Funcs(cgi)
-	// tmpl = template.Must(tmpl.ParseGlob(path.Join(m.Conf("serve", "template.path"), "/*.tmpl")))
-	// tmpl = template.Must(tmpl.ParseGlob(path.Join(m.Conf("serve", "template.path"), m.Target().Name, "/*.tmpl")))
+	// tmpl = template.Must(tmpl.ParseGlob(path.Join(m.Conf(ice.WEB_SERVE, "template.path"), "/*.tmpl")))
+	// tmpl = template.Must(tmpl.ParseGlob(path.Join(m.Conf(ice.WEB_SERVE, "template.path"), m.Target().Name, "/*.tmpl")))
 	tmpl = template.Must(tmpl.ParseFiles(which))
-	m.Confm("serve", "template.list", func(index int, value string) { tmpl = template.Must(tmpl.Parse(value)) })
+	m.Confm(ice.WEB_SERVE, "template.list", func(index int, value string) { tmpl = template.Must(tmpl.Parse(value)) })
 	for i, v := range tmpl.Templates() {
 		m.Log("info", "%v, %v", i, v.Name())
 	}
 	return tmpl
 }
-func (web *WEB) HandleCmd(m *ice.Message, key string, cmd *ice.Command) {
+func (web *Frame) HandleCmd(m *ice.Message, key string, cmd *ice.Command) {
 	web.HandleFunc(key, func(w http.ResponseWriter, r *http.Request) {
 		m.TryCatch(m.Spawns(), true, func(msg *ice.Message) {
 			defer func() {
@@ -210,7 +218,7 @@ func (web *WEB) HandleCmd(m *ice.Message, key string, cmd *ice.Command) {
 		})
 	})
 }
-func (web *WEB) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+func (web *Frame) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	m := web.m
 
 	index := r.Header.Get("index.module") == ""
@@ -233,16 +241,16 @@ func (web *WEB) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	web.ServeMux.ServeHTTP(w, r)
 }
 
-func (web *WEB) Spawn(m *ice.Message, c *ice.Context, arg ...string) ice.Server {
-	return &WEB{}
+func (web *Frame) Spawn(m *ice.Message, c *ice.Context, arg ...string) ice.Server {
+	return &Frame{}
 }
-func (web *WEB) Begin(m *ice.Message, arg ...string) ice.Server {
+func (web *Frame) Begin(m *ice.Message, arg ...string) ice.Server {
 	web.send = map[string]*ice.Message{}
 	return web
 }
-func (web *WEB) Start(m *ice.Message, arg ...string) bool {
+func (web *Frame) Start(m *ice.Message, arg ...string) bool {
 	m.Travel(func(p *ice.Context, s *ice.Context) {
-		if w, ok := s.Server().(*WEB); ok {
+		if w, ok := s.Server().(*Frame); ok {
 			if w.ServeMux != nil {
 				return
 			}
@@ -251,7 +259,7 @@ func (web *WEB) Start(m *ice.Message, arg ...string) bool {
 
 			// 级联路由
 			route := "/" + s.Name + "/"
-			if n, ok := p.Server().(*WEB); ok && n.ServeMux != nil {
+			if n, ok := p.Server().(*Frame); ok && n.ServeMux != nil {
 				msg.Log("route", "%s <= %s", p.Name, route)
 				n.Handle(route, http.StripPrefix(path.Dir(route), w))
 			}
@@ -272,41 +280,31 @@ func (web *WEB) Start(m *ice.Message, arg ...string) bool {
 		}
 	})
 
-	port := kit.Select(m.Conf("spide", "self.port"), arg, 0)
-	m.Cap(ice.CTX_STREAM, port)
-	web.m = m
-	web.Server = &http.Server{Addr: port, Handler: web}
-	m.Log("serve", "node %v", m.Conf("cli.runtime", "node"))
-	m.Log("serve", "listen %s", port)
+	port := m.Cap(ice.CTX_STREAM, kit.Select(m.Conf(ice.WEB_SPIDE, "self.port"), arg, 0))
+	m.Log("serve", "listen %s %v", port, m.Conf("cli.runtime", "node"))
+	web.m, web.Server = m, &http.Server{Addr: port, Handler: web}
 	m.Log("serve", "listen %s", web.Server.ListenAndServe())
 	return true
 }
-func (web *WEB) Close(m *ice.Message, arg ...string) bool {
+func (web *Frame) Close(m *ice.Message, arg ...string) bool {
 	return true
 }
 
 var Index = &ice.Context{Name: "web", Help: "网页模块",
 	Caches: map[string]*ice.Cache{},
 	Configs: map[string]*ice.Config{
-		"spide": {Name: "客户端", Value: map[string]interface{}{
+		ice.WEB_SPIDE: {Name: "客户端", Value: map[string]interface{}{
 			"self": map[string]interface{}{"port": ice.WEB_PORT},
 		}},
-		"serve": {Name: "服务端", Value: map[string]interface{}{
+		ice.WEB_SERVE: {Name: "服务端", Value: map[string]interface{}{
 			"static": map[string]interface{}{"/": "usr/volcanos/",
 				"/static/volcanos/": "usr/volcanos/",
 			},
-			"template": map[string]interface{}{
-				"path": "usr/template",
-				"list": []interface{}{
-					`{{define "raw"}}{{.|result}}{{end}}`,
-					`{{define "title"}}{{.|result}}{{end}}`,
-					`{{define "chapter"}}{{.|result}}{{end}}`,
-					`{{define "section"}}{{.|result}}{{end}}`,
-					`{{define "block"}}<div>{{.|result}}<div>{{end}}`,
-				},
-			},
+			"template": map[string]interface{}{"path": "usr/template", "list": []interface{}{
+				`{{define "raw"}}{{.|result}}{{end}}`,
+			}},
 		}},
-		"space": {Name: "空间端", Value: map[string]interface{}{
+		ice.WEB_SPACE: {Name: "空间端", Value: map[string]interface{}{
 			ice.MDB_META: map[string]interface{}{"buffer": 4096, "redial": 3000},
 			ice.MDB_HASH: map[string]interface{}{},
 			ice.MDB_LIST: map[string]interface{}{},
@@ -314,17 +312,16 @@ var Index = &ice.Context{Name: "web", Help: "网页模块",
 	},
 	Commands: map[string]*ice.Command{
 		ice.ICE_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			m.Echo("hello %s world", c.Name)
 		}},
 		ice.ICE_EXIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			m.Done()
 		}},
-		"serve": {Name: "hi", Help: "hello", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			m.Conf("cli.runtime", "node.type", "server")
+		ice.WEB_SERVE: {Name: "serve", Help: "服务器", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			m.Conf("cli.runtime", "node.name", m.Conf("cli.runtime", "boot.hostname"))
+			m.Conf("cli.runtime", "node.type", "server")
 			m.Target().Start(m, arg...)
 		}},
-		"/space": &ice.Command{Name: "/space", Help: "", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		"/space": &ice.Command{Name: "/space", Help: "工作间", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			r := m.Optionv("request").(*http.Request)
 			w := m.Optionv("response").(http.ResponseWriter)
 			if s, e := websocket.Upgrade(w, r, nil, m.Confi("web.space", "meta.buffer"), m.Confi("web.space", "meta.buffer")); m.Assert(e) {
@@ -336,26 +333,26 @@ var Index = &ice.Context{Name: "web", Help: "网页模块",
 					"type":        m.Option("node"),
 					"name":        m.Option("name"),
 				}
-				m.Confv("space", []string{ice.MDB_HASH, h}, meta)
-				m.Log("space", "conn %v %v", h, kit.Formats(m.Confv("space")))
+				m.Confv(ice.WEB_SPACE, []string{ice.MDB_HASH, h}, meta)
+				m.Log("space", "conn %v %v", h, kit.Formats(m.Confv(ice.WEB_SPACE)))
 
-				web := m.Target().Server().(*WEB)
+				web := m.Target().Server().(*Frame)
 				m.Gos(m, func(m *ice.Message) {
 					web.HandleWSS(m, false, s)
-					m.Log("space", "close %v %v", h, kit.Formats(m.Confv("space")))
-					m.Confv("space", []string{ice.MDB_HASH, h}, "")
+					m.Log("space", "close %v %v", h, kit.Formats(m.Confv(ice.WEB_SPACE)))
+					m.Confv(ice.WEB_SPACE, []string{ice.MDB_HASH, h}, "")
 				})
 			}
 		}},
-		"space": &ice.Command{Name: "space", Help: "", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		ice.WEB_SPACE: &ice.Command{Name: "space", Help: "工作间", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			if len(arg) == 0 {
-				m.Conf("space", ice.MDB_HASH, func(key string, value map[string]interface{}) {
+				m.Conf(ice.WEB_SPACE, ice.MDB_HASH, func(key string, value map[string]interface{}) {
 					m.Push(key, value)
 				})
 				return
 			}
 
-			web := m.Target().Server().(*WEB)
+			web := m.Target().Server().(*Frame)
 			switch arg[0] {
 			case "connect":
 				node, name := m.Conf("cli.runtime", "node.type"), m.Conf("cli.runtime", "boot.hostname")
@@ -395,7 +392,7 @@ var Index = &ice.Context{Name: "web", Help: "网页模块",
 				}
 
 				target := strings.Split(arg[0], ".")
-				if socket, ok := m.Confv("space", "hash."+target[0]+".socket").(*websocket.Conn); !ok {
+				if socket, ok := m.Confv(ice.WEB_SPACE, "hash."+target[0]+".socket").(*websocket.Conn); !ok {
 					m.Echo("error").Echo("not found")
 				} else {
 					id := kit.Format(c.ID())
@@ -403,7 +400,7 @@ var Index = &ice.Context{Name: "web", Help: "网页模块",
 					m.Optionv("_target", target[1:])
 					m.Set(ice.MSG_DETAIL, arg[1:]...)
 
-					web := m.Target().Server().(*WEB)
+					web := m.Target().Server().(*Frame)
 					web.send[id] = m
 
 					now := time.Now()
@@ -419,4 +416,4 @@ var Index = &ice.Context{Name: "web", Help: "网页模块",
 	},
 }
 
-func init() { ice.Index.Register(Index, &WEB{}) }
+func init() { ice.Index.Register(Index, &Frame{}) }

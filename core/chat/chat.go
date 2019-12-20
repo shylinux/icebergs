@@ -191,4 +191,4 @@ var Index = &ice.Context{Name: "chat", Help: "聊天模块",
 	},
 }
 
-func init() { web.Index.Register(Index, &web.WEB{}) }
+func init() { web.Index.Register(Index, &web.Frame{}) }

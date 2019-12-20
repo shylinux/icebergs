@@ -505,11 +505,18 @@ func (m *Message) Table(cbs ...interface{}) *Message {
 	}
 	return m
 }
-func (m *Message) Option(key string, arg ...interface{}) string {
-	return kit.Select("", kit.Simple(m.Optionv(key, arg...)), 0)
+func (m *Message) Render(str string) *Message {
+	if res, err := kit.Render(str, m); m.Assert(err) {
+		m.Echo(string(res))
+	}
+	return m
 }
-func (m *Message) Options(key string, arg ...interface{}) bool {
-	return kit.Select("", kit.Simple(m.Optionv(key, arg...)), 0) != ""
+
+func (m *Message) Detail(arg ...interface{}) string {
+	return kit.Select("", m.meta[MSG_DETAIL], 0)
+}
+func (m *Message) Detailv(arg ...interface{}) []string {
+	return m.meta[MSG_DETAIL]
 }
 func (m *Message) Optionv(key string, arg ...interface{}) interface{} {
 	if len(arg) > 0 {
@@ -537,6 +544,12 @@ func (m *Message) Optionv(key string, arg ...interface{}) interface{} {
 	}
 	return nil
 }
+func (m *Message) Options(key string, arg ...interface{}) bool {
+	return kit.Select("", kit.Simple(m.Optionv(key, arg...)), 0) != ""
+}
+func (m *Message) Option(key string, arg ...interface{}) string {
+	return kit.Select("", kit.Simple(m.Optionv(key, arg...)), 0)
+}
 func (m *Message) Append(key string, arg ...interface{}) string {
 	return kit.Select("", m.meta[key], 0)
 }
@@ -548,12 +561,6 @@ func (m *Message) Resultv(arg ...interface{}) []string {
 }
 func (m *Message) Result(arg ...interface{}) string {
 	return strings.Join(m.Resultv(), "")
-}
-func (m *Message) Detailv(arg ...interface{}) []string {
-	return m.meta[MSG_DETAIL]
-}
-func (m *Message) Detail(arg ...interface{}) string {
-	return kit.Select("", m.meta[MSG_DETAIL], 0)
 }
 
 func (m *Message) Log(level string, str string, arg ...interface{}) *Message {
@@ -609,76 +616,6 @@ func (m *Message) TryCatch(msg *Message, safe bool, hand ...func(msg *Message)) 
 	}
 	return m
 }
-func (m *Message) Travel(cb interface{}) *Message {
-	list := []*Context{m.target}
-	for i := 0; i < len(list); i++ {
-		switch cb := cb.(type) {
-		case func(*Context, *Context):
-			cb(list[i].context, list[i])
-		case func(*Context, *Context, string, *Command):
-			ls := []string{}
-			for k := range list[i].Commands {
-				ls = append(ls, k)
-			}
-			sort.Strings(ls)
-			for _, k := range ls {
-				cb(list[i].context, list[i], k, list[i].Commands[k])
-			}
-		case func(*Context, *Context, string, *Config):
-			ls := []string{}
-			for k := range list[i].Configs {
-				ls = append(ls, k)
-			}
-			sort.Strings(ls)
-			for _, k := range ls {
-				cb(list[i].context, list[i], k, list[i].Configs[k])
-			}
-		}
-
-		ls := []string{}
-		for k := range list[i].contexts {
-			ls = append(ls, k)
-		}
-		sort.Strings(ls)
-		for _, k := range ls {
-			list = append(list, list[i].contexts[k])
-		}
-	}
-	return m
-}
-func (m *Message) Search(key interface{}, cb func(p *Context, s *Context, key string)) *Message {
-	switch key := key.(type) {
-	case string:
-		if k, ok := Alias[key]; ok {
-			key = k
-		}
-		fmt.Printf("%v fuck %v\n", m.Time(), key)
-
-		if strings.Contains(key, ":") {
-
-		} else if strings.Contains(key, ".") {
-			list := strings.Split(key, ".")
-
-			p := m.target.root
-			for _, v := range list[:len(list)-1] {
-				if s, ok := p.contexts[v]; ok {
-					p = s
-				} else {
-					p = nil
-					break
-				}
-			}
-			if p == nil {
-				m.Log(LOG_WARN, "not found %s", key)
-				break
-			}
-			cb(p.context, p, list[len(list)-1])
-		} else {
-			cb(m.target.context, m.target, key)
-		}
-	}
-	return m
-}
 func (m *Message) Gos(msg *Message, cb func(*Message)) *Message {
 	go func() { msg.TryCatch(msg, true, func(msg *Message) { cb(msg) }) }()
 	return m
@@ -730,6 +667,79 @@ func (m *Message) Back(sub *Message) *Message {
 	return m
 }
 
+func (m *Message) Travel(cb interface{}) *Message {
+	list := []*Context{m.target}
+	for i := 0; i < len(list); i++ {
+		switch cb := cb.(type) {
+		case func(*Context, *Context):
+			cb(list[i].context, list[i])
+		case func(*Context, *Context, string, *Command):
+			ls := []string{}
+			for k := range list[i].Commands {
+				ls = append(ls, k)
+			}
+			sort.Strings(ls)
+			for _, k := range ls {
+				cb(list[i].context, list[i], k, list[i].Commands[k])
+			}
+		case func(*Context, *Context, string, *Config):
+			ls := []string{}
+			for k := range list[i].Configs {
+				ls = append(ls, k)
+			}
+			sort.Strings(ls)
+			for _, k := range ls {
+				cb(list[i].context, list[i], k, list[i].Configs[k])
+			}
+		}
+
+		ls := []string{}
+		for k := range list[i].contexts {
+			ls = append(ls, k)
+		}
+		sort.Strings(ls)
+		for _, k := range ls {
+			list = append(list, list[i].contexts[k])
+		}
+	}
+	return m
+}
+func (m *Message) Search(key interface{}, cb func(p *Context, s *Context, key string)) *Message {
+	switch key := key.(type) {
+	case string:
+		if k, ok := Alias[key]; ok {
+			key = k
+		}
+
+		if strings.Contains(key, ":") {
+
+		} else if strings.Contains(key, ".") {
+			list := strings.Split(key, ".")
+
+			p := m.target.root
+			for _, v := range list[:len(list)-1] {
+				if s, ok := p.contexts[v]; ok {
+					p = s
+				} else {
+					p = nil
+					break
+				}
+			}
+			if p == nil {
+				m.Log(LOG_WARN, "not found %s", key)
+				break
+			}
+			cb(p.context, p, list[len(list)-1])
+		} else {
+			cb(m.target.context, m.target, key)
+		}
+	}
+	return m
+}
+
+func Meta(arg ...interface{}) string {
+	return MDB_META + "." + kit.Keys(arg...)
+}
 func (m *Message) Rich(key string, args interface{}, data interface{}) map[string]interface{} {
 	cache := m.Confm(key, args)
 	if cache == nil {

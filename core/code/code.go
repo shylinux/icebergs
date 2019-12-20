@@ -488,4 +488,4 @@ var Index = &ice.Context{Name: "code", Help: "编程模块",
 	},
 }
 
-func init() { web.Index.Register(Index, &web.WEB{}) }
+func init() { web.Index.Register(Index, &web.Frame{}) }

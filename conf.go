@@ -23,13 +23,18 @@ const (
 	MDB_HASH = "hash"
 )
 const (
+	WEB_PORT = ":9020"
+	WEB_SESS = "sessid"
+	WEB_TMPL = "render"
+
+	WEB_SPIDE = "spide"
+	WEB_SERVE = "serve"
+	WEB_SPACE = "space"
+)
+const (
 	GDB_SIGNAL = "signal"
 	GDB_TIMER  = "timer"
 	GDB_EVENT  = "event"
-)
-const (
-	WEB_PORT = ":9020"
-	WEB_SESS = "sessid"
 )
 const (
 	LOG_CMD   = "cmd"
@@ -47,4 +52,8 @@ var Alias = map[string]string{
 	GDB_SIGNAL: "gdb.signal",
 	GDB_TIMER:  "gdb.timer",
 	GDB_EVENT:  "gdb.event",
+
+	WEB_SPIDE: "web.spide",
+	WEB_SPACE: "web.space",
+	"note":    "web.wiki.note",
 }

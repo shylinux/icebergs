@@ -51,10 +51,10 @@ func (b *Block) Draw(m *ice.Message, x, y int) Chart {
 	return b
 }
 func (b *Block) Data(root interface{}) {
-	kit.Table(kit.Value(root, "data"), 0, 100, func(key string, value string) {
+	kit.Fetch(kit.Value(root, "data"), func(key string, value string) {
 		b.TextData += key + "='" + value + "' "
 	})
-	kit.Table(kit.Value(root, "rect"), 0, 100, func(key string, value string) {
+	kit.Fetch(kit.Value(root, "rect"), func(key string, value string) {
 		b.RectData += key + "='" + value + "' "
 	})
 	b.FontColor = kit.Select(b.FontColor, kit.Value(root, "fg"))

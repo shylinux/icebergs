@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"strings"
 )
 
 type Frame struct {
@@ -47,6 +48,9 @@ func (f *Frame) Start(m *ice.Message, arg ...string) bool {
 		}
 
 		fmt.Fprintf(f.out, res)
+		if !strings.HasSuffix(res, "\n") {
+			fmt.Fprintf(f.out, "\n")
+		}
 		fmt.Fprintf(f.out, m.Time(prompt, count, target.Name))
 		count++
 	}

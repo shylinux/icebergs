@@ -1,22 +1,24 @@
 # {{title "hello world"}}
 
-{{table "项目" `
+{{shell "" "uptime"}}
+
+{{title "premenu"}}
+
+## {{chapter "项目总览"}}
+{{table "总览" `
 volcano iceberg
 context toolkit
 preload appframe
 `}}
 
-## {{chapter "hello world"}}
-
-{{table "框架" `
-ctx cli aaa web
-lex yac gdb log
-tcp nfs ssh mdb
+{{order "总览" `
+volcano iceberg
+context toolkit
+preload appframe
 `}}
 
-### {{section "hello world"}}
-
-{{chain "孵化" `
+## {{chapter "项目详情"}}
+{{chain "详情" `
 context
     volcanos
         proto.js
@@ -47,4 +49,5 @@ context
         misc.go
 `}}
 
-### {{section "hello world"}}
+{{title "endmenu"}}
+

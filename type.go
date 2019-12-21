@@ -74,6 +74,18 @@ func (c *Context) Cap(key string, arg ...interface{}) string {
 func (c *Context) Server() Server {
 	return c.server
 }
+func (c *Context) Run(m *Message, cmd *Command, key string, arg ...string) *Message {
+	m.Hand = true
+	m.Log(LOG_CMD, "%s.%s %v", c.Name, key, arg)
+	cmd.Hand(m, c, key, arg...)
+	return m
+}
+func (c *Context) Runs(m *Message, cmd string, key string, arg ...string) {
+	if s, ok := m.Target().Commands[key]; ok {
+		c.Run(m, s, cmd, arg...)
+	}
+	return
+}
 func (c *Context) Register(s *Context, x Server) *Context {
 	Pulse.Log("register", "%s <- %s", c.Name, s.Name)
 	if c.contexts == nil {
@@ -345,7 +357,7 @@ func (m *Message) Push(key string, value interface{}, arg ...interface{}) *Messa
 		}
 		for _, k := range list {
 			if k == "key" {
-				m.Add(MSG_APPEND, k, k)
+				m.Add(MSG_APPEND, k, key)
 			} else {
 				m.Add(MSG_APPEND, k, kit.Format(value[k]))
 			}
@@ -357,6 +369,9 @@ func (m *Message) Push(key string, value interface{}, arg ...interface{}) *Messa
 func (m *Message) Echo(str string, arg ...interface{}) *Message {
 	m.meta[MSG_RESULT] = append(m.meta[MSG_RESULT], fmt.Sprintf(str, arg...))
 	return m
+}
+func (m *Message) Error(str string, arg ...interface{}) *Message {
+	return m.Echo("error").Echo(str, arg...)
 }
 func (m *Message) Sort(key string, arg ...string) *Message {
 	cmp := "str"
@@ -581,6 +596,9 @@ func (m *Message) Log(level string, str string, arg ...interface{}) *Message {
 		prefix, level, fmt.Sprintf(str, arg...), suffix)
 	return m
 }
+func (m *Message) Info(str string, arg ...interface{}) *Message {
+	return m.Log(LOG_INFO, str, arg...)
+}
 func (m *Message) Assert(arg interface{}) bool {
 	switch arg := arg.(type) {
 	case nil:
@@ -622,14 +640,6 @@ func (m *Message) Gos(msg *Message, cb func(*Message)) *Message {
 }
 func (m *Message) Run(arg ...string) *Message {
 	m.target.server.Start(m, arg...)
-	return m
-}
-func (m *Message) Runs(key string, cmd string, arg ...string) *Message {
-	if s, ok := m.Target().Commands[key]; ok {
-		m.meta[MSG_DETAIL] = append([]string{cmd}, arg...)
-		m.Log(LOG_CMD, "%s.%s %s %v", m.Target().Name, key, cmd, arg)
-		s.Hand(m, m.Target(), cmd, arg...)
-	}
 	return m
 }
 func (m *Message) Done() bool {
@@ -704,19 +714,19 @@ func (m *Message) Travel(cb interface{}) *Message {
 	}
 	return m
 }
-func (m *Message) Search(key interface{}, cb func(p *Context, s *Context, key string)) *Message {
+func (m *Message) Search(key interface{}, cb interface{}) *Message {
 	switch key := key.(type) {
 	case string:
 		if k, ok := Alias[key]; ok {
 			key = k
 		}
 
+		p := m.target.root
 		if strings.Contains(key, ":") {
 
 		} else if strings.Contains(key, ".") {
 			list := strings.Split(key, ".")
 
-			p := m.target.root
 			for _, v := range list[:len(list)-1] {
 				if s, ok := p.contexts[v]; ok {
 					p = s
@@ -729,9 +739,26 @@ func (m *Message) Search(key interface{}, cb func(p *Context, s *Context, key st
 				m.Log(LOG_WARN, "not found %s", key)
 				break
 			}
-			cb(p.context, p, list[len(list)-1])
+			key = list[len(list)-1]
 		} else {
-			cb(m.target.context, m.target, key)
+			p = m.target
+		}
+
+		switch cb := cb.(type) {
+		case func(p *Context, s *Context, key string, cmd *Command):
+			for c := p; c != nil; c = c.context {
+				if cmd, ok := c.Commands[key]; ok {
+					cb(c.context, c, key, cmd)
+				}
+			}
+		case func(p *Context, s *Context, key string, conf *Config):
+			for c := p; c != nil; c = c.context {
+				if cmd, ok := c.Configs[key]; ok {
+					cb(c.context, c, key, cmd)
+				}
+			}
+		case func(p *Context, s *Context, key string):
+			cb(p.context, p, key)
 		}
 	}
 	return m
@@ -740,7 +767,28 @@ func (m *Message) Search(key interface{}, cb func(p *Context, s *Context, key st
 func Meta(arg ...interface{}) string {
 	return MDB_META + "." + kit.Keys(arg...)
 }
-func (m *Message) Rich(key string, args interface{}, data interface{}) map[string]interface{} {
+func Data(arg ...interface{}) map[string]interface{} {
+	meta := map[string]interface{}{}
+	data := map[string]interface{}{
+		MDB_META: meta, MDB_LIST: []interface{}{}, MDB_HASH: map[string]interface{}{},
+	}
+	for i := 0; i < len(arg)-1; i += 2 {
+		kit.Value(meta, arg[i], arg[i+1])
+	}
+	return data
+}
+func List(arg ...interface{}) []interface{} {
+	list, data := []interface{}{}, map[string]interface{}{}
+	for i := 0; i < len(arg)-1; i += 2 {
+		if arg[i] == MDB_TYPE {
+			data = map[string]interface{}{}
+			list = append(list, data)
+		}
+		kit.Value(data, arg[i], arg[i+1])
+	}
+	return list
+}
+func (m *Message) Rich(key string, args interface{}, data interface{}) string {
 	cache := m.Confm(key, args)
 	if cache == nil {
 		cache = map[string]interface{}{}
@@ -754,7 +802,15 @@ func (m *Message) Rich(key string, args interface{}, data interface{}) map[strin
 		hash = map[string]interface{}{}
 	}
 
-	h := kit.ShortKey(hash, 6)
+	h := ""
+	switch short := kit.Format(kit.Value(meta, "short")); short {
+	case "":
+		h = kit.ShortKey(hash, 6)
+	case "data":
+		h = kit.Hashs(kit.Format(data))
+	default:
+		h = kit.Hashs(kit.Format(kit.Value(data, short)))
+	}
 	hash[h] = data
 
 	cache[MDB_HASH] = hash
@@ -764,7 +820,7 @@ func (m *Message) Rich(key string, args interface{}, data interface{}) map[strin
 	} else {
 		m.Conf(key, args, cache)
 	}
-	return meta
+	return h
 }
 func (m *Message) Grow(key string, args interface{}, data interface{}) map[string]interface{} {
 	cache := m.Confm(key, args)
@@ -783,11 +839,11 @@ func (m *Message) Grow(key string, args interface{}, data interface{}) map[strin
 	kit.Value(data, "id", meta["count"])
 
 	// 保存数据
-	if len(list) > kit.Int(kit.Select(m.Conf("cache", "limit"), meta["limit"])) {
-		least := kit.Int(kit.Select(m.Conf("cache", "least"), meta["least"]))
+	if len(list) > kit.Int(kit.Select(m.Conf("cache", Meta("limit")), meta["limit"])) {
+		least := kit.Int(kit.Select(m.Conf("cache", Meta("least")), meta["least"]))
 
 		// 创建文件
-		name := kit.Select(path.Join(m.Conf("cache", "store"), key+".csv"), meta["store"])
+		name := kit.Select(path.Join(m.Conf("cache", Meta("store")), key+".csv"), meta["store"])
 		f, e := os.OpenFile(name, os.O_RDWR|os.O_APPEND|os.O_CREATE, 0666)
 		if e != nil {
 			f, _, e = kit.Create(name)
@@ -973,21 +1029,12 @@ func (m *Message) Cmd(arg ...interface{}) *Message {
 		return m
 	}
 
-	m.Search(list[0], func(p *Context, s *Context, key string) {
-		for c := s; c != nil; c = c.context {
-			if cmd, ok := c.Commands[key]; ok {
-				m.TryCatch(m.Spawns(s), true, func(msg *Message) {
-
-					msg.Hand = true
-					m.Hand = true
-					m = msg
-					msg.Log(LOG_CMD, "%s.%s %v", c.Name, key, list[1:])
-					msg.meta[MSG_DETAIL] = list
-					cmd.Hand(msg, c, key, list[1:]...)
-				})
-				break
-			}
-		}
+	m.Search(list[0], func(p *Context, c *Context, key string, cmd *Command) {
+		m.TryCatch(m.Spawns(c), true, func(msg *Message) {
+			m.Hand, m = true, msg
+			msg.meta[MSG_DETAIL] = list
+			c.Run(msg, cmd, key, list[1:]...)
+		})
 	})
 	return m
 }

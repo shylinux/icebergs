@@ -36,7 +36,6 @@ func Cookie(msg *ice.Message, sessid string) string {
 	http.SetCookie(w, &http.Cookie{Name: ice.WEB_SESS, Value: sessid, Path: "/", Expires: expire})
 	return sessid
 }
-
 func (web *Frame) Login(msg *ice.Message, w http.ResponseWriter, r *http.Request) bool {
 	if msg.Options(ice.WEB_SESS) {
 		sub := msg.Cmd("aaa.sess", "check", msg.Option(ice.WEB_SESS))
@@ -44,7 +43,7 @@ func (web *Frame) Login(msg *ice.Message, w http.ResponseWriter, r *http.Request
 			msg.Option("username", sub.Append("username")))
 	}
 
-	msg.Runs("_login", msg.Option("url"), kit.Simple(msg.Optionv("cmds"))...)
+	msg.Target().Runs(msg, msg.Option("url"), ice.WEB_LOGIN, kit.Simple(msg.Optionv("cmds"))...)
 	return true
 }
 func (web *Frame) HandleWSS(m *ice.Message, safe bool, c *websocket.Conn) bool {
@@ -108,16 +107,13 @@ func (web *Frame) HandleWSS(m *ice.Message, safe bool, c *websocket.Conn) bool {
 	return false
 }
 func (web *Frame) HandleCGI(m *ice.Message, alias map[string]interface{}, which string) *template.Template {
-	cgi := template.FuncMap{
-		"result": func(msg *ice.Message) string {
-			return msg.Result()
-		},
-	}
+	cgi := template.FuncMap{}
 
 	tmpl := template.New(ice.WEB_TMPL)
 	cb := func(k string, p []string, v *ice.Command) {
 		cgi[k] = func(arg ...interface{}) (res interface{}) {
 			m.TryCatch(m.Spawn(), true, func(msg *ice.Message) {
+				m.Log("cmd", "%v %v %v", k, p, arg)
 				v.Hand(msg, m.Target(), k, kit.Simple(p, arg)...)
 
 				buffer := bytes.NewBuffer([]byte{})
@@ -280,7 +276,7 @@ func (web *Frame) Start(m *ice.Message, arg ...string) bool {
 		}
 	})
 
-	port := m.Cap(ice.CTX_STREAM, kit.Select(m.Conf(ice.WEB_SPIDE, "self.port"), arg, 0))
+	port := m.Cap(ice.CTX_STREAM, kit.Select(m.Conf(ice.WEB_SPIDE, ice.Meta("self", "port")), arg, 0))
 	m.Log("serve", "listen %s %v", port, m.Conf("cli.runtime", "node"))
 	web.m, web.Server = m, &http.Server{Addr: port, Handler: web}
 	m.Log("serve", "listen %s", web.Server.ListenAndServe())
@@ -293,58 +289,35 @@ func (web *Frame) Close(m *ice.Message, arg ...string) bool {
 var Index = &ice.Context{Name: "web", Help: "网页模块",
 	Caches: map[string]*ice.Cache{},
 	Configs: map[string]*ice.Config{
-		ice.WEB_SPIDE: {Name: "客户端", Value: map[string]interface{}{
-			"self": map[string]interface{}{"port": ice.WEB_PORT},
-		}},
-		ice.WEB_SERVE: {Name: "服务端", Value: map[string]interface{}{
+		ice.WEB_SPIDE: {Name: "spide", Help: "客户端", Value: ice.Data("self.port", ice.WEB_PORT)},
+		ice.WEB_SERVE: {Name: "serve", Help: "服务器", Value: map[string]interface{}{
 			"static": map[string]interface{}{"/": "usr/volcanos/",
 				"/static/volcanos/": "usr/volcanos/",
 			},
 			"template": map[string]interface{}{"path": "usr/template", "list": []interface{}{
-				`{{define "raw"}}{{.|result}}{{end}}`,
+				`{{define "raw"}}{{.Result}}{{end}}`,
 			}},
 		}},
-		ice.WEB_SPACE: {Name: "空间端", Value: map[string]interface{}{
-			ice.MDB_META: map[string]interface{}{"buffer": 4096, "redial": 3000},
-			ice.MDB_HASH: map[string]interface{}{},
-			ice.MDB_LIST: map[string]interface{}{},
-		}},
+		ice.WEB_SPACE: {Name: "space", Help: "空间站", Value: ice.Meta("buffer", 4096, "redial", 3000)},
+		ice.WEB_STORY: {Name: "story", Help: "故事会", Value: ice.Data("short", "data")},
+		ice.WEB_CACHE: {Name: "cache", Help: "缓存", Value: ice.Data(
+			"short", "text", "path", "var/file",
+			"store", "var/data", "limit", "30", "least", "10",
+		)},
+		ice.WEB_ROUTE: {Name: "route", Help: "路由", Value: ice.Data()},
+		ice.WEB_PROXY: {Name: "proxy", Help: "代理", Value: ice.Data()},
 	},
 	Commands: map[string]*ice.Command{
-		ice.ICE_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-		}},
-		ice.ICE_EXIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			m.Done()
+		ice.ICE_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {}},
+		ice.ICE_EXIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) { m.Done() }},
+		ice.WEB_SPIDE: {Name: "spide", Help: "客户端", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 		}},
 		ice.WEB_SERVE: {Name: "serve", Help: "服务器", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			m.Conf("cli.runtime", "node.name", m.Conf("cli.runtime", "boot.hostname"))
 			m.Conf("cli.runtime", "node.type", "server")
 			m.Target().Start(m, arg...)
 		}},
-		"/space": &ice.Command{Name: "/space", Help: "工作间", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			r := m.Optionv("request").(*http.Request)
-			w := m.Optionv("response").(http.ResponseWriter)
-			if s, e := websocket.Upgrade(w, r, nil, m.Confi("web.space", "meta.buffer"), m.Confi("web.space", "meta.buffer")); m.Assert(e) {
-				h := m.Option("name")
-
-				meta := map[string]interface{}{
-					"create_time": m.Time(),
-					"socket":      s,
-					"type":        m.Option("node"),
-					"name":        m.Option("name"),
-				}
-				m.Confv(ice.WEB_SPACE, []string{ice.MDB_HASH, h}, meta)
-				m.Log("space", "conn %v %v", h, kit.Formats(m.Confv(ice.WEB_SPACE)))
-
-				web := m.Target().Server().(*Frame)
-				m.Gos(m, func(m *ice.Message) {
-					web.HandleWSS(m, false, s)
-					m.Log("space", "close %v %v", h, kit.Formats(m.Confv(ice.WEB_SPACE)))
-					m.Confv(ice.WEB_SPACE, []string{ice.MDB_HASH, h}, "")
-				})
-			}
-		}},
-		ice.WEB_SPACE: &ice.Command{Name: "space", Help: "工作间", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		ice.WEB_SPACE: {Name: "space", Help: "空间站", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			if len(arg) == 0 {
 				m.Conf(ice.WEB_SPACE, ice.MDB_HASH, func(key string, value map[string]interface{}) {
 					m.Push(key, value)
@@ -411,6 +384,125 @@ var Index = &ice.Context{Name: "web", Help: "网页模块",
 						return nil
 					})
 				}
+			}
+		}},
+		ice.WEB_STORY: {Name: "story", Help: "故事会", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			if len(arg) == 0 {
+				m.Confm("story", ice.Meta("head"), func(key string, value map[string]interface{}) {
+					m.Push(key, value, []string{"key", "type", "time", "story"})
+				})
+				return
+			}
+
+			// head list data time text file
+			switch arg[0] {
+			case "add":
+				// 查询索引
+				head := kit.Hashs(arg[1])
+				prev := m.Conf("story", ice.Meta("head", head, "list"))
+				m.Log("info", "head: %v prev: %v", head, prev)
+
+				// 添加节点
+				meta := map[string]interface{}{
+					"time":  m.Time(),
+					"story": arg[1],
+					"scene": arg[2],
+					"data":  m.Cmdx(ice.WEB_CACHE, "add", "text", arg[2]),
+					"prev":  prev,
+				}
+				list := m.Rich("story", nil, meta)
+				m.Log("info", "list: %v meta: %v", list, kit.Format(meta))
+
+				// 添加索引
+				m.Conf("story", ice.Meta("head", head), map[string]interface{}{
+					"time": m.Time(), "type": "text",
+					"story": arg[1], "list": list,
+				})
+				m.Echo(list)
+
+			case "commit":
+				// 查询索引
+				head := kit.Hashs(arg[1])
+				prev := m.Conf("story", ice.Meta("head", head, "list"))
+				m.Log("info", "head: %v prev: %v", head, prev)
+
+				// 查询节点
+				menu := map[string]string{}
+				for i := 2; i < len(arg); i++ {
+					if i < len(arg)-1 && m.Confs("story", kit.Keys("hash", arg[i+1])) {
+						menu[arg[i]] = arg[i+1]
+						i++
+					} else if head := kit.Hashs(arg[i]); m.Confs("story", kit.Keys("meta", "head", head)) {
+						menu[arg[i]] = head
+					} else {
+						m.Error("not found %v", arg[i])
+						return
+					}
+				}
+
+				// 添加节点
+				meta := map[string]interface{}{
+					"time":  m.Time(),
+					"story": arg[1],
+					"list":  menu,
+					"prev":  prev,
+				}
+				list := m.Rich("story", nil, meta)
+				m.Log("info", "list: %v meta: %v", list, kit.Format(meta))
+
+				// 添加索引
+				m.Conf("story", ice.Meta("head", head), map[string]interface{}{
+					"time": m.Time(), "type": "list",
+					"story": arg[1], "list": list,
+				})
+				m.Echo(list)
+			}
+		}},
+		ice.WEB_CACHE: {Name: "cache", Help: "缓存", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			if len(arg) == 0 {
+				m.Confm("cache", "hash", func(key string, value map[string]interface{}) {
+					m.Push(key, value, []string{"time", "text"})
+				})
+				return
+			}
+
+			switch arg[0] {
+			case "add":
+				// 添加数据
+				data := m.Rich("cache", nil, map[string]interface{}{
+					"time": m.Time(), "type": arg[1], arg[1]: arg[2],
+				})
+				m.Info("data: %v type: %v text: %v", data, arg[1], arg[2])
+				m.Echo(data)
+				m.Cmd("nfs.save", path.Join(m.Conf("cache", ice.Meta("path")), data[:2], data), arg[2])
+			}
+		}},
+		ice.WEB_ROUTE: {Name: "route", Help: "路由", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		}},
+		ice.WEB_PROXY: {Name: "proxy", Help: "代理", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		}},
+
+		"/space": &ice.Command{Name: "/space", Help: "空间站", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			r := m.Optionv("request").(*http.Request)
+			w := m.Optionv("response").(http.ResponseWriter)
+			if s, e := websocket.Upgrade(w, r, nil, m.Confi("web.space", "meta.buffer"), m.Confi("web.space", "meta.buffer")); m.Assert(e) {
+				h := m.Option("name")
+
+				meta := map[string]interface{}{
+					"create_time": m.Time(),
+					"socket":      s,
+					"type":        m.Option("node"),
+					"name":        m.Option("name"),
+				}
+				m.Confv(ice.WEB_SPACE, []string{ice.MDB_HASH, h}, meta)
+				m.Log("space", "conn %v %v", h, kit.Formats(m.Confv(ice.WEB_SPACE)))
+
+				web := m.Target().Server().(*Frame)
+				m.Gos(m, func(m *ice.Message) {
+					web.HandleWSS(m, false, s)
+					m.Log("space", "close %v %v", h, kit.Formats(m.Confv(ice.WEB_SPACE)))
+					m.Confv(ice.WEB_SPACE, []string{ice.MDB_HASH, h}, "")
+				})
 			}
 		}},
 	},

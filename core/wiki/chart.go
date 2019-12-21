@@ -104,7 +104,7 @@ func (b *Chain) Init(m *ice.Message, arg ...string) Chart {
 		width += b.GetWidths(strings.Repeat(" ", v))
 	}
 	b.Width = width
-	m.Log("info", "data %v", kit.Formats(b.data))
+	// m.Log("info", "data %v", kit.Formats(b.data))
 	return b
 }
 func (b *Chain) Draw(m *ice.Message, x, y int) Chart {
@@ -242,7 +242,7 @@ func (b *Table) Init(m *ice.Message, arg ...string) Chart {
 	b.Width = width
 	b.Height = len(b.data) * b.GetHeights()
 
-	m.Log("info", "data %v", kit.Formats(b.data))
+	// m.Log("info", "data %v", kit.Formats(b.data))
 	return b
 }
 func (b *Table) Draw(m *ice.Message, x, y int) Chart {

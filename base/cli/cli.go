@@ -25,7 +25,7 @@ var Index = &ice.Context{Name: "cli", Help: "命令模块",
 	},
 	Commands: map[string]*ice.Command{
 		ice.ICE_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			m.Cmd("ctx.config", "load", "var/conf/cli.json")
+			m.Cmd(ice.CTX_CONFIG, "load", "var/conf/cli.json")
 
 			m.Conf("runtime", "host.GOARCH", runtime.GOARCH)
 			m.Conf("runtime", "host.GOOS", runtime.GOOS)
@@ -46,7 +46,7 @@ var Index = &ice.Context{Name: "cli", Help: "命令模块",
 			m.Log("info", "runtime %v", kit.Formats(m.Confv("runtime")))
 		}},
 		ice.ICE_EXIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			m.Cmd("ctx.config", "save", "var/conf/cli.json", "cli.runtime")
+			m.Cmd(ice.CTX_CONFIG, "save", "var/conf/cli.json", "cli.runtime")
 		}},
 		"runtime": {Name: "runtime", Help: "hello", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 		}},

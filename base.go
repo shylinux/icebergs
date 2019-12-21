@@ -58,11 +58,6 @@ var Index = &Context{Name: "ice", Help: "冰山模块",
 			"row_sep": "\n",
 			"compact": "false",
 		}},
-		"cache": {Name: "数据缓存", Value: map[string]interface{}{
-			"store": "var/data",
-			"limit": "30",
-			"least": "10",
-		}},
 		"help": {Value: map[string]interface{}{
 			"index": []interface{}{
 				"^_^      欢迎使用冰山框架       ^_^",
@@ -77,9 +72,9 @@ var Index = &Context{Name: "ice", Help: "冰山模块",
 	},
 	Commands: map[string]*Command{
 		ICE_INIT: {Hand: func(m *Message, c *Context, cmd string, arg ...string) {
-			m.Travel(func(p *Context, s *Context) {
-				if _, ok := s.Commands[ICE_INIT]; ok && p != nil {
-					m.Spawns(s).Runs(ICE_INIT, ICE_INIT, arg...)
+			m.Travel(func(p *Context, c *Context) {
+				if cmd, ok := c.Commands[ICE_INIT]; ok && p != nil {
+					c.Run(m.Spawns(c), cmd, ICE_INIT, arg...)
 				}
 			})
 		}},
@@ -98,10 +93,10 @@ var Index = &Context{Name: "ice", Help: "冰山模块",
 			m.root.Cmd(ICE_EXIT)
 		}},
 		ICE_EXIT: {Hand: func(m *Message, c *Context, cmd string, arg ...string) {
-			m.root.Travel(func(p *Context, s *Context) {
-				if _, ok := s.Commands[ICE_EXIT]; ok && p != nil {
-					m.TryCatch(m.Spawns(s), true, func(msg *Message) {
-						msg.Runs(ICE_EXIT, ICE_EXIT, arg...)
+			m.root.Travel(func(p *Context, c *Context) {
+				if cmd, ok := c.Commands[ICE_EXIT]; ok && p != nil {
+					m.TryCatch(m.Spawns(c), true, func(msg *Message) {
+						c.Run(msg, cmd, ICE_EXIT, arg...)
 					})
 				}
 			})

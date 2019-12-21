@@ -10,6 +10,7 @@ const (
 const (
 	CTX_STATUS = "status"
 	CTX_STREAM = "stream"
+	CTX_CONFIG = "config"
 )
 const (
 	MSG_DETAIL = "detail"
@@ -21,15 +22,22 @@ const (
 	MDB_META = "meta"
 	MDB_LIST = "list"
 	MDB_HASH = "hash"
+
+	MDB_TYPE = "_type"
 )
 const (
 	WEB_PORT = ":9020"
 	WEB_SESS = "sessid"
 	WEB_TMPL = "render"
 
+	WEB_LOGIN = "_login"
 	WEB_SPIDE = "spide"
 	WEB_SERVE = "serve"
 	WEB_SPACE = "space"
+	WEB_STORY = "story"
+	WEB_CACHE = "cache"
+	WEB_ROUTE = "route"
+	WEB_PROXY = "proxy"
 )
 const (
 	GDB_SIGNAL = "signal"
@@ -49,11 +57,19 @@ const (
 )
 
 var Alias = map[string]string{
+	CTX_CONFIG: "ctx.config",
+
 	GDB_SIGNAL: "gdb.signal",
 	GDB_TIMER:  "gdb.timer",
 	GDB_EVENT:  "gdb.event",
 
 	WEB_SPIDE: "web.spide",
+	WEB_SERVE: "web.serve",
 	WEB_SPACE: "web.space",
-	"note":    "web.wiki.note",
+	WEB_STORY: "web.story",
+	WEB_CACHE: "web.cache",
+	WEB_ROUTE: "web.route",
+	WEB_PROXY: "web.proxy",
+
+	"note": "web.wiki.note",
 }

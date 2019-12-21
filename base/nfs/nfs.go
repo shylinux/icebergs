@@ -136,6 +136,17 @@ var Index = &ice.Context{Name: "nfs", Help: "文件模块",
 			dir(m, arg[0], arg[1], 0, false, "both", rg,
 				strings.Split(kit.Select("time size line path", arg, 2), " "), ice.ICE_TIME)
 		}},
+		"save": {Name: "save path text", Help: "保存", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			if f, p, e := kit.Create(arg[0]); m.Assert(e) {
+				defer f.Close()
+				for _, v := range arg[1:] {
+					if n, e := f.WriteString(v); m.Assert(e) {
+						m.Log("info", "save %v %v", n, p)
+						m.Echo(p)
+					}
+				}
+			}
+		}},
 	},
 }
 

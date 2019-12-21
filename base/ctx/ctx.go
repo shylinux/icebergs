@@ -6,12 +6,15 @@ import (
 
 	"encoding/json"
 	"os"
+	"path"
 	"sort"
 )
 
 var Index = &ice.Context{Name: "ctx", Help: "元始模块",
-	Caches:  map[string]*ice.Cache{},
-	Configs: map[string]*ice.Config{},
+	Caches: map[string]*ice.Cache{},
+	Configs: map[string]*ice.Config{
+		ice.CTX_CONFIG: {Name: "config", Help: "配置", Value: ice.Data("path", "var/conf")},
+	},
 	Commands: map[string]*ice.Command{
 		"context": {Name: "context", Help: "模块", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			ice.Pulse.Travel(func(p *ice.Context, s *ice.Context) {
@@ -53,26 +56,34 @@ var Index = &ice.Context{Name: "ctx", Help: "元始模块",
 				return
 			}
 
-			m.Search(arg[0]+"."+arg[1], func(p *ice.Context, s *ice.Context, key string) {
-				if i, ok := s.Commands[key]; ok {
-					if len(arg) == 2 {
-						m.Push("name", i.Name)
-						m.Push("help", i.Help)
-						m.Push("meta", kit.Format(i.Meta))
-						m.Push("list", kit.Format(i.List))
+			m.Search(arg[0]+"."+arg[1], func(p *ice.Context, s *ice.Context, key string, cmd *ice.Command) {
+				if len(arg) == 2 {
+					m.Push("name", cmd.Name)
+					m.Push("help", cmd.Help)
+					m.Push("meta", kit.Format(cmd.Meta))
+					m.Push("list", kit.Format(cmd.List))
+				} else {
+					if cmd.Meta != nil && kit.Format(cmd.Meta["remote"]) == "true" && m.Option("you") != "" {
+						m.Copy(m.Spawns(s).Cmd("web.space", m.Option("you"), "ctx.command", arg[0], arg[1], "run", arg[3:]))
 					} else {
-						if i.Meta != nil && kit.Format(i.Meta["remote"]) == "true" && m.Option("you") != "" {
-							m.Copy(m.Spawns(s).Cmd("web.space", m.Option("you"), "ctx.command", arg[0], arg[1], "run", arg[3:]))
-						} else {
-							m.Copy(m.Spawns(s).Runs(key, key, arg[3:]...))
-						}
+						m.Copy(s.Run(m.Spawns(s), cmd, key, arg[3:]...))
 					}
 				}
 			})
 		}},
-		"config": {Name: "config", Help: "配置", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		ice.CTX_CONFIG: {Name: "config", Help: "配置", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			if len(arg) == 0 {
+				m.Travel(func(p *ice.Context, s *ice.Context, key string, conf *ice.Config) {
+					m.Push("key", key)
+					m.Push("name", conf.Name)
+					m.Push("value", kit.Format(conf.Value))
+				})
+				return
+			}
+
 			switch arg[0] {
 			case "save":
+				arg[1] = path.Join(m.Conf(ice.CTX_CONFIG, ice.Meta("path")), arg[1])
 				if f, p, e := kit.Create(arg[1]); m.Assert(e) {
 					data := map[string]interface{}{}
 					for _, k := range arg[2:] {
@@ -86,6 +97,7 @@ var Index = &ice.Context{Name: "ctx", Help: "元始模块",
 					m.Echo(p)
 				}
 			case "load":
+				arg[1] = path.Join(m.Conf(ice.CTX_CONFIG, ice.Meta("path")), arg[1])
 				if f, e := os.Open(arg[1]); e == nil {
 					data := map[string]interface{}{}
 					json.NewDecoder(f).Decode(&data)
@@ -97,6 +109,8 @@ var Index = &ice.Context{Name: "ctx", Help: "元始模块",
 						})
 					}
 				}
+			default:
+				m.Echo(m.Conf(arg[0]))
 			}
 		}},
 	},

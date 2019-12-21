@@ -1,44 +1,43 @@
 package chat
 
 import (
-	"github.com/shylinux/toolkits"
-
 	"github.com/shylinux/icebergs"
 	_ "github.com/shylinux/icebergs/base"
 	"github.com/shylinux/icebergs/base/web"
+	"github.com/shylinux/toolkits"
 )
 
 var Index = &ice.Context{Name: "chat", Help: "聊天模块",
 	Caches: map[string]*ice.Cache{},
 	Configs: map[string]*ice.Config{
-		"group": {Name: "group", Value: map[string]interface{}{
-			ice.MDB_META: map[string]interface{}{},
-			ice.MDB_LIST: map[string]interface{}{},
-			ice.MDB_HASH: map[string]interface{}{},
-		}},
+		"group": {Name: "group", Help: "群组", Value: ice.Data()},
 	},
 	Commands: map[string]*ice.Command{
 		ice.ICE_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			m.Cmd("ctx.config", "load", "var/conf/aaa.json")
-			m.Cmd("ctx.config", "load", "var/conf/chat.json")
+			m.Cmd(ice.CTX_CONFIG, "load", "aaa.json")
+			m.Cmd(ice.CTX_CONFIG, "load", "web.json")
+			m.Cmd(ice.CTX_CONFIG, "load", "chat.json")
 		}},
 		ice.ICE_EXIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			m.Cmd("ctx.config", "save", "var/conf/chat.json", "web.chat.group")
-			m.Cmd("ctx.config", "save", "var/conf/aaa.json", "aaa.role", "aaa.user", "aaa.sess")
+			m.Cmd(ice.CTX_CONFIG, "save", "chat.json", "web.chat.group")
+			m.Cmd(ice.CTX_CONFIG, "save", "web.json", "web.story", "web.cache")
+			m.Cmd(ice.CTX_CONFIG, "save", "aaa.json", "aaa.role", "aaa.user", "aaa.sess")
 		}},
 
-		"_login": {Name: "_login", Help: "hello", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		ice.WEB_LOGIN: {Name: "login", Help: "登录", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			if cmd != "/login" {
 				if !m.Options(ice.WEB_SESS) || !m.Options("username") {
+					// 检查失败
+					m.Log(ice.LOG_WARN, "not login").Error("not login")
 					m.Option("path", "")
-					m.Log("warn", "not login")
-					m.Echo("error").Echo("not login")
 					return
 				}
 			}
-			if len(arg) > 0 && m.Confs("group", "hash."+arg[0]) {
+
+			// 查询群组
+			if len(arg) > 0 && m.Confs("group", kit.Keys("hash", arg[0])) {
 				m.Option("sess.river", arg[0])
-				if len(arg) > 1 && m.Confs("group", "hash."+arg[0]+".tool.hash."+arg[1]) {
+				if len(arg) > 1 && m.Confs("group", kit.Keys("hash", arg[0], "tool", "hash", arg[1])) {
 					m.Option("sess.storm", arg[1])
 				}
 			}

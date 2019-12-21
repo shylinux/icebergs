@@ -1,17 +1,17 @@
 # {{title "hello world"}}
 
-{{shell "" "uptime"}}
+{{shell "开机时长" "" "uptime"}}
 
 {{title "premenu"}}
 
 ## {{chapter "项目总览"}}
-{{table "总览" `
+{{order "总览" `
 volcano iceberg
 context toolkit
 preload appframe
 `}}
 
-{{order "总览" `
+{{table "总览" `
 volcano iceberg
 context toolkit
 preload appframe

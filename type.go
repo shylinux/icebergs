@@ -370,9 +370,6 @@ func (m *Message) Echo(str string, arg ...interface{}) *Message {
 	m.meta[MSG_RESULT] = append(m.meta[MSG_RESULT], fmt.Sprintf(str, arg...))
 	return m
 }
-func (m *Message) Error(str string, arg ...interface{}) *Message {
-	return m.Echo("error").Echo(str, arg...)
-}
 func (m *Message) Sort(key string, arg ...string) *Message {
 	cmp := "str"
 	if len(arg) > 0 && arg[0] != "" {
@@ -550,10 +547,10 @@ func (m *Message) Optionv(key string, arg ...interface{}) interface{} {
 	}
 
 	for msg := m; msg != nil; msg = msg.message {
-		if list, ok := msg.meta[key]; ok {
+		if list, ok := msg.data[key]; ok {
 			return list
 		}
-		if list, ok := msg.data[key]; ok {
+		if list, ok := msg.meta[key]; ok {
 			return list
 		}
 	}
@@ -579,8 +576,9 @@ func (m *Message) Result(arg ...interface{}) string {
 }
 
 func (m *Message) Log(level string, str string, arg ...interface{}) *Message {
+	str = strings.TrimSpace(fmt.Sprintf(str, arg...))
 	if Log != nil {
-		Log(m, level, fmt.Sprintf(str, arg...))
+		Log(m, level, str)
 	}
 	prefix, suffix := "", ""
 	switch level {
@@ -593,12 +591,37 @@ func (m *Message) Log(level string, str string, arg ...interface{}) *Message {
 	}
 	fmt.Fprintf(os.Stderr, "%s %d %s->%s %s%s %s%s\n",
 		time.Now().Format(ICE_TIME), m.code, m.source.Name, m.target.Name,
-		prefix, level, fmt.Sprintf(str, arg...), suffix)
+		prefix, level, str, suffix)
 	return m
 }
 func (m *Message) Info(str string, arg ...interface{}) *Message {
 	return m.Log(LOG_INFO, str, arg...)
 }
+func (m *Message) Warn(err bool, str string, arg ...interface{}) bool {
+	if err {
+		m.Echo("warn: ").Echo(str, arg...)
+		return m.Log(LOG_WARN, str, arg...) != nil
+	}
+	return false
+}
+func (m *Message) Error(err bool, str string, arg ...interface{}) bool {
+	if err {
+		m.Echo("error: ").Echo(str, arg...)
+		m.Log(LOG_ERROR, m.Format("stack"))
+		m.Log(LOG_ERROR, str, arg...)
+		m.Log(LOG_ERROR, m.Format("chain"))
+		return true
+	}
+	return false
+}
+func (m *Message) Trace(key string, str string, arg ...interface{}) *Message {
+	if m.Options(key) {
+		m.Echo("trace: ").Echo(str, arg...)
+		return m.Log(LOG_TRACE, str, arg...)
+	}
+	return m
+}
+
 func (m *Message) Assert(arg interface{}) bool {
 	switch arg := arg.(type) {
 	case nil:
@@ -749,12 +772,14 @@ func (m *Message) Search(key interface{}, cb interface{}) *Message {
 			for c := p; c != nil; c = c.context {
 				if cmd, ok := c.Commands[key]; ok {
 					cb(c.context, c, key, cmd)
+					break
 				}
 			}
 		case func(p *Context, s *Context, key string, conf *Config):
 			for c := p; c != nil; c = c.context {
 				if cmd, ok := c.Configs[key]; ok {
 					cb(c.context, c, key, cmd)
+					break
 				}
 			}
 		case func(p *Context, s *Context, key string):
@@ -1039,18 +1064,14 @@ func (m *Message) Cmd(arg ...interface{}) *Message {
 	return m
 }
 func (m *Message) Confv(arg ...interface{}) (val interface{}) {
-	m.Search(arg[0], func(p *Context, s *Context, key string) {
-		for c := s; c != nil; c = c.context {
-			if conf, ok := c.Configs[key]; ok {
-				if len(arg) > 1 {
-					if len(arg) > 2 {
-						kit.Value(conf.Value, arg[1:]...)
-					}
-					val = kit.Value(conf.Value, arg[1])
-				} else {
-					val = conf.Value
-				}
+	m.Search(arg[0], func(p *Context, s *Context, key string, conf *Config) {
+		if len(arg) > 1 {
+			if len(arg) > 2 {
+				kit.Value(conf.Value, arg[1:]...)
 			}
+			val = kit.Value(conf.Value, arg[1])
+		} else {
+			val = conf.Value
 		}
 	})
 	return

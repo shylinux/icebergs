@@ -13,34 +13,6 @@ import (
 	"strings"
 )
 
-var prefix = `<svg class="story" data-name="{{.Option "name"}}" data-text="{{.Option "text"}}" vertion="1.1" xmlns="http://www.w3.org/2000/svg"
-	width="{{.Option "width"}}" height="{{.Option "height"}}" style="{{.Option "style"}}"
-	data-name="{{.Option "name"}}"
->`
-
-var shell = `<div class="story code" data-name="{{.Option "name"}}" data-text="{{.Option "text"}}" data-input="{{.Option "input"}}">$ {{.Option "input"}}
-{{.Option "output"}}</div>`
-
-var title = `<span class="story">{{.Option "prefix"}}{{.Option "content"}}</span>`
-
-var order = `<ul class="story" data-name="{{.Option "name"}}" data-text="{{.Option "text"}}">{{range $index, $value := .Optionv "list"}}<li>{{$value}}</li>{{end}}</ul>`
-
-var table = `<table class="story" data-name="{{.Option "name"}} data-text="{{.Option "text"}}>
-<tr>{{range $i, $v := .Optionv "head"}}<th>{{$v}}</th>{{end}}</tr>
-{{range $index, $value := .Optionv "list"}}
-<tr>{{range $i, $v := $value}}<td>{{$v}}</td>{{end}}</tr>
-{{end}}
-</table>`
-
-var premenu = `<ul class="story premenu"></ul>`
-var endmenu = `<ul class="story endmenu">
-{{$menu := .Optionv "menu"}}
-{{range $index, $value := Value $menu "list"}}
-<li>{{Value $value "prefix"}} {{Value $value "content"}}</li>
-{{end}}
-</ul>
-`
-
 var Index = &ice.Context{Name: "wiki", Help: "文档模块",
 	Caches: map[string]*ice.Cache{},
 	Configs: map[string]*ice.Config{
@@ -65,11 +37,11 @@ var Index = &ice.Context{Name: "wiki", Help: "文档模块",
 	Commands: map[string]*ice.Command{
 		"chart": {Name: "chart block|chain|table name text [fg bg fs ls p m]", Help: "绘图", Meta: map[string]interface{}{
 			"display": "inner",
-		}, List: []interface{}{
-			map[string]interface{}{"type": "select", "value": "chain", "values": "block chain table"},
-			map[string]interface{}{"type": "text", "value": ""},
-			map[string]interface{}{"type": "button", "value": "生成"},
-		}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		}, List: ice.List(
+			ice.MDB_TYPE, "select", "value", "chain", "values", "block chain table",
+			ice.MDB_TYPE, "text", "value", "",
+			ice.MDB_TYPE, "button", "value", "生成",
+		), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			// 创建类型
 			var chart Chart
 			switch arg[0] {
@@ -84,6 +56,7 @@ var Index = &ice.Context{Name: "wiki", Help: "文档模块",
 			arg[2] = strings.TrimSpace(arg[2])
 
 			// 构造数据
+			m.Option("type", arg[0])
 			m.Option("name", arg[1])
 			m.Option("text", arg[2])
 			chart.Init(m, arg[2:]...)
@@ -95,7 +68,10 @@ var Index = &ice.Context{Name: "wiki", Help: "文档模块",
 			chart.Draw(m, 0, 0)
 			m.Render(m.Conf("chart", ice.Meta("suffix")))
 		}},
-		"table": {Name: "table name text", Help: "表格", Hand: func(m *ice.Message, c *ice.Context, key string, arg ...string) {
+		"table": {Name: "table name text", Help: "表格", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			m.Option("type", "table")
+			m.Option("name", arg[0])
+			m.Option("text", arg[1])
 			head, list := []string{}, [][]string{}
 			for i, v := range kit.Split(arg[1], "\n") {
 				if i == 0 {
@@ -109,26 +85,28 @@ var Index = &ice.Context{Name: "wiki", Help: "文档模块",
 			m.Render(m.Conf("table", ice.Meta("template")))
 		}},
 		"order": {Name: "order name text", Help: "列表", Hand: func(m *ice.Message, c *ice.Context, key string, arg ...string) {
-			m.Optionv("name", arg[0])
-			m.Optionv("text", arg[1])
+			m.Option("type", "order")
+			m.Option("name", arg[0])
+			m.Option("text", arg[1])
 			m.Optionv("list", kit.Split(arg[1], "\n"))
 			m.Render(m.Conf("order", ice.Meta("template")))
 		}},
-		"shell": {Name: "shell dir cmd", Help: "命令", Hand: func(m *ice.Message, c *ice.Context, key string, arg ...string) {
-			m.Option("cmd_dir", arg[0])
-			m.Option("input", strings.Join(arg[1:], " "))
-			m.Option("output", m.Cmdx("cli.system", "sh", "-c", strings.Join(arg[1:], " ")))
+		"shell": {Name: "shell name dir cmd", Help: "命令", Hand: func(m *ice.Message, c *ice.Context, key string, arg ...string) {
+			m.Option("type", "shell")
+			m.Option("name", arg[0])
+			m.Option("cmd_dir", arg[1])
+			m.Option("output", m.Cmdx("cli.system", "sh", "-c", m.Option("input", strings.Join(arg[2:], " "))))
 			m.Render(m.Conf("shell", ice.Meta("template")))
 		}},
 		"title": {Name: "title text", Help: "标题", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			// 生成序号
 			title, _ := m.Optionv("title").(map[string]int)
 			switch arg[0] {
-			case "premenu":
-				m.Echo(premenu)
-				return
 			case "endmenu":
 				m.Render(endmenu)
+				return
+			case "premenu":
+				m.Render(premenu)
 				return
 			case "section":
 				arg = arg[1:]
@@ -142,13 +120,13 @@ var Index = &ice.Context{Name: "wiki", Help: "文档模块",
 			default:
 				m.Option("prefix", "")
 			}
-
-			ns := strings.Split(m.Conf("runtime", "node.name"), "-")
+			m.Option("type", "title")
+			m.Option("text", arg[0])
 
 			// 生成菜单
+			ns := strings.Split(m.Conf("runtime", "node.name"), "-")
 			menu, _ := m.Optionv("menu").(map[string]interface{})
-			list, _ := menu["list"].([]interface{})
-			menu["list"] = append(list, map[string]interface{}{
+			menu["list"] = append(menu["list"].([]interface{}), map[string]interface{}{
 				"content": m.Option("content", kit.Select(ns[len(ns)-1], arg, 0)),
 				"prefix":  m.Option("prefix"),
 			})
@@ -160,7 +138,7 @@ var Index = &ice.Context{Name: "wiki", Help: "文档模块",
 		"_text": {Name: "_text file", Help: "文章", Hand: func(m *ice.Message, c *ice.Context, key string, arg ...string) {
 			m.Option(ice.WEB_TMPL, "raw")
 			m.Optionv("title", map[string]int{})
-			m.Optionv("menu", map[string]interface{}{})
+			m.Optionv("menu", map[string]interface{}{"list": []interface{}{}})
 
 			// 生成文章
 			buffer := bytes.NewBuffer([]byte{})
@@ -185,7 +163,7 @@ var Index = &ice.Context{Name: "wiki", Help: "文档模块",
 		}},
 		"note": {Name: "note file", Help: "笔记", Meta: map[string]interface{}{
 			"remote": "true", "display": "inner",
-			"detail": []string{"add", "commit", "favor", "detail"},
+			"detail": []string{"add", "commit", "history", "share"},
 		}, List: ice.List(
 			ice.MDB_TYPE, "text", "value", "miss.md", "name", "path",
 			ice.MDB_TYPE, "button", "value", "执行", "action", "auto",
@@ -199,6 +177,9 @@ var Index = &ice.Context{Name: "wiki", Help: "文档模块",
 				}
 			}
 			m.Cmdy(kit.Select("_tree", "_text", len(arg) > 0 && strings.HasSuffix(arg[0], ".md")), arg)
+		}},
+		"index": {Name: "index hash", Help: "索引", Hand: func(m *ice.Message, c *ice.Context, key string, arg ...string) {
+			m.Cmd(ice.WEB_STORY, "index", arg)
 		}},
 	},
 }

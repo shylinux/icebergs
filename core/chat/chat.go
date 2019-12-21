@@ -20,15 +20,14 @@ var Index = &ice.Context{Name: "chat", Help: "聊天模块",
 		}},
 		ice.ICE_EXIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			m.Cmd(ice.CTX_CONFIG, "save", "chat.json", "web.chat.group")
-			m.Cmd(ice.CTX_CONFIG, "save", "web.json", "web.story", "web.cache")
+			m.Cmd(ice.CTX_CONFIG, "save", "web.json", "web.story", "web.cache", "web.share")
 			m.Cmd(ice.CTX_CONFIG, "save", "aaa.json", "aaa.role", "aaa.user", "aaa.sess")
 		}},
 
 		ice.WEB_LOGIN: {Name: "login", Help: "登录", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			if cmd != "/login" {
-				if !m.Options(ice.WEB_SESS) || !m.Options("username") {
+				if m.Warn(!m.Options(ice.WEB_SESS) || !m.Options("username"), "not login") {
 					// 检查失败
-					m.Log(ice.LOG_WARN, "not login").Error("not login")
 					m.Option("path", "")
 					return
 				}

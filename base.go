@@ -128,6 +128,7 @@ func Run(arg ...string) string {
 
 	frame := &Frame{}
 	Index.server = frame
+	Pulse.Option("begin_time", Pulse.Time())
 
 	if frame.Begin(Pulse.Spawns(), arg...).Start(Pulse.Spawns(), arg...) {
 		frame.Close(Pulse.Spawns(), arg...)

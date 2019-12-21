@@ -7,6 +7,7 @@ import (
 
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"math/rand"
 	"net"
 	"net/http"
@@ -113,8 +114,7 @@ func (web *Frame) HandleCGI(m *ice.Message, alias map[string]interface{}, which 
 	cb := func(k string, p []string, v *ice.Command) {
 		cgi[k] = func(arg ...interface{}) (res interface{}) {
 			m.TryCatch(m.Spawn(), true, func(msg *ice.Message) {
-				m.Log("cmd", "%v %v %v", k, p, arg)
-				v.Hand(msg, m.Target(), k, kit.Simple(p, arg)...)
+				msg.Target().Run(msg, v, k, kit.Simple(p, arg)...)
 
 				buffer := bytes.NewBuffer([]byte{})
 				m.Assert(tmpl.ExecuteTemplate(buffer, msg.Option(ice.WEB_TMPL), msg))
@@ -139,10 +139,10 @@ func (web *Frame) HandleCGI(m *ice.Message, alias map[string]interface{}, which 
 	}
 
 	tmpl = tmpl.Funcs(cgi)
-	// tmpl = template.Must(tmpl.ParseGlob(path.Join(m.Conf(ice.WEB_SERVE, "template.path"), "/*.tmpl")))
-	// tmpl = template.Must(tmpl.ParseGlob(path.Join(m.Conf(ice.WEB_SERVE, "template.path"), m.Target().Name, "/*.tmpl")))
+	// tmpl = template.Must(tmpl.ParseGlob(path.Join(m.Conf(ice.WEB_SERVE, ice.Meta("template", "path")), "/*.tmpl")))
+	// tmpl = template.Must(tmpl.ParseGlob(path.Join(m.Conf(ice.WEB_SERVE, ice.Meta("template", "path")), m.Target().Name, "/*.tmpl")))
 	tmpl = template.Must(tmpl.ParseFiles(which))
-	m.Confm(ice.WEB_SERVE, "template.list", func(index int, value string) { tmpl = template.Must(tmpl.Parse(value)) })
+	m.Confm(ice.WEB_SERVE, ice.Meta("template", "list"), func(index int, value string) { tmpl = template.Must(tmpl.Parse(value)) })
 	for i, v := range tmpl.Templates() {
 		m.Log("info", "%v, %v", i, v.Name())
 	}
@@ -209,7 +209,13 @@ func (web *Frame) HandleCmd(m *ice.Message, key string, cmd *ice.Command) {
 			if web.Login(msg, w, r) {
 				msg.Log("cmd", "%s %s", msg.Target().Name, key)
 				cmd.Hand(msg, msg.Target(), msg.Option("url"), kit.Simple(msg.Optionv("cmds"))...)
-				w.Write([]byte(msg.Formats("meta")))
+				switch msg.Append("content-type") {
+				case "text/html":
+					w.Header().Set("Content-Type", "text/html")
+					fmt.Fprintf(w, msg.Result())
+				default:
+					fmt.Fprintf(w, msg.Formats("meta"))
+				}
 			}
 		})
 	})
@@ -261,7 +267,7 @@ func (web *Frame) Start(m *ice.Message, arg ...string) bool {
 			}
 
 			// 静态路由
-			m.Confm("web.serve", "static", func(key string, value string) {
+			m.Confm(ice.WEB_SERVE, ice.Meta("static"), func(key string, value string) {
 				msg.Log("route", "%s <- %s <- %s", s.Name, key, value)
 				w.Handle(key, http.StripPrefix(key, http.FileServer(http.Dir(value))))
 			})
@@ -290,15 +296,15 @@ var Index = &ice.Context{Name: "web", Help: "网页模块",
 	Caches: map[string]*ice.Cache{},
 	Configs: map[string]*ice.Config{
 		ice.WEB_SPIDE: {Name: "spide", Help: "客户端", Value: ice.Data("self.port", ice.WEB_PORT)},
-		ice.WEB_SERVE: {Name: "serve", Help: "服务器", Value: map[string]interface{}{
-			"static": map[string]interface{}{"/": "usr/volcanos/",
+		ice.WEB_SERVE: {Name: "serve", Help: "服务器", Value: ice.Data(
+			"static", map[string]interface{}{"/": "usr/volcanos/",
 				"/static/volcanos/": "usr/volcanos/",
 			},
-			"template": map[string]interface{}{"path": "usr/template", "list": []interface{}{
+			"template", map[string]interface{}{"path": "usr/template", "list": []interface{}{
 				`{{define "raw"}}{{.Result}}{{end}}`,
 			}},
-		}},
-		ice.WEB_SPACE: {Name: "space", Help: "空间站", Value: ice.Meta("buffer", 4096, "redial", 3000)},
+		)},
+		ice.WEB_SPACE: {Name: "space", Help: "空间站", Value: ice.Data("buffer", 4096, "redial", 3000)},
 		ice.WEB_STORY: {Name: "story", Help: "故事会", Value: ice.Data("short", "data")},
 		ice.WEB_CACHE: {Name: "cache", Help: "缓存", Value: ice.Data(
 			"short", "text", "path", "var/file",
@@ -306,6 +312,7 @@ var Index = &ice.Context{Name: "web", Help: "网页模块",
 		)},
 		ice.WEB_ROUTE: {Name: "route", Help: "路由", Value: ice.Data()},
 		ice.WEB_PROXY: {Name: "proxy", Help: "代理", Value: ice.Data()},
+		ice.WEB_SHARE: {Name: "share", Help: "共享", Value: ice.Data()},
 	},
 	Commands: map[string]*ice.Command{
 		ice.ICE_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {}},
@@ -398,16 +405,16 @@ var Index = &ice.Context{Name: "web", Help: "网页模块",
 			switch arg[0] {
 			case "add":
 				// 查询索引
-				head := kit.Hashs(arg[1])
+				head := kit.Hashs(arg[1], arg[2])
 				prev := m.Conf("story", ice.Meta("head", head, "list"))
 				m.Log("info", "head: %v prev: %v", head, prev)
 
 				// 添加节点
 				meta := map[string]interface{}{
 					"time":  m.Time(),
-					"story": arg[1],
-					"scene": arg[2],
-					"data":  m.Cmdx(ice.WEB_CACHE, "add", "text", arg[2]),
+					"scene": arg[1],
+					"story": arg[2],
+					"data":  m.Cmdx(ice.WEB_CACHE, "add", "text", arg[3]),
 					"prev":  prev,
 				}
 				list := m.Rich("story", nil, meta)
@@ -415,8 +422,7 @@ var Index = &ice.Context{Name: "web", Help: "网页模块",
 
 				// 添加索引
 				m.Conf("story", ice.Meta("head", head), map[string]interface{}{
-					"time": m.Time(), "type": "text",
-					"story": arg[1], "list": list,
+					"time": m.Time(), "scene": arg[1], "story": arg[2], "list": list,
 				})
 				m.Echo(list)
 
@@ -433,9 +439,9 @@ var Index = &ice.Context{Name: "web", Help: "网页模块",
 						menu[arg[i]] = arg[i+1]
 						i++
 					} else if head := kit.Hashs(arg[i]); m.Confs("story", kit.Keys("meta", "head", head)) {
-						menu[arg[i]] = head
+						menu[arg[i]] = m.Conf(ice.WEB_STORY, ice.Meta("head", head, "list"))
 					} else {
-						m.Error("not found %v", arg[i])
+						m.Error(true, "not found %v", arg[i])
 						return
 					}
 				}
@@ -443,6 +449,7 @@ var Index = &ice.Context{Name: "web", Help: "网页模块",
 				// 添加节点
 				meta := map[string]interface{}{
 					"time":  m.Time(),
+					"scene": "commit",
 					"story": arg[1],
 					"list":  menu,
 					"prev":  prev,
@@ -452,10 +459,40 @@ var Index = &ice.Context{Name: "web", Help: "网页模块",
 
 				// 添加索引
 				m.Conf("story", ice.Meta("head", head), map[string]interface{}{
-					"time": m.Time(), "type": "list",
-					"story": arg[1], "list": list,
+					"time": m.Time(), "scene": "commit", "story": arg[1], "list": list,
 				})
 				m.Echo(list)
+
+			case "history":
+				list := kit.Select(arg[1], kit.Select(m.Conf(ice.WEB_STORY, ice.Meta("head", arg[1], "list")),
+					m.Conf(ice.WEB_STORY, ice.Meta("head", kit.Hashs(arg[1]), "list"))))
+				for i := 0; i < 10 && list != ""; i++ {
+					m.Confm(ice.WEB_STORY, kit.Keys("hash", list), func(value map[string]interface{}) {
+						m.Push(list, value, []string{"key", "time", "story", "scene"})
+						m.Push("text", m.Conf(ice.WEB_CACHE, kit.Keys("hash", value["data"], "text")))
+						m.Push(list, value, []string{"data"})
+
+						kit.Fetch(value["list"], func(key string, val string) {
+							m.Push(list, value, []string{"key", "time"})
+							m.Push("story", kit.Keys(kit.Format(value["story"]), key))
+							m.Push("scene", value["scene"])
+							data := m.Conf(ice.WEB_STORY, kit.Keys("hash", val, "data"))
+							m.Push("text", m.Conf(ice.WEB_CACHE, kit.Keys("hash", data, "text")))
+							m.Push("data", data)
+						})
+						list = kit.Format(value["prev"])
+					})
+				}
+
+			case "share":
+				m.Cmdy(ice.WEB_SHARE, arg[1:])
+
+			case "index":
+				list := kit.Select(arg[1], kit.Select(m.Conf(ice.WEB_STORY, ice.Meta("head", arg[1], "list")),
+					m.Conf(ice.WEB_STORY, ice.Meta("head", kit.Hashs(arg[1]), "list"))))
+				data := kit.Select(list, m.Conf(ice.WEB_STORY, []string{"hash", list, "data"}))
+				text := m.Conf(ice.WEB_CACHE, []string{"hash", data, "text"})
+				m.Echo(text)
 			}
 		}},
 		ice.WEB_CACHE: {Name: "cache", Help: "缓存", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
@@ -480,6 +517,38 @@ var Index = &ice.Context{Name: "web", Help: "网页模块",
 		ice.WEB_ROUTE: {Name: "route", Help: "路由", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 		}},
 		ice.WEB_PROXY: {Name: "proxy", Help: "代理", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		}},
+		ice.WEB_SHARE: {Name: "share type name value", Help: "共享", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			if len(arg) == 0 {
+				m.Confm(ice.WEB_SHARE, "hash", func(key string, value map[string]interface{}) {
+					m.Push(key, value)
+				})
+				return
+			}
+			m.Echo(m.Rich(ice.WEB_SHARE, nil, map[string]interface{}{
+				"create_time": m.Time(), "type": arg[0], "name": arg[1], "text": kit.Select("", arg, 2),
+			}))
+		}},
+		"/share/": &ice.Command{Name: "/share", Help: "共享", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			key := kit.Select("", strings.Split(cmd, "/"), 2)
+			m.Confm(ice.WEB_SHARE, kit.Keys("hash", key), func(value map[string]interface{}) {
+				m.Push("content-type", "text/html")
+				m.Echo(`<!DOCTYPE html>`)
+				m.Echo(`<head>`)
+				m.Echo(`<meta charset="utf-8">`)
+				m.Echo(`<link rel="stylesheet" text="text/css" href="/style.css">`)
+				m.Echo(`</head>`)
+				m.Echo(`<body>`)
+				m.Echo(`<fieldset>`)
+				key := kit.Keys("web.wiki", value["type"])
+				if key == "web.wiki.chain" {
+					m.Cmdy("web.wiki.chart", "chain", value["name"], value["text"])
+				} else {
+					m.Cmdy(key, value["name"], "", value["text"])
+				}
+				m.Echo(`</fieldset>`)
+				m.Echo(`</body>`)
+			})
 		}},
 
 		"/space": &ice.Command{Name: "/space", Help: "空间站", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {

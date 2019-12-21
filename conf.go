@@ -38,6 +38,7 @@ const (
 	WEB_CACHE = "cache"
 	WEB_ROUTE = "route"
 	WEB_PROXY = "proxy"
+	WEB_SHARE = "share"
 )
 const (
 	GDB_SIGNAL = "signal"
@@ -49,6 +50,7 @@ const (
 	LOG_INFO  = "info"
 	LOG_WARN  = "warn"
 	LOG_ERROR = "error"
+	LOG_TRACE = "trace"
 
 	LOG_BEGIN = "begin"
 	LOG_START = "start"
@@ -70,6 +72,7 @@ var Alias = map[string]string{
 	WEB_CACHE: "web.cache",
 	WEB_ROUTE: "web.route",
 	WEB_PROXY: "web.proxy",
+	WEB_SHARE: "web.share",
 
 	"note": "web.wiki.note",
 }

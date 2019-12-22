@@ -24,9 +24,9 @@ var Index = &ice.Context{Name: "team", Help: "团队模块",
 			"exports": []interface{}{"you", "name"},
 			"detail":  []interface{}{"启动", "停止"},
 		}, List: kit.List(
-			kit.MDB_TYPE, "text", "value", "", "name", "name",
-			kit.MDB_TYPE, "text", "value", "", "name", "type",
-			kit.MDB_TYPE, "button", "value", "创建", "action", "auto",
+			kit.MDB_INPUT, "text", "value", "", "name", "name",
+			kit.MDB_INPUT, "text", "value", "", "name", "type",
+			kit.MDB_INPUT, "button", "value", "创建", "action", "auto",
 		), Hand: func(m *ice.Message, c *ice.Context, key string, arg ...string) {
 			if len(arg) > 1 {
 				switch arg[1] {

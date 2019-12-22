@@ -20,7 +20,7 @@ var Index = &ice.Context{Name: "chat", Help: "聊天模块",
 		}},
 		ice.ICE_EXIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			m.Cmd(ice.CTX_CONFIG, "save", "chat.json", ice.CHAT_GROUP)
-			m.Cmd(ice.CTX_CONFIG, "save", "web.json", ice.WEB_STORY, ice.WEB_CACHE, ice.WEB_SHARE)
+			m.Cmd(ice.CTX_CONFIG, "save", "web.json", ice.WEB_STORY, ice.WEB_CACHE, ice.WEB_FAVOR, ice.WEB_SHARE)
 			m.Cmd(ice.CTX_CONFIG, "save", "aaa.json", ice.AAA_ROLE, ice.AAA_USER, ice.AAA_SESS)
 		}},
 
@@ -114,6 +114,7 @@ var Index = &ice.Context{Name: "chat", Help: "聊天模块",
 				m.Richs(ice.CHAT_GROUP, prefix, "", func(key string, value map[string]interface{}) {
 					m.Push(key, value["meta"], []string{kit.MDB_KEY, kit.MDB_NAME})
 				})
+				m.Sort(kit.MDB_NAME)
 				return
 			}
 

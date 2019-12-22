@@ -9,8 +9,8 @@ var Index = &ice.Context{Name: "aaa", Help: "认证模块",
 	Caches: map[string]*ice.Cache{},
 	Configs: map[string]*ice.Config{
 		ice.AAA_ROLE: {Name: "role", Help: "角色", Value: kit.Data()},
-		ice.AAA_USER: {Name: "user", Help: "用户", Value: kit.Data("short", "username")},
-		ice.AAA_SESS: {Name: "sess", Help: "会话", Value: kit.Data("short", "uniq", "expire", "720h")},
+		ice.AAA_USER: {Name: "user", Help: "用户", Value: kit.Data(kit.MDB_SHORT, "username")},
+		ice.AAA_SESS: {Name: "sess", Help: "会话", Value: kit.Data(kit.MDB_SHORT, "uniq", "expire", "720h")},
 	},
 	Commands: map[string]*ice.Command{
 		ice.ICE_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {}},

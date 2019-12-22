@@ -302,14 +302,14 @@ var Index = &ice.Context{Name: "web", Help: "网页模块",
 			}},
 		)},
 		ice.WEB_SPACE: {Name: "space", Help: "空间站", Value: kit.Data("buffer", 4096, "redial", 3000)},
-		ice.WEB_STORY: {Name: "story", Help: "故事会", Value: kit.Data("short", "data")},
+		ice.WEB_STORY: {Name: "story", Help: "故事会", Value: kit.Data(kit.MDB_SHORT, "data")},
 		ice.WEB_CACHE: {Name: "cache", Help: "缓存", Value: kit.Data(
-			"short", "text", "path", "var/file",
+			kit.MDB_SHORT, "text", "path", "var/file",
 			"store", "var/data", "limit", "30", "least", "10",
 		)},
 		ice.WEB_ROUTE: {Name: "route", Help: "路由", Value: kit.Data()},
 		ice.WEB_PROXY: {Name: "proxy", Help: "代理", Value: kit.Data()},
-		ice.WEB_FAVOR: {Name: "favor", Help: "收藏", Value: kit.Data()},
+		ice.WEB_FAVOR: {Name: "favor", Help: "收藏", Value: kit.Data(kit.MDB_SHORT, kit.MDB_NAME)},
 		ice.WEB_SHARE: {Name: "share", Help: "共享", Value: kit.Data()},
 	},
 	Commands: map[string]*ice.Command{
@@ -321,16 +321,20 @@ var Index = &ice.Context{Name: "web", Help: "网页模块",
 			m.Conf("cli.runtime", "node.name", m.Conf("cli.runtime", "boot.hostname"))
 			m.Conf("cli.runtime", "node.type", "server")
 
-			m.Rich(ice.WEB_SPACE, nil, map[string]interface{}{
-				"type": "myself",
-				"node": m.Conf("cli.runtime", "boot.hostname"),
-				"user": m.Conf("cli.runtime", "boot.username"),
-			})
+			m.Rich(ice.WEB_SPACE, nil, kit.Dict(
+				"type", "myself",
+				"node", m.Conf("cli.runtime", "boot.hostname"),
+				"user", m.Conf("cli.runtime", "boot.username"),
+			))
 			m.Target().Start(m, arg...)
 		}},
-		ice.WEB_SPACE: {Name: "space", Help: "空间站", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		ice.WEB_SPACE: {Name: "space", Help: "空间站", Meta: kit.Dict("exports", []string{"pod", "node"}), List: kit.List(
+			kit.MDB_INPUT, "text", "name", "pod", "action", "auto",
+			kit.MDB_INPUT, "button", "value", "查看", "action", "auto",
+			kit.MDB_INPUT, "button", "value", "返回", "cb", "Last",
+		), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			if len(arg) == 0 {
-				m.Conf(ice.WEB_SPACE, kit.MDB_HASH, func(key string, value map[string]interface{}) {
+				m.Richs(ice.WEB_SPACE, nil, "", func(key string, value map[string]interface{}) {
 					m.Push(key, value)
 				})
 				return
@@ -523,14 +527,70 @@ var Index = &ice.Context{Name: "web", Help: "网页模块",
 		}},
 		ice.WEB_PROXY: {Name: "proxy", Help: "代理", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 		}},
-		ice.WEB_FAVOR: {Name: "favor", Help: "收藏", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		ice.WEB_FAVOR: {Name: "favor", Help: "收藏", Meta: kit.Dict("exports", []string{"hot", "favor"}), List: kit.List(
+			kit.MDB_INPUT, "text", "name", "hot", "action", "auto",
+			kit.MDB_INPUT, "text", "name", "id", "action", "auto",
+			kit.MDB_INPUT, "button", "value", "查看", "action", "auto",
+			kit.MDB_INPUT, "button", "value", "返回", "cb", "Last",
+		), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			if len(arg) == 0 {
-				m.Confm(ice.WEB_SHARE, "hash", func(key string, value map[string]interface{}) {
-					m.Push(key, value)
+				// 收藏门类
+				m.Richs(ice.WEB_FAVOR, nil, "", func(key string, value map[string]interface{}) {
+					m.Push("favor", kit.Value(value, "meta.name"))
+					m.Push("count", kit.Value(value, "meta.count"))
+					m.Push("time", kit.Value(value, "meta.create_time"))
 				})
 				return
 			}
 
+			if len(arg) > 1 {
+				switch arg[1] {
+				case "modify":
+					// 编辑收藏
+					m.Richs(ice.WEB_FAVOR, nil, m.Option("hot"), func(key string, value map[string]interface{}) {
+						m.Grows(ice.WEB_FAVOR, kit.Keys(kit.MDB_HASH, key), "id", m.Option("id"), func(index int, value map[string]interface{}) {
+							m.Info("modify favor: %s index: %d value: %v->%v", key, index, value[arg[2]], arg[3])
+							kit.Value(value, arg[2], arg[3])
+						})
+					})
+					return
+				}
+			}
+
+			// 创建收藏
+			favor := ""
+			if m.Richs(ice.WEB_FAVOR, nil, arg[0], func(key string, value map[string]interface{}) {
+				favor = key
+			}) == nil {
+				favor = m.Rich(ice.WEB_FAVOR, nil, kit.Data(kit.MDB_NAME, arg[0]))
+				m.Info("create favor: %s name: %s", favor, arg[0])
+			}
+
+			if len(arg) == 1 {
+				// 收藏列表
+				m.Grows(ice.WEB_FAVOR, kit.Keys(kit.MDB_HASH, favor), "", "", func(index int, value map[string]interface{}) {
+					m.Push(kit.Format(index), value, []string{"create_time", "id", "type", "name", "text"})
+				})
+				return
+			}
+
+			if len(arg) == 2 {
+				// 收藏详情
+				m.Grows(ice.WEB_FAVOR, kit.Keys(kit.MDB_HASH, favor), "id", arg[1], func(index int, value map[string]interface{}) {
+					for k, v := range value {
+						m.Push("key", k).Push("value", v)
+					}
+					m.Sort("key")
+				})
+				return
+			}
+
+			// 添加收藏
+			index := m.Grow(ice.WEB_FAVOR, kit.Keys(kit.MDB_HASH, favor), kit.Dict(
+				kit.MDB_TYPE, arg[1], kit.MDB_NAME, arg[2], kit.MDB_TEXT, arg[3],
+			))
+			m.Info("create favor: %s index: %d name: %s", favor, index, arg[2])
+			m.Echo("%d", index)
 		}},
 		ice.WEB_SHARE: {Name: "share", Help: "共享", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			if len(arg) == 0 {

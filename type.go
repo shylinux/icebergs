@@ -817,7 +817,8 @@ func (m *Message) Richs(key string, chain interface{}, raw interface{}, cb inter
 		return nil
 	}
 
-	switch h := kit.Format(raw); h {
+	h := kit.Format(raw)
+	switch h {
 	case "*", "":
 		// 全部遍历
 		switch cb := cb.(type) {
@@ -836,7 +837,7 @@ func (m *Message) Richs(key string, chain interface{}, raw interface{}, cb inter
 		res, _ = hash[h].(map[string]interface{})
 	default:
 		// 单个查询
-		switch kit.Format(kit.Value(meta, "short")) {
+		switch kit.Format(kit.Value(meta, kit.MDB_SHORT)) {
 		case "", "uniq":
 		default:
 			h = kit.Hashs(h)
@@ -849,6 +850,8 @@ func (m *Message) Richs(key string, chain interface{}, raw interface{}, cb inter
 		switch cb := cb.(type) {
 		case func(map[string]interface{}):
 			cb(res)
+		case func(string, map[string]interface{}):
+			cb(h, res)
 		}
 	}
 	return res
@@ -880,7 +883,7 @@ func (m *Message) Rich(key string, chain interface{}, data interface{}) string {
 
 	// 生成键值
 	h := ""
-	switch short := kit.Format(kit.Value(meta, "short")); short {
+	switch short := kit.Format(kit.Value(meta, kit.MDB_SHORT)); short {
 	case "":
 		h = kit.ShortKey(hash, 6)
 	case "uniq":
@@ -888,7 +891,11 @@ func (m *Message) Rich(key string, chain interface{}, data interface{}) string {
 	case "data":
 		h = kit.Hashs(kit.Format(data))
 	default:
-		h = kit.Hashs(kit.Format(kit.Value(data, short)))
+		if kit.Value(data, "meta") != nil {
+			h = kit.Hashs(kit.Format(kit.Value(data, "meta."+short)))
+		} else {
+			h = kit.Hashs(kit.Format(kit.Value(data, short)))
+		}
 	}
 
 	// 添加数据
@@ -913,8 +920,10 @@ func (m *Message) Grow(key string, chain interface{}, data interface{}) int {
 	id := kit.Int(meta["count"]) + 1
 	if kit.Value(data, "meta") != nil {
 		kit.Value(data, "meta.id", id)
+		kit.Value(data, "meta.create_time", m.Time())
 	} else {
 		kit.Value(data, "id", id)
+		kit.Value(data, "create_time", m.Time())
 	}
 
 	// 添加数据

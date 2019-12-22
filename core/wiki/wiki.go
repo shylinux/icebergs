@@ -38,9 +38,9 @@ var Index = &ice.Context{Name: "wiki", Help: "文档模块",
 		"chart": {Name: "chart block|chain|table name text [fg bg fs ls p m]", Help: "绘图", Meta: map[string]interface{}{
 			"display": "inner",
 		}, List: kit.List(
-			kit.MDB_TYPE, "select", "value", "chain", "values", "block chain table",
-			kit.MDB_TYPE, "text", "value", "",
-			kit.MDB_TYPE, "button", "value", "生成",
+			kit.MDB_INPUT, "select", "value", "chain", "values", "block chain table",
+			kit.MDB_INPUT, "text", "value", "",
+			kit.MDB_INPUT, "button", "value", "生成",
 		), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			// 创建类型
 			var chart Chart
@@ -165,9 +165,9 @@ var Index = &ice.Context{Name: "wiki", Help: "文档模块",
 			"remote": "true", "display": "inner",
 			"detail": []string{"add", "commit", "history", "share"},
 		}, List: kit.List(
-			kit.MDB_TYPE, "text", "value", "miss.md", "name", "path",
-			kit.MDB_TYPE, "button", "value", "执行", "action", "auto",
-			kit.MDB_TYPE, "button", "value", "返回", "cb", "Last",
+			kit.MDB_INPUT, "text", "value", "miss.md", "name", "path",
+			kit.MDB_INPUT, "button", "value", "执行", "action", "auto",
+			kit.MDB_INPUT, "button", "value", "返回", "cb", "Last",
 		), Hand: func(m *ice.Message, c *ice.Context, key string, arg ...string) {
 			if len(arg) > 0 {
 				switch arg[0] {

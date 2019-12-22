@@ -57,10 +57,10 @@ var Index = &ice.Context{Name: "tmux", Help: "终端模块",
 		}},
 		"buffer": {Name: "buffer", Help: "终端",
 			List: kit.List(
-				kit.MDB_TYPE, "text", "name", "buffer", "action", "auto",
-				kit.MDB_TYPE, "text", "name", "value",
-				kit.MDB_TYPE, "button", "value", "查看", "action", "auto",
-				kit.MDB_TYPE, "button", "value", "返回", "cb", "Last",
+				kit.MDB_INPUT, "text", "name", "buffer", "action", "auto",
+				kit.MDB_INPUT, "text", "name", "value",
+				kit.MDB_INPUT, "button", "value", "查看", "action", "auto",
+				kit.MDB_INPUT, "button", "value", "返回", "cb", "Last",
 			),
 			Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 				if len(arg) == 0 {
@@ -87,11 +87,11 @@ var Index = &ice.Context{Name: "tmux", Help: "终端模块",
 				m.Cmdy("cli.system", "tmux", "show-buffer", "-b", arg[0]).Set("append")
 			}},
 		"session": {Name: "session", Help: "会话", List: kit.List(
-			kit.MDB_TYPE, "text", "name", "session", "action", "auto",
-			kit.MDB_TYPE, "text", "name", "window", "action", "auto",
-			kit.MDB_TYPE, "text", "name", "pane", "action", "auto",
-			kit.MDB_TYPE, "button", "value", "查看", "action", "auto",
-			kit.MDB_TYPE, "button", "value", "返回", "cb", "Last",
+			kit.MDB_INPUT, "text", "name", "session", "action", "auto",
+			kit.MDB_INPUT, "text", "name", "window", "action", "auto",
+			kit.MDB_INPUT, "text", "name", "pane", "action", "auto",
+			kit.MDB_INPUT, "button", "value", "查看", "action", "auto",
+			kit.MDB_INPUT, "button", "value", "返回", "cb", "Last",
 		), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			prefix := []string{"cli.system", "tmux"}
 			if len(arg) > 3 {

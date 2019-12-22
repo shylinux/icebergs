@@ -16,7 +16,7 @@ import (
 var Index = &ice.Context{Name: "wiki", Help: "文档模块",
 	Caches: map[string]*ice.Cache{},
 	Configs: map[string]*ice.Config{
-		"note": {Name: "note", Help: "笔记", Value: ice.Data(
+		"note": {Name: "note", Help: "笔记", Value: kit.Data(
 			"temp", "var/tmp/file",
 			"path", "usr/local/wiki",
 			"head", "time size line path",
@@ -28,19 +28,19 @@ var Index = &ice.Context{Name: "wiki", Help: "文档模块",
 				"section": []interface{}{"title", "section"},
 			},
 		)},
-		"title": {Name: "title", Help: "标题", Value: ice.Data("template", title)},
-		"shell": {Name: "shell", Help: "命令", Value: ice.Data("template", shell)},
-		"order": {Name: "order", Help: "列表", Value: ice.Data("template", order)},
-		"table": {Name: "table", Help: "表格", Value: ice.Data("template", table)},
-		"chart": {Name: "chart", Help: "绘图", Value: ice.Data("prefix", prefix, "suffix", `</svg>`)},
+		"title": {Name: "title", Help: "标题", Value: kit.Data("template", title)},
+		"shell": {Name: "shell", Help: "命令", Value: kit.Data("template", shell)},
+		"order": {Name: "order", Help: "列表", Value: kit.Data("template", order)},
+		"table": {Name: "table", Help: "表格", Value: kit.Data("template", table)},
+		"chart": {Name: "chart", Help: "绘图", Value: kit.Data("prefix", prefix, "suffix", `</svg>`)},
 	},
 	Commands: map[string]*ice.Command{
 		"chart": {Name: "chart block|chain|table name text [fg bg fs ls p m]", Help: "绘图", Meta: map[string]interface{}{
 			"display": "inner",
-		}, List: ice.List(
-			ice.MDB_TYPE, "select", "value", "chain", "values", "block chain table",
-			ice.MDB_TYPE, "text", "value", "",
-			ice.MDB_TYPE, "button", "value", "生成",
+		}, List: kit.List(
+			kit.MDB_TYPE, "select", "value", "chain", "values", "block chain table",
+			kit.MDB_TYPE, "text", "value", "",
+			kit.MDB_TYPE, "button", "value", "生成",
 		), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			// 创建类型
 			var chart Chart
@@ -164,10 +164,10 @@ var Index = &ice.Context{Name: "wiki", Help: "文档模块",
 		"note": {Name: "note file", Help: "笔记", Meta: map[string]interface{}{
 			"remote": "true", "display": "inner",
 			"detail": []string{"add", "commit", "history", "share"},
-		}, List: ice.List(
-			ice.MDB_TYPE, "text", "value", "miss.md", "name", "path",
-			ice.MDB_TYPE, "button", "value", "执行", "action", "auto",
-			ice.MDB_TYPE, "button", "value", "返回", "cb", "Last",
+		}, List: kit.List(
+			kit.MDB_TYPE, "text", "value", "miss.md", "name", "path",
+			kit.MDB_TYPE, "button", "value", "执行", "action", "auto",
+			kit.MDB_TYPE, "button", "value", "返回", "cb", "Last",
 		), Hand: func(m *ice.Message, c *ice.Context, key string, arg ...string) {
 			if len(arg) > 0 {
 				switch arg[0] {

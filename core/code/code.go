@@ -56,32 +56,13 @@ var Index = &ice.Context{Name: "code", Help: "编程模块",
 	},
 	Commands: map[string]*ice.Command{
 		ice.ICE_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			m.Cmd(ice.GDB_EVENT, "listen", "miss", "start", "web.code.docker", "image")
+			m.Cmd(ice.GDB_EVENT, "listen", "miss.start", "web.code.docker", "image")
 		}},
 		"tmux": {Name: "tmux [session [window [pane cmd]]]", Help: "窗口", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			prefix := kit.Simple(m.Confv("prefix", "tmux"))
 			if len(arg) > 1 {
 				switch arg[1] {
 				case "cmd":
-
-				case "pane":
-					prefix = append(prefix, "list-panes")
-					if arg[0] == "" {
-						prefix = append(prefix, "-a")
-					} else {
-						prefix = append(prefix, "-s", "-t", arg[0])
-					}
-					m.Cmd(prefix, "cmd_parse", "cut", " ", "8", "pane_name size some lines bytes haha pane_id tag").Table(func(index int, value map[string]string) {
-						m.Push("pane_id", strings.TrimPrefix(value["pane_id"], "%"))
-						m.Push("pane_name", strings.TrimSuffix(value["pane_name"], ":"))
-						m.Push("size", value["size"])
-						m.Push("lines", strings.TrimSuffix(value["lines"], ","))
-						m.Push("bytes", kit.FmtSize(kit.Int64(value["bytes"])))
-						m.Push("tag", value["tag"])
-					})
-
-					m.Sort("pane_name")
-					return
 
 				case "favor":
 					env := m.Cmdx(prefix, "show-environment", "-g") + m.Cmdx(prefix, "show-environment", "-t", arg[0])
@@ -107,143 +88,8 @@ var Index = &ice.Context{Name: "code", Help: "编程模块",
 					})
 					m.Echo(strings.TrimSpace(m.Cmdx(prefix, "capture-pane", "-pt", arg[0])))
 					return
-
-				case "buffer":
-					// 写缓存
-					if len(arg) > 5 {
-						switch arg[3] {
-						case "modify":
-							switch arg[4] {
-							case "text":
-								m.Cmdy(prefix, "set-buffer", "-b", arg[2], arg[5])
-							}
-						}
-					} else if len(arg) > 3 {
-						m.Cmd(prefix, "set-buffer", "-b", arg[2], arg[3])
-					}
-
-					// 读缓存
-					if len(arg) > 2 {
-						m.Cmdy(prefix, "show-buffer", "-b", arg[2])
-						return
-					}
-
-					m.Cmd(prefix, "list-buffers", "cmd_parse", "cut", ": ", "3", "buffer size text").Table(func(index int, value map[string]string, head []string) {
-						m.Push("buffer", value["buffer"])
-						m.Push("size", value["size"])
-						if index < 3 {
-							m.Push("text", m.Cmdx(prefix, "show-buffer", "-b", value["buffer"]))
-						} else {
-							m.Push("text", value["text"][2:len(value["text"])-1])
-						}
-					})
-					return
-
-				case "select":
-					// 切换会话
-					if m.Options("session") {
-						m.Cmd(prefix, "switch-client", "-t", arg[0])
-						arg = arg[:0]
-						break
-					}
-					m.Cmd(prefix, "switch-client", "-t", m.Option("session"))
-
-					// 切换窗口
-					if !m.Options("window") {
-						m.Cmd(prefix, "select-window", "-t", m.Option("session")+":"+arg[0])
-						arg = []string{m.Option("session")}
-						break
-					}
-					m.Cmd(prefix, "select-window", "-t", m.Option("session")+":"+m.Option("window"))
-
-					// 切换终端
-					m.Cmd(prefix, "select-pane", "-t", m.Option("session")+":"+m.Option("window")+"."+arg[0])
-					arg = []string{m.Option("session"), m.Option("window")}
-
-				case "modify":
-					switch arg[2] {
-					case "session":
-						// 重命名会话
-						m.Cmdy(prefix, "rename-session", "-t", arg[0], arg[3])
-						arg = arg[:0]
-
-					case "window":
-						// 重命名窗口
-						m.Cmdy(prefix, "rename-window", "-t", m.Option("session")+":"+arg[0], arg[3])
-						arg = []string{m.Option("session")}
-
-					default:
-						return
-					}
-				case "delete":
-					// 删除会话
-					if !m.Options("session") {
-						m.Cmdy(prefix, "kill-session", "-t", arg[0])
-						arg = arg[:0]
-						break
-					}
-
-					// 删除窗口
-					if !m.Options("window") {
-						m.Cmdy(prefix, "kill-window", "-t", m.Option("session")+":"+arg[0])
-						arg = []string{m.Option("session")}
-						break
-					}
-
-					// 删除终端
-					m.Cmd(prefix, "kill-pane", "-t", m.Option("session")+":"+m.Option("window")+"."+arg[3])
-					arg = []string{m.Option("session"), m.Option("window")}
 				}
 			}
-
-			// 查看会话
-			if x := m.Cmdx(prefix, "list-session", "-F", "#{session_id},#{session_attached},#{session_name},#{session_windows},#{session_height},#{session_width}"); len(arg) == 0 {
-				for _, l := range kit.Split(x, "\n") {
-					ls := kit.Split(l, ",")
-					m.Push("id", ls[0])
-					m.Push("tag", ls[1])
-					m.Push("session", ls[2])
-					m.Push("windows", ls[3])
-					m.Push("height", ls[4])
-					m.Push("width", ls[5])
-				}
-				return
-			}
-
-			// 创建会话
-			if arg[0] != "" && kit.IndexOf(m.Appendv("session"), arg[0]) == -1 {
-				m.Cmdy(prefix, "new-session", "-ds", arg[0])
-			}
-			m.Set(ice.MSG_APPEND).Set(ice.MSG_RESULT)
-
-			// 查看窗口
-			if m.Cmdy(prefix, "list-windows", "-t", arg[0], "-F", "#{window_id},#{window_active},#{window_name},#{window_panes},#{window_height},#{window_width}",
-				"cmd_parse", "cut", ",", "6", "id tag window panes height width"); len(arg) == 1 {
-				return
-			}
-
-			// 创建窗口
-			if arg[1] != "" && kit.IndexOf(m.Appendv("window"), arg[1]) == -1 {
-				m.Cmdy(prefix, "new-window", "-dt", arg[0], "-n", arg[1])
-			}
-			m.Set(ice.MSG_APPEND).Set(ice.MSG_RESULT)
-
-			// 查看面板
-			if len(arg) == 2 {
-				m.Cmdy(prefix, "list-panes", "-t", arg[0]+":"+arg[1], "-F", "#{pane_id},#{pane_active},#{pane_index},#{pane_tty},#{pane_height},#{pane_width}",
-					"cmd_parse", "cut", ",", "6", "id tag pane tty height width")
-				return
-			}
-
-			// 执行命令
-			target := arg[0] + ":" + arg[1] + "." + arg[2]
-			if len(arg) > 3 {
-				m.Cmdy(prefix, "send-keys", "-t", target, strings.Join(arg[3:], " "), "Enter")
-				time.Sleep(1 * time.Second)
-			}
-
-			// 查看终端
-			m.Echo(strings.TrimSpace(m.Cmdx(prefix, "capture-pane", "-pt", target)))
 			return
 		}},
 		"docker": {Name: "docker image|volume|network|container", Help: "容器", Hand: func(m *ice.Message, c *ice.Context, key string, arg ...string) {

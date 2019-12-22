@@ -17,6 +17,7 @@ func (f *Frame) Spawn(m *Message, c *Context, arg ...string) Server {
 	return &Frame{}
 }
 func (f *Frame) Begin(m *Message, arg ...string) Server {
+	m.Log(LOG_BEGIN, "ice")
 	list := map[*Context]*Message{m.target: m}
 	m.Travel(func(p *Context, s *Context) {
 		s.root = m.target
@@ -30,6 +31,7 @@ func (f *Frame) Begin(m *Message, arg ...string) Server {
 	return f
 }
 func (f *Frame) Start(m *Message, arg ...string) bool {
+	m.Log(LOG_START, "ice")
 	m.Cmd(ICE_INIT).Cmd("init", arg)
 	return true
 }

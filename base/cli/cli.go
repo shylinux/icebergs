@@ -53,9 +53,10 @@ var Index = &ice.Context{Name: "cli", Help: "命令模块",
 		"system": {Name: "system", Help: "hello", Hand: func(m *ice.Message, c *ice.Context, key string, arg ...string) {
 			cmd := exec.Command(arg[0], arg[1:]...)
 			cmd.Dir = m.Option("cmd_dir")
-
 			m.Log("info", "dir: %s", cmd.Dir)
+
 			if m.Option("cmd_type") == "daemon" {
+				// 守护进程
 				m.Gos(m, func(m *ice.Message) {
 					if e := cmd.Start(); e != nil {
 						m.Log("warn", "%v start %s", arg, e)
@@ -65,20 +66,19 @@ var Index = &ice.Context{Name: "cli", Help: "命令模块",
 						m.Log("info", "%v exit", arg)
 					}
 				})
-				return
+			} else {
+				// 系统命令
+				out := bytes.NewBuffer(make([]byte, 0, 1024))
+				err := bytes.NewBuffer(make([]byte, 0, 1024))
+				cmd.Stdout = out
+				cmd.Stderr = err
+				if e := cmd.Run(); e != nil {
+					m.Warn(e != nil, kit.Select(e.Error(), err.String()))
+				} else {
+					m.Echo(out.String())
+				}
+				m.Push("code", int(cmd.ProcessState.ExitCode()))
 			}
-
-			out := bytes.NewBuffer(make([]byte, 0, 1024))
-			err := bytes.NewBuffer(make([]byte, 0, 1024))
-
-			cmd.Stdout = out
-			cmd.Stderr = err
-
-			if e := cmd.Run(); e != nil {
-				m.Echo("error: ").Echo(kit.Select(e.Error(), err.String()))
-				return
-			}
-			m.Echo(out.String())
 		}},
 		"timer": {Name: "timer", Help: "hello", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 		}},

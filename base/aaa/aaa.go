@@ -8,85 +8,55 @@ import (
 var Index = &ice.Context{Name: "aaa", Help: "认证模块",
 	Caches: map[string]*ice.Cache{},
 	Configs: map[string]*ice.Config{
-		"role": {Name: "role", Help: "角色", Value: map[string]interface{}{
-			ice.MDB_META: map[string]interface{}{},
-			ice.MDB_HASH: map[string]interface{}{
-				"root": map[string]interface{}{},
-				"tech": map[string]interface{}{},
-				"void": map[string]interface{}{},
-			},
-			ice.MDB_LIST: map[string]interface{}{},
-		}},
-		"user": {Name: "user", Help: "用户", Value: map[string]interface{}{
-			ice.MDB_META: map[string]interface{}{},
-			ice.MDB_HASH: map[string]interface{}{},
-			ice.MDB_LIST: map[string]interface{}{},
-		}},
-		"sess": {Name: "sess", Help: "会话", Value: map[string]interface{}{
-			ice.MDB_META: map[string]interface{}{"expire": "720h"},
-			ice.MDB_HASH: map[string]interface{}{},
-			ice.MDB_LIST: map[string]interface{}{},
-		}},
+		ice.AAA_ROLE: {Name: "role", Help: "角色", Value: kit.Data()},
+		ice.AAA_USER: {Name: "user", Help: "用户", Value: kit.Data("short", "username")},
+		ice.AAA_SESS: {Name: "sess", Help: "会话", Value: kit.Data("short", "uniq", "expire", "720h")},
 	},
 	Commands: map[string]*ice.Command{
-		ice.ICE_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		ice.ICE_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {}},
+		ice.ICE_EXIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {}},
+		ice.AAA_ROLE: {Name: "role", Help: "角色", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			switch arg[0] {
+			case "check":
+				m.Echo(kit.Select("void", "root", arg[1] == m.Conf("cli.runtime", "boot.username")))
+			}
 		}},
-		ice.ICE_EXIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-		}},
-		"role": {Name: "role", Help: "角色", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-		}},
-		"user": {Name: "user", Help: "用户", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		ice.AAA_USER: {Name: "user", Help: "用户", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			switch arg[0] {
 			case "login":
-				user := m.Confm("user", "hash."+arg[1])
+				// 用户认证
+				user := m.Richs(ice.AAA_USER, nil, arg[1], nil)
 				if user == nil {
-					m.Confv("user", "hash."+arg[1], map[string]interface{}{
-						"create_time": m.Time(),
-						"password":    arg[2],
-						"userrole":    kit.Select("void", "root", arg[1] == m.Conf("cli.runtime", "boot.username")),
+					m.Rich(ice.AAA_USER, nil, map[string]interface{}{
+						"username": arg[1], "password": arg[2],
+						"usernode": m.Conf("cli.runtime", "boot.hostname"),
 					})
-					m.Log("info", "create user %s %s", arg[1], m.Conf("user", "hash."+arg[1]))
+					user = m.Richs(ice.AAA_USER, nil, arg[1], nil)
+					m.Info("create user: %s %s", arg[1], kit.Format(user))
 				} else if kit.Format(user["password"]) != arg[2] {
-					m.Log("warn", "login fail %s", arg[1])
-					// 登录失败
+					m.Info("login fail user: %s", arg[1])
 					break
 				}
 
+				// 用户授权
 				sessid := kit.Format(user[ice.WEB_SESS])
 				if sessid == "" {
-					sessid = m.Cmdx("aaa.sess", "login", arg[1])
+					role := m.Cmdx(ice.AAA_ROLE, "check", arg[1])
+					sessid = m.Rich(ice.AAA_SESS, nil, map[string]interface{}{
+						"username": arg[1], "userrole": role,
+					})
+					m.Info("user: %s role: %s sess: %s", arg[1], role, sessid)
 				}
-
-				m.Grow("user", nil, map[string]interface{}{
-					"create_time": m.Time(),
-					"remote_ip":   m.Option("remote_ip"),
-					"username":    arg[1],
-					ice.WEB_SESS:  sessid,
-				})
-				// 登录成功
 				m.Echo(sessid)
 			}
 		}},
-		"sess": {Name: "sess check|login", Help: "会话", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		ice.AAA_SESS: {Name: "sess check|login", Help: "会话", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			switch arg[0] {
 			case "check":
-				user := m.Conf("sess", "hash."+arg[1]+".username")
-				if user != "" {
-					m.Confm("user", "hash."+user, func(value map[string]interface{}) {
-						m.Push("username", user)
-						m.Push("userrole", value["userrole"])
-					})
-				}
-
-				m.Echo(user)
-			case "login":
-				sessid := kit.Hashs("uniq")
-				m.Conf("sess", "hash."+sessid, map[string]interface{}{
-					"create_time": m.Time(),
-					"username":    arg[1],
+				m.Richs(ice.AAA_SESS, nil, arg[1], func(value map[string]interface{}) {
+					m.Push(arg[1], value, []string{"username", "userrole"})
+					m.Echo("%s", value["username"])
 				})
-				m.Log("info", "create sess %s %s", arg[1], sessid)
-				m.Echo(sessid)
 			}
 		}},
 	},

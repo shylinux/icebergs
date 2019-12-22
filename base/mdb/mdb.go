@@ -31,10 +31,8 @@ var Index = &ice.Context{Name: "mdb", Help: "数据模块",
 			} else {
 				m.Option("cache.offend", kit.Select("0", arg, 3))
 				m.Option("cache.limit", kit.Select("10", arg, 4))
-				m.Option("cache.match", kit.Select("", arg, 5))
-				m.Option("cache.value", kit.Select("", arg, 6))
 				fields := strings.Split(arg[7], " ")
-				m.Grows(arg[0], arg[1], func(index int, value map[string]interface{}) {
+				m.Grows(arg[0], arg[1], kit.Select("", arg, 5), kit.Select("", arg, 6), func(index int, value map[string]interface{}) {
 					m.Push("id", value, fields)
 				})
 			}

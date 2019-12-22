@@ -8,6 +8,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"math/rand"
 	"os"
 	"path"
 	"runtime"
@@ -186,7 +187,7 @@ func (m *Message) Format(key interface{}) string {
 	case string:
 		switch key {
 		case "cost":
-			return time.Now().Sub(m.time).String()
+			return kit.FmtTime(kit.Int64(time.Now().Sub(m.time)))
 		case "meta":
 			return kit.Format(m.meta)
 		case "time":
@@ -367,7 +368,10 @@ func (m *Message) Push(key string, value interface{}, arg ...interface{}) *Messa
 	return m.Add(MSG_APPEND, key, kit.Format(value))
 }
 func (m *Message) Echo(str string, arg ...interface{}) *Message {
-	m.meta[MSG_RESULT] = append(m.meta[MSG_RESULT], fmt.Sprintf(str, arg...))
+	if len(arg) > 0 {
+		str = fmt.Sprintf(str, arg...)
+	}
+	m.meta[MSG_RESULT] = append(m.meta[MSG_RESULT], str)
 	return m
 }
 func (m *Message) Sort(key string, arg ...string) *Message {
@@ -520,6 +524,15 @@ func (m *Message) Table(cbs ...interface{}) *Message {
 func (m *Message) Render(str string) *Message {
 	if res, err := kit.Render(str, m); m.Assert(err) {
 		m.Echo(string(res))
+	}
+	return m
+}
+func (m *Message) Split(str string, field string, space string, enter string) *Message {
+	fields := kit.Split(field, space)
+	for _, l := range kit.Split(str, enter) {
+		for i, v := range kit.Split(l, space) {
+			m.Push(kit.Select("some", fields, i), v)
+		}
 	}
 	return m
 }
@@ -790,85 +803,131 @@ func (m *Message) Search(key interface{}, cb interface{}) *Message {
 }
 
 func Meta(arg ...interface{}) string {
-	return MDB_META + "." + kit.Keys(arg...)
+	return kit.MDB_META + "." + kit.Keys(arg...)
 }
-func Data(arg ...interface{}) map[string]interface{} {
-	meta := map[string]interface{}{}
-	data := map[string]interface{}{
-		MDB_META: meta, MDB_LIST: []interface{}{}, MDB_HASH: map[string]interface{}{},
-	}
-	for i := 0; i < len(arg)-1; i += 2 {
-		kit.Value(meta, arg[i], arg[i+1])
-	}
-	return data
-}
-func List(arg ...interface{}) []interface{} {
-	list, data := []interface{}{}, map[string]interface{}{}
-	for i := 0; i < len(arg)-1; i += 2 {
-		if arg[i] == MDB_TYPE {
-			data = map[string]interface{}{}
-			list = append(list, data)
-		}
-		kit.Value(data, arg[i], arg[i+1])
-	}
-	return list
-}
-func (m *Message) Rich(key string, args interface{}, data interface{}) string {
-	cache := m.Confm(key, args)
+func (m *Message) Richs(key string, chain interface{}, raw interface{}, cb interface{}) (res map[string]interface{}) {
+	// 数据结构
+	cache := m.Confm(key, chain)
 	if cache == nil {
-		cache = map[string]interface{}{}
+		return nil
 	}
-	meta, ok := cache[MDB_META].(map[string]interface{})
+	meta, ok := cache[kit.MDB_META].(map[string]interface{})
+	hash, ok := cache[kit.MDB_HASH].(map[string]interface{})
 	if !ok {
-		meta = map[string]interface{}{}
-	}
-	hash, ok := cache[MDB_HASH].(map[string]interface{})
-	if !ok {
-		hash = map[string]interface{}{}
+		return nil
 	}
 
+	switch h := kit.Format(raw); h {
+	case "*", "":
+		// 全部遍历
+		switch cb := cb.(type) {
+		case func(string, map[string]interface{}):
+			for k, v := range hash {
+				cb(k, v.(map[string]interface{}))
+			}
+		}
+	case "%":
+		// 随机选取
+		list := []string{}
+		for k := range hash {
+			list = append(list, k)
+		}
+		h = list[rand.Intn(len(list))]
+		res, _ = hash[h].(map[string]interface{})
+	default:
+		// 单个查询
+		switch kit.Format(kit.Value(meta, "short")) {
+		case "", "uniq":
+		default:
+			h = kit.Hashs(h)
+		}
+		res, _ = hash[h].(map[string]interface{})
+	}
+
+	// 返回数据
+	if res != nil {
+		switch cb := cb.(type) {
+		case func(map[string]interface{}):
+			cb(res)
+		}
+	}
+	return res
+}
+func (m *Message) Rich(key string, chain interface{}, data interface{}) string {
+	// 数据结构
+	cache := m.Confm(key, chain)
+	if cache == nil {
+		cache = map[string]interface{}{}
+		m.Confv(key, chain, cache)
+	}
+	meta, ok := cache[kit.MDB_META].(map[string]interface{})
+	if !ok {
+		meta = map[string]interface{}{}
+		cache[kit.MDB_META] = meta
+	}
+	hash, ok := cache[kit.MDB_HASH].(map[string]interface{})
+	if !ok {
+		hash = map[string]interface{}{}
+		cache[kit.MDB_HASH] = hash
+	}
+
+	// 通用数据
+	if kit.Value(data, "meta") != nil {
+		kit.Value(data, "meta.create_time", m.Time())
+	} else {
+		kit.Value(data, "create_time", m.Time())
+	}
+
+	// 生成键值
 	h := ""
 	switch short := kit.Format(kit.Value(meta, "short")); short {
 	case "":
 		h = kit.ShortKey(hash, 6)
+	case "uniq":
+		h = kit.Hashs("uniq")
 	case "data":
 		h = kit.Hashs(kit.Format(data))
 	default:
 		h = kit.Hashs(kit.Format(kit.Value(data, short)))
 	}
-	hash[h] = data
 
-	cache[MDB_HASH] = hash
-	cache[MDB_META] = meta
-	if args == nil {
-		m.Conf(key, cache)
-	} else {
-		m.Conf(key, args, cache)
-	}
+	// 添加数据
+	hash[h] = data
 	return h
 }
-func (m *Message) Grow(key string, args interface{}, data interface{}) map[string]interface{} {
-	cache := m.Confm(key, args)
+func (m *Message) Grow(key string, chain interface{}, data interface{}) int {
+	// 数据结构
+	cache := m.Confm(key, chain)
 	if cache == nil {
 		cache = map[string]interface{}{}
+		m.Confv(key, chain, cache)
 	}
-	meta, ok := cache[MDB_META].(map[string]interface{})
+	meta, ok := cache[kit.MDB_META].(map[string]interface{})
 	if !ok {
 		meta = map[string]interface{}{}
+		cache[kit.MDB_META] = meta
 	}
-	list, _ := cache[MDB_LIST].([]interface{})
+	list, _ := cache[kit.MDB_LIST].([]interface{})
+
+	// 通用数据
+	id := kit.Int(meta["count"]) + 1
+	if kit.Value(data, "meta") != nil {
+		kit.Value(data, "meta.id", id)
+	} else {
+		kit.Value(data, "id", id)
+	}
 
 	// 添加数据
 	list = append(list, data)
-	meta["count"] = kit.Int(meta["count"]) + 1
-	kit.Value(data, "id", meta["count"])
+	cache[kit.MDB_LIST] = list
+	meta["count"] = id
 
 	// 保存数据
-	if len(list) > kit.Int(kit.Select(m.Conf("cache", Meta("limit")), meta["limit"])) {
-		least := kit.Int(kit.Select(m.Conf("cache", Meta("least")), meta["least"]))
+	if len(list) > kit.Int(kit.Select(m.Conf(WEB_CACHE, Meta("limit")), meta["limit"])) {
+		least := kit.Int(kit.Select(m.Conf(WEB_CACHE, Meta("least")), meta["least"]))
 
 		// 创建文件
-		name := kit.Select(path.Join(m.Conf("cache", Meta("store")), key+".csv"), meta["store"])
+		name := kit.Select(path.Join(m.Conf(WEB_CACHE, Meta("store")), kit.Keys(key, chain, "csv")), meta["store"])
 		f, e := os.OpenFile(name, os.O_RDWR|os.O_APPEND|os.O_CREATE, 0666)
 		if e != nil {
 			f, _, e = kit.Create(name)
@@ -929,38 +988,29 @@ func (m *Message) Grow(key string, args interface{}, data interface{}) map[strin
 		list = list[:least]
 		w.Flush()
 	}
-
-	// 更新数据
-	cache[MDB_LIST] = list
-	cache[MDB_META] = meta
-	if args == nil {
-		m.Conf(key, cache)
-	} else {
-		m.Conf(key, args, cache)
-	}
-	return meta
+	return id
 }
-func (m *Message) Grows(key string, args interface{}, cb interface{}) map[string]interface{} {
+func (m *Message) Grows(key string, args interface{}, match string, value string, cb interface{}) map[string]interface{} {
 	cache := m.Confm(key, args)
 	if cache == nil {
 		return nil
 	}
-	meta, ok := cache[MDB_META].(map[string]interface{})
-	if !ok {
-		return nil
-	}
-	list, ok := cache[MDB_LIST].([]interface{})
-	if !ok {
+	meta, ok := cache[kit.MDB_META].(map[string]interface{})
+	list, ok := cache[kit.MDB_LIST].([]interface{})
+	if !ok || len(list) == 0 {
 		return nil
 	}
 
 	offend := kit.Int(kit.Select("0", m.Option("cache.offend")))
 	limit := kit.Int(kit.Select("10", m.Option("cache.limit")))
-	match := kit.Select("", m.Option("cache.match"))
-	value := kit.Select("", m.Option("cache.value"))
 	current := kit.Int(meta["offset"])
 	end := current + len(list) - offend
 	begin := end - limit
+
+	if match == kit.MDB_ID {
+		begin, end = kit.Int(value)-1, kit.Int(value)
+		match, value = "", ""
+	}
 
 	data := make([]interface{}, 0, limit)
 	m.Log(LOG_INFO, "read %v-%v from %v-%v", begin, end, current, current+len(list))
@@ -1067,7 +1117,11 @@ func (m *Message) Confv(arg ...interface{}) (val interface{}) {
 	m.Search(arg[0], func(p *Context, s *Context, key string, conf *Config) {
 		if len(arg) > 1 {
 			if len(arg) > 2 {
-				kit.Value(conf.Value, arg[1:]...)
+				if arg[1] == nil {
+					conf.Value = arg[2]
+				} else {
+					kit.Value(conf.Value, arg[1:]...)
+				}
 			}
 			val = kit.Value(conf.Value, arg[1])
 		} else {

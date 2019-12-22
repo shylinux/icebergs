@@ -10,7 +10,7 @@ import (
 var Index = &ice.Context{Name: "chat", Help: "聊天模块",
 	Caches: map[string]*ice.Cache{},
 	Configs: map[string]*ice.Config{
-		"group": {Name: "group", Help: "群组", Value: ice.Data()},
+		ice.CHAT_GROUP: {Name: "group", Help: "群组", Value: kit.Data()},
 	},
 	Commands: map[string]*ice.Command{
 		ice.ICE_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
@@ -19,172 +19,180 @@ var Index = &ice.Context{Name: "chat", Help: "聊天模块",
 			m.Cmd(ice.CTX_CONFIG, "load", "chat.json")
 		}},
 		ice.ICE_EXIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			m.Cmd(ice.CTX_CONFIG, "save", "chat.json", "web.chat.group")
-			m.Cmd(ice.CTX_CONFIG, "save", "web.json", "web.story", "web.cache", "web.share")
-			m.Cmd(ice.CTX_CONFIG, "save", "aaa.json", "aaa.role", "aaa.user", "aaa.sess")
+			m.Cmd(ice.CTX_CONFIG, "save", "chat.json", ice.CHAT_GROUP)
+			m.Cmd(ice.CTX_CONFIG, "save", "web.json", ice.WEB_STORY, ice.WEB_CACHE, ice.WEB_SHARE)
+			m.Cmd(ice.CTX_CONFIG, "save", "aaa.json", ice.AAA_ROLE, ice.AAA_USER, ice.AAA_SESS)
 		}},
 
 		ice.WEB_LOGIN: {Name: "login", Help: "登录", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			if cmd != "/login" {
-				if m.Warn(!m.Options(ice.WEB_SESS) || !m.Options("username"), "not login") {
-					// 检查失败
-					m.Option("path", "")
-					return
+			if len(arg) > 0 {
+				switch arg[0] {
+				case "login":
+					// 用户登录
+					m.Option(ice.MSG_SESSID, (web.Cookie(m, m.Cmdx(ice.AAA_USER, "login", m.Option(ice.MSG_USERNAME, arg[1]), arg[2]))))
+				default:
+					// 用户群组
+					m.Richs(ice.CHAT_GROUP, nil, arg[0], func(value map[string]interface{}) {
+						m.Option(ice.MSG_RIVER, arg[0])
+						if len(arg) > 1 {
+							m.Richs(ice.CHAT_GROUP, kit.Keys(kit.MDB_HASH, arg[0], "tool"), arg[1], func(value map[string]interface{}) {
+								m.Option(ice.MSG_STORM, arg[1])
+							})
+						}
+						m.Info("river: %s storm: %s", m.Option(ice.MSG_RIVER), m.Option(ice.MSG_STORM))
+					})
 				}
+			}
+			if cmd == "/login" {
+				return
 			}
 
-			// 查询群组
-			if len(arg) > 0 && m.Confs("group", kit.Keys("hash", arg[0])) {
-				m.Option("sess.river", arg[0])
-				if len(arg) > 1 && m.Confs("group", kit.Keys("hash", arg[0], "tool", "hash", arg[1])) {
-					m.Option("sess.storm", arg[1])
-				}
+			// 登录检查
+			if m.Warn(!m.Options(ice.MSG_SESSID) || !m.Options(ice.MSG_USERNAME), "not login") {
+				m.Option("path", "")
 			}
-			m.Log("info", "river: %s storm: %s", m.Option("sess.river"), m.Option("sess.storm"))
 		}},
 
+		"/toast": {Name: "/toast", Help: "提示", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {}},
+		"/tutor": {Name: "/tutor", Help: "向导", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {}},
+		"/debug": {Name: "/debug", Help: "调试", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {}},
+		"/carte": {Name: "/carte", Help: "菜单", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {}},
+		"/favor": {Name: "/favor", Help: "收藏", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {}},
 		"/login": {Name: "/login", Help: "登录", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			switch arg[0] {
 			case "check":
-				m.Push("username", m.Option("username"))
-				m.Push("userrole", m.Option("userrole"))
-				m.Echo(m.Option("username"))
+				m.Echo(m.Option(ice.MSG_USERNAME))
 			case "login":
-				m.Echo(web.Cookie(m, m.Cmdx("aaa.user", "login", arg[1], arg[2])))
+				m.Echo(m.Option(ice.MSG_SESSID))
 			}
 		}},
-		"/favor": {Name: "/favor", Help: "登录", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			m.Cmdy("cli.system", arg)
-		}},
 
-		"/ocean": {Name: "/ocean", Help: "hello", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		"/ocean": {Name: "/ocean", Help: "大海洋", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			if len(arg) == 0 {
-				m.Confm("aaa.user", ice.MDB_HASH, func(key string, value map[string]interface{}) {
-					m.Push("key", key)
-					m.Push("user.route", m.Conf("cli.runtime", "node.name"))
+				// 用户列表
+				m.Richs(ice.AAA_USER, nil, "", func(key string, value map[string]interface{}) {
+					m.Push(key, value, []string{"username", "usernode"})
 				})
 				return
 			}
+
 			switch arg[0] {
 			case "spawn":
-				if arg[1] == "" {
-					arg[1] = kit.ShortKey(m.Confm("group", ice.MDB_HASH), 6)
-				}
-				user := map[string]interface{}{
-					ice.MDB_META: map[string]interface{}{},
-					ice.MDB_HASH: map[string]interface{}{},
-					ice.MDB_LIST: []interface{}{},
-				}
-				tool := map[string]interface{}{
-					ice.MDB_META: map[string]interface{}{},
-					ice.MDB_HASH: map[string]interface{}{},
-					ice.MDB_LIST: []interface{}{},
-				}
-				for _, v := range arg[3:] {
-					kit.Value(user, "hash."+v, map[string]interface{}{
-						"create_time": m.Time(),
-					})
-					kit.Value(user, "list."+v+".-2", map[string]interface{}{
-						"create_time": m.Time(),
-						"operation":   "add",
-						"username":    v,
-					})
-				}
-
-				m.Conf("group", "hash."+arg[1], map[string]interface{}{
-					ice.MDB_META: map[string]interface{}{
-						"create_time": m.Time(),
-						"name":        arg[2],
-					},
-					"user": user,
-					"tool": tool,
-				})
-
-				m.Log("info", "river create %v %v", arg[1], kit.Formats(m.Confv("group", "hash."+arg[1])))
-				m.Echo(arg[1])
+				// 创建群组
+				river := m.Rich(ice.CHAT_GROUP, nil, kit.Data(kit.MDB_NAME, arg[1]))
+				m.Info("create river: %v name: %v", river, arg[1])
+				m.Cmd("/river", river, "add", arg[2:])
 			}
 		}},
-		"/river": {Name: "/river", Help: "hello", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			if len(arg) == 0 {
-				m.Confm("group", ice.MDB_HASH, func(key string, value map[string]interface{}) {
-					m.Push("key", key)
-					m.Push("name", kit.Value(value[ice.MDB_META], "name"))
+		"/river": {Name: "/river", Help: "小河流", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			switch len(arg) {
+			case 0:
+				// 群组列表
+				m.Richs(ice.CHAT_GROUP, nil, "", func(key string, value map[string]interface{}) {
+					m.Push(key, value["meta"], []string{kit.MDB_KEY, kit.MDB_NAME})
 				})
-				return
+			case 1:
+				// 群组详情
+				m.Richs(ice.CHAT_GROUP, nil, arg[0], func(key string, value map[string]interface{}) {
+					m.Push(key, value["meta"], []string{kit.MDB_KEY, kit.MDB_NAME})
+				})
+			default:
+				switch arg[1] {
+				case "add":
+					// 添加用户
+					for _, v := range arg[2:] {
+						user := m.Rich(ice.CHAT_GROUP, kit.Keys(kit.MDB_HASH, arg[0], "user"), kit.Data("username", v))
+						m.Info("add river: %s user: %s name: %s", arg[0], user, v)
+					}
+				}
 			}
 		}},
-		"/action": {Name: "/action", Help: "hello", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			if len(arg) == 2 {
-				m.Set(ice.MSG_OPTION)
-				m.Confm("group", "hash."+arg[0]+".tool.hash."+arg[1]+".list", func(index int, value map[string]interface{}) {
-					m.Push("river", arg[0])
-					m.Push("storm", arg[1])
-					m.Push("action", index)
-
-					m.Push("node", value["pod"])
-					m.Push("group", value["ctx"])
-					m.Push("index", value["cmd"])
-
-					msg := m.Cmd("web.space", value["pod"], "ctx.command", value["ctx"], value["cmd"])
-					m.Push("name", value["cmd"])
-					m.Push("help", msg.Append("help"))
-					m.Push("inputs", msg.Append("list"))
-					m.Push("feature", msg.Append("meta"))
-				})
-				return
-			}
-
-			m.Confm("group", "hash."+arg[0]+".tool.hash."+arg[1]+".list."+arg[2], func(value map[string]interface{}) {
-				m.Cmdy("web.space", value["pod"], "ctx.command", value["ctx"], value["cmd"], "run", arg[3:])
-			})
-		}},
-		"/storm": {Name: "/storm", Help: "hello", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		"/storm": {Name: "/storm", Help: "暴风雨", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			prefix := kit.Keys(kit.MDB_HASH, arg[0], "tool")
 			if len(arg) < 2 {
-				m.Confm("group", "hash."+arg[0]+".tool.hash", func(key string, value map[string]interface{}) {
-					m.Push("key", key).Push("count", len(value[ice.MDB_LIST].([]interface{})))
+				// 应用列表
+				m.Richs(ice.CHAT_GROUP, prefix, "", func(key string, value map[string]interface{}) {
+					m.Push(key, value["meta"], []string{kit.MDB_KEY, kit.MDB_NAME})
 				})
 				return
+			}
+
+			switch arg[2] {
+			case "add":
+				// 添加命令
+				for i := 3; i < len(arg)-3; i += 4 {
+					id := m.Grow(ice.CHAT_GROUP, kit.Keys(prefix, kit.MDB_HASH, arg[1]), kit.Data(
+						"pod", arg[i], "ctx", arg[i+1], "cmd", arg[i+2], "key", arg[i+3],
+					))
+					m.Info("create tool %d %v", id, arg[i:i+4])
+				}
+			case "rename":
+				// 重命名应用
+				old := m.Conf(ice.CHAT_GROUP, kit.Keys(prefix, kit.MDB_HASH, arg[1], kit.MDB_META, kit.MDB_NAME))
+				m.Info("rename storm: %s %s->%s", arg[1], old, arg[3])
+				m.Conf(ice.CHAT_GROUP, kit.Keys(prefix, kit.MDB_HASH, arg[1], kit.MDB_META, kit.MDB_NAME), arg[3])
+
+			case "remove":
+				// 删除应用
+				m.Richs(ice.CHAT_GROUP, kit.Keys(prefix), arg[1], func(value map[string]interface{}) {
+					m.Info("remove storm: %s %s", arg[1], kit.Format(value))
+				})
+				m.Conf(ice.CHAT_GROUP, kit.Keys(prefix, kit.MDB_HASH, arg[1]), "")
 			}
 		}},
-		"/steam": {Name: "/steam", Help: "hello", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		"/steam": {Name: "/steam", Help: "大气层", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			if len(arg) < 2 {
-				m.Push("user", m.Conf("cli.runtime", "boot.username"))
-				m.Push("node", m.Conf("cli.runtime", "node.name"))
-				m.Confm("web.space", ice.MDB_HASH, func(key string, value map[string]interface{}) {
-					m.Push("user", m.Conf("cli.runtime", "boot.username"))
-					m.Push("node", value["name"])
+				// 设备列表
+				m.Richs(ice.WEB_SPACE, nil, "", func(key string, value map[string]interface{}) {
+					m.Push(key, value, []string{"user", "node"})
 				})
 				return
 			}
+
 			switch arg[1] {
 			case "spawn":
-				list := []interface{}{}
-				for i := 3; i < len(arg)-3; i += 4 {
-					if arg[i] == m.Conf("cli.runtime", "node.name") {
-						arg[i] = ""
-					}
-					list = append(list, map[string]interface{}{
-						"pod": arg[i],
-						"ctx": arg[i+1],
-						"cmd": arg[i+2],
-						"key": arg[i+3],
-					})
-				}
-				m.Conf("group", "hash."+arg[0]+".tool.hash."+arg[2], map[string]interface{}{
-					ice.MDB_META: map[string]interface{}{
-						"create_time": m.Time(),
-					},
-					ice.MDB_HASH: map[string]interface{}{},
-					ice.MDB_LIST: list,
-				})
+				// 创建应用
+				storm := m.Rich(ice.CHAT_GROUP, kit.Keys(kit.MDB_HASH, arg[0], "tool"), kit.Data(kit.MDB_NAME, arg[2]))
+				m.Info("create river: %s storm: %s name: %v", arg[0], storm, arg[2])
+				m.Cmd("/storm", arg[0], storm, "add", arg[3:])
 
-				m.Log("info", "steam spawn %v %v %v", arg[0], arg[2], list)
 			default:
-				if arg[2] == m.Conf("cli.runtime", "node.name") {
-					arg[2] = ""
-				}
-				m.Cmdy("web.space", arg[2], "ctx.command")
+				// 命令列表
+				m.Cmdy(ice.WEB_SPACE, arg[2], ice.CTX_COMMAND)
 			}
+		}},
+
+		"/action": {Name: "/action", Help: "小工具", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			prefix := kit.Keys(kit.MDB_HASH, arg[0], "tool", kit.MDB_HASH, arg[1])
+			if len(arg) == 2 {
+				// 命令列表
+				m.Set(ice.MSG_OPTION)
+				m.Grows(ice.CHAT_GROUP, prefix, "", "", func(index int, value map[string]interface{}) {
+					if meta, ok := kit.Value(value, "meta").(map[string]interface{}); ok {
+						m.Push("river", arg[0])
+						m.Push("storm", arg[1])
+						m.Push("action", index)
+
+						m.Push("node", meta["pod"])
+						m.Push("group", meta["ctx"])
+						m.Push("index", meta["cmd"])
+
+						msg := m.Cmd(ice.WEB_SPACE, meta["pod"], ice.CTX_COMMAND, meta["ctx"], meta["cmd"])
+						m.Push("name", meta["cmd"])
+						m.Push("help", msg.Append("help"))
+						m.Push("inputs", msg.Append("list"))
+						m.Push("feature", msg.Append("meta"))
+					}
+				})
+				return
+			}
+
+			// 执行命令
+			m.Grows(ice.CHAT_GROUP, prefix, kit.MDB_ID, kit.Format(kit.Int(arg[2])+1), func(index int, value map[string]interface{}) {
+				if meta, ok := kit.Value(value, "meta").(map[string]interface{}); ok {
+					m.Cmdy(ice.WEB_SPACE, meta["pod"], ice.CTX_COMMAND, meta["ctx"], meta["cmd"], "run", arg[3:])
+				}
+			})
 		}},
 	},
 }

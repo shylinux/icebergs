@@ -13,10 +13,10 @@ import (
 var Index = &ice.Context{Name: "ctx", Help: "元始模块",
 	Caches: map[string]*ice.Cache{},
 	Configs: map[string]*ice.Config{
-		ice.CTX_CONFIG: {Name: "config", Help: "配置", Value: ice.Data("path", "var/conf")},
+		ice.CTX_CONFIG: {Name: "config", Help: "配置", Value: kit.Data("path", "var/conf")},
 	},
 	Commands: map[string]*ice.Command{
-		"context": {Name: "context", Help: "模块", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		ice.CTX_CONTEXT: {Name: "context", Help: "模块", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			ice.Pulse.Travel(func(p *ice.Context, s *ice.Context) {
 				if p != nil {
 					m.Push("ups", p.Name)
@@ -29,7 +29,7 @@ var Index = &ice.Context{Name: "ctx", Help: "元始模块",
 				m.Push("help", s.Help)
 			})
 		}},
-		"command": {Name: "command", Help: "命令", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		ice.CTX_COMMAND: {Name: "command", Help: "命令", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			if len(arg) == 0 {
 				ice.Pulse.Travel(func(p *ice.Context, s *ice.Context) {
 					list := []string{}
@@ -110,7 +110,7 @@ var Index = &ice.Context{Name: "ctx", Help: "元始模块",
 					}
 				}
 			default:
-				m.Echo(m.Conf(arg[0]))
+				m.Echo(kit.Formats(m.Confv(arg[0])))
 			}
 		}},
 	},

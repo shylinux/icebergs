@@ -47,9 +47,9 @@ func (f *Frame) Start(m *ice.Message, arg ...string) bool {
 			res = msg.Result()
 		}
 
-		fmt.Fprintf(f.out, res)
+		fmt.Fprint(f.out, res)
 		if !strings.HasSuffix(res, "\n") {
-			fmt.Fprintf(f.out, "\n")
+			fmt.Fprint(f.out, "\n")
 		}
 		fmt.Fprintf(f.out, m.Time(prompt, count, target.Name))
 		count++

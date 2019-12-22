@@ -13,17 +13,8 @@ import (
 )
 
 var Index = &ice.Context{Name: "mall", Help: "团队模块",
-	Caches: map[string]*ice.Cache{},
-	Configs: map[string]*ice.Config{
-		"miss": {Value: map[string]interface{}{
-			ice.MDB_META: map[string]interface{}{
-				"path": "usr/local/work",
-				"cmd":  []interface{}{"cli.system", "sh", "ice.sh", "start", "web.space", "connect"},
-			},
-			ice.MDB_LIST: map[string]interface{}{},
-			ice.MDB_HASH: map[string]interface{}{},
-		}},
-	},
+	Caches:  map[string]*ice.Cache{},
+	Configs: map[string]*ice.Config{},
 	Commands: map[string]*ice.Command{
 		"miss": {Name: "miss", Help: "任务", Meta: map[string]interface{}{
 			"exports": []interface{}{"you", "name"},
@@ -76,15 +67,15 @@ var Index = &ice.Context{Name: "mall", Help: "团队模块",
 			}, Hand: func(m *ice.Message, c *ice.Context, key string, arg ...string) {
 				switch arg[0] {
 				case "create":
-					meta := m.Grow("web.chat.group", []string{ice.MDB_HASH, m.Option("sess.river"), "task"}, map[string]interface{}{
+					id := m.Grow("web.chat.group", []string{kit.MDB_HASH, m.Option("sess.river"), "task"}, map[string]interface{}{
 						"name":       arg[1],
 						"text":       kit.Select("", arg, 2),
 						"status":     "准备",
 						"begin_time": m.Time(),
 						"close_time": m.Time("3h"),
 					})
-					m.Log("info", "create task %v", kit.Format(meta))
-					m.Echo("%v", meta["count"])
+					m.Log("info", "create task %v", id)
+					m.Echo("%d", id)
 				case "action":
 				case "cancel":
 				}

@@ -163,17 +163,20 @@ var Index = &ice.Context{Name: "wiki", Help: "文档模块",
 		}},
 		"note": {Name: "note file", Help: "笔记", Meta: map[string]interface{}{
 			"remote": "you", "display": "inner",
-			"detail": []string{"add", "commit", "history", "share"},
+			"detail": []string{"add", "commit", "history", "share", "favor"},
 		}, List: kit.List(
 			kit.MDB_INPUT, "text", "value", "miss.md", "name", "path",
 			kit.MDB_INPUT, "button", "value", "执行", "action", "auto",
 			kit.MDB_INPUT, "button", "value", "返回", "cb", "Last",
 		), Hand: func(m *ice.Message, c *ice.Context, key string, arg ...string) {
-			if len(arg) > 0 {
-				switch arg[0] {
-				case "story":
+			if len(arg) > 1 {
+				switch arg[1] {
+				case "favor":
+					m.Cmdy(ice.WEB_FAVOR, kit.Select("story", m.Option("hot")), arg[2:])
+				case "share":
+					m.Cmdy(ice.WEB_SHARE, arg[2:])
+				default:
 					m.Cmdy(arg)
-					return
 				}
 			}
 			m.Cmdy(kit.Select("_tree", "_text", len(arg) > 0 && strings.HasSuffix(arg[0], ".md")), arg)

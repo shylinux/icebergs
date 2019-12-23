@@ -49,12 +49,13 @@ const (
 	WEB_SPIDE = "spide"
 	WEB_SERVE = "serve"
 	WEB_SPACE = "space"
-	WEB_STORY = "story"
+	WEB_DREAM = "dream"
+	WEB_FAVOR = "favor"
 	WEB_CACHE = "cache"
+	WEB_STORY = "story"
+	WEB_SHARE = "share"
 	WEB_ROUTE = "route"
 	WEB_PROXY = "proxy"
-	WEB_FAVOR = "favor"
-	WEB_SHARE = "share"
 )
 const (
 	LOG_CMD   = "cmd"
@@ -93,12 +94,13 @@ var Alias = map[string]string{
 	WEB_SPIDE: "web.spide",
 	WEB_SERVE: "web.serve",
 	WEB_SPACE: "web.space",
-	WEB_STORY: "web.story",
+	WEB_DREAM: "web.dream",
+	WEB_FAVOR: "web.favor",
 	WEB_CACHE: "web.cache",
+	WEB_STORY: "web.story",
+	WEB_SHARE: "web.share",
 	WEB_ROUTE: "web.route",
 	WEB_PROXY: "web.proxy",
-	WEB_FAVOR: "web.favor",
-	WEB_SHARE: "web.share",
 
 	GDB_SIGNAL: "gdb.signal",
 	GDB_TIMER:  "gdb.timer",

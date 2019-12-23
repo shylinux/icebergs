@@ -62,7 +62,7 @@ var Index = &ice.Context{Name: "team", Help: "团队模块",
 			// 任务列表
 			m.Cmdy("nfs.dir", m.Conf("miss", "meta.path"), "", "time name")
 			m.Table(func(index int, value map[string]string, head []string) {
-				m.Push("status", kit.Select("stop", "start", m.Confs(ice.WEB_SPACE, kit.Keys("hash", value["name"]))))
+				m.Push("status", kit.Select("start", "stop", m.Richs(ice.WEB_SPACE, nil, value["name"], nil) == nil))
 			})
 		}},
 	},

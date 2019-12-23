@@ -16,7 +16,7 @@ var Index = &ice.Context{Name: "mall", Help: "团队模块",
 	Caches:  map[string]*ice.Cache{},
 	Configs: map[string]*ice.Config{},
 	Commands: map[string]*ice.Command{
-		"miss": {Name: "miss", Help: "任务", Meta: map[string]interface{}{
+		"_miss": {Name: "miss", Help: "任务", Meta: map[string]interface{}{
 			"exports": []interface{}{"you", "name"},
 			"detail":  []interface{}{"启动", "停止"},
 		}, List: []interface{}{
@@ -55,7 +55,7 @@ var Index = &ice.Context{Name: "mall", Help: "团队模块",
 				m.Push("status", kit.Select("stop", "start", m.Confs("web.space", "hash."+value["name"])))
 			})
 		}},
-		"task": {Name: "task", Help: "任务",
+		"_task": {Name: "task", Help: "任务",
 			Meta: map[string]interface{}{
 				"remote": "true",
 			},
@@ -80,7 +80,7 @@ var Index = &ice.Context{Name: "mall", Help: "团队模块",
 				case "cancel":
 				}
 			}},
-		"process": {Name: "process", Help: "任务进度", Meta: map[string]interface{}{
+		"_process": {Name: "process", Help: "任务进度", Meta: map[string]interface{}{
 			"remote": "true",
 			"detail": []string{"编辑", "准备", "开始", "取消", "完成"},
 		}, List: []interface{}{

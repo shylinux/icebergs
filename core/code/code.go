@@ -77,7 +77,7 @@ var Index = &ice.Context{Name: "code", Help: "编程模块",
 				m.Cmdy(ice.WEB_STORY, "download", m.Optionv("arg"))
 			}
 		}},
-		"tmux": {Name: "tmux [session [window [pane cmd]]]", Help: "窗口", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		"_tmux": {Name: "tmux [session [window [pane cmd]]]", Help: "窗口", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			prefix := kit.Simple(m.Confv("prefix", "tmux"))
 			if len(arg) > 1 {
 				switch arg[1] {
@@ -111,7 +111,7 @@ var Index = &ice.Context{Name: "code", Help: "编程模块",
 			}
 			return
 		}},
-		"docker": {Name: "docker image|volume|network|container", Help: "容器", Hand: func(m *ice.Message, c *ice.Context, key string, arg ...string) {
+		"_docker": {Name: "docker image|volume|network|container", Help: "容器", Hand: func(m *ice.Message, c *ice.Context, key string, arg ...string) {
 			prefix := kit.Simple(m.Confv("prefix", "docker"))
 			switch arg[0] {
 			case "image":
@@ -226,7 +226,7 @@ var Index = &ice.Context{Name: "code", Help: "编程模块",
 			}
 			return
 		}},
-		"git": {Name: "git init|diff|status|commit|branch|remote|pull|push|sum", Help: "版本", Hand: func(m *ice.Message, c *ice.Context, key string, arg ...string) {
+		"_git": {Name: "git init|diff|status|commit|branch|remote|pull|push|sum", Help: "版本", Hand: func(m *ice.Message, c *ice.Context, key string, arg ...string) {
 			prefix, arg := append(kit.Simple(m.Confv("prefix", "git")), "cmd_dir", kit.Select(".", arg[0])), arg[1:]
 
 			switch arg[0] {

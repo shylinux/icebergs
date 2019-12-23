@@ -162,7 +162,7 @@ var Index = &ice.Context{Name: "wiki", Help: "文档模块",
 				kit.Select("", arg, 0), m.Conf("note", ice.Meta("head")))
 		}},
 		"note": {Name: "note file", Help: "笔记", Meta: map[string]interface{}{
-			"remote": "true", "display": "inner",
+			"remote": "you", "display": "inner",
 			"detail": []string{"add", "commit", "history", "share"},
 		}, List: kit.List(
 			kit.MDB_INPUT, "text", "value", "miss.md", "name", "path",

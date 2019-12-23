@@ -49,7 +49,7 @@ var Index = &ice.Context{Name: "chat", Help: "聊天模块",
 
 			// 登录检查
 			if m.Warn(!m.Options(ice.MSG_SESSID) || !m.Options(ice.MSG_USERNAME), "not login") {
-				m.Option("path", "")
+				m.Option("url", "")
 			}
 		}},
 
@@ -145,7 +145,7 @@ var Index = &ice.Context{Name: "chat", Help: "聊天模块",
 			if len(arg) < 2 {
 				// 设备列表
 				m.Richs(ice.WEB_SPACE, nil, "", func(key string, value map[string]interface{}) {
-					m.Push(key, value, []string{"user", "node"})
+					m.Push(key, value, []string{"type", "name", "user"})
 				})
 				return
 			}

@@ -15,10 +15,18 @@ const (
 	CTX_CONTEXT = "context"
 )
 const (
+	CLI_RUNTIME = "runtime"
+	CLI_SYSTEM  = "system"
+)
+const (
 	MSG_DETAIL = "detail"
 	MSG_OPTION = "option"
 	MSG_APPEND = "append"
 	MSG_RESULT = "result"
+
+	MSG_SOURCE = "_source"
+	MSG_TARGET = "_target"
+	MSG_HANDLE = "_handle"
 
 	MSG_SESSID   = "sessid"
 	MSG_USERNAME = "user.name"
@@ -74,6 +82,9 @@ var Alias = map[string]string{
 	CTX_CONFIG:  "ctx.config",
 	CTX_COMMAND: "ctx.command",
 	CTX_CONTEXT: "ctx.context",
+
+	CLI_RUNTIME: "cli.runtime",
+	CLI_SYSTEM:  "cli.system",
 
 	AAA_ROLE: "aaa.role",
 	AAA_USER: "aaa.user",

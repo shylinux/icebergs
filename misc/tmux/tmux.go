@@ -155,6 +155,7 @@ var Index = &ice.Context{Name: "tmux", Help: "终端模块",
 			target := arg[0]
 			if m.Cmd(prefix, "has-session", "-t", target).Append("code") != "0" {
 				// 创建会话
+				m.Option("cmd_env", "TMUX", "")
 				m.Cmd(prefix, "new-session", "-ds", arg[0])
 			}
 

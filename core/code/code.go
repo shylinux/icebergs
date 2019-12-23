@@ -56,7 +56,26 @@ var Index = &ice.Context{Name: "code", Help: "编程模块",
 	},
 	Commands: map[string]*ice.Command{
 		ice.ICE_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			m.Cmd(ice.GDB_EVENT, "listen", "miss.start", "web.code.docker", "image")
+		}},
+		"/zsh": {Name: "/zsh", Help: "终端", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			m.Info("%s cmd: %s arg: %v sub: %v", cmd, m.Option("cmd"), m.Optionv("arg"), m.Optionv("sub"))
+
+			switch m.Option("cmd") {
+			case "upload":
+				// 上传文件
+				msg := m.Cmd(ice.WEB_STORY, "upload")
+				m.Push("_output", "result")
+				m.Echo("list: %s\n", msg.Append("list"))
+				m.Echo("data: %s\n", msg.Append("data"))
+				m.Echo("time: %s\n", msg.Append("time"))
+				m.Echo("type: %s\n", msg.Append("type"))
+				m.Echo("name: %s\n", msg.Append("name"))
+				m.Echo("size: %s\n", msg.Append("size"))
+
+			case "download":
+				// 下载文件
+				m.Cmdy(ice.WEB_STORY, "download", m.Optionv("arg"))
+			}
 		}},
 		"tmux": {Name: "tmux [session [window [pane cmd]]]", Help: "窗口", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			prefix := kit.Simple(m.Confv("prefix", "tmux"))

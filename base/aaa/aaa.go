@@ -18,7 +18,7 @@ var Index = &ice.Context{Name: "aaa", Help: "认证模块",
 		ice.AAA_ROLE: {Name: "role", Help: "角色", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			switch arg[0] {
 			case "check":
-				m.Echo(kit.Select("void", "root", arg[1] == m.Conf("cli.runtime", "boot.username")))
+				m.Echo(kit.Select("void", "root", arg[1] == m.Conf(ice.CLI_RUNTIME, "boot.username")))
 			}
 		}},
 		ice.AAA_USER: {Name: "user", Help: "用户", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
@@ -27,10 +27,10 @@ var Index = &ice.Context{Name: "aaa", Help: "认证模块",
 				// 用户认证
 				user := m.Richs(ice.AAA_USER, nil, arg[1], nil)
 				if user == nil {
-					m.Rich(ice.AAA_USER, nil, map[string]interface{}{
-						"username": arg[1], "password": arg[2],
-						"usernode": m.Conf("cli.runtime", "boot.hostname"),
-					})
+					m.Rich(ice.AAA_USER, nil, kit.Dict(
+						"username", arg[1], "password", arg[2],
+						"usernode", m.Conf(ice.CLI_RUNTIME, "boot.hostname"),
+					))
 					user = m.Richs(ice.AAA_USER, nil, arg[1], nil)
 					m.Info("create user: %s %s", arg[1], kit.Format(user))
 				} else if kit.Format(user["password"]) != arg[2] {
@@ -42,9 +42,9 @@ var Index = &ice.Context{Name: "aaa", Help: "认证模块",
 				sessid := kit.Format(user[ice.WEB_SESS])
 				if sessid == "" {
 					role := m.Cmdx(ice.AAA_ROLE, "check", arg[1])
-					sessid = m.Rich(ice.AAA_SESS, nil, map[string]interface{}{
-						"username": arg[1], "userrole": role,
-					})
+					sessid = m.Rich(ice.AAA_SESS, nil, kit.Dict(
+						"username", arg[1], "userrole", role,
+					))
 					m.Info("user: %s role: %s sess: %s", arg[1], role, sessid)
 				}
 				m.Echo(sessid)

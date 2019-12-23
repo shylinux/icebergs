@@ -549,13 +549,13 @@ func (m *Message) Optionv(key string, arg ...interface{}) interface{} {
 			m.meta[MSG_OPTION] = append(m.meta[MSG_OPTION], key)
 		}
 
-		switch arg := arg[0].(type) {
+		switch str := arg[0].(type) {
 		case string:
-			m.meta[key] = []string{arg}
+			m.meta[key] = kit.Simple(arg)
 		case []string:
-			m.meta[key] = arg
+			m.meta[key] = str
 		default:
-			m.data[key] = arg
+			m.data[key] = str
 		}
 	}
 
@@ -576,9 +576,12 @@ func (m *Message) Option(key string, arg ...interface{}) string {
 	return kit.Select("", kit.Simple(m.Optionv(key, arg...)), 0)
 }
 func (m *Message) Append(key string, arg ...interface{}) string {
-	return kit.Select("", m.meta[key], 0)
+	return kit.Select("", m.Appendv(key, arg...), 0)
 }
 func (m *Message) Appendv(key string, arg ...interface{}) []string {
+	if len(arg) > 0 {
+		m.meta[key] = kit.Simple(arg...)
+	}
 	return m.meta[key]
 }
 func (m *Message) Resultv(arg ...interface{}) []string {
@@ -824,9 +827,11 @@ func (m *Message) Richs(key string, chain interface{}, raw interface{}, cb inter
 		switch cb := cb.(type) {
 		case func(string, map[string]interface{}):
 			for k, v := range hash {
-				cb(k, v.(map[string]interface{}))
+				res = v.(map[string]interface{})
+				cb(k, res)
 			}
 		}
+		return res
 	case "%":
 		// 随机选取
 		list := []string{}
@@ -875,11 +880,8 @@ func (m *Message) Rich(key string, chain interface{}, data interface{}) string {
 	}
 
 	// 通用数据
-	if kit.Value(data, "meta") != nil {
-		kit.Value(data, "meta.create_time", m.Time())
-	} else {
-		kit.Value(data, "create_time", m.Time())
-	}
+	prefix := kit.Select("", "meta.", kit.Value(data, "meta") != nil)
+	kit.Value(data, prefix+kit.MDB_TIME, m.Time())
 
 	// 生成键值
 	h := ""
@@ -918,13 +920,9 @@ func (m *Message) Grow(key string, chain interface{}, data interface{}) int {
 
 	// 通用数据
 	id := kit.Int(meta["count"]) + 1
-	if kit.Value(data, "meta") != nil {
-		kit.Value(data, "meta.id", id)
-		kit.Value(data, "meta.create_time", m.Time())
-	} else {
-		kit.Value(data, "id", id)
-		kit.Value(data, "create_time", m.Time())
-	}
+	prefix := kit.Select("", "meta.", kit.Value(data, "meta") != nil)
+	kit.Value(data, prefix+kit.MDB_TIME, m.Time())
+	kit.Value(data, prefix+kit.MDB_ID, id)
 
 	// 添加数据
 	list = append(list, data)
@@ -1120,6 +1118,8 @@ func (m *Message) Cmd(arg ...interface{}) *Message {
 			c.Run(msg, cmd, key, list[1:]...)
 		})
 	})
+
+	m.Warn(m.Hand == false, "not found %v", list)
 	return m
 }
 func (m *Message) Confv(arg ...interface{}) (val interface{}) {

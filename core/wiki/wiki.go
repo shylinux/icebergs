@@ -174,10 +174,11 @@ var Index = &ice.Context{Name: "wiki", Help: "文档模块",
 				case "favor":
 					m.Cmdy(ice.WEB_FAVOR, kit.Select("story", m.Option("hot")), arg[2:])
 				case "share":
-					m.Cmdy(ice.WEB_SHARE, arg[2:])
+					m.Cmdy(ice.WEB_SHARE, "add", arg[2:])
 				default:
 					m.Cmdy(arg)
 				}
+				return
 			}
 			m.Cmdy(kit.Select("_tree", "_text", len(arg) > 0 && strings.HasSuffix(arg[0], ".md")), arg)
 		}},

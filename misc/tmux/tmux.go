@@ -51,7 +51,7 @@ var Index = &ice.Context{Name: "tmux", Help: "终端模块",
 	},
 	Commands: map[string]*ice.Command{
 		ice.ICE_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			m.Cmd(ice.GDB_EVENT, "listen", "miss.start", "cli.tmux.session")
+			m.Cmd(ice.GDB_EVENT, "listen", ice.DREAM_START, "cli.tmux.session")
 		}},
 		ice.ICE_EXIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 		}},
@@ -86,7 +86,7 @@ var Index = &ice.Context{Name: "tmux", Help: "终端模块",
 				// 查看缓存
 				m.Cmdy("cli.system", "tmux", "show-buffer", "-b", arg[0]).Set("append")
 			}},
-		"session": {Name: "session", Help: "会话", List: kit.List(
+		"session": {Name: "session", Help: "会话", Meta: kit.Dict("detail", []string{"选择", "运行", "编辑", "删除", "下载"}), List: kit.List(
 			kit.MDB_INPUT, "text", "name", "session", "action", "auto",
 			kit.MDB_INPUT, "text", "name", "window", "action", "auto",
 			kit.MDB_INPUT, "text", "name", "pane", "action", "auto",
@@ -96,6 +96,15 @@ var Index = &ice.Context{Name: "tmux", Help: "终端模块",
 			prefix := []string{"cli.system", "tmux"}
 			if len(arg) > 3 {
 				switch arg[1] {
+				case "运行":
+					target := ""
+					switch arg[2] {
+					case "session":
+						target = arg[3]
+					}
+					m.Cmd("run", target, m.Option("hot"))
+					arg = arg[:0]
+
 				case "select":
 					if arg[2] == "session" {
 						// 选择会话
@@ -156,7 +165,10 @@ var Index = &ice.Context{Name: "tmux", Help: "终端模块",
 			if m.Cmd(prefix, "has-session", "-t", target).Append("code") != "0" {
 				// 创建会话
 				m.Option("cmd_env", "TMUX", "")
+				m.Option("cmd_dir", m.Conf(ice.WEB_DREAM, "meta.path"))
 				m.Cmd(prefix, "new-session", "-ds", arg[0])
+				m.Cmd("run", arg[0], arg[1:])
+				arg = arg[:1]
 			}
 
 			if len(arg) == 1 {
@@ -196,6 +208,21 @@ var Index = &ice.Context{Name: "tmux", Help: "终端模块",
 		}},
 		"view": {Name: "view", Help: "终端", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			m.Cmdy("cli.system", "tmux", "capture-pane", "-pt", kit.Select("", arg, 0)).Set("append")
+		}},
+		"run": {Name: "view", Help: "终端", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			prefix := []string{"cli.system", "tmux"}
+
+			m.Richs(ice.WEB_SPACE, nil, arg[0], func(key string, value map[string]interface{}) {
+				m.Cmdy(prefix, "send-keys", "-t", arg[0], "export ctx_share=", value["share"], "Enter")
+			})
+
+			m.Option("cmd_env", "TMUX", "")
+			m.Cmd(ice.WEB_FAVOR, kit.Select("some", arg, 1)).Table(func(index int, value map[string]string, head []string) {
+				switch value["type"] {
+				case "shell":
+					m.Cmdy(prefix, "send-keys", "-t", arg[0], value["text"], "Enter")
+				}
+			})
 		}},
 	},
 }

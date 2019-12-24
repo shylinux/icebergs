@@ -356,6 +356,7 @@ func (m *Message) Push(key string, value interface{}, arg ...interface{}) *Messa
 			}
 			sort.Strings(list)
 		}
+
 		for _, k := range list {
 			if k == "key" {
 				m.Add(MSG_APPEND, k, key)

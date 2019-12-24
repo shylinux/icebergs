@@ -29,38 +29,54 @@ CMD sh bin/boot.sh
 var Index = &ice.Context{Name: "code", Help: "编程模块",
 	Caches: map[string]*ice.Cache{},
 	Configs: map[string]*ice.Config{
-		"prefix": {Name: "prefix", Help: "外部命令", Value: map[string]interface{}{
-			"zsh":    []interface{}{"cli.system", "zsh"},
-			"tmux":   []interface{}{"cli.system", "tmux"},
-			"docker": []interface{}{"cli.system", "docker"},
-			"git":    []interface{}{"cli.system", "git"},
-			"vim":    []interface{}{"cli.system", "vim"},
-		}},
-		"docker": {Name: "docker", Help: "容器", Value: map[string]interface{}{
-			"template": map[string]interface{}{"shy": Dockfile},
-			"output":   "etc/Dockerfile",
-		}},
-		"tmux": {Name: "tmux", Help: "终端", Value: map[string]interface{}{
-			"favor": map[string]interface{}{
-				"index": []interface{}{
-					"ctx_dev ctx_share",
-					"curl -s $ctx_dev/publish/auto.sh >auto.sh",
-					"source auto.sh",
-					"ShyLogin",
-				},
-			},
-		}},
-		"git": {Name: "git", Help: "记录", Value: map[string]interface{}{
-			"alias": map[string]interface{}{"s": "status", "b": "branch"},
-		}},
+		"login": {Name: "login", Help: "登录", Value: kit.Data()},
 	},
 	Commands: map[string]*ice.Command{
 		ice.ICE_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 		}},
+
+		"login": {Name: "login", Help: "登录", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			switch kit.Select("list", arg, 0) {
+			case "open":
+			case "init":
+				if m.Option("sid") != "" {
+					if m.Confs("login", []string{"hash", m.Option("sid"), "status"}) {
+						m.Conf("login", []string{"hash", m.Option("sid"), "status"}, "login")
+						m.Echo(m.Option("sid"))
+						return
+					}
+				}
+
+				// 添加终端
+				h := m.Rich("login", nil, kit.Dict(
+					"status", "login",
+					"type", kit.Select("zsh", arg, 1),
+					"you", m.Conf(ice.WEB_SHARE, kit.Keys("hash", m.Option("share"), "name")),
+					"pwd", m.Option("pwd"),
+					"pid", m.Option("pid"),
+					"pane", m.Option("pane"),
+					"hostname", m.Option("hostname"),
+					"username", m.Option("username"),
+				))
+				m.Info("zsh %s", h)
+				m.Echo(h)
+
+			case "list":
+				m.Richs("login", nil, "", func(key string, value map[string]interface{}) {
+					m.Push(key, value)
+				})
+			}
+		}},
 		"/zsh": {Name: "/zsh", Help: "终端", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			m.Info("%s cmd: %s arg: %v sub: %v", cmd, m.Option("cmd"), m.Optionv("arg"), m.Optionv("sub"))
+			m.Option("you", "")
+			m.Richs("login", nil, m.Option("sid"), func(key string, value map[string]interface{}) {
+				m.Option("you", value["you"])
+			})
+			m.Info("%s%s %s arg: %v sub: %v", m.Option("you"), cmd, m.Option("cmd"), m.Optionv("arg"), m.Optionv("sub"))
 
 			switch m.Option("cmd") {
+			case "login":
+				m.Cmdy("login", "init", cmd).Push("_output", "result")
 			case "upload":
 				// 上传文件
 				msg := m.Cmd(ice.WEB_STORY, "upload")
@@ -75,6 +91,13 @@ var Index = &ice.Context{Name: "code", Help: "编程模块",
 			case "download":
 				// 下载文件
 				m.Cmdy(ice.WEB_STORY, "download", m.Optionv("arg"))
+
+			case "history":
+				m.Option("you", "")
+				vs := strings.SplitN(strings.TrimSpace(m.Option("arg")), " ", 2)
+				m.Cmd(ice.WEB_SPACE, m.Option("you"), ice.WEB_FAVOR, "zsh.history", "shell", m.Option("sid"), kit.Select("", vs, 1),
+					"sid", m.Option("sid"), "num", vs[0], "pwd", m.Option("pwd"))
+				m.Push("_output", "void")
 			}
 		}},
 		"_tmux": {Name: "tmux [session [window [pane cmd]]]", Help: "窗口", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {

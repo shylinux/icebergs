@@ -73,6 +73,24 @@ const (
 	GDB_SIGNAL = "signal"
 	GDB_TIMER  = "timer"
 	GDB_EVENT  = "event"
+
+	DREAM_START = "dream.start"
+	DREAM_CLOSE = "dream.close"
+	SPACE_START = "space.start"
+	SPACE_CLOSE = "space.close"
+)
+const (
+	MDB_REDIS  = "redis"
+	MDB_MYSQL  = "mysql"
+	MDB_CREATE = "create"
+	MDB_IMPORT = "import"
+	MDB_EXPORT = "export"
+	MDB_REMOVE = "remove"
+
+	MDB_INESRT = "insert"
+	MDB_UPDATE = "update"
+	MDB_SELECT = "select"
+	MDB_DELETE = "delete"
 )
 
 const (
@@ -105,6 +123,18 @@ var Alias = map[string]string{
 	GDB_SIGNAL: "gdb.signal",
 	GDB_TIMER:  "gdb.timer",
 	GDB_EVENT:  "gdb.event",
+
+	MDB_REDIS:  "mdb.redis",
+	MDB_MYSQL:  "mdb.mysql",
+	MDB_CREATE: "mdb.create",
+	MDB_IMPORT: "mdb.import",
+	MDB_EXPORT: "mdb.export",
+	MDB_REMOVE: "mdb.remove",
+
+	MDB_INESRT: "mdb.insert",
+	MDB_UPDATE: "mdb.update",
+	MDB_SELECT: "mdb.select",
+	MDB_DELETE: "mdb.delete",
 
 	CHAT_GROUP: "web.chat.group",
 

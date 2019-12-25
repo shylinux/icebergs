@@ -100,6 +100,7 @@ func (web *Frame) HandleWSS(m *ice.Message, safe bool, c *websocket.Conn) bool {
 				msg.Optionv(ice.MSG_TARGET, target)
 				socket.WriteMessage(t, []byte(msg.Format("meta")))
 				msg.Info("send %v %v->%v %v", t, source, target, msg.Format("meta"))
+				msg.Log("cost", "%s: ", msg.Format("cost"))
 				if msg.Detail() == "exit" {
 					return true
 				}
@@ -127,12 +128,10 @@ func (web *Frame) HandleCGI(m *ice.Message, alias map[string]interface{}, which 
 	for k, v := range alias {
 		list := kit.Simple(v)
 		if v, ok := m.Target().Commands[list[0]]; ok {
-			m.Log("info", "%v, %v", k, v.Name)
 			cb(k, list[1:], v)
 		}
 	}
 	for k, v := range m.Target().Commands {
-		m.Log("info", "%v, %v", k, v.Name)
 		if strings.HasPrefix(k, "/") || strings.HasPrefix(k, "_") {
 			continue
 		}
@@ -144,15 +143,12 @@ func (web *Frame) HandleCGI(m *ice.Message, alias map[string]interface{}, which 
 	// tmpl = template.Must(tmpl.ParseGlob(path.Join(m.Conf(ice.WEB_SERVE, ice.Meta("template", "path")), m.Target().Name, "/*.tmpl")))
 	tmpl = template.Must(tmpl.ParseFiles(which))
 	m.Confm(ice.WEB_SERVE, ice.Meta("template", "list"), func(index int, value string) { tmpl = template.Must(tmpl.Parse(value)) })
-	for i, v := range tmpl.Templates() {
-		m.Log("info", "%v, %v", i, v.Name())
-	}
 	return tmpl
 }
 func (web *Frame) HandleCmd(m *ice.Message, key string, cmd *ice.Command) {
 	web.HandleFunc(key, func(w http.ResponseWriter, r *http.Request) {
 		m.TryCatch(m.Spawns(), true, func(msg *ice.Message) {
-			defer func() { msg.Log("cost", msg.Format("cost")) }()
+			defer func() { msg.Log("cost", "%s: %s %v", msg.Format("cost"), r.URL.Path, msg.Optionv("cmds")) }()
 
 			// 解析请求
 			msg.Optionv("request", r)
@@ -495,12 +491,11 @@ var Index = &ice.Context{Name: "web", Help: "网页模块",
 						m.Info("send %s %s", id, m.Format("meta"))
 
 						// 下发命令
-						now := time.Now()
 						m.Target().Server().(*Frame).send[id] = m
 						socket.WriteMessage(MSG_MAPS, []byte(m.Format("meta")))
 						m.Call(true, func(msg *ice.Message) *ice.Message {
 							// 返回结果
-							m.Copy(msg).Log("cost", "cost: %s", kit.FmtTime(kit.Int64(time.Now().Sub(now))))
+							m.Copy(msg).Log("cost", "%s: %s %v", m.Format("cost"), arg[0], arg[1:])
 							return nil
 						})
 					}
@@ -517,11 +512,12 @@ var Index = &ice.Context{Name: "web", Help: "网页模块",
 			if len(arg) > 1 {
 				switch arg[1] {
 				case "启动":
+					arg = arg[:1]
 				case "停止", "stop":
 					m.Cmd(ice.WEB_SPACE, arg[0], "exit", "1")
 					time.Sleep(time.Second * 3)
 					m.Cmd(ice.GDB_EVENT, "action", ice.DREAM_CLOSE, arg[0])
-					return
+					arg = arg[:0]
 				}
 			}
 
@@ -892,21 +888,13 @@ var Index = &ice.Context{Name: "web", Help: "网页模块",
 
 			switch arg[0] {
 			case "add":
-				node := kit.Dict(
-					kit.MDB_TYPE, arg[1], kit.MDB_NAME, arg[2], kit.MDB_TEXT, arg[3],
-				)
-				switch arg[1] {
-				case "story":
-					node["data"] = arg[3]
-				default:
-					node["data"] = m.Cmd(ice.WEB_CACHE, "add", arg[1:]).Append("data")
-				}
-
 				// 创建共享
-				h := m.Rich(ice.WEB_SHARE, nil, node)
+				h := m.Rich(ice.WEB_SHARE, nil, kit.Dict(
+					kit.MDB_TYPE, arg[1], kit.MDB_NAME, arg[2], kit.MDB_TEXT, arg[3],
+				))
 				m.Grow(ice.WEB_SHARE, nil, kit.Dict(
 					kit.MDB_TYPE, arg[1], kit.MDB_NAME, arg[2], kit.MDB_TEXT, arg[3],
-					"data", node["data"], "share", h,
+					"share", h,
 				))
 				m.Info("share: %s", h)
 				m.Echo(h)
@@ -954,13 +942,13 @@ var Index = &ice.Context{Name: "web", Help: "网页模块",
 					"share", m.Cmdx(ice.WEB_SHARE, "add", m.Option("node"), m.Option("name"), m.Option("user")),
 					"socket", s,
 				))
-				m.Info("conn %s", m.Option(kit.MDB_NAME))
+				m.Info("space: %s", m.Option(kit.MDB_NAME))
 
 				m.Gos(m, func(m *ice.Message) {
 					// 监听消息
 					web := m.Target().Server().(*Frame)
 					web.HandleWSS(m, false, s)
-					m.Info("close %s %s", m.Option(kit.MDB_NAME), kit.Format(m.Confv(ice.WEB_SPACE, kit.Keys(kit.MDB_HASH, m.Option(kit.MDB_NAME)))))
+					m.Log("close", "%s: %s", m.Option(kit.MDB_NAME), kit.Format(m.Confv(ice.WEB_SPACE, kit.Keys(kit.MDB_HASH, h))))
 					m.Confv(ice.WEB_SPACE, kit.Keys(kit.MDB_HASH, h), "")
 				})
 			}

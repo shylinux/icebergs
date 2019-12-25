@@ -191,7 +191,11 @@ var Index = &ice.Context{Name: "chat", Help: "聊天模块",
 			// 执行命令
 			m.Grows(ice.CHAT_GROUP, prefix, kit.MDB_ID, kit.Format(kit.Int(arg[2])+1), func(index int, value map[string]interface{}) {
 				if meta, ok := kit.Value(value, "meta").(map[string]interface{}); ok {
-					m.Cmdy(ice.WEB_SPACE, meta["pod"], ice.CTX_COMMAND, meta["ctx"], meta["cmd"], "run", arg[3:])
+					if kit.Format(meta["pod"]) == m.Conf(ice.CLI_RUNTIME, "node.name") {
+						m.Cmdy(kit.Keys(meta["ctx"], meta["cmd"]), arg[3:])
+					} else {
+						m.Cmdy(ice.WEB_SPACE, meta["pod"], kit.Keys(meta["ctx"], meta["cmd"]), arg[3:])
+					}
 				}
 			})
 		}},

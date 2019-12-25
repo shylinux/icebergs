@@ -59,6 +59,7 @@ const (
 )
 const (
 	LOG_CMD   = "cmd"
+	LOG_COST  = "cost"
 	LOG_INFO  = "info"
 	LOG_WARN  = "warn"
 	LOG_ERROR = "error"

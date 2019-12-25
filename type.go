@@ -599,17 +599,21 @@ func (m *Message) Log(level string, str string, arg ...interface{}) *Message {
 	}
 	prefix, suffix := "", ""
 	switch level {
-	case "cmd", "start", "serve":
+	case LOG_CMD, "start", "serve":
 		prefix, suffix = "\033[32m", "\033[0m"
-	case "cost":
+	case LOG_COST:
 		prefix, suffix = "\033[33m", "\033[0m"
-	case "warn", "close":
+	case LOG_WARN, LOG_ERROR, "close":
 		prefix, suffix = "\033[31m", "\033[0m"
 	}
 	fmt.Fprintf(os.Stderr, "%s %d %s->%s %s%s %s%s\n",
 		time.Now().Format(ICE_TIME), m.code, m.source.Name, m.target.Name,
 		prefix, level, str, suffix)
 	return m
+}
+func (m *Message) Cost(str string, arg ...interface{}) *Message {
+	m.Log(LOG_COST, "%s: %s", m.Format("cost"), kit.Format(str, arg...))
+	return m.Log(LOG_INFO, str, arg...)
 }
 func (m *Message) Info(str string, arg ...interface{}) *Message {
 	return m.Log(LOG_INFO, str, arg...)
@@ -657,10 +661,10 @@ func (m *Message) TryCatch(msg *Message, safe bool, hand ...func(msg *Message)) 
 		case io.EOF:
 		case nil:
 		default:
+			m.Log(LOG_ERROR, "catch: %s", e)
 			m.Log(LOG_BENCH, "chain: %s", msg.Format("chain"))
-			m.Log(LOG_BENCH, "catch: %s", e)
+			m.Log(LOG_ERROR, "catch: %s", e)
 			m.Log(LOG_BENCH, "stack: %s", msg.Format("stack"))
-
 			if m.Log(LOG_ERROR, "catch: %s", e); len(hand) > 1 {
 				m.TryCatch(msg, safe, hand[1:]...)
 			} else if !safe {
@@ -935,10 +939,13 @@ func (m *Message) Grow(key string, chain interface{}, data interface{}) int {
 		least := kit.Int(kit.Select(m.Conf(WEB_CACHE, Meta("least")), meta["least"]))
 
 		// 创建文件
-		name := kit.Select(path.Join(m.Conf(WEB_CACHE, Meta("store")), kit.Keys(key, chain, "csv")), meta["store"])
+		name := path.Join(kit.Select(m.Conf(WEB_CACHE, Meta("store")), meta["store"]), kit.Keys(key, chain, "csv"))
 		f, e := os.OpenFile(name, os.O_RDWR|os.O_APPEND|os.O_CREATE, 0666)
 		if e != nil {
 			f, _, e = kit.Create(name)
+			m.Info("%s.%v create: %s", key, chain, name)
+		} else {
+			m.Info("%s.%v append: %s", key, chain, name)
 		}
 		defer f.Close()
 		s, e := f.Stat()
@@ -991,15 +998,15 @@ func (m *Message) Grow(key string, chain interface{}, data interface{}) int {
 			}
 		}
 
-		m.Log(LOG_INFO, "save %s offset %v+%v", name, offset, count)
+		m.Log(LOG_INFO, "%s.%v save %s offset %v+%v", key, chain, name, offset, count)
 		meta["offset"] = offset + count
 		list = list[:least]
 		w.Flush()
 	}
 	return id
 }
-func (m *Message) Grows(key string, args interface{}, match string, value string, cb interface{}) map[string]interface{} {
-	cache := m.Confm(key, args)
+func (m *Message) Grows(key string, chain interface{}, match string, value string, cb interface{}) map[string]interface{} {
+	cache := m.Confm(key, chain)
 	if cache == nil {
 		return nil
 	}
@@ -1021,8 +1028,8 @@ func (m *Message) Grows(key string, args interface{}, match string, value string
 	}
 
 	data := make([]interface{}, 0, limit)
-	m.Log(LOG_INFO, "read %v-%v from %v-%v", begin, end, current, current+len(list))
 	if begin < current {
+		m.Log(LOG_INFO, "%s.%s read %v-%v from %v-%v", key, chain, begin, end, current, current+len(list))
 		store, _ := meta["record"].([]interface{})
 		for s := len(store) - 1; s > -1; s-- {
 			item, _ := store[s].(map[string]interface{})
@@ -1082,7 +1089,6 @@ func (m *Message) Grows(key string, args interface{}, match string, value string
 	if begin < current {
 		begin = current
 	}
-	m.Log(LOG_INFO, "cache %v-%v", begin-current, end-current)
 	for i := begin - current; i < end-current; i++ {
 		if match == "" || strings.Contains(kit.Format(kit.Value(list[i], match)), value) {
 			data = append(data, list[i])
@@ -1114,9 +1120,13 @@ func (m *Message) Cmd(arg ...interface{}) *Message {
 
 	m.Search(list[0], func(p *Context, c *Context, key string, cmd *Command) {
 		m.TryCatch(m.Spawns(c), true, func(msg *Message) {
-			m.Hand, m = true, msg
 			msg.meta[MSG_DETAIL] = list
-			c.Run(msg, cmd, key, list[1:]...)
+			m.Hand, msg.Hand, m = true, true, msg
+			if you := m.Option(kit.Format(kit.Value(cmd.Meta, "remote"))); you != "" {
+				msg.Copy(msg.Spawns(c).Cmd(WEB_SPACE, you, list[0], list[1:]))
+			} else {
+				c.Run(msg, cmd, key, list[1:]...)
+			}
 		})
 	})
 

@@ -21,11 +21,10 @@ func main() {
 }
 END
 
-    [ -f go.mod ] || go mod init
+    [ -f go.mod ] || go mod init ${PWD##**/}
 
     [ -f Makefile ] || cat >> Makefile <<END
 all:
-    @echo && date
 	sh build.sh build && sh build.sh restart
 END
 }

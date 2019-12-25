@@ -607,7 +607,7 @@ func (m *Message) Log(level string, str string, arg ...interface{}) *Message {
 		prefix, suffix = "\033[31m", "\033[0m"
 	}
 	fmt.Fprintf(os.Stderr, "%s %d %s->%s %s%s %s%s\n",
-		time.Now().Format(ICE_TIME), m.code, m.source.Name, m.target.Name,
+		m.time.Format(ICE_TIME), m.code, m.source.Name, m.target.Name,
 		prefix, level, str, suffix)
 	return m
 }

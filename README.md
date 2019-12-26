@@ -4,7 +4,7 @@ icebergs是一个后端框架，通过模块化、集群化实现资源的无限
 
 一键创建项目
 ```
-curl -s https://raw.githubusercontent.com/shylinux/icebergs/master/demo/build.sh | sh miss
+mkdir miss; cd miss && curl -s https://raw.githubusercontent.com/shylinux/icebergs/master/demo/build.sh | sh
 ```
 
 ## 1 原型 type.go

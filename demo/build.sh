@@ -30,7 +30,7 @@ prepare() {
  }
 start() {
     prepare && while true; do
-        date && ice.bin \$@ 2>boot.log && break || echo -e "\n\nrestarting..."
+        date && ice.bin \$@ 2>boot.log && echo -e "\n\nrestarting..." || break
     done
 }
 restart() {

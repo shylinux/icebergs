@@ -42,12 +42,25 @@ func Cookie(msg *ice.Message, sessid string) string {
 }
 func (web *Frame) Login(msg *ice.Message, w http.ResponseWriter, r *http.Request) bool {
 	if msg.Options(ice.WEB_SESS) {
+		// 会话认证
 		sub := msg.Cmd(ice.AAA_SESS, "check", msg.Option(ice.WEB_SESS))
 		msg.Info("role: %s user: %s", msg.Option(ice.MSG_USERROLE, sub.Append("userrole")),
 			msg.Option(ice.MSG_USERNAME, sub.Append("username")))
 	}
 
+	if (!msg.Options(ice.MSG_SESSID) || !msg.Options(ice.MSG_USERNAME)) && msg.Option("user.ip") == "::1" {
+		// 自动认证
+		msg.Option(ice.MSG_USERNAME, msg.Conf(ice.CLI_RUNTIME, "boot.username"))
+		msg.Option(ice.MSG_USERROLE, msg.Cmdx(ice.AAA_ROLE, "check", msg.Option(ice.MSG_USERNAME)))
+		msg.Option(ice.MSG_SESSID, msg.Rich(ice.AAA_SESS, nil, kit.Dict(
+			"username", msg.Option(ice.MSG_USERNAME), "userrole", msg.Option(ice.MSG_USERROLE),
+		)))
+		Cookie(msg, msg.Option(ice.MSG_SESSID))
+		msg.Info("user: %s role: %s sess: %s", msg.Option(ice.MSG_USERNAME), msg.Option(ice.MSG_USERROLE), msg.Option(ice.MSG_SESSID))
+	}
+
 	if s, ok := msg.Target().Commands[ice.WEB_LOGIN]; ok {
+		// 权限检查
 		msg.Target().Run(msg, s, ice.WEB_LOGIN, kit.Simple(msg.Optionv("cmds"))...)
 	}
 	return msg.Option("url") != ""

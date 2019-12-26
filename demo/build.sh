@@ -23,7 +23,7 @@ END
     [ -f ${ice_sh} ] || cat >> ${ice_sh} <<END
 #! /bin/sh
 
-export PATH=\${PWD}/bin:\$PATH
+export PATH=\${PWD}/bin:\${PWD}:\$PATH
 prepare() {
     which ice.bin && return
     curl -s https://shylinux.com/publish/ice.bin -o bin/ice.bin

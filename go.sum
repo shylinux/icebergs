@@ -1,2 +1,7 @@
+github.com/gomarkdown/markdown v0.0.0-20191207194928-fbea82c4bb03 h1:m13UZm540+0yrpGOIXd7q4AvPGQPSTo+2jxrBK26o64=
+github.com/gomarkdown/markdown v0.0.0-20191207194928-fbea82c4bb03/go.mod h1:aii0r/K0ZnHv7G0KF7xy1v0A7s2Ljrb5byB7MO5p6TU=
+github.com/gorilla/websocket v1.4.1 h1:q7AeDBpnBk8AogcD4DSag/Ukw/KV+YhzLj2bP5HvKCM=
+github.com/gorilla/websocket v1.4.1/go.mod h1:YR8l580nyteQvAITg2hZ9XVh4b55+EU/adAjf1fMHhE=
 github.com/shylinux/toolkits v0.0.0-20191225132906-3c11db083b5b h1:BXDEMcpHmwuwoqY/NWehDs11GOy2x+2MS7Xfihb3zFY=
 github.com/shylinux/toolkits v0.0.0-20191225132906-3c11db083b5b/go.mod h1:Y68Ot6xOmo1bun67YvqC3chDGeU2gDxtsUnvVDGJm4g=
+golang.org/dl v0.0.0-20190829154251-82a15e2f2ead/go.mod h1:IUMfjQLJQd4UTqG1Z90tenwKoCX93Gn3MAQJMOSBsDQ=

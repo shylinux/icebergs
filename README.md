@@ -2,6 +2,11 @@
 
 icebergs是一个后端框架，通过模块化、集群化实现资源的无限的扩展与自由的组合。
 
+一键创建项目
+```
+curl -s https://raw.githubusercontent.com/shylinux/icebergs/master/demo/build.sh | sh miss
+```
+
 ## 1 原型 type.go
 ### 1.1 msg.Detail
 ### 1.2 msg.Option

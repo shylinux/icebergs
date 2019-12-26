@@ -21,13 +21,15 @@ var Index = &ice.Context{Name: "team", Help: "团队模块",
 	},
 	Commands: map[string]*ice.Command{
 		"miss": {Name: "miss", Help: "任务", Meta: map[string]interface{}{
-			"exports": []interface{}{"you", "name"},
+			"display": "github.com/shylinux/context/usr/librarys/code",
 			"detail":  []interface{}{"启动", "停止"},
+			"exports": []interface{}{"you", "name"},
 		}, List: kit.List(
 			kit.MDB_INPUT, "text", "value", "", "name", "name",
 			kit.MDB_INPUT, "text", "value", "", "name", "type",
 			kit.MDB_INPUT, "button", "value", "创建", "action", "auto",
 		), Hand: func(m *ice.Message, c *ice.Context, key string, arg ...string) {
+			return
 			if len(arg) > 1 {
 				switch arg[1] {
 				case "启动":

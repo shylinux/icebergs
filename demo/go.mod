@@ -4,7 +4,7 @@ go 1.13
 
 require (
 	github.com/shylinux/icebergs v0.0.0-20191212145348-fe6226481eaa
-	github.com/shylinux/toolkits v0.0.0-20191212145555-d32eaba90a9e
+	github.com/shylinux/toolkits v0.0.0-20191225132906-3c11db083b5b
 )
 
 replace (

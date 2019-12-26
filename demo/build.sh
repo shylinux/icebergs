@@ -1,9 +1,6 @@
 #! /bin/sh
 
-export ice_app=${ice_app:="ice.app"}
-export ice_err=${ice_err:="boot.log"}
-export ice_serve=${ice_serve:="web.serve"}
-export ice_can=${ice_can:="https://github.com/shylinux/volcanos"}
+ice_sh=${ice_sh:="ice.sh"}
 
 prepare() {
     [ -f main.go ] || cat >> main.go <<END
@@ -23,28 +20,43 @@ END
 
     [ -f go.mod ] || go mod init ${PWD##**/}
 
-    [ -f Makefile ] || cat >> Makefile <<END
-all:
-	sh build.sh build && sh build.sh restart
-END
-}
-build() {
-    prepare && go build -o bin/shy main.go
-}
+    [ -f ${ice_sh} ] || cat >> ${ice_sh} <<END
+#! /bin/sh
 
+export PATH=\${PWD}/bin:\$PATH
+prepare() {
+    which ice.bin && return
+    curl -s https://shylinux.com/publish/ice.bin -o bin/ice.bin
+ }
 start() {
-    [ -z "$@" ] && ( [ -d usr/volcanos ] || git clone $ice_can usr/volcanos )
-    while true; do
-        date && $ice_app $@ 2>$ice_err && echo -e "\n\nrestarting..." || break
+    prepare && while true; do
+        date && ice.bin \$@ 2>boot.log && break || echo -e "\n\nrestarting..."
     done
 }
 restart() {
-    kill -2 `cat var/run/shy.pid`
+    kill -2 \`cat var/run/shy.pid\`
 }
 shutdown() {
-    kill -3 `cat var/run/shy.pid`
+    kill -3 \`cat var/run/shy.pid\`
+}
+
+cmd=\$1 && shift
+[ -z "\$cmd" ] && cmd=start
+\$cmd \$*
+END
+    chmod u+x ${ice_sh}
+
+    [ -f Makefile ] || cat >> Makefile <<END
+all:
+	go build -o bin/ice.bin main.go && chmod u+x bin/ice.bin && ./${ice_sh} restart
+END
+}
+
+build() {
+    [ "$1" != "" ] && mdkir $1 && cd $1
+    prepare && go build -o bin/ice.bin main.go && chmod u+x bin/ice.bin && ./${ice_sh}
 }
 
 cmd=$1 && shift
-[ -z "$cmd" ] && cmd=start
+[ -z "$cmd" ] && cmd=build
 $cmd $*

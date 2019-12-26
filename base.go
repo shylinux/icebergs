@@ -125,7 +125,7 @@ func Run(arg ...string) string {
 		arg = os.Args[1:]
 	}
 	if len(arg) == 0 {
-		arg = append(arg, os.Getenv("ice_serve"))
+		arg = append(arg, WEB_SERVE)
 	}
 
 	frame := &Frame{}

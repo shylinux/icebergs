@@ -427,6 +427,9 @@ var Index = &ice.Context{Name: "web", Help: "网页模块",
 				"name", m.Conf(ice.CLI_RUNTIME, "boot.hostname"),
 				"user", m.Conf(ice.CLI_RUNTIME, "boot.username"),
 			))
+			if _, e := os.Stat("usr/volcanos"); e != nil {
+				m.Cmd("cli.system", "git", "clone", "https://github.com/shylinux/volcanos", "usr/volcanos")
+			}
 			m.Target().Start(m, kit.Select("self", arg, 0))
 		}},
 		ice.WEB_SPACE: {Name: "space", Help: "空间站", Meta: kit.Dict("exports", []string{"pod", "name"}), List: kit.List(
@@ -952,6 +955,18 @@ var Index = &ice.Context{Name: "web", Help: "网页模块",
 					m.Confv(ice.WEB_SPACE, kit.Keys(kit.MDB_HASH, h), "")
 				})
 			}
+		}},
+		"/static/volcanos/plugin/github.com/": {Name: "/space/", Help: "空间站", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			file := strings.TrimPrefix(cmd, "/static/volcanos/")
+			if _, e := os.Stat(path.Join("usr/volcanos", file)); e != nil {
+				m.Cmd("cli.system", "git", "clone", "https://"+strings.Join(strings.Split(cmd, "/")[4:7], "/"),
+					path.Join("usr/volcanos", strings.Join(strings.Split(cmd, "/")[3:7], "/")))
+			}
+
+			m.Push("_output", "void")
+			r := m.Optionv("request").(*http.Request)
+			w := m.Optionv("response").(http.ResponseWriter)
+			http.ServeFile(w, r, path.Join("usr/volcanos", file))
 		}},
 	},
 }

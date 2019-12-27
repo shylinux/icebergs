@@ -28,11 +28,13 @@ func (f *Frame) Begin(m *Message, arg ...string) Server {
 		}
 	})
 	m.target.wg = &sync.WaitGroup{}
+	m.root.Cost("begin")
 	return f
 }
 func (f *Frame) Start(m *Message, arg ...string) bool {
 	m.Log(LOG_START, "ice")
 	m.Cmd(ICE_INIT).Cmd("init", arg)
+	m.root.Cost("start")
 	return true
 }
 func (f *Frame) Close(m *Message, arg ...string) bool {
@@ -81,6 +83,7 @@ var Index = &Context{Name: "ice", Help: "冰山模块",
 			})
 		}},
 		"init": {Name: "init", Help: "hello", Hand: func(m *Message, c *Context, cmd string, arg ...string) {
+			m.root.Cost("_init")
 			m.Start("log", arg...)
 			m.Start("gdb", arg...)
 			m.Start("ssh", arg...)

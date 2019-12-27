@@ -22,6 +22,8 @@ var Index = &ice.Context{Name: "cli", Help: "命令模块",
 		ice.ICE_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			m.Cmd(ice.CTX_CONFIG, "load", "cli.json")
 
+			m.Conf(ice.CLI_RUNTIME, "host.ctx_self", os.Getenv("ctx_self"))
+			m.Conf(ice.CLI_RUNTIME, "host.ctx_dev", os.Getenv("ctx_dev"))
 			m.Conf(ice.CLI_RUNTIME, "host.GOARCH", runtime.GOARCH)
 			m.Conf(ice.CLI_RUNTIME, "host.GOOS", runtime.GOOS)
 			m.Conf(ice.CLI_RUNTIME, "host.pid", os.Getpid())

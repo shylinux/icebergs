@@ -33,6 +33,10 @@ var Index = &ice.Context{Name: "code", Help: "编程模块",
 	},
 	Commands: map[string]*ice.Command{
 		ice.ICE_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			m.Cmd(ice.CTX_CONFIG, "load", "code.json")
+		}},
+		ice.ICE_EXIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			m.Cmd(ice.CTX_CONFIG, "save", "code.json", "web.code.login")
 		}},
 
 		"login": {Name: "login", Help: "登录", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
@@ -47,18 +51,19 @@ var Index = &ice.Context{Name: "code", Help: "编程模块",
 					}
 				}
 
+				you := m.Conf(ice.WEB_SHARE, kit.Keys("hash", m.Option("share"), "name"))
 				// 添加终端
 				h := m.Rich("login", nil, kit.Dict(
 					"status", "login",
 					"type", kit.Select("zsh", arg, 1),
-					"you", m.Conf(ice.WEB_SHARE, kit.Keys("hash", m.Option("share"), "name")),
+					"you", you,
 					"pwd", m.Option("pwd"),
 					"pid", m.Option("pid"),
 					"pane", m.Option("pane"),
 					"hostname", m.Option("hostname"),
 					"username", m.Option("username"),
 				))
-				m.Info("zsh %s", h)
+				m.Info("%s: %s", you, h)
 				m.Echo(h)
 
 			case "list":
@@ -78,28 +83,34 @@ var Index = &ice.Context{Name: "code", Help: "编程模块",
 			case "login":
 				m.Cmdy("login", "init", cmd).Push("_output", "result")
 			case "upload":
-				// 上传文件
-				msg := m.Cmd(ice.WEB_STORY, "upload")
-				m.Push("_output", "result")
-				m.Echo("list: %s\n", msg.Append("list"))
+				// 缓存文件
+				msg := m.Cmd(ice.WEB_CACHE, "upload")
 				m.Echo("data: %s\n", msg.Append("data"))
 				m.Echo("time: %s\n", msg.Append("time"))
 				m.Echo("type: %s\n", msg.Append("type"))
 				m.Echo("name: %s\n", msg.Append("name"))
 				m.Echo("size: %s\n", msg.Append("size"))
+				m.Push("_output", "result")
+
+				// 下发文件
+				m.Cmd(ice.WEB_SPACE, msg.Option("you"), ice.WEB_SPACE, "download", msg.Append("type"), msg.Append("name"), "self", msg.Append("data"))
 
 			case "download":
 				// 下载文件
-				m.Cmdy(ice.WEB_STORY, "download", m.Optionv("arg"))
+				m.Option("you", "")
+				if m.Cmdy(ice.WEB_STORY, "index", m.Option("arg")).Append("text") == "" {
+					m.Cmdy(ice.WEB_SPACE, m.Option("pod"), ice.WEB_STORY, "index", m.Optionv("arg"))
+				}
+				m.Push("_output", kit.Select("file", "result", m.Append("file") == ""))
 
 			case "history":
-				m.Option("you", "")
 				vs := strings.SplitN(strings.TrimSpace(m.Option("arg")), " ", 2)
 				m.Cmd(ice.WEB_SPACE, m.Option("you"), ice.WEB_FAVOR, "zsh.history", "shell", m.Option("sid"), kit.Select("", vs, 1),
 					"sid", m.Option("sid"), "num", vs[0], "pwd", m.Option("pwd"))
 				m.Push("_output", "void")
 			}
 		}},
+
 		"_tmux": {Name: "tmux [session [window [pane cmd]]]", Help: "窗口", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			prefix := kit.Simple(m.Confv("prefix", "tmux"))
 			if len(arg) > 1 {

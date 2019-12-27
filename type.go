@@ -77,7 +77,7 @@ func (c *Context) Server() Server {
 }
 func (c *Context) Run(m *Message, cmd *Command, key string, arg ...string) *Message {
 	m.Hand = true
-	m.Log(LOG_CMD, "%s.%s %v", c.Name, key, arg)
+	m.Log(LOG_CMDS, "%s.%s %v", c.Name, key, arg)
 	cmd.Hand(m, c, key, arg...)
 	return m
 }
@@ -599,21 +599,20 @@ func (m *Message) Log(level string, str string, arg ...interface{}) *Message {
 	}
 	prefix, suffix := "", ""
 	switch level {
-	case LOG_CMD, "start", "serve":
+	case LOG_CMDS, "start", "serve":
 		prefix, suffix = "\033[32m", "\033[0m"
 	case LOG_COST:
 		prefix, suffix = "\033[33m", "\033[0m"
 	case LOG_WARN, LOG_ERROR, "close":
 		prefix, suffix = "\033[31m", "\033[0m"
 	}
-	fmt.Fprintf(os.Stderr, "%s %d %s->%s %s%s %s%s\n",
-		m.time.Format(ICE_TIME), m.code, m.source.Name, m.target.Name,
+	fmt.Fprintf(os.Stderr, "%s %02d %9s %s%s %s%s\n",
+		m.time.Format(ICE_TIME), m.code, fmt.Sprintf("%s->%s", m.source.Name, m.target.Name),
 		prefix, level, str, suffix)
 	return m
 }
 func (m *Message) Cost(str string, arg ...interface{}) *Message {
-	m.Log(LOG_COST, "%s: %s", m.Format("cost"), kit.Format(str, arg...))
-	return m.Log(LOG_INFO, str, arg...)
+	return m.Log(LOG_COST, "%s: %s", m.Format("cost"), kit.Format(str, arg...))
 }
 func (m *Message) Info(str string, arg ...interface{}) *Message {
 	return m.Log(LOG_INFO, str, arg...)
@@ -847,12 +846,14 @@ func (m *Message) Richs(key string, chain interface{}, raw interface{}, cb inter
 		res, _ = hash[h].(map[string]interface{})
 	default:
 		// 单个查询
-		switch kit.Format(kit.Value(meta, kit.MDB_SHORT)) {
-		case "", "uniq":
-		default:
-			h = kit.Hashs(h)
+		if res, ok = hash[h].(map[string]interface{}); !ok {
+			switch kit.Format(kit.Value(meta, kit.MDB_SHORT)) {
+			case "", "uniq":
+			default:
+				h = kit.Hashs(h)
+				res, ok = hash[h].(map[string]interface{})
+			}
 		}
-		res, _ = hash[h].(map[string]interface{})
 	}
 
 	// 返回数据

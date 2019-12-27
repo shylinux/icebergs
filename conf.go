@@ -46,6 +46,7 @@ const (
 	WEB_TMPL = "render"
 
 	WEB_LOGIN = "_login"
+
 	WEB_SPIDE = "spide"
 	WEB_SERVE = "serve"
 	WEB_SPACE = "space"
@@ -56,9 +57,11 @@ const (
 	WEB_SHARE = "share"
 	WEB_ROUTE = "route"
 	WEB_PROXY = "proxy"
+	WEB_GROUP = "group"
+	WEB_LABEL = "label"
 )
 const (
-	LOG_CMD   = "cmd"
+	LOG_CMDS  = "cmds"
 	LOG_COST  = "cost"
 	LOG_INFO  = "info"
 	LOG_WARN  = "warn"
@@ -95,7 +98,24 @@ const (
 )
 
 const (
-	CHAT_GROUP = "group"
+	CHAT_RIVER = "river"
+)
+
+const (
+	TYPE_SPACE = "space"
+	TYPE_RIVER = "river"
+	TYPE_STORM = "storm"
+
+	TYPE_STORY = "story"
+	TYPE_SHELL = "shell"
+	TYPE_TABLE = "table"
+	TYPE_INNER = "inner"
+	TYPE_MEDIA = "media"
+)
+const (
+	FAVOR_CHAT  = "chat.init"
+	FAVOR_TMUX  = "tmux.init"
+	FAVOR_RIVER = "river.init"
 )
 
 var Alias = map[string]string{
@@ -120,6 +140,8 @@ var Alias = map[string]string{
 	WEB_SHARE: "web.share",
 	WEB_ROUTE: "web.route",
 	WEB_PROXY: "web.proxy",
+	WEB_GROUP: "web.group",
+	WEB_LABEL: "web.label",
 
 	GDB_SIGNAL: "gdb.signal",
 	GDB_TIMER:  "gdb.timer",
@@ -137,7 +159,7 @@ var Alias = map[string]string{
 	MDB_SELECT: "mdb.select",
 	MDB_DELETE: "mdb.delete",
 
-	CHAT_GROUP: "web.chat.group",
+	CHAT_RIVER: "web.chat.river",
 
 	"note": "web.wiki.note",
 }

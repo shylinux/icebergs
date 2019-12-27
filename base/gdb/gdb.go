@@ -56,7 +56,7 @@ func (f *Frame) Start(m *ice.Message, arg ...string) bool {
 			}
 			m.Info("%s: %v", ice.GDB_EVENT, d)
 			m.Grows(ice.GDB_EVENT, d[0], "", "", func(index int, value map[string]interface{}) {
-				m.Cmd(value["cmd"], d[1:])
+				m.Cmd(value["cmd"], d[1:]).Cost("event %v", d)
 			})
 		}
 	}

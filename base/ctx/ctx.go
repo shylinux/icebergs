@@ -56,17 +56,23 @@ var Index = &ice.Context{Name: "ctx", Help: "元始模块",
 				return
 			}
 
-			m.Search(arg[0]+"."+arg[1], func(p *ice.Context, s *ice.Context, key string, cmd *ice.Command) {
-				if len(arg) == 2 {
+			chain := arg[0]
+			if len(arg) > 1 {
+				chain = arg[0] + "." + arg[1]
+				arg = arg[1:]
+			}
+			arg = arg[1:]
+			m.Search(chain, func(p *ice.Context, s *ice.Context, key string, cmd *ice.Command) {
+				if len(arg) == 0 {
 					m.Push("name", cmd.Name)
 					m.Push("help", cmd.Help)
 					m.Push("meta", kit.Format(cmd.Meta))
 					m.Push("list", kit.Format(cmd.List))
 				} else {
 					if you := m.Option(kit.Format(kit.Value(cmd.Meta, "remote"))); you != "" {
-						m.Copy(m.Spawns(s).Cmd("web.space", you, "ctx.command", arg[0], arg[1], "run", arg[3:]))
+						m.Copy(m.Spawns(s).Cmd("web.space", you, "ctx.command", chain, "run", arg[1:]))
 					} else {
-						m.Copy(s.Run(m.Spawns(s), cmd, key, arg[3:]...))
+						m.Copy(s.Run(m.Spawns(s), cmd, key, arg[1:]...))
 					}
 				}
 			})

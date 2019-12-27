@@ -35,11 +35,11 @@ func (f *Frame) Start(m *ice.Message, arg ...string) bool {
 	fmt.Fprintf(f.out, m.Time(prompt, count, target.Name))
 	for bio.Scan() {
 		ls := kit.Split(bio.Text())
-		m.Log("info", "input %v", ls)
+		m.Log("info", "stdin input %v", ls)
 
-		msg := m.Spawn(target)
+		msg := m.Spawns(target)
 		if msg.Cmdy(ls); !msg.Hand {
-			msg = msg.Cmdy("cli.system", ls)
+			msg = msg.Set("result").Cmdy(ice.CLI_SYSTEM, ls)
 		}
 		res := msg.Result()
 		if res == "" {
@@ -52,6 +52,7 @@ func (f *Frame) Start(m *ice.Message, arg ...string) bool {
 			fmt.Fprint(f.out, "\n")
 		}
 		fmt.Fprintf(f.out, m.Time(prompt, count, target.Name))
+		msg.Cost("stdin %v", ls)
 		count++
 	}
 	return true

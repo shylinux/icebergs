@@ -39,6 +39,9 @@ var Index = &ice.Context{Name: "cli", Help: "命令模块",
 			}
 			m.Conf(ice.CLI_RUNTIME, "boot.time", m.Time())
 
+			count := m.Confi(ice.CLI_RUNTIME, "boot.count") + 1
+			m.Conf(ice.CLI_RUNTIME, "boot.count", count)
+
 			m.Conf(ice.CLI_RUNTIME, "node.type", kit.MIME_WORKER)
 			m.Conf(ice.CLI_RUNTIME, "node.name", m.Conf(ice.CLI_RUNTIME, "boot.pathname"))
 			m.Log("info", "runtime %v", kit.Formats(m.Confv(ice.CLI_RUNTIME)))

@@ -78,7 +78,7 @@ func (c *Context) Server() Server {
 }
 func (c *Context) Run(m *Message, cmd *Command, key string, arg ...string) *Message {
 	m.Hand = true
-	m.Log(LOG_CMDS, "%s.%s %v", c.Name, key, arg)
+	m.Log(LOG_CMDS, "%s.%s %d %v", c.Name, key, len(arg), arg)
 	cmd.Hand(m, c, key, arg...)
 	return m
 }
@@ -655,6 +655,15 @@ func (m *Message) Trace(key string, str string, arg ...interface{}) *Message {
 	return m
 }
 
+func (m *Message) Space(arg interface{}) []string {
+	if arg == nil || kit.Format(arg) == m.Conf(CLI_RUNTIME, "node.name") {
+		return nil
+	}
+	return []string{WEB_SPACE, kit.Format(arg)}
+}
+func (m *Message) Right(arg ...interface{}) bool {
+	return !m.Warn(m.Cmdx(AAA_ROLE, "right", m.Option(MSG_USERROLE), kit.Keys(arg...)) != "ok", "no right")
+}
 func (m *Message) Event(key string, arg ...string) *Message {
 	m.Cmd(GDB_EVENT, "action", key, arg)
 	return m

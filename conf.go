@@ -81,12 +81,16 @@ const ( // GDB
 	GDB_TIMER  = "timer"
 	GDB_EVENT  = "event"
 
+	SYSTEM_INIT = "system.init"
+
 	SERVE_START = "serve.start"
 	SERVE_CLOSE = "serve.close"
 	SPACE_START = "space.start"
 	SPACE_CLOSE = "space.close"
 	DREAM_START = "dream.start"
 	DREAM_CLOSE = "dream.close"
+
+	USER_CREATE = "user.create"
 )
 const ( // MDB
 	MDB_REDIS  = "redis"
@@ -105,6 +109,11 @@ const ( // MDB
 const ( // APP
 	APP_NOTE = "note"
 	APP_MISS = "miss"
+)
+const ( // ROLE
+	ROLE_ROOT = "root"
+	ROLE_TECH = "tech"
+	ROLE_VOID = "void"
 )
 const ( // CHAT
 	CHAT_RIVER = "river"

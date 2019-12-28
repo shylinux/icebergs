@@ -573,6 +573,9 @@ var Index = &ice.Context{Name: "web", Help: "网页模块",
 			if _, e := os.Stat("usr/volcanos"); e != nil {
 				m.Cmd("cli.system", "git", "clone", "https://github.com/shylinux/volcanos", "usr/volcanos")
 			}
+			if m.Conf(ice.CLI_RUNTIME, "boot.count") == "1" {
+				m.Event(ice.SYSTEM_INIT)
+			}
 			m.Target().Start(m, kit.Select("self", arg, 0))
 		}},
 		ice.WEB_SPACE: {Name: "space", Help: "空间站", Meta: kit.Dict("exports", []string{"pod", "name"}), List: kit.List(
@@ -686,8 +689,11 @@ var Index = &ice.Context{Name: "web", Help: "网页模块",
 		), List: kit.List(
 			kit.MDB_INPUT, "text", "value", "", "name", "name",
 			kit.MDB_INPUT, "button", "value", "创建", "action", "auto",
-		), Hand: func(m *ice.Message, c *ice.Context, key string, arg ...string) {
+		), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			if len(arg) > 1 {
+				if !m.Right(cmd, arg[1]) {
+					return
+				}
 				switch arg[1] {
 				case "启动":
 					arg = arg[:1]

@@ -67,21 +67,38 @@ var Index = &ice.Context{Name: "code", Help: "编程模块",
 				m.Echo(h)
 
 			case "list":
-				m.Richs("login", nil, "", func(key string, value map[string]interface{}) {
-					m.Push(key, value)
+				m.Richs("login", nil, "*", func(key string, value map[string]interface{}) {
+					m.Push(key, value, []string{"time", "type", "status", "you"})
+					pwd := strings.Split(kit.Format(value["pwd"]), "/")
+					if len(pwd) > 3 {
+						m.Push("pwd", strings.Join(pwd[len(pwd)-3:len(pwd)], "/"))
+					} else {
+						m.Push("pwd", value["pwd"])
+					}
+
+					m.Push(key, value, []string{"pid", "pane", "hostname", "username"})
+				})
+
+			case "exit":
+				m.Richs("login", nil, m.Option("sid"), func(key string, value map[string]interface{}) {
+					m.Info("logout: %s", m.Option("sid"))
+					value["status"] = "logout"
 				})
 			}
 		}},
-		"/zsh": {Name: "/zsh", Help: "终端", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		"/zsh": {Name: "/zsh", Help: "命令行", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			m.Option("you", "")
 			m.Richs("login", nil, m.Option("sid"), func(key string, value map[string]interface{}) {
 				m.Option("you", value["you"])
 			})
 			m.Info("%s%s %s arg: %v sub: %v", m.Option("you"), cmd, m.Option("cmd"), m.Optionv("arg"), m.Optionv("sub"))
 
+			m.Push("_output", "result")
 			switch m.Option("cmd") {
 			case "login":
-				m.Cmdy("login", "init", cmd).Push("_output", "result")
+				m.Cmdy("login", "init", cmd)
+			case "logout":
+				m.Cmdy("login", "exit")
 			case "upload":
 				// 缓存文件
 				msg := m.Cmd(ice.WEB_CACHE, "upload")
@@ -101,13 +118,65 @@ var Index = &ice.Context{Name: "code", Help: "编程模块",
 				if m.Cmdy(ice.WEB_STORY, "index", m.Option("arg")).Append("text") == "" {
 					m.Cmdy(ice.WEB_SPACE, m.Option("pod"), ice.WEB_STORY, "index", m.Optionv("arg"))
 				}
-				m.Push("_output", kit.Select("file", "result", m.Append("file") == ""))
+				m.Append("_output", kit.Select("file", "result", m.Append("file") == ""))
 
 			case "history":
 				vs := strings.SplitN(strings.TrimSpace(m.Option("arg")), " ", 2)
 				m.Cmd(ice.WEB_SPACE, m.Option("you"), ice.WEB_FAVOR, "zsh.history", "shell", m.Option("sid"), kit.Select("", vs, 1),
 					"sid", m.Option("sid"), "num", vs[0], "pwd", m.Option("pwd"))
 				m.Push("_output", "void")
+
+			case "favor":
+				if m.Options("arg") {
+					m.Cmdy(ice.WEB_SPACE, m.Option("you"), ice.WEB_FAVOR,
+						m.Option("tab"), ice.TYPE_SHELL, m.Option("note"), m.Option("arg"))
+					break
+				}
+				m.Echo("#/bin/sh\n\n")
+				m.Cmd(ice.WEB_SPACE, m.Option("you"), ice.WEB_FAVOR, m.Option("tab")).Table(func(index int, value map[string]string, head []string) {
+					switch value["type"] {
+					case ice.TYPE_SHELL:
+						m.Echo("# %v:%v\n%v\n\n", value["type"], value["name"], value["text"])
+					}
+				})
+				m.Push("_output", "result")
+			}
+		}},
+		"/vim": {Name: "/vim", Help: "编辑器", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			m.Option("you", "")
+			m.Richs("login", nil, m.Option("sid"), func(key string, value map[string]interface{}) {
+				m.Option("you", value["you"])
+			})
+			m.Info("%s%s %s arg: %v sub: %v", m.Option("you"), cmd, m.Option("cmd"), m.Optionv("arg"), m.Optionv("sub"))
+
+			m.Push("_output", "result")
+			switch m.Option("cmd") {
+			case "login":
+				m.Cmdy("login", "init", cmd)
+			case "logout":
+				m.Cmdy("login", "exit")
+
+			case "read", "write", "exec":
+				m.Cmd(ice.WEB_SPACE, m.Option("you"), ice.WEB_FAVOR, "vim.history", "vimrc", m.Option("cmd"), m.Option("arg"),
+					"sid", m.Option("sid"), "pwd", m.Option("pwd"))
+
+			case "tasklet":
+				m.Cmd(ice.WEB_SPACE, m.Option("you"), ice.APP_MISS, "add", m.Option("tab"), m.Option("note"), m.Option("arg"))
+
+			case "favor":
+				if m.Options("arg") {
+					m.Cmd(ice.WEB_SPACE, m.Option("you"), ice.WEB_FAVOR, m.Option("tab"), "vimrc", m.Option("note"), m.Option("arg"),
+						"buf", m.Option("buf"), "line", m.Option("line"), "col", m.Option("col"),
+					)
+					break
+				}
+				m.Cmd(ice.WEB_SPACE, m.Option("you"), ice.WEB_FAVOR, m.Option("tab"), "extra", "buf line col").Table(func(index int, value map[string]string, head []string) {
+					switch value["type"] {
+					case ice.TYPE_VIMRC:
+						m.Echo("%v\n", m.Option("tab")).Echo("%v:%v:%v:(%v): %v\n",
+							value["buf"], value["line"], value["col"], value["name"], value["text"])
+					}
+				})
 			}
 		}},
 

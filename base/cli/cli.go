@@ -37,6 +37,7 @@ var Index = &ice.Context{Name: "cli", Help: "命令模块",
 			if name, e := os.Getwd(); e == nil {
 				m.Conf(ice.CLI_RUNTIME, "boot.pathname", path.Base(kit.Select(name, os.Getenv("PWD"))))
 			}
+			m.Conf(ice.CLI_RUNTIME, "boot.time", m.Time())
 
 			m.Conf(ice.CLI_RUNTIME, "node.type", kit.MIME_WORKER)
 			m.Conf(ice.CLI_RUNTIME, "node.name", m.Conf(ice.CLI_RUNTIME, "boot.pathname"))

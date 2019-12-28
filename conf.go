@@ -1,24 +1,24 @@
 package ice
 
-const (
+const ( // ICE
 	ICE_CHAN = 10
 	ICE_INIT = "_init"
 	ICE_EXIT = "_exit"
 	ICE_DATE = "2006-01-02"
 	ICE_TIME = "2006-01-02 15:04:05"
 )
-const (
+const ( // CTX
 	CTX_STATUS  = "status"
 	CTX_STREAM  = "stream"
 	CTX_CONFIG  = "config"
 	CTX_COMMAND = "command"
 	CTX_CONTEXT = "context"
 )
-const (
+const ( // CLI
 	CLI_RUNTIME = "runtime"
 	CLI_SYSTEM  = "system"
 )
-const (
+const ( // MSG
 	MSG_DETAIL = "detail"
 	MSG_OPTION = "option"
 	MSG_APPEND = "append"
@@ -29,18 +29,21 @@ const (
 	MSG_HANDLE = "_handle"
 
 	MSG_SESSID   = "sessid"
+	MSG_USERIP   = "user.ip"
+	MSG_USERUA   = "user.ua"
+	MSG_USERURL  = "user.url"
 	MSG_USERNAME = "user.name"
 	MSG_USERROLE = "user.role"
 
 	MSG_RIVER = "sess.river"
 	MSG_STORM = "sess.storm"
 )
-const (
+const ( // AAA
 	AAA_ROLE = "role"
 	AAA_USER = "user"
 	AAA_SESS = "sess"
 )
-const (
+const ( // WEB
 	WEB_PORT = ":9020"
 	WEB_SESS = "sessid"
 	WEB_TMPL = "render"
@@ -60,7 +63,7 @@ const (
 	WEB_GROUP = "group"
 	WEB_LABEL = "label"
 )
-const (
+const ( // LOG
 	LOG_CMDS  = "cmds"
 	LOG_COST  = "cost"
 	LOG_INFO  = "info"
@@ -73,17 +76,19 @@ const (
 	LOG_BENCH = "bench"
 	LOG_CLOSE = "close"
 )
-const (
+const ( // GDB
 	GDB_SIGNAL = "signal"
 	GDB_TIMER  = "timer"
 	GDB_EVENT  = "event"
 
-	DREAM_START = "dream.start"
-	DREAM_CLOSE = "dream.close"
+	SERVE_START = "serve.start"
+	SERVE_CLOSE = "serve.close"
 	SPACE_START = "space.start"
 	SPACE_CLOSE = "space.close"
+	DREAM_START = "dream.start"
+	DREAM_CLOSE = "dream.close"
 )
-const (
+const ( // MDB
 	MDB_REDIS  = "redis"
 	MDB_MYSQL  = "mysql"
 	MDB_CREATE = "create"
@@ -97,22 +102,26 @@ const (
 	MDB_DELETE = "delete"
 )
 
-const (
+const ( // APP
+	APP_NOTE = "note"
+	APP_MISS = "miss"
+)
+const ( // CHAT
 	CHAT_RIVER = "river"
 )
-
-const (
+const ( // TYPE
 	TYPE_SPACE = "space"
 	TYPE_RIVER = "river"
 	TYPE_STORM = "storm"
 
 	TYPE_STORY = "story"
 	TYPE_SHELL = "shell"
+	TYPE_VIMRC = "vimrc"
 	TYPE_TABLE = "table"
 	TYPE_INNER = "inner"
 	TYPE_MEDIA = "media"
 )
-const (
+const ( // FAVOR
 	FAVOR_CHAT  = "chat.init"
 	FAVOR_TMUX  = "tmux.init"
 	FAVOR_RIVER = "river.init"
@@ -161,5 +170,6 @@ var Alias = map[string]string{
 
 	CHAT_RIVER: "web.chat.river",
 
-	"note": "web.wiki.note",
+	APP_NOTE: "web.wiki.note",
+	APP_MISS: "web.team.miss",
 }

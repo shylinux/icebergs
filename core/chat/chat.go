@@ -20,10 +20,10 @@ var Index = &ice.Context{Name: "chat", Help: "聊天模块",
 				m.Cmd(ice.WEB_FAVOR, ice.FAVOR_RIVER, "river", "meet", "root")
 				m.Cmd(ice.WEB_FAVOR, ice.FAVOR_RIVER, "user", m.Conf(ice.CLI_RUNTIME, "boot.username"), "root")
 				m.Cmd(ice.WEB_FAVOR, ice.FAVOR_RIVER, "storm", "miss", "root")
+				m.Cmd(ice.WEB_FAVOR, ice.FAVOR_RIVER, "action", "spide", "root")
 				m.Cmd(ice.WEB_FAVOR, ice.FAVOR_RIVER, "action", "space", "root")
 				m.Cmd(ice.WEB_FAVOR, ice.FAVOR_RIVER, "action", "dream", "root")
 				m.Cmd(ice.WEB_FAVOR, ice.FAVOR_RIVER, "action", "favor", "root")
-				m.Cmd(ice.WEB_FAVOR, ice.FAVOR_RIVER, "action", "cache", "root")
 				m.Cmd(ice.WEB_FAVOR, ice.FAVOR_RIVER, "action", "story", "root")
 				m.Cmd(ice.WEB_FAVOR, ice.FAVOR_RIVER, "action", "share", "root")
 			}
@@ -37,17 +37,18 @@ var Index = &ice.Context{Name: "chat", Help: "聊天模块",
 				switch arg[0] {
 				case "login":
 					// 用户登录
-					m.Option(ice.MSG_SESSID, (web.Cookie(m, m.Cmdx(ice.AAA_USER, "login", m.Option(ice.MSG_USERNAME, arg[1]), arg[2]))))
-					if m.Richs(ice.CHAT_RIVER, nil, "", nil) == nil {
-						// 默认群组
-						m.Richs(ice.WEB_FAVOR, nil, "river.init", func(key string, value map[string]interface{}) {
+					m.Option(ice.MSG_SESSID, web.Cookie(m, m.Cmdx(ice.AAA_USER, "login", m.Option(ice.MSG_USERNAME, arg[1]), arg[2])))
+				default:
+					// 默认群组
+					if m.Richs(ice.CHAT_RIVER, nil, "%", nil) == nil {
+						m.Richs(ice.WEB_FAVOR, nil, ice.FAVOR_RIVER, func(key string, value map[string]interface{}) {
 							m.Grows(ice.WEB_FAVOR, kit.Keys(kit.MDB_HASH, key), "", "", func(index int, value map[string]interface{}) {
 								switch kit.Format(value["type"]) {
-								case "river":
+								case ice.TYPE_RIVER:
 									m.Option("river", m.Cmdx("/ocean", "spawn", value["name"]))
 								case "user":
 									m.Cmd("/river", m.Option("river"), "add", value["name"])
-								case "storm":
+								case ice.TYPE_STORM:
 									m.Option("storm", m.Cmdx("/steam", m.Option("river"), "spawn", value["name"]))
 								case "action":
 									m.Cmd("/storm", m.Option("river"), m.Option("storm"), "add", m.Conf(ice.CLI_RUNTIME, "node.name"), "", value["name"], value["text"])
@@ -55,7 +56,7 @@ var Index = &ice.Context{Name: "chat", Help: "聊天模块",
 							})
 						})
 					}
-				default:
+
 					// 用户群组
 					m.Richs(ice.CHAT_RIVER, nil, arg[0], func(value map[string]interface{}) {
 						m.Option(ice.MSG_RIVER, arg[0])
@@ -82,7 +83,14 @@ var Index = &ice.Context{Name: "chat", Help: "聊天模块",
 		"/tutor": {Name: "/tutor", Help: "向导", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {}},
 		"/debug": {Name: "/debug", Help: "调试", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {}},
 		"/carte": {Name: "/carte", Help: "菜单", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {}},
-		"/favor": {Name: "/favor", Help: "收藏", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {}},
+		"/favor": {Name: "/favor", Help: "收藏", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			m.Hand = false
+			if msg := m.Cmd(arg); !msg.Hand {
+				m.Set("result").Cmdy(ice.CLI_SYSTEM, arg)
+			} else {
+				m.Copy(msg)
+			}
+		}},
 		"/login": {Name: "/login", Help: "登录", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			switch arg[0] {
 			case "check":
@@ -95,7 +103,7 @@ var Index = &ice.Context{Name: "chat", Help: "聊天模块",
 		"/ocean": {Name: "/ocean", Help: "大海洋", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			if len(arg) == 0 {
 				// 用户列表
-				m.Richs(ice.AAA_USER, nil, "", func(key string, value map[string]interface{}) {
+				m.Richs(ice.AAA_USER, nil, "*", func(key string, value map[string]interface{}) {
 					m.Push(key, value, []string{"username", "usernode"})
 				})
 				return
@@ -114,7 +122,7 @@ var Index = &ice.Context{Name: "chat", Help: "聊天模块",
 			switch len(arg) {
 			case 0:
 				// 群组列表
-				m.Richs(ice.CHAT_RIVER, nil, "", func(key string, value map[string]interface{}) {
+				m.Richs(ice.CHAT_RIVER, nil, "*", func(key string, value map[string]interface{}) {
 					m.Push(key, value["meta"], []string{kit.MDB_KEY, kit.MDB_NAME})
 				})
 			case 1:
@@ -137,7 +145,7 @@ var Index = &ice.Context{Name: "chat", Help: "聊天模块",
 			prefix := kit.Keys(kit.MDB_HASH, arg[0], "tool")
 			if len(arg) < 2 {
 				// 应用列表
-				m.Richs(ice.CHAT_RIVER, prefix, "", func(key string, value map[string]interface{}) {
+				m.Richs(ice.CHAT_RIVER, prefix, "*", func(key string, value map[string]interface{}) {
 					m.Push(key, value["meta"], []string{kit.MDB_KEY, kit.MDB_NAME})
 				})
 				m.Sort(kit.MDB_NAME)
@@ -170,7 +178,7 @@ var Index = &ice.Context{Name: "chat", Help: "聊天模块",
 		"/steam": {Name: "/steam", Help: "大气层", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			if len(arg) < 2 {
 				// 设备列表
-				m.Richs(ice.WEB_SPACE, nil, "", func(key string, value map[string]interface{}) {
+				m.Richs(ice.WEB_SPACE, nil, "*", func(key string, value map[string]interface{}) {
 					m.Push(key, value, []string{"type", "name", "user"})
 				})
 				return

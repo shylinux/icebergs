@@ -52,9 +52,11 @@ var Index = &ice.Context{Name: "tmux", Help: "终端模块",
 	},
 	Commands: map[string]*ice.Command{
 		ice.ICE_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			m.Cmd(ice.GDB_EVENT, "listen", ice.DREAM_START, "cli.tmux.auto")
-			if m.Richs(ice.WEB_STORY, "head", "auto.sh", nil) == nil {
-				m.Cmd(ice.WEB_STORY, "add", "shell", "auto.sh", m.Cmdx(ice.WEB_SPIDE, "shy", "GET", "/publish/auto.sh"))
+			m.Watch(ice.DREAM_START, "cli.tmux.auto")
+			for _, p := range []string{"auto.sh", "auto.vim"} {
+				if m.Richs(ice.WEB_STORY, "head", p, nil) == nil {
+					m.Cmd(ice.WEB_STORY, "add", ice.TYPE_SHELL, p, m.Cmdx(ice.WEB_SPIDE, "shy", "cache", "GET", "/publish/"+p))
+				}
 			}
 			if m.Richs(ice.WEB_FAVOR, nil, ice.FAVOR_TMUX, nil) == nil {
 				m.Cmd(ice.WEB_FAVOR, ice.FAVOR_TMUX, ice.TYPE_SHELL, "下载脚本", `curl -s "$ctx_dev/code/zsh?cmd=download&arg=auto.sh" > auto.sh`)
@@ -63,6 +65,7 @@ var Index = &ice.Context{Name: "tmux", Help: "终端模块",
 		}},
 		ice.ICE_EXIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 		}},
+
 		"buffer": {Name: "buffer", Help: "终端",
 			List: kit.List(
 				kit.MDB_INPUT, "text", "name", "buffer", "action", "auto",

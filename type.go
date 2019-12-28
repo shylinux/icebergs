@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"io"
 	"math/rand"
+	"net/http"
 	"os"
 	"path"
 	"runtime"
@@ -143,6 +144,7 @@ func (c *Context) Close(m *Message, arg ...string) bool {
 type Message struct {
 	time time.Time
 	code int
+	Hand bool
 
 	meta map[string][]string
 	data map[string]interface{}
@@ -153,8 +155,10 @@ type Message struct {
 
 	source *Context
 	target *Context
-	Hand   bool
-	cb     func(*Message) *Message
+
+	cb func(*Message) *Message
+	W  http.ResponseWriter
+	R  *http.Request
 }
 
 func (m *Message) Time(args ...interface{}) string {
@@ -347,6 +351,9 @@ func (m *Message) Copy(msg *Message) *Message {
 func (m *Message) Push(key string, value interface{}, arg ...interface{}) *Message {
 	switch value := value.(type) {
 	case map[string]interface{}:
+		if key == "detail" {
+			value = kit.KeyValue(map[string]interface{}{}, "", value)
+		}
 		list := []string{}
 		if len(arg) > 0 {
 			list = kit.Simple(arg[0])
@@ -358,10 +365,16 @@ func (m *Message) Push(key string, value interface{}, arg ...interface{}) *Messa
 		}
 
 		for _, k := range list {
-			if k == "key" {
-				m.Add(MSG_APPEND, k, key)
-			} else {
-				m.Add(MSG_APPEND, k, kit.Format(value[k]))
+			switch key {
+			case "detail":
+				m.Add(MSG_APPEND, "key", k)
+				m.Add(MSG_APPEND, "value", kit.Format(value[k]))
+			default:
+				if k == "key" {
+					m.Add(MSG_APPEND, k, key)
+				} else {
+					m.Add(MSG_APPEND, k, kit.Format(kit.Value(value, k)))
+				}
 			}
 		}
 		return m
@@ -642,6 +655,15 @@ func (m *Message) Trace(key string, str string, arg ...interface{}) *Message {
 	return m
 }
 
+func (m *Message) Event(key string, arg ...string) *Message {
+	m.Cmd(GDB_EVENT, "action", key, arg)
+	return m
+}
+func (m *Message) Watch(key string, arg ...string) *Message {
+	m.Cmd(GDB_EVENT, "listen", key, arg)
+	return m
+}
+
 func (m *Message) Assert(arg interface{}) bool {
 	switch arg := arg.(type) {
 	case nil:
@@ -826,7 +848,7 @@ func (m *Message) Richs(key string, chain interface{}, raw interface{}, cb inter
 
 	h := kit.Format(raw)
 	switch h {
-	case "*", "":
+	case "*":
 		// 全部遍历
 		switch cb := cb.(type) {
 		case func(string, map[string]interface{}):
@@ -838,12 +860,14 @@ func (m *Message) Richs(key string, chain interface{}, raw interface{}, cb inter
 		return res
 	case "%":
 		// 随机选取
-		list := []string{}
-		for k := range hash {
-			list = append(list, k)
+		if len(hash) > 0 {
+			list := []string{}
+			for k := range hash {
+				list = append(list, k)
+			}
+			h = list[rand.Intn(len(list))]
+			res, _ = hash[h].(map[string]interface{})
 		}
-		h = list[rand.Intn(len(list))]
-		res, _ = hash[h].(map[string]interface{})
 	default:
 		// 单个查询
 		if res, ok = hash[h].(map[string]interface{}); !ok {
@@ -1128,6 +1152,7 @@ func (m *Message) Cmd(arg ...interface{}) *Message {
 			} else {
 				c.Run(msg, cmd, key, list[1:]...)
 			}
+			m.Hand, msg.Hand = true, true
 		})
 	})
 

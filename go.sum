@@ -4,4 +4,6 @@ github.com/gorilla/websocket v1.4.1 h1:q7AeDBpnBk8AogcD4DSag/Ukw/KV+YhzLj2bP5HvK
 github.com/gorilla/websocket v1.4.1/go.mod h1:YR8l580nyteQvAITg2hZ9XVh4b55+EU/adAjf1fMHhE=
 github.com/shylinux/toolkits v0.0.0-20191225132906-3c11db083b5b h1:BXDEMcpHmwuwoqY/NWehDs11GOy2x+2MS7Xfihb3zFY=
 github.com/shylinux/toolkits v0.0.0-20191225132906-3c11db083b5b/go.mod h1:Y68Ot6xOmo1bun67YvqC3chDGeU2gDxtsUnvVDGJm4g=
+github.com/shylinux/toolkits v0.1.0 h1:7ghnVEjuwLf7zBsyeR37ahm2gaOKIyjSw9F9Pp9oTBU=
+github.com/shylinux/toolkits v0.1.0/go.mod h1:Y68Ot6xOmo1bun67YvqC3chDGeU2gDxtsUnvVDGJm4g=
 golang.org/dl v0.0.0-20190829154251-82a15e2f2ead/go.mod h1:IUMfjQLJQd4UTqG1Z90tenwKoCX93Gn3MAQJMOSBsDQ=

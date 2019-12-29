@@ -79,7 +79,7 @@ var Index = &ice.Context{Name: "ctx", Help: "元始模块",
 		}},
 		ice.CTX_CONFIG: {Name: "config", Help: "配置", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			if len(arg) == 0 {
-				m.Travel(func(p *ice.Context, s *ice.Context, key string, conf *ice.Config) {
+				ice.Pulse.Travel(func(p *ice.Context, s *ice.Context, key string, conf *ice.Config) {
 					m.Push("key", key)
 					m.Push("name", conf.Name)
 					m.Push("value", kit.Format(conf.Value))

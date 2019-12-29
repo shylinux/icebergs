@@ -114,11 +114,7 @@ func (c *Context) Begin(m *Message, arg ...string) *Context {
 }
 func (c *Context) Start(m *Message, arg ...string) bool {
 	c.start = m
-	if c.context != nil && c.context.wg != nil {
-		c.context.wg.Add(1)
-	} else {
-		c.root.wg.Add(1)
-	}
+	m.Hold(1)
 
 	wait := make(chan bool)
 	m.Gos(m, func(m *Message) {
@@ -606,19 +602,27 @@ func (m *Message) Result(arg ...interface{}) string {
 }
 
 func (m *Message) Log(level string, str string, arg ...interface{}) *Message {
-	str = strings.TrimSpace(fmt.Sprintf(str, arg...))
-	if Log != nil {
+	if str = strings.TrimSpace(fmt.Sprintf(str, arg...)); Log != nil {
 		Log(m, level, str)
 	}
+
 	prefix, suffix := "", ""
 	switch level {
-	case LOG_CMDS, "start", "serve":
+	case LOG_ENABLE, LOG_IMPORT, LOG_CREATE, LOG_INSERT, LOG_EXPORT:
+		prefix, suffix = "\033[36;44m", "\033[0m"
+
+	case LOG_LISTEN, LOG_SIGNAL, LOG_TIMERS, LOG_EVENTS:
+		prefix, suffix = "\033[33m", "\033[0m"
+
+	case LOG_CMDS, LOG_START, LOG_SERVE:
 		prefix, suffix = "\033[32m", "\033[0m"
 	case LOG_COST:
 		prefix, suffix = "\033[33m", "\033[0m"
-	case LOG_WARN, LOG_ERROR, "close":
+	case LOG_WARN, LOG_ERROR, LOG_CLOSE:
 		prefix, suffix = "\033[31m", "\033[0m"
 	}
+
+	// 输出日志
 	fmt.Fprintf(os.Stderr, "%s %02d %9s %s%s %s%s\n",
 		m.time.Format(ICE_TIME), m.code, fmt.Sprintf("%s->%s", m.source.Name, m.target.Name),
 		prefix, level, str, suffix)
@@ -691,11 +695,11 @@ func (m *Message) TryCatch(msg *Message, safe bool, hand ...func(msg *Message)) 
 		case io.EOF:
 		case nil:
 		default:
-			m.Log(LOG_ERROR, "catch: %s", e)
-			m.Log(LOG_BENCH, "chain: %s", msg.Format("chain"))
-			m.Log(LOG_ERROR, "catch: %s", e)
-			m.Log(LOG_BENCH, "stack: %s", msg.Format("stack"))
-			if m.Log(LOG_ERROR, "catch: %s", e); len(hand) > 1 {
+			m.Log(LOG_WARN, "catch: %s", e)
+			m.Log(LOG_INFO, "chain: %s", msg.Format("chain"))
+			m.Log(LOG_WARN, "catch: %s", e)
+			m.Log(LOG_INFO, "stack: %s", msg.Format("stack"))
+			if m.Log(LOG_WARN, "catch: %s", e); len(hand) > 1 {
 				m.TryCatch(msg, safe, hand[1:]...)
 			} else if !safe {
 				m.Assert(e)
@@ -714,6 +718,14 @@ func (m *Message) Gos(msg *Message, cb func(*Message)) *Message {
 }
 func (m *Message) Run(arg ...string) *Message {
 	m.target.server.Start(m, arg...)
+	return m
+}
+func (m *Message) Hold(n int) *Message {
+	if c := m.target; c.context != nil && c.context.wg != nil {
+		c.context.wg.Add(n)
+	} else {
+		c.root.wg.Add(n)
+	}
 	return m
 }
 func (m *Message) Done() bool {
@@ -860,6 +872,10 @@ func (m *Message) Richs(key string, chain interface{}, raw interface{}, cb inter
 	case "*":
 		// 全部遍历
 		switch cb := cb.(type) {
+		case func(string, string):
+			for k, v := range hash {
+				cb(k, kit.Format(v))
+			}
 		case func(string, map[string]interface{}):
 			for k, v := range hash {
 				res = v.(map[string]interface{})

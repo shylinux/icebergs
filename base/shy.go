@@ -7,7 +7,9 @@ import (
 	_ "github.com/shylinux/icebergs/base/web"
 
 	_ "github.com/shylinux/icebergs/base/gdb"
+	_ "github.com/shylinux/icebergs/base/lex"
 	_ "github.com/shylinux/icebergs/base/log"
+	_ "github.com/shylinux/icebergs/base/yac"
 
 	_ "github.com/shylinux/icebergs/base/mdb"
 	_ "github.com/shylinux/icebergs/base/nfs"

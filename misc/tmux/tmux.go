@@ -4,6 +4,7 @@ import (
 	"github.com/shylinux/icebergs"
 	"github.com/shylinux/icebergs/base/cli"
 	"github.com/shylinux/toolkits"
+	"os"
 	"path"
 	"strings"
 	"time"
@@ -52,20 +53,29 @@ var Index = &ice.Context{Name: "tmux", Help: "终端模块",
 	},
 	Commands: map[string]*ice.Command{
 		ice.ICE_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			m.Watch(ice.SYSTEM_INIT, "cli.tmux.init")
 			m.Watch(ice.DREAM_START, "cli.tmux.auto")
-			return
-			m.Watch(ice.SERVE_START, "cli.tmux.auto")
-			for _, p := range []string{"auto.sh", "auto.vim"} {
-				if m.Richs(ice.WEB_STORY, "head", p, nil) == nil {
-					m.Cmd(ice.WEB_STORY, "add", ice.TYPE_SHELL, p, m.Cmdx(ice.WEB_SPIDE, "shy", "cache", "GET", "/publish/"+p))
-				}
-			}
-			if m.Richs(ice.WEB_FAVOR, nil, ice.FAVOR_TMUX, nil) == nil {
-				m.Cmd(ice.WEB_FAVOR, ice.FAVOR_TMUX, ice.TYPE_SHELL, "下载脚本", `curl -s "$ctx_dev/code/zsh?cmd=download&arg=auto.sh" > auto.sh`)
-				m.Cmd(ice.WEB_FAVOR, ice.FAVOR_TMUX, ice.TYPE_SHELL, "加载脚本", `source auto.sh`)
-			}
 		}},
 		ice.ICE_EXIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		}},
+		"init": {Name: "init", Help: "初始化", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			for _, v := range []string{"auto.sh", "auto.vim"} {
+				p := path.Join(m.Conf("web.code.publish", "meta.path"), v)
+				if _, e := os.Stat(p); e != nil && os.IsNotExist(e) {
+					if h := m.Cmdx(ice.WEB_SPIDE, "shy", "cache", "GET", "/publish/"+v); h != "" {
+						os.Link(m.Cmd(ice.WEB_STORY, "index", h).Append("file"), p)
+						m.Log(ice.LOG_EXPORT, "%s: %s", h, p)
+					}
+				}
+			}
+
+			if m.Richs(ice.WEB_FAVOR, nil, "tmux.auto", nil) == nil {
+				m.Cmd(ice.WEB_FAVOR, "tmux.auto", ice.TYPE_SHELL, "下载脚本", `curl -s "$ctx_dev/publish/auto.sh" -o auto.sh`)
+				m.Cmd(ice.WEB_FAVOR, "tmux.auto", ice.TYPE_SHELL, "加载脚本", `source auto.sh`)
+			}
+			if m.Richs(ice.WEB_FAVOR, nil, "tmux.init", nil) == nil {
+				m.Cmd(ice.WEB_FAVOR, "tmux.init", ice.TYPE_SHELL, "一键启动", `curl -s "$ctx_dev/publish/ice.sh" |sh`)
+			}
 		}},
 
 		"buffer": {Name: "buffer", Help: "终端",
@@ -233,12 +243,12 @@ var Index = &ice.Context{Name: "tmux", Help: "终端模块",
 				m.Cmd(prefix, "new-session", "-ds", arg[0])
 			}
 
+			m.Cmdy(prefix, "send-keys", "-t", arg[0], "export ctx_dev=", kit.Select(m.Conf(ice.CLI_RUNTIME, "conf.ctx_dev"), m.Conf(ice.CLI_RUNTIME, "host.ctx_self")), "Enter")
 			m.Richs(ice.WEB_SPACE, nil, arg[0], func(key string, value map[string]interface{}) {
-				m.Cmdy(prefix, "send-keys", "-t", arg[0], "export ctx_dev=", kit.Select(m.Conf(ice.CLI_RUNTIME, "host.ctx_dev"), m.Conf(ice.CLI_RUNTIME, "host.ctx_self")), "Enter")
 				m.Cmdy(prefix, "send-keys", "-t", arg[0], "export ctx_share=", value["share"], "Enter")
 			})
 
-			m.Cmd(ice.WEB_FAVOR, kit.Select("tmux.init", arg, 1)).Table(func(index int, value map[string]string, head []string) {
+			m.Cmd(ice.WEB_FAVOR, kit.Select("tmux.auto", arg, 1)).Table(func(index int, value map[string]string, head []string) {
 				switch value["type"] {
 				case "shell":
 					m.Cmdy(prefix, "send-keys", "-t", arg[0], value["text"], "Enter")

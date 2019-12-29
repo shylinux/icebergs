@@ -44,6 +44,9 @@ func IsLocalIP(ip string) bool {
 	return ip == "::1" || ip == "127.0.0.1"
 }
 func (web *Frame) Login(msg *ice.Message, w http.ResponseWriter, r *http.Request) bool {
+	if strings.HasPrefix(msg.Option(ice.MSG_USERURL), "/space/") {
+		return true
+	}
 	if msg.Options(ice.WEB_SESS) {
 		// 会话认证
 		sub := msg.Cmd(ice.AAA_SESS, "check", msg.Option(ice.WEB_SESS))
@@ -377,6 +380,14 @@ var Index = &ice.Context{Name: "web", Help: "网页模块",
 		ice.ICE_EXIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			m.Done()
 			m.Done()
+			p := m.Conf(ice.WEB_CACHE, "meta.store")
+			m.Richs(ice.WEB_CACHE, nil, "*", func(key string, value map[string]interface{}) {
+				if f, _, e := kit.Create(path.Join(p, key[:2], key)); e == nil {
+					defer f.Close()
+					f.WriteString(kit.Formats(value))
+				}
+			})
+			m.Conf(ice.WEB_CACHE, "hash", kit.Dict())
 			m.Cmd(ice.CTX_CONFIG, "save", "web.json", ice.WEB_SPIDE, ice.WEB_FAVOR, ice.WEB_CACHE, ice.WEB_STORY, ice.WEB_SHARE)
 		}},
 
@@ -540,8 +551,14 @@ var Index = &ice.Context{Name: "web", Help: "网页模块",
 
 					// 验证结果
 					if m.Cost("%s %s: %s", res.Status, res.Header.Get("Content-Length"), res.Header.Get("Content-Type")); m.Warn(e != nil, "%s", e) {
+						if cache != "" {
+							m.Set("result")
+						}
 						return
 					} else if m.Warn(res.StatusCode != http.StatusOK, "%s", res.Status) {
+						if cache != "" {
+							m.Set("result")
+						}
 						return
 					}
 
@@ -572,10 +589,18 @@ var Index = &ice.Context{Name: "web", Help: "网页模块",
 			m.Conf(ice.CLI_RUNTIME, "node.type", ice.WEB_SERVER)
 
 			// 启动服务
-			m.Target().Start(m, kit.Select("self", arg, 0))
-			m.Richs(ice.WEB_SPIDE, nil, "dev", func(key string, value map[string]interface{}) {
-				m.Cmd(ice.WEB_SPACE, "connect", "dev")
-			})
+			switch kit.Select("self", arg, 0) {
+			case "dev":
+				m.Event(ice.SYSTEM_INIT)
+				fallthrough
+			case "self":
+				m.Target().Start(m, "self")
+				fallthrough
+			default:
+				m.Richs(ice.WEB_SPIDE, nil, "dev", func(key string, value map[string]interface{}) {
+					m.Cmd(ice.WEB_SPACE, "connect", "dev")
+				})
+			}
 		}},
 		ice.WEB_SPACE: {Name: "space", Help: "空间站", Meta: kit.Dict("exports", []string{"pod", "name"}), List: kit.List(
 			kit.MDB_INPUT, "text", "name", "pod",
@@ -813,22 +838,15 @@ var Index = &ice.Context{Name: "web", Help: "网页模块",
 			favor := ""
 			if m.Richs(ice.WEB_FAVOR, nil, arg[0], func(key string, value map[string]interface{}) {
 				favor = key
-			}) == nil {
+			}) == nil && len(arg) > 1 {
 				favor = m.Rich(ice.WEB_FAVOR, nil, kit.Data(kit.MDB_NAME, arg[0]))
-				m.Info("create favor: %s name: %s", favor, arg[0])
+				m.Log(ice.LOG_CREATE, "favor: %s name: %s", favor, arg[0])
 			}
 
-			extras := []string{}
-			if len(arg) == 3 && arg[1] == "extra" {
-				extras, arg = strings.Split(arg[2], " "), arg[:1]
-			}
 			if len(arg) == 1 {
 				// 收藏列表
 				m.Grows(ice.WEB_FAVOR, kit.Keys(kit.MDB_HASH, favor), "", "", func(index int, value map[string]interface{}) {
 					m.Push(kit.Format(index), value, []string{kit.MDB_TIME, kit.MDB_ID, kit.MDB_TYPE, kit.MDB_NAME, kit.MDB_TEXT})
-					for _, k := range extras {
-						m.Push(k, kit.Select("", kit.Value(value, "extra."+k)))
-					}
 				})
 				return
 			}
@@ -984,6 +1002,14 @@ var Index = &ice.Context{Name: "web", Help: "网页模块",
 			// head list data time text file
 			switch arg[0] {
 			case "catch":
+				if last := m.Richs(ice.WEB_STORY, "head", arg[2], nil); last != nil {
+					if t, e := time.ParseInLocation(ice.ICE_TIME, kit.Format(last["time"]), time.Local); e == nil {
+						if s, e := os.Stat(arg[2]); e == nil && s.ModTime().Before(t) {
+							m.Info("%s last: %s", arg[2], kit.Format(t))
+							break
+						}
+					}
+				}
 				fallthrough
 			case "add", "upload":
 				// 保存数据
@@ -998,6 +1024,11 @@ var Index = &ice.Context{Name: "web", Help: "网页模块",
 					head, prev, count = key, kit.Format(value["list"]), kit.Int(value["count"])
 					m.Log("info", "head: %v prev: %v count: %v", head, prev, count)
 				})
+
+				if last := m.Richs(ice.WEB_STORY, nil, prev, nil); prev != "" && last != nil && last["data"] == arg[3] {
+					// 重复提交
+					break
+				}
 
 				// 添加节点
 				list := m.Rich(ice.WEB_STORY, nil, kit.Dict(
@@ -1064,12 +1095,18 @@ var Index = &ice.Context{Name: "web", Help: "网页模块",
 				for i := 0; i < 10 && list != ""; i++ {
 					m.Confm(ice.WEB_STORY, kit.Keys("hash", list), func(value map[string]interface{}) {
 						// 直连节点
-						m.Confm(ice.WEB_CACHE, kit.Keys("hash", value["data"]), func(val map[string]interface{}) {
-							m.Push(list, value, []string{"key", "time", "count", "scene", "story"})
+						val := m.Confm(ice.WEB_CACHE, kit.Keys("hash", value["data"]))
+						if val == nil {
+							data := kit.Format(value["data"])
+							if f, e := os.Open(path.Join(m.Conf(ice.WEB_CACHE, "meta.store"), data[:2], data)); e != nil ||
+								json.NewDecoder(f).Decode(&val) != nil {
+								return
+							}
+						}
+						m.Push(list, value, []string{"key", "time", "count", "scene", "story"})
 
-							m.Push("drama", val["text"])
-							m.Push("data", value["data"])
-						})
+						m.Push("drama", val["text"])
+						m.Push("data", value["data"])
 
 						// 复合节点
 						kit.Fetch(value["list"], func(key string, val string) {
@@ -1102,11 +1139,16 @@ var Index = &ice.Context{Name: "web", Help: "网页模块",
 				}
 
 				// 查询数据
-				if node := m.Confm(ice.WEB_CACHE, kit.Keys("hash", arg[1])); node != nil {
-					m.Push("data", arg[1])
-					m.Push(arg[1], node, []string{"text", "time", "size", "type", "name", "file"})
-					m.Echo("%s", node["text"])
+				node := m.Confm(ice.WEB_CACHE, kit.Keys("hash", arg[1]))
+				if node == nil {
+					if f, e := os.Open(path.Join(m.Conf(ice.WEB_CACHE, "meta.store"), arg[1][:2], arg[1])); e != nil ||
+						json.NewDecoder(f).Decode(&node) != nil {
+						return
+					}
 				}
+				m.Push("data", arg[1])
+				m.Push(arg[1], node, []string{"text", "time", "size", "type", "name", "file"})
+				m.Echo("%s", node["text"])
 			default:
 				if len(arg) == 1 {
 					m.Cmd(ice.WEB_STORY, "history", arg).Table(func(index int, value map[string]string, head []string) {

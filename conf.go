@@ -97,6 +97,8 @@ const ( // GDB
 	GDB_TIMER  = "timer"
 	GDB_EVENT  = "event"
 
+	SYSTEM_INIT = "system.init"
+
 	SERVE_START = "serve.start"
 	SERVE_CLOSE = "serve.close"
 	SPACE_START = "space.start"

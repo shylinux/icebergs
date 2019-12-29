@@ -33,11 +33,22 @@ var Index = &ice.Context{Name: "code", Help: "编程模块",
 
 		"compile": {Name: "compile", Help: "编译", Value: kit.Data("path", "usr/publish")},
 		"publish": {Name: "publish", Help: "发布", Value: kit.Data("path", "usr/publish")},
-		"upgrade": {Name: "upgrade", Help: "升级", Value: kit.Data("path", "usr/publish")},
+		"upgrade": {Name: "upgrade", Help: "升级", Value: kit.Dict(
+			kit.MDB_HASH, kit.Dict(
+				"system", kit.Dict(
+					kit.MDB_LIST, kit.List(
+						kit.MDB_INPUT, "bin", "file", "ice.sh", "path", "ice.sh",
+						kit.MDB_INPUT, "bin", "file", "ice.bin", "path", "ice.bin",
+					),
+				),
+			),
+		)},
 	},
 	Commands: map[string]*ice.Command{
 		ice.ICE_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			m.Cmd(ice.CTX_CONFIG, "load", "code.json")
+			m.Watch(ice.SYSTEM_INIT, "compile", "linux")
+			m.Watch(ice.SYSTEM_INIT, "publish", "ice.sh")
 		}},
 		ice.ICE_EXIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			m.Cmd(ice.CTX_CONFIG, "save", "code.json", "web.code.login")
@@ -92,12 +103,28 @@ var Index = &ice.Context{Name: "code", Help: "编程模块",
 			m.Log(ice.LOG_EXPORT, "%s: %s", arg[0], target)
 		}},
 		"upgrade": {Name: "upgrade", Help: "升级", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			os.Rename("ice.sh", "ice.sh.bak")
-			os.Link(m.Cmd(ice.WEB_STORY, "index", m.Cmdx(ice.WEB_SPIDE, "dev", "cache", "/publish/ice.sh")).Append("file"), "ice.sh")
+			exit := true
+			m.Grows("upgrade", "hash.system", "", "", func(index int, value map[string]interface{}) {
+				if value["file"] == "ice.bin" {
+					value["file"] = kit.Keys("ice", m.Conf(ice.CLI_RUNTIME, "host.GOOS"), m.Conf(ice.CLI_RUNTIME, "host.GOARCH"))
+				}
 
-			os.Rename("ice.bin", "ice.bin.bak")
-			os.Link(m.Cmd(ice.WEB_STORY, "index", m.Cmdx(ice.WEB_SPIDE, "dev", "cache", kit.Keys("/publish/ice",
-				m.Conf(ice.CLI_RUNTIME, "host.GOOS"), m.Conf(ice.CLI_RUNTIME, "host.GOARCH")))).Append("file"), "ice.bin")
+				h := m.Cmdx(ice.WEB_SPIDE, "dev", "cache", "/publish/"+kit.Format(value["file"]))
+				if h == "" {
+					exit = false
+					return
+				}
+				m.Cmd(ice.WEB_STORY, "add", "bin", value["path"], h)
+
+				os.Rename(kit.Format(value["path"]), kit.Keys(value["path"], "bak"))
+				os.Link(m.Cmd(ice.WEB_STORY, "index", h).Append("file"), kit.Format(value["path"]))
+				os.Chmod(kit.Format(value["path"]), 777)
+				m.Log(ice.LOG_EXPORT, "%s: %s", h, value["path"])
+			})
+
+			if exit {
+				m.Cmd("exit")
+			}
 		}},
 
 		"login": {Name: "login", Help: "登录", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {

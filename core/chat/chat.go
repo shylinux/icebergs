@@ -7,7 +7,7 @@ import (
 	"github.com/shylinux/toolkits"
 )
 
-var Index = &ice.Context{Name: "chat", Help: "聊天模块",
+var Index = &ice.Context{Name: "chat", Help: "聊天中心",
 	Caches: map[string]*ice.Cache{},
 	Configs: map[string]*ice.Config{
 		ice.CHAT_RIVER: {Name: "river", Help: "群组", Value: kit.Data()},
@@ -16,10 +16,18 @@ var Index = &ice.Context{Name: "chat", Help: "聊天模块",
 		ice.ICE_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			m.Cmd(ice.CTX_CONFIG, "load", "chat.json")
 
-			if m.Conf(ice.CLI_RUNTIME, "boot.count") == "1" {
+			m.Watch(ice.SYSTEM_INIT, "web.chat.init")
+			m.Watch(ice.USER_CREATE, "web.chat./ocean", "spawn", "")
+		}},
+		ice.ICE_EXIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			m.Cmd(ice.CTX_CONFIG, "save", "chat.json", ice.CHAT_RIVER)
+		}},
+
+		"init": {Name: "init", Help: "初始化", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			if len(m.Confm(ice.CHAT_RIVER, "hash")) == 0 {
 				// 系统群组
-				m.Option(ice.MSG_USERNAME, m.Conf(ice.CLI_RUNTIME, "boot.username"))
 				m.Option(ice.MSG_USERROLE, ice.ROLE_ROOT)
+				m.Option(ice.MSG_USERNAME, m.Conf(ice.CLI_RUNTIME, "boot.username"))
 				river := m.Cmdx("web.chat./ocean", "spawn", "meet", m.Conf(ice.CLI_RUNTIME, "boot.username"))
 				river = m.Cmdx("web.chat./steam", river, "spawn", "miss",
 					"", "", "spide", "",
@@ -41,13 +49,7 @@ var Index = &ice.Context{Name: "chat", Help: "聊天模块",
 				m.Cmd(ice.AAA_ROLE, "black", ice.ROLE_VOID, "enable", "dream.停止")
 			}
 
-			// 用户群组
-			m.Watch(ice.USER_CREATE, "web.chat./ocean", "spawn", "")
 		}},
-		ice.ICE_EXIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			m.Cmd(ice.CTX_CONFIG, "save", "chat.json", ice.CHAT_RIVER)
-		}},
-
 		ice.WEB_LOGIN: {Name: "login", Help: "登录", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			if len(arg) > 0 {
 				switch arg[0] {

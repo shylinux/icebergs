@@ -21,7 +21,7 @@ var Index = &ice.Context{Name: "git", Help: "代码管理",
 				"name", "volcanos", "path", "usr/volcanos", "branch", "master",
 				"remote", "https://github.com/shylinux/volcanos",
 			))
-			m.Watch(ice.SERVE_START, "cli.git.check", "volcanos")
+			m.Watch(ice.SYSTEM_INIT, "cli.git.check", "volcanos")
 		}},
 		ice.ICE_EXIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 		}},

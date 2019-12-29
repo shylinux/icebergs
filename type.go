@@ -279,6 +279,8 @@ func (m *Message) Spawn(arg ...interface{}) *Message {
 
 		source: m.target,
 		target: m.target,
+		R:      m.R,
+		W:      m.W,
 	}
 
 	if len(arg) > 0 {

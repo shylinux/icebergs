@@ -12,8 +12,24 @@ import (
 )
 
 type Frame struct {
-	in  io.ReadCloser
-	out io.WriteCloser
+	in     io.ReadCloser
+	out    io.WriteCloser
+	target *ice.Context
+	count  int
+}
+
+func (f *Frame) prompt(m *ice.Message) *ice.Message {
+	prompt := "[15:04:05]%s> "
+	fmt.Fprintf(f.out, kit.Format("%d", f.count))
+	fmt.Fprintf(f.out, m.Time(prompt, f.target.Name))
+	return m
+}
+func (f *Frame) printf(m *ice.Message, res string) *ice.Message {
+	fmt.Fprint(f.out, res)
+	if !strings.HasSuffix(res, "\n") {
+		fmt.Fprint(f.out, "\n")
+	}
+	return m
 }
 
 func (f *Frame) Spawn(m *ice.Message, c *ice.Context, arg ...string) ice.Server {
@@ -23,37 +39,52 @@ func (f *Frame) Begin(m *ice.Message, arg ...string) ice.Server {
 	return f
 }
 func (f *Frame) Start(m *ice.Message, arg ...string) bool {
-	f.in = os.Stdin
-	f.out = os.Stdout
-	m.Cap(ice.CTX_STREAM, "stdio")
+	switch kit.Select("stdio", arg, 0) {
+	default:
+		f.in = os.Stdin
+		f.out = os.Stdout
+		m.Cap(ice.CTX_STREAM, "stdio")
+	}
 
-	prompt := "%d[15:04:05]%s> "
-	target := m.Target()
-	count := 0
-
+	f.count = 0
+	f.target = m.Target()
 	bio := bufio.NewScanner(f.in)
-	fmt.Fprintf(f.out, m.Time(prompt, count, target.Name))
-	for bio.Scan() {
+	for f.prompt(m); bio.Scan(); f.prompt(m) {
 		ls := kit.Split(bio.Text())
-		m.Log("info", "stdin input %v", ls)
+		m.Log(ice.LOG_IMPORT, "stdin: %v", ls)
 
-		msg := m.Spawns(target)
+		if len(ls) > 0 && strings.HasPrefix(ls[0], "~") {
+			// 切换模块
+			target := ls[0][1:]
+			if ls = ls[1:]; len(target) == 0 {
+				target, ls = ls[0], ls[1:]
+			}
+			ice.Pulse.Search(target+".", func(p *ice.Context, s *ice.Context, key string) {
+				m.Info("choice: %s", s.Name)
+				f.target = s
+			})
+		}
+
+		if len(ls) == 0 {
+			continue
+		}
+
+		// 执行命令
+		msg := m.Spawns(f.target)
 		if msg.Cmdy(ls); !msg.Hand {
 			msg = msg.Set("result").Cmdy(ice.CLI_SYSTEM, ls)
 		}
+
+		// 生成结果
 		res := msg.Result()
 		if res == "" {
-			msg.Table()
-			res = msg.Result()
+			res = msg.Table().Result()
 		}
 
-		fmt.Fprint(f.out, res)
-		if !strings.HasSuffix(res, "\n") {
-			fmt.Fprint(f.out, "\n")
-		}
-		fmt.Fprintf(f.out, m.Time(prompt, count, target.Name))
-		msg.Cost("stdin %v", ls)
-		count++
+		// 输出结果
+		msg.Cost("stdin:%v", ls)
+		f.printf(msg, res)
+		f.count++
 	}
 	return true
 }
@@ -66,12 +97,13 @@ var Index = &ice.Context{Name: "ssh", Help: "终端模块",
 	Configs: map[string]*ice.Config{},
 	Commands: map[string]*ice.Command{
 		ice.ICE_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			m.Echo("hello %s world", c.Name)
 		}},
 		ice.ICE_EXIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			f := m.Target().Server().(*Frame)
-			f.in.Close()
-			m.Done()
+			if f, ok := m.Target().Server().(*Frame); ok {
+				// 关闭终端
+				f.in.Close()
+				m.Done()
+			}
 		}},
 	},
 }

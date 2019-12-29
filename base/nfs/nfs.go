@@ -131,6 +131,11 @@ var Index = &ice.Context{Name: "nfs", Help: "文件模块",
 	Caches:  map[string]*ice.Cache{},
 	Configs: map[string]*ice.Config{},
 	Commands: map[string]*ice.Command{
+		ice.ICE_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		}},
+		ice.ICE_EXIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		}},
+
 		"dir": {Name: "dir", Help: "目录", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			rg, _ := regexp.Compile(m.Option("dir_reg"))
 			dir(m, arg[0], arg[1], 0, false, "both", rg,
@@ -141,7 +146,7 @@ var Index = &ice.Context{Name: "nfs", Help: "文件模块",
 				defer f.Close()
 				for _, v := range arg[1:] {
 					if n, e := f.WriteString(v); m.Assert(e) {
-						m.Log("info", "save %v %v", n, p)
+						m.Log("export", "%v: %v", n, p)
 						m.Echo(p)
 					}
 				}

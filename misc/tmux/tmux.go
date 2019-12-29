@@ -53,6 +53,8 @@ var Index = &ice.Context{Name: "tmux", Help: "终端模块",
 	Commands: map[string]*ice.Command{
 		ice.ICE_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			m.Watch(ice.DREAM_START, "cli.tmux.auto")
+			return
+			m.Watch(ice.SERVE_START, "cli.tmux.auto")
 			for _, p := range []string{"auto.sh", "auto.vim"} {
 				if m.Richs(ice.WEB_STORY, "head", p, nil) == nil {
 					m.Cmd(ice.WEB_STORY, "add", ice.TYPE_SHELL, p, m.Cmdx(ice.WEB_SPIDE, "shy", "cache", "GET", "/publish/"+p))

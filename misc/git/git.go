@@ -12,12 +12,26 @@ import (
 var Index = &ice.Context{Name: "git", Help: "代码管理",
 	Caches: map[string]*ice.Cache{},
 	Configs: map[string]*ice.Config{
-		"buffer": {Name: "buffer", Help: "缓存", Value: kit.Data()},
+		"repos": {Name: "repos", Help: "仓库", Value: kit.Data(kit.MDB_SHORT, "name")},
 	},
 	Commands: map[string]*ice.Command{
 		ice.ICE_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			// 前端代码
+			m.Rich("repos", nil, kit.Data(
+				"name", "volcanos", "path", "usr/volcanos", "branch", "master",
+				"remote", "https://github.com/shylinux/volcanos",
+			))
+			m.Watch(ice.SERVE_START, "cli.git.check", "volcanos")
 		}},
 		ice.ICE_EXIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		}},
+		"check": {Name: "check", Help: "检查", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			m.Richs("repos", nil, arg[0], func(key string, value map[string]interface{}) {
+				if _, e := os.Stat(kit.Format(kit.Value(value, "meta.path"))); e != nil && os.IsNotExist(e) {
+					m.Cmd("cli.system", "git", "clone", kit.Value(value, "meta.remote"),
+						"-b", kit.Value(value, "meta.branch"), kit.Value(value, "meta.path"))
+				}
+			})
 		}},
 		"sum": {Name: "sum", Help: "统计", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			total := false

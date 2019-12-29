@@ -11,6 +11,11 @@ var Index = &ice.Context{Name: "tcp", Help: "网络模块",
 	Caches:  map[string]*ice.Cache{},
 	Configs: map[string]*ice.Config{},
 	Commands: map[string]*ice.Command{
+		ice.ICE_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		}},
+		ice.ICE_EXIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		}},
+
 		"ifconfig": {Name: "ifconfig [name]", Help: "网络配置", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			if ifs, e := net.Interfaces(); m.Assert(e) {
 				for _, v := range ifs {

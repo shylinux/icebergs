@@ -118,7 +118,7 @@ var Index = &ice.Context{Name: "chat", Help: "聊天模块",
 					"user", kit.Data(kit.MDB_SHORT, "username"),
 					"tool", kit.Data(),
 				))
-				m.Info("create river: %v name: %v", river, arg[1])
+				m.Log("create", "river: %v name: %v", river, arg[1])
 				m.Cmd("/river", river, "add", arg[2:])
 				m.Echo(river)
 			}
@@ -144,7 +144,7 @@ var Index = &ice.Context{Name: "chat", Help: "聊天模块",
 					// 添加用户
 					for _, v := range arg[2:] {
 						user := m.Rich(ice.CHAT_RIVER, kit.Keys(kit.MDB_HASH, arg[0], "user"), kit.Data("username", v))
-						m.Info("add river: %s user: %s name: %s", arg[0], user, v)
+						m.Log("insert", "river: %s user: %s name: %s", arg[0], user, v)
 					}
 				}
 			}
@@ -170,7 +170,7 @@ var Index = &ice.Context{Name: "chat", Help: "聊天模块",
 					id := m.Grow(ice.CHAT_RIVER, kit.Keys(prefix, kit.MDB_HASH, arg[1]), kit.Data(
 						"pod", arg[i], "ctx", arg[i+1], "cmd", arg[i+2], "key", arg[i+3],
 					))
-					m.Info("create tool %d %v", id, arg[i:i+4])
+					m.Log("insert", "storm: %s %d: %v", arg[1], id, arg[i:i+4])
 				}
 			case "rename":
 				// 重命名应用
@@ -181,7 +181,7 @@ var Index = &ice.Context{Name: "chat", Help: "聊天模块",
 			case "remove":
 				// 删除应用
 				m.Richs(ice.CHAT_RIVER, kit.Keys(prefix), arg[1], func(value map[string]interface{}) {
-					m.Info("remove storm: %s %s", arg[1], kit.Format(value))
+					m.Log("remove", "storm: %s value: %s", arg[1], kit.Format(value))
 				})
 				m.Conf(ice.CHAT_RIVER, kit.Keys(prefix, kit.MDB_HASH, arg[1]), "")
 			}
@@ -201,7 +201,7 @@ var Index = &ice.Context{Name: "chat", Help: "聊天模块",
 				storm := m.Rich(ice.CHAT_RIVER, kit.Keys(kit.MDB_HASH, arg[0], "tool"), kit.Dict(
 					kit.MDB_META, kit.Dict(kit.MDB_NAME, arg[2]),
 				))
-				m.Info("create river: %s storm: %s name: %v", arg[0], storm, arg[2])
+				m.Log("create", "storm: %s name: %v", storm, arg[2])
 				m.Cmd("/storm", arg[0], storm, "add", arg[3:])
 				m.Echo(storm)
 

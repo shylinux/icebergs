@@ -30,6 +30,10 @@ var Index = &ice.Context{Name: "code", Help: "编程模块",
 	Caches: map[string]*ice.Cache{},
 	Configs: map[string]*ice.Config{
 		"login": {Name: "login", Help: "登录", Value: kit.Data()},
+
+		"compile": {Name: "compile", Help: "编译", Value: kit.Data("path", "usr/publish")},
+		"publish": {Name: "publish", Help: "发布", Value: kit.Data("path", "usr/publish")},
+		"upgrade": {Name: "upgrade", Help: "升级", Value: kit.Data("path", "usr/publish")},
 	},
 	Commands: map[string]*ice.Command{
 		ice.ICE_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
@@ -37,6 +41,63 @@ var Index = &ice.Context{Name: "code", Help: "编程模块",
 		}},
 		ice.ICE_EXIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			m.Cmd(ice.CTX_CONFIG, "save", "code.json", "web.code.login")
+		}},
+
+		"compile": {Name: "compile", Help: "编译", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			if len(arg) == 0 {
+				// 目录列表
+				m.Cmdy("nfs.dir", "", m.Conf("publish", "meta.path"))
+				return
+			}
+
+			// 编译目标
+			main := kit.Select("main.go", arg, 2)
+			arch := kit.Select(m.Conf(ice.CLI_RUNTIME, "host.GOARCH"), arg, 1)
+			goos := kit.Select(m.Conf(ice.CLI_RUNTIME, "host.GOOS"), arg, 0)
+			file := path.Join(m.Conf("compile", "meta.path"), kit.Keys("ice", goos, arch))
+
+			// 编译参数
+			m.Add("option", "cmd_env", "GOCACHE", os.Getenv("GOCACHE"))
+			m.Add("option", "cmd_env", "GOARCH", arch, "GOOS", goos)
+			m.Add("option", "cmd_env", "HOME", os.Getenv("HOME"))
+			m.Cmd("cli.system", "go", "build", "-o", file, main)
+
+			// 编译记录
+			m.Cmdy(ice.WEB_STORY, "catch", "bin", file)
+			m.Log(ice.LOG_EXPORT, "%s: %s", main, file)
+		}},
+		"publish": {Name: "publish", Help: "发布", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			if len(arg) == 0 {
+				// 目录列表
+				m.Cmdy("nfs.dir", "", m.Conf("publish", "meta.path"))
+				return
+			}
+
+			p := arg[0]
+			if s, e := os.Stat(arg[0]); m.Assert(e) && s.IsDir() {
+				// 发布目录
+				p = path.Base(arg[0]) + ".tar.gz"
+				m.Cmd("cli.system", "tar", "-zcf", p, arg[0])
+				defer func() { os.Remove(p) }()
+				arg[0] = p
+			}
+
+			// 发布文件
+			target := path.Join(m.Conf("publish", "meta.path"), path.Base(arg[0]))
+			os.Remove(target)
+			os.Link(arg[0], target)
+
+			// 发布记录
+			m.Cmdy(ice.WEB_STORY, "catch", "bin", p)
+			m.Log(ice.LOG_EXPORT, "%s: %s", arg[0], target)
+		}},
+		"upgrade": {Name: "upgrade", Help: "升级", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			os.Rename("ice.sh", "ice.sh.bak")
+			os.Link(m.Cmd(ice.WEB_STORY, "index", m.Cmdx(ice.WEB_SPIDE, "dev", "cache", "/publish/ice.sh")).Append("file"), "ice.sh")
+
+			os.Rename("ice.bin", "ice.bin.bak")
+			os.Link(m.Cmd(ice.WEB_STORY, "index", m.Cmdx(ice.WEB_SPIDE, "dev", "cache", kit.Keys("/publish/ice",
+				m.Conf(ice.CLI_RUNTIME, "host.GOOS"), m.Conf(ice.CLI_RUNTIME, "host.GOARCH")))).Append("file"), "ice.bin")
 		}},
 
 		"login": {Name: "login", Help: "登录", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {

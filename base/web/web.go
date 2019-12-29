@@ -68,8 +68,8 @@ func (web *Frame) Login(msg *ice.Message, w http.ResponseWriter, r *http.Request
 	}
 	return msg.Option(ice.MSG_USERURL) != ""
 }
-func (web *Frame) HandleWSS(m *ice.Message, safe bool, c *websocket.Conn) bool {
-	for {
+func (web *Frame) HandleWSS(m *ice.Message, safe bool, c *websocket.Conn, name string) bool {
+	for running := true; running; {
 		if t, b, e := c.ReadMessage(); m.Warn(e != nil, "space recv %d msg %v", t, e) {
 			break
 		} else {
@@ -77,38 +77,40 @@ func (web *Frame) HandleWSS(m *ice.Message, safe bool, c *websocket.Conn) bool {
 			case MSG_MAPS:
 				// 接收报文
 				socket, msg := c, m.Spawn(b)
-				source := kit.Simple(msg.Optionv(ice.MSG_SOURCE))
+				source := kit.Simple(msg.Optionv(ice.MSG_SOURCE), name)
 				target := kit.Simple(msg.Optionv(ice.MSG_TARGET))
 				msg.Info("recv %v %v->%v %v", t, source, target, msg.Format("meta"))
 
 				if len(target) == 0 {
 					// 本地执行
 					if msg.Optionv(ice.MSG_HANDLE, "true"); !msg.Warn(!safe, "no right") {
+						m.Option("_dev", name)
 						msg = msg.Cmd()
 					}
-					kit.Revert(source)
-					source, target = []string{source[0]}, source[1:]
+					if source, target = []string{}, kit.Revert(source)[1:]; msg.Detail() == "exit" {
+						return true
+					}
 
 				} else if s, ok := msg.Confv(ice.WEB_SPACE, kit.Keys("hash", target[0], "socket")).(*websocket.Conn); ok {
 					// 转发报文
+					socket, source, target = s, source, target[1:]
 					msg.Info("space route")
-					socket, source, target = s, append(source, target[0]), target[1:]
 
 				} else if call, ok := web.send[msg.Option(ice.MSG_TARGET)]; len(target) == 1 && ok {
 					// 接收响应
-					msg.Info("space done")
 					delete(web.send, msg.Option(ice.MSG_TARGET))
+					msg.Info("space done")
 					call.Back(msg)
 					break
 
 				} else if msg.Warn(msg.Option("_handle") == "true", "space miss") {
-					// 丢弃报文
+					// 回复失败
 					break
 
 				} else {
-					// 失败报文
+					// 下发失败
 					msg.Warn(true, "space error")
-					source, target = []string{source[len(source)-1]}, kit.Revert(source)[1:]
+					source, target = []string{}, kit.Revert(source)[1:]
 				}
 
 				// 发送报文
@@ -117,9 +119,6 @@ func (web *Frame) HandleWSS(m *ice.Message, safe bool, c *websocket.Conn) bool {
 				socket.WriteMessage(t, []byte(msg.Format("meta")))
 				msg.Info("send %v %v->%v %v", t, source, target, msg.Format("meta"))
 				msg.Log("cost", "%s: ", msg.Format("cost"))
-				if msg.Detail() == "exit" {
-					return true
-				}
 			}
 		}
 	}
@@ -335,7 +334,11 @@ var Index = &ice.Context{Name: "web", Help: "网页模块",
 		ice.WEB_SERVE: {Name: "serve", Help: "服务器", Value: kit.Data(
 			"static", map[string]interface{}{"/": "usr/volcanos/",
 				"/static/volcanos/": "usr/volcanos/",
+				"/publish/":         "usr/publish/",
 			},
+			"volcanos", kit.Dict("path", "usr/volcanos",
+				"repos", "https://github.com/shylinux/volcanos",
+				"branch", "master"),
 			"template", map[string]interface{}{"path": "usr/template", "list": []interface{}{
 				`{{define "raw"}}{{.Result}}{{end}}`,
 			}},
@@ -360,18 +363,19 @@ var Index = &ice.Context{Name: "web", Help: "网页模块",
 	Commands: map[string]*ice.Command{
 		ice.ICE_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			m.Cmd(ice.CTX_CONFIG, "load", "web.json")
+
 			if m.Richs(ice.WEB_SPIDE, nil, "self", nil) == nil {
-				m.Cmd(ice.WEB_SPIDE, "add", "self", "http://:9020")
-				m.Cmd(ice.WEB_SPIDE, "add", "self", kit.Select("http://:9020", os.Getenv("ctx_dev")))
+				m.Cmd(ice.WEB_SPIDE, "add", "self", kit.Select("http://:9020", m.Conf(ice.CLI_RUNTIME, "conf.ctx_self")))
 			}
 			if m.Richs(ice.WEB_SPIDE, nil, "dev", nil) == nil {
-				m.Cmd(ice.WEB_SPIDE, "add", "dev", kit.Select("http://:9020", os.Getenv("ctx_dev")))
+				m.Cmd(ice.WEB_SPIDE, "add", "dev", kit.Select("http://mac.local:9020", m.Conf(ice.CLI_RUNTIME, "conf.ctx_dev")))
 			}
 			if m.Richs(ice.WEB_SPIDE, nil, "shy", nil) == nil {
-				m.Cmd(ice.WEB_SPIDE, "add", "shy", "https://shylinux.com")
+				m.Cmd(ice.WEB_SPIDE, "add", "shy", kit.Select("https://shylinux.com:443", m.Conf(ice.CLI_RUNTIME, "conf.ctx_shy")))
 			}
 		}},
 		ice.ICE_EXIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			m.Done()
 			m.Done()
 			m.Cmd(ice.CTX_CONFIG, "save", "web.json", ice.WEB_SPIDE, ice.WEB_FAVOR, ice.WEB_CACHE, ice.WEB_STORY, ice.WEB_SHARE)
 		}},
@@ -418,6 +422,7 @@ var Index = &ice.Context{Name: "web", Help: "网页模块",
 							"url", arg[2],
 						),
 					))
+					m.Log(ice.LOG_CREATE, "%s: %v", arg[1], arg[2:])
 				}
 			default:
 				// spide shy [cache] [POST|GET] uri file|data|form|part|json arg...
@@ -562,21 +567,15 @@ var Index = &ice.Context{Name: "web", Help: "网页模块",
 			}
 		}},
 		ice.WEB_SERVE: {Name: "serve", Help: "服务器", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			// 节点信息
 			m.Conf(ice.CLI_RUNTIME, "node.name", m.Conf(ice.CLI_RUNTIME, "boot.hostname"))
-			m.Conf(ice.CLI_RUNTIME, "node.type", kit.MIME_SERVER)
+			m.Conf(ice.CLI_RUNTIME, "node.type", ice.WEB_SERVER)
 
-			m.Rich(ice.WEB_SPACE, nil, kit.Dict(
-				"type", kit.MIME_MYSELF,
-				"name", m.Conf(ice.CLI_RUNTIME, "boot.hostname"),
-				"user", m.Conf(ice.CLI_RUNTIME, "boot.username"),
-			))
-			if _, e := os.Stat("usr/volcanos"); e != nil {
-				m.Cmd("cli.system", "git", "clone", "https://github.com/shylinux/volcanos", "usr/volcanos")
-			}
-			if m.Conf(ice.CLI_RUNTIME, "boot.count") == "1" {
-				m.Event(ice.SYSTEM_INIT)
-			}
+			// 启动服务
 			m.Target().Start(m, kit.Select("self", arg, 0))
+			m.Richs(ice.WEB_SPIDE, nil, "dev", func(key string, value map[string]interface{}) {
+				m.Cmd(ice.WEB_SPACE, "connect", "dev")
+			})
 		}},
 		ice.WEB_SPACE: {Name: "space", Help: "空间站", Meta: kit.Dict("exports", []string{"pod", "name"}), List: kit.List(
 			kit.MDB_INPUT, "text", "name", "pod",
@@ -591,13 +590,6 @@ var Index = &ice.Context{Name: "web", Help: "网页模块",
 				m.Sort("name")
 				return
 			}
-			if len(arg) == 1 {
-				// 节点详情
-				m.Richs(ice.WEB_SPACE, nil, arg[0], func(key string, value map[string]interface{}) {
-					m.Push("detail", value)
-				})
-				return
-			}
 
 			web := m.Target().Server().(*Frame)
 			switch arg[0] {
@@ -606,9 +598,9 @@ var Index = &ice.Context{Name: "web", Help: "网页模块",
 				case "add":
 					m.Cmdy(ice.WEB_SPIDE, "self", path.Join("/space/share/add", path.Join(arg[2:]...)))
 				default:
-					m.Richs(ice.WEB_SPIDE, nil, "self", func(key string, value map[string]interface{}) {
+					m.Richs(ice.WEB_SPIDE, nil, m.Option("_dev"), func(key string, value map[string]interface{}) {
+						m.Log(ice.LOG_CREATE, "dev: %s share: %s", m.Option("_dev"), arg[1])
 						value["share"] = arg[1]
-						m.Info("what %v", kit.Formats(value))
 					})
 				}
 
@@ -626,36 +618,51 @@ var Index = &ice.Context{Name: "web", Help: "网页模块",
 
 			case "connect":
 				// 基本信息
+				dev := kit.Select("dev", arg, 1)
 				node := m.Conf(ice.CLI_RUNTIME, "node.type")
-				name := kit.Select(m.Conf(ice.CLI_RUNTIME, "boot.pathname"), m.Conf(ice.CLI_RUNTIME, "boot.hostname"), node == kit.MIME_SERVER)
+				name := m.Conf(ice.CLI_RUNTIME, "node.name")
 				user := m.Conf(ice.CLI_RUNTIME, "boot.username")
 
-				m.Richs(ice.WEB_SPIDE, nil, kit.Select("self", arg, 1), func(key string, value map[string]interface{}) {
-					host := kit.Format(kit.Value(value, "client.hostname"))
+				m.Hold(1).Gos(m, func(m *ice.Message) {
+					m.Richs(ice.WEB_SPIDE, nil, dev, func(key string, value map[string]interface{}) {
+						proto := kit.Select("ws", "wss", kit.Format(kit.Value(value, "client.protocol")) == "https")
+						host := kit.Format(kit.Value(value, "client.hostname"))
 
-					for i := 0; i < m.Confi(ice.WEB_SPACE, "meta.redial.c"); i++ {
-						if u, e := url.Parse(kit.MergeURL("ws://"+host+"/space/", "node", node, "name", name, "user", user, "share", value["share"])); m.Assert(e) {
-							if s, e := net.Dial("tcp", host); !m.Warn(e != nil, "%s", e) {
-								if s, _, e := websocket.NewClient(s, u, nil, m.Confi(ice.WEB_SPACE, "meta.buffer.r"), m.Confi(ice.WEB_SPACE, "meta.buffer.w")); !m.Warn(e != nil, "%s", e) {
-									// 连接成功
-									m.Info("conn %d success %s", i, u)
-									if i = 0; web.HandleWSS(m, true, s) {
-										break
+						for i := 0; i < m.Confi(ice.WEB_SPACE, "meta.redial.c"); i++ {
+							if u, e := url.Parse(kit.MergeURL(proto+"://"+host+"/space/", "node", node, "name", name, "user", user, "share", value["share"])); m.Assert(e) {
+								if s, e := net.Dial("tcp", host); !m.Warn(e != nil, "%s", e) {
+									if s, _, e := websocket.NewClient(s, u, nil, m.Confi(ice.WEB_SPACE, "meta.buffer.r"), m.Confi(ice.WEB_SPACE, "meta.buffer.w")); !m.Warn(e != nil, "%s", e) {
+
+										// 连接成功
+										m.Rich(ice.WEB_SPACE, nil, kit.Dict(kit.MDB_TYPE, ice.WEB_MASTER, kit.MDB_NAME, dev))
+										m.Info("%d conn %s success %s", i, dev, u)
+										if i = 0; web.HandleWSS(m, true, s, dev) {
+											break
+										}
 									}
 								}
-							}
 
-							// 断线重连
-							sleep := time.Duration(rand.Intn(m.Confi(ice.WEB_SPACE, "meta.redial.a"))*i+i*m.Confi(ice.WEB_SPACE, "meta.redial.b")) * time.Millisecond
-							m.Info("%d sleep: %s reconnect: %s", i, sleep, u)
-							time.Sleep(sleep)
+								// 断线重连
+								sleep := time.Duration(rand.Intn(m.Confi(ice.WEB_SPACE, "meta.redial.a"))*i+i*m.Confi(ice.WEB_SPACE, "meta.redial.b")) * time.Millisecond
+								m.Info("%d sleep: %s reconnect: %s", i, sleep, u)
+								time.Sleep(sleep)
+							}
 						}
-					}
+					})
+					m.Done()
 				})
 
 			default:
-				// 本地命令
-				if arg[0] == "" || arg[0] == m.Conf(ice.CLI_RUNTIME, "node.name") {
+				if len(arg) == 1 {
+					// 节点详情
+					m.Richs(ice.WEB_SPACE, nil, arg[0], func(key string, value map[string]interface{}) {
+						m.Push("detail", value)
+					})
+					break
+				}
+
+				if arg[0] == "" {
+					// 本地命令
 					m.Cmdy(arg[1:])
 					break
 				}
@@ -665,11 +672,11 @@ var Index = &ice.Context{Name: "web", Help: "网页模块",
 					if socket, ok := value["socket"].(*websocket.Conn); ok {
 						// 构造路由
 						id := kit.Format(c.ID())
-						m.Optionv(ice.MSG_SOURCE, []string{id, target[0]})
+						m.Optionv(ice.MSG_SOURCE, []string{id})
 						m.Optionv(ice.MSG_TARGET, target[1:])
-						m.Set(ice.MSG_DETAIL, arg[1:]...)
 						m.Option("hot", m.Option("hot"))
 						m.Option("top", m.Option("top"))
+						m.Set(ice.MSG_DETAIL, arg[1:]...)
 						m.Info("send %s %s", id, m.Format("meta"))
 
 						// 下发命令
@@ -846,7 +853,7 @@ var Index = &ice.Context{Name: "web", Help: "网页模块",
 				kit.MDB_TYPE, arg[1], kit.MDB_NAME, arg[2], kit.MDB_TEXT, arg[3],
 				"extra", extra,
 			))
-			m.Info("create favor: %s index: %d name: %s", favor, index, arg[2])
+			m.Log(ice.LOG_INSERT, "favor: %s index: %d name: %s", favor, index, arg[2])
 			m.Echo("%d", index)
 		}},
 		ice.WEB_CACHE: {Name: "cache", Help: "缓存池", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
@@ -861,6 +868,22 @@ var Index = &ice.Context{Name: "web", Help: "网页模块",
 			}
 
 			switch arg[0] {
+			case "catch":
+				if f, e := os.Open(arg[2]); m.Assert(e) {
+					defer f.Close()
+
+					h := kit.Hashs(f)
+					if o, p, e := kit.Create(path.Join(m.Conf(ice.WEB_CACHE, ice.Meta("path")), h[:2], h)); m.Assert(e) {
+						defer o.Close()
+						f.Seek(0, os.SEEK_SET)
+
+						if n, e := io.Copy(o, f); m.Assert(e) {
+							m.Log(ice.LOG_IMPORT, "%s: %s", kit.FmtSize(n), p)
+							arg = kit.Simple(arg[0], arg[1], path.Base(arg[2]), p, p, n)
+						}
+					}
+				}
+				fallthrough
 			case "upload", "download":
 				// 打开文件
 				if m.R != nil {
@@ -901,7 +924,7 @@ var Index = &ice.Context{Name: "web", Help: "网页模块",
 					kit.MDB_FILE, kit.Select("", arg, 4), kit.MDB_SIZE, size,
 				)
 				h := m.Rich(ice.WEB_CACHE, nil, data)
-				m.Info("cache: %s type: %s name: %s", h, arg[1], arg[2])
+				m.Log(ice.LOG_CREATE, "cache: %s %s: %s", h, arg[1], arg[2])
 
 				// 保存数据
 				if arg[0] == "add" && len(arg) == 4 {
@@ -960,9 +983,11 @@ var Index = &ice.Context{Name: "web", Help: "网页模块",
 
 			// head list data time text file
 			switch arg[0] {
+			case "catch":
+				fallthrough
 			case "add", "upload":
 				// 保存数据
-				if m.Richs(ice.WEB_CACHE, nil, arg[3], nil) == nil {
+				if m.Richs(ice.WEB_CACHE, nil, kit.Select("", arg, 3), nil) == nil {
 					m.Cmdy(ice.WEB_CACHE, arg)
 					arg = []string{arg[0], m.Append("type"), m.Append("name"), m.Append("data")}
 				}
@@ -978,7 +1003,7 @@ var Index = &ice.Context{Name: "web", Help: "网页模块",
 				list := m.Rich(ice.WEB_STORY, nil, kit.Dict(
 					"count", count+1, "scene", arg[1], "story", arg[2], "data", arg[3], "prev", prev,
 				))
-				m.Info("%s: %s story: %s", arg[1], arg[2], list)
+				m.Log(ice.LOG_CREATE, "story: %s %s: %s", list, arg[1], arg[2])
 				m.Push("list", list)
 
 				// 添加索引
@@ -1136,7 +1161,7 @@ var Index = &ice.Context{Name: "web", Help: "网页模块",
 					kit.MDB_TYPE, arg[1], kit.MDB_NAME, arg[2], kit.MDB_TEXT, arg[3],
 					"share", h,
 				))
-				m.Info("share: %s %s", h, extra)
+				m.Log(ice.LOG_CREATE, "share: %s extra: %s", h, kit.Format(extra))
 				m.Echo(h)
 			}
 		}},
@@ -1188,7 +1213,7 @@ var Index = &ice.Context{Name: "web", Help: "网页模块",
 				return
 			}
 
-			if s, e := websocket.Upgrade(m.W, m.R, nil, m.Confi(ice.WEB_SPACE, "meta.buffer"), m.Confi(ice.WEB_SPACE, "meta.buffer")); m.Assert(e) {
+			if s, e := websocket.Upgrade(m.W, m.R, nil, m.Confi(ice.WEB_SPACE, "meta.buffer.r"), m.Confi(ice.WEB_SPACE, "meta.buffer.w")); m.Assert(e) {
 				// 共享空间
 				share := m.Option("share")
 				if m.Richs(ice.WEB_SHARE, nil, share, nil) == nil {
@@ -1200,17 +1225,16 @@ var Index = &ice.Context{Name: "web", Help: "网页模块",
 					kit.MDB_TYPE, m.Option("node"),
 					kit.MDB_NAME, m.Option("name"),
 					kit.MDB_USER, m.Option("user"),
-					"share", share,
-					"socket", s,
+					"share", share, "socket", s,
 				))
-				m.Info("space: %s", m.Option(kit.MDB_NAME))
+				m.Log(ice.LOG_CREATE, "space: %s share: %s", m.Option(kit.MDB_NAME), share)
 
 				m.Gos(m, func(m *ice.Message) {
 					// 监听消息
 					m.Event(ice.SPACE_START, m.Option("node"), m.Option("name"))
-					m.Target().Server().(*Frame).HandleWSS(m, false, s)
+					m.Target().Server().(*Frame).HandleWSS(m, false, s, m.Option("name"))
+					m.Log(ice.LOG_CLOSE, "%s: %s", m.Option(kit.MDB_NAME), kit.Format(m.Confv(ice.WEB_SPACE, kit.Keys(kit.MDB_HASH, h))))
 					m.Event(ice.SPACE_CLOSE, m.Option("node"), m.Option("name"))
-					m.Log("close", "%s: %s", m.Option(kit.MDB_NAME), kit.Format(m.Confv(ice.WEB_SPACE, kit.Keys(kit.MDB_HASH, h))))
 					m.Confv(ice.WEB_SPACE, kit.Keys(kit.MDB_HASH, h), "")
 				})
 

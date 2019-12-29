@@ -1,7 +1,5 @@
 #! /bin/sh
 
-ice_sh=${ice_sh:="ice.sh"}
-
 prepare() {
     [ -f main.go ] || cat >> main.go <<END
 package main
@@ -20,41 +18,56 @@ END
 
     [ -f go.mod ] || go mod init ${PWD##**/}
 
-    [ -f ${ice_sh} ] || cat >> ${ice_sh} <<END
+    [ -f Makefile ] || cat >> Makefile <<END
+all:
+	go build -o ice.bin main.go && chmod u+x ice.bin && ./ice.sh restart
+END
+
+    [ -f ice.sh ] || cat >> ice.sh <<END
 #! /bin/sh
 
-export PATH=\${PWD}/bin:\${PWD}:\$PATH
+export PATH=\${PWD}:\$PATH
+export ctx_pid=var/run/ice.pid
+
 prepare() {
-    which ice.bin && return
-    curl -s https://shylinux.com/publish/ice.bin -o bin/ice.bin
+    [ -e ice.sh ] || curl \$ctx_dev/publish/ice.sh -o ice.sh && chmod u+x ice.sh
+    [ -e ice.bin ] && chmod u+x ice.bin && return
+
+    bin="ice"
+    case \`uname -s\` in
+        Darwin) bin=\${bin}.darwin ;;
+        Linux) bin=\${bin}.linux ;;
+        *) bin=\${bin}.windows ;;
+    esac
+    case \`uname -m\` in
+        x86_64) bin=\${bin}.amd64 ;;
+        i686) bin=\${bin}.386 ;;
+        arm*) bin=\${bin}.arm ;;
+    esac
+    curl \$ctx_dev/publish/\${bin} -o ice.bin && chmod u+x ice.bin
  }
 start() {
-    prepare && while true; do
+    prepare && shutdown && while true; do
         date && ice.bin \$@ 2>boot.log && echo -e "\n\nrestarting..." || break
     done
 }
 restart() {
-    kill -2 \`cat var/run/shy.pid\`
+    [ -e \$ctx_pid ] && kill -2 \`cat \$ctx_pid\` || echo
 }
 shutdown() {
-    kill -3 \`cat var/run/shy.pid\`
+    [ -e \$ctx_pid ] && kill -3 \`cat \$ctx_pid\` || echo
 }
 
-cmd=\$1 && shift
-[ -z "\$cmd" ] && cmd=start
+cmd=\$1 && [ -n "\$cmd" ] && shift || cmd=start
 \$cmd \$*
 END
-    chmod u+x ${ice_sh}
-
-    [ -f Makefile ] || cat >> Makefile <<END
-all:
-	go build -o bin/ice.bin main.go && chmod u+x bin/ice.bin && ./${ice_sh} restart
-END
+    chmod u+x ice.sh
 }
 
 build() {
-    [ "$1" != "" ] && mkdir $1 && cd $1
-    prepare && go build -o bin/ice.bin main.go && chmod u+x bin/ice.bin && ./${ice_sh}
+    miss=./ && [ "$1" != "" ] && miss=$1 && shift && mkdir $miss
+    cd $miss && prepare && go build -o ice.bin main.go && chmod u+x ice.bin && ./ice.sh start
 }
 
-build $*
+cmd=build && [ "$1" != "" ] && cmd=$1 && shift
+$cmd $*

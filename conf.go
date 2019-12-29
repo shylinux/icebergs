@@ -62,26 +62,40 @@ const ( // WEB
 	WEB_PROXY = "proxy"
 	WEB_GROUP = "group"
 	WEB_LABEL = "label"
+
+	WEB_MASTER = "master"
+	WEB_MYSELF = "myself"
+	WEB_SERVER = "server"
+	WEB_WORKER = "worker"
 )
 const ( // LOG
+	LOG_ENABLE = "enable"
+	LOG_IMPORT = "import"
+	LOG_CREATE = "create"
+	LOG_INSERT = "insert"
+	LOG_EXPORT = "export"
+
+	LOG_LISTEN = "listen"
+	LOG_SIGNAL = "signal"
+	LOG_TIMERS = "timers"
+	LOG_EVENTS = "events"
+
+	LOG_BEGIN = "begin"
+	LOG_START = "start"
+	LOG_SERVE = "serve"
+	LOG_CLOSE = "close"
+
 	LOG_CMDS  = "cmds"
 	LOG_COST  = "cost"
 	LOG_INFO  = "info"
 	LOG_WARN  = "warn"
 	LOG_ERROR = "error"
 	LOG_TRACE = "trace"
-
-	LOG_BEGIN = "begin"
-	LOG_START = "start"
-	LOG_BENCH = "bench"
-	LOG_CLOSE = "close"
 )
 const ( // GDB
 	GDB_SIGNAL = "signal"
 	GDB_TIMER  = "timer"
 	GDB_EVENT  = "event"
-
-	SYSTEM_INIT = "system.init"
 
 	SERVE_START = "serve.start"
 	SERVE_CLOSE = "serve.close"
@@ -181,4 +195,8 @@ var Alias = map[string]string{
 
 	APP_NOTE: "web.wiki.note",
 	APP_MISS: "web.team.miss",
+
+	"compile": "web.code.compile",
+	"publish": "web.code.publish",
+	"upgrade": "web.code.upgrade",
 }

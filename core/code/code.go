@@ -189,7 +189,9 @@ var Index = &ice.Context{Name: "code", Help: "编程模块",
 				m.Cmdy("login", "exit")
 			case "upload":
 				// 缓存文件
-				msg := m.Cmd(ice.WEB_CACHE, "upload")
+				you := m.Option("you")
+				m.Option("you", "")
+				msg := m.Cmd(ice.WEB_STORY, "upload")
 				m.Echo("data: %s\n", msg.Append("data"))
 				m.Echo("time: %s\n", msg.Append("time"))
 				m.Echo("type: %s\n", msg.Append("type"))
@@ -198,6 +200,7 @@ var Index = &ice.Context{Name: "code", Help: "编程模块",
 				m.Push("_output", "result")
 
 				// 下发文件
+				m.Option("you", you)
 				m.Cmd(ice.WEB_SPACE, msg.Option("you"), ice.WEB_SPACE, "download", msg.Append("type"), msg.Append("name"), "self", msg.Append("data"))
 
 			case "download":

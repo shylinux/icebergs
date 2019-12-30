@@ -739,7 +739,7 @@ var Index = &ice.Context{Name: "web", Help: "网页模块",
 
 			if len(arg) > 0 {
 				// 规范命名
-				if !strings.Contains(arg[0], "-") {
+				if !strings.Contains(arg[0], "-") || !strings.HasPrefix(arg[0], "20") {
 					arg[0] = m.Time("20060102-") + arg[0]
 				}
 
@@ -1256,6 +1256,8 @@ var Index = &ice.Context{Name: "web", Help: "网页模块",
 			}
 
 			if s, e := websocket.Upgrade(m.W, m.R, nil, m.Confi(ice.WEB_SPACE, "meta.buffer.r"), m.Confi(ice.WEB_SPACE, "meta.buffer.w")); m.Assert(e) {
+				m.Option("name", strings.Replace(m.Option("name"), ".", "_", -1))
+
 				// 共享空间
 				share := m.Option("share")
 				if m.Richs(ice.WEB_SHARE, nil, share, nil) == nil {

@@ -190,6 +190,12 @@ func (m *Message) Format(key interface{}) string {
 			return kit.FmtTime(kit.Int64(time.Now().Sub(m.time)))
 		case "meta":
 			return kit.Format(m.meta)
+		case "append":
+			if len(m.meta["append"]) == 0 {
+				return fmt.Sprintf("%dx%d %s", 0, len(m.meta["append"]), kit.Format(m.meta["append"]))
+			} else {
+				return fmt.Sprintf("%dx%d %s", len(m.meta[m.meta["append"][0]]), len(m.meta["append"]), kit.Format(m.meta["append"]))
+			}
 		case "time":
 			return m.Time()
 		case "ship":

@@ -47,7 +47,7 @@ prepare() {
     curl \$ctx_dev/publish/\${bin} -o ice.bin && chmod u+x ice.bin
  }
 start() {
-    while true; do
+    trap HUP hup && while true; do
         date && ice.bin \$@ 2>boot.log && echo -e "\n\nrestarting..." || break
     done
 }

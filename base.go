@@ -38,7 +38,9 @@ func (f *Frame) Start(m *Message, arg ...string) bool {
 	return true
 }
 func (f *Frame) Close(m *Message, arg ...string) bool {
-	m.target.wg.Wait()
+	m.TryCatch(m, true, func(m *Message) {
+		m.target.wg.Wait()
+	})
 	list := map[*Context]*Message{m.target: m}
 	m.Travel(func(p *Context, s *Context) {
 		if msg, ok := list[p]; ok && msg != nil {

@@ -339,6 +339,9 @@ func (m *Message) Set(key string, arg ...string) *Message {
 	return m.Add(key, arg...)
 }
 func (m *Message) Copy(msg *Message) *Message {
+	if msg == nil {
+		return m
+	}
 	for _, k := range msg.meta[MSG_APPEND] {
 		if kit.IndexOf(m.meta[MSG_APPEND], k) == -1 {
 			m.meta[MSG_APPEND] = append(m.meta[MSG_APPEND], k)

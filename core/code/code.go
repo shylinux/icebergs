@@ -57,7 +57,7 @@ var Index = &ice.Context{Name: "code", Help: "编程模块",
 		"compile": {Name: "compile", Help: "编译", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			if len(arg) == 0 {
 				// 目录列表
-				m.Cmdy("nfs.dir", "", m.Conf("publish", "meta.path"))
+				m.Cmdy("nfs.dir", "", m.Conf("publish", "meta.path"), "time size path")
 				return
 			}
 
@@ -80,7 +80,7 @@ var Index = &ice.Context{Name: "code", Help: "编程模块",
 		"publish": {Name: "publish", Help: "发布", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			if len(arg) == 0 {
 				// 目录列表
-				m.Cmdy("nfs.dir", "", m.Conf("publish", "meta.path"))
+				m.Cmdy("nfs.dir", "", m.Conf("publish", "meta.path"), "time size path")
 				return
 			}
 

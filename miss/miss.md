@@ -14,9 +14,17 @@ cli模块用于与系统进行交互。
 - 系统信息 ice.CLI_RUNTIME
 - 系统命令 ice.CLI_SYSTEM
 
+## 文件模块 base/nfs
+
+nfs模块用于管理文件的读写。
+
 ## 终端模块 base/ssh
 
 ssh模块用于与终端交互。
+
+## 数据模块 base/mdb
+
+mdb模块用于管理数据的读写。
 
 ## 日志模块 base/log
 

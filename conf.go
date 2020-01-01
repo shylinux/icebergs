@@ -151,6 +151,19 @@ const ( // FAVOR
 	FAVOR_TMUX  = "tmux.init"
 	FAVOR_RIVER = "river.init"
 )
+const ( // FAVOR
+	STORY_CATCH   = "catch"
+	STORY_WATCH   = "watch"
+	STORY_STATUS  = "status"
+	STORY_COMMIT  = "commit"
+	STORY_BRANCH  = "branch"
+	STORY_HISTORY = "history"
+
+	STORY_PULL     = "pull"
+	STORY_PUSH     = "push"
+	STORY_UPLOAD   = "upload"
+	STORY_DOWNLOAD = "download"
+)
 
 var Alias = map[string]string{
 	CTX_CONFIG:  "ctx.config",

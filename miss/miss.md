@@ -6,6 +6,10 @@ icebergs是一个后端框架，通过模块化、集群化实现资源的无限
 ```
 mkdir miss; cd miss && curl -s https://shylinux.com/publish/build.sh | sh
 ```
+一键启动项目
+```
+mkdir miss; cd miss && curl -s https://shylinux.com/publish/ice.sh | sh
+```
 
 ## 命令模块 base/cli
 

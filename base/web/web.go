@@ -229,7 +229,7 @@ func (web *Frame) HandleCmd(m *ice.Message, key string, cmd *ice.Command) {
 					w.Header().Set("Content-Type", kit.Select("text/html", msg.Append("type")))
 					http.ServeFile(w, r, msg.Append("file"))
 				case "qrcode":
-					if qr, e := qrcode.New(msg.Append("qrcode"), qrcode.Medium); m.Assert(e) {
+					if qr, e := qrcode.New(msg.Result(), qrcode.Medium); m.Assert(e) {
 						w.Header().Set("Content-Type", "image/png")
 						m.Assert(qr.Write(256, w))
 					}
@@ -478,7 +478,7 @@ var Index = &ice.Context{Name: "web", Help: "网页模块",
 					// 请求数据
 					head := map[string]string{}
 					body, ok := m.Optionv("body").(io.Reader)
-					if !ok && len(arg) > 0 {
+					if !ok && len(arg) > 0 && method != "GET" {
 						switch arg[0] {
 						case "file":
 							if f, e := os.Open(arg[1]); m.Warn(e != nil, "%s", e) {
@@ -526,6 +526,7 @@ var Index = &ice.Context{Name: "web", Help: "网页模块",
 								head["Content-Type"] = "application/json"
 								body = bytes.NewBuffer(b)
 							}
+							m.Log(ice.LOG_EXPORT, "json: %s", kit.Format(data))
 						}
 						arg = arg[:0]
 					}
@@ -1430,7 +1431,7 @@ var Index = &ice.Context{Name: "web", Help: "网页模块",
 
 					case "qrcode":
 						m.Push("_output", "qrcode")
-						m.Push("qrcode", value["text"])
+						m.Echo("%s", value["text"])
 
 					default:
 						if m.Cmdy(ice.WEB_STORY, "index", value["data"]); m.Append("file") != "" {

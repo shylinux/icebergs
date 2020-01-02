@@ -71,6 +71,7 @@ const ( // WEB
 const ( // LOG
 	LOG_ENABLE = "enable"
 	LOG_IMPORT = "import"
+	LOG_MODIFY = "modify"
 	LOG_CREATE = "create"
 	LOG_INSERT = "insert"
 	LOG_EXPORT = "export"
@@ -97,6 +98,8 @@ const ( // GDB
 	GDB_TIMER  = "timer"
 	GDB_EVENT  = "event"
 
+	SYSTEM_INIT = "system.init"
+
 	SERVE_START = "serve.start"
 	SERVE_CLOSE = "serve.close"
 	SPACE_START = "space.start"
@@ -105,6 +108,7 @@ const ( // GDB
 	DREAM_CLOSE = "dream.close"
 
 	USER_CREATE = "user.create"
+	MISS_CREATE = "miss.create"
 )
 const ( // MDB
 	MDB_REDIS  = "redis"
@@ -137,6 +141,7 @@ const ( // TYPE
 	TYPE_RIVER = "river"
 	TYPE_STORM = "storm"
 
+	TYPE_DRIVE = "drive"
 	TYPE_STORY = "story"
 	TYPE_SHELL = "shell"
 	TYPE_VIMRC = "vimrc"
@@ -148,6 +153,20 @@ const ( // FAVOR
 	FAVOR_CHAT  = "chat.init"
 	FAVOR_TMUX  = "tmux.init"
 	FAVOR_RIVER = "river.init"
+	FAVOR_START = "favor.start"
+)
+const ( // STORY
+	STORY_CATCH   = "catch"
+	STORY_WATCH   = "watch"
+	STORY_STATUS  = "status"
+	STORY_COMMIT  = "commit"
+	STORY_BRANCH  = "branch"
+	STORY_HISTORY = "history"
+
+	STORY_PULL     = "pull"
+	STORY_PUSH     = "push"
+	STORY_UPLOAD   = "upload"
+	STORY_DOWNLOAD = "download"
 )
 
 var Alias = map[string]string{

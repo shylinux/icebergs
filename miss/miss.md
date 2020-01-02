@@ -2,9 +2,53 @@
 
 icebergs是一个后端框架，通过模块化、集群化实现资源的无限的扩展与自由的组合。
 
+{{chain "icebergs" `
+icebergs
+    type.go
+        msg.Detail
+        msg.Option
+        msg.Append
+        msg.Result
+        msg.Travel
+        msg.Search
+        msg.Conf
+        msg.Cmd
+        msg.Cap
+    base.go bg blue
+        Begin
+        _init
+        Start bg red
+            code
+            wiki
+            chat
+                ocean
+                river
+                action
+                storm
+                steam
+            team
+            mall
+        _exit
+        Close
+    conf.go
+        init
+        host
+        boot
+        node
+        user
+        work
+        auth
+        data
+        file
+` "" "" 16}}
+
 一键创建项目
 ```
 mkdir miss; cd miss && curl -s https://shylinux.com/publish/build.sh | sh
+```
+一键启动项目
+```
+mkdir miss; cd miss && curl -s https://shylinux.com/publish/ice.sh | sh
 ```
 
 ## 命令模块 base/cli
@@ -14,9 +58,21 @@ cli模块用于与系统进行交互。
 - 系统信息 ice.CLI_RUNTIME
 - 系统命令 ice.CLI_SYSTEM
 
+## 网络模块 base/tcp
+
+tcp模块用于管理网络的读写
+
+## 文件模块 base/nfs
+
+nfs模块用于管理文件的读写。
+
 ## 终端模块 base/ssh
 
 ssh模块用于与终端交互。
+
+## 数据模块 base/mdb
+
+mdb模块用于管理数据的读写。
 
 ## 日志模块 base/log
 

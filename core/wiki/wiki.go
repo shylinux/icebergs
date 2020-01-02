@@ -143,7 +143,7 @@ var Index = &ice.Context{Name: "wiki", Help: "文档模块",
 			// 生成文章
 			buffer := bytes.NewBuffer([]byte{})
 			f := m.Target().Server().(*web.Frame)
-			tmpl := f.HandleCGI(m, m.Confm("note", ice.Meta("alias")), path.Join(m.Conf("note", ice.Meta("path")), arg[0]))
+			tmpl := f.HandleCGI(m, m.Confm("note", ice.Meta("alias")), arg[0])
 			m.Assert(tmpl.ExecuteTemplate(buffer, m.Option("filename", path.Base(arg[0])), m))
 
 			// 缓存文章
@@ -158,8 +158,8 @@ var Index = &ice.Context{Name: "wiki", Help: "文档模块",
 			m.Echo(string(markdown.ToHTML(buffer.Bytes(), nil, nil)))
 		}},
 		"_tree": {Name: "_tree path", Help: "文库", Hand: func(m *ice.Message, c *ice.Context, key string, arg ...string) {
-			m.Cmdy("nfs.dir", m.Conf("note", ice.Meta("path")),
-				kit.Select("", arg, 0), m.Conf("note", ice.Meta("head")))
+			m.Cmdy("nfs.dir", m.Conf("note", "meta.path"),
+				kit.Select("", arg, 0), m.Conf("note", "meta.head"))
 		}},
 		"note": {Name: "note file", Help: "笔记", Meta: map[string]interface{}{
 			"remote": "you", "display": "inner",
@@ -179,6 +179,9 @@ var Index = &ice.Context{Name: "wiki", Help: "文档模块",
 					m.Cmdy(arg)
 				}
 				return
+			}
+			if len(arg) > 0 && strings.HasSuffix(arg[0], ".md") {
+				arg[0] = path.Join(m.Conf("note", "meta.path"), arg[0])
 			}
 			m.Cmdy(kit.Select("_tree", "_text", len(arg) > 0 && strings.HasSuffix(arg[0], ".md")), arg)
 		}},

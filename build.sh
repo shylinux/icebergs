@@ -20,6 +20,8 @@ END
 
     [ -f Makefile ] || cat >> Makefile <<END
 all:
+    @echo
+    @date
 	go build -o ice.bin main.go && chmod u+x ice.bin && ./ice.sh restart
 END
 
@@ -27,7 +29,8 @@ END
 #! /bin/sh
 
 export PATH=\${PWD}:\$PATH
-export ctx_pid=var/run/ice.pid
+export ctx_pid=\${ctx_pid:=var/run/ice.pid}
+export ctx_log=\${ctx_log:=boot.log}
 
 prepare() {
     [ -e ice.sh ] || curl \$ctx_dev/publish/ice.sh -o ice.sh && chmod u+x ice.sh
@@ -47,9 +50,12 @@ prepare() {
     curl \$ctx_dev/publish/\${bin} -o ice.bin && chmod u+x ice.bin
  }
 start() {
-    prepare && shutdown && while true; do
-        date && ice.bin \$@ 2>boot.log && echo -e "\n\nrestarting..." || break
+    trap HUP hup && while true; do
+        date && ice.bin \$@ 2>\$ctx_log && echo -e "\n\nrestarting..." || break
     done
+}
+serve() {
+    prepare && shutdown && start \$@
 }
 restart() {
     [ -e \$ctx_pid ] && kill -2 \`cat \$ctx_pid\` || echo
@@ -58,7 +64,7 @@ shutdown() {
     [ -e \$ctx_pid ] && kill -3 \`cat \$ctx_pid\` || echo
 }
 
-cmd=\$1 && [ -n "\$cmd" ] && shift || cmd=start
+cmd=\$1 && [ -n "\$cmd" ] && shift || cmd=serve
 \$cmd \$*
 END
     chmod u+x ice.sh
@@ -66,7 +72,7 @@ END
 
 build() {
     miss=./ && [ "$1" != "" ] && miss=$1 && shift && mkdir $miss
-    cd $miss && prepare && go build -o ice.bin main.go && chmod u+x ice.bin && ./ice.sh start
+    cd $miss && prepare && go build -o ice.bin main.go && chmod u+x ice.bin && ./ice.sh start serve dev
 }
 
 cmd=build && [ "$1" != "" ] && cmd=$1 && shift

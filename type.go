@@ -190,6 +190,12 @@ func (m *Message) Format(key interface{}) string {
 			return kit.FmtTime(kit.Int64(time.Now().Sub(m.time)))
 		case "meta":
 			return kit.Format(m.meta)
+		case "append":
+			if len(m.meta["append"]) == 0 {
+				return fmt.Sprintf("%dx%d %s", 0, len(m.meta["append"]), kit.Format(m.meta["append"]))
+			} else {
+				return fmt.Sprintf("%dx%d %s", len(m.meta[m.meta["append"][0]]), len(m.meta["append"]), kit.Format(m.meta["append"]))
+			}
 		case "time":
 			return m.Time()
 		case "ship":
@@ -279,6 +285,8 @@ func (m *Message) Spawn(arg ...interface{}) *Message {
 
 		source: m.target,
 		target: m.target,
+		R:      m.R,
+		W:      m.W,
 	}
 
 	if len(arg) > 0 {
@@ -331,6 +339,9 @@ func (m *Message) Set(key string, arg ...string) *Message {
 	return m.Add(key, arg...)
 }
 func (m *Message) Copy(msg *Message) *Message {
+	if msg == nil {
+		return m
+	}
 	for _, k := range msg.meta[MSG_APPEND] {
 		if kit.IndexOf(m.meta[MSG_APPEND], k) == -1 {
 			m.meta[MSG_APPEND] = append(m.meta[MSG_APPEND], k)

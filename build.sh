@@ -20,6 +20,8 @@ END
 
     [ -f Makefile ] || cat >> Makefile <<END
 all:
+    @echo
+    @date
 	go build -o ice.bin main.go && chmod u+x ice.bin && ./ice.sh restart
 END
 
@@ -27,7 +29,8 @@ END
 #! /bin/sh
 
 export PATH=\${PWD}:\$PATH
-export ctx_pid=var/run/ice.pid
+export ctx_pid=\${ctx_pid:=var/run/ice.pid}
+export ctx_log=\${ctx_log:=boot.log}
 
 prepare() {
     [ -e ice.sh ] || curl \$ctx_dev/publish/ice.sh -o ice.sh && chmod u+x ice.sh
@@ -48,7 +51,7 @@ prepare() {
  }
 start() {
     trap HUP hup && while true; do
-        date && ice.bin \$@ 2>boot.log && echo -e "\n\nrestarting..." || break
+        date && ice.bin \$@ 2>\$ctx_log && echo -e "\n\nrestarting..." || break
     done
 }
 serve() {

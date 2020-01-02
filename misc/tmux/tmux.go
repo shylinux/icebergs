@@ -55,6 +55,7 @@ var Index = &ice.Context{Name: "tmux", Help: "终端模块",
 		ice.ICE_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			m.Watch(ice.SYSTEM_INIT, "cli.tmux.init")
 			m.Watch(ice.DREAM_START, "cli.tmux.auto")
+			m.Watch(ice.FAVOR_START, "cli.tmux.auto")
 		}},
 		ice.ICE_EXIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 		}},
@@ -234,6 +235,13 @@ var Index = &ice.Context{Name: "tmux", Help: "终端模块",
 		}},
 		"auto": {Name: "auto", Help: "终端", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			prefix := []string{"cli.system", "tmux"}
+			if arg[0] == "" {
+				m.Cmd("cli.tmux.session").Table(func(index int, value map[string]string, head []string) {
+					if value["tag"] == "1" {
+						arg[0] = value["session"]
+					}
+				})
+			}
 
 			m.Option("cmd_env", "TMUX", "")
 			m.Option("cmd_dir", path.Join(m.Conf(ice.WEB_DREAM, "meta.path"), arg[0]))

@@ -174,6 +174,9 @@ var Index = &ice.Context{Name: "chat", Help: "聊天中心",
 					))
 					m.Log("insert", "storm: %s %d: %v", arg[1], id, arg[i:i+4])
 				}
+			case "share":
+				m.Cmdy(ice.WEB_SHARE, "add", arg[3:])
+
 			case "rename":
 				// 重命名应用
 				old := m.Conf(ice.CHAT_RIVER, kit.Keys(prefix, kit.MDB_HASH, arg[1], kit.MDB_META, kit.MDB_NAME))

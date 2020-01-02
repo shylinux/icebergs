@@ -12,10 +12,20 @@ import (
 var Index = &ice.Context{Name: "team", Help: "团队模块",
 	Caches: map[string]*ice.Cache{},
 	Configs: map[string]*ice.Config{
-		ice.APP_MISS: {Name: "miss", Help: "任务", Value: kit.Data()},
+		ice.APP_MISS: {Name: "miss", Help: "任务", Value: kit.Data(
+			"mis", []interface{}{"已取消", "准备中", "开发中", "测试中", "发布中", "已完成"}, "fsm", kit.Dict(
+				"准备中", kit.Dict("next", "开发中"),
+				"开发中", kit.Dict("next", "测试中", "prev", "准备中"),
+				"测试中", kit.Dict("next", "发布中", "prev", "开发中"),
+				"发布中", kit.Dict("next", "已完成", "prev", "测试中"),
+				"已完成", kit.Dict(),
+				"已取消", kit.Dict(),
+			),
+		)},
 	},
 	Commands: map[string]*ice.Command{
 		ice.ICE_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			m.Watch(ice.MISS_CREATE, ice.APP_MISS)
 			m.Cmd(ice.CTX_CONFIG, "load", "team.json")
 		}},
 		ice.ICE_EXIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
@@ -27,8 +37,11 @@ var Index = &ice.Context{Name: "team", Help: "团队模块",
 				switch arg[1] {
 				case "modify":
 					// 修改任务
-					m.Grows(ice.APP_MISS, nil, "id", arg[0], func(index int, value map[string]interface{}) {
-						value[arg[2]] = arg[3]
+					m.Richs(ice.WEB_FAVOR, nil, m.Option("hot"), func(key string, value map[string]interface{}) {
+						m.Grows(ice.WEB_FAVOR, kit.Keys("hash", key), "id", arg[0], func(index int, value map[string]interface{}) {
+							m.Log(ice.LOG_MODIFY, "%s: %s->%s", arg[2], arg[4], arg[3])
+							kit.Value(value, arg[2], arg[3])
+						})
 					})
 					arg = arg[:0]
 				}
@@ -36,22 +49,19 @@ var Index = &ice.Context{Name: "team", Help: "团队模块",
 
 			if len(arg) == 0 {
 				// 任务列表
-				m.Grows(ice.APP_MISS, nil, "", "", func(index int, value map[string]interface{}) {
-					m.Push(kit.Format(index), value, []string{"begin_time", "close_time", "status", "id", "type", "name", "text"})
+				m.Richs(ice.WEB_FAVOR, nil, m.Option("hot"), func(key string, value map[string]interface{}) {
+					m.Grows(ice.WEB_FAVOR, kit.Keys("hash", key), "", "", func(index int, value map[string]interface{}) {
+						m.Push(kit.Format(index), value, []string{"extra.begin_time", "extra.close_time", "extra.status", "id", "type", "name", "text"})
+					})
 				})
 				return
 			}
 
 			// 添加任务
-			h := m.Grow(ice.APP_MISS, nil, kit.Dict(
-				kit.MDB_NAME, arg[0],
-				kit.MDB_TYPE, kit.Select("开发", arg, 1),
-				kit.MDB_TEXT, kit.Select("功能开发", arg, 2),
-				"status", kit.Select("准备中", arg, 3),
+			m.Cmdy(ice.WEB_FAVOR, kit.Select("miss", m.Option("hot")), ice.TYPE_DRIVE, arg[0], arg[1],
 				"begin_time", m.Time(), "close_time", m.Time(),
-			))
-			m.Info("miss: %d", h)
-			m.Echo("%d", h)
+				"status", kit.Select("准备中", arg, 3),
+			)
 		}},
 		"date": {Name: "date", Help: "日历", Hand: func(m *ice.Message, c *ice.Context, key string, arg ...string) {
 			show := map[int]string{0: "周日", 1: "周一", 2: "周二", 3: "周三", 4: "周四", 5: "周五", 6: "周六"}
@@ -107,49 +117,45 @@ var Index = &ice.Context{Name: "team", Help: "团队模块",
 			"detail", []string{"回退", "前进", "取消", "完成"},
 		), Hand: func(m *ice.Message, c *ice.Context, key string, arg ...string) {
 			if len(arg) > 0 {
-				m.Grows(ice.APP_MISS, nil, "id", arg[0], func(index int, value map[string]interface{}) {
-					switch value["status"] {
-					case "准备中":
-						switch arg[1] {
-						case "开始":
-							value["status"] = "进行中"
-							value["begin_time"] = m.Time()
-							value["close_time"] = m.Time("30m")
+				m.Richs(ice.WEB_FAVOR, nil, m.Option("hot"), func(key string, value map[string]interface{}) {
+					m.Grows(ice.WEB_FAVOR, kit.Keys("hash", key), "id", arg[0], func(index int, value map[string]interface{}) {
+						switch value = value["extra"].(map[string]interface{}); arg[1] {
+						case "前进":
+							if value["status"] == "准备中" {
+								value["begin_time"] = m.Time()
+								value["close_time"] = m.Time("30m")
+							}
+							if next := m.Conf(ice.APP_MISS, kit.Keys("meta.fsm", value["status"], "next")); next != "" {
+								value["status"] = next
+							}
+
+						case "回退":
+							if prev := m.Conf(ice.APP_MISS, kit.Keys("meta.fsm", value["status"], "prev")); prev != "" {
+								value["status"] = prev
+							}
+
 						case "取消":
 							value["status"] = "已取消"
 							value["close_time"] = m.Time()
+
 						case "完成":
 							value["status"] = "已完成"
 							value["close_time"] = m.Time()
 						}
-					case "进行中":
-						switch arg[1] {
-						case "准备":
-							value["status"] = "准备中"
-							value["begin_time"] = m.Time()
-							value["close_time"] = m.Time()
-						case "取消":
-							value["status"] = "已取消"
-							value["close_time"] = m.Time()
-						case "完成":
-							value["status"] = "已完成"
-							value["close_time"] = m.Time()
-						}
-					}
+					})
 				})
 			}
 
-			m.Push("准备中", "")
-			m.Push("开发中", "")
-			m.Push("测试中", "")
-			m.Push("发布中", "")
-			m.Push("已取消", "")
-			m.Push("已完成", "")
-			m.Grows(ice.APP_MISS, nil, "", "", func(index int, value map[string]interface{}) {
-				m.Push(kit.Format(value["status"]),
-					kit.Format(`<span title="%v" data-id="%v">%v</span>`,
-						kit.Format("%s-%s\n%s", value["begin_time"], value["close_time"], value["text"]),
-						value["id"], value["name"]))
+			m.Confm(ice.APP_MISS, "meta.mis", func(index int, value string) {
+				m.Push(value, "")
+			})
+			m.Richs(ice.WEB_FAVOR, nil, m.Option("hot"), func(key string, value map[string]interface{}) {
+				m.Grows(ice.WEB_FAVOR, kit.Keys("hash", key), "", "", func(index int, value map[string]interface{}) {
+					m.Push(kit.Format(kit.Value(value, "extra.status")),
+						kit.Format(`<span title="%v" data-id="%v">%v</span>`,
+							kit.Format("%s-%s\n%s", kit.Value(value, "extra.begin_time"), kit.Value(value, "extra.close_time"), value["text"]),
+							value["id"], value["name"]))
+				})
 			})
 		}},
 	},

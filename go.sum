@@ -6,4 +6,6 @@ github.com/shylinux/toolkits v0.0.0-20191225132906-3c11db083b5b h1:BXDEMcpHmwuwo
 github.com/shylinux/toolkits v0.0.0-20191225132906-3c11db083b5b/go.mod h1:Y68Ot6xOmo1bun67YvqC3chDGeU2gDxtsUnvVDGJm4g=
 github.com/shylinux/toolkits v0.1.0 h1:7ghnVEjuwLf7zBsyeR37ahm2gaOKIyjSw9F9Pp9oTBU=
 github.com/shylinux/toolkits v0.1.0/go.mod h1:Y68Ot6xOmo1bun67YvqC3chDGeU2gDxtsUnvVDGJm4g=
+github.com/skip2/go-qrcode v0.0.0-20191027152451-9434209cb086 h1:RYiqpb2ii2Z6J4x0wxK46kvPBbFuZcdhS+CIztmYgZs=
+github.com/skip2/go-qrcode v0.0.0-20191027152451-9434209cb086/go.mod h1:PLPIyL7ikehBD1OAjmKKiOEhbvWyHGaNDjquXMcYABo=
 golang.org/dl v0.0.0-20190829154251-82a15e2f2ead/go.mod h1:IUMfjQLJQd4UTqG1Z90tenwKoCX93Gn3MAQJMOSBsDQ=

@@ -4,6 +4,7 @@ import (
 	"github.com/gorilla/websocket"
 	"github.com/shylinux/icebergs"
 	"github.com/shylinux/toolkits"
+	"github.com/skip2/go-qrcode"
 
 	"bytes"
 	"encoding/json"
@@ -227,6 +228,11 @@ func (web *Frame) HandleCmd(m *ice.Message, key string, cmd *ice.Command) {
 					w.Header().Set("Content-Disposition", fmt.Sprintf("filename=%s", kit.Select(msg.Append("name"), msg.Append("story"))))
 					w.Header().Set("Content-Type", kit.Select("text/html", msg.Append("type")))
 					http.ServeFile(w, r, msg.Append("file"))
+				case "qrcode":
+					if qr, e := qrcode.New(msg.Append("qrcode"), qrcode.Medium); m.Assert(e) {
+						w.Header().Set("Content-Type", "image/png")
+						m.Assert(qr.Write(256, w))
+					}
 				case "result":
 					w.Header().Set("Content-Type", kit.Select("text/html", msg.Append("type")))
 					fmt.Fprint(w, msg.Result())
@@ -363,7 +369,11 @@ var Index = &ice.Context{Name: "web", Help: "网页模块",
 		)},
 		ice.WEB_FAVOR: {Name: "favor", Help: "收藏夹", Value: kit.Data(kit.MDB_SHORT, kit.MDB_NAME)},
 		ice.WEB_CACHE: {Name: "cache", Help: "缓存池", Value: kit.Data(kit.MDB_SHORT, "text", "path", "var/file", "store", "var/data", "limit", "30", "least", "10")},
-		ice.WEB_STORY: {Name: "story", Help: "故事会", Value: kit.Dict(kit.MDB_META, kit.Dict(kit.MDB_SHORT, "data"), "head", kit.Data(kit.MDB_SHORT, "story"))},
+		ice.WEB_STORY: {Name: "story", Help: "故事会", Value: kit.Dict(
+			kit.MDB_META, kit.Dict(kit.MDB_SHORT, "data"),
+			"head", kit.Data(kit.MDB_SHORT, "story"),
+			"mime", kit.Dict("md", "txt"),
+		)},
 		ice.WEB_SHARE: {Name: "share", Help: "共享链", Value: kit.Data("template", share_template)},
 		ice.WEB_ROUTE: {Name: "route", Help: "路由", Value: kit.Data()},
 		ice.WEB_PROXY: {Name: "proxy", Help: "代理", Value: kit.Data()},
@@ -785,6 +795,7 @@ var Index = &ice.Context{Name: "web", Help: "网页模块",
 			m.Sort("name")
 			m.Sort("status")
 		}},
+
 		ice.WEB_FAVOR: {Name: "favor", Help: "收藏夹", Meta: kit.Dict("remote", "you", "exports", []string{"hot", "favor"}, "detail", []string{"执行", "编辑", "收录", "下载"}), List: kit.List(
 			kit.MDB_INPUT, "text", "name", "hot", "action", "auto",
 			kit.MDB_INPUT, "text", "name", "id", "action", "auto",
@@ -803,6 +814,7 @@ var Index = &ice.Context{Name: "web", Help: "网页模块",
 						})
 					})
 					arg = []string{m.Option("hot")}
+
 				case "收录":
 					m.Richs(ice.WEB_FAVOR, nil, m.Option("hot"), func(key string, value map[string]interface{}) {
 						m.Grows(ice.WEB_FAVOR, kit.Keys(kit.MDB_HASH, key), "id", id, func(index int, value map[string]interface{}) {
@@ -810,8 +822,13 @@ var Index = &ice.Context{Name: "web", Help: "网页模块",
 						})
 					})
 					arg = []string{m.Option("hot")}
+
+				case "执行":
+					m.Event(ice.FAVOR_START, m.Option("you"), kit.Select(m.Option("hot"), arg[3], arg[2] == "favor"))
+					arg = arg[:0]
 				}
 			}
+
 			if len(arg) > 0 {
 				switch arg[0] {
 				case "import":
@@ -917,7 +934,7 @@ var Index = &ice.Context{Name: "web", Help: "网页模块",
 			case "upload", "download":
 				// 打开文件
 				if m.R != nil {
-					if f, h, e := m.R.FormFile(kit.Select("upload", arg, 1)); m.Assert(e) {
+					if f, h, e := m.R.FormFile(kit.Select("upload", arg, 1)); e == nil {
 						defer f.Close()
 
 						// 创建文件
@@ -1302,6 +1319,12 @@ var Index = &ice.Context{Name: "web", Help: "网页模块",
 				m.Echo("%s", node["text"])
 			default:
 				if len(arg) == 1 {
+					if _, e := os.Stat(arg[0]); e == nil {
+						if scene := m.Conf(ice.WEB_STORY, kit.Keys("mime", strings.TrimPrefix(path.Ext(arg[0]), "."))); scene != "" {
+							m.Cmd(ice.WEB_STORY, ice.STORY_CATCH, scene, arg[0])
+						}
+					}
+
 					m.Cmd(ice.WEB_STORY, "history", arg).Table(func(index int, value map[string]string, head []string) {
 						m.Push("time", value["time"])
 						m.Push("list", value["key"])
@@ -1340,18 +1363,21 @@ var Index = &ice.Context{Name: "web", Help: "网页模块",
 
 			switch arg[0] {
 			case "add":
+				arg = arg[1:]
+				fallthrough
+			default:
 				// 创建共享
 				extra := kit.Dict()
-				for i := 4; i < len(arg)-1; i += 2 {
+				for i := 3; i < len(arg)-1; i += 2 {
 					kit.Value(extra, arg[i], arg[i+1])
 				}
 
 				h := m.Rich(ice.WEB_SHARE, nil, kit.Dict(
-					kit.MDB_TYPE, arg[1], kit.MDB_NAME, arg[2], kit.MDB_TEXT, arg[3],
+					kit.MDB_TYPE, arg[0], kit.MDB_NAME, arg[1], kit.MDB_TEXT, arg[2],
 					"extra", extra,
 				))
 				m.Grow(ice.WEB_SHARE, nil, kit.Dict(
-					kit.MDB_TYPE, arg[1], kit.MDB_NAME, arg[2], kit.MDB_TEXT, arg[3],
+					kit.MDB_TYPE, arg[0], kit.MDB_NAME, arg[1], kit.MDB_TEXT, arg[2],
 					"share", h,
 				))
 				m.Log(ice.LOG_CREATE, "share: %s extra: %s", h, kit.Format(extra))
@@ -1374,15 +1400,37 @@ var Index = &ice.Context{Name: "web", Help: "网页模块",
 				Cookie(m, m.Cmdx(ice.AAA_USER, "login", m.Option("username"), m.Option("password")))
 
 			default:
-				key := kit.Select("", strings.Split(cmd, "/"), 2)
-				m.Confm(ice.WEB_SHARE, kit.Keys("hash", key), func(value map[string]interface{}) {
-					m.Info("share %s %v", key, kit.Format(value))
+				m.Richs(ice.WEB_SHARE, nil, arg[0], func(key string, value map[string]interface{}) {
+					m.Info("share %s %v", arg, kit.Format(value))
 					switch value["type"] {
 					case ice.TYPE_STORY:
-						if m.Cmdy(ice.WEB_STORY, "index", kit.Value(value, "extra.data")).Append("text") == "" {
-							m.Cmdy(ice.WEB_SPACE, kit.Value(value, "extra.pod"), ice.WEB_STORY, "index", kit.Value(value, "extra.data"))
+						if m.Cmdy(ice.WEB_STORY, "index", kit.Value(value, "text")).Append("text") == "" {
+							m.Cmdy(ice.WEB_SPACE, kit.Value(value, "extra.pod"), ice.WEB_STORY, "index", kit.Value(value, "text"))
 						}
-						m.Push("_output", kit.Select("file", "result", m.Append("file") == ""))
+
+						p := path.Join("tmp/file", m.Append("data"))
+						if _, e := os.Stat(p); e == nil {
+							m.Append("_output", "file")
+							m.Append("file", p)
+							break
+						}
+
+						m.Set("result")
+						m.Render(m.Conf(ice.WEB_SHARE, "meta.template.story.prefix"))
+						m.Cmdy("web.wiki._text", m.Append("file"))
+						m.Render(m.Conf(ice.WEB_SHARE, "meta.template.story.suffix"))
+						m.Push("_output", "result")
+
+						if f, p, e := kit.Create(p); e == nil {
+							defer f.Close()
+							if n, e := f.WriteString(m.Result()); e == nil {
+								m.Log(ice.LOG_EXPORT, "%d: %s", n, p)
+							}
+						}
+
+					case "qrcode":
+						m.Push("_output", "qrcode")
+						m.Push("qrcode", value["text"])
 
 					default:
 						if m.Cmdy(ice.WEB_STORY, "index", value["data"]); m.Append("file") != "" {

@@ -109,7 +109,7 @@ var Index = &ice.Context{Name: "code", Help: "编程模块",
 					value["file"] = kit.Keys("ice", m.Conf(ice.CLI_RUNTIME, "host.GOOS"), m.Conf(ice.CLI_RUNTIME, "host.GOARCH"))
 				}
 
-				h := m.Cmdx(ice.WEB_SPIDE, "dev", "cache", "/publish/"+kit.Format(value["file"]))
+				h := m.Cmdx(ice.WEB_SPIDE, "dev", "cache", "GET", "/publish/"+kit.Format(value["file"]))
 				if h == "" {
 					exit = false
 					return

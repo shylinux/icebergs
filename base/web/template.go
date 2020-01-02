@@ -5,6 +5,13 @@ import (
 )
 
 var share_template = kit.Dict(
+	"story.prefix", `<!DOCTYPE html>
+<head>
+<meta charset="utf-8">
+</head>
+<body>
+`, "story.suffix", `</body>`,
+
 	"download", `<a href="/code/zsh?cmd=download&arg=%s" target="_blank">%s</a>`,
 	"share", `<a href="/share/%s" target="_blank">%s</a>`,
 	"shy/story", `{{.}}`,

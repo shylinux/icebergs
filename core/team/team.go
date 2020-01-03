@@ -32,12 +32,15 @@ var Index = &ice.Context{Name: "team", Help: "团队模块",
 			m.Cmd(ice.CTX_CONFIG, "save", "team.json", "web.team.miss")
 		}},
 
-		ice.APP_MISS: {Name: "miss", Help: "任务", Hand: func(m *ice.Message, c *ice.Context, key string, arg ...string) {
+		ice.APP_MISS: {Name: "miss", Help: "任务", Meta: kit.Dict(
+			"remote", "you",
+		), Hand: func(m *ice.Message, c *ice.Context, key string, arg ...string) {
+			hot := kit.Select(ice.FAVOR_MISS, m.Option("hot"))
 			if len(arg) > 1 {
 				switch arg[1] {
 				case "modify":
 					// 修改任务
-					m.Richs(ice.WEB_FAVOR, nil, m.Option("hot"), func(key string, value map[string]interface{}) {
+					m.Richs(ice.WEB_FAVOR, nil, hot, func(key string, value map[string]interface{}) {
 						m.Grows(ice.WEB_FAVOR, kit.Keys("hash", key), "id", arg[0], func(index int, value map[string]interface{}) {
 							m.Log(ice.LOG_MODIFY, "%s: %s->%s", arg[2], arg[4], arg[3])
 							kit.Value(value, arg[2], arg[3])
@@ -49,7 +52,7 @@ var Index = &ice.Context{Name: "team", Help: "团队模块",
 
 			if len(arg) == 0 {
 				// 任务列表
-				m.Richs(ice.WEB_FAVOR, nil, m.Option("hot"), func(key string, value map[string]interface{}) {
+				m.Richs(ice.WEB_FAVOR, nil, hot, func(key string, value map[string]interface{}) {
 					m.Grows(ice.WEB_FAVOR, kit.Keys("hash", key), "", "", func(index int, value map[string]interface{}) {
 						m.Push(kit.Format(index), value, []string{"extra.begin_time", "extra.close_time", "extra.status", "id", "type", "name", "text"})
 					})
@@ -58,7 +61,7 @@ var Index = &ice.Context{Name: "team", Help: "团队模块",
 			}
 
 			// 添加任务
-			m.Cmdy(ice.WEB_FAVOR, kit.Select("miss", m.Option("hot")), ice.TYPE_DRIVE, arg[0], arg[1],
+			m.Cmdy(ice.WEB_FAVOR, hot, ice.TYPE_DRIVE, arg[0], arg[1],
 				"begin_time", m.Time(), "close_time", m.Time(),
 				"status", kit.Select("准备中", arg, 3),
 			)
@@ -113,11 +116,16 @@ var Index = &ice.Context{Name: "team", Help: "团队模块",
 			m.Push("year", 1000)
 		}},
 		"progress": {Name: "progress", Help: "进度", Meta: kit.Dict(
+			"remote", "you",
 			"display", "github.com/shylinux/icebergs/core/team/miss",
 			"detail", []string{"回退", "前进", "取消", "完成"},
+		), List: kit.List(
+			kit.MDB_INPUT, "text", "value", "",
+			kit.MDB_INPUT, "button", "value", "查看", "action", "auto",
 		), Hand: func(m *ice.Message, c *ice.Context, key string, arg ...string) {
+			hot := kit.Select(ice.FAVOR_MISS, m.Option("hot"))
 			if len(arg) > 0 {
-				m.Richs(ice.WEB_FAVOR, nil, m.Option("hot"), func(key string, value map[string]interface{}) {
+				m.Richs(ice.WEB_FAVOR, nil, hot, func(key string, value map[string]interface{}) {
 					m.Grows(ice.WEB_FAVOR, kit.Keys("hash", key), "id", arg[0], func(index int, value map[string]interface{}) {
 						switch value = value["extra"].(map[string]interface{}); arg[1] {
 						case "前进":
@@ -149,7 +157,7 @@ var Index = &ice.Context{Name: "team", Help: "团队模块",
 			m.Confm(ice.APP_MISS, "meta.mis", func(index int, value string) {
 				m.Push(value, "")
 			})
-			m.Richs(ice.WEB_FAVOR, nil, m.Option("hot"), func(key string, value map[string]interface{}) {
+			m.Richs(ice.WEB_FAVOR, nil, hot, func(key string, value map[string]interface{}) {
 				m.Grows(ice.WEB_FAVOR, kit.Keys("hash", key), "", "", func(index int, value map[string]interface{}) {
 					m.Push(kit.Format(kit.Value(value, "extra.status")),
 						kit.Format(`<span title="%v" data-id="%v">%v</span>`,

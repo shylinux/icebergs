@@ -18,7 +18,7 @@ var Index = &ice.Context{Name: "wiki", Help: "文档模块",
 	Configs: map[string]*ice.Config{
 		"note": {Name: "note", Help: "笔记", Value: kit.Data(
 			"temp", "var/tmp/file",
-			"path", "usr/local/wiki",
+			"path", "",
 			"head", "time size line path",
 			"alias", map[string]interface{}{
 				"block": []interface{}{"chart", "block"},
@@ -161,10 +161,10 @@ var Index = &ice.Context{Name: "wiki", Help: "文档模块",
 			m.Cmdy("nfs.dir", m.Conf("note", "meta.path"),
 				kit.Select("", arg, 0), m.Conf("note", "meta.head"))
 		}},
-		"note": {Name: "note file", Help: "笔记", Meta: map[string]interface{}{
-			"remote": "you", "display": "inner",
-			"detail": []string{"add", "commit", "history", "share", "favor"},
-		}, List: kit.List(
+		"note": {Name: "note file", Help: "笔记", Meta: kit.Dict(
+			"remote", "you", "display", "inner",
+			"detail", []string{"add", "commit", "history", "share", "favor"},
+		), List: kit.List(
 			kit.MDB_INPUT, "text", "value", "miss.md", "name", "path",
 			kit.MDB_INPUT, "button", "value", "执行", "action", "auto",
 			kit.MDB_INPUT, "button", "value", "返回", "cb", "Last",

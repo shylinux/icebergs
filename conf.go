@@ -154,6 +154,7 @@ const ( // FAVOR
 	FAVOR_TMUX  = "tmux.init"
 	FAVOR_RIVER = "river.init"
 	FAVOR_START = "favor.start"
+	FAVOR_MISS  = "miss"
 )
 const ( // STORY
 	STORY_CATCH   = "catch"

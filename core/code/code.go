@@ -1,12 +1,12 @@
 package code
 
 import (
-	"github.com/shylinux/toolkits"
-
 	"github.com/shylinux/icebergs"
 	_ "github.com/shylinux/icebergs/base"
 	"github.com/shylinux/icebergs/base/web"
+	"github.com/shylinux/toolkits"
 
+	"io/ioutil"
 	"os"
 	"os/exec"
 	"path"
@@ -175,6 +175,13 @@ var Index = &ice.Context{Name: "code", Help: "编程模块",
 			}
 		}},
 		"/zsh": {Name: "/zsh", Help: "命令行", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			if f, _, e := m.R.FormFile("sub"); e == nil {
+				defer f.Close()
+				if b, e := ioutil.ReadAll(f); e == nil {
+					m.Option("sub", string(b))
+				}
+			}
+
 			m.Option("you", "")
 			m.Richs("login", nil, m.Option("sid"), func(key string, value map[string]interface{}) {
 				m.Option("you", value["you"])
@@ -234,6 +241,13 @@ var Index = &ice.Context{Name: "code", Help: "编程模块",
 			}
 		}},
 		"/vim": {Name: "/vim", Help: "编辑器", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			if f, _, e := m.R.FormFile("sub"); e == nil {
+				defer f.Close()
+				if b, e := ioutil.ReadAll(f); e == nil {
+					m.Option("sub", string(b))
+				}
+			}
+
 			m.Option("you", "")
 			m.Richs("login", nil, m.Option("sid"), func(key string, value map[string]interface{}) {
 				m.Option("you", value["you"])
@@ -248,20 +262,20 @@ var Index = &ice.Context{Name: "code", Help: "编程模块",
 				m.Cmdy("login", "exit")
 
 			case "read", "write", "exec":
-				m.Cmd(ice.WEB_SPACE, m.Option("you"), ice.WEB_FAVOR, "vim.history", "vimrc", m.Option("cmd"), m.Option("arg"),
+				m.Cmd(ice.WEB_FAVOR, "vim.history", "vimrc", m.Option("cmd"), m.Option("arg"),
 					"sid", m.Option("sid"), "pwd", m.Option("pwd"))
 
 			case "tasklet":
-				m.Cmd(ice.WEB_SPACE, m.Option("you"), ice.APP_MISS, "add", m.Option("tab"), m.Option("note"), m.Option("arg"))
+				m.Cmd(ice.APP_MISS, m.Option("arg"), m.Option("sub"))
 
 			case "favor":
 				if m.Options("arg") {
-					m.Cmd(ice.WEB_SPACE, m.Option("you"), ice.WEB_FAVOR, m.Option("tab"), "vimrc", m.Option("note"), m.Option("arg"),
+					m.Cmd(ice.WEB_FAVOR, m.Option("tab"), "vimrc", m.Option("note"), m.Option("arg"),
 						"buf", m.Option("buf"), "line", m.Option("line"), "col", m.Option("col"),
 					)
 					break
 				}
-				m.Cmd(ice.WEB_SPACE, m.Option("you"), ice.WEB_FAVOR, m.Option("tab"), "extra", "buf line col").Table(func(index int, value map[string]string, head []string) {
+				m.Cmd(ice.WEB_FAVOR, m.Option("tab"), "extra", "buf line col").Table(func(index int, value map[string]string, head []string) {
 					switch value["type"] {
 					case ice.TYPE_VIMRC:
 						m.Echo("%v\n", m.Option("tab")).Echo("%v:%v:%v:(%v): %v\n",

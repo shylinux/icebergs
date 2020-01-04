@@ -9,7 +9,7 @@ import (
 var Index = &ice.Context{Name: "aaa", Help: "认证模块",
 	Caches: map[string]*ice.Cache{},
 	Configs: map[string]*ice.Config{
-		ice.AAA_ROLE: {Name: "role", Help: "角色", Value: kit.Data(kit.MDB_SHORT, "chain")},
+		ice.AAA_ROLE: {Name: "role", Help: "角色", Value: kit.Data(kit.MDB_SHORT, "chain", "root", kit.Dict(), "tech", kit.Dict())},
 		ice.AAA_USER: {Name: "user", Help: "用户", Value: kit.Data(kit.MDB_SHORT, "username")},
 		ice.AAA_SESS: {Name: "sess", Help: "会话", Value: kit.Data(kit.MDB_SHORT, "uniq", "expire", "720h")},
 	},
@@ -30,7 +30,7 @@ var Index = &ice.Context{Name: "aaa", Help: "认证模块",
 			switch arg[0] {
 			case "check":
 				// 用户角色
-				m.Echo(kit.Select("void", "root", arg[1] == m.Conf(ice.CLI_RUNTIME, "boot.username")))
+				m.Echo(kit.Select(kit.Select("void", "tech", m.Confs(ice.AAA_ROLE, kit.Keys("meta.tech", arg[1]))), "root", m.Confs(ice.AAA_ROLE, kit.Keys("meta.root", arg[1]))))
 
 			case "black", "white":
 				// 黑白名单
@@ -81,6 +81,8 @@ var Index = &ice.Context{Name: "aaa", Help: "认证模块",
 				}
 				// 普通用户
 				m.Echo("ok")
+			default:
+				m.Conf(ice.AAA_ROLE, kit.Keys("meta", arg[0], arg[1]), "true")
 			}
 		}},
 		ice.AAA_USER: {Name: "user", Help: "用户", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
@@ -120,12 +122,25 @@ var Index = &ice.Context{Name: "aaa", Help: "认证模块",
 			}
 		}},
 		ice.AAA_SESS: {Name: "sess check|login", Help: "会话", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			if len(arg) == 0 {
+				m.Richs(ice.AAA_SESS, nil, "", func(key string, value map[string]interface{}) {
+					m.Push(key, value, []string{"key", "time", "username", "userrole"})
+				})
+				return
+			}
+
 			switch arg[0] {
 			case "check":
 				m.Richs(ice.AAA_SESS, nil, arg[1], func(value map[string]interface{}) {
 					m.Push(arg[1], value, []string{"username", "userrole"})
 					m.Echo("%s", value["username"])
 				})
+			case "create":
+				h := m.Rich(ice.AAA_SESS, nil, kit.Dict(
+					"username", arg[1], "userrole", kit.Select("", arg, 2),
+				))
+				m.Log(ice.LOG_CREATE, "%s: %s", h, arg[1])
+				m.Echo(h)
 			}
 		}},
 	},

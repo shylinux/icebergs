@@ -97,6 +97,9 @@ var Index = &ice.Context{Name: "chat", Help: "聊天中心",
 		"/login": {Name: "/login", Help: "登录", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			switch arg[0] {
 			case "check":
+				m.Richs(ice.AAA_USER, nil, m.Option(ice.MSG_USERNAME), func(key string, value map[string]interface{}) {
+					m.Push("nickname", value["nickname"])
+				})
 				m.Echo(m.Option(ice.MSG_USERNAME))
 			case "login":
 				m.Echo(m.Option(ice.MSG_SESSID))

@@ -223,6 +223,9 @@ func (web *Frame) HandleCmd(m *ice.Message, key string, cmd *ice.Command) {
 				// 输出响应
 				switch msg.Append("_output") {
 				case "void":
+				case "status":
+					w.WriteHeader(kit.Int(kit.Select("200", msg.Result())))
+
 				case "file":
 					msg.Info("_output: %s %s", msg.Append("_output"), msg.Append("file"))
 					w.Header().Set("Content-Disposition", fmt.Sprintf("filename=%s", kit.Select(msg.Append("name"), msg.Append("story"))))
@@ -636,6 +639,16 @@ var Index = &ice.Context{Name: "web", Help: "网页模块",
 
 			web := m.Target().Server().(*Frame)
 			switch arg[0] {
+			case "auth":
+				m.Richs(ice.WEB_SPACE, nil, arg[1], func(key string, value map[string]interface{}) {
+					sessid := kit.Format(kit.Value(value, "sessid"))
+					if value["user"] = arg[2]; sessid == "" || m.Cmdx(ice.AAA_SESS, "check", sessid) != arg[1] {
+						sessid = m.Cmdx(ice.AAA_SESS, "create", arg[2:])
+						value["sessid"] = sessid
+					}
+					m.Cmd(ice.WEB_SPACE, arg[1], "sessid", sessid)
+				})
+
 			case "share":
 				switch arg[1] {
 				case "add":
@@ -646,18 +659,6 @@ var Index = &ice.Context{Name: "web", Help: "网页模块",
 						value["share"] = arg[1]
 					})
 				}
-
-			case "upload":
-				for _, file := range arg[2:] {
-					msg := m.Cmd(ice.WEB_STORY, "index", file)
-					m.Cmdy(ice.WEB_SPIDE, arg[1], "/space/upload", "part",
-						"type", msg.Append("type"), "name", msg.Append("name"),
-						"text", msg.Append("text"), "upload", "@"+msg.Append("file"),
-					)
-				}
-			case "download":
-				m.Cmd(ice.WEB_STORY, "add", arg[1], arg[2],
-					m.Cmdx(ice.WEB_SPIDE, arg[3], "cache", "/space/download/"+arg[4]))
 
 			case "connect":
 				// 基本信息
@@ -1374,11 +1375,11 @@ var Index = &ice.Context{Name: "web", Help: "网页模块",
 				}
 
 				h := m.Rich(ice.WEB_SHARE, nil, kit.Dict(
-					kit.MDB_TYPE, arg[0], kit.MDB_NAME, arg[1], kit.MDB_TEXT, arg[2],
+					kit.MDB_TYPE, arg[0], kit.MDB_NAME, arg[1], kit.MDB_TEXT, kit.Select("", arg, 2),
 					"extra", extra,
 				))
 				m.Grow(ice.WEB_SHARE, nil, kit.Dict(
-					kit.MDB_TYPE, arg[0], kit.MDB_NAME, arg[1], kit.MDB_TEXT, arg[2],
+					kit.MDB_TYPE, arg[0], kit.MDB_NAME, arg[1], kit.MDB_TEXT, kit.Select("", arg, 2),
 					"share", h,
 				))
 				m.Log(ice.LOG_CREATE, "share: %s extra: %s", h, kit.Format(extra))
@@ -1429,6 +1430,10 @@ var Index = &ice.Context{Name: "web", Help: "网页模块",
 							}
 						}
 
+					case "active":
+						m.Push("_output", "qrcode")
+						m.Echo(kit.Format(value))
+
 					case "qrcode":
 						m.Push("_output", "qrcode")
 						m.Echo("%s", value["text"])
@@ -1440,7 +1445,6 @@ var Index = &ice.Context{Name: "web", Help: "网页模块",
 							m.Push("_output", "result")
 						}
 					}
-
 				})
 			}
 
@@ -1515,59 +1519,13 @@ var Index = &ice.Context{Name: "web", Help: "网页模块",
 			case "share":
 				m.Cmdy(ice.WEB_SHARE, list[3:])
 				return
-			case "pull":
-				node := m.Cmd(ice.WEB_STORY, "index", list[3]).Append("list")
-				for i := 0; i < 10 && node != "" && node != list[4]; i++ {
-					m.Confm(ice.WEB_STORY, kit.Keys("hash", node), func(value map[string]interface{}) {
-						m.Push("list", node)
-						m.Push("node", kit.Format(value))
-						m.Push("data", value["data"])
-						m.Push("save", kit.Format(m.Confm(ice.WEB_CACHE, kit.Keys("hash", value["data"]))))
-						node = kit.Format(value["prev"])
-					})
-				}
-				return
-			case "push":
-				if m.Confm(ice.WEB_CACHE, kit.Keys("hash", m.Option("data"))) == nil {
-					// 导入缓存
-					m.Log(ice.LOG_IMPORT, "%v: %v", m.Option("data"), m.Option("save"))
-					node := kit.UnMarshal(m.Option("save"))
-					m.Conf(ice.WEB_CACHE, kit.Keys("hash", m.Option("data")), node)
-				}
-
-				node := kit.UnMarshal(m.Option("node")).(map[string]interface{})
-				if m.Confm(ice.WEB_STORY, kit.Keys("hash", m.Option("list"))) == nil {
-					// 导入节点
-					m.Log(ice.LOG_IMPORT, "%v: %v", m.Option("list"), m.Option("node"))
-					m.Conf(ice.WEB_STORY, kit.Keys("hash", m.Option("list")), node)
-				}
-
-				if head := m.Richs(ice.WEB_STORY, "head", node["story"], nil); head == nil {
-					// 自动创建
-					h := m.Rich(ice.WEB_STORY, "head", kit.Dict(
-						"count", node["count"], "scene", node["scene"], "story", node["story"], "list", m.Option("list"),
-					))
-					m.Log(ice.LOG_CREATE, "%v: %v", h, node["story"])
-				} else if head["list"] == kit.Format(node["prev"]) || head["list"] == kit.Format(node["pull"]) {
-					// 更新索引
-					head["list"] = m.Option("list")
-					head["count"] = node["count"]
-					head["time"] = node["time"]
-				} else {
-					// 推送失败
-				}
-				return
-			case "upload":
-				m.Cmdy(ice.WEB_CACHE, "upload")
-				return
-			case "download":
-				m.Cmdy(ice.WEB_STORY, "index", list[3])
-				m.Push("_output", kit.Select("file", "result", m.Append("file") == ""))
-				return
 			}
 
 			if s, e := websocket.Upgrade(m.W, m.R, nil, m.Confi(ice.WEB_SPACE, "meta.buffer.r"), m.Confi(ice.WEB_SPACE, "meta.buffer.w")); m.Assert(e) {
 				m.Option("name", strings.Replace(m.Option("name"), ".", "_", -1))
+				if !m.Options("name") {
+					m.Option("name", kit.Hashs("uniq"))
+				}
 
 				// 共享空间
 				share := m.Option("share")
@@ -1580,6 +1538,7 @@ var Index = &ice.Context{Name: "web", Help: "网页模块",
 					kit.MDB_TYPE, m.Option("node"),
 					kit.MDB_NAME, m.Option("name"),
 					kit.MDB_USER, m.Option("user"),
+					"sessid", m.Option("sessid"),
 					"share", share, "socket", s,
 				))
 				m.Log(ice.LOG_CREATE, "space: %s share: %s", m.Option(kit.MDB_NAME), share)
@@ -1597,6 +1556,7 @@ var Index = &ice.Context{Name: "web", Help: "网页模块",
 				if share != m.Option("share") {
 					m.Cmd(ice.WEB_SPACE, m.Option("name"), ice.WEB_SPACE, "share", share)
 				}
+				m.Echo(share)
 			}
 		}},
 		"/static/volcanos/plugin/github.com/": {Name: "/space/", Help: "空间站", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {

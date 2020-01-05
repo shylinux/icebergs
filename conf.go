@@ -152,7 +152,6 @@ const ( // TYPE
 const ( // FAVOR
 	FAVOR_CHAT  = "chat.init"
 	FAVOR_TMUX  = "tmux.init"
-	FAVOR_RIVER = "river.init"
 	FAVOR_START = "favor.start"
 	FAVOR_MISS  = "miss"
 )

@@ -19,6 +19,13 @@ import (
 func dir(m *ice.Message, root string, name string, level int, deep bool, dir_type string, dir_reg *regexp.Regexp, fields []string, format string) {
 
 	if fs, e := ioutil.ReadDir(path.Join(root, name)); e != nil {
+		if f, e := os.Open(path.Join(root, name)); e == nil {
+			defer f.Close()
+			if b, e := ioutil.ReadAll(f); e == nil {
+				m.Echo(string(b))
+				return
+			}
+		}
 		m.Log(ice.LOG_WARN, "%s", e)
 	} else {
 		for _, f := range fs {
@@ -138,9 +145,13 @@ var Index = &ice.Context{Name: "nfs", Help: "文件模块",
 		ice.ICE_EXIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 		}},
 
-		"dir": {Name: "dir", Help: "目录", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		"dir": {Name: "dir", Help: "目录", List: kit.List(
+			kit.MDB_INPUT, "text", "name", "path", "action", "auto",
+			kit.MDB_INPUT, "button", "name", "查看",
+			kit.MDB_INPUT, "button", "name", "返回", "cb", "Last",
+		), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			rg, _ := regexp.Compile(m.Option("dir_reg"))
-			dir(m, arg[0], arg[1], 0, false, "both", rg,
+			dir(m, kit.Select("./", m.Option("dir_root")), kit.Select("", arg, 0), 0, false, "both", rg,
 				strings.Split(kit.Select("time size line path", arg, 2), " "), ice.ICE_TIME)
 		}},
 		"save": {Name: "save path text", Help: "保存", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {

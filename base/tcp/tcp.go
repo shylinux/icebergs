@@ -40,7 +40,6 @@ var Index = &ice.Context{Name: "tcp", Help: "网络模块",
 						}
 					}
 				}
-				m.Table()
 			}
 		}},
 	},

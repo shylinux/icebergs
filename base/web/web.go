@@ -224,6 +224,7 @@ func (web *Frame) HandleCmd(m *ice.Message, key string, cmd *ice.Command) {
 				switch msg.Append("_output") {
 				case "void":
 				case "status":
+					msg.Info("status %s", msg.Result())
 					w.WriteHeader(kit.Int(kit.Select("200", msg.Result())))
 
 				case "file":
@@ -241,6 +242,12 @@ func (web *Frame) HandleCmd(m *ice.Message, key string, cmd *ice.Command) {
 					fmt.Fprint(w, msg.Result())
 				default:
 					fmt.Fprint(w, msg.Formats("meta"))
+				}
+			} else {
+				switch msg.Append("_output") {
+				case "status":
+					msg.Info("status %s", msg.Result())
+					w.WriteHeader(kit.Int(kit.Select("200", msg.Result())))
 				}
 			}
 		})
@@ -899,7 +906,7 @@ var Index = &ice.Context{Name: "web", Help: "网页模块",
 				kit.Value(extra, arg[i], arg[i+1])
 			}
 			index := m.Grow(ice.WEB_FAVOR, kit.Keys(kit.MDB_HASH, favor), kit.Dict(
-				kit.MDB_TYPE, arg[1], kit.MDB_NAME, arg[2], kit.MDB_TEXT, arg[3],
+				kit.MDB_TYPE, arg[1], kit.MDB_NAME, arg[2], kit.MDB_TEXT, kit.Select("", arg, 3),
 				"extra", extra,
 			))
 			m.Log(ice.LOG_INSERT, "favor: %s index: %d name: %s", favor, index, arg[2])

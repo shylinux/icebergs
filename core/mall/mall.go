@@ -1,21 +1,28 @@
 package mall
 
 import (
-	"github.com/shylinux/toolkits"
-
 	"github.com/shylinux/icebergs"
 	_ "github.com/shylinux/icebergs/base"
 	"github.com/shylinux/icebergs/base/web"
+	"github.com/shylinux/toolkits"
 
+	"fmt"
 	"os"
 	"path"
 	"strings"
+	"time"
 )
 
 var Index = &ice.Context{Name: "mall", Help: "团队模块",
 	Caches:  map[string]*ice.Cache{},
 	Configs: map[string]*ice.Config{},
 	Commands: map[string]*ice.Command{
+		ice.ICE_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			m.Cmd(ice.WEB_SPIDE, "add", "12306", "https://kyfw.12306.cn")
+		}},
+		ice.ICE_EXIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		}},
+
 		"_miss": {Name: "miss", Help: "任务", Meta: map[string]interface{}{
 			"exports": []interface{}{"you", "name"},
 			"detail":  []interface{}{"启动", "停止"},
@@ -124,6 +131,36 @@ var Index = &ice.Context{Name: "mall", Help: "团队模块",
 			m.Cmdy("mdb.select", "web.chat.group", "hash."+m.Option("sess.river")+".task", "0",
 				kit.Select("0", arg, 0), kit.Select("10", arg, 1), kit.Select("", arg, 2), kit.Select("", arg, 3),
 				kit.Select("id status begin_time close_time name text", arg, 4))
+		}},
+		"12306": &ice.Command{Name: "12306", Help: "12306", Hand: func(m *ice.Message, c *ice.Context, key string, arg ...string) {
+			date := time.Now().Add(time.Hour * 24).Format("2006-01-02")
+			if len(arg) > 0 {
+				date, arg = arg[0], arg[1:]
+			}
+			to := "QFK"
+			if len(arg) > 0 {
+				to, arg = arg[0], arg[1:]
+			}
+			from := "BJP"
+			if len(arg) > 0 {
+				from, arg = arg[0], arg[1:]
+			}
+			m.Echo("%s->%s %s\n", from, to, date)
+
+			m.Cmd(ice.WEB_SPIDE, "12306", "GET", fmt.Sprintf("/otn/leftTicket/init?linktypeid=dc&fs=北京,BJP&ts=曲阜,QFK&date=%s&flag=N,N,Y", date))
+			m.Cmd(ice.WEB_SPIDE, "12306", "GET", fmt.Sprintf("/otn/leftTicket/queryZ?leftTicketDTO.train_date=%s&leftTicketDTO.from_station=%s&leftTicketDTO.to_station=%s&purpose_codes=ADULT", date, from, to)).Table(func(index int, value map[string]string, head []string) {
+				kit.Fetch(kit.Value(kit.UnMarshal(value["data"]), "result"), func(index int, value string) {
+					fields := strings.Split(value, "|")
+					m.Info("once %d len(%d) %v", index, len(fields), fields)
+					m.Push("车次--", fields[3])
+					m.Push("出发----", fields[8])
+					m.Push("到站----", fields[9])
+					m.Push("时长----", fields[10])
+					m.Push("二等座", fields[30])
+					m.Push("一等座", fields[31])
+				})
+			})
+			return
 		}},
 	},
 }

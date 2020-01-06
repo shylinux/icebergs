@@ -539,6 +539,8 @@ var Index = &ice.Context{Name: "web", Help: "网页模块",
 							m.Log(ice.LOG_EXPORT, "json: %s", kit.Format(data))
 						}
 						arg = arg[:0]
+					} else {
+						body = bytes.NewBuffer([]byte{})
 					}
 
 					// 构造请求
@@ -570,24 +572,23 @@ var Index = &ice.Context{Name: "web", Help: "网页模块",
 
 					// 发送请求
 					res, e := web.Client.Do(req)
+					if m.Warn(e != nil, "%s", e) {
+						m.Set("result")
+						return
+					}
+
+					// 验证结果
+					if m.Cost("%s %s: %s", res.Status, res.Header.Get("Content-Length"), res.Header.Get("Content-Type")); m.Warn(res.StatusCode != http.StatusOK, "%s", res.Status) {
+						if cache != "" {
+							m.Set("result")
+						}
+						return
+					}
 
 					// 缓存参数
 					for _, v := range res.Cookies() {
 						kit.Value(client, "cookie."+v.Name, v.Value)
 						m.Info("%s: %s", v.Name, v.Value)
-					}
-
-					// 验证结果
-					if m.Cost("%s %s: %s", res.Status, res.Header.Get("Content-Length"), res.Header.Get("Content-Type")); m.Warn(e != nil, "%s", e) {
-						if cache != "" {
-							m.Set("result")
-						}
-						return
-					} else if m.Warn(res.StatusCode != http.StatusOK, "%s", res.Status) {
-						if cache != "" {
-							m.Set("result")
-						}
-						return
 					}
 
 					switch cache {
@@ -599,12 +600,13 @@ var Index = &ice.Context{Name: "web", Help: "网页模块",
 						// 解析结果
 						var data interface{}
 						m.Assert(json.NewDecoder(res.Body).Decode(&data))
+						m.Info("res: %s", kit.Formats(data))
 						kit.Fetch(data, func(key string, value interface{}) {
 							switch value := value.(type) {
 							case []interface{}:
-								m.Append(key, value)
+								m.Push(key, value)
 							default:
-								m.Append(key, kit.Format(value))
+								m.Push(key, kit.Format(value))
 							}
 						})
 					}

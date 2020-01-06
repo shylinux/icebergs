@@ -469,6 +469,8 @@ var Index = &ice.Context{Name: "web", Help: "网页模块",
 					// 缓存数据
 					cache := ""
 					switch arg[1] {
+					case "raw":
+						cache, arg = arg[1], arg[1:]
 					case "cache":
 						cache, arg = arg[1], arg[1:]
 					}
@@ -592,6 +594,10 @@ var Index = &ice.Context{Name: "web", Help: "网页模块",
 					}
 
 					switch cache {
+					case "raw":
+						if b, e := ioutil.ReadAll(res.Body); m.Assert(e) {
+							m.Echo(string(b))
+						}
 					case "cache":
 						// 缓存结果
 						m.Optionv("response", res)

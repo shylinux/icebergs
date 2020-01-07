@@ -1062,6 +1062,7 @@ func (m *Message) Grow(key string, chain interface{}, data interface{}) int {
 		m.Log(LOG_INFO, "%s.%v save %s offset %v+%v", key, chain, name, offset, count)
 		meta["offset"] = offset + count
 		list = list[:least]
+		cache[kit.MDB_LIST] = list
 		w.Flush()
 	}
 	return id

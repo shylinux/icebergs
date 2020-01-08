@@ -74,5 +74,36 @@ build() {
     cd $miss && prepare && go build -o ice.bin main.go && chmod u+x ice.bin && ./ice.sh start serve dev
 }
 
+tutor() {
+    mkdir $1
+    [ -f "$1/$1.go" ] || cat >> "$1/$1.go" <<END
+package $1
+
+import (
+	"github.com/shylinux/icebergs"
+	"github.com/shylinux/icebergs/base/cli"
+	"github.com/shylinux/toolkits"
+)
+
+var Index = &ice.Context{Name: "$1", Help: "$1",
+	Caches: map[string]*ice.Cache{},
+	Configs: map[string]*ice.Config{
+		"$1": {Name: "$1", Help: "$1", Value: kit.Data(kit.MDB_SHORT, "name")},
+	},
+	Commands: map[string]*ice.Command{
+		ice.ICE_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {}},
+		ice.ICE_EXIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {}},
+
+		"$1": {Name: "$1", Help: "$1", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+            m.Echo("hello world")
+		}},
+	},
+}
+
+func init() { cli.Index.Register(Index, nil) }
+
+END
+}
+
 cmd=build && [ "$1" != "" ] && cmd=$1 && shift
 $cmd $*

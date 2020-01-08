@@ -95,7 +95,12 @@ var Index = &ice.Context{Name: "wiki", Help: "文档模块",
 			m.Option("type", "shell")
 			m.Option("name", arg[0])
 			m.Option("cmd_dir", arg[1])
-			m.Option("output", m.Cmdx("cli.system", "sh", "-c", m.Option("input", strings.Join(arg[2:], " "))))
+			switch arg[1] {
+			case "-demo":
+				m.Option("input", strings.Join(arg[2:], " "))
+			default:
+				m.Option("output", m.Cmdx("cli.system", "sh", "-c", m.Option("input", strings.Join(arg[2:], " "))))
+			}
 			m.Render(m.Conf("shell", ice.Meta("template")))
 		}},
 		"title": {Name: "title text", Help: "标题", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {

@@ -52,7 +52,7 @@ fun! ShySync(target)
     if a:target == "read" || a:target == "write"
         call ShySend({"cmd": a:target, "arg": expand("<afile>")})
     elseif a:target == "exec"
-        call ShySend({"cmd": a:target, "sub": getcmdline()})
+        call ShySend({"cmd": a:target, "arg": getcmdline()})
     elseif a:target == "insert"
         call ShySend({"cmd": a:target, "sub": getreg("."), "row": line("."), "col": col(".")})
     else
@@ -93,13 +93,13 @@ fun! ShyHelp()
 endfun
 
 call ShyLogin()
-autocmd VimLeave * call ShyLogout()
-autocmd BufReadPost * call ShySync("bufs")
-autocmd BufReadPost * call ShySync("read")
-autocmd BufWritePre * call ShySync("write")
-autocmd CmdlineLeave * call ShySync("exec")
-autocmd QuickFixCmdPost * call ShyCheck("fixs")
-autocmd InsertLeave * call ShySync("insert")
+autocmd! VimLeave * call ShyLogout()
+autocmd! BufReadPost * call ShySync("bufs")
+autocmd! BufReadPost * call ShySync("read")
+autocmd! BufWritePre * call ShySync("write")
+autocmd! CmdlineLeave * call ShySync("exec")
+autocmd! QuickFixCmdPost * call ShyCheck("fixs")
+autocmd! InsertLeave * call ShySync("insert")
 nnoremap <C-G><C-G> :call ShyGrep(expand("<cword>"))<CR>
 nnoremap <C-G><C-R> :call ShyCheck("cache")<CR>
 nnoremap <C-G><C-F> :call ShyFavor()<CR>

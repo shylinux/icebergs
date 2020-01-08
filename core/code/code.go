@@ -208,7 +208,7 @@ var Index = &ice.Context{Name: "code", Help: "编程模块",
 
 				// 下发文件
 				m.Option("you", you)
-				m.Cmd(ice.WEB_SPACE, msg.Option("you"), ice.WEB_SPACE, "download", msg.Append("type"), msg.Append("name"), "self", msg.Append("data"))
+				m.Cmd(ice.WEB_SPACE, msg.Option("you"), ice.WEB_STORY, ice.STORY_PULL, "dev", msg.Append("name"))
 
 			case "download":
 				// 下载文件
@@ -263,7 +263,7 @@ var Index = &ice.Context{Name: "code", Help: "编程模块",
 
 			case "read", "write", "exec":
 				m.Cmd(ice.WEB_FAVOR, "vim.history", "vimrc", m.Option("cmd"), m.Option("arg"),
-					"sid", m.Option("sid"), "pwd", m.Option("pwd"))
+					"sid", m.Option("sid"), "pwd", m.Option("pwd"), "buf", m.Option("buf"))
 
 			case "tasklet":
 				m.Cmd(ice.APP_MISS, m.Option("arg"), m.Option("sub"))

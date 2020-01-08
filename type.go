@@ -386,7 +386,10 @@ func (m *Message) Push(key string, value interface{}, arg ...interface{}) *Messa
 		}
 		return m
 	}
-	return m.Add(MSG_APPEND, key, kit.Format(value))
+	for _, v := range kit.Simple(value) {
+		m.Add(MSG_APPEND, key, v)
+	}
+	return m
 }
 func (m *Message) Echo(str string, arg ...interface{}) *Message {
 	if len(arg) > 0 {
@@ -677,7 +680,7 @@ func (m *Message) Space(arg interface{}) []string {
 	return []string{WEB_SPACE, kit.Format(arg)}
 }
 func (m *Message) Right(arg ...interface{}) bool {
-	return !m.Warn(m.Cmdx(AAA_ROLE, "right", m.Option(MSG_USERROLE), kit.Keys(arg...)) != "ok", "no right")
+	return m.Option(MSG_USERROLE) == ROLE_ROOT || !m.Warn(m.Cmdx(AAA_ROLE, "right", m.Option(MSG_USERROLE), kit.Keys(arg...)) != "ok", "no right")
 }
 func (m *Message) Event(key string, arg ...string) *Message {
 	m.Cmd(GDB_EVENT, "action", key, arg)
@@ -996,7 +999,7 @@ func (m *Message) Grow(key string, chain interface{}, data interface{}) int {
 	meta["count"] = id
 
 	// 保存数据
-	if len(list) > kit.Int(kit.Select(m.Conf(WEB_CACHE, Meta("limit")), meta["limit"])) {
+	if len(list) >= kit.Int(kit.Select(m.Conf(WEB_CACHE, Meta("limit")), meta["limit"])) {
 		least := kit.Int(kit.Select(m.Conf(WEB_CACHE, Meta("least")), meta["least"]))
 
 		// 创建文件

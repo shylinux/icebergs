@@ -471,6 +471,8 @@ var Index = &ice.Context{Name: "web", Help: "网页模块",
 					switch arg[1] {
 					case "raw":
 						cache, arg = arg[1], arg[1:]
+					case "msg":
+						cache, arg = arg[1], arg[1:]
 					case "cache":
 						cache, arg = arg[1], arg[1:]
 					}
@@ -594,6 +596,18 @@ var Index = &ice.Context{Name: "web", Help: "网页模块",
 					}
 
 					switch cache {
+					case "msg":
+						var data map[string][]string
+						m.Assert(json.NewDecoder(res.Body).Decode(&data))
+						m.Info("res: %s", kit.Formats(data))
+						if len(data["append"]) > 0 {
+							for i := range data[data["append"][0]] {
+								for _, k := range data["append"] {
+									m.Push(k, data[k][i])
+								}
+							}
+						}
+
 					case "raw":
 						if b, e := ioutil.ReadAll(res.Body); m.Assert(e) {
 							m.Echo(string(b))
@@ -615,6 +629,7 @@ var Index = &ice.Context{Name: "web", Help: "网页模块",
 								m.Push(key, kit.Format(value))
 							}
 						})
+						m.Info("res: %s", m.Formats("meta"))
 					}
 				})
 			}
@@ -1057,12 +1072,12 @@ var Index = &ice.Context{Name: "web", Help: "网页模块",
 				pull := end
 				var first map[string]interface{}
 				for begin != end {
-					if m.Cmd(ice.WEB_SPIDE, arg[1], "/story/pull", "begin", begin, "end", end).Table(func(index int, value map[string]string, head []string) {
+					if m.Cmd(ice.WEB_SPIDE, arg[1], "msg", "/story/pull", "begin", begin, "end", end).Table(func(index int, value map[string]string, head []string) {
 						if m.Richs(ice.WEB_CACHE, nil, value["data"], nil) == nil {
 							// 导入缓存
 							m.Log(ice.LOG_IMPORT, "%v: %v", value["data"], value["save"])
 							if node := kit.UnMarshal(value["save"]); kit.Format(kit.Value(node, "file")) != "" {
-								m.Cmd(ice.WEB_SPIDE, arg[1], "cache", "GET", "/story/download/"+kit.Format(value["data"]))
+								m.Cmd(ice.WEB_SPIDE, arg[1], "cache", "GET", "/story/download/"+value["data"])
 							} else {
 								m.Conf(ice.WEB_CACHE, kit.Keys("hash", value["data"]), node)
 							}

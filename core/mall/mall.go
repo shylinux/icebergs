@@ -19,8 +19,10 @@ var Index = &ice.Context{Name: "mall", Help: "团队模块",
 	Commands: map[string]*ice.Command{
 		ice.ICE_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			m.Cmd(ice.CTX_CONFIG, "load", "mall.json")
-
-			if m.Cmd(ice.WEB_SPIDE, "add", "12306", "https://kyfw.12306.cn"); !m.Confs("railway", "meta.site") {
+			if m.Richs(ice.WEB_SPIDE, nil, "12306", nil) == nil {
+				m.Cmd(ice.WEB_SPIDE, "add", "12306", "https://kyfw.12306.cn")
+			}
+			if !m.Confs("railway", "meta.site") {
 				list := strings.Split(strings.TrimPrefix(m.Cmdx(ice.WEB_SPIDE, "12306", "raw", "GET", "/otn/resources/js/framework/station_name.js?station_version=1.9090"), "var statuion_names ='"), "|")
 				for i := 0; i < len(list)-5; i += 5 {
 					m.Conf("railway", kit.Keys("meta.site", list[i+1]), list[i+2])
@@ -31,6 +33,30 @@ var Index = &ice.Context{Name: "mall", Help: "团队模块",
 			m.Cmd(ice.CTX_CONFIG, "save", "mall.json", "web.mall.railway")
 		}},
 
+		"passcode": &ice.Command{Name: "passcode", Help: "passcode", Meta: kit.Dict(
+			"display", "mall/image",
+		), List: kit.List(
+			kit.MDB_INPUT, "text", "name", "账号",
+			kit.MDB_INPUT, "text", "name", "密码",
+			kit.MDB_INPUT, "button", "name", "登录", "display", "mall/input",
+			kit.MDB_INPUT, "button", "name", "刷新", "display", "mall/input",
+		), Hand: func(m *ice.Message, c *ice.Context, key string, arg ...string) {
+			if len(arg) == 0 {
+				m.Cmd(ice.WEB_SPIDE, "12306", "raw", "/passport/web/auth/uamtk-static", "form", "appid", "otn")
+				m.Cmd(ice.WEB_SPIDE, "12306", "raw", "GET", "/otn/HttpZF/GetJS")
+				m.Cmd(ice.WEB_SPIDE, "12306", "raw", "/otn/login/conf")
+
+				m.Cmdy(ice.WEB_SPIDE, "12306", "GET", fmt.Sprintf("/passport/captcha/captcha-image64?login_site=E&module=login&rand=sjrand"))
+				return
+			}
+
+			switch arg[0] {
+			case "check":
+				m.Cmdy(ice.WEB_SPIDE, "12306", "GET", fmt.Sprintf("/passport/captcha/captcha-check?answer=%s&rand=sjrand&login_site=E", arg[1]))
+			case "login":
+				m.Cmdy(ice.WEB_SPIDE, "12306", "raw", "/passport/web/login", "form", "username", arg[1], "password", arg[2], "answer", arg[3], "appid", "otn")
+			}
+		}},
 		"railway": &ice.Command{Name: "railway", Help: "12306", List: kit.List(
 			kit.MDB_INPUT, "text", "name", "date", "value", "2020-01-22",
 			kit.MDB_INPUT, "text", "name", "from", "value", "北京",

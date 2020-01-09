@@ -19,8 +19,27 @@ var Index = &ice.Context{Name: "docker", Help: "docker",
 		"docker": {Name: "docker", Help: "docker", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			m.Echo("hello world")
 		}},
-		"image": {Name: "image", Help: "镜像管理", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			m.Split(strings.Replace(m.Cmdx(ice.CLI_SYSTEM, "docker", "image", "ls"), "IMAGE ID", "IMAGE_ID", 1), "index", " ", "\n")
+		"image": {Name: "image", Help: "镜像管理", Meta: kit.Dict(
+			"detail", []string{"运行", "清理", "删除"},
+		), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			prefix := []string{ice.CLI_SYSTEM, "docker", "image"}
+			if len(arg) > 2 {
+				switch arg[1] {
+				case "运行":
+					m.Cmdy(prefix[:2], "run", "-dt", m.Option("REPOSITORY")+":"+m.Option("TAG"))
+					m.Set("append")
+					return
+				case "清理":
+					m.Cmd(prefix, "prune", "-f")
+				case "delete":
+					switch arg[2] {
+					case "NAMES":
+						m.Cmd(prefix, "rename", arg[4], arg[3])
+					}
+				}
+			}
+
+			m.Split(strings.Replace(m.Cmdx(prefix, "ls"), "IMAGE ID", "IMAGE_ID", 1), "index", " ", "\n")
 		}},
 		"container": {Name: "container", Help: "容器管理", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			prefix := []string{ice.CLI_SYSTEM, "docker", "container"}

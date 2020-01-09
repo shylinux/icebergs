@@ -163,6 +163,8 @@ var Index = &ice.Context{Name: "wiki", Help: "文档模块",
 			m.Echo(string(markdown.ToHTML(buffer.Bytes(), nil, nil)))
 		}},
 		"_tree": {Name: "_tree path", Help: "文库", Hand: func(m *ice.Message, c *ice.Context, key string, arg ...string) {
+			m.Option("dir_deep", "true")
+			m.Option("dir_reg", ".*\\.md")
 			m.Cmdy("nfs.dir", kit.Select(m.Conf("note", "meta.path"), arg, 0), m.Conf("note", "meta.head"))
 		}},
 		"note": {Name: "note file", Help: "笔记", Meta: kit.Dict("remote", "you", "display", "inner"), List: kit.List(

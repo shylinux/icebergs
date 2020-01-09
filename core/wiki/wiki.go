@@ -1,7 +1,6 @@
 package wiki
 
 import (
-	"github.com/gomarkdown/markdown"
 	"github.com/shylinux/icebergs"
 	_ "github.com/shylinux/icebergs/base"
 	"github.com/shylinux/icebergs/base/web"
@@ -13,7 +12,7 @@ import (
 	"strings"
 )
 
-var Index = &ice.Context{Name: "wiki", Help: "文档模块",
+var Index = &ice.Context{Name: "wiki", Help: "文档中心",
 	Caches: map[string]*ice.Cache{},
 	Configs: map[string]*ice.Config{
 		"note": {Name: "note", Help: "笔记", Value: kit.Data(
@@ -29,6 +28,10 @@ var Index = &ice.Context{Name: "wiki", Help: "文档模块",
 			},
 		)},
 		"title": {Name: "title", Help: "标题", Value: kit.Data("template", title)},
+		"brief": {Name: "brief", Help: "摘要", Value: kit.Data("template", brief)},
+		"refer": {Name: "refer", Help: "参考", Value: kit.Data("template", refer)},
+		"spark": {Name: "spark", Help: "段落", Value: kit.Data("template", spark)},
+
 		"shell": {Name: "shell", Help: "命令", Value: kit.Data("template", shell)},
 		"order": {Name: "order", Help: "列表", Value: kit.Data("template", order)},
 		"table": {Name: "table", Help: "表格", Value: kit.Data("template", table)},
@@ -95,16 +98,40 @@ var Index = &ice.Context{Name: "wiki", Help: "文档模块",
 			m.Option("type", "shell")
 			m.Option("name", arg[0])
 			m.Option("cmd_dir", arg[1])
-			switch arg[1] {
-			case "-demo":
-				m.Option("input", strings.Join(arg[2:], " "))
+
+			switch arg = arg[2:]; arg[0] {
+			case "install", "compile":
+				m.Option("input", strings.Join(arg[1:], " "))
 			default:
-				m.Option("output", m.Cmdx("cli.system", "sh", "-c", m.Option("input", strings.Join(arg[2:], " "))))
+				m.Option("output", m.Cmdx("cli.system", "sh", "-c", m.Option("input", strings.Join(arg, " "))))
 			}
+			m.Render(m.Conf("spark", ice.Meta("template")), m.Option("name"))
 			m.Render(m.Conf("shell", ice.Meta("template")))
+		}},
+
+		"spark": {Name: "spark name text", Help: "参考", Hand: func(m *ice.Message, c *ice.Context, key string, arg ...string) {
+			m.Option("type", "refer")
+			m.Option("name", arg[0])
+			m.Option("text", arg[1])
+			m.Optionv("list", kit.Split(arg[1], "\n"))
+			m.Render(m.Conf("order", ice.Meta("template")))
+		}},
+		"refer": {Name: "refer name text", Help: "参考", Hand: func(m *ice.Message, c *ice.Context, key string, arg ...string) {
+			m.Option("type", "refer")
+			m.Option("name", arg[0])
+			m.Option("text", arg[1])
+			m.Optionv("list", kit.Split(arg[1], "\n"))
+			m.Render(m.Conf("order", ice.Meta("template")))
+		}},
+		"brief": {Name: "brief text", Help: "摘要", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			m.Option("type", "brief")
+			m.Option("name", arg[0])
+			m.Option("text", arg[1])
+			m.Render(m.Conf("brief", ice.Meta("template")))
 		}},
 		"title": {Name: "title text", Help: "标题", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			// 生成序号
+			m.Option("level", "h1")
 			title, _ := m.Optionv("title").(map[string]int)
 			switch arg[0] {
 			case "endmenu":
@@ -114,10 +141,12 @@ var Index = &ice.Context{Name: "wiki", Help: "文档模块",
 				m.Render(premenu)
 				return
 			case "section":
+				m.Option("level", "h3")
 				arg = arg[1:]
 				title["section"]++
 				m.Option("prefix", fmt.Sprintf("%d.%d ", title["chapter"], title["section"]))
 			case "chapter":
+				m.Option("level", "h2")
 				arg = arg[1:]
 				title["chapter"]++
 				title["section"] = 0
@@ -160,7 +189,7 @@ var Index = &ice.Context{Name: "wiki", Help: "文档模块",
 			}
 
 			// 生成网页
-			m.Echo(string(markdown.ToHTML(buffer.Bytes(), nil, nil)))
+			m.Echo(string(buffer.Bytes()))
 		}},
 		"_tree": {Name: "_tree path", Help: "文库", Hand: func(m *ice.Message, c *ice.Context, key string, arg ...string) {
 			m.Option("dir_deep", "true")

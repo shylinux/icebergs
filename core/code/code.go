@@ -26,7 +26,7 @@ CMD sh bin/boot.sh
 
 `
 
-var Index = &ice.Context{Name: "code", Help: "编程模块",
+var Index = &ice.Context{Name: "code", Help: "编程中心",
 	Caches: map[string]*ice.Cache{},
 	Configs: map[string]*ice.Config{
 		"login": {Name: "login", Help: "登录", Value: kit.Data()},

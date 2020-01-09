@@ -32,6 +32,8 @@ func (f *Frame) Begin(m *Message, arg ...string) Server {
 	return f
 }
 func (f *Frame) Start(m *Message, arg ...string) bool {
+	m.Cap(CTX_STATUS, "start")
+	m.Cap(CTX_STREAM, strings.Split(m.Time(), " ")[1])
 	m.Log(LOG_START, "ice")
 	m.Cmd(ICE_INIT).Cmd("init", arg)
 	m.root.Cost("start")

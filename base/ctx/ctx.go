@@ -10,7 +10,7 @@ import (
 	"sort"
 )
 
-var Index = &ice.Context{Name: "ctx", Help: "元始模块",
+var Index = &ice.Context{Name: "ctx", Help: "配置模块",
 	Caches: map[string]*ice.Cache{},
 	Configs: map[string]*ice.Config{
 		ice.CTX_CONFIG: {Name: "config", Help: "配置", Value: kit.Data("path", "var/conf")},

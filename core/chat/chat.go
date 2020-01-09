@@ -14,6 +14,8 @@ var Index = &ice.Context{Name: "chat", Help: "聊天中心",
 	},
 	Commands: map[string]*ice.Command{
 		ice.ICE_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			m.Cap(ice.CTX_STATUS, "start")
+			m.Cap(ice.CTX_STREAM, "volcanos")
 			m.Cmd(ice.CTX_CONFIG, "load", "chat.json")
 			m.Watch(ice.SYSTEM_INIT, "web.chat.init")
 			m.Watch(ice.USER_CREATE, "web.chat./tutor", "init")

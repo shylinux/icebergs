@@ -7,7 +7,7 @@ import (
 	"strings"
 )
 
-var Index = &ice.Context{Name: "tcp", Help: "网络模块",
+var Index = &ice.Context{Name: "tcp", Help: "通信模块",
 	Caches:  map[string]*ice.Cache{},
 	Configs: map[string]*ice.Config{},
 	Commands: map[string]*ice.Command{

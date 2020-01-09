@@ -352,7 +352,7 @@ func (web *Frame) Close(m *ice.Message, arg ...string) bool {
 	return true
 }
 
-var Index = &ice.Context{Name: "web", Help: "网页模块",
+var Index = &ice.Context{Name: "web", Help: "网络模块",
 	Caches: map[string]*ice.Cache{},
 	Configs: map[string]*ice.Config{
 		ice.WEB_SPIDE: {Name: "spide", Help: "蜘蛛侠", Value: kit.Data(kit.MDB_SHORT, "client.name")},
@@ -814,7 +814,7 @@ var Index = &ice.Context{Name: "web", Help: "网页模块",
 			}
 
 			// 任务列表
-			m.Cmdy("nfs.dir", m.Conf(ice.WEB_DREAM, "meta.path"), "", "time name")
+			m.Cmdy("nfs.dir", m.Conf(ice.WEB_DREAM, "meta.path"), "time name")
 			m.Table(func(index int, value map[string]string, head []string) {
 				if m.Richs(ice.WEB_SPACE, nil, value["name"], func(key string, value map[string]interface{}) {
 					m.Push("type", value["type"])

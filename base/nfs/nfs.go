@@ -136,7 +136,7 @@ func dir(m *ice.Message, root string, name string, level int, deep bool, dir_typ
 	}
 }
 
-var Index = &ice.Context{Name: "nfs", Help: "文件模块",
+var Index = &ice.Context{Name: "nfs", Help: "存储模块",
 	Caches:  map[string]*ice.Cache{},
 	Configs: map[string]*ice.Config{},
 	Commands: map[string]*ice.Command{

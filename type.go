@@ -545,37 +545,18 @@ func (m *Message) Table(cbs ...interface{}) *Message {
 	}
 	return m
 }
-func (m *Message) Render(str string) *Message {
-	if res, err := kit.Render(str, m); m.Assert(err) {
+func (m *Message) Render(str string, arg ...interface{}) *Message {
+	if len(arg) == 0 {
+		arg = append(arg, m)
+	}
+	if res, err := kit.Render(str, arg[0]); m.Assert(err) {
 		m.Echo(string(res))
 	}
 	return m
 }
 func (m *Message) Split(str string, field string, space string, enter string) *Message {
-	indexs := []int{}
 	fields := kit.Split(field, space)
-	for i, l := range kit.Split(str, enter) {
-		if i == 0 && (field == "" || field == "index") {
-			fields = kit.Split(l, space)
-			if field == "index" {
-				for _, v := range fields {
-					indexs = append(indexs, strings.Index(l, v))
-				}
-			}
-			continue
-		}
-
-		if len(indexs) > 0 {
-			for i, v := range indexs {
-				if i == len(indexs)-1 {
-					m.Push(kit.Select("some", fields, i), l[v:])
-				} else {
-					m.Push(kit.Select("some", fields, i), l[v:indexs[i+1]])
-				}
-			}
-			continue
-		}
-
+	for _, l := range kit.Split(str, enter) {
 		for i, v := range kit.Split(l, space) {
 			m.Push(kit.Select("some", fields, i), v)
 		}

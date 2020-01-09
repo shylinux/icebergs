@@ -9,7 +9,7 @@ import (
 	"time"
 )
 
-var Index = &ice.Context{Name: "team", Help: "团队模块",
+var Index = &ice.Context{Name: "team", Help: "团队中心",
 	Caches: map[string]*ice.Cache{},
 	Configs: map[string]*ice.Config{
 		ice.APP_MISS: {Name: "miss", Help: "任务", Value: kit.Data(

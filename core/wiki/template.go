@@ -1,6 +1,11 @@
 package wiki
 
-var title = `<span class="story" data-type="{{.Option "type"}}" data-name="{{.Option "prefix"}}" data-text="{{.Option "text"}}">{{.Option "prefix"}}{{.Option "content"}}</span>`
+var title = `<{{.Option "level"}} class="story" data-type="{{.Option "type"}}" data-name="{{.Option "prefix"}}" data-text="{{.Option "text"}}">{{.Option "prefix"}}{{.Option "content"}}</{{.Option "level"}}>`
+var brief = `<p class="story" data-type="{{.Option "type"}}" data-name="{{.Option "name"}}" data-text="{{.Option "input"}}">{{.Option "text"}}</p>`
+var refer = `<ul class="story"
+data-type="{{.Option "type"}}" data-name="{{.Option "name"}}" data-text="{{.Option "text"}}">
+{{range $index, $value := .Optionv "list"}}<li>{{$value}}</li>{{end}}</ul>`
+var spark = `<p>{{.}}</p>`
 
 var shell = `<div class="story code" data-type="{{.Option "type"}}" data-name="{{.Option "name"}}" data-text="{{.Option "input"}}">$ {{.Option "input"}}
 {{.Option "output"}}</div>`

@@ -7,7 +7,7 @@ import (
 	"strings"
 )
 
-var Index = &ice.Context{Name: "docker", Help: "docker",
+var Index = &ice.Context{Name: "docker", Help: "容器管理",
 	Caches: map[string]*ice.Cache{},
 	Configs: map[string]*ice.Config{
 		"docker": {Name: "docker", Help: "docker", Value: kit.Data(kit.MDB_SHORT, "name")},

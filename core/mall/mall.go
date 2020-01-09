@@ -11,7 +11,7 @@ import (
 	"time"
 )
 
-var Index = &ice.Context{Name: "mall", Help: "团队模块",
+var Index = &ice.Context{Name: "mall", Help: "贸易中心",
 	Caches: map[string]*ice.Cache{},
 	Configs: map[string]*ice.Config{
 		"railway": {Name: "railway", Help: "12306", Value: kit.Data()},

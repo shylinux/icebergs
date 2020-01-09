@@ -163,19 +163,21 @@ var Index = &ice.Context{Name: "wiki", Help: "文档模块",
 			m.Echo(string(markdown.ToHTML(buffer.Bytes(), nil, nil)))
 		}},
 		"_tree": {Name: "_tree path", Help: "文库", Hand: func(m *ice.Message, c *ice.Context, key string, arg ...string) {
-			m.Cmdy("nfs.dir", m.Conf("note", "meta.path"),
-				kit.Select("", arg, 0), m.Conf("note", "meta.head"))
+			m.Cmdy("nfs.dir", kit.Select(m.Conf("note", "meta.path"), arg, 0), m.Conf("note", "meta.head"))
 		}},
-		"note": {Name: "note file", Help: "笔记", Meta: kit.Dict(
-			"remote", "you", "display", "inner",
-			"detail", []string{"add", "commit", "history", "share", "favor"},
-		), List: kit.List(
-			kit.MDB_INPUT, "text", "value", "miss.md", "name", "path",
-			kit.MDB_INPUT, "button", "value", "执行", "action", "auto",
-			kit.MDB_INPUT, "button", "value", "返回", "cb", "Last",
+		"note": {Name: "note file", Help: "笔记", Meta: kit.Dict("remote", "you", "display", "inner"), List: kit.List(
+			kit.MDB_INPUT, "text", "name", "path", "value", "miss.md",
+			kit.MDB_INPUT, "button", "name", "执行", "action", "auto",
+			kit.MDB_INPUT, "button", "name", "返回", "cb", "Last",
 		), Hand: func(m *ice.Message, c *ice.Context, key string, arg ...string) {
 			if len(arg) > 1 {
 				switch arg[1] {
+				case "运行":
+					switch arg[2] {
+					case "shell":
+						m.Cmdy(ice.CLI_SYSTEM, "sh", "-c", arg[4])
+					}
+
 				case "favor":
 					m.Cmdy(ice.WEB_FAVOR, kit.Select("story", m.Option("hot")), arg[2:])
 				case "share":

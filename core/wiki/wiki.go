@@ -8,6 +8,7 @@ import (
 
 	"bytes"
 	"fmt"
+	"html"
 	"path"
 	"strings"
 )
@@ -101,9 +102,10 @@ var Index = &ice.Context{Name: "wiki", Help: "文档中心",
 
 			switch arg = arg[2:]; arg[0] {
 			case "install", "compile":
-				m.Option("input", strings.Join(arg[1:], " "))
+				m.Option("input", html.EscapeString(strings.Join(arg[1:], " ")))
 			default:
-				m.Option("output", m.Cmdx("cli.system", "sh", "-c", m.Option("input", strings.Join(arg, " "))))
+				m.Option("input", html.EscapeString(strings.Join(arg, " ")))
+				m.Option("output", html.EscapeString(m.Cmdx("cli.system", "sh", "-c", strings.Join(arg, " "))))
 			}
 			m.Render(m.Conf("spark", ice.Meta("template")), m.Option("name"))
 			m.Render(m.Conf("shell", ice.Meta("template")))
@@ -120,7 +122,11 @@ var Index = &ice.Context{Name: "wiki", Help: "文档中心",
 			m.Option("type", "refer")
 			m.Option("name", arg[0])
 			m.Option("text", arg[1])
-			m.Optionv("list", kit.Split(arg[1], "\n"))
+			list := []interface{}{}
+			for _, v := range kit.Split(arg[1], "\n") {
+				list = append(list, kit.Split(v, " "))
+			}
+			m.Optionv("list", list)
 			m.Render(m.Conf("order", ice.Meta("template")))
 		}},
 		"brief": {Name: "brief text", Help: "摘要", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {

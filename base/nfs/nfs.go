@@ -8,6 +8,7 @@ import (
 	"crypto/sha1"
 	"encoding/hex"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"os"
 	"path"
@@ -161,6 +162,18 @@ var Index = &ice.Context{Name: "nfs", Help: "存储模块",
 					if n, e := f.WriteString(v); m.Assert(e) {
 						m.Log("export", "%v: %v", n, p)
 						m.Echo(p)
+					}
+				}
+			}
+		}},
+		"copy": {Name: "save path text", Help: "保存", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			if f, _, e := kit.Create(arg[0]); m.Assert(e) {
+				defer f.Close()
+				for _, v := range arg[1:] {
+					if s, e := os.Open(v); !m.Warn(e != nil, "%s", e) {
+						if n, e := io.Copy(f, s); m.Assert(e) {
+							m.Log(ice.LOG_IMPORT, "%d: %v", n, v)
+						}
 					}
 				}
 			}

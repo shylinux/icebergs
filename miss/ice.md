@@ -50,9 +50,9 @@ mkdir miss; cd miss && curl -s https://shylinux.com/publish/build.sh | sh
 mkdir miss; cd miss && curl -s https://shylinux.com/publish/ice.sh | sh
 ```
 
-## {{chapter "元始模块 base/ctx"}}
+## {{chapter "配置模块 base/ctx"}}
 
-## {{chapter "配置模块 base/cli"}}
+## {{chapter "命令模块 base/cli"}}
 cli模块用于与系统进行交互。
 
 - 系统信息 ice.CLI_RUNTIME

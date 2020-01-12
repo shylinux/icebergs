@@ -46,6 +46,13 @@ var Index = &ice.Context{Name: "chat", Help: "聊天中心",
 					m.Cmd(ice.WEB_FAVOR, "river.root", "field", "total", "cli.git")
 					m.Cmd(ice.WEB_FAVOR, "river.root", "field", "branch", "cli.git")
 					m.Cmd(ice.WEB_FAVOR, "river.root", "field", "status", "cli.git")
+
+					m.Cmd(ice.WEB_FAVOR, "river.root", "storm", "note")
+					m.Cmd(ice.WEB_FAVOR, "river.root", "field", "total", "cli.git")
+					m.Cmd(ice.WEB_FAVOR, "river.root", "field", "date", "web.team")
+					m.Cmd(ice.WEB_FAVOR, "river.root", "field", "miss", "web.team")
+					m.Cmd(ice.WEB_FAVOR, "river.root", "field", "progress", "web.team")
+					m.Cmd(ice.WEB_FAVOR, "river.root", "field", "note", "web.wiki")
 				}
 
 				// 用户权限

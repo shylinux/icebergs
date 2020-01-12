@@ -119,10 +119,7 @@ var Index = &ice.Context{Name: "team", Help: "团队中心",
 				}
 			}
 		}},
-		"stat": {Name: "stat", Help: "统计", Meta: kit.Dict(
-			"display", "demo.wasm",
-		// "display", "github.com/shylinux/icebergs/core/team/stat",
-		), Hand: func(m *ice.Message, c *ice.Context, key string, arg ...string) {
+		"stat": {Name: "stat", Help: "统计", Meta: kit.Dict(), Hand: func(m *ice.Message, c *ice.Context, key string, arg ...string) {
 			hot := kit.Select(ice.FAVOR_MISS, m.Option("hot"))
 			stat := map[string]int{}
 			m.Option("cache.limit", "1000")
@@ -136,8 +133,7 @@ var Index = &ice.Context{Name: "team", Help: "团队中心",
 			}
 		}},
 		"progress": {Name: "progress", Help: "进度", Meta: kit.Dict(
-			"remote", "you",
-			"display", "github.com/shylinux/icebergs/core/team/miss",
+			"remote", "you", "display", "team/miss",
 			"detail", []string{"回退", "前进", "取消", "完成"},
 		), List: kit.List(
 			kit.MDB_INPUT, "text", "value", "",

@@ -1,6 +1,7 @@
 package wiki
 
 import (
+	"github.com/gomarkdown/markdown"
 	"github.com/shylinux/icebergs"
 	_ "github.com/shylinux/icebergs/base"
 	"github.com/shylinux/icebergs/base/web"
@@ -195,7 +196,11 @@ var Index = &ice.Context{Name: "wiki", Help: "文档中心",
 			}
 
 			// 生成网页
-			m.Echo(string(buffer.Bytes()))
+			data := buffer.Bytes()
+			if strings.HasSuffix(arg[0], ".md") {
+				data = markdown.ToHTML(buffer.Bytes(), nil, nil)
+			}
+			m.Echo(string(data))
 		}},
 		"_tree": {Name: "_tree path", Help: "文库", Hand: func(m *ice.Message, c *ice.Context, key string, arg ...string) {
 			m.Option("dir_deep", "true")
@@ -203,7 +208,7 @@ var Index = &ice.Context{Name: "wiki", Help: "文档中心",
 			m.Cmdy("nfs.dir", kit.Select(m.Conf("note", "meta.path"), arg, 0), m.Conf("note", "meta.head"))
 		}},
 		"note": {Name: "note file", Help: "笔记", Meta: kit.Dict("remote", "you", "display", "inner"), List: kit.List(
-			kit.MDB_INPUT, "text", "name", "path", "value", "miss.md",
+			kit.MDB_INPUT, "text", "name", "path", "value", "README.md",
 			kit.MDB_INPUT, "button", "name", "执行", "action", "auto",
 			kit.MDB_INPUT, "button", "name", "返回", "cb", "Last",
 		), Hand: func(m *ice.Message, c *ice.Context, key string, arg ...string) {

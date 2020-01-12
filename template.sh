@@ -94,7 +94,7 @@ END
 build() {
 	export GOPRIVATE=github.com
     miss=./ && [ "$1" != "" ] && miss=$1 && shift && mkdir $miss
-    cd $miss && prepare && go build -o ${ice_bin} ${main_go} && chmod u+x ${ice_bin} && ./${ice_sh} start serve dev
+    cd $miss && prepare && cd src && go build -o ../${ice_bin} ../${main_go} && cd .. && chmod u+x ${ice_bin} && ./${ice_sh} start serve dev
 }
 
 tutor() {

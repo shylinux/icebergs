@@ -84,6 +84,7 @@ var Index = &ice.Context{Name: "cli", Help: "命令模块",
 			switch m.Option("cmd_type") {
 			case "daemon":
 				// 守护进程
+				cmd.Env = append(cmd.Env, fmt.Sprintf("PATH=%s", os.Getenv("PATH")))
 				m.Gos(m, func(m *ice.Message) {
 					if e := cmd.Start(); e != nil {
 						m.Warn(e != nil, "%v start: %s", arg, e)

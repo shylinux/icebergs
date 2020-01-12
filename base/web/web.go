@@ -807,6 +807,7 @@ var Index = &ice.Context{Name: "web", Help: "网络模块",
 					// 启动任务
 					m.Option("cmd_dir", p)
 					m.Option("cmd_type", "daemon")
+					m.Option("cmd_env", "ctx_log", "boot.log")
 					m.Cmd(m.Confv(ice.WEB_DREAM, "meta.cmd"), "self", arg[0])
 					time.Sleep(time.Second * 3)
 					m.Event(ice.DREAM_START, arg...)

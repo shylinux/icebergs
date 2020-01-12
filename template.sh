@@ -34,6 +34,7 @@ END
     [ -f Makefile ] || cat >> Makefile <<END
 all:
 	@echo && date
+	export GOPRIVATE=github.com
 	go build -o ${ice_bin} ${main_go} && chmod u+x ${ice_bin} && ./${ice_sh} restart
 END
 
@@ -91,6 +92,7 @@ END
 }
 
 build() {
+	export GOPRIVATE=github.com
     miss=./ && [ "$1" != "" ] && miss=$1 && shift && mkdir $miss
     cd $miss && prepare && go build -o ${ice_bin} ${main_go} && chmod u+x ${ice_bin} && ./${ice_sh} start serve dev
 }

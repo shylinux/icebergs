@@ -37,8 +37,8 @@ var Index = &ice.Context{Name: "code", Help: "编程中心",
 			kit.MDB_HASH, kit.Dict(
 				"system", kit.Dict(
 					kit.MDB_LIST, kit.List(
-						kit.MDB_INPUT, "bin", "file", "ice.sh", "path", "ice.sh",
-						kit.MDB_INPUT, "bin", "file", "ice.bin", "path", "ice.bin",
+						kit.MDB_INPUT, "bin", "file", "ice.sh", "path", "bin/ice.sh",
+						kit.MDB_INPUT, "bin", "file", "ice.bin", "path", "bin/ice.bin",
 					),
 				),
 			),
@@ -48,7 +48,7 @@ var Index = &ice.Context{Name: "code", Help: "编程中心",
 		ice.ICE_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			m.Cmd(ice.CTX_CONFIG, "load", "code.json")
 			m.Watch(ice.SYSTEM_INIT, "compile", "linux")
-			m.Watch(ice.SYSTEM_INIT, "publish", "ice.sh")
+			m.Watch(ice.SYSTEM_INIT, "publish", "bin/ice.sh")
 		}},
 		ice.ICE_EXIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			m.Cmd(ice.CTX_CONFIG, "save", "code.json", "web.code.login")
@@ -62,7 +62,7 @@ var Index = &ice.Context{Name: "code", Help: "编程中心",
 			}
 
 			// 编译目标
-			main := kit.Select("main.go", arg, 2)
+			main := kit.Select("src/main.go", arg, 2)
 			arch := kit.Select(m.Conf(ice.CLI_RUNTIME, "host.GOARCH"), arg, 1)
 			goos := kit.Select(m.Conf(ice.CLI_RUNTIME, "host.GOOS"), arg, 0)
 			file := path.Join(m.Conf("compile", "meta.path"), kit.Keys("ice", goos, arch))

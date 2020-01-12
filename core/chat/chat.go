@@ -35,6 +35,17 @@ var Index = &ice.Context{Name: "chat", Help: "聊天中心",
 					m.Cmd(ice.WEB_FAVOR, "river.root", "field", "favor")
 					m.Cmd(ice.WEB_FAVOR, "river.root", "field", "story")
 					m.Cmd(ice.WEB_FAVOR, "river.root", "field", "share")
+
+					m.Cmd(ice.WEB_FAVOR, "river.root", "storm", "misc")
+					m.Cmd(ice.WEB_FAVOR, "river.root", "field", "buffer", "cli.tmux")
+					m.Cmd(ice.WEB_FAVOR, "river.root", "field", "session", "cli.tmux")
+					m.Cmd(ice.WEB_FAVOR, "river.root", "field", "image", "cli.docker")
+					m.Cmd(ice.WEB_FAVOR, "river.root", "field", "container", "cli.docker")
+					m.Cmd(ice.WEB_FAVOR, "river.root", "field", "command", "cli.docker")
+					m.Cmd(ice.WEB_FAVOR, "river.root", "field", "repos", "cli.git")
+					m.Cmd(ice.WEB_FAVOR, "river.root", "field", "total", "cli.git")
+					m.Cmd(ice.WEB_FAVOR, "river.root", "field", "branch", "cli.git")
+					m.Cmd(ice.WEB_FAVOR, "river.root", "field", "status", "cli.git")
 				}
 
 				// 用户权限
@@ -46,6 +57,8 @@ var Index = &ice.Context{Name: "chat", Help: "聊天中心",
 				m.Cmd(ice.AAA_ROLE, "white", ice.ROLE_VOID, "enable", "/action")
 				m.Cmd(ice.AAA_ROLE, "white", ice.ROLE_VOID, "enable", "dream")
 				m.Cmd(ice.AAA_ROLE, "black", ice.ROLE_VOID, "enable", "dream.停止")
+
+				m.Cmd(ice.AAA_USER, "first", m.Conf(ice.CLI_RUNTIME, "boot.username"))
 			}
 
 		}},
@@ -95,6 +108,7 @@ var Index = &ice.Context{Name: "chat", Help: "聊天中心",
 					m.Option(ice.MSG_USERROLE, m.Cmdx(ice.AAA_ROLE, "check", value["username"]))
 					storm, river := "", m.Option(ice.MSG_RIVER, m.Cmdx("/ocean", "spawn", kit.Select(arg[1], value["nickname"])+"@"+m.Conf(ice.CLI_RUNTIME, "boot.hostname"), m.Option(ice.MSG_USERNAME)))
 					m.Richs(ice.WEB_FAVOR, nil, kit.Keys("river", m.Option(ice.MSG_USERROLE)), func(key string, value map[string]interface{}) {
+						m.Option("cache.limit", "100")
 						m.Grows(ice.WEB_FAVOR, kit.Keys("hash", key), "", "", func(index int, value map[string]interface{}) {
 							switch value["type"] {
 							case "storm":

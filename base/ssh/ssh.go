@@ -40,10 +40,18 @@ func (f *Frame) Begin(m *ice.Message, arg ...string) ice.Server {
 }
 func (f *Frame) Start(m *ice.Message, arg ...string) bool {
 	switch kit.Select("stdio", arg, 0) {
-	default:
+	case "stdio":
 		f.in = os.Stdin
 		f.out = os.Stdout
 		m.Cap(ice.CTX_STREAM, "stdio")
+	default:
+		if n, e := os.Open(arg[0]); m.Warn(e != nil, "%s", e) {
+			return true
+		} else {
+			f.in = n
+			f.out = os.Stderr
+			m.Cap(ice.CTX_STREAM, arg[0])
+		}
 	}
 
 	f.count = 0
@@ -104,6 +112,9 @@ var Index = &ice.Context{Name: "ssh", Help: "终端模块",
 				f.in.Close()
 				m.Done()
 			}
+		}},
+		"scan": {Name: "scan", Help: "解析", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			m.Starts(arg[0], arg[1], arg[2:]...)
 		}},
 	},
 }

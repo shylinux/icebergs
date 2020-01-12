@@ -87,6 +87,16 @@ var Index = &ice.Context{Name: "aaa", Help: "认证模块",
 		}},
 		ice.AAA_USER: {Name: "user", Help: "用户", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			switch arg[0] {
+			case "first":
+				if m.Richs(ice.AAA_USER, nil, "%", nil) == nil {
+					m.Rich(ice.AAA_USER, nil, kit.Dict("username", arg[1],
+						"usernode", m.Conf(ice.CLI_RUNTIME, "boot.hostname"),
+					))
+					user := m.Richs(ice.AAA_USER, nil, arg[1], nil)
+					m.Info("create user: %s %s", arg[1], kit.Format(user))
+					m.Event(ice.USER_CREATE, arg[1])
+				}
+
 			case "login":
 				// 用户认证
 				user := m.Richs(ice.AAA_USER, nil, arg[1], nil)

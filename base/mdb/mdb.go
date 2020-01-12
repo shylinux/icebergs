@@ -7,6 +7,7 @@ import (
 	"bytes"
 	"encoding/csv"
 	"encoding/json"
+	"os"
 	"sort"
 	"strings"
 )
@@ -54,6 +55,11 @@ var Index = &ice.Context{Name: "mdb", Help: "数据模块",
 			case kit.MDB_LIST:
 				buf := bytes.NewBufferString(msg.Append("text"))
 				r := csv.NewReader(buf)
+				if msg.Append("file") != "" {
+					if f, e := os.Open(msg.Append("file")); m.Assert(e) {
+						r = csv.NewReader(f)
+					}
+				}
 				head, _ := r.Read()
 
 				for {
@@ -79,7 +85,7 @@ var Index = &ice.Context{Name: "mdb", Help: "数据模块",
 				}
 			}
 		}},
-		ice.MDB_EXPORT: {Name: "export", Help: "导出数据", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		ice.MDB_EXPORT: {Name: "export conf key list|hash", Help: "导出数据", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			name := kit.Select(kit.Select(arg[0], arg[0]+":"+arg[1], arg[1] != ""), arg, 3)
 
 			switch arg[2] {
@@ -89,7 +95,7 @@ var Index = &ice.Context{Name: "mdb", Help: "数据模块",
 				buf := bytes.NewBuffer(make([]byte, 0, 1024))
 				w := csv.NewWriter(buf)
 				head := []string{}
-				m.Confm(arg[0], arg[1], func(index int, value map[string]interface{}) {
+				m.Grows(arg[0], arg[1], "", "", func(index int, value map[string]interface{}) {
 					if index == 0 {
 						// 输出表头
 						for k := range value {
@@ -108,10 +114,10 @@ var Index = &ice.Context{Name: "mdb", Help: "数据模块",
 				})
 				w.Flush()
 
-				m.Cmd(ice.WEB_STORY, "add", "csv", name, string(buf.Bytes()))
+				m.Cmdy(ice.WEB_STORY, "add", "csv", name, string(buf.Bytes()))
 
 			case kit.MDB_HASH:
-				m.Cmd(ice.WEB_STORY, "add", "json", name, kit.Formats(m.Confv(arg[0], arg[1])))
+				m.Cmdy(ice.WEB_STORY, "add", "json", name, kit.Formats(m.Confv(arg[0], arg[1])))
 			}
 		}},
 	},

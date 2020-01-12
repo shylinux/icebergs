@@ -828,7 +828,8 @@ var Index = &ice.Context{Name: "web", Help: "网络模块",
 			m.Sort("status")
 		}},
 
-		ice.WEB_FAVOR: {Name: "favor", Help: "收藏夹", Meta: kit.Dict("remote", "you", "exports", []string{"hot", "favor"}, "detail", []string{"执行", "编辑", "收录", "下载"}), List: kit.List(
+		ice.WEB_FAVOR: {Name: "favor", Help: "收藏夹", Meta: kit.Dict("remote", "you", "exports", []string{"hot", "favor"},
+			"detail", []string{"执行", "编辑", "收录", "导出", "下载"}), List: kit.List(
 			kit.MDB_INPUT, "text", "name", "hot", "action", "auto",
 			kit.MDB_INPUT, "text", "name", "id", "action", "auto",
 			kit.MDB_INPUT, "button", "value", "查看", "action", "auto",
@@ -858,6 +859,8 @@ var Index = &ice.Context{Name: "web", Help: "网络模块",
 				case "执行":
 					m.Event(ice.FAVOR_START, m.Option("you"), kit.Select(m.Option("hot"), arg[3], arg[2] == "favor"))
 					arg = arg[:0]
+				case "导出":
+					arg = []string{"export", m.Option("hot")}
 				}
 			}
 
@@ -876,8 +879,9 @@ var Index = &ice.Context{Name: "web", Help: "网络模块",
 					if len(arg) == 1 {
 						m.Cmdy(ice.MDB_EXPORT, ice.WEB_FAVOR, kit.MDB_HASH, kit.MDB_HASH, "favor.json")
 					} else {
+						m.Option("cache.limit", "1000")
 						m.Richs(ice.WEB_FAVOR, nil, arg[1], func(key string, value map[string]interface{}) {
-							m.Cmdy(ice.MDB_EXPORT, ice.WEB_FAVOR, kit.Keys(kit.MDB_HASH, key, kit.MDB_LIST), kit.MDB_LIST, arg[1]+".csv")
+							m.Cmdy(ice.MDB_EXPORT, ice.WEB_FAVOR, kit.Keys(kit.MDB_HASH, key), kit.MDB_LIST, arg[1]+".csv")
 						})
 					}
 					return
@@ -1028,7 +1032,8 @@ var Index = &ice.Context{Name: "web", Help: "网络模块",
 				m.Push("data", h)
 			}
 		}},
-		ice.WEB_STORY: {Name: "story", Help: "故事会", Meta: kit.Dict("remote", "you", "exports", []string{"top", "story"}, "detail", []string{"归档", "共享", "下载"}), List: kit.List(
+		ice.WEB_STORY: {Name: "story", Help: "故事会", Meta: kit.Dict("remote", "you", "exports", []string{"top", "story"},
+			"detail", []string{"归档", "共享", "导出", "下载"}), List: kit.List(
 			kit.MDB_INPUT, "text", "name", "top", "action", "auto",
 			kit.MDB_INPUT, "text", "name", "list", "action", "auto",
 			kit.MDB_INPUT, "button", "value", "查看", "action", "auto",
@@ -1047,6 +1052,11 @@ var Index = &ice.Context{Name: "web", Help: "网络模块",
 						m.Cmdy(ice.WEB_SPACE, "share", "add", ice.TYPE_STORY,
 							msg.Append("story"), arg[3], "pod", pod, "data", arg[3])
 						return
+					}
+				case "导出":
+					switch arg[2] {
+					case "story", "list":
+						arg = []string{ice.STORY_WATCH, arg[3], m.Option("story")}
 					}
 				}
 			}
@@ -1177,6 +1187,7 @@ var Index = &ice.Context{Name: "web", Help: "网络模块",
 			case ice.STORY_WATCH:
 				msg := m.Cmd(ice.WEB_STORY, "index", arg[1])
 				name := kit.Select(arg[1], arg, 2)
+				os.Remove(kit.Keys(name, "bak"))
 				os.Rename(name, kit.Keys(name, "bak"))
 				if msg.Append("file") != "" {
 					os.Link(msg.Append("file"), name)
@@ -1211,7 +1222,11 @@ var Index = &ice.Context{Name: "web", Help: "网络模块",
 				}
 
 				// 保存数据
-				if m.Richs(ice.WEB_CACHE, nil, kit.Select("", arg, 3), nil) == nil {
+				if m.Richs(ice.WEB_CACHE, nil, kit.Select("", arg, 3), func(key string, value map[string]interface{}) {
+					if len(arg) > 3 {
+						arg[3] = key
+					}
+				}) == nil {
 					m.Cmdy(ice.WEB_CACHE, arg)
 					arg = []string{arg[0], m.Append("type"), m.Append("name"), m.Append("data")}
 				}

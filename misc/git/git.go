@@ -5,6 +5,7 @@ import (
 	"github.com/shylinux/icebergs/base/cli"
 	"github.com/shylinux/toolkits"
 	"os"
+	"path"
 	"strings"
 	"time"
 )
@@ -21,14 +22,93 @@ var Index = &ice.Context{Name: "git", Help: "代码管理",
 				"name", "volcanos", "path", "usr/volcanos", "branch", "master",
 				"remote", "https://github.com/shylinux/volcanos",
 			))
+			m.Rich("repos", nil, kit.Data(
+				"name", "icebergs", "path", "../../icebergs", "branch", "master",
+				"remote", "https://github.com/shylinux/icebergs",
+			))
+			m.Rich("repos", nil, kit.Data(
+				"name", "toolkits", "path", "../../toolkits", "branch", "master",
+				"remote", "https://github.com/shylinux/toolkits",
+			))
+			m.Rich("repos", nil, kit.Data(
+				"name", "contexts", "path", "../../contexts", "branch", "master",
+				"remote", "https://github.com/shylinux/context",
+			))
+			m.Cmd("nfs.dir", m.Conf(ice.WEB_DREAM, "meta.path"), "name path").Table(func(index int, value map[string]string, head []string) {
+				if s, e := os.Stat(path.Join(value["path"], ".git")); e == nil && s.IsDir() {
+					m.Rich("repos", nil, kit.Data(
+						"name", value["name"], "path", value["path"], "branch", "master",
+						"remote", m.Cmdx(ice.CLI_SYSTEM, "git", "remote", "get-url", "origin"),
+					))
+				}
+			})
 			m.Watch(ice.SYSTEM_INIT, "cli.git.check", "volcanos")
 		}},
 		ice.ICE_EXIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 		}},
+		"repos": {Name: "repos", Help: "仓库", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			m.Richs("repos", nil, "*", func(key string, value map[string]interface{}) {
+				m.Push(key, value["meta"], []string{"time", "name", "branch", "path", "remote"})
+			})
+			m.Sort("name")
+		}},
+		"branch": {Name: "branch", Help: "分支", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			prefix := []string{ice.CLI_SYSTEM, "git", "branch"}
+			m.Richs("repos", nil, kit.Select("*", arg, 0), func(key string, value map[string]interface{}) {
+				m.Option("cmd_dir", kit.Value(value, "meta.path"))
+				for _, v := range strings.Split(m.Cmdx(prefix, "-v"), "\n") {
+					if len(v) > 0 {
+						m.Push("repos", kit.Value(value, "meta.name"))
+						m.Push("tags", v[:2])
+						vs := strings.SplitN(strings.TrimSpace(v[2:]), " ", 2)
+						m.Push("branch", vs[0])
+						vs = strings.SplitN(strings.TrimSpace(vs[1]), " ", 2)
+						m.Push("hash", vs[0])
+						m.Push("note", strings.TrimSpace(vs[1]))
+					}
+				}
+			})
+			m.Sort("repos")
+		}},
+		"status": {Name: "status", Help: "状态", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			prefix := []string{ice.CLI_SYSTEM, "git", "status"}
+			m.Richs("repos", nil, kit.Select("*", arg, 0), func(key string, value map[string]interface{}) {
+				m.Option("cmd_dir", kit.Value(value, "meta.path"))
+				for _, v := range strings.Split(strings.TrimSpace(m.Cmdx(prefix, "-sb")), "\n") {
+					vs := strings.SplitN(strings.TrimSpace(v), " ", 2)
+					m.Push("repos", kit.Value(value, "meta.name"))
+					m.Push("tags", vs[0])
+					m.Push("file", vs[1])
+				}
+			})
+		}},
+		"total": {Name: "total", Help: "统计", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			days := 0
+			commit, adds, dels, rest := 0, 0, 0, 0
+			m.Richs("repos", nil, kit.Select("*", arg, 0), func(key string, value map[string]interface{}) {
+				m.Push("repos", kit.Value(value, "meta.name"))
+				m.Copy(m.Cmd("sum", "total", kit.Value(value, "meta.path"), "10000").Table(func(index int, value map[string]string, head []string) {
+					if kit.Int(value["days"]) > days {
+						days = kit.Int(value["days"])
+					}
+					commit += kit.Int(value["commit"])
+					adds += kit.Int(value["adds"])
+					dels += kit.Int(value["dels"])
+					rest += kit.Int(value["rest"])
+				}))
+			})
+			m.Push("repos", "total")
+			m.Push("days", days)
+			m.Push("commit", commit)
+			m.Push("adds", adds)
+			m.Push("dels", dels)
+			m.Push("rest", rest)
+			m.Sort("commit", "int_r")
+		}},
 		"check": {Name: "check", Help: "检查", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			m.Richs("repos", nil, arg[0], func(key string, value map[string]interface{}) {
 				if _, e := os.Stat(kit.Format(kit.Value(value, "meta.path"))); e != nil && os.IsNotExist(e) {
-					m.Cmd("cli.system", "git", "clone", kit.Value(value, "meta.remote"),
+					m.Cmd(ice.CLI_SYSTEM, "git", "clone", kit.Value(value, "meta.remote"),
 						"-b", kit.Value(value, "meta.branch"), kit.Value(value, "meta.path"))
 				}
 			})

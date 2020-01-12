@@ -88,15 +88,17 @@ var Index = &Context{Name: "ice", Help: "冰山模块",
 		}},
 		"init": {Name: "init", Help: "hello", Hand: func(m *Message, c *Context, cmd string, arg ...string) {
 			m.root.Cost("_init")
-			m.Start("log", arg...)
-			m.Start("gdb", arg...)
-			m.Start("ssh", arg...)
+			m.Start("log")
+			m.Start("gdb")
+			m.Start("ssh")
+			m.Cmd("ssh.scan", "init.shy", "启动配置", "etc/init.shy")
 			m.Cmd(arg)
 		}},
 		"help": {Name: "help", Help: "帮助", Hand: func(m *Message, c *Context, cmd string, arg ...string) {
 			m.Echo(strings.Join(kit.Simple(m.Confv("help", "index")), "\n"))
 		}},
 		"exit": {Name: "exit", Help: "hello", Hand: func(m *Message, c *Context, cmd string, arg ...string) {
+			m.Cmd("ssh.scan", "exit.shy", "退出配置", "etc/exit.shy")
 			f := m.root.target.server.(*Frame)
 			f.code = kit.Int(kit.Select("0", arg, 0))
 			m.root.Cmd(ICE_EXIT)

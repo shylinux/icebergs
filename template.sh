@@ -1,7 +1,20 @@
 #! /bin/sh
 
+ice_sh="bin/ice.sh"
+ice_bin="bin/ice.bin"
+ice_mod="${PWD##**/}"
+init_shy="etc/init.shy"
+exit_shy="etc/exit.shy"
+main_go="src/main.go"
+readme="README.md"
+
 prepare() {
-    [ -f main.go ] || cat >> main.go <<END
+    [ -f ${readme} ] || cat >> ${readme} <<END
+hello ice world
+END
+
+    [ -d src ] || mkdir src
+    [ -f ${main_go} ] || cat >> ${main_go} <<END
 package main
 
 import (
@@ -16,24 +29,32 @@ func main() {
 }
 END
 
-    [ -f go.mod ] || go mod init ${PWD##**/}
+    [ -f src/go.mod ] || cd src && go mod init ${ice_mod} && cd ..
 
     [ -f Makefile ] || cat >> Makefile <<END
 all:
 	@echo && date
-	go build -o ice.bin main.go && chmod u+x ice.bin && ./ice.sh restart
+	go build -o ${ice_bin} ${main_go} && chmod u+x ${ice_bin} && ./${ice_sh} restart
 END
 
-    [ -f ice.sh ] || cat >> ice.sh <<END
+    [ -d etc ] || mkdir etc
+    [ -f ${init_shy} ] || cat >> ${init_shy} <<END
+END
+    [ -f ${exit_shy} ] || cat >> "${exit_shy}" <<END
+END
+
+    [ -d bin ] || mkdir bin
+    [ -f ${ice_sh} ] || cat >> ${ice_sh} <<END
 #! /bin/sh
 
-export PATH=\${PWD}:\$PATH
+export PATH=\${PWD}:\${PWD}/bin:\$PATH
 export ctx_pid=\${ctx_pid:=var/run/ice.pid}
-export ctx_log=\${ctx_log:=boot.log}
+export ctx_log=\${ctx_log:=bin/boot.log}
 
 prepare() {
-    [ -e ice.sh ] || curl \$ctx_dev/publish/ice.sh -o ice.sh && chmod u+x ice.sh
-    [ -e ice.bin ] && chmod u+x ice.bin && return
+    [ -d etc ] || mkdir bin
+    [ -e ${ice_sh} ] || curl \$ctx_dev/publish/ice.sh -o ${ice_sh} && chmod u+x ${ice_sh}
+    [ -e ${ice_bin} ] && chmod u+x ${ice_bin} && return
 
     bin="ice"
     case \`uname -s\` in
@@ -46,11 +67,11 @@ prepare() {
         i686) bin=\${bin}.386 ;;
         arm*) bin=\${bin}.arm ;;
     esac
-    curl \$ctx_dev/publish/\${bin} -o ice.bin && chmod u+x ice.bin
+    curl \$ctx_dev/publish/\${bin} -o ${ice_bin} && chmod u+x ${ice_bin}
  }
 start() {
     trap HUP hup && while true; do
-        date && ice.bin \$@ 2>\$ctx_log && echo -e "\n\nrestarting..." || break
+        date && ./${ice_bin} \$@ 2>\$ctx_log && echo -e "\n\nrestarting..." || break
     done
 }
 serve() {
@@ -66,12 +87,12 @@ shutdown() {
 cmd=\$1 && [ -n "\$cmd" ] && shift || cmd=serve
 \$cmd \$*
 END
-    chmod u+x ice.sh
+    chmod u+x ${ice_sh}
 }
 
 build() {
     miss=./ && [ "$1" != "" ] && miss=$1 && shift && mkdir $miss
-    cd $miss && prepare && go build -o ice.bin main.go && chmod u+x ice.bin && ./ice.sh start serve dev
+    cd $miss && prepare && go build -o ${ice_bin} ${main_go} && chmod u+x ${ice_bin} && ./${ice_sh} start serve dev
 }
 
 tutor() {

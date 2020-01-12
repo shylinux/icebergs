@@ -2,9 +2,24 @@
 
 icebergs是一个后端框架，通过模块化、集群化实现资源的无限的扩展与自由的组合。
 
+使用icebergs可以将各种模块或项目集成到一起，快速开发出集中式的服务器。
+
+使用icebergs可以将各种设备自由的组合在一起，快速搭建起分布式的服务器。
+
+所以通过icebergs开发出来的模块，无需任何多余代码，就可以独立运行，可以成为系统命令，可以远程调用，可以成为前端插件，可以成为小程序页面。
+
+## 项目开发
+开发环境，需要安装git，golang
+
 一键创建项目
 ```
-mkdir miss; cd miss && curl -s https://shylinux.com/publish/build.sh | sh
+mkdir miss; cd miss && curl -s https://shylinux.com/publish/template.sh | sh
+```
+
+运行环境，如需前端页面访问服务，需要安装git
+一键复制项目
+```
+export ctx_dev=http://127.0.0.1:9020 && curl -s $ctx_dev/publish/ice.sh
 ```
 
 ## 1 原型 type.go

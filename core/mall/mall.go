@@ -22,12 +22,6 @@ var Index = &ice.Context{Name: "mall", Help: "贸易中心",
 			if m.Richs(ice.WEB_SPIDE, nil, "12306", nil) == nil {
 				m.Cmd(ice.WEB_SPIDE, "add", "12306", "https://kyfw.12306.cn")
 			}
-			if !m.Confs("railway", "meta.site") {
-				list := strings.Split(strings.TrimPrefix(m.Cmdx(ice.WEB_SPIDE, "12306", "raw", "GET", "/otn/resources/js/framework/station_name.js?station_version=1.9090"), "var statuion_names ='"), "|")
-				for i := 0; i < len(list)-5; i += 5 {
-					m.Conf("railway", kit.Keys("meta.site", list[i+1]), list[i+2])
-				}
-			}
 		}},
 		ice.ICE_EXIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			m.Cmd(ice.CTX_CONFIG, "save", "mall.json", "web.mall.railway")
@@ -57,6 +51,13 @@ var Index = &ice.Context{Name: "mall", Help: "贸易中心",
 			kit.MDB_INPUT, "text", "name", "to", "value", "曲阜",
 			kit.MDB_INPUT, "button", "name", "查询",
 		), Hand: func(m *ice.Message, c *ice.Context, key string, arg ...string) {
+			if !m.Confs("railway", "meta.site") {
+				list := strings.Split(strings.TrimPrefix(m.Cmdx(ice.WEB_SPIDE, "12306", "raw", "GET", "/otn/resources/js/framework/station_name.js?station_version=1.9090"), "var statuion_names ='"), "|")
+				for i := 0; i < len(list)-5; i += 5 {
+					m.Conf("railway", kit.Keys("meta.site", list[i+1]), list[i+2])
+				}
+			}
+
 			date := time.Now().Add(time.Hour * 24).Format("2006-01-02")
 			if len(arg) > 0 {
 				date, arg = arg[0], arg[1:]

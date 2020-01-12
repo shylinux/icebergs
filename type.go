@@ -100,6 +100,16 @@ func (c *Context) Register(s *Context, x Server) *Context {
 	return s
 }
 
+func (c *Context) Spawn(m *Message, name string, help string, arg ...string) *Context {
+	s := &Context{Name: name, Help: help, Caches: map[string]*Cache{}}
+	if m.target.Server != nil {
+		c.Register(s, m.target.server.Spawn(m, s, arg...))
+	} else {
+		c.Register(s, nil)
+	}
+	m.target = s
+	return s
+}
 func (c *Context) Begin(m *Message, arg ...string) *Context {
 	c.Caches[CTX_STATUS] = &Cache{Name: CTX_STATUS, Value: ""}
 	c.Caches[CTX_STREAM] = &Cache{Name: CTX_STREAM, Value: ""}
@@ -357,6 +367,7 @@ func (m *Message) Copy(msg *Message) *Message {
 }
 func (m *Message) Push(key string, value interface{}, arg ...interface{}) *Message {
 	switch value := value.(type) {
+	case map[string]string:
 	case map[string]interface{}:
 		if key == "detail" {
 			value = kit.KeyValue(map[string]interface{}{}, "", value)
@@ -555,8 +566,30 @@ func (m *Message) Render(str string, arg ...interface{}) *Message {
 	return m
 }
 func (m *Message) Split(str string, field string, space string, enter string) *Message {
+	indexs := []int{}
 	fields := kit.Split(field, space)
-	for _, l := range kit.Split(str, enter) {
+	for i, l := range kit.Split(str, enter) {
+		if i == 0 && (field == "" || field == "index") {
+			fields = kit.Split(l, space)
+			if field == "index" {
+				for _, v := range fields {
+					indexs = append(indexs, strings.Index(l, v))
+				}
+			}
+			continue
+		}
+
+		if len(indexs) > 0 {
+			for i, v := range indexs {
+				if i == len(indexs)-1 {
+					m.Push(kit.Select("some", fields, i), l[v:])
+				} else {
+					m.Push(kit.Select("some", fields, i), l[v:indexs[i+1]])
+				}
+			}
+			continue
+		}
+
 		for i, v := range kit.Split(l, space) {
 			m.Push(kit.Select("some", fields, i), v)
 		}
@@ -762,6 +795,10 @@ func (m *Message) Start(key string, arg ...string) *Message {
 	})
 	return m
 }
+func (m *Message) Starts(name string, help string, arg ...string) *Message {
+	m.target.Spawn(m, name, help, arg...).Begin(m, arg...).Start(m, arg...)
+	return m
+}
 func (m *Message) Call(sync bool, cb func(*Message) *Message) *Message {
 	if sync {
 		wait := make(chan bool)
@@ -777,6 +814,10 @@ func (m *Message) Back(sub *Message) *Message {
 	if m.cb != nil {
 		m.cb(sub)
 	}
+	return m
+}
+func (m *Message) Sleep(arg string) *Message {
+	time.Sleep(kit.Duration(arg))
 	return m
 }
 

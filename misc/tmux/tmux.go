@@ -244,7 +244,10 @@ var Index = &ice.Context{Name: "tmux", Help: "终端管理",
 			}
 
 			m.Option("cmd_env", "TMUX", "")
-			m.Option("cmd_dir", path.Join(m.Conf(ice.WEB_DREAM, "meta.path"), arg[0]))
+			p := path.Join(m.Conf(ice.WEB_DREAM, "meta.path"), arg[0])
+			if s, e := os.Stat(p); e == nil && s.IsDir() {
+				m.Option("cmd_dir", p)
+			}
 
 			// 创建会话
 			if m.Cmd(prefix, "has-session", "-t", arg[0]).Append("code") != "0" {

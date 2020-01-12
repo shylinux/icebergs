@@ -116,7 +116,14 @@ var Index = &ice.Context{Name: "ctx", Help: "配置模块",
 					}
 				}
 			default:
-				m.Echo(kit.Formats(m.Confv(arg[0])))
+				if len(arg) > 2 {
+					m.Conf(arg[0], arg[1], arg[2])
+				}
+				if len(arg) > 1 {
+					m.Echo(m.Conf(arg[0], arg[1]))
+				} else {
+					m.Echo(kit.Formats(m.Confv(arg[0])))
+				}
 			}
 		}},
 	},

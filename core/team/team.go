@@ -32,8 +32,10 @@ var Index = &ice.Context{Name: "team", Help: "团队中心",
 			m.Cmd(ice.CTX_CONFIG, "save", "team.json", "web.team.miss")
 		}},
 
-		ice.APP_MISS: {Name: "miss", Help: "任务", Meta: kit.Dict(
-			"remote", "you",
+		ice.APP_MISS: {Name: "miss", Help: "任务", Meta: kit.Dict("remote", "you"), List: kit.List(
+			kit.MDB_INPUT, "text", "name", "id",
+			kit.MDB_INPUT, "button", "name", "执行",
+			kit.MDB_INPUT, "button", "name", "返回", "cb", "Last",
 		), Hand: func(m *ice.Message, c *ice.Context, key string, arg ...string) {
 			hot := kit.Select(ice.FAVOR_MISS, m.Option("hot"))
 			if len(arg) > 1 {
@@ -59,11 +61,20 @@ var Index = &ice.Context{Name: "team", Help: "团队中心",
 				})
 				return
 			}
+			if len(arg) == 1 {
+				// 任务详情
+				m.Richs(ice.WEB_FAVOR, nil, hot, func(key string, value map[string]interface{}) {
+					m.Grows(ice.WEB_FAVOR, kit.Keys("hash", key), "id", arg[0], func(index int, value map[string]interface{}) {
+						m.Push("detail", value)
+					})
+				})
+				return
+			}
 
 			// 添加任务
 			m.Cmdy(ice.WEB_FAVOR, hot, ice.TYPE_DRIVE, arg[0], arg[1],
 				"begin_time", m.Time(), "close_time", m.Time(),
-				"status", kit.Select("准备中", arg, 3),
+				"status", kit.Select("准备中", arg, 2),
 			)
 		}},
 		"date": {Name: "date", Help: "日历", Hand: func(m *ice.Message, c *ice.Context, key string, arg ...string) {
@@ -109,11 +120,20 @@ var Index = &ice.Context{Name: "team", Help: "团队中心",
 			}
 		}},
 		"stat": {Name: "stat", Help: "统计", Meta: kit.Dict(
+			"display", "demo.wasm",
 		// "display", "github.com/shylinux/icebergs/core/team/stat",
 		), Hand: func(m *ice.Message, c *ice.Context, key string, arg ...string) {
-			m.Push("weekly", 10)
-			m.Push("month", 100)
-			m.Push("year", 1000)
+			hot := kit.Select(ice.FAVOR_MISS, m.Option("hot"))
+			stat := map[string]int{}
+			m.Option("cache.limit", "1000")
+			m.Richs(ice.WEB_FAVOR, nil, hot, func(key string, value map[string]interface{}) {
+				m.Grows(ice.WEB_FAVOR, kit.Keys("hash", key), "", "", func(index int, value map[string]interface{}) {
+					stat[kit.Format(kit.Value(value, "extra.status"))] += 1
+				})
+			})
+			for k, v := range stat {
+				m.Push(k, v)
+			}
 		}},
 		"progress": {Name: "progress", Help: "进度", Meta: kit.Dict(
 			"remote", "you",
@@ -135,11 +155,13 @@ var Index = &ice.Context{Name: "team", Help: "团队中心",
 							}
 							if next := m.Conf(ice.APP_MISS, kit.Keys("meta.fsm", value["status"], "next")); next != "" {
 								value["status"] = next
+								kit.Value(value, "change.-2", kit.Dict("time", m.Time(), "status", next))
 							}
 
 						case "回退":
 							if prev := m.Conf(ice.APP_MISS, kit.Keys("meta.fsm", value["status"], "prev")); prev != "" {
 								value["status"] = prev
+								kit.Value(value, "change.-2", kit.Dict("time", m.Time(), "status", prev))
 							}
 
 						case "取消":

@@ -110,6 +110,9 @@ var Index = &ice.Context{Name: "aaa", Help: "认证模块",
 					m.Info("create user: %s %s", arg[1], kit.Format(user))
 					m.Event(ice.USER_CREATE, arg[1])
 
+				} else if kit.Format(user["password"]) == "" {
+					user["password"] = arg[2]
+
 				} else if kit.Format(user["password"]) != arg[2] {
 					// 认证失败
 					m.Info("login fail user: %s", arg[1])

@@ -896,7 +896,7 @@ var Index = &ice.Context{Name: "web", Help: "网络模块",
 					m.Push("favor", kit.Value(value, "meta.name"))
 					m.Push("count", kit.Value(value, "meta.count"))
 				})
-				m.Sort("time", "time_r")
+				m.Sort("favor")
 				return
 			}
 

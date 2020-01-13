@@ -273,3 +273,30 @@ func (b *Table) Draw(m *ice.Message, x, y int) Chart {
 	}
 	return b
 }
+
+func stack(m *ice.Message, name string, level int, data interface{}) {
+	l, ok := kit.Value(data, "list").([]interface{})
+	style := []string{}
+	kit.Fetch(kit.Value(data, "meta"), func(key string, value string) {
+		switch key {
+		case "bg":
+			style = append(style, "background:"+value)
+		case "fg":
+			style = append(style, "color:"+value)
+		}
+	})
+	if !ok || len(l) == 0 {
+		m.Echo(`<div class="%s" style="%s"><span class="state">o</span> %s</div>`, name, strings.Join(style, ";"), kit.Value(data, "meta.text"))
+		return
+	}
+	m.Echo(`<div class="%s %s" style="%s"><span class="state">%s</span> %s</div>`,
+		kit.Select("span", "fold", level > 2), name, strings.Join(style, ";"), kit.Select("v", ">", level > 2), kit.Value(data, "meta.text"))
+
+	m.Echo("<ul class='%s' %s>", name, kit.Select("", `style="display:none"`, level > 2))
+	kit.Fetch(kit.Value(data, "list"), func(index int, value map[string]interface{}) {
+		m.Echo("<li>")
+		stack(m, name, level+1, value)
+		m.Echo("</li>")
+	})
+	m.Echo("</ul>")
+}

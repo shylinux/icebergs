@@ -4,6 +4,7 @@ import (
 	"github.com/shylinux/icebergs"
 	"github.com/shylinux/icebergs/base/cli"
 	"github.com/shylinux/toolkits"
+
 	"os"
 	"path"
 	"strings"
@@ -44,8 +45,7 @@ var Index = &ice.Context{Name: "git", Help: "代码管理",
 			})
 			m.Watch(ice.SYSTEM_INIT, "cli.git.check", "volcanos")
 		}},
-		ice.ICE_EXIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-		}},
+		ice.ICE_EXIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {}},
 		"repos": {Name: "repos", Help: "仓库", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			m.Richs("repos", nil, "*", func(key string, value map[string]interface{}) {
 				m.Push(key, value["meta"], []string{"time", "name", "branch", "path", "remote"})
@@ -62,6 +62,7 @@ var Index = &ice.Context{Name: "git", Help: "代码管理",
 						m.Push("tags", v[:2])
 						vs := strings.SplitN(strings.TrimSpace(v[2:]), " ", 2)
 						m.Push("branch", vs[0])
+						m.Push("last", m.Cmdx(ice.CLI_SYSTEM, "git", "log", "-n", "1", "--pretty=%ad", "--date=short"))
 						vs = strings.SplitN(strings.TrimSpace(vs[1]), " ", 2)
 						m.Push("hash", vs[0])
 						m.Push("note", strings.TrimSpace(vs[1]))
@@ -87,7 +88,7 @@ var Index = &ice.Context{Name: "git", Help: "代码管理",
 			commit, adds, dels, rest := 0, 0, 0, 0
 			m.Richs("repos", nil, kit.Select("*", arg, 0), func(key string, value map[string]interface{}) {
 				m.Push("repos", kit.Value(value, "meta.name"))
-				m.Copy(m.Cmd("sum", "total", kit.Value(value, "meta.path"), "10000").Table(func(index int, value map[string]string, head []string) {
+				m.Copy(m.Cmd("sum", kit.Value(value, "meta.path"), "total", "10000").Table(func(index int, value map[string]string, head []string) {
 					if kit.Int(value["days"]) > days {
 						days = kit.Int(value["days"])
 					}
@@ -103,7 +104,7 @@ var Index = &ice.Context{Name: "git", Help: "代码管理",
 			m.Push("adds", adds)
 			m.Push("dels", dels)
 			m.Push("rest", rest)
-			m.Sort("commit", "int_r")
+			m.Sort("adds", "int_r")
 		}},
 		"check": {Name: "check", Help: "检查", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			m.Richs("repos", nil, arg[0], func(key string, value map[string]interface{}) {
@@ -113,19 +114,20 @@ var Index = &ice.Context{Name: "git", Help: "代码管理",
 				}
 			})
 		}},
-		"sum": {Name: "sum", Help: "统计", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		"sum": {Name: "sum [path] [total] [count|date] args...", Help: "统计", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			if len(arg) > 0 {
+				if s, e := os.Stat(arg[0] + "/.git"); e == nil && s.IsDir() {
+					m.Option("cmd_dir", arg[0])
+					arg = arg[1:]
+				}
+			}
+
 			total := false
 			if len(arg) > 0 && arg[0] == "total" {
 				total, arg = true, arg[1:]
 			}
 
 			args := []string{}
-			if len(arg) > 0 {
-				if s, e := os.Stat(arg[0] + "/.git"); e == nil && s.IsDir() {
-					args, arg = append(args, "-C", arg[0]), arg[1:]
-				}
-			}
-
 			args = append(args, "log", "--shortstat", "--pretty=commit: %ad %n%s", "--date=iso", "--reverse")
 			if len(arg) > 0 {
 				args = append(args, kit.Select("-n", "--since", strings.Contains(arg[0], "-")))

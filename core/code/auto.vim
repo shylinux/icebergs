@@ -83,7 +83,7 @@ endfun
 fun! ShyGrep(word)
     if !exists("g:grep_dir") | let g:grep_dir = "./" | endif
     let g:grep_dir = input("dir: ", g:grep_dir, "file")
-    execute "grep -rn --exclude tags --exclude '*.tags' " . a:word . " " . g:grep_dir
+    execute "grep -rn --exclude tags --exclude '*.tags' '\<" . a:word . "\>' " . g:grep_dir
 endfun
 fun! ShyTag(word)
     execute "tag " . a:word

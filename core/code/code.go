@@ -49,6 +49,14 @@ var Index = &ice.Context{Name: "code", Help: "编程中心",
 			m.Cmd(ice.CTX_CONFIG, "load", "code.json")
 			m.Watch(ice.SYSTEM_INIT, "compile", "linux")
 			m.Watch(ice.SYSTEM_INIT, "publish", "bin/ice.sh")
+
+			if m.Richs(ice.WEB_FAVOR, nil, "auto.init", nil) == nil {
+				m.Cmd(ice.WEB_FAVOR, "auto.init", ice.TYPE_SHELL, "下载脚本", `curl -s "$ctx_dev/publish/auto.sh" -o auto.sh`)
+				m.Cmd(ice.WEB_FAVOR, "auto.init", ice.TYPE_SHELL, "加载脚本", `source auto.sh`)
+			}
+			if m.Richs(ice.WEB_FAVOR, nil, "ice.init", nil) == nil {
+				m.Cmd(ice.WEB_FAVOR, "ice.init", ice.TYPE_SHELL, "一键启动", `curl -s "$ctx_dev/publish/ice.sh" |sh`)
+			}
 		}},
 		ice.ICE_EXIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			m.Cmd(ice.CTX_CONFIG, "save", "code.json", "web.code.login")
@@ -71,6 +79,7 @@ var Index = &ice.Context{Name: "code", Help: "编程中心",
 			m.Add("option", "cmd_env", "GOCACHE", os.Getenv("GOCACHE"))
 			m.Add("option", "cmd_env", "GOARCH", arch, "GOOS", goos)
 			m.Add("option", "cmd_env", "HOME", os.Getenv("HOME"))
+			m.Add("option", "cmd_env", "CGO_ENABLED", "0")
 			m.Cmd("cli.system", "go", "build", "-o", file, main)
 
 			// 编译记录

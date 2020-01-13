@@ -8,7 +8,8 @@ data-type="{{.Option "type"}}" data-name="{{.Option "name"}}" data-text="{{.Opti
 var spark = `<p>{{.}}</p>`
 
 var shell = `<div class="story code" data-type="{{.Option "type"}}" data-name="{{.Option "name"}}" data-text="{{.Option "input"}}">$ {{.Option "input"}}
-{{.Option "output"}}</div>`
+{{.Option "output"}}</div>
+`
 
 var order = `<ul class="story"
 data-type="{{.Option "type"}}" data-name="{{.Option "name"}}" data-text="{{.Option "text"}}">

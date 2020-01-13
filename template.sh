@@ -34,6 +34,7 @@ END
     [ -f Makefile ] || cat >> Makefile <<END
 all:
 	@echo && date
+	export CGO_ENABLED=0
 	export GOPRIVATE=github.com
 	export GOPROXY=https://goproxy.cn
 	go build -o ${ice_bin} ${main_go} && chmod u+x ${ice_bin} && ./${ice_sh} restart
@@ -54,7 +55,7 @@ export ctx_pid=\${ctx_pid:=var/run/ice.pid}
 export ctx_log=\${ctx_log:=bin/boot.log}
 
 prepare() {
-    [ -d etc ] || mkdir bin
+    [ -d bin ] || mkdir bin
     [ -e ${ice_sh} ] || curl \$ctx_dev/publish/ice.sh -o ${ice_sh} && chmod u+x ${ice_sh}
     [ -e ${ice_bin} ] && chmod u+x ${ice_bin} && return
 
@@ -93,6 +94,7 @@ END
 }
 
 build() {
+	export CGO_ENABLED=0
 	export GOPRIVATE=github.com
 	export GOPROXY=https://goproxy.cn
 	go build -o ${ice_bin} ${main_go} && chmod u+x ${ice_bin} && ./${ice_sh} restart

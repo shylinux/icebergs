@@ -51,11 +51,9 @@ var Index = &ice.Context{Name: "wiki", Help: "文档中心",
 			var chart Chart
 			switch arg[0] {
 			case "block":
-				chart = &Block{}
+				chart = &Table{}
 			case "chain":
 				chart = &Chain{}
-			case "table":
-				chart = &Table{}
 			}
 			arg[1] = strings.TrimSpace(arg[1])
 			arg[2] = strings.TrimSpace(arg[2])
@@ -72,6 +70,11 @@ var Index = &ice.Context{Name: "wiki", Help: "文档中心",
 			m.Render(m.Conf("chart", ice.Meta("prefix")))
 			chart.Draw(m, 0, 0)
 			m.Render(m.Conf("chart", ice.Meta("suffix")))
+		}},
+		"stack": {Name: "stack name text", Help: "堆栈", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			chain := &Chain{}
+			m.Render(m.Conf("spark", ice.Meta("template")), arg[0])
+			stack(m, "stack", 0, kit.Parse(nil, "", chain.show(m, arg[1])...))
 		}},
 		"table": {Name: "table name text", Help: "表格", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			m.Option("type", "table")
@@ -101,13 +104,17 @@ var Index = &ice.Context{Name: "wiki", Help: "文档中心",
 			m.Option("name", arg[0])
 			m.Option("cmd_dir", arg[1])
 
+			input, output := "", ""
 			switch arg = arg[2:]; arg[0] {
 			case "install", "compile":
-				m.Option("input", html.EscapeString(strings.Join(arg[1:], " ")))
+				input = strings.Join(arg[1:], " ")
 			default:
-				m.Option("input", html.EscapeString(strings.Join(arg, " ")))
-				m.Option("output", html.EscapeString(m.Cmdx("cli.system", "sh", "-c", strings.Join(arg, " "))))
+				input = strings.Join(arg, " ")
+				output = m.Cmdx("cli.system", "sh", "-c", strings.Join(arg, " "))
 			}
+
+			m.Option("input", html.EscapeString(input))
+			m.Option("output", html.EscapeString(output))
 			m.Render(m.Conf("spark", ice.Meta("template")), m.Option("name"))
 			m.Render(m.Conf("shell", ice.Meta("template")))
 		}},

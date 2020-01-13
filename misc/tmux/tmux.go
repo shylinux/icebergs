@@ -69,14 +69,6 @@ var Index = &ice.Context{Name: "tmux", Help: "终端管理",
 					}
 				}
 			}
-
-			if m.Richs(ice.WEB_FAVOR, nil, "tmux.auto", nil) == nil {
-				m.Cmd(ice.WEB_FAVOR, "tmux.auto", ice.TYPE_SHELL, "下载脚本", `curl -s "$ctx_dev/publish/auto.sh" -o auto.sh`)
-				m.Cmd(ice.WEB_FAVOR, "tmux.auto", ice.TYPE_SHELL, "加载脚本", `source auto.sh`)
-			}
-			if m.Richs(ice.WEB_FAVOR, nil, "tmux.init", nil) == nil {
-				m.Cmd(ice.WEB_FAVOR, "tmux.init", ice.TYPE_SHELL, "一键启动", `curl -s "$ctx_dev/publish/ice.sh" |sh`)
-			}
 		}},
 
 		"buffer": {Name: "buffer", Help: "终端",

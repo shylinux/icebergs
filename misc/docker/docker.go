@@ -13,7 +13,13 @@ var Index = &ice.Context{Name: "docker", Help: "容器管理",
 		"docker": {Name: "docker", Help: "docker", Value: kit.Data(kit.MDB_SHORT, "name")},
 	},
 	Commands: map[string]*ice.Command{
-		ice.ICE_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {}},
+		ice.ICE_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			if m.Richs(ice.WEB_FAVOR, nil, "alpine.init", nil) == nil {
+				m.Cmd(ice.WEB_FAVOR, "alpine.init", ice.TYPE_SHELL, "镜像源", `sed -i 's/dl-cdn.alpinelinux.org/mirrors.aliyun.com/g' /etc/apk/repositories`)
+				m.Cmd(ice.WEB_FAVOR, "alpine.init", ice.TYPE_SHELL, "软件包", `apk add bash`)
+				m.Cmd(ice.WEB_FAVOR, "alpine.init", ice.TYPE_SHELL, "软件包", `apk add curl`)
+			}
+		}},
 		ice.ICE_EXIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {}},
 
 		"image": {Name: "image", Help: "镜像管理", Meta: kit.Dict("detail", []string{"运行", "清理", "删除"}), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
@@ -48,8 +54,12 @@ var Index = &ice.Context{Name: "docker", Help: "容器管理",
 			if len(arg) > 2 {
 				switch arg[1] {
 				case "进入":
-					m.Cmdy(ice.CLI_SYSTEM, "tmux", "new-window", "-t", "", "-n", m.Option("NAMES"),
-						"-PF", "#{session_name}:#{window_name}.1", "docker exec -it "+m.Option("NAMES")+" sh").Set("append")
+					m.Cmd("cli.tmux.session").Table(func(index int, value map[string]string, head []string) {
+						if value["tag"] == "1" {
+							m.Cmdy(ice.CLI_SYSTEM, "tmux", "new-window", "-t", value["session"], "-n", m.Option("NAMES"),
+								"-PF", "#{session_name}:#{window_name}.1", "docker exec -it "+m.Option("NAMES")+" sh").Set("append")
+						}
+					})
 					return
 				case "停止":
 					m.Cmd(prefix, "stop", m.Option("CONTAINER_ID"))

@@ -104,6 +104,9 @@ build() {
 
 tutor() {
     mkdir $1
+    [ -f "$1/$1.md" ] || cat >> "$1/$1.md" <<END
+# {{title "$1"}}
+END
     [ -f "$1/$1.go" ] || cat >> "$1/$1.go" <<END
 package $1
 
@@ -131,6 +134,7 @@ var Index = &ice.Context{Name: "$1", Help: "$1",
 func init() { cli.Index.Register(Index, nil) }
 
 END
+    ls $1
 }
 
 cmd=build && [ "$1" != "" ] && cmd=$1 && shift

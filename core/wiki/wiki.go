@@ -9,7 +9,6 @@ import (
 
 	"bytes"
 	"fmt"
-	"html"
 	"path"
 	"strings"
 )
@@ -113,8 +112,8 @@ var Index = &ice.Context{Name: "wiki", Help: "文档中心",
 				output = m.Cmdx("cli.system", "sh", "-c", strings.Join(arg, " "))
 			}
 
-			m.Option("input", html.EscapeString(input))
-			m.Option("output", html.EscapeString(output))
+			m.Option("input", input)
+			m.Option("output", output)
 			m.Render(m.Conf("spark", ice.Meta("template")), m.Option("name"))
 			m.Render(m.Conf("shell", ice.Meta("template")))
 		}},
@@ -130,14 +129,14 @@ var Index = &ice.Context{Name: "wiki", Help: "文档中心",
 			m.Option("type", "refer")
 			m.Option("name", arg[0])
 			m.Option("text", arg[1])
-			list := []interface{}{}
+			list := [][]string{}
 			for _, v := range kit.Split(arg[1], "\n") {
 				list = append(list, kit.Split(v, " "))
 			}
 			m.Optionv("list", list)
-			m.Render(m.Conf("order", ice.Meta("template")))
+			m.Render(m.Conf("refer", ice.Meta("template")))
 		}},
-		"brief": {Name: "brief text", Help: "摘要", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		"brief": {Name: "brief name text", Help: "摘要", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			m.Option("type", "brief")
 			m.Option("name", arg[0])
 			m.Option("text", arg[1])

@@ -18,6 +18,7 @@ var Index = &ice.Context{Name: "cli", Help: "命令模块",
 	Configs: map[string]*ice.Config{
 		ice.CLI_RUNTIME: {Name: "runtime", Help: "运行环境", Value: kit.Dict()},
 		ice.CLI_SYSTEM:  {Name: "system", Help: "系统命令", Value: kit.Data()},
+		"python":        {Name: "python", Help: "系统命令", Value: kit.Data("python", "python", "pip", "pip")},
 	},
 	Commands: map[string]*ice.Command{
 		ice.ICE_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
@@ -107,6 +108,17 @@ var Index = &ice.Context{Name: "cli", Help: "命令模块",
 				}
 				m.Push("code", int(cmd.ProcessState.ExitCode()))
 				m.Echo(out.String())
+			}
+		}},
+		"python": {Name: "python", Help: "运行环境", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			prefix := []string{ice.CLI_SYSTEM, m.Conf("python", "meta.python")}
+			switch arg[0] {
+			case "qrcode":
+				m.Cmdy(prefix, "-c", fmt.Sprintf(`import pyqrcode; print(pyqrcode.create("%s").terminal(quiet_zone=1))`, arg[1]))
+			case "install":
+				m.Cmdy(prefix[:1], m.Conf("python", "meta.pip"), "install", arg[1:])
+			default:
+				m.Cmdy(prefix, arg)
 			}
 		}},
 	},

@@ -557,6 +557,11 @@ var Index = &ice.Context{Name: "web", Help: "网络模块",
 					for k, v := range head {
 						req.Header.Set(k, v)
 					}
+					if list, ok := m.Optionv("header").([]string); ok {
+						for i := 0; i < len(list)-1; i += 2 {
+							req.Header.Set(list[i], list[i+1])
+						}
+					}
 					kit.Fetch(client["header"], func(key string, value string) {
 						req.Header.Set(key, value)
 					})
@@ -617,9 +622,16 @@ var Index = &ice.Context{Name: "web", Help: "网络模块",
 						m.Optionv("response", res)
 						m.Echo(m.Cmd(ice.WEB_CACHE, "download", res.Header.Get("Content-Type"), uri).Append("data"))
 					default:
+						if strings.HasPrefix(res.Header.Get("Content-Type"), "text/html") {
+							b, _ := ioutil.ReadAll(res.Body)
+							m.Echo(string(b))
+							break
+						}
+
 						// 解析结果
 						var data interface{}
 						m.Assert(json.NewDecoder(res.Body).Decode(&data))
+						data = kit.KeyValue(map[string]interface{}{}, "", data)
 						m.Info("res: %s", kit.Formats(data))
 						kit.Fetch(data, func(key string, value interface{}) {
 							switch value := value.(type) {
@@ -629,7 +641,6 @@ var Index = &ice.Context{Name: "web", Help: "网络模块",
 								m.Push(key, kit.Format(value))
 							}
 						})
-						m.Info("res: %s", m.Formats("meta"))
 					}
 				})
 			}

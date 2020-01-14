@@ -1,4 +1,4 @@
-package lk
+package lark
 
 import (
 	"github.com/shylinux/icebergs"
@@ -7,30 +7,21 @@ import (
 	"github.com/shylinux/toolkits"
 
 	"encoding/json"
-	"net/http"
 	"strings"
 	"time"
 )
 
-func get(m *ice.Message, arg ...string) *ice.Message {
-	m.Option("temp_expire", -1)
-	m.Option("format", "object")
-	m.Cmdy("web.get", "feishu", arg, "temp", "data")
-	return m
+func post(m *ice.Message, bot string, arg ...interface{}) {
+	m.Richs("app", nil, bot, func(key string, value map[string]interface{}) {
+		m.Option("header", "Authorization", "Bearer "+m.Cmdx("app", "token", bot), "Content-Type", "application/json")
+		m.Cmdy(ice.WEB_SPIDE, "lark", arg)
+	})
 }
-func post(m *ice.Message, arg ...string) *ice.Message {
-	m.Option("temp_expire", -1)
-	m.Option("format", "object")
-	m.Cmdy("web.get", "method", "POST", "feishu", arg,
-		"content_type", "application/json",
-		"temp", "data",
-	)
-	return m
-}
+
 func parse(m *ice.Message) {
 	data := m.Optionv("content_data")
 	if data == nil {
-		json.NewDecoder(m.Optionv("request").(*http.Request).Body).Decode(&data)
+		json.NewDecoder(m.R.Body).Decode(&data)
 		m.Optionv("content_data", data)
 
 		switch d := data.(type) {
@@ -54,43 +45,58 @@ func parse(m *ice.Message) {
 	}) != nil {
 		m.Option("msg.type", "event_click")
 	}
-	m.Log("info", "msg: %v", kit.Formats(data))
+	m.Info("msg: %v", kit.Formats(data))
 }
 
-var Index = &ice.Context{Name: "lk", Help: "lark",
+var Index = &ice.Context{Name: "lark", Help: "lark",
 	Caches: map[string]*ice.Cache{},
 	Configs: map[string]*ice.Config{
-		"app":  &ice.Config{Name: "app", Value: map[string]interface{}{}, Help: "服务配置"},
-		"user": &ice.Config{Name: "user", Value: map[string]interface{}{}, Help: "服务配置"},
+		"app":  &ice.Config{Name: "app", Help: "服务配置", Value: kit.Data(kit.MDB_SHORT, "name", "lark", "https://open.feishu.cn")},
+		"user": &ice.Config{Name: "user", Help: "用户配置", Value: kit.Data()},
 	},
 	Commands: map[string]*ice.Command{
+		ice.ICE_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			m.Cmd(ice.CTX_CONFIG, "load", "lark.json")
+			m.Confm("app", "meta.userrole", func(key string, value string) {
+				m.Cmd(ice.AAA_ROLE, value, key)
+			})
+			m.Cmd(ice.WEB_SPIDE, "add", "lark", m.Conf("app", "meta.lark"))
+		}},
+		ice.ICE_EXIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			m.Cmd(ice.CTX_CONFIG, "save", "lark.json", "web.chat.lark.app")
+		}},
 		"app": {Name: "app login|token bot", Help: "应用", Hand: func(m *ice.Message, c *ice.Context, key string, arg ...string) {
 			if len(arg) == 0 {
-				m.Confm("app", func(key string, value map[string]interface{}) {
-					m.Push("key", key)
-					m.Push("id", value["id"])
+				m.Richs("app", nil, "*", func(key string, value map[string]interface{}) {
+					m.Push("key", value)
 				})
-				m.Table()
 				return
 			}
 
 			switch arg[0] {
 			case "login":
-				m.Confv("app", arg[1], map[string]interface{}{"id": arg[2], "mm": arg[3]})
+				m.Rich("app", nil, kit.Dict("name", arg[1], "id", arg[2], "mm", arg[3]))
+
 			case "token":
-				if now := time.Now().Unix(); !m.Confs("app", []string{arg[1], "token"}) || int64(m.Confi("app", []string{arg[1], "expire"})) < now {
-					post(m, "auth/v3/tenant_access_token/internal/", "app_id", m.Conf("app", []string{arg[1], "id"}),
-						"app_secret", m.Conf("app", []string{arg[1], "mm"}))
-					m.Conf("app", []string{arg[1], "token"}, m.Append("tenant_access_token"))
-					m.Conf("app", []string{arg[1], "expire"}, kit.Int64(m.Append("expire"))+now)
-					m.Set("result")
+				m.Richs("app", nil, arg[1], func(key string, value map[string]interface{}) {
+					if now := time.Now().Unix(); kit.Format(value["token"]) == "" || kit.Int64(value["expire"]) < now {
+						m.Cmdy(ice.WEB_SPIDE, "lark", "/open-apis/auth/v3/tenant_access_token/internal/", "app_id", value["id"], "app_secret", value["mm"])
+						value["token"] = m.Append("tenant_access_token")
+						value["expire"] = kit.Int64(m.Append("expire")) + now
+						m.Set("result")
+					}
+					m.Echo("%s", value["token"])
+				})
+
+			case "watch":
+				for _, v := range arg[3:] {
+					m.Watch(v, "web.chat.lark.send", arg[1], arg[2], v)
 				}
-				m.Echo(m.Conf("app", []string{arg[1], "token"}))
 			}
 			return
 		}},
 		"ship": {Name: "ship", Help: "组织", Hand: func(m *ice.Message, c *ice.Context, key string, arg ...string) {
-			data := kit.UnMarshal(m.Cmdx("web.get", "feishu", "contact/v1/scope/get/",
+			data := kit.UnMarshal(m.Cmdx(ice.WEB_SPIDE, "lark", "/open-apis/contact/v1/scope/get/",
 				"headers", "Authorization", "Bearer "+m.Cmdx(".app", "token", "bot"),
 			))
 			kit.Fetch(kit.Value(data, "data.authed_departments"), func(index int, value string) {
@@ -124,11 +130,15 @@ var Index = &ice.Context{Name: "lk", Help: "lark",
 		"user": {Name: "user code|email|mobile", Help: "用户", Hand: func(m *ice.Message, c *ice.Context, key string, arg ...string) {
 			switch arg[0] {
 			case "code":
-				post(m, "/connect/qrconnect/oauth2/access_token/",
-					"app_secret", m.Conf("app", []string{"bot", "mm"}), "app_id", m.Conf("app", []string{"bot", "id"}),
-					"grant_type", "authorization_code", "code", arg[1],
-				)
-				msg := get(m.Spawn(), "/connect/qrconnect/oauth2/user_info/",
+				m.Richs("app", nil, "bot", func(key string, value map[string]interface{}) {
+					m.Cmd(ice.WEB_SPIDE, "lark", "/connect/qrconnect/oauth2/access_token/",
+						"app_secret", value["mm"], "app_id", value["id"],
+						"grant_type", "authorization_code", "code", arg[1],
+					)
+
+				})
+
+				msg := m.Cmd(ice.WEB_SPIDE, "lark", "/connect/qrconnect/oauth2/user_info/",
 					"headers", "Authorization", "Bearer "+m.Append("access_token"),
 				)
 				m.Confv("user", m.Append("open_id"), map[string]interface{}{
@@ -155,13 +165,7 @@ var Index = &ice.Context{Name: "lk", Help: "lark",
 					ps = append(ps, kit.Select("mobile", "email", strings.Contains(arg[i], "@"))+"_users")
 				}
 
-				data := kit.UnMarshal(m.Cmdx("web.get", "feishu", "user/v1/batch_get_id", us,
-					"headers", "Authorization", "Bearer "+m.Cmdx(".app", "token", "bot")))
-
-				for i, v := range ps {
-					m.Append(arg[i], kit.Value(data, []string{"data", v, arg[i], "0", "open_id"}))
-				}
-				m.Table()
+				post(m, "bot", "GET", "/open-apis/user/v1/batch_get_id", us)
 			}
 			return
 		}},
@@ -248,7 +252,7 @@ var Index = &ice.Context{Name: "lk", Help: "lark",
 							continue
 						}
 						line = append(line, map[string]interface{}{
-							"tag": "text", "text": v,
+							"tag": "text", "text": v + " ",
 						})
 					}
 					content = append(content, line)
@@ -261,14 +265,9 @@ var Index = &ice.Context{Name: "lk", Help: "lark",
 						},
 					})
 				}
-
 			}
 
-			m.Cmdy("web.get", "method", "POST", "feishu", "message/v4/send/",
-				"headers", "Authorization", "Bearer "+m.Cmdx(".app", "token", "bot"),
-				"content_data", kit.Formats(form), "content_type", "application/json",
-				"temp", "data", "data.message_id",
-			)
+			post(m, "bot", "/open-apis/message/v4/send/", "data", kit.Formats(form))
 			return
 		}},
 		"/msg": {Name: "/msg", Help: "消息", Hand: func(m *ice.Message, c *ice.Context, key string, arg ...string) {
@@ -276,7 +275,8 @@ var Index = &ice.Context{Name: "lk", Help: "lark",
 
 			switch m.Option("msg.type") {
 			case "url_verification":
-				m.Echo(kit.Format(map[string]interface{}{"challenge": m.Option("challenge")}))
+				m.Push("_output", "result")
+				m.Echo(kit.Format(map[string]interface{}{"challenge": m.Option("msg.challenge")}))
 
 			case "event_callback":
 				switch m.Option("type") {
@@ -291,11 +291,14 @@ var Index = &ice.Context{Name: "lk", Help: "lark",
 					}
 				default:
 					if m.Options("open_chat_id") {
-						m.Option("username", m.Option("open_id"))
-						m.Option("sessid", m.Cmdx("aaa.user", "session", "select"))
-						m.Cmd("ssh._check", "work", "create", m.Option("username"))
-						msg := m.Cmd(kit.Split(m.Option("text_without_at_bot")))
-						m.Cmdy(".send", m.Option("open_chat_id"), kit.Select("你好", msg.Result()))
+						m.Option(ice.MSG_USERNAME, m.Option("open_id"))
+						m.Option(ice.MSG_USERROLE, m.Cmdx(ice.AAA_ROLE, "check", m.Option(ice.MSG_USERNAME)))
+						if cmd := kit.Split(m.Option("text_without_at_bot")); m.Right(cmd) {
+							m.Cmdy(cmd)
+						} else {
+							m.Echo("no right")
+						}
+						m.Cmdy("send", m.Option("open_chat_id"), kit.Select("你好", m.Result()))
 					}
 				}
 			case "event_click":

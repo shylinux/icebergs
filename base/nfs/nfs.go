@@ -166,6 +166,26 @@ var Index = &ice.Context{Name: "nfs", Help: "存储模块",
 				}
 			}
 		}},
+		"echo": {Name: "echo path text", Help: "保存", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			if f, e := os.OpenFile(arg[0], os.O_WRONLY, 0777); m.Assert(e) {
+				defer f.Close()
+				for _, v := range arg[1:] {
+					if n, e := f.WriteString(v); m.Assert(e) {
+						m.Log(ice.LOG_EXPORT, "%d: %s", n, arg[0])
+					}
+				}
+			}
+		}},
+		"cat": {Name: "cat path", Help: "保存", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			if f, e := os.OpenFile(arg[0], os.O_RDONLY, 0777); m.Assert(e) {
+				defer f.Close()
+				buf := make([]byte, 1024)
+				if n, e := f.Read(buf); m.Assert(e) {
+					m.Log(ice.LOG_IMPORT, "%d: %s", n, arg[0])
+					m.Echo(string(buf[:n]))
+				}
+			}
+		}},
 		"copy": {Name: "save path text", Help: "保存", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			if f, _, e := kit.Create(arg[0]); m.Assert(e) {
 				defer f.Close()

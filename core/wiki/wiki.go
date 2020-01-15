@@ -21,7 +21,7 @@ var Index = &ice.Context{Name: "wiki", Help: "文档中心",
 			"path", "",
 			"head", "time size line path",
 			"alias", map[string]interface{}{
-				"block": []interface{}{"chart", "block"},
+				"label": []interface{}{"chart", "block"},
 				"chain": []interface{}{"chart", "chain"},
 
 				"chapter": []interface{}{"title", "chapter"},
@@ -116,6 +116,9 @@ var Index = &ice.Context{Name: "wiki", Help: "文档中心",
 			m.Option("output", output)
 			m.Render(m.Conf("spark", ice.Meta("template")), m.Option("name"))
 			m.Render(m.Conf("shell", ice.Meta("template")))
+		}},
+		"index": {Name: "index hash", Help: "索引", Hand: func(m *ice.Message, c *ice.Context, key string, arg ...string) {
+			m.Cmd(ice.WEB_STORY, "index", arg)
 		}},
 
 		"spark": {Name: "spark name text", Help: "参考", Hand: func(m *ice.Message, c *ice.Context, key string, arg ...string) {
@@ -239,9 +242,6 @@ var Index = &ice.Context{Name: "wiki", Help: "文档中心",
 				arg[0] = path.Join(m.Conf("note", "meta.path"), arg[0])
 			}
 			m.Cmdy(kit.Select("_tree", "_text", len(arg) > 0 && strings.HasSuffix(arg[0], ".md")), arg)
-		}},
-		"index": {Name: "index hash", Help: "索引", Hand: func(m *ice.Message, c *ice.Context, key string, arg ...string) {
-			m.Cmd(ice.WEB_STORY, "index", arg)
 		}},
 	},
 }

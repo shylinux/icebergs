@@ -1048,6 +1048,11 @@ func (m *Message) Grow(key string, chain interface{}, data interface{}) int {
 
 		// 创建文件
 		name := path.Join(kit.Select(m.Conf(WEB_CACHE, Meta("store")), meta["store"]), kit.Keys(key, chain, "csv"))
+		if s, e := os.Stat(name); e == nil {
+			if s.Size() > 100000 {
+				name = strings.Replace(name, ".csv", fmt.Sprintf("_%d.csv", kit.Int(meta["offset"])), -1)
+			}
+		}
 		f, e := os.OpenFile(name, os.O_RDWR|os.O_APPEND|os.O_CREATE, 0666)
 		if e != nil {
 			f, _, e = kit.Create(name)
@@ -1136,9 +1141,9 @@ func (m *Message) Grows(key string, chain interface{}, match string, value strin
 		match, value = "", ""
 	}
 
-	data := make([]interface{}, 0, limit)
+	order := 0
 	if begin < current {
-		m.Log(LOG_INFO, "%s.%s read %v-%v from %v-%v", key, chain, begin, end, current, current+len(list))
+		m.Log(LOG_INFO, "%s.%v read %v-%v from %v-%v", key, chain, begin, end, current, current+len(list))
 		store, _ := meta["record"].([]interface{})
 		for s := len(store) - 1; s > -1; s-- {
 			item, _ := store[s].(map[string]interface{})
@@ -1152,26 +1157,29 @@ func (m *Message) Grows(key string, chain interface{}, match string, value strin
 				if begin >= end {
 					break
 				}
+
 				item, _ := store[s].(map[string]interface{})
-				if line+kit.Int(item["count"]) < begin {
+				name := kit.Format(item["file"])
+				pos := kit.Int(item["position"])
+				offset := kit.Int(item["offset"])
+				if offset+kit.Int(item["count"]) <= begin {
+					m.Log(LOG_INFO, "skip store %v %d", item, begin)
 					continue
 				}
 
-				name := kit.Format(item["file"])
-				pos := kit.Int(item["position"])
-				line := kit.Int(item["offset"])
-				m.Log(LOG_INFO, "load history %v %v %v", s, line, item)
+				m.Log(LOG_IMPORT, "load history %v %v %v", s, offset, item)
 				if f, e := os.Open(name); m.Assert(e) {
 					defer f.Close()
 					r := csv.NewReader(f)
 					heads, _ := r.Read()
-					m.Log(LOG_INFO, "load head %v", heads)
+					m.Log(LOG_IMPORT, "load head %v", heads)
 
 					f.Seek(int64(pos), os.SEEK_SET)
 					r = csv.NewReader(f)
-					for i := line; i < end; i++ {
+					for i := offset; i < end; i++ {
 						lines, e := r.Read()
 						if e != nil {
+							m.Log(LOG_IMPORT, "load head %v", e)
 							break
 						}
 
@@ -1180,9 +1188,18 @@ func (m *Message) Grows(key string, chain interface{}, match string, value strin
 							for i := range heads {
 								item[heads[i]] = lines[i]
 							}
-							m.Log(LOG_INFO, "load line %v %v %v", i, len(data), item)
+							m.Log(LOG_INFO, "load line %v %v %v", i, order, item)
 							if match == "" || strings.Contains(kit.Format(item[match]), value) {
-								data = append(data, item)
+								// 读取文件
+								switch cb := cb.(type) {
+								case func(int, map[string]interface{}):
+									cb(order, item)
+								case func(int, map[string]interface{}) bool:
+									if cb(order, item) {
+										return meta
+									}
+								}
+								order++
 							}
 							begin = i + 1
 						} else {
@@ -1200,10 +1217,18 @@ func (m *Message) Grows(key string, chain interface{}, match string, value strin
 	}
 	for i := begin - current; i < end-current; i++ {
 		if match == "" || strings.Contains(kit.Format(kit.Value(list[i], match)), value) {
-			data = append(data, list[i])
+			// 读取缓存
+			switch cb := cb.(type) {
+			case func(int, map[string]interface{}):
+				cb(order, list[i].(map[string]interface{}))
+			case func(int, map[string]interface{}) bool:
+				if cb(order, list[i].(map[string]interface{})) {
+					return meta
+				}
+			}
+			order++
 		}
 	}
-	kit.Fetch(data, cb)
 	return meta
 }
 

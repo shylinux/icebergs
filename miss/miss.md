@@ -6,19 +6,19 @@
 命令化 组件化 个性化
 `}}
 
-{{table "图谱" `
+{{label "图谱" `
 code wiki chat team mall
 linux nginx golang redis mysql
 zsh tmux docker git vim
 `}}
 
-{{table "图谱" `
+{{label "图谱" `
 ctx cli aaa web
 lex yac log gdb
 tcp nfs ssh mdb
 `}}
 
-{{table "图谱" `
+{{label "图谱" `
 spide serve space dream
 favor cache story share
 route proxy group label

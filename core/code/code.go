@@ -249,6 +249,12 @@ var Index = &ice.Context{Name: "code", Help: "编程中心",
 				m.Push("_output", "result")
 			}
 		}},
+		"/input/": {Name: "/input/", Help: "编辑器", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			m.Cmd("cli.input.match", arg[0]).Table(func(index int, value map[string]string, head []string) {
+				m.Echo("%s %s\n", value["code"], value["text"])
+				m.Push("_output", "result")
+			})
+		}},
 		"/vim": {Name: "/vim", Help: "编辑器", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			if f, _, e := m.R.FormFile("sub"); e == nil {
 				defer f.Close()

@@ -18,12 +18,14 @@ var Index = &ice.Context{Name: "input", Help: "输入法",
 	Configs: map[string]*ice.Config{
 		"input": {Name: "input", Help: "输入法", Value: kit.Data(
 			"store", "var/input/", "limit", "2000", "least", "1000",
+			kit.MDB_SHORT, "code",
 		)},
 	},
 	Commands: map[string]*ice.Command{
 		ice.ICE_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			m.Cmd(ice.CTX_CONFIG, "load", "input.json")
 		}},
+
 		ice.ICE_EXIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			m.Cmd(ice.CTX_CONFIG, "save", "input.json", "cli.input.input")
 		}},
@@ -49,6 +51,10 @@ var Index = &ice.Context{Name: "input", Help: "输入法",
 						))
 					}
 				}
+			case "push":
+				m.Rich("input", nil, kit.Dict(
+					"id", "0", "text", arg[1], "code", arg[2], "weight", kit.Select("99990000", arg, 3),
+				))
 			case "list":
 				// 词汇列表
 				m.Option("cache.offend", kit.Select("0", arg, 1))
@@ -64,6 +70,11 @@ var Index = &ice.Context{Name: "input", Help: "输入法",
 				m.Cmdy(ice.WEB_FAVOR, "input.word")
 				return
 			}
+
+			m.Info("add %s: %s", arg[0], kit.Hashs(arg[0]))
+			m.Richs("input", nil, arg[0], func(key string, value map[string]interface{}) {
+				m.Push(key, value, []string{"id", "code", "text", "weight"})
+			})
 
 			// 搜索方法
 			method := "word"
@@ -95,9 +106,10 @@ var Index = &ice.Context{Name: "input", Help: "输入法",
 
 			// 搜索词汇
 			bio := csv.NewReader(bytes.NewBufferString(m.Cmdx(ice.CLI_SYSTEM, "grep", "-rh", arg[0], m.Conf("input", "meta.store"))))
-			for i := 0; i < 100; i++ {
+			for i := 0; i < kit.Int(kit.Select("100", arg, 2)); i++ {
 				if line, e := bio.Read(); e != nil {
 					break
+				} else if len(line) < 3 {
 				} else {
 					if method == "word" && i == 0 {
 						// 添加收藏
@@ -112,6 +124,7 @@ var Index = &ice.Context{Name: "input", Help: "输入法",
 					}
 				}
 			}
+			m.Sort("weight", "int_r")
 		}},
 	},
 }

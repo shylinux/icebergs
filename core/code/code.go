@@ -283,6 +283,28 @@ var Index = &ice.Context{Name: "code", Help: "编程中心",
 			case "tasklet":
 				m.Cmd(ice.APP_MISS, m.Option("arg"), m.Option("sub"))
 
+			case "trans":
+				if strings.HasPrefix(strings.TrimSpace(m.Option("arg")), "ice ") {
+					arg := kit.Split(strings.TrimPrefix(strings.TrimSpace(m.Option("arg")), "ice "))
+					switch arg[0] {
+					case "add":
+						m.Cmd("cli.input.input", "push", arg[1:])
+						m.Option("arg", arg[2])
+					default:
+						m.Set("append")
+						if m.Cmdy(arg).Table(); strings.TrimSpace(m.Result()) == "" {
+							m.Cmdy(ice.CLI_SYSTEM, arg)
+						}
+						m.Info("trans: --%s--", m.Result())
+						m.Push("_output", "result")
+						return
+					}
+				}
+				m.Cmd("cli.input.match", m.Option("arg")).Table(func(index int, value map[string]string, head []string) {
+					m.Echo("%s\n", value["text"])
+					m.Push("_output", "result")
+				})
+
 			case "favor":
 				if m.Options("arg") {
 					m.Cmd(ice.WEB_FAVOR, m.Option("tab"), "vimrc", m.Option("note"), m.Option("arg"),

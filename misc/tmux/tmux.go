@@ -71,6 +71,18 @@ var Index = &ice.Context{Name: "tmux", Help: "终端管理",
 			}
 		}},
 
+		"text": {Name: "text", Help: "文本",
+			List: kit.List(
+				kit.MDB_INPUT, "text", "name", "name",
+				kit.MDB_INPUT, "button", "value", "保存",
+				kit.MDB_INPUT, "textarea", "name", "text",
+			),
+			Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+				if len(arg) > 1 && arg[1] != "" {
+					m.Cmd("cli.system", "tmux", "set-buffer", arg[1])
+				}
+				m.Cmdy("cli.system", "tmux", "show-buffer").Set("append")
+			}},
 		"buffer": {Name: "buffer", Help: "终端",
 			List: kit.List(
 				kit.MDB_INPUT, "text", "name", "buffer", "action", "auto",

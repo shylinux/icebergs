@@ -24,15 +24,15 @@ var Index = &ice.Context{Name: "git", Help: "代码管理",
 				"remote", "https://github.com/shylinux/volcanos",
 			))
 			m.Rich("repos", nil, kit.Data(
-				"name", "icebergs", "path", "../../icebergs", "branch", "master",
+				"name", "icebergs", "path", "../icebergs", "branch", "master",
 				"remote", "https://github.com/shylinux/icebergs",
 			))
 			m.Rich("repos", nil, kit.Data(
-				"name", "toolkits", "path", "../../toolkits", "branch", "master",
+				"name", "toolkits", "path", "../toolkits", "branch", "master",
 				"remote", "https://github.com/shylinux/toolkits",
 			))
 			m.Rich("repos", nil, kit.Data(
-				"name", "contexts", "path", "../../contexts", "branch", "master",
+				"name", "contexts", "path", "../contexts", "branch", "master",
 				"remote", "https://github.com/shylinux/context",
 			))
 			m.Cmd("nfs.dir", m.Conf(ice.WEB_DREAM, "meta.path"), "name path").Table(func(index int, value map[string]string, head []string) {

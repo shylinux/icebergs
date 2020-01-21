@@ -1043,13 +1043,13 @@ func (m *Message) Grow(key string, chain interface{}, data interface{}) int {
 	meta["count"] = id
 
 	// 保存数据
-	if len(list) >= kit.Int(kit.Select(m.Conf(WEB_CACHE, Meta("limit")), meta["limit"])) {
-		least := kit.Int(kit.Select(m.Conf(WEB_CACHE, Meta("least")), meta["least"]))
+	if len(list) >= kit.Int(kit.Select(m.Conf(WEB_CACHE, "meta.limit"), kit.Select(kit.Format(meta["limit"]), m.Option("cache.limit")))) {
+		least := kit.Int(kit.Select(m.Conf(WEB_CACHE, "meta.least"), kit.Select(kit.Format(meta["least"]), m.Option("cache.least"))))
 
 		// 创建文件
-		name := path.Join(kit.Select(m.Conf(WEB_CACHE, Meta("store")), meta["store"]), kit.Keys(key, chain, "csv"))
+		name := path.Join(kit.Select(m.Conf(WEB_CACHE, Meta("store")), kit.Select(kit.Format(meta["store"]), m.Option("cache.store"))), kit.Keys(key, chain, "csv"))
 		if s, e := os.Stat(name); e == nil {
-			if s.Size() > 100000 {
+			if s.Size() > kit.Int64(kit.Select(m.Conf(WEB_CACHE, "meta.fsize"), kit.Select(kit.Format(meta["fsize"]), m.Option("cache.fsize")))) {
 				name = strings.Replace(name, ".csv", fmt.Sprintf("_%d.csv", kit.Int(meta["offset"])), -1)
 			}
 		}
@@ -1084,13 +1084,17 @@ func (m *Message) Grow(key string, chain interface{}, data interface{}) int {
 		count := len(list) - least
 		offset := kit.Int(meta["offset"])
 		record, _ := meta["record"].([]interface{})
-		meta["record"] = append(record, map[string]interface{}{
-			"time":     m.Time(),
-			"offset":   offset,
-			"position": s.Size(),
-			"count":    count,
-			"file":     name,
-		})
+		if len(record) > 0 && kit.Format(kit.Value(record, kit.Keys(len(record)-1, "file"))) == name && count < 10 {
+			kit.Value(record, kit.Keys(len(record)-1, "count"), kit.Int(kit.Value(record, kit.Keys(len(record)-1, "count")))+count)
+		} else {
+			meta["record"] = append(record, map[string]interface{}{
+				"time":     m.Time(),
+				"offset":   offset,
+				"position": s.Size(),
+				"count":    count,
+				"file":     name,
+			})
+		}
 
 		// 保存数据
 		for i, v := range list {
@@ -1126,7 +1130,7 @@ func (m *Message) Grows(key string, chain interface{}, match string, value strin
 	}
 	meta, ok := cache[kit.MDB_META].(map[string]interface{})
 	list, ok := cache[kit.MDB_LIST].([]interface{})
-	if !ok || len(list) == 0 {
+	if !ok {
 		return nil
 	}
 

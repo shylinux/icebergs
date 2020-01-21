@@ -378,7 +378,9 @@ var Index = &ice.Context{Name: "web", Help: "网络模块",
 			"cmd", []interface{}{ice.CLI_SYSTEM, "ice.sh", "start", ice.WEB_SPACE, "connect"},
 		)},
 		ice.WEB_FAVOR: {Name: "favor", Help: "收藏夹", Value: kit.Data(kit.MDB_SHORT, kit.MDB_NAME)},
-		ice.WEB_CACHE: {Name: "cache", Help: "缓存池", Value: kit.Data(kit.MDB_SHORT, "text", "path", "var/file", "store", "var/data", "limit", "30", "least", "10")},
+		ice.WEB_CACHE: {Name: "cache", Help: "缓存池", Value: kit.Data(
+			kit.MDB_SHORT, "text", "path", "var/file", "store", "var/data", "limit", "30", "least", "10", "fsize", "100000",
+		)},
 		ice.WEB_STORY: {Name: "story", Help: "故事会", Value: kit.Dict(
 			kit.MDB_META, kit.Dict(kit.MDB_SHORT, "data"),
 			"head", kit.Data(kit.MDB_SHORT, "story"),

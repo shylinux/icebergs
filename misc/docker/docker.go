@@ -2,7 +2,7 @@ package docker
 
 import (
 	"github.com/shylinux/icebergs"
-	"github.com/shylinux/icebergs/base/cli"
+	"github.com/shylinux/icebergs/core/code"
 	"github.com/shylinux/toolkits"
 	"strings"
 )
@@ -95,4 +95,4 @@ var Index = &ice.Context{Name: "docker", Help: "容器管理",
 	},
 }
 
-func init() { cli.Index.Register(Index, nil) }
+func init() { code.Index.Register(Index, nil) }

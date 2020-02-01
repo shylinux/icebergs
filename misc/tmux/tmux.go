@@ -2,7 +2,7 @@ package tmux
 
 import (
 	"github.com/shylinux/icebergs"
-	"github.com/shylinux/icebergs/base/cli"
+	"github.com/shylinux/icebergs/core/code"
 	"github.com/shylinux/toolkits"
 	"os"
 	"path"
@@ -53,9 +53,9 @@ var Index = &ice.Context{Name: "tmux", Help: "终端管理",
 	},
 	Commands: map[string]*ice.Command{
 		ice.ICE_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			m.Watch(ice.SYSTEM_INIT, "cli.tmux.init")
-			m.Watch(ice.DREAM_START, "cli.tmux.auto")
-			m.Watch(ice.FAVOR_START, "cli.tmux.auto")
+			m.Watch(ice.SYSTEM_INIT, "web.code.tmux.init")
+			m.Watch(ice.DREAM_START, "web.code.tmux.auto")
+			m.Watch(ice.FAVOR_START, "web.code.tmux.auto")
 		}},
 		ice.ICE_EXIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 		}},
@@ -240,7 +240,7 @@ var Index = &ice.Context{Name: "tmux", Help: "终端管理",
 		"auto": {Name: "auto", Help: "终端", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			prefix := []string{"cli.system", "tmux"}
 			if arg[0] == "" {
-				m.Cmd("cli.tmux.session").Table(func(index int, value map[string]string, head []string) {
+				m.Cmd("web.code.tmux.session").Table(func(index int, value map[string]string, head []string) {
 					if value["tag"] == "1" {
 						arg[0] = value["session"]
 					}
@@ -273,4 +273,4 @@ var Index = &ice.Context{Name: "tmux", Help: "终端管理",
 	},
 }
 
-func init() { cli.Index.Register(Index, &Frame{}) }
+func init() { code.Index.Register(Index, &Frame{}) }

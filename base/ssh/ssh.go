@@ -64,21 +64,20 @@ func (f *Frame) Start(m *ice.Message, arg ...string) bool {
 		if len(ls) > 0 && strings.HasPrefix(ls[0], "~") {
 			// 切换模块
 			target := ls[0][1:]
-			if ls = ls[1:]; len(target) == 0 {
+			if ls = ls[1:]; len(target) == 0 && len(ls) > 0 {
 				target, ls = ls[0], ls[1:]
 			}
-			ice.Pulse.Search(target+".", func(p *ice.Context, s *ice.Context, key string) {
+			m.Spawn(f.target).Search(target+".", func(p *ice.Context, s *ice.Context, key string) {
 				m.Info("choice: %s", s.Name)
 				f.target = s
 			})
 		}
-
 		if len(ls) == 0 {
 			continue
 		}
+		msg := m.Spawns(f.target)
 
 		// 执行命令
-		msg := m.Spawns(f.target)
 		if msg.Cmdy(ls); !msg.Hand {
 			msg = msg.Set("result").Cmdy(ice.CLI_SYSTEM, ls)
 		}
@@ -115,6 +114,13 @@ var Index = &ice.Context{Name: "ssh", Help: "终端模块",
 		}},
 		"scan": {Name: "scan", Help: "解析", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			m.Starts(arg[0], arg[1], arg[2:]...)
+		}},
+		"show": {Name: "show", Help: "解析", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			msg := m.Spawn()
+			msg.Option("title", "疫情分布")
+			msg.Info("what %v", msg.Format("meta"))
+			m.Copy(msg)
+			msg.Info("what %v", m.Format("meta"))
 		}},
 	},
 }

@@ -2,7 +2,7 @@ package git
 
 import (
 	"github.com/shylinux/icebergs"
-	"github.com/shylinux/icebergs/base/cli"
+	"github.com/shylinux/icebergs/core/code"
 	"github.com/shylinux/toolkits"
 
 	"os"
@@ -14,39 +14,44 @@ import (
 var Index = &ice.Context{Name: "git", Help: "代码管理",
 	Caches: map[string]*ice.Cache{},
 	Configs: map[string]*ice.Config{
-		"repos": {Name: "repos", Help: "仓库", Value: kit.Data(kit.MDB_SHORT, "name")},
+		"repos": {Name: "repos", Help: "仓库", Value: kit.Data(kit.MDB_SHORT, "name", "owner", "https://github.com/shylinux")},
 	},
 	Commands: map[string]*ice.Command{
 		ice.ICE_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			// 前端代码
-			m.Rich("repos", nil, kit.Data(
-				"name", "volcanos", "path", "usr/volcanos", "branch", "master",
-				"remote", "https://github.com/shylinux/volcanos",
-			))
-			m.Rich("repos", nil, kit.Data(
-				"name", "icebergs", "path", "../icebergs", "branch", "master",
-				"remote", "https://github.com/shylinux/icebergs",
-			))
-			m.Rich("repos", nil, kit.Data(
-				"name", "toolkits", "path", "../toolkits", "branch", "master",
-				"remote", "https://github.com/shylinux/toolkits",
-			))
-			m.Rich("repos", nil, kit.Data(
-				"name", "contexts", "path", "../contexts", "branch", "master",
-				"remote", "https://github.com/shylinux/context",
-			))
+			for _, repos := range []string{"volcanos"} {
+				m.Rich("repos", nil, kit.Data(
+					"name", repos, "path", "usr/"+repos, "branch", "master",
+					"remote", m.Conf("repos", "meta.owner")+"/"+repos,
+				))
+			}
+			// 后端代码
+			for _, repos := range []string{"contexts", "icebergs", "toolkits"} {
+				m.Rich("repos", nil, kit.Data(
+					"name", repos, "path", "../"+repos, "branch", "master",
+					"remote", m.Conf("repos", "meta.owner")+"/"+repos,
+				))
+			}
+			// 应用代码
 			m.Cmd("nfs.dir", m.Conf(ice.WEB_DREAM, "meta.path"), "name path").Table(func(index int, value map[string]string, head []string) {
-				if s, e := os.Stat(path.Join(value["path"], ".git")); e == nil && s.IsDir() {
+				if s, e := os.Stat(m.Option("cmd_dir", path.Join(value["path"], ".git"))); e == nil && s.IsDir() {
 					m.Rich("repos", nil, kit.Data(
 						"name", value["name"], "path", value["path"], "branch", "master",
 						"remote", m.Cmdx(ice.CLI_SYSTEM, "git", "remote", "get-url", "origin"),
 					))
 				}
 			})
-			m.Watch(ice.SYSTEM_INIT, "cli.git.check", "volcanos")
+			m.Watch(ice.SYSTEM_INIT, "web.code.git.check", "volcanos")
 		}},
 		ice.ICE_EXIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {}},
-		"repos": {Name: "repos", Help: "仓库", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+
+		"repos": {Name: "repos [name [path]]", Help: "仓库", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			if len(arg) > 0 {
+				m.Rich("repos", nil, kit.Data(
+					"name", arg[0], "path", "usr/"+kit.Select(arg[0], arg, 1), "branch", "master",
+					"remote", m.Conf("repos", "meta.owner")+"/"+arg[0],
+				))
+			}
 			m.Richs("repos", nil, "*", func(key string, value map[string]interface{}) {
 				m.Push(key, value["meta"], []string{"time", "name", "branch", "path", "remote"})
 			})
@@ -192,4 +197,4 @@ var Index = &ice.Context{Name: "git", Help: "代码管理",
 	},
 }
 
-func init() { cli.Index.Register(Index, nil) }
+func init() { code.Index.Register(Index, nil) }

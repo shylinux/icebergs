@@ -10,6 +10,7 @@ const ( // ICE
 const ( // CTX
 	CTX_STATUS  = "status"
 	CTX_STREAM  = "stream"
+	CTX_FOLLOW  = "follow"
 	CTX_CONFIG  = "config"
 	CTX_COMMAND = "command"
 	CTX_CONTEXT = "context"

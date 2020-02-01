@@ -3,6 +3,7 @@ package ice
 import (
 	"github.com/shylinux/toolkits"
 
+	"bytes"
 	"encoding/csv"
 	"encoding/json"
 	"errors"
@@ -113,12 +114,18 @@ func (c *Context) Spawn(m *Message, name string, help string, arg ...string) *Co
 func (c *Context) Begin(m *Message, arg ...string) *Context {
 	c.Caches[CTX_STATUS] = &Cache{Name: CTX_STATUS, Value: ""}
 	c.Caches[CTX_STREAM] = &Cache{Name: CTX_STREAM, Value: ""}
+	c.Caches[CTX_FOLLOW] = &Cache{Name: CTX_FOLLOW, Value: ""}
 
 	m.Log(LOG_BEGIN, "%s", c.Name)
 	if c.begin = m; c.server != nil {
 		m.TryCatch(m, true, func(m *Message) {
 			c.server.Begin(m, arg...)
 		})
+	}
+	if c.context == Index {
+		c.Cap(CTX_FOLLOW, c.Name)
+	} else if c.context != nil {
+		c.Cap(CTX_FOLLOW, kit.Keys(c.context.Cap(CTX_FOLLOW), c.Name))
 	}
 	return c
 }
@@ -191,6 +198,9 @@ func (m *Message) Time(args ...interface{}) string {
 }
 func (m *Message) Target() *Context {
 	return m.target
+}
+func (m *Message) Source() *Context {
+	return m.source
 }
 func (m *Message) Format(key interface{}) string {
 	switch key := key.(type) {
@@ -316,6 +326,21 @@ func (m *Message) Spawns(arg ...interface{}) *Message {
 	return msg
 }
 
+func (m *Message) CSV(text string) *Message {
+	bio := bytes.NewBufferString(text)
+	r := csv.NewReader(bio)
+	heads, _ := r.Read()
+	for {
+		lines, e := r.Read()
+		if e != nil {
+			break
+		}
+		for i, k := range heads {
+			m.Push(k, kit.Select("", lines, i))
+		}
+	}
+	return m
+}
 func (m *Message) Add(key string, arg ...string) *Message {
 	switch key {
 	case MSG_DETAIL, MSG_RESULT:
@@ -352,17 +377,19 @@ func (m *Message) Copy(msg *Message) *Message {
 	if msg == nil {
 		return m
 	}
+	for _, k := range msg.meta[MSG_OPTION] {
+		if kit.IndexOf(m.meta[MSG_OPTION], k) == -1 {
+			m.meta[MSG_OPTION] = append(m.meta[MSG_OPTION], k)
+		}
+		m.meta[k] = append(m.meta[k], msg.meta[k]...)
+	}
 	for _, k := range msg.meta[MSG_APPEND] {
 		if kit.IndexOf(m.meta[MSG_APPEND], k) == -1 {
 			m.meta[MSG_APPEND] = append(m.meta[MSG_APPEND], k)
 		}
-		for _, v := range msg.meta[k] {
-			m.meta[k] = append(m.meta[k], v)
-		}
+		m.meta[k] = append(m.meta[k], msg.meta[k]...)
 	}
-	for _, v := range msg.meta[MSG_RESULT] {
-		m.meta[MSG_RESULT] = append(m.meta[MSG_RESULT], v)
-	}
+	m.meta[MSG_RESULT] = append(m.meta[MSG_RESULT], msg.meta[MSG_RESULT]...)
 	return m
 }
 func (m *Message) Push(key string, value interface{}, arg ...interface{}) *Message {
@@ -868,14 +895,22 @@ func (m *Message) Search(key interface{}, cb interface{}) *Message {
 		p := m.target.root
 		if strings.Contains(key, ":") {
 
+		} else if key == "." {
+			if m.target.context != nil {
+				p = m.target.context
+			}
 		} else if strings.Contains(key, ".") {
 			list := strings.Split(key, ".")
-
-			for _, v := range list[:len(list)-1] {
-				if s, ok := p.contexts[v]; ok {
-					p = s
-				} else {
-					p = nil
+			for _, p = range []*Context{m.target.root, m.target, m.source} {
+				for _, v := range list[:len(list)-1] {
+					if s, ok := p.contexts[v]; ok {
+						p = s
+					} else {
+						p = nil
+						break
+					}
+				}
+				if p != nil {
 					break
 				}
 			}
@@ -1316,7 +1351,9 @@ func (m *Message) Capv(arg ...interface{}) interface{} {
 	for _, s := range []*Context{m.target} {
 		for c := s; c != nil; c = c.context {
 			if caps, ok := c.Caches[key]; ok {
-				caps.Value = kit.Format(arg[0])
+				if len(arg) > 0 {
+					caps.Value = kit.Format(arg[0])
+				}
 				return caps.Value
 			}
 		}

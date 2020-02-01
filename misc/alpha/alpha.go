@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"encoding/csv"
 	"github.com/shylinux/icebergs"
-	"github.com/shylinux/icebergs/base/cli"
+	"github.com/shylinux/icebergs/core/wiki"
 	"github.com/shylinux/toolkits"
 	"math/rand"
 	"os"
@@ -23,7 +23,7 @@ var Index = &ice.Context{Name: "alpha", Help: "英汉词典",
 			m.Cmd(ice.CTX_CONFIG, "load", "alpha.json")
 		}},
 		ice.ICE_EXIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			m.Cmd(ice.CTX_CONFIG, "save", "alpha.json", "cli.alpha.alpha")
+			m.Cmd(ice.CTX_CONFIG, "save", "alpha.json", "alpha")
 		}},
 
 		"alpha": {Name: "alpha [load|list]", Help: "英汉词典", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
@@ -35,7 +35,7 @@ var Index = &ice.Context{Name: "alpha", Help: "英汉词典",
 			switch arg[0] {
 			case "load":
 				// 加载词库
-				m.Cmd(ice.MDB_IMPORT, "cli.alpha.alpha", "", "list",
+				m.Cmd(ice.MDB_IMPORT, "web.wiki.alpha.alpha", "", "list",
 					m.Cmd(ice.WEB_CACHE, "catch", "csv", arg[1]).Append("data"))
 			case "list":
 				// 词汇列表
@@ -75,7 +75,7 @@ var Index = &ice.Context{Name: "alpha", Help: "英汉词典",
 			if field == nil {
 				field = map[string]interface{}{}
 				head := []string{}
-				if f, e := os.Open(path.Join(m.Conf("alpha", "meta.store"), "cli.alpha.alpha..csv")); m.Assert(e) {
+				if f, e := os.Open(path.Join(m.Conf("alpha", "meta.store"), "web.wiki.alpha.alpha.csv")); m.Assert(e) {
 					defer f.Close()
 					bio := csv.NewReader(f)
 					head, e = bio.Read()
@@ -109,4 +109,4 @@ var Index = &ice.Context{Name: "alpha", Help: "英汉词典",
 	},
 }
 
-func init() { cli.Index.Register(Index, nil) }
+func init() { wiki.Index.Register(Index, nil) }

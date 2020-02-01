@@ -141,10 +141,8 @@ var Index = &ice.Context{Name: "nfs", Help: "存储模块",
 	Caches:  map[string]*ice.Cache{},
 	Configs: map[string]*ice.Config{},
 	Commands: map[string]*ice.Command{
-		ice.ICE_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-		}},
-		ice.ICE_EXIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-		}},
+		ice.ICE_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {}},
+		ice.ICE_EXIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {}},
 
 		"dir": {Name: "dir", Help: "目录", List: kit.List(
 			kit.MDB_INPUT, "text", "name", "path", "action", "auto",
@@ -155,6 +153,17 @@ var Index = &ice.Context{Name: "nfs", Help: "存储模块",
 			dir(m, kit.Select("./", m.Option("dir_root")), kit.Select("", arg, 0), 0, m.Options("dir_deep"), "both", rg,
 				strings.Split(kit.Select("time size line path", arg, 1), " "), ice.ICE_TIME)
 		}},
+		"cat": {Name: "cat path", Help: "保存", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			if f, e := os.OpenFile(arg[0], os.O_RDONLY, 0777); m.Assert(e) {
+				defer f.Close()
+				buf := make([]byte, 1024)
+				if n, e := f.Read(buf); m.Assert(e) {
+					m.Log(ice.LOG_IMPORT, "%d: %s", n, arg[0])
+					m.Echo(string(buf[:n]))
+				}
+			}
+		}},
+
 		"save": {Name: "save path text", Help: "保存", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			if f, p, e := kit.Create(arg[0]); m.Assert(e) {
 				defer f.Close()
@@ -173,16 +182,6 @@ var Index = &ice.Context{Name: "nfs", Help: "存储模块",
 					if n, e := f.WriteString(v); m.Assert(e) {
 						m.Log(ice.LOG_EXPORT, "%d: %s", n, arg[0])
 					}
-				}
-			}
-		}},
-		"cat": {Name: "cat path", Help: "保存", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			if f, e := os.OpenFile(arg[0], os.O_RDONLY, 0777); m.Assert(e) {
-				defer f.Close()
-				buf := make([]byte, 1024)
-				if n, e := f.Read(buf); m.Assert(e) {
-					m.Log(ice.LOG_IMPORT, "%d: %s", n, arg[0])
-					m.Echo(string(buf[:n]))
 				}
 			}
 		}},

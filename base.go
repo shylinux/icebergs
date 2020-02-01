@@ -58,6 +58,7 @@ var Index = &Context{Name: "ice", Help: "冰山模块",
 	Caches: map[string]*Cache{
 		CTX_STATUS: {Value: "begin"},
 		CTX_STREAM: {Value: "shy"},
+		CTX_FOLLOW: {Value: ""},
 	},
 	Configs: map[string]*Config{
 		"table": {Name: "数据缓存", Value: map[string]interface{}{

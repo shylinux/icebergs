@@ -1457,6 +1457,9 @@ var Index = &ice.Context{Name: "web", Help: "网络模块",
 
 		"/share/": {Name: "/share/", Help: "共享链", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			switch arg[0] {
+			case "local":
+				http.ServeFile(m.W, m.R, "usr/"+path.Join(arg[1:]...))
+
 			case "login":
 				Cookie(m, m.Cmdx(ice.AAA_USER, "login", m.Option("username"), m.Option("password")))
 

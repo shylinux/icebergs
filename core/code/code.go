@@ -33,16 +33,12 @@ var Index = &ice.Context{Name: "code", Help: "编程中心",
 
 		"compile": {Name: "compile", Help: "编译", Value: kit.Data("path", "usr/publish")},
 		"publish": {Name: "publish", Help: "发布", Value: kit.Data("path", "usr/publish")},
-		"upgrade": {Name: "upgrade", Help: "升级", Value: kit.Dict(
-			kit.MDB_HASH, kit.Dict(
-				"system", kit.Dict(
-					kit.MDB_LIST, kit.List(
-						kit.MDB_INPUT, "bin", "file", "ice.sh", "path", "bin/ice.sh",
-						kit.MDB_INPUT, "bin", "file", "ice.bin", "path", "bin/ice.bin",
-					),
-				),
-			),
-		)},
+		"upgrade": {Name: "upgrade", Help: "升级", Value: kit.Dict(kit.MDB_HASH, kit.Dict(
+			"system", kit.Dict(kit.MDB_LIST, kit.List(
+				kit.MDB_INPUT, "bin", "file", "ice.sh", "path", "bin/ice.sh",
+				kit.MDB_INPUT, "bin", "file", "ice.bin", "path", "bin/ice.bin",
+			)),
+		))},
 	},
 	Commands: map[string]*ice.Command{
 		ice.ICE_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
@@ -249,12 +245,6 @@ var Index = &ice.Context{Name: "code", Help: "编程中心",
 				m.Push("_output", "result")
 			}
 		}},
-		"/input/": {Name: "/input/", Help: "编辑器", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			m.Cmd("cli.input.match", arg[0]).Table(func(index int, value map[string]string, head []string) {
-				m.Echo("%s %s\n", value["code"], value["text"])
-				m.Push("_output", "result")
-			})
-		}},
 		"/vim": {Name: "/vim", Help: "编辑器", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			if f, _, e := m.R.FormFile("sub"); e == nil {
 				defer f.Close()
@@ -288,19 +278,21 @@ var Index = &ice.Context{Name: "code", Help: "编程中心",
 					arg := kit.Split(strings.TrimPrefix(strings.TrimSpace(m.Option("arg")), "ice "))
 					switch arg[0] {
 					case "add":
-						m.Cmd("cli.input.input", "push", arg[1:])
+						// 添加词汇
+						m.Cmd("input.push", arg[1:])
 						m.Option("arg", arg[2])
 					default:
+						// 执行命令
 						m.Set("append")
 						if m.Cmdy(arg).Table(); strings.TrimSpace(m.Result()) == "" {
 							m.Cmdy(ice.CLI_SYSTEM, arg)
 						}
-						m.Info("trans: --%s--", m.Result())
 						m.Push("_output", "result")
 						return
 					}
 				}
-				m.Cmd("cli.input.match", m.Option("arg")).Table(func(index int, value map[string]string, head []string) {
+				// 词汇列表
+				m.Cmd("input.find", m.Option("arg")).Table(func(index int, value map[string]string, head []string) {
 					m.Echo("%s\n", value["text"])
 					m.Push("_output", "result")
 				})

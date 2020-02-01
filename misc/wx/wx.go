@@ -2,7 +2,7 @@ package wx
 
 import (
 	"github.com/shylinux/icebergs"
-	"github.com/shylinux/icebergs/base/cli"
+	"github.com/shylinux/icebergs/core/chat"
 	"github.com/shylinux/toolkits"
 	"regexp"
 )
@@ -53,4 +53,4 @@ var Index = &ice.Context{Name: "wx", Help: "wx",
 	},
 }
 
-func init() { cli.Index.Register(Index, nil) }
+func init() { chat.Index.Register(Index, nil) }

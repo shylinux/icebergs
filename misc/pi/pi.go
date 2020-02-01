@@ -2,7 +2,7 @@ package pi
 
 import (
 	"github.com/shylinux/icebergs"
-	"github.com/shylinux/icebergs/base/cli"
+	"github.com/shylinux/icebergs/core/chat"
 	"github.com/shylinux/toolkits"
 	"os"
 	"path"
@@ -35,4 +35,4 @@ var Index = &ice.Context{Name: "pi", Help: "pi",
 	},
 }
 
-func init() { cli.Index.Register(Index, nil) }
+func init() { chat.Index.Register(Index, nil) }

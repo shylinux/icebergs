@@ -523,7 +523,7 @@ func (m *Message) Table(cbs ...interface{}) *Message {
 	}
 
 	//计算列宽
-	space := kit.Select(m.Conf("table", "space"), m.Option("table.space"))
+	space := kit.Select(" ", m.Option("table.space"))
 	depth, width := 0, map[string]int{}
 	for _, k := range m.meta[MSG_APPEND] {
 		if len(m.meta[k]) > depth {
@@ -538,8 +538,8 @@ func (m *Message) Table(cbs ...interface{}) *Message {
 	}
 
 	// 回调函数
-	rows := kit.Select(m.Conf("table", "row_sep"), m.Option("table.row_sep"))
-	cols := kit.Select(m.Conf("table", "col_sep"), m.Option("table.col_sep"))
+	rows := kit.Select(" ", m.Option("table.row_sep"))
+	cols := kit.Select("\n", m.Option("table.col_sep"))
 	compact := kit.Select(m.Conf("table", "compact"), m.Option("table.compact")) == "true"
 	cb := func(maps map[string]string, lists []string, line int) bool {
 		for i, v := range lists {

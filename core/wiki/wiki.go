@@ -9,6 +9,7 @@ import (
 
 	"bytes"
 	"fmt"
+	"os"
 	"path"
 	"strings"
 )
@@ -38,17 +39,19 @@ var Index = &ice.Context{Name: "wiki", Help: "文档中心",
 		"table": {Name: "table", Help: "表格", Value: kit.Data("template", table)},
 		"chart": {Name: "chart", Help: "绘图", Value: kit.Data("prefix", prefix, "suffix", `</svg>`)},
 
-		"mind": {Name: "mind", Help: "思维导图", Value: kit.Data(kit.MDB_SHORT, "name", "prefix", `<svg vertion="1.1" xmlns="http://www.w3.org/2000/svg" width="%v" height="%v">`, "suffix", `</svg>`)},
-		"word": {Name: "word", Help: "语言文字", Value: kit.Data(kit.MDB_SHORT, "name")},
-		"data": {Name: "data", Help: "数据表格", Value: kit.Data(kit.MDB_SHORT, "name")},
-		"feel": {Name: "feel", Help: "影音媒体", Value: kit.Data(kit.MDB_SHORT, "name")},
+		"mind": {Name: "mind", Help: "思维导图", Value: kit.Data(kit.MDB_SHORT, "name", "path", "usr/local", "regs", ".*\\.svg", "prefix", `<svg vertion="1.1" xmlns="http://www.w3.org/2000/svg" width="%v" height="%v">`, "suffix", `</svg>`)},
+		"word": {Name: "word", Help: "语言文字", Value: kit.Data(kit.MDB_SHORT, "name", "path", "usr/local", "regs", ".*\\.shy")},
+		"data": {Name: "data", Help: "数据表格", Value: kit.Data(kit.MDB_SHORT, "name", "path", "usr/local", "regs", ".*\\.csv")},
+		"feel": {Name: "feel", Help: "影音媒体", Value: kit.Data(kit.MDB_SHORT, "name", "path", "usr/local", "regs", ".*\\.(JPG|MOV|m4v)")},
+		"walk": {Name: "walk", Help: "走遍世界", Value: kit.Data(kit.MDB_SHORT, "name", "path", "usr/local", "regs", ".*\\.csv")},
 	},
 	Commands: map[string]*ice.Command{
 		ice.ICE_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			m.Cmd(ice.CTX_CONFIG, "load", kit.Keys(m.Cap(ice.CTX_FOLLOW), "json"))
+
 		}},
 		ice.ICE_EXIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			m.Cmd(ice.CTX_CONFIG, "save", kit.Keys(m.Cap(ice.CTX_FOLLOW), "json"), kit.Keys(m.Cap(ice.CTX_FOLLOW), "mind"))
+			m.Cmd(ice.CTX_CONFIG, "save", kit.Keys(m.Cap(ice.CTX_FOLLOW), "json"), kit.Keys(m.Cap(ice.CTX_FOLLOW), "feel"))
 		}},
 		"chart": {Name: "chart block|chain|table name text [fg bg fs ls p m]", Help: "绘图", Meta: map[string]interface{}{
 			"display": "inner",
@@ -217,9 +220,9 @@ var Index = &ice.Context{Name: "wiki", Help: "文档中心",
 
 			// 生成网页
 			data := buffer.Bytes()
-			if strings.HasSuffix(arg[0], ".md") {
-				data = markdown.ToHTML(buffer.Bytes(), nil, nil)
-			}
+			// if strings.HasSuffix(arg[0], ".md") {
+			data = markdown.ToHTML(buffer.Bytes(), nil, nil)
+			// }
 			m.Echo(string(data))
 		}},
 		"_tree": {Name: "_tree path", Help: "文库", Hand: func(m *ice.Message, c *ice.Context, key string, arg ...string) {
@@ -259,93 +262,150 @@ var Index = &ice.Context{Name: "wiki", Help: "文档中心",
 			kit.MDB_INPUT, "text", "name", "name",
 			kit.MDB_INPUT, "button", "name", "执行",
 			kit.MDB_INPUT, "button", "name", "返回", "cb", "Last",
-		), Hand: func(m *ice.Message, c *ice.Context, key string, arg ...string) {
+		), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			if len(arg) > 0 && arg[0] == "action" {
 				switch arg[1] {
 				case "保存":
-					m.Cmd("nfs.save", path.Join("usr", arg[2]), arg[3:])
+					m.Cmd("nfs.save", path.Join(m.Conf(cmd, "meta.path"), arg[2]), arg[3:])
 				}
 				return
 			}
 
-			m.Option("dir_root", "usr")
+			// 文件列表
+			m.Option("dir_root", m.Conf(cmd, "meta.path"))
+			m.Option("dir_reg", m.Conf(cmd, "meta.regs"))
 			m.Cmdy("nfs.dir", kit.Select("./", arg, 0))
-			if m.Append("path") == "" && m.Result() == "" {
-				m.Echo(m.Conf("mind", "meta.prefix"), "100%", "100%")
-				m.Echo(m.Conf("mind", "meta.suffix"))
+			m.Sort("time", "time_r")
+			if len(arg) == 0 || strings.HasSuffix(arg[0], "/") {
+				// 目录列表
+				m.Option("dir_reg", "")
+				m.Option("dir_type", "dir")
+				m.Cmdy("nfs.dir", kit.Select("./", arg, 0))
 			}
 		}},
 		"word": {Name: "word", Help: "语言文字", Meta: kit.Dict("display", "wiki/word"), List: kit.List(
 			kit.MDB_INPUT, "text", "name", "name",
 			kit.MDB_INPUT, "button", "name", "执行",
 			kit.MDB_INPUT, "button", "name", "返回", "cb", "Last",
-		), Hand: func(m *ice.Message, c *ice.Context, key string, arg ...string) {
+		), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			if len(arg) > 0 && arg[0] == "action" {
 				switch arg[1] {
 				case "保存":
-					m.Cmd("nfs.save", path.Join("usr", arg[2]), arg[3])
+					m.Cmd("nfs.save", path.Join(m.Conf(cmd, "meta.path"), arg[2]), arg[3])
 				}
 				return
 			}
 
-			m.Option("dir_root", "usr")
+			// 文件列表
+			m.Option("dir_root", m.Conf(cmd, "meta.path"))
+			m.Option("dir_reg", m.Conf(cmd, "meta.regs"))
 			m.Cmdy("nfs.dir", kit.Select("./", arg, 0))
+			m.Sort("time", "time_r")
+			if len(arg) == 0 || strings.HasSuffix(arg[0], "/") {
+				// 目录列表
+				m.Option("dir_reg", "")
+				m.Option("dir_type", "dir")
+				m.Cmdy("nfs.dir", kit.Select("./", arg, 0))
+				return
+			}
+			m.Option("preview", m.Cmdx("_text", path.Join(m.Conf(cmd, "meta.path"), arg[0])))
 		}},
 		"data": {Name: "data", Help: "数据表格", Meta: kit.Dict("display", "wiki/data"), List: kit.List(
 			kit.MDB_INPUT, "text", "name", "name",
 			kit.MDB_INPUT, "button", "name", "执行",
 			kit.MDB_INPUT, "button", "name", "返回", "cb", "Last",
-		), Hand: func(m *ice.Message, c *ice.Context, key string, arg ...string) {
+		), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			if len(arg) > 0 && arg[0] == "action" {
 				switch arg[1] {
 				case "保存":
-					m.Cmd("nfs.save", path.Join("usr", arg[2]), arg[3])
+					m.Cmd("nfs.save", path.Join(m.Conf("mind", "meta.path"), arg[2]), arg[3])
 				}
 				return
 			}
 
-			m.Option("dir_root", "usr")
+			// 文件列表
+			m.Option("dir_root", m.Conf(cmd, "meta.path"))
+			m.Option("dir_reg", m.Conf(cmd, "meta.regs"))
 			m.Cmdy("nfs.dir", kit.Select("./", arg, 0))
-			if len(arg) > 0 && strings.HasSuffix(arg[0], ".csv") {
-				m.CSV(m.Result())
+			m.Sort("time", "time_r")
+			if len(arg) == 0 || strings.HasSuffix(arg[0], "/") {
+				// 目录列表
+				m.Option("dir_reg", "")
+				m.Option("dir_type", "dir")
+				m.Cmdy("nfs.dir", kit.Select("./", arg, 0))
+				return
 			}
+			m.CSV(m.Result())
 		}},
 		"feel": {Name: "feel", Help: "影音媒体", Meta: kit.Dict("display", "wiki/feel"), List: kit.List(
 			kit.MDB_INPUT, "text", "name", "name",
 			kit.MDB_INPUT, "button", "name", "执行",
 			kit.MDB_INPUT, "button", "name", "返回", "cb", "Last",
-		), Hand: func(m *ice.Message, c *ice.Context, key string, arg ...string) {
+		), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			if len(arg) > 0 && arg[0] == "action" {
 				switch arg[1] {
 				case "保存":
-					m.Cmd("nfs.save", path.Join("usr", arg[2]), arg[3])
+					m.Cmd("nfs.save", path.Join(m.Conf("mind", "meta.path"), arg[2]), arg[3])
+				case "标签":
+					m.Conf("feel", kit.Keys(path.Base(arg[2]), "-2"), arg[3])
+					p := path.Join(m.Conf(cmd, "meta.path"), arg[2])
+					q := path.Join(m.Conf(cmd, "meta.path"), arg[3])
+					os.MkdirAll(q, 0777)
+					m.Assert(os.Link(p, path.Join(q, path.Base(arg[2]))))
 				}
 				return
 			}
 
-			m.Option("dir_root", "usr")
-			m.Cmdy("nfs.dir", kit.Select("./", arg, 0))
-			m.Sort("time", "time_r")
+			if len(arg) == 0 || strings.HasSuffix(arg[0], "/") {
+				// 文件列表
+				m.Option("dir_root", m.Conf(cmd, "meta.path"))
+				m.Option("dir_reg", m.Conf(cmd, "meta.regs"))
+				m.Cmdy("nfs.dir", kit.Select("./", arg, 0), "time size path").Table(func(index int, value map[string]string, head []string) {
+					m.Push("label", m.Conf("feel", path.Base(value["path"])))
+				})
+
+				// 目录列表
+				m.Option("dir_reg", "")
+				m.Option("dir_type", "dir")
+				m.Cmdy("nfs.dir", kit.Select("./", arg, 0))
+
+				if len(arg) > 0 {
+					m.Sort("time", "time_r")
+				} else {
+					m.Sort("line", "int_r")
+				}
+				return
+			}
+			// 下载文件
+			m.Echo(path.Join(m.Conf(cmd, "meta.path"), arg[0]))
 		}},
 		"walk": {Name: "walk", Help: "走遍世界", Meta: kit.Dict("display", "wiki/walk"), List: kit.List(
 			kit.MDB_INPUT, "text", "name", "file",
 			kit.MDB_INPUT, "button", "name", "执行",
 			kit.MDB_INPUT, "button", "name", "返回", "cb", "Last",
-		), Hand: func(m *ice.Message, c *ice.Context, key string, arg ...string) {
+		), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			if len(arg) > 0 && arg[0] == "action" {
 				switch arg[1] {
 				case "保存":
-					m.Cmd("nfs.save", path.Join("usr", arg[2]), arg[3])
+					m.Cmd("nfs.save", path.Join(m.Conf("mind", "meta.path"), arg[2]), arg[3])
 				}
 				return
 			}
 
-			m.Option("dir_root", "usr")
+			// 文件列表
+			m.Option("dir_root", m.Conf(cmd, "meta.path"))
+			m.Option("dir_reg", m.Conf(cmd, "meta.regs"))
 			m.Cmdy("nfs.dir", kit.Select("./", arg, 0))
-			if len(arg) > 0 && strings.HasSuffix(arg[0], ".csv") {
-				m.Option("title", "我走过的世界")
-				m.CSV(m.Result())
+			m.Sort("time", "time_r")
+			if len(arg) == 0 || strings.HasSuffix(arg[0], "/") {
+				// 目录列表
+				m.Option("dir_reg", "")
+				m.Option("dir_type", "dir")
+				m.Cmdy("nfs.dir", kit.Select("./", arg, 0))
+				return
 			}
+			m.Option("title", "我走过的世界")
+			m.CSV(m.Result())
 		}},
 	},
 }

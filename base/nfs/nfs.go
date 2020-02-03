@@ -150,7 +150,7 @@ var Index = &ice.Context{Name: "nfs", Help: "存储模块",
 			kit.MDB_INPUT, "button", "name", "返回", "cb", "Last",
 		), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			rg, _ := regexp.Compile(m.Option("dir_reg"))
-			dir(m, kit.Select("./", m.Option("dir_root")), kit.Select("", arg, 0), 0, m.Options("dir_deep"), "both", rg,
+			dir(m, kit.Select("./", m.Option("dir_root")), kit.Select("", arg, 0), 0, m.Options("dir_deep"), kit.Select("both", m.Option("dir_type")), rg,
 				strings.Split(kit.Select("time size line path", arg, 1), " "), ice.ICE_TIME)
 		}},
 		"cat": {Name: "cat path", Help: "保存", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {

@@ -62,9 +62,6 @@ var Index = &Context{Name: "ice", Help: "冰山模块",
 	},
 	Configs: map[string]*Config{
 		"table": {Name: "数据缓存", Value: map[string]interface{}{
-			"space":   " ",
-			"col_sep": " ",
-			"row_sep": "\n",
 			"compact": "false",
 		}},
 		"help": {Value: map[string]interface{}{

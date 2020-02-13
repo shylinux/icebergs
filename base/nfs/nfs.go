@@ -156,7 +156,7 @@ var Index = &ice.Context{Name: "nfs", Help: "存储模块",
 		"cat": {Name: "cat path", Help: "保存", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			if f, e := os.OpenFile(arg[0], os.O_RDONLY, 0777); m.Assert(e) {
 				defer f.Close()
-				buf := make([]byte, 1024)
+				buf := make([]byte, 4096000)
 				if n, e := f.Read(buf); m.Assert(e) {
 					m.Log(ice.LOG_IMPORT, "%d: %s", n, arg[0])
 					m.Echo(string(buf[:n]))

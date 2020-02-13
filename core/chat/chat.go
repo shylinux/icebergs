@@ -16,27 +16,37 @@ var Index = &ice.Context{Name: "chat", Help: "聊天中心",
 		ice.ICE_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			m.Cap(ice.CTX_STATUS, "start")
 			m.Cap(ice.CTX_STREAM, "volcanos")
-			m.Cmd(ice.CTX_CONFIG, "load", "chat.json")
 			m.Watch(ice.SYSTEM_INIT, "web.chat.init")
 			m.Watch(ice.USER_CREATE, "web.chat./tutor", "init")
+			m.Cmd(ice.CTX_CONFIG, "load", kit.Keys(m.Cap(ice.CTX_FOLLOW), "json"))
 		}},
 		ice.ICE_EXIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			m.Cmd(ice.CTX_CONFIG, "save", "chat.json", ice.CHAT_RIVER)
+			m.Cmd(ice.CTX_CONFIG, "save", kit.Keys(m.Cap(ice.CTX_FOLLOW), "json"), kit.Keys(m.Cap(ice.CTX_FOLLOW), "river"))
 		}},
 
 		"init": {Name: "init", Help: "初始化", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			if len(m.Confm(ice.CHAT_RIVER, "hash")) == 0 {
 				// 系统群组
 				if m.Richs(ice.WEB_FAVOR, nil, "river.root", nil) == nil {
-					m.Cmd(ice.WEB_FAVOR, "river.root", "storm", "miss")
-					m.Cmd(ice.WEB_FAVOR, "river.root", "field", "spide")
-					m.Cmd(ice.WEB_FAVOR, "river.root", "field", "space")
-					m.Cmd(ice.WEB_FAVOR, "river.root", "field", "dream")
-					m.Cmd(ice.WEB_FAVOR, "river.root", "field", "favor")
-					m.Cmd(ice.WEB_FAVOR, "river.root", "field", "story")
-					m.Cmd(ice.WEB_FAVOR, "river.root", "field", "share")
+					m.Cmd(ice.WEB_FAVOR, "river.root", "storm", "mall", "mall")
+					m.Cmd(ice.WEB_FAVOR, "river.root", "field", "asset", "web.mall")
+					m.Cmd(ice.WEB_FAVOR, "river.root", "field", "bonus", "web.mall")
+					m.Cmd(ice.WEB_FAVOR, "river.root", "field", "trans", "web.mall")
+					m.Cmd(ice.WEB_FAVOR, "river.root", "field", "spend", "web.mall")
 
-					m.Cmd(ice.WEB_FAVOR, "river.root", "storm", "misc")
+					m.Cmd(ice.WEB_FAVOR, "river.root", "storm", "team", "team")
+					m.Cmd(ice.WEB_FAVOR, "river.root", "field", "miss", "web.team")
+					m.Cmd(ice.WEB_FAVOR, "river.root", "field", "stat", "web.team")
+					m.Cmd(ice.WEB_FAVOR, "river.root", "field", "plan", "web.team")
+
+					m.Cmd(ice.WEB_FAVOR, "river.root", "storm", "wiki", "wiki")
+					m.Cmd(ice.WEB_FAVOR, "river.root", "field", "mind", "web.wiki")
+					m.Cmd(ice.WEB_FAVOR, "river.root", "field", "word", "web.wiki")
+					m.Cmd(ice.WEB_FAVOR, "river.root", "field", "data", "web.wiki")
+					m.Cmd(ice.WEB_FAVOR, "river.root", "field", "feel", "web.wiki")
+					m.Cmd(ice.WEB_FAVOR, "river.root", "field", "walk", "web.wiki")
+
+					m.Cmd(ice.WEB_FAVOR, "river.root", "storm", "code", "code")
 					m.Cmd(ice.WEB_FAVOR, "river.root", "field", "buffer", "web.code.tmux")
 					m.Cmd(ice.WEB_FAVOR, "river.root", "field", "session", "web.code.tmux")
 					m.Cmd(ice.WEB_FAVOR, "river.root", "field", "image", "web.code.docker")
@@ -47,12 +57,13 @@ var Index = &ice.Context{Name: "chat", Help: "聊天中心",
 					m.Cmd(ice.WEB_FAVOR, "river.root", "field", "branch", "web.code.git")
 					m.Cmd(ice.WEB_FAVOR, "river.root", "field", "status", "web.code.git")
 
-					m.Cmd(ice.WEB_FAVOR, "river.root", "storm", "note")
-					m.Cmd(ice.WEB_FAVOR, "river.root", "field", "total", "web.code.git")
-					m.Cmd(ice.WEB_FAVOR, "river.root", "field", "date", "web.team")
-					m.Cmd(ice.WEB_FAVOR, "river.root", "field", "miss", "web.team")
-					m.Cmd(ice.WEB_FAVOR, "river.root", "field", "progress", "web.team")
-					m.Cmd(ice.WEB_FAVOR, "river.root", "field", "note", "web.wiki")
+					m.Cmd(ice.WEB_FAVOR, "river.root", "storm", "root")
+					m.Cmd(ice.WEB_FAVOR, "river.root", "field", "spide")
+					m.Cmd(ice.WEB_FAVOR, "river.root", "field", "space")
+					m.Cmd(ice.WEB_FAVOR, "river.root", "field", "dream")
+					m.Cmd(ice.WEB_FAVOR, "river.root", "field", "favor")
+					m.Cmd(ice.WEB_FAVOR, "river.root", "field", "story")
+					m.Cmd(ice.WEB_FAVOR, "river.root", "field", "share")
 				}
 
 				// 用户权限
@@ -279,12 +290,24 @@ var Index = &ice.Context{Name: "chat", Help: "聊天中心",
 						m.Push("index", meta["cmd"])
 
 						msg := m.Cmd(m.Space(meta["pod"]), ice.CTX_COMMAND, meta["ctx"], meta["cmd"])
-						m.Push("name", meta["cmd"])
+						m.Push("name", kit.Select(kit.Format(meta["key"]), meta["cmd"]))
 						m.Push("help", msg.Append("help"))
 						m.Push("inputs", msg.Append("list"))
 						m.Push("feature", msg.Append("meta"))
 					}
 				})
+				return
+			}
+
+			switch arg[2] {
+			case "save":
+				m.Conf(ice.CHAT_RIVER, kit.Keys(prefix), "")
+				for i := 3; i < len(arg)-3; i += 4 {
+					id := m.Grow(ice.CHAT_RIVER, kit.Keys(prefix), kit.Data(
+						"pod", arg[i], "ctx", arg[i+1], "cmd", arg[i+2], "key", arg[i+3],
+					))
+					m.Log("insert", "storm: %s %d: %v", arg[1], id, arg[i:i+4])
+				}
 				return
 			}
 

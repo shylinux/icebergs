@@ -25,9 +25,14 @@ const ( // MSG
 	MSG_APPEND = "append"
 	MSG_RESULT = "result"
 
+	MSG_ACTION = "_action"
+
 	MSG_SOURCE = "_source"
 	MSG_TARGET = "_target"
 	MSG_HANDLE = "_handle"
+	MSG_STDOUT = "_stdout"
+	MSG_PROMPT = "_prompt"
+	MSG_ALIAS  = "_alias"
 
 	MSG_SESSID   = "sessid"
 	MSG_USERIP   = "user.ip"

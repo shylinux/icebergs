@@ -20,10 +20,10 @@ var Index = &ice.Context{Name: "alpha", Help: "英汉词典",
 	},
 	Commands: map[string]*ice.Command{
 		ice.ICE_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			m.Cmd(ice.CTX_CONFIG, "load", "alpha.json")
+			m.Cmd(ice.CTX_CONFIG, "load", kit.Keys(m.Cap(ice.CTX_FOLLOW), "json"))
 		}},
 		ice.ICE_EXIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			m.Cmd(ice.CTX_CONFIG, "save", "alpha.json", "alpha")
+			m.Cmd(ice.CTX_CONFIG, "save", kit.Keys(m.Cap(ice.CTX_FOLLOW), "json"), kit.Keys(m.Cap(ice.CTX_FOLLOW), "alpha"))
 		}},
 
 		"alpha": {Name: "alpha [load|list]", Help: "英汉词典", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
@@ -35,7 +35,7 @@ var Index = &ice.Context{Name: "alpha", Help: "英汉词典",
 			switch arg[0] {
 			case "load":
 				// 加载词库
-				m.Cmd(ice.MDB_IMPORT, "web.wiki.alpha.alpha", "", "list",
+				m.Cmd(ice.MDB_IMPORT, "alpha", "", "list",
 					m.Cmd(ice.WEB_CACHE, "catch", "csv", arg[1]).Append("data"))
 			case "list":
 				// 词汇列表

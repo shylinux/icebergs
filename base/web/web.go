@@ -161,8 +161,10 @@ func (web *Frame) HandleCGI(m *ice.Message, alias map[string]interface{}, which 
 	tmpl = tmpl.Funcs(cgi)
 	// tmpl = template.Must(tmpl.ParseGlob(path.Join(m.Conf(ice.WEB_SERVE, ice.Meta("template", "path")), "/*.tmpl")))
 	// tmpl = template.Must(tmpl.ParseGlob(path.Join(m.Conf(ice.WEB_SERVE, ice.Meta("template", "path")), m.Target().Name, "/*.tmpl")))
-	tmpl = template.Must(tmpl.ParseFiles(which))
-	m.Confm(ice.WEB_SERVE, ice.Meta("template", "list"), func(index int, value string) { tmpl = template.Must(tmpl.Parse(value)) })
+	tmpl, e := tmpl.ParseFiles(which)
+	if e != nil {
+	}
+	// m.Confm(ice.WEB_SERVE, ice.Meta("template", "list"), func(index int, value string) { tmpl = template.Must(tmpl.Parse(value)) })
 	return tmpl
 }
 func (web *Frame) HandleCmd(m *ice.Message, key string, cmd *ice.Command) {
@@ -761,8 +763,11 @@ var Index = &ice.Context{Name: "web", Help: "网络模块",
 						id := kit.Format(c.ID())
 						m.Optionv(ice.MSG_SOURCE, []string{id})
 						m.Optionv(ice.MSG_TARGET, target[1:])
-						m.Option("hot", m.Option("hot"))
-						m.Option("top", m.Option("top"))
+						for _, k := range []string{"top", "hot"} {
+							if m.Options(k) {
+								m.Option(k, m.Option(k))
+							}
+						}
 						m.Set(ice.MSG_DETAIL, arg[1:]...)
 						m.Info("send %s %s", id, m.Format("meta"))
 
@@ -923,6 +928,7 @@ var Index = &ice.Context{Name: "web", Help: "网络模块",
 			}
 
 			if len(arg) == 1 {
+				m.Option("cache.limit", 30)
 				// 收藏列表
 				m.Grows(ice.WEB_FAVOR, kit.Keys(kit.MDB_HASH, favor), "", "", func(index int, value map[string]interface{}) {
 					m.Push(kit.Format(index), value, []string{kit.MDB_TIME, kit.MDB_ID, kit.MDB_TYPE, kit.MDB_NAME, kit.MDB_TEXT})
@@ -950,7 +956,7 @@ var Index = &ice.Context{Name: "web", Help: "网络模块",
 				kit.MDB_TYPE, arg[1], kit.MDB_NAME, arg[2], kit.MDB_TEXT, kit.Select("", arg, 3),
 				"extra", extra,
 			))
-			m.Log(ice.LOG_INSERT, "favor: %s index: %d name: %s", favor, index, arg[2])
+			m.Log(ice.LOG_INSERT, "favor: %s index: %d name: %s text: %s", favor, index, arg[2], kit.Select("", arg, 3))
 			m.Echo("%d", index)
 		}},
 		ice.WEB_CACHE: {Name: "cache", Help: "缓存池", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {

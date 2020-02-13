@@ -102,7 +102,7 @@ func (c *Context) Register(s *Context, x Server) *Context {
 }
 
 func (c *Context) Spawn(m *Message, name string, help string, arg ...string) *Context {
-	s := &Context{Name: name, Help: help, Caches: map[string]*Cache{}}
+	s := &Context{Name: name, Help: help, Caches: map[string]*Cache{}, Configs: map[string]*Config{}}
 	if m.target.Server != nil {
 		c.Register(s, m.target.server.Spawn(m, s, arg...))
 	} else {
@@ -141,7 +141,9 @@ func (c *Context) Start(m *Message, arg ...string) bool {
 		wait <- true
 		c.server.Start(m, arg...)
 		c.Cap(CTX_STATUS, "close")
-		m.Done()
+		if m.Done(); m.wait != nil {
+			m.wait <- true
+		}
 	})
 	<-wait
 	return true
@@ -169,9 +171,10 @@ type Message struct {
 	source *Context
 	target *Context
 
-	cb func(*Message) *Message
-	W  http.ResponseWriter
-	R  *http.Request
+	cb   func(*Message) *Message
+	W    http.ResponseWriter
+	R    *http.Request
+	wait chan bool
 }
 
 func (m *Message) Time(args ...interface{}) string {
@@ -362,7 +365,9 @@ func (m *Message) Set(key string, arg ...string) *Message {
 		delete(m.meta, key)
 	case MSG_OPTION, MSG_APPEND:
 		if len(arg) > 0 {
-			delete(m.meta, arg[0])
+			if delete(m.meta, arg[0]); len(arg) == 1 {
+				return m
+			}
 		} else {
 			for _, k := range m.meta[key] {
 				delete(m.meta, k)
@@ -538,8 +543,8 @@ func (m *Message) Table(cbs ...interface{}) *Message {
 	}
 
 	// 回调函数
-	rows := kit.Select(" ", m.Option("table.row_sep"))
-	cols := kit.Select("\n", m.Option("table.col_sep"))
+	rows := kit.Select("\n", m.Option("table.row_sep"))
+	cols := kit.Select(" ", m.Option("table.col_sep"))
 	compact := kit.Select(m.Conf("table", "compact"), m.Option("table.compact")) == "true"
 	cb := func(maps map[string]string, lists []string, line int) bool {
 		for i, v := range lists {
@@ -822,8 +827,11 @@ func (m *Message) Start(key string, arg ...string) *Message {
 	})
 	return m
 }
+
 func (m *Message) Starts(name string, help string, arg ...string) *Message {
+	m.wait = make(chan bool)
 	m.target.Spawn(m, name, help, arg...).Begin(m, arg...).Start(m, arg...)
+	<-m.wait
 	return m
 }
 func (m *Message) Call(sync bool, cb func(*Message) *Message) *Message {
@@ -925,17 +933,21 @@ func (m *Message) Search(key interface{}, cb interface{}) *Message {
 
 		switch cb := cb.(type) {
 		case func(p *Context, s *Context, key string, cmd *Command):
-			for c := p; c != nil; c = c.context {
-				if cmd, ok := c.Commands[key]; ok {
-					cb(c.context, c, key, cmd)
-					break
+			for _, p = range []*Context{p, m.target, m.source} {
+				for c := p; c != nil; c = c.context {
+					if cmd, ok := c.Commands[key]; ok {
+						cb(c, p, key, cmd)
+						return m
+					}
 				}
 			}
 		case func(p *Context, s *Context, key string, conf *Config):
-			for c := p; c != nil; c = c.context {
-				if cmd, ok := c.Configs[key]; ok {
-					cb(c.context, c, key, cmd)
-					break
+			for _, p = range []*Context{p, m.target, m.source} {
+				for c := p; c != nil; c = c.context {
+					if cmd, ok := c.Configs[key]; ok {
+						cb(c.context, c, key, cmd)
+						break
+					}
 				}
 			}
 		case func(p *Context, s *Context, key string):
@@ -1069,8 +1081,9 @@ func (m *Message) Grow(key string, chain interface{}, data interface{}) int {
 	// 通用数据
 	id := kit.Int(meta["count"]) + 1
 	prefix := kit.Select("", "meta.", kit.Value(data, "meta") != nil)
-	kit.Value(data, prefix+kit.MDB_TIME, m.Time())
-	kit.Value(data, prefix+kit.MDB_ID, id)
+	if kit.Value(data, prefix+kit.MDB_ID, id); kit.Value(data, prefix+kit.MDB_TIME) == nil {
+		kit.Value(data, prefix+kit.MDB_TIME, m.Time())
+	}
 
 	// 添加数据
 	list = append(list, data)
@@ -1298,7 +1311,7 @@ func (m *Message) Cmd(arg ...interface{}) *Message {
 			if you := m.Option(kit.Format(kit.Value(cmd.Meta, "remote"))); you != "" {
 				msg.Copy(msg.Spawns(c).Cmd(WEB_SPACE, you, list[0], list[1:]))
 			} else {
-				c.Run(msg, cmd, key, list[1:]...)
+				p.Run(msg, cmd, key, list[1:]...)
 			}
 			m.Hand, msg.Hand = true, true
 		})

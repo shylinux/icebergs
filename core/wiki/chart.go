@@ -45,7 +45,7 @@ func (b *Block) Draw(m *ice.Message, x, y int) Chart {
 	m.Echo(`<rect x="%d" y="%d" width="%d" height="%d" fill="%s" %v/>`,
 		x+b.Margin/2, y+b.Margin/2, b.GetWidth(), b.GetHeight(), b.BackGround, b.RectData)
 	m.Echo("\n")
-	m.Echo(`<text x="%d" y="%d" font-size="%d" style="dominant-baseline:middle;text-anchor:middle;" fill="%s" %v>%v</text>`,
+	m.Echo(`<text x="%d" y="%d" font-size="%d" fill="%s" %v>%v</text>`,
 		x+b.GetWidths()/2, y+b.GetHeights()/2, b.FontSize, b.FontColor, b.TextData, b.Text)
 	m.Echo("\n")
 	return b
@@ -64,19 +64,90 @@ func (b *Block) GetWidth(str ...string) int {
 	if b.Width != 0 {
 		return b.Width
 	}
-	return len(kit.Select(b.Text, str, 0))*b.FontSize*6/10 + b.Padding
+	s := kit.Select(b.Text, str, 0)
+	cn := (len(s) - len([]rune(s))) / 2
+	en := len([]rune(s)) - cn
+	return cn*b.FontSize + en*b.FontSize*10/16 + b.Padding
 }
 func (b *Block) GetHeight(str ...string) int {
 	if b.Height != 0 {
 		return b.Height
 	}
-	return b.FontSize*b.LineSize/10 + b.Padding
+	return b.FontSize + b.Padding
 }
 func (b *Block) GetWidths(str ...string) int {
 	return b.GetWidth(str...) + b.Margin
 }
 func (b *Block) GetHeights(str ...string) int {
 	return b.GetHeight() + b.Margin
+}
+
+// 框
+type Label struct {
+	data [][]string
+	max  map[int]int
+	Block
+}
+
+func (b *Label) Init(m *ice.Message, arg ...string) Chart {
+	b.FontSize = kit.Int(kit.Select("24", arg, 1))
+	b.Padding = kit.Int(kit.Select("16", arg, 6))
+	b.Margin = kit.Int(kit.Select("8", arg, 7))
+
+	// 解析数据
+	b.max = map[int]int{}
+	for _, v := range kit.Split(arg[0], "\n") {
+		l := kit.Split(v)
+		for i, v := range l {
+			switch data := kit.Parse(nil, "", kit.Split(v)...).(type) {
+			case map[string]interface{}:
+				v = kit.Select("", data["text"])
+			}
+
+			if w := b.GetWidth(v); w > b.max[i] {
+				b.max[i] = w
+			}
+		}
+		b.data = append(b.data, l)
+	}
+
+	// 计算尺寸
+	width := 0
+	for _, v := range b.max {
+		width += v + b.Margin
+	}
+	b.Width = width
+	b.Height = len(b.data) * b.GetHeights()
+	return b
+}
+func (b *Label) Draw(m *ice.Message, x, y int) Chart {
+	b.Width, b.Height = 0, 0
+	top := y
+	for _, line := range b.data {
+		left := x
+		for i, text := range line {
+			switch data := kit.Parse(nil, "", kit.Split(text)...).(type) {
+			case map[string]interface{}:
+				text = kit.Select(text, data["text"])
+			}
+			b.Text = text
+
+			width := b.max[i]
+			if m.Option("compact") == "true" {
+				width = b.GetWidth()
+			}
+
+			m.Echo(`<rect x="%d" y="%d" width="%d" height="%d" rx="4" ry="4"/>`,
+				left, top, width, b.GetHeight())
+			m.Echo("\n")
+			m.Echo(`<text x="%d" y="%d" fill="%s" stroke-width="1">%v</text>`,
+				left+width/2, top+b.GetHeight()/2, m.Option("stroke"), text)
+			m.Echo("\n")
+			left += width + b.Margin
+		}
+		top += b.GetHeights()
+	}
+	return b
 }
 
 // 树
@@ -204,78 +275,7 @@ func (b *Chain) draw(m *ice.Message, root map[string]interface{}, depth int, wid
 	return b
 }
 
-// 表
-type Table struct {
-	data [][]string
-	max  map[int]int
-	Block
-}
-
-func (b *Table) Init(m *ice.Message, arg ...string) Chart {
-	// 解析数据
-	b.max = map[int]int{}
-	for _, v := range kit.Split(arg[0], "\n") {
-		l := kit.Split(v)
-		for i, v := range l {
-			switch data := kit.Parse(nil, "", kit.Split(v)...).(type) {
-			case map[string]interface{}:
-				v = kit.Select("", data["text"])
-			}
-			if len(v) > b.max[i] {
-				b.max[i] = len(v)
-			}
-		}
-		b.data = append(b.data, l)
-	}
-	b.FontColor = kit.Select("white", arg, 1)
-	b.BackGround = kit.Select("red", arg, 2)
-	b.FontSize = kit.Int(kit.Select("24", arg, 3))
-	b.LineSize = kit.Int(kit.Select("12", arg, 4))
-	b.Padding = kit.Int(kit.Select("8", arg, 5))
-	b.Margin = kit.Int(kit.Select("8", arg, 6))
-
-	// 计算尺寸
-	width := 0
-	for _, v := range b.max {
-		width += b.GetWidths(strings.Repeat(" ", v))
-	}
-	b.Width = width
-	b.Height = len(b.data) * b.GetHeights()
-
-	// m.Log("info", "data %v", kit.Formats(b.data))
-	return b
-}
-func (b *Table) Draw(m *ice.Message, x, y int) Chart {
-	b.Width, b.Height = 0, 0
-	for n, line := range b.data {
-		for i, text := range line {
-			l := 0
-			for j := 0; j < i; j++ {
-				l += b.GetWidths(strings.Repeat(" ", b.max[i]))
-			}
-			block := &Block{
-				BackGround: kit.Select(b.BackGround),
-				FontColor:  kit.Select(b.FontColor),
-				FontSize:   b.FontSize,
-				LineSize:   b.LineSize,
-				Padding:    b.Padding,
-				Margin:     b.Margin,
-				Width:      b.GetWidth(strings.Repeat(" ", b.max[i])),
-			}
-
-			switch data := kit.Parse(nil, "", kit.Split(text)...).(type) {
-			case map[string]interface{}:
-				text = kit.Select(text, data["text"])
-				block.Data(data)
-			}
-			block.Init(m, text).Draw(m, x+l, y+n*b.GetHeights())
-		}
-	}
-	return b
-}
-
-func stack(m *ice.Message, name string, level int, data interface{}) {
-	l, ok := kit.Value(data, "list").([]interface{})
+func Stack(m *ice.Message, name string, level int, data interface{}) {
 	style := []string{}
 	kit.Fetch(kit.Value(data, "meta"), func(key string, value string) {
 		switch key {
@@ -285,6 +285,8 @@ func stack(m *ice.Message, name string, level int, data interface{}) {
 			style = append(style, "color:"+value)
 		}
 	})
+
+	l, ok := kit.Value(data, "list").([]interface{})
 	if !ok || len(l) == 0 {
 		m.Echo(`<div class="%s" style="%s"><span class="state">o</span> %s</div>`, name, strings.Join(style, ";"), kit.Value(data, "meta.text"))
 		return
@@ -295,7 +297,7 @@ func stack(m *ice.Message, name string, level int, data interface{}) {
 	m.Echo("<ul class='%s' %s>", name, kit.Select("", `style="display:none"`, level > 2))
 	kit.Fetch(kit.Value(data, "list"), func(index int, value map[string]interface{}) {
 		m.Echo("<li>")
-		stack(m, name, level+1, value)
+		Stack(m, name, level+1, value)
 		m.Echo("</li>")
 	})
 	m.Echo("</ul>")

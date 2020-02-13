@@ -1210,7 +1210,12 @@ var Index = &ice.Context{Name: "web", Help: "网络模块",
 				os.Remove(kit.Keys(name, "bak"))
 				os.Rename(name, kit.Keys(name, "bak"))
 				if msg.Append("file") != "" {
-					os.Link(msg.Append("file"), name)
+					p := path.Dir(name)
+					e := os.MkdirAll(p, 0777)
+					m.Log("what", "%v", e)
+
+					e = os.Link(msg.Append("file"), name)
+					m.Log("what", "%v", e)
 					m.Log(ice.LOG_EXPORT, "%s: %s", msg.Append("file"), name)
 				} else {
 					if f, p, e := kit.Create(name); m.Assert(e) {
@@ -1636,6 +1641,15 @@ var Index = &ice.Context{Name: "web", Help: "网络模块",
 
 			m.Push("_output", "void")
 			http.ServeFile(m.W, m.R, path.Join("usr/volcanos", file))
+		}},
+		"/plugin/github.com/": {Name: "/space/", Help: "空间站", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			if _, e := os.Stat(path.Join("usr/volcanos", cmd)); e != nil {
+				m.Cmd("cli.system", "git", "clone", "https://"+strings.Join(strings.Split(cmd, "/")[2:5], "/"),
+					path.Join("usr/volcanos", strings.Join(strings.Split(cmd, "/")[1:5], "/")))
+			}
+
+			m.Push("_output", "void")
+			http.ServeFile(m.W, m.R, path.Join("usr/volcanos", cmd))
 		}},
 	},
 }

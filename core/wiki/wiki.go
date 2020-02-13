@@ -322,6 +322,7 @@ var Index = &ice.Context{Name: "wiki", Help: "文档中心",
 			kit.MDB_INPUT, "text", "name", "name", "value", "what/he.svg",
 			kit.MDB_INPUT, "button", "name", "执行", "action", "auto",
 			kit.MDB_INPUT, "button", "name", "返回", "cb", "Last",
+			kit.MDB_INPUT, "button", "name", "上传", "cb", "upload",
 		), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			if len(arg) > 0 && arg[0] == "action" {
 				switch arg[1] {
@@ -348,7 +349,18 @@ var Index = &ice.Context{Name: "wiki", Help: "文档中心",
 			kit.MDB_INPUT, "text", "name", "name", "value", "what/hi.shy",
 			kit.MDB_INPUT, "button", "name", "执行", "action", "auto",
 			kit.MDB_INPUT, "button", "name", "返回", "cb", "Last",
+			kit.MDB_INPUT, "button", "name", "上传", "cb", "upload",
 		), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			if m.Option("_action") == "上传" {
+				if len(arg) == 0 {
+					arg = append(arg, "/")
+				}
+				m.Cmdy(ice.WEB_STORY, "upload")
+				m.Cmd(ice.WEB_STORY, ice.STORY_WATCH, m.Append("data"),
+					path.Join(m.Conf(cmd, "meta.path"), arg[0], kit.Select("", m.Append("name"), strings.HasSuffix(arg[0], "/"))))
+				return
+			}
+
 			if len(arg) > 0 && arg[0] == "action" {
 				switch arg[1] {
 				case "保存":
@@ -381,7 +393,18 @@ var Index = &ice.Context{Name: "wiki", Help: "文档中心",
 			kit.MDB_INPUT, "text", "name", "name",
 			kit.MDB_INPUT, "button", "name", "执行",
 			kit.MDB_INPUT, "button", "name", "返回", "cb", "Last",
+			kit.MDB_INPUT, "button", "name", "上传", "cb", "upload",
 		), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			if m.Option("_action") == "上传" {
+				if len(arg) == 0 {
+					arg = append(arg, "/")
+				}
+				m.Cmdy(ice.WEB_STORY, "upload")
+				m.Cmd(ice.WEB_STORY, ice.STORY_WATCH, m.Append("data"),
+					path.Join(m.Conf(cmd, "meta.path"), arg[0], kit.Select("", m.Append("name"), strings.HasSuffix(arg[0], "/"))))
+				return
+			}
+
 			if len(arg) > 0 && arg[0] == "action" {
 				switch arg[1] {
 				case "保存":

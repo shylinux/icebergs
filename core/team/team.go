@@ -126,6 +126,10 @@ var Index = &ice.Context{Name: "team", Help: "团队中心",
 			kit.MDB_INPUT, "text", "name", "begin_time", "action", "auto", "figure", "date",
 			kit.MDB_INPUT, "button", "name", "查看",
 		), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			if len(arg) == 0 {
+				arg = append(arg, "week")
+			}
+
 			// 起始日期
 			first := time.Now()
 			if len(arg) > 1 {

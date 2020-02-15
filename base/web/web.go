@@ -409,8 +409,6 @@ var Index = &ice.Context{Name: "web", Help: "网络模块",
 			}
 		}},
 		ice.ICE_EXIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			m.Done()
-			m.Done()
 			p := m.Conf(ice.WEB_CACHE, "meta.store")
 			m.Richs(ice.WEB_CACHE, nil, "*", func(key string, value map[string]interface{}) {
 				if f, _, e := kit.Create(path.Join(p, key[:2], key)); e == nil {
@@ -419,7 +417,15 @@ var Index = &ice.Context{Name: "web", Help: "网络模块",
 				}
 			})
 			// m.Conf(ice.WEB_CACHE, "hash", kit.Dict())
-			m.Cmd(ice.CTX_CONFIG, "save", "web.json", ice.WEB_SPIDE, ice.WEB_FAVOR, ice.WEB_CACHE, ice.WEB_STORY, ice.WEB_SHARE)
+			m.Cmd(ice.CTX_CONFIG, "save", kit.Keys(m.Cap(ice.CTX_FOLLOW), "json"),
+				ice.WEB_SPIDE, ice.WEB_FAVOR, ice.WEB_CACHE, ice.WEB_STORY, ice.WEB_SHARE)
+
+			m.Done()
+			m.Richs(ice.WEB_SPACE, nil, "*", func(key string, value map[string]interface{}) {
+				if kit.Format(value["type"]) == "master" {
+					m.Done()
+				}
+			})
 		}},
 
 		ice.WEB_SPIDE: {Name: "spide", Help: "蜘蛛侠", List: kit.List(
@@ -649,27 +655,35 @@ var Index = &ice.Context{Name: "web", Help: "网络模块",
 				})
 			}
 		}},
-		ice.WEB_SERVE: {Name: "serve", Help: "服务器", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		ice.WEB_SERVE: {Name: "serve [shy|dev|self]", Help: "服务器", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			// 节点信息
 			m.Conf(ice.CLI_RUNTIME, "node.name", m.Conf(ice.CLI_RUNTIME, "boot.hostname"))
 			m.Conf(ice.CLI_RUNTIME, "node.type", ice.WEB_SERVER)
 
-			// 启动服务
-			switch kit.Select("self", arg, 0) {
+			switch kit.Select("def", arg, 0) {
+			case "shy":
+				// 连接根服务
+				m.Richs(ice.WEB_SPIDE, nil, "shy", func(key string, value map[string]interface{}) {
+					m.Cmd(ice.WEB_SPACE, "connect", "shy")
+				})
+				fallthrough
 			case "dev":
+				// 系统初始化
 				m.Event(ice.SYSTEM_INIT)
 				fallthrough
 			case "self":
+				// 启动服务
 				m.Target().Start(m, "self")
 				fallthrough
 			default:
+				// 连接上游服务
 				m.Richs(ice.WEB_SPIDE, nil, "dev", func(key string, value map[string]interface{}) {
 					m.Cmd(ice.WEB_SPACE, "connect", "dev")
 				})
 			}
 		}},
 		ice.WEB_SPACE: {Name: "space", Help: "空间站", Meta: kit.Dict("exports", []string{"pod", "name"}), List: kit.List(
-			kit.MDB_INPUT, "text", "name", "pod",
+			kit.MDB_INPUT, "text", "name", "name",
 			kit.MDB_INPUT, "button", "value", "查看", "action", "auto",
 			kit.MDB_INPUT, "button", "value", "返回", "cb", "Last",
 		), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {

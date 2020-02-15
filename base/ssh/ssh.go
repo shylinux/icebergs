@@ -71,6 +71,14 @@ func (f *Frame) parse(m *ice.Message, line string) *Frame {
 		if len(ls) == 0 {
 			continue
 		}
+		if m.Option("scan_mode") == "scan" {
+			f.printf(m, ls[0])
+			f.printf(m, "`")
+			f.printf(m, strings.Join(ls[1:], "` `"))
+			f.printf(m, "`")
+			f.printf(m, "\n")
+			continue
+		}
 
 		// 命令替换
 		if alias, ok := m.Optionv(ice.MSG_ALIAS).(map[string]interface{}); ok {
@@ -201,7 +209,7 @@ var Index = &ice.Context{Name: "ssh", Help: "终端模块",
 				f.parse(m, kit.Format(value["line"]))
 			})
 		}},
-		"scan": {Name: "scan", Help: "解析", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		"scan": {Name: "scan name help file", Help: "解析", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			buf := bytes.NewBuffer(make([]byte, 4096))
 			m.Optionv(ice.MSG_STDOUT, buf)
 

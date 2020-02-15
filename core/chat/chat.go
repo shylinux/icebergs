@@ -35,7 +35,7 @@ var Index = &ice.Context{Name: "chat", Help: "聊天中心",
 					m.Cmd(ice.WEB_FAVOR, "river.root", "field", "spend", "web.mall")
 
 					m.Cmd(ice.WEB_FAVOR, "river.root", "storm", "team", "team")
-					m.Cmd(ice.WEB_FAVOR, "river.root", "field", "miss", "web.team")
+					m.Cmd(ice.WEB_FAVOR, "river.root", "field", "task", "web.team")
 					m.Cmd(ice.WEB_FAVOR, "river.root", "field", "stat", "web.team")
 					m.Cmd(ice.WEB_FAVOR, "river.root", "field", "plan", "web.team")
 
@@ -318,6 +318,23 @@ var Index = &ice.Context{Name: "chat", Help: "聊天中心",
 					cmds = kit.Simple(m.Space(meta["pod"]), kit.Keys(meta["ctx"], meta["cmd"]), arg[3:])
 				}
 			})
+
+			// 命令补全
+			if len(cmds) > 1 && cmds[1] == "action" {
+				switch cmds[2] {
+				case "location":
+					// 记录位置
+					m.Cmdy("aaa.location", cmds[3:])
+					return
+				case "input":
+					switch cmds[3] {
+					case "location":
+						// 查询位置
+						m.Copy(m.Cmd("aaa.location"), "append", "name")
+						return
+					}
+				}
+			}
 
 			// 执行命令
 			if m.Right(cmds) {

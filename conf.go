@@ -131,7 +131,7 @@ const ( // MDB
 )
 
 const ( // APP
-	APP_NOTE = "note"
+	APP_MIND = "mind"
 	APP_MISS = "miss"
 )
 const ( // ROLE
@@ -218,8 +218,8 @@ var Alias = map[string]string{
 
 	CHAT_RIVER: "web.chat.river",
 
-	APP_NOTE: "web.wiki.note",
 	APP_MISS: "web.team.miss",
+	APP_MIND: "web.wiki.mind",
 
 	"compile": "web.code.compile",
 	"publish": "web.code.publish",

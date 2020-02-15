@@ -32,6 +32,14 @@ var Index = &ice.Context{Name: "git", Help: "代码管理",
 					"remote", m.Conf("repos", "meta.owner")+"/"+repos,
 				))
 			}
+			m.Cmd("nfs.dir", "usr", "name path").Table(func(index int, value map[string]string, head []string) {
+				if s, e := os.Stat(m.Option("cmd_dir", path.Join(value["path"], ".git"))); e == nil && s.IsDir() {
+					m.Rich("repos", nil, kit.Data(
+						"name", value["name"], "path", value["path"], "branch", "master",
+						"remote", m.Cmdx(ice.CLI_SYSTEM, "git", "remote", "get-url", "origin"),
+					))
+				}
+			})
 			// 应用代码
 			m.Cmd("nfs.dir", m.Conf(ice.WEB_DREAM, "meta.path"), "name path").Table(func(index int, value map[string]string, head []string) {
 				if s, e := os.Stat(m.Option("cmd_dir", path.Join(value["path"], ".git"))); e == nil && s.IsDir() {

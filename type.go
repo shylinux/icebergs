@@ -378,8 +378,17 @@ func (m *Message) Set(key string, arg ...string) *Message {
 	}
 	return m.Add(key, arg...)
 }
-func (m *Message) Copy(msg *Message) *Message {
+func (m *Message) Copy(msg *Message, arg ...string) *Message {
 	if msg == nil {
+		return m
+	}
+	if len(arg) > 0 {
+		for _, k := range arg[1:] {
+			if kit.IndexOf(m.meta[arg[0]], k) == -1 {
+				m.meta[arg[0]] = append(m.meta[arg[0]], k)
+			}
+			m.meta[k] = append(m.meta[k], msg.meta[k]...)
+		}
 		return m
 	}
 	for _, k := range msg.meta[MSG_OPTION] {
@@ -803,20 +812,25 @@ func (m *Message) Run(arg ...string) *Message {
 	return m
 }
 func (m *Message) Hold(n int) *Message {
+	ctx := m.target.root
 	if c := m.target; c.context != nil && c.context.wg != nil {
-		c.context.wg.Add(n)
-	} else {
-		c.root.wg.Add(n)
+		ctx = c.context
 	}
+
+	ctx.wg.Add(n)
+	m.Log(LOG_TRACE, "%s wait %s %v", ctx.Name, m.target.Name, ctx.wg)
 	return m
 }
 func (m *Message) Done() bool {
 	defer func() { recover() }()
-	if m.target.context != nil && m.target.context.wg != nil {
-		m.target.context.wg.Done()
-	} else {
-		m.target.root.wg.Done()
+
+	ctx := m.target.root
+	if c := m.target; c.context != nil && c.context.wg != nil {
+		ctx = c.context
 	}
+
+	m.Log(LOG_TRACE, "%s done %s %v", ctx.Name, m.target.Name, ctx.wg)
+	ctx.wg.Done()
 	return true
 }
 func (m *Message) Start(key string, arg ...string) *Message {
@@ -946,7 +960,7 @@ func (m *Message) Search(key interface{}, cb interface{}) *Message {
 				for c := p; c != nil; c = c.context {
 					if cmd, ok := c.Configs[key]; ok {
 						cb(c.context, c, key, cmd)
-						break
+						return m
 					}
 				}
 			}

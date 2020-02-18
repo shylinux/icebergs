@@ -67,7 +67,7 @@ var Index = &ice.Context{Name: "ctx", Help: "配置模块",
 						m.Push("key", s.Cap(ice.CTX_FOLLOW))
 						m.Push("index", k)
 						m.Push("name", v.Name)
-						m.Push("help", v.Help)
+						m.Push("help", kit.Format(v.Help))
 					}
 				})
 				return
@@ -83,13 +83,13 @@ var Index = &ice.Context{Name: "ctx", Help: "配置模块",
 				if len(arg) == 0 {
 					// 命令列表
 					m.Push("name", cmd.Name)
-					m.Push("help", cmd.Help)
+					m.Push("help", kit.Format(cmd.Help))
 					m.Push("meta", kit.Format(cmd.Meta))
 					m.Push("list", kit.Format(cmd.List))
 				} else {
 					if you := m.Option(kit.Format(kit.Value(cmd.Meta, "remote"))); you != "" {
 						// 远程命令
-						m.Copy(m.Spawns(s).Cmd("web.space", you, "ctx.command", chain, "run", arg[1:]))
+						m.Copy(m.Spawns(s).Cmd(ice.WEB_SPACE, you, "ctx.command", chain, "run", arg[1:]))
 					} else {
 						// 本地命令
 						m.Copy(s.Run(m.Spawns(s), cmd, key, arg[1:]...))

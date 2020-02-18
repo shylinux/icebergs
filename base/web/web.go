@@ -229,6 +229,9 @@ func (web *Frame) HandleCmd(m *ice.Message, key string, cmd *ice.Command) {
 					msg.Info("status %s", msg.Result())
 					w.WriteHeader(kit.Int(kit.Select("200", msg.Result())))
 
+				case "redirect":
+					http.Redirect(w, r, msg.Result(), 302)
+
 				case "file":
 					msg.Info("_output: %s %s", msg.Append("_output"), msg.Append("file"))
 					w.Header().Set("Content-Disposition", fmt.Sprintf("filename=%s", kit.Select(msg.Append("name"), msg.Append("story"))))
@@ -816,7 +819,7 @@ var Index = &ice.Context{Name: "web", Help: "网络模块",
 				case "启动":
 					arg = arg[:1]
 				case "停止", "stop":
-					m.Cmd(ice.WEB_SPACE, arg[0], "exit", "1")
+					m.Cmd(ice.WEB_SPACE, m.Option("name"), "exit", "1")
 					time.Sleep(time.Second * 3)
 					m.Event(ice.DREAM_CLOSE, arg[0])
 					arg = arg[:0]
@@ -1516,6 +1519,72 @@ var Index = &ice.Context{Name: "web", Help: "网络模块",
 								m.Log(ice.LOG_EXPORT, "%d: %s", n, p)
 							}
 						}
+
+					case "storm":
+						if len(arg) == 1 {
+							m.Push("_output", "redirect")
+							m.Echo("/share/%s/", arg[0])
+							break
+						}
+
+						if arg[1] == "" {
+							http.ServeFile(m.W, m.R, "usr/volcanos/share.html")
+							break
+						}
+
+						if len(arg) == 2 {
+							kit.Fetch(kit.Value(value, "extra.tool"), func(index int, value map[string]interface{}) {
+								m.Push("river", arg[0])
+								m.Push("storm", arg[1])
+								m.Push("action", index)
+
+								m.Push("node", value["pod"])
+								m.Push("group", value["ctx"])
+								m.Push("index", value["cmd"])
+
+								m.Push("args", value["args"])
+
+								msg := m.Cmd(m.Space(value["pod"]), ice.CTX_COMMAND, value["ctx"], value["cmd"])
+								m.Push("name", value["cmd"])
+								m.Push("help", kit.Select(msg.Append("help"), kit.Format(value["help"])))
+								m.Push("inputs", msg.Append("list"))
+								m.Push("feature", msg.Append("meta"))
+							})
+							break
+						}
+
+						meta := kit.Value(value, kit.Format("extra.tool.%s", arg[2])).(map[string]interface{})
+						cmds := kit.Simple(m.Space(meta["pod"]), kit.Keys(meta["ctx"], meta["cmd"]), arg[3:])
+						m.Cmdy(cmds).Option("cmds", cmds)
+
+					case "action":
+						if len(arg) == 1 {
+							m.Push("_output", "redirect")
+							m.Echo("/share/%s/", arg[0])
+							break
+						}
+
+						if arg[1] == "" {
+							http.ServeFile(m.W, m.R, "usr/volcanos/share.html")
+							break
+						}
+
+						meta := kit.Value(value, "extra").(map[string]interface{})
+						if len(arg) == 2 {
+							m.Push("river", arg[0])
+							m.Push("storm", arg[1])
+							m.Push("action", "0")
+
+							msg := m.Cmd(m.Space(meta["pod"]), ice.CTX_COMMAND, meta["ctx"], meta["cmd"])
+							m.Push("name", meta["cmd"])
+							m.Push("help", kit.Select(msg.Append("help"), kit.Format(meta["help"])))
+							m.Push("inputs", msg.Append("list"))
+							m.Push("feature", msg.Append("meta"))
+							break
+						}
+
+						cmds := kit.Simple(m.Space(meta["pod"]), kit.Keys(meta["ctx"], meta["cmd"]), arg[3:])
+						m.Cmdy(cmds).Option("cmds", cmds)
 
 					case "active":
 						m.Push("_output", "qrcode")

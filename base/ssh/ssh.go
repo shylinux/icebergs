@@ -210,7 +210,7 @@ var Index = &ice.Context{Name: "ssh", Help: "终端模块",
 			})
 		}},
 		"scan": {Name: "scan name help file", Help: "解析", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			buf := bytes.NewBuffer(make([]byte, 4096))
+			buf := bytes.NewBuffer(make([]byte, 0, 4096))
 			m.Optionv(ice.MSG_STDOUT, buf)
 
 			m.Starts(strings.Replace(arg[0], ".", "_", -1), arg[1], arg[2:]...)

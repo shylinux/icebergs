@@ -45,7 +45,7 @@ var Index = &ice.Context{Name: "wiki", Help: "文档中心",
 		"chart": {Name: "chart", Help: "绘图", Value: kit.Data("prefix", prefix, "suffix", `</svg>`)},
 
 		"draw": {Name: "draw", Help: "思维导图", Value: kit.Data(kit.MDB_SHORT, "name", "path", "usr/local", "regs", ".*\\.svg", "prefix", `<svg vertion="1.1" xmlns="http://www.w3.org/2000/svg" width="%v" height="%v">`, "suffix", `</svg>`)},
-		"word": {Name: "word", Help: "语言文字", Value: kit.Data(kit.MDB_SHORT, "name", "path", "usr/learning", "regs", ".*\\.shy")},
+		"word": {Name: "word", Help: "语言文字", Value: kit.Data(kit.MDB_SHORT, "name", "path", "usr/local", "regs", ".*\\.shy")},
 		"data": {Name: "data", Help: "数据表格", Value: kit.Data(kit.MDB_SHORT, "name", "path", "usr/local", "regs", ".*\\.csv")},
 		"feel": {Name: "feel", Help: "影音媒体", Value: kit.Data(kit.MDB_SHORT, "name", "path", "usr/local", "regs", ".*\\.(png|JPG|MOV|m4v)")},
 		"walk": {Name: "walk", Help: "走遍世界", Value: kit.Data(kit.MDB_SHORT, "name", "path", "usr/local", "regs", ".*\\.csv")},
@@ -166,6 +166,13 @@ var Index = &ice.Context{Name: "wiki", Help: "文档中心",
 			m.Render(m.Conf("title", "meta.template"))
 		}},
 		"brief": {Name: "brief name text", Help: "摘要", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			if len(arg) == 0 {
+				m.Echo(`<br class="story" data-type="brief">`)
+				return
+			}
+			if len(arg) == 1 {
+				arg = []string{"", arg[0]}
+			}
 			m.Option(kit.MDB_TYPE, cmd)
 			m.Option(kit.MDB_NAME, arg[0])
 			m.Option(kit.MDB_TEXT, arg[1])
@@ -367,8 +374,8 @@ var Index = &ice.Context{Name: "wiki", Help: "文档中心",
 				m.Cmdy("nfs.dir", kit.Select("./", arg, 0))
 			}
 		}},
-		"word": {Name: "word", Help: "语言文字", Meta: kit.Dict("display", "wiki/word"), List: kit.List(
-			kit.MDB_INPUT, "text", "name", "name", "value", "what/hi.shy",
+		"word": {Name: "word", Help: "语言文字", Meta: kit.Dict("remote", "pod", "display", "wiki/word"), List: kit.List(
+			kit.MDB_INPUT, "text", "name", "name", "value", "自然/编程/hi.shy",
 			kit.MDB_INPUT, "button", "name", "执行", "action", "auto",
 			kit.MDB_INPUT, "button", "name", "返回", "cb", "Last",
 			kit.MDB_INPUT, "button", "name", "上传", "cb", "upload",

@@ -103,16 +103,17 @@ build() {
 }
 
 tutor() {
-    mkdir $1
-    [ -f "$1/$1.md" ] || cat >> "$1/$1.md" <<END
-# {{title "$1"}}
+    [ -d $1 ] || mkdir $1
+
+    [ -f "$1/$1.shy" ] || cat >> "$1/$1.shy" <<END
+title "$1"
 END
     [ -f "$1/$1.go" ] || cat >> "$1/$1.go" <<END
 package $1
 
 import (
 	"github.com/shylinux/icebergs"
-	"github.com/shylinux/icebergs/base/cli"
+	"github.com/shylinux/icebergs/base/web"
 	"github.com/shylinux/toolkits"
 )
 
@@ -131,7 +132,7 @@ var Index = &ice.Context{Name: "$1", Help: "$1",
 	},
 }
 
-func init() { cli.Index.Register(Index, nil) }
+func init() { web.Index.Register(Index, nil) }
 
 END
     ls $1

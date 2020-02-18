@@ -35,6 +35,7 @@ var Index = &ice.Context{Name: "chat", Help: "聊天中心",
 					m.Cmd(ice.WEB_FAVOR, "river.root", "field", "spend", "web.mall")
 
 					m.Cmd(ice.WEB_FAVOR, "river.root", "storm", "team", "team")
+					m.Cmd(ice.WEB_FAVOR, "river.root", "field", "miss", "web.team")
 					m.Cmd(ice.WEB_FAVOR, "river.root", "field", "task", "web.team")
 					m.Cmd(ice.WEB_FAVOR, "river.root", "field", "stat", "web.team")
 					m.Cmd(ice.WEB_FAVOR, "river.root", "field", "plan", "web.team")
@@ -228,7 +229,7 @@ var Index = &ice.Context{Name: "chat", Help: "聊天中心",
 				// 添加命令
 				for i := 3; i < len(arg)-3; i += 4 {
 					id := m.Grow(ice.CHAT_RIVER, kit.Keys(prefix, kit.MDB_HASH, arg[1]), kit.Data(
-						"pod", arg[i], "ctx", arg[i+1], "cmd", arg[i+2], "key", arg[i+3],
+						"pod", arg[i], "ctx", arg[i+1], "cmd", arg[i+2], "help", arg[i+3],
 					))
 					m.Log("insert", "storm: %s %d: %v", arg[1], id, arg[i:i+4])
 				}
@@ -268,6 +269,9 @@ var Index = &ice.Context{Name: "chat", Help: "聊天中心",
 				m.Cmd("/storm", arg[0], storm, "add", arg[3:])
 				m.Echo(storm)
 
+			case "append":
+				m.Cmd("/storm", arg[0], arg[2], "add", arg[3:])
+
 			default:
 				// 命令列表
 				m.Cmdy(ice.WEB_SPACE, arg[2], ice.CTX_COMMAND)
@@ -289,9 +293,11 @@ var Index = &ice.Context{Name: "chat", Help: "聊天中心",
 						m.Push("group", meta["ctx"])
 						m.Push("index", meta["cmd"])
 
+						m.Push("args", kit.Select("[]", kit.Format(meta["args"])))
+
 						msg := m.Cmd(m.Space(meta["pod"]), ice.CTX_COMMAND, meta["ctx"], meta["cmd"])
-						m.Push("name", kit.Select(kit.Format(meta["key"]), meta["cmd"]))
-						m.Push("help", msg.Append("help"))
+						m.Push("name", meta["cmd"])
+						m.Push("help", kit.Select(msg.Append("help"), kit.Format(meta["help"])))
 						m.Push("inputs", msg.Append("list"))
 						m.Push("feature", msg.Append("meta"))
 					}
@@ -300,13 +306,23 @@ var Index = &ice.Context{Name: "chat", Help: "聊天中心",
 			}
 
 			switch arg[2] {
+			case "share":
+				list := []string{}
+				m.Grows(ice.CHAT_RIVER, prefix, "", "", func(index int, value map[string]interface{}) {
+					for k, v := range value["meta"].(map[string]interface{}) {
+						list = append(list, kit.Format("tool.%d.%v", index, k), kit.Format(v))
+					}
+				})
+				m.Cmdy(ice.WEB_SHARE, "add", "storm", arg[3], arg[4], list)
+
 			case "save":
-				m.Conf(ice.CHAT_RIVER, kit.Keys(prefix), "")
-				for i := 3; i < len(arg)-3; i += 4 {
+				m.Conf(ice.CHAT_RIVER, kit.Keys(prefix, "list"), "")
+				for i := 3; i < len(arg)-4; i += 5 {
 					id := m.Grow(ice.CHAT_RIVER, kit.Keys(prefix), kit.Data(
-						"pod", arg[i], "ctx", arg[i+1], "cmd", arg[i+2], "key", arg[i+3],
+						"pod", arg[i], "ctx", arg[i+1], "cmd", arg[i+2],
+						"help", arg[i+3], "args", arg[i+4],
 					))
-					m.Log("insert", "storm: %s %d: %v", arg[1], id, arg[i:i+4])
+					m.Log("insert", "storm: %s %d: %v", arg[1], id, arg[i:i+5])
 				}
 				return
 			}
@@ -316,28 +332,35 @@ var Index = &ice.Context{Name: "chat", Help: "聊天中心",
 			m.Grows(ice.CHAT_RIVER, prefix, kit.MDB_ID, kit.Format(kit.Int(arg[2])+1), func(index int, value map[string]interface{}) {
 				if meta, ok := kit.Value(value, "meta").(map[string]interface{}); ok {
 					cmds = kit.Simple(m.Space(meta["pod"]), kit.Keys(meta["ctx"], meta["cmd"]), arg[3:])
+
+					// 命令补全
+					if len(arg) > 3 && arg[3] == "action" {
+						switch arg[4] {
+						case "location":
+							// 记录位置
+							m.Cmdy("aaa.location", arg[5:])
+							return
+						case "input":
+							switch arg[5] {
+							case "location":
+								// 查询位置
+								m.Copy(m.Cmd("aaa.location"), "append", "name")
+								return
+							}
+						case "share":
+							list := []string{}
+							for k, v := range meta {
+								list = append(list, k, kit.Format(v))
+							}
+							m.Cmdy(ice.WEB_SHARE, "add", "action", arg[5], arg[6], list)
+							return
+						}
+					}
 				}
 			})
 
-			// 命令补全
-			if len(cmds) > 1 && cmds[1] == "action" {
-				switch cmds[2] {
-				case "location":
-					// 记录位置
-					m.Cmdy("aaa.location", cmds[3:])
-					return
-				case "input":
-					switch cmds[3] {
-					case "location":
-						// 查询位置
-						m.Copy(m.Cmd("aaa.location"), "append", "name")
-						return
-					}
-				}
-			}
-
 			// 执行命令
-			if m.Right(cmds) {
+			if len(cmds) > 0 && m.Right(cmds) {
 				m.Cmdy(cmds).Option("cmds", cmds)
 			}
 		}},

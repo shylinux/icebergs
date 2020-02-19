@@ -81,15 +81,22 @@ var Index = &ice.Context{Name: "git", Help: "代码管理",
 			})
 			m.Sort("repos")
 		}},
-		"status": {Name: "status", Help: "状态", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			prefix := []string{ice.CLI_SYSTEM, "git", "status"}
+		"status": {Name: "status name", Help: "状态", List: kit.List(
+			kit.MDB_INPUT, "text", "name", "repos", "action", "auto",
+			kit.MDB_INPUT, "button", "name", "查看", "action", "auto",
+			kit.MDB_INPUT, "button", "name", "返回", "cb", "Last", "action", "auto",
+		), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			prefix := []string{ice.CLI_SYSTEM, "git"}
 			m.Richs("repos", nil, kit.Select("*", arg, 0), func(key string, value map[string]interface{}) {
-				m.Option("cmd_dir", kit.Value(value, "meta.path"))
-				for _, v := range strings.Split(strings.TrimSpace(m.Cmdx(prefix, "-sb")), "\n") {
-					vs := strings.SplitN(strings.TrimSpace(v), " ", 2)
-					m.Push("repos", kit.Value(value, "meta.name"))
-					m.Push("tags", vs[0])
-					m.Push("file", vs[1])
+				if m.Option("cmd_dir", kit.Value(value, "meta.path")); len(arg) > 0 {
+					m.Echo(m.Cmdx(prefix, "diff"))
+				} else {
+					for _, v := range strings.Split(strings.TrimSpace(m.Cmdx(prefix, "status", "-sb")), "\n") {
+						vs := strings.SplitN(strings.TrimSpace(v), " ", 2)
+						m.Push("repos", kit.Value(value, "meta.name"))
+						m.Push("tags", vs[0])
+						m.Push("file", vs[1])
+					}
 				}
 			})
 		}},

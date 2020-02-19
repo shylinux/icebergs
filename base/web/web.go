@@ -1446,6 +1446,8 @@ var Index = &ice.Context{Name: "web", Help: "网络模块",
 			if len(arg) == 1 {
 				m.Richs(ice.WEB_SHARE, nil, arg[0], func(key string, value map[string]interface{}) {
 					m.Push("detail", value)
+					m.Push("key", "qrcode")
+					m.Push("value", kit.Format(`<img src="/share/%s/qrcode">`, key))
 				})
 				return
 			}
@@ -1493,6 +1495,13 @@ var Index = &ice.Context{Name: "web", Help: "网络模块",
 
 			default:
 				m.Richs(ice.WEB_SHARE, nil, arg[0], func(key string, value map[string]interface{}) {
+					switch kit.Select("", arg, 1) {
+					case "qrcode":
+						m.Push("_output", "qrcode")
+						m.Echo("%s/%s/", m.Conf(ice.WEB_SHARE, "meta.domain"), key)
+						return
+					}
+
 					m.Info("share %s %v", arg, kit.Format(value))
 					switch value["type"] {
 					case ice.TYPE_STORY:
@@ -1533,6 +1542,7 @@ var Index = &ice.Context{Name: "web", Help: "网络模块",
 						}
 
 						if len(arg) == 2 {
+							value["count"] = kit.Int(value["count"]) + 1
 							kit.Fetch(kit.Value(value, "extra.tool"), func(index int, value map[string]interface{}) {
 								m.Push("river", arg[0])
 								m.Push("storm", arg[1])

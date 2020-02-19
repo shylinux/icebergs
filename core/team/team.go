@@ -290,7 +290,7 @@ var Index = &ice.Context{Name: "team", Help: "团队中心",
 
 			case "week":
 				// 周计划
-				first = first.Add(-time.Duration((first.Hour()*int(time.Hour) + first.Minute()*int(time.Minute) + first.Second()*int(time.Second))))
+				first = first.Add(-time.Duration((int64(first.Hour())*int64(time.Hour) + int64(first.Minute())*int64(time.Minute) + int64(first.Second())*int64(time.Second))))
 				one := first.AddDate(0, 0, -int(first.Weekday()))
 				end := first.AddDate(0, 0, 7-int(first.Weekday()))
 

@@ -760,6 +760,13 @@ var Index = &ice.Context{Name: "web", Help: "网络模块",
 
 			default:
 				if len(arg) == 1 {
+					list := []string{}
+					m.Cmdy(ice.WEB_SPACE, arg[0], "space").Table(func(index int, value map[string]string, head []string) {
+						list = append(list, arg[0]+"."+value["name"])
+					})
+					m.Append("name", list)
+					break
+
 					// 节点详情
 					m.Richs(ice.WEB_SPACE, nil, arg[0], func(key string, value map[string]interface{}) {
 						m.Push("detail", value)
@@ -780,7 +787,7 @@ var Index = &ice.Context{Name: "web", Help: "网络模块",
 						id := kit.Format(c.ID())
 						m.Optionv(ice.MSG_SOURCE, []string{id})
 						m.Optionv(ice.MSG_TARGET, target[1:])
-						for _, k := range []string{"top", "hot"} {
+						for _, k := range []string{"top", "hot", ice.MSG_USERNAME} {
 							if m.Options(k) {
 								m.Option(k, m.Option(k))
 							}
@@ -863,7 +870,7 @@ var Index = &ice.Context{Name: "web", Help: "网络模块",
 
 		ice.WEB_FAVOR: {Name: "favor", Help: "收藏夹", Meta: kit.Dict("remote", "you", "exports", []string{"hot", "favor"},
 			"detail", []string{"执行", "编辑", "收录", "导出", "下载"}), List: kit.List(
-			kit.MDB_INPUT, "text", "name", "hot", "action", "auto",
+			kit.MDB_INPUT, "text", "name", "favor", "action", "auto",
 			kit.MDB_INPUT, "text", "name", "id", "action", "auto",
 			kit.MDB_INPUT, "button", "value", "查看", "action", "auto",
 			kit.MDB_INPUT, "button", "value", "返回", "cb", "Last",
@@ -1068,7 +1075,7 @@ var Index = &ice.Context{Name: "web", Help: "网络模块",
 		}},
 		ice.WEB_STORY: {Name: "story", Help: "故事会", Meta: kit.Dict("remote", "you", "exports", []string{"top", "story"},
 			"detail", []string{"归档", "共享", "导出", "下载"}), List: kit.List(
-			kit.MDB_INPUT, "text", "name", "top", "action", "auto",
+			kit.MDB_INPUT, "text", "name", "story", "action", "auto",
 			kit.MDB_INPUT, "text", "name", "list", "action", "auto",
 			kit.MDB_INPUT, "button", "value", "查看", "action", "auto",
 			kit.MDB_INPUT, "button", "value", "返回", "cb", "Last",

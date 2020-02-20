@@ -29,7 +29,7 @@ var Index = &ice.Context{Name: "ctx", Help: "配置模块",
 				// 模块列表
 				p.Travel(func(p *ice.Context, s *ice.Context) {
 					if p != nil {
-						m.Push("ups", p.Name)
+						m.Push("ups", kit.Select("shy", p.Cap(ice.CTX_FOLLOW)))
 					} else {
 						m.Push("ups", "shy")
 					}
@@ -38,7 +38,23 @@ var Index = &ice.Context{Name: "ctx", Help: "配置模块",
 					m.Push(ice.CTX_STREAM, s.Cap(ice.CTX_STREAM))
 					m.Push("help", s.Help)
 				})
+				return
+			} else if len(arg) == 1 {
+				m.Cmdy(ice.CTX_COMMAND, arg[0]+".")
+			} else {
+				m.Search(arg[0]+".", func(p *ice.Context, s *ice.Context, key string) {
+					msg := m.Spawn(s)
+					switch arg[1] {
+					case "command":
+						msg.Cmdy(ice.CTX_COMMAND, arg[0], arg[2:])
+					case "config":
+						msg.Cmdy(ice.CTX_CONFIG, arg[2:])
+					case "cache":
+					}
+					m.Copy(msg)
+				})
 			}
+
 		}},
 		ice.CTX_COMMAND: {Name: "command [all] [context [command run arg...]]", Help: "命令", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			all := false
@@ -82,6 +98,7 @@ var Index = &ice.Context{Name: "ctx", Help: "配置模块",
 			m.Search(chain, func(p *ice.Context, s *ice.Context, key string, cmd *ice.Command) {
 				if len(arg) == 0 {
 					// 命令列表
+					m.Push("key", key)
 					m.Push("name", cmd.Name)
 					m.Push("help", kit.Format(cmd.Help))
 					m.Push("meta", kit.Format(cmd.Meta))
@@ -97,7 +114,7 @@ var Index = &ice.Context{Name: "ctx", Help: "配置模块",
 				}
 			})
 		}},
-		ice.CTX_CONFIG: {Name: "config [all] save|load", Help: "配置", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		ice.CTX_CONFIG: {Name: "config [all] [save|load] chain key arg...", Help: "配置", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			all := false
 			if len(arg) > 0 && arg[0] == "all" {
 				all, arg = true, arg[1:]
@@ -154,7 +171,7 @@ var Index = &ice.Context{Name: "ctx", Help: "配置模块",
 				}
 				if len(arg) > 1 {
 					// 读取配置
-					m.Echo(msg.Conf(arg[0], arg[1]))
+					m.Echo(kit.Formats(msg.Confv(arg[0], arg[1])))
 				} else {
 					// 读取配置
 					m.Echo(kit.Formats(msg.Confv(arg[0])))

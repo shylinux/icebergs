@@ -947,6 +947,13 @@ func (m *Message) Search(key interface{}, cb interface{}) *Message {
 
 		switch cb := cb.(type) {
 		case func(p *Context, s *Context, key string, cmd *Command):
+			if key == "" {
+				for k, v := range p.Commands {
+					cb(p.context, p, k, v)
+				}
+				break
+			}
+
 			for _, p = range []*Context{p, m.target, m.source} {
 				for c := p; c != nil; c = c.context {
 					if cmd, ok := c.Commands[key]; ok {

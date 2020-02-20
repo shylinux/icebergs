@@ -83,7 +83,8 @@ var Index = &ice.Context{Name: "git", Help: "代码管理",
 		}},
 		"status": {Name: "status repos", Help: "状态", Meta: kit.Dict(
 			"detail", []interface{}{"add", "reset", "remove", kit.Dict("name", "commit", "args", kit.List(
-				kit.MDB_INPUT, "text", "name", "repos",
+				kit.MDB_INPUT, "select", "name", "type", "values", []string{"add", "opt"},
+				kit.MDB_INPUT, "text", "name", "name", "value", "some",
 			))},
 		), List: kit.List(
 			kit.MDB_INPUT, "text", "name", "repos", "action", "auto",
@@ -97,15 +98,16 @@ var Index = &ice.Context{Name: "git", Help: "代码管理",
 					m.Option("cmd_dir", kit.Value(value, "meta.path"))
 					switch arg[1] {
 					case "add":
-						m.Cmd(prefix, arg[1], arg[3])
+						m.Cmdy(prefix, arg[1], m.Option("file"))
 					case "reset":
-						m.Cmd(prefix, arg[1], arg[3])
+						m.Cmdy(prefix, arg[1], m.Option("file"))
 					case "checkout":
-						m.Cmd(prefix, arg[1], arg[3])
+						m.Cmdy(prefix, arg[1], m.Option("file"))
 					case "commit":
+						m.Cmdy(prefix, arg[1], "-m", m.Option("comment"))
 					}
 				})
-				arg = []string{}
+				return
 			}
 
 			m.Richs("repos", nil, kit.Select("*", arg, 0), func(key string, value map[string]interface{}) {

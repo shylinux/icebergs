@@ -96,9 +96,16 @@ func (web *Frame) HandleWSS(m *ice.Message, safe bool, c *websocket.Conn, name s
 						return true
 					}
 
-				} else if s, ok := msg.Confv(ice.WEB_SPACE, kit.Keys("hash", target[0], "socket")).(*websocket.Conn); ok {
+				} else if msg.Richs(ice.WEB_SPACE, nil, target[0], func(key string, value map[string]interface{}) {
+					msg.Info("what --- ")
+					if s, ok := value["socket"].(*websocket.Conn); ok {
+						socket, source, target = s, source, target[1:]
+						msg.Info("what --- %v %v", source, target)
+					} else {
+						socket, source, target = s, source, target[1:]
+					}
+				}) != nil {
 					// 转发报文
-					socket, source, target = s, source, target[1:]
 					msg.Info("space route")
 
 				} else if call, ok := web.send[msg.Option(ice.MSG_TARGET)]; len(target) == 1 && ok {
@@ -740,7 +747,10 @@ var Index = &ice.Context{Name: "web", Help: "网络模块",
 									if s, _, e := websocket.NewClient(s, u, nil, m.Confi(ice.WEB_SPACE, "meta.buffer.r"), m.Confi(ice.WEB_SPACE, "meta.buffer.w")); !m.Warn(e != nil, "%s", e) {
 
 										// 连接成功
-										m.Rich(ice.WEB_SPACE, nil, kit.Dict(kit.MDB_TYPE, ice.WEB_MASTER, kit.MDB_NAME, dev, "user", kit.Value(value, "client.hostname")))
+										m.Rich(ice.WEB_SPACE, nil, kit.Dict(
+											kit.MDB_TYPE, ice.WEB_MASTER, kit.MDB_NAME, dev, "user", kit.Value(value, "client.hostname"),
+											"socket", s,
+										))
 										m.Log(ice.LOG_CMDS, "%d conn %s success %s", i, dev, u)
 										if i = 0; web.HandleWSS(m, true, s, dev) {
 											break

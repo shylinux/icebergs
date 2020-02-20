@@ -10,6 +10,7 @@ import (
 	"io"
 	"os"
 	"strings"
+	"time"
 )
 
 type Frame struct {
@@ -182,6 +183,8 @@ var Index = &ice.Context{Name: "ssh", Help: "终端模块",
 			"PS1", []interface{}{"\033[33;44m", "count", "[", "time", "]", "\033[5m", "target", "\033[0m", "\033[44m", ">", "\033[0m ", "\033[?25h", "\033[32m"},
 			"PS2", []interface{}{"count", " ", "target", "> "},
 		)},
+
+		"super": {Name: "super", Help: "super", Value: kit.Data()},
 	},
 	Commands: map[string]*ice.Command{
 		ice.ICE_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
@@ -238,6 +241,22 @@ var Index = &ice.Context{Name: "ssh", Help: "终端模块",
 				m.Echo("%d: %v\n", len(ls), ls)
 				m.Info("%v", ls)
 			}
+		}},
+
+		"super": {Name: "super user remote port local", Help: "上位机", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			key := m.Rich("super", nil, kit.Dict(
+				"user", arg[0], "remote", arg[1], "port", arg[2], "local", arg[3],
+			))
+			m.Echo(key)
+			m.Info(key)
+
+			m.Gos(m, func(m *ice.Message) {
+				for {
+					m.Cmd(ice.CLI_SYSTEM, "ssh", "-CNR", kit.Format("%s:%s:22", arg[2], arg[3]), kit.Format("%s@%s", arg[0], arg[1]))
+					m.Info("reconnect after 10s")
+					time.Sleep(time.Second * 10)
+				}
+			})
 		}},
 	},
 }

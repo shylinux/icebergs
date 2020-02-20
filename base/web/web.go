@@ -812,16 +812,13 @@ var Index = &ice.Context{Name: "web", Help: "网络模块",
 			kit.MDB_INPUT, "button", "value", "创建", "action", "auto",
 		), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			if len(arg) > 1 {
-				if !m.Right(cmd, arg[1]) {
-					return
-				}
 				switch arg[1] {
 				case "启动":
-					arg = arg[:1]
+					arg = []string{arg[3]}
 				case "停止", "stop":
-					m.Cmd(ice.WEB_SPACE, m.Option("name"), "exit", "1")
+					m.Cmd(ice.WEB_SPACE, kit.Select(m.Option("name"), arg, 3), "exit", "1")
 					time.Sleep(time.Second * 3)
-					m.Event(ice.DREAM_CLOSE, arg[0])
+					m.Event(ice.DREAM_CLOSE, arg[3])
 					arg = arg[:0]
 				}
 			}

@@ -689,6 +689,12 @@ func (m *Message) Resultv(arg ...interface{}) []string {
 	return m.meta[MSG_RESULT]
 }
 func (m *Message) Result(arg ...interface{}) string {
+	if len(arg) > 0 {
+		switch v := arg[0].(type) {
+		case int:
+			return kit.Select("", m.Meta[MSG_RESULT], v)
+		}
+	}
 	return strings.Join(m.Resultv(), "")
 }
 

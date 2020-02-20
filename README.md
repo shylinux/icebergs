@@ -1,26 +1,91 @@
 # Icebergs.go
 
-icebergs是一个后端框架，通过模块化、集群化实现资源的无限的扩展与自由的组合。
+icebergs是一个应用框架，通过模块化、集群化、自动化，快速搭建起完整的个人云计算平台。
 
 - 使用icebergs可以将各种模块或项目集成到一起，快速开发出集中式的服务器。
 - 使用icebergs可以将各种设备自由的组合在一起，快速搭建起分布式的服务器。
 
-所以通过icebergs开发出来的各种模块，无需任何多余代码，就可以独立运行，可以成为系统命令，可以远程调用，可以成为前端插件，可以成为小程序页面。
-从而提高代码的复用性与灵活性。
+## 0. 搭建服务
+### 0.1 一键部署
+```sh
+mkdir miss; cd miss && curl -s https://shylinux.com/publish/ice.sh | sh
+```
+
+脚本会根据当前系统类型，自动下载程序文件ice.bin，并自动启动服务。
+
+### 0.2 使用方式
+**终端交互**
+
+启动后的进程，像bash一样是一个可交互的shell，可以执行各种模块命令或系统命令。
+
+**网页交互**
+
+默认还会启动一个web服务，访问地址 http://localhost:9020 ，就可以通过网页进行操作。
+
+**重启服务**
+
+在终端按Ctrl+C，就可以重新启动服务。
+
+**结束服务**
+
+在终端按Ctrl+\，就可以停止服务。
+
+### 0.3 使用示例
 
 ## 1. 项目开发
+icebergs是一个应用框架，如果官方模块无法满足使用需求，还可以搜集第三方模块，自行编译程序。
 
-### 1.1 一键创建项目
-*开发环境，需要安装git和golang*
+如果第三方模块也无法满足使用需求，还可以自己开发模块，
+icebergs提供了模板，可以一键创建新模块，快速添加自己的功能模块。
+
+### 1.1 部署环境
+*开发环境，需要提前安装好git和golang*
 ```sh
 mkdir miss; cd miss && curl -s https://shylinux.com/publish/template.sh | sh
 ```
-### 1.2 一键部署项目
-*运行环境，如需通过前端页面访问服务，则需要安装git*
+template.sh会自动创建出项目模板，并自动编译生成程序，然后启动服务。
+
+为了方便以后创建项目与模块。
+可以将辅助脚本template.sh下载，并添加到可执行目录中。
+
+### 1.2 添加第三方模块
+
+在src/main.go文件中，就可以import任意的第三方模块，
+执行一下make命令，就会重新生成ice.bin。
+重新启动服务，就可以使用第三方模块了。
+
+### 1.3 开发模块
 ```sh
-export ctx_dev=http://127.0.0.1:9020 && curl -s $ctx_dev/publish/ice.sh | sh
+template.sh tutor hello
 ```
-*ctx_dev是开发机地址，不必是本机地址，可以是任意一台先前创建过项目的机器地址。*
+使用之前下载的template.sh，调用tutor命令，并指定模块名称hello，就可以一键创建模块了。
+
+在src/main.go 中import新加的模块，
+执行make命令，程序编译完成后，
+重启服务，就可以使用新模块了。
+
+### 1.4 开发框架
+如果现有的框架，无法满足需求，还可以下载框架源码自行更改。
+
+```sh
+git clone https://github.com/shylinux/icebergs usr/icebergs
+```
+修改go.mod文件，引用本地框架。
+```go
+replace github.com/shylinux/icebergs => ./usr/icebergs
+```
+
+### 1.5 开发接口
+
+如果现有的接口，无法满足需求，还可以下载接口源码自行更改。
+
+```sh
+git clone https://github.com/shylinux/toolkits usr/toolkits
+```
+修改go.mod文件，引用本地框架。
+```go
+replace github.com/shylinux/toolkits => ./usr/toolkits
+```
 
 ## 2 原型设计 type.go
 ### 2.1 msg.Detail
@@ -63,15 +128,4 @@ export ctx_dev=http://127.0.0.1:9020 && curl -s $ctx_dev/publish/ice.sh | sh
 ### 5.3 聊天中心 core/chat
 ### 5.4 团队中心 core/team
 ### 5.5 贸易中心 core/mall
-
-## 5 配置 conf.go
-### 5.1 环境 init
-### 5.2 主机 host
-### 5.3 启动 boot
-### 5.4 节点 node
-### 5.5 用户 user
-### 5.6 群组 work
-### 5.7 认证 auth
-### 5.8 数据 data
-### 5.9 文件 file
 

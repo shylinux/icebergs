@@ -110,6 +110,7 @@ var Index = &ice.Context{Name: "chat", Help: "聊天中心",
 				m.Set("result").Echo("401")
 				return
 			}
+
 			// 权限检查
 			if !m.Right(m.Option(ice.MSG_USERURL), m.Optionv("cmds")) {
 				m.Option(ice.MSG_USERURL, "")
@@ -221,9 +222,6 @@ var Index = &ice.Context{Name: "chat", Help: "聊天中心",
 				return
 			}
 
-			if !m.Right(cmd, arg[2]) {
-				return
-			}
 			switch arg[2] {
 			case "add":
 				// 添加命令

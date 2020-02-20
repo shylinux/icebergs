@@ -97,10 +97,8 @@ func (web *Frame) HandleWSS(m *ice.Message, safe bool, c *websocket.Conn, name s
 					}
 
 				} else if msg.Richs(ice.WEB_SPACE, nil, target[0], func(key string, value map[string]interface{}) {
-					msg.Info("what --- ")
 					if s, ok := value["socket"].(*websocket.Conn); ok {
 						socket, source, target = s, source, target[1:]
-						msg.Info("what --- %v %v", source, target)
 					} else {
 						socket, source, target = s, source, target[1:]
 					}
@@ -234,7 +232,7 @@ func (web *Frame) HandleCmd(m *ice.Message, key string, cmd *ice.Command) {
 				case "void":
 				case "status":
 					msg.Info("status %s", msg.Result())
-					w.WriteHeader(kit.Int(kit.Select("200", msg.Result())))
+					w.WriteHeader(kit.Int(kit.Select("200", msg.Result(0))))
 
 				case "redirect":
 					http.Redirect(w, r, msg.Result(), 302)
@@ -244,11 +242,13 @@ func (web *Frame) HandleCmd(m *ice.Message, key string, cmd *ice.Command) {
 					w.Header().Set("Content-Disposition", fmt.Sprintf("filename=%s", kit.Select(msg.Append("name"), msg.Append("story"))))
 					w.Header().Set("Content-Type", kit.Select("text/html", msg.Append("type")))
 					http.ServeFile(w, r, msg.Append("file"))
+
 				case "qrcode":
 					if qr, e := qrcode.New(msg.Result(), qrcode.Medium); m.Assert(e) {
 						w.Header().Set("Content-Type", "image/png")
 						m.Assert(qr.Write(256, w))
 					}
+
 				case "result":
 					w.Header().Set("Content-Type", kit.Select("text/html", msg.Append("type")))
 					fmt.Fprint(w, msg.Result())

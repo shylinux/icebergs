@@ -252,6 +252,15 @@ var Index = &ice.Context{Name: "chat", Help: "聊天中心",
 		}},
 		"/steam": {Name: "/steam", Help: "大气层", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			if len(arg) < 2 {
+				if pod := m.Option("pod"); pod != "" {
+					m.Option("pod", "")
+					list := []string{}
+					m.Cmdy(ice.WEB_SPACE, pod, "web.chat./steam").Table(func(index int, value map[string]string, head []string) {
+						list = append(list, pod+"."+value["name"])
+					})
+					m.Append("name", list)
+					return
+				}
 				// 设备列表
 				m.Richs(ice.WEB_SPACE, nil, "*", func(key string, value map[string]interface{}) {
 					m.Push(key, value, []string{"type", "name", "user"})

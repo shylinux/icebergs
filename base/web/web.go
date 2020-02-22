@@ -35,8 +35,13 @@ type Frame struct {
 	send map[string]*ice.Message
 }
 
+func Redirect(msg *ice.Message, url string, arg ...interface{}) *ice.Message {
+	msg.Push("_output", "redirect")
+	msg.Echo(kit.MergeURL(url, arg...))
+	return msg
+}
 func Cookie(msg *ice.Message, sessid string) string {
-	expire := time.Now().Add(kit.Duration(msg.Conf(ice.AAA_SESS, ice.Meta("expire"))))
+	expire := time.Now().Add(kit.Duration(msg.Conf(ice.AAA_SESS, "meta.expire")))
 	msg.Log("cookie", "expire:%v sessid:%s", kit.Format(expire), sessid)
 	http.SetCookie(msg.W, &http.Cookie{Name: ice.WEB_SESS, Value: sessid, Path: "/", Expires: expire})
 	return sessid
@@ -219,6 +224,9 @@ func (web *Frame) HandleCmd(m *ice.Message, key string, cmd *ice.Command) {
 			// 请求参数
 			for k, v := range r.Form {
 				msg.Optionv(k, v)
+				if k == ice.MSG_SESSID {
+					Cookie(msg, v[0])
+				}
 			}
 
 			if msg.Optionv("cmds") == nil {
@@ -322,7 +330,7 @@ func (web *Frame) Start(m *ice.Message, arg ...string) bool {
 
 			// 静态路由
 			msg := m.Spawns(s)
-			m.Confm(ice.WEB_SERVE, ice.Meta("static"), func(key string, value string) {
+			m.Confm(ice.WEB_SERVE, "meta.static", func(key string, value string) {
 				m.Log("route", "%s <- %s <- %s", s.Name, key, value)
 				w.Handle(key, http.StripPrefix(key, http.FileServer(http.Dir(value))))
 			})
@@ -389,9 +397,10 @@ var Index = &ice.Context{Name: "web", Help: "网络模块",
 		ice.WEB_DREAM: {Name: "dream", Help: "梦想家", Value: kit.Data("path", "usr/local/work",
 			"cmd", []interface{}{ice.CLI_SYSTEM, "ice.sh", "start", ice.WEB_SPACE, "connect"},
 		)},
+
 		ice.WEB_FAVOR: {Name: "favor", Help: "收藏夹", Value: kit.Data(kit.MDB_SHORT, kit.MDB_NAME)},
 		ice.WEB_CACHE: {Name: "cache", Help: "缓存池", Value: kit.Data(
-			kit.MDB_SHORT, "text", "path", "var/file", "store", "var/data", "limit", "30", "least", "10", "fsize", "100000",
+			kit.MDB_SHORT, "text", "path", "var/file", "store", "var/data", "limit", "50", "least", "30", "fsize", "100000",
 		)},
 		ice.WEB_STORY: {Name: "story", Help: "故事会", Value: kit.Dict(
 			kit.MDB_META, kit.Dict(kit.MDB_SHORT, "data"),
@@ -399,6 +408,7 @@ var Index = &ice.Context{Name: "web", Help: "网络模块",
 			"mime", kit.Dict("md", "txt"),
 		)},
 		ice.WEB_SHARE: {Name: "share", Help: "共享链", Value: kit.Data("template", share_template)},
+
 		ice.WEB_ROUTE: {Name: "route", Help: "路由", Value: kit.Data()},
 		ice.WEB_PROXY: {Name: "proxy", Help: "代理", Value: kit.Data()},
 		ice.WEB_GROUP: {Name: "group", Help: "分组", Value: kit.Data()},
@@ -406,7 +416,7 @@ var Index = &ice.Context{Name: "web", Help: "网络模块",
 	},
 	Commands: map[string]*ice.Command{
 		ice.ICE_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			m.Cmd(ice.CTX_CONFIG, "load", "web.json")
+			m.Load()
 
 			if m.Richs(ice.WEB_SPIDE, nil, "self", nil) == nil {
 				m.Cmd(ice.WEB_SPIDE, "add", "self", kit.Select("http://:9020", m.Conf(ice.CLI_RUNTIME, "conf.ctx_self")))
@@ -427,8 +437,7 @@ var Index = &ice.Context{Name: "web", Help: "网络模块",
 				}
 			})
 			// m.Conf(ice.WEB_CACHE, "hash", kit.Dict())
-			m.Cmd(ice.CTX_CONFIG, "save", kit.Keys(m.Cap(ice.CTX_FOLLOW), "json"),
-				ice.WEB_SPIDE, ice.WEB_FAVOR, ice.WEB_CACHE, ice.WEB_STORY, ice.WEB_SHARE)
+			m.Save(ice.WEB_SPIDE, ice.WEB_FAVOR, ice.WEB_CACHE, ice.WEB_STORY, ice.WEB_SHARE)
 
 			m.Done()
 			m.Richs(ice.WEB_SPACE, nil, "*", func(key string, value map[string]interface{}) {
@@ -1007,7 +1016,7 @@ var Index = &ice.Context{Name: "web", Help: "网络模块",
 					defer f.Close()
 
 					h := kit.Hashs(f)
-					if o, p, e := kit.Create(path.Join(m.Conf(ice.WEB_CACHE, ice.Meta("path")), h[:2], h)); m.Assert(e) {
+					if o, p, e := kit.Create(path.Join(m.Conf(ice.WEB_CACHE, "meta.path"), h[:2], h)); m.Assert(e) {
 						defer o.Close()
 						f.Seek(0, os.SEEK_SET)
 
@@ -1026,7 +1035,7 @@ var Index = &ice.Context{Name: "web", Help: "网络模块",
 
 						// 创建文件
 						file := kit.Hashs(f)
-						if o, p, e := kit.Create(path.Join(m.Conf(ice.WEB_CACHE, ice.Meta("path")), file[:2], file)); m.Assert(e) {
+						if o, p, e := kit.Create(path.Join(m.Conf(ice.WEB_CACHE, "meta.path"), file[:2], file)); m.Assert(e) {
 							defer o.Close()
 
 							// 保存文件
@@ -1040,7 +1049,7 @@ var Index = &ice.Context{Name: "web", Help: "网络模块",
 				} else if r, ok := m.Optionv("response").(*http.Response); ok {
 					if buf, e := ioutil.ReadAll(r.Body); m.Assert(e) {
 						file := kit.Hashs(string(buf))
-						if o, p, e := kit.Create(path.Join(m.Conf(ice.WEB_CACHE, ice.Meta("path")), file[:2], file)); m.Assert(e) {
+						if o, p, e := kit.Create(path.Join(m.Conf(ice.WEB_CACHE, "meta.path"), file[:2], file)); m.Assert(e) {
 							defer o.Close()
 							if n, e := o.Write(buf); m.Assert(e) {
 								m.Info("download: %s file: %s", kit.FmtSize(int64(n)), p)
@@ -1062,7 +1071,7 @@ var Index = &ice.Context{Name: "web", Help: "网络模块",
 
 				// 保存数据
 				if arg[0] == "add" && len(arg) == 4 {
-					p := path.Join(m.Conf(ice.WEB_CACHE, ice.Meta("path")), h[:2], h)
+					p := path.Join(m.Conf(ice.WEB_CACHE, "meta.path"), h[:2], h)
 					if m.Cmd("nfs.save", p, arg[3]); kit.Int(size) > 512 {
 						data["text"], data["file"], arg[3] = p, p, p
 					}
@@ -1326,7 +1335,7 @@ var Index = &ice.Context{Name: "web", Help: "网络模块",
 			case "commit":
 				// 查询索引
 				head := kit.Hashs(arg[1])
-				prev := m.Conf("story", ice.Meta("head", head, "list"))
+				prev := m.Conf("story", kit.Keys("meta.head", head, "list"))
 				m.Log("info", "head: %v prev: %v", head, prev)
 
 				// 查询节点
@@ -1336,7 +1345,7 @@ var Index = &ice.Context{Name: "web", Help: "网络模块",
 						menu[arg[i]] = arg[i+1]
 						i++
 					} else if head := kit.Hashs(arg[i]); m.Confs("story", kit.Keys("meta", "head", head)) {
-						menu[arg[i]] = m.Conf(ice.WEB_STORY, ice.Meta("head", head, "list"))
+						menu[arg[i]] = m.Conf(ice.WEB_STORY, kit.Keys("meta.head", head, "list"))
 					} else {
 						m.Error(true, "not found %v", arg[i])
 						return
@@ -1355,7 +1364,7 @@ var Index = &ice.Context{Name: "web", Help: "网络模块",
 				m.Log("info", "list: %v meta: %v", list, kit.Format(meta))
 
 				// 添加索引
-				m.Conf("story", ice.Meta("head", head), map[string]interface{}{
+				m.Conf("story", kit.Keys("meta.head", head), map[string]interface{}{
 					"time": m.Time(), "scene": "commit", "story": arg[1], "list": list,
 				})
 				m.Echo(list)
@@ -1509,14 +1518,15 @@ var Index = &ice.Context{Name: "web", Help: "网络模块",
 
 			default:
 				m.Richs(ice.WEB_SHARE, nil, arg[0], func(key string, value map[string]interface{}) {
+					m.Info("share %s %v", arg, kit.Format(value))
 					switch kit.Select("", arg, 1) {
 					case "qrcode":
+						// 显示共享码
 						m.Push("_output", "qrcode")
 						m.Echo("%s/%s/", m.Conf(ice.WEB_SHARE, "meta.domain"), key)
 						return
 					}
 
-					m.Info("share %s %v", arg, kit.Format(value))
 					switch value["type"] {
 					case ice.TYPE_STORY:
 						if m.Cmdy(ice.WEB_STORY, "index", kit.Value(value, "text")).Append("text") == "" {
@@ -1543,19 +1553,29 @@ var Index = &ice.Context{Name: "web", Help: "网络模块",
 							}
 						}
 
+					case "river":
+						// 共享群组
+						Redirect(m, "/", "share", key, "river", value["text"])
+
 					case "storm":
+						// 共享应用
+						Redirect(m, "/", "share", key, "storm", value["text"], "river", kit.Value(value, "extra.river"))
+
+					case "action":
 						if len(arg) == 1 {
-							m.Push("_output", "redirect")
-							m.Echo("/share/%s/", arg[0])
+							// 跳转主页
+							Redirect(m, "/share/"+arg[0]+"/", "title", value["name"])
 							break
 						}
 
 						if arg[1] == "" {
+							// 返回主页
 							http.ServeFile(m.W, m.R, "usr/volcanos/share.html")
 							break
 						}
 
 						if len(arg) == 2 {
+							// 应用列表
 							value["count"] = kit.Int(value["count"]) + 1
 							kit.Fetch(kit.Value(value, "extra.tool"), func(index int, value map[string]interface{}) {
 								m.Push("river", arg[0])
@@ -1565,7 +1585,6 @@ var Index = &ice.Context{Name: "web", Help: "网络模块",
 								m.Push("node", value["pod"])
 								m.Push("group", value["ctx"])
 								m.Push("index", value["cmd"])
-
 								m.Push("args", value["args"])
 
 								msg := m.Cmd(m.Space(value["pod"]), ice.CTX_COMMAND, value["ctx"], value["cmd"])
@@ -1577,46 +1596,24 @@ var Index = &ice.Context{Name: "web", Help: "网络模块",
 							break
 						}
 
+						// 执行命令
 						meta := kit.Value(value, kit.Format("extra.tool.%s", arg[2])).(map[string]interface{})
+						if meta["single"] == "yes" {
+							arg = append(arg[:3], kit.Simple(kit.UnMarshal(kit.Format(meta["args"])))...)
+							for i := len(arg) - 1; i >= 0; i-- {
+								if arg[i] != "" {
+									break
+								}
+								arg = arg[:i]
+							}
+						}
 						cmds := kit.Simple(m.Space(meta["pod"]), kit.Keys(meta["ctx"], meta["cmd"]), arg[3:])
 						m.Cmdy(cmds).Option("cmds", cmds)
-
-					case "action":
-						if len(arg) == 1 {
-							m.Push("_output", "redirect")
-							m.Echo("/share/%s/", arg[0])
-							break
-						}
-
-						if arg[1] == "" {
-							http.ServeFile(m.W, m.R, "usr/volcanos/share.html")
-							break
-						}
-
-						meta := kit.Value(value, "extra").(map[string]interface{})
-						if len(arg) == 2 {
-							m.Push("river", arg[0])
-							m.Push("storm", arg[1])
-							m.Push("action", "0")
-
-							msg := m.Cmd(m.Space(meta["pod"]), ice.CTX_COMMAND, meta["ctx"], meta["cmd"])
-							m.Push("name", meta["cmd"])
-							m.Push("help", kit.Select(msg.Append("help"), kit.Format(meta["help"])))
-							m.Push("inputs", msg.Append("list"))
-							m.Push("feature", msg.Append("meta"))
-							break
-						}
-
-						cmds := kit.Simple(m.Space(meta["pod"]), kit.Keys(meta["ctx"], meta["cmd"]), arg[3:])
-						m.Cmdy(cmds).Option("cmds", cmds)
+						m.Option("title", value["name"])
 
 					case "active":
 						m.Push("_output", "qrcode")
 						m.Echo(kit.Format(value))
-
-					case "qrcode":
-						m.Push("_output", "qrcode")
-						m.Echo("%s", value["text"])
 
 					default:
 						if m.Cmdy(ice.WEB_STORY, "index", value["data"]); m.Append("file") != "" {

@@ -23,7 +23,7 @@ var Index = &ice.Context{Name: "git", Help: "代码管理",
 			if s, e := os.Stat(".git"); e == nil && s.IsDir() {
 				m.Rich("repos", nil, kit.Data(
 					"name", path.Base(wd), "path", wd, "branch", "master",
-					"remote", strings.TrimSpace(m.Cmdx(ice.CLI_SYSTEM, "git", "remote", "get-url", "origin")),
+					"remote", strings.TrimSpace(m.Cmdx(ice.CLI_SYSTEM, "git", "remote", "-v")),
 				))
 			}
 
@@ -32,7 +32,7 @@ var Index = &ice.Context{Name: "git", Help: "代码管理",
 				if s, e := os.Stat(m.Option("cmd_dir", path.Join(value["path"], ".git"))); e == nil && s.IsDir() {
 					m.Rich("repos", nil, kit.Data(
 						"name", value["name"], "path", value["path"], "branch", "master",
-						"remote", strings.TrimSpace(m.Cmdx(ice.CLI_SYSTEM, "git", "remote", "get-url", "origin")),
+						"remote", strings.TrimSpace(m.Cmdx(ice.CLI_SYSTEM, "git", "remote", "-v")),
 					))
 				}
 			})
@@ -42,11 +42,10 @@ var Index = &ice.Context{Name: "git", Help: "代码管理",
 				if s, e := os.Stat(m.Option("cmd_dir", path.Join(value["path"], ".git"))); e == nil && s.IsDir() {
 					m.Rich("repos", nil, kit.Data(
 						"name", value["name"], "path", value["path"], "branch", "master",
-						"remote", strings.TrimSpace(m.Cmdx(ice.CLI_SYSTEM, "git", "remote", "get-url", "origin")),
+						"remote", strings.TrimSpace(m.Cmdx(ice.CLI_SYSTEM, "git", "remote", "-v")),
 					))
 				}
 			})
-			m.Watch(ice.SYSTEM_INIT, "web.code.git.check", "volcanos")
 		}},
 		ice.ICE_EXIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {}},
 

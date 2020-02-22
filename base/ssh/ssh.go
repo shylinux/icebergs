@@ -158,9 +158,14 @@ func (f *Frame) Start(m *ice.Message, arg ...string) bool {
 			line += "\n"
 			continue
 		}
-		m.Option(ice.MSG_PROMPT, m.Confv("prompt", "meta.PS1"))
-		m.Log(ice.LOG_IMPORT, "stdin: %v", line)
+		if strings.HasPrefix(strings.TrimSpace(line), "#") {
+			// 注释
+			line = ""
+			continue
+		}
+
 		m.Grow("history", nil, kit.Dict("line", line))
+		m.Option(ice.MSG_PROMPT, m.Confv("prompt", "meta.PS1"))
 
 		if f.out == os.Stdout {
 			f.printf(m, "\033[0m")
@@ -188,10 +193,10 @@ var Index = &ice.Context{Name: "ssh", Help: "终端模块",
 	},
 	Commands: map[string]*ice.Command{
 		ice.ICE_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			m.Cmd(ice.CTX_CONFIG, "load", kit.Keys(m.Cap(ice.CTX_FOLLOW), "json"))
+			m.Load()
 		}},
 		ice.ICE_EXIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			m.Cmd(ice.CTX_CONFIG, "save", kit.Keys(m.Cap(ice.CTX_FOLLOW), "json"), kit.Keys(m.Cap(ice.CTX_FOLLOW), "history"))
+			m.Save("history")
 
 			if f, ok := m.Target().Server().(*Frame); ok {
 				// 关闭终端

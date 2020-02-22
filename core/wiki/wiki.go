@@ -18,8 +18,7 @@ var Index = &ice.Context{Name: "wiki", Help: "文档中心",
 	Caches: map[string]*ice.Cache{},
 	Configs: map[string]*ice.Config{
 		"note": {Name: "note", Help: "笔记", Value: kit.Data(
-			"temp", "var/tmp/file",
-			"path", "",
+			"path", "", "temp", "var/tmp/file",
 			"head", "time size line path",
 			"alias", map[string]interface{}{
 				"label": []interface{}{"chart", "label"},
@@ -52,11 +51,10 @@ var Index = &ice.Context{Name: "wiki", Help: "文档中心",
 	},
 	Commands: map[string]*ice.Command{
 		ice.ICE_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			m.Cmd(ice.CTX_CONFIG, "load", kit.Keys(m.Cap(ice.CTX_FOLLOW), "json"))
-
+			m.Load()
 		}},
 		ice.ICE_EXIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			m.Cmd(ice.CTX_CONFIG, "save", kit.Keys(m.Cap(ice.CTX_FOLLOW), "json"), kit.Keys(m.Cap(ice.CTX_FOLLOW), "feel"))
+			m.Save("feel")
 		}},
 
 		"note": {Name: "note file", Help: "笔记", Meta: kit.Dict("remote", "you", "display", "inner"), List: kit.List(
@@ -87,7 +85,7 @@ var Index = &ice.Context{Name: "wiki", Help: "文档中心",
 			m.Cmdy(kit.Select("_tree", "_text", len(arg) > 0 && strings.HasSuffix(arg[0], ".md")), arg)
 		}},
 		"_tree": {Name: "_tree path", Help: "文库", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			m.Option("dir_deep", "true")
+			// m.Option("dir_deep", "true")
 			m.Option("dir_reg", ".*\\.md")
 			m.Cmdy("nfs.dir", kit.Select(m.Conf("note", "meta.path"), arg, 0), m.Conf("note", "meta.head"))
 		}},
@@ -104,11 +102,11 @@ var Index = &ice.Context{Name: "wiki", Help: "文档中心",
 			// 生成文章
 			buffer := bytes.NewBuffer([]byte{})
 			f := m.Target().Server().(*web.Frame)
-			tmpl := f.HandleCGI(m, m.Confm("note", ice.Meta("alias")), arg[0])
+			tmpl := f.HandleCGI(m, m.Confm("note", "meta.alias"), arg[0])
 			m.Assert(tmpl.ExecuteTemplate(buffer, m.Option("filename", path.Base(arg[0])), m))
 
 			// 缓存文章
-			if f, p, e := kit.Create(path.Join(m.Conf("note", ice.Meta("temp")), arg[0])); e == nil {
+			if f, p, e := kit.Create(path.Join(m.Conf("note", "meta.temp"), arg[0])); e == nil {
 				defer f.Close()
 				if n, e := f.Write(buffer.Bytes()); e == nil {
 					m.Log("info", "save %d %v", n, p)
@@ -303,9 +301,7 @@ var Index = &ice.Context{Name: "wiki", Help: "文档中心",
 			Stack(m, cmd, 0, kit.Parse(nil, "", chain.show(m, arg[1])...))
 			m.Echo("</div>")
 		}},
-		"chart": {Name: "chart label|chain|table name text [fg bg fs ls p m]", Help: "绘图", Meta: map[string]interface{}{
-			"display": "inner",
-		}, List: kit.List(
+		"chart": {Name: "chart label|chain|table name text [fg bg fs ls p m]", Help: "绘图", Meta: map[string]interface{}{}, List: kit.List(
 			kit.MDB_INPUT, "select", "value", "chain", "values", "block chain table",
 			kit.MDB_INPUT, "text", "value", "",
 			kit.MDB_INPUT, "button", "value", "生成",
@@ -342,9 +338,9 @@ var Index = &ice.Context{Name: "wiki", Help: "文档中心",
 			m.Option("height", chart.GetHeight())
 
 			// 生成网页
-			m.Render(m.Conf("chart", ice.Meta("prefix")))
+			m.Render(m.Conf("chart", "meta.prefix"))
 			chart.Draw(m, 4, 4)
-			m.Render(m.Conf("chart", ice.Meta("suffix")))
+			m.Render(m.Conf("chart", "meta.suffix"))
 		}},
 
 		"draw": {Name: "draw", Help: "思维导图", Meta: kit.Dict("display", "wiki/draw"), List: kit.List(
@@ -597,6 +593,19 @@ var Index = &ice.Context{Name: "wiki", Help: "文档中心",
 			m.Cmd("word", "action", "追加", arg)
 			m.Option("scan_mode", "scan")
 			m.Cmdy("ssh.scan", "some", "some", path.Join(m.Conf("word", "meta.path"), arg[0]))
+		}},
+
+		"qrcode": {Name: "qrcode", Help: "扫码", Meta: kit.Dict("display", "wiki/image"), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			data := map[string]interface{}{}
+			for i := 0; i < len(arg)-1; i += 2 {
+				kit.Value(data, arg[i], arg[i+1])
+			}
+			m.Push("_output", "qrcode")
+			m.Echo(kit.Format(data))
+		}},
+		"qrcode2": {Name: "qrcode2", Help: "扫码", Meta: kit.Dict("display", "wiki/image"), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			m.Push("_output", "qrcode")
+			m.Echo(kit.MergeURL(arg[0], arg[1:]))
 		}},
 	},
 }

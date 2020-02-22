@@ -137,7 +137,7 @@ var Index = &ice.Context{Name: "ctx", Help: "配置模块",
 			switch arg[0] {
 			case "save":
 				// 保存配置
-				arg[1] = path.Join(msg.Conf(ice.CTX_CONFIG, ice.Meta("path")), arg[1])
+				arg[1] = path.Join(msg.Conf(ice.CTX_CONFIG, "meta.path"), arg[1])
 				if f, p, e := kit.Create(arg[1]); m.Assert(e) {
 					data := map[string]interface{}{}
 					for _, k := range arg[2:] {
@@ -152,7 +152,7 @@ var Index = &ice.Context{Name: "ctx", Help: "配置模块",
 				}
 			case "load":
 				// 加载配置
-				arg[1] = path.Join(msg.Conf(ice.CTX_CONFIG, ice.Meta("path")), arg[1])
+				arg[1] = path.Join(msg.Conf(ice.CTX_CONFIG, "meta.path"), arg[1])
 				if f, e := os.Open(arg[1]); e == nil {
 					data := map[string]interface{}{}
 					json.NewDecoder(f).Decode(&data)

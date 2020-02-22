@@ -141,9 +141,6 @@ var Index = &ice.Context{Name: "nfs", Help: "存储模块",
 	Caches:  map[string]*ice.Cache{},
 	Configs: map[string]*ice.Config{},
 	Commands: map[string]*ice.Command{
-		ice.ICE_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {}},
-		ice.ICE_EXIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {}},
-
 		"dir": {Name: "dir", Help: "目录", List: kit.List(
 			kit.MDB_INPUT, "text", "name", "path", "action", "auto",
 			kit.MDB_INPUT, "button", "name", "查看",

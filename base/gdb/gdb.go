@@ -111,6 +111,7 @@ var Index = &ice.Context{Name: "gdb", Help: "事件模块",
 				close(f.d)
 			}
 		}},
+
 		ice.GDB_SIGNAL: {Name: "signal", Help: "信号器", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			switch arg[0] {
 			case "listen":

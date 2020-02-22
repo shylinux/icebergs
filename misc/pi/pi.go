@@ -14,9 +14,6 @@ var Index = &ice.Context{Name: "pi", Help: "pi",
 		"pi": {Name: "pi", Help: "pi", Value: kit.Data(kit.MDB_SHORT, "name")},
 	},
 	Commands: map[string]*ice.Command{
-		ice.ICE_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {}},
-		ice.ICE_EXIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {}},
-
 		"GPIO": {Name: "GPIO", Help: "GPIO", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			p := kit.Format("/sys/class/gpio/gpio%s", arg[0])
 			if _, e := os.Stat(p); e != nil {

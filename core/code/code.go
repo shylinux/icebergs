@@ -42,7 +42,8 @@ var Index = &ice.Context{Name: "code", Help: "编程中心",
 	},
 	Commands: map[string]*ice.Command{
 		ice.ICE_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			m.Cmd(ice.CTX_CONFIG, "load", "code.json")
+			m.Load()
+
 			m.Watch(ice.SYSTEM_INIT, "compile", "linux")
 			m.Watch(ice.SYSTEM_INIT, "publish", "bin/ice.sh")
 
@@ -55,7 +56,7 @@ var Index = &ice.Context{Name: "code", Help: "编程中心",
 			}
 		}},
 		ice.ICE_EXIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			m.Cmd(ice.CTX_CONFIG, "save", "code.json", "web.code.login")
+			m.Save("login")
 		}},
 
 		"compile": {Name: "compile", Help: "编译", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {

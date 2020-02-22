@@ -18,14 +18,15 @@ func distance(lat1, long1, lat2, long2 float64) float64 {
 var Index = &ice.Context{Name: "aaa", Help: "认证模块",
 	Caches: map[string]*ice.Cache{},
 	Configs: map[string]*ice.Config{
-		ice.AAA_ROLE: {Name: "role", Help: "角色", Value: kit.Data(kit.MDB_SHORT, "chain", "root", kit.Dict(), "tech", kit.Dict())},
+		ice.AAA_ROLE: {Name: "role", Help: "角色", Value: kit.Data(kit.MDB_SHORT, "chain")},
 		ice.AAA_USER: {Name: "user", Help: "用户", Value: kit.Data(kit.MDB_SHORT, "username")},
 		ice.AAA_SESS: {Name: "sess", Help: "会话", Value: kit.Data(kit.MDB_SHORT, "uniq", "expire", "720h")},
-		"location":   {Name: "location", Help: "location", Value: kit.Data(kit.MDB_SHORT, "name")},
+
+		"location": {Name: "location", Help: "定位", Value: kit.Data(kit.MDB_SHORT, "name")},
 	},
 	Commands: map[string]*ice.Command{
 		ice.ICE_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			m.Cmd(ice.CTX_CONFIG, "load", kit.Keys(m.Cap(ice.CTX_FOLLOW), "json"))
+			m.Load()
 			// 权限索引
 			m.Conf(ice.AAA_ROLE, "black.tech.meta.short", "chain")
 			m.Conf(ice.AAA_ROLE, "white.tech.meta.short", "chain")
@@ -33,11 +34,9 @@ var Index = &ice.Context{Name: "aaa", Help: "认证模块",
 			m.Conf(ice.AAA_ROLE, "white.void.meta.short", "chain")
 		}},
 		ice.ICE_EXIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			m.Cmd(ice.CTX_CONFIG, "save", kit.Keys(m.Cap(ice.CTX_FOLLOW), "json"),
-				ice.AAA_ROLE, ice.AAA_USER, ice.AAA_SESS,
-				kit.Keys(m.Cap(ice.CTX_FOLLOW), "location"),
-			)
+			m.Save(ice.AAA_ROLE, ice.AAA_USER, ice.AAA_SESS, m.Prefix("location"))
 		}},
+
 		"location": {Name: "location", Help: "location", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			if len(arg) == 0 {
 				m.Grows("location", nil, "", "", func(index int, value map[string]interface{}) {

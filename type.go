@@ -34,8 +34,8 @@ type Config struct {
 type Command struct {
 	Name string
 	Help interface{}
-	Meta map[string]interface{}
 	List []interface{}
+	Meta map[string]interface{}
 	Hand func(m *Message, c *Context, key string, arg ...string)
 }
 type Context struct {
@@ -74,9 +74,6 @@ func (c *Context) Cap(key string, arg ...interface{}) string {
 	}
 	return c.Caches[key].Value
 }
-func (c *Context) Server() Server {
-	return c.server
-}
 func (c *Context) Run(m *Message, cmd *Command, key string, arg ...string) *Message {
 	m.Hand = true
 	m.Log(LOG_CMDS, "%s.%s %d %v", c.Name, key, len(arg), arg)
@@ -88,6 +85,9 @@ func (c *Context) Runs(m *Message, cmd string, key string, arg ...string) {
 		c.Run(m, s, cmd, arg...)
 	}
 	return
+}
+func (c *Context) Server() Server {
+	return c.server
 }
 func (c *Context) Register(s *Context, x Server) *Context {
 	Pulse.Log("register", "%s <- %s", c.Name, s.Name)
@@ -112,20 +112,23 @@ func (c *Context) Spawn(m *Message, name string, help string, arg ...string) *Co
 	return s
 }
 func (c *Context) Begin(m *Message, arg ...string) *Context {
-	c.Caches[CTX_STATUS] = &Cache{Name: CTX_STATUS, Value: ""}
-	c.Caches[CTX_STREAM] = &Cache{Name: CTX_STREAM, Value: ""}
 	c.Caches[CTX_FOLLOW] = &Cache{Name: CTX_FOLLOW, Value: ""}
+	c.Caches[CTX_STREAM] = &Cache{Name: CTX_STREAM, Value: ""}
+	c.Caches[CTX_STATUS] = &Cache{Name: CTX_STATUS, Value: ""}
 
-	m.Log(LOG_BEGIN, "%s", c.Name)
-	if c.begin = m; c.server != nil {
-		m.TryCatch(m, true, func(m *Message) {
-			c.server.Begin(m, arg...)
-		})
-	}
 	if c.context == Index {
 		c.Cap(CTX_FOLLOW, c.Name)
 	} else if c.context != nil {
 		c.Cap(CTX_FOLLOW, kit.Keys(c.context.Cap(CTX_FOLLOW), c.Name))
+	}
+	m.Log(LOG_BEGIN, "%s", c.Cap(CTX_FOLLOW))
+	c.Cap(CTX_STATUS, ICE_BEGIN)
+
+	if c.begin = m; c.server != nil {
+		m.TryCatch(m, true, func(m *Message) {
+			// 初始化模块
+			c.server.Begin(m, arg...)
+		})
 	}
 	return c
 }
@@ -135,12 +138,12 @@ func (c *Context) Start(m *Message, arg ...string) bool {
 
 	wait := make(chan bool)
 	m.Gos(m, func(m *Message) {
-		m.Log(LOG_START, "%s", c.Name)
-
-		c.Cap(CTX_STATUS, "start")
+		m.Log(LOG_START, "%s", c.Cap(CTX_FOLLOW))
+		c.Cap(CTX_STATUS, ICE_START)
 		wait <- true
+
+		// 启动模块
 		c.server.Start(m, arg...)
-		c.Cap(CTX_STATUS, "close")
 		if m.Done(); m.wait != nil {
 			m.wait <- true
 		}
@@ -149,8 +152,11 @@ func (c *Context) Start(m *Message, arg ...string) bool {
 	return true
 }
 func (c *Context) Close(m *Message, arg ...string) bool {
-	m.Log(LOG_CLOSE, "%s", c.Name)
+	m.Log(LOG_CLOSE, "%s", c.Cap(CTX_FOLLOW))
+	c.Cap(CTX_STATUS, ICE_CLOSE)
+
 	if c.server != nil {
+		// 结束模块
 		return c.server.Close(m, arg...)
 	}
 	return true
@@ -178,11 +184,13 @@ type Message struct {
 }
 
 func (m *Message) Time(args ...interface{}) string {
+	// [duration] [format [args...]]
 	t := m.time
 	if len(args) > 0 {
 		switch arg := args[0].(type) {
 		case string:
 			if d, e := time.ParseDuration(arg); e == nil {
+				// 时间偏移
 				t, args = t.Add(d), args[1:]
 			}
 		}
@@ -193,6 +201,7 @@ func (m *Message) Time(args ...interface{}) string {
 		case string:
 			f = arg
 			if len(args) > 1 {
+				// 时间格式
 				f = fmt.Sprintf(f, args[1:]...)
 			}
 		}
@@ -219,13 +228,16 @@ func (m *Message) Format(key interface{}) string {
 			} else {
 				return fmt.Sprintf("%dx%d %s", len(m.meta[m.meta["append"][0]]), len(m.meta["append"]), kit.Format(m.meta["append"]))
 			}
+
 		case "time":
 			return m.Time()
 		case "ship":
 			return fmt.Sprintf("%s->%s", m.source.Name, m.target.Name)
 		case "prefix":
 			return fmt.Sprintf("%s %d %s->%s", m.Time(), m.code, m.source.Name, m.target.Name)
+
 		case "chain":
+			// 调用链
 			ms := []*Message{}
 			for msg := m; msg != nil; msg = msg.message {
 				ms = append(ms, msg)
@@ -265,6 +277,7 @@ func (m *Message) Format(key interface{}) string {
 			}
 			return strings.Join(meta, "")
 		case "stack":
+			// 调用栈
 			pc := make([]uintptr, 100)
 			pc = pc[:runtime.Callers(5, pc)]
 			frames := runtime.CallersFrames(pc)
@@ -290,10 +303,14 @@ func (m *Message) Formats(key string) string {
 	switch key {
 	case "meta":
 		return kit.Formats(m.meta)
-	default:
-		return m.Format(key)
 	}
-	return m.time.Format(ICE_TIME)
+	return m.Format(key)
+}
+func (m *Message) Spawns(arg ...interface{}) *Message {
+	msg := m.Spawn(arg...)
+	msg.code = m.target.root.ID()
+	m.messages = append(m.messages, msg)
+	return msg
 }
 func (m *Message) Spawn(arg ...interface{}) *Message {
 	msg := &Message{
@@ -322,28 +339,7 @@ func (m *Message) Spawn(arg ...interface{}) *Message {
 	}
 	return msg
 }
-func (m *Message) Spawns(arg ...interface{}) *Message {
-	msg := m.Spawn(arg...)
-	msg.code = m.target.root.ID()
-	m.messages = append(m.messages, msg)
-	return msg
-}
 
-func (m *Message) CSV(text string) *Message {
-	bio := bytes.NewBufferString(text)
-	r := csv.NewReader(bio)
-	heads, _ := r.Read()
-	for {
-		lines, e := r.Read()
-		if e != nil {
-			break
-		}
-		for i, k := range heads {
-			m.Push(k, kit.Select("", lines, i))
-		}
-	}
-	return m
-}
 func (m *Message) Add(key string, arg ...string) *Message {
 	switch key {
 	case MSG_DETAIL, MSG_RESULT:
@@ -378,41 +374,16 @@ func (m *Message) Set(key string, arg ...string) *Message {
 	}
 	return m.Add(key, arg...)
 }
-func (m *Message) Copy(msg *Message, arg ...string) *Message {
-	if msg == nil {
-		return m
-	}
-	if len(arg) > 0 {
-		for _, k := range arg[1:] {
-			if kit.IndexOf(m.meta[arg[0]], k) == -1 {
-				m.meta[arg[0]] = append(m.meta[arg[0]], k)
-			}
-			m.meta[k] = append(m.meta[k], msg.meta[k]...)
-		}
-		return m
-	}
-	for _, k := range msg.meta[MSG_OPTION] {
-		if kit.IndexOf(m.meta[MSG_OPTION], k) == -1 {
-			m.meta[MSG_OPTION] = append(m.meta[MSG_OPTION], k)
-		}
-		m.meta[k] = append(m.meta[k], msg.meta[k]...)
-	}
-	for _, k := range msg.meta[MSG_APPEND] {
-		if kit.IndexOf(m.meta[MSG_APPEND], k) == -1 {
-			m.meta[MSG_APPEND] = append(m.meta[MSG_APPEND], k)
-		}
-		m.meta[k] = append(m.meta[k], msg.meta[k]...)
-	}
-	m.meta[MSG_RESULT] = append(m.meta[MSG_RESULT], msg.meta[MSG_RESULT]...)
-	return m
-}
 func (m *Message) Push(key string, value interface{}, arg ...interface{}) *Message {
 	switch value := value.(type) {
 	case map[string]string:
 	case map[string]interface{}:
 		if key == "detail" {
+			// 格式转换
 			value = kit.KeyValue(map[string]interface{}{}, "", value)
 		}
+
+		// 键值排序
 		list := []string{}
 		if len(arg) > 0 {
 			list = kit.Simple(arg[0])
@@ -423,6 +394,7 @@ func (m *Message) Push(key string, value interface{}, arg ...interface{}) *Messa
 			sort.Strings(list)
 		}
 
+		// 追加数据
 		for _, k := range list {
 			switch key {
 			case "detail":
@@ -438,6 +410,7 @@ func (m *Message) Push(key string, value interface{}, arg ...interface{}) *Messa
 		}
 		return m
 	}
+
 	for _, v := range kit.Simple(value) {
 		m.Add(MSG_APPEND, key, v)
 	}
@@ -450,7 +423,40 @@ func (m *Message) Echo(str string, arg ...interface{}) *Message {
 	m.meta[MSG_RESULT] = append(m.meta[MSG_RESULT], str)
 	return m
 }
+func (m *Message) Copy(msg *Message, arg ...string) *Message {
+	if len(arg) > 0 {
+		// 精确复制
+		for _, k := range arg[1:] {
+			if kit.IndexOf(m.meta[arg[0]], k) == -1 {
+				m.meta[arg[0]] = append(m.meta[arg[0]], k)
+			}
+			m.meta[k] = append(m.meta[k], msg.meta[k]...)
+		}
+		return m
+	}
+
+	// 复制选项
+	for _, k := range msg.meta[MSG_OPTION] {
+		if kit.IndexOf(m.meta[MSG_OPTION], k) == -1 {
+			m.meta[MSG_OPTION] = append(m.meta[MSG_OPTION], k)
+		}
+		m.meta[k] = append(m.meta[k], msg.meta[k]...)
+	}
+
+	// 复制数据
+	for _, k := range msg.meta[MSG_APPEND] {
+		if kit.IndexOf(m.meta[MSG_APPEND], k) == -1 {
+			m.meta[MSG_APPEND] = append(m.meta[MSG_APPEND], k)
+		}
+		m.meta[k] = append(m.meta[k], msg.meta[k]...)
+	}
+
+	// 复制文本
+	m.meta[MSG_RESULT] = append(m.meta[MSG_RESULT], msg.meta[MSG_RESULT]...)
+	return m
+}
 func (m *Message) Sort(key string, arg ...string) *Message {
+	// 排序方法
 	cmp := "str"
 	if len(arg) > 0 && arg[0] != "" {
 		cmp = arg[0]
@@ -463,6 +469,7 @@ func (m *Message) Sort(key string, arg ...string) *Message {
 		}
 	}
 
+	// 排序因子
 	number := map[int]int{}
 	table := []map[string]string{}
 	m.Table(func(index int, line map[string]string, head []string) {
@@ -479,6 +486,7 @@ func (m *Message) Sort(key string, arg ...string) *Message {
 		}
 	})
 
+	// 排序数据
 	for i := 0; i < len(table)-1; i++ {
 		for j := i + 1; j < len(table); j++ {
 			result := false
@@ -504,10 +512,10 @@ func (m *Message) Sort(key string, arg ...string) *Message {
 		}
 	}
 
+	// 输出数据
 	for _, k := range m.meta[MSG_APPEND] {
 		delete(m.meta, k)
 	}
-
 	for _, v := range table {
 		for _, k := range m.meta[MSG_APPEND] {
 			m.Add(MSG_APPEND, k, v[k])
@@ -525,11 +533,13 @@ func (m *Message) Table(cbs ...interface{}) *Message {
 					nrow = len(m.meta[k])
 				}
 			}
+
 			for i := 0; i < nrow; i++ {
 				line := map[string]string{}
 				for _, k := range m.meta[MSG_APPEND] {
 					line[k] = kit.Select("", m.meta[k], i)
 				}
+				// 依次回调
 				cb(i, line, m.meta[MSG_APPEND])
 			}
 		}
@@ -554,7 +564,7 @@ func (m *Message) Table(cbs ...interface{}) *Message {
 	// 回调函数
 	rows := kit.Select("\n", m.Option("table.row_sep"))
 	cols := kit.Select(" ", m.Option("table.col_sep"))
-	compact := kit.Select(m.Conf("table", "compact"), m.Option("table.compact")) == "true"
+	compact := m.Option("table.compact") == "true"
 	cb := func(maps map[string]string, lists []string, line int) bool {
 		for i, v := range lists {
 			if k := m.meta[MSG_APPEND][i]; compact {
@@ -591,6 +601,7 @@ func (m *Message) Table(cbs ...interface{}) *Message {
 
 			row[k], wor = data, append(wor, data+strings.Repeat(space, width[k]-kit.Width(data, len(space))))
 		}
+		// 依次回调
 		if !cb(row, wor, i) {
 			break
 		}
@@ -606,11 +617,15 @@ func (m *Message) Render(str string, arg ...interface{}) *Message {
 	}
 	return m
 }
+func (m *Message) Qrcode(str string, arg ...interface{}) *Message {
+	return m
+}
 func (m *Message) Split(str string, field string, space string, enter string) *Message {
 	indexs := []int{}
 	fields := kit.Split(field, space)
 	for i, l := range kit.Split(str, enter) {
 		if i == 0 && (field == "" || field == "index") {
+			// 表头行
 			fields = kit.Split(l, space)
 			if field == "index" {
 				for _, v := range fields {
@@ -621,6 +636,7 @@ func (m *Message) Split(str string, field string, space string, enter string) *M
 		}
 
 		if len(indexs) > 0 {
+			// 数据行
 			for i, v := range indexs {
 				if i == len(indexs)-1 {
 					m.Push(kit.Select("some", fields, i), l[v:])
@@ -637,6 +653,21 @@ func (m *Message) Split(str string, field string, space string, enter string) *M
 	}
 	return m
 }
+func (m *Message) CSV(text string) *Message {
+	bio := bytes.NewBufferString(text)
+	r := csv.NewReader(bio)
+	heads, _ := r.Read()
+	for {
+		lines, e := r.Read()
+		if e != nil {
+			break
+		}
+		for i, k := range heads {
+			m.Push(k, kit.Select("", lines, i))
+		}
+	}
+	return m
+}
 
 func (m *Message) Detail(arg ...interface{}) string {
 	return kit.Select("", m.meta[MSG_DETAIL], 0)
@@ -646,6 +677,7 @@ func (m *Message) Detailv(arg ...interface{}) []string {
 }
 func (m *Message) Optionv(key string, arg ...interface{}) interface{} {
 	if len(arg) > 0 {
+		// 写数据
 		if kit.IndexOf(m.meta[MSG_OPTION], key) == -1 {
 			m.meta[MSG_OPTION] = append(m.meta[MSG_OPTION], key)
 		}
@@ -662,9 +694,11 @@ func (m *Message) Optionv(key string, arg ...interface{}) interface{} {
 
 	for msg := m; msg != nil; msg = msg.message {
 		if list, ok := msg.data[key]; ok {
+			// 读数据
 			return list
 		}
 		if list, ok := msg.meta[key]; ok {
+			// 读选项
 			return list
 		}
 	}
@@ -692,7 +726,7 @@ func (m *Message) Result(arg ...interface{}) string {
 	if len(arg) > 0 {
 		switch v := arg[0].(type) {
 		case int:
-			return kit.Select("", m.Meta[MSG_RESULT], v)
+			return kit.Select("", m.meta[MSG_RESULT], v)
 		}
 	}
 	return strings.Join(m.Resultv(), "")
@@ -700,9 +734,11 @@ func (m *Message) Result(arg ...interface{}) string {
 
 func (m *Message) Log(level string, str string, arg ...interface{}) *Message {
 	if str = strings.TrimSpace(fmt.Sprintf(str, arg...)); Log != nil {
+		// 日志模块
 		Log(m, level, str)
 	}
 
+	// 日志颜色
 	prefix, suffix := "", ""
 	switch level {
 	case LOG_ENABLE, LOG_IMPORT, LOG_CREATE, LOG_INSERT, LOG_EXPORT:
@@ -756,36 +792,6 @@ func (m *Message) Trace(key string, str string, arg ...interface{}) *Message {
 	return m
 }
 
-func (m *Message) Space(arg interface{}) []string {
-	if arg == nil || kit.Format(arg) == m.Conf(CLI_RUNTIME, "node.name") {
-		return nil
-	}
-	return []string{WEB_SPACE, kit.Format(arg)}
-}
-func (m *Message) Right(arg ...interface{}) bool {
-	return m.Option(MSG_USERROLE) == ROLE_ROOT || !m.Warn(m.Cmdx(AAA_ROLE, "right", m.Option(MSG_USERROLE), kit.Keys(arg...)) != "ok", "no right")
-}
-func (m *Message) Event(key string, arg ...string) *Message {
-	m.Cmd(GDB_EVENT, "action", key, arg)
-	return m
-}
-func (m *Message) Watch(key string, arg ...string) *Message {
-	m.Cmd(GDB_EVENT, "listen", key, arg)
-	return m
-}
-
-func (m *Message) Assert(arg interface{}) bool {
-	switch arg := arg.(type) {
-	case nil:
-		return true
-	case bool:
-		if arg == true {
-			return true
-		}
-	}
-
-	panic(errors.New(fmt.Sprintf("error %v", arg)))
-}
 func (m *Message) TryCatch(msg *Message, safe bool, hand ...func(msg *Message)) *Message {
 	defer func() {
 		switch e := recover(); e {
@@ -797,24 +803,36 @@ func (m *Message) TryCatch(msg *Message, safe bool, hand ...func(msg *Message)) 
 			m.Log(LOG_WARN, "catch: %s", e)
 			m.Log(LOG_INFO, "stack: %s", msg.Format("stack"))
 			if m.Log(LOG_WARN, "catch: %s", e); len(hand) > 1 {
+				// 捕获异常
 				m.TryCatch(msg, safe, hand[1:]...)
 			} else if !safe {
+				// 抛出异常
 				m.Assert(e)
 			}
 		}
 	}()
 
 	if len(hand) > 0 {
+		// 运行函数
 		hand[0](msg)
 	}
 	return m
 }
-func (m *Message) Gos(msg *Message, cb func(*Message)) *Message {
-	go func() { msg.TryCatch(msg, true, func(msg *Message) { cb(msg) }) }()
-	return m
+func (m *Message) Assert(arg interface{}) bool {
+	switch arg := arg.(type) {
+	case nil:
+		return true
+	case bool:
+		if arg == true {
+			return true
+		}
+	}
+
+	// 抛出异常
+	panic(errors.New(fmt.Sprintf("error %v", arg)))
 }
-func (m *Message) Run(arg ...string) *Message {
-	m.target.server.Start(m, arg...)
+func (m *Message) Sleep(arg string) *Message {
+	time.Sleep(kit.Duration(arg))
 	return m
 }
 func (m *Message) Hold(n int) *Message {
@@ -839,21 +857,6 @@ func (m *Message) Done() bool {
 	ctx.wg.Done()
 	return true
 }
-func (m *Message) Start(key string, arg ...string) *Message {
-	m.Travel(func(p *Context, s *Context) {
-		if s.Name == key {
-			s.Start(m.Spawns(s), arg...)
-		}
-	})
-	return m
-}
-
-func (m *Message) Starts(name string, help string, arg ...string) *Message {
-	m.wait = make(chan bool)
-	m.target.Spawn(m, name, help, arg...).Begin(m, arg...).Start(m, arg...)
-	<-m.wait
-	return m
-}
 func (m *Message) Call(sync bool, cb func(*Message) *Message) *Message {
 	if sync {
 		wait := make(chan bool)
@@ -871,8 +874,65 @@ func (m *Message) Back(sub *Message) *Message {
 	}
 	return m
 }
-func (m *Message) Sleep(arg string) *Message {
-	time.Sleep(kit.Duration(arg))
+func (m *Message) Gos(msg *Message, cb func(*Message)) *Message {
+	go func() { msg.TryCatch(msg, true, func(msg *Message) { cb(msg) }) }()
+	return m
+}
+
+func (m *Message) Run(arg ...string) *Message {
+	m.target.server.Start(m, arg...)
+	return m
+}
+func (m *Message) Start(key string, arg ...string) *Message {
+	m.Travel(func(p *Context, s *Context) {
+		if s.Name == key {
+			s.Start(m.Spawns(s), arg...)
+		}
+	})
+	return m
+}
+func (m *Message) Starts(name string, help string, arg ...string) *Message {
+	m.wait = make(chan bool)
+	m.target.Spawn(m, name, help, arg...).Begin(m, arg...).Start(m, arg...)
+	<-m.wait
+	return m
+}
+
+func (m *Message) Space(arg interface{}) []string {
+	if arg == nil || kit.Format(arg) == m.Conf(CLI_RUNTIME, "node.name") {
+		return nil
+	}
+	return []string{WEB_SPACE, kit.Format(arg)}
+}
+func (m *Message) Right(arg ...interface{}) bool {
+	return m.Option(MSG_USERROLE) == ROLE_ROOT || !m.Warn(m.Cmdx(AAA_ROLE, "right", m.Option(MSG_USERROLE), kit.Keys(arg...)) != "ok", "no right")
+}
+func (m *Message) Event(key string, arg ...string) *Message {
+	m.Cmd(GDB_EVENT, "action", key, arg)
+	return m
+}
+func (m *Message) Watch(key string, arg ...string) *Message {
+	m.Cmd(GDB_EVENT, "listen", key, arg)
+	return m
+}
+
+func (m *Message) Prefix(arg ...string) string {
+	return kit.Keys(m.Cap(CTX_FOLLOW), arg)
+}
+func (m *Message) Save(arg ...string) *Message {
+	list := []string{}
+	for _, k := range arg {
+		list = append(list, kit.Keys(m.Cap(CTX_FOLLOW), k))
+	}
+	m.Cmd(CTX_CONFIG, "save", kit.Keys(m.Cap(CTX_FOLLOW), "json"), list)
+	return m
+}
+func (m *Message) Load(arg ...string) *Message {
+	list := []string{}
+	for _, k := range arg {
+		list = append(list, kit.Keys(m.Cap(CTX_FOLLOW), k))
+	}
+	m.Cmd(CTX_CONFIG, "load", kit.Keys(m.Cap(CTX_FOLLOW), "json"), list)
 	return m
 }
 
@@ -881,6 +941,7 @@ func (m *Message) Travel(cb interface{}) *Message {
 	for i := 0; i < len(list); i++ {
 		switch cb := cb.(type) {
 		case func(*Context, *Context):
+			// 模块回调
 			cb(list[i].context, list[i])
 		case func(*Context, *Context, string, *Command):
 			ls := []string{}
@@ -889,6 +950,7 @@ func (m *Message) Travel(cb interface{}) *Message {
 			}
 			sort.Strings(ls)
 			for _, k := range ls {
+				// 命令回调
 				cb(list[i].context, list[i], k, list[i].Commands[k])
 			}
 		case func(*Context, *Context, string, *Config):
@@ -898,10 +960,12 @@ func (m *Message) Travel(cb interface{}) *Message {
 			}
 			sort.Strings(ls)
 			for _, k := range ls {
+				// 配置回调
 				cb(list[i].context, list[i], k, list[i].Configs[k])
 			}
 		}
 
+		// 下级模块
 		ls := []string{}
 		for k := range list[i].contexts {
 			ls = append(ls, k)
@@ -920,6 +984,7 @@ func (m *Message) Search(key interface{}, cb interface{}) *Message {
 			key = k
 		}
 
+		// 查找模块
 		p := m.target.root
 		if strings.Contains(key, ":") {
 
@@ -951,6 +1016,7 @@ func (m *Message) Search(key interface{}, cb interface{}) *Message {
 			p = m.target
 		}
 
+		// 遍历命令
 		switch cb := cb.(type) {
 		case func(p *Context, s *Context, key string, cmd *Command):
 			if key == "" {
@@ -984,9 +1050,6 @@ func (m *Message) Search(key interface{}, cb interface{}) *Message {
 	return m
 }
 
-func Meta(arg ...interface{}) string {
-	return kit.MDB_META + "." + kit.Keys(arg...)
-}
 func (m *Message) Richs(key string, chain interface{}, raw interface{}, cb interface{}) (res map[string]interface{}) {
 	// 数据结构
 	cache := m.Confm(key, chain)
@@ -1122,7 +1185,7 @@ func (m *Message) Grow(key string, chain interface{}, data interface{}) int {
 		least := kit.Int(kit.Select(m.Conf(WEB_CACHE, "meta.least"), kit.Select(kit.Format(meta["least"]), m.Option("cache.least"))))
 
 		// 创建文件
-		name := path.Join(kit.Select(m.Conf(WEB_CACHE, Meta("store")), kit.Select(kit.Format(meta["store"]), m.Option("cache.store"))), kit.Keys(key, chain, "csv"))
+		name := path.Join(kit.Select(m.Conf(WEB_CACHE, "meta.store"), kit.Select(kit.Format(meta["store"]), m.Option("cache.store"))), kit.Keys(key, chain, "csv"))
 		if s, e := os.Stat(name); e == nil {
 			if s.Size() > kit.Int64(kit.Select(m.Conf(WEB_CACHE, "meta.fsize"), kit.Select(kit.Format(meta["fsize"]), m.Option("cache.fsize")))) {
 				name = strings.Replace(name, ".csv", fmt.Sprintf("_%d.csv", kit.Int(meta["offset"])), -1)
@@ -1199,6 +1262,7 @@ func (m *Message) Grow(key string, chain interface{}, data interface{}) int {
 	return id
 }
 func (m *Message) Grows(key string, chain interface{}, match string, value string, cb interface{}) map[string]interface{} {
+	// 数据结构
 	cache := m.Confm(key, chain)
 	if cache == nil {
 		return nil
@@ -1209,11 +1273,18 @@ func (m *Message) Grows(key string, chain interface{}, match string, value strin
 		return nil
 	}
 
+	// 数据范围
 	offend := kit.Int(kit.Select("0", m.Option("cache.offend")))
 	limit := kit.Int(kit.Select("10", m.Option("cache.limit")))
 	current := kit.Int(meta["offset"])
 	end := current + len(list) - offend
 	begin := end - limit
+	switch limit {
+	case -1:
+		begin = current
+	case -2:
+		begin = 0
+	}
 
 	if match == kit.MDB_ID {
 		begin, end = kit.Int(value)-1, kit.Int(value)
@@ -1222,9 +1293,11 @@ func (m *Message) Grows(key string, chain interface{}, match string, value strin
 
 	order := 0
 	if begin < current {
+		// 读取磁盘
 		m.Log(LOG_INFO, "%s.%v read %v-%v from %v-%v", key, chain, begin, end, current, current+len(list))
 		store, _ := meta["record"].([]interface{})
 		for s := len(store) - 1; s > -1; s-- {
+			// 查找索引
 			item, _ := store[s].(map[string]interface{})
 			line := kit.Int(item["offset"])
 			m.Log(LOG_INFO, "check history %v %v %v", s, line, item)
@@ -1237,6 +1310,7 @@ func (m *Message) Grows(key string, chain interface{}, match string, value strin
 					break
 				}
 
+				// 查找偏移
 				item, _ := store[s].(map[string]interface{})
 				name := kit.Format(item["file"])
 				pos := kit.Int(item["position"])
@@ -1246,6 +1320,7 @@ func (m *Message) Grows(key string, chain interface{}, match string, value strin
 					continue
 				}
 
+				// 打开文件
 				m.Log(LOG_IMPORT, "load history %v %v %v", s, offset, item)
 				if f, e := os.Open(name); m.Assert(e) {
 					defer f.Close()
@@ -1336,8 +1411,10 @@ func (m *Message) Cmd(arg ...interface{}) *Message {
 			msg.meta[MSG_DETAIL] = list
 			m.Hand, msg.Hand, m = true, true, msg
 			if you := m.Option(kit.Format(kit.Value(cmd.Meta, "remote"))); you != "" {
+				// 远程命令
 				msg.Copy(msg.Spawns(c).Cmd(WEB_SPACE, you, list[0], list[1:]))
 			} else {
+				// 本地命令
 				p.Run(msg, cmd, key, list[1:]...)
 			}
 			m.Hand, msg.Hand = true, true
@@ -1352,13 +1429,17 @@ func (m *Message) Confv(arg ...interface{}) (val interface{}) {
 		if len(arg) > 1 {
 			if len(arg) > 2 {
 				if arg[1] == nil {
+					// 写配置
 					conf.Value = arg[2]
 				} else {
+					// 写修改项
 					kit.Value(conf.Value, arg[1:]...)
 				}
 			}
+			// 读配置项
 			val = kit.Value(conf.Value, arg[1])
 		} else {
+			// 读配置
 			val = conf.Value
 		}
 	})
@@ -1392,8 +1473,10 @@ func (m *Message) Capv(arg ...interface{}) interface{} {
 		for c := s; c != nil; c = c.context {
 			if caps, ok := c.Caches[key]; ok {
 				if len(arg) > 0 {
+					// 写数据
 					caps.Value = kit.Format(arg[0])
 				}
+				// 读数据
 				return caps.Value
 			}
 		}

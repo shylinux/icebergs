@@ -6,18 +6,11 @@ const ( // ICE
 	ICE_EXIT = "_exit"
 	ICE_DATE = "2006-01-02"
 	ICE_TIME = "2006-01-02 15:04:05"
-)
-const ( // CTX
-	CTX_STATUS  = "status"
-	CTX_STREAM  = "stream"
-	CTX_FOLLOW  = "follow"
-	CTX_CONFIG  = "config"
-	CTX_COMMAND = "command"
-	CTX_CONTEXT = "context"
-)
-const ( // CLI
-	CLI_RUNTIME = "runtime"
-	CLI_SYSTEM  = "system"
+
+	ICE_BEGIN = "begin"
+	ICE_START = "start"
+	ICE_SERVE = "serve"
+	ICE_CLOSE = "close"
 )
 const ( // MSG
 	MSG_DETAIL = "detail"
@@ -25,11 +18,11 @@ const ( // MSG
 	MSG_APPEND = "append"
 	MSG_RESULT = "result"
 
-	MSG_ACTION = "_action"
-
 	MSG_SOURCE = "_source"
 	MSG_TARGET = "_target"
+	MSG_ACTION = "_action"
 	MSG_HANDLE = "_handle"
+
 	MSG_STDOUT = "_stdout"
 	MSG_PROMPT = "_prompt"
 	MSG_ALIAS  = "_alias"
@@ -43,6 +36,18 @@ const ( // MSG
 
 	MSG_RIVER = "sess.river"
 	MSG_STORM = "sess.storm"
+)
+const ( // CTX
+	CTX_STATUS  = "status"
+	CTX_STREAM  = "stream"
+	CTX_FOLLOW  = "follow"
+	CTX_CONFIG  = "config"
+	CTX_COMMAND = "command"
+	CTX_CONTEXT = "context"
+)
+const ( // CLI
+	CLI_RUNTIME = "runtime"
+	CLI_SYSTEM  = "system"
 )
 const ( // AAA
 	AAA_ROLE = "role"
@@ -60,10 +65,12 @@ const ( // WEB
 	WEB_SERVE = "serve"
 	WEB_SPACE = "space"
 	WEB_DREAM = "dream"
+
 	WEB_FAVOR = "favor"
 	WEB_CACHE = "cache"
 	WEB_STORY = "story"
 	WEB_SHARE = "share"
+
 	WEB_ROUTE = "route"
 	WEB_PROXY = "proxy"
 	WEB_GROUP = "group"
@@ -77,9 +84,12 @@ const ( // WEB
 const ( // LOG
 	LOG_ENABLE = "enable"
 	LOG_IMPORT = "import"
-	LOG_MODIFY = "modify"
 	LOG_CREATE = "create"
 	LOG_INSERT = "insert"
+	LOG_SELECT = "select"
+	LOG_MODIFY = "modify"
+	LOG_DELETE = "delete"
+	LOG_REMOVE = "remove"
 	LOG_EXPORT = "export"
 
 	LOG_LISTEN = "listen"
@@ -114,7 +124,9 @@ const ( // GDB
 	DREAM_CLOSE = "dream.close"
 
 	USER_CREATE = "user.create"
+	CHAT_CREATE = "chat.create"
 	MISS_CREATE = "miss.create"
+	MIND_CREATE = "mind.create"
 )
 const ( // MDB
 	MDB_REDIS  = "redis"
@@ -144,11 +156,11 @@ const ( // CHAT
 )
 const ( // TYPE
 	TYPE_SPACE = "space"
+	TYPE_STORY = "story"
 	TYPE_RIVER = "river"
 	TYPE_STORM = "storm"
 
 	TYPE_DRIVE = "drive"
-	TYPE_STORY = "story"
 	TYPE_SHELL = "shell"
 	TYPE_VIMRC = "vimrc"
 	TYPE_TABLE = "table"
@@ -159,7 +171,6 @@ const ( // FAVOR
 	FAVOR_CHAT  = "chat.init"
 	FAVOR_TMUX  = "tmux.init"
 	FAVOR_START = "favor.start"
-	FAVOR_MISS  = "miss"
 )
 const ( // STORY
 	STORY_CATCH   = "catch"
@@ -176,9 +187,9 @@ const ( // STORY
 )
 
 var Alias = map[string]string{
-	CTX_CONFIG:  "ctx.config",
-	CTX_COMMAND: "ctx.command",
 	CTX_CONTEXT: "ctx.context",
+	CTX_COMMAND: "ctx.command",
+	CTX_CONFIG:  "ctx.config",
 
 	CLI_RUNTIME: "cli.runtime",
 	CLI_SYSTEM:  "cli.system",
@@ -191,10 +202,12 @@ var Alias = map[string]string{
 	WEB_SERVE: "web.serve",
 	WEB_SPACE: "web.space",
 	WEB_DREAM: "web.dream",
+
 	WEB_FAVOR: "web.favor",
 	WEB_CACHE: "web.cache",
 	WEB_STORY: "web.story",
 	WEB_SHARE: "web.share",
+
 	WEB_ROUTE: "web.route",
 	WEB_PROXY: "web.proxy",
 	WEB_GROUP: "web.group",

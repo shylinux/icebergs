@@ -1,56 +1,167 @@
 package wx
 
 import (
+	"crypto/sha1"
+	"encoding/hex"
+	"encoding/xml"
 	"github.com/shylinux/icebergs"
+	"github.com/shylinux/icebergs/base/web"
 	"github.com/shylinux/icebergs/core/chat"
 	"github.com/shylinux/toolkits"
-	"regexp"
+	"sort"
+	"strings"
 )
 
-var Index = &ice.Context{Name: "wx", Help: "wx",
+func reply(m *ice.Message) {
+	m.Push("_output", "result")
+	m.Render(m.Conf("login", "meta.template.text"))
+}
+func action(m *ice.Message) {
+	m.Push("_output", "result")
+
+	m.Echo(`<xml>
+<ToUserName><![CDATA[%s]]></ToUserName>
+<FromUserName><![CDATA[%s]]></FromUserName>
+<CreateTime>%s</CreateTime>
+<MsgType><![CDATA[news]]></MsgType>
+`, m.Option("FromUserName"), m.Option("ToUserName"), m.Option("CreateTime"))
+
+	count := 0
+	m.Table(func(index int, value map[string]string, head []string) {
+		count++
+	})
+	m.Echo(`<ArticleCount>%d</ArticleCount>
+`, count)
+
+	m.Echo(`<Articles>
+`)
+	m.Table(func(index int, value map[string]string, head []string) {
+		m.Echo(`<item>
+	<Title><![CDATA[%s]]></Title>
+	<Description><![CDATA[%s]]></Description>
+	<PicUrl><![CDATA[%s]]></PicUrl>
+	<Url><![CDATA[%s]]></Url>
+</item>
+`, value["name"], value["text"], value["view"], value["link"])
+	})
+
+	m.Echo(`</Articles>
+`)
+	m.Echo(`</xml>
+`)
+	m.Info("what %v", m.Result())
+}
+
+var Index = &ice.Context{Name: "wx", Help: "公众号",
 	Caches: map[string]*ice.Cache{},
 	Configs: map[string]*ice.Config{
-		"login": {Name: "login", Help: "认证", Value: kit.Data("wechat", "https://login.weixin.qq.com")},
+		"login": {Name: "login", Help: "认证", Value: kit.Data(
+			"auth", "/sns/jscode2session?grant_type=authorization_code",
+			"weixin", "https://api.weixin.qq.com",
+			"appid", "", "appmm", "", "token", "",
+			"userrole", kit.Dict(),
+			"template", kit.Dict(
+				"text", `<xml>
+				<ToUserName><![CDATA[{{.Option "FromUserName"}}]]></ToUserName>
+				<FromUserName><![CDATA[{{.Option "ToUserName"}}]]></FromUserName>
+				<CreateTime>{{.Option "CreateTime"}}</CreateTime>
+				<MsgType><![CDATA[text]]></MsgType>
+				<Content><![CDATA[{{.Append "reply"}}]]></Content>
+				</xml>`,
+			),
+			"menu", []interface{}{
+				kit.Dict("name", "home", "text", "主页", "view", "https://shylinux.com/static/volcanos/favicon.ico", "link", "https://shylinux.com"),
+				kit.Dict("name", "sub", "text", "工具", "view", "https://shylinux.com/static/volcanos/favicon.ico", "link", "https://shylinux.com"),
+			},
+		)},
 	},
 	Commands: map[string]*ice.Command{
 		ice.ICE_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			m.Cmd(ice.WEB_SPIDE, "add", "wechat", m.Conf("login", "meta.wechat"))
+			m.Load()
+			m.Confm("login", "meta.userrole", func(key string, value string) {
+				m.Cmd(ice.AAA_ROLE, value, key)
+			})
 		}},
-		ice.ICE_EXIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {}},
+		ice.ICE_EXIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			m.Save("login")
+		}},
 
-		"login": {Name: "login", Help: "认证", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			what := m.Cmdx(ice.WEB_SPIDE, "wechat", "raw", "GET", "/jslogin", "appid", "wx782c26e4c19acffb", "fun", "new")
-			// what := `window.QRLogin.code = 200; window.QRLogin.uuid = "gZUohppbCw==";`
-			reg, _ := regexp.Compile(`window.QRLogin.code = (\d+); window.QRLogin.uuid = "(\S+?)";`)
-			if list := reg.FindStringSubmatch(what); list[1] == "200" {
-				m.Richs(ice.WEB_SPIDE, nil, "wechat", func(key string, value map[string]interface{}) {
-					if qrcode := kit.Format("%s/l/%s", kit.Value(value, "client.url"), list[2]); m.R == nil {
-						m.Cmdy("cli.python", "qrcode", qrcode)
-					} else {
-						m.Push("_output", "qrcode").Echo(qrcode)
-					}
-
-					m.Gos(m, func(m *ice.Message) {
-						reg, _ := regexp.Compile(`window.code=(\d+)`)
-						for i := 0; i < 1000; i++ {
-							what := m.Cmdx(ice.WEB_SPIDE, "wechat", "raw", "GET", "/cgi-bin/mmwebwx-bin/login", "loginicon", "true", "uuid", list[2], "tip", "1", "r", kit.Int(m.Time("stamp"))/1579, "_", m.Time("stamp"))
-							// window.code=200; window.redirect_uri="https://wx2.qq.com/cgi-bin/mmwebwx-bin/webwxnewloginpage?ticket=A7_l6ng7wSjNbs7-qD3ArIRJ@qrticket_0&uuid=Ia1-kbZ0wA==&lang=zh_CN&scan=1579005657";
-							if list := reg.FindStringSubmatch(what); list[1] == "200" {
-								reg, _ := regexp.Compile(`window.redirect_uri="(\S+)";`)
-								if list := reg.FindStringSubmatch(what); len(list) > 1 {
-									what := m.Cmdx(ice.WEB_SPIDE, "wechat", "raw", "GET", list[1])
-									m.Info("what %s", what)
-									break
-								}
-							}
-							m.Info("wait scan %v", list)
-							m.Sleep("1s")
-						}
-					})
-				})
+		"/login/": {Name: "/login/", Help: "认证", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			check := []string{m.Conf("login", "meta.token"), m.Option("timestamp"), m.Option("nonce")}
+			sort.Strings(check)
+			b := sha1.Sum([]byte(strings.Join(check, "")))
+			if m.Warn(m.Option("signature") != hex.EncodeToString(b[:]), "error") {
+				// 验证失败
+				return
 			}
+
+			if m.Option("echostr") != "" {
+				m.Push("_output", "result")
+				m.Echo(m.Option("echostr"))
+				// 绑定验证
+				return
+			}
+
+			// 解析数据
+			data := struct {
+				ToUserName   string
+				FromUserName string
+				CreateTime   int
+				MsgType      string
+				Content      string
+				MsgId        int64
+			}{}
+			xml.NewDecoder(m.R.Body).Decode(&data)
+			m.Option("ToUserName", data.ToUserName)
+			m.Option("FromUserName", data.FromUserName)
+			m.Option("CreateTime", data.CreateTime)
+
+			m.Option(ice.MSG_USERNAME, data.FromUserName)
+			if m.Richs(ice.AAA_USER, nil, m.Option(ice.MSG_USERNAME), nil) == nil {
+				// 创建用户
+				m.Rich(ice.AAA_USER, nil, kit.Dict(
+					"username", m.Option(ice.MSG_USERNAME),
+					"usernode", m.Conf(ice.CLI_RUNTIME, "boot.hostname"),
+				))
+				m.Event(ice.USER_CREATE, m.Option(ice.MSG_USERNAME))
+			}
+
+			m.Option(ice.MSG_USERROLE, m.Cmdx(ice.AAA_ROLE, "check", data.FromUserName))
+			m.Info("%s: %s", m.Option(ice.MSG_USERROLE), m.Option(ice.MSG_USERNAME))
+
+			m.Option(ice.MSG_SESSID, m.Cmdx(ice.AAA_SESS, "create", m.Option(ice.MSG_USERNAME), m.Option(ice.MSG_USERROLE)))
+			m.Info("sessid: %s", m.Option(ice.MSG_SESSID))
+
+			switch m.Option("MsgType", data.MsgType) {
+			case "text":
+				if cmds := kit.Split(data.Content); !m.Right(cmds) {
+					action(m.Cmdy("menu"))
+				} else {
+					switch cmds[0] {
+					case "menu":
+						action(m.Cmdy("menu"))
+					default:
+						msg := m.Cmd(cmds)
+						if m.Hand = false; !msg.Hand {
+							msg = m.Cmd(ice.CLI_SYSTEM, cmds)
+						}
+						if msg.Result() == "" {
+							msg.Table()
+						}
+						reply(m.Push("reply", msg.Result()))
+					}
+				}
+			}
+
+		}},
+
+		"menu": {Name: "menu", Help: "菜单", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			kit.Fetch(m.Confv("login", "meta.menu"), func(index int, value map[string]interface{}) {
+				m.Push("", value, []string{"name", "text", "view"})
+				m.Push("link", kit.MergeURL(kit.Format(value["link"]), ice.MSG_SESSID, m.Option(ice.MSG_SESSID)))
+			})
 		}},
 	},
 }
 
-func init() { chat.Index.Register(Index, nil) }
+func init() { chat.Index.Register(Index, &web.Frame{}) }

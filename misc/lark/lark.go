@@ -56,15 +56,16 @@ var Index = &ice.Context{Name: "lark", Help: "lark",
 	},
 	Commands: map[string]*ice.Command{
 		ice.ICE_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			m.Cmd(ice.CTX_CONFIG, "load", "lark.json")
+			m.Load()
 			m.Confm("app", "meta.userrole", func(key string, value string) {
 				m.Cmd(ice.AAA_ROLE, value, key)
 			})
 			m.Cmd(ice.WEB_SPIDE, "add", "lark", m.Conf("app", "meta.lark"))
 		}},
 		ice.ICE_EXIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			m.Cmd(ice.CTX_CONFIG, "save", "lark.json", "web.chat.lark.app")
+			m.Save("app")
 		}},
+
 		"app": {Name: "app login|token bot", Help: "应用", Hand: func(m *ice.Message, c *ice.Context, key string, arg ...string) {
 			if len(arg) == 0 {
 				m.Richs("app", nil, "*", func(key string, value map[string]interface{}) {

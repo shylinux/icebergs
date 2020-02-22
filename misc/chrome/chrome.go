@@ -15,10 +15,10 @@ var Index = &ice.Context{Name: "chrome", Help: "chrome",
 	},
 	Commands: map[string]*ice.Command{
 		ice.ICE_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			m.Cmd(ice.CTX_CONFIG, "load", kit.Keys(m.Cap(ice.CTX_FOLLOW), "json"))
+			m.Load()
 		}},
 		ice.ICE_EXIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			m.Cmd(ice.CTX_CONFIG, "save", kit.Keys(m.Cap(ice.CTX_FOLLOW), "json"), kit.Keys(m.Cap(ice.CTX_FOLLOW), "history"))
+			m.Save("history")
 		}},
 
 		"/crx": {Name: "/crx", Help: "/crx", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {

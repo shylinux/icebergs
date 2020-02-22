@@ -28,7 +28,7 @@ var Index = &ice.Context{Name: "mall", Help: "贸易中心",
 	},
 	Commands: map[string]*ice.Command{
 		ice.ICE_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			m.Cmd(ice.CTX_CONFIG, "load", kit.Keys(m.Cap(ice.CTX_FOLLOW), "json"))
+			m.Load()
 
 			// m.Cmd(ice.CTX_CONFIG, "load", "mall.json")
 			// if m.Richs(ice.WEB_SPIDE, nil, "12306", nil) == nil {
@@ -36,7 +36,7 @@ var Index = &ice.Context{Name: "mall", Help: "贸易中心",
 			// }
 		}},
 		ice.ICE_EXIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			m.Cmd(ice.CTX_CONFIG, "save", kit.Keys(m.Cap(ice.CTX_FOLLOW), "json"), kit.Keys(m.Cap(ice.CTX_FOLLOW), "asset"))
+			m.Save("asset")
 
 			// m.Cmd(ice.CTX_CONFIG, "save", "mall.json", "web.mall.railway")
 		}},

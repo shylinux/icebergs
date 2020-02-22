@@ -20,14 +20,14 @@ var Index = &ice.Context{Name: "mp", Help: "小程序",
 	},
 	Commands: map[string]*ice.Command{
 		ice.ICE_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			m.Cmd(ice.CTX_CONFIG, "load", "mp.json")
+			m.Load()
 			m.Confm("login", "meta.userrole", func(key string, value string) {
 				m.Cmd(ice.AAA_ROLE, value, key)
 			})
 			m.Cmd(ice.WEB_SPIDE, "add", "weixin", m.Conf("login", "meta.weixin"))
 		}},
 		ice.ICE_EXIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			m.Cmd(ice.CTX_CONFIG, "save", "mp.json", "web.chat.mp.login")
+			m.Save("login")
 		}},
 		"/login/": {Name: "/login/", Help: "登录", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			switch arg[0] {
@@ -77,8 +77,6 @@ var Index = &ice.Context{Name: "mp", Help: "小程序",
 				m.Echo(m.Option("scan")).Push("_output", "qrcode")
 
 			case "auth":
-				m.Log("fuck", "what %v", m.Option(ice.MSG_USERNAME))
-				m.Log("fuck", "what %v", m.Option(ice.MSG_SESSID))
 				if !m.Options(ice.MSG_USERNAME) || !m.Options(ice.MSG_SESSID) {
 					m.Echo("401").Push("_output", "status")
 					break

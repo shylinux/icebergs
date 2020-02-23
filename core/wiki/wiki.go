@@ -7,8 +7,8 @@ import (
 	"github.com/shylinux/icebergs/base/web"
 	"github.com/shylinux/toolkits"
 
-	"bytes"
 	"fmt"
+	"io/ioutil"
 	"os"
 	"path"
 	"strings"
@@ -18,17 +18,7 @@ var Index = &ice.Context{Name: "wiki", Help: "文档中心",
 	Caches: map[string]*ice.Cache{},
 	Configs: map[string]*ice.Config{
 		"note": {Name: "note", Help: "笔记", Value: kit.Data(
-			"path", "", "temp", "var/tmp/file",
-			"head", "time size line path",
-			"alias", map[string]interface{}{
-				"label": []interface{}{"chart", "label"},
-				"chain": []interface{}{"chart", "chain"},
-
-				"section": []interface{}{"title", "section"},
-				"chapter": []interface{}{"title", "chapter"},
-				"endmenu": []interface{}{"title", "endmenu"},
-				"premenu": []interface{}{"title", "premenu"},
-			},
+			"path", "", "head", "time size line path",
 		)},
 
 		"title": {Name: "title", Help: "标题", Value: kit.Data("template", title)},
@@ -41,11 +31,21 @@ var Index = &ice.Context{Name: "wiki", Help: "文档中心",
 		"order": {Name: "order", Help: "列表", Value: kit.Data("template", order)},
 		"table": {Name: "table", Help: "表格", Value: kit.Data("template", table)},
 		"stack": {Name: "stack", Help: "结构", Value: kit.Data("template", stack)},
-		"chart": {Name: "chart", Help: "绘图", Value: kit.Data("prefix", prefix, "suffix", `</svg>`)},
+		"chart": {Name: "chart", Help: "绘图", Value: kit.Data("template", prefix, "suffix", `</svg>`)},
 
-		"draw": {Name: "draw", Help: "思维导图", Value: kit.Data(kit.MDB_SHORT, "name", "path", "usr/local", "regs", ".*\\.svg", "prefix", `<svg vertion="1.1" xmlns="http://www.w3.org/2000/svg" width="%v" height="%v">`, "suffix", `</svg>`)},
-		"word": {Name: "word", Help: "语言文字", Value: kit.Data(kit.MDB_SHORT, "name", "path", "usr/local", "regs", ".*\\.shy")},
+		"word": {Name: "word", Help: "语言文字", Value: kit.Data(kit.MDB_SHORT, "name", "path", "usr/local", "regs", ".*\\.shy",
+			"alias", map[string]interface{}{
+				"label": []interface{}{"chart", "label"},
+				"chain": []interface{}{"chart", "chain"},
+
+				"section": []interface{}{"title", "section"},
+				"chapter": []interface{}{"title", "chapter"},
+				"endmenu": []interface{}{"title", "endmenu"},
+				"premenu": []interface{}{"title", "premenu"},
+			},
+		)},
 		"data": {Name: "data", Help: "数据表格", Value: kit.Data(kit.MDB_SHORT, "name", "path", "usr/local", "regs", ".*\\.csv")},
+		"draw": {Name: "draw", Help: "思维导图", Value: kit.Data(kit.MDB_SHORT, "name", "path", "usr/local", "regs", ".*\\.svg", "prefix", `<svg vertion="1.1" xmlns="http://www.w3.org/2000/svg" width="%v" height="%v">`, "suffix", `</svg>`)},
 		"feel": {Name: "feel", Help: "影音媒体", Value: kit.Data(kit.MDB_SHORT, "name", "path", "usr/local", "regs", ".*\\.(png|JPG|MOV|m4v)")},
 		"walk": {Name: "walk", Help: "走遍世界", Value: kit.Data(kit.MDB_SHORT, "name", "path", "usr/local", "regs", ".*\\.csv")},
 	},
@@ -57,68 +57,26 @@ var Index = &ice.Context{Name: "wiki", Help: "文档中心",
 			m.Save("feel")
 		}},
 
-		"note": {Name: "note file", Help: "笔记", Meta: kit.Dict("remote", "you", "display", "inner"), List: kit.List(
-			kit.MDB_INPUT, "text", "name", "path", "value", "README.md",
+		"note": {Name: "note file", Help: "文档", Meta: kit.Dict("remote", "you", "display", "inner"), List: kit.List(
+			kit.MDB_INPUT, "text", "name", "path", "value", "README.md", "action", "auto",
 			kit.MDB_INPUT, "button", "name", "执行", "action", "auto",
 			kit.MDB_INPUT, "button", "name", "返回", "cb", "Last",
 		), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			if len(arg) > 1 {
-				switch arg[1] {
-				case "运行":
-					switch arg[2] {
-					case "shell":
-						m.Cmdy(ice.CLI_SYSTEM, "sh", "-c", arg[4])
-					}
-
-				case "favor":
-					m.Cmdy(ice.WEB_FAVOR, kit.Select("story", m.Option("hot")), arg[2:])
-				case "share":
-					m.Cmdy(ice.WEB_SHARE, "add", arg[2:])
-				default:
-					m.Cmdy(arg)
-				}
-				return
-			}
 			if len(arg) > 0 && strings.HasSuffix(arg[0], ".md") {
 				arg[0] = path.Join(m.Conf("note", "meta.path"), arg[0])
 			}
 			m.Cmdy(kit.Select("_tree", "_text", len(arg) > 0 && strings.HasSuffix(arg[0], ".md")), arg)
 		}},
-		"_tree": {Name: "_tree path", Help: "文库", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			// m.Option("dir_deep", "true")
+		"_tree": {Name: "_tree [path [true]]", Help: "文库", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			m.Option("dir_reg", ".*\\.md")
+			m.Option("dir_deep", kit.Select("", arg, 1))
 			m.Cmdy("nfs.dir", kit.Select(m.Conf("note", "meta.path"), arg, 0), m.Conf("note", "meta.head"))
 		}},
 		"_text": {Name: "_text file", Help: "文章", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			m.Option(ice.WEB_TMPL, "raw")
-			m.Optionv("title", map[string]int{})
-			m.Optionv("menu", map[string]interface{}{"list": []interface{}{}})
-			if strings.HasSuffix(arg[0], ".shy") {
-				m.Optionv(ice.MSG_ALIAS, m.Confv("note", "meta.alias"))
-				m.Cmdy("ssh.scan", arg[0], arg[0], arg[0])
-				return
+			if b, e := ioutil.ReadFile(arg[0]); m.Assert(e) {
+				data := markdown.ToHTML(b, nil, nil)
+				m.Echo(string(data))
 			}
-
-			// 生成文章
-			buffer := bytes.NewBuffer([]byte{})
-			f := m.Target().Server().(*web.Frame)
-			tmpl := f.HandleCGI(m, m.Confm("note", "meta.alias"), arg[0])
-			m.Assert(tmpl.ExecuteTemplate(buffer, m.Option("filename", path.Base(arg[0])), m))
-
-			// 缓存文章
-			if f, p, e := kit.Create(path.Join(m.Conf("note", "meta.temp"), arg[0])); e == nil {
-				defer f.Close()
-				if n, e := f.Write(buffer.Bytes()); e == nil {
-					m.Log("info", "save %d %v", n, p)
-				}
-			}
-
-			// 生成网页
-			data := buffer.Bytes()
-			// if strings.HasSuffix(arg[0], ".md") {
-			data = markdown.ToHTML(buffer.Bytes(), nil, nil)
-			// }
-			m.Echo(string(data))
 		}},
 
 		"title": {Name: "title [chapter|section|endmenu|premenu] text", Help: "标题", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
@@ -317,75 +275,41 @@ var Index = &ice.Context{Name: "wiki", Help: "文档中心",
 			arg[1] = strings.TrimSpace(arg[1])
 			arg[2] = strings.TrimSpace(arg[2])
 
-			// 构造数据
+			// 基本参数
 			m.Option(kit.MDB_TYPE, arg[0])
 			m.Option(kit.MDB_NAME, arg[1])
 			m.Option(kit.MDB_TEXT, arg[2])
-			m.Option("font-size", kit.Select("16", arg, 3))
+			m.Option("font-size", kit.Select("24", arg, 3))
 			m.Option("stroke", kit.Select("yellow", arg, 4))
 			m.Option("fill", kit.Select("purple", arg, 5))
 
+			// 扩展参数
 			m.Option("style", "")
 			m.Option("compact", "false")
 			m.Option("stroke-width", "2")
+			m.Option("padding", "10")
+			m.Option("margin", "10")
 			m.Option("font-family", kit.Select("", "monospace", len(arg[2]) == len([]rune(arg[2]))))
 			for i := 6; i < len(arg)-1; i++ {
 				m.Option(arg[i], arg[i+1])
 			}
 
+			// 计算尺寸
 			chart.Init(m, arg[2:]...)
 			m.Option("width", chart.GetWidth())
 			m.Option("height", chart.GetHeight())
 
-			// 生成网页
-			m.Render(m.Conf("chart", "meta.prefix"))
-			chart.Draw(m, 4, 4)
+			// 渲染绘图
+			m.Render(m.Conf("chart", "meta.template"))
+			chart.Draw(m, 0, 0)
 			m.Render(m.Conf("chart", "meta.suffix"))
 		}},
 
-		"draw": {Name: "draw", Help: "思维导图", Meta: kit.Dict("display", "wiki/draw"), List: kit.List(
-			kit.MDB_INPUT, "text", "name", "name", "value", "what/he.svg",
-			kit.MDB_INPUT, "button", "name", "执行", "action", "auto",
-			kit.MDB_INPUT, "button", "name", "返回", "cb", "Last",
-			kit.MDB_INPUT, "button", "name", "上传", "cb", "upload",
-		), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			if len(arg) > 0 && arg[0] == "action" {
-				switch arg[1] {
-				case "保存":
-					m.Cmd("nfs.save", path.Join(m.Conf(cmd, "meta.path"), arg[2]), arg[3:])
-				}
-				return
-			}
-
-			// 文件列表
-			m.Option("dir_root", m.Conf(cmd, "meta.path"))
-			m.Option("dir_reg", m.Conf(cmd, "meta.regs"))
-			m.Cmdy("nfs.dir", kit.Select("./", arg, 0))
-			m.Sort("time", "time_r")
-
-			if len(arg) == 0 || strings.HasSuffix(arg[0], "/") {
-				// 目录列表
-				m.Option("dir_reg", "")
-				m.Option("dir_type", "dir")
-				m.Cmdy("nfs.dir", kit.Select("./", arg, 0))
-			}
-		}},
 		"word": {Name: "word", Help: "语言文字", Meta: kit.Dict("remote", "pod", "display", "wiki/word"), List: kit.List(
 			kit.MDB_INPUT, "text", "name", "name", "value", "自然/编程/hi.shy",
 			kit.MDB_INPUT, "button", "name", "执行", "action", "auto",
 			kit.MDB_INPUT, "button", "name", "返回", "cb", "Last",
-			kit.MDB_INPUT, "button", "name", "上传", "cb", "upload",
 		), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			if m.Option("_action") == "上传" {
-				if len(arg) == 0 {
-					arg = append(arg, "/")
-				}
-				m.Cmdy(ice.WEB_STORY, "upload")
-				m.Cmd(ice.WEB_STORY, ice.STORY_WATCH, m.Append("data"),
-					path.Join(m.Conf(cmd, "meta.path"), arg[0], kit.Select("", m.Append("name"), strings.HasSuffix(arg[0], "/"))))
-				return
-			}
-
 			if len(arg) > 0 && arg[0] == "action" {
 				switch arg[1] {
 				case "追加":
@@ -425,6 +349,7 @@ var Index = &ice.Context{Name: "wiki", Help: "文档中心",
 			m.Option("dir_reg", m.Conf(cmd, "meta.regs"))
 			m.Cmdy("nfs.dir", kit.Select("./", arg, 0))
 			m.Sort("time", "time_r")
+
 			if len(arg) == 0 || strings.HasSuffix(arg[0], "/") {
 				// 目录列表
 				m.Option("dir_reg", "")
@@ -437,7 +362,7 @@ var Index = &ice.Context{Name: "wiki", Help: "文档中心",
 			m.Option(ice.WEB_TMPL, "raw")
 			m.Optionv("title", map[string]int{})
 			m.Optionv("menu", map[string]interface{}{"list": []interface{}{}})
-			m.Optionv(ice.MSG_ALIAS, m.Confv("note", "meta.alias"))
+			m.Optionv(ice.MSG_ALIAS, m.Confv("word", "meta.alias"))
 			m.Set("result").Cmdy("ssh.scan", arg[0], arg[0], path.Join(m.Conf(cmd, "meta.path"), arg[0]))
 		}},
 		"data": {Name: "data", Help: "数据表格", Meta: kit.Dict("display", "wiki/data"), List: kit.List(
@@ -472,6 +397,33 @@ var Index = &ice.Context{Name: "wiki", Help: "文档中心",
 				return
 			}
 			m.CSV(m.Result())
+		}},
+		"draw": {Name: "draw", Help: "思维导图", Meta: kit.Dict("display", "wiki/draw"), List: kit.List(
+			kit.MDB_INPUT, "text", "name", "name", "value", "what/he.svg",
+			kit.MDB_INPUT, "button", "name", "执行", "action", "auto",
+			kit.MDB_INPUT, "button", "name", "返回", "cb", "Last",
+			kit.MDB_INPUT, "button", "name", "上传", "cb", "upload",
+		), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			if len(arg) > 0 && arg[0] == "action" {
+				switch arg[1] {
+				case "保存":
+					m.Cmd("nfs.save", path.Join(m.Conf(cmd, "meta.path"), arg[2]), arg[3:])
+				}
+				return
+			}
+
+			// 文件列表
+			m.Option("dir_root", m.Conf(cmd, "meta.path"))
+			m.Option("dir_reg", m.Conf(cmd, "meta.regs"))
+			m.Cmdy("nfs.dir", kit.Select("./", arg, 0))
+			m.Sort("time", "time_r")
+
+			if len(arg) == 0 || strings.HasSuffix(arg[0], "/") {
+				// 目录列表
+				m.Option("dir_reg", "")
+				m.Option("dir_type", "dir")
+				m.Cmdy("nfs.dir", kit.Select("./", arg, 0))
+			}
 		}},
 		"feel": {Name: "feel", Help: "影音媒体", Meta: kit.Dict("display", "wiki/feel", "detail", []string{"标签", "删除"}), List: kit.List(
 			kit.MDB_INPUT, "text", "name", "name",

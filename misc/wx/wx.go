@@ -1,16 +1,35 @@
 package wx
 
 import (
-	"crypto/sha1"
-	"encoding/hex"
-	"encoding/xml"
 	"github.com/shylinux/icebergs"
 	"github.com/shylinux/icebergs/base/web"
 	"github.com/shylinux/icebergs/core/chat"
 	"github.com/shylinux/toolkits"
+
+	"crypto/sha1"
+	"encoding/hex"
+	"encoding/xml"
 	"sort"
 	"strings"
 )
+
+func parse(m *ice.Message) {
+	data := struct {
+		ToUserName   string
+		FromUserName string
+		CreateTime   int
+		MsgId        int64
+		MsgType      string
+		Content      string
+	}{}
+	xml.NewDecoder(m.R.Body).Decode(&data)
+	m.Option("ToUserName", data.ToUserName)
+	m.Option("FromUserName", data.FromUserName)
+	m.Option("CreateTime", data.CreateTime)
+
+	m.Option("MsgType", data.MsgType)
+	m.Option("Content", data.Content)
+}
 
 func reply(m *ice.Message) {
 	m.Push("_output", "result")
@@ -89,58 +108,37 @@ var Index = &ice.Context{Name: "wx", Help: "公众号",
 		"/login/": {Name: "/login/", Help: "认证", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			check := []string{m.Conf("login", "meta.token"), m.Option("timestamp"), m.Option("nonce")}
 			sort.Strings(check)
-			b := sha1.Sum([]byte(strings.Join(check, "")))
-			if m.Warn(m.Option("signature") != hex.EncodeToString(b[:]), "error") {
+			if b := sha1.Sum([]byte(strings.Join(check, ""))); m.Warn(m.Option("signature") != hex.EncodeToString(b[:]), "error") {
 				// 验证失败
 				return
 			}
 
 			if m.Option("echostr") != "" {
+				// 绑定验证
 				m.Push("_output", "result")
 				m.Echo(m.Option("echostr"))
-				// 绑定验证
 				return
 			}
 
 			// 解析数据
-			data := struct {
-				ToUserName   string
-				FromUserName string
-				CreateTime   int
-				MsgType      string
-				Content      string
-				MsgId        int64
-			}{}
-			xml.NewDecoder(m.R.Body).Decode(&data)
-			m.Option("ToUserName", data.ToUserName)
-			m.Option("FromUserName", data.FromUserName)
-			m.Option("CreateTime", data.CreateTime)
+			parse(m)
 
-			m.Option(ice.MSG_USERNAME, data.FromUserName)
-			if m.Richs(ice.AAA_USER, nil, m.Option(ice.MSG_USERNAME), nil) == nil {
-				// 创建用户
-				m.Rich(ice.AAA_USER, nil, kit.Dict(
-					"username", m.Option(ice.MSG_USERNAME),
-					"usernode", m.Conf(ice.CLI_RUNTIME, "boot.hostname"),
-				))
-				m.Event(ice.USER_CREATE, m.Option(ice.MSG_USERNAME))
-			}
-
-			m.Option(ice.MSG_USERROLE, m.Cmdx(ice.AAA_ROLE, "check", data.FromUserName))
+			// 用户登录
+			m.Option(ice.MSG_USERNAME, m.Option("FromUserName"))
+			m.Option(ice.MSG_USERROLE, m.Cmdx(ice.AAA_ROLE, "check", m.Option("FromUserName")))
 			m.Info("%s: %s", m.Option(ice.MSG_USERROLE), m.Option(ice.MSG_USERNAME))
+			m.Option(ice.MSG_SESSID, m.Cmdx(ice.AAA_USER, "login", m.Option(ice.MSG_USERNAME)))
 
-			m.Option(ice.MSG_SESSID, m.Cmdx(ice.AAA_SESS, "create", m.Option(ice.MSG_USERNAME), m.Option(ice.MSG_USERROLE)))
-			m.Info("sessid: %s", m.Option(ice.MSG_SESSID))
-
-			switch m.Option("MsgType", data.MsgType) {
+			switch m.Option("MsgType") {
 			case "text":
-				if cmds := kit.Split(data.Content); !m.Right(cmds) {
+				if cmds := kit.Split(m.Option("Content")); !m.Right(cmds) {
 					action(m.Cmdy("menu"))
 				} else {
 					switch cmds[0] {
 					case "menu":
 						action(m.Cmdy("menu"))
 					default:
+						// 执行命令
 						msg := m.Cmd(cmds)
 						if m.Hand = false; !msg.Hand {
 							msg = m.Cmd(ice.CLI_SYSTEM, cmds)
@@ -148,6 +146,8 @@ var Index = &ice.Context{Name: "wx", Help: "公众号",
 						if msg.Result() == "" {
 							msg.Table()
 						}
+
+						// 返回结果
 						reply(m.Push("reply", msg.Result()))
 					}
 				}

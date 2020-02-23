@@ -11,7 +11,7 @@ import (
 	"time"
 )
 
-var Index = &ice.Context{Name: "git", Help: "代码管理",
+var Index = &ice.Context{Name: "git", Help: "代码库",
 	Caches: map[string]*ice.Cache{},
 	Configs: map[string]*ice.Config{
 		"repos": {Name: "repos", Help: "仓库", Value: kit.Data(kit.MDB_SHORT, "name", "owner", "https://github.com/shylinux")},
@@ -123,10 +123,21 @@ var Index = &ice.Context{Name: "git", Help: "代码管理",
 				}
 			})
 		}},
-		"total": {Name: "total", Help: "统计", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		"total": {Name: "total", Help: "统计", List: kit.List(
+			kit.MDB_INPUT, "text", "name", "repos", "action", "auto",
+			kit.MDB_INPUT, "button", "name", "查看", "action", "auto",
+			kit.MDB_INPUT, "button", "name", "返回", "cb", "Last",
+		), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			if len(arg) > 0 {
+				m.Richs("repos", nil, arg[0], func(key string, value map[string]interface{}) {
+					m.Cmdy("sum", kit.Value(value, "meta.path"), arg[1:])
+				})
+				return
+			}
+
 			days := 0
 			commit, adds, dels, rest := 0, 0, 0, 0
-			m.Richs("repos", nil, kit.Select("*", arg, 0), func(key string, value map[string]interface{}) {
+			m.Richs("repos", nil, "*", func(key string, value map[string]interface{}) {
 				m.Push("repos", kit.Value(value, "meta.name"))
 				m.Copy(m.Cmd("sum", kit.Value(value, "meta.path"), "total", "10000").Table(func(index int, value map[string]string, head []string) {
 					if kit.Int(value["days"]) > days {
@@ -176,7 +187,7 @@ var Index = &ice.Context{Name: "git", Help: "代码管理",
 			if len(arg) > 0 {
 				args = append(args, kit.Select("-n", "--since", strings.Contains(arg[0], "-")))
 				if strings.Contains(arg[0], "-") && !strings.Contains(arg[0], ":") {
-					arg[1] = arg[1] + " 00:00:00"
+					arg[0] = arg[0] + " 00:00:00"
 				}
 				args = append(args, arg[0:]...)
 			} else {

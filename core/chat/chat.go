@@ -14,15 +14,16 @@ var Index = &ice.Context{Name: "chat", Help: "聊天中心",
 			"template", kit.Dict("root", []interface{}{
 				[]interface{}{"storm", "mall", "mall"},
 				[]interface{}{"field", "asset", "web.mall"},
-				[]interface{}{"field", "bonus", "web.mall"},
-				[]interface{}{"field", "trans", "web.mall"},
 				[]interface{}{"field", "spend", "web.mall"},
+				[]interface{}{"field", "trans", "web.mall"},
+				[]interface{}{"field", "bonus", "web.mall"},
+				[]interface{}{"field", "month", "web.mall"},
 
 				[]interface{}{"storm", "team", "team"},
+				[]interface{}{"field", "plan", "web.team"},
+				[]interface{}{"field", "stat", "web.team"},
 				[]interface{}{"field", "miss", "web.team"},
 				[]interface{}{"field", "task", "web.team"},
-				[]interface{}{"field", "stat", "web.team"},
-				[]interface{}{"field", "plan", "web.team"},
 
 				[]interface{}{"storm", "wiki", "wiki"},
 				[]interface{}{"field", "draw", "web.wiki"},
@@ -261,6 +262,7 @@ var Index = &ice.Context{Name: "chat", Help: "聊天中心",
 						m.Push(key, value["meta"], []string{kit.MDB_KEY, kit.MDB_NAME})
 					})
 				})
+				m.Log(ice.LOG_SELECT, "%s", m.Format("append"))
 			case 1:
 				// 群组详情
 				m.Richs(ice.CHAT_RIVER, nil, arg[0], func(key string, value map[string]interface{}) {
@@ -304,6 +306,7 @@ var Index = &ice.Context{Name: "chat", Help: "聊天中心",
 				m.Richs(ice.CHAT_RIVER, prefix, "*", func(key string, value map[string]interface{}) {
 					m.Push(key, value["meta"], []string{kit.MDB_KEY, kit.MDB_NAME})
 				})
+				m.Log(ice.LOG_SELECT, "%s", m.Format("append"))
 				m.Sort(kit.MDB_NAME)
 				return
 			}
@@ -443,6 +446,9 @@ var Index = &ice.Context{Name: "chat", Help: "聊天中心",
 							// 记录位置
 							m.Cmdy("aaa.location", arg[5:])
 							return
+						case "upload":
+							m.Cmdy(ice.WEB_STORY, "upload")
+
 						case "share":
 							list := []string{}
 							for k, v := range meta {

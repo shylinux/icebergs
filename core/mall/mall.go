@@ -13,18 +13,41 @@ import (
 	"time"
 )
 
+func input(m *ice.Message, arg ...string) bool {
+	if len(arg) > 0 && arg[0] == "action" {
+		switch arg[1] {
+		case "input":
+			switch arg[2] {
+			case "account", "to":
+				m.Richs("asset", nil, "*", func(key string, value map[string]interface{}) {
+					m.Push(arg[2], kit.Value(value, "meta.account"))
+					m.Push("count", kit.Value(value, "meta.count"))
+				})
+				m.Sort("count", "int_r")
+				return true
+			case "type", "name", "text", "value":
+				m.Confm("asset", kit.Keys("meta.word", arg[2]), func(key string, value string) {
+					m.Push(arg[2], key)
+					m.Push("count", value)
+				})
+				m.Sort("count", "int_r")
+				return true
+			}
+		}
+	}
+	return false
+}
+
 var Index = &ice.Context{Name: "mall", Help: "贸易中心",
 	Caches: map[string]*ice.Cache{},
 	Configs: map[string]*ice.Config{
 		"railway": {Name: "railway", Help: "12306", Value: kit.Data()},
-		"asset": {Name: "asset", Help: "资产", Value: kit.Data(
-			kit.MDB_SHORT, "account", "limit", "5000",
-			"site", kit.Dict(
-				"个税", "https://its.beijing.chinatax.gov.cn:8443/zmsqjl.html",
-				"社保", "http://fuwu.rsj.beijing.gov.cn/csibiz/indinfo/index.jsp",
-				"公积金", "https://grwsyw.gjj.beijing.gov.cn/ish/flow/menu/PPLGRZH0102?_r=0.6644871172745264",
-			),
-		)},
+
+		"asset": {Name: "asset", Help: "资产", Value: kit.Data(kit.MDB_SHORT, "account", "site", kit.Dict(
+			"公积金", "https://grwsyw.gjj.beijing.gov.cn/ish/flow/menu/PPLGRZH0102?_r=0.6644871172745264",
+			"社保", "http://fuwu.rsj.beijing.gov.cn/csibiz/indinfo/index.jsp",
+			"个税", "https://its.beijing.chinatax.gov.cn:8443/zmsqjl.html",
+		))},
 	},
 	Commands: map[string]*ice.Command{
 		ice.ICE_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
@@ -42,32 +65,43 @@ var Index = &ice.Context{Name: "mall", Help: "贸易中心",
 		}},
 
 		"spend": {Name: "spend", Help: "支出", List: kit.List(
-			kit.MDB_INPUT, "text", "name", "account",
-			kit.MDB_INPUT, "text", "name", "name",
-			kit.MDB_INPUT, "text", "name", "text",
-			kit.MDB_INPUT, "text", "name", "value",
+			kit.MDB_INPUT, "text", "name", "account", "figure", "key",
+			kit.MDB_INPUT, "text", "name", "name", "figure", "key",
+			kit.MDB_INPUT, "text", "name", "value", "cb", "money",
 			kit.MDB_INPUT, "button", "name", "记录",
+			kit.MDB_INPUT, "textarea", "name", "text", "figure", "key",
 		), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			if input(m, arg...) {
+				return
+			}
 			if len(arg) < 2 {
+				// 查看流水
 				m.Cmdy("asset", arg)
 				return
 			}
+			// 添加流水
 			amount := kit.Int(arg[3])
 			m.Cmdy("asset", arg[0], "", "支出", arg[1], arg[2], -amount, arg[4:])
 			m.Cmdy("asset", "流水", "", "支出", arg[1], arg[2], -amount, arg[4:])
 		}},
 		"trans": {Name: "trans", Help: "转账", List: kit.List(
-			kit.MDB_INPUT, "text", "name", "account",
-			kit.MDB_INPUT, "text", "name", "to",
-			kit.MDB_INPUT, "text", "name", "name",
-			kit.MDB_INPUT, "text", "name", "text",
-			kit.MDB_INPUT, "text", "name", "value",
+			kit.MDB_INPUT, "text", "name", "account", "figure", "key",
+			kit.MDB_INPUT, "text", "name", "to", "figure", "key",
+			kit.MDB_INPUT, "text", "name", "name", "figure", "key",
+			kit.MDB_INPUT, "text", "name", "text", "figure", "key",
+			kit.MDB_INPUT, "text", "name", "value", "cb", "money",
 			kit.MDB_INPUT, "button", "name", "记录",
 		), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			// 输入补全
+			if input(m, arg...) {
+				return
+			}
 			if len(arg) < 2 {
+				// 查看流水
 				m.Cmdy("asset", arg)
 				return
 			}
+			// 添加流水
 			amount := kit.Int(arg[4])
 			m.Cmdy("asset", arg[0], "", "转出", arg[2], arg[3], -amount, arg[5:])
 			m.Cmd("asset", arg[1], "", "转入", arg[2], arg[3], amount, arg[5:])
@@ -75,16 +109,22 @@ var Index = &ice.Context{Name: "mall", Help: "贸易中心",
 			m.Cmd("asset", "流水", "", "转入", arg[2], arg[3], amount, arg[5:])
 		}},
 		"bonus": {Name: "bonus", Help: "收入", List: kit.List(
-			kit.MDB_INPUT, "text", "name", "account",
-			kit.MDB_INPUT, "text", "name", "name",
-			kit.MDB_INPUT, "text", "name", "text",
-			kit.MDB_INPUT, "text", "name", "value",
+			kit.MDB_INPUT, "text", "name", "account", "figure", "key",
+			kit.MDB_INPUT, "text", "name", "name", "figure", "key",
+			kit.MDB_INPUT, "text", "name", "text", "figure", "key",
+			kit.MDB_INPUT, "text", "name", "value", "cb", "money",
 			kit.MDB_INPUT, "button", "name", "记录",
 		), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			// 输入补全
+			if input(m, arg...) {
+				return
+			}
 			if len(arg) < 2 {
+				// 查看流水
 				m.Cmdy("asset", arg)
 				return
 			}
+			// 添加流水
 			m.Cmdy("asset", arg[0], "", "收入", arg[1:])
 			m.Cmdy("asset", "流水", "", "收入", arg[1:])
 		}},
@@ -235,10 +275,9 @@ var Index = &ice.Context{Name: "mall", Help: "贸易中心",
 		}, List: kit.List(
 			kit.MDB_INPUT, "text", "name", "account", "action", "auto",
 			kit.MDB_INPUT, "text", "name", "id", "action", "auto",
-			kit.MDB_INPUT, "button", "name", "查看",
+			kit.MDB_INPUT, "button", "name", "查看", "action", "auto",
 			kit.MDB_INPUT, "button", "name", "返回", "cb", "Last",
 		), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			m.Option("cache.limit", "10000")
 			if len(arg) == 0 {
 				// 账户列表
 				m.Richs("asset", nil, "*", func(key string, value map[string]interface{}) {
@@ -251,14 +290,17 @@ var Index = &ice.Context{Name: "mall", Help: "贸易中心",
 			if len(arg) > 0 && arg[0] == "action" {
 				switch arg[1] {
 				case "modify":
+					// 修改数据
 					m.Richs("asset", nil, m.Option("account"), func(key string, account map[string]interface{}) {
 						m.Grows("asset", kit.Keys("hash", key), "id", arg[5], func(index int, current map[string]interface{}) {
+							m.Log(ice.LOG_MODIFY, "%s: %d %s: %s->%s", key, index, kit.Value(current, arg[2]), arg[2], arg[3])
 							kit.Value(current, arg[2], arg[3])
 						})
 					})
 
 				case "save":
-					m.Option("cache.limit", "10000")
+					// 保存数据
+					m.Option("cache.limit", -2)
 					if f, p, e := kit.Create(arg[2]); m.Assert(e) {
 						defer f.Close()
 
@@ -285,7 +327,7 @@ var Index = &ice.Context{Name: "mall", Help: "贸易中心",
 					}
 
 				case "load":
-					m.Option("cache.limit", "10000")
+					// 加载数据
 					m.CSV(m.Cmdx("nfs.cat", arg[2])).Table(func(index int, data map[string]string, head []string) {
 						v, _ := strconv.ParseFloat(data["金额"], 64)
 						for _, account := range []string{kit.Select(data["账户"], arg, 3), "流水"} {
@@ -331,8 +373,8 @@ var Index = &ice.Context{Name: "mall", Help: "贸易中心",
 				m.Log(ice.LOG_CREATE, "account: %s", arg[0])
 			}
 
+			field := []string{"time", "id", "value", "type", "name", "text"}
 			m.Richs("asset", nil, arg[0], func(key string, value map[string]interface{}) {
-				field := []string{"time", "id", "value", "type", "name", "text"}
 				if len(arg) == 1 {
 					// 消费流水
 					m.Grows("asset", kit.Keys("hash", key), "", "", func(index int, value map[string]interface{}) {
@@ -369,7 +411,12 @@ var Index = &ice.Context{Name: "mall", Help: "贸易中心",
 					return
 				}
 
-				// 添加流水
+				// 词汇统计
+				web.Count(m, cmd, "meta.word.type", arg[2])
+				web.Count(m, cmd, "meta.word.name", arg[3])
+				web.Count(m, cmd, "meta.word.text", arg[4])
+
+				// 数据结构
 				amount := kit.Int(arg[5])
 				extra := map[string]interface{}{}
 				data := kit.Dict(
@@ -382,14 +429,16 @@ var Index = &ice.Context{Name: "mall", Help: "贸易中心",
 						kit.Value(extra, arg[i], arg[i+1])
 					}
 				}
-				m.Grow("asset", kit.Keys("hash", key), data)
+				// 添加流水
+				n := m.Grow("asset", kit.Keys("hash", key), data)
 
 				// 账户结余
 				amount = kit.Int(kit.Value(value, "meta.amount")) + amount
 				m.Log(ice.LOG_INSERT, "%s: %v", key, amount)
 				kit.Value(value, "meta.amount", amount)
-				m.Echo("%d", amount)
+				m.Echo("%s: %d %d\n", arg[0], n, amount)
 
+				// 收支统计
 				switch data["type"] {
 				case "收入":
 					bonus := kit.Int(kit.Value(value, "meta.bonus")) + amount

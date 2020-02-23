@@ -185,10 +185,8 @@ var Index = &ice.Context{Name: "team", Help: "团队中心",
 				}
 
 				// 词汇统计
-				count := kit.Int(m.Conf(cmd, kit.Keys("meta.word", "type", arg[2])))
-				m.Conf(cmd, kit.Keys("meta.word", "type", arg[2]), count+1)
-				count = kit.Int(m.Conf(cmd, kit.Keys("meta.word", "name", arg[3])))
-				m.Conf(cmd, kit.Keys("meta.word", "name", arg[3]), count+1)
+				web.Count(m, cmd, "meta.word.type", arg[2])
+				web.Count(m, cmd, "meta.word.name", arg[3])
 
 				// 数据结构
 				extra := kit.Dict()
@@ -460,7 +458,7 @@ var Index = &ice.Context{Name: "team", Help: "团队中心",
 			kit.MDB_INPUT, "text", "name", "name", "figure", "key",
 			kit.MDB_INPUT, "button", "name", "添加",
 			kit.MDB_INPUT, "textarea", "name", "text",
-			kit.MDB_INPUT, "text", "name", "location", "figure", "key", "cb", "location",
+			kit.MDB_INPUT, "text", "name", "location", "figure", "key", "cb", "location", "className", "opts",
 		), Hand: func(m *ice.Message, c *ice.Context, key string, arg ...string) {
 			if len(arg) > 0 && arg[0] == "action" {
 				switch arg[1] {

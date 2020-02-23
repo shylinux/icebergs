@@ -7,7 +7,7 @@ import (
 	"github.com/shylinux/toolkits"
 )
 
-var Index = &ice.Context{Name: "chrome", Help: "chrome",
+var Index = &ice.Context{Name: "chrome", Help: "浏览器",
 	Caches: map[string]*ice.Cache{},
 	Configs: map[string]*ice.Config{
 		"chrome":  {Name: "chrome", Help: "chrome", Value: kit.Data(kit.MDB_SHORT, "name")},
@@ -27,7 +27,7 @@ var Index = &ice.Context{Name: "chrome", Help: "chrome",
 				m.Cmdy("history", arg[1:])
 			}
 		}},
-		"chrome": {Name: "chrome", Help: "标签", List: kit.List(
+		"chrome": {Name: "chrome", Help: "浏览器", List: kit.List(
 			kit.MDB_INPUT, "text", "name", "name", "action", "auto",
 			kit.MDB_INPUT, "text", "name", "wid", "action", "auto",
 			kit.MDB_INPUT, "text", "name", "url",
@@ -35,6 +35,7 @@ var Index = &ice.Context{Name: "chrome", Help: "chrome",
 			kit.MDB_INPUT, "button", "name", "返回", "cb", "Last",
 		), Meta: kit.Dict("detail", []string{"编辑", "goBack", "goForward", "duplicate", "reload", "remove"}), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			if len(arg) == 0 {
+				// 窗口列表
 				m.Richs(ice.WEB_SPACE, nil, "*", func(key string, value map[string]interface{}) {
 					if kit.Format(value["type"]) == "chrome" {
 						m.Push(key, value, []string{"time", "name"})
@@ -42,12 +43,12 @@ var Index = &ice.Context{Name: "chrome", Help: "chrome",
 				})
 				return
 			}
-
 			if arg[0] == "action" {
+				// 命令转换
 				m.Cmdy(ice.WEB_SPACE, m.Option("name"), "tabs", m.Option("tid"), arg[1])
 				arg = []string{m.Option("name"), m.Option("wid")}
 			}
-
+			// 下发命令
 			m.Cmdy(ice.WEB_SPACE, arg[0], "wins", arg[1:])
 		}},
 		"cookie": {Name: "cookie", Help: "数据", List: kit.List(
@@ -57,29 +58,28 @@ var Index = &ice.Context{Name: "chrome", Help: "chrome",
 			kit.MDB_INPUT, "button", "name", "返回", "cb", "Last",
 		), Meta: kit.Dict("detail", []string{"编辑", "删除"}), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			if len(arg) == 0 {
-				m.Richs(ice.WEB_SPACE, nil, "*", func(key string, value map[string]interface{}) {
-					if kit.Format(value["type"]) == "chrome" {
-						m.Push(key, value, []string{"time", "name"})
-					}
-				})
+				// 窗口列表
+				m.Cmdy("chrome")
 				return
 			}
-
 			if arg[0] == "action" {
+				// 命令转换
 				m.Cmdy(ice.WEB_SPACE, m.Option("name"), "cookie", arg[1:])
 				arg = []string{m.Option("name"), m.Option("id")}
 			}
-
+			// 下发命令
 			m.Cmdy(ice.WEB_SPACE, arg[0], "cookie", arg[1:])
 		}},
 		"history": {Name: "history id url title", Help: "历史", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			if len(arg) == 0 {
+				// 查看记录
 				m.Grows("history", nil, "", "", func(index int, value map[string]interface{}) {
 					m.Push("", value)
 				})
 				m.Sort("id", "int_r")
 				return
 			}
+			// 添加记录
 			m.Grow("history", nil, kit.Dict("hid", arg[0], "url", arg[1], "title", arg[2]))
 		}},
 		"bookmark": {Name: "bookmark", Help: "书签", List: kit.List(
@@ -89,19 +89,16 @@ var Index = &ice.Context{Name: "chrome", Help: "chrome",
 			kit.MDB_INPUT, "button", "name", "返回", "cb", "Last",
 		), Meta: kit.Dict("detail", []string{"编辑", "删除"}), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			if len(arg) == 0 {
-				m.Richs(ice.WEB_SPACE, nil, "*", func(key string, value map[string]interface{}) {
-					if kit.Format(value["type"]) == "chrome" {
-						m.Push(key, value, []string{"time", "name"})
-					}
-				})
+				// 窗口列表
+				m.Cmdy("chrome")
 				return
 			}
-
 			if arg[0] == "action" {
+				// 命令转换
 				m.Cmdy(ice.WEB_SPACE, m.Option("name"), "bookmark", arg[1:])
 				arg = []string{m.Option("name"), m.Option("id")}
 			}
-
+			// 下发命令
 			m.Cmdy(ice.WEB_SPACE, arg[0], "bookmark", arg[1:])
 		}},
 	},

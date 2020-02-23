@@ -26,7 +26,7 @@ func (f *Frame) Close(m *ice.Message, arg ...string) bool {
 	return true
 }
 
-var Index = &ice.Context{Name: "tmux", Help: "终端管理",
+var Index = &ice.Context{Name: "tmux", Help: "命令行",
 	Caches: map[string]*ice.Cache{},
 	Configs: map[string]*ice.Config{
 		"buffer": {Name: "buffer", Help: "缓存", Value: kit.Data()},

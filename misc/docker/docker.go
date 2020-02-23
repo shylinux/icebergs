@@ -7,10 +7,10 @@ import (
 	"strings"
 )
 
-var Index = &ice.Context{Name: "docker", Help: "容器管理",
+var Index = &ice.Context{Name: "docker", Help: "虚拟机",
 	Caches: map[string]*ice.Cache{},
 	Configs: map[string]*ice.Config{
-		"docker": {Name: "docker", Help: "docker", Value: kit.Data(kit.MDB_SHORT, "name")},
+		"docker": {Name: "docker", Help: "虚拟机", Value: kit.Data(kit.MDB_SHORT, "name")},
 	},
 	Commands: map[string]*ice.Command{
 		ice.ICE_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {

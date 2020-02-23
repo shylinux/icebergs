@@ -46,6 +46,19 @@ func Cookie(msg *ice.Message, sessid string) string {
 	http.SetCookie(msg.W, &http.Cookie{Name: ice.WEB_SESS, Value: sessid, Path: "/", Expires: expire})
 	return sessid
 }
+func Upload(m *ice.Message, name string) string {
+	m.Cmdy(ice.WEB_STORY, "upload")
+	if s, e := os.Stat(name); e == nil && s.IsDir() {
+		name = path.Join(name, m.Append("name"))
+	}
+	m.Cmd(ice.WEB_STORY, ice.STORY_WATCH, m.Append("data"), name)
+	return name
+}
+func Count(m *ice.Message, cmd, key, name string) int {
+	count := kit.Int(m.Conf(cmd, kit.Keys(key, name)))
+	m.Conf(cmd, kit.Keys(key, name), count+1)
+	return count
+}
 func IsLocalIP(ip string) bool {
 	return ip == "::1" || strings.HasPrefix(ip, "127.")
 }

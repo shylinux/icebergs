@@ -48,7 +48,7 @@ func parse(m *ice.Message) {
 	m.Info("msg: %v", kit.Formats(data))
 }
 
-var Index = &ice.Context{Name: "lark", Help: "lark",
+var Index = &ice.Context{Name: "lark", Help: "机器人",
 	Caches: map[string]*ice.Cache{},
 	Configs: map[string]*ice.Config{
 		"app":  &ice.Config{Name: "app", Help: "服务配置", Value: kit.Data(kit.MDB_SHORT, "name", "lark", "https://open.feishu.cn")},
@@ -63,13 +63,14 @@ var Index = &ice.Context{Name: "lark", Help: "lark",
 			m.Cmd(ice.WEB_SPIDE, "add", "lark", m.Conf("app", "meta.lark"))
 		}},
 		ice.ICE_EXIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			m.Save("app")
+			m.Save("app", "user")
 		}},
 
 		"app": {Name: "app login|token bot", Help: "应用", Hand: func(m *ice.Message, c *ice.Context, key string, arg ...string) {
 			if len(arg) == 0 {
+				// 应用列表
 				m.Richs("app", nil, "*", func(key string, value map[string]interface{}) {
-					m.Push("key", value)
+					m.Push("key", value, []string{"time", "name", "id", "expire"})
 				})
 				return
 			}
@@ -90,6 +91,7 @@ var Index = &ice.Context{Name: "lark", Help: "lark",
 				})
 
 			case "watch":
+				// 消息通知
 				for _, v := range arg[3:] {
 					m.Watch(v, "web.chat.lark.send", arg[1], arg[2], v)
 				}
@@ -168,7 +170,6 @@ var Index = &ice.Context{Name: "lark", Help: "lark",
 
 				post(m, "bot", "GET", "/open-apis/user/v1/batch_get_id", us)
 			}
-			return
 		}},
 		"send": {Name: "send [chat_id|open_id|user_id|email] who [menu] [title] text", Help: "消息", Hand: func(m *ice.Message, c *ice.Context, key string, arg ...string) {
 			var form = map[string]interface{}{"content": map[string]interface{}{}}
@@ -271,11 +272,10 @@ var Index = &ice.Context{Name: "lark", Help: "lark",
 			post(m, "bot", "/open-apis/message/v4/send/", "data", kit.Formats(form))
 			return
 		}},
-		"/msg": {Name: "/msg", Help: "消息", Hand: func(m *ice.Message, c *ice.Context, key string, arg ...string) {
-			parse(m)
-
-			switch m.Option("msg.type") {
+		"/msg": {Name: "/msg", Help: "聊天消息", Hand: func(m *ice.Message, c *ice.Context, key string, arg ...string) {
+			switch parse(m); m.Option("msg.type") {
 			case "url_verification":
+				// 绑定验证
 				m.Push("_output", "result")
 				m.Echo(kit.Format(map[string]interface{}{"challenge": m.Option("msg.challenge")}))
 
@@ -283,26 +283,41 @@ var Index = &ice.Context{Name: "lark", Help: "lark",
 				switch m.Option("type") {
 				case "chat_disband":
 				case "p2p_chat_create":
+					// 创建对话
 					if m.Options("open_chat_id") {
-						m.Cmdy(".send", m.Option("open_chat_id"), "我们做朋友吧~")
+						m.Cmdy("send", m.Option("open_chat_id"), "我们做朋友吧~")
 					}
 				case "add_bot":
+					// 加入群聊
 					if m.Options("open_chat_id") {
-						m.Cmdy(".send", m.Option("open_chat_id"), "我来也~")
+						m.Cmdy("send", m.Option("open_chat_id"), "我来也~")
 					}
 				default:
 					if m.Options("open_chat_id") {
+						// 用户登录
 						m.Option(ice.MSG_USERNAME, m.Option("open_id"))
 						m.Option(ice.MSG_USERROLE, m.Cmdx(ice.AAA_ROLE, "check", m.Option(ice.MSG_USERNAME)))
-						if cmd := kit.Split(m.Option("text_without_at_bot")); m.Right(cmd) {
-							m.Cmdy(cmd)
-						} else {
+						m.Info("%s: %s", m.Option(ice.MSG_USERROLE), m.Option(ice.MSG_USERNAME))
+						m.Option(ice.MSG_SESSID, m.Cmdx(ice.AAA_USER, "login", m.Option(ice.MSG_USERNAME)))
+
+						if cmd := kit.Split(m.Option("text_without_at_bot")); !m.Right(cmd) {
 							m.Echo("no right")
+						} else {
+							// 执行命令
+							msg := m.Cmd(cmd)
+							if m.Hand = false; !msg.Hand {
+								msg = m.Cmd(ice.CLI_SYSTEM, cmd)
+							}
+							if msg.Result() == "" {
+								msg.Table()
+							}
+							// 返回结果
+							m.Cmdy("send", m.Option("open_chat_id"), kit.Select("你好", msg.Result()))
 						}
-						m.Cmdy("send", m.Option("open_chat_id"), kit.Select("你好", m.Result()))
 					}
 				}
 			case "event_click":
+				// 消息卡片
 				m.Echo(kit.Format(map[string]interface{}{
 					"header": map[string]interface{}{
 						"title": map[string]interface{}{

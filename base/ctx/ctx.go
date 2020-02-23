@@ -83,7 +83,7 @@ var Index = &ice.Context{Name: "ctx", Help: "配置模块",
 						m.Push("key", s.Cap(ice.CTX_FOLLOW))
 						m.Push("index", k)
 						m.Push("name", v.Name)
-						m.Push("help", kit.Format(v.Help))
+						m.Push("help", kit.Simple(v.Help)[0])
 					}
 				})
 				return
@@ -100,7 +100,7 @@ var Index = &ice.Context{Name: "ctx", Help: "配置模块",
 					// 命令列表
 					m.Push("key", key)
 					m.Push("name", cmd.Name)
-					m.Push("help", kit.Format(cmd.Help))
+					m.Push("help", kit.Simple(cmd.Help)[0])
 					m.Push("meta", kit.Format(cmd.Meta))
 					m.Push("list", kit.Format(cmd.List))
 				} else {

@@ -8,7 +8,7 @@ import (
 	"path"
 )
 
-var Index = &ice.Context{Name: "pi", Help: "pi",
+var Index = &ice.Context{Name: "pi", Help: "开发板",
 	Caches: map[string]*ice.Cache{},
 	Configs: map[string]*ice.Config{
 		"pi": {Name: "pi", Help: "pi", Value: kit.Data(kit.MDB_SHORT, "name")},

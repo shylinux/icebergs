@@ -5,7 +5,6 @@ import (
 	"github.com/shylinux/icebergs/base/web"
 	"github.com/shylinux/icebergs/core/chat"
 	"github.com/shylinux/toolkits"
-	"time"
 )
 
 var Index = &ice.Context{Name: "mp", Help: "小程序",
@@ -35,34 +34,16 @@ var Index = &ice.Context{Name: "mp", Help: "小程序",
 				msg := m.Cmd(ice.WEB_SPIDE, "weixin", "GET", m.Conf("login", "meta.auth"),
 					"js_code", m.Option("code"), "appid", m.Conf("login", "meta.appid"), "secret", m.Conf("login", "meta.appmm"))
 
-				if m.Richs(ice.AAA_USER, nil, msg.Append("openid"), nil) == nil {
-					// 创建用户
-					m.Rich(ice.AAA_USER, nil, kit.Dict(
-						"username", msg.Append("openid"),
-						"expires_in", time.Now().Unix()+kit.Int64(msg.Append("expires_in")),
-						"session_key", msg.Append("session_key"),
-						"usernode", m.Conf(ice.CLI_RUNTIME, "boot.hostname"),
-					))
-					m.Event(ice.USER_CREATE, msg.Append("openid"))
-				}
-
-				if m.Options(ice.MSG_SESSID) && m.Cmdx(ice.AAA_SESS, "check", m.Option(ice.MSG_SESSID)) == msg.Append("openid") {
-					// 复用会话
-					m.Echo(m.Option(ice.MSG_SESSID))
-				} else {
-					// 创建会话
-					role := m.Conf("login", kit.Keys("meta.userrole", msg.Append("openid")))
-					sessid := m.Rich(ice.AAA_SESS, nil, kit.Dict(
-						"username", msg.Append("openid"), "userrole", role,
-					))
-					m.Info("user: %s role: %s sess: %s", msg.Append("openid"), role, sessid)
-					m.Echo(msg.Option(ice.MSG_SESSID, sessid))
-				}
+				// 用户登录
+				m.Option(ice.MSG_USERNAME, msg.Append("openid"))
+				m.Option(ice.MSG_USERROLE, m.Cmdx(ice.AAA_ROLE, "check", m.Option("FromUserName")))
+				m.Info("%s: %s", m.Option(ice.MSG_USERROLE), m.Option(ice.MSG_USERNAME))
+				m.Echo(m.Option(ice.MSG_SESSID, m.Cmdx(ice.AAA_USER, "login", m.Option(ice.MSG_USERNAME))))
 
 			case "info":
+				// 用户信息
 				m.Richs(ice.AAA_SESS, nil, m.Option(ice.MSG_SESSID), func(key string, value map[string]interface{}) {
 					m.Richs(ice.AAA_USER, nil, value["username"], func(key string, value map[string]interface{}) {
-						// 注册用户
 						value["gender"] = m.Option("gender")
 						value["avatar"] = m.Option("avatarUrl")
 						value["nickname"] = m.Option("nickName")
@@ -81,15 +62,21 @@ var Index = &ice.Context{Name: "mp", Help: "小程序",
 					m.Echo("401").Push("_output", "status")
 					break
 				}
-				m.Cmd(ice.WEB_SPACE, "auth", m.Option("auth"), m.Option(ice.MSG_USERNAME), m.Option(ice.MSG_USERROLE))
+				switch m.Option("type") {
+				case "active":
+					// 授权登录
+					m.Cmd(ice.WEB_SPACE, "auth", m.Option("auth"), m.Option(ice.MSG_USERNAME), m.Option(ice.MSG_USERROLE))
+				}
 
 			case "cmds":
-				if arg = kit.Split(arg[1]); m.Right(arg) {
-					m.Hand = false
-					if m.Cmdy(arg); !m.Hand {
-						m.Set("result")
-						m.Cmdy(ice.CLI_SYSTEM, arg)
-					}
+				if arg = kit.Split(arg[1]); !m.Right(arg) {
+					return
+				}
+
+				// 执行命令
+				msg := m.Cmd(arg)
+				if m.Hand = false; !msg.Hand {
+					msg = m.Cmd(ice.CLI_SYSTEM, arg)
 				}
 			}
 		}},

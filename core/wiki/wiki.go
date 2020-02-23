@@ -444,15 +444,10 @@ var Index = &ice.Context{Name: "wiki", Help: "文档中心",
 			kit.MDB_INPUT, "text", "name", "name",
 			kit.MDB_INPUT, "button", "name", "执行",
 			kit.MDB_INPUT, "button", "name", "返回", "cb", "Last",
-			kit.MDB_INPUT, "button", "name", "上传", "cb", "upload",
+			kit.MDB_INPUT, "button", "name", "上传", "figure", "upload",
 		), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			if m.Option("_action") == "上传" {
-				if len(arg) == 0 {
-					arg = append(arg, "/")
-				}
-				m.Cmdy(ice.WEB_STORY, "upload")
-				m.Cmd(ice.WEB_STORY, ice.STORY_WATCH, m.Append("data"),
-					path.Join(m.Conf(cmd, "meta.path"), arg[0], kit.Select("", m.Append("name"), strings.HasSuffix(arg[0], "/"))))
+				web.Upload(m, path.Join(m.Conf(cmd, "meta.path"), kit.Select("", arg, 0)))
 				return
 			}
 
@@ -523,7 +518,7 @@ var Index = &ice.Context{Name: "wiki", Help: "文档中心",
 			m.Echo(path.Join(m.Conf(cmd, "meta.path"), arg[0]))
 		}},
 		"walk": {Name: "walk", Help: "走遍世界", Meta: kit.Dict("display", "wiki/walk"), List: kit.List(
-			kit.MDB_INPUT, "text", "name", "file",
+			kit.MDB_INPUT, "text", "name", "file", "figure", "province",
 			kit.MDB_INPUT, "button", "name", "执行",
 			kit.MDB_INPUT, "button", "name", "返回", "cb", "Last",
 		), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {

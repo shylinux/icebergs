@@ -714,6 +714,19 @@ func (m *Message) Append(key string, arg ...interface{}) string {
 	return kit.Select("", m.Appendv(key, arg...), 0)
 }
 func (m *Message) Appendv(key string, arg ...interface{}) []string {
+	if key == "_index" {
+		max := 0
+		for _, k := range m.meta[MSG_APPEND] {
+			if len(m.meta[k]) > max {
+				max = len(m.meta[k])
+			}
+		}
+		index := []string{}
+		for i := 0; i < max; i++ {
+			index = append(index, kit.Format(i))
+		}
+		return index
+	}
 	if len(arg) > 0 {
 		m.meta[key] = kit.Simple(arg...)
 	}
@@ -1421,7 +1434,10 @@ func (m *Message) Cmd(arg ...interface{}) *Message {
 		})
 	})
 
-	m.Warn(m.Hand == false, "not found %v", list)
+	if m.Warn(m.Hand == false, "not found %v", list) {
+		m.Cmdy(CLI_SYSTEM, list)
+		m.Hand = true
+	}
 	return m
 }
 func (m *Message) Confv(arg ...interface{}) (val interface{}) {

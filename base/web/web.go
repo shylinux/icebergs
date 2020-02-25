@@ -1611,7 +1611,7 @@ var Index = &ice.Context{Name: "web", Help: "网络模块",
 
 						// 执行命令
 						meta := kit.Value(value, kit.Format("extra.tool.%s", arg[2])).(map[string]interface{})
-						if meta["single"] == "yes" {
+						if meta["single"] == "yes" && kit.Select("", arg, 3) != "action" {
 							arg = append(arg[:3], kit.Simple(kit.UnMarshal(kit.Format(meta["args"])))...)
 							for i := len(arg) - 1; i >= 0; i-- {
 								if arg[i] != "" {

@@ -14,6 +14,23 @@ import (
 	"strings"
 )
 
+func reply(m *ice.Message, cmd string, arg ...string) bool {
+	// 文件列表
+	m.Option("dir_root", m.Conf(cmd, "meta.path"))
+	m.Option("dir_reg", m.Conf(cmd, "meta.regs"))
+	m.Cmdy("nfs.dir", kit.Select("./", arg, 0))
+	m.Sort("time", "time_r")
+
+	if len(arg) == 0 || strings.HasSuffix(arg[0], "/") {
+		// 目录列表
+		m.Option("dir_reg", "")
+		m.Option("dir_type", "dir")
+		m.Cmdy("nfs.dir", kit.Select("./", arg, 0))
+		return true
+	}
+	return false
+}
+
 var Index = &ice.Context{Name: "wiki", Help: "文档中心",
 	Caches: map[string]*ice.Cache{},
 	Configs: map[string]*ice.Config{
@@ -28,6 +45,15 @@ var Index = &ice.Context{Name: "wiki", Help: "文档中心",
 
 		"local": {Name: "local", Help: "文件", Value: kit.Data("template", local)},
 		"shell": {Name: "shell", Help: "命令", Value: kit.Data("template", shell)},
+		"field": {Name: "shell", Help: "命令", Value: kit.Data("template", field,
+			"some", kit.Dict("simple", kit.Dict(
+				"inputs", kit.List(
+					kit.MDB_INPUT, "text", "name", "name",
+					kit.MDB_INPUT, "button", "value", "查看",
+					kit.MDB_INPUT, "button", "value", "返回", "cb", "Last",
+				),
+			)),
+		)},
 		"order": {Name: "order", Help: "列表", Value: kit.Data("template", order)},
 		"table": {Name: "table", Help: "表格", Value: kit.Data("template", table)},
 		"stack": {Name: "stack", Help: "结构", Value: kit.Data("template", stack)},
@@ -209,6 +235,35 @@ var Index = &ice.Context{Name: "wiki", Help: "文档中心",
 			m.Option("output", output)
 			m.Render(m.Conf(cmd, "meta.template"))
 		}},
+		"field": {Name: "field name text", Help: "列表", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			m.Option(kit.MDB_TYPE, cmd)
+			m.Option(kit.MDB_NAME, arg[0])
+			m.Option(kit.MDB_TEXT, arg[1])
+
+			if len(arg) > 2 {
+				if meta := m.Confv("field", kit.Keys("meta.some", arg[2])); meta != nil {
+					arg = arg[3:]
+					m.Option("meta", meta)
+				} else {
+					list := []string{}
+					for _, line := range kit.Split(strings.Join(arg[2:], " "), "\n") {
+						ls := kit.Split(line)
+						for i := 0; i < len(ls); i++ {
+							if strings.HasPrefix(ls[i], "#") {
+								ls = ls[:i]
+								break
+							}
+						}
+						list = append(list, ls...)
+					}
+
+					meta := kit.Parse(nil, "", list...)
+					m.Option("meta", meta)
+				}
+			}
+
+			m.Render(m.Conf(cmd, "meta.template"))
+		}},
 		"order": {Name: "order name text", Help: "列表", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			m.Option(kit.MDB_TYPE, cmd)
 			m.Option(kit.MDB_NAME, arg[0])
@@ -306,12 +361,18 @@ var Index = &ice.Context{Name: "wiki", Help: "文档中心",
 		}},
 
 		"word": {Name: "word", Help: "语言文字", Meta: kit.Dict("remote", "pod", "display", "wiki/word"), List: kit.List(
-			kit.MDB_INPUT, "text", "name", "name", "value", "自然/编程/hi.shy",
+			kit.MDB_INPUT, "text", "name", "path", "value", "自然/编程/hi.shy",
 			kit.MDB_INPUT, "button", "name", "执行", "action", "auto",
 			kit.MDB_INPUT, "button", "name", "返回", "cb", "Last",
 		), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			if len(arg) > 0 && arg[0] == "action" {
 				switch arg[1] {
+				case "story":
+					cmds := kit.Split(strings.Join(arg[4:], " "))
+					if m.Right(cmds) {
+						m.Cmdy(cmds)
+					}
+					return
 				case "追加":
 					if f, e := os.OpenFile(path.Join(m.Conf(cmd, "meta.path"), arg[2]), os.O_WRONLY|os.O_APPEND|os.O_CREATE, 0666); m.Assert(e) {
 						defer f.Close()
@@ -344,17 +405,8 @@ var Index = &ice.Context{Name: "wiki", Help: "文档中心",
 				return
 			}
 
-			// 文件列表
-			m.Option("dir_root", m.Conf(cmd, "meta.path"))
-			m.Option("dir_reg", m.Conf(cmd, "meta.regs"))
-			m.Cmdy("nfs.dir", kit.Select("./", arg, 0))
-			m.Sort("time", "time_r")
-
-			if len(arg) == 0 || strings.HasSuffix(arg[0], "/") {
+			if reply(m, cmd, arg...) {
 				// 目录列表
-				m.Option("dir_reg", "")
-				m.Option("dir_type", "dir")
-				m.Cmdy("nfs.dir", kit.Select("./", arg, 0))
 				return
 			}
 
@@ -365,17 +417,12 @@ var Index = &ice.Context{Name: "wiki", Help: "文档中心",
 			m.Optionv(ice.MSG_ALIAS, m.Confv("word", "meta.alias"))
 			m.Set("result").Cmdy("ssh.scan", arg[0], arg[0], path.Join(m.Conf(cmd, "meta.path"), arg[0]))
 		}},
-		"data": {Name: "data", Help: "数据表格", Meta: kit.Dict("display", "wiki/data"), List: kit.List(
-			kit.MDB_INPUT, "text", "name", "name",
-			kit.MDB_INPUT, "button", "name", "执行",
+		// "data": {Name: "data", Help: "数据表格", Meta: kit.Dict("display", "wiki/data"), List: kit.List(
+		"data": {Name: "data", Help: "数据表格", Meta: kit.Dict("display", "story/trend"), List: kit.List(
+			kit.MDB_INPUT, "text", "name", "path",
+			kit.MDB_INPUT, "button", "name", "执行", "action", "auto",
 			kit.MDB_INPUT, "button", "name", "返回", "cb", "Last",
-			kit.MDB_INPUT, "button", "name", "上传", "figure", "upload",
 		), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			if m.Option("_action") == "上传" {
-				web.Upload(m, path.Join(m.Conf(cmd, "meta.path"), kit.Select("", arg, 0)))
-				return
-			}
-
 			if len(arg) > 0 && arg[0] == "action" {
 				switch arg[1] {
 				case "保存":
@@ -384,25 +431,17 @@ var Index = &ice.Context{Name: "wiki", Help: "文档中心",
 				return
 			}
 
-			// 文件列表
-			m.Option("dir_root", m.Conf(cmd, "meta.path"))
-			m.Option("dir_reg", m.Conf(cmd, "meta.regs"))
-			m.Cmdy("nfs.dir", kit.Select("./", arg, 0))
-			m.Sort("time", "time_r")
-			if len(arg) == 0 || strings.HasSuffix(arg[0], "/") {
+			if reply(m, cmd, arg...) {
 				// 目录列表
-				m.Option("dir_reg", "")
-				m.Option("dir_type", "dir")
-				m.Cmdy("nfs.dir", kit.Select("./", arg, 0))
 				return
 			}
+			// 解析数据
 			m.CSV(m.Result())
 		}},
 		"draw": {Name: "draw", Help: "思维导图", Meta: kit.Dict("display", "wiki/draw"), List: kit.List(
-			kit.MDB_INPUT, "text", "name", "name", "value", "what/he.svg",
+			kit.MDB_INPUT, "text", "name", "path",
 			kit.MDB_INPUT, "button", "name", "执行", "action", "auto",
 			kit.MDB_INPUT, "button", "name", "返回", "cb", "Last",
-			kit.MDB_INPUT, "button", "name", "上传", "cb", "upload",
 		), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			if len(arg) > 0 && arg[0] == "action" {
 				switch arg[1] {
@@ -412,18 +451,7 @@ var Index = &ice.Context{Name: "wiki", Help: "文档中心",
 				return
 			}
 
-			// 文件列表
-			m.Option("dir_root", m.Conf(cmd, "meta.path"))
-			m.Option("dir_reg", m.Conf(cmd, "meta.regs"))
-			m.Cmdy("nfs.dir", kit.Select("./", arg, 0))
-			m.Sort("time", "time_r")
-
-			if len(arg) == 0 || strings.HasSuffix(arg[0], "/") {
-				// 目录列表
-				m.Option("dir_reg", "")
-				m.Option("dir_type", "dir")
-				m.Cmdy("nfs.dir", kit.Select("./", arg, 0))
-			}
+			reply(m, cmd, arg...)
 		}},
 		"feel": {Name: "feel", Help: "影音媒体", Meta: kit.Dict("display", "wiki/feel", "detail", []string{"标签", "删除"}), List: kit.List(
 			kit.MDB_INPUT, "text", "name", "name",

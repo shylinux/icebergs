@@ -244,6 +244,20 @@ var Index = &ice.Context{Name: "git", Help: "代码库",
 				m.Push("rest", count_add-count_del)
 			}
 		}},
+
+		"trend": {Name: "check name [path [repos]]", Help: "检查", Meta: kit.Dict(
+			"display", "/plugin/story/trend",
+		), List: kit.List(
+			kit.MDB_INPUT, "text", "name", "repos", "action", "auto",
+			kit.MDB_INPUT, "text", "name", "begin_time", "figure", "date",
+			kit.MDB_INPUT, "button", "name", "执行", "action", "auto",
+			kit.MDB_INPUT, "button", "name", "返回", "cb", "Last",
+		), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			if len(arg) == 0 {
+				m.Option("_display", "table")
+			}
+			m.Cmdy("total", arg)
+		}},
 	},
 }
 

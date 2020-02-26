@@ -361,7 +361,7 @@ var Index = &ice.Context{Name: "wiki", Help: "文档中心",
 		}},
 
 		"word": {Name: "word", Help: "语言文字", Meta: kit.Dict("remote", "pod", "display", "wiki/word"), List: kit.List(
-			kit.MDB_INPUT, "text", "path", "path", "value", "自然/编程/hi.shy",
+			kit.MDB_INPUT, "text", "name", "path", "value", "自然/编程/hi.shy",
 			kit.MDB_INPUT, "button", "name", "执行", "action", "auto",
 			kit.MDB_INPUT, "button", "name", "返回", "cb", "Last",
 		), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {

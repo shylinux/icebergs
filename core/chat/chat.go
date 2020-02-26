@@ -249,7 +249,7 @@ var Index = &ice.Context{Name: "chat", Help: "聊天中心",
 				))
 				m.Log(ice.LOG_CREATE, "river: %v name: %v", river, arg[1])
 				// 添加用户
-				m.Cmd("/river", river, "add", arg[2:])
+				m.Cmd("/river", river, "add", m.Option(ice.MSG_USERNAME), arg[2:])
 				m.Echo(river)
 			}
 		}},

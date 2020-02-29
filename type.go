@@ -371,6 +371,8 @@ func (m *Message) Set(key string, arg ...string) *Message {
 			delete(m.meta, key)
 			return m
 		}
+	default:
+		delete(m.meta, key)
 	}
 	return m.Add(key, arg...)
 }
@@ -618,6 +620,27 @@ func (m *Message) Render(str string, arg ...interface{}) *Message {
 	return m
 }
 func (m *Message) Qrcode(str string, arg ...interface{}) *Message {
+	return m
+}
+func (m *Message) Parse(meta string, key string, arg ...string) *Message {
+	list := []string{}
+	for _, line := range kit.Split(strings.Join(arg, " "), "\n") {
+		ls := kit.Split(line)
+		for i := 0; i < len(ls); i++ {
+			if strings.HasPrefix(ls[i], "#") {
+				ls = ls[:i]
+				break
+			}
+		}
+		list = append(list, ls...)
+	}
+
+	switch data := kit.Parse(nil, "", list...); meta {
+	case MSG_OPTION:
+		m.Option(key, data)
+	case MSG_APPEND:
+		m.Append(key, data)
+	}
 	return m
 }
 func (m *Message) Split(str string, field string, space string, enter string) *Message {

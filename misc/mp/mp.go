@@ -62,7 +62,7 @@ var Index = &ice.Context{Name: "mp", Help: "小程序",
 					m.Echo("401").Push("_output", "status")
 					break
 				}
-				switch m.Option("type") {
+				switch kit.Select("active", m.Option("type")) {
 				case "active":
 					// 授权登录
 					m.Cmd(ice.WEB_SPACE, "auth", m.Option("auth"), m.Option(ice.MSG_USERNAME), m.Option(ice.MSG_USERROLE))

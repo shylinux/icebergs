@@ -9,6 +9,7 @@ import (
 
 	"fmt"
 	"io/ioutil"
+	"math/rand"
 	"os"
 	"path"
 	"strings"
@@ -26,6 +27,7 @@ func reply(m *ice.Message, cmd string, arg ...string) bool {
 		m.Option("dir_reg", "")
 		m.Option("dir_type", "dir")
 		m.Cmdy("nfs.dir", kit.Select("./", arg, 0))
+		m.Option("_display", "table")
 		return true
 	}
 	return false
@@ -59,6 +61,8 @@ var Index = &ice.Context{Name: "wiki", Help: "文档中心",
 		"stack": {Name: "stack", Help: "结构", Value: kit.Data("template", stack)},
 		"chart": {Name: "chart", Help: "绘图", Value: kit.Data("template", prefix, "suffix", `</svg>`)},
 
+		"draw": {Name: "draw", Help: "思维导图", Value: kit.Data(kit.MDB_SHORT, "name", "path", "usr/local", "regs", ".*\\.svg", "prefix", `<svg vertion="1.1" xmlns="http://www.w3.org/2000/svg" width="%v" height="%v">`, "suffix", `</svg>`)},
+		"data": {Name: "data", Help: "数据表格", Value: kit.Data(kit.MDB_SHORT, "name", "path", "usr/local", "regs", ".*\\.csv")},
 		"word": {Name: "word", Help: "语言文字", Value: kit.Data(kit.MDB_SHORT, "name", "path", "usr/local", "regs", ".*\\.shy",
 			"alias", map[string]interface{}{
 				"label": []interface{}{"chart", "label"},
@@ -70,10 +74,8 @@ var Index = &ice.Context{Name: "wiki", Help: "文档中心",
 				"premenu": []interface{}{"title", "premenu"},
 			},
 		)},
-		"data": {Name: "data", Help: "数据表格", Value: kit.Data(kit.MDB_SHORT, "name", "path", "usr/local", "regs", ".*\\.csv")},
-		"draw": {Name: "draw", Help: "思维导图", Value: kit.Data(kit.MDB_SHORT, "name", "path", "usr/local", "regs", ".*\\.svg", "prefix", `<svg vertion="1.1" xmlns="http://www.w3.org/2000/svg" width="%v" height="%v">`, "suffix", `</svg>`)},
-		"feel": {Name: "feel", Help: "影音媒体", Value: kit.Data(kit.MDB_SHORT, "name", "path", "usr/local", "regs", ".*\\.(png|JPG|MOV|m4v)")},
 		"walk": {Name: "walk", Help: "走遍世界", Value: kit.Data(kit.MDB_SHORT, "name", "path", "usr/local", "regs", ".*\\.csv")},
+		"feel": {Name: "feel", Help: "影音媒体", Value: kit.Data(kit.MDB_SHORT, "name", "path", "usr/local", "regs", ".*\\.(png|JPG|MOV|m4v)")},
 	},
 	Commands: map[string]*ice.Command{
 		ice.ICE_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
@@ -240,25 +242,22 @@ var Index = &ice.Context{Name: "wiki", Help: "文档中心",
 			m.Option(kit.MDB_NAME, arg[0])
 			m.Option(kit.MDB_TEXT, arg[1])
 
-			if meta := m.Confv("field", kit.Keys("meta.some", kit.Select("simple", arg, 2))); meta != nil {
-				m.Option("meta", meta)
-			} else {
-				list := []string{}
-				for _, line := range kit.Split(strings.Join(arg[2:], " "), "\n") {
-					ls := kit.Split(line)
-					for i := 0; i < len(ls); i++ {
-						if strings.HasPrefix(ls[i], "#") {
-							ls = ls[:i]
-							break
-						}
-					}
-					list = append(list, ls...)
-				}
+			data := kit.Dict()
+			cmds := kit.Split(arg[1])
+			m.Search(cmds[0], func(p *ice.Context, s *ice.Context, key string, cmd *ice.Command) {
+				data["feature"], data["inputs"] = cmd.Meta, cmd.List
+			})
 
-				meta := kit.Parse(nil, "", list...)
-				m.Option("meta", meta)
+			for i := 2; i < len(arg)-1; i += 2 {
+				if data := m.Confv("field", kit.Keys("meta.some", arg[i+1], arg[i])); data != nil {
+					m.Option(arg[i], data)
+				} else {
+					m.Parse("option", arg[i], arg[i+1])
+				}
+				data[arg[i]] = m.Optionv(arg[i])
 			}
 
+			m.Option("meta", data)
 			m.Render(m.Conf(cmd, "meta.template"))
 		}},
 		"order": {Name: "order name text", Help: "列表", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
@@ -357,6 +356,51 @@ var Index = &ice.Context{Name: "wiki", Help: "文档中心",
 			m.Render(m.Conf("chart", "meta.suffix"))
 		}},
 
+		"draw": {Name: "draw", Help: "思维导图", Meta: kit.Dict("display", "wiki/draw"), List: kit.List(
+			kit.MDB_INPUT, "text", "name", "path", "action", "auto",
+			kit.MDB_INPUT, "button", "name", "查看", "action", "auto",
+			kit.MDB_INPUT, "button", "name", "返回", "cb", "Last",
+		), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			if len(arg) > 0 && arg[0] == "action" {
+				switch arg[1] {
+				case "执行":
+					list := []string{"red", "green", "yellow", "cyan", "blue", "white", "black"}
+					switch kit.Select("", arg, 2) {
+					case "color":
+						m.Push("fill", list[rand.Intn(len(list))])
+						m.Push("fill", list[rand.Intn(len(list))])
+					default:
+						x := kit.Int(m.Option("x"))%300 + 10
+						m.Push("x", x)
+					}
+				case "保存":
+					m.Cmd("nfs.save", path.Join(m.Conf(cmd, "meta.path"), kit.Select(arg[2], "hi.svg")), arg[3:])
+				}
+				return
+			}
+
+			reply(m, cmd, arg...)
+		}},
+		"data": {Name: "data", Help: "数据表格", Meta: kit.Dict("display", "wiki/data"), List: kit.List(
+			kit.MDB_INPUT, "text", "name", "path",
+			kit.MDB_INPUT, "button", "name", "执行", "action", "auto",
+			kit.MDB_INPUT, "button", "name", "返回", "cb", "Last",
+		), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			if len(arg) > 0 && arg[0] == "action" {
+				switch arg[1] {
+				case "保存":
+					m.Cmd("nfs.save", path.Join(m.Conf(cmd, "meta.path"), arg[2]), arg[3])
+				}
+				return
+			}
+
+			if reply(m, cmd, arg...) {
+				// 目录列表
+				return
+			}
+			// 解析数据
+			m.CSV(m.Result())
+		}},
 		"word": {Name: "word", Help: "语言文字", Meta: kit.Dict("remote", "pod", "display", "wiki/word"), List: kit.List(
 			kit.MDB_INPUT, "text", "name", "path", "value", "自然/编程/hi.shy",
 			kit.MDB_INPUT, "button", "name", "执行", "action", "auto",
@@ -365,9 +409,9 @@ var Index = &ice.Context{Name: "wiki", Help: "文档中心",
 			if len(arg) > 0 && arg[0] == "action" {
 				switch arg[1] {
 				case "story":
-					cmds := kit.Split(strings.Join(arg[4:], " "))
-					if m.Right(cmds) {
-						m.Cmdy(cmds)
+					cmds := kit.Split(arg[4])
+					if m.Right(cmds, arg[5:]) {
+						m.Cmdy(cmds, arg[5:])
 					}
 					return
 				case "追加":
@@ -413,42 +457,6 @@ var Index = &ice.Context{Name: "wiki", Help: "文档中心",
 			m.Optionv("menu", map[string]interface{}{"list": []interface{}{}})
 			m.Optionv(ice.MSG_ALIAS, m.Confv("word", "meta.alias"))
 			m.Set("result").Cmdy("ssh.scan", arg[0], arg[0], path.Join(m.Conf(cmd, "meta.path"), arg[0]))
-		}},
-		// "data": {Name: "data", Help: "数据表格", Meta: kit.Dict("display", "wiki/data"), List: kit.List(
-		"data": {Name: "data", Help: "数据表格", Meta: kit.Dict("display", "story/trend"), List: kit.List(
-			kit.MDB_INPUT, "text", "name", "path",
-			kit.MDB_INPUT, "button", "name", "执行", "action", "auto",
-			kit.MDB_INPUT, "button", "name", "返回", "cb", "Last",
-		), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			if len(arg) > 0 && arg[0] == "action" {
-				switch arg[1] {
-				case "保存":
-					m.Cmd("nfs.save", path.Join(m.Conf(cmd, "meta.path"), arg[2]), arg[3])
-				}
-				return
-			}
-
-			if reply(m, cmd, arg...) {
-				// 目录列表
-				return
-			}
-			// 解析数据
-			m.CSV(m.Result())
-		}},
-		"draw": {Name: "draw", Help: "思维导图", Meta: kit.Dict("display", "wiki/draw"), List: kit.List(
-			kit.MDB_INPUT, "text", "name", "path",
-			kit.MDB_INPUT, "button", "name", "执行", "action", "auto",
-			kit.MDB_INPUT, "button", "name", "返回", "cb", "Last",
-		), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			if len(arg) > 0 && arg[0] == "action" {
-				switch arg[1] {
-				case "保存":
-					m.Cmd("nfs.save", path.Join(m.Conf(cmd, "meta.path"), arg[2]), arg[3:])
-				}
-				return
-			}
-
-			reply(m, cmd, arg...)
 		}},
 		"feel": {Name: "feel", Help: "影音媒体", Meta: kit.Dict("display", "wiki/feel", "detail", []string{"标签", "删除"}), List: kit.List(
 			kit.MDB_INPUT, "text", "name", "name",
@@ -565,19 +573,6 @@ var Index = &ice.Context{Name: "wiki", Help: "文档中心",
 			m.Cmd("word", "action", "追加", arg)
 			m.Option("scan_mode", "scan")
 			m.Cmdy("ssh.scan", "some", "some", path.Join(m.Conf("word", "meta.path"), arg[0]))
-		}},
-
-		"qrcode": {Name: "qrcode", Help: "扫码", Meta: kit.Dict("display", "wiki/image"), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			data := map[string]interface{}{}
-			for i := 0; i < len(arg)-1; i += 2 {
-				kit.Value(data, arg[i], arg[i+1])
-			}
-			m.Push("_output", "qrcode")
-			m.Echo(kit.Format(data))
-		}},
-		"qrcode2": {Name: "qrcode2", Help: "扫码", Meta: kit.Dict("display", "wiki/image"), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			m.Push("_output", "qrcode")
-			m.Echo(kit.MergeURL(arg[0], arg[1:]))
 		}},
 	},
 }

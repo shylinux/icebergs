@@ -49,7 +49,7 @@ var Index = &ice.Context{Name: "wiki", Help: "文档中心",
 			"some", kit.Dict("simple", kit.Dict(
 				"inputs", kit.List(
 					kit.MDB_INPUT, "text", "name", "name",
-					kit.MDB_INPUT, "button", "value", "查看",
+					kit.MDB_INPUT, "button", "value", "查看", "action", "auto",
 					kit.MDB_INPUT, "button", "value", "返回", "cb", "Last",
 				),
 			)),
@@ -240,26 +240,23 @@ var Index = &ice.Context{Name: "wiki", Help: "文档中心",
 			m.Option(kit.MDB_NAME, arg[0])
 			m.Option(kit.MDB_TEXT, arg[1])
 
-			if len(arg) > 2 {
-				if meta := m.Confv("field", kit.Keys("meta.some", arg[2])); meta != nil {
-					arg = arg[3:]
-					m.Option("meta", meta)
-				} else {
-					list := []string{}
-					for _, line := range kit.Split(strings.Join(arg[2:], " "), "\n") {
-						ls := kit.Split(line)
-						for i := 0; i < len(ls); i++ {
-							if strings.HasPrefix(ls[i], "#") {
-								ls = ls[:i]
-								break
-							}
+			if meta := m.Confv("field", kit.Keys("meta.some", kit.Select("simple", arg, 2))); meta != nil {
+				m.Option("meta", meta)
+			} else {
+				list := []string{}
+				for _, line := range kit.Split(strings.Join(arg[2:], " "), "\n") {
+					ls := kit.Split(line)
+					for i := 0; i < len(ls); i++ {
+						if strings.HasPrefix(ls[i], "#") {
+							ls = ls[:i]
+							break
 						}
-						list = append(list, ls...)
 					}
-
-					meta := kit.Parse(nil, "", list...)
-					m.Option("meta", meta)
+					list = append(list, ls...)
 				}
+
+				meta := kit.Parse(nil, "", list...)
+				m.Option("meta", meta)
 			}
 
 			m.Render(m.Conf(cmd, "meta.template"))

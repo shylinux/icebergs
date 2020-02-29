@@ -14,10 +14,12 @@ import (
 )
 
 type Frame struct {
-	in     io.ReadCloser
-	out    io.Writer
+	in  io.ReadCloser
+	out io.Writer
+
 	target *ice.Context
 	count  int
+	exit   bool
 }
 
 func (f *Frame) prompt(m *ice.Message) *Frame {
@@ -141,7 +143,7 @@ func (f *Frame) Start(m *ice.Message, arg ...string) bool {
 
 	line := ""
 	bio := bufio.NewScanner(f.in)
-	for f.prompt(m); bio.Scan(); f.prompt(m) {
+	for f.prompt(m); bio.Scan() && !f.exit; f.prompt(m) {
 		if len(bio.Text()) == 0 {
 			// 空行
 			continue
@@ -246,6 +248,11 @@ var Index = &ice.Context{Name: "ssh", Help: "终端模块",
 				m.Echo("%d: %v\n", len(ls), ls)
 				m.Info("%v", ls)
 			}
+		}},
+		"return": {Name: "return", Help: "解析", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			m.Option(ice.MSG_PROMPT, m.Confv("prompt", "meta.PS1"))
+			f := m.Target().Server().(*Frame)
+			f.exit = true
 		}},
 
 		"super": {Name: "super user remote port local", Help: "上位机", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {

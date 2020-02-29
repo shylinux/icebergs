@@ -106,6 +106,8 @@ func (web *Frame) HandleWSS(m *ice.Message, safe bool, c *websocket.Conn, name s
 
 				if len(target) == 0 {
 					// 本地执行
+					msg.Option(ice.MSG_USERROLE, msg.Cmdx(ice.AAA_ROLE, "check", msg.Option(ice.MSG_USERNAME)))
+					msg.Log("some", "%s: %s", msg.Option(ice.MSG_USERROLE), msg.Option(ice.MSG_USERNAME))
 					if msg.Optionv(ice.MSG_HANDLE, "true"); !msg.Warn(!safe, "no right") {
 						m.Option("_dev", name)
 						msg = msg.Cmd()

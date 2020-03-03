@@ -61,6 +61,18 @@ var Index = &ice.Context{Name: "git", Help: "代码库",
 			})
 			m.Sort("name")
 		}},
+		"check": {Name: "check name [path [repos]]", Help: "检查", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			if len(arg) > 1 {
+				m.Cmd("repos", arg)
+			}
+
+			m.Richs("repos", nil, arg[0], func(key string, value map[string]interface{}) {
+				if _, e := os.Stat(kit.Format(kit.Value(value, "meta.path"))); e != nil && os.IsNotExist(e) {
+					m.Cmd(ice.CLI_SYSTEM, "git", "clone", kit.Value(value, "meta.remote"),
+						"-b", kit.Value(value, "meta.branch"), kit.Value(value, "meta.path"))
+				}
+			})
+		}},
 		"branch": {Name: "branch", Help: "分支", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			prefix := []string{ice.CLI_SYSTEM, "git", "branch"}
 			m.Richs("repos", nil, kit.Select("*", arg, 0), func(key string, value map[string]interface{}) {
@@ -156,18 +168,6 @@ var Index = &ice.Context{Name: "git", Help: "代码库",
 			m.Push("dels", dels)
 			m.Push("rest", rest)
 			m.Sort("adds", "int_r")
-		}},
-		"check": {Name: "check name [path [repos]]", Help: "检查", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			if len(arg) > 1 {
-				m.Cmd("repos", arg)
-			}
-
-			m.Richs("repos", nil, arg[0], func(key string, value map[string]interface{}) {
-				if _, e := os.Stat(kit.Format(kit.Value(value, "meta.path"))); e != nil && os.IsNotExist(e) {
-					m.Cmd(ice.CLI_SYSTEM, "git", "clone", kit.Value(value, "meta.remote"),
-						"-b", kit.Value(value, "meta.branch"), kit.Value(value, "meta.path"))
-				}
-			})
 		}},
 		"sum": {Name: "sum [path] [total] [count|date] args...", Help: "统计", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			if len(arg) > 0 {

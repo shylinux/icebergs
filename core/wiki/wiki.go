@@ -356,7 +356,7 @@ var Index = &ice.Context{Name: "wiki", Help: "文档中心",
 			m.Render(m.Conf("chart", "meta.suffix"))
 		}},
 
-		"draw": {Name: "draw", Help: "思维导图", Meta: kit.Dict("display", "wiki/draw"), List: kit.List(
+		"draw": {Name: "draw", Help: "思维导图", Meta: kit.Dict("remote", "pod", "display", "wiki/draw"), List: kit.List(
 			kit.MDB_INPUT, "text", "name", "path", "action", "auto",
 			kit.MDB_INPUT, "button", "name", "查看", "action", "auto",
 			kit.MDB_INPUT, "button", "name", "返回", "cb", "Last",
@@ -381,7 +381,7 @@ var Index = &ice.Context{Name: "wiki", Help: "文档中心",
 
 			reply(m, cmd, arg...)
 		}},
-		"data": {Name: "data", Help: "数据表格", Meta: kit.Dict("display", "wiki/data"), List: kit.List(
+		"data": {Name: "data", Help: "数据表格", Meta: kit.Dict("remote", "pod", "display", "wiki/data"), List: kit.List(
 			kit.MDB_INPUT, "text", "name", "path",
 			kit.MDB_INPUT, "button", "name", "执行", "action", "auto",
 			kit.MDB_INPUT, "button", "name", "返回", "cb", "Last",
@@ -458,7 +458,7 @@ var Index = &ice.Context{Name: "wiki", Help: "文档中心",
 			m.Optionv(ice.MSG_ALIAS, m.Confv("word", "meta.alias"))
 			m.Set("result").Cmdy("ssh.scan", arg[0], arg[0], path.Join(m.Conf(cmd, "meta.path"), arg[0]))
 		}},
-		"feel": {Name: "feel", Help: "影音媒体", Meta: kit.Dict("display", "wiki/feel", "detail", []string{"标签", "删除"}), List: kit.List(
+		"feel": {Name: "feel", Help: "影音媒体", Meta: kit.Dict("remote", "pod", "display", "wiki/feel", "detail", []string{"标签", "删除"}), List: kit.List(
 			kit.MDB_INPUT, "text", "name", "name",
 			kit.MDB_INPUT, "button", "name", "执行",
 			kit.MDB_INPUT, "button", "name", "返回", "cb", "Last",
@@ -502,7 +502,7 @@ var Index = &ice.Context{Name: "wiki", Help: "文档中心",
 			// 下载文件
 			m.Echo(path.Join(m.Conf(cmd, "meta.path"), arg[0]))
 		}},
-		"walk": {Name: "walk", Help: "走遍世界", Meta: kit.Dict("display", "wiki/walk"), List: kit.List(
+		"walk": {Name: "walk", Help: "走遍世界", Meta: kit.Dict("remote", "pod", "display", "wiki/walk"), List: kit.List(
 			kit.MDB_INPUT, "text", "name", "file", "figure", "province",
 			kit.MDB_INPUT, "button", "name", "执行",
 			kit.MDB_INPUT, "button", "name", "返回", "cb", "Last",
@@ -531,7 +531,7 @@ var Index = &ice.Context{Name: "wiki", Help: "文档中心",
 			m.CSV(m.Result())
 		}},
 
-		"mind": {Name: "mind zone type name text", Help: "思考", List: kit.List(
+		"mind": {Name: "mind zone type name text", Help: "思考", Meta: kit.Dict("remote", "pod"), List: kit.List(
 			kit.MDB_INPUT, "text", "name", "path", "action", "auto", "figure", "key",
 			kit.MDB_INPUT, "text", "name", "type", "figure", "key",
 			kit.MDB_INPUT, "text", "name", "name", "figure", "key",

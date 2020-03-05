@@ -47,6 +47,8 @@ var Index = &ice.Context{Name: "mall", Help: "贸易中心",
 			"公积金", "https://grwsyw.gjj.beijing.gov.cn/ish/flow/menu/PPLGRZH0102?_r=0.6644871172745264",
 			"社保", "http://fuwu.rsj.beijing.gov.cn/csibiz/indinfo/index.jsp",
 			"个税", "https://its.beijing.chinatax.gov.cn:8443/zmsqjl.html",
+		), "word", kit.Dict(
+			"type", kit.Dict("流水", 0), "name", kit.Dict("晚餐", 0), "text", kit.Dict("泡面", 0), "value", kit.Dict("4500", 0),
 		))},
 	},
 	Commands: map[string]*ice.Command{
@@ -67,7 +69,7 @@ var Index = &ice.Context{Name: "mall", Help: "贸易中心",
 		"spend": {Name: "spend", Help: "支出", List: kit.List(
 			kit.MDB_INPUT, "text", "name", "account", "figure", "key",
 			kit.MDB_INPUT, "text", "name", "name", "figure", "key",
-			kit.MDB_INPUT, "text", "name", "value", "cb", "money",
+			kit.MDB_INPUT, "text", "name", "value", "figure", "key",
 			kit.MDB_INPUT, "button", "name", "记录",
 			kit.MDB_INPUT, "textarea", "name", "text", "figure", "key",
 		), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
@@ -80,17 +82,16 @@ var Index = &ice.Context{Name: "mall", Help: "贸易中心",
 				return
 			}
 			// 添加流水
-			amount := kit.Int(arg[3])
-			m.Cmdy("asset", arg[0], "", "支出", arg[1], arg[2], -amount, arg[4:])
-			m.Cmdy("asset", "流水", "", "支出", arg[1], arg[2], -amount, arg[4:])
+			amount := kit.Int(arg[2])
+			m.Cmdy("asset", arg[0], "", "支出", arg[1], arg[3], -amount, arg[4:])
+			m.Cmdy("asset", "流水", "", "支出", arg[1], arg[3], -amount, arg[4:])
 		}},
 		"trans": {Name: "trans", Help: "转账", List: kit.List(
 			kit.MDB_INPUT, "text", "name", "account", "figure", "key",
 			kit.MDB_INPUT, "text", "name", "to", "figure", "key",
-			kit.MDB_INPUT, "text", "name", "name", "figure", "key",
-			kit.MDB_INPUT, "text", "name", "text", "figure", "key",
-			kit.MDB_INPUT, "text", "name", "value", "cb", "money",
+			kit.MDB_INPUT, "text", "name", "value", "figure", "key",
 			kit.MDB_INPUT, "button", "name", "记录",
+			kit.MDB_INPUT, "textarea", "name", "text", "figure", "key",
 		), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			// 输入补全
 			if input(m, arg...) {
@@ -102,18 +103,18 @@ var Index = &ice.Context{Name: "mall", Help: "贸易中心",
 				return
 			}
 			// 添加流水
-			amount := kit.Int(arg[4])
-			m.Cmdy("asset", arg[0], "", "转出", arg[2], arg[3], -amount, arg[5:])
-			m.Cmd("asset", arg[1], "", "转入", arg[2], arg[3], amount, arg[5:])
-			m.Cmd("asset", "流水", "", "转出", arg[2], arg[3], -amount, arg[5:])
-			m.Cmd("asset", "流水", "", "转入", arg[2], arg[3], amount, arg[5:])
+			amount := kit.Int(arg[2])
+			m.Cmdy("asset", arg[0], "", "转出", arg[1], arg[3], -amount, arg[4:])
+			m.Cmdy("asset", arg[1], "", "转入", arg[0], arg[3], amount, arg[4:])
+			m.Cmd("asset", "流水", "", "转出", arg[1], arg[3], -amount, arg[4:])
+			m.Cmd("asset", "流水", "", "转入", arg[0], arg[3], amount, arg[4:])
 		}},
 		"bonus": {Name: "bonus", Help: "收入", List: kit.List(
 			kit.MDB_INPUT, "text", "name", "account", "figure", "key",
 			kit.MDB_INPUT, "text", "name", "name", "figure", "key",
-			kit.MDB_INPUT, "text", "name", "text", "figure", "key",
-			kit.MDB_INPUT, "text", "name", "value", "cb", "money",
+			kit.MDB_INPUT, "text", "name", "value", "figure", "key",
 			kit.MDB_INPUT, "button", "name", "记录",
+			kit.MDB_INPUT, "textarea", "name", "text", "figure", "key",
 		), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			// 输入补全
 			if input(m, arg...) {
@@ -125,16 +126,23 @@ var Index = &ice.Context{Name: "mall", Help: "贸易中心",
 				return
 			}
 			// 添加流水
-			m.Cmdy("asset", arg[0], "", "收入", arg[1:])
-			m.Cmdy("asset", "流水", "", "收入", arg[1:])
+			amount := kit.Int(arg[2])
+			m.Cmdy("asset", arg[0], "", "收入", arg[1], arg[3], amount, arg[4:])
+			m.Cmdy("asset", "流水", "", "收入", arg[1], arg[3], amount, arg[4:])
 		}},
 		"month": {Name: "month", Help: "工资", List: kit.List(
 			kit.MDB_INPUT, "text", "name", "month",
-			kit.MDB_INPUT, "text", "name", "value",
+			kit.MDB_INPUT, "text", "name", "value", "figure", "key",
+			kit.MDB_INPUT, "text", "name", "value", "figure", "key",
 			kit.MDB_INPUT, "button", "name", "计算",
 			kit.MDB_INPUT, "button", "name", "记录",
 		), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			data := map[string]int{"个税方案": 6, "基本工资": 0, "个税": 0,
+			// 输入补全
+			if input(m, arg...) {
+				return
+			}
+
+			data := map[string]int64{"个税方案": 6, "基本工资": 0, "个税": 0,
 				"公积金比例": 1200, "养老保险比例": 800, "医疗保险比例": 200, "失业保险比例": 20, "工伤保险比例": 2, "生育保险比例": 0,
 				"公积金金额": 0, "养老保险金额": 0, "医疗保险金额": 0, "失业保险金额": 0, "工伤保险金额": 0, "生育保险金额": 0,
 
@@ -142,28 +150,33 @@ var Index = &ice.Context{Name: "mall", Help: "贸易中心",
 				"企业公积金金额": 0, "企业养老保险金额": 0, "企业医疗保险金额": 0, "企业失业保险金额": 0, "企业工伤保险金额": 0, "企业生育保险金额": 0,
 			}
 
-			for i := 2; i < len(arg)-1; i += 2 {
+			for i := 3; i < len(arg)-1; i += 2 {
 				if _, ok := data[arg[i]]; ok {
-					data[arg[i]] = kit.Int(arg[i+1])
+					data[arg[i]] = kit.Int64(arg[i+1])
 					arg[i] = ""
 				}
 			}
 
-			// data["养老保险比例"] = 725
-			// data["失业保险比例"] = 20
-			//
-			salary := kit.Int(arg[1])
+			data["养老保险比例"] = 725
+			data["失业保险比例"] = 18
+
+			salary := kit.Int64(arg[1])
+			data["个税"] = kit.Int64(arg[2])
 			base := data["基本工资"]
 			if base == 0 {
 				base = salary
 			}
 
 			// 五险一金
-			amount := 0
+			amount := int64(0)
 			for _, k := range []string{"公积金", "养老保险", "医疗保险", "失业保险", "工伤保险"} {
 				m.Push("名目", k)
-				value := -base * kit.Int(data[k+"比例"]) / 10000
+				value := -base * kit.Int64(data[k+"比例"]) / 10000
+				m.Info("%v %v: %v %v", base, k, base*kit.Int64(data[k+"比例"]), value)
 				if m.Push("比例", data[k+"比例"]); data[k+"金额"] == 0 {
+					if k == "医疗保险" {
+						value -= 300
+					}
 					data[k+"金额"] = value
 				} else {
 					value = data[k+"金额"]
@@ -173,10 +186,10 @@ var Index = &ice.Context{Name: "mall", Help: "贸易中心",
 			}
 
 			// 企业五险一金
-			company := 0
+			company := int64(0)
 			for _, k := range []string{"企业公积金", "企业养老保险", "企业医疗保险", "企业失业保险", "企业工伤保险", "企业生育保险"} {
 				m.Push("名目", k)
-				value := -base * kit.Int(data[k+"比例"]) / 10000
+				value := -base * kit.Int64(data[k+"比例"]) / 10000
 				if m.Push("比例", data[k+"比例"]); data[k+"金额"] == 0 {
 					data[k+"金额"] = value
 				}
@@ -188,12 +201,12 @@ var Index = &ice.Context{Name: "mall", Help: "贸易中心",
 			m.Push("金额", company)
 
 			// 其它津贴
-			for i := 2; i < len(arg)-1; i += 2 {
+			for i := 3; i < len(arg)-1; i += 2 {
 				if arg[i] != "" && data[arg[i]] == 0 {
 					m.Push("名目", arg[i])
 					m.Push("比例", "")
 					m.Push("金额", arg[i+1])
-					amount += kit.Int(arg[i+1])
+					amount += kit.Int64(arg[i+1])
 				}
 			}
 			salary += amount
@@ -202,10 +215,10 @@ var Index = &ice.Context{Name: "mall", Help: "贸易中心",
 			m.Push("比例", "")
 			m.Push("金额", salary)
 
-			tax, amount := 0, salary
+			tax, amount := int64(0), salary
 			if data["个税方案"] == 6 {
 				// 2011年个税法案
-				month := []int{
+				month := []int64{
 					8350000, 4500,
 					5850000, 3500,
 					3850000, 3000,
@@ -247,26 +260,26 @@ var Index = &ice.Context{Name: "mall", Help: "贸易中心",
 			case "计算":
 			case "记录":
 				// 收入
-				m.Cmd("bonus", "工资", "企业承担", arg[0], company)
-				m.Cmd("bonus", "工资", "基本工资", arg[0], arg[1])
-				for i := 2; i < len(arg)-1; i += 2 {
-					if arg[i] != "" {
-						m.Cmd("bonus", "工资", arg[i], arg[0], arg[i+1])
+				m.Cmd("bonus", "工资", "企业承担", company, arg[0])
+				m.Cmd("bonus", "工资", "基本工资", arg[1], arg[0])
+				for i := 3; i < len(arg)-1; i += 2 {
+					if arg[i] != "" && data[arg[i]] == 0 {
+						m.Cmd("bonus", "工资", arg[i], arg[i+1], arg[0])
 					}
 				}
 
 				// 转账
-				m.Cmd("trans", "工资", "公积金", "企业公积金", arg[0], -data["企业公积金金额"])
+				m.Cmd("trans", "工资", "公积金", -data["企业公积金金额"], arg[0])
 				for _, k := range []string{"企业养老保险", "企业医疗保险", "企业失业保险", "企业工伤保险", "企业生育保险"} {
-					m.Cmd("trans", "工资", "社保", k, arg[0], -data[k+"金额"])
+					m.Cmd("trans", "工资", k, -data[k+"金额"], arg[0])
 				}
-				m.Cmd("trans", "工资", "公积金", "个人公积金", arg[0], -data["公积金金额"])
+				m.Cmd("trans", "工资", "公积金", -data["公积金金额"], arg[0])
 				for _, k := range []string{"养老保险", "医疗保险", "失业保险"} {
-					m.Cmd("trans", "工资", "社保", k, arg[0], -data[k+"金额"])
+					m.Cmd("trans", "工资", k, -data[k+"金额"], arg[0])
 				}
 
 				// 个税
-				m.Cmd("trans", "工资", "个税", "工资个税", arg[0], tax)
+				m.Cmd("trans", "工资", "个税", tax, arg[0])
 			}
 		}},
 		"asset": {Name: "asset account type name value", Help: []string{"资产",
@@ -415,6 +428,7 @@ var Index = &ice.Context{Name: "mall", Help: "贸易中心",
 				web.Count(m, cmd, "meta.word.type", arg[2])
 				web.Count(m, cmd, "meta.word.name", arg[3])
 				web.Count(m, cmd, "meta.word.text", arg[4])
+				web.Count(m, cmd, "meta.word.value", strings.TrimPrefix(arg[5], "-"))
 
 				// 数据结构
 				amount := kit.Int(arg[5])
@@ -422,7 +436,7 @@ var Index = &ice.Context{Name: "mall", Help: "贸易中心",
 				data := kit.Dict(
 					"type", arg[2], "name", arg[3], "text", arg[4], "value", amount, "extra", extra,
 				)
-				for i := 6; i < len(arg); i += 2 {
+				for i := 6; i < len(arg)-1; i += 2 {
 					if arg[i] == "time" {
 						kit.Value(data, arg[i], arg[i+1])
 					} else {

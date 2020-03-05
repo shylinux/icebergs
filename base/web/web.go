@@ -244,46 +244,51 @@ func (web *Frame) HandleCmd(m *ice.Message, key string, cmd *ice.Command) {
 				}
 			}
 
+			if !web.Login(msg, w, r) {
+				// 登录失败
+				w.WriteHeader(401)
+				return
+			}
+
 			if msg.Optionv("cmds") == nil {
 				msg.Optionv("cmds", strings.Split(msg.Option(ice.MSG_USERURL), "/")[2:])
 			}
+			cmds := kit.Simple(msg.Optionv("cmds"))
 
 			// 执行命令
-			if web.Login(msg, w, r) && msg.Target().Run(msg, cmd, msg.Option(ice.MSG_USERURL), kit.Simple(msg.Optionv("cmds"))...) != nil {
-				// 输出响应
-				switch msg.Append("_output") {
-				case "void":
-				case "status":
-					msg.Info("status %s", msg.Result())
-					w.WriteHeader(kit.Int(kit.Select("200", msg.Result(0))))
-
-				case "redirect":
-					http.Redirect(w, r, msg.Result(), 302)
-
-				case "file":
-					msg.Info("_output: %s %s", msg.Append("_output"), msg.Append("file"))
-					w.Header().Set("Content-Disposition", fmt.Sprintf("filename=%s", kit.Select(msg.Append("name"), msg.Append("story"))))
-					w.Header().Set("Content-Type", kit.Select("text/html", msg.Append("type")))
-					http.ServeFile(w, r, msg.Append("file"))
-
-				case "qrcode":
-					if qr, e := qrcode.New(msg.Result(), qrcode.Medium); m.Assert(e) {
-						w.Header().Set("Content-Type", "image/png")
-						m.Assert(qr.Write(256, w))
-					}
-
-				case "result":
-					w.Header().Set("Content-Type", kit.Select("text/html", msg.Append("type")))
-					fmt.Fprint(w, msg.Result())
-				default:
-					fmt.Fprint(w, msg.Formats("meta"))
-				}
+			if msg.Option("proxy") != "" {
+				msg.Cmd(ice.WEB_PROXY, msg.Option("proxy"), msg.Option(ice.MSG_USERURL), cmds)
 			} else {
-				switch msg.Append("_output") {
-				case "status":
-					msg.Info("status %s", msg.Result())
-					w.WriteHeader(kit.Int(kit.Select("200", msg.Result())))
+				msg.Target().Run(msg, cmd, msg.Option(ice.MSG_USERURL), cmds...)
+			}
+
+			// 输出响应
+			switch msg.Append("_output") {
+			case "void":
+			case "status":
+				msg.Info("status %s", msg.Result())
+				w.WriteHeader(kit.Int(kit.Select("200", msg.Result(0))))
+
+			case "redirect":
+				http.Redirect(w, r, msg.Result(), 302)
+
+			case "file":
+				msg.Info("_output: %s %s", msg.Append("_output"), msg.Append("file"))
+				w.Header().Set("Content-Disposition", fmt.Sprintf("filename=%s", kit.Select(msg.Append("name"), msg.Append("story"))))
+				w.Header().Set("Content-Type", kit.Select("text/html", msg.Append("type")))
+				http.ServeFile(w, r, msg.Append("file"))
+
+			case "qrcode":
+				if qr, e := qrcode.New(msg.Result(), qrcode.Medium); m.Assert(e) {
+					w.Header().Set("Content-Type", "image/png")
+					m.Assert(qr.Write(256, w))
 				}
+
+			case "result":
+				w.Header().Set("Content-Type", kit.Select("text/html", msg.Append("type")))
+				fmt.Fprint(w, msg.Result())
+			default:
+				fmt.Fprint(w, msg.Formats("meta"))
 			}
 		})
 	})
@@ -1517,6 +1522,7 @@ var Index = &ice.Context{Name: "web", Help: "网络模块",
 		ice.WEB_ROUTE: {Name: "route", Help: "路由", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 		}},
 		ice.WEB_PROXY: {Name: "proxy", Help: "代理", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			m.Cmdy(ice.WEB_SPACE, arg[0], arg[1:])
 		}},
 		ice.WEB_GROUP: {Name: "group", Help: "分组", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 		}},

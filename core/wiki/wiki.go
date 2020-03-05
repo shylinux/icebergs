@@ -363,6 +363,9 @@ var Index = &ice.Context{Name: "wiki", Help: "文档中心",
 		), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			if len(arg) > 0 && arg[0] == "action" {
 				switch arg[1] {
+				case "保存":
+					m.Cmd("nfs.save", path.Join(m.Conf(cmd, "meta.path"), kit.Select("hi.svg", arg[2])), arg[3:])
+
 				case "执行":
 					list := []string{"red", "green", "yellow", "cyan", "blue", "white", "black"}
 					switch kit.Select("", arg, 2) {
@@ -373,8 +376,6 @@ var Index = &ice.Context{Name: "wiki", Help: "文档中心",
 						x := kit.Int(m.Option("x"))%300 + 10
 						m.Push("x", x)
 					}
-				case "保存":
-					m.Cmd("nfs.save", path.Join(m.Conf(cmd, "meta.path"), kit.Select(arg[2], "hi.svg")), arg[3:])
 				}
 				return
 			}

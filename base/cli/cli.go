@@ -11,6 +11,7 @@ import (
 	"os/user"
 	"path"
 	"runtime"
+	"strings"
 )
 
 var Index = &ice.Context{Name: "cli", Help: "命令模块",
@@ -45,7 +46,12 @@ var Index = &ice.Context{Name: "cli", Help: "命令模块",
 				m.Cmd(ice.AAA_ROLE, "root", m.Conf(ice.CLI_RUNTIME, "boot.username"))
 			}
 			if name, e := os.Getwd(); e == nil {
-				m.Conf(ice.CLI_RUNTIME, "boot.pathname", path.Base(kit.Select(name, os.Getenv("PWD"))))
+				name = path.Base(kit.Select(name, os.Getenv("PWD")))
+				ls := strings.Split(name, "/")
+				name = ls[len(ls)-1]
+				ls = strings.Split(name, "\\")
+				name = ls[len(ls)-1]
+				m.Conf(ice.CLI_RUNTIME, "boot.pathname", name)
 			}
 
 			// 启动记录

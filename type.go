@@ -1458,8 +1458,7 @@ func (m *Message) Cmd(arg ...interface{}) *Message {
 	})
 
 	if m.Warn(m.Hand == false, "not found %v", list) {
-		m.Cmdy(CLI_SYSTEM, list)
-		m.Hand = true
+		return m.Set(MSG_RESULT).Cmd(CLI_SYSTEM, list)
 	}
 	return m
 }

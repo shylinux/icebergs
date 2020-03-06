@@ -92,10 +92,7 @@ func (f *Frame) parse(m *ice.Message, line string) *Frame {
 
 		// 执行命令
 		msg := m.Spawns(f.target)
-		if msg.Cmdy(ls[0], ls[1:]); !msg.Hand {
-			// 系统命令
-			msg = msg.Set("result").Cmdy(ice.CLI_SYSTEM, ls)
-		}
+		msg.Cmdy(ls[0], ls[1:])
 
 		// 转换结果
 		res := msg.Result()

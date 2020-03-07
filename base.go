@@ -3,6 +3,7 @@ package ice
 import (
 	"github.com/shylinux/toolkits"
 
+	"fmt"
 	"os"
 	"strings"
 	"sync"
@@ -36,7 +37,7 @@ func (f *Frame) Start(m *Message, arg ...string) bool {
 	m.Cap(CTX_STREAM, strings.Split(m.Time(), " ")[1])
 	m.root.Cost("start")
 
-	m.Cmd("init", arg)
+	m.Cmdy("init", arg)
 	return true
 }
 func (f *Frame) Close(m *Message, arg ...string) bool {
@@ -86,19 +87,19 @@ var Index = &Context{Name: "ice", Help: "冰山模块",
 			m.root.Cost("_init")
 
 			m.target.root.wg = &sync.WaitGroup{}
-			for _, k := range []string{"log", "gdb", "ssh"} {
+			for _, k := range kit.Split(os.Getenv("ctx_mod")) {
 				m.Start(k)
 			}
 
-			m.Cmd("ssh.scan", "init.shy", "启动配置", "etc/init.shy")
-			m.Cmd(arg)
+			m.Cmd(SSH_SOURCE, "etc/init.shy", "init.shy", "启动配置")
+			m.Cmdy(arg)
 		}},
 		"help": {Name: "help", Help: "帮助", Hand: func(m *Message, c *Context, cmd string, arg ...string) {
 			m.Echo(strings.Join(kit.Simple(m.Confv("help", "index")), "\n"))
 		}},
 		"exit": {Name: "exit", Help: "结束", Hand: func(m *Message, c *Context, cmd string, arg ...string) {
 			m.root.target.server.(*Frame).code = kit.Int(kit.Select("0", arg, 0))
-			m.Cmd("ssh.scan", "exit.shy", "退出配置", "etc/exit.shy")
+			m.Cmd(SSH_SOURCE, "etc/exit.shy", "exit.shy", "退出配置")
 
 			m.root.Cmd(ICE_EXIT)
 			m.root.Cost("_exit")
@@ -134,18 +135,23 @@ func Run(arg ...string) string {
 		arg = os.Args[1:]
 	}
 	if len(arg) == 0 {
-		arg = append(arg, WEB_SERVE)
+		// arg = append(arg, WEB_SERVE)
+		arg = append(arg, WEB_SPACE, "connect", "self")
 	}
 
 	frame := &Frame{}
 	Index.server = frame
 	Pulse.Option("begin_time", Pulse.Time())
 
-	if frame.Begin(Pulse.Spawns(), arg...).Start(Pulse.Spawns(), arg...) {
+	if frame.Begin(Pulse.Spawns(), arg...).Start(Pulse, arg...) {
 		frame.Close(Pulse.Spawns(), arg...)
 	}
 
-	time.Sleep(time.Second)
+	if Pulse.Result() == "" {
+		Pulse.Table()
+	}
+	fmt.Printf(Pulse.Result())
+	// time.Sleep(time.Second)
 	os.Exit(frame.code)
-	return Pulse.Result()
+	return ""
 }

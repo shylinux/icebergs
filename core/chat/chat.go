@@ -109,7 +109,7 @@ var Index = &ice.Context{Name: "chat", Help: "聊天中心",
 			}
 
 			// 前端框架
-			m.Cmd("web.code.git.check", m.Conf(ice.CHAT_RIVER, "meta.fe"))
+			m.Cmd("web.code.git.repos", m.Conf(ice.CHAT_RIVER, "meta.fe"))
 			m.Cap(ice.CTX_STREAM, m.Conf(ice.CHAT_RIVER, "meta.fe"))
 			m.Cap(ice.CTX_STATUS, "start")
 		}},

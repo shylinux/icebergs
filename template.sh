@@ -4,6 +4,7 @@ ice_sh="bin/ice.sh"
 ice_bin="bin/ice.bin"
 ice_mod="${PWD##**/}"
 init_shy="etc/init.shy"
+local_shy="etc/local.shy"
 exit_shy="etc/exit.shy"
 main_go="src/main.go"
 readme="README.md"
@@ -42,6 +43,16 @@ END
 
     [ -d etc ] || mkdir etc
     [ -f ${init_shy} ] || cat >> ${init_shy} <<END
+~web
+
+# web.code.tmux.init
+# web.code.git.init
+
+~ssh
+    source etc/local.shy
+END
+    [ -f ${local_shy} ] || cat >> ${local_shy} <<END
+~web
 END
     [ -f ${exit_shy} ] || cat >> "${exit_shy}" <<END
 END
@@ -50,9 +61,10 @@ END
     [ -f ${ice_sh} ] || cat >> ${ice_sh} <<END
 #! /bin/sh
 
-export PATH=\${PWD}:\${PWD}/bin:\$PATH
+export PATH=\${PWD}/bin:\${PWD}:\$PATH
 export ctx_pid=\${ctx_pid:=var/run/ice.pid}
 export ctx_log=\${ctx_log:=bin/boot.log}
+export ctx_mod=\${ctx_mod:="ssh ctx log gdb"}
 
 prepare() {
     [ -d bin ] || mkdir bin
@@ -77,14 +89,14 @@ start() {
         date && ice.bin \$@ 2>\$ctx_log && echo -e "\n\nrestarting..." || break
     done
 }
-serve() {
-    prepare && shutdown && start \$@
-}
 restart() {
     [ -e \$ctx_pid ] && kill -2 \`cat \$ctx_pid\` || echo
 }
 shutdown() {
     [ -e \$ctx_pid ] && kill -3 \`cat \$ctx_pid\` || echo
+}
+serve() {
+    prepare && shutdown && start \$@
 }
 
 cmd=\$1 && [ -n "\$cmd" ] && shift || cmd=serve
@@ -97,14 +109,24 @@ build() {
 	export CGO_ENABLED=0
 	export GOPRIVATE=github.com
 	export GOPROXY=https://goproxy.cn
-	go build -o ${ice_bin} ${main_go} && chmod u+x ${ice_bin} && ./${ice_sh} restart
     miss=./ && [ "$1" != "" ] && miss=$1 && shift && mkdir $miss
-    cd $miss && prepare && go build -o ${ice_bin} ${main_go} && chmod u+x ${ice_bin} && ./${ice_sh} start serve dev
+    cd $miss && prepare && go build -o ${ice_bin} ${main_go} && chmod u+x ${ice_bin} && ./${ice_sh} start serve
 }
 
 tutor() {
     [ -d $1 ] || mkdir $1
 
+    [ -f "$1/$1.js" ] || cat >> "$1/$1.js" <<END
+Volcanos("onimport", {help: "导入数据", list: [],
+    "init": function(can, msg, cb, output, action, option) {},
+})
+Volcanos("onaction", {help: "控件菜单", list: []})
+Volcanos("onchoice", {help: "控件交互", list: ["刷新"]
+    "刷新": function(event, can, value, cmd, target) {},
+})
+Volcanos("ondetail", {help: "控件详情", list: []})
+Volcanos("onexport", {help: "导出数据", list: []})
+END
     [ -f "$1/$1.shy" ] || cat >> "$1/$1.shy" <<END
 title "$1"
 END
@@ -113,7 +135,7 @@ package $1
 
 import (
 	"github.com/shylinux/icebergs"
-	"github.com/shylinux/icebergs/base/web"
+	"github.com/shylinux/icebergs/core/wiki"
 	"github.com/shylinux/toolkits"
 )
 
@@ -132,10 +154,10 @@ var Index = &ice.Context{Name: "$1", Help: "$1",
 	},
 }
 
-func init() { web.Index.Register(Index, nil) }
+func init() { wiki.Index.Register(Index, nil) }
 
 END
-    ls $1
+    ls -l $1
 }
 
 cmd=build && [ "$1" != "" ] && cmd=$1 && shift

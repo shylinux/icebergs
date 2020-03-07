@@ -109,6 +109,9 @@ const ( // LOG
 	LOG_ERROR = "error"
 	LOG_TRACE = "trace"
 )
+const ( // SSH
+	SSH_SOURCE = "source"
+)
 const ( // GDB
 	GDB_SIGNAL = "signal"
 	GDB_TIMER  = "timer"
@@ -193,6 +196,7 @@ var Alias = map[string]string{
 
 	CLI_RUNTIME: "cli.runtime",
 	CLI_SYSTEM:  "cli.system",
+	SSH_SOURCE:  "ssh.source",
 
 	AAA_ROLE: "aaa.role",
 	AAA_USER: "aaa.user",

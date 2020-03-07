@@ -42,7 +42,6 @@ var Index = &ice.Context{Name: "cli", Help: "命令模块",
 			}
 			if user, e := user.Current(); e == nil {
 				m.Conf(ice.CLI_RUNTIME, "boot.username", path.Base(kit.Select(user.Name, os.Getenv("USER"))))
-
 				m.Cmd(ice.AAA_ROLE, "root", m.Conf(ice.CLI_RUNTIME, "boot.username"))
 			}
 			if name, e := os.Getwd(); e == nil {
@@ -77,6 +76,9 @@ var Index = &ice.Context{Name: "cli", Help: "命令模块",
 			cmd.Dir = m.Option("cmd_dir")
 			if len(cmd.Dir) > 0 {
 				m.Info("dir: %s", cmd.Dir)
+				if _, e := os.Stat(cmd.Dir); e != nil && os.IsNotExist(e) {
+					os.MkdirAll(cmd.Dir, 0777)
+				}
 			}
 
 			// 环境变量

@@ -92,14 +92,16 @@ var Index = &ice.Context{Name: "log", Help: "日志模块",
 	},
 	Commands: map[string]*ice.Command{
 		ice.ICE_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			m.Confm("file", nil, func(key string, value map[string]interface{}) {
-				// 日志文件
-				if f, p, e := kit.Create(kit.Format(value["path"])); m.Assert(e) {
-					m.Cap(ice.CTX_STREAM, path.Base(p))
-					m.Log("create", "%s: %s", key, p)
-					value["file"] = f
-				}
-			})
+			if os.Getenv("ctx_mod") != "" {
+				m.Confm("file", nil, func(key string, value map[string]interface{}) {
+					// 日志文件
+					if f, p, e := kit.Create(kit.Format(value["path"])); m.Assert(e) {
+						m.Cap(ice.CTX_STREAM, path.Base(p))
+						m.Log("create", "%s: %s", key, p)
+						value["file"] = f
+					}
+				})
+			}
 		}},
 		ice.ICE_EXIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			if f, ok := m.Target().Server().(*Frame); ok {

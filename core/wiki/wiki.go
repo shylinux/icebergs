@@ -459,7 +459,7 @@ var Index = &ice.Context{Name: "wiki", Help: "文档中心",
 			m.Optionv("title", map[string]int{})
 			m.Optionv("menu", map[string]interface{}{"list": []interface{}{}})
 			m.Optionv(ice.MSG_ALIAS, m.Confv("word", "meta.alias"))
-			m.Set("result").Cmdy("ssh.scan", arg[0], arg[0], path.Join(m.Conf(cmd, "meta.path"), arg[0]))
+			m.Set("result").Cmdy(ice.SSH_SOURCE, path.Join(m.Conf(cmd, "meta.path"), arg[0]))
 		}},
 		"feel": {Name: "feel", Help: "影音媒体", Meta: kit.Dict("remote", "pod", "display", "wiki/feel", "detail", []string{"标签", "删除"}), List: kit.List(
 			kit.MDB_INPUT, "text", "name", "name",
@@ -564,7 +564,7 @@ var Index = &ice.Context{Name: "wiki", Help: "文档中心",
 			m.Cmd("word", "action", "追加", arg)
 
 			m.Option("scan_mode", "scan")
-			m.Cmdy("ssh.scan", "some", "some", path.Join(m.Conf("word", "meta.path"), arg[0]))
+			m.Cmdy(ice.SSH_SOURCE, path.Join(m.Conf("word", "meta.path"), arg[0]))
 		}},
 	},
 }

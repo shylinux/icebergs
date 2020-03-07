@@ -30,7 +30,7 @@ var Index = &ice.Context{Name: "git", Help: "代码库",
 		"total": {Name: "repos", Help: "仓库", Value: kit.Data(kit.MDB_SHORT, "name", "skip", kit.Dict("wubi-dict", "true"))},
 	},
 	Commands: map[string]*ice.Command{
-		ice.ICE_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		"init": {Name: "init", Help: "init", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			// 系统项目
 			wd, _ := os.Getwd()
 			add(m, path.Base(wd), wd)
@@ -45,7 +45,6 @@ var Index = &ice.Context{Name: "git", Help: "代码库",
 				add(m, value["name"], value["path"])
 			})
 		}},
-		ice.ICE_EXIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {}},
 
 		"repos": {Name: "repos [name [path [remote [branch]]]]", Help: "仓库", List: kit.List(
 			kit.MDB_INPUT, "text", "name", "name", "action", "auto",
@@ -53,7 +52,7 @@ var Index = &ice.Context{Name: "git", Help: "代码库",
 			kit.MDB_INPUT, "button", "name", "返回", "cb", "Last",
 		), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			if len(arg) > 1 {
-				if _, e := os.Stat(m.Option("cmd_dir", path.Join(arg[1], ".git"))); e != nil && os.IsNotExist(e) {
+				if _, e := os.Stat(path.Join(arg[1], ".git")); e != nil && os.IsNotExist(e) {
 					// 下载仓库
 					m.Cmd(ice.CLI_SYSTEM, "git", "clone", "-b", kit.Select("master", arg, 3),
 						kit.Select(m.Conf("repos", "meta.owner")+"/"+arg[0], arg, 2), arg[1])

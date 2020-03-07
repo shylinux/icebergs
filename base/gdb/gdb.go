@@ -86,10 +86,11 @@ var Index = &ice.Context{Name: "gdb", Help: "事件模块",
 	},
 	Commands: map[string]*ice.Command{
 		ice.ICE_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			if os.Getenv("ctx_mod") != "" {
+				m.Cmd("nfs.save", kit.Select(m.Conf(ice.GDB_SIGNAL, "meta.pid"),
+					m.Conf(ice.CLI_RUNTIME, "conf.ctx_pid")), m.Conf(ice.CLI_RUNTIME, "host.pid"))
+			}
 			// 进程标识
-			m.Cmd("nfs.save", kit.Select(m.Conf(ice.GDB_SIGNAL, "meta.pid"),
-				m.Conf(ice.CLI_RUNTIME, "conf.ctx_pid")), m.Conf(ice.CLI_RUNTIME, "host.pid"))
-
 			if f, ok := m.Target().Server().(*Frame); ok {
 				// 注册信号
 				f.s = make(chan os.Signal, ice.ICE_CHAN)

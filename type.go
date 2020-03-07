@@ -143,7 +143,9 @@ func (c *Context) Start(m *Message, arg ...string) bool {
 		wait <- true
 
 		// 启动模块
-		c.server.Start(m, arg...)
+		if c.server != nil {
+			c.server.Start(m, arg...)
+		}
 		if m.Done(); m.wait != nil {
 			m.wait <- true
 		}
@@ -791,10 +793,12 @@ func (m *Message) Log(level string, str string, arg ...interface{}) *Message {
 		prefix, suffix = "\033[31m", "\033[0m"
 	}
 
-	// 输出日志
-	fmt.Fprintf(os.Stderr, "%s %02d %9s %s%s %s%s\n",
-		m.time.Format(ICE_TIME), m.code, fmt.Sprintf("%s->%s", m.source.Name, m.target.Name),
-		prefix, level, str, suffix)
+	if os.Getenv("ctx_mod") != "" {
+		// 输出日志
+		fmt.Fprintf(os.Stderr, "%s %02d %9s %s%s %s%s\n",
+			m.time.Format(ICE_TIME), m.code, fmt.Sprintf("%s->%s", m.source.Name, m.target.Name),
+			prefix, level, str, suffix)
+	}
 	return m
 }
 func (m *Message) Cost(str string, arg ...interface{}) *Message {

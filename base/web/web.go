@@ -35,6 +35,18 @@ type Frame struct {
 	send map[string]*ice.Message
 }
 
+func Refresh(msg *ice.Message, n int) string {
+	return fmt.Sprintf(`<!DOCTYPE html>
+<head>
+	<meta charset="utf-8">
+	<meta http-equiv="Refresh" content="%d">
+</head>
+<body>
+	请稍后，系统初始化中...
+</body>
+	`, n)
+}
+
 func Redirect(msg *ice.Message, url string, arg ...interface{}) *ice.Message {
 	msg.Push("_output", "redirect")
 	msg.Echo(kit.MergeURL(url, arg...))
@@ -317,15 +329,28 @@ func (web *Frame) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if index && kit.Right(m.Conf(ice.WEB_SERVE, "meta.logheaders")) {
+		// 请求参数
 		for k, v := range r.Header {
 			m.Info("%s: %v", k, kit.Format(v))
 		}
 		m.Info(" ")
 	}
 
-	web.ServeMux.ServeHTTP(w, r)
+	if r.URL.Path == "/" && m.Conf(ice.WEB_SERVE, "meta.init") != "true" {
+		if _, e := os.Stat(m.Conf(ice.WEB_SERVE, "meta.volcanos.path")); e == nil {
+			// 初始化成功
+			m.Conf(ice.WEB_SERVE, "meta.init", "true")
+		} else {
+			// 系统初始化
+			w.Write([]byte(Refresh(m, 10)))
+			m.Event(ice.SYSTEM_INIT)
+		}
+	} else {
+		web.ServeMux.ServeHTTP(w, r)
+	}
 
 	if index && kit.Right(m.Conf(ice.WEB_SERVE, "meta.logheaders")) {
+		// 响应参数
 		for k, v := range w.Header() {
 			m.Info("%s: %v", k, kit.Format(v))
 		}
@@ -401,13 +426,14 @@ var Index = &ice.Context{Name: "web", Help: "网络模块",
 				"/static/volcanos/": "usr/volcanos/",
 				"/publish/":         "usr/publish/",
 			},
-			"volcanos", kit.Dict("path", "usr/volcanos",
+			"volcanos", kit.Dict("path", "usr/volcanos", "branch", "master",
 				"repos", "https://github.com/shylinux/volcanos",
-				"branch", "master"),
+			),
 			"template", map[string]interface{}{"path": "usr/template", "list": []interface{}{
 				`{{define "raw"}}{{.Result}}{{end}}`,
 			}},
 			"logheaders", "false",
+			"init", "false",
 		)},
 		ice.WEB_SPACE: {Name: "space", Help: "空间站", Value: kit.Data(kit.MDB_SHORT, "name",
 			"redial.a", 3000, "redial.b", 1000, "redial.c", 1000,
@@ -448,6 +474,8 @@ var Index = &ice.Context{Name: "web", Help: "网络模块",
 			if m.Richs(ice.WEB_SPIDE, nil, "shy", nil) == nil {
 				m.Cmd(ice.WEB_SPIDE, "add", "shy", kit.Select("https://shylinux.com:443", m.Conf(ice.CLI_RUNTIME, "conf.ctx_shy")))
 			}
+			m.Watch(ice.SYSTEM_INIT, "web.code.git.repos", "volcanos", m.Conf(ice.WEB_SERVE, "meta.volcanos.path"),
+				m.Conf(ice.WEB_SERVE, "meta.volcanos.repos"), m.Conf(ice.WEB_SERVE, "meta.volcanos.branch"))
 		}},
 		ice.ICE_EXIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			p := m.Conf(ice.WEB_CACHE, "meta.store")
@@ -458,7 +486,8 @@ var Index = &ice.Context{Name: "web", Help: "网络模块",
 				}
 			})
 			// m.Conf(ice.WEB_CACHE, "hash", kit.Dict())
-			m.Save(ice.WEB_SPIDE, ice.WEB_FAVOR, ice.WEB_CACHE, ice.WEB_STORY, ice.WEB_SHARE)
+			m.Save(ice.WEB_FAVOR, ice.WEB_CACHE, ice.WEB_STORY, ice.WEB_SHARE,
+				ice.WEB_SPIDE, ice.WEB_SERVE)
 
 			m.Done()
 			m.Richs(ice.WEB_SPACE, nil, "*", func(key string, value map[string]interface{}) {
@@ -716,8 +745,6 @@ var Index = &ice.Context{Name: "web", Help: "网络模块",
 			default:
 				// 启动服务
 				m.Target().Start(m, "self")
-				// 系统初始化
-				m.Event(ice.SYSTEM_INIT)
 			}
 		}},
 		ice.WEB_SPACE: {Name: "space", Help: "空间站", Meta: kit.Dict("exports", []string{"pod", "name"}), List: kit.List(
@@ -887,6 +914,7 @@ var Index = &ice.Context{Name: "web", Help: "网络模块",
 					m.Option("cmd_dir", p)
 					m.Option("cmd_type", "daemon")
 					m.Option("cmd_env", "ctx_log", "boot.log")
+					m.Option("cmd_env", "PATH", kit.Path(path.Join(p, "bin"))+":"+os.Getenv("PATH"))
 					m.Cmd(m.Confv(ice.WEB_DREAM, "meta.cmd"), "self", arg[0])
 					time.Sleep(time.Second * 3)
 					m.Event(ice.DREAM_START, arg...)
@@ -1272,11 +1300,9 @@ var Index = &ice.Context{Name: "web", Help: "网络模块",
 				os.Rename(name, kit.Keys(name, "bak"))
 				if msg.Append("file") != "" {
 					p := path.Dir(name)
-					e := os.MkdirAll(p, 0777)
-					m.Log("what", "%v", e)
+					os.MkdirAll(p, 0777)
 
-					e = os.Link(msg.Append("file"), name)
-					m.Log("what", "%v", e)
+					os.Link(msg.Append("file"), name)
 					m.Log(ice.LOG_EXPORT, "%s: %s", msg.Append("file"), name)
 				} else {
 					if f, p, e := kit.Create(name); m.Assert(e) {

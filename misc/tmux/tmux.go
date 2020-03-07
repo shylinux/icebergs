@@ -52,14 +52,10 @@ var Index = &ice.Context{Name: "tmux", Help: "命令行",
 		)},
 	},
 	Commands: map[string]*ice.Command{
-		ice.ICE_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			m.Watch(ice.SYSTEM_INIT, "web.code.tmux.init")
+		"init": {Name: "init", Help: "初始化", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			m.Watch(ice.DREAM_START, "web.code.tmux.auto")
 			m.Watch(ice.FAVOR_START, "web.code.tmux.auto")
-		}},
-		ice.ICE_EXIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-		}},
-		"init": {Name: "init", Help: "初始化", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+
 			for _, v := range []string{"auto.sh", "auto.vim"} {
 				p := path.Join(m.Conf("web.code.publish", "meta.path"), v)
 				if _, e := os.Stat(p); e != nil && os.IsNotExist(e) {

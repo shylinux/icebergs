@@ -344,31 +344,29 @@ var Index = &ice.Context{Name: "team", Help: "团队中心",
 				// 本月日期
 				for day := one; day.Before(end); day = day.AddDate(0, 0, 1) {
 					note := []string{ShowDay(m, day)}
-					m.Info("what %v", note)
 
 					index := day.Format("2006-01-02")
-					if arg[0] == "month" {
-						for i, v := range list[index] {
-							b, _ := kit.Render(kit.Format(template, name[index][i]), v)
-							note = append(note, string(b))
-						}
-						m.Push(head[int(day.Weekday())], strings.Join(note, ""))
-						continue
+					for i, v := range list[index] {
+						b, _ := kit.Render(kit.Format(template, name[index][i]), v)
+						note = append(note, string(b))
+						// note = append(note, kit.Format(`%s: %s`, v["name"], v["text"]))
 					}
-					for _, v := range list[index] {
-						note = append(note, kit.Format(`%s: %s`, v["name"], v["text"]))
-					}
+
 					if len(note) > 1 {
-						note[0] = kit.Format(`<div title="%s">%s<sup class="more">%d<sup><div>`, strings.Join(note[1:], "\n"), note[0], len(note)-1)
+						note[0] = kit.Format(`%s<sup class="more">%d</sup>`, note[0], len(note)-1)
 					} else {
-						note[0] = kit.Format(`%s<sup class="less">%s<sup>`, note[0], "")
+						note[0] = kit.Format(`%s<sup class="less">%s</sup>`, note[0], "")
 					}
-					m.Push(head[int(day.Weekday())], note[0])
+
+					if arg[0] == "month" {
+						m.Push(head[int(day.Weekday())], strings.Join(note, ""))
+					} else {
+						m.Push(head[int(day.Weekday())], note[0])
+					}
 				}
 				// 下月开头
 				tail := end.AddDate(0, 0, 6-int(end.Weekday())+1)
 				for day := end; end.Weekday() != 0 && day.Before(tail); day = day.AddDate(0, 0, 1) {
-					m.Info("what %v", day)
 					m.Push(head[int(day.Weekday())], ShowDay(m, day))
 				}
 

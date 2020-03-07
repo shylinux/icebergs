@@ -56,6 +56,7 @@ func (f *Frame) parse(m *ice.Message, line string) *Frame {
 		m.Log(ice.LOG_IMPORT, "stdin: %d %v", len(ls), ls)
 
 		if len(ls) == 1 && ls[0] == "~" {
+			// 模块列表
 			ls = []string{"context"}
 		} else if len(ls) > 0 && strings.HasPrefix(ls[0], "~") {
 			// 切换模块
@@ -90,9 +91,32 @@ func (f *Frame) parse(m *ice.Message, line string) *Frame {
 			}
 		}
 
-		// 执行命令
+		// 解析选项
+		ln := []string{}
 		msg := m.Spawns(f.target)
-		msg.Cmdy(ls[0], ls[1:])
+		for i := 0; i < len(ls); i++ {
+			if ls[i] == "--" {
+				ln = append(ln, ls[i+1:]...)
+				break
+			} else if strings.HasPrefix(ls[i], "-") {
+				for j := i; j < len(ls); j++ {
+					if j == len(ls)-1 || strings.HasPrefix(ls[j+1], "-") {
+						if i == j {
+							msg.Option(ls[i][1:], "true")
+						} else {
+							msg.Option(ls[i][1:], ls[i+1:j+1])
+						}
+						i = j
+						break
+					}
+				}
+			} else {
+				ln = append(ln, ls[i])
+			}
+		}
+
+		// 执行命令
+		msg.Cmdy(ln[0], ln[1:])
 
 		// 转换结果
 		res := msg.Result()

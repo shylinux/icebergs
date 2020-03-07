@@ -41,7 +41,6 @@ var Index = &ice.Context{Name: "chat", Help: "聊天中心",
 				[]interface{}{"field", "command", "web.code.docker"},
 				[]interface{}{"field", "repos", "web.code.git"},
 				[]interface{}{"field", "total", "web.code.git"},
-				[]interface{}{"field", "branch", "web.code.git"},
 				[]interface{}{"field", "status", "web.code.git"},
 
 				[]interface{}{"storm", "root"},

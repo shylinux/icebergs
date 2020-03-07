@@ -56,6 +56,7 @@ var Index = &ice.Context{Name: "wiki", Help: "文档中心",
 				),
 			)),
 		)},
+
 		"order": {Name: "order", Help: "列表", Value: kit.Data("template", order)},
 		"table": {Name: "table", Help: "表格", Value: kit.Data("template", table)},
 		"stack": {Name: "stack", Help: "结构", Value: kit.Data("template", stack)},
@@ -237,7 +238,7 @@ var Index = &ice.Context{Name: "wiki", Help: "文档中心",
 			m.Option("output", output)
 			m.Render(m.Conf(cmd, "meta.template"))
 		}},
-		"field": {Name: "field name text", Help: "列表", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		"field": {Name: "field name text", Help: "插件", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			m.Option(kit.MDB_TYPE, cmd)
 			m.Option(kit.MDB_NAME, arg[0])
 			m.Option(kit.MDB_TEXT, arg[1])
@@ -260,6 +261,7 @@ var Index = &ice.Context{Name: "wiki", Help: "文档中心",
 			m.Option("meta", data)
 			m.Render(m.Conf(cmd, "meta.template"))
 		}},
+
 		"order": {Name: "order name text", Help: "列表", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			m.Option(kit.MDB_TYPE, cmd)
 			m.Option(kit.MDB_NAME, arg[0])
@@ -383,7 +385,7 @@ var Index = &ice.Context{Name: "wiki", Help: "文档中心",
 			reply(m, cmd, arg...)
 		}},
 		"data": {Name: "data", Help: "数据表格", Meta: kit.Dict("remote", "pod", "display", "wiki/data"), List: kit.List(
-			kit.MDB_INPUT, "text", "name", "path",
+			kit.MDB_INPUT, "text", "name", "path", "action", "auto",
 			kit.MDB_INPUT, "button", "name", "执行", "action", "auto",
 			kit.MDB_INPUT, "button", "name", "返回", "cb", "Last",
 		), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
@@ -546,21 +548,10 @@ var Index = &ice.Context{Name: "wiki", Help: "文档中心",
 					// 输入补全
 					switch arg[2] {
 					case "type":
-						m.Push("type", []string{"spark", "label", "refer", "brief", "chapter", "section", "title"})
+						m.Push("type", []string{"spark", "order", "table", "label", "chain", "refer", "brief", "chapter", "section", "title"})
 					case "path":
 						m.Option("_refresh", "true")
-						// 文件列表
-						m.Option("dir_root", m.Conf("word", "meta.path"))
-						m.Option("dir_reg", m.Conf("word", "meta.regs"))
-						m.Cmdy("nfs.dir", kit.Select("./", arg, 3), "path")
-						m.Sort("time", "time_r")
-						if len(arg) == 3 || strings.HasSuffix(arg[3], "/") {
-							// 目录列表
-							m.Option("dir_reg", "")
-							m.Option("dir_type", "dir")
-							m.Cmdy("nfs.dir", kit.Select("./", arg, 3), "path")
-							return
-						}
+						reply(m, "word", arg[3:]...)
 					}
 					return
 				}
@@ -570,8 +561,8 @@ var Index = &ice.Context{Name: "wiki", Help: "文档中心",
 				m.Cmdy("word", arg)
 				return
 			}
-
 			m.Cmd("word", "action", "追加", arg)
+
 			m.Option("scan_mode", "scan")
 			m.Cmdy("ssh.scan", "some", "some", path.Join(m.Conf("word", "meta.path"), arg[0]))
 		}},

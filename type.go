@@ -1167,7 +1167,9 @@ func (m *Message) Rich(key string, chain interface{}, data interface{}) string {
 
 	// 通用数据
 	prefix := kit.Select("", "meta.", kit.Value(data, "meta") != nil)
-	kit.Value(data, prefix+kit.MDB_TIME, m.Time())
+	if kit.Value(data, prefix+kit.MDB_TIME) == nil {
+		kit.Value(data, prefix+kit.MDB_TIME, m.Time())
+	}
 
 	// 生成键值
 	h := ""

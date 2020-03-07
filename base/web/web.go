@@ -708,18 +708,16 @@ var Index = &ice.Context{Name: "web", Help: "网络模块",
 				})
 				fallthrough
 			case "dev":
-				// 系统初始化
-				m.Event(ice.SYSTEM_INIT)
-				fallthrough
-			case "self":
-				// 启动服务
-				m.Target().Start(m, "self")
-				fallthrough
-			default:
 				// 连接上游服务
 				m.Richs(ice.WEB_SPIDE, nil, "dev", func(key string, value map[string]interface{}) {
 					m.Cmd(ice.WEB_SPACE, "connect", "dev")
 				})
+				fallthrough
+			default:
+				// 启动服务
+				m.Target().Start(m, "self")
+				// 系统初始化
+				m.Event(ice.SYSTEM_INIT)
 			}
 		}},
 		ice.WEB_SPACE: {Name: "space", Help: "空间站", Meta: kit.Dict("exports", []string{"pod", "name"}), List: kit.List(
@@ -839,8 +837,10 @@ var Index = &ice.Context{Name: "web", Help: "网络模块",
 						m.Target().Server().(*Frame).send[id] = m
 						socket.WriteMessage(MSG_MAPS, []byte(m.Format("meta")))
 						t := time.AfterFunc(kit.Duration(m.Conf(ice.WEB_SPACE, "meta.timeout.c")), func() {
-							m.Log(ice.LOG_WARN, "timeout")
-							m.Back(nil)
+							m.TryCatch(m, true, func(m *ice.Message) {
+								m.Log(ice.LOG_WARN, "timeout")
+								m.Back(nil)
+							})
 						})
 						m.Call(true, func(msg *ice.Message) *ice.Message {
 							// 返回结果
@@ -861,11 +861,11 @@ var Index = &ice.Context{Name: "web", Help: "网络模块",
 			if len(arg) > 1 {
 				switch arg[1] {
 				case "启动":
-					arg = []string{arg[3]}
+					arg = []string{arg[4]}
 				case "停止", "stop":
-					m.Cmd(ice.WEB_SPACE, kit.Select(m.Option("name"), arg, 3), "exit", "1")
+					m.Cmd(ice.WEB_SPACE, kit.Select(m.Option("name"), arg, 4), "exit", "1")
 					time.Sleep(time.Second * 3)
-					m.Event(ice.DREAM_CLOSE, arg[3])
+					m.Event(ice.DREAM_CLOSE, arg[4])
 					arg = arg[:0]
 				}
 			}

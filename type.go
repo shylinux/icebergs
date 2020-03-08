@@ -647,8 +647,8 @@ func (m *Message) Parse(meta string, key string, arg ...string) *Message {
 }
 func (m *Message) Split(str string, field string, space string, enter string) *Message {
 	indexs := []int{}
-	fields := kit.Split(field, space)
-	for i, l := range kit.Split(str, enter) {
+	fields := kit.Split(field, space, "{}")
+	for i, l := range kit.Split(str, enter, "{}") {
 		if i == 0 && (field == "" || field == "index") {
 			// 表头行
 			fields = kit.Split(l, space)

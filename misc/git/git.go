@@ -74,6 +74,45 @@ var Index = &ice.Context{Name: "git", Help: "代码库",
 			})
 			m.Sort("name")
 		}},
+		"total": {Name: "total", Help: "统计", List: kit.List(
+			kit.MDB_INPUT, "text", "name", "name", "action", "auto",
+			kit.MDB_INPUT, "button", "name", "查看", "action", "auto",
+			kit.MDB_INPUT, "button", "name", "返回", "cb", "Last",
+		), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			if len(arg) > 0 {
+				// 提交详情
+				m.Richs("repos", nil, arg[0], func(key string, value map[string]interface{}) {
+					m.Cmdy("_sum", kit.Value(value, "meta.path"), arg[1:])
+				})
+				return
+			}
+
+			// 提交统计
+			days := 0
+			commit, adds, dels, rest := 0, 0, 0, 0
+			m.Richs("repos", nil, "*", func(key string, value map[string]interface{}) {
+				if m.Conf("total", kit.Keys("meta.skip", kit.Value(value, "meta.name"))) == "true" {
+					return
+				}
+				m.Push("name", kit.Value(value, "meta.name"))
+				m.Copy(m.Cmd("_sum", kit.Value(value, "meta.path"), "total", "10000").Table(func(index int, value map[string]string, head []string) {
+					if kit.Int(value["days"]) > days {
+						days = kit.Int(value["days"])
+					}
+					commit += kit.Int(value["commit"])
+					adds += kit.Int(value["adds"])
+					dels += kit.Int(value["dels"])
+					rest += kit.Int(value["rest"])
+				}))
+			})
+			m.Push("name", "total")
+			m.Push("days", days)
+			m.Push("commit", commit)
+			m.Push("adds", adds)
+			m.Push("dels", dels)
+			m.Push("rest", rest)
+			m.Sort("adds", "int_r")
+		}},
 		"status": {Name: "status repos", Help: "状态", Meta: kit.Dict(
 			"detail", []interface{}{"add", "reset", "remove", kit.Dict("name", "commit", "args", kit.List(
 				kit.MDB_INPUT, "select", "name", "type", "values", []string{"add", "opt"},
@@ -86,7 +125,7 @@ var Index = &ice.Context{Name: "git", Help: "代码库",
 		), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			prefix := []string{ice.CLI_SYSTEM, "git"}
 
-			if len(arg) > 0 && arg[0] == "action" {
+			if len(arg) > 1 && arg[0] == "action" {
 				m.Richs("repos", nil, m.Option("name"), func(key string, value map[string]interface{}) {
 					m.Option("cmd_dir", kit.Value(value, "meta.path"))
 					switch arg[1] {
@@ -119,46 +158,8 @@ var Index = &ice.Context{Name: "git", Help: "代码库",
 				}
 			})
 		}},
-		"total": {Name: "total", Help: "统计", List: kit.List(
-			kit.MDB_INPUT, "text", "name", "name", "action", "auto",
-			kit.MDB_INPUT, "button", "name", "查看", "action", "auto",
-			kit.MDB_INPUT, "button", "name", "返回", "cb", "Last",
-		), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			if len(arg) > 0 {
-				// 提交详情
-				m.Richs("repos", nil, arg[0], func(key string, value map[string]interface{}) {
-					m.Cmdy("sum", kit.Value(value, "meta.path"), arg[1:])
-				})
-				return
-			}
 
-			// 提交统计
-			days := 0
-			commit, adds, dels, rest := 0, 0, 0, 0
-			m.Richs("repos", nil, "*", func(key string, value map[string]interface{}) {
-				if m.Conf("total", kit.Keys("meta.skip", kit.Value(value, "meta.name"))) == "true" {
-					return
-				}
-				m.Push("name", kit.Value(value, "meta.name"))
-				m.Copy(m.Cmd("sum", kit.Value(value, "meta.path"), "total", "10000").Table(func(index int, value map[string]string, head []string) {
-					if kit.Int(value["days"]) > days {
-						days = kit.Int(value["days"])
-					}
-					commit += kit.Int(value["commit"])
-					adds += kit.Int(value["adds"])
-					dels += kit.Int(value["dels"])
-					rest += kit.Int(value["rest"])
-				}))
-			})
-			m.Push("name", "total")
-			m.Push("days", days)
-			m.Push("commit", commit)
-			m.Push("adds", adds)
-			m.Push("dels", dels)
-			m.Push("rest", rest)
-			m.Sort("adds", "int_r")
-		}},
-		"sum": {Name: "sum [path] [total] [count|date] args...", Help: "统计", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		"_sum": {Name: "_sum [path] [total] [count|date] args...", Help: "统计", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			if len(arg) > 0 {
 				if s, e := os.Stat(arg[0] + "/.git"); e == nil && s.IsDir() {
 					m.Option("cmd_dir", arg[0])
@@ -234,9 +235,7 @@ var Index = &ice.Context{Name: "git", Help: "代码库",
 			}
 		}},
 
-		"trend": {Name: "check name [path [repos]]", Help: "检查", Meta: kit.Dict(
-			"display", "/plugin/story/trend",
-		), List: kit.List(
+		"trend": {Name: "check name [path [repos]]", Help: "检查", Meta: kit.Dict("display", "/plugin/story/trend"), List: kit.List(
 			kit.MDB_INPUT, "text", "name", "repos", "action", "auto",
 			kit.MDB_INPUT, "text", "name", "begin_time", "figure", "date",
 			kit.MDB_INPUT, "button", "name", "执行", "action", "auto",
@@ -246,32 +245,6 @@ var Index = &ice.Context{Name: "git", Help: "代码库",
 				m.Option("_display", "table")
 			}
 			m.Cmdy("total", arg)
-		}},
-
-		"check": {Name: "check name [path [repos]]", Help: "检查", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			if len(arg) > 1 {
-				m.Cmd("repos", arg)
-			}
-		}},
-		"branch": {Name: "branch", Help: "分支", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			prefix := []string{ice.CLI_SYSTEM, "git", "branch"}
-			m.Richs("repos", nil, kit.Select("*", arg, 0), func(key string, value map[string]interface{}) {
-				m.Option("cmd_dir", kit.Value(value, "meta.path"))
-				for _, v := range strings.Split(m.Cmdx(prefix, "-v"), "\n") {
-					if len(v) > 0 {
-						m.Push("time", m.Cmdx(ice.CLI_SYSTEM, "git", "log", "-n", "1", "--pretty=%ad", "--date=iso"))
-						m.Push("name", kit.Value(value, "meta.name"))
-
-						m.Push("tags", v[:2])
-						vs := strings.SplitN(strings.TrimSpace(v[2:]), " ", 2)
-						m.Push("branch", vs[0])
-						vs = strings.SplitN(strings.TrimSpace(vs[1]), " ", 2)
-						m.Push("hash", vs[0])
-						m.Push("last", strings.TrimSpace(vs[1]))
-					}
-				}
-			})
-			m.Sort("repos")
 		}},
 	},
 }

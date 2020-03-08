@@ -340,11 +340,9 @@ func (web *Frame) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		if _, e := os.Stat(m.Conf(ice.WEB_SERVE, "meta.volcanos.path")); e == nil {
 			// 初始化成功
 			m.Conf(ice.WEB_SERVE, "meta.init", "true")
-		} else {
-			// 系统初始化
-			w.Write([]byte(Refresh(m, 10)))
-			m.Event(ice.SYSTEM_INIT)
 		}
+		w.Write([]byte(Refresh(m, 5)))
+		m.Event(ice.SYSTEM_INIT)
 	} else {
 		web.ServeMux.ServeHTTP(w, r)
 	}
@@ -745,6 +743,7 @@ var Index = &ice.Context{Name: "web", Help: "网络模块",
 			default:
 				// 启动服务
 				m.Target().Start(m, "self")
+				m.Cmd(ice.WEB_SPACE, "connect", "self")
 			}
 		}},
 		ice.WEB_SPACE: {Name: "space", Help: "空间站", Meta: kit.Dict("exports", []string{"pod", "name"}), List: kit.List(
@@ -884,6 +883,7 @@ var Index = &ice.Context{Name: "web", Help: "网络模块",
 		), List: kit.List(
 			kit.MDB_INPUT, "text", "value", "", "name", "name",
 			kit.MDB_INPUT, "button", "value", "创建", "action", "auto",
+			kit.MDB_INPUT, "button", "value", "返回", "cb", "Last",
 		), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			if len(arg) > 1 {
 				switch arg[1] {
@@ -913,12 +913,17 @@ var Index = &ice.Context{Name: "web", Help: "网络模块",
 					// 启动任务
 					m.Option("cmd_dir", p)
 					m.Option("cmd_type", "daemon")
-					m.Option("cmd_env", "ctx_log", "boot.log")
-					m.Option("cmd_env", "PATH", kit.Path(path.Join(p, "bin"))+":"+os.Getenv("PATH"))
+					m.Optionv("cmd_env",
+						"ctx_log", "boot.log",
+						"ctx_mod", "ctx log gdb ssh",
+						"PATH", kit.Path(path.Join(p, "bin"))+":"+os.Getenv("PATH"),
+					)
 					m.Cmd(m.Confv(ice.WEB_DREAM, "meta.cmd"), "self", arg[0])
-					time.Sleep(time.Second * 3)
+					time.Sleep(time.Second * 1)
 					m.Event(ice.DREAM_START, arg...)
 				}
+				m.Cmdy("nfs.dir", p)
+				return
 			}
 
 			// 任务列表
@@ -1016,11 +1021,15 @@ var Index = &ice.Context{Name: "web", Help: "网络模块",
 				m.Log(ice.LOG_CREATE, "favor: %s name: %s", favor, arg[0])
 			}
 
+			fields := []string{kit.MDB_TIME, kit.MDB_ID, kit.MDB_TYPE, kit.MDB_NAME, kit.MDB_TEXT}
+			if len(arg) > 1 && arg[1] == "extra" {
+				fields, arg = append(fields, arg[2:]...), arg[:1]
+			}
 			if len(arg) == 1 {
 				m.Option("cache.limit", 30)
 				// 收藏列表
 				m.Grows(ice.WEB_FAVOR, kit.Keys(kit.MDB_HASH, favor), "", "", func(index int, value map[string]interface{}) {
-					m.Push(kit.Format(index), value, []string{kit.MDB_TIME, kit.MDB_ID, kit.MDB_TYPE, kit.MDB_NAME, kit.MDB_TEXT})
+					m.Push(kit.Format(index), value, fields)
 				})
 				return
 			}

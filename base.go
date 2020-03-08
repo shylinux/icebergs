@@ -155,3 +155,10 @@ func Run(arg ...string) string {
 	os.Exit(frame.code)
 	return ""
 }
+func ListLook(name string) []interface{} {
+	return kit.List(
+		kit.MDB_INPUT, "text", "name", name, "action", "auto",
+		kit.MDB_INPUT, "button", "name", "查看", "action", "auto",
+		kit.MDB_INPUT, "button", "name", "返回", "cb", "Last",
+	)
+}

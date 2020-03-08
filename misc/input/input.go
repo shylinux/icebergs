@@ -18,7 +18,7 @@ var Index = &ice.Context{Name: "input", Help: "输入法",
 	Caches: map[string]*ice.Cache{},
 	Configs: map[string]*ice.Config{
 		"input": {Name: "input", Help: "输入法", Value: kit.Data(
-			"store", "var/input/", "fsize", "100000", "limit", "2000", "least", "1000",
+			"store", "var/input/", "fsize", "200000", "limit", "5000", "least", "1000",
 			"repos", "wubi-dict", "local", "some",
 		)},
 	},
@@ -33,29 +33,32 @@ var Index = &ice.Context{Name: "input", Help: "输入法",
 		"load": {Name: "load file [name]", Help: "加载词库", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			if len(arg) == 0 {
 				// 默认词库
-				if m.Cmd("web.code.git.check", m.Conf("input", "meta.repos")); m.Confs("input", "wubi86") {
+				if m.Cmd("web.code.git.repos", m.Conf("input", "meta.repos"), "usr/"+m.Conf("input", "meta.repos")); m.Confs("input", "wubi86") {
 					m.Echo("wubi86: %v", m.Conf("input", "wubi86.meta.count"))
 					return
 				}
 				arg = append(arg, path.Join("usr", m.Conf("input", "meta.repos"), "wubi86"))
 			}
-			lib := kit.Select(path.Base(arg[0]), arg, 1)
-
-			// 缓存配置
-			m.Option("cache.least", m.Conf("input", "meta.least"))
-			m.Option("cache.limit", m.Conf("input", "meta.limit"))
-			m.Option("cache.fsize", m.Conf("input", "meta.fsize"))
-			m.Assert(os.RemoveAll(m.Option("cache.store", path.Join(m.Conf("input", "meta.store"), lib))))
-			m.Conf("input", lib, "")
 
 			if f, e := os.Open(arg[0]); m.Assert(e) {
 				bio := bufio.NewScanner(f)
+
+				// 清空数据
+				lib := kit.Select(path.Base(arg[0]), arg, 1)
+				m.Assert(os.RemoveAll(m.Option("cache.store", path.Join(m.Conf("input", "meta.store"), lib))))
+				m.Conf("input", lib, "")
+
+				// 缓存配置
+				m.Option("cache.least", m.Conf("input", "meta.least"))
+				m.Option("cache.limit", m.Conf("input", "meta.limit"))
+				m.Option("cache.fsize", m.Conf("input", "meta.fsize"))
+
 				// 加载词库
 				for bio.Scan() {
 					if strings.HasPrefix(bio.Text(), "#") {
 						continue
 					}
-					line := kit.Split(bio.Text(), " \t")
+					line := kit.Split(bio.Text())
 					if line[2] == "0" {
 						continue
 					}
@@ -67,14 +70,23 @@ var Index = &ice.Context{Name: "input", Help: "输入法",
 				m.Echo("%s: %d", lib, m.Grow("input", lib, kit.Dict("text", "成功", "code", "z", "weight", "0")))
 			}
 		}},
-		"push": {Name: "push text code [weight [lib]]", Help: "添加词汇", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			lib := kit.Select("person", arg, 2)
+		"push": {Name: "push lib text code [weight]", Help: "添加词汇", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			m.Option("cache.least", 0)
 			m.Option("cache.limit", 0)
-			m.Option("cache.store", path.Join(m.Conf("input", "meta.store"), lib))
-			m.Echo("%s: %d", lib, m.Grow("input", lib, kit.Dict("text", arg[0], "code", arg[1], "weight", kit.Select("99990000", arg, 3))))
+			m.Option("cache.store", path.Join(m.Conf("input", "meta.store"), arg[0]))
+			m.Echo("%s: %d", arg[0], m.Grow("input", arg[0], kit.Dict(
+				"text", arg[1], "code", arg[2], "weight", kit.Select("9091929394", arg, 3))))
 		}},
 		"list": {Name: "list [lib [offend [limit]]]", Help: "查看词汇", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			if len(arg) == 0 {
+				kit.Fetch(m.Confv("input"), func(key string, value map[string]interface{}) {
+					if key != "meta" {
+						m.Push(key, value["meta"], []string{"key", "count"})
+					}
+				})
+				return
+			}
+
 			lib := kit.Select("person", arg, 0)
 			m.Option("cache.offend", kit.Select("0", arg, 1))
 			m.Option("cache.limit", kit.Select("10", arg, 2))
@@ -84,14 +96,17 @@ var Index = &ice.Context{Name: "input", Help: "输入法",
 		}},
 		"save": {Name: "save lib [filename]", Help: "导出词库", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			lib := kit.Select("person", arg, 0)
-			m.Option("cache.limit", 1000000)
-			m.Option("cache.offend", 0)
-			if f, p, e := kit.Create(path.Join("usr", m.Conf("input", "meta.repos"), lib)); m.Assert(e) {
+			if f, p, e := kit.Create(kit.Select(path.Join("usr", m.Conf("input", "meta.repos"), lib), arg, 1)); m.Assert(e) {
 				defer f.Close()
+
 				n := 0
+				m.Option("cache.offend", 0)
+				m.Option("cache.limit", -2)
 				m.Grows("input", lib, "", "", func(index int, value map[string]interface{}) {
-					n++
-					fmt.Fprintf(f, "%s %s %s\n", value["text"], value["code"], value["weight"])
+					if value["code"] != "z" {
+						n++
+						fmt.Fprintf(f, "%s %s %s\n", value["text"], value["code"], value["weight"])
+					}
 				})
 				m.Log(ice.LOG_EXPORT, "%s: %d", p, n)
 				m.Echo("%s: %d", p, n)
@@ -122,6 +137,7 @@ var Index = &ice.Context{Name: "input", Help: "输入法",
 				if line, e := bio.Read(); e != nil {
 					break
 				} else if len(line) < 3 {
+
 				} else {
 					if method == "word" && i == 0 {
 						// 添加收藏
@@ -140,5 +156,8 @@ var Index = &ice.Context{Name: "input", Help: "输入法",
 		}},
 	},
 }
+
+// ice add person 码神 dcpy
+// 码神
 
 func init() { code.Index.Register(Index, nil) }

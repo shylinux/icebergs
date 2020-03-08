@@ -82,6 +82,7 @@ const ( // WEB
 	WEB_WORKER = "worker"
 )
 const ( // LOG
+	// 数据
 	LOG_ENABLE = "enable"
 	LOG_IMPORT = "import"
 	LOG_CREATE = "create"
@@ -92,16 +93,23 @@ const ( // LOG
 	LOG_REMOVE = "remove"
 	LOG_EXPORT = "export"
 
+	// 事件
 	LOG_LISTEN = "listen"
 	LOG_SIGNAL = "signal"
 	LOG_TIMERS = "timers"
 	LOG_EVENTS = "events"
 
+	// 状态
 	LOG_BEGIN = "begin"
 	LOG_START = "start"
 	LOG_SERVE = "serve"
 	LOG_CLOSE = "close"
 
+	// 权限
+	LOG_LOGIN  = "login"
+	LOG_LOGOUT = "logout"
+
+	// 分类
 	LOG_CMDS  = "cmds"
 	LOG_COST  = "cost"
 	LOG_INFO  = "info"

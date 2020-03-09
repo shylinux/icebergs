@@ -26,7 +26,7 @@ var Index = &ice.Context{Name: "docker", Help: "虚拟机",
 		"auto": {Name: "auto", Help: "自动化", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			prefix := []string{ice.CLI_SYSTEM, "docker"}
 			// 创建容器
-			pid := m.Cmdx(prefix, "run", "-dt", "--name", arg[0], "--mount", kit.Format("type=bind,source=%s,target=/root",
+			pid := m.Cmdx(prefix, "run", "-dt", "-w", "/root", "--name", arg[0], "--mount", kit.Format("type=bind,source=%s,target=/root",
 				kit.Path(m.Conf(ice.WEB_DREAM, "meta.path"), arg[0])), "alpine")
 			m.Log(ice.LOG_CREATE, "%s: %s", arg[0], pid)
 

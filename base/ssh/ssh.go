@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -29,7 +30,7 @@ func (f *Frame) prompt(m *ice.Message) *Frame {
 			case "count":
 				fmt.Fprintf(f.out, kit.Format("%d", f.count))
 			case "time":
-				fmt.Fprintf(f.out, m.Time("15:04:05"))
+				fmt.Fprintf(f.out, time.Now().Format("15:04:05"))
 			case "target":
 				fmt.Fprintf(f.out, f.target.Name)
 			default:
@@ -41,7 +42,7 @@ func (f *Frame) prompt(m *ice.Message) *Frame {
 }
 func (f *Frame) printf(m *ice.Message, res string, arg ...interface{}) *Frame {
 	if len(arg) > 0 {
-		fmt.Fprintf(f.out, res, arg)
+		fmt.Fprintf(f.out, res, arg...)
 	} else {
 		fmt.Fprint(f.out, res)
 	}
@@ -150,10 +151,11 @@ func (f *Frame) Start(m *ice.Message, arg ...string) bool {
 		m.Cap(ice.CTX_STREAM, "stdio")
 		f.target = m.Target()
 	default:
-		// 解析脚本
 		if s, e := os.Open(arg[0]); m.Warn(e != nil, "%s", e) {
+			// 打开失败
 			return true
 		} else {
+			// 解析脚本
 			defer s.Close()
 			if f.in, f.out = s, os.Stdout; m.Optionv(ice.MSG_STDOUT) != nil {
 				f.out = m.Optionv(ice.MSG_STDOUT).(io.Writer)
@@ -186,16 +188,39 @@ func (f *Frame) Start(m *ice.Message, arg ...string) bool {
 			line = ""
 			continue
 		}
+		if strings.HasPrefix(strings.TrimSpace(line), "!") {
+			m.Option("cache.offend", 0)
+			m.Option("cache.limit", 30)
+			if len(line) == 1 {
+				// 历史记录
+				m.Grows("history", nil, "", "", func(index int, value map[string]interface{}) {
+					f.printf(m, "%d\t%s\n", index+1, value["line"])
+				})
+				line = ""
+				continue
+			}
+			if i, e := strconv.Atoi(line[1:]); e == nil {
+				// 历史命令
+				m.Grows("history", nil, "id", kit.Format(i), func(index int, value map[string]interface{}) {
+					line = kit.Format(value["line"])
+				})
+			} else {
 
-		m.Grow("history", nil, kit.Dict("line", line))
-		m.Option(ice.MSG_PROMPT, m.Confv("prompt", "meta.PS1"))
+			}
+		} else {
+			// 记录历史
+			m.Grow("history", nil, kit.Dict("line", line))
+			f.count++
+		}
 
-		if f.out == os.Stdout {
+		// 清空格式
+		if m.Option(ice.MSG_PROMPT, m.Confv("prompt", "meta.PS1")); f.out == os.Stdout {
 			f.printf(m, "\033[0m")
 		}
+
+		// 解析命令
 		f.parse(m, line)
 		m.Cost("stdin: %v", line)
-		f.count++
 		line = ""
 	}
 	return true

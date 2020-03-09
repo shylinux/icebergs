@@ -167,6 +167,7 @@ ShyInit() {
     elif bindkey &>/dev/null; then
         # zsh
         bindkey -s '\C-G\C-R' 'ShySyncs base\n'
+        bindkey -s '\C-G\C-G' 'ShySyncs history\n'
         setopt nosharehistory
     fi
 

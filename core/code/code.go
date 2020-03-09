@@ -96,7 +96,18 @@ var Index = &ice.Context{Name: "code", Help: "编程中心",
 					m.Push(key, value, []string{"pid", "pane", "hostname", "username"})
 				})
 
-			case "sync":
+			case "prune":
+				list := []string{}
+				m.Richs("login", nil, "*", func(key string, value map[string]interface{}) {
+					if value["status"] == "logout" {
+						list = append(list, key)
+					}
+				})
+
+				kit.Fetch(list, func(index int, value string) {
+					m.Log(ice.LOG_DELETE, "%s: %s", value, m.Conf("login", kit.Keys("hash", value)))
+					m.Conf("login", kit.Keys("hash", value), "")
+				})
 
 			case "exit":
 				// 退出会话

@@ -34,6 +34,7 @@ var Index = &ice.Context{Name: "chat", Help: "聊天中心",
 				[]interface{}{"field", "feel", "web.wiki"},
 
 				[]interface{}{"storm", "code", "code"},
+				[]interface{}{"field", "login", "web.code"},
 				[]interface{}{"field", "buffer", "web.code.tmux"},
 				[]interface{}{"field", "session", "web.code.tmux"},
 				[]interface{}{"field", "image", "web.code.docker"},

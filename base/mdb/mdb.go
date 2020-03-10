@@ -96,7 +96,8 @@ var Index = &ice.Context{Name: "mdb", Help: "数据模块",
 				})
 			}
 		}},
-		ice.MDB_IMPORT: {Name: "import", Help: "导入数据", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+
+		ice.MDB_IMPORT: {Name: "import conf key type file", Help: "导入数据", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			msg := m.Cmd(ice.WEB_STORY, "index", arg[3])
 
 			switch arg[2] {
@@ -107,6 +108,7 @@ var Index = &ice.Context{Name: "mdb", Help: "数据模块",
 				r := csv.NewReader(buf)
 				if msg.Append("file") != "" {
 					if f, e := os.Open(msg.Append("file")); m.Assert(e) {
+						// 导入文件
 						r = csv.NewReader(f)
 					}
 				}
@@ -122,8 +124,9 @@ var Index = &ice.Context{Name: "mdb", Help: "数据模块",
 					for i, k := range head {
 						data[k] = line[i]
 					}
-					m.Grow(arg[0], arg[1], data)
-					m.Info("import %v", data)
+					// 导入数据
+					n := m.Grow(arg[0], arg[1], data)
+					m.Log(ice.LOG_INSERT, "index: %d value: %v", n, data)
 				}
 
 			case kit.MDB_HASH:
@@ -131,11 +134,11 @@ var Index = &ice.Context{Name: "mdb", Help: "数据模块",
 				m.Assert(json.Unmarshal([]byte(msg.Append("text")), &data))
 				for k, v := range data {
 					m.Conf(arg[0], kit.Keys(arg[1], k), v)
-					m.Info("import %v", v)
+					m.Log(ice.LOG_MODIFY, "%s: %s", k, v)
 				}
 			}
 		}},
-		ice.MDB_EXPORT: {Name: "export conf key list|hash", Help: "导出数据", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		ice.MDB_EXPORT: {Name: "export conf key type name", Help: "导出数据", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			name := kit.Select(kit.Select(arg[0], arg[0]+":"+arg[1], arg[1] != ""), arg, 3)
 
 			switch arg[2] {
@@ -168,6 +171,17 @@ var Index = &ice.Context{Name: "mdb", Help: "数据模块",
 
 			case kit.MDB_HASH:
 				m.Cmdy(ice.WEB_STORY, "add", "json", name, kit.Formats(m.Confv(arg[0], arg[1])))
+			}
+		}},
+		ice.MDB_DELETE: {Name: "delete conf key type", Help: "删除", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			switch arg[2] {
+			case kit.MDB_DICT:
+				m.Log(ice.LOG_DELETE, "%s: %s", arg[1], m.Conf(arg[0], arg[1]))
+				m.Echo("%s", m.Conf(arg[0], arg[1]))
+				m.Conf(arg[0], arg[1], "")
+			case kit.MDB_META:
+			case kit.MDB_LIST:
+			case kit.MDB_HASH:
 			}
 		}},
 	},

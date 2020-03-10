@@ -13,7 +13,7 @@ import (
 var Index = &ice.Context{Name: "vim", Help: "编辑器",
 	Caches: map[string]*ice.Cache{},
 	Configs: map[string]*ice.Config{
-		"vim": {Name: "vim", Help: "编辑器", Value: kit.Data(kit.MDB_SHORT, "name")},
+		"vim": {Name: "vim", Help: "编辑器", Value: kit.Data(kit.MDB_SHORT, "name", "history", "vim.history")},
 	},
 	Commands: map[string]*ice.Command{
 		ice.WEB_LOGIN: {Name: "_login", Help: "_login", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
@@ -47,7 +47,7 @@ var Index = &ice.Context{Name: "vim", Help: "编辑器",
 		"/sync": {Name: "/sync", Help: "同步", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			switch arg[0] {
 			case "read", "write", "exec", "insert":
-				m.Cmd(ice.WEB_FAVOR, "vim.history", "vimrc", arg[0], kit.Select(m.Option("arg"), m.Option("sub")),
+				m.Cmd(ice.WEB_FAVOR, m.Conf("vim", "meta.history"), "vimrc", arg[0], kit.Select(m.Option("arg"), m.Option("sub")),
 					"sid", m.Option("sid"), "pwd", m.Option("pwd"), "buf", m.Option("buf"), "row", m.Option("row"), "col", m.Option("col"))
 
 			default:

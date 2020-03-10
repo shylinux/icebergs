@@ -137,7 +137,6 @@ func (f *Frame) Spawn(m *ice.Message, c *ice.Context, arg ...string) ice.Server 
 	return &Frame{}
 }
 func (f *Frame) Begin(m *ice.Message, arg ...string) ice.Server {
-	m.Target().Configs["history"] = &ice.Config{Name: "history", Help: "历史", Value: kit.Data()}
 	return f
 }
 func (f *Frame) Start(m *ice.Message, arg ...string) bool {

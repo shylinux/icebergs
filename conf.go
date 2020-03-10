@@ -168,8 +168,11 @@ const ( // CHAT
 const ( // TYPE
 	TYPE_SPACE = "space"
 	TYPE_STORY = "story"
-	TYPE_RIVER = "river"
-	TYPE_STORM = "storm"
+
+	TYPE_RIVER  = "river"
+	TYPE_STORM  = "storm"
+	TYPE_ACTION = "action"
+	TYPE_ACTIVE = "active"
 
 	TYPE_DRIVE = "drive"
 	TYPE_SHELL = "shell"
@@ -184,8 +187,11 @@ const ( // FAVOR
 	FAVOR_START = "favor.start"
 )
 const ( // STORY
-	STORY_CATCH   = "catch"
-	STORY_WATCH   = "watch"
+	STORY_CATCH = "catch"
+	STORY_INDEX = "index"
+	STORY_TRASH = "trash"
+	STORY_WATCH = "watch"
+
 	STORY_STATUS  = "status"
 	STORY_COMMIT  = "commit"
 	STORY_BRANCH  = "branch"

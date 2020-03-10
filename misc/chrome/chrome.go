@@ -10,21 +10,13 @@ import (
 var Index = &ice.Context{Name: "chrome", Help: "浏览器",
 	Caches: map[string]*ice.Cache{},
 	Configs: map[string]*ice.Config{
-		"chrome":  {Name: "chrome", Help: "chrome", Value: kit.Data(kit.MDB_SHORT, "name")},
-		"history": {Name: "history", Help: "history", Value: kit.Data(kit.MDB_SHORT, "name")},
+		"chrome": {Name: "chrome", Help: "chrome", Value: kit.Data(kit.MDB_SHORT, "name", "history", "url.history")},
 	},
 	Commands: map[string]*ice.Command{
-		ice.ICE_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			m.Load()
-		}},
-		ice.ICE_EXIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			m.Save("history")
-		}},
-
 		"/crx": {Name: "/crx", Help: "/crx", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			switch arg[0] {
 			case "history":
-				m.Cmdy("history", arg[1:])
+				m.Cmdy(ice.WEB_FAVOR, m.Conf("chrome", "meta.history"), "spide", arg[3], arg[2])
 			}
 		}},
 		"chrome": {Name: "chrome", Help: "浏览器", List: kit.List(
@@ -69,18 +61,6 @@ var Index = &ice.Context{Name: "chrome", Help: "浏览器",
 			}
 			// 下发命令
 			m.Cmdy(ice.WEB_SPACE, arg[0], "cookie", arg[1:])
-		}},
-		"history": {Name: "history id url title", Help: "历史", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			if len(arg) == 0 {
-				// 查看记录
-				m.Grows("history", nil, "", "", func(index int, value map[string]interface{}) {
-					m.Push("", value)
-				})
-				m.Sort("id", "int_r")
-				return
-			}
-			// 添加记录
-			m.Grow("history", nil, kit.Dict("hid", arg[0], "url", arg[1], "title", arg[2]))
 		}},
 		"bookmark": {Name: "bookmark", Help: "书签", List: kit.List(
 			kit.MDB_INPUT, "text", "name", "name", "action", "auto",

@@ -14,7 +14,7 @@ import (
 var Index = &ice.Context{Name: "zsh", Help: "命令行",
 	Caches: map[string]*ice.Cache{},
 	Configs: map[string]*ice.Config{
-		"zsh": {Name: "zsh", Help: "命令行", Value: kit.Data(kit.MDB_SHORT, "name")},
+		"zsh": {Name: "zsh", Help: "命令行", Value: kit.Data(kit.MDB_SHORT, "name", "history", "zsh.history")},
 	},
 	Commands: map[string]*ice.Command{
 		ice.WEB_LOGIN: {Name: "_login", Help: "_login", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
@@ -205,7 +205,7 @@ var Index = &ice.Context{Name: "zsh", Help: "命令行",
 		}},
 		"/history": {Name: "/history", Help: "历史", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			vs := strings.SplitN(strings.TrimSpace(arg[0]), " ", 2)
-			m.Cmd(ice.WEB_SPACE, m.Option("you"), ice.WEB_FAVOR, "zsh.history", ice.TYPE_SHELL, vs[0], kit.Select("", vs, 1),
+			m.Cmd(ice.WEB_SPACE, m.Option("you"), ice.WEB_FAVOR, m.Conf("zsh", "meta.history"), ice.TYPE_SHELL, vs[0], kit.Select("", vs, 1),
 				"sid", m.Option("sid"), "pwd", m.Option("pwd"))
 		}},
 	},

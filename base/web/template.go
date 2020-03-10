@@ -5,26 +5,16 @@ import (
 )
 
 var share_template = kit.Dict(
-	"story.prefix", `<!DOCTYPE html>
-<head>
-<meta charset="utf-8">
-</head>
-<body>
-`, "story.suffix", `</body>`,
-
-	"download", `<a href="/code/zsh?cmd=download&arg=%s" target="_blank">%s</a>`,
 	"share", `<a href="/share/%s" target="_blank">%s</a>`,
-	"shy/story", `{{.}}`,
-	"shy/chain", `<!DOCTYPE html>
+	"qrcode", `<img src="/share/%s/qrcode">`,
+
+	"simple", `<!DOCTYPE html>
 <head>
-<meta charset="utf-8">
-<link rel="stylesheet" text="text/css" href="/style.css">
+<meta charset='utf-8'>
+<title>{{.Option "name"}}</title>
 </head>
 <body>
-<fieldset>
-	{{.Append "type"}}
-	{{.Append "text"}}
-</fieldset>
+{{.Option "text"}}
 </body>
 `,
 )

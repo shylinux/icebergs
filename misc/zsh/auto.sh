@@ -70,6 +70,7 @@ ShyLogin() {
     echo "${ctx_welcome}"
     echo "${ctx_dev}"
     echo "sid: ${ctx_sid}"
+    echo "begin: ${ctx_begin}"
 }
 ShyLogout() {
     echo ${ctx_goodbye} && [ "$ctx_sid" != "" ] && ShyPost logout
@@ -94,6 +95,13 @@ ShySend() {
 # 同步数据
 ShySync() {
     case "$1" in
+        "base")
+            ShySync df &>/dev/null
+            ShySync ps &>/dev/null
+            ShySync env &>/dev/null
+            ShySync free &>/dev/null
+            ShySync history
+            ;;
         "history")
             ctx_end=`history|tail -n1|awk '{print $1}'`
             ctx_begin=${ctx_begin:=$ctx_end}
@@ -106,18 +114,6 @@ ShySync() {
             ;;
         ps) ShySend ps -ef ;;
         *) ShySend "$@"
-    esac
-}
-ShySyncs() {
-    case "$1" in
-        "base")
-            ShySync df &>/dev/null
-            ShySync ps &>/dev/null
-            ShySync env &>/dev/null
-            ShySync free &>/dev/null
-            ShySync history
-            ;;
-        *)
     esac
 }
 ShyInput() {
@@ -166,8 +162,8 @@ ShyInit() {
 
     elif bindkey &>/dev/null; then
         # zsh
-        bindkey -s '\C-G\C-R' 'ShySyncs base\n'
-        bindkey -s '\C-G\C-G' 'ShySyncs history\n'
+        bindkey -s '\C-G\C-R' 'ShySync base\n'
+        bindkey -s '\C-G\C-G' 'ShySync history\n'
         setopt nosharehistory
     fi
 

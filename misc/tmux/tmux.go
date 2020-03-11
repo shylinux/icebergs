@@ -2,6 +2,7 @@ package tmux
 
 import (
 	"github.com/shylinux/icebergs"
+	"github.com/shylinux/icebergs/base/web"
 	"github.com/shylinux/icebergs/core/code"
 	"github.com/shylinux/toolkits"
 
@@ -14,26 +15,30 @@ import (
 var Index = &ice.Context{Name: "tmux", Help: "工作台",
 	Caches: map[string]*ice.Cache{},
 	Configs: map[string]*ice.Config{
+		"prefix": {Name: "buffer", Help: "缓存", Value: kit.Data("cmd", []interface{}{ice.CLI_SYSTEM, "tmux"})},
 		"buffer": {Name: "buffer", Help: "缓存", Value: kit.Data()},
 		"session": {Name: "session", Help: "会话", Value: kit.Data(
 			"format", "#{session_id},#{session_attached},#{session_name},#{session_windows},#{session_height},#{session_width}",
 			"fields", "id,tag,session,windows,height,width",
-			"cmd", []interface{}{"cli.system", "tmux", "list-session"},
 		)},
 		"windows": {Name: "window", Help: "窗口", Value: kit.Data(
 			"format", "#{window_id},#{window_active},#{window_name},#{window_panes},#{window_height},#{window_width}",
 			"fields", "id,tag,window,panes,height,width",
-			"cmd", []interface{}{"cli.system", "tmux", "list-windows"},
 		)},
 		"panes": {Name: "pane", Help: "终端", Value: kit.Data(
 			"format", "#{pane_id},#{pane_active},#{pane_index},#{pane_tty},#{pane_height},#{pane_width}",
 			"fields", "id,tag,pane,tty,height,width",
-			"cmd", []interface{}{"cli.system", "tmux", "list-panes"},
 		)},
 		"view": {Name: "pane", Help: "终端", Value: kit.Data(
 			"format", "#{pane_id},#{pane_active},#{pane_index},#{pane_tty},#{pane_height},#{pane_width}",
 			"fields", "id,tag,pane,tty,height,width",
-			"cmd", []interface{}{"cli.system", "tmux", "list-panes"},
+		)},
+		"relay": {Name: "relay", Help: "跳板", Value: kit.Data(
+			"tail", kit.Dict(
+				"verify", "Verification code:",
+				"password", "Password:",
+				"login", "[relay ~]$",
+			),
 		)},
 	},
 	Commands: map[string]*ice.Command{
@@ -42,6 +47,8 @@ var Index = &ice.Context{Name: "tmux", Help: "工作台",
 
 			if m.Richs(ice.WEB_FAVOR, nil, "tmux.auto", nil) == nil {
 				m.Cmd(ice.WEB_FAVOR, "tmux.auto", ice.TYPE_SHELL, "脚本", `curl $ctx_dev/publish/auto.sh > auto.sh`)
+				m.Cmd(ice.WEB_FAVOR, "tmux.auto", ice.TYPE_SHELL, "脚本", `source auto.sh`)
+				m.Cmd(ice.WEB_FAVOR, "tmux.auto", ice.TYPE_SHELL, "脚本", `ShyLogin`)
 			}
 
 			for _, v := range []string{"auto.sh", "auto.vim"} {
@@ -54,8 +61,8 @@ var Index = &ice.Context{Name: "tmux", Help: "工作台",
 				}
 			}
 		}},
-		"auto": {Name: "auto", Help: "初始化", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			prefix := []string{ice.CLI_SYSTEM, "tmux"}
+		"auto": {Name: "auto", Help: "自动化", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			prefix := kit.Simple(m.Confv("prefix", "meta.cmd"))
 
 			// 共享空间
 			share, dev := "", kit.Select(m.Conf(ice.CLI_RUNTIME, "conf.ctx_dev"), m.Conf(ice.CLI_RUNTIME, "host.ctx_self"))
@@ -72,6 +79,11 @@ var Index = &ice.Context{Name: "tmux", Help: "工作台",
 				m.Cmd(prefix, "new-session", "-ds", arg[0])
 			}
 
+			if m.Option("relay") != "" {
+				// 自动认证
+				m.Cmd("relay", arg[0], m.Option("relay"))
+			}
+
 			// 连接参数
 			m.Cmdy(prefix, "send-keys", "-t", arg[0], "export ctx_dev=", dev, "Enter")
 			m.Cmdy(prefix, "send-keys", "-t", arg[0], "export ctx_share=", share, "Enter")
@@ -83,6 +95,9 @@ var Index = &ice.Context{Name: "tmux", Help: "工作台",
 					m.Cmdy(prefix, "send-keys", "-t", arg[0], value["text"], "Enter")
 				}
 			})
+			for _, v := range kit.Simple(m.Optionv("after")) {
+				m.Cmdy(prefix, "send-keys", "-t", arg[0], v, "Enter")
+			}
 		}},
 
 		"text": {Name: "text", Help: "文本", List: kit.List(
@@ -90,20 +105,19 @@ var Index = &ice.Context{Name: "tmux", Help: "工作台",
 			kit.MDB_INPUT, "button", "value", "保存",
 			kit.MDB_INPUT, "textarea", "name", "text",
 		), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			prefix := []string{ice.CLI_SYSTEM, "tmux"}
+			prefix := kit.Simple(m.Confv("prefix", "meta.cmd"))
 			if len(arg) > 1 && arg[1] != "" {
 				m.Cmd(prefix, "set-buffer", arg[1])
 			}
 			m.Cmdy(prefix, "show-buffer").Set("append")
 		}},
-
 		"buffer": {Name: "buffer", Help: "缓存", List: kit.List(
 			kit.MDB_INPUT, "text", "name", "buffer", "action", "auto",
 			kit.MDB_INPUT, "text", "name", "value",
 			kit.MDB_INPUT, "button", "value", "查看", "action", "auto",
 			kit.MDB_INPUT, "button", "value", "返回", "cb", "Last",
 		), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			prefix := []string{ice.CLI_SYSTEM, "tmux"}
+			prefix := kit.Simple(m.Confv("prefix", "meta.cmd"))
 			if len(arg) > 1 {
 				// 设置缓存
 				m.Cmd(prefix, "set-buffer", "-b", arg[0], arg[1])
@@ -134,7 +148,8 @@ var Index = &ice.Context{Name: "tmux", Help: "工作台",
 			kit.MDB_INPUT, "button", "value", "查看", "action", "auto",
 			kit.MDB_INPUT, "button", "value", "返回", "cb", "Last",
 		), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			prefix := []string{"cli.system", "tmux"}
+			prefix := kit.Simple(m.Confv("prefix", "meta.cmd"))
+
 			if len(arg) > 1 && arg[0] == "action" {
 				switch arg[1] {
 				case "运行":
@@ -197,7 +212,7 @@ var Index = &ice.Context{Name: "tmux", Help: "工作台",
 
 			if len(arg) == 0 {
 				// 会话列表
-				m.Split(m.Cmdx(m.Confv(cmd, "meta.cmd"),
+				m.Split(m.Cmdx(prefix, "list-session",
 					"-F", m.Conf(cmd, "meta.format")), m.Conf(cmd, "meta.fields"), ",", "\n")
 				return
 			}
@@ -240,17 +255,68 @@ var Index = &ice.Context{Name: "tmux", Help: "工作台",
 			m.Echo(strings.TrimSpace(m.Cmdx("view", target)))
 		}},
 		"windows": {Name: "window", Help: "窗口", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			m.Split(m.Cmdx(m.Confv(cmd, "meta.cmd"), "-t", kit.Select("", arg, 0),
+			prefix := kit.Simple(m.Confv("prefix", "meta.cmd"))
+			m.Split(m.Cmdx(prefix, "list-windows", "-t", kit.Select("", arg, 0),
 				"-F", m.Conf(cmd, "meta.format")), m.Conf(cmd, "meta.fields"), ",", "\n")
 		}},
 		"panes": {Name: "pane", Help: "终端", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			m.Split(m.Cmdx(m.Confv(cmd, "meta.cmd"), "-t", kit.Select("", arg, 0),
+			prefix := kit.Simple(m.Confv("prefix", "meta.cmd"))
+			m.Split(m.Cmdx(prefix, "list-panes", "-t", kit.Select("", arg, 0),
 				"-F", m.Conf(cmd, "meta.format")), m.Conf(cmd, "meta.fields"), ",", "\n")
 		}},
 		"view": {Name: "view", Help: "终端", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			m.Cmdy("cli.system", "tmux", "capture-pane", "-pt", kit.Select("", arg, 0)).Set("append")
+			prefix := kit.Simple(m.Confv("prefix", "meta.cmd"))
+			m.Cmdy(prefix, "capture-pane", "-pt", kit.Select("", arg, 0)).Set("append")
+		}},
+
+		"relay": {Name: "relay", Help: "跳板", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			prefix := kit.Simple(m.Confv("prefix", "meta.cmd"))
+
+			m.Richs("aaa.auth.auth", nil, kit.Select("relay", arg, 1), func(key string, value map[string]interface{}) {
+				m.Cmdy(prefix, "send-keys", "-t", arg[0], kit.Format("ssh %s@%s", value["username"], value["website"]), "Enter")
+
+				for i := 0; i < 10; i++ {
+					time.Sleep(100 * time.Millisecond)
+					tail := m.Cmdx(prefix, "capture-pane", "-p")
+					if strings.HasSuffix(strings.TrimSpace(tail), m.Conf("relay", "meta.tail.login")) {
+						for _, v := range kit.Simple(value["init"]) {
+							if v != "" {
+								m.Cmdy(prefix, "send-keys", "-t", arg[0], v, "Enter")
+							}
+						}
+						break
+					}
+
+					if strings.HasSuffix(strings.TrimSpace(tail), m.Conf("relay", "meta.tail.verify")) {
+						m.Cmdy(prefix, "send-keys", "-t", arg[0], m.Cmdx("aaa.auth.get", "relay"), "Enter")
+						continue
+					}
+
+					if strings.HasSuffix(strings.TrimSpace(tail), m.Conf("relay", "meta.tail.password")) {
+						m.Cmdy(prefix, "send-keys", "-t", arg[0], value["password"], "Enter")
+						continue
+					}
+				}
+			})
+		}},
+		"/favor": {Name: "/favor", Help: "收藏", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			// prefix := kit.Simple(m.Confv("prefix", "meta.cmd"))
+
+			// 当前会话
+			current := ""
+			m.Cmd("session").Table(func(index int, value map[string]string, head []string) {
+				if value["tag"] == "1" {
+					current = value["session"]
+				}
+			})
+
+			switch arg = kit.Split(kit.Select("tmux.auto", arg, 0)); arg[0] {
+			default:
+				m.Cmd("auto", current, arg)
+				m.Append("_output", "void")
+			}
 		}},
 	},
 }
 
-func init() { code.Index.Register(Index, nil) }
+func init() { code.Index.Register(Index, &web.Frame{}) }

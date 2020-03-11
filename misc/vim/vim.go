@@ -47,9 +47,11 @@ var Index = &ice.Context{Name: "vim", Help: "编辑器",
 		"/sync": {Name: "/sync", Help: "同步", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			switch arg[0] {
 			case "read", "write", "exec", "insert":
-				m.Cmd(ice.WEB_FAVOR, m.Conf("vim", "meta.history"), "vimrc", arg[0], kit.Select(m.Option("arg"), m.Option("sub")),
-					"sid", m.Option("sid"), "pwd", m.Option("pwd"), "buf", m.Option("buf"), "row", m.Option("row"), "col", m.Option("col"))
-
+				cmds := []string{ice.WEB_FAVOR, m.Conf("vim", "meta.history"), "vimrc", arg[0], kit.Select(m.Option("arg"), m.Option("sub")),
+					"sid", m.Option("sid"), "pwd", m.Option("pwd"), "buf", m.Option("buf"), "row", m.Option("row"), "col", m.Option("col")}
+				if m.Cmd(cmds); m.Option("you") != "" {
+					m.Cmd(ice.WEB_SPACE, m.Option("you"), cmds)
+				}
 			default:
 				m.Richs("login", nil, m.Option("sid"), func(key string, value map[string]interface{}) {
 					kit.Value(value, kit.Keys("sync", arg[0]), kit.Dict(
@@ -86,14 +88,16 @@ var Index = &ice.Context{Name: "vim", Help: "编辑器",
 		"/favor": {Name: "/favor", Help: "收藏", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			if m.Options("arg") {
 				// 添加收藏
-				m.Cmd(ice.WEB_FAVOR, m.Option("tab"), "vimrc", m.Option("note"), m.Option("arg"),
-					"pwd", m.Option("pwd"), "buf", m.Option("buf"), "row", m.Option("row"), "col", m.Option("col"),
-				)
+				cmds := []string{ice.WEB_FAVOR, m.Option("tab"), "vimrc", m.Option("note"), m.Option("arg"),
+					"pwd", m.Option("pwd"), "buf", m.Option("buf"), "row", m.Option("row"), "col", m.Option("col")}
+				if m.Cmdy(cmds); m.Option("you") != "" {
+					m.Cmdy(ice.WEB_SPACE, m.Option("you"), cmds)
+				}
 				return
 			}
 
 			// 查看收藏
-			m.Cmd(ice.WEB_FAVOR, m.Option("tab"), "extra", "extra.pwd", "extra.buf", "extra.row", "extra.col").Table(func(index int, value map[string]string, head []string) {
+			m.Cmd(ice.WEB_SPACE, m.Option("you"), ice.WEB_FAVOR, m.Option("tab"), "extra", "extra.pwd", "extra.buf", "extra.row", "extra.col").Table(func(index int, value map[string]string, head []string) {
 				switch value["type"] {
 				case ice.TYPE_VIMRC:
 					m.Echo("%v\n", m.Option("tab")).Echo("%v:%v:%v:(%v): %v\n",

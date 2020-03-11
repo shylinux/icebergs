@@ -35,10 +35,7 @@ END
     [ -f Makefile ] || cat >> Makefile <<END
 all:
 	@echo && date
-	export CGO_ENABLED=0
-	export GOPRIVATE=github.com
-	export GOPROXY=https://goproxy.cn
-	go build -o ${ice_bin} ${main_go} && chmod u+x ${ice_bin} && ./${ice_sh} restart
+	GOPRIVATE=github.com GOPROXY=https://goproxy.cn CGO_ENABLED=0 go build -o ${ice_bin} ${main_go} && chmod u+x ${ice_bin} && ./${ice_sh} restart
 END
 
     [ -d etc ] || mkdir etc

@@ -467,7 +467,7 @@ var Index = &ice.Context{Name: "web", Help: "网络模块",
 				m.Cmd(ice.WEB_SPIDE, "add", "self", kit.Select("http://:9020", m.Conf(ice.CLI_RUNTIME, "conf.ctx_self")))
 			}
 			if m.Richs(ice.WEB_SPIDE, nil, "dev", nil) == nil {
-				m.Cmd(ice.WEB_SPIDE, "add", "dev", kit.Select("http://mac.local:9020", m.Conf(ice.CLI_RUNTIME, "conf.ctx_dev")))
+				m.Cmd(ice.WEB_SPIDE, "add", "dev", kit.Select("http://:9020", m.Conf(ice.CLI_RUNTIME, "conf.ctx_dev")))
 			}
 			if m.Richs(ice.WEB_SPIDE, nil, "shy", nil) == nil {
 				m.Cmd(ice.WEB_SPIDE, "add", "shy", kit.Select("https://shylinux.com:443", m.Conf(ice.CLI_RUNTIME, "conf.ctx_shy")))
@@ -865,12 +865,14 @@ var Index = &ice.Context{Name: "web", Help: "网络模块",
 						t := time.AfterFunc(kit.Duration(m.Conf(ice.WEB_SPACE, "meta.timeout.c")), func() {
 							m.TryCatch(m, true, func(m *ice.Message) {
 								m.Log(ice.LOG_WARN, "timeout")
-								m.Back(nil)
 							})
 						})
 						m.Call(true, func(msg *ice.Message) *ice.Message {
+							if msg != nil {
+								m.Copy(msg)
+							}
 							// 返回结果
-							m.Copy(msg).Log("cost", "%s: %s %v", m.Format("cost"), arg[0], arg[1:])
+							m.Log("cost", "%s: %s %v", m.Format("cost"), arg[0], arg[1:])
 							t.Stop()
 							return nil
 						})
@@ -878,7 +880,8 @@ var Index = &ice.Context{Name: "web", Help: "网络模块",
 				}) == nil, "not found %s", arg[0])
 			}
 		}},
-		ice.WEB_DREAM: {Name: "dream", Help: "梦想家", Meta: kit.Dict("exports", []string{"you", "name"},
+		ice.WEB_DREAM: {Name: "dream", Help: "梦想家", Meta: kit.Dict(
+			"remote", "pod", "exports", []string{"you", "name"},
 			"detail", []interface{}{"启动", "停止"},
 		), List: kit.List(
 			kit.MDB_INPUT, "text", "value", "", "name", "name",
@@ -915,7 +918,8 @@ var Index = &ice.Context{Name: "web", Help: "网络模块",
 					m.Option("cmd_type", "daemon")
 					m.Optionv("cmd_env",
 						"ctx_log", "boot.log",
-						"ctx_mod", "ctx log gdb ssh",
+						"ctx_mod", "ctx,log,gdb,ssh",
+						"ctx_dev", m.Conf(ice.CLI_RUNTIME, "conf.ctx_dev"),
 						"PATH", kit.Path(path.Join(p, "bin"))+":"+os.Getenv("PATH"),
 					)
 					m.Cmd(m.Confv(ice.WEB_DREAM, "meta.cmd"), "self", arg[0])
@@ -942,7 +946,7 @@ var Index = &ice.Context{Name: "web", Help: "网络模块",
 		}},
 
 		ice.WEB_FAVOR: {Name: "favor [path [type name [text [key value]....]]", Help: "收藏夹", Meta: kit.Dict(
-			"remote", "you", "exports", []string{"hot", "favor"},
+			"remote", "pod", "exports", []string{"hot", "favor"},
 			"detail", []string{"编辑", "收录", "导出", "删除"},
 		), List: kit.List(
 			kit.MDB_INPUT, "text", "name", "favor", "action", "auto",
@@ -1157,7 +1161,7 @@ var Index = &ice.Context{Name: "web", Help: "网络模块",
 				m.Push("data", h)
 			}
 		}},
-		ice.WEB_STORY: {Name: "story", Help: "故事会", Meta: kit.Dict("remote", "you", "exports", []string{"top", "story"},
+		ice.WEB_STORY: {Name: "story", Help: "故事会", Meta: kit.Dict("remote", "pod", "exports", []string{"top", "story"},
 			"detail", []string{"共享", "更新", "推送"}), List: kit.List(
 			kit.MDB_INPUT, "text", "name", "story", "action", "auto",
 			kit.MDB_INPUT, "text", "name", "list", "action", "auto",
@@ -1536,9 +1540,11 @@ var Index = &ice.Context{Name: "web", Help: "网络模块",
 				m.Richs(ice.WEB_SHARE, nil, arg[0], func(key string, value map[string]interface{}) {
 					m.Push("detail", value)
 					m.Push("key", "link")
-					m.Push("value", fmt.Sprintf(m.Conf(ice.WEB_SHARE, "meta.template.share"), key, key))
-					m.Push("key", "qrcode")
-					m.Push("value", fmt.Sprintf(m.Conf(ice.WEB_SHARE, "meta.template.qrcode"), key))
+					m.Push("value", fmt.Sprintf(m.Conf(ice.WEB_SHARE, "meta.template.link"), key, key))
+					m.Push("key", "share")
+					m.Push("value", fmt.Sprintf(m.Conf(ice.WEB_SHARE, "meta.template.share"), key))
+					m.Push("key", "value")
+					m.Push("value", fmt.Sprintf(m.Conf(ice.WEB_SHARE, "meta.template.value"), key))
 				})
 				return
 			}
@@ -1609,9 +1615,13 @@ var Index = &ice.Context{Name: "web", Help: "网络模块",
 					m.Append("_output", "result")
 					m.Echo(kit.Formats(value))
 					return
-				case "qrcode", "共享码":
+				case "share", "共享码":
 					m.Append("_output", "qrcode")
 					m.Echo("%s/%s/", m.Conf(ice.WEB_SHARE, "meta.domain"), key)
+					return
+				case "value", "数据值":
+					m.Append("_output", "qrcode")
+					m.Echo("%s", value["text"])
 					return
 				}
 
@@ -1709,6 +1719,7 @@ var Index = &ice.Context{Name: "web", Help: "网络模块",
 						break
 					}
 				}
+				m.Log(ice.LOG_EXPORT, "%s %s", m.Option("begin"), m.Format("append"))
 
 			case ice.STORY_PUSH:
 				// 上传节点

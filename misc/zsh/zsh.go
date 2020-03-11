@@ -45,45 +45,16 @@ var Index = &ice.Context{Name: "zsh", Help: "命令行",
 			m.Cmdy("login", "exit")
 		}},
 
-		"/download": {Name: "/download", Help: "下载", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			you := m.Option("you")
-			m.Option("you", "")
-
-			if len(arg) == 0 || arg[0] == "" {
-				// 文件列表
-				m.Cmdy(ice.WEB_SPACE, you, ice.WEB_STORY)
-				m.Table()
-				return
-			}
-
-			// 查找文件
-			if m.Cmdy(ice.WEB_STORY, "index", arg[0]).Append("text") == "" && you != "" {
-				// 上发文件
-				m.Cmdy(ice.WEB_SPACE, you, ice.WEB_STORY, "index", arg[0])
-			}
-
-			// 下载文件
-			m.Append("_output", kit.Select("file", "result", m.Append("file") == ""))
-		}},
-		"/upload": {Name: "/upload", Help: "上传", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			you := m.Option("you")
-			m.Option("you", "")
-
-			// 缓存文件
-			msg := m.Cmd(ice.WEB_STORY, "upload")
-			m.Echo("data: %s\n", msg.Append("data"))
-			m.Echo("time: %s\n", msg.Append("time"))
-			m.Echo("type: %s\n", msg.Append("type"))
-			m.Echo("name: %s\n", msg.Append("name"))
-			m.Echo("size: %s\n", msg.Append("size"))
-
-			if you != "" {
-				// 下发文件
-				m.Cmd(ice.WEB_SPACE, you, ice.WEB_STORY, ice.STORY_PULL, "dev", msg.Append("name"))
-			}
-		}},
 		"/sync": {Name: "/sync", Help: "同步", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			switch arg[0] {
+			case "history":
+				vs := strings.SplitN(strings.TrimSpace(m.Option("arg")), " ", 2)
+				cmds := []string{ice.WEB_FAVOR, m.Conf("zsh", "meta.history"), ice.TYPE_SHELL, vs[0], kit.Select("", vs, 1),
+					"sid", m.Option("sid"), "pwd", m.Option("pwd")}
+
+				if m.Cmd(cmds); m.Option("you") != "" {
+					m.Cmd(ice.WEB_SPACE, m.Option("you"), cmds)
+				}
 			default:
 				m.Richs("login", nil, m.Option("sid"), func(key string, value map[string]interface{}) {
 					kit.Value(value, kit.Keys("sync", arg[0]), kit.Dict(
@@ -181,19 +152,17 @@ var Index = &ice.Context{Name: "zsh", Help: "命令行",
 			m.Info("trans: %v", m.Result())
 		}},
 		"/favor": {Name: "/favor", Help: "收藏", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			you := m.Option("you")
-			m.Option("you", "")
-
 			if len(arg) > 0 && arg[0] != "sh" {
 				// 添加收藏
-				if m.Cmdy(ice.WEB_FAVOR, m.Option("tab"), ice.TYPE_SHELL, m.Option("note"), arg[0]); you != "" {
-					m.Cmdy(ice.WEB_SPACE, you, ice.WEB_FAVOR, m.Option("tab"), ice.TYPE_SHELL, m.Option("note"), arg[0])
+				cmds := []string{ice.WEB_FAVOR, kit.Select("zsh.history", m.Option("tab")), ice.TYPE_SHELL, m.Option("note"), arg[0]}
+				if m.Cmdy(cmds); m.Option("you") != "" {
+					m.Cmdy(ice.WEB_SPACE, m.Option("you"), cmds)
 				}
 				return
 			}
 
 			m.Echo("#/bin/sh\n\n")
-			m.Cmd(ice.WEB_SPACE, you, ice.WEB_FAVOR, m.Option("tab")).Table(func(index int, value map[string]string, head []string) {
+			m.Cmd(ice.WEB_SPACE, m.Option("you"), ice.WEB_FAVOR, kit.Select("zsh.history", m.Option("tab"))).Table(func(index int, value map[string]string, head []string) {
 				switch value["type"] {
 				case ice.TYPE_SHELL:
 					// 查看收藏
@@ -203,10 +172,38 @@ var Index = &ice.Context{Name: "zsh", Help: "命令行",
 				}
 			})
 		}},
-		"/history": {Name: "/history", Help: "历史", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			vs := strings.SplitN(strings.TrimSpace(arg[0]), " ", 2)
-			m.Cmd(ice.WEB_SPACE, m.Option("you"), ice.WEB_FAVOR, m.Conf("zsh", "meta.history"), ice.TYPE_SHELL, vs[0], kit.Select("", vs, 1),
-				"sid", m.Option("sid"), "pwd", m.Option("pwd"))
+
+		"/download": {Name: "/download", Help: "下载", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			if len(arg) == 0 || arg[0] == "" {
+				// 文件列表
+				m.Cmdy(ice.WEB_SPACE, m.Option("you"), ice.WEB_STORY)
+				m.Table()
+				return
+			}
+
+			// 查找文件
+			if m.Cmdy(ice.WEB_STORY, "index", arg[0]).Append("text") == "" && m.Option("you") != "" {
+				// 上发文件
+				m.Cmd(ice.WEB_SPACE, m.Option("you"), ice.WEB_STORY, "push", arg[0], "dev", arg[0])
+				m.Cmdy(ice.WEB_STORY, "index", arg[0])
+			}
+
+			// 下载文件
+			m.Append("_output", kit.Select("file", "result", m.Append("file") == ""))
+		}},
+		"/upload": {Name: "/upload", Help: "上传", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			// 缓存文件
+			msg := m.Cmd(ice.WEB_STORY, "upload")
+			m.Echo("data: %s\n", msg.Append("data"))
+			m.Echo("time: %s\n", msg.Append("time"))
+			m.Echo("type: %s\n", msg.Append("type"))
+			m.Echo("name: %s\n", msg.Append("name"))
+			m.Echo("size: %s\n", msg.Append("size"))
+
+			if m.Option("you") != "" {
+				// 下发文件
+				m.Cmd(ice.WEB_SPACE, m.Option("you"), ice.WEB_STORY, ice.STORY_PULL, msg.Append("name"), "dev", msg.Append("name"))
+			}
 		}},
 	},
 }

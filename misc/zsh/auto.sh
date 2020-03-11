@@ -92,6 +92,14 @@ ShySend() {
         -F "SHELL=${SHELL}" -F "pwd=${PWD}" -F "sid=${ctx_sid}"
 }
 
+ShyRelay() {
+    which=docker && [ "$1" != "" ] && which=$1 && shift
+    arg="" && for cmd in "$@"; do
+        arg="$arg&after="`echo $cmd|sed s/\;/%3B/g|sed s/\ /%20/g`
+    done
+    ${ctx_curl} -s "$ctx_dev/code/tmux/favor?relay=$which&cmds=tmux.auto&$arg" &
+}
+
 # 同步数据
 ShySync() {
     case "$1" in
@@ -108,7 +116,7 @@ ShySync() {
             ctx_count=`expr $ctx_end - $ctx_begin`
             ShyEcho "sync $ctx_begin-$ctx_end count $ctx_count to $ctx_dev"
             history|tail -n $ctx_count |while read line; do
-                ShyPost history "$line"
+                ShyPost sync history arg "$line" >/dev/null
             done
             ctx_begin=$ctx_end
             ;;
@@ -129,7 +137,7 @@ ShyFavor() {
         # 查看收藏
         ctx_word="sh"
         shift && [ "$1" != "" ] && ctx_tab="$1"
-        shift && [ "$1" != "" ] && ctx_note="$1"
+        shift && ctx_note="$1"
     else
         # 添加收藏
         [ "$1" != "" ] && ctx_word="$*" || ctx_word=`history|tail -n1|head -n1|sed -e 's/^[\ 0-9]*//g'`
@@ -151,6 +159,9 @@ ShyInit() {
 
     if bind &>/dev/null; then
         # bash
+        bind -x '"\C-G\C-R":ShySync base'
+        bind -x '"\C-G\C-G":ShySync history'
+
         # bind 'TAB:complete' 
         bind 'TAB:menu-complete' 
         complete -F ShyInput word
@@ -158,13 +169,12 @@ ShyInit() {
         bind -x '"\C-G\C-F":ShyFavor'
         bind -x '"\C-GF":ShyFavor sh'
         bind -x '"\C-Gf":ShyFavor sh'
-        bind -x '"\C-G\C-G":ShySync history'
 
     elif bindkey &>/dev/null; then
         # zsh
+        setopt nosharehistory
         bindkey -s '\C-G\C-R' 'ShySync base\n'
         bindkey -s '\C-G\C-G' 'ShySync history\n'
-        setopt nosharehistory
     fi
 
     echo "url: ${ctx_url}"

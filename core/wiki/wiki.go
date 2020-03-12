@@ -62,9 +62,9 @@ var Index = &ice.Context{Name: "wiki", Help: "文档中心",
 		"stack": {Name: "stack", Help: "结构", Value: kit.Data("template", stack)},
 		"chart": {Name: "chart", Help: "绘图", Value: kit.Data("template", prefix, "suffix", `</svg>`)},
 
-		"draw": {Name: "draw", Help: "思维导图", Value: kit.Data(kit.MDB_SHORT, "name", "path", "usr/local", "regs", ".*\\.svg", "prefix", `<svg vertion="1.1" xmlns="http://www.w3.org/2000/svg" width="%v" height="%v">`, "suffix", `</svg>`)},
-		"data": {Name: "data", Help: "数据表格", Value: kit.Data(kit.MDB_SHORT, "name", "path", "usr/local", "regs", ".*\\.csv")},
-		"word": {Name: "word", Help: "语言文字", Value: kit.Data(kit.MDB_SHORT, "name", "path", "usr/local", "regs", ".*\\.shy",
+		"draw": {Name: "draw", Help: "思维导图", Value: kit.Data(kit.MDB_SHORT, "name", "path", "", "regs", ".*\\.svg", "prefix", `<svg vertion="1.1" xmlns="http://www.w3.org/2000/svg" width="%v" height="%v">`, "suffix", `</svg>`)},
+		"data": {Name: "data", Help: "数据表格", Value: kit.Data(kit.MDB_SHORT, "name", "path", "", "regs", ".*\\.csv")},
+		"word": {Name: "word", Help: "语言文字", Value: kit.Data(kit.MDB_SHORT, "name", "path", "", "regs", ".*\\.shy",
 			"alias", map[string]interface{}{
 				"label": []interface{}{"chart", "label"},
 				"chain": []interface{}{"chart", "chain"},
@@ -75,8 +75,8 @@ var Index = &ice.Context{Name: "wiki", Help: "文档中心",
 				"premenu": []interface{}{"title", "premenu"},
 			},
 		)},
-		"walk": {Name: "walk", Help: "走遍世界", Value: kit.Data(kit.MDB_SHORT, "name", "path", "usr/local", "regs", ".*\\.csv")},
-		"feel": {Name: "feel", Help: "影音媒体", Value: kit.Data(kit.MDB_SHORT, "name", "path", "usr/local", "regs", ".*\\.(png|JPG|MOV|m4v)")},
+		"walk": {Name: "walk", Help: "走遍世界", Value: kit.Data(kit.MDB_SHORT, "name", "path", "", "regs", ".*\\.csv")},
+		"feel": {Name: "feel", Help: "影音媒体", Value: kit.Data(kit.MDB_SHORT, "name", "path", "", "regs", ".*\\.(png|JPG|MOV|m4v)")},
 	},
 	Commands: map[string]*ice.Command{
 		ice.ICE_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {

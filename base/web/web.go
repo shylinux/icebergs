@@ -682,13 +682,14 @@ var Index = &ice.Context{Name: "web", Help: "网络模块",
 						var data map[string][]string
 						m.Assert(json.NewDecoder(res.Body).Decode(&data))
 						m.Info("res: %s", kit.Formats(data))
-						if len(data["append"]) > 0 {
-							for i := range data[data["append"][0]] {
-								for _, k := range data["append"] {
+						if len(data[ice.MSG_APPEND]) > 0 {
+							for i := range data[data[ice.MSG_APPEND][0]] {
+								for _, k := range data[ice.MSG_APPEND] {
 									m.Push(k, data[k][i])
 								}
 							}
 						}
+						m.Resultv(data[ice.MSG_RESULT])
 
 					case "raw":
 						if b, e := ioutil.ReadAll(res.Body); m.Assert(e) {
@@ -790,31 +791,32 @@ var Index = &ice.Context{Name: "web", Help: "网络模块",
 				name := m.Conf(ice.CLI_RUNTIME, "node.name")
 				user := m.Conf(ice.CLI_RUNTIME, "boot.username")
 
-				m.Hold(1).Gos(m, func(m *ice.Message) {
-					m.Richs(ice.WEB_SPIDE, nil, dev, func(key string, value map[string]interface{}) {
+				m.Hold(1).Gos(m, func(msg *ice.Message) {
+					msg.Richs(ice.WEB_SPIDE, nil, dev, func(key string, value map[string]interface{}) {
 						proto := kit.Select("ws", "wss", kit.Format(kit.Value(value, "client.protocol")) == "https")
 						host := kit.Format(kit.Value(value, "client.hostname"))
 
-						for i := 0; i < m.Confi(ice.WEB_SPACE, "meta.redial.c"); i++ {
-							if u, e := url.Parse(kit.MergeURL(proto+"://"+host+"/space/", "node", node, "name", name, "user", user, "share", value["share"])); m.Assert(e) {
-								if s, e := net.Dial("tcp", host); !m.Warn(e != nil, "%s", e) {
-									if s, _, e := websocket.NewClient(s, u, nil, m.Confi(ice.WEB_SPACE, "meta.buffer.r"), m.Confi(ice.WEB_SPACE, "meta.buffer.w")); !m.Warn(e != nil, "%s", e) {
+						for i := 0; i < msg.Confi(ice.WEB_SPACE, "meta.redial.c"); i++ {
+							if u, e := url.Parse(kit.MergeURL(proto+"://"+host+"/space/", "node", node, "name", name, "user", user, "share", value["share"])); msg.Assert(e) {
+								if s, e := net.Dial("tcp", host); !msg.Warn(e != nil, "%s", e) {
+									if s, _, e := websocket.NewClient(s, u, nil, msg.Confi(ice.WEB_SPACE, "meta.buffer.r"), msg.Confi(ice.WEB_SPACE, "meta.buffer.w")); !msg.Warn(e != nil, "%s", e) {
+										msg = m.Spawn()
 
 										// 连接成功
-										m.Rich(ice.WEB_SPACE, nil, kit.Dict(
+										msg.Rich(ice.WEB_SPACE, nil, kit.Dict(
 											kit.MDB_TYPE, ice.WEB_MASTER, kit.MDB_NAME, dev, "user", kit.Value(value, "client.hostname"),
 											"socket", s,
 										))
-										m.Log(ice.LOG_CMDS, "%d conn %s success %s", i, dev, u)
-										if i = 0; web.HandleWSS(m, true, s, dev) {
+										msg.Log(ice.LOG_CMDS, "%d conn %s success %s", i, dev, u)
+										if i = 0; web.HandleWSS(msg, true, s, dev) {
 											break
 										}
 									}
 								}
 
 								// 断线重连
-								sleep := time.Duration(rand.Intn(m.Confi(ice.WEB_SPACE, "meta.redial.a"))*i+i*m.Confi(ice.WEB_SPACE, "meta.redial.b")) * time.Millisecond
-								m.Info("%d sleep: %s reconnect: %s", i, sleep, u)
+								sleep := time.Duration(rand.Intn(msg.Confi(ice.WEB_SPACE, "meta.redial.a"))*i+i*msg.Confi(ice.WEB_SPACE, "meta.redial.b")) * time.Millisecond
+								msg.Info("%d sleep: %s reconnect: %s", i, sleep, u)
 								time.Sleep(sleep)
 							}
 						}
@@ -1053,6 +1055,9 @@ var Index = &ice.Context{Name: "web", Help: "网络模块",
 				kit.MDB_TYPE, arg[1], kit.MDB_NAME, arg[2], kit.MDB_TEXT, arg[3],
 				"extra", kit.Dict(arg[4:]),
 			))
+			m.Richs(ice.WEB_FAVOR, nil, favor, func(key string, value map[string]interface{}) {
+				kit.Value(value, "meta.time", m.Time())
+			})
 			m.Log(ice.LOG_INSERT, "favor: %s index: %d name: %s text: %s", favor, index, arg[2], arg[3])
 			m.Echo("%d", index)
 		}},
@@ -1531,7 +1536,7 @@ var Index = &ice.Context{Name: "web", Help: "网络模块",
 				// 共享列表
 				m.Grows(ice.WEB_SHARE, nil, "", "", func(key int, value map[string]interface{}) {
 					m.Push(kit.Format(key), value, []string{kit.MDB_TIME, "share", kit.MDB_TYPE, kit.MDB_NAME, kit.MDB_TEXT})
-					m.Push("link", fmt.Sprintf(m.Conf(ice.WEB_SHARE, "meta.template.share"), value["share"], value["share"]))
+					m.Push("value", fmt.Sprintf(m.Conf(ice.WEB_SHARE, "meta.template.link"), value["share"], value["share"]))
 				})
 				return
 			}

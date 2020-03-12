@@ -190,8 +190,11 @@ autocmd! VimLeave * call ShyLogout()
 autocmd! BufReadPost * call ShySync("bufs")
 autocmd! BufReadPost * call ShySync("read")
 autocmd! BufWritePre * call ShySync("write")
-" autocmd! CmdlineLeave * call ShySync("exec")
-autocmd! CmdWinLeave * call ShySync("exec")
+if exists("CmdlineLeave")
+    autocmd! CmdlineLeave * call ShySync("exec")
+else
+    autocmd! CmdWinLeave * call ShySync("exec")
+endif
 " autocmd! QuickFixCmdPost * call ShyCheck("fixs")
 autocmd! InsertLeave * call ShySync("insert")
 

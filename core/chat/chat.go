@@ -5,6 +5,8 @@ import (
 	_ "github.com/shylinux/icebergs/base"
 	"github.com/shylinux/icebergs/base/web"
 	"github.com/shylinux/toolkits"
+
+	"strings"
 )
 
 var Index = &ice.Context{Name: "chat", Help: "聊天中心",
@@ -484,6 +486,7 @@ var Index = &ice.Context{Name: "chat", Help: "聊天中心",
 				return
 			}
 
+			m.Cmd(ice.WEB_FAVOR, "cmd.history", "cmd", m.Option(ice.MSG_SESSID)[:6], strings.Join(cmds, " "))
 			// 执行命令
 			m.Cmdy(cmds).Option("cmds", cmds)
 		}},

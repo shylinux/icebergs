@@ -99,7 +99,7 @@ var Index = &ice.Context{Name: "code", Help: "编程中心",
 			case "prune":
 				list := []string{}
 				m.Richs("login", nil, "*", func(key string, value map[string]interface{}) {
-					if value["status"] == "logout" {
+					if len(arg) > 1 && arg[1] == "all" || value["status"] == "logout" {
 						list = append(list, key)
 					}
 				})
@@ -108,6 +108,7 @@ var Index = &ice.Context{Name: "code", Help: "编程中心",
 					m.Log(ice.LOG_DELETE, "%s: %s", value, m.Conf("login", kit.Keys("hash", value)))
 					m.Conf("login", kit.Keys("hash", value), "")
 				})
+				m.Echo("%d", len(list))
 
 			case "exit":
 				// 退出会话

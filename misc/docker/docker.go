@@ -25,9 +25,16 @@ var Index = &ice.Context{Name: "docker", Help: "虚拟机",
 		}},
 		"auto": {Name: "auto", Help: "自动化", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			prefix := []string{ice.CLI_SYSTEM, "docker"}
+
+			if m.Cmd(prefix, "container", "start", arg[0]).Append("code") != "1" {
+				// 启动容器
+				return
+			}
+
 			// 创建容器
-			pid := m.Cmdx(prefix, "run", "-dt", "-w", "/root", "--name", arg[0], "--mount", kit.Format("type=bind,source=%s,target=/root",
-				kit.Path(m.Conf(ice.WEB_DREAM, "meta.path"), arg[0])), "alpine")
+			pid := m.Cmdx(prefix, "run", "-dt", "-w", "/root", "--name", arg[0],
+				// "--mount", kit.Format("type=bind,source=%s,target=/root", kit.Path(m.Conf(ice.WEB_DREAM, "meta.path"), arg[0])),
+				"alpine")
 			m.Log(ice.LOG_CREATE, "%s: %s", arg[0], pid)
 
 			m.Cmd(ice.WEB_FAVOR, kit.Select("alpine.auto", arg, 1)).Table(func(index int, value map[string]string, head []string) {

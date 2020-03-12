@@ -758,6 +758,9 @@ func (m *Message) Appendv(key string, arg ...interface{}) []string {
 	return m.meta[key]
 }
 func (m *Message) Resultv(arg ...interface{}) []string {
+	if len(arg) > 0 {
+		m.meta[MSG_RESULT] = kit.Simple(arg...)
+	}
 	return m.meta[MSG_RESULT]
 }
 func (m *Message) Result(arg ...interface{}) string {
@@ -767,7 +770,7 @@ func (m *Message) Result(arg ...interface{}) string {
 			return kit.Select("", m.meta[MSG_RESULT], v)
 		}
 	}
-	return strings.Join(m.Resultv(), "")
+	return strings.Join(m.Resultv(arg...), "")
 }
 
 func (m *Message) Log(level string, str string, arg ...interface{}) *Message {

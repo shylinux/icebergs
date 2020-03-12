@@ -216,6 +216,7 @@ func (f *Frame) Start(m *ice.Message, arg ...string) bool {
 		if m.Option(ice.MSG_PROMPT, m.Confv("prompt", "meta.PS1")); f.out == os.Stdout {
 			f.printf(m, "\033[0m")
 		}
+		m.Cmd(ice.WEB_FAVOR, "cmd.history", "cmd", kit.Select("stdio", arg, 0), line)
 
 		// 解析命令
 		f.parse(m, line)

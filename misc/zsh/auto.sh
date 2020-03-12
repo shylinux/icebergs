@@ -35,6 +35,9 @@ ShyLog() {
 }
 
 # 发送数据
+ShyWord() {
+    echo "$*"|sed "s/\ /%20/g"|sed "s/|/%7C/g"|sed "s/\;/%3B/g"|sed "s/\[/%5B/g"|sed "s/\]/%5D/g"
+}
 ShyLine() {
     echo "$*"|sed -e 's/\"/\\\"/g' -e 's/\n/\\n/g'
 }
@@ -68,11 +71,13 @@ ShyHelp() {
 ShyLogin() {
     HOST=`hostname` ctx_sid=`ShyPost login "" share "${ctx_share}" pid "$$" pane "${TMUX_PANE}" hostname "${HOST}" username "${USER}"`
     echo "${ctx_welcome}"
-    echo "${ctx_dev}"
-    echo "sid: ${ctx_sid}"
-    echo "begin: ${ctx_begin}"
+    echo "${ctx_dev} "
+    echo -n "sid: ${ctx_sid} "
+    echo "begin: ${ctx_begin} "
+    export ctx_sid
 }
 ShyLogout() {
+    ShySync history
     echo ${ctx_goodbye} && [ "$ctx_sid" != "" ] && ShyPost logout
 }
 
@@ -92,12 +97,23 @@ ShySend() {
         -F "SHELL=${SHELL}" -F "pwd=${PWD}" -F "sid=${ctx_sid}"
 }
 
-ShyRelay() {
-    which=docker && [ "$1" != "" ] && which=$1 && shift
-    arg="" && for cmd in "$@"; do
-        arg="$arg&after="`echo $cmd|sed s/\;/%3B/g|sed s/\ /%20/g`
+ShyLocal() {
+    which=alpine && [ "$1" != "" ] && which=$1 && shift
+    favor=tmux.auto && [ "$1" != "" ] && favor=$1 && shift
+    step=before arg="" && for cmd in "$@"; do
+        [ "$cmd" = after ] && step=after && continue
+        arg="$arg&$step="`ShyWord $cmd`
     done
-    ${ctx_curl} -s "$ctx_dev/code/tmux/favor?relay=$which&cmds=tmux.auto&$arg" &
+    ${ctx_curl} -s "$ctx_dev/code/tmux/favor?local=$which&cmds=$favor&$arg" &
+}
+ShyRelay() {
+    which=relay && [ "$1" != "" ] && which=$1 && shift
+    favor=tmux.auto && [ "$1" != "" ] && favor=$1 && shift
+    step=before arg="" && for cmd in "$@"; do
+        [ "$cmd" = after ] && step=after && continue
+        arg="$arg&$step="`ShyWord $cmd`
+    done
+    ${ctx_curl} -s "$ctx_dev/code/tmux/favor?relay=$which&cmds=$favor&$arg" &
 }
 
 # 同步数据
@@ -115,7 +131,7 @@ ShySync() {
             ctx_begin=${ctx_begin:=$ctx_end}
             ctx_count=`expr $ctx_end - $ctx_begin`
             ShyEcho "sync $ctx_begin-$ctx_end count $ctx_count to $ctx_dev"
-            history|tail -n $ctx_count |while read line; do
+            HISTTIMEFORMAT="%F %T " history|tail -n $ctx_count |while read line; do
                 ShyPost sync history arg "$line" >/dev/null
             done
             ctx_begin=$ctx_end
@@ -178,9 +194,8 @@ ShyInit() {
     fi
 
     echo "url: ${ctx_url}"
-    echo "pid: $$"
-    echo "begin: ${ctx_begin}"
-    echo "share: ${ctx_share}"
-    echo "pane: $TMUX_PANE"
+    echo -n "pid: $$ "
+    echo -n "begin: ${ctx_begin} "
+    echo -n "share: ${ctx_share} "
+    echo "pane: $TMUX_PANE "
 }
-ShyInit && trap ShyLogout EXIT

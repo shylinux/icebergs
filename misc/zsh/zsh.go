@@ -48,9 +48,9 @@ var Index = &ice.Context{Name: "zsh", Help: "命令行",
 		"/sync": {Name: "/sync", Help: "同步", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			switch arg[0] {
 			case "history":
-				vs := strings.SplitN(strings.TrimSpace(m.Option("arg")), " ", 2)
-				cmds := []string{ice.WEB_FAVOR, m.Conf("zsh", "meta.history"), ice.TYPE_SHELL, vs[0], kit.Select("", vs, 1),
-					"sid", m.Option("sid"), "pwd", m.Option("pwd")}
+				vs := strings.SplitN(strings.TrimSpace(m.Option("arg")), " ", 4)
+				cmds := []string{ice.WEB_FAVOR, m.Conf("zsh", "meta.history"), ice.TYPE_SHELL, vs[0], kit.Select("", vs, 3),
+					"sid", m.Option("sid"), "pwd", m.Option("pwd"), "time", vs[1] + " " + vs[2]}
 
 				if m.Cmd(cmds); m.Option("you") != "" {
 					m.Cmd(ice.WEB_SPACE, m.Option("you"), cmds)
@@ -154,15 +154,22 @@ var Index = &ice.Context{Name: "zsh", Help: "命令行",
 		"/favor": {Name: "/favor", Help: "收藏", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			if len(arg) > 0 && arg[0] != "sh" {
 				// 添加收藏
-				cmds := []string{ice.WEB_FAVOR, kit.Select("zsh.history", m.Option("tab")), ice.TYPE_SHELL, m.Option("note"), arg[0]}
+				cmds := []string{ice.WEB_FAVOR, kit.Select("zsh.history", m.Option("tab")), kit.Select(ice.TYPE_SHELL, m.Option("type")), m.Option("note"), arg[0]}
 				if m.Cmdy(cmds); m.Option("you") != "" {
 					m.Cmdy(ice.WEB_SPACE, m.Option("you"), cmds)
 				}
 				return
 			}
 
+			if m.Option("tab") == "" {
+				// 收藏列表
+				m.Cmdy(ice.WEB_SPACE, m.Option("you"), ice.WEB_FAVOR)
+				m.Table()
+				return
+			}
+
 			m.Echo("#/bin/sh\n\n")
-			m.Cmd(ice.WEB_SPACE, m.Option("you"), ice.WEB_FAVOR, kit.Select("zsh.history", m.Option("tab"))).Table(func(index int, value map[string]string, head []string) {
+			m.Cmd(ice.WEB_SPACE, m.Option("you"), ice.WEB_FAVOR, m.Option("tab")).Table(func(index int, value map[string]string, head []string) {
 				switch value["type"] {
 				case ice.TYPE_SHELL:
 					// 查看收藏

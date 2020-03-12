@@ -166,6 +166,7 @@ const ( // CHAT
 	CHAT_RIVER = "river"
 )
 const ( // TYPE
+	TYPE_SPIDE = "spide"
 	TYPE_SPACE = "space"
 	TYPE_STORY = "story"
 

@@ -502,7 +502,9 @@ var Index = &ice.Context{Name: "web", Help: "网络模块",
 			})
 		}},
 
-		ice.WEB_SPIDE: {Name: "spide", Help: "蜘蛛侠", List: kit.List(
+		ice.WEB_SPIDE: {Name: "spide", Help: "蜘蛛侠", Meta: kit.Dict(
+			"remote", "pod",
+		), List: kit.List(
 			kit.MDB_INPUT, "text", "name", "name",
 			kit.MDB_INPUT, "button", "value", "查看", "action", "auto",
 			kit.MDB_INPUT, "button", "value", "返回", "cb", "Last",

@@ -124,6 +124,8 @@ var Index = &ice.Context{Name: "tmux", Help: "工作台",
 			m.Cmdy(prefix, "show-buffer").Set("append")
 		}},
 		"buffer": {Name: "buffer", Help: "缓存", List: kit.List(
+			"remote", "pod",
+		), List: kit.List(
 			kit.MDB_INPUT, "text", "name", "buffer", "action", "auto",
 			kit.MDB_INPUT, "text", "name", "value",
 			kit.MDB_INPUT, "button", "value", "查看", "action", "auto",

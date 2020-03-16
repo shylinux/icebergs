@@ -32,11 +32,11 @@ func parse(m *ice.Message) {
 }
 
 func reply(m *ice.Message) {
-	m.Push("_output", "result")
+	m.Append("_output", "result")
 	m.Render(m.Conf("login", "meta.template.text"))
 }
 func action(m *ice.Message) {
-	m.Push("_output", "result")
+	m.Append("_output", "result")
 
 	m.Echo(`<xml>
 <ToUserName><![CDATA[%s]]></ToUserName>
@@ -115,8 +115,7 @@ var Index = &ice.Context{Name: "wx", Help: "公众号",
 
 			if m.Option("echostr") != "" {
 				// 绑定验证
-				m.Push("_output", "result")
-				m.Echo(m.Option("echostr"))
+				web.Render(m, m.Option("echostr"))
 				return
 			}
 

@@ -9,6 +9,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"math/rand"
 	"net/http"
 	"os"
@@ -1161,8 +1162,25 @@ func (m *Message) Richs(key string, chain interface{}, raw interface{}, cb inter
 			switch kit.Format(kit.Value(meta, kit.MDB_SHORT)) {
 			case "", "uniq":
 			default:
-				h = kit.Hashs(h)
-				res, ok = hash[h].(map[string]interface{})
+				hh := kit.Hashs(h)
+				if res, ok = hash[hh].(map[string]interface{}); ok {
+					h = hh
+					break
+				}
+
+				prefix := path.Join(kit.Select(m.Conf(WEB_CACHE, "meta.store"), kit.Format(meta["store"])), key)
+				for _, k := range []string{h, hh} {
+					if f, e := os.Open(path.Join(prefix, kit.Keys(k, "json"))); e == nil {
+						defer f.Close()
+						if b, e := ioutil.ReadAll(f); e == nil {
+							if json.Unmarshal(b, &res) == e {
+								h = k
+								m.Log(LOG_IMPORT, "%s/%s.json", prefix, k)
+								break
+							}
+						}
+					}
+				}
 			}
 		}
 	}
@@ -1220,7 +1238,35 @@ func (m *Message) Rich(key string, chain interface{}, data interface{}) string {
 	}
 
 	// 添加数据
-	hash[h] = data
+	if hash[h] = data; len(hash) >= kit.Int(kit.Select(m.Conf(WEB_CACHE, "meta.limit"), kit.Format(meta["limit"]))) {
+		least := kit.Int(kit.Select(m.Conf(WEB_CACHE, "meta.least"), kit.Format(meta["least"])))
+
+		// 时间淘汰
+		list := []int{}
+		for _, v := range hash {
+			list = append(list, kit.Time(kit.Format(kit.Value(v, "time"))))
+		}
+		sort.Ints(list)
+		dead := list[len(list)-1-least]
+
+		prefix := path.Join(kit.Select(m.Conf(WEB_CACHE, "meta.store"), kit.Format(meta["store"])), key)
+		for k, v := range hash {
+			if kit.Time(kit.Format(kit.Value(v, "time"))) > dead {
+				break
+			}
+
+			name := path.Join(prefix, kit.Keys(k, "json"))
+			if f, p, e := kit.Create(name); m.Assert(e) {
+				defer f.Close()
+				// 保存数据
+				if n, e := f.WriteString(kit.Format(v)); m.Assert(e) {
+					m.Log(LOG_EXPORT, "%s: %d", p, n)
+					delete(hash, k)
+				}
+			}
+		}
+	}
+
 	return h
 }
 func (m *Message) Grow(key string, chain interface{}, data interface{}) int {

@@ -196,7 +196,7 @@ var Index = &ice.Context{Name: "zsh", Help: "命令行",
 			}
 
 			// 下载文件
-			m.Append("_output", kit.Select("file", "result", m.Append("file") == ""))
+			web.Render(m, "download", kit.Select("file", "result", m.Append("file") == ""))
 		}},
 		"/upload": {Name: "/upload", Help: "上传", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			// 缓存文件

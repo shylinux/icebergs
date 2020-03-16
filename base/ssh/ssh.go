@@ -238,8 +238,25 @@ var Index = &ice.Context{Name: "ssh", Help: "终端模块",
 		)},
 
 		"super": {Name: "super", Help: "super", Value: kit.Data()},
+
+		"demo": {Name: "demo", Help: "demo", Value: kit.Data(
+			"short", "name",
+			"limit", "5", "least", "2",
+		)},
 	},
 	Commands: map[string]*ice.Command{
+		"demo": {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			data := m.Richs("demo", nil, arg[0], nil)
+			if data != nil {
+				m.Echo("%v", data)
+				return
+			}
+
+			m.Rich("demo", nil, kit.Dict(
+				"name", arg[0],
+			))
+		}},
+
 		ice.ICE_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			m.Load()
 		}},

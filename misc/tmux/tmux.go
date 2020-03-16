@@ -346,7 +346,7 @@ var Index = &ice.Context{Name: "tmux", Help: "工作台",
 
 			switch arg = kit.Split(kit.Select("tmux.auto", arg, 0)); arg[0] {
 			default:
-				m.Append("_output", "void")
+				m.Append("_output", "result")
 				m.Cmd("auto", current, arg)
 			}
 		}},

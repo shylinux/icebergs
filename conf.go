@@ -86,19 +86,19 @@ const ( // LOG
 	// 数据
 	LOG_ENABLE = "enable"
 	LOG_IMPORT = "import"
+	LOG_EXPORT = "export"
 	LOG_CREATE = "create"
+	LOG_REMOVE = "remove"
 	LOG_INSERT = "insert"
+	LOG_DELETE = "delete"
 	LOG_SELECT = "select"
 	LOG_MODIFY = "modify"
-	LOG_DELETE = "delete"
-	LOG_REMOVE = "remove"
-	LOG_EXPORT = "export"
 
 	// 事件
 	LOG_LISTEN = "listen"
 	LOG_SIGNAL = "signal"
-	LOG_TIMERS = "timers"
 	LOG_EVENTS = "events"
+	LOG_TIMERS = "timers"
 
 	// 状态
 	LOG_BEGIN = "begin"
@@ -165,6 +165,7 @@ const ( // ROLE
 )
 const ( // CHAT
 	CHAT_RIVER = "river"
+	CHAT_STORM = "storm"
 )
 const ( // TYPE
 	TYPE_SPIDE = "spide"

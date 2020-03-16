@@ -55,11 +55,11 @@ var Index = &ice.Context{Name: "mp", Help: "小程序",
 				})
 
 			case "scan":
-				m.Echo(m.Option("scan")).Push("_output", "qrcode")
+				web.Render(m, "qrcode", m.Option("scan"))
 
 			case "auth":
 				if !m.Options(ice.MSG_USERNAME) || !m.Options(ice.MSG_SESSID) {
-					m.Echo("401").Push("_output", "status")
+					web.Render(m, "status", 401, "not login")
 					break
 				}
 				switch kit.Select("active", m.Option("type")) {

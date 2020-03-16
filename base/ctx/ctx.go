@@ -8,12 +8,14 @@ import (
 	"os"
 	"path"
 	"sort"
+	"strings"
 )
 
 var Index = &ice.Context{Name: "ctx", Help: "配置模块",
 	Caches: map[string]*ice.Cache{},
 	Configs: map[string]*ice.Config{
 		ice.CTX_CONFIG: {Name: "config", Help: "配置", Value: kit.Data("path", "var/conf")},
+		"demo":         {Name: "demo", Help: "配置", Value: kit.Data("path", "var/conf")},
 	},
 	Commands: map[string]*ice.Command{
 		ice.CTX_CONTEXT: {Name: "context [all]", Help: "模块", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
@@ -169,8 +171,12 @@ var Index = &ice.Context{Name: "ctx", Help: "配置模块",
 				}
 			default:
 				if len(arg) > 2 {
-					// 修改配置
-					msg.Conf(arg[0], arg[1], arg[2])
+					if strings.HasPrefix(arg[2], "@") {
+						msg.Conf(arg[0], arg[1], msg.Cmdx("nfs.cat", arg[2][1:]))
+					} else {
+						msg.Conf(arg[0], arg[1], kit.Parse(nil, "", arg[2:]...))
+					}
+
 				}
 				if len(arg) > 1 {
 					// 读取配置

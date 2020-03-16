@@ -18,7 +18,7 @@ var Index = &ice.Context{Name: "input", Help: "输入法",
 	Caches: map[string]*ice.Cache{},
 	Configs: map[string]*ice.Config{
 		"input": {Name: "input", Help: "输入法", Value: kit.Data(
-			"store", "var/input/", "fsize", "200000", "limit", "5000", "least", "1000",
+			"store", "var/data/input", "fsize", "200000", "limit", "5000", "least", "1000",
 			"repos", "wubi-dict", "local", "some",
 		)},
 	},
@@ -45,13 +45,14 @@ var Index = &ice.Context{Name: "input", Help: "输入法",
 
 				// 清空数据
 				lib := kit.Select(path.Base(arg[0]), arg, 1)
-				m.Assert(os.RemoveAll(m.Option("cache.store", path.Join(m.Conf("input", "meta.store"), lib))))
+				m.Assert(os.RemoveAll(path.Join(m.Conf("input", "meta.store"), lib)))
 				m.Conf("input", lib, "")
 
 				// 缓存配置
-				m.Option("cache.least", m.Conf("input", "meta.least"))
-				m.Option("cache.limit", m.Conf("input", "meta.limit"))
-				m.Option("cache.fsize", m.Conf("input", "meta.fsize"))
+				m.Conf("input", kit.Keys(lib, "meta.store"), path.Join(m.Conf("input", "meta.store"), lib))
+				m.Conf("input", kit.Keys(lib, "meta.fsize"), m.Conf("input", "meta.fsize"))
+				m.Conf("input", kit.Keys(lib, "meta.limit"), m.Conf("input", "meta.limit"))
+				m.Conf("input", kit.Keys(lib, "meta.least"), m.Conf("input", "meta.least"))
 
 				// 加载词库
 				for bio.Scan() {
@@ -65,17 +66,16 @@ var Index = &ice.Context{Name: "input", Help: "输入法",
 					m.Grow("input", lib, kit.Dict("text", line[0], "code", line[1], "weight", line[2]))
 				}
 				// 保存词库
-				m.Option("cache.least", 0)
-				m.Option("cache.limit", 0)
+				m.Conf("input", kit.Keys(lib, "meta.limit"), 0)
+				m.Conf("input", kit.Keys(lib, "meta.least"), 0)
 				m.Echo("%s: %d", lib, m.Grow("input", lib, kit.Dict("text", "成功", "code", "z", "weight", "0")))
 			}
 		}},
 		"push": {Name: "push lib text code [weight]", Help: "添加词汇", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			m.Option("cache.least", 0)
-			m.Option("cache.limit", 0)
-			m.Option("cache.store", path.Join(m.Conf("input", "meta.store"), arg[0]))
+			m.Conf("input", kit.Keys(arg[0], "meta.limit"), 0)
+			m.Conf("input", kit.Keys(arg[0], "meta.least"), 0)
 			m.Echo("%s: %d", arg[0], m.Grow("input", arg[0], kit.Dict(
-				"text", arg[1], "code", arg[2], "weight", kit.Select("9091929394", arg, 3))))
+				"text", arg[1], "code", arg[2], "weight", kit.Select("90919495", arg, 3))))
 		}},
 		"list": {Name: "list [lib [offend [limit]]]", Help: "查看词汇", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			if len(arg) == 0 {

@@ -52,7 +52,7 @@ func (f *Frame) printf(m *ice.Message, res string, arg ...interface{}) *Frame {
 	return f
 }
 func (f *Frame) parse(m *ice.Message, line string) *Frame {
-	for _, one := range kit.Split(line, ";") {
+	for _, one := range kit.Split(line, ";", ";", ";") {
 		ls := kit.Split(one)
 		m.Log(ice.LOG_IMPORT, "stdin: %d %v", len(ls), ls)
 

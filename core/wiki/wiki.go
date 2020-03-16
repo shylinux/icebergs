@@ -246,7 +246,9 @@ var Index = &ice.Context{Name: "wiki", Help: "文档中心",
 			data := kit.Dict()
 			cmds := kit.Split(arg[1])
 			m.Search(cmds[0], func(p *ice.Context, s *ice.Context, key string, cmd *ice.Command) {
-				data["feature"], data["inputs"] = cmd.Meta, cmd.List
+				if data["feature"], data["inputs"] = cmd.Meta, cmd.List; len(cmd.List) == 0 {
+					data["inputs"] = m.Confv("field", "meta.some.simple.inputs")
+				}
 			})
 
 			for i := 2; i < len(arg)-1; i += 2 {
@@ -413,6 +415,16 @@ var Index = &ice.Context{Name: "wiki", Help: "文档中心",
 				switch arg[1] {
 				case "story":
 					cmds := kit.Split(arg[4])
+					if len(arg) > 6 {
+						switch arg[5] {
+						case "action":
+							switch arg[6] {
+							case "favor":
+								m.Cmdy(ice.WEB_FAVOR, arg[7:])
+								return
+							}
+						}
+					}
 					if m.Right(cmds, arg[5:]) {
 						m.Cmdy(cmds, arg[5:])
 					}

@@ -443,7 +443,9 @@ var Index = &ice.Context{Name: "web", Help: "网络模块",
 			"cmd", []interface{}{ice.CLI_SYSTEM, "ice.bin", ice.WEB_SPACE, "connect"},
 		)},
 
-		ice.WEB_FAVOR: {Name: "favor", Help: "收藏夹", Value: kit.Data(kit.MDB_SHORT, kit.MDB_NAME)},
+		ice.WEB_FAVOR: {Name: "favor", Help: "收藏夹", Value: kit.Data(
+			kit.MDB_SHORT, kit.MDB_NAME, "template", favor_template,
+		)},
 		ice.WEB_CACHE: {Name: "cache", Help: "缓存池", Value: kit.Data(
 			kit.MDB_SHORT, "text", "path", "var/file", "store", "var/data", "fsize", "100000", "limit", "50", "least", "30",
 		)},
@@ -472,8 +474,13 @@ var Index = &ice.Context{Name: "web", Help: "网络模块",
 			if m.Richs(ice.WEB_SPIDE, nil, "shy", nil) == nil {
 				m.Cmd(ice.WEB_SPIDE, "add", "shy", kit.Select("https://shylinux.com:443", m.Conf(ice.CLI_RUNTIME, "conf.ctx_shy")))
 			}
+			m.Rich(ice.WEB_SPACE, nil, kit.Dict(
+				kit.MDB_TYPE, ice.WEB_BETTER, kit.MDB_NAME, "tmux",
+				kit.MDB_TEXT, m.Conf(ice.CLI_RUNTIME, "boot.username"),
+			))
 			m.Watch(ice.SYSTEM_INIT, "web.code.git.repos", "volcanos", m.Conf(ice.WEB_SERVE, "meta.volcanos.path"),
 				m.Conf(ice.WEB_SERVE, "meta.volcanos.repos"), m.Conf(ice.WEB_SERVE, "meta.volcanos.branch"))
+			m.Conf(ice.WEB_FAVOR, "meta.template", favor_template)
 		}},
 		ice.ICE_EXIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			p := m.Conf(ice.WEB_CACHE, "meta.store")
@@ -753,9 +760,9 @@ var Index = &ice.Context{Name: "web", Help: "网络模块",
 			kit.MDB_INPUT, "button", "value", "返回", "cb", "Last",
 		), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			if len(arg) == 0 {
-				// 节点列表
+				// 空间列表
 				m.Richs(ice.WEB_SPACE, nil, "*", func(key string, value map[string]interface{}) {
-					m.Push(key, value, []string{"time", "type", "name", "user"})
+					m.Push(key, value, []string{"time", "type", "name", "text"})
 				})
 				m.Sort("name")
 				return
@@ -804,7 +811,7 @@ var Index = &ice.Context{Name: "web", Help: "网络模块",
 
 										// 连接成功
 										msg.Rich(ice.WEB_SPACE, nil, kit.Dict(
-											kit.MDB_TYPE, ice.WEB_MASTER, kit.MDB_NAME, dev, "user", kit.Value(value, "client.hostname"),
+											kit.MDB_TYPE, ice.WEB_MASTER, kit.MDB_NAME, dev, kit.MDB_TEXT, kit.Value(value, "client.hostname"),
 											"socket", s,
 										))
 										msg.Log(ice.LOG_CMDS, "%d conn %s success %s", i, dev, u)
@@ -826,6 +833,7 @@ var Index = &ice.Context{Name: "web", Help: "网络模块",
 
 			default:
 				if len(arg) == 1 {
+					// 空间空间
 					list := []string{}
 					m.Cmdy(ice.WEB_SPACE, arg[0], "space").Table(func(index int, value map[string]string, head []string) {
 						list = append(list, arg[0]+"."+value["name"])
@@ -833,7 +841,7 @@ var Index = &ice.Context{Name: "web", Help: "网络模块",
 					m.Append("name", list)
 					break
 
-					// 节点详情
+					// 空间详情
 					m.Richs(ice.WEB_SPACE, nil, arg[0], func(key string, value map[string]interface{}) {
 						m.Push("detail", value)
 					})
@@ -849,16 +857,24 @@ var Index = &ice.Context{Name: "web", Help: "网络模块",
 				target := strings.Split(arg[0], ".")
 				m.Warn(m.Richs(ice.WEB_SPACE, nil, target[0], func(key string, value map[string]interface{}) {
 					if socket, ok := value["socket"].(*websocket.Conn); ok {
-						// 构造路由
-						id := kit.Format(c.ID())
-						m.Optionv(ice.MSG_SOURCE, []string{id})
-						m.Optionv(ice.MSG_TARGET, target[1:])
-						for _, k := range []string{"top", "hot", ice.MSG_USERNAME} {
+						// 复制选项
+						for _, k := range kit.Simple(m.Optionv("_option")) {
 							if m.Options(k) {
-								m.Option(k, m.Option(k))
+								switch k {
+								case "detail", "cmds":
+								default:
+									if m.Option(k) != "" {
+										m.Option(k, m.Option(k))
+									}
+								}
 							}
 						}
+
+						// 构造路由
+						id := kit.Format(c.ID())
 						m.Set(ice.MSG_DETAIL, arg[1:]...)
+						m.Optionv(ice.MSG_TARGET, target[1:])
+						m.Optionv(ice.MSG_SOURCE, []string{id})
 						m.Info("send %s %s", id, m.Format("meta"))
 
 						// 下发命令
@@ -949,13 +965,27 @@ var Index = &ice.Context{Name: "web", Help: "网络模块",
 
 		ice.WEB_FAVOR: {Name: "favor [path [type name [text [key value]....]]", Help: "收藏夹", Meta: kit.Dict(
 			"remote", "pod", "exports", []string{"hot", "favor"},
-			"detail", []string{"编辑", "收录", "导出", "删除"},
+			"detail", []string{"编辑", "收藏", "收录", "导出", "删除"},
 		), List: kit.List(
 			kit.MDB_INPUT, "text", "name", "favor", "action", "auto",
 			kit.MDB_INPUT, "text", "name", "id", "action", "auto",
 			kit.MDB_INPUT, "button", "value", "查看", "action", "auto",
 			kit.MDB_INPUT, "button", "value", "返回", "cb", "Last",
+			kit.MDB_INPUT, "button", "value", "渲染",
+			kit.MDB_INPUT, "button", "value", "回放",
 		), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			switch m.Option("_action") {
+			case "渲染":
+				m.Option("render", "spide")
+				m.Richs(ice.WEB_FAVOR, nil, kit.Select(m.Option("favor"), arg, 0), func(key string, value map[string]interface{}) {
+					m.Option("render", kit.Select("spide", kit.Value(value, "meta.render")))
+				})
+				defer m.Render(m.Conf(ice.WEB_FAVOR, kit.Keys("meta.template", m.Option("render"))))
+
+			case "回放":
+				return
+			}
+
 			if len(arg) > 1 && arg[0] == "action" {
 				favor, id := m.Option("favor"), m.Option("id")
 				switch arg[2] {
@@ -968,6 +998,12 @@ var Index = &ice.Context{Name: "web", Help: "网络模块",
 				switch arg[1] {
 				case "modify", "编辑":
 					m.Richs(ice.WEB_FAVOR, nil, favor, func(key string, value map[string]interface{}) {
+						if id == "" {
+							m.Log(ice.LOG_MODIFY, "favor: %s value: %v->%v", key, kit.Value(value, kit.Keys("meta", arg[2])), arg[3])
+							m.Echo("%s->%s", kit.Value(value, kit.Keys("meta", arg[2])), arg[3])
+							kit.Value(value, kit.Keys("meta", arg[2]), arg[3])
+							return
+						}
 						m.Grows(ice.WEB_FAVOR, kit.Keys(kit.MDB_HASH, key), "id", id, func(index int, value map[string]interface{}) {
 							m.Log(ice.LOG_MODIFY, "favor: %s index: %d value: %v->%v", key, index, value[arg[2]], arg[3])
 							m.Echo("%s->%s", value[arg[2]], arg[3])
@@ -1010,12 +1046,14 @@ var Index = &ice.Context{Name: "web", Help: "网络模块",
 				// 收藏门类
 				m.Richs(ice.WEB_FAVOR, nil, "*", func(key string, value map[string]interface{}) {
 					m.Push(key, value["meta"], []string{"time", "count"})
+					m.Push("render", kit.Select("spide", kit.Value(value, "meta.render")))
 					m.Push("favor", kit.Value(value, "meta.name"))
 				})
 				m.Sort("favor")
 				return
 			}
 
+			m.Option("favor", arg[0])
 			fields := []string{kit.MDB_TIME, kit.MDB_ID, kit.MDB_TYPE, kit.MDB_NAME, kit.MDB_TEXT}
 			if len(arg) > 1 && arg[1] == "extra" {
 				fields, arg = append(fields, arg[2:]...), arg[:1]
@@ -1580,13 +1618,37 @@ var Index = &ice.Context{Name: "web", Help: "网络模块",
 		}},
 
 		ice.WEB_ROUTE: {Name: "route", Help: "路由", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-		}},
-		ice.WEB_PROXY: {Name: "proxy", Help: "代理", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			m.Richs(ice.WEB_SPACE, nil, arg[0], func(key string, value map[string]interface{}) {
+				switch value[kit.MDB_TYPE] {
+				case ice.WEB_MASTER:
+				case ice.WEB_SERVER:
+				case ice.WEB_WORKER:
+				}
+			})
 			m.Cmdy(ice.WEB_SPACE, arg[0], arg[1:])
 		}},
+		ice.WEB_PROXY: {Name: "proxy", Help: "代理", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			m.Richs(ice.WEB_SPACE, nil, arg[0], func(key string, value map[string]interface{}) {
+				if value[kit.MDB_TYPE] == ice.WEB_BETTER {
+					switch value[kit.MDB_NAME] {
+					case "tmux":
+						m.Cmd("web.code.tmux.session").Table(func(index int, value map[string]string, head []string) {
+							if value["tag"] == "1" {
+								m.Log(ice.LOG_SELECT, "space: %s", value["session"])
+								arg[0] = value["session"]
+							}
+						})
+					}
+				}
+			})
+
+			m.Cmdy(ice.WEB_ROUTE, arg[0], arg[1:])
+		}},
 		ice.WEB_GROUP: {Name: "group", Help: "分组", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			m.Cmdy(ice.WEB_PROXY, arg[0], arg[1:])
 		}},
 		ice.WEB_LABEL: {Name: "label", Help: "标签", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			m.Cmdy(ice.WEB_GROUP, arg[0], arg[1:])
 		}},
 
 		"/share/": {Name: "/share/", Help: "共享链", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
@@ -1796,7 +1858,7 @@ var Index = &ice.Context{Name: "web", Help: "网络模块",
 				h := m.Rich(ice.WEB_SPACE, nil, kit.Dict(
 					kit.MDB_TYPE, m.Option("node"),
 					kit.MDB_NAME, m.Option("name"),
-					kit.MDB_USER, m.Option("user"),
+					kit.MDB_TEXT, m.Option("user"),
 					"sessid", m.Option("sessid"),
 					"share", share, "socket", s,
 				))

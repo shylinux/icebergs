@@ -78,6 +78,7 @@ const ( // WEB
 
 	WEB_MASTER = "master"
 	WEB_MYSELF = "myself"
+	WEB_BETTER = "better"
 	WEB_SERVER = "server"
 	WEB_WORKER = "worker"
 )

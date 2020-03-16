@@ -30,7 +30,7 @@ func (f *Frame) Start(m *ice.Message, arg ...string) bool {
 				return true
 			}
 			m.Log(ice.LOG_SIGNAL, "%v: %v", s, m.Confv(ice.GDB_SIGNAL, kit.Keys(kit.MDB_HASH, s)))
-			m.Cmd(m.Confv(ice.GDB_SIGNAL, kit.Keys(kit.MDB_HASH, s)))
+			m.Cmd(m.Confv(ice.GDB_SIGNAL, kit.Keys(kit.MDB_HASH, s)), kit.Keys(s))
 
 		case t, ok := <-f.t:
 			if !ok {
@@ -73,9 +73,10 @@ var Index = &ice.Context{Name: "gdb", Help: "事件模块",
 			kit.MDB_META, kit.Dict("pid", "var/run/ice.pid"),
 			kit.MDB_LIST, kit.List(),
 			kit.MDB_HASH, kit.Dict(
-				"2", []interface{}{"exit"},
+				"2", []interface{}{"exit", "0"},
 				"3", []interface{}{"exit", "1"},
-				"15", []interface{}{"exit"},
+				"15", []interface{}{"exit", "1"},
+				"20", []interface{}{"cli.daemon", "exit"},
 				"30", []interface{}{"exit"},
 				"31", []interface{}{"exit", "1"},
 				"28", "WINCH",

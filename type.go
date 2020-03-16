@@ -428,6 +428,12 @@ func (m *Message) Echo(str string, arg ...interface{}) *Message {
 	return m
 }
 func (m *Message) Copy(msg *Message, arg ...string) *Message {
+	if m == msg {
+		return m
+	}
+	if m == nil {
+		return m
+	}
 	if len(arg) > 0 {
 		// 精确复制
 		for _, k := range arg[1:] {
@@ -959,6 +965,24 @@ func (m *Message) Watch(key string, arg ...string) *Message {
 	return m
 }
 
+func (m *Message) Preview(arg string) (res string) {
+	list := kit.Split(arg)
+	m.Search(list[0], func(p *Context, s *Context, key string, cmd *Command) {
+		res = kit.Format(kit.Dict("feature", cmd.Meta, "inputs", cmd.List))
+	})
+	return res
+}
+func (m *Message) Prefile(favor string, id string) map[string]string {
+	res := map[string]string{}
+	m.Option("render", "")
+	m.Option("_action", "")
+	m.Cmd(WEB_FAVOR, kit.Select(m.Option("favor"), favor), id).Table(func(index int, value map[string]string, head []string) {
+		res[value["key"]] = value["value"]
+	})
+
+	res["content"] = m.Cmdx(CLI_SYSTEM, "sed", "-n", kit.Format("%d,%dp", kit.Int(res["extra.row"]), kit.Int(res["extra.row"])+3), res["extra.buf"])
+	return res
+}
 func (m *Message) Prefix(arg ...string) string {
 	return kit.Keys(m.Cap(CTX_FOLLOW), arg)
 }
@@ -1226,16 +1250,24 @@ func (m *Message) Grow(key string, chain interface{}, data interface{}) int {
 	meta["count"] = id
 
 	// 保存数据
-	if len(list) >= kit.Int(kit.Select(m.Conf(WEB_CACHE, "meta.limit"), kit.Select(kit.Format(meta["limit"]), m.Option("cache.limit")))) {
-		least := kit.Int(kit.Select(m.Conf(WEB_CACHE, "meta.least"), kit.Select(kit.Format(meta["least"]), m.Option("cache.least"))))
+	if len(list) >= kit.Int(kit.Select(m.Conf(WEB_CACHE, "meta.limit"), kit.Format(meta["limit"]))) {
+		least := kit.Int(kit.Select(m.Conf(WEB_CACHE, "meta.least"), kit.Format(meta["least"])))
 
-		// 创建文件
-		name := path.Join(kit.Select(m.Conf(WEB_CACHE, "meta.store"), kit.Select(kit.Format(meta["store"]), m.Option("cache.store"))), kit.Keys(key, chain, "csv"))
-		if s, e := os.Stat(name); e == nil {
-			if s.Size() > kit.Int64(kit.Select(m.Conf(WEB_CACHE, "meta.fsize"), kit.Select(kit.Format(meta["fsize"]), m.Option("cache.fsize")))) {
-				name = strings.Replace(name, ".csv", fmt.Sprintf("_%d.csv", kit.Int(meta["offset"])), -1)
+		record, _ := meta["record"].([]interface{})
+
+		// 文件命名
+		prefix := path.Join(kit.Select(m.Conf(WEB_CACHE, "meta.store"), kit.Format(meta["store"])), key)
+		name := path.Join(prefix, kit.Keys(kit.Select("list", chain), "csv"))
+		if len(record) > 0 {
+			name = kit.Format(kit.Value(record, kit.Keys(len(record)-1, "file")))
+			if s, e := os.Stat(name); e == nil {
+				if s.Size() > kit.Int64(kit.Select(m.Conf(WEB_CACHE, "meta.fsize"), kit.Format(meta["fsize"]))) {
+					name = fmt.Sprintf("%s/%s_%d.csv", prefix, kit.Select("list", chain), kit.Int(meta["offset"]))
+				}
 			}
 		}
+
+		// 打开文件
 		f, e := os.OpenFile(name, os.O_RDWR|os.O_APPEND|os.O_CREATE, 0666)
 		if e != nil {
 			f, _, e = kit.Create(name)
@@ -1256,28 +1288,22 @@ func (m *Message) Grow(key string, chain interface{}, data interface{}) int {
 			}
 			sort.Strings(keys)
 			w.Write(keys)
+			m.Info("write head: %v", keys)
 			w.Flush()
 			s, e = f.Stat()
 		} else {
 			r := csv.NewReader(f)
 			keys, e = r.Read()
+			m.Info("read head: %v", keys)
 		}
 
-		// 保存记录
+		// 创建索引
 		count := len(list) - least
 		offset := kit.Int(meta["offset"])
-		record, _ := meta["record"].([]interface{})
-		if len(record) > 0 && kit.Format(kit.Value(record, kit.Keys(len(record)-1, "file"))) == name && count < 10 {
-			kit.Value(record, kit.Keys(len(record)-1, "count"), kit.Int(kit.Value(record, kit.Keys(len(record)-1, "count")))+count)
-		} else {
-			meta["record"] = append(record, map[string]interface{}{
-				"time":     m.Time(),
-				"offset":   offset,
-				"position": s.Size(),
-				"count":    count,
-				"file":     name,
-			})
-		}
+		meta["record"] = append(record, map[string]interface{}{
+			"time": m.Time(), "offset": offset, "count": count,
+			"file": name, "position": s.Size(),
+		})
 
 		// 保存数据
 		for i, v := range list {
@@ -1300,7 +1326,7 @@ func (m *Message) Grow(key string, chain interface{}, data interface{}) int {
 
 		m.Log(LOG_INFO, "%s.%v save %s offset %v+%v", key, chain, name, offset, count)
 		meta["offset"] = offset + count
-		list = list[:least]
+		list = list[count:]
 		cache[kit.MDB_LIST] = list
 		w.Flush()
 	}
@@ -1453,16 +1479,22 @@ func (m *Message) Cmd(arg ...interface{}) *Message {
 
 	m.Search(list[0], func(p *Context, c *Context, key string, cmd *Command) {
 		m.TryCatch(m.Spawns(c), true, func(msg *Message) {
-			msg.meta[MSG_DETAIL] = list
-			m.Hand, msg.Hand, m = true, true, msg
-			if you := m.Option(kit.Format(kit.Value(cmd.Meta, "remote"))); you != "" {
-				// 远程命令
-				msg.Copy(msg.Spawns(c).Cmd(WEB_SPACE, you, list[0], list[1:]))
-			} else {
-				// 本地命令
-				p.Run(msg, cmd, key, list[1:]...)
-			}
 			m.Hand, msg.Hand = true, true
+			msg.meta[MSG_DETAIL] = list
+
+			// _key := kit.Format(kit.Value(cmd.Meta, "remote"))
+			// if you := m.Option(_key); you != "" {
+			// 	// 远程命令
+			// 	msg.Option(_key, "")
+			// 	msg.Option("_option", m.Optionv("option"))
+			// 	msg.Copy(msg.Spawns(c).Cmd(WEB_LABEL, you, list[0], list[1:]))
+			// } else {
+			// 	// 本地命令
+			// 	p.Run(msg, cmd, key, list[1:]...)
+			// }
+
+			p.Run(msg, cmd, key, list[1:]...)
+			m.Hand, msg.Hand, m = true, true, msg
 		})
 	})
 

@@ -11,7 +11,7 @@ import (
 var Index = &ice.Context{Name: "docker", Help: "虚拟机",
 	Caches: map[string]*ice.Cache{},
 	Configs: map[string]*ice.Config{
-		"docker": {Name: "docker", Help: "虚拟机", Value: kit.Data(kit.MDB_SHORT, "name")},
+		"docker": {Name: "docker", Help: "虚拟机", Value: kit.Data(kit.MDB_SHORT, "name", "build", []interface{}{})},
 	},
 	Commands: map[string]*ice.Command{
 		"init": {Name: "init", Help: "初始化", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
@@ -31,10 +31,18 @@ var Index = &ice.Context{Name: "docker", Help: "虚拟机",
 				return
 			}
 
+			args := []string{}
+			kit.Fetch(m.Confv("docker", "meta.build"), func(index int, value string) {
+				switch value {
+				case "home":
+					args = append(args, "-w", "/root")
+				case "mount":
+					args = append(args, "--mount", kit.Format("type=bind,source=%s,target=/root", kit.Path(m.Conf(ice.WEB_DREAM, "meta.path"), arg[0])))
+				}
+			})
+
 			// 创建容器
-			pid := m.Cmdx(prefix, "run", "-dt", "-w", "/root", "--name", arg[0],
-				// "--mount", kit.Format("type=bind,source=%s,target=/root", kit.Path(m.Conf(ice.WEB_DREAM, "meta.path"), arg[0])),
-				"alpine")
+			pid := m.Cmdx(prefix, "run", "-dt", args, "--name", arg[0], "alpine")
 			m.Log(ice.LOG_CREATE, "%s: %s", arg[0], pid)
 
 			m.Cmd(ice.WEB_FAVOR, kit.Select("alpine.auto", arg, 1)).Table(func(index int, value map[string]string, head []string) {

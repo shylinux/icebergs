@@ -101,7 +101,7 @@ var Index = &ice.Context{Name: "chrome", Help: "浏览器",
 				// 添加收藏
 				cmds := []string{ice.WEB_FAVOR, m.Option("tab"), ice.TYPE_SPIDE, m.Option("note"), arg[0]}
 				if m.Cmdy(cmds); m.Option("you") != "" {
-					m.Cmdy(ice.WEB_SPACE, m.Option("you"), cmds)
+					m.Cmdy(ice.WEB_PROXY, m.Option("you"), cmds)
 				}
 				return
 			}

@@ -20,6 +20,7 @@ var Index = &ice.Context{Name: "cli", Help: "命令模块",
 		ice.CLI_RUNTIME: {Name: "runtime", Help: "运行环境", Value: kit.Dict()},
 		ice.CLI_SYSTEM:  {Name: "system", Help: "系统命令", Value: kit.Data()},
 		"python":        {Name: "python", Help: "系统命令", Value: kit.Data("python", "python", "pip", "pip")},
+		"daemon":        {Name: "daemon", Help: "守护进程", Value: kit.Data(kit.MDB_SHORT, "name")},
 	},
 	Commands: map[string]*ice.Command{
 		ice.ICE_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
@@ -94,15 +95,25 @@ var Index = &ice.Context{Name: "cli", Help: "命令模块",
 			case "daemon":
 				// 守护进程
 				cmd.Env = append(cmd.Env, fmt.Sprintf("PATH=%s", os.Getenv("PATH")))
+				if e := cmd.Start(); e != nil {
+					m.Warn(e != nil, "%v start: %s", arg, e)
+					return
+				}
+
+				m.Rich("daemon", nil, kit.Dict(kit.MDB_NAME, cmd.Process.Pid, "status", "running"))
+				m.Echo("%d", cmd.Process.Pid)
+
 				m.Gos(m, func(m *ice.Message) {
-					if e := cmd.Start(); e != nil {
-						m.Warn(e != nil, "%v start: %s", arg, e)
-					} else if e := cmd.Wait(); e != nil {
+					if e := cmd.Wait(); e != nil {
 						m.Warn(e != nil, "%v wait: %s", arg, e)
 					} else {
 						m.Cost("%v exit: %v", arg, cmd.ProcessState.ExitCode())
+						m.Rich("daemon", nil, func(key string, value map[string]interface{}) {
+							value["status"] = "exited"
+						})
 					}
 				})
+
 			default:
 				// 系统命令
 				out := bytes.NewBuffer(make([]byte, 0, 1024))
@@ -116,6 +127,11 @@ var Index = &ice.Context{Name: "cli", Help: "命令模块",
 				}
 				m.Push("code", int(cmd.ProcessState.ExitCode()))
 				m.Echo(out.String())
+			}
+		}},
+		"daemon": {Name: "daemon", Help: "守护进程", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			switch arg[0] {
+			case "exit":
 			}
 		}},
 		"python": {Name: "python", Help: "运行环境", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {

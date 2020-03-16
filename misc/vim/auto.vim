@@ -93,13 +93,16 @@ highlight Comment ctermfg=cyan ctermbg=darkblue
 " 收藏列表
 call ShyDefine("g:favor_tab", "")
 call ShyDefine("g:favor_note", "")
+let shyList=["启动流程", "请求响应", "服务集群", "数据结构", "系统架构", "编译原理"]
 fun! ShyFavor()
-    let g:favor_tab = input("tab: ", g:favor_tab)
+    " let g:favor_tab = input("tab: ", g:favor_tab)
+    let g:favor_tab = g:shyList[inputlist(g:shyList)-1]
     let g:favor_note = input("note: ", g:favor_note)
     call ShySend("favor", {"tab": g:favor_tab, "note": g:favor_note, "arg": getline("."), "row": getpos(".")[1], "col": getpos(".")[2]})
 endfun
 fun! ShyFavors()
-    let res = split(ShySend("favor", {"tab": input("tab: ", g:favor_tab)}), "\n")
+    " let res = split(ShySend("favor", {"tab": input("tab: ", g:favor_tab)}), "\n")
+    let res = split(ShySend("favor", {"tab": g:shyList[inputlist(g:shyList)-1]}), "\n")
     let page = "" | let note = ""
     for i in range(0, len(res)-1, 2)
         if res[i] != page
@@ -108,7 +111,21 @@ fun! ShyFavors()
         endif
         let page = res[i] | let note .= res[i+1] . "\n"
     endfor
-    if note != "" | lexpr note | lopen | let note = "" | endif
+    if note != "" | lexpr note | let note = "" | endif
+
+    let view = inputlist(["列表", "默认", "垂直", "水平"])
+
+    for i in range(0, len(res)-1, 2)
+        if i < 5
+            if l:view == 4
+                split | lnext
+            elseif l:view == 3
+                vsplit | lnext
+            endif
+        endif
+    endfor
+    botright lopen
+    if l:view  == 1 | only | endif
 endfun
 fun! ShyCheck(target)
     if a:target == "cache"

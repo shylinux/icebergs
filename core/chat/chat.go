@@ -5,8 +5,6 @@ import (
 	_ "github.com/shylinux/icebergs/base"
 	"github.com/shylinux/icebergs/base/web"
 	"github.com/shylinux/toolkits"
-
-	"strings"
 )
 
 var Index = &ice.Context{Name: "chat", Help: "聊天中心",
@@ -31,7 +29,6 @@ var Index = &ice.Context{Name: "chat", Help: "聊天中心",
 				[]interface{}{"field", "draw", "web.wiki"},
 				[]interface{}{"field", "data", "web.wiki"},
 				[]interface{}{"field", "word", "web.wiki"},
-				[]interface{}{"field", "mind", "web.wiki"},
 				[]interface{}{"field", "walk", "web.wiki"},
 				[]interface{}{"field", "feel", "web.wiki"},
 
@@ -445,12 +442,31 @@ var Index = &ice.Context{Name: "chat", Help: "聊天中心",
 					// 命令补全
 					if len(arg) > 3 && arg[3] == "action" {
 						switch arg[4] {
+						case "input":
+							switch arg[5] {
+							case "location":
+								// 查询位置
+								m.Copy(m.Cmd("aaa.location"), "append", "name")
+								return
+							}
+
+						case "favor":
+							m.Cmdy(ice.WEB_FAVOR, arg[5:])
+							return
 						case "location":
 							// 记录位置
 							m.Cmdy("aaa.location", arg[5:])
 							return
 						case "upload":
 							m.Cmdy(ice.WEB_STORY, "upload")
+							return
+
+						case "story":
+							// 	cmds := kit.Split(arg[7])
+							// 	if m.Right(cmds, arg[8:]) {
+							// 		m.Cmdy(cmds, arg[8:])
+							// 	}
+							// 	return
 
 						case "share":
 							list := []string{}
@@ -460,13 +476,6 @@ var Index = &ice.Context{Name: "chat", Help: "聊天中心",
 							// 共享命令
 							m.Cmdy(ice.WEB_SHARE, "add", "action", arg[5], arg[6], list)
 							return
-						case "input":
-							switch arg[5] {
-							case "location":
-								// 查询位置
-								m.Copy(m.Cmd("aaa.location"), "append", "name")
-								return
-							}
 						}
 					}
 
@@ -476,19 +485,30 @@ var Index = &ice.Context{Name: "chat", Help: "聊天中心",
 			})
 
 			if len(cmds) == 0 {
+				// 没有命令
+				m.Push("_output", "status")
+				m.Set("result").Echo("404")
 				return
 			}
 
-			if !m.Right(cmd, arg[2]) {
+			if !m.Right(cmds) {
 				// 没有权限
 				m.Push("_output", "status")
 				m.Set("result").Echo("403")
 				return
 			}
 
-			m.Cmd(ice.WEB_FAVOR, "cmd.history", "cmd", m.Option(ice.MSG_SESSID)[:6], strings.Join(cmds, " "))
+			// 代理命令
+			proxy := []string{}
+			m.Search(cmds[0], func(p *ice.Context, c *ice.Context, key string, cmd *ice.Command) {
+				if remote := kit.Format(kit.Value(cmd.Meta, "remote")); m.Option(remote) != "" {
+					proxy = append(proxy, ice.WEB_PROXY, m.Option(remote))
+				}
+			})
+
 			// 执行命令
-			m.Cmdy(cmds).Option("cmds", cmds)
+			m.Cmdy(proxy, cmds).Option("cmds", cmds)
+			// m.Cmd(ice.WEB_FAVOR, "cmd.history", "cmd", m.Option(ice.MSG_SESSID)[:6], strings.Join(cmds, " "))
 		}},
 	},
 }

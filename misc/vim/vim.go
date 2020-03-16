@@ -63,7 +63,7 @@ var Index = &ice.Context{Name: "vim", Help: "编辑器",
 		}},
 		"/input": {Name: "/input", Help: "补全", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			if strings.HasPrefix(strings.TrimSpace(arg[0]), "ice ") {
-				list := kit.Split(strings.TrimSpace(arg[0]), "ice ")
+				list := kit.Split(strings.TrimSpace(arg[0]))
 				switch list[1] {
 				case "add":
 					// 添加词汇

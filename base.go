@@ -5,6 +5,7 @@ import (
 
 	"fmt"
 	"os"
+	"runtime"
 	"strings"
 	"sync"
 	"time"
@@ -135,14 +136,15 @@ func Run(arg ...string) string {
 		arg = os.Args[1:]
 	}
 	if len(arg) == 0 {
-		// arg = append(arg, WEB_SERVE)
 		arg = append(arg, WEB_SPACE, "connect", "self")
 	}
 
 	frame := &Frame{}
 	Index.server = frame
+	Pulse.Option("cache.limit", "30")
 	Pulse.Option("begin_time", Pulse.Time())
 
+	runtime.GOMAXPROCS(1)
 	if frame.Begin(Pulse.Spawns(), arg...).Start(Pulse, arg...) {
 		frame.Close(Pulse.Spawns(), arg...)
 	}
@@ -151,7 +153,6 @@ func Run(arg ...string) string {
 		Pulse.Table()
 	}
 	fmt.Printf(Pulse.Result())
-	// time.Sleep(time.Second)
 	os.Exit(frame.code)
 	return ""
 }

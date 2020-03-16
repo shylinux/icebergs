@@ -283,6 +283,7 @@ var Index = &ice.Context{Name: "tmux", Help: "工作台",
 
 		"local": {Name: "local which target", Help: "虚拟机", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			prefix := kit.Simple(m.Confv("prefix", "meta.cmd"))
+			m.Cmd("web.code.docker.auto", arg[1])
 			m.Cmdy(prefix, "send-keys", "-t", arg[1], "docker exec -it ", arg[1], " bash", "Enter")
 		}},
 		"relay": {Name: "relay which target", Help: "跳板机", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {

@@ -176,7 +176,7 @@ var Index = &ice.Context{Name: "chat", Help: "聊天中心",
 			}
 
 			// 登录检查
-			if m.Warn(!m.Options(ice.MSG_SESSID) || !m.Options(ice.MSG_USERNAME), "not login") {
+			if m.Warn(!m.Options(ice.MSG_USERNAME), "not login") {
 				web.Render(m, "status", 401, "not login")
 				m.Option(ice.MSG_USERURL, "")
 				return

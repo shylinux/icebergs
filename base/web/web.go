@@ -41,7 +41,7 @@ func Count(m *ice.Message, cmd, key, name string) int {
 	return count
 }
 func Render(msg *ice.Message, cmd string, args ...interface{}) *ice.Message {
-	msg.Info("render %s: %v", cmd, args)
+	msg.Log(ice.LOG_EXPORT, "%s: %v", cmd, args)
 	switch arg := kit.Simple(args...); cmd {
 	case "redirect":
 		http.Redirect(msg.W, msg.R, kit.MergeURL(arg[0], arg[1:]), 307)
@@ -78,22 +78,30 @@ func Render(msg *ice.Message, cmd string, args ...interface{}) *ice.Message {
 	msg.Append("_output", "render")
 	return msg
 }
-func IsLocalIP(ip string) bool {
-	return ip == "::1" || strings.HasPrefix(ip, "127.")
+func IsLocalIP(msg *ice.Message, ip string) (ok bool) {
+	if ip == "::1" || strings.HasPrefix(ip, "127.") {
+		return true
+	}
+	msg.Cmd("tcp.ifconfig").Table(func(index int, value map[string]string, head []string) {
+		if value["ip"] == ip {
+			ok = true
+		}
+	})
+	return ok
 }
 
 func (web *Frame) Login(msg *ice.Message, w http.ResponseWriter, r *http.Request) bool {
 	msg.Option(ice.MSG_USERNAME, "")
 	msg.Option(ice.MSG_USERROLE, "")
 
-	if msg.Options(ice.WEB_SESS) {
+	if msg.Options(ice.MSG_SESSID) {
 		// 会话认证
-		sub := msg.Cmd(ice.AAA_SESS, "check", msg.Option(ice.WEB_SESS))
+		sub := msg.Cmd(ice.AAA_SESS, "check", msg.Option(ice.MSG_SESSID))
 		msg.Log(ice.LOG_LOGIN, "role: %s user: %s", msg.Option(ice.MSG_USERROLE, sub.Append("userrole")),
 			msg.Option(ice.MSG_USERNAME, sub.Append("username")))
 	}
 
-	if (!msg.Options(ice.MSG_SESSID) || !msg.Options(ice.MSG_USERNAME)) && IsLocalIP(msg.Option(ice.MSG_USERIP)) {
+	if !msg.Options(ice.MSG_USERNAME) && IsLocalIP(msg, msg.Option(ice.MSG_USERIP)) {
 		// 自动认证
 		msg.Option(ice.MSG_USERNAME, msg.Conf(ice.CLI_RUNTIME, "boot.username"))
 		msg.Option(ice.MSG_USERROLE, msg.Cmdx(ice.AAA_ROLE, "check", msg.Option(ice.MSG_USERNAME)))
@@ -107,7 +115,22 @@ func (web *Frame) Login(msg *ice.Message, w http.ResponseWriter, r *http.Request
 	if s, ok := msg.Target().Commands[ice.WEB_LOGIN]; ok {
 		// 权限检查
 		msg.Target().Run(msg, s, ice.WEB_LOGIN, kit.Simple(msg.Optionv("cmds"))...)
+	} else if strings.HasPrefix(msg.Option(ice.MSG_USERURL), "/static/") {
+	} else if strings.HasPrefix(msg.Option(ice.MSG_USERURL), "/plugin/") {
+	} else if strings.HasPrefix(msg.Option(ice.MSG_USERURL), "/space/") {
+	} else if strings.HasPrefix(msg.Option(ice.MSG_USERURL), "/route/") {
+	} else if strings.HasPrefix(msg.Option(ice.MSG_USERURL), "/share/") {
+	} else {
+		if msg.Warn(!msg.Options(ice.MSG_USERNAME), "not login %s", msg.Option(ice.MSG_USERURL)) {
+			Render(msg, "status", 401, "not login")
+			return false
+		}
+		if !msg.Right(msg.Option(ice.MSG_USERURL)) {
+			Render(msg, "status", 403, "not auth")
+			return false
+		}
 	}
+
 	return msg.Option(ice.MSG_USERURL) != ""
 }
 func (web *Frame) HandleWSS(m *ice.Message, safe bool, c *websocket.Conn, name string) bool {
@@ -216,21 +239,21 @@ func (web *Frame) HandleCmd(m *ice.Message, key string, cmd *ice.Command) {
 		m.TryCatch(m.Spawns(), true, func(msg *ice.Message) {
 			defer func() { msg.Cost("%s %v", r.URL.Path, msg.Optionv("cmds")) }()
 
-			// 解析请求
+			// 请求地址
 			msg.Option(ice.MSG_USERUA, r.Header.Get("User-Agent"))
 			msg.Option(ice.MSG_USERIP, r.Header.Get(ice.MSG_USERIP))
 			msg.Option(ice.MSG_USERURL, r.URL.Path)
-			msg.Option(ice.WEB_SESS, "")
+			msg.Option(ice.MSG_SESSID, "")
 			msg.R, msg.W = r, w
 
-			// 请求环境
+			// 请求变量
 			for _, v := range r.Cookies() {
 				if v.Value != "" {
 					msg.Option(v.Name, v.Value)
 				}
 			}
 
-			// 请求数据
+			// 解析引擎
 			switch r.Header.Get("Content-Type") {
 			case "application/json":
 				var data interface{}
@@ -261,22 +284,22 @@ func (web *Frame) HandleCmd(m *ice.Message, key string, cmd *ice.Command) {
 				}
 			}
 
-			if !web.Login(msg, w, r) {
-				// 登录失败
-				w.WriteHeader(401)
-				return
-			}
-
-			// 解析命令
+			// 请求命令
 			if msg.Optionv("cmds") == nil {
-				msg.Optionv("cmds", strings.Split(msg.Option(ice.MSG_USERURL), "/")[2:])
+				msg.Optionv("cmds", strings.Split(strings.TrimPrefix(msg.Option(ice.MSG_USERURL), key), "/"))
 			}
 			cmds := kit.Simple(msg.Optionv("cmds"))
+
+			// 登录检查
+			if !web.Login(msg, w, r) {
+				// Render(msg, "status", 401, "not login")
+				return
+			}
 
 			// 执行命令
 			msg.Target().Run(msg, cmd, msg.Option(ice.MSG_USERURL), cmds...)
 
-			// 输出响应
+			// 渲染引擎
 			switch msg.Append("_output") {
 			case "render":
 			case "result":
@@ -465,6 +488,7 @@ var Index = &ice.Context{Name: "web", Help: "网络模块",
 			m.Watch(ice.SYSTEM_INIT, "web.code.git.repos", "volcanos", m.Conf(ice.WEB_SERVE, "meta.volcanos.path"),
 				m.Conf(ice.WEB_SERVE, "meta.volcanos.repos"), m.Conf(ice.WEB_SERVE, "meta.volcanos.branch"))
 			m.Conf(ice.WEB_FAVOR, "meta.template", favor_template)
+			m.Conf(ice.WEB_SHARE, "meta.template", share_template)
 		}},
 		ice.ICE_EXIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			m.Save(ice.WEB_SPIDE, ice.WEB_SERVE,
@@ -478,9 +502,7 @@ var Index = &ice.Context{Name: "web", Help: "网络模块",
 			})
 		}},
 
-		ice.WEB_SPIDE: {Name: "spide", Help: "蜘蛛侠", Meta: kit.Dict(
-			"remote", "pod",
-		), List: kit.List(
+		ice.WEB_SPIDE: {Name: "spide name [msg|raw|cache] POST|GET url [json|form|part|file|data] arg...", Help: "蜘蛛侠", Meta: kit.Dict("remote", "pod"), List: kit.List(
 			kit.MDB_INPUT, "text", "name", "name",
 			kit.MDB_INPUT, "button", "value", "查看", "action", "auto",
 			kit.MDB_INPUT, "button", "value", "返回", "cb", "Last",
@@ -488,7 +510,7 @@ var Index = &ice.Context{Name: "web", Help: "网络模块",
 			if len(arg) == 0 {
 				// 爬虫列表
 				m.Richs(ice.WEB_SPIDE, nil, "*", func(key string, value map[string]interface{}) {
-					m.Push(key, value["client"], []string{"name", "method", "url"})
+					m.Push(key, value["client"], []string{"name", "login", "share", "method", "url"})
 				})
 				m.Sort("name")
 				return
@@ -497,6 +519,10 @@ var Index = &ice.Context{Name: "web", Help: "网络模块",
 				// 爬虫详情
 				m.Richs(ice.WEB_SPIDE, nil, arg[0], func(key string, value map[string]interface{}) {
 					m.Push("detail", value)
+					if kit.Value(value, "client.share") != nil {
+						m.Push("key", "share")
+						m.Push("value", fmt.Sprintf(m.Conf(ice.WEB_SHARE, "meta.template.text"), kit.Value(value, "client.share")))
+					}
 				})
 				return
 			}
@@ -507,206 +533,192 @@ var Index = &ice.Context{Name: "web", Help: "网络模块",
 				if uri, e := url.Parse(arg[2]); e == nil && arg[2] != "" {
 					dir, file := path.Split(uri.EscapedPath())
 					m.Rich(ice.WEB_SPIDE, nil, kit.Dict(
-						"cookie", kit.Dict(),
-						"header", kit.Dict(),
-						"client", kit.Dict(
-							"name", arg[1],
-							"logheaders", false,
-							"timeout", "100s",
-							"method", "POST",
-							"protocol", uri.Scheme,
-							"hostname", uri.Host,
-							"path", dir,
-							"file", file,
-							"query", uri.RawQuery,
-							"url", arg[2],
+						"cookie", kit.Dict(), "header", kit.Dict(), "client", kit.Dict(
+							"share", m.Cmdx(ice.WEB_SHARE, "add", ice.TYPE_SPIDE, arg[1], arg[2]),
+							"type", "POST", "name", arg[1], "text", arg[2],
+							"name", arg[1], "url", arg[2], "method", "POST",
+							"protocol", uri.Scheme, "hostname", uri.Host,
+							"path", dir, "file", file, "query", uri.RawQuery,
+							"timeout", "100s", "logheaders", false,
 						),
 					))
 					m.Log(ice.LOG_CREATE, "%s: %v", arg[1], arg[2:])
 				}
-			default:
-				// spide shy [cache] [POST|GET] uri file|data|form|part|json arg...
-				m.Richs(ice.WEB_SPIDE, nil, arg[0], func(key string, value map[string]interface{}) {
-					client := value["client"].(map[string]interface{})
-					// 缓存数据
-					cache := ""
-					switch arg[1] {
-					case "raw":
-						cache, arg = arg[1], arg[1:]
-					case "msg":
-						cache, arg = arg[1], arg[1:]
-					case "cache":
-						cache, arg = arg[1], arg[1:]
-					}
-
-					// 请求方法
-					method := kit.Select("POST", client["method"])
-					switch arg = arg[1:]; arg[0] {
-					case "POST":
-						method, arg = "POST", arg[1:]
-					case "GET":
-						method, arg = "GET", arg[1:]
-					}
-
-					// 请求地址
-					uri, arg := arg[0], arg[1:]
-
-					// 请求数据
-					head := map[string]string{}
-					body, ok := m.Optionv("body").(io.Reader)
-					if !ok && len(arg) > 0 && method != "GET" {
-						switch arg[0] {
-						case "file":
-							if f, e := os.Open(arg[1]); m.Warn(e != nil, "%s", e) {
-								return
-							} else {
-								defer f.Close()
-								body, arg = f, arg[2:]
-							}
-						case "data":
-							body, arg = bytes.NewBufferString(arg[1]), arg[2:]
-						case "form":
-							data := []string{}
-							for i := 1; i < len(arg)-1; i += 2 {
-								data = append(data, url.QueryEscape(arg[i])+"="+url.QueryEscape(arg[i+1]))
-							}
-							body = bytes.NewBufferString(strings.Join(data, "&"))
-							head["Content-Type"] = "application/x-www-form-urlencoded"
-						case "part":
-							buf := &bytes.Buffer{}
-							mp := multipart.NewWriter(buf)
-							for i := 1; i < len(arg)-1; i += 2 {
-								if strings.HasPrefix(arg[i+1], "@") {
-									if f, e := os.Open(arg[i+1][1:]); m.Assert(e) {
-										defer f.Close()
-										if p, e := mp.CreateFormFile(arg[i], path.Base(arg[i+1][1:])); m.Assert(e) {
-											io.Copy(p, f)
-										}
-									}
-								} else {
-									mp.WriteField(arg[i], arg[i+1])
-								}
-							}
-							mp.Close()
-							head["Content-Type"] = mp.FormDataContentType()
-							body = buf
-						case "json":
-							arg = arg[1:]
-							fallthrough
-						default:
-							data := map[string]interface{}{}
-							for i := 0; i < len(arg)-1; i += 2 {
-								kit.Value(data, arg[i], arg[i+1])
-							}
-							if b, e := json.Marshal(data); m.Assert(e) {
-								head["Content-Type"] = "application/json"
-								body = bytes.NewBuffer(b)
-							}
-							m.Log(ice.LOG_EXPORT, "json: %s", kit.Format(data))
-						}
-						arg = arg[:0]
-					} else {
-						body = bytes.NewBuffer([]byte{})
-					}
-
-					// 构造请求
-					uri = kit.MergeURL2(kit.Format(client["url"]), uri, arg)
-					req, e := http.NewRequest(method, uri, body)
-					m.Info("%s %s", req.Method, req.URL)
-					m.Assert(e)
-
-					// 请求参数
-					for k, v := range head {
-						req.Header.Set(k, v)
-					}
-					if list, ok := m.Optionv("header").([]string); ok {
-						for i := 0; i < len(list)-1; i += 2 {
-							req.Header.Set(list[i], list[i+1])
-						}
-					}
-					kit.Fetch(client["header"], func(key string, value string) {
-						req.Header.Set(key, value)
-					})
-					kit.Fetch(client["cookie"], func(key string, value string) {
-						req.AddCookie(&http.Cookie{Name: key, Value: value})
-						m.Info("%s: %s", key, value)
-					})
-					if method == "POST" {
-						m.Info("%s: %s", req.Header.Get("Content-Length"), req.Header.Get("Content-Type"))
-					}
-
-					// 请求代理
-					web := m.Target().Server().(*Frame)
-					if web.Client == nil {
-						web.Client = &http.Client{Timeout: kit.Duration(kit.Format(client["timeout"]))}
-					}
-
-					// 发送请求
-					res, e := web.Client.Do(req)
-					if m.Warn(e != nil, "%s", e) {
-						m.Set("result")
-						return
-					}
-
-					// 验证结果
-					if m.Cost("%s %s: %s", res.Status, res.Header.Get("Content-Length"), res.Header.Get("Content-Type")); m.Warn(res.StatusCode != http.StatusOK, "%s", res.Status) {
-						if cache != "" {
-							m.Set("result")
-						}
-						return
-					}
-
-					// 缓存参数
-					for _, v := range res.Cookies() {
-						kit.Value(client, "cookie."+v.Name, v.Value)
-						m.Info("%s: %s", v.Name, v.Value)
-					}
-
-					switch cache {
-					case "msg":
-						var data map[string][]string
-						m.Assert(json.NewDecoder(res.Body).Decode(&data))
-						m.Info("res: %s", kit.Formats(data))
-						if len(data[ice.MSG_APPEND]) > 0 {
-							for i := range data[data[ice.MSG_APPEND][0]] {
-								for _, k := range data[ice.MSG_APPEND] {
-									m.Push(k, data[k][i])
-								}
-							}
-						}
-						m.Resultv(data[ice.MSG_RESULT])
-
-					case "raw":
-						if b, e := ioutil.ReadAll(res.Body); m.Assert(e) {
-							m.Echo(string(b))
-						}
-					case "cache":
-						// 缓存结果
-						m.Optionv("response", res)
-						m.Echo(m.Cmd(ice.WEB_CACHE, "download", res.Header.Get("Content-Type"), uri).Append("data"))
-					default:
-						if strings.HasPrefix(res.Header.Get("Content-Type"), "text/html") {
-							b, _ := ioutil.ReadAll(res.Body)
-							m.Echo(string(b))
-							break
-						}
-
-						// 解析结果
-						var data interface{}
-						m.Assert(json.NewDecoder(res.Body).Decode(&data))
-						data = kit.KeyValue(map[string]interface{}{}, "", data)
-						m.Info("res: %s", kit.Formats(data))
-						kit.Fetch(data, func(key string, value interface{}) {
-							switch value := value.(type) {
-							case []interface{}:
-								m.Push(key, value)
-							default:
-								m.Push(key, kit.Format(value))
-							}
-						})
-					}
+				return
+			case "login":
+				m.Richs(ice.WEB_SPIDE, nil, arg[1], func(key string, value map[string]interface{}) {
+					kit.Value(value, "client.login", m.Cmdx(ice.WEB_SPIDE, arg[1], "raw", "/route/login", "login", kit.Value(value, "client.login")))
+					kit.Value(value, "client.share", m.Cmdx(ice.WEB_SHARE, "add", ice.TYPE_SPIDE, arg[1],
+						kit.Format("%s?sessid=%s", kit.Value(value, "client.url"), kit.Value(value, "cookie.sessid"))))
+					m.Echo("%s", kit.Value(value, "client.login"))
 				})
+				return
 			}
+
+			m.Richs(ice.WEB_SPIDE, nil, arg[0], func(key string, value map[string]interface{}) {
+				client := value["client"].(map[string]interface{})
+				// 缓存数据
+				cache := ""
+				switch arg[1] {
+				case "raw":
+					cache, arg = arg[1], arg[1:]
+				case "msg":
+					cache, arg = arg[1], arg[1:]
+				case "cache":
+					cache, arg = arg[1], arg[1:]
+				}
+
+				// 请求方法
+				method := kit.Select("POST", client["method"])
+				switch arg = arg[1:]; arg[0] {
+				case "POST":
+					method, arg = "POST", arg[1:]
+				case "GET":
+					method, arg = "GET", arg[1:]
+				}
+
+				// 请求地址
+				uri, arg := arg[0], arg[1:]
+
+				// 渲染引擎
+				head := map[string]string{}
+				body, ok := m.Optionv("body").(io.Reader)
+				if !ok && len(arg) > 0 && method != "GET" {
+					switch arg[0] {
+					case "data":
+						body, arg = bytes.NewBufferString(arg[1]), arg[2:]
+					case "file":
+						if f, e := os.Open(arg[1]); m.Warn(e != nil, "%s", e) {
+							return
+						} else {
+							defer f.Close()
+							body, arg = f, arg[2:]
+						}
+					case "part":
+						buf := &bytes.Buffer{}
+						mp := multipart.NewWriter(buf)
+						for i := 1; i < len(arg)-1; i += 2 {
+							if strings.HasPrefix(arg[i+1], "@") {
+								if f, e := os.Open(arg[i+1][1:]); m.Assert(e) {
+									defer f.Close()
+									if p, e := mp.CreateFormFile(arg[i], path.Base(arg[i+1][1:])); m.Assert(e) {
+										io.Copy(p, f)
+									}
+								}
+							} else {
+								mp.WriteField(arg[i], arg[i+1])
+							}
+						}
+						mp.Close()
+						head["Content-Type"] = mp.FormDataContentType()
+						body = buf
+					case "form":
+						data := []string{}
+						for i := 1; i < len(arg)-1; i += 2 {
+							data = append(data, url.QueryEscape(arg[i])+"="+url.QueryEscape(arg[i+1]))
+						}
+						body = bytes.NewBufferString(strings.Join(data, "&"))
+						head["Content-Type"] = "application/x-www-form-urlencoded"
+					case "json":
+						arg = arg[1:]
+						fallthrough
+					default:
+						data := map[string]interface{}{}
+						for i := 0; i < len(arg)-1; i += 2 {
+							kit.Value(data, arg[i], arg[i+1])
+						}
+						if b, e := json.Marshal(data); m.Assert(e) {
+							head["Content-Type"] = "application/json"
+							body = bytes.NewBuffer(b)
+						}
+						m.Log(ice.LOG_EXPORT, "json: %s", kit.Format(data))
+					}
+					arg = arg[:0]
+				} else {
+					body = bytes.NewBuffer([]byte{})
+				}
+
+				// 请求地址
+				uri = kit.MergeURL2(kit.Format(client["url"]), uri, arg)
+				req, e := http.NewRequest(method, uri, body)
+				m.Info("%s %s", req.Method, req.URL)
+				m.Assert(e)
+
+				// 请求变量
+				kit.Fetch(value["cookie"], func(key string, value string) {
+					req.AddCookie(&http.Cookie{Name: key, Value: value})
+					m.Info("%s: %s", key, value)
+				})
+				kit.Fetch(value["header"], func(key string, value string) {
+					req.Header.Set(key, value)
+				})
+				list := kit.Simple(m.Optionv("header"))
+				for i := 0; i < len(list)-1; i += 2 {
+					req.Header.Set(list[i], list[i+1])
+				}
+				for k, v := range head {
+					req.Header.Set(k, v)
+				}
+
+				// 请求代理
+				web := m.Target().Server().(*Frame)
+				if web.Client == nil {
+					web.Client = &http.Client{Timeout: kit.Duration(kit.Format(client["timeout"]))}
+				}
+				if method == "POST" {
+					m.Info("%s: %s", req.Header.Get("Content-Length"), req.Header.Get("Content-Type"))
+				}
+
+				// 发送请求
+				res, e := web.Client.Do(req)
+				if m.Warn(e != nil, "%s", e) {
+					return
+				}
+
+				// 检查结果
+				if m.Cost("%s %s: %s", res.Status, res.Header.Get("Content-Length"), res.Header.Get("Content-Type")); m.Warn(res.StatusCode != http.StatusOK, "%s", res.Status) {
+					return
+				}
+
+				// 缓存变量
+				for _, v := range res.Cookies() {
+					kit.Value(value, "cookie."+v.Name, v.Value)
+					m.Log(ice.LOG_IMPORT, "%s: %s", v.Name, v.Value)
+				}
+
+				// 解析引擎
+				switch cache {
+				case "cache":
+					m.Optionv("response", res)
+					m.Echo(m.Cmd(ice.WEB_CACHE, "download", res.Header.Get("Content-Type"), uri).Append("data"))
+				case "raw":
+					if b, e := ioutil.ReadAll(res.Body); m.Assert(e) {
+						m.Echo(string(b))
+					}
+				case "msg":
+					var data map[string][]string
+					m.Assert(json.NewDecoder(res.Body).Decode(&data))
+					m.Info("res: %s", kit.Formats(data))
+					for _, k := range data[ice.MSG_APPEND] {
+						for i := range data[k] {
+							m.Push(k, data[k][i])
+						}
+					}
+					m.Resultv(data[ice.MSG_RESULT])
+				default:
+					if strings.HasPrefix(res.Header.Get("Content-Type"), "text/html") {
+						b, _ := ioutil.ReadAll(res.Body)
+						m.Echo(string(b))
+						break
+					}
+
+					var data interface{}
+					m.Assert(json.NewDecoder(res.Body).Decode(&data))
+					data = kit.KeyValue(map[string]interface{}{}, "", data)
+					m.Info("res: %s", kit.Formats(data))
+					m.Push("", data)
+				}
+			})
 		}},
 		ice.WEB_SERVE: {Name: "serve [shy|dev|self]", Help: "服务器", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			// 节点信息
@@ -748,16 +760,16 @@ var Index = &ice.Context{Name: "web", Help: "网络模块",
 
 			web := m.Target().Server().(*Frame)
 			switch arg[0] {
-			case "auth":
-				m.Richs(ice.WEB_SPACE, nil, arg[1], func(key string, value map[string]interface{}) {
-					sessid := kit.Format(kit.Value(value, "sessid"))
-					if value["user"] = arg[2]; sessid == "" || m.Cmdx(ice.AAA_SESS, "check", sessid) != arg[1] {
-						sessid = m.Cmdx(ice.AAA_SESS, "create", arg[2:])
-						value["sessid"] = sessid
-					}
-					m.Cmd(ice.WEB_SPACE, arg[1], "sessid", sessid)
-				})
-
+			// case "auth":
+			// 	m.Richs(ice.WEB_SPACE, nil, arg[1], func(key string, value map[string]interface{}) {
+			// 		sessid := kit.Format(kit.Value(value, "sessid"))
+			// 		if value["user"] = arg[2]; sessid == "" || m.Cmdx(ice.AAA_SESS, "check", sessid) != arg[1] {
+			// 			sessid = m.Cmdx(ice.AAA_SESS, "create", arg[2:])
+			// 			value["sessid"] = sessid
+			// 		}
+			// 		m.Cmd(ice.WEB_SPACE, arg[1], "sessid", sessid)
+			// 	})
+			//
 			case "share":
 				switch arg[1] {
 				case "add":
@@ -781,10 +793,10 @@ var Index = &ice.Context{Name: "web", Help: "网络模块",
 						proto := kit.Select("ws", "wss", kit.Format(kit.Value(value, "client.protocol")) == "https")
 						host := kit.Format(kit.Value(value, "client.hostname"))
 
-						for i := 0; i < msg.Confi(ice.WEB_SPACE, "meta.redial.c"); i++ {
+						for i := 0; i < kit.Int(msg.Conf(ice.WEB_SPACE, "meta.redial.c")); i++ {
 							if u, e := url.Parse(kit.MergeURL(proto+"://"+host+"/space/", "node", node, "name", name, "user", user, "share", value["share"])); msg.Assert(e) {
 								if s, e := net.Dial("tcp", host); !msg.Warn(e != nil, "%s", e) {
-									if s, _, e := websocket.NewClient(s, u, nil, msg.Confi(ice.WEB_SPACE, "meta.buffer.r"), msg.Confi(ice.WEB_SPACE, "meta.buffer.w")); !msg.Warn(e != nil, "%s", e) {
+									if s, _, e := websocket.NewClient(s, u, nil, kit.Int(msg.Conf(ice.WEB_SPACE, "meta.buffer.r")), kit.Int(msg.Conf(ice.WEB_SPACE, "meta.buffer.w"))); !msg.Warn(e != nil, "%s", e) {
 										msg = m.Spawn()
 
 										// 连接成功
@@ -800,7 +812,7 @@ var Index = &ice.Context{Name: "web", Help: "网络模块",
 								}
 
 								// 断线重连
-								sleep := time.Duration(rand.Intn(msg.Confi(ice.WEB_SPACE, "meta.redial.a"))*i+i*msg.Confi(ice.WEB_SPACE, "meta.redial.b")) * time.Millisecond
+								sleep := time.Duration(rand.Intn(kit.Int(msg.Conf(ice.WEB_SPACE, "meta.redial.a"))*i)+kit.Int(msg.Conf(ice.WEB_SPACE, "meta.redial.b"))) * time.Millisecond
 								msg.Info("%d sleep: %s reconnect: %s", i, sleep, u)
 								time.Sleep(sleep)
 							}
@@ -818,12 +830,6 @@ var Index = &ice.Context{Name: "web", Help: "网络模块",
 					})
 					m.Append("name", list)
 					break
-
-					// 空间详情
-					m.Richs(ice.WEB_SPACE, nil, arg[0], func(key string, value map[string]interface{}) {
-						m.Push("detail", value)
-					})
-					break
 				}
 
 				if arg[0] == "" {
@@ -834,14 +840,14 @@ var Index = &ice.Context{Name: "web", Help: "网络模块",
 
 				target := strings.Split(arg[0], ".")
 				m.Warn(m.Richs(ice.WEB_SPACE, nil, target[0], func(key string, value map[string]interface{}) {
-					if socket, ok := value["socket"].(*websocket.Conn); ok {
+					if socket, ok := value["socket"].(*websocket.Conn); !m.Warn(!ok, "socket err") {
 						// 复制选项
 						for _, k := range kit.Simple(m.Optionv("_option")) {
 							if m.Options(k) {
 								switch k {
 								case "detail", "cmds":
 								default:
-									if m.Option(k) != "" {
+									if m.Option(k) == "" {
 										m.Option(k, m.Option(k))
 									}
 								}
@@ -859,17 +865,15 @@ var Index = &ice.Context{Name: "web", Help: "网络模块",
 						m.Target().Server().(*Frame).send[id] = m
 						socket.WriteMessage(MSG_MAPS, []byte(m.Format("meta")))
 						t := time.AfterFunc(kit.Duration(m.Conf(ice.WEB_SPACE, "meta.timeout.c")), func() {
-							m.TryCatch(m, true, func(m *ice.Message) {
-								m.Log(ice.LOG_WARN, "timeout")
-							})
+							m.Log(ice.LOG_WARN, "timeout")
 						})
+
 						m.Call(true, func(msg *ice.Message) *ice.Message {
-							if msg != nil {
+							m.Log("cost", "%s: %s %v", m.Format("cost"), arg[0], arg[1:])
+							if t.Stop(); msg != nil && m != nil {
+								// 返回结果
 								m.Copy(msg)
 							}
-							// 返回结果
-							m.Log("cost", "%s: %s %v", m.Format("cost"), arg[0], arg[1:])
-							t.Stop()
 							return nil
 						})
 					}
@@ -884,61 +888,56 @@ var Index = &ice.Context{Name: "web", Help: "网络模块",
 			kit.MDB_INPUT, "button", "value", "创建", "action", "auto",
 			kit.MDB_INPUT, "button", "value", "返回", "cb", "Last",
 		), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			if len(arg) > 1 {
+			if len(arg) > 1 && arg[0] == "action" {
 				switch arg[1] {
-				case "启动":
+				case "启动", "start":
 					arg = []string{arg[4]}
 				case "停止", "stop":
 					m.Cmd(ice.WEB_SPACE, kit.Select(m.Option("name"), arg, 4), "exit", "1")
-					time.Sleep(time.Second * 3)
 					m.Event(ice.DREAM_CLOSE, arg[4])
-					arg = arg[:0]
+					return
 				}
 			}
 
-			if len(arg) > 0 {
-				// 规范命名
-				if !strings.Contains(arg[0], "-") || !strings.HasPrefix(arg[0], "20") {
-					arg[0] = m.Time("20060102-") + arg[0]
-				}
-
-				// 创建目录
-				p := path.Join(m.Conf(ice.WEB_DREAM, "meta.path"), arg[0])
-				if _, e := os.Stat(p); e != nil {
-					os.MkdirAll(p, 0777)
-				}
-
-				if m.Richs(ice.WEB_SPACE, nil, arg[0], nil) == nil {
-					// 启动任务
-					m.Option("cmd_dir", p)
-					m.Option("cmd_type", "daemon")
-					m.Optionv("cmd_env",
-						"ctx_log", "boot.log",
-						"ctx_mod", "ctx,log,gdb,ssh",
-						"ctx_dev", m.Conf(ice.CLI_RUNTIME, "conf.ctx_dev"),
-						"PATH", kit.Path(path.Join(p, "bin"))+":"+os.Getenv("PATH"),
-					)
-					m.Cmd(m.Confv(ice.WEB_DREAM, "meta.cmd"), "self", arg[0])
-					time.Sleep(time.Second * 1)
-					m.Event(ice.DREAM_START, arg...)
-				}
-				m.Cmdy("nfs.dir", p)
+			if len(arg) == 0 {
+				// 任务列表
+				m.Cmdy("nfs.dir", m.Conf(ice.WEB_DREAM, "meta.path"), "time name")
+				m.Table(func(index int, value map[string]string, head []string) {
+					if m.Richs(ice.WEB_SPACE, nil, value["name"], func(key string, value map[string]interface{}) {
+						m.Push("type", value["type"])
+						m.Push("status", "start")
+					}) == nil {
+						m.Push("type", "none")
+						m.Push("status", "stop")
+					}
+				})
+				m.Sort("name")
 				return
 			}
 
-			// 任务列表
-			m.Cmdy("nfs.dir", m.Conf(ice.WEB_DREAM, "meta.path"), "time name")
-			m.Table(func(index int, value map[string]string, head []string) {
-				if m.Richs(ice.WEB_SPACE, nil, value["name"], func(key string, value map[string]interface{}) {
-					m.Push("type", value["type"])
-					m.Push("status", "start")
-				}) == nil {
-					m.Push("type", "none")
-					m.Push("status", "stop")
-				}
-			})
-			m.Sort("name")
-			m.Sort("status")
+			// 规范命名
+			if !strings.Contains(arg[0], "-") || !strings.HasPrefix(arg[0], "20") {
+				arg[0] = m.Time("20060102-") + arg[0]
+			}
+
+			// 创建目录
+			p := path.Join(m.Conf(ice.WEB_DREAM, "meta.path"), arg[0])
+			os.MkdirAll(p, 0777)
+
+			if m.Richs(ice.WEB_SPACE, nil, arg[0], nil) == nil {
+				// 启动任务
+				m.Option("cmd_dir", p)
+				m.Option("cmd_type", "daemon")
+				m.Optionv("cmd_env",
+					"ctx_dev", m.Conf(ice.CLI_RUNTIME, "conf.ctx_dev"),
+					"ctx_log", "boot.log", "ctx_mod", "ctx,log,gdb,ssh",
+					"PATH", kit.Path(path.Join(p, "bin"))+":"+os.Getenv("PATH"),
+				)
+				m.Cmd(m.Confv(ice.WEB_DREAM, "meta.cmd"), "self", arg[0])
+				time.Sleep(time.Second * 1)
+				m.Event(ice.DREAM_START, arg...)
+			}
+			m.Cmdy("nfs.dir", p)
 		}},
 
 		ice.WEB_FAVOR: {Name: "favor [path [type name [text [key value]....]]", Help: "收藏夹", Meta: kit.Dict(
@@ -1231,8 +1230,7 @@ var Index = &ice.Context{Name: "web", Help: "网络模块",
 
 				switch arg[1] {
 				case "share", "共享":
-					m.Echo("share: ")
-					if list == "" {
+					if m.Echo("share: "); list == "" {
 						msg := m.Cmd(ice.WEB_STORY, ice.STORY_INDEX, story)
 						m.Cmdy(ice.WEB_SHARE, "add", "story", story, msg.Append("list"))
 					} else {
@@ -1602,6 +1600,17 @@ var Index = &ice.Context{Name: "web", Help: "网络模块",
 			}
 
 			switch arg[0] {
+			case "auth":
+				m.Richs(ice.WEB_SHARE, nil, arg[1], func(key string, value map[string]interface{}) {
+					if value["type"] == "login" {
+						m.Richs(ice.AAA_SESS, nil, value["text"], func(key string, value map[string]interface{}) {
+							value["userrole"] = m.Cmdx(ice.AAA_ROLE, "check", arg[2])
+							m.Echo("%s", value["userrole"])
+							value["username"] = arg[2]
+						})
+					}
+				})
+
 			case "add":
 				arg = arg[1:]
 				fallthrough
@@ -1688,10 +1697,13 @@ var Index = &ice.Context{Name: "web", Help: "网络模块",
 					Render(m, kit.Formats(value))
 					return
 				case "share", "共享码":
-					Render(m, "qrcode", kit.Format("%s/%s/", m.Conf(ice.WEB_SHARE, "meta.domain"), key))
+					Render(m, "qrcode", kit.Format("%s/share/%s/", m.Conf(ice.WEB_SHARE, "meta.domain"), key))
 					return
 				case "value", "数据值":
-					Render(m, "%s", value["text"])
+					Render(m, "qrcode", kit.Format(value))
+					return
+				case "text":
+					Render(m, "qrcode", kit.Format(value["text"]))
 					return
 				}
 
@@ -1771,6 +1783,7 @@ var Index = &ice.Context{Name: "web", Help: "网络模块",
 			})
 		}},
 		"/story/": {Name: "/story/", Help: "故事会", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+
 			switch arg[0] {
 			case ice.STORY_PULL:
 				// 下载节点
@@ -1833,6 +1846,7 @@ var Index = &ice.Context{Name: "web", Help: "网络模块",
 			}
 		}},
 		"/favor/": {Name: "/story/", Help: "故事会", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+
 			switch arg[0] {
 			case "pull":
 				m.Richs(ice.WEB_FAVOR, nil, m.Option("favor"), func(key string, value map[string]interface{}) {
@@ -1853,18 +1867,22 @@ var Index = &ice.Context{Name: "web", Help: "网络模块",
 				})
 			}
 		}},
-		"/space/": {Name: "/space/", Help: "空间站", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			list := strings.Split(cmd, "/")
 
-			switch list[2] {
+		"/route/": {Name: "/route/", Help: "路由器", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			switch arg[0] {
 			case "login":
-				m.Option(ice.MSG_SESSID, Render(m, "cookie", m.Cmdx(ice.AAA_USER, "login", m.Option("username"), m.Option("password"))))
-				return
-			case "share":
-				m.Cmdy(ice.WEB_SHARE, list[3:])
-				return
+				if m.Richs(ice.WEB_ROUTE, nil, kit.Select(m.Option("login"), arg, 1), func(key string, value map[string]interface{}) {
+					m.Echo("%s", value["share"])
+				}) == nil {
+					sessid := m.Cmdx(ice.AAA_SESS, "create", "")
+					share := m.Cmdx(ice.WEB_SHARE, "add", "login", m.Option(ice.MSG_USERIP), sessid)
+					m.Rich(ice.WEB_ROUTE, nil, kit.Dict("share", share, "sessid", sessid))
+					Render(m, "cookie", sessid)
+					Render(m, share)
+				}
 			}
-
+		}},
+		"/space/": {Name: "/space/", Help: "空间站", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			if s, e := websocket.Upgrade(m.W, m.R, nil, m.Confi(ice.WEB_SPACE, "meta.buffer.r"), m.Confi(ice.WEB_SPACE, "meta.buffer.w")); m.Assert(e) {
 				m.Option("name", strings.Replace(m.Option("name"), ".", "_", -1))
 				if !m.Options("name") {
@@ -1882,7 +1900,6 @@ var Index = &ice.Context{Name: "web", Help: "网络模块",
 					kit.MDB_TYPE, m.Option("node"),
 					kit.MDB_NAME, m.Option("name"),
 					kit.MDB_TEXT, m.Option("user"),
-					"sessid", m.Option("sessid"),
 					"share", share, "socket", s,
 				))
 				m.Log(ice.LOG_CREATE, "space: %s share: %s", m.Option(kit.MDB_NAME), share)
@@ -1903,6 +1920,7 @@ var Index = &ice.Context{Name: "web", Help: "网络模块",
 				m.Echo(share)
 			}
 		}},
+
 		"/static/volcanos/plugin/github.com/": {Name: "/space/", Help: "空间站", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			file := strings.TrimPrefix(cmd, "/static/volcanos/")
 			if _, e := os.Stat(path.Join("usr/volcanos", file)); e != nil {

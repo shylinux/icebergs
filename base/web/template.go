@@ -7,6 +7,7 @@ import (
 var share_template = kit.Dict(
 	"value", `<img src="/share/%s/value">`,
 	"share", `<img src="/share/%s/share">`,
+	"text", `<img src="/share/%s/text">`,
 
 	"link", `<a href="/share/%s" target="_blank">%s</a>`,
 	"simple", `<!DOCTYPE html>

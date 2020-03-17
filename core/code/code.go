@@ -42,6 +42,7 @@ var Index = &ice.Context{Name: "code", Help: "编程中心",
 		ice.ICE_EXIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			m.Save("login")
 		}},
+
 		"login": {Name: "login", Help: "登录", List: ice.ListLook("key"), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			if len(arg) > 0 && arg[0] == "action" {
 				switch arg[1] {
@@ -58,7 +59,6 @@ var Index = &ice.Context{Name: "code", Help: "编程中心",
 			}
 
 			switch kit.Select("list", arg, 0) {
-			case "open":
 			case "init":
 				if m.Option("sid") != "" && m.Confs("login", []string{"hash", m.Option("sid"), "status"}) {
 					// 复用会话
@@ -94,6 +94,11 @@ var Index = &ice.Context{Name: "code", Help: "编程中心",
 						m.Push("pwd", value["pwd"])
 					}
 					m.Push(key, value, []string{"pid", "pane", "hostname", "username"})
+				})
+
+			case "check":
+				m.Richs("login", nil, m.Option("sid"), func(key string, value map[string]interface{}) {
+
 				})
 
 			case "prune":

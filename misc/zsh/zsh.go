@@ -17,7 +17,7 @@ var Index = &ice.Context{Name: "zsh", Help: "命令行",
 		"zsh": {Name: "zsh", Help: "命令行", Value: kit.Data(kit.MDB_SHORT, "name", "history", "zsh.history")},
 	},
 	Commands: map[string]*ice.Command{
-		ice.WEB_LOGIN: {Name: "_login", Help: "_login", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		ice.WEB_LOGIN: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			if f, _, e := m.R.FormFile("sub"); e == nil {
 				defer f.Close()
 				if b, e := ioutil.ReadAll(f); e == nil {
@@ -35,6 +35,7 @@ var Index = &ice.Context{Name: "zsh", Help: "命令行",
 			m.Info("%s %s cmd: %v sub: %v", m.Option("you"), m.Option(ice.MSG_USERURL), m.Optionv("cmds"), m.Optionv("sub"))
 			m.Append("_output", "result")
 		}},
+
 		"/help": {Name: "/help", Help: "帮助", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			m.Cmdy("help")
 		}},

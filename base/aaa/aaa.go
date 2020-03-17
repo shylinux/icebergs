@@ -161,9 +161,9 @@ var Index = &ice.Context{Name: "aaa", Help: "认证模块",
 			case "create":
 				// 创建会话
 				h := m.Rich(ice.AAA_SESS, nil, kit.Dict(
-					"username", arg[1], "userrole", kit.Select("", arg, 2),
+					"username", arg[1], "userrole", m.Cmdx(ice.AAA_ROLE, "check", arg[1]),
 				))
-				m.Log(ice.LOG_CREATE, "%s: %s", h, arg[1])
+				m.Log(ice.LOG_CREATE, "sessid: %s username: %s", h, arg[1])
 				m.Echo(h)
 			}
 		}},

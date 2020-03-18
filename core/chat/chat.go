@@ -457,9 +457,10 @@ var Index = &ice.Context{Name: "chat", Help: "聊天中心",
 							m.Cmdy(ice.WEB_FAVOR, arg[5:])
 							return
 
-						case "location":
+						case "device":
 							// 记录位置
-							m.Cmdy("aaa.location", arg[5:])
+							m.Cmd(ice.WEB_FAVOR, kit.Select("device", m.Option("hot")), arg[5], arg[6],
+								kit.Select("", arg, 7), kit.KeyValue(map[string]interface{}{}, "", kit.UnMarshal(kit.Select("{}", arg, 8))))
 							return
 
 						case "upload":
@@ -483,7 +484,6 @@ var Index = &ice.Context{Name: "chat", Help: "聊天中心",
 			})
 
 			if len(cmds) == 0 {
-				web.Render(m, "status", 404, "not found")
 				return
 			}
 

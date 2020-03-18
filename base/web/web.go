@@ -117,6 +117,7 @@ func (web *Frame) Login(msg *ice.Message, w http.ResponseWriter, r *http.Request
 		msg.Target().Run(msg, s, ice.WEB_LOGIN, kit.Simple(msg.Optionv("cmds"))...)
 	} else if strings.HasPrefix(msg.Option(ice.MSG_USERURL), "/static/") {
 	} else if strings.HasPrefix(msg.Option(ice.MSG_USERURL), "/plugin/") {
+	} else if strings.HasPrefix(msg.Option(ice.MSG_USERURL), "/login/") {
 	} else if strings.HasPrefix(msg.Option(ice.MSG_USERURL), "/space/") {
 	} else if strings.HasPrefix(msg.Option(ice.MSG_USERURL), "/route/") {
 	} else if strings.HasPrefix(msg.Option(ice.MSG_USERURL), "/share/") {
@@ -305,6 +306,7 @@ func (web *Frame) HandleCmd(m *ice.Message, key string, cmd *ice.Command) {
 			case "result":
 				fmt.Fprint(w, msg.Result())
 			default:
+				w.Header().Set("Content-Type", "application/json")
 				fmt.Fprint(w, msg.Formats("meta"))
 			}
 		})
@@ -521,7 +523,7 @@ var Index = &ice.Context{Name: "web", Help: "网络模块",
 					m.Push("detail", value)
 					if kit.Value(value, "client.share") != nil {
 						m.Push("key", "share")
-						m.Push("value", fmt.Sprintf(m.Conf(ice.WEB_SHARE, "meta.template.text"), kit.Value(value, "client.share")))
+						m.Push("value", fmt.Sprintf(m.Conf(ice.WEB_SHARE, "meta.template.text"), m.Conf(ice.WEB_SHARE, "meta.domain"), kit.Value(value, "client.share")))
 					}
 				})
 				return
@@ -769,17 +771,12 @@ var Index = &ice.Context{Name: "web", Help: "网络模块",
 			// 		}
 			// 		m.Cmd(ice.WEB_SPACE, arg[1], "sessid", sessid)
 			// 	})
-			//
+
 			case "share":
-				switch arg[1] {
-				case "add":
-					m.Cmdy(ice.WEB_SPIDE, "self", path.Join("/space/share/add", path.Join(arg[2:]...)))
-				default:
-					m.Richs(ice.WEB_SPIDE, nil, m.Option("_dev"), func(key string, value map[string]interface{}) {
-						m.Log(ice.LOG_CREATE, "dev: %s share: %s", m.Option("_dev"), arg[1])
-						value["share"] = arg[1]
-					})
-				}
+				m.Richs(ice.WEB_SPIDE, nil, m.Option("_dev"), func(key string, value map[string]interface{}) {
+					m.Log(ice.LOG_CREATE, "dev: %s share: %s", m.Option("_dev"), arg[1])
+					value["share"] = arg[1]
+				})
 
 			case "connect":
 				// 基本信息
@@ -812,7 +809,7 @@ var Index = &ice.Context{Name: "web", Help: "网络模块",
 								}
 
 								// 断线重连
-								sleep := time.Duration(rand.Intn(kit.Int(msg.Conf(ice.WEB_SPACE, "meta.redial.a"))*i)+kit.Int(msg.Conf(ice.WEB_SPACE, "meta.redial.b"))) * time.Millisecond
+								sleep := time.Duration(rand.Intn(kit.Int(msg.Conf(ice.WEB_SPACE, "meta.redial.a"))*i+2)+kit.Int(msg.Conf(ice.WEB_SPACE, "meta.redial.b"))) * time.Millisecond
 								msg.Info("%d sleep: %s reconnect: %s", i, sleep, u)
 								time.Sleep(sleep)
 							}
@@ -1590,11 +1587,11 @@ var Index = &ice.Context{Name: "web", Help: "网络模块",
 				m.Richs(ice.WEB_SHARE, nil, arg[0], func(key string, value map[string]interface{}) {
 					m.Push("detail", value)
 					m.Push("key", "link")
-					m.Push("value", fmt.Sprintf(m.Conf(ice.WEB_SHARE, "meta.template.link"), key, key))
+					m.Push("value", fmt.Sprintf(m.Conf(ice.WEB_SHARE, "meta.template.link"), m.Conf(ice.WEB_SHARE, "meta.domain"), key, key))
 					m.Push("key", "share")
-					m.Push("value", fmt.Sprintf(m.Conf(ice.WEB_SHARE, "meta.template.share"), key))
+					m.Push("value", fmt.Sprintf(m.Conf(ice.WEB_SHARE, "meta.template.share"), m.Conf(ice.WEB_SHARE, "meta.domain"), key))
 					m.Push("key", "value")
-					m.Push("value", fmt.Sprintf(m.Conf(ice.WEB_SHARE, "meta.template.value"), key))
+					m.Push("value", fmt.Sprintf(m.Conf(ice.WEB_SHARE, "meta.template.value"), m.Conf(ice.WEB_SHARE, "meta.domain"), key))
 				})
 				return
 			}
@@ -1602,13 +1599,10 @@ var Index = &ice.Context{Name: "web", Help: "网络模块",
 			switch arg[0] {
 			case "auth":
 				m.Richs(ice.WEB_SHARE, nil, arg[1], func(key string, value map[string]interface{}) {
-					if value["type"] == "login" {
-						m.Richs(ice.AAA_SESS, nil, value["text"], func(key string, value map[string]interface{}) {
-							value["userrole"] = m.Cmdx(ice.AAA_ROLE, "check", arg[2])
-							m.Echo("%s", value["userrole"])
-							value["username"] = arg[2]
-						})
-					}
+					m.Richs(ice.AAA_SESS, nil, value["text"], func(key string, value map[string]interface{}) {
+						value["username"], value["userrole"] = arg[2], m.Cmdx(ice.AAA_ROLE, "check", arg[2])
+						m.Echo("%s", value["userrole"])
+					})
 				})
 
 			case "add":
@@ -1670,6 +1664,12 @@ var Index = &ice.Context{Name: "web", Help: "网络模块",
 		}},
 
 		"/share/": {Name: "/share/", Help: "共享链", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			switch arg[0] {
+			case "local":
+				Render(m, "download", m.Cmdx(arg[1], path.Join(arg[2:]...)))
+				return
+			}
+
 			m.Richs(ice.WEB_SHARE, nil, arg[0], func(key string, value map[string]interface{}) {
 				m.Log(ice.LOG_EXPORT, "%s: %v", arg, kit.Format(value))
 

@@ -28,6 +28,17 @@ var Index = &ice.Context{Name: "aaa", Help: "认证模块",
 		}},
 
 		ice.AAA_ROLE: {Name: "role check|black|white|right", Help: "角色", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			if len(arg) == 0 {
+				kit.Fetch(m.Confv("role", "meta.root"), func(key string, value string) {
+					m.Push("userrole", "root")
+					m.Push("username", key)
+				})
+				kit.Fetch(m.Confv("role", "meta.tech"), func(key string, value string) {
+					m.Push("userrole", "tech")
+					m.Push("username", key)
+				})
+				return
+			}
 			switch arg[0] {
 			case "check":
 				// 用户角色
@@ -90,9 +101,17 @@ var Index = &ice.Context{Name: "aaa", Help: "认证模块",
 			}
 		}},
 		ice.AAA_USER: {Name: "user first|login", Help: "用户", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			if len(arg) == 0 {
+				// 用户列表
+				m.Richs(ice.AAA_USER, nil, "*", func(key string, value map[string]interface{}) {
+					m.Push(key, value, []string{"time", "username", "usernode"})
+				})
+				return
+			}
+
 			switch arg[0] {
 			case "first":
-				// 初始用户
+				// 超级用户
 				if m.Richs(ice.AAA_USER, nil, "%", nil) == nil {
 					m.Rich(ice.AAA_USER, nil, kit.Dict("username", arg[1],
 						"usernode", m.Conf(ice.CLI_RUNTIME, "boot.hostname"),
@@ -133,18 +152,13 @@ var Index = &ice.Context{Name: "aaa", Help: "认证模块",
 				}
 
 				// 创建会话
-				role := m.Cmdx(ice.AAA_ROLE, "check", arg[1])
-				sessid := m.Rich(ice.AAA_SESS, nil, kit.Dict(
-					"username", arg[1], "userrole", role,
-				))
-				m.Info("user: %s role: %s sess: %s", arg[1], role, sessid)
-				m.Echo(sessid)
+				m.Echo(m.Cmdx(ice.AAA_SESS, "create", arg[1]))
 			}
 		}},
 		ice.AAA_SESS: {Name: "sess check|login", Help: "会话", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			if len(arg) == 0 {
 				// 会话列表
-				m.Richs(ice.AAA_SESS, nil, "", func(key string, value map[string]interface{}) {
+				m.Richs(ice.AAA_SESS, nil, "*", func(key string, value map[string]interface{}) {
 					m.Push(key, value, []string{"key", "time", "username", "userrole"})
 				})
 				return
@@ -162,6 +176,7 @@ var Index = &ice.Context{Name: "aaa", Help: "认证模块",
 				// 创建会话
 				h := m.Rich(ice.AAA_SESS, nil, kit.Dict(
 					"username", arg[1], "userrole", m.Cmdx(ice.AAA_ROLE, "check", arg[1]),
+					"from", m.Option(ice.MSG_SESSID),
 				))
 				m.Log(ice.LOG_CREATE, "sessid: %s username: %s", h, arg[1])
 				m.Echo(h)

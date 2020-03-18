@@ -76,7 +76,7 @@ var Index = &ice.Context{Name: "wiki", Help: "文档中心",
 			},
 		)},
 		"walk": {Name: "walk", Help: "走遍世界", Value: kit.Data(kit.MDB_SHORT, "name", "path", "", "regs", ".*\\.csv")},
-		"feel": {Name: "feel", Help: "影音媒体", Value: kit.Data(kit.MDB_SHORT, "name", "path", "", "regs", ".*\\.(png|JPG|MOV|m4v)")},
+		"feel": {Name: "feel", Help: "影音媒体", Value: kit.Data(kit.MDB_SHORT, "name", "path", "", "regs", ".*\\.(png|jpg|JPG|MOV|m4v)")},
 	},
 	Commands: map[string]*ice.Command{
 		ice.ICE_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {

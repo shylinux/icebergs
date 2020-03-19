@@ -153,7 +153,7 @@ var Index = &ice.Context{Name: "chat", Help: "聊天中心",
 				case "login":
 					// 密码登录
 					if len(arg) > 2 {
-						web.Render(m, "cookie", m.Option(ice.MSG_SESSID, m.Cmdx(ice.AAA_USER, "login", m.Option(ice.MSG_USERNAME, arg[1]), arg[2])))
+						m.Render("cookie", m.Option(ice.MSG_SESSID, m.Cmdx(ice.AAA_USER, "login", m.Option(ice.MSG_USERNAME, arg[1]), arg[2])))
 					}
 
 				default:
@@ -177,14 +177,14 @@ var Index = &ice.Context{Name: "chat", Help: "聊天中心",
 
 			// 登录检查
 			if m.Warn(!m.Options(ice.MSG_USERNAME), "not login") {
-				web.Render(m, "status", 401, "not login")
+				m.Render("status", 401, "not login")
 				m.Option(ice.MSG_USERURL, "")
 				return
 			}
 
 			// 权限检查
 			if m.Warn(!m.Right(m.Option(ice.MSG_USERURL), m.Optionv("cmds")), "not auth") {
-				web.Render(m, "status", 403, "not auth")
+				m.Render("status", 403, "not auth")
 				m.Option(ice.MSG_USERURL, "")
 				return
 			}
@@ -268,7 +268,7 @@ var Index = &ice.Context{Name: "chat", Help: "聊天中心",
 			}
 
 			if !m.Right(cmd, arg[1]) {
-				web.Render(m, "status", 403, "not auth")
+				m.Render("status", 403, "not auth")
 				return
 			}
 
@@ -296,7 +296,7 @@ var Index = &ice.Context{Name: "chat", Help: "聊天中心",
 		}},
 		"/storm": {Name: "/storm", Help: "暴风雨", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			if m.Warn(m.Option(ice.MSG_RIVER) == "", "not join") {
-				web.Render(m, "status", 402, "not join")
+				m.Render("status", 402, "not join")
 				return
 			}
 
@@ -312,7 +312,7 @@ var Index = &ice.Context{Name: "chat", Help: "聊天中心",
 			}
 
 			if !m.Right(cmd, arg[2]) {
-				web.Render(m, "status", 403, "not auth")
+				m.Render("status", 403, "not auth")
 				return
 			}
 
@@ -342,7 +342,7 @@ var Index = &ice.Context{Name: "chat", Help: "聊天中心",
 		}},
 		"/steam": {Name: "/steam", Help: "大气层", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			if m.Warn(m.Option(ice.MSG_RIVER) == "", "not join") {
-				web.Render(m, "status", 402, "not join")
+				m.Render("status", 402, "not join")
 				return
 			}
 
@@ -363,7 +363,7 @@ var Index = &ice.Context{Name: "chat", Help: "聊天中心",
 			}
 
 			if !m.Right(cmd, arg[1]) {
-				web.Render(m, "status", 403, "not auth")
+				m.Render("status", 403, "not auth")
 				return
 			}
 
@@ -395,7 +395,7 @@ var Index = &ice.Context{Name: "chat", Help: "聊天中心",
 		"/source": {Name: "/source", Help: "输入框", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {}},
 		"/action": {Name: "/action", Help: "工作台", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			if m.Warn(m.Option(ice.MSG_RIVER) == "" || m.Option(ice.MSG_STORM) == "", "not join") {
-				web.Render(m, "status", 402, "not join")
+				m.Render("status", 402, "not join")
 				return
 			}
 
@@ -488,7 +488,7 @@ var Index = &ice.Context{Name: "chat", Help: "聊天中心",
 			}
 
 			if !m.Right(cmds) {
-				web.Render(m, "status", 403, "not auth")
+				m.Render("status", 403, "not auth")
 				return
 			}
 

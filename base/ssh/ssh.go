@@ -36,8 +36,13 @@ func Render(msg *ice.Message, cmd string, args ...interface{}) {
 		fmt.Fprintf(msg.O, msg.Result())
 
 	case ice.RENDER_QRCODE:
-		msg.Cmdy("cli.python", "qrcode", kit.Format(args[0], args[1:]...))
-		fallthrough
+		if len(args) > 0 {
+			fmt.Println(msg.Cmdx("cli.python", "qrcode", kit.Format(args[0], args[1:]...)))
+		} else {
+			fmt.Println(msg.Cmdx("cli.python", "qrcode", kit.Format(kit.Dict(
+				kit.MDB_TYPE, "cmd", kit.MDB_NAME, msg.Option("_cmd"), kit.MDB_TEXT, strings.TrimSpace(msg.Result()),
+			))))
+		}
 	default:
 		// 转换结果
 		res := msg.Result()
@@ -145,6 +150,12 @@ func (f *Frame) parse(m *ice.Message, line string) *Frame {
 				ln = append(ln, ls[i])
 			}
 		}
+
+		if ln[0] == "qrcode" {
+			msg.Option(ice.MSG_OUTPUT, ice.RENDER_QRCODE)
+			ln = ln[1:]
+		}
+		msg.Option("_cmd", one)
 
 		// 执行命令
 		msg.Cmdy(ln[0], ln[1:])
@@ -294,6 +305,7 @@ var Index = &ice.Context{Name: "ssh", Help: "终端模块",
 				m.Done()
 			}
 		}},
+
 		"history": {Name: "history", Help: "历史", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			if len(arg) == 0 {
 				m.Grows("history", nil, "", "", func(index int, value map[string]interface{}) {
@@ -307,24 +319,17 @@ var Index = &ice.Context{Name: "ssh", Help: "终端模块",
 				f.parse(m, kit.Format(value["line"]))
 			})
 		}},
+		"return": {Name: "return", Help: "解析", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			m.Option(ice.MSG_PROMPT, m.Confv("prompt", "meta.PS1"))
+			f := m.Target().Server().(*Frame)
+			f.exit = true
+		}},
 		"source": {Name: "source file", Help: "解析", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			buf := bytes.NewBuffer(make([]byte, 0, 4096))
 			m.Optionv(ice.MSG_STDOUT, buf)
 
 			m.Starts(strings.Replace(arg[0], ".", "_", -1), arg[0], arg[0:]...)
 			m.Echo(buf.String())
-		}},
-		"print": {Name: "print", Help: "解析", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			f := m.Target().Server().(*Frame)
-			f.printf(m, arg[0])
-			f.printf(m, arg[0])
-			f.printf(m, arg[0])
-			f.printf(m, arg[0])
-		}},
-		"prompt": {Name: "print", Help: "解析", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			m.Option(ice.MSG_PROMPT, m.Confv("prompt", "meta.PS1"))
-			f := m.Target().Server().(*Frame)
-			f.prompt(m)
 		}},
 		"show": {Name: "show", Help: "解析", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			f, e := os.Open("usr/local/what/hi.shy")
@@ -336,11 +341,6 @@ var Index = &ice.Context{Name: "ssh", Help: "终端模块",
 				m.Echo("%d: %v\n", len(ls), ls)
 				m.Info("%v", ls)
 			}
-		}},
-		"return": {Name: "return", Help: "解析", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			m.Option(ice.MSG_PROMPT, m.Confv("prompt", "meta.PS1"))
-			f := m.Target().Server().(*Frame)
-			f.exit = true
 		}},
 
 		"super": {Name: "super user remote port local", Help: "上位机", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {

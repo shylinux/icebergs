@@ -113,11 +113,11 @@ var Index = &ice.Context{Name: "wiki", Help: "文档中心",
 			switch arg[0] {
 			case "endmenu":
 				// 后置目录
-				m.Render(endmenu)
+				m.Render(ice.RENDER_TEMPLATE, endmenu)
 				return
 			case "premenu":
 				// 前置目录
-				m.Render(premenu)
+				m.Render(ice.RENDER_TEMPLATE, premenu)
 				return
 			case "section":
 				arg = arg[1:]
@@ -148,7 +148,7 @@ var Index = &ice.Context{Name: "wiki", Help: "文档中心",
 			})
 
 			// 生成网页
-			m.Render(m.Conf("title", "meta.template"))
+			m.Render(ice.RENDER_TEMPLATE, m.Conf("title", "meta.template"))
 		}},
 		"brief": {Name: "brief name text", Help: "摘要", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			if len(arg) == 0 {
@@ -161,7 +161,7 @@ var Index = &ice.Context{Name: "wiki", Help: "文档中心",
 			m.Option(kit.MDB_TYPE, cmd)
 			m.Option(kit.MDB_NAME, arg[0])
 			m.Option(kit.MDB_TEXT, arg[1])
-			m.Render(m.Conf(cmd, "meta.template"))
+			m.Render(ice.RENDER_TEMPLATE, m.Conf(cmd, "meta.template"))
 		}},
 		"refer": {Name: "refer name text", Help: "参考", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			m.Option(kit.MDB_TYPE, cmd)
@@ -173,7 +173,7 @@ var Index = &ice.Context{Name: "wiki", Help: "文档中心",
 				list = append(list, kit.Split(v, " "))
 			}
 			m.Optionv("list", list)
-			m.Render(m.Conf(cmd, "meta.template"))
+			m.Render(ice.RENDER_TEMPLATE, m.Conf(cmd, "meta.template"))
 		}},
 		"spark": {Name: "spark name text", Help: "感悟", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			if len(arg) == 0 {
@@ -188,7 +188,7 @@ var Index = &ice.Context{Name: "wiki", Help: "文档中心",
 			m.Option(kit.MDB_NAME, arg[0])
 			m.Option(kit.MDB_TEXT, arg[1])
 			m.Optionv("list", kit.Split(arg[1], "\n"))
-			m.Render(m.Conf(cmd, "meta.template"))
+			m.Render(ice.RENDER_TEMPLATE, m.Conf(cmd, "meta.template"))
 		}},
 
 		"local": {Name: "local name text", Help: "文件", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
@@ -218,7 +218,7 @@ var Index = &ice.Context{Name: "wiki", Help: "文档中心",
 				list = append(list, "</table>")
 				m.Optionv("input", list)
 			}
-			m.Render(m.Conf(cmd, "meta.template"))
+			m.Render(ice.RENDER_TEMPLATE, m.Conf(cmd, "meta.template"))
 		}},
 		"shell": {Name: "shell name dir cmd", Help: "命令", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			m.Option(kit.MDB_TYPE, cmd)
@@ -236,7 +236,7 @@ var Index = &ice.Context{Name: "wiki", Help: "文档中心",
 
 			m.Option("input", input)
 			m.Option("output", output)
-			m.Render(m.Conf(cmd, "meta.template"))
+			m.Render(ice.RENDER_TEMPLATE, m.Conf(cmd, "meta.template"))
 		}},
 		"field": {Name: "field name text", Help: "插件", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			m.Option(kit.MDB_TYPE, cmd)
@@ -261,7 +261,7 @@ var Index = &ice.Context{Name: "wiki", Help: "文档中心",
 			}
 
 			m.Option("meta", data)
-			m.Render(m.Conf(cmd, "meta.template"))
+			m.Render(ice.RENDER_TEMPLATE, m.Conf(cmd, "meta.template"))
 		}},
 
 		"order": {Name: "order name text", Help: "列表", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
@@ -269,7 +269,7 @@ var Index = &ice.Context{Name: "wiki", Help: "文档中心",
 			m.Option(kit.MDB_NAME, arg[0])
 			m.Option(kit.MDB_TEXT, arg[1])
 			m.Optionv("list", kit.Split(strings.TrimSpace(arg[1]), "\n"))
-			m.Render(m.Conf(cmd, "meta.template"))
+			m.Render(ice.RENDER_TEMPLATE, m.Conf(cmd, "meta.template"))
 		}},
 		"table": {Name: "table name text", Help: "表格", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			m.Option(kit.MDB_TYPE, cmd)
@@ -302,7 +302,7 @@ var Index = &ice.Context{Name: "wiki", Help: "文档中心",
 			}
 			m.Optionv("head", head)
 			m.Optionv("list", list)
-			m.Render(m.Conf(cmd, "meta.template"))
+			m.Render(ice.RENDER_TEMPLATE, m.Conf(cmd, "meta.template"))
 		}},
 		"stack": {Name: "stack name text", Help: "结构", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			m.Option(kit.MDB_TYPE, cmd)
@@ -310,7 +310,7 @@ var Index = &ice.Context{Name: "wiki", Help: "文档中心",
 			m.Option(kit.MDB_TEXT, arg[1])
 
 			chain := &Chain{}
-			m.Render(m.Conf(cmd, "meta.template"))
+			m.Render(ice.RENDER_TEMPLATE, m.Conf(cmd, "meta.template"))
 			Stack(m, cmd, 0, kit.Parse(nil, "", chain.show(m, arg[1])...))
 			m.Echo("</div>")
 		}},
@@ -355,9 +355,9 @@ var Index = &ice.Context{Name: "wiki", Help: "文档中心",
 			m.Option("height", chart.GetHeight())
 
 			// 渲染绘图
-			m.Render(m.Conf("chart", "meta.template"))
+			m.Render(ice.RENDER_TEMPLATE, m.Conf("chart", "meta.template"))
 			chart.Draw(m, 0, 0)
-			m.Render(m.Conf("chart", "meta.suffix"))
+			m.Render(ice.RENDER_TEMPLATE, m.Conf("chart", "meta.suffix"))
 		}},
 
 		"draw": {Name: "draw", Help: "思维导图", Meta: kit.Dict("remote", "pod", "display", "wiki/draw"), List: kit.List(

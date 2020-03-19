@@ -632,10 +632,10 @@ func (m *Message) Render(cmd string, args ...interface{}) *Message {
 
 	switch cmd {
 	case RENDER_TEMPLATE:
-		if len(args) == 0 {
+		if len(args) == 1 {
 			args = append(args, m)
 		}
-		if res, err := kit.Render(cmd, args[0]); m.Assert(err) {
+		if res, err := kit.Render(args[0].(string), args[1]); m.Assert(err) {
 			m.Echo(string(res))
 		}
 	}
@@ -790,6 +790,14 @@ func (m *Message) Result(arg ...interface{}) string {
 	return strings.Join(m.Resultv(arg...), "")
 }
 
+func (m *Message) Logs(level string, arg ...interface{}) *Message {
+	list := []string{}
+	for i := 0; i < len(arg)-1; i++ {
+		list = append(list, fmt.Sprintf("%v: %v", arg[i], arg[i+1]))
+	}
+	m.Log(level, strings.Join(list, " "))
+	return m
+}
 func (m *Message) Log(level string, str string, arg ...interface{}) *Message {
 	if str = strings.TrimSpace(fmt.Sprintf(str, arg...)); Log != nil {
 		// 日志模块

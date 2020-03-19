@@ -138,16 +138,12 @@ var Index = &ice.Context{Name: "cli", Help: "命令模块",
 			prefix := []string{ice.CLI_SYSTEM, m.Conf("python", "meta.python")}
 			switch arg[0] {
 			case "qrcode":
-				m.Cmdy(prefix, "-c", fmt.Sprintf(`import pyqrcode; print(pyqrcode.create("%s").terminal(quiet_zone=1))`, arg[1]))
+				m.Cmdy(prefix, "-c", fmt.Sprintf(`import pyqrcode; print(pyqrcode.create('%s').terminal(module_color='%s', quiet_zone=1))`, kit.Select("hello world", arg, 1), kit.Select("blue", arg, 2)))
 			case "install":
 				m.Cmdy(prefix[:1], m.Conf("python", "meta.pip"), "install", arg[1:])
 			default:
 				m.Cmdy(prefix, arg)
 			}
-		}},
-
-		"qrcode": {Name: "qrcode text", Help: "二", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			m.Render(ice.RENDER_QRCODE, kit.Select("hello world", arg, 0))
 		}},
 	},
 }

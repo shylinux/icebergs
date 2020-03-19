@@ -10,34 +10,37 @@ import (
 	"crypto/sha1"
 	"encoding/base32"
 	"encoding/binary"
+	"math"
 	"strings"
 	"time"
 )
 
-func gen() string {
+func gen(per int64) string {
 	buf := bytes.NewBuffer([]byte{})
-	binary.Write(buf, binary.BigEndian, time.Now().Unix()/30)
+	binary.Write(buf, binary.BigEndian, time.Now().Unix()/per)
 	b := hmac.New(sha1.New, buf.Bytes()).Sum(nil)
 	return strings.ToUpper(base32.StdEncoding.EncodeToString(b[:]))
 }
-func get(key string) string {
+func get(key string, num int, per int64) string {
+	now := kit.Int64(time.Now().Unix() / per)
+
 	buf := []byte{}
-	now := kit.Int64(time.Now().Unix() / 30)
 	for i := 0; i < 8; i++ {
 		buf = append(buf, byte((now >> ((7 - i) * 8))))
 	}
 
+	if l := len(key) % 8; l != 0 {
+		key += strings.Repeat("=", 8-l)
+	}
 	s, _ := base32.StdEncoding.DecodeString(strings.ToUpper(key))
 
 	hm := hmac.New(sha1.New, s)
 	hm.Write(buf)
 	b := hm.Sum(nil)
 
-	o := b[len(b)-1] & 0x0F
-	p := b[o : o+4]
-	p[0] = p[0] & 0x7f
-	res := int64(p[0])<<24 + int64(p[1])<<16 + int64(p[2])<<8 + int64(p[3])
-	return kit.Format("%06d", res%1000000)
+	n := b[len(b)-1] & 0x0F
+	res := int64(b[n]&0x7F)<<24 | int64(b[n+1]&0xFF)<<16 | int64(b[n+2]&0xFF)<<8 | int64(b[n+3]&0xFF)
+	return kit.Format(kit.Format("%%0%dd", num), res%int64(math.Pow10(num)))
 }
 
 var Index = &ice.Context{Name: "totp", Help: "动态码",
@@ -71,40 +74,28 @@ var Index = &ice.Context{Name: "totp", Help: "动态码",
 
 			if len(arg) == 1 {
 				// 创建密钥
-				arg = append(arg, gen())
+				arg = append(arg, gen(30))
 			}
 
 			// 添加密钥
 			m.Log(ice.LOG_CREATE, "%s: %s", arg[0], m.Rich("totp", nil, kit.Dict(
 				kit.MDB_NAME, arg[0], kit.MDB_TEXT, arg[1], kit.MDB_EXTRA, kit.Dict(arg[2:]),
 			)))
-
-			// 创建共享
-			defer m.Cmdy(ice.WEB_SHARE, "optauth", arg[0], kit.Format(m.Conf("totp", "meta.share"), arg[0], arg[1]))
 		}},
-		"get": {Name: "get user [secret]", Help: "获取密码", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		"get": {Name: "get [user [number [period]]]", Help: "获取密码", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			if len(arg) == 0 {
 				// 密码列表
 				m.Richs("totp", nil, "*", func(key string, value map[string]interface{}) {
 					m.Push("name", value["name"])
-					m.Push("code", m.Cmdx("get", value["name"], value["text"]))
+					m.Push("code", get(kit.Format(value["text"]), kit.Int(kit.Select("6", value["number"])), kit.Int64(kit.Select("30", value["period"]))))
 				})
 				return
 			}
 
-			if len(arg) == 1 {
-				// 获取密钥
-				m.Richs("totp", nil, arg[0], func(key string, value map[string]interface{}) {
-					arg = append(arg, kit.Format(value["text"]))
-				})
-			}
-			if len(arg) == 1 {
-				// 创建密钥
-				arg = append(arg, m.Cmdx("new", arg[0]))
-			}
-
-			// 获取密码
-			m.Echo(get(arg[1]))
+			m.Richs("totp", nil, arg[0], func(key string, value map[string]interface{}) {
+				// 获取密码
+				m.Echo(get(kit.Format(value["text"]), kit.Int(kit.Select("6", arg, 1)), kit.Int64(kit.Select("30", arg, 2))))
+			})
 		}},
 	},
 }

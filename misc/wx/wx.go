@@ -32,7 +32,6 @@ func parse(m *ice.Message) {
 }
 
 func reply(m *ice.Message) {
-	m.Option(ice.MSG_OUTPUT, ice.RENDER_RESULT)
 	m.Render(m.Conf("login", "meta.template.text"))
 }
 func action(m *ice.Message) {
@@ -115,7 +114,7 @@ var Index = &ice.Context{Name: "wx", Help: "公众号",
 
 			if m.Option("echostr") != "" {
 				// 绑定验证
-				web.Render(m, m.Option("echostr"))
+				m.Render(m.Option("echostr"))
 				return
 			}
 

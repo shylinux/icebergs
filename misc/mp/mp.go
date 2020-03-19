@@ -77,11 +77,11 @@ var Index = &ice.Context{Name: "mp", Help: "小程序",
 				})
 
 			case "scan":
-				web.Render(m, "qrcode", m.Option("scan"))
+				m.Render(ice.RENDER_QRCODE, m.Option("scan"))
 
 			case "auth":
 				if !m.Options(ice.MSG_USERNAME) {
-					web.Render(m, "status", 401, "not login")
+					m.Render("status", 401, "not login")
 					break
 				}
 
@@ -93,17 +93,17 @@ var Index = &ice.Context{Name: "mp", Help: "小程序",
 
 			case "upload":
 				msg := m.Cmd(ice.WEB_CACHE, "upload")
-				m.Cmdy(ice.WEB_STORY, ice.STORY_WATCH, msg.Append("data"), path.Join("usr/local/mp/", path.Base(msg.Append("name"))))
-				web.Render(m, msg.Append("data"))
-				m.Cmdy(ice.WEB_FAVOR, "device", "file", msg.Append("name"), msg.Append("data"))
+				m.Cmd(ice.WEB_STORY, ice.STORY_WATCH, msg.Append("data"), path.Join("usr/local/mp/", path.Base(msg.Append("name"))))
+				m.Cmd(ice.WEB_FAVOR, "device", "file", msg.Append("name"), msg.Append("data"))
+				m.Render(msg.Append("data"))
 
 			case "cmds":
 				if !m.Options(ice.MSG_USERNAME) {
-					web.Render(m, "status", 401, "not login")
+					m.Render("status", 401, "not login")
 					break
 				}
 				if arg = kit.Split(arg[1]); !m.Right(arg) {
-					web.Render(m, "status", 403, "not auth")
+					m.Render("status", 403, "not auth")
 					break
 				}
 

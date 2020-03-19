@@ -15,8 +15,9 @@ import (
 var Index = &ice.Context{Name: "tmux", Help: "工作台",
 	Caches: map[string]*ice.Cache{},
 	Configs: map[string]*ice.Config{
-		"prefix": {Name: "buffer", Help: "缓存", Value: kit.Data("cmd", []interface{}{ice.CLI_SYSTEM, "tmux"})},
+		"prefix": {Name: "prefix", Help: "前缀", Value: kit.Data("cmd", []interface{}{ice.CLI_SYSTEM, "tmux"})},
 		"buffer": {Name: "buffer", Help: "缓存", Value: kit.Data()},
+
 		"session": {Name: "session", Help: "会话", Value: kit.Data(
 			"format", "#{session_id},#{session_attached},#{session_name},#{session_windows},#{session_height},#{session_width}",
 			"fields", "id,tag,session,windows,height,width",
@@ -29,11 +30,10 @@ var Index = &ice.Context{Name: "tmux", Help: "工作台",
 			"format", "#{pane_id},#{pane_active},#{pane_index},#{pane_tty},#{pane_height},#{pane_width}",
 			"fields", "id,tag,pane,tty,height,width",
 		)},
-		"view": {Name: "pane", Help: "终端", Value: kit.Data(
-			"format", "#{pane_id},#{pane_active},#{pane_index},#{pane_tty},#{pane_height},#{pane_width}",
-			"fields", "id,tag,pane,tty,height,width",
-		)},
-		"relay": {Name: "relay", Help: "跳板", Value: kit.Data(kit.MDB_SHORT, kit.MDB_NAME,
+		"view": {Name: "pane", Help: "终端", Value: kit.Data()},
+
+		"local": {Name: "local", Help: "虚拟机", Value: kit.Data(kit.MDB_SHORT, kit.MDB_NAME)},
+		"relay": {Name: "relay", Help: "跳板机", Value: kit.Data(kit.MDB_SHORT, kit.MDB_NAME,
 			"count", 100, "sleep", "100ms", "tail", kit.Dict(
 				"verify", "Verification code:",
 				"password", "Password:",
@@ -99,7 +99,7 @@ var Index = &ice.Context{Name: "tmux", Help: "工作台",
 
 			m.Cmd(ice.WEB_FAVOR, kit.Select("tmux.auto", arg, 1)).Table(func(index int, value map[string]string, head []string) {
 				switch value["type"] {
-				case "shell":
+				case ice.TYPE_SHELL:
 					// 发送命令
 					m.Cmdy(prefix, "send-keys", "-t", arg[0], value["text"], "Enter")
 					time.Sleep(10 * time.Millisecond)
@@ -112,7 +112,7 @@ var Index = &ice.Context{Name: "tmux", Help: "工作台",
 			}
 		}},
 
-		"text": {Name: "text", Help: "文本", List: kit.List(
+		"text": {Name: "text", Help: "文本", Meta: kit.Dict("remote", "pod"), List: kit.List(
 			kit.MDB_INPUT, "text", "name", "name",
 			kit.MDB_INPUT, "button", "value", "保存",
 			kit.MDB_INPUT, "textarea", "name", "text",
@@ -121,11 +121,9 @@ var Index = &ice.Context{Name: "tmux", Help: "工作台",
 			if len(arg) > 1 && arg[1] != "" {
 				m.Cmd(prefix, "set-buffer", arg[1])
 			}
-			m.Cmdy(prefix, "show-buffer").Set("append")
+			m.Cmdy(prefix, "show-buffer").Set(ice.MSG_APPEND)
 		}},
-		"buffer": {Name: "buffer", Help: "缓存", Meta: kit.Dict(
-			"remote", "pod",
-		), List: kit.List(
+		"buffer": {Name: "buffer", Help: "缓存", Meta: kit.Dict("remote", "pod"), List: kit.List(
 			kit.MDB_INPUT, "text", "name", "buffer", "action", "auto",
 			kit.MDB_INPUT, "text", "name", "value",
 			kit.MDB_INPUT, "button", "value", "查看", "action", "auto",
@@ -139,7 +137,7 @@ var Index = &ice.Context{Name: "tmux", Help: "工作台",
 
 			if len(arg) > 0 {
 				// 查看缓存
-				m.Cmdy(prefix, "show-buffer", "-b", arg[0]).Set("append")
+				m.Cmdy(prefix, "show-buffer", "-b", arg[0]).Set(ice.MSG_APPEND)
 				return
 			}
 
@@ -155,7 +153,7 @@ var Index = &ice.Context{Name: "tmux", Help: "工作台",
 				}
 			}
 		}},
-		"session": {Name: "session", Help: "会话", Meta: kit.Dict("detail", []string{"选择", "运行", "编辑", "删除", "下载"}), List: kit.List(
+		"session": {Name: "session [session [window [pane [cmd]]]]", Help: "会话", Meta: kit.Dict("detail", []string{"选择", "编辑", "删除", "下载"}), List: kit.List(
 			kit.MDB_INPUT, "text", "name", "session", "action", "auto",
 			kit.MDB_INPUT, "text", "name", "window", "action", "auto",
 			kit.MDB_INPUT, "text", "name", "pane", "action", "auto",
@@ -166,68 +164,51 @@ var Index = &ice.Context{Name: "tmux", Help: "工作台",
 
 			if len(arg) > 1 && arg[0] == "action" {
 				switch arg[1] {
-				case "运行":
-					target := ""
-					switch arg[2] {
-					case "session":
-						target = arg[3]
-					}
-					m.Cmd("auto", target, m.Option("hot"))
-					arg = arg[:0]
-
-				case "select":
+				case "select", "选择":
 					if arg[2] == "session" {
 						// 选择会话
 						m.Cmd(prefix, "switch-client", "-t", arg[3])
-						arg = arg[:0]
 						break
 					}
 
 					if m.Cmd(prefix, "switch-client", "-t", m.Option("session")); arg[2] == "window" {
 						// 选择窗口
 						m.Cmd(prefix, "select-window", "-t", m.Option("session")+":"+arg[3])
-						arg = []string{m.Option("session")}
 						break
 					}
 
 					if m.Cmd(prefix, "select-window", "-t", m.Option("session")+":"+m.Option("window")); arg[2] == "pane" {
 						// 选择终端
 						m.Cmd(prefix, "select-pane", "-t", m.Option("session")+":"+m.Option("window")+"."+arg[3])
-						arg = []string{m.Option("session"), m.Option("window")}
 					}
-				case "modify":
+				case "modify", "编辑":
 					switch arg[2] {
 					case "session":
 						// 重命名会话
 						m.Cmd(prefix, "rename-session", "-t", arg[4], arg[3])
-						arg = arg[:0]
 					case "window":
 						// 重命名窗口
 						m.Cmd(prefix, "rename-window", "-t", m.Option("session")+":"+arg[4], arg[3])
-						arg = []string{m.Option("session")}
 					}
-				case "delete":
+				case "delete", "删除":
 					switch arg[2] {
 					case "session":
 						// 删除会话
 						m.Cmd(prefix, "kill-session", "-t", arg[3])
-						arg = arg[:0]
 					case "window":
 						// 删除窗口
 						m.Cmd(prefix, "kill-window", "-t", m.Option("session")+":"+arg[3])
-						arg = []string{m.Option("session")}
 					case "pane":
 						// 删除终端
 						m.Cmd(prefix, "kill-pane", "-t", m.Option("session")+":"+m.Option("window")+"."+arg[3])
-						arg = []string{m.Option("session"), m.Option("window")}
 					}
 				}
+				return
 			}
 
 			if len(arg) == 0 {
 				// 会话列表
-				m.Split(m.Cmdx(prefix, "list-session",
-					"-F", m.Conf(cmd, "meta.format")), m.Conf(cmd, "meta.fields"), ",", "\n")
+				m.Split(m.Cmdx(prefix, "list-session", "-F", m.Conf(cmd, "meta.format")), m.Conf(cmd, "meta.fields"), ",", "\n")
 				return
 			}
 
@@ -237,8 +218,7 @@ var Index = &ice.Context{Name: "tmux", Help: "工作台",
 				m.Option("cmd_env", "TMUX", "")
 				m.Option("cmd_dir", m.Conf(ice.WEB_DREAM, "meta.path"))
 				m.Cmd(prefix, "new-session", "-ds", arg[0])
-				m.Cmd("auto", arg[0], arg[1:])
-				arg = arg[:1]
+				m.Cmd("auto", arg[0])
 			}
 
 			if len(arg) == 1 {
@@ -280,15 +260,15 @@ var Index = &ice.Context{Name: "tmux", Help: "工作台",
 		}},
 		"view": {Name: "view", Help: "终端", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			prefix := kit.Simple(m.Confv("prefix", "meta.cmd"))
-			m.Cmdy(prefix, "capture-pane", "-pt", kit.Select("", arg, 0)).Set("append")
+			m.Cmdy(prefix, "capture-pane", "-pt", kit.Select("", arg, 0)).Set(ice.MSG_APPEND)
 		}},
 
-		"local": {Name: "local which target", Help: "虚拟机", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		"local": {Name: "local name name", Help: "虚拟机", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			prefix := kit.Simple(m.Confv("prefix", "meta.cmd"))
 			m.Cmd("web.code.docker.auto", arg[1])
 			m.Cmdy(prefix, "send-keys", "-t", arg[1], "docker exec -it ", arg[1], " bash", "Enter")
 		}},
-		"relay": {Name: "relay which target", Help: "跳板机", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		"relay": {Name: "relay [name [favor]]", Help: "跳板机", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			prefix := kit.Simple(m.Confv("prefix", "meta.cmd"))
 			if len(arg) == 0 {
 				// 认证列表
@@ -304,10 +284,10 @@ var Index = &ice.Context{Name: "tmux", Help: "工作台",
 				})
 				return
 			}
+
 			if len(arg) > 4 {
 				// 添加认证
-				m.Rich(cmd, nil, kit.Dict(
-					kit.MDB_NAME, arg[0], kit.MDB_TEXT, arg[1],
+				m.Rich(cmd, nil, kit.Dict(kit.MDB_NAME, arg[0], kit.MDB_TEXT, arg[1],
 					"username", arg[2], "website", arg[3], "password", arg[4],
 				))
 				return
@@ -335,18 +315,22 @@ var Index = &ice.Context{Name: "tmux", Help: "工作台",
 				}
 			})
 		}},
+
 		"/favor": {Name: "/favor", Help: "收藏", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			current := ""
 			m.Cmd("session").Table(func(index int, value map[string]string, head []string) {
 				if value["tag"] == "1" {
-					// 当前会话
 					current = value["session"]
 				}
 			})
 
+			m.Option(ice.MSG_OUTPUT, ice.RENDER_RESULT)
 			switch arg = kit.Split(kit.Select("tmux.auto", arg, 0)); arg[0] {
+			case "ice":
+				if m.Cmdy(arg[1:]); len(m.Resultv()) == 0 {
+					m.Table()
+				}
 			default:
-				m.Append("_output", "result")
 				m.Cmd("auto", current, arg)
 			}
 		}},

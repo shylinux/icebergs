@@ -19,8 +19,8 @@ var Index = &ice.Context{Name: "cli", Help: "命令模块",
 	Configs: map[string]*ice.Config{
 		ice.CLI_RUNTIME: {Name: "runtime", Help: "运行环境", Value: kit.Dict()},
 		ice.CLI_SYSTEM:  {Name: "system", Help: "系统命令", Value: kit.Data()},
-		"python":        {Name: "python", Help: "系统命令", Value: kit.Data("python", "python", "pip", "pip")},
 		"daemon":        {Name: "daemon", Help: "守护进程", Value: kit.Data(kit.MDB_SHORT, "name")},
+		"python":        {Name: "python", Help: "系统命令", Value: kit.Data("python", "python", "pip", "pip")},
 	},
 	Commands: map[string]*ice.Command{
 		ice.ICE_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
@@ -144,6 +144,10 @@ var Index = &ice.Context{Name: "cli", Help: "命令模块",
 			default:
 				m.Cmdy(prefix, arg)
 			}
+		}},
+
+		"qrcode": {Name: "qrcode text", Help: "二", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			m.Render(ice.RENDER_QRCODE, kit.Select("hello world", arg, 0))
 		}},
 	},
 }

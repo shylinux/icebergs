@@ -40,9 +40,10 @@ func Count(m *ice.Message, cmd, key, name string) int {
 	m.Conf(cmd, kit.Keys(key, name), count+1)
 	return count
 }
-func Render(msg *ice.Message, cmd string, args ...interface{}) *ice.Message {
+func Render(msg *ice.Message, cmd string, args ...interface{}) {
 	msg.Log(ice.LOG_EXPORT, "%s: %v", cmd, args)
 	switch arg := kit.Simple(args...); cmd {
+	case ice.RENDER_OUTPUT:
 	case "redirect":
 		http.Redirect(msg.W, msg.R, kit.MergeURL(arg[0], arg[1:]), 307)
 
@@ -56,27 +57,32 @@ func Render(msg *ice.Message, cmd string, args ...interface{}) *ice.Message {
 		msg.W.WriteHeader(kit.Int(kit.Select("200", arg, 0)))
 		msg.W.Write([]byte(kit.Select("", arg, 1)))
 
-	case "result":
-		msg.W.Write([]byte(kit.Format(arg[0], args[1:]...)))
-
 	case "cookie":
 		expire := time.Now().Add(kit.Duration(msg.Conf(ice.AAA_SESS, "meta.expire")))
 		http.SetCookie(msg.W, &http.Cookie{Value: arg[0], Name: kit.Select(ice.MSG_SESSID, arg, 1), Path: "/", Expires: expire})
 
-	case "qrcode":
+	case ice.RENDER_DOWNLOAD:
+		msg.W.Header().Set("Content-Disposition", fmt.Sprintf("filename=%s", kit.Select(path.Base(arg[0]), arg, 2)))
+		msg.W.Header().Set("Content-Type", kit.Select("text/html", arg, 1))
+		http.ServeFile(msg.W, msg.R, arg[0])
+
+	case ice.RENDER_RESULT:
+		if len(arg) > 0 {
+			msg.W.Write([]byte(kit.Format(arg[0], args[1:]...)))
+		} else {
+			msg.W.Write([]byte(msg.Result()))
+		}
+
+	case ice.RENDER_QRCODE:
 		if qr, e := qrcode.New(arg[0], qrcode.Medium); msg.Assert(e) {
 			msg.W.Header().Set("Content-Type", "image/png")
 			msg.Assert(qr.Write(256, msg.W))
 		}
-	case "download":
-		msg.W.Header().Set("Content-Disposition", fmt.Sprintf("filename=%s", kit.Select(path.Base(arg[0]), arg, 2)))
-		msg.W.Header().Set("Content-Type", kit.Select("text/html", arg, 1))
-		http.ServeFile(msg.W, msg.R, arg[0])
 	default:
-		msg.W.Write([]byte(kit.Format(cmd, args...)))
+		msg.W.Header().Set("Content-Type", "application/json")
+		fmt.Fprint(msg.W, msg.Formats("meta"))
 	}
-	msg.Append("_output", "render")
-	return msg
+	msg.Append(ice.MSG_OUTPUT, ice.RENDER_OUTPUT)
 }
 func IsLocalIP(msg *ice.Message, ip string) (ok bool) {
 	if ip == "::1" || strings.HasPrefix(ip, "127.") {
@@ -301,14 +307,8 @@ func (web *Frame) HandleCmd(m *ice.Message, key string, cmd *ice.Command) {
 			msg.Target().Run(msg, cmd, msg.Option(ice.MSG_USERURL), cmds...)
 
 			// 渲染引擎
-			switch msg.Append("_output") {
-			case "render":
-			case "result":
-				fmt.Fprint(w, msg.Result())
-			default:
-				w.Header().Set("Content-Type", "application/json")
-				fmt.Fprint(w, msg.Formats("meta"))
-			}
+			_args, _ := msg.Optionv(ice.MSG_ARGS).([]interface{})
+			Render(msg, msg.Option(ice.MSG_OUTPUT), _args...)
 		})
 	})
 }
@@ -1778,7 +1778,7 @@ var Index = &ice.Context{Name: "web", Help: "网络模块",
 					m.Option("name", value["name"])
 					m.Option("text", value["text"])
 					m.Render(m.Conf(ice.WEB_SHARE, "meta.template.simple"))
-					m.Append("_output", "result")
+					m.Option(ice.MSG_OUTPUT, ice.RENDER_RESULT)
 				}
 			})
 		}},

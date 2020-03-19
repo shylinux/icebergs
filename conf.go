@@ -20,8 +20,10 @@ const ( // MSG
 
 	MSG_SOURCE = "_source"
 	MSG_TARGET = "_target"
-	MSG_ACTION = "_action"
 	MSG_HANDLE = "_handle"
+	MSG_ACTION = "_action"
+	MSG_OUTPUT = "_output"
+	MSG_ARGS   = "_args"
 
 	MSG_STDOUT = "_stdout"
 	MSG_PROMPT = "_prompt"
@@ -37,6 +39,7 @@ const ( // MSG
 	MSG_RIVER = "sess.river"
 	MSG_STORM = "sess.storm"
 )
+
 const ( // CTX
 	CTX_STATUS  = "status"
 	CTX_STREAM  = "stream"
@@ -163,10 +166,6 @@ const ( // ROLE
 	ROLE_TECH = "tech"
 	ROLE_VOID = "void"
 )
-const ( // CHAT
-	CHAT_RIVER = "river"
-	CHAT_STORM = "storm"
-)
 const ( // TYPE
 	TYPE_SPIDE = "spide"
 	TYPE_SPACE = "space"
@@ -183,6 +182,10 @@ const ( // TYPE
 	TYPE_TABLE = "table"
 	TYPE_INNER = "inner"
 	TYPE_MEDIA = "media"
+)
+const ( // CHAT
+	CHAT_RIVER = "river"
+	CHAT_STORM = "storm"
 )
 const ( // FAVOR
 	FAVOR_CHAT  = "chat.init"
@@ -204,6 +207,13 @@ const ( // STORY
 	STORY_PUSH     = "push"
 	STORY_UPLOAD   = "upload"
 	STORY_DOWNLOAD = "download"
+)
+const ( // RENDER
+	RENDER_OUTPUT   = "_output"
+	RENDER_TEMPLATE = "_template"
+	RENDER_DOWNLOAD = "_download"
+	RENDER_RESULT   = "_result"
+	RENDER_QRCODE   = "_qrcode"
 )
 
 var Alias = map[string]string{

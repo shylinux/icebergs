@@ -32,11 +32,11 @@ func parse(m *ice.Message) {
 }
 
 func reply(m *ice.Message) {
-	m.Append("_output", "result")
+	m.Option(ice.MSG_OUTPUT, ice.RENDER_RESULT)
 	m.Render(m.Conf("login", "meta.template.text"))
 }
 func action(m *ice.Message) {
-	m.Append("_output", "result")
+	m.Option(ice.MSG_OUTPUT, ice.RENDER_RESULT)
 
 	m.Echo(`<xml>
 <ToUserName><![CDATA[%s]]></ToUserName>

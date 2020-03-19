@@ -179,10 +179,13 @@ type Message struct {
 
 	source *Context
 	target *Context
+	frames interface{}
 
 	cb   func(*Message) *Message
 	W    http.ResponseWriter
 	R    *http.Request
+	O    io.Writer
+	I    io.Reader
 	wait chan bool
 }
 
@@ -317,19 +320,18 @@ func (m *Message) Spawns(arg ...interface{}) *Message {
 }
 func (m *Message) Spawn(arg ...interface{}) *Message {
 	msg := &Message{
-		time: time.Now(),
-		code: -1,
+		code: -1, time: time.Now(),
 
 		meta: map[string][]string{},
 		data: map[string]interface{}{},
 
-		message: m,
-		root:    m.root,
+		message: m, root: m.root,
 
 		source: m.target,
 		target: m.target,
-		R:      m.R,
-		W:      m.W,
+
+		W: m.W, R: m.R,
+		O: m.O, I: m.I,
 	}
 
 	if len(arg) > 0 {
@@ -451,7 +453,11 @@ func (m *Message) Copy(msg *Message, arg ...string) *Message {
 		if kit.IndexOf(m.meta[MSG_OPTION], k) == -1 {
 			m.meta[MSG_OPTION] = append(m.meta[MSG_OPTION], k)
 		}
-		m.meta[k] = append(m.meta[k], msg.meta[k]...)
+		if _, ok := msg.meta[k]; ok {
+			m.meta[k] = msg.meta[k]
+		} else {
+			m.data[k] = msg.data[k]
+		}
 	}
 
 	// 复制数据
@@ -619,16 +625,20 @@ func (m *Message) Table(cbs ...interface{}) *Message {
 	}
 	return m
 }
-func (m *Message) Render(str string, arg ...interface{}) *Message {
-	if len(arg) == 0 {
-		arg = append(arg, m)
+func (m *Message) Render(cmd string, args ...interface{}) *Message {
+	m.Log(LOG_EXPORT, "%s: %v", cmd, args)
+	m.Optionv(MSG_OUTPUT, cmd)
+	m.Optionv(MSG_ARGS, args)
+
+	switch cmd {
+	case RENDER_TEMPLATE:
+		if len(args) == 0 {
+			args = append(args, m)
+		}
+		if res, err := kit.Render(cmd, args[0]); m.Assert(err) {
+			m.Echo(string(res))
+		}
 	}
-	if res, err := kit.Render(str, arg[0]); m.Assert(err) {
-		m.Echo(string(res))
-	}
-	return m
-}
-func (m *Message) Qrcode(str string, arg ...interface{}) *Message {
 	return m
 }
 func (m *Message) Parse(meta string, key string, arg ...string) *Message {
@@ -948,14 +958,14 @@ func (m *Message) Starts(name string, help string, arg ...string) *Message {
 	return m
 }
 
+func (m *Message) Right(arg ...interface{}) bool {
+	return m.Option(MSG_USERROLE) == ROLE_ROOT || !m.Warn(m.Cmdx(AAA_ROLE, "right", m.Option(MSG_USERROLE), kit.Keys(arg...)) != "ok", "no right")
+}
 func (m *Message) Space(arg interface{}) []string {
 	if arg == nil || kit.Format(arg) == m.Conf(CLI_RUNTIME, "node.name") {
 		return nil
 	}
 	return []string{WEB_SPACE, kit.Format(arg)}
-}
-func (m *Message) Right(arg ...interface{}) bool {
-	return m.Option(MSG_USERROLE) == ROLE_ROOT || !m.Warn(m.Cmdx(AAA_ROLE, "right", m.Option(MSG_USERROLE), kit.Keys(arg...)) != "ok", "no right")
 }
 func (m *Message) Event(key string, arg ...string) *Message {
 	m.Cmd(GDB_EVENT, "action", key, arg)
@@ -963,44 +973,6 @@ func (m *Message) Event(key string, arg ...string) *Message {
 }
 func (m *Message) Watch(key string, arg ...string) *Message {
 	m.Cmd(GDB_EVENT, "listen", key, arg)
-	return m
-}
-
-func (m *Message) Preview(arg string) (res string) {
-	list := kit.Split(arg)
-	m.Search(list[0], func(p *Context, s *Context, key string, cmd *Command) {
-		res = kit.Format(kit.Dict("feature", cmd.Meta, "inputs", cmd.List))
-	})
-	return res
-}
-func (m *Message) Prefile(favor string, id string) map[string]string {
-	res := map[string]string{}
-	m.Option("render", "")
-	m.Option("_action", "")
-	m.Cmd(WEB_FAVOR, kit.Select(m.Option("favor"), favor), id).Table(func(index int, value map[string]string, head []string) {
-		res[value["key"]] = value["value"]
-	})
-
-	res["content"] = m.Cmdx(CLI_SYSTEM, "sed", "-n", kit.Format("%d,%dp", kit.Int(res["extra.row"]), kit.Int(res["extra.row"])+3), res["extra.buf"])
-	return res
-}
-func (m *Message) Prefix(arg ...string) string {
-	return kit.Keys(m.Cap(CTX_FOLLOW), arg)
-}
-func (m *Message) Save(arg ...string) *Message {
-	list := []string{}
-	for _, k := range arg {
-		list = append(list, kit.Keys(m.Cap(CTX_FOLLOW), k))
-	}
-	m.Cmd(CTX_CONFIG, "save", kit.Keys(m.Cap(CTX_FOLLOW), "json"), list)
-	return m
-}
-func (m *Message) Load(arg ...string) *Message {
-	list := []string{}
-	for _, k := range arg {
-		list = append(list, kit.Keys(m.Cap(CTX_FOLLOW), k))
-	}
-	m.Cmd(CTX_CONFIG, "load", kit.Keys(m.Cap(CTX_FOLLOW), "json"), list)
 	return m
 }
 
@@ -1115,6 +1087,44 @@ func (m *Message) Search(key interface{}, cb interface{}) *Message {
 			cb(p.context, p, key)
 		}
 	}
+	return m
+}
+func (m *Message) Preview(arg string) (res string) {
+	list := kit.Split(arg)
+	m.Search(list[0], func(p *Context, s *Context, key string, cmd *Command) {
+		res = kit.Format(kit.Dict("feature", cmd.Meta, "inputs", cmd.List))
+	})
+	return res
+}
+
+func (m *Message) Prefile(favor string, id string) map[string]string {
+	res := map[string]string{}
+	m.Option("render", "")
+	m.Option("_action", "")
+	m.Cmd(WEB_FAVOR, kit.Select(m.Option("favor"), favor), id).Table(func(index int, value map[string]string, head []string) {
+		res[value["key"]] = value["value"]
+	})
+
+	res["content"] = m.Cmdx(CLI_SYSTEM, "sed", "-n", kit.Format("%d,%dp", kit.Int(res["extra.row"]), kit.Int(res["extra.row"])+3), res["extra.buf"])
+	return res
+}
+func (m *Message) Prefix(arg ...string) string {
+	return kit.Keys(m.Cap(CTX_FOLLOW), arg)
+}
+func (m *Message) Save(arg ...string) *Message {
+	list := []string{}
+	for _, k := range arg {
+		list = append(list, kit.Keys(m.Cap(CTX_FOLLOW), k))
+	}
+	m.Cmd(CTX_CONFIG, "save", kit.Keys(m.Cap(CTX_FOLLOW), "json"), list)
+	return m
+}
+func (m *Message) Load(arg ...string) *Message {
+	list := []string{}
+	for _, k := range arg {
+		list = append(list, kit.Keys(m.Cap(CTX_FOLLOW), k))
+	}
+	m.Cmd(CTX_CONFIG, "load", kit.Keys(m.Cap(CTX_FOLLOW), "json"), list)
 	return m
 }
 

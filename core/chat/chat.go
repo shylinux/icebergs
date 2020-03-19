@@ -153,7 +153,7 @@ var Index = &ice.Context{Name: "chat", Help: "聊天中心",
 				case "login":
 					// 密码登录
 					if len(arg) > 2 {
-						m.Option(ice.MSG_SESSID, web.Render(m, "cookie", m.Cmdx(ice.AAA_USER, "login", m.Option(ice.MSG_USERNAME, arg[1]), arg[2])))
+						web.Render(m, "cookie", m.Option(ice.MSG_SESSID, m.Cmdx(ice.AAA_USER, "login", m.Option(ice.MSG_USERNAME, arg[1]), arg[2])))
 					}
 
 				default:

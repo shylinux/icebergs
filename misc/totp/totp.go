@@ -43,15 +43,11 @@ func get(key string) string {
 var Index = &ice.Context{Name: "totp", Help: "动态码",
 	Caches: map[string]*ice.Cache{},
 	Configs: map[string]*ice.Config{
-		"totp": {Name: "totp", Help: "动态码", Value: kit.Data(kit.MDB_SHORT, "name")},
+		"totp": {Name: "totp", Help: "动态码", Value: kit.Data(kit.MDB_SHORT, "name", "share", "otpauth://totp/%s?secret=%s")},
 	},
 	Commands: map[string]*ice.Command{
-		ice.ICE_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			m.Load()
-		}},
-		ice.ICE_EXIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			m.Save("totp")
-		}},
+		ice.ICE_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {}},
+		ice.ICE_EXIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {}},
 
 		"new": {Name: "new user [secret]", Help: "创建密钥", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			if len(arg) == 0 {
@@ -64,7 +60,11 @@ var Index = &ice.Context{Name: "totp", Help: "动态码",
 
 			if m.Richs("totp", nil, arg[0], func(key string, value map[string]interface{}) {
 				// 密钥详情
-				m.Push("detail", value)
+				if len(arg) > 1 {
+					m.Render(ice.RENDER_QRCODE, kit.Format(m.Conf("totp", "meta.share"), value["name"], value["text"]))
+				} else {
+					m.Push("detail", value)
+				}
 			}) != nil {
 				return
 			}
@@ -80,7 +80,7 @@ var Index = &ice.Context{Name: "totp", Help: "动态码",
 			)))
 
 			// 创建共享
-			defer m.Cmdy(ice.WEB_SHARE, "optauth", arg[0], kit.Format("otpauth://totp/%s?secret=%s", arg[0], arg[1]))
+			defer m.Cmdy(ice.WEB_SHARE, "optauth", arg[0], kit.Format(m.Conf("totp", "meta.share"), arg[0], arg[1]))
 		}},
 		"get": {Name: "get user [secret]", Help: "获取密码", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			if len(arg) == 0 {

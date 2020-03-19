@@ -276,7 +276,7 @@ var Index = &ice.Context{Name: "lark", Help: "机器人",
 			switch parse(m); m.Option("msg.type") {
 			case "url_verification":
 				// 绑定验证
-				m.Append("_output", "result")
+				m.Option(ice.MSG_OUTPUT, ice.RENDER_RESULT)
 				m.Echo(kit.Format(map[string]interface{}{"challenge": m.Option("msg.challenge")}))
 
 			case "event_callback":

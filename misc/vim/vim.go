@@ -32,7 +32,7 @@ var Index = &ice.Context{Name: "vim", Help: "编辑器",
 			})
 
 			m.Info("%s %s cmd: %v sub: %v", m.Option("you"), m.Option(ice.MSG_USERURL), m.Optionv("cmds"), m.Optionv("sub"))
-			m.Append("_output", "result")
+			m.Option(ice.MSG_OUTPUT, ice.RENDER_RESULT)
 		}},
 		"/help": {Name: "/help", Help: "帮助", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			m.Cmdy("help")

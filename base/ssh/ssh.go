@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"path"
 	"strconv"
 	"strings"
 	"time"
@@ -21,6 +22,35 @@ type Frame struct {
 	target *ice.Context
 	count  int
 	exit   bool
+}
+
+func Render(msg *ice.Message, cmd string, args ...interface{}) {
+	msg.Log(ice.LOG_EXPORT, "%s: %v", cmd, args)
+	switch arg := kit.Simple(args...); cmd {
+	case ice.RENDER_OUTPUT:
+
+	case ice.RENDER_DOWNLOAD:
+		os.Link(kit.Select(path.Base(arg[0]), arg, 2), arg[0])
+
+	case ice.RENDER_RESULT:
+		fmt.Fprintf(msg.O, msg.Result())
+
+	case ice.RENDER_QRCODE:
+		msg.Cmdy("cli.python", "qrcode", kit.Format(args[0], args[1:]...))
+		fallthrough
+	default:
+		// 转换结果
+		res := msg.Result()
+		if res == "" {
+			res = msg.Table().Result()
+		}
+
+		// 输出结果
+		if fmt.Fprintf(msg.O, res); !strings.HasSuffix(res, "\n") {
+			fmt.Fprintf(msg.O, "\n")
+		}
+	}
+	msg.Append(ice.MSG_OUTPUT, ice.RENDER_OUTPUT)
 }
 
 func (f *Frame) prompt(m *ice.Message) *Frame {
@@ -119,16 +149,10 @@ func (f *Frame) parse(m *ice.Message, line string) *Frame {
 		// 执行命令
 		msg.Cmdy(ln[0], ln[1:])
 
-		// 转换结果
-		res := msg.Result()
-		if res == "" {
-			res = msg.Table().Result()
-		}
+		// 渲染引擎
+		_args, _ := msg.Optionv(ice.MSG_ARGS).([]interface{})
+		Render(msg, msg.Option(ice.MSG_OUTPUT), _args...)
 
-		// 输出结果
-		if f.printf(msg, res); !strings.HasSuffix(res, "\n") {
-			f.printf(msg, "\n")
-		}
 	}
 	return f
 }
@@ -162,6 +186,7 @@ func (f *Frame) Start(m *ice.Message, arg ...string) bool {
 			m.Cap(ice.CTX_STREAM, arg[0])
 		}
 	}
+	m.I, m.O = f.in, f.out
 
 	line := ""
 	bio := bufio.NewScanner(f.in)

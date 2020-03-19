@@ -102,6 +102,11 @@ var Index = &ice.Context{Name: "code", Help: "编程中心",
 				})
 
 			case "prune":
+				if len(arg) > 1 && arg[1] == "all" {
+					m.Conf("login", "hash", "")
+					break
+				}
+
 				list := []string{}
 				m.Richs("login", nil, "*", func(key string, value map[string]interface{}) {
 					if len(arg) > 1 && arg[1] == "all" || value["status"] == "logout" {

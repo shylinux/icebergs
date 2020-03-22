@@ -11,6 +11,8 @@ var Index = &ice.Context{Name: "chat", Help: "聊天中心",
 	Configs: map[string]*ice.Config{
 		ice.CHAT_RIVER: {Name: "river", Help: "群组", Value: kit.Data(
 			"template", kit.Dict("root", []interface{}{
+				[]interface{}{"river", `{{.Option "user.nick"|Format}}@{{.Conf "runtime" "node.name"|Format}}`, "mall"},
+
 				[]interface{}{"storm", "mall", "mall"},
 				[]interface{}{"field", "asset", "web.mall"},
 				[]interface{}{"field", "spend", "web.mall"},
@@ -118,22 +120,19 @@ var Index = &ice.Context{Name: "chat", Help: "聊天中心",
 		}},
 		"auto": {Name: "auto user", Help: "自动化", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			m.Richs(ice.AAA_USER, nil, arg[0], func(key string, value map[string]interface{}) {
+				m.Option(ice.MSG_USERNICK, value["usernick"])
 				m.Option(ice.MSG_USERNAME, value["username"])
-				m.Option(ice.MSG_USERROLE, m.Cmdx(ice.AAA_ROLE, "check", value["username"]))
-
-				if len(arg[0]) > 8 {
-					arg[0] = arg[0][:8]
-				}
-
-				// 创建群组
-				name := kit.Select(arg[0], value["nickname"]) + "@" + m.Conf(ice.CLI_RUNTIME, "boot.hostname")
-				storm, river := "", m.Option(ice.MSG_RIVER, m.Cmdx("/ocean", "spawn", name, m.Option(ice.MSG_USERNAME)))
+				m.Option(ice.MSG_USERROLE, "root")
 
 				// 创建应用
+				storm, river := "", ""
 				m.Option("cache.limit", -2)
-				m.Richs(ice.WEB_FAVOR, nil, kit.Keys("river", m.Option(ice.MSG_USERROLE)), func(key string, value map[string]interface{}) {
+				m.Richs(ice.WEB_FAVOR, nil, kit.Keys("river", m.Cmdx(ice.AAA_ROLE, "check", value["username"])), func(key string, value map[string]interface{}) {
 					m.Grows(ice.WEB_FAVOR, kit.Keys("hash", key), "", "", func(index int, value map[string]interface{}) {
 						switch value["type"] {
+						case "river":
+							name, _ := kit.Render(kit.Format(value["name"]), m)
+							river = m.Option(ice.MSG_RIVER, m.Cmdx("/ocean", "spawn", string(name)))
 						case "storm":
 							storm = m.Option(ice.MSG_STORM, m.Cmdx("/steam", river, "spawn", value["name"]))
 						case "field":
@@ -218,6 +217,8 @@ var Index = &ice.Context{Name: "chat", Help: "聊天中心",
 						arg = append(arg, "tool.0.args", m.Option("args"))
 						arg = append(arg, "tool.0.single", "yes")
 					} else {
+						m.Option(ice.MSG_RIVER, arg[5])
+						m.Option(ice.MSG_STORM, arg[7])
 						m.Cmd("/action", arg[5], arg[7]).Table(func(index int, value map[string]string, head []string) {
 							arg = append(arg, kit.Format("tool.%d.pod", index), value["node"])
 							arg = append(arg, kit.Format("tool.%d.ctx", index), value["group"])
@@ -403,6 +404,7 @@ var Index = &ice.Context{Name: "chat", Help: "聊天中心",
 			if len(arg) == 2 {
 				// 命令列表
 				m.Set(ice.MSG_OPTION)
+				m.Render("")
 				m.Grows(ice.CHAT_RIVER, prefix, "", "", func(index int, value map[string]interface{}) {
 					if meta, ok := kit.Value(value, "meta").(map[string]interface{}); ok {
 						m.Push("river", arg[0])

@@ -33,8 +33,10 @@ const ( // MSG
 	MSG_USERIP   = "user.ip"
 	MSG_USERUA   = "user.ua"
 	MSG_USERURL  = "user.url"
+	MSG_USERNICK = "user.nick"
 	MSG_USERNAME = "user.name"
 	MSG_USERROLE = "user.role"
+	MSG_USERADDR = "user.addr"
 
 	MSG_RIVER = "sess.river"
 	MSG_STORM = "sess.storm"

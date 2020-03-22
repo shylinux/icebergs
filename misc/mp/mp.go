@@ -86,9 +86,30 @@ var Index = &ice.Context{Name: "mp", Help: "小程序",
 				}
 
 				switch kit.Select("active", m.Option("type")) {
+				case "share":
+					m.Richs(ice.WEB_SHARE, nil, m.Option("text"), func(key string, value map[string]interface{}) {
+						switch value["type"] {
+						case "invite":
+							if m.Option(ice.MSG_USERROLE) != value["name"] {
+								m.Cmd(ice.AAA_ROLE, value["name"], m.Option(ice.MSG_USERNAME))
+								m.Cmd("web.chat.auto", m.Option(ice.MSG_USERNAME), value["name"])
+							}
+							break
+						default:
+							m.Option("type", value["type"])
+							m.Option("name", value["name"])
+							m.Option("text", value["text"])
+						}
+					})
+				}
+
+				switch kit.Select("active", m.Option("type")) {
 				case "active":
-					// 授权登录
-					m.Cmd(ice.WEB_SPACE, m.Option("auth"), "sessid", m.Cmdx(ice.AAA_SESS, "create", m.Option(ice.MSG_USERNAME)))
+					// 网页登录
+					m.Cmdy(ice.WEB_SPACE, m.Option("name"), "sessid", m.Cmdx(ice.AAA_SESS, "create", m.Option(ice.MSG_USERNAME)))
+				case "login":
+					// 终端登录
+					m.Cmdy(ice.AAA_SESS, "auth", m.Option("text"), m.Option(ice.MSG_USERNAME))
 				}
 
 			case "upload":

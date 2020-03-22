@@ -76,9 +76,12 @@ func Render(msg *ice.Message, cmd string, args ...interface{}) {
 	case ice.RENDER_QRCODE:
 		if qr, e := qrcode.New(arg[0], qrcode.Medium); msg.Assert(e) {
 			msg.W.Header().Set("Content-Type", "image/png")
-			msg.Assert(qr.Write(256, msg.W))
+			msg.Assert(qr.Write(kit.Int(kit.Select("256", arg, 1)), msg.W))
 		}
 	default:
+		if cmd != "" {
+			msg.Echo(kit.Format(cmd, args...))
+		}
 		msg.W.Header().Set("Content-Type", "application/json")
 		fmt.Fprint(msg.W, msg.Formats("meta"))
 	}
@@ -251,7 +254,13 @@ func (web *Frame) HandleCmd(m *ice.Message, key string, cmd *ice.Command) {
 			msg.Option(ice.MSG_USERIP, r.Header.Get(ice.MSG_USERIP))
 			msg.Option(ice.MSG_USERURL, r.URL.Path)
 			msg.Option(ice.MSG_SESSID, "")
+			msg.Option(ice.MSG_OUTPUT, "")
 			msg.R, msg.W = r, w
+			if r.Header.Get("X-Real-Port") != "" {
+				msg.Option(ice.MSG_USERADDR, msg.Option(ice.MSG_USERIP)+":"+r.Header.Get("X-Real-Port"))
+			} else {
+				msg.Option(ice.MSG_USERADDR, r.RemoteAddr)
+			}
 
 			// 请求变量
 			for _, v := range r.Cookies() {
@@ -349,7 +358,7 @@ func (web *Frame) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			m.Conf(ice.WEB_SERVE, "meta.init", "true")
 		}
 		m.W = w
-		m.Render("refresh")
+		Render(m, "refresh")
 		m.Event(ice.SYSTEM_INIT)
 		m.W = nil
 	} else {
@@ -813,12 +822,10 @@ var Index = &ice.Context{Name: "web", Help: "网络模块",
 
 			default:
 				if len(arg) == 1 {
-					// 空间空间
-					list := []string{}
-					m.Cmdy(ice.WEB_SPACE, arg[0], "space").Table(func(index int, value map[string]string, head []string) {
-						list = append(list, arg[0]+"."+value["name"])
+					// 空间详情
+					m.Richs(ice.WEB_SPACE, nil, arg[0], func(key string, value map[string]interface{}) {
+						m.Push("detail", value)
 					})
-					m.Append("name", list)
 					break
 				}
 
@@ -1577,7 +1584,7 @@ var Index = &ice.Context{Name: "web", Help: "网络模块",
 			}
 			if len(arg) == 1 {
 				// 共享详情
-				m.Richs(ice.WEB_SHARE, nil, arg[0], func(key string, value map[string]interface{}) {
+				if m.Richs(ice.WEB_SHARE, nil, arg[0], func(key string, value map[string]interface{}) {
 					m.Push("detail", value)
 					m.Push("key", "link")
 					m.Push("value", fmt.Sprintf(m.Conf(ice.WEB_SHARE, "meta.template.link"), m.Conf(ice.WEB_SHARE, "meta.domain"), key, key))
@@ -1585,17 +1592,30 @@ var Index = &ice.Context{Name: "web", Help: "网络模块",
 					m.Push("value", fmt.Sprintf(m.Conf(ice.WEB_SHARE, "meta.template.share"), m.Conf(ice.WEB_SHARE, "meta.domain"), key))
 					m.Push("key", "value")
 					m.Push("value", fmt.Sprintf(m.Conf(ice.WEB_SHARE, "meta.template.value"), m.Conf(ice.WEB_SHARE, "meta.domain"), key))
-				})
-				return
+				}) != nil {
+					return
+				}
 			}
 
 			switch arg[0] {
+			case "invite":
+				arg = []string{arg[0], m.Cmdx(ice.WEB_SHARE, "add", "invite", kit.Select("tech", arg, 1), kit.Select("miss", arg, 2))}
+
+				fallthrough
+			case "check":
+				m.Richs(ice.WEB_SHARE, nil, arg[1], func(key string, value map[string]interface{}) {
+					m.Render(ice.RENDER_QRCODE, kit.Format(kit.Dict(
+						kit.MDB_TYPE, "share", kit.MDB_NAME, value["type"], kit.MDB_TEXT, key,
+					)))
+				})
+
 			case "auth":
 				m.Richs(ice.WEB_SHARE, nil, arg[1], func(key string, value map[string]interface{}) {
-					m.Richs(ice.AAA_SESS, nil, value["text"], func(key string, value map[string]interface{}) {
-						value["username"], value["userrole"] = arg[2], m.Cmdx(ice.AAA_ROLE, "check", arg[2])
-						m.Echo("%s", value["userrole"])
-					})
+					if value["type"] == "active" {
+						m.Cmdy(ice.WEB_SPACE, value["name"], "sessid", m.Cmdx(ice.AAA_SESS, "create", arg[2]))
+					} else {
+						m.Cmdy(ice.AAA_SESS, "auth", value["text"], arg[2])
+					}
 				})
 
 			case "add":
@@ -1609,6 +1629,7 @@ var Index = &ice.Context{Name: "web", Help: "网络模块",
 
 				// 创建共享
 				h := m.Rich(ice.WEB_SHARE, nil, kit.Dict(
+					kit.MDB_TIME, m.Time("10m"),
 					kit.MDB_TYPE, arg[0], kit.MDB_NAME, arg[1], kit.MDB_TEXT, arg[2],
 					"extra", extra,
 				))
@@ -1850,6 +1871,10 @@ var Index = &ice.Context{Name: "web", Help: "网络模块",
 
 			m.Richs(ice.WEB_SHARE, nil, arg[0], func(key string, value map[string]interface{}) {
 				m.Log(ice.LOG_EXPORT, "%s: %v", arg, kit.Format(value))
+				if kit.Time(kit.Format(value[kit.MDB_TIME])) < kit.Time(m.Time()) {
+					m.Echo("invalid")
+					return
+				}
 
 				switch value["type"] {
 				case ice.TYPE_SPACE:
@@ -1877,8 +1902,13 @@ var Index = &ice.Context{Name: "web", Help: "网络模块",
 				case "share", "共享码":
 					m.Render(ice.RENDER_QRCODE, kit.Format("%s/share/%s/", m.Conf(ice.WEB_SHARE, "meta.domain"), key))
 					return
+				case "check", "安全码":
+					m.Render(ice.RENDER_QRCODE, kit.Format(kit.Dict(
+						kit.MDB_TYPE, "share", kit.MDB_NAME, value["type"], kit.MDB_TEXT, key,
+					)))
+					return
 				case "value", "数据值":
-					m.Render(ice.RENDER_QRCODE, kit.Format(value))
+					m.Render(ice.RENDER_QRCODE, kit.Format(value), kit.Select("256", arg, 2))
 					return
 				case "text":
 					m.Render(ice.RENDER_QRCODE, kit.Format(value["text"]))
@@ -1903,7 +1933,7 @@ var Index = &ice.Context{Name: "web", Help: "网络模块",
 
 					if arg[1] == "" {
 						// 返回主页
-						http.ServeFile(m.W, m.R, m.Conf(ice.WEB_SHARE, "meta.index"))
+						Render(m, ice.RENDER_DOWNLOAD, m.Conf(ice.WEB_SHARE, "meta.index"))
 						break
 					}
 
@@ -1946,16 +1976,12 @@ var Index = &ice.Context{Name: "web", Help: "网络模块",
 					m.Cmdy(cmds).Option("cmds", cmds)
 					m.Option("title", value["name"])
 
-				case ice.TYPE_ACTIVE:
-					// 扫码数据
-					m.Render(ice.RENDER_QRCODE, kit.Format(value))
-
 				default:
 					// 查看数据
 					m.Option("type", value["type"])
 					m.Option("name", value["name"])
 					m.Option("text", value["text"])
-					m.Render(m.Conf(ice.WEB_SHARE, "meta.template.simple"))
+					m.Render(ice.RENDER_TEMPLATE, m.Conf(ice.WEB_SHARE, "meta.template.simple"))
 					m.Option(ice.MSG_OUTPUT, ice.RENDER_RESULT)
 				}
 			})
@@ -2036,36 +2062,33 @@ var Index = &ice.Context{Name: "web", Help: "网络模块",
 					})
 				})
 			case "push":
-				m.Richs(ice.WEB_FAVOR, nil, m.Option("favor"), func(key string, value map[string]interface{}) {
-					m.Log(ice.LOG_IMPORT, "%v", value)
-					m.Grow(ice.WEB_FAVOR, kit.Keys(kit.MDB_HASH, key), kit.Dict(
-						kit.MDB_TYPE, m.Option("type"), kit.MDB_NAME, m.Option("name"), kit.MDB_TEXT, m.Option("text"),
-						"extra", kit.UnMarshal(m.Option("extra")),
-					))
-				})
+				m.Cmdy(ice.WEB_FAVOR, m.Option("favor"), m.Option("type"), m.Option("name"), m.Option("text"), m.Option("extra"))
 			}
 		}},
 
 		"/route/": {Name: "/route/", Help: "路由器", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			switch arg[0] {
 			case "login":
-				if m.Richs(ice.WEB_ROUTE, nil, kit.Select(m.Option("login"), arg, 1), func(key string, value map[string]interface{}) {
-					m.Echo("%s", value["share"])
-				}) == nil {
-					sessid := m.Cmdx(ice.AAA_SESS, "create", "")
-					share := m.Cmdx(ice.WEB_SHARE, "add", "login", m.Option(ice.MSG_USERIP), sessid)
-					m.Rich(ice.WEB_ROUTE, nil, kit.Dict("share", share, "sessid", sessid))
-					m.Render("cookie", sessid)
-					m.Render(share)
+				if m.Option(ice.MSG_USERNAME) != "" {
+					m.Push(ice.MSG_USERNAME, m.Option(ice.MSG_USERNAME))
+					m.Info("username: %v", m.Option(ice.MSG_USERNAME))
+					break
 				}
+				if m.Option(ice.MSG_SESSID) != "" && m.Cmdx(ice.AAA_SESS, "check", m.Option(ice.MSG_SESSID)) != "" {
+					m.Info("sessid: %v", m.Option(ice.MSG_SESSID))
+					break
+				}
+
+				sessid := m.Cmdx(ice.AAA_SESS, "create", "")
+				share := m.Cmdx(ice.WEB_SHARE, "add", "login", m.Option(ice.MSG_USERIP), sessid)
+				Render(m, "cookie", sessid)
+				m.Render(share)
 			}
 		}},
 		"/space/": {Name: "/space/", Help: "空间站", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			if s, e := websocket.Upgrade(m.W, m.R, nil, m.Confi(ice.WEB_SPACE, "meta.buffer.r"), m.Confi(ice.WEB_SPACE, "meta.buffer.w")); m.Assert(e) {
-				m.Option("name", strings.Replace(m.Option("name"), ".", "_", -1))
-				if !m.Options("name") {
-					m.Option("name", kit.Hashs("uniq"))
-				}
+				m.Option("name", strings.Replace(kit.Select(m.Option(ice.MSG_USERADDR), m.Option("name")), ".", "_", -1))
+				m.Option("node", kit.Select("worker", m.Option("node")))
 
 				// 共享空间
 				share := m.Option("share")

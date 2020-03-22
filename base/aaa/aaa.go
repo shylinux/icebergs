@@ -42,9 +42,11 @@ var Index = &ice.Context{Name: "aaa", Help: "认证模块",
 			switch arg[0] {
 			case "check":
 				// 用户角色
-				m.Echo(kit.Select(kit.Select("void",
-					"tech", m.Confs(ice.AAA_ROLE, kit.Keys("meta.tech", arg[1]))),
-					"root", m.Confs(ice.AAA_ROLE, kit.Keys("meta.root", arg[1]))))
+				if len(arg) > 1 && arg[1] != "" {
+					m.Echo(kit.Select(kit.Select("void",
+						"tech", m.Confs(ice.AAA_ROLE, kit.Keys("meta.tech", arg[1]))),
+						"root", m.Confs(ice.AAA_ROLE, kit.Keys("meta.root", arg[1]))))
+				}
 
 			case "black", "white":
 				// 黑白名单
@@ -97,7 +99,7 @@ var Index = &ice.Context{Name: "aaa", Help: "认证模块",
 				m.Echo("ok")
 
 			default:
-				m.Conf(ice.AAA_ROLE, kit.Keys("meta", arg[0], arg[1]), "true")
+				m.Conf(ice.AAA_ROLE, kit.Keys("meta", arg[0], arg[1]), kit.Select("true", arg, 2))
 			}
 		}},
 		ice.AAA_USER: {Name: "user first|login", Help: "用户", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
@@ -125,9 +127,13 @@ var Index = &ice.Context{Name: "aaa", Help: "认证模块",
 				// 用户认证
 				user := m.Richs(ice.AAA_USER, nil, arg[1], nil)
 				if word := kit.Select("", arg, 2); user == nil {
+					nick := arg[1]
+					if len(nick) > 8 {
+						nick = nick[:8]
+					}
 					// 创建用户
 					m.Rich(ice.AAA_USER, nil, kit.Dict(
-						"username", arg[1], "password", word,
+						"usernick", nick, "username", arg[1], "password", word,
 						"usernode", m.Conf(ice.CLI_RUNTIME, "boot.hostname"),
 					))
 					user = m.Richs(ice.AAA_USER, nil, arg[1], nil)
@@ -165,6 +171,13 @@ var Index = &ice.Context{Name: "aaa", Help: "认证模块",
 			}
 
 			switch arg[0] {
+			case "auth":
+				m.Richs(ice.AAA_SESS, nil, arg[1], func(value map[string]interface{}) {
+					value["username"], value["userrole"] = arg[2], m.Cmdx(ice.AAA_ROLE, "check", arg[2])
+					m.Log(ice.LOG_LOGIN, "sessid: %s username: %s userrole: %s", arg[1], arg[2], value["userrole"])
+					m.Echo("%v", value["userrole"])
+				})
+
 			case "check":
 				// 查看会话
 				m.Richs(ice.AAA_SESS, nil, arg[1], func(value map[string]interface{}) {

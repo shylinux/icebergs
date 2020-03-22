@@ -20,7 +20,6 @@ type Frame struct {
 	out io.Writer
 
 	target *ice.Context
-	count  int
 	exit   bool
 }
 
@@ -63,7 +62,7 @@ func (f *Frame) prompt(m *ice.Message) *Frame {
 		for _, v := range kit.Simple(m.Optionv(ice.MSG_PROMPT)) {
 			switch v {
 			case "count":
-				fmt.Fprintf(f.out, kit.Format("%d", f.count))
+				fmt.Fprintf(f.out, "%d", kit.Int(m.Conf("history", "meta.count"))+1)
 			case "time":
 				fmt.Fprintf(f.out, time.Now().Format("15:04:05"))
 			case "target":
@@ -176,7 +175,7 @@ func (f *Frame) Begin(m *ice.Message, arg ...string) ice.Server {
 }
 func (f *Frame) Start(m *ice.Message, arg ...string) bool {
 	m.Option(ice.MSG_PROMPT, m.Confv("prompt", "meta.PS1"))
-	f.count, f.target = kit.Int(m.Conf("history", "meta.count"))+1, m.Source()
+	f.target = m.Source()
 
 	switch kit.Select("stdio", arg, 0) {
 	case "stdio":
@@ -223,14 +222,11 @@ func (f *Frame) Start(m *ice.Message, arg ...string) bool {
 			line = ""
 			continue
 		}
+
 		if strings.HasPrefix(strings.TrimSpace(line), "!") {
-			m.Option("cache.offend", 0)
-			m.Option("cache.limit", 30)
 			if len(line) == 1 {
 				// 历史记录
-				m.Grows("history", nil, "", "", func(index int, value map[string]interface{}) {
-					f.printf(m, "%d\t%s\n", index+1, value["line"])
-				})
+				f.printf(m, m.Cmd("history").Table().Result())
 				line = ""
 				continue
 			}
@@ -240,12 +236,13 @@ func (f *Frame) Start(m *ice.Message, arg ...string) bool {
 					line = kit.Format(value["line"])
 				})
 			} else {
-
+				f.printf(m, m.Cmd("history", "search", line[1:]).Table().Result())
+				line = ""
+				continue
 			}
 		} else {
 			// 记录历史
 			m.Grow("history", nil, kit.Dict("line", line))
-			f.count++
 		}
 
 		// 清空格式
@@ -268,31 +265,15 @@ func (f *Frame) Close(m *ice.Message, arg ...string) bool {
 var Index = &ice.Context{Name: "ssh", Help: "终端模块",
 	Caches: map[string]*ice.Cache{},
 	Configs: map[string]*ice.Config{
+		"history": {Name: "history", Help: "history", Value: kit.Data()},
 		"prompt": {Name: "prompt", Help: "prompt", Value: kit.Data(
 			"PS1", []interface{}{"\033[33;44m", "count", "[", "time", "]", "\033[5m", "target", "\033[0m", "\033[44m", ">", "\033[0m ", "\033[?25h", "\033[32m"},
 			"PS2", []interface{}{"count", " ", "target", "> "},
 		)},
 
 		"super": {Name: "super", Help: "super", Value: kit.Data()},
-
-		"demo": {Name: "demo", Help: "demo", Value: kit.Data(
-			"short", "name",
-			"limit", "5", "least", "2",
-		)},
 	},
 	Commands: map[string]*ice.Command{
-		"demo": {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			data := m.Richs("demo", nil, arg[0], nil)
-			if data != nil {
-				m.Echo("%v", data)
-				return
-			}
-
-			m.Rich("demo", nil, kit.Dict(
-				"name", arg[0],
-			))
-		}},
-
 		ice.ICE_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			m.Load()
 		}},
@@ -314,10 +295,18 @@ var Index = &ice.Context{Name: "ssh", Help: "终端模块",
 				return
 			}
 
-			f := m.Target().Server().(*Frame)
-			m.Grows("history", nil, "id", arg[0], func(index int, value map[string]interface{}) {
-				f.parse(m, kit.Format(value["line"]))
-			})
+			switch arg[0] {
+			case "search":
+				m.Grows("history", nil, "", "", func(index int, value map[string]interface{}) {
+					if strings.Contains(kit.Format(value["line"]), arg[1]) {
+						m.Push("", value, []string{"id", "time", "line"})
+					}
+				})
+			default:
+				m.Grows("history", nil, "id", arg[0], func(index int, value map[string]interface{}) {
+					m.Push("", value, []string{"id", "time", "line"})
+				})
+			}
 		}},
 		"return": {Name: "return", Help: "解析", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			m.Option(ice.MSG_PROMPT, m.Confv("prompt", "meta.PS1"))

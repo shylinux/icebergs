@@ -540,7 +540,7 @@ var Index = &ice.Context{Name: "web", Help: "网络模块",
 						value["name"] = arg[1]
 						value["text"] = arg[2]
 						value["url"] = arg[2]
-					}) != nil {
+					}) == nil {
 						m.Rich(ice.WEB_SPIDE, nil, kit.Dict(
 							"cookie", kit.Dict(), "header", kit.Dict(), "client", kit.Dict(
 								"share", m.Cmdx(ice.WEB_SHARE, "add", ice.TYPE_SPIDE, arg[1], arg[2]),

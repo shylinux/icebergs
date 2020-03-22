@@ -31,6 +31,13 @@ var Index = &ice.Context{Name: "zsh", Help: "命令行",
 				// 查找空间
 				m.Option("you", value["you"])
 			})
+			if m.Option("you") == "" {
+				m.Cmd("web.code.tmux.session").Table(func(index int, value map[string]string, head []string) {
+					if value["tag"] == "1" {
+						m.Option("you", value["session"])
+					}
+				})
+			}
 
 			m.Info("%s %s cmd: %v sub: %v", m.Option("you"), m.Option(ice.MSG_USERURL), m.Optionv("cmds"), m.Optionv("sub"))
 			m.Option(ice.MSG_OUTPUT, ice.RENDER_RESULT)

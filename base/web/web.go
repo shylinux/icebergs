@@ -514,7 +514,7 @@ var Index = &ice.Context{Name: "web", Help: "网络模块",
 			if len(arg) == 0 {
 				// 爬虫列表
 				m.Richs(ice.WEB_SPIDE, nil, "*", func(key string, value map[string]interface{}) {
-					m.Push(key, value["client"], []string{"name", "login", "share", "method", "url"})
+					m.Push(key, value["client"], []string{"name", "share", "login", "method", "url"})
 				})
 				m.Sort("name")
 				return
@@ -557,10 +557,20 @@ var Index = &ice.Context{Name: "web", Help: "网络模块",
 				return
 			case "login":
 				m.Richs(ice.WEB_SPIDE, nil, arg[1], func(key string, value map[string]interface{}) {
-					kit.Value(value, "client.login", m.Cmdx(ice.WEB_SPIDE, arg[1], "raw", "/route/login", "login", kit.Value(value, "client.login")))
-					kit.Value(value, "client.share", m.Cmdx(ice.WEB_SHARE, "add", ice.TYPE_SPIDE, arg[1],
-						kit.Format("%s?sessid=%s", kit.Value(value, "client.url"), kit.Value(value, "cookie.sessid"))))
-					m.Echo("%s", kit.Value(value, "client.login"))
+					msg := m.Cmd(ice.WEB_SPIDE, arg[1], "msg", "/route/login", "login")
+					if msg.Append(ice.MSG_USERNAME) != "" {
+						m.Echo(msg.Append(ice.MSG_USERNAME))
+						return
+					}
+					if msg.Result() != "" {
+						kit.Value(value, "client.login", msg.Result())
+						kit.Value(value, "client.share", m.Cmdx(ice.WEB_SHARE, "add", ice.TYPE_SPIDE, arg[1],
+							kit.Format("%s?sessid=%s", kit.Value(value, "client.url"), kit.Value(value, "cookie.sessid"))))
+					}
+					m.Render(ice.RENDER_QRCODE, kit.Dict(
+						kit.MDB_TYPE, "login", kit.MDB_NAME, arg[1],
+						kit.MDB_TEXT, kit.Value(value, "cookie.sessid"),
+					))
 				})
 				return
 			}
@@ -731,28 +741,12 @@ var Index = &ice.Context{Name: "web", Help: "网络模块",
 			})
 		}},
 		ice.WEB_SERVE: {Name: "serve [shy|dev|self]", Help: "服务器", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			// 节点信息
-			// m.Conf(ice.CLI_RUNTIME, "node.name", m.Conf(ice.CLI_RUNTIME, "boot.hostname"))
+			// 启动服务
+			m.Conf(ice.CLI_RUNTIME, "node.name", m.Conf(ice.CLI_RUNTIME, "boot.hostname"))
 			m.Conf(ice.CLI_RUNTIME, "node.type", ice.WEB_SERVER)
-
-			switch kit.Select("def", arg, 0) {
-			case "shy":
-				// 连接根服务
-				m.Richs(ice.WEB_SPIDE, nil, "shy", func(key string, value map[string]interface{}) {
-					m.Cmd(ice.WEB_SPACE, "connect", "shy")
-				})
-				fallthrough
-			case "dev":
-				// 连接上游服务
-				m.Richs(ice.WEB_SPIDE, nil, "dev", func(key string, value map[string]interface{}) {
-					m.Cmd(ice.WEB_SPACE, "connect", "dev")
-				})
-				fallthrough
-			default:
-				// 启动服务
-				m.Target().Start(m, "self")
-				m.Cmd(ice.WEB_SPACE, "connect", "self")
-			}
+			m.Target().Start(m, "self")
+			// 连接服务
+			m.Cmd(ice.WEB_SPACE, "connect", "self")
 		}},
 		ice.WEB_SPACE: {Name: "space", Help: "空间站", Meta: kit.Dict("exports", []string{"pod", "name"}), List: kit.List(
 			kit.MDB_INPUT, "text", "name", "name",
@@ -1028,33 +1022,30 @@ var Index = &ice.Context{Name: "web", Help: "网络模块",
 
 			switch arg[0] {
 			case "sync":
-				m.Richs(ice.WEB_FAVOR, nil, arg[1], func(key string, value map[string]interface{}) {
-					count := kit.Int(kit.Value(value, kit.Keys("meta.count")))
+				m.Richs(ice.WEB_FAVOR, nil, arg[1], func(key string, val map[string]interface{}) {
+					remote := kit.Keys("meta.remote", arg[2], arg[3])
+					count := kit.Int(kit.Value(val, kit.Keys("meta.count")))
 
-					pull := kit.Int(kit.Value(value, kit.Keys("meta.remote", arg[2], "pull"))) + 1
-					pull = 1
-					m.Cmd(ice.WEB_SPIDE, arg[2], "msg", "/favor/pull", "favor", arg[3], "begin", pull).Table(func(index int, value map[string]string, head []string) {
-						kit.Value(value, kit.Keys("meta.remote", arg[2], arg[3], "pull"), value["id"])
-						m.Log(ice.LOG_IMPORT, "%v", value)
-						m.Grow(ice.WEB_FAVOR, kit.Keys(kit.MDB_HASH, key), kit.Dict(
-							kit.MDB_TYPE, value["type"], kit.MDB_NAME, value["name"], kit.MDB_TEXT, value["text"],
-							"extra", kit.UnMarshal(value["extra"]),
-						))
+					pull := kit.Int(kit.Value(val, kit.Keys(remote, "pull")))
+					m.Cmd(ice.WEB_SPIDE, arg[2], "msg", "/favor/pull", "favor", arg[3], "begin", pull+1).Table(func(index int, value map[string]string, head []string) {
+						m.Cmd(ice.WEB_FAVOR, arg[1], value["type"], value["name"], value["text"], value["extra"])
+						pull = kit.Int(value["id"])
 					})
 
-					push := kit.Int(kit.Value(value, kit.Keys("meta.remote", arg[0], "push"))) + 1
-					push = 1
-					for i := push; i <= count; i++ {
-						m.Grows(ice.WEB_FAVOR, kit.Keys(kit.MDB_HASH, key), "id", kit.Format(i), func(index int, value map[string]interface{}) {
-							kit.Value(value, kit.Keys("meta.remote", arg[2], arg[3], "push"), value["id"])
-							m.Cmd(ice.WEB_SPIDE, arg[2], "msg", "/favor/push", "favor", arg[3],
-								"type", value["type"], "name", value["name"], "text", value["text"],
-								"time", value["time"], "extra", kit.Format(value["extra"]),
-							)
-						})
-					}
+					m.Option("cache.limit", count-kit.Int(kit.Value(val, kit.Keys(remote, "push"))))
+					m.Grows(ice.WEB_FAVOR, kit.Keys(kit.MDB_HASH, key), "", "", func(index int, value map[string]interface{}) {
+						m.Cmd(ice.WEB_SPIDE, arg[2], "msg", "/favor/push", "favor", arg[3],
+							"type", value["type"], "name", value["name"], "text", value["text"],
+							"extra", kit.Format(value["extra"]),
+						)
+						pull++
+					})
+					kit.Value(val, kit.Keys(remote, "pull"), pull)
+					kit.Value(val, kit.Keys(remote, "push"), kit.Value(val, "meta.count"))
+					m.Echo("%d", kit.Value(val, "meta.count"))
 					return
 				})
+				return
 			}
 
 			m.Option("favor", arg[0])
@@ -1250,9 +1241,9 @@ var Index = &ice.Context{Name: "web", Help: "网络模块",
 			case ice.STORY_PULL: // story [spide [story]]
 				// 起止节点
 				prev, begin, end := "", arg[3], ""
+				repos := kit.Keys("remote", arg[2], arg[3])
 				m.Richs(ice.WEB_STORY, "head", arg[1], func(key string, val map[string]interface{}) {
-					begin = kit.Select(kit.Format(kit.Value(val, kit.Keys("remote", kit.Select("dev", arg, 2), "pull", "head"))), arg, 3)
-					end = kit.Format(kit.Value(val, kit.Keys("remote", kit.Select("dev", arg, 2), "pull", "list")))
+					end = kit.Format(kit.Value(val, kit.Keys(repos, "pull", "list")))
 					prev = kit.Format(val["list"])
 				})
 
@@ -1291,10 +1282,10 @@ var Index = &ice.Context{Name: "web", Help: "网络模块",
 							pull, first = kit.Format(value["list"]), node
 							m.Richs(ice.WEB_STORY, "head", arg[1], func(key string, val map[string]interface{}) {
 								prev = kit.Format(val["list"])
-								if kit.Int(node["count"]) > kit.Int(kit.Value(val, kit.Keys("remote", arg[2], "pull", "count"))) {
+								if kit.Int(node["count"]) > kit.Int(kit.Value(val, kit.Keys(repos, "pull", "count"))) {
 									// 更新分支
 									m.Log(ice.LOG_IMPORT, "%v: %v", arg[2], pull)
-									kit.Value(val, kit.Keys("remote", arg[2], "pull"), kit.Dict(
+									kit.Value(val, kit.Keys(repos, "pull"), kit.Dict(
 										"head", arg[3], "time", node["time"], "list", pull, "count", node["count"],
 									))
 								}
@@ -1322,11 +1313,12 @@ var Index = &ice.Context{Name: "web", Help: "网络模块",
 				// 更新分支
 				m.Cmdx(ice.WEB_STORY, "pull", arg[1:])
 
+				repos := kit.Keys("remote", arg[2], arg[3])
 				// 查询索引
 				prev, pull, some, list := "", "", "", ""
 				m.Richs(ice.WEB_STORY, "head", arg[1], func(key string, val map[string]interface{}) {
 					prev = kit.Format(val["list"])
-					pull = kit.Format(kit.Value(val, kit.Keys("remote", arg[2], "pull", "list")))
+					pull = kit.Format(kit.Value(val, kit.Keys(repos, "pull", "list")))
 					for some = pull; prev != some && some != ""; {
 						local := m.Richs(ice.WEB_STORY, nil, prev, nil)
 						remote := m.Richs(ice.WEB_STORY, nil, some, nil)
@@ -1342,7 +1334,7 @@ var Index = &ice.Context{Name: "web", Help: "网络模块",
 						return
 					}
 
-					if pull != "" || some != pull {
+					if some != pull {
 						// 合并节点
 						local := m.Richs(ice.WEB_STORY, nil, prev, nil)
 						remote := m.Richs(ice.WEB_STORY, nil, pull, nil)
@@ -1352,11 +1344,13 @@ var Index = &ice.Context{Name: "web", Help: "网络模块",
 						))
 						m.Log(ice.LOG_CREATE, "merge: %s %s->%s", list, prev, pull)
 						val["list"] = list
+						prev = list
+						val["count"] = kit.Int(remote["count"]) + 1
 					}
 
 					// 查询节点
 					nodes := []string{}
-					for list != "" && list != some {
+					for list = prev; list != some; {
 						m.Richs(ice.WEB_STORY, nil, list, func(key string, value map[string]interface{}) {
 							nodes, list = append(nodes, list), kit.Format(value["prev"])
 						})

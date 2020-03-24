@@ -203,6 +203,10 @@ var Index = &ice.Context{Name: "chat", Help: "聊天中心",
 				m.Echo(m.Option(ice.MSG_USERNAME))
 
 			case "login":
+				if len(arg) > 1 {
+					m.Cmdy(ice.AAA_USER, "login", arg[1:])
+					break
+				}
 				m.Echo(m.Option(ice.MSG_SESSID))
 
 			case "share":

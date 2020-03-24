@@ -68,10 +68,12 @@ var Index = &ice.Context{Name: "mall", Help: "贸易中心",
 
 		"spend": {Name: "spend", Help: "支出", List: kit.List(
 			kit.MDB_INPUT, "text", "name", "account", "figure", "key",
+			kit.MDB_INPUT, "text", "name", "to", "figure", "key",
 			kit.MDB_INPUT, "text", "name", "name", "figure", "key",
 			kit.MDB_INPUT, "text", "name", "value", "figure", "key",
 			kit.MDB_INPUT, "button", "name", "记录",
 			kit.MDB_INPUT, "textarea", "name", "text", "figure", "key",
+			kit.MDB_INPUT, "text", "name", "time", "figure", "date",
 		), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			if input(m, arg...) {
 				return
@@ -81,14 +83,20 @@ var Index = &ice.Context{Name: "mall", Help: "贸易中心",
 				m.Cmdy("asset", arg)
 				return
 			}
+			if len(arg) == 4 {
+				arg = append(arg, "")
+			}
 			// 添加流水
-			amount := kit.Int(arg[2])
-			m.Cmdy("asset", arg[0], "", "支出", arg[1], arg[3], -amount, arg[4:])
-			m.Cmdy("asset", "流水", "", "支出", arg[1], arg[3], -amount, arg[4:])
+			amount := kit.Int(arg[3])
+			m.Cmdy("asset", arg[0], "", "转出", arg[1], arg[2], -amount, "time", arg[5:])
+			m.Cmdy("asset", arg[1], "", "转入", arg[0], arg[2], amount, "time", arg[5:])
+			m.Cmdy("asset", arg[1], "", "支出", arg[2], arg[4], -amount, "time", arg[5:])
+			m.Cmdy("asset", "流水", "", "支出", arg[2], arg[4], -amount, "time", arg[5:])
 		}},
 		"trans": {Name: "trans", Help: "转账", List: kit.List(
 			kit.MDB_INPUT, "text", "name", "account", "figure", "key",
 			kit.MDB_INPUT, "text", "name", "to", "figure", "key",
+			kit.MDB_INPUT, "text", "name", "name", "figure", "key",
 			kit.MDB_INPUT, "text", "name", "value", "figure", "key",
 			kit.MDB_INPUT, "button", "name", "记录",
 			kit.MDB_INPUT, "textarea", "name", "text", "figure", "key",
@@ -102,12 +110,15 @@ var Index = &ice.Context{Name: "mall", Help: "贸易中心",
 				m.Cmdy("asset", arg)
 				return
 			}
+			if len(arg) == 4 {
+				arg = append(arg, "")
+			}
 			// 添加流水
-			amount := kit.Int(arg[2])
-			m.Cmdy("asset", arg[0], "", "转出", arg[1], arg[3], -amount, arg[4:])
-			m.Cmdy("asset", arg[1], "", "转入", arg[0], arg[3], amount, arg[4:])
-			m.Cmd("asset", "流水", "", "转出", arg[1], arg[3], -amount, arg[4:])
-			m.Cmd("asset", "流水", "", "转入", arg[0], arg[3], amount, arg[4:])
+			amount := kit.Int(arg[3])
+			m.Cmdy("asset", arg[0], "", "转出", arg[1], arg[2], -amount, arg[5:])
+			m.Cmdy("asset", arg[1], "", "转入", arg[0], arg[2], amount, arg[5:])
+			m.Cmd("asset", "流水", "", "转出", arg[2], arg[4], -amount, arg[5:])
+			m.Cmd("asset", "流水", "", "转入", arg[2], arg[4], amount, arg[5:])
 		}},
 		"bonus": {Name: "bonus", Help: "收入", List: kit.List(
 			kit.MDB_INPUT, "text", "name", "account", "figure", "key",
@@ -393,7 +404,7 @@ var Index = &ice.Context{Name: "mall", Help: "贸易中心",
 					m.Grows("asset", kit.Keys("hash", key), "", "", func(index int, value map[string]interface{}) {
 						m.Push("", value, field)
 					})
-					m.Sort("time", "time_r")
+					m.Sort("id", "int_r")
 					return
 				}
 				if len(arg) == 2 {
@@ -401,10 +412,10 @@ var Index = &ice.Context{Name: "mall", Help: "贸易中心",
 					m.Grows("asset", kit.Keys("hash", key), "id", arg[1], func(index int, value map[string]interface{}) {
 						m.Push("detail", value)
 					})
-					m.Sort("time", "time_r")
 					return
 				}
 				if len(arg) < 6 {
+					// 消费查询
 					name, value := "type", arg[2]
 					switch len(arg) {
 					case 3:
@@ -420,7 +431,7 @@ var Index = &ice.Context{Name: "mall", Help: "贸易中心",
 					m.Grows("asset", kit.Keys("hash", key), name, value, func(index int, value map[string]interface{}) {
 						m.Push("", value, field)
 					})
-					m.Sort("time", "time_r")
+					m.Sort("id", "int_r")
 					return
 				}
 
@@ -432,14 +443,16 @@ var Index = &ice.Context{Name: "mall", Help: "贸易中心",
 
 				// 数据结构
 				amount := kit.Int(arg[5])
-				extra := map[string]interface{}{}
+				extra := kit.Dict()
 				data := kit.Dict(
-					"type", arg[2], "name", arg[3], "text", arg[4], "value", amount, "extra", extra,
+					kit.MDB_TYPE, arg[2], kit.MDB_NAME, arg[3], kit.MDB_TEXT, arg[4],
+					"value", amount, "extra", extra,
 				)
 				for i := 6; i < len(arg)-1; i += 2 {
-					if arg[i] == "time" {
+					switch arg[i] {
+					case kit.MDB_TIME:
 						kit.Value(data, arg[i], arg[i+1])
-					} else {
+					default:
 						kit.Value(extra, arg[i], arg[i+1])
 					}
 				}
@@ -447,10 +460,10 @@ var Index = &ice.Context{Name: "mall", Help: "贸易中心",
 				n := m.Grow("asset", kit.Keys("hash", key), data)
 
 				// 账户结余
-				amount = kit.Int(kit.Value(value, "meta.amount")) + amount
-				m.Log(ice.LOG_INSERT, "%s: %v", key, amount)
-				kit.Value(value, "meta.amount", amount)
-				m.Echo("%s: %d %d\n", arg[0], n, amount)
+				total := kit.Int(kit.Value(value, "meta.amount")) + amount
+				m.Log(ice.LOG_INSERT, "account: %s total: %v", arg[0], total)
+				kit.Value(value, "meta.amount", total)
+				m.Echo("%s: %d %d\n", arg[0], n, total)
 
 				// 收支统计
 				switch data["type"] {

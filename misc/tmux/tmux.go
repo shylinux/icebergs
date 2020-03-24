@@ -142,7 +142,7 @@ var Index = &ice.Context{Name: "tmux", Help: "工作台",
 			}
 
 			// 缓存列表
-			for i, v := range kit.Split(m.Cmdx(prefix, "list-buffers"), "\n") {
+			for i, v := range kit.Split(m.Cmdx(prefix, "list-buffers"), "\n", "\n", "\n") {
 				ls := strings.SplitN(v, ": ", 3)
 				m.Push("buffer", ls[0])
 				m.Push("size", ls[1])

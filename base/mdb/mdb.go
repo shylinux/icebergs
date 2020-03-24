@@ -112,6 +112,7 @@ var Index = &ice.Context{Name: "mdb", Help: "数据模块",
 						r = csv.NewReader(f)
 					}
 				}
+
 				head, _ := r.Read()
 
 				for {
@@ -122,7 +123,11 @@ var Index = &ice.Context{Name: "mdb", Help: "数据模块",
 
 					data := kit.Dict()
 					for i, k := range head {
-						data[k] = line[i]
+						if k == kit.MDB_EXTRA {
+							data[k] = kit.UnMarshal(line[i])
+						} else {
+							data[k] = line[i]
+						}
 					}
 					// 导入数据
 					n := m.Grow(arg[0], arg[1], data)
@@ -145,8 +150,10 @@ var Index = &ice.Context{Name: "mdb", Help: "数据模块",
 			case kit.MDB_DICT:
 			case kit.MDB_META:
 			case kit.MDB_LIST:
-				buf := bytes.NewBuffer(make([]byte, 0, 1024))
-				w := csv.NewWriter(buf)
+				f, p, e := kit.Create("var/temp/" + kit.Keys(name, "csv"))
+				m.Assert(e)
+				w := csv.NewWriter(f)
+
 				head := []string{}
 				m.Grows(arg[0], arg[1], "", "", func(index int, value map[string]interface{}) {
 					if index == 0 {
@@ -167,7 +174,7 @@ var Index = &ice.Context{Name: "mdb", Help: "数据模块",
 				})
 				w.Flush()
 
-				m.Cmdy(ice.WEB_STORY, "add", "csv", name, string(buf.Bytes()))
+				m.Cmdy(ice.WEB_STORY, "catch", "csv", p)
 
 			case kit.MDB_HASH:
 				m.Cmdy(ice.WEB_STORY, "add", "json", name, kit.Formats(m.Confv(arg[0], arg[1])))

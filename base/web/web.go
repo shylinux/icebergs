@@ -7,6 +7,7 @@ import (
 	"github.com/skip2/go-qrcode"
 
 	"bytes"
+	"encoding/csv"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -1028,6 +1029,46 @@ var Index = &ice.Context{Name: "web", Help: "网络模块",
 			}
 
 			switch arg[0] {
+			case "save":
+				f, p, e := kit.Create(arg[1])
+				m.Assert(e)
+				defer f.Close()
+				w := csv.NewWriter(f)
+
+				w.Write([]string{"favor", "type", "name", "text", "extra"})
+
+				n := 0
+				m.Option("cache.offend", 0)
+				m.Option("cache.limit", -2)
+				for _, favor := range arg[2:] {
+					m.Richs(ice.WEB_FAVOR, nil, favor, func(key string, val map[string]interface{}) {
+						m.Grows(ice.WEB_FAVOR, kit.Keys(kit.MDB_HASH, key), "", "", func(index int, value map[string]interface{}) {
+							w.Write(kit.Simple(kit.Value(val, "meta.name"), value["type"], value["name"], value["text"], kit.Format(value["extra"])))
+							n++
+						})
+					})
+				}
+				w.Flush()
+				m.Echo("%s: %d", p, n)
+
+			case "load":
+				f, e := os.Open(arg[1])
+				m.Assert(e)
+				defer f.Close()
+				r := csv.NewReader(f)
+
+				head, e := r.Read()
+				m.Assert(e)
+				m.Info("head: %v", head)
+
+				for {
+					line, e := r.Read()
+					if e != nil {
+						break
+					}
+					m.Cmd(ice.WEB_FAVOR, line)
+				}
+
 			case "sync":
 				m.Richs(ice.WEB_FAVOR, nil, arg[1], func(key string, val map[string]interface{}) {
 					remote := kit.Keys("meta.remote", arg[2], arg[3])
@@ -1090,6 +1131,8 @@ var Index = &ice.Context{Name: "web", Help: "网络模块",
 				arg = append(arg, "")
 			}
 
+			m.Info("what %v", arg[4:])
+			m.Info("what %v", kit.Dict(arg[4:]))
 			// 添加收藏
 			index := m.Grow(ice.WEB_FAVOR, kit.Keys(kit.MDB_HASH, favor), kit.Dict(
 				kit.MDB_TYPE, arg[1], kit.MDB_NAME, arg[2], kit.MDB_TEXT, arg[3],

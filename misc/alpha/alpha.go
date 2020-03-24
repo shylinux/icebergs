@@ -15,7 +15,9 @@ var Index = &ice.Context{Name: "alpha", Help: "英汉词典",
 	Caches: map[string]*ice.Cache{},
 	Configs: map[string]*ice.Config{
 		"alpha": {Name: "alpha", Help: "英汉词典", Value: kit.Data(
-			"store", "var/alpha/", "limit", "2000", "least", "1000",
+			"store", "var/data/alpha", "fsize", "200000", "limit", "5000", "least", "1000",
+			"repos", "word-dict", "local", "some",
+			"field", []interface{}{"audio", "bnc", "collins", "definition", "detail", "exchange", "frq", "id", "oxford", "phonetic", "pos", "tag", "time", "translation", "word"},
 		)},
 	},
 	Commands: map[string]*ice.Command{
@@ -25,31 +27,67 @@ var Index = &ice.Context{Name: "alpha", Help: "英汉词典",
 		ice.ICE_EXIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			m.Save("alpha")
 		}},
-
-		"alpha": {Name: "alpha [load|list]", Help: "英汉词典", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			count := kit.Int(m.Conf("alpha", "meta.count"))
+		"load": {Name: "load file [name]", Help: "加载词库", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			if len(arg) == 0 {
-				arg = append(arg, "list", kit.Format(count-rand.Intn(count)))
+				// 下载词库
+				if m.Cmd("web.code.git.repos", m.Conf("alpha", "meta.repos"), "usr/"+m.Conf("alpha", "meta.repos")); m.Confs("alpha", "ecdict") {
+					m.Echo("ecdict: %v", m.Conf("alpha", "ecdict.meta.count"))
+					return
+				}
+				arg = append(arg, path.Join("usr", m.Conf("alpha", "meta.repos"), "ecdict"))
 			}
 
-			switch arg[0] {
-			case "load":
-				// 加载词库
-				m.Cmd(ice.MDB_IMPORT, "alpha", "", "list",
-					m.Cmd(ice.WEB_CACHE, "catch", "csv", arg[1]).Append("data"))
-			case "list":
-				// 词汇列表
-				m.Option("cache.offend", kit.Select("0", arg, 1))
-				m.Option("cache.limit", kit.Select("10", arg, 2))
-				m.Grows("alpha", nil, "", "", func(index int, value map[string]interface{}) {
-					m.Push("", value, []string{"id", "word", "translation", "definition"})
-				})
-			}
+			// 清空数据
+			lib := kit.Select(path.Base(arg[0]), arg, 1)
+			m.Assert(os.RemoveAll(path.Join(m.Conf("alpha", "meta.store"), lib)))
+			m.Conf("alpha", lib, "")
+
+			// 缓存配置
+			m.Conf("alpha", kit.Keys(lib, "meta.store"), path.Join(m.Conf("alpha", "meta.store"), lib))
+			m.Conf("alpha", kit.Keys(lib, "meta.fsize"), m.Conf("alpha", "meta.fsize"))
+			m.Conf("alpha", kit.Keys(lib, "meta.limit"), m.Conf("alpha", "meta.limit"))
+			m.Conf("alpha", kit.Keys(lib, "meta.least"), m.Conf("alpha", "meta.least"))
+
+			m.Cmd(ice.MDB_IMPORT, "alpha", lib, "list",
+				m.Cmd(ice.WEB_CACHE, "catch", "csv", arg[0]+".csv").Append("data"))
+
+			// 保存词库
+			m.Conf("alpha", kit.Keys(lib, "meta.limit"), 0)
+			m.Conf("alpha", kit.Keys(lib, "meta.least"), 0)
+			m.Echo("%s: %d", lib, m.Grow("alpha", lib, kit.Dict("word", " ")))
 		}},
+		"push": {Name: "push lib word text", Help: "添加词汇", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			m.Conf("alpha", kit.Keys(arg[0], "meta.limit"), 0)
+			m.Conf("alpha", kit.Keys(arg[0], "meta.least"), 0)
+			m.Echo("%s: %d", arg[0], m.Grow("alpha", arg[0], kit.Dict("word", arg[1], "translation", arg[2])))
+		}},
+		"list": {Name: "list [lib [offend [limit]]]", Help: "查看词汇", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			if len(arg) == 0 {
+				kit.Fetch(m.Confv("alpha"), func(key string, value map[string]interface{}) {
+					if key != "meta" {
+						m.Push(key, value["meta"], []string{"key", "count"})
+					}
+				})
+				return
+			}
+
+			lib := kit.Select("ecdict", arg, 0)
+			m.Option("cache.offend", kit.Select("0", arg, 1))
+			m.Option("cache.limit", kit.Select("10", arg, 2))
+			m.Grows("alpha", lib, "", "", func(index int, value map[string]interface{}) {
+				m.Push("", value, []string{"id", "word", "translation"})
+			})
+		}},
+		"save": {Name: "save lib [filename]", Help: "导出词库", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			m.Option("cache.offend", 0)
+			m.Option("cache.limit", -2)
+			m.Cmdy(ice.WEB_STORY, "watch", m.Cmdx(ice.MDB_EXPORT, "alpha", arg[0], "list"), arg[1:])
+		}},
+
 		"random": {Name: "random [count]", Help: "随机词汇", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			count := kit.Int(m.Conf("alpha", "meta.count"))
+			count := kit.Int(m.Conf("alpha", "ecdict.meta.count")) + 1
 			for i := 0; i < kit.Int(kit.Select("10", arg, 0)); i++ {
-				m.Cmdy("alpha", "list", count-rand.Intn(count), 1)
+				m.Cmdy("list", "ecdict", count-rand.Intn(count), 1)
 			}
 		}},
 		"search": {Name: "search [word [method]]", Help: "查找词汇", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
@@ -70,23 +108,11 @@ var Index = &ice.Context{Name: "alpha", Help: "英汉词典",
 				arg[0] = "," + arg[0] + "$"
 			}
 
-			// 字段列表
-			field := m.Confm("alpha", "meta.field")
-			if field == nil {
-				field = map[string]interface{}{}
-				head := []string{}
-				if f, e := os.Open(path.Join(m.Conf("alpha", "meta.store"), "web.wiki.alpha.alpha.csv")); m.Assert(e) {
-					defer f.Close()
-					bio := csv.NewReader(f)
-					head, e = bio.Read()
-				}
-				for i, k := range head {
-					field[k] = i
-				}
-				m.Conf("alpha", "meta.field", field)
-			}
-
 			// 搜索词汇
+			field := map[string]int{}
+			for i, k := range kit.Simple(m.Confv("alpha", "meta.field")) {
+				field[k] = i
+			}
 			bio := csv.NewReader(bytes.NewBufferString(m.Cmdx(ice.CLI_SYSTEM, "grep", "-rh", arg[0], m.Conf("alpha", "meta.store"))))
 			for i := 0; i < 100; i++ {
 				if line, e := bio.Read(); e != nil {

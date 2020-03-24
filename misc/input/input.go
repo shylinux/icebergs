@@ -32,7 +32,7 @@ var Index = &ice.Context{Name: "input", Help: "输入法",
 
 		"load": {Name: "load file [name]", Help: "加载词库", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			if len(arg) == 0 {
-				// 默认词库
+				// 下载词库
 				if m.Cmd("web.code.git.repos", m.Conf("input", "meta.repos"), "usr/"+m.Conf("input", "meta.repos")); m.Confs("input", "wubi86") {
 					m.Echo("wubi86: %v", m.Conf("input", "wubi86.meta.count"))
 					return

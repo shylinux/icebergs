@@ -162,10 +162,7 @@ var Index = &ice.Context{Name: "zsh", Help: "命令行",
 		"/favor": {Name: "/favor", Help: "收藏", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			if len(arg) > 0 && arg[0] != "sh" {
 				// 添加收藏
-				cmds := []string{ice.WEB_FAVOR, kit.Select("zsh.history", m.Option("tab")), kit.Select(ice.TYPE_SHELL, m.Option("type")), m.Option("note"), arg[0]}
-				if m.Cmdy(cmds); m.Option("you") != "" {
-					m.Cmdy(ice.WEB_SPACE, m.Option("you"), cmds)
-				}
+				m.Cmdy(ice.WEB_FAVOR, kit.Select("zsh.history", m.Option("tab")), kit.Select(ice.TYPE_SHELL, m.Option("type")), m.Option("note"), arg[0])
 				return
 			}
 

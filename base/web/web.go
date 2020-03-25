@@ -312,6 +312,7 @@ func (web *Frame) HandleCmd(m *ice.Message, key string, cmd *ice.Command) {
 				// msg.Render("status", 401, "not login")
 				return
 			}
+			msg.Option("_option", msg.Optionv(ice.MSG_OPTION))
 
 			// 执行命令
 			msg.Target().Run(msg, cmd, msg.Option(ice.MSG_USERURL), cmds...)
@@ -464,6 +465,7 @@ var Index = &ice.Context{Name: "web", Help: "网络模块",
 
 		ice.WEB_FAVOR: {Name: "favor", Help: "收藏夹", Value: kit.Data(
 			kit.MDB_SHORT, kit.MDB_NAME, "template", favor_template,
+			"proxy", "",
 		)},
 		ice.WEB_CACHE: {Name: "cache", Help: "缓存池", Value: kit.Data(
 			kit.MDB_SHORT, "text", "path", "var/file", "store", "var/data", "fsize", "100000", "limit", "50", "least", "30",
@@ -841,14 +843,10 @@ var Index = &ice.Context{Name: "web", Help: "网络模块",
 					if socket, ok := value["socket"].(*websocket.Conn); !m.Warn(!ok, "socket err") {
 						// 复制选项
 						for _, k := range kit.Simple(m.Optionv("_option")) {
-							if m.Options(k) {
-								switch k {
-								case "detail", "cmds":
-								default:
-									if m.Option(k) == "" {
-										m.Option(k, m.Option(k))
-									}
-								}
+							switch k {
+							case "detail", "cmds":
+							default:
+								m.Optionv(k, m.Optionv(k))
 							}
 						}
 
@@ -1042,6 +1040,9 @@ var Index = &ice.Context{Name: "web", Help: "网络模块",
 				m.Option("cache.limit", -2)
 				for _, favor := range arg[2:] {
 					m.Richs(ice.WEB_FAVOR, nil, favor, func(key string, val map[string]interface{}) {
+						if m.Conf(ice.WEB_FAVOR, kit.Keys("meta.skip", kit.Value(val, "meta.name"))) == "true" {
+							return
+						}
 						m.Grows(ice.WEB_FAVOR, kit.Keys(kit.MDB_HASH, key), "", "", func(index int, value map[string]interface{}) {
 							w.Write(kit.Simple(kit.Value(val, "meta.name"), value["type"], value["name"], value["text"], kit.Format(value["extra"])))
 							n++
@@ -1050,6 +1051,7 @@ var Index = &ice.Context{Name: "web", Help: "网络模块",
 				}
 				w.Flush()
 				m.Echo("%s: %d", p, n)
+				return
 
 			case "load":
 				f, e := os.Open(arg[1])
@@ -1068,6 +1070,7 @@ var Index = &ice.Context{Name: "web", Help: "网络模块",
 					}
 					m.Cmd(ice.WEB_FAVOR, line)
 				}
+				return
 
 			case "sync":
 				m.Richs(ice.WEB_FAVOR, nil, arg[1], func(key string, val map[string]interface{}) {
@@ -1131,8 +1134,6 @@ var Index = &ice.Context{Name: "web", Help: "网络模块",
 				arg = append(arg, "")
 			}
 
-			m.Info("what %v", arg[4:])
-			m.Info("what %v", kit.Dict(arg[4:]))
 			// 添加收藏
 			index := m.Grow(ice.WEB_FAVOR, kit.Keys(kit.MDB_HASH, favor), kit.Dict(
 				kit.MDB_TYPE, arg[1], kit.MDB_NAME, arg[2], kit.MDB_TEXT, arg[3],
@@ -1143,6 +1144,12 @@ var Index = &ice.Context{Name: "web", Help: "网络模块",
 			})
 			m.Log(ice.LOG_INSERT, "favor: %s index: %d name: %s text: %s", favor, index, arg[2], arg[3])
 			m.Echo("%d", index)
+
+			// 分发数据
+			if p := kit.Select(m.Conf(ice.WEB_FAVOR, "meta.proxy"), m.Option("you")); p != "" {
+				m.Option("you", "")
+				m.Cmdy(ice.WEB_PROXY, p, ice.WEB_FAVOR, arg)
+			}
 		}},
 		ice.WEB_CACHE: {Name: "cache", Help: "缓存池", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			if len(arg) == 0 {

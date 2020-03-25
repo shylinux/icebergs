@@ -144,8 +144,14 @@ fun! ShyCheck(target)
     end
 endfun
 
-
-
+" 搜索
+call ShyDefine("g:grep_dir", "./")
+fun! ShyGrep(word)
+    let g:grep_dir = input("dir: ", g:grep_dir, "file")
+    " execute "grep -rn --exclude tags --exclude '*.tags' '\\<" . a:word . "\\>' " . g:grep_dir
+    execute "grep -rn '\\<" . a:word . "\\>' " . g:grep_dir
+    copen
+endfun
 
 
 " 任务列表
@@ -154,11 +160,6 @@ fun! ShyTask()
 endfun
 
 " 标签列表
-fun! ShyGrep(word)
-    if !exists("g:grep_dir") | let g:grep_dir = "./" | endif
-    let g:grep_dir = input("dir: ", g:grep_dir, "file")
-    execute "grep -rn --exclude tags --exclude '*.tags' '\<" . a:word . "\>' " . g:grep_dir
-endfun
 fun! ShyTag(word)
     execute "tag " . a:word
 endfun
@@ -218,7 +219,7 @@ autocmd! InsertLeave * call ShySync("insert")
 " 按键映射
 nnoremap <C-G><C-F> :call ShyFavor()<CR>
 nnoremap <C-G>f :call ShyFavors()<CR>
-" nnoremap <C-G><C-G> :call ShyGrep(expand("<cword>"))<CR>
+nnoremap <C-G><C-G> :call ShyGrep(expand("<cword>"))<CR>
 " nnoremap <C-G><C-R> :call ShyCheck("cache")<CR>
 " nnoremap <C-G><C-T> :call ShyTask()<CR>
 nnoremap <C-G><C-K> :call ShyComes("refresh")<CR>

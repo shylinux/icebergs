@@ -1,14 +1,16 @@
 package alpha
 
 import (
-	"bytes"
-	"encoding/csv"
 	"github.com/shylinux/icebergs"
 	"github.com/shylinux/icebergs/core/wiki"
 	"github.com/shylinux/toolkits"
+
+	"bytes"
+	"encoding/csv"
 	"math/rand"
 	"os"
 	"path"
+	"strings"
 )
 
 var Index = &ice.Context{Name: "alpha", Help: "英汉词典",
@@ -98,11 +100,8 @@ var Index = &ice.Context{Name: "alpha", Help: "英汉词典",
 			}
 
 			// 搜索方法
-			method := "word"
-			if len(arg) > 1 {
-				method = arg[1]
-			}
-			switch method {
+			method := kit.Select("word", arg, 1)
+			switch arg[0] = strings.TrimSpace(arg[0]); method {
 			case "line":
 			case "word":
 				arg[0] = "," + arg[0] + "$"

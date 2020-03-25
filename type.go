@@ -462,6 +462,9 @@ func (m *Message) Copy(msg *Message, arg ...string) *Message {
 
 	// 复制数据
 	for _, k := range msg.meta[MSG_APPEND] {
+		if kit.IndexOf(m.meta[MSG_OPTION], k) > -1 && len(m.meta[k]) > 0 {
+			m.meta[k] = m.meta[k][:0]
+		}
 		if kit.IndexOf(m.meta[MSG_APPEND], k) == -1 {
 			m.meta[MSG_APPEND] = append(m.meta[MSG_APPEND], k)
 		}

@@ -88,11 +88,8 @@ var Index = &ice.Context{Name: "vim", Help: "编辑器",
 		"/favor": {Name: "/favor", Help: "收藏", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			if m.Options("arg") {
 				// 添加收藏
-				cmds := []string{ice.WEB_FAVOR, m.Option("tab"), "vimrc", m.Option("note"), m.Option("arg"),
-					"pwd", m.Option("pwd"), "buf", m.Option("buf"), "row", m.Option("row"), "col", m.Option("col")}
-				if m.Cmdy(cmds); m.Option("you") != "" {
-					m.Cmdy(ice.WEB_SPACE, m.Option("you"), cmds)
-				}
+				m.Cmdy(ice.WEB_FAVOR, m.Option("tab"), "vimrc", m.Option("note"), m.Option("arg"),
+					"pwd", m.Option("pwd"), "buf", m.Option("buf"), "row", m.Option("row"), "col", m.Option("col"))
 				return
 			}
 

@@ -27,7 +27,7 @@ var Index = &ice.Context{Name: "git", Help: "代码库",
 	Caches: map[string]*ice.Cache{},
 	Configs: map[string]*ice.Config{
 		"repos": {Name: "repos", Help: "仓库", Value: kit.Data(kit.MDB_SHORT, "name", "owner", "https://github.com/shylinux")},
-		"total": {Name: "repos", Help: "仓库", Value: kit.Data(kit.MDB_SHORT, "name", "skip", kit.Dict("wubi-dict", "true"))},
+		"total": {Name: "repos", Help: "仓库", Value: kit.Data(kit.MDB_SHORT, "name", "skip", kit.Dict("wubi-dict", "true", "word-dict", "true"))},
 	},
 	Commands: map[string]*ice.Command{
 		"init": {Name: "init", Help: "init", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {

@@ -407,8 +407,12 @@ var Index = &ice.Context{Name: "chat", Help: "聊天中心",
 			prefix := kit.Keys(kit.MDB_HASH, arg[0], "tool", kit.MDB_HASH, arg[1])
 			if len(arg) == 2 {
 				// 命令列表
-				m.Set(ice.MSG_OPTION)
-				m.Render("")
+				if p := kit.Select(m.Option("pod"), m.Option("you")); p != "" {
+					if m.Cmdy(ice.WEB_SPACE, p, arg); len(m.Appendv("river")) > 0 {
+						return
+					}
+				}
+
 				m.Grows(ice.CHAT_RIVER, prefix, "", "", func(index int, value map[string]interface{}) {
 					if meta, ok := kit.Value(value, "meta").(map[string]interface{}); ok {
 						m.Push("river", arg[0])
@@ -440,6 +444,10 @@ var Index = &ice.Context{Name: "chat", Help: "聊天中心",
 						"help", arg[i+3], "args", arg[i+4],
 					))
 					m.Log(ice.LOG_INSERT, "storm: %s %d: %v", arg[1], id, arg[i:i+5])
+				}
+
+				if p := kit.Select(m.Option("pod"), m.Option("you")); p != "" {
+					m.Cmd(ice.WEB_SPACE, p, arg)
 				}
 				return
 			}

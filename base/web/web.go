@@ -446,6 +446,7 @@ var Index = &ice.Context{Name: "web", Help: "网络模块",
 			},
 			"volcanos", kit.Dict("path", "usr/volcanos", "branch", "master",
 				"repos", "https://github.com/shylinux/volcanos",
+				"require", "usr/local",
 			),
 			"template", map[string]interface{}{"path": "usr/template", "list": []interface{}{
 				`{{define "raw"}}{{.Result}}{{end}}`,
@@ -1912,6 +1913,63 @@ var Index = &ice.Context{Name: "web", Help: "网络模块",
 			})
 		}},
 
+		"/route/": {Name: "/route/", Help: "路由器", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			switch arg[0] {
+			case "login":
+				if m.Option(ice.MSG_USERNAME) != "" {
+					m.Push(ice.MSG_USERNAME, m.Option(ice.MSG_USERNAME))
+					m.Info("username: %v", m.Option(ice.MSG_USERNAME))
+					break
+				}
+				if m.Option(ice.MSG_SESSID) != "" && m.Cmdx(ice.AAA_SESS, "check", m.Option(ice.MSG_SESSID)) != "" {
+					m.Info("sessid: %v", m.Option(ice.MSG_SESSID))
+					break
+				}
+
+				sessid := m.Cmdx(ice.AAA_SESS, "create", "")
+				share := m.Cmdx(ice.WEB_SHARE, "add", "login", m.Option(ice.MSG_USERIP), sessid)
+				Render(m, "cookie", sessid)
+				m.Render(share)
+			}
+		}},
+		"/space/": {Name: "/space/", Help: "空间站", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			if s, e := websocket.Upgrade(m.W, m.R, nil, m.Confi(ice.WEB_SPACE, "meta.buffer.r"), m.Confi(ice.WEB_SPACE, "meta.buffer.w")); m.Assert(e) {
+				m.Option("name", strings.Replace(kit.Select(m.Option(ice.MSG_USERADDR), m.Option("name")), ".", "_", -1))
+				m.Option("node", kit.Select("worker", m.Option("node")))
+
+				// 共享空间
+				share := m.Option("share")
+				if m.Richs(ice.WEB_SHARE, nil, share, nil) == nil {
+					share = m.Cmdx(ice.WEB_SHARE, "add", m.Option("node"), m.Option("name"), m.Option("user"))
+				}
+				// m.Cmd(ice.WEB_GROUP, m.Option("group"), "add", m.Option("name"))
+
+				// 添加节点
+				h := m.Rich(ice.WEB_SPACE, nil, kit.Dict(
+					kit.MDB_TYPE, m.Option("node"),
+					kit.MDB_NAME, m.Option("name"),
+					kit.MDB_TEXT, m.Option("user"),
+					"share", share, "socket", s,
+				))
+				m.Log(ice.LOG_CREATE, "space: %s share: %s", m.Option(kit.MDB_NAME), share)
+
+				m.Gos(m, func(m *ice.Message) {
+					// 监听消息
+					m.Event(ice.SPACE_START, m.Option("node"), m.Option("name"))
+					m.Target().Server().(*Frame).HandleWSS(m, false, s, m.Option("name"))
+					m.Log(ice.LOG_CLOSE, "%s: %s", m.Option(kit.MDB_NAME), kit.Format(m.Confv(ice.WEB_SPACE, kit.Keys(kit.MDB_HASH, h))))
+					m.Event(ice.SPACE_CLOSE, m.Option("node"), m.Option("name"))
+					m.Confv(ice.WEB_SPACE, kit.Keys(kit.MDB_HASH, h), "")
+				})
+
+				// 共享空间
+				if share != m.Option("share") {
+					m.Cmd(ice.WEB_SPACE, m.Option("name"), ice.WEB_SPACE, "share", share)
+				}
+				m.Echo(share)
+			}
+		}},
+
 		"/share/": {Name: "/share/", Help: "共享链", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			switch arg[0] {
 			case "local":
@@ -2099,7 +2157,7 @@ var Index = &ice.Context{Name: "web", Help: "网络模块",
 				m.Render(kit.Select(ice.RENDER_DOWNLOAD, ice.RENDER_RESULT, m.Append("file") == ""), m.Append("text"))
 			}
 		}},
-		"/favor/": {Name: "/story/", Help: "故事会", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		"/favor/": {Name: "/story/", Help: "收藏夹", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 
 			switch arg[0] {
 			case "pull":
@@ -2116,79 +2174,13 @@ var Index = &ice.Context{Name: "web", Help: "网络模块",
 			}
 		}},
 
-		"/route/": {Name: "/route/", Help: "路由器", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			switch arg[0] {
-			case "login":
-				if m.Option(ice.MSG_USERNAME) != "" {
-					m.Push(ice.MSG_USERNAME, m.Option(ice.MSG_USERNAME))
-					m.Info("username: %v", m.Option(ice.MSG_USERNAME))
-					break
-				}
-				if m.Option(ice.MSG_SESSID) != "" && m.Cmdx(ice.AAA_SESS, "check", m.Option(ice.MSG_SESSID)) != "" {
-					m.Info("sessid: %v", m.Option(ice.MSG_SESSID))
-					break
-				}
-
-				sessid := m.Cmdx(ice.AAA_SESS, "create", "")
-				share := m.Cmdx(ice.WEB_SHARE, "add", "login", m.Option(ice.MSG_USERIP), sessid)
-				Render(m, "cookie", sessid)
-				m.Render(share)
-			}
-		}},
-		"/space/": {Name: "/space/", Help: "空间站", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			if s, e := websocket.Upgrade(m.W, m.R, nil, m.Confi(ice.WEB_SPACE, "meta.buffer.r"), m.Confi(ice.WEB_SPACE, "meta.buffer.w")); m.Assert(e) {
-				m.Option("name", strings.Replace(kit.Select(m.Option(ice.MSG_USERADDR), m.Option("name")), ".", "_", -1))
-				m.Option("node", kit.Select("worker", m.Option("node")))
-
-				// 共享空间
-				share := m.Option("share")
-				if m.Richs(ice.WEB_SHARE, nil, share, nil) == nil {
-					share = m.Cmdx(ice.WEB_SHARE, "add", m.Option("node"), m.Option("name"), m.Option("user"))
-				}
-				// m.Cmd(ice.WEB_GROUP, m.Option("group"), "add", m.Option("name"))
-
-				// 添加节点
-				h := m.Rich(ice.WEB_SPACE, nil, kit.Dict(
-					kit.MDB_TYPE, m.Option("node"),
-					kit.MDB_NAME, m.Option("name"),
-					kit.MDB_TEXT, m.Option("user"),
-					"share", share, "socket", s,
-				))
-				m.Log(ice.LOG_CREATE, "space: %s share: %s", m.Option(kit.MDB_NAME), share)
-
-				m.Gos(m, func(m *ice.Message) {
-					// 监听消息
-					m.Event(ice.SPACE_START, m.Option("node"), m.Option("name"))
-					m.Target().Server().(*Frame).HandleWSS(m, false, s, m.Option("name"))
-					m.Log(ice.LOG_CLOSE, "%s: %s", m.Option(kit.MDB_NAME), kit.Format(m.Confv(ice.WEB_SPACE, kit.Keys(kit.MDB_HASH, h))))
-					m.Event(ice.SPACE_CLOSE, m.Option("node"), m.Option("name"))
-					m.Confv(ice.WEB_SPACE, kit.Keys(kit.MDB_HASH, h), "")
-				})
-
-				// 共享空间
-				if share != m.Option("share") {
-					m.Cmd(ice.WEB_SPACE, m.Option("name"), ice.WEB_SPACE, "share", share)
-				}
-				m.Echo(share)
-			}
-		}},
-
-		"/static/volcanos/plugin/github.com/": {Name: "/space/", Help: "空间站", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			file := strings.TrimPrefix(cmd, "/static/volcanos/")
-			if _, e := os.Stat(path.Join("usr/volcanos", file)); e != nil {
-				m.Cmd("cli.system", "git", "clone", "https://"+strings.Join(strings.Split(cmd, "/")[4:7], "/"),
-					path.Join("usr/volcanos", strings.Join(strings.Split(cmd, "/")[3:7], "/")))
-			}
-
-			m.Render(ice.RENDER_DOWNLOAD, path.Join("usr/volcanos", file))
-		}},
 		"/plugin/github.com/": {Name: "/space/", Help: "空间站", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			if _, e := os.Stat(path.Join("usr/volcanos", cmd)); e != nil {
-				m.Cmd("cli.system", "git", "clone", "https://"+strings.Join(strings.Split(cmd, "/")[2:5], "/"),
-					path.Join("usr/volcanos", strings.Join(strings.Split(cmd, "/")[1:5], "/")))
+			prefix := m.Conf(ice.WEB_SERVE, "meta.volcanos.require")
+			if _, e := os.Stat(path.Join(prefix, cmd)); e != nil {
+				m.Cmd(ice.CLI_SYSTEM, "git", "clone", "https://"+strings.Join(strings.Split(cmd, "/")[2:5], "/"),
+					path.Join(prefix, strings.Join(strings.Split(cmd, "/")[1:5], "/")))
 			}
-
-			m.Render(ice.RENDER_DOWNLOAD, path.Join("usr/volcanos", cmd))
+			m.Render(ice.RENDER_DOWNLOAD, path.Join(prefix, cmd))
 		}},
 	},
 }

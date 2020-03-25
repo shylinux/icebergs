@@ -394,7 +394,10 @@ var Index = &ice.Context{Name: "chat", Help: "聊天中心",
 		}},
 
 		"/header": {Name: "/header", Help: "菜单栏", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {}},
-		"/footer": {Name: "/footer", Help: "状态栏", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {}},
+		"/footer": {Name: "/input", Help: "输入", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			m.Echo(m.Conf(ice.WEB_SHARE, "meta.email"))
+			m.Echo(m.Conf(ice.WEB_SHARE, "meta.record"))
+		}},
 
 		"/target": {Name: "/target", Help: "对话框", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {}},
 		"/source": {Name: "/source", Help: "输入框", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {}},

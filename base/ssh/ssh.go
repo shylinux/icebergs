@@ -249,7 +249,9 @@ func (f *Frame) Start(m *ice.Message, arg ...string) bool {
 		if m.Option(ice.MSG_PROMPT, m.Confv("prompt", "meta.PS1")); f.out == os.Stdout {
 			f.printf(m, "\033[0m")
 		}
-		m.Cmd(ice.WEB_FAVOR, "cmd.history", "cmd", kit.Select("stdio", arg, 0), line)
+		if m.Cap(ice.CTX_STREAM) == "stdio" {
+			m.Cmd(ice.WEB_FAVOR, "cmd.history", "cmd", kit.Select("stdio", arg, 0), line)
+		}
 
 		// 解析命令
 		f.parse(m, line)
@@ -265,7 +267,7 @@ func (f *Frame) Close(m *ice.Message, arg ...string) bool {
 var Index = &ice.Context{Name: "ssh", Help: "终端模块",
 	Caches: map[string]*ice.Cache{},
 	Configs: map[string]*ice.Config{
-		"history": {Name: "history", Help: "history", Value: kit.Data()},
+		"history": {Name: "history", Help: "history", Value: kit.Data("limit", "200", "least", "100")},
 		"prompt": {Name: "prompt", Help: "prompt", Value: kit.Data(
 			"PS1", []interface{}{"\033[33;44m", "count", "[", "time", "]", "\033[5m", "target", "\033[0m", "\033[44m", ">", "\033[0m ", "\033[?25h", "\033[32m"},
 			"PS2", []interface{}{"count", " ", "target", "> "},

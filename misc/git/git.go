@@ -16,7 +16,7 @@ func add(m *ice.Message, n string, p string) {
 		ls := strings.SplitN(strings.Trim(m.Cmdx(ice.CLI_SYSTEM, "git", "log", "-n1", `--pretty=format:"%ad %s"`, "--date=iso"), "\""), " ", 4)
 		m.Rich("repos", nil, kit.Data(
 			"name", n, "path", p,
-			"last", ls[3], "time", strings.Join(ls[:2], " "),
+			"last", kit.Select("", ls, 3), "time", strings.Join(ls[:2], " "),
 			"branch", strings.TrimSpace(m.Cmdx(ice.CLI_SYSTEM, "git", "branch")),
 			"remote", strings.TrimSpace(m.Cmdx(ice.CLI_SYSTEM, "git", "remote", "-v")),
 		))

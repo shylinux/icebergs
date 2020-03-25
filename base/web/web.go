@@ -770,6 +770,7 @@ var Index = &ice.Context{Name: "web", Help: "网络模块",
 				// 空间列表
 				m.Richs(ice.WEB_SPACE, nil, "*", func(key string, value map[string]interface{}) {
 					m.Push(key, value, []string{"time", "type", "name", "text"})
+					m.Push("link", fmt.Sprintf(`<a target="_blank" href="%s?pod=%s">%s</a>`, m.Conf(ice.WEB_SHARE, "meta.domain"), value["name"], value["name"]))
 				})
 				m.Sort("name")
 				return
@@ -829,6 +830,8 @@ var Index = &ice.Context{Name: "web", Help: "网络模块",
 					// 空间详情
 					m.Richs(ice.WEB_SPACE, nil, arg[0], func(key string, value map[string]interface{}) {
 						m.Push("detail", value)
+						m.Push("key", "link")
+						m.Push("value", fmt.Sprintf(`<a target="_blank" href="%s?pod=%s">%s</a>`, m.Conf(ice.WEB_SHARE, "meta.domain"), value["name"], value["name"]))
 					})
 					break
 				}
@@ -1627,9 +1630,9 @@ var Index = &ice.Context{Name: "web", Help: "网络模块",
 		), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			if len(arg) == 0 {
 				// 共享列表
-				m.Grows(ice.WEB_SHARE, nil, "", "", func(key int, value map[string]interface{}) {
-					m.Push(kit.Format(key), value, []string{kit.MDB_TIME, "share", kit.MDB_TYPE, kit.MDB_NAME, kit.MDB_TEXT})
-					m.Push("value", fmt.Sprintf(m.Conf(ice.WEB_SHARE, "meta.template.link"), value["share"], value["share"]))
+				m.Grows(ice.WEB_SHARE, nil, "", "", func(index int, value map[string]interface{}) {
+					m.Push("", value, []string{kit.MDB_TIME, "share", kit.MDB_TYPE, kit.MDB_NAME, kit.MDB_TEXT})
+					m.Push("value", fmt.Sprintf(m.Conf(ice.WEB_SHARE, "meta.template.link"), m.Conf(ice.WEB_SHARE, "meta.domain"), value["share"], value["share"]))
 				})
 				return
 			}

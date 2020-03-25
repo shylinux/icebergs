@@ -25,7 +25,7 @@ var Index = &ice.Context{Name: "vim", Help: "编辑器",
 				}
 			}
 
-			m.Option("you", "")
+			m.Option("you", "tmux")
 			m.Richs("login", nil, m.Option("sid"), func(key string, value map[string]interface{}) {
 				// 查找空间
 				m.Option("you", value["you"])
@@ -50,7 +50,7 @@ var Index = &ice.Context{Name: "vim", Help: "编辑器",
 				cmds := []string{ice.WEB_FAVOR, m.Conf("vim", "meta.history"), "vimrc", arg[0], kit.Select(m.Option("arg"), m.Option("sub")),
 					"sid", m.Option("sid"), "pwd", m.Option("pwd"), "buf", m.Option("buf"), "row", m.Option("row"), "col", m.Option("col")}
 				if m.Cmd(cmds); m.Option("you") != "" {
-					m.Cmd(ice.WEB_SPACE, m.Option("you"), cmds)
+					m.Cmd(ice.WEB_PROXY, m.Option("you"), cmds)
 				}
 			default:
 				m.Richs("login", nil, m.Option("sid"), func(key string, value map[string]interface{}) {
@@ -94,7 +94,7 @@ var Index = &ice.Context{Name: "vim", Help: "编辑器",
 			}
 
 			// 查看收藏
-			m.Cmd(ice.WEB_SPACE, m.Option("you"), ice.WEB_FAVOR, m.Option("tab"), "extra", "extra.pwd", "extra.buf", "extra.row", "extra.col").Table(func(index int, value map[string]string, head []string) {
+			m.Cmd(ice.WEB_PROXY, m.Option("you"), ice.WEB_FAVOR, m.Option("tab"), "extra", "extra.pwd", "extra.buf", "extra.row", "extra.col").Table(func(index int, value map[string]string, head []string) {
 				switch value["type"] {
 				case ice.TYPE_VIMRC:
 					m.Echo("%v\n", m.Option("tab")).Echo("%v:%v:%v:(%v): %v\n",

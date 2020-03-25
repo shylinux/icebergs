@@ -26,18 +26,11 @@ var Index = &ice.Context{Name: "zsh", Help: "命令行",
 				}
 			}
 
-			m.Option("you", "")
+			m.Option("you", "tmux")
 			m.Richs("login", nil, m.Option("sid"), func(key string, value map[string]interface{}) {
 				// 查找空间
 				m.Option("you", value["you"])
 			})
-			if m.Option("you") == "" {
-				m.Cmd("web.code.tmux.session").Table(func(index int, value map[string]string, head []string) {
-					if value["tag"] == "1" {
-						m.Option("you", value["session"])
-					}
-				})
-			}
 
 			m.Info("%s %s cmd: %v sub: %v", m.Option("you"), m.Option(ice.MSG_USERURL), m.Optionv("cmds"), m.Optionv("sub"))
 			m.Option(ice.MSG_OUTPUT, ice.RENDER_RESULT)
@@ -61,7 +54,7 @@ var Index = &ice.Context{Name: "zsh", Help: "命令行",
 					"sid", m.Option("sid"), "pwd", m.Option("pwd"), "time", vs[1] + " " + vs[2]}
 
 				if m.Cmd(cmds); m.Option("you") != "" {
-					m.Cmd(ice.WEB_SPACE, m.Option("you"), cmds)
+					m.Cmd(ice.WEB_PROXY, m.Option("you"), cmds)
 				}
 			default:
 				m.Richs("login", nil, m.Option("sid"), func(key string, value map[string]interface{}) {
@@ -168,13 +161,13 @@ var Index = &ice.Context{Name: "zsh", Help: "命令行",
 
 			if m.Option("tab") == "" {
 				// 收藏列表
-				m.Cmdy(ice.WEB_SPACE, m.Option("you"), ice.WEB_FAVOR)
+				m.Cmdy(ice.WEB_PROXY, m.Option("you"), ice.WEB_FAVOR)
 				m.Table()
 				return
 			}
 
 			m.Echo("#/bin/sh\n\n")
-			m.Cmd(ice.WEB_SPACE, m.Option("you"), ice.WEB_FAVOR, m.Option("tab")).Table(func(index int, value map[string]string, head []string) {
+			m.Cmd(ice.WEB_PROXY, m.Option("you"), ice.WEB_FAVOR, m.Option("tab")).Table(func(index int, value map[string]string, head []string) {
 				switch value["type"] {
 				case ice.TYPE_SHELL:
 					// 查看收藏
@@ -188,7 +181,7 @@ var Index = &ice.Context{Name: "zsh", Help: "命令行",
 		"/download": {Name: "/download", Help: "下载", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			if len(arg) == 0 || arg[0] == "" {
 				// 文件列表
-				m.Cmdy(ice.WEB_SPACE, m.Option("you"), ice.WEB_STORY)
+				m.Cmdy(ice.WEB_PROXY, m.Option("you"), ice.WEB_STORY)
 				m.Table()
 				return
 			}
@@ -196,7 +189,7 @@ var Index = &ice.Context{Name: "zsh", Help: "命令行",
 			// 查找文件
 			if m.Cmdy(ice.WEB_STORY, "index", arg[0]).Append("text") == "" && m.Option("you") != "" {
 				// 上发文件
-				m.Cmd(ice.WEB_SPACE, m.Option("you"), ice.WEB_STORY, "push", arg[0], "dev", arg[0])
+				m.Cmd(ice.WEB_PROXY, m.Option("you"), ice.WEB_STORY, "push", arg[0], "dev", arg[0])
 				m.Cmdy(ice.WEB_STORY, "index", arg[0])
 			}
 
@@ -214,7 +207,7 @@ var Index = &ice.Context{Name: "zsh", Help: "命令行",
 
 			if m.Option("you") != "" {
 				// 下发文件
-				m.Cmd(ice.WEB_SPACE, m.Option("you"), ice.WEB_STORY, ice.STORY_PULL, msg.Append("name"), "dev", msg.Append("name"))
+				m.Cmd(ice.WEB_PROXY, m.Option("you"), ice.WEB_STORY, ice.STORY_PULL, msg.Append("name"), "dev", msg.Append("name"))
 			}
 		}},
 	},

@@ -16,13 +16,13 @@ title "${ice_mod}"
 
 field "自动化" favor 
 
-field "启动流程" favor args `[ 启动流程 ]`
-field "请求响应" favor args `[ 请求响应 ]`
-field "服务集群" favor args `[ 服务集群 ]`
+field "启动流程" favor args "启动流程"
+field "请求响应" favor args "请求响应"
+field "服务集群" favor args "服务集群"
 
-field "数据结构" favor args `[ 数据结构 ]`
-field "系统架构" favor args `[ 系统架构 ]`
-field "编译原理" favor args `[ 编译原理 ]`
+field "数据结构" favor args "数据结构"
+field "系统架构" favor args "系统架构"
+field "编译原理" favor args "编译原理"
 END
 
     [ -d src ] || mkdir src

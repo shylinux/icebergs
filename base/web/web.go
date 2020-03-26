@@ -753,13 +753,16 @@ var Index = &ice.Context{Name: "web", Help: "网络模块",
 				}
 			})
 		}},
-		ice.WEB_SERVE: {Name: "serve [shy|dev|self]", Help: "服务器", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		ice.WEB_SERVE: {Name: "serve", Help: "服务器", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			// 启动服务
 			m.Conf(ice.CLI_RUNTIME, "node.name", m.Conf(ice.CLI_RUNTIME, "boot.hostname"))
 			m.Conf(ice.CLI_RUNTIME, "node.type", ice.WEB_SERVER)
 			m.Target().Start(m, "self")
 			// 连接服务
 			m.Cmd(ice.WEB_SPACE, "connect", "self")
+			for _, k := range arg {
+				m.Cmd(ice.WEB_SPACE, "connect", k)
+			}
 		}},
 		ice.WEB_SPACE: {Name: "space", Help: "空间站", Meta: kit.Dict("exports", []string{"pod", "name"}), List: kit.List(
 			kit.MDB_INPUT, "text", "name", "name",

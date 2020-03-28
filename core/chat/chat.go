@@ -22,8 +22,8 @@ var Index = &ice.Context{Name: "chat", Help: "聊天中心",
 
 				[]interface{}{"storm", "team", "team"},
 				[]interface{}{"field", "plan", "web.team"},
-				[]interface{}{"field", "stat", "web.team"},
 				[]interface{}{"field", "miss", "web.team"},
+				[]interface{}{"field", "stat", "web.team"},
 				[]interface{}{"field", "task", "web.team"},
 
 				[]interface{}{"storm", "wiki", "wiki"},

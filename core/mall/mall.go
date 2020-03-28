@@ -2,7 +2,6 @@ package mall
 
 import (
 	"github.com/shylinux/icebergs"
-	_ "github.com/shylinux/icebergs/base"
 	"github.com/shylinux/icebergs/base/web"
 	"github.com/shylinux/toolkits"
 
@@ -10,7 +9,6 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
-	"time"
 )
 
 func input(m *ice.Message, arg ...string) bool {
@@ -41,7 +39,7 @@ func input(m *ice.Message, arg ...string) bool {
 var Index = &ice.Context{Name: "mall", Help: "贸易中心",
 	Caches: map[string]*ice.Cache{},
 	Configs: map[string]*ice.Config{
-		"railway": {Name: "railway", Help: "12306", Value: kit.Data()},
+		"railway": {Name: "railway", Help: "12306", Value: kit.Data("site", "https://kyfw.12306.cn")},
 
 		"asset": {Name: "asset", Help: "资产", Value: kit.Data(kit.MDB_SHORT, "account", "site", kit.Dict(
 			"公积金", "https://grwsyw.gjj.beijing.gov.cn/ish/flow/menu/PPLGRZH0102?_r=0.6644871172745264",
@@ -54,28 +52,23 @@ var Index = &ice.Context{Name: "mall", Help: "贸易中心",
 	Commands: map[string]*ice.Command{
 		ice.ICE_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			m.Load()
-
-			// m.Cmd(ice.CTX_CONFIG, "load", "mall.json")
-			// if m.Richs(ice.WEB_SPIDE, nil, "12306", nil) == nil {
-			// 	m.Cmd(ice.WEB_SPIDE, "add", "12306", "https://kyfw.12306.cn")
-			// }
+			m.Cmd(ice.WEB_SPIDE, "add", "12306", m.Conf("railway", "meta.site"))
 		}},
 		ice.ICE_EXIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			m.Save("asset")
-
-			// m.Cmd(ice.CTX_CONFIG, "save", "mall.json", "web.mall.railway")
+			m.Save("asset", "railway")
 		}},
 
 		"spend": {Name: "spend", Help: "支出", List: kit.List(
 			kit.MDB_INPUT, "text", "name", "account", "figure", "key",
 			kit.MDB_INPUT, "text", "name", "to", "figure", "key",
 			kit.MDB_INPUT, "text", "name", "name", "figure", "key",
-			kit.MDB_INPUT, "text", "name", "value", "figure", "key",
 			kit.MDB_INPUT, "button", "name", "记录",
 			kit.MDB_INPUT, "textarea", "name", "text", "figure", "key",
+			kit.MDB_INPUT, "text", "name", "value", "figure", "key",
 			kit.MDB_INPUT, "text", "name", "time", "figure", "date",
 		), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			if input(m, arg...) {
+				// 输入补全
 				return
 			}
 			if len(arg) < 2 {
@@ -83,26 +76,24 @@ var Index = &ice.Context{Name: "mall", Help: "贸易中心",
 				m.Cmdy("asset", arg)
 				return
 			}
-			if len(arg) == 4 {
-				arg = append(arg, "")
-			}
 			// 添加流水
-			amount := kit.Int(arg[3])
+			amount := kit.Int(arg[4])
 			m.Cmdy("asset", arg[0], "", "转出", arg[1], arg[2], -amount, "time", arg[5:])
 			m.Cmdy("asset", arg[1], "", "转入", arg[0], arg[2], amount, "time", arg[5:])
-			m.Cmdy("asset", arg[1], "", "支出", arg[2], arg[4], -amount, "time", arg[5:])
-			m.Cmdy("asset", "流水", "", "支出", arg[2], arg[4], -amount, "time", arg[5:])
+			m.Cmdy("asset", arg[1], "", "支出", arg[2], arg[3], -amount, "time", arg[5:])
+			m.Cmdy("asset", "流水", "", "支出", arg[2], arg[3], -amount, "time", arg[5:])
 		}},
 		"trans": {Name: "trans", Help: "转账", List: kit.List(
 			kit.MDB_INPUT, "text", "name", "account", "figure", "key",
 			kit.MDB_INPUT, "text", "name", "to", "figure", "key",
 			kit.MDB_INPUT, "text", "name", "name", "figure", "key",
-			kit.MDB_INPUT, "text", "name", "value", "figure", "key",
 			kit.MDB_INPUT, "button", "name", "记录",
 			kit.MDB_INPUT, "textarea", "name", "text", "figure", "key",
+			kit.MDB_INPUT, "text", "name", "value", "figure", "key",
+			kit.MDB_INPUT, "text", "name", "time", "figure", "date",
 		), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			// 输入补全
 			if input(m, arg...) {
+				// 输入补全
 				return
 			}
 			if len(arg) < 2 {
@@ -110,15 +101,12 @@ var Index = &ice.Context{Name: "mall", Help: "贸易中心",
 				m.Cmdy("asset", arg)
 				return
 			}
-			if len(arg) == 4 {
-				arg = append(arg, "")
-			}
 			// 添加流水
-			amount := kit.Int(arg[3])
-			m.Cmdy("asset", arg[0], "", "转出", arg[1], arg[2], -amount, arg[5:])
-			m.Cmdy("asset", arg[1], "", "转入", arg[0], arg[2], amount, arg[5:])
-			m.Cmd("asset", "流水", "", "转出", arg[2], arg[4], -amount, arg[5:])
-			m.Cmd("asset", "流水", "", "转入", arg[2], arg[4], amount, arg[5:])
+			amount := kit.Int(arg[4])
+			m.Cmdy("asset", arg[0], "", "转出", arg[1], arg[2], -amount, "time", arg[5:])
+			m.Cmdy("asset", arg[1], "", "转入", arg[0], arg[2], amount, "time", arg[5:])
+			m.Cmd("asset", "流水", "", "转出", arg[2], arg[3], -amount, "time", arg[5:])
+			m.Cmd("asset", "流水", "", "转入", arg[2], arg[3], amount, "time", arg[5:])
 		}},
 		"bonus": {Name: "bonus", Help: "收入", List: kit.List(
 			kit.MDB_INPUT, "text", "name", "account", "figure", "key",
@@ -126,9 +114,10 @@ var Index = &ice.Context{Name: "mall", Help: "贸易中心",
 			kit.MDB_INPUT, "text", "name", "value", "figure", "key",
 			kit.MDB_INPUT, "button", "name", "记录",
 			kit.MDB_INPUT, "textarea", "name", "text", "figure", "key",
+			kit.MDB_INPUT, "text", "name", "time", "figure", "date",
 		), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			// 输入补全
 			if input(m, arg...) {
+				// 输入补全
 				return
 			}
 			if len(arg) < 2 {
@@ -138,8 +127,8 @@ var Index = &ice.Context{Name: "mall", Help: "贸易中心",
 			}
 			// 添加流水
 			amount := kit.Int(arg[2])
-			m.Cmdy("asset", arg[0], "", "收入", arg[1], arg[3], amount, arg[4:])
-			m.Cmdy("asset", "流水", "", "收入", arg[1], arg[3], amount, arg[4:])
+			m.Cmdy("asset", arg[0], "", "收入", arg[1], arg[3], amount, "time", arg[4:])
+			m.Cmdy("asset", "流水", "", "收入", arg[1], arg[3], amount, "time", arg[4:])
 		}},
 		"month": {Name: "month", Help: "工资", List: kit.List(
 			kit.MDB_INPUT, "text", "name", "month",
@@ -301,22 +290,17 @@ var Index = &ice.Context{Name: "mall", Help: "贸易中心",
 			kit.MDB_INPUT, "text", "name", "id", "action", "auto",
 			kit.MDB_INPUT, "button", "name", "查看", "action", "auto",
 			kit.MDB_INPUT, "button", "name", "返回", "cb", "Last",
+			kit.MDB_INPUT, "button", "name", "保存",
 		), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			if len(arg) == 0 {
-				// 账户列表
-				m.Richs("asset", nil, "*", func(key string, value map[string]interface{}) {
-					m.Push(key, value["meta"], []string{"account", "count", "amount", "bonus", "spend"})
-				})
-				m.Sort("amount", "int_r")
-				return
+			if m.Option("_action") == "保存" {
+				arg = []string{"action", "save"}
 			}
-
 			if len(arg) > 0 && arg[0] == "action" {
 				switch arg[1] {
 				case "modify":
 					// 修改数据
-					m.Richs("asset", nil, m.Option("account"), func(key string, account map[string]interface{}) {
-						m.Grows("asset", kit.Keys("hash", key), "id", arg[5], func(index int, current map[string]interface{}) {
+					m.Richs(cmd, nil, m.Option("account"), func(key string, account map[string]interface{}) {
+						m.Grows(cmd, kit.Keys("hash", key), "id", arg[5], func(index int, current map[string]interface{}) {
 							m.Log(ice.LOG_MODIFY, "%s: %d %s: %s->%s", key, index, kit.Value(current, arg[2]), arg[2], arg[3])
 							kit.Value(current, arg[2], arg[3])
 						})
@@ -325,18 +309,18 @@ var Index = &ice.Context{Name: "mall", Help: "贸易中心",
 				case "save":
 					// 保存数据
 					m.Option("cache.limit", -2)
-					if f, p, e := kit.Create(arg[2]); m.Assert(e) {
+					if f, p, e := kit.Create(kit.Select("usr/local/asset.csv", arg, 2)); m.Assert(e) {
 						defer f.Close()
 
 						w := csv.NewWriter(f)
 						defer w.Flush()
 
 						w.Write([]string{"时间", "收支类型", "账目分类", "备注", "金额", "账户"})
-						m.Richs("asset", nil, kit.Select("*", arg, 3), func(key string, account map[string]interface{}) {
+						m.Richs(cmd, nil, kit.Select("*", arg, 3), func(key string, account map[string]interface{}) {
 							if kit.Format(kit.Value(account, "meta.account")) == "流水" {
 								return
 							}
-							m.Grows("asset", kit.Keys("hash", key), kit.Select("", arg, 4), kit.Select("", arg, 5), func(index int, current map[string]interface{}) {
+							m.Grows(cmd, kit.Keys("hash", key), kit.Select("", arg, 4), kit.Select("", arg, 5), func(index int, current map[string]interface{}) {
 								w.Write([]string{
 									kit.Format(current["time"]),
 									kit.Format(current["type"]),
@@ -348,6 +332,7 @@ var Index = &ice.Context{Name: "mall", Help: "贸易中心",
 							})
 						})
 						m.Log(ice.LOG_EXPORT, "%s", p)
+						m.Cmdy(ice.WEB_STORY, "catch", "csv", p)
 					}
 
 				case "load":
@@ -361,15 +346,15 @@ var Index = &ice.Context{Name: "mall", Help: "贸易中心",
 								"time", data["时间"], "extra", kit.UnMarshal(data["extra"]),
 							)
 
-							if m.Richs("asset", nil, account, nil) == nil {
+							if m.Richs(cmd, nil, account, nil) == nil {
 								// 添加账户
 								m.Log(ice.LOG_CREATE, "account: %s", account)
-								m.Rich("asset", nil, kit.Data("account", account, "amount", "0", "bonus", "0", "spend", "0"))
+								m.Rich(cmd, nil, kit.Data("account", account, "amount", "0", "bonus", "0", "spend", "0"))
 							}
 
-							m.Richs("asset", nil, account, func(key string, value map[string]interface{}) {
+							m.Richs(cmd, nil, account, func(key string, value map[string]interface{}) {
 								// 账户流水
-								m.Grow("asset", kit.Keys("hash", key), item)
+								m.Grow(cmd, kit.Keys("hash", key), item)
 
 								// 账户结余
 								amount := kit.Int(kit.Value(value, "meta.amount")) + kit.Int(v)
@@ -391,17 +376,26 @@ var Index = &ice.Context{Name: "mall", Help: "贸易中心",
 				return
 			}
 
-			if m.Richs("asset", nil, arg[0], nil) == nil {
+			if len(arg) == 0 {
+				// 账户列表
+				m.Richs(cmd, nil, "*", func(key string, value map[string]interface{}) {
+					m.Push(key, value["meta"], []string{"account", "count", "amount", "bonus", "spend"})
+				})
+				m.Sort("amount", "int_r")
+				return
+			}
+
+			if len(arg) > 5 && m.Richs(cmd, nil, arg[0], nil) == nil {
 				// 添加账户
-				m.Rich("asset", nil, kit.Data("account", arg[0], "amount", "0", "bonus", "0", "spend", "0"))
+				m.Rich(cmd, nil, kit.Data("account", arg[0], "amount", "0", "bonus", "0", "spend", "0"))
 				m.Log(ice.LOG_CREATE, "account: %s", arg[0])
 			}
 
 			field := []string{"time", "id", "value", "type", "name", "text"}
-			m.Richs("asset", nil, arg[0], func(key string, value map[string]interface{}) {
+			m.Richs(cmd, nil, arg[0], func(key string, value map[string]interface{}) {
 				if len(arg) == 1 {
 					// 消费流水
-					m.Grows("asset", kit.Keys("hash", key), "", "", func(index int, value map[string]interface{}) {
+					m.Grows(cmd, kit.Keys("hash", key), "", "", func(index int, value map[string]interface{}) {
 						m.Push("", value, field)
 					})
 					m.Sort("id", "int_r")
@@ -409,7 +403,7 @@ var Index = &ice.Context{Name: "mall", Help: "贸易中心",
 				}
 				if len(arg) == 2 {
 					// 消费详情
-					m.Grows("asset", kit.Keys("hash", key), "id", arg[1], func(index int, value map[string]interface{}) {
+					m.Grows(cmd, kit.Keys("hash", key), "id", arg[1], func(index int, value map[string]interface{}) {
 						m.Push("detail", value)
 					})
 					return
@@ -428,7 +422,7 @@ var Index = &ice.Context{Name: "mall", Help: "贸易中心",
 						// 消费备注
 						name, value = "text", arg[4]
 					}
-					m.Grows("asset", kit.Keys("hash", key), name, value, func(index int, value map[string]interface{}) {
+					m.Grows(cmd, kit.Keys("hash", key), name, value, func(index int, value map[string]interface{}) {
 						m.Push("", value, field)
 					})
 					m.Sort("id", "int_r")
@@ -457,7 +451,7 @@ var Index = &ice.Context{Name: "mall", Help: "贸易中心",
 					}
 				}
 				// 添加流水
-				n := m.Grow("asset", kit.Keys("hash", key), data)
+				n := m.Grow(cmd, kit.Keys(kit.MDB_HASH, key), data)
 
 				// 账户结余
 				total := kit.Int(kit.Value(value, "meta.amount")) + amount
@@ -477,51 +471,34 @@ var Index = &ice.Context{Name: "mall", Help: "贸易中心",
 			})
 		}},
 
-		"passcode": &ice.Command{Name: "passcode", Help: "passcode", Meta: kit.Dict("active", "mall/input"), Hand: func(m *ice.Message, c *ice.Context, key string, arg ...string) {
-			prefix := []string{ice.WEB_SPIDE, "12306"}
-			if len(arg) == 0 {
-				m.Cmd(prefix, "raw", "/passport/web/auth/uamtk-static", "form", "appid", "otn")
-				m.Cmd(prefix, "raw", "GET", "/otn/HttpZF/GetJS")
-				m.Cmd(prefix, "raw", "/otn/login/conf")
-
-				m.Cmdy(prefix, "GET", fmt.Sprintf("/passport/captcha/captcha-image64?login_site=E&module=login&rand=sjrand"))
-				return
-			}
-
-			switch arg[0] {
-			case "check":
-				m.Cmdy(prefix, "GET", fmt.Sprintf("/passport/captcha/captcha-check?login_site=E&rand=sjrand&answer=%s", arg[1]))
-			case "login":
-				m.Cmdy(prefix, "raw", "/passport/web/login", "form", "username", arg[1], "password", arg[2], "answer", arg[3], "appid", "otn")
-			}
-		}},
 		"railway": &ice.Command{Name: "railway", Help: "12306", List: kit.List(
-			kit.MDB_INPUT, "text", "name", "date", "value", "2020-01-22",
-			kit.MDB_INPUT, "text", "name", "from", "value", "北京",
-			kit.MDB_INPUT, "text", "name", "to", "value", "曲阜",
+			kit.MDB_INPUT, "text", "name", "date", "figure", "date",
+			kit.MDB_INPUT, "text", "name", "from", "value", "北京", "figure", "city",
+			kit.MDB_INPUT, "text", "name", "to", "value", "曲阜", "figure", "city",
 			kit.MDB_INPUT, "button", "name", "查询",
 		), Hand: func(m *ice.Message, c *ice.Context, key string, arg ...string) {
-			if !m.Confs("railway", "meta.site") {
+			if !m.Confs("railway", "meta.place") {
 				list := strings.Split(strings.TrimPrefix(m.Cmdx(ice.WEB_SPIDE, "12306", "raw", "GET", "/otn/resources/js/framework/station_name.js?station_version=1.9090"), "var statuion_names ='"), "|")
 				for i := 0; i < len(list)-5; i += 5 {
-					m.Conf("railway", kit.Keys("meta.site", list[i+1]), list[i+2])
+					m.Conf("railway", kit.Keys("meta.place", list[i+1]), list[i+2])
 				}
 			}
 
-			date := time.Now().Add(time.Hour * 24).Format("2006-01-02")
+			date := strings.Split(m.Time("24h"), " ")[0]
 			if len(arg) > 0 {
 				date, arg = arg[0], arg[1:]
 			}
+			date = strings.Split(date, " ")[0]
 			from := "北京"
 			if len(arg) > 0 {
 				from, arg = arg[0], arg[1:]
 			}
-			from_code := m.Conf("railway", kit.Keys("meta.site", from))
+			from_code := m.Conf("railway", kit.Keys("meta.place", from))
 			to := "曲阜"
 			if len(arg) > 0 {
 				to, arg = arg[0], arg[1:]
 			}
-			to_code := m.Conf("railway", kit.Keys("meta.site", to))
+			to_code := m.Conf("railway", kit.Keys("meta.place", to))
 
 			m.Echo("%s->%s %s\n", from, to, date)
 
@@ -545,6 +522,24 @@ var Index = &ice.Context{Name: "mall", Help: "贸易中心",
 					m.Push("一等座", fields[31])
 				})
 			})
+		}},
+		"passcode": &ice.Command{Name: "passcode", Help: "passcode", Meta: kit.Dict("active", "mall/input"), Hand: func(m *ice.Message, c *ice.Context, key string, arg ...string) {
+			prefix := []string{ice.WEB_SPIDE, "12306"}
+			if len(arg) == 0 {
+				m.Cmd(prefix, "raw", "/passport/web/auth/uamtk-static", "form", "appid", "otn")
+				m.Cmd(prefix, "raw", "GET", "/otn/HttpZF/GetJS")
+				m.Cmd(prefix, "raw", "/otn/login/conf")
+
+				m.Cmdy(prefix, "GET", fmt.Sprintf("/passport/captcha/captcha-image64?login_site=E&module=login&rand=sjrand"))
+				return
+			}
+
+			switch arg[0] {
+			case "check":
+				m.Cmdy(prefix, "GET", fmt.Sprintf("/passport/captcha/captcha-check?login_site=E&rand=sjrand&answer=%s", arg[1]))
+			case "login":
+				m.Cmdy(prefix, "raw", "/passport/web/login", "form", "username", arg[1], "password", arg[2], "answer", arg[3], "appid", "otn")
+			}
 		}},
 	},
 }

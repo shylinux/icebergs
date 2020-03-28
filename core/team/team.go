@@ -2,7 +2,6 @@ package team
 
 import (
 	"github.com/shylinux/icebergs"
-	_ "github.com/shylinux/icebergs/base"
 	"github.com/shylinux/icebergs/base/web"
 	"github.com/shylinux/toolkits"
 
@@ -53,18 +52,23 @@ var Index = &ice.Context{Name: "team", Help: "团队中心",
 			m.Save("task")
 		}},
 
-		"task": {Name: "task [zone [id [type [name [text args...]]]]]", Help: "任务", Meta: kit.Dict("remote", "you"), List: kit.List(
+		"task": {Name: "task [zone [id [type [name [text args...]]]]]", Help: "任务", List: kit.List(
 			kit.MDB_INPUT, "text", "name", "zone", "action", "auto",
 			kit.MDB_INPUT, "text", "name", "id", "action", "auto",
 			kit.MDB_INPUT, "button", "name", "查看", "action", "auto",
 			kit.MDB_INPUT, "button", "name", "返回", "cb", "Last",
+			kit.MDB_INPUT, "button", "name", "保存",
 		), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			if m.Option("_action") == "保存" {
+				arg = []string{"action", "export"}
+			}
+
 			if len(arg) > 0 && arg[0] == "action" {
 				switch arg[1] {
 				case "export":
 					// 导出数据
 					m.Option("cache.limit", -2)
-					if f, p, e := kit.Create(arg[2]); m.Assert(e) {
+					if f, p, e := kit.Create(kit.Select("usr/local/task.csv", arg, 2)); m.Assert(e) {
 						defer f.Close()
 
 						w := csv.NewWriter(f)
@@ -86,6 +90,7 @@ var Index = &ice.Context{Name: "team", Help: "团队中心",
 							})
 						})
 						m.Log(ice.LOG_EXPORT, "%s", p)
+						m.Cmdy(ice.WEB_STORY, "catch", "csv", p)
 					}
 
 				case "import":
@@ -195,11 +200,14 @@ var Index = &ice.Context{Name: "team", Help: "团队中心",
 				// 词汇统计
 				web.Count(m, cmd, "meta.word.type", arg[2])
 				web.Count(m, cmd, "meta.word.name", arg[3])
+				web.Count(m, cmd, "meta.word.text", arg[4])
 
 				// 数据结构
 				extra := kit.Dict()
-				data := kit.Dict("type", arg[2], "name", arg[3], "text", arg[4], "extra", extra,
+				data := kit.Dict(
+					kit.MDB_TYPE, arg[2], kit.MDB_NAME, arg[3], kit.MDB_TEXT, arg[4],
 					"begin_time", m.Time(), "close_time", m.Time(), "status", "prepare",
+					"extra", extra,
 				)
 
 				// 扩展字段
@@ -218,15 +226,13 @@ var Index = &ice.Context{Name: "team", Help: "团队中心",
 			})
 		}},
 		"plan": {Name: "plan day|week|month|year", Help: "计划", Meta: kit.Dict(
-			"remote", "you", "display", "team/plan", "detail", []string{"process", "finish", "cancel"},
+			"display", "team/plan", "detail", []string{"process", "finish", "cancel"},
 		), List: kit.List(
 			kit.MDB_INPUT, "select", "name", "scale", "value", "day", "values", []string{"day", "week", "month", "months", "year", "long"}, "action", "auto",
 			kit.MDB_INPUT, "text", "name", "begin_time", "figure", "date", "action", "auto",
 			kit.MDB_INPUT, "text", "name", "end_time", "figure", "date", "action", "auto",
 			kit.MDB_INPUT, "button", "name", "查看", "action", "auto",
 		), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			m.Option("cache.limit", -1)
-
 			// 起始日期
 			first := time.Now()
 			if len(arg) > 1 {
@@ -241,6 +247,7 @@ var Index = &ice.Context{Name: "team", Help: "团队中心",
 			}
 			last = DateZero(m, last)
 
+			m.Option("cache.limit", -1)
 			switch head := kit.Simple(m.Confv(cmd, "meta.head")); arg[0] {
 			case "action":
 				switch arg[1] {
@@ -416,7 +423,7 @@ var Index = &ice.Context{Name: "team", Help: "团队中心",
 				m.Sort("year", "int")
 			}
 		}},
-		"stat": {Name: "stat", Help: "统计", Meta: kit.Dict("remote", "you"), List: kit.List(
+		"stat": {Name: "stat", Help: "统计", List: kit.List(
 			kit.MDB_INPUT, "text", "name", "begin_time", "figure", "date", "action", "auto",
 			kit.MDB_INPUT, "text", "name", "end_time", "figure", "date", "action", "auto",
 			kit.MDB_INPUT, "button", "name", "查看", "action", "auto",
@@ -466,13 +473,12 @@ var Index = &ice.Context{Name: "team", Help: "团队中心",
 				m.Push("max", kit.FmtTime(int64(stat["max"])*int64(time.Second)))
 			})
 		}},
-		"miss": {Name: "miss zone type name text", Help: "任务", Meta: kit.Dict("remote", "you"), List: kit.List(
+		"miss": {Name: "miss zone type name text", Help: "任务", List: kit.List(
 			kit.MDB_INPUT, "text", "name", "zone", "figure", "key", "action", "auto",
 			kit.MDB_INPUT, "text", "name", "type", "figure", "key",
 			kit.MDB_INPUT, "text", "name", "name", "figure", "key",
 			kit.MDB_INPUT, "button", "name", "添加",
 			kit.MDB_INPUT, "textarea", "name", "text",
-			kit.MDB_INPUT, "text", "name", "location", "figure", "key", "cb", "location", "className", "opts",
 		), Hand: func(m *ice.Message, c *ice.Context, key string, arg ...string) {
 			if len(arg) > 0 && arg[0] == "action" {
 				switch arg[1] {

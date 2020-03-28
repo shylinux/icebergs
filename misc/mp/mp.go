@@ -77,7 +77,7 @@ var Index = &ice.Context{Name: "mp", Help: "小程序",
 				})
 
 			case "scan":
-				m.Render(ice.RENDER_QRCODE, m.Option("scan"))
+				m.Cmd(ice.WEB_FAVOR, "device", "scan", m.Option("name"), m.Option("text"))
 
 			case "auth":
 				if !m.Options(ice.MSG_USERNAME) {

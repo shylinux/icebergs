@@ -8,6 +8,7 @@ import (
 	"github.com/shylinux/toolkits"
 
 	"fmt"
+	"io"
 	"io/ioutil"
 	"math/rand"
 	"os"
@@ -477,7 +478,20 @@ var Index = &ice.Context{Name: "wiki", Help: "文档中心",
 			kit.MDB_INPUT, "text", "name", "name",
 			kit.MDB_INPUT, "button", "name", "执行",
 			kit.MDB_INPUT, "button", "name", "返回", "cb", "Last",
+			kit.MDB_INPUT, "button", "name", "上传", "figure", "upload",
 		), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			if m.Option("_action") == "上传" {
+				if f, h, e := m.R.FormFile("upload"); m.Assert(e) {
+					defer f.Close()
+					if o, p, e := kit.Create(path.Join(m.Option("name"), h.Filename)); m.Assert(e) {
+						if n, e := io.Copy(o, f); m.Assert(e) {
+							m.Log(ice.LOG_IMPORT, "%s: %s", kit.FmtSize(n), p)
+						}
+					}
+				}
+				return
+			}
+
 			if len(arg) > 0 && arg[0] == "action" {
 				switch arg[1] {
 				case "删除":

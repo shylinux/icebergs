@@ -847,7 +847,7 @@ var Index = &ice.Context{Name: "web", Help: "网络模块",
 
 				target := strings.Split(arg[0], ".")
 				m.Warn(m.Richs(ice.WEB_SPACE, nil, target[0], func(key string, value map[string]interface{}) {
-					if channel, ok := value["channel"].(chan *ice.Message); !m.Warn(!ok, "socket err") {
+					if socket, ok := value["socket"].(*websocket.Conn); !m.Warn(!ok, "socket err") {
 						// 复制选项
 						for _, k := range kit.Simple(m.Optionv("_option")) {
 							switch k {
@@ -866,8 +866,7 @@ var Index = &ice.Context{Name: "web", Help: "网络模块",
 
 						// 下发命令
 						m.Target().Server().(*Frame).send[id] = m
-
-						channel <- m
+						socket.WriteMessage(MSG_MAPS, []byte(m.Format("meta")))
 						t := time.AfterFunc(kit.Duration(m.Conf(ice.WEB_SPACE, "meta.timeout.c")), func() {
 							m.Log(ice.LOG_WARN, "timeout")
 						})
@@ -1951,25 +1950,14 @@ var Index = &ice.Context{Name: "web", Help: "网络模块",
 				}
 				// m.Cmd(ice.WEB_GROUP, m.Option("group"), "add", m.Option("name"))
 
-				c := make(chan *ice.Message, ice.ICE_CHAN)
 				// 添加节点
 				h := m.Rich(ice.WEB_SPACE, nil, kit.Dict(
 					kit.MDB_TYPE, m.Option("node"),
 					kit.MDB_NAME, m.Option("name"),
 					kit.MDB_TEXT, m.Option("user"),
 					"share", share, "socket", s,
-					"channel", c,
 				))
 				m.Log(ice.LOG_CREATE, "space: %s share: %s", m.Option(kit.MDB_NAME), share)
-
-				m.Gos(m, func(m *ice.Message) {
-					for {
-						select {
-						case msg := <-c:
-							s.WriteMessage(MSG_MAPS, []byte(msg.Format("meta")))
-						}
-					}
-				})
 
 				m.Gos(m, func(m *ice.Message) {
 					// 监听消息

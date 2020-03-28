@@ -1523,6 +1523,32 @@ func (m *Message) Grows(key string, chain interface{}, match string, value strin
 	}
 	return meta
 }
+func (m *Message) Show(cmd string, arg ...string) bool {
+	if len(arg) == 0 {
+		// 日志分类
+		m.Richs(cmd, nil, "*", func(key string, value map[string]interface{}) {
+			m.Push(key, value["meta"])
+		})
+		return true
+	}
+	if len(arg) < 3 {
+		m.Richs(cmd, nil, arg[0], func(key string, val map[string]interface{}) {
+			if len(arg) == 1 {
+				// 日志列表
+				m.Grows(cmd, kit.Keys(kit.MDB_HASH, key), "", "", func(index int, value map[string]interface{}) {
+					m.Push(key, value)
+				})
+				return
+			}
+			// 日志详情
+			m.Grows(cmd, kit.Keys(kit.MDB_HASH, key), "id", arg[1], func(index int, value map[string]interface{}) {
+				m.Push("detail", value)
+			})
+		})
+		return true
+	}
+	return false
+}
 
 func (m *Message) Cmdy(arg ...interface{}) *Message {
 	msg := m.Cmd(arg...)

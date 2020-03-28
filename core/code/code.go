@@ -27,17 +27,6 @@ var Index = &ice.Context{Name: "code", Help: "编程中心",
 	Commands: map[string]*ice.Command{
 		ice.ICE_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			m.Load()
-
-			// m.Watch(ice.SYSTEM_INIT, "compile", "linux")
-			// m.Watch(ice.SYSTEM_INIT, "publish", "bin/ice.sh")
-			//
-			// if m.Richs(ice.WEB_FAVOR, nil, "auto.init", nil) == nil {
-			// 	m.Cmd(ice.WEB_FAVOR, "auto.init", ice.TYPE_SHELL, "下载脚本", `curl -s "$ctx_dev/publish/auto.sh" -o auto.sh`)
-			// 	m.Cmd(ice.WEB_FAVOR, "auto.init", ice.TYPE_SHELL, "加载脚本", `source auto.sh`)
-			// }
-			// if m.Richs(ice.WEB_FAVOR, nil, "ice.init", nil) == nil {
-			// 	m.Cmd(ice.WEB_FAVOR, "ice.init", ice.TYPE_SHELL, "一键启动", `curl -s "$ctx_dev/publish/ice.sh" |sh`)
-			// }
 		}},
 		ice.ICE_EXIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			m.Save("login")
@@ -46,12 +35,12 @@ var Index = &ice.Context{Name: "code", Help: "编程中心",
 		"login": {Name: "login", Help: "登录", List: ice.ListLook("key"), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			if len(arg) > 0 && arg[0] == "action" {
 				switch arg[1] {
-				case "modify":
+				case "modify", "编辑":
 					m.Richs("login", nil, m.Option("key"), func(key string, value map[string]interface{}) {
 						m.Log(ice.LOG_MODIFY, "%s %s %v->%s", key, arg[2], value[arg[2]], arg[3])
 						value[arg[2]] = arg[3]
 					})
-				case "delete":
+				case "delete", "删除":
 					m.Log(ice.LOG_DELETE, "%s %s", m.Option("key"), m.Conf("login", kit.Keys("hash", m.Option("key"))))
 					m.Conf("login", kit.Keys("hash", m.Option("key")), "")
 				}
@@ -96,17 +85,7 @@ var Index = &ice.Context{Name: "code", Help: "编程中心",
 					m.Push(key, value, []string{"pid", "pane", "hostname", "username"})
 				})
 
-			case "check":
-				m.Richs("login", nil, m.Option("sid"), func(key string, value map[string]interface{}) {
-
-				})
-
 			case "prune":
-				if len(arg) > 1 && arg[1] == "all" {
-					m.Conf("login", "hash", "")
-					break
-				}
-
 				list := []string{}
 				m.Richs("login", nil, "*", func(key string, value map[string]interface{}) {
 					if len(arg) > 1 && arg[1] == "all" || value["status"] == "logout" {
@@ -114,6 +93,7 @@ var Index = &ice.Context{Name: "code", Help: "编程中心",
 					}
 				})
 
+				// 清理会话
 				kit.Fetch(list, func(index int, value string) {
 					m.Log(ice.LOG_DELETE, "%s: %s", value, m.Conf("login", kit.Keys("hash", value)))
 					m.Conf("login", kit.Keys("hash", value), "")

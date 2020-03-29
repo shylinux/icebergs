@@ -112,7 +112,7 @@ var Index = &ice.Context{Name: "tmux", Help: "工作台",
 			}
 		}},
 
-		"text": {Name: "text", Help: "文本", Meta: kit.Dict("remote", "pod"), List: kit.List(
+		"text": {Name: "text", Help: "文本", List: kit.List(
 			kit.MDB_INPUT, "text", "name", "name",
 			kit.MDB_INPUT, "button", "value", "保存",
 			kit.MDB_INPUT, "textarea", "name", "text",
@@ -123,7 +123,7 @@ var Index = &ice.Context{Name: "tmux", Help: "工作台",
 			}
 			m.Cmdy(prefix, "show-buffer").Set(ice.MSG_APPEND)
 		}},
-		"buffer": {Name: "buffer", Help: "缓存", Meta: kit.Dict("remote", "pod"), List: kit.List(
+		"buffer": {Name: "buffer", Help: "缓存", List: kit.List(
 			kit.MDB_INPUT, "text", "name", "buffer", "action", "auto",
 			kit.MDB_INPUT, "text", "name", "value",
 			kit.MDB_INPUT, "button", "value", "查看", "action", "auto",

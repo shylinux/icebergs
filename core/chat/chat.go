@@ -511,11 +511,10 @@ var Index = &ice.Context{Name: "chat", Help: "聊天中心",
 
 			// 代理命令
 			proxy := []string{}
-			m.Search(cmds[0], func(p *ice.Context, c *ice.Context, key string, cmd *ice.Command) {
-				if remote := kit.Format(kit.Value(cmd.Meta, "remote")); m.Option(remote) != "" {
-					proxy = append(proxy, ice.WEB_PROXY, m.Option(remote))
-				}
-			})
+			if m.Option("pod") != "" {
+				proxy = append(proxy, ice.WEB_PROXY, m.Option("pod"))
+				m.Option("pod", "")
+			}
 
 			// 执行命令
 			m.Cmdy(proxy, cmds).Option("cmds", cmds)

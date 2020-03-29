@@ -32,9 +32,14 @@ var Index = &ice.Context{Name: "code", Help: "编程中心",
 			m.Save("login")
 		}},
 
-		"login": {Name: "login", Help: "登录", List: ice.ListLook("key"), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		"login": {Name: "login", Help: "登录", Meta: kit.Dict(
+			"detail", []string{"编辑", "清理", "清空", "删除"},
+		), List: ice.ListLook("key"), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			if len(arg) > 0 && arg[0] == "action" {
 				switch arg[1] {
+				case "prune", "清理":
+					m.Cmdy("login", "prune")
+
 				case "modify", "编辑":
 					m.Richs("login", nil, m.Option("key"), func(key string, value map[string]interface{}) {
 						m.Log(ice.LOG_MODIFY, "%s %s %v->%s", key, arg[2], value[arg[2]], arg[3])

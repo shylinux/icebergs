@@ -303,7 +303,9 @@ func (web *Frame) HandleCmd(m *ice.Message, key string, cmd *ice.Command) {
 
 			// 请求命令
 			if msg.Optionv("cmds") == nil {
-				msg.Optionv("cmds", strings.Split(strings.TrimPrefix(msg.Option(ice.MSG_USERURL), key), "/"))
+				if p := strings.TrimPrefix(msg.Option(ice.MSG_USERURL), key); p != "" {
+					msg.Optionv("cmds", strings.Split(p, "/"))
+				}
 			}
 			cmds := kit.Simple(msg.Optionv("cmds"))
 
@@ -519,7 +521,7 @@ var Index = &ice.Context{Name: "web", Help: "网络模块",
 			})
 		}},
 
-		ice.WEB_SPIDE: {Name: "spide name [msg|raw|cache] POST|GET url [json|form|part|file|data] arg...", Help: "蜘蛛侠", Meta: kit.Dict("remote", "pod"), List: kit.List(
+		ice.WEB_SPIDE: {Name: "spide name [msg|raw|cache] POST|GET url [json|form|part|file|data] arg...", Help: "蜘蛛侠", List: kit.List(
 			kit.MDB_INPUT, "text", "name", "name",
 			kit.MDB_INPUT, "button", "value", "查看", "action", "auto",
 			kit.MDB_INPUT, "button", "value", "返回", "cb", "Last",
@@ -884,7 +886,7 @@ var Index = &ice.Context{Name: "web", Help: "网络模块",
 			}
 		}},
 		ice.WEB_DREAM: {Name: "dream", Help: "梦想家", Meta: kit.Dict(
-			"remote", "pod", "exports", []string{"you", "name"},
+			"exports", []string{"you", "name"},
 			"detail", []interface{}{"启动", "停止"},
 		), List: kit.List(
 			kit.MDB_INPUT, "text", "value", "", "name", "name",
@@ -944,7 +946,7 @@ var Index = &ice.Context{Name: "web", Help: "网络模块",
 		}},
 
 		ice.WEB_FAVOR: {Name: "favor [path [type name [text [key value]....]]", Help: "收藏夹", Meta: kit.Dict(
-			"remote", "pod", "exports", []string{"hot", "favor"},
+			"exports", []string{"hot", "favor"},
 			"detail", []string{"编辑", "收藏", "收录", "导出", "删除"},
 		), List: kit.List(
 			kit.MDB_INPUT, "text", "name", "favor", "action", "auto",
@@ -1263,7 +1265,7 @@ var Index = &ice.Context{Name: "web", Help: "网络模块",
 				m.Push("data", h)
 			}
 		}},
-		ice.WEB_STORY: {Name: "story", Help: "故事会", Meta: kit.Dict("remote", "pod", "exports", []string{"top", "story"},
+		ice.WEB_STORY: {Name: "story", Help: "故事会", Meta: kit.Dict("exports", []string{"top", "story"},
 			"detail", []string{"共享", "更新", "推送"}), List: kit.List(
 			kit.MDB_INPUT, "text", "name", "story", "action", "auto",
 			kit.MDB_INPUT, "text", "name", "list", "action", "auto",

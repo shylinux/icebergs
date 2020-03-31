@@ -775,7 +775,9 @@ var Index = &ice.Context{Name: "web", Help: "网络模块",
 				// 空间列表
 				m.Richs(ice.WEB_SPACE, nil, "*", func(key string, value map[string]interface{}) {
 					m.Push(key, value, []string{"time", "type", "name", "text"})
-					m.Push("link", fmt.Sprintf(`<a target="_blank" href="%s?pod=%s">%s</a>`, m.Conf(ice.WEB_SHARE, "meta.domain"), value["name"], value["name"]))
+					if m.W != nil {
+						m.Push("link", fmt.Sprintf(`<a target="_blank" href="%s?pod=%s">%s</a>`, m.Conf(ice.WEB_SHARE, "meta.domain"), value["name"], value["name"]))
+					}
 				})
 				m.Sort("name")
 				return

@@ -59,6 +59,7 @@ func Render(msg *ice.Message, cmd string, args ...interface{}) {
 
 func (f *Frame) prompt(m *ice.Message) *Frame {
 	if f.out == os.Stdout {
+		fmt.Fprintf(f.out, "\r")
 		for _, v := range kit.Simple(m.Optionv(ice.MSG_PROMPT)) {
 			switch v {
 			case "count":
@@ -314,6 +315,13 @@ var Index = &ice.Context{Name: "ssh", Help: "终端模块",
 			m.Option(ice.MSG_PROMPT, m.Confv("prompt", "meta.PS1"))
 			f := m.Target().Server().(*Frame)
 			f.exit = true
+		}},
+		"target": {Name: "target", Help: "目标", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			f := m.Target().Server().(*Frame)
+			m.Search(arg[0], func(p *ice.Context, s *ice.Context, key string) {
+				f.target = s
+			})
+			f.prompt(m)
 		}},
 		"source": {Name: "source file", Help: "解析", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			buf := bytes.NewBuffer(make([]byte, 0, 4096))

@@ -1672,9 +1672,12 @@ var Index = &ice.Context{Name: "web", Help: "网络模块",
 
 			case "auth":
 				m.Richs(ice.WEB_SHARE, nil, arg[1], func(key string, value map[string]interface{}) {
-					if value["type"] == "active" {
+					switch value["type"] {
+					case "active":
 						m.Cmdy(ice.WEB_SPACE, value["name"], "sessid", m.Cmdx(ice.AAA_SESS, "create", arg[2]))
-					} else {
+					case "user":
+						m.Cmdy(ice.AAA_ROLE, arg[2], value["name"])
+					default:
 						m.Cmdy(ice.AAA_SESS, "auth", value["text"], arg[2])
 					}
 				})
@@ -1989,7 +1992,7 @@ var Index = &ice.Context{Name: "web", Help: "网络模块",
 
 			m.Richs(ice.WEB_SHARE, nil, arg[0], func(key string, value map[string]interface{}) {
 				m.Log(ice.LOG_EXPORT, "%s: %v", arg, kit.Format(value))
-				if kit.Time(kit.Format(value[kit.MDB_TIME])) < kit.Time(m.Time()) {
+				if m.Option(ice.MSG_USERROLE) != ice.ROLE_ROOT && kit.Time(kit.Format(value[kit.MDB_TIME])) < kit.Time(m.Time()) {
 					m.Echo("invalid")
 					return
 				}

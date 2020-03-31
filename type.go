@@ -1308,7 +1308,7 @@ func (m *Message) Grow(key string, chain interface{}, data interface{}) int {
 	id := kit.Int(meta["count"]) + 1
 	prefix := kit.Select("", "meta.", kit.Value(data, "meta") != nil)
 	if kit.Value(data, prefix+kit.MDB_ID, id); kit.Value(data, prefix+kit.MDB_TIME) == nil {
-		kit.Value(data, prefix+kit.MDB_TIME, m.Time())
+		kit.Value(data, prefix+kit.MDB_TIME, kit.Select(m.Time(), m.Option("time")))
 	}
 
 	// 添加数据

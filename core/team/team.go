@@ -206,7 +206,7 @@ var Index = &ice.Context{Name: "team", Help: "团队中心",
 				extra := kit.Dict()
 				data := kit.Dict(
 					kit.MDB_TYPE, arg[2], kit.MDB_NAME, arg[3], kit.MDB_TEXT, arg[4],
-					"begin_time", m.Time(), "close_time", m.Time(), "status", "prepare",
+					"begin_time", kit.Select(m.Time(), m.Option("begin_time")), "close_time", kit.Select(m.Time(), m.Option("begin_time")), "status", "prepare",
 					"extra", extra,
 				)
 
@@ -479,6 +479,7 @@ var Index = &ice.Context{Name: "team", Help: "团队中心",
 			kit.MDB_INPUT, "text", "name", "name", "figure", "key",
 			kit.MDB_INPUT, "button", "name", "添加",
 			kit.MDB_INPUT, "textarea", "name", "text",
+			kit.MDB_INPUT, "text", "name", "begin_time", "figure", "date", "position", "opts",
 		), Hand: func(m *ice.Message, c *ice.Context, key string, arg ...string) {
 			if len(arg) > 0 && arg[0] == "action" {
 				switch arg[1] {

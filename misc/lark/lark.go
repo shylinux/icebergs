@@ -57,13 +57,16 @@ var Index = &ice.Context{Name: "lark", Help: "机器人",
 	Commands: map[string]*ice.Command{
 		ice.ICE_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			m.Load()
-			m.Confm("app", "meta.userrole", func(key string, value string) {
-				m.Cmd(ice.AAA_ROLE, value, key)
-			})
 			m.Cmd(ice.WEB_SPIDE, "add", "lark", m.Conf("app", "meta.lark"))
+			m.Cmd("duty", "boot", m.Conf(ice.CLI_RUNTIME, "boot.hostname"), m.Time())
 		}},
 		ice.ICE_EXIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			m.Save("app", "user")
+		}},
+		ice.WEB_LOGIN: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		}},
+		"login": {Name: "login", Help: "应用", Hand: func(m *ice.Message, c *ice.Context, key string, arg ...string) {
+			m.Cmdy(ice.WEB_SHARE, "add", "user", m.Option(ice.MSG_USERNAME), m.Option(ice.MSG_SESSID))
 		}},
 
 		"app": {Name: "app login|token bot", Help: "应用", Hand: func(m *ice.Message, c *ice.Context, key string, arg ...string) {
@@ -171,7 +174,46 @@ var Index = &ice.Context{Name: "lark", Help: "机器人",
 				post(m, "bot", "GET", "/open-apis/user/v1/batch_get_id", us)
 			}
 		}},
-		"send": {Name: "send [chat_id|open_id|user_id|email] who [menu] [title] text", Help: "消息", Hand: func(m *ice.Message, c *ice.Context, key string, arg ...string) {
+		"send": {Name: "send [chat_id|open_id|user_id|email] user [title] text", Help: "消息", Hand: func(m *ice.Message, c *ice.Context, key string, arg ...string) {
+			var form = map[string]interface{}{"content": map[string]interface{}{}}
+			switch arg[0] {
+			case "chat_id", "open_id", "user_id", "email":
+				form[arg[0]], arg = arg[1], arg[2:]
+			default:
+				form["chat_id"], arg = arg[0], arg[1:]
+			}
+
+			switch len(arg) {
+			case 0:
+			case 1:
+				kit.Value(form, "msg_type", "text")
+				kit.Value(form, "content.text", arg[0])
+			default:
+				content := []interface{}{}
+				line := []interface{}{}
+				for _, v := range arg[1:] {
+					if v == "\n" {
+						content, line = append(content, line), []interface{}{}
+						continue
+					}
+					line = append(line, map[string]interface{}{
+						"tag": "text", "text": v + " ",
+					})
+				}
+				content = append(content, line)
+
+				kit.Value(form, "msg_type", "post")
+				kit.Value(form, "content.post", map[string]interface{}{
+					"zh_cn": map[string]interface{}{
+						"title":   arg[0],
+						"content": content,
+					},
+				})
+			}
+
+			post(m, "bot", "/open-apis/message/v4/send/", "data", kit.Formats(form))
+		}},
+		"menu": {Name: "send chat_id|open_id|user_id|email [menu] [title] text", Help: "消息", Hand: func(m *ice.Message, c *ice.Context, key string, arg ...string) {
 			var form = map[string]interface{}{"content": map[string]interface{}{}}
 			switch arg[0] {
 			case "chat_id", "open_id", "user_id", "email":
@@ -272,6 +314,10 @@ var Index = &ice.Context{Name: "lark", Help: "机器人",
 			post(m, "bot", "/open-apis/message/v4/send/", "data", kit.Formats(form))
 			return
 		}},
+		"duty": {Name: "send [chat_id|open_id|user_id|email] user [title] text", Help: "消息", Hand: func(m *ice.Message, c *ice.Context, key string, arg ...string) {
+			m.Cmdy("send", m.Conf("app", "meta.duty"), arg)
+		}},
+
 		"/msg": {Name: "/msg", Help: "聊天消息", Hand: func(m *ice.Message, c *ice.Context, key string, arg ...string) {
 			switch parse(m); m.Option("msg.type") {
 			case "url_verification":
@@ -293,26 +339,31 @@ var Index = &ice.Context{Name: "lark", Help: "机器人",
 						m.Cmdy("send", m.Option("open_chat_id"), "我来也~")
 					}
 				default:
-					if m.Options("open_chat_id") {
-						// 用户登录
-						m.Option(ice.MSG_USERNAME, m.Option("open_id"))
-						m.Option(ice.MSG_USERROLE, m.Cmdx(ice.AAA_ROLE, "check", m.Option(ice.MSG_USERNAME)))
-						m.Info("%s: %s", m.Option(ice.MSG_USERROLE), m.Option(ice.MSG_USERNAME))
-						m.Option(ice.MSG_SESSID, m.Cmdx(ice.AAA_USER, "login", m.Option(ice.MSG_USERNAME)))
+					switch m.Option("msg_type") {
+					case "image":
+					default:
+						if m.Options("open_chat_id") {
+							// 用户登录
+							m.Option(ice.MSG_USERNAME, m.Option("open_id"))
+							m.Option(ice.MSG_USERROLE, m.Cmdx(ice.AAA_ROLE, "check", m.Option(ice.MSG_USERNAME)))
+							m.Info("%s: %s", m.Option(ice.MSG_USERROLE), m.Option(ice.MSG_USERNAME))
 
-						if cmd := kit.Split(m.Option("text_without_at_bot")); !m.Right(cmd) {
-							m.Echo("no right")
-						} else {
-							// 执行命令
-							msg := m.Cmd(cmd)
-							if m.Hand = false; !msg.Hand {
-								msg = m.Cmd(ice.CLI_SYSTEM, cmd)
+							if cmd := kit.Split(m.Option("text_without_at_bot")); cmd[0] == "login" || m.Right(cmd) {
+								// 执行命令
+								msg := m.Cmd(cmd)
+								if m.Hand = false; !msg.Hand {
+									msg = m.Cmd(ice.CLI_SYSTEM, cmd)
+								}
+								if msg.Result() == "" {
+									msg.Table()
+								}
+								m.Echo(msg.Result())
+							} else {
+								m.Cmd("duty", m.Option("open_chat_id"), m.Option("text_without_at_bot"))
 							}
-							if msg.Result() == "" {
-								msg.Table()
-							}
+
 							// 返回结果
-							m.Cmdy("send", m.Option("open_chat_id"), kit.Select("你好", msg.Result()))
+							m.Cmd("send", m.Option("open_chat_id"), kit.Select("你好", m.Result()))
 						}
 					}
 				}

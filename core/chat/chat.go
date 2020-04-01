@@ -455,6 +455,14 @@ var Index = &ice.Context{Name: "chat", Help: "聊天中心",
 				return
 			}
 
+			if m.Option("_action") == "上传" {
+				msg := m.Cmd(ice.WEB_CACHE, "upload")
+				m.Option("_data", msg.Append("data"))
+				m.Option("_name", msg.Append("name"))
+				m.Cmd(ice.WEB_FAVOR, "upload", msg.Append("type"), msg.Append("name"), msg.Append("data"))
+				m.Option("_option", m.Optionv("option"))
+			}
+
 			// 查询命令
 			cmds := []string{}
 			m.Grows(ice.CHAT_RIVER, prefix, kit.MDB_ID, kit.Format(kit.Int(arg[2])+1), func(index int, value map[string]interface{}) {

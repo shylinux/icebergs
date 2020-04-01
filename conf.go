@@ -53,6 +53,7 @@ const ( // CTX
 const ( // CLI
 	CLI_RUNTIME = "runtime"
 	CLI_SYSTEM  = "system"
+	CLI_DAEMON  = "daemon"
 )
 const ( // AAA
 	AAA_ROLE = "role"
@@ -211,6 +212,7 @@ const ( // STORY
 	STORY_DOWNLOAD = "download"
 )
 const ( // RENDER
+	RENDER_VOID     = "_output"
 	RENDER_OUTPUT   = "_output"
 	RENDER_TEMPLATE = "_template"
 	RENDER_DOWNLOAD = "_download"
@@ -225,6 +227,7 @@ var Alias = map[string]string{
 
 	CLI_RUNTIME: "cli.runtime",
 	CLI_SYSTEM:  "cli.system",
+	CLI_DAEMON:  "cli.daemon",
 	SSH_SOURCE:  "ssh.source",
 
 	AAA_ROLE: "aaa.role",
@@ -270,4 +273,5 @@ var Alias = map[string]string{
 	"compile": "web.code.compile",
 	"publish": "web.code.publish",
 	"upgrade": "web.code.upgrade",
+	"pprof":   "web.code.pprof",
 }

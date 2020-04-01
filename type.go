@@ -1532,7 +1532,7 @@ func (m *Message) Show(cmd string, arg ...string) bool {
 		return true
 	}
 	if len(arg) < 3 {
-		m.Richs(cmd, nil, arg[0], func(key string, val map[string]interface{}) {
+		if m.Richs(cmd, nil, arg[0], func(key string, val map[string]interface{}) {
 			if len(arg) == 1 {
 				// 日志列表
 				m.Grows(cmd, kit.Keys(kit.MDB_HASH, key), "", "", func(index int, value map[string]interface{}) {
@@ -1544,8 +1544,9 @@ func (m *Message) Show(cmd string, arg ...string) bool {
 			m.Grows(cmd, kit.Keys(kit.MDB_HASH, key), "id", arg[1], func(index int, value map[string]interface{}) {
 				m.Push("detail", value)
 			})
-		})
-		return true
+		}) != nil {
+			return true
+		}
 	}
 	return false
 }

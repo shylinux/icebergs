@@ -130,9 +130,8 @@ var Index = &ice.Context{Name: "cli", Help: "命令模块",
 			}
 		}},
 		"daemon": {Name: "daemon", Help: "守护进程", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			switch arg[0] {
-			case "exit":
-			}
+			m.Option("cmd_type", "daemon")
+			m.Cmdy(ice.CLI_SYSTEM, arg)
 		}},
 		"python": {Name: "python", Help: "运行环境", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			prefix := []string{ice.CLI_SYSTEM, m.Conf("python", "meta.python")}

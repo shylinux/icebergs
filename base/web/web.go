@@ -309,15 +309,12 @@ func (web *Frame) HandleCmd(m *ice.Message, key string, cmd *ice.Command) {
 			}
 			cmds := kit.Simple(msg.Optionv("cmds"))
 
-			// 登录检查
-			if !web.Login(msg, w, r) {
-				// msg.Render("status", 401, "not login")
-				return
+			if web.Login(msg, w, r) {
+				// 登录成功
+				msg.Option("_option", msg.Optionv(ice.MSG_OPTION))
+				// 执行命令
+				msg.Target().Run(msg, cmd, msg.Option(ice.MSG_USERURL), cmds...)
 			}
-			msg.Option("_option", msg.Optionv(ice.MSG_OPTION))
-
-			// 执行命令
-			msg.Target().Run(msg, cmd, msg.Option(ice.MSG_USERURL), cmds...)
 
 			// 渲染引擎
 			_args, _ := msg.Optionv(ice.MSG_ARGS).([]interface{})
@@ -354,6 +351,10 @@ func (web *Frame) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			m.Info("%s: %v", k, kit.Format(v))
 		}
 		m.Info(" ")
+	}
+
+	if strings.HasPrefix(r.URL.Path, "/debug") {
+		r.URL.Path = strings.Replace(r.URL.Path, "/debug", "/code", -1)
 	}
 
 	if r.URL.Path == "/" && m.Conf(ice.WEB_SERVE, "meta.init") != "true" {
@@ -428,7 +429,7 @@ func (web *Frame) Start(m *ice.Message, arg ...string) bool {
 		// 启动服务
 		web.m, web.Server = m, &http.Server{Addr: port, Handler: web}
 		m.Event(ice.SERVE_START, arg[0])
-		m.Log("serve", "listen %s", web.Server.ListenAndServe())
+		m.Warn(true, "listen %s", web.Server.ListenAndServe())
 		m.Event(ice.SERVE_CLOSE, arg[0])
 	})
 	return true
@@ -489,9 +490,7 @@ var Index = &ice.Context{Name: "web", Help: "网络模块",
 		ice.ICE_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			m.Load()
 
-			if m.Richs(ice.WEB_SPIDE, nil, "self", nil) == nil {
-				m.Cmd(ice.WEB_SPIDE, "add", "self", kit.Select("http://:9020", m.Conf(ice.CLI_RUNTIME, "conf.ctx_self")))
-			}
+			m.Cmd(ice.WEB_SPIDE, "add", "self", kit.Select("http://:9020", m.Conf(ice.CLI_RUNTIME, "conf.ctx_self")))
 			if m.Richs(ice.WEB_SPIDE, nil, "dev", nil) == nil {
 				m.Cmd(ice.WEB_SPIDE, "add", "dev", kit.Select("http://:9020", m.Conf(ice.CLI_RUNTIME, "conf.ctx_dev")))
 			}
@@ -550,16 +549,21 @@ var Index = &ice.Context{Name: "web", Help: "网络模块",
 			case "add":
 				// 添加爬虫
 				if uri, e := url.Parse(arg[2]); e == nil && arg[2] != "" {
+					if uri.Host == "random" {
+						uri.Host = ":" + m.Cmdx("tcp.getport")
+						arg[2] = strings.Replace(arg[2], "random", uri.Host, -1)
+					}
 					dir, file := path.Split(uri.EscapedPath())
 					if m.Richs(ice.WEB_SPIDE, nil, arg[1], func(key string, value map[string]interface{}) {
-						value["name"] = arg[1]
-						value["text"] = arg[2]
-						value["url"] = arg[2]
+						// kit.Value(value, "client.name", arg[1])
+						// kit.Value(value, "client.text", arg[2])
+						kit.Value(value, "client.hostname", uri.Host)
+						kit.Value(value, "client.url", arg[2])
 					}) == nil {
 						m.Rich(ice.WEB_SPIDE, nil, kit.Dict(
 							"cookie", kit.Dict(), "header", kit.Dict(), "client", kit.Dict(
 								"share", m.Cmdx(ice.WEB_SHARE, "add", ice.TYPE_SPIDE, arg[1], arg[2]),
-								"type", "POST", "name", arg[1], "text", arg[2],
+								// "type", "POST", "name", arg[1], "text", arg[2],
 								"name", arg[1], "url", arg[2], "method", "POST",
 								"protocol", uri.Scheme, "hostname", uri.Host,
 								"path", dir, "file", file, "query", uri.RawQuery,
@@ -725,7 +729,8 @@ var Index = &ice.Context{Name: "web", Help: "网络模块",
 				switch cache {
 				case "cache":
 					m.Optionv("response", res)
-					m.Echo(m.Cmd(ice.WEB_CACHE, "download", res.Header.Get("Content-Type"), uri).Append("data"))
+					m.Cmdy(ice.WEB_CACHE, "download", res.Header.Get("Content-Type"), uri)
+					m.Echo(m.Append("data"))
 				case "raw":
 					if b, e := ioutil.ReadAll(res.Body); m.Assert(e) {
 						m.Echo(string(b))
@@ -919,6 +924,7 @@ var Index = &ice.Context{Name: "web", Help: "网络模块",
 					}
 				})
 				m.Sort("name")
+				m.Sort("status")
 				return
 			}
 
@@ -1265,6 +1271,25 @@ var Index = &ice.Context{Name: "web", Help: "网络模块",
 				m.Push("text", arg[3])
 				m.Push("size", size)
 				m.Push("data", h)
+			case "watch":
+				if m.Richs(ice.WEB_CACHE, nil, arg[1], func(key string, value map[string]interface{}) {
+					if value["file"] == "" {
+						if f, _, e := kit.Create(arg[2]); m.Assert(e) {
+							defer f.Close()
+							f.WriteString(kit.Format(value["text"]))
+						}
+					} else {
+						os.MkdirAll(path.Dir(arg[2]), 0777)
+						os.Remove(arg[2])
+						os.Link(kit.Format(value["file"]), arg[2])
+					}
+				}) == nil {
+					m.Cmdy(ice.WEB_SPIDE, "dev", "cache", "/cache/"+arg[1])
+					os.MkdirAll(path.Dir(arg[2]), 0777)
+					os.Remove(arg[2])
+					os.Link(m.Append("file"), arg[2])
+				}
+				m.Echo(arg[2])
 			}
 		}},
 		ice.WEB_STORY: {Name: "story", Help: "故事会", Meta: kit.Dict("exports", []string{"top", "story"},
@@ -1754,7 +1779,7 @@ var Index = &ice.Context{Name: "web", Help: "网络模块",
 			})
 		}},
 		ice.WEB_PROXY: {Name: "proxy", Help: "代理", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			m.Richs(ice.WEB_SPACE, nil, arg[0], func(key string, value map[string]interface{}) {
+			m.Richs(ice.WEB_SPACE, nil, kit.Select(m.Conf(ice.WEB_FAVOR, "meta.proxy"), arg[0]), func(key string, value map[string]interface{}) {
 				if value[kit.MDB_TYPE] == ice.WEB_BETTER {
 					switch value[kit.MDB_NAME] {
 					case "tmux":
@@ -2105,6 +2130,11 @@ var Index = &ice.Context{Name: "web", Help: "网络模块",
 					m.Render(ice.RENDER_TEMPLATE, m.Conf(ice.WEB_SHARE, "meta.template.simple"))
 					m.Option(ice.MSG_OUTPUT, ice.RENDER_RESULT)
 				}
+			})
+		}},
+		"/cache/": {Name: "/cache/", Help: "缓存池", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			m.Richs(ice.WEB_CACHE, nil, arg[0], func(key string, value map[string]interface{}) {
+				m.Render(ice.RENDER_DOWNLOAD, value["file"])
 			})
 		}},
 		"/story/": {Name: "/story/", Help: "故事会", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {

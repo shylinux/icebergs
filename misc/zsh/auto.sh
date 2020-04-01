@@ -177,6 +177,8 @@ ShyInit() {
         # bash
         bind -x '"\C-G\C-R":ShySync base'
         bind -x '"\C-G\C-G":ShySync history'
+        bind -x '"\C-P":history-search-backward'
+        bind -x '"\C-N":history-search-forward'
 
         # bind 'TAB:complete' 
         bind 'TAB:menu-complete' 
@@ -194,8 +196,8 @@ ShyInit() {
     fi
 
     echo "url: ${ctx_url}"
-    echo -n "pid: $$ "
-    echo -n "begin: ${ctx_begin} "
-    echo -n "share: ${ctx_share} "
-    echo "pane: $TMUX_PANE "
+    echo -n "pid: $$"
+    echo -n "begin: ${ctx_begin}"
+    echo -n "share: ${ctx_share}"
+    echo "pane: $TMUX_PANE"
 }

@@ -198,6 +198,9 @@ var Index = &ice.Context{Name: "code", Help: "编程中心",
 			}
 		}},
 
+		"test": {Name: "test src", Help: "功能测试", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			m.Cmdy(ice.CLI_SYSTEM, "go", "test", kit.Select("./", arg, 0))
+		}},
 		"pprof": {Name: "pprof run name time", Help: "性能分析", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			if m.Show(cmd, arg...) {
 				return

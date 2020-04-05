@@ -760,11 +760,21 @@ var Index = &ice.Context{Name: "web", Help: "网络模块",
 				}
 			})
 		}},
-		ice.WEB_SERVE: {Name: "serve", Help: "服务器", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			// 启动服务
+		ice.WEB_SERVE: {Name: "serve [random] [ups...]", Help: "服务器", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			m.Conf(ice.CLI_RUNTIME, "node.name", m.Conf(ice.CLI_RUNTIME, "boot.hostname"))
 			m.Conf(ice.CLI_RUNTIME, "node.type", ice.WEB_SERVER)
+
+			if len(arg) > 0 && arg[0] == "random" {
+				// 随机端口
+				m.Conf(ice.CLI_RUNTIME, "node.name", m.Conf(ice.CLI_RUNTIME, "boot.pathname"))
+				m.Cmd(ice.WEB_SPIDE, "add", "self", "http://random")
+				arg = arg[1:]
+			}
+
+			// 启动服务
 			m.Target().Start(m, "self")
+			m.Sleep("1s")
+
 			// 连接服务
 			m.Cmd(ice.WEB_SPACE, "connect", "self")
 			for _, k := range arg {
@@ -780,7 +790,7 @@ var Index = &ice.Context{Name: "web", Help: "网络模块",
 				// 空间列表
 				m.Richs(ice.WEB_SPACE, nil, "*", func(key string, value map[string]interface{}) {
 					m.Push(key, value, []string{"time", "type", "name", "text"})
-					if m.W != nil {
+					if m.Option(ice.MSG_USERUA) != "" {
 						m.Push("link", fmt.Sprintf(`<a target="_blank" href="%s?pod=%s">%s</a>`, m.Conf(ice.WEB_SHARE, "meta.domain"), value["name"], value["name"]))
 					}
 				})

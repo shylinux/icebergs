@@ -7,10 +7,26 @@ init_shy="etc/init.shy"
 local_shy="etc/local.shy"
 exit_shy="etc/exit.shy"
 main_go="src/main.go"
+main_js="src/main.js"
 readme="README.md"
-shy="hi.shy"
+shy="src/main.shy"
 
 prepare() {
+    [ -d src ] || mkdir src
+
+    [ -f ${main_go} ] || cat >> ${main_go} <<END
+package main
+
+import (
+	"github.com/shylinux/icebergs"
+	_ "github.com/shylinux/icebergs/base"
+	_ "github.com/shylinux/icebergs/core"
+	_ "github.com/shylinux/icebergs/misc"
+)
+
+func main() { println(ice.Run()) }
+END
+
     [ -f ${shy} ] || cat >> ${shy} <<END
 title "${ice_mod}"
 
@@ -25,44 +41,45 @@ field "系统架构" favor args "系统架构"
 field "编译原理" favor args "编译原理"
 END
 
-    [ -d src ] || mkdir src
-    [ -f ${main_go} ] || cat >> ${main_go} <<END
-package main
-
-import (
-	"github.com/shylinux/icebergs"
-	_ "github.com/shylinux/icebergs/base"
-	_ "github.com/shylinux/icebergs/core"
-	_ "github.com/shylinux/icebergs/misc"
-)
-
-func main() {
-	println(ice.Run())
-}
+    [ -f ${main_js} ] || cat >> ${main_js} <<END
+Volcanos("onimport", {help: "导入数据", list: [],
+    "init": function(can, msg, cb, output, action, option) {},
+})
+Volcanos("onaction", {help: "控件菜单", list: []})
+Volcanos("onchoice", {help: "控件交互", list: ["刷新"]
+    "刷新": function(event, can, value, cmd, target) {},
+})
+Volcanos("ondetail", {help: "控件详情", list: []})
+Volcanos("onexport", {help: "导出数据", list: []})
 END
 
     [ -f go.mod ] || go mod init ${ice_mod}
 
     [ -f Makefile ] || cat >> Makefile <<END
+export GOPROXY=https://goproxy.cn
+export GOPRIVATE=github.com
+export CGO_ENABLED=0
 all:
 	@echo && date
-	GOPRIVATE=github.com GOPROXY=https://goproxy.cn CGO_ENABLED=0 go build -o ${ice_bin} ${main_go} && chmod u+x ${ice_bin} && ./${ice_sh} restart
+	go build -o ${ice_bin} ${main_go} && chmod u+x ${ice_bin} && ./${ice_sh} restart
 END
 
     [ -d etc ] || mkdir etc
     [ -f ${init_shy} ] || cat >> ${init_shy} <<END
 ~web
 
-# web.code.tmux.init
-# web.code.git.init
-
 ~ssh
     source etc/local.shy
 END
     [ -f ${local_shy} ] || cat >> ${local_shy} <<END
+~aaa
+
 ~web
+
 END
     [ -f ${exit_shy} ] || cat >> "${exit_shy}" <<END
+~web
+
 END
 
     [ -d bin ] || mkdir bin

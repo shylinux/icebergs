@@ -221,7 +221,7 @@ var Index = &ice.Context{Name: "code", Help: "编程中心",
 					m.Cmd(ice.WEB_FAVOR, "pprof", "shell", "text", m.Cmdx(ice.CLI_SYSTEM, "go", "tool", "pprof", "-text", msg.Append("text")))
 					m.Cmd(ice.WEB_FAVOR, "pprof", "pprof", name, msg.Append("data"))
 
-					arg = kit.Simple("web", value["bin"], value[kit.MDB_TEXT], name)
+					arg = kit.Simple("web", value[kit.MDB_TEXT], msg.Append("text"))
 				})
 
 				fallthrough

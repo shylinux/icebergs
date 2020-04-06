@@ -20,6 +20,7 @@ import (
 	"os"
 	"path"
 	"strings"
+	"sync"
 	"text/template"
 	"time"
 )
@@ -155,7 +156,7 @@ func (web *Frame) HandleWSS(m *ice.Message, safe bool, c *websocket.Conn, name s
 				socket, msg := c, m.Spawn(b)
 				source := kit.Simple(msg.Optionv(ice.MSG_SOURCE), name)
 				target := kit.Simple(msg.Optionv(ice.MSG_TARGET))
-				msg.Info("recv %v %v->%v %v", t, source, target, msg.Format("meta"))
+				msg.Info("recv %v<-%v %v", target, source, msg.Format("meta"))
 
 				if len(target) == 0 {
 					// 本地执行
@@ -182,7 +183,6 @@ func (web *Frame) HandleWSS(m *ice.Message, safe bool, c *websocket.Conn, name s
 				} else if call, ok := web.send[msg.Option(ice.MSG_TARGET)]; len(target) == 1 && ok {
 					// 接收响应
 					delete(web.send, msg.Option(ice.MSG_TARGET))
-					msg.Info("space done")
 					call.Back(msg)
 					break
 
@@ -248,12 +248,13 @@ func (web *Frame) HandleCGI(m *ice.Message, alias map[string]interface{}, which 
 func (web *Frame) HandleCmd(m *ice.Message, key string, cmd *ice.Command) {
 	web.HandleFunc(key, func(w http.ResponseWriter, r *http.Request) {
 		m.TryCatch(m.Spawns(), true, func(msg *ice.Message) {
-			defer func() { msg.Cost("%s %v", r.URL.Path, msg.Optionv("cmds")) }()
+			defer func() { msg.Cost("%s %v %v", r.URL.Path, msg.Optionv("cmds"), msg.Format("append")) }()
 
 			// 请求地址
 			msg.Option(ice.MSG_USERUA, r.Header.Get("User-Agent"))
 			msg.Option(ice.MSG_USERIP, r.Header.Get(ice.MSG_USERIP))
 			msg.Option(ice.MSG_USERURL, r.URL.Path)
+			msg.Option(ice.MSG_USERPOD, "")
 			msg.Option(ice.MSG_SESSID, "")
 			msg.Option(ice.MSG_OUTPUT, "")
 			msg.R, msg.W = r, w
@@ -881,20 +882,17 @@ var Index = &ice.Context{Name: "web", Help: "网络模块",
 						m.Set(ice.MSG_DETAIL, arg[1:]...)
 						m.Optionv(ice.MSG_TARGET, target[1:])
 						m.Optionv(ice.MSG_SOURCE, []string{id})
-						m.Info("send %s %s", id, m.Format("meta"))
+						m.Info("send %s->%v %s", id, target, m.Format("meta"))
 
 						// 下发命令
 						m.Target().Server().(*Frame).send[id] = m
 						socket.WriteMessage(MSG_MAPS, []byte(m.Format("meta")))
-						t := time.AfterFunc(kit.Duration(m.Conf(ice.WEB_SPACE, "meta.timeout.c")), func() {
-							m.Log(ice.LOG_WARN, "timeout")
-						})
 
-						m.Call(true, func(msg *ice.Message) *ice.Message {
-							m.Log("cost", "%s: %s %v", m.Format("cost"), arg[0], arg[1:])
-							if t.Stop(); msg != nil && m != nil {
+						m.Call(m.Option("_async") == "", func(res *ice.Message) *ice.Message {
+							if res != nil && m != nil {
 								// 返回结果
-								m.Copy(msg)
+								m.Log("cost", "%s: %s %v %v", m.Format("cost"), arg[0], arg[1:], res.Format("append"))
+								return m.Copy(res)
 							}
 							return nil
 						})
@@ -1123,6 +1121,28 @@ var Index = &ice.Context{Name: "web", Help: "网络模块",
 					m.Echo("%d", kit.Value(val, "meta.count"))
 					return
 				})
+				return
+
+			case "search":
+				m.Option("cache.limit", -2)
+				wg := &sync.WaitGroup{}
+				m.Richs(ice.WEB_FAVOR, nil, "*", func(key string, val map[string]interface{}) {
+					favor := kit.Format(kit.Value(val, "meta.name"))
+					wg.Add(1)
+					m.Info("routine %v", favor)
+					m.Gos(m, func(m *ice.Message) {
+						m.Grows(ice.WEB_FAVOR, kit.Keys(kit.MDB_HASH, key), "", "", func(index int, value map[string]interface{}) {
+
+							if strings.Contains(kit.Format(value["name"]), arg[1]) || strings.Contains(kit.Format(value["text"]), arg[1]) {
+								m.Push("pod", strings.Join(kit.Simple(m.Optionv("user.pod")), "."))
+								m.Push("favor", favor)
+								m.Push("", value, []string{"id", "type", "name", "text"})
+							}
+						})
+						wg.Done()
+					})
+				})
+				wg.Wait()
 				return
 			}
 
@@ -1756,18 +1776,8 @@ var Index = &ice.Context{Name: "web", Help: "网络模块",
 			}
 
 			m.Richs(ice.WEB_SPACE, nil, kit.Select("*", arg, 0), func(key string, value map[string]interface{}) {
-				switch value[kit.MDB_TYPE] {
-				case ice.WEB_MASTER:
-					return
-				case ice.WEB_BETTER:
-					return
-				}
-				if value[kit.MDB_NAME] == m.Conf(ice.CLI_RUNTIME, "node.name") {
-					// 避免循环
-					return
-				}
-
 				if len(arg) > 1 {
+					m.Call(false, func(res *ice.Message) *ice.Message { return res })
 					// 发送命令
 					m.Cmdy(ice.WEB_SPACE, value[kit.MDB_NAME], arg[1:])
 					return
@@ -1775,6 +1785,11 @@ var Index = &ice.Context{Name: "web", Help: "网络模块",
 
 				switch value[kit.MDB_TYPE] {
 				case ice.WEB_SERVER:
+					if value[kit.MDB_NAME] == m.Conf(ice.CLI_RUNTIME, "node.name") {
+						// 避免循环
+						return
+					}
+
 					// 远程查询
 					m.Cmd(ice.WEB_SPACE, value[kit.MDB_NAME], ice.WEB_ROUTE).Table(func(index int, val map[string]string, head []string) {
 						m.Push(kit.MDB_TYPE, val[kit.MDB_TYPE])
@@ -1890,11 +1905,11 @@ var Index = &ice.Context{Name: "web", Help: "网络模块",
 		}},
 		ice.WEB_LABEL: {Name: "label", Help: "标签", Meta: kit.Dict(
 			"exports", []string{"lab", "label"},
-			"detail", []string{"退还"},
+			"detail", []string{"归还"},
 		), List: ice.ListLook("label", "name"), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			if len(arg) > 1 && arg[0] == "action" {
 				switch arg[1] {
-				case "del", "退还":
+				case "del", "归还":
 					if m.Option("label") != "" && m.Option("name") != "" {
 						m.Cmdy(ice.WEB_LABEL, m.Option("label"), "del", m.Option("name"))
 					}
@@ -1902,15 +1917,21 @@ var Index = &ice.Context{Name: "web", Help: "网络模块",
 				return
 			}
 
-			if len(arg) < 2 {
-				// 分组列表
+			if len(arg) < 3 {
 				m.Richs(cmd, nil, kit.Select("*", arg, 0), func(key string, value map[string]interface{}) {
-					if len(arg) < 1 {
+					if len(arg) == 0 {
+						// 分组列表
 						m.Push(key, value[kit.MDB_META])
 						return
 					}
-					m.Richs(cmd, kit.Keys(kit.MDB_HASH, key), "*", func(key string, value map[string]interface{}) {
-						m.Push(key, value)
+					m.Richs(cmd, kit.Keys(kit.MDB_HASH, key), kit.Select("*", arg, 1), func(key string, value map[string]interface{}) {
+						if len(arg) == 1 {
+							// 设备列表
+							m.Push(key, value)
+							return
+						}
+						// 设备详情
+						m.Push("detail", value)
 					})
 				})
 				m.Logs(ice.LOG_SELECT, cmd, m.Format(ice.MSG_APPEND))
@@ -1919,44 +1940,50 @@ var Index = &ice.Context{Name: "web", Help: "网络模块",
 
 			if m.Richs(cmd, nil, arg[0], nil) == nil {
 				// 添加分组
-				n := m.Rich(cmd, nil, kit.Data(kit.MDB_SHORT, kit.MDB_NAME, cmd, arg[0]))
-				m.Logs(ice.LOG_CREATE, cmd, n)
+				m.Logs(ice.LOG_CREATE, cmd, m.Rich(cmd, nil, kit.Data(kit.MDB_SHORT, kit.MDB_NAME, cmd, arg[0])))
 			}
 
 			m.Richs(cmd, nil, arg[0], func(key string, value map[string]interface{}) {
-				if m.Richs(cmd, kit.Keys(kit.MDB_HASH, key), arg[1], func(key string, value map[string]interface{}) {
-					// 分组详情
-					m.Push("detail", value)
-				}) != nil {
-					return
-				}
-
 				switch arg[1] {
 				case "add":
 					if pod := m.Cmdx(ice.WEB_GROUP, arg[2], "get", arg[3:]); pod != "" {
 						if m.Richs(cmd, kit.Keys(kit.MDB_HASH, key), pod, func(key string, value map[string]interface{}) {
 							if value[kit.MDB_STATUS] == "void" {
+								// 更新设备
 								value[kit.MDB_STATUS] = "free"
+								m.Logs(ice.LOG_MODIFY, cmd, key, kit.MDB_NAME, pod, kit.MDB_STATUS, value[kit.MDB_STATUS])
 							}
-							m.Logs(ice.LOG_MODIFY, cmd, key, kit.MDB_NAME, pod, kit.MDB_STATUS, value[kit.MDB_STATUS])
 						}) == nil {
+							// 获取设备
 							m.Logs(ice.LOG_INSERT, cmd, key, kit.MDB_NAME, pod)
 							m.Rich(cmd, kit.Keys(kit.MDB_HASH, key), kit.Dict(kit.MDB_NAME, pod, "group", arg[2], kit.MDB_STATUS, "free"))
 						}
 					}
 					m.Echo(arg[0])
+
 				case "del":
 					m.Richs(cmd, kit.Keys(kit.MDB_HASH, key), arg[2], func(sub string, value map[string]interface{}) {
+						// 归还设备
 						m.Cmdx(ice.WEB_GROUP, value["group"], "put", arg[2])
 						m.Logs(ice.LOG_MODIFY, cmd, key, kit.MDB_NAME, arg[2], kit.MDB_STATUS, "void")
 						value[kit.MDB_STATUS] = "void"
 						m.Echo(arg[2])
 					})
 				default:
-					m.Richs(cmd, kit.Keys(kit.MDB_HASH, key), "*", func(key string, value map[string]interface{}) {
+					wg := &sync.WaitGroup{}
+					m.Option("_async", "true")
+					m.Richs(cmd, kit.Keys(kit.MDB_HASH, key), arg[1], func(key string, value map[string]interface{}) {
+						wg.Add(1)
 						// 远程命令
-						m.Cmdy(ice.WEB_PROXY, value["name"], arg[1:])
+						m.Option("user.pod", value["name"])
+						m.Cmd(ice.WEB_PROXY, value["name"], arg[2:]).Call(false, func(res *ice.Message) *ice.Message {
+							if wg.Done(); res != nil && m != nil {
+								m.Copy(res)
+							}
+							return nil
+						})
 					})
+					wg.Wait()
 				}
 			})
 		}},

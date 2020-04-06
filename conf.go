@@ -33,6 +33,7 @@ const ( // MSG
 	MSG_USERIP   = "user.ip"
 	MSG_USERUA   = "user.ua"
 	MSG_USERURL  = "user.url"
+	MSG_USERPOD  = "user.pod"
 	MSG_USERNICK = "user.nick"
 	MSG_USERNAME = "user.name"
 	MSG_USERROLE = "user.role"

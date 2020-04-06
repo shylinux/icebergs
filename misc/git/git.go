@@ -8,6 +8,7 @@ import (
 	"os"
 	"path"
 	"strings"
+	"sync"
 	"time"
 )
 
@@ -90,21 +91,28 @@ var Index = &ice.Context{Name: "git", Help: "代码库",
 			// 提交统计
 			days := 0
 			commit, adds, dels, rest := 0, 0, 0, 0
+			wg := &sync.WaitGroup{}
 			m.Richs("repos", nil, "*", func(key string, value map[string]interface{}) {
 				if m.Conf("total", kit.Keys("meta.skip", kit.Value(value, "meta.name"))) == "true" {
 					return
 				}
+				wg.Add(1)
 				m.Push("name", kit.Value(value, "meta.name"))
-				m.Copy(m.Cmd("_sum", kit.Value(value, "meta.path"), "total", "10000").Table(func(index int, value map[string]string, head []string) {
-					if kit.Int(value["days"]) > days {
-						days = kit.Int(value["days"])
-					}
-					commit += kit.Int(value["commit"])
-					adds += kit.Int(value["adds"])
-					dels += kit.Int(value["dels"])
-					rest += kit.Int(value["rest"])
-				}))
+				m.Gos(m, func(m *ice.Message) {
+					msg := m.Cmd("_sum", kit.Value(value, "meta.path"), "total", "10000").Table(func(index int, value map[string]string, head []string) {
+						if kit.Int(value["days"]) > days {
+							days = kit.Int(value["days"])
+						}
+						commit += kit.Int(value["commit"])
+						adds += kit.Int(value["adds"])
+						dels += kit.Int(value["dels"])
+						rest += kit.Int(value["rest"])
+					})
+					m.Copy(msg)
+					wg.Done()
+				})
 			})
+			wg.Wait()
 			m.Push("name", "total")
 			m.Push("days", days)
 			m.Push("commit", commit)

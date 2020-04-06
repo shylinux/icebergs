@@ -929,19 +929,37 @@ func (m *Message) Done() bool {
 	return true
 }
 func (m *Message) Call(sync bool, cb func(*Message) *Message) *Message {
-	if sync {
-		wait := make(chan bool)
-		m.cb = func(sub *Message) *Message {
+	wait := make(chan bool, 2)
+	t := time.AfterFunc(kit.Duration("10s"), func() {
+		m.Log(LOG_WARN, "timeout")
+		m.Back(nil)
+		wait <- false
+	})
+	m.cb = func(sub *Message) *Message {
+		if sync {
+			t.Stop()
 			wait <- true
-			return cb(sub)
 		}
+		return cb(sub)
+	}
+
+	if sync {
 		<-wait
+	} else {
+		t.Stop()
 	}
 	return m
 }
-func (m *Message) Back(sub *Message) *Message {
+func (m *Message) Back(res *Message) *Message {
 	if m.cb != nil {
-		m.cb(sub)
+		// if res != nil {
+		// 	m.Info("back %v", res.Format("prefix"))
+		// } else {
+		// 	m.Info("back %v", nil)
+		// }
+		if sub := m.cb(res); m.message != nil {
+			m.message.Back(sub)
+		}
 	}
 	return m
 }

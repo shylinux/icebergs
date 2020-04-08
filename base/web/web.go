@@ -876,7 +876,6 @@ var Index = &ice.Context{Name: "web", Help: "网络模块",
 								m.Optionv(k, m.Optionv(k))
 							}
 						}
-						m.Option("_option", m.Optionv("_option"))
 
 						// 构造路由
 						id := kit.Format(c.ID())
@@ -1133,8 +1132,7 @@ var Index = &ice.Context{Name: "web", Help: "网络模块",
 					m.Info("routine %v", favor)
 					m.Gos(m, func(m *ice.Message) {
 						m.Grows(ice.WEB_FAVOR, kit.Keys(kit.MDB_HASH, key), "", "", func(index int, value map[string]interface{}) {
-
-							if strings.Contains(kit.Format(value["name"]), arg[1]) || strings.Contains(kit.Format(value["text"]), arg[1]) {
+							if strings.Contains(favor, arg[1]) || strings.Contains(kit.Format(value["name"]), arg[1]) || strings.Contains(kit.Format(value["text"]), arg[1]) {
 								m.Push("pod", strings.Join(kit.Simple(m.Optionv("user.pod")), "."))
 								m.Push("favor", favor)
 								m.Push("", value, []string{"id", "type", "name", "text"})

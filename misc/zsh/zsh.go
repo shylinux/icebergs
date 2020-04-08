@@ -50,6 +50,11 @@ var Index = &ice.Context{Name: "zsh", Help: "命令行",
 			switch arg[0] {
 			case "history":
 				vs := strings.SplitN(strings.TrimSpace(m.Option("arg")), " ", 4)
+				if strings.Contains(m.Option("SHELL"), "zsh") {
+					vs = []string{vs[0], "", "", strings.Join(vs[1:], " ")}
+
+				}
+
 				cmds := []string{ice.WEB_FAVOR, m.Conf("zsh", "meta.history"), ice.TYPE_SHELL, vs[0], kit.Select("", vs, 3),
 					"sid", m.Option("sid"), "pwd", m.Option("pwd"), "time", vs[1] + " " + vs[2]}
 

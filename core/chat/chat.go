@@ -361,7 +361,10 @@ var Index = &ice.Context{Name: "chat", Help: "聊天中心",
 				} else {
 					// 本地空间
 					m.Richs(ice.WEB_SPACE, nil, "*", func(key string, value map[string]interface{}) {
-						m.Push(key, value, []string{"type", "name", "user"})
+						switch value[kit.MDB_TYPE] {
+						case ice.WEB_SERVER, ice.WEB_WORKER:
+							m.Push(key, value, []string{"type", "name", "user"})
+						}
 					})
 				}
 				return

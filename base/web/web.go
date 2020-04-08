@@ -876,6 +876,7 @@ var Index = &ice.Context{Name: "web", Help: "网络模块",
 								m.Optionv(k, m.Optionv(k))
 							}
 						}
+						m.Optionv("_option", m.Optionv("_option"))
 
 						// 构造路由
 						id := kit.Format(c.ID())

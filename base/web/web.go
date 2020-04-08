@@ -1132,8 +1132,7 @@ var Index = &ice.Context{Name: "web", Help: "网络模块",
 					m.Info("routine %v", favor)
 					m.Gos(m, func(m *ice.Message) {
 						m.Grows(ice.WEB_FAVOR, kit.Keys(kit.MDB_HASH, key), "", "", func(index int, value map[string]interface{}) {
-
-							if strings.Contains(kit.Format(value["name"]), arg[1]) || strings.Contains(kit.Format(value["text"]), arg[1]) {
+							if strings.Contains(favor, arg[1]) || strings.Contains(kit.Format(value["name"]), arg[1]) || strings.Contains(kit.Format(value["text"]), arg[1]) {
 								m.Push("pod", strings.Join(kit.Simple(m.Optionv("user.pod")), "."))
 								m.Push("favor", favor)
 								m.Push("", value, []string{"id", "type", "name", "text"})
@@ -1775,11 +1774,22 @@ var Index = &ice.Context{Name: "web", Help: "网络模块",
 				return
 			}
 
-			m.Richs(ice.WEB_SPACE, nil, kit.Select("*", arg, 0), func(key string, value map[string]interface{}) {
+			target, rest := "*", ""
+			if len(arg) > 0 {
+				ls := strings.SplitN(arg[0], ".", 2)
+				if target = ls[0]; len(ls) > 1 {
+					rest = ls[1]
+				}
+			}
+			m.Richs(ice.WEB_SPACE, nil, target, func(key string, value map[string]interface{}) {
 				if len(arg) > 1 {
+					ls := []interface{}{ice.WEB_SPACE, value[kit.MDB_NAME]}
 					m.Call(false, func(res *ice.Message) *ice.Message { return res })
 					// 发送命令
-					m.Cmdy(ice.WEB_SPACE, value[kit.MDB_NAME], arg[1:])
+					if rest != "" {
+						ls = append(ls, ice.WEB_SPACE, rest)
+					}
+					m.Cmdy(ls, arg[1:])
 					return
 				}
 

@@ -92,7 +92,7 @@ var Index = &ice.Context{Name: "alpha", Help: "英汉词典",
 				m.Cmdy("list", "ecdict", count-rand.Intn(count), 1)
 			}
 		}},
-		"search": {Name: "search [word [method]]", Help: "查找词汇", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		"trans": {Name: "trans [word [method]]", Help: "查找词汇", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			if len(arg) == 0 {
 				// 收藏列表
 				m.Cmdy(ice.WEB_FAVOR, "alpha.word")

@@ -32,6 +32,8 @@ var Index = &ice.Context{Name: "git", Help: "代码库",
 			"config", kit.Dict(
 				"alias", kit.Dict("s", "status", "b", "branch"),
 				"color", kit.Dict("ui", "true"),
+				"push", kit.Dict("default", "simple"),
+				"credential", kit.Dict("helper", "store"),
 			),
 		)},
 

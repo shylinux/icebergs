@@ -1,8 +1,8 @@
 package nfs
 
 import (
-	"github.com/shylinux/icebergs"
-	"github.com/shylinux/toolkits"
+	ice "github.com/shylinux/icebergs"
+	kit "github.com/shylinux/toolkits"
 
 	"bufio"
 	"crypto/sha1"
@@ -138,8 +138,10 @@ func dir(m *ice.Message, root string, name string, level int, deep bool, dir_typ
 }
 
 var Index = &ice.Context{Name: "nfs", Help: "存储模块",
-	Caches:  map[string]*ice.Cache{},
-	Configs: map[string]*ice.Config{},
+	Caches: map[string]*ice.Cache{},
+	Configs: map[string]*ice.Config{
+		"trash": {Name: "trash", Help: "trash", Value: kit.Data("path", "var/trash")},
+	},
 	Commands: map[string]*ice.Command{
 		"dir": {Name: "dir", Help: "目录", List: kit.List(
 			kit.MDB_INPUT, "text", "name", "path", "action", "auto",
@@ -161,7 +163,7 @@ var Index = &ice.Context{Name: "nfs", Help: "存储模块",
 			}
 		}},
 
-		"save": {Name: "save path text", Help: "保存", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		"save": {Name: "save path text...", Help: "保存", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			if f, p, e := kit.Create(arg[0]); m.Assert(e) {
 				defer f.Close()
 				for _, v := range arg[1:] {
@@ -172,17 +174,7 @@ var Index = &ice.Context{Name: "nfs", Help: "存储模块",
 				}
 			}
 		}},
-		"echo": {Name: "echo path text", Help: "保存", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			if f, e := os.OpenFile(arg[0], os.O_WRONLY, 0777); m.Assert(e) {
-				defer f.Close()
-				for _, v := range arg[1:] {
-					if n, e := f.WriteString(v); m.Assert(e) {
-						m.Log(ice.LOG_EXPORT, "%d: %s", n, arg[0])
-					}
-				}
-			}
-		}},
-		"copy": {Name: "save path text", Help: "保存", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		"copy": {Name: "copy path file...", Help: "保存", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			if f, _, e := kit.Create(arg[0]); m.Assert(e) {
 				defer f.Close()
 				for _, v := range arg[1:] {
@@ -191,6 +183,27 @@ var Index = &ice.Context{Name: "nfs", Help: "存储模块",
 							m.Log(ice.LOG_IMPORT, "%d: %v", n, v)
 						}
 					}
+				}
+			}
+		}},
+
+		"trash": {Name: "trash file", Help: "保存", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			if s, e := os.Stat(arg[0]); e == nil {
+				if s.IsDir() {
+					name := path.Base(arg[0]) + ".tar.gz"
+					m.Cmd(ice.CLI_SYSTEM, "tar", "zcf", name, arg[0])
+				} else {
+				}
+
+				if f, e := os.Open(arg[0]); m.Assert(e) {
+					defer f.Close()
+
+					h := kit.Hashs(f)
+					p := path.Join(m.Conf("trash", "meta.path"), h[:2], h)
+					os.MkdirAll(path.Dir(p), 0777)
+					os.Rename(arg[0], p)
+
+					m.Cmd(ice.WEB_FAVOR, "trash", "bin", arg[0], p)
 				}
 			}
 		}},

@@ -16,6 +16,19 @@ import (
 var Index = &ice.Context{Name: "code", Help: "编程中心",
 	Caches: map[string]*ice.Cache{},
 	Configs: map[string]*ice.Config{
+		"prepare": {Name: "prepare", Help: "准备", Value: kit.Data("path", "usr/prepare",
+			"tool", kit.Dict(
+				"vim", []interface{}{
+					"wget ftp://ftp.vim.org/pub/vim/unix/vim-8.1.tar.bz2",
+					"tar xvf vim-8.1.tar.bz2",
+					"cd vim81",
+
+					"./configure --prefix=/home/shaoying/usr/vim --enable-multibyte=yes --enable-cscope=yes --enable-luainterp=yes --enable-pythoninterp=yes",
+					"make -j4",
+					"make install",
+				},
+			),
+		)},
 		"compile": {Name: "compile", Help: "编译", Value: kit.Data("path", "usr/publish")},
 		"publish": {Name: "publish", Help: "发布", Value: kit.Data("path", "usr/publish")},
 		"upgrade": {Name: "upgrade", Help: "升级", Value: kit.Dict(kit.MDB_HASH, kit.Dict(
@@ -125,6 +138,15 @@ var Index = &ice.Context{Name: "code", Help: "编程中心",
 					m.Push("detail", value)
 				})
 			}
+		}},
+
+		ice.CODE_INSTALL: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		}},
+		ice.CODE_PREPARE: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			m.Cmd(ice.CLI_SYSTEM, "go", "get", "github.com/gotags")
+		}},
+		"prepare": {Name: "prepare", Help: "准备", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+
 		}},
 
 		"compile": {Name: "compile [os [arch]]", Help: "编译", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {

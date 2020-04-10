@@ -90,6 +90,19 @@ var Index = &ice.Context{Name: "cli", Help: "命令模块",
 			if len(cmd.Env) > 0 {
 				m.Info("env: %s", cmd.Env)
 			}
+			if m.Option("cmd_stdout") != "" {
+				if f, p, e := kit.Create(m.Option("cmd_stdout")); m.Assert(e) {
+					m.Info("stdout: %s", p)
+					cmd.Stdout = f
+					cmd.Stderr = f
+				}
+			}
+			if m.Option("cmd_stderr") != "" {
+				if f, p, e := kit.Create(m.Option("cmd_stderr")); m.Assert(e) {
+					m.Info("stderr: %s", p)
+					cmd.Stderr = f
+				}
+			}
 
 			switch m.Option("cmd_type") {
 			case "daemon":

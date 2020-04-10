@@ -82,30 +82,37 @@ ShyLogout() {
 }
 
 # 发送文件
-ShyDownload() {
-    ${ctx_curl} -s "${ctx_url}download" -F "cmds=$1" \
-        -F "SHELL=${SHELL}" -F "pwd=${PWD}" -F "sid=${ctx_sid}"
-}
-ShyUpload() {
-    ${ctx_curl} -s "${ctx_url}upload" -F "upload=@$1" \
-        -F "SHELL=${SHELL}" -F "pwd=${PWD}" -F "sid=${ctx_sid}"
-}
 ShySend() {
     local TEMP=`mktemp /tmp/tmp.XXXXXX` && "$@" > $TEMP
     ShyRight "$ctx_silent" || cat $TEMP
     ${ctx_curl} -s "${ctx_url}sync" -F "cmds=$1" -F "cmds=$*" -F "sub=@$TEMP" \
         -F "SHELL=${SHELL}" -F "pwd=${PWD}" -F "sid=${ctx_sid}"
 }
-
-ShyLocal() {
-    which=alpine && [ "$1" != "" ] && which=$1 && shift
-    favor=tmux.auto && [ "$1" != "" ] && favor=$1 && shift
-    step=before arg="" && for cmd in "$@"; do
-        [ "$cmd" = after ] && step=after && continue
-        arg="$arg&$step="`ShyWord $cmd`
-    done
-    ${ctx_curl} -s "$ctx_dev/code/tmux/favor?local=$which&cmds=$favor&$arg" &
+ShyUpload() {
+    ${ctx_curl} -s "${ctx_url}upload" -F "upload=@$1" \
+        -F "SHELL=${SHELL}" -F "pwd=${PWD}" -F "sid=${ctx_sid}"
 }
+ShyDownload() {
+    ${ctx_curl} -s "${ctx_url}download" -F "cmds=$1" \
+        -F "SHELL=${SHELL}" -F "pwd=${PWD}" -F "sid=${ctx_sid}"
+}
+ShyInstall() {
+    case "$1" in
+        "vim")
+            # git vim
+            curl -fLo ~/.vimrc https://raw.githubusercontent.com/shylinux/contexts/master/etc/conf/vimrc
+            curl -fLo ~/.vim/autoload/plug.vim --create-dirs https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim
+            vim -c PlugInstall
+            ;;
+        *)
+            ;;
+    esac
+}
+ShyUpgrade() {
+    file=auto.sh && [ "$1" != "" ] && file=$1
+    ${ctx_curl} -s $ctx_dev/publish/$file > $file && source auto.sh
+}
+
 ShyRelay() {
     which=relay && [ "$1" != "" ] && which=$1 && shift
     favor=tmux.auto && [ "$1" != "" ] && favor=$1 && shift
@@ -115,7 +122,35 @@ ShyRelay() {
     done
     ${ctx_curl} -s "$ctx_dev/code/tmux/favor?relay=$which&cmds=$favor&$arg" &
 }
-
+ShyLocal() {
+    which=alpine && [ "$1" != "" ] && which=$1 && shift
+    favor=tmux.auto && [ "$1" != "" ] && favor=$1 && shift
+    step=before arg="" && for cmd in "$@"; do
+        [ "$cmd" = after ] && step=after && continue
+        arg="$arg&$step="`ShyWord $cmd`
+    done
+    ${ctx_curl} -s "$ctx_dev/code/tmux/favor?local=$which&cmds=$favor&$arg" &
+}
+ShyFavor() {
+    cmd=$1; [ "$READLINE_LINE" != "" ] && set $READLINE_LINE && READLINE_LINE=""
+    if [ "$cmd" = "sh" ] ; then
+        # 查看收藏
+        ctx_word="sh"
+        shift && [ "$1" != "" ] && ctx_tab="$1"
+        shift && ctx_note="$1"
+    else
+        # 添加收藏
+        [ "$1" != "" ] && ctx_word="$*" || ctx_word=`history|tail -n1|head -n1|sed -e 's/^[\ 0-9]*//g'`
+    fi
+    ShyPost favor "${ctx_word}" tab "${ctx_tab}" note "${ctx_note}"
+}
+ShyInput() {
+    if [ "$1" = "line" ] ; then
+        READLINE_LINE=`ShyPost input "$1" line "$READLINE_LINE" point "$READLINE_POINT"`
+    else
+        COMPREPLY=(`ShyPost input "$COMP_WORDS" line "$COMP_LINE" index "$COMP_CWORD" break "$COMP_WORDBREAKS"`)
+    fi
+}
 # 同步数据
 ShySync() {
     case "$1" in
@@ -139,31 +174,6 @@ ShySync() {
         ps) ShySend ps -ef ;;
         *) ShySend "$@"
     esac
-}
-ShyInput() {
-    if [ "$1" = "line" ] ; then
-        READLINE_LINE=`ShyPost input "$1" line "$READLINE_LINE" point "$READLINE_POINT"`
-    else
-        COMPREPLY=(`ShyPost input "$COMP_WORDS" line "$COMP_LINE" index "$COMP_CWORD" break "$COMP_WORDBREAKS"`)
-    fi
-}
-ShyFavor() {
-    cmd=$1; [ "$READLINE_LINE" != "" ] && set $READLINE_LINE && READLINE_LINE=""
-    if [ "$cmd" = "sh" ] ; then
-        # 查看收藏
-        ctx_word="sh"
-        shift && [ "$1" != "" ] && ctx_tab="$1"
-        shift && ctx_note="$1"
-    else
-        # 添加收藏
-        [ "$1" != "" ] && ctx_word="$*" || ctx_word=`history|tail -n1|head -n1|sed -e 's/^[\ 0-9]*//g'`
-    fi
-    ShyPost favor "${ctx_word}" tab "${ctx_tab}" note "${ctx_note}"
-}
-
-ShyUpgrade() {
-    file=auto.sh && [ "$1" != "" ] && file=$1
-    ${ctx_curl} -s $ctx_dev/publish/$file > $file && source auto.sh
 }
 ShyInit() {
     [ "$ctx_begin" = "" ] && ctx_begin=`history|tail -n1|awk '{print $1}'`

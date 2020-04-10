@@ -187,6 +187,10 @@ const ( // TYPE
 	TYPE_INNER = "inner"
 	TYPE_MEDIA = "media"
 )
+const ( // CODE
+	CODE_INSTALL = "_install"
+	CODE_PREPARE = "_prepare"
+)
 const ( // CHAT
 	CHAT_RIVER = "river"
 	CHAT_STORM = "storm"

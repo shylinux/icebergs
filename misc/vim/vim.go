@@ -13,10 +13,37 @@ import (
 var Index = &ice.Context{Name: "vim", Help: "编辑器",
 	Caches: map[string]*ice.Cache{},
 	Configs: map[string]*ice.Config{
-		"vim": {Name: "vim", Help: "编辑器", Value: kit.Data(kit.MDB_SHORT, "name", "history", "vim.history")},
+		"vim": {Name: "vim", Help: "编辑器", Value: kit.Data(
+			kit.MDB_SHORT, "name", "history", "vim.history",
+			"version", "vim81",
+			"source", "ftp://ftp.vim.org/pub/vim/unix/vim-8.1.tar.bz2",
+			"script", "",
+		)},
 	},
 	Commands: map[string]*ice.Command{
-		ice.WEB_LOGIN: {Name: "_login", Help: "_login", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		ice.CODE_INSTALL: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			msg := m.Cmd(ice.WEB_SPIDE, "dev", "cache", m.Conf("vim", "meta.source"))
+			m.Cmd(ice.WEB_CACHE, "watch", msg.Append("data"), "usr/vim.tar.gz")
+
+			m.Option("cmd_dir", "usr")
+			m.Cmd(ice.CLI_SYSTEM, "tar", "xvf", "vim.tar.gz")
+			m.Option("cmd_dir", "usr/"+m.Conf("vim", "meta.version"))
+			m.Cmd(ice.CLI_SYSTEM, "./configure",
+				"--prefix="+kit.Path("usr/vim"),
+				"--enable-multibyte=yes",
+				"--enable-cscope=yes",
+				"--enable-luainterp=yes",
+				"--enable-pythoninterp=yes",
+			)
+
+			m.Cmd(ice.CLI_SYSTEM, "make", "-j4")
+			m.Cmd(ice.CLI_SYSTEM, "make", "install")
+		}},
+		ice.CODE_PREPARE: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+
+		}},
+
+		ice.WEB_LOGIN: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			if f, _, e := m.R.FormFile("sub"); e == nil {
 				defer f.Close()
 				if b, e := ioutil.ReadAll(f); e == nil {

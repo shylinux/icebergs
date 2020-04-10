@@ -26,10 +26,9 @@ var Index = &ice.Context{Name: "zsh", Help: "命令行",
 				}
 			}
 
-			m.Option("you", "tmux")
+			// 查找空间
 			m.Richs("login", nil, m.Option("sid"), func(key string, value map[string]interface{}) {
-				// 查找空间
-				m.Option("you", value["you"])
+				m.Option("you", kit.Select("tmux", value["you"]))
 			})
 
 			m.Info("%s %s cmd: %v sub: %v", m.Option("you"), m.Option(ice.MSG_USERURL), m.Optionv("cmds"), m.Optionv("sub"))

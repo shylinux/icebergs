@@ -1,10 +1,13 @@
 package vim
 
 import (
-	"github.com/shylinux/icebergs"
+	"os"
+	"path"
+
+	ice "github.com/shylinux/icebergs"
 	"github.com/shylinux/icebergs/base/web"
 	"github.com/shylinux/icebergs/core/code"
-	"github.com/shylinux/toolkits"
+	kit "github.com/shylinux/toolkits"
 
 	"io/ioutil"
 	"strings"
@@ -14,26 +17,26 @@ var Index = &ice.Context{Name: "vim", Help: "编辑器",
 	Caches: map[string]*ice.Cache{},
 	Configs: map[string]*ice.Config{
 		"vim": {Name: "vim", Help: "编辑器", Value: kit.Data(
-			kit.MDB_SHORT, "name", "history", "vim.history",
-			"version", "vim81",
 			"source", "ftp://ftp.vim.org/pub/vim/unix/vim-8.1.tar.bz2",
+			"version", "vim81",
+
+			kit.MDB_SHORT, "name", "history", "vim.history",
 			"script", "",
 		)},
 	},
 	Commands: map[string]*ice.Command{
 		ice.CODE_INSTALL: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			msg := m.Cmd(ice.WEB_SPIDE, "dev", "cache", m.Conf("vim", "meta.source"))
-			m.Cmd(ice.WEB_CACHE, "watch", msg.Append("data"), "usr/vim.tar.gz")
+			p := path.Join(m.Conf("install", "meta.path"), m.Conf("vim", "meta.version"))
+			if _, e := os.Stat(p); e != nil {
+				m.Option("cmd_dir", m.Conf("install", "meta.path"))
+				m.Cmd(ice.CLI_SYSTEM, "wget", "-O", "vim.tar.gz", m.Conf("vim", "meta.source"))
+				m.Cmd(ice.CLI_SYSTEM, "tar", "xvf", "vim.tar.gz")
+			}
 
-			m.Option("cmd_dir", "usr")
-			m.Cmd(ice.CLI_SYSTEM, "tar", "xvf", "vim.tar.gz")
-			m.Option("cmd_dir", "usr/"+m.Conf("vim", "meta.version"))
-			m.Cmd(ice.CLI_SYSTEM, "./configure",
-				"--prefix="+kit.Path("usr/vim"),
-				"--enable-multibyte=yes",
-				"--enable-cscope=yes",
-				"--enable-luainterp=yes",
-				"--enable-pythoninterp=yes",
+			m.Option("cmd_dir", p)
+			m.Cmd(ice.CLI_SYSTEM, "./configure", "--enable-multibyte=yes",
+				"--prefix="+kit.Path("usr/local"), "--enable-cscope=yes",
+				"--enable-luainterp=yes", "--enable-pythoninterp=yes",
 			)
 
 			m.Cmd(ice.CLI_SYSTEM, "make", "-j4")

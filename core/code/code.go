@@ -1,9 +1,9 @@
 package code
 
 import (
-	"github.com/shylinux/icebergs"
+	ice "github.com/shylinux/icebergs"
 	"github.com/shylinux/icebergs/base/web"
-	"github.com/shylinux/toolkits"
+	kit "github.com/shylinux/toolkits"
 
 	"os"
 	"path"
@@ -16,19 +16,12 @@ import (
 var Index = &ice.Context{Name: "code", Help: "编程中心",
 	Caches: map[string]*ice.Cache{},
 	Configs: map[string]*ice.Config{
-		"prepare": {Name: "prepare", Help: "准备", Value: kit.Data("path", "usr/prepare",
-			"tool", kit.Dict(
-				"vim", []interface{}{
-					"wget ftp://ftp.vim.org/pub/vim/unix/vim-8.1.tar.bz2",
-					"tar xvf vim-8.1.tar.bz2",
-					"cd vim81",
-
-					"./configure --prefix=/home/shaoying/usr/vim --enable-multibyte=yes --enable-cscope=yes --enable-luainterp=yes --enable-pythoninterp=yes",
-					"make -j4",
-					"make install",
-				},
-			),
+		"install": {Name: "install", Help: "安装", Value: kit.Data("path", "usr/install",
+			"source", "https://dl.google.com/go/go1.14.2.src.tar.gz",
 		)},
+		"prepare": {Name: "prepare", Help: "准备", Value: kit.Data("path", "usr/prepare")},
+		"project": {Name: "project", Help: "项目", Value: kit.Data("path", "usr/prepare")},
+
 		"compile": {Name: "compile", Help: "编译", Value: kit.Data("path", "usr/publish")},
 		"publish": {Name: "publish", Help: "发布", Value: kit.Data("path", "usr/publish")},
 		"upgrade": {Name: "upgrade", Help: "升级", Value: kit.Dict(kit.MDB_HASH, kit.Dict(
@@ -38,14 +31,23 @@ var Index = &ice.Context{Name: "code", Help: "编程中心",
 			)),
 		))},
 
-		"login": {Name: "login", Help: "登录", Value: kit.Data()},
-
-		"pprof": {Name: "pprof", Help: "性能分析", Value: kit.Data(
-			kit.MDB_SHORT, kit.MDB_NAME,
+		"pprof": {Name: "pprof", Help: "性能分析", Value: kit.Data(kit.MDB_SHORT, kit.MDB_NAME,
 			"stop", "ps aux|grep pprof|grep -v grep|cut -d' ' -f2|xargs -n1 kill",
 		)},
+		"login": {Name: "login", Help: "终端接入", Value: kit.Data()},
 	},
 	Commands: map[string]*ice.Command{
+		ice.CODE_INSTALL: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			p := path.Join(m.Conf("install", "meta.path"), "go")
+			if _, e := os.Stat(p); e != nil {
+				m.Option("cmd_dir", m.Conf("install", "meta.path"))
+				m.Cmd(ice.CLI_SYSTEM, "wget", "-O", "go.tar.gz", m.Conf("install", "meta.source"))
+				m.Cmd(ice.CLI_SYSTEM, "tar", "xvf", "go.tar.gz")
+			}
+		}},
+		ice.CODE_PREPARE: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		}},
+
 		ice.ICE_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			m.Load()
 		}},
@@ -60,6 +62,7 @@ var Index = &ice.Context{Name: "code", Help: "编程中心",
 				switch arg[1] {
 				case "prune", "清理":
 					m.Cmdy("login", "prune")
+				case "clear", "清空":
 
 				case "modify", "编辑":
 					m.Richs("login", nil, m.Option("key"), func(key string, value map[string]interface{}) {
@@ -140,11 +143,6 @@ var Index = &ice.Context{Name: "code", Help: "编程中心",
 			}
 		}},
 
-		ice.CODE_INSTALL: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-		}},
-		ice.CODE_PREPARE: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			m.Cmd(ice.CLI_SYSTEM, "go", "get", "github.com/gotags")
-		}},
 		"prepare": {Name: "prepare", Help: "准备", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 
 		}},

@@ -1,9 +1,9 @@
 package git
 
 import (
-	"github.com/shylinux/icebergs"
+	ice "github.com/shylinux/icebergs"
 	"github.com/shylinux/icebergs/core/code"
-	"github.com/shylinux/toolkits"
+	kit "github.com/shylinux/toolkits"
 
 	"os"
 	"path"
@@ -29,16 +29,21 @@ var Index = &ice.Context{Name: "git", Help: "代码库",
 	Configs: map[string]*ice.Config{
 		"git": {Name: "git", Help: "代码库", Value: kit.Data(
 			"source", "https://github.com/git/git.git",
+			"config", kit.Dict(
+				"alias", kit.Dict("s", "status", "b", "branch"),
+				"color", kit.Dict("ui", "true"),
+			),
 		)},
+
 		"repos": {Name: "repos", Help: "仓库", Value: kit.Data(kit.MDB_SHORT, "name", "owner", "https://github.com/shylinux")},
 		"total": {Name: "total", Help: "统计", Value: kit.Data(kit.MDB_SHORT, "name", "skip", kit.Dict("wubi-dict", "true", "word-dict", "true"))},
 	},
 	Commands: map[string]*ice.Command{
 		ice.CODE_INSTALL: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			m.Option("cmd_dir", "usr")
-			msg := m.Cmd(ice.CLI_SYSTEM, "git", "clone", m.Conf("git", "meta.git"))
+			m.Option("cmd_dir", m.Conf("install", "meta.path"))
+			m.Cmd(ice.CLI_SYSTEM, "git", "clone", m.Conf("git", "meta.source"))
 
-			m.Option("cmd_dir", "usr/git")
+			m.Option("cmd_dir", path.Join(m.Conf("install", "meta.path"), "git"))
 			m.Cmd(ice.CLI_SYSTEM, "make", "configure")
 			m.Cmd(ice.CLI_SYSTEM, "./configure", "--prefix="+kit.Path("usr/local"))
 
@@ -46,8 +51,13 @@ var Index = &ice.Context{Name: "git", Help: "代码库",
 			m.Cmd(ice.CLI_SYSTEM, "make", "install")
 		}},
 		ice.CODE_PREPARE: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-
+			kit.Fetch(m.Confv("git", "meta.config"), func(conf string, value interface{}) {
+				kit.Fetch(value, func(key string, value string) {
+					m.Cmd(ice.CLI_SYSTEM, "git", "config", "--global", conf+"."+key, value)
+				})
+			})
 		}},
+
 		"init": {Name: "init", Help: "初始化", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			// 系统项目
 			wd, _ := os.Getwd()

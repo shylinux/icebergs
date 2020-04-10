@@ -27,10 +27,27 @@ func add(m *ice.Message, n string, p string) {
 var Index = &ice.Context{Name: "git", Help: "代码库",
 	Caches: map[string]*ice.Cache{},
 	Configs: map[string]*ice.Config{
+		"git": {Name: "git", Help: "代码库", Value: kit.Data(
+			"source", "https://github.com/git/git.git",
+		)},
 		"repos": {Name: "repos", Help: "仓库", Value: kit.Data(kit.MDB_SHORT, "name", "owner", "https://github.com/shylinux")},
 		"total": {Name: "total", Help: "统计", Value: kit.Data(kit.MDB_SHORT, "name", "skip", kit.Dict("wubi-dict", "true", "word-dict", "true"))},
 	},
 	Commands: map[string]*ice.Command{
+		ice.CODE_INSTALL: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			m.Option("cmd_dir", "usr")
+			msg := m.Cmd(ice.CLI_SYSTEM, "git", "clone", m.Conf("git", "meta.git"))
+
+			m.Option("cmd_dir", "usr/git")
+			m.Cmd(ice.CLI_SYSTEM, "make", "configure")
+			m.Cmd(ice.CLI_SYSTEM, "./configure", "--prefix="+kit.Path("usr/local"))
+
+			m.Cmd(ice.CLI_SYSTEM, "make", "-j4")
+			m.Cmd(ice.CLI_SYSTEM, "make", "install")
+		}},
+		ice.CODE_PREPARE: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+
+		}},
 		"init": {Name: "init", Help: "初始化", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			// 系统项目
 			wd, _ := os.Getwd()

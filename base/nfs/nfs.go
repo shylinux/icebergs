@@ -186,6 +186,11 @@ var Index = &ice.Context{Name: "nfs", Help: "存储模块",
 				}
 			}
 		}},
+		"link": {Name: "link path file", Help: "链接", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			m.Cmd("nfs.trash", arg[0])
+			os.MkdirAll(path.Dir(arg[0]), 0777)
+			os.Link(arg[1], arg[0])
+		}},
 
 		"trash": {Name: "trash file", Help: "保存", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			if s, e := os.Stat(arg[0]); e == nil {

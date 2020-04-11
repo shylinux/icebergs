@@ -1,7 +1,7 @@
 package ice
 
 import (
-	"github.com/shylinux/toolkits"
+	kit "github.com/shylinux/toolkits"
 
 	"bytes"
 	"encoding/csv"
@@ -795,7 +795,7 @@ func (m *Message) Result(arg ...interface{}) string {
 
 func (m *Message) Logs(level string, arg ...interface{}) *Message {
 	list := []string{}
-	for i := 0; i < len(arg)-1; i++ {
+	for i := 0; i < len(arg)-1; i += 2 {
 		list = append(list, fmt.Sprintf("%v: %v", arg[i], arg[i+1]))
 	}
 	m.Log(level, strings.Join(list, " "))

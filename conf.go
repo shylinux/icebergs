@@ -190,6 +190,7 @@ const ( // TYPE
 const ( // CODE
 	CODE_INSTALL = "_install"
 	CODE_PREPARE = "_prepare"
+	CODE_PROJECT = "_project"
 )
 const ( // CHAT
 	CHAT_RIVER = "river"

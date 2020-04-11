@@ -1,8 +1,8 @@
 package cli
 
 import (
-	"github.com/shylinux/icebergs"
-	"github.com/shylinux/toolkits"
+	ice "github.com/shylinux/icebergs"
+	kit "github.com/shylinux/toolkits"
 
 	"bytes"
 	"fmt"
@@ -19,7 +19,7 @@ var Index = &ice.Context{Name: "cli", Help: "命令模块",
 	Configs: map[string]*ice.Config{
 		ice.CLI_RUNTIME: {Name: "runtime", Help: "运行环境", Value: kit.Dict()},
 		ice.CLI_SYSTEM:  {Name: "system", Help: "系统命令", Value: kit.Data()},
-		"daemon":        {Name: "daemon", Help: "守护进程", Value: kit.Data(kit.MDB_SHORT, "name")},
+		ice.CLI_DAEMON:  {Name: "daemon", Help: "守护进程", Value: kit.Data(kit.MDB_SHORT, "name")},
 		"python":        {Name: "python", Help: "系统命令", Value: kit.Data("python", "python", "pip", "pip")},
 	},
 	Commands: map[string]*ice.Command{
@@ -142,7 +142,7 @@ var Index = &ice.Context{Name: "cli", Help: "命令模块",
 				m.Echo(out.String())
 			}
 		}},
-		"daemon": {Name: "daemon", Help: "守护进程", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		ice.CLI_DAEMON: {Name: "daemon", Help: "守护进程", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			m.Option("cmd_type", "daemon")
 			m.Cmdy(ice.CLI_SYSTEM, arg)
 		}},

@@ -2,8 +2,8 @@ package web
 
 import (
 	"github.com/gorilla/websocket"
-	"github.com/shylinux/icebergs"
-	"github.com/shylinux/toolkits"
+	ice "github.com/shylinux/icebergs"
+	kit "github.com/shylinux/toolkits"
 	"github.com/skip2/go-qrcode"
 
 	"bytes"
@@ -1618,6 +1618,12 @@ var Index = &ice.Context{Name: "web", Help: "网络模块",
 				}
 				m.Echo(list)
 
+				// 分发数据
+				if p := kit.Select(m.Conf(ice.WEB_FAVOR, "meta.proxy"), m.Option("you")); p != "" {
+					m.Option("you", "")
+					m.Cmd(ice.WEB_PROXY, p, ice.WEB_STORY, ice.STORY_PULL, arg[2], "dev", arg[2])
+				}
+
 			case ice.STORY_INDEX:
 				m.Richs(ice.WEB_STORY, "head", arg[1], func(key string, value map[string]interface{}) {
 					// 查询索引
@@ -1815,6 +1821,12 @@ var Index = &ice.Context{Name: "web", Help: "网络模块",
 			})
 		}},
 		ice.WEB_PROXY: {Name: "proxy", Help: "代理", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			if arg[0] == "" {
+				// 本机命令
+				m.Cmdy(arg[1:])
+				return
+			}
+
 			m.Richs(ice.WEB_SPACE, nil, kit.Select(m.Conf(ice.WEB_FAVOR, "meta.proxy"), arg[0]), func(key string, value map[string]interface{}) {
 				if value[kit.MDB_TYPE] == ice.WEB_BETTER {
 					switch value[kit.MDB_NAME] {

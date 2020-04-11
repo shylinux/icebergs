@@ -1,10 +1,10 @@
 package zsh
 
 import (
-	"github.com/shylinux/icebergs"
+	ice "github.com/shylinux/icebergs"
 	"github.com/shylinux/icebergs/base/web"
 	"github.com/shylinux/icebergs/core/code"
-	"github.com/shylinux/toolkits"
+	kit "github.com/shylinux/toolkits"
 
 	"io/ioutil"
 	"strings"
@@ -14,24 +14,24 @@ import (
 var Index = &ice.Context{Name: "zsh", Help: "命令行",
 	Caches: map[string]*ice.Cache{},
 	Configs: map[string]*ice.Config{
-		"zsh": {Name: "zsh", Help: "命令行", Value: kit.Data(kit.MDB_SHORT, "name", "history", "zsh.history")},
+		"zsh": {Name: "zsh", Help: "命令行", Value: kit.Data("history", "zsh.history")},
 	},
 	Commands: map[string]*ice.Command{
 		ice.WEB_LOGIN: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			if f, _, e := m.R.FormFile("sub"); e == nil {
 				defer f.Close()
+				// 文件参数
 				if b, e := ioutil.ReadAll(f); e == nil {
-					// 加载参数
 					m.Option("sub", string(b))
 				}
 			}
 
-			// 查找空间
 			m.Richs("login", nil, m.Option("sid"), func(key string, value map[string]interface{}) {
-				m.Option("you", kit.Select("tmux", value["you"]))
+				// 查找空间
+				m.Option("you", value["you"])
 			})
 
-			m.Info("%s %s cmd: %v sub: %v", m.Option("you"), m.Option(ice.MSG_USERURL), m.Optionv("cmds"), m.Optionv("sub"))
+			m.Logs(ice.LOG_LOGIN, "you", m.Option("you"), "url", m.Option(ice.MSG_USERURL), "cmd", m.Optionv("cmds"), "sub", m.Optionv("sub"))
 			m.Option(ice.MSG_OUTPUT, ice.RENDER_RESULT)
 		}},
 
@@ -50,16 +50,11 @@ var Index = &ice.Context{Name: "zsh", Help: "命令行",
 			case "history":
 				vs := strings.SplitN(strings.TrimSpace(m.Option("arg")), " ", 4)
 				if strings.Contains(m.Option("SHELL"), "zsh") {
-					vs = []string{vs[0], "", "", strings.Join(vs[1:], " ")}
-
+					vs = []string{vs[0], m.Time("2006-01-02"), m.Time("15:04:05"), strings.Join(vs[1:], " ")}
 				}
+				m.Cmd(ice.WEB_FAVOR, m.Conf("zsh", "meta.history"), ice.TYPE_SHELL, vs[0], kit.Select("", vs, 3),
+					"sid", m.Option("sid"), "pwd", m.Option("pwd"), "time", vs[1]+" "+vs[2])
 
-				cmds := []string{ice.WEB_FAVOR, m.Conf("zsh", "meta.history"), ice.TYPE_SHELL, vs[0], kit.Select("", vs, 3),
-					"sid", m.Option("sid"), "pwd", m.Option("pwd"), "time", vs[1] + " " + vs[2]}
-
-				if m.Cmd(cmds); m.Option("you") != "" {
-					m.Cmd(ice.WEB_PROXY, m.Option("you"), cmds)
-				}
 			default:
 				m.Richs("login", nil, m.Option("sid"), func(key string, value map[string]interface{}) {
 					kit.Value(value, kit.Keys("sync", arg[0]), kit.Dict(
@@ -159,14 +154,14 @@ var Index = &ice.Context{Name: "zsh", Help: "命令行",
 		"/favor": {Name: "/favor", Help: "收藏", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			if len(arg) > 0 && arg[0] != "sh" {
 				// 添加收藏
-				m.Cmdy(ice.WEB_FAVOR, kit.Select("zsh.history", m.Option("tab")), kit.Select(ice.TYPE_SHELL, m.Option("type")), m.Option("note"), arg[0])
+				m.Cmdy(ice.WEB_FAVOR, kit.Select(m.Conf("zsh", "meta.history"), m.Option("tab")),
+					kit.Select(ice.TYPE_SHELL, m.Option("type")), m.Option("note"), arg[0])
 				return
 			}
 
 			if m.Option("tab") == "" {
 				// 收藏列表
-				m.Cmdy(ice.WEB_PROXY, m.Option("you"), ice.WEB_FAVOR)
-				m.Table()
+				m.Cmdy(ice.WEB_FAVOR).Table()
 				return
 			}
 
@@ -185,8 +180,7 @@ var Index = &ice.Context{Name: "zsh", Help: "命令行",
 		"/download": {Name: "/download", Help: "下载", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			if len(arg) == 0 || arg[0] == "" {
 				// 文件列表
-				m.Cmdy(ice.WEB_PROXY, m.Option("you"), ice.WEB_STORY)
-				m.Table()
+				m.Cmdy(ice.WEB_PROXY, m.Option("you"), ice.WEB_STORY).Table()
 				return
 			}
 
@@ -208,11 +202,6 @@ var Index = &ice.Context{Name: "zsh", Help: "命令行",
 			m.Echo("type: %s\n", msg.Append("type"))
 			m.Echo("name: %s\n", msg.Append("name"))
 			m.Echo("size: %s\n", msg.Append("size"))
-
-			if m.Option("you") != "" {
-				// 下发文件
-				m.Cmd(ice.WEB_PROXY, m.Option("you"), ice.WEB_STORY, ice.STORY_PULL, msg.Append("name"), "dev", msg.Append("name"))
-			}
 		}},
 	},
 }

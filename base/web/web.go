@@ -1821,12 +1821,6 @@ var Index = &ice.Context{Name: "web", Help: "网络模块",
 			})
 		}},
 		ice.WEB_PROXY: {Name: "proxy", Help: "代理", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			if arg[0] == "" {
-				// 本机命令
-				m.Cmdy(arg[1:])
-				return
-			}
-
 			m.Richs(ice.WEB_SPACE, nil, kit.Select(m.Conf(ice.WEB_FAVOR, "meta.proxy"), arg[0]), func(key string, value map[string]interface{}) {
 				if value[kit.MDB_TYPE] == ice.WEB_BETTER {
 					switch value[kit.MDB_NAME] {

@@ -187,8 +187,8 @@ ShyInit() {
         # bash
         bind -x '"\C-G\C-R":ShySync base'
         bind -x '"\C-G\C-G":ShySync history'
-        bind -x '"\C-P":history-search-backward'
-        bind -x '"\C-N":history-search-forward'
+        # bind -x '"\C-P":history-search-backward'
+        # bind -x '"\C-N":history-search-forward'
 
         # bind 'TAB:complete' 
         bind 'TAB:menu-complete' 

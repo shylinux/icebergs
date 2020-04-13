@@ -123,7 +123,6 @@ var Index = &ice.Context{Name: "git", Help: "代码库",
 					return
 				}
 				wg.Add(1)
-				m.Push("name", kit.Value(value, "meta.name"))
 				m.Gos(m, func(m *ice.Message) {
 					msg := m.Cmd("_sum", kit.Value(value, "meta.path"), "total", "10000").Table(func(index int, value map[string]string, head []string) {
 						if kit.Int(value["days"]) > days {
@@ -134,6 +133,7 @@ var Index = &ice.Context{Name: "git", Help: "代码库",
 						dels += kit.Int(value["dels"])
 						rest += kit.Int(value["rest"])
 					})
+					m.Push("name", kit.Value(value, "meta.name"))
 					m.Copy(msg)
 					wg.Done()
 				})
@@ -145,7 +145,7 @@ var Index = &ice.Context{Name: "git", Help: "代码库",
 			m.Push("adds", adds)
 			m.Push("dels", dels)
 			m.Push("rest", rest)
-			m.Sort("adds", "int_r")
+			m.Sort("rest", "int_r")
 		}},
 		"status": {Name: "status name auto", Help: "文件状态", Meta: kit.Dict(
 			"detail", []interface{}{"add", "reset", "remove", kit.Dict("name", "commit", "args", kit.List(

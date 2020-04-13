@@ -110,19 +110,27 @@ var Index = &ice.Context{Name: "ctx", Help: "配置模块",
 						button := false
 						for i, v := range list {
 							if i > 0 {
-								ls := kit.Split(v, ":=")
-								switch ls[0] {
+								switch ls := kit.Split(v, ":="); ls[0] {
+								case "[", "]":
 								case "auto":
 									cmd.List = append(cmd.List, kit.List(kit.MDB_INPUT, "button", "name", "查看", "value", "auto")...)
 									cmd.List = append(cmd.List, kit.List(kit.MDB_INPUT, "button", "name", "返回", "value", "Last")...)
 									button = true
 								default:
-									if len(ls) > 1 && ls[1] == "button" {
+									kind, value := "text", ""
+									if len(ls) == 3 {
+										kind, value = ls[1], ls[2]
+									} else if len(ls) == 2 {
+										if strings.Contains(v, "=") {
+											value = ls[1]
+										} else {
+											kind = ls[1]
+										}
+									}
+									if kind == "button" {
 										button = true
 									}
-									cmd.List = append(cmd.List, kit.List(
-										kit.MDB_INPUT, kit.Select("text", ls, 1), "name", ls[0], "value", kit.Select("", ls, 2),
-									)...)
+									cmd.List = append(cmd.List, kit.List(kit.MDB_INPUT, kind, "name", ls[0], "value", value)...)
 								}
 							}
 						}

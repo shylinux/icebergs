@@ -157,7 +157,4 @@ var Index = &ice.Context{Name: "input", Help: "输入法",
 	},
 }
 
-// ice add person 码神 dcpy
-// 码神
-
 func init() { code.Index.Register(Index, nil) }

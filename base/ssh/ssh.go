@@ -357,6 +357,11 @@ var Index = &ice.Context{Name: "ssh", Help: "终端模块",
 				}
 			})
 		}},
+
+		"what": {Name: "what", Help: "上位机", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			ls := kit.Split("window:=auto", " ", ":=")
+			m.Echo("%v %v", len(ls), ls)
+		}},
 	},
 }
 

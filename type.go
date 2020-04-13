@@ -869,11 +869,15 @@ func (m *Message) TryCatch(msg *Message, safe bool, hand ...func(msg *Message)) 
 		case io.EOF:
 		case nil:
 		default:
-			m.Log(LOG_WARN, "catch: %s", e)
+			_, file, line, _ := runtime.Caller(3)
+			if list := strings.Split(file, "/"); len(list) > 2 {
+				file = strings.Join(list[len(list)-2:], "/")
+			}
+			m.Log(LOG_WARN, "catch: %s %s:%d", e, file, line)
 			m.Log(LOG_INFO, "chain: %s", msg.Format("chain"))
-			m.Log(LOG_WARN, "catch: %s", e)
+			m.Log(LOG_WARN, "catch: %s %s:%d", e, file, line)
 			m.Log(LOG_INFO, "stack: %s", msg.Format("stack"))
-			if m.Log(LOG_WARN, "catch: %s", e); len(hand) > 1 {
+			if m.Log(LOG_WARN, "catch: %s %s:%d", e, file, line); len(hand) > 1 {
 				// 捕获异常
 				m.TryCatch(msg, safe, hand[1:]...)
 			} else if !safe {

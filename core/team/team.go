@@ -35,8 +35,7 @@ var Index = &ice.Context{Name: "team", Help: "团队中心",
 	Configs: map[string]*ice.Config{
 		"task": {Name: "task", Help: "任务", Value: kit.Data(kit.MDB_SHORT, "zone")},
 		"plan": {Name: "plan", Help: "计划", Value: kit.Data(kit.MDB_SHORT, "zone",
-			"head", []interface{}{"周日", "周一", "周二", "周三", "周四", "周五", "周六"},
-			"template", kit.Dict(
+			"head", []interface{}{"周日", "周一", "周二", "周三", "周四", "周五", "周六"}, "template", kit.Dict(
 				"day", `<div class="task {{.status}}" data-zone="%s" data-id="{{.id}}" data-begin_time="{{.begin_time}}">{{.status}} {{.name}}: {{.text}}</div>`,
 				"week", `<div class="task {{.status}}" data-zone="%s" data-id="{{.id}}" data-begin_time="{{.begin_time}}" title="{{.text}}">{{.name}}</div>`,
 				"month", `<div class="task {{.status}}" data-zone="%s" data-id="{{.id}}" data-begin_time="{{.begin_time}}" title="{{.text}}">{{.name}}</div>`,
@@ -52,13 +51,7 @@ var Index = &ice.Context{Name: "team", Help: "团队中心",
 			m.Save("task")
 		}},
 
-		"task": {Name: "task [zone [id [type [name [text args...]]]]]", Help: "任务", List: kit.List(
-			kit.MDB_INPUT, "text", "name", "zone", "action", "auto",
-			kit.MDB_INPUT, "text", "name", "id", "action", "auto",
-			kit.MDB_INPUT, "button", "name", "查看", "action", "auto",
-			kit.MDB_INPUT, "button", "name", "返回", "cb", "Last",
-			kit.MDB_INPUT, "button", "name", "保存",
-		), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		"task": {Name: "task [zone=auto [id=auto]] auto", Help: "任务", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			if m.Option("_action") == "保存" {
 				arg = []string{"action", "export"}
 			}
@@ -145,10 +138,40 @@ var Index = &ice.Context{Name: "team", Help: "团队中心",
 				return
 			}
 
-			if len(arg) == 0 {
-				// 分类列表
-				m.Richs(cmd, nil, "*", func(key string, value map[string]interface{}) {
-					m.Push(key, value["meta"], []string{"time", "count", "zone"})
+			if len(arg) < 5 {
+				m.Richs(cmd, nil, kit.Select("*", arg, 0), func(key string, value map[string]interface{}) {
+					if len(arg) == 0 {
+						// 分类列表
+						m.Push(key, value["meta"], []string{"time", "count", "zone"})
+						return
+					}
+
+					field := []string{"begin_time", "id", "status", "type", "name", "text"}
+					if len(arg) == 1 {
+						// 任务列表
+						m.Grows(cmd, kit.Keys("hash", key), "", "", func(index int, value map[string]interface{}) {
+							m.Push("", value, field)
+						})
+					} else if len(arg) == 2 {
+						// 任务详情
+						m.Grows(cmd, kit.Keys("hash", key), "id", arg[1], func(index int, value map[string]interface{}) {
+							m.Push("detail", value)
+						})
+					} else {
+						name, value := "type", arg[2]
+						switch len(arg) {
+						case 3:
+							// 分类查询
+							name, value = "type", arg[2]
+						case 4:
+							// 名称查询
+							name, value = "name", arg[3]
+						}
+						m.Grows(cmd, kit.Keys("hash", key), name, value, func(index int, value map[string]interface{}) {
+							m.Push("", value, field)
+						})
+					}
+					m.Sort("time", "time_r")
 				})
 				return
 			}
@@ -159,44 +182,7 @@ var Index = &ice.Context{Name: "team", Help: "团队中心",
 				m.Log(ice.LOG_CREATE, "zone: %s", arg[0])
 			}
 
-			field := []string{"begin_time", "id", "status", "type", "name", "text"}
 			m.Richs(cmd, nil, arg[0], func(key string, value map[string]interface{}) {
-				if len(arg) == 1 {
-					// 任务列表
-					m.Grows(cmd, kit.Keys("hash", key), "", "", func(index int, value map[string]interface{}) {
-						m.Push("", value, field)
-					})
-					m.Sort("time", "time_r")
-					return
-				}
-
-				if len(arg) == 2 {
-					// 任务详情
-					m.Grows(cmd, kit.Keys("hash", key), "id", arg[1], func(index int, value map[string]interface{}) {
-						m.Push("detail", value)
-					})
-					m.Sort("time", "time_r")
-					return
-				}
-
-				if len(arg) < 5 {
-					// 任务查询
-					name, value := "type", arg[2]
-					switch len(arg) {
-					case 3:
-						// 分类查询
-						name, value = "type", arg[2]
-					case 4:
-						// 名称查询
-						name, value = "name", arg[3]
-					}
-					m.Grows(cmd, kit.Keys("hash", key), name, value, func(index int, value map[string]interface{}) {
-						m.Push("", value, field)
-					})
-					m.Sort("time", "time_r")
-					return
-				}
-
 				// 词汇统计
 				web.Count(m, cmd, "meta.word.type", arg[2])
 				web.Count(m, cmd, "meta.word.name", arg[3])
@@ -225,13 +211,8 @@ var Index = &ice.Context{Name: "team", Help: "团队中心",
 				m.Echo("%s: %d", kit.Value(value, "meta.zone"), n)
 			})
 		}},
-		"plan": {Name: "plan day|week|month|year", Help: "计划", Meta: kit.Dict(
+		"plan": {Name: "plan scale:select=day|week|month|year begin_time=@date end_time=@date auto", Help: "计划", Meta: kit.Dict(
 			"display", "team/plan", "detail", []string{"process", "finish", "cancel"},
-		), List: kit.List(
-			kit.MDB_INPUT, "select", "name", "scale", "value", "day", "values", []string{"day", "week", "month", "months", "year", "long"}, "action", "auto",
-			kit.MDB_INPUT, "text", "name", "begin_time", "figure", "date", "action", "auto",
-			kit.MDB_INPUT, "text", "name", "end_time", "figure", "date", "action", "auto",
-			kit.MDB_INPUT, "button", "name", "查看", "action", "auto",
 		), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			// 起始日期
 			first := time.Now()
@@ -423,11 +404,7 @@ var Index = &ice.Context{Name: "team", Help: "团队中心",
 				m.Sort("year", "int")
 			}
 		}},
-		"stat": {Name: "stat", Help: "统计", List: kit.List(
-			kit.MDB_INPUT, "text", "name", "begin_time", "figure", "date", "action", "auto",
-			kit.MDB_INPUT, "text", "name", "end_time", "figure", "date", "action", "auto",
-			kit.MDB_INPUT, "button", "name", "查看", "action", "auto",
-		), Hand: func(m *ice.Message, c *ice.Context, key string, arg ...string) {
+		"stat": {Name: "stat begin_time=@date end_time=@date auto", Help: "统计", Hand: func(m *ice.Message, c *ice.Context, key string, arg ...string) {
 			begin_time := kit.Time(kit.Select("1990-07-30", arg, 0))
 			end_time := kit.Time(kit.Select("1990-07-30", arg, 1))
 			now_time := kit.Time(m.Time())
@@ -473,14 +450,7 @@ var Index = &ice.Context{Name: "team", Help: "团队中心",
 				m.Push("max", kit.FmtTime(int64(stat["max"])*int64(time.Second)))
 			})
 		}},
-		"miss": {Name: "miss zone type name text", Help: "任务", List: kit.List(
-			kit.MDB_INPUT, "text", "name", "zone", "figure", "key", "action", "auto",
-			kit.MDB_INPUT, "text", "name", "type", "figure", "key",
-			kit.MDB_INPUT, "text", "name", "name", "figure", "key",
-			kit.MDB_INPUT, "button", "name", "添加",
-			kit.MDB_INPUT, "textarea", "name", "text",
-			kit.MDB_INPUT, "text", "name", "begin_time", "figure", "date", "position", "opts",
-		), Hand: func(m *ice.Message, c *ice.Context, key string, arg ...string) {
+		"miss": {Name: "miss zone=@key type=@key name=@key 添加:button text:textarea @begin_time=@date", Help: "任务", Hand: func(m *ice.Message, c *ice.Context, key string, arg ...string) {
 			if len(arg) > 0 && arg[0] == "action" {
 				switch arg[1] {
 				case "input":

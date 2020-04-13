@@ -42,6 +42,14 @@ var Index = &ice.Context{Name: "tmux", Help: "工作台",
 		)},
 	},
 	Commands: map[string]*ice.Command{
+		ice.CODE_INSTALL: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		}},
+		ice.CODE_PREPARE: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			m.Cmd("nfs.link", path.Join(os.Getenv("HOME"), ".tmux.conf"), "etc/conf/tmux.conf")
+		}},
+		ice.CODE_PROJECT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		}},
+
 		"init": {Name: "init", Help: "初始化", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			m.Watch(ice.DREAM_START, m.Prefix("auto"))
 
@@ -111,24 +119,17 @@ var Index = &ice.Context{Name: "tmux", Help: "工作台",
 				m.Cmdy(prefix, "send-keys", "-t", arg[0], v, "Enter")
 			}
 		}},
+		"load": {Name: "load", Help: "序列化", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		}},
 
-		"text": {Name: "text", Help: "文本", List: kit.List(
-			kit.MDB_INPUT, "text", "name", "name",
-			kit.MDB_INPUT, "button", "value", "保存",
-			kit.MDB_INPUT, "textarea", "name", "text",
-		), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		"text": {Name: "text name 保存:button text:textarea", Help: "文本", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			prefix := kit.Simple(m.Confv("prefix", "meta.cmd"))
 			if len(arg) > 1 && arg[1] != "" {
 				m.Cmd(prefix, "set-buffer", arg[1])
 			}
 			m.Cmdy(prefix, "show-buffer").Set(ice.MSG_APPEND)
 		}},
-		"buffer": {Name: "buffer", Help: "缓存", List: kit.List(
-			kit.MDB_INPUT, "text", "name", "buffer", "action", "auto",
-			kit.MDB_INPUT, "text", "name", "value",
-			kit.MDB_INPUT, "button", "value", "查看", "action", "auto",
-			kit.MDB_INPUT, "button", "value", "返回", "cb", "Last",
-		), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		"buffer": {Name: "buffer [buffer=auto [value]] auto", Help: "缓存", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			prefix := kit.Simple(m.Confv("prefix", "meta.cmd"))
 			if len(arg) > 1 {
 				// 设置缓存
@@ -153,12 +154,8 @@ var Index = &ice.Context{Name: "tmux", Help: "工作台",
 				}
 			}
 		}},
-		"session": {Name: "session [session [window [pane [cmd]]]]", Help: "会话", Meta: kit.Dict("detail", []string{"选择", "编辑", "删除", "下载"}), List: kit.List(
-			kit.MDB_INPUT, "text", "name", "session", "action", "auto",
-			kit.MDB_INPUT, "text", "name", "window", "action", "auto",
-			kit.MDB_INPUT, "text", "name", "pane", "action", "auto",
-			kit.MDB_INPUT, "button", "value", "查看", "action", "auto",
-			kit.MDB_INPUT, "button", "value", "返回", "cb", "Last",
+		"session": {Name: "session [session=auto [window=auto [pane=auto [cmd]]]] auto", Help: "会话", Meta: kit.Dict(
+			"detail", []string{"选择", "编辑", "删除", "下载"},
 		), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			prefix := kit.Simple(m.Confv("prefix", "meta.cmd"))
 

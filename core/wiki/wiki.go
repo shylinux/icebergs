@@ -1,15 +1,12 @@
 package wiki
 
 import (
-	"github.com/gomarkdown/markdown"
 	"github.com/shylinux/icebergs"
 	_ "github.com/shylinux/icebergs/base"
 	"github.com/shylinux/icebergs/base/web"
 	"github.com/shylinux/toolkits"
 
 	"fmt"
-	"io/ioutil"
-	"math/rand"
 	"os"
 	"path"
 	"strings"
@@ -36,10 +33,6 @@ func reply(m *ice.Message, cmd string, arg ...string) bool {
 var Index = &ice.Context{Name: "wiki", Help: "文档中心",
 	Caches: map[string]*ice.Cache{},
 	Configs: map[string]*ice.Config{
-		"note": {Name: "note", Help: "笔记", Value: kit.Data(
-			"path", "", "head", "time size line path",
-		)},
-
 		"title": {Name: "title", Help: "标题", Value: kit.Data("template", title)},
 		"brief": {Name: "brief", Help: "摘要", Value: kit.Data("template", brief)},
 		"refer": {Name: "refer", Help: "参考", Value: kit.Data("template", refer)},
@@ -47,7 +40,7 @@ var Index = &ice.Context{Name: "wiki", Help: "文档中心",
 
 		"local": {Name: "local", Help: "文件", Value: kit.Data("template", local)},
 		"shell": {Name: "shell", Help: "命令", Value: kit.Data("template", shell)},
-		"field": {Name: "shell", Help: "命令", Value: kit.Data("template", field,
+		"field": {Name: "field", Help: "插件", Value: kit.Data("template", field,
 			"some", kit.Dict("simple", kit.Dict(
 				"inputs", kit.List(
 					kit.MDB_INPUT, "text", "name", "name",
@@ -62,7 +55,9 @@ var Index = &ice.Context{Name: "wiki", Help: "文档中心",
 		"stack": {Name: "stack", Help: "结构", Value: kit.Data("template", stack)},
 		"chart": {Name: "chart", Help: "绘图", Value: kit.Data("template", prefix, "suffix", `</svg>`)},
 
-		"draw": {Name: "draw", Help: "思维导图", Value: kit.Data(kit.MDB_SHORT, "name", "path", "", "regs", ".*\\.svg", "prefix", `<svg vertion="1.1" xmlns="http://www.w3.org/2000/svg" width="%v" height="%v">`, "suffix", `</svg>`)},
+		"draw": {Name: "draw", Help: "思维导图", Value: kit.Data(kit.MDB_SHORT, "name", "path", "", "regs", ".*\\.svg",
+			"prefix", `<svg vertion="1.1" xmlns="http://www.w3.org/2000/svg" width="%v" height="%v">`, "suffix", `</svg>`,
+		)},
 		"data": {Name: "data", Help: "数据表格", Value: kit.Data(kit.MDB_SHORT, "name", "path", "", "regs", ".*\\.csv")},
 		"word": {Name: "word", Help: "语言文字", Value: kit.Data(kit.MDB_SHORT, "name", "path", "", "regs", ".*\\.shy",
 			"alias", map[string]interface{}{
@@ -84,28 +79,6 @@ var Index = &ice.Context{Name: "wiki", Help: "文档中心",
 		}},
 		ice.ICE_EXIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			m.Save("feel")
-		}},
-
-		"note": {Name: "note file", Help: "文档", Meta: kit.Dict("display", "inner"), List: kit.List(
-			kit.MDB_INPUT, "text", "name", "path", "value", "README.md", "action", "auto",
-			kit.MDB_INPUT, "button", "name", "执行", "action", "auto",
-			kit.MDB_INPUT, "button", "name", "返回", "cb", "Last",
-		), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			if len(arg) > 0 && strings.HasSuffix(arg[0], ".md") {
-				arg[0] = path.Join(m.Conf("note", "meta.path"), arg[0])
-			}
-			m.Cmdy(kit.Select("_tree", "_text", len(arg) > 0 && strings.HasSuffix(arg[0], ".md")), arg)
-		}},
-		"_tree": {Name: "_tree [path [true]]", Help: "文库", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			m.Option("dir_reg", ".*\\.md")
-			m.Option("dir_deep", kit.Select("", arg, 1))
-			m.Cmdy("nfs.dir", kit.Select(m.Conf("note", "meta.path"), arg, 0), m.Conf("note", "meta.head"))
-		}},
-		"_text": {Name: "_text file", Help: "文章", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			if b, e := ioutil.ReadFile(arg[0]); m.Assert(e) {
-				data := markdown.ToHTML(b, nil, nil)
-				m.Echo(string(data))
-			}
 		}},
 
 		"title": {Name: "title [chapter|section|endmenu|premenu] text", Help: "标题", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
@@ -161,6 +134,7 @@ var Index = &ice.Context{Name: "wiki", Help: "文档中心",
 			m.Option(kit.MDB_TYPE, cmd)
 			m.Option(kit.MDB_NAME, arg[0])
 			m.Option(kit.MDB_TEXT, arg[1])
+
 			m.Render(ice.RENDER_TEMPLATE, m.Conf(cmd, "meta.template"))
 		}},
 		"refer": {Name: "refer name text", Help: "参考", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
@@ -187,6 +161,7 @@ var Index = &ice.Context{Name: "wiki", Help: "文档中心",
 			m.Option(kit.MDB_TYPE, cmd)
 			m.Option(kit.MDB_NAME, arg[0])
 			m.Option(kit.MDB_TEXT, arg[1])
+
 			m.Optionv("list", kit.Split(arg[1], "\n"))
 			m.Render(ice.RENDER_TEMPLATE, m.Conf(cmd, "meta.template"))
 		}},
@@ -195,8 +170,8 @@ var Index = &ice.Context{Name: "wiki", Help: "文档中心",
 			m.Option(kit.MDB_TYPE, cmd)
 			m.Option(kit.MDB_NAME, arg[0])
 			m.Option(kit.MDB_TEXT, arg[1])
-			m.Option("input", m.Cmdx("nfs.cat", arg[1]))
 
+			m.Option("input", m.Cmdx("nfs.cat", arg[1]))
 			switch ls := strings.Split(arg[1], "."); ls[len(ls)-1] {
 			case "csv":
 				list := []string{"<table>"}
@@ -220,22 +195,13 @@ var Index = &ice.Context{Name: "wiki", Help: "文档中心",
 			}
 			m.Render(ice.RENDER_TEMPLATE, m.Conf(cmd, "meta.template"))
 		}},
-		"shell": {Name: "shell name dir cmd", Help: "命令", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		"shell": {Name: "shell name text", Help: "命令", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			m.Option(kit.MDB_TYPE, cmd)
 			m.Option(kit.MDB_NAME, arg[0])
-			m.Option("cmd_dir", arg[1])
+			m.Option(kit.MDB_TEXT, arg[1])
 
-			input, output := "", ""
-			switch arg = arg[2:]; arg[0] {
-			case "install", "compile":
-				input = strings.Join(arg[1:], " ")
-			default:
-				input = strings.Join(arg, " ")
-				output = m.Cmdx(ice.CLI_SYSTEM, "sh", "-c", input)
-			}
-
-			m.Option("input", input)
-			m.Option("output", output)
+			m.Option("input", strings.Join(arg[1:], " "))
+			m.Option("output", m.Cmdx(ice.CLI_SYSTEM, "sh", "-c", m.Option("input")))
 			m.Render(ice.RENDER_TEMPLATE, m.Conf(cmd, "meta.template"))
 		}},
 		"field": {Name: "field name text", Help: "插件", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
@@ -268,6 +234,7 @@ var Index = &ice.Context{Name: "wiki", Help: "文档中心",
 			m.Option(kit.MDB_TYPE, cmd)
 			m.Option(kit.MDB_NAME, arg[0])
 			m.Option(kit.MDB_TEXT, arg[1])
+
 			m.Optionv("list", kit.Split(strings.TrimSpace(arg[1]), "\n"))
 			m.Render(ice.RENDER_TEMPLATE, m.Conf(cmd, "meta.template"))
 		}},
@@ -314,11 +281,7 @@ var Index = &ice.Context{Name: "wiki", Help: "文档中心",
 			Stack(m, cmd, 0, kit.Parse(nil, "", chain.show(m, arg[1])...))
 			m.Echo("</div>")
 		}},
-		"chart": {Name: "chart label|chain|table name text [fg bg fs ls p m]", Help: "绘图", Meta: map[string]interface{}{}, List: kit.List(
-			kit.MDB_INPUT, "select", "value", "chain", "values", "block chain table",
-			kit.MDB_INPUT, "text", "value", "",
-			kit.MDB_INPUT, "button", "value", "生成",
-		), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		"chart": {Name: "chart label|chain|table name text [fg bg fs ls p m]", Help: "绘图", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			// 创建类型
 			var chart Chart
 			switch arg[0] {
@@ -360,37 +323,18 @@ var Index = &ice.Context{Name: "wiki", Help: "文档中心",
 			m.Render(ice.RENDER_TEMPLATE, m.Conf("chart", "meta.suffix"))
 		}},
 
-		"draw": {Name: "draw", Help: "思维导图", Meta: kit.Dict("display", "wiki/draw"), List: kit.List(
-			kit.MDB_INPUT, "text", "name", "path", "action", "auto",
-			kit.MDB_INPUT, "button", "name", "查看", "action", "auto",
-			kit.MDB_INPUT, "button", "name", "返回", "cb", "Last",
-		), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		"draw": {Name: "draw path auto", Help: "思维导图", Meta: kit.Dict("display", "wiki/draw"), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			if len(arg) > 0 && arg[0] == "action" {
 				switch arg[1] {
 				case "保存":
 					m.Cmd("nfs.save", path.Join(m.Conf(cmd, "meta.path"), kit.Select("hi.svg", arg[2])), arg[3:])
-
-				case "执行":
-					list := []string{"red", "green", "yellow", "cyan", "blue", "white", "black"}
-					switch kit.Select("", arg, 2) {
-					case "color":
-						m.Push("fill", list[rand.Intn(len(list))])
-						m.Push("fill", list[rand.Intn(len(list))])
-					default:
-						x := kit.Int(m.Option("x"))%300 + 10
-						m.Push("x", x)
-					}
 				}
 				return
 			}
 
 			reply(m, cmd, arg...)
 		}},
-		"data": {Name: "data", Help: "数据表格", Meta: kit.Dict("display", "wiki/data"), List: kit.List(
-			kit.MDB_INPUT, "text", "name", "path", "action", "auto",
-			kit.MDB_INPUT, "button", "name", "执行", "action", "auto",
-			kit.MDB_INPUT, "button", "name", "返回", "cb", "Last",
-		), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		"data": {Name: "data path auto", Help: "数据表格", Meta: kit.Dict("display", "wiki/data"), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			if len(arg) > 0 && arg[0] == "action" {
 				switch arg[1] {
 				case "保存":
@@ -406,11 +350,7 @@ var Index = &ice.Context{Name: "wiki", Help: "文档中心",
 			// 解析数据
 			m.CSV(m.Result())
 		}},
-		"word": {Name: "word", Help: "语言文字", Meta: kit.Dict("display", "wiki/word"), List: kit.List(
-			kit.MDB_INPUT, "text", "name", "path", "value", "自然/编程/hi.shy",
-			kit.MDB_INPUT, "button", "name", "执行", "action", "auto",
-			kit.MDB_INPUT, "button", "name", "返回", "cb", "Last",
-		), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		"word": {Name: "word path auto", Help: "语言文字", Meta: kit.Dict("display", "wiki/word"), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			if len(arg) > 0 && arg[0] == "action" {
 				switch arg[1] {
 				case "story":
@@ -473,11 +413,8 @@ var Index = &ice.Context{Name: "wiki", Help: "文档中心",
 			m.Optionv(ice.MSG_ALIAS, m.Confv("word", "meta.alias"))
 			m.Set("result").Cmdy(ice.SSH_SOURCE, path.Join(m.Conf(cmd, "meta.path"), arg[0]))
 		}},
-		"feel": {Name: "feel", Help: "影音媒体", Meta: kit.Dict("display", "wiki/feel", "detail", []string{"标签", "删除"}), List: kit.List(
-			kit.MDB_INPUT, "text", "name", "name",
-			kit.MDB_INPUT, "button", "name", "执行",
-			kit.MDB_INPUT, "button", "name", "返回", "cb", "Last",
-			kit.MDB_INPUT, "button", "name", "上传", "figure", "upload",
+		"feel": {Name: "feel path auto 上传:button=@upload", Help: "影音媒体", Meta: kit.Dict(
+			"display", "wiki/feel", "detail", []string{"标签", "删除"},
 		), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			if m.Option("_action") == "上传" {
 				m.Cmd(ice.WEB_CACHE, "watch", m.Option("_data"), path.Join(m.Option("name"), m.Option("_name")))
@@ -523,11 +460,7 @@ var Index = &ice.Context{Name: "wiki", Help: "文档中心",
 			// 下载文件
 			m.Echo(path.Join(m.Conf(cmd, "meta.path"), arg[0]))
 		}},
-		"walk": {Name: "walk", Help: "走遍世界", Meta: kit.Dict("display", "wiki/walk"), List: kit.List(
-			kit.MDB_INPUT, "text", "name", "file", "figure", "province",
-			kit.MDB_INPUT, "button", "name", "执行",
-			kit.MDB_INPUT, "button", "name", "返回", "cb", "Last",
-		), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		"walk": {Name: "walk path=@province auto", Help: "走遍世界", Meta: kit.Dict("display", "wiki/walk"), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			if len(arg) > 0 && arg[0] == "action" {
 				switch arg[1] {
 				case "保存":

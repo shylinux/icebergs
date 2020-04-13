@@ -189,14 +189,14 @@ var Index = &ice.Context{Name: "chat", Help: "聊天中心",
 			}
 		}},
 
-		"search": {Name: "search label:text=some word:text=启动流程 auto", Help: "搜索引擎", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		"search": {Name: "search label=some word=启动流程 auto", Help: "搜索引擎", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			if len(arg) < 2 {
 				m.Cmdy(ice.WEB_LABEL, arg)
 				return
 			}
 			m.Cmdy(ice.WEB_LABEL, arg[0], "*", "favor", "search", arg[1:])
 		}},
-		"commend": {Name: "commend label:text=some word:text=请求响应 auto", Help: "推荐引擎", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		"commend": {Name: "commend label=some word=请求响应 auto", Help: "推荐引擎", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			if len(arg) < 2 {
 				m.Cmdy(ice.WEB_LABEL, arg)
 				return

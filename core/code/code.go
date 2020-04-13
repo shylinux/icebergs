@@ -138,9 +138,9 @@ var Index = &ice.Context{Name: "code", Help: "编程中心",
 			}
 		}},
 
-		"login": {Name: "login", Help: "登录", Meta: kit.Dict(
+		"login": {Name: "login key", Help: "登录", Meta: kit.Dict(
 			"detail", []string{"编辑", "删除", "清理", "清空"},
-		), List: ice.ListLook("key"), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			if len(arg) > 0 && arg[0] == "action" {
 				switch arg[1] {
 				case "modify", "编辑":

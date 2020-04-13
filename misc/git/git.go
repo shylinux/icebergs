@@ -28,8 +28,7 @@ var Index = &ice.Context{Name: "git", Help: "代码库",
 	Caches: map[string]*ice.Cache{},
 	Configs: map[string]*ice.Config{
 		"git": {Name: "git", Help: "代码库", Value: kit.Data(
-			"source", "https://github.com/git/git.git",
-			"config", kit.Dict(
+			"source", "https://github.com/git/git.git", "config", kit.Dict(
 				"alias", kit.Dict("s", "status", "b", "branch"),
 				"color", kit.Dict("ui", "true"),
 				"push", kit.Dict("default", "simple"),
@@ -59,6 +58,8 @@ var Index = &ice.Context{Name: "git", Help: "代码库",
 				})
 			})
 		}},
+		ice.CODE_PROJECT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		}},
 
 		"init": {Name: "init", Help: "初始化", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			// 系统项目
@@ -75,12 +76,12 @@ var Index = &ice.Context{Name: "git", Help: "代码库",
 				add(m, value["name"], value["path"])
 			})
 		}},
+		"auto": {Name: "auto", Help: "自动化", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		}},
+		"load": {Name: "load", Help: "序列化", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		}},
 
-		"repos": {Name: "repos [name [path [remote [branch]]]]", Help: "仓库", List: kit.List(
-			kit.MDB_INPUT, "text", "name", "name", "action", "auto",
-			kit.MDB_INPUT, "button", "name", "查看", "action", "auto",
-			kit.MDB_INPUT, "button", "name", "返回", "cb", "Last",
-		), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		"repos": {Name: "repos [name=auto [path [remote [branch]]]] auto", Help: "代码仓库", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			if len(arg) > 1 {
 				if _, e := os.Stat(path.Join(arg[1], ".git")); e != nil && os.IsNotExist(e) {
 					// 下载仓库
@@ -104,11 +105,7 @@ var Index = &ice.Context{Name: "git", Help: "代码库",
 			})
 			m.Sort("name")
 		}},
-		"total": {Name: "total", Help: "统计", List: kit.List(
-			kit.MDB_INPUT, "text", "name", "name", "action", "auto",
-			kit.MDB_INPUT, "button", "name", "查看", "action", "auto",
-			kit.MDB_INPUT, "button", "name", "返回", "cb", "Last",
-		), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		"total": {Name: "total name auto", Help: "提交统计", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			if len(arg) > 0 {
 				// 提交详情
 				m.Richs("repos", nil, arg[0], func(key string, value map[string]interface{}) {
@@ -150,15 +147,11 @@ var Index = &ice.Context{Name: "git", Help: "代码库",
 			m.Push("rest", rest)
 			m.Sort("adds", "int_r")
 		}},
-		"status": {Name: "status repos", Help: "状态", Meta: kit.Dict(
+		"status": {Name: "status name auto", Help: "文件状态", Meta: kit.Dict(
 			"detail", []interface{}{"add", "reset", "remove", kit.Dict("name", "commit", "args", kit.List(
 				kit.MDB_INPUT, "select", "name", "type", "values", []string{"add", "opt"},
 				kit.MDB_INPUT, "text", "name", "name", "value", "some",
 			))},
-		), List: kit.List(
-			kit.MDB_INPUT, "text", "name", "name", "action", "auto",
-			kit.MDB_INPUT, "button", "name", "查看", "action", "auto",
-			kit.MDB_INPUT, "button", "name", "返回", "cb", "Last",
 		), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			prefix := []string{ice.CLI_SYSTEM, "git"}
 
@@ -272,11 +265,8 @@ var Index = &ice.Context{Name: "git", Help: "代码库",
 			}
 		}},
 
-		"trend": {Name: "check name [path [repos]]", Help: "检查", Meta: kit.Dict("display", "/plugin/story/trend"), List: kit.List(
-			kit.MDB_INPUT, "text", "name", "repos", "action", "auto",
-			kit.MDB_INPUT, "text", "name", "begin_time", "figure", "date",
-			kit.MDB_INPUT, "button", "name", "执行", "action", "auto",
-			kit.MDB_INPUT, "button", "name", "返回", "cb", "Last",
+		"trend": {Name: "trend name=auto begin_time=@date auto", Help: "趋势图", Meta: kit.Dict(
+			"display", "/plugin/story/trend",
 		), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			if len(arg) == 0 {
 				m.Option("_display", "table")

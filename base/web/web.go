@@ -483,7 +483,7 @@ var Index = &ice.Context{Name: "web", Help: "网络模块",
 		ice.WEB_SHARE: {Name: "share", Help: "共享链", Value: kit.Data("index", "usr/volcanos/share.html", "template", share_template)},
 
 		ice.WEB_ROUTE: {Name: "route", Help: "路由", Value: kit.Data(kit.MDB_SHORT, kit.MDB_NAME)},
-		ice.WEB_PROXY: {Name: "proxy", Help: "代理", Value: kit.Data()},
+		ice.WEB_PROXY: {Name: "proxy", Help: "代理", Value: kit.Data(kit.MDB_SHORT, "proxy")},
 		ice.WEB_GROUP: {Name: "group", Help: "分组", Value: kit.Data(kit.MDB_SHORT, "group")},
 		ice.WEB_LABEL: {Name: "label", Help: "标签", Value: kit.Data(kit.MDB_SHORT, "label")},
 	},
@@ -508,8 +508,7 @@ var Index = &ice.Context{Name: "web", Help: "网络模块",
 			m.Conf(ice.WEB_SHARE, "meta.template", share_template)
 		}},
 		ice.ICE_EXIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			m.Save(ice.WEB_SPIDE, ice.WEB_SERVE,
-				ice.WEB_GROUP, ice.WEB_LABEL,
+			m.Save(ice.WEB_SPIDE, ice.WEB_SERVE, ice.WEB_GROUP, ice.WEB_LABEL,
 				ice.WEB_FAVOR, ice.WEB_CACHE, ice.WEB_STORY, ice.WEB_SHARE,
 			)
 
@@ -521,12 +520,8 @@ var Index = &ice.Context{Name: "web", Help: "网络模块",
 			})
 		}},
 
-		ice.WEB_SPIDE: {Name: "spide name [msg|raw|cache] POST|GET url [json|form|part|file|data] arg...", Help: "蜘蛛侠", List: kit.List(
-			kit.MDB_INPUT, "text", "name", "name",
-			kit.MDB_INPUT, "button", "value", "查看", "action", "auto",
-			kit.MDB_INPUT, "button", "value", "返回", "cb", "Last",
-		), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			if len(arg) == 0 {
+		ice.WEB_SPIDE: {Name: "spide name=auto [action:select=msg|raw|cache] [method:select=POST|GET] url [format:select=json|form|part|data|file] arg... auto", Help: "蜘蛛侠", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			if len(arg) == 0 || arg[0] == "" {
 				// 爬虫列表
 				m.Richs(ice.WEB_SPIDE, nil, "*", func(key string, value map[string]interface{}) {
 					m.Push(key, value["client"], []string{"name", "share", "login", "method", "url"})
@@ -534,7 +529,7 @@ var Index = &ice.Context{Name: "web", Help: "网络模块",
 				m.Sort("name")
 				return
 			}
-			if len(arg) == 1 {
+			if len(arg) == 1 || len(arg) > 3 && arg[3] == "" {
 				// 爬虫详情
 				m.Richs(ice.WEB_SPIDE, nil, arg[0], func(key string, value map[string]interface{}) {
 					m.Push("detail", value)
@@ -625,8 +620,6 @@ var Index = &ice.Context{Name: "web", Help: "网络模块",
 				body, ok := m.Optionv("body").(io.Reader)
 				if !ok && len(arg) > 0 && method != "GET" {
 					switch arg[0] {
-					case "data":
-						body, arg = bytes.NewBufferString(arg[1]), arg[2:]
 					case "file":
 						if f, e := os.Open(arg[1]); m.Warn(e != nil, "%s", e) {
 							return
@@ -634,6 +627,8 @@ var Index = &ice.Context{Name: "web", Help: "网络模块",
 							defer f.Close()
 							body, arg = f, arg[2:]
 						}
+					case "data":
+						body, arg = bytes.NewBufferString(arg[1]), arg[2:]
 					case "part":
 						buf := &bytes.Buffer{}
 						mp := multipart.NewWriter(buf)
@@ -782,10 +777,8 @@ var Index = &ice.Context{Name: "web", Help: "网络模块",
 				m.Cmd(ice.WEB_SPACE, "connect", k)
 			}
 		}},
-		ice.WEB_SPACE: {Name: "space", Help: "空间站", Meta: kit.Dict("exports", []string{"pod", "name"}), List: kit.List(
-			kit.MDB_INPUT, "text", "name", "name",
-			kit.MDB_INPUT, "button", "value", "查看", "action", "auto",
-			kit.MDB_INPUT, "button", "value", "返回", "cb", "Last",
+		ice.WEB_SPACE: {Name: "space name auto", Help: "空间站", Meta: kit.Dict(
+			"exports", []string{"pod", "name"},
 		), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			if len(arg) == 0 {
 				// 空间列表
@@ -901,13 +894,8 @@ var Index = &ice.Context{Name: "web", Help: "网络模块",
 				}) == nil, "not found %s", arg[0])
 			}
 		}},
-		ice.WEB_DREAM: {Name: "dream", Help: "梦想家", Meta: kit.Dict(
-			"exports", []string{"you", "name"},
-			"detail", []interface{}{"启动", "停止"},
-		), List: kit.List(
-			kit.MDB_INPUT, "text", "value", "", "name", "name",
-			kit.MDB_INPUT, "button", "value", "创建", "action", "auto",
-			kit.MDB_INPUT, "button", "value", "返回", "cb", "Last",
+		ice.WEB_DREAM: {Name: "dream name auto", Help: "梦想家", Meta: kit.Dict(
+			"exports", []string{"you", "name"}, "detail", []interface{}{"启动", "停止"},
 		), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			if len(arg) > 1 && arg[0] == "action" {
 				switch arg[1] {
@@ -962,16 +950,8 @@ var Index = &ice.Context{Name: "web", Help: "网络模块",
 			m.Cmdy("nfs.dir", p)
 		}},
 
-		ice.WEB_FAVOR: {Name: "favor [path [type name [text [key value]....]]", Help: "收藏夹", Meta: kit.Dict(
-			"exports", []string{"hot", "favor"},
-			"detail", []string{"编辑", "收藏", "收录", "导出", "删除"},
-		), List: kit.List(
-			kit.MDB_INPUT, "text", "name", "favor", "action", "auto",
-			kit.MDB_INPUT, "text", "name", "id", "action", "auto",
-			kit.MDB_INPUT, "button", "name", "查看", "action", "auto",
-			kit.MDB_INPUT, "button", "name", "返回", "cb", "Last",
-			kit.MDB_INPUT, "button", "name", "渲染",
-			kit.MDB_INPUT, "button", "name", "回放",
+		ice.WEB_FAVOR: {Name: "favor favor=auto id=auto auto", Help: "收藏夹", Meta: kit.Dict(
+			"exports", []string{"hot", "favor"}, "detail", []string{"编辑", "收藏", "收录", "导出", "删除"},
 		), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			switch m.Option("_action") {
 			case "渲染":
@@ -1322,12 +1302,8 @@ var Index = &ice.Context{Name: "web", Help: "网络模块",
 				m.Echo(arg[2])
 			}
 		}},
-		ice.WEB_STORY: {Name: "story", Help: "故事会", Meta: kit.Dict("exports", []string{"top", "story"},
-			"detail", []string{"共享", "更新", "推送"}), List: kit.List(
-			kit.MDB_INPUT, "text", "name", "story", "action", "auto",
-			kit.MDB_INPUT, "text", "name", "list", "action", "auto",
-			kit.MDB_INPUT, "button", "value", "查看", "action", "auto",
-			kit.MDB_INPUT, "button", "value", "返回", "cb", "Last",
+		ice.WEB_STORY: {Name: "story story=auto key=auto auto", Help: "故事会", Meta: kit.Dict(
+			"exports", []string{"top", "story"}, "detail", []string{"共享", "更新", "推送"},
 		), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			if len(arg) > 1 && arg[0] == "action" {
 				story, list := m.Option("story"), m.Option("list")
@@ -1651,8 +1627,7 @@ var Index = &ice.Context{Name: "web", Help: "网络模块",
 
 					m.Richs(ice.WEB_STORY, nil, list, func(key string, value map[string]interface{}) {
 						// 直连节点
-						m.Push("list", key)
-						m.Push(list, value, []string{"time", "count", "scene", "story"})
+						m.Push(key, value, []string{"time", "key", "count", "scene", "story"})
 						m.Richs(ice.WEB_CACHE, nil, value["data"], func(key string, value map[string]interface{}) {
 							m.Push("drama", value["text"])
 							m.Push("data", key)
@@ -1661,8 +1636,7 @@ var Index = &ice.Context{Name: "web", Help: "网络模块",
 						kit.Fetch(value["list"], func(key string, val string) {
 							m.Richs(ice.WEB_STORY, nil, val, func(key string, value map[string]interface{}) {
 								// 复合节点
-								m.Push("list", key)
-								m.Push(list, value, []string{"time", "count", "scene", "story"})
+								m.Push(key, value, []string{"time", "key", "count", "scene", "story"})
 								m.Richs(ice.WEB_CACHE, nil, value["data"], func(key string, value map[string]interface{}) {
 									m.Push("drama", value["text"])
 									m.Push("data", key)
@@ -1691,11 +1665,7 @@ var Index = &ice.Context{Name: "web", Help: "网络模块",
 				})
 			}
 		}},
-		ice.WEB_SHARE: {Name: "share", Help: "共享链", List: kit.List(
-			kit.MDB_INPUT, "text", "name", "share", "action", "auto",
-			kit.MDB_INPUT, "button", "value", "查看", "action", "auto",
-			kit.MDB_INPUT, "button", "value", "返回", "cb", "Last",
-		), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		ice.WEB_SHARE: {Name: "share share auto", Help: "共享链", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			if len(arg) == 0 {
 				// 共享列表
 				m.Grows(ice.WEB_SHARE, nil, "", "", func(index int, value map[string]interface{}) {

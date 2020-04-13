@@ -69,6 +69,7 @@ var Index = &ice.Context{Name: "cli", Help: "命令模块",
 		}},
 
 		ice.CLI_RUNTIME: {Name: "runtime", Help: "运行环境", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			m.Cmdy(ice.CTX_CONFIG, ice.CLI_RUNTIME, arg)
 		}},
 		ice.CLI_SYSTEM: {Name: "system", Help: "系统命令", Hand: func(m *ice.Message, c *ice.Context, key string, arg ...string) {
 			cmd := exec.Command(arg[0], arg[1:]...)

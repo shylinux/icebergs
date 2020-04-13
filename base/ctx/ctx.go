@@ -86,6 +86,7 @@ var Index = &ice.Context{Name: "ctx", Help: "配置模块",
 						m.Push("index", k)
 						m.Push("name", v.Name)
 						m.Push("help", kit.Simple(v.Help)[0])
+						m.Push("list", kit.Format(v.List))
 					}
 				})
 				return
@@ -104,6 +105,35 @@ var Index = &ice.Context{Name: "ctx", Help: "配置模块",
 					m.Push("name", cmd.Name)
 					m.Push("help", kit.Simple(cmd.Help)[0])
 					m.Push("meta", kit.Format(cmd.Meta))
+					if len(cmd.List) == 0 {
+						list := kit.Split(cmd.Name)
+						button := false
+						for i, v := range list {
+							if i > 0 {
+								ls := kit.Split(v, ":=")
+								switch ls[0] {
+								case "auto":
+									cmd.List = append(cmd.List, kit.List(kit.MDB_INPUT, "button", "name", "查看", "value", "auto")...)
+									cmd.List = append(cmd.List, kit.List(kit.MDB_INPUT, "button", "name", "返回", "value", "Last")...)
+									button = true
+								default:
+									if len(ls) > 1 && ls[1] == "button" {
+										button = true
+									}
+									cmd.List = append(cmd.List, kit.List(
+										kit.MDB_INPUT, kit.Select("text", ls, 1), "name", ls[0], "value", kit.Select("", ls, 2),
+									)...)
+								}
+							}
+						}
+						if len(cmd.List) == 0 {
+							cmd.List = append(cmd.List, kit.List(kit.MDB_INPUT, "text", "name", "name")...)
+						}
+						if !button {
+							cmd.List = append(cmd.List, kit.List(kit.MDB_INPUT, "button", "name", "查看")...)
+							cmd.List = append(cmd.List, kit.List(kit.MDB_INPUT, "button", "name", "返回", "value", "Last")...)
+						}
+					}
 					m.Push("list", kit.Format(cmd.List))
 				} else {
 					if you := m.Option(kit.Format(kit.Value(cmd.Meta, "remote"))); you != "" {

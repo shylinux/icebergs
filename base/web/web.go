@@ -1768,9 +1768,7 @@ var Index = &ice.Context{Name: "web", Help: "网络模块",
 			}
 		}},
 
-		ice.WEB_ROUTE: {Name: "route", Help: "路由", Meta: kit.Dict(
-			"detail", []string{"分组"},
-		), List: ice.ListLook("name"), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		ice.WEB_ROUTE: {Name: "route name auto", Help: "路由", Meta: kit.Dict("detail", []string{"分组"}), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			if len(arg) > 1 && arg[0] == "action" {
 				switch arg[1] {
 				case "group", "分组":
@@ -1837,10 +1835,9 @@ var Index = &ice.Context{Name: "web", Help: "网络模块",
 
 			m.Cmdy(ice.WEB_ROUTE, arg[0], arg[1:])
 		}},
-		ice.WEB_GROUP: {Name: "group", Help: "分组", Meta: kit.Dict(
-			"exports", []string{"grp", "group"},
-			"detail", []string{"标签", "退还"},
-		), List: ice.ListLook("group", "name"), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		ice.WEB_GROUP: {Name: "group group name auto", Help: "分组", Meta: kit.Dict(
+			"exports", []string{"grp", "group"}, "detail", []string{"标签", "退还"},
+		), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			if len(arg) > 1 && arg[0] == "action" {
 				switch arg[1] {
 				case "label", "标签":
@@ -1920,10 +1917,9 @@ var Index = &ice.Context{Name: "web", Help: "网络模块",
 				}
 			})
 		}},
-		ice.WEB_LABEL: {Name: "label", Help: "标签", Meta: kit.Dict(
-			"exports", []string{"lab", "label"},
-			"detail", []string{"归还"},
-		), List: ice.ListLook("label", "name"), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		ice.WEB_LABEL: {Name: "label label name auto", Help: "标签", Meta: kit.Dict(
+			"exports", []string{"lab", "label"}, "detail", []string{"归还"},
+		), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			if len(arg) > 1 && arg[0] == "action" {
 				switch arg[1] {
 				case "del", "归还":

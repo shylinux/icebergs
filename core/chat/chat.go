@@ -189,6 +189,21 @@ var Index = &ice.Context{Name: "chat", Help: "聊天中心",
 			}
 		}},
 
+		"search": {Name: "search label:text=some word:text=启动流程 auto", Help: "搜索引擎", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			if len(arg) < 2 {
+				m.Cmdy(ice.WEB_LABEL, arg)
+				return
+			}
+			m.Cmdy(ice.WEB_LABEL, arg[0], "*", "favor", "search", arg[1:])
+		}},
+		"commend": {Name: "commend label:text=some word:text=请求响应 auto", Help: "推荐引擎", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			if len(arg) < 2 {
+				m.Cmdy(ice.WEB_LABEL, arg)
+				return
+			}
+			m.Cmdy(ice.WEB_LABEL, arg[0], "*", "favor", "search", arg[1:])
+		}},
+
 		"/toast": {Name: "/toast", Help: "提示", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {}},
 		"/carte": {Name: "/carte", Help: "菜单", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {}},
 		"/tutor": {Name: "/tutor", Help: "向导", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {}},
@@ -396,8 +411,10 @@ var Index = &ice.Context{Name: "chat", Help: "聊天中心",
 			}
 		}},
 
-		"/header": {Name: "/header", Help: "菜单栏", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {}},
-		"/footer": {Name: "/input", Help: "输入", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		"/header": {Name: "/header", Help: "标题栏", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			m.Echo(m.Conf(ice.WEB_SHARE, "meta.repos"))
+		}},
+		"/footer": {Name: "/footer", Help: "状态栏", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			m.Echo(m.Conf(ice.WEB_SHARE, "meta.email"))
 			m.Echo(m.Conf(ice.WEB_SHARE, "meta.legal"))
 		}},

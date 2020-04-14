@@ -323,7 +323,7 @@ var Index = &ice.Context{Name: "wiki", Help: "文档中心",
 			m.Render(ice.RENDER_TEMPLATE, m.Conf("chart", "meta.suffix"))
 		}},
 
-		"draw": {Name: "draw path auto", Help: "思维导图", Meta: kit.Dict("display", "wiki/draw"), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		"draw": {Name: "draw path auto", Help: "思维导图", Meta: kit.Dict("display", "local/wiki/draw"), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			if len(arg) > 0 && arg[0] == "action" {
 				switch arg[1] {
 				case "保存":
@@ -334,7 +334,7 @@ var Index = &ice.Context{Name: "wiki", Help: "文档中心",
 
 			reply(m, cmd, arg...)
 		}},
-		"data": {Name: "data path auto", Help: "数据表格", Meta: kit.Dict("display", "wiki/data"), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		"data": {Name: "data path auto", Help: "数据表格", Meta: kit.Dict("display", "local/wiki/data"), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			if len(arg) > 0 && arg[0] == "action" {
 				switch arg[1] {
 				case "保存":
@@ -350,7 +350,7 @@ var Index = &ice.Context{Name: "wiki", Help: "文档中心",
 			// 解析数据
 			m.CSV(m.Result())
 		}},
-		"word": {Name: "word path auto", Help: "语言文字", Meta: kit.Dict("display", "wiki/word"), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		"word": {Name: "word path auto", Help: "语言文字", Meta: kit.Dict("display", "local/wiki/word"), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			if len(arg) > 0 && arg[0] == "action" {
 				switch arg[1] {
 				case "story":
@@ -414,7 +414,7 @@ var Index = &ice.Context{Name: "wiki", Help: "文档中心",
 			m.Set("result").Cmdy(ice.SSH_SOURCE, path.Join(m.Conf(cmd, "meta.path"), arg[0]))
 		}},
 		"feel": {Name: "feel path auto 上传:button=@upload", Help: "影音媒体", Meta: kit.Dict(
-			"display", "wiki/feel", "detail", []string{"标签", "删除"},
+			"display", "local/wiki/feel", "detail", []string{"标签", "删除"},
 		), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			if m.Option("_action") == "上传" {
 				m.Cmd(ice.WEB_CACHE, "watch", m.Option("_data"), path.Join(m.Option("name"), m.Option("_name")))
@@ -460,7 +460,7 @@ var Index = &ice.Context{Name: "wiki", Help: "文档中心",
 			// 下载文件
 			m.Echo(path.Join(m.Conf(cmd, "meta.path"), arg[0]))
 		}},
-		"walk": {Name: "walk path=@province auto", Help: "走遍世界", Meta: kit.Dict("display", "wiki/walk"), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		"walk": {Name: "walk path=@province auto", Help: "走遍世界", Meta: kit.Dict("display", "local/wiki/walk"), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			if len(arg) > 0 && arg[0] == "action" {
 				switch arg[1] {
 				case "保存":

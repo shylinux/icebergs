@@ -367,6 +367,12 @@ func (web *Frame) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		Render(m, "refresh")
 		m.Event(ice.SYSTEM_INIT)
 		m.W = nil
+	} else if r.URL.Path == "/share" && r.Method == "GET" {
+		http.ServeFile(w, r, m.Conf(ice.WEB_SERVE, "meta.page.share"))
+
+	} else if r.URL.Path == "/" && r.Method == "GET" {
+		http.ServeFile(w, r, m.Conf(ice.WEB_SERVE, "meta.page.index"))
+
 	} else {
 		web.ServeMux.ServeHTTP(w, r)
 	}
@@ -444,19 +450,22 @@ var Index = &ice.Context{Name: "web", Help: "网络模块",
 	Configs: map[string]*ice.Config{
 		ice.WEB_SPIDE: {Name: "spide", Help: "蜘蛛侠", Value: kit.Data(kit.MDB_SHORT, "client.name")},
 		ice.WEB_SERVE: {Name: "serve", Help: "服务器", Value: kit.Data(
-			"static", map[string]interface{}{"/": "usr/volcanos/",
-				"/static/volcanos/": "usr/volcanos/",
-				"/publish/":         "usr/publish/",
-			},
+			"page", kit.Dict(
+				"index", "usr/volcanos/page/index.html",
+				"share", "usr/volcanos/page/share.html",
+			),
+			"static", kit.Dict("/", "usr/volcanos/",
+				"/static/volcanos/", "usr/volcanos/",
+				"/publish/", "usr/publish/",
+			),
 			"volcanos", kit.Dict("path", "usr/volcanos", "branch", "master",
 				"repos", "https://github.com/shylinux/volcanos",
 				"require", "usr/local",
 			),
-			"template", map[string]interface{}{"path": "usr/template", "list": []interface{}{
+			"template", kit.Dict("path", "usr/template", "list", []interface{}{
 				`{{define "raw"}}{{.Result}}{{end}}`,
-			}},
-			"logheaders", "false",
-			"init", "false",
+			}),
+			"logheaders", "false", "init", "false",
 		)},
 		ice.WEB_SPACE: {Name: "space", Help: "空间站", Value: kit.Data(kit.MDB_SHORT, kit.MDB_NAME,
 			"redial.a", 3000, "redial.b", 1000, "redial.c", 1000,
@@ -2099,7 +2108,7 @@ var Index = &ice.Context{Name: "web", Help: "网络模块",
 
 					if arg[1] == "" {
 						// 返回主页
-						Render(m, ice.RENDER_DOWNLOAD, m.Conf(ice.WEB_SHARE, "meta.index"))
+						Render(m, ice.RENDER_DOWNLOAD, m.Conf(ice.WEB_SERVE, "meta.page.share"))
 						break
 					}
 

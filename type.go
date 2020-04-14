@@ -824,7 +824,7 @@ func (m *Message) Log(level string, str string, arg ...interface{}) *Message {
 		prefix, suffix = "\033[31m", "\033[0m"
 	}
 
-	if os.Getenv("ctx_mod") != "" {
+	if os.Getenv("ctx_mod") != "" && m != nil {
 		// 输出日志
 		fmt.Fprintf(os.Stderr, "%s %02d %9s %s%s %s%s\n",
 			m.time.Format(ICE_TIME), m.code, fmt.Sprintf("%s->%s", m.source.Name, m.target.Name),

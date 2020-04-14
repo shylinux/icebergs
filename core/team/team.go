@@ -212,7 +212,7 @@ var Index = &ice.Context{Name: "team", Help: "团队中心",
 			})
 		}},
 		"plan": {Name: "plan scale:select=day|week|month|year begin_time=@date end_time=@date auto", Help: "计划", Meta: kit.Dict(
-			"display", "team/plan", "detail", []string{"process", "finish", "cancel"},
+			"display", "local/team/plan", "detail", []string{"process", "finish", "cancel"},
 		), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			// 起始日期
 			first := time.Now()

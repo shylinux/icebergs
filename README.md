@@ -1,4 +1,4 @@
-# Icebergs.go
+# icebergs
 
 icebergs是一个应用框架，通过模块化、集群化、自动化，快速搭建起完整的个人云计算平台。
 
@@ -75,19 +75,7 @@ git clone https://github.com/shylinux/icebergs usr/icebergs
 replace github.com/shylinux/icebergs => ./usr/icebergs
 ```
 
-### 1.5 开发接口
-
-如果现有的接口，无法满足需求，还可以下载接口源码自行更改。
-
-```sh
-git clone https://github.com/shylinux/toolkits usr/toolkits
-```
-修改go.mod文件，引用本地框架。
-```go
-replace github.com/shylinux/toolkits => ./usr/toolkits
-```
-
-## 2 原型设计 type.go
+## 2 原型 type.go
 ### 2.1 msg.Detail
 ### 2.2 msg.Option
 ### 2.3 msg.Append
@@ -107,25 +95,36 @@ replace github.com/shylinux/toolkits => ./usr/toolkits
 ### 3.6 释放资源 Close
 
 ## 4 基础模块 base/
-### 4.1 模块中心 base/ctx
-### 4.2 命令中心 base/cli
-### 4.3 认证中心 base/aaa
-### 4.4 网页中心 base/web
+### 4.1 模块中心 base/ctx/
+### 4.2 命令中心 base/cli/
+### 4.3 认证中心 base/aaa/
+### 4.4 网页中心 base/web/
 
-### 4.5 词法中心 base/lex
-### 4.6 语法中心 base/yac
-### 4.7 事件中心 base/gdb
-### 4.8 日志中心 base/log
+### 4.5 词法中心 base/lex/
+### 4.6 语法中心 base/yac/
+### 4.7 事件中心 base/gdb/
+### 4.8 日志中心 base/log/
 
-### 4.9 网络中心 base/tcp
-### 4.10 文件中心 base/nfs
-### 4.11 终端中心 base/ssh
-### 4.12 数据中心 base/mdb
+### 4.9 网络中心 base/tcp/
+### 4.10 文件中心 base/nfs/
+### 4.11 终端中心 base/ssh/
+### 4.12 数据中心 base/mdb/
 
 ## 5 核心模块 core/
-### 5.1 编程中心 core/code
-### 5.2 文档中心 core/wiki
-### 5.3 聊天中心 core/chat
-### 5.4 团队中心 core/team
-### 5.5 贸易中心 core/mall
+### 5.1 编程中心 core/code/
+### 5.2 文档中心 core/wiki/
+### 5.3 聊天中心 core/chat/
+### 5.4 团队中心 core/team/
+### 5.5 贸易中心 core/mall/
 
+## 6 其它模块 misc/
+### 6.1 终端管理 misc/zsh/
+### 6.1 终端管理 misc/tmux/
+### 6.1 容器管理 misc/docker/
+### 6.1 代码管理 misc/git/
+### 6.1 代码管理 misc/vim/
+### 6.1 公众号 misc/mp/
+### 6.1 小程序 misc/wx/
+### 6.1 浏览器 misc/chrome/
+### 6.1 机器人 misc/lark/
+### 6.1 开发板 misc/pi/

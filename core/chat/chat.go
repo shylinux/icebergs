@@ -429,13 +429,15 @@ var Index = &ice.Context{Name: "chat", Help: "聊天中心",
 
 			prefix := kit.Keys(kit.MDB_HASH, arg[0], "tool", kit.MDB_HASH, arg[1])
 			if len(arg) == 2 {
-				// 命令列表
-				if p := kit.Select(m.Option("pod"), m.Option("you")); p != "" {
-					if m.Cmdy(ice.WEB_SPACE, p, arg); len(m.Appendv("river")) > 0 {
+				if p := m.Option("pod"); p != "" {
+					m.Option("pod", "")
+					if m.Cmdy(ice.WEB_SPACE, p, "web.chat./action", arg); len(m.Appendv("river")) > 0 {
+						// 远程查询
 						return
 					}
 				}
 
+				// 命令列表
 				m.Grows(ice.CHAT_RIVER, prefix, "", "", func(index int, value map[string]interface{}) {
 					if meta, ok := kit.Value(value, "meta").(map[string]interface{}); ok {
 						m.Push("river", arg[0])
@@ -459,6 +461,13 @@ var Index = &ice.Context{Name: "chat", Help: "聊天中心",
 
 			switch arg[2] {
 			case "save":
+				if p := m.Option("pod"); p != "" {
+					// 远程保存
+					m.Option("pod", "")
+					m.Cmd(ice.WEB_SPACE, p, "web.chat./action", arg)
+					return
+				}
+
 				// 保存应用
 				m.Conf(ice.CHAT_RIVER, kit.Keys(prefix, "list"), "")
 				for i := 3; i < len(arg)-4; i += 5 {
@@ -468,11 +477,6 @@ var Index = &ice.Context{Name: "chat", Help: "聊天中心",
 					))
 					m.Log(ice.LOG_INSERT, "storm: %s %d: %v", arg[1], id, arg[i:i+5])
 				}
-
-				if p := kit.Select(m.Option("pod"), m.Option("you")); p != "" {
-					m.Cmd(ice.WEB_SPACE, p, arg)
-				}
-				return
 			}
 
 			if m.Option("_action") == "上传" {

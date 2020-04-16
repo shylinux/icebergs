@@ -43,6 +43,8 @@ var Index = &ice.Context{Name: "tmux", Help: "工作台",
 	},
 	Commands: map[string]*ice.Command{
 		ice.CODE_INSTALL: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			m.Option("cmd_dir", m.Conf("install", "meta.path"))
+			m.Cmd(ice.CLI_SYSTEM, "git", "clone", "https://github.com/tmux/tmux")
 		}},
 		ice.CODE_PREPARE: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			m.Cmd("nfs.link", path.Join(os.Getenv("HOME"), ".tmux.conf"), "etc/conf/tmux.conf")
@@ -82,17 +84,20 @@ var Index = &ice.Context{Name: "tmux", Help: "工作台",
 			m.Option("cmd_env", "TMUX", "", "ctx_dev", dev, "ctx_share", share)
 			m.Option("cmd_dir", path.Join(m.Conf(ice.WEB_DREAM, "meta.path"), arg[0]))
 
-			if arg[0] != "" && m.Cmd(prefix, "has-session", "-t", arg[0]).Append("code") != "0" {
-				// 创建会话
-				m.Cmd(prefix, "new-session", "-ds", arg[0])
+			if arg[0] != "" && m.Cmd(prefix, "has-session", "-t", arg[0]).Append("code") == "0" {
+				// 复用会话
+				return
 			}
 
+			// 创建会话
+			m.Cmd(prefix, "new-session", "-ds", arg[0])
+
 			if m.Option("local") != "" {
-				// 自动虚拟
+				// 创建容器
 				m.Cmd("local", m.Option("local"), arg[0])
 			}
 			if m.Option("relay") != "" {
-				// 自动认证
+				// 远程登录
 				m.Cmd("relay", m.Option("relay"), arg[0])
 			}
 
@@ -119,7 +124,50 @@ var Index = &ice.Context{Name: "tmux", Help: "工作台",
 				m.Cmdy(prefix, "send-keys", "-t", arg[0], v, "Enter")
 			}
 		}},
-		"load": {Name: "load", Help: "序列化", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		"make": {Name: "make name cmd...", Help: "个性化", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			prefix := kit.Simple(m.Confv("prefix", "meta.cmd"))
+			session := m.Conf(ice.CLI_RUNTIME, "node.name")
+			if arg[1] == "session" {
+				session, arg[2], arg = arg[2], arg[0], arg[2:]
+			}
+
+			if m.Warn(m.Cmd(prefix, "has-session", "-t", session).Append("code") != "0", "session miss") {
+				// 会话不存在
+				return
+			}
+
+			if m.Cmdx("session", session, "has", arg[0]) != "" {
+				// 窗口已存在
+				return
+			}
+
+			switch arg[1] {
+			case "init":
+				m.Cmdx(prefix, "rename-window", "-t", session, arg[0])
+				arg[1], arg = arg[0], arg[1:]
+			case "link":
+				m.Cmdx(prefix, "link-window", "-dt", session, "-s", arg[2])
+				return
+			default:
+				m.Cmd(prefix, "new-window", "-dt", session, "-n", arg[0])
+			}
+
+			if arg[1] == "init" {
+			} else {
+			}
+
+			for _, v := range arg[1:] {
+				switch ls := kit.Split(v); ls[1] {
+				case "v":
+					m.Cmd(prefix, "split-window", "-h", "-dt", session+":"+arg[0]+"."+ls[0], ls[2:])
+				case "u", "split-window":
+					m.Cmd(prefix, "split-window", "-dt", session+":"+arg[0]+"."+ls[0], ls[2:])
+				case "k":
+					m.Cmd(prefix, "send-key", "-t", session+":"+arg[0]+"."+ls[0], ls[2:])
+				default:
+					m.Cmd(prefix, ls[1], "-t", session+":"+arg[0]+"."+ls[0], ls[2:])
+				}
+			}
 		}},
 
 		"text": {Name: "text name 保存:button text:textarea", Help: "文本", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
@@ -221,6 +269,15 @@ var Index = &ice.Context{Name: "tmux", Help: "工作台",
 			if len(arg) == 1 {
 				// 窗口列表
 				m.Cmdy("windows", target)
+				return
+			}
+			switch arg[1] {
+			case "has":
+				m.Cmd("windows", target).Table(func(index int, value map[string]string, head []string) {
+					if value["window"] == arg[2] {
+						m.Echo("true")
+					}
+				})
 				return
 			}
 

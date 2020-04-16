@@ -4,7 +4,7 @@ var title = `<{{.Option "level"}} class="story" data-type="{{.Option "type"}}" d
 var brief = `<p class="story" data-type="{{.Option "type"}}" data-name="{{.Option "name"}}" data-text="{{.Option "text"}}">{{.Option "text"}}</p>`
 var refer = `<ul class="story"
 data-type="{{.Option "type"}}" data-name="{{.Option "name"}}" data-text="{{.Option "text"}}">
-{{range $index, $value := .Optionv "list"}}<li>{{index $value 0}}: {{index $value 1}}</li>{{end}}</ul>`
+{{range $index, $value := .Optionv "list"}}<li>{{index $value 0}}: <a href="{{index $value 1}}" target="_blank">{{index $value 1}}</a></li>{{end}}</ul>`
 var spark = `<p class="story" data-type="{{.Option "type"}}" data-name="{{.Option "name"}}" data-text="{{.Option "text"}}">{{.Option "text"}}</p>`
 
 var local = `<div class="story"

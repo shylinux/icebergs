@@ -943,6 +943,13 @@ var Index = &ice.Context{Name: "web", Help: "网络模块",
 			p := path.Join(m.Conf(ice.WEB_DREAM, "meta.path"), arg[0])
 			os.MkdirAll(p, 0777)
 
+			if b, e := ioutil.ReadFile(path.Join(p, m.Conf(ice.GDB_SIGNAL, "meta.pid"))); e == nil {
+				if s, e := os.Stat("/proc/" + string(b)); e == nil && s.IsDir() {
+					m.Info("already exists %v", string(b))
+					return
+				}
+			}
+
 			if m.Richs(ice.WEB_SPACE, nil, arg[0], nil) == nil {
 				// 启动任务
 				m.Option("cmd_dir", p)

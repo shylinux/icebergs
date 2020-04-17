@@ -13,26 +13,6 @@ var Index = &ice.Context{Name: "chat", Help: "聊天中心",
 			"template", kit.Dict("root", []interface{}{
 				[]interface{}{"river", `{{.Option "user.nick"|Format}}@{{.Conf "runtime" "node.name"|Format}}`, "mall"},
 
-				[]interface{}{"storm", "mall", "mall"},
-				[]interface{}{"field", "asset", "web.mall"},
-				[]interface{}{"field", "spend", "web.mall"},
-				[]interface{}{"field", "trans", "web.mall"},
-				[]interface{}{"field", "bonus", "web.mall"},
-				[]interface{}{"field", "month", "web.mall"},
-
-				[]interface{}{"storm", "team", "team"},
-				[]interface{}{"field", "plan", "web.team"},
-				[]interface{}{"field", "miss", "web.team"},
-				[]interface{}{"field", "stat", "web.team"},
-				[]interface{}{"field", "task", "web.team"},
-
-				[]interface{}{"storm", "wiki", "wiki"},
-				[]interface{}{"field", "draw", "web.wiki"},
-				[]interface{}{"field", "data", "web.wiki"},
-				[]interface{}{"field", "word", "web.wiki"},
-				[]interface{}{"field", "walk", "web.wiki"},
-				[]interface{}{"field", "feel", "web.wiki"},
-
 				[]interface{}{"storm", "code", "code"},
 				[]interface{}{"field", "login", "web.code"},
 				[]interface{}{"field", "buffer", "web.code.tmux"},
@@ -44,6 +24,13 @@ var Index = &ice.Context{Name: "chat", Help: "聊天中心",
 				[]interface{}{"field", "total", "web.code.git"},
 				[]interface{}{"field", "status", "web.code.git"},
 
+				[]interface{}{"storm", "wiki", "wiki"},
+				[]interface{}{"field", "draw", "web.wiki"},
+				[]interface{}{"field", "data", "web.wiki"},
+				[]interface{}{"field", "word", "web.wiki"},
+				[]interface{}{"field", "walk", "web.wiki"},
+				[]interface{}{"field", "feel", "web.wiki"},
+
 				[]interface{}{"storm", "root"},
 				[]interface{}{"field", "spide"},
 				[]interface{}{"field", "space"},
@@ -51,6 +38,26 @@ var Index = &ice.Context{Name: "chat", Help: "聊天中心",
 				[]interface{}{"field", "favor"},
 				[]interface{}{"field", "story"},
 				[]interface{}{"field", "share"},
+
+				[]interface{}{"storm", "miss"},
+				[]interface{}{"field", "route"},
+				[]interface{}{"field", "group"},
+				[]interface{}{"field", "label"},
+				[]interface{}{"field", "search"},
+				[]interface{}{"field", "commend"},
+
+				[]interface{}{"storm", "team", "team"},
+				[]interface{}{"field", "plan", "web.team"},
+				[]interface{}{"field", "miss", "web.team"},
+				[]interface{}{"field", "stat", "web.team"},
+				[]interface{}{"field", "task", "web.team"},
+
+				[]interface{}{"storm", "mall", "mall"},
+				[]interface{}{"field", "asset", "web.mall"},
+				[]interface{}{"field", "spend", "web.mall"},
+				[]interface{}{"field", "trans", "web.mall"},
+				[]interface{}{"field", "bonus", "web.mall"},
+				[]interface{}{"field", "month", "web.mall"},
 			}, "void", []interface{}{
 				[]interface{}{"storm", "wiki", "wiki"},
 				[]interface{}{"field", "note", "web.wiki"},
@@ -152,7 +159,7 @@ var Index = &ice.Context{Name: "chat", Help: "聊天中心",
 				case "login":
 					// 密码登录
 					if len(arg) > 2 {
-						m.Render("cookie", m.Option(ice.MSG_SESSID, m.Cmdx(ice.AAA_USER, "login", m.Option(ice.MSG_USERNAME, arg[1]), arg[2])))
+						web.Render(m, "cookie", m.Option(ice.MSG_SESSID, m.Cmdx(ice.AAA_USER, "login", m.Option(ice.MSG_USERNAME, arg[1]), arg[2])))
 					}
 
 				default:
@@ -215,14 +222,10 @@ var Index = &ice.Context{Name: "chat", Help: "聊天中心",
 				m.Richs(ice.AAA_USER, nil, m.Option(ice.MSG_USERNAME), func(key string, value map[string]interface{}) {
 					m.Push("nickname", value["nickname"])
 				})
-				m.Echo(m.Option(ice.MSG_USERNAME))
+				m.Render(m.Option(ice.MSG_USERNAME))
 
 			case "login":
-				if len(arg) > 1 {
-					m.Cmdy(ice.AAA_USER, "login", arg[1:])
-					break
-				}
-				m.Echo(m.Option(ice.MSG_SESSID))
+				m.Render(m.Option(ice.MSG_SESSID))
 
 			case "share":
 				switch arg[1] {

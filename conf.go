@@ -162,8 +162,10 @@ const ( // MDB
 )
 
 const ( // APP
-	APP_MIND = "mind"
-	APP_MISS = "miss"
+	APP_MIND    = "mind"
+	APP_MISS    = "miss"
+	APP_SEARCH  = "search"
+	APP_COMMEND = "commend"
 )
 const ( // ROLE
 	ROLE_ROOT = "root"
@@ -273,8 +275,10 @@ var Alias = map[string]string{
 
 	CHAT_RIVER: "web.chat.river",
 
-	APP_MISS: "web.team.miss",
-	APP_MIND: "web.wiki.mind",
+	APP_MISS:    "web.team.miss",
+	APP_MIND:    "web.wiki.mind",
+	APP_SEARCH:  "web.chat.search",
+	APP_COMMEND: "web.chat.commend",
 
 	"compile": "web.code.compile",
 	"publish": "web.code.publish",

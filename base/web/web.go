@@ -1589,29 +1589,29 @@ var Index = &ice.Context{Name: "web", Help: "网络模块",
 				if last := m.Richs(ice.WEB_STORY, nil, prev, nil); prev != "" && last != nil && last["data"] == arg[3] {
 					// 重复提交
 					m.Echo(prev)
-					break
-				}
-
-				// 添加节点
-				list := m.Rich(ice.WEB_STORY, nil, kit.Dict(
-					"scene", arg[1], "story", arg[2], "count", count+1, "data", arg[3], "prev", prev,
-				))
-				m.Log(ice.LOG_CREATE, "story: %s %s: %s", list, arg[1], arg[2])
-				m.Push("list", list)
-
-				if head == "" {
-					// 添加索引
-					m.Rich(ice.WEB_STORY, "head", kit.Dict("scene", arg[1], "story", arg[2], "count", count+1, "list", list))
 				} else {
-					// 更新索引
-					value["count"] = count + 1
-					value["time"] = m.Time()
-					value["list"] = list
+					// 添加节点
+					list := m.Rich(ice.WEB_STORY, nil, kit.Dict(
+						"scene", arg[1], "story", arg[2], "count", count+1, "data", arg[3], "prev", prev,
+					))
+					m.Log(ice.LOG_CREATE, "story: %s %s: %s", list, arg[1], arg[2])
+					m.Push("list", list)
+
+					if head == "" {
+						// 添加索引
+						m.Rich(ice.WEB_STORY, "head", kit.Dict("scene", arg[1], "story", arg[2], "count", count+1, "list", list))
+					} else {
+						// 更新索引
+						value["count"] = count + 1
+						value["time"] = m.Time()
+						value["list"] = list
+					}
+					m.Echo(list)
 				}
-				m.Echo(list)
 
 				// 分发数据
 				if p := kit.Select(m.Conf(ice.WEB_FAVOR, "meta.proxy"), m.Option("you")); p != "" {
+					m.Info("what %v", p)
 					m.Option("you", "")
 					m.Cmd(ice.WEB_PROXY, p, ice.WEB_STORY, ice.STORY_PULL, arg[2], "dev", arg[2])
 				}

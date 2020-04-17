@@ -212,10 +212,15 @@ var Index = &ice.Context{Name: "wiki", Help: "文档中心",
 			data := kit.Dict()
 			cmds := kit.Split(arg[1])
 			m.Search(cmds[0], func(p *ice.Context, s *ice.Context, key string, cmd *ice.Command) {
+				ls := strings.Split(cmds[0], ".")
+				m.Cmd(ice.CTX_COMMAND, strings.Join(ls[:len(ls)-1], "."), key)
 				if data["feature"], data["inputs"] = cmd.Meta, cmd.List; len(cmd.List) == 0 {
 					data["inputs"] = m.Confv("field", "meta.some.simple.inputs")
 				}
 			})
+			if len(data) == 0 {
+				m.Echo("not found", arg[1])
+			}
 
 			for i := 2; i < len(arg)-1; i += 2 {
 				if data := m.Confv("field", kit.Keys("meta.some", arg[i+1], arg[i])); data != nil {

@@ -84,13 +84,10 @@ var Index = &ice.Context{Name: "tmux", Help: "工作台",
 			m.Option("cmd_env", "TMUX", "", "ctx_dev", dev, "ctx_share", share)
 			m.Option("cmd_dir", path.Join(m.Conf(ice.WEB_DREAM, "meta.path"), arg[0]))
 
-			if arg[0] != "" && m.Cmd(prefix, "has-session", "-t", arg[0]).Append("code") == "0" {
-				// 复用会话
-				return
+			if arg[0] != "" && m.Cmd(prefix, "has-session", "-t", arg[0]).Append("code") != "0" {
+				// 创建会话
+				m.Cmd(prefix, "new-session", "-ds", arg[0])
 			}
-
-			// 创建会话
-			m.Cmd(prefix, "new-session", "-ds", arg[0])
 
 			if m.Option("local") != "" {
 				// 创建容器

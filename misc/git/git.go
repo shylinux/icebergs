@@ -41,6 +41,9 @@ var Index = &ice.Context{Name: "git", Help: "代码库",
 		"total": {Name: "total", Help: "统计", Value: kit.Data(kit.MDB_SHORT, "name", "skip", kit.Dict("wubi-dict", "true", "word-dict", "true"))},
 	},
 	Commands: map[string]*ice.Command{
+		ice.WEB_LOGIN: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		}},
+
 		ice.CODE_INSTALL: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			m.Option("cmd_dir", m.Conf("install", "meta.path"))
 			m.Cmd(ice.CLI_SYSTEM, "git", "clone", m.Conf("git", "meta.source"))

@@ -569,8 +569,8 @@ var Index = &ice.Context{Name: "chat", Help: "聊天中心",
 				wg.Wait()
 			case "set":
 				if arg[1] != "" {
-					// m.Cmdy(ice.WEB_SPACE, arg[1], "web.chat.search", "set", "", arg[2:])
-					// break
+					m.Cmdy(ice.WEB_SPACE, arg[1], "web.chat.search", "set", "", arg[2:])
+					break
 				}
 
 				m.Richs("search", nil, arg[2], func(key string, value map[string]interface{}) {

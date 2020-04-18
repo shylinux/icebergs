@@ -2,6 +2,7 @@ package git
 
 import (
 	ice "github.com/shylinux/icebergs"
+	"github.com/shylinux/icebergs/base/web"
 	"github.com/shylinux/icebergs/core/code"
 	kit "github.com/shylinux/toolkits"
 
@@ -273,7 +274,10 @@ var Index = &ice.Context{Name: "git", Help: "代码库",
 			}
 			m.Cmdy("total", arg)
 		}},
+
+		"/webhook": {Name: "/webhook", Help: "/webhook", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		}},
 	},
 }
 
-func init() { code.Index.Register(Index, nil) }
+func init() { code.Index.Register(Index, &web.Frame{}) }

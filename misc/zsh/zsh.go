@@ -31,7 +31,7 @@ var Index = &ice.Context{Name: "zsh", Help: "命令行",
 				m.Option("you", value["you"])
 			})
 
-			m.Logs(ice.LOG_LOGIN, "you", m.Option("you"), "url", m.Option(ice.MSG_USERURL), "cmd", m.Optionv("cmds"), "sub", m.Optionv("sub"))
+			m.Logs(ice.LOG_AUTH, "you", m.Option("you"), "url", m.Option(ice.MSG_USERURL), "cmd", m.Optionv("cmds"), "sub", m.Optionv("sub"))
 			m.Option(ice.MSG_OUTPUT, ice.RENDER_RESULT)
 		}},
 

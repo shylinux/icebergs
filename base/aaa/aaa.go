@@ -174,7 +174,7 @@ var Index = &ice.Context{Name: "aaa", Help: "认证模块",
 			case "auth":
 				m.Richs(ice.AAA_SESS, nil, arg[1], func(value map[string]interface{}) {
 					value["username"], value["userrole"] = arg[2], m.Cmdx(ice.AAA_ROLE, "check", arg[2])
-					m.Log(ice.LOG_LOGIN, "sessid: %s username: %s userrole: %s", arg[1], arg[2], value["userrole"])
+					m.Log(ice.LOG_AUTH, "sessid: %s username: %s userrole: %s", arg[1], arg[2], value["userrole"])
 					m.Echo("%v", value["userrole"])
 				})
 

@@ -33,8 +33,8 @@ const ( // MSG
 	MSG_USERIP   = "user.ip"
 	MSG_USERUA   = "user.ua"
 	MSG_USERURL  = "user.url"
-	MSG_USERPOD  = "user.pod"
 	MSG_USERWEB  = "user.web"
+	MSG_USERPOD  = "user.pod"
 	MSG_USERNICK = "user.nick"
 	MSG_USERNAME = "user.name"
 	MSG_USERROLE = "user.role"
@@ -115,8 +115,7 @@ const ( // LOG
 	LOG_CLOSE = "close"
 
 	// 权限
-	LOG_LOGIN  = "login"
-	LOG_LOGOUT = "logout"
+	LOG_AUTH = "auth"
 
 	// 分类
 	LOG_CMDS  = "cmds"

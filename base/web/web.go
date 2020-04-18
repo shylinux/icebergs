@@ -108,7 +108,7 @@ func (web *Frame) Login(msg *ice.Message, w http.ResponseWriter, r *http.Request
 	if msg.Options(ice.MSG_SESSID) {
 		// 会话认证
 		sub := msg.Cmd(ice.AAA_SESS, "check", msg.Option(ice.MSG_SESSID))
-		msg.Log(ice.LOG_LOGIN, "role: %s user: %s", msg.Option(ice.MSG_USERROLE, sub.Append("userrole")),
+		msg.Log(ice.LOG_AUTH, "role: %s user: %s", msg.Option(ice.MSG_USERROLE, sub.Append("userrole")),
 			msg.Option(ice.MSG_USERNAME, sub.Append("username")))
 	}
 
@@ -120,7 +120,7 @@ func (web *Frame) Login(msg *ice.Message, w http.ResponseWriter, r *http.Request
 			msg.Option(ice.MSG_SESSID, msg.Cmdx(ice.AAA_SESS, "create", msg.Option(ice.MSG_USERNAME), msg.Option(ice.MSG_USERROLE)))
 			msg.Render("cookie", msg.Option(ice.MSG_SESSID))
 		}
-		msg.Log(ice.LOG_LOGIN, "user: %s role: %s sess: %s", msg.Option(ice.MSG_USERNAME), msg.Option(ice.MSG_USERROLE), msg.Option(ice.MSG_SESSID))
+		msg.Log(ice.LOG_AUTH, "user: %s role: %s sess: %s", msg.Option(ice.MSG_USERNAME), msg.Option(ice.MSG_USERROLE), msg.Option(ice.MSG_SESSID))
 	}
 
 	if s, ok := msg.Target().Commands[ice.WEB_LOGIN]; ok {
@@ -251,8 +251,9 @@ func (web *Frame) HandleCmd(m *ice.Message, key string, cmd *ice.Command) {
 			defer func() { msg.Cost("%s %v %v", r.URL.Path, msg.Optionv("cmds"), msg.Format("append")) }()
 
 			// 请求地址
-			msg.Option(ice.MSG_USERUA, r.Header.Get("User-Agent"))
+			msg.Option(ice.MSG_USERWEB, m.Conf(ice.WEB_SHARE, "meta.domain"))
 			msg.Option(ice.MSG_USERIP, r.Header.Get(ice.MSG_USERIP))
+			msg.Option(ice.MSG_USERUA, r.Header.Get("User-Agent"))
 			msg.Option(ice.MSG_USERURL, r.URL.Path)
 			msg.Option(ice.MSG_USERPOD, "")
 			msg.Option(ice.MSG_SESSID, "")
@@ -517,6 +518,21 @@ var Index = &ice.Context{Name: "web", Help: "网络模块",
 			m.Conf(ice.WEB_SHARE, "meta.template", share_template)
 
 			m.Cmd(ice.APP_SEARCH, "add", "favor", "base", m.AddCmd(&ice.Command{Name: "search word", Help: "搜索引擎", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+				switch arg[0] {
+				case "set":
+					m.Richs(ice.WEB_FAVOR, nil, arg[1], func(key string, value map[string]interface{}) {
+						m.Grows(ice.WEB_FAVOR, kit.Keys(kit.MDB_HASH, key), "id", arg[2], func(index int, value map[string]interface{}) {
+							if cmd := m.Conf(ice.WEB_FAVOR, kit.Keys("meta.render", value["type"])); cmd != "" {
+								m.Optionv("value", value)
+								m.Cmdy(cmd, arg[1:])
+							} else {
+								m.Push("detail", value)
+							}
+						})
+					})
+					return
+				}
+
 				m.Option("cache.limit", -2)
 				wg := &sync.WaitGroup{}
 				m.Richs(ice.WEB_FAVOR, nil, "*", func(key string, val map[string]interface{}) {
@@ -540,6 +556,12 @@ var Index = &ice.Context{Name: "web", Help: "网络模块",
 			}}))
 
 			m.Cmd(ice.APP_SEARCH, "add", "story", "base", m.AddCmd(&ice.Command{Name: "search word", Help: "搜索引擎", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+				switch arg[0] {
+				case "set":
+					m.Cmdy(ice.WEB_STORY, "index", arg[2])
+					return
+				}
+
 				m.Richs(ice.WEB_STORY, "head", "*", func(key string, val map[string]interface{}) {
 					if val["story"] == arg[0] {
 						m.Push("pod", m.Option(ice.MSG_USERPOD))
@@ -555,6 +577,12 @@ var Index = &ice.Context{Name: "web", Help: "网络模块",
 			}}))
 
 			m.Cmd(ice.APP_SEARCH, "add", "share", "base", m.AddCmd(&ice.Command{Name: "search word", Help: "搜索引擎", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+				switch arg[0] {
+				case "set":
+					m.Cmdy(ice.WEB_SHARE, arg[2])
+					return
+				}
+
 				m.Option("cache.limit", -2)
 				m.Grows(ice.WEB_SHARE, nil, "", "", func(index int, value map[string]interface{}) {
 					if value["share"] == arg[0] || value["type"] == arg[0] ||
@@ -1026,18 +1054,6 @@ var Index = &ice.Context{Name: "web", Help: "网络模块",
 		ice.WEB_FAVOR: {Name: "favor favor=auto id=auto auto", Help: "收藏夹", Meta: kit.Dict(
 			"exports", []string{"hot", "favor"}, "detail", []string{"编辑", "收藏", "收录", "导出", "删除"},
 		), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			switch m.Option("_action") {
-			case "渲染":
-				m.Option("render", "spide")
-				m.Richs(ice.WEB_FAVOR, nil, kit.Select(m.Option("favor"), arg, 0), func(key string, value map[string]interface{}) {
-					m.Option("render", kit.Select("spide", kit.Value(value, "meta.render")))
-				})
-				defer m.Render(m.Conf(ice.WEB_FAVOR, kit.Keys("meta.template", m.Option("render"))))
-
-			case "回放":
-				return
-			}
-
 			if len(arg) > 1 && arg[0] == "action" {
 				favor, id := m.Option("favor"), m.Option("id")
 				switch arg[2] {

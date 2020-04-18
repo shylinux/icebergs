@@ -167,7 +167,7 @@ var Index = &ice.Context{Name: "code", Help: "编程中心",
 				if m.Option("sid") != "" && m.Conf(cmd, []string{kit.MDB_HASH, m.Option("sid"), "status"}) != "" {
 					// 复用会话
 					m.Conf(cmd, []string{kit.MDB_HASH, m.Option("sid"), "status"}, "login")
-					m.Logs(ice.LOG_LOGIN, "sid", m.Option("sid"))
+					m.Logs(ice.LOG_AUTH, "sid", m.Option("sid"))
 					m.Echo(m.Option("sid"))
 					return
 				}
@@ -184,13 +184,13 @@ var Index = &ice.Context{Name: "code", Help: "编程中心",
 					"hostname", m.Option("hostname"),
 					"username", m.Option("username"),
 				))
-				m.Logs(ice.LOG_LOGIN, "sid", h, "you", you)
+				m.Logs(ice.LOG_AUTH, "sid", h, "you", you)
 				m.Echo(h)
 
 			case "exit":
 				// 退出会话
 				m.Richs(cmd, nil, m.Option("sid"), func(key string, value map[string]interface{}) {
-					m.Logs(ice.LOG_LOGOUT, "sid", m.Option("sid"))
+					m.Logs(ice.LOG_AUTH, "sid", m.Option("sid"))
 					value["status"] = "logout"
 					m.Echo(key)
 				})

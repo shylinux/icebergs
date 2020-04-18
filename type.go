@@ -57,7 +57,7 @@ type Context struct {
 	server Server
 
 	wg *sync.WaitGroup
-	id int64
+	id int32
 }
 type Server interface {
 	Spawn(m *Message, c *Context, arg ...string) Server
@@ -66,8 +66,8 @@ type Server interface {
 	Close(m *Message, arg ...string) bool
 }
 
-func (c *Context) ID() int64 {
-	return atomic.AddInt64(&c.id, 1)
+func (c *Context) ID() int32 {
+	return atomic.AddInt32(&c.id, 1)
 }
 func (c *Context) Cap(key string, arg ...interface{}) string {
 	if len(arg) > 0 {
@@ -315,7 +315,7 @@ func (m *Message) Formats(key string) string {
 func (m *Message) Spawns(arg ...interface{}) *Message {
 	msg := m.Spawn(arg...)
 	msg.code = int(m.target.root.ID())
-	m.messages = append(m.messages, msg)
+	// m.messages = append(m.messages, msg)
 	return msg
 }
 func (m *Message) Spawn(arg ...interface{}) *Message {
@@ -827,7 +827,7 @@ func (m *Message) Log(level string, str string, arg ...interface{}) *Message {
 	if os.Getenv("ctx_mod") != "" && m != nil {
 		// 输出日志
 		fmt.Fprintf(os.Stderr, "%s %02d %9s %s%s %s%s\n",
-			m.time.Format(ICE_TIME), m.code, fmt.Sprintf("%s->%s", m.source.Name, m.target.Name),
+			m.time.Format(ICE_TIME), m.code, fmt.Sprintf("%4s->%-4s", m.source.Name, m.target.Name),
 			prefix, level, str, suffix)
 	}
 	return m
@@ -1453,40 +1453,38 @@ func (m *Message) Grows(key string, chain interface{}, match string, value strin
 
 	order := 0
 	if begin < current {
-		// 读取磁盘
+		// 读取文件
 		m.Log(LOG_INFO, "%s.%v read %v-%v from %v-%v", key, chain, begin, end, current, current+len(list))
 		store, _ := meta["record"].([]interface{})
 		for s := len(store) - 1; s > -1; s-- {
-			// 查找索引
 			item, _ := store[s].(map[string]interface{})
 			line := kit.Int(item["offset"])
-			m.Log(LOG_INFO, "check history %v %v %v", s, line, item)
+			m.Logs(LOG_INFO, "action", "check", "record", s, "offset", line, "count", item["count"])
 			if begin < line && s > 0 {
+				if kit.Int(item["count"]) != 0 {
+					s -= (line - begin) / kit.Int(item["count"])
+				}
+				// 向后查找
 				continue
 			}
 
-			for ; s < len(store); s++ {
-				if begin >= end {
-					break
-				}
-
-				// 查找偏移
+			for ; begin < end && s < len(store); s++ {
 				item, _ := store[s].(map[string]interface{})
 				name := kit.Format(item["file"])
 				pos := kit.Int(item["position"])
 				offset := kit.Int(item["offset"])
 				if offset+kit.Int(item["count"]) <= begin {
-					m.Log(LOG_INFO, "skip store %v %d", item, begin)
+					m.Logs(LOG_INFO, "action", "check", "record", s, "offset", line, "count", item["count"])
+					// 向前查找
 					continue
 				}
 
-				// 打开文件
-				m.Log(LOG_IMPORT, "load history %v %v %v", s, offset, item)
 				if f, e := os.Open(name); m.Assert(e) {
 					defer f.Close()
+					// 打开文件
 					r := csv.NewReader(f)
 					heads, _ := r.Read()
-					m.Log(LOG_IMPORT, "load head %v", heads)
+					m.Logs(LOG_IMPORT, "head", heads)
 
 					f.Seek(int64(pos), os.SEEK_SET)
 					r = csv.NewReader(f)
@@ -1496,29 +1494,35 @@ func (m *Message) Grows(key string, chain interface{}, match string, value strin
 							m.Log(LOG_IMPORT, "load head %v", e)
 							break
 						}
+						if i < begin {
+							m.Logs(LOG_INFO, "action", "skip", "offset", i)
+							continue
+						}
 
-						if i >= begin {
-							item := map[string]interface{}{}
-							for i := range heads {
+						// 读取数据
+						item := map[string]interface{}{}
+						for i := range heads {
+							if heads[i] == "extra" {
+								item[heads[i]] = kit.UnMarshal(lines[i])
+							} else {
 								item[heads[i]] = lines[i]
 							}
-							m.Log(LOG_INFO, "load line %v %v %v", i, order, item)
-							if match == "" || strings.Contains(kit.Format(item[match]), value) {
-								// 读取文件
-								switch cb := cb.(type) {
-								case func(int, map[string]interface{}):
-									cb(order, item)
-								case func(int, map[string]interface{}) bool:
-									if cb(order, item) {
-										return meta
-									}
-								}
-								order++
-							}
-							begin = i + 1
-						} else {
-							m.Log(LOG_INFO, "skip line %v", i)
 						}
+						m.Logs(LOG_IMPORT, "offset", i, "type", item["type"], "name", item["name"], "text", item["text"])
+
+						if match == "" || strings.Contains(kit.Format(item[match]), value) {
+							// 匹配成功
+							switch cb := cb.(type) {
+							case func(int, map[string]interface{}):
+								cb(order, item)
+							case func(int, map[string]interface{}) bool:
+								if cb(order, item) {
+									return meta
+								}
+							}
+							order++
+						}
+						begin = i + 1
 					}
 				}
 			}
@@ -1530,8 +1534,8 @@ func (m *Message) Grows(key string, chain interface{}, match string, value strin
 		begin = current
 	}
 	for i := begin - current; i < end-current; i++ {
+		// 读取缓存
 		if match == "" || strings.Contains(kit.Format(kit.Value(list[i], match)), value) {
-			// 读取缓存
 			switch cb := cb.(type) {
 			case func(int, map[string]interface{}):
 				cb(order, list[i].(map[string]interface{}))

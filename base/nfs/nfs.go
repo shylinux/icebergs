@@ -172,6 +172,12 @@ var Index = &ice.Context{Name: "nfs", Help: "存储模块",
 	Commands: map[string]*ice.Command{
 		ice.ICE_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			m.Cmd(ice.APP_SEARCH, "add", "dir", "base", m.AddCmd(&ice.Command{Name: "search word", Help: "搜索引擎", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+				switch arg[0] {
+				case "set":
+					m.Cmdy("nfs.cat", arg[5])
+					return
+				}
+
 				travel(m, "./", "", func(name string) {
 					if strings.Contains(name, arg[0]) {
 						m.Push("pod", m.Option(ice.MSG_USERPOD))

@@ -25,6 +25,23 @@ var Index = &ice.Context{Name: "vim", Help: "编辑器",
 		)},
 	},
 	Commands: map[string]*ice.Command{
+		ice.ICE_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			m.Conf(ice.WEB_FAVOR, "meta.render.vimrc", m.AddCmd(&ice.Command{Name: "render favor id", Help: "渲染引擎", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+				value := m.Optionv("value").(map[string]interface{})
+				switch value["name"] {
+				case "read":
+					p := path.Join(kit.Format(kit.Value(value, "extra.pwd")), kit.Format(kit.Value(value, "extra.buf")))
+					f, e := os.Open(p)
+					m.Assert(e)
+					defer f.Close()
+					b, e := ioutil.ReadAll(f)
+					m.Assert(e)
+					m.Echo(string(b))
+				case "write":
+				case "exec":
+				}
+			}}))
+		}},
 		ice.CODE_INSTALL: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			p := path.Join(m.Conf("install", "meta.path"), m.Conf("vim", "meta.version"))
 			if _, e := os.Stat(p); e != nil {
@@ -74,7 +91,7 @@ var Index = &ice.Context{Name: "vim", Help: "编辑器",
 				m.Option("you", value["you"])
 			})
 
-			m.Logs(ice.LOG_LOGIN, "you", m.Option("you"), "url", m.Option(ice.MSG_USERURL), "cmd", m.Optionv("cmds"), "sub", m.Optionv("sub"))
+			m.Logs(ice.LOG_AUTH, "you", m.Option("you"), "url", m.Option(ice.MSG_USERURL), "cmd", m.Optionv("cmds"), "sub", m.Optionv("sub"))
 			m.Option(ice.MSG_OUTPUT, ice.RENDER_RESULT)
 		}},
 		"/help": {Name: "/help", Help: "帮助", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {

@@ -136,6 +136,33 @@ func dir(m *ice.Message, root string, name string, level int, deep bool, dir_typ
 		}
 	}
 }
+func travel(m *ice.Message, root string, name string, cb func(name string)) {
+	if fs, e := ioutil.ReadDir(path.Join(root, name)); e != nil {
+		cb(name)
+	} else {
+		for _, f := range fs {
+			if f.Name() == "." || f.Name() == ".." {
+				continue
+			}
+			if strings.HasPrefix(f.Name(), ".") {
+				continue
+			}
+
+			p := path.Join(root, name, f.Name())
+			if f, e = os.Lstat(p); e != nil {
+				m.Log("info", "%s", e)
+				continue
+			} else if (f.Mode()&os.ModeSymlink) != 0 && f.IsDir() {
+				continue
+			}
+			if f.IsDir() {
+				travel(m, root, path.Join(name, f.Name()), cb)
+			} else {
+				cb(path.Join(name, f.Name()))
+			}
+		}
+	}
+}
 
 var Index = &ice.Context{Name: "nfs", Help: "存储模块",
 	Caches: map[string]*ice.Cache{},
@@ -143,6 +170,22 @@ var Index = &ice.Context{Name: "nfs", Help: "存储模块",
 		"trash": {Name: "trash", Help: "trash", Value: kit.Data("path", "var/trash")},
 	},
 	Commands: map[string]*ice.Command{
+		ice.ICE_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			m.Cmd(ice.APP_SEARCH, "add", "dir", "base", m.AddCmd(&ice.Command{Name: "search word", Help: "搜索引擎", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+				travel(m, "./", "", func(name string) {
+					if strings.Contains(name, arg[0]) {
+						m.Push("pod", m.Option(ice.MSG_USERPOD))
+						m.Push("engine", "dir")
+						m.Push("favor", "./")
+						m.Push("id", "")
+						m.Push("type", "file")
+						m.Push("name", path.Base(name))
+						m.Push("text", name)
+					}
+				})
+			}}))
+		}},
+
 		"dir": {Name: "dir", Help: "目录", List: kit.List(
 			kit.MDB_INPUT, "text", "name", "path", "action", "auto",
 			kit.MDB_INPUT, "button", "name", "查看",

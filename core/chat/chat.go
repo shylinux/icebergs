@@ -4,6 +4,8 @@ import (
 	"github.com/shylinux/icebergs"
 	"github.com/shylinux/icebergs/base/web"
 	"github.com/shylinux/toolkits"
+
+	"sync"
 )
 
 var Index = &ice.Context{Name: "chat", Help: "聊天中心",
@@ -85,12 +87,14 @@ var Index = &ice.Context{Name: "chat", Help: "聊天中心",
 			}),
 			"fe", "volcanos",
 		)},
+		"search": {Name: "search", Help: "search", Value: kit.Data(kit.MDB_SHORT, kit.MDB_NAME)},
 	},
 	Commands: map[string]*ice.Command{
 		ice.ICE_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			m.Load()
 			m.Watch(ice.SYSTEM_INIT, m.Prefix("init"))
 			m.Watch(ice.USER_CREATE, m.Prefix("auto"))
+
 		}},
 		ice.ICE_EXIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			m.Save("river")
@@ -196,12 +200,32 @@ var Index = &ice.Context{Name: "chat", Help: "聊天中心",
 			}
 		}},
 
-		"search": {Name: "search label=some word=启动流程 auto", Help: "搜索引擎", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			if len(arg) < 2 {
-				m.Cmdy(ice.WEB_LABEL, arg)
-				return
+		"search": {Name: "search label kind word", Help: "搜索引擎", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			switch arg[0] {
+			case "add":
+				if m.Richs("search", nil, arg[1], nil) == nil {
+					m.Rich("search", nil, kit.Data(kit.MDB_NAME, arg[1]))
+				}
+				m.Richs("search", nil, arg[1], func(key string, value map[string]interface{}) {
+					m.Grow("search", kit.Keys(kit.MDB_HASH, key), kit.Dict(
+						kit.MDB_NAME, arg[2], kit.MDB_TEXT, arg[3:],
+					))
+				})
+			case "get":
+				wg := &sync.WaitGroup{}
+				m.Richs("search", nil, arg[1], func(key string, value map[string]interface{}) {
+					wg.Add(1)
+					m.Gos(m, func(m *ice.Message) {
+						m.Grows("search", kit.Keys(kit.MDB_HASH, key), "", "", func(index int, value map[string]interface{}) {
+							m.Cmdy(value[kit.MDB_TEXT], arg[2:])
+						})
+						wg.Done()
+					})
+				})
+				wg.Wait()
+			default:
+				m.Cmdy(ice.WEB_LABEL, arg[0], arg[1], "web.chat.search", "get", arg[2:])
 			}
-			m.Cmdy(ice.WEB_LABEL, arg[0], "*", "favor", "search", arg[1:])
 		}},
 		"commend": {Name: "commend label=some word=请求响应 auto", Help: "推荐引擎", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			if len(arg) < 2 {

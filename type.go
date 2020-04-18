@@ -19,6 +19,7 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"time"
 )
 
@@ -56,7 +57,7 @@ type Context struct {
 	server Server
 
 	wg *sync.WaitGroup
-	id int
+	id int64
 }
 type Server interface {
 	Spawn(m *Message, c *Context, arg ...string) Server
@@ -65,9 +66,8 @@ type Server interface {
 	Close(m *Message, arg ...string) bool
 }
 
-func (c *Context) ID() int {
-	c.id++
-	return c.id
+func (c *Context) ID() int64 {
+	return atomic.AddInt64(&c.id, 1)
 }
 func (c *Context) Cap(key string, arg ...interface{}) string {
 	if len(arg) > 0 {
@@ -314,7 +314,7 @@ func (m *Message) Formats(key string) string {
 }
 func (m *Message) Spawns(arg ...interface{}) *Message {
 	msg := m.Spawn(arg...)
-	msg.code = m.target.root.ID()
+	msg.code = int(m.target.root.ID())
 	m.messages = append(m.messages, msg)
 	return msg
 }
@@ -1573,6 +1573,13 @@ func (m *Message) Show(cmd string, arg ...string) bool {
 	return false
 }
 
+var count = int32(0)
+
+func (m *Message) AddCmd(cmd *Command) string {
+	name := fmt.Sprintf("_cb_%d", atomic.AddInt32(&count, 1))
+	m.target.Commands[name] = cmd
+	return kit.Keys(m.target.Cap(CTX_FOLLOW), name)
+}
 func (m *Message) Cmdy(arg ...interface{}) *Message {
 	msg := m.Cmd(arg...)
 	m.Copy(msg)

@@ -515,6 +515,61 @@ var Index = &ice.Context{Name: "web", Help: "网络模块",
 				m.Conf(ice.WEB_SERVE, "meta.volcanos.repos"), m.Conf(ice.WEB_SERVE, "meta.volcanos.branch"))
 			m.Conf(ice.WEB_FAVOR, "meta.template", favor_template)
 			m.Conf(ice.WEB_SHARE, "meta.template", share_template)
+
+			m.Cmd(ice.APP_SEARCH, "add", "favor", "base", m.AddCmd(&ice.Command{Name: "search word", Help: "搜索引擎", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+				m.Option("cache.limit", -2)
+				wg := &sync.WaitGroup{}
+				m.Richs(ice.WEB_FAVOR, nil, "*", func(key string, val map[string]interface{}) {
+					favor := kit.Format(kit.Value(val, "meta.name"))
+					wg.Add(1)
+					m.Info("routine %v", favor)
+					m.Gos(m, func(m *ice.Message) {
+						m.Grows(ice.WEB_FAVOR, kit.Keys(kit.MDB_HASH, key), "", "", func(index int, value map[string]interface{}) {
+							if favor == arg[0] || value["type"] == arg[0] ||
+								strings.Contains(kit.Format(value["name"]), arg[0]) || strings.Contains(kit.Format(value["text"]), arg[0]) {
+								m.Push("pod", m.Option(ice.MSG_USERPOD))
+								m.Push("engine", "favor")
+								m.Push("favor", favor)
+								m.Push("", value, []string{"id", "type", "name", "text"})
+							}
+						})
+						wg.Done()
+					})
+				})
+				wg.Wait()
+			}}))
+
+			m.Cmd(ice.APP_SEARCH, "add", "story", "base", m.AddCmd(&ice.Command{Name: "search word", Help: "搜索引擎", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+				m.Richs(ice.WEB_STORY, "head", "*", func(key string, val map[string]interface{}) {
+					if val["story"] == arg[0] {
+						m.Push("pod", m.Option(ice.MSG_USERPOD))
+						m.Push("engine", "story")
+						m.Push("favor", val["story"])
+						m.Push("id", val["list"])
+
+						m.Push("type", val["scene"])
+						m.Push("name", val["story"])
+						m.Push("text", val["count"])
+					}
+				})
+			}}))
+
+			m.Cmd(ice.APP_SEARCH, "add", "share", "base", m.AddCmd(&ice.Command{Name: "search word", Help: "搜索引擎", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+				m.Option("cache.limit", -2)
+				m.Grows(ice.WEB_SHARE, nil, "", "", func(index int, value map[string]interface{}) {
+					if value["share"] == arg[0] || value["type"] == arg[0] ||
+						strings.Contains(kit.Format(value["name"]), arg[0]) || strings.Contains(kit.Format(value["text"]), arg[0]) {
+						m.Push("pod", m.Option(ice.MSG_USERPOD))
+						m.Push("engine", "share")
+						m.Push("favor", value["type"])
+						m.Push("id", value["share"])
+
+						m.Push("type", value["type"])
+						m.Push("name", value["name"])
+						m.Push("text", value["text"])
+					}
+				})
+			}}))
 		}},
 		ice.ICE_EXIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			m.Save(ice.WEB_SPIDE, ice.WEB_SERVE, ice.WEB_GROUP, ice.WEB_LABEL,
@@ -794,7 +849,9 @@ var Index = &ice.Context{Name: "web", Help: "网络模块",
 				m.Richs(ice.WEB_SPACE, nil, "*", func(key string, value map[string]interface{}) {
 					m.Push(key, value, []string{"time", "type", "name", "text"})
 					if m.Option(ice.MSG_USERUA) != "" {
-						m.Push("link", fmt.Sprintf(`<a target="_blank" href="%s?pod=%s">%s</a>`, m.Conf(ice.WEB_SHARE, "meta.domain"), value["name"], value["name"]))
+						m.Push("link", fmt.Sprintf(`<a target="_blank" href="%s?pod=%s">%s</a>`,
+							kit.Select(m.Conf(ice.WEB_SHARE, "meta.domain"), m.Option(ice.MSG_USERWEB)),
+							kit.Keys(m.Option(ice.MSG_USERPOD), value["name"]), value["name"]))
 					}
 				})
 				m.Sort("name")
@@ -1118,27 +1175,6 @@ var Index = &ice.Context{Name: "web", Help: "网络模块",
 					m.Echo("%d", kit.Value(val, "meta.count"))
 					return
 				})
-				return
-
-			case "search":
-				m.Option("cache.limit", -2)
-				wg := &sync.WaitGroup{}
-				m.Richs(ice.WEB_FAVOR, nil, "*", func(key string, val map[string]interface{}) {
-					favor := kit.Format(kit.Value(val, "meta.name"))
-					wg.Add(1)
-					m.Info("routine %v", favor)
-					m.Gos(m, func(m *ice.Message) {
-						m.Grows(ice.WEB_FAVOR, kit.Keys(kit.MDB_HASH, key), "", "", func(index int, value map[string]interface{}) {
-							if strings.Contains(favor, arg[1]) || strings.Contains(kit.Format(value["name"]), arg[1]) || strings.Contains(kit.Format(value["text"]), arg[1]) {
-								m.Push("pod", strings.Join(kit.Simple(m.Optionv("user.pod")), "."))
-								m.Push("favor", favor)
-								m.Push("", value, []string{"id", "type", "name", "text"})
-							}
-						})
-						wg.Done()
-					})
-				})
-				wg.Wait()
 				return
 			}
 

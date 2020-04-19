@@ -17,6 +17,17 @@ var Index = &ice.Context{Name: "zsh", Help: "命令行",
 		"zsh": {Name: "zsh", Help: "命令行", Value: kit.Data("history", "zsh.history")},
 	},
 	Commands: map[string]*ice.Command{
+		ice.ICE_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			m.Conf(ice.WEB_FAVOR, "meta.render.shell", m.AddCmd(&ice.Command{Name: "render favor id", Help: "渲染引擎", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+				value := m.Optionv("value").(map[string]interface{})
+				m.Option("cmd_dir", kit.Value(value, "extra.pwd"))
+				m.Cmdy(ice.CLI_SYSTEM, value["text"])
+			}}))
+			m.Conf(ice.WEB_FAVOR, "meta.render.cmd", m.AddCmd(&ice.Command{Name: "render favor id", Help: "渲染引擎", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+				value := m.Optionv("value").(map[string]interface{})
+				m.Cmdy(kit.Split(kit.Format(value["text"])))
+			}}))
+		}},
 		ice.WEB_LOGIN: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			if f, _, e := m.R.FormFile("sub"); e == nil {
 				defer f.Close()

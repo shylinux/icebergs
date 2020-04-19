@@ -29,7 +29,7 @@ var Index = &ice.Context{Name: "vim", Help: "编辑器",
 			m.Conf(ice.WEB_FAVOR, "meta.render.vimrc", m.AddCmd(&ice.Command{Name: "render favor id", Help: "渲染引擎", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 				value := m.Optionv("value").(map[string]interface{})
 				switch value["name"] {
-				case "read":
+				case "read", "write", "exec":
 					p := path.Join(kit.Format(kit.Value(value, "extra.pwd")), kit.Format(kit.Value(value, "extra.buf")))
 					f, e := os.Open(p)
 					m.Assert(e)
@@ -37,8 +37,6 @@ var Index = &ice.Context{Name: "vim", Help: "编辑器",
 					b, e := ioutil.ReadAll(f)
 					m.Assert(e)
 					m.Echo(string(b))
-				case "write":
-				case "exec":
 				}
 			}}))
 		}},

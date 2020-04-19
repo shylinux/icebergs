@@ -157,6 +157,7 @@ func travel(m *ice.Message, root string, name string, cb func(name string)) {
 			}
 			if f.IsDir() {
 				travel(m, root, path.Join(name, f.Name()), cb)
+				cb(path.Join(name, f.Name()))
 			} else {
 				cb(path.Join(name, f.Name()))
 			}
@@ -174,17 +175,19 @@ var Index = &ice.Context{Name: "nfs", Help: "存储模块",
 			m.Cmd(ice.APP_SEARCH, "add", "dir", "base", m.AddCmd(&ice.Command{Name: "search word", Help: "搜索引擎", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 				switch arg[0] {
 				case "set":
-					m.Cmdy("nfs.cat", arg[5])
+					m.Cmdy("nfs.dir", arg[5])
 					return
 				}
 
 				travel(m, "./", "", func(name string) {
 					if strings.Contains(name, arg[0]) {
+						s, e := os.Stat(name)
+						m.Assert(e)
 						m.Push("pod", m.Option(ice.MSG_USERPOD))
 						m.Push("engine", "dir")
-						m.Push("favor", "./")
-						m.Push("id", "")
-						m.Push("type", "file")
+						m.Push("favor", "file")
+						m.Push("id", kit.FmtSize(s.Size()))
+						m.Push("type", strings.TrimPrefix(path.Ext(name), "."))
 						m.Push("name", path.Base(name))
 						m.Push("text", name)
 					}
@@ -192,7 +195,7 @@ var Index = &ice.Context{Name: "nfs", Help: "存储模块",
 			}}))
 		}},
 
-		"dir": {Name: "dir", Help: "目录", List: kit.List(
+		"dir": {Name: "dir name field auto", Help: "目录", List: kit.List(
 			kit.MDB_INPUT, "text", "name", "path", "action", "auto",
 			kit.MDB_INPUT, "button", "name", "查看",
 			kit.MDB_INPUT, "button", "name", "返回", "cb", "Last",

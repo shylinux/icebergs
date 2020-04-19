@@ -94,7 +94,6 @@ var Index = &ice.Context{Name: "chat", Help: "聊天中心",
 			m.Load()
 			m.Watch(ice.SYSTEM_INIT, m.Prefix("init"))
 			m.Watch(ice.USER_CREATE, m.Prefix("auto"))
-
 		}},
 		ice.ICE_EXIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			m.Save("river")
@@ -545,6 +544,11 @@ var Index = &ice.Context{Name: "chat", Help: "聊天中心",
 		}},
 
 		"search": {Name: "search label pod engine word", Help: "搜索引擎", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			if len(arg) < 2 {
+				m.Cmdy(ice.WEB_LABEL, arg)
+				return
+			}
+
 			switch arg[0] {
 			case "add":
 				if m.Richs("search", nil, arg[1], nil) == nil {
@@ -579,6 +583,18 @@ var Index = &ice.Context{Name: "chat", Help: "聊天中心",
 					})
 				})
 			default:
+				if len(arg) == 2 {
+					m.Richs("search", nil, "*", func(key string, value map[string]interface{}) {
+						m.Push(key, value)
+					})
+					break
+				}
+				if len(arg) == 3 {
+					m.Richs("search", nil, "*", func(key string, value map[string]interface{}) {
+						m.Push(key, value)
+					})
+					break
+				}
 				m.Cmdy(ice.WEB_LABEL, arg[0], arg[1], "web.chat.search", "get", arg[2:])
 			}
 		}},

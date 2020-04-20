@@ -87,7 +87,8 @@ var Index = &ice.Context{Name: "chat", Help: "聊天中心",
 			}),
 			"fe", "volcanos",
 		)},
-		"search": {Name: "search", Help: "search", Value: kit.Data(kit.MDB_SHORT, kit.MDB_NAME)},
+		"search":  {Name: "search", Help: "search", Value: kit.Data(kit.MDB_SHORT, kit.MDB_NAME)},
+		"commend": {Name: "commend", Help: "commend", Value: kit.Data(kit.MDB_SHORT, kit.MDB_NAME, "user", kit.Data(kit.MDB_SHORT, kit.MDB_NAME))},
 	},
 	Commands: map[string]*ice.Command{
 		ice.ICE_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
@@ -96,7 +97,7 @@ var Index = &ice.Context{Name: "chat", Help: "聊天中心",
 			m.Watch(ice.USER_CREATE, m.Prefix("auto"))
 		}},
 		ice.ICE_EXIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			m.Save("river")
+			m.Save("river", "search", "commend")
 		}},
 
 		"init": {Name: "init", Help: "初始化", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
@@ -551,20 +552,20 @@ var Index = &ice.Context{Name: "chat", Help: "聊天中心",
 
 			switch arg[0] {
 			case "add":
-				if m.Richs("search", nil, arg[1], nil) == nil {
-					m.Rich("search", nil, kit.Data(kit.MDB_NAME, arg[1]))
+				if m.Richs(cmd, nil, arg[1], nil) == nil {
+					m.Rich(cmd, nil, kit.Data(kit.MDB_NAME, arg[1]))
 				}
-				m.Richs("search", nil, arg[1], func(key string, value map[string]interface{}) {
-					m.Grow("search", kit.Keys(kit.MDB_HASH, key), kit.Dict(
+				m.Richs(cmd, nil, arg[1], func(key string, value map[string]interface{}) {
+					m.Grow(cmd, kit.Keys(kit.MDB_HASH, key), kit.Dict(
 						kit.MDB_NAME, arg[2], kit.MDB_TEXT, arg[3:],
 					))
 				})
 			case "get":
 				wg := &sync.WaitGroup{}
-				m.Richs("search", nil, arg[1], func(key string, value map[string]interface{}) {
+				m.Richs(cmd, nil, arg[1], func(key string, value map[string]interface{}) {
 					wg.Add(1)
 					m.Gos(m, func(m *ice.Message) {
-						m.Grows("search", kit.Keys(kit.MDB_HASH, key), "", "", func(index int, value map[string]interface{}) {
+						m.Grows(cmd, kit.Keys(kit.MDB_HASH, key), "", "", func(index int, value map[string]interface{}) {
 							m.Cmdy(value[kit.MDB_TEXT], arg[2:])
 						})
 						wg.Done()
@@ -577,20 +578,20 @@ var Index = &ice.Context{Name: "chat", Help: "聊天中心",
 					break
 				}
 
-				m.Richs("search", nil, arg[2], func(key string, value map[string]interface{}) {
-					m.Grows("search", kit.Keys(kit.MDB_HASH, key), "", "", func(index int, value map[string]interface{}) {
+				m.Richs(cmd, nil, arg[2], func(key string, value map[string]interface{}) {
+					m.Grows(cmd, kit.Keys(kit.MDB_HASH, key), "", "", func(index int, value map[string]interface{}) {
 						m.Cmdy(value[kit.MDB_TEXT], "set", arg[3:])
 					})
 				})
 			default:
 				if len(arg) == 2 {
-					m.Richs("search", nil, "*", func(key string, value map[string]interface{}) {
+					m.Richs(cmd, nil, "*", func(key string, value map[string]interface{}) {
 						m.Push(key, value)
 					})
 					break
 				}
 				if len(arg) == 3 {
-					m.Richs("search", nil, "*", func(key string, value map[string]interface{}) {
+					m.Richs(cmd, nil, "*", func(key string, value map[string]interface{}) {
 						m.Push(key, value)
 					})
 					break
@@ -598,12 +599,83 @@ var Index = &ice.Context{Name: "chat", Help: "聊天中心",
 				m.Cmdy(ice.WEB_LABEL, arg[0], arg[1], "web.chat.search", "get", arg[2:])
 			}
 		}},
-		"commend": {Name: "commend label=some word=请求响应 auto", Help: "推荐引擎", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		"commend": {Name: "commend label pod engine work auto", Help: "推荐引擎", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			if len(arg) < 2 {
 				m.Cmdy(ice.WEB_LABEL, arg)
 				return
 			}
-			m.Cmdy(ice.WEB_LABEL, arg[0], "*", "favor", "search", arg[1:])
+
+			switch arg[0] {
+			case "add":
+				if m.Richs(cmd, nil, arg[1], nil) == nil {
+					m.Rich(cmd, nil, kit.Data(kit.MDB_NAME, arg[1]))
+				}
+				m.Richs(cmd, nil, arg[1], func(key string, value map[string]interface{}) {
+					m.Grow(cmd, kit.Keys(kit.MDB_HASH, key), kit.Dict(
+						kit.MDB_NAME, arg[2], kit.MDB_TEXT, arg[3:],
+					))
+				})
+			case "get":
+				wg := &sync.WaitGroup{}
+				m.Richs(cmd, nil, arg[1], func(key string, value map[string]interface{}) {
+					wg.Add(1)
+					m.Gos(m, func(m *ice.Message) {
+						m.Grows(cmd, kit.Keys(kit.MDB_HASH, key), "", "", func(index int, value map[string]interface{}) {
+							m.Cmdy(value[kit.MDB_TEXT], arg[2:])
+						})
+						wg.Done()
+					})
+				})
+				wg.Wait()
+			case "set":
+				if arg[1] != "" {
+					// m.Cmdy(ice.WEB_SPACE, arg[1], "web.chat.commend", "set", "", arg[2:])
+					// break
+				}
+
+				if m.Richs(cmd, "meta.user", m.Option(ice.MSG_USERNAME), nil) == nil {
+					m.Rich(cmd, "meta.user", kit.Dict(
+						kit.MDB_NAME, m.Option(ice.MSG_USERNAME),
+					))
+				}
+				switch m.Option("_action") {
+				case "喜欢":
+					m.Richs(cmd, "meta.user", m.Option(ice.MSG_USERNAME), func(key string, value map[string]interface{}) {
+						m.Grow(cmd, kit.Keys("meta.user", kit.MDB_HASH, key, "like"), kit.Dict(
+							kit.MDB_EXTRA, kit.Dict("engine", arg[2], "favor", arg[3], "id", arg[4]),
+							kit.MDB_TYPE, arg[5], kit.MDB_NAME, arg[6], kit.MDB_TEXT, arg[7],
+						))
+					})
+				case "讨厌":
+					m.Richs(cmd, "meta.user", m.Option(ice.MSG_USERNAME), func(key string, value map[string]interface{}) {
+						m.Grow(cmd, kit.Keys("meta.user", kit.MDB_HASH, key, "hate"), kit.Dict(
+							kit.MDB_EXTRA, kit.Dict("engine", arg[2], "favor", arg[3], "id", arg[4]),
+							kit.MDB_TYPE, arg[5], kit.MDB_NAME, arg[6], kit.MDB_TEXT, arg[7],
+						))
+					})
+				}
+
+				m.Richs(cmd, nil, arg[2], func(key string, value map[string]interface{}) {
+					m.Grows(cmd, kit.Keys(kit.MDB_HASH, key), "", "", func(index int, value map[string]interface{}) {
+						m.Cmdy(value[kit.MDB_TEXT], "set", arg[3:])
+					})
+				})
+			default:
+				if len(arg) == 2 {
+					m.Richs(cmd, nil, "*", func(key string, value map[string]interface{}) {
+						m.Push(key, value)
+					})
+					break
+				}
+				if len(arg) == 3 {
+					m.Richs(cmd, nil, "*", func(key string, value map[string]interface{}) {
+						m.Push(key, value)
+					})
+					break
+				}
+				// m.Cmdy(ice.WEB_LABEL, arg[0], arg[1], "web.chat.commend", "get", arg[2:])
+				m.Cmdy("web.chat.commend", "get", arg[2:])
+			}
 		}},
 	},
 }

@@ -193,6 +193,60 @@ var Index = &ice.Context{Name: "nfs", Help: "存储模块",
 					}
 				})
 			}}))
+			m.Cmd(ice.APP_COMMEND, "add", "dir", "base", m.AddCmd(&ice.Command{Name: "commend word", Help: "推荐引擎", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+				switch arg[0] {
+				case "set":
+					m.Cmdy("nfs.dir", arg[5])
+					return
+				}
+
+				travel(m, "./", "", func(name string) {
+					score := 0
+					m.Richs(ice.APP_COMMEND, "meta.user", m.Option(ice.MSG_USERNAME), func(key string, value map[string]interface{}) {
+						m.Grows(ice.APP_COMMEND, kit.Keys("meta.user", kit.MDB_HASH, key, "like"), "", "", func(index int, value map[string]interface{}) {
+							switch kit.Value(value, "extra.engine") {
+							case "dir":
+								if value["type"] == strings.TrimPrefix(path.Ext(name), ".") {
+									score += 1
+								}
+								if value["name"] == path.Base(name) {
+									score += 2
+								}
+								if value["text"] == name {
+									score += 3
+								}
+							default:
+							}
+						})
+						m.Grows(cmd, kit.Keys("meta.user", kit.MDB_HASH, key, "hate"), "", "", func(index int, value map[string]interface{}) {
+							switch kit.Value(value, "extra.engine") {
+							case "dir":
+								if value["type"] == strings.TrimPrefix(path.Ext(name), ".") {
+									score -= 1
+								}
+								if value["name"] == path.Base(name) {
+									score -= 2
+								}
+								if value["text"] == name {
+									score -= 3
+								}
+							default:
+							}
+						})
+					})
+
+					if s, e := os.Stat(name); e == nil {
+						m.Push("pod", m.Option(ice.MSG_USERPOD))
+						m.Push("engine", "dir")
+						m.Push("favor", "file")
+						m.Push("id", kit.FmtSize(s.Size()))
+						m.Push("score", score)
+						m.Push("type", strings.TrimPrefix(path.Ext(name), "."))
+						m.Push("name", path.Base(name))
+						m.Push("text", name)
+					}
+				})
+			}}))
 		}},
 
 		"dir": {Name: "dir name field auto", Help: "目录", List: kit.List(

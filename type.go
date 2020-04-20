@@ -840,8 +840,9 @@ func (m *Message) Info(str string, arg ...interface{}) *Message {
 }
 func (m *Message) Warn(err bool, str string, arg ...interface{}) bool {
 	if err {
+		_, file, line, _ := runtime.Caller(1)
 		m.Echo("warn: ").Echo(str, arg...)
-		return m.Log(LOG_WARN, str, arg...) != nil
+		return m.Log(LOG_WARN, "%s:%d %s", file, line, fmt.Sprintf(str, arg...)) != nil
 	}
 	return false
 }

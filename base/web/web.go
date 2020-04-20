@@ -502,16 +502,9 @@ var Index = &ice.Context{Name: "web", Help: "网络模块",
 			m.Load()
 
 			m.Cmd(ice.WEB_SPIDE, "add", "self", kit.Select("http://:9020", m.Conf(ice.CLI_RUNTIME, "conf.ctx_self")))
-			if m.Richs(ice.WEB_SPIDE, nil, "dev", nil) == nil {
-				m.Cmd(ice.WEB_SPIDE, "add", "dev", kit.Select("http://:9020", m.Conf(ice.CLI_RUNTIME, "conf.ctx_dev")))
-			}
-			if m.Richs(ice.WEB_SPIDE, nil, "shy", nil) == nil {
-				m.Cmd(ice.WEB_SPIDE, "add", "shy", kit.Select("https://shylinux.com:443", m.Conf(ice.CLI_RUNTIME, "conf.ctx_shy")))
-			}
-			m.Rich(ice.WEB_SPACE, nil, kit.Dict(
-				kit.MDB_TYPE, ice.WEB_BETTER, kit.MDB_NAME, "tmux",
-				kit.MDB_TEXT, m.Conf(ice.CLI_RUNTIME, "boot.username"),
-			))
+			m.Cmd(ice.WEB_SPIDE, "add", "dev", kit.Select("http://:9020", m.Conf(ice.CLI_RUNTIME, "conf.ctx_dev")))
+			m.Cmd(ice.WEB_SPIDE, "add", "shy", kit.Select("https://shylinux.com:443", m.Conf(ice.CLI_RUNTIME, "conf.ctx_shy")))
+
 			m.Watch(ice.SYSTEM_INIT, "web.code.git.repos", "volcanos", m.Conf(ice.WEB_SERVE, "meta.volcanos.path"),
 				m.Conf(ice.WEB_SERVE, "meta.volcanos.repos"), m.Conf(ice.WEB_SERVE, "meta.volcanos.branch"))
 			m.Conf(ice.WEB_FAVOR, "meta.template", favor_template)
@@ -538,7 +531,6 @@ var Index = &ice.Context{Name: "web", Help: "网络模块",
 				m.Richs(ice.WEB_FAVOR, nil, "*", func(key string, val map[string]interface{}) {
 					favor := kit.Format(kit.Value(val, "meta.name"))
 					wg.Add(1)
-					m.Info("routine %v", favor)
 					m.Gos(m, func(m *ice.Message) {
 						m.Grows(ice.WEB_FAVOR, kit.Keys(kit.MDB_HASH, key), "", "", func(index int, value map[string]interface{}) {
 							if favor == arg[0] || value["type"] == arg[0] ||
@@ -546,7 +538,7 @@ var Index = &ice.Context{Name: "web", Help: "网络模块",
 								m.Push("pod", m.Option(ice.MSG_USERPOD))
 								m.Push("engine", "favor")
 								m.Push("favor", favor)
-								m.Push("", value, []string{"id", "type", "name", "text"})
+								m.Push("", value, []string{"id", "time", "type", "name", "text"})
 							}
 						})
 						wg.Done()
@@ -569,6 +561,7 @@ var Index = &ice.Context{Name: "web", Help: "网络模块",
 						m.Push("favor", val["story"])
 						m.Push("id", val["list"])
 
+						m.Push("time", val["time"])
 						m.Push("type", val["scene"])
 						m.Push("name", val["story"])
 						m.Push("text", val["count"])
@@ -592,6 +585,7 @@ var Index = &ice.Context{Name: "web", Help: "网络模块",
 						m.Push("favor", value["type"])
 						m.Push("id", value["share"])
 
+						m.Push("time", value["time"])
 						m.Push("type", value["type"])
 						m.Push("name", value["name"])
 						m.Push("text", value["text"])
@@ -601,8 +595,7 @@ var Index = &ice.Context{Name: "web", Help: "网络模块",
 		}},
 		ice.ICE_EXIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			m.Save(ice.WEB_SPIDE, ice.WEB_SERVE, ice.WEB_GROUP, ice.WEB_LABEL,
-				ice.WEB_FAVOR, ice.WEB_CACHE, ice.WEB_STORY, ice.WEB_SHARE,
-			)
+				ice.WEB_FAVOR, ice.WEB_CACHE, ice.WEB_STORY, ice.WEB_SHARE)
 
 			m.Done()
 			m.Richs(ice.WEB_SPACE, nil, "*", func(key string, value map[string]interface{}) {
@@ -1237,7 +1230,7 @@ var Index = &ice.Context{Name: "web", Help: "网络模块",
 			m.Richs(ice.WEB_FAVOR, nil, favor, func(key string, value map[string]interface{}) {
 				kit.Value(value, "meta.time", m.Time())
 			})
-			m.Log(ice.LOG_INSERT, "favor: %s index: %d name: %s text: %s", favor, index, arg[2], arg[3])
+			m.Log(ice.LOG_INSERT, "favor: %s index: %d name: %s text: %s", arg[0], index, arg[2], arg[3])
 			m.Echo("%d", index)
 
 			// 分发数据
@@ -1806,7 +1799,7 @@ var Index = &ice.Context{Name: "web", Help: "网络模块",
 			}
 		}},
 
-		ice.WEB_ROUTE: {Name: "route name auto", Help: "路由", Meta: kit.Dict("detail", []string{"分组"}), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		ice.WEB_ROUTE: {Name: "route name cmd auto", Help: "路由", Meta: kit.Dict("detail", []string{"分组"}), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			if len(arg) > 1 && arg[0] == "action" {
 				switch arg[1] {
 				case "group", "分组":
@@ -1824,10 +1817,10 @@ var Index = &ice.Context{Name: "web", Help: "网络模块",
 					rest = ls[1]
 				}
 			}
-			m.Richs(ice.WEB_SPACE, nil, target, func(key string, value map[string]interface{}) {
+			m.Richs(ice.WEB_SPACE, nil, target, func(key string, val map[string]interface{}) {
 				if len(arg) > 1 {
-					ls := []interface{}{ice.WEB_SPACE, value[kit.MDB_NAME]}
 					m.Call(false, func(res *ice.Message) *ice.Message { return res })
+					ls := []interface{}{ice.WEB_SPACE, val[kit.MDB_NAME]}
 					// 发送命令
 					if rest != "" {
 						ls = append(ls, ice.WEB_SPACE, rest)
@@ -1836,189 +1829,301 @@ var Index = &ice.Context{Name: "web", Help: "网络模块",
 					return
 				}
 
-				switch value[kit.MDB_TYPE] {
+				switch val[kit.MDB_TYPE] {
 				case ice.WEB_SERVER:
-					if value[kit.MDB_NAME] == m.Conf(ice.CLI_RUNTIME, "node.name") {
+					if val[kit.MDB_NAME] == m.Conf(ice.CLI_RUNTIME, "node.name") {
 						// 避免循环
 						return
 					}
 
 					// 远程查询
-					m.Cmd(ice.WEB_SPACE, value[kit.MDB_NAME], ice.WEB_ROUTE).Table(func(index int, val map[string]string, head []string) {
-						m.Push(kit.MDB_TYPE, val[kit.MDB_TYPE])
-						m.Push(kit.MDB_NAME, kit.Keys(value[kit.MDB_NAME], val[kit.MDB_NAME]))
+					m.Cmd(ice.WEB_SPACE, val[kit.MDB_NAME], ice.WEB_ROUTE).Table(func(index int, value map[string]string, head []string) {
+						m.Push(kit.MDB_TYPE, value[kit.MDB_TYPE])
+						m.Push(kit.MDB_NAME, kit.Keys(val[kit.MDB_NAME], value[kit.MDB_NAME]))
 					})
 					fallthrough
 				case ice.WEB_WORKER:
 					// 本机查询
-					m.Push(kit.MDB_TYPE, value[kit.MDB_TYPE])
-					m.Push(kit.MDB_NAME, value[kit.MDB_NAME])
+					m.Push(kit.MDB_TYPE, val[kit.MDB_TYPE])
+					m.Push(kit.MDB_NAME, val[kit.MDB_NAME])
 				}
 			})
 		}},
-		ice.WEB_PROXY: {Name: "proxy", Help: "代理", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			m.Richs(ice.WEB_SPACE, nil, kit.Select(m.Conf(ice.WEB_FAVOR, "meta.proxy"), arg[0]), func(key string, value map[string]interface{}) {
+		ice.WEB_PROXY: {Name: "proxy name cmd auto", Help: "代理", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			switch arg[0] {
+			case "add":
+				m.Rich(ice.WEB_SPACE, nil, kit.Dict(
+					kit.MDB_TYPE, ice.WEB_BETTER, kit.MDB_NAME, arg[1], kit.MDB_TEXT, arg[2],
+				))
+				m.Conf(ice.WEB_PROXY, kit.Keys("meta.better", arg[1]), arg[2])
+				m.Logs(ice.LOG_INSERT, "proxy", arg[1], "cb", arg[2])
+				return
+			}
+
+			m.Richs(ice.WEB_SPACE, nil, arg[0], func(key string, value map[string]interface{}) {
 				if value[kit.MDB_TYPE] == ice.WEB_BETTER {
-					switch value[kit.MDB_NAME] {
-					case "tmux":
-						m.Cmd("web.code.tmux.session").Table(func(index int, value map[string]string, head []string) {
-							if value["tag"] == "1" {
-								m.Log(ice.LOG_SELECT, "space: %s", value["session"])
-								arg[0] = value["session"]
-							}
-						})
-					}
+					arg[0] = m.Cmdx(m.Conf(ice.WEB_PROXY, kit.Keys("meta.better", arg[0])))
+					m.Logs(ice.LOG_SELECT, "proxy", value["name"], "space", arg[0])
 				}
 			})
 
 			m.Cmdy(ice.WEB_ROUTE, arg[0], arg[1:])
 		}},
-		ice.WEB_GROUP: {Name: "group group name auto", Help: "分组", Meta: kit.Dict(
-			"exports", []string{"grp", "group"}, "detail", []string{"标签", "退还"},
+		ice.WEB_GROUP: {Name: "group group=auto name=auto auto", Help: "分组", Meta: kit.Dict(
+			"exports", []string{"grp", "group"}, "detail", []string{"标签", "添加", "退还"},
 		), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			if len(arg) > 1 && arg[0] == "action" {
 				switch arg[1] {
 				case "label", "标签":
-					if m.Option("lab") != "" && m.Option("group") != "" {
-						m.Cmdy(ice.WEB_LABEL, m.Option("lab"), "add", m.Option("group"), m.Option("name"))
+					if m.Option(ice.EXPORT_LABEL) != "" && m.Option(cmd) != "" {
+						m.Cmdy(ice.WEB_LABEL, m.Option(ice.EXPORT_LABEL), "add", m.Option(cmd), m.Option(kit.MDB_NAME))
+						m.Option(ice.FIELD_RELOAD, "true")
+					}
+				case "add", "添加":
+					if m.Option(cmd) != "" && m.Option(kit.MDB_NAME) != "" {
+						m.Cmdy(cmd, m.Option(cmd), "add", m.Option(kit.MDB_NAME))
+						m.Option(ice.FIELD_RELOAD, "true")
 					}
 				case "del", "退还":
-					if m.Option("group") != "" && m.Option("name") != "" {
-						m.Cmdy(ice.WEB_GROUP, m.Option("group"), "del", m.Option("name"))
+					if m.Option(cmd) != "" && m.Option(kit.MDB_NAME) != "" {
+						m.Cmdy(cmd, m.Option(cmd), "del", m.Option(kit.MDB_NAME))
+						m.Option(ice.FIELD_RELOAD, "true")
 					}
+				case "prune", "清理":
+					m.Richs(cmd, nil, m.Option(cmd), func(key string, value map[string]interface{}) {
+						m.Richs(cmd, kit.Keys(kit.MDB_HASH, key), kit.MDB_FOREACH, func(sub string, value map[string]interface{}) {
+							if value[kit.MDB_STATUS] != "busy" {
+								m.Cmdy(cmd, m.Option(cmd), "del", value[kit.MDB_NAME])
+								m.Option(ice.FIELD_RELOAD, "true")
+							}
+						})
+					})
+				case "clear", "清空":
+					m.Richs(cmd, nil, m.Option(cmd), func(key string, value map[string]interface{}) {
+						m.Richs(cmd, kit.Keys(kit.MDB_HASH, key), kit.MDB_FOREACH, func(sub string, value map[string]interface{}) {
+							if value[kit.MDB_STATUS] == "void" {
+								last := m.Conf(cmd, kit.Keys(kit.MDB_HASH, key, kit.MDB_HASH, sub))
+								m.Logs(ice.LOG_DELETE, cmd, m.Option(cmd), kit.MDB_NAME, value[kit.MDB_NAME], kit.MDB_VALUE, last)
+								m.Conf(cmd, kit.Keys(kit.MDB_HASH, key, kit.MDB_HASH, sub), "")
+								m.Option(ice.FIELD_RELOAD, "true")
+								m.Echo(last)
+							}
+						})
+					})
+				case "delete", "删除":
+					m.Richs(cmd, nil, m.Option(cmd), func(key string, value map[string]interface{}) {
+						m.Echo(m.Conf(cmd, kit.Keys(kit.MDB_HASH, key)))
+						m.Logs(ice.LOG_REMOVE, cmd, m.Option(cmd), kit.MDB_VALUE, m.Conf(cmd, kit.Keys(kit.MDB_HASH, key)))
+						m.Conf(cmd, kit.Keys(kit.MDB_HASH, key), "")
+						m.Option(ice.FIELD_RELOAD, "true")
+					})
 				}
 				return
 			}
 
-			if len(arg) < 2 {
-				// 分组列表
-				m.Richs(cmd, nil, kit.Select("*", arg, 0), func(key string, value map[string]interface{}) {
+			if len(arg) < 3 {
+				m.Richs(cmd, nil, kit.Select(kit.MDB_FOREACH, arg, 0), func(key string, value map[string]interface{}) {
 					if len(arg) < 1 {
-						m.Push(key, value[kit.MDB_META])
+						// 一级列表
+						m.Option(ice.FIELD_DETAIL, "清理", "清空", "删除")
+						value = value[kit.MDB_META].(map[string]interface{})
+						m.Push(key, value, []string{kit.MDB_TIME})
+						status := map[string]int{}
+						m.Richs(cmd, kit.Keys(kit.MDB_HASH, key), kit.MDB_FOREACH, func(key string, value map[string]interface{}) {
+							status[kit.Format(value[kit.MDB_STATUS])]++
+						})
+						m.Push("count", kit.Format("%d/%d/%d", status["busy"], status["free"], status["void"]))
+						m.Push(key, value, []string{cmd})
 						return
 					}
-					m.Richs(cmd, kit.Keys(kit.MDB_HASH, key), "*", func(key string, value map[string]interface{}) {
-						m.Push(key, value)
+					m.Richs(cmd, kit.Keys(kit.MDB_HASH, key), kit.Select("*", arg, 1), func(key string, value map[string]interface{}) {
+						if len(arg) < 2 {
+							// 二级列表
+							m.Option(ice.FIELD_DETAIL, "标签", "添加", "退还", "清理", "清空")
+							m.Push(key, value, []string{kit.MDB_TIME, kit.MDB_STATUS, kit.MDB_NAME})
+							return
+						}
+						// 分组详情
+						m.Option(ice.FIELD_DETAIL, "标签", "添加", "退还")
+						m.Push("detail", value)
 					})
 				})
-				m.Logs(ice.LOG_SELECT, cmd, m.Format(ice.MSG_APPEND))
+				if len(arg) < 1 {
+					m.Sort(cmd)
+				} else if len(arg) < 2 {
+					m.Sort(kit.MDB_NAME)
+				}
 				return
 			}
 
 			if m.Richs(cmd, nil, arg[0], nil) == nil {
 				// 添加分组
-				n := m.Rich(cmd, nil, kit.Data(kit.MDB_SHORT, kit.MDB_NAME, cmd, arg[0]))
-				m.Logs(ice.LOG_CREATE, cmd, n)
+				m.Logs(ice.LOG_CREATE, cmd, m.Rich(cmd, nil, kit.Data(
+					kit.MDB_SHORT, kit.MDB_NAME, cmd, arg[0],
+				)))
 			}
 
 			m.Richs(cmd, nil, arg[0], func(key string, value map[string]interface{}) {
-				if m.Richs(cmd, kit.Keys(kit.MDB_HASH, key), arg[1], func(key string, value map[string]interface{}) {
-					// 分组详情
-					m.Push("detail", value)
-				}) != nil {
-					return
-				}
-
 				switch arg[1] {
-				case "add":
+				case "add": // 添加设备
 					if m.Richs(cmd, kit.Keys(kit.MDB_HASH, key), arg[2], func(key string, value map[string]interface{}) {
 						if value[kit.MDB_STATUS] == "void" {
 							value[kit.MDB_STATUS] = "free"
+							m.Logs(ice.LOG_MODIFY, cmd, arg[0], kit.MDB_NAME, arg[2], kit.MDB_STATUS, value[kit.MDB_STATUS])
 						}
-						m.Logs(ice.LOG_MODIFY, cmd, key, kit.MDB_NAME, arg[2], kit.MDB_STATUS, value[kit.MDB_STATUS])
 					}) == nil {
-						m.Logs(ice.LOG_INSERT, cmd, key, kit.MDB_NAME, arg[2])
-						m.Rich(cmd, kit.Keys(kit.MDB_HASH, key), kit.Dict(kit.MDB_NAME, arg[2], kit.MDB_STATUS, "free"))
+						m.Logs(ice.LOG_INSERT, cmd, arg[0], kit.MDB_NAME, arg[2])
+						m.Rich(cmd, kit.Keys(kit.MDB_HASH, key), kit.Dict(
+							kit.MDB_NAME, arg[2], kit.MDB_STATUS, "free",
+						))
 					}
 					m.Echo(arg[0])
-				case "del":
-					m.Logs(ice.LOG_MODIFY, cmd, key, kit.MDB_NAME, arg[2], kit.MDB_STATUS, "void")
+				case "del": // 删除设备
 					m.Richs(cmd, kit.Keys(kit.MDB_HASH, key), arg[2], func(sub string, value map[string]interface{}) {
-						value[kit.MDB_STATUS] = "void"
+						if value[kit.MDB_STATUS] == "free" {
+							value[kit.MDB_STATUS] = "void"
+							m.Logs(ice.LOG_MODIFY, cmd, arg[0], kit.MDB_NAME, arg[2], kit.MDB_STATUS, value[kit.MDB_STATUS])
+							m.Echo(arg[2])
+						}
 					})
-				case "get":
+				case "get": // 分配设备
 					m.Richs(cmd, kit.Keys(kit.MDB_HASH, key), kit.Select("%", arg, 2), func(sub string, value map[string]interface{}) {
-						m.Logs(ice.LOG_MODIFY, cmd, key, kit.MDB_NAME, value[kit.MDB_NAME], kit.MDB_STATUS, "busy")
-						value[kit.MDB_STATUS] = "busy"
-						m.Echo("%s", value[kit.MDB_NAME])
+						if value[kit.MDB_STATUS] == "free" {
+							value[kit.MDB_STATUS] = "busy"
+							m.Logs(ice.LOG_MODIFY, cmd, arg[0], kit.MDB_NAME, arg[2], kit.MDB_STATUS, value[kit.MDB_STATUS])
+							m.Echo("%s", value[kit.MDB_NAME])
+						}
 					})
-				case "put":
-					m.Logs(ice.LOG_MODIFY, cmd, key, kit.MDB_NAME, arg[2], kit.MDB_STATUS, "free")
+				case "put": // 回收设备
 					m.Richs(cmd, kit.Keys(kit.MDB_HASH, key), arg[2], func(sub string, value map[string]interface{}) {
-						value[kit.MDB_STATUS] = "free"
+						if value[kit.MDB_STATUS] == "busy" {
+							value[kit.MDB_STATUS] = "free"
+							m.Logs(ice.LOG_MODIFY, cmd, arg[0], kit.MDB_NAME, arg[2], kit.MDB_STATUS, value[kit.MDB_STATUS])
+							m.Echo("%s", value[kit.MDB_NAME])
+						}
 					})
 				default:
-					m.Richs(cmd, kit.Keys(kit.MDB_HASH, key), "*", func(key string, value map[string]interface{}) {
+					m.Richs(cmd, kit.Keys(kit.MDB_HASH, key), arg[1], func(key string, value map[string]interface{}) {
 						// 执行命令
-						m.Cmdy(ice.WEB_PROXY, value["name"], arg[1:])
+						m.Cmdy(ice.WEB_PROXY, value[kit.MDB_NAME], arg[2:])
 					})
 				}
 			})
 		}},
-		ice.WEB_LABEL: {Name: "label label name auto", Help: "标签", Meta: kit.Dict(
+		ice.WEB_LABEL: {Name: "label label=auto name=auto auto", Help: "标签", Meta: kit.Dict(
 			"exports", []string{"lab", "label"}, "detail", []string{"归还"},
 		), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			if len(arg) > 1 && arg[0] == "action" {
 				switch arg[1] {
-				case "del", "归还":
-					if m.Option("label") != "" && m.Option("name") != "" {
-						m.Cmdy(ice.WEB_LABEL, m.Option("label"), "del", m.Option("name"))
+				case "add", "添加":
+					if m.Option(cmd) != "" && m.Option(kit.MDB_GROUP) != "" && m.Option(kit.MDB_NAME) != "" {
+						m.Cmdy(cmd, m.Option(cmd), "add", m.Option(kit.MDB_GROUP), m.Option(kit.MDB_NAME))
+						m.Option(ice.FIELD_RELOAD, "true")
 					}
+				case "del", "退还":
+					if m.Option(cmd) != "" && m.Option(kit.MDB_GROUP) != "" && m.Option(kit.MDB_NAME) != "" {
+						m.Cmdy(cmd, m.Option(cmd), "del", m.Option(kit.MDB_GROUP), m.Option(kit.MDB_NAME))
+						m.Option(ice.FIELD_RELOAD, "true")
+					}
+				case "prune", "清理":
+					m.Richs(cmd, nil, m.Option(cmd), func(key string, value map[string]interface{}) {
+						m.Richs(cmd, kit.Keys(kit.MDB_HASH, key), kit.MDB_FOREACH, func(sub string, value map[string]interface{}) {
+							if value[kit.MDB_STATUS] != "busy" {
+								m.Cmdy(cmd, m.Option(cmd), "del", value[kit.MDB_GROUP], value[kit.MDB_NAME])
+								m.Option(ice.FIELD_RELOAD, "true")
+							}
+						})
+					})
+				case "clear", "清空":
+					m.Richs(cmd, nil, m.Option(cmd), func(key string, value map[string]interface{}) {
+						m.Richs(cmd, kit.Keys(kit.MDB_HASH, key), kit.MDB_FOREACH, func(sub string, value map[string]interface{}) {
+							if value[kit.MDB_STATUS] == "void" {
+								last := m.Conf(cmd, kit.Keys(kit.MDB_HASH, key, kit.MDB_HASH, sub))
+								m.Logs(ice.LOG_DELETE, cmd, m.Option(cmd), kit.MDB_NAME, value[kit.MDB_NAME], kit.MDB_VALUE, last)
+								m.Conf(cmd, kit.Keys(kit.MDB_HASH, key, kit.MDB_HASH, sub), "")
+								m.Option(ice.FIELD_RELOAD, "true")
+								m.Echo(last)
+							}
+						})
+					})
+				case "delete", "删除":
+					m.Richs(cmd, nil, m.Option(cmd), func(key string, value map[string]interface{}) {
+						m.Echo(m.Conf(cmd, kit.Keys(kit.MDB_HASH, key)))
+						m.Logs(ice.LOG_REMOVE, cmd, m.Option(cmd), kit.MDB_VALUE, m.Conf(cmd, kit.Keys(kit.MDB_HASH, key)))
+						m.Conf(cmd, kit.Keys(kit.MDB_HASH, key), "")
+						m.Option(ice.FIELD_RELOAD, "true")
+					})
 				}
 				return
 			}
 
 			if len(arg) < 3 {
 				m.Richs(cmd, nil, kit.Select("*", arg, 0), func(key string, value map[string]interface{}) {
-					if len(arg) == 0 {
-						// 分组列表
-						m.Push(key, value[kit.MDB_META])
+					if len(arg) < 1 {
+						// 一级列表
+						m.Option(ice.FIELD_DETAIL, "清理", "清空", "删除")
+						value = value[kit.MDB_META].(map[string]interface{})
+						m.Push(key, value, []string{kit.MDB_TIME})
+						status := map[string]int{}
+						m.Richs(cmd, kit.Keys(kit.MDB_HASH, key), kit.MDB_FOREACH, func(key string, value map[string]interface{}) {
+							status[kit.Format(value[kit.MDB_STATUS])]++
+						})
+						m.Push("count", kit.Format("%d/%d/%d", status["busy"], status["free"], status["void"]))
+						m.Push(key, value, []string{cmd})
 						return
 					}
 					m.Richs(cmd, kit.Keys(kit.MDB_HASH, key), kit.Select("*", arg, 1), func(key string, value map[string]interface{}) {
-						if len(arg) == 1 {
-							// 设备列表
-							m.Push(key, value)
+						if len(arg) < 2 {
+							// 二级列表
+							m.Option(ice.FIELD_DETAIL, "添加", "退还", "清理", "清空")
+							m.Push(key, value, []string{kit.MDB_TIME, kit.MDB_GROUP, kit.MDB_STATUS, kit.MDB_NAME})
 							return
 						}
-						// 设备详情
+						// 分组详情
+						m.Option(ice.FIELD_DETAIL, "添加", "退还")
 						m.Push("detail", value)
 					})
 				})
-				m.Logs(ice.LOG_SELECT, cmd, m.Format(ice.MSG_APPEND))
+				if len(arg) < 1 {
+					m.Sort(cmd)
+				} else if len(arg) < 2 {
+					m.Sort(kit.MDB_NAME)
+				}
 				return
 			}
 
 			if m.Richs(cmd, nil, arg[0], nil) == nil {
 				// 添加分组
-				m.Logs(ice.LOG_CREATE, cmd, m.Rich(cmd, nil, kit.Data(kit.MDB_SHORT, kit.MDB_NAME, cmd, arg[0])))
+				m.Logs(ice.LOG_CREATE, cmd, m.Rich(cmd, nil, kit.Data(
+					kit.MDB_SHORT, kit.MDB_NAME, cmd, arg[0],
+				)))
 			}
 
 			m.Richs(cmd, nil, arg[0], func(key string, value map[string]interface{}) {
 				switch arg[1] {
-				case "add":
+				case "add": // 添加设备
 					if pod := m.Cmdx(ice.WEB_GROUP, arg[2], "get", arg[3:]); pod != "" {
 						if m.Richs(cmd, kit.Keys(kit.MDB_HASH, key), pod, func(key string, value map[string]interface{}) {
 							if value[kit.MDB_STATUS] == "void" {
-								// 更新设备
 								value[kit.MDB_STATUS] = "free"
-								m.Logs(ice.LOG_MODIFY, cmd, key, kit.MDB_NAME, pod, kit.MDB_STATUS, value[kit.MDB_STATUS])
+								m.Logs(ice.LOG_MODIFY, cmd, arg[0], kit.MDB_NAME, pod, kit.MDB_STATUS, value[kit.MDB_STATUS])
 							}
 						}) == nil {
-							// 获取设备
-							m.Logs(ice.LOG_INSERT, cmd, key, kit.MDB_NAME, pod)
-							m.Rich(cmd, kit.Keys(kit.MDB_HASH, key), kit.Dict(kit.MDB_NAME, pod, "group", arg[2], kit.MDB_STATUS, "free"))
+							m.Logs(ice.LOG_INSERT, cmd, arg[0], kit.MDB_NAME, pod)
+							m.Rich(cmd, kit.Keys(kit.MDB_HASH, key), kit.Dict(
+								kit.MDB_NAME, pod, kit.MDB_GROUP, arg[2], kit.MDB_STATUS, "free",
+							))
 						}
+						m.Echo(arg[0])
 					}
-					m.Echo(arg[0])
-
-				case "del":
-					m.Richs(cmd, kit.Keys(kit.MDB_HASH, key), arg[2], func(sub string, value map[string]interface{}) {
-						// 归还设备
-						m.Cmdx(ice.WEB_GROUP, value["group"], "put", arg[2])
-						m.Logs(ice.LOG_MODIFY, cmd, key, kit.MDB_NAME, arg[2], kit.MDB_STATUS, "void")
-						value[kit.MDB_STATUS] = "void"
-						m.Echo(arg[2])
+				case "del": // 删除设备
+					m.Richs(cmd, kit.Keys(kit.MDB_HASH, key), arg[3], func(sub string, value map[string]interface{}) {
+						if value[kit.MDB_STATUS] == "free" {
+							value[kit.MDB_STATUS] = "void"
+							m.Logs(ice.LOG_MODIFY, cmd, arg[0], kit.MDB_NAME, arg[3], kit.MDB_STATUS, "void")
+							m.Cmdx(ice.WEB_GROUP, value[kit.MDB_GROUP], "put", arg[3])
+							m.Echo(arg[3])
+						}
 					})
 				default:
 					wg := &sync.WaitGroup{}
@@ -2026,8 +2131,8 @@ var Index = &ice.Context{Name: "web", Help: "网络模块",
 					m.Richs(cmd, kit.Keys(kit.MDB_HASH, key), arg[1], func(key string, value map[string]interface{}) {
 						wg.Add(1)
 						// 远程命令
-						m.Option("user.pod", value["name"])
-						m.Cmd(ice.WEB_PROXY, value["name"], arg[2:]).Call(false, func(res *ice.Message) *ice.Message {
+						m.Option(ice.MSG_USERPOD, value[kit.MDB_NAME])
+						m.Cmd(ice.WEB_PROXY, value[kit.MDB_NAME], arg[2:]).Call(false, func(res *ice.Message) *ice.Message {
 							if wg.Done(); res != nil && m != nil {
 								m.Copy(res)
 							}

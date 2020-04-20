@@ -187,6 +187,7 @@ var Index = &ice.Context{Name: "nfs", Help: "存储模块",
 						m.Push("engine", "dir")
 						m.Push("favor", "file")
 						m.Push("id", kit.FmtSize(s.Size()))
+						m.Push("time", s.ModTime().Format(ice.ICE_TIME))
 						m.Push("type", strings.TrimPrefix(path.Ext(name), "."))
 						m.Push("name", path.Base(name))
 						m.Push("text", name)

@@ -42,6 +42,12 @@ const ( // MSG
 
 	MSG_RIVER = "sess.river"
 	MSG_STORM = "sess.storm"
+
+	FIELD_RELOAD = "field.reload"
+	FIELD_DETAIL = "field.detail"
+
+	EXPORT_LABEL = "lab"
+	EXPORT_GROUP = "grp"
 )
 
 const ( // CTX

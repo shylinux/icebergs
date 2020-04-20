@@ -584,19 +584,22 @@ var Index = &ice.Context{Name: "chat", Help: "聊天中心",
 					})
 				})
 			default:
-				if len(arg) == 2 {
-					m.Richs(cmd, nil, "*", func(key string, value map[string]interface{}) {
-						m.Push(key, value)
-					})
-					break
-				}
-				if len(arg) == 3 {
-					m.Richs(cmd, nil, "*", func(key string, value map[string]interface{}) {
-						m.Push(key, value)
+				if len(arg) < 4 {
+					m.Richs(cmd, nil, kit.Select(kit.MDB_FOREACH, arg, 2), func(key string, val map[string]interface{}) {
+						if len(arg) < 3 {
+							m.Push(key, val[kit.MDB_META], []string{kit.MDB_TIME, kit.MDB_NAME, kit.MDB_COUNT})
+							return
+						}
+						m.Grows(cmd, kit.Keys(kit.MDB_HASH, key), "", "", func(index int, value map[string]interface{}) {
+							m.Push("", value, []string{kit.MDB_TIME})
+							m.Push("group", arg[2])
+							m.Push("", value, []string{kit.MDB_NAME, kit.MDB_TEXT})
+						})
 					})
 					break
 				}
 				m.Cmdy(ice.WEB_LABEL, arg[0], arg[1], "web.chat.search", "get", arg[2:])
+				m.Sort("time", "time_r")
 			}
 		}},
 		"commend": {Name: "commend label pod engine work auto", Help: "推荐引擎", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
@@ -626,11 +629,12 @@ var Index = &ice.Context{Name: "chat", Help: "聊天中心",
 						wg.Done()
 					})
 				})
+				m.Sort("time", "time_r")
 				wg.Wait()
 			case "set":
 				if arg[1] != "" {
-					// m.Cmdy(ice.WEB_SPACE, arg[1], "web.chat.commend", "set", "", arg[2:])
-					// break
+					m.Cmdy(ice.WEB_SPACE, arg[1], "web.chat.commend", "set", "", arg[2:])
+					break
 				}
 
 				if m.Richs(cmd, "meta.user", m.Option(ice.MSG_USERNAME), nil) == nil {
@@ -673,8 +677,8 @@ var Index = &ice.Context{Name: "chat", Help: "聊天中心",
 					})
 					break
 				}
-				// m.Cmdy(ice.WEB_LABEL, arg[0], arg[1], "web.chat.commend", "get", arg[2:])
-				m.Cmdy("web.chat.commend", "get", arg[2:])
+				m.Cmdy(ice.WEB_LABEL, arg[0], arg[1], "web.chat.commend", "get", arg[2:])
+				// m.Cmdy("web.chat.commend", "get", arg[2:])
 			}
 		}},
 	},

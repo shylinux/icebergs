@@ -42,6 +42,15 @@ var Index = &ice.Context{Name: "tmux", Help: "工作台",
 		)},
 	},
 	Commands: map[string]*ice.Command{
+		ice.ICE_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			m.Cmd(ice.WEB_PROXY, "add", "tmux", m.AddCmd(&ice.Command{Name: "proxy", Help: "代理", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+				m.Cmd("session").Table(func(index int, value map[string]string, head []string) {
+					if value["tag"] == "1" {
+						m.Echo(value["session"])
+					}
+				})
+			}}))
+		}},
 		ice.CODE_INSTALL: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			m.Option("cmd_dir", m.Conf("install", "meta.path"))
 			m.Cmd(ice.CLI_SYSTEM, "git", "clone", "https://github.com/tmux/tmux")

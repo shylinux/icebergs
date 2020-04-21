@@ -7,6 +7,8 @@ import (
 	kit "github.com/shylinux/toolkits"
 
 	"io/ioutil"
+	"os"
+	"path"
 	"strings"
 	"unicode"
 )
@@ -14,7 +16,14 @@ import (
 var Index = &ice.Context{Name: "zsh", Help: "命令行",
 	Caches: map[string]*ice.Cache{},
 	Configs: map[string]*ice.Config{
-		"zsh": {Name: "zsh", Help: "命令行", Value: kit.Data("history", "zsh.history")},
+		"zsh": {Name: "zsh", Help: "命令行", Value: kit.Data(
+			"history", "zsh.history", "script", []interface{}{
+				".bashrc", "etc/conf/bashrc",
+				".zshrc", "etc/conf/zshrc",
+				".ish/init.sh", "etc/conf/ishrc",
+				".vim/syntax/sh.vim", "etc/conf/sh.vim",
+			},
+		)},
 	},
 	Commands: map[string]*ice.Command{
 		ice.ICE_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
@@ -27,6 +36,12 @@ var Index = &ice.Context{Name: "zsh", Help: "命令行",
 				value := m.Optionv("value").(map[string]interface{})
 				m.Cmdy(kit.Split(kit.Format(value["text"])))
 			}}))
+		}},
+		ice.CODE_PREPARE: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			list := kit.Simple(m.Confv("zsh", "meta.script"))
+			for i := 0; i < len(list); i += 2 {
+				m.Cmd("nfs.link", path.Join(os.Getenv("HOME"), list[i]), list[i+1])
+			}
 		}},
 		ice.WEB_LOGIN: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			if f, _, e := m.R.FormFile("sub"); e == nil {

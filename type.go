@@ -728,6 +728,8 @@ func (m *Message) Optionv(key string, arg ...interface{}) interface{} {
 		}
 
 		switch str := arg[0].(type) {
+		case nil:
+			delete(m.meta, key)
 		case string:
 			m.meta[key] = kit.Simple(arg)
 		case []string:

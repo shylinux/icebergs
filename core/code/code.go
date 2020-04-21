@@ -7,6 +7,7 @@ import (
 
 	"os"
 	"path"
+	"runtime"
 	"strings"
 
 	"net/http"
@@ -17,7 +18,14 @@ var Index = &ice.Context{Name: "code", Help: "编程中心",
 	Caches: map[string]*ice.Cache{},
 	Configs: map[string]*ice.Config{
 		"install": {Name: "install", Help: "安装", Value: kit.Data("path", "usr/install",
-			"source", "https://dl.google.com/go/go1.14.2.src.tar.gz", "target", "usr/local",
+			"linux", "https://dl.google.com/go/go1.14.2.linux-amd64.tar.gz",
+			"darwin", "https://dl.google.com/go/go1.14.2.darwin-amd64.pkg",
+			"windows", "https://dl.google.com/go/go1.14.2.windows-amd64.msi",
+			"source", "https://dl.google.com/go/go1.14.2.src.tar.gz",
+			"target", "usr/local", "script", ".ish/pluged/golang/init.sh", "export", kit.Dict(
+				"GOPROXY", "https://goproxy.cn,direct",
+				"GOPRIVATE", "https://github.com",
+			),
 		)},
 		"prepare": {Name: "prepare", Help: "配置", Value: kit.Data("path", "usr/prepare")},
 		"project": {Name: "project", Help: "项目", Value: kit.Data("path", "usr/project")},
@@ -45,15 +53,29 @@ var Index = &ice.Context{Name: "code", Help: "编程中心",
 		}},
 
 		ice.CODE_INSTALL: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			p := path.Join(m.Conf("install", "meta.path"), "go")
+			p := path.Join(m.Conf("install", "meta.path"), path.Base(m.Conf("install", kit.Keys("meta", runtime.GOOS))))
+			// 下载
 			if _, e := os.Stat(p); e != nil {
-				// 下载源码
 				m.Option("cmd_dir", m.Conf("install", "meta.path"))
-				m.Cmd(ice.CLI_SYSTEM, "wget", "-O", "go.tar.gz", m.Conf("install", "meta.source"))
-				m.Cmd(ice.CLI_SYSTEM, "tar", "xvf", "go.tar.gz")
+				m.Cmd(ice.CLI_SYSTEM, "wget", m.Conf("install", kit.Keys("meta", runtime.GOOS)))
 			}
+
+			// 安装
+			m.Option("cmd_dir", "")
+			os.MkdirAll(m.Conf("install", kit.Keys("meta.target")), 0777)
+			m.Cmdy(ice.CLI_SYSTEM, "tar", "xvf", p, "-C", m.Conf("install", kit.Keys("meta.target")))
 		}},
 		ice.CODE_PREPARE: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			export := []string{}
+			kit.Fetch(m.Confv("install", "meta.export"), func(key string, val string) {
+				export = append(export, key+"="+val)
+			})
+
+			m.Cmd("nfs.save", m.Conf("install", "meta.script"), kit.Format(`
+export GOROOT=%s GOPATH=%s:$GOPATH GOBIN=%s
+export PATH=$GOBIN:$GOROOT/bin:$PATH
+export %s
+`, kit.Path(m.Conf("install", kit.Keys("meta.target")), "go"), kit.Path("src"), kit.Path("bin"), strings.Join(export, " ")))
 		}},
 		ice.CODE_PROJECT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 		}},

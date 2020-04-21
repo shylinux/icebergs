@@ -108,8 +108,8 @@ func (web *Frame) Login(msg *ice.Message, w http.ResponseWriter, r *http.Request
 	if msg.Options(ice.MSG_SESSID) {
 		// 会话认证
 		sub := msg.Cmd(ice.AAA_SESS, "check", msg.Option(ice.MSG_SESSID))
-		msg.Log(ice.LOG_AUTH, "role: %s user: %s", msg.Option(ice.MSG_USERROLE, sub.Append("userrole")),
-			msg.Option(ice.MSG_USERNAME, sub.Append("username")))
+		msg.Logs(ice.LOG_AUTH, "role", msg.Option(ice.MSG_USERROLE, sub.Append("userrole")),
+			"user", msg.Option(ice.MSG_USERNAME, sub.Append("username")))
 	}
 
 	if !msg.Options(ice.MSG_USERNAME) && IsLocalIP(msg, msg.Option(ice.MSG_USERIP)) {
@@ -120,7 +120,7 @@ func (web *Frame) Login(msg *ice.Message, w http.ResponseWriter, r *http.Request
 			msg.Option(ice.MSG_SESSID, msg.Cmdx(ice.AAA_SESS, "create", msg.Option(ice.MSG_USERNAME), msg.Option(ice.MSG_USERROLE)))
 			msg.Render("cookie", msg.Option(ice.MSG_SESSID))
 		}
-		msg.Log(ice.LOG_AUTH, "user: %s role: %s sess: %s", msg.Option(ice.MSG_USERNAME), msg.Option(ice.MSG_USERROLE), msg.Option(ice.MSG_SESSID))
+		msg.Logs(ice.LOG_AUTH, "role", msg.Option(ice.MSG_USERROLE), "user", msg.Option(ice.MSG_USERNAME), "sess", msg.Option(ice.MSG_SESSID))
 	}
 
 	if s, ok := msg.Target().Commands[ice.WEB_LOGIN]; ok {
@@ -148,61 +148,59 @@ func (web *Frame) Login(msg *ice.Message, w http.ResponseWriter, r *http.Request
 func (web *Frame) HandleWSS(m *ice.Message, safe bool, c *websocket.Conn, name string) bool {
 	for running := true; running; {
 		if t, b, e := c.ReadMessage(); m.Warn(e != nil, "space recv %d msg %v", t, e) {
+			// 解析失败
 			break
 		} else {
-			switch t {
-			case MSG_MAPS:
-				// 接收报文
-				socket, msg := c, m.Spawn(b)
-				source := kit.Simple(msg.Optionv(ice.MSG_SOURCE), name)
-				target := kit.Simple(msg.Optionv(ice.MSG_TARGET))
-				msg.Info("recv %v<-%v %v", target, source, msg.Format("meta"))
+			socket, msg := c, m.Spawns(b)
+			target := kit.Simple(msg.Optionv(ice.MSG_TARGET))
+			source := kit.Simple(msg.Optionv(ice.MSG_SOURCE), name)
+			msg.Info("recv %v<-%v %v", target, source, msg.Format("meta"))
 
-				if len(target) == 0 {
+			if len(target) == 0 {
+				msg.Option(ice.MSG_USERROLE, msg.Cmdx(ice.AAA_ROLE, "check", msg.Option(ice.MSG_USERNAME)))
+				msg.Logs(ice.LOG_AUTH, "role", msg.Option(ice.MSG_USERROLE), "user", msg.Option(ice.MSG_USERNAME))
+				if msg.Optionv(ice.MSG_HANDLE, "true"); !msg.Warn(!safe, "no right") {
 					// 本地执行
-					msg.Option(ice.MSG_USERROLE, msg.Cmdx(ice.AAA_ROLE, "check", msg.Option(ice.MSG_USERNAME)))
-					msg.Log("some", "%s: %s", msg.Option(ice.MSG_USERROLE), msg.Option(ice.MSG_USERNAME))
-					if msg.Optionv(ice.MSG_HANDLE, "true"); !msg.Warn(!safe, "no right") {
-						m.Option("_dev", name)
-						msg = msg.Cmd()
-					}
-					if source, target = []string{}, kit.Revert(source)[1:]; msg.Detail() == "exit" {
-						return true
-					}
-
-				} else if msg.Richs(ice.WEB_SPACE, nil, target[0], func(key string, value map[string]interface{}) {
-					if s, ok := value["socket"].(*websocket.Conn); ok {
-						socket, source, target = s, source, target[1:]
-					} else {
-						socket, source, target = s, source, target[1:]
-					}
-				}) != nil {
-					// 转发报文
-					msg.Info("space route")
-
-				} else if call, ok := web.send[msg.Option(ice.MSG_TARGET)]; len(target) == 1 && ok {
-					// 接收响应
-					delete(web.send, msg.Option(ice.MSG_TARGET))
-					call.Back(msg)
-					break
-
-				} else if msg.Warn(msg.Option("_handle") == "true", "space miss") {
-					// 回复失败
-					break
-
-				} else {
-					// 下发失败
-					msg.Warn(true, "space error")
-					source, target = []string{}, kit.Revert(source)[1:]
+					m.Option("_dev", name)
+					msg = msg.Cmd()
 				}
+				if source, target = []string{}, kit.Revert(source)[1:]; msg.Detail() == "exit" {
+					// 重启进程
+					return true
+				}
+			} else if msg.Richs(ice.WEB_SPACE, nil, target[0], func(key string, value map[string]interface{}) {
+				// 查询节点
+				if s, ok := value["socket"].(*websocket.Conn); ok {
+					socket, source, target = s, source, target[1:]
+				} else {
+					socket, source, target = s, source, target[1:]
+				}
+			}) != nil {
+				// 转发报文
 
-				// 发送报文
-				msg.Optionv(ice.MSG_SOURCE, source)
-				msg.Optionv(ice.MSG_TARGET, target)
-				socket.WriteMessage(t, []byte(msg.Format("meta")))
-				msg.Info("send %v %v->%v %v", t, source, target, msg.Format("meta"))
-				msg.Log("cost", "%s: ", msg.Format("cost"))
+			} else if res, ok := web.send[msg.Option(ice.MSG_TARGET)]; len(target) == 1 && ok {
+				// 接收响应
+				delete(web.send, msg.Option(ice.MSG_TARGET))
+				res.Cost("%v->%v %v %v", target, source, res.Detailv(), msg.Format("append"))
+				res.Back(msg)
+				continue
+
+			} else if msg.Warn(msg.Option("_handle") == "true", "space miss") {
+				// 回复失败
+				continue
+
+			} else {
+				// 下发失败
+				msg.Warn(true, "space error")
+				source, target = []string{}, kit.Revert(source)[1:]
 			}
+
+			// 发送报文
+			msg.Optionv(ice.MSG_SOURCE, source)
+			msg.Optionv(ice.MSG_TARGET, target)
+			socket.WriteMessage(t, []byte(msg.Format("meta")))
+			msg.Info("send %v %v->%v %v", t, source, target, msg.Format("meta"))
+			msg.Cost("%v->%v %v %v", source, target, msg.Detailv(), msg.Format("append"))
 		}
 	}
 	return false
@@ -904,7 +902,7 @@ var Index = &ice.Context{Name: "web", Help: "网络模块",
 								"proxy", kit.Select("master", arg, 3), "group", kit.Select("worker", arg, 4), "share", value["share"])); msg.Assert(e) {
 								if s, e := net.Dial("tcp", host); !msg.Warn(e != nil, "%s", e) {
 									if s, _, e := websocket.NewClient(s, u, nil, kit.Int(msg.Conf(ice.WEB_SPACE, "meta.buffer.r")), kit.Int(msg.Conf(ice.WEB_SPACE, "meta.buffer.w"))); !msg.Warn(e != nil, "%s", e) {
-										msg = m.Spawn()
+										msg = m.Spawns()
 
 										// 连接成功
 										msg.Rich(ice.WEB_SPACE, nil, kit.Dict(
@@ -920,7 +918,7 @@ var Index = &ice.Context{Name: "web", Help: "网络模块",
 
 								// 断线重连
 								sleep := time.Duration(rand.Intn(kit.Int(msg.Conf(ice.WEB_SPACE, "meta.redial.a"))*i+2)+kit.Int(msg.Conf(ice.WEB_SPACE, "meta.redial.b"))) * time.Millisecond
-								msg.Info("%d sleep: %s reconnect: %s", i, sleep, u)
+								msg.Cost("order: %d sleep: %s reconnect: %s", i, sleep, u)
 								time.Sleep(sleep)
 							}
 						}
@@ -951,19 +949,20 @@ var Index = &ice.Context{Name: "web", Help: "网络模块",
 						// 复制选项
 						for _, k := range kit.Simple(m.Optionv("_option")) {
 							switch k {
-							case "detail", "cmds":
+							case "detail", "cmds", ice.MSG_SESSID:
 							default:
 								m.Optionv(k, m.Optionv(k))
 							}
 						}
 						m.Optionv("_option", m.Optionv("_option"))
+						m.Optionv("option", nil)
 
 						// 构造路由
 						id := kit.Format(c.ID())
 						m.Set(ice.MSG_DETAIL, arg[1:]...)
 						m.Optionv(ice.MSG_TARGET, target[1:])
 						m.Optionv(ice.MSG_SOURCE, []string{id})
-						m.Info("send %s->%v %s", id, target, m.Format("meta"))
+						m.Info("send [%s]->%v %s", id, target, m.Format("meta"))
 
 						// 下发命令
 						m.Target().Server().(*Frame).send[id] = m
@@ -972,7 +971,6 @@ var Index = &ice.Context{Name: "web", Help: "网络模块",
 						m.Call(m.Option("_async") == "", func(res *ice.Message) *ice.Message {
 							if res != nil && m != nil {
 								// 返回结果
-								m.Log("cost", "%s: %s %v %v", m.Format("cost"), arg[0], arg[1:], res.Format("append"))
 								return m.Copy(res)
 							}
 							return nil
@@ -2132,7 +2130,7 @@ var Index = &ice.Context{Name: "web", Help: "网络模块",
 						wg.Add(1)
 						// 远程命令
 						m.Option(ice.MSG_USERPOD, value[kit.MDB_NAME])
-						m.Cmd(ice.WEB_PROXY, value[kit.MDB_NAME], arg[2:]).Call(false, func(res *ice.Message) *ice.Message {
+						m.Cmd(ice.WEB_SPACE, value[kit.MDB_NAME], arg[2:]).Call(false, func(res *ice.Message) *ice.Message {
 							if wg.Done(); res != nil && m != nil {
 								m.Copy(res)
 							}

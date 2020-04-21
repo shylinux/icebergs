@@ -598,6 +598,7 @@ var Index = &ice.Context{Name: "chat", Help: "聊天中心",
 					})
 					break
 				}
+				m.Option("pod", "")
 				m.Cmdy(ice.WEB_LABEL, arg[0], arg[1], "web.chat.search", "get", arg[2:])
 				m.Sort("time", "time_r")
 			}

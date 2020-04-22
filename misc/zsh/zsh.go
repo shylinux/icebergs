@@ -20,7 +20,7 @@ var Index = &ice.Context{Name: "zsh", Help: "命令行",
 			"history", "zsh.history", "script", []interface{}{
 				".bashrc", "etc/conf/bashrc",
 				".zshrc", "etc/conf/zshrc",
-				".ish/init.sh", "etc/conf/ishrc",
+				".ish/plug.sh", "usr/shell/plug.sh",
 				".vim/syntax/sh.vim", "etc/conf/sh.vim",
 			},
 		)},
@@ -38,6 +38,8 @@ var Index = &ice.Context{Name: "zsh", Help: "命令行",
 			}}))
 		}},
 		ice.CODE_PREPARE: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			m.Cmd("web.code.git.repos", "shell", "usr/shell")
+
 			list := kit.Simple(m.Confv("zsh", "meta.script"))
 			for i := 0; i < len(list); i += 2 {
 				m.Cmd("nfs.link", path.Join(os.Getenv("HOME"), list[i]), list[i+1])

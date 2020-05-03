@@ -363,7 +363,7 @@ func (web *Frame) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			m.Conf(ice.WEB_SERVE, "meta.init", "true")
 		}
 		m.W = w
-		Render(m, "refresh")
+		Render(m, "refresh", m.Conf(ice.WEB_SERVE, "meta.volcanos.refresh"))
 		m.Event(ice.SYSTEM_INIT)
 		m.W = nil
 	} else if r.URL.Path == "/share" && r.Method == "GET" {
@@ -454,12 +454,12 @@ var Index = &ice.Context{Name: "web", Help: "网络模块",
 				"share", "usr/volcanos/page/share.html",
 			),
 			"static", kit.Dict("/", "usr/volcanos/",
-				"/static/volcanos/", "usr/volcanos/",
 				"/publish/", "usr/publish/",
 			),
 			"volcanos", kit.Dict("path", "usr/volcanos", "branch", "master",
 				"repos", "https://github.com/shylinux/volcanos",
 				"require", "usr/local",
+				"refresh", "5",
 			),
 			"template", kit.Dict("path", "usr/template", "list", []interface{}{
 				`{{define "raw"}}{{.Result}}{{end}}`,
@@ -502,11 +502,6 @@ var Index = &ice.Context{Name: "web", Help: "网络模块",
 			m.Cmd(ice.WEB_SPIDE, "add", "self", kit.Select("http://:9020", m.Conf(ice.CLI_RUNTIME, "conf.ctx_self")))
 			m.Cmd(ice.WEB_SPIDE, "add", "dev", kit.Select("http://:9020", m.Conf(ice.CLI_RUNTIME, "conf.ctx_dev")))
 			m.Cmd(ice.WEB_SPIDE, "add", "shy", kit.Select("https://shylinux.com:443", m.Conf(ice.CLI_RUNTIME, "conf.ctx_shy")))
-
-			m.Watch(ice.SYSTEM_INIT, "web.code.git.repos", "volcanos", m.Conf(ice.WEB_SERVE, "meta.volcanos.path"),
-				m.Conf(ice.WEB_SERVE, "meta.volcanos.repos"), m.Conf(ice.WEB_SERVE, "meta.volcanos.branch"))
-			m.Conf(ice.WEB_FAVOR, "meta.template", favor_template)
-			m.Conf(ice.WEB_SHARE, "meta.template", share_template)
 
 			m.Cmd(ice.APP_SEARCH, "add", "favor", "base", m.AddCmd(&ice.Command{Name: "search word", Help: "搜索引擎", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 				switch arg[0] {
@@ -859,6 +854,11 @@ var Index = &ice.Context{Name: "web", Help: "网络模块",
 			for _, k := range arg {
 				m.Cmd(ice.WEB_SPACE, "connect", k)
 			}
+
+			m.Watch(ice.SYSTEM_INIT, "web.code.git.repos", "volcanos", m.Conf(ice.WEB_SERVE, "meta.volcanos.path"),
+				m.Conf(ice.WEB_SERVE, "meta.volcanos.repos"), m.Conf(ice.WEB_SERVE, "meta.volcanos.branch"))
+			m.Conf(ice.WEB_FAVOR, "meta.template", favor_template)
+			m.Conf(ice.WEB_SHARE, "meta.template", share_template)
 		}},
 		ice.WEB_SPACE: {Name: "space name auto", Help: "空间站", Meta: kit.Dict(
 			"exports", []string{"pod", "name"},
@@ -2415,6 +2415,21 @@ var Index = &ice.Context{Name: "web", Help: "网络模块",
 					path.Join(prefix, strings.Join(strings.Split(cmd, "/")[1:5], "/")))
 			}
 			m.Render(ice.RENDER_DOWNLOAD, path.Join(prefix, cmd))
+		}},
+		"/github.com/": {Name: "/space/", Help: "空间站", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			prefix := m.Conf(ice.WEB_SERVE, "meta.volcanos.require")
+			if _, e := os.Stat(path.Join(prefix, cmd)); e != nil {
+				m.Cmd(ice.CLI_SYSTEM, "git", "clone", "https://"+strings.Join(strings.Split(cmd, "/")[1:4], "/"),
+					path.Join(prefix, strings.Join(strings.Split(cmd, "/")[1:4], "/")))
+			}
+			m.Render(ice.RENDER_DOWNLOAD, path.Join(prefix, cmd))
+		}},
+		"/local/": {Name: "/space/", Help: "空间站", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			p := path.Join(cmd)
+			switch strings.TrimSuffix(path.Ext(p), ".") {
+			case "js":
+				m.Render(ice.RENDER_DOWNLOAD, p)
+			}
 		}},
 	},
 }

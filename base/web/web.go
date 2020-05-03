@@ -369,9 +369,9 @@ func (web *Frame) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	} else if r.URL.Path == "/share" && r.Method == "GET" {
 		http.ServeFile(w, r, m.Conf(ice.WEB_SERVE, "meta.page.share"))
 
-	} else if r.URL.Path == "/" && r.Method == "GET" {
-		http.ServeFile(w, r, m.Conf(ice.WEB_SERVE, "meta.page.index"))
-
+		// } else if r.URL.Path == "/" && r.Method == "GET" {
+		// 	http.ServeFile(w, r, m.Conf(ice.WEB_SERVE, "meta.page.index"))
+		//
 	} else {
 		web.ServeMux.ServeHTTP(w, r)
 	}

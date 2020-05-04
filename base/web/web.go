@@ -449,6 +449,8 @@ var Index = &ice.Context{Name: "web", Help: "网络模块",
 	Configs: map[string]*ice.Config{
 		ice.WEB_SPIDE: {Name: "spide", Help: "蜘蛛侠", Value: kit.Data(kit.MDB_SHORT, "client.name")},
 		ice.WEB_SERVE: {Name: "serve", Help: "服务器", Value: kit.Data(
+			"title", "github.com/shylinux/contexts",
+			"legal", `<a href="mailto:shylinuxc@gmail.com">shylinuxc@gmail.com</a>`,
 			"page", kit.Dict(
 				"index", "usr/volcanos/page/index.html",
 				"share", "usr/volcanos/page/share.html",
@@ -458,7 +460,7 @@ var Index = &ice.Context{Name: "web", Help: "网络模块",
 			),
 			"volcanos", kit.Dict("path", "usr/volcanos", "branch", "master",
 				"repos", "https://github.com/shylinux/volcanos",
-				"require", "usr/local",
+				"require", ".ish/pluged",
 				"refresh", "5",
 			),
 			"template", kit.Dict("path", "usr/template", "list", []interface{}{
@@ -488,7 +490,10 @@ var Index = &ice.Context{Name: "web", Help: "网络模块",
 			"head", kit.Data(kit.MDB_SHORT, "story"),
 			"mime", kit.Dict("md", "txt"),
 		)},
-		ice.WEB_SHARE: {Name: "share", Help: "共享链", Value: kit.Data("index", "usr/volcanos/share.html", "template", share_template)},
+		ice.WEB_SHARE: {Name: "share", Help: "共享链", Value: kit.Data(
+			"index", "usr/volcanos/share.html",
+			"template", share_template,
+		)},
 
 		ice.WEB_ROUTE: {Name: "route", Help: "路由", Value: kit.Data(kit.MDB_SHORT, kit.MDB_NAME)},
 		ice.WEB_PROXY: {Name: "proxy", Help: "代理", Value: kit.Data(kit.MDB_SHORT, "proxy")},

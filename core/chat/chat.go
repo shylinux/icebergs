@@ -308,7 +308,7 @@ var Index = &ice.Context{Name: "chat", Help: "聊天中心",
 		}},
 		"/storm": {Name: "/storm", Help: "暴风雨", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			if m.Warn(m.Option(ice.MSG_RIVER) == "", "not join") {
-				m.Render("status", 402, "not join")
+				// m.Render("status", 402, "not join")
 				return
 			}
 
@@ -404,18 +404,17 @@ var Index = &ice.Context{Name: "chat", Help: "聊天中心",
 		}},
 
 		"/header": {Name: "/header", Help: "标题栏", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			m.Echo(m.Conf(ice.WEB_SHARE, "meta.repos"))
+			m.Echo(m.Conf(ice.WEB_SERVE, "meta.title"))
 		}},
 		"/footer": {Name: "/footer", Help: "状态栏", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			m.Echo(m.Conf(ice.WEB_SHARE, "meta.email"))
-			m.Echo(m.Conf(ice.WEB_SHARE, "meta.legal"))
+			m.Echo(m.Conf(ice.WEB_SERVE, "meta.legal"))
 		}},
 
 		"/target": {Name: "/target", Help: "对话框", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {}},
 		"/source": {Name: "/source", Help: "输入框", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {}},
 		"/action": {Name: "/action", Help: "工作台", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			if m.Warn(m.Option(ice.MSG_RIVER) == "" || m.Option(ice.MSG_STORM) == "", "not join") {
-				m.Render("status", 402, "not join")
+				// m.Render("status", 402, "not join")
 				return
 			}
 

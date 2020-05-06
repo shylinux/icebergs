@@ -7,6 +7,7 @@ import (
 	kit "github.com/shylinux/toolkits"
 
 	"io/ioutil"
+	"net/url"
 	"os"
 	"path"
 	"strings"
@@ -17,11 +18,10 @@ var Index = &ice.Context{Name: "zsh", Help: "命令行",
 	Caches: map[string]*ice.Cache{},
 	Configs: map[string]*ice.Config{
 		"zsh": {Name: "zsh", Help: "命令行", Value: kit.Data(
-			"history", "zsh.history", "script", []interface{}{
+			"proxy", "tmux", "history", "zsh.history", "script", []interface{}{
+				".vim/syntax/sh.vim", "etc/conf/sh.vim",
 				".bashrc", "etc/conf/bashrc",
 				".zshrc", "etc/conf/zshrc",
-				".ish/plug.sh", "usr/shell/plug.sh",
-				".vim/syntax/sh.vim", "etc/conf/sh.vim",
 			},
 		)},
 	},
@@ -39,6 +39,9 @@ var Index = &ice.Context{Name: "zsh", Help: "命令行",
 		}},
 		ice.CODE_PREPARE: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			m.Cmd("web.code.git.repos", "shell", "usr/shell")
+			p := path.Join(os.Getenv("HOME"), ".ish")
+			m.Cmd(ice.CLI_SYSTEM, "rm", p)
+			m.Cmd(ice.CLI_SYSTEM, "ln", "-s", kit.Path("usr/shell"), p)
 
 			list := kit.Simple(m.Confv("zsh", "meta.script"))
 			for i := 0; i < len(list); i += 2 {
@@ -54,9 +57,10 @@ var Index = &ice.Context{Name: "zsh", Help: "命令行",
 				}
 			}
 
+			m.Option("you", m.Conf("zsh", "meta.proxy"))
 			m.Richs("login", nil, m.Option("sid"), func(key string, value map[string]interface{}) {
 				// 查找空间
-				m.Option("you", value["you"])
+				m.Option("you", kit.Select(m.Conf("zsh", "meta.proxy"), value["you"]))
 			})
 
 			m.Logs(ice.LOG_AUTH, "you", m.Option("you"), "url", m.Option(ice.MSG_USERURL), "cmd", m.Optionv("cmds"), "sub", m.Optionv("sub"))
@@ -203,6 +207,14 @@ var Index = &ice.Context{Name: "zsh", Help: "命令行",
 					}
 				}
 			})
+		}},
+		"/ish": {Name: "/ish", Help: "命令", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			if sub, e := url.QueryUnescape(m.Option("sub")); m.Assert(e) {
+				m.Cmdy(kit.Split(sub))
+				if len(m.Resultv()) == 0 {
+					m.Table()
+				}
+			}
 		}},
 
 		"/download": {Name: "/download", Help: "下载", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {

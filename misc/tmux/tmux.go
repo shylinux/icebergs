@@ -158,10 +158,6 @@ var Index = &ice.Context{Name: "tmux", Help: "工作台",
 				m.Cmd(prefix, "new-window", "-dt", session, "-n", arg[0])
 			}
 
-			if arg[1] == "init" {
-			} else {
-			}
-
 			for _, v := range arg[1:] {
 				switch ls := kit.Split(v); ls[1] {
 				case "v":

@@ -84,7 +84,7 @@ var Index = &ice.Context{Name: "ctx", Help: "配置模块",
 						v := s.Commands[k]
 						m.Push("key", s.Cap(ice.CTX_FOLLOW))
 						m.Push("index", k)
-						m.Push("name", v.Name)
+						m.Push("name", kit.Format(v.Name))
 						m.Push("help", kit.Simple(v.Help)[0])
 						m.Push("list", kit.Format(v.List))
 					}
@@ -106,7 +106,14 @@ var Index = &ice.Context{Name: "ctx", Help: "配置模块",
 					m.Push("help", kit.Simple(cmd.Help)[0])
 					m.Push("meta", kit.Format(cmd.Meta))
 					if len(cmd.List) == 0 {
-						list := kit.Split(cmd.Name)
+						var list []string
+						switch name := cmd.Name.(type) {
+						case []string, []interface{}:
+							list = kit.Split(kit.Simple(name)[0])
+						default:
+							list = kit.Split(strings.Split(kit.Format(name), ";")[0])
+						}
+
 						button := false
 						for i, v := range list {
 							if i > 0 {

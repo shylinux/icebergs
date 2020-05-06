@@ -1,3 +1,6 @@
+// icebergs: 后端 冰山架 挨撕不可
+// CMS: a cluster manager system
+
 package ice
 
 import (
@@ -34,15 +37,16 @@ type Config struct {
 	Value interface{}
 }
 type Command struct {
-	Name string
-	Help interface{}
+	Name interface{} // string []string
+	Help interface{} // string []string
 	List []interface{}
 	Meta map[string]interface{}
 	Hand func(m *Message, c *Context, key string, arg ...string)
 }
 type Context struct {
 	Name string
-	Help string
+	Help interface{} // string []string
+	Test interface{} // string []string
 
 	Caches   map[string]*Cache
 	Configs  map[string]*Config
@@ -95,7 +99,7 @@ func (c *Context) Register(s *Context, x Server) *Context {
 	if c.contexts == nil {
 		c.contexts = map[string]*Context{}
 	}
-	c.contexts[s.Name] = s
+	c.contexts[kit.Format(s.Name)] = s
 	s.root = c.root
 	s.context = c
 	s.server = x

@@ -27,18 +27,24 @@ var Index = &ice.Context{Name: "aaa", Help: "认证模块",
 			m.Save(ice.AAA_ROLE, ice.AAA_USER, ice.AAA_SESS)
 		}},
 
-		ice.AAA_ROLE: {Name: "role check|black|white|right", Help: "角色", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		ice.AAA_ROLE: {Name: []string{
+			"role check username",
+			"role right userrole chain",
+			"role userrole username ok",
+			"role black|white userrole enable|disable chain",
+		}, Help: "角色", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+
+			// ice.AAA_ROLE: {Name: "role check username; role right userrole chain; role userrole username ok; role black|white userrole enable|disable chain", Help: "角色", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			if len(arg) == 0 {
 				kit.Fetch(m.Confv("role", "meta.root"), func(key string, value string) {
-					m.Push("userrole", "root")
-					m.Push("username", key)
+					m.Push("userrole", "root").Push("username", key)
 				})
 				kit.Fetch(m.Confv("role", "meta.tech"), func(key string, value string) {
-					m.Push("userrole", "tech")
-					m.Push("username", key)
+					m.Push("userrole", "tech").Push("username", key)
 				})
 				return
 			}
+
 			switch arg[0] {
 			case "check":
 				// 用户角色

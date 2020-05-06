@@ -105,11 +105,13 @@ const ( // LOG
 	LOG_REMOVE = "remove"
 	LOG_INSERT = "insert"
 	LOG_DELETE = "delete"
-	LOG_SELECT = "select"
 	LOG_MODIFY = "modify"
+	LOG_SELECT = "select"
 
 	// 事件
 	LOG_LISTEN = "listen"
+	LOG_ACCEPT = "accept"
+	LOG_FINISH = "finish"
 	LOG_SIGNAL = "signal"
 	LOG_EVENTS = "events"
 	LOG_TIMERS = "timers"
@@ -120,10 +122,8 @@ const ( // LOG
 	LOG_SERVE = "serve"
 	LOG_CLOSE = "close"
 
-	// 权限
-	LOG_AUTH = "auth"
-
 	// 分类
+	LOG_AUTH  = "auth"
 	LOG_CMDS  = "cmds"
 	LOG_COST  = "cost"
 	LOG_INFO  = "info"

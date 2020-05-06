@@ -4,7 +4,7 @@ import (
 	"github.com/shylinux/icebergs"
 	"github.com/shylinux/toolkits"
 
-	"fmt"
+	"bufio"
 	"os"
 	"path"
 )
@@ -36,18 +36,25 @@ func (f *Frame) Start(m *ice.Message, arg ...string) bool {
 			break
 		} else {
 			// 日志文件
-			file := kit.Select("bench", m.Conf("show", l.l+".file"))
-			f := m.Confv("file", file+".file").(*os.File)
-
-			// 日志内容
-			ls := []string{l.m.Format("prefix"), " "}
-			ls = append(ls, m.Conf("show", l.l+".prefix"),
-				l.l, " ", l.s, m.Conf("show", l.l+".suffix"), "\n")
+			file := kit.Select("bench", m.Conf("show", kit.Keys(l.l, "file")))
+			// 日志格式
+			view := m.Confm("view", m.Conf("show", kit.Keys(l.l, "view")))
 
 			// 输出日志
-			for _, v := range ls {
-				fmt.Fprintf(f, v)
+			bio := m.Confv("file", file+".file").(*bufio.Writer)
+			bio.WriteString(l.m.Format("prefix"))
+			bio.WriteString(" ")
+			if p, ok := view["prefix"].(string); ok {
+				bio.WriteString(p)
 			}
+			bio.WriteString(l.l)
+			bio.WriteString(" ")
+			bio.WriteString(l.s)
+			if p, ok := view["suffix"].(string); ok {
+				bio.WriteString(p)
+			}
+			bio.WriteString("\n")
+			bio.Flush()
 		}
 	}
 	return true
@@ -65,27 +72,43 @@ var Index = &ice.Context{Name: "log", Help: "日志模块",
 			"error", kit.Dict("path", "var/log/error.log"),
 			"trace", kit.Dict("path", "var/log/trace.log"),
 		)},
-		"show": &ice.Config{Name: "show", Help: "日志格式", Value: kit.Dict(
+		"view": &ice.Config{Name: "view", Help: "日志格式", Value: kit.Dict(
+			"red", kit.Dict("prefix", "\033[31m", "suffix", "\033[0m"),
+			"green", kit.Dict("prefix", "\033[32m", "suffix", "\033[0m"),
+			"yellow", kit.Dict("prefix", "\033[33m", "suffix", "\033[0m"),
+		)},
+		"show": &ice.Config{Name: "show", Help: "日志分流", Value: kit.Dict(
+			// 数据
 			ice.LOG_ENABLE, kit.Dict("file", "watch"),
 			ice.LOG_IMPORT, kit.Dict("file", "watch"),
-			ice.LOG_CREATE, kit.Dict("file", "watch"),
-			ice.LOG_INSERT, kit.Dict("file", "watch"),
 			ice.LOG_EXPORT, kit.Dict("file", "watch"),
+			ice.LOG_CREATE, kit.Dict("file", "watch"),
+			ice.LOG_REMOVE, kit.Dict("file", "watch"),
+			ice.LOG_INSERT, kit.Dict("file", "watch"),
+			ice.LOG_DELETE, kit.Dict("file", "watch"),
+			ice.LOG_MODIFY, kit.Dict("file", "watch"),
+			ice.LOG_SELECT, kit.Dict("file", "watch"),
 
+			// 事件
 			ice.LOG_LISTEN, kit.Dict("file", "bench"),
+			ice.LOG_ACCEPT, kit.Dict("file", "bench", "view", "green"),
+			ice.LOG_FINISH, kit.Dict("file", "bench", "view", "red"),
 			ice.LOG_SIGNAL, kit.Dict("file", "bench"),
-			ice.LOG_TIMERS, kit.Dict("file", "bench"),
 			ice.LOG_EVENTS, kit.Dict("file", "bench"),
+			ice.LOG_TIMERS, kit.Dict("file", "bench"),
 
+			// 状态
 			ice.LOG_BEGIN, kit.Dict("file", "bench"),
-			ice.LOG_START, kit.Dict("file", "bench", "prefix", "\033[32m", "suffix", "\033[0m"),
-			ice.LOG_SERVE, kit.Dict("file", "bench", "prefix", "\033[32m", "suffix", "\033[0m"),
-			ice.LOG_CLOSE, kit.Dict("file", "bench", "prefix", "\033[31m", "suffix", "\033[0m"),
+			ice.LOG_START, kit.Dict("file", "bench", "view", "green"),
+			ice.LOG_SERVE, kit.Dict("file", "bench", "view", "green"),
+			ice.LOG_CLOSE, kit.Dict("file", "bench", "view", "red"),
 
-			ice.LOG_CMDS, kit.Dict("file", "bench", "prefix", "\033[32m", "suffix", "\033[0m"),
-			ice.LOG_COST, kit.Dict("file", "bench", "prefix", "\033[33m", "suffix", "\033[0m"),
+			// 分类
+			ice.LOG_AUTH, kit.Dict("file", "bench", "view", "yellow"),
+			ice.LOG_CMDS, kit.Dict("file", "bench", "view", "green"),
+			ice.LOG_COST, kit.Dict("file", "bench", "view", "yellow"),
 			ice.LOG_INFO, kit.Dict("file", "bench"),
-			ice.LOG_WARN, kit.Dict("file", "bench", "prefix", "\033[31m", "suffix", "\033[0m"),
+			ice.LOG_WARN, kit.Dict("file", "bench", "view", "red"),
 			ice.LOG_ERROR, kit.Dict("file", "error"),
 			ice.LOG_TRACE, kit.Dict("file", "trace"),
 		)},
@@ -98,7 +121,7 @@ var Index = &ice.Context{Name: "log", Help: "日志模块",
 					if f, p, e := kit.Create(kit.Format(value["path"])); m.Assert(e) {
 						m.Cap(ice.CTX_STREAM, path.Base(p))
 						m.Log("create", "%s: %s", key, p)
-						value["file"] = f
+						value["file"] = bufio.NewWriter(f)
 					}
 				})
 			}

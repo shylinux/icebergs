@@ -407,7 +407,9 @@ var Index = &ice.Context{Name: "chat", Help: "聊天中心",
 			m.Echo(m.Conf(ice.WEB_SERVE, "meta.title"))
 		}},
 		"/footer": {Name: "/footer", Help: "状态栏", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			m.Echo(m.Conf(ice.WEB_SERVE, "meta.legal"))
+			kit.Fetch(m.Confv(ice.WEB_SERVE, "meta.legal"), func(index int, value string) {
+				m.Echo(value)
+			})
 		}},
 
 		"/target": {Name: "/target", Help: "对话框", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {}},

@@ -214,8 +214,8 @@ var Index = &ice.Context{Name: "ctx", Help: "配置模块",
 					} else {
 						msg.Conf(arg[0], arg[1], kit.Parse(nil, "", arg[2:]...))
 					}
-
 				}
+
 				if len(arg) > 1 {
 					// 读取配置
 					m.Echo(kit.Formats(msg.Confv(arg[0], arg[1])))

@@ -2415,19 +2415,11 @@ var Index = &ice.Context{Name: "web", Help: "网络模块",
 
 		"/plugin/github.com/": {Name: "/space/", Help: "空间站", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			prefix := m.Conf(ice.WEB_SERVE, "meta.volcanos.require")
-			if _, e := os.Stat(path.Join(prefix, cmd)); e != nil {
-				m.Cmd(ice.CLI_SYSTEM, "git", "clone", "https://"+strings.Join(strings.Split(cmd, "/")[2:5], "/"),
-					path.Join(prefix, strings.Join(strings.Split(cmd, "/")[1:5], "/")))
+			repos := path.Join(strings.Split(cmd, "/")[2:5]...)
+			if _, e := os.Stat(path.Join(prefix, repos)); e != nil {
+				m.Cmd(ice.CLI_SYSTEM, "git", "clone", "https://"+repos, path.Join(prefix, repos))
 			}
-			m.Render(ice.RENDER_DOWNLOAD, path.Join(prefix, cmd))
-		}},
-		"/github.com/": {Name: "/space/", Help: "空间站", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			prefix := m.Conf(ice.WEB_SERVE, "meta.volcanos.require")
-			if _, e := os.Stat(path.Join(prefix, cmd)); e != nil {
-				m.Cmd(ice.CLI_SYSTEM, "git", "clone", "https://"+strings.Join(strings.Split(cmd, "/")[1:4], "/"),
-					path.Join(prefix, strings.Join(strings.Split(cmd, "/")[1:4], "/")))
-			}
-			m.Render(ice.RENDER_DOWNLOAD, path.Join(prefix, cmd))
+			m.Render(ice.RENDER_DOWNLOAD, path.Join(prefix, repos, path.Join(arg[2:]...)))
 		}},
 		"/local/": {Name: "/space/", Help: "空间站", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			p := path.Join(cmd)

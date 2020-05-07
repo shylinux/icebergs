@@ -88,7 +88,7 @@ var Index = &Context{Name: "ice", Help: "冰山模块",
 			m.root.Cost("_init")
 
 			m.target.root.wg = &sync.WaitGroup{}
-			for _, k := range kit.Split(os.Getenv("ctx_mod")) {
+			for _, k := range kit.Split(kit.Select("gdb,log,ssh,ctx", os.Getenv("ctx_mod"))) {
 				m.Start(k)
 			}
 

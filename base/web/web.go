@@ -450,7 +450,7 @@ var Index = &ice.Context{Name: "web", Help: "网络模块",
 		ice.WEB_SPIDE: {Name: "spide", Help: "蜘蛛侠", Value: kit.Data(kit.MDB_SHORT, "client.name")},
 		ice.WEB_SERVE: {Name: "serve", Help: "服务器", Value: kit.Data(
 			"title", "github.com/shylinux/contexts",
-			"legal", `<a href="mailto:shylinuxc@gmail.com">shylinuxc@gmail.com</a>`,
+			"legal", []interface{}{`<a href="mailto:shylinuxc@gmail.com">shylinuxc@gmail.com</a>`},
 			"page", kit.Dict(
 				"index", "usr/volcanos/page/index.html",
 				"share", "usr/volcanos/page/share.html",

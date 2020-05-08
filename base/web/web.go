@@ -253,7 +253,6 @@ func (web *Frame) HandleCmd(m *ice.Message, key string, cmd *ice.Command) {
 			msg.Option(ice.MSG_USERIP, r.Header.Get(ice.MSG_USERIP))
 			msg.Option(ice.MSG_USERUA, r.Header.Get("User-Agent"))
 			msg.Option(ice.MSG_USERURL, r.URL.Path)
-			msg.Option(ice.MSG_USERPOD, "")
 			msg.Option(ice.MSG_SESSID, "")
 			msg.Option(ice.MSG_OUTPUT, "")
 			msg.R, msg.W = r, w
@@ -307,10 +306,11 @@ func (web *Frame) HandleCmd(m *ice.Message, key string, cmd *ice.Command) {
 					msg.Optionv("cmds", strings.Split(p, "/"))
 				}
 			}
-			cmds := kit.Simple(msg.Optionv("cmds"))
 
-			if web.Login(msg, w, r) {
+			if cmds := kit.Simple(msg.Optionv("cmds")); web.Login(msg, w, r) {
 				// 登录成功
+				msg.Info("what %v", msg.Option("pod"))
+				msg.Option(ice.MSG_USERPOD, msg.Option("pod"))
 				msg.Option("_option", msg.Optionv(ice.MSG_OPTION))
 				// 执行命令
 				msg.Target().Run(msg, cmd, msg.Option(ice.MSG_USERURL), cmds...)

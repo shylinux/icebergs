@@ -151,7 +151,7 @@ var Index = &ice.Context{Name: "git", Help: "代码库",
 			m.Push("rest", rest)
 			m.Sort("rest", "int_r")
 		}},
-		"status": {Name: "status name auto", Help: "文件状态", Meta: kit.Dict(
+		"status": {Name: "status name=auto auto", Help: "文件状态", Meta: kit.Dict(
 			"detail", []interface{}{"add", "reset", "remove", kit.Dict("name", "commit", "args", kit.List(
 				kit.MDB_INPUT, "select", "name", "type", "values", []string{"add", "opt"},
 				kit.MDB_INPUT, "text", "name", "name", "value", "some",

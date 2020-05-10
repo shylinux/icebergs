@@ -416,8 +416,15 @@ var Index = &ice.Context{Name: "chat", Help: "聊天中心",
 		"/source": {Name: "/source", Help: "输入框", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {}},
 		"/action": {Name: "/action", Help: "工作台", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			if m.Warn(m.Option(ice.MSG_RIVER) == "" || m.Option(ice.MSG_STORM) == "", "not join") {
-				// m.Render("status", 402, "not join")
+				cmds := kit.Simple(kit.Keys(m.Option("group"), m.Option("index")), arg[3:])
+				if !m.Right(cmds) {
+					m.Render("status", 403, "not auth")
+					return
+				}
+				m.Set(ice.MSG_RESULT)
+				m.Cmdy(cmds).Option("cmds", cmds)
 				return
+				// m.Render("status", 402, "not join")
 			}
 
 			prefix := kit.Keys(kit.MDB_HASH, arg[0], "tool", kit.MDB_HASH, arg[1])

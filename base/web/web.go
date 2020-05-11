@@ -2420,20 +2420,27 @@ var Index = &ice.Context{Name: "web", Help: "网络模块",
 			}
 			m.Render(ice.RENDER_DOWNLOAD, path.Join(prefix, repos, path.Join(arg[2:]...)))
 		}},
+		"/publish/": {Name: "/publish/", Help: "空间站", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			if p := m.Option("pod"); p != "" {
+				m.Option("pod", "")
+				m.Cmdy(ice.WEB_SPACE, p, "web./publish/", arg)
+				m.Render(ice.RENDER_RESULT)
+				return
+			}
+
+			p := path.Join(kit.Simple(m.Conf(ice.WEB_SERVE, "meta.publish"), arg)...)
+			if m.W == nil {
+				m.Cmdy("nfs.cat", p)
+				return
+			}
+			m.Render(ice.RENDER_DOWNLOAD, p)
+		}},
 		"/local/": {Name: "/space/", Help: "空间站", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			p := path.Join(cmd)
 			switch strings.TrimSuffix(path.Ext(p), ".") {
 			case "js":
 				m.Render(ice.RENDER_DOWNLOAD, p)
 			}
-		}},
-		"/publish/": {Name: "/publish/", Help: "空间站", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			if m.Option("pod") != "" {
-				m.Cmdy(ice.WEB_SPACE, m.Option("pod"), "web./publish", arg)
-				m.Render(ice.RENDER_RESULT)
-				return
-			}
-			m.Render(ice.RENDER_DOWNLOAD, path.Join(kit.Simple(m.Conf(ice.WEB_SERVE, "meta.publish"), arg)...))
 		}},
 	},
 }

@@ -415,14 +415,24 @@ var Index = &ice.Context{Name: "chat", Help: "聊天中心",
 		"/target": {Name: "/target", Help: "对话框", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {}},
 		"/source": {Name: "/source", Help: "输入框", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {}},
 		"/action": {Name: "/action", Help: "工作台", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			// 代理命令
+			proxy := []string{}
+			if m.Option("pod") != "" {
+				proxy = append(proxy, ice.WEB_PROXY, m.Option("pod"))
+				m.Option("pod", "")
+			}
+
 			if m.Warn(m.Option(ice.MSG_RIVER) == "" || m.Option(ice.MSG_STORM) == "", "not join") {
+				m.Set(ice.MSG_RESULT)
+
 				cmds := kit.Simple(kit.Keys(m.Option("group"), m.Option("index")), arg[3:])
 				if !m.Right(cmds) {
 					m.Render("status", 403, "not auth")
 					return
 				}
-				m.Set(ice.MSG_RESULT)
-				m.Cmdy(cmds).Option("cmds", cmds)
+
+				// 执行命令
+				m.Cmdy(proxy, cmds).Option("cmds", cmds)
 				return
 				// m.Render("status", 402, "not join")
 			}
@@ -539,13 +549,6 @@ var Index = &ice.Context{Name: "chat", Help: "聊天中心",
 			if !m.Right(cmds) {
 				m.Render("status", 403, "not auth")
 				return
-			}
-
-			// 代理命令
-			proxy := []string{}
-			if m.Option("pod") != "" {
-				proxy = append(proxy, ice.WEB_PROXY, m.Option("pod"))
-				m.Option("pod", "")
 			}
 
 			// 执行命令

@@ -455,9 +455,8 @@ var Index = &ice.Context{Name: "web", Help: "网络模块",
 				"index", "usr/volcanos/page/index.html",
 				"share", "usr/volcanos/page/share.html",
 			),
-			"static", kit.Dict("/", "usr/volcanos/",
-				"/publish/", "usr/publish/",
-			),
+			"static", kit.Dict("/", "usr/volcanos/"),
+			"publish", "usr/publish/",
 			"volcanos", kit.Dict("path", "usr/volcanos", "branch", "master",
 				"repos", "https://github.com/shylinux/volcanos",
 				"require", ".ish/pluged",
@@ -2427,6 +2426,14 @@ var Index = &ice.Context{Name: "web", Help: "网络模块",
 			case "js":
 				m.Render(ice.RENDER_DOWNLOAD, p)
 			}
+		}},
+		"/publish/": {Name: "/publish/", Help: "空间站", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			if m.Option("pod") != "" {
+				m.Cmdy(ice.WEB_SPACE, m.Option("pod"), "web./publish", arg)
+				m.Render(ice.RENDER_RESULT)
+				return
+			}
+			m.Render(ice.RENDER_DOWNLOAD, path.Join(kit.Simple(m.Conf(ice.WEB_SERVE, "meta.publish"), arg)...))
 		}},
 	},
 }

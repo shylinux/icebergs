@@ -1,6 +1,8 @@
 package vim
 
 import (
+	"fmt"
+
 	ice "github.com/shylinux/icebergs"
 	"github.com/shylinux/icebergs/base/web"
 	"github.com/shylinux/icebergs/core/code"
@@ -31,12 +33,18 @@ var Index = &ice.Context{Name: "vim", Help: "编辑器",
 				switch value["name"] {
 				case "read", "write", "exec":
 					p := path.Join(kit.Format(kit.Value(value, "extra.pwd")), kit.Format(kit.Value(value, "extra.buf")))
+					if strings.HasPrefix(kit.Format(kit.Value(value, "extra.buf")), "/") {
+						p = path.Join(kit.Format(kit.Value(value, "extra.buf")))
+					}
+
 					f, e := os.Open(p)
 					m.Assert(e)
 					defer f.Close()
 					b, e := ioutil.ReadAll(f)
 					m.Assert(e)
 					m.Echo(string(b))
+				default:
+					m.Cmdy(ice.CLI_SYSTEM, "sed", "-n", fmt.Sprintf("/%s/,/^}$/p", value["text"]), kit.Value(value, "extra.buf"))
 				}
 			}}))
 		}},
@@ -84,9 +92,11 @@ var Index = &ice.Context{Name: "vim", Help: "编辑器",
 				}
 			}
 
+			ls := strings.Split(m.Option("pwd"), "/")
+			m.Option("you", ls[len(ls)-1])
 			m.Richs("login", nil, m.Option("sid"), func(key string, value map[string]interface{}) {
 				// 查找空间
-				m.Option("you", value["you"])
+				m.Option("you", kit.Select(m.Option("you"), value["you"]))
 			})
 
 			m.Logs(ice.LOG_AUTH, "you", m.Option("you"), "url", m.Option(ice.MSG_USERURL), "cmd", m.Optionv("cmds"), "sub", m.Optionv("sub"))

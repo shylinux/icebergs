@@ -39,6 +39,7 @@ const ( // MSG
 	MSG_USERNAME = "user.name"
 	MSG_USERROLE = "user.role"
 	MSG_USERADDR = "user.addr"
+	MSG_USERDATA = "user.data"
 
 	MSG_RIVER = "sess.river"
 	MSG_STORM = "sess.storm"

@@ -105,6 +105,19 @@ func (c *Context) Register(s *Context, x Server) *Context {
 	s.server = x
 	return s
 }
+func (c *Context) Merge(s *Context, x Server) *Context {
+	for k, v := range s.Commands {
+		c.Commands[k] = v
+	}
+	for k, v := range s.Configs {
+		c.Configs[k] = v
+	}
+	for k, v := range s.Caches {
+		c.Caches[k] = v
+	}
+	s.server = x
+	return c
+}
 
 func (c *Context) Spawn(m *Message, name string, help string, arg ...string) *Context {
 	s := &Context{Name: name, Help: help, Caches: map[string]*Cache{}, Configs: map[string]*Config{}}

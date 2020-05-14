@@ -1196,6 +1196,9 @@ var Index = &ice.Context{Name: "web", Help: "网络模块",
 					// 收藏详情
 					m.Grows(ice.WEB_FAVOR, kit.Keys(kit.MDB_HASH, key), "id", arg[1], func(index int, value map[string]interface{}) {
 						m.Push("detail", value)
+						m.Optionv("value", value)
+						m.Push("key", "render")
+						m.Push("value", m.Cmdx(m.Conf(ice.WEB_FAVOR, kit.Keys("meta.render", value["type"]))))
 					})
 				})
 				return

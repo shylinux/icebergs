@@ -1,9 +1,10 @@
 package wiki
 
 import (
-	"github.com/shylinux/icebergs"
-	"github.com/shylinux/toolkits"
 	"strings"
+
+	ice "github.com/shylinux/icebergs"
+	kit "github.com/shylinux/toolkits"
 )
 
 // 图形接口
@@ -260,11 +261,14 @@ func (b *Chain) draw(m *ice.Message, root map[string]interface{}, depth int, wid
 
 	// 当前节点
 	item := &Block{
-		BackGround: kit.Select(b.BackGround, kit.Select(p.BackGround, meta["bg"])),
-		FontColor:  kit.Select(b.FontColor, kit.Select(p.FontColor, meta["fg"])),
+		BackGround: kit.Select(b.BackGround, kit.Select(p.BackGround)),
+		FontColor:  kit.Select(b.FontColor, kit.Select(p.FontColor)),
 		FontSize:   b.FontSize,
 		Padding:    b.Padding,
 		Margin:     b.Margin,
+	}
+	if m.Option("compact") != "true" {
+		item.Width = b.max[depth]
 	}
 	item.Init(m, kit.Format(meta["text"])).Data(m, meta)
 	item.Draw(m, x, y+(kit.Int(meta["height"])-1)*b.GetHeights()/2)

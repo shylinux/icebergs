@@ -1,10 +1,10 @@
 package wiki
 
 import (
-	"github.com/shylinux/icebergs"
+	ice "github.com/shylinux/icebergs"
 	_ "github.com/shylinux/icebergs/base"
 	"github.com/shylinux/icebergs/base/web"
-	"github.com/shylinux/toolkits"
+	kit "github.com/shylinux/toolkits"
 
 	"fmt"
 	"os"
@@ -212,8 +212,11 @@ var Index = &ice.Context{Name: "wiki", Help: "文档中心",
 			data := kit.Dict()
 			cmds := kit.Split(arg[1])
 			m.Search(cmds[0], func(p *ice.Context, s *ice.Context, key string, cmd *ice.Command) {
-				ls := strings.Split(cmds[0], ".")
-				m.Cmd(ice.CTX_COMMAND, strings.Join(ls[:len(ls)-1], "."), key)
+				if ls := strings.Split(cmds[0], "."); len(ls) > 1 {
+					m.Cmd(ice.CTX_COMMAND, strings.Join(ls[:len(ls)-1], "."), key)
+				} else {
+					m.Cmd(ice.CTX_COMMAND, key)
+				}
 				if data["feature"], data["inputs"] = cmd.Meta, cmd.List; len(cmd.List) == 0 {
 					data["inputs"] = m.Confv("field", "meta.some.simple.inputs")
 				}
@@ -312,7 +315,8 @@ var Index = &ice.Context{Name: "wiki", Help: "文档中心",
 			m.Option("stroke-width", "2")
 			m.Option("padding", "10")
 			m.Option("margin", "10")
-			m.Option("font-family", kit.Select("", "monospace", len(arg[2]) == len([]rune(arg[2]))))
+			// m.Option("font-family", kit.Select("", "monospace", len(arg[2]) == len([]rune(arg[2]))))
+			m.Option("font-family", "monospace")
 			for i := 6; i < len(arg)-1; i++ {
 				m.Option(arg[i], arg[i+1])
 			}

@@ -94,7 +94,7 @@ var Index = &ice.Context{Name: "ctx", Help: "配置模块",
 
 			chain := arg[0]
 			if len(arg) > 1 {
-				chain = arg[0] + "." + arg[1]
+				chain = kit.Keys(arg[0], arg[1])
 				arg = arg[1:]
 			}
 			arg = arg[1:]

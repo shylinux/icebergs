@@ -166,6 +166,12 @@ var Index = &ice.Context{Name: "chat", Help: "聊天中心",
 						web.Render(m, "cookie", m.Option(ice.MSG_SESSID, m.Cmdx(ice.AAA_USER, "login", m.Option(ice.MSG_USERNAME, arg[1]), arg[2])))
 					}
 
+				case "":
+					m.Info("what %v", m.Option("share"))
+					if m.Option("share") != "" {
+						return
+					}
+
 				default:
 					// 群组检查
 					m.Richs(ice.CHAT_RIVER, nil, arg[0], func(key string, value map[string]interface{}) {
@@ -368,146 +374,6 @@ var Index = &ice.Context{Name: "chat", Help: "聊天中心",
 
 		"/target": {Name: "/target", Help: "对话框", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {}},
 		"/source": {Name: "/source", Help: "输入框", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {}},
-		"/action": {Name: "/action", Help: "工作台", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			// 代理命令
-			proxy := []string{}
-			if m.Option("pod") != "" {
-				proxy = append(proxy, ice.WEB_PROXY, m.Option("pod"))
-				m.Option("pod", "")
-			}
-
-			if m.Warn(m.Option(ice.MSG_RIVER) == "" || m.Option(ice.MSG_STORM) == "", "not join") {
-				m.Set(ice.MSG_RESULT)
-
-				cmds := kit.Simple(kit.Keys(m.Option("group"), m.Option("index")), arg[3:])
-				if !m.Right(cmds) {
-					m.Render("status", 403, "not auth")
-					return
-				}
-
-				// 执行命令
-				m.Cmdy(proxy, cmds).Option("cmds", cmds)
-				return
-				// m.Render("status", 402, "not join")
-			}
-
-			prefix := kit.Keys(kit.MDB_HASH, arg[0], "tool", kit.MDB_HASH, arg[1])
-			if len(arg) == 2 {
-				if p := m.Option("pod"); p != "" {
-					m.Option("pod", "")
-					if m.Cmdy(ice.WEB_SPACE, p, "web.chat./action", arg); len(m.Appendv("river")) > 0 {
-						// 远程查询
-						return
-					}
-				}
-
-				// 命令列表
-				m.Grows(ice.CHAT_RIVER, prefix, "", "", func(index int, value map[string]interface{}) {
-					if meta, ok := kit.Value(value, "meta").(map[string]interface{}); ok {
-						m.Push("river", arg[0])
-						m.Push("storm", arg[1])
-						m.Push("action", index)
-
-						m.Push("node", meta["pod"])
-						m.Push("group", meta["ctx"])
-						m.Push("index", meta["cmd"])
-						m.Push("args", kit.Select("[]", kit.Format(meta["args"])))
-
-						msg := m.Cmd(m.Space(meta["pod"]), ice.CTX_COMMAND, meta["ctx"], meta["cmd"])
-						m.Push("name", meta["cmd"])
-						m.Push("help", kit.Select(msg.Append("help"), kit.Format(meta["help"])))
-						m.Push("feature", msg.Append("meta"))
-						m.Push("inputs", msg.Append("list"))
-					}
-				})
-				return
-			}
-
-			switch arg[2] {
-			case "save":
-				if p := m.Option("pod"); p != "" {
-					// 远程保存
-					m.Option("pod", "")
-					m.Cmd(ice.WEB_SPACE, p, "web.chat./action", arg)
-					return
-				}
-
-				// 保存应用
-				m.Conf(ice.CHAT_RIVER, kit.Keys(prefix, "list"), "")
-				for i := 3; i < len(arg)-4; i += 5 {
-					id := m.Grow(ice.CHAT_RIVER, kit.Keys(prefix), kit.Data(
-						"pod", arg[i], "ctx", arg[i+1], "cmd", arg[i+2],
-						"help", arg[i+3], "args", arg[i+4],
-					))
-					m.Log(ice.LOG_INSERT, "storm: %s %d: %v", arg[1], id, arg[i:i+5])
-				}
-			}
-
-			if m.Option("_action") == "上传" {
-				msg := m.Cmd(ice.WEB_CACHE, "upload")
-				m.Option("_data", msg.Append("data"))
-				m.Option("_name", msg.Append("name"))
-				m.Cmd(ice.WEB_FAVOR, "upload", msg.Append("type"), msg.Append("name"), msg.Append("data"))
-				m.Option("_option", m.Optionv("option"))
-			}
-
-			// 查询命令
-			cmds := []string{}
-			m.Grows(ice.CHAT_RIVER, prefix, kit.MDB_ID, kit.Format(kit.Int(arg[2])+1), func(index int, value map[string]interface{}) {
-				if meta, ok := kit.Value(value, "meta").(map[string]interface{}); ok {
-					if len(arg) > 3 && arg[3] == "action" {
-						// 命令补全
-						switch arg[4] {
-						case "input":
-							switch arg[5] {
-							case "location":
-								// 查询位置
-								m.Copy(m.Cmd("aaa.location"), "append", "name")
-								return
-							}
-
-						case "favor":
-							m.Cmdy(ice.WEB_FAVOR, arg[5:])
-							return
-
-						case "device":
-							// 记录位置
-							m.Cmd(ice.WEB_FAVOR, kit.Select("device", m.Option("hot")), arg[5], arg[6],
-								kit.Select("", arg, 7), kit.KeyValue(map[string]interface{}{}, "", kit.UnMarshal(kit.Select("{}", arg, 8))))
-							return
-
-						case "upload":
-							m.Cmdy(ice.WEB_STORY, "upload")
-							return
-
-						case "share":
-							list := []string{}
-							for k, v := range meta {
-								list = append(list, k, kit.Format(v))
-							}
-							// 共享命令
-							m.Cmdy(ice.WEB_SHARE, "add", "action", arg[5], arg[6], list)
-							return
-						}
-					}
-
-					// 组装命令
-					cmds = kit.Simple(m.Space(meta["pod"]), kit.Keys(meta["ctx"], meta["cmd"]), arg[3:])
-				}
-			})
-
-			if len(cmds) == 0 {
-				return
-			}
-
-			if !m.Right(cmds) {
-				m.Render("status", 403, "not auth")
-				return
-			}
-
-			// 执行命令
-			m.Cmdy(proxy, cmds).Option("cmds", cmds)
-		}},
 
 		"search": {Name: "search label pod engine word", Help: "搜索引擎", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			if len(arg) < 2 {

@@ -246,6 +246,7 @@ func (web *Frame) HandleCmd(m *ice.Message, key string, cmd *ice.Command) {
 			defer func() { msg.Cost("%s %v %v", r.URL.Path, msg.Optionv("cmds"), msg.Format("append")) }()
 			if u, e := url.Parse(r.Header.Get("Referer")); e == nil {
 				for k, v := range u.Query() {
+					msg.Info("%s: %v", k, v)
 					msg.Option(k, v)
 				}
 			}

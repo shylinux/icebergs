@@ -15,6 +15,7 @@ func init() {
 			ice.WEB_SHARE: {Name: "share", Help: "共享链", Value: kit.Data(
 				"index", "usr/volcanos/share.html",
 				"template", share_template,
+				"expire", "72h",
 			)},
 		},
 		Commands: map[string]*ice.Command{
@@ -77,7 +78,7 @@ func init() {
 
 					// 创建共享
 					h := m.Rich(ice.WEB_SHARE, nil, kit.Dict(
-						kit.MDB_TIME, m.Time("10m"),
+						kit.MDB_TIME, m.Time(m.Conf(ice.WEB_SHARE, "meta.expire")),
 						kit.MDB_TYPE, arg[0], kit.MDB_NAME, arg[1], kit.MDB_TEXT, arg[2],
 						"extra", extra,
 					))
@@ -128,7 +129,7 @@ func init() {
 						m.Render(kit.Formats(value))
 						return
 					case "share", "共享码":
-						m.Render(ice.RENDER_QRCODE, kit.Format("%s/share/%s/", m.Conf(ice.WEB_SHARE, "meta.domain"), key))
+						m.Render(ice.RENDER_QRCODE, kit.Format("%s/share/%s/?share=%s", m.Conf(ice.WEB_SHARE, "meta.domain"), key, key))
 						return
 					case "check", "安全码":
 						m.Render(ice.RENDER_QRCODE, kit.Format(kit.Dict(
@@ -155,7 +156,7 @@ func init() {
 					case ice.TYPE_ACTION:
 						if len(arg) == 1 {
 							// 跳转主页
-							m.Render("redirect", "/share/"+arg[0]+"/", "title", kit.Format(value["name"]))
+							m.Render("redirect", "/share", "share", arg[0], "title", kit.Format(value["name"]))
 							break
 						}
 

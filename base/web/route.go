@@ -1,8 +1,8 @@
 package web
 
 import (
-	"github.com/shylinux/icebergs"
-	"github.com/shylinux/toolkits"
+	ice "github.com/shylinux/icebergs"
+	kit "github.com/shylinux/toolkits"
 
 	"strings"
 )
@@ -32,6 +32,10 @@ func init() {
 							m.Cmdy(ice.WEB_GROUP, m.Option("grp"), "add", m.Option("name"))
 						}
 					}
+					return
+				}
+				if arg[0] == "" {
+					m.Cmdy(arg[1:])
 					return
 				}
 

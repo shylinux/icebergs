@@ -1,8 +1,8 @@
 package web
 
 import (
-	"github.com/shylinux/icebergs"
-	"github.com/shylinux/toolkits"
+	ice "github.com/shylinux/icebergs"
+	kit "github.com/shylinux/toolkits"
 
 	"os"
 	"path"
@@ -380,6 +380,69 @@ func init() {
 						}
 						m.Sort("key")
 					})
+				}
+			}},
+			"/story/": {Name: "/story/", Help: "故事会", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+
+				switch arg[0] {
+				case ice.STORY_PULL:
+					// 下载节点
+
+					list := m.Cmd(ice.WEB_STORY, ice.STORY_INDEX, m.Option("begin")).Append("list")
+					for i := 0; i < 10 && list != "" && list != m.Option("end"); i++ {
+						if m.Richs(ice.WEB_STORY, nil, list, func(key string, value map[string]interface{}) {
+							// 节点信息
+							m.Push("list", key)
+							m.Push("node", kit.Format(value))
+							m.Push("data", value["data"])
+							m.Push("save", kit.Format(m.Richs(ice.WEB_CACHE, nil, value["data"], nil)))
+							list = kit.Format(value["prev"])
+						}) == nil {
+							break
+						}
+					}
+					m.Log(ice.LOG_EXPORT, "%s %s", m.Option("begin"), m.Format("append"))
+
+				case ice.STORY_PUSH:
+					// 上传节点
+
+					if m.Richs(ice.WEB_CACHE, nil, m.Option("data"), nil) == nil {
+						// 导入缓存
+						m.Log(ice.LOG_IMPORT, "%v: %v", m.Option("data"), m.Option("save"))
+						m.Conf(ice.WEB_CACHE, kit.Keys("hash", m.Option("data")), kit.UnMarshal(m.Option("save")))
+					}
+
+					node := kit.UnMarshal(m.Option("node")).(map[string]interface{})
+					if m.Richs(ice.WEB_STORY, nil, m.Option("list"), nil) == nil {
+						// 导入节点
+						m.Log(ice.LOG_IMPORT, "%v: %v", m.Option("list"), m.Option("node"))
+						m.Conf(ice.WEB_STORY, kit.Keys("hash", m.Option("list")), node)
+					}
+
+					if head := m.Richs(ice.WEB_STORY, "head", m.Option("story"), nil); head == nil {
+						// 自动创建
+						h := m.Rich(ice.WEB_STORY, "head", kit.Dict(
+							"scene", node["scene"], "story", m.Option("story"),
+							"count", node["count"], "list", m.Option("list"),
+						))
+						m.Log(ice.LOG_CREATE, "%v: %v", h, m.Option("story"))
+					} else if head["list"] == kit.Format(node["prev"]) || head["list"] == kit.Format(node["pull"]) {
+						// 快速合并
+						head["list"] = m.Option("list")
+						head["count"] = node["count"]
+						head["time"] = node["time"]
+					} else {
+						// 推送失败
+					}
+
+				case ice.STORY_UPLOAD:
+					// 上传数据
+					m.Cmdy(ice.WEB_CACHE, "upload")
+
+				case ice.STORY_DOWNLOAD:
+					// 下载数据
+					m.Cmdy(ice.WEB_STORY, ice.STORY_INDEX, arg[1])
+					m.Render(kit.Select(ice.RENDER_DOWNLOAD, ice.RENDER_RESULT, m.Append("file") == ""), m.Append("text"))
 				}
 			}},
 		}}, nil)

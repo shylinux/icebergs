@@ -1,8 +1,10 @@
 package web
 
 import (
-	"github.com/shylinux/icebergs"
-	"github.com/shylinux/toolkits"
+	"os"
+
+	ice "github.com/shylinux/icebergs"
+	kit "github.com/shylinux/toolkits"
 
 	"fmt"
 	"path"
@@ -214,6 +216,36 @@ func init() {
 						m.Option(ice.MSG_OUTPUT, ice.RENDER_RESULT)
 					}
 				})
+			}},
+			"/plugin/github.com/": {Name: "/space/", Help: "空间站", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+				prefix := m.Conf(ice.WEB_SERVE, "meta.volcanos.require")
+				repos := path.Join(strings.Split(cmd, "/")[2:5]...)
+				if _, e := os.Stat(path.Join(prefix, repos)); e != nil {
+					m.Cmd(ice.CLI_SYSTEM, "git", "clone", "https://"+repos, path.Join(prefix, repos))
+				}
+				m.Render(ice.RENDER_DOWNLOAD, path.Join(prefix, repos, path.Join(arg[2:]...)))
+			}},
+			"/publish/": {Name: "/publish/", Help: "空间站", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+				if p := m.Option("pod"); p != "" {
+					m.Option("pod", "")
+					m.Cmdy(ice.WEB_SPACE, p, "web./publish/", arg)
+					m.Render(ice.RENDER_RESULT)
+					return
+				}
+
+				p := path.Join(kit.Simple(m.Conf(ice.WEB_SERVE, "meta.publish"), arg)...)
+				if m.W == nil {
+					m.Cmdy("nfs.cat", p)
+					return
+				}
+				m.Render(ice.RENDER_DOWNLOAD, p)
+			}},
+			"/local/": {Name: "/space/", Help: "空间站", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+				p := path.Join(cmd)
+				switch strings.TrimSuffix(path.Ext(p), ".") {
+				case "js":
+					m.Render(ice.RENDER_DOWNLOAD, p)
+				}
 			}},
 		}}, nil)
 }

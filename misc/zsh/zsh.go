@@ -63,6 +63,7 @@ var Index = &ice.Context{Name: "zsh", Help: "命令行",
 				m.Option("you", kit.Select(m.Conf("zsh", "meta.proxy"), value["you"]))
 			})
 
+			m.Option("arg", strings.ReplaceAll(m.Option("arg"), "%20", " "))
 			m.Logs(ice.LOG_AUTH, "you", m.Option("you"), "url", m.Option(ice.MSG_USERURL), "cmd", m.Optionv("cmds"), "sub", m.Optionv("sub"))
 			m.Option(ice.MSG_OUTPUT, ice.RENDER_RESULT)
 		}},

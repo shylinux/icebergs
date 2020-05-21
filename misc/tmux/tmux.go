@@ -1,10 +1,10 @@
 package tmux
 
 import (
-	"github.com/shylinux/icebergs"
+	ice "github.com/shylinux/icebergs"
 	"github.com/shylinux/icebergs/base/web"
 	"github.com/shylinux/icebergs/core/code"
-	"github.com/shylinux/toolkits"
+	kit "github.com/shylinux/toolkits"
 
 	"os"
 	"path"
@@ -43,6 +43,10 @@ var Index = &ice.Context{Name: "tmux", Help: "工作台",
 	},
 	Commands: map[string]*ice.Command{
 		ice.ICE_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			if m.Cmdy(ice.CLI_SYSTEM, "tmux", "ls"); m.Append("code") != "0" {
+				return
+			}
+
 			m.Cmd(ice.WEB_PROXY, "add", "tmux", m.AddCmd(&ice.Command{Name: "proxy", Help: "代理", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 				m.Cmd("session").Table(func(index int, value map[string]string, head []string) {
 					if value["tag"] == "1" {

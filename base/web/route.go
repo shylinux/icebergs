@@ -34,7 +34,7 @@ func init() {
 					}
 					return
 				}
-				if arg[0] == "" {
+				if len(arg) > 0 && arg[0] == "" {
 					m.Cmdy(arg[1:])
 					return
 				}

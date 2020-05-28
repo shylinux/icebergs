@@ -29,12 +29,18 @@ type Config struct {
 	Help  string
 	Value interface{}
 }
+type Action struct {
+	Name string
+	Help string
+	Hand func(m *Message, arg ...string)
+}
 type Command struct {
-	Name interface{} // string []string
-	Help interface{} // string []string
-	List []interface{}
-	Meta map[string]interface{}
-	Hand func(m *Message, c *Context, key string, arg ...string)
+	Name   interface{} // string []string
+	Help   interface{} // string []string
+	List   []interface{}
+	Meta   map[string]interface{}
+	Hand   func(m *Message, c *Context, key string, arg ...string)
+	Action map[string]*Action
 }
 type Context struct {
 	Name string
@@ -73,8 +79,19 @@ func (c *Context) Cap(key string, arg ...interface{}) string {
 	return c.Caches[key].Value
 }
 func (c *Context) Run(m *Message, cmd *Command, key string, arg ...string) *Message {
-	m.Hand = true
 	m.Log(LOG_CMDS, "%s.%s %d %v", c.Name, key, len(arg), arg)
+	if m.Hand = true; len(arg) > 1 && arg[0] == "action" && cmd.Action != nil {
+		if h, ok := cmd.Action[arg[1]]; ok {
+			h.Hand(m, arg[2:]...)
+			return m
+		}
+		for _, h := range cmd.Action {
+			if h.Name == arg[1] || h.Help == arg[1] {
+				h.Hand(m, arg[2:]...)
+				return m
+			}
+		}
+	}
 	cmd.Hand(m, c, key, arg...)
 	return m
 }
@@ -653,17 +670,6 @@ func (m *Message) Cmd(arg ...interface{}) *Message {
 		m.TryCatch(m.Spawns(c), true, func(msg *Message) {
 			m.Hand, msg.Hand = true, true
 			msg.meta[MSG_DETAIL] = list
-
-			// _key := kit.Format(kit.Value(cmd.Meta, "remote"))
-			// if you := m.Option(_key); you != "" {
-			// 	// 远程命令
-			// 	msg.Option(_key, "")
-			// 	msg.Option("_option", m.Optionv("option"))
-			// 	msg.Copy(msg.Spawns(c).Cmd(WEB_LABEL, you, list[0], list[1:]))
-			// } else {
-			// 	// 本地命令
-			// 	p.Run(msg, cmd, key, list[1:]...)
-			// }
 
 			p.Run(msg, cmd, key, list[1:]...)
 			m.Hand, msg.Hand, m = true, true, msg

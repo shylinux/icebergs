@@ -5,7 +5,7 @@ import (
 	"github.com/shylinux/toolkits"
 )
 
-func _action_share_create(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+func _action_share_create(m *ice.Message, arg ...string) {
 	if m.Option("index") != "" {
 		arg = append(arg, "tool.0.pod", m.Option("node"))
 		arg = append(arg, "tool.0.ctx", m.Option("group"))
@@ -96,7 +96,7 @@ func init() {
 		"/action": {Name: "/action", Help: "工作台", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			switch arg[0] {
 			case "share":
-				_action_share_create(m, c, cmd, arg...)
+				_action_share_create(m, arg...)
 				return
 			}
 			if len(arg) == 0 || arg[0] == "" {

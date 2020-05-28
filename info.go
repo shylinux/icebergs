@@ -14,7 +14,7 @@ func (m *Message) Logs(level string, arg ...interface{}) *Message {
 	for i := 0; i < len(arg)-1; i += 2 {
 		list = append(list, fmt.Sprintf("%v: %v", arg[i], arg[i+1]))
 	}
-	m.Log(level, strings.Join(list, " "))
+	m.log(level, strings.Join(list, " "))
 	return m
 }
 func (m *Message) Log(level string, str string, arg ...interface{}) *Message {
@@ -43,18 +43,22 @@ func (m *Message) log(level string, str string, arg ...interface{}) *Message {
 		prefix, suffix = "\033[31m", "\033[0m"
 	}
 
-	_, file, line, _ := runtime.Caller(2)
-	ls := strings.Split(file, "/")
-	if len(ls) > 2 {
-		ls = ls[len(ls)-2:]
+	switch level {
+	case LOG_CMDS, LOG_INFO, LOG_WARN, LOG_COST:
+	default:
+		_, file, line, _ := runtime.Caller(2)
+		ls := strings.Split(file, "/")
+		if len(ls) > 2 {
+			ls = ls[len(ls)-2:]
+		}
+		suffix += fmt.Sprintf(" %s:%d", strings.Join(ls, "/"), line)
 	}
 
 	if os.Getenv("ctx_mod") != "" && m != nil {
 		// 输出日志
-		fmt.Fprintf(os.Stderr, "%s %02d %9s %s%s %s%s %s\n",
+		fmt.Fprintf(os.Stderr, "%s %02d %9s %s%s %s%s\n",
 			m.time.Format(ICE_TIME), m.code, fmt.Sprintf("%4s->%-4s", m.source.Name, m.target.Name),
 			prefix, level, str, suffix,
-			fmt.Sprintf("%s:%d", strings.Join(ls, "/"), line),
 		)
 	}
 	return m

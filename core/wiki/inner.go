@@ -6,6 +6,7 @@ import (
 	kit "github.com/shylinux/toolkits"
 
 	"os"
+	"path"
 )
 
 func _inner_save(m *ice.Message, name, text string) {
@@ -36,8 +37,17 @@ func init() {
 				COMMIT: {Name: "commit name", Help: "提交", Hand: func(m *ice.Message, arg ...string) {
 					web.StoryCatch(m, "", arg[0])
 				}},
+				"go": {Name: "go name", Help: "提交", Hand: func(m *ice.Message, arg ...string) {
+					m.Cmdy(ice.CLI_SYSTEM, "go", "run", path.Join("./", arg[0]))
+				}},
+				"project": {Name: "go name", Help: "提交", Hand: func(m *ice.Message, arg ...string) {
+					if len(arg) == 0 || arg[0] == "" {
+						arg = append(arg, "./")
+					}
+					m.Cmdy("nfs.dir", path.Join(arg...), "file")
+				}},
 			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-				m.Cmdy("nfs.dir", arg)
+				m.Cmdy("nfs.dir", path.Join(arg...), "file")
 			}},
 		},
 	}, nil)

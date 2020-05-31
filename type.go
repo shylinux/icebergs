@@ -79,15 +79,19 @@ func (c *Context) Cap(key string, arg ...interface{}) string {
 	return c.Caches[key].Value
 }
 func (c *Context) Run(m *Message, cmd *Command, key string, arg ...string) *Message {
+	action, args := m.Option("_action"), arg
+	if len(arg) > 0 && arg[0] == "action" {
+		action, args = arg[1], arg[2:]
+	}
 	m.Log(LOG_CMDS, "%s.%s %d %v", c.Name, key, len(arg), arg)
-	if m.Hand = true; len(arg) > 1 && arg[0] == "action" && cmd.Action != nil {
-		if h, ok := cmd.Action[arg[1]]; ok {
-			h.Hand(m, arg[2:]...)
+	if m.Hand = true; len(arg) > 1 && action != "" && cmd.Action != nil {
+		if h, ok := cmd.Action[action]; ok {
+			h.Hand(m, args...)
 			return m
 		}
 		for _, h := range cmd.Action {
-			if h.Name == arg[1] || h.Help == arg[1] {
-				h.Hand(m, arg[2:]...)
+			if h.Name == action || h.Help == action {
+				h.Hand(m, args...)
 				return m
 			}
 		}
@@ -140,6 +144,12 @@ func (c *Context) Spawn(m *Message, name string, help string, arg ...string) *Co
 	return s
 }
 func (c *Context) Begin(m *Message, arg ...string) *Context {
+	if c.Caches == nil {
+		c.Caches = map[string]*Cache{}
+	}
+	if c.Configs == nil {
+		c.Configs = map[string]*Config{}
+	}
 	c.Caches[CTX_FOLLOW] = &Cache{Name: CTX_FOLLOW, Value: ""}
 	c.Caches[CTX_STREAM] = &Cache{Name: CTX_STREAM, Value: ""}
 	c.Caches[CTX_STATUS] = &Cache{Name: CTX_STATUS, Value: ""}
@@ -677,7 +687,7 @@ func (m *Message) Cmd(arg ...interface{}) *Message {
 	})
 
 	if m.Warn(m.Hand == false, "not found %v", list) {
-		return m.Set(MSG_RESULT).Cmd(CLI_SYSTEM, list)
+		// return m.Set(MSG_RESULT).Cmd(CLI_SYSTEM, list)
 	}
 	return m
 }

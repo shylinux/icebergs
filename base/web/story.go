@@ -228,12 +228,12 @@ func _story_trash(m *ice.Message, arg ...string) {
 	os.Remove(bak)
 	os.Rename(arg[1], bak)
 }
-func _story_watch(m *ice.Message, arg ...string) {
+func _story_watch(m *ice.Message, index string, arg ...string) {
 	// 备份文件
-	name := kit.Select(arg[1], arg, 2)
+	name := kit.Select(index, arg, 0)
 	m.Cmd(ice.WEB_STORY, ice.STORY_TRASH, name)
 
-	if msg := m.Cmd(ice.WEB_STORY, ice.STORY_INDEX, arg[1]); msg.Append("file") != "" {
+	if msg := m.Cmd(ice.WEB_STORY, ice.STORY_INDEX, index); msg.Append("file") != "" {
 		p := path.Dir(name)
 		os.MkdirAll(p, 0777)
 
@@ -305,36 +305,37 @@ func _story_add(m *ice.Message, arg ...string) {
 
 	// 分发数据
 	if p := kit.Select(m.Conf(ice.WEB_FAVOR, "meta.proxy"), m.Option("you")); p != "" {
-		m.Info("what %v", p)
 		m.Option("you", "")
 		m.Cmd(ice.WEB_PROXY, p, ice.WEB_STORY, ice.STORY_PULL, arg[2], "dev", arg[2])
 	}
 
 }
 
-func _story_index(m *ice.Message, arg ...string) {
-	m.Richs(ice.WEB_STORY, "head", arg[1], func(key string, value map[string]interface{}) {
+func _story_index(m *ice.Message, name string) {
+	m.Richs(ice.WEB_STORY, "head", name, func(key string, value map[string]interface{}) {
 		// 查询索引
-		arg[1] = kit.Format(value["list"])
+		name = kit.Format(value["list"])
 	})
 
-	m.Richs(ice.WEB_STORY, nil, arg[1], func(key string, value map[string]interface{}) {
+	m.Richs(ice.WEB_STORY, nil, name, func(key string, value map[string]interface{}) {
 		// 查询节点
 		m.Push("list", key)
 		m.Push(key, value, []string{"scene", "story"})
-		arg[1] = kit.Format(value["data"])
+		name = kit.Format(value["data"])
 	})
 
-	m.Richs(ice.WEB_CACHE, nil, arg[1], func(key string, value map[string]interface{}) {
+	m.Richs(ice.WEB_CACHE, nil, name, func(key string, value map[string]interface{}) {
 		// 查询数据
 		m.Push("data", key)
 		m.Push(key, value, []string{"text", "time", "size", "type", "name", "file"})
-		m.Echo("%s", value["text"])
+		if value["file"] != "" {
+			m.Echo("%s", m.Cmdx("nfs.cat", value["file"]))
+		}
 	})
 }
-func _story_history(m *ice.Message, arg ...string) {
+func _story_history(m *ice.Message, name string) {
 	// 历史记录
-	list := m.Cmd(ice.WEB_STORY, ice.STORY_INDEX, arg[1]).Append("list")
+	list := m.Cmd(ice.WEB_STORY, ice.STORY_INDEX, name).Append("list")
 	for i := 0; i < kit.Int(kit.Select("30", m.Option("cache.limit"))) && list != ""; i++ {
 
 		m.Richs(ice.WEB_STORY, nil, list, func(key string, value map[string]interface{}) {
@@ -362,7 +363,9 @@ func _story_history(m *ice.Message, arg ...string) {
 	}
 }
 
-func StoryWatch(m *ice.Message, file string, name string) { _story_watch(m, file, name) }
+func StoryIndex(m *ice.Message, name string)               { _story_index(m, name) }
+func StoryHistory(m *ice.Message, name string)             { _story_history(m, name) }
+func StoryWatch(m *ice.Message, index string, file string) { _story_watch(m, index, file) }
 func StoryCatch(m *ice.Message, mime string, file string) {
 	_story_catch(m, "catch", kit.Select(mime, strings.TrimPrefix(path.Ext(file), ".")), file)
 }
@@ -413,16 +416,16 @@ func init() {
 				case ice.STORY_TRASH:
 					_story_trash(m, arg...)
 				case ice.STORY_WATCH:
-					_story_watch(m, arg...)
+					_story_watch(m, arg[1], arg[2:]...)
 				case ice.STORY_CATCH:
 					_story_catch(m, arg...)
 				case "add", ice.STORY_UPLOAD, ice.STORY_DOWNLOAD:
 					_story_add(m, arg...)
 
 				case ice.STORY_INDEX:
-					_story_index(m, arg...)
+					_story_index(m, arg[1])
 				case ice.STORY_HISTORY:
-					_story_history(m, arg...)
+					_story_history(m, arg[1])
 				default:
 					_story_show(m, arg...)
 				}

@@ -45,6 +45,10 @@ func _action_share_select(m *ice.Message, c *ice.Context, cmd string, arg ...str
 	})
 }
 func _action_share_update(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+	if len(arg) > 3 && arg[3] == "action" && _action_action(m, arg[4], arg[5:]...) {
+		return
+	}
+
 	m.Richs(ice.WEB_SHARE, nil, m.Option("share"), func(key string, value map[string]interface{}) {
 		kit.Fetch(kit.Value(value, kit.Keys("extra.tool", arg[2])), func(value map[string]interface{}) {
 			cmds := kit.Simple(m.Space(value["pod"]), kit.Keys(value["ctx"], value["cmd"]), arg[3:])
@@ -60,7 +64,21 @@ func _action_proxy(m *ice.Message) (proxy []string) {
 	}
 	return proxy
 }
+func _action_action(m *ice.Message, action string, arg ...string) bool {
+	switch action {
+	case "upload":
+		msg := m.Cmd(ice.WEB_STORY, "upload")
+		m.Option("name", msg.Append("name"))
+		m.Option("data", msg.Append("data"))
+	}
+	return false
+}
+
 func _action_order(m *ice.Message, arg ...string) {
+	if len(arg) > 3 && arg[3] == "action" && _action_action(m, arg[4], arg[5:]...) {
+		return
+	}
+
 	cmds := kit.Simple(kit.Keys(m.Option("group"), m.Option("index")), arg[3:])
 	if m.Set(ice.MSG_RESULT); !m.Right(cmds) {
 		m.Render("status", 403, "not auth")
@@ -99,6 +117,7 @@ func init() {
 				_action_share_create(m, arg...)
 				return
 			}
+
 			if len(arg) == 0 || arg[0] == "" {
 				if m.Option("share") != "" {
 					if len(arg) < 3 {

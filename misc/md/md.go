@@ -7,7 +7,8 @@ import (
 
 	"github.com/gomarkdown/markdown"
 	"io/ioutil"
-	"math/rand"
+	"path"
+	"strings"
 )
 
 var Index = &ice.Context{Name: "md", Help: "md",

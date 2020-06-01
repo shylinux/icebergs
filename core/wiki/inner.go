@@ -14,8 +14,18 @@ const INNER = "inner"
 const QRCODE = "qrcode"
 const VEDIO = "vedio"
 
+func _inner_ext(name string) string {
+	return kit.Select(path.Base(name), strings.TrimPrefix(path.Ext(name), "."))
+}
+func _inner_binary(m *ice.Message, name string) bool {
+	p := _inner_ext(name)
+	if m.Conf(INNER, kit.Keys("meta.binary", p)) == "true" {
+		return true
+	}
+	return false
+}
 func _inner_protect(m *ice.Message, name string) bool {
-	if ls := strings.Split(name, "/"); m.Conf(INNER, kit.Keys("meta.protect", ls[0])) == "true" {
+	if ls := strings.Split(name, "/"); !m.Right(ls) && m.Conf(INNER, kit.Keys("meta.protect", ls[0])) == "true" {
 		return true
 	}
 	return false
@@ -27,12 +37,13 @@ func _inner_list(m *ice.Message, name string) {
 		return
 	}
 
-	p := strings.TrimPrefix(path.Ext(name), ".")
+	p := _inner_ext(name)
+	m.Logs("info", "type", p)
 	if m.Cmdy(kit.Keys(p, "list"), name); len(m.Resultv()) > 0 {
 		return
 	}
 
-	if strings.HasSuffix(name, "/") || m.Conf(INNER, kit.Keys("meta.source", p)) == "true" {
+	if strings.HasSuffix(name, "/") || !_inner_binary(m, name) {
 		m.Cmdy("nfs.dir", name, "file size time")
 	} else {
 		m.Echo(name)
@@ -56,7 +67,7 @@ func _inner_save(m *ice.Message, name, text string) {
 	}
 }
 func _inner_plug(m *ice.Message, name string) {
-	p := strings.TrimPrefix(path.Ext(name), ".")
+	p := _inner_ext(name)
 	if msg := m.Cmd(kit.Keys(p, "plug"), name); m != msg && msg.Hand {
 		m.Copy(msg)
 		return
@@ -75,7 +86,7 @@ func _inner_show(m *ice.Message, name string) {
 		return
 	}
 
-	p := strings.TrimPrefix(path.Ext(name), ".")
+	p := _inner_ext(name)
 	if msg := m.Cmd(kit.Keys(p, "show"), name); m != msg && msg.Hand {
 		m.Copy(msg)
 		return
@@ -102,10 +113,7 @@ func init() {
 		Configs: map[string]*ice.Config{
 			INNER: {Name: "inner", Help: "编辑器", Value: kit.Data(
 				"protect", kit.Dict("etc", "true", "var", "true", "usr", "true"),
-				"source", kit.Dict(
-					"sh", "true", "shy", "true", "py", "true",
-					"js", "true", "go", "true", "c", "true",
-				),
+				"binary", kit.Dict("bin", "true", "gz", "true"),
 				"plug", kit.Dict(
 					"py", kit.Dict("display", true, "profile", true),
 					"md", kit.Dict("display", true, "profile", true),

@@ -687,7 +687,7 @@ func (m *Message) Cmd(arg ...interface{}) *Message {
 	})
 
 	if m.Warn(m.Hand == false, "not found %v", list) {
-		// return m.Set(MSG_RESULT).Cmd(CLI_SYSTEM, list)
+		return m.Set(MSG_RESULT).Cmd(CLI_SYSTEM, list)
 	}
 	return m
 }

@@ -159,7 +159,7 @@ func (web *Frame) HandleWSS(m *ice.Message, safe bool, c *websocket.Conn, name s
 			socket, msg := c, m.Spawns(b)
 			target := kit.Simple(msg.Optionv(ice.MSG_TARGET))
 			source := kit.Simple(msg.Optionv(ice.MSG_SOURCE), name)
-			msg.Info("recv %v<-%v %v", target, source, msg.Format("meta"))
+			msg.Info("recv %v<-%v %s %v", target, source, msg.Detailv(), msg.Format("meta"))
 
 			if len(target) == 0 {
 				msg.Option(ice.MSG_USERROLE, msg.Cmdx(ice.AAA_ROLE, "check", msg.Option(ice.MSG_USERNAME)))
@@ -204,6 +204,7 @@ func (web *Frame) HandleWSS(m *ice.Message, safe bool, c *websocket.Conn, name s
 			msg.Optionv(ice.MSG_SOURCE, source)
 			msg.Optionv(ice.MSG_TARGET, target)
 			socket.WriteMessage(t, []byte(msg.Format("meta")))
+			target = append([]string{name}, target...)
 			msg.Info("send %v %v->%v %v", t, source, target, msg.Format("meta"))
 			msg.Cost("%v->%v %v %v", source, target, msg.Detailv(), msg.Format("append"))
 		}

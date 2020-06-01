@@ -26,14 +26,14 @@ func (m *Message) log(level string, str string, arg ...interface{}) *Message {
 
 	case LOG_CMDS, LOG_START, LOG_SERVE:
 		prefix, suffix = "\033[32m", "\033[0m"
-	case LOG_COST:
+	case LOG_AUTH, LOG_COST:
 		prefix, suffix = "\033[33m", "\033[0m"
 	case LOG_WARN, LOG_ERROR, LOG_CLOSE:
 		prefix, suffix = "\033[31m", "\033[0m"
 	}
 
 	switch level {
-	case LOG_CMDS, LOG_INFO, LOG_WARN, LOG_COST:
+	case LOG_CMDS, LOG_INFO, LOG_WARN, LOG_AUTH, LOG_COST:
 	default:
 		_, file, line, _ := runtime.Caller(2)
 		ls := strings.Split(file, "/")

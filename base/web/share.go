@@ -109,6 +109,7 @@ func _share_action_redirect(m *ice.Message, value map[string]interface{}, share 
 		"title", kit.Format(value["name"]),
 		"river", kit.Value(value, "extra.river"),
 		"storm", kit.Value(value, "extra.storm"),
+		kit.UnMarshal(kit.Format(kit.Value(value, "extra.tool.0.value"))),
 	)
 	return true
 }
@@ -127,6 +128,7 @@ func _share_action_list(m *ice.Message, value map[string]interface{}, river, sto
 		m.Push("group", value["ctx"])
 		m.Push("index", value["cmd"])
 		m.Push("args", value["args"])
+		m.Push("value", value["value"])
 
 		msg := m.Cmd(m.Space(value["pod"]), ice.CTX_COMMAND, value["ctx"], value["cmd"])
 		m.Push("name", value["cmd"])

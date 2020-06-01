@@ -24,7 +24,7 @@ func _inner_list(m *ice.Message, name string) {
 		return
 	}
 
-	m.Cmdy("nfs.dir", name, "file")
+	m.Cmdy("nfs.dir", name, "file size time")
 }
 func _inner_save(m *ice.Message, name, text string) {
 	if m.Cmdy(kit.Keys(strings.TrimPrefix(path.Ext(name), "."), "save"), name, text); len(m.Resultv()) > 0 {

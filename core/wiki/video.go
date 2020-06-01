@@ -6,7 +6,7 @@ import (
 
 	"github.com/nareix/joy4/av"
 	"github.com/nareix/joy4/av/avutil"
-	"github.com/nareix/joy4/codec/h264parser"
+	"github.com/nareix/joy4/format"
 )
 
 func init() {
@@ -28,13 +28,8 @@ func init() {
 					if streams, e := file.Streams(); m.Assert(e) {
 						for _, stream := range streams {
 							m.Info("what %v", kit.Formats(stream))
-
 							if stream.Type().IsAudio() {
 							} else if stream.Type().IsVideo() {
-
-								m.Info("what %v", kit.Formats(stream))
-								h264parser.ParseSPS(stream.RecordInfo.SPS)
-
 								vstream := stream.(av.VideoCodecData)
 								m.Push("type", vstream.Type().String())
 								m.Push("width", vstream.Width())

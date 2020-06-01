@@ -11,6 +11,7 @@ func _action_share_create(m *ice.Message, arg ...string) {
 		arg = append(arg, "tool.0.ctx", m.Option("group"))
 		arg = append(arg, "tool.0.cmd", m.Option("index"))
 		arg = append(arg, "tool.0.args", m.Option("args"))
+		arg = append(arg, "tool.0.value", m.Option("value"))
 		arg = append(arg, "tool.0.single", "yes")
 	} else {
 		m.Option(ice.MSG_RIVER, arg[5])

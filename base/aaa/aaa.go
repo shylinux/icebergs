@@ -105,7 +105,7 @@ var Index = &ice.Context{Name: "aaa", Help: "认证模块",
 				if m.Option(ice.MSG_USERROLE) == ice.ROLE_ROOT {
 					// 超级用户
 					m.Echo("ok")
-				} else if _role_right(m, arg[1], strings.Split(kit.Keys(arg[2:]), ".")...) {
+				} else if _role_right(m, kit.Select("void", arg, 1), strings.Split(kit.Keys(arg[2:]), ".")...) {
 					// 其它用户
 					m.Echo("ok")
 				}

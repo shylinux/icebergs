@@ -139,7 +139,7 @@ func _share_action_list(m *ice.Message, value map[string]interface{}, river, sto
 	return true
 }
 func _share_action(m *ice.Message, value map[string]interface{}, arg ...string) bool {
-	if len(arg) == 1 {
+	if len(arg) == 1 || arg[1] == "" {
 		return _share_action_redirect(m, value, arg[0])
 	}
 	if arg[1] == "" {
@@ -217,8 +217,8 @@ func init() {
 
 				m.Richs(ice.WEB_SHARE, nil, arg[0], func(key string, value map[string]interface{}) {
 					m.Log(ice.LOG_EXPORT, "%s: %v", arg, kit.Format(value))
-					if m.Option(ice.MSG_USERROLE) != ice.ROLE_ROOT && kit.Time(kit.Format(value[kit.MDB_TIME])) < kit.Time(m.Time()) {
-						m.Echo("invalid")
+					if m.Warn(m.Option(ice.MSG_USERROLE) != ice.ROLE_ROOT && kit.Time(kit.Format(value[kit.MDB_TIME])) < kit.Time(m.Time()), "expired") {
+						m.Echo("expired")
 						return
 					}
 

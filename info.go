@@ -9,17 +9,6 @@ import (
 	"strings"
 )
 
-func (m *Message) Logs(level string, arg ...interface{}) *Message {
-	list := []string{}
-	for i := 0; i < len(arg)-1; i += 2 {
-		list = append(list, fmt.Sprintf("%v: %v", arg[i], arg[i+1]))
-	}
-	m.log(level, strings.Join(list, " "))
-	return m
-}
-func (m *Message) Log(level string, str string, arg ...interface{}) *Message {
-	return m.log(level, str, arg...)
-}
 func (m *Message) log(level string, str string, arg ...interface{}) *Message {
 	if str = strings.TrimSpace(fmt.Sprintf(str, arg...)); Log != nil {
 		// 日志模块
@@ -63,8 +52,17 @@ func (m *Message) log(level string, str string, arg ...interface{}) *Message {
 	}
 	return m
 }
-func (m *Message) Cost(str string, arg ...interface{}) *Message {
-	return m.log(LOG_COST, "%s: %s", m.Format("cost"), kit.Format(str, arg...))
+
+func (m *Message) Log(level string, str string, arg ...interface{}) *Message {
+	return m.log(level, str, arg...)
+}
+func (m *Message) Logs(level string, arg ...interface{}) *Message {
+	list := []string{}
+	for i := 0; i < len(arg)-1; i += 2 {
+		list = append(list, fmt.Sprintf("%v: %v", arg[i], arg[i+1]))
+	}
+	m.log(level, strings.Join(list, " "))
+	return m
 }
 func (m *Message) Info(str string, arg ...interface{}) *Message {
 	return m.log(LOG_INFO, str, arg...)
@@ -87,10 +85,16 @@ func (m *Message) Error(err bool, str string, arg ...interface{}) bool {
 	}
 	return false
 }
+func (m *Message) Debug(str string, arg ...interface{}) {
+	m.log(LOG_DEBUG, str, arg...)
+}
 func (m *Message) Trace(key string, str string, arg ...interface{}) *Message {
 	if m.Options(key) {
 		m.Echo("trace: ").Echo(str, arg...)
 		return m.log(LOG_TRACE, str, arg...)
 	}
 	return m
+}
+func (m *Message) Cost(str string, arg ...interface{}) *Message {
+	return m.log(LOG_COST, "%s: %s", m.Format("cost"), kit.Format(str, arg...))
 }

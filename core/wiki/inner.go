@@ -14,19 +14,36 @@ const INNER = "inner"
 const QRCODE = "qrcode"
 const VEDIO = "vedio"
 
-func _inner_list(m *ice.Message, name string) {
+func _inner_protect(m *ice.Message, name string) bool {
 	if ls := strings.Split(name, "/"); m.Conf(INNER, kit.Keys("meta.protect", ls[0])) == "true" {
+		return true
+	}
+	return false
+}
+
+func _inner_list(m *ice.Message, name string) {
+	if _inner_protect(m, name) {
 		m.Push("file", "../")
 		return
 	}
 
-	if m.Cmdy(kit.Keys(strings.TrimPrefix(path.Ext(name), "."), "list"), name); len(m.Resultv()) > 0 {
+	p := strings.TrimPrefix(path.Ext(name), ".")
+	if m.Cmdy(kit.Keys(p, "list"), name); len(m.Resultv()) > 0 {
 		return
 	}
 
-	m.Cmdy("nfs.dir", name, "file size time")
+	if strings.HasSuffix(name, "/") || m.Conf(INNER, kit.Keys("meta.source", p)) == "true" {
+		m.Cmdy("nfs.dir", name, "file size time")
+	} else {
+		m.Echo(name)
+	}
 }
 func _inner_save(m *ice.Message, name, text string) {
+	if _inner_protect(m, name) {
+		m.Echo("no right")
+		return
+	}
+
 	if m.Cmdy(kit.Keys(strings.TrimPrefix(path.Ext(name), "."), "save"), name, text); len(m.Resultv()) > 0 {
 		return
 	}
@@ -53,6 +70,11 @@ func _inner_plug(m *ice.Message, name string) {
 	m.Echo("{}")
 }
 func _inner_show(m *ice.Message, name string) {
+	if _inner_protect(m, name) {
+		m.Push("file", "../")
+		return
+	}
+
 	p := strings.TrimPrefix(path.Ext(name), ".")
 	if msg := m.Cmd(kit.Keys(p, "show"), name); m != msg && msg.Hand {
 		m.Copy(msg)
@@ -80,6 +102,10 @@ func init() {
 		Configs: map[string]*ice.Config{
 			INNER: {Name: "inner", Help: "编辑器", Value: kit.Data(
 				"protect", kit.Dict("etc", "true", "var", "true", "usr", "true"),
+				"source", kit.Dict(
+					"sh", "true", "shy", "true", "py", "true",
+					"js", "true", "go", "true", "c", "true",
+				),
 				"plug", kit.Dict(
 					"py", kit.Dict("display", true, "profile", true),
 					"md", kit.Dict("display", true, "profile", true),
@@ -121,7 +147,7 @@ func init() {
 					web.StoryWatch(m, m.Option("data"), path.Join(m.Option("path"), m.Option("name")))
 				}},
 				"project": {Name: "project path", Help: "项目", Hand: func(m *ice.Message, arg ...string) {
-					_inner_list(m, path.Join("./", kit.Select("", arg, 0)))
+					_inner_list(m, path.Join("./", kit.Select("", arg, 0))+"/")
 				}},
 			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 				if len(arg) > 0 && arg[0] == "action" {

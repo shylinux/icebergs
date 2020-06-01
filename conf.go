@@ -131,6 +131,7 @@ const ( // LOG
 	LOG_WARN  = "warn"
 	LOG_ERROR = "error"
 	LOG_TRACE = "trace"
+	LOG_DEBUG = "debug"
 )
 const ( // SSH
 	SSH_SOURCE = "source"

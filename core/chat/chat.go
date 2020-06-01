@@ -161,9 +161,11 @@ var Index = &ice.Context{Name: "chat", Help: "聊天中心",
 				switch arg[0] {
 				case "login":
 					// 密码登录
+					m.Debug("user %v", m.Option(ice.MSG_USERNAME))
 					if len(arg) > 2 {
 						web.Render(m, "cookie", m.Option(ice.MSG_SESSID, m.Cmdx(ice.AAA_USER, "login", m.Option(ice.MSG_USERNAME, arg[1]), arg[2])))
 					}
+					m.Debug("user %v", m.Option(ice.MSG_USERNAME))
 
 				case "":
 					m.Info("what %v", m.Option("share"))
@@ -187,6 +189,9 @@ var Index = &ice.Context{Name: "chat", Help: "聊天中心",
 				}
 			}
 			if m.Option(ice.MSG_USERURL) == "/login" {
+				return
+			}
+			if m.Option(ice.MSG_USERURL) == "/header" {
 				return
 			}
 
@@ -363,7 +368,18 @@ var Index = &ice.Context{Name: "chat", Help: "聊天中心",
 		}},
 
 		"/header": {Name: "/header", Help: "标题栏", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			m.Echo(m.Conf(ice.WEB_SERVE, "meta.title"))
+			switch kit.Select("", arg, 0) {
+			case "check":
+				if m.Option(ice.MSG_USERNAME) != "" {
+					m.Echo(m.Option(ice.MSG_USERNAME))
+				}
+			case "login":
+				if m.Option(ice.MSG_USERNAME) != "" {
+					m.Render(m.Option(ice.MSG_USERNAME))
+				}
+			default:
+				m.Echo(m.Conf(ice.WEB_SERVE, "meta.title"))
+			}
 		}},
 		"/footer": {Name: "/footer", Help: "状态栏", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			kit.Fetch(m.Confv(ice.WEB_SERVE, "meta.legal"), func(index int, value string) {

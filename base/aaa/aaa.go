@@ -7,6 +7,70 @@ import (
 	"strings"
 )
 
+func _role_list(m *ice.Message) {
+	kit.Fetch(m.Confv("role", "meta.root"), func(key string, value string) {
+		m.Push("userrole", "root").Push("username", key)
+	})
+	kit.Fetch(m.Confv("role", "meta.tech"), func(key string, value string) {
+		m.Push("userrole", "tech").Push("username", key)
+	})
+}
+func _role_black(m *ice.Message, userrole, chain, status string) {
+	m.Rich(ice.AAA_ROLE, kit.Keys("black", userrole), kit.Dict(
+		"chain", chain, "status", status,
+	))
+	m.Logs(ice.LOG_ENABLE, "role", userrole, "black", chain)
+}
+func _role_white(m *ice.Message, userrole, chain, status string) {
+	m.Rich(ice.AAA_ROLE, kit.Keys("white", userrole), kit.Dict(
+		"chain", chain, "status", status,
+	))
+	m.Logs(ice.LOG_ENABLE, "role", userrole, "white", chain)
+}
+func _role_check(m *ice.Message, username string) {
+	m.Echo(kit.Select(kit.Select("void",
+		"tech", m.Confs(ice.AAA_ROLE, kit.Keys("meta.tech", username))),
+		"root", m.Confs(ice.AAA_ROLE, kit.Keys("meta.root", username))))
+}
+func _role_right(m *ice.Message, userrole string, keys ...string) bool {
+	ok := true
+	for i := 0; i < len(keys); i++ {
+		// 黑名单
+		m.Richs(ice.AAA_ROLE, kit.Keys("black", userrole), kit.Keys(keys[:i+1]), func(key string, value map[string]interface{}) {
+			if value["status"] == "true" {
+				ok = false
+			}
+		})
+	}
+	if m.Warn(!ok, "black right %s", keys) {
+		return false
+	}
+
+	if m.Option(ice.MSG_USERROLE) == ice.ROLE_TECH {
+		// 管理用户
+		return true
+	}
+
+	ok = false
+	for i := 0; i < len(keys); i++ {
+		// 白名单
+		m.Richs(ice.AAA_ROLE, kit.Keys("white", userrole), kit.Keys(keys[:i+1]), func(key string, value map[string]interface{}) {
+			if value["status"] == "true" {
+				ok = true
+			}
+		})
+	}
+	if m.Warn(!ok, "no white right %s", keys) {
+		return false
+	}
+
+	// 普通用户
+	return true
+}
+func _role_auth(m *ice.Message, userrole, username, status string) {
+	m.Conf(ice.AAA_ROLE, kit.Keys("meta", userrole, username), status)
+}
+
 var Index = &ice.Context{Name: "aaa", Help: "认证模块",
 	Caches: map[string]*ice.Cache{},
 	Configs: map[string]*ice.Config{
@@ -28,84 +92,33 @@ var Index = &ice.Context{Name: "aaa", Help: "认证模块",
 		}},
 
 		ice.AAA_ROLE: {Name: []string{
-			"role check username",
-			"role right userrole chain",
-			"role userrole username ok",
-			"role black|white userrole enable|disable chain",
+			"role black|white userrole chain",
+			"role check|userrole username",
 		}, Help: "角色", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-
-			// ice.AAA_ROLE: {Name: "role check username; role right userrole chain; role userrole username ok; role black|white userrole enable|disable chain", Help: "角色", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			if len(arg) == 0 {
-				kit.Fetch(m.Confv("role", "meta.root"), func(key string, value string) {
-					m.Push("userrole", "root").Push("username", key)
-				})
-				kit.Fetch(m.Confv("role", "meta.tech"), func(key string, value string) {
-					m.Push("userrole", "tech").Push("username", key)
-				})
+				_role_list(m)
 				return
 			}
 
 			switch arg[0] {
-			case "check":
-				// 用户角色
-				if len(arg) > 1 && arg[1] != "" {
-					m.Echo(kit.Select(kit.Select("void",
-						"tech", m.Confs(ice.AAA_ROLE, kit.Keys("meta.tech", arg[1]))),
-						"root", m.Confs(ice.AAA_ROLE, kit.Keys("meta.root", arg[1]))))
-				}
-
-			case "black", "white":
-				// 黑白名单
-				m.Rich(ice.AAA_ROLE, kit.Keys(arg[0], arg[1]), kit.Dict(
-					"status", arg[2], "chain", kit.Keys(arg[3:]),
-				))
-				m.Log(ice.LOG_ENABLE, "role: %s %s: %v", arg[1], arg[0], arg[3:])
-
 			case "right":
 				if m.Option(ice.MSG_USERROLE) == ice.ROLE_ROOT {
 					// 超级用户
 					m.Echo("ok")
-					break
-				}
-
-				ok := true
-				keys := strings.Split(kit.Keys(arg[2:]), ".")
-				for i := 0; i < len(keys); i++ {
-					if !ok {
-						break
-					}
-					// 黑名单
-					m.Richs(ice.AAA_ROLE, kit.Keys("black", arg[1]), kit.Keys(keys[:i+1]), func(key string, value map[string]interface{}) {
-						ok = value["status"] != "enable"
-					})
-				}
-				if m.Warn(!ok, "black right %s", keys) {
-					break
-				}
-				if m.Option(ice.MSG_USERROLE) == ice.ROLE_TECH {
-					// 管理用户
+				} else if _role_right(m, arg[1], strings.Split(kit.Keys(arg[2:]), ".")...) {
+					// 其它用户
 					m.Echo("ok")
-					break
 				}
-
-				ok = false
-				for i := 0; i < len(keys); i++ {
-					if ok {
-						break
-					}
-					// 白名单
-					m.Richs(ice.AAA_ROLE, kit.Keys("white", arg[1]), kit.Keys(keys[:i+1]), func(key string, value map[string]interface{}) {
-						ok = value["status"] == "enable"
-					})
+			case "check":
+				if len(arg) > 1 && arg[1] != "" {
+					_role_check(m, arg[1])
 				}
-				if m.Warn(!ok, "no white right %s", keys) {
-					break
-				}
-				// 普通用户
-				m.Echo("ok")
-
+			case "white":
+				_role_white(m, arg[1], kit.Keys(arg[2:]), "true")
+			case "black":
+				_role_black(m, arg[1], kit.Keys(arg[2:]), "true")
 			default:
-				m.Conf(ice.AAA_ROLE, kit.Keys("meta", arg[0], arg[1]), kit.Select("true", arg, 2))
+				_role_auth(m, arg[0], arg[1], kit.Select("true", arg, 2))
 			}
 		}},
 		ice.AAA_USER: {Name: "user first|login", Help: "用户", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {

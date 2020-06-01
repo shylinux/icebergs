@@ -131,7 +131,9 @@ func (web *Frame) Login(msg *ice.Message, w http.ResponseWriter, r *http.Request
 
 	if s, ok := msg.Target().Commands[ice.WEB_LOGIN]; ok {
 		// 权限检查
+		msg.Debug("user %v", msg.Option(ice.MSG_USERNAME))
 		msg.Target().Run(msg, s, ice.WEB_LOGIN, kit.Simple(msg.Optionv("cmds"))...)
+		msg.Debug("user %v", msg.Option(ice.MSG_USERNAME))
 	} else if ls := strings.Split(msg.Option(ice.MSG_USERURL), "/"); kit.IndexOf([]string{
 		"static", "plugin", "login", "space", "route", "share",
 		"publish",

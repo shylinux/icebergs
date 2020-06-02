@@ -98,3 +98,20 @@ func (m *Message) Trace(key string, str string, arg ...interface{}) *Message {
 func (m *Message) Cost(str string, arg ...interface{}) *Message {
 	return m.log(LOG_COST, "%s: %s", m.Format("cost"), kit.Format(str, arg...))
 }
+
+func log_fields(arg ...interface{}) string {
+	list := []string{}
+	for i := 0; i < len(arg)-1; i += 2 {
+		list = append(list, fmt.Sprintf("%v: %v", arg[i], arg[i+1]))
+	}
+	return strings.Join(list, " ")
+}
+func (m *Message) Log_INSERT(arg ...interface{}) *Message {
+	return m.log(LOG_INSERT, log_fields(arg...))
+}
+func (m *Message) Log_MODIFY(arg ...interface{}) *Message {
+	return m.log(LOG_MODIFY, log_fields(arg...))
+}
+func (m *Message) Log_REMOVE(arg ...interface{}) *Message {
+	return m.log(LOG_REMOVE, log_fields(arg...))
+}

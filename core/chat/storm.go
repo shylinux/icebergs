@@ -5,12 +5,47 @@ import (
 	"github.com/shylinux/toolkits"
 )
 
+var STORM = ice.Name("storm", Index)
+
+func _storm_list(m *ice.Message, river string) {
+	m.Richs(ice.CHAT_RIVER, kit.Keys(kit.MDB_HASH, river, "tool"), "*", func(key string, value map[string]interface{}) {
+		m.Push(key, value["meta"], []string{kit.MDB_KEY, kit.MDB_NAME})
+	})
+	m.Sort(kit.MDB_NAME)
+}
+func _storm_tool(m *ice.Message, river, storm string, arg ...string) {
+	prefix := kit.Keys(kit.MDB_HASH, river, "tool", kit.MDB_HASH, storm)
+	for i := 0; i < len(arg)-3; i += 4 {
+		id := m.Grow(ice.CHAT_RIVER, kit.Keys(prefix), kit.Data(
+			"pod", arg[i], "ctx", arg[i+1], "cmd", arg[i+2], "help", arg[i+3],
+		))
+		m.Log_INSERT(RIVER, river, STORM, storm, "hash", id, "tool", arg[i:i+4])
+	}
+}
+func _storm_share(m *ice.Message, river, storm, name string, arg ...string) {
+	m.Cmdy(ice.WEB_SHARE, ice.TYPE_STORM, name, storm, RIVER, river, arg)
+}
+func _storm_rename(m *ice.Message, river, storm string, name string) {
+	prefix := kit.Keys(kit.MDB_HASH, river, "tool", kit.MDB_HASH, storm)
+	old := m.Conf(ice.CHAT_RIVER, kit.Keys(prefix, kit.MDB_META, kit.MDB_NAME))
+	m.Log_MODIFY(RIVER, river, STORM, storm, "value", name, "old", old)
+	m.Conf(ice.CHAT_RIVER, kit.Keys(prefix, kit.MDB_META, kit.MDB_NAME), name)
+}
+func _storm_remove(m *ice.Message, river string, storm string) {
+	prefix := kit.Keys(kit.MDB_HASH, river, "tool")
+	m.Richs(ice.CHAT_RIVER, kit.Keys(prefix), storm, func(value map[string]interface{}) {
+		m.Log_REMOVE(RIVER, river, STORM, storm, "value", kit.Format(value))
+	})
+	m.Conf(ice.CHAT_RIVER, kit.Keys(prefix, kit.MDB_HASH, storm), "")
+}
+
 func init() {
 	Index.Merge(&ice.Context{Commands: map[string]*ice.Command{
-		"/storm": {Name: "/storm", Help: "暴风雨", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		"/storm": {Name: "/storm share|tool|rename|remove arg...", Help: "暴风雨", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			switch arg[0] {
 			case "share":
-				m.Cmdy(ice.WEB_SHARE, ice.TYPE_STORM, m.Option("name"), m.Option("storm"), "river", m.Option("river"))
+				// TODO check right
+				_storm_share(m, m.Option(RIVER), m.Option(STORM), m.Option("name"))
 				return
 			}
 
@@ -19,14 +54,8 @@ func init() {
 				return
 			}
 
-			prefix := kit.Keys(kit.MDB_HASH, arg[0], "tool")
 			if len(arg) < 3 {
-				// 应用列表
-				m.Richs(ice.CHAT_RIVER, prefix, "*", func(key string, value map[string]interface{}) {
-					m.Push(key, value["meta"], []string{kit.MDB_KEY, kit.MDB_NAME})
-				})
-				m.Log(ice.LOG_SELECT, "%s", m.Format("append"))
-				m.Sort(kit.MDB_NAME)
+				_storm_list(m, arg[0])
 				return
 			}
 
@@ -36,27 +65,12 @@ func init() {
 			}
 
 			switch arg[2] {
-			case "add":
-				// 添加命令
-				for i := 3; i < len(arg)-3; i += 4 {
-					id := m.Grow(ice.CHAT_RIVER, kit.Keys(prefix, kit.MDB_HASH, arg[1]), kit.Data(
-						"pod", arg[i], "ctx", arg[i+1], "cmd", arg[i+2], "help", arg[i+3],
-					))
-					m.Log(ice.LOG_INSERT, "storm: %s %d: %v", arg[1], id, arg[i:i+4])
-				}
-
+			case "add", "tool":
+				_storm_tool(m, arg[0], arg[1], arg[3:]...)
 			case "rename":
-				// 重命名应用
-				old := m.Conf(ice.CHAT_RIVER, kit.Keys(prefix, kit.MDB_HASH, arg[1], kit.MDB_META, kit.MDB_NAME))
-				m.Log(ice.LOG_MODIFY, "storm: %s %s->%s", arg[1], old, arg[3])
-				m.Conf(ice.CHAT_RIVER, kit.Keys(prefix, kit.MDB_HASH, arg[1], kit.MDB_META, kit.MDB_NAME), arg[3])
-
+				_storm_rename(m, arg[0], arg[1], arg[3])
 			case "remove":
-				// 删除应用
-				m.Richs(ice.CHAT_RIVER, kit.Keys(prefix), arg[1], func(value map[string]interface{}) {
-					m.Log(ice.LOG_REMOVE, "storm: %s value: %s", arg[1], kit.Format(value))
-				})
-				m.Conf(ice.CHAT_RIVER, kit.Keys(prefix, kit.MDB_HASH, arg[1]), "")
+				_storm_remove(m, arg[0], arg[1])
 			}
 		}},
 	}}, nil)

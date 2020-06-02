@@ -161,16 +161,8 @@ var Index = &ice.Context{Name: "chat", Help: "聊天中心",
 				switch arg[0] {
 				case "login":
 					// 密码登录
-					m.Debug("user %v", m.Option(ice.MSG_USERNAME))
 					if len(arg) > 2 {
 						web.Render(m, "cookie", m.Option(ice.MSG_SESSID, m.Cmdx(ice.AAA_USER, "login", m.Option(ice.MSG_USERNAME, arg[1]), arg[2])))
-					}
-					m.Debug("user %v", m.Option(ice.MSG_USERNAME))
-
-				case "":
-					m.Info("what %v", m.Option("share"))
-					if m.Option("share") != "" {
-						return
 					}
 
 				default:
@@ -183,15 +175,13 @@ var Index = &ice.Context{Name: "chat", Help: "聊天中心",
 									m.Option(ice.MSG_STORM, arg[1])
 								})
 							}
-							m.Log(ice.LOG_AUTH, "river: %s storm: %s", m.Option(ice.MSG_RIVER), m.Option(ice.MSG_STORM))
+							m.Logs(ice.LOG_AUTH, "river", m.Option(ice.MSG_RIVER), "storm", m.Option(ice.MSG_STORM))
 						})
 					})
 				}
 			}
-			if m.Option(ice.MSG_USERURL) == "/login" {
-				return
-			}
-			if m.Option(ice.MSG_USERURL) == "/header" {
+			switch m.Option(ice.MSG_USERURL) {
+			case "/login", "/header", "/footer":
 				return
 			}
 
@@ -277,45 +267,6 @@ var Index = &ice.Context{Name: "chat", Help: "聊天中心",
 				m.Echo(river)
 			}
 		}},
-		"/river": {Name: "/river", Help: "小河流", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			if len(arg) < 2 {
-				// 群组列表
-				m.Richs(ice.CHAT_RIVER, nil, "*", func(key string, value map[string]interface{}) {
-					m.Richs(ice.CHAT_RIVER, kit.Keys(kit.MDB_HASH, key, "user"), m.Option(ice.MSG_USERNAME), func(k string, val map[string]interface{}) {
-						m.Push(key, value["meta"], []string{kit.MDB_KEY, kit.MDB_NAME})
-					})
-				})
-				m.Log(ice.LOG_SELECT, "%s", m.Format("append"))
-				return
-			}
-
-			if !m.Right(cmd, arg[1]) {
-				m.Render("status", 403, "not auth")
-				return
-			}
-
-			switch arg[1] {
-			case "add":
-				m.Rich(ice.CHAT_RIVER, kit.Keys(kit.MDB_HASH, arg[0], "user"), kit.Data("username", m.Conf(ice.CLI_RUNTIME, "boot.username")))
-				// 添加用户
-				for _, v := range arg[2:] {
-					user := m.Rich(ice.CHAT_RIVER, kit.Keys(kit.MDB_HASH, arg[0], "user"), kit.Data("username", v))
-					m.Log(ice.LOG_INSERT, "river: %s user: %s name: %s", arg[0], user, v)
-				}
-			case "rename":
-				// 重命名群组
-				old := m.Conf(ice.CHAT_RIVER, kit.Keys(kit.MDB_HASH, arg[0], kit.MDB_META, kit.MDB_NAME))
-				m.Log(ice.LOG_MODIFY, "river: %s %s->%s", arg[0], old, arg[2])
-				m.Conf(ice.CHAT_RIVER, kit.Keys(kit.MDB_HASH, arg[0], kit.MDB_META, kit.MDB_NAME), arg[2])
-
-			case "remove":
-				// 删除群组
-				m.Richs(ice.CHAT_RIVER, nil, arg[0], func(value map[string]interface{}) {
-					m.Log(ice.LOG_REMOVE, "river: %s value: %s", arg[0], kit.Format(value))
-				})
-				m.Conf(ice.CHAT_RIVER, kit.Keys(kit.MDB_HASH, arg[0]), "")
-			}
-		}},
 		"/steam": {Name: "/steam", Help: "大气层", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			if m.Warn(m.Option(ice.MSG_RIVER) == "", "not join") {
 				m.Render("status", 402, "not join")
@@ -365,26 +316,6 @@ var Index = &ice.Context{Name: "chat", Help: "聊天中心",
 				// 命令列表
 				m.Cmdy(ice.WEB_SPACE, arg[2], ice.CTX_COMMAND)
 			}
-		}},
-
-		"/header": {Name: "/header", Help: "标题栏", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			switch kit.Select("", arg, 0) {
-			case "check":
-				if m.Option(ice.MSG_USERNAME) != "" {
-					m.Echo(m.Option(ice.MSG_USERNAME))
-				}
-			case "login":
-				if m.Option(ice.MSG_USERNAME) != "" {
-					m.Render(m.Option(ice.MSG_USERNAME))
-				}
-			default:
-				m.Echo(m.Conf(ice.WEB_SERVE, "meta.title"))
-			}
-		}},
-		"/footer": {Name: "/footer", Help: "状态栏", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			kit.Fetch(m.Confv(ice.WEB_SERVE, "meta.legal"), func(index int, value string) {
-				m.Echo(value)
-			})
 		}},
 
 		"/target": {Name: "/target", Help: "对话框", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {}},

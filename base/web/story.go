@@ -264,10 +264,10 @@ func _story_catch(m *ice.Message, arg ...string) {
 	_story_add(m, arg...)
 }
 func _story_add(m *ice.Message, arg ...string) {
-	if arg[3] == "" || m.Richs(ice.WEB_CACHE, nil, arg[3], func(key string, value map[string]interface{}) {
+	if len(arg) > 3 && (arg[3] == "" || m.Richs(ice.WEB_CACHE, nil, arg[3], func(key string, value map[string]interface{}) {
 		// 复用缓存
 		arg[3] = key
-	}) == nil {
+	}) == nil) {
 		// 添加缓存
 		m.Cmdy(ice.WEB_CACHE, arg)
 		arg = []string{arg[0], m.Append("type"), m.Append("name"), m.Append("data")}

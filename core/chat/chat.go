@@ -187,6 +187,10 @@ var Index = &ice.Context{Name: "chat", Help: "聊天中心",
 
 			// 登录检查
 			if m.Warn(!m.Options(ice.MSG_USERNAME), "not login") {
+				if m.Option("share") != "" {
+					m.Option(ice.MSG_USERNAME, "void")
+					return
+				}
 				m.Render("status", 401, "not login")
 				m.Option(ice.MSG_USERURL, "")
 				return

@@ -44,6 +44,9 @@ func (m *Message) Set(key string, arg ...string) *Message {
 		}
 	default:
 		delete(m.meta, key)
+		for _, k := range arg {
+			delete(m.meta, k)
+		}
 	}
 	return m.Add(key, arg...)
 }

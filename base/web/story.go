@@ -264,7 +264,7 @@ func _story_catch(m *ice.Message, arg ...string) {
 	_story_add(m, arg...)
 }
 func _story_add(m *ice.Message, arg ...string) {
-	if m.Richs(ice.WEB_CACHE, nil, kit.Select("", arg, 3), func(key string, value map[string]interface{}) {
+	if arg[3] == "" || m.Richs(ice.WEB_CACHE, nil, arg[3], func(key string, value map[string]interface{}) {
 		// 复用缓存
 		arg[3] = key
 	}) == nil {
@@ -277,18 +277,19 @@ func _story_add(m *ice.Message, arg ...string) {
 	head, prev, value, count := "", "", map[string]interface{}{}, 0
 	m.Richs(ice.WEB_STORY, "head", arg[2], func(key string, val map[string]interface{}) {
 		head, prev, value, count = key, kit.Format(val["list"]), val, kit.Int(val["count"])
-		m.Log("info", "head: %v prev: %v count: %v", head, prev, count)
+		m.Logs("info", "head", head, "prev", prev, "count", count)
 	})
 
 	if last := m.Richs(ice.WEB_STORY, nil, prev, nil); prev != "" && last != nil && last["data"] == arg[3] {
 		// 重复提交
+		m.Logs("info", "file", "exists")
 		m.Echo(prev)
 	} else {
 		// 添加节点
 		list := m.Rich(ice.WEB_STORY, nil, kit.Dict(
 			"scene", arg[1], "story", arg[2], "count", count+1, "data", arg[3], "prev", prev,
 		))
-		m.Log(ice.LOG_CREATE, "story: %s %s: %s", list, arg[1], arg[2])
+		m.Log_CREATE("story", list, "type", arg[1], "name", arg[2])
 		m.Push("list", list)
 
 		if head == "" {
@@ -328,8 +329,10 @@ func _story_index(m *ice.Message, name string) {
 		// 查询数据
 		m.Push("data", key)
 		m.Push(key, value, []string{"text", "time", "size", "type", "name", "file"})
-		if value["file"] != "" {
+		if kit.Format(value["file"]) != "" {
 			m.Echo("%s", m.Cmdx("nfs.cat", value["file"]))
+		} else {
+			m.Echo("%s", kit.Format(value["text"]))
 		}
 	})
 }
@@ -367,7 +370,10 @@ func StoryIndex(m *ice.Message, name string)               { _story_index(m, nam
 func StoryHistory(m *ice.Message, name string)             { _story_history(m, name) }
 func StoryWatch(m *ice.Message, index string, file string) { _story_watch(m, index, file) }
 func StoryCatch(m *ice.Message, mime string, file string) {
-	_story_catch(m, "catch", kit.Select(mime, strings.TrimPrefix(path.Ext(file), ".")), file)
+	_story_catch(m, "catch", kit.Select(mime, strings.TrimPrefix(path.Ext(file), ".")), file, "")
+}
+func StoryAdd(m *ice.Message, mime string, name string, text string, arg ...string) {
+	_story_add(m, kit.Simple("add", mime, name, text, arg)...)
 }
 
 func init() {

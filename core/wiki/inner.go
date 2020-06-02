@@ -15,7 +15,7 @@ const QRCODE = "qrcode"
 const VEDIO = "vedio"
 
 func _inner_ext(name string) string {
-	return kit.Select(path.Base(name), strings.TrimPrefix(path.Ext(name), "."))
+	return strings.ToLower(kit.Select(path.Base(name), strings.TrimPrefix(path.Ext(name), ".")))
 }
 func _inner_binary(m *ice.Message, name string) bool {
 	p := _inner_ext(name)
@@ -107,6 +107,13 @@ func _inner_show(m *ice.Message, name string) {
 		m.Echo(strings.ReplaceAll(strings.Join(m.Cmd("web.wiki.word", name).Resultv(), ""), "\n", " "))
 	}
 }
+func _inner_main(m *ice.Message, arg ...string) {
+	if len(arg) > 2 && arg[2] != "" {
+		web.StoryIndex(m, arg[2])
+		return
+	}
+	_inner_list(m, path.Join(arg...))
+}
 
 func init() {
 	Index.Merge(&ice.Context{
@@ -133,13 +140,26 @@ func init() {
 				"display": "/plugin/inner.js", "style": "editor",
 			}, Action: map[string]*ice.Action{
 				"history": {Name: "history path name", Help: "历史", Hand: func(m *ice.Message, arg ...string) {
-					web.StoryHistory(m, path.Join("./", arg[0], arg[1]))
-					if len(arg) > 2 && arg[2] != "" {
-						m.Echo(m.Cmdx(ice.WEB_STORY, "index", arg[2]))
-					}
+					msg := m.Spawn()
+					web.StoryHistory(msg, path.Join("./", arg[0], arg[1]))
+					m.Copy(msg, ice.MSG_APPEND, "time", "key", "count", "data")
+					msg = m.Spawn()
+					_inner_main(msg, arg...)
+					m.Echo(msg.Result())
 				}},
 				"commit": {Name: "commit path name", Help: "提交", Hand: func(m *ice.Message, arg ...string) {
 					web.StoryCatch(m, "", path.Join("./", arg[0], arg[1]))
+				}},
+				"record": {Name: "record", Help: "记录", Hand: func(m *ice.Message, arg ...string) {
+					web.StoryAdd(m, "display", path.Join("./", m.Option("path"), m.Option("name"))+".display", m.Option("display"))
+				}},
+				"recover": {Name: "recover", Help: "复盘", Hand: func(m *ice.Message, arg ...string) {
+					msg := m.Spawn()
+					web.StoryHistory(msg, path.Join("./", arg[0], arg[1])+".display")
+					m.Copy(msg, ice.MSG_APPEND, "time", "key", "count", "drama")
+					msg = m.Spawn()
+					_inner_main(msg, arg...)
+					m.Echo(msg.Result())
 				}},
 
 				"run": {Name: "run path name", Help: "运行", Hand: func(m *ice.Message, arg ...string) {
@@ -165,11 +185,7 @@ func init() {
 					return
 				}
 
-				if len(arg) > 2 && arg[2] != "" {
-					m.Echo(m.Cmdx(ice.WEB_STORY, "index", arg[2]))
-					return
-				}
-				_inner_list(m, path.Join(arg...))
+				_inner_main(m, arg...)
 			}},
 		},
 	}, nil)

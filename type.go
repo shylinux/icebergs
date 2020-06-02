@@ -4,6 +4,8 @@
 package ice
 
 import (
+	"reflect"
+
 	kit "github.com/shylinux/toolkits"
 
 	"encoding/json"
@@ -83,7 +85,9 @@ func (c *Context) Run(m *Message, cmd *Command, key string, arg ...string) *Mess
 	if len(arg) > 0 && arg[0] == "action" {
 		action, args = arg[1], arg[2:]
 	}
-	m.Log(LOG_CMDS, "%s.%s %d %v", c.Name, key, len(arg), arg)
+
+	p := reflect.ValueOf(cmd.Hand)
+	m.Log(LOG_CMDS, "%s.%s %d %v %s", c.Name, key, len(arg), arg, kit.FileLine(p.Pointer(), 3))
 	if m.Hand = true; len(arg) > 1 && action != "" && cmd.Action != nil {
 		if h, ok := cmd.Action[action]; ok {
 			h.Hand(m, args...)
@@ -96,6 +100,7 @@ func (c *Context) Run(m *Message, cmd *Command, key string, arg ...string) *Mess
 			}
 		}
 	}
+
 	cmd.Hand(m, c, key, arg...)
 	return m
 }

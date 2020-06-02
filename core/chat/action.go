@@ -6,13 +6,18 @@ import (
 )
 
 func _action_share_create(m *ice.Message, arg ...string) {
+	m.Debug("info %v", arg)
 	if m.Option("index") != "" {
-		arg = append(arg, "tool.0.pod", m.Option("node"))
-		arg = append(arg, "tool.0.ctx", m.Option("group"))
-		arg = append(arg, "tool.0.cmd", m.Option("index"))
-		arg = append(arg, "tool.0.args", m.Option("args"))
-		arg = append(arg, "tool.0.value", m.Option("value"))
-		arg = append(arg, "tool.0.single", "yes")
+		m.Debug("info %v", arg)
+		m.Cmdy(ice.WEB_SHARE, ice.TYPE_ACTION, m.Option("name"), m.Option("text"),
+			"tool.0.pod", kit.Select(m.Option("pod"), m.Option("node")),
+			"tool.0.ctx", m.Option("group"),
+			"tool.0.cmd", m.Option("index"),
+			"tool.0.args", m.Option("args"),
+			"tool.0.value", m.Option("value"),
+			"tool.0.single", "yes",
+		)
+		return
 	} else {
 		m.Option(ice.MSG_RIVER, arg[5])
 		m.Option(ice.MSG_STORM, arg[7])
@@ -23,7 +28,6 @@ func _action_share_create(m *ice.Message, arg ...string) {
 			arg = append(arg, kit.Format("tool.%d.args", index), value["args"])
 		})
 	}
-	m.Cmdy(ice.WEB_SHARE, ice.TYPE_ACTION, m.Option("name"), arg[2], arg[3], arg[4:])
 }
 func _action_share_select(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 	m.Richs(ice.WEB_SHARE, nil, m.Option("share"), func(key string, value map[string]interface{}) {
@@ -52,7 +56,7 @@ func _action_share_update(m *ice.Message, c *ice.Context, cmd string, arg ...str
 
 	m.Richs(ice.WEB_SHARE, nil, m.Option("share"), func(key string, value map[string]interface{}) {
 		kit.Fetch(kit.Value(value, kit.Keys("extra.tool", arg[2])), func(value map[string]interface{}) {
-			cmds := kit.Simple(m.Space(value["pod"]), kit.Keys(value["ctx"], value["cmd"]), arg[3:])
+			cmds := kit.Simple(kit.Keys(value["ctx"], value["cmd"]), arg[3:])
 			m.Cmdy(_action_proxy(m), cmds).Option("cmds", cmds)
 		})
 	})

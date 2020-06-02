@@ -71,7 +71,7 @@ func init() {
 						m.Push(kit.MDB_NAME, val[kit.MDB_NAME])
 					}
 				})
-				if m.W != nil {
+				if m.W != nil && len(arg) < 2 {
 					m.Table(func(index int, value map[string]string, field []string) {
 						m.Push("link", Format("a", kit.MergeURL(m.Option(ice.MSG_USERWEB), "pod", value["name"]), value["name"]))
 					})

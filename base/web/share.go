@@ -69,6 +69,12 @@ func _share_create(m *ice.Message, kind, name, text string, arg ...string) {
 
 func _share_local(m *ice.Message, arg ...string) {
 	p := path.Join(arg...)
+	if m.Option("pod") != "" {
+		m.Cmdy(ice.WEB_SPACE, m.Option("pod"), "nfs.cat", p)
+		m.Render(ice.RENDER_RESULT)
+		return
+	}
+
 	switch ls := strings.Split(p, "/"); ls[0] {
 	case "etc", "var":
 		return
@@ -109,6 +115,7 @@ func _share_action_redirect(m *ice.Message, value map[string]interface{}, share 
 		"title", kit.Format(value["name"]),
 		"river", kit.Value(value, "extra.river"),
 		"storm", kit.Value(value, "extra.storm"),
+		"pod", kit.Value(value, "extra.tool.0.pod"),
 		kit.UnMarshal(kit.Format(kit.Value(value, "extra.tool.0.value"))),
 	)
 	return true

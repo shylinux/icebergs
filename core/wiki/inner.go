@@ -157,6 +157,13 @@ func init() {
 				"record": {Name: "record", Help: "记录", Hand: func(m *ice.Message, arg ...string) {
 					web.StoryAdd(m, "display", path.Join("./", m.Option("path"), m.Option("name"))+".display", m.Option("display"))
 				}},
+				"favor": {Name: "favor", Help: "收藏", Hand: func(m *ice.Message, arg ...string) {
+					m.Cmd(ice.WEB_FAVOR, arg, "extra", "extra.poster").Table(func(index int, value map[string]string, header []string) {
+						m.Push("image", kit.Format(`<a title="%s" href="%s" target="_blank"><img src="%s" width=200></a>`,
+							value["name"], value["text"], value["extra.poster"]))
+						m.Push("video", kit.Format(`<video src="%s" controls></video>`, value["text"]))
+					})
+				}},
 				"recover": {Name: "recover", Help: "复盘", Hand: func(m *ice.Message, arg ...string) {
 					msg := m.Spawn()
 					web.StoryHistory(msg, path.Join("./", arg[0], arg[1])+".display")
@@ -196,6 +203,12 @@ func init() {
 				}
 
 				_inner_main(m, arg...)
+			}},
+
+			"video": {Name: "video", Help: "视频", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+				m.Cmd(ice.WEB_FAVOR, arg, "extra", "extra.poster").Table(func(index int, value map[string]string, header []string) {
+					m.Echo(`<video src="%s" controls loop></video>`, value["text"])
+				})
 			}},
 		},
 	}, nil)

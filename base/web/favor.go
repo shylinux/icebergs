@@ -208,13 +208,13 @@ func init() {
 					return
 				}
 
+				fields := []string{kit.MDB_TIME, kit.MDB_ID, kit.MDB_TYPE, kit.MDB_NAME, kit.MDB_TEXT}
+				if len(arg) > 1 && arg[1] == "extra" {
+					fields, arg = append(fields, arg[2:]...), arg[:1]
+				}
 				m.Option("favor", arg[0])
 				if len(arg) < 3 {
 					// 收藏列表
-					fields := []string{kit.MDB_TIME, kit.MDB_ID, kit.MDB_TYPE, kit.MDB_NAME, kit.MDB_TEXT}
-					if len(arg) > 1 && arg[1] == "extra" {
-						fields, arg = append(fields, arg[2:]...), arg[:1]
-					}
 					_favor_list(m, arg[0], kit.Select("", arg, 1), fields...)
 					return
 				}

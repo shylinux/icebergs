@@ -60,6 +60,7 @@ func _inner_save(m *ice.Message, name, text string) {
 
 	if f, e := os.Create(name); m.Assert(e) {
 		defer f.Close()
+		m.Cmd(web.FAVOR, "inner.save", "shell", name, text)
 		if n, e := f.WriteString(text); m.Assert(e) {
 			m.Logs(ice.LOG_EXPORT, "file", name, "size", n)
 		}

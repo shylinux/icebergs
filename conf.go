@@ -99,17 +99,17 @@ const ( // WEB
 )
 const ( // LOG
 	// 数据
-	LOG_ENABLE = "enable"
 	LOG_IMPORT = "import"
 	LOG_EXPORT = "export"
 	LOG_CREATE = "create"
 	LOG_REMOVE = "remove"
 	LOG_INSERT = "insert"
 	LOG_DELETE = "delete"
-	LOG_MODIFY = "modify"
 	LOG_SELECT = "select"
+	LOG_MODIFY = "modify"
 
 	// 事件
+	LOG_ENABLE = "enable"
 	LOG_LISTEN = "listen"
 	LOG_ACCEPT = "accept"
 	LOG_FINISH = "finish"
@@ -124,8 +124,8 @@ const ( // LOG
 	LOG_CLOSE = "close"
 
 	// 分类
-	LOG_AUTH  = "auth"
 	LOG_CMDS  = "cmds"
+	LOG_AUTH  = "auth"
 	LOG_COST  = "cost"
 	LOG_INFO  = "info"
 	LOG_WARN  = "warn"

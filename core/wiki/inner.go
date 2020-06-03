@@ -38,12 +38,11 @@ func _inner_list(m *ice.Message, name string) {
 	}
 
 	p := _inner_ext(name)
-	m.Logs("info", "type", p)
-	if m.Cmdy(kit.Keys(p, "list"), name); len(m.Resultv()) > 0 {
+	if m.Cmdy(kit.Keys(p, "list"), name); len(m.Resultv()) > 0 && m.Result(0) != "warn: " {
 		return
 	}
 
-	if strings.HasSuffix(name, "/") || !_inner_binary(m, name) {
+	if m.Set(ice.MSG_RESULT); strings.HasSuffix(name, "/") || !_inner_binary(m, name) {
 		m.Cmdy("nfs.dir", name, "file size time")
 	} else {
 		m.Echo(name)
@@ -98,7 +97,7 @@ func _inner_show(m *ice.Message, name string) {
 		return
 	}
 
-	switch p {
+	switch m.Set(ice.MSG_RESULT); p {
 	case "csv":
 		m.CSV(m.Cmdx("nfs.cat", name))
 	case "md":
@@ -142,10 +141,13 @@ func init() {
 				"history": {Name: "history path name", Help: "历史", Hand: func(m *ice.Message, arg ...string) {
 					msg := m.Spawn()
 					web.StoryHistory(msg, path.Join("./", arg[0], arg[1]))
-					m.Copy(msg, ice.MSG_APPEND, "time", "key", "count", "data")
-					msg = m.Spawn()
-					_inner_main(msg, arg...)
-					m.Echo(msg.Result())
+					m.Copy(msg, ice.MSG_APPEND, "time", "count", "key")
+
+					if len(arg) > 2 && arg[2] != "" {
+						msg = m.Spawn()
+						web.StoryIndex(msg, arg[2])
+						m.Echo(msg.Result())
+					}
 				}},
 				"commit": {Name: "commit path name", Help: "提交", Hand: func(m *ice.Message, arg ...string) {
 					web.StoryCatch(m, "", path.Join("./", arg[0], arg[1]))
@@ -156,10 +158,13 @@ func init() {
 				"recover": {Name: "recover", Help: "复盘", Hand: func(m *ice.Message, arg ...string) {
 					msg := m.Spawn()
 					web.StoryHistory(msg, path.Join("./", arg[0], arg[1])+".display")
-					m.Copy(msg, ice.MSG_APPEND, "time", "key", "count", "drama")
-					msg = m.Spawn()
-					_inner_main(msg, arg...)
-					m.Echo(msg.Result())
+					m.Copy(msg, ice.MSG_APPEND, "time", "count", "key", "drama")
+
+					if len(arg) > 2 && arg[2] != "" {
+						msg = m.Spawn()
+						web.StoryIndex(msg, arg[2])
+						m.Echo(msg.Result())
+					}
 				}},
 
 				"run": {Name: "run path name", Help: "运行", Hand: func(m *ice.Message, arg ...string) {

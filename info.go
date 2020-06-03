@@ -52,7 +52,6 @@ func (m *Message) log(level string, str string, arg ...interface{}) *Message {
 	}
 	return m
 }
-
 func (m *Message) Log(level string, str string, arg ...interface{}) *Message {
 	return m.log(level, str, arg...)
 }
@@ -69,8 +68,8 @@ func (m *Message) Info(str string, arg ...interface{}) *Message {
 }
 func (m *Message) Warn(err bool, str string, arg ...interface{}) bool {
 	if err {
-		_, file, line, _ := runtime.Caller(1)
 		m.Echo("warn: ").Echo(str, arg...)
+		_, file, line, _ := runtime.Caller(1)
 		return m.log(LOG_WARN, "%s:%d %s", file, line, fmt.Sprintf(str, arg...)) != nil
 	}
 	return false
@@ -85,9 +84,6 @@ func (m *Message) Error(err bool, str string, arg ...interface{}) bool {
 	}
 	return false
 }
-func (m *Message) Debug(str string, arg ...interface{}) {
-	m.log(LOG_DEBUG, str, arg...)
-}
 func (m *Message) Trace(key string, str string, arg ...interface{}) *Message {
 	if m.Options(key) {
 		m.Echo("trace: ").Echo(str, arg...)
@@ -95,8 +91,8 @@ func (m *Message) Trace(key string, str string, arg ...interface{}) *Message {
 	}
 	return m
 }
-func (m *Message) Cost(str string, arg ...interface{}) *Message {
-	return m.log(LOG_COST, "%s: %s", m.Format("cost"), kit.Format(str, arg...))
+func (m *Message) Debug(str string, arg ...interface{}) {
+	m.log(LOG_DEBUG, str, arg...)
 }
 
 func log_fields(arg ...interface{}) string {
@@ -106,19 +102,34 @@ func log_fields(arg ...interface{}) string {
 	}
 	return strings.Join(list, " ")
 }
-func (m *Message) Log_INSERT(arg ...interface{}) *Message {
-	return m.log(LOG_INSERT, log_fields(arg...))
+func (m *Message) Log_IMPORT(arg ...interface{}) *Message {
+	return m.log(LOG_IMPORT, log_fields(arg...))
 }
-func (m *Message) Log_MODIFY(arg ...interface{}) *Message {
-	return m.log(LOG_MODIFY, log_fields(arg...))
-}
-func (m *Message) Log_REMOVE(arg ...interface{}) *Message {
-	return m.log(LOG_REMOVE, log_fields(arg...))
+func (m *Message) Log_EXPORT(arg ...interface{}) *Message {
+	return m.log(LOG_EXPORT, log_fields(arg...))
 }
 func (m *Message) Log_CREATE(arg ...interface{}) *Message {
 	return m.log(LOG_CREATE, log_fields(arg...))
 }
+func (m *Message) Log_REMOVE(arg ...interface{}) *Message {
+	return m.log(LOG_REMOVE, log_fields(arg...))
+}
+func (m *Message) Log_INSERT(arg ...interface{}) *Message {
+	return m.log(LOG_INSERT, log_fields(arg...))
+}
+func (m *Message) Log_DELETE(arg ...interface{}) *Message {
+	return m.log(LOG_DELETE, log_fields(arg...))
+}
+func (m *Message) Log_SELETE(arg ...interface{}) *Message {
+	return m.log(LOG_SELECT, log_fields(arg...))
+}
+func (m *Message) Log_MODIFY(arg ...interface{}) *Message {
+	return m.log(LOG_MODIFY, log_fields(arg...))
+}
 
 func (m *Message) Log_AUTH(arg ...interface{}) *Message {
 	return m.log(LOG_AUTH, log_fields(arg...))
+}
+func (m *Message) Cost(str string, arg ...interface{}) *Message {
+	return m.log(LOG_COST, "%s: %s", m.Format("cost"), kit.Format(str, arg...))
 }

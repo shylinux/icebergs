@@ -1,15 +1,14 @@
 package web
 
 import (
-	"io"
-	"io/ioutil"
-	"net/http"
-	"path"
-
 	ice "github.com/shylinux/icebergs"
 	kit "github.com/shylinux/toolkits"
 
+	"io"
+	"io/ioutil"
+	"net/http"
 	"os"
+	"path"
 )
 
 var CACHE = ice.Name("cache", Index)

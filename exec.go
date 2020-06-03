@@ -81,8 +81,9 @@ func (m *Message) Done() bool {
 }
 func (m *Message) Call(sync bool, cb func(*Message) *Message) *Message {
 	wait := make(chan bool, 2)
-	t := time.AfterFunc(kit.Duration(kit.Select("10s", m.Option("timeout"))), func() {
-		m.Warn(true, "timeout %v", m.Detailv())
+	p := kit.Select("10s", m.Option("timeout"))
+	t := time.AfterFunc(kit.Duration(p), func() {
+		m.Warn(true, "%s timeout %v", p, m.Detailv())
 		wait <- false
 		m.Back(nil)
 	})

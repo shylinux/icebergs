@@ -118,7 +118,7 @@ func init() {
 			ice.WEB_SPACE: {Name: "space", Help: "空间站", Value: kit.Data(kit.MDB_SHORT, kit.MDB_NAME,
 				"redial.a", 3000, "redial.b", 1000, "redial.c", 1000,
 				"buffer.r", 4096, "buffer.w", 4096,
-				"timeout.c", "30s",
+				"timeout.c", "180s",
 			)},
 		},
 		Commands: map[string]*ice.Command{

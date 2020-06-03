@@ -9,6 +9,59 @@ import (
 	"os"
 )
 
+var FAVOR = ice.Name("favor", Index)
+
+func _favor_list(m *ice.Message, favor, id string, fields ...string) {
+	if favor == "" {
+		m.Richs(FAVOR, nil, "*", func(key string, value map[string]interface{}) {
+			m.Push(key, value["meta"], []string{"time", "count"})
+			m.Push("render", kit.Select("spide", kit.Value(value, "meta.render")))
+			m.Push(FAVOR, kit.Value(value, "meta.name"))
+		})
+		m.Sort(FAVOR)
+		return
+	}
+
+	m.Richs(ice.WEB_FAVOR, nil, favor, func(key string, value map[string]interface{}) {
+		if id == "" {
+			m.Grows(ice.WEB_FAVOR, kit.Keys(kit.MDB_HASH, key), "", "", func(index int, value map[string]interface{}) {
+				m.Push("", value, fields)
+			})
+			return
+		}
+
+		m.Grows(ice.WEB_FAVOR, kit.Keys(kit.MDB_HASH, key), "id", id, func(index int, value map[string]interface{}) {
+			m.Push("detail", value)
+			m.Optionv("value", value)
+			m.Push("key", "render")
+			m.Push("value", m.Cmdx(m.Conf(ice.WEB_FAVOR, kit.Keys("meta.render", value["type"]))))
+		})
+	})
+}
+func _favor_create(m *ice.Message, name string) string {
+	favor := m.Rich(ice.WEB_FAVOR, nil, kit.Data(kit.MDB_NAME, name))
+	m.Log_CREATE("favor", favor, "name", favor)
+	return favor
+}
+func _favor_insert(m *ice.Message, favor, kind, name, text string, extra ...string) {
+	index := m.Grow(ice.WEB_FAVOR, kit.Keys(kit.MDB_HASH, favor), kit.Dict(
+		kit.MDB_TYPE, kind, kit.MDB_NAME, name, kit.MDB_TEXT, text,
+		"extra", kit.Dict(extra),
+	))
+	m.Richs(ice.WEB_FAVOR, nil, favor, func(key string, value map[string]interface{}) {
+		kit.Value(value, "meta.time", m.Time())
+	})
+	m.Log_INSERT("favor", favor, "index", index, "name", name, "text", text)
+	m.Echo("%d", index)
+}
+
+func FavorInsert(m *ice.Message, favor, kind, name, text string, extra ...string) {
+	_favor_insert(m, favor, kind, name, text, extra...)
+}
+func FavorList(m *ice.Message, favor, id string, fields ...string) {
+	_favor_list(m, favor, id, fields...)
+}
+
 func init() {
 	Index.Merge(&ice.Context{
 		Configs: map[string]*ice.Config{
@@ -78,13 +131,7 @@ func init() {
 				}
 
 				if len(arg) == 0 {
-					// 收藏门类
-					m.Richs(ice.WEB_FAVOR, nil, "*", func(key string, value map[string]interface{}) {
-						m.Push(key, value["meta"], []string{"time", "count"})
-						m.Push("render", kit.Select("spide", kit.Value(value, "meta.render")))
-						m.Push("favor", kit.Value(value, "meta.name"))
-					})
-					m.Sort("favor")
+					_favor_list(m, "", "")
 					return
 				}
 
@@ -162,27 +209,13 @@ func init() {
 				}
 
 				m.Option("favor", arg[0])
-				fields := []string{kit.MDB_TIME, kit.MDB_ID, kit.MDB_TYPE, kit.MDB_NAME, kit.MDB_TEXT}
-				if len(arg) > 1 && arg[1] == "extra" {
-					fields, arg = append(fields, arg[2:]...), arg[:1]
-				}
 				if len(arg) < 3 {
-					m.Richs(ice.WEB_FAVOR, nil, arg[0], func(key string, value map[string]interface{}) {
-						if len(arg) < 2 {
-							// 收藏列表
-							m.Grows(ice.WEB_FAVOR, kit.Keys(kit.MDB_HASH, key), "", "", func(index int, value map[string]interface{}) {
-								m.Push("", value, fields)
-							})
-							return
-						}
-						// 收藏详情
-						m.Grows(ice.WEB_FAVOR, kit.Keys(kit.MDB_HASH, key), "id", arg[1], func(index int, value map[string]interface{}) {
-							m.Push("detail", value)
-							m.Optionv("value", value)
-							m.Push("key", "render")
-							m.Push("value", m.Cmdx(m.Conf(ice.WEB_FAVOR, kit.Keys("meta.render", value["type"]))))
-						})
-					})
+					// 收藏列表
+					fields := []string{kit.MDB_TIME, kit.MDB_ID, kit.MDB_TYPE, kit.MDB_NAME, kit.MDB_TEXT}
+					if len(arg) > 1 && arg[1] == "extra" {
+						fields, arg = append(fields, arg[2:]...), arg[:1]
+					}
+					_favor_list(m, arg[0], kit.Select("", arg, 1), fields...)
 					return
 				}
 
@@ -191,24 +224,13 @@ func init() {
 					favor = key
 				}) == nil {
 					// 创建收藏
-					favor = m.Rich(ice.WEB_FAVOR, nil, kit.Data(kit.MDB_NAME, arg[0]))
-					m.Log(ice.LOG_CREATE, "favor: %s name: %s", favor, arg[0])
+					favor = _favor_create(m, arg[0])
 				}
 
 				if len(arg) == 3 {
 					arg = append(arg, "")
 				}
-
-				// 添加收藏
-				index := m.Grow(ice.WEB_FAVOR, kit.Keys(kit.MDB_HASH, favor), kit.Dict(
-					kit.MDB_TYPE, arg[1], kit.MDB_NAME, arg[2], kit.MDB_TEXT, arg[3],
-					"extra", kit.Dict(arg[4:]),
-				))
-				m.Richs(ice.WEB_FAVOR, nil, favor, func(key string, value map[string]interface{}) {
-					kit.Value(value, "meta.time", m.Time())
-				})
-				m.Log(ice.LOG_INSERT, "favor: %s index: %d name: %s text: %s", arg[0], index, arg[2], arg[3])
-				m.Echo("%d", index)
+				_favor_insert(m, favor, arg[1], arg[2], arg[3], arg[4:]...)
 
 				// 分发数据
 				if p := kit.Select(m.Conf(ice.WEB_FAVOR, "meta.proxy"), m.Option("you")); p != "" {

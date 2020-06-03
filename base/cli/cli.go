@@ -14,6 +14,54 @@ import (
 	"strings"
 )
 
+func _system_run(m *ice.Message, cmd *exec.Cmd) {
+	out := bytes.NewBuffer(make([]byte, 0, 1024))
+	err := bytes.NewBuffer(make([]byte, 0, 1024))
+	cmd.Stdout = out
+	cmd.Stderr = err
+	if e := cmd.Run(); e != nil {
+		m.Warn(e != nil, "%v run: %s", nil, kit.Select(e.Error(), err.String()))
+	} else {
+		m.Cost("%v exit: %v", nil, cmd.ProcessState.ExitCode())
+	}
+	m.Push("code", int(cmd.ProcessState.ExitCode()))
+	m.Echo(out.String())
+}
+func _daemon_run(m *ice.Message, cmd *exec.Cmd, out, err string) {
+	if out != "" {
+		if f, p, e := kit.Create(out); m.Assert(e) {
+			m.Log_EXPORT("stdout", p)
+			cmd.Stdout = f
+			cmd.Stderr = f
+		}
+	}
+	if err != "" {
+		if f, p, e := kit.Create(err); m.Assert(e) {
+			m.Log_EXPORT("stderr", p)
+			cmd.Stderr = f
+		}
+	}
+
+	cmd.Env = append(cmd.Env, fmt.Sprintf("PATH=%s", os.Getenv("PATH")))
+	if e := cmd.Start(); m.Warn(e != nil, "%v start: %s", cmd.Args, e) {
+		return
+	}
+
+	m.Rich("daemon", nil, kit.Dict(kit.MDB_NAME, cmd.Process.Pid, "status", "running"))
+	m.Echo("%d", cmd.Process.Pid)
+
+	m.Gos(m, func(m *ice.Message) {
+		if e := cmd.Wait(); e != nil {
+			m.Warn(e != nil, "%v wait: %s", cmd.Args, e)
+		} else {
+			m.Cost("%v exit: %v", cmd.Args, cmd.ProcessState.ExitCode())
+			m.Rich("daemon", nil, func(key string, value map[string]interface{}) {
+				value["status"] = "exited"
+			})
+		}
+	})
+}
+
 var Index = &ice.Context{Name: "cli", Help: "命令模块",
 	Caches: map[string]*ice.Cache{},
 	Configs: map[string]*ice.Config{
@@ -91,56 +139,12 @@ var Index = &ice.Context{Name: "cli", Help: "命令模块",
 			if len(cmd.Env) > 0 {
 				m.Info("env: %s", cmd.Env)
 			}
-			if m.Option("cmd_stdout") != "" {
-				if f, p, e := kit.Create(m.Option("cmd_stdout")); m.Assert(e) {
-					m.Info("stdout: %s", p)
-					cmd.Stdout = f
-					cmd.Stderr = f
-				}
-			}
-			if m.Option("cmd_stderr") != "" {
-				if f, p, e := kit.Create(m.Option("cmd_stderr")); m.Assert(e) {
-					m.Info("stderr: %s", p)
-					cmd.Stderr = f
-				}
-			}
 
 			switch m.Option("cmd_type") {
 			case "daemon":
-				// 守护进程
-				cmd.Env = append(cmd.Env, fmt.Sprintf("PATH=%s", os.Getenv("PATH")))
-				if e := cmd.Start(); e != nil {
-					m.Warn(e != nil, "%v start: %s", arg, e)
-					return
-				}
-
-				m.Rich("daemon", nil, kit.Dict(kit.MDB_NAME, cmd.Process.Pid, "status", "running"))
-				m.Echo("%d", cmd.Process.Pid)
-
-				m.Gos(m, func(m *ice.Message) {
-					if e := cmd.Wait(); e != nil {
-						m.Warn(e != nil, "%v wait: %s", arg, e)
-					} else {
-						m.Cost("%v exit: %v", arg, cmd.ProcessState.ExitCode())
-						m.Rich("daemon", nil, func(key string, value map[string]interface{}) {
-							value["status"] = "exited"
-						})
-					}
-				})
-
+				_daemon_run(m, cmd, m.Option("cmd_stdout"), m.Option("cmd_stderr"))
 			default:
-				// 系统命令
-				out := bytes.NewBuffer(make([]byte, 0, 1024))
-				err := bytes.NewBuffer(make([]byte, 0, 1024))
-				cmd.Stdout = out
-				cmd.Stderr = err
-				if e := cmd.Run(); e != nil {
-					m.Warn(e != nil, "%v run: %s", arg, kit.Select(e.Error(), err.String()))
-				} else {
-					m.Cost("%v exit: %v", arg, cmd.ProcessState.ExitCode())
-				}
-				m.Push("code", int(cmd.ProcessState.ExitCode()))
-				m.Echo(out.String())
+				_system_run(m, cmd)
 			}
 		}},
 		ice.CLI_DAEMON: {Name: "daemon", Help: "守护进程", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {

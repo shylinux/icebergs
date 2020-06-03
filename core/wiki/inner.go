@@ -94,6 +94,7 @@ func _inner_show(m *ice.Message, name string) {
 	if ls := kit.Simple(m.Confv(INNER, kit.Keys("meta.show", p))); len(ls) > 0 {
 		m.Cmdy(ice.CLI_SYSTEM, ls, name)
 		m.Set(ice.MSG_APPEND)
+		m.Cmd(web.FAVOR, "inner.run", "shell", name, m.Result())
 		return
 	}
 
@@ -169,6 +170,9 @@ func init() {
 
 				"run": {Name: "run path name", Help: "运行", Hand: func(m *ice.Message, arg ...string) {
 					_inner_show(m, path.Join("./", arg[0], arg[1]))
+				}},
+				"log": {Name: "log path name", Help: "日志", Hand: func(m *ice.Message, arg ...string) {
+					web.FavorList(m, "inner.run", "", "time", "id", "type", "name", "text")
 				}},
 				"plug": {Name: "plug path name", Help: "插件", Hand: func(m *ice.Message, arg ...string) {
 					_inner_plug(m, path.Join("./", arg[0], arg[1]))

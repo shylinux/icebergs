@@ -175,6 +175,8 @@ func (web *Frame) HandleWSS(m *ice.Message, safe bool, c *websocket.Conn, name s
 					// 本地执行
 					m.Option("_dev", name)
 					msg = msg.Cmd()
+					msg.Set("_option")
+					msg.Set("_option")
 				}
 				if source, target = []string{}, kit.Revert(source)[1:]; msg.Detail() == "exit" {
 					// 重启进程

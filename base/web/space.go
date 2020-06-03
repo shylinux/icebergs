@@ -100,6 +100,7 @@ func _space_send(m *ice.Message, space string, arg ...string) {
 			m.Target().Server().(*Frame).send[id] = m
 			socket.WriteMessage(1, []byte(m.Format("meta")))
 
+			m.Option("timeout", m.Conf(SPACE, "meta.timeout.c"))
 			m.Call(m.Option("_async") == "", func(res *ice.Message) *ice.Message {
 				if res != nil && m != nil {
 					// 返回结果
@@ -137,9 +138,7 @@ func init() {
 					})
 
 				case "connect":
-					dev := kit.Select("dev", arg, 1)
-					name := kit.Select(m.Conf(ice.CLI_RUNTIME, "node.name"), arg, 2)
-					_space_dial(m, dev, name)
+					_space_dial(m, kit.Select("dev", arg, 1), kit.Select(m.Conf(ice.CLI_RUNTIME, "node.name"), arg, 2))
 
 				default:
 					if len(arg) == 1 {
@@ -168,7 +167,6 @@ func init() {
 					if m.Richs(ice.WEB_SHARE, nil, share, nil) == nil {
 						share = m.Cmdx(ice.WEB_SHARE, "add", m.Option("node"), m.Option("name"), m.Option("user"))
 					}
-					// m.Cmd(ice.WEB_GROUP, m.Option("group"), "add", m.Option("name"))
 
 					// 添加节点
 					h := m.Rich(ice.WEB_SPACE, nil, kit.Dict(

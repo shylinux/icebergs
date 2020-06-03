@@ -167,7 +167,7 @@ var Index = &ice.Context{Name: "chat", Help: "聊天中心",
 
 				default:
 					// 群组检查
-					m.Richs(ice.CHAT_RIVER, nil, arg[0], func(key string, value map[string]interface{}) {
+					if m.Richs(ice.CHAT_RIVER, nil, arg[0], func(key string, value map[string]interface{}) {
 						m.Richs(ice.CHAT_RIVER, kit.Keys(kit.MDB_HASH, arg[0], "user"), m.Option(ice.MSG_USERNAME), func(key string, value map[string]interface{}) {
 							if m.Option(ice.MSG_RIVER, arg[0]); len(arg) > 1 {
 								// 应用检查
@@ -177,7 +177,11 @@ var Index = &ice.Context{Name: "chat", Help: "聊天中心",
 							}
 							m.Logs(ice.LOG_AUTH, "river", m.Option(ice.MSG_RIVER), "storm", m.Option(ice.MSG_STORM))
 						})
-					})
+					}) == nil {
+						// 前端应用
+						// m.Option(ice.MSG_RIVER, arg[0])
+						// m.Option(ice.MSG_STORM, arg[1])
+					}
 				}
 			}
 			switch m.Option(ice.MSG_USERURL) {

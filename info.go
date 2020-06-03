@@ -118,3 +118,7 @@ func (m *Message) Log_REMOVE(arg ...interface{}) *Message {
 func (m *Message) Log_CREATE(arg ...interface{}) *Message {
 	return m.log(LOG_CREATE, log_fields(arg...))
 }
+
+func (m *Message) Log_AUTH(arg ...interface{}) *Message {
+	return m.log(LOG_AUTH, log_fields(arg...))
+}

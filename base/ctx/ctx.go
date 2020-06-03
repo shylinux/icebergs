@@ -91,6 +91,12 @@ func _config_make(m *ice.Message, chain string, arg ...string) {
 		m.Echo(kit.Formats(msg.Confv(chain)))
 	}
 }
+func _config_rich(m *ice.Message, name string, key string, arg ...string) {
+	m.Rich(name, key, kit.Dict(arg))
+}
+func _config_grow(m *ice.Message, name string, key string, arg ...string) {
+	m.Grow(name, key, kit.Dict(arg))
+}
 
 func _command_list(m *ice.Message, all bool) {
 	p := m.Spawn(m.Source())
@@ -252,6 +258,10 @@ var Index = &ice.Context{Name: "ctx", Help: "配置模块",
 				_config_save(m, arg[1], arg[2:]...)
 			case "load":
 				_config_load(m, arg[1], arg[2:]...)
+			case "grow":
+				_config_grow(m, arg[1], arg[2], arg[3:]...)
+			case "rich":
+				_config_rich(m, arg[1], arg[2], arg[3:]...)
 			default:
 				_config_make(m, arg[0], arg[1:]...)
 			}

@@ -264,10 +264,10 @@ func _story_catch(m *ice.Message, arg ...string) {
 	_story_add(m, arg...)
 }
 func _story_add(m *ice.Message, arg ...string) {
-	if len(arg) > 3 && (arg[3] == "" || m.Richs(ice.WEB_CACHE, nil, arg[3], func(key string, value map[string]interface{}) {
+	if len(arg) < 4 || arg[3] == "" || m.Richs(ice.WEB_CACHE, nil, arg[3], func(key string, value map[string]interface{}) {
 		// 复用缓存
 		arg[3] = key
-	}) == nil) {
+	}) == nil {
 		// 添加缓存
 		m.Cmdy(ice.WEB_CACHE, arg)
 		arg = []string{arg[0], m.Append("type"), m.Append("name"), m.Append("data")}
@@ -305,11 +305,15 @@ func _story_add(m *ice.Message, arg ...string) {
 	}
 
 	// 分发数据
-	if p := kit.Select(m.Conf(ice.WEB_FAVOR, "meta.proxy"), m.Option("you")); p != "" {
-		m.Option("you", "")
-		m.Cmd(ice.WEB_PROXY, p, ice.WEB_STORY, ice.STORY_PULL, arg[2], "dev", arg[2])
+	for _, k := range []string{"you", "pod"} {
+		if p := m.Option(k); p != "" {
+			m.Option(k, "")
+			m.Cmd(ice.WEB_PROXY, p, ice.WEB_STORY, ice.STORY_PULL, arg[2], "dev", arg[2])
+			return
+		}
 	}
-
+	m.Cmd(ice.WEB_PROXY, m.Conf(ice.WEB_FAVOR, "meta.proxy"),
+		ice.WEB_STORY, ice.STORY_PULL, arg[2], "dev", arg[2])
 }
 
 func _story_index(m *ice.Message, name string) {

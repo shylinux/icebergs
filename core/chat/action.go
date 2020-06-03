@@ -75,6 +75,8 @@ func _action_action(m *ice.Message, action string, arg ...string) bool {
 		msg := m.Cmd(ice.WEB_STORY, "upload")
 		m.Option("name", msg.Append("name"))
 		m.Option("data", msg.Append("data"))
+		m.Debug("what", m.Option("name"))
+		m.Debug("what", m.Option("data"))
 	}
 	return false
 }
@@ -89,6 +91,7 @@ func _action_order(m *ice.Message, arg ...string) {
 		m.Render("status", 403, "not auth")
 		return
 	}
+	m.Add("option", "_option", "data", "name")
 	m.Cmdy(_action_proxy(m), cmds).Option("cmds", cmds)
 }
 

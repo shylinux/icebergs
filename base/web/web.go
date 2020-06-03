@@ -24,6 +24,8 @@ import (
 	"time"
 )
 
+var SERVE = ice.Name("serve", Index)
+
 type Frame struct {
 	*http.Client
 	*http.Server
@@ -99,6 +101,13 @@ func IsLocalIP(msg *ice.Message, ip string) (ok bool) {
 	if ip == "::1" || strings.HasPrefix(ip, "127.") {
 		return true
 	}
+
+	msg.Log_AUTH("ip", ip)
+	if msg.Richs(SERVE, kit.Keys("meta.white"), ip, nil) != nil {
+		msg.Log_AUTH("ip", ip)
+		return true
+	}
+
 	msg.Cmd("tcp.ifconfig").Table(func(index int, value map[string]string, head []string) {
 		if value["ip"] == ip {
 			ok = true
@@ -159,7 +168,7 @@ func (web *Frame) HandleWSS(m *ice.Message, safe bool, c *websocket.Conn, name s
 			socket, msg := c, m.Spawns(b)
 			target := kit.Simple(msg.Optionv(ice.MSG_TARGET))
 			source := kit.Simple(msg.Optionv(ice.MSG_SOURCE), name)
-			msg.Info("recv %v<-%v %s %v", target, source, msg.Detailv(), msg.Format("meta"))
+			msg.Info("recv %v<-%v %s %v", target, source, msg.Detailv(), msg.Formats("meta"))
 
 			if len(target) == 0 {
 				msg.Option(ice.MSG_USERROLE, msg.Cmdx(ice.AAA_ROLE, "check", msg.Option(ice.MSG_USERNAME)))
@@ -205,7 +214,7 @@ func (web *Frame) HandleWSS(m *ice.Message, safe bool, c *websocket.Conn, name s
 			msg.Optionv(ice.MSG_TARGET, target)
 			socket.WriteMessage(t, []byte(msg.Format("meta")))
 			target = append([]string{name}, target...)
-			msg.Info("send %v %v->%v %v", t, source, target, msg.Format("meta"))
+			msg.Info("send %v %v->%v %v %v", t, source, target, msg.Detailv(), msg.Formats("meta"))
 			msg.Cost("%v->%v %v %v", source, target, msg.Detailv(), msg.Format("append"))
 		}
 	}
@@ -470,6 +479,7 @@ var Index = &ice.Context{Name: "web", Help: "网络模块",
 				`{{define "raw"}}{{.Result}}{{end}}`,
 			}),
 			"logheaders", "false", "init", "false",
+			"black", kit.Dict(),
 		)},
 		ice.WEB_SPACE: {Name: "space", Help: "空间站", Value: kit.Data(kit.MDB_SHORT, kit.MDB_NAME,
 			"redial.a", 3000, "redial.b", 1000, "redial.c", 1000,
@@ -948,7 +958,7 @@ var Index = &ice.Context{Name: "web", Help: "网络模块",
 						m.Set(ice.MSG_DETAIL, arg[1:]...)
 						m.Optionv(ice.MSG_TARGET, target[1:])
 						m.Optionv(ice.MSG_SOURCE, []string{id})
-						m.Info("send [%s]->%v %s", id, target, m.Format("meta"))
+						m.Info("send [%s]->%v %v %s", id, target, m.Detailv(), m.Formats("meta"))
 
 						// 下发命令
 						m.Target().Server().(*Frame).send[id] = m

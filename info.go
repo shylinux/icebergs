@@ -33,7 +33,7 @@ func (m *Message) log(level string, str string, arg ...interface{}) *Message {
 	}
 
 	switch level {
-	case LOG_CMDS, LOG_INFO, LOG_WARN, LOG_AUTH, LOG_COST:
+	case LOG_CMDS, LOG_INFO, LOG_WARN:
 	default:
 		_, file, line, _ := runtime.Caller(2)
 		ls := strings.Split(file, "/")

@@ -85,21 +85,31 @@ func (c *Context) Run(m *Message, cmd *Command, key string, arg ...string) *Mess
 		action, args = arg[1], arg[2:]
 	}
 
-	p := reflect.ValueOf(cmd.Hand)
-	m.Log(LOG_CMDS, "%s.%s %d %v %s", c.Name, key, len(arg), arg, kit.FileLine(p.Pointer(), 3))
 	if m.Hand = true; len(arg) > 1 && action != "" && cmd.Action != nil {
 		if h, ok := cmd.Action[action]; ok {
+			p := reflect.ValueOf(h.Hand)
+			m.Log(LOG_CMDS, "%s.%s %d %v %s", c.Name, key, len(arg), arg, kit.FileLine(p.Pointer(), 3))
 			h.Hand(m, args...)
 			return m
 		}
 		for _, h := range cmd.Action {
 			if h.Name == action || h.Help == action {
+				p := reflect.ValueOf(h.Hand)
+				m.Log(LOG_CMDS, "%s.%s %d %v %s", c.Name, key, len(arg), arg, kit.FileLine(p.Pointer(), 3))
 				h.Hand(m, args...)
 				return m
 			}
 		}
+		if h, ok := cmd.Action["action"]; ok {
+			p := reflect.ValueOf(h.Hand)
+			m.Log(LOG_CMDS, "%s.%s %d %v %s", c.Name, key, len(arg), arg, kit.FileLine(p.Pointer(), 3))
+			h.Hand(m, arg[1:]...)
+			return m
+		}
 	}
 
+	p := reflect.ValueOf(cmd.Hand)
+	m.Log(LOG_CMDS, "%s.%s %d %v %s", c.Name, key, len(arg), arg, kit.FileLine(p.Pointer(), 3))
 	cmd.Hand(m, c, key, arg...)
 	return m
 }

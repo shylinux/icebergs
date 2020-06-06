@@ -194,14 +194,15 @@ func init() {
 				"project": {Name: "project path", Help: "项目", Hand: func(m *ice.Message, arg ...string) {
 					_inner_list(m, path.Join("./", kit.Select("", arg, 0))+"/")
 				}},
-			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-				if len(arg) > 0 && arg[0] == "action" {
-					if m.Cmdy(kit.Split(arg[1])); !m.Hand {
-						m.Cmdy(ice.CLI_SYSTEM, kit.Split(arg[1]))
+				"find": {Name: "find word", Help: "搜索", Hand: func(m *ice.Message, arg ...string) {
+					web.FavorList(m, arg[0], arg[1], arg[2:]...)
+				}},
+				"action": {Name: "action path", Help: "命令", Hand: func(m *ice.Message, arg ...string) {
+					if m.Cmdy(kit.Split(arg[0])); !m.Hand {
+						m.Cmdy(ice.CLI_SYSTEM, kit.Split(arg[0]))
 					}
-					return
-				}
-
+				}},
+			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 				_inner_main(m, arg...)
 			}},
 

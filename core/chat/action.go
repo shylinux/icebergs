@@ -6,9 +6,7 @@ import (
 )
 
 func _action_share_create(m *ice.Message, arg ...string) {
-	m.Debug("info %v", arg)
 	if m.Option("index") != "" {
-		m.Debug("info %v", arg)
 		m.Cmdy(ice.WEB_SHARE, ice.TYPE_ACTION, m.Option("name"), m.Option("text"),
 			"tool.0.pod", kit.Select(m.Option("pod"), m.Option("node")),
 			"tool.0.ctx", m.Option("group"),
@@ -17,7 +15,6 @@ func _action_share_create(m *ice.Message, arg ...string) {
 			"tool.0.value", m.Option("value"),
 			"tool.0.single", "yes",
 		)
-		return
 	} else {
 		m.Option(ice.MSG_RIVER, arg[5])
 		m.Option(ice.MSG_STORM, arg[7])
@@ -61,6 +58,37 @@ func _action_share_update(m *ice.Message, c *ice.Context, cmd string, arg ...str
 		})
 	})
 }
+func _action_order(m *ice.Message, arg ...string) {
+	if arg[2] == "index" {
+		for i, v := range arg[3:] {
+			m.Push("river", arg[0])
+			m.Push("storm", arg[1])
+			m.Push("action", i)
+
+			m.Push("node", "")
+			m.Push("group", "")
+			m.Push("index", v)
+			m.Push("args", "[]")
+
+			msg := m.Cmd(m.Space(m.Option("pod")), ice.CTX_COMMAND, v)
+			m.Push("name", msg.Append("name"))
+			m.Push("help", msg.Append("help"))
+			m.Push("feature", msg.Append("meta"))
+			m.Push("inputs", msg.Append("list"))
+		}
+	}
+	if len(arg) > 3 && arg[3] == "action" && _action_action(m, arg[4], arg[5:]...) {
+		return
+	}
+
+	cmds := kit.Simple(kit.Keys(m.Option("group"), m.Option("index")), arg[3:])
+	if m.Set(ice.MSG_RESULT); !m.Right(cmds) {
+		m.Render("status", 403, "not auth")
+		return
+	}
+	m.Add("option", "_option", "data", "name")
+	m.Cmdy(_action_proxy(m), cmds).Option("cmds", cmds)
+}
 
 func _action_proxy(m *ice.Message) (proxy []string) {
 	if m.Option("pod") != "" {
@@ -75,26 +103,9 @@ func _action_action(m *ice.Message, action string, arg ...string) bool {
 		msg := m.Cmd(ice.WEB_STORY, "upload")
 		m.Option("name", msg.Append("name"))
 		m.Option("data", msg.Append("data"))
-		m.Debug("what", m.Option("name"))
-		m.Debug("what", m.Option("data"))
 	}
 	return false
 }
-
-func _action_order(m *ice.Message, arg ...string) {
-	if len(arg) > 3 && arg[3] == "action" && _action_action(m, arg[4], arg[5:]...) {
-		return
-	}
-
-	cmds := kit.Simple(kit.Keys(m.Option("group"), m.Option("index")), arg[3:])
-	if m.Set(ice.MSG_RESULT); !m.Right(cmds) {
-		m.Render("status", 403, "not auth")
-		return
-	}
-	m.Add("option", "_option", "data", "name")
-	m.Cmdy(_action_proxy(m), cmds).Option("cmds", cmds)
-}
-
 func _action_select(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 	prefix := kit.Keys(kit.MDB_HASH, arg[0], "tool", kit.MDB_HASH, arg[1])
 	m.Grows(ice.CHAT_RIVER, prefix, "", "", func(index int, value map[string]interface{}) {
@@ -116,7 +127,6 @@ func _action_select(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 		}
 	})
 }
-
 func init() {
 	Index.Merge(&ice.Context{Commands: map[string]*ice.Command{
 		"/action": {Name: "/action", Help: "工作台", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
@@ -125,7 +135,6 @@ func init() {
 				_action_share_create(m, arg...)
 				return
 			}
-
 			if len(arg) == 0 || arg[0] == "" {
 				if m.Option("share") != "" {
 					if len(arg) < 3 {
@@ -175,14 +184,6 @@ func init() {
 					))
 					m.Log(ice.LOG_INSERT, "storm: %s %d: %v", arg[1], id, arg[i:i+5])
 				}
-			}
-
-			if m.Option("_action") == "上传" {
-				msg := m.Cmd(ice.WEB_CACHE, "upload")
-				m.Option("_data", msg.Append("data"))
-				m.Option("_name", msg.Append("name"))
-				m.Cmd(ice.WEB_FAVOR, "upload", msg.Append("type"), msg.Append("name"), msg.Append("data"))
-				m.Option("_option", m.Optionv("option"))
 			}
 
 			// 查询命令

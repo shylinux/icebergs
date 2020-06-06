@@ -99,7 +99,7 @@ var Index = &ice.Context{Name: "chrome", Help: "浏览器",
 		"/favor": {Name: "/favor", Help: "收藏", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			if len(arg) > 0 {
 				// 添加收藏
-				m.Cmdy(ice.WEB_FAVOR, m.Option("tab"), ice.TYPE_SPIDE, m.Option("note"), arg[0])
+				web.FavorInsert(m, m.Option("tab"), ice.TYPE_SPIDE, m.Option("note"), arg[0])
 				return
 			}
 		}},

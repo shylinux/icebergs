@@ -372,9 +372,9 @@ func _story_history(m *ice.Message, name string) {
 	}
 }
 
-func StoryHistory(m *ice.Message, name string)             { _story_history(m, name) }
-func StoryIndex(m *ice.Message, name string)               { _story_index(m, name, true) }
-func StoryWatch(m *ice.Message, index string, file string) { _story_watch(m, index, file) }
+func StoryHistory(m *ice.Message, name string) *ice.Message { _story_history(m, name); return m }
+func StoryIndex(m *ice.Message, name string) *ice.Message   { _story_index(m, name, true); return m }
+func StoryWatch(m *ice.Message, index string, file string)  { _story_watch(m, index, file) }
 func StoryCatch(m *ice.Message, mime string, file string) {
 	_story_catch(m, "catch", kit.Select(mime, strings.TrimPrefix(path.Ext(file), ".")), file, "")
 }

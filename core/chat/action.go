@@ -81,6 +81,11 @@ func _action_order(m *ice.Message, arg ...string) {
 		return
 	}
 
+	if m.Option("index") == "" || !m.Right(kit.Keys(m.Option("group"), m.Option("index"))) {
+		m.Render("status", 403, "not auth")
+		return
+	}
+
 	cmds := kit.Simple(kit.Keys(m.Option("group"), m.Option("index")), arg[3:])
 	if m.Set(ice.MSG_RESULT); !m.Right(cmds) {
 		m.Render("status", 403, "not auth")

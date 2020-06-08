@@ -21,6 +21,8 @@ func _river_right(m *ice.Message, action string) bool {
 }
 
 func _river_list(m *ice.Message) {
+	m.Set(ice.MSG_OPTION, "key")
+	m.Set(ice.MSG_OPTION, "name")
 	m.Richs(RIVER, nil, "*", func(key string, value map[string]interface{}) {
 		m.Richs(RIVER, kit.Keys(kit.MDB_HASH, key, "user"), m.Option(ice.MSG_USERNAME), func(k string, val map[string]interface{}) {
 			m.Push(key, value["meta"], []string{kit.MDB_KEY, kit.MDB_NAME})

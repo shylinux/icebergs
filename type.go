@@ -4,8 +4,6 @@
 package ice
 
 import (
-	"reflect"
-
 	kit "github.com/shylinux/toolkits"
 
 	"encoding/json"
@@ -87,29 +85,25 @@ func (c *Context) Run(m *Message, cmd *Command, key string, arg ...string) *Mess
 
 	if m.Hand = true; len(arg) > 1 && action != "" && cmd.Action != nil {
 		if h, ok := cmd.Action[action]; ok {
-			p := reflect.ValueOf(h.Hand)
-			m.Log(LOG_CMDS, "%s.%s %d %v %s", c.Name, key, len(arg), arg, kit.FileLine(p.Pointer(), 3))
+			m.Log(LOG_CMDS, "%s.%s %d %v %s", c.Name, key, len(arg), arg, kit.FileLine(h.Hand, 3))
 			h.Hand(m, args...)
 			return m
 		}
 		for _, h := range cmd.Action {
 			if h.Name == action || h.Help == action {
-				p := reflect.ValueOf(h.Hand)
-				m.Log(LOG_CMDS, "%s.%s %d %v %s", c.Name, key, len(arg), arg, kit.FileLine(p.Pointer(), 3))
+				m.Log(LOG_CMDS, "%s.%s %d %v %s", c.Name, key, len(arg), arg, kit.FileLine(h.Hand, 3))
 				h.Hand(m, args...)
 				return m
 			}
 		}
 		if h, ok := cmd.Action["action"]; ok {
-			p := reflect.ValueOf(h.Hand)
-			m.Log(LOG_CMDS, "%s.%s %d %v %s", c.Name, key, len(arg), arg, kit.FileLine(p.Pointer(), 3))
+			m.Log(LOG_CMDS, "%s.%s %d %v %s", c.Name, key, len(arg), arg, kit.FileLine(h.Hand, 3))
 			h.Hand(m, arg[1:]...)
 			return m
 		}
 	}
 
-	p := reflect.ValueOf(cmd.Hand)
-	m.Log(LOG_CMDS, "%s.%s %d %v %s", c.Name, key, len(arg), arg, kit.FileLine(p.Pointer(), 3))
+	m.Log(LOG_CMDS, "%s.%s %d %v %s", c.Name, key, len(arg), arg, kit.FileLine(cmd.Hand, 3))
 	cmd.Hand(m, c, key, arg...)
 	return m
 }

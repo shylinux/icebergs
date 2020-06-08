@@ -82,12 +82,16 @@ var Index = &ice.Context{Name: "totp", Help: "动态码",
 				kit.MDB_NAME, arg[0], kit.MDB_TEXT, arg[1], kit.MDB_EXTRA, kit.Dict(arg[2:]),
 			)))
 		}},
-		"get": {Name: "get [user [number [period]]]", Help: "获取密码", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		"get": {Name: "get [name [number [period]]] auto", Help: "获取密码", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			if len(arg) == 0 {
 				// 密码列表
 				m.Richs("totp", nil, "*", func(key string, value map[string]interface{}) {
+					per := kit.Int64(kit.Select("30", value["period"]))
+					m.Push("time", m.Time())
+					m.Push("rest", per-time.Now().Unix()%per)
 					m.Push("name", value["name"])
-					m.Push("code", get(kit.Format(value["text"]), kit.Int(kit.Select("6", value["number"])), kit.Int64(kit.Select("30", value["period"]))))
+					m.Push("code", get(kit.Format(value["text"]), kit.Int(kit.Select("6", value["number"])), per))
+
 				})
 				return
 			}

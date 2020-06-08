@@ -7,8 +7,9 @@ import (
 )
 
 const (
-	TASK = "task"
 	ZONE = "zone"
+	TASK = "task"
+	PLAN = "plan"
 )
 
 const (
@@ -100,7 +101,27 @@ var Index = &ice.Context{Name: "team", Help: "团队中心",
 
 			_task_insert(m, arg[0], arg[2], arg[3], arg[4], arg[5], arg[6], arg[7:]...)
 		}},
-		"plan": {Name: "plan", Help: "plan"},
+		PLAN: {Name: "plan scale:select=day|week|month|year begin_time=@date end_time=@date auto", Help: "计划", Meta: kit.Dict(
+			"display", "/plugin/local/team/miss.js", "detail", []string{"prepare", "process", "finish", "cancel"},
+		), Action: map[string]*ice.Action{
+			"modify": {Name: "modify key value old", Help: "编辑", Hand: func(m *ice.Message, arg ...string) {
+				_task_modify(m, m.Option("zone"), m.Option("id"), arg[0], arg[1], arg[2])
+			}},
+			"delete": {Name: "delete key value", Help: "删除", Hand: func(m *ice.Message, arg ...string) {
+				_task_delete(m, m.Option("zone"), m.Option("id"))
+			}},
+		}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			switch arg[0] {
+			case "day":
+			case "week":
+			case "month":
+			case "months":
+			case "year":
+			case "long":
+			}
+
+			_task_list(m, "", "")
+		}},
 		"miss": {Name: "miss", Help: "miss"},
 	},
 }

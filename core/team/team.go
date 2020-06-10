@@ -5,6 +5,8 @@ import (
 	"github.com/shylinux/icebergs/base/web"
 	"github.com/shylinux/toolkits"
 
+	"encoding/csv"
+	"os"
 	"time"
 )
 
@@ -13,6 +15,8 @@ const (
 	PLAN = "plan"
 	TASK = "task"
 	MISS = "miss"
+
+	EXPORT = "usr/export/web.team/task.csv"
 )
 
 const (
@@ -36,10 +40,90 @@ func _task_list(m *ice.Message, zone string, id string, field ...interface{}) {
 		})
 	})
 }
+
 func _task_create(m *ice.Message, zone string) {
-	m.Rich(TASK, nil, kit.Data(ZONE, zone))
-	m.Log_CREATE("zone", zone)
+	if m.Richs(TASK, nil, zone, nil) == nil {
+		m.Rich(TASK, nil, kit.Data(ZONE, zone))
+		m.Log_CREATE("zone", zone)
+	}
 }
+func _task_export(m *ice.Message, file string) {
+	f, p, e := kit.Create(file)
+	m.Assert(e)
+	defer f.Close()
+
+	w := csv.NewWriter(f)
+	defer w.Flush()
+
+	m.Assert(w.Write([]string{
+		"zone", "id", "time",
+		"type", "name", "text",
+		"level", "status", "score",
+		"begin_time", "close_time",
+		"extra",
+	}))
+	count := 0
+	m.Option("cache.limit", -2)
+	m.Richs(TASK, nil, "*", func(key string, val map[string]interface{}) {
+		m.Grows(TASK, kit.Keys("hash", key), "", "", func(index int, value map[string]interface{}) {
+			m.Assert(w.Write(kit.Simple(
+				kit.Format(kit.Value(val, "meta.zone")),
+				kit.Format(value["id"]),
+				kit.Format(value["time"]),
+				kit.Format(value["type"]),
+				kit.Format(value["name"]),
+				kit.Format(value["text"]),
+				kit.Format(value["level"]),
+				kit.Format(value["status"]),
+				kit.Format(value["score"]),
+				kit.Format(value["begin_time"]),
+				kit.Format(value["close_time"]),
+				kit.Format(value["extra"]),
+			)))
+			count++
+		})
+	})
+	m.Log_EXPORT("file", p, "count", count)
+}
+func _task_import(m *ice.Message, file string) {
+	f, e := os.Open(file)
+	m.Assert(e)
+	defer f.Close()
+
+	r := csv.NewReader(f)
+	heads, _ := r.Read()
+	count := 0
+	for {
+		lines, e := r.Read()
+		if e != nil {
+			break
+		}
+
+		zone := ""
+		data := kit.Dict()
+		for i, k := range heads {
+			switch k {
+			case "zone":
+				zone = lines[i]
+			case "id":
+				continue
+			case "extra":
+				kit.Value(data, k, kit.UnMarshal(lines[i]))
+			default:
+				kit.Value(data, k, lines[i])
+			}
+		}
+
+		_task_create(m, zone)
+		m.Richs(TASK, nil, zone, func(key string, value map[string]interface{}) {
+			id := m.Grow(TASK, kit.Keys("hash", key), data)
+			m.Log_INSERT("zone", zone, "id", id)
+			count++
+		})
+	}
+	m.Log_IMPORT("file", file, "count", count)
+}
+
 func _task_insert(m *ice.Message, zone, kind, name, text, begin_time, close_time string, arg ...string) {
 	m.Richs(TASK, nil, zone, func(key string, value map[string]interface{}) {
 		id := m.Grow(TASK, kit.Keys("hash", key), kit.Dict(
@@ -55,9 +139,25 @@ func _task_insert(m *ice.Message, zone, kind, name, text, begin_time, close_time
 func _task_modify(m *ice.Message, zone, id, pro, set, old string) {
 	m.Richs(TASK, nil, kit.Select("*", zone), func(key string, val map[string]interface{}) {
 		m.Grows(TASK, kit.Keys("hash", key), "id", id, func(index int, value map[string]interface{}) {
-			switch key {
+			switch pro {
 			case "id", "time":
 				m.Info("not allow %v", key)
+			case "status":
+				if value["status"] == set {
+					break
+				}
+				switch value["status"] {
+				case StatusCancel, StatusFinish:
+					m.Info("not allow %v", key)
+					return
+				}
+				switch set {
+				case StatusProcess:
+					kit.Value(value, "begin_time", m.Time())
+				case StatusCancel, StatusFinish:
+					kit.Value(value, "close_time", m.Time())
+				}
+				fallthrough
 			default:
 				m.Log_MODIFY("zone", zone, "id", id, "key", pro, "value", set, "old", old)
 				kit.Value(value, pro, set)
@@ -73,8 +173,6 @@ func _task_delete(m *ice.Message, zone, id string) {
 		})
 	})
 }
-func _task_remove(m *ice.Message, zone string) {
-}
 
 var Index = &ice.Context{Name: "team", Help: "团队中心",
 	Configs: map[string]*ice.Config{
@@ -88,16 +186,24 @@ var Index = &ice.Context{Name: "team", Help: "团队中心",
 			"display", "/plugin/local/team/miss.js", "detail", []string{"prepare", "process", "finish", "cancel"},
 		), Action: map[string]*ice.Action{
 			"insert": {Name: "insert zone type name text begin_time end_time", Help: "添加", Hand: func(m *ice.Message, arg ...string) {
-				if m.Richs(TASK, nil, arg[0], nil) == nil {
-					_task_create(m, arg[0])
-				}
+				_task_create(m, arg[0])
 				_task_insert(m, arg[0], arg[1], arg[2], arg[3], arg[4], arg[5])
 			}},
 			"delete": {Name: "delete key value", Help: "删除", Hand: func(m *ice.Message, arg ...string) {
 				_task_delete(m, m.Option("zone"), m.Option("id"))
 			}},
 			"modify": {Name: "modify key value old", Help: "编辑", Hand: func(m *ice.Message, arg ...string) {
+				switch arg[0] {
+				case "status":
+
+				}
 				_task_modify(m, m.Option("zone"), m.Option("id"), arg[0], arg[1], arg[2])
+			}},
+			"import": {Name: "import file...", Help: "导入", Hand: func(m *ice.Message, arg ...string) {
+				_task_import(m, kit.Select(EXPORT, arg, 0))
+			}},
+			"export": {Name: "export file...", Help: "导出", Hand: func(m *ice.Message, arg ...string) {
+				_task_export(m, kit.Select(EXPORT, arg, 0))
 			}},
 		}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			begin_time := time.Now()

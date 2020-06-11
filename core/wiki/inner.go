@@ -129,7 +129,7 @@ func init() {
 			)},
 		},
 		Commands: map[string]*ice.Command{
-			INNER: {Name: "inner path=auto name=auto auto", Help: "编辑器", Meta: map[string]interface{}{
+			INNER: {Name: "inner path=tmp name=hi.qrc key auto", Help: "编辑器", Meta: map[string]interface{}{
 				"display": "/plugin/inner.js", "style": "editor",
 			}, Action: map[string]*ice.Action{
 				"cmd": {Name: "cmd arg", Help: "命令", Hand: func(m *ice.Message, arg ...string) {
@@ -164,7 +164,8 @@ func init() {
 					}
 				}},
 				"commit": {Name: "commit path name", Help: "提交", Hand: func(m *ice.Message, arg ...string) {
-					web.StoryCatch(m, "", path.Join("./", arg[0], arg[1]))
+					msg := web.StoryCatch(m.Spawn(), "", path.Join("./", arg[0], arg[1]))
+					m.Copy(msg, ice.MSG_APPEND, "time", "count", "key")
 				}},
 				"recover": {Name: "recover", Help: "复盘", Hand: func(m *ice.Message, arg ...string) {
 					msg := web.StoryHistory(m.Spawn(), path.Join("./", arg[0], arg[1])+".display")
@@ -175,7 +176,8 @@ func init() {
 					}
 				}},
 				"record": {Name: "record", Help: "记录", Hand: func(m *ice.Message, arg ...string) {
-					web.StoryAdd(m, "display", path.Join("./", m.Option("path"), m.Option("name"))+".display", m.Option("display"))
+					msg := web.StoryAdd(m.Spawn(), "display", path.Join("./", m.Option("path"), m.Option("name"))+".display", m.Option("display"))
+					m.Copy(msg, ice.MSG_APPEND, "time", "count", "key")
 				}},
 
 				"log": {Name: "log path name", Help: "日志", Hand: func(m *ice.Message, arg ...string) {

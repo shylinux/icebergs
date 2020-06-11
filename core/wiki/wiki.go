@@ -359,7 +359,7 @@ var Index = &ice.Context{Name: "wiki", Help: "文档中心",
 			// 解析数据
 			m.CSV(m.Result())
 		}},
-		"word": {Name: "word path=auto auto", Help: "语言文字", Meta: kit.Dict("display", "local/wiki/word"), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		"word": {Name: "word path=自然/编程/hi.shy auto", Help: "语言文字", Meta: kit.Dict("display", "local/wiki/word"), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			if len(arg) > 0 && arg[0] == "action" {
 				switch arg[1] {
 				case "story":

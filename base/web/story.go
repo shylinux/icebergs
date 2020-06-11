@@ -250,7 +250,8 @@ func _story_add(m *ice.Message, arg ...string) {
 			"scene", arg[1], "story", arg[2], "count", count+1, "data", arg[3], "prev", prev,
 		))
 		m.Log_CREATE("story", list, "type", arg[1], "name", arg[2])
-		m.Push("list", list)
+		m.Push("count", count+1)
+		m.Push("key", list)
 
 		if head == "" {
 			// 添加索引
@@ -375,11 +376,13 @@ func _story_history(m *ice.Message, name string) {
 func StoryHistory(m *ice.Message, name string) *ice.Message { _story_history(m, name); return m }
 func StoryIndex(m *ice.Message, name string) *ice.Message   { _story_index(m, name, true); return m }
 func StoryWatch(m *ice.Message, index string, file string)  { _story_watch(m, index, file) }
-func StoryCatch(m *ice.Message, mime string, file string) {
+func StoryCatch(m *ice.Message, mime string, file string) *ice.Message {
 	_story_catch(m, "catch", kit.Select(mime, strings.TrimPrefix(path.Ext(file), ".")), file, "")
+	return m
 }
-func StoryAdd(m *ice.Message, mime string, name string, text string, arg ...string) {
+func StoryAdd(m *ice.Message, mime string, name string, text string, arg ...string) *ice.Message {
 	_story_add(m, kit.Simple("add", mime, name, text, arg)...)
+	return m
 }
 
 func init() {

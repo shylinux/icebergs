@@ -44,8 +44,8 @@ func _task_list(m *ice.Message, zone string, id string, field ...interface{}) {
 	m.Richs(TASK, nil, kit.Select(kit.MDB_FOREACH, zone), func(key string, val map[string]interface{}) {
 		if zone = kit.Format(kit.Value(val, "meta.zone")); id == "" {
 			m.Grows(TASK, kit.Keys(kit.MDB_HASH, key), "", "", func(index int, value map[string]interface{}) {
-				m.Push(ZONE, zone)
 				m.Push(zone, value)
+				m.Push(ZONE, zone)
 			})
 			return
 		}
@@ -54,7 +54,6 @@ func _task_list(m *ice.Message, zone string, id string, field ...interface{}) {
 		})
 	})
 }
-
 func _task_create(m *ice.Message, zone string) {
 	if m.Richs(TASK, nil, zone, nil) == nil {
 		m.Rich(TASK, nil, kit.Data(ZONE, zone))
@@ -187,13 +186,33 @@ func _task_delete(m *ice.Message, zone, id string) {
 		})
 	})
 }
+func _task_plugin(m *ice.Message, arg ...string) {
+	if len(arg) == 0 {
+		kit.Fetch(m.Confv(MISS, "meta.plug"), func(key string, value map[string]interface{}) {
+			for k := range value {
+				m.Push(key, k)
+			}
+		})
+		return
+	}
+	m.Cmdy(kit.Keys(arg[0], arg[1]), arg[2:])
+}
 
 var Index = &ice.Context{Name: "team", Help: "团队中心",
 	Configs: map[string]*ice.Config{
 		TASK: {Name: "task", Help: "task", Value: kit.Data(kit.MDB_SHORT, ZONE)},
+		MISS: {Name: "miss", Help: "miss", Value: kit.Data(kit.MDB_SHORT, ZONE)},
 	},
 	Commands: map[string]*ice.Command{
-		ice.ICE_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) { m.Load() }},
+		ice.ICE_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			m.Travel(func(p *ice.Context, s *ice.Context, key string, cmd *ice.Command) {
+				if s == c {
+					return
+				}
+				m.Conf(MISS, kit.Keys("meta.plug", s.Name, key), cmd.Name)
+			})
+			m.Load()
+		}},
 		ice.ICE_EXIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) { m.Save(TASK) }},
 
 		PLAN: {Name: "plan scale:select=day|week|month|year|long begin_time=@date end_time=@date auto", Help: "计划", Meta: kit.Dict(
@@ -214,6 +233,9 @@ var Index = &ice.Context{Name: "team", Help: "团队中心",
 			}},
 			kit.MDB_EXPORT: {Name: "export file", Help: "导出", Hand: func(m *ice.Message, arg ...string) {
 				_task_export(m, kit.Select(EXPORT, arg, 0))
+			}},
+			"plugin": {Name: "plugin", Help: "插件", Hand: func(m *ice.Message, arg ...string) {
+				_task_plugin(m, arg...)
 			}},
 		}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			begin_time := time.Now()
@@ -249,8 +271,8 @@ var Index = &ice.Context{Name: "team", Help: "团队中心",
 				m.Grows(TASK, kit.Keys(kit.MDB_HASH, key), "", "", func(index int, value map[string]interface{}) {
 					begin, _ := time.ParseInLocation(ice.ICE_TIME, kit.Format(value[BEGIN_TIME]), time.Local)
 					if begin_time.Before(begin) && begin.Before(end_time) {
-						m.Push(ZONE, zone)
 						m.Push(zone, value)
+						m.Push(ZONE, zone)
 					}
 				})
 			})

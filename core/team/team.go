@@ -197,6 +197,9 @@ func _task_plugin(m *ice.Message, arg ...string) {
 	}
 	m.Cmdy(kit.Keys(arg[0], arg[1]), arg[2:])
 }
+func _task_input(m *ice.Message, key, value string) {
+	m.Cmdy(kit.Keys(m.Option("zone"), m.Option("type")), "action", "input", key, value)
+}
 
 var Index = &ice.Context{Name: "team", Help: "团队中心",
 	Configs: map[string]*ice.Config{
@@ -236,6 +239,9 @@ var Index = &ice.Context{Name: "team", Help: "团队中心",
 			}},
 			"plugin": {Name: "plugin", Help: "插件", Hand: func(m *ice.Message, arg ...string) {
 				_task_plugin(m, arg...)
+			}},
+			"input": {Name: "input", Help: "补全", Hand: func(m *ice.Message, arg ...string) {
+				_task_input(m, arg[0], arg[1])
 			}},
 		}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			begin_time := time.Now()

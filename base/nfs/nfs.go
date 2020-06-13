@@ -165,6 +165,21 @@ func travel(m *ice.Message, root string, name string, cb func(name string)) {
 	}
 }
 
+func _nfs_save(m *ice.Message, file string, text ...string) {
+	if f, p, e := kit.Create(file); m.Assert(e) {
+		defer f.Close()
+		for _, v := range text {
+			if n, e := f.WriteString(v); m.Assert(e) {
+				m.Log_EXPORT("file", p, "size", n)
+			}
+		}
+		m.Echo(p)
+	}
+}
+func Save(m *ice.Message, file string, text ...string) {
+	_nfs_save(m, file, text...)
+}
+
 var Index = &ice.Context{Name: "nfs", Help: "存储模块",
 	Caches: map[string]*ice.Cache{},
 	Configs: map[string]*ice.Config{
@@ -271,15 +286,7 @@ var Index = &ice.Context{Name: "nfs", Help: "存储模块",
 		}},
 
 		"save": {Name: "save path text...", Help: "保存", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			if f, p, e := kit.Create(arg[0]); m.Assert(e) {
-				defer f.Close()
-				for _, v := range arg[1:] {
-					if n, e := f.WriteString(v); m.Assert(e) {
-						m.Log("export", "%v: %v", n, p)
-						m.Echo(p)
-					}
-				}
-			}
+			_nfs_save(m, arg[0], arg[1:]...)
 		}},
 		"copy": {Name: "copy path file...", Help: "保存", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			if f, _, e := kit.Create(arg[0]); m.Assert(e) {

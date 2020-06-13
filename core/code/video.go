@@ -27,8 +27,8 @@ func init() {
 				if file, e := avutil.Open(arg[0]); m.Assert(e) {
 					if streams, e := file.Streams(); m.Assert(e) {
 						for _, stream := range streams {
-							m.Info("what %v", kit.Formats(stream))
 							if stream.Type().IsAudio() {
+
 							} else if stream.Type().IsVideo() {
 								vstream := stream.(av.VideoCodecData)
 								m.Push("type", vstream.Type().String())

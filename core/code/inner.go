@@ -12,8 +12,15 @@ import (
 
 const (
 	INNER  = "inner"
-	QRCODE = "qrcode"
 	VEDIO  = "vedio"
+	QRCODE = "qrcode"
+)
+
+const (
+	LIST = "list"
+	SAVE = "save"
+	PLUG = "plug"
+	SHOW = "show"
 )
 
 func _inner_protect(m *ice.Message, name string) bool {
@@ -40,7 +47,7 @@ func _inner_sub(m *ice.Message, action string, name string, arg ...string) bool 
 }
 
 func _inner_list(m *ice.Message, name string) {
-	if _inner_sub(m, "list", name) {
+	if _inner_sub(m, LIST, name) {
 		return
 	}
 
@@ -51,7 +58,7 @@ func _inner_list(m *ice.Message, name string) {
 	m.Echo(name)
 }
 func _inner_save(m *ice.Message, name, text string) {
-	if _inner_sub(m, "save", name) {
+	if _inner_sub(m, SAVE, name) {
 		return
 	}
 
@@ -64,7 +71,7 @@ func _inner_save(m *ice.Message, name, text string) {
 	}
 }
 func _inner_plug(m *ice.Message, name string) {
-	if _inner_sub(m, "plug", name) {
+	if _inner_sub(m, PLUG, name) {
 		return
 	}
 
@@ -77,7 +84,7 @@ func _inner_plug(m *ice.Message, name string) {
 	m.Echo("{}")
 }
 func _inner_show(m *ice.Message, name string) {
-	if _inner_sub(m, "show", name) {
+	if _inner_sub(m, SHOW, name) {
 		return
 	}
 
@@ -129,7 +136,7 @@ func init() {
 			)},
 		},
 		Commands: map[string]*ice.Command{
-			INNER: {Name: "inner path=tmp name=hi.qrc key auto", Help: "编辑器", Meta: map[string]interface{}{
+			INNER: {Name: "inner path=tmp file=hi.qrc key auto", Help: "编辑器", Meta: map[string]interface{}{
 				"display": "/plugin/local/code/inner.js", "style": "editor",
 			}, Action: map[string]*ice.Action{
 				"cmd": {Name: "cmd arg", Help: "命令", Hand: func(m *ice.Message, arg ...string) {
@@ -186,10 +193,10 @@ func init() {
 				"run": {Name: "run path name", Help: "运行", Hand: func(m *ice.Message, arg ...string) {
 					_inner_show(m, path.Join("./", arg[0], arg[1]))
 				}},
-				"plug": {Name: "plug path name", Help: "插件", Hand: func(m *ice.Message, arg ...string) {
+				PLUG: {Name: "plug path name", Help: "插件", Hand: func(m *ice.Message, arg ...string) {
 					_inner_plug(m, path.Join("./", arg[0], arg[1]))
 				}},
-				"save": {Name: "save path name content", Help: "保存", Hand: func(m *ice.Message, arg ...string) {
+				SAVE: {Name: "save path name content", Help: "保存", Hand: func(m *ice.Message, arg ...string) {
 					_inner_save(m, path.Join("./", arg[0], arg[1]), kit.Select(m.Option("content"), arg, 2))
 				}},
 			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) { _inner_main(m, arg...) }},

@@ -17,8 +17,12 @@ import (
 	"strings"
 )
 
-func dir(m *ice.Message, root string, name string, level int, deep bool, dir_type string, dir_reg *regexp.Regexp, fields []string, format string) {
+const (
+	FILE  = "file"
+	TRASH = "trash"
+)
 
+func _file_list(m *ice.Message, root string, name string, level int, deep bool, dir_type string, dir_reg *regexp.Regexp, fields []string) {
 	if fs, e := ioutil.ReadDir(path.Join(root, name)); e != nil {
 		if f, e := os.Open(path.Join(root, name)); e == nil {
 			defer f.Close()
@@ -49,7 +53,7 @@ func dir(m *ice.Message, root string, name string, level int, deep bool, dir_typ
 				for _, field := range fields {
 					switch field {
 					case "time":
-						m.Push("time", f.ModTime().Format(format))
+						m.Push("time", f.ModTime().Format(ice.ICE_TIME))
 					case "type":
 						if m.Assert(e) && f.IsDir() {
 							m.Push("type", "dir")
@@ -131,42 +135,25 @@ func dir(m *ice.Message, root string, name string, level int, deep bool, dir_typ
 				}
 			}
 			if f.IsDir() && deep {
-				dir(m, root, p, level+1, deep, dir_type, dir_reg, fields, format)
+				_file_list(m, root, p, level+1, deep, dir_type, dir_reg, fields)
 			}
 		}
 	}
 }
-func travel(m *ice.Message, root string, name string, cb func(name string)) {
-	if fs, e := ioutil.ReadDir(path.Join(root, name)); e != nil {
-		cb(name)
-	} else {
-		for _, f := range fs {
-			if f.Name() == "." || f.Name() == ".." {
-				continue
-			}
-			if strings.HasPrefix(f.Name(), ".") {
-				continue
-			}
-
-			p := path.Join(root, name, f.Name())
-			if f, e = os.Lstat(p); e != nil {
-				m.Log("info", "%s", e)
-				continue
-			} else if (f.Mode()&os.ModeSymlink) != 0 && f.IsDir() {
-				continue
-			}
-			if f.IsDir() {
-				travel(m, root, path.Join(name, f.Name()), cb)
-				cb(path.Join(name, f.Name()))
-			} else {
-				cb(path.Join(name, f.Name()))
+func _file_show(m *ice.Message, name string) {
+	if f, e := os.OpenFile(name, os.O_RDONLY, 0777); m.Assert(e) {
+		defer f.Close()
+		if s, e := f.Stat(); m.Assert(e) {
+			buf := make([]byte, s.Size())
+			if n, e := f.Read(buf); m.Assert(e) {
+				m.Log_IMPORT("file", name, "size", n)
+				m.Echo(string(buf[:n]))
 			}
 		}
 	}
 }
-
-func _nfs_save(m *ice.Message, file string, text ...string) {
-	if f, p, e := kit.Create(file); m.Assert(e) {
+func _file_save(m *ice.Message, name string, text ...string) {
+	if f, p, e := kit.Create(name); m.Assert(e) {
 		defer f.Close()
 		for _, v := range text {
 			if n, e := f.WriteString(v); m.Assert(e) {
@@ -176,155 +163,74 @@ func _nfs_save(m *ice.Message, file string, text ...string) {
 		m.Echo(p)
 	}
 }
-func Save(m *ice.Message, file string, text ...string) {
-	_nfs_save(m, file, text...)
+func _file_copy(m *ice.Message, name string, from ...string) {
+	if f, p, e := kit.Create(name); m.Assert(e) {
+		defer f.Close()
+		for _, v := range from {
+			if s, e := os.Open(v); !m.Warn(e != nil, "%s", e) {
+				defer s.Close()
+				if n, e := io.Copy(f, s); !m.Warn(e != nil, "%s", e) {
+					m.Log_IMPORT("file", p, "size", n)
+				}
+			}
+		}
+	}
+}
+func _file_link(m *ice.Message, name string, from string) {
+	m.Cmd("nfs.trash", name)
+	os.MkdirAll(path.Dir(name), 0777)
+	os.Link(from, name)
+}
+func _file_trash(m *ice.Message, name string, from ...string) {
+	if s, e := os.Stat(name); e == nil {
+		if s.IsDir() {
+			name := path.Base(name) + ".tar.gz"
+			m.Cmd(ice.CLI_SYSTEM, "tar", "zcf", name, name)
+		}
+
+		if f, e := os.Open(name); m.Assert(e) {
+			defer f.Close()
+
+			h := kit.Hashs(f)
+			p := path.Join(m.Conf("trash", "meta.path"), h[:2], h)
+			os.MkdirAll(path.Dir(p), 0777)
+			os.Rename(name, p)
+
+			m.Cmd(ice.WEB_FAVOR, "trash", "bin", name, p)
+		}
+	}
+}
+
+func FileSave(m *ice.Message, file string, text ...string) {
+	_file_save(m, file, text...)
 }
 
 var Index = &ice.Context{Name: "nfs", Help: "存储模块",
-	Caches: map[string]*ice.Cache{},
 	Configs: map[string]*ice.Config{
-		"trash": {Name: "trash", Help: "trash", Value: kit.Data("path", "var/trash")},
+		TRASH: {Name: "trash", Help: "删除", Value: kit.Data("path", "var/trash")},
 	},
 	Commands: map[string]*ice.Command{
-		ice.ICE_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			m.Cmd(ice.APP_SEARCH, "add", "dir", "base", m.AddCmd(&ice.Command{Name: "search word", Help: "搜索引擎", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-				switch arg[0] {
-				case "set":
-					m.Cmdy("nfs.dir", arg[5])
-					return
-				}
-
-				travel(m, "./", "", func(name string) {
-					if strings.Contains(name, arg[0]) {
-						s, e := os.Stat(name)
-						m.Assert(e)
-						m.Push("pod", m.Option(ice.MSG_USERPOD))
-						m.Push("engine", "dir")
-						m.Push("favor", "file")
-						m.Push("id", kit.FmtSize(s.Size()))
-						m.Push("time", s.ModTime().Format(ice.ICE_TIME))
-						m.Push("type", strings.TrimPrefix(path.Ext(name), "."))
-						m.Push("name", path.Base(name))
-						m.Push("text", name)
-					}
-				})
-			}}))
-			m.Cmd(ice.APP_COMMEND, "add", "dir", "base", m.AddCmd(&ice.Command{Name: "commend word", Help: "推荐引擎", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-				switch arg[0] {
-				case "set":
-					m.Cmdy("nfs.dir", arg[5])
-					return
-				}
-
-				travel(m, "./", "", func(name string) {
-					score := 0
-					m.Richs(ice.APP_COMMEND, "meta.user", m.Option(ice.MSG_USERNAME), func(key string, value map[string]interface{}) {
-						m.Grows(ice.APP_COMMEND, kit.Keys("meta.user", kit.MDB_HASH, key, "like"), "", "", func(index int, value map[string]interface{}) {
-							switch kit.Value(value, "extra.engine") {
-							case "dir":
-								if value["type"] == strings.TrimPrefix(path.Ext(name), ".") {
-									score += 1
-								}
-								if value["name"] == path.Base(name) {
-									score += 2
-								}
-								if value["text"] == name {
-									score += 3
-								}
-							default:
-							}
-						})
-						m.Grows(cmd, kit.Keys("meta.user", kit.MDB_HASH, key, "hate"), "", "", func(index int, value map[string]interface{}) {
-							switch kit.Value(value, "extra.engine") {
-							case "dir":
-								if value["type"] == strings.TrimPrefix(path.Ext(name), ".") {
-									score -= 1
-								}
-								if value["name"] == path.Base(name) {
-									score -= 2
-								}
-								if value["text"] == name {
-									score -= 3
-								}
-							default:
-							}
-						})
-					})
-
-					if s, e := os.Stat(name); e == nil {
-						m.Push("pod", m.Option(ice.MSG_USERPOD))
-						m.Push("engine", "dir")
-						m.Push("favor", "file")
-						m.Push("id", kit.FmtSize(s.Size()))
-						m.Push("score", score)
-						m.Push("type", strings.TrimPrefix(path.Ext(name), "."))
-						m.Push("name", path.Base(name))
-						m.Push("text", name)
-					}
-				})
-			}}))
-		}},
-
-		"dir": {Name: "dir name field auto", Help: "目录", List: kit.List(
-			kit.MDB_INPUT, "text", "name", "path", "action", "auto",
-			kit.MDB_INPUT, "button", "name", "查看",
-			kit.MDB_INPUT, "button", "name", "返回", "cb", "Last",
-		), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		"dir": {Name: "dir path field...", Help: "目录", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			rg, _ := regexp.Compile(m.Option("dir_reg"))
-			dir(m, kit.Select("./", m.Option("dir_root")), kit.Select("", arg, 0), 0, m.Options("dir_deep"), kit.Select("both", m.Option("dir_type")), rg,
-				strings.Split(kit.Select("time size line path", arg, 1), " "), ice.ICE_TIME)
+			_file_list(m, kit.Select("./", m.Option("dir_root")), kit.Select("", arg, 0),
+				0, m.Options("dir_deep"), kit.Select("both", m.Option("dir_type")), rg,
+				strings.Split(kit.Select("time size line path", strings.Join(arg[1:], " ")), " "))
 		}},
-		"cat": {Name: "cat path", Help: "保存", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			if f, e := os.OpenFile(arg[0], os.O_RDONLY, 0777); m.Assert(e) {
-				defer f.Close()
-				buf := make([]byte, 4096000)
-				if n, e := f.Read(buf); m.Assert(e) {
-					m.Log(ice.LOG_IMPORT, "%d: %s", n, arg[0])
-					m.Echo(string(buf[:n]))
-				}
-			}
+		"cat": {Name: "cat file", Help: "查看", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			_file_show(m, arg[0])
 		}},
-
-		"save": {Name: "save path text...", Help: "保存", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			_nfs_save(m, arg[0], arg[1:]...)
+		"save": {Name: "save file text...", Help: "保存", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			_file_save(m, arg[0], arg[1:]...)
 		}},
-		"copy": {Name: "copy path file...", Help: "保存", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			if f, _, e := kit.Create(arg[0]); m.Assert(e) {
-				defer f.Close()
-				for _, v := range arg[1:] {
-					if s, e := os.Open(v); !m.Warn(e != nil, "%s", e) {
-						if n, e := io.Copy(f, s); m.Assert(e) {
-							m.Log(ice.LOG_IMPORT, "%d: %v", n, v)
-						}
-					}
-				}
-			}
+		"copy": {Name: "copy file from...", Help: "复制", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			_file_copy(m, arg[0], arg[1:]...)
 		}},
-		"link": {Name: "link path file", Help: "链接", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			m.Cmd("nfs.trash", arg[0])
-			os.MkdirAll(path.Dir(arg[0]), 0777)
-			os.Link(arg[1], arg[0])
+		"link": {Name: "link file from", Help: "链接", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			_file_link(m, arg[0], arg[1])
 		}},
 
-		"trash": {Name: "trash file", Help: "保存", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			if s, e := os.Stat(arg[0]); e == nil {
-				if s.IsDir() {
-					name := path.Base(arg[0]) + ".tar.gz"
-					m.Cmd(ice.CLI_SYSTEM, "tar", "zcf", name, arg[0])
-				} else {
-				}
-
-				if f, e := os.Open(arg[0]); m.Assert(e) {
-					defer f.Close()
-
-					h := kit.Hashs(f)
-					p := path.Join(m.Conf("trash", "meta.path"), h[:2], h)
-					os.MkdirAll(path.Dir(p), 0777)
-					os.Rename(arg[0], p)
-
-					m.Cmd(ice.WEB_FAVOR, "trash", "bin", arg[0], p)
-				}
-			}
+		TRASH: {Name: "trash file", Help: "删除", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			_file_trash(m, arg[0])
 		}},
 	},
 }

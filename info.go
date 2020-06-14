@@ -2,6 +2,7 @@ package ice
 
 import (
 	kit "github.com/shylinux/toolkits"
+	"github.com/shylinux/toolkits/log"
 
 	"fmt"
 	"os"
@@ -45,10 +46,11 @@ func (m *Message) log(level string, str string, arg ...interface{}) *Message {
 
 	if os.Getenv("ctx_mod") != "" && m != nil {
 		// 输出日志
-		fmt.Fprintf(os.Stderr, "%s %02d %9s %s%s %s%s\n",
+		str := fmt.Sprintf("%s %02d %9s %s%s %s%s",
 			m.time.Format(ICE_TIME), m.code, fmt.Sprintf("%4s->%-4s", m.source.Name, m.target.Name),
 			prefix, level, str, suffix,
 		)
+		log.Info(str)
 	}
 	return m
 }

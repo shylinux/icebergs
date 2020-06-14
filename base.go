@@ -2,6 +2,8 @@ package ice
 
 import (
 	"github.com/shylinux/toolkits"
+	"github.com/shylinux/toolkits/conf"
+	"github.com/shylinux/toolkits/log"
 
 	"fmt"
 	"os"
@@ -131,6 +133,8 @@ var Log func(*Message, string, string)
 func Run(arg ...string) string {
 	Index.root = Index
 	Pulse.root = Pulse
+
+	log.Init(conf.New(nil))
 
 	if len(arg) == 0 {
 		arg = os.Args[1:]

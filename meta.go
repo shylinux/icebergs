@@ -79,7 +79,10 @@ func (m *Message) Push(key string, value interface{}, arg ...interface{}) *Messa
 			var v interface{}
 			switch k {
 			case kit.MDB_KEY, kit.MDB_ZONE:
-				v = key
+				if key != "" {
+					v = key
+				}
+				fallthrough
 			default:
 				if v = kit.Value(value, k); v == nil {
 					v = kit.Value(value, kit.Keys(kit.MDB_EXTRA, k))

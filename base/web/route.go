@@ -91,7 +91,7 @@ func init() {
 					}
 
 					sessid := m.Cmdx(ice.AAA_SESS, "create", "")
-					share := m.Cmdx(ice.WEB_SHARE, "add", "login", m.Option(ice.MSG_USERIP), sessid)
+					share := m.Cmdx(ice.WEB_SHARE, "login", m.Option(ice.MSG_USERIP), sessid)
 					Render(m, "cookie", sessid)
 					m.Render(share)
 				}

@@ -13,39 +13,45 @@ import (
 type Frame struct {
 }
 
+const (
+	GETPORT = "getport"
+)
+
+func _tcp_port(m *ice.Message) {
+	current := kit.Int(m.Conf(GETPORT, "meta.current"))
+	end := kit.Int(m.Conf(GETPORT, "meta.end"))
+	if current >= end {
+		current = kit.Int(m.Conf(GETPORT, "meta.begin"))
+	}
+	for i := current; i < end; i++ {
+		if m.Cmd(ice.CLI_SYSTEM, "lsof", "-i", kit.Format(":%d", i)).Append("code") != "0" {
+			m.Conf(GETPORT, "meta.current", i)
+			m.Log_CREATE(GETPORT, i)
+			m.Echo("%d", i)
+			break
+		}
+	}
+}
+
 var Index = &ice.Context{Name: "tcp", Help: "通信模块",
 	Caches: map[string]*ice.Cache{},
 	Configs: map[string]*ice.Config{
-		"getport": &ice.Config{Name: "getport", Help: "getport", Value: kit.Data(
-			"begin", 10000, "end", 20000,
+		GETPORT: &ice.Config{Name: "getport", Help: "分配端口", Value: kit.Data(
+			"begin", 10000, "current", 10000, "end", 20000,
 		)},
 	},
 	Commands: map[string]*ice.Command{
-		ice.ICE_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			m.Load()
-		}},
-		ice.ICE_EXIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			m.Save("getport")
+		ice.ICE_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) { m.Load() }},
+		ice.ICE_EXIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) { m.Save(GETPORT) }},
+
+		GETPORT: {Name: "getport", Help: "分配端口", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			_tcp_port(m)
 		}},
 
 		"ip": {Name: "ifconfig [name]", Help: "网络配置", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			if addr, e := net.InterfaceAddrs(); m.Assert(e) {
 				for _, v := range addr {
 					m.Info("%v", v)
-				}
-			}
-		}},
-		"getport": {Name: "getport", Help: "分配端口", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			begin := kit.Int(m.Conf("getport", "meta.begin"))
-			end := kit.Int(m.Conf("getport", "meta.end"))
-			if begin >= end {
-				begin = 10000
-			}
-			for i := begin; i < end; i++ {
-				if m.Cmd(ice.CLI_SYSTEM, "lsof", "-i", kit.Format(":%d", i)).Append("code") != "0" {
-					m.Conf("getport", "meta.begin", i+1)
-					m.Echo("%d", i)
-					break
 				}
 			}
 		}},

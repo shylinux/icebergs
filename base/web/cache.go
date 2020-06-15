@@ -21,14 +21,15 @@ func _cache_list(m *ice.Message) {
 func _cache_save(m *ice.Message, method, kind, name, text string, arg ...string) {
 	size := kit.Int(kit.Select(kit.Format(len(text)), arg, 1))
 	if method == "add" && size > 512 {
-		// 创建文件
 		file := kit.Hashs(text)
+
+		// 创建文件
 		if o, p, e := kit.Create(path.Join(m.Conf(CACHE, "meta.path"), file[:2], file)); m.Assert(e) {
 			defer o.Close()
 
 			// 导入数据
 			if n, e := o.WriteString(text); m.Assert(e) {
-				m.Log(ice.LOG_IMPORT, "%s: %s", kit.FmtSize(int64(n)), p)
+				m.Log_EXPORT(kit.MDB_FILE, p, kit.MDB_SIZE, kit.FmtSize(int64(n)))
 				text, arg = p, kit.Simple(p, n)
 			}
 		}
@@ -39,7 +40,7 @@ func _cache_save(m *ice.Message, method, kind, name, text string, arg ...string)
 		kit.MDB_TYPE, kind, kit.MDB_NAME, name, kit.MDB_TEXT, text,
 		kit.MDB_FILE, kit.Select("", arg, 0), kit.MDB_SIZE, size,
 	))
-	m.Log(ice.LOG_CREATE, "cache: %s %s: %s", h, kind, name)
+	m.Log_CREATE(CACHE, h, kit.MDB_TYPE, kind, kit.MDB_NAME, name)
 
 	// 添加记录
 	m.Grow(CACHE, nil, kit.Dict(
@@ -84,11 +85,11 @@ func _cache_catch(m *ice.Message, arg ...string) []string {
 		h := kit.Hashs(f)
 		if o, p, e := kit.Create(path.Join(m.Conf(CACHE, "meta.path"), h[:2], h)); m.Assert(e) {
 			defer o.Close()
-			f.Seek(0, os.SEEK_SET)
 
 			// 导入数据
+			f.Seek(0, os.SEEK_SET)
 			if n, e := io.Copy(o, f); m.Assert(e) {
-				m.Log(ice.LOG_IMPORT, "%s: %s", kit.FmtSize(n), p)
+				m.Log_IMPORT(kit.MDB_FILE, kit.FmtSize(n), kit.MDB_SIZE, p)
 				arg = kit.Simple(arg[0], arg[1], arg[2], p, p, n)
 			}
 		}
@@ -151,11 +152,11 @@ func init() {
 				case "catch":
 					arg = _cache_catch(m, arg...)
 					fallthrough
-				case "upload", "download":
-					if m.R != nil {
-						arg = _cache_upload(m, arg...)
-					} else if r, ok := m.Optionv("response").(*http.Response); ok {
+				case "download", "upload":
+					if r, ok := m.Optionv("response").(*http.Response); ok {
 						arg = _cache_download(m, r, arg...)
+					} else if m.R != nil {
+						arg = _cache_upload(m, arg...)
 					}
 					fallthrough
 				case "add":

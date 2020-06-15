@@ -5,14 +5,14 @@ import (
 	"github.com/shylinux/toolkits"
 )
 
-func _action_share_create(m *ice.Message, arg ...string) {
-	if m.Option("index") != "" {
-		m.Cmdy(ice.WEB_SHARE, ice.TYPE_ACTION, m.Option("name"), m.Option("text"),
-			"tool.0.pod", kit.Select(m.Option("pod"), m.Option("node")),
-			"tool.0.ctx", m.Option("group"),
-			"tool.0.cmd", m.Option("index"),
-			"tool.0.args", m.Option("args"),
-			"tool.0.value", m.Option("value"),
+func _action_share(m *ice.Message, arg ...string) {
+	if m.Option("_index") != "" {
+		m.Cmdy(ice.WEB_SHARE, ice.TYPE_ACTION, m.Option("_name"), m.Option("_text"),
+			"tool.0.pod", kit.Select(m.Option("_pod"), m.Option("_node")),
+			"tool.0.ctx", m.Option("_group"),
+			"tool.0.cmd", m.Option("_index"),
+			"tool.0.args", m.Option("_args"),
+			"tool.0.value", m.Option("_value"),
 			"tool.0.single", "yes",
 		)
 	} else {
@@ -26,7 +26,7 @@ func _action_share_create(m *ice.Message, arg ...string) {
 		})
 	}
 }
-func _action_share_select(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+func _action_share_list(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 	m.Richs(ice.WEB_SHARE, nil, m.Option("share"), func(key string, value map[string]interface{}) {
 		kit.Fetch(kit.Value(value, "extra.tool"), func(index int, value map[string]interface{}) {
 			m.Push("river", arg[0])
@@ -46,7 +46,7 @@ func _action_share_select(m *ice.Message, c *ice.Context, cmd string, arg ...str
 		})
 	})
 }
-func _action_share_update(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+func _action_share_show(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 	if len(arg) > 3 && arg[3] == "action" && _action_action(m, arg[4], arg[5:]...) {
 		return
 	}
@@ -134,21 +134,20 @@ func _action_select(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 }
 func init() {
 	Index.Merge(&ice.Context{Commands: map[string]*ice.Command{
-		"/action": {Name: "/action", Help: "工作台", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			switch arg[0] {
-			case "share":
-				_action_share_create(m, arg...)
-				return
-			}
+		"/action": {Name: "/action", Help: "工作台", Action: map[string]*ice.Action{
+			kit.MDB_SHARE: {Name: "share arg...", Help: "共享", Hand: func(m *ice.Message, arg ...string) {
+				_action_share(m, arg...)
+			}},
+		}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			if len(arg) == 0 || arg[0] == "" {
 				if m.Option("share") != "" {
 					if len(arg) < 3 {
-						_action_share_select(m, c, cmd, arg...)
+						_action_share_list(m, c, cmd, arg...)
 						return
 					}
-					_action_share_update(m, c, cmd, arg...)
+					_action_share_show(m, c, cmd, arg...)
+					return
 				}
-				return
 			}
 
 			if m.Warn(m.Option(ice.MSG_RIVER) == "" || m.Option(ice.MSG_STORM) == "", "not join") {
@@ -226,7 +225,7 @@ func init() {
 								list = append(list, k, kit.Format(v))
 							}
 							// 共享命令
-							m.Cmdy(ice.WEB_SHARE, "add", "action", arg[5], arg[6], list)
+							m.Cmdy(ice.WEB_SHARE, "action", arg[5], arg[6], list)
 							return
 						}
 					}

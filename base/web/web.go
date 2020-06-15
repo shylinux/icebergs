@@ -50,6 +50,7 @@ func Render(msg *ice.Message, cmd string, args ...interface{}) {
 		msg.Log(ice.LOG_EXPORT, "%s: %v", cmd, args)
 	}
 	switch arg := kit.Simple(args...); cmd {
+	case ice.RENDER_VOID:
 	case ice.RENDER_OUTPUT:
 	case "redirect":
 		http.Redirect(msg.W, msg.R, kit.MergeURL(arg[0], arg[1:]), 307)
@@ -627,7 +628,7 @@ var Index = &ice.Context{Name: "web", Help: "网络模块",
 					}) == nil {
 						m.Rich(ice.WEB_SPIDE, nil, kit.Dict(
 							"cookie", kit.Dict(), "header", kit.Dict(), "client", kit.Dict(
-								"share", m.Cmdx(ice.WEB_SHARE, "add", ice.TYPE_SPIDE, arg[1], arg[2]),
+								"share", m.Cmdx(ice.WEB_SHARE, ice.TYPE_SPIDE, arg[1], arg[2]),
 								// "type", "POST", "name", arg[1], "text", arg[2],
 								"name", arg[1], "url", arg[2], "method", "POST",
 								"protocol", uri.Scheme, "hostname", uri.Host,
@@ -648,7 +649,7 @@ var Index = &ice.Context{Name: "web", Help: "网络模块",
 					}
 					if msg.Result() != "" {
 						kit.Value(value, "client.login", msg.Result())
-						kit.Value(value, "client.share", m.Cmdx(ice.WEB_SHARE, "add", ice.TYPE_SPIDE, arg[1],
+						kit.Value(value, "client.share", m.Cmdx(ice.WEB_SHARE, ice.TYPE_SPIDE, arg[1],
 							kit.Format("%s?sessid=%s", kit.Value(value, "client.url"), kit.Value(value, "cookie.sessid"))))
 					}
 					m.Render(ice.RENDER_QRCODE, kit.Dict(

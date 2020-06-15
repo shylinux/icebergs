@@ -66,7 +66,7 @@ var Index = &ice.Context{Name: "lark", Help: "机器人",
 		ice.WEB_LOGIN: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 		}},
 		"login": {Name: "login", Help: "应用", Hand: func(m *ice.Message, c *ice.Context, key string, arg ...string) {
-			m.Cmdy(ice.WEB_SHARE, "add", "user", m.Option(ice.MSG_USERNAME), m.Option(ice.MSG_SESSID))
+			m.Cmdy(ice.WEB_SHARE, "user", m.Option(ice.MSG_USERNAME), m.Option(ice.MSG_SESSID))
 		}},
 
 		"app": {Name: "app login|token bot", Help: "应用", Hand: func(m *ice.Message, c *ice.Context, key string, arg ...string) {

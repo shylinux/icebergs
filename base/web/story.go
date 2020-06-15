@@ -15,10 +15,10 @@ var STORY = ice.Name("story", Index)
 func _story_share(m *ice.Message, story string, list string, arg ...string) {
 	if m.Echo("share: "); list == "" {
 		msg := m.Cmd(STORY, ice.STORY_INDEX, story)
-		m.Cmdy(ice.WEB_SHARE, "add", "story", story, msg.Append("list"))
+		m.Cmdy(ice.WEB_SHARE, "story", story, msg.Append("list"))
 	} else {
 		msg := m.Cmd(STORY, ice.STORY_INDEX, list)
-		m.Cmdy(ice.WEB_SHARE, "add", msg.Append("scene"), msg.Append("story"), msg.Append("text"))
+		m.Cmdy(ice.WEB_SHARE, msg.Append("scene"), msg.Append("story"), msg.Append("text"))
 	}
 }
 func _story_list(m *ice.Message, arg ...string) {

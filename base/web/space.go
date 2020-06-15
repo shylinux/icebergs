@@ -165,7 +165,7 @@ func init() {
 					// 共享空间
 					share := m.Option("share")
 					if m.Richs(ice.WEB_SHARE, nil, share, nil) == nil {
-						share = m.Cmdx(ice.WEB_SHARE, "add", m.Option("node"), m.Option("name"), m.Option("user"))
+						share = m.Cmdx(ice.WEB_SHARE, m.Option("node"), m.Option("name"), m.Option("user"))
 					}
 
 					// 添加节点

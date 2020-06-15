@@ -2,6 +2,7 @@ package code
 
 import (
 	"github.com/shylinux/icebergs"
+	"github.com/shylinux/icebergs/base/web"
 	"github.com/shylinux/toolkits"
 
 	"net/http"
@@ -39,28 +40,38 @@ func _pprof_list(m *ice.Message, zone string, id string, field ...interface{}) {
 	})
 }
 func _pprof_show(m *ice.Message, zone string, seconds string) {
+	favor := m.Conf(PPROF, kit.Keys(kit.MDB_META, web.FAVOR))
+
 	m.Richs(PPROF, nil, zone, func(key string, val map[string]interface{}) {
 		val = val[kit.MDB_META].(map[string]interface{})
 
+		// 收藏程序
+		m.Cmd(ice.WEB_FAVOR, favor, "bin", val[BINNARY], m.Cmd(ice.WEB_CACHE, "catch", "bin", val[BINNARY]).Append("data"))
+
+		// 性能分析
+		msg := m.Cmd(ice.WEB_SPIDE, "self", "cache", "GET", kit.Select("/code/pprof/profile", val[SERVICE]), "seconds", kit.Select("5", seconds))
+		m.Cmd(ice.WEB_FAVOR, favor, "pprof", zone+".pd.gz", msg.Append("data"))
+
+		// 结果摘要
+		ls := strings.Split(m.Cmdx(ice.CLI_SYSTEM, "go", "tool", "pprof", "-text", msg.Append("text")), "\n")
+		if len(ls) > 20 {
+			ls = ls[:20]
+		}
+		m.Cmd(ice.WEB_FAVOR, favor, "shell", zone, strings.Join(ls, "\n"))
+
+		// 结果展示
+		p := kit.Format("%s:%s", m.Conf(ice.WEB_SHARE, "meta.host"), m.Cmdx("tcp.getport"))
+		m.Cmd(ice.CLI_DAEMON, "go", "tool", "pprof", "-http="+p, val[BINNARY], msg.Append("text"))
+		m.Cmd(ice.WEB_FAVOR, favor, "spide", msg.Append("text"), "http://"+p)
+		m.Echo(p)
+
+		return
 		m.Gos(m.Spawn(), func(msg *ice.Message) {
 			m.Sleep("1s").Grows(PPROF, kit.Keys(kit.MDB_HASH, key), "", "", func(index int, value map[string]interface{}) {
 				// 压测命令
-				m.Cmd(ice.WEB_FAVOR, "pprof", "shell", value[kit.MDB_TEXT], m.Cmdx(kit.Split(kit.Format(value[kit.MDB_TEXT]))))
+				m.Cmd(ice.WEB_FAVOR, favor, "shell", value[kit.MDB_TEXT], m.Cmdx(kit.Split(kit.Format(value[kit.MDB_TEXT]))))
 			})
 		})
-
-		// 启动监控
-		name := zone + ".pd.gz"
-		msg := m.Cmd(ice.WEB_SPIDE, "self", "cache", "GET", kit.Select("/code/pprof/profile", val[SERVICE]), "seconds", kit.Select("5", seconds))
-		m.Cmd(ice.WEB_FAVOR, "pprof", "shell", "text", m.Cmdx(ice.CLI_SYSTEM, "go", "tool", "pprof", "-text", msg.Append("text")))
-		m.Cmd(ice.WEB_FAVOR, "pprof", "pprof", name, msg.Append("data"))
-
-		// 展示结果
-		p := kit.Format("%s:%s", m.Conf(ice.WEB_SHARE, "meta.host"), m.Cmdx("tcp.getport"))
-		m.Cmd(ice.CLI_DAEMON, "go", "tool", "pprof", "-http="+p, val[BINNARY], msg.Append("text"))
-		m.Cmd(ice.WEB_FAVOR, "pprof", "bin", val[BINNARY], m.Cmd(ice.WEB_CACHE, "catch", "bin", val[BINNARY]).Append("data"))
-		m.Cmd(ice.WEB_FAVOR, "pprof", "spide", msg.Append("text"), "http://"+p)
-		m.Echo(p)
 	})
 
 }
@@ -92,7 +103,8 @@ func _pprof_insert(m *ice.Message, zone, kind, name, text string, arg ...string)
 			// 添加信息
 			kit.MDB_EXTRA, kit.Dict(arg),
 		))
-		m.Log_INSERT(kit.MDB_ZONE, zone, kit.MDB_ID, id, kit.MDB_TYPE, kind, kit.MDB_NAME, name)
+		m.Log_INSERT(kit.MDB_META, PPROF, kit.MDB_ZONE, zone,
+			kit.MDB_ID, id, kit.MDB_TYPE, kind, kit.MDB_NAME, name)
 		m.Echo("%d", id)
 	})
 }
@@ -108,7 +120,9 @@ func _pprof_create(m *ice.Message, zone string, binnary, service string, seconds
 func init() {
 	Index.Merge(&ice.Context{
 		Configs: map[string]*ice.Config{
-			PPROF: {Name: "pprof", Help: "性能分析", Value: kit.Data(kit.MDB_SHORT, kit.MDB_ZONE)},
+			PPROF: {Name: "pprof", Help: "性能分析", Value: kit.Data(kit.MDB_SHORT, kit.MDB_ZONE,
+				web.FAVOR, "pprof",
+			)},
 		},
 		Commands: map[string]*ice.Command{
 			PPROF: {Name: "pprof zone=auto id=auto auto", Help: "性能分析", Action: map[string]*ice.Action{

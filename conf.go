@@ -228,7 +228,7 @@ const ( // STORY
 	STORY_DOWNLOAD = "download"
 )
 const ( // RENDER
-	RENDER_VOID     = "_output"
+	RENDER_VOID     = "_void"
 	RENDER_OUTPUT   = "_output"
 	RENDER_TEMPLATE = "_template"
 	RENDER_DOWNLOAD = "_download"

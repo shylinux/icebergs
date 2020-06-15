@@ -248,7 +248,7 @@ var Index = &ice.Context{Name: "chat", Help: "聊天中心",
 				default:
 					return
 				}
-				m.Cmdy(ice.WEB_SHARE, "add", arg[1], arg[2], arg[3], arg[4:])
+				m.Cmdy(ice.WEB_SHARE, arg[1], arg[2], arg[3], arg[4:])
 			}
 		}},
 

@@ -54,6 +54,21 @@ func _favor_insert(m *ice.Message, favor, kind, name, text string, extra ...stri
 	m.Log_INSERT("favor", favor, "index", index, "name", name, "text", text)
 	m.Echo("%d", index)
 }
+func _favor_modify(m *ice.Message, favor, id, pro, set, old string) {
+	m.Richs(FAVOR, nil, favor, func(key string, val map[string]interface{}) {
+		switch pro {
+		case FAVOR, kit.MDB_ID, kit.MDB_TIME:
+			m.Warn(true, "deny modify %v", pro)
+			return
+		}
+
+		m.Grows(FAVOR, kit.Keys(kit.MDB_HASH, key), kit.MDB_ID, id, func(index int, value map[string]interface{}) {
+			// 修改信息
+			m.Log_MODIFY(FAVOR, favor, kit.MDB_ID, id, kit.MDB_KEY, pro, kit.MDB_VALUE, set, "old", old)
+			kit.Value(value, pro, set)
+		})
+	})
+}
 
 func FavorInsert(m *ice.Message, favor, kind, name, text string, extra ...string) {
 	_favor_insert(m, favor, kind, name, text, extra...)
@@ -73,7 +88,11 @@ func init() {
 		Commands: map[string]*ice.Command{
 			ice.WEB_FAVOR: {Name: "favor favor=auto id=auto auto", Help: "收藏夹", Meta: kit.Dict(
 				"exports", []string{"hot", "favor"}, "detail", []string{"编辑", "收藏", "收录", "导出", "删除"},
-			), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			), Action: map[string]*ice.Action{
+				kit.MDB_MODIFY: {Name: "modify key value old", Help: "编辑", Hand: func(m *ice.Message, arg ...string) {
+					_favor_modify(m, m.Option(FAVOR), m.Option(kit.MDB_ID), arg[0], arg[1], kit.Select("", arg, 2))
+				}},
+			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 				if len(arg) > 1 && arg[0] == "action" {
 					favor, id := m.Option("favor"), m.Option("id")
 					switch arg[2] {
@@ -84,20 +103,6 @@ func init() {
 					}
 
 					switch arg[1] {
-					case "modify", "编辑":
-						m.Richs(ice.WEB_FAVOR, nil, favor, func(key string, value map[string]interface{}) {
-							if id == "" {
-								m.Log(ice.LOG_MODIFY, "favor: %s value: %v->%v", key, kit.Value(value, kit.Keys("meta", arg[2])), arg[3])
-								m.Echo("%s->%s", kit.Value(value, kit.Keys("meta", arg[2])), arg[3])
-								kit.Value(value, kit.Keys("meta", arg[2]), arg[3])
-								return
-							}
-							m.Grows(ice.WEB_FAVOR, kit.Keys(kit.MDB_HASH, key), "id", id, func(index int, value map[string]interface{}) {
-								m.Log(ice.LOG_MODIFY, "favor: %s index: %d value: %v->%v", key, index, value[arg[2]], arg[3])
-								m.Echo("%s->%s", value[arg[2]], arg[3])
-								kit.Value(value, arg[2], arg[3])
-							})
-						})
 					case "commit", "收录":
 						m.Echo("list: ")
 						m.Richs(ice.WEB_FAVOR, nil, favor, func(key string, value map[string]interface{}) {
@@ -114,10 +119,6 @@ func init() {
 								m.Cmdy(ice.MDB_EXPORT, ice.WEB_FAVOR, kit.Keys(kit.MDB_HASH, key), kit.MDB_LIST, favor)
 							})
 						}
-					case "delete", "删除":
-						m.Richs(ice.WEB_FAVOR, nil, favor, func(key string, value map[string]interface{}) {
-							m.Cmdy(ice.MDB_DELETE, ice.WEB_FAVOR, kit.Keys(kit.MDB_HASH, key), kit.MDB_DICT)
-						})
 					case "import", "导入":
 						if favor == "" {
 							m.Cmdy(ice.MDB_IMPORT, ice.WEB_FAVOR, kit.MDB_HASH, kit.MDB_HASH, "favor")
@@ -231,6 +232,7 @@ func init() {
 					arg = append(arg, "")
 				}
 				_favor_insert(m, favor, arg[1], arg[2], arg[3], arg[4:]...)
+				return
 
 				// 分发数据
 				if p := kit.Select(m.Conf(ice.WEB_FAVOR, "meta.proxy"), m.Option("you")); p != "" {

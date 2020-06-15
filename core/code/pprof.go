@@ -22,18 +22,19 @@ func _pprof_list(m *ice.Message, zone string, id string, field ...interface{}) {
 		if zone = kit.Format(kit.Value(val, kit.MDB_ZONE)); id == "" {
 			m.Grows(PPROF, kit.Keys(kit.MDB_HASH, key), "", "", func(index int, value map[string]interface{}) {
 				// 查看信息
-				m.Push(kit.MDB_ZONE, zone)
-				m.Push(BINNARY, val[BINNARY])
-				m.Push(SERVICE, val[SERVICE])
-				m.Push(SECONDS, val[SECONDS])
 				m.Push("操作", `<input type="button" value="运行">`)
-				m.Push(zone, value, []string{kit.MDB_TYPE, kit.MDB_NAME, kit.MDB_TEXT})
+				m.Push(zone, value, []string{
+					kit.MDB_ZONE, kit.MDB_ID, kit.MDB_TYPE,
+					kit.MDB_NAME, kit.MDB_TEXT, SECONDS, BINNARY, SERVICE,
+				}, val)
 			})
 			return
 		}
 		m.Grows(PPROF, kit.Keys(kit.MDB_HASH, key), kit.MDB_ID, id, func(index int, value map[string]interface{}) {
 			// 查看信息
 			m.Push("detail", value)
+			m.Push(kit.MDB_KEY, "操作")
+			m.Push(kit.MDB_VALUE, `<input type="button" value="运行">`)
 		})
 	})
 }

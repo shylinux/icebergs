@@ -52,7 +52,6 @@ func (m *Message) Set(key string, arg ...string) *Message {
 }
 func (m *Message) Push(key string, value interface{}, arg ...interface{}) *Message {
 	switch value := value.(type) {
-	case map[string]string:
 	case map[string]interface{}:
 		if key == "detail" {
 			// 格式转换
@@ -70,18 +69,35 @@ func (m *Message) Push(key string, value interface{}, arg ...interface{}) *Messa
 			sort.Strings(list)
 		}
 
-		// 追加数据
+		var val map[string]interface{}
+		if len(arg) > 1 {
+			val, _ = arg[1].(map[string]interface{})
+		}
+
 		for _, k := range list {
-			switch key {
-			case "detail":
-				m.Add(MSG_APPEND, "key", k)
-				m.Add(MSG_APPEND, "value", kit.Format(value[k]))
+			// 查找数据
+			var v interface{}
+			switch k {
+			case kit.MDB_KEY, kit.MDB_ZONE:
+				v = key
 			default:
-				if k == "key" {
-					m.Add(MSG_APPEND, k, key)
-				} else {
-					m.Add(MSG_APPEND, k, kit.Format(kit.Value(value, k)))
+				if v = kit.Value(value, k); v == nil {
+					v = kit.Value(value, kit.Keys(kit.MDB_EXTRA, k))
 				}
+				if v == nil && val != nil {
+					if v = kit.Value(val, k); v == nil {
+						v = kit.Value(val, kit.Keys(kit.MDB_EXTRA, k))
+					}
+				}
+			}
+
+			// 追加数据
+			switch v := kit.Format(v); key {
+			case "detail":
+				m.Add(MSG_APPEND, kit.MDB_KEY, k)
+				m.Add(MSG_APPEND, kit.MDB_VALUE, v)
+			default:
+				m.Add(MSG_APPEND, k, v)
 			}
 		}
 		return m

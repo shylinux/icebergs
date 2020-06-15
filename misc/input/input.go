@@ -242,7 +242,7 @@ var Index = &ice.Context{Name: "input", Help: "输入法",
 		"demo": {Name: "demo list nconn nreq", Help: "导入词库", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			conf, e := conf.Open(kit.Select("hi.shy", arg, 0))
 			m.Assert(e)
-			m.Echo(conf.Get("hi"))
+			m.Echo(conf.Get("he"))
 		}},
 	},
 }

@@ -465,23 +465,7 @@ func (m *Message) Show(cmd string, arg ...string) bool {
 	return false
 }
 
-func (m *Message) RichList(prefix string, zone string, id string, field ...interface{}) {
-	m.Richs(prefix, nil, kit.Select(kit.MDB_FOREACH, zone), func(key string, val map[string]interface{}) {
-		if zone = kit.Format(kit.Value(val, "meta.zone")); id == "" {
-			m.Grows(prefix, kit.Keys(kit.MDB_HASH, key), "", "", func(index int, value map[string]interface{}) {
-				m.Push(zone, value)
-				m.Push(kit.MDB_ZONE, zone)
-			})
-			return
-		}
-		m.Grows(prefix, kit.Keys(kit.MDB_HASH, key), kit.MDB_ID, id, func(index int, value map[string]interface{}) {
-			m.Push("detail", value)
-		})
-	})
-}
 func (m *Message) RichCreate(prefix string, zone string, arg ...string) {
-	if m.Richs(prefix, nil, zone, nil) == nil {
-		m.Rich(prefix, nil, kit.Data(kit.MDB_ZONE, zone, arg))
-		m.Log_CREATE(kit.MDB_ZONE, zone)
-	}
+}
+func (m *Message) RichInsert(prefix string, zone string, kind, name, text string, data []string, arg ...string) {
 }

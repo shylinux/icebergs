@@ -4,71 +4,17 @@ import (
 	ice "github.com/shylinux/icebergs"
 	kit "github.com/shylinux/toolkits"
 
-	"bytes"
-	"fmt"
 	"os"
-	"os/exec"
 	"os/user"
 	"path"
 	"runtime"
 	"strings"
 )
 
-func _system_run(m *ice.Message, cmd *exec.Cmd) {
-	out := bytes.NewBuffer(make([]byte, 0, 1024))
-	err := bytes.NewBuffer(make([]byte, 0, 1024))
-	cmd.Stdout = out
-	cmd.Stderr = err
-	if e := cmd.Run(); e != nil {
-		m.Warn(e != nil, "%v run: %s", nil, kit.Select(e.Error(), err.String()))
-	} else {
-		m.Cost("%v exit: %v", nil, cmd.ProcessState.ExitCode())
-	}
-	m.Push("code", int(cmd.ProcessState.ExitCode()))
-	m.Echo(out.String())
-}
-func _daemon_run(m *ice.Message, cmd *exec.Cmd, out, err string) {
-	if out != "" {
-		if f, p, e := kit.Create(out); m.Assert(e) {
-			m.Log_EXPORT("stdout", p)
-			cmd.Stdout = f
-			cmd.Stderr = f
-		}
-	}
-	if err != "" {
-		if f, p, e := kit.Create(err); m.Assert(e) {
-			m.Log_EXPORT("stderr", p)
-			cmd.Stderr = f
-		}
-	}
-
-	cmd.Env = append(cmd.Env, fmt.Sprintf("PATH=%s", os.Getenv("PATH")))
-	if e := cmd.Start(); m.Warn(e != nil, "%v start: %s", cmd.Args, e) {
-		return
-	}
-
-	m.Rich("daemon", nil, kit.Dict(kit.MDB_NAME, cmd.Process.Pid, "status", "running"))
-	m.Echo("%d", cmd.Process.Pid)
-
-	m.Gos(m, func(m *ice.Message) {
-		if e := cmd.Wait(); e != nil {
-			m.Warn(e != nil, "%v wait: %s", cmd.Args, e)
-		} else {
-			m.Cost("%v exit: %v", cmd.Args, cmd.ProcessState.ExitCode())
-			m.Rich("daemon", nil, func(key string, value map[string]interface{}) {
-				value["status"] = "exited"
-			})
-		}
-	})
-}
-
 var Index = &ice.Context{Name: "cli", Help: "命令模块",
 	Caches: map[string]*ice.Cache{},
 	Configs: map[string]*ice.Config{
 		ice.CLI_RUNTIME: {Name: "runtime", Help: "运行环境", Value: kit.Dict()},
-		ice.CLI_SYSTEM:  {Name: "system", Help: "系统命令", Value: kit.Data()},
-		ice.CLI_DAEMON:  {Name: "daemon", Help: "守护进程", Value: kit.Data(kit.MDB_SHORT, "name")},
-		"python":        {Name: "python", Help: "系统命令", Value: kit.Data("python", "python", "pip", "pip")},
 	},
 	Commands: map[string]*ice.Command{
 		ice.ICE_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
@@ -118,49 +64,6 @@ var Index = &ice.Context{Name: "cli", Help: "命令模块",
 
 		ice.CLI_RUNTIME: {Name: "runtime", Help: "运行环境", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			m.Cmdy(ice.CTX_CONFIG, ice.CLI_RUNTIME, arg)
-		}},
-		ice.CLI_SYSTEM: {Name: "system", Help: "系统命令", Hand: func(m *ice.Message, c *ice.Context, key string, arg ...string) {
-			cmd := exec.Command(arg[0], arg[1:]...)
-
-			// 运行目录
-			cmd.Dir = m.Option("cmd_dir")
-			if len(cmd.Dir) > 0 {
-				m.Info("dir: %s", cmd.Dir)
-				if _, e := os.Stat(cmd.Dir); e != nil && os.IsNotExist(e) {
-					os.MkdirAll(cmd.Dir, 0777)
-				}
-			}
-
-			// 环境变量
-			env := kit.Simple(m.Optionv("cmd_env"))
-			for i := 0; i < len(env)-1; i += 2 {
-				cmd.Env = append(cmd.Env, fmt.Sprintf("%s=%s", env[i], env[i+1]))
-			}
-			if len(cmd.Env) > 0 {
-				m.Info("env: %s", cmd.Env)
-			}
-
-			switch m.Option("cmd_type") {
-			case "daemon":
-				_daemon_run(m, cmd, m.Option("cmd_stdout"), m.Option("cmd_stderr"))
-			default:
-				_system_run(m, cmd)
-			}
-		}},
-		ice.CLI_DAEMON: {Name: "daemon", Help: "守护进程", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			m.Option("cmd_type", "daemon")
-			m.Cmdy(ice.CLI_SYSTEM, arg)
-		}},
-		"python": {Name: "python", Help: "运行环境", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			prefix := []string{ice.CLI_SYSTEM, m.Conf("python", "meta.python")}
-			switch arg[0] {
-			case "qrcode":
-				m.Cmdy(prefix, "-c", fmt.Sprintf(`import pyqrcode; print(pyqrcode.create('%s').terminal(module_color='%s', quiet_zone=1))`, kit.Select("hello world", arg, 1), kit.Select("blue", arg, 2)))
-			case "install":
-				m.Cmdy(prefix[:1], m.Conf("python", "meta.pip"), "install", arg[1:])
-			default:
-				m.Cmdy(prefix, arg)
-			}
 		}},
 	},
 }

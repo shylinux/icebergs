@@ -13,10 +13,33 @@ import (
 
 var CACHE = ice.Name("cache", Index)
 
-func _cache_list(m *ice.Message) {
-	m.Grows(CACHE, nil, "", "", func(index int, value map[string]interface{}) {
-		m.Push("", value)
+func _cache_list(m *ice.Message, key string) {
+	if key == "" {
+		m.Grows(CACHE, nil, "", "", func(index int, value map[string]interface{}) {
+			m.Push("", value, []string{kit.MDB_TIME, kit.MDB_ID, kit.MDB_TYPE})
+			m.Push(kit.MDB_SIZE, kit.FmtSize(kit.Int64(value[kit.MDB_SIZE])))
+			m.Push("", value, []string{kit.MDB_NAME, kit.MDB_TEXT, kit.MDB_DATA})
+		})
+		m.Sort(kit.MDB_ID, "int_r")
+		return
+	}
+	m.Richs(CACHE, nil, key, func(key string, value map[string]interface{}) {
+		m.Push("detail", value)
+		m.Push(kit.MDB_KEY, "操作")
+		m.Push(kit.MDB_VALUE, `<input type="button" value="运行">`)
 	})
+}
+func _cache_show(m *ice.Message, kind, name, text string, arg ...string) {
+	if kind == "" && name == "" {
+		m.Richs(CACHE, nil, m.Option(kit.MDB_DATA), func(key string, value map[string]interface{}) {
+			kind = kit.Format(value[kit.MDB_TYPE])
+			name = kit.Format(value[kit.MDB_NAME])
+			text = kit.Format(value[kit.MDB_TEXT])
+			arg = kit.Simple(value[kit.MDB_EXTRA])
+			m.Log_EXPORT(kit.MDB_META, CACHE, kit.MDB_TYPE, kind, kit.MDB_NAME, name)
+		})
+	}
+	FavorShow(m, kind, name, text, kit.Simple(arg)...)
 }
 func _cache_save(m *ice.Message, method, kind, name, text string, arg ...string) {
 	size := kit.Int(kit.Select(kit.Format(len(text)), arg, 1))
@@ -56,7 +79,7 @@ func _cache_save(m *ice.Message, method, kind, name, text string, arg ...string)
 	m.Push("size", size)
 	m.Push("data", h)
 }
-func _cache_show(m *ice.Message, key, file string) {
+func _cache_watch(m *ice.Message, key, file string) {
 	if m.Richs(CACHE, nil, key, func(key string, value map[string]interface{}) {
 		if value["file"] == "" {
 			if f, _, e := kit.Create(file); m.Assert(e) {
@@ -89,7 +112,7 @@ func _cache_catch(m *ice.Message, arg ...string) []string {
 			// 导入数据
 			f.Seek(0, os.SEEK_SET)
 			if n, e := io.Copy(o, f); m.Assert(e) {
-				m.Log_IMPORT(kit.MDB_FILE, kit.FmtSize(n), kit.MDB_SIZE, p)
+				m.Log_IMPORT(kit.MDB_FILE, p, kit.MDB_SIZE, kit.FmtSize(n))
 				arg = kit.Simple(arg[0], arg[1], arg[2], p, p, n)
 			}
 		}
@@ -126,7 +149,7 @@ func _cache_download(m *ice.Message, r *http.Response, arg ...string) []string {
 
 			// 导入数据
 			if n, e := o.Write(buf); m.Assert(e) {
-				m.Log(ice.LOG_IMPORT, "%s: %s", kit.FmtSize(int64(n)), p)
+				m.Log_IMPORT(kit.MDB_FILE, p, kit.MDB_SIZE, kit.FmtSize(int64(n)))
 				arg = kit.Simple(arg[0], arg[1], arg[2], p, p, n)
 			}
 		}
@@ -134,6 +157,10 @@ func _cache_download(m *ice.Message, r *http.Response, arg ...string) []string {
 	return arg
 }
 
+func CacheCatch(m *ice.Message, kind, name string) *ice.Message {
+	_cache_catch(m, "catch", kind, name)
+	return m
+}
 func init() {
 	Index.Merge(&ice.Context{
 		Configs: map[string]*ice.Config{
@@ -142,9 +169,20 @@ func init() {
 			)},
 		},
 		Commands: map[string]*ice.Command{
-			CACHE: {Name: "cache", Help: "缓存池", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			CACHE: {Name: "cache data=auto auto", Help: "缓存池", Action: map[string]*ice.Action{
+				kit.MDB_CREATE: {Name: "create type name text arg...", Help: "创建", Hand: func(m *ice.Message, arg ...string) {
+					_cache_save(m, "add", arg[0], arg[1], arg[2], arg[3:]...)
+				}},
+				kit.MDB_SHOW: {Name: "show type name text arg...", Help: "运行", Hand: func(m *ice.Message, arg ...string) {
+					if len(arg) > 2 {
+						_cache_show(m, arg[0], arg[1], arg[2], arg[3:]...)
+					} else {
+						_cache_show(m, "", "", "")
+					}
+				}},
+			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 				if len(arg) == 0 {
-					_cache_list(m)
+					_cache_list(m, "")
 					return
 				}
 
@@ -162,7 +200,9 @@ func init() {
 				case "add":
 					_cache_save(m, arg[0], arg[1], arg[2], arg[3], arg[4:]...)
 				case "watch":
-					_cache_show(m, arg[1], arg[2])
+					_cache_watch(m, arg[1], arg[2])
+				default:
+					_cache_list(m, arg[0])
 				}
 			}},
 			"/cache/": {Name: "/cache/", Help: "缓存池", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {

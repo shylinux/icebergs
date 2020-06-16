@@ -1,5 +1,10 @@
 package ice
 
+const (
+	DIR_MOD  = 0750
+	FILE_MOD = 0640
+)
+
 const ( // ICE
 	ICE_CHAN = 10
 	ICE_INIT = "_init"

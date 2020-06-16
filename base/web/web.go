@@ -265,7 +265,7 @@ func (web *Frame) HandleCmd(m *ice.Message, key string, cmd *ice.Command) {
 			defer func() { msg.Cost("%s %v %v", r.URL.Path, msg.Optionv("cmds"), msg.Format("append")) }()
 			if u, e := url.Parse(r.Header.Get("Referer")); e == nil {
 				for k, v := range u.Query() {
-					msg.Info("%s: %v", k, v)
+					msg.Logs("refer", k, v)
 					msg.Option(k, v)
 				}
 			}
@@ -307,7 +307,7 @@ func (web *Frame) HandleCmd(m *ice.Message, key string, cmd *ice.Command) {
 				r.ParseMultipartForm(kit.Int64(kit.Select(r.Header.Get("Content-Length"), "4096")))
 				if r.ParseForm(); len(r.PostForm) > 0 {
 					for k, v := range r.PostForm {
-						msg.Info("%s: %v", k, v)
+						msg.Logs("form", k, v)
 					}
 				}
 			}
@@ -576,6 +576,10 @@ var Index = &ice.Context{Name: "web", Help: "网络模块",
 						m.Push("text", value["text"])
 					}
 				})
+			}}))
+
+			m.Conf(ice.WEB_FAVOR, "meta.render.bench", m.AddCmd(&ice.Command{Name: "render type name text arg...", Help: "渲染引擎", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+				m.Cmdy("web.code.bench", "action", "show", arg)
 			}}))
 		}},
 		ice.ICE_EXIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {

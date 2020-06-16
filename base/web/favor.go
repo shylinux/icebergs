@@ -41,7 +41,24 @@ func _favor_list(m *ice.Message, zone, id string, fields ...string) {
 		})
 	})
 }
-func _favor_show(m *ice.Message, zone, id string, arg ...string) {
+func _favor_show(m *ice.Message, kind string, name, text interface{}, arg ...string) {
+	if kind == "" && name == "" {
+		m.Richs(FAVOR, nil, m.Option(kit.MDB_ZONE), func(key string, val map[string]interface{}) {
+			m.Grows(FAVOR, kit.Keys(kit.MDB_HASH, key), kit.MDB_ID, m.Option(kit.MDB_ID), func(index int, value map[string]interface{}) {
+				kind = kit.Format(value[kit.MDB_TYPE])
+				name = kit.Format(value[kit.MDB_NAME])
+				text = kit.Format(value[kit.MDB_TEXT])
+				arg = kit.Simple(value[kit.MDB_EXTRA])
+				m.Log_EXPORT(kit.MDB_META, FAVOR, kit.MDB_TYPE, kind, kit.MDB_NAME, name)
+			})
+		})
+	}
+
+	if cmd := m.Conf(FAVOR, kit.Keys("meta.render", kind)); cmd != "" {
+		m.Cmdy(cmd, kind, name, text, arg)
+		return
+	}
+	m.Cmdy(kind, "action", "show", kind, name, text, arg)
 }
 func _favor_sync(m *ice.Message, zone, route, favor string, arg ...string) {
 	m.Richs(FAVOR, nil, zone, func(key string, val map[string]interface{}) {
@@ -126,7 +143,7 @@ func _favor_modify(m *ice.Message, zone, id, pro, set, old string) {
 		})
 	})
 }
-func _favor_insert(m *ice.Message, zone, kind, name, text string, arg ...string) {
+func _favor_insert(m *ice.Message, zone, kind, name interface{}, text interface{}, arg ...string) {
 	m.Richs(FAVOR, nil, zone, func(key string, val map[string]interface{}) {
 		kit.Value(val, kit.Keys(kit.MDB_META, kit.MDB_TIME), m.Time())
 
@@ -218,12 +235,16 @@ func _favor_export(m *ice.Message, file string) {
 	m.Log_EXPORT(kit.MDB_FILE, p, kit.MDB_COUNT, count)
 }
 
-func FavorInsert(m *ice.Message, zone, kind, name, text string, extra ...string) {
+func FavorInsert(m *ice.Message, zone, kind string, name interface{}, text interface{}, extra ...string) {
 	_favor_create(m, zone)
 	_favor_insert(m, zone, kind, name, text, extra...)
 }
 func FavorList(m *ice.Message, favor, id string, fields ...string) {
 	_favor_list(m, favor, id, fields...)
+}
+func FavorShow(m *ice.Message, kind string, name, text interface{}, arg ...string) *ice.Message {
+	_favor_show(m, kind, name, text, arg...)
+	return m
 }
 
 func init() {
@@ -264,8 +285,12 @@ func init() {
 				kit.MDB_SYNC: {Name: "sync route favor", Help: "同步", Hand: func(m *ice.Message, arg ...string) {
 					_favor_sync(m, m.Option(kit.MDB_ZONE), arg[0], arg[1], arg[2:]...)
 				}},
-				kit.MDB_SHOW: {Name: "show arg...", Help: "运行", Hand: func(m *ice.Message, arg ...string) {
-					_favor_show(m, m.Option(kit.MDB_ZONE), m.Option(kit.MDB_ID), arg...)
+				kit.MDB_SHOW: {Name: "show type name text arg...", Help: "运行", Hand: func(m *ice.Message, arg ...string) {
+					if len(arg) > 2 {
+						_favor_show(m, arg[0], arg[1], arg[2], arg[3:]...)
+					} else {
+						_favor_show(m, "", "", "")
+					}
 				}},
 			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 				fields := []string{kit.MDB_TIME, kit.MDB_ID, kit.MDB_TYPE, kit.MDB_NAME, kit.MDB_TEXT}

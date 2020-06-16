@@ -27,14 +27,17 @@ var Index = &ice.Context{Name: "zsh", Help: "命令行",
 	},
 	Commands: map[string]*ice.Command{
 		ice.ICE_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			m.Conf(ice.WEB_FAVOR, "meta.render.shell", m.AddCmd(&ice.Command{Name: "render favor id", Help: "渲染引擎", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-				value := m.Optionv("value").(map[string]interface{})
+			m.Conf(ice.WEB_FAVOR, "meta.render.shell", m.AddCmd(&ice.Command{Name: "render type name text", Help: "渲染引擎", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+				value, _ := m.Optionv(kit.MDB_VALUE).(map[string]interface{})
 				m.Option("cmd_dir", kit.Value(value, "extra.pwd"))
-				m.Cmdy(ice.CLI_SYSTEM, value["text"])
+				m.Cmdy(ice.CLI_SYSTEM, kit.Select(kit.Format(value["text"]), arg, 2))
 			}}))
-			m.Conf(ice.WEB_FAVOR, "meta.render.cmd", m.AddCmd(&ice.Command{Name: "render favor id", Help: "渲染引擎", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-				value := m.Optionv("value").(map[string]interface{})
-				m.Cmdy(kit.Split(kit.Format(value["text"])))
+			m.Conf(ice.WEB_FAVOR, "meta.render.cmd", m.AddCmd(&ice.Command{Name: "render type name text", Help: "渲染引擎", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+				value, _ := m.Optionv(kit.MDB_VALUE).(map[string]interface{})
+				m.Cmdy(kit.Split(kit.Format(kit.Select(kit.Format(value["text"], arg, 2)))))
+			}}))
+			m.Conf(ice.WEB_FAVOR, "meta.render.bin", m.AddCmd(&ice.Command{Name: "render type name text", Help: "渲染引擎", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+				m.Cmdy(ice.CLI_SYSTEM, "file", arg[2])
 			}}))
 		}},
 		ice.CODE_PREPARE: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {

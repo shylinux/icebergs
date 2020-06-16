@@ -130,6 +130,7 @@ func (f *Frame) parse(m *ice.Message, line string) *Frame {
 		// 解析选项
 		ln := []string{}
 		msg := m.Spawns(f.target)
+		msg.Option("cache.limit", 10)
 		for i := 0; i < len(ls); i++ {
 			if ls[i] == "--" {
 				ln = append(ln, ls[i+1:]...)

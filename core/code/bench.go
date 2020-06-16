@@ -28,7 +28,7 @@ func _bench_list(m *ice.Message, zone string, id string, field ...interface{}) {
 				m.Push(zone, value, []string{
 					kit.MDB_ZONE, kit.MDB_ID, kit.MDB_TYPE,
 					kit.MDB_NAME, NCONN, NREQS, kit.MDB_TEXT,
-				})
+				}, val)
 			})
 			return
 		}
@@ -109,17 +109,23 @@ func init() {
 				kit.MDB_MODIFY: {Name: "modify key value old", Help: "编辑", Hand: func(m *ice.Message, arg ...string) {
 					_bench_modify(m, m.Option(kit.MDB_ZONE), m.Option(kit.MDB_ID), arg[0], arg[1], kit.Select("", arg, 2))
 				}},
-				kit.MDB_SHOW: {Name: "show", Help: "运行", Hand: func(m *ice.Message, arg ...string) {
-					m.Richs(BENCH, nil, m.Option(kit.MDB_ZONE), func(key string, val map[string]interface{}) {
-						m.Grows(BENCH, kit.Keys(kit.MDB_HASH, key), kit.MDB_ID, m.Option(kit.MDB_ID), func(index int, value map[string]interface{}) {
-							m.Option(kit.MDB_TEXT, value[kit.MDB_TEXT])
-							m.Option(NCONN, value[NCONN])
-							m.Option(NREQS, value[NREQS])
+				kit.MDB_SHOW: {Name: "show type name text arg...", Help: "运行", Hand: func(m *ice.Message, arg ...string) {
+					if len(arg) < 2 {
+						m.Richs(BENCH, nil, m.Option(kit.MDB_ZONE), func(key string, val map[string]interface{}) {
+							m.Grows(BENCH, kit.Keys(kit.MDB_HASH, key), kit.MDB_ID, m.Option(kit.MDB_ID), func(index int, value map[string]interface{}) {
+								arg = kit.Simple(value[kit.MDB_TYPE], value[kit.MDB_NAME], value[kit.MDB_TEXT], value[kit.MDB_EXTRA])
+							})
 						})
-					})
+					}
+					if len(arg) > 2 {
+						m.Option(kit.MDB_TEXT, arg[2])
+						for i := 3; i < len(arg)-1; i++ {
+							m.Option(arg[i], arg[i+1])
+						}
+					}
 
 					list := []*http.Request{}
-					target := kit.Select(m.Option(kit.MDB_TEXT))
+					target := kit.Select(m.Option(kit.MDB_TEXT), arg, 2)
 					for _, v := range strings.Split(target, ",") {
 						switch ls := kit.Split(v); ls[0] {
 						case http.MethodPost:

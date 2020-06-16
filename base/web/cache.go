@@ -158,7 +158,8 @@ func _cache_download(m *ice.Message, r *http.Response, arg ...string) []string {
 }
 
 func CacheCatch(m *ice.Message, kind, name string) *ice.Message {
-	_cache_catch(m, "catch", kind, name)
+	arg := _cache_catch(m, "catch", kind, name)
+	_cache_save(m, arg[0], arg[1], arg[2], arg[3], arg[4:]...)
 	return m
 }
 func init() {

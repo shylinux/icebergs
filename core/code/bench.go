@@ -142,7 +142,6 @@ func init() {
 							list = append(list, req)
 						}
 					}
-					m.Echo("%s \n", target)
 					_bench_show(m, kit.Int64(kit.Select(m.Option(NCONN))), kit.Int64(kit.Select(m.Option(NREQS))), list)
 				}},
 			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {

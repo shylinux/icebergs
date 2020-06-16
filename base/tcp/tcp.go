@@ -2,6 +2,7 @@ package tcp
 
 import (
 	"github.com/shylinux/icebergs"
+	"github.com/shylinux/icebergs/base/cli"
 	"github.com/shylinux/toolkits"
 
 	"bufio"
@@ -24,7 +25,7 @@ func _tcp_port(m *ice.Message) {
 		current = kit.Int(m.Conf(GETPORT, "meta.begin"))
 	}
 	for i := current; i < end; i++ {
-		if m.Cmd(ice.CLI_SYSTEM, "lsof", "-i", kit.Format(":%d", i)).Append("code") != "0" {
+		if m.Cmd(cli.SYSTEM, "lsof", "-i", kit.Format(":%d", i)).Append(cli.CMD_CODE) != "0" {
 			m.Conf(GETPORT, "meta.current", i)
 			m.Log_CREATE(GETPORT, i)
 			m.Echo("%d", i)

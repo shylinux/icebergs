@@ -1,10 +1,10 @@
 package code
 
 import (
-	"github.com/shylinux/icebergs"
+	ice "github.com/shylinux/icebergs"
 	"github.com/shylinux/icebergs/base/cli"
 	"github.com/shylinux/icebergs/base/web"
-	"github.com/shylinux/toolkits"
+	kit "github.com/shylinux/toolkits"
 	"github.com/shylinux/toolkits/task"
 
 	"net/http"
@@ -43,7 +43,7 @@ func _pprof_list(m *ice.Message, zone string, id string, field ...interface{}) {
 		}
 	})
 }
-func _pprof_show(m *ice.Message, zone string, id string, seconds string) {
+func _pprof_show(m *ice.Message, zone string, id string) {
 	favor := m.Conf(PPROF, kit.Keys(kit.MDB_META, web.FAVOR))
 
 	m.Richs(PPROF, nil, zone, func(key string, val map[string]interface{}) {
@@ -69,7 +69,7 @@ func _pprof_show(m *ice.Message, zone string, id string, seconds string) {
 		web.FavorInsert(m, favor, kit.MIME_FILE, bin, val[BINNARY])
 
 		// 性能分析
-		msg := m.Cmd(ice.WEB_SPIDE, "self", "cache", "GET", kit.Select("/code/pprof/profile", val[SERVICE]), "seconds", kit.Select("5", seconds))
+		msg := m.Cmd(ice.WEB_SPIDE, "self", "cache", "GET", kit.Select("/code/pprof/profile", val[SERVICE]), "seconds", kit.Select("5", kit.Format(val[SECONDS])))
 		web.FavorInsert(m, favor, PPROF, msg.Append(kit.MDB_TEXT), kit.Keys(zone, "pd.gz"))
 
 		// 结果摘要
@@ -165,7 +165,7 @@ func init() {
 					_pprof_modify(m, m.Option(kit.MDB_ZONE), m.Option(kit.MDB_ID), arg[0], arg[1], kit.Select("", arg, 2))
 				}},
 				kit.MDB_SHOW: {Name: "show type name text arg...", Help: "运行", Hand: func(m *ice.Message, arg ...string) {
-					_pprof_show(m, m.Option(kit.MDB_ZONE), m.Option(kit.MDB_ID), m.Option(SECONDS))
+					_pprof_show(m, m.Option(kit.MDB_ZONE), m.Option(kit.MDB_ID))
 				}},
 			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 				_pprof_list(m, kit.Select(kit.MDB_FOREACH, arg, 0), kit.Select("", arg, 1))

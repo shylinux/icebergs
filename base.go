@@ -1,13 +1,12 @@
 package ice
 
 import (
-	"github.com/shylinux/toolkits"
+	kit "github.com/shylinux/toolkits"
 	"github.com/shylinux/toolkits/conf"
 	"github.com/shylinux/toolkits/log"
 
 	"fmt"
 	"os"
-	"runtime"
 	"strings"
 	"sync"
 	"time"
@@ -148,7 +147,6 @@ func Run(arg ...string) string {
 	Pulse.Option("cache.limit", "30")
 	Pulse.Option("begin_time", Pulse.Time())
 
-	runtime.GOMAXPROCS(1)
 	if frame.Begin(Pulse.Spawns(), arg...).Start(Pulse, arg...) {
 		frame.Close(Pulse.Spawns(), arg...)
 	}

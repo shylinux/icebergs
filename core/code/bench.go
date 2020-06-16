@@ -1,9 +1,13 @@
 package code
 
 import (
-	"github.com/shylinux/icebergs"
-	"github.com/shylinux/toolkits"
+	"time"
+
+	ice "github.com/shylinux/icebergs"
+	kit "github.com/shylinux/toolkits"
+	"github.com/shylinux/toolkits/log"
 	"github.com/shylinux/toolkits/util/bench"
+	"github.com/shylinux/toolkits/util/bench/redis"
 
 	"io"
 	"net/http"
@@ -54,6 +58,13 @@ func _bench_show(m *ice.Message, nconn, nreq int64, list []*http.Request) {
 
 	m.Echo(s.Show())
 	m.Echo("body: %d\n", body)
+}
+func _bench_redis(m *ice.Message, nconn, nreq int64, hosts []string, cmds []string) {
+	m.Logs("info", "hosts", hosts, "cmds", cmds, nreq, nconn)
+	s, e := redis.Redis(nconn, nreq, hosts, cmds, func(cmd string, arg []interface{}, reply interface{}) {
+	})
+	m.Assert(e)
+	m.Echo("cmds: %s QPS: %.2f n/s AVG: %s time: %s \n", cmds, s.QPS, log.FmtDuration(s.Cost/time.Duration(s.NReq)), log.FmtDuration(s.EndTime.Sub(s.BeginTime)))
 }
 func _bench_modify(m *ice.Message, zone, id, pro, set, old string) {
 	m.Richs(BENCH, nil, zone, func(key string, val map[string]interface{}) {
@@ -110,7 +121,7 @@ func init() {
 					_bench_modify(m, m.Option(kit.MDB_ZONE), m.Option(kit.MDB_ID), arg[0], arg[1], kit.Select("", arg, 2))
 				}},
 				kit.MDB_SHOW: {Name: "show type name text arg...", Help: "运行", Hand: func(m *ice.Message, arg ...string) {
-					if len(arg) < 2 {
+					if len(arg) < 4 {
 						m.Richs(BENCH, nil, m.Option(kit.MDB_ZONE), func(key string, val map[string]interface{}) {
 							m.Grows(BENCH, kit.Keys(kit.MDB_HASH, key), kit.MDB_ID, m.Option(kit.MDB_ID), func(index int, value map[string]interface{}) {
 								arg = kit.Simple(value[kit.MDB_TYPE], value[kit.MDB_NAME], value[kit.MDB_TEXT], value[kit.MDB_EXTRA])
@@ -118,14 +129,30 @@ func init() {
 						})
 					}
 					if len(arg) > 2 {
+						m.Option(kit.MDB_NAME, arg[1])
 						m.Option(kit.MDB_TEXT, arg[2])
 						for i := 3; i < len(arg)-1; i++ {
 							m.Option(arg[i], arg[i+1])
 						}
 					}
 
-					list := []*http.Request{}
 					target := kit.Select(m.Option(kit.MDB_TEXT), arg, 2)
+					if strings.HasPrefix(target, "redis://") {
+						hosts := []string{}
+						cmds := strings.Split((m.Option(kit.MDB_NAME)), ",")
+						for _, v := range strings.Split(target, ",") {
+							hosts = append(hosts, strings.TrimPrefix(v, "redis://"))
+						}
+						nconn := kit.Int64(kit.Select("10", m.Option(NCONN)))
+						nreqs := kit.Int64(kit.Select("5000", m.Option(NREQS)))
+						m.Echo("nconn: %d nreqs: %d\n", nconn, nreqs*nconn)
+						for _, cmd := range cmds {
+							_bench_redis(m, nconn, nreqs, hosts, []string{cmd})
+						}
+						return
+					}
+
+					list := []*http.Request{}
 					for _, v := range strings.Split(target, ",") {
 						switch ls := kit.Split(v); ls[0] {
 						case http.MethodPost:

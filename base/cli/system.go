@@ -10,7 +10,7 @@ import (
 	"os/exec"
 )
 
-var SYSTEM = ice.Name("system", Index)
+var SYSTEM = ice.Name("system", nil)
 
 const (
 	CMD_STDOUT = "cmd_stdout"

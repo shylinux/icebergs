@@ -101,6 +101,12 @@ func _cache_watch(m *ice.Message, key, file string) {
 }
 
 func _cache_catch(m *ice.Message, arg ...string) []string {
+	if r, ok := m.Optionv("response").(*http.Response); ok {
+		return _cache_download(m, r, arg...)
+	} else if m.R != nil {
+		return _cache_upload(m, arg...)
+	}
+
 	if f, e := os.Open(arg[2]); m.Assert(e) {
 		defer f.Close()
 
@@ -188,15 +194,8 @@ func init() {
 				}
 
 				switch arg[0] {
-				case "catch":
+				case "download", "upload", "catch":
 					arg = _cache_catch(m, arg...)
-					fallthrough
-				case "download", "upload":
-					if r, ok := m.Optionv("response").(*http.Response); ok {
-						arg = _cache_download(m, r, arg...)
-					} else if m.R != nil {
-						arg = _cache_upload(m, arg...)
-					}
 					fallthrough
 				case "add":
 					_cache_save(m, arg[0], arg[1], arg[2], arg[3], arg[4:]...)

@@ -2,7 +2,7 @@ package aaa
 
 import (
 	"github.com/shylinux/icebergs"
-	"github.com/shylinux/icebergs/base/cli"
+	// "github.com/shylinux/icebergs/base/cli"
 	"github.com/shylinux/toolkits"
 )
 
@@ -26,8 +26,6 @@ var Index = &ice.Context{Name: "aaa", Help: "认证模块", Commands: map[string
 		m.Rich(ROLE, nil, kit.Dict(kit.MDB_NAME, TECH, Black, kit.Dict(), White, kit.Dict()))
 		m.Rich(ROLE, nil, kit.Dict(kit.MDB_NAME, VOID, White, kit.Dict(), Black, kit.Dict()))
 		m.Load()
-		cli.PassWord = kit.Hashs("uniq")
-		_user_create(m, cli.UserName, cli.PassWord)
 	}},
 	ice.ICE_EXIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 		m.Save(ROLE, USER, SESS)

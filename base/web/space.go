@@ -58,7 +58,7 @@ func _space_dial(m *ice.Message, dev, name string, arg ...string) {
 								"socket", s,
 							))
 							msg.Log(ice.LOG_CMDS, "%d conn %s success %s", i, dev, u)
-							if i = 0; web.HandleWSS(msg, true, s, dev) {
+							if i = 0; HandleWSS(msg, true, web.send, s, dev) {
 								break
 							}
 						}
@@ -110,6 +110,70 @@ func _space_send(m *ice.Message, space string, arg ...string) {
 			})
 		}
 	}) == nil, "not found %s", space)
+}
+
+func HandleWSS(m *ice.Message, safe bool, send map[string]*ice.Message, c *websocket.Conn, name string) bool {
+	for running := true; running; {
+		if t, b, e := c.ReadMessage(); m.Warn(e != nil, "space recv %d msg %v", t, e) {
+			// 解析失败
+			break
+		} else {
+			socket, msg := c, m.Spawns(b)
+			target := kit.Simple(msg.Optionv(ice.MSG_TARGET))
+			source := kit.Simple(msg.Optionv(ice.MSG_SOURCE), name)
+			msg.Info("recv %v<-%v %s %v", target, source, msg.Detailv(), msg.Format("meta"))
+
+			if len(target) == 0 {
+				msg.Option(ice.MSG_USERROLE, msg.Cmdx(ice.AAA_ROLE, "check", msg.Option(ice.MSG_USERNAME)))
+				msg.Logs(ice.LOG_AUTH, "role", msg.Option(ice.MSG_USERROLE), "user", msg.Option(ice.MSG_USERNAME))
+				if msg.Optionv(ice.MSG_HANDLE, "true"); !msg.Warn(!safe, "no right") {
+					// 本地执行
+					m.Option("_dev", name)
+					msg = msg.Cmd()
+					msg.Set("_option")
+					msg.Set("_option")
+				}
+				if source, target = []string{}, kit.Revert(source)[1:]; msg.Detail() == "exit" {
+					// 重启进程
+					return true
+				}
+			} else if msg.Richs(ice.WEB_SPACE, nil, target[0], func(key string, value map[string]interface{}) {
+				// 查询节点
+				if s, ok := value["socket"].(*websocket.Conn); ok {
+					socket, source, target = s, source, target[1:]
+				} else {
+					socket, source, target = s, source, target[1:]
+				}
+			}) != nil {
+				// 转发报文
+
+			} else if res, ok := send[msg.Option(ice.MSG_TARGET)]; len(target) == 1 && ok {
+				// 接收响应
+				delete(send, msg.Option(ice.MSG_TARGET))
+				res.Cost("%v->%v %v %v", target, source, res.Detailv(), msg.Format("append"))
+				res.Back(msg)
+				continue
+
+			} else if msg.Warn(msg.Option("_handle") == "true", "space miss") {
+				// 回复失败
+				continue
+
+			} else {
+				// 下发失败
+				msg.Warn(true, "space error")
+				source, target = []string{}, kit.Revert(source)[1:]
+			}
+
+			// 发送报文
+			msg.Optionv(ice.MSG_SOURCE, source)
+			msg.Optionv(ice.MSG_TARGET, target)
+			socket.WriteMessage(t, []byte(msg.Format("meta")))
+			target = append([]string{name}, target...)
+			msg.Info("send %v %v->%v %v %v", t, source, target, msg.Detailv(), msg.Format("meta"))
+			msg.Cost("%v->%v %v %v", source, target, msg.Detailv(), msg.Format("append"))
+		}
+	}
+	return false
 }
 
 func init() {
@@ -180,7 +244,7 @@ func init() {
 					m.Gos(m, func(m *ice.Message) {
 						// 监听消息
 						m.Event(ice.SPACE_START, m.Option("node"), m.Option("name"))
-						m.Target().Server().(*Frame).HandleWSS(m, false, s, m.Option("name"))
+						HandleWSS(m, false, m.Target().Server().(*Frame).send, s, m.Option("name"))
 						m.Log(ice.LOG_CLOSE, "%s: %s", m.Option(kit.MDB_NAME), kit.Format(m.Confv(ice.WEB_SPACE, kit.Keys(kit.MDB_HASH, h))))
 						m.Event(ice.SPACE_CLOSE, m.Option("node"), m.Option("name"))
 						m.Confv(ice.WEB_SPACE, kit.Keys(kit.MDB_HASH, h), "")

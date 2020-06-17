@@ -40,9 +40,6 @@ func _config_list(m *ice.Message, all bool) {
 func _config_save(m *ice.Message, name string, arg ...string) {
 	msg := m.Spawn(m.Source())
 	// 保存配置
-	if m.Cap(ice.CTX_STATUS) != ice.ICE_START {
-		return
-	}
 	name = path.Join(msg.Conf(ice.CTX_CONFIG, "meta.path"), name)
 	if f, p, e := kit.Create(name); m.Assert(e) {
 		data := map[string]interface{}{}

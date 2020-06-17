@@ -22,7 +22,7 @@ var Index = &ice.Context{Name: "mp", Help: "小程序",
 	Commands: map[string]*ice.Command{
 		ice.ICE_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			m.Load()
-			m.Cmd(ice.WEB_SPIDE, "add", "weixin", m.Conf("login", "meta.weixin"))
+			web.SpideCreate(m, "weixin", m.Conf("login", "meta.weixin"))
 			m.Confm("login", "meta.userrole", func(key string, value string) {
 				m.Cmd(ice.AAA_ROLE, value, key)
 			})

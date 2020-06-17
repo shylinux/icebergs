@@ -21,17 +21,19 @@ func _sess_auth(m *ice.Message, sessid string, username string, userrole string)
 		}
 		value["username"] = username
 		m.Log_AUTH(SESSID, sessid, USERNAME, username, USERROLE, userrole)
-		m.Echo("%v", value[USERROLE])
 	})
 }
 func _sess_check(m *ice.Message, sessid string) {
 	m.Richs(SESS, nil, sessid, func(value map[string]interface{}) {
-		m.Push(sessid, value, []string{USERNAME, USERROLE})
-		m.Echo("%s", value[USERROLE])
+		m.Log_AUTH(
+			USERROLE, m.Option(ice.MSG_USERROLE, value[USERROLE]),
+			USERNAME, m.Option(ice.MSG_USERNAME, value[USERNAME]),
+		)
 	})
 }
 func _sess_create(m *ice.Message, username string) string {
 	h := m.Rich(SESS, nil, kit.Dict(
+		kit.MDB_TIME, m.Time(m.Conf(SESS, "meta.expire")),
 		USERNAME, username, "from", m.Option(ice.MSG_SESSID),
 	))
 	m.Log_CREATE(SESSID, h, USERNAME, username)

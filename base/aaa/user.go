@@ -25,12 +25,17 @@ func _user_create(m *ice.Message, name, word string) {
 	// 创建用户
 	m.Rich(USER, nil, kit.Dict(
 		USERNAME, name, PASSWORD, word,
-		USERNICK, name, USERNODE, m.Conf(ice.CLI_RUNTIME, "boot.hostname"),
+		USERNICK, name, USERNODE, cli.NodeName,
 	))
 	m.Log_CREATE(USERNAME, name)
 	m.Event(ice.USER_CREATE, name)
 }
 
+func UserRoot(m *ice.Message) {
+	cli.PassWord = kit.Hashs("uniq")
+	cli.PassWord = cli.UserName
+	_user_create(m, cli.UserName, cli.PassWord)
+}
 func UserRole(m *ice.Message, username string) string {
 	if username == cli.UserName {
 		return ROOT
@@ -42,12 +47,6 @@ func UserLogin(m *ice.Message, username, password string) bool {
 		m.Option(ice.MSG_USERNAME, username)
 		m.Option(ice.MSG_USERROLE, UserRole(m, username))
 		m.Option(ice.MSG_SESSID, SessCreate(m, m.Option(ice.MSG_USERNAME), m.Option(ice.MSG_USERROLE)))
-
-		m.Log_AUTH(
-			USERROLE, m.Option(ice.MSG_USERROLE),
-			USERNAME, m.Option(ice.MSG_USERNAME),
-			SESSID, m.Option(ice.MSG_SESSID),
-		)
 		return true
 	}
 	return false
@@ -66,43 +65,7 @@ func init() {
 					_user_login(m, arg[0], arg[1])
 				}},
 			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-				if len(arg) == 0 {
-					_user_list(m)
-					return
-				}
-
-				switch arg[0] {
-				case "first":
-					// 超级用户
-					if m.Richs(ice.AAA_USER, nil, "%", nil) == nil {
-					}
-
-				case "login":
-					// 用户认证
-					user := m.Richs(USER, nil, arg[1], nil)
-					if word := kit.Select("", arg, 2); user == nil {
-						nick := arg[1]
-						if len(nick) > 8 {
-							nick = nick[:8]
-						}
-						_user_create(m, arg[1], word)
-
-					} else if word != "" {
-						if !_user_login(m, arg[1], word) {
-							m.Info("login fail user: %s", arg[1])
-							break
-						}
-					}
-
-					if m.Options(ice.MSG_SESSID) && m.Cmdx(ice.AAA_SESS, "check", m.Option(ice.MSG_SESSID)) == arg[1] {
-						// 复用会话
-						m.Echo(m.Option(ice.MSG_SESSID))
-						break
-					}
-
-					// 创建会话
-					m.Echo(m.Cmdx(ice.AAA_SESS, "create", arg[1]))
-				}
+				_user_list(m)
 			}},
 		},
 	}, nil)

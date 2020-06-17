@@ -30,7 +30,8 @@ func _system_show(m *ice.Message, cmd *exec.Cmd) {
 	cmd.Stderr = err
 
 	defer m.Cost("%v exit: %v out: %v err: %v ", cmd.Args, 0, out.Len(), err.Len())
-	if e := cmd.Run(); !m.Warn(e != nil, "%v run: %s", cmd.Args, kit.Select(e.Error(), err.String())) {
+	if e := cmd.Run(); e != nil {
+		m.Warn(e != nil, "%v run: %s", cmd.Args, kit.Select(e.Error(), err.String()))
 	}
 
 	m.Push(CMD_CODE, int(cmd.ProcessState.ExitCode()))

@@ -57,7 +57,7 @@ func _ip_islocal(m *ice.Message, ip string) (ok bool) {
 	})
 	return ok
 }
-func _tcp_port(m *ice.Message) {
+func _tcp_port(m *ice.Message) string {
 	current := kit.Int(m.Conf(GETPORT, "meta.current"))
 	end := kit.Int(m.Conf(GETPORT, "meta.end"))
 	if current >= end {
@@ -67,14 +67,18 @@ func _tcp_port(m *ice.Message) {
 		if m.Cmd(cli.SYSTEM, "lsof", "-i", kit.Format(":%d", i)).Append(cli.CMD_CODE) != "0" {
 			m.Conf(GETPORT, "meta.current", i)
 			m.Log_CREATE(GETPORT, i)
-			m.Echo("%d", i)
+			return kit.Format("%d", i)
 			break
 		}
 	}
+	return ""
 }
 
 func IPIsLocal(m *ice.Message, ip string) bool {
 	return _ip_islocal(m, ip)
+}
+func TCPPort(m *ice.Message) string {
+	return _tcp_port(m)
 }
 
 var Index = &ice.Context{Name: "tcp", Help: "通信模块",
@@ -92,7 +96,7 @@ var Index = &ice.Context{Name: "tcp", Help: "通信模块",
 			_ip_list(m, "")
 		}},
 		GETPORT: {Name: "getport", Help: "分配端口", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			_tcp_port(m)
+			m.Echo(_tcp_port(m))
 		}},
 
 		"ip": {Name: "ifconfig [name]", Help: "网络配置", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {

@@ -24,6 +24,12 @@ var HostName = ""
 var PathName = ""
 var NodeName = ""
 
+func NodeType(m *ice.Message, kind, name string) {
+	m.Conf(ice.CLI_RUNTIME, "node.type", kind)
+	m.Conf(ice.CLI_RUNTIME, "node.name", name)
+	NodeName = name
+}
+
 var Index = &ice.Context{Name: "cli", Help: "命令模块",
 	Configs: map[string]*ice.Config{
 		RUNTIME: {Name: "runtime", Help: "运行环境", Value: kit.Dict()},

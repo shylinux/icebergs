@@ -14,7 +14,7 @@ var Index = &ice.Context{Name: "railway", Help: "railway",
 	Commands: map[string]*ice.Command{
 		ice.ICE_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			m.Load()
-			m.Cmd(ice.WEB_SPIDE, "add", "12306", m.Conf("railway", "meta.site"))
+			web.SpideCreate(m, "12306", m.Conf("railway", "meta.site"))
 		}},
 		ice.ICE_EXIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			m.Save("railway")

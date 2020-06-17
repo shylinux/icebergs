@@ -10,8 +10,6 @@ import (
 	"strings"
 )
 
-var SHARE = ice.Name(kit.MDB_SHARE, Index)
-
 func _share_list(m *ice.Message, key string, fields ...string) {
 	if key == "" {
 		m.Grows(SHARE, nil, "", "", func(index int, value map[string]interface{}) {
@@ -85,7 +83,7 @@ func _share_remote(m *ice.Message, pod string, arg ...string) {
 	m.Cmdy(ice.WEB_SPACE, pod, "web./publish/", arg)
 	m.Render(ice.RENDER_RESULT)
 }
-func _share_create(m *ice.Message, kind, name, text string, arg ...string) {
+func _share_create(m *ice.Message, kind, name, text string, arg ...string) string {
 	for _, k := range []string{"river", "storm"} {
 		arg = append(arg, k, m.Option(k))
 	}
@@ -103,6 +101,7 @@ func _share_create(m *ice.Message, kind, name, text string, arg ...string) {
 	))
 	m.Log_CREATE(kit.MDB_SHARE, h, kit.MDB_TYPE, kind, kit.MDB_NAME, name)
 	m.Echo(h)
+	return h
 }
 
 func _share_story(m *ice.Message, value map[string]interface{}, arg ...string) map[string]interface{} {
@@ -221,6 +220,11 @@ func _trash(m *ice.Message, arg ...string) {
 		}
 	}
 }
+
+func ShareCreate(m *ice.Message, kind, name, text string, arg ...string) string {
+	return _share_create(m, kind, name, text, arg...)
+}
+
 func init() {
 	Index.Merge(&ice.Context{
 		Configs: map[string]*ice.Config{

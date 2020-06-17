@@ -2,6 +2,7 @@ package ssh
 
 import (
 	"github.com/shylinux/icebergs"
+	"github.com/shylinux/icebergs/base/aaa"
 	"github.com/shylinux/toolkits"
 
 	"bufio"
@@ -178,6 +179,7 @@ func (f *Frame) Begin(m *ice.Message, arg ...string) ice.Server {
 func (f *Frame) Start(m *ice.Message, arg ...string) bool {
 	m.Option(ice.MSG_PROMPT, m.Confv("prompt", "meta.PS1"))
 	f.target = m.Source()
+	aaa.UserRoot(m)
 
 	switch kit.Select("stdio", arg, 0) {
 	case "stdio":

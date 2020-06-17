@@ -66,7 +66,7 @@ var Index = &ice.Context{Name: "lark", Help: "机器人",
 	Commands: map[string]*ice.Command{
 		ice.ICE_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			m.Load()
-			m.Cmd(ice.WEB_SPIDE, "add", LARK, m.Conf(APP, "meta.lark"))
+			web.SpideCreate(m, LARK, m.Conf(APP, "meta.lark"))
 			m.Cmd(DUTY, "boot", m.Conf(ice.CLI_RUNTIME, "boot.hostname"), m.Time())
 		}},
 		ice.ICE_EXIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {

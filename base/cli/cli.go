@@ -11,7 +11,18 @@ import (
 	"strings"
 )
 
-var RUNTIME = ice.Name("runtime", nil)
+const (
+	RUNTIME = "runtime"
+	SYSTEM  = "system"
+	DAEMON  = "daemon"
+	PYTHON  = "python"
+)
+
+var UserName = ""
+var PassWord = ""
+var HostName = ""
+var PathName = ""
+var NodeName = ""
 
 var Index = &ice.Context{Name: "cli", Help: "命令模块",
 	Configs: map[string]*ice.Config{
@@ -37,12 +48,11 @@ var Index = &ice.Context{Name: "cli", Help: "命令模块",
 			runtime.GOMAXPROCS(n)
 
 			// 启动信息
-			if name, e := os.Hostname(); e == nil {
-				m.Conf(RUNTIME, "boot.hostname", kit.Select(name, os.Getenv("HOSTNAME")))
-			}
 			if user, e := user.Current(); e == nil {
 				m.Conf(RUNTIME, "boot.username", path.Base(kit.Select(user.Name, os.Getenv("USER"))))
-				m.Cmd(ice.AAA_ROLE, "root", m.Conf(RUNTIME, "boot.username"))
+			}
+			if name, e := os.Hostname(); e == nil {
+				m.Conf(RUNTIME, "boot.hostname", kit.Select(name, os.Getenv("HOSTNAME")))
 			}
 			if name, e := os.Getwd(); e == nil {
 				name = path.Base(kit.Select(name, os.Getenv("PWD")))
@@ -61,7 +71,12 @@ var Index = &ice.Context{Name: "cli", Help: "命令模块",
 			m.Conf(RUNTIME, "node.time", m.Time())
 			m.Conf(RUNTIME, "node.type", ice.WEB_WORKER)
 			m.Conf(RUNTIME, "node.name", m.Conf(RUNTIME, "boot.pathname"))
-			m.Log("info", "runtime %v", kit.Formats(m.Confv(RUNTIME)))
+			m.Info("runtime %v", kit.Formats(m.Confv(RUNTIME)))
+
+			UserName = m.Conf(RUNTIME, "boot.username")
+			HostName = m.Conf(RUNTIME, "boot.hostname")
+			PathName = m.Conf(RUNTIME, "boot.pathname")
+			NodeName = m.Conf(RUNTIME, "node.nodename")
 		}},
 		ice.ICE_EXIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			m.Save(RUNTIME, SYSTEM)
@@ -73,4 +88,4 @@ var Index = &ice.Context{Name: "cli", Help: "命令模块",
 	},
 }
 
-func init() { ice.Index.Register(Index, nil) }
+func init() { ice.Index.Register(Index, nil, RUNTIME, SYSTEM, DAEMON, PYTHON) }

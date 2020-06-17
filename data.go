@@ -469,3 +469,13 @@ func (m *Message) RichCreate(prefix string, zone string, arg ...string) {
 }
 func (m *Message) RichInsert(prefix string, zone string, kind, name, text string, data []string, arg ...string) {
 }
+func ListLook(name ...string) []interface{} {
+	list := []interface{}{}
+	for _, k := range name {
+		list = append(list, kit.MDB_INPUT, "text", "name", k, "action", "auto")
+	}
+	return kit.List(append(list,
+		kit.MDB_INPUT, "button", "name", "查看", "action", "auto",
+		kit.MDB_INPUT, "button", "name", "返回", "cb", "Last",
+	)...)
+}

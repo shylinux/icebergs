@@ -11,6 +11,14 @@ import (
 	"time"
 )
 
+const (
+	APP  = "app"
+	USER = "user"
+	DUTY = "duty"
+	SEND = "send"
+	LARK = "lark"
+)
+
 func post(m *ice.Message, bot string, arg ...interface{}) {
 	m.Richs("app", nil, bot, func(key string, value map[string]interface{}) {
 		m.Option("header", "Authorization", "Bearer "+m.Cmdx("app", "token", bot), "Content-Type", "application/json")
@@ -49,20 +57,65 @@ func parse(m *ice.Message) {
 }
 
 var Index = &ice.Context{Name: "lark", Help: "机器人",
-	Caches: map[string]*ice.Cache{},
 	Configs: map[string]*ice.Config{
-		"app":  &ice.Config{Name: "app", Help: "服务配置", Value: kit.Data(kit.MDB_SHORT, "name", "lark", "https://open.feishu.cn")},
-		"user": &ice.Config{Name: "user", Help: "用户配置", Value: kit.Data()},
+		APP: &ice.Config{Name: "app", Help: "服务配置", Value: kit.Data(kit.MDB_SHORT, kit.MDB_NAME,
+			LARK, "https://open.feishu.cn",
+		)},
+		USER: &ice.Config{Name: "user", Help: "用户配置", Value: kit.Data()},
 	},
 	Commands: map[string]*ice.Command{
 		ice.ICE_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			m.Load()
-			m.Cmd(ice.WEB_SPIDE, "add", "lark", m.Conf("app", "meta.lark"))
-			m.Cmd("duty", "boot", m.Conf(ice.CLI_RUNTIME, "boot.hostname"), m.Time())
+			m.Cmd(ice.WEB_SPIDE, "add", LARK, m.Conf(APP, "meta.lark"))
+			m.Cmd(DUTY, "boot", m.Conf(ice.CLI_RUNTIME, "boot.hostname"), m.Time())
 		}},
 		ice.ICE_EXIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			m.Save("app", "user")
+			m.Save(APP, USER)
 		}},
+		DUTY: {Name: "send [title] text", Help: "消息", Hand: func(m *ice.Message, c *ice.Context, key string, arg ...string) {
+			m.Cmdy("send", m.Conf(APP, "meta.duty"), arg)
+		}},
+		SEND: {Name: "send [chat_id|open_id|user_id|email] user [title] text", Help: "消息", Hand: func(m *ice.Message, c *ice.Context, key string, arg ...string) {
+			var form = kit.Dict("content", kit.Dict())
+
+			switch arg[0] {
+			case "chat_id", "open_id", "user_id", "email":
+				form[arg[0]], arg = arg[1], arg[2:]
+			default:
+				form["chat_id"], arg = arg[0], arg[1:]
+			}
+
+			switch len(arg) {
+			case 0:
+			case 1:
+				kit.Value(form, "msg_type", "text")
+				kit.Value(form, "content.text", arg[0])
+			default:
+				content := []interface{}{}
+				line := []interface{}{}
+				for _, v := range arg[1:] {
+					if v == "\n" {
+						content, line = append(content, line), []interface{}{}
+						continue
+					}
+					line = append(line, map[string]interface{}{
+						"tag": "text", "text": v + " ",
+					})
+				}
+				content = append(content, line)
+
+				kit.Value(form, "msg_type", "post")
+				kit.Value(form, "content.post", map[string]interface{}{
+					"zh_cn": map[string]interface{}{
+						"title":   arg[0],
+						"content": content,
+					},
+				})
+			}
+
+			post(m, "bot", "/open-apis/message/v4/send/", "data", kit.Formats(form))
+		}},
+
 		ice.WEB_LOGIN: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 		}},
 		"login": {Name: "login", Help: "应用", Hand: func(m *ice.Message, c *ice.Context, key string, arg ...string) {
@@ -174,45 +227,6 @@ var Index = &ice.Context{Name: "lark", Help: "机器人",
 				post(m, "bot", "GET", "/open-apis/user/v1/batch_get_id", us)
 			}
 		}},
-		"send": {Name: "send [chat_id|open_id|user_id|email] user [title] text", Help: "消息", Hand: func(m *ice.Message, c *ice.Context, key string, arg ...string) {
-			var form = map[string]interface{}{"content": map[string]interface{}{}}
-			switch arg[0] {
-			case "chat_id", "open_id", "user_id", "email":
-				form[arg[0]], arg = arg[1], arg[2:]
-			default:
-				form["chat_id"], arg = arg[0], arg[1:]
-			}
-
-			switch len(arg) {
-			case 0:
-			case 1:
-				kit.Value(form, "msg_type", "text")
-				kit.Value(form, "content.text", arg[0])
-			default:
-				content := []interface{}{}
-				line := []interface{}{}
-				for _, v := range arg[1:] {
-					if v == "\n" {
-						content, line = append(content, line), []interface{}{}
-						continue
-					}
-					line = append(line, map[string]interface{}{
-						"tag": "text", "text": v + " ",
-					})
-				}
-				content = append(content, line)
-
-				kit.Value(form, "msg_type", "post")
-				kit.Value(form, "content.post", map[string]interface{}{
-					"zh_cn": map[string]interface{}{
-						"title":   arg[0],
-						"content": content,
-					},
-				})
-			}
-
-			post(m, "bot", "/open-apis/message/v4/send/", "data", kit.Formats(form))
-		}},
 		"menu": {Name: "send chat_id|open_id|user_id|email [menu] [title] text", Help: "消息", Hand: func(m *ice.Message, c *ice.Context, key string, arg ...string) {
 			var form = map[string]interface{}{"content": map[string]interface{}{}}
 			switch arg[0] {
@@ -313,9 +327,6 @@ var Index = &ice.Context{Name: "lark", Help: "机器人",
 
 			post(m, "bot", "/open-apis/message/v4/send/", "data", kit.Formats(form))
 			return
-		}},
-		"duty": {Name: "send [chat_id|open_id|user_id|email] user [title] text", Help: "消息", Hand: func(m *ice.Message, c *ice.Context, key string, arg ...string) {
-			m.Cmdy("send", m.Conf("app", "meta.duty"), arg)
 		}},
 
 		"/msg": {Name: "/msg", Help: "聊天消息", Hand: func(m *ice.Message, c *ice.Context, key string, arg ...string) {
@@ -420,6 +431,4 @@ var Index = &ice.Context{Name: "lark", Help: "机器人",
 	},
 }
 
-func init() {
-	chat.Index.Register(Index, &web.Frame{})
-}
+func init() { chat.Index.Register(Index, &web.Frame{}) }

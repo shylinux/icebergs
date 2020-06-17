@@ -129,6 +129,7 @@ const ( // LOG
 	LOG_CLOSE = "close"
 
 	// 分类
+	LOG_CONF  = "conf"
 	LOG_CMDS  = "cmds"
 	LOG_AUTH  = "auth"
 	LOG_COST  = "cost"

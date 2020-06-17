@@ -10,8 +10,6 @@ import (
 	"strings"
 )
 
-var DAEMON = ice.Name("daemon", Index)
-
 const (
 	StatusError = "error"
 	StatusStart = "start"
@@ -46,6 +44,7 @@ func _daemon_show(m *ice.Message, cmd *exec.Cmd, out, err string) {
 	m.Echo("%d", cmd.Process.Pid)
 
 	m.Gos(m, func(m *ice.Message) {
+		defer m.Cost("%v exit: %v", cmd.Args, 0)
 		if e := cmd.Wait(); e != nil {
 			m.Warn(e != nil, "%v wait: %s", cmd.Args, e)
 			m.Richs(DAEMON, nil, h, func(key string, value map[string]interface{}) {
@@ -53,7 +52,6 @@ func _daemon_show(m *ice.Message, cmd *exec.Cmd, out, err string) {
 				kit.Value(value, kit.Keys(kit.MDB_EXTRA, kit.MDB_ERROR), e)
 			})
 		} else {
-			defer m.Cost("%v exit: %v", cmd.Args, cmd.ProcessState.ExitCode())
 			m.Richs(DAEMON, nil, h, func(key string, value map[string]interface{}) {
 				kit.Value(value, kit.Keys(kit.MDB_EXTRA, kit.MDB_STATUS), StatusClose)
 			})
@@ -61,6 +59,10 @@ func _daemon_show(m *ice.Message, cmd *exec.Cmd, out, err string) {
 	})
 }
 
+func Daemon(m *ice.Message, key string, arg ...string) {
+	cmd := exec.Command(key, arg...)
+	_daemon_show(m, cmd, m.Option(CMD_STDOUT), m.Option(CMD_STDERR))
+}
 func init() {
 	Index.Merge(&ice.Context{
 		Configs: map[string]*ice.Config{

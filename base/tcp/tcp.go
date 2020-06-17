@@ -11,13 +11,52 @@ import (
 	"strings"
 )
 
-type Frame struct {
-}
+type Frame struct{}
 
 const (
 	GETPORT = "getport"
 )
 
+func _ip_list(m *ice.Message, ifname string) {
+	if ifs, e := net.Interfaces(); m.Assert(e) {
+		for _, v := range ifs {
+			if ifname != "" && !strings.Contains(v.Name, ifname) {
+				continue
+			}
+			if ips, e := v.Addrs(); m.Assert(e) {
+				for _, x := range ips {
+					ip := strings.Split(x.String(), "/")
+					if strings.Contains(ip[0], ":") || len(ip) == 0 {
+						continue
+					}
+					if len(v.HardwareAddr.String()) == 0 {
+						continue
+					}
+
+					m.Push("index", v.Index)
+					m.Push("name", v.Name)
+					m.Push("ip", ip[0])
+					m.Push("mask", ip[1])
+					m.Push("hard", v.HardwareAddr.String())
+				}
+			}
+		}
+	}
+}
+func _ip_islocal(m *ice.Message, ip string) (ok bool) {
+	if ip == "::1" || strings.HasPrefix(ip, "127.") {
+		return true
+	}
+
+	msg := m.Spawn()
+	_ip_list(msg, "")
+	msg.Table(func(index int, value map[string]string, head []string) {
+		if value["ip"] == ip {
+			ok = true
+		}
+	})
+	return ok
+}
 func _tcp_port(m *ice.Message) {
 	current := kit.Int(m.Conf(GETPORT, "meta.current"))
 	end := kit.Int(m.Conf(GETPORT, "meta.end"))
@@ -34,6 +73,10 @@ func _tcp_port(m *ice.Message) {
 	}
 }
 
+func IPIsLocal(m *ice.Message, ip string) bool {
+	return _ip_islocal(m, ip)
+}
+
 var Index = &ice.Context{Name: "tcp", Help: "通信模块",
 	Caches: map[string]*ice.Cache{},
 	Configs: map[string]*ice.Config{
@@ -45,6 +88,9 @@ var Index = &ice.Context{Name: "tcp", Help: "通信模块",
 		ice.ICE_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) { m.Load() }},
 		ice.ICE_EXIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) { m.Save(GETPORT) }},
 
+		"ifconfig": {Name: "ifconfig [name]", Help: "网络配置", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			_ip_list(m, "")
+		}},
 		GETPORT: {Name: "getport", Help: "分配端口", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			_tcp_port(m)
 		}},
@@ -58,32 +104,6 @@ var Index = &ice.Context{Name: "tcp", Help: "通信模块",
 		}},
 		"netstat": {Name: "netstat [name]", Help: "网络配置", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			m.Cmdy(ice.CLI_SYSTEM, "netstat", "-lanp")
-		}},
-		"ifconfig": {Name: "ifconfig [name]", Help: "网络配置", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			if ifs, e := net.Interfaces(); m.Assert(e) {
-				for _, v := range ifs {
-					if len(arg) > 0 && !strings.Contains(v.Name, arg[0]) {
-						continue
-					}
-					if ips, e := v.Addrs(); m.Assert(e) {
-						for _, x := range ips {
-							ip := strings.Split(x.String(), "/")
-							if strings.Contains(ip[0], ":") || len(ip) == 0 {
-								continue
-							}
-							if len(v.HardwareAddr.String()) == 0 {
-								continue
-							}
-
-							m.Push("index", v.Index)
-							m.Push("name", v.Name)
-							m.Push("ip", ip[0])
-							m.Push("mask", ip[1])
-							m.Push("hard", v.HardwareAddr.String())
-						}
-					}
-				}
-			}
 		}},
 
 		"check": {Name: "check addr", Help: "server", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
@@ -177,6 +197,4 @@ var Index = &ice.Context{Name: "tcp", Help: "通信模块",
 	},
 }
 
-func init() {
-	ice.Index.Register(Index, nil)
-}
+func init() { ice.Index.Register(Index, nil) }

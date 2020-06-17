@@ -96,7 +96,9 @@ func (c *Context) Run(m *Message, cmd *Command, key string, arg ...string) *Mess
 				return m
 			}
 		}
-		if h, ok := cmd.Action["action"]; ok {
+	}
+	if len(arg) > 0 {
+		if h, ok := cmd.Action[arg[0]]; ok {
 			m.Log(LOG_CMDS, "%s.%s %d %v %s", c.Name, key, len(arg), arg, kit.FileLine(h.Hand, 3))
 			h.Hand(m, arg[1:]...)
 			return m
@@ -116,7 +118,11 @@ func (c *Context) Runs(m *Message, cmd string, key string, arg ...string) {
 func (c *Context) Server() Server {
 	return c.server
 }
-func (c *Context) Register(s *Context, x Server) *Context {
+func (c *Context) Register(s *Context, x Server, name ...string) *Context {
+	for _, n := range name {
+		Name(n, s)
+	}
+
 	Pulse.Log("register", "%s <- %s", c.Name, s.Name)
 	if c.contexts == nil {
 		c.contexts = map[string]*Context{}
@@ -128,6 +134,15 @@ func (c *Context) Register(s *Context, x Server) *Context {
 	return s
 }
 func (c *Context) Merge(s *Context, x Server) *Context {
+	if c.Commands == nil {
+		c.Commands = map[string]*Command{}
+	}
+	if c.Configs == nil {
+		c.Configs = map[string]*Config{}
+	}
+	if c.Caches == nil {
+		c.Caches = map[string]*Cache{}
+	}
 	for k, v := range s.Commands {
 		c.Commands[k] = v
 	}

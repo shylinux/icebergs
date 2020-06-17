@@ -7,8 +7,6 @@ import (
 	"fmt"
 )
 
-var PYTHON = ice.Name("python", Index)
-
 func init() {
 	Index.Merge(&ice.Context{
 		Configs: map[string]*ice.Config{

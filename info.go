@@ -129,6 +129,9 @@ func (m *Message) Log_MODIFY(arg ...interface{}) *Message {
 	return m.log(LOG_MODIFY, log_fields(arg...))
 }
 
+func (m *Message) Log_CONF(arg ...interface{}) *Message {
+	return m.log(LOG_CONF, log_fields(arg...))
+}
 func (m *Message) Log_AUTH(arg ...interface{}) *Message {
 	return m.log(LOG_AUTH, log_fields(arg...))
 }

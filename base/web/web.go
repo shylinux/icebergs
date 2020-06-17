@@ -3,6 +3,9 @@ package web
 import (
 	"github.com/gorilla/websocket"
 	ice "github.com/shylinux/icebergs"
+	"github.com/shylinux/icebergs/base/aaa"
+	"github.com/shylinux/icebergs/base/cli"
+	"github.com/shylinux/icebergs/base/tcp"
 	kit "github.com/shylinux/toolkits"
 	"github.com/skip2/go-qrcode"
 
@@ -121,20 +124,18 @@ func (web *Frame) Login(msg *ice.Message, w http.ResponseWriter, r *http.Request
 
 	if msg.Options(ice.MSG_SESSID) {
 		// 会话认证
-		sub := msg.Cmd(ice.AAA_SESS, "check", msg.Option(ice.MSG_SESSID))
-		msg.Logs(ice.LOG_AUTH, "role", msg.Option(ice.MSG_USERROLE, sub.Append("userrole")),
-			"user", msg.Option(ice.MSG_USERNAME, sub.Append("username")))
+		sub := aaa.SessCheck(msg.Spawn(), msg.Option(ice.MSG_SESSID))
+		msg.Log_AUTH(
+			aaa.USERROLE, msg.Option(ice.MSG_USERROLE, sub.Append(aaa.USERROLE)),
+			aaa.USERNAME, msg.Option(ice.MSG_USERNAME, sub.Append(aaa.USERNAME)),
+		)
 	}
 
-	if !msg.Options(ice.MSG_USERNAME) && IsLocalIP(msg, msg.Option(ice.MSG_USERIP)) {
+	if !msg.Options(ice.MSG_USERNAME) && tcp.IPIsLocal(msg, msg.Option(ice.MSG_USERIP)) {
 		// 自动认证
-		msg.Option(ice.MSG_USERNAME, msg.Conf(ice.CLI_RUNTIME, "boot.username"))
-		msg.Option(ice.MSG_USERROLE, msg.Cmdx(ice.AAA_ROLE, "check", msg.Option(ice.MSG_USERNAME)))
-		if strings.HasPrefix(msg.Option(ice.MSG_USERUA), "Mozilla/5.0") {
-			msg.Option(ice.MSG_SESSID, msg.Cmdx(ice.AAA_SESS, "create", msg.Option(ice.MSG_USERNAME), msg.Option(ice.MSG_USERROLE)))
-			msg.Render("cookie", msg.Option(ice.MSG_SESSID))
+		if aaa.UserLogin(msg, cli.UserName, cli.PassWord) {
+			Render(msg, "cookie", msg.Option(ice.MSG_SESSID))
 		}
-		msg.Logs(ice.LOG_AUTH, "role", msg.Option(ice.MSG_USERROLE), "user", msg.Option(ice.MSG_USERNAME), "sess", msg.Option(ice.MSG_SESSID))
 	}
 
 	if s, ok := msg.Target().Commands[ice.WEB_LOGIN]; ok {

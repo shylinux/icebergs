@@ -10,14 +10,13 @@ import (
 	"os/exec"
 )
 
-var SYSTEM = ice.Name("system", nil)
-
 const (
 	CMD_STDOUT = "cmd_stdout"
 	CMD_STDERR = "cmd_stderr"
-	CMD_TYPE   = "cmd_type"
-	CMD_DIR    = "cmd_dir"
-	CMD_ENV    = "cmd_env"
+
+	CMD_TYPE = "cmd_type"
+	CMD_DIR  = "cmd_dir"
+	CMD_ENV  = "cmd_env"
 
 	CMD_ERR  = "cmd_err"
 	CMD_OUT  = "cmd_out"
@@ -30,10 +29,8 @@ func _system_show(m *ice.Message, cmd *exec.Cmd) {
 	cmd.Stdout = out
 	cmd.Stderr = err
 
-	if e := cmd.Run(); e != nil {
-		m.Warn(e != nil, "%v run: %s", cmd.Args, kit.Select(e.Error(), err.String()))
-	} else {
-		defer m.Cost("%v exit: %v out: %v err: %v ", cmd.Args, cmd.ProcessState.ExitCode(), out.Len(), err.Len())
+	defer m.Cost("%v exit: %v out: %v err: %v ", cmd.Args, 0, out.Len(), err.Len())
+	if e := cmd.Run(); !m.Warn(e != nil, "%v run: %s", cmd.Args, kit.Select(e.Error(), err.String())) {
 	}
 
 	m.Push(CMD_CODE, int(cmd.ProcessState.ExitCode()))
@@ -42,6 +39,10 @@ func _system_show(m *ice.Message, cmd *exec.Cmd) {
 	m.Echo(out.String())
 }
 
+func System(m *ice.Message, key string, arg ...string) {
+	cmd := exec.Command(key, arg...)
+	_system_show(m, cmd)
+}
 func init() {
 	Index.Merge(&ice.Context{
 		Configs: map[string]*ice.Config{

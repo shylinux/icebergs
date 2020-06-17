@@ -2,6 +2,7 @@ package chat
 
 import (
 	"github.com/shylinux/icebergs"
+	"github.com/shylinux/icebergs/base/aaa"
 	"github.com/shylinux/icebergs/base/web"
 	"github.com/shylinux/toolkits"
 
@@ -162,7 +163,9 @@ var Index = &ice.Context{Name: "chat", Help: "聊天中心",
 				case "login":
 					// 密码登录
 					if len(arg) > 2 {
-						web.Render(m, "cookie", m.Option(ice.MSG_SESSID, m.Cmdx(ice.AAA_USER, "login", m.Option(ice.MSG_USERNAME, arg[1]), arg[2])))
+						if aaa.UserLogin(m, arg[1], arg[2]) {
+							web.Render(m, "cookie", m.Option(ice.MSG_SESSID))
+						}
 					}
 
 				default:

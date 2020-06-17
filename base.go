@@ -21,6 +21,7 @@ func (f *Frame) Spawn(m *Message, c *Context, arg ...string) Server {
 }
 func (f *Frame) Begin(m *Message, arg ...string) Server {
 	m.Log(LOG_BEGIN, "ice")
+	defer m.Cost("begin ice")
 
 	list := map[*Context]*Message{m.target: m}
 	m.Travel(func(p *Context, s *Context) {
@@ -30,22 +31,21 @@ func (f *Frame) Begin(m *Message, arg ...string) Server {
 			s.Begin(list[s], arg...)
 		}
 	})
-	m.root.Cost("begin")
 	return f
 }
 func (f *Frame) Start(m *Message, arg ...string) bool {
 	m.Log(LOG_START, "ice")
+	defer m.Cost("start ice")
+
 	m.Cap(CTX_STATUS, "start")
 	m.Cap(CTX_STREAM, strings.Split(m.Time(), " ")[1])
-	m.root.Cost("start")
 
 	m.Cmdy("init", arg)
 	return true
 }
 func (f *Frame) Close(m *Message, arg ...string) bool {
-	m.TryCatch(m, true, func(m *Message) {
-		m.target.wg.Wait()
-	})
+	m.Log(LOG_CLOSE, "ice")
+	defer m.Cost("close ice")
 
 	list := map[*Context]*Message{m.target: m}
 	m.Travel(func(p *Context, s *Context) {
@@ -53,6 +53,10 @@ func (f *Frame) Close(m *Message, arg ...string) bool {
 			list[s] = msg.Spawns(s)
 			s.Close(list[s], arg...)
 		}
+	})
+
+	m.TryCatch(m, true, func(m *Message) {
+		m.target.wg.Wait()
 	})
 	return true
 }
@@ -78,6 +82,7 @@ var Index = &Context{Name: "ice", Help: "冰山模块",
 	},
 	Commands: map[string]*Command{
 		ICE_INIT: {Hand: func(m *Message, c *Context, cmd string, arg ...string) {
+			defer m.Cost(ICE_INIT)
 			m.Travel(func(p *Context, c *Context) {
 				if cmd, ok := c.Commands[ICE_INIT]; ok && p != nil {
 					c.Run(m.Spawns(c), cmd, ICE_INIT, arg...)
@@ -86,7 +91,6 @@ var Index = &Context{Name: "ice", Help: "冰山模块",
 		}},
 		"init": {Name: "init", Help: "启动", Hand: func(m *Message, c *Context, cmd string, arg ...string) {
 			m.root.Cmd(ICE_INIT)
-			m.root.Cost("_init")
 
 			m.target.root.wg = &sync.WaitGroup{}
 			for _, k := range kit.Split(kit.Select("gdb,log,ssh,ctx", os.Getenv("ctx_mod"))) {
@@ -104,9 +108,9 @@ var Index = &Context{Name: "ice", Help: "冰山模块",
 			m.Cmd(SSH_SOURCE, "etc/exit.shy", "exit.shy", "退出配置")
 
 			m.root.Cmd(ICE_EXIT)
-			m.root.Cost("_exit")
 		}},
 		ICE_EXIT: {Hand: func(m *Message, c *Context, cmd string, arg ...string) {
+			defer m.Cost(ICE_EXIT)
 			m.root.Travel(func(p *Context, c *Context) {
 				if cmd, ok := c.Commands[ICE_EXIT]; ok && p != nil {
 					m.TryCatch(m.Spawns(c), true, func(msg *Message) {
@@ -130,11 +134,6 @@ var Pulse = &Message{
 var Log func(*Message, string, string)
 
 func Run(arg ...string) string {
-	Index.root = Index
-	Pulse.root = Pulse
-
-	log.Init(conf.New(nil))
-
 	if len(arg) == 0 {
 		arg = os.Args[1:]
 	}
@@ -142,8 +141,13 @@ func Run(arg ...string) string {
 		arg = append(arg, WEB_SPACE, "connect", "self")
 	}
 
+	log.Init(conf.New(nil))
+
 	frame := &Frame{}
+	Index.root = Index
 	Index.server = frame
+
+	Pulse.root = Pulse
 	Pulse.Option("cache.limit", "30")
 	Pulse.Option("begin_time", Pulse.Time())
 
@@ -155,16 +159,7 @@ func Run(arg ...string) string {
 		Pulse.Table()
 	}
 	fmt.Printf(Pulse.Result())
+
 	os.Exit(frame.code)
 	return ""
-}
-func ListLook(name ...string) []interface{} {
-	list := []interface{}{}
-	for _, k := range name {
-		list = append(list, kit.MDB_INPUT, "text", "name", k, "action", "auto")
-	}
-	return kit.List(append(list,
-		kit.MDB_INPUT, "button", "name", "查看", "action", "auto",
-		kit.MDB_INPUT, "button", "name", "返回", "cb", "Last",
-	)...)
 }

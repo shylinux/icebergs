@@ -44,6 +44,10 @@ func (f *Frame) Start(m *Message, arg ...string) bool {
 	return true
 }
 func (f *Frame) Close(m *Message, arg ...string) bool {
+	m.TryCatch(m, true, func(m *Message) {
+		m.target.wg.Wait()
+	})
+
 	m.Log(LOG_CLOSE, "ice")
 	defer m.Cost("close ice")
 
@@ -53,10 +57,6 @@ func (f *Frame) Close(m *Message, arg ...string) bool {
 			list[s] = msg.Spawns(s)
 			s.Close(list[s], arg...)
 		}
-	})
-
-	m.TryCatch(m, true, func(m *Message) {
-		m.target.wg.Wait()
 	})
 	return true
 }

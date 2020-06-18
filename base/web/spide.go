@@ -84,6 +84,9 @@ func _spide_create(m *ice.Message, name, address string, arg ...string) {
 func SpideCreate(m *ice.Message, name, address string, arg ...string) {
 	_spide_create(m, name, address, arg...)
 }
+
+const SPIDE = "spide"
+
 func init() {
 	Index.Merge(&ice.Context{
 		Configs: map[string]*ice.Config{

@@ -13,12 +13,6 @@ import (
 	"time"
 )
 
-const (
-	SPIDE = "spide"
-	SERVE = "serve"
-	SHARE = "share"
-)
-
 type Frame struct {
 	*http.Client
 	*http.Server
@@ -264,4 +258,8 @@ var Index = &ice.Context{Name: "web", Help: "网络模块",
 	},
 }
 
-func init() { ice.Index.Register(Index, &Frame{}, SERVE) }
+func init() {
+	ice.Index.Register(Index, &Frame{},
+		SPIDE, SERVE, SPACE, DREAM,
+	)
+}

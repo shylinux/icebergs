@@ -11,6 +11,8 @@ import (
 	"time"
 )
 
+const DREAM = "dream"
+
 func init() {
 	Index.Merge(&ice.Context{
 		Configs: map[string]*ice.Config{

@@ -191,6 +191,9 @@ func (web *Frame) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		web.ServeMux.ServeHTTP(w, r)
 	}
 }
+
+const SERVE = "serve"
+
 func init() {
 	Index.Merge(&ice.Context{
 		Configs: map[string]*ice.Config{

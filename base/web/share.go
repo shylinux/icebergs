@@ -225,6 +225,8 @@ func ShareCreate(m *ice.Message, kind, name, text string, arg ...string) string 
 	return _share_create(m, kind, name, text, arg...)
 }
 
+const SHARE = "share"
+
 func init() {
 	Index.Merge(&ice.Context{
 		Configs: map[string]*ice.Config{

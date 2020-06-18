@@ -87,6 +87,11 @@ func Render(msg *ice.Message, cmd string, args ...interface{}) {
 	msg.Append(ice.MSG_OUTPUT, ice.RENDER_OUTPUT)
 }
 
+func (web *Frame) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	if _serve_main(web.m, w, r) {
+		web.ServeMux.ServeHTTP(w, r)
+	}
+}
 func (web *Frame) Spawn(m *ice.Message, c *ice.Context, arg ...string) ice.Server {
 	return &Frame{}
 }
@@ -122,7 +127,7 @@ func (web *Frame) Start(m *ice.Message, arg ...string) bool {
 					msg.Log("route", "%s <- %s", s.Name, k)
 					w.HandleFunc(k, func(w http.ResponseWriter, r *http.Request) {
 						m.TryCatch(msg.Spawns(), true, func(msg *ice.Message) {
-							HandleCmd(k, x, msg, w, r)
+							_serve_handle(k, x, msg, w, r)
 						})
 					})
 				}
@@ -157,9 +162,9 @@ var Index = &ice.Context{Name: "web", Help: "网络模块",
 		ice.ICE_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			m.Load()
 
-			SpideCreate(m, "self", kit.Select("http://:9020", m.Conf(ice.CLI_RUNTIME, "conf.ctx_self")))
-			SpideCreate(m, "dev", kit.Select("http://:9020", m.Conf(ice.CLI_RUNTIME, "conf.ctx_dev")))
-			SpideCreate(m, "shy", kit.Select("https://shylinux.com:443", m.Conf(ice.CLI_RUNTIME, "conf.ctx_shy")))
+			m.Cmd(SPIDE, kit.MDB_CREATE, "self", kit.Select("http://:9020", m.Conf(ice.CLI_RUNTIME, "conf.ctx_self")))
+			m.Cmd(SPIDE, kit.MDB_CREATE, "dev", kit.Select("http://:9020", m.Conf(ice.CLI_RUNTIME, "conf.ctx_dev")))
+			m.Cmd(SPIDE, kit.MDB_CREATE, "shy", kit.Select("https://shylinux.com:443", m.Conf(ice.CLI_RUNTIME, "conf.ctx_shy")))
 
 			m.Cmd(ice.APP_SEARCH, "add", "favor", "base", m.AddCmd(&ice.Command{Name: "search word", Help: "搜索引擎", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 				switch arg[0] {
@@ -265,5 +270,6 @@ var Index = &ice.Context{Name: "web", Help: "网络模块",
 func init() {
 	ice.Index.Register(Index, &Frame{},
 		SPIDE, SERVE, SPACE, DREAM,
+		CACHE, FAVOR, STORY, SHARE,
 	)
 }

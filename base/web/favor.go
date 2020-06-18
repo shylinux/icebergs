@@ -243,10 +243,10 @@ func FavorShow(m *ice.Message, kind string, name, text interface{}, arg ...strin
 }
 
 const (
-	EXPORT = "usr/export/web.favor/favor.csv"
+	_EXPORT = "usr/export/web.favor/favor.csv"
 )
 
-var FAVOR = ice.Name("favor", Index)
+const FAVOR = "favor"
 
 func init() {
 	Index.Merge(&ice.Context{
@@ -260,10 +260,10 @@ func init() {
 				"detail", []string{"编辑", "收藏", "收录", "导出", "删除"},
 			), Action: map[string]*ice.Action{
 				kit.MDB_EXPORT: {Name: "export file", Help: "导出", Hand: func(m *ice.Message, arg ...string) {
-					_favor_export(m, kit.Select(EXPORT, arg, 0))
+					_favor_export(m, kit.Select(_EXPORT, arg, 0))
 				}},
 				kit.MDB_IMPORT: {Name: "import file", Help: "导入", Hand: func(m *ice.Message, arg ...string) {
-					_favor_import(m, kit.Select(EXPORT, arg, 0))
+					_favor_import(m, kit.Select(_EXPORT, arg, 0))
 				}},
 				kit.MDB_CREATE: {Name: "create zone", Help: "创建", Hand: func(m *ice.Message, arg ...string) {
 					_favor_create(m, arg[0])

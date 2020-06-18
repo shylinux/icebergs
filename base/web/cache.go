@@ -11,8 +11,6 @@ import (
 	"path"
 )
 
-var CACHE = ice.Name("cache", Index)
-
 func _cache_list(m *ice.Message, key string) {
 	if key == "" {
 		m.Grows(CACHE, nil, "", "", func(index int, value map[string]interface{}) {
@@ -168,6 +166,9 @@ func CacheCatch(m *ice.Message, kind, name string) *ice.Message {
 	_cache_save(m, arg[0], arg[1], arg[2], arg[3], arg[4:]...)
 	return m
 }
+
+const CACHE = "cache"
+
 func init() {
 	Index.Merge(&ice.Context{
 		Configs: map[string]*ice.Config{
@@ -180,16 +181,16 @@ func init() {
 				kit.MDB_CREATE: {Name: "create type name text arg...", Help: "创建", Hand: func(m *ice.Message, arg ...string) {
 					_cache_save(m, "add", arg[0], arg[1], arg[2], arg[3:]...)
 				}},
+				kit.MDB_INSERT: {Name: "insert type name", Help: "插入", Hand: func(m *ice.Message, arg ...string) {
+					arg = _cache_catch(m, arg[0], arg[1])
+					_cache_save(m, arg[0], arg[1], arg[2], arg[3], arg[4:]...)
+				}},
 				kit.MDB_SHOW: {Name: "show type name text arg...", Help: "运行", Hand: func(m *ice.Message, arg ...string) {
 					if len(arg) > 2 {
 						_cache_show(m, arg[0], arg[1], arg[2], arg[3:]...)
 					} else {
 						_cache_show(m, "", "", "")
 					}
-				}},
-				kit.MDB_INSERT: {Name: "insert type name", Help: "插入", Hand: func(m *ice.Message, arg ...string) {
-					arg = _cache_catch(m, arg[0], arg[1])
-					_cache_save(m, arg[0], arg[1], arg[2], arg[3], arg[4:]...)
 				}},
 			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 				if len(arg) == 0 {

@@ -14,7 +14,7 @@ import (
 	"strings"
 )
 
-func Login(msg *ice.Message, w http.ResponseWriter, r *http.Request) bool {
+func _serve_login(msg *ice.Message, w http.ResponseWriter, r *http.Request) bool {
 	msg.Option(ice.MSG_USERNAME, "")
 	msg.Option(ice.MSG_USERROLE, "")
 
@@ -56,7 +56,7 @@ func Login(msg *ice.Message, w http.ResponseWriter, r *http.Request) bool {
 
 	return msg.Option(ice.MSG_USERURL) != ""
 }
-func HandleCmd(key string, cmd *ice.Command, msg *ice.Message, w http.ResponseWriter, r *http.Request) {
+func _serve_handle(key string, cmd *ice.Command, msg *ice.Message, w http.ResponseWriter, r *http.Request) {
 	defer func() { msg.Cost("%s %v %v", r.URL.Path, msg.Optionv("cmds"), msg.Format("append")) }()
 	if u, e := url.Parse(r.Header.Get("Referer")); e == nil {
 		for k, v := range u.Query() {
@@ -122,7 +122,7 @@ func HandleCmd(key string, cmd *ice.Command, msg *ice.Message, w http.ResponseWr
 	}
 
 	// 执行命令
-	if cmds := kit.Simple(msg.Optionv("cmds")); Login(msg, w, r) {
+	if cmds := kit.Simple(msg.Optionv("cmds")); _serve_login(msg, w, r) {
 		msg.Option("_option", msg.Optionv(ice.MSG_OPTION))
 		msg.Target().Run(msg, cmd, msg.Option(ice.MSG_USERURL), cmds...)
 	}
@@ -131,9 +131,7 @@ func HandleCmd(key string, cmd *ice.Command, msg *ice.Message, w http.ResponseWr
 	_args, _ := msg.Optionv(ice.MSG_ARGS).([]interface{})
 	Render(msg, msg.Option(ice.MSG_OUTPUT), _args...)
 }
-func (web *Frame) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	m := web.m
-
+func _serve_main(m *ice.Message, w http.ResponseWriter, r *http.Request) bool {
 	if r.Header.Get("index.module") == "" {
 		// 解析地址
 		if ip := r.Header.Get("X-Forwarded-For"); ip != "" {
@@ -184,8 +182,9 @@ func (web *Frame) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	} else if r.URL.Path == "/share" && r.Method == "GET" {
 		http.ServeFile(w, r, m.Conf(SERVE, "meta.page.share"))
 	} else {
-		web.ServeMux.ServeHTTP(w, r)
+		return true
 	}
+	return false
 }
 
 const SERVE = "serve"
@@ -229,7 +228,7 @@ func init() {
 				if cli.NodeType(m, ice.WEB_SERVER, cli.HostName); len(arg) > 0 && arg[0] == "random" {
 					cli.NodeType(m, ice.WEB_SERVER, cli.PathName)
 					// 随机端口
-					SpideCreate(m, "self", "http://random")
+					m.Cmd(SPIDE, kit.MDB_CREATE, "self", "http://random")
 					arg = arg[1:]
 				}
 

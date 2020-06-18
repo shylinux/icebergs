@@ -47,7 +47,7 @@ func _space_dial(m *ice.Message, dev, name string, arg ...string) {
 
 		host := kit.Format(client["hostname"])
 		proto := kit.Select("ws", "wss", client["protocol"] == "https")
-		uri := kit.MergeURL(proto+"://"+host+"/space/", "name", name, "type", m.Conf(cli.RUNTIME, "node.type"))
+		uri := kit.MergeURL(proto+"://"+host+"/space/", "name", name, "type", cli.NodeType)
 		if u, e := url.Parse(uri); m.Assert(e) {
 
 			task.Put(dev, func(task *task.Task) error {
@@ -62,7 +62,7 @@ func _space_dial(m *ice.Message, dev, name string, arg ...string) {
 							m.Log_CREATE("space", dev, "retry", i, "uri", uri)
 
 							m = m.Spawns()
-							if i = 0; HandleWSS(m, true, web.send, s, dev) {
+							if i = 0; _space_handle(m, true, web.send, s, dev) {
 								// 连接关闭
 								break
 							}
@@ -128,7 +128,7 @@ func _space_exec(msg *ice.Message, source, target []string, c *websocket.Conn, n
 	_space_echo(msg, []string{}, kit.Revert(source)[1:], c, name)
 	msg.Cost("%v->%v %v %v", source, target, msg.Detailv(), msg.Format("append"))
 }
-func HandleWSS(m *ice.Message, safe bool, send map[string]*ice.Message, c *websocket.Conn, name string) bool {
+func _space_handle(m *ice.Message, safe bool, send map[string]*ice.Message, c *websocket.Conn, name string) bool {
 	for running := true; running; {
 		if t, b, e := c.ReadMessage(); m.Warn(e != nil, "space recv %d msg %v", t, e) {
 			// 解析失败
@@ -226,7 +226,7 @@ func init() {
 					task.Put(name, func(task *task.Task) error {
 						// 监听消息
 						m.Event(ice.SPACE_START, ice.WEB_WORKER, name)
-						HandleWSS(m, false, m.Target().Server().(*Frame).send, s, name)
+						_space_handle(m, false, m.Target().Server().(*Frame).send, s, name)
 						m.Log(ice.LOG_CLOSE, "%s: %s", name, kit.Format(m.Confv(SPACE, kit.Keys(kit.MDB_HASH, h))))
 						m.Event(ice.SPACE_CLOSE, ice.WEB_WORKER, name)
 						m.Confv(SPACE, kit.Keys(kit.MDB_HASH, h), "")

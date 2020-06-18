@@ -10,8 +10,6 @@ import (
 	"time"
 )
 
-var STORY = ice.Name("story", Index)
-
 func _story_share(m *ice.Message, story string, list string, arg ...string) {
 	if m.Echo("share: "); list == "" {
 		msg := m.Cmd(STORY, ice.STORY_INDEX, story)
@@ -384,6 +382,8 @@ func StoryAdd(m *ice.Message, mime string, name string, text string, arg ...stri
 	_story_add(m, kit.Simple("add", mime, name, text, arg)...)
 	return m
 }
+
+const STORY = "story"
 
 func init() {
 	Index.Merge(&ice.Context{

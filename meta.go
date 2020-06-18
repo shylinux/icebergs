@@ -386,17 +386,20 @@ func (m *Message) Split(str string, field string, space string, enter string) *M
 	}
 	return m
 }
-func (m *Message) CSV(text string) *Message {
+func (m *Message) CSV(text string, head ...string) *Message {
 	bio := bytes.NewBufferString(text)
 	r := csv.NewReader(bio)
-	heads, _ := r.Read()
+
+	if len(head) == 0 {
+		head, _ = r.Read()
+	}
 	for {
-		lines, e := r.Read()
+		line, e := r.Read()
 		if e != nil {
 			break
 		}
-		for i, k := range heads {
-			m.Push(k, kit.Select("", lines, i))
+		for i, k := range head {
+			m.Push(k, kit.Select("", line, i))
 		}
 	}
 	return m

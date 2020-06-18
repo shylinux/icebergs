@@ -78,6 +78,9 @@ func (c *Context) Cap(key string, arg ...interface{}) string {
 	return c.Caches[key].Value
 }
 func (c *Context) Run(m *Message, cmd *Command, key string, arg ...string) *Message {
+	m.meta[MSG_DETAIL] = kit.Simple(key, arg)
+	m.Hand = true
+
 	action, args := m.Option("_action"), arg
 	if len(arg) > 0 && arg[0] == "action" {
 		action, args = arg[1], arg[2:]
@@ -594,14 +597,14 @@ func (m *Message) Cmd(arg ...interface{}) *Message {
 		return m
 	}
 
-	m.Search(list[0], func(p *Context, c *Context, key string, cmd *Command) {
-		m.TryCatch(m.Spawns(c), true, func(msg *Message) {
-			m.Hand, msg.Hand = true, true
-			msg.meta[MSG_DETAIL] = list
+	if ctx, ok := names[list[0]].(*Context); ok {
+		m.Hand = true
+		return ctx.Run(m.Spawns(ctx), ctx.Commands[list[0]], list[0], list[1:]...)
+	}
 
-			p.Run(msg, cmd, key, list[1:]...)
-			m.Hand, msg.Hand, m = true, true, msg
-		})
+	m.Search(list[0], func(p *Context, c *Context, key string, cmd *Command) {
+		m = p.Run(m.Spawns(c), cmd, key, list[1:]...)
+		m.Hand = true
 	})
 
 	if m.Warn(m.Hand == false, "not found %v", list) {

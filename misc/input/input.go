@@ -5,7 +5,6 @@ import (
 	"github.com/shylinux/icebergs/base/web"
 	"github.com/shylinux/icebergs/core/code"
 	"github.com/shylinux/toolkits"
-	"github.com/shylinux/toolkits/conf"
 	"github.com/shylinux/toolkits/task"
 
 	"bufio"
@@ -15,20 +14,7 @@ import (
 	"os"
 	"path"
 	"strings"
-)
-
-const (
-	INPUT = "input"
-)
-const (
-	LINE = "line"
-	WORD = "word"
-)
-const (
-	FILE   = "file"
-	CODE   = "code"
-	TEXT   = "text"
-	WEIGHT = "weight"
+	"sync"
 )
 
 func _input_list(m *ice.Message, lib string) {
@@ -89,8 +75,8 @@ func _input_find(m *ice.Message, method, word, limit string) {
 	m.Sort(WEIGHT, "int_r")
 }
 func _input_find2(m *ice.Message, method, word, limit string) {
-	files := map[string]bool{}
 	list := []interface{}{}
+	files := map[string]bool{}
 	m.Richs(INPUT, "", kit.MDB_FOREACH, func(key string, value map[string]interface{}) {
 		kit.Fetch(kit.Value(value, "meta.record"), func(index int, value map[string]interface{}) {
 			file := value["file"].(string)
@@ -103,35 +89,22 @@ func _input_find2(m *ice.Message, method, word, limit string) {
 	})
 	defer m.Cost("some")
 
-	p.Sync(list, func(task *task.Task) error {
-		file := task.Arg.(string)
-		f, e := os.Open(file)
-		if e != nil {
-			return e
-		}
-		defer f.Close()
+	var mu sync.Mutex
+	task.Sync(list, func(task *task.Task) error {
+		kit.CSV(kit.Format(task.Arg), 100000, func(index int, value map[string]string, head []string) {
+			if value["code"] != word {
+				return
+			}
+			mu.Lock()
+			defer mu.Unlock()
 
-		r := csv.NewReader(f)
-		head, e := r.Read()
-		if e != nil {
-			return e
-		}
-		for {
-			line, e := r.Read()
-			if e != nil {
-				break
-			}
-			if head[0] == "code" {
-				if line[0] == word {
-					m.Push(FILE, file)
-					m.Push(kit.MDB_ID, line[1])
-					m.Push(CODE, line[0])
-					m.Push(TEXT, line[2])
-					m.Push(kit.MDB_TIME, line[3])
-					m.Push(WEIGHT, line[4])
-				}
-			}
-		}
+			m.Push(FILE, task.Arg)
+			m.Push(kit.MDB_ID, value[kit.MDB_ID])
+			m.Push(CODE, value["code"])
+			m.Push(TEXT, value["text"])
+			m.Push(WEIGHT, value["weight"])
+			m.Push(kit.MDB_TIME, value["time"])
+		})
 		return nil
 	})
 }
@@ -192,7 +165,17 @@ func _input_load(m *ice.Message, file string, libs ...string) {
 	}
 }
 
-var p = task.New(nil, 10)
+const INPUT = "input"
+const (
+	WORD = "word"
+	LINE = "line"
+)
+const (
+	FILE   = "file"
+	CODE   = "code"
+	TEXT   = "text"
+	WEIGHT = "weight"
+)
 
 var Index = &ice.Context{Name: "input", Help: "输入法",
 	Configs: map[string]*ice.Config{
@@ -221,10 +204,6 @@ var Index = &ice.Context{Name: "input", Help: "输入法",
 			_input_find(m, kit.Select(WORD, arg, 1), arg[0], kit.Select("100", arg, 2))
 		}},
 		"find2": {Name: "find2 key [word|line [limit]]", Help: "查找字码", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			if len(arg) == 0 {
-				web.FavorList(m, "input.word", "")
-				return
-			}
 			_input_find2(m, kit.Select(WORD, arg, 1), arg[0], kit.Select("100", arg, 2))
 		}},
 
@@ -233,16 +212,6 @@ var Index = &ice.Context{Name: "input", Help: "输入法",
 		}},
 		"load": {Name: "load file lib", Help: "导入词库", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			_input_load(m, kit.Select("usr/wubi-dict/wubi86", arg, 0))
-		}},
-
-		"compare": {Name: "demo list nconn nreq", Help: "导入词库", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			m.Cmdy("web.code.bench", "http://localhost:9020/code/bench?cmd=web.code.input.find&cmd=shwq")
-			m.Cmdy("web.code.bench", "http://localhost:9020/code/bench?cmd=web.code.input.find2&cmd=shwq")
-		}},
-		"demo": {Name: "demo list nconn nreq", Help: "导入词库", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			conf, e := conf.Open(kit.Select("hi.shy", arg, 0))
-			m.Assert(e)
-			m.Echo(conf.Get("he"))
 		}},
 	},
 }

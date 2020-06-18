@@ -58,28 +58,11 @@ func _action_share_show(m *ice.Message, river, storm, index string, arg ...strin
 		})
 	}
 }
-func _action_action(m *ice.Message, action string, arg ...string) bool {
-	switch action {
-	case "upload":
-		msg := m.Cmd(ice.WEB_STORY, "upload")
-		m.Option("name", msg.Append("name"))
-		m.Option("data", msg.Append("data"))
-	}
-	return false
-}
-
-func _action_proxy(m *ice.Message) (proxy []string) {
-	if m.Option("pod") != "" {
-		proxy = append(proxy, ice.WEB_PROXY, m.Option("pod"))
-		m.Option("pod", "")
-	}
-	return proxy
-}
-func _action_order(m *ice.Message, river, storm string, arg ...string) {
-	for i, v := range arg {
+func _action_order_list(m *ice.Message, river, storm string, arg ...string) {
+	for _, v := range arg {
 		m.Push("river", river)
 		m.Push("storm", storm)
-		m.Push("action", i)
+		m.Push("action", v)
 
 		m.Push("node", "")
 		m.Push("group", "")
@@ -92,6 +75,23 @@ func _action_order(m *ice.Message, river, storm string, arg ...string) {
 		m.Push("feature", msg.Append("meta"))
 		m.Push("inputs", msg.Append("list"))
 	}
+}
+
+func _action_action(m *ice.Message, action string, arg ...string) bool {
+	switch action {
+	case "upload":
+		msg := m.Cmd(ice.WEB_STORY, "upload")
+		m.Option("name", msg.Append("name"))
+		m.Option("data", msg.Append("data"))
+	}
+	return false
+}
+func _action_proxy(m *ice.Message) (proxy []string) {
+	if m.Option("pod") != "" {
+		proxy = append(proxy, ice.WEB_PROXY, m.Option("pod"))
+		m.Option("pod", "")
+	}
+	return proxy
 }
 func _action_list(m *ice.Message, river, storm string) {
 	prefix := kit.Keys(kit.MDB_HASH, river, "tool", kit.MDB_HASH, storm)
@@ -158,7 +158,7 @@ func init() {
 			switch arg[2] {
 			case "index":
 				// 前端列表
-				_action_order(m, arg[0], arg[1], arg[3:]...)
+				_action_order_list(m, arg[0], arg[1], arg[3:]...)
 				return
 			}
 

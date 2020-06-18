@@ -10,7 +10,6 @@ var ErrNameExists = errors.New("name already exists")
 
 func Name(name string, value interface{}) string {
 	if _, ok := names[name]; ok {
-		println(name)
 		panic(ErrNameExists)
 	}
 	names[name] = value

@@ -56,84 +56,80 @@ func Login(msg *ice.Message, w http.ResponseWriter, r *http.Request) bool {
 
 	return msg.Option(ice.MSG_USERURL) != ""
 }
-func Trans(web *Frame, m *ice.Message, key string, cmd *ice.Command) {
-	web.HandleFunc(key, func(w http.ResponseWriter, r *http.Request) {
-		m.TryCatch(m.Spawns(), true, func(msg *ice.Message) {
-			defer func() { msg.Cost("%s %v %v", r.URL.Path, msg.Optionv("cmds"), msg.Format("append")) }()
-			if u, e := url.Parse(r.Header.Get("Referer")); e == nil {
-				for k, v := range u.Query() {
-					msg.Logs("refer", k, v)
-					msg.Option(k, v)
-				}
+func HandleCmd(key string, cmd *ice.Command, msg *ice.Message, w http.ResponseWriter, r *http.Request) {
+	defer func() { msg.Cost("%s %v %v", r.URL.Path, msg.Optionv("cmds"), msg.Format("append")) }()
+	if u, e := url.Parse(r.Header.Get("Referer")); e == nil {
+		for k, v := range u.Query() {
+			msg.Logs("refer", k, v)
+			msg.Option(k, v)
+		}
+	}
+
+	// 用户请求
+	msg.Option(ice.MSG_USERWEB, msg.Conf(SHARE, "meta.domain"))
+	msg.Option(ice.MSG_USERIP, r.Header.Get(ice.MSG_USERIP))
+	msg.Option(ice.MSG_USERUA, r.Header.Get("User-Agent"))
+	msg.Option(ice.MSG_USERURL, r.URL.Path)
+	if msg.R, msg.W = r, w; r.Header.Get("X-Real-Port") != "" {
+		msg.Option(ice.MSG_USERADDR, msg.Option(ice.MSG_USERIP)+":"+r.Header.Get("X-Real-Port"))
+	} else {
+		msg.Option(ice.MSG_USERADDR, r.RemoteAddr)
+	}
+
+	// 请求变量
+	msg.Option(ice.MSG_SESSID, "")
+	msg.Option(ice.MSG_OUTPUT, "")
+	for _, v := range r.Cookies() {
+		msg.Option(v.Name, v.Value)
+	}
+
+	// 解析引擎
+	switch r.Header.Get("Content-Type") {
+	case "application/json":
+		var data interface{}
+		if e := json.NewDecoder(r.Body).Decode(&data); !msg.Warn(e != nil, "%s", e) {
+			msg.Optionv(ice.MSG_USERDATA, data)
+			msg.Logs("json", "value", kit.Formats(data))
+		}
+
+		switch d := data.(type) {
+		case map[string]interface{}:
+			for k, v := range d {
+				msg.Optionv(k, v)
 			}
-
-			// 用户请求
-			msg.Option(ice.MSG_USERWEB, m.Conf(SHARE, "meta.domain"))
-			msg.Option(ice.MSG_USERIP, r.Header.Get(ice.MSG_USERIP))
-			msg.Option(ice.MSG_USERUA, r.Header.Get("User-Agent"))
-			msg.Option(ice.MSG_USERURL, r.URL.Path)
-			if msg.R, msg.W = r, w; r.Header.Get("X-Real-Port") != "" {
-				msg.Option(ice.MSG_USERADDR, msg.Option(ice.MSG_USERIP)+":"+r.Header.Get("X-Real-Port"))
-			} else {
-				msg.Option(ice.MSG_USERADDR, r.RemoteAddr)
+		}
+	default:
+		r.ParseMultipartForm(kit.Int64(kit.Select(r.Header.Get("Content-Length"), "4096")))
+		if r.ParseForm(); len(r.PostForm) > 0 {
+			for k, v := range r.PostForm {
+				msg.Logs("form", k, v)
 			}
+		}
+	}
 
-			// 请求变量
-			msg.Option(ice.MSG_SESSID, "")
-			msg.Option(ice.MSG_OUTPUT, "")
-			for _, v := range r.Cookies() {
-				msg.Option(v.Name, v.Value)
-			}
+	// 请求参数
+	for k, v := range r.Form {
+		if msg.Optionv(k, v); k == ice.MSG_SESSID {
+			msg.Render("cookie", v[0])
+		}
+	}
 
-			// 解析引擎
-			switch r.Header.Get("Content-Type") {
-			case "application/json":
-				var data interface{}
-				if e := json.NewDecoder(r.Body).Decode(&data); !msg.Warn(e != nil, "%s", e) {
-					msg.Optionv(ice.MSG_USERDATA, data)
-					msg.Logs("json", "value", kit.Formats(data))
-				}
+	// 请求命令
+	if msg.Option(ice.MSG_USERPOD, msg.Option("pod")); msg.Optionv("cmds") == nil {
+		if p := strings.TrimPrefix(msg.Option(ice.MSG_USERURL), key); p != "" {
+			msg.Optionv("cmds", strings.Split(p, "/"))
+		}
+	}
 
-				switch d := data.(type) {
-				case map[string]interface{}:
-					for k, v := range d {
-						msg.Optionv(k, v)
-					}
-				}
-			default:
-				r.ParseMultipartForm(kit.Int64(kit.Select(r.Header.Get("Content-Length"), "4096")))
-				if r.ParseForm(); len(r.PostForm) > 0 {
-					for k, v := range r.PostForm {
-						msg.Logs("form", k, v)
-					}
-				}
-			}
+	// 执行命令
+	if cmds := kit.Simple(msg.Optionv("cmds")); Login(msg, w, r) {
+		msg.Option("_option", msg.Optionv(ice.MSG_OPTION))
+		msg.Target().Run(msg, cmd, msg.Option(ice.MSG_USERURL), cmds...)
+	}
 
-			// 请求参数
-			for k, v := range r.Form {
-				if msg.Optionv(k, v); k == ice.MSG_SESSID {
-					msg.Render("cookie", v[0])
-				}
-			}
-
-			// 请求命令
-			if msg.Option(ice.MSG_USERPOD, msg.Option("pod")); msg.Optionv("cmds") == nil {
-				if p := strings.TrimPrefix(msg.Option(ice.MSG_USERURL), key); p != "" {
-					msg.Optionv("cmds", strings.Split(p, "/"))
-				}
-			}
-
-			// 执行命令
-			if cmds := kit.Simple(msg.Optionv("cmds")); Login(msg, w, r) {
-				msg.Option("_option", msg.Optionv(ice.MSG_OPTION))
-				msg.Target().Run(msg, cmd, msg.Option(ice.MSG_USERURL), cmds...)
-			}
-
-			// 渲染引擎
-			_args, _ := msg.Optionv(ice.MSG_ARGS).([]interface{})
-			Render(msg, msg.Option(ice.MSG_OUTPUT), _args...)
-		})
-	})
+	// 渲染引擎
+	_args, _ := msg.Optionv(ice.MSG_ARGS).([]interface{})
+	Render(msg, msg.Option(ice.MSG_OUTPUT), _args...)
 }
 func (web *Frame) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	m := web.m

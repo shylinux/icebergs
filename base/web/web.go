@@ -120,7 +120,11 @@ func (web *Frame) Start(m *ice.Message, arg ...string) bool {
 			m.Travel(func(p *ice.Context, sub *ice.Context, k string, x *ice.Command) {
 				if s == sub && k[0] == '/' {
 					msg.Log("route", "%s <- %s", s.Name, k)
-					Trans(w, msg, k, x)
+					w.HandleFunc(k, func(w http.ResponseWriter, r *http.Request) {
+						m.TryCatch(msg.Spawns(), true, func(msg *ice.Message) {
+							HandleCmd(k, x, msg, w, r)
+						})
+					})
 				}
 			})
 		}

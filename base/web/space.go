@@ -17,6 +17,9 @@ import (
 )
 
 func _link(m *ice.Message, pod interface{}) string {
+	if m.Option(ice.MSG_USERUA) == "" {
+		return kit.Format(pod)
+	}
 	return fmt.Sprintf(`<a target="_blank" href="%s?pod=%s">%s</a>`,
 		kit.Select(m.Conf(SHARE, "meta.domain"), m.Option(ice.MSG_USERWEB)), pod, pod)
 }
@@ -44,7 +47,7 @@ func _space_dial(m *ice.Message, dev, name string, arg ...string) {
 
 		host := kit.Format(client["hostname"])
 		proto := kit.Select("ws", "wss", client["protocol"] == "https")
-		uri := kit.MergeURL(proto+"://"+host+"/space/", "name", name)
+		uri := kit.MergeURL(proto+"://"+host+"/space/", "name", name, "type", cli.NodeType)
 		if u, e := url.Parse(uri); m.Assert(e) {
 
 			task.Put(dev, func(task *task.Task) error {
@@ -212,13 +215,11 @@ func init() {
 			"/space/": {Name: "/space/", Help: "空间站", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 				if s, e := websocket.Upgrade(m.W, m.R, nil, m.Confi(ice.WEB_SPACE, "meta.buffer.r"), m.Confi(ice.WEB_SPACE, "meta.buffer.w")); m.Assert(e) {
 					name := m.Option(kit.MDB_NAME, strings.Replace(kit.Select(m.Option(ice.MSG_USERADDR), m.Option(kit.MDB_NAME)), ".", "_", -1))
+					kind := kit.Select(ice.WEB_WORKER, m.Option(kit.MDB_TYPE))
 
 					// 添加节点
-					h := m.Rich(ice.WEB_SPACE, nil, kit.Dict(
-						kit.MDB_TYPE, ice.WEB_WORKER,
-						kit.MDB_NAME, m.Option(kit.MDB_NAME),
-						kit.MDB_TEXT, s.RemoteAddr().String(),
-						"socket", s,
+					h := m.Rich(ice.WEB_SPACE, nil, kit.Dict("socket", s,
+						kit.MDB_TYPE, kind, kit.MDB_NAME, name, kit.MDB_TEXT, s.RemoteAddr().String(),
 					))
 					m.Log_CREATE(SPACE, name)
 

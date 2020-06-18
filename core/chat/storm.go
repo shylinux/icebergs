@@ -5,8 +5,6 @@ import (
 	"github.com/shylinux/toolkits"
 )
 
-var STORM = ice.Name("storm", Index)
-
 func _storm_list(m *ice.Message, river string) {
 	m.Richs(ice.CHAT_RIVER, kit.Keys(kit.MDB_HASH, river, "tool"), "*", func(key string, value map[string]interface{}) {
 		m.Push(key, value["meta"], []string{kit.MDB_KEY, kit.MDB_NAME})

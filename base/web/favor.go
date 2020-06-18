@@ -239,8 +239,9 @@ func FavorInsert(m *ice.Message, zone, kind string, name interface{}, text inter
 	_favor_create(m, zone)
 	_favor_insert(m, zone, kind, name, text, extra...)
 }
-func FavorList(m *ice.Message, favor, id string, fields ...string) {
+func FavorList(m *ice.Message, favor, id string, fields ...string) *ice.Message {
 	_favor_list(m, favor, id, fields...)
+	return m
 }
 func FavorShow(m *ice.Message, kind string, name, text interface{}, arg ...string) *ice.Message {
 	_favor_show(m, kind, name, text, arg...)

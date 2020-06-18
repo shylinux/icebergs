@@ -5,8 +5,6 @@ import (
 	"github.com/shylinux/toolkits"
 )
 
-var RIVER = ice.Name("river", Index)
-
 func _river_right(m *ice.Message, action string) bool {
 	if m.Warn(m.Option(ice.MSG_RIVER) == "", "not join") {
 		m.Render("status", 402, "not join")

@@ -9,10 +9,14 @@ import (
 	"sync"
 )
 
+const (
+	RIVER = "river"
+	STORM = "storm"
+)
+
 var Index = &ice.Context{Name: "chat", Help: "聊天中心",
-	Caches: map[string]*ice.Cache{},
 	Configs: map[string]*ice.Config{
-		ice.CHAT_RIVER: {Name: "river", Help: "群组", Value: kit.Data(
+		RIVER: {Name: "river", Help: "群组", Value: kit.Data(
 			"template", kit.Dict("root", []interface{}{
 				[]interface{}{"river", `{{.Option "user.nick"|Format}}@{{.Conf "runtime" "node.name"|Format}}`, "mall"},
 
@@ -65,30 +69,28 @@ var Index = &ice.Context{Name: "chat", Help: "聊天中心",
 				[]interface{}{"storm", "wiki", "wiki"},
 				[]interface{}{"field", "note", "web.wiki"},
 			}),
-			"black", kit.Dict("void", []interface{}{
-				[]interface{}{"/debug"},
-				[]interface{}{"/river", "add"},
-				[]interface{}{"/river", "share"},
-				[]interface{}{"/river", "rename"},
-				[]interface{}{"/river", "remove"},
-				[]interface{}{"/storm", "remove"},
-				[]interface{}{"/storm", "rename"},
-				[]interface{}{"/storm", "share"},
-				[]interface{}{"/storm", "add"},
+			"black", kit.Dict("tech", []interface{}{
+				"/debug",
+				"/river.add",
+				"/river.share",
+				"/river.rename",
+				"/river.remove",
+				"/storm.remove",
+				"/storm.rename",
+				"/storm.share",
+				"/storm.add",
 			}),
 			"white", kit.Dict("void", []interface{}{
-				[]interface{}{"/toast"},
-				[]interface{}{"/carte"},
-				[]interface{}{"/tutor"},
-				[]interface{}{"/login"},
-				[]interface{}{"/river"},
-				[]interface{}{"/storm"},
-				[]interface{}{"/action"},
-				[]interface{}{"web.wiki.note"},
+				"/toast",
+				"/carte",
+				"/tutor",
+				"/login",
+				"/river",
+				"/storm",
+				"/action",
+				"web.wiki.note",
 			}),
-			"fe", "volcanos",
 		)},
-		"commend": {Name: "commend", Help: "commend", Value: kit.Data(kit.MDB_SHORT, kit.MDB_NAME, "user", kit.Data(kit.MDB_SHORT, kit.MDB_NAME))},
 	},
 	Commands: map[string]*ice.Command{
 		ice.ICE_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
@@ -97,59 +99,50 @@ var Index = &ice.Context{Name: "chat", Help: "聊天中心",
 			m.Watch(ice.USER_CREATE, m.Prefix("auto"))
 		}},
 		ice.ICE_EXIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			m.Save("river", "search", "commend")
+			m.Save(RIVER)
 		}},
 
 		"init": {Name: "init", Help: "初始化", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			if len(m.Confm(ice.CHAT_RIVER, "hash")) == 0 {
-				if m.Richs(ice.WEB_FAVOR, nil, "river.root", nil) == nil {
-					// 系统群组
-					kit.Fetch(m.Confv(ice.CHAT_RIVER, "meta.template.root"), func(index int, value interface{}) {
-						m.Cmd(ice.WEB_FAVOR, "river.root", value)
-					})
-					// 默认群组
-					kit.Fetch(m.Confv(ice.CHAT_RIVER, "meta.template.void"), func(index int, value interface{}) {
-						m.Cmd(ice.WEB_FAVOR, "river.void", value)
-					})
-					// 黑名单
-					kit.Fetch(m.Confv(ice.CHAT_RIVER, "meta.black.void"), func(index int, value interface{}) {
-						m.Cmd(ice.AAA_ROLE, "black", ice.ROLE_VOID, "enable", value)
-					})
-					// 白名单
-					kit.Fetch(m.Confv(ice.CHAT_RIVER, "meta.white.void"), func(index int, value interface{}) {
-						m.Cmd(ice.AAA_ROLE, "white", ice.ROLE_VOID, "enable", value)
-					})
-				}
-				// 超级用户
-				m.Cmd(ice.AAA_USER, "first", m.Conf(ice.CLI_RUNTIME, "boot.username"))
-			}
+			if len(m.Confm(ice.CHAT_RIVER, kit.MDB_HASH)) == 0 {
+				// 默认群组
+				kit.Fetch(m.Confv(ice.CHAT_RIVER, "meta.template"), func(key string, val map[string]interface{}) {
+					if favor := kit.Keys(c.Cap(ice.CTX_FOLLOW), key); m.Richs(ice.WEB_FAVOR, nil, favor, nil) == nil {
+						kit.Fetch(val, func(index int, value interface{}) {
+							v := kit.Simple(value)
+							web.FavorInsert(m, favor, v[0], v[1], v[2])
+						})
+					}
+				})
 
-			// 前端框架
-			m.Cmd("web.code.git.repos", m.Conf(ice.CHAT_RIVER, "meta.fe"))
-			m.Cap(ice.CTX_STREAM, m.Conf(ice.CHAT_RIVER, "meta.fe"))
+				// 黑名单
+				kit.Fetch(m.Confv(ice.CHAT_RIVER, "meta.black.tech"), func(index int, value interface{}) {
+					m.Cmd(aaa.ROLE, aaa.Black, aaa.TECH, value)
+				})
+				// 白名单
+				kit.Fetch(m.Confv(ice.CHAT_RIVER, "meta.white.void"), func(index int, value interface{}) {
+					m.Cmd(aaa.ROLE, aaa.White, aaa.VOID, value)
+				})
+			}
 			m.Cap(ice.CTX_STATUS, "start")
 		}},
 		"auto": {Name: "auto user", Help: "自动化", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			m.Richs(ice.AAA_USER, nil, arg[0], func(key string, value map[string]interface{}) {
-				m.Option(ice.MSG_USERNICK, value["usernick"])
-				m.Option(ice.MSG_USERNAME, value["username"])
-				m.Option(ice.MSG_USERROLE, "root")
+			m.Richs(aaa.USER, nil, arg[0], func(key string, value map[string]interface{}) {
+				m.Option(ice.MSG_USERNICK, value[aaa.USERNAME])
+				m.Option(ice.MSG_USERNAME, value[aaa.USERNAME])
 
 				// 创建应用
 				storm, river := "", ""
 				m.Option("cache.limit", -2)
-				m.Richs(ice.WEB_FAVOR, nil, kit.Keys("river", m.Cmdx(ice.AAA_ROLE, "check", value["username"])), func(key string, value map[string]interface{}) {
-					m.Grows(ice.WEB_FAVOR, kit.Keys("hash", key), "", "", func(index int, value map[string]interface{}) {
-						switch value["type"] {
-						case "river":
-							name, _ := kit.Render(kit.Format(value["name"]), m)
-							river = m.Option(ice.MSG_RIVER, m.Cmdx("/ocean", "spawn", string(name)))
-						case "storm":
-							storm = m.Option(ice.MSG_STORM, m.Cmdx("/steam", river, "spawn", value["name"]))
-						case "field":
-							m.Cmd("/storm", river, storm, "add", "", kit.Select("", value["text"]), value["name"], "")
-						}
-					})
+				web.FavorList(m, kit.Keys(c.Cap(ice.CTX_FOLLOW), aaa.UserRole(m, value[aaa.USERNAME])), "").Table(func(index int, value map[string]string, head []string) {
+					switch value[kit.MDB_TYPE] {
+					case "river":
+						name, _ := kit.Render(kit.Format(value["name"]), m)
+						river = m.Option(ice.MSG_RIVER, m.Cmdx("/ocean", "spawn", string(name)))
+					case "storm":
+						storm = m.Option(ice.MSG_STORM, m.Cmdx("/steam", river, "spawn", value["name"]))
+					case "field":
+						m.Cmd("/storm", river, storm, "add", "", kit.Select("", value["text"]), value["name"], "")
+					}
 				})
 			})
 		}},
@@ -162,15 +155,13 @@ var Index = &ice.Context{Name: "chat", Help: "聊天中心",
 				switch arg[0] {
 				case "login":
 					// 密码登录
-					if len(arg) > 2 {
-						if aaa.UserLogin(m, arg[1], arg[2]) {
-							web.Render(m, "cookie", m.Option(ice.MSG_SESSID))
-						}
+					if len(arg) > 2 && aaa.UserLogin(m, arg[1], arg[2]) {
+						web.Render(m, "cookie", m.Option(ice.MSG_SESSID))
 					}
 
 				default:
 					// 群组检查
-					if m.Richs(ice.CHAT_RIVER, nil, arg[0], func(key string, value map[string]interface{}) {
+					m.Richs(ice.CHAT_RIVER, nil, arg[0], func(key string, value map[string]interface{}) {
 						m.Richs(ice.CHAT_RIVER, kit.Keys(kit.MDB_HASH, arg[0], "user"), m.Option(ice.MSG_USERNAME), func(key string, value map[string]interface{}) {
 							if m.Option(ice.MSG_RIVER, arg[0]); len(arg) > 1 {
 								// 应用检查
@@ -178,29 +169,20 @@ var Index = &ice.Context{Name: "chat", Help: "聊天中心",
 									m.Option(ice.MSG_STORM, arg[1])
 								})
 							}
-							m.Logs(ice.LOG_AUTH, "river", m.Option(ice.MSG_RIVER), "storm", m.Option(ice.MSG_STORM))
+							m.Log_AUTH(RIVER, m.Option(ice.MSG_RIVER), STORM, m.Option(ice.MSG_STORM))
 						})
-					}) == nil {
-						// 前端应用
-						// m.Option(ice.MSG_RIVER, arg[0])
-						// m.Option(ice.MSG_STORM, arg[1])
-					}
+					})
 				}
-			}
-			switch m.Option(ice.MSG_USERURL) {
-			case "/login", "/header", "/footer":
-				return
 			}
 
 			// 登录检查
 			if m.Warn(!m.Options(ice.MSG_USERNAME), "not login") {
-				if m.Option("share") != "" {
-					m.Option(ice.MSG_USERNAME, "void")
+				if m.Option("share") == "" {
+					m.Render("status", 401, "not login")
+					m.Option(ice.MSG_USERURL, "")
 					return
 				}
-				m.Render("status", 401, "not login")
-				m.Option(ice.MSG_USERURL, "")
-				return
+				m.Option(ice.MSG_USERROLE, aaa.VOID)
 			}
 
 			// 权限检查
@@ -414,4 +396,4 @@ var Index = &ice.Context{Name: "chat", Help: "聊天中心",
 	},
 }
 
-func init() { web.Index.Register(Index, &web.Frame{}) }
+func init() { web.Index.Register(Index, &web.Frame{}, RIVER, STORM) }

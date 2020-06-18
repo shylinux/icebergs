@@ -36,7 +36,7 @@ func UserRoot(m *ice.Message) {
 	cli.PassWord = cli.UserName
 	_user_create(m, cli.UserName, cli.PassWord)
 }
-func UserRole(m *ice.Message, username string) string {
+func UserRole(m *ice.Message, username interface{}) string {
 	if username == cli.UserName {
 		return ROOT
 	}

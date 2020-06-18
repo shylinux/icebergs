@@ -232,7 +232,7 @@ var Index = &ice.Context{Name: "input", Help: "输入法",
 			_input_save(m, arg[0], arg[1:]...)
 		}},
 		"load": {Name: "load file lib", Help: "导入词库", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			_input_load(m, arg[0])
+			_input_load(m, kit.Select("usr/wubi-dict/wubi86", arg, 0))
 		}},
 
 		"compare": {Name: "demo list nconn nreq", Help: "导入词库", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {

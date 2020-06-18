@@ -26,7 +26,10 @@ func Login(msg *ice.Message, w http.ResponseWriter, r *http.Request) bool {
 	if !msg.Options(ice.MSG_USERNAME) && tcp.IPIsLocal(msg, msg.Option(ice.MSG_USERIP)) {
 		// 自动认证
 		if aaa.UserLogin(msg, cli.UserName, cli.PassWord) {
-			Render(msg, "cookie", msg.Option(ice.MSG_SESSID))
+			if strings.HasPrefix(msg.Option(ice.MSG_USERUA), "Mozilla/5.0") {
+				msg.Option(ice.MSG_SESSID, aaa.SessCreate(msg, msg.Option(ice.MSG_USERNAME), msg.Option(ice.MSG_USERROLE)))
+				Render(msg, "cookie", msg.Option(ice.MSG_SESSID))
+			}
 		}
 	}
 

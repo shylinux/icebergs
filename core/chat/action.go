@@ -167,7 +167,7 @@ func init() {
 				_action_share_show(m, arg[0], arg[1], arg[2], arg[3:]...)
 				return
 			}
-			if arg[3] == "action" && _action_action(m, arg[3]) {
+			if len(arg) > 3 && arg[3] == "action" && _action_action(m, arg[3]) {
 				// 前置命令
 				return
 			}

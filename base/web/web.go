@@ -42,7 +42,7 @@ func Format(key string, arg ...interface{}) string {
 }
 func Render(msg *ice.Message, cmd string, args ...interface{}) {
 	if cmd != "" {
-		msg.Log(ice.LOG_EXPORT, "%s: %v", cmd, args)
+		defer func() { msg.Log(ice.LOG_EXPORT, "%s: %v", cmd, args) }()
 	}
 	switch arg := kit.Simple(args...); cmd {
 	case ice.RENDER_VOID:
@@ -73,6 +73,7 @@ func Render(msg *ice.Message, cmd string, args ...interface{}) {
 		if len(arg) > 0 {
 			msg.W.Write([]byte(kit.Format(arg[0], args[1:]...)))
 		} else {
+			args = append(args, "length:", len(msg.Result()))
 			msg.W.Write([]byte(msg.Result()))
 		}
 

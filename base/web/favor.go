@@ -8,12 +8,6 @@ import (
 	"os"
 )
 
-const (
-	EXPORT = "usr/export/web.favor/favor.csv"
-)
-
-var FAVOR = ice.Name("favor", Index)
-
 func _favor_list(m *ice.Message, zone, id string, fields ...string) {
 	m.Richs(FAVOR, nil, kit.Select(kit.MDB_FOREACH, zone), func(key string, val map[string]interface{}) {
 		if val = val[kit.MDB_META].(map[string]interface{}); zone == "" {
@@ -247,6 +241,12 @@ func FavorShow(m *ice.Message, kind string, name, text interface{}, arg ...strin
 	_favor_show(m, kind, name, text, arg...)
 	return m
 }
+
+const (
+	EXPORT = "usr/export/web.favor/favor.csv"
+)
+
+var FAVOR = ice.Name("favor", Index)
 
 func init() {
 	Index.Merge(&ice.Context{

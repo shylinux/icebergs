@@ -103,8 +103,8 @@ func _cache_watch(m *ice.Message, key, file string) {
 func _cache_catch(m *ice.Message, arg ...string) []string {
 	if r, ok := m.Optionv("response").(*http.Response); ok {
 		return _cache_download(m, r, arg...)
-	} else if m.R != nil {
-		return _cache_upload(m, arg...)
+		// } else if m.R != nil {
+		// 	return _cache_upload(m, arg...)
 	}
 
 	if f, e := os.Open(arg[2]); m.Assert(e) {
@@ -186,6 +186,10 @@ func init() {
 					} else {
 						_cache_show(m, "", "", "")
 					}
+				}},
+				kit.MDB_INSERT: {Name: "insert type name", Help: "插入", Hand: func(m *ice.Message, arg ...string) {
+					arg = _cache_catch(m, arg[0], arg[1])
+					_cache_save(m, arg[0], arg[1], arg[2], arg[3], arg[4:]...)
 				}},
 			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 				if len(arg) == 0 {

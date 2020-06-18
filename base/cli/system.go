@@ -28,8 +28,11 @@ func _system_show(m *ice.Message, cmd *exec.Cmd) {
 	err := bytes.NewBuffer(make([]byte, 0, 1024))
 	cmd.Stdout = out
 	cmd.Stderr = err
+	defer func() {
+		m.Cost("%v exit: %v out: %v err: %v ",
+			cmd.Args, cmd.ProcessState.ExitCode(), out.Len(), err.Len())
+	}()
 
-	defer m.Cost("%v exit: %v out: %v err: %v ", cmd.Args, 0, out.Len(), err.Len())
 	if e := cmd.Run(); e != nil {
 		m.Warn(e != nil, "%v run: %s", cmd.Args, kit.Select(e.Error(), err.String()))
 	}

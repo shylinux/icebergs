@@ -81,14 +81,11 @@ var Index = &ice.Context{Name: "chat", Help: "聊天中心",
 				"/storm.add",
 			}),
 			"white", kit.Dict("void", []interface{}{
-				"/toast",
-				"/carte",
-				"/tutor",
-				"/login",
+				"/header",
 				"/river",
 				"/storm",
 				"/action",
-				"web.wiki.note",
+				"/footer",
 			}),
 		)},
 	},
@@ -156,6 +153,7 @@ var Index = &ice.Context{Name: "chat", Help: "聊天中心",
 				case "login":
 					// 密码登录
 					if len(arg) > 2 && aaa.UserLogin(m, arg[1], arg[2]) {
+						m.Option(ice.MSG_SESSID, aaa.SessCreate(m, m.Option(ice.MSG_USERNAME), m.Option(ice.MSG_USERROLE)))
 						web.Render(m, "cookie", m.Option(ice.MSG_SESSID))
 					}
 
@@ -175,6 +173,9 @@ var Index = &ice.Context{Name: "chat", Help: "聊天中心",
 				}
 			}
 
+			if m.Right(m.Option(ice.MSG_USERURL), m.Optionv("cmds")) {
+				return
+			}
 			// 登录检查
 			if m.Warn(!m.Options(ice.MSG_USERNAME), "not login") {
 				if m.Option("share") == "" {

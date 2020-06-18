@@ -75,7 +75,7 @@ func _input_find(m *ice.Message, method, word, limit string) {
 		} else {
 			if method == WORD && i == 0 {
 				// 添加收藏
-				web.FavorInsert(m, "input.word", "input", line[2], line[4], "id", line[3], WEIGHT, line[6])
+				// web.FavorInsert(m.Spawn(), "input.word", "input", line[2], line[4], "id", line[3], WEIGHT, line[6])
 			}
 
 			// 输出词汇

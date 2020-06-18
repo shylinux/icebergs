@@ -47,7 +47,7 @@ func _space_dial(m *ice.Message, dev, name string, arg ...string) {
 
 		host := kit.Format(client["hostname"])
 		proto := kit.Select("ws", "wss", client["protocol"] == "https")
-		uri := kit.MergeURL(proto+"://"+host+"/space/", "name", name, "type", cli.NodeType)
+		uri := kit.MergeURL(proto+"://"+host+"/space/", "name", name, "type", m.Conf(cli.RUNTIME, "node.type"))
 		if u, e := url.Parse(uri); m.Assert(e) {
 
 			task.Put(dev, func(task *task.Task) error {

@@ -89,7 +89,14 @@ var Index = &ice.Context{Name: "cli", Help: "命令模块",
 		}},
 
 		RUNTIME: {Name: "runtime", Help: "运行环境", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			m.Cmdy(ice.CTX_CONFIG, RUNTIME, arg)
+			switch kit.Select("", arg, 0) {
+			case "hostname":
+				HostName = arg[1]
+				m.Conf(RUNTIME, "boot.hostname", arg[1])
+				m.Echo(m.Conf(RUNTIME, "boot.hostname"))
+			default:
+				m.Cmdy(ice.CTX_CONFIG, RUNTIME, arg)
+			}
 		}},
 	},
 }

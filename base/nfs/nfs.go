@@ -2,6 +2,8 @@ package nfs
 
 import (
 	ice "github.com/shylinux/icebergs"
+	"github.com/shylinux/icebergs/base/cli"
+	"github.com/shylinux/icebergs/base/web"
 	kit "github.com/shylinux/toolkits"
 
 	"bufio"
@@ -18,8 +20,7 @@ import (
 )
 
 const (
-	FILE  = "file"
-	TRASH = "trash"
+	FILE = "file"
 )
 
 func _file_list(m *ice.Message, root string, name string, level int, deep bool, dir_type string, dir_reg *regexp.Regexp, fields []string) {
@@ -141,12 +142,12 @@ func _file_list(m *ice.Message, root string, name string, level int, deep bool, 
 	}
 }
 func _file_show(m *ice.Message, name string) {
-	if f, e := os.OpenFile(name, os.O_RDONLY, 0777); m.Assert(e) {
+	if f, e := os.OpenFile(name, os.O_RDONLY, 0640); m.Assert(e) {
 		defer f.Close()
 		if s, e := f.Stat(); m.Assert(e) {
 			buf := make([]byte, s.Size())
 			if n, e := f.Read(buf); m.Assert(e) {
-				m.Log_IMPORT("file", name, "size", n)
+				m.Log_IMPORT(kit.MDB_FILE, name, kit.MDB_SIZE, n)
 				m.Echo(string(buf[:n]))
 			}
 		}
@@ -157,7 +158,7 @@ func _file_save(m *ice.Message, name string, text ...string) {
 		defer f.Close()
 		for _, v := range text {
 			if n, e := f.WriteString(v); m.Assert(e) {
-				m.Log_EXPORT("file", p, "size", n)
+				m.Log_IMPORT(kit.MDB_FILE, p, kit.MDB_SIZE, n)
 			}
 		}
 		m.Echo(p)
@@ -170,7 +171,7 @@ func _file_copy(m *ice.Message, name string, from ...string) {
 			if s, e := os.Open(v); !m.Warn(e != nil, "%s", e) {
 				defer s.Close()
 				if n, e := io.Copy(f, s); !m.Warn(e != nil, "%s", e) {
-					m.Log_IMPORT("file", p, "size", n)
+					m.Log_IMPORT(kit.MDB_FILE, p, kit.MDB_SIZE, n)
 				}
 			}
 		}
@@ -178,14 +179,14 @@ func _file_copy(m *ice.Message, name string, from ...string) {
 }
 func _file_link(m *ice.Message, name string, from string) {
 	m.Cmd("nfs.trash", name)
-	os.MkdirAll(path.Dir(name), 0777)
+	os.MkdirAll(path.Dir(name), 0760)
 	os.Link(from, name)
 }
 func _file_trash(m *ice.Message, name string, from ...string) {
 	if s, e := os.Stat(name); e == nil {
 		if s.IsDir() {
 			name := path.Base(name) + ".tar.gz"
-			m.Cmd(ice.CLI_SYSTEM, "tar", "zcf", name, name)
+			m.Cmd(cli.SYSTEM, "tar", "zcf", name, name)
 		}
 
 		if f, e := os.Open(name); m.Assert(e) {
@@ -196,36 +197,41 @@ func _file_trash(m *ice.Message, name string, from ...string) {
 			os.MkdirAll(path.Dir(p), 0777)
 			os.Rename(name, p)
 
-			m.Cmd(ice.WEB_FAVOR, "trash", "bin", name, p)
+			m.Cmd(web.FAVOR, "trash", "bin", name, p)
 		}
 	}
 }
 
-func FileSave(m *ice.Message, file string, text ...string) {
-	_file_save(m, file, text...)
-}
+const (
+	DIR   = "dir"
+	CAT   = "cat"
+	SAVE  = "save"
+	COPY  = "copy"
+	LINK  = "link"
+	TRASH = "trash"
+)
 
 var Index = &ice.Context{Name: "nfs", Help: "存储模块",
 	Configs: map[string]*ice.Config{
 		TRASH: {Name: "trash", Help: "删除", Value: kit.Data("path", "var/trash")},
 	},
 	Commands: map[string]*ice.Command{
-		"dir": {Name: "dir path field...", Help: "目录", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		DIR: {Name: "dir path field...", Help: "目录", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			rg, _ := regexp.Compile(m.Option("dir_reg"))
 			_file_list(m, kit.Select("./", m.Option("dir_root")), kit.Select("", arg, 0),
 				0, m.Options("dir_deep"), kit.Select("both", m.Option("dir_type")), rg,
 				strings.Split(kit.Select("time size line path", strings.Join(arg[1:], " ")), " "))
 		}},
-		"cat": {Name: "cat file", Help: "查看", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		CAT: {Name: "cat file", Help: "查看", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			_file_show(m, arg[0])
 		}},
-		"save": {Name: "save file text...", Help: "保存", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		SAVE: {Name: "save file text...", Help: "保存", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			_file_save(m, arg[0], arg[1:]...)
 		}},
-		"copy": {Name: "copy file from...", Help: "复制", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		COPY: {Name: "copy file from...", Help: "复制", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			_file_copy(m, arg[0], arg[1:]...)
 		}},
-		"link": {Name: "link file from", Help: "链接", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		LINK: {Name: "link file from", Help: "链接", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			_file_link(m, arg[0], arg[1])
 		}},
 

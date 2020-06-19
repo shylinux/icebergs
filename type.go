@@ -78,6 +78,9 @@ func (c *Context) Cap(key string, arg ...interface{}) string {
 	return c.Caches[key].Value
 }
 func (c *Context) Run(m *Message, cmd *Command, key string, arg ...string) *Message {
+	if cmd == nil {
+		return m
+	}
 	m.meta[MSG_DETAIL] = kit.Simple(key, arg)
 	m.Hand = true
 
@@ -100,7 +103,7 @@ func (c *Context) Run(m *Message, cmd *Command, key string, arg ...string) *Mess
 			}
 		}
 	}
-	if len(arg) > 0 {
+	if len(arg) > 0 && cmd.Action != nil {
 		if h, ok := cmd.Action[arg[0]]; ok {
 			m.Log(LOG_CMDS, "%s.%s %d %v %s", c.Name, key, len(arg), arg, kit.FileLine(h.Hand, 3))
 			h.Hand(m, arg[1:]...)
@@ -499,7 +502,9 @@ func (m *Message) Search(key interface{}, cb interface{}) *Message {
 
 		// 查找模块
 		p := m.target.root
-		if strings.Contains(key, ":") {
+		if ctx, ok := names[key].(*Context); ok {
+			p = ctx
+		} else if strings.Contains(key, ":") {
 
 		} else if key == "." {
 			if m.target.context != nil {
@@ -597,14 +602,10 @@ func (m *Message) Cmd(arg ...interface{}) *Message {
 		return m
 	}
 
-	if ctx, ok := names[list[0]].(*Context); ok {
-		m.Hand = true
-		return ctx.Run(m.Spawns(ctx), ctx.Commands[list[0]], list[0], list[1:]...)
-	}
-
 	m.Search(list[0], func(p *Context, c *Context, key string, cmd *Command) {
-		m = p.Run(m.Spawns(c), cmd, key, list[1:]...)
-		m.Hand = true
+		m.TryCatch(m.Spawns(c), true, func(msg *Message) {
+			m = p.Run(msg, cmd, key, list[1:]...)
+		})
 	})
 
 	if m.Warn(m.Hand == false, "not found %v", list) {

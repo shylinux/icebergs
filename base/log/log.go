@@ -120,8 +120,8 @@ var Index = &ice.Context{Name: "log", Help: "日志模块",
 					// 日志文件
 					if f, p, e := kit.Create(kit.Format(value["path"])); m.Assert(e) {
 						m.Cap(ice.CTX_STREAM, path.Base(p))
-						m.Log("create", "%s: %s", key, p)
 						value["file"] = bufio.NewWriter(f)
+						m.Log_CREATE(kit.MDB_FILE, p)
 					}
 				})
 			}

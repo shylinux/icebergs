@@ -90,7 +90,7 @@ func _input_find2(m *ice.Message, method, word, limit string) {
 	defer m.Cost("some")
 
 	var mu sync.Mutex
-	task.Sync(list, func(task *task.Task) error {
+	task.Sync(list, func(task *task.Task, lock *task.Lock) error {
 		kit.CSV(kit.Format(task.Arg), 100000, func(index int, value map[string]string, head []string) {
 			if value["code"] != word {
 				return
@@ -181,7 +181,7 @@ var Index = &ice.Context{Name: "input", Help: "输入法",
 	Configs: map[string]*ice.Config{
 		INPUT: {Name: "input", Help: "输入法", Value: kit.Data(
 			"repos", "wubi-dict", "local", "person",
-			kit.MDB_STORE, "var/data/input", kit.MDB_FSIZE, "200000",
+			kit.MDB_STORE, "usr/export/input", kit.MDB_FSIZE, "200000",
 			kit.MDB_LIMIT, "5000", kit.MDB_LEAST, "1000",
 			kit.MDB_SHORT, "zone",
 		)},

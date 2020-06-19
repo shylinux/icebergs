@@ -342,7 +342,7 @@ func (m *Message) Grows(key string, chain interface{}, match string, value strin
 	order := 0
 	if begin < current {
 		// 读取文件
-		m.Log(LOG_INFO, "%s.%v read %v-%v from %v-%v", key, chain, begin, end, current, current+len(list))
+		// m.Log(LOG_INFO, "%s.%v read %v-%v from %v-%v", key, chain, begin, end, current, current+len(list))
 		store, _ := meta["record"].([]interface{})
 		for s := len(store) - 1; s > -1; s-- {
 			item, _ := store[s].(map[string]interface{})

@@ -9,6 +9,7 @@ import (
 	"time"
 
 	kit "github.com/shylinux/toolkits"
+	"github.com/shylinux/toolkits/task"
 )
 
 func (m *Message) TryCatch(msg *Message, safe bool, hand ...func(msg *Message)) *Message {
@@ -112,6 +113,10 @@ func (m *Message) Back(res *Message) *Message {
 	return m
 }
 func (m *Message) Gos(msg *Message, cb func(*Message)) *Message {
-	go func() { msg.TryCatch(msg, true, func(msg *Message) { cb(msg) }) }()
+	task.Put(nil, func(task *task.Task) error {
+		msg.Optionv("_task", task)
+		msg.TryCatch(msg, true, func(msg *Message) { cb(msg) })
+		return nil
+	})
 	return m
 }

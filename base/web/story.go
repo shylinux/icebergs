@@ -384,6 +384,9 @@ func StoryAdd(m *ice.Message, mime string, name string, text string, arg ...stri
 }
 
 const STORY = "story"
+const (
+	CATCH = "catch"
+)
 
 func init() {
 	Index.Merge(&ice.Context{

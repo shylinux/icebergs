@@ -52,6 +52,11 @@ func (m *Message) Set(key string, arg ...string) *Message {
 }
 func (m *Message) Push(key string, value interface{}, arg ...interface{}) *Message {
 	switch value := value.(type) {
+	case map[string]string:
+		for k, v := range value {
+			m.Push(k, v)
+		}
+		return m
 	case map[string]interface{}:
 		if key == "detail" {
 			// 格式转换
@@ -452,6 +457,10 @@ func (m *Message) Append(key string, arg ...interface{}) string {
 	return kit.Select("", m.Appendv(key, arg...), 0)
 }
 func (m *Message) Appendv(key string, arg ...interface{}) []string {
+	if key == MSG_APPEND {
+		m.meta[MSG_APPEND] = kit.Simple(arg)
+		return m.meta[key]
+	}
 	if key == "_index" {
 		max := 0
 		for _, k := range m.meta[MSG_APPEND] {

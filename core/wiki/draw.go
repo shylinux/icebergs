@@ -2,7 +2,6 @@ package wiki
 
 import (
 	"github.com/shylinux/icebergs"
-	"github.com/shylinux/icebergs/base/nfs"
 	"github.com/shylinux/toolkits"
 
 	"path"
@@ -36,7 +35,7 @@ func init() {
 				"display", "/plugin/local/wiki/draw.js",
 			), Action: map[string]*ice.Action{
 				"save": {Name: "save path text", Help: "保存", Hand: func(m *ice.Message, arg ...string) {
-					nfs.FileSave(m, path.Join(m.Conf(DRAW, "meta.path"), kit.Select("hi.svg", arg, 0)), kit.Select(m.Option("content"), arg, 1))
+					m.Cmd("nfs.save", path.Join(m.Conf(DRAW, "meta.path"), kit.Select("hi.svg", arg, 0)), kit.Select(m.Option("content"), arg, 1))
 				}},
 				"run": {Name: "show path text", Help: "运行", Hand: func(m *ice.Message, arg ...string) {
 					_draw_show(m, arg[0], arg[1], arg[2], arg[3], arg[4:]...)

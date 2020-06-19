@@ -47,7 +47,7 @@ func _alpha_find2(m *ice.Message, method, word string) {
 		}
 
 		var mu sync.Mutex
-		task.Sync(args, func(task *task.Task) error {
+		task.Sync(args, func(task *task.Task, lock *task.Lock) error {
 			info := task.Arg.(os.FileInfo)
 			file := path.Join(p, info.Name())
 			kit.CSV(file, 100000, func(index int, value map[string]string, head []string) {

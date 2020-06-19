@@ -263,16 +263,16 @@ func _story_add(m *ice.Message, arg ...string) {
 		m.Echo(list)
 	}
 
-	// 分发数据
-	for _, k := range []string{"you", "pod"} {
-		if p := m.Option(k); p != "" {
-			m.Option(k, "")
-			m.Cmd(ice.WEB_PROXY, p, STORY, ice.STORY_PULL, arg[2], "dev", arg[2])
-			return
-		}
-	}
-	m.Cmd(ice.WEB_PROXY, m.Conf(ice.WEB_FAVOR, "meta.proxy"),
-		STORY, ice.STORY_PULL, arg[2], "dev", arg[2])
+	// // 分发数据
+	// for _, k := range []string{"you", "pod"} {
+	// 	if p := m.Option(k); p != "" {
+	// 		m.Option(k, "")
+	// 		m.Cmd(ice.WEB_PROXY, p, STORY, ice.STORY_PULL, arg[2], "dev", arg[2])
+	// 		return
+	// 	}
+	// }
+	// m.Cmd(ice.WEB_PROXY, m.Conf(ice.WEB_FAVOR, "meta.proxy"),
+	// 	STORY, ice.STORY_PULL, arg[2], "dev", arg[2])
 }
 func _story_trash(m *ice.Message, arg ...string) {
 	bak := kit.Select(kit.Keys(arg[1], "bak"), arg, 2)

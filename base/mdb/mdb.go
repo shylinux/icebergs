@@ -5,28 +5,21 @@ import (
 	"github.com/shylinux/icebergs/base/web"
 	"github.com/shylinux/toolkits"
 
-	"bytes"
 	"encoding/csv"
 	"encoding/json"
-	"math"
 	"os"
-	"path"
 	"sort"
 	"strings"
 )
 
-func _list_import(m *ice.Message, prefix, key, file, text string) {
-	buf := bytes.NewBufferString(text)
-	r := csv.NewReader(buf)
+func _list_import(m *ice.Message, prefix, key, file string) {
+	f, e := os.Open(file)
+	m.Assert(e)
+	defer f.Close()
 
-	if file != "" {
-		if f, e := os.Open(file); m.Assert(e) {
-			defer f.Close()
-			r = csv.NewReader(f)
-			// 导入文件
-		}
-	}
+	r := csv.NewReader(f)
 
+	count := 0
 	head, _ := r.Read()
 	for {
 		line, e := r.Read()
@@ -44,12 +37,13 @@ func _list_import(m *ice.Message, prefix, key, file, text string) {
 		}
 
 		// 导入数据
-		n := m.Grow(prefix, key, data)
-		m.Log_INSERT(kit.MDB_KEY, kit.Keys(prefix, key), kit.MDB_ID, n)
+		m.Grow(prefix, key, data)
+		count++
 	}
+	m.Log_IMPORT(kit.MDB_KEY, kit.Keys(prefix, key), kit.MDB_COUNT, count)
 }
 func _list_export(m *ice.Message, prefix, key, file string) {
-	f, p, e := kit.Create(path.Join("usr/export", kit.Keys(file, "csv")))
+	f, p, e := kit.Create(kit.Keys(file, "csv"))
 	m.Assert(e)
 	defer f.Close()
 	defer m.Cmdy(web.STORY, "catch", "csv", p)
@@ -57,6 +51,7 @@ func _list_export(m *ice.Message, prefix, key, file string) {
 	w := csv.NewWriter(f)
 	defer w.Flush()
 
+	count := 0
 	head := []string{}
 	m.Grows(prefix, key, "", "", func(index int, value map[string]interface{}) {
 		if index == 0 {
@@ -74,54 +69,80 @@ func _list_export(m *ice.Message, prefix, key, file string) {
 			data = append(data, kit.Format(value[k]))
 		}
 		w.Write(data)
+		count++
 	})
+	m.Log_EXPORT(kit.MDB_FILE, p, kit.MDB_COUNT, count)
 }
-func _hash_import(m *ice.Message, prefix, key, file, text string) {
-	data := kit.Parse(nil, "", kit.Split(text, "\t: ,\n")...).(map[string]interface{})
+func _hash_import(m *ice.Message, prefix, key, file string) {
+	f, e := os.Open(file)
+	m.Assert(e)
+	defer f.Close()
+
+	defer m.Log_IMPORT(kit.MDB_FILE, file)
+
+	data := map[string]interface{}{}
+	de := json.NewDecoder(f)
+	de.Decode(&data)
+
 	for k, v := range data {
-		m.Log_MODIFY(kit.MDB_KEY, kit.Keys(prefix, key), "k", k, "v", v)
+		m.Log_MODIFY(kit.MDB_KEY, kit.Keys(prefix, key, kit.MDB_HASH), "k", k, "v", v)
 		m.Conf(prefix, kit.Keys(key, k), v)
 	}
 }
 func _hash_export(m *ice.Message, prefix, key, file string) {
-	f, p, e := kit.Create(path.Join("usr/export", kit.Keys(file, "json")))
+	f, p, e := kit.Create(kit.Keys(file, "json"))
 	m.Assert(e)
 	defer f.Close()
 	defer m.Cmdy(web.STORY, "catch", "json", p)
 
 	en := json.NewEncoder(f)
-	en.Encode(m.Confv(prefix, key))
+	en.SetIndent("", "  ")
+	en.Encode(m.Confv(prefix, kit.Keys(key, kit.MDB_HASH)))
+	m.Log_EXPORT(kit.MDB_FILE, p)
 }
+func _dict_import(m *ice.Message, prefix, key, file string) {
+	f, e := os.Open(file)
+	m.Assert(e)
+	defer f.Close()
 
-func distance(lat1, long1, lat2, long2 float64) float64 {
-	lat1 = lat1 * math.Pi / 180
-	long1 = long1 * math.Pi / 180
-	lat2 = lat2 * math.Pi / 180
-	long2 = long2 * math.Pi / 180
-	return 2 * 6371 * math.Asin(math.Sqrt(math.Pow(math.Sin(math.Abs(lat1-lat2)/2), 2)+math.Cos(lat1)*math.Cos(lat2)*math.Pow(math.Sin(math.Abs(long1-long2)/2), 2)))
+	defer m.Log_IMPORT(kit.MDB_FILE, file)
+
+	data := map[string]interface{}{}
+	de := json.NewDecoder(f)
+	de.Decode(&data)
+
+	for k, v := range data {
+		m.Log_MODIFY(kit.MDB_KEY, kit.Keys(prefix, key), "k", k, "v", v)
+		m.Conf(prefix, kit.Keys(key, k), v)
+	}
+}
+func _dict_export(m *ice.Message, prefix, key, file string) {
+	f, p, e := kit.Create(kit.Keys(file, "json"))
+	m.Assert(e)
+	defer f.Close()
+	defer m.Cmdy(web.STORY, "catch", "json", p)
+
+	en := json.NewEncoder(f)
+	en.SetIndent("", "  ")
+	en.Encode(m.Confv(prefix, kit.Keys(key)))
+	m.Log_EXPORT(kit.MDB_FILE, p)
 }
 
 const IMPORT = "import"
 const EXPORT = "export"
 
 var Index = &ice.Context{Name: "mdb", Help: "数据模块",
-	Caches: map[string]*ice.Cache{},
-	Configs: map[string]*ice.Config{
-		"location": {Name: "location", Help: "定位", Value: kit.Data(kit.MDB_SHORT, "name")},
-	},
 	Commands: map[string]*ice.Command{
-		ice.ICE_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			m.Load()
-		}},
-		ice.ICE_EXIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			m.Save(m.Prefix("location"))
-		}},
+		ice.ICE_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {}},
+		ice.ICE_EXIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {}},
 		kit.MDB_IMPORT: {Name: "import conf key type file", Help: "导入数据", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			switch msg := m.Cmd(ice.WEB_STORY, "index", arg[3]); arg[2] {
+			switch arg[2] {
 			case kit.MDB_LIST:
-				_list_import(m, arg[0], arg[1], msg.Append(kit.MDB_FILE), msg.Append(kit.MDB_TEXT))
+				_list_import(m, arg[0], arg[1], arg[3])
 			case kit.MDB_HASH:
-				_hash_import(m, arg[0], arg[1], msg.Append(kit.MDB_FILE), msg.Append(kit.MDB_TEXT))
+				_hash_import(m, arg[0], arg[1], arg[3])
+			case kit.MDB_DICT:
+				_dict_import(m, arg[0], arg[1], arg[3])
 			}
 		}},
 		kit.MDB_EXPORT: {Name: "export conf key type [name]", Help: "导出数据", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
@@ -130,45 +151,9 @@ var Index = &ice.Context{Name: "mdb", Help: "数据模块",
 				_list_export(m, arg[0], arg[1], file)
 			case kit.MDB_HASH:
 				_hash_export(m, arg[0], arg[1], file)
+			case kit.MDB_DICT:
+				_dict_export(m, arg[0], arg[1], file)
 			}
-		}},
-
-		"location": {Name: "location", Help: "location", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			if len(arg) == 0 {
-				m.Grows("location", nil, "", "", func(index int, value map[string]interface{}) {
-					m.Push("", value)
-				})
-				return
-			}
-			if len(arg) == 1 {
-				m.Richs("location", nil, arg[0], func(key string, value map[string]interface{}) {
-					m.Info("what %v", value)
-					m.Push("detail", value)
-				})
-				return
-			}
-			if len(arg) == 2 {
-				m.Richs("aaa.location", nil, "*", func(key string, value map[string]interface{}) {
-					m.Push("name", value["name"])
-					m.Push("distance", kit.Int(distance(
-						float64(kit.Int(arg[0]))/100000,
-						float64(kit.Int(arg[1]))/100000,
-						float64(kit.Int(value["latitude"]))/100000,
-						float64(kit.Int(value["longitude"]))/100000,
-					)*1000))
-				})
-				m.Sort("distance", "int")
-				return
-			}
-
-			data := m.Richs("location", nil, arg[0], nil)
-			if data != nil {
-				data["count"] = kit.Int(data["count"]) + 1
-			} else {
-				data = kit.Dict("name", arg[0], "address", arg[1], "latitude", arg[2], "longitude", arg[3], "count", 1)
-				m.Rich("location", nil, data)
-			}
-			m.Grow("location", nil, data)
 		}},
 
 		"update": {Name: "update config table index key value", Help: "修改数据", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {

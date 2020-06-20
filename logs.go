@@ -2,7 +2,7 @@ package ice
 
 import (
 	"github.com/shylinux/toolkits"
-	"github.com/shylinux/toolkits/log"
+	"github.com/shylinux/toolkits/logs"
 
 	"fmt"
 	"runtime"

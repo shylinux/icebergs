@@ -5,7 +5,7 @@ import (
 
 	ice "github.com/shylinux/icebergs"
 	kit "github.com/shylinux/toolkits"
-	"github.com/shylinux/toolkits/log"
+	"github.com/shylinux/toolkits/logs"
 	"github.com/shylinux/toolkits/util/bench"
 	"github.com/shylinux/toolkits/util/bench/redis"
 

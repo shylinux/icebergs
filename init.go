@@ -3,7 +3,7 @@ package ice
 import (
 	kit "github.com/shylinux/toolkits"
 	"github.com/shylinux/toolkits/conf"
-	"github.com/shylinux/toolkits/log"
+	"github.com/shylinux/toolkits/logs"
 	"github.com/shylinux/toolkits/miss"
 	"github.com/shylinux/toolkits/task"
 
@@ -82,12 +82,6 @@ var Index = &Context{Name: "ice", Help: "冰山模块",
 				"",
 			},
 		}},
-		"miss": {Value: kit.Dict(
-			kit.MDB_STORE, "var/data",
-			kit.MDB_FSIZE, "200000",
-			kit.MDB_LIMIT, "110",
-			kit.MDB_LEAST, "100",
-		)},
 		"task": {Value: kit.Dict(
 			kit.MDB_STORE, "var/data",
 			kit.MDB_LIMIT, "110",
@@ -155,10 +149,9 @@ func Run(arg ...string) string {
 		arg = append(arg, "web.space", "connect", "self")
 	}
 
-	conf := conf.New(nil)
-	task.Init(conf, 10)
-	miss.Init(conf)
-	log.Init(conf)
+	log.Init(conf.Sub("log"))
+	miss.Init(conf.Sub("miss"))
+	task.Init(conf.Sub("task"))
 
 	frame := &Frame{}
 	Index.root = Index

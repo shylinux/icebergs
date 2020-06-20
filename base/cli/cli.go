@@ -2,6 +2,7 @@ package cli
 
 import (
 	ice "github.com/shylinux/icebergs"
+	"github.com/shylinux/icebergs/base/ctx"
 	kit "github.com/shylinux/toolkits"
 
 	"os"
@@ -25,8 +26,8 @@ var PathName = ""
 var NodeName = ""
 
 func NodeType(m *ice.Message, kind, name string) {
-	m.Conf(ice.CLI_RUNTIME, "node.type", kind)
-	m.Conf(ice.CLI_RUNTIME, "node.name", name)
+	m.Conf(RUNTIME, "node.type", kind)
+	m.Conf(RUNTIME, "node.name", name)
 	NodeName = name
 }
 
@@ -35,7 +36,7 @@ var Index = &ice.Context{Name: "cli", Help: "命令模块",
 		RUNTIME: {Name: "runtime", Help: "运行环境", Value: kit.Dict()},
 	},
 	Commands: map[string]*ice.Command{
-		ice.ICE_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		ice.CTX_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			m.Load()
 
 			// 启动配置
@@ -75,7 +76,7 @@ var Index = &ice.Context{Name: "cli", Help: "命令模块",
 
 			// 节点信息
 			m.Conf(RUNTIME, "node.time", m.Time())
-			m.Conf(RUNTIME, "node.type", ice.WEB_WORKER)
+			m.Conf(RUNTIME, "node.type", "worker")
 			m.Conf(RUNTIME, "node.name", m.Conf(RUNTIME, "boot.pathname"))
 			m.Info("runtime %v", kit.Formats(m.Confv(RUNTIME)))
 
@@ -84,7 +85,7 @@ var Index = &ice.Context{Name: "cli", Help: "命令模块",
 			PathName = m.Conf(RUNTIME, "boot.pathname")
 			NodeName = m.Conf(RUNTIME, "node.nodename")
 		}},
-		ice.ICE_EXIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		ice.CTX_EXIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			m.Save(RUNTIME, SYSTEM)
 		}},
 
@@ -95,7 +96,7 @@ var Index = &ice.Context{Name: "cli", Help: "命令模块",
 				m.Conf(RUNTIME, "boot.hostname", arg[1])
 				m.Echo(m.Conf(RUNTIME, "boot.hostname"))
 			default:
-				m.Cmdy(ice.CTX_CONFIG, RUNTIME, arg)
+				m.Cmdy(ctx.CONFIG, RUNTIME, arg)
 			}
 		}},
 	},

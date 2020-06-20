@@ -70,26 +70,26 @@ func _pprof_show(m *ice.Message, zone string, id string) {
 		m.Cmd(web.FAVOR, favor, kit.MIME_FILE, bin, val[BINNARY])
 
 		// 性能分析
-		msg := m.Cmd(ice.WEB_SPIDE, "self", "cache", "GET", kit.Select("/code/pprof/profile", val[SERVICE]), "seconds", kit.Select("5", kit.Format(val[SECONDS])))
+		msg := m.Cmd(web.SPIDE, "self", "cache", "GET", kit.Select("/code/pprof/profile", val[SERVICE]), "seconds", kit.Select("5", kit.Format(val[SECONDS])))
 		m.Cmd(web.FAVOR, favor, PPROF, msg.Append(kit.MDB_TEXT), kit.Keys(zone, "pd.gz"))
 
 		// 结果摘要
 		cmd := kit.Simple(m.Confv(PPROF, "meta.pprof"), "-text", val[BINNARY], msg.Append(kit.MDB_TEXT))
-		res := strings.Split(m.Cmdx(ice.CLI_SYSTEM, cmd), "\n")
+		res := strings.Split(m.Cmdx(cli.SYSTEM, cmd), "\n")
 		if len(res) > 20 {
 			res = res[:20]
 		}
-		m.Cmd(web.FAVOR, favor, ice.TYPE_SHELL, strings.Join(cmd, " "), strings.Join(res, "\n"))
-		list = append(list, ice.TYPE_SHELL+": "+strings.Join(cmd, " "), strings.Join(res, "\n"))
+		m.Cmd(web.FAVOR, favor, web.TYPE_SHELL, strings.Join(cmd, " "), strings.Join(res, "\n"))
+		list = append(list, web.TYPE_SHELL+": "+strings.Join(cmd, " "), strings.Join(res, "\n"))
 
 		// 结果展示
-		p := kit.Format("%s:%s", m.Conf(ice.WEB_SHARE, "meta.host"), m.Cmdx("tcp.getport"))
+		p := kit.Format("%s:%s", m.Conf(web.SHARE, "meta.host"), m.Cmdx("tcp.getport"))
 		m.Option(cli.CMD_STDOUT, "var/daemon/stdout")
 		m.Option(cli.CMD_STDERR, "var/daemon/stderr")
 		m.Cmd(cli.DAEMON, m.Confv(PPROF, "meta.pprof"), "-http="+p, val[BINNARY], msg.Append(kit.MDB_TEXT))
 
 		url := "http://" + p + "/ui/top"
-		m.Cmd(web.FAVOR, favor, ice.TYPE_SPIDE, url, msg.Append(kit.MDB_TEXT))
+		m.Cmd(web.FAVOR, favor, web.TYPE_SPIDE, url, msg.Append(kit.MDB_TEXT))
 		m.Set(ice.MSG_RESULT).Echo(url).Echo(" \n").Echo("\n")
 		m.Echo(strings.Join(list, "\n")).Echo("\n")
 

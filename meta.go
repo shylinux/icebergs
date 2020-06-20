@@ -236,25 +236,22 @@ func (m *Message) Sort(key string, arg ...string) *Message {
 	}
 	return m
 }
-func (m *Message) Table(cbs ...interface{}) *Message {
-	if len(cbs) > 0 {
-		switch cb := cbs[0].(type) {
-		case func(int, map[string]string, []string):
-			nrow := 0
-			for _, k := range m.meta[MSG_APPEND] {
-				if len(m.meta[k]) > nrow {
-					nrow = len(m.meta[k])
-				}
+func (m *Message) Table(cbs ...func(index int, value map[string]string, head []string)) *Message {
+	if len(cbs) > 0 && cbs[0] != nil {
+		nrow := 0
+		for _, k := range m.meta[MSG_APPEND] {
+			if len(m.meta[k]) > nrow {
+				nrow = len(m.meta[k])
 			}
+		}
 
-			for i := 0; i < nrow; i++ {
-				line := map[string]string{}
-				for _, k := range m.meta[MSG_APPEND] {
-					line[k] = kit.Select("", m.meta[k], i)
-				}
-				// 依次回调
-				cb(i, line, m.meta[MSG_APPEND])
+		for i := 0; i < nrow; i++ {
+			line := map[string]string{}
+			for _, k := range m.meta[MSG_APPEND] {
+				line[k] = kit.Select("", m.meta[k], i)
 			}
+			// 依次回调
+			cbs[0](i, line, m.meta[MSG_APPEND])
 		}
 		return m
 	}

@@ -2,11 +2,12 @@ package chat
 
 import (
 	"github.com/shylinux/icebergs"
+	"github.com/shylinux/icebergs/base/web"
 	"github.com/shylinux/toolkits"
 )
 
 func _storm_list(m *ice.Message, river string) {
-	m.Richs(ice.CHAT_RIVER, kit.Keys(kit.MDB_HASH, river, "tool"), "*", func(key string, value map[string]interface{}) {
+	m.Richs(RIVER, kit.Keys(kit.MDB_HASH, river, "tool"), "*", func(key string, value map[string]interface{}) {
 		m.Push(key, value["meta"], []string{kit.MDB_KEY, kit.MDB_NAME})
 	})
 	m.Sort(kit.MDB_NAME)
@@ -14,27 +15,27 @@ func _storm_list(m *ice.Message, river string) {
 func _storm_tool(m *ice.Message, river, storm string, arg ...string) {
 	prefix := kit.Keys(kit.MDB_HASH, river, "tool", kit.MDB_HASH, storm)
 	for i := 0; i < len(arg)-3; i += 4 {
-		id := m.Grow(ice.CHAT_RIVER, kit.Keys(prefix), kit.Data(
+		id := m.Grow(RIVER, kit.Keys(prefix), kit.Data(
 			"pod", arg[i], "ctx", arg[i+1], "cmd", arg[i+2], "help", arg[i+3],
 		))
 		m.Log_INSERT(RIVER, river, STORM, storm, "hash", id, "tool", arg[i:i+4])
 	}
 }
 func _storm_share(m *ice.Message, river, storm, name string, arg ...string) {
-	m.Cmdy(ice.WEB_SHARE, ice.TYPE_STORM, name, storm, RIVER, river, arg)
+	m.Cmdy(web.SHARE, web.TYPE_STORM, name, storm, RIVER, river, arg)
 }
 func _storm_rename(m *ice.Message, river, storm string, name string) {
 	prefix := kit.Keys(kit.MDB_HASH, river, "tool", kit.MDB_HASH, storm)
-	old := m.Conf(ice.CHAT_RIVER, kit.Keys(prefix, kit.MDB_META, kit.MDB_NAME))
+	old := m.Conf(RIVER, kit.Keys(prefix, kit.MDB_META, kit.MDB_NAME))
 	m.Log_MODIFY(RIVER, river, STORM, storm, "value", name, "old", old)
-	m.Conf(ice.CHAT_RIVER, kit.Keys(prefix, kit.MDB_META, kit.MDB_NAME), name)
+	m.Conf(RIVER, kit.Keys(prefix, kit.MDB_META, kit.MDB_NAME), name)
 }
 func _storm_remove(m *ice.Message, river string, storm string) {
 	prefix := kit.Keys(kit.MDB_HASH, river, "tool")
-	m.Richs(ice.CHAT_RIVER, kit.Keys(prefix), storm, func(value map[string]interface{}) {
+	m.Richs(RIVER, kit.Keys(prefix), storm, func(value map[string]interface{}) {
 		m.Log_REMOVE(RIVER, river, STORM, storm, "value", kit.Format(value))
 	})
-	m.Conf(ice.CHAT_RIVER, kit.Keys(prefix, kit.MDB_HASH, storm), "")
+	m.Conf(RIVER, kit.Keys(prefix, kit.MDB_HASH, storm), "")
 }
 
 func init() {

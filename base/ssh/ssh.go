@@ -54,7 +54,7 @@ func Render(msg *ice.Message, cmd string, args ...interface{}) {
 		// 转换结果
 		res := msg.Result()
 		if res == "" {
-			res = msg.Table().Result()
+			res = msg.Table(nil).Result()
 		}
 		args = append(args, "length:", len(res))
 
@@ -321,8 +321,8 @@ var Index = &ice.Context{Name: "ssh", Help: "终端模块",
 		REMOTE: {Name: "remote", Help: "远程连接", Value: kit.Data()},
 	},
 	Commands: map[string]*ice.Command{
-		ice.ICE_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) { m.Load() }},
-		ice.ICE_EXIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		ice.CTX_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) { m.Load() }},
+		ice.CTX_EXIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			if _, ok := m.Target().Server().(*Frame); ok {
 				m.Done()
 			}

@@ -2,6 +2,7 @@ package chat
 
 import (
 	"github.com/shylinux/icebergs"
+	"github.com/shylinux/icebergs/base/cli"
 	"github.com/shylinux/toolkits"
 )
 
@@ -28,7 +29,7 @@ func _river_list(m *ice.Message) {
 	})
 }
 func _river_user(m *ice.Message, river string, user ...string) {
-	m.Rich(RIVER, kit.Keys(kit.MDB_HASH, river, "user"), kit.Data("username", m.Conf(ice.CLI_RUNTIME, "boot.username")))
+	m.Rich(RIVER, kit.Keys(kit.MDB_HASH, river, "user"), kit.Data("username", m.Conf(cli.RUNTIME, "boot.username")))
 	for _, v := range user {
 		user := m.Rich(RIVER, kit.Keys(kit.MDB_HASH, river, "user"), kit.Data("username", v))
 		m.Log_INSERT(RIVER, river, "hash", user, "user", v)
@@ -52,17 +53,17 @@ func init() {
 			Action: map[string]*ice.Action{
 				"user": {Name: "user user...", Help: "添加用户", Hand: func(m *ice.Message, arg ...string) {
 					if _river_right(m, "user") {
-						_river_user(m, m.Option(ice.CHAT_RIVER), arg...)
+						_river_user(m, m.Option(RIVER), arg...)
 					}
 				}},
 				"rename": {Name: "rename name", Help: "重命名", Hand: func(m *ice.Message, arg ...string) {
 					if _river_right(m, "rename") {
-						_river_rename(m, m.Option(ice.CHAT_RIVER), arg[0])
+						_river_rename(m, m.Option(RIVER), arg[0])
 					}
 				}},
 				"remove": {Name: "remove", Help: "删除", Hand: func(m *ice.Message, arg ...string) {
 					if _river_right(m, "remove") {
-						_river_remove(m, m.Option(ice.CHAT_RIVER))
+						_river_remove(m, m.Option(RIVER))
 					}
 				}},
 			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {

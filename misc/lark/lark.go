@@ -2,6 +2,8 @@ package lark
 
 import (
 	"github.com/shylinux/icebergs"
+	"github.com/shylinux/icebergs/base/aaa"
+	"github.com/shylinux/icebergs/base/cli"
 	"github.com/shylinux/icebergs/base/web"
 	"github.com/shylinux/icebergs/core/chat"
 	"github.com/shylinux/toolkits"
@@ -22,7 +24,7 @@ const (
 func post(m *ice.Message, bot string, arg ...interface{}) {
 	m.Richs("app", nil, bot, func(key string, value map[string]interface{}) {
 		m.Option("header", "Authorization", "Bearer "+m.Cmdx("app", "token", bot), "Content-Type", "application/json")
-		m.Cmdy(ice.WEB_SPIDE, "lark", arg)
+		m.Cmdy(web.SPIDE, "lark", arg)
 	})
 }
 
@@ -64,12 +66,12 @@ var Index = &ice.Context{Name: "lark", Help: "机器人",
 		USER: &ice.Config{Name: "user", Help: "用户配置", Value: kit.Data()},
 	},
 	Commands: map[string]*ice.Command{
-		ice.ICE_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		ice.CTX_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			m.Load()
 			m.Cmd(web.SPIDE, "add", LARK, m.Conf(APP, "meta.lark"))
-			m.Cmd(DUTY, "boot", m.Conf(ice.CLI_RUNTIME, "boot.hostname"), m.Time())
+			m.Cmd(DUTY, "boot", m.Conf(cli.RUNTIME, "boot.hostname"), m.Time())
 		}},
-		ice.ICE_EXIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		ice.CTX_EXIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			m.Save(APP, USER)
 		}},
 		DUTY: {Name: "send [title] text", Help: "消息", Hand: func(m *ice.Message, c *ice.Context, key string, arg ...string) {
@@ -116,10 +118,10 @@ var Index = &ice.Context{Name: "lark", Help: "机器人",
 			post(m, "bot", "/open-apis/message/v4/send/", "data", kit.Formats(form))
 		}},
 
-		ice.WEB_LOGIN: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		web.LOGIN: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 		}},
 		"login": {Name: "login", Help: "应用", Hand: func(m *ice.Message, c *ice.Context, key string, arg ...string) {
-			m.Cmdy(ice.WEB_SHARE, "user", m.Option(ice.MSG_USERNAME), m.Option(ice.MSG_SESSID))
+			m.Cmdy(web.SHARE, "user", m.Option(ice.MSG_USERNAME), m.Option(ice.MSG_SESSID))
 		}},
 
 		"app": {Name: "app login|token bot", Help: "应用", Hand: func(m *ice.Message, c *ice.Context, key string, arg ...string) {
@@ -138,7 +140,7 @@ var Index = &ice.Context{Name: "lark", Help: "机器人",
 			case "token":
 				m.Richs("app", nil, arg[1], func(key string, value map[string]interface{}) {
 					if now := time.Now().Unix(); kit.Format(value["token"]) == "" || kit.Int64(value["expire"]) < now {
-						m.Cmdy(ice.WEB_SPIDE, "lark", "/open-apis/auth/v3/tenant_access_token/internal/", "app_id", value["id"], "app_secret", value["mm"])
+						m.Cmdy(web.SPIDE, "lark", "/open-apis/auth/v3/tenant_access_token/internal/", "app_id", value["id"], "app_secret", value["mm"])
 						value["token"] = m.Append("tenant_access_token")
 						value["expire"] = kit.Int64(m.Append("expire")) + now
 						m.Set("result")
@@ -155,7 +157,7 @@ var Index = &ice.Context{Name: "lark", Help: "机器人",
 			return
 		}},
 		"ship": {Name: "ship", Help: "组织", Hand: func(m *ice.Message, c *ice.Context, key string, arg ...string) {
-			data := kit.UnMarshal(m.Cmdx(ice.WEB_SPIDE, "lark", "/open-apis/contact/v1/scope/get/",
+			data := kit.UnMarshal(m.Cmdx(web.SPIDE, "lark", "/open-apis/contact/v1/scope/get/",
 				"headers", "Authorization", "Bearer "+m.Cmdx(".app", "token", "bot"),
 			))
 			kit.Fetch(kit.Value(data, "data.authed_departments"), func(index int, value string) {
@@ -190,14 +192,14 @@ var Index = &ice.Context{Name: "lark", Help: "机器人",
 			switch arg[0] {
 			case "code":
 				m.Richs("app", nil, "bot", func(key string, value map[string]interface{}) {
-					m.Cmd(ice.WEB_SPIDE, "lark", "/connect/qrconnect/oauth2/access_token/",
+					m.Cmd(web.SPIDE, "lark", "/connect/qrconnect/oauth2/access_token/",
 						"app_secret", value["mm"], "app_id", value["id"],
 						"grant_type", "authorization_code", "code", arg[1],
 					)
 
 				})
 
-				msg := m.Cmd(ice.WEB_SPIDE, "lark", "/connect/qrconnect/oauth2/user_info/",
+				msg := m.Cmd(web.SPIDE, "lark", "/connect/qrconnect/oauth2/user_info/",
 					"headers", "Authorization", "Bearer "+m.Append("access_token"),
 				)
 				m.Confv("user", m.Append("open_id"), map[string]interface{}{
@@ -356,14 +358,14 @@ var Index = &ice.Context{Name: "lark", Help: "机器人",
 						if m.Options("open_chat_id") {
 							// 用户登录
 							m.Option(ice.MSG_USERNAME, m.Option("open_id"))
-							m.Option(ice.MSG_USERROLE, m.Cmdx(ice.AAA_ROLE, "check", m.Option(ice.MSG_USERNAME)))
+							m.Option(ice.MSG_USERROLE, m.Cmdx(aaa.ROLE, "check", m.Option(ice.MSG_USERNAME)))
 							m.Info("%s: %s", m.Option(ice.MSG_USERROLE), m.Option(ice.MSG_USERNAME))
 
 							if cmd := kit.Split(m.Option("text_without_at_bot")); cmd[0] == "login" || m.Right(cmd) {
 								// 执行命令
 								msg := m.Cmd(cmd)
 								if m.Hand = false; !msg.Hand {
-									msg = m.Cmd(ice.CLI_SYSTEM, cmd)
+									msg = m.Cmd(cli.SYSTEM, cmd)
 								}
 								if msg.Result() == "" {
 									msg.Table()

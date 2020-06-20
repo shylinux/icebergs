@@ -2,6 +2,9 @@ package wiki
 
 import (
 	ice "github.com/shylinux/icebergs"
+	"github.com/shylinux/icebergs/base/cli"
+	"github.com/shylinux/icebergs/base/ctx"
+	"github.com/shylinux/icebergs/base/ssh"
 	kit "github.com/shylinux/toolkits"
 
 	"fmt"
@@ -161,9 +164,9 @@ func init() {
 				cmds := kit.Split(arg[1])
 				m.Search(cmds[0], func(p *ice.Context, s *ice.Context, key string, cmd *ice.Command) {
 					if ls := strings.Split(cmds[0], "."); len(ls) > 1 {
-						m.Cmd(ice.CTX_COMMAND, strings.Join(ls[:len(ls)-1], "."), key)
+						m.Cmd(ctx.COMMAND, strings.Join(ls[:len(ls)-1], "."), key)
 					} else {
-						m.Cmd(ice.CTX_COMMAND, key)
+						m.Cmd(ctx.COMMAND, key)
 					}
 					if data["feature"], data["inputs"] = cmd.Meta, cmd.List; len(cmd.List) == 0 {
 						data["inputs"] = m.Confv("field", "meta.some.simple.inputs")
@@ -192,7 +195,7 @@ func init() {
 
 				// 渲染引擎
 				m.Option("input", strings.Join(arg[1:], " "))
-				m.Option("output", m.Cmdx(ice.CLI_SYSTEM, "sh", "-c", m.Option("input")))
+				m.Option("output", m.Cmdx(cli.SYSTEM, "sh", "-c", m.Option("input")))
 				m.Render(ice.RENDER_TEMPLATE, m.Conf(SHELL, "meta.template"))
 			}},
 
@@ -209,11 +212,11 @@ func init() {
 				}
 
 				// 解析脚本
-				m.Option(ice.WEB_TMPL, "raw")
+				m.Option("render", "raw")
 				m.Optionv(TITLE, map[string]int{})
 				m.Optionv("menu", map[string]interface{}{"list": []interface{}{}})
 				m.Optionv(ice.MSG_ALIAS, m.Confv(WORD, "meta.alias"))
-				m.Set(ice.MSG_RESULT).Cmdy(ice.SSH_SOURCE, path.Join(m.Conf(WORD, "meta.path"), arg[0]))
+				m.Set(ice.MSG_RESULT).Cmdy(ssh.SOURCE, path.Join(m.Conf(WORD, "meta.path"), arg[0]))
 			}},
 		},
 	}, nil)

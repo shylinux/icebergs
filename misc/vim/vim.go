@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	ice "github.com/shylinux/icebergs"
+	"github.com/shylinux/icebergs/base/cli"
 	"github.com/shylinux/icebergs/base/web"
 	"github.com/shylinux/icebergs/core/code"
 	kit "github.com/shylinux/toolkits"
@@ -27,8 +28,8 @@ var Index = &ice.Context{Name: "vim", Help: "编辑器",
 		)},
 	},
 	Commands: map[string]*ice.Command{
-		ice.ICE_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			m.Conf(ice.WEB_FAVOR, "meta.render.vimrc", m.AddCmd(&ice.Command{Name: "render favor id", Help: "渲染引擎", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		ice.CTX_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			m.Conf(web.FAVOR, "meta.render.vimrc", m.AddCmd(&ice.Command{Name: "render favor id", Help: "渲染引擎", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 				value := m.Optionv("value").(map[string]interface{})
 				switch value["name"] {
 				case "read", "write", "exec":
@@ -44,29 +45,29 @@ var Index = &ice.Context{Name: "vim", Help: "编辑器",
 					m.Assert(e)
 					m.Echo(string(b))
 				default:
-					m.Cmdy(ice.CLI_SYSTEM, "sed", "-n", fmt.Sprintf("/%s/,/^}$/p", value["text"]), kit.Value(value, "extra.buf"))
+					m.Cmdy(cli.SYSTEM, "sed", "-n", fmt.Sprintf("/%s/,/^}$/p", value["text"]), kit.Value(value, "extra.buf"))
 				}
 			}}))
 		}},
-		ice.CODE_INSTALL: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		code.INSTALL: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			p := path.Join(m.Conf("install", "meta.path"), m.Conf("vim", "meta.version"))
 			if _, e := os.Stat(p); e != nil {
 				// 下载源码
 				m.Option("cmd_dir", m.Conf("install", "meta.path"))
-				m.Cmd(ice.CLI_SYSTEM, "wget", "-O", "vim.tar.gz", m.Conf("vim", "meta.source"))
-				m.Cmd(ice.CLI_SYSTEM, "tar", "xvf", "vim.tar.gz")
+				m.Cmd(cli.SYSTEM, "wget", "-O", "vim.tar.gz", m.Conf("vim", "meta.source"))
+				m.Cmd(cli.SYSTEM, "tar", "xvf", "vim.tar.gz")
 			}
 
 			// 配置选项
 			m.Option("cmd_dir", p)
-			m.Cmdy(ice.CLI_SYSTEM, "./configure", "--prefix="+kit.Path(m.Conf("vim", "meta.target")),
+			m.Cmdy(cli.SYSTEM, "./configure", "--prefix="+kit.Path(m.Conf("vim", "meta.target")),
 				"--enable-multibyte=yes", m.Confv("vim", "meta.config"))
 
 			// 编译安装
-			m.Cmdy(ice.CLI_SYSTEM, "make", "-j4")
-			m.Cmdy(ice.CLI_SYSTEM, "make", "install")
+			m.Cmdy(cli.SYSTEM, "make", "-j4")
+			m.Cmdy(cli.SYSTEM, "make", "install")
 		}},
-		ice.CODE_PREPARE: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		code.PREPARE: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			// 语法脚本
 			for _, s := range []string{"go.vim", "shy.vim", "javascript.vim"} {
 				m.Cmd("nfs.link", path.Join(os.Getenv("HOME"), ".vim/syntax/"+s), "etc/conf/"+s)
@@ -80,10 +81,10 @@ var Index = &ice.Context{Name: "vim", Help: "编辑器",
 			m.Echo("vim -c PlugInstall\n")
 			m.Echo("vim -c GoInstallBinaries\n")
 		}},
-		ice.CODE_PROJECT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		code.PROJECT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 		}},
 
-		ice.WEB_LOGIN: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		web.LOGIN: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			if f, _, e := m.R.FormFile("sub"); e == nil {
 				defer f.Close()
 				// 文件参数
@@ -115,7 +116,7 @@ var Index = &ice.Context{Name: "vim", Help: "编辑器",
 		"/sync": {Name: "/sync", Help: "同步", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			switch arg[0] {
 			case "read", "write", "exec", "insert":
-				m.Cmd(ice.WEB_FAVOR, m.Conf("vim", "meta.history"), ice.TYPE_VIMRC, arg[0], kit.Select(m.Option("arg"), m.Option("sub")),
+				m.Cmd(web.FAVOR, m.Conf("vim", "meta.history"), web.TYPE_VIMRC, arg[0], kit.Select(m.Option("arg"), m.Option("sub")),
 					"sid", m.Option("sid"), "pwd", m.Option("pwd"), "buf", m.Option("buf"), "row", m.Option("row"), "col", m.Option("col"))
 
 			default:
@@ -152,16 +153,16 @@ var Index = &ice.Context{Name: "vim", Help: "编辑器",
 		"/favor": {Name: "/favor", Help: "收藏", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			if m.Options("arg") {
 				// 添加收藏
-				m.Cmdy(ice.WEB_FAVOR, kit.Select(m.Conf("vim", "meta.history"), m.Option("tab")),
-					ice.TYPE_VIMRC, m.Option("note"), m.Option("arg"),
+				m.Cmdy(web.FAVOR, kit.Select(m.Conf("vim", "meta.history"), m.Option("tab")),
+					web.TYPE_VIMRC, m.Option("note"), m.Option("arg"),
 					"pwd", m.Option("pwd"), "buf", m.Option("buf"), "row", m.Option("row"), "col", m.Option("col"))
 				return
 			}
 
 			// 查看收藏
-			m.Cmd(ice.WEB_PROXY, m.Option("you"), ice.WEB_FAVOR, m.Option("tab"), "extra", "extra.pwd", "extra.buf", "extra.row", "extra.col").Table(func(index int, value map[string]string, head []string) {
+			m.Cmd(web.PROXY, m.Option("you"), web.FAVOR, m.Option("tab"), "extra", "extra.pwd", "extra.buf", "extra.row", "extra.col").Table(func(index int, value map[string]string, head []string) {
 				switch value["type"] {
-				case ice.TYPE_VIMRC:
+				case web.TYPE_VIMRC:
 					m.Echo("%v\n", m.Option("tab")).Echo("%v:%v:%v:(%v): %v\n",
 						value["extra.buf"], value["extra.row"], value["extra.col"], value["name"], value["text"])
 				}

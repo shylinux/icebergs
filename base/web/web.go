@@ -2,6 +2,10 @@ package web
 
 import (
 	ice "github.com/shylinux/icebergs"
+	"github.com/shylinux/icebergs/base/aaa"
+	"github.com/shylinux/icebergs/base/cli"
+	"github.com/shylinux/icebergs/base/gdb"
+	"github.com/shylinux/icebergs/base/nfs"
 	kit "github.com/shylinux/toolkits"
 	"github.com/skip2/go-qrcode"
 
@@ -34,6 +38,7 @@ func Format(key string, arg ...interface{}) string {
 	}
 	return ""
 }
+
 func Render(msg *ice.Message, cmd string, args ...interface{}) {
 	if cmd != "" {
 		defer func() { msg.Log(ice.LOG_EXPORT, "%s: %v", cmd, args) }()
@@ -55,7 +60,7 @@ func Render(msg *ice.Message, cmd string, args ...interface{}) {
 		msg.W.Write([]byte(kit.Select("", arg, 1)))
 
 	case "cookie":
-		expire := time.Now().Add(kit.Duration(msg.Conf(ice.AAA_SESS, "meta.expire")))
+		expire := time.Now().Add(kit.Duration(msg.Conf(aaa.SESS, "meta.expire")))
 		http.SetCookie(msg.W, &http.Cookie{Value: arg[0], Name: kit.Select(ice.MSG_SESSID, arg, 1), Path: "/", Expires: expire})
 
 	case ice.RENDER_DOWNLOAD:
@@ -136,18 +141,18 @@ func (web *Frame) Start(m *ice.Message, arg ...string) bool {
 	})
 
 	// TODO simple
-	m.Richs(ice.WEB_SPIDE, nil, arg[0], func(key string, value map[string]interface{}) {
+	m.Richs(SPIDE, nil, arg[0], func(key string, value map[string]interface{}) {
 		client := value["client"].(map[string]interface{})
 
 		// 服务地址
 		port := m.Cap(ice.CTX_STREAM, client["hostname"])
-		m.Log("serve", "listen %s %s %v", arg[0], port, m.Conf(ice.CLI_RUNTIME, "node"))
+		m.Log("serve", "listen %s %s %v", arg[0], port, m.Conf(cli.RUNTIME, "node"))
 
 		// 启动服务
 		web.m, web.Server = m, &http.Server{Addr: port, Handler: web}
-		m.Event(ice.SERVE_START, arg[0])
+		m.Event(gdb.SERVE_START, arg[0])
 		m.Warn(true, "listen %s", web.Server.ListenAndServe())
-		m.Event(ice.SERVE_CLOSE, arg[0])
+		m.Event(gdb.SERVE_CLOSE, arg[0])
 	})
 	return true
 }
@@ -159,19 +164,19 @@ var Index = &ice.Context{Name: "web", Help: "网络模块",
 	Caches:  map[string]*ice.Cache{},
 	Configs: map[string]*ice.Config{},
 	Commands: map[string]*ice.Command{
-		ice.ICE_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		ice.CTX_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			m.Load()
 
-			m.Cmd(SPIDE, kit.MDB_CREATE, "self", kit.Select("http://:9020", m.Conf(ice.CLI_RUNTIME, "conf.ctx_self")))
-			m.Cmd(SPIDE, kit.MDB_CREATE, "dev", kit.Select("http://:9020", m.Conf(ice.CLI_RUNTIME, "conf.ctx_dev")))
-			m.Cmd(SPIDE, kit.MDB_CREATE, "shy", kit.Select("https://shylinux.com:443", m.Conf(ice.CLI_RUNTIME, "conf.ctx_shy")))
+			m.Cmd(SPIDE, kit.MDB_CREATE, "self", kit.Select("http://:9020", m.Conf(cli.RUNTIME, "conf.ctx_self")))
+			m.Cmd(SPIDE, kit.MDB_CREATE, "dev", kit.Select("http://:9020", m.Conf(cli.RUNTIME, "conf.ctx_dev")))
+			m.Cmd(SPIDE, kit.MDB_CREATE, "shy", kit.Select("https://shylinux.com:443", m.Conf(cli.RUNTIME, "conf.ctx_shy")))
 
-			m.Cmd(ice.APP_SEARCH, "add", "favor", "base", m.AddCmd(&ice.Command{Name: "search word", Help: "搜索引擎", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			m.Cmd(nfs.SEARCH, "add", "favor", "base", m.AddCmd(&ice.Command{Name: "search word", Help: "搜索引擎", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 				switch arg[0] {
 				case "set":
-					m.Richs(ice.WEB_FAVOR, nil, arg[1], func(key string, value map[string]interface{}) {
-						m.Grows(ice.WEB_FAVOR, kit.Keys(kit.MDB_HASH, key), "id", arg[2], func(index int, value map[string]interface{}) {
-							if cmd := m.Conf(ice.WEB_FAVOR, kit.Keys("meta.render", value["type"])); cmd != "" {
+					m.Richs(FAVOR, nil, arg[1], func(key string, value map[string]interface{}) {
+						m.Grows(FAVOR, kit.Keys(kit.MDB_HASH, key), "id", arg[2], func(index int, value map[string]interface{}) {
+							if cmd := m.Conf(FAVOR, kit.Keys("meta.render", value["type"])); cmd != "" {
 								m.Optionv("value", value)
 								m.Cmdy(cmd, arg[1:])
 							} else {
@@ -184,11 +189,11 @@ var Index = &ice.Context{Name: "web", Help: "网络模块",
 
 				m.Option("cache.limit", -2)
 				wg := &sync.WaitGroup{}
-				m.Richs(ice.WEB_FAVOR, nil, "*", func(key string, val map[string]interface{}) {
+				m.Richs(FAVOR, nil, "*", func(key string, val map[string]interface{}) {
 					favor := kit.Format(kit.Value(val, "meta.name"))
 					wg.Add(1)
 					m.Gos(m, func(m *ice.Message) {
-						m.Grows(ice.WEB_FAVOR, kit.Keys(kit.MDB_HASH, key), "", "", func(index int, value map[string]interface{}) {
+						m.Grows(FAVOR, kit.Keys(kit.MDB_HASH, key), "", "", func(index int, value map[string]interface{}) {
 							if favor == arg[0] || value["type"] == arg[0] ||
 								strings.Contains(kit.Format(value["name"]), arg[0]) || strings.Contains(kit.Format(value["text"]), arg[0]) {
 								m.Push("pod", m.Option(ice.MSG_USERPOD))
@@ -203,14 +208,14 @@ var Index = &ice.Context{Name: "web", Help: "网络模块",
 				wg.Wait()
 			}}))
 
-			m.Cmd(ice.APP_SEARCH, "add", "story", "base", m.AddCmd(&ice.Command{Name: "search word", Help: "搜索引擎", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			m.Cmd(nfs.SEARCH, "add", "story", "base", m.AddCmd(&ice.Command{Name: "search word", Help: "搜索引擎", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 				switch arg[0] {
 				case "set":
-					m.Cmdy(ice.WEB_STORY, "index", arg[2])
+					m.Cmdy(STORY, "index", arg[2])
 					return
 				}
 
-				m.Richs(ice.WEB_STORY, "head", "*", func(key string, val map[string]interface{}) {
+				m.Richs(STORY, "head", "*", func(key string, val map[string]interface{}) {
 					if val["story"] == arg[0] {
 						m.Push("pod", m.Option(ice.MSG_USERPOD))
 						m.Push("engine", "story")
@@ -225,15 +230,15 @@ var Index = &ice.Context{Name: "web", Help: "网络模块",
 				})
 			}}))
 
-			m.Cmd(ice.APP_SEARCH, "add", "share", "base", m.AddCmd(&ice.Command{Name: "search word", Help: "搜索引擎", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			m.Cmd(nfs.SEARCH, "add", "share", "base", m.AddCmd(&ice.Command{Name: "search word", Help: "搜索引擎", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 				switch arg[0] {
 				case "set":
-					m.Cmdy(ice.WEB_SHARE, arg[2])
+					m.Cmdy(SHARE, arg[2])
 					return
 				}
 
 				m.Option("cache.limit", -2)
-				m.Grows(ice.WEB_SHARE, nil, "", "", func(index int, value map[string]interface{}) {
+				m.Grows(SHARE, nil, "", "", func(index int, value map[string]interface{}) {
 					if value["share"] == arg[0] || value["type"] == arg[0] ||
 						strings.Contains(kit.Format(value["name"]), arg[0]) || strings.Contains(kit.Format(value["text"]), arg[0]) {
 						m.Push("pod", m.Option(ice.MSG_USERPOD))
@@ -249,16 +254,16 @@ var Index = &ice.Context{Name: "web", Help: "网络模块",
 				})
 			}}))
 
-			m.Conf(ice.WEB_FAVOR, "meta.render.bench", m.AddCmd(&ice.Command{Name: "render type name text arg...", Help: "渲染引擎", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			m.Conf(FAVOR, "meta.render.bench", m.AddCmd(&ice.Command{Name: "render type name text arg...", Help: "渲染引擎", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 				m.Cmdy("web.code.bench", "action", "show", arg)
 			}}))
 		}},
-		ice.ICE_EXIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			m.Save(ice.WEB_SPIDE, ice.WEB_SERVE, ice.WEB_GROUP, ice.WEB_LABEL,
-				ice.WEB_FAVOR, ice.WEB_CACHE, ice.WEB_STORY, ice.WEB_SHARE)
+		ice.CTX_EXIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			m.Save(SPIDE, SERVE, GROUP, LABEL,
+				FAVOR, CACHE, STORY, SHARE)
 
 			m.Done()
-			m.Richs(ice.WEB_SPACE, nil, "*", func(key string, value map[string]interface{}) {
+			m.Richs(SPACE, nil, "*", func(key string, value map[string]interface{}) {
 				if kit.Format(value["type"]) == "master" {
 					m.Done()
 				}

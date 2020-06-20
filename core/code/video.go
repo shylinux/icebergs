@@ -2,6 +2,7 @@ package code
 
 import (
 	ice "github.com/shylinux/icebergs"
+	"github.com/shylinux/icebergs/base/web"
 	kit "github.com/shylinux/toolkits"
 
 	"github.com/nareix/joy4/av"
@@ -40,7 +41,7 @@ func init() {
 				}
 			}},
 			"video": {Name: "video", Help: "视频", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-				m.Cmd(ice.WEB_FAVOR, arg, "extra", "extra.poster").Table(func(index int, value map[string]string, header []string) {
+				m.Cmd(web.FAVOR, arg, "extra", "extra.poster").Table(func(index int, value map[string]string, header []string) {
 					m.Echo(`<video src="%s" controls loop></video>`, value["text"])
 				})
 			}},

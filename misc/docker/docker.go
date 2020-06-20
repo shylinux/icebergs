@@ -2,11 +2,25 @@ package docker
 
 import (
 	"github.com/shylinux/icebergs"
+	"github.com/shylinux/icebergs/base/cli"
+	"github.com/shylinux/icebergs/base/gdb"
+	"github.com/shylinux/icebergs/base/web"
 	"github.com/shylinux/icebergs/core/code"
 	"github.com/shylinux/toolkits"
 
 	"strings"
 )
+
+func ListLook(name ...string) []interface{} {
+	list := []interface{}{}
+	for _, k := range name {
+		list = append(list, kit.MDB_INPUT, "text", "name", k, "action", "auto")
+	}
+	return kit.List(append(list,
+		kit.MDB_INPUT, "button", "name", "查看", "action", "auto",
+		kit.MDB_INPUT, "button", "name", "返回", "cb", "Last",
+	)...)
+}
 
 var Index = &ice.Context{Name: "docker", Help: "虚拟机",
 	Caches: map[string]*ice.Cache{},
@@ -15,16 +29,16 @@ var Index = &ice.Context{Name: "docker", Help: "虚拟机",
 	},
 	Commands: map[string]*ice.Command{
 		"init": {Name: "init", Help: "初始化", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			m.Watch(ice.DREAM_START, m.Prefix("auto"))
+			m.Watch(gdb.DREAM_START, m.Prefix("auto"))
 
-			if m.Richs(ice.WEB_FAVOR, nil, "alpine.auto", nil) == nil {
-				m.Cmd(ice.WEB_FAVOR, "alpine.auto", ice.TYPE_SHELL, "镜像源", `sed -i 's/dl-cdn.alpinelinux.org/mirrors.aliyun.com/g' /etc/apk/repositories`)
-				m.Cmd(ice.WEB_FAVOR, "alpine.auto", ice.TYPE_SHELL, "软件包", `apk add bash`)
-				m.Cmd(ice.WEB_FAVOR, "alpine.auto", ice.TYPE_SHELL, "软件包", `apk add curl`)
+			if m.Richs(web.FAVOR, nil, "alpine.auto", nil) == nil {
+				m.Cmd(web.FAVOR, "alpine.auto", web.TYPE_SHELL, "镜像源", `sed -i 's/dl-cdn.alpinelinux.org/mirrors.aliyun.com/g' /etc/apk/repositories`)
+				m.Cmd(web.FAVOR, "alpine.auto", web.TYPE_SHELL, "软件包", `apk add bash`)
+				m.Cmd(web.FAVOR, "alpine.auto", web.TYPE_SHELL, "软件包", `apk add curl`)
 			}
 		}},
 		"auto": {Name: "auto", Help: "自动化", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			prefix := []string{ice.CLI_SYSTEM, "docker"}
+			prefix := []string{cli.SYSTEM, "docker"}
 
 			if m.Cmd(prefix, "container", "start", arg[0]).Append("code") != "1" {
 				// 启动容器
@@ -37,7 +51,7 @@ var Index = &ice.Context{Name: "docker", Help: "虚拟机",
 				case "home":
 					args = append(args, "-w", "/root")
 				case "mount":
-					args = append(args, "--mount", kit.Format("type=bind,source=%s,target=/root", kit.Path(m.Conf(ice.WEB_DREAM, "meta.path"), arg[0])))
+					args = append(args, "--mount", kit.Format("type=bind,source=%s,target=/root", kit.Path(m.Conf(web.DREAM, "meta.path"), arg[0])))
 				}
 			})
 
@@ -45,16 +59,16 @@ var Index = &ice.Context{Name: "docker", Help: "虚拟机",
 			pid := m.Cmdx(prefix, "run", "-dt", args, "--name", arg[0], "alpine")
 			m.Log(ice.LOG_CREATE, "%s: %s", arg[0], pid)
 
-			m.Cmd(ice.WEB_FAVOR, kit.Select("alpine.auto", arg, 1)).Table(func(index int, value map[string]string, head []string) {
-				if value["type"] == ice.TYPE_SHELL {
+			m.Cmd(web.FAVOR, kit.Select("alpine.auto", arg, 1)).Table(func(index int, value map[string]string, head []string) {
+				if value["type"] == web.TYPE_SHELL {
 					// 执行命令
 					m.Cmd(prefix, "exec", arg[0], kit.Split(value["text"]))
 				}
 			})
 		}},
 
-		"image": {Name: "image", Help: "镜像管理", Meta: kit.Dict("detail", []string{"运行", "清理", "删除"}), List: ice.ListLook("IMAGE_ID"), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			prefix := []string{ice.CLI_SYSTEM, "docker", "image"}
+		"image": {Name: "image", Help: "镜像管理", Meta: kit.Dict("detail", []string{"运行", "清理", "删除"}), List: ListLook("IMAGE_ID"), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			prefix := []string{cli.SYSTEM, "docker", "image"}
 			if len(arg) > 1 && arg[0] == "action" {
 				switch arg[1] {
 				case "运行":
@@ -86,12 +100,12 @@ var Index = &ice.Context{Name: "docker", Help: "虚拟机",
 			m.Split(strings.Replace(m.Cmdx(prefix, "ls"), "IMAGE ID", "IMAGE_ID", 1), "index", " ", "\n")
 			m.Sort("REPOSITORY")
 		}},
-		"container": {Name: "container", Help: "容器管理", List: ice.ListLook("CONTAINER_ID"), Meta: kit.Dict("detail", []string{"进入", "启动", "停止", "重启", "清理", "编辑", "删除"}), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			prefix := []string{ice.CLI_SYSTEM, "docker", "container"}
+		"container": {Name: "container", Help: "容器管理", List: ListLook("CONTAINER_ID"), Meta: kit.Dict("detail", []string{"进入", "启动", "停止", "重启", "清理", "编辑", "删除"}), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			prefix := []string{cli.SYSTEM, "docker", "container"}
 			if len(arg) > 1 && arg[0] == "action" {
 				switch arg[1] {
 				case "进入":
-					m.Cmdy(ice.CLI_SYSTEM, "tmux", "new-window", "-t", m.Option("NAMES"), "-n", m.Option("NAMES"),
+					m.Cmdy(cli.SYSTEM, "tmux", "new-window", "-t", m.Option("NAMES"), "-n", m.Option("NAMES"),
 						"-PF", "#{session_name}:#{window_name}.1", "docker exec -it "+m.Option("NAMES")+" bash").Set("append")
 					return
 				case "停止":
@@ -133,7 +147,7 @@ var Index = &ice.Context{Name: "docker", Help: "虚拟机",
 				m.Cmdy("container")
 				return
 			}
-			prefix := []string{ice.CLI_SYSTEM, "docker", "container"}
+			prefix := []string{cli.SYSTEM, "docker", "container"}
 			m.Cmdy(prefix, "exec", arg[0], arg[1:]).Set("append")
 		}},
 	},

@@ -24,7 +24,7 @@ var Index = &ice.Context{Name: "mp", Help: "小程序",
 			m.Load()
 			web.SpideCreate(m, "weixin", m.Conf("login", "meta.weixin"))
 			m.Confm("login", "meta.userrole", func(key string, value string) {
-				m.Cmd(ice.AAA_ROLE, value, key)
+				m.Cmd(aaa.ROLE, value, key)
 			})
 		}},
 		ice.ICE_EXIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
@@ -56,16 +56,16 @@ var Index = &ice.Context{Name: "mp", Help: "小程序",
 		"/login/": {Name: "/login/", Help: "登录", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			switch arg[0] {
 			case "code":
-				msg := m.Cmd(ice.WEB_SPIDE, "weixin", "GET", m.Conf("login", "meta.auth"), "js_code", m.Option("code"),
+				msg := m.Cmd(web.SPIDE, "weixin", "GET", m.Conf("login", "meta.auth"), "js_code", m.Option("code"),
 					"appid", m.Conf("login", "meta.appid"), "secret", m.Conf("login", "meta.appmm"))
 
 				// 用户登录
-				m.Echo(m.Option(ice.MSG_SESSID, m.Cmdx(ice.AAA_USER, "login", msg.Append("openid"))))
+				m.Echo(m.Option(ice.MSG_SESSID, m.Cmdx(aaa.USER, "login", msg.Append("openid"))))
 
 			case "info":
 				// 用户信息
-				m.Richs(ice.AAA_SESS, nil, m.Option(ice.MSG_SESSID), func(key string, value map[string]interface{}) {
-					m.Richs(ice.AAA_USER, nil, value["username"], func(key string, value map[string]interface{}) {
+				m.Richs(aaa.SESS, nil, m.Option(ice.MSG_SESSID), func(key string, value map[string]interface{}) {
+					m.Richs(aaa.USER, nil, value["username"], func(key string, value map[string]interface{}) {
 						value["gender"] = m.Option("gender")
 						value["avatar"] = m.Option("avatarUrl")
 						value["nickname"] = m.Option("nickName")
@@ -77,7 +77,7 @@ var Index = &ice.Context{Name: "mp", Help: "小程序",
 				})
 
 			case "scan":
-				m.Cmd(ice.WEB_FAVOR, "device", "scan", m.Option("name"), m.Option("text"))
+				m.Cmd(web.FAVOR, "device", "scan", m.Option("name"), m.Option("text"))
 
 			case "auth":
 				if !m.Options(ice.MSG_USERNAME) {
@@ -87,11 +87,11 @@ var Index = &ice.Context{Name: "mp", Help: "小程序",
 
 				switch kit.Select("active", m.Option("type")) {
 				case "share":
-					m.Richs(ice.WEB_SHARE, nil, m.Option("text"), func(key string, value map[string]interface{}) {
+					m.Richs(web.SHARE, nil, m.Option("text"), func(key string, value map[string]interface{}) {
 						switch value["type"] {
 						case "invite":
 							if m.Option(ice.MSG_USERROLE) != value["name"] {
-								m.Cmd(ice.AAA_ROLE, value["name"], m.Option(ice.MSG_USERNAME))
+								m.Cmd(aaa.ROLE, value["name"], m.Option(ice.MSG_USERNAME))
 								m.Cmd("web.chat.auto", m.Option(ice.MSG_USERNAME), value["name"])
 							}
 							break
@@ -106,16 +106,16 @@ var Index = &ice.Context{Name: "mp", Help: "小程序",
 				switch kit.Select("active", m.Option("type")) {
 				case "active":
 					// 网页登录
-					m.Cmdy(ice.WEB_SPACE, m.Option("name"), "sessid", m.Cmdx(ice.AAA_SESS, "create", m.Option(ice.MSG_USERNAME)))
+					m.Cmdy(web.SPACE, m.Option("name"), "sessid", m.Cmdx(aaa.SESS, "create", m.Option(ice.MSG_USERNAME)))
 				case "login":
 					// 终端登录
-					m.Cmdy(ice.AAA_SESS, "auth", m.Option("text"), m.Option(ice.MSG_USERNAME))
+					m.Cmdy(aaa.SESS, "auth", m.Option("text"), m.Option(ice.MSG_USERNAME))
 				}
 
 			case "upload":
-				msg := m.Cmd(ice.WEB_CACHE, "upload")
-				m.Cmd(ice.WEB_STORY, ice.STORY_WATCH, msg.Append("data"), path.Join("usr/local/mp/", path.Base(msg.Append("name"))))
-				m.Cmd(ice.WEB_FAVOR, "device", "file", msg.Append("name"), msg.Append("data"))
+				msg := m.Cmd(web.CACHE, "upload")
+				m.Cmd(web.STORY, ice.STORY_WATCH, msg.Append("data"), path.Join("usr/local/mp/", path.Base(msg.Append("name"))))
+				m.Cmd(web.FAVOR, "device", "file", msg.Append("name"), msg.Append("data"))
 				m.Render(msg.Append("data"))
 
 			case "cmds":

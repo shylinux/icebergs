@@ -5,20 +5,22 @@ import (
 	kit "github.com/shylinux/toolkits"
 )
 
+const GROUP = "group"
+
 func init() {
 	Index.Merge(&ice.Context{
 		Configs: map[string]*ice.Config{
-			ice.WEB_GROUP: {Name: "group", Help: "分组", Value: kit.Data(kit.MDB_SHORT, "group")},
+			GROUP: {Name: "group", Help: "分组", Value: kit.Data(kit.MDB_SHORT, "group")},
 		},
 		Commands: map[string]*ice.Command{
-			ice.WEB_GROUP: {Name: "group group=auto name=auto auto", Help: "分组", Meta: kit.Dict(
+			GROUP: {Name: "group group=auto name=auto auto", Help: "分组", Meta: kit.Dict(
 				"exports", []string{"grp", "group"}, "detail", []string{"标签", "添加", "退还"},
 			), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 				if len(arg) > 1 && arg[0] == "action" {
 					switch arg[1] {
 					case "label", "标签":
 						if m.Option(ice.EXPORT_LABEL) != "" && m.Option(cmd) != "" {
-							m.Cmdy(ice.WEB_LABEL, m.Option(ice.EXPORT_LABEL), "add", m.Option(cmd), m.Option(kit.MDB_NAME))
+							m.Cmdy(LABEL, m.Option(ice.EXPORT_LABEL), "add", m.Option(cmd), m.Option(kit.MDB_NAME))
 							m.Option(ice.FIELD_RELOAD, "true")
 						}
 					case "add", "添加":
@@ -147,7 +149,7 @@ func init() {
 					default:
 						m.Richs(cmd, kit.Keys(kit.MDB_HASH, key), arg[1], func(key string, value map[string]interface{}) {
 							// 执行命令
-							m.Cmdy(ice.WEB_PROXY, value[kit.MDB_NAME], arg[2:])
+							m.Cmdy(PROXY, value[kit.MDB_NAME], arg[2:])
 						})
 					}
 				})

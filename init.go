@@ -4,7 +4,10 @@ import (
 	kit "github.com/shylinux/toolkits"
 	"github.com/shylinux/toolkits/conf"
 	"github.com/shylinux/toolkits/log"
+	"github.com/shylinux/toolkits/miss"
+	"github.com/shylinux/toolkits/task"
 
+	"errors"
 	"fmt"
 	"os"
 	"strings"
@@ -79,25 +82,36 @@ var Index = &Context{Name: "ice", Help: "冰山模块",
 				"",
 			},
 		}},
+		"miss": {Value: kit.Dict(
+			kit.MDB_STORE, "var/data",
+			kit.MDB_FSIZE, "200000",
+			kit.MDB_LIMIT, "110",
+			kit.MDB_LEAST, "100",
+		)},
+		"task": {Value: kit.Dict(
+			kit.MDB_STORE, "var/data",
+			kit.MDB_LIMIT, "110",
+			kit.MDB_LEAST, "100",
+		)},
 	},
 	Commands: map[string]*Command{
-		ICE_INIT: {Hand: func(m *Message, c *Context, cmd string, arg ...string) {
-			defer m.Cost(ICE_INIT)
+		CTX_INIT: {Hand: func(m *Message, c *Context, cmd string, arg ...string) {
+			defer m.Cost(CTX_INIT)
 			m.Travel(func(p *Context, c *Context) {
-				if cmd, ok := c.Commands[ICE_INIT]; ok && p != nil {
-					c.Run(m.Spawns(c), cmd, ICE_INIT, arg...)
+				if cmd, ok := c.Commands[CTX_INIT]; ok && p != nil {
+					c.cmd(m.Spawns(c), cmd, CTX_INIT, arg...)
 				}
 			})
 		}},
 		"init": {Name: "init", Help: "启动", Hand: func(m *Message, c *Context, cmd string, arg ...string) {
-			m.root.Cmd(ICE_INIT)
+			m.root.Cmd(CTX_INIT)
 
 			m.target.root.wg = &sync.WaitGroup{}
 			for _, k := range kit.Split(kit.Select("gdb,log,ssh,ctx", os.Getenv("ctx_mod"))) {
 				m.Start(k)
 			}
 
-			m.Cmd(SSH_SOURCE, "etc/init.shy", "init.shy", "启动配置")
+			m.Cmd("ssh.source", "etc/init.shy", "init.shy", "启动配置")
 			m.Cmdy(arg)
 		}},
 		"help": {Name: "help", Help: "帮助", Hand: func(m *Message, c *Context, cmd string, arg ...string) {
@@ -105,16 +119,16 @@ var Index = &Context{Name: "ice", Help: "冰山模块",
 		}},
 		"exit": {Name: "exit", Help: "结束", Hand: func(m *Message, c *Context, cmd string, arg ...string) {
 			m.root.target.server.(*Frame).code = kit.Int(kit.Select("0", arg, 0))
-			m.Cmd(SSH_SOURCE, "etc/exit.shy", "exit.shy", "退出配置")
+			m.Cmd("ssh.source", "etc/exit.shy", "exit.shy", "退出配置")
 
-			m.root.Cmd(ICE_EXIT)
+			m.root.Cmd(CTX_EXIT)
 		}},
-		ICE_EXIT: {Hand: func(m *Message, c *Context, cmd string, arg ...string) {
-			defer m.Cost(ICE_EXIT)
+		CTX_EXIT: {Hand: func(m *Message, c *Context, cmd string, arg ...string) {
+			defer m.Cost(CTX_EXIT)
 			m.root.Travel(func(p *Context, c *Context) {
-				if cmd, ok := c.Commands[ICE_EXIT]; ok && p != nil {
+				if cmd, ok := c.Commands[CTX_EXIT]; ok && p != nil {
 					m.TryCatch(m.Spawns(c), true, func(msg *Message) {
-						c.Run(msg, cmd, ICE_EXIT, arg...)
+						c.cmd(msg, cmd, CTX_EXIT, arg...)
 					})
 				}
 			})
@@ -138,10 +152,13 @@ func Run(arg ...string) string {
 		arg = os.Args[1:]
 	}
 	if len(arg) == 0 {
-		arg = append(arg, WEB_SPACE, "connect", "self")
+		arg = append(arg, "web.space", "connect", "self")
 	}
 
-	log.Init(conf.New(nil))
+	conf := conf.New(nil)
+	task.Init(conf, 10)
+	miss.Init(conf)
+	log.Init(conf)
 
 	frame := &Frame{}
 	Index.root = Index
@@ -156,10 +173,22 @@ func Run(arg ...string) string {
 	}
 
 	if Pulse.Result() == "" {
-		Pulse.Table()
+		Pulse.Table(nil)
 	}
 	fmt.Printf(Pulse.Result())
 
 	os.Exit(frame.code)
 	return ""
+}
+
+var names = map[string]interface{}{}
+
+var ErrNameExists = errors.New("name already exists")
+
+func Name(name string, value interface{}) string {
+	if _, ok := names[name]; ok {
+		panic(ErrNameExists)
+	}
+	names[name] = value
+	return name
 }

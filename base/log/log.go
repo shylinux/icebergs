@@ -63,8 +63,12 @@ func (f *Frame) Close(m *ice.Message, arg ...string) bool {
 	return true
 }
 
+const (
+	ERROR = "error"
+	TRACE = "trace"
+)
+
 var Index = &ice.Context{Name: "log", Help: "日志模块",
-	Caches: map[string]*ice.Cache{},
 	Configs: map[string]*ice.Config{
 		"file": &ice.Config{Name: "file", Help: "日志文件", Value: kit.Dict(
 			"watch", kit.Dict("path", "var/log/watch.log"),
@@ -114,7 +118,7 @@ var Index = &ice.Context{Name: "log", Help: "日志模块",
 		)},
 	},
 	Commands: map[string]*ice.Command{
-		ice.ICE_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		ice.CTX_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			if os.Getenv("ctx_mod") != "" {
 				m.Confm("file", nil, func(key string, value map[string]interface{}) {
 					// 日志文件
@@ -126,7 +130,7 @@ var Index = &ice.Context{Name: "log", Help: "日志模块",
 				})
 			}
 		}},
-		ice.ICE_EXIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		ice.CTX_EXIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			if f, ok := m.Target().Server().(*Frame); ok {
 				// 关闭日志
 				ice.Log = nil

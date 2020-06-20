@@ -2,7 +2,8 @@ package web
 
 import (
 	ice "github.com/shylinux/icebergs"
-	cli "github.com/shylinux/icebergs/base/cli"
+	"github.com/shylinux/icebergs/base/cli"
+	"github.com/shylinux/icebergs/base/gdb"
 	kit "github.com/shylinux/toolkits"
 
 	"io/ioutil"
@@ -34,7 +35,7 @@ func _dream_show(m *ice.Message, name string) {
 	p := path.Join(m.Conf(DREAM, "meta.path"), name)
 	os.MkdirAll(p, 0777)
 
-	if b, e := ioutil.ReadFile(path.Join(p, m.Conf(ice.GDB_SIGNAL, "meta.pid"))); e == nil {
+	if b, e := ioutil.ReadFile(path.Join(p, m.Conf(gdb.SIGNAL, "meta.pid"))); e == nil {
 		if s, e := os.Stat("/proc/" + string(b)); e == nil && s.IsDir() {
 			m.Info("already exists %v", string(b))
 			return
@@ -60,13 +61,13 @@ const DREAM = "dream"
 func init() {
 	Index.Merge(&ice.Context{
 		Configs: map[string]*ice.Config{
-			ice.WEB_DREAM: {Name: "dream", Help: "梦想家", Value: kit.Data("path", "usr/local/work",
-				// "cmd", []interface{}{ice.CLI_SYSTEM, "ice.sh", "start", ice.WEB_SPACE, "connect"},
-				"cmd", []interface{}{ice.CLI_SYSTEM, "ice.bin", ice.WEB_SPACE, "connect"},
+			DREAM: {Name: "dream", Help: "梦想家", Value: kit.Data("path", "usr/local/work",
+				// "cmd", []interface{}{cli.SYSTEM, "ice.sh", "start", ice.WEB_SPACE, "connect"},
+				"cmd", []interface{}{cli.SYSTEM, "ice.bin", SPACE, "connect"},
 			)},
 		},
 		Commands: map[string]*ice.Command{
-			ice.WEB_DREAM: {Name: "dream [name] auto", Help: "梦想家", Meta: kit.Dict("detail", []interface{}{"启动", "停止"}), Action: map[string]*ice.Action{
+			DREAM: {Name: "dream [name] auto", Help: "梦想家", Meta: kit.Dict("detail", []interface{}{"启动", "停止"}), Action: map[string]*ice.Action{
 				"start": {Name: "start", Help: "启动", Hand: func(m *ice.Message, arg ...string) {
 					_dream_show(m, m.Option(kit.MDB_NAME))
 				}},

@@ -2,6 +2,7 @@ package code
 
 import (
 	ice "github.com/shylinux/icebergs"
+	"github.com/shylinux/icebergs/base/cli"
 	"github.com/shylinux/icebergs/base/web"
 	kit "github.com/shylinux/toolkits"
 
@@ -9,6 +10,12 @@ import (
 	"path"
 	"runtime"
 	"strings"
+)
+
+const ( // CODE
+	INSTALL = "_install"
+	PREPARE = "_prepare"
+	PROJECT = "_project"
 )
 
 var Index = &ice.Context{Name: "code", Help: "编程中心",
@@ -38,27 +45,27 @@ var Index = &ice.Context{Name: "code", Help: "编程中心",
 		"login": {Name: "login", Help: "终端接入", Value: kit.Data()},
 	},
 	Commands: map[string]*ice.Command{
-		ice.ICE_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		ice.CTX_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			m.Load()
 		}},
-		ice.ICE_EXIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		ice.CTX_EXIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			m.Save("login")
 		}},
 
-		ice.CODE_INSTALL: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		INSTALL: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			p := path.Join(m.Conf("install", "meta.path"), path.Base(m.Conf("install", kit.Keys("meta", runtime.GOOS))))
 			// 下载
 			if _, e := os.Stat(p); e != nil {
 				m.Option("cmd_dir", m.Conf("install", "meta.path"))
-				m.Cmd(ice.CLI_SYSTEM, "wget", m.Conf("install", kit.Keys("meta", runtime.GOOS)))
+				m.Cmd(cli.SYSTEM, "wget", m.Conf("install", kit.Keys("meta", runtime.GOOS)))
 			}
 
 			// 安装
 			m.Option("cmd_dir", "")
 			os.MkdirAll(m.Conf("install", kit.Keys("meta.target")), 0777)
-			m.Cmdy(ice.CLI_SYSTEM, "tar", "xvf", p, "-C", m.Conf("install", kit.Keys("meta.target")))
+			m.Cmdy(cli.SYSTEM, "tar", "xvf", p, "-C", m.Conf("install", kit.Keys("meta.target")))
 		}},
-		ice.CODE_PREPARE: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		PREPARE: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			export := []string{}
 			kit.Fetch(m.Confv("install", "meta.export"), func(key string, val string) {
 				export = append(export, key+"="+val)
@@ -70,7 +77,7 @@ export PATH=$GOBIN:$GOROOT/bin:$PATH
 export %s
 `, kit.Path(m.Conf("install", kit.Keys("meta.target")), "go"), kit.Path("src"), kit.Path("bin"), strings.Join(export, " ")))
 		}},
-		ice.CODE_PROJECT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		PROJECT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 		}},
 
 		"install": {Name: "install", Help: "安装", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
@@ -89,17 +96,17 @@ export %s
 
 			// 编译目标
 			main := kit.Select("src/main.go", arg, 2)
-			arch := kit.Select(m.Conf(ice.CLI_RUNTIME, "host.GOARCH"), arg, 1)
-			goos := kit.Select(m.Conf(ice.CLI_RUNTIME, "host.GOOS"), arg, 0)
+			arch := kit.Select(m.Conf(cli.RUNTIME, "host.GOARCH"), arg, 1)
+			goos := kit.Select(m.Conf(cli.RUNTIME, "host.GOOS"), arg, 0)
 			file := path.Join(m.Conf(cmd, "meta.path"), kit.Keys("ice", goos, arch))
 
 			// 编译参数
 			m.Optionv("cmd_env", "GOCACHE", os.Getenv("GOCACHE"), "HOME", os.Getenv("HOME"),
 				"GOARCH", arch, "GOOS", goos, "CGO_ENABLED", "0")
-			m.Cmd(ice.CLI_SYSTEM, "go", "build", "-o", file, main)
+			m.Cmd(cli.SYSTEM, "go", "build", "-o", file, main)
 
 			// 编译记录
-			m.Cmdy(ice.WEB_STORY, ice.STORY_CATCH, "bin", file)
+			m.Cmdy(web.STORY, web.CATCH, "bin", file)
 			m.Logs(ice.LOG_EXPORT, "source", main, "target", file)
 		}},
 		"publish": {Name: "publish [source]", Help: "发布", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
@@ -112,7 +119,7 @@ export %s
 			if s, e := os.Stat(arg[0]); m.Assert(e) && s.IsDir() {
 				// 发布目录
 				p := path.Base(arg[0]) + ".tar.gz"
-				m.Cmd(ice.CLI_SYSTEM, "tar", "-zcf", p, arg[0])
+				m.Cmd(cli.SYSTEM, "tar", "-zcf", p, arg[0])
 				defer func() { os.Remove(p) }()
 				arg[0] = p
 			}
@@ -124,7 +131,7 @@ export %s
 			os.Link(arg[0], target)
 
 			// 发布记录
-			m.Cmdy(ice.WEB_STORY, ice.STORY_CATCH, "bin", target)
+			m.Cmdy(web.STORY, web.CATCH, "bin", target)
 			m.Logs(ice.LOG_EXPORT, "source", arg[0], "target", target)
 		}},
 		"upgrade": {Name: "upgrade which", Help: "升级", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
@@ -132,20 +139,20 @@ export %s
 			m.Grows(cmd, kit.Keys(kit.MDB_HASH, kit.Select("system", arg, 0)), "", "", func(index int, value map[string]interface{}) {
 				if value["file"] == "ice.bin" {
 					// 程序文件
-					value["file"] = kit.Keys("ice", m.Conf(ice.CLI_RUNTIME, "host.GOOS"), m.Conf(ice.CLI_RUNTIME, "host.GOARCH"))
+					value["file"] = kit.Keys("ice", m.Conf(cli.RUNTIME, "host.GOOS"), m.Conf(cli.RUNTIME, "host.GOARCH"))
 					exit = true
 				}
 
 				// 下载文件
-				h := m.Cmdx(ice.WEB_SPIDE, "dev", "cache", "GET", "/publish/"+kit.Format(value["file"]))
+				h := m.Cmdx(web.SPIDE, "dev", "cache", "GET", "/publish/"+kit.Format(value["file"]))
 				if h == "" {
 					exit = false
 					return
 				}
 
 				// 升级记录
-				m.Cmd(ice.WEB_STORY, "add", "bin", value["path"], h)
-				m.Cmd(ice.WEB_STORY, ice.STORY_WATCH, h, value["path"])
+				m.Cmd(web.STORY, "add", "bin", value["path"], h)
+				m.Cmd(web.STORY, web.SHOW, h, value["path"])
 				os.Chmod(kit.Format(value["path"]), 0777)
 			})
 			if exit {
@@ -187,7 +194,7 @@ export %s
 					return
 				}
 
-				you := m.Conf(ice.WEB_SHARE, kit.Keys(kit.MDB_HASH, m.Option("share"), "name"))
+				you := m.Conf(web.SHARE, kit.Keys(kit.MDB_HASH, m.Option("share"), "name"))
 				// 添加会话
 				h := m.Rich(cmd, nil, kit.Dict(
 					"type", kit.Select("zsh", arg, 1),

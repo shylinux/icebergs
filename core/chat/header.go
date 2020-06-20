@@ -2,6 +2,7 @@ package chat
 
 import (
 	"github.com/shylinux/icebergs"
+	"github.com/shylinux/icebergs/base/web"
 	"github.com/shylinux/toolkits"
 )
 
@@ -18,7 +19,7 @@ func init() {
 					m.Render(m.Option(ice.MSG_USERNAME))
 				}
 			default:
-				m.Echo(m.Conf(ice.WEB_SERVE, "meta.title"))
+				m.Echo(m.Conf(web.SERVE, "meta.title"))
 			}
 		}},
 	}}, nil)

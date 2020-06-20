@@ -207,7 +207,7 @@ var Index = &ice.Context{Name: "team", Help: "团队中心",
 		MISS: {Name: "miss", Help: "miss", Value: kit.Data(kit.MDB_SHORT, ZONE)},
 	},
 	Commands: map[string]*ice.Command{
-		ice.ICE_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		ice.CTX_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			m.Travel(func(p *ice.Context, s *ice.Context, key string, cmd *ice.Command) {
 				if s == c {
 					return
@@ -216,7 +216,7 @@ var Index = &ice.Context{Name: "team", Help: "团队中心",
 			})
 			m.Load()
 		}},
-		ice.ICE_EXIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) { m.Save(TASK) }},
+		ice.CTX_EXIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) { m.Save(TASK) }},
 
 		PLAN: {Name: "plan scale:select=day|week|month|year|long begin_time=@date end_time=@date auto", Help: "计划", Meta: kit.Dict(
 			"display", "/plugin/local/team/plan.js", "detail", []string{StatusPrepare, StatusProcess, StatusCancel, StatusFinish},
@@ -246,7 +246,7 @@ var Index = &ice.Context{Name: "team", Help: "团队中心",
 		}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			begin_time := time.Now()
 			if len(arg) > 1 {
-				begin_time, _ = time.ParseInLocation(ice.ICE_TIME, arg[1], time.Local)
+				begin_time, _ = time.ParseInLocation(ice.MOD_TIME, arg[1], time.Local)
 			}
 			end_time := begin_time
 
@@ -275,7 +275,7 @@ var Index = &ice.Context{Name: "team", Help: "团队中心",
 			m.Richs(TASK, nil, kit.Select(kit.MDB_FOREACH, m.Option(ZONE)), func(key string, val map[string]interface{}) {
 				zone := kit.Format(kit.Value(val, "meta.zone"))
 				m.Grows(TASK, kit.Keys(kit.MDB_HASH, key), "", "", func(index int, value map[string]interface{}) {
-					begin, _ := time.ParseInLocation(ice.ICE_TIME, kit.Format(value[BEGIN_TIME]), time.Local)
+					begin, _ := time.ParseInLocation(ice.MOD_TIME, kit.Format(value[BEGIN_TIME]), time.Local)
 					if begin_time.Before(begin) && begin.Before(end_time) {
 						m.Push(zone, value)
 						m.Push(ZONE, zone)

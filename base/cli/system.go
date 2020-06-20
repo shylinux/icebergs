@@ -60,7 +60,7 @@ func init() {
 				if cmd.Dir = m.Option(CMD_DIR); len(cmd.Dir) > 0 {
 					m.Log_EXPORT(kit.MDB_META, SYSTEM, CMD_DIR, cmd.Dir)
 					if _, e := os.Stat(cmd.Dir); e != nil && os.IsNotExist(e) {
-						os.MkdirAll(cmd.Dir, ice.DIR_MOD)
+						os.MkdirAll(cmd.Dir, ice.MOD_DIR)
 					}
 				}
 

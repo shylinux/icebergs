@@ -2,6 +2,7 @@ package tcp
 
 import (
 	"github.com/shylinux/icebergs"
+	"github.com/shylinux/icebergs/base/aaa"
 	"github.com/shylinux/icebergs/base/cli"
 	"github.com/shylinux/toolkits"
 
@@ -89,8 +90,8 @@ var Index = &ice.Context{Name: "tcp", Help: "通信模块",
 		)},
 	},
 	Commands: map[string]*ice.Command{
-		ice.ICE_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) { m.Load() }},
-		ice.ICE_EXIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) { m.Save(GETPORT) }},
+		ice.CTX_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) { m.Load() }},
+		ice.CTX_EXIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) { m.Save(GETPORT) }},
 
 		"ifconfig": {Name: "ifconfig [name]", Help: "网络配置", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			_ip_list(m, "")
@@ -107,7 +108,7 @@ var Index = &ice.Context{Name: "tcp", Help: "通信模块",
 			}
 		}},
 		"netstat": {Name: "netstat [name]", Help: "网络配置", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			m.Cmdy(ice.CLI_SYSTEM, "netstat", "-lanp")
+			m.Cmdy(cli.SYSTEM, "netstat", "-lanp")
 		}},
 
 		"check": {Name: "check addr", Help: "server", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
@@ -146,8 +147,8 @@ var Index = &ice.Context{Name: "tcp", Help: "通信模块",
 								switch msg.Cmdx("check", c.RemoteAddr().String()) {
 								case "local":
 									// 本机用户
-									msg.Option(ice.MSG_USERNAME, msg.Conf(ice.CLI_RUNTIME, "boot.username"))
-									msg.Option(ice.MSG_USERROLE, msg.Cmdx(ice.AAA_ROLE, "check", msg.Option(ice.MSG_USERNAME)))
+									msg.Option(ice.MSG_USERNAME, msg.Conf(cli.RUNTIME, "boot.username"))
+									msg.Option(ice.MSG_USERROLE, msg.Cmdx(aaa.ROLE, "check", msg.Option(ice.MSG_USERNAME)))
 									msg.Logs(ice.LOG_AUTH, "name", msg.Option(ice.MSG_USERNAME), "role", msg.Option(ice.MSG_USERROLE))
 								}
 
@@ -159,7 +160,7 @@ var Index = &ice.Context{Name: "tcp", Help: "通信模块",
 
 									if len(text) == 0 {
 										if len(cmds) > 0 {
-											msg.Cmd(ice.AAA_ROLE, "right")
+											msg.Cmd(aaa.ROLE, "right")
 											// 执行命令
 											res := msg.Cmd(cmds)
 

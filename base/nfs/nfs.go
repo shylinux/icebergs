@@ -3,7 +3,6 @@ package nfs
 import (
 	ice "github.com/shylinux/icebergs"
 	"github.com/shylinux/icebergs/base/cli"
-	"github.com/shylinux/icebergs/base/web"
 	kit "github.com/shylinux/toolkits"
 
 	"bufio"
@@ -54,7 +53,7 @@ func _file_list(m *ice.Message, root string, name string, level int, deep bool, 
 				for _, field := range fields {
 					switch field {
 					case "time":
-						m.Push("time", f.ModTime().Format(ice.ICE_TIME))
+						m.Push("time", f.ModTime().Format(ice.MOD_TIME))
 					case "type":
 						if m.Assert(e) && f.IsDir() {
 							m.Push("type", "dir")
@@ -197,7 +196,7 @@ func _file_trash(m *ice.Message, name string, from ...string) {
 			os.MkdirAll(path.Dir(p), 0777)
 			os.Rename(name, p)
 
-			m.Cmd(web.FAVOR, "trash", "bin", name, p)
+			m.Cmd("web.favor", "trash", "bin", name, p)
 		}
 	}
 }
@@ -241,4 +240,4 @@ var Index = &ice.Context{Name: "nfs", Help: "存储模块",
 	},
 }
 
-func init() { ice.Index.Register(Index, nil) }
+func init() { ice.Index.Register(Index, nil, DIR, CAT, SAVE, COPY, LINK, TRASH) }

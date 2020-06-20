@@ -1,11 +1,10 @@
 package ice
 
 import (
-	kit "github.com/shylinux/toolkits"
+	"github.com/shylinux/toolkits"
 	"github.com/shylinux/toolkits/log"
 
 	"fmt"
-	"os"
 	"runtime"
 	"strings"
 )
@@ -33,25 +32,16 @@ func (m *Message) log(level string, str string, arg ...interface{}) *Message {
 		prefix, suffix = "\033[31m", "\033[0m"
 	}
 
+	// 文件行号
 	switch level {
 	case LOG_CMDS, LOG_INFO, LOG_WARN, "refer", "form":
 	default:
-		_, file, line, _ := runtime.Caller(2)
-		ls := strings.Split(file, "/")
-		if len(ls) > 2 {
-			ls = ls[len(ls)-2:]
-		}
-		suffix += fmt.Sprintf(" %s:%d", strings.Join(ls, "/"), line)
+		suffix += " " + kit.FileLine(3, 2)
 	}
 
-	if os.Getenv("ctx_mod") != "" && m != nil {
-		// 输出日志
-		str := fmt.Sprintf("%s %02d %9s %s%s %s%s",
-			m.time.Format(ICE_TIME), m.code, fmt.Sprintf("%4s->%-4s", m.source.Name, m.target.Name),
-			prefix, level, str, suffix,
-		)
-		log.Info(str)
-	}
+	// 输出日志
+	log.Info(fmt.Sprintf("%02d %9s %s%s %s%s", m.code, fmt.Sprintf("%4s->%-4s", m.source.Name, m.target.Name),
+		prefix, level, str, suffix))
 	return m
 }
 func (m *Message) Log(level string, str string, arg ...interface{}) *Message {
@@ -85,13 +75,6 @@ func (m *Message) Error(err bool, str string, arg ...interface{}) bool {
 		return true
 	}
 	return false
-}
-func (m *Message) Trace(key string, str string, arg ...interface{}) *Message {
-	if m.Options(key) {
-		m.Echo("trace: ").Echo(str, arg...)
-		return m.log(LOG_TRACE, str, arg...)
-	}
-	return m
 }
 func (m *Message) Debug(str string, arg ...interface{}) {
 	m.log(LOG_DEBUG, str, arg...)

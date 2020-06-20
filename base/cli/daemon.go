@@ -33,7 +33,7 @@ func _daemon_show(m *ice.Message, cmd *exec.Cmd, out, err string) {
 	}
 
 	h := m.Rich(DAEMON, nil, kit.Dict(
-		kit.MDB_TYPE, ice.TYPE_SHELL, kit.MDB_NAME, cmd.Process.Pid, kit.MDB_TEXT, strings.Join(cmd.Args, " "),
+		kit.MDB_TYPE, "shell", kit.MDB_NAME, cmd.Process.Pid, kit.MDB_TEXT, strings.Join(cmd.Args, " "),
 		kit.MDB_EXTRA, kit.Dict(
 			kit.MDB_STATUS, StatusStart,
 			CMD_STDOUT, out,

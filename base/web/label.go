@@ -85,7 +85,7 @@ func _label_select(m *ice.Message, cmd string, arg ...string) {
 	}
 }
 func _label_create(m *ice.Message, cmd string, key string, arg ...string) {
-	if pod := m.Cmdx(ice.WEB_GROUP, arg[2], "get", arg[3:]); pod != "" {
+	if pod := m.Cmdx(GROUP, arg[2], "get", arg[3:]); pod != "" {
 		if m.Richs(cmd, kit.Keys(kit.MDB_HASH, key), pod, func(key string, value map[string]interface{}) {
 			if value[kit.MDB_STATUS] == "void" {
 				value[kit.MDB_STATUS] = "free"
@@ -105,7 +105,7 @@ func _label_remove(m *ice.Message, cmd string, key string, arg ...string) {
 		if value[kit.MDB_STATUS] == "free" {
 			value[kit.MDB_STATUS] = "void"
 			m.Logs(ice.LOG_MODIFY, cmd, arg[0], kit.MDB_NAME, arg[3], kit.MDB_STATUS, "void")
-			m.Cmdx(ice.WEB_GROUP, value[kit.MDB_GROUP], "put", arg[3])
+			m.Cmdx(GROUP, value[kit.MDB_GROUP], "put", arg[3])
 			m.Echo(arg[3])
 		}
 	})
@@ -116,7 +116,7 @@ func _label_remote(m *ice.Message, cmd string, key string, arg ...string) {
 	m.Richs(cmd, kit.Keys(kit.MDB_HASH, key), arg[1], func(key string, value map[string]interface{}) {
 		wg.Add(1)
 		m.Option(ice.MSG_USERPOD, value[kit.MDB_NAME])
-		m.Cmd(ice.WEB_SPACE, value[kit.MDB_NAME], arg[2:]).Call(false, func(res *ice.Message) *ice.Message {
+		m.Cmd(SPACE, value[kit.MDB_NAME], arg[2:]).Call(false, func(res *ice.Message) *ice.Message {
 			if wg.Done(); res != nil && m != nil {
 				m.Copy(res)
 			}
@@ -126,13 +126,15 @@ func _label_remote(m *ice.Message, cmd string, key string, arg ...string) {
 	wg.Wait()
 }
 
+const LABEL = "label"
+
 func init() {
 	Index.Merge(&ice.Context{
 		Configs: map[string]*ice.Config{
-			ice.WEB_LABEL: {Name: "label", Help: "标签", Value: kit.Data(kit.MDB_SHORT, "label")},
+			LABEL: {Name: "label", Help: "标签", Value: kit.Data(kit.MDB_SHORT, "label")},
 		},
 		Commands: map[string]*ice.Command{
-			ice.WEB_LABEL: {Name: "label label=auto name=auto auto", Help: "标签", Meta: kit.Dict(
+			LABEL: {Name: "label label=auto name=auto auto", Help: "标签", Meta: kit.Dict(
 				"exports", []string{"lab", "label"}, "detail", []string{"归还"},
 			), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 				if len(arg) > 1 && arg[0] == "action" {
@@ -172,7 +174,7 @@ func init() {
 						_label_remove(m, cmd, key, arg...)
 					default: // 远程命令
 						if arg[0] == "route" {
-							m.Cmd(ice.WEB_ROUTE).Table(func(index int, value map[string]string, field []string) {
+							m.Cmd(ROUTE).Table(func(index int, value map[string]string, field []string) {
 								m.Rich(cmd, kit.Keys(kit.MDB_HASH, key), kit.Dict(
 									kit.MDB_NAME, value["name"], kit.MDB_GROUP, arg[0], kit.MDB_STATUS, "free",
 								))

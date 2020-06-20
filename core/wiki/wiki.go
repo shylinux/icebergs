@@ -3,6 +3,7 @@ package wiki
 import (
 	ice "github.com/shylinux/icebergs"
 	_ "github.com/shylinux/icebergs/base"
+	"github.com/shylinux/icebergs/base/ssh"
 	"github.com/shylinux/icebergs/base/web"
 	kit "github.com/shylinux/toolkits"
 
@@ -46,10 +47,10 @@ var Index = &ice.Context{Name: "wiki", Help: "文档中心",
 		"feel": {Name: "feel", Help: "影音媒体", Value: kit.Data(kit.MDB_SHORT, "name", "path", "", "regs", ".*\\.(png|jpg|JPG|MOV|m4v)")},
 	},
 	Commands: map[string]*ice.Command{
-		ice.ICE_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		ice.CTX_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			m.Load()
 		}},
-		ice.ICE_EXIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		ice.CTX_EXIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			m.Save("feel")
 		}},
 
@@ -198,7 +199,7 @@ var Index = &ice.Context{Name: "wiki", Help: "文档中心",
 			"display", "local/wiki/feel", "detail", []string{"标签", "删除"},
 		), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			if m.Option("_action") == "上传" {
-				m.Cmd(ice.WEB_CACHE, "watch", m.Option("_data"), path.Join(m.Option("name"), m.Option("_name")))
+				m.Cmd(web.CACHE, "watch", m.Option("_data"), path.Join(m.Option("name"), m.Option("_name")))
 				return
 			}
 
@@ -296,7 +297,7 @@ var Index = &ice.Context{Name: "wiki", Help: "文档中心",
 			m.Cmd("word", "action", "追加", arg)
 
 			m.Option("scan_mode", "scan")
-			m.Cmdy(ice.SSH_SOURCE, path.Join(m.Conf("word", "meta.path"), arg[0]))
+			m.Cmdy(ssh.SOURCE, path.Join(m.Conf("word", "meta.path"), arg[0]))
 		}},
 	},
 }

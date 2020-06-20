@@ -5,6 +5,7 @@ import (
 	ice "github.com/shylinux/icebergs"
 	aaa "github.com/shylinux/icebergs/base/aaa"
 	"github.com/shylinux/icebergs/base/cli"
+	"github.com/shylinux/icebergs/base/gdb"
 	kit "github.com/shylinux/toolkits"
 	"github.com/shylinux/toolkits/task"
 
@@ -57,7 +58,7 @@ func _space_dial(m *ice.Message, dev, name string, arg ...string) {
 
 							// 连接成功
 							m.Rich(SPACE, nil, kit.Dict("socket", s,
-								kit.MDB_TYPE, ice.WEB_MASTER, kit.MDB_NAME, dev, kit.MDB_TEXT, host,
+								kit.MDB_TYPE, MASTER, kit.MDB_NAME, dev, kit.MDB_TEXT, host,
 							))
 							m.Log_CREATE("space", dev, "retry", i, "uri", uri)
 
@@ -151,7 +152,7 @@ func _space_handle(m *ice.Message, safe bool, send map[string]*ice.Message, c *w
 					})
 					continue
 				}
-			} else if msg.Richs(ice.WEB_SPACE, nil, target[0], func(key string, value map[string]interface{}) {
+			} else if msg.Richs(SPACE, nil, target[0], func(key string, value map[string]interface{}) {
 				// 查询节点
 				if s, ok := value["socket"].(*websocket.Conn); ok {
 					socket, source, target = s, source, target[1:]
@@ -184,16 +185,23 @@ func _space_handle(m *ice.Message, safe bool, send map[string]*ice.Message, c *w
 
 const SPACE = "space"
 
+const (
+	MASTER = "master"
+	SERVER = "server"
+	WORKER = "worker"
+	BETTER = "better"
+)
+
 func init() {
 	Index.Merge(&ice.Context{
 		Configs: map[string]*ice.Config{
-			ice.WEB_SPACE: {Name: "space", Help: "空间站", Value: kit.Data(kit.MDB_SHORT, kit.MDB_NAME,
+			SPACE: {Name: "space", Help: "空间站", Value: kit.Data(kit.MDB_SHORT, kit.MDB_NAME,
 				"redial", kit.Dict("a", 3000, "b", 1000, "c", 1000, "r", 4096, "w", 4096),
 				"timeout", kit.Dict("c", "180s"),
 			)},
 		},
 		Commands: map[string]*ice.Command{
-			ice.WEB_SPACE: {Name: "space [name [cmd...]] auto", Help: "空间站", Action: map[string]*ice.Action{
+			SPACE: {Name: "space [name [cmd...]] auto", Help: "空间站", Action: map[string]*ice.Action{
 				"connect": {Name: "connect [dev [name]]", Help: "连接", Hand: func(m *ice.Message, arg ...string) {
 					_space_dial(m, kit.Select("dev", arg, 0), kit.Select(cli.NodeName, arg, 2))
 				}},
@@ -213,22 +221,22 @@ func init() {
 			}},
 
 			"/space/": {Name: "/space/", Help: "空间站", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-				if s, e := websocket.Upgrade(m.W, m.R, nil, m.Confi(ice.WEB_SPACE, "meta.buffer.r"), m.Confi(ice.WEB_SPACE, "meta.buffer.w")); m.Assert(e) {
+				if s, e := websocket.Upgrade(m.W, m.R, nil, m.Confi(SPACE, "meta.buffer.r"), m.Confi(SPACE, "meta.buffer.w")); m.Assert(e) {
 					name := m.Option(kit.MDB_NAME, strings.Replace(kit.Select(m.Option(ice.MSG_USERADDR), m.Option(kit.MDB_NAME)), ".", "_", -1))
-					kind := kit.Select(ice.WEB_WORKER, m.Option(kit.MDB_TYPE))
+					kind := kit.Select(WORKER, m.Option(kit.MDB_TYPE))
 
 					// 添加节点
-					h := m.Rich(ice.WEB_SPACE, nil, kit.Dict("socket", s,
+					h := m.Rich(SPACE, nil, kit.Dict("socket", s,
 						kit.MDB_TYPE, kind, kit.MDB_NAME, name, kit.MDB_TEXT, s.RemoteAddr().String(),
 					))
 					m.Log_CREATE(SPACE, name)
 
 					task.Put(name, func(task *task.Task) error {
 						// 监听消息
-						m.Event(ice.SPACE_START, ice.WEB_WORKER, name)
+						m.Event(gdb.SPACE_START, WORKER, name)
 						_space_handle(m, false, m.Target().Server().(*Frame).send, s, name)
 						m.Log(ice.LOG_CLOSE, "%s: %s", name, kit.Format(m.Confv(SPACE, kit.Keys(kit.MDB_HASH, h))))
-						m.Event(ice.SPACE_CLOSE, ice.WEB_WORKER, name)
+						m.Event(gdb.SPACE_CLOSE, WORKER, name)
 						m.Confv(SPACE, kit.Keys(kit.MDB_HASH, h), "")
 						return nil
 					})

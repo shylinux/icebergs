@@ -2,6 +2,9 @@ package web
 
 import (
 	ice "github.com/shylinux/icebergs"
+	"github.com/shylinux/icebergs/base/aaa"
+	"github.com/shylinux/icebergs/base/cli"
+	"github.com/shylinux/icebergs/base/ctx"
 	kit "github.com/shylinux/toolkits"
 
 	"fmt"
@@ -23,11 +26,11 @@ func _share_list(m *ice.Message, key string, fields ...string) {
 		m.Push("detail", value)
 
 		m.Push(kit.MDB_KEY, kit.MDB_LINK)
-		m.Push(kit.MDB_VALUE, fmt.Sprintf(m.Conf(ice.WEB_SHARE, "meta.template.link"), m.Conf(ice.WEB_SHARE, "meta.domain"), key, key))
+		m.Push(kit.MDB_VALUE, fmt.Sprintf(m.Conf(SHARE, "meta.template.link"), m.Conf(SHARE, "meta.domain"), key, key))
 		m.Push(kit.MDB_KEY, kit.MDB_SHARE)
-		m.Push(kit.MDB_VALUE, fmt.Sprintf(m.Conf(ice.WEB_SHARE, "meta.template.share"), m.Conf(ice.WEB_SHARE, "meta.domain"), key))
+		m.Push(kit.MDB_VALUE, fmt.Sprintf(m.Conf(SHARE, "meta.template.share"), m.Conf(SHARE, "meta.domain"), key))
 		m.Push(kit.MDB_KEY, kit.MDB_VALUE)
-		m.Push(kit.MDB_VALUE, fmt.Sprintf(m.Conf(ice.WEB_SHARE, "meta.template.value"), m.Conf(ice.WEB_SHARE, "meta.domain"), key))
+		m.Push(kit.MDB_VALUE, fmt.Sprintf(m.Conf(SHARE, "meta.template.value"), m.Conf(SHARE, "meta.domain"), key))
 	})
 }
 func _share_show(m *ice.Message, key string, value map[string]interface{}, arg ...string) bool {
@@ -37,7 +40,7 @@ func _share_show(m *ice.Message, key string, value map[string]interface{}, arg .
 			kit.MDB_TYPE, SHARE, kit.MDB_NAME, value[kit.MDB_TYPE], kit.MDB_TEXT, key,
 		)))
 	case kit.MDB_SHARE, "共享码":
-		m.Render(ice.RENDER_QRCODE, kit.Format("%s/share/%s/?share=%s", m.Conf(ice.WEB_SHARE, "meta.domain"), key, key))
+		m.Render(ice.RENDER_QRCODE, kit.Format("%s/share/%s/?share=%s", m.Conf(SHARE, "meta.domain"), key, key))
 	case kit.MDB_VALUE, "数据值":
 		m.Render(ice.RENDER_QRCODE, kit.Format(value), kit.Select("256", arg, 1))
 	case kit.MDB_TEXT:
@@ -45,7 +48,7 @@ func _share_show(m *ice.Message, key string, value map[string]interface{}, arg .
 	case "detail", "详情":
 		m.Render(kit.Formats(value))
 	case "download", "下载":
-		if strings.HasPrefix(kit.Format(value["text"]), m.Conf(ice.WEB_CACHE, "meta.path")) {
+		if strings.HasPrefix(kit.Format(value["text"]), m.Conf(CACHE, "meta.path")) {
 			m.Render(ice.RENDER_DOWNLOAD, value["text"], value["type"], value["name"])
 		} else {
 			m.Render("%s", value["text"])
@@ -56,9 +59,9 @@ func _share_show(m *ice.Message, key string, value map[string]interface{}, arg .
 	return true
 }
 func _share_repos(m *ice.Message, repos string, arg ...string) {
-	prefix := m.Conf(ice.WEB_SERVE, "meta.volcanos.require")
+	prefix := m.Conf(SERVE, "meta.volcanos.require")
 	if _, e := os.Stat(path.Join(prefix, repos)); e != nil {
-		m.Cmd(ice.CLI_SYSTEM, "git", "clone", "https://"+repos, path.Join(prefix, repos))
+		m.Cmd(cli.SYSTEM, "git", "clone", "https://"+repos, path.Join(prefix, repos))
 	}
 	m.Render(ice.RENDER_DOWNLOAD, path.Join(prefix, repos, path.Join(arg...)))
 }
@@ -66,7 +69,7 @@ func _share_local(m *ice.Message, arg ...string) {
 	p := path.Join(arg...)
 	if m.Option("pod") != "" {
 		// 远程文件
-		m.Cmdy(ice.WEB_SPACE, m.Option("pod"), "nfs.cat", p)
+		m.Cmdy(SPACE, m.Option("pod"), "nfs.cat", p)
 		m.Render(ice.RENDER_RESULT)
 		return
 	}
@@ -80,7 +83,7 @@ func _share_local(m *ice.Message, arg ...string) {
 	m.Render(ice.RENDER_DOWNLOAD, p)
 }
 func _share_remote(m *ice.Message, pod string, arg ...string) {
-	m.Cmdy(ice.WEB_SPACE, pod, "web./publish/", arg)
+	m.Cmdy(SPACE, pod, "web./publish/", arg)
 	m.Render(ice.RENDER_RESULT)
 }
 func _share_create(m *ice.Message, kind, name, text string, arg ...string) string {
@@ -89,7 +92,7 @@ func _share_create(m *ice.Message, kind, name, text string, arg ...string) strin
 	}
 
 	h := m.Rich(SHARE, nil, kit.Dict(
-		kit.MDB_TIME, m.Time(m.Conf(ice.WEB_SHARE, "meta.expire")),
+		kit.MDB_TIME, m.Time(m.Conf(SHARE, "meta.expire")),
 		kit.MDB_TYPE, kind, kit.MDB_NAME, name, kit.MDB_TEXT, text,
 		kit.MDB_EXTRA, kit.Dict(arg),
 	))
@@ -105,9 +108,9 @@ func _share_create(m *ice.Message, kind, name, text string, arg ...string) strin
 }
 
 func _share_story(m *ice.Message, value map[string]interface{}, arg ...string) map[string]interface{} {
-	msg := m.Cmd(ice.WEB_STORY, ice.STORY_INDEX, value["text"])
+	msg := m.Cmd(STORY, INDEX, value["text"])
 	if msg.Append("text") == "" && kit.Value(value, "extra.pod") != "" {
-		msg = m.Cmd(ice.WEB_SPACE, kit.Value(value, "extra.pod"), ice.WEB_STORY, ice.STORY_INDEX, value["text"])
+		msg = m.Cmd(SPACE, kit.Value(value, "extra.pod"), STORY, INDEX, value["text"])
 	}
 	value = kit.Dict("type", msg.Append("scene"), "name", msg.Append("story"), "text", msg.Append("text"), "file", msg.Append("file"))
 	m.Log(ice.LOG_EXPORT, "%s: %v", arg, kit.Format(value))
@@ -140,7 +143,7 @@ func _share_action(m *ice.Message, value map[string]interface{}, arg ...string) 
 	cmds := kit.Simple(m.Space(meta["pod"]), kit.Keys(meta["ctx"], meta["cmd"]), arg[3:])
 	m.Cmdy(cmds).Option("cmds", cmds)
 	m.Option("title", value["name"])
-	if strings.HasPrefix(kit.Format(value["text"]), m.Conf(ice.WEB_CACHE, "meta.path")) {
+	if strings.HasPrefix(kit.Format(value["text"]), m.Conf(CACHE, "meta.path")) {
 		m.Render(ice.RENDER_DOWNLOAD, value["text"], value["type"], value["name"])
 	} else {
 		m.Render("%s", value["text"])
@@ -158,7 +161,7 @@ func _share_action_redirect(m *ice.Message, value map[string]interface{}, share 
 	return true
 }
 func _share_action_page(m *ice.Message, value map[string]interface{}) bool {
-	Render(m, ice.RENDER_DOWNLOAD, m.Conf(ice.WEB_SERVE, "meta.page.share"))
+	Render(m, ice.RENDER_DOWNLOAD, m.Conf(SERVE, "meta.page.share"))
 	return true
 }
 func _share_action_list(m *ice.Message, value map[string]interface{}, river, storm string) bool {
@@ -174,7 +177,7 @@ func _share_action_list(m *ice.Message, value map[string]interface{}, river, sto
 		m.Push("args", value["args"])
 		m.Push("value", value["value"])
 
-		msg := m.Cmd(m.Space(value["pod"]), ice.CTX_COMMAND, value["ctx"], value["cmd"])
+		msg := m.Cmd(m.Space(value["pod"]), ctx.COMMAND, value["ctx"], value["cmd"])
 		m.Push("name", value["cmd"])
 		m.Push("help", kit.Select(msg.Append("help"), kit.Format(value["help"])))
 		m.Push("inputs", msg.Append("list"))
@@ -184,19 +187,19 @@ func _share_action_list(m *ice.Message, value map[string]interface{}, river, sto
 }
 
 func _share_auth(m *ice.Message, share string, role string) {
-	m.Richs(ice.WEB_SHARE, nil, share, func(key string, value map[string]interface{}) {
+	m.Richs(SHARE, nil, share, func(key string, value map[string]interface{}) {
 		switch value["type"] {
 		case "active":
-			m.Cmdy(ice.WEB_SPACE, value["name"], "sessid", m.Cmdx(ice.AAA_SESS, "create", role))
+			m.Cmdy(SPACE, value["name"], "sessid", m.Cmdx(aaa.SESS, "create", role))
 		case "user":
-			m.Cmdy(ice.AAA_ROLE, role, value["name"])
+			m.Cmdy(aaa.ROLE, role, value["name"])
 		default:
-			m.Cmdy(ice.AAA_SESS, "auth", value["text"], role)
+			m.Cmdy(aaa.SESS, "auth", value["text"], role)
 		}
 	})
 }
 func _share_check(m *ice.Message, share string) {
-	m.Richs(ice.WEB_SHARE, nil, share, func(key string, value map[string]interface{}) {
+	m.Richs(SHARE, nil, share, func(key string, value map[string]interface{}) {
 		m.Render(ice.RENDER_QRCODE, kit.Format(kit.Dict(
 			kit.MDB_TYPE, "share", kit.MDB_NAME, value["type"], kit.MDB_TEXT, key,
 		)))
@@ -205,7 +208,7 @@ func _share_check(m *ice.Message, share string) {
 func _trash(m *ice.Message, arg ...string) {
 	switch arg[0] {
 	case "invite":
-		arg = []string{arg[0], m.Cmdx(ice.WEB_SHARE, "invite", kit.Select("tech", arg, 1), kit.Select("miss", arg, 2))}
+		arg = []string{arg[0], m.Cmdx(SHARE, "invite", kit.Select("tech", arg, 1), kit.Select("miss", arg, 2))}
 		fallthrough
 	case "check":
 		_share_check(m, arg[1])
@@ -232,6 +235,7 @@ func init() {
 		Configs: map[string]*ice.Config{
 			SHARE: {Name: "share", Help: "共享链", Value: kit.Data(
 				"template", share_template, "expire", "72h",
+				"limit", 10,
 			)},
 		},
 		Commands: map[string]*ice.Command{
@@ -250,15 +254,15 @@ func init() {
 				_share_local(m, arg...)
 			}},
 			"/share/": {Name: "/share/", Help: "共享链", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-				m.Richs(ice.WEB_SHARE, nil, kit.Select(m.Option(kit.MDB_SHARE), arg, 0), func(key string, value map[string]interface{}) {
+				m.Richs(SHARE, nil, kit.Select(m.Option(kit.MDB_SHARE), arg, 0), func(key string, value map[string]interface{}) {
 					m.Log_EXPORT(kit.MDB_META, SHARE, "arg", arg, "value", kit.Format(value))
-					if m.Warn(m.Option(ice.MSG_USERROLE) != ice.ROLE_ROOT && kit.Time(kit.Format(value[kit.MDB_TIME])) < kit.Time(m.Time()), "expired") {
+					if m.Warn(m.Option(ice.MSG_USERROLE) != aaa.ROOT && kit.Time(kit.Format(value[kit.MDB_TIME])) < kit.Time(m.Time()), "expired") {
 						m.Echo("expired")
 						return
 					}
 
 					switch value[kit.MDB_TYPE] {
-					case ice.TYPE_STORY:
+					case TYPE_STORY:
 						value = _share_story(m, value, arg...)
 					}
 
@@ -267,15 +271,15 @@ func init() {
 					}
 
 					switch value[kit.MDB_TYPE] {
-					case ice.TYPE_RIVER:
+					case TYPE_RIVER:
 						// 共享群组
 						m.Render("redirect", "/", "share", key, "river", kit.Format(value["text"]))
 
-					case ice.TYPE_STORM:
+					case TYPE_STORM:
 						// 共享应用
 						m.Render("redirect", "/", "share", key, "storm", kit.Format(value["text"]), "river", kit.Format(kit.Value(value, "extra.river")))
 
-					case ice.TYPE_ACTION:
+					case TYPE_ACTION:
 						_share_action(m, value, arg...)
 
 					default:
@@ -299,7 +303,7 @@ func init() {
 					return
 				}
 
-				p := path.Join(kit.Simple(m.Conf(ice.WEB_SERVE, "meta.publish"), arg)...)
+				p := path.Join(kit.Simple(m.Conf(SERVE, "meta.publish"), arg)...)
 				if m.W == nil {
 					m.Cmdy("nfs.cat", p)
 					return

@@ -47,10 +47,10 @@ var Index = &ice.Context{Name: "mall", Help: "贸易中心",
 		))},
 	},
 	Commands: map[string]*ice.Command{
-		ice.ICE_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		ice.CTX_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			m.Load()
 		}},
-		ice.ICE_EXIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		ice.CTX_EXIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			m.Save("asset")
 		}},
 
@@ -295,7 +295,7 @@ var Index = &ice.Context{Name: "mall", Help: "贸易中心",
 								})
 							})
 							m.Log(ice.LOG_EXPORT, "%s", p)
-							m.Cmdy(ice.WEB_STORY, "catch", "csv", p)
+							m.Cmdy(web.STORY, "catch", "csv", p)
 						}
 
 					case "load":

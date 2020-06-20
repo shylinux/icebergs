@@ -2,6 +2,7 @@ package git
 
 import (
 	ice "github.com/shylinux/icebergs"
+	"github.com/shylinux/icebergs/base/cli"
 	"github.com/shylinux/icebergs/base/web"
 	"github.com/shylinux/icebergs/core/code"
 	kit "github.com/shylinux/toolkits"
@@ -15,12 +16,12 @@ import (
 
 func add(m *ice.Message, n string, p string) {
 	if s, e := os.Stat(m.Option("cmd_dir", path.Join(p, ".git"))); e == nil && s.IsDir() {
-		ls := strings.SplitN(strings.Trim(m.Cmdx(ice.CLI_SYSTEM, "git", "log", "-n1", `--pretty=format:"%ad %s"`, "--date=iso"), "\""), " ", 4)
+		ls := strings.SplitN(strings.Trim(m.Cmdx(cli.SYSTEM, "git", "log", "-n1", `--pretty=format:"%ad %s"`, "--date=iso"), "\""), " ", 4)
 		m.Rich("repos", nil, kit.Data(
 			"name", n, "path", p,
 			"last", kit.Select("", ls, 3), "time", strings.Join(ls[:2], " "),
-			"branch", strings.TrimSpace(m.Cmdx(ice.CLI_SYSTEM, "git", "branch")),
-			"remote", strings.TrimSpace(m.Cmdx(ice.CLI_SYSTEM, "git", "remote", "-v")),
+			"branch", strings.TrimSpace(m.Cmdx(cli.SYSTEM, "git", "branch")),
+			"remote", strings.TrimSpace(m.Cmdx(cli.SYSTEM, "git", "remote", "-v")),
 		))
 	}
 }
@@ -41,28 +42,28 @@ var Index = &ice.Context{Name: "git", Help: "代码库",
 		"total": {Name: "total", Help: "统计", Value: kit.Data(kit.MDB_SHORT, "name", "skip", kit.Dict("wubi-dict", "true", "word-dict", "true"))},
 	},
 	Commands: map[string]*ice.Command{
-		ice.WEB_LOGIN: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		web.LOGIN: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 		}},
 
-		ice.CODE_INSTALL: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		code.INSTALL: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			m.Option("cmd_dir", m.Conf("install", "meta.path"))
-			m.Cmd(ice.CLI_SYSTEM, "git", "clone", m.Conf("git", "meta.source"))
+			m.Cmd(cli.SYSTEM, "git", "clone", m.Conf("git", "meta.source"))
 
 			m.Option("cmd_dir", path.Join(m.Conf("install", "meta.path"), "git"))
-			m.Cmd(ice.CLI_SYSTEM, "make", "configure")
-			m.Cmd(ice.CLI_SYSTEM, "./configure", "--prefix="+kit.Path("usr/local"))
+			m.Cmd(cli.SYSTEM, "make", "configure")
+			m.Cmd(cli.SYSTEM, "./configure", "--prefix="+kit.Path("usr/local"))
 
-			m.Cmd(ice.CLI_SYSTEM, "make", "-j4")
-			m.Cmd(ice.CLI_SYSTEM, "make", "install")
+			m.Cmd(cli.SYSTEM, "make", "-j4")
+			m.Cmd(cli.SYSTEM, "make", "install")
 		}},
-		ice.CODE_PREPARE: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		code.PREPARE: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			kit.Fetch(m.Confv("git", "meta.config"), func(conf string, value interface{}) {
 				kit.Fetch(value, func(key string, value string) {
-					m.Cmd(ice.CLI_SYSTEM, "git", "config", "--global", conf+"."+key, value)
+					m.Cmd(cli.SYSTEM, "git", "config", "--global", conf+"."+key, value)
 				})
 			})
 		}},
-		ice.CODE_PROJECT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		code.PROJECT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 		}},
 
 		"init": {Name: "init", Help: "初始化", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
@@ -76,7 +77,7 @@ var Index = &ice.Context{Name: "git", Help: "代码库",
 			})
 
 			// 应用项目
-			m.Cmd("nfs.dir", m.Conf(ice.WEB_DREAM, "meta.path"), "name path").Table(func(index int, value map[string]string, head []string) {
+			m.Cmd("nfs.dir", m.Conf(web.DREAM, "meta.path"), "name path").Table(func(index int, value map[string]string, head []string) {
 				add(m, value["name"], value["path"])
 			})
 		}},
@@ -89,7 +90,7 @@ var Index = &ice.Context{Name: "git", Help: "代码库",
 			if len(arg) > 1 {
 				if _, e := os.Stat(path.Join(arg[1], ".git")); e != nil && os.IsNotExist(e) {
 					// 下载仓库
-					m.Cmd(ice.CLI_SYSTEM, "git", "clone", "-b", kit.Select("master", arg, 3),
+					m.Cmd(cli.SYSTEM, "git", "clone", "-b", kit.Select("master", arg, 3),
 						kit.Select(m.Conf("repos", "meta.owner")+"/"+arg[0], arg, 2), arg[1])
 					add(m, arg[0], arg[1])
 				}
@@ -157,7 +158,7 @@ var Index = &ice.Context{Name: "git", Help: "代码库",
 				kit.MDB_INPUT, "text", "name", "name", "value", "some",
 			))},
 		), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			prefix := []string{ice.CLI_SYSTEM, "git"}
+			prefix := []string{cli.SYSTEM, "git"}
 
 			if len(arg) > 1 && arg[0] == "action" {
 				m.Richs("repos", nil, m.Option("name"), func(key string, value map[string]interface{}) {
@@ -220,7 +221,7 @@ var Index = &ice.Context{Name: "git", Help: "代码库",
 
 			var total_day time.Duration
 			count, count_add, count_del := 0, 0, 0
-			for i, v := range strings.Split(m.Cmdx(ice.CLI_SYSTEM, "git", args), "commit: ") {
+			for i, v := range strings.Split(m.Cmdx(cli.SYSTEM, "git", args), "commit: ") {
 				if i > 0 {
 					l := strings.Split(v, "\n")
 					hs := strings.Split(l[0], " ")

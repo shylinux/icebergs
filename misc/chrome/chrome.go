@@ -23,7 +23,7 @@ var Index = &ice.Context{Name: "chrome", Help: "浏览器",
 		), Meta: kit.Dict("detail", []string{"编辑", "goBack", "goForward", "duplicate", "reload", "remove"}), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			if len(arg) == 0 {
 				// 窗口列表
-				m.Richs(ice.WEB_SPACE, nil, "*", func(key string, value map[string]interface{}) {
+				m.Richs(web.SPACE, nil, "*", func(key string, value map[string]interface{}) {
 					if kit.Format(value["type"]) == "chrome" {
 						m.Push(key, value, []string{"time", "name"})
 					}
@@ -32,11 +32,11 @@ var Index = &ice.Context{Name: "chrome", Help: "浏览器",
 			}
 			if arg[0] == "action" {
 				// 命令转换
-				m.Cmdy(ice.WEB_SPACE, m.Option("name"), "tabs", m.Option("tid"), arg[1])
+				m.Cmdy(web.SPACE, m.Option("name"), "tabs", m.Option("tid"), arg[1])
 				arg = []string{m.Option("name"), m.Option("wid")}
 			}
 			// 下发命令
-			m.Cmdy(ice.WEB_SPACE, arg[0], "wins", arg[1:])
+			m.Cmdy(web.SPACE, arg[0], "wins", arg[1:])
 		}},
 		"cookie": {Name: "cookie", Help: "数据", List: kit.List(
 			kit.MDB_INPUT, "text", "name", "name", "action", "auto",
@@ -51,11 +51,11 @@ var Index = &ice.Context{Name: "chrome", Help: "浏览器",
 			}
 			if arg[0] == "action" {
 				// 命令转换
-				m.Cmdy(ice.WEB_SPACE, m.Option("name"), "cookie", arg[1:])
+				m.Cmdy(web.SPACE, m.Option("name"), "cookie", arg[1:])
 				arg = []string{m.Option("name"), m.Option("id")}
 			}
 			// 下发命令
-			m.Cmdy(ice.WEB_SPACE, arg[0], "cookie", arg[1:])
+			m.Cmdy(web.SPACE, arg[0], "cookie", arg[1:])
 		}},
 		"bookmark": {Name: "bookmark", Help: "书签", List: kit.List(
 			kit.MDB_INPUT, "text", "name", "name", "action", "auto",
@@ -70,14 +70,14 @@ var Index = &ice.Context{Name: "chrome", Help: "浏览器",
 			}
 			if arg[0] == "action" {
 				// 命令转换
-				m.Cmdy(ice.WEB_SPACE, m.Option("name"), "bookmark", arg[1:])
+				m.Cmdy(web.SPACE, m.Option("name"), "bookmark", arg[1:])
 				arg = []string{m.Option("name"), m.Option("id")}
 			}
 			// 下发命令
-			m.Cmdy(ice.WEB_SPACE, arg[0], "bookmark", arg[1:])
+			m.Cmdy(web.SPACE, arg[0], "bookmark", arg[1:])
 		}},
 
-		ice.WEB_LOGIN: {Name: "_login", Help: "_login", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		web.LOGIN: {Name: "_login", Help: "_login", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			m.Option("you", "")
 			m.Richs("login", nil, m.Option("sid"), func(key string, value map[string]interface{}) {
 				// 查找空间
@@ -99,7 +99,7 @@ var Index = &ice.Context{Name: "chrome", Help: "浏览器",
 		"/favor": {Name: "/favor", Help: "收藏", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			if len(arg) > 0 {
 				// 添加收藏
-				web.FavorInsert(m, m.Option("tab"), ice.TYPE_SPIDE, m.Option("note"), arg[0])
+				web.FavorInsert(m, m.Option("tab"), web.TYPE_SPIDE, m.Option("note"), arg[0])
 				return
 			}
 		}},
@@ -107,14 +107,14 @@ var Index = &ice.Context{Name: "chrome", Help: "浏览器",
 		"/crx": {Name: "/crx", Help: "/crx", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			switch arg[0] {
 			case "login":
-				m.Cmdy(ice.WEB_SPIDE, "dev", "msg", "/code/chrome/login", "sid", m.Option("sid"))
+				m.Cmdy(web.SPIDE, "dev", "msg", "/code/chrome/login", "sid", m.Option("sid"))
 
 			case "bookmark":
-				m.Cmdy(ice.WEB_SPIDE, "dev", "/code/chrome/favor", "cmds", arg[2], "note", arg[3],
+				m.Cmdy(web.SPIDE, "dev", "/code/chrome/favor", "cmds", arg[2], "note", arg[3],
 					"tab", kit.Select(m.Conf("chrome", "meta.history"), arg, 4), "sid", m.Option("sid"), "type", "spide")
 
 			case "history":
-				m.Cmdy(ice.WEB_SPIDE, "dev", "/code/chrome/favor", "cmds", arg[2], "note", arg[3],
+				m.Cmdy(web.SPIDE, "dev", "/code/chrome/favor", "cmds", arg[2], "note", arg[3],
 					"tab", m.Conf("chrome", "meta.history"), "sid", m.Option("sid"))
 			}
 		}},

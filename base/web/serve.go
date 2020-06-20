@@ -4,6 +4,7 @@ import (
 	ice "github.com/shylinux/icebergs"
 	"github.com/shylinux/icebergs/base/aaa"
 	"github.com/shylinux/icebergs/base/cli"
+	"github.com/shylinux/icebergs/base/gdb"
 	"github.com/shylinux/icebergs/base/tcp"
 	kit "github.com/shylinux/toolkits"
 
@@ -33,9 +34,9 @@ func _serve_login(msg *ice.Message, w http.ResponseWriter, r *http.Request) bool
 		}
 	}
 
-	if s, ok := msg.Target().Commands[ice.WEB_LOGIN]; ok {
+	if _, ok := msg.Target().Commands[LOGIN]; ok {
 		// 权限检查
-		msg.Target().Run(msg, s, ice.WEB_LOGIN, kit.Simple(msg.Optionv("cmds"))...)
+		msg.Target().Cmd(msg, LOGIN, LOGIN, kit.Simple(msg.Optionv("cmds"))...)
 
 	} else if ls := strings.Split(msg.Option(ice.MSG_USERURL), "/"); msg.Conf(SERVE, kit.Keys("meta.black", ls[1])) == "true" {
 		return false // black
@@ -124,7 +125,7 @@ func _serve_handle(key string, cmd *ice.Command, msg *ice.Message, w http.Respon
 	// 执行命令
 	if cmds := kit.Simple(msg.Optionv("cmds")); _serve_login(msg, w, r) {
 		msg.Option("_option", msg.Optionv(ice.MSG_OPTION))
-		msg.Target().Run(msg, cmd, msg.Option(ice.MSG_USERURL), cmds...)
+		msg.Target().Cmd(msg, key, msg.Option(ice.MSG_USERURL), cmds...)
 	}
 
 	// 渲染引擎
@@ -177,7 +178,7 @@ func _serve_main(m *ice.Message, w http.ResponseWriter, r *http.Request) bool {
 		}
 		m.W = w
 		Render(m, "refresh", m.Conf(SERVE, "meta.volcanos.refresh"))
-		m.Event(ice.SYSTEM_INIT)
+		m.Event(gdb.SYSTEM_INIT)
 		m.W = nil
 	} else if r.URL.Path == "/share" && r.Method == "GET" {
 		http.ServeFile(w, r, m.Conf(SERVE, "meta.page.share"))
@@ -189,10 +190,12 @@ func _serve_main(m *ice.Message, w http.ResponseWriter, r *http.Request) bool {
 
 const SERVE = "serve"
 
+const LOGIN = "_login"
+
 func init() {
 	Index.Merge(&ice.Context{
 		Configs: map[string]*ice.Config{
-			ice.WEB_SERVE: {Name: "serve", Help: "服务器", Value: kit.Data(
+			SERVE: {Name: "serve", Help: "服务器", Value: kit.Data(
 				"init", "false", "logheaders", "false",
 				"black", kit.Dict(),
 				"white", kit.Dict(
@@ -224,9 +227,9 @@ func init() {
 			)},
 		},
 		Commands: map[string]*ice.Command{
-			ice.WEB_SERVE: {Name: "serve [random] [ups...]", Help: "服务器", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-				if cli.NodeType(m, ice.WEB_SERVER, cli.HostName); len(arg) > 0 && arg[0] == "random" {
-					cli.NodeType(m, ice.WEB_SERVER, cli.PathName)
+			SERVE: {Name: "serve [random] [ups...]", Help: "服务器", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+				if cli.NodeType(m, SERVER, cli.HostName); len(arg) > 0 && arg[0] == "random" {
+					cli.NodeType(m, SERVER, cli.PathName)
 					// 随机端口
 					m.Cmd(SPIDE, kit.MDB_CREATE, "self", "http://random")
 					arg = arg[1:]
@@ -234,12 +237,12 @@ func init() {
 
 				// 启动服务
 				m.Target().Start(m, "self")
-				defer m.Cmd(ice.WEB_SPACE, "connect", "self")
+				defer m.Cmd(SPACE, "connect", "self")
 				m.Sleep("1s")
 
 				// 连接服务
 				for _, k := range arg {
-					m.Cmd(ice.WEB_SPACE, "connect", k)
+					m.Cmd(SPACE, "connect", k)
 				}
 			}},
 		}}, nil)

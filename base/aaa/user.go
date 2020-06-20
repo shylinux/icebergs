@@ -3,6 +3,7 @@ package aaa
 import (
 	"github.com/shylinux/icebergs"
 	"github.com/shylinux/icebergs/base/cli"
+	"github.com/shylinux/icebergs/base/gdb"
 	"github.com/shylinux/toolkits"
 
 	"strings"
@@ -31,7 +32,7 @@ func _user_create(m *ice.Message, name, word string) {
 		USERNICK, name, USERNODE, cli.NodeName,
 	))
 	m.Log_CREATE(USERNAME, name)
-	m.Event(ice.USER_CREATE, name)
+	m.Event(gdb.USER_CREATE, name)
 }
 
 func UserRoot(m *ice.Message) {

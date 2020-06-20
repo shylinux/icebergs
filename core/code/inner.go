@@ -2,6 +2,7 @@ package code
 
 import (
 	ice "github.com/shylinux/icebergs"
+	"github.com/shylinux/icebergs/base/cli"
 	"github.com/shylinux/icebergs/base/web"
 	kit "github.com/shylinux/toolkits"
 
@@ -90,7 +91,7 @@ func _inner_show(m *ice.Message, name string) {
 
 	p := _inner_ext(name)
 	if ls := kit.Simple(m.Confv(INNER, kit.Keys("meta.show", p))); len(ls) > 0 {
-		m.Cmdy(ice.CLI_SYSTEM, ls, name)
+		m.Cmdy(cli.SYSTEM, ls, name)
 		m.Set(ice.MSG_APPEND)
 		m.Cmd(web.FAVOR, "inner.run", "shell", name, m.Result())
 		return
@@ -141,12 +142,12 @@ func init() {
 			}, Action: map[string]*ice.Action{
 				"cmd": {Name: "cmd arg", Help: "命令", Hand: func(m *ice.Message, arg ...string) {
 					if m.Cmdy(kit.Split(arg[0])); !m.Hand {
-						m.Cmdy(ice.CLI_SYSTEM, kit.Split(arg[0]))
+						m.Cmdy(cli.SYSTEM, kit.Split(arg[0]))
 					}
 				}},
 
 				"favor": {Name: "favor", Help: "收藏", Hand: func(m *ice.Message, arg ...string) {
-					m.Cmd(ice.WEB_FAVOR, arg, "extra", "extra.poster").Table(func(index int, value map[string]string, header []string) {
+					m.Cmd(web.FAVOR, arg, "extra", "extra.poster").Table(func(index int, value map[string]string, header []string) {
 						m.Push("image", kit.Format(`<a title="%s" href="%s" target="_blank"><img src="%s" width=200></a>`,
 							value["name"], value["text"], value["extra.poster"]))
 						m.Push("video", kit.Format(`<video src="%s" controls></video>`, value["text"]))

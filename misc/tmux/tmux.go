@@ -2,6 +2,8 @@ package tmux
 
 import (
 	ice "github.com/shylinux/icebergs"
+	"github.com/shylinux/icebergs/base/cli"
+	"github.com/shylinux/icebergs/base/gdb"
 	"github.com/shylinux/icebergs/base/web"
 	"github.com/shylinux/icebergs/core/code"
 	kit "github.com/shylinux/toolkits"
@@ -15,7 +17,7 @@ import (
 var Index = &ice.Context{Name: "tmux", Help: "工作台",
 	Caches: map[string]*ice.Cache{},
 	Configs: map[string]*ice.Config{
-		"prefix": {Name: "prefix", Help: "前缀", Value: kit.Data("cmd", []interface{}{ice.CLI_SYSTEM, "tmux"})},
+		"prefix": {Name: "prefix", Help: "前缀", Value: kit.Data("cmd", []interface{}{cli.SYSTEM, "tmux"})},
 		"buffer": {Name: "buffer", Help: "缓存", Value: kit.Data()},
 
 		"session": {Name: "session", Help: "会话", Value: kit.Data(
@@ -42,12 +44,12 @@ var Index = &ice.Context{Name: "tmux", Help: "工作台",
 		)},
 	},
 	Commands: map[string]*ice.Command{
-		ice.ICE_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			if m.Cmdy(ice.CLI_SYSTEM, "tmux", "ls"); m.Append("code") != "0" {
+		ice.CTX_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			if m.Cmdy(cli.SYSTEM, "tmux", "ls"); m.Append("code") != "0" {
 				return
 			}
 
-			m.Cmd(ice.WEB_PROXY, "add", "tmux", m.AddCmd(&ice.Command{Name: "proxy", Help: "代理", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			m.Cmd(web.PROXY, "add", "tmux", m.AddCmd(&ice.Command{Name: "proxy", Help: "代理", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 				m.Cmd("session").Table(func(index int, value map[string]string, head []string) {
 					if value["tag"] == "1" {
 						m.Echo(value["session"])
@@ -55,31 +57,31 @@ var Index = &ice.Context{Name: "tmux", Help: "工作台",
 				})
 			}}))
 		}},
-		ice.CODE_INSTALL: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		code.INSTALL: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			m.Option("cmd_dir", m.Conf("install", "meta.path"))
-			m.Cmd(ice.CLI_SYSTEM, "git", "clone", "https://github.com/tmux/tmux")
+			m.Cmd(cli.SYSTEM, "git", "clone", "https://github.com/tmux/tmux")
 		}},
-		ice.CODE_PREPARE: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		code.PREPARE: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			m.Cmd("nfs.link", path.Join(os.Getenv("HOME"), ".tmux.conf"), "etc/conf/tmux.conf")
 		}},
-		ice.CODE_PROJECT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		code.PROJECT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 		}},
 
 		"init": {Name: "init", Help: "初始化", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			m.Watch(ice.DREAM_START, m.Prefix("auto"))
+			m.Watch(gdb.DREAM_START, m.Prefix("auto"))
 
-			if m.Richs(ice.WEB_FAVOR, nil, "tmux.auto", nil) == nil {
-				m.Cmd(ice.WEB_FAVOR, "tmux.auto", ice.TYPE_SHELL, "脚本", `curl $ctx_dev/publish/auto.sh > auto.sh`)
-				m.Cmd(ice.WEB_FAVOR, "tmux.auto", ice.TYPE_SHELL, "脚本", `source auto.sh`)
-				m.Cmd(ice.WEB_FAVOR, "tmux.auto", ice.TYPE_SHELL, "脚本", `ShyInit && ShyLogin && trap ShyLogout EXIT`)
+			if m.Richs(web.FAVOR, nil, "tmux.auto", nil) == nil {
+				m.Cmd(web.FAVOR, "tmux.auto", web.TYPE_SHELL, "脚本", `curl $ctx_dev/publish/auto.sh > auto.sh`)
+				m.Cmd(web.FAVOR, "tmux.auto", web.TYPE_SHELL, "脚本", `source auto.sh`)
+				m.Cmd(web.FAVOR, "tmux.auto", web.TYPE_SHELL, "脚本", `ShyInit && ShyLogin && trap ShyLogout EXIT`)
 			}
 
 			for _, v := range []string{"auto.sh", "auto.vim", "auto.tmux"} {
 				p := path.Join(m.Conf("web.code.publish", "meta.path"), v)
 				if _, e := os.Stat(p); e != nil && os.IsNotExist(e) {
 					// 下载脚本
-					if h := m.Cmdx(ice.WEB_SPIDE, "shy", "cache", "GET", "/publish/"+v); h != "" {
-						m.Cmd(ice.WEB_STORY, ice.STORY_WATCH, h, p)
+					if h := m.Cmdx(web.SPIDE, "shy", "cache", "GET", "/publish/"+v); h != "" {
+						m.Cmd(web.STORY, web.SHOW, h, p)
 					}
 				}
 			}
@@ -88,14 +90,14 @@ var Index = &ice.Context{Name: "tmux", Help: "工作台",
 			prefix := kit.Simple(m.Confv("prefix", "meta.cmd"))
 
 			// 共享空间
-			share, dev := "", kit.Select(m.Conf(ice.CLI_RUNTIME, "conf.ctx_dev"), m.Conf(ice.CLI_RUNTIME, "host.ctx_self"))
-			m.Richs(ice.WEB_SPACE, nil, arg[0], func(key string, value map[string]interface{}) {
+			share, dev := "", kit.Select(m.Conf(cli.RUNTIME, "conf.ctx_dev"), m.Conf(cli.RUNTIME, "host.ctx_self"))
+			m.Richs(web.SPACE, nil, arg[0], func(key string, value map[string]interface{}) {
 				share = kit.Format(value["share"])
 			})
 
 			// 环境变量
 			m.Option("cmd_env", "TMUX", "", "ctx_dev", dev, "ctx_share", share)
-			m.Option("cmd_dir", path.Join(m.Conf(ice.WEB_DREAM, "meta.path"), arg[0]))
+			m.Option("cmd_dir", path.Join(m.Conf(web.DREAM, "meta.path"), arg[0]))
 
 			if arg[0] != "" && m.Cmd(prefix, "has-session", "-t", arg[0]).Append("code") != "0" {
 				// 创建会话
@@ -120,9 +122,9 @@ var Index = &ice.Context{Name: "tmux", Help: "工作台",
 			m.Cmdy(prefix, "send-keys", "-t", arg[0], "export ctx_dev=", dev, "Enter")
 			m.Cmdy(prefix, "send-keys", "-t", arg[0], "export ctx_share=", share, "Enter")
 
-			m.Cmd(ice.WEB_FAVOR, kit.Select("tmux.auto", arg, 1)).Table(func(index int, value map[string]string, head []string) {
+			m.Cmd(web.FAVOR, kit.Select("tmux.auto", arg, 1)).Table(func(index int, value map[string]string, head []string) {
 				switch value["type"] {
-				case ice.TYPE_SHELL:
+				case web.TYPE_SHELL:
 					// 发送命令
 					m.Cmdy(prefix, "send-keys", "-t", arg[0], value["text"], "Enter")
 					time.Sleep(10 * time.Millisecond)
@@ -136,7 +138,7 @@ var Index = &ice.Context{Name: "tmux", Help: "工作台",
 		}},
 		"make": {Name: "make name cmd...", Help: "个性化", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			prefix := kit.Simple(m.Confv("prefix", "meta.cmd"))
-			session := m.Conf(ice.CLI_RUNTIME, "node.name")
+			session := m.Conf(cli.RUNTIME, "node.name")
 			if arg[1] == "session" {
 				session, arg[2], arg = arg[2], arg[0], arg[2:]
 			}
@@ -267,7 +269,7 @@ var Index = &ice.Context{Name: "tmux", Help: "工作台",
 			if m.Cmd(prefix, "has-session", "-t", target).Append("code") != "0" {
 				// 创建会话
 				m.Option("cmd_env", "TMUX", "")
-				m.Option("cmd_dir", m.Conf(ice.WEB_DREAM, "meta.path"))
+				m.Option("cmd_dir", m.Conf(web.DREAM, "meta.path"))
 				m.Cmd(prefix, "new-session", "-ds", arg[0])
 				m.Cmd("auto", arg[0])
 			}

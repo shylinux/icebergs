@@ -31,7 +31,7 @@ func _favor_list(m *ice.Message, zone, id string, fields ...string) {
 			m.Push("detail", value)
 			m.Optionv("value", value)
 			m.Push(kit.MDB_KEY, kit.MDB_RENDER)
-			m.Push(kit.MDB_VALUE, m.Cmdx(m.Conf(ice.WEB_FAVOR, kit.Keys(kit.MDB_META, kit.MDB_RENDER, value[kit.MDB_TYPE]))))
+			m.Push(kit.MDB_VALUE, m.Cmdx(m.Conf(FAVOR, kit.Keys(kit.MDB_META, kit.MDB_RENDER, value[kit.MDB_TYPE]))))
 		})
 	})
 }
@@ -61,14 +61,14 @@ func _favor_sync(m *ice.Message, zone, route, favor string, arg ...string) {
 		count := kit.Int(kit.Value(val, kit.Keys(kit.MDB_COUNT)))
 
 		pull := kit.Int(kit.Value(val, kit.Keys(remote, kit.MDB_PULL)))
-		m.Cmd(ice.WEB_SPIDE, route, "msg", "/favor/pull", FAVOR, favor, "begin", pull+1).Table(func(index int, value map[string]string, head []string) {
+		m.Cmd(SPIDE, route, "msg", "/favor/pull", FAVOR, favor, "begin", pull+1).Table(func(index int, value map[string]string, head []string) {
 			_favor_insert(m, favor, value[kit.MDB_TYPE], value[kit.MDB_NAME], value[kit.MDB_TEXT], value[kit.MDB_EXTRA])
 			pull = kit.Int(value[kit.MDB_ID])
 		})
 
 		m.Option("cache.limit", count-kit.Int(kit.Value(val, kit.Keys(remote, kit.MDB_PUSH))))
 		m.Grows(FAVOR, kit.Keys(kit.MDB_HASH, key), "", "", func(index int, value map[string]interface{}) {
-			m.Cmd(ice.WEB_SPIDE, route, "msg", "/favor/push", FAVOR, favor,
+			m.Cmd(SPIDE, route, "msg", "/favor/push", FAVOR, favor,
 				kit.MDB_TYPE, value[kit.MDB_TYPE], kit.MDB_NAME, value[kit.MDB_NAME], kit.MDB_TEXT, value[kit.MDB_TEXT],
 				kit.MDB_EXTRA, kit.Format(value[kit.MDB_EXTRA]),
 			)
@@ -98,7 +98,7 @@ func _favor_proxy(m *ice.Message, zone, id string, arg ...string) {
 		// 分发数据
 		m.Richs(FAVOR, nil, zone, func(key string, val map[string]interface{}) {
 			m.Grows(FAVOR, kit.Keys(kit.MDB_HASH, key), kit.MDB_ID, id, func(index int, value map[string]interface{}) {
-				m.Cmdy(ice.WEB_PROXY, p, ice.WEB_FAVOR, zone, kit.MDB_TYPE, value[kit.MDB_TYPE],
+				m.Cmdy(PROXY, p, FAVOR, zone, kit.MDB_TYPE, value[kit.MDB_TYPE],
 					kit.MDB_NAME, value[kit.MDB_NAME], kit.MDB_TEXT, value[kit.MDB_TEXT],
 					kit.Format(value[kit.MDB_EXTRA]))
 			})
@@ -108,7 +108,7 @@ func _favor_proxy(m *ice.Message, zone, id string, arg ...string) {
 func _favor_share(m *ice.Message, zone, id string, arg ...string) {
 	m.Richs(FAVOR, nil, zone, func(key string, val map[string]interface{}) {
 		m.Grows(FAVOR, kit.Keys(kit.MDB_HASH, key), kit.MDB_ID, id, func(index int, value map[string]interface{}) {
-			m.Cmdy(ice.WEB_SHARE, value[kit.MDB_TYPE], value[kit.MDB_NAME], value[kit.MDB_TYPE], kit.Format(value[kit.MDB_EXTRA]))
+			m.Cmdy(SHARE, value[kit.MDB_TYPE], value[kit.MDB_NAME], value[kit.MDB_TYPE], kit.Format(value[kit.MDB_EXTRA]))
 		})
 	})
 }
@@ -116,7 +116,7 @@ func _favor_commit(m *ice.Message, zone, id string, arg ...string) {
 	m.Echo("list: ")
 	m.Richs(FAVOR, nil, zone, func(key string, val map[string]interface{}) {
 		m.Grows(FAVOR, kit.Keys(kit.MDB_HASH, key), kit.MDB_ID, id, func(index int, value map[string]interface{}) {
-			m.Cmdy(ice.WEB_STORY, "add", value[kit.MDB_TYPE], value[kit.MDB_NAME], value[kit.MDB_TEXT])
+			m.Cmdy(STORY, "add", value[kit.MDB_TYPE], value[kit.MDB_NAME], value[kit.MDB_TEXT])
 		})
 	})
 }
@@ -247,6 +247,23 @@ const (
 )
 
 const FAVOR = "favor"
+const ( // TYPE
+	TYPE_SPIDE = "spide"
+	TYPE_SPACE = "space"
+	TYPE_STORY = "story"
+
+	TYPE_RIVER  = "river"
+	TYPE_STORM  = "storm"
+	TYPE_ACTION = "action"
+	TYPE_ACTIVE = "active"
+
+	TYPE_DRIVE = "drive"
+	TYPE_SHELL = "shell"
+	TYPE_VIMRC = "vimrc"
+	TYPE_TABLE = "table"
+	TYPE_INNER = "inner"
+	TYPE_MEDIA = "media"
+)
 
 func init() {
 	Index.Merge(&ice.Context{

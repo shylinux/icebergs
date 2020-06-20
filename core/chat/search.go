@@ -2,6 +2,7 @@ package chat
 
 import (
 	"github.com/shylinux/icebergs"
+	"github.com/shylinux/icebergs/base/web"
 	"github.com/shylinux/toolkits"
 	"sync"
 )
@@ -14,7 +15,7 @@ func init() {
 		Commands: map[string]*ice.Command{
 			"search": {Name: "search label pod engine word", Help: "搜索引擎", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 				if len(arg) < 2 {
-					m.Cmdy(ice.WEB_LABEL, arg)
+					m.Cmdy(web.LABEL, arg)
 					return
 				}
 
@@ -42,7 +43,7 @@ func init() {
 					wg.Wait()
 				case "set":
 					if arg[1] != "" {
-						m.Cmdy(ice.WEB_SPACE, arg[1], "web.chat.search", "set", "", arg[2:])
+						m.Cmdy(web.SPACE, arg[1], "web.chat.search", "set", "", arg[2:])
 						break
 					}
 
@@ -67,7 +68,7 @@ func init() {
 						break
 					}
 					m.Option("pod", "")
-					m.Cmdy(ice.WEB_LABEL, arg[0], arg[1], "web.chat.search", "get", arg[2:])
+					m.Cmdy(web.LABEL, arg[0], arg[1], "web.chat.search", "get", arg[2:])
 					m.Sort("time", "time_r")
 				}
 			}},

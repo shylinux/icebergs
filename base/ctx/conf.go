@@ -25,7 +25,7 @@ func _config_list(m *ice.Message, all bool) {
 func _config_save(m *ice.Message, name string, arg ...string) {
 	msg := m.Spawn(m.Source())
 	// 保存配置
-	name = path.Join(msg.Conf(ice.CTX_CONFIG, "meta.path"), name)
+	name = path.Join(msg.Conf(CONFIG, "meta.path"), name)
 	if f, p, e := kit.Create(name); m.Assert(e) {
 		data := map[string]interface{}{}
 		for _, k := range arg {
@@ -42,7 +42,7 @@ func _config_save(m *ice.Message, name string, arg ...string) {
 func _config_load(m *ice.Message, name string, arg ...string) {
 	msg := m.Spawn(m.Source())
 	// 加载配置
-	name = path.Join(msg.Conf(ice.CTX_CONFIG, "meta.path"), name)
+	name = path.Join(msg.Conf(CONFIG, "meta.path"), name)
 	if f, e := os.Open(name); e == nil {
 		data := map[string]interface{}{}
 		json.NewDecoder(f).Decode(&data)
@@ -80,13 +80,19 @@ func _config_grow(m *ice.Message, name string, key string, arg ...string) {
 	m.Grow(name, key, kit.Dict(arg))
 }
 
+const (
+	CONTEXT = "context"
+	COMMAND = "command"
+	CONFIG  = "config"
+)
+
 func init() {
 	Index.Merge(&ice.Context{
 		Configs: map[string]*ice.Config{
 			CONFIG: {Name: "config", Help: "配置", Value: kit.Data("path", "var/conf")},
 		},
 		Commands: map[string]*ice.Command{
-			ice.CTX_CONFIG: {Name: "config [all] [chain [key [arg...]]]", Help: "配置", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			CONFIG: {Name: "config [all] [chain [key [arg...]]]", Help: "配置", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 				if all, arg := _parse_arg_all(m, arg...); len(arg) == 0 {
 					_config_list(m, all)
 					return

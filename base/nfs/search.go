@@ -39,11 +39,16 @@ func travel(m *ice.Message, root string, name string, cb func(name string)) {
 	}
 }
 
+const (
+	SEARCH  = "search"
+	COMMEND = "commend"
+)
+
 func init() {
 	Index.Register(&ice.Context{Name: "search", Help: "搜索",
 		Commands: map[string]*ice.Command{
-			ice.ICE_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-				m.Cmd(ice.APP_SEARCH, "add", "dir", "base", m.AddCmd(&ice.Command{Name: "search word", Help: "搜索引擎", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			ice.CTX_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+				m.Cmd(SEARCH, "add", "dir", "base", m.AddCmd(&ice.Command{Name: "search word", Help: "搜索引擎", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 					switch arg[0] {
 					case "set":
 						m.Cmdy("nfs.dir", arg[5])
@@ -58,14 +63,14 @@ func init() {
 							m.Push("engine", "dir")
 							m.Push("favor", "file")
 							m.Push("id", kit.FmtSize(s.Size()))
-							m.Push("time", s.ModTime().Format(ice.ICE_TIME))
+							m.Push("time", s.ModTime().Format(ice.MOD_TIME))
 							m.Push("type", strings.TrimPrefix(path.Ext(name), "."))
 							m.Push("name", path.Base(name))
 							m.Push("text", name)
 						}
 					})
 				}}))
-				m.Cmd(ice.APP_COMMEND, "add", "dir", "base", m.AddCmd(&ice.Command{Name: "commend word", Help: "推荐引擎", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+				m.Cmd(COMMEND, "add", "dir", "base", m.AddCmd(&ice.Command{Name: "commend word", Help: "推荐引擎", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 					switch arg[0] {
 					case "set":
 						m.Cmdy("nfs.dir", arg[5])
@@ -74,8 +79,8 @@ func init() {
 
 					travel(m, "./", "", func(name string) {
 						score := 0
-						m.Richs(ice.APP_COMMEND, "meta.user", m.Option(ice.MSG_USERNAME), func(key string, value map[string]interface{}) {
-							m.Grows(ice.APP_COMMEND, kit.Keys("meta.user", kit.MDB_HASH, key, "like"), "", "", func(index int, value map[string]interface{}) {
+						m.Richs(COMMEND, "meta.user", m.Option(ice.MSG_USERNAME), func(key string, value map[string]interface{}) {
+							m.Grows(COMMEND, kit.Keys("meta.user", kit.MDB_HASH, key, "like"), "", "", func(index int, value map[string]interface{}) {
 								switch kit.Value(value, "extra.engine") {
 								case "dir":
 									if value["type"] == strings.TrimPrefix(path.Ext(name), ".") {

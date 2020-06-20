@@ -97,7 +97,7 @@ var Index = &ice.Context{Name: "wx", Help: "公众号",
 		ice.ICE_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			m.Load()
 			m.Confm("login", "meta.userrole", func(key string, value string) {
-				m.Cmd(ice.AAA_ROLE, value, key)
+				m.Cmd(aaa.ROLE, value, key)
 			})
 		}},
 		ice.ICE_EXIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
@@ -123,9 +123,9 @@ var Index = &ice.Context{Name: "wx", Help: "公众号",
 
 			// 用户登录
 			m.Option(ice.MSG_USERNAME, m.Option("FromUserName"))
-			m.Option(ice.MSG_USERROLE, m.Cmdx(ice.AAA_ROLE, "check", m.Option("FromUserName")))
+			m.Option(ice.MSG_USERROLE, m.Cmdx(aaa.ROLE, "check", m.Option("FromUserName")))
 			m.Info("%s: %s", m.Option(ice.MSG_USERROLE), m.Option(ice.MSG_USERNAME))
-			m.Option(ice.MSG_SESSID, m.Cmdx(ice.AAA_USER, "login", m.Option(ice.MSG_USERNAME)))
+			m.Option(ice.MSG_SESSID, m.Cmdx(aaa.USER, "login", m.Option(ice.MSG_USERNAME)))
 
 			switch m.Option("MsgType") {
 			case "text":
@@ -139,7 +139,7 @@ var Index = &ice.Context{Name: "wx", Help: "公众号",
 						// 执行命令
 						msg := m.Cmd(cmds)
 						if m.Hand = false; !msg.Hand {
-							msg = m.Cmd(ice.CLI_SYSTEM, cmds)
+							msg = m.Cmd(cli.SYSTEM, cmds)
 						}
 						if msg.Result() == "" {
 							msg.Table()

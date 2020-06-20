@@ -90,7 +90,7 @@ func _cache_watch(m *ice.Message, key, file string) {
 			os.Link(kit.Format(value["file"]), file)
 		}
 	}) == nil {
-		m.Cmdy(ice.WEB_SPIDE, "dev", "cache", "/cache/"+key)
+		m.Cmdy(SPIDE, "dev", "cache", "/cache/"+key)
 		os.MkdirAll(path.Dir(file), 0777)
 		os.Remove(file)
 		os.Link(m.Append("file"), file)

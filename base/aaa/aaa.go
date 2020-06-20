@@ -22,12 +22,12 @@ const (
 )
 
 var Index = &ice.Context{Name: "aaa", Help: "认证模块", Commands: map[string]*ice.Command{
-	ice.ICE_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+	ice.CTX_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 		m.Rich(ROLE, nil, kit.Dict(kit.MDB_NAME, TECH, Black, kit.Dict(), White, kit.Dict()))
 		m.Rich(ROLE, nil, kit.Dict(kit.MDB_NAME, VOID, White, kit.Dict(), Black, kit.Dict()))
 		m.Load()
 	}},
-	ice.ICE_EXIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+	ice.CTX_EXIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 		m.Save(ROLE, USER, SESS)
 	}},
 }}

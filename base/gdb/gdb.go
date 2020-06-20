@@ -2,6 +2,8 @@ package gdb
 
 import (
 	"github.com/shylinux/icebergs"
+	"github.com/shylinux/icebergs/base/cli"
+	"github.com/shylinux/icebergs/base/nfs"
 	"github.com/shylinux/toolkits"
 
 	"os"
@@ -29,21 +31,23 @@ func (f *Frame) Start(m *ice.Message, arg ...string) bool {
 			if !ok {
 				return true
 			}
-			// m.Log(ice.LOG_SIGNAL, "%v: %v", s, m.Confv(ice.GDB_SIGNAL, kit.Keys(kit.MDB_HASH, s)))
-			m.Cmd(m.Confv(ice.GDB_SIGNAL, kit.Keys(kit.MDB_HASH, s)), kit.Keys(s))
+			// 信号事件
+			m.Logs(EVENT, SIGNAL, s)
+			m.Cmd(m.Confv(SIGNAL, kit.Keys(kit.MDB_HASH, s)), kit.Keys(s))
 
 		case t, ok := <-f.t:
 			if !ok {
 				return true
 			}
-			break
+
+			// 定时事件
 			stamp := int(t.Unix())
-			m.Confm(ice.GDB_TIMER, kit.MDB_HASH, func(key string, value map[string]interface{}) {
+			m.Confm(TIMER, kit.MDB_HASH, func(key string, value map[string]interface{}) {
 				if kit.Int(value["next"]) <= stamp {
-					m.Log(ice.LOG_INFO, "timer %v %v", key, value["next"])
+					m.Logs(EVENT, TIMER, key, kit.MDB_TIME, value["next"])
 					value["next"] = stamp + int(kit.Duration(value["interval"]))/int(time.Second)
 					m.Cmd(value["cmd"])
-					m.Grow(ice.GDB_TIMER, nil, map[string]interface{}{
+					m.Grow(TIMER, nil, map[string]interface{}{
 						"create_time": kit.Format(t), "interval": value["interval"],
 						"cmd": value["cmd"], "key": key,
 					})
@@ -54,8 +58,9 @@ func (f *Frame) Start(m *ice.Message, arg ...string) bool {
 			if !ok {
 				return true
 			}
-			m.Log(ice.LOG_EVENTS, "%s: %v", d[0], d[1:])
-			m.Grows(ice.GDB_EVENT, d[0], "", "", func(index int, value map[string]interface{}) {
+			// 异步事件
+			m.Logs(EVENT, d[0], d[1:])
+			m.Grows(EVENT, d[0], "", "", func(index int, value map[string]interface{}) {
 				m.Cmd(value["cmd"], d[1:]).Cost("event %v", d)
 			})
 		}
@@ -66,46 +71,71 @@ func (f *Frame) Close(m *ice.Message, arg ...string) bool {
 	return true
 }
 
+const (
+	SIGNAL = "signal"
+	TIMER  = "timer"
+	EVENT  = "event"
+)
+
+const (
+	LISTEN = "listen"
+	ACTION = "action"
+)
+const (
+	SYSTEM_INIT = "system.init"
+
+	SERVE_START = "serve.start"
+	SERVE_CLOSE = "serve.close"
+	SPACE_START = "space.start"
+	SPACE_CLOSE = "space.close"
+	DREAM_START = "dream.start"
+	DREAM_CLOSE = "dream.close"
+
+	USER_CREATE = "user.create"
+	CHAT_CREATE = "chat.create"
+	MISS_CREATE = "miss.create"
+	MIND_CREATE = "mind.create"
+)
+
 var Index = &ice.Context{Name: "gdb", Help: "事件模块",
-	Caches: map[string]*ice.Cache{},
 	Configs: map[string]*ice.Config{
-		ice.GDB_SIGNAL: {Name: "signal", Help: "信号器", Value: kit.Dict(
+		SIGNAL: {Name: "signal", Help: "信号器", Value: kit.Dict(
 			kit.MDB_META, kit.Dict("pid", "var/run/ice.pid"),
 			kit.MDB_LIST, kit.List(),
 			kit.MDB_HASH, kit.Dict(
 				"2", []interface{}{"exit", "0"},
 				"3", []interface{}{"exit", "1"},
 				"15", []interface{}{"exit", "1"},
-				"20", []interface{}{},
+				// "20", []interface{}{"void"},
 				"30", []interface{}{"exit"},
 				"31", []interface{}{"exit", "1"},
-				"28", "WINCH",
+				// "28", []interface{}{"void"},
 			),
 		)},
-		ice.GDB_TIMER: {Name: "timer", Help: "定时器", Value: kit.Data("tick", "100ms")},
-		ice.GDB_EVENT: {Name: "event", Help: "触发器", Value: kit.Data()},
+		TIMER: {Name: "timer", Help: "定时器", Value: kit.Data("tick", "100ms")},
+		EVENT: {Name: "event", Help: "触发器", Value: kit.Data()},
 	},
 	Commands: map[string]*ice.Command{
-		ice.ICE_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		ice.CTX_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			if os.Getenv("ctx_mod") != "" {
-				m.Cmd("nfs.save", kit.Select(m.Conf(ice.GDB_SIGNAL, "meta.pid"),
-					m.Conf(ice.CLI_RUNTIME, "conf.ctx_pid")), m.Conf(ice.CLI_RUNTIME, "host.pid"))
+				m.Cmd(nfs.SAVE, kit.Select(m.Conf(SIGNAL, "meta.pid"),
+					m.Conf(cli.RUNTIME, "conf.ctx_pid")), m.Conf(cli.RUNTIME, "host.pid"))
 			}
 			// 进程标识
 			if f, ok := m.Target().Server().(*Frame); ok {
 				// 注册信号
-				f.s = make(chan os.Signal, ice.ICE_CHAN)
-				m.Richs(ice.GDB_SIGNAL, nil, "*", func(key string, value string) {
-					m.Log(ice.LOG_LISTEN, "%s: %s", key, value)
+				f.s = make(chan os.Signal, ice.MOD_CHAN)
+				m.Richs(SIGNAL, nil, "*", func(key string, value string) {
+					m.Logs(LISTEN, key, "cmd", value)
 					signal.Notify(f.s, syscall.Signal(kit.Int(key)))
 				})
 				// 启动心跳
-				f.t = time.Tick(kit.Duration(m.Cap(ice.CTX_STREAM, m.Conf(ice.GDB_TIMER, "meta.tick"))))
+				f.t = time.Tick(kit.Duration(m.Cap(ice.CTX_STREAM, m.Conf(TIMER, "meta.tick"))))
 				// 分发事件
-				f.d = make(chan []string, ice.ICE_CHAN)
+				f.d = make(chan []string, ice.MOD_CHAN)
 			}
 		}},
-		ice.ICE_EXIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		ice.CTX_EXIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			if f, ok := m.Target().Server().(*Frame); ok {
 				// 停止心跳
 				close(f.s)
@@ -114,36 +144,35 @@ var Index = &ice.Context{Name: "gdb", Help: "事件模块",
 			}
 		}},
 
-		ice.GDB_SIGNAL: {Name: "signal", Help: "信号器", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			switch arg[0] {
-			case "listen":
-				// 监听信号
-				m.Rich(ice.GDB_SIGNAL, arg[0], arg[1:])
-			}
-		}},
-		ice.GDB_TIMER: {Name: "timer", Help: "定时器", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			switch arg[0] {
-			case "repeat":
-				// 周期命令
-				m.Rich(ice.GDB_TIMER, nil, kit.Dict(
-					"next", time.Now().Add(kit.Duration(arg[1])).Unix(),
+		SIGNAL: {Name: "signal", Help: "信号器", Action: map[string]*ice.Action{
+			LISTEN: {Name: "listen signal cmd...", Help: "监听事件", Hand: func(m *ice.Message, arg ...string) {
+				m.Rich(SIGNAL, arg[0], arg[1:])
+			}},
+		}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {}},
+
+		TIMER: {Name: "timer", Help: "定时器", Action: map[string]*ice.Action{
+			LISTEN: {Name: "listen delay interval cmd...", Help: "监听事件", Hand: func(m *ice.Message, arg ...string) {
+				m.Rich(TIMER, nil, kit.Dict(
+					"next", time.Now().Add(kit.Duration(arg[0])).Unix(),
 					"interval", arg[1], "cmd", arg[2:],
 				))
-			}
-		}},
-		ice.GDB_EVENT: {Name: "event", Help: "触发器", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			switch arg[0] {
-			case "listen":
-				// 监听事件
-				m.Grow(ice.GDB_EVENT, arg[1], kit.Dict("cmd", arg[2:]))
-				m.Log(ice.LOG_LISTEN, "%s: %v", arg[1], arg[2:])
-			case "action":
-				// 触发事件
+			}},
+		}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {}},
+
+		EVENT: {Name: "event", Help: "触发器", Action: map[string]*ice.Action{
+			LISTEN: {Name: "listen event cmd...", Help: "监听事件", Hand: func(m *ice.Message, arg ...string) {
+				m.Grow(EVENT, arg[0], kit.Dict("cmd", arg[1:]))
+				m.Logs(LISTEN, arg[0], "cmd", arg[1:])
+			}},
+			ACTION: {Name: "action event arg...", Help: "触发事件", Hand: func(m *ice.Message, arg ...string) {
 				if f, ok := m.Target().Server().(*Frame); ok {
-					f.d <- arg[1:]
+					m.Logs(ACTION, arg[0], "arg", arg[1:])
+					f.d <- arg
 				}
-			}
-		}},
+			}},
+		}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {}},
+
+		"void": {Name: "void", Help: "空命令", Action: map[string]*ice.Action{}},
 	},
 }
 

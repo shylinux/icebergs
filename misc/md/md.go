@@ -11,6 +11,20 @@ import (
 	"strings"
 )
 
+/*
+func (m *Message) Prefile(favor string, id string) map[string]string {
+	// TODO
+	res := map[string]string{}
+	m.Option("render", "")
+	m.Option("_action", "")
+	m.Cmd("web.favor", kit.Select(m.Option("favor"), favor), id).Table(func(index int, value map[string]string, head []string) {
+		res[value["key"]] = value["value"]
+	})
+
+	res["content"] = m.Cmdx("cli.system", "sed", "-n", kit.Format("%d,%dp", kit.Int(res["extra.row"]), kit.Int(res["extra.row"])+3), res["extra.buf"])
+	return res
+}
+*/
 var Index = &ice.Context{Name: "md", Help: "md",
 	Caches: map[string]*ice.Cache{},
 	Configs: map[string]*ice.Config{

@@ -1,14 +1,13 @@
 package ice
 
 import (
+	kit "github.com/shylinux/toolkits"
+
 	"errors"
 	"fmt"
 	"io"
-	"runtime"
-	"strings"
 	"time"
 
-	kit "github.com/shylinux/toolkits"
 	"github.com/shylinux/toolkits/task"
 )
 
@@ -18,15 +17,13 @@ func (m *Message) TryCatch(msg *Message, safe bool, hand ...func(msg *Message)) 
 		case io.EOF:
 		case nil:
 		default:
-			_, file, line, _ := runtime.Caller(3)
-			if list := strings.Split(file, "/"); len(list) > 2 {
-				file = strings.Join(list[len(list)-2:], "/")
-			}
-			m.Log(LOG_WARN, "catch: %s %s:%d", e, file, line)
+			fileline := kit.FileLine(3, 2)
+			m.Log(LOG_WARN, "catch: %s", e, fileline)
 			m.Log(LOG_INFO, "chain: %s", msg.Format("chain"))
-			m.Log(LOG_WARN, "catch: %s %s:%d", e, file, line)
+			m.Log(LOG_WARN, "catch: %s", e, fileline)
 			m.Log(LOG_INFO, "stack: %s", msg.Format("stack"))
-			if m.Log(LOG_WARN, "catch: %s %s:%d", e, file, line); len(hand) > 1 {
+			m.Log(LOG_WARN, "catch: %s", e, fileline)
+			if len(hand) > 1 {
 				// 捕获异常
 				m.TryCatch(msg, safe, hand[1:]...)
 			} else if !safe {
@@ -50,10 +47,10 @@ func (m *Message) Assert(arg interface{}) bool {
 		if arg == true {
 			return true
 		}
+	case error:
+		panic(arg)
 	}
-
-	// 抛出异常
-	panic(errors.New(fmt.Sprintf("error %v", arg)))
+	panic(errors.New(fmt.Sprintf("error: %v", arg)))
 }
 func (m *Message) Sleep(arg string) *Message {
 	time.Sleep(kit.Duration(arg))

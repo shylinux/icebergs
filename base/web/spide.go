@@ -46,7 +46,7 @@ func _spide_login(m *ice.Message, name string) {
 		}
 		if msg.Result() != "" {
 			kit.Value(value, "client.login", msg.Result())
-			kit.Value(value, "client.share", m.Cmdx(SHARE, ice.TYPE_SPIDE, name,
+			kit.Value(value, "client.share", m.Cmdx(SHARE, TYPE_SPIDE, name,
 				kit.Format("%s?sessid=%s", kit.Value(value, "client.url"), kit.Value(value, "cookie.sessid"))))
 		}
 		m.Render(ice.RENDER_QRCODE, kit.Dict(
@@ -69,7 +69,7 @@ func _spide_create(m *ice.Message, name, address string, arg ...string) {
 			dir, file := path.Split(uri.EscapedPath())
 			m.Rich(SPIDE, nil, kit.Dict(
 				"cookie", kit.Dict(), "header", kit.Dict(), "client", kit.Dict(
-					"share", ShareCreate(m.Spawn(), ice.TYPE_SPIDE, name, address),
+					"share", ShareCreate(m.Spawn(), TYPE_SPIDE, name, address),
 					"name", name, "url", address, "method", "POST",
 					"protocol", uri.Scheme, "hostname", uri.Host,
 					"path", dir, "file", file, "query", uri.RawQuery,

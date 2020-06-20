@@ -5,12 +5,6 @@ import (
 	"github.com/shylinux/toolkits"
 )
 
-const (
-	CONTEXT = "context"
-	COMMAND = "command"
-	CONFIG  = "config"
-)
-
 func _parse_arg_all(m *ice.Message, arg ...string) (bool, []string) {
 	if len(arg) > 0 && arg[0] == "all" {
 		return true, arg[1:]

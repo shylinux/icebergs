@@ -77,12 +77,10 @@ func (c *Context) Cap(key string, arg ...interface{}) string {
 	}
 	return c.Caches[key].Value
 }
-func (c *Context) Run(m *Message, cmd *Command, key string, arg ...string) *Message {
-	if cmd == nil {
+func (c *Context) cmd(m *Message, cmd *Command, key string, arg ...string) *Message {
+	if m.meta[MSG_DETAIL] = kit.Simple(key, arg); cmd == nil {
 		return m
 	}
-	m.meta[MSG_DETAIL] = kit.Simple(key, arg)
-	m.Hand = true
 
 	action, args := m.Option("_action"), arg
 	if len(arg) > 0 && arg[0] == "action" {
@@ -115,11 +113,11 @@ func (c *Context) Run(m *Message, cmd *Command, key string, arg ...string) *Mess
 	cmd.Hand(m, c, key, arg...)
 	return m
 }
-func (c *Context) Runs(m *Message, cmd string, key string, arg ...string) {
-	if s, ok := m.Target().Commands[key]; ok {
-		c.Run(m, s, cmd, arg...)
+func (c *Context) Cmd(m *Message, cmd string, key string, arg ...string) *Message {
+	if s, ok := m.Target().Commands[cmd]; ok {
+		c.cmd(m, s, cmd, arg...)
 	}
-	return
+	return m
 }
 func (c *Context) Server() Server {
 	return c.server
@@ -183,6 +181,9 @@ func (c *Context) Begin(m *Message, arg ...string) *Context {
 	if c.Configs == nil {
 		c.Configs = map[string]*Config{}
 	}
+	if c.Commands == nil {
+		c.Commands = map[string]*Command{}
+	}
 	c.Caches[CTX_FOLLOW] = &Cache{Name: CTX_FOLLOW, Value: ""}
 	c.Caches[CTX_STREAM] = &Cache{Name: CTX_STREAM, Value: ""}
 	c.Caches[CTX_STATUS] = &Cache{Name: CTX_STATUS, Value: ""}
@@ -192,8 +193,8 @@ func (c *Context) Begin(m *Message, arg ...string) *Context {
 	} else if c.context != nil {
 		c.Cap(CTX_FOLLOW, kit.Keys(c.context.Cap(CTX_FOLLOW), c.Name))
 	}
-	m.Log(LOG_BEGIN, "%s", c.Cap(CTX_FOLLOW))
-	c.Cap(CTX_STATUS, ICE_BEGIN)
+	m.Logs(LOG_BEGIN, CTX_FOLLOW, c.Cap(CTX_FOLLOW))
+	c.Cap(CTX_STATUS, CTX_BEGIN)
 
 	if c.begin = m; c.server != nil {
 		m.TryCatch(m, true, func(m *Message) {
@@ -209,12 +210,11 @@ func (c *Context) Start(m *Message, arg ...string) bool {
 
 	wait := make(chan bool)
 	m.Gos(m, func(m *Message) {
-		m.Log(LOG_START, "%s", c.Cap(CTX_FOLLOW))
-		c.Cap(CTX_STATUS, ICE_START)
-		wait <- true
+		m.Logs(LOG_START, CTX_FOLLOW, c.Cap(CTX_FOLLOW))
+		c.Cap(CTX_STATUS, CTX_START)
 
 		// 启动模块
-		if c.server != nil {
+		if wait <- true; c.server != nil {
 			c.server.Start(m, arg...)
 		}
 		if m.Done(); m.wait != nil {
@@ -226,7 +226,7 @@ func (c *Context) Start(m *Message, arg ...string) bool {
 }
 func (c *Context) Close(m *Message, arg ...string) bool {
 	m.Log(LOG_CLOSE, "%s", c.Cap(CTX_FOLLOW))
-	c.Cap(CTX_STATUS, ICE_CLOSE)
+	c.Cap(CTX_STATUS, CTX_CLOSE)
 
 	if c.server != nil {
 		// 结束模块
@@ -249,7 +249,6 @@ type Message struct {
 
 	source *Context
 	target *Context
-	frames interface{}
 
 	cb   func(*Message) *Message
 	W    http.ResponseWriter
@@ -271,7 +270,7 @@ func (m *Message) Time(args ...interface{}) string {
 			}
 		}
 	}
-	f := ICE_TIME
+	f := MOD_TIME
 	if len(args) > 0 {
 		switch arg := args[0].(type) {
 		case string:
@@ -373,7 +372,7 @@ func (m *Message) Format(key interface{}) string {
 	case []byte:
 		json.Unmarshal(key, &m.meta)
 	}
-	return m.time.Format(ICE_TIME)
+	return m.time.Format(MOD_TIME)
 }
 func (m *Message) Formats(key string) string {
 	switch key {
@@ -414,11 +413,6 @@ func (m *Message) Spawn(arg ...interface{}) *Message {
 	}
 	return msg
 }
-
-func (m *Message) Run(arg ...string) *Message {
-	m.target.server.Start(m, arg...)
-	return m
-}
 func (m *Message) Start(key string, arg ...string) *Message {
 	m.Travel(func(p *Context, s *Context) {
 		if s.Name == key {
@@ -433,25 +427,6 @@ func (m *Message) Starts(name string, help string, arg ...string) *Message {
 	<-m.wait
 	return m
 }
-
-func (m *Message) Right(arg ...interface{}) bool {
-	return m.Option(MSG_USERROLE) == ROLE_ROOT || !m.Warn(m.Cmdx(AAA_ROLE, "right", m.Option(MSG_USERROLE), kit.Keys(arg...)) != "ok", "no right")
-}
-func (m *Message) Space(arg interface{}) []string {
-	if arg == nil || kit.Format(arg) == m.Conf(CLI_RUNTIME, "node.name") {
-		return nil
-	}
-	return []string{WEB_SPACE, kit.Format(arg)}
-}
-func (m *Message) Event(key string, arg ...string) *Message {
-	m.Cmd(GDB_EVENT, "action", key, arg)
-	return m
-}
-func (m *Message) Watch(key string, arg ...string) *Message {
-	m.Cmd(GDB_EVENT, "listen", key, arg)
-	return m
-}
-
 func (m *Message) Travel(cb interface{}) *Message {
 	list := []*Context{m.target}
 	for i := 0; i < len(list); i++ {
@@ -496,10 +471,6 @@ func (m *Message) Travel(cb interface{}) *Message {
 func (m *Message) Search(key interface{}, cb interface{}) *Message {
 	switch key := key.(type) {
 	case string:
-		if k, ok := Alias[key]; ok {
-			key = k
-		}
-
 		// 查找模块
 		p := m.target.root
 		if ctx, ok := names[key].(*Context); ok {
@@ -567,31 +538,12 @@ func (m *Message) Search(key interface{}, cb interface{}) *Message {
 	}
 	return m
 }
-func (m *Message) Preview(arg string) (res string) {
-	list := kit.Split(arg)
-	m.Search(list[0], func(p *Context, s *Context, key string, cmd *Command) {
-		res = kit.Format(kit.Dict("feature", cmd.Meta, "inputs", cmd.List))
-	})
-	return res
-}
 
-var count = int32(0)
-
-func (m *Message) AddCmd(cmd *Command) string {
-	name := fmt.Sprintf("_cb_%d", atomic.AddInt32(&count, 1))
-	m.target.Commands[name] = cmd
-	return kit.Keys(m.target.Cap(CTX_FOLLOW), name)
-}
 func (m *Message) Cmdy(arg ...interface{}) *Message {
-	msg := m.Cmd(arg...)
-	m.Copy(msg)
-	return m
+	return m.Copy(m.Cmd(arg...))
 }
 func (m *Message) Cmdx(arg ...interface{}) string {
 	return kit.Select("", m.Cmd(arg...).meta[MSG_RESULT], 0)
-}
-func (m *Message) Cmds(arg ...interface{}) bool {
-	return kit.Select("", m.Cmd(arg...).meta[MSG_RESULT], 0) != ""
 }
 func (m *Message) Cmd(arg ...interface{}) *Message {
 	list := kit.Simple(arg...)
@@ -604,12 +556,12 @@ func (m *Message) Cmd(arg ...interface{}) *Message {
 
 	m.Search(list[0], func(p *Context, c *Context, key string, cmd *Command) {
 		m.TryCatch(m.Spawns(c), true, func(msg *Message) {
-			m = p.Run(msg, cmd, key, list[1:]...)
+			m = p.cmd(msg, cmd, key, list[1:]...)
 		})
 	})
 
 	if m.Warn(m.Hand == false, "not found %v", list) {
-		return m.Set(MSG_RESULT).Cmd(CLI_SYSTEM, list)
+		return m.Set(MSG_RESULT).Cmd("cli.system", list)
 	}
 	return m
 }
@@ -641,9 +593,6 @@ func (m *Message) Confm(key string, chain interface{}, cbs ...interface{}) map[s
 	}
 	value, _ := val.(map[string]interface{})
 	return value
-}
-func (m *Message) Confs(arg ...interface{}) bool {
-	return kit.Format(m.Confv(arg...)) != ""
 }
 func (m *Message) Confi(arg ...interface{}) int {
 	return kit.Int(m.Confv(arg...))

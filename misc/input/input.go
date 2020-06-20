@@ -2,6 +2,7 @@ package input
 
 import (
 	"github.com/shylinux/icebergs"
+	"github.com/shylinux/icebergs/base/cli"
 	"github.com/shylinux/icebergs/base/web"
 	"github.com/shylinux/icebergs/core/code"
 	"github.com/shylinux/toolkits"
@@ -50,7 +51,7 @@ func _input_find(m *ice.Message, method, word, limit string) {
 	}
 
 	// 搜索词汇
-	res := m.Cmdx(ice.CLI_SYSTEM, "grep", "-rn", word, m.Conf(INPUT, "meta.store"))
+	res := m.Cmdx(cli.SYSTEM, "grep", "-rn", word, m.Conf(INPUT, "meta.store"))
 	bio := csv.NewReader(bytes.NewBufferString(strings.Replace(res, ":", ",", -1)))
 
 	for i := 0; i < kit.Int(limit); i++ {
@@ -187,8 +188,8 @@ var Index = &ice.Context{Name: "input", Help: "输入法",
 		)},
 	},
 	Commands: map[string]*ice.Command{
-		ice.ICE_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) { m.Load() }},
-		ice.ICE_EXIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) { m.Save(INPUT) }},
+		ice.CTX_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) { m.Load() }},
+		ice.CTX_EXIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) { m.Save(INPUT) }},
 
 		"list": {Name: "list [lib]", Help: "查看词库", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			_input_list(m, kit.Select("", arg, 0))

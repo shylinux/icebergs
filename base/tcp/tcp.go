@@ -12,12 +12,6 @@ import (
 	"strings"
 )
 
-type Frame struct{}
-
-const (
-	GETPORT = "getport"
-)
-
 func _ip_list(m *ice.Message, ifname string) {
 	if ifs, e := net.Interfaces(); m.Assert(e) {
 		for _, v := range ifs {
@@ -58,18 +52,20 @@ func _ip_islocal(m *ice.Message, ip string) (ok bool) {
 	})
 	return ok
 }
-func _tcp_port(m *ice.Message) string {
-	current := kit.Int(m.Conf(GETPORT, "meta.current"))
-	end := kit.Int(m.Conf(GETPORT, "meta.end"))
+func _port_list(m *ice.Message) string {
+	return ""
+}
+func _port_get(m *ice.Message) string {
+	current := kit.Int(m.Conf(PORT, "meta.current"))
+	end := kit.Int(m.Conf(PORT, "meta.end"))
 	if current >= end {
-		current = kit.Int(m.Conf(GETPORT, "meta.begin"))
+		current = kit.Int(m.Conf(PORT, "meta.begin"))
 	}
 	for i := current; i < end; i++ {
 		if m.Cmd(cli.SYSTEM, "lsof", "-i", kit.Format(":%d", i)).Append(cli.CMD_CODE) != "0" {
-			m.Conf(GETPORT, "meta.current", i)
-			m.Log_CREATE(GETPORT, i)
+			m.Conf(PORT, "meta.current", i)
+			m.Log_CREATE(PORT, i)
 			return kit.Format("%d", i)
-			break
 		}
 	}
 	return ""
@@ -78,52 +74,33 @@ func _tcp_port(m *ice.Message) string {
 func IPIsLocal(m *ice.Message, ip string) bool {
 	return _ip_islocal(m, ip)
 }
-func TCPPort(m *ice.Message) string {
-	return _tcp_port(m)
-}
+
+const (
+	IP   = "ip"
+	PORT = "port"
+)
 
 var Index = &ice.Context{Name: "tcp", Help: "通信模块",
-	Caches: map[string]*ice.Cache{},
 	Configs: map[string]*ice.Config{
-		GETPORT: &ice.Config{Name: "getport", Help: "分配端口", Value: kit.Data(
+		PORT: &ice.Config{Name: "port", Help: "端口", Value: kit.Data(
 			"begin", 10000, "current", 10000, "end", 20000,
 		)},
 	},
 	Commands: map[string]*ice.Command{
 		ice.CTX_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) { m.Load() }},
-		ice.CTX_EXIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) { m.Save(GETPORT) }},
+		ice.CTX_EXIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) { m.Save(PORT) }},
 
-		"ifconfig": {Name: "ifconfig [name]", Help: "网络配置", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		IP: {Name: "ip", Help: "地址", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			_ip_list(m, "")
 		}},
-		GETPORT: {Name: "getport", Help: "分配端口", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			m.Echo(_tcp_port(m))
+		PORT: {Name: "port", Help: "端口", Action: map[string]*ice.Action{
+			"get": {Name: "get", Help: "分配端口", Hand: func(m *ice.Message, arg ...string) {
+				m.Echo(_port_get(m))
+			}},
+		}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			_port_list(m)
 		}},
 
-		"ip": {Name: "ifconfig [name]", Help: "网络配置", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			if addr, e := net.InterfaceAddrs(); m.Assert(e) {
-				for _, v := range addr {
-					m.Info("%v", v)
-				}
-			}
-		}},
-		"netstat": {Name: "netstat [name]", Help: "网络配置", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			m.Cmdy(cli.SYSTEM, "netstat", "-lanp")
-		}},
-
-		"check": {Name: "check addr", Help: "server", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			if strings.Contains(arg[0], ".") {
-				switch list := strings.Split(arg[0], ":"); list[0] {
-				case "127.0.0.1":
-					m.Echo("local")
-				}
-			} else {
-				switch list := strings.Split(arg[0], "]:"); strings.TrimPrefix(list[0], "[") {
-				case "::1":
-					m.Echo("local")
-				}
-			}
-		}},
 		"server": {Name: "server [tcp4|tcp6|udp4|udp6] addr", Help: "server", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			proto := "tcp4"
 			switch arg[0] {
@@ -202,4 +179,4 @@ var Index = &ice.Context{Name: "tcp", Help: "通信模块",
 	},
 }
 
-func init() { ice.Index.Register(Index, nil) }
+func init() { ice.Index.Register(Index, nil, IP, PORT) }

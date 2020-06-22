@@ -4,6 +4,7 @@ import (
 	ice "github.com/shylinux/icebergs"
 	"github.com/shylinux/icebergs/base/cli"
 	"github.com/shylinux/icebergs/base/gdb"
+	"github.com/shylinux/icebergs/base/nfs"
 	kit "github.com/shylinux/toolkits"
 
 	"io/ioutil"
@@ -14,7 +15,7 @@ import (
 
 func _dream_list(m *ice.Message) {
 	// 任务列表
-	m.Cmdy("nfs.dir", m.Conf(DREAM, "meta.path"), "time name").Table(func(index int, value map[string]string, head []string) {
+	m.Cmdy(nfs.DIR, m.Conf(DREAM, "meta.path"), "time name").Table(func(index int, value map[string]string, head []string) {
 		if m.Richs(SPACE, nil, value[kit.MDB_NAME], func(key string, value map[string]interface{}) {
 			m.Push(kit.MDB_TYPE, value[kit.MDB_TYPE])
 			m.Push(kit.MDB_STATUS, "start")
@@ -53,7 +54,7 @@ func _dream_show(m *ice.Message, name string) {
 		)
 		m.Cmd(m.Confv(DREAM, "meta.cmd"), "self", name)
 	}
-	m.Cmdy("nfs.dir", p)
+	m.Cmdy(nfs.DIR, p)
 }
 
 const DREAM = "dream"

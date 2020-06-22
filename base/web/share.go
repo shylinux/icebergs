@@ -5,6 +5,7 @@ import (
 	"github.com/shylinux/icebergs/base/aaa"
 	"github.com/shylinux/icebergs/base/cli"
 	"github.com/shylinux/icebergs/base/ctx"
+	"github.com/shylinux/icebergs/base/mdb"
 	kit "github.com/shylinux/toolkits"
 
 	"fmt"
@@ -151,12 +152,9 @@ func _share_action(m *ice.Message, value map[string]interface{}, arg ...string) 
 	return true
 }
 func _share_action_redirect(m *ice.Message, value map[string]interface{}, share string) bool {
-	m.Render("redirect", "/share", "share", share,
-		"title", kit.Format(value["name"]),
-		"river", kit.Value(value, "extra.river"),
-		"storm", kit.Value(value, "extra.storm"),
-		"pod", kit.Value(value, "extra.tool.0.pod"),
-		kit.UnMarshal(kit.Format(kit.Value(value, "extra.tool.0.value"))),
+	tool := kit.Value(value, "extra.tool.0").(map[string]interface{})
+	m.Render("redirect", "/share", "share", share, "title", kit.Format(value["name"]),
+		"pod", kit.Format(tool["pod"]), kit.UnMarshal(kit.Format(tool["val"])),
 	)
 	return true
 }
@@ -240,7 +238,7 @@ func init() {
 		},
 		Commands: map[string]*ice.Command{
 			SHARE: {Name: "share share=auto auto", Help: "共享链", Action: map[string]*ice.Action{
-				kit.MDB_CREATE: {Name: "create type name text arg...", Help: "创建", Hand: func(m *ice.Message, arg ...string) {
+				mdb.CREATE: {Name: "create type name text arg...", Help: "创建", Hand: func(m *ice.Message, arg ...string) {
 					_share_create(m, arg[0], arg[1], arg[2], arg[3:]...)
 				}},
 			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
@@ -255,7 +253,7 @@ func init() {
 			}},
 			"/share/": {Name: "/share/", Help: "共享链", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 				m.Richs(SHARE, nil, kit.Select(m.Option(kit.MDB_SHARE), arg, 0), func(key string, value map[string]interface{}) {
-					m.Log_EXPORT(kit.MDB_META, SHARE, "arg", arg, "value", kit.Format(value))
+					m.Log_SELECT(kit.MDB_META, SHARE, "arg", arg, "value", kit.Format(value))
 					if m.Warn(m.Option(ice.MSG_USERROLE) != aaa.ROOT && kit.Time(kit.Format(value[kit.MDB_TIME])) < kit.Time(m.Time()), "expired") {
 						m.Echo("expired")
 						return

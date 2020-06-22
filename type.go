@@ -137,11 +137,7 @@ func (c *Context) Register(s *Context, x Server, name ...string) *Context {
 	s.server = x
 	return s
 }
-func (c *Context) Merge(s *Context, x Server, name ...string) *Context {
-	for _, n := range name {
-		Name(n, s)
-	}
-
+func (c *Context) Merge(s *Context, x Server) *Context {
 	if c.Commands == nil {
 		c.Commands = map[string]*Command{}
 	}
@@ -193,7 +189,7 @@ func (c *Context) Begin(m *Message, arg ...string) *Context {
 	} else if c.context != nil {
 		c.Cap(CTX_FOLLOW, kit.Keys(c.context.Cap(CTX_FOLLOW), c.Name))
 	}
-	m.Logs(LOG_BEGIN, CTX_FOLLOW, c.Cap(CTX_FOLLOW))
+	m.Log(LOG_BEGIN, c.Cap(CTX_FOLLOW))
 	c.Cap(CTX_STATUS, CTX_BEGIN)
 
 	if c.begin = m; c.server != nil {
@@ -210,7 +206,7 @@ func (c *Context) Start(m *Message, arg ...string) bool {
 
 	wait := make(chan bool)
 	m.Gos(m, func(m *Message) {
-		m.Logs(LOG_START, CTX_FOLLOW, c.Cap(CTX_FOLLOW))
+		m.Log(LOG_START, c.Cap(CTX_FOLLOW))
 		c.Cap(CTX_STATUS, CTX_START)
 
 		// 启动模块
@@ -469,6 +465,9 @@ func (m *Message) Travel(cb interface{}) *Message {
 	return m
 }
 func (m *Message) Search(key interface{}, cb interface{}) *Message {
+	if key == "" {
+		return m
+	}
 	switch key := key.(type) {
 	case string:
 		// 查找模块
@@ -484,6 +483,9 @@ func (m *Message) Search(key interface{}, cb interface{}) *Message {
 		} else if strings.Contains(key, ".") {
 			list := strings.Split(key, ".")
 			for _, p = range []*Context{m.target.root, m.target, m.source} {
+				if p == nil {
+					continue
+				}
 				for _, v := range list[:len(list)-1] {
 					if s, ok := p.contexts[v]; ok {
 						p = s

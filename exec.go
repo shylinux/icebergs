@@ -17,12 +17,12 @@ func (m *Message) TryCatch(msg *Message, safe bool, hand ...func(msg *Message)) 
 		case io.EOF:
 		case nil:
 		default:
-			fileline := kit.FileLine(3, 2)
-			m.Log(LOG_WARN, "catch: %s", e, fileline)
+			fileline := kit.FileLine(5, 2)
+			m.Log(LOG_WARN, "catch: %s %s", e, fileline)
 			m.Log(LOG_INFO, "chain: %s", msg.Format("chain"))
-			m.Log(LOG_WARN, "catch: %s", e, fileline)
+			m.Log(LOG_WARN, "catch: %s %s", e, fileline)
 			m.Log(LOG_INFO, "stack: %s", msg.Format("stack"))
-			m.Log(LOG_WARN, "catch: %s", e, fileline)
+			m.Log(LOG_WARN, "catch: %s %s", e, fileline)
 			if len(hand) > 1 {
 				// 捕获异常
 				m.TryCatch(msg, safe, hand[1:]...)

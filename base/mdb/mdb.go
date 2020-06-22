@@ -2,7 +2,6 @@ package mdb
 
 import (
 	"github.com/shylinux/icebergs"
-	"github.com/shylinux/icebergs/base/web"
 	"github.com/shylinux/toolkits"
 	"github.com/shylinux/toolkits/task"
 
@@ -12,10 +11,14 @@ import (
 	"sort"
 )
 
+func _story_catch(m *ice.Message, kind, file string) {
+	m.Cmdy("web.story", "catch", CSV, file)
+}
+
 func _list_import(m *ice.Message, prefix, key, file string) {
 	f, e := os.Open(file)
 	m.Assert(e)
-	defer m.Cmdy(web.STORY, web.CATCH, CSV, file)
+	defer _story_catch(m, CSV, file)
 	defer f.Close()
 
 	r := csv.NewReader(f)
@@ -46,7 +49,7 @@ func _list_import(m *ice.Message, prefix, key, file string) {
 func _list_export(m *ice.Message, prefix, key, file string) {
 	f, p, e := kit.Create(kit.Keys(file, CSV))
 	m.Assert(e)
-	defer m.Cmdy(web.STORY, web.CATCH, CSV, p)
+	defer _story_catch(m, CSV, p)
 	defer f.Close()
 
 	w := csv.NewWriter(f)
@@ -120,7 +123,7 @@ func _hash_search(m *ice.Message, prefix, key, field, value string) {
 func _hash_import(m *ice.Message, prefix, key, file string) {
 	f, e := os.Open(file)
 	m.Assert(e)
-	defer m.Cmdy(web.STORY, web.CATCH, JSON, file)
+	defer _story_catch(m, JSON, file)
 	defer f.Close()
 
 	list := map[string]interface{}{}
@@ -138,7 +141,7 @@ func _hash_import(m *ice.Message, prefix, key, file string) {
 func _hash_export(m *ice.Message, prefix, key, file string) {
 	f, p, e := kit.Create(kit.Keys(file, JSON))
 	m.Assert(e)
-	defer m.Cmdy(web.STORY, web.CATCH, JSON, p)
+	defer _story_catch(m, JSON, p)
 	defer f.Close()
 
 	en := json.NewEncoder(f)
@@ -149,7 +152,7 @@ func _hash_export(m *ice.Message, prefix, key, file string) {
 func _dict_import(m *ice.Message, prefix, key, file string) {
 	f, e := os.Open(file)
 	m.Assert(e)
-	m.Cmdy(web.STORY, web.CATCH, JSON, file)
+	defer _story_catch(m, JSON, file)
 	defer f.Close()
 
 	data := map[string]interface{}{}
@@ -167,7 +170,7 @@ func _dict_import(m *ice.Message, prefix, key, file string) {
 func _dict_export(m *ice.Message, prefix, key, file string) {
 	f, p, e := kit.Create(kit.Keys(file, JSON))
 	m.Assert(e)
-	defer m.Cmdy(web.STORY, web.CATCH, JSON, p)
+	defer _story_catch(m, JSON, p)
 	defer f.Close()
 
 	en := json.NewEncoder(f)
@@ -187,10 +190,20 @@ const (
 	LIST = "list"
 )
 const (
+	CREATE = "create"
+	RENAME = "rename"
+	REMOVE = "remove"
+	COMMIT = "commit"
 	IMPORT = "import"
 	EXPORT = "export"
+
+	INSERT = "insert"
+	DELETE = "delete"
 	SELECT = "select"
-	SEARCH = "search"
+	MODIFY = "modify"
+
+	PARSER = "parser"
+	ADVISE = "advise"
 )
 
 var Index = &ice.Context{Name: "mdb", Help: "数据模块",
@@ -225,17 +238,9 @@ var Index = &ice.Context{Name: "mdb", Help: "数据模块",
 				_list_select(m, arg[0], arg[1], kit.Select("10", arg, 3), kit.Select("0", arg, 4), kit.Select("", arg, 5), kit.Select("", arg, 6))
 			}
 		}},
-		SEARCH: {Name: "search conf key type key value", Help: "数据查询", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			switch arg[2] {
-			case LIST:
-				_list_search(m, arg[0], arg[1], arg[3], arg[4])
-			case HASH:
-				_hash_search(m, arg[0], arg[1], arg[3], arg[4])
-			}
-		}},
 	},
 }
 
 func init() {
-	ice.Index.Register(Index, nil, IMPORT, EXPORT, SELECT, SEARCH)
+	ice.Index.Register(Index, nil, IMPORT, EXPORT, SELECT, SEARCH, RENDER)
 }

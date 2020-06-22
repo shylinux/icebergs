@@ -386,7 +386,7 @@ func StoryAdd(m *ice.Message, mime string, name string, text string, arg ...stri
 const STORY = "story"
 const (
 	TRASH = "trash"
-	CATCH = "catch"
+	// CATCH = "catch"
 	INDEX = "index"
 
 	LIST = "list"

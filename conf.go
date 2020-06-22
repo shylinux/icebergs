@@ -24,6 +24,7 @@ const ( // MSG
 	MSG_OUTPUT = "_output"
 	MSG_ARGS   = "_args"
 
+	MSG_CMDS     = "cmds"
 	MSG_SESSID   = "sessid"
 	MSG_USERIP   = "user.ip"
 	MSG_USERUA   = "user.ua"

@@ -5,6 +5,7 @@ import (
 	"github.com/shylinux/icebergs/base/aaa"
 	"github.com/shylinux/icebergs/base/cli"
 	"github.com/shylinux/icebergs/base/gdb"
+	"github.com/shylinux/icebergs/base/mdb"
 	"github.com/shylinux/icebergs/base/tcp"
 	kit "github.com/shylinux/toolkits"
 
@@ -15,7 +16,9 @@ import (
 	"strings"
 )
 
-func _serve_login(msg *ice.Message, w http.ResponseWriter, r *http.Request) bool {
+const LOGIN = "_login"
+
+func _serve_login(msg *ice.Message, cmds []string, w http.ResponseWriter, r *http.Request) ([]string, bool) {
 	msg.Option(ice.MSG_USERNAME, "")
 	msg.Option(ice.MSG_USERROLE, "")
 
@@ -36,29 +39,30 @@ func _serve_login(msg *ice.Message, w http.ResponseWriter, r *http.Request) bool
 
 	if _, ok := msg.Target().Commands[LOGIN]; ok {
 		// 权限检查
-		msg.Target().Cmd(msg, LOGIN, LOGIN, kit.Simple(msg.Optionv("cmds"))...)
+		msg.Target().Cmd(msg, LOGIN, msg.Option(ice.MSG_USERURL), cmds...)
+		cmds = kit.Simple(msg.Optionv(ice.MSG_CMDS))
 
 	} else if ls := strings.Split(msg.Option(ice.MSG_USERURL), "/"); msg.Conf(SERVE, kit.Keys("meta.black", ls[1])) == "true" {
-		return false // black
+		return cmds, false // black
 
 	} else if msg.Conf(SERVE, kit.Keys("meta.white", ls[1])) == "true" {
-		return true // white
+		return cmds, true // white
 
 	} else {
 		if msg.Warn(!msg.Options(ice.MSG_USERNAME), "not login %s", msg.Option(ice.MSG_USERURL)) {
-			msg.Render("status", 401, "not login")
-			return false
+			msg.Render(STATUS, 401, "not login")
+			return cmds, false
 		}
 		if !msg.Right(msg.Option(ice.MSG_USERURL)) {
-			msg.Render("status", 403, "not auth")
-			return false
+			msg.Render(STATUS, 403, "not auth")
+			return cmds, false
 		}
 	}
 
-	return msg.Option(ice.MSG_USERURL) != ""
+	return cmds, msg.Option(ice.MSG_USERURL) != ""
 }
 func _serve_handle(key string, cmd *ice.Command, msg *ice.Message, w http.ResponseWriter, r *http.Request) {
-	defer func() { msg.Cost("%s %v %v", r.URL.Path, msg.Optionv("cmds"), msg.Format("append")) }()
+	defer func() { msg.Cost("%s %v %v", r.URL.Path, msg.Optionv(ice.MSG_CMDS), msg.Format("append")) }()
 	if u, e := url.Parse(r.Header.Get("Referer")); e == nil {
 		for k, v := range u.Query() {
 			msg.Logs("refer", k, v)
@@ -111,19 +115,19 @@ func _serve_handle(key string, cmd *ice.Command, msg *ice.Message, w http.Respon
 	// 请求参数
 	for k, v := range r.Form {
 		if msg.Optionv(k, v); k == ice.MSG_SESSID {
-			msg.Render("cookie", v[0])
+			msg.Render(COOKIE, v[0])
 		}
 	}
 
 	// 请求命令
-	if msg.Option(ice.MSG_USERPOD, msg.Option("pod")); msg.Optionv("cmds") == nil {
+	if msg.Option(ice.MSG_USERPOD, msg.Option("pod")); msg.Optionv(ice.MSG_CMDS) == nil {
 		if p := strings.TrimPrefix(msg.Option(ice.MSG_USERURL), key); p != "" {
-			msg.Optionv("cmds", strings.Split(p, "/"))
+			msg.Optionv(ice.MSG_CMDS, strings.Split(p, "/"))
 		}
 	}
 
 	// 执行命令
-	if cmds := kit.Simple(msg.Optionv("cmds")); _serve_login(msg, w, r) {
+	if cmds, ok := _serve_login(msg, kit.Simple(msg.Optionv(ice.MSG_CMDS)), w, r); ok {
 		msg.Option("_option", msg.Optionv(ice.MSG_OPTION))
 		msg.Target().Cmd(msg, key, msg.Option(ice.MSG_USERURL), cmds...)
 	}
@@ -190,8 +194,6 @@ func _serve_main(m *ice.Message, w http.ResponseWriter, r *http.Request) bool {
 
 const SERVE = "serve"
 
-const LOGIN = "_login"
-
 func init() {
 	Index.Merge(&ice.Context{
 		Configs: map[string]*ice.Config{
@@ -207,9 +209,6 @@ func init() {
 					"plugin", true,
 					"publish", true,
 				),
-
-				"title", "github.com/shylinux/contexts",
-				"legal", []interface{}{`<a href="mailto:shylinuxc@gmail.com">shylinuxc@gmail.com</a>`},
 
 				"static", kit.Dict("/", "usr/volcanos/"),
 				"volcanos", kit.Dict("path", "usr/volcanos", "branch", "master",
@@ -228,10 +227,10 @@ func init() {
 		},
 		Commands: map[string]*ice.Command{
 			SERVE: {Name: "serve [random] [ups...]", Help: "服务器", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-				if cli.NodeType(m, SERVER, cli.HostName); len(arg) > 0 && arg[0] == "random" {
-					cli.NodeType(m, SERVER, cli.PathName)
+				if cli.NodeInfo(m, SERVER, cli.HostName); len(arg) > 0 && arg[0] == "random" {
+					cli.NodeInfo(m, SERVER, cli.PathName)
 					// 随机端口
-					m.Cmd(SPIDE, kit.MDB_CREATE, "self", "http://random")
+					m.Cmd(SPIDE, mdb.CREATE, "self", "http://random")
 					arg = arg[1:]
 				}
 

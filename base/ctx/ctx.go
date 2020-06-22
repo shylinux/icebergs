@@ -24,12 +24,14 @@ func _context_list(m *ice.Message, all bool) {
 		} else {
 			m.Push("ups", "shy")
 		}
-		m.Push("name", s.Name)
+		m.Push(kit.MDB_NAME, s.Name)
 		m.Push(ice.CTX_STATUS, s.Cap(ice.CTX_STATUS))
 		m.Push(ice.CTX_STREAM, s.Cap(ice.CTX_STREAM))
 		m.Push("help", s.Help)
 	})
 }
+
+const CONTEXT = "context"
 
 var Index = &ice.Context{Name: "ctx", Help: "配置模块",
 	Commands: map[string]*ice.Command{
@@ -45,9 +47,9 @@ var Index = &ice.Context{Name: "ctx", Help: "配置模块",
 				m.Search(arg[0]+".", func(p *ice.Context, s *ice.Context, key string) {
 					msg := m.Spawn(s)
 					switch arg[1] {
-					case "command":
+					case COMMAND:
 						msg.Cmdy(COMMAND, arg[0], arg[2:])
-					case "config":
+					case CONFIG:
 						msg.Cmdy(CONFIG, arg[2:])
 					}
 					m.Copy(msg)

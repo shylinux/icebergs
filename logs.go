@@ -35,6 +35,7 @@ func (m *Message) log(level string, str string, arg ...interface{}) *Message {
 	// 文件行号
 	switch level {
 	case LOG_CMDS, LOG_INFO, LOG_WARN, "refer", "form":
+	case "register", "begin":
 	default:
 		suffix += " " + kit.FileLine(3, 2)
 	}
@@ -105,7 +106,7 @@ func (m *Message) Log_INSERT(arg ...interface{}) *Message {
 func (m *Message) Log_DELETE(arg ...interface{}) *Message {
 	return m.log(LOG_DELETE, log_fields(arg...))
 }
-func (m *Message) Log_SELETE(arg ...interface{}) *Message {
+func (m *Message) Log_SELECT(arg ...interface{}) *Message {
 	return m.log(LOG_SELECT, log_fields(arg...))
 }
 func (m *Message) Log_MODIFY(arg ...interface{}) *Message {

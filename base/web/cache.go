@@ -1,8 +1,9 @@
 package web
 
 import (
-	ice "github.com/shylinux/icebergs"
-	kit "github.com/shylinux/toolkits"
+	"github.com/shylinux/icebergs"
+	"github.com/shylinux/icebergs/base/nfs"
+	"github.com/shylinux/toolkits"
 
 	"io"
 	"io/ioutil"
@@ -66,34 +67,27 @@ func _cache_save(m *ice.Message, method, kind, name, text string, arg ...string)
 	// 添加记录
 	m.Grow(CACHE, nil, kit.Dict(
 		kit.MDB_TYPE, kind, kit.MDB_NAME, name, kit.MDB_TEXT, text,
-		kit.MDB_SIZE, size, "data", h,
+		kit.MDB_SIZE, size, kit.MDB_DATA, h,
 	))
 
 	// 返回结果
-	m.Push("time", m.Time())
-	m.Push("type", kind)
-	m.Push("name", name)
-	m.Push("text", text)
-	m.Push("size", size)
-	m.Push("data", h)
+	m.Push(kit.MDB_TIME, m.Time())
+	m.Push(kit.MDB_TYPE, kind)
+	m.Push(kit.MDB_NAME, name)
+	m.Push(kit.MDB_TEXT, text)
+	m.Push(kit.MDB_SIZE, size)
+	m.Push(kit.MDB_DATA, h)
 }
 func _cache_watch(m *ice.Message, key, file string) {
 	if m.Richs(CACHE, nil, key, func(key string, value map[string]interface{}) {
 		if value["file"] == "" {
-			if f, _, e := kit.Create(file); m.Assert(e) {
-				defer f.Close()
-				f.WriteString(kit.Format(value["text"]))
-			}
+			m.Cmdy(nfs.SAVE, file, value["text"])
 		} else {
-			os.MkdirAll(path.Dir(file), 0777)
-			os.Remove(file)
-			os.Link(kit.Format(value["file"]), file)
+			m.Cmdy(nfs.LINK, file, value[kit.MDB_FILE])
 		}
 	}) == nil {
 		m.Cmdy(SPIDE, "dev", "cache", "/cache/"+key)
-		os.MkdirAll(path.Dir(file), 0777)
-		os.Remove(file)
-		os.Link(m.Append("file"), file)
+		m.Cmdy(nfs.LINK, file, m.Append(kit.MDB_FILE))
 	}
 	m.Echo(file)
 }
@@ -101,8 +95,8 @@ func _cache_watch(m *ice.Message, key, file string) {
 func _cache_catch(m *ice.Message, arg ...string) []string {
 	if r, ok := m.Optionv("response").(*http.Response); ok {
 		return _cache_download(m, r, arg...)
-		// } else if m.R != nil {
-		// 	return _cache_upload(m, arg...)
+	} else if r, ok := m.Optionv("request").(*http.Request); ok {
+		return _cache_upload(m, r, arg...)
 	}
 
 	if f, e := os.Open(arg[2]); m.Assert(e) {
@@ -123,8 +117,8 @@ func _cache_catch(m *ice.Message, arg ...string) []string {
 	}
 	return arg
 }
-func _cache_upload(m *ice.Message, arg ...string) []string {
-	if f, h, e := m.R.FormFile(kit.Select("upload", arg, 1)); e == nil {
+func _cache_upload(m *ice.Message, r *http.Request, arg ...string) []string {
+	if f, h, e := r.FormFile(kit.Select("upload", arg, 1)); e == nil {
 		defer f.Close()
 
 		// 创建文件
@@ -161,13 +155,11 @@ func _cache_download(m *ice.Message, r *http.Response, arg ...string) []string {
 	return arg
 }
 
-func CacheCatch(m *ice.Message, kind, name string) *ice.Message {
-	arg := _cache_catch(m, "catch", kind, name)
-	_cache_save(m, arg[0], arg[1], arg[2], arg[3], arg[4:]...)
-	return m
-}
-
 const CACHE = "cache"
+const (
+	CATCH = "catch"
+	WATCH = "watch"
+)
 
 func init() {
 	Index.Merge(&ice.Context{
@@ -178,12 +170,12 @@ func init() {
 		},
 		Commands: map[string]*ice.Command{
 			CACHE: {Name: "cache data=auto auto", Help: "缓存池", Action: map[string]*ice.Action{
-				kit.MDB_CREATE: {Name: "create type name text arg...", Help: "创建", Hand: func(m *ice.Message, arg ...string) {
-					_cache_save(m, "add", arg[0], arg[1], arg[2], arg[3:]...)
-				}},
-				kit.MDB_INSERT: {Name: "insert type name", Help: "插入", Hand: func(m *ice.Message, arg ...string) {
-					arg = _cache_catch(m, arg[0], arg[1])
+				CATCH: {Name: "catch type file", Help: "捕获", Hand: func(m *ice.Message, arg ...string) {
+					arg = _cache_catch(m, "catch", arg[0], arg[1])
 					_cache_save(m, arg[0], arg[1], arg[2], arg[3], arg[4:]...)
+				}},
+				WATCH: {Name: "watch key file", Help: "查看", Hand: func(m *ice.Message, arg ...string) {
+					_cache_watch(m, arg[0], arg[1])
 				}},
 				kit.MDB_SHOW: {Name: "show type name text arg...", Help: "运行", Hand: func(m *ice.Message, arg ...string) {
 					if len(arg) > 2 {
@@ -198,14 +190,12 @@ func init() {
 					return
 				}
 
+				// TODO remove
 				switch arg[0] {
-				case "download", "upload", "catch":
+				case "download", "upload":
 					arg = _cache_catch(m, arg...)
-					fallthrough
 				case "add":
 					_cache_save(m, arg[0], arg[1], arg[2], arg[3], arg[4:]...)
-				case "watch":
-					_cache_watch(m, arg[1], arg[2])
 				default:
 					_cache_list(m, arg[0])
 				}

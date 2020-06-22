@@ -4,6 +4,7 @@ import (
 	"github.com/shylinux/icebergs"
 	"github.com/shylinux/icebergs/base/cli"
 	"github.com/shylinux/icebergs/base/gdb"
+	"github.com/shylinux/icebergs/base/mdb"
 	"github.com/shylinux/toolkits"
 
 	"strings"
@@ -26,13 +27,27 @@ func _user_login(m *ice.Message, name, word string) (ok bool) {
 	return ok
 }
 func _user_create(m *ice.Message, name, word string) {
-	// 创建用户
 	m.Rich(USER, nil, kit.Dict(
 		USERNAME, name, PASSWORD, word,
 		USERNICK, name, USERNODE, cli.NodeName,
 	))
 	m.Log_CREATE(USERNAME, name)
 	m.Event(gdb.USER_CREATE, name)
+}
+func _user_search(m *ice.Message, kind, name, text string, arg ...string) {
+	m.Richs(USER, nil, kit.MDB_FOREACH, func(key string, val map[string]interface{}) {
+		if name != val[USERNAME] {
+			return
+		}
+		m.Push("pod", m.Option("pod"))
+		m.Push("ctx", "aaa")
+		m.Push("cmd", USER)
+		m.Push(key, val, []string{kit.MDB_TIME})
+		m.Push(kit.MDB_SIZE, kit.Format(""))
+		m.Push(kit.MDB_TYPE, kit.Format(UserRole(m, val[USERNAME])))
+		m.Push(kit.MDB_NAME, kit.Format(val[USERNAME]))
+		m.Push(kit.MDB_TEXT, kit.Format(val[USERNODE]))
+	})
 }
 
 func UserRoot(m *ice.Message) {
@@ -54,22 +69,26 @@ func UserLogin(m *ice.Message, username, password string) bool {
 	}
 	return false
 }
+
+const USER = "user"
+
 func init() {
 	Index.Merge(&ice.Context{
 		Configs: map[string]*ice.Config{
 			USER: {Name: "user", Help: "用户", Value: kit.Data(kit.MDB_SHORT, USERNAME)},
 		},
 		Commands: map[string]*ice.Command{
-			USER: {Name: "user first|login", Help: "用户", Action: map[string]*ice.Action{
-				kit.MDB_CREATE: {Name: "create username [password]", Help: "创建", Hand: func(m *ice.Message, arg ...string) {
+			USER: {Name: "user", Help: "用户", Action: map[string]*ice.Action{
+				mdb.CREATE: {Name: "create username [password]", Help: "创建", Hand: func(m *ice.Message, arg ...string) {
 					_user_create(m, arg[0], kit.Select("", arg, 1))
 				}},
-				"login": {Name: "login username password", Help: "login", Hand: func(m *ice.Message, arg ...string) {
+				mdb.SEARCH: {Name: "search type name text arg...", Help: "搜索", Hand: func(m *ice.Message, arg ...string) {
+					_user_search(m, arg[0], arg[1], kit.Select("", arg, 2))
+				}},
+				"login": {Name: "login username password", Help: "登录", Hand: func(m *ice.Message, arg ...string) {
 					_user_login(m, arg[0], arg[1])
 				}},
-			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-				_user_list(m)
-			}},
+			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) { _user_list(m) }},
 		},
 	}, nil)
 }

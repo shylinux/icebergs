@@ -18,10 +18,6 @@ import (
 	"strings"
 )
 
-const (
-	FILE = "file"
-)
-
 func _file_list(m *ice.Message, root string, name string, level int, deep bool, dir_type string, dir_reg *regexp.Regexp, fields []string) {
 	if fs, e := ioutil.ReadDir(path.Join(root, name)); e != nil {
 		if f, e := os.Open(path.Join(root, name)); e == nil {
@@ -157,7 +153,7 @@ func _file_save(m *ice.Message, name string, text ...string) {
 		defer f.Close()
 		for _, v := range text {
 			if n, e := f.WriteString(v); m.Assert(e) {
-				m.Log_IMPORT(kit.MDB_FILE, p, kit.MDB_SIZE, n)
+				m.Log_EXPORT(kit.MDB_FILE, p, kit.MDB_SIZE, n)
 			}
 		}
 		m.Echo(p)
@@ -177,11 +173,11 @@ func _file_copy(m *ice.Message, name string, from ...string) {
 	}
 }
 func _file_link(m *ice.Message, name string, from string) {
-	m.Cmd("nfs.trash", name)
+	_file_trash(m, name)
 	os.MkdirAll(path.Dir(name), 0760)
 	os.Link(from, name)
 }
-func _file_trash(m *ice.Message, name string, from ...string) {
+func _file_trash(m *ice.Message, name string) {
 	if s, e := os.Stat(name); e == nil {
 		if s.IsDir() {
 			name := path.Base(name) + ".tar.gz"
@@ -192,13 +188,38 @@ func _file_trash(m *ice.Message, name string, from ...string) {
 			defer f.Close()
 
 			h := kit.Hashs(f)
-			p := path.Join(m.Conf("trash", "meta.path"), h[:2], h)
+			p := path.Join(m.Conf(TRASH, "meta.path"), h[:2], h)
 			os.MkdirAll(path.Dir(p), 0777)
 			os.Rename(name, p)
 
-			m.Cmd("web.favor", "trash", "bin", name, p)
+			m.Cmd("web.favor", TRASH, "bin", name, p)
 		}
 	}
+}
+
+func _file_search(m *ice.Message, kind, name, text string, arg ...string) {
+	if kind == FILE {
+		msg := m.Spawn()
+		rg, e := regexp.Compile("")
+		m.Assert(e)
+		_file_list(msg, "./", "", 0, true, "both", rg, []string{"path", "time", "size"})
+		msg.Table(func(index int, value map[string]string, head []string) {
+			if !strings.Contains(value["path"], name) {
+				return
+			}
+			m.Push("pod", "")
+			m.Push("ctx", "nfs")
+			m.Push("cmd", FILE)
+			m.Push(kit.MDB_TIME, value["time"])
+			m.Push(kit.MDB_SIZE, value["size"])
+			m.Push(kit.MDB_TYPE, FILE)
+			m.Push(kit.MDB_NAME, value["path"])
+			m.Push(kit.MDB_TEXT, "")
+		})
+	}
+}
+func _file_render(m *ice.Message, kind, name, text string, arg ...string) {
+	_file_show(m, name)
 }
 
 const (
@@ -208,6 +229,8 @@ const (
 	COPY  = "copy"
 	LINK  = "link"
 	TRASH = "trash"
+
+	FILE = "file"
 )
 
 var Index = &ice.Context{Name: "nfs", Help: "存储模块",
@@ -215,6 +238,21 @@ var Index = &ice.Context{Name: "nfs", Help: "存储模块",
 		TRASH: {Name: "trash", Help: "删除", Value: kit.Data("path", "var/trash")},
 	},
 	Commands: map[string]*ice.Command{
+		ice.CTX_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			m.Cmd("mdb.search", "create", "file", "file", "nfs")
+			m.Cmd("mdb.render", "create", "file", "file", "nfs")
+		}},
+
+		FILE: {Name: "file", Help: "文件", Action: map[string]*ice.Action{
+			"search": {Name: "search type name text", Help: "搜索", Hand: func(m *ice.Message, arg ...string) {
+				_file_search(m, arg[0], arg[1], arg[2], arg[3:]...)
+			}},
+			"render": {Name: "render type name text", Help: "渲染", Hand: func(m *ice.Message, arg ...string) {
+				_file_render(m, arg[0], arg[1], arg[2], arg[3:]...)
+			}},
+		}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		}},
+
 		DIR: {Name: "dir path field...", Help: "目录", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			rg, _ := regexp.Compile(m.Option("dir_reg"))
 			_file_list(m, kit.Select("./", m.Option("dir_root")), kit.Select("", arg, 0),

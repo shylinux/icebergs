@@ -1,9 +1,9 @@
 package cli
 
 import (
-	ice "github.com/shylinux/icebergs"
+	"github.com/shylinux/icebergs"
 	"github.com/shylinux/icebergs/base/ctx"
-	kit "github.com/shylinux/toolkits"
+	"github.com/shylinux/toolkits"
 
 	"os"
 	"os/user"
@@ -12,24 +12,21 @@ import (
 	"strings"
 )
 
-const (
-	RUNTIME = "runtime"
-	SYSTEM  = "system"
-	DAEMON  = "daemon"
-	PYTHON  = "python"
-)
-
 var UserName = ""
 var PassWord = ""
 var HostName = ""
 var PathName = ""
 var NodeName = ""
+var NodeType = ""
 
-func NodeType(m *ice.Message, kind, name string) {
+func NodeInfo(m *ice.Message, kind, name string) {
 	m.Conf(RUNTIME, "node.type", kind)
 	m.Conf(RUNTIME, "node.name", name)
 	NodeName = name
+	NodeType = kind
 }
+
+const RUNTIME = "runtime"
 
 var Index = &ice.Context{Name: "cli", Help: "命令模块",
 	Configs: map[string]*ice.Config{
@@ -50,10 +47,6 @@ var Index = &ice.Context{Name: "cli", Help: "命令模块",
 			m.Conf(RUNTIME, "host.GOOS", runtime.GOOS)
 			m.Conf(RUNTIME, "host.pid", os.Getpid())
 
-			n := kit.Int(kit.Select("20", m.Conf(RUNTIME, "host.GOMAXPROCS")))
-			m.Logs("host", "gomaxprocs", n)
-			runtime.GOMAXPROCS(n)
-
 			// 启动信息
 			if user, e := user.Current(); e == nil {
 				m.Conf(RUNTIME, "boot.username", path.Base(kit.Select(user.Name, os.Getenv("USER"))))
@@ -69,6 +62,9 @@ var Index = &ice.Context{Name: "cli", Help: "命令模块",
 				name = ls[len(ls)-1]
 				m.Conf(RUNTIME, "boot.pathname", name)
 			}
+			UserName = m.Conf(RUNTIME, "boot.username")
+			HostName = m.Conf(RUNTIME, "boot.hostname")
+			PathName = m.Conf(RUNTIME, "boot.pathname")
 
 			// 启动记录
 			count := m.Confi(RUNTIME, "boot.count") + 1
@@ -76,14 +72,12 @@ var Index = &ice.Context{Name: "cli", Help: "命令模块",
 
 			// 节点信息
 			m.Conf(RUNTIME, "node.time", m.Time())
-			m.Conf(RUNTIME, "node.type", "worker")
-			m.Conf(RUNTIME, "node.name", m.Conf(RUNTIME, "boot.pathname"))
+			NodeInfo(m, "worker", m.Conf(RUNTIME, "boot.pathname"))
 			m.Info("runtime %v", kit.Formats(m.Confv(RUNTIME)))
 
-			UserName = m.Conf(RUNTIME, "boot.username")
-			HostName = m.Conf(RUNTIME, "boot.hostname")
-			PathName = m.Conf(RUNTIME, "boot.pathname")
-			NodeName = m.Conf(RUNTIME, "node.nodename")
+			n := kit.Int(kit.Select("20", m.Conf(RUNTIME, "host.GOMAXPROCS")))
+			m.Logs("host", "gomaxprocs", n)
+			runtime.GOMAXPROCS(n)
 		}},
 		ice.CTX_EXIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			m.Save(RUNTIME, SYSTEM)
@@ -92,9 +86,9 @@ var Index = &ice.Context{Name: "cli", Help: "命令模块",
 		RUNTIME: {Name: "runtime", Help: "运行环境", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			switch kit.Select("", arg, 0) {
 			case "hostname":
-				HostName = arg[1]
 				m.Conf(RUNTIME, "boot.hostname", arg[1])
-				m.Echo(m.Conf(RUNTIME, "boot.hostname"))
+				HostName = arg[1]
+				m.Echo(HostName)
 			default:
 				m.Cmdy(ctx.CONFIG, RUNTIME, arg)
 			}

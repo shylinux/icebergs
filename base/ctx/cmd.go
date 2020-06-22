@@ -14,19 +14,16 @@ func _command_list(m *ice.Message, all bool, name string) {
 		p = ice.Pulse
 	}
 
-	if strings.Contains(name, ".") {
+	if name != "" {
 		p.Search(name, func(p *ice.Context, s *ice.Context, key string, cmd *ice.Command) {
 			m.Push("key", s.Cap(ice.CTX_FOLLOW))
 			m.Push("name", kit.Format(cmd.Name))
 			m.Push("help", kit.Simple(cmd.Help)[0])
-			if name != "" {
-				m.Push("meta", kit.Format(cmd.Meta))
-				if len(cmd.List) == 0 {
-					_command_make(m, cmd)
-				}
-				m.Push("list", kit.Format(cmd.List))
+			m.Push("meta", kit.Format(cmd.Meta))
+			if len(cmd.List) == 0 {
+				_command_make(m, cmd)
 			}
-
+			m.Push("list", kit.Format(cmd.List))
 		})
 		return
 	}
@@ -35,9 +32,6 @@ func _command_list(m *ice.Message, all bool, name string) {
 	p.Travel(func(p *ice.Context, s *ice.Context) {
 		list := []string{}
 		for k := range s.Commands {
-			if name != "" && k != name {
-				continue
-			}
 			if k[0] == '/' || k[0] == '_' {
 				// 内部命令
 				continue
@@ -51,13 +45,11 @@ func _command_list(m *ice.Message, all bool, name string) {
 			m.Push("key", s.Cap(ice.CTX_FOLLOW))
 			m.Push("name", kit.Format(v.Name))
 			m.Push("help", kit.Simple(v.Help)[0])
-			if name != "" {
-				m.Push("meta", kit.Format(v.Meta))
-				if len(v.List) == 0 {
-					_command_make(m, v)
-				}
-				m.Push("list", kit.Format(v.List))
+			m.Push("meta", kit.Format(v.Meta))
+			if len(v.List) == 0 {
+				_command_make(m, v)
 			}
+			m.Push("list", kit.Format(v.List))
 		}
 	})
 }
@@ -72,29 +64,30 @@ func _command_make(m *ice.Message, cmd *ice.Command) {
 
 	button := false
 	for i, v := range list {
-		if i > 0 {
-			switch ls := kit.Split(v, ":="); ls[0] {
-			case "[", "]":
-			case "auto":
-				cmd.List = append(cmd.List, kit.List(kit.MDB_INPUT, "button", "name", "查看", "value", "auto")...)
-				cmd.List = append(cmd.List, kit.List(kit.MDB_INPUT, "button", "name", "返回", "value", "Last")...)
-				button = true
-			default:
-				kind, value := "text", ""
-				if len(ls) == 3 {
-					kind, value = ls[1], ls[2]
-				} else if len(ls) == 2 {
-					if strings.Contains(v, "=") {
-						value = ls[1]
-					} else {
-						kind = ls[1]
-					}
+		if i == 0 {
+			continue
+		}
+		switch ls := kit.Split(v, ":="); ls[0] {
+		case "[", "]":
+		case "auto":
+			cmd.List = append(cmd.List, kit.List(kit.MDB_INPUT, "button", "name", "查看", "value", "auto")...)
+			cmd.List = append(cmd.List, kit.List(kit.MDB_INPUT, "button", "name", "返回", "value", "Last")...)
+			button = true
+		default:
+			kind, value := "text", ""
+			if len(ls) == 3 {
+				kind, value = ls[1], ls[2]
+			} else if len(ls) == 2 {
+				if strings.Contains(v, "=") {
+					value = ls[1]
+				} else {
+					kind = ls[1]
 				}
-				if kind == "button" {
-					button = true
-				}
-				cmd.List = append(cmd.List, kit.List(kit.MDB_INPUT, kind, "name", ls[0], "value", value)...)
 			}
+			if kind == "button" {
+				button = true
+			}
+			cmd.List = append(cmd.List, kit.List(kit.MDB_INPUT, kind, "name", ls[0], "value", value)...)
 		}
 	}
 	if len(cmd.List) == 0 {
@@ -102,9 +95,11 @@ func _command_make(m *ice.Message, cmd *ice.Command) {
 	}
 	if !button {
 		cmd.List = append(cmd.List, kit.List(kit.MDB_INPUT, "button", "name", "查看")...)
-		cmd.List = append(cmd.List, kit.List(kit.MDB_INPUT, "button", "name", "返回", "value", "Last")...)
+		cmd.List = append(cmd.List, kit.List(kit.MDB_INPUT, "button", "name", "返回")...)
 	}
 }
+
+const COMMAND = "command"
 
 func init() {
 	Index.Merge(&ice.Context{

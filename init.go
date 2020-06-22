@@ -2,12 +2,7 @@ package ice
 
 import (
 	kit "github.com/shylinux/toolkits"
-	"github.com/shylinux/toolkits/conf"
-	"github.com/shylinux/toolkits/logs"
-	"github.com/shylinux/toolkits/miss"
-	"github.com/shylinux/toolkits/task"
 
-	"errors"
 	"fmt"
 	"os"
 	"strings"
@@ -90,7 +85,7 @@ var Index = &Context{Name: "ice", Help: "冰山模块",
 	},
 	Commands: map[string]*Command{
 		CTX_INIT: {Hand: func(m *Message, c *Context, cmd string, arg ...string) {
-			defer m.Cost(CTX_INIT)
+			defer m.Cost("_init ice")
 			m.Travel(func(p *Context, c *Context) {
 				if cmd, ok := c.Commands[CTX_INIT]; ok && p != nil {
 					c.cmd(m.Spawns(c), cmd, CTX_INIT, arg...)
@@ -149,10 +144,6 @@ func Run(arg ...string) string {
 		arg = append(arg, "web.space", "connect", "self")
 	}
 
-	log.Init(conf.Sub("log"))
-	miss.Init(conf.Sub("miss"))
-	task.Init(conf.Sub("task"))
-
 	frame := &Frame{}
 	Index.root = Index
 	Index.server = frame
@@ -176,11 +167,28 @@ func Run(arg ...string) string {
 
 var names = map[string]interface{}{}
 
-var ErrNameExists = errors.New("name already exists")
+var ErrNameExists = "name already exists:"
+
+type Error struct {
+	Arg      []interface{}
+	FileLine string
+}
+
+func NewError(n int, arg ...interface{}) *Error {
+	return &Error{Arg: arg, FileLine: kit.FileLine(n, 3)}
+}
+func (e *Error) Error() string {
+	return e.FileLine + " " + strings.Join(kit.Simple(e.Arg), " ")
+}
 
 func Name(name string, value interface{}) string {
-	if _, ok := names[name]; ok {
-		panic(ErrNameExists)
+	if s, ok := names[name]; ok {
+		last := ""
+		switch s := s.(type) {
+		case *Context:
+			last = s.Name
+		}
+		panic(NewError(4, ErrNameExists, name, "last:", last))
 	}
 	names[name] = value
 	return name

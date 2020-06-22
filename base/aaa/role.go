@@ -90,6 +90,9 @@ func _role_white(m *ice.Message, userrole, chain string, status bool) {
 func RoleRight(m *ice.Message, userrole string, keys ...string) bool {
 	return _role_right(m, userrole, kit.Split(kit.Keys(keys), ".")...)
 }
+
+const ROLE = "role"
+
 func init() {
 	Index.Merge(&ice.Context{
 		Configs: map[string]*ice.Config{

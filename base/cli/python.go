@@ -1,11 +1,11 @@
 package cli
 
 import (
-	ice "github.com/shylinux/icebergs"
-	kit "github.com/shylinux/toolkits"
-
-	"fmt"
+	"github.com/shylinux/icebergs"
+	"github.com/shylinux/toolkits"
 )
+
+const PYTHON = "python"
 
 func init() {
 	Index.Merge(&ice.Context{
@@ -22,7 +22,7 @@ func init() {
 				}},
 				"qrcode": {Name: "qrcode text color", Help: "安装", Hand: func(m *ice.Message, arg ...string) {
 					prefix := []string{SYSTEM, m.Conf(PYTHON, kit.Keys(kit.MDB_META, PYTHON))}
-					m.Cmdy(prefix, "-c", fmt.Sprintf(m.Conf(PYTHON, "meta.qrcode"),
+					m.Cmdy(prefix, "-c", kit.Format(m.Conf(PYTHON, "meta.qrcode"),
 						kit.Select("hello world", arg, 0), kit.Select("blue", arg, 1)))
 				}},
 			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {

@@ -2,6 +2,7 @@ package team
 
 import (
 	"github.com/shylinux/icebergs"
+	"github.com/shylinux/icebergs/base/mdb"
 	"github.com/shylinux/icebergs/base/web"
 	"github.com/shylinux/toolkits"
 
@@ -221,20 +222,20 @@ var Index = &ice.Context{Name: "team", Help: "团队中心",
 		PLAN: {Name: "plan scale:select=day|week|month|year|long begin_time=@date end_time=@date auto", Help: "计划", Meta: kit.Dict(
 			"display", "/plugin/local/team/plan.js", "detail", []string{StatusPrepare, StatusProcess, StatusCancel, StatusFinish},
 		), Action: map[string]*ice.Action{
-			kit.MDB_INSERT: {Name: "insert zone type name text begin_time end_time", Help: "添加", Hand: func(m *ice.Message, arg ...string) {
+			mdb.INSERT: {Name: "insert zone type name text begin_time end_time", Help: "添加", Hand: func(m *ice.Message, arg ...string) {
 				_task_create(m, arg[0])
 				_task_insert(m, arg[0], arg[1], arg[2], arg[3], arg[4], arg[5])
 			}},
-			kit.MDB_DELETE: {Name: "delete", Help: "删除", Hand: func(m *ice.Message, arg ...string) {
+			mdb.DELETE: {Name: "delete", Help: "删除", Hand: func(m *ice.Message, arg ...string) {
 				_task_delete(m, m.Option(ZONE), m.Option(kit.MDB_ID))
 			}},
-			kit.MDB_MODIFY: {Name: "modify key value old", Help: "编辑", Hand: func(m *ice.Message, arg ...string) {
+			mdb.MODIFY: {Name: "modify key value old", Help: "编辑", Hand: func(m *ice.Message, arg ...string) {
 				_task_modify(m, m.Option(ZONE), m.Option(kit.MDB_ID), arg[0], arg[1], arg[2])
 			}},
-			kit.MDB_IMPORT: {Name: "import file", Help: "导入", Hand: func(m *ice.Message, arg ...string) {
+			mdb.IMPORT: {Name: "import file", Help: "导入", Hand: func(m *ice.Message, arg ...string) {
 				_task_import(m, kit.Select(EXPORT, arg, 0))
 			}},
-			kit.MDB_EXPORT: {Name: "export file", Help: "导出", Hand: func(m *ice.Message, arg ...string) {
+			mdb.EXPORT: {Name: "export file", Help: "导出", Hand: func(m *ice.Message, arg ...string) {
 				_task_export(m, kit.Select(EXPORT, arg, 0))
 			}},
 			"plugin": {Name: "plugin", Help: "插件", Hand: func(m *ice.Message, arg ...string) {
@@ -284,10 +285,10 @@ var Index = &ice.Context{Name: "team", Help: "团队中心",
 			})
 		}},
 		TASK: {Name: "task zone=auto id=auto auto", Help: "任务", Action: map[string]*ice.Action{
-			kit.MDB_DELETE: {Name: "delete", Help: "删除", Hand: func(m *ice.Message, arg ...string) {
+			mdb.DELETE: {Name: "delete", Help: "删除", Hand: func(m *ice.Message, arg ...string) {
 				_task_delete(m, m.Option(ZONE), m.Option(kit.MDB_ID))
 			}},
-			kit.MDB_MODIFY: {Name: "modify key value old", Help: "编辑", Hand: func(m *ice.Message, arg ...string) {
+			mdb.MODIFY: {Name: "modify key value old", Help: "编辑", Hand: func(m *ice.Message, arg ...string) {
 				_task_modify(m, m.Option(ZONE), m.Option(kit.MDB_ID), arg[0], arg[1], arg[2])
 			}},
 		}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {

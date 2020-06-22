@@ -2,6 +2,7 @@ package web
 
 import (
 	ice "github.com/shylinux/icebergs"
+	"github.com/shylinux/icebergs/base/mdb"
 	"github.com/shylinux/icebergs/base/tcp"
 	kit "github.com/shylinux/toolkits"
 
@@ -58,7 +59,7 @@ func _spide_login(m *ice.Message, name string) {
 func _spide_create(m *ice.Message, name, address string, arg ...string) {
 	if uri, e := url.Parse(address); e == nil && address != "" {
 		if uri.Host == "random" {
-			uri.Host = ":" + tcp.TCPPort(m)
+			uri.Host = ":" + m.Cmdx(tcp.PORT, "get")
 			address = strings.Replace(address, "random", uri.Host, -1)
 		}
 
@@ -90,7 +91,7 @@ func init() {
 		},
 		Commands: map[string]*ice.Command{
 			SPIDE: {Name: "spide name=auto [action:select=msg|raw|cache] [method:select=POST|GET] url [format:select=json|form|part|data|file] arg... auto", Help: "蜘蛛侠", Action: map[string]*ice.Action{
-				kit.MDB_CREATE: {Name: "create name address", Help: "", Hand: func(m *ice.Message, arg ...string) {
+				mdb.CREATE: {Name: "create name address", Help: "", Hand: func(m *ice.Message, arg ...string) {
 					_spide_create(m, arg[0], arg[1])
 				}},
 				"login": {Name: "login name", Help: "", Hand: func(m *ice.Message, arg ...string) {
@@ -237,7 +238,7 @@ func init() {
 					switch cache {
 					case "cache":
 						m.Optionv("response", res)
-						CacheCatch(m, res.Header.Get("Content-Type"), uri)
+						m.Cmdy(CACHE, "catch", res.Header.Get("Content-Type"), uri)
 						m.Echo(m.Append("data"))
 					case "raw":
 						if b, e := ioutil.ReadAll(res.Body); m.Assert(e) {

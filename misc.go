@@ -39,7 +39,7 @@ func (m *Message) Right(arg ...interface{}) bool {
 	return m.Option(MSG_USERROLE) == "root" || !m.Warn(m.Cmdx("aaa.role", "right", m.Option(MSG_USERROLE), kit.Keys(arg...)) != "ok", "no right")
 }
 func (m *Message) Space(arg interface{}) []string {
-	if arg == nil || kit.Format(arg) == m.Conf("cli.runtime", "node.name") {
+	if arg == nil || arg == "" || kit.Format(arg) == m.Conf("cli.runtime", "node.name") {
 		return nil
 	}
 	return []string{"web.space", kit.Format(arg)}

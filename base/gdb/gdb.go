@@ -72,16 +72,6 @@ func (f *Frame) Close(m *ice.Message, arg ...string) bool {
 }
 
 const (
-	SIGNAL = "signal"
-	TIMER  = "timer"
-	EVENT  = "event"
-)
-
-const (
-	LISTEN = "listen"
-	ACTION = "action"
-)
-const (
 	SYSTEM_INIT = "system.init"
 
 	SERVE_START = "serve.start"
@@ -95,6 +85,16 @@ const (
 	CHAT_CREATE = "chat.create"
 	MISS_CREATE = "miss.create"
 	MIND_CREATE = "mind.create"
+)
+const (
+	LISTEN = "listen"
+	ACTION = "action"
+)
+const (
+	SIGNAL = "signal"
+	TIMER  = "timer"
+	EVENT  = "event"
+	DEBUG  = "debug"
 )
 
 var Index = &ice.Context{Name: "gdb", Help: "事件模块",
@@ -125,8 +125,8 @@ var Index = &ice.Context{Name: "gdb", Help: "事件模块",
 			if f, ok := m.Target().Server().(*Frame); ok {
 				// 注册信号
 				f.s = make(chan os.Signal, ice.MOD_CHAN)
-				m.Richs(SIGNAL, nil, "*", func(key string, value string) {
-					m.Logs(LISTEN, key, "cmd", value)
+				m.Richs(SIGNAL, nil, kit.MDB_FOREACH, func(key string, value string) {
+					m.Logs(LISTEN, key, value)
 					signal.Notify(f.s, syscall.Signal(kit.Int(key)))
 				})
 				// 启动心跳
@@ -162,6 +162,19 @@ var Index = &ice.Context{Name: "gdb", Help: "事件模块",
 		EVENT: {Name: "event", Help: "触发器", Action: map[string]*ice.Action{
 			LISTEN: {Name: "listen event cmd...", Help: "监听事件", Hand: func(m *ice.Message, arg ...string) {
 				m.Grow(EVENT, arg[0], kit.Dict("cmd", arg[1:]))
+				m.Logs(LISTEN, arg[0], arg[1:])
+			}},
+			ACTION: {Name: "action event arg...", Help: "触发事件", Hand: func(m *ice.Message, arg ...string) {
+				if f, ok := m.Target().Server().(*Frame); ok {
+					m.Logs(ACTION, arg[0], arg[1:])
+					f.d <- arg
+				}
+			}},
+		}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {}},
+
+		DEBUG: {Name: "debug", Help: "调试器", Action: map[string]*ice.Action{
+			LISTEN: {Name: "listen event cmd...", Help: "监听事件", Hand: func(m *ice.Message, arg ...string) {
+				m.Grow(EVENT, arg[0], kit.Dict("cmd", arg[1:]))
 				m.Logs(LISTEN, arg[0], "cmd", arg[1:])
 			}},
 			ACTION: {Name: "action event arg...", Help: "触发事件", Hand: func(m *ice.Message, arg ...string) {
@@ -171,9 +184,7 @@ var Index = &ice.Context{Name: "gdb", Help: "事件模块",
 				}
 			}},
 		}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {}},
-
-		"void": {Name: "void", Help: "空命令", Action: map[string]*ice.Action{}},
 	},
 }
 
-func init() { ice.Index.Register(Index, &Frame{}) }
+func init() { ice.Index.Register(Index, &Frame{}, SIGNAL, TIMER, EVENT, DEBUG) }

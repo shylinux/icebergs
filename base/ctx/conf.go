@@ -16,15 +16,14 @@ func _config_list(m *ice.Message, all bool) {
 		p = ice.Pulse
 	}
 	p.Travel(func(p *ice.Context, s *ice.Context, key string, conf *ice.Config) {
-		m.Push("key", key)
-		m.Push("name", conf.Name)
-		m.Push("value", kit.Format(conf.Value))
+		m.Push(kit.MDB_KEY, key)
+		m.Push(kit.MDB_NAME, conf.Name)
+		m.Push(kit.MDB_VALUE, kit.Format(conf.Value))
 	})
 
 }
 func _config_save(m *ice.Message, name string, arg ...string) {
 	msg := m.Spawn(m.Source())
-	// 保存配置
 	name = path.Join(msg.Conf(CONFIG, "meta.path"), name)
 	if f, p, e := kit.Create(name); m.Assert(e) {
 		data := map[string]interface{}{}
@@ -33,7 +32,7 @@ func _config_save(m *ice.Message, name string, arg ...string) {
 		}
 		if s, e := json.MarshalIndent(data, "", "  "); m.Assert(e) {
 			if n, e := f.Write(s); m.Assert(e) {
-				m.Log("info", "save %d %s", n, p)
+				m.Log_EXPORT(CONFIG, name, kit.MDB_FILE, p, kit.MDB_SIZE, n)
 			}
 		}
 		m.Echo(p)
@@ -41,7 +40,6 @@ func _config_save(m *ice.Message, name string, arg ...string) {
 }
 func _config_load(m *ice.Message, name string, arg ...string) {
 	msg := m.Spawn(m.Source())
-	// 加载配置
 	name = path.Join(msg.Conf(CONFIG, "meta.path"), name)
 	if f, e := os.Open(name); e == nil {
 		data := map[string]interface{}{}
@@ -49,7 +47,7 @@ func _config_load(m *ice.Message, name string, arg ...string) {
 
 		for k, v := range data {
 			msg.Search(k, func(p *ice.Context, s *ice.Context, key string) {
-				m.Log("info", "load %s.%s %v", s.Name, key, kit.Format(v))
+				m.Log_IMPORT(CONFIG, kit.Keys(s.Name, key), kit.MDB_FILE, name)
 				s.Configs[key].Value = v
 			})
 		}
@@ -80,10 +78,12 @@ func _config_grow(m *ice.Message, name string, key string, arg ...string) {
 	m.Grow(name, key, kit.Dict(arg))
 }
 
+const CONFIG = "config"
 const (
-	CONTEXT = "context"
-	COMMAND = "command"
-	CONFIG  = "config"
+	SAVE = "save"
+	LOAD = "load"
+	RICH = "rich"
+	GROW = "grow"
 )
 
 func init() {
@@ -92,24 +92,25 @@ func init() {
 			CONFIG: {Name: "config", Help: "配置", Value: kit.Data("path", "var/conf")},
 		},
 		Commands: map[string]*ice.Command{
-			CONFIG: {Name: "config [all] [chain [key [arg...]]]", Help: "配置", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			CONFIG: {Name: "config [all] [chain [key [arg...]]]", Help: "配置", Action: map[string]*ice.Action{
+				SAVE: {Name: "save", Help: "保存", Hand: func(m *ice.Message, arg ...string) {
+					_config_save(m, arg[0], arg[1:]...)
+				}},
+				LOAD: {Name: "load", Help: "加载", Hand: func(m *ice.Message, arg ...string) {
+					_config_load(m, arg[0], arg[1:]...)
+				}},
+				RICH: {Name: "rich", Help: "富有", Hand: func(m *ice.Message, arg ...string) {
+					_config_rich(m, arg[0], arg[1], arg[2:]...)
+				}},
+				GROW: {Name: "grow", Help: "成长", Hand: func(m *ice.Message, arg ...string) {
+					_config_grow(m, arg[0], arg[1], arg[2:]...)
+				}},
+			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 				if all, arg := _parse_arg_all(m, arg...); len(arg) == 0 {
 					_config_list(m, all)
 					return
 				}
-
-				switch arg[0] {
-				case "save":
-					_config_save(m, arg[1], arg[2:]...)
-				case "load":
-					_config_load(m, arg[1], arg[2:]...)
-				case "grow":
-					_config_grow(m, arg[1], arg[2], arg[3:]...)
-				case "rich":
-					_config_rich(m, arg[1], arg[2], arg[3:]...)
-				default:
-					_config_make(m, arg[0], arg[1:]...)
-				}
+				_config_make(m, arg[0], arg[1:]...)
 			}},
 		},
 	}, nil)

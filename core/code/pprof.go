@@ -3,6 +3,8 @@ package code
 import (
 	ice "github.com/shylinux/icebergs"
 	"github.com/shylinux/icebergs/base/cli"
+	"github.com/shylinux/icebergs/base/mdb"
+	"github.com/shylinux/icebergs/base/tcp"
 	"github.com/shylinux/icebergs/base/web"
 	kit "github.com/shylinux/toolkits"
 	"github.com/shylinux/toolkits/task"
@@ -83,7 +85,7 @@ func _pprof_show(m *ice.Message, zone string, id string) {
 		list = append(list, web.TYPE_SHELL+": "+strings.Join(cmd, " "), strings.Join(res, "\n"))
 
 		// 结果展示
-		p := kit.Format("%s:%s", m.Conf(web.SHARE, "meta.host"), m.Cmdx("tcp.getport"))
+		p := kit.Format("%s:%s", m.Conf(web.SHARE, "meta.host"), m.Cmdx(tcp.PORT, "get"))
 		m.Option(cli.CMD_STDOUT, "var/daemon/stdout")
 		m.Option(cli.CMD_STDERR, "var/daemon/stderr")
 		m.Cmd(cli.DAEMON, m.Confv(PPROF, "meta.pprof"), "-http="+p, val[BINNARY], msg.Append(kit.MDB_TEXT))
@@ -149,11 +151,11 @@ func init() {
 		},
 		Commands: map[string]*ice.Command{
 			PPROF: {Name: "pprof zone=auto id=auto auto", Help: "性能分析", Action: map[string]*ice.Action{
-				kit.MDB_CREATE: {Name: "create zone [binnary [service [seconds]]]", Help: "创建", Hand: func(m *ice.Message, arg ...string) {
+				mdb.CREATE: {Name: "create zone [binnary [service [seconds]]]", Help: "创建", Hand: func(m *ice.Message, arg ...string) {
 					_pprof_create(m, arg[0], kit.Select("bin/ice.bin", arg, 1),
 						kit.Select("http://localhost:9020/code/pprof/profile", arg, 2), kit.Select("3", arg, 3))
 				}},
-				kit.MDB_INSERT: {Name: "insert zone type name [text]", Help: "插入", Hand: func(m *ice.Message, arg ...string) {
+				mdb.INSERT: {Name: "insert zone type name [text]", Help: "插入", Hand: func(m *ice.Message, arg ...string) {
 					if len(arg) == 2 {
 						arg = append(arg, "")
 					}
@@ -162,7 +164,7 @@ func init() {
 					}
 					_pprof_insert(m, arg[0], arg[1], arg[2], kit.Select("http://localhost:9020/code/bench?cmd="+arg[2], arg, 3), arg[4:]...)
 				}},
-				kit.MDB_MODIFY: {Name: "modify key value old", Help: "编辑", Hand: func(m *ice.Message, arg ...string) {
+				mdb.MODIFY: {Name: "modify key value old", Help: "编辑", Hand: func(m *ice.Message, arg ...string) {
 					_pprof_modify(m, m.Option(kit.MDB_ZONE), m.Option(kit.MDB_ID), arg[0], arg[1], kit.Select("", arg, 2))
 				}},
 				kit.MDB_SHOW: {Name: "show type name text arg...", Help: "运行", Hand: func(m *ice.Message, arg ...string) {

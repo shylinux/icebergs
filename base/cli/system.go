@@ -1,8 +1,8 @@
 package cli
 
 import (
-	ice "github.com/shylinux/icebergs"
-	kit "github.com/shylinux/toolkits"
+	"github.com/shylinux/icebergs"
+	"github.com/shylinux/toolkits"
 
 	"bytes"
 	"fmt"
@@ -18,8 +18,8 @@ const (
 	CMD_DIR  = "cmd_dir"
 	CMD_ENV  = "cmd_env"
 
-	CMD_ERR  = "cmd_err"
 	CMD_OUT  = "cmd_out"
+	CMD_ERR  = "cmd_err"
 	CMD_CODE = "cmd_code"
 )
 
@@ -43,10 +43,8 @@ func _system_show(m *ice.Message, cmd *exec.Cmd) {
 	m.Echo(out.String())
 }
 
-func System(m *ice.Message, key string, arg ...string) {
-	cmd := exec.Command(key, arg...)
-	_system_show(m, cmd)
-}
+const SYSTEM = "system"
+
 func init() {
 	Index.Merge(&ice.Context{
 		Configs: map[string]*ice.Config{

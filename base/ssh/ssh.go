@@ -4,6 +4,7 @@ import (
 	"github.com/shylinux/icebergs"
 	"github.com/shylinux/icebergs/base/aaa"
 	"github.com/shylinux/icebergs/base/cli"
+	"github.com/shylinux/icebergs/base/mdb"
 	"github.com/shylinux/icebergs/base/web"
 	"github.com/shylinux/toolkits"
 
@@ -31,7 +32,7 @@ type Frame struct {
 }
 
 func Render(msg *ice.Message, cmd string, args ...interface{}) {
-	defer func() { msg.Log_EXPORT(kit.MDB_RENDER, cmd, kit.MDB_TEXT, args) }()
+	defer func() { msg.Log_EXPORT(mdb.RENDER, cmd, kit.MDB_TEXT, args) }()
 
 	switch arg := kit.Simple(args...); cmd {
 	case ice.RENDER_OUTPUT:
@@ -272,7 +273,6 @@ func (f *Frame) Start(m *ice.Message, arg ...string) bool {
 		f.target = m.Target()
 		aaa.UserRoot(m)
 	default:
-
 		if s, e := os.Open(arg[0]); !m.Warn(e != nil, "%s", e) {
 			defer s.Close()
 

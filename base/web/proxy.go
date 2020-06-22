@@ -10,7 +10,7 @@ const PROXY = "proxy"
 func init() {
 	Index.Merge(&ice.Context{
 		Configs: map[string]*ice.Config{
-			PROXY: {Name: "proxy", Help: "代理", Value: kit.Data(kit.MDB_SHORT, "proxy")},
+			PROXY: {Name: "proxy", Help: "代理", Value: kit.Data(kit.MDB_SHORT, PROXY)},
 		},
 		Commands: map[string]*ice.Command{
 			PROXY: {Name: "proxy name cmd auto", Help: "代理", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {

@@ -32,9 +32,11 @@ func (f *Frame) Begin(m *ice.Message, arg ...string) ice.Server {
 }
 func (f *Frame) Start(m *ice.Message, arg ...string) bool {
 	for {
-		if l, ok := <-f.p; !ok {
-			break
-		} else {
+		select {
+		case l, ok := <-f.p:
+			if !ok {
+				break
+			}
 			// 日志文件
 			file := kit.Select("bench", m.Conf("show", kit.Keys(l.l, "file")))
 			// 日志格式

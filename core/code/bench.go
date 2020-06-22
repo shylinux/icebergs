@@ -1,9 +1,8 @@
 package code
 
 import (
-	"time"
-
-	ice "github.com/shylinux/icebergs"
+	"github.com/shylinux/icebergs"
+	"github.com/shylinux/icebergs/base/mdb"
 	kit "github.com/shylinux/toolkits"
 	"github.com/shylinux/toolkits/logs"
 	"github.com/shylinux/toolkits/util/bench"
@@ -14,6 +13,7 @@ import (
 	"os"
 	"strings"
 	"sync/atomic"
+	"time"
 )
 
 const (
@@ -109,15 +109,15 @@ func init() {
 		},
 		Commands: map[string]*ice.Command{
 			BENCH: {Name: "bench zone=auto id=auto auto", Help: "性能压测", Action: map[string]*ice.Action{
-				kit.MDB_CREATE: {Name: "create zone", Help: "创建", Hand: func(m *ice.Message, arg ...string) {
+				mdb.CREATE: {Name: "create zone", Help: "创建", Hand: func(m *ice.Message, arg ...string) {
 					_bench_create(m, arg[0])
 				}},
-				kit.MDB_INSERT: {Name: "insert zone type name text nconn nreqs", Help: "插入", Hand: func(m *ice.Message, arg ...string) {
+				mdb.INSERT: {Name: "insert zone type name text nconn nreqs", Help: "插入", Hand: func(m *ice.Message, arg ...string) {
 					_bench_insert(m, arg[0], arg[1], arg[2],
 						kit.Select("http://localhost:9020/code/bench?cmd="+arg[2], arg, 3),
 						kit.Select("3", arg, 4), kit.Select("10", arg, 5))
 				}},
-				kit.MDB_MODIFY: {Name: "modify key value old", Help: "编辑", Hand: func(m *ice.Message, arg ...string) {
+				mdb.MODIFY: {Name: "modify key value old", Help: "编辑", Hand: func(m *ice.Message, arg ...string) {
 					_bench_modify(m, m.Option(kit.MDB_ZONE), m.Option(kit.MDB_ID), arg[0], arg[1], kit.Select("", arg, 2))
 				}},
 				kit.MDB_SHOW: {Name: "show type name text arg...", Help: "运行", Hand: func(m *ice.Message, arg ...string) {

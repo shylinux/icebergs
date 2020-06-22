@@ -1,11 +1,13 @@
 package web
 
 import (
-	ice "github.com/shylinux/icebergs"
+	"github.com/shylinux/icebergs"
+	"github.com/shylinux/icebergs/base/mdb"
 	kit "github.com/shylinux/toolkits"
 
 	"encoding/csv"
 	"os"
+	"strings"
 )
 
 func _favor_list(m *ice.Message, zone, id string, fields ...string) {
@@ -30,8 +32,8 @@ func _favor_list(m *ice.Message, zone, id string, fields ...string) {
 			// 详细信息
 			m.Push("detail", value)
 			m.Optionv("value", value)
-			m.Push(kit.MDB_KEY, kit.MDB_RENDER)
-			m.Push(kit.MDB_VALUE, m.Cmdx(m.Conf(FAVOR, kit.Keys(kit.MDB_META, kit.MDB_RENDER, value[kit.MDB_TYPE]))))
+			m.Push(kit.MDB_KEY, mdb.RENDER)
+			m.Push(kit.MDB_VALUE, m.Cmdx(m.Conf(FAVOR, kit.Keys(kit.MDB_META, mdb.RENDER, value[kit.MDB_TYPE]))))
 		})
 	})
 }
@@ -117,6 +119,21 @@ func _favor_commit(m *ice.Message, zone, id string, arg ...string) {
 	m.Richs(FAVOR, nil, zone, func(key string, val map[string]interface{}) {
 		m.Grows(FAVOR, kit.Keys(kit.MDB_HASH, key), kit.MDB_ID, id, func(index int, value map[string]interface{}) {
 			m.Cmdy(STORY, "add", value[kit.MDB_TYPE], value[kit.MDB_NAME], value[kit.MDB_TEXT])
+		})
+	})
+}
+func _favor_search(m *ice.Message, kind, name, text string, arg ...string) {
+	m.Richs(FAVOR, nil, kit.Select(kit.MDB_FOREACH, ""), func(key string, val map[string]interface{}) {
+		m.Grows(FAVOR, kit.Keys(kit.MDB_HASH, key), "", "", func(index int, value map[string]interface{}) {
+			if name != value[kit.MDB_NAME] && !strings.Contains(kit.Format(value[kit.MDB_TEXT]), name) {
+				return
+			}
+			m.Push("pod", m.Option("pod"))
+			m.Push("ctx", "web")
+			m.Push("cmd", "favor")
+			m.Push(key, value, []string{kit.MDB_TIME}, val)
+			m.Push(kit.MDB_SIZE, kit.FmtSize(int64(len(kit.Format(value[kit.MDB_TEXT])))))
+			m.Push(key, value, []string{kit.MDB_TYPE, kit.MDB_NAME, kit.MDB_TEXT}, val)
 		})
 	})
 }
@@ -276,23 +293,26 @@ func init() {
 			FAVOR: {Name: "favor zone=auto id=auto auto", Help: "收藏夹", Meta: kit.Dict(
 				"detail", []string{"编辑", "收藏", "收录", "导出", "删除"},
 			), Action: map[string]*ice.Action{
-				kit.MDB_EXPORT: {Name: "export file", Help: "导出", Hand: func(m *ice.Message, arg ...string) {
+				mdb.EXPORT: {Name: "export file", Help: "导出", Hand: func(m *ice.Message, arg ...string) {
 					_favor_export(m, kit.Select(_EXPORT, arg, 0))
 				}},
-				kit.MDB_IMPORT: {Name: "import file", Help: "导入", Hand: func(m *ice.Message, arg ...string) {
+				mdb.IMPORT: {Name: "import file", Help: "导入", Hand: func(m *ice.Message, arg ...string) {
 					_favor_import(m, kit.Select(_EXPORT, arg, 0))
 				}},
-				kit.MDB_CREATE: {Name: "create zone", Help: "创建", Hand: func(m *ice.Message, arg ...string) {
+				mdb.CREATE: {Name: "create zone", Help: "创建", Hand: func(m *ice.Message, arg ...string) {
 					_favor_create(m, arg[0])
 				}},
-				kit.MDB_INSERT: {Name: "insert zone type name text", Help: "插入", Hand: func(m *ice.Message, arg ...string) {
+				mdb.INSERT: {Name: "insert zone type name text", Help: "插入", Hand: func(m *ice.Message, arg ...string) {
 					_favor_insert(m, arg[0], arg[1], arg[2], kit.Select("", arg, 3))
 				}},
-				kit.MDB_MODIFY: {Name: "modify key value old", Help: "编辑", Hand: func(m *ice.Message, arg ...string) {
+				mdb.MODIFY: {Name: "modify key value old", Help: "编辑", Hand: func(m *ice.Message, arg ...string) {
 					_favor_modify(m, m.Option(kit.MDB_ZONE), m.Option(kit.MDB_ID), arg[0], arg[1], kit.Select("", arg, 2))
 				}},
-				kit.MDB_COMMIT: {Name: "commit arg...", Help: "提交", Hand: func(m *ice.Message, arg ...string) {
+				mdb.COMMIT: {Name: "commit arg...", Help: "提交", Hand: func(m *ice.Message, arg ...string) {
 					_favor_commit(m, m.Option(kit.MDB_ZONE), m.Option(kit.MDB_ID), arg...)
+				}},
+				mdb.SEARCH: {Name: "search type name text", Help: "搜索", Hand: func(m *ice.Message, arg ...string) {
+					_favor_search(m, arg[0], arg[1], arg[2], arg[3:]...)
 				}},
 				kit.MDB_SHARE: {Name: "share arg...", Help: "共享", Hand: func(m *ice.Message, arg ...string) {
 					_favor_share(m, m.Option(kit.MDB_ZONE), m.Option(kit.MDB_ID), arg...)

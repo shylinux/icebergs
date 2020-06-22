@@ -204,6 +204,9 @@ const (
 
 	PARSER = "parser"
 	ADVISE = "advise"
+
+	PLUGIN = "plugin"
+	ENGINE = "engine"
 )
 
 var Index = &ice.Context{Name: "mdb", Help: "数据模块",

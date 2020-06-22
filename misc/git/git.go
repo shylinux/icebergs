@@ -3,8 +3,10 @@ package git
 import (
 	ice "github.com/shylinux/icebergs"
 	"github.com/shylinux/icebergs/base/cli"
+	"github.com/shylinux/icebergs/base/mdb"
 	"github.com/shylinux/icebergs/base/web"
 	"github.com/shylinux/icebergs/core/code"
+	"github.com/shylinux/icebergs/core/wiki"
 	kit "github.com/shylinux/toolkits"
 
 	"os"
@@ -78,7 +80,7 @@ var Index = &ice.Context{Name: "git", Help: "代码库",
 
 			// 应用项目
 			m.Cmd("nfs.dir", m.Conf(web.DREAM, "meta.path"), "name path").Table(func(index int, value map[string]string, head []string) {
-				add(m, value["name"], value["path"])
+				// add(m, value["name"], value["path"])
 			})
 		}},
 		"auto": {Name: "auto", Help: "自动化", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
@@ -110,7 +112,9 @@ var Index = &ice.Context{Name: "git", Help: "代码库",
 			})
 			m.Sort("name")
 		}},
-		"total": {Name: "total name=auto auto", Help: "提交统计", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		"total": {Name: "total name=auto auto", Help: "提交统计", Meta: kit.Dict(
+			mdb.PLUGIN, wiki.DataPlugin,
+		), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			if len(arg) > 0 {
 				// 提交详情
 				m.Richs("repos", nil, arg[0], func(key string, value map[string]interface{}) {
@@ -145,7 +149,7 @@ var Index = &ice.Context{Name: "git", Help: "代码库",
 			})
 			wg.Wait()
 			m.Push("name", "total")
-			m.Push("days", days)
+			m.Push("days", kit.Int(days)+1)
 			m.Push("commit", commit)
 			m.Push("adds", adds)
 			m.Push("dels", dels)
@@ -208,7 +212,7 @@ var Index = &ice.Context{Name: "git", Help: "代码库",
 			}
 
 			args := []string{}
-			args = append(args, "log", "--shortstat", "--pretty=commit: %ad %n%s", "--date=iso", "--reverse")
+			args = append(args, "log", kit.Format("--author=%s\\|shylinux", m.Option(ice.MSG_USERNAME)), "--shortstat", "--pretty=commit: %ad %n%s", "--date=iso", "--reverse")
 			if len(arg) > 0 {
 				args = append(args, kit.Select("-n", "--since", strings.Contains(arg[0], "-")))
 				if strings.Contains(arg[0], "-") && !strings.Contains(arg[0], ":") {

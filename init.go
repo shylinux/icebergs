@@ -106,6 +106,18 @@ var Index = &Context{Name: "ice", Help: "冰山模块",
 		"help": {Name: "help", Help: "帮助", Hand: func(m *Message, c *Context, cmd string, arg ...string) {
 			m.Echo(strings.Join(kit.Simple(m.Confv("help", "index")), "\n"))
 		}},
+		"name": {Name: "name", Help: "命名", Hand: func(m *Message, c *Context, cmd string, arg ...string) {
+			for k, v := range names {
+				m.Push("key", k)
+				switch v := v.(type) {
+				case *Context:
+					m.Push("value", v.Name)
+				default:
+					m.Push("value", "")
+				}
+			}
+			m.Sort("key")
+		}},
 		"exit": {Name: "exit", Help: "结束", Hand: func(m *Message, c *Context, cmd string, arg ...string) {
 			m.root.target.server.(*Frame).code = kit.Int(kit.Select("0", arg, 0))
 			m.Cmd("ssh.source", "etc/exit.shy", "exit.shy", "退出配置")

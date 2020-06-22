@@ -10,10 +10,10 @@ func init() {
 		Commands: map[string]*ice.Command{
 			"/" + mdb.SEARCH: {Name: "/search", Help: "搜索引擎", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 				if len(arg) > 2 {
-					m.Cmdy(mdb.RENDER, arg)
+					m.Cmdy(m.Space(m.Option("pod")), mdb.RENDER, arg)
 					return
 				}
-				m.Cmdy(mdb.SEARCH, arg)
+				m.Cmdy(m.Space(m.Option("pod")), mdb.SEARCH, arg)
 			}},
 		},
 	}, nil)

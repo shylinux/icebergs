@@ -277,7 +277,7 @@ func (f *Frame) Start(m *ice.Message, arg ...string) bool {
 			defer s.Close()
 
 			buf := bytes.NewBuffer(make([]byte, 0, 4096))
-			defer m.Echo(buf.String())
+			defer func() { m.Echo(buf.String()) }()
 
 			// 脚本解析
 			f.source = arg[0]
@@ -380,4 +380,4 @@ var Index = &ice.Context{Name: "ssh", Help: "终端模块",
 	},
 }
 
-func init() { ice.Index.Register(Index, &Frame{}) }
+func init() { ice.Index.Register(Index, &Frame{}, SOURCE, QRCODE) }

@@ -119,9 +119,10 @@ func _space_send(m *ice.Message, space string, arg ...string) {
 func _space_echo(msg *ice.Message, source, target []string, c *websocket.Conn, name string) {
 	msg.Optionv(ice.MSG_SOURCE, source)
 	msg.Optionv(ice.MSG_TARGET, target)
-	c.WriteMessage(1, []byte(msg.Format("meta")))
+	e := c.WriteMessage(1, []byte(msg.Format("meta")))
+	msg.Assert(e)
 	target = append([]string{name}, target...)
-	msg.Info("send %v %v->%v %v %v", 1, source, target, msg.Detailv(), msg.Format("meta"))
+	msg.Log("send", "%v->%v %v %v", source, target, msg.Detailv(), msg.Format("meta"))
 }
 func _space_exec(msg *ice.Message, source, target []string, c *websocket.Conn, name string) {
 	msg = msg.Cmd()
@@ -138,7 +139,7 @@ func _space_handle(m *ice.Message, safe bool, send map[string]*ice.Message, c *w
 			socket, msg := c, m.Spawns(b)
 			target := kit.Simple(msg.Optionv(ice.MSG_TARGET))
 			source := kit.Simple(msg.Optionv(ice.MSG_SOURCE), name)
-			msg.Info("recv %v<-%v %s %v", target, source, msg.Detailv(), msg.Format("meta"))
+			msg.Log("recv", "%v<-%v %s %v", target, source, msg.Detailv(), msg.Format("meta"))
 
 			if len(target) == 0 {
 				msg.Option(ice.MSG_USERROLE, aaa.UserRole(msg, msg.Option(ice.MSG_USERNAME)))

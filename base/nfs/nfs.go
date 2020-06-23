@@ -232,6 +232,17 @@ const (
 
 	FILE = "file"
 )
+const (
+	DIR_ROOT = "dir_root"
+	DIR_TYPE = "dir_type"
+	DIR_DEEP = "dir_deep"
+	DIR_REG  = "dir_reg"
+)
+const (
+	TYPE_ALL  = "all"
+	TYPE_DIR  = "dir"
+	TYPE_FILE = "file"
+)
 
 var Index = &ice.Context{Name: "nfs", Help: "存储模块",
 	Configs: map[string]*ice.Config{

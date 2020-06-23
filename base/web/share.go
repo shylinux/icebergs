@@ -260,7 +260,7 @@ func init() {
 					}
 
 					switch value[kit.MDB_TYPE] {
-					case TYPE_STORY:
+					case STORY:
 						value = _share_story(m, value, arg...)
 					}
 

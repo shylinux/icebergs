@@ -9,6 +9,7 @@ import (
 
 	"fmt"
 	"net/http"
+	"os"
 	"path"
 	"time"
 )
@@ -56,6 +57,9 @@ func Render(msg *ice.Message, cmd string, args ...interface{}) {
 	case ice.RENDER_DOWNLOAD:
 		msg.W.Header().Set("Content-Disposition", fmt.Sprintf("filename=%s", kit.Select(path.Base(arg[0]), arg, 2)))
 		msg.W.Header().Set("Content-Type", kit.Select("text/html", arg, 1))
+		if _, e := os.Stat(arg[0]); e != nil {
+			arg[0] = "/" + arg[0]
+		}
 		http.ServeFile(msg.W, msg.R, arg[0])
 
 	case ice.RENDER_RESULT:

@@ -223,7 +223,7 @@ func init() {
 				_space_send(m, arg[0], arg[1:]...)
 			}},
 
-			"/space/": {Name: "/space/", Help: "空间站", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			"/space/": {Name: "/space/ type name", Help: "空间站", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 				if s, e := websocket.Upgrade(m.W, m.R, nil, m.Confi(SPACE, "meta.buffer.r"), m.Confi(SPACE, "meta.buffer.w")); m.Assert(e) {
 					name := m.Option(kit.MDB_NAME, strings.Replace(kit.Select(m.Option(ice.MSG_USERADDR), m.Option(kit.MDB_NAME)), ".", "_", -1))
 					kind := kit.Select(WORKER, m.Option(kit.MDB_TYPE))

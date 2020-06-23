@@ -82,7 +82,7 @@ func _pprof_show(m *ice.Message, zone string, id string) {
 		m.Cmd(cli.DAEMON, m.Confv(PPROF, "meta.pprof"), "-http="+p, val[BINNARY], msg.Append(kit.MDB_TEXT))
 
 		url := "http://" + p + "/ui/top"
-		m.Cmd(web.FAVOR, favor, web.TYPE_SPIDE, url, msg.Append(kit.MDB_TEXT))
+		m.Cmd(web.FAVOR, favor, web.SPIDE, url, msg.Append(kit.MDB_TEXT))
 		m.Set(ice.MSG_RESULT).Echo(url).Echo(" \n").Echo("\n")
 		m.Echo(strings.Join(list, "\n")).Echo("\n")
 

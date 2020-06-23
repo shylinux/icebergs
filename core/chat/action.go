@@ -123,7 +123,7 @@ func _action_show(m *ice.Message, river, storm, index string, arg ...string) {
 }
 func _action_proxy(m *ice.Message) (proxy []string) {
 	if m.Option(POD) != "" {
-		proxy = append(proxy, web.PROXY, m.Option(POD))
+		proxy = append(proxy, web.SPACE, m.Option(POD))
 		m.Option(POD, "")
 	}
 	return proxy

@@ -1,11 +1,11 @@
 package aaa
 
 import (
-	"github.com/shylinux/icebergs"
+	ice "github.com/shylinux/icebergs"
 	"github.com/shylinux/icebergs/base/cli"
 	"github.com/shylinux/icebergs/base/gdb"
 	"github.com/shylinux/icebergs/base/mdb"
-	"github.com/shylinux/toolkits"
+	kit "github.com/shylinux/toolkits"
 
 	"strings"
 )
@@ -55,11 +55,16 @@ func UserRoot(m *ice.Message) {
 	cli.PassWord = cli.UserName
 	_user_create(m, cli.UserName, cli.PassWord)
 }
-func UserRole(m *ice.Message, username interface{}) string {
-	if username == cli.UserName {
+func UserRole(m *ice.Message, username interface{}) (role string) {
+	if role = VOID; username == cli.UserName {
 		return ROOT
 	}
-	return VOID
+	m.Richs(ROLE, nil, TECH, func(key string, value map[string]interface{}) {
+		if kit.Value(value, kit.Keys(USER, username)) == true {
+			role = TECH
+		}
+	})
+	return
 }
 func UserLogin(m *ice.Message, username, password string) bool {
 	if _user_login(m, username, password) {

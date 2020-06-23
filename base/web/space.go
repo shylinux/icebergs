@@ -125,7 +125,9 @@ func _space_echo(msg *ice.Message, source, target []string, c *websocket.Conn, n
 	msg.Log("send", "%v->%v %v %v", source, target, msg.Detailv(), msg.Format("meta"))
 }
 func _space_exec(msg *ice.Message, source, target []string, c *websocket.Conn, name string) {
-	msg = msg.Cmd()
+	if msg.Right(msg.Detailv()) {
+		msg = msg.Cmd()
+	}
 	msg.Set("_option")
 	_space_echo(msg, []string{}, kit.Revert(source)[1:], c, name)
 	msg.Cost("%v->%v %v %v", source, target, msg.Detailv(), msg.Format("append"))

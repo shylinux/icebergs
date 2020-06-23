@@ -1,9 +1,10 @@
 package cli
 
 import (
-	"github.com/shylinux/icebergs"
+	ice "github.com/shylinux/icebergs"
 	"github.com/shylinux/icebergs/base/ctx"
-	"github.com/shylinux/toolkits"
+	"github.com/shylinux/icebergs/base/mdb"
+	kit "github.com/shylinux/toolkits"
 
 	"os"
 	"os/user"
@@ -78,6 +79,10 @@ var Index = &ice.Context{Name: "cli", Help: "命令模块",
 			n := kit.Int(kit.Select("20", m.Conf(RUNTIME, "host.GOMAXPROCS")))
 			m.Logs("host", "gomaxprocs", n)
 			runtime.GOMAXPROCS(n)
+
+			m.Cmdy(mdb.ENGINE, mdb.CREATE, "shell", m.AddCmd(&ice.Command{Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+				m.Cmdy(SYSTEM, arg[2])
+			}}))
 		}},
 		ice.CTX_EXIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			m.Save(RUNTIME, SYSTEM)

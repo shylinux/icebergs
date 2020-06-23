@@ -3,6 +3,7 @@ package web
 import (
 	ice "github.com/shylinux/icebergs"
 	"github.com/shylinux/icebergs/base/aaa"
+	"github.com/shylinux/icebergs/base/mdb"
 	kit "github.com/shylinux/toolkits"
 	"github.com/skip2/go-qrcode"
 
@@ -88,4 +89,35 @@ func RenderCookie(msg *ice.Message, value string, arg ...string) { // name path 
 func RenderStatus(msg *ice.Message, code int, text string) { // name path expire
 	msg.W.WriteHeader(code)
 	msg.W.Write([]byte(text))
+}
+
+var RENDER = struct {
+	Button string
+	Field  string
+	A      string
+}{
+	Button: "button",
+	Field:  "field",
+	A:      "a",
+}
+
+func init() {
+	Index.Merge(&ice.Context{
+		Commands: map[string]*ice.Command{
+			mdb.RENDER: {Action: map[string]*ice.Action{
+				RENDER.Button: {Hand: func(m *ice.Message, arg ...string) {
+					m.Echo(`<input type="button" value="%s">`, arg[0])
+				}},
+				RENDER.Field: {Hand: func(m *ice.Message, arg ...string) {
+					m.Echo(`<fieldset><legend>%s(%s)</legend><form></form></fieldset>`, arg[0], arg[1])
+				}},
+				RENDER.A: {Hand: func(m *ice.Message, arg ...string) {
+					u := kit.Select(m.Conf(SHARE, "meta.domain"), arg, 1)
+					m.Echo(`<a href="%s" target="_blank">%s</a>`, u, arg[0])
+				}},
+			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+				m.Echo(`<input type="%s" value="%s">`, arg[0], arg[1])
+			}},
+		},
+	}, nil)
 }

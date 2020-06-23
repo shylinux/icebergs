@@ -1,8 +1,8 @@
 package mdb
 
 import (
-	"github.com/shylinux/icebergs"
-	"github.com/shylinux/toolkits"
+	ice "github.com/shylinux/icebergs"
+	kit "github.com/shylinux/toolkits"
 )
 
 const RENDER = "render"
@@ -19,7 +19,7 @@ func init() {
 				}},
 			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 				m.Richs(RENDER, nil, kit.MDB_FOREACH, func(key string, value map[string]interface{}) {
-					m.Cmdy(kit.Keys(value[kit.MDB_TEXT], value[kit.MDB_NAME]), RENDER, arg[0], arg[1], kit.Select("", arg, 2))
+					m.Cmdy(kit.Keys(value[kit.MDB_TEXT], value[kit.MDB_NAME]), arg[0], arg[1], kit.Select("", arg, 2))
 				})
 			}},
 		}}, nil)

@@ -1,11 +1,10 @@
 package ice
 
 import (
-	"github.com/shylinux/toolkits"
-	"github.com/shylinux/toolkits/logs"
+	kit "github.com/shylinux/toolkits"
+	log "github.com/shylinux/toolkits/logs"
 
 	"fmt"
-	"runtime"
 	"strings"
 )
 
@@ -26,7 +25,7 @@ func (m *Message) log(level string, str string, arg ...interface{}) *Message {
 
 	case LOG_CMDS, LOG_START, LOG_SERVE:
 		prefix, suffix = "\033[32m", "\033[0m"
-	case LOG_AUTH, LOG_COST:
+	case LOG_AUTH, LOG_CONF, LOG_COST:
 		prefix, suffix = "\033[33m", "\033[0m"
 	case LOG_WARN, LOG_ERROR, LOG_CLOSE:
 		prefix, suffix = "\033[31m", "\033[0m"
@@ -59,11 +58,10 @@ func (m *Message) Logs(level string, arg ...interface{}) *Message {
 func (m *Message) Info(str string, arg ...interface{}) *Message {
 	return m.log(LOG_INFO, str, arg...)
 }
-func (m *Message) Warn(err bool, str string, arg ...interface{}) bool {
+func (m *Message) Warn(err bool, arg ...interface{}) bool {
 	if err {
-		m.Echo("warn: ").Echo(str, arg...)
-		_, file, line, _ := runtime.Caller(1)
-		return m.log(LOG_WARN, "%s:%d %s", file, line, fmt.Sprintf(str, arg...)) != nil
+		m.meta[MSG_RESULT] = append([]string{"warn: "}, kit.Simple(arg...)...)
+		return m.log(LOG_WARN, fmt.Sprint(arg...)) != nil
 	}
 	return false
 }

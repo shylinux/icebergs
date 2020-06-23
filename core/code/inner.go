@@ -98,6 +98,13 @@ func _inner_show(m *ice.Message, name string) {
 	}
 
 	switch m.Set(ice.MSG_RESULT); p {
+	case "go":
+		if strings.HasSuffix(name, "test.go") {
+			m.Cmdy(cli.SYSTEM, "go", "test", "-v", "./"+name)
+		} else {
+			m.Cmdy(cli.SYSTEM, "go", "run", "./"+name)
+		}
+
 	case "csv":
 		m.CSV(m.Cmdx("nfs.cat", name))
 	case "md":
@@ -131,7 +138,6 @@ func init() {
 				"show", kit.Dict(
 					"sh", []string{"bash"},
 					"py", []string{"python"},
-					"go", []string{"go", "run"},
 					"js", []string{"node"},
 				),
 			)},

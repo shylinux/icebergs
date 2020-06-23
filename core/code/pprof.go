@@ -14,25 +14,16 @@ import (
 	"strings"
 )
 
-var PPROF = ice.Name("pprof", Index)
-
-const (
-	BINNARY = "binnary"
-	SERVICE = "service"
-	SECONDS = "seconds"
-)
-
 func _pprof_list(m *ice.Message, zone string, id string, field ...interface{}) {
 	m.Richs(PPROF, nil, kit.Select(kit.MDB_FOREACH, zone), func(key string, val map[string]interface{}) {
 		val = val[kit.MDB_META].(map[string]interface{})
 		if zone = kit.Format(kit.Value(val, kit.MDB_ZONE)); id == "" {
 			m.Grows(PPROF, kit.Keys(kit.MDB_HASH, key), "", "", func(index int, value map[string]interface{}) {
 				// 列表信息
-				m.Push("操作", `<input type="button" value="运行">`)
+				m.Push("操作", m.Cmdx(mdb.RENDER, web.RENDER.Button, "运行"))
 				m.Push(zone, value, []string{
-					kit.MDB_ZONE, kit.MDB_ID,
-					kit.MDB_TYPE, kit.MDB_NAME, kit.MDB_TEXT,
-					SECONDS, BINNARY, SERVICE,
+					kit.MDB_ZONE, kit.MDB_ID, kit.MDB_TYPE,
+					kit.MDB_NAME, kit.MDB_TEXT, SECONDS, BINNARY, SERVICE,
 				}, val)
 			})
 		} else {
@@ -40,7 +31,7 @@ func _pprof_list(m *ice.Message, zone string, id string, field ...interface{}) {
 				// 详细信息
 				m.Push("detail", value)
 				m.Push(kit.MDB_KEY, "操作")
-				m.Push(kit.MDB_VALUE, `<input type="button" value="运行">`)
+				m.Push(kit.MDB_VALUE, m.Cmdx(mdb.RENDER, web.RENDER.Button, "运行"))
 			})
 		}
 	})
@@ -101,25 +92,25 @@ func _pprof_show(m *ice.Message, zone string, id string) {
 		m.Push("bin", bin)
 	})
 }
-func _pprof_modify(m *ice.Message, zone, id, pro, set, old string) {
-	pro = kit.Select(pro, m.Option(kit.MDB_KEY))
+func _pprof_modify(m *ice.Message, zone, id, k, v, old string) {
+	k = kit.Select(k, m.Option(kit.MDB_KEY))
 	m.Richs(PPROF, nil, kit.Select(kit.MDB_FOREACH, zone), func(key string, val map[string]interface{}) {
-		switch pro {
+		switch k {
 		case kit.MDB_ZONE, kit.MDB_ID, kit.MDB_TIME:
-			m.Warn(true, "deny modify %v", pro)
+			m.Warn(true, mdb.ErrDenyModify, k)
 			return
 		case BINNARY, SERVICE, SECONDS:
 			// 修改信息
-			m.Log_MODIFY(kit.MDB_ZONE, zone, kit.MDB_KEY, pro, kit.MDB_VALUE, set, "old", old)
+			m.Log_MODIFY(kit.MDB_ZONE, zone, kit.MDB_KEY, k, kit.MDB_VALUE, v, "old", old)
 			val = val[kit.MDB_META].(map[string]interface{})
-			kit.Value(val, pro, set)
+			kit.Value(val, k, v)
 			return
 		}
 
 		m.Grows(PPROF, kit.Keys(kit.MDB_HASH, key), kit.MDB_ID, id, func(index int, value map[string]interface{}) {
 			// 修改信息
-			m.Log_MODIFY(kit.MDB_ZONE, zone, kit.MDB_ID, id, kit.MDB_KEY, pro, kit.MDB_VALUE, set, "old", old)
-			kit.Value(value, pro, set)
+			m.Log_MODIFY(kit.MDB_ZONE, zone, kit.MDB_ID, id, kit.MDB_KEY, k, kit.MDB_VALUE, v, "old", old)
+			kit.Value(value, k, v)
 		})
 	})
 }
@@ -127,20 +118,23 @@ func _pprof_insert(m *ice.Message, zone, kind, name, text string, arg ...string)
 	m.Richs(PPROF, nil, zone, func(key string, val map[string]interface{}) {
 		id := m.Grow(PPROF, kit.Keys(kit.MDB_HASH, key), kit.Dict(
 			kit.MDB_TYPE, kind, kit.MDB_NAME, name, kit.MDB_TEXT, text,
-			// 添加信息
 			kit.MDB_EXTRA, kit.Dict(arg),
 		))
-		m.Log_INSERT(kit.MDB_META, PPROF, kit.MDB_ZONE, zone,
-			kit.MDB_ID, id, kit.MDB_TYPE, kind, kit.MDB_NAME, name)
+		m.Log_INSERT(kit.MDB_META, PPROF, kit.MDB_ZONE, zone, kit.MDB_ID, id, kit.MDB_TYPE, kind, kit.MDB_NAME, name)
 		m.Echo("%d", id)
 	})
 }
 func _pprof_create(m *ice.Message, zone string, binnary, service string, seconds string, arg ...string) {
-	m.Rich(PPROF, nil, kit.Data(kit.MDB_ZONE, zone,
-		// 添加信息
-		BINNARY, binnary, SERVICE, service, SECONDS, seconds, arg))
+	m.Rich(PPROF, nil, kit.Data(kit.MDB_ZONE, zone, BINNARY, binnary, SERVICE, service, SECONDS, seconds, arg))
 	m.Log_CREATE(kit.MDB_ZONE, zone)
 }
+
+const PPROF = "pprof"
+const (
+	BINNARY = "binnary"
+	SERVICE = "service"
+	SECONDS = "seconds"
+)
 
 func init() {
 	Index.Merge(&ice.Context{

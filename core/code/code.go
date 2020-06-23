@@ -255,4 +255,4 @@ export %s
 	},
 }
 
-func init() { web.Index.Register(Index, &web.Frame{}) }
+func init() { web.Index.Register(Index, &web.Frame{}, BENCH, PPROF) }

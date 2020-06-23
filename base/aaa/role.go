@@ -1,8 +1,8 @@
 package aaa
 
 import (
-	"github.com/shylinux/icebergs"
-	"github.com/shylinux/toolkits"
+	ice "github.com/shylinux/icebergs"
+	kit "github.com/shylinux/toolkits"
 )
 
 const ( // 用户角色
@@ -32,6 +32,13 @@ func _role_list(m *ice.Message, userrole string) {
 			m.Push(ROLE, kit.Value(value, kit.MDB_NAME))
 			m.Push(kit.MDB_ZONE, Black)
 			m.Push(kit.MDB_KEY, k)
+		}
+	})
+}
+func _role_user(m *ice.Message, userrole string, username ...string) {
+	m.Richs(ROLE, nil, userrole, func(key string, value map[string]interface{}) {
+		for _, user := range username {
+			kit.Value(value, kit.Keys(USER, user), true)
 		}
 	})
 }
@@ -99,7 +106,7 @@ func init() {
 			ROLE: {Name: "role", Help: "角色", Value: kit.Data(kit.MDB_SHORT, kit.MDB_NAME)},
 		},
 		Commands: map[string]*ice.Command{
-			ROLE: {Name: "role [role]", Help: "角色", Action: map[string]*ice.Action{
+			ROLE: {Name: "role [role [user...]]", Help: "角色", Action: map[string]*ice.Action{
 				White: {Name: "white role chain...", Help: "白名单", Hand: func(m *ice.Message, arg ...string) {
 					_role_white(m, arg[0], kit.Keys(arg[1:]), true)
 				}},
@@ -112,6 +119,9 @@ func init() {
 					}
 				}},
 			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+				if len(arg) > 1 {
+					_role_user(m, arg[0], arg[1:]...)
+				}
 				_role_list(m, kit.Select("", arg, 0))
 			}},
 		},

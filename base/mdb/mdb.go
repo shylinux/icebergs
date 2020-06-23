@@ -1,8 +1,8 @@
 package mdb
 
 import (
-	"github.com/shylinux/icebergs"
-	"github.com/shylinux/toolkits"
+	ice "github.com/shylinux/icebergs"
+	kit "github.com/shylinux/toolkits"
 	"github.com/shylinux/toolkits/task"
 
 	"encoding/csv"
@@ -180,6 +180,9 @@ func _dict_export(m *ice.Message, prefix, key, file string) {
 }
 
 const (
+	ErrDenyModify = "deny modify "
+)
+const (
 	CSV  = "csv"
 	JSON = "json"
 )
@@ -201,9 +204,6 @@ const (
 	DELETE = "delete"
 	SELECT = "select"
 	MODIFY = "modify"
-
-	PARSER = "parser"
-	ADVISE = "advise"
 )
 
 var Index = &ice.Context{Name: "mdb", Help: "数据模块",
@@ -242,5 +242,7 @@ var Index = &ice.Context{Name: "mdb", Help: "数据模块",
 }
 
 func init() {
-	ice.Index.Register(Index, nil, IMPORT, EXPORT, SELECT, SEARCH, RENDER)
+	ice.Index.Register(Index, nil, IMPORT, EXPORT, SELECT,
+		PLUGIN, ENGINE, SEARCH, RENDER,
+	)
 }

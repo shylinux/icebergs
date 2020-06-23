@@ -97,6 +97,10 @@ var Index = &ice.Context{Name: "web", Help: "网络模块",
 		ice.CTX_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			m.Load()
 
+			for k := range c.Commands[mdb.RENDER].Action {
+				m.Cmdy(mdb.RENDER, mdb.CREATE, k, mdb.RENDER, c.Cap(ice.CTX_FOLLOW))
+			}
+
 			m.Cmd(SPIDE, mdb.CREATE, "self", kit.Select("http://:9020", m.Conf(cli.RUNTIME, "conf.ctx_self")))
 			m.Cmd(SPIDE, mdb.CREATE, "dev", kit.Select("http://:9020", m.Conf(cli.RUNTIME, "conf.ctx_dev")))
 			m.Cmd(SPIDE, mdb.CREATE, "shy", kit.Select("https://shylinux.com:443", m.Conf(cli.RUNTIME, "conf.ctx_shy")))

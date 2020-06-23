@@ -16,13 +16,11 @@ func _wiki_list(m *ice.Message, cmd, name string, arg ...string) bool {
 	if strings.HasSuffix(name, "/") {
 		m.Option(nfs.DIR_ROOT, m.Conf(cmd, "meta.path"))
 		m.Option(nfs.DIR_TYPE, nfs.TYPE_DIR)
-		m.Cmdy(nfs.DIR, name)
+		m.Cmdy(nfs.DIR, name, "time size path")
 
 		m.Option(nfs.DIR_TYPE, nfs.TYPE_FILE)
 		m.Option(nfs.DIR_REG, m.Conf(cmd, "meta.regs"))
-		m.Cmdy(nfs.DIR, name)
-
-		m.Option("_display", "table")
+		m.Cmdy(nfs.DIR, name, "time size path")
 		return true
 	}
 	return false
@@ -64,10 +62,8 @@ var Index = &ice.Context{Name: "wiki", Help: "文档中心",
 	},
 	Commands: map[string]*ice.Command{
 		ice.CTX_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			m.Load()
 		}},
 		ice.CTX_EXIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			m.Save("feel")
 		}},
 
 		"walk": {Name: "walk path=@province auto", Help: "走遍世界", Meta: kit.Dict("display", "local/wiki/walk"), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {

@@ -264,11 +264,10 @@ const (
 )
 
 const FAVOR = "favor"
-const ( // TYPE
-	TYPE_SPIDE = "spide"
-	TYPE_SPACE = "space"
-	TYPE_STORY = "story"
 
+const PLUGIN = "plugin"
+
+const ( // TYPE
 	TYPE_RIVER  = "river"
 	TYPE_STORM  = "storm"
 	TYPE_ACTION = "action"
@@ -303,6 +302,7 @@ func init() {
 					_favor_create(m, arg[0])
 				}},
 				mdb.INSERT: {Name: "insert zone type name text", Help: "插入", Hand: func(m *ice.Message, arg ...string) {
+					_favor_create(m, arg[0])
 					_favor_insert(m, arg[0], arg[1], arg[2], kit.Select("", arg, 3))
 				}},
 				mdb.MODIFY: {Name: "modify key value old", Help: "编辑", Hand: func(m *ice.Message, arg ...string) {

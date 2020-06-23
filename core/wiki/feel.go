@@ -15,20 +15,19 @@ func _feel_show(m *ice.Message, name string, arg ...string) {
 }
 
 const FEEL = "feel"
-const (
-	FeelPlugin = "/plugin/local/wiki/feel.js"
-)
+const FeelPlugin = "/plugin/local/wiki/feel.js"
 
 func init() {
 	Index.Merge(&ice.Context{Name: "feel", Help: "影音媒体",
 		Configs: map[string]*ice.Config{
 			FEEL: {Name: "feel", Help: "影音媒体", Value: kit.Data(
 				kit.MDB_SHORT, "name", "path", "", "regs", ".*.(qrc|png|jpg|JPG|MOV|m4v)",
+				"height", "600", "page.limit", "3",
 			)},
 		},
 		Commands: map[string]*ice.Command{
 			FEEL: {Name: "feel path=auto auto", Help: "影音媒体", Meta: kit.Dict(
-				mdb.PLUGIN, FeelPlugin, "detail", []string{"标签", "删除"},
+				web.PLUGIN, FeelPlugin, "detail", []string{"标签", "删除"},
 			), Action: map[string]*ice.Action{
 				mdb.CREATE: {Name: "create", Help: "创建", Hand: func(m *ice.Message, arg ...string) {
 					m.Conf(FEEL, kit.Keys(path.Base(arg[2]), "-2"), arg[3])
@@ -44,6 +43,9 @@ func init() {
 					_wiki_upload(m, FEEL)
 				}},
 			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+				m.Option("prefix", m.Conf(FEEL, "meta.path"))
+				m.Option("height", m.Conf(FEEL, "meta.height"))
+				m.Option("limit", m.Conf(FEEL, "meta.page.limit"))
 				if !_wiki_list(m, FEEL, kit.Select("./", arg, 0)) {
 					_feel_show(m, arg[0])
 				}

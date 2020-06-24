@@ -21,8 +21,8 @@ func init() {
 	Index.Merge(&ice.Context{Name: "feel", Help: "影音媒体",
 		Configs: map[string]*ice.Config{
 			FEEL: {Name: "feel", Help: "影音媒体", Value: kit.Data(
-				kit.MDB_SHORT, "name", "path", "", "regs", ".*.(qrc|png|jpg|JPG|MOV|m4v)",
-				"height", "600", "page.limit", "3",
+				kit.MDB_SHORT, "name", "path", "", "regs", ".*.(qrc|png|jpg|JPG|MOV|m4v|mp4)",
+				"height", "400", "page.limit", "3",
 			)},
 		},
 		Commands: map[string]*ice.Command{
@@ -42,6 +42,13 @@ func init() {
 				web.UPLOAD: {Name: "upload", Help: "上传", Hand: func(m *ice.Message, arg ...string) {
 					_wiki_upload(m, FEEL)
 				}},
+				web.SPIDE: {Name: "spide type title url poster", Help: "爬虫", Hand: func(m *ice.Message, arg ...string) {
+					m.Cmdy(web.SPIDE, "self", "cache", "GET", arg[2])
+					m.Cmd(web.CACHE, "watch", m.Append("data"), path.Join(m.Conf(FEEL, "meta.path"), m.Option("path"), arg[1])+path.Ext(arg[2]))
+					if m.Option("path") != "最近" {
+						m.Cmd(web.CACHE, "watch", m.Append("data"), path.Join(m.Conf(FEEL, "meta.path"), "最近", arg[1])+path.Ext(arg[2]))
+					}
+				}},
 			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 				m.Option("prefix", m.Conf(FEEL, "meta.path"))
 				m.Option("height", m.Conf(FEEL, "meta.height"))
@@ -49,6 +56,7 @@ func init() {
 				if !_wiki_list(m, FEEL, kit.Select("./", arg, 0)) {
 					_feel_show(m, arg[0])
 				}
+				m.Sort(kit.MDB_TIME, "time_r")
 			}},
 		},
 	}, nil)

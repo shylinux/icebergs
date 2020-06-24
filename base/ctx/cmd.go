@@ -1,8 +1,8 @@
 package ctx
 
 import (
-	"github.com/shylinux/icebergs"
-	"github.com/shylinux/toolkits"
+	ice "github.com/shylinux/icebergs"
+	kit "github.com/shylinux/toolkits"
 
 	"sort"
 	"strings"
@@ -28,30 +28,22 @@ func _command_list(m *ice.Message, all bool, name string) {
 		return
 	}
 
-	// 命令列表
-	p.Travel(func(p *ice.Context, s *ice.Context) {
-		list := []string{}
-		for k := range s.Commands {
-			if k[0] == '/' || k[0] == '_' {
-				// 内部命令
-				continue
-			}
-			list = append(list, k)
+	list := []string{}
+	for k := range p.Target().Commands {
+		if k[0] == '/' || k[0] == '_' {
+			// 内部命令
+			continue
 		}
-		sort.Strings(list)
+		list = append(list, k)
+	}
+	sort.Strings(list)
 
-		for _, k := range list {
-			v := s.Commands[k]
-			m.Push("key", s.Cap(ice.CTX_FOLLOW))
-			m.Push("name", kit.Format(v.Name))
-			m.Push("help", kit.Simple(v.Help)[0])
-			m.Push("meta", kit.Format(v.Meta))
-			if len(v.List) == 0 {
-				_command_make(m, v)
-			}
-			m.Push("list", kit.Format(v.List))
-		}
-	})
+	for _, k := range list {
+		v := p.Target().Commands[k]
+		m.Push("key", k)
+		m.Push("name", kit.Format(v.Name))
+		m.Push("help", kit.Simple(v.Help)[0])
+	}
 }
 func _command_make(m *ice.Message, cmd *ice.Command) {
 	var list []string

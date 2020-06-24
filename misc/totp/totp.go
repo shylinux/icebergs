@@ -1,9 +1,9 @@
 package totp
 
 import (
-	"github.com/shylinux/icebergs"
+	ice "github.com/shylinux/icebergs"
 	"github.com/shylinux/icebergs/base/aaa"
-	"github.com/shylinux/toolkits"
+	kit "github.com/shylinux/toolkits"
 
 	"bytes"
 	"crypto/hmac"
@@ -15,13 +15,13 @@ import (
 	"time"
 )
 
-func gen(per int64) string {
+func _totp_gen(per int64) string {
 	buf := bytes.NewBuffer([]byte{})
 	binary.Write(buf, binary.BigEndian, time.Now().Unix()/per)
 	b := hmac.New(sha1.New, buf.Bytes()).Sum(nil)
 	return strings.ToUpper(base32.StdEncoding.EncodeToString(b[:]))
 }
-func get(key string, num int, per int64) string {
+func _totp_get(key string, num int, per int64) string {
 	now := kit.Int64(time.Now().Unix() / per)
 
 	buf := []byte{}
@@ -43,10 +43,14 @@ func get(key string, num int, per int64) string {
 	return kit.Format(kit.Format("%%0%dd", num), res%int64(math.Pow10(num)))
 }
 
+const TOTP = "totp"
+
 var Index = &ice.Context{Name: "totp", Help: "动态码",
 	Caches: map[string]*ice.Cache{},
 	Configs: map[string]*ice.Config{
-		"totp": {Name: "totp", Help: "动态码", Value: kit.Data(kit.MDB_SHORT, "name", "share", "otpauth://totp/%s?secret=%s")},
+		TOTP: {Name: "totp", Help: "动态码", Value: kit.Data(
+			kit.MDB_SHORT, "name", "share", "otpauth://totp/%s?secret=%s",
+		)},
 	},
 	Commands: map[string]*ice.Command{
 		ice.CTX_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {}},

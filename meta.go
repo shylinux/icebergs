@@ -86,6 +86,7 @@ func (m *Message) Push(key string, value interface{}, arg ...interface{}) *Messa
 			case kit.MDB_KEY, kit.MDB_ZONE:
 				if key != "" {
 					v = key
+					break
 				}
 				fallthrough
 			default:
@@ -319,7 +320,6 @@ func (m *Message) Table(cbs ...func(index int, value map[string]string, head []s
 	return m
 }
 func (m *Message) Render(cmd string, args ...interface{}) *Message {
-	// m.Log(LOG_EXPORT, "%s: %v", cmd, args)
 	m.Optionv(MSG_OUTPUT, cmd)
 	m.Optionv(MSG_ARGS, args)
 

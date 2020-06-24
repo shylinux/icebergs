@@ -1,31 +1,29 @@
 package docker
 
 import (
-	"github.com/shylinux/icebergs"
+	ice "github.com/shylinux/icebergs"
 	"github.com/shylinux/icebergs/base/cli"
 	"github.com/shylinux/icebergs/base/gdb"
 	"github.com/shylinux/icebergs/base/web"
 	"github.com/shylinux/icebergs/core/code"
-	"github.com/shylinux/toolkits"
+	kit "github.com/shylinux/toolkits"
 
 	"strings"
 )
 
-func ListLook(name ...string) []interface{} {
-	list := []interface{}{}
-	for _, k := range name {
-		list = append(list, kit.MDB_INPUT, "text", "name", k, "action", "auto")
-	}
-	return kit.List(append(list,
-		kit.MDB_INPUT, "button", "name", "查看", "action", "auto",
-		kit.MDB_INPUT, "button", "name", "返回", "cb", "Last",
-	)...)
-}
+const DOCKER = "docker"
 
 var Index = &ice.Context{Name: "docker", Help: "虚拟机",
 	Caches: map[string]*ice.Cache{},
 	Configs: map[string]*ice.Config{
-		"docker": {Name: "docker", Help: "虚拟机", Value: kit.Data(kit.MDB_SHORT, "name", "build", []interface{}{})},
+		INSTALL: {Name: "install", Help: "安装", Value: kit.Data("path", "usr/install",
+			"linux", "https://dl.google.com/go/go1.14.2.linux-amd64.tar.gz",
+			"darwin", "https://dl.google.com/go/go1.14.2.darwin-amd64.pkg",
+			"windows", "https://dl.google.com/go/go1.14.2.windows-amd64.msi",
+			"source", "https://dl.google.com/go/go1.14.2.src.tar.gz",
+			"target", "usr/local",
+		)},
+		DOCKER: {Name: "docker", Help: "虚拟机", Value: kit.Data(kit.MDB_SHORT, "name", "build", []interface{}{})},
 	},
 	Commands: map[string]*ice.Command{
 		"init": {Name: "init", Help: "初始化", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
@@ -154,3 +152,14 @@ var Index = &ice.Context{Name: "docker", Help: "虚拟机",
 }
 
 func init() { code.Index.Register(Index, nil) }
+
+func ListLook(name ...string) []interface{} {
+	list := []interface{}{}
+	for _, k := range name {
+		list = append(list, kit.MDB_INPUT, "text", "name", k, "action", "auto")
+	}
+	return kit.List(append(list,
+		kit.MDB_INPUT, "button", "name", "查看", "action", "auto",
+		kit.MDB_INPUT, "button", "name", "返回", "cb", "Last",
+	)...)
+}

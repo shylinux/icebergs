@@ -2,43 +2,256 @@ package web
 
 import (
 	ice "github.com/shylinux/icebergs"
+	"github.com/shylinux/icebergs/base/nfs"
 	kit "github.com/shylinux/toolkits"
 
 	"os"
-	"path"
-	"strings"
 	"time"
 )
 
-func _story_share(m *ice.Message, story string, list string, arg ...string) {
-	if m.Echo("share: "); list == "" {
-		msg := m.Cmd(STORY, INDEX, story)
-		m.Cmdy(SHARE, "story", story, msg.Append("list"))
-	} else {
-		msg := m.Cmd(STORY, INDEX, list)
-		m.Cmdy(SHARE, msg.Append("scene"), msg.Append("story"), msg.Append("text"))
-	}
-}
-func _story_list(m *ice.Message, arg ...string) {
-	if len(arg) == 0 {
-		m.Richs(STORY, "head", "*", func(key string, value map[string]interface{}) {
-			m.Push(key, value, []string{"time", "story", "count"})
+func _story_list(m *ice.Message, name string, key string) {
+	if name == "" {
+		m.Richs(STORY, HEAD, kit.MDB_FOREACH, func(key string, value map[string]interface{}) {
+			m.Push(key, value, []string{kit.MDB_TIME, kit.MDB_COUNT, STORY})
 		})
-		m.Sort("time", "time_r")
+		m.Sort(kit.MDB_TIME, "time_r")
 		return
 	}
-	if len(arg) == 1 {
-		m.Cmdy(STORY, "history", arg)
+	if key == "" {
+		_story_history(m, name)
 		return
 	}
-	m.Cmd(STORY, INDEX, arg[1]).Table(func(index int, value map[string]string, head []string) {
-		for k, v := range value {
-			m.Push("key", k)
-			m.Push("value", v)
+
+	m.Richs(STORY, nil, key, func(key string, value map[string]interface{}) {
+		m.Push("detail", value)
+	})
+
+}
+func _story_index(m *ice.Message, name string, withdata bool) {
+	m.Richs(STORY, HEAD, name, func(key string, value map[string]interface{}) {
+		// 查询索引
+		m.Push(HEAD, key)
+		name = kit.Format(value[LIST])
+	})
+
+	m.Richs(STORY, nil, name, func(key string, value map[string]interface{}) {
+		// 查询节点
+		m.Push(LIST, key)
+		m.Push(key, value, []string{SCENE, STORY})
+		name = kit.Format(value[DATA])
+	})
+
+	m.Richs(CACHE, nil, name, func(key string, value map[string]interface{}) {
+		// 查询数据
+		m.Push(DATA, key)
+		m.Push(key, value, []string{kit.MDB_TEXT, kit.MDB_FILE, kit.MDB_SIZE, kit.MDB_TIME, kit.MDB_NAME, kit.MDB_TYPE})
+		if withdata {
+			if value[kit.MDB_FILE] == "" {
+				m.Echo("%s", kit.Format(value[kit.MDB_TEXT]))
+			} else {
+				m.Echo("%s", m.Cmdx(nfs.CAT, value[kit.MDB_FILE]))
+			}
 		}
-		m.Sort("key")
 	})
 }
+func _story_history(m *ice.Message, name string) {
+	// 历史记录
+	list := m.Cmd(STORY, INDEX, name).Append(LIST)
+	for i := 0; i < kit.Int(kit.Select("30", m.Option("cache.limit"))) && list != ""; i++ {
+		m.Richs(STORY, nil, list, func(key string, value map[string]interface{}) {
+			// 直连节点
+			m.Push(key, value, []string{kit.MDB_TIME, kit.MDB_KEY, kit.MDB_COUNT, SCENE, STORY})
+			m.Richs(CACHE, nil, value[DATA], func(key string, value map[string]interface{}) {
+				m.Push(DRAMA, value[kit.MDB_TEXT])
+				m.Push(DATA, key)
+			})
+
+			kit.Fetch(value[LIST], func(key string, val string) {
+				m.Richs(STORY, nil, val, func(key string, value map[string]interface{}) {
+					// 复合节点
+					m.Push(key, value, []string{kit.MDB_TIME, kit.MDB_KEY, kit.MDB_COUNT, SCENE, STORY})
+					m.Richs(CACHE, nil, value[DATA], func(key string, value map[string]interface{}) {
+						m.Push(DRAMA, value[kit.MDB_TEXT])
+						m.Push(DATA, key)
+					})
+				})
+			})
+
+			// 切换节点
+			list = kit.Format(value[PREV])
+		})
+	}
+}
+func _story_write(m *ice.Message, scene, name, text string, arg ...string) {
+	if len(arg) < 1 || text == "" || m.Richs(CACHE, nil, text, func(key string, value map[string]interface{}) { text = key }) == nil {
+		// 添加缓存
+		m.Cmdy(CACHE, CATCH, scene, name, text, arg)
+		scene, name, text = m.Append(kit.MDB_TYPE), m.Append(kit.MDB_NAME), m.Append(DATA)
+	}
+
+	// 查询索引
+	head, prev, value, count := "", "", kit.Dict(), 0
+	m.Richs(STORY, HEAD, name, func(key string, val map[string]interface{}) {
+		head, prev, value, count = key, kit.Format(val[LIST]), val, kit.Int(val[kit.MDB_COUNT])
+		m.Logs("info", HEAD, head, PREV, prev, kit.MDB_COUNT, count)
+	})
+
+	if last := m.Richs(STORY, nil, prev, nil); prev != "" && last != nil && last[DATA] == text {
+		// 重复提交
+		m.Push(prev, last, []string{kit.MDB_TIME, kit.MDB_COUNT, kit.MDB_KEY})
+		m.Logs("info", "file", "exists")
+		m.Echo(prev)
+		return
+	}
+
+	// 添加节点
+	list := m.Rich(STORY, nil, kit.Dict(
+		SCENE, scene, STORY, name, kit.MDB_COUNT, count+1, DATA, text, PREV, prev,
+	))
+	m.Log_CREATE(STORY, list, kit.MDB_TYPE, scene, kit.MDB_NAME, name)
+	m.Push(kit.MDB_COUNT, count+1)
+	m.Push(kit.MDB_KEY, list)
+
+	if head == "" {
+		// 添加索引
+		m.Rich(STORY, HEAD, kit.Dict(SCENE, scene, STORY, name, kit.MDB_COUNT, count+1, LIST, list))
+	} else {
+		// 更新索引
+		value[kit.MDB_COUNT] = count + 1
+		value[kit.MDB_TIME] = m.Time()
+		value[LIST] = list
+	}
+	m.Echo(list)
+}
+func _story_catch(m *ice.Message, scene, name string, arg ...string) {
+	if last := m.Richs(STORY, HEAD, name, nil); last != nil {
+		if t, e := time.ParseInLocation(ice.MOD_TIME, kit.Format(last[kit.MDB_TIME]), time.Local); e == nil {
+			if s, e := os.Stat(name); e == nil && s.ModTime().Before(t) {
+				m.Push(name, last, []string{kit.MDB_TIME, kit.MDB_COUNT, kit.MDB_KEY})
+				m.Logs("info", "file", "exists")
+				m.Echo("%s", last[LIST])
+				// 重复提交
+				return
+			}
+		}
+	}
+	_story_write(m, scene, name, "", arg...)
+}
+func _story_watch(m *ice.Message, key, file string) {
+	_story_index(m, key, false)
+	_cache_watch(m, m.Append(DATA), file)
+}
+
+const (
+	HEAD = "head"
+	LIST = "list"
+	PREV = "prev"
+	DATA = "data"
+
+	INDEX   = "index"
+	HISTORY = "history"
+
+	PULL   = "pull"
+	PUSH   = "push"
+	COMMIT = "commit"
+)
+const SCENE = "scene"
+const STORY = "story"
+const DRAMA = "drama"
+
+func init() {
+	Index.Merge(&ice.Context{
+		Configs: map[string]*ice.Config{
+			STORY: {Name: "story", Help: "故事会", Value: kit.Dict(
+				kit.MDB_META, kit.Dict(kit.MDB_SHORT, DATA),
+				HEAD, kit.Data(kit.MDB_SHORT, STORY),
+			)},
+		},
+		Commands: map[string]*ice.Command{
+			STORY: {Name: "story story=auto key=auto auto", Help: "故事会", Action: map[string]*ice.Action{
+				WRITE: {Name: "write type name text arg...", Help: "添加", Hand: func(m *ice.Message, arg ...string) {
+					_story_write(m, arg[0], arg[1], arg[2], arg[3:]...)
+				}},
+				CATCH: {Name: "catch type name arg...", Help: "捕捉", Hand: func(m *ice.Message, arg ...string) {
+					_story_catch(m, arg[0], arg[1], arg[2:]...)
+				}},
+				WATCH: {Name: "watch key name", Help: "查看", Hand: func(m *ice.Message, arg ...string) {
+					_story_watch(m, arg[0], arg[1])
+				}},
+				INDEX: {Name: "index key", Help: "索引", Hand: func(m *ice.Message, arg ...string) {
+					_story_index(m, arg[0], false)
+				}},
+				HISTORY: {Name: "history name", Help: "历史", Hand: func(m *ice.Message, arg ...string) {
+					_story_history(m, arg[0])
+				}},
+				"add": {Name: "add type name text arg...", Help: "淘汰", Hand: func(m *ice.Message, arg ...string) {
+					panic(m)
+				}},
+			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+				_story_list(m, kit.Select("", arg, 0), kit.Select("", arg, 1))
+			}},
+
+			"/story/": {Name: "/story/", Help: "故事会", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+				switch arg[0] {
+				case PULL:
+					list := m.Cmd(STORY, INDEX, m.Option("begin")).Append("list")
+					for i := 0; i < 10 && list != "" && list != m.Option("end"); i++ {
+						if m.Richs(STORY, nil, list, func(key string, value map[string]interface{}) {
+							// 节点信息
+							m.Push("list", key)
+							m.Push("node", kit.Format(value))
+							m.Push("data", value["data"])
+							m.Push("save", kit.Format(m.Richs(CACHE, nil, value["data"], nil)))
+							list = kit.Format(value["prev"])
+						}) == nil {
+							break
+						}
+					}
+					m.Log(ice.LOG_EXPORT, "%s %s", m.Option("begin"), m.Format("append"))
+
+				case PUSH:
+					if m.Richs(CACHE, nil, m.Option("data"), nil) == nil {
+						// 导入缓存
+						m.Log(ice.LOG_IMPORT, "%v: %v", m.Option("data"), m.Option("save"))
+						m.Conf(CACHE, kit.Keys("hash", m.Option("data")), kit.UnMarshal(m.Option("save")))
+					}
+
+					node := kit.UnMarshal(m.Option("node")).(map[string]interface{})
+					if m.Richs(STORY, nil, m.Option("list"), nil) == nil {
+						// 导入节点
+						m.Log(ice.LOG_IMPORT, "%v: %v", m.Option("list"), m.Option("node"))
+						m.Conf(STORY, kit.Keys("hash", m.Option("list")), node)
+					}
+
+					if head := m.Richs(STORY, "head", m.Option("story"), nil); head == nil {
+						// 自动创建
+						h := m.Rich(STORY, "head", kit.Dict(
+							"scene", node["scene"], "story", m.Option("story"),
+							"count", node["count"], "list", m.Option("list"),
+						))
+						m.Log(ice.LOG_CREATE, "%v: %v", h, m.Option("story"))
+					} else if head["list"] == kit.Format(node["prev"]) || head["list"] == kit.Format(node["pull"]) {
+						// 快速合并
+						head["list"] = m.Option("list")
+						head["count"] = node["count"]
+						head["time"] = node["time"]
+					} else {
+						// 推送失败
+					}
+
+				case UPLOAD:
+					// 上传数据
+					m.Cmdy(CACHE, "upload")
+
+				case DOWNLOAD:
+					// 下载数据
+					m.Cmdy(STORY, INDEX, arg[1])
+					m.Render(kit.Select(ice.RENDER_DOWNLOAD, ice.RENDER_RESULT, m.Append("file") == ""), m.Append("text"))
+				}
+			}},
+		}}, nil)
+}
+
 func _story_pull(m *ice.Message, arg ...string) {
 	// 起止节点
 	prev, begin, end := "", arg[3], ""
@@ -218,304 +431,4 @@ func _story_commit(m *ice.Message, arg ...string) {
 	}
 	m.Echo(list)
 
-}
-
-func _story_add(m *ice.Message, arg ...string) {
-	if len(arg) < 4 || arg[3] == "" || m.Richs(CACHE, nil, arg[3], func(key string, value map[string]interface{}) {
-		// 复用缓存
-		arg[3] = key
-	}) == nil {
-		// 添加缓存
-		m.Cmdy(CACHE, arg)
-		arg = []string{arg[0], m.Append("type"), m.Append("name"), m.Append("data")}
-	}
-
-	// 查询索引
-	head, prev, value, count := "", "", map[string]interface{}{}, 0
-	m.Richs(STORY, "head", arg[2], func(key string, val map[string]interface{}) {
-		head, prev, value, count = key, kit.Format(val["list"]), val, kit.Int(val["count"])
-		m.Logs("info", "head", head, "prev", prev, "count", count)
-	})
-
-	if last := m.Richs(STORY, nil, prev, nil); prev != "" && last != nil && last["data"] == arg[3] {
-		// 重复提交
-		m.Push(prev, last, []string{"time", "count", "key"})
-		m.Logs("info", "file", "exists")
-		m.Echo(prev)
-	} else {
-		// 添加节点
-		list := m.Rich(STORY, nil, kit.Dict(
-			"scene", arg[1], "story", arg[2], "count", count+1, "data", arg[3], "prev", prev,
-		))
-		m.Log_CREATE("story", list, "type", arg[1], "name", arg[2])
-		m.Push("count", count+1)
-		m.Push("key", list)
-
-		if head == "" {
-			// 添加索引
-			m.Rich(STORY, "head", kit.Dict("scene", arg[1], "story", arg[2], "count", count+1, "list", list))
-		} else {
-			// 更新索引
-			value["count"] = count + 1
-			value["time"] = m.Time()
-			value["list"] = list
-		}
-		m.Echo(list)
-	}
-
-	// // 分发数据
-	// for _, k := range []string{"you", "pod"} {
-	// 	if p := m.Option(k); p != "" {
-	// 		m.Option(k, "")
-	// 		m.Cmd(PROXY, p, STORY, PULL, arg[2], "dev", arg[2])
-	// 		return
-	// 	}
-	// }
-	// m.Cmd(PROXY, m.Conf(FAVOR, "meta.proxy"),
-	// 	STORY, PULL, arg[2], "dev", arg[2])
-}
-func _story_trash(m *ice.Message, arg ...string) {
-	bak := kit.Select(kit.Keys(arg[1], "bak"), arg, 2)
-	os.Remove(bak)
-	os.Rename(arg[1], bak)
-}
-func _story_catch(m *ice.Message, arg ...string) {
-	if last := m.Richs(STORY, "head", arg[2], nil); last != nil {
-		if t, e := time.ParseInLocation(ice.MOD_TIME, kit.Format(last["time"]), time.Local); e == nil {
-			// 文件对比
-			if s, e := os.Stat(arg[2]); e == nil && s.ModTime().Before(t) {
-				m.Push(arg[2], last, []string{"time", "count", "key"})
-				m.Logs("info", "file", "exists")
-				m.Echo("%s", last["list"])
-				return
-			}
-		}
-	}
-	_story_add(m, arg...)
-}
-func _story_watch(m *ice.Message, index string, arg ...string) {
-	// 备份文件
-	name := kit.Select(index, arg, 0)
-	m.Cmd(STORY, TRASH, name)
-
-	if msg := m.Cmd(STORY, INDEX, index); msg.Append("file") != "" {
-		p := path.Dir(name)
-		os.MkdirAll(p, 0777)
-
-		// 导出文件
-		os.Link(msg.Append("file"), name)
-		m.Log(ice.LOG_EXPORT, "%s: %s", msg.Append("file"), name)
-	} else {
-		if f, p, e := kit.Create(name); m.Assert(e) {
-			defer f.Close()
-			// 导出数据
-			f.WriteString(msg.Append("text"))
-			m.Log(ice.LOG_EXPORT, "%s: %s", msg.Append("text"), p)
-		}
-	}
-	m.Echo(name)
-}
-func _story_index(m *ice.Message, name string, withdata bool) {
-	m.Richs(STORY, "head", name, func(key string, value map[string]interface{}) {
-		// 查询索引
-		name = kit.Format(value["list"])
-	})
-
-	m.Richs(STORY, nil, name, func(key string, value map[string]interface{}) {
-		// 查询节点
-		m.Push("list", key)
-		m.Push(key, value, []string{"scene", "story"})
-		name = kit.Format(value["data"])
-	})
-
-	m.Richs(CACHE, nil, name, func(key string, value map[string]interface{}) {
-		// 查询数据
-		m.Push("data", key)
-		m.Push(key, value, []string{"text", "time", "size", "type", "name", "file"})
-		if withdata {
-			if kit.Format(value["file"]) != "" {
-				m.Echo("%s", m.Cmdx("nfs.cat", value["file"]))
-			} else {
-				m.Echo("%s", kit.Format(value["text"]))
-			}
-		}
-	})
-}
-func _story_history(m *ice.Message, name string) {
-	// 历史记录
-	list := m.Cmd(STORY, INDEX, name).Append("list")
-	for i := 0; i < kit.Int(kit.Select("30", m.Option("cache.limit"))) && list != ""; i++ {
-
-		m.Richs(STORY, nil, list, func(key string, value map[string]interface{}) {
-			// 直连节点
-			m.Push(key, value, []string{"time", "key", "count", "scene", "story"})
-			m.Richs(CACHE, nil, value["data"], func(key string, value map[string]interface{}) {
-				m.Push("drama", value["text"])
-				m.Push("data", key)
-			})
-
-			kit.Fetch(value["list"], func(key string, val string) {
-				m.Richs(STORY, nil, val, func(key string, value map[string]interface{}) {
-					// 复合节点
-					m.Push(key, value, []string{"time", "key", "count", "scene", "story"})
-					m.Richs(CACHE, nil, value["data"], func(key string, value map[string]interface{}) {
-						m.Push("drama", value["text"])
-						m.Push("data", key)
-					})
-				})
-			})
-
-			// 切换节点
-			list = kit.Format(value["prev"])
-		})
-	}
-}
-
-func StoryHistory(m *ice.Message, name string) *ice.Message { _story_history(m, name); return m }
-func StoryIndex(m *ice.Message, name string) *ice.Message   { _story_index(m, name, true); return m }
-func StoryWatch(m *ice.Message, index string, file string)  { _story_watch(m, index, file) }
-func StoryCatch(m *ice.Message, mime string, file string) *ice.Message {
-	_story_catch(m, "catch", kit.Select(mime, strings.TrimPrefix(path.Ext(file), ".")), file, "")
-	return m
-}
-func StoryAdd(m *ice.Message, mime string, name string, text string, arg ...string) *ice.Message {
-	_story_add(m, kit.Simple("add", mime, name, text, arg)...)
-	return m
-}
-
-const STORY = "story"
-const (
-	TRASH = "trash"
-	// CATCH = "catch"
-	INDEX = "index"
-
-	LIST = "list"
-	SHOW = "show"
-
-	PULL = "pull"
-	PUSH = "push"
-
-	UPLOAD   = "upload"
-	DOWNLOAD = "download"
-)
-
-func init() {
-	Index.Merge(&ice.Context{
-		Configs: map[string]*ice.Config{
-			STORY: {Name: "story", Help: "故事会", Value: kit.Dict(
-				kit.MDB_META, kit.Dict(kit.MDB_SHORT, "data"),
-				"head", kit.Data(kit.MDB_SHORT, "story"),
-				"mime", kit.Dict("md", "txt"),
-			)},
-		},
-		Commands: map[string]*ice.Command{
-			STORY: {Name: "story story=auto key=auto auto", Help: "故事会", Meta: kit.Dict(
-				"exports", []string{"top", "story"}, "detail", []string{"共享", "更新", "推送"},
-			), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-				if len(arg) > 1 && arg[0] == "action" {
-					story, list := m.Option("story"), m.Option("list")
-					switch arg[2] {
-					case "story":
-						story = arg[3]
-					case "list":
-						list = arg[3]
-					}
-
-					switch arg[1] {
-					case "share", "共享":
-						_story_share(m, story, list, arg...)
-					}
-					return
-				}
-
-				if len(arg) == 0 {
-					_story_list(m, arg...)
-					return
-				}
-
-				switch arg[0] {
-				case PULL: // story [spide [story]]
-					_story_pull(m, arg...)
-				case PUSH:
-					_story_push(m, arg...)
-				case "commit":
-					_story_commit(m, arg...)
-
-				case TRASH:
-					_story_trash(m, arg...)
-				case SHOW:
-					_story_watch(m, arg[1], arg[2:]...)
-				case CATCH:
-					_story_catch(m, arg...)
-				case "add":
-					_story_add(m, arg...)
-
-				case INDEX:
-					_story_index(m, arg[1], true)
-				case LIST:
-					_story_history(m, arg[1])
-				default:
-					_story_list(m, arg...)
-				}
-			}},
-			"/story/": {Name: "/story/", Help: "故事会", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-
-				switch arg[0] {
-				case PULL:
-					list := m.Cmd(STORY, INDEX, m.Option("begin")).Append("list")
-					for i := 0; i < 10 && list != "" && list != m.Option("end"); i++ {
-						if m.Richs(STORY, nil, list, func(key string, value map[string]interface{}) {
-							// 节点信息
-							m.Push("list", key)
-							m.Push("node", kit.Format(value))
-							m.Push("data", value["data"])
-							m.Push("save", kit.Format(m.Richs(CACHE, nil, value["data"], nil)))
-							list = kit.Format(value["prev"])
-						}) == nil {
-							break
-						}
-					}
-					m.Log(ice.LOG_EXPORT, "%s %s", m.Option("begin"), m.Format("append"))
-
-				case PUSH:
-					if m.Richs(CACHE, nil, m.Option("data"), nil) == nil {
-						// 导入缓存
-						m.Log(ice.LOG_IMPORT, "%v: %v", m.Option("data"), m.Option("save"))
-						m.Conf(CACHE, kit.Keys("hash", m.Option("data")), kit.UnMarshal(m.Option("save")))
-					}
-
-					node := kit.UnMarshal(m.Option("node")).(map[string]interface{})
-					if m.Richs(STORY, nil, m.Option("list"), nil) == nil {
-						// 导入节点
-						m.Log(ice.LOG_IMPORT, "%v: %v", m.Option("list"), m.Option("node"))
-						m.Conf(STORY, kit.Keys("hash", m.Option("list")), node)
-					}
-
-					if head := m.Richs(STORY, "head", m.Option("story"), nil); head == nil {
-						// 自动创建
-						h := m.Rich(STORY, "head", kit.Dict(
-							"scene", node["scene"], "story", m.Option("story"),
-							"count", node["count"], "list", m.Option("list"),
-						))
-						m.Log(ice.LOG_CREATE, "%v: %v", h, m.Option("story"))
-					} else if head["list"] == kit.Format(node["prev"]) || head["list"] == kit.Format(node["pull"]) {
-						// 快速合并
-						head["list"] = m.Option("list")
-						head["count"] = node["count"]
-						head["time"] = node["time"]
-					} else {
-						// 推送失败
-					}
-
-				case UPLOAD:
-					// 上传数据
-					m.Cmdy(CACHE, "upload")
-
-				case DOWNLOAD:
-					// 下载数据
-					m.Cmdy(STORY, INDEX, arg[1])
-					m.Render(kit.Select(ice.RENDER_DOWNLOAD, ice.RENDER_RESULT, m.Append("file") == ""), m.Append("text"))
-				}
-			}},
-		}}, nil)
 }

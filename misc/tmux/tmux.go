@@ -81,7 +81,7 @@ var Index = &ice.Context{Name: "tmux", Help: "工作台",
 				if _, e := os.Stat(p); e != nil && os.IsNotExist(e) {
 					// 下载脚本
 					if h := m.Cmdx(web.SPIDE, "shy", "cache", "GET", "/publish/"+v); h != "" {
-						m.Cmd(web.STORY, web.SHOW, h, p)
+						m.Cmd(web.STORY, web.WATCH, h, p)
 					}
 				}
 			}

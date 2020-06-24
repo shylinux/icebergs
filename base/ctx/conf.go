@@ -1,8 +1,10 @@
 package ctx
 
 import (
-	"github.com/shylinux/icebergs"
-	"github.com/shylinux/toolkits"
+	"sort"
+
+	ice "github.com/shylinux/icebergs"
+	kit "github.com/shylinux/toolkits"
 
 	"encoding/json"
 	"os"
@@ -15,12 +17,23 @@ func _config_list(m *ice.Message, all bool) {
 	if all {
 		p = ice.Pulse
 	}
-	p.Travel(func(p *ice.Context, s *ice.Context, key string, conf *ice.Config) {
-		m.Push(kit.MDB_KEY, key)
-		m.Push(kit.MDB_NAME, conf.Name)
-		m.Push(kit.MDB_VALUE, kit.Format(conf.Value))
-	})
 
+	list := []string{}
+	for k := range p.Target().Configs {
+		if k[0] == '/' || k[0] == '_' {
+			// 内部命令
+			continue
+		}
+		list = append(list, k)
+	}
+	sort.Strings(list)
+
+	for _, k := range list {
+		v := p.Target().Configs[k]
+		m.Push(kit.MDB_KEY, k)
+		m.Push(kit.MDB_NAME, v.Name)
+		m.Push(kit.MDB_VALUE, kit.Format(v.Value))
+	}
 }
 func _config_save(m *ice.Message, name string, arg ...string) {
 	msg := m.Spawn(m.Source())

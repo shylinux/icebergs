@@ -1,10 +1,10 @@
 package chat
 
 import (
-	"github.com/shylinux/icebergs"
+	ice "github.com/shylinux/icebergs"
 	"github.com/shylinux/icebergs/base/ctx"
 	"github.com/shylinux/icebergs/base/web"
-	"github.com/shylinux/toolkits"
+	kit "github.com/shylinux/toolkits"
 
 	"strconv"
 )
@@ -143,7 +143,7 @@ func init() {
 			web.UPLOAD: {Name: "upload", Help: "上传", Hand: func(m *ice.Message, arg ...string) {
 				msg := m.Cmd(web.STORY, web.UPLOAD)
 				m.Option(kit.MDB_NAME, msg.Append(kit.MDB_NAME))
-				m.Option(kit.MDB_DATA, msg.Append(kit.MDB_DATA))
+				m.Option(web.DATA, msg.Append(web.DATA))
 				_action_show(m, m.Option(RIVER), m.Option(STORM), m.Option(ACTION),
 					append([]string{ACTION, web.UPLOAD}, arg...)...)
 			}},

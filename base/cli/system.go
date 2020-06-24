@@ -1,8 +1,10 @@
 package cli
 
 import (
-	"github.com/shylinux/icebergs"
-	"github.com/shylinux/toolkits"
+	"strings"
+
+	ice "github.com/shylinux/icebergs"
+	kit "github.com/shylinux/toolkits"
 
 	"bytes"
 	"fmt"
@@ -23,6 +25,8 @@ const (
 	CMD_CODE = "cmd_code"
 )
 
+const ErrRun = "run err "
+
 func _system_show(m *ice.Message, cmd *exec.Cmd) {
 	out := bytes.NewBuffer(make([]byte, 0, 1024))
 	err := bytes.NewBuffer(make([]byte, 0, 1024))
@@ -34,7 +38,7 @@ func _system_show(m *ice.Message, cmd *exec.Cmd) {
 	}()
 
 	if e := cmd.Run(); e != nil {
-		m.Warn(e != nil, "%v run: %s", cmd.Args, kit.Select(e.Error(), err.String()))
+		m.Warn(e != nil, ErrRun, strings.Join(cmd.Args, " "), "\n", kit.Select(e.Error(), err.String()))
 	}
 
 	m.Push(CMD_CODE, int(cmd.ProcessState.ExitCode()))

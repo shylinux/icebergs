@@ -1,12 +1,12 @@
 package alpha
 
 import (
-	"github.com/shylinux/icebergs"
+	ice "github.com/shylinux/icebergs"
 	"github.com/shylinux/icebergs/base/cli"
 	"github.com/shylinux/icebergs/base/mdb"
 	"github.com/shylinux/icebergs/base/web"
 	"github.com/shylinux/icebergs/core/wiki"
-	"github.com/shylinux/toolkits"
+	kit "github.com/shylinux/toolkits"
 	"github.com/shylinux/toolkits/task"
 
 	"io/ioutil"
@@ -80,7 +80,7 @@ func _alpha_load(m *ice.Message, file, name string) {
 	))
 
 	m.Cmd(mdb.IMPORT, ALPHA, name, kit.MDB_LIST,
-		m.Cmd(web.CACHE, "catch", "csv", file+".csv").Append(kit.MDB_DATA))
+		m.Cmd(web.CACHE, "catch", "csv", file+".csv").Append(web.DATA))
 
 	// 保存词库
 	m.Conf(ALPHA, kit.Keys(name, "meta.limit"), 0)

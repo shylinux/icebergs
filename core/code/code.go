@@ -1,8 +1,11 @@
 package code
 
 import (
+	"net/http"
+
 	ice "github.com/shylinux/icebergs"
 	"github.com/shylinux/icebergs/base/cli"
+	"github.com/shylinux/icebergs/base/nfs"
 	"github.com/shylinux/icebergs/base/web"
 	kit "github.com/shylinux/toolkits"
 
@@ -20,27 +23,20 @@ const ( // CODE
 
 var Index = &ice.Context{Name: "code", Help: "编程中心",
 	Configs: map[string]*ice.Config{
-		"install": {Name: "install", Help: "安装", Value: kit.Data("path", "usr/install",
+		INSTALL: {Name: "install", Help: "安装", Value: kit.Data("path", "usr/install",
 			"linux", "https://dl.google.com/go/go1.14.2.linux-amd64.tar.gz",
 			"darwin", "https://dl.google.com/go/go1.14.2.darwin-amd64.pkg",
 			"windows", "https://dl.google.com/go/go1.14.2.windows-amd64.msi",
 			"source", "https://dl.google.com/go/go1.14.2.src.tar.gz",
-			"target", "usr/local", "script", ".ish/pluged/golang/init.sh", "export", kit.Dict(
+			"target", "usr/local",
+		)},
+		PREPARE: {Name: "prepare", Help: "配置", Value: kit.Data("path", "usr/prepare",
+			"script", ".ish/pluged/golang/init.sh", "export", kit.Dict(
 				"GOPROXY", "https://goproxy.cn,direct",
 				"GOPRIVATE", "https://github.com",
 			),
 		)},
-		"prepare": {Name: "prepare", Help: "配置", Value: kit.Data("path", "usr/prepare")},
-		"project": {Name: "project", Help: "项目", Value: kit.Data("path", "usr/project")},
-
-		"compile": {Name: "compile", Help: "编译", Value: kit.Data("path", "usr/publish")},
-		"publish": {Name: "publish", Help: "发布", Value: kit.Data("path", "usr/publish")},
-		"upgrade": {Name: "upgrade", Help: "升级", Value: kit.Dict(kit.MDB_HASH, kit.Dict(
-			"system", kit.Dict(kit.MDB_LIST, kit.List(
-				kit.MDB_INPUT, "bin", "file", "ice.bin", "path", "bin/ice.bin",
-				kit.MDB_INPUT, "bin", "file", "ice.sh", "path", "bin/ice.sh",
-			)),
-		))},
+		PROJECT: {Name: "project", Help: "项目", Value: kit.Data("path", "usr/project")},
 
 		"login": {Name: "login", Help: "终端接入", Value: kit.Data()},
 	},
@@ -53,116 +49,39 @@ var Index = &ice.Context{Name: "code", Help: "编程中心",
 		}},
 
 		INSTALL: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			p := path.Join(m.Conf("install", "meta.path"), path.Base(m.Conf("install", kit.Keys("meta", runtime.GOOS))))
-			// 下载
+			target := m.Conf(INSTALL, kit.Keys("meta", runtime.GOOS))
+			p := path.Join(m.Conf(INSTALL, "meta.path"), path.Base(target))
+
 			if _, e := os.Stat(p); e != nil {
-				m.Option("cmd_dir", m.Conf("install", "meta.path"))
-				m.Cmd(cli.SYSTEM, "wget", m.Conf("install", kit.Keys("meta", runtime.GOOS)))
+				// 下载
+				m.Option(cli.CMD_DIR, m.Conf(INSTALL, "meta.path"))
+				msg := m.Cmd(web.SPIDE, web.CACHE, http.MethodGet, target)
+				m.Cmd(web.CACHE, web.WATCH, msg.Append(web.DATA), p)
 			}
 
 			// 安装
-			m.Option("cmd_dir", "")
-			os.MkdirAll(m.Conf("install", kit.Keys("meta.target")), 0777)
-			m.Cmdy(cli.SYSTEM, "tar", "xvf", p, "-C", m.Conf("install", kit.Keys("meta.target")))
+			m.Option(cli.CMD_DIR, "")
+			os.MkdirAll(m.Conf(INSTALL, kit.Keys("meta.target")), 0777)
+			m.Cmdy(cli.SYSTEM, "tar", "xvf", p, "-C", m.Conf(INSTALL, kit.Keys("meta.target")))
 		}},
 		PREPARE: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			export := []string{}
-			kit.Fetch(m.Confv("install", "meta.export"), func(key string, val string) {
+			kit.Fetch(m.Confv(PREPARE, "meta.export"), func(key string, val string) {
 				export = append(export, key+"="+val)
 			})
 
-			m.Cmd("nfs.save", m.Conf("install", "meta.script"), kit.Format(`
+			m.Cmd(nfs.SAVE, m.Conf(PREPARE, "meta.script"), kit.Format(`
 export GOROOT=%s GOPATH=%s:$GOPATH GOBIN=%s
 export PATH=$GOBIN:$GOROOT/bin:$PATH
 export %s
-`, kit.Path(m.Conf("install", kit.Keys("meta.target")), "go"), kit.Path("src"), kit.Path("bin"), strings.Join(export, " ")))
+`, kit.Path(m.Conf(INSTALL, kit.Keys("meta.target")), "go"), kit.Path("src"), kit.Path("bin"), strings.Join(export, " ")))
 		}},
 		PROJECT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 		}},
 
-		"install": {Name: "install", Help: "安装", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-		}},
-		"prepare": {Name: "prepare", Help: "配置", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-		}},
-		"project": {Name: "project", Help: "项目", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-		}},
-
-		"compile": {Name: "compile [os [arch [main]]]", Help: "编译", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			if len(arg) == 0 {
-				// 目录列表
-				m.Cmdy("nfs.dir", m.Conf(cmd, "meta.path"), "time size path")
-				return
-			}
-
-			// 编译目标
-			main := kit.Select("src/main.go", arg, 2)
-			arch := kit.Select(m.Conf(cli.RUNTIME, "host.GOARCH"), arg, 1)
-			goos := kit.Select(m.Conf(cli.RUNTIME, "host.GOOS"), arg, 0)
-			file := path.Join(m.Conf(cmd, "meta.path"), kit.Keys("ice", goos, arch))
-
-			// 编译参数
-			m.Optionv("cmd_env", "GOCACHE", os.Getenv("GOCACHE"), "HOME", os.Getenv("HOME"),
-				"GOARCH", arch, "GOOS", goos, "CGO_ENABLED", "0")
-			m.Cmd(cli.SYSTEM, "go", "build", "-o", file, main)
-
-			// 编译记录
-			m.Cmdy(web.STORY, web.CATCH, "bin", file)
-			m.Logs(ice.LOG_EXPORT, "source", main, "target", file)
-		}},
-		"publish": {Name: "publish [source]", Help: "发布", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			if len(arg) == 0 {
-				// 目录列表
-				m.Cmdy("nfs.dir", m.Conf(cmd, "meta.path"), "time size path")
-				return
-			}
-
-			if s, e := os.Stat(arg[0]); m.Assert(e) && s.IsDir() {
-				// 发布目录
-				p := path.Base(arg[0]) + ".tar.gz"
-				m.Cmd(cli.SYSTEM, "tar", "-zcf", p, arg[0])
-				defer func() { os.Remove(p) }()
-				arg[0] = p
-			}
-
-			// 发布文件
-			target := path.Join(m.Conf(cmd, "meta.path"), path.Base(arg[0]))
-			os.Remove(target)
-			os.MkdirAll(path.Dir(target), 0777)
-			os.Link(arg[0], target)
-
-			// 发布记录
-			m.Cmdy(web.STORY, web.CATCH, "bin", target)
-			m.Logs(ice.LOG_EXPORT, "source", arg[0], "target", target)
-		}},
-		"upgrade": {Name: "upgrade which", Help: "升级", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			exit := false
-			m.Grows(cmd, kit.Keys(kit.MDB_HASH, kit.Select("system", arg, 0)), "", "", func(index int, value map[string]interface{}) {
-				if value["file"] == "ice.bin" {
-					// 程序文件
-					value["file"] = kit.Keys("ice", m.Conf(cli.RUNTIME, "host.GOOS"), m.Conf(cli.RUNTIME, "host.GOARCH"))
-					exit = true
-				}
-
-				// 下载文件
-				h := m.Cmdx(web.SPIDE, "dev", "cache", "GET", "/publish/"+kit.Format(value["file"]))
-				if h == "" {
-					exit = false
-					return
-				}
-
-				// 升级记录
-				m.Cmd(web.STORY, "add", "bin", value["path"], h)
-				m.Cmd(web.STORY, web.SHOW, h, value["path"])
-				os.Chmod(kit.Format(value["path"]), 0777)
-			})
-			if exit {
-				m.Sleep("1s").Gos(m, func(m *ice.Message) { m.Cmd("exit") })
-			}
-		}},
-
 		"login": {Name: "login key", Help: "登录", Meta: kit.Dict(
 			"detail", []string{"编辑", "删除", "清理", "清空"},
-		), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		), Action: map[string]*ice.Action{}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			if len(arg) > 0 && arg[0] == "action" {
 				switch arg[1] {
 				case "modify", "编辑":
@@ -255,4 +174,4 @@ export %s
 	},
 }
 
-func init() { web.Index.Register(Index, &web.Frame{}, BENCH, PPROF) }
+func init() { web.Index.Register(Index, &web.Frame{}, COMPILE, BENCH, PPROF) }

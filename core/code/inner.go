@@ -115,7 +115,7 @@ func _inner_show(m *ice.Message, name string) {
 }
 func _inner_main(m *ice.Message, arg ...string) {
 	if len(arg) > 2 && arg[2] != "" {
-		web.StoryIndex(m, arg[2])
+		m.Cmdy(web.STORY, web.INDEX, arg[2])
 		return
 	}
 	_inner_list(m, path.Join(arg...))
@@ -163,34 +163,34 @@ func init() {
 					web.FavorList(m, arg[0], arg[1], arg[2:]...)
 				}},
 				"upload": {Name: "upload path name", Help: "上传", Hand: func(m *ice.Message, arg ...string) {
-					web.StoryWatch(m, m.Option("data"), path.Join(m.Option("path"), m.Option("name")))
+					m.Cmd(web.STORY, web.WATCH, m.Option("data"), path.Join(m.Option("path"), m.Option("name")))
 				}},
 				"project": {Name: "project path", Help: "项目", Hand: func(m *ice.Message, arg ...string) {
 					_inner_list(m, path.Join("./", kit.Select("", arg, 0))+"/")
 				}},
 
 				"history": {Name: "history path name", Help: "历史", Hand: func(m *ice.Message, arg ...string) {
-					msg := web.StoryHistory(m.Spawn(), path.Join("./", arg[0], arg[1]))
+					msg := m.Cmd(web.STORY, web.HISTORY, path.Join("./", arg[0], arg[1]))
 					m.Copy(msg, ice.MSG_APPEND, "time", "count", "key")
 
 					if len(arg) > 2 && arg[2] != "" {
-						m.Echo(web.StoryIndex(m.Spawn(), arg[2]).Result())
+						m.Echo(m.Cmd(web.STORY, web.INDEX, arg[2]).Result())
 					}
 				}},
 				"commit": {Name: "commit path name", Help: "提交", Hand: func(m *ice.Message, arg ...string) {
-					msg := web.StoryCatch(m.Spawn(), "", path.Join("./", arg[0], arg[1]))
+					msg := m.Cmd(web.STORY, web.CATCH, "", path.Join("./", arg[0], arg[1]))
 					m.Copy(msg, ice.MSG_APPEND, "time", "count", "key")
 				}},
 				"recover": {Name: "recover", Help: "复盘", Hand: func(m *ice.Message, arg ...string) {
-					msg := web.StoryHistory(m.Spawn(), path.Join("./", arg[0], arg[1])+".display")
+					msg := m.Cmd(web.STORY, web.HISTORY, path.Join("./", arg[0], arg[1])+".display")
 					m.Copy(msg, ice.MSG_APPEND, "time", "count", "key", "drama")
 
 					if len(arg) > 2 && arg[2] != "" {
-						m.Echo(web.StoryIndex(m.Spawn(), arg[2]).Result())
+						m.Echo(m.Cmd(web.STORY, web.INDEX, arg[2]).Result())
 					}
 				}},
 				"record": {Name: "record", Help: "记录", Hand: func(m *ice.Message, arg ...string) {
-					msg := web.StoryAdd(m.Spawn(), "display", path.Join("./", m.Option("path"), m.Option("name"))+".display", m.Option("display"))
+					msg := m.Cmd(web.STORY, web.CATCH, "display", path.Join("./", m.Option("path"), m.Option("name"))+".display", m.Option("display"))
 					m.Copy(msg, ice.MSG_APPEND, "time", "count", "key")
 				}},
 

@@ -84,11 +84,17 @@ var Index = &ice.Context{Name: "tcp", Help: "通信模块",
 		)},
 	},
 	Commands: map[string]*ice.Command{
-		ice.CTX_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) { m.Load() }},
+		ice.CTX_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			m.Load()
+			m.Cmd(IP).Table(func(index int, value map[string]string, head []string) {
+				m.Cmd(IP, aaa.White, value[IP])
+			})
+
+		}},
 		ice.CTX_EXIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) { m.Save(PORT) }},
 
 		IP: {Name: "ip", Help: "地址", Action: map[string]*ice.Action{
-			"white": {Name: "show ip", Help: "白名单", Hand: func(m *ice.Message, arg ...string) {
+			aaa.White: {Name: "show ip", Help: "白名单", Hand: func(m *ice.Message, arg ...string) {
 				m.Rich(IP, kit.Keys("meta.white"), kit.Dict(
 					kit.MDB_NAME, "",
 					kit.MDB_TEXT, arg[0],

@@ -12,6 +12,25 @@ import (
 	"strings"
 )
 
+func _port_list(m *ice.Message) string {
+	return ""
+}
+func _port_get(m *ice.Message) string {
+	current := kit.Int(m.Conf(PORT, "meta.current"))
+	end := kit.Int(m.Conf(PORT, "meta.end"))
+	if current >= end {
+		current = kit.Int(m.Conf(PORT, "meta.begin"))
+	}
+	for i := current; i < end; i++ {
+		if m.Cmd(cli.SYSTEM, "lsof", "-i", kit.Format(":%d", i)).Append(cli.CMD_CODE) != "0" {
+			m.Conf(PORT, "meta.current", i)
+			m.Log_CREATE(PORT, i)
+			return kit.Format("%d", i)
+		}
+	}
+	return ""
+}
+
 func _ip_list(m *ice.Message, ifname string) {
 	if ifs, e := net.Interfaces(); m.Assert(e) {
 		for _, v := range ifs {
@@ -43,34 +62,8 @@ func _ip_islocal(m *ice.Message, ip string) (ok bool) {
 		return true
 	}
 
-	msg := m.Spawn()
-	_ip_list(msg, "")
-	msg.Table(func(index int, value map[string]string, head []string) {
-		if value["ip"] == ip {
-			ok = true
-		}
-	})
-	return ok
+	return m.Richs(IP, kit.Keys("meta.white"), ip, nil) != nil
 }
-func _port_list(m *ice.Message) string {
-	return ""
-}
-func _port_get(m *ice.Message) string {
-	current := kit.Int(m.Conf(PORT, "meta.current"))
-	end := kit.Int(m.Conf(PORT, "meta.end"))
-	if current >= end {
-		current = kit.Int(m.Conf(PORT, "meta.begin"))
-	}
-	for i := current; i < end; i++ {
-		if m.Cmd(cli.SYSTEM, "lsof", "-i", kit.Format(":%d", i)).Append(cli.CMD_CODE) != "0" {
-			m.Conf(PORT, "meta.current", i)
-			m.Log_CREATE(PORT, i)
-			return kit.Format("%d", i)
-		}
-	}
-	return ""
-}
-
 func IPIsLocal(m *ice.Message, ip string) bool {
 	return _ip_islocal(m, ip)
 }
@@ -82,15 +75,26 @@ const (
 
 var Index = &ice.Context{Name: "tcp", Help: "通信模块",
 	Configs: map[string]*ice.Config{
-		PORT: &ice.Config{Name: "port", Help: "端口", Value: kit.Data(
+		PORT: {Name: "port", Help: "端口", Value: kit.Data(
 			"begin", 10000, "current", 10000, "end", 20000,
+		)},
+		IP: {Name: "ip", Help: "地址", Value: kit.Data(
+			"black", kit.Dict(),
+			"white", kit.Data(kit.MDB_SHORT, kit.MDB_TEXT),
 		)},
 	},
 	Commands: map[string]*ice.Command{
 		ice.CTX_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) { m.Load() }},
 		ice.CTX_EXIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) { m.Save(PORT) }},
 
-		IP: {Name: "ip", Help: "地址", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		IP: {Name: "ip", Help: "地址", Action: map[string]*ice.Action{
+			"white": {Name: "show ip", Help: "白名单", Hand: func(m *ice.Message, arg ...string) {
+				m.Rich(IP, kit.Keys("meta.white"), kit.Dict(
+					kit.MDB_NAME, "",
+					kit.MDB_TEXT, arg[0],
+				))
+			}},
+		}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			_ip_list(m, "")
 		}},
 		PORT: {Name: "port", Help: "端口", Action: map[string]*ice.Action{

@@ -4,6 +4,7 @@ import (
 	ice "github.com/shylinux/icebergs"
 	"github.com/shylinux/icebergs/base/cli"
 	"github.com/shylinux/icebergs/base/gdb"
+	"github.com/shylinux/icebergs/base/mdb"
 	"github.com/shylinux/icebergs/base/web"
 	"github.com/shylinux/icebergs/core/code"
 	kit "github.com/shylinux/toolkits"
@@ -12,20 +13,86 @@ import (
 )
 
 const DOCKER = "docker"
+const (
+	IMAGE     = "image"
+	CONTAINER = "container"
+)
 
 var Index = &ice.Context{Name: "docker", Help: "虚拟机",
 	Caches: map[string]*ice.Cache{},
 	Configs: map[string]*ice.Config{
-		INSTALL: {Name: "install", Help: "安装", Value: kit.Data("path", "usr/install",
-			"linux", "https://dl.google.com/go/go1.14.2.linux-amd64.tar.gz",
-			"darwin", "https://dl.google.com/go/go1.14.2.darwin-amd64.pkg",
-			"windows", "https://dl.google.com/go/go1.14.2.windows-amd64.msi",
-			"source", "https://dl.google.com/go/go1.14.2.src.tar.gz",
-			"target", "usr/local",
-		)},
-		DOCKER: {Name: "docker", Help: "虚拟机", Value: kit.Data(kit.MDB_SHORT, "name", "build", []interface{}{})},
+		DOCKER: {Name: "docker", Help: "虚拟机", Value: kit.Data(
+			kit.MDB_SHORT, "name", "build", []interface{}{}),
+		},
 	},
 	Commands: map[string]*ice.Command{
+		IMAGE: {Name: "image", Help: "镜像管理", Meta: kit.Dict("detail", []string{"运行", "清理", "删除"}), List: ListLook("IMAGE_ID"), Action: map[string]*ice.Action{
+			"run": {Name: "run", Help: "运行", Hand: func(m *ice.Message, arg ...string) {
+				m.Cmdy(cli.SYSTEM, DOCKER, "run", "-dt", m.Option("REPOSITORY")+":"+m.Option("TAG"))
+			}},
+			"prune": {Name: "prune", Help: "清理", Hand: func(m *ice.Message, arg ...string) {
+				m.Cmdy(cli.SYSTEM, DOCKER, "prune", "-f")
+			}},
+			mdb.DELETE: {Name: "delete", Help: "删除", Hand: func(m *ice.Message, arg ...string) {
+				m.Cmdy(cli.SYSTEM, DOCKER, "rm", m.Option("IMAGE_ID"))
+			}},
+		}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			prefix := []string{cli.SYSTEM, DOCKER, IMAGE}
+			if len(arg) > 0 {
+				// 容器详情
+				res := m.Cmdx(prefix, "inspect", arg[0])
+				m.Push("detail", kit.KeyValue(map[string]interface{}{}, "", kit.Parse(nil, "", kit.Split(res)...)))
+				return
+			}
+
+			// 镜像列表
+			m.Split(strings.Replace(m.Cmdx(prefix, "ls"), "IMAGE ID", "IMAGE_ID", 1), "index", " ", "\n")
+			m.Sort("REPOSITORY")
+		}},
+		CONTAINER: {Name: "container", Help: "容器管理", List: ListLook("CONTAINER_ID"), Meta: kit.Dict("detail", []string{"进入", "启动", "停止", "重启", "清理", "编辑", "删除"}), Action: map[string]*ice.Action{
+			"prune": {Name: "prune", Help: "清理", Hand: func(m *ice.Message, arg ...string) {
+				m.Cmdy(cli.SYSTEM, DOCKER, "prune", "-f")
+				m.Cmdy(prefix, "prune", "-f")
+			}},
+		}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			prefix := []string{cli.SYSTEM, DOCKER, CONTAINER}
+			if len(arg) > 1 && arg[0] == "action" {
+				switch arg[1] {
+				case "进入":
+					m.Cmdy(cli.SYSTEM, "tmux", "new-window", "-t", m.Option("NAMES"), "-n", m.Option("NAMES"),
+						"-PF", "#{session_name}:#{window_name}.1", "docker exec -it "+m.Option("NAMES")+" bash").Set("append")
+					return
+				case "停止":
+					m.Cmdy(prefix, "stop", m.Option("CONTAINER_ID"))
+				case "启动":
+					m.Cmdy(prefix, "start", m.Option("CONTAINER_ID"))
+				case "重启":
+					m.Cmdy(prefix, "restart", m.Option("CONTAINER_ID"))
+				case "清理":
+					m.Cmdy(prefix, "prune", "-f")
+				case "modify":
+					switch arg[2] {
+					case "NAMES":
+						m.Cmdy(prefix, "rename", arg[4], arg[3])
+					}
+				case "delete":
+					m.Cmdy(prefix, "rm", m.Option("CONTAINER_ID")).Set("append")
+				}
+				return
+			}
+
+			if len(arg) > 0 {
+				// 容器详情
+				res := m.Cmdx(prefix, "inspect", arg[0])
+				m.Push("detail", kit.KeyValue(map[string]interface{}{}, "", kit.Parse(nil, "", kit.Split(res)...)))
+				return
+			}
+
+			// 容器列表
+			m.Split(strings.Replace(m.Cmdx(prefix, "ls", "-a"), "CONTAINER ID", "CONTAINER_ID", 1), "index", " ", "\n")
+			m.Sort("NAMES")
+		}},
+
 		"init": {Name: "init", Help: "初始化", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			m.Watch(gdb.DREAM_START, m.Prefix("auto"))
 
@@ -65,77 +132,6 @@ var Index = &ice.Context{Name: "docker", Help: "虚拟机",
 			})
 		}},
 
-		"image": {Name: "image", Help: "镜像管理", Meta: kit.Dict("detail", []string{"运行", "清理", "删除"}), List: ListLook("IMAGE_ID"), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			prefix := []string{cli.SYSTEM, "docker", "image"}
-			if len(arg) > 1 && arg[0] == "action" {
-				switch arg[1] {
-				case "运行":
-					m.Cmdy(prefix[:2], "run", "-dt", m.Option("REPOSITORY")+":"+m.Option("TAG")).Set("append")
-					return
-				case "清理":
-					m.Cmdy(prefix, "prune", "-f").Set("append")
-					return
-				case "delete":
-					m.Cmdy(prefix, "rm", m.Option("IMAGE_ID")).Set("append")
-					return
-				}
-			}
-
-			if len(arg) > 0 {
-				// 容器详情
-				res := m.Cmdx(prefix, "inspect", arg[0])
-				m.Push("detail", kit.KeyValue(map[string]interface{}{}, "", kit.Parse(nil, "", kit.Split(res)...)))
-				return
-			}
-
-			if len(arg) > 0 {
-				// 下载镜像
-				m.Cmdy(prefix, "pull", arg[0]+":"+kit.Select("latest", arg, 1)).Set("append")
-				return
-			}
-
-			// 镜像列表
-			m.Split(strings.Replace(m.Cmdx(prefix, "ls"), "IMAGE ID", "IMAGE_ID", 1), "index", " ", "\n")
-			m.Sort("REPOSITORY")
-		}},
-		"container": {Name: "container", Help: "容器管理", List: ListLook("CONTAINER_ID"), Meta: kit.Dict("detail", []string{"进入", "启动", "停止", "重启", "清理", "编辑", "删除"}), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			prefix := []string{cli.SYSTEM, "docker", "container"}
-			if len(arg) > 1 && arg[0] == "action" {
-				switch arg[1] {
-				case "进入":
-					m.Cmdy(cli.SYSTEM, "tmux", "new-window", "-t", m.Option("NAMES"), "-n", m.Option("NAMES"),
-						"-PF", "#{session_name}:#{window_name}.1", "docker exec -it "+m.Option("NAMES")+" bash").Set("append")
-					return
-				case "停止":
-					m.Cmdy(prefix, "stop", m.Option("CONTAINER_ID"))
-				case "启动":
-					m.Cmdy(prefix, "start", m.Option("CONTAINER_ID"))
-				case "重启":
-					m.Cmdy(prefix, "restart", m.Option("CONTAINER_ID"))
-				case "清理":
-					m.Cmdy(prefix, "prune", "-f")
-				case "modify":
-					switch arg[2] {
-					case "NAMES":
-						m.Cmdy(prefix, "rename", arg[4], arg[3])
-					}
-				case "delete":
-					m.Cmdy(prefix, "rm", m.Option("CONTAINER_ID")).Set("append")
-				}
-				return
-			}
-
-			if len(arg) > 0 {
-				// 容器详情
-				res := m.Cmdx(prefix, "inspect", arg[0])
-				m.Push("detail", kit.KeyValue(map[string]interface{}{}, "", kit.Parse(nil, "", kit.Split(res)...)))
-				return
-			}
-
-			// 容器列表
-			m.Split(strings.Replace(m.Cmdx(prefix, "ls", "-a"), "CONTAINER ID", "CONTAINER_ID", 1), "index", " ", "\n")
-			m.Sort("NAMES")
-		}},
 		"command": {Name: "command", Help: "命令", List: kit.List(
 			kit.MDB_INPUT, "text", "name", "CONTAINER_ID",
 			kit.MDB_INPUT, "text", "name", "cmd", "className", "args cmd",

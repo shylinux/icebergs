@@ -78,7 +78,7 @@ var Index = &ice.Context{Name: "totp", Help: "动态码",
 
 			if len(arg) == 1 {
 				// 创建密钥
-				arg = append(arg, gen(30))
+				arg = append(arg, _totp_gen(30))
 			}
 
 			// 添加密钥
@@ -94,7 +94,7 @@ var Index = &ice.Context{Name: "totp", Help: "动态码",
 					m.Push("time", m.Time())
 					m.Push("rest", per-time.Now().Unix()%per)
 					m.Push("name", value["name"])
-					m.Push("code", get(kit.Format(value["text"]), kit.Int(kit.Select("6", value["number"])), per))
+					m.Push("code", _totp_get(kit.Format(value["text"]), kit.Int(kit.Select("6", value["number"])), per))
 
 				})
 				return
@@ -102,7 +102,7 @@ var Index = &ice.Context{Name: "totp", Help: "动态码",
 
 			m.Richs("totp", nil, arg[0], func(key string, value map[string]interface{}) {
 				// 获取密码
-				m.Echo(get(kit.Format(value["text"]), kit.Int(kit.Select("6", arg, 1)), kit.Int64(kit.Select("30", arg, 2))))
+				m.Echo(_totp_get(kit.Format(value["text"]), kit.Int(kit.Select("6", arg, 1)), kit.Int64(kit.Select("30", arg, 2))))
 			})
 		}},
 	},

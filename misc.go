@@ -28,6 +28,9 @@ func (m *Message) Load(arg ...string) *Message {
 }
 
 func (m *Message) Watch(key string, arg ...string) *Message {
+	if len(arg) == 0 {
+		arg = append(arg, m.Prefix("auto"))
+	}
 	m.Cmd("gdb.event", "listen", key, arg)
 	return m
 }

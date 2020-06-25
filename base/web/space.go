@@ -236,10 +236,16 @@ func init() {
 
 					task.Put(name, func(task *task.Task) error {
 						// 监听消息
-						m.Event(gdb.SPACE_START, WORKER, name)
+						switch kind {
+						case WORKER:
+							m.Event(DREAM_START, name)
+							defer m.Event(DREAM_STOP, name)
+						default:
+							m.Event(gdb.SPACE_START, kind, name)
+							defer m.Event(gdb.SPACE_CLOSE, kind, name)
+						}
 						_space_handle(m, false, m.Target().Server().(*Frame).send, s, name)
 						m.Log(ice.LOG_CLOSE, "%s: %s", name, kit.Format(m.Confv(SPACE, kit.Keys(kit.MDB_HASH, h))))
-						m.Event(gdb.SPACE_CLOSE, WORKER, name)
 						m.Confv(SPACE, kit.Keys(kit.MDB_HASH, h), "")
 						return nil
 					})

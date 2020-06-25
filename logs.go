@@ -8,6 +8,9 @@ import (
 	"strings"
 )
 
+var ErrWarn = "warn: "
+var ErrNotFound = "not found "
+
 func (m *Message) log(level string, str string, arg ...interface{}) *Message {
 	if str = strings.TrimSpace(fmt.Sprintf(str, arg...)); Log != nil {
 		// 日志模块
@@ -33,7 +36,8 @@ func (m *Message) log(level string, str string, arg ...interface{}) *Message {
 
 	// 文件行号
 	switch level {
-	case LOG_CMDS, LOG_INFO, LOG_WARN, "refer", "form":
+	// case LOG_CMDS, LOG_INFO, LOG_WARN, "refer", "form":
+	case LOG_CMDS, LOG_INFO, "refer", "form":
 	case "register", "begin":
 	default:
 		suffix += " " + kit.FileLine(3, 2)
@@ -60,7 +64,7 @@ func (m *Message) Info(str string, arg ...interface{}) *Message {
 }
 func (m *Message) Warn(err bool, arg ...interface{}) bool {
 	if err {
-		m.meta[MSG_RESULT] = append([]string{"warn: "}, kit.Simple(arg...)...)
+		m.meta[MSG_RESULT] = append([]string{ErrWarn}, kit.Simple(arg...)...)
 		return m.log(LOG_WARN, fmt.Sprint(arg...)) != nil
 	}
 	return false

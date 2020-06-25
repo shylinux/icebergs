@@ -61,7 +61,7 @@ func (f *Frame) Start(m *ice.Message, arg ...string) bool {
 			// 异步事件
 			m.Logs(EVENT, d[0], d[1:])
 			m.Grows(EVENT, d[0], "", "", func(index int, value map[string]interface{}) {
-				m.Cmd(value["cmd"], d[1:]).Cost("event %v", d)
+				m.Cmd(value["cmd"], d).Cost("event %v", d)
 			})
 		}
 	}
@@ -86,6 +86,23 @@ const (
 	MISS_CREATE = "miss.create"
 	MIND_CREATE = "mind.create"
 )
+
+const (
+	INIT = "init"
+	AUTO = "auto"
+	MAKE = "make"
+
+	OPEN  = "open"
+	CLOSE = "close"
+	START = "start"
+	STOP  = "stop"
+
+	RESTART = "restart"
+	CHANGE  = "change"
+	PRUNE   = "prune"
+	CLEAR   = "clear"
+)
+
 const (
 	LISTEN = "listen"
 	ACTION = "action"

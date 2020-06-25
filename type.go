@@ -562,7 +562,7 @@ func (m *Message) Cmd(arg ...interface{}) *Message {
 		})
 	})
 
-	if m.Warn(m.Hand == false, "not found %v", list) {
+	if m.Warn(m.Hand == false, ErrNotFound, list) {
 		return m.Set(MSG_RESULT).Cmd("cli.system", list)
 	}
 	return m

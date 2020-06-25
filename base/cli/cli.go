@@ -49,8 +49,9 @@ var Index = &ice.Context{Name: "cli", Help: "命令模块",
 			m.Conf(RUNTIME, "host.pid", os.Getpid())
 
 			// 启动信息
-			if user, e := user.Current(); e == nil {
-				m.Conf(RUNTIME, "boot.username", path.Base(kit.Select(user.Name, os.Getenv("USER"))))
+			m.Conf(RUNTIME, "boot.username", os.Getenv("USER"))
+			if user, e := user.Current(); e == nil && user.Name != "" {
+				m.Conf(RUNTIME, "boot.username", user.Name)
 			}
 			if name, e := os.Hostname(); e == nil {
 				m.Conf(RUNTIME, "boot.hostname", kit.Select(name, os.Getenv("HOSTNAME")))

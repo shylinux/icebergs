@@ -357,11 +357,15 @@ func (m *Message) Parse(meta string, key string, arg ...string) *Message {
 }
 func (m *Message) Split(str string, field string, space string, enter string) *Message {
 	indexs := []int{}
-	fields := kit.Split(field, space, "{}")
-	for i, l := range kit.Split(str, enter, "{}") {
+	fields := kit.Split(field, space, space, space)
+	for i, l := range kit.Split(str, enter, enter, enter) {
+		m.Debug("----%v----", l)
+		if strings.TrimSpace(l) == "" {
+			continue
+		}
 		if i == 0 && (field == "" || field == "index") {
 			// 表头行
-			fields = kit.Split(l, space)
+			fields = kit.Split(l, space, space)
 			if field == "index" {
 				for _, v := range fields {
 					indexs = append(indexs, strings.Index(l, v))
@@ -382,7 +386,7 @@ func (m *Message) Split(str string, field string, space string, enter string) *M
 			continue
 		}
 
-		for i, v := range kit.Split(l, space) {
+		for i, v := range kit.Split(l, space, space) {
 			m.Push(kit.Select("some", fields, i), v)
 		}
 	}

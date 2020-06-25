@@ -106,6 +106,7 @@ var Index = &ice.Context{Name: "web", Help: "网络模块",
 			m.Cmd(SPIDE, mdb.CREATE, "dev", kit.Select("http://:9020", m.Conf(cli.RUNTIME, "conf.ctx_dev")))
 			m.Cmd(SPIDE, mdb.CREATE, "shy", kit.Select("https://shylinux.com:443", m.Conf(cli.RUNTIME, "conf.ctx_shy")))
 			m.Cmd(aaa.ROLE, aaa.White, aaa.VOID, "web", "/publish/")
+			m.Cmd(aaa.ROLE, aaa.White, aaa.VOID, "command")
 
 			m.Cmd("mdb.search", "create", "favor", "favor", "web")
 

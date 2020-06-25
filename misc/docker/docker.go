@@ -139,7 +139,7 @@ var Index = &ice.Context{Name: "docker", Help: "虚拟机",
 
 						p = path.Join(p, ".bashrc")
 						if _, e := os.Stat(p); e != nil {
-							m.Cmd(nfs.SAVE, p, kit.Format("export ctx_dev=%s\nexport ctx_pod=%s ctx_user=%s\n",
+							m.Cmd(nfs.SAVE, p, kit.Format("export ctx_dev=%s export ctx_pod=%s ctx_user=%s\n",
 								m.Conf(cli.RUNTIME, "conf.ctx_dev"), arg[0], cli.UserName))
 						}
 

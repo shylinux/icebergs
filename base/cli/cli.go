@@ -52,7 +52,7 @@ var Index = &ice.Context{Name: "cli", Help: "命令模块",
 			// 启动信息
 			m.Conf(RUNTIME, "boot.username", kit.Select(os.Getenv("USER"), os.Getenv("ctx_user")))
 			if user, e := user.Current(); e == nil && user.Name != "" {
-				m.Conf(RUNTIME, "boot.username", user.Name)
+				m.Conf(RUNTIME, "boot.username", kit.Select(user.Name, os.Getenv("ctx_user")))
 			}
 			if name, e := os.Hostname(); e == nil {
 				m.Conf(RUNTIME, "boot.hostname", kit.Select(name, os.Getenv("HOSTNAME")))

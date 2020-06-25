@@ -42,6 +42,7 @@ var Index = &ice.Context{Name: "cli", Help: "命令模块",
 			m.Conf(RUNTIME, "conf.ctx_dev", os.Getenv("ctx_dev"))
 			m.Conf(RUNTIME, "conf.ctx_shy", os.Getenv("ctx_shy"))
 			m.Conf(RUNTIME, "conf.ctx_pid", os.Getenv("ctx_pid"))
+			m.Conf(RUNTIME, "conf.ctx_user", os.Getenv("ctx_user"))
 
 			// 主机信息
 			m.Conf(RUNTIME, "host.GOARCH", runtime.GOARCH)
@@ -49,7 +50,7 @@ var Index = &ice.Context{Name: "cli", Help: "命令模块",
 			m.Conf(RUNTIME, "host.pid", os.Getpid())
 
 			// 启动信息
-			m.Conf(RUNTIME, "boot.username", os.Getenv("USER"))
+			m.Conf(RUNTIME, "boot.username", kit.Select(os.Getenv("USER"), os.Getenv("ctx_user")))
 			if user, e := user.Current(); e == nil && user.Name != "" {
 				m.Conf(RUNTIME, "boot.username", user.Name)
 			}

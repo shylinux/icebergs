@@ -43,6 +43,7 @@ var Index = &ice.Context{Name: "cli", Help: "命令模块",
 			m.Conf(RUNTIME, "conf.ctx_shy", os.Getenv("ctx_shy"))
 			m.Conf(RUNTIME, "conf.ctx_pid", os.Getenv("ctx_pid"))
 			m.Conf(RUNTIME, "conf.ctx_user", os.Getenv("ctx_user"))
+			m.Conf(RUNTIME, "conf.ctx_pod", os.Getenv("ctx_pod"))
 
 			// 主机信息
 			m.Conf(RUNTIME, "host.GOARCH", runtime.GOARCH)

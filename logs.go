@@ -12,7 +12,7 @@ var ErrWarn = "warn: "
 var ErrNotFound = "not found "
 
 func (m *Message) log(level string, str string, arg ...interface{}) *Message {
-	if str = strings.TrimSpace(fmt.Sprintf(str, arg...)); Log != nil {
+	if str = strings.TrimSpace(kit.Format(str, arg...)); Log != nil {
 		// 日志模块
 		Log(m, level, str)
 	}

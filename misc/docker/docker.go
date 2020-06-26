@@ -61,6 +61,7 @@ var Index = &ice.Context{Name: "docker", Help: "虚拟机",
 			"detail", []string{"进入", "启动", "停止", "重启", "清理", "编辑", "删除"},
 		), Action: map[string]*ice.Action{
 			gdb.OPEN: {Name: "open", Help: "进入", Hand: func(m *ice.Message, arg ...string) {
+				m.Cmd("web.code.tmux", m.Option("NAMES"))
 				m.Cmdy(cli.SYSTEM, "tmux", "new-window", "-t", m.Option("NAMES"), "-n", m.Option("NAMES"),
 					"-PF", "#{session_name}:#{window_name}.1", "docker exec -it "+m.Option("NAMES")+" bash")
 			}},

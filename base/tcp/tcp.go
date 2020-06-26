@@ -62,7 +62,11 @@ func _ip_islocal(m *ice.Message, ip string) (ok bool) {
 		return true
 	}
 
-	return m.Richs(IP, kit.Keys("meta.white"), ip, nil) != nil
+	if m.Richs(IP, kit.Keys("meta.white"), ip, nil) == nil {
+		return false
+	}
+	m.Log_AUTH(aaa.White, ip)
+	return true
 }
 func IPIsLocal(m *ice.Message, ip string) bool {
 	return _ip_islocal(m, ip)

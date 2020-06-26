@@ -4,6 +4,7 @@ go 1.13
 
 require (
 	github.com/gomarkdown/markdown v0.0.0-20200609195525-3f9352745725
+	github.com/gomodule/redigo v2.0.0+incompatible // indirect
 	github.com/gorilla/websocket v1.4.1
 	github.com/nareix/joy4 v0.0.0-20200507095837-05a4ffbb5369
 	github.com/shylinux/toolkits v0.1.6

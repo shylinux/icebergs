@@ -9,6 +9,7 @@ import (
 	"github.com/shylinux/icebergs/base/web"
 	kit "github.com/shylinux/toolkits"
 
+	"net/url"
 	"os"
 	"path"
 	"runtime"
@@ -169,6 +170,25 @@ export %s
 				m.Richs(cmd, nil, arg[0], func(key string, value map[string]interface{}) {
 					m.Push("detail", value)
 				})
+			}
+		}},
+
+		"/miss/": {Name: "/miss/", Help: "任务", Action: map[string]*ice.Action{
+			"pwd": {Name: "pwd", Help: "pwd", Hand: func(m *ice.Message, arg ...string) {
+				m.Render(ice.RENDER_RESULT)
+				m.Echo("hello world\n")
+			}},
+		}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			u, e := url.QueryUnescape(m.Option("arg"))
+			m.Assert(e)
+			args := kit.Split(u)
+			if len(arg) == 0 || arg[0] == "" {
+				return
+			}
+
+			m.Render(ice.RENDER_RESULT)
+			if m.Cmdy(arg, args); len(m.Resultv()) == 0 {
+				m.Table()
 			}
 		}},
 	},

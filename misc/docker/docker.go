@@ -5,13 +5,10 @@ import (
 	"github.com/shylinux/icebergs/base/cli"
 	"github.com/shylinux/icebergs/base/gdb"
 	"github.com/shylinux/icebergs/base/mdb"
-	"github.com/shylinux/icebergs/base/nfs"
 	"github.com/shylinux/icebergs/base/web"
 	"github.com/shylinux/icebergs/core/code"
 	kit "github.com/shylinux/toolkits"
 
-	"os"
-	"path"
 	"strings"
 )
 
@@ -30,6 +27,14 @@ var Index = &ice.Context{Name: "docker", Help: "虚拟机",
 	Configs: map[string]*ice.Config{
 		DOCKER: {Name: "docker", Help: "虚拟机", Value: kit.Data(
 			"repos", "centos", "build", []interface{}{"home", "mount"},
+			"alpine", []interface{}{
+				`sed -i 's/dl-cdn.alpinelinux.org/mirrors.aliyun.com/g' /etc/apk/repositories`,
+				`apk add curl`,
+			},
+			"centos", []interface{}{
+				`curl -o /etc/yum.repos.d/CentOS-Base.repo http://mirrors.aliyun.com/repo/Centos-8.repo`,
+				`yum makecache`,
+			},
 		)},
 	},
 	Commands: map[string]*ice.Command{
@@ -63,7 +68,7 @@ var Index = &ice.Context{Name: "docker", Help: "虚拟机",
 			gdb.OPEN: {Name: "open", Help: "进入", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmd("web.code.tmux", m.Option("NAMES"))
 				m.Cmdy(cli.SYSTEM, "tmux", "new-window", "-t", m.Option("NAMES"), "-n", m.Option("NAMES"),
-					"-PF", "#{session_name}:#{window_name}.1", "docker exec -it "+m.Option("NAMES")+" bash")
+					"-PF", "#{session_name}:#{window_name}.1", "docker exec -it "+m.Option("NAMES")+" sh")
 			}},
 			gdb.START: {Name: "start", Help: "启动", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmdy(_container, "start", m.Option("CONTAINER_ID"))
@@ -114,13 +119,6 @@ var Index = &ice.Context{Name: "docker", Help: "虚拟机",
 
 		gdb.INIT: {Name: "init", Help: "初始化", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			m.Watch(web.DREAM_START)
-			return
-
-			if m.Richs(web.FAVOR, nil, "alpine.auto", nil) == nil {
-				m.Cmd(web.FAVOR, "alpine.auto", web.TYPE_SHELL, "镜像源", `sed -i 's/dl-cdn.alpinelinux.org/mirrors.aliyun.com/g' /etc/apk/repositories`)
-				m.Cmd(web.FAVOR, "alpine.auto", web.TYPE_SHELL, "软件包", `apk add bash`)
-				m.Cmd(web.FAVOR, "alpine.auto", web.TYPE_SHELL, "软件包", `apk add curl`)
-			}
 		}},
 		gdb.AUTO: {Name: "auto", Help: "自动化", Action: map[string]*ice.Action{
 			web.DREAM_START: {Name: "dream.start", Hand: func(m *ice.Message, arg ...string) {
@@ -129,7 +127,11 @@ var Index = &ice.Context{Name: "docker", Help: "虚拟机",
 					return
 				}
 
-				args := []string{"--name", arg[0]}
+				args := []string{"--name", arg[0],
+					"-e", "ctx_user=" + cli.UserName,
+					"-e", "ctx_dev=" + m.Conf(cli.RUNTIME, "conf.ctx_dev"),
+					"-e", "ctx_pod=" + arg[0],
+				}
 				kit.Fetch(m.Confv(DOCKER, "meta.build"), func(index int, value string) {
 					switch value {
 					case "home":
@@ -137,13 +139,6 @@ var Index = &ice.Context{Name: "docker", Help: "虚拟机",
 					case "mount":
 						p := kit.Path(m.Conf(web.DREAM, "meta.path"), arg[0])
 						args = append(args, "--mount", kit.Format("type=bind,source=%s,target=/root", p))
-
-						p = path.Join(p, ".bashrc")
-						if _, e := os.Stat(p); e != nil {
-							m.Cmd(nfs.SAVE, p, kit.Format("export ctx_dev=%s export ctx_pod=%s ctx_user=%s\n",
-								m.Conf(cli.RUNTIME, "conf.ctx_dev"), arg[0], cli.UserName))
-						}
-
 					}
 				})
 
@@ -151,13 +146,9 @@ var Index = &ice.Context{Name: "docker", Help: "虚拟机",
 				repos := m.Conf(DOCKER, "meta.repos")
 				pid := m.Cmdx(_docker, "run", "-dt", args, repos)
 				m.Log_CREATE(repos, arg[0], "pid", pid)
-				return
 
-				m.Cmd(web.FAVOR, kit.Select(repos+".auto", arg, 1)).Table(func(index int, value map[string]string, head []string) {
-					if value[kit.MDB_TYPE] == web.TYPE_SHELL {
-						m.Cmd(_container, "exec", arg[0], kit.Split(value[kit.MDB_TEXT]))
-						// 执行命令
-					}
+				kit.Fetch(m.Confv(DOCKER, kit.Keys("meta", repos)), func(index int, value string) {
+					m.Logs("cmd", value, "res", m.Cmdx(_container, "exec", arg[0], kit.Split(value)))
 				})
 			}},
 		}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {}},

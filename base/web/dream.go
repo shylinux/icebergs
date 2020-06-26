@@ -82,7 +82,7 @@ func init() {
 					"ctx_log", "bin/boot.log", "ctx_mod", "ctx,log,gdb,ssh",
 				),
 				"miss", `#!/bin/bash
-git &>/dev/null || yum install -y git
+git &>/dev/null || apk add git || yum install -y git
 
 [ -f ~/.ish/plug.sh ] || [ -f ./.ish/plug.sh ] || git clone https://github.com/shylinux/intshell ./.ish
 [ "$ISH_CONF_PRE" != "" ] || source ./.ish/plug.sh || source ~/.ish/plug.sh
@@ -91,18 +91,6 @@ git &>/dev/null || yum install -y git
 require show.sh
 require help.sh
 require miss.sh
-
-ish_miss_prepare_volcanos
-# ish_miss_prepare_icebergs
-# ish_miss_prepare toolkits
-# ish_miss_prepare_intshell
-# ish_miss_prepare learning
-
-go &>/dev/null || yum install -y golang
-ish_miss_prepare_compile
-ish_miss_prepare_install
-make || yum install -y make
-
 `,
 			)},
 		},

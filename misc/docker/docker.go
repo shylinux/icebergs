@@ -41,7 +41,7 @@ var Index = &ice.Context{Name: "docker", Help: "虚拟机",
 		IMAGE: {Name: "image IMAGE_ID=auto auto", Help: "镜像管理", Meta: kit.Dict(
 			"detail", []string{"运行", "清理", "删除"},
 		), Action: map[string]*ice.Action{
-			"run": {Name: "run", Help: "运行", Hand: func(m *ice.Message, arg ...string) {
+			gdb.START: {Name: "start", Help: "运行", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmdy(_docker, "run", "-dt", m.Option("REPOSITORY")+":"+m.Option("TAG"))
 			}},
 			gdb.PRUNE: {Name: "prune", Help: "清理", Hand: func(m *ice.Message, arg ...string) {
@@ -61,6 +61,12 @@ var Index = &ice.Context{Name: "docker", Help: "虚拟机",
 			// 镜像列表
 			m.Split(strings.Replace(m.Cmdx(_image, "ls"), "IMAGE ID", "IMAGE_ID", 1), "index", " ", "\n")
 			m.Sort("REPOSITORY")
+
+			m.Table(func(index int, value map[string]string, head []string) {
+				for _, k := range []string{"start", "clear"} {
+					m.Push(k, m.Cmdx(mdb.RENDER, web.RENDER.Button, k))
+				}
+			})
 		}},
 		CONTAINER: {Name: "container CONTAINER_ID=auto auto", Help: "容器管理", Meta: kit.Dict(
 			"detail", []string{"进入", "启动", "停止", "重启", "清理", "编辑", "删除"},

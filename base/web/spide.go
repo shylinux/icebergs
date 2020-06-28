@@ -238,8 +238,8 @@ func init() {
 					switch cache {
 					case "cache":
 						m.Optionv("response", res)
-						m.Cmdy(CACHE, "catch", res.Header.Get("Content-Type"), uri)
-						m.Echo(m.Append("data"))
+						m.Cmdy(CACHE, DOWNLOAD, res.Header.Get("Content-Type"), uri)
+						m.Echo(m.Append(DATA))
 					case "raw":
 						if b, e := ioutil.ReadAll(res.Body); m.Assert(e) {
 							m.Echo(string(b))

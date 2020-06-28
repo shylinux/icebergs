@@ -176,7 +176,6 @@ func Run(arg ...string) string {
 		Pulse.Table(nil)
 	}
 	fmt.Printf(Pulse.Result())
-
 	os.Exit(frame.code)
 	return ""
 }

@@ -286,7 +286,7 @@ func init() {
 			STACK: {Name: "stack", Help: "结构", Value: kit.Data("template", stack)},
 
 			WORD: {Name: "word", Help: "语言文字", Value: kit.Data(kit.MDB_SHORT, "name",
-				"path", "", "regs", ".*\\.shy", "alias", map[string]interface{}{
+				"path", "usr/demo", "regs", ".*\\.shy", "alias", map[string]interface{}{
 					LABEL: []interface{}{CHART, LABEL},
 					CHAIN: []interface{}{CHART, CHAIN},
 
@@ -359,7 +359,7 @@ func init() {
 				_stack_show(m, arg[0], arg[1], arg[2:]...)
 			}},
 
-			WORD: {Name: "word path=自然/编程/hi.shy auto", Help: "语言文字", Meta: kit.Dict(
+			WORD: {Name: "word path=hi.shy auto", Help: "语言文字", Meta: kit.Dict(
 				"display", "/plugin/local/wiki/word.js",
 			), Action: map[string]*ice.Action{
 				"story": {Name: "story", Help: "运行", Hand: func(m *ice.Message, arg ...string) {

@@ -43,9 +43,9 @@ func _pprof_show(m *ice.Message, zone string, id string) {
 		val = val[kit.MDB_META].(map[string]interface{})
 
 		list := []string{}
-		m.Grows(PPROF, kit.Keys(kit.MDB_HASH, key), "", "", func(index int, value map[string]interface{}) {
-			task.Put(val, func(task *task.Task) error {
-				m.Sleep("1s")
+		task.Put(val, func(task *task.Task) error {
+			m.Sleep("1s")
+			m.Grows(PPROF, kit.Keys(kit.MDB_HASH, key), "", "", func(index int, value map[string]interface{}) {
 				// 压测命令
 				m.Log_EXPORT(kit.MDB_META, PPROF, kit.MDB_ZONE, zone, kit.MDB_VALUE, kit.Format(value))
 				cmd := kit.Format(value[kit.MDB_TYPE])
@@ -54,16 +54,17 @@ func _pprof_show(m *ice.Message, zone string, id string) {
 					arg, kit.Simple(value[kit.MDB_EXTRA])...).Result()
 				m.Cmd(web.FAVOR, favor, cmd, arg, res)
 				list = append(list, cmd+": "+arg, res)
-				return nil
 			})
+			return nil
 		})
 
 		// 收藏程序
-		bin := m.Cmd(web.CACHE, "catch", kit.MIME_FILE, kit.Format(val[BINNARY])).Append(kit.MDB_TEXT)
+		msg := m.Cmd(web.CACHE, web.CATCH, kit.MIME_FILE, kit.Format(val[BINNARY]))
+		bin := msg.Append(kit.MDB_TEXT)
 		m.Cmd(web.FAVOR, favor, kit.MIME_FILE, bin, val[BINNARY])
 
 		// 性能分析
-		msg := m.Cmd(web.SPIDE, "self", "cache", "GET", kit.Select("/code/pprof/profile", val[SERVICE]), "seconds", kit.Select("5", kit.Format(val[SECONDS])))
+		msg = m.Cmd(web.SPIDE, "self", web.CACHE, http.MethodGet, kit.Select("/code/pprof/profile", val[SERVICE]), "seconds", kit.Select("5", kit.Format(val[SECONDS])))
 		m.Cmd(web.FAVOR, favor, PPROF, msg.Append(kit.MDB_TEXT), kit.Keys(zone, "pd.gz"))
 
 		// 结果摘要

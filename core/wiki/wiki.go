@@ -32,10 +32,8 @@ func _wiki_save(m *ice.Message, cmd, name, text string, arg ...string) {
 	m.Cmd(nfs.SAVE, path.Join(m.Conf(cmd, "meta.path"), name), text)
 }
 func _wiki_upload(m *ice.Message, cmd string) {
-	m.Option("request", m.R)
-	msg := m.Cmd(web.CACHE, "catch", "", "")
-	m.Cmd(web.CACHE, "watch", msg.Append("data"), path.Join(msg.Conf(cmd, "meta.path"),
-		path.Dir(m.Option("path")), msg.Append("name")))
+	m.Cmdy(web.CACHE, web.UPLOAD)
+	m.Cmdy(web.CACHE, web.WATCH, m.Option(web.DATA), path.Join(m.Option("path"), m.Option("name")))
 }
 
 func reply(m *ice.Message, cmd string, arg ...string) bool {

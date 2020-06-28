@@ -4,9 +4,10 @@ import (
 	ice "github.com/shylinux/icebergs"
 	kit "github.com/shylinux/toolkits"
 
+	"os"
+
 	qrs "github.com/skip2/go-qrcode"
 	"github.com/tuotoo/qrcode"
-	"os"
 )
 
 func init() {
@@ -40,7 +41,7 @@ func init() {
 				m.Echo(m.Conf(QRCODE, "meta.plug"))
 			}},
 			"show": {Name: "show name", Help: "渲染", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-				m.Echo(`<img src="/share/local/%s">`, arg[0])
+				m.Echo(`<img src="/share/local/%s?pod=%s">`, arg[0], m.Option(ice.MSG_USERPOD))
 			}},
 		},
 	}, nil)

@@ -26,7 +26,10 @@ var _container = []string{cli.SYSTEM, DOCKER, CONTAINER}
 var Index = &ice.Context{Name: "docker", Help: "虚拟机",
 	Configs: map[string]*ice.Config{
 		DOCKER: {Name: "docker", Help: "虚拟机", Value: kit.Data(
-			"repos", "centos", "build", []interface{}{"home", "mount"},
+			"repos", "centos", "build", []interface{}{
+				"home",
+				// "mount",
+			},
 			"alpine", []interface{}{
 				`sed -i 's/dl-cdn.alpinelinux.org/mirrors.aliyun.com/g' /etc/apk/repositories`,
 				`apk add curl`,

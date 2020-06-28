@@ -41,9 +41,11 @@ func _cache_save(m *ice.Message, kind, name, text string, arg ...string) { // fi
 
 	// 添加数据
 	size := kit.Int(kit.Select(kit.Format(len(text)), arg, 1))
+	file := kit.Select("", arg, 0)
+	text = kit.Select(file, text)
 	h := m.Rich(CACHE, nil, kit.Dict(
 		kit.MDB_TYPE, kind, kit.MDB_NAME, name, kit.MDB_TEXT, text,
-		kit.MDB_FILE, kit.Select("", arg, 0), kit.MDB_SIZE, size,
+		kit.MDB_FILE, file, kit.MDB_SIZE, size,
 	))
 	m.Log_CREATE(CACHE, h, kit.MDB_TYPE, kind, kit.MDB_NAME, name)
 
@@ -59,6 +61,7 @@ func _cache_save(m *ice.Message, kind, name, text string, arg ...string) { // fi
 	m.Push(kit.MDB_NAME, name)
 	m.Push(kit.MDB_TEXT, text)
 	m.Push(kit.MDB_SIZE, size)
+	m.Push(kit.MDB_FILE, file)
 	m.Push(DATA, h)
 }
 func _cache_watch(m *ice.Message, key, file string) {
@@ -152,10 +155,8 @@ func init() {
 					_cache_save(m, arg[0], arg[1], "", file, size)
 				}},
 				UPLOAD: {Name: "upload", Help: "上传", Hand: func(m *ice.Message, arg ...string) {
-					if r, ok := m.Optionv("request").(*http.Request); ok {
-						kind, name, file, size := _cache_upload(m, r)
-						_cache_save(m, kind, name, "", file, size)
-					}
+					kind, name, file, size := _cache_upload(m, m.R)
+					_cache_save(m, kind, name, "", file, size)
 				}},
 				DOWNLOAD: {Name: "download type name", Help: "下载", Hand: func(m *ice.Message, arg ...string) {
 					if r, ok := m.Optionv("response").(*http.Response); ok {

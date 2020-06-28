@@ -6,7 +6,6 @@ import (
 	"github.com/shylinux/icebergs/base/web"
 	kit "github.com/shylinux/toolkits"
 
-	"os"
 	"path"
 	"strings"
 )
@@ -28,8 +27,8 @@ func _inner_protect(m *ice.Message, name string) bool {
 	ls := strings.Split(name, "/")
 	return !m.Right(ls) && m.Conf(INNER, kit.Keys("meta.protect", ls[0])) == "true"
 }
-func _inner_binary(m *ice.Message, name string) bool {
-	return m.Conf(INNER, kit.Keys("meta.binary", _inner_ext(name))) == "true"
+func _inner_source(m *ice.Message, name string) bool {
+	return m.Conf(INNER, kit.Keys("meta.source", _inner_ext(name))) == "true"
 }
 func _inner_ext(name string) string {
 	return strings.ToLower(kit.Select(path.Base(name), strings.TrimPrefix(path.Ext(name), ".")))
@@ -52,7 +51,7 @@ func _inner_list(m *ice.Message, name string) {
 		return
 	}
 
-	if m.Set(ice.MSG_RESULT); strings.HasSuffix(name, "/") || !_inner_binary(m, name) {
+	if m.Set(ice.MSG_RESULT); strings.HasSuffix(name, "/") || _inner_source(m, name) {
 		m.Cmdy("nfs.dir", name, "file size time")
 		return
 	}
@@ -63,12 +62,13 @@ func _inner_save(m *ice.Message, name, text string) {
 		return
 	}
 
-	if f, e := os.Create(name); m.Assert(e) {
+	if f, p, e := kit.Create(name); m.Assert(e) {
 		defer f.Close()
 		m.Cmd(web.FAVOR, "inner.save", "shell", name, text)
 		if n, e := f.WriteString(text); m.Assert(e) {
 			m.Log_EXPORT("file", name, "size", n)
 		}
+		m.Echo(p)
 	}
 }
 func _inner_plug(m *ice.Message, name string) {
@@ -126,7 +126,13 @@ func init() {
 		Configs: map[string]*ice.Config{
 			INNER: {Name: "inner", Help: "编辑器", Value: kit.Data(
 				"protect", kit.Dict("etc", "true", "var", "true", "usr", "true"),
-				"binary", kit.Dict("bin", "true", "gz", "true"),
+				"source", kit.Dict(
+					"sh", "true",
+					"py", "true",
+					"shy", "true",
+					"go", "true",
+					"js", "true",
+				),
 				"plug", kit.Dict(
 					"py", kit.Dict(
 						"prefix", kit.Dict("#", "comment"),
@@ -136,14 +142,14 @@ func init() {
 					"csv", kit.Dict("display", true),
 				),
 				"show", kit.Dict(
-					"sh", []string{"bash"},
+					"sh", []string{"sh"},
 					"py", []string{"python"},
 					"js", []string{"node"},
 				),
 			)},
 		},
 		Commands: map[string]*ice.Command{
-			INNER: {Name: "inner path=tmp file=hi.qrc key auto", Help: "编辑器", Meta: map[string]interface{}{
+			INNER: {Name: "inner path=usr/demo file=hi.qrc key auto", Help: "编辑器", Meta: map[string]interface{}{
 				"display": "/plugin/local/code/inner.js", "style": "editor",
 			}, Action: map[string]*ice.Action{
 				"cmd": {Name: "cmd arg", Help: "命令", Hand: func(m *ice.Message, arg ...string) {
@@ -161,9 +167,6 @@ func init() {
 				}},
 				"find": {Name: "find word", Help: "搜索", Hand: func(m *ice.Message, arg ...string) {
 					web.FavorList(m, arg[0], arg[1], arg[2:]...)
-				}},
-				"upload": {Name: "upload path name", Help: "上传", Hand: func(m *ice.Message, arg ...string) {
-					m.Cmd(web.STORY, web.WATCH, m.Option("data"), path.Join(m.Option("path"), m.Option("name")))
 				}},
 				"project": {Name: "project path", Help: "项目", Hand: func(m *ice.Message, arg ...string) {
 					_inner_list(m, path.Join("./", kit.Select("", arg, 0))+"/")
@@ -205,6 +208,11 @@ func init() {
 				}},
 				SAVE: {Name: "save path name content", Help: "保存", Hand: func(m *ice.Message, arg ...string) {
 					_inner_save(m, path.Join("./", arg[0], arg[1]), kit.Select(m.Option("content"), arg, 2))
+				}},
+
+				web.UPLOAD: {Name: "upload path name", Help: "上传", Hand: func(m *ice.Message, arg ...string) {
+					m.Cmdy(web.CACHE, web.UPLOAD)
+					m.Cmdy(web.CACHE, web.WATCH, m.Option(web.DATA), path.Join(m.Option("path"), m.Option("name")))
 				}},
 			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) { _inner_main(m, arg...) }},
 		},

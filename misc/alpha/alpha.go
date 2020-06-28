@@ -39,7 +39,7 @@ func _alpha_find(m *ice.Message, method, word string) {
 	})
 }
 func _alpha_find2(m *ice.Message, method, word string) {
-	p := path.Join(m.Conf(ALPHA, "meta.store"), ALPHA)
+	p := path.Join(m.Conf(ALPHA, "meta.store"), ALPHA+".ecdict")
 	if ls, e := ioutil.ReadDir(p); m.Assert(e) {
 		args := []interface{}{}
 		for _, v := range ls {
@@ -80,7 +80,7 @@ func _alpha_load(m *ice.Message, file, name string) {
 	))
 
 	m.Cmd(mdb.IMPORT, ALPHA, name, kit.MDB_LIST,
-		m.Cmd(web.CACHE, "catch", "csv", file+".csv").Append(web.DATA))
+		m.Cmd(web.CACHE, "catch", "csv", file+".csv").Append(kit.MDB_FILE))
 
 	// 保存词库
 	m.Conf(ALPHA, kit.Keys(name, "meta.limit"), 0)

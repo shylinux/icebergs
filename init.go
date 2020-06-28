@@ -147,6 +147,7 @@ var Pulse = &Message{
 }
 
 var Log func(*Message, string, string)
+var Loop func()
 
 func Run(arg ...string) string {
 	if len(arg) == 0 {
@@ -165,6 +166,9 @@ func Run(arg ...string) string {
 	Pulse.Option("begin_time", Pulse.Time())
 
 	if frame.Begin(Pulse.Spawns(), arg...).Start(Pulse, arg...) {
+		if Loop != nil {
+			Loop()
+		}
 		frame.Close(Pulse.Spawns(), arg...)
 	}
 

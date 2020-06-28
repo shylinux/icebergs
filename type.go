@@ -549,7 +549,7 @@ func (m *Message) Cmdx(arg ...interface{}) string {
 }
 func (m *Message) Cmd(arg ...interface{}) *Message {
 	list := kit.Simple(arg...)
-	if len(list) == 0 {
+	if len(list) == 0 && m.Hand == false {
 		list = m.meta[MSG_DETAIL]
 	}
 	if len(list) == 0 {

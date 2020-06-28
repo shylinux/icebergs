@@ -77,12 +77,13 @@ func _pprof_show(m *ice.Message, zone string, id string) {
 		list = append(list, web.TYPE_SHELL+": "+strings.Join(cmd, " "), strings.Join(res, "\n"))
 
 		// 结果展示
-		p := kit.Format("%s:%s", m.Conf(web.SHARE, "meta.host"), m.Cmdx(tcp.PORT, "get"))
+		u := kit.ParseURL(m.Option(ice.MSG_USERWEB))
+		p := kit.Format("%s:%s", u.Hostname(), m.Cmdx(tcp.PORT, "get"))
 		m.Option(cli.CMD_STDOUT, "var/daemon/stdout")
 		m.Option(cli.CMD_STDERR, "var/daemon/stderr")
 		m.Cmd(cli.DAEMON, m.Confv(PPROF, "meta.pprof"), "-http="+p, val[BINNARY], msg.Append(kit.MDB_TEXT))
 
-		url := "http://" + p + "/ui/top"
+		url := u.Scheme + "://" + p + "/ui/top"
 		m.Cmd(web.FAVOR, favor, web.SPIDE, url, msg.Append(kit.MDB_TEXT))
 		m.Set(ice.MSG_RESULT).Echo(url).Echo(" \n").Echo("\n")
 		m.Echo(strings.Join(list, "\n")).Echo("\n")

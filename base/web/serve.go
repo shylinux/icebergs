@@ -71,7 +71,7 @@ func _serve_handle(key string, cmd *ice.Command, msg *ice.Message, w http.Respon
 	}
 
 	// 用户请求
-	msg.Option(ice.MSG_USERWEB, msg.Conf(SHARE, "meta.domain"))
+	msg.Option(ice.MSG_USERWEB, kit.Select(msg.Conf(SHARE, "meta.domain"), r.Header.Get("Referer")))
 	msg.Option(ice.MSG_USERIP, r.Header.Get(ice.MSG_USERIP))
 	msg.Option(ice.MSG_USERUA, r.Header.Get("User-Agent"))
 	msg.Option(ice.MSG_USERURL, r.URL.Path)

@@ -35,7 +35,7 @@ func init() {
 		Commands: map[string]*ice.Command{
 			DRAW: {Name: "draw path=hi.svg auto", Help: "思维导图", Meta: kit.Dict(mdb.PLUGIN, DrawPlugin), Action: map[string]*ice.Action{
 				nfs.SAVE: {Name: "save path text", Help: "保存", Hand: func(m *ice.Message, arg ...string) {
-					_wiki_save(m, DRAW, arg[0], kit.Select(m.Option("content"), arg, 1))
+					_wiki_save(m, DATA, arg[0], arg[1])
 				}},
 				"run": {Name: "show zone type name text", Help: "运行", Hand: func(m *ice.Message, arg ...string) {
 					_draw_show(m, arg[0], arg[1], arg[2], arg[3], arg[4:]...)

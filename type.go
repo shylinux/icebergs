@@ -109,6 +109,9 @@ func (c *Context) cmd(m *Message, cmd *Command, key string, arg ...string) *Mess
 		}
 	}
 
+	if len(arg) > 0 && arg[0] == "render" {
+		arg = arg[1:]
+	}
 	m.Log(LOG_CMDS, "%s.%s %d %v %s", c.Name, key, len(arg), arg, kit.FileLine(cmd.Hand, 3))
 	cmd.Hand(m, c, key, arg...)
 	return m

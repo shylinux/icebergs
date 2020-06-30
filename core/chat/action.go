@@ -71,7 +71,9 @@ func _action_list(m *ice.Message, river, storm string) {
 	}
 
 	prefix := kit.Keys(kit.MDB_HASH, river, TOOL, kit.MDB_HASH, storm)
+	m.Debug("what %v", prefix)
 	m.Grows(RIVER, prefix, "", "", func(index int, value map[string]interface{}) {
+		m.Debug("what %v", value)
 		if meta, ok := kit.Value(value, kit.MDB_META).(map[string]interface{}); ok {
 			m.Push(RIVER, river)
 			m.Push(STORM, storm)
@@ -144,20 +146,21 @@ func init() {
 				msg := m.Cmd(web.STORY, web.UPLOAD)
 				m.Option(kit.MDB_NAME, msg.Append(kit.MDB_NAME))
 				m.Option(web.DATA, msg.Append(web.DATA))
-				_action_show(m, m.Option(RIVER), m.Option(STORM), m.Option(ACTION),
+				_action_show(m, m.Option(ice.MSG_RIVER), m.Option(ice.MSG_STORM), m.Option(ice.MSG_ACTION),
 					append([]string{ACTION, web.UPLOAD}, arg...)...)
 			}},
 			ORDER: {Name: "order cmd...", Help: "定制", Hand: func(m *ice.Message, arg ...string) {
-				_action_order_list(m, m.Option(RIVER), m.Option(STORM), arg...)
+				_action_order_list(m, m.Option(ice.MSG_RIVER), m.Option(ice.MSG_STORM), arg...)
 			}},
 		}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			if len(arg) == 0 {
 				// 命令列表
-				_action_list(m, m.Option(RIVER), m.Option(STORM))
+				m.Debug("%v", m.Formats("meta"))
+				_action_list(m, m.Option(ice.MSG_RIVER), m.Option(ice.MSG_STORM))
 				return
 			}
 			// 执行命令
-			_action_show(m, m.Option(RIVER), m.Option(STORM), arg[0], arg[1:]...)
+			_action_show(m, m.Option(ice.MSG_RIVER), m.Option(ice.MSG_STORM), arg[0], arg[1:]...)
 		}},
 	}}, nil)
 }

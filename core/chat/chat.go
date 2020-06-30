@@ -5,90 +5,45 @@ import (
 	"github.com/shylinux/icebergs/base/aaa"
 	"github.com/shylinux/icebergs/base/ctx"
 	"github.com/shylinux/icebergs/base/gdb"
+	"github.com/shylinux/icebergs/base/mdb"
 	"github.com/shylinux/icebergs/base/web"
 	"github.com/shylinux/toolkits"
+
+	"strings"
 )
 
 var Index = &ice.Context{Name: "chat", Help: "聊天中心",
-	Configs: map[string]*ice.Config{
-		RIVER: {Name: "river", Help: "群组", Value: kit.Data(
-			"template", kit.Dict("root", []interface{}{
-				[]interface{}{"river", `{{.Option "user.nick"|Format}}@{{.Conf "runtime" "node.name"|Format}}`, "mall"},
-
-				[]interface{}{"storm", "code", "code"},
-				[]interface{}{"field", "login", "web.code"},
-				[]interface{}{"field", "buffer", "web.code.tmux"},
-				[]interface{}{"field", "session", "web.code.tmux"},
-				[]interface{}{"field", "image", "web.code.docker"},
-				[]interface{}{"field", "container", "web.code.docker"},
-				[]interface{}{"field", "command", "web.code.docker"},
-				[]interface{}{"field", "repos", "web.code.git"},
-				[]interface{}{"field", "total", "web.code.git"},
-				[]interface{}{"field", "status", "web.code.git"},
-
-				[]interface{}{"storm", "wiki", "wiki"},
-				[]interface{}{"field", "draw", "web.wiki"},
-				[]interface{}{"field", "data", "web.wiki"},
-				[]interface{}{"field", "word", "web.wiki"},
-				[]interface{}{"field", "walk", "web.wiki"},
-				[]interface{}{"field", "feel", "web.wiki"},
-
-				[]interface{}{"storm", "root"},
-				[]interface{}{"field", "spide"},
-				[]interface{}{"field", "space"},
-				[]interface{}{"field", "dream"},
-				[]interface{}{"field", "favor"},
-				[]interface{}{"field", "story"},
-				[]interface{}{"field", "share"},
-
-				[]interface{}{"storm", "miss"},
-				[]interface{}{"field", "route"},
-				[]interface{}{"field", "group"},
-				[]interface{}{"field", "label"},
-				[]interface{}{"field", "search"},
-				[]interface{}{"field", "commend"},
-
-				[]interface{}{"storm", "team", "team"},
-				[]interface{}{"field", "plan", "web.team"},
-				[]interface{}{"field", "miss", "web.team"},
-				[]interface{}{"field", "stat", "web.team"},
-				[]interface{}{"field", "task", "web.team"},
-
-				[]interface{}{"storm", "mall", "mall"},
-				[]interface{}{"field", "asset", "web.mall"},
-				[]interface{}{"field", "spend", "web.mall"},
-				[]interface{}{"field", "trans", "web.mall"},
-				[]interface{}{"field", "bonus", "web.mall"},
-				[]interface{}{"field", "month", "web.mall"},
-			}, "void", []interface{}{
-				[]interface{}{"storm", "wiki", "wiki"},
-				[]interface{}{"field", "note", "web.wiki"},
-			}),
-			"black", kit.Dict("tech", []interface{}{
-				"/debug",
-				"/river.add",
-				"/river.share",
-				"/river.rename",
-				"/river.remove",
-				"/storm.remove",
-				"/storm.rename",
-				"/storm.share",
-				"/storm.add",
-			}),
-			"white", kit.Dict("void", []interface{}{
-				"/header",
-				"/river",
-				"/storm",
-				"/action",
-				"/footer",
-			}),
-		)},
-	},
+	Configs: map[string]*ice.Config{},
 	Commands: map[string]*ice.Command{
 		ice.CTX_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			m.Load()
 			m.Watch(gdb.SYSTEM_INIT, m.Prefix("init"))
 			m.Watch(gdb.USER_CREATE, m.Prefix("auto"))
+			m.Cmd(mdb.SEARCH, mdb.CREATE, ctx.COMMAND, m.AddCmd(&ice.Command{Hand: func(m *ice.Message, c *ice.Context, cc string, arg ...string) {
+				arg = arg[1:]
+				ice.Pulse.Travel(func(p *ice.Context, s *ice.Context, key string, cmd *ice.Command) {
+					if strings.HasPrefix(key, "_") || strings.HasPrefix(key, "/") {
+						return
+					}
+					if arg[1] != "" && arg[1] != key && arg[1] != s.Name {
+						return
+					}
+					if arg[2] != "" && !strings.Contains(kit.Format(cmd.Name), arg[2]) && !strings.Contains(kit.Format(cmd.Help), arg[2]) {
+						return
+					}
+
+					m.Push("pod", "")
+					m.Push("ctx", "web.chat")
+					m.Push("cmd", cc)
+
+					m.Push("time", m.Time())
+					m.Push("size", "")
+
+					m.Push("type", ctx.COMMAND)
+					m.Push("name", key)
+					m.Push("text", s.Cap(ice.CTX_FOLLOW))
+				})
+			}}))
 		}},
 		ice.CTX_EXIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			m.Save(RIVER)
@@ -96,16 +51,6 @@ var Index = &ice.Context{Name: "chat", Help: "聊天中心",
 
 		"init": {Name: "init", Help: "初始化", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			if len(m.Confm(RIVER, kit.MDB_HASH)) == 0 {
-				// 默认群组
-				kit.Fetch(m.Confv(RIVER, "meta.template"), func(key string, val map[string]interface{}) {
-					if favor := kit.Keys(c.Cap(ice.CTX_FOLLOW), key); m.Richs(web.FAVOR, nil, favor, nil) == nil {
-						kit.Fetch(val, func(index int, value interface{}) {
-							v := kit.Simple(value)
-							web.FavorInsert(m, favor, v[0], v[1], v[2])
-						})
-					}
-				})
-
 				// 黑名单
 				kit.Fetch(m.Confv(RIVER, "meta.black.tech"), func(index int, value interface{}) {
 					m.Cmd(aaa.ROLE, aaa.Black, aaa.TECH, value)
@@ -169,7 +114,12 @@ var Index = &ice.Context{Name: "chat", Help: "聊天中心",
 					case "/action":
 						arg = arg[2:]
 					case "/storm":
-						arg = arg[2:]
+						if len(arg) > 0 {
+							arg = arg[1:]
+						}
+						if len(arg) > 0 {
+							arg = arg[1:]
+						}
 					case "/river":
 						arg = arg[1:]
 					}

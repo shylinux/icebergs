@@ -3,6 +3,7 @@ package nfs
 import (
 	ice "github.com/shylinux/icebergs"
 	"github.com/shylinux/icebergs/base/cli"
+	"github.com/shylinux/icebergs/base/mdb"
 	kit "github.com/shylinux/toolkits"
 
 	"bufio"
@@ -17,6 +18,10 @@ import (
 	"sort"
 	"strings"
 )
+
+func _file_ext(name string) string {
+	return strings.ToLower(kit.Select(path.Base(name), strings.TrimPrefix(path.Ext(name), ".")))
+}
 
 func _file_list(m *ice.Message, root string, name string, level int, deep bool, dir_type string, dir_reg *regexp.Regexp, fields []string) {
 	if fs, e := ioutil.ReadDir(path.Join(root, name)); e != nil {
@@ -52,9 +57,9 @@ func _file_list(m *ice.Message, root string, name string, level int, deep bool, 
 						m.Push("time", f.ModTime().Format(ice.MOD_TIME))
 					case "type":
 						if m.Assert(e) && f.IsDir() {
-							m.Push("type", "dir")
+							m.Push("type", DIR)
 						} else {
-							m.Push("type", "file")
+							m.Push("type", FILE)
 						}
 					case "full":
 						if f.IsDir() {
@@ -199,39 +204,50 @@ func _file_trash(m *ice.Message, name string) {
 }
 
 func _file_search(m *ice.Message, kind, name, text string, arg ...string) {
-	if kind == FILE {
-		msg := m.Spawn()
-		rg, e := regexp.Compile("")
-		m.Assert(e)
-		_file_list(msg, "./", "", 0, true, "both", rg, []string{"path", "time", "size"})
-		msg.Table(func(index int, value map[string]string, head []string) {
-			if !strings.Contains(value["path"], name) {
-				return
-			}
-			m.Push("pod", "")
-			m.Push("ctx", "nfs")
-			m.Push("cmd", FILE)
-			m.Push(kit.MDB_TIME, value["time"])
-			m.Push(kit.MDB_SIZE, value["size"])
-			m.Push(kit.MDB_TYPE, FILE)
-			m.Push(kit.MDB_NAME, value["path"])
-			m.Push(kit.MDB_TEXT, "")
-		})
-	}
+	rg, e := regexp.Compile("")
+	m.Assert(e)
+
+	msg := m.Spawn()
+	_file_list(msg, "./", "", 0, true, "both", rg, []string{"time", "size", "type", "path"})
+	msg.Table(func(index int, value map[string]string, head []string) {
+		if !strings.Contains(value["path"], name) {
+			return
+		}
+		ext := _file_ext(value["path"])
+		if value["type"] == DIR {
+			ext = DIR
+		} else if m.Richs(mdb.RENDER, nil, ext, nil) == nil {
+			ext = value["type"]
+		}
+
+		m.Push("pod", m.Option("pod"))
+		m.Push("ctx", NFS)
+		m.Push("cmd", FILE)
+		m.Push(kit.MDB_TIME, value["time"])
+		m.Push(kit.MDB_SIZE, value["size"])
+		m.Push(kit.MDB_TYPE, ext)
+		m.Push(kit.MDB_NAME, value["path"])
+		m.Push(kit.MDB_TEXT, "")
+	})
 }
 func _file_render(m *ice.Message, kind, name, text string, arg ...string) {
-	_file_show(m, name)
+	if m.Conf(FILE, kit.Keys("meta.source", _file_ext(name))) == "true" {
+		_file_show(m, name)
+	} else {
+		m.Echo(name)
+	}
 }
 
 const (
-	DIR   = "dir"
 	CAT   = "cat"
 	SAVE  = "save"
 	COPY  = "copy"
 	LINK  = "link"
 	TRASH = "trash"
 
+	DIR  = "dir"
 	FILE = "file"
+	NFS  = "nfs"
 )
 const (
 	DIR_ROOT = "dir_root"
@@ -248,24 +264,54 @@ const (
 var Index = &ice.Context{Name: "nfs", Help: "存储模块",
 	Configs: map[string]*ice.Config{
 		TRASH: {Name: "trash", Help: "删除", Value: kit.Data("path", "var/trash")},
+		FILE: {Name: "file", Help: "文件", Value: kit.Data(
+			"source", kit.Dict(
+				"makefile", "true",
+				"sh", "true",
+				"shy", "true",
+				"py", "true",
+				"js", "true",
+				"go", "true",
+				"vim", "true",
+				"conf", "true",
+				"json", "true",
+			),
+		)},
 	},
 	Commands: map[string]*ice.Command{
 		ice.CTX_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			m.Cmd("mdb.search", "create", "file", "file", "nfs")
-			m.Cmd("mdb.render", "create", "file", "file", "nfs")
+			m.Cmd(mdb.SEARCH, mdb.CREATE, FILE, FILE, NFS)
+			m.Cmd(mdb.RENDER, mdb.CREATE, FILE, FILE, NFS)
+			m.Cmd(mdb.RENDER, mdb.CREATE, DIR)
+
+			m.Cmd(mdb.RENDER, mdb.CREATE, "bin", m.AddCmd(&ice.Command{Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+				m.Echo("hello world")
+			}}))
+			m.Cmd(mdb.RENDER, mdb.CREATE, "m4v", m.AddCmd(&ice.Command{Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+				if !strings.HasPrefix(arg[1], "http") {
+					arg[1] = path.Join("/share/local", kit.Path(arg[1]))
+				}
+				m.Echo(`<video src="%s" height=400 controls autoplay loop></video>`, arg[1])
+			}}))
 		}},
 
 		FILE: {Name: "file", Help: "文件", Action: map[string]*ice.Action{
-			"search": {Name: "search type name text", Help: "搜索", Hand: func(m *ice.Message, arg ...string) {
+			mdb.SEARCH: {Name: "search type name text", Help: "搜索", Hand: func(m *ice.Message, arg ...string) {
 				_file_search(m, arg[0], arg[1], arg[2], arg[3:]...)
 			}},
-			"render": {Name: "render type name text", Help: "渲染", Hand: func(m *ice.Message, arg ...string) {
+			mdb.RENDER: {Name: "render type name text", Help: "渲染", Hand: func(m *ice.Message, arg ...string) {
 				_file_render(m, arg[0], arg[1], arg[2], arg[3:]...)
 			}},
 		}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 		}},
-
-		DIR: {Name: "dir path field...", Help: "目录", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		DIR: {Name: "dir path field...", Help: "目录", Action: map[string]*ice.Action{
+			mdb.SEARCH: {Name: "search type name text", Help: "搜索", Hand: func(m *ice.Message, arg ...string) {
+				_file_search(m, arg[0], arg[1], arg[2], arg[3:]...)
+			}},
+			mdb.RENDER: {Name: "render type name text", Help: "渲染", Hand: func(m *ice.Message, arg ...string) {
+				_file_list(m, "./", arg[1], 0, false, "both", nil, []string{"time", "size", "type", "path"})
+			}},
+		}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			rg, _ := regexp.Compile(m.Option("dir_reg"))
 			_file_list(m, kit.Select("./", m.Option("dir_root")), kit.Select("", arg, 0),
 				0, m.Options("dir_deep"), kit.Select("both", m.Option("dir_type")), rg,

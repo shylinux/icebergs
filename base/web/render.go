@@ -14,6 +14,13 @@ import (
 	"time"
 )
 
+func URL(m *ice.Message, path string, arg ...interface{}) string {
+	list := kit.Simple(arg)
+	if m.Option("pod") != "" {
+		list = append(list, "pod", m.Option("pod"))
+	}
+	return kit.MergeURL2(m.R.Header.Get("Origin"), path, list)
+}
 func Count(m *ice.Message, cmd, key, name string) int {
 	count := kit.Int(m.Conf(cmd, kit.Keys(key, name)))
 	m.Conf(cmd, kit.Keys(key, name), count+1)
@@ -99,10 +106,12 @@ var RENDER = struct {
 	Button string
 	Field  string
 	A      string
+	IMG    string
 }{
 	Button: "button",
 	Field:  "field",
 	A:      "a",
+	IMG:    "img",
 }
 
 func init() {
@@ -118,6 +127,9 @@ func init() {
 				RENDER.A: {Hand: func(m *ice.Message, arg ...string) {
 					u := kit.Select(m.Conf(SHARE, "meta.domain"), arg, 1)
 					m.Echo(`<a href="%s" target="_blank">%s</a>`, u, arg[0])
+				}},
+				RENDER.IMG: {Hand: func(m *ice.Message, arg ...string) {
+					m.Echo(`<img src="%s">`, arg[0])
 				}},
 			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 				m.Echo(`<input type="%s" value="%s">`, arg[0], arg[1])

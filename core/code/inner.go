@@ -127,6 +127,8 @@ func init() {
 			INNER: {Name: "inner", Help: "编辑器", Value: kit.Data(
 				"protect", kit.Dict("etc", "true", "var", "true", "usr", "true"),
 				"source", kit.Dict(
+					"url", "true",
+					"sh", "true",
 					"sh", "true",
 					"py", "true",
 					"shy", "true",

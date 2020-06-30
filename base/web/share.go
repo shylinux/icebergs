@@ -27,11 +27,11 @@ func _share_list(m *ice.Message, key string, fields ...string) {
 		m.Push("detail", value)
 
 		m.Push(kit.MDB_KEY, kit.MDB_LINK)
-		m.Push(kit.MDB_VALUE, fmt.Sprintf(m.Conf(SHARE, "meta.template.link"), m.Conf(SHARE, "meta.domain"), key, key))
+		m.Push(kit.MDB_VALUE, m.Cmdx(mdb.RENDER, RENDER.A, key, URL(m, kit.Format("/share/%s", key))))
 		m.Push(kit.MDB_KEY, kit.MDB_SHARE)
-		m.Push(kit.MDB_VALUE, fmt.Sprintf(m.Conf(SHARE, "meta.template.share"), m.Conf(SHARE, "meta.domain"), key))
+		m.Push(kit.MDB_VALUE, m.Cmdx(mdb.RENDER, RENDER.IMG, URL(m, kit.Format("/share/%s/share", key))))
 		m.Push(kit.MDB_KEY, kit.MDB_VALUE)
-		m.Push(kit.MDB_VALUE, fmt.Sprintf(m.Conf(SHARE, "meta.template.value"), m.Conf(SHARE, "meta.domain"), key))
+		m.Push(kit.MDB_VALUE, m.Cmdx(mdb.RENDER, RENDER.IMG, URL(m, kit.Format("/share/%s/value", key))))
 	})
 }
 func _share_show(m *ice.Message, key string, value map[string]interface{}, arg ...string) bool {
@@ -88,10 +88,6 @@ func _share_remote(m *ice.Message, pod string, arg ...string) {
 	m.Render(ice.RENDER_RESULT)
 }
 func _share_create(m *ice.Message, kind, name, text string, arg ...string) string {
-	for _, k := range []string{"river", "storm"} {
-		arg = append(arg, k, m.Option(k))
-	}
-
 	h := m.Rich(SHARE, nil, kit.Dict(
 		kit.MDB_TIME, m.Time(m.Conf(SHARE, "meta.expire")),
 		kit.MDB_TYPE, kind, kit.MDB_NAME, name, kit.MDB_TEXT, text,

@@ -4,14 +4,13 @@ import (
 	ice "github.com/shylinux/icebergs"
 	"github.com/shylinux/icebergs/base/aaa"
 	"github.com/shylinux/icebergs/base/cli"
+	"github.com/shylinux/icebergs/base/ctx"
 	"github.com/shylinux/icebergs/base/gdb"
 	"github.com/shylinux/icebergs/base/mdb"
-	"github.com/shylinux/icebergs/base/nfs"
 	kit "github.com/shylinux/toolkits"
 
 	"net/http"
 	"path"
-	"strings"
 )
 
 type Frame struct {
@@ -98,67 +97,20 @@ var Index = &ice.Context{Name: "web", Help: "网络模块",
 		ice.CTX_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			m.Load()
 
+			m.Cmd(SPIDE, mdb.CREATE, "dev", kit.Select("http://:9020", m.Conf(cli.RUNTIME, "conf.ctx_dev")))
+			m.Cmd(SPIDE, mdb.CREATE, "self", kit.Select("http://:9020", m.Conf(cli.RUNTIME, "conf.ctx_self")))
+			m.Cmd(SPIDE, mdb.CREATE, "shy", kit.Select("https://shylinux.com:443", m.Conf(cli.RUNTIME, "conf.ctx_shy")))
+
+			m.Cmd(aaa.ROLE, aaa.White, aaa.VOID, "web", "/publish/")
+			m.Cmd(aaa.ROLE, aaa.White, aaa.VOID, ctx.COMMAND)
+
+			m.Cmd(mdb.SEARCH, mdb.CREATE, FAVOR)
+			m.Cmd(mdb.SEARCH, mdb.CREATE, SPIDE)
+			m.Cmd(mdb.RENDER, mdb.CREATE, SPIDE)
+
 			for k := range c.Commands[mdb.RENDER].Action {
 				m.Cmdy(mdb.RENDER, mdb.CREATE, k, mdb.RENDER, c.Cap(ice.CTX_FOLLOW))
 			}
-
-			m.Cmd(SPIDE, mdb.CREATE, "self", kit.Select("http://:9020", m.Conf(cli.RUNTIME, "conf.ctx_self")))
-			m.Cmd(SPIDE, mdb.CREATE, "dev", kit.Select("http://:9020", m.Conf(cli.RUNTIME, "conf.ctx_dev")))
-			m.Cmd(SPIDE, mdb.CREATE, "shy", kit.Select("https://shylinux.com:443", m.Conf(cli.RUNTIME, "conf.ctx_shy")))
-			m.Cmd(aaa.ROLE, aaa.White, aaa.VOID, "web", "/publish/")
-			m.Cmd(aaa.ROLE, aaa.White, aaa.VOID, "command")
-
-			m.Cmd("mdb.search", "create", "favor", "favor", "web")
-
-			m.Cmd(nfs.SEARCH, "add", "story", "base", m.AddCmd(&ice.Command{Name: "search word", Help: "搜索引擎", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-				switch arg[0] {
-				case "set":
-					m.Cmdy(STORY, "index", arg[2])
-					return
-				}
-
-				m.Richs(STORY, "head", "*", func(key string, val map[string]interface{}) {
-					if val["story"] == arg[0] {
-						m.Push("pod", m.Option(ice.MSG_USERPOD))
-						m.Push("engine", "story")
-						m.Push("favor", val["story"])
-						m.Push("id", val["list"])
-
-						m.Push("time", val["time"])
-						m.Push("type", val["scene"])
-						m.Push("name", val["story"])
-						m.Push("text", val["count"])
-					}
-				})
-			}}))
-
-			m.Cmd(nfs.SEARCH, "add", "share", "base", m.AddCmd(&ice.Command{Name: "search word", Help: "搜索引擎", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-				switch arg[0] {
-				case "set":
-					m.Cmdy(SHARE, arg[2])
-					return
-				}
-
-				m.Option("cache.limit", -2)
-				m.Grows(SHARE, nil, "", "", func(index int, value map[string]interface{}) {
-					if value["share"] == arg[0] || value["type"] == arg[0] ||
-						strings.Contains(kit.Format(value["name"]), arg[0]) || strings.Contains(kit.Format(value["text"]), arg[0]) {
-						m.Push("pod", m.Option(ice.MSG_USERPOD))
-						m.Push("engine", "share")
-						m.Push("favor", value["type"])
-						m.Push("id", value["share"])
-
-						m.Push("time", value["time"])
-						m.Push("type", value["type"])
-						m.Push("name", value["name"])
-						m.Push("text", value["text"])
-					}
-				})
-			}}))
-
-			m.Conf(FAVOR, "meta.render.bench", m.AddCmd(&ice.Command{Name: "render type name text arg...", Help: "渲染引擎", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-				m.Cmdy("web.code.bench", "action", "show", arg)
-			}}))
 		}},
 		ice.CTX_EXIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			m.Save(SPIDE, SERVE, GROUP, LABEL,

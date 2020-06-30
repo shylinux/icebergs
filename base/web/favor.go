@@ -130,7 +130,7 @@ func _favor_search(m *ice.Message, kind, name, text string, arg ...string) {
 			}
 			m.Push("pod", m.Option("pod"))
 			m.Push("ctx", "web")
-			m.Push("cmd", "favor")
+			m.Push("cmd", SPIDE)
 			m.Push(key, value, []string{kit.MDB_TIME}, val)
 			m.Push(kit.MDB_SIZE, kit.FmtSize(int64(len(kit.Format(value[kit.MDB_TEXT])))))
 			m.Push(key, value, []string{kit.MDB_TYPE, kit.MDB_NAME, kit.MDB_TEXT}, val)

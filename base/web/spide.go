@@ -81,6 +81,26 @@ func _spide_create(m *ice.Message, name, address string, arg ...string) {
 		m.Log_CREATE(SPIDE, name, "address", address)
 	}
 }
+func _spide_search(m *ice.Message, kind, name, text string, arg ...string) {
+	m.Richs(SPIDE, nil, kit.Select(kit.MDB_FOREACH, ""), func(key string, value map[string]interface{}) {
+		if kit.Format(kit.Value(value, "client.name")) != name && (text == "" || !strings.Contains(kit.Format(kit.Value(value, "client.url")), text)) {
+			return
+		}
+
+		m.Push("pod", m.Option("pod"))
+		m.Push("ctx", "web")
+		m.Push("cmd", SPIDE)
+		m.Push(key, value, []string{kit.MDB_TIME})
+		m.Push(kit.MDB_SIZE, 0)
+		m.Push("type", SPIDE)
+		// m.Push("type", kit.Format(kit.Value(value, "client.protocol")))
+		m.Push("name", kit.Format(kit.Value(value, "client.name")))
+		m.Push("text", kit.Format(kit.Value(value, "client.url")))
+	})
+}
+func _spide_render(m *ice.Message, kind, name, text string, arg ...string) {
+	m.Echo(`<iframe src="%s" width=800 height=400></iframe>`, text)
+}
 
 const SPIDE = "spide"
 
@@ -93,6 +113,12 @@ func init() {
 			SPIDE: {Name: "spide name=auto [action:select=msg|raw|cache] [method:select=POST|GET] url [format:select=json|form|part|data|file] arg... auto", Help: "蜘蛛侠", Action: map[string]*ice.Action{
 				mdb.CREATE: {Name: "create name address", Help: "", Hand: func(m *ice.Message, arg ...string) {
 					_spide_create(m, arg[0], arg[1])
+				}},
+				mdb.SEARCH: {Name: "search type name text arg...", Help: "搜索", Hand: func(m *ice.Message, arg ...string) {
+					_spide_search(m, arg[0], arg[1], arg[2], arg[3:]...)
+				}},
+				mdb.RENDER: {Name: "render type name text arg...", Help: "渲染", Hand: func(m *ice.Message, arg ...string) {
+					_spide_render(m, arg[0], arg[1], arg[2], arg[3:]...)
 				}},
 				"login": {Name: "login name", Help: "", Hand: func(m *ice.Message, arg ...string) {
 					_spide_login(m, arg[0])

@@ -20,7 +20,7 @@ func _pprof_list(m *ice.Message, zone string, id string, field ...interface{}) {
 		if zone = kit.Format(kit.Value(val, kit.MDB_ZONE)); id == "" {
 			m.Grows(PPROF, kit.Keys(kit.MDB_HASH, key), "", "", func(index int, value map[string]interface{}) {
 				// 列表信息
-				m.Push("操作", m.Cmdx(mdb.RENDER, web.RENDER.Button, "运行"))
+				m.Push("操作", m.Cmdx("_render", web.RENDER.Button, "运行"))
 				m.Push(zone, value, []string{
 					kit.MDB_ZONE, kit.MDB_ID, kit.MDB_TYPE,
 					kit.MDB_NAME, kit.MDB_TEXT, SECONDS, BINNARY, SERVICE,
@@ -31,7 +31,7 @@ func _pprof_list(m *ice.Message, zone string, id string, field ...interface{}) {
 				// 详细信息
 				m.Push("detail", value)
 				m.Push(kit.MDB_KEY, "操作")
-				m.Push(kit.MDB_VALUE, m.Cmdx(mdb.RENDER, web.RENDER.Button, "运行"))
+				m.Push(kit.MDB_VALUE, m.Cmdx("_render", web.RENDER.Button, "运行"))
 			})
 		}
 	})

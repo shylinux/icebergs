@@ -1,14 +1,12 @@
 package code
 
 import (
-	"net/http"
-	"path"
-
 	ice "github.com/shylinux/icebergs"
 	"github.com/shylinux/icebergs/base/cli"
 	"github.com/shylinux/icebergs/base/web"
 	kit "github.com/shylinux/toolkits"
 
+	"net/http"
 	"os"
 )
 
@@ -35,16 +33,8 @@ func init() {
 					}
 
 					// 下载文件
-					h := m.Cmdx(web.SPIDE, "dev", web.CACHE, http.MethodGet, "/publish/"+kit.Format(value[kit.MDB_FILE]))
-					if h == "" {
-						exit = false
-						return
-					}
-
-					// 升级记录
-					m.Cmd(web.STORY, web.CATCH, "bin", value[kit.MDB_PATH], h)
-					m.Cmd(web.STORY, web.WATCH, h, path.Join(m.Conf(UPGRADE, "meta.path"), kit.Format(value[kit.MDB_PATH])))
-					m.Cmd(web.STORY, web.WATCH, h, value[kit.MDB_PATH])
+					msg := m.Cmd(web.SPIDE, "dev", web.CACHE, http.MethodGet, "/publish/"+kit.Format(value[kit.MDB_FILE]))
+					m.Cmd(web.STORY, web.WATCH, msg.Append(kit.MDB_FILE), value[kit.MDB_PATH])
 					os.Chmod(kit.Format(value[kit.MDB_PATH]), 0770)
 				})
 				if exit {

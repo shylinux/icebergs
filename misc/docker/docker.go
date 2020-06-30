@@ -4,7 +4,6 @@ import (
 	ice "github.com/shylinux/icebergs"
 	"github.com/shylinux/icebergs/base/cli"
 	"github.com/shylinux/icebergs/base/gdb"
-	"github.com/shylinux/icebergs/base/mdb"
 	"github.com/shylinux/icebergs/base/web"
 	"github.com/shylinux/icebergs/core/code"
 	kit "github.com/shylinux/toolkits"
@@ -67,7 +66,7 @@ var Index = &ice.Context{Name: "docker", Help: "虚拟机",
 
 			m.Table(func(index int, value map[string]string, head []string) {
 				for _, k := range []string{"start", "clear"} {
-					m.Push(k, m.Cmdx(mdb.RENDER, web.RENDER.Button, k))
+					m.Push(k, m.Cmdx("_render", web.RENDER.Button, k))
 				}
 			})
 		}},
@@ -114,7 +113,7 @@ var Index = &ice.Context{Name: "docker", Help: "虚拟机",
 
 			m.Table(func(index int, value map[string]string, head []string) {
 				for _, k := range []string{"open", "start", "stop", "restart", "clear"} {
-					m.Push(k, m.Cmdx(mdb.RENDER, web.RENDER.Button, k))
+					m.Push(k, m.Cmdx("_render", web.RENDER.Button, k))
 				}
 			})
 		}},

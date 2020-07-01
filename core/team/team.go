@@ -1,10 +1,10 @@
 package team
 
 import (
-	"github.com/shylinux/icebergs"
+	ice "github.com/shylinux/icebergs"
 	"github.com/shylinux/icebergs/base/mdb"
 	"github.com/shylinux/icebergs/base/web"
-	"github.com/shylinux/toolkits"
+	kit "github.com/shylinux/toolkits"
 
 	"encoding/csv"
 	"os"
@@ -273,6 +273,8 @@ var Index = &ice.Context{Name: "team", Help: "团队中心",
 			end_time = end_time.Add(-8 * time.Hour)
 			m.Logs("info", "begin", begin_time, "end", end_time)
 
+			m.Set(ice.MSG_OPTION, "end_time")
+			m.Set(ice.MSG_OPTION, "begin_time")
 			m.Richs(TASK, nil, kit.Select(kit.MDB_FOREACH, m.Option(ZONE)), func(key string, val map[string]interface{}) {
 				zone := kit.Format(kit.Value(val, "meta.zone"))
 				m.Grows(TASK, kit.Keys(kit.MDB_HASH, key), "", "", func(index int, value map[string]interface{}) {

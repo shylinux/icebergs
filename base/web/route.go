@@ -4,6 +4,7 @@ import (
 	ice "github.com/shylinux/icebergs"
 	"github.com/shylinux/icebergs/base/aaa"
 	"github.com/shylinux/icebergs/base/cli"
+	"github.com/shylinux/icebergs/base/mdb"
 	kit "github.com/shylinux/toolkits"
 
 	"strings"
@@ -77,7 +78,7 @@ func init() {
 				})
 				if m.W != nil && len(arg) < 2 {
 					m.Table(func(index int, value map[string]string, field []string) {
-						m.Push("link", Format("a", kit.MergeURL(m.Option(ice.MSG_USERWEB), "pod", value["name"]), value["name"]))
+						m.Push("link", m.Cmdx(mdb.RENDER, RENDER.A, value["name"], kit.MergeURL(m.Option(ice.MSG_USERWEB), "pod", value["name"])))
 					})
 				}
 			}},

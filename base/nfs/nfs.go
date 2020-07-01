@@ -178,7 +178,6 @@ func _file_copy(m *ice.Message, name string, from ...string) {
 	}
 }
 func _file_link(m *ice.Message, name string, from string) {
-	_file_trash(m, name)
 	os.MkdirAll(path.Dir(name), 0760)
 	os.Link(from, name)
 	m.Echo(name)

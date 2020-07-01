@@ -1,7 +1,10 @@
 package chat
 
 import (
+	"strings"
+
 	ice "github.com/shylinux/icebergs"
+	"github.com/shylinux/icebergs/base/aaa"
 	"github.com/shylinux/icebergs/base/ctx"
 	"github.com/shylinux/icebergs/base/web"
 	kit "github.com/shylinux/toolkits"
@@ -23,6 +26,9 @@ func _action_share_create(m *ice.Message, name, text string, arg ...string) {
 }
 func _action_share_list(m *ice.Message, key string) {
 	m.Richs(web.SHARE, nil, key, func(key string, value map[string]interface{}) {
+		m.Option(ice.MSG_USERNAME, kit.Value(value, "extra.username"))
+		m.Option(ice.MSG_USERROLE, kit.Value(value, "extra.userrole"))
+		m.Log_AUTH(aaa.USERNAME, m.Option(ice.MSG_USERNAME), aaa.USERROLE, m.Option(ice.MSG_USERROLE))
 		kit.Fetch(kit.Value(value, "extra.tool"), func(index int, value map[string]interface{}) {
 			m.Push(RIVER, "")
 			m.Push(STORM, "")
@@ -34,7 +40,8 @@ func _action_share_list(m *ice.Message, key string) {
 			m.Push("args", value[ARG])
 
 			msg := m.Cmd(m.Space(value[POD]), ctx.COMMAND, kit.Keys(value[CTX], value[CMD]))
-			m.Push("name", value[CMD])
+			ls := strings.Split(kit.Format(value[CMD]), ".")
+			m.Push("name", ls[len(ls)-1])
 			m.Push("help", kit.Select(msg.Append("help"), kit.Format(value["help"])))
 			m.Push("inputs", msg.Append("list"))
 			m.Push("feature", msg.Append("meta"))
@@ -71,9 +78,7 @@ func _action_list(m *ice.Message, river, storm string) {
 	}
 
 	prefix := kit.Keys(kit.MDB_HASH, river, TOOL, kit.MDB_HASH, storm)
-	m.Debug("what %v", prefix)
 	m.Grows(RIVER, prefix, "", "", func(index int, value map[string]interface{}) {
-		m.Debug("what %v", value)
 		if meta, ok := kit.Value(value, kit.MDB_META).(map[string]interface{}); ok {
 			m.Push(RIVER, river)
 			m.Push(STORM, storm)
@@ -85,7 +90,8 @@ func _action_list(m *ice.Message, river, storm string) {
 			m.Push("args", kit.Select("[]", kit.Format(meta["args"])))
 
 			msg := m.Cmd(m.Space(meta[POD]), ctx.COMMAND, kit.Keys(meta[CTX], meta[CMD]))
-			m.Push("name", meta[CMD])
+			ls := strings.Split(kit.Format(meta["cmd"]), ".")
+			m.Push("name", ls[len(ls)-1])
 			m.Push("help", kit.Select(msg.Append("help"), kit.Format(meta["help"])))
 			m.Push("feature", msg.Append("meta"))
 			m.Push("inputs", msg.Append("list"))
@@ -98,15 +104,24 @@ func _action_show(m *ice.Message, river, storm, index string, arg ...string) {
 
 	if i, e := strconv.Atoi(index); e == nil {
 		m.Richs(web.SHARE, nil, m.Option("share"), func(key string, value map[string]interface{}) {
+			m.Option(ice.MSG_USERNAME, kit.Value(value, "extra.username"))
+			m.Option(ice.MSG_USERROLE, kit.Value(value, "extra.userrole"))
+			m.Log_AUTH(aaa.USERNAME, m.Option(ice.MSG_USERNAME), aaa.USERROLE, m.Option(ice.MSG_USERROLE))
 			kit.Fetch(kit.Value(value, kit.Keys("extra.tool", i)), func(value map[string]interface{}) {
 				// 共享命令
-				cmds = kit.Simple(m.Space(value[POD]), kit.Keys(value[CTX], value[CMD]), arg)
+				if value[POD] != "" {
+					m.Option(POD, value[POD])
+				}
+				cmds = kit.Simple(kit.Keys(value[CTX], value[CMD]), arg)
 			})
 		})
 		m.Grows(RIVER, prefix, kit.MDB_ID, kit.Format(i+1), func(index int, value map[string]interface{}) {
 			if value, ok := kit.Value(value, kit.MDB_META).(map[string]interface{}); ok {
 				// 群组命令
-				cmds = kit.Simple(m.Space(value[POD]), kit.Keys(value[CTX], value[CMD]), arg)
+				if value[POD] != "" {
+					m.Option(POD, value[POD])
+				}
+				cmds = kit.Simple(kit.Keys(value[CTX], value[CMD]), arg)
 			}
 		})
 	} else if !m.Warn(!m.Right(index), "no right of %v", index) {
@@ -155,7 +170,6 @@ func init() {
 		}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			if len(arg) == 0 {
 				// 命令列表
-				m.Debug("%v", m.Formats("meta"))
 				_action_list(m, m.Option(ice.MSG_RIVER), m.Option(ice.MSG_STORM))
 				return
 			}

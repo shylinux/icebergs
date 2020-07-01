@@ -29,9 +29,10 @@ func init() {
 				m.Echo("hello world")
 			}},
 			"save": {Name: "save name text", Help: "保存", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-				if qr, e := qrs.New(kit.Select(m.Option("content", arg, 1)), qrs.Medium); m.Assert(e) {
+				if qr, e := qrs.New(kit.Select(m.Option("content"), arg, 1), qrs.Medium); m.Assert(e) {
 					if f, e := os.Create(arg[0]); m.Assert(e) {
 						defer f.Close()
+						m.Debug(m.Option("content"))
 						m.Assert(qr.Write(kit.Int(kit.Select("256", arg, 2)), f))
 						m.Echo(arg[0])
 					}

@@ -3,6 +3,7 @@ package web
 import (
 	ice "github.com/shylinux/icebergs"
 	"github.com/shylinux/icebergs/base/aaa"
+	"github.com/shylinux/icebergs/base/mdb"
 	kit "github.com/shylinux/toolkits"
 	"github.com/skip2/go-qrcode"
 
@@ -131,6 +132,14 @@ func init() {
 					m.Echo(`<input type="button" value="%s">`, arg[0])
 				}},
 			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+				if arg[0] == mdb.RENDER {
+					m.Search("_render", func(p *ice.Context, s *ice.Context, key string, cmd *ice.Command) {
+						if action, ok := cmd.Action[arg[1]]; ok {
+							action.Hand(m, arg[2:]...)
+						}
+					})
+					return
+				}
 				m.Echo(`<input type="%s" value="%s">`, arg[1], arg[2])
 			}},
 		},

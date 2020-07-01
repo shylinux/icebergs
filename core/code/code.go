@@ -5,6 +5,7 @@ import (
 
 	ice "github.com/shylinux/icebergs"
 	"github.com/shylinux/icebergs/base/cli"
+	"github.com/shylinux/icebergs/base/mdb"
 	"github.com/shylinux/icebergs/base/nfs"
 	"github.com/shylinux/icebergs/base/web"
 	kit "github.com/shylinux/toolkits"
@@ -44,6 +45,7 @@ var Index = &ice.Context{Name: "code", Help: "编程中心",
 	Commands: map[string]*ice.Command{
 		ice.CTX_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			m.Load()
+			m.Cmd(mdb.ENGINE, mdb.CREATE, BENCH)
 		}},
 		ice.CTX_EXIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			m.Save("login")

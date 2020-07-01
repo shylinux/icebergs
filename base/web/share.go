@@ -91,7 +91,7 @@ func _share_create(m *ice.Message, kind, name, text string, arg ...string) strin
 	h := m.Rich(SHARE, nil, kit.Dict(
 		kit.MDB_TIME, m.Time(m.Conf(SHARE, "meta.expire")),
 		kit.MDB_TYPE, kind, kit.MDB_NAME, name, kit.MDB_TEXT, text,
-		kit.MDB_EXTRA, kit.Dict(arg),
+		kit.MDB_EXTRA, kit.Dict(aaa.USERROLE, m.Option(ice.MSG_USERROLE), aaa.USERNAME, m.Option(ice.MSG_USERNAME), arg),
 	))
 
 	// 创建列表
@@ -172,7 +172,8 @@ func _share_action_list(m *ice.Message, value map[string]interface{}, river, sto
 		m.Push("value", value["value"])
 
 		msg := m.Cmd(m.Space(value["pod"]), ctx.COMMAND, value["ctx"], value["cmd"])
-		m.Push("name", value["cmd"])
+		ls := strings.Split(kit.Format(value["cmd"]), ".")
+		m.Push("name", ls[len(ls)-1])
 		m.Push("help", kit.Select(msg.Append("help"), kit.Format(value["help"])))
 		m.Push("inputs", msg.Append("list"))
 		m.Push("feature", msg.Append("meta"))

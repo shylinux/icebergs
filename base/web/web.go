@@ -107,6 +107,12 @@ var Index = &ice.Context{Name: "web", Help: "网络模块",
 			m.Cmd(mdb.SEARCH, mdb.CREATE, FAVOR)
 			m.Cmd(mdb.SEARCH, mdb.CREATE, SPIDE)
 			m.Cmd(mdb.RENDER, mdb.CREATE, SPIDE)
+
+			m.Search("_render", func(p *ice.Context, s *ice.Context, key string, cmd *ice.Command) {
+				for k := range cmd.Action {
+					m.Cmd(mdb.RENDER, mdb.CREATE, k, "_render", "web")
+				}
+			})
 		}},
 		ice.CTX_EXIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			m.Save(SPIDE, SERVE, GROUP, LABEL,

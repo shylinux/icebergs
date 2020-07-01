@@ -10,10 +10,10 @@ const RENDER = "render"
 func init() {
 	Index.Merge(&ice.Context{
 		Configs: map[string]*ice.Config{
-			RENDER: {Name: "render", Help: "渲染引擎", Value: kit.Data(kit.MDB_SHORT, kit.MDB_TYPE)},
+			RENDER: {Name: "render", Help: "渲染", Value: kit.Data(kit.MDB_SHORT, kit.MDB_TYPE)},
 		},
 		Commands: map[string]*ice.Command{
-			RENDER: {Name: "render type name text arg...", Help: "渲染引擎", Action: map[string]*ice.Action{
+			RENDER: {Name: "render type name [text]", Help: "渲染", Action: map[string]*ice.Action{
 				CREATE: {Name: "create type [cmd [ctx]]", Help: "创建", Hand: func(m *ice.Message, arg ...string) {
 					m.Rich(RENDER, nil, kit.Dict(kit.MDB_TYPE, arg[0], kit.MDB_NAME, kit.Select(arg[0], arg, 1), kit.MDB_TEXT, kit.Select("", arg, 2)))
 				}},

@@ -24,7 +24,7 @@ func _bench_list(m *ice.Message, zone string, id string, field ...interface{}) {
 		if zone = kit.Format(kit.Value(val, kit.MDB_ZONE)); id == "" {
 			m.Grows(BENCH, kit.Keys(kit.MDB_HASH, key), "", "", func(index int, value map[string]interface{}) {
 				// 查看信息
-				m.Push("操作", m.Cmdx("_render", web.RENDER.Button, "运行"))
+				m.Push("操作", m.Cmdx(mdb.RENDER, web.RENDER.Button, "运行"))
 				m.Push(zone, value, []string{
 					kit.MDB_ZONE, kit.MDB_ID, kit.MDB_TYPE,
 					kit.MDB_NAME, NCONN, NREQS, kit.MDB_TEXT,
@@ -36,7 +36,7 @@ func _bench_list(m *ice.Message, zone string, id string, field ...interface{}) {
 			// 查看信息
 			m.Push("detail", value)
 			m.Push(kit.MDB_KEY, "操作")
-			m.Push(kit.MDB_VALUE, m.Cmdx("_render", web.RENDER.Button, "运行"))
+			m.Push(kit.MDB_VALUE, m.Cmdx(mdb.RENDER, web.RENDER.Button, "运行"))
 		})
 	})
 }
@@ -63,6 +63,9 @@ func _bench_redis(m *ice.Message, nconn, nreq int64, hosts []string, cmds []stri
 		log.FmtDuration(s.Cost/time.Duration(s.NReq)), log.FmtDuration(s.EndTime.Sub(s.BeginTime)))
 }
 func _bench_engine(m *ice.Message, kind, name, target string, arg ...string) {
+	for i := 0; i < len(arg); i += 2 {
+		m.Option(arg[i], arg[i+1])
+	}
 	nconn := kit.Int64(kit.Select("10", m.Option(NCONN)))
 	nreqs := kit.Int64(kit.Select("1000", m.Option(NREQS)))
 	m.Echo("nconn: %d nreqs: %d\n", nconn, nreqs*nconn)

@@ -20,7 +20,7 @@ func _pprof_list(m *ice.Message, zone string, id string, field ...interface{}) {
 		if zone = kit.Format(kit.Value(val, kit.MDB_ZONE)); id == "" {
 			m.Grows(PPROF, kit.Keys(kit.MDB_HASH, key), "", "", func(index int, value map[string]interface{}) {
 				// 列表信息
-				m.Push("操作", m.Cmdx("_render", web.RENDER.Button, "运行"))
+				m.Push("操作", m.Cmdx(mdb.RENDER, web.RENDER.Button, "运行"))
 				m.Push(zone, value, []string{
 					kit.MDB_ZONE, kit.MDB_ID, kit.MDB_TYPE,
 					kit.MDB_NAME, kit.MDB_TEXT, SECONDS, BINNARY, SERVICE,
@@ -31,7 +31,7 @@ func _pprof_list(m *ice.Message, zone string, id string, field ...interface{}) {
 				// 详细信息
 				m.Push("detail", value)
 				m.Push(kit.MDB_KEY, "操作")
-				m.Push(kit.MDB_VALUE, m.Cmdx("_render", web.RENDER.Button, "运行"))
+				m.Push(kit.MDB_VALUE, m.Cmdx(mdb.RENDER, web.RENDER.Button, "运行"))
 			})
 		}
 	})
@@ -50,8 +50,7 @@ func _pprof_show(m *ice.Message, zone string, id string) {
 				m.Log_EXPORT(kit.MDB_META, PPROF, kit.MDB_ZONE, zone, kit.MDB_VALUE, kit.Format(value))
 				cmd := kit.Format(value[kit.MDB_TYPE])
 				arg := kit.Format(value[kit.MDB_TEXT])
-				res := web.FavorShow(m.Spawn(), cmd, kit.Format(value[kit.MDB_NAME]),
-					arg, kit.Simple(value[kit.MDB_EXTRA])...).Result()
+				res := m.Cmd(mdb.ENGINE, value[kit.MDB_TYPE], value[kit.MDB_NAME], value[kit.MDB_TEXT], value[kit.MDB_EXTRA]).Result()
 				m.Cmd(web.FAVOR, favor, cmd, arg, res)
 				list = append(list, cmd+": "+arg, res)
 			})

@@ -4,7 +4,6 @@ import (
 	ice "github.com/shylinux/icebergs"
 	"github.com/shylinux/icebergs/base/cli"
 	"github.com/shylinux/icebergs/base/gdb"
-	"github.com/shylinux/icebergs/base/mdb"
 	"github.com/shylinux/icebergs/base/nfs"
 	kit "github.com/shylinux/toolkits"
 
@@ -25,7 +24,7 @@ func _dream_list(m *ice.Message) {
 			m.Push(kit.MDB_STATUS, gdb.STOP)
 		}
 		for _, k := range []string{"start", "stop", "restart"} {
-			m.Push(k, m.Cmdx(mdb.RENDER, RENDER.Button, k))
+			m.Push(k, m.Cmdx("_render", RENDER.Button, k))
 		}
 	})
 	m.Sort(kit.MDB_NAME)

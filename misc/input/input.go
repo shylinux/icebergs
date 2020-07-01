@@ -33,6 +33,16 @@ func _input_list(m *ice.Message, lib string) {
 	})
 }
 func _input_push(m *ice.Message, lib, text, code, weight string) {
+	if m.Richs(INPUT, "", lib, nil) == nil {
+		m.Rich(INPUT, "", kit.Data(
+			kit.MDB_STORE, path.Join(m.Conf(INPUT, "meta.store"), lib),
+			kit.MDB_FSIZE, m.Conf(INPUT, "meta.fsize"),
+			kit.MDB_LIMIT, m.Conf(INPUT, "meta.limit"),
+			kit.MDB_LEAST, m.Conf(INPUT, "meta.least"),
+			kit.MDB_ZONE, lib,
+		))
+	}
+
 	m.Richs(INPUT, "", lib, func(key string, value map[string]interface{}) {
 		prefix := kit.Keys(kit.MDB_HASH, key)
 		m.Conf(INPUT, kit.Keys(prefix, "meta.limit"), 0)
@@ -140,7 +150,7 @@ func _input_load(m *ice.Message, file string, libs ...string) {
 			kit.MDB_FSIZE, m.Conf(INPUT, "meta.fsize"),
 			kit.MDB_LIMIT, m.Conf(INPUT, "meta.limit"),
 			kit.MDB_LEAST, m.Conf(INPUT, "meta.least"),
-			"zone", lib,
+			kit.MDB_ZONE, lib,
 		)))
 
 		// 缓存配置

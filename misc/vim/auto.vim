@@ -10,7 +10,6 @@ fun! ShyLog(...)
 endfun
 
 " 后端通信
-call ShyDefine("g:ctx_sid", "")
 call ShyDefine("g:ctx_url", (len($ctx_dev) > 1? $ctx_dev: "http://127.0.0.1:9020") . "/code/vim/")
 fun! ShySend(cmd, arg)
     if has_key(a:arg, "sub") && a:arg["sub"] != ""
@@ -19,7 +18,6 @@ fun! ShySend(cmd, arg)
         let a:arg["sub"] = "@" . temp
     endif
 
-    let a:arg["sid"] = g:ctx_sid
     let a:arg["pwd"] = getcwd()
     let a:arg["buf"] = bufname("%")
     let a:arg["row"] = line(".")
@@ -30,18 +28,6 @@ fun! ShySend(cmd, arg)
     endfor
     return system("curl -s " . g:ctx_url . a:cmd . args . " 2>/dev/null")
 endfun
-
-" 用户登录
-fun! ShyLogout()
-    if g:ctx_sid != "" | call ShySend("logout", {}) | endif
-endfun
-fun! ShyLogin()
-    let g:ctx_sid = ShySend("login", {"share": $ctx_share, "pid": getpid(), "pane": $TMUX_PANE, "hostname": hostname(), "username": $USER})
-endfun
-fun! ShyHelp()
-    echo ShySend("help", {})
-endfun
-call ShyLogin()
 
 " 数据同步
 fun! ShySync(target)
@@ -128,22 +114,6 @@ fun! ShyFavors()
     botright lopen
     if l:view  == 1 | only | endif
 endfun
-fun! ShyCheck(target)
-    if a:target == "cache"
-        call ShySync("bufs")
-        call ShySync("regs")
-        call ShySync("marks")
-        call ShySync("tags")
-    elseif a:target == "fixs"
-        let l = len(getqflist())
-        if l > 0
-            execute "copen " . (l > 10? 10: l + 1)
-            call ShySync("fixs")
-		else
-            cclose
-        end
-    end
-endfun
 
 " 搜索
 call ShyDefine("g:grep_dir", "./")
@@ -154,20 +124,24 @@ fun! ShyGrep(word)
     copen
 endfun
 
-
-" 任务列表
-fun! ShyTask()
-    call ShySend({"cmd": "tasklet", "arg": input("target: "), "sub": input("detail: ")})
-endfun
-
-" 标签列表
-fun! ShyTag(word)
-    execute "tag " . a:word
-endfun
-
 " 自动刷新
 let ShyComeList = {}
 fun! ShyCome(buf, row, action, extra)
+    " 低配命令
+    if !exists("appendbufline")
+		execute a:extra["row"]
+
+		if a:extra["count"] > 0
+			execute "+1,+" . a:extra["count"] ."delete"
+		endif
+
+        let a:extra["count"] = 0
+        for line in reverse(split(ShySend("sync", {"cmds": "trans", "arg": getline(".")}), "\n"))
+			let a:extra["count"] += 1
+            call append(".", line)
+        endfor
+        return
+    endif
     if a:action == "refresh"
         " 清空历史
         if a:extra["count"] > 0 | call deletebufline(a:buf, a:row+1, a:row+a:extra["count"]) | endif
@@ -188,13 +162,6 @@ fun! ShyUpdate(timer)
     call ShyCome(what["buf"], what["row"], what["action"], what)
 endfun
 fun! ShyComes(action)
-    " 低配命令
-    if !exists("appendbufline")
-        for line in reverse(split(ShySend({"cmd": "trans", "arg": getline(".")}), "\n"))
-            call append(".", line)
-        endfor
-        return
-    endif
     if !exists("b:timer") | let b:timer = -1 | endif
     " 清除定时
     if b:timer > 0 | call timer_stop(b:timer) | let b:timer = -2 | return | endif
@@ -203,9 +170,24 @@ fun! ShyComes(action)
     let g:ShyComeList[b:timer] = {"buf": bufname("."), "row": line("."), "pre": getline("."), "action": a:action, "count": 0}
     call ShyLog("new timer", b:timer)
 endfun
+fun! ShyCheck(target)
+    if a:target == "cache"
+        call ShySync("bufs")
+        call ShySync("regs")
+        call ShySync("marks")
+        call ShySync("tags")
+    elseif a:target == "fixs"
+        let l = len(getqflist())
+        if l > 0
+            execute "copen " . (l > 10? 10: l + 1)
+            call ShySync("fixs")
+		else
+            cclose
+        end
+    end
+endfun
 
 " 事件回调
-autocmd! VimLeave * call ShyLogout()
 autocmd! BufReadPost * call ShySync("bufs")
 autocmd! BufReadPost * call ShySync("read")
 autocmd! BufWritePre * call ShySync("write")
@@ -218,11 +200,10 @@ endif
 autocmd! InsertLeave * call ShySync("insert")
 
 " 按键映射
+nnoremap <C-G><C-G> :call ShyGrep(expand("<cword>"))<CR>
 nnoremap <C-G><C-F> :call ShyFavor()<CR>
 nnoremap <C-G>f :call ShyFavors()<CR>
-nnoremap <C-G><C-G> :call ShyGrep(expand("<cword>"))<CR>
 " nnoremap <C-G><C-R> :call ShyCheck("cache")<CR>
-" nnoremap <C-G><C-T> :call ShyTask()<CR>
 nnoremap <C-G><C-K> :call ShyComes("refresh")<CR>
 inoremap <C-K> <C-X><C-U>
 

@@ -132,6 +132,7 @@ func init() {
 					"sh", "true",
 					"py", "true",
 					"shy", "true",
+					"txt", "true",
 					"go", "true",
 					"js", "true",
 				),

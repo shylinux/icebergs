@@ -52,6 +52,9 @@ var Index = &ice.Context{Name: "docker", Help: "虚拟机",
 			gdb.CLEAR: {Name: "clear", Help: "删除", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmdy(_image, "rm", m.Option("IMAGE_ID"))
 			}},
+			web.PULL: {Name: "pull", Help: "更新", Hand: func(m *ice.Message, arg ...string) {
+				m.Cmdy(_image, "pull", m.Option("REPOSITORY"))
+			}},
 		}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			if len(arg) > 0 {
 				// 容器详情
@@ -65,7 +68,7 @@ var Index = &ice.Context{Name: "docker", Help: "虚拟机",
 			m.Sort("REPOSITORY")
 
 			m.Table(func(index int, value map[string]string, head []string) {
-				for _, k := range []string{"start", "clear"} {
+				for _, k := range []string{"pull", "start", "clear"} {
 					m.Push(k, m.Cmdx("_render", web.RENDER.Button, k))
 				}
 			})

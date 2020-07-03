@@ -87,7 +87,7 @@ func (c *Context) cmd(m *Message, cmd *Command, key string, arg ...string) *Mess
 		action, args = arg[1], arg[2:]
 	}
 
-	if m.Hand = true; len(arg) > 1 && action != "" && cmd.Action != nil {
+	if m.Hand = true; action != "" && cmd.Action != nil {
 		if h, ok := cmd.Action[action]; ok {
 			m.Log(LOG_CMDS, "%s.%s %d %v %s", c.Name, key, len(arg), arg, kit.FileLine(h.Hand, 3))
 			h.Hand(m, args...)

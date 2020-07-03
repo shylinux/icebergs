@@ -1,7 +1,7 @@
 package ice
 
 import (
-	"github.com/shylinux/toolkits"
+	kit "github.com/shylinux/toolkits"
 
 	"fmt"
 	"sync/atomic"
@@ -54,4 +54,15 @@ func (m *Message) AddCmd(cmd *Command) string {
 	name := fmt.Sprintf("_cb_%d", atomic.AddInt32(&count, 1))
 	m.target.Commands[name] = cmd
 	return kit.Keys(m.target.Cap(CTX_FOLLOW), name)
+}
+
+func (m *Message) PushAction(list ...interface{}) {
+	m.Table(func(index int, value map[string]string, head []string) {
+		for _, k := range kit.Simple(list...) {
+			m.Push(k, m.Cmdx("render", "button", k))
+		}
+	})
+}
+func (m *Message) PushDetail(value interface{}, arg ...interface{}) *Message {
+	return m.Push("detail", value, arg...)
 }

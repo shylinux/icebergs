@@ -1,10 +1,10 @@
 package gdb
 
 import (
-	"github.com/shylinux/icebergs"
+	ice "github.com/shylinux/icebergs"
 	"github.com/shylinux/icebergs/base/cli"
 	"github.com/shylinux/icebergs/base/nfs"
-	"github.com/shylinux/toolkits"
+	kit "github.com/shylinux/toolkits"
 
 	"os"
 	"os/signal"
@@ -99,6 +99,7 @@ const (
 
 	RESTART = "restart"
 	CHANGE  = "change"
+	BUILD   = "build"
 	PRUNE   = "prune"
 	CLEAR   = "clear"
 )

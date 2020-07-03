@@ -362,7 +362,6 @@ func (m *Message) Split(str string, field string, space string, enter string) *M
 	indexs := []int{}
 	fields := kit.Split(field, space, space, space)
 	for i, l := range kit.Split(str, enter, enter, enter) {
-		m.Debug("----%v----", l)
 		if strings.TrimSpace(l) == "" {
 			continue
 		}

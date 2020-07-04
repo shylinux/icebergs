@@ -271,6 +271,9 @@ func (f *Frame) Start(m *ice.Message, arg ...string) bool {
 		r, f.stdout = os.Stdin, os.Stdout
 		m.Cap(ice.CTX_STREAM, STDIO)
 		f.target = m.Target()
+		m.Option("_option", ice.MSG_USERNAME)
+		m.Option(ice.MSG_USERNAME, cli.UserName)
+		m.Option(ice.MSG_USERROLE, aaa.ROOT)
 		aaa.UserRoot(m)
 	default:
 		if s, e := os.Open(arg[0]); !m.Warn(e != nil, "%s", e) {

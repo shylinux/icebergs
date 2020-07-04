@@ -102,7 +102,7 @@ var Index = &ice.Context{Name: DOCKER, Help: "虚拟机",
 			}
 
 			// 镜像列表
-			m.Split(strings.Replace(m.Cmdx(_image, "ls"), "IMAGE ID", _IMAGE_ID, 1), "index", " ", "\n")
+			m.Split(strings.Replace(m.Cmdx(_docker, "images"), "IMAGE ID", _IMAGE_ID, 1), "index", " ", "\n")
 			m.Sort(_REPOSITORY)
 
 			// 镜像操作
@@ -146,7 +146,7 @@ var Index = &ice.Context{Name: DOCKER, Help: "虚拟机",
 			}
 
 			// 容器列表
-			m.Split(strings.Replace(m.Cmdx(_container, "ls", "-a"), "CONTAINER ID", _CONTAINER_ID, 1), "index", " ", "\n")
+			m.Split(strings.Replace(m.Cmdx(_docker, "ps", "-a"), "CONTAINER ID", _CONTAINER_ID, 1), "index", " ", "\n")
 			m.Sort("NAMES")
 			m.Table(func(index int, value map[string]string, head []string) {
 				if strings.TrimSpace(value["PORTS"]) == "" {

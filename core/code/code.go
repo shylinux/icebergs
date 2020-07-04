@@ -196,4 +196,4 @@ export %s
 	},
 }
 
-func init() { web.Index.Register(Index, &web.Frame{}, COMPILE, BENCH, PPROF) }
+func init() { web.Index.Register(Index, &web.Frame{}, COMPILE, UPGRADE, BENCH, PPROF) }

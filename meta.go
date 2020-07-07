@@ -388,7 +388,12 @@ func (m *Message) Split(str string, field string, space string, enter string) *M
 			continue
 		}
 
-		for i, v := range kit.Split(l, space, space) {
+		ls := kit.Split(l, space, space)
+		for i, v := range ls {
+			if i == len(fields)-1 {
+				m.Push(kit.Select("some", fields, i), strings.Join(ls[i:], space))
+				break
+			}
 			m.Push(kit.Select("some", fields, i), v)
 		}
 	}

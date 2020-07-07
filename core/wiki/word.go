@@ -286,7 +286,7 @@ func init() {
 			STACK: {Name: "stack", Help: "结构", Value: kit.Data("template", stack)},
 
 			WORD: {Name: "word", Help: "语言文字", Value: kit.Data(kit.MDB_SHORT, "name",
-				"path", "usr/demo", "regs", ".*\\.shy", "alias", map[string]interface{}{
+				"path", "usr", "regs", ".*\\.shy", "alias", map[string]interface{}{
 					LABEL: []interface{}{CHART, LABEL},
 					CHAIN: []interface{}{CHART, CHAIN},
 

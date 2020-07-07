@@ -98,7 +98,7 @@ func init() {
 		Commands: map[string]*ice.Command{
 			COMMAND: {Name: "command [all] command", Help: "命令", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 				all, arg := _parse_arg_all(m, arg...)
-				_command_list(m, all, kit.Select("", arg, 0))
+				_command_list(m, all, strings.Join(arg, "."))
 			}},
 		},
 	}, nil)

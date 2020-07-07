@@ -1,12 +1,12 @@
 package ssh
 
 import (
-	"github.com/shylinux/icebergs"
+	ice "github.com/shylinux/icebergs"
 	"github.com/shylinux/icebergs/base/aaa"
 	"github.com/shylinux/icebergs/base/cli"
 	"github.com/shylinux/icebergs/base/mdb"
 	"github.com/shylinux/icebergs/base/web"
-	"github.com/shylinux/toolkits"
+	kit "github.com/shylinux/toolkits"
 
 	"bufio"
 	"bytes"
@@ -332,6 +332,10 @@ var Index = &ice.Context{Name: "ssh", Help: "终端模块",
 		}},
 
 		SOURCE: {Name: "source file", Help: "脚本解析", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			if _, e := os.Stat(arg[0]); e != nil {
+				arg[0] = path.Join(path.Dir(m.Option("_script")), arg[0])
+			}
+			m.Option("_script", arg[0])
 			m.Starts(strings.Replace(arg[0], ".", "_", -1), arg[0], arg[0:]...)
 		}},
 		TARGET: {Name: "target name", Help: "当前模块", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {

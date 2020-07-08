@@ -3,6 +3,7 @@ package code
 import (
 	ice "github.com/shylinux/icebergs"
 	"github.com/shylinux/icebergs/base/cli"
+	"github.com/shylinux/icebergs/base/mdb"
 	"github.com/shylinux/icebergs/base/web"
 	kit "github.com/shylinux/toolkits"
 
@@ -127,14 +128,12 @@ func init() {
 			INNER: {Name: "inner", Help: "编辑器", Value: kit.Data(
 				"protect", kit.Dict("etc", "true", "var", "true", "usr", "true"),
 				"source", kit.Dict(
-					"url", "true",
-					"sh", "true",
-					"sh", "true",
-					"py", "true",
+					"txt", "true", "url", "true",
+					"sh", "true", "py", "true",
 					"shy", "true",
-					"txt", "true",
-					"go", "true",
-					"js", "true",
+					"go", "true", "js", "true",
+					"c", "true", "h", "true",
+					"makefile", "true",
 				),
 				"plug", kit.Dict(
 					"py", kit.Dict(
@@ -213,11 +212,30 @@ func init() {
 					_inner_save(m, path.Join("./", arg[0], arg[1]), kit.Select(m.Option("content"), arg, 2))
 				}},
 
+				mdb.SEARCH: {Name: "search type name text arg...", Help: "搜索", Hand: func(m *ice.Message, arg ...string) {
+					m.Cmdy(mdb.SEARCH, arg)
+				}},
 				web.UPLOAD: {Name: "upload path name", Help: "上传", Hand: func(m *ice.Message, arg ...string) {
 					m.Cmdy(web.CACHE, web.UPLOAD)
 					m.Cmdy(web.CACHE, web.WATCH, m.Option(web.DATA), path.Join(m.Option("path"), m.Option("name")))
 				}},
 			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) { _inner_main(m, arg...) }},
+		},
+	}, nil)
+
+	Index.Register(&ice.Context{Name: "c", Help: "c",
+		Commands: map[string]*ice.Command{
+			ice.CTX_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+				m.Cmd(mdb.SEARCH, mdb.CREATE, "h", "c", c.Cap(ice.CTX_FOLLOW))
+				m.Cmd(mdb.SEARCH, mdb.CREATE, "c", "c", c.Cap(ice.CTX_FOLLOW))
+			}},
+			"c": {Name: "c", Help: "c", Action: map[string]*ice.Action{
+				mdb.SEARCH: {Hand: func(m *ice.Message, arg ...string) {
+					m.Split(m.Cmdx(cli.SYSTEM, "grep", "-rn", arg[1], m.Option("_path")), "file:line:text", ":", "\n")
+				}},
+			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+
+			}},
 		},
 	}, nil)
 }

@@ -151,9 +151,9 @@ func init() {
 			)},
 		},
 		Commands: map[string]*ice.Command{
-			INNER: {Name: "inner path=usr/demo file=hi.qrc key auto", Help: "编辑器", Meta: map[string]interface{}{
-				"display": "/plugin/local/code/inner.js", "style": "editor",
-			}, Action: map[string]*ice.Action{
+			INNER: {Name: "inner path=usr/demo file=hi.qrc line=1 auto", Help: "编辑器", Meta: kit.Dict(
+				"display", "/plugin/local/code/inner.js", "style", "editor",
+			), Action: map[string]*ice.Action{
 				"cmd": {Name: "cmd arg", Help: "命令", Hand: func(m *ice.Message, arg ...string) {
 					if m.Cmdy(kit.Split(arg[0])); !m.Hand {
 						m.Cmdy(cli.SYSTEM, kit.Split(arg[0]))

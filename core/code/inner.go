@@ -115,9 +115,8 @@ func _inner_show(m *ice.Message, name string) {
 	}
 }
 func _inner_main(m *ice.Message, arg ...string) {
-	if len(arg) > 2 && arg[2] != "" {
-		m.Cmdy(web.STORY, web.INDEX, arg[2])
-		return
+	if len(arg) > 2 {
+		arg = arg[:2]
 	}
 	_inner_list(m, path.Join(arg...))
 }

@@ -89,12 +89,18 @@ func (c *Context) cmd(m *Message, cmd *Command, key string, arg ...string) *Mess
 
 	if m.Hand = true; action != "" && cmd.Action != nil {
 		if h, ok := cmd.Action[action]; ok {
+			if action == m.Option("_action") {
+				m.Option("_action", "")
+			}
 			m.Log(LOG_CMDS, "%s.%s %d %v %s", c.Name, key, len(arg), arg, kit.FileLine(h.Hand, 3))
 			h.Hand(m, args...)
 			return m
 		}
 		for _, h := range cmd.Action {
 			if h.Name == action || h.Help == action {
+				if action == m.Option("_action") {
+					m.Option("_action", "")
+				}
 				m.Log(LOG_CMDS, "%s.%s %d %v %s", c.Name, key, len(arg), arg, kit.FileLine(h.Hand, 3))
 				h.Hand(m, args...)
 				return m

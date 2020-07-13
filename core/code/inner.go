@@ -4,6 +4,7 @@ import (
 	ice "github.com/shylinux/icebergs"
 	"github.com/shylinux/icebergs/base/cli"
 	"github.com/shylinux/icebergs/base/mdb"
+	"github.com/shylinux/icebergs/base/nfs"
 	"github.com/shylinux/icebergs/base/web"
 	kit "github.com/shylinux/toolkits"
 
@@ -53,7 +54,8 @@ func _inner_list(m *ice.Message, name string) {
 	}
 
 	if m.Set(ice.MSG_RESULT); strings.HasSuffix(name, "/") || _inner_source(m, name) {
-		m.Cmdy("nfs.dir", name, "file size time")
+		m.Option(nfs.DIR_DEEP, "true")
+		m.Cmdy(nfs.DIR, name, "path size time")
 		return
 	}
 	m.Echo(name)
@@ -118,6 +120,29 @@ func _inner_main(m *ice.Message, arg ...string) {
 	if len(arg) > 2 {
 		arg = arg[:2]
 	}
+	p := _inner_ext(arg[1])
+	key := strings.TrimSuffix(path.Base(arg[1]), "."+p)
+	switch p {
+	case "godoc":
+		m.Option(cli.CMD_DIR, arg[0])
+		m.Echo(m.Cmdx(cli.SYSTEM, "go", "doc", key))
+
+	case "man3", "man2", "man1":
+		p := m.Cmdx(cli.SYSTEM, "man", strings.TrimPrefix(p, "man"), key)
+		p = strings.Replace(p, "_\x08", "", -1)
+		res := make([]byte, 0, len(p))
+		for i := 0; i < len(p); i++ {
+			switch p[i] {
+			case '\x08':
+				i++
+			default:
+				res = append(res, p[i])
+			}
+		}
+
+		m.Echo(string(res))
+		return
+	}
 	_inner_list(m, path.Join(arg...))
 }
 
@@ -133,6 +158,8 @@ func init() {
 					"go", "true", "js", "true",
 					"c", "true", "h", "true",
 					"makefile", "true",
+					"mod", "true",
+					"sum", "true",
 				),
 				"plug", kit.Dict(
 					"py", kit.Dict(
@@ -150,7 +177,7 @@ func init() {
 			)},
 		},
 		Commands: map[string]*ice.Command{
-			INNER: {Name: "inner path=usr/demo file=hi.qrc line=1 auto", Help: "编辑器", Meta: kit.Dict(
+			INNER: {Name: "inner path=usr/demo file=hi.qrc line=1 查看:button=auto", Help: "编辑器", Meta: kit.Dict(
 				"display", "/plugin/local/code/inner.js", "style", "editor",
 			), Action: map[string]*ice.Action{
 				"cmd": {Name: "cmd arg", Help: "命令", Hand: func(m *ice.Message, arg ...string) {
@@ -215,7 +242,6 @@ func init() {
 					m.Cmdy(web.CACHE, web.UPLOAD)
 					m.Cmdy(web.CACHE, web.WATCH, m.Option(web.DATA), path.Join(m.Option("path"), m.Option("name")))
 				}},
-
 				mdb.SEARCH: {Name: "search type name text arg...", Help: "搜索", Hand: func(m *ice.Message, arg ...string) {
 					m.Cmdy(mdb.SEARCH, arg)
 				}},

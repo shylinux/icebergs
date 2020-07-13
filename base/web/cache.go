@@ -6,7 +6,6 @@ import (
 	kit "github.com/shylinux/toolkits"
 
 	"io"
-	"io/ioutil"
 	"net/http"
 	"os"
 	"path"
@@ -103,19 +102,27 @@ func _cache_upload(m *ice.Message, r *http.Request) (kind, name, file, size stri
 	return "", "", "", "0"
 }
 func _cache_download(m *ice.Message, r *http.Response) (file, size string) {
-	if buf, e := ioutil.ReadAll(r.Body); m.Assert(e) {
-		defer r.Body.Close()
+	defer r.Body.Close()
 
-		// 创建文件
-		if f, p, e := kit.Create(_cache_name(m, kit.Hashs(buf))); m.Assert(e) {
-			defer f.Close()
-
-			// 导入数据
-			if n, e := f.Write(buf); m.Assert(e) {
-				m.Log_IMPORT(kit.MDB_FILE, p, kit.MDB_SIZE, kit.FmtSize(int64(n)))
-				return p, kit.Format(n)
+	total := kit.Int(kit.Select("1", r.Header.Get("Content-Length")))
+	if f, p, e := kit.Create(path.Join("var/tmp", kit.Hashs("uniq"))); m.Assert(e) {
+		size, buf := 0, make([]byte, 81920)
+		for {
+			if n, e := r.Body.Read(buf); e == nil {
+				f.Write(buf[0:n])
+				size += n
+				m.Log_IMPORT(kit.MDB_FILE, p, "per", size*100/total, kit.MDB_SIZE, kit.FmtSize(int64(size)), "total", kit.FmtSize(int64(total)))
+			} else if e == io.EOF {
+				f.Close()
+				break
+			} else {
+				break
 			}
 		}
+		m.Log_IMPORT(kit.MDB_FILE, p, kit.MDB_SIZE, kit.FmtSize(int64(size)))
+		c := _cache_name(m, kit.Hashs(f))
+		m.Cmd(nfs.LINK, c, p)
+		return c, kit.Format(size)
 	}
 	return "", "0"
 }

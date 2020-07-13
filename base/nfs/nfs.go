@@ -24,6 +24,7 @@ func _file_ext(name string) string {
 }
 
 func _file_list(m *ice.Message, root string, name string, level int, deep bool, dir_type string, dir_reg *regexp.Regexp, fields []string) {
+	m.Debug("fuck %v %v", root, name)
 	if fs, e := ioutil.ReadDir(path.Join(root, name)); e != nil {
 		if f, e := os.Open(path.Join(root, name)); e == nil {
 			defer f.Close()
@@ -136,7 +137,7 @@ func _file_list(m *ice.Message, root string, name string, level int, deep bool, 
 				}
 			}
 			if f.IsDir() && deep {
-				_file_list(m, root, p, level+1, deep, dir_type, dir_reg, fields)
+				_file_list(m, root, path.Join(name, f.Name()), level+1, deep, dir_type, dir_reg, fields)
 			}
 		}
 	}
@@ -311,9 +312,9 @@ var Index = &ice.Context{Name: "nfs", Help: "存储模块",
 				_file_list(m, "./", arg[1], 0, false, "both", nil, []string{"time", "size", "type", "path"})
 			}},
 		}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			rg, _ := regexp.Compile(m.Option("dir_reg"))
-			_file_list(m, kit.Select("./", m.Option("dir_root")), kit.Select("", arg, 0),
-				0, m.Options("dir_deep"), kit.Select("both", m.Option("dir_type")), rg,
+			rg, _ := regexp.Compile(m.Option(DIR_REG))
+			_file_list(m, kit.Select("./", m.Option(DIR_ROOT)), kit.Select("", arg, 0),
+				0, m.Options(DIR_DEEP), kit.Select("both", m.Option(DIR_TYPE)), rg,
 				strings.Split(kit.Select("time size line path", strings.Join(arg[1:], " ")), " "))
 		}},
 		CAT: {Name: "cat file", Help: "查看", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {

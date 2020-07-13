@@ -4,6 +4,7 @@ import (
 	ice "github.com/shylinux/icebergs"
 	"github.com/shylinux/icebergs/base/cli"
 	"github.com/shylinux/icebergs/base/ctx"
+	"github.com/shylinux/icebergs/base/nfs"
 	"github.com/shylinux/icebergs/base/ssh"
 	kit "github.com/shylinux/toolkits"
 
@@ -366,6 +367,7 @@ func init() {
 					m.Cmdy(arg[0], "action", "run", arg[1:])
 				}},
 			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+				m.Option(nfs.DIR_DEEP, "true")
 				if reply(m, cmd, arg...) {
 					// 目录列表
 					return

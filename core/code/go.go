@@ -12,7 +12,7 @@ import (
 	kit "github.com/shylinux/toolkits"
 )
 
-func _c_find(m *ice.Message, key string) {
+func _go_find(m *ice.Message, key string) {
 	for _, p := range strings.Split(m.Cmdx(cli.SYSTEM, "find", ".", "-name", key), "\n") {
 		if p == "" {
 			continue
@@ -22,11 +22,11 @@ func _c_find(m *ice.Message, key string) {
 		m.Push("text", "")
 	}
 }
-func _c_tags(m *ice.Message, key string) {
+func _go_tags(m *ice.Message, key string) {
 	if _, e := os.Stat(path.Join(m.Option("_path"), ".tags")); e != nil {
-		m.Cmd(cli.SYSTEM, "ctags", "-R", "-f", ".tags", "./")
+		m.Cmd(cli.SYSTEM, "gotags", "-R", "-f", ".tags", "./")
 	}
-	for _, l := range strings.Split(m.Cmdx(cli.SYSTEM, "grep", key, ".tags"), "\n") {
+	for _, l := range strings.Split(m.Cmdx(cli.SYSTEM, "grep", "^"+key, ".tags"), "\n") {
 		ls := strings.SplitN(l, "\t", 2)
 		if len(ls) < 2 {
 			continue
@@ -52,51 +52,38 @@ func _c_tags(m *ice.Message, key string) {
 	}
 	m.Sort("line", "int")
 }
-func _c_grep(m *ice.Message, key string) {
-	m.Split(m.Cmd(cli.SYSTEM, "grep", "--exclude=.[a-z]*", "-rn", key, ".").Append(cli.CMD_OUT), "file:line:text", ":", "\n")
+func _go_grep(m *ice.Message, key string) {
+	m.Split(m.Cmd(cli.SYSTEM, "grep", "--exclude-dir=.git", "--exclude=.[a-z]*", "-rn", key, ".").Append(cli.CMD_OUT), "file:line:text", ":", "\n")
 }
-func _c_help(m *ice.Message, section, key string) {
-	p := m.Cmd(cli.SYSTEM, "man", section, key).Append(cli.CMD_OUT)
+func _go_help(m *ice.Message, key string) {
+	p := m.Cmd(cli.SYSTEM, "go", "doc", key).Append(cli.CMD_OUT)
 	if p == "" {
 		return
 	}
 	ls := strings.Split(p, "\n")
-
-	if len(ls) > 20 {
-		p = strings.Join(ls[:20], "\n")
+	if len(ls) > 10 {
+		ls = ls[:10]
 	}
-	p = strings.Replace(p, "_\x08", "", -1)
-	res := make([]byte, 0, len(p))
-	for i := 0; i < len(p); i++ {
-		switch p[i] {
-		case '\x08':
-			i++
-		default:
-			res = append(res, p[i])
-		}
-	}
+	res := strings.Join(ls, "\n")
 
-	m.Push("file", key+".man"+section)
+	m.Push("file", key+".godoc")
 	m.Push("line", 1)
 	m.Push("text", string(res))
 }
 func init() {
-	Index.Register(&ice.Context{Name: "c", Help: "c",
+	Index.Register(&ice.Context{Name: "go", Help: "go",
 		Commands: map[string]*ice.Command{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-				m.Cmd(mdb.SEARCH, mdb.CREATE, "h", "c", c.Cap(ice.CTX_FOLLOW))
-				m.Cmd(mdb.SEARCH, mdb.CREATE, "c", "c", c.Cap(ice.CTX_FOLLOW))
-				m.Cmd(mdb.SEARCH, mdb.CREATE, "man3", "c", c.Cap(ice.CTX_FOLLOW))
-				m.Cmd(mdb.SEARCH, mdb.CREATE, "man2", "c", c.Cap(ice.CTX_FOLLOW))
+				m.Cmd(mdb.SEARCH, mdb.CREATE, "go", "go", c.Cap(ice.CTX_FOLLOW))
+				m.Cmd(mdb.SEARCH, mdb.CREATE, "godoc", "go", c.Cap(ice.CTX_FOLLOW))
 			}},
-			"c": {Name: "c", Help: "c", Action: map[string]*ice.Action{
+			"go": {Name: "go", Help: "go", Action: map[string]*ice.Action{
 				mdb.SEARCH: {Hand: func(m *ice.Message, arg ...string) {
 					m.Option(cli.CMD_DIR, m.Option("_path"))
-					_c_find(m, kit.Select("main", arg, 1))
-					_c_help(m, "2", kit.Select("main", arg, 1))
-					_c_help(m, "3", kit.Select("main", arg, 1))
-					_c_tags(m, kit.Select("main", arg, 1))
-					_c_grep(m, kit.Select("main", arg, 1))
+					_go_find(m, kit.Select("main", arg, 1))
+					_go_tags(m, kit.Select("main", arg, 1))
+					_go_help(m, kit.Select("main", arg, 1))
+					_go_grep(m, kit.Select("main", arg, 1))
 				}},
 			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 

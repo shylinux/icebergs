@@ -38,16 +38,16 @@ func _wiki_upload(m *ice.Message, cmd string) {
 
 func reply(m *ice.Message, cmd string, arg ...string) bool {
 	// 文件列表
-	m.Option("dir_root", m.Conf(cmd, "meta.path"))
-	m.Option("dir_reg", m.Conf(cmd, "meta.regs"))
-	m.Cmdy("nfs.dir", kit.Select("./", arg, 0))
+	m.Option(nfs.DIR_ROOT, m.Conf(cmd, "meta.path"))
+	m.Option(nfs.DIR_REG, m.Conf(cmd, "meta.regs"))
+	m.Cmdy(nfs.DIR, kit.Select("./", arg, 0))
 	m.Sort("time", "time_r")
 
 	if len(arg) == 0 || strings.HasSuffix(arg[0], "/") {
 		// 目录列表
-		m.Option("dir_reg", "")
-		m.Option("dir_type", "dir")
-		m.Cmdy("nfs.dir", kit.Select("./", arg, 0))
+		m.Option(nfs.DIR_REG, "")
+		m.Option(nfs.DIR_TYPE, "dir")
+		m.Cmdy(nfs.DIR, kit.Select("./", arg, 0))
 		m.Option("_display", "table")
 		return true
 	}

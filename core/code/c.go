@@ -26,7 +26,7 @@ func _c_tags(m *ice.Message, key string) {
 	if _, e := os.Stat(path.Join(m.Option("_path"), ".tags")); e != nil {
 		m.Cmd(cli.SYSTEM, "ctags", "-R", "-f", ".tags", "./")
 	}
-	for _, l := range strings.Split(m.Cmdx(cli.SYSTEM, "grep", key, ".tags"), "\n") {
+	for _, l := range strings.Split(m.Cmdx(cli.SYSTEM, "grep", "^"+key, ".tags"), "\n") {
 		ls := strings.SplitN(l, "\t", 2)
 		if len(ls) < 2 {
 			continue
@@ -53,7 +53,9 @@ func _c_tags(m *ice.Message, key string) {
 	m.Sort("line", "int")
 }
 func _c_grep(m *ice.Message, key string) {
-	m.Split(m.Cmd(cli.SYSTEM, "grep", "--exclude=.[a-z]*", "-rn", key, ".").Append(cli.CMD_OUT), "file:line:text", ":", "\n")
+	m.Split(m.Cmd(cli.SYSTEM, "grep",
+		"--exclude-dir=.git", "--exclude-dir=pluged",
+		"--exclude=.[a-z]*", "-rn", key, ".").Append(cli.CMD_OUT), "file:line:text", ":", "\n")
 }
 func _c_help(m *ice.Message, section, key string) {
 	p := m.Cmd(cli.SYSTEM, "man", section, key).Append(cli.CMD_OUT)
@@ -80,16 +82,24 @@ func _c_help(m *ice.Message, section, key string) {
 	m.Push("line", 1)
 	m.Push("text", string(res))
 }
+
+const C = "c"
+const H = "h"
+const MAN1 = "man1"
+const MAN2 = "man2"
+const MAN3 = "man3"
+const MAN8 = "man8"
+
 func init() {
-	Index.Register(&ice.Context{Name: "c", Help: "c",
+	Index.Register(&ice.Context{Name: C, Help: "c",
 		Commands: map[string]*ice.Command{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-				m.Cmd(mdb.SEARCH, mdb.CREATE, "h", "c", c.Cap(ice.CTX_FOLLOW))
-				m.Cmd(mdb.SEARCH, mdb.CREATE, "c", "c", c.Cap(ice.CTX_FOLLOW))
-				m.Cmd(mdb.SEARCH, mdb.CREATE, "man3", "c", c.Cap(ice.CTX_FOLLOW))
-				m.Cmd(mdb.SEARCH, mdb.CREATE, "man2", "c", c.Cap(ice.CTX_FOLLOW))
+				m.Cmd(mdb.SEARCH, mdb.CREATE, H, C, c.Cap(ice.CTX_FOLLOW))
+				m.Cmd(mdb.SEARCH, mdb.CREATE, C, C, c.Cap(ice.CTX_FOLLOW))
+				m.Cmd(mdb.SEARCH, mdb.CREATE, MAN3, C, c.Cap(ice.CTX_FOLLOW))
+				m.Cmd(mdb.SEARCH, mdb.CREATE, MAN2, C, c.Cap(ice.CTX_FOLLOW))
 			}},
-			"c": {Name: "c", Help: "c", Action: map[string]*ice.Action{
+			C: {Name: C, Help: "c", Action: map[string]*ice.Action{
 				mdb.SEARCH: {Hand: func(m *ice.Message, arg ...string) {
 					m.Option(cli.CMD_DIR, m.Option("_path"))
 					_c_find(m, kit.Select("main", arg, 1))

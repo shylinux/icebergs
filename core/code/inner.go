@@ -55,6 +55,7 @@ func _inner_list(m *ice.Message, name string) {
 
 	if m.Set(ice.MSG_RESULT); strings.HasSuffix(name, "/") || _inner_source(m, name) {
 		m.Option(nfs.DIR_DEEP, "true")
+		m.Option(nfs.DIR_TYPE, nfs.TYPE_FILE)
 		m.Cmdy(nfs.DIR, name, "path size time")
 		return
 	}
@@ -87,7 +88,8 @@ func _inner_plug(m *ice.Message, name string) {
 
 	m.Echo("{}")
 }
-func _inner_show(m *ice.Message, name string) {
+func _inner_show(m *ice.Message, dir, file string) {
+	name := path.Join(dir, file)
 	if _inner_sub(m, SHOW, name) {
 		return
 	}
@@ -102,10 +104,11 @@ func _inner_show(m *ice.Message, name string) {
 
 	switch m.Set(ice.MSG_RESULT); p {
 	case "go":
+		m.Option(cli.CMD_DIR, dir)
 		if strings.HasSuffix(name, "test.go") {
-			m.Cmdy(cli.SYSTEM, "go", "test", "-v", "./"+name)
+			m.Cmdy(cli.SYSTEM, "go", "test", "-v", "./"+file)
 		} else {
-			m.Cmdy(cli.SYSTEM, "go", "run", "./"+name)
+			m.Cmdy(cli.SYSTEM, "go", "run", "./"+file)
 		}
 
 	case "csv":
@@ -127,7 +130,7 @@ func _inner_main(m *ice.Message, arg ...string) {
 		m.Option(cli.CMD_DIR, arg[0])
 		m.Echo(m.Cmdx(cli.SYSTEM, "go", "doc", key))
 
-	case "man3", "man2", "man1":
+	case "man8", "man3", "man2", "man1":
 		p := m.Cmdx(cli.SYSTEM, "man", strings.TrimPrefix(p, "man"), key)
 		p = strings.Replace(p, "_\x08", "", -1)
 		res := make([]byte, 0, len(p))
@@ -229,7 +232,7 @@ func init() {
 					web.FavorList(m, "inner.run", "", "time", "id", "type", "name", "text")
 				}},
 				"run": {Name: "run path name", Help: "运行", Hand: func(m *ice.Message, arg ...string) {
-					_inner_show(m, path.Join("./", arg[0], arg[1]))
+					_inner_show(m, arg[0], arg[1])
 				}},
 				PLUG: {Name: "plug path name", Help: "插件", Hand: func(m *ice.Message, arg ...string) {
 					_inner_plug(m, path.Join("./", arg[0], arg[1]))

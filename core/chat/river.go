@@ -122,6 +122,10 @@ func init() {
 						_river_user(m, m.Option(ice.MSG_RIVER), arg...)
 					}},
 				}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+					if len(arg) > 0 {
+						_storm_list(m, arg[0])
+						return
+					}
 					_river_list(m)
 				}},
 		},

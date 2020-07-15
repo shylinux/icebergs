@@ -1,13 +1,13 @@
 package chat
 
 import (
-	"github.com/shylinux/icebergs"
+	ice "github.com/shylinux/icebergs"
 	"github.com/shylinux/icebergs/base/aaa"
 	"github.com/shylinux/icebergs/base/ctx"
 	"github.com/shylinux/icebergs/base/gdb"
 	"github.com/shylinux/icebergs/base/mdb"
 	"github.com/shylinux/icebergs/base/web"
-	"github.com/shylinux/toolkits"
+	kit "github.com/shylinux/toolkits"
 
 	"strings"
 )
@@ -121,7 +121,12 @@ var Index = &ice.Context{Name: "chat", Help: "聊天中心",
 							arg = arg[1:]
 						}
 					case "/river":
-						arg = arg[1:]
+						if len(arg) > 0 {
+							arg = arg[1:]
+						}
+						if len(arg) > 1 && arg[1] == "storm" {
+							arg = arg[1:]
+						}
 					}
 					m.Optionv(ice.MSG_CMDS, arg)
 				}

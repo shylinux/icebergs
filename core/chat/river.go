@@ -1,12 +1,12 @@
 package chat
 
 import (
-	"github.com/shylinux/icebergs"
+	ice "github.com/shylinux/icebergs"
 	"github.com/shylinux/icebergs/base/aaa"
 	"github.com/shylinux/icebergs/base/cli"
 	"github.com/shylinux/icebergs/base/mdb"
 	"github.com/shylinux/icebergs/base/web"
-	"github.com/shylinux/toolkits"
+	kit "github.com/shylinux/toolkits"
 )
 
 func _river_list(m *ice.Message) {
@@ -122,8 +122,8 @@ func init() {
 						_river_user(m, m.Option(ice.MSG_RIVER), arg...)
 					}},
 				}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-					if len(arg) > 0 {
-						_storm_list(m, arg[0])
+					if len(arg) > 0 && arg[0] == "storm" {
+						m.Cmdy("/storm", arg[1:])
 						return
 					}
 					_river_list(m)

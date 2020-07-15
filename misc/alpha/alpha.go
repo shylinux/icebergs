@@ -97,7 +97,7 @@ const (
 var Index = &ice.Context{Name: "alpha", Help: "英汉词典",
 	Configs: map[string]*ice.Config{
 		ALPHA: {Name: "alpha", Help: "英汉词典", Value: kit.Data(
-			kit.MDB_STORE, "usr/export", kit.MDB_FSIZE, "2000000",
+			kit.MDB_STORE, "usr/export/alpha", kit.MDB_FSIZE, "2000000",
 			kit.MDB_LIMIT, "50000", kit.MDB_LEAST, "1000",
 			"repos", "word-dict", "local", "person",
 			"field", []interface{}{"audio", "bnc", "collins", "definition", "detail", "exchange", "frq", "id", "oxford", "phonetic", "pos", "tag", "time", "translation", "word"},

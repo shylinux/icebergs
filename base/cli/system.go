@@ -41,6 +41,7 @@ func _system_show(m *ice.Message, cmd *exec.Cmd) {
 		m.Warn(e != nil, ErrRun, strings.Join(cmd.Args, " "), "\n", kit.Select(e.Error(), err.String()))
 	}
 
+	m.Push(kit.MDB_TIME, m.Time())
 	m.Push(CMD_CODE, int(cmd.ProcessState.ExitCode()))
 	m.Push(CMD_ERR, err.String())
 	m.Push(CMD_OUT, out.String())

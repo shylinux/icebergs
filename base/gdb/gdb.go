@@ -97,6 +97,7 @@ const (
 	START = "start"
 	STOP  = "stop"
 
+	RELOAD  = "reload"
 	RESTART = "restart"
 	CHANGE  = "change"
 	BUILD   = "build"

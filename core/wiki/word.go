@@ -360,7 +360,7 @@ func init() {
 				_stack_show(m, arg[0], arg[1], arg[2:]...)
 			}},
 
-			WORD: {Name: "word path=hi.shy auto", Help: "语言文字", Meta: kit.Dict(
+			WORD: {Name: "word path=demo/hi.shy auto", Help: "语言文字", Meta: kit.Dict(
 				"display", "/plugin/local/wiki/word.js",
 			), Action: map[string]*ice.Action{
 				"story": {Name: "story", Help: "运行", Hand: func(m *ice.Message, arg ...string) {

@@ -48,18 +48,19 @@ func _inner_sub(m *ice.Message, action string, name string, arg ...string) bool 
 	return false
 }
 
-func _inner_list(m *ice.Message, name string) {
-	if _inner_sub(m, LIST, name) {
+func _inner_list(m *ice.Message, dir, file string) {
+	if _inner_sub(m, LIST, path.Join(dir, file)) {
 		return
 	}
 
-	if m.Set(ice.MSG_RESULT); strings.HasSuffix(name, "/") || _inner_source(m, name) {
+	if m.Set(ice.MSG_RESULT); file == "" || strings.HasSuffix(file, "/") || _inner_source(m, file) {
+		m.Option(nfs.DIR_ROOT, dir)
 		m.Option(nfs.DIR_DEEP, "true")
 		m.Option(nfs.DIR_TYPE, nfs.TYPE_FILE)
-		m.Cmdy(nfs.DIR, name, "path size time")
+		m.Cmdy(nfs.DIR, file, "path size time")
 		return
 	}
-	m.Echo(name)
+	m.Echo(path.Join(dir, file))
 }
 func _inner_save(m *ice.Message, name, text string) {
 	if _inner_sub(m, SAVE, name) {
@@ -119,15 +120,12 @@ func _inner_show(m *ice.Message, dir, file string) {
 		m.Echo(strings.ReplaceAll(strings.Join(m.Cmd("web.wiki.word", name).Resultv(), ""), "\n", " "))
 	}
 }
-func _inner_main(m *ice.Message, arg ...string) {
-	if len(arg) > 2 {
-		arg = arg[:2]
-	}
-	p := _inner_ext(arg[1])
-	key := strings.TrimSuffix(path.Base(arg[1]), "."+p)
+func _inner_main(m *ice.Message, dir, file string) {
+	p := _inner_ext(file)
+	key := strings.TrimSuffix(path.Base(file), "."+p)
 	switch p {
 	case "godoc":
-		m.Option(cli.CMD_DIR, arg[0])
+		m.Option(cli.CMD_DIR, dir)
 		m.Echo(m.Cmdx(cli.SYSTEM, "go", "doc", key))
 
 	case "man8", "man3", "man2", "man1":
@@ -144,9 +142,9 @@ func _inner_main(m *ice.Message, arg ...string) {
 		}
 
 		m.Echo(string(res))
-		return
+	default:
+		_inner_list(m, dir, file)
 	}
-	_inner_list(m, path.Join(arg...))
 }
 
 func init() {
@@ -155,14 +153,16 @@ func init() {
 			INNER: {Name: "inner", Help: "编辑器", Value: kit.Data(
 				"protect", kit.Dict("etc", "true", "var", "true", "usr", "true"),
 				"source", kit.Dict(
-					"txt", "true", "url", "true",
-					"sh", "true", "py", "true",
-					"shy", "true",
-					"go", "true", "js", "true",
-					"c", "true", "h", "true",
 					"makefile", "true",
-					"mod", "true",
-					"sum", "true",
+					"c", "true", "h", "true",
+					"sh", "true", "shy", "true", "py", "true",
+					"mod", "true", "sum", "true",
+					"go", "true", "js", "true",
+
+					"md", "true", "csv", "true",
+					"txt", "true", "url", "true",
+					"conf", "true", "json", "true",
+					"ts", "true", "tsx", "true", "vue", "true", "sass", "true",
 				),
 				"plug", kit.Dict(
 					"py", kit.Dict(
@@ -171,6 +171,48 @@ func init() {
 					),
 					"md", kit.Dict("display", true, "profile", true),
 					"csv", kit.Dict("display", true),
+					"ts", kit.Dict(
+						"prefix", kit.Dict("//", "comment"),
+						"split", kit.Dict(
+							"space", " ",
+							"operator", "{[(.:,;!|)]}",
+						),
+						"keyword", kit.Dict(
+							"import", "keyword",
+							"from", "keyword",
+							"new", "keyword",
+							"as", "keyword",
+							"const", "keyword",
+							"export", "keyword",
+							"default", "keyword",
+
+							"if", "keyword",
+							"return", "keyword",
+
+							"class", "keyword",
+							"extends", "keyword",
+							"interface", "keyword",
+							"declare", "keyword",
+							"async", "keyword",
+							"await", "keyword",
+							"try", "keyword",
+							"catch", "keyword",
+
+							"function", "function",
+							"arguments", "function",
+							"console", "function",
+							"this", "function",
+
+							"string", "datatype",
+							"number", "datatype",
+
+							"true", "string",
+							"false", "string",
+						),
+					),
+					"tsx", kit.Dict("link", "ts"),
+					"vue", kit.Dict("link", "ts"),
+					"sass", kit.Dict("link", "ts"),
 				),
 				"show", kit.Dict(
 					"sh", []string{"sh"},
@@ -198,9 +240,6 @@ func init() {
 				}},
 				"find": {Name: "find word", Help: "搜索", Hand: func(m *ice.Message, arg ...string) {
 					web.FavorList(m, arg[0], arg[1], arg[2:]...)
-				}},
-				"project": {Name: "project path", Help: "项目", Hand: func(m *ice.Message, arg ...string) {
-					_inner_list(m, path.Join("./", kit.Select("", arg, 0))+"/")
 				}},
 
 				"history": {Name: "history path name", Help: "历史", Hand: func(m *ice.Message, arg ...string) {
@@ -248,7 +287,9 @@ func init() {
 				mdb.SEARCH: {Name: "search type name text arg...", Help: "搜索", Hand: func(m *ice.Message, arg ...string) {
 					m.Cmdy(mdb.SEARCH, arg)
 				}},
-			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) { _inner_main(m, arg...) }},
+			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+				_inner_main(m, arg[0], kit.Select("", arg, 1))
+			}},
 		},
 	}, nil)
 }

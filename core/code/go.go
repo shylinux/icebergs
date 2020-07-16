@@ -1,15 +1,16 @@
 package code
 
 import (
+	ice "github.com/shylinux/icebergs"
+	"github.com/shylinux/icebergs/base/cli"
+	"github.com/shylinux/icebergs/base/mdb"
+	"github.com/shylinux/icebergs/base/nfs"
+	kit "github.com/shylinux/toolkits"
+
 	"bufio"
 	"os"
 	"path"
 	"strings"
-
-	ice "github.com/shylinux/icebergs"
-	"github.com/shylinux/icebergs/base/cli"
-	"github.com/shylinux/icebergs/base/mdb"
-	kit "github.com/shylinux/toolkits"
 )
 
 func _go_find(m *ice.Message, key string) {
@@ -26,7 +27,7 @@ func _go_tags(m *ice.Message, key string) {
 	if _, e := os.Stat(path.Join(m.Option("_path"), ".tags")); e != nil {
 		m.Cmd(cli.SYSTEM, "gotags", "-R", "-f", ".tags", "./")
 	}
-	for _, l := range strings.Split(m.Cmdx(cli.SYSTEM, "grep", "^"+key, ".tags"), "\n") {
+	for _, l := range strings.Split(m.Cmdx(cli.SYSTEM, "grep", "^"+key+"\\>", ".tags"), "\n") {
 		ls := strings.SplitN(l, "\t", 2)
 		if len(ls) < 2 {
 			continue
@@ -70,14 +71,54 @@ func _go_help(m *ice.Message, key string) {
 	m.Push("line", 1)
 	m.Push("text", string(res))
 }
+
+const GO = "go"
+const GODOC = "godoc"
+const MOD = "mod"
+const SUM = "sum"
+
 func init() {
-	Index.Register(&ice.Context{Name: "go", Help: "go",
+	Index.Register(&ice.Context{Name: GO, Help: "go",
 		Commands: map[string]*ice.Command{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-				m.Cmd(mdb.SEARCH, mdb.CREATE, "go", "go", c.Cap(ice.CTX_FOLLOW))
-				m.Cmd(mdb.SEARCH, mdb.CREATE, "godoc", "go", c.Cap(ice.CTX_FOLLOW))
+				m.Cmd(mdb.SEARCH, mdb.CREATE, GO, GO, c.Cap(ice.CTX_FOLLOW))
+				m.Cmd(mdb.PLUGIN, mdb.CREATE, GO, GO, c.Cap(ice.CTX_FOLLOW))
+				m.Cmd(mdb.RENDER, mdb.CREATE, GO, GO, c.Cap(ice.CTX_FOLLOW))
+				m.Cmd(mdb.ENGINE, mdb.CREATE, GO, GO, c.Cap(ice.CTX_FOLLOW))
+
+				m.Cmd(mdb.SEARCH, mdb.CREATE, GODOC, GO, c.Cap(ice.CTX_FOLLOW))
+				m.Cmd(mdb.PLUGIN, mdb.CREATE, GODOC, GO, c.Cap(ice.CTX_FOLLOW))
+				m.Cmd(mdb.RENDER, mdb.CREATE, GODOC, GODOC, c.Cap(ice.CTX_FOLLOW))
+
+				m.Cmd(mdb.PLUGIN, mdb.CREATE, MOD, MOD, c.Cap(ice.CTX_FOLLOW))
+				m.Cmd(mdb.PLUGIN, mdb.CREATE, MOD, MOD, c.Cap(ice.CTX_FOLLOW))
+				m.Cmd(mdb.RENDER, mdb.CREATE, SUM, SUM, c.Cap(ice.CTX_FOLLOW))
+				m.Cmd(mdb.RENDER, mdb.CREATE, SUM, SUM, c.Cap(ice.CTX_FOLLOW))
+
 			}},
-			"go": {Name: "go", Help: "go", Action: map[string]*ice.Action{
+			MOD: {Name: MOD, Help: "mod", Action: map[string]*ice.Action{
+				mdb.PLUGIN: {Hand: func(m *ice.Message, arg ...string) {
+					m.Echo(m.Conf(GO, "meta.mod.plug"))
+				}},
+				mdb.RENDER: {Hand: func(m *ice.Message, arg ...string) {
+					m.Cmdy(nfs.CAT, path.Join(arg[2], arg[1]))
+				}},
+			}},
+			SUM: {Name: SUM, Help: "sum", Action: map[string]*ice.Action{
+				mdb.PLUGIN: {Hand: func(m *ice.Message, arg ...string) {
+					m.Echo(m.Conf(GO, "meta.mod.plug"))
+				}},
+				mdb.RENDER: {Hand: func(m *ice.Message, arg ...string) {
+					m.Cmdy(nfs.CAT, path.Join(arg[2], arg[1]))
+				}},
+			}},
+			GODOC: {Name: GODOC, Help: "godoc", Action: map[string]*ice.Action{
+				mdb.RENDER: {Hand: func(m *ice.Message, arg ...string) {
+					m.Option(cli.CMD_DIR, arg[2])
+					m.Echo(m.Cmdx(cli.SYSTEM, GO, "doc", strings.TrimSuffix(arg[1], "."+arg[0])))
+				}},
+			}},
+			GO: {Name: GO, Help: "go", Action: map[string]*ice.Action{
 				mdb.SEARCH: {Hand: func(m *ice.Message, arg ...string) {
 					m.Option(cli.CMD_DIR, m.Option("_path"))
 					_go_find(m, kit.Select("main", arg, 1))
@@ -85,9 +126,96 @@ func init() {
 					_go_help(m, kit.Select("main", arg, 1))
 					_go_grep(m, kit.Select("main", arg, 1))
 				}},
-			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+				mdb.PLUGIN: {Hand: func(m *ice.Message, arg ...string) {
+					m.Echo(m.Conf(GO, "meta.plug"))
+				}},
+				mdb.RENDER: {Hand: func(m *ice.Message, arg ...string) {
+					m.Cmdy(nfs.CAT, path.Join(arg[2], arg[1]))
+				}},
+				mdb.ENGINE: {Hand: func(m *ice.Message, arg ...string) {
+					m.Option(cli.CMD_DIR, arg[2])
+					if strings.HasSuffix(arg[1], "test.go") {
+						m.Cmdy(cli.SYSTEM, GO, "test", "-v", "./"+arg[1])
+					} else {
+						m.Cmdy(cli.SYSTEM, GO, "run", "./"+arg[1])
+					}
+				}},
+			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {}},
+		},
+		Configs: map[string]*ice.Config{
+			GO: {Name: GO, Help: "go", Value: kit.Data(
+				"mod.plug", kit.Dict(
+					"prefix", kit.Dict(
+						"#", "comment",
+					),
+					"keyword", kit.Dict(
+						"module", "keyword",
+						"require", "keyword",
+						"replace", "keyword",
+						"=>", "keyword",
+					),
+				),
+				"plug", kit.Dict(
+					"split", kit.Dict(
+						"space", " \t",
+						"operator", "{[(&.,;!|<>)]}",
+					),
+					"prefix", kit.Dict(
+						"//", "comment",
+						"/*", "comment",
+						"*", "comment",
+					),
+					"keyword", kit.Dict(
+						"package", "keyword",
+						"import", "keyword",
+						"const", "keyword",
+						"func", "keyword",
+						"var", "keyword",
+						"type", "keyword",
+						"struct", "keyword",
+						"interface", "keyword",
 
-			}},
+						"if", "keyword",
+						"else", "keyword",
+						"for", "keyword",
+						"range", "keyword",
+						"break", "keyword",
+						"continue", "keyword",
+						"switch", "keyword",
+						"case", "keyword",
+						"default", "keyword",
+						"fallthrough", "keyword",
+
+						"go", "keyword",
+						"select", "keyword",
+						"return", "keyword",
+						"defer", "keyword",
+
+						"map", "datatype",
+						"chan", "datatype",
+						"string", "datatype",
+						"error", "datatype",
+						"bool", "datatype",
+						"byte", "datatype",
+						"int", "datatype",
+						"int64", "datatype",
+						"float64", "datatype",
+
+						"len", "function",
+						"cap", "function",
+						"copy", "function",
+						"append", "function",
+						"msg", "function",
+						"m", "function",
+
+						"nil", "string",
+						"-1", "string",
+						"0", "string",
+						"1", "string",
+						"2", "string",
+					),
+				),
+			)},
 		},
 	}, nil)
 }

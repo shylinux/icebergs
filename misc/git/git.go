@@ -4,6 +4,7 @@ import (
 	ice "github.com/shylinux/icebergs"
 	"github.com/shylinux/icebergs/base/cli"
 	"github.com/shylinux/icebergs/base/mdb"
+	"github.com/shylinux/icebergs/base/nfs"
 	"github.com/shylinux/icebergs/base/web"
 	"github.com/shylinux/icebergs/core/code"
 	"github.com/shylinux/icebergs/core/wiki"
@@ -274,8 +275,8 @@ var Index = &ice.Context{Name: "git", Help: "代码库",
 			}
 		}},
 
-		"trend": {Name: "trend name=auto begin_time=@date auto", Help: "趋势图", Meta: kit.Dict(
-			"display", "story/trend",
+		"trend": {Name: "trend repos=auto begin_time=@date auto", Help: "趋势图", Meta: kit.Dict(
+			"display", "/plugin/local/story/trend.js",
 		), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			if len(arg) == 0 {
 				m.Option("_display", "table")
@@ -283,7 +284,16 @@ var Index = &ice.Context{Name: "git", Help: "代码库",
 			m.Cmdy("total", arg)
 		}},
 
-		"/webhook": {Name: "/webhook", Help: "/webhook", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		"spide": {Name: "spide repos=auto begin_time=@date auto", Help: "趋势图", Meta: kit.Dict(
+			"display", "/plugin/local/story/trend.js",
+		), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			if len(arg) == 0 {
+				m.Option("_display", "table")
+				m.Cmdy("total", arg)
+				return
+			}
+			m.Option(nfs.DIR_DEEP, "true")
+			m.Cmdy(nfs.DIR, mdb.RENDER, nfs.DIR, "", path.Join("usr", arg[0]))
 		}},
 	},
 }

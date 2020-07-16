@@ -24,7 +24,6 @@ func _file_ext(name string) string {
 }
 
 func _file_list(m *ice.Message, root string, name string, level int, deep bool, dir_type string, dir_reg *regexp.Regexp, fields []string) {
-	m.Debug("fuck %v %v", root, name)
 	if fs, e := ioutil.ReadDir(path.Join(root, name)); e != nil {
 		if f, e := os.Open(path.Join(root, name)); e == nil {
 			defer f.Close()
@@ -230,13 +229,6 @@ func _file_search(m *ice.Message, kind, name, text string, arg ...string) {
 		m.Push(kit.MDB_TEXT, "")
 	})
 }
-func _file_render(m *ice.Message, kind, name, text string, arg ...string) {
-	if m.Conf(FILE, kit.Keys("meta.source", _file_ext(name))) == "true" {
-		_file_show(m, name)
-	} else {
-		m.Echo(name)
-	}
-}
 
 const (
 	CAT   = "cat"
@@ -280,7 +272,8 @@ var Index = &ice.Context{Name: "nfs", Help: "存储模块",
 	},
 	Commands: map[string]*ice.Command{
 		ice.CTX_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			m.Cmd(mdb.SEARCH, mdb.CREATE, FILE, FILE, NFS)
+			m.Cmd(mdb.SEARCH, mdb.CREATE, FILE)
+			m.Cmd(mdb.SEARCH, mdb.CREATE, DIR)
 			m.Cmd(mdb.RENDER, mdb.CREATE, FILE, FILE, NFS)
 			m.Cmd(mdb.RENDER, mdb.CREATE, DIR)
 
@@ -300,7 +293,7 @@ var Index = &ice.Context{Name: "nfs", Help: "存储模块",
 				_file_search(m, arg[0], arg[1], arg[2], arg[3:]...)
 			}},
 			mdb.RENDER: {Name: "render type name text", Help: "渲染", Hand: func(m *ice.Message, arg ...string) {
-				_file_render(m, arg[0], arg[1], arg[2], arg[3:]...)
+				_file_show(m, path.Join(arg[2], arg[1]))
 			}},
 		}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 		}},
@@ -309,7 +302,8 @@ var Index = &ice.Context{Name: "nfs", Help: "存储模块",
 				_file_search(m, arg[0], arg[1], arg[2], arg[3:]...)
 			}},
 			mdb.RENDER: {Name: "render type name text", Help: "渲染", Hand: func(m *ice.Message, arg ...string) {
-				_file_list(m, "./", arg[1], 0, false, "both", nil, []string{"time", "size", "type", "path"})
+				_file_list(m, arg[2], arg[1], 0, m.Option(DIR_DEEP) == "true", kit.Select("both", m.Option(DIR_TYPE)),
+					nil, []string{"time", "size", "type", "path"})
 			}},
 		}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			rg, _ := regexp.Compile(m.Option(DIR_REG))

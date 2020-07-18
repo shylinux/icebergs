@@ -6,23 +6,39 @@ import (
 	"github.com/shylinux/icebergs/base/ctx"
 	"github.com/shylinux/icebergs/base/nfs"
 	"github.com/shylinux/icebergs/base/ssh"
+	"github.com/shylinux/icebergs/base/web"
 	kit "github.com/shylinux/toolkits"
+	"github.com/skip2/go-qrcode"
 
+	"bytes"
+	"encoding/base64"
 	"fmt"
 	"path"
 	"strings"
 )
 
+func _option(m *ice.Message, kind, name, text string, arg ...string) {
+	m.Option(kit.MDB_TYPE, kind)
+	m.Option(kit.MDB_NAME, name)
+	m.Option(kit.MDB_TEXT, text)
+
+	extra := kit.Dict()
+	m.Optionv(kit.MDB_EXTRA, extra)
+	for i := 0; i < len(arg); i += 2 {
+		extra[arg[i]] = kit.Format(kit.Parse(nil, "", kit.Split(arg[i+1])...))
+	}
+}
+
 func _title_show(m *ice.Message, kind, text string, arg ...string) {
 	title, _ := m.Optionv(TITLE).(map[string]int)
 	switch kind {
-	case ENDMENU:
-		// 后置目录
-		m.Render(ice.RENDER_TEMPLATE, endmenu)
-		return
 	case PREMENU:
 		// 前置目录
 		m.Render(ice.RENDER_TEMPLATE, premenu)
+		return
+	case ENDMENU:
+		// 后置目录
+		m.Render(ice.RENDER_TEMPLATE, endmenu)
 		return
 	case SECTION:
 		// 分节标题
@@ -41,11 +57,6 @@ func _title_show(m *ice.Message, kind, text string, arg ...string) {
 		m.Option("prefix", "")
 	}
 
-	// 基本参数
-	m.Option(kit.MDB_TYPE, TITLE)
-	m.Option(kit.MDB_NAME, text)
-	m.Option(kit.MDB_TEXT, text)
-
 	// 添加目录
 	menu, _ := m.Optionv("menu").(map[string]interface{})
 	menu["list"] = append(menu["list"].([]interface{}), map[string]interface{}{
@@ -55,34 +66,28 @@ func _title_show(m *ice.Message, kind, text string, arg ...string) {
 	})
 
 	// 渲染引擎
+	_option(m, TITLE, text, text, arg...)
 	m.Render(ice.RENDER_TEMPLATE, m.Conf(TITLE, "meta.template"))
 }
 func _brief_show(m *ice.Message, name, text string, arg ...string) {
-	m.Option(kit.MDB_TYPE, BRIEF)
-	m.Option(kit.MDB_NAME, name)
-	m.Option(kit.MDB_TEXT, text)
-
-	// 渲染引擎
+	_option(m, BRIEF, name, text, arg...)
 	m.Render(ice.RENDER_TEMPLATE, m.Conf(BRIEF, "meta.template"))
 }
 func _refer_show(m *ice.Message, name, text string, arg ...string) {
-	m.Option(kit.MDB_TYPE, REFER)
-	m.Option(kit.MDB_NAME, name)
-	m.Option(kit.MDB_TEXT, text)
-
 	list := [][]string{}
 	for _, v := range kit.Split(strings.TrimSpace(text), "\n") {
 		list = append(list, kit.Split(v, " "))
 	}
 	m.Optionv("list", list)
+
+	_option(m, REFER, name, text, arg...)
 	m.Render(ice.RENDER_TEMPLATE, m.Conf(REFER, "meta.template"))
 }
 func _spark_show(m *ice.Message, name, text string, arg ...string) {
-	m.Option(kit.MDB_TYPE, SPARK)
-	m.Option(kit.MDB_NAME, name)
-	m.Option(kit.MDB_TEXT, text)
-
+	text = strings.TrimSpace(text)
 	m.Optionv("list", kit.Split(text, "\n"))
+
+	_option(m, SPARK, name, text, arg...)
 	m.Render(ice.RENDER_TEMPLATE, m.Conf(SPARK, "meta.template"))
 }
 
@@ -113,7 +118,8 @@ func _chart_show(m *ice.Message, kind, name, text string, arg ...string) {
 	m.Option("compact", "false")
 	m.Option("stroke-width", "2")
 	m.Option("padding", "10")
-	m.Option("margin", "10")
+	m.Option("marginx", "10")
+	m.Option("marginy", "10")
 	// m.Option("font-family", kit.Select("", "monospace", len(text) == len([]rune(text))))
 	m.Option("font-family", "monospace")
 	for i := 0; i < len(arg)-1; i++ {
@@ -165,36 +171,22 @@ func _field_show(m *ice.Message, name, text string, arg ...string) {
 	m.Render(ice.RENDER_TEMPLATE, m.Conf(FIELD, "meta.template"))
 }
 func _shell_show(m *ice.Message, name, text string, arg ...string) {
-	m.Option(kit.MDB_TYPE, SHELL)
-	m.Option(kit.MDB_NAME, name)
-	m.Option(kit.MDB_TEXT, text)
-
-	// 渲染引擎
 	m.Option("output", m.Cmdx(cli.SYSTEM, "sh", "-c", m.Option("input", text)))
+	_option(m, SHELL, name, text, arg...)
 	m.Render(ice.RENDER_TEMPLATE, m.Conf(SHELL, "meta.template"))
 }
 func _local_show(m *ice.Message, name, text string, arg ...string) {
-	m.Option(kit.MDB_TYPE, LOCAL)
-	m.Option(kit.MDB_NAME, name)
-	m.Option(kit.MDB_TEXT, text)
-
-	m.Option("input", m.Cmdx("nfs.cat", text))
+	m.Option("input", m.Cmdx(nfs.CAT, text))
+	_option(m, LOCAL, name, text, arg...)
 	m.Render(ice.RENDER_TEMPLATE, m.Conf(LOCAL, "meta.template"))
 }
 
 func _order_show(m *ice.Message, name, text string, arg ...string) {
-	m.Option(kit.MDB_TYPE, ORDER)
-	m.Option(kit.MDB_NAME, name)
-	m.Option(kit.MDB_TEXT, text)
-
 	m.Optionv("list", kit.Split(strings.TrimSpace(text), "\n"))
+	_option(m, ORDER, name, text, arg...)
 	m.Render(ice.RENDER_TEMPLATE, m.Conf(ORDER, "meta.template"))
 }
 func _table_show(m *ice.Message, name, text string, arg ...string) {
-	m.Option(kit.MDB_TYPE, TABLE)
-	m.Option(kit.MDB_NAME, name)
-	m.Option(kit.MDB_TEXT, text)
-
 	head, list := []string{}, [][]string{}
 	for i, v := range kit.Split(strings.TrimSpace(text), "\n") {
 		if i == 0 {
@@ -221,17 +213,17 @@ func _table_show(m *ice.Message, name, text string, arg ...string) {
 	}
 	m.Optionv("head", head)
 	m.Optionv("list", list)
+
+	_option(m, TABLE, name, text, arg...)
 	m.Render(ice.RENDER_TEMPLATE, m.Conf(TABLE, "meta.template"))
 }
-func _stack_show(m *ice.Message, name, text string, arg ...string) {
-	m.Option(kit.MDB_TYPE, STACK)
-	m.Option(kit.MDB_NAME, name)
-	m.Option(kit.MDB_TEXT, text)
-
-	chain := &Chain{}
-	m.Render(ice.RENDER_TEMPLATE, m.Conf(STACK, "meta.template"))
-	Stack(m, STACK, 0, kit.Parse(nil, "", chain.show(m, text)...))
-	m.Echo("</div>")
+func _image_show(m *ice.Message, name, text string, arg ...string) {
+	_option(m, IMAGE, name, text, arg...)
+	m.Render(ice.RENDER_TEMPLATE, m.Conf(IMAGE, "meta.template"))
+}
+func _video_show(m *ice.Message, name, text string, arg ...string) {
+	_option(m, VIDEO, name, text, arg...)
+	m.Render(ice.RENDER_TEMPLATE, m.Conf(VIDEO, "meta.template"))
 }
 
 func _word_show(m *ice.Message, name string, arg ...string) {
@@ -244,8 +236,6 @@ func _word_show(m *ice.Message, name string, arg ...string) {
 }
 
 const (
-	WORD = "word"
-
 	TITLE = "title"
 	BRIEF = "brief"
 	REFER = "refer"
@@ -258,48 +248,51 @@ const (
 
 	ORDER = "order"
 	TABLE = "table"
-	STACK = "stack"
+	IMAGE = "image"
+	VIDEO = "video"
 
+	PREMENU = "premenu"
 	CHAPTER = "chapter"
 	SECTION = "section"
 	ENDMENU = "endmenu"
-	PREMENU = "premenu"
 
 	LABEL = "label"
 	CHAIN = "chain"
 )
 
+const WORD = "word"
+
 func init() {
 	Index.Merge(&ice.Context{
 		Configs: map[string]*ice.Config{
-			TITLE: {Name: "title", Help: "标题", Value: kit.Data("template", title)},
-			BRIEF: {Name: "brief", Help: "摘要", Value: kit.Data("template", brief)},
-			REFER: {Name: "refer", Help: "参考", Value: kit.Data("template", refer)},
-			SPARK: {Name: "spark", Help: "段落", Value: kit.Data("template", spark)},
+			TITLE: {Name: TITLE, Help: "标题", Value: kit.Data("template", title)},
+			BRIEF: {Name: BRIEF, Help: "摘要", Value: kit.Data("template", brief)},
+			REFER: {Name: REFER, Help: "参考", Value: kit.Data("template", refer)},
+			SPARK: {Name: SPARK, Help: "段落", Value: kit.Data("template", spark)},
 
-			CHART: {Name: "chart", Help: "图表", Value: kit.Data("template", chart, "suffix", `</svg>`)},
-			FIELD: {Name: "field", Help: "插件", Value: kit.Data("template", field)},
-			SHELL: {Name: "shell", Help: "命令", Value: kit.Data("template", shell)},
-			LOCAL: {Name: "local", Help: "文件", Value: kit.Data("template", local)},
+			CHART: {Name: CHART, Help: "图表", Value: kit.Data("template", chart, "suffix", `</svg>`)},
+			FIELD: {Name: FIELD, Help: "插件", Value: kit.Data("template", field)},
+			SHELL: {Name: SHELL, Help: "命令", Value: kit.Data("template", shell)},
+			LOCAL: {Name: LOCAL, Help: "文件", Value: kit.Data("template", local)},
 
-			ORDER: {Name: "order", Help: "列表", Value: kit.Data("template", order)},
-			TABLE: {Name: "table", Help: "表格", Value: kit.Data("template", table)},
-			STACK: {Name: "stack", Help: "结构", Value: kit.Data("template", stack)},
+			ORDER: {Name: ORDER, Help: "列表", Value: kit.Data("template", order)},
+			TABLE: {Name: TABLE, Help: "表格", Value: kit.Data("template", table)},
+			IMAGE: {Name: IMAGE, Help: "图片", Value: kit.Data("template", image)},
+			VIDEO: {Name: VIDEO, Help: "视频", Value: kit.Data("template", video)},
 
-			WORD: {Name: "word", Help: "语言文字", Value: kit.Data(kit.MDB_SHORT, "name",
+			WORD: {Name: WORD, Help: "语言文字", Value: kit.Data(
 				"path", "usr", "regs", ".*\\.shy", "alias", map[string]interface{}{
-					LABEL: []interface{}{CHART, LABEL},
-					CHAIN: []interface{}{CHART, CHAIN},
-
-					SECTION: []interface{}{TITLE, SECTION},
-					CHAPTER: []interface{}{TITLE, CHAPTER},
-					ENDMENU: []interface{}{TITLE, ENDMENU},
 					PREMENU: []interface{}{TITLE, PREMENU},
+					CHAPTER: []interface{}{TITLE, CHAPTER},
+					SECTION: []interface{}{TITLE, SECTION},
+					ENDMENU: []interface{}{TITLE, ENDMENU},
+					LABEL:   []interface{}{CHART, LABEL},
+					CHAIN:   []interface{}{CHART, CHAIN},
 				},
 			)},
 		},
 		Commands: map[string]*ice.Command{
-			TITLE: {Name: "title [chapter|section|endmenu|premenu] text", Help: "标题", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			TITLE: {Name: "title [premenu|chapter|section|endmenu] text", Help: "标题", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 				if len(arg) == 0 {
 					ns := strings.Split(cli.NodeName, "-")
 					arg = append(arg, kit.Select(ns[len(ns)-1], ""))
@@ -307,9 +300,9 @@ func init() {
 				if len(arg) == 1 {
 					arg = append(arg, arg[0])
 				}
-				_title_show(m, arg[0], arg[1], arg[2:]...)
+				_title_show(m, arg[0], kit.Select(arg[0], arg[1]), arg[2:]...)
 			}},
-			BRIEF: {Name: "brief name text", Help: "摘要", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			BRIEF: {Name: "brief [name] text", Help: "摘要", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 				if len(arg) == 0 {
 					m.Echo(`<br class="story" data-type="brief">`)
 					return
@@ -317,12 +310,12 @@ func init() {
 				if len(arg) == 1 {
 					arg = []string{"", arg[0]}
 				}
-				_brief_show(m, arg[0], arg[1], arg[2:]...)
+				_brief_show(m, arg[0], kit.Select(arg[0], arg[1]), arg[2:]...)
 			}},
 			REFER: {Name: "refer name `[name url]...`", Help: "参考", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 				_refer_show(m, arg[0], arg[1], arg[2:]...)
 			}},
-			SPARK: {Name: "spark name text", Help: "感悟", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			SPARK: {Name: "spark [name] text", Help: "感悟", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 				if len(arg) == 0 {
 					m.Echo(`<br class="story" data-type="spark">`)
 					return
@@ -330,7 +323,7 @@ func init() {
 				if len(arg) == 1 {
 					arg = []string{"", arg[0]}
 				}
-				_spark_show(m, arg[0], arg[1], arg[2:]...)
+				_spark_show(m, arg[0], kit.Select(arg[0], arg[1]), arg[2:]...)
 			}},
 
 			CHART: {Name: "chart label|chain name text arg...", Help: "图表", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
@@ -343,33 +336,64 @@ func init() {
 			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 				_field_show(m, arg[0], arg[1], arg[2:]...)
 			}},
-			SHELL: {Name: "shell name cmd", Help: "命令", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-				_shell_show(m, arg[0], arg[1])
+			SHELL: {Name: "shell [name] cmd", Help: "命令", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+				if len(arg) == 1 {
+					arg = []string{"", arg[0]}
+				}
+				_shell_show(m, arg[0], kit.Select(arg[0], arg[1]), arg[2:]...)
 			}},
-			LOCAL: {Name: "local name text", Help: "文件", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-				_local_show(m, arg[0], arg[1])
+			LOCAL: {Name: "local [name] text", Help: "文件", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+				if len(arg) == 1 {
+					arg = []string{"", arg[0]}
+				}
+				_local_show(m, arg[0], kit.Select(arg[0], arg[1]), arg[2:]...)
 			}},
 
-			ORDER: {Name: "order name text", Help: "列表", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-				_order_show(m, arg[0], arg[1], arg[2:]...)
+			ORDER: {Name: "order name `[item \n]...`", Help: "列表", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+				if len(arg) == 1 {
+					arg = []string{"", arg[0]}
+				}
+				_order_show(m, arg[0], kit.Select(arg[0], arg[1]), arg[2:]...)
 			}},
-			TABLE: {Name: "table name text", Help: "表格", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-				_table_show(m, arg[0], arg[1], arg[2:]...)
+			TABLE: {Name: "table name `[item item\n]...`", Help: "表格", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+				if arg[0] == "cmd" {
+					msg := m.Cmd(kit.Split(arg[1])).Table()
+					arg[1] = msg.Result()
+				}
+
+				if len(arg) == 1 {
+					arg = []string{"", arg[0]}
+				}
+				_table_show(m, arg[0], kit.Select(arg[0], arg[1]), arg[2:]...)
 			}},
-			STACK: {Name: "stack name text", Help: "结构", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-				_stack_show(m, arg[0], arg[1], arg[2:]...)
+			IMAGE: {Name: "image name url", Help: "图片", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+				if arg[0] == "qrcode" {
+					buf := bytes.NewBuffer(make([]byte, 0, 4096))
+					if qr, e := qrcode.New(arg[1], qrcode.Medium); m.Assert(e) {
+						m.Assert(qr.Write(kit.Int(kit.Select("256")), buf))
+					}
+					arg[1] = "data:image/png;base64," + base64.StdEncoding.EncodeToString(buf.Bytes())
+				}
+				if len(arg) == 1 {
+					arg = []string{"", arg[0]}
+				}
+				_image_show(m, arg[0], kit.Select(arg[0], arg[1]), arg[2:]...)
+			}},
+			VIDEO: {Name: "video name url", Help: "视频", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+				if len(arg) == 1 {
+					arg = []string{"", arg[0]}
+				}
+				_video_show(m, arg[0], kit.Select(arg[0], arg[1]), arg[2:]...)
 			}},
 
 			WORD: {Name: "word path=demo/hi.shy auto", Help: "语言文字", Meta: kit.Dict(
 				"display", "/plugin/local/wiki/word.js",
 			), Action: map[string]*ice.Action{
-				"story": {Name: "story", Help: "运行", Hand: func(m *ice.Message, arg ...string) {
+				web.STORY: {Name: "story", Help: "运行", Hand: func(m *ice.Message, arg ...string) {
 					m.Cmdy(arg[0], "action", "run", arg[1:])
 				}},
 			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-				m.Option(nfs.DIR_DEEP, "true")
-				if reply(m, cmd, arg...) {
-					// 目录列表
+				if m.Option(nfs.DIR_DEEP, "true"); reply(m, cmd, arg...) {
 					return
 				}
 				_word_show(m, arg[0])

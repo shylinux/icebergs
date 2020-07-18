@@ -1,11 +1,25 @@
 package wiki
 
-var title = `<{{.Option "level"}} class="story" data-type="{{.Option "type"}}" data-name="{{.Option "prefix"}}" data-text="{{.Option "text"}}">{{.Option "prefix"}} {{.Option "content"}}</{{.Option "level"}}>`
-var brief = `<p class="story" data-type="{{.Option "type"}}" data-name="{{.Option "name"}}" data-text="{{.Option "text"}}">{{.Option "text"}}</p>`
+var premenu = `<ul class="story" data-type="premenu"></ul>`
+var endmenu = `<ul class="story" data-type="endmenu">{{$menu := .Optionv "menu"}}{{range $index, $value := Value $menu "list"}}
+<li>{{Value $value "prefix"}} {{Value $value "content"}}</li>{{end}}
+</ul>`
+
+var title = `<{{.Option "level"}} class="story"
+{{range $k, $v := .Optionv "extra"}}data-{{$k}}='{{$v}}'{{end}}
+data-type="{{.Option "type"}}" data-name="{{.Option "prefix"}}" data-text="{{.Option "text"}}"
+>{{.Option "prefix"}} {{.Option "content"}}</{{.Option "level"}}>`
+
+var brief = `<p class="story"
+{{range $k, $v := .Optionv "extra"}}data-{{$k}}='{{$v}}'{{end}}
+data-type="{{.Option "type"}}" data-name="{{.Option "name"}}" data-text="{{.Option "text"}}"
+>{{.Option "text"}}</p>`
+
 var refer = `<ul class="story"
+{{range $k, $v := .Optionv "extra"}}data-{{$k}}='{{$v}}'{{end}} 
 data-type="{{.Option "type"}}" data-name="{{.Option "name"}}" data-text="{{.Option "text"}}">
 {{range $index, $value := .Optionv "list"}}<li>{{index $value 0}}: <a href="{{index $value 1}}" target="_blank">{{index $value 1}}</a></li>{{end}}</ul>`
-var spark = `<p class="story" data-type="{{.Option "type"}}" data-name="{{.Option "name"}}" data-text="{{.Option "text"}}">{{.Option "text"}}</p>`
+var spark = `<p class="story" {{range $k, $v := .Optionv "extra"}}data-{{$k}}='{{$v}}'{{end}} data-type="{{.Option "type"}}" data-name="{{.Option "name"}}" data-text="{{.Option "text"}}">{{.Option "text"}}</p>`
 
 var chart = `<svg class="story" vertion="1.1" xmlns="http://www.w3.org/2000/svg" dominant-baseline="middle" text-anchor="middle"
 	data-type="{{.Option "type"}}" data-name="{{.Option "name"}}" data-text="{{.Option "text"}}"
@@ -22,18 +36,24 @@ var field = `<fieldset class="story {{.Option "name"}}" data-type="{{.Option "ty
 <div class="status"></div>
 </fieldset>
 `
-var shell = `<code class="story" data-type="{{.Option "type"}}" data-name="{{.Option "name"}}" data-text="{{.Option "input"}}" data-dir="{{.Option "cmd_dir"}}">$ {{.Option "input"}} # {{.Option "name"}}
+var shell = `<code class="story"
+{{range $k, $v := .Optionv "extra"}}data-{{$k}}='{{$v}}'{{end}}
+data-type="{{.Option "type"}}" data-name="{{.Option "name"}}" data-text="{{.Option "input"}}"
+>$ {{.Option "input"}} # {{.Option "name"}}
 {{.Option "output"}}</code>
 `
-var local = `<div class="story"
-data-type="{{.Option "type"}}" data-name="{{.Option "name"}}" data-text="{{.Option "text"}}">
-{{range $index, $value := .Optionv "input"}}{{$value}}{{end}}</div>`
+var local = `<code class="story"
+{{range $k, $v := .Optionv "extra"}}data-{{$k}}='{{$v}}'{{end}}
+data-type="{{.Option "type"}}" data-name="{{.Option "name"}}" data-text="{{.Option "text"}}"
+>{{range $index, $value := .Optionv "input"}}{{$value}}{{end}}</code>`
 
 var order = `<ul class="story"
+{{range $k, $v := .Optionv "extra"}}data-{{$k}}='{{$v}}'{{end}}
 data-type="{{.Option "type"}}" data-name="{{.Option "name"}}" data-text="{{.Option "text"}}">
 {{range $index, $value := .Optionv "list"}}<li>{{$value}}</li>{{end}}</ul>`
 
 var table = `<table class="story"
+{{range $k, $v := .Optionv "extra"}}data-{{$k}}='{{$v}}'{{end}}
 data-type="{{.Option "type"}}" data-name="{{.Option "name"}}" data-text="{{.Option "text"}}">
 <tr>{{range $i, $v := .Optionv "head"}}<th>{{$v}}</th>{{end}}</tr>
 {{range $index, $value := .Optionv "list"}}
@@ -41,10 +61,12 @@ data-type="{{.Option "type"}}" data-name="{{.Option "name"}}" data-text="{{.Opti
 {{end}}
 </table>`
 
-var stack = `<div class="story"
-data-type="{{.Option "type"}}" data-name="{{.Option "name"}}" data-text="{{.Option "text"}}">`
+var image = `<img class="story"
+{{range $k, $v := .Optionv "extra"}}data-{{$k}}='{{$v}}'{{end}}
+data-type="{{.Option "type"}}" data-name="{{.Option "name"}}" data-text="{{.Option "text"}}"
+title="{{.Option "text"}}" src="{{.Option "text"}}">`
 
-var premenu = `<ul class="story" data-type="premenu"></ul>`
-var endmenu = `<ul class="story" data-type="endmenu">{{$menu := .Optionv "menu"}}{{range $index, $value := Value $menu "list"}}
-<li>{{Value $value "prefix"}} {{Value $value "content"}}</li>{{end}}
-</ul>`
+var video = `<video class="story"
+{{range $k, $v := .Optionv "extra"}}data-{{$k}}='{{$v}}'{{end}}
+data-type="{{.Option "type"}}" data-name="{{.Option "name"}}" data-text="{{.Option "text"}}"
+title="{{.Option "text"}}" src="{{.Option "text"}}" controls></video>`

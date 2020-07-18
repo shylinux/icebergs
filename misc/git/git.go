@@ -275,8 +275,8 @@ var Index = &ice.Context{Name: "git", Help: "代码库",
 			}
 		}},
 
-		"trend": {Name: "trend repos=auto begin_time=@date auto", Help: "趋势图", Meta: kit.Dict(
-			"display", "/plugin/local/story/trend.js",
+		"trend": {Name: "trend name=auto begin_time=@date auto", Help: "趋势图", Meta: kit.Dict(
+			"display", "/plugin/story/trend.js",
 		), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			if len(arg) == 0 {
 				m.Option("_display", "table")
@@ -284,8 +284,8 @@ var Index = &ice.Context{Name: "git", Help: "代码库",
 			m.Cmdy("total", arg)
 		}},
 
-		"spide": {Name: "spide repos=auto begin_time=@date auto", Help: "趋势图", Meta: kit.Dict(
-			"display", "/plugin/local/story/trend.js",
+		"spide": {Name: "spide name=auto auto", Help: "趋势图", Meta: kit.Dict(
+			"display", "/plugin/story/spide.js",
 		), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			if len(arg) == 0 {
 				m.Option("_display", "table")

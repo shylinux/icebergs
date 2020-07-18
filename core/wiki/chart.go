@@ -25,12 +25,15 @@ type Block struct {
 	BackGround string
 
 	Padding int
-	Margin  int
+	MarginX int
+	MarginY int
 
 	Width, Height int
 
 	TextData string
 	RectData string
+
+	x, y int
 }
 
 func (b *Block) Init(m *ice.Message, arg ...string) Chart {
@@ -39,7 +42,8 @@ func (b *Block) Init(m *ice.Message, arg ...string) Chart {
 	b.FontColor = kit.Select(m.Option("stroke"), kit.Select(b.FontColor, arg, 2))
 	b.BackGround = kit.Select(m.Option("fill"), kit.Select(b.BackGround, arg, 3))
 	b.Padding = kit.Int(kit.Select(m.Option("padding"), kit.Select(kit.Format(b.Padding), arg, 4)))
-	b.Margin = kit.Int(kit.Select(m.Option("margin"), kit.Select(kit.Format(b.Margin), arg, 5)))
+	b.MarginX = kit.Int(kit.Select(m.Option("marginx"), kit.Select(kit.Format(b.MarginX), arg, 5)))
+	b.MarginY = kit.Int(kit.Select(m.Option("marginy"), kit.Select(kit.Format(b.MarginY), arg, 5)))
 	return b
 }
 func (b *Block) Data(m *ice.Message, root interface{}) Chart {
@@ -61,11 +65,11 @@ func (b *Block) Data(m *ice.Message, root interface{}) Chart {
 	return b
 }
 func (b *Block) Draw(m *ice.Message, x, y int) Chart {
-	m.Echo(`<rect x="%d" y="%d" width="%d" height="%d" rx="4" ry="4" %v/>`,
-		x+b.Margin/2, y+b.Margin/2, b.GetWidth(), b.GetHeight(), b.RectData)
+	m.Echo(`<rect x="%d" y="%d" width="%d" height="%d" rx="4" ry="4" fill="%s" %v/>`,
+		x+b.MarginX/2, y+b.MarginY/2, b.GetWidth(), b.GetHeight(), b.BackGround, b.RectData)
 	m.Echo("\n")
-	m.Echo(`<text x="%d" y="%d" stroke-width="1" fill="%s" %v>%v</text>`,
-		x+b.GetWidths()/2, y+b.GetHeights()/2, b.FontColor, b.TextData, b.Text)
+	m.Echo(`<text x="%d" y="%d" stroke-width="1" fill="%s" stroke=%s %v>%v</text>`,
+		x+b.GetWidths()/2, y+b.GetHeights()/2, b.FontColor, b.FontColor, b.TextData, b.Text)
 	m.Echo("\n")
 	return b
 }
@@ -86,10 +90,10 @@ func (b *Block) GetHeight(str ...string) int {
 	return b.FontSize + b.Padding
 }
 func (b *Block) GetWidths(str ...string) int {
-	return b.GetWidth(str...) + b.Margin
+	return b.GetWidth(str...) + b.MarginX
 }
 func (b *Block) GetHeights(str ...string) int {
-	return b.GetHeight() + b.Margin
+	return b.GetHeight() + b.MarginY
 }
 
 // 框
@@ -103,7 +107,8 @@ func (b *Label) Init(m *ice.Message, arg ...string) Chart {
 	b.Text = kit.Select(b.Text, arg, 0)
 	b.FontSize = kit.Int(m.Option("font-size"))
 	b.Padding = kit.Int(m.Option("padding"))
-	b.Margin = kit.Int(m.Option("margin"))
+	b.MarginX = kit.Int(m.Option("marginx"))
+	b.MarginY = kit.Int(m.Option("marginy"))
 
 	// 解析数据
 	b.max = map[int]int{}
@@ -124,7 +129,7 @@ func (b *Label) Init(m *ice.Message, arg ...string) Chart {
 
 	// 计算尺寸
 	for _, v := range b.max {
-		b.Width += v + b.Margin
+		b.Width += v + b.MarginX
 	}
 	b.Height = len(b.data) * b.GetHeights()
 	return b
@@ -139,7 +144,8 @@ func (b *Label) Draw(m *ice.Message, x, y int) Chart {
 			item := &Block{
 				FontSize: b.FontSize,
 				Padding:  b.Padding,
-				Margin:   b.Margin,
+				MarginX:  b.MarginX,
+				MarginY:  b.MarginY,
 			}
 			switch data := kit.Parse(nil, "", kit.Split(text)...).(type) {
 			case map[string]interface{}:
@@ -154,10 +160,10 @@ func (b *Label) Draw(m *ice.Message, x, y int) Chart {
 			}
 			item.Draw(m, left, top)
 
-			left += item.GetWidth() + item.Margin
+			left += item.GetWidth() + item.MarginX
 			b.Height = item.GetHeight()
 		}
-		top += b.Height + b.Margin
+		top += b.Height + b.MarginY
 	}
 	return b
 }
@@ -172,7 +178,8 @@ type Chain struct {
 func (b *Chain) Init(m *ice.Message, arg ...string) Chart {
 	b.FontSize = kit.Int(m.Option("font-size"))
 	b.Padding = kit.Int(m.Option("padding"))
-	b.Margin = kit.Int(m.Option("margin"))
+	b.MarginX = kit.Int(m.Option("marginx"))
+	b.MarginY = kit.Int(m.Option("marginy"))
 
 	// 解析数据
 	b.data = kit.Parse(nil, "", b.show(m, arg[0])...).(map[string]interface{})
@@ -181,7 +188,7 @@ func (b *Chain) Init(m *ice.Message, arg ...string) Chart {
 	b.max = map[int]int{}
 	b.Height = b.size(m, b.data, 0, b.max) * b.GetHeights()
 	for _, v := range b.max {
-		b.Width += v
+		b.Width += v + b.MarginX
 	}
 	return b
 }
@@ -261,17 +268,29 @@ func (b *Chain) draw(m *ice.Message, root map[string]interface{}, depth int, wid
 
 	// 当前节点
 	item := &Block{
-		BackGround: kit.Select(b.BackGround, kit.Select(p.BackGround)),
-		FontColor:  kit.Select(b.FontColor, kit.Select(p.FontColor)),
+		BackGround: kit.Select(b.BackGround, kit.Select(p.BackGround, meta["bg"])),
+		FontColor:  kit.Select(b.FontColor, kit.Select(p.FontColor, meta["fg"])),
 		FontSize:   b.FontSize,
 		Padding:    b.Padding,
-		Margin:     b.Margin,
+		MarginX:    b.MarginX,
+		MarginY:    b.MarginY,
 	}
 	if m.Option("compact") != "true" {
 		item.Width = b.max[depth]
 	}
+	item.x = x
+	item.y = y + (kit.Int(meta["height"])-1)*b.GetHeights()/2
 	item.Init(m, kit.Format(meta["text"])).Data(m, meta)
-	item.Draw(m, x, y+(kit.Int(meta["height"])-1)*b.GetHeights()/2)
+	item.Draw(m, item.x, item.y)
+
+	if p != nil && p.y != 0 {
+		x1 := p.x + p.GetWidths() - (p.MarginX+item.MarginX)/4
+		y1 := p.y + p.GetHeights()/2
+		x4 := item.x + (p.MarginX+item.MarginX)/4
+		y4 := item.y + item.GetHeights()/2
+		m.Echo(`<path d="M %d,%d Q %d,%d %d,%d T %d %d" stroke=cyan fill=none></path>`,
+			x1, y1, x1+(x4-x1)/4, y1, x1+(x4-x1)/2, y1+(y4-y1)/2, x4, y4)
+	}
 
 	// 递归节点
 	h := 0

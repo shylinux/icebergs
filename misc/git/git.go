@@ -3,6 +3,7 @@ package git
 import (
 	ice "github.com/shylinux/icebergs"
 	"github.com/shylinux/icebergs/base/cli"
+	"github.com/shylinux/icebergs/base/gdb"
 	"github.com/shylinux/icebergs/base/mdb"
 	"github.com/shylinux/icebergs/base/nfs"
 	"github.com/shylinux/icebergs/base/web"
@@ -45,6 +46,12 @@ var Index = &ice.Context{Name: "git", Help: "代码库",
 		"total": {Name: "total", Help: "统计", Value: kit.Data(kit.MDB_SHORT, "name", "skip", kit.Dict("wubi-dict", "true", "word-dict", "true"))},
 	},
 	Commands: map[string]*ice.Command{
+		ice.CTX_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			m.Watch(gdb.SYSTEM_INIT, m.AddCmd(&ice.Command{Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+				m.Cmd("repos", "volcanos", "usr/volcanos")
+
+			}}))
+		}},
 		web.LOGIN: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 		}},
 

@@ -33,6 +33,9 @@ func init() {
 				mdb.RENDER: {Hand: func(m *ice.Message, arg ...string) {
 					m.Cmdy(nfs.CAT, path.Join(arg[2], arg[1]))
 				}},
+				mdb.ENGINE: {Hand: func(m *ice.Message, arg ...string) {
+					m.Cmdy(cli.SYSTEM, path.Join(arg[2], arg[1]))
+				}},
 			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {}},
 		},
 		Configs: map[string]*ice.Config{

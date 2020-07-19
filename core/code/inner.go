@@ -30,7 +30,7 @@ func _inner_ext(name string) string {
 }
 
 func _inner_show(m *ice.Message, ext, file, dir string, arg ...string) {
-	if m.Cmdy(mdb.RENDER, ext, file, dir, arg); m.Result() == "" {
+	if m.Cmdy(mdb.ENGINE, ext, file, dir, arg); m.Result() == "" {
 		if ls := kit.Simple(m.Confv(INNER, kit.Keys("meta.show", ext))); len(ls) > 0 {
 			m.Cmdy(cli.SYSTEM, ls, path.Join(dir, file)).Set(ice.MSG_APPEND)
 		}

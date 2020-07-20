@@ -25,12 +25,11 @@ const ( // CODE
 
 var Index = &ice.Context{Name: "code", Help: "编程中心",
 	Configs: map[string]*ice.Config{
-		INSTALL: {Name: "install", Help: "安装", Value: kit.Data("path", "usr/install",
+		INSTALL: {Name: "install", Help: "安装", Value: kit.Data(
+			"path", "usr/install", "target", "usr/local",
 			"linux", "https://dl.google.com/go/go1.14.2.linux-amd64.tar.gz",
-			"darwin", "https://dl.google.com/go/go1.14.2.darwin-amd64.pkg",
-			"windows", "https://dl.google.com/go/go1.14.2.windows-amd64.msi",
-			"source", "https://dl.google.com/go/go1.14.2.src.tar.gz",
-			"target", "usr/local",
+			"darwin", "https://dl.google.com/go/go1.14.6.darwin-amd64.tar.gz",
+			"windows", "https://golang.google.cn/dl/go1.14.6.windows-amd64.zip",
 		)},
 		PREPARE: {Name: "prepare", Help: "配置", Value: kit.Data("path", "usr/prepare",
 			"script", ".ish/pluged/golang/init.sh", "export", kit.Dict(
@@ -51,20 +50,17 @@ var Index = &ice.Context{Name: "code", Help: "编程中心",
 			m.Save("login")
 		}},
 
-		INSTALL: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		INSTALL: {Name: "install url 安装:button", Help: "安装", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			target := m.Conf(INSTALL, kit.Keys("meta", runtime.GOOS))
-			p := path.Join(m.Conf(INSTALL, "meta.path"), path.Base(target))
 
+			p := path.Join(m.Conf(INSTALL, "meta.path"), path.Base(target))
 			if _, e := os.Stat(p); e != nil {
 				// 下载
-				m.Option(cli.CMD_DIR, m.Conf(INSTALL, "meta.path"))
-				msg := m.Cmd(web.SPIDE, web.CACHE, http.MethodGet, target)
+				msg := m.Cmd(web.SPIDE, "dev", web.CACHE, http.MethodGet, target)
 				m.Cmd(web.CACHE, web.WATCH, msg.Append(web.DATA), p)
 			}
 
-			// 安装
-			m.Option(cli.CMD_DIR, "")
-			os.MkdirAll(m.Conf(INSTALL, kit.Keys("meta.target")), 0777)
+			os.MkdirAll(m.Conf(INSTALL, kit.Keys("meta.target")), ice.MOD_DIR)
 			m.Cmdy(cli.SYSTEM, "tar", "xvf", p, "-C", m.Conf(INSTALL, kit.Keys("meta.target")))
 		}},
 		PREPARE: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {

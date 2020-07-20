@@ -106,23 +106,24 @@ func _cache_download(m *ice.Message, r *http.Response) (file, size string) {
 
 	total := kit.Int(kit.Select("1", r.Header.Get("Content-Length")))
 	if f, p, e := kit.Create(path.Join("var/tmp", kit.Hashs("uniq"))); m.Assert(e) {
-		size, buf := 0, make([]byte, 81920)
+		size, buf := 0, make([]byte, 1024)
 		for {
-			if n, e := r.Body.Read(buf); e == nil {
+			if n, _ := r.Body.Read(buf); n > 0 {
 				f.Write(buf[0:n])
 				size += n
 				m.Log_IMPORT(kit.MDB_FILE, p, "per", size*100/total, kit.MDB_SIZE, kit.FmtSize(int64(size)), "total", kit.FmtSize(int64(total)))
-			} else if e == io.EOF {
-				f.Close()
-				break
 			} else {
+				f.Close()
 				break
 			}
 		}
-		m.Log_IMPORT(kit.MDB_FILE, p, kit.MDB_SIZE, kit.FmtSize(int64(size)))
-		c := _cache_name(m, kit.Hashs(f))
-		m.Cmd(nfs.LINK, c, p)
-		return c, kit.Format(size)
+		if f, e := os.Open(p); m.Assert(e) {
+			defer f.Close()
+			m.Log_IMPORT(kit.MDB_FILE, p, kit.MDB_SIZE, kit.FmtSize(int64(size)))
+			c := _cache_name(m, kit.Hashs(f))
+			m.Cmd(nfs.LINK, c, p)
+			return c, kit.Format(size)
+		}
 	}
 	return "", "0"
 }

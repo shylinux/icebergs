@@ -184,6 +184,12 @@ func _serve_main(m *ice.Message, w http.ResponseWriter, r *http.Request) bool {
 		Render(m, "refresh", m.Conf(SERVE, "meta.volcanos.refresh"))
 		m.Event(gdb.SYSTEM_INIT)
 		m.W = nil
+	} else if r.URL.Path == "/" && m.Conf(SERVE, "meta.sso") != "" {
+		if c, e := r.Cookie(ice.MSG_SESSID); e != nil || c.Value == "" {
+			http.Redirect(w, r, m.Conf(SERVE, "meta.sso"), http.StatusTemporaryRedirect)
+			return false
+		}
+		return true
 	} else if r.URL.Path == "/share" && r.Method == "GET" {
 		http.ServeFile(w, r, m.Conf(SERVE, "meta.page.share"))
 	} else {

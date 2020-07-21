@@ -10,6 +10,7 @@ import (
 	"github.com/shylinux/toolkits"
 
 	"encoding/json"
+	"math/rand"
 	"net/http"
 	"strings"
 	"time"
@@ -68,6 +69,8 @@ const (
 	FORM  = "form"
 	DUTY  = "duty"
 	TALK  = "talk"
+
+	RAND = "rand"
 
 	LARK = "lark"
 )
@@ -224,6 +227,11 @@ var Index = &ice.Context{Name: "lark", Help: "机器人",
 			}
 			m.Cmdy(m.Prefix(SEND), "chat_id", arg[0], arg[2:])
 		}},
+		RAND: {Name: "rand", Help: "随机", Hand: func(m *ice.Message, c *ice.Context, key string, arg ...string) {
+			msg := m.Cmd(GROUP, "user", m.Option(OPEN_CHAT_ID))
+			list := msg.Appendv("name")
+			m.Echo(list[rand.Intn(len(list))])
+		}},
 		SEND: {Name: "send [chat_id|open_id|user_id|email] user [title] text", Help: "消息", Hand: func(m *ice.Message, c *ice.Context, key string, arg ...string) {
 			var form = kit.Dict("content", kit.Dict())
 
@@ -239,6 +247,9 @@ var Index = &ice.Context{Name: "lark", Help: "机器人",
 			case 1:
 				kit.Value(form, "msg_type", "text")
 				kit.Value(form, "content.text", arg[0])
+				if arg[0] == "" {
+					return
+				}
 			default:
 				content := []interface{}{}
 				line := []interface{}{}
@@ -464,23 +475,30 @@ var Index = &ice.Context{Name: "lark", Help: "机器人",
 
 		"/sso": {Name: "/sso", Help: "消息", Hand: func(m *ice.Message, c *ice.Context, key string, arg ...string) {
 			if m.Options("code") {
-				m.Option("username", m.Cmd(".user", "code", m.Option("code")).Append("open_id"))
-				m.Option("sessid", m.Cmdx("aaa.user", "session", "select"))
-				m.Cmd("ssh._check", "work", "create", m.Option("username"))
+				m.Richs(APP, nil, "bot", func(key string, value map[string]interface{}) {
+					data := kit.UnMarshal(m.Cmdx(web.SPIDE, LARK, "raw", "/open-apis/authen/v1/access_token",
+						"code", m.Option("code"), "grant_type", "authorization_code",
+						"app_access_token", m.Cmdx(APP, "token", "bot"),
+					))
 
-				// web.Cookie(m)
-				// m.Append("redirect", m.Cmdx("web.spide", "serve", "merge", m.Option("index_path")), "code", "")
+					m.Option(ice.MSG_USERROLE, aaa.ROOT)
+					user := kit.Format(kit.Value(data, "data.open_id"))
+					web.RenderCookie(m, aaa.SessCreate(m, user, aaa.UserRole(m, user)))
+					m.Render("redirect", m.Conf(web.SHARE, "meta.domain"))
+
+					m.Debug("data %v", kit.Format(data))
+					m.Cmd(aaa.USER, mdb.MODIFY, user,
+						aaa.USERNICK, kit.Value(data, "data.name"),
+					)
+				})
 				return
 			}
 
-			if !m.Options("sessid") || !m.Options("username") {
-				m.Append("redirect", m.Cmdx("web.spide", "feishu", "merge", "/connect/qrconnect/page/sso/",
-					"redirect_uri", m.Cmdx("web.spide", "serve", "merge", m.Option("index_path")),
-					"app_id", m.Conf("app", "bot.id"), "state", "ok"))
-				return
-			}
-			m.Cmd("/render")
-			return
+			m.Richs(APP, nil, "bot", func(key string, value map[string]interface{}) {
+				m.Render("redirect", kit.MergeURL2(m.Conf(APP, "meta.lark"), "/open-apis/authen/v1/index"),
+					"app_id", value["id"], "redirect_uri", kit.MergeURL2(m.Conf(web.SHARE, "meta.domain"), "/chat/lark/sso"),
+				)
+			})
 		}},
 	},
 }

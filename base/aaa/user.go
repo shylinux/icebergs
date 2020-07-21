@@ -26,6 +26,18 @@ func _user_login(m *ice.Message, name, word string) (ok bool) {
 	})
 	return ok
 }
+func _user_modify(m *ice.Message, name string, arg ...string) {
+	if m.Richs(USER, nil, name, nil) == nil {
+		m.Rich(USER, nil, kit.Dict(USERNAME, name))
+	}
+
+	m.Richs(USER, nil, name, func(key string, value map[string]interface{}) {
+		for i := 0; i < len(arg)-1; i += 2 {
+			m.Log_MODIFY(USERNAME, name, arg[i], arg[i+1])
+			kit.Value(value, arg[i], arg[i+1])
+		}
+	})
+}
 func _user_create(m *ice.Message, name, word string) {
 	m.Rich(USER, nil, kit.Dict(
 		USERNAME, name, PASSWORD, word,
@@ -86,6 +98,9 @@ func init() {
 			USER: {Name: "user", Help: "用户", Action: map[string]*ice.Action{
 				mdb.CREATE: {Name: "create username [password]", Help: "创建", Hand: func(m *ice.Message, arg ...string) {
 					_user_create(m, arg[0], kit.Select("", arg, 1))
+				}},
+				mdb.MODIFY: {Name: "create username [key value]...", Help: "创建", Hand: func(m *ice.Message, arg ...string) {
+					_user_modify(m, arg[0], arg[1:]...)
 				}},
 				mdb.SEARCH: {Name: "search type name text arg...", Help: "搜索", Hand: func(m *ice.Message, arg ...string) {
 					_user_search(m, arg[0], arg[1], kit.Select("", arg, 2))

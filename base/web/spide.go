@@ -229,6 +229,7 @@ func init() {
 					list := kit.Simple(m.Optionv("header"))
 					for i := 0; i < len(list)-1; i += 2 {
 						req.Header.Set(list[i], list[i+1])
+						m.Info("%s: %s", list[i], list[i+1])
 					}
 					for k, v := range head {
 						req.Header.Set(k, v)

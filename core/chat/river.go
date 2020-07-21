@@ -50,7 +50,7 @@ func _river_create(m *ice.Message, kind, name, text string, arg ...string) {
 	))
 	m.Log_CREATE(kit.MDB_META, RIVER, kit.MDB_TYPE, kind, kit.MDB_NAME, name)
 
-	_river_user(m, h, cli.UserName)
+	_river_user(m, h, cli.UserName, m.Option(ice.MSG_USERNAME))
 	kit.Fetch(m.Confv(RIVER, kit.Keys("meta.template", "base")), func(storm string, value interface{}) {
 		list := []string{}
 		kit.Fetch(value, func(index int, value string) {
@@ -85,14 +85,10 @@ func init() {
 					),
 				),
 				aaa.Black, kit.Dict(aaa.TECH, []interface{}{
-					"/river.create",
 					"/river.rename",
 					"/river.remove",
-					"/river.share",
-					"/storm.share",
 					"/storm.remove",
 					"/storm.rename",
-					"/storm.create",
 				}),
 				aaa.White, kit.Dict(aaa.VOID, []interface{}{
 					"/header",

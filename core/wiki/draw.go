@@ -28,12 +28,13 @@ const (
 func init() {
 	sub := Index.Register(&ice.Context{Name: "draw", Help: "思维导图",
 		Configs: map[string]*ice.Config{
-			DRAW: {Name: "draw", Help: "思维导图", Value: kit.Data(kit.MDB_SHORT, "name", "path", "usr/demo", "regs", ".*\\.svg",
+			DRAW: {Name: "draw", Help: "思维导图", Value: kit.Data(
+				"path", "", "regs", ".*\\.svg",
 				"prefix", `<svg vertion="1.1" xmlns="http://www.w3.org/2000/svg" width="%v" height="%v">`, "suffix", `</svg>`,
 			)},
 		},
 		Commands: map[string]*ice.Command{
-			DRAW: {Name: "draw path=hi.svg auto", Help: "思维导图", Meta: kit.Dict(mdb.PLUGIN, DrawPlugin), Action: map[string]*ice.Action{
+			DRAW: {Name: "draw path=src/main.svg auto", Help: "思维导图", Meta: kit.Dict(mdb.PLUGIN, DrawPlugin), Action: map[string]*ice.Action{
 				nfs.SAVE: {Name: "save path text", Help: "保存", Hand: func(m *ice.Message, arg ...string) {
 					_wiki_save(m, DRAW, arg[0], kit.Select(m.Option("content"), arg, 1))
 				}},

@@ -164,6 +164,28 @@ func _field_show(m *ice.Message, name, text string, arg ...string) {
 			m.Parse("option", arg[i], arg[i+1])
 		}
 		data[arg[i]] = m.Optionv(arg[i])
+		if arg[i] == "args" {
+			args := kit.Simple(m.Optionv(arg[i]))
+
+			count := 0
+			kit.Fetch(data["inputs"], func(index int, value map[string]interface{}) {
+				if value["_input"] == "text" || value["type"] == "text" {
+					count++
+				}
+			})
+
+			if len(args) > count {
+				list := data["inputs"].([]interface{})
+				for i := count; i < len(args); i++ {
+					list = append(list, kit.Dict(
+						"_input", "text",
+						"name", "args",
+						"value", args[i],
+					))
+				}
+				data["inputs"] = list
+			}
+		}
 	}
 
 	// 渲染引擎

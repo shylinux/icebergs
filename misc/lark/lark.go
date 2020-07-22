@@ -69,12 +69,17 @@ const (
 	SHIP  = "ship"
 	USER  = "user"
 	GROUP = "group"
-	SEND  = "send"
-	FORM  = "form"
-	DUTY  = "duty"
-	TALK  = "talk"
-	RAND  = "rand"
-	HOME  = "home"
+
+	SEND = "send"
+	FORM = "form"
+	DUTY = "duty"
+	TALK = "talk"
+	RAND = "rand"
+	HOME = "home"
+
+	DATE = "date"
+	META = "meta"
+	WORD = "word"
 
 	LARK = "lark"
 )
@@ -89,6 +94,9 @@ var Index = &ice.Context{Name: "lark", Help: "机器人",
 		SHIP: {Name: SHIP, Help: "组织配置", Value: kit.Data(kit.MDB_SHORT, SHIP_ID)},
 		USER: {Name: USER, Help: "用户配置", Value: kit.Data(kit.MDB_SHORT, OPEN_ID)},
 		HOME: {Name: HOME, Help: "卡片配置", Value: kit.Data(kit.MDB_SHORT, OPEN_ID)},
+		META: {Name: META, Help: "卡片配置", Value: kit.Data(
+			kit.MDB_SHORT, "url",
+		)},
 	},
 	Commands: map[string]*ice.Command{
 		ice.CTX_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
@@ -97,7 +105,7 @@ var Index = &ice.Context{Name: "lark", Help: "机器人",
 			m.Cmd(DUTY, "boot", m.Conf(cli.RUNTIME, "boot.hostname"), m.Time())
 		}},
 		ice.CTX_EXIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			m.Save(APP, SHIP, USER)
+			m.Save(APP, SHIP, USER, META)
 		}},
 
 		APP: {Name: "app [name] auto", Help: "应用", Action: map[string]*ice.Action{
@@ -232,6 +240,7 @@ var Index = &ice.Context{Name: "lark", Help: "机器人",
 			// 用户通知
 			m.Cmdy(m.Prefix(SEND), CHAT_ID, arg[0], arg[2:])
 		}},
+
 		SEND: {Name: "send [chat_id|open_id|user_id|email] user [title] text", Help: "消息", Hand: func(m *ice.Message, c *ice.Context, key string, arg ...string) {
 			var form = kit.Dict("content", kit.Dict())
 
@@ -405,6 +414,26 @@ var Index = &ice.Context{Name: "lark", Help: "机器人",
 			post(m, "bot", "/open-apis/message/v4/send/", "data", kit.Formats(form))
 		}},
 
+		// DATE: {Name: "date id", Help: "日历", Hand: func(m *ice.Message, c *ice.Context, key string, arg ...string) {
+		// 	m.Richs(APP, nil, "bot", func(key string, value map[string]interface{}) {
+		// 		if len(arg) == 0 {
+		// 			data := raw(m, "/open-apis/calendar/v3/calendar_list")
+		// 			kit.Fetch(kit.Value(data, "data"), func(index int, value map[string]interface{}) {
+		// 				m.Push("", value)
+		// 			})
+		// 			return
+		// 		}
+		// 		data := raw(m, "/open-apis/calendar/v3/calendars/"+arg[0]+"/events")
+		// 		kit.Fetch(kit.Value(data, "data"), func(index int, value map[string]interface{}) {
+		// 			m.Push("", value)
+		// 		})
+		// 	})
+		// }},
+		// META: {Name: "meta", Help: "日历", Hand: func(m *ice.Message, c *ice.Context, key string, arg ...string) {
+		// 	m.Richs(META, nil, kit.MDB_FOREACH, func(key string, value map[string]interface{}) {
+		// 		m.Push("image", m.Cmdx(mdb.RENDER, web.RENDER.IMG, value["url"]))
+		// 	})
+		// }},
 		web.LOGIN: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {}},
 		"/msg": {Name: "/msg", Help: "聊天消息", Hand: func(m *ice.Message, c *ice.Context, key string, arg ...string) {
 			if data := m.Optionv(ice.MSG_USERDATA); kit.Value(data, "action") != nil {
@@ -444,7 +473,13 @@ var Index = &ice.Context{Name: "lark", Help: "机器人",
 					}
 				default:
 					switch m.Option("msg_type") {
+					case "location":
 					case "image":
+						m.Rich(META, nil, kit.Dict(
+							"url", m.Option("image_url"),
+							"width", m.Option("image_width"),
+							"height", m.Option("image_height"),
+						))
 					default:
 						if m.Options(OPEN_CHAT_ID) {
 							if m.Cmdy(TALK, strings.TrimSpace(m.Option("text_without_at_bot"))); len(m.Resultv()) > 0 {

@@ -11,6 +11,9 @@ refer "官网" `
 field "ship" web.chat.lark.ship
 field "group" web.chat.lark.group
 
+field "date" web.chat.lark.date
+field "meta" web.chat.lark.meta
+
 section "icebergs"
 field "icebergs_统计" web.code.git.trend args `[ icebergs ]` action `{ height 200 speed 20 }`
 field "icebergs_源码" web.code.inner args `[ usr/icebergs misc/lark/lark.go 74 ]`

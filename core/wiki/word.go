@@ -211,7 +211,7 @@ func _order_show(m *ice.Message, name, text string, arg ...string) {
 func _table_show(m *ice.Message, name, text string, arg ...string) {
 	head, list := []string{}, [][]string{}
 	for i, v := range kit.Split(strings.TrimSpace(text), "\n") {
-		if i == 0 {
+		if v = strings.ReplaceAll(v, "%", "%%"); i == 0 {
 			head = kit.Split(v)
 		} else {
 			line := kit.Split(v)

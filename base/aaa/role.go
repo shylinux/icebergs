@@ -72,7 +72,7 @@ func _role_right(m *ice.Message, userrole string, keys ...string) (ok bool) {
 				ok = true
 			}
 		}
-		if m.Warn(!ok, "%s no right %s", userrole, keys) {
+		if m.Warn(!ok, ErrNotAuth, userrole, " of ", keys) {
 			return
 		}
 		// 普通用户

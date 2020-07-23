@@ -6,6 +6,9 @@ import (
 )
 
 const (
+	ErrNotAuth = "not auth: "
+)
+const (
 	USERNICK = "usernick"
 	USERNAME = "username"
 	PASSWORD = "password"

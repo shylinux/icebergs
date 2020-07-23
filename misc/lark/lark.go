@@ -151,7 +151,7 @@ var Index = &ice.Context{Name: "lark", Help: "机器人",
 					kit.Fetch(kit.Value(data, "data.user_list"), func(index int, value map[string]interface{}) {
 						msg := m.Cmd(m.Prefix(USER), value[OPEN_ID])
 						m.Push("avatar", m.Cmdx(mdb.RENDER, web.RENDER.IMG, msg.Append("avatar_72")))
-						m.Push("gender", kit.Select("男", "女", msg.Append("gender") == "1"))
+						m.Push("gender", kit.Select("男", "女", msg.Append("gender") == "2"))
 						m.Push(kit.MDB_NAME, msg.Append(kit.MDB_NAME))
 						m.Push("description", msg.Append("description"))
 						m.Push(OPEN_ID, msg.Append(OPEN_ID))
@@ -436,7 +436,8 @@ var Index = &ice.Context{Name: "lark", Help: "机器人",
 		// }},
 		web.LOGIN: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {}},
 		"/msg": {Name: "/msg", Help: "聊天消息", Hand: func(m *ice.Message, c *ice.Context, key string, arg ...string) {
-			if data := m.Optionv(ice.MSG_USERDATA); kit.Value(data, "action") != nil {
+			data := m.Optionv(ice.MSG_USERDATA)
+			if kit.Value(data, "action") != nil {
 				kit.Fetch(kit.Value(data, "action.value"), func(key string, value string) {
 					m.Option(key, value)
 				})
@@ -485,9 +486,13 @@ var Index = &ice.Context{Name: "lark", Help: "机器人",
 							if m.Cmdy(TALK, strings.TrimSpace(m.Option("text_without_at_bot"))); len(m.Resultv()) > 0 {
 								m.Cmd(SEND, m.Option(OPEN_CHAT_ID), m.Result())
 							}
+						} else {
+							m.Cmd(DUTY, m.Option("msg.type"), kit.Formats(data))
 						}
 					}
 				}
+			default:
+				m.Cmd(DUTY, m.Option("msg.type"), kit.Formats(data))
 			}
 		}},
 		"/sso": {Name: "/sso", Help: "网页", Hand: func(m *ice.Message, c *ice.Context, key string, arg ...string) {

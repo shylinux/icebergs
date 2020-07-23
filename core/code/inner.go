@@ -37,6 +37,9 @@ func _inner_show(m *ice.Message, ext, file, dir string, arg ...string) {
 	}
 }
 func _inner_list(m *ice.Message, ext, file, dir string, arg ...string) {
+	if !m.Right(strings.Split(dir, "/"), file) {
+		return
+	}
 	if m.Cmdy(mdb.RENDER, ext, file, dir, arg); m.Result() == "" {
 		if m.Conf(INNER, kit.Keys("meta.source", ext)) == "true" {
 			if m.Cmdy(mdb.RENDER, nfs.FILE, file, dir, arg); m.Result() == "" {

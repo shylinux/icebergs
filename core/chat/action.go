@@ -124,9 +124,11 @@ func _action_show(m *ice.Message, river, storm, index string, arg ...string) {
 				cmds = kit.Simple(kit.Keys(value[CTX], value[CMD]), arg)
 			}
 		})
-	} else if !m.Warn(!m.Right(index), "no right of %v", index) {
+	} else if m.Right(index) {
 		// 定制命令
 		cmds = kit.Simple(index, arg)
+	} else {
+		return
 	}
 	if len(cmds) == 0 {
 		m.Render("status", 404, "not found")

@@ -353,7 +353,9 @@ func init() {
 			}},
 			FIELD: {Name: "field name cmd", Help: "插件", Action: map[string]*ice.Action{
 				"run": {Name: "run", Help: "运行", Hand: func(m *ice.Message, arg ...string) {
-					m.Cmdy(arg[1:])
+					if m.Right(arg[1:]) {
+						m.Cmdy(arg[1:])
+					}
 				}},
 			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 				_field_show(m, arg[0], arg[1], arg[2:]...)

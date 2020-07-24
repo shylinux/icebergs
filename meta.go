@@ -197,9 +197,9 @@ func (m *Message) Sort(key string, arg ...string) *Message {
 		case "int_r":
 			number[index] = -kit.Int(line[key])
 		case "time":
-			number[index] = kit.Time(line[key])
+			number[index] = int(kit.Time(line[key]))
 		case "time_r":
-			number[index] = -kit.Time(line[key])
+			number[index] = -int(kit.Time(line[key]))
 		}
 	})
 

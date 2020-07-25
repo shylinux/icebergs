@@ -1,8 +1,6 @@
 package cli
 
 import (
-	"strings"
-
 	ice "github.com/shylinux/icebergs"
 	kit "github.com/shylinux/toolkits"
 
@@ -10,6 +8,8 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"strings"
+	"time"
 )
 
 const (
@@ -90,11 +90,11 @@ func init() {
 					m.Push("name", value["name"])
 					m.Push("term", value["term"])
 					ls := strings.Split(value["begin"], " (")
-					t, _ := time.Parse("Jan 2 15:04", ls[0])
-					m.Push("begin", t.Format("2006-01-02 15:04:05"))
+					ls[0] = strings.Join(kit.Split(ls[0], " \t"), " ")
 
-					m.Push("ip", value["ip"])
-					m.Push("duration", value["duration"])
+					t, _ := time.ParseInLocation("2006 Jan 2 15:04", "2020 "+ls[0], time.Local)
+					m.Push("begin", t.Format("2006-01-02 15:04:05"))
+					m.Push("duration", time.Since(t).String())
 				})
 			}},
 		},

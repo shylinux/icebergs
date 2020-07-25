@@ -89,12 +89,18 @@ func init() {
 				msg.Table(func(index int, value map[string]string, head []string) {
 					m.Push("name", value["name"])
 					m.Push("term", value["term"])
-					ls := strings.Split(value["begin"], " (")
+
+					ls := strings.Split(value["begin"], "(")
 					ls[0] = strings.Join(kit.Split(ls[0], " \t"), " ")
+					if len(ls) > 1 {
+						m.Push("ip", strings.TrimSuffix(ls[1], ")"))
+					}
 
 					t, _ := time.ParseInLocation("2006 Jan 2 15:04", "2020 "+ls[0], time.Local)
 					m.Push("begin", t.Format("2006-01-02 15:04:05"))
-					m.Push("duration", time.Since(t).String())
+					d := time.Since(t)
+					d = d / time.Millisecond * time.Millisecond
+					m.Push("duration", d.String())
 				})
 			}},
 		},

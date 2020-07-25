@@ -106,11 +106,13 @@ var RENDER = struct {
 	A      string
 	IMG    string
 	Field  string
+	Frame  string
 	Button string
 }{
 	A:      "a",
 	IMG:    "img",
 	Field:  "field",
+	Frame:  "frame",
 	Button: "button",
 }
 
@@ -119,7 +121,8 @@ func init() {
 		Commands: map[string]*ice.Command{
 			"_render": {Action: map[string]*ice.Action{
 				RENDER.A: {Hand: func(m *ice.Message, arg ...string) {
-					u := kit.Select(m.Conf(SHARE, "meta.domain"), arg, 1)
+					// u := kit.Select(m.Conf(SHARE, "meta.domain"), arg, 1)
+					u := kit.Select(arg[0], arg, 1)
 					m.Echo(`<a href="%s" target="_blank">%s</a>`, u, arg[0])
 				}},
 				RENDER.IMG: {Hand: func(m *ice.Message, arg ...string) {
@@ -127,6 +130,9 @@ func init() {
 				}},
 				RENDER.Field: {Hand: func(m *ice.Message, arg ...string) {
 					m.Echo(`<fieldset><legend>%s(%s)</legend><form></form></fieldset>`, arg[0], arg[1])
+				}},
+				RENDER.Frame: {Hand: func(m *ice.Message, arg ...string) {
+					m.Echo(`<iframe src=%s width=800 height=400 ></iframe>`, arg[0])
 				}},
 				RENDER.Button: {Hand: func(m *ice.Message, arg ...string) {
 					m.Echo(`<input type="button" value="%s">`, arg[0])

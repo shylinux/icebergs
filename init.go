@@ -59,6 +59,7 @@ func (f *Frame) Close(m *Message, arg ...string) bool {
 	return true
 }
 
+var wait = make(chan bool, 1)
 var Index = &Context{Name: "ice", Help: "冰山模块",
 	Caches: map[string]*Cache{
 		CTX_FOLLOW: {Value: ""},
@@ -133,6 +134,7 @@ var Index = &Context{Name: "ice", Help: "冰山模块",
 					})
 				}
 			})
+			wait <- true
 		}},
 	},
 }
@@ -176,6 +178,7 @@ func Run(arg ...string) string {
 		Pulse.Table(nil)
 	}
 	fmt.Printf(Pulse.Result())
+	<-wait
 	os.Exit(frame.code)
 	return ""
 }

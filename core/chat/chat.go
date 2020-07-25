@@ -85,8 +85,8 @@ var Index = &ice.Context{Name: "chat", Help: "聊天中心",
 		}},
 
 		web.LOGIN: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			m.Option(ice.MSG_RIVER, "")
-			m.Option(ice.MSG_STORM, "")
+			m.Option(ice.MSG_RIVER, m.Option("river"))
+			m.Option(ice.MSG_STORM, m.Option("storm"))
 
 			if len(arg) > 0 {
 				switch arg[0] {

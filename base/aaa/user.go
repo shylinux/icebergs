@@ -32,8 +32,8 @@ func _user_modify(m *ice.Message, name string, arg ...string) {
 	}
 
 	m.Richs(USER, nil, name, func(key string, value map[string]interface{}) {
+		m.Log_MODIFY(USERNAME, name, arg)
 		for i := 0; i < len(arg)-1; i += 2 {
-			m.Log_MODIFY(USERNAME, name, arg[i], arg[i+1])
 			kit.Value(value, arg[i], arg[i+1])
 		}
 	})

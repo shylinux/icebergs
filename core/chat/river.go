@@ -122,6 +122,10 @@ func init() {
 						m.Cmdy("/storm", arg[1:])
 						return
 					}
+					if m.Option(ice.MSG_SESSID) == "" {
+						m.Render("status", "401")
+						return
+					}
 					_river_list(m)
 				}},
 		},

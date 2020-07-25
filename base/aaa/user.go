@@ -48,7 +48,7 @@ func _user_create(m *ice.Message, name, word string) {
 }
 func _user_search(m *ice.Message, kind, name, text string, arg ...string) {
 	m.Richs(USER, nil, kit.MDB_FOREACH, func(key string, val map[string]interface{}) {
-		if name != val[USERNAME] {
+		if name != "" && name != val[USERNAME] {
 			return
 		}
 		m.Push("pod", m.Option("pod"))
@@ -57,8 +57,8 @@ func _user_search(m *ice.Message, kind, name, text string, arg ...string) {
 		m.Push(key, val, []string{kit.MDB_TIME})
 		m.Push(kit.MDB_SIZE, kit.Format(""))
 		m.Push(kit.MDB_TYPE, kit.Format(UserRole(m, val[USERNAME])))
-		m.Push(kit.MDB_NAME, kit.Format(val[USERNAME]))
-		m.Push(kit.MDB_TEXT, kit.Format(val[USERNODE]))
+		m.Push(kit.MDB_NAME, kit.Format(val[USERNICK]))
+		m.Push(kit.MDB_TEXT, kit.Format(val[USERNAME]))
 	})
 }
 

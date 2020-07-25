@@ -13,7 +13,6 @@ func _sess_list(m *ice.Message) {
 }
 func _sess_auth(m *ice.Message, sessid string, username string, userrole string) {
 	m.Richs(SESS, nil, sessid, func(value map[string]interface{}) {
-		m.Debug("fuck %v", m.Option(ice.MSG_USERROLE))
 		if m.Option(ice.MSG_USERROLE) == ROOT {
 			value[USERROLE] = userrole
 		} else if m.Option(ice.MSG_USERROLE) == TECH && userrole != ROOT {
@@ -32,12 +31,15 @@ func _sess_check(m *ice.Message, sessid string) {
 		})
 		m.Log_AUTH(
 			USERNAME, m.Option(ice.MSG_USERNAME, value[USERNAME]),
-			USERROLE, m.Option(ice.MSG_USERROLE, value[USERROLE]),
+			USERROLE, m.Option(ice.MSG_USERROLE, kit.Select(UserRole(m, value[USERNAME]), value[USERROLE])),
 			USERNICK, m.Option(ice.MSG_USERROLE),
 		)
 	})
 }
 func _sess_create(m *ice.Message, username string) string {
+	if m.Richs(USER, nil, username, nil) == nil {
+		_user_create(m, username, "")
+	}
 	h := m.Rich(SESS, nil, kit.Dict(
 		kit.MDB_TIME, m.Time(m.Conf(SESS, "meta.expire")),
 		USERNAME, username, "from", m.Option(ice.MSG_SESSID),

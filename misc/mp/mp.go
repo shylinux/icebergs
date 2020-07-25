@@ -2,10 +2,13 @@ package mp
 
 import (
 	"github.com/shylinux/icebergs"
+	"github.com/shylinux/icebergs/base/aaa"
+	"github.com/shylinux/icebergs/base/mdb"
 	"github.com/shylinux/icebergs/base/web"
 	"github.com/shylinux/icebergs/core/chat"
 	"github.com/shylinux/toolkits"
 
+	"net/http"
 	"path"
 )
 
@@ -20,14 +23,14 @@ var Index = &ice.Context{Name: "mp", Help: "小程序",
 		)},
 	},
 	Commands: map[string]*ice.Command{
-		ice.ICE_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		ice.CTX_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			m.Load()
-			web.SpideCreate(m, "weixin", m.Conf("login", "meta.weixin"))
+			m.Cmd(web.SPIDE, mdb.CREATE, "weixin", m.Conf("login", "meta.weixin"))
 			m.Confm("login", "meta.userrole", func(key string, value string) {
 				m.Cmd(aaa.ROLE, value, key)
 			})
 		}},
-		ice.ICE_EXIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		ice.CTX_EXIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			m.Save("login")
 		}},
 
@@ -56,11 +59,11 @@ var Index = &ice.Context{Name: "mp", Help: "小程序",
 		"/login/": {Name: "/login/", Help: "登录", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			switch arg[0] {
 			case "code":
-				msg := m.Cmd(web.SPIDE, "weixin", "GET", m.Conf("login", "meta.auth"), "js_code", m.Option("code"),
+				msg := m.Cmd(web.SPIDE, "weixin", http.MethodGet, m.Conf("login", "meta.auth"), "js_code", m.Option("code"),
 					"appid", m.Conf("login", "meta.appid"), "secret", m.Conf("login", "meta.appmm"))
 
 				// 用户登录
-				m.Echo(m.Option(ice.MSG_SESSID, m.Cmdx(aaa.USER, "login", msg.Append("openid"))))
+				m.Echo(aaa.SessCreate(msg, msg.Append("openid"), aaa.UserRole(msg, msg.Append("openid"))))
 
 			case "info":
 				// 用户信息
@@ -114,7 +117,7 @@ var Index = &ice.Context{Name: "mp", Help: "小程序",
 
 			case "upload":
 				msg := m.Cmd(web.CACHE, "upload")
-				m.Cmd(web.STORY, ice.STORY_WATCH, msg.Append("data"), path.Join("usr/local/mp/", path.Base(msg.Append("name"))))
+				m.Cmd(web.STORY, web.WATCH, msg.Append("data"), path.Join("usr/local/mp/", path.Base(msg.Append("name"))))
 				m.Cmd(web.FAVOR, "device", "file", msg.Append("name"), msg.Append("data"))
 				m.Render(msg.Append("data"))
 

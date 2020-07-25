@@ -438,6 +438,7 @@ func (m *Message) Optionv(key string, arg ...interface{}) interface{} {
 			m.meta[key] = kit.Simple(arg)
 		case []string:
 			m.meta[key] = str
+			delete(m.data, key)
 		default:
 			m.data[key] = str
 		}

@@ -70,7 +70,7 @@ func _action_list(m *ice.Message, river, storm string) {
 	if p := m.Option(POD); p != "" {
 		m.Option(POD, "")
 		// 代理列表
-		m.Cmdy(web.SPACE, p, "web.chat./action", river, storm)
+		m.Cmdy(web.SPACE, p, "web.chat./action")
 	}
 	if m.Option("share") != "" {
 		// 共享列表
@@ -131,6 +131,12 @@ func _action_show(m *ice.Message, river, storm, index string, arg ...string) {
 		return
 	}
 	if len(cmds) == 0 {
+		if p := m.Option(POD); p != "" {
+			m.Option(POD, "")
+			// 代理列表
+			m.Cmdy(web.SPACE, p, "web.chat./action", index, arg)
+			return
+		}
 		m.Render("status", 404, "not found")
 		return
 	}

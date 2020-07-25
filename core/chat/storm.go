@@ -11,6 +11,12 @@ func _storm_list(m *ice.Message, river string) {
 	m.Set(ice.MSG_OPTION, kit.MDB_KEY)
 	m.Set(ice.MSG_OPTION, kit.MDB_NAME)
 	m.Set(ice.MSG_OPTION, kit.MDB_COUNT)
+
+	if p := m.Option(POD); p != "" {
+		m.Option(POD, "")
+		// 代理列表
+		m.Cmdy(web.SPACE, p, "web.chat./storm")
+	}
 	m.Richs(RIVER, kit.Keys(kit.MDB_HASH, river, USER), m.Option(ice.MSG_USERNAME), func(k string, val map[string]interface{}) {
 		m.Richs(RIVER, kit.Keys(kit.MDB_HASH, river, TOOL), kit.MDB_FOREACH, func(key string, value map[string]interface{}) {
 			m.Push(key, value[kit.MDB_META], []string{kit.MDB_KEY, kit.MDB_NAME, kit.MDB_COUNT}, val[kit.MDB_META])

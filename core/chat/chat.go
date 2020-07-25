@@ -112,16 +112,26 @@ var Index = &ice.Context{Name: "chat", Help: "聊天中心",
 					})
 					switch m.Option(ice.MSG_USERURL) {
 					case "/action":
-						arg = arg[2:]
-					case "/storm":
 						if len(arg) > 0 {
+							m.Option(ice.MSG_RIVER, arg[0])
 							arg = arg[1:]
 						}
 						if len(arg) > 0 {
+							m.Option(ice.MSG_STORM, arg[0])
+							arg = arg[1:]
+						}
+					case "/storm":
+						if len(arg) > 0 {
+							m.Option(ice.MSG_RIVER, arg[0])
+							arg = arg[1:]
+						}
+						if len(arg) > 0 {
+							m.Option(ice.MSG_STORM, arg[0])
 							arg = arg[1:]
 						}
 					case "/river":
 						if len(arg) > 0 {
+							m.Option(ice.MSG_RIVER, arg[0])
 							arg = arg[1:]
 						}
 						if len(arg) > 1 && arg[1] == "storm" {

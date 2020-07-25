@@ -6,8 +6,11 @@ refer "" `
 源码 https://github.com/shylinux/icebergs/blob/master/misc/mp/mp.go
 `
 
-field "用户" user
+chapter "应用"
+section "二维码"
+field "qrcode 源码" web.code.inner args `[ usr/icebergs core/code/qrcode.go 1 ]`
 
+chapter "项目"
 section "icebergs"
 field "icebergs_统计" web.code.git.trend args `[ icebergs ]` action `{ height 200 speed 20 }`
 field "icebergs_源码" web.code.inner args `[ usr/icebergs misc/mp/mp.go 1 ]`

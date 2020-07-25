@@ -12,7 +12,7 @@ import (
 
 func _user_list(m *ice.Message) {
 	m.Richs(USER, nil, kit.MDB_FOREACH, func(key string, value map[string]interface{}) {
-		m.Push(key, value, []string{kit.MDB_TIME, USERNAME, USERNICK})
+		m.Push(key, value, []string{kit.MDB_TIME, USERNICK, USERNAME})
 	})
 }
 func _user_login(m *ice.Message, name, word string) (ok bool) {

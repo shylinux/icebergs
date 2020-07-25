@@ -358,7 +358,7 @@ func init() {
 					}
 				}},
 			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-				_field_show(m, arg[0], arg[1], arg[2:]...)
+				_field_show(m, strings.ReplaceAll(arg[0], " ", "_"), arg[1], arg[2:]...)
 			}},
 			SHELL: {Name: "shell [name] cmd", Help: "命令", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 				if len(arg) == 1 {

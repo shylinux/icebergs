@@ -83,6 +83,20 @@ func init() {
 					_system_show(m, cmd)
 				}
 			}},
+			"ssh_user": {Name: "ssh_user", Help: "ssh_user", Hand: func(m *ice.Message, c *ice.Context, key string, arg ...string) {
+				msg := m.Cmd(SYSTEM, "who")
+				msg.Split(msg.Result(), "name term begin", " \t", "\n")
+				msg.Table(func(index int, value map[string]string, head []string) {
+					m.Push("name", value["name"])
+					m.Push("term", value["term"])
+					ls := strings.Split(value["begin"], " (")
+					t, _ := time.Parse("Jan 2 15:04", ls[0])
+					m.Push("begin", t.Format("2006-01-02 15:04:05"))
+
+					m.Push("ip", value["ip"])
+					m.Push("duration", value["duration"])
+				})
+			}},
 		},
 	}, nil)
 }

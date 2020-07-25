@@ -56,6 +56,7 @@ var Index = &ice.Context{Name: "mp", Help: "小程序",
 		), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			m.Echo(arg[0])
 		}},
+
 		"/login/": {Name: "/login/", Help: "登录", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			switch arg[0] {
 			case "code":
@@ -67,17 +68,15 @@ var Index = &ice.Context{Name: "mp", Help: "小程序",
 
 			case "info":
 				// 用户信息
-				m.Richs(aaa.SESS, nil, m.Option(ice.MSG_SESSID), func(key string, value map[string]interface{}) {
-					m.Richs(aaa.USER, nil, value["username"], func(key string, value map[string]interface{}) {
-						value["gender"] = m.Option("gender")
-						value["avatar"] = m.Option("avatarUrl")
-						value["nickname"] = m.Option("nickName")
-						value["language"] = m.Option("language")
-						value["province"] = m.Option("province")
-						value["country"] = m.Option("country")
-						value["city"] = m.Option("city")
-					})
-				})
+				m.Cmd(aaa.USER, mdb.MODIFY, m.Option(ice.MSG_USERNAME),
+					"gender", m.Option("gender"),
+					"avatar", m.Option("avatarUrl"),
+					"usernick", m.Option("nickName"),
+					"language", m.Option("language"),
+					"province", m.Option("province"),
+					"country", m.Option("country"),
+					"city", m.Option("city"),
+				)
 
 			case "scan":
 				m.Cmd(web.FAVOR, "device", "scan", m.Option("name"), m.Option("text"))

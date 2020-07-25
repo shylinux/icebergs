@@ -2,47 +2,26 @@ package code
 
 import (
 	ice "github.com/shylinux/icebergs"
+	"github.com/shylinux/icebergs/base/mdb"
 	kit "github.com/shylinux/toolkits"
-
-	"os"
-
-	qrs "github.com/skip2/go-qrcode"
-	"github.com/tuotoo/qrcode"
 )
 
 func init() {
-	Index.Register(&ice.Context{Name: "qrc", Help: "二维码",
+	Index.Register(&ice.Context{Name: QRCODE, Help: "二维码",
 		Configs: map[string]*ice.Config{
-			QRCODE: {Name: "qrcode", Help: "二维码", Value: kit.Data(
-				"plug", `{"display": {"height": "400px"}}`,
-			)},
+			QRCODE: {Name: "qrcode", Help: "二维码", Value: kit.Data()},
 		},
 		Commands: map[string]*ice.Command{
-			"list": {Name: "list name", Help: "列表", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-				if f, e := os.Open(arg[0]); e == nil {
-					defer f.Close()
-					if q, e := qrcode.Decode(f); e == nil {
-						m.Echo(q.Content)
-						return
-					}
-				}
-				m.Echo("hello world")
-			}},
-			"save": {Name: "save name text", Help: "保存", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-				if qr, e := qrs.New(kit.Select(m.Option("content"), arg, 1), qrs.Medium); m.Assert(e) {
-					if f, e := os.Create(arg[0]); m.Assert(e) {
-						defer f.Close()
-						m.Debug(m.Option("content"))
-						m.Assert(qr.Write(kit.Int(kit.Select("256", arg, 2)), f))
-						m.Echo(arg[0])
-					}
-				}
-			}},
-			"plug": {Name: "plug name text", Help: "插件", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-				m.Echo(m.Conf(QRCODE, "meta.plug"))
-			}},
-			"show": {Name: "show name", Help: "渲染", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-				m.Echo(`<img src="/share/local/%s?pod=%s">`, arg[0], m.Option(ice.MSG_USERPOD))
+			QRCODE: {Name: "qrcode", Help: "二维码", Action: map[string]*ice.Action{
+				mdb.INSERT: {Hand: func(m *ice.Message, arg ...string) {
+					m.Grow(QRCODE, kit.Keys(m.Option(ice.MSG_RIVER), m.Option(ice.MSG_STORM)), func(index int, value map[string]interface{}) {
+						m.Push("", value, []string{kit.MDB_TIME, kit.MDB_TEXT})
+					})
+				}},
+			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+				m.Grow(QRCODE, kit.Keys(m.Option(ice.MSG_RIVER), m.Option(ice.MSG_STORM)), func(index int, value map[string]interface{}) {
+					m.Push("", value, []string{kit.MDB_TIME, kit.MDB_TEXT})
+				})
 			}},
 		},
 	}, nil)

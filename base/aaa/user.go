@@ -28,7 +28,7 @@ func _user_login(m *ice.Message, name, word string) (ok bool) {
 }
 func _user_modify(m *ice.Message, name string, arg ...string) {
 	if m.Richs(USER, nil, name, nil) == nil {
-		m.Rich(USER, nil, kit.Dict(USERNAME, name))
+		_user_create(m, name, "")
 	}
 
 	m.Richs(USER, nil, name, func(key string, value map[string]interface{}) {

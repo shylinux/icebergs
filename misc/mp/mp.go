@@ -79,7 +79,13 @@ var Index = &ice.Context{Name: "mp", Help: "小程序",
 				)
 
 			case "scan":
-				m.Cmd(web.FAVOR, "device", "scan", m.Option("name"), m.Option("text"))
+				if p := m.Option("pod"); p != "" {
+					m.Option("pod", "")
+					// 代理列表
+					m.Cmdy(web.SPACE, p, "web.chat.qrcode.qrcode", mdb.INSERT, "qrcode", m.Option("name"), m.Option("text"))
+					return
+				}
+				m.Cmdy("web.chat.qrcode.qrcode", mdb.INSERT, "qrcode", m.Option("name"), m.Option("text"))
 
 			case "auth":
 				if !m.Options(ice.MSG_USERNAME) {

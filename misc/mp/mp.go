@@ -19,7 +19,6 @@ var Index = &ice.Context{Name: "mp", Help: "小程序",
 			"auth", "/sns/jscode2session?grant_type=authorization_code",
 			"weixin", "https://api.weixin.qq.com",
 			"appid", "", "appmm", "", "token", "",
-			"userrole", kit.Dict(),
 		)},
 	},
 	Commands: map[string]*ice.Command{
@@ -32,29 +31,6 @@ var Index = &ice.Context{Name: "mp", Help: "小程序",
 		}},
 		ice.CTX_EXIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			m.Save("login")
-		}},
-
-		"scan": {Name: "scan", Help: "扫码", List: kit.List(
-			kit.MDB_INPUT, "text", "name", "location", "cb", "location",
-			kit.MDB_INPUT, "text", "name", "battery", "cb", "battery",
-			kit.MDB_INPUT, "text", "name", "paste", "cb", "paste",
-			kit.MDB_INPUT, "text", "name", "scan", "cb", "scan",
-			kit.MDB_INPUT, "text", "name", "wifi", "cb", "wifi",
-
-			kit.MDB_INPUT, "text", "name", "album", "cb", "album",
-			kit.MDB_INPUT, "text", "name", "finger", "cb", "finger",
-			kit.MDB_INPUT, "text", "name", "vibrate", "cb", "vibrate",
-			kit.MDB_INPUT, "text", "name", "wifiList", "cb", "wifiList",
-			kit.MDB_INPUT, "text", "name", "wifiConn", "cb", "wifiConn",
-
-			kit.MDB_INPUT, "textarea", "name", "scan", "cb", "scan",
-			kit.MDB_INPUT, "textarea", "name", "location", "cb", "location",
-			kit.MDB_INPUT, "button", "name", "scan", "cb", "scan",
-			kit.MDB_INPUT, "button", "name", "location", "cb", "location",
-			kit.MDB_INPUT, "button", "name", "text",
-			kit.MDB_INPUT, "button", "name", "share",
-		), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			m.Echo(arg[0])
 		}},
 
 		"/login/": {Name: "/login/", Help: "登录", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
@@ -139,6 +115,29 @@ var Index = &ice.Context{Name: "mp", Help: "小程序",
 				// 执行命令
 				m.Cmdy(arg)
 			}
+		}},
+
+		"scan": {Name: "scan", Help: "扫码", List: kit.List(
+			kit.MDB_INPUT, "text", "name", "location", "cb", "location",
+			kit.MDB_INPUT, "text", "name", "battery", "cb", "battery",
+			kit.MDB_INPUT, "text", "name", "paste", "cb", "paste",
+			kit.MDB_INPUT, "text", "name", "scan", "cb", "scan",
+			kit.MDB_INPUT, "text", "name", "wifi", "cb", "wifi",
+
+			kit.MDB_INPUT, "text", "name", "album", "cb", "album",
+			kit.MDB_INPUT, "text", "name", "finger", "cb", "finger",
+			kit.MDB_INPUT, "text", "name", "vibrate", "cb", "vibrate",
+			kit.MDB_INPUT, "text", "name", "wifiList", "cb", "wifiList",
+			kit.MDB_INPUT, "text", "name", "wifiConn", "cb", "wifiConn",
+
+			kit.MDB_INPUT, "textarea", "name", "scan", "cb", "scan",
+			kit.MDB_INPUT, "textarea", "name", "location", "cb", "location",
+			kit.MDB_INPUT, "button", "name", "scan", "cb", "scan",
+			kit.MDB_INPUT, "button", "name", "location", "cb", "location",
+			kit.MDB_INPUT, "button", "name", "text",
+			kit.MDB_INPUT, "button", "name", "share",
+		), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			m.Echo(arg[0])
 		}},
 	},
 }

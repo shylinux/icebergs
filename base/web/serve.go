@@ -22,6 +22,7 @@ func _serve_login(msg *ice.Message, cmds []string, w http.ResponseWriter, r *htt
 	msg.Option(ice.MSG_USERNAME, "")
 	msg.Option(ice.MSG_USERROLE, "")
 
+	msg.Debug("what %v", msg.Option(ice.MSG_SESSID))
 	if msg.Options(ice.MSG_SESSID) {
 		// 会话认证
 		aaa.SessCheck(msg, msg.Option(ice.MSG_SESSID))
@@ -63,6 +64,14 @@ func _serve_login(msg *ice.Message, cmds []string, w http.ResponseWriter, r *htt
 }
 func _serve_handle(key string, cmd *ice.Command, msg *ice.Message, w http.ResponseWriter, r *http.Request) {
 	defer func() { msg.Cost("%s %v %v", r.URL.Path, msg.Optionv(ice.MSG_CMDS), msg.Format("append")) }()
+
+	// 请求变量
+	msg.Option(ice.MSG_SESSID, "")
+	for _, v := range r.Cookies() {
+		msg.Option(v.Name, v.Value)
+	}
+
+	msg.Option(ice.MSG_OUTPUT, "")
 	if u, e := url.Parse(r.Header.Get("Referer")); e == nil {
 		for k, v := range u.Query() {
 			msg.Logs("refer", k, v)
@@ -79,13 +88,6 @@ func _serve_handle(key string, cmd *ice.Command, msg *ice.Message, w http.Respon
 		msg.Option(ice.MSG_USERADDR, msg.Option(ice.MSG_USERIP)+":"+r.Header.Get("X-Real-Port"))
 	} else {
 		msg.Option(ice.MSG_USERADDR, r.RemoteAddr)
-	}
-
-	// 请求变量
-	msg.Option(ice.MSG_SESSID, "")
-	msg.Option(ice.MSG_OUTPUT, "")
-	for _, v := range r.Cookies() {
-		msg.Option(v.Name, v.Value)
 	}
 
 	// 解析引擎
@@ -119,12 +121,14 @@ func _serve_handle(key string, cmd *ice.Command, msg *ice.Message, w http.Respon
 		}
 	}
 
+	msg.Debug("what %v", msg.Option(ice.MSG_SESSID))
 	// 请求命令
 	if msg.Option(ice.MSG_USERPOD, msg.Option("pod")); msg.Optionv(ice.MSG_CMDS) == nil {
 		if p := strings.TrimPrefix(msg.Option(ice.MSG_USERURL), key); p != "" {
 			msg.Optionv(ice.MSG_CMDS, strings.Split(p, "/"))
 		}
 	}
+	msg.Debug("what %v", msg.Option(ice.MSG_SESSID))
 
 	// 执行命令
 	if cmds, ok := _serve_login(msg, kit.Simple(msg.Optionv(ice.MSG_CMDS)), w, r); ok {
@@ -185,6 +189,9 @@ func _serve_main(m *ice.Message, w http.ResponseWriter, r *http.Request) bool {
 		m.Event(gdb.SYSTEM_INIT)
 		m.W = nil
 	} else if r.URL.Path == "/" && m.Conf(SERVE, "meta.sso") != "" {
+		if r.ParseForm(); r.FormValue(ice.MSG_SESSID) != "" {
+			return true
+		}
 		if c, e := r.Cookie(ice.MSG_SESSID); e != nil || c.Value == "" {
 			http.Redirect(w, r, m.Conf(SERVE, "meta.sso"), http.StatusTemporaryRedirect)
 			return false

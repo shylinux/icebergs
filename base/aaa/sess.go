@@ -27,11 +27,17 @@ func _sess_auth(m *ice.Message, sessid string, username string, userrole string)
 func _sess_check(m *ice.Message, sessid string) {
 	m.Richs(SESS, nil, sessid, func(value map[string]interface{}) {
 		m.Richs(USER, nil, value[USERNAME], func(value map[string]interface{}) {
-			m.Option(ice.MSG_USERNICK, value[USERNICK])
+			if m.Option(ice.MSG_USERNICK, value[USERNICK]) == "" {
+				if name := kit.Format(value[USERNAME]); len(name) > 10 {
+					m.Option(ice.MSG_USERNICK, name[:10])
+				} else {
+					m.Option(ice.MSG_USERNICK, value[USERNAME])
+				}
+			}
 		})
 		m.Log_AUTH(
 			USERNAME, m.Option(ice.MSG_USERNAME, value[USERNAME]),
-			USERROLE, m.Option(ice.MSG_USERROLE, kit.Select(UserRole(m, value[USERNAME]), value[USERROLE])),
+			USERROLE, m.Option(ice.MSG_USERROLE, kit.Select(UserRole(m, value[USERNAME]))),
 			USERNICK, m.Option(ice.MSG_USERROLE),
 		)
 	})

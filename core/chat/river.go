@@ -124,7 +124,9 @@ func init() {
 						_river_user(m, m.Option(ice.MSG_RIVER), arg...)
 					}},
 				}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-					m.Cmd(aaa.USER, mdb.MODIFY, m.Option(ice.MSG_USERNAME), aaa.USERNICK, m.Option(ice.MSG_USERNICK))
+					if m.Option(ice.MSG_USERNICK) != "" {
+						m.Cmd(aaa.USER, mdb.MODIFY, m.Option(ice.MSG_USERNAME), aaa.USERNICK, m.Option(ice.MSG_USERNICK))
+					}
 					if len(arg) > 0 && arg[0] == "storm" {
 						m.Cmdy("/storm", arg[1:])
 						return

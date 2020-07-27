@@ -81,6 +81,7 @@ func init() {
 					if len(arg) == 0 {
 						m.Push(key, value, []string{kit.MDB_TIME, kit.MDB_TYPE, kit.MDB_NAME, kit.MDB_TEXT,
 							LONGITUDE, LATITUDE})
+						m.Debug(m.Option(ice.MSG_USERUA))
 						if strings.Contains(m.Option(ice.MSG_USERUA), "MicroMessenger") {
 							return
 						}

@@ -288,17 +288,13 @@ var Index = &ice.Context{Name: "lark", Help: "机器人",
 			post(m, "bot", "/open-apis/message/v4/send/", "data", kit.Formats(form))
 		}},
 		TALK: {Name: "talk text", Help: "聊天", Hand: func(m *ice.Message, c *ice.Context, key string, arg ...string) {
-			cmd := kit.Split(arg[0])
-			if len(cmd) == 0 {
-				m.Cmd(HOME)
-				return
-			}
-
 			// 用户权限
 			m.Option(ice.MSG_USERNAME, m.Option(OPEN_ID))
+			m.Option(ice.MSG_USERNICK, aaa.UserNick(m, m.Option(ice.MSG_USERNAME)))
 			m.Option(ice.MSG_USERROLE, aaa.UserRole(m, m.Option(ice.MSG_USERNAME)))
 			m.Info("%s: %s", m.Option(ice.MSG_USERROLE), m.Option(ice.MSG_USERNAME))
 
+			cmd := kit.Split(arg[0])
 			if !m.Right(cmd) {
 				// 群组权限
 				m.Option(ice.MSG_USERNAME, m.Option(OPEN_CHAT_ID))
@@ -311,6 +307,10 @@ var Index = &ice.Context{Name: "lark", Help: "机器人",
 					m.Cmd(HOME)
 					return
 				}
+			}
+			if len(cmd) == 0 {
+				m.Cmd(HOME)
+				return
 			}
 
 			// 执行命令
@@ -336,12 +336,38 @@ var Index = &ice.Context{Name: "lark", Help: "机器人",
 			m.Echo(list[rand.Intn(len(list))])
 		}},
 		HOME: {Name: "home", Help: "首页", Hand: func(m *ice.Message, c *ice.Context, key string, arg ...string) {
-			m.Cmd(FORM, CHAT_ID, m.Option(OPEN_CHAT_ID), HOME, "应用列表",
-				"官网首页", "url", "https://shylinux.com",
-				"群里誰最帅", "cmd", "rand",
-				"群里誰最美", "cmd", "rand",
-				"date", "cmd", "date",
-				"pwd", "cmd", "pwd",
+			list := []string{}
+			name := kit.Select(m.Option(ice.MSG_USERNAME), m.Option(ice.MSG_USERNICK))
+			if len(name) > 10 {
+				name = name[:10]
+			}
+			name += "的应用列表"
+			link := "https://shylinux.com"
+			text := ""
+			if len(arg) == 0 {
+				m.Option("_source", ".")
+				m.Cmd("web.chat./river").Table(func(index int, val map[string]string, head []string) {
+					m.Option(ice.MSG_RIVER, val["key"])
+					m.Cmd("web.chat./storm").Table(func(index int, value map[string]string, head []string) {
+						list = append(list, val["name"]+"."+value["name"], "cmd", "home "+val["key"]+" "+value["key"])
+					})
+				})
+			} else {
+				m.Option(ice.MSG_RIVER, arg[0])
+				m.Option(ice.MSG_STORM, arg[1])
+				m.Richs(chat.RIVER, nil, arg[0], func(key string, val map[string]interface{}) {
+					m.Richs(chat.RIVER, kit.Keys(kit.MDB_HASH, arg[0], chat.TOOL), arg[1], func(key string, value map[string]interface{}) {
+						text = kit.Keys(kit.Value(val, "meta.name"), kit.Value(value, "meta.name"))
+					})
+				})
+
+				m.Cmd("web.chat./action").Table(func(index int, value map[string]string, head []string) {
+					list = append(list, value["name"], "cmd", kit.Keys(value["group"], value["index"]))
+				})
+				link = "https://shylinux.com?river=" + arg[0] + "&storm=" + arg[1]
+			}
+			m.Cmd(FORM, CHAT_ID, m.Option(OPEN_CHAT_ID), name, text,
+				"网页应用", "url", link, list,
 			)
 		}},
 		FORM: {Name: "form chat_id|open_id|user_id|email user title [text [confirm|value|url arg...]]...", Help: "消息", Hand: func(m *ice.Message, c *ice.Context, key string, arg ...string) {
@@ -384,7 +410,9 @@ var Index = &ice.Context{Name: "lark", Help: "机器人",
 					button[arg[i+1]], i = arg[i+2], i+2
 				default:
 					button["value"], i = map[string]interface{}{
-						arg[i+1]: arg[i+2],
+						arg[i+1]:      arg[i+2],
+						ice.MSG_RIVER: m.Option(ice.MSG_RIVER),
+						ice.MSG_STORM: m.Option(ice.MSG_STORM),
 					}, i+2
 				}
 				kit.Value(button, "value.content", content)
@@ -438,22 +466,14 @@ var Index = &ice.Context{Name: "lark", Help: "机器人",
 		"/msg": {Name: "/msg", Help: "聊天消息", Hand: func(m *ice.Message, c *ice.Context, key string, arg ...string) {
 			data := m.Optionv(ice.MSG_USERDATA)
 			if kit.Value(data, "action") != nil {
+				m.Option(ice.MSG_USERUA, "MicroMessenger")
+
 				kit.Fetch(kit.Value(data, "action.value"), func(key string, value string) {
 					m.Option(key, value)
 				})
-				cmd := kit.Split(m.Option("cmd"))
-				if len(cmd) == 0 {
-					return
-				}
 
-				msg := m.Cmd(cmd)
-				if m.Hand = false; !msg.Hand {
-					msg = m.Cmd(cli.SYSTEM, cmd)
-				}
-				if m.Hand = true; msg.Result() == "" {
-					msg.Table()
-				}
-				m.Cmd(SEND, CHAT_ID, m.Option(OPEN_CHAT_ID), msg.Result())
+				m.Cmdy(TALK, m.Option("cmd"))
+				m.Cmd(SEND, CHAT_ID, m.Option(OPEN_CHAT_ID), m.Result())
 				return
 			}
 

@@ -4,6 +4,7 @@ import (
 	"github.com/shylinux/icebergs"
 	"github.com/shylinux/icebergs/base/aaa"
 	"github.com/shylinux/icebergs/base/cli"
+	"github.com/shylinux/icebergs/base/mdb"
 	"github.com/shylinux/icebergs/base/web"
 	"github.com/shylinux/icebergs/core/chat"
 	"github.com/shylinux/toolkits"
@@ -79,7 +80,6 @@ var Index = &ice.Context{Name: "wx", Help: "公众号",
 			"auth", "/sns/jscode2session?grant_type=authorization_code",
 			"weixin", "https://api.weixin.qq.com",
 			"appid", "", "appmm", "", "token", "",
-			"userrole", kit.Dict(),
 			"template", kit.Dict(
 				"text", `<xml>
 				<ToUserName><![CDATA[{{.Option "FromUserName"}}]]></ToUserName>
@@ -97,10 +97,8 @@ var Index = &ice.Context{Name: "wx", Help: "公众号",
 	},
 	Commands: map[string]*ice.Command{
 		ice.CTX_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			m.Load()
-			m.Confm("login", "meta.userrole", func(key string, value string) {
-				m.Cmd(aaa.ROLE, value, key)
-			})
+			m.Load("login")
+			m.Cmd(web.SPIDE, mdb.CREATE, "weixin", m.Conf("login", "meta.weixin"))
 		}},
 		ice.CTX_EXIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			m.Save("login")
@@ -109,13 +107,11 @@ var Index = &ice.Context{Name: "wx", Help: "公众号",
 		"/login/": {Name: "/login/", Help: "认证", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			check := []string{m.Conf("login", "meta.token"), m.Option("timestamp"), m.Option("nonce")}
 			sort.Strings(check)
-			if b := sha1.Sum([]byte(strings.Join(check, ""))); m.Warn(m.Option("signature") != hex.EncodeToString(b[:]), "error") {
+			if b := sha1.Sum([]byte(strings.Join(check, ""))); m.Warn(m.Option("signature") != hex.EncodeToString(b[:]), "signature error") {
 				// 验证失败
 				return
 			}
-
-			if m.Option("echostr") != "" {
-				// 绑定验证
+			if m.Option("echostr") != "" { // 绑定验证
 				m.Render(m.Option("echostr"))
 				return
 			}
@@ -124,10 +120,7 @@ var Index = &ice.Context{Name: "wx", Help: "公众号",
 			parse(m)
 
 			// 用户登录
-			m.Option(ice.MSG_USERNAME, m.Option("FromUserName"))
-			m.Option(ice.MSG_USERROLE, m.Cmdx(aaa.ROLE, "check", m.Option("FromUserName")))
-			m.Info("%s: %s", m.Option(ice.MSG_USERROLE), m.Option(ice.MSG_USERNAME))
-			m.Option(ice.MSG_SESSID, m.Cmdx(aaa.USER, "login", m.Option(ice.MSG_USERNAME)))
+			m.Option(ice.MSG_SESSID, aaa.SessCreate(m, m.Append("FromUserName"), aaa.UserRole(m, m.Append("FromUserName"))))
 
 			switch m.Option("MsgType") {
 			case "text":

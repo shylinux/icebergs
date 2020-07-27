@@ -1,0 +1,19 @@
+title "微信公众号"
+
+refer "" `
+官网 https://weixin.qq.com/
+后台 https://mp.weixin.qq.com/
+文档 https://developers.weixin.qq.com/doc/offiaccount/Getting_Started/Overview.html
+源码 https://github.com/shylinux/icebergs/blob/master/misc/wx/wx.go
+`
+
+chapter "应用"
+field "user" user
+field "sess" sess
+
+chapter "项目"
+section "icebergs"
+field "icebergs_统计" web.code.git.trend args `[ icebergs ]` action `{ height 200 speed 20 }`
+field "icebergs_源码" web.code.inner args `[ usr/icebergs misc/wx/wx.go 1 ]`
+field "icebergs_项目" web.code.git.spide args `[ icebergs ]`
+

@@ -14,8 +14,13 @@ func _user_list(m *ice.Message) {
 	m.Richs(USER, nil, kit.MDB_FOREACH, func(key string, value map[string]interface{}) {
 		m.Push(key, value, []string{kit.MDB_TIME, USERNICK, USERNAME})
 	})
+	m.Sort(USERNAME)
 }
 func _user_login(m *ice.Message, name, word string) (ok bool) {
+	if m.Richs(USER, nil, name, nil) == nil {
+		_user_create(m, name, "")
+	}
+
 	m.Richs(USER, nil, name, func(key string, value map[string]interface{}) {
 		if value[PASSWORD] == "" {
 			ok, value[PASSWORD] = true, word
@@ -67,6 +72,12 @@ func UserRoot(m *ice.Message) {
 	cli.PassWord = cli.UserName
 	_user_create(m, cli.UserName, cli.PassWord)
 }
+func UserNick(m *ice.Message, username interface{}) (nick string) {
+	m.Richs(USER, nil, kit.Format(username), func(key string, value map[string]interface{}) {
+		nick = kit.Format(value[USERNICK])
+	})
+	return
+}
 func UserRole(m *ice.Message, username interface{}) (role string) {
 	if role = VOID; username == cli.UserName {
 		return ROOT
@@ -82,6 +93,7 @@ func UserLogin(m *ice.Message, username, password string) bool {
 	if _user_login(m, username, password) {
 		m.Option(ice.MSG_USERNAME, username)
 		m.Option(ice.MSG_USERROLE, UserRole(m, username))
+		m.Info("%s: %s", m.Option(ice.MSG_USERROLE), m.Option(ice.MSG_USERNAME))
 		return true
 	}
 	return false
@@ -99,7 +111,11 @@ func init() {
 				mdb.CREATE: {Name: "create username [password]", Help: "创建", Hand: func(m *ice.Message, arg ...string) {
 					_user_create(m, arg[0], kit.Select("", arg, 1))
 				}},
-				mdb.MODIFY: {Name: "create username [key value]...", Help: "创建", Hand: func(m *ice.Message, arg ...string) {
+				mdb.MODIFY: {Name: "modify username [key value]...", Help: "编辑", Hand: func(m *ice.Message, arg ...string) {
+					if len(arg) == 2 {
+						_user_modify(m, m.Option("username"), arg[0], arg[1])
+						return
+					}
 					_user_modify(m, arg[0], arg[1:]...)
 				}},
 				mdb.SEARCH: {Name: "search type name text arg...", Help: "搜索", Hand: func(m *ice.Message, arg ...string) {

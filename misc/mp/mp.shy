@@ -7,12 +7,6 @@ refer "" `
 `
 
 chapter "应用"
-field "user" user
-field "qrcode" web.chat.qrcode.qrcode
-field "qrcode" web.chat.qrcode.qrcode args `[ insert qrcode hi hello ]`
-
-section "二维码"
-field "qrcode 源码" web.code.inner args `[ usr/icebergs core/code/qrcode.go 1 ]`
 
 chapter "项目"
 section "icebergs"

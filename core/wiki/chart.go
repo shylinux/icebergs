@@ -112,8 +112,8 @@ func (b *Label) Init(m *ice.Message, arg ...string) Chart {
 
 	// 解析数据
 	b.max = map[int]int{}
-	for _, v := range kit.Split(arg[0], "\n") {
-		l := kit.Split(v)
+	for _, v := range strings.Split(arg[0], "\n") {
+		l := kit.Split(v, " ", " ")
 		for i, v := range l {
 			switch data := kit.Parse(nil, "", kit.Split(v)...).(type) {
 			case map[string]interface{}:
@@ -135,6 +135,10 @@ func (b *Label) Init(m *ice.Message, arg ...string) Chart {
 	return b
 }
 func (b *Label) Draw(m *ice.Message, x, y int) Chart {
+	m.Debug("arg %v", m.Option("order"))
+	order, _ := kit.Parse(nil, "", kit.Split(m.Option("order"))...).(map[string]interface{})
+	m.Debug("order", order)
+
 	top := y
 	for _, line := range b.data {
 		left := x
@@ -147,6 +151,19 @@ func (b *Label) Draw(m *ice.Message, x, y int) Chart {
 				MarginX:  b.MarginX,
 				MarginY:  b.MarginY,
 			}
+			if order != nil {
+				if w := kit.Int(kit.Value(order, "index")); w != 0 && i%w == 0 {
+					for k, v := range order {
+						switch k {
+						case "fg":
+							item.FontColor = kit.Format(v)
+						case "bg":
+							item.BackGround = kit.Format(v)
+						}
+					}
+				}
+			}
+
 			switch data := kit.Parse(nil, "", kit.Split(text)...).(type) {
 			case map[string]interface{}:
 				item.Init(m, kit.Select(text, data["text"])).Data(m, data)

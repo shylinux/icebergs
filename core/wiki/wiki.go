@@ -44,11 +44,14 @@ func reply(m *ice.Message, cmd string, arg ...string) bool {
 	m.Sort("time", "time_r")
 
 	if len(arg) == 0 || strings.HasSuffix(arg[0], "/") {
+		m.Option("_display", "table")
+		if m.Option(nfs.DIR_DEEP) == "true" {
+			return true
+		}
 		// 目录列表
 		m.Option(nfs.DIR_REG, "")
 		m.Option(nfs.DIR_TYPE, "dir")
 		m.Cmdy(nfs.DIR, kit.Select("./", arg, 0))
-		m.Option("_display", "table")
 		return true
 	}
 	return false

@@ -205,8 +205,11 @@ func (f *Frame) parse(m *ice.Message, line string) string {
 			continue
 		}
 
-		// 执行命令
-		msg.Cmdy(ls[0], ls[1:])
+		if strings.HasPrefix(line, "<") {
+			msg.Resultv(line)
+		} else if msg.Cmdy(ls[0], ls[1:]); strings.HasPrefix(msg.Result(), "warn: ") && m.Option("render") == "raw" {
+			msg.Resultv(line)
+		}
 
 		// 渲染引擎
 		_args, _ := msg.Optionv(ice.MSG_ARGS).([]interface{})

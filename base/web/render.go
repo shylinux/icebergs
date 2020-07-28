@@ -132,7 +132,7 @@ func init() {
 					m.Echo(`<fieldset><legend>%s(%s)</legend><form></form></fieldset>`, arg[0], arg[1])
 				}},
 				RENDER.Frame: {Hand: func(m *ice.Message, arg ...string) {
-					m.Echo(`<iframe src=%s width=800 height=400 ></iframe>`, arg[0])
+					m.Echo(`<iframe src=%s class="story" data-type="iframe" width=800 height=400 ></iframe>`, arg[0])
 				}},
 				RENDER.Button: {Hand: func(m *ice.Message, arg ...string) {
 					m.Echo(`<input type="button" value="%s">`, arg[0])

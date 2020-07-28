@@ -3,6 +3,8 @@ package vim
 import (
 	ice "github.com/shylinux/icebergs"
 	"github.com/shylinux/icebergs/base/cli"
+	"github.com/shylinux/icebergs/base/mdb"
+	"github.com/shylinux/icebergs/base/nfs"
 	"github.com/shylinux/icebergs/base/web"
 	"github.com/shylinux/icebergs/core/code"
 	kit "github.com/shylinux/toolkits"
@@ -26,6 +28,15 @@ var Index = &ice.Context{Name: "vim", Help: "编辑器",
 				"--enable-luainterp=yes",
 				"--enable-cscope=yes",
 			}, "history", "vim.history",
+			"plug", kit.Dict(
+				"prefix", kit.Dict(
+					"\"", "comment",
+				),
+				"keyword", kit.Dict(
+					"highlight", "keyword",
+					"syntax", "keyword",
+				),
+			),
 		)},
 	},
 	Commands: map[string]*ice.Command{
@@ -49,6 +60,14 @@ var Index = &ice.Context{Name: "vim", Help: "编辑器",
 					m.Cmdy(cli.SYSTEM, "sed", "-n", fmt.Sprintf("/%s/,/^}$/p", value["text"]), kit.Value(value, "extra.buf"))
 				}
 			}}))
+		}},
+		VIM: {Name: VIM, Help: "vim", Action: map[string]*ice.Action{
+			mdb.PLUGIN: {Hand: func(m *ice.Message, arg ...string) {
+				m.Echo(m.Conf(VIM, "meta.plug"))
+			}},
+			mdb.RENDER: {Hand: func(m *ice.Message, arg ...string) {
+				m.Cmdy(nfs.CAT, path.Join(arg[2], arg[1]))
+			}},
 		}},
 		code.INSTALL: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			p := path.Join(m.Conf("install", "meta.path"), m.Conf("vim", "meta.version"))

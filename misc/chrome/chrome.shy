@@ -7,4 +7,11 @@ refer "官网" `
 插件 chrome://extensions
 `
 
-
+chapter "应用"
+section "启动本地应用"
+refer `
+终端 terminal://
+博客 https://www.cnblogs.com/lymvv/p/8431238.html
+`
+other "https://www.cnblogs.com/lymvv/p/8431238.html"
+baidu "html"

@@ -1,9 +1,21 @@
 title "vim"
 
 refer "官网" `
-官网 https://www.vim.org/
-下载 https://www.vim.org/download.php
-源码 ftp://ftp.vim.org/pub/vim/unix/vim-8.1.tar.bz2
+官网 https://www.vim.org
+源码 https://github.com/vim/vim
+文档 http://vimdoc.sourceforge.net/htmldoc/usr_toc.html
 `
 
-spark terminal
+field "启动配置" web.code.inner args `[ etc/conf/ vimrc ]`
+
+chapter "配置"
+
+chapter "插件"
+
+refer `
+插件管理器 https://github.com/junegunn/vim-plug
+`
+section "状态栏"
+refer `
+插件管理器 https://github.com/vim-airline/vim-airline
+`

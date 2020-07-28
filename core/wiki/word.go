@@ -4,6 +4,7 @@ import (
 	ice "github.com/shylinux/icebergs"
 	"github.com/shylinux/icebergs/base/cli"
 	"github.com/shylinux/icebergs/base/ctx"
+	"github.com/shylinux/icebergs/base/mdb"
 	"github.com/shylinux/icebergs/base/nfs"
 	"github.com/shylinux/icebergs/base/ssh"
 	"github.com/shylinux/icebergs/base/web"
@@ -124,6 +125,12 @@ func _chart_show(m *ice.Message, kind, name, text string, arg ...string) {
 	m.Option("font-family", "monospace")
 	for i := 0; i < len(arg)-1; i++ {
 		m.Option(arg[i], arg[i+1])
+	}
+	if m.Option("fg") != "" {
+		m.Option("stroke", m.Option("fg"))
+	}
+	if m.Option("bg") != "" {
+		m.Option("fill", m.Option("bg"))
 	}
 
 	// 计算尺寸
@@ -247,6 +254,14 @@ func _video_show(m *ice.Message, name, text string, arg ...string) {
 	_option(m, VIDEO, name, text, arg...)
 	m.Render(ice.RENDER_TEMPLATE, m.Conf(VIDEO, "meta.template"))
 }
+func _baidu_show(m *ice.Message, name, text string, arg ...string) {
+	_option(m, BAIDU, name, text, arg...)
+	m.Cmdy(mdb.RENDER, web.RENDER.Frame, kit.Format("https://baidu.com/s?wd=%s", text))
+}
+func _other_show(m *ice.Message, name, text string, arg ...string) {
+	_option(m, OTHER, name, text, arg...)
+	m.Cmdy(mdb.RENDER, web.RENDER.Frame, text)
+}
 
 func _word_show(m *ice.Message, name string, arg ...string) {
 	m.Set(ice.MSG_RESULT)
@@ -272,6 +287,9 @@ const (
 	TABLE = "table"
 	IMAGE = "image"
 	VIDEO = "video"
+
+	BAIDU = "baidu"
+	OTHER = "other"
 
 	PREMENU = "premenu"
 	CHAPTER = "chapter"
@@ -335,6 +353,9 @@ func init() {
 				_brief_show(m, arg[0], kit.Select(arg[0], arg[1]), arg[2:]...)
 			}},
 			REFER: {Name: "refer name `[name url]...`", Help: "参考", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+				if len(arg) == 1 {
+					arg = []string{"", arg[0]}
+				}
 				_refer_show(m, arg[0], arg[1], arg[2:]...)
 			}},
 			SPARK: {Name: "spark [name] text", Help: "感悟", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
@@ -349,6 +370,9 @@ func init() {
 			}},
 
 			CHART: {Name: "chart label|chain name text arg...", Help: "图表", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+				if len(arg) == 2 {
+					arg = []string{arg[0], "", arg[1]}
+				}
 				_chart_show(m, arg[0], arg[1], arg[2], arg[3:]...)
 			}},
 			FIELD: {Name: "field name cmd", Help: "插件", Action: map[string]*ice.Action{
@@ -408,6 +432,19 @@ func init() {
 					arg = []string{"", arg[0]}
 				}
 				_video_show(m, arg[0], kit.Select(arg[0], arg[1]), arg[2:]...)
+			}},
+
+			BAIDU: {Name: "baidu word", Help: "百度", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+				if len(arg) == 1 {
+					arg = []string{"", arg[0]}
+				}
+				_baidu_show(m, arg[0], kit.Select(arg[0], arg[1]), arg[2:]...)
+			}},
+			OTHER: {Name: "other word", Help: "网页", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+				if len(arg) == 1 {
+					arg = []string{"", arg[0]}
+				}
+				_other_show(m, arg[0], kit.Select(arg[0], arg[1]), arg[2:]...)
 			}},
 
 			WORD: {Name: "word path=demo/hi.shy auto", Help: "语言文字", Meta: kit.Dict(

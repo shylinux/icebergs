@@ -96,7 +96,10 @@ func init() {
 						m.Push("ip", strings.TrimSuffix(ls[1], ")"))
 					}
 
-					t, _ := time.ParseInLocation("2006 Jan 2 15:04", "2020 "+ls[0], time.Local)
+					t, e := time.ParseInLocation("2006 Jan 2 15:04", "2020 "+ls[0], time.Local)
+					if e != nil {
+						t, _ = time.ParseInLocation("2006-01-02 15:04", ls[0], time.Local)
+					}
 					m.Push("begin", t.Format("2006-01-02 15:04:05"))
 					d := time.Since(t)
 					d = d / time.Millisecond * time.Millisecond

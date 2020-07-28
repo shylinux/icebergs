@@ -198,6 +198,7 @@ func (b *Chain) Init(m *ice.Message, arg ...string) Chart {
 	b.MarginX = kit.Int(m.Option("marginx"))
 	b.MarginY = kit.Int(m.Option("marginy"))
 
+	m.Debug("what %v", arg)
 	// 解析数据
 	b.data = kit.Parse(nil, "", b.show(m, arg[0])...).(map[string]interface{})
 
@@ -215,7 +216,7 @@ func (b *Chain) Draw(m *ice.Message, x, y int) Chart {
 }
 func (b *Chain) show(m *ice.Message, str string) (res []string) {
 	miss := []int{}
-	for _, line := range kit.Split(str, "\n") {
+	for _, line := range kit.Split(str, "\n", "\n") {
 		// 计算缩进
 		dep := 0
 	loop:
@@ -251,7 +252,7 @@ func (b *Chain) show(m *ice.Message, str string) (res []string) {
 		}
 
 		// 输出节点
-		word := kit.Split(line)
+		word := kit.Split(line, "\t ", "\t ")
 		res = append(res, "{", kit.MDB_META, "{", "text")
 		res = append(res, word...)
 		res = append(res, "}", kit.MDB_LIST, "[")

@@ -17,6 +17,7 @@ import (
 )
 
 const VIM = "vim"
+const VIMRC = "vimrc"
 
 var Index = &ice.Context{Name: "vim", Help: "编辑器",
 	Caches: map[string]*ice.Cache{},
@@ -29,12 +30,55 @@ var Index = &ice.Context{Name: "vim", Help: "编辑器",
 				"--enable-cscope=yes",
 			}, "history", "vim.history",
 			"plug", kit.Dict(
+				"split", kit.Dict(
+					"space", " \t",
+					"operator", "{[(&.,;!|<>)]}",
+				),
 				"prefix", kit.Dict(
 					"\"", "comment",
 				),
 				"keyword", kit.Dict(
+					"colorscheme", "keyword",
 					"highlight", "keyword",
 					"syntax", "keyword",
+
+					"nnoremap", "keyword",
+					"cnoremap", "keyword",
+					"inoremap", "keyword",
+
+					"autocmd", "keyword",
+					"command", "keyword",
+					"execute", "keyword",
+
+					"set", "keyword",
+					"let", "keyword",
+					"if", "keyword",
+					"else", "keyword",
+					"elseif", "keyword",
+					"endif", "keyword",
+					"end", "keyword",
+					"for", "keyword",
+					"in", "keyword",
+					"continue", "keyword",
+					"break", "keyword",
+					"endfor", "keyword",
+					"try", "keyword",
+					"catch", "keyword",
+					"finally", "keyword",
+					"endtry", "keyword",
+
+					"call", "keyword",
+					"return", "keyword",
+					"source", "keyword",
+					"finish", "keyword",
+					"function", "keyword",
+					"endfunction", "keyword",
+
+					"has", "function",
+					"type", "function",
+					"empty", "function",
+					"exists", "function",
+					"executable", "function",
 				),
 			),
 		)},
@@ -60,6 +104,11 @@ var Index = &ice.Context{Name: "vim", Help: "编辑器",
 					m.Cmdy(cli.SYSTEM, "sed", "-n", fmt.Sprintf("/%s/,/^}$/p", value["text"]), kit.Value(value, "extra.buf"))
 				}
 			}}))
+
+			m.Cmd(mdb.PLUGIN, mdb.CREATE, VIMRC, VIM, c.Cap(ice.CTX_FOLLOW))
+			m.Cmd(mdb.RENDER, mdb.CREATE, VIMRC, VIM, c.Cap(ice.CTX_FOLLOW))
+			m.Cmd(mdb.PLUGIN, mdb.CREATE, VIM, VIM, c.Cap(ice.CTX_FOLLOW))
+			m.Cmd(mdb.RENDER, mdb.CREATE, VIM, VIM, c.Cap(ice.CTX_FOLLOW))
 		}},
 		VIM: {Name: VIM, Help: "vim", Action: map[string]*ice.Action{
 			mdb.PLUGIN: {Hand: func(m *ice.Message, arg ...string) {

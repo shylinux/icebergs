@@ -22,7 +22,6 @@ func _serve_login(msg *ice.Message, cmds []string, w http.ResponseWriter, r *htt
 	msg.Option(ice.MSG_USERNAME, "")
 	msg.Option(ice.MSG_USERROLE, "")
 
-	msg.Debug("what %v", msg.Option(ice.MSG_SESSID))
 	if msg.Options(ice.MSG_SESSID) {
 		// 会话认证
 		aaa.SessCheck(msg, msg.Option(ice.MSG_SESSID))
@@ -121,14 +120,12 @@ func _serve_handle(key string, cmd *ice.Command, msg *ice.Message, w http.Respon
 		}
 	}
 
-	msg.Debug("what %v", msg.Option(ice.MSG_SESSID))
 	// 请求命令
 	if msg.Option(ice.MSG_USERPOD, msg.Option("pod")); msg.Optionv(ice.MSG_CMDS) == nil {
 		if p := strings.TrimPrefix(msg.Option(ice.MSG_USERURL), key); p != "" {
 			msg.Optionv(ice.MSG_CMDS, strings.Split(p, "/"))
 		}
 	}
-	msg.Debug("what %v", msg.Option(ice.MSG_SESSID))
 
 	// 执行命令
 	if cmds, ok := _serve_login(msg, kit.Simple(msg.Optionv(ice.MSG_CMDS)), w, r); ok {

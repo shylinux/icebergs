@@ -29,7 +29,7 @@ func init() {
 			}},
 
 			PASTE: {Name: "paste text auto 添加:button", Help: "粘贴板", Action: map[string]*ice.Action{
-				mdb.INSERT: {Hand: func(m *ice.Message, arg ...string) {
+				mdb.INSERT: {Name: "insert type name text", Hand: func(m *ice.Message, arg ...string) {
 					m.Conf(PASTE, kit.Keys(kit.MDB_META, m.Option(ice.MSG_RIVER), m.Option(ice.MSG_STORM), kit.MDB_META, kit.MDB_SHORT), kit.MDB_TEXT)
 
 					h := m.Rich(PASTE, kit.Keys(kit.MDB_META, m.Option(ice.MSG_RIVER), m.Option(ice.MSG_STORM)), kit.Dict(

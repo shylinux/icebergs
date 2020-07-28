@@ -19,6 +19,10 @@ func _river_list(m *ice.Message) {
 		m.Cmdy(web.SPACE, p, "web.chat./river")
 	}
 	m.Richs(RIVER, nil, kit.MDB_FOREACH, func(key string, value map[string]interface{}) {
+		if kit.Value(value, "meta.type") == "public" {
+			m.Push(key, value[kit.MDB_META], []string{kit.MDB_KEY, kit.MDB_NAME})
+			return
+		}
 		m.Richs(RIVER, kit.Keys(kit.MDB_HASH, key, USER), m.Option(ice.MSG_USERNAME), func(k string, val map[string]interface{}) {
 			m.Push(key, value[kit.MDB_META], []string{kit.MDB_KEY, kit.MDB_NAME}, val[kit.MDB_META])
 		})

@@ -17,12 +17,19 @@ func _storm_list(m *ice.Message, river string) {
 		// 代理列表
 		m.Cmdy(web.SPACE, p, "web.chat./storm")
 	}
+	ok := true
 	m.Richs(RIVER, kit.Keys(kit.MDB_HASH, river, USER), m.Option(ice.MSG_USERNAME), func(k string, val map[string]interface{}) {
-		m.Richs(RIVER, kit.Keys(kit.MDB_HASH, river, TOOL), kit.MDB_FOREACH, func(key string, value map[string]interface{}) {
-			m.Push(key, value[kit.MDB_META], []string{kit.MDB_KEY, kit.MDB_NAME, kit.MDB_COUNT}, val[kit.MDB_META])
-		})
+		ok = true
 	})
-	m.Sort(kit.MDB_NAME)
+	m.Richs(RIVER, kit.Keys(kit.MDB_HASH, river), m.Option(ice.MSG_RIVER), func(k string, val map[string]interface{}) {
+		ok = true
+	})
+	if ok {
+		m.Richs(RIVER, kit.Keys(kit.MDB_HASH, river, TOOL), kit.MDB_FOREACH, func(key string, value map[string]interface{}) {
+			m.Push(key, value[kit.MDB_META], []string{kit.MDB_KEY, kit.MDB_NAME, kit.MDB_COUNT})
+		})
+		m.Sort(kit.MDB_NAME)
+	}
 }
 func _storm_tool(m *ice.Message, river, storm string, arg ...string) { // pod ctx cmd help
 	prefix := kit.Keys(kit.MDB_HASH, river, TOOL, kit.MDB_HASH, storm)

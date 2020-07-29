@@ -59,9 +59,11 @@ func (m *Message) AddCmd(cmd *Command) string {
 
 func (m *Message) PushAction(list ...interface{}) {
 	m.Table(func(index int, value map[string]string, head []string) {
+		action := []string{}
 		for _, k := range kit.Simple(list...) {
-			m.Push(k, m.Cmdx("render", "button", k))
+			action = append(action, m.Cmdx("render", "button", k))
 		}
+		m.Push("操作", strings.Join(action, ""))
 	})
 }
 func (m *Message) PushDetail(value interface{}, arg ...interface{}) *Message {

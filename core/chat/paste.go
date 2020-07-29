@@ -3,7 +3,6 @@ package chat
 import (
 	ice "github.com/shylinux/icebergs"
 	"github.com/shylinux/icebergs/base/mdb"
-	"github.com/shylinux/icebergs/base/web"
 	kit "github.com/shylinux/toolkits"
 
 	"strings"
@@ -79,12 +78,14 @@ func init() {
 						if strings.Contains(m.Option(ice.MSG_USERUA), "MicroMessenger") {
 							return
 						}
-						m.Push("action", m.Cmdx(mdb.RENDER, web.RENDER.Button, "删除"))
 						return
 					}
 					m.Push("detail", value)
 				})
-				m.Sort("time", "time_r")
+				if len(arg) == 0 {
+					m.PushAction("复制", "删除")
+					m.Sort("time", "time_r")
+				}
 			}},
 		},
 	}, nil)

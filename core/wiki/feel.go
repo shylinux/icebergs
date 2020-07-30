@@ -56,6 +56,9 @@ func init() {
 				if !_wiki_list(m, FEEL, kit.Select("./", arg, 0)) {
 					_feel_show(m, arg[0])
 				}
+				m.Table(func(index int, value map[string]string, head []string) {
+					m.Push("show", m.Cmdx(mdb.RENDER, web.RENDER.IMG, path.Join("/share/local", value["path"])))
+				})
 				m.Sort(kit.MDB_TIME, "time_r")
 			}},
 		},

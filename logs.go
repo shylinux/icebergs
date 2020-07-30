@@ -21,7 +21,7 @@ func (m *Message) log(level string, str string, arg ...interface{}) *Message {
 	// 日志颜色
 	prefix, suffix := "", ""
 	switch level {
-	case LOG_ENABLE, LOG_IMPORT, LOG_CREATE, LOG_INSERT, LOG_EXPORT:
+	case LOG_ENABLE, LOG_IMPORT, LOG_CREATE, LOG_INSERT, LOG_MODIFY, LOG_EXPORT:
 		prefix, suffix = "\033[36;44m", "\033[0m"
 
 	case LOG_LISTEN, LOG_SIGNAL, LOG_TIMERS, LOG_EVENTS:

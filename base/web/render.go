@@ -126,7 +126,7 @@ func init() {
 					m.Echo(`<a href="%s" target="_blank">%s</a>`, u, arg[0])
 				}},
 				RENDER.IMG: {Hand: func(m *ice.Message, arg ...string) {
-					m.Echo(`<img src="%s">`, arg[0])
+					m.Echo(`<img src="%s" height=%s>`, arg[0], kit.Select("120", arg, 1))
 				}},
 				RENDER.Field: {Hand: func(m *ice.Message, arg ...string) {
 					m.Echo(`<fieldset><legend>%s(%s)</legend><form></form></fieldset>`, arg[0], arg[1])

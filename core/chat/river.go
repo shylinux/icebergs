@@ -28,6 +28,13 @@ func _river_list(m *ice.Message) {
 		})
 	})
 }
+func _river_node(m *ice.Message, river string, node ...string) {
+	prefix := kit.Keys(kit.MDB_HASH, river, NODE)
+	for _, v := range node {
+		m.Rich(RIVER, prefix, kit.Data(kit.MDB_NAME, v))
+		m.Log_INSERT(RIVER, river, NODE, v)
+	}
+}
 func _river_user(m *ice.Message, river string, user ...string) {
 	prefix := kit.Keys(kit.MDB_HASH, river, USER)
 	for _, v := range user {
@@ -77,6 +84,7 @@ func _river_create(m *ice.Message, kind, name, text string, arg ...string) {
 
 const (
 	USER = "user"
+	NODE = "node"
 	TOOL = "tool"
 )
 const RIVER = "river"
@@ -126,6 +134,9 @@ func init() {
 					}},
 					USER: {Name: "user user...", Help: "添加用户", Hand: func(m *ice.Message, arg ...string) {
 						_river_user(m, m.Option(ice.MSG_RIVER), arg...)
+					}},
+					NODE: {Name: "node node...", Help: "添加设备", Hand: func(m *ice.Message, arg ...string) {
+						_river_node(m, m.Option(ice.MSG_RIVER), arg...)
 					}},
 				}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 					if m.Option(ice.MSG_USERNICK) != "" {

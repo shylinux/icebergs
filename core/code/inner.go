@@ -87,6 +87,7 @@ func init() {
 		Configs: map[string]*ice.Config{
 			INNER: {Name: "inner", Help: "编辑器", Value: kit.Data(
 				"source", kit.Dict(
+					"license", "true",
 					"makefile", "true",
 					"shy", "true", "py", "true",
 

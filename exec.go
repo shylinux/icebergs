@@ -17,7 +17,7 @@ func (m *Message) TryCatch(msg *Message, safe bool, hand ...func(msg *Message)) 
 		case io.EOF:
 		case nil:
 		default:
-			fileline := kit.FileLine(5, 2)
+			fileline := kit.FileLine(4, 2)
 			m.Log(LOG_WARN, "catch: %s %s", e, fileline)
 			m.Log(LOG_INFO, "chain: %s", msg.Format("chain"))
 			m.Log(LOG_WARN, "catch: %s %s", e, fileline)

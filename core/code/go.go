@@ -91,8 +91,9 @@ func init() {
 				m.Cmd(mdb.RENDER, mdb.CREATE, GODOC, GODOC, c.Cap(ice.CTX_FOLLOW))
 
 				m.Cmd(mdb.PLUGIN, mdb.CREATE, MOD, MOD, c.Cap(ice.CTX_FOLLOW))
-				m.Cmd(mdb.PLUGIN, mdb.CREATE, MOD, MOD, c.Cap(ice.CTX_FOLLOW))
-				m.Cmd(mdb.RENDER, mdb.CREATE, SUM, SUM, c.Cap(ice.CTX_FOLLOW))
+				m.Cmd(mdb.RENDER, mdb.CREATE, MOD, MOD, c.Cap(ice.CTX_FOLLOW))
+
+				m.Cmd(mdb.PLUGIN, mdb.CREATE, SUM, SUM, c.Cap(ice.CTX_FOLLOW))
 				m.Cmd(mdb.RENDER, mdb.CREATE, SUM, SUM, c.Cap(ice.CTX_FOLLOW))
 
 			}},

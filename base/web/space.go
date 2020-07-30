@@ -6,6 +6,7 @@ import (
 	aaa "github.com/shylinux/icebergs/base/aaa"
 	"github.com/shylinux/icebergs/base/cli"
 	"github.com/shylinux/icebergs/base/gdb"
+	"github.com/shylinux/icebergs/base/mdb"
 	kit "github.com/shylinux/toolkits"
 	"github.com/shylinux/toolkits/task"
 
@@ -186,6 +187,20 @@ func _space_handle(m *ice.Message, safe bool, send map[string]*ice.Message, c *w
 	return false
 }
 
+func _space_search(m *ice.Message, kind, name, text string, arg ...string) {
+	m.Richs(SPACE, nil, kit.Select(kit.MDB_FOREACH, name), func(key string, value map[string]interface{}) {
+		if name != "" && name != value[kit.MDB_NAME] && !strings.Contains(kit.Format(value[kit.MDB_TEXT]), name) {
+			return
+		}
+		m.Push("pod", m.Option("pod"))
+		m.Push("ctx", "web")
+		m.Push("cmd", SPACE)
+		m.Push(key, value, []string{kit.MDB_TIME})
+		m.Push(kit.MDB_SIZE, kit.FmtSize(int64(len(kit.Format(value[kit.MDB_TEXT])))))
+		m.Push(key, value, []string{kit.MDB_TYPE, kit.MDB_NAME, kit.MDB_TEXT})
+	})
+}
+
 const SPACE = "space"
 
 const (
@@ -207,6 +222,9 @@ func init() {
 			SPACE: {Name: "space [name [cmd...]] auto", Help: "空间站", Action: map[string]*ice.Action{
 				"connect": {Name: "connect [dev [name]]", Help: "连接", Hand: func(m *ice.Message, arg ...string) {
 					_space_dial(m, kit.Select("dev", arg, 0), kit.Select(cli.NodeName, arg, 2))
+				}},
+				mdb.SEARCH: {Name: "search type name text", Help: "搜索", Hand: func(m *ice.Message, arg ...string) {
+					_space_search(m, arg[0], arg[1], arg[2], arg[3:]...)
 				}},
 			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 				if len(arg) < 2 {

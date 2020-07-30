@@ -144,7 +144,7 @@ func _action_show(m *ice.Message, river, storm, index string, arg ...string) {
 		m.Render("status", 403, "not auth")
 		return
 	}
-	m.Cmdy(_action_proxy(m), cmds).Option("cmds", cmds)
+	m.Cmdy(_action_proxy(m), cmds)
 }
 func _action_proxy(m *ice.Message) (proxy []string) {
 	if m.Option(POD) != "" {

@@ -112,11 +112,7 @@ func init() {
 					_user_create(m, arg[0], kit.Select("", arg, 1))
 				}},
 				mdb.MODIFY: {Name: "modify username [key value]...", Help: "编辑", Hand: func(m *ice.Message, arg ...string) {
-					if len(arg) == 2 {
-						_user_modify(m, m.Option("username"), arg[0], arg[1])
-						return
-					}
-					_user_modify(m, arg[0], arg[1:]...)
+					_user_modify(m, m.Option("username"), arg[0], arg[1])
 				}},
 				mdb.SEARCH: {Name: "search type name text arg...", Help: "搜索", Hand: func(m *ice.Message, arg ...string) {
 					_user_search(m, arg[0], arg[1], kit.Select("", arg, 2))

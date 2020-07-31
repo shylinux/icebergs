@@ -21,8 +21,8 @@ func init() {
 	Index.Merge(&ice.Context{Name: "feel", Help: "影音媒体",
 		Configs: map[string]*ice.Config{
 			FEEL: {Name: "feel", Help: "影音媒体", Value: kit.Data(
-				kit.MDB_SHORT, "name", "path", "", "regs", ".*.(qrc|png|PNG|jpg|JPG|MOV|m4v|mp4)",
-				"height", "400", "page.limit", "3",
+				kit.MDB_SHORT, "name", "path", "", "regs", ".*.(qrc|png|PNG|jpg|jpeg|JPG|MOV|m4v|mp4)",
+				"height", "200", "page.limit", "3",
 			)},
 		},
 		Commands: map[string]*ice.Command{

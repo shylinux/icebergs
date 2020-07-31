@@ -10,9 +10,9 @@ image qrcode `https://weixin.qq.com`
 
 
 chapter "应用"
-field "feel" web.wiki.feel args `[ usr/export/web.chat.meet.miss/feel/ ]`
 field "miss" web.chat.meet.miss args `[ ]`
 field "date" web.chat.meet.date args `[ ]`
+field "feel" web.wiki.feel args `[ usr/export/web.chat.meet.miss/feel/ ]`
 
 field "user" user
 field "sess" sess

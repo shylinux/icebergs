@@ -1,12 +1,12 @@
 package chat
 
 import (
-	"path"
-
 	ice "github.com/shylinux/icebergs"
 	"github.com/shylinux/icebergs/base/mdb"
 	"github.com/shylinux/icebergs/base/web"
 	kit "github.com/shylinux/toolkits"
+
+	"path"
 )
 
 const MEET = "meet"
@@ -15,24 +15,30 @@ const (
 	DATE = "date"
 )
 
-var _miss_select = "time,name,性别,年龄,籍贯,学历,职业,照片"
+var _miss_select = "time,name,性别,年龄,身高,籍贯,户口,学历,职业,公司,年薪,资产,家境,照片"
 var _miss_insert = kit.List(
 	"_input", "text", "name", "name",
 	"_input", "text", "name", "性别",
 	"_input", "text", "name", "年龄",
-	"_input", "text", "name", "生日",
-	"_input", "text", "name", "照片",
 	"_input", "text", "name", "身高",
 	"_input", "text", "name", "体重",
+
+	"_input", "text", "name", "星座",
+	"_input", "text", "name", "生日",
 	"_input", "text", "name", "性格",
 	"_input", "text", "name", "爱好",
+
 	"_input", "text", "name", "籍贯",
 	"_input", "text", "name", "户口",
 	"_input", "text", "name", "学历",
 	"_input", "text", "name", "学校",
 	"_input", "text", "name", "职业",
+	"_input", "text", "name", "公司",
+
 	"_input", "text", "name", "年薪",
 	"_input", "text", "name", "资产",
+	"_input", "text", "name", "家境",
+	"_input", "text", "name", "照片",
 )
 
 var _date_select = "time,id,name,地点,主题"
@@ -56,7 +62,7 @@ func init() {
 				m.Save(MISS, DATE)
 			}},
 
-			MISS: {Name: "miss name=auto auto 添加:button 导出:button 导入:button", Help: "miss", Meta: kit.Dict(
+			MISS: {Name: "miss name=auto auto 添加:button 导出:button 导入:button", Help: "信息", Meta: kit.Dict(
 				"display", "", "insert", _miss_insert,
 			), Action: map[string]*ice.Action{
 				mdb.INSERT: {Name: "insert [key value]...", Help: "添加", Hand: func(m *ice.Message, arg ...string) {
@@ -80,17 +86,31 @@ func init() {
 					msg.Table(func(index int, value map[string]string, head []string) {
 						for _, k := range head {
 							if k == "照片" {
+								if m.Option(ice.MSG_USERUA) == "" {
+									continue
+								}
 								m.Push("照片", m.Cmdx(mdb.RENDER, web.RENDER.IMG, path.Join("/share/local", value["照片"])))
 							} else {
 								m.Push(k, value[k])
 							}
 						}
 					})
-					m.PushAction("删除")
+					if m.Option(ice.MSG_USERUA) == "" {
+						return
+					}
+					m.PushAction("喜欢", "删除")
+				} else {
+					msg.Table(func(index int, value map[string]string, head []string) {
+						if value["key"] == "照片" {
+							value["value"] = m.Cmdx(mdb.RENDER, web.RENDER.IMG, path.Join("/share/local", value["value"]), "400")
+						}
+						m.Push("key", value["key"])
+						m.Push("value", value["value"])
+					})
 				}
 			}},
 
-			DATE: {Name: "date name=auto auto 添加:button 导出:button 导入:button", Help: "date", Meta: kit.Dict(
+			DATE: {Name: "date id=auto auto 添加:button 导出:button 导入:button", Help: "约会", Meta: kit.Dict(
 				"display", "", "insert", _date_insert,
 			), Action: map[string]*ice.Action{
 				mdb.INSERT: {Name: "insert [key value]...", Help: "添加", Hand: func(m *ice.Message, arg ...string) {
@@ -109,8 +129,12 @@ func init() {
 					m.Cmdy(mdb.IMPORT, m.Prefix(DATE), "", mdb.LIST)
 				}},
 			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-				m.Option("fields", _date_select)
-				m.Cmdy(mdb.SELECT, m.Prefix(DATE), "", mdb.LIST)
+				if len(arg) == 0 {
+					m.Option("fields", _date_select)
+					m.Cmdy(mdb.SELECT, m.Prefix(DATE), "", mdb.LIST)
+					return
+				}
+				m.Cmdy(mdb.SELECT, m.Prefix(DATE), "", mdb.LIST, kit.MDB_ID, arg[0])
 			}},
 		},
 	}, nil)

@@ -92,10 +92,12 @@ const (
 	AUTO = "auto"
 	MAKE = "make"
 
-	OPEN  = "open"
-	CLOSE = "close"
+	BEGIN = "begin"
+	END   = "end"
 	START = "start"
 	STOP  = "stop"
+	OPEN  = "open"
+	CLOSE = "close"
 
 	RELOAD  = "reload"
 	RESTART = "restart"

@@ -10,12 +10,8 @@ image qrcode `https://weixin.qq.com`
 
 
 chapter "应用"
-field "miss" web.chat.meet.miss args `[ ]`
-field "date" web.chat.meet.date args `[ ]`
-field "feel" web.wiki.feel args `[ usr/export/web.chat.meet.miss/feel/ ]`
-
-field "user" user
-field "sess" sess
+field "task" web.team.task args `[ ]`
+field "plan" web.team.plan args `[ ]`
 
 chapter "项目"
 section "icebergs"

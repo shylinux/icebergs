@@ -120,7 +120,10 @@ func init() {
 				}},
 			}},
 			GO: {Name: GO, Help: "go", Action: map[string]*ice.Action{
-				mdb.SEARCH: {Hand: func(m *ice.Message, arg ...string) {
+				mdb.SEARCH: {Name: "search type name text", Hand: func(m *ice.Message, arg ...string) {
+					if arg[0] == kit.MDB_FOREACH {
+						return
+					}
 					m.Option(cli.CMD_DIR, m.Option("_path"))
 					_go_find(m, kit.Select("main", arg, 1))
 					_go_tags(m, kit.Select("main", arg, 1))

@@ -21,7 +21,10 @@ func init() {
 				m.Cmd(mdb.RENDER, mdb.CREATE, SH, SH, c.Cap(ice.CTX_FOLLOW))
 			}},
 			SH: {Name: SH, Help: "sh", Action: map[string]*ice.Action{
-				mdb.SEARCH: {Hand: func(m *ice.Message, arg ...string) {
+				mdb.SEARCH: {Name: "search type name text", Hand: func(m *ice.Message, arg ...string) {
+					if arg[0] == kit.MDB_FOREACH {
+						return
+					}
 					m.Option(cli.CMD_DIR, m.Option("_path"))
 					_c_find(m, kit.Select("main", arg, 1))
 					m.Cmdy(mdb.SEARCH, "man1", arg[1:])

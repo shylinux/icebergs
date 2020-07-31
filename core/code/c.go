@@ -111,7 +111,10 @@ func init() {
 				}
 			}},
 			C: {Name: C, Help: "c", Action: map[string]*ice.Action{
-				mdb.SEARCH: {Hand: func(m *ice.Message, arg ...string) {
+				mdb.SEARCH: {Name: "search type name text", Hand: func(m *ice.Message, arg ...string) {
+					if arg[0] == kit.MDB_FOREACH {
+						return
+					}
 					m.Option(cli.CMD_DIR, m.Option("_path"))
 					_c_find(m, kit.Select("main", arg, 1))
 					m.Cmdy(mdb.SEARCH, "man2", arg[1:])
@@ -126,7 +129,10 @@ func init() {
 				}},
 			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {}},
 			MAN: {Name: MAN, Help: "man", Action: map[string]*ice.Action{
-				mdb.SEARCH: {Hand: func(m *ice.Message, arg ...string) {
+				mdb.SEARCH: {Name: "search type name text", Hand: func(m *ice.Message, arg ...string) {
+					if arg[0] == kit.MDB_FOREACH {
+						return
+					}
 					for _, k := range []string{"1", "2", "3", "8"} {
 						if text := _c_help(m, k, kit.Select("main", arg, 1)); text != "" {
 							m.Push(kit.MDB_FILE, arg[1]+".man"+k)

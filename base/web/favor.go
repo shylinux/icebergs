@@ -1,7 +1,7 @@
 package web
 
 import (
-	"github.com/shylinux/icebergs"
+	ice "github.com/shylinux/icebergs"
 	"github.com/shylinux/icebergs/base/mdb"
 	kit "github.com/shylinux/toolkits"
 
@@ -128,14 +128,16 @@ func _favor_search(m *ice.Message, kind, name, text string, arg ...string) {
 			if name != value[kit.MDB_NAME] && !strings.Contains(kit.Format(value[kit.MDB_TEXT]), name) {
 				return
 			}
-			m.Push("pod", m.Option("pod"))
-			m.Push("ctx", "web")
-			m.Push("cmd", SPIDE)
+			m.Push("pod", m.Option(ice.MSG_USERPOD))
+			m.Push("ctx", m.Prefix())
+			m.Push("cmd", FAVOR)
 			m.Push(key, value, []string{kit.MDB_TIME}, val)
 			m.Push(kit.MDB_SIZE, kit.FmtSize(int64(len(kit.Format(value[kit.MDB_TEXT])))))
 			m.Push(key, value, []string{kit.MDB_TYPE, kit.MDB_NAME, kit.MDB_TEXT}, val)
 		})
 	})
+}
+func _favor_render(m *ice.Message, kind, name, text string, arg ...string) {
 }
 
 func _favor_modify(m *ice.Message, zone, id, pro, set, old string) {
@@ -313,6 +315,9 @@ func init() {
 				}},
 				mdb.SEARCH: {Name: "search type name text", Help: "搜索", Hand: func(m *ice.Message, arg ...string) {
 					_favor_search(m, arg[0], arg[1], arg[2], arg[3:]...)
+				}},
+				mdb.RENDER: {Name: "search type name text", Help: "搜索", Hand: func(m *ice.Message, arg ...string) {
+					_favor_render(m, arg[0], arg[1], arg[2], arg[3:]...)
 				}},
 				kit.MDB_SHARE: {Name: "share arg...", Help: "共享", Hand: func(m *ice.Message, arg ...string) {
 					_favor_share(m, m.Option(kit.MDB_ZONE), m.Option(kit.MDB_ID), arg...)

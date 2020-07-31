@@ -203,6 +203,9 @@ func _file_trash(m *ice.Message, name string) {
 }
 
 func _file_search(m *ice.Message, kind, name, text string, arg ...string) {
+	if kind == kit.MDB_FOREACH {
+		return
+	}
 	rg, e := regexp.Compile("")
 	m.Assert(e)
 

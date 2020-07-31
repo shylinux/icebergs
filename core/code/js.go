@@ -61,7 +61,10 @@ func init() {
 			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {}},
 
 			JS: {Name: JS, Help: "js", Action: map[string]*ice.Action{
-				mdb.SEARCH: {Hand: func(m *ice.Message, arg ...string) {
+				mdb.SEARCH: {Name: "search type name text", Hand: func(m *ice.Message, arg ...string) {
+					if arg[0] == kit.MDB_FOREACH {
+						return
+					}
 					m.Option(cli.CMD_DIR, m.Option("_path"))
 					_js_find(m, kit.Select("main", arg, 1))
 					_js_grep(m, kit.Select("main", arg, 1))

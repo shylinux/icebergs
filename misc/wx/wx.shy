@@ -10,8 +10,10 @@ image qrcode `https://weixin.qq.com`
 
 
 chapter "应用"
-field "task" web.team.task args `[ ]`
 field "plan" web.team.plan args `[ ]`
+field "task" web.team.task args `[ ]`
+field "asset" web.mall.asset args `[ ]`
+
 
 chapter "项目"
 section "icebergs"

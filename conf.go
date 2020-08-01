@@ -26,6 +26,7 @@ const ( // MSG
 
 	MSG_CMDS     = "cmds"
 	MSG_SESSID   = "sessid"
+	MSG_DOMAIN   = "domain"
 	MSG_USERIP   = "user.ip"
 	MSG_USERUA   = "user.ua"
 	MSG_USERURL  = "user.url"

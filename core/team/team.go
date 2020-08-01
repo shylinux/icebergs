@@ -1,9 +1,8 @@
 package team
 
 import (
-	"strings"
-
 	ice "github.com/shylinux/icebergs"
+	"github.com/shylinux/icebergs/base/ctx"
 	"github.com/shylinux/icebergs/base/gdb"
 	"github.com/shylinux/icebergs/base/mdb"
 	"github.com/shylinux/icebergs/base/web"
@@ -11,76 +10,47 @@ import (
 
 	"encoding/csv"
 	"os"
+	"path"
+	"strings"
 	"time"
-)
-
-const (
-	PLAN = "plan"
-	TASK = "task"
-	MISS = "miss"
-)
-const (
-	ZONE   = "zone"
-	LEVEL  = "level"
-	STATUS = "status"
-	SCORE  = "score"
-
-	BEGIN_TIME = "begin_time"
-	CLOSE_TIME = "close_time"
-
-	EXPORT = "usr/export/web.team.task/list.csv"
-)
-const (
-	ScaleDay   = "day"
-	ScaleWeek  = "week"
-	ScaleMonth = "month"
-	ScaleYear  = "year"
-	ScaleLong  = "long"
-)
-const (
-	StatusPrepare = "prepare"
-	StatusProcess = "process"
-	StatusCancel  = "cancel"
-	StatusFinish  = "finish"
 )
 
 func _task_list(m *ice.Message, zone string, id string, field ...interface{}) {
 	fields := strings.Split(kit.Select("begin_time,zone,id,status,level,type,name,text", m.Option("fields")), ",")
-	m.Richs(TASK, nil, kit.Select(kit.MDB_FOREACH, zone), func(key string, val map[string]interface{}) {
+	m.Richs(TASK, kit.Keys(kit.MDB_HASH, m.Optionv(ice.MSG_DOMAIN)), kit.Select(kit.MDB_FOREACH, zone), func(key string, val map[string]interface{}) {
 		if zone = kit.Format(kit.Value(val, "meta.zone")); id == "" {
-			m.Grows(TASK, kit.Keys(kit.MDB_HASH, key), "", "", func(index int, value map[string]interface{}) {
+			m.Grows(TASK, kit.Keys(kit.MDB_HASH, m.Optionv(ice.MSG_DOMAIN), kit.MDB_HASH, key), "", "", func(index int, value map[string]interface{}) {
 				m.Push(zone, value, fields)
 			})
 			return
 		}
-		m.Grows(TASK, kit.Keys(kit.MDB_HASH, key), kit.MDB_ID, id, func(index int, value map[string]interface{}) {
+		m.Grows(TASK, kit.Keys(kit.MDB_HASH, m.Optionv(ice.MSG_DOMAIN), kit.MDB_HASH, key), kit.MDB_ID, id, func(index int, value map[string]interface{}) {
 			m.Push("detail", value)
 		})
 	})
 }
 func _task_create(m *ice.Message, zone string) {
-	if m.Richs(TASK, nil, zone, nil) == nil {
-		m.Rich(TASK, nil, kit.Data(ZONE, zone))
-		m.Log_CREATE(ZONE, zone)
+	if m.Richs(TASK, kit.Keys(kit.MDB_HASH, m.Optionv(ice.MSG_DOMAIN)), zone, nil) == nil {
+		m.Conf(TASK, kit.Keys(kit.MDB_HASH, m.Optionv(ice.MSG_DOMAIN), kit.MDB_META, kit.MDB_SHORT), kit.MDB_ZONE)
+		m.Rich(TASK, kit.Keys(kit.MDB_HASH, m.Optionv(ice.MSG_DOMAIN)), kit.Data(kit.MDB_ZONE, zone))
+		m.Log_CREATE(kit.MDB_ZONE, zone)
 	}
 }
-func _task_insert(m *ice.Message, zone, kind, name, text, begin_time, close_time string, arg ...string) {
-	m.Richs(TASK, nil, zone, func(key string, value map[string]interface{}) {
-		id := m.Grow(TASK, kit.Keys(kit.MDB_HASH, key), kit.Dict(
-			kit.MDB_TYPE, kind, kit.MDB_NAME, name, kit.MDB_TEXT, text,
-			BEGIN_TIME, begin_time, CLOSE_TIME, begin_time,
-			STATUS, StatusPrepare, LEVEL, 3, SCORE, 3,
-			kit.MDB_EXTRA, kit.Dict(arg),
+func _task_insert(m *ice.Message, zone string, arg ...string) {
+	m.Richs(TASK, kit.Keys(kit.MDB_HASH, m.Optionv(ice.MSG_DOMAIN)), zone, func(key string, value map[string]interface{}) {
+		id := m.Grow(TASK, kit.Keys(kit.MDB_HASH, m.Optionv(ice.MSG_DOMAIN), kit.MDB_HASH, key), kit.Dict(
+			BEGIN_TIME, m.Time(), CLOSE_TIME, m.Time(), kit.MDB_EXTRA, kit.Dict(),
+			STATUS, StatusPrepare, LEVEL, 3, SCORE, 3, arg,
 		))
-		m.Log_INSERT(ZONE, zone, kit.MDB_ID, id, kit.MDB_TYPE, kind, kit.MDB_NAME, name)
+		m.Log_INSERT(kit.MDB_ZONE, zone, kit.MDB_ID, id, arg[0], arg[1])
 		m.Echo("%d", id)
 	})
 }
 func _task_modify(m *ice.Message, zone, id, pro, set string) {
-	m.Richs(TASK, nil, kit.Select(kit.MDB_FOREACH, zone), func(key string, val map[string]interface{}) {
-		m.Grows(TASK, kit.Keys(kit.MDB_HASH, key), kit.MDB_ID, id, func(index int, value map[string]interface{}) {
+	m.Richs(TASK, kit.Keys(kit.MDB_HASH, m.Optionv(ice.MSG_DOMAIN)), kit.Select(kit.MDB_FOREACH, zone), func(key string, val map[string]interface{}) {
+		m.Grows(TASK, kit.Keys(kit.MDB_HASH, m.Optionv(ice.MSG_DOMAIN), kit.MDB_HASH, key), kit.MDB_ID, id, func(index int, value map[string]interface{}) {
 			switch pro {
-			case ZONE, kit.MDB_ID, kit.MDB_TIME:
+			case kit.MDB_ZONE, kit.MDB_ID, kit.MDB_TIME:
 				m.Info("not allow %v", key)
 			case STATUS:
 				if value[STATUS] == set {
@@ -99,16 +69,16 @@ func _task_modify(m *ice.Message, zone, id, pro, set string) {
 				}
 				fallthrough
 			default:
-				m.Log_MODIFY(ZONE, zone, kit.MDB_ID, id, kit.MDB_KEY, pro, kit.MDB_VALUE, set)
+				m.Log_MODIFY(kit.MDB_ZONE, zone, kit.MDB_ID, id, kit.MDB_KEY, pro, kit.MDB_VALUE, set)
 				kit.Value(value, pro, set)
 			}
 		})
 	})
 }
 func _task_delete(m *ice.Message, zone, id string) {
-	m.Richs(TASK, nil, kit.Select(kit.MDB_FOREACH, zone), func(key string, val map[string]interface{}) {
-		m.Grows(TASK, kit.Keys(kit.MDB_HASH, key), kit.MDB_ID, id, func(index int, value map[string]interface{}) {
-			m.Log_DELETE(ZONE, zone, kit.MDB_ID, id)
+	m.Richs(TASK, kit.Keys(kit.MDB_HASH, m.Optionv(ice.MSG_DOMAIN)), kit.Select(kit.MDB_FOREACH, zone), func(key string, val map[string]interface{}) {
+		m.Grows(TASK, kit.Keys(kit.MDB_HASH, m.Optionv(ice.MSG_DOMAIN), kit.MDB_HASH, key), kit.MDB_ID, id, func(index int, value map[string]interface{}) {
+			m.Log_DELETE(kit.MDB_ZONE, zone, kit.MDB_ID, id)
 			kit.Value(value, STATUS, StatusCancel)
 		})
 	})
@@ -122,7 +92,7 @@ func _task_export(m *ice.Message, file string) {
 	defer w.Flush()
 
 	m.Assert(w.Write([]string{
-		ZONE, kit.MDB_ID, kit.MDB_TIME,
+		kit.MDB_ZONE, kit.MDB_ID, kit.MDB_TIME,
 		kit.MDB_TYPE, kit.MDB_NAME, kit.MDB_TEXT,
 		LEVEL, STATUS, SCORE,
 		BEGIN_TIME, CLOSE_TIME,
@@ -130,8 +100,8 @@ func _task_export(m *ice.Message, file string) {
 	}))
 	count := 0
 	m.Option("cache.limit", -2)
-	m.Richs(TASK, nil, kit.MDB_FOREACH, func(key string, val map[string]interface{}) {
-		m.Grows(TASK, kit.Keys(kit.MDB_HASH, key), "", "", func(index int, value map[string]interface{}) {
+	m.Richs(TASK, kit.Keys(kit.MDB_HASH, m.Optionv(ice.MSG_DOMAIN)), kit.MDB_FOREACH, func(key string, val map[string]interface{}) {
+		m.Grows(TASK, kit.Keys(kit.MDB_HASH, m.Optionv(ice.MSG_DOMAIN), kit.MDB_HASH, key), "", "", func(index int, value map[string]interface{}) {
 			m.Assert(w.Write(kit.Simple(
 				kit.Format(kit.Value(val, "meta.zone")),
 				kit.Format(value[kit.MDB_ID]),
@@ -170,7 +140,7 @@ func _task_import(m *ice.Message, file string) {
 		data := kit.Dict()
 		for i, k := range heads {
 			switch k {
-			case ZONE:
+			case kit.MDB_ZONE:
 				zone = lines[i]
 			case kit.MDB_ID:
 				continue
@@ -182,18 +152,19 @@ func _task_import(m *ice.Message, file string) {
 		}
 
 		_task_create(m, zone)
-		m.Richs(TASK, nil, zone, func(key string, value map[string]interface{}) {
-			id := m.Grow(TASK, kit.Keys(kit.MDB_HASH, key), data)
-			m.Log_INSERT(ZONE, zone, kit.MDB_ID, id)
+		m.Richs(TASK, kit.Keys(kit.MDB_HASH, m.Optionv(ice.MSG_DOMAIN)), zone, func(key string, value map[string]interface{}) {
+			id := m.Grow(TASK, kit.Keys(kit.MDB_HASH, m.Optionv(ice.MSG_DOMAIN), kit.MDB_HASH, key), data)
+			m.Log_INSERT(kit.MDB_ZONE, zone, kit.MDB_ID, id)
 			count++
 		})
 	}
 	m.Log_IMPORT("file", file, "count", count)
 	m.Echo(file)
 }
+
 func _task_search(m *ice.Message, kind, name, text string, arg ...string) {
-	m.Richs(TASK, nil, kit.MDB_FOREACH, func(key string, val map[string]interface{}) {
-		m.Grows(TASK, kit.Keys(kit.MDB_HASH, key), "", "", func(index int, value map[string]interface{}) {
+	m.Richs(TASK, kit.Keys(kit.MDB_HASH, m.Optionv(ice.MSG_DOMAIN)), kit.MDB_FOREACH, func(key string, val map[string]interface{}) {
+		m.Grows(TASK, kit.Keys(kit.MDB_HASH, m.Optionv(ice.MSG_DOMAIN), kit.MDB_HASH, key), "", "", func(index int, value map[string]interface{}) {
 			if value[kit.MDB_NAME] == name || strings.Contains(kit.Format(value[kit.MDB_TEXT]), name) {
 				m.Push("pod", m.Option(ice.MSG_USERPOD))
 				m.Push("ctx", m.Prefix())
@@ -210,27 +181,36 @@ func _task_search(m *ice.Message, kind, name, text string, arg ...string) {
 }
 func _task_render(m *ice.Message, kind, name, text string, arg ...string) {
 	ls := strings.Split(text, ":")
-	m.Richs(TASK, nil, ls[0], func(key string, val map[string]interface{}) {
-		m.Grows(TASK, kit.Keys(kit.MDB_HASH, key), "id", ls[1], func(index int, value map[string]interface{}) {
+	m.Richs(TASK, kit.Keys(kit.MDB_HASH, m.Optionv(ice.MSG_DOMAIN)), ls[0], func(key string, val map[string]interface{}) {
+		m.Grows(TASK, kit.Keys(kit.MDB_HASH, m.Optionv(ice.MSG_DOMAIN), kit.MDB_HASH, key), "id", ls[1], func(index int, value map[string]interface{}) {
 			m.Push("detail", value)
 		})
 	})
 }
-
-func _task_plugin(m *ice.Message, arg ...string) {
-	if len(arg) == 0 {
-		kit.Fetch(m.Confv(MISS, "meta.plug"), func(key string, value map[string]interface{}) {
-			for k := range value {
-				m.Push(key, k)
-			}
-		})
-		return
+func _task_action(m *ice.Message, status interface{}, action ...string) string {
+	switch status {
+	case StatusPrepare:
+		action = append(action, "开始")
+	case StatusProcess:
+		action = append(action, "完成")
+	case StatusCancel, StatusFinish:
 	}
-	m.Cmdy(kit.Keys(arg[0], arg[1]), arg[2:])
+	for i, v := range action {
+		action[i] = m.Cmdx(mdb.RENDER, web.RENDER.Button, v)
+	}
+	return strings.Join(action, "")
 }
-
 func _task_input(m *ice.Message, key, value string) {
-	m.Cmdy(kit.Keys(m.Option("zone"), m.Option("type")), "action", "input", key, value)
+	switch key {
+	case "zone":
+		m.Richs(TASK, kit.Keys(kit.MDB_HASH, m.Optionv(ice.MSG_DOMAIN)), kit.MDB_FOREACH, func(key string, val map[string]interface{}) {
+			m.Push("zone", kit.Value(val, "meta.zone"))
+			m.Push("count", kit.Select("0", kit.Format(kit.Value(val, "meta.count"))))
+		})
+		m.Sort("count", "int_r")
+	case "name":
+	case "text":
+	}
 }
 func _task_scope(m *ice.Message, arg ...string) (time.Time, time.Time) {
 	begin_time := time.Now()
@@ -262,19 +242,55 @@ func _task_scope(m *ice.Message, arg ...string) (time.Time, time.Time) {
 	return begin_time, end_time
 }
 
+var _task_inputs = kit.List(
+	"_input", "text", "name", "zone", "value", "@key",
+	"_input", "select", "name", "type", "values", []interface{}{
+		"once", "step", "week",
+	},
+	"_input", "text", "name", "name", "value", "@key",
+	"_input", "text", "name", "text", "value", "@key",
+	"_input", "text", "name", "extra.cmds",
+	"_input", "text", "name", "extra.args",
+	"_input", "text", "name", "begin_time", "value", "@date",
+	"_input", "text", "name", "close_time", "value", "@date",
+)
+
+const (
+	TASK = "task"
+	PLAN = "plan"
+	MISS = "miss"
+)
+const (
+	LEVEL  = "level"
+	STATUS = "status"
+	SCORE  = "score"
+
+	BEGIN_TIME = "begin_time"
+	CLOSE_TIME = "close_time"
+
+	EXPORT = "usr/export/web.team.task/"
+)
+const (
+	ScaleDay   = "day"
+	ScaleWeek  = "week"
+	ScaleMonth = "month"
+	ScaleYear  = "year"
+	ScaleLong  = "long"
+)
+const (
+	StatusPrepare = "prepare"
+	StatusProcess = "process"
+	StatusCancel  = "cancel"
+	StatusFinish  = "finish"
+)
+
 var Index = &ice.Context{Name: "team", Help: "团队中心",
 	Configs: map[string]*ice.Config{
-		TASK: {Name: "task", Help: "task", Value: kit.Data(kit.MDB_SHORT, ZONE)},
-		MISS: {Name: "miss", Help: "miss", Value: kit.Data(kit.MDB_SHORT, ZONE)},
+		TASK: {Name: "task", Help: "task", Value: kit.Data(kit.MDB_SHORT, kit.MDB_ZONE)},
+		MISS: {Name: "miss", Help: "miss", Value: kit.Data(kit.MDB_SHORT, kit.MDB_ZONE)},
 	},
 	Commands: map[string]*ice.Command{
 		ice.CTX_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			m.Travel(func(p *ice.Context, s *ice.Context, key string, cmd *ice.Command) {
-				if s == c {
-					return
-				}
-				m.Conf(MISS, kit.Keys("meta.plug", s.Name, key), cmd.Name)
-			})
 			m.Load()
 
 			m.Cmd(mdb.SEARCH, mdb.CREATE, TASK, TASK, m.Prefix())
@@ -283,32 +299,23 @@ var Index = &ice.Context{Name: "team", Help: "团队中心",
 		ice.CTX_EXIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) { m.Save(TASK) }},
 
 		TASK: {Name: "task zone=auto id=auto auto 添加:button 导出:button 导入:button", Help: "任务", Meta: kit.Dict(
-			mdb.INSERT, kit.List(
-				"_input", "text", "name", "zone",
-				"_input", "text", "name", "type",
-				"_input", "text", "name", "name",
-				"_input", "text", "name", "text",
-				"_input", "text", "name", "begin_time",
-				"_input", "text", "name", "close_time",
-				"_input", "text", "name", "cmds",
-				"_input", "text", "name", "args",
-			),
+			mdb.INSERT, _task_inputs,
 		), Action: map[string]*ice.Action{
 			mdb.INSERT: {Name: "insert [key value]...", Help: "添加", Hand: func(m *ice.Message, arg ...string) {
 				_task_create(m, arg[1])
-				_task_insert(m, arg[1], arg[3], arg[5], arg[7], arg[9], arg[11], arg[12:]...)
+				_task_insert(m, arg[1], arg[2:]...)
 			}},
 			mdb.MODIFY: {Name: "modify key value", Help: "编辑", Hand: func(m *ice.Message, arg ...string) {
-				_task_modify(m, m.Option(ZONE), m.Option(kit.MDB_ID), arg[0], arg[1])
+				_task_modify(m, m.Option(kit.MDB_ZONE), m.Option(kit.MDB_ID), arg[0], arg[1])
 			}},
 			mdb.DELETE: {Name: "delete", Help: "删除", Hand: func(m *ice.Message, arg ...string) {
-				_task_delete(m, m.Option(ZONE), m.Option(kit.MDB_ID))
+				_task_delete(m, m.Option(kit.MDB_ZONE), m.Option(kit.MDB_ID))
 			}},
 			mdb.EXPORT: {Name: "export file", Help: "导出", Hand: func(m *ice.Message, arg ...string) {
-				_task_export(m, kit.Select(EXPORT, arg, 0))
+				_task_export(m, kit.Select(path.Join(EXPORT, m.Option(ice.MSG_DOMAIN), "list.csv"), arg, 0))
 			}},
 			mdb.IMPORT: {Name: "import file", Help: "导入", Hand: func(m *ice.Message, arg ...string) {
-				_task_import(m, kit.Select(EXPORT, arg, 0))
+				_task_import(m, kit.Select(path.Join(EXPORT, m.Option(ice.MSG_DOMAIN), "list.csv"), arg, 0))
 			}},
 
 			mdb.SEARCH: {Name: "search type name text", Help: "搜索", Hand: func(m *ice.Message, arg ...string) {
@@ -319,41 +326,66 @@ var Index = &ice.Context{Name: "team", Help: "团队中心",
 			}},
 
 			gdb.BEGIN: {Name: "begin", Help: "开始", Hand: func(m *ice.Message, arg ...string) {
-				_task_modify(m, m.Option(ZONE), m.Option(kit.MDB_ID), STATUS, StatusProcess)
+				_task_modify(m, m.Option(kit.MDB_ZONE), m.Option(kit.MDB_ID), STATUS, StatusProcess)
 			}},
 			gdb.END: {Name: "end", Help: "完成", Hand: func(m *ice.Message, arg ...string) {
-				_task_modify(m, m.Option(ZONE), m.Option(kit.MDB_ID), STATUS, StatusFinish)
+				_task_modify(m, m.Option(kit.MDB_ZONE), m.Option(kit.MDB_ID), STATUS, StatusFinish)
+			}},
+
+			"input": {Name: "input key value", Help: "补全", Hand: func(m *ice.Message, arg ...string) {
+				_task_input(m, kit.Select("", arg, 0), kit.Select("", arg, 1))
 			}},
 		}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			_task_list(m, kit.Select("", arg, 0), kit.Select("", arg, 1))
-			if len(arg) < 2 {
-				m.PushAction("开始", "完成")
+			if _task_list(m, kit.Select("", arg, 0), kit.Select("", arg, 1)); len(arg) < 2 {
+				m.Table(func(index int, value map[string]string, head []string) {
+					m.Push("action", _task_action(m, value[STATUS]))
+				})
+			} else {
+				m.Table(func(index int, value map[string]string, head []string) {
+					if value["key"] == "status" {
+						m.Push("key", "action")
+						m.Push("value", _task_action(m, value["value"]))
+					}
+				})
 			}
 		}},
-		PLAN: {Name: "plan scale:select=day|week|month|year|long begin_time=@date end_time=@date auto", Help: "计划", Meta: kit.Dict(
+		PLAN: {Name: "plan scale:select=day|week|month|year|long begin_time=@date auto 添加:button", Help: "计划", Meta: kit.Dict(
+			mdb.INSERT, _task_inputs,
 			"display", "/plugin/local/team/plan.js", "detail", []string{StatusPrepare, StatusProcess, StatusCancel, StatusFinish},
 		), Action: map[string]*ice.Action{
-			mdb.INSERT: {Name: "insert zone type name text begin_time end_time", Help: "添加", Hand: func(m *ice.Message, arg ...string) {
-				_task_create(m, arg[0])
-				_task_insert(m, arg[0], arg[1], arg[2], arg[3], arg[4], arg[5])
+			mdb.INSERT: {Name: "insert [key value]...", Help: "添加", Hand: func(m *ice.Message, arg ...string) {
+				_task_create(m, arg[1])
+				_task_insert(m, arg[1], arg[2:]...)
 			}},
 			mdb.MODIFY: {Name: "modify key value", Help: "编辑", Hand: func(m *ice.Message, arg ...string) {
-				_task_modify(m, m.Option(ZONE), m.Option(kit.MDB_ID), arg[0], arg[1])
+				_task_modify(m, m.Option(kit.MDB_ZONE), m.Option(kit.MDB_ID), arg[0], arg[1])
 			}},
 			mdb.DELETE: {Name: "delete", Help: "删除", Hand: func(m *ice.Message, arg ...string) {
-				_task_delete(m, m.Option(ZONE), m.Option(kit.MDB_ID))
+				_task_delete(m, m.Option(kit.MDB_ZONE), m.Option(kit.MDB_ID))
 			}},
 			mdb.EXPORT: {Name: "export file", Help: "导出", Hand: func(m *ice.Message, arg ...string) {
-				_task_export(m, kit.Select(EXPORT, arg, 0))
+				_task_export(m, kit.Select(path.Join(EXPORT, m.Option(ice.MSG_DOMAIN), "list.csv"), arg, 0))
 			}},
 			mdb.IMPORT: {Name: "import file", Help: "导入", Hand: func(m *ice.Message, arg ...string) {
-				_task_import(m, kit.Select(EXPORT, arg, 0))
+				_task_import(m, kit.Select(path.Join(EXPORT, m.Option(ice.MSG_DOMAIN), "list.csv"), arg, 0))
 			}},
-			mdb.PLUGIN: {Name: "plugin", Help: "插件", Hand: func(m *ice.Message, arg ...string) {
-				_task_plugin(m, arg...)
+
+			gdb.BEGIN: {Name: "begin", Help: "开始", Hand: func(m *ice.Message, arg ...string) {
+				_task_modify(m, m.Option(kit.MDB_ZONE), m.Option(kit.MDB_ID), STATUS, StatusProcess)
 			}},
-			"input": {Name: "input", Help: "补全", Hand: func(m *ice.Message, arg ...string) {
-				_task_input(m, arg[0], arg[1])
+			gdb.END: {Name: "end", Help: "完成", Hand: func(m *ice.Message, arg ...string) {
+				_task_modify(m, m.Option(kit.MDB_ZONE), m.Option(kit.MDB_ID), STATUS, StatusFinish)
+			}},
+
+			"command": {Name: "command", Help: "命令", Hand: func(m *ice.Message, arg ...string) {
+				if len(arg) == 1 {
+					m.Cmdy(ctx.COMMAND, arg[0])
+					return
+				}
+				m.Cmdy(arg[0], arg[1:])
+			}},
+			"input": {Name: "input key value", Help: "补全", Hand: func(m *ice.Message, arg ...string) {
+				_task_input(m, kit.Select("", arg, 0), kit.Select("", arg, 1))
 			}},
 		}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			begin_time, end_time := _task_scope(m, arg...)
@@ -361,13 +393,14 @@ var Index = &ice.Context{Name: "team", Help: "团队中心",
 
 			m.Set(ice.MSG_OPTION, "end_time")
 			m.Set(ice.MSG_OPTION, "begin_time")
-			m.Richs(TASK, nil, kit.Select(kit.MDB_FOREACH, m.Option(ZONE)), func(key string, val map[string]interface{}) {
+			m.Richs(TASK, kit.Keys(kit.MDB_HASH, m.Optionv(ice.MSG_DOMAIN)), kit.Select(kit.MDB_FOREACH, m.Option(kit.MDB_ZONE)), func(key string, val map[string]interface{}) {
 				zone := kit.Format(kit.Value(val, "meta.zone"))
-				m.Grows(TASK, kit.Keys(kit.MDB_HASH, key), "", "", func(index int, value map[string]interface{}) {
+				m.Grows(TASK, kit.Keys(kit.MDB_HASH, m.Optionv(ice.MSG_DOMAIN), kit.MDB_HASH, key), "", "", func(index int, value map[string]interface{}) {
 					begin, _ := time.ParseInLocation(ice.MOD_TIME, kit.Format(value[BEGIN_TIME]), time.Local)
 					if begin_time.Before(begin) && begin.Before(end_time) {
 						m.Push(zone, value)
-						m.Push(ZONE, zone)
+						m.Push(kit.MDB_ZONE, zone)
+						m.Push("action", _task_action(m, value[STATUS], "插件"))
 					}
 				})
 			})

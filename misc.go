@@ -63,7 +63,7 @@ func (m *Message) PushAction(list ...interface{}) {
 		for _, k := range kit.Simple(list...) {
 			action = append(action, m.Cmdx("render", "button", k))
 		}
-		m.Push("操作", strings.Join(action, ""))
+		m.Push("action", strings.Join(action, ""))
 	})
 }
 func (m *Message) PushDetail(value interface{}, arg ...interface{}) *Message {

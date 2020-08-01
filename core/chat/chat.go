@@ -100,14 +100,24 @@ var Index = &ice.Context{Name: "chat", Help: "聊天中心",
 				default:
 					// 群组检查
 					m.Richs(RIVER, nil, arg[0], func(key string, value map[string]interface{}) {
+						m.Debug("%v", kit.Value(value, "meta.type"))
+						if kit.Value(value, "meta.type") != "public" {
+							m.Option(ice.MSG_DOMAIN, "R"+arg[0])
+						}
+
 						m.Richs(RIVER, kit.Keys(kit.MDB_HASH, arg[0], USER), m.Option(ice.MSG_USERNAME), func(key string, value map[string]interface{}) {
 							if m.Option(ice.MSG_RIVER, arg[0]); len(arg) > 1 {
 								// 应用检查
 								m.Richs(RIVER, kit.Keys(kit.MDB_HASH, arg[0], TOOL), arg[1], func(key string, value map[string]interface{}) {
+									m.Debug("%v", kit.Value(value, "meta.type"))
+									if kit.Value(value, "meta.type") != "public" {
+										m.Option(ice.MSG_DOMAIN, kit.Keys(m.Option(ice.MSG_DOMAIN), "S"+arg[1]))
+									}
+
 									m.Option(ice.MSG_STORM, arg[1])
 								})
 							}
-							m.Log_AUTH(RIVER, m.Option(ice.MSG_RIVER), STORM, m.Option(ice.MSG_STORM))
+							m.Log_AUTH(RIVER, m.Option(ice.MSG_RIVER), STORM, m.Option(ice.MSG_STORM), "domain", m.Option(ice.MSG_DOMAIN))
 						})
 					})
 					switch m.Option(ice.MSG_USERURL) {

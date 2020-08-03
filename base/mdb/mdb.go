@@ -15,7 +15,7 @@ import (
 )
 
 func _file_name(m *ice.Message, arg ...string) string {
-	return kit.Select(path.Join("usr/export", kit.Select(arg[0], arg[0]+":"+arg[1], arg[1] != ""), arg[2]), arg, 3)
+	return kit.Select(path.Join("usr/export", kit.Select(arg[0], arg[0]+"/"+arg[1], arg[1] != ""), arg[2]), arg, 3)
 }
 
 func _hash_insert(m *ice.Message, prefix, key string, arg ...string) string {
@@ -60,6 +60,10 @@ func _hash_import(m *ice.Message, prefix, key, file string) {
 	de := json.NewDecoder(f)
 	de.Decode(&list)
 
+	if m.Conf(prefix, kit.Keys(key, kit.MDB_META, kit.MDB_SHORT)) == "" {
+		m.Conf(prefix, kit.Keys(key, kit.MDB_META, kit.MDB_SHORT), m.Conf(prefix, kit.Keys(kit.MDB_META, kit.MDB_SHORT)))
+	}
+
 	count := 0
 	for _, data := range list {
 		// 导入数据
@@ -71,7 +75,9 @@ func _hash_import(m *ice.Message, prefix, key, file string) {
 }
 func _hash_select(m *ice.Message, prefix, key, field, value string) {
 	fields := strings.Split(kit.Select("time,name", m.Option("fields")), ",")
+	m.Debug("what %v %v", prefix, key, value)
 	m.Richs(prefix, key, value, func(key string, val map[string]interface{}) {
+		m.Debug("what %v %v", prefix, key)
 		if value == kit.MDB_FOREACH {
 			m.Push(key, val, fields)
 			return
@@ -299,14 +305,20 @@ var Index = &ice.Context{Name: "mdb", Help: "数据模块",
 				_list_delete(m, arg[0], arg[1], arg[3], arg[4])
 			}
 		}},
+		SELECT: {Name: "select conf key type field value", Help: "数据查询", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			switch arg[2] {
+			case HASH:
+				_hash_select(m, arg[0], arg[1], arg[3], arg[4])
+			case LIST:
+				_list_select(m, arg[0], arg[1], kit.Select("", arg, 3), kit.Select("", arg, 4))
+			}
+		}},
 		EXPORT: {Name: "export conf key type [name]", Help: "导出数据", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			switch file := _file_name(m, arg...); arg[2] {
 			case HASH:
 				_hash_export(m, arg[0], arg[1], file)
 			case LIST:
 				_list_export(m, arg[0], arg[1], file)
-			case DICT:
-				_dict_export(m, arg[0], arg[1], file)
 			}
 		}},
 		IMPORT: {Name: "import conf key type file", Help: "导入数据", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
@@ -315,17 +327,6 @@ var Index = &ice.Context{Name: "mdb", Help: "数据模块",
 				_hash_import(m, arg[0], arg[1], file)
 			case LIST:
 				_list_import(m, arg[0], arg[1], file)
-			case DICT:
-				_dict_import(m, arg[0], arg[1], file)
-			}
-		}},
-
-		SELECT: {Name: "select conf key type field value", Help: "数据查询", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			switch arg[2] {
-			case LIST:
-				_list_select(m, arg[0], arg[1], kit.Select("", arg, 3), kit.Select("", arg, 4))
-			case HASH:
-				_hash_select(m, arg[0], arg[1], arg[3], arg[4])
 			}
 		}},
 	},

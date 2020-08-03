@@ -97,6 +97,14 @@ func init() {
 				web.SHARE: {Name: "share name", Help: "共享", Hand: func(m *ice.Message, arg ...string) {
 					_storm_share(m, m.Option(ice.MSG_RIVER), m.Option(ice.MSG_STORM), arg[0])
 				}},
+				"save": {Name: "save", Help: "保存", Hand: func(m *ice.Message, arg ...string) {
+					prefix := kit.Keys(kit.MDB_HASH, m.Option(ice.MSG_RIVER), TOOL, kit.MDB_HASH, m.Option(ice.MSG_STORM))
+					for i, v := range arg {
+						args := kit.Parse(nil, "", kit.Split(v)...)
+						m.Conf(RIVER, kit.Keys(prefix, kit.MDB_LIST, i, kit.MDB_META, "args"), args)
+						m.Debug("fuck %v %v", kit.Keys(prefix, kit.MDB_LIST, i), args)
+					}
+				}},
 				TOOL: {Name: "tool [pod ctx cmd help]...", Help: "添加工具", Hand: func(m *ice.Message, arg ...string) {
 					_storm_tool(m, m.Option(ice.MSG_RIVER), m.Option(ice.MSG_STORM), arg...)
 				}},

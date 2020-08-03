@@ -12,6 +12,8 @@ import (
 	"path"
 )
 
+const MP = "mp"
+
 var Index = &ice.Context{Name: "mp", Help: "小程序",
 	Caches: map[string]*ice.Cache{},
 	Configs: map[string]*ice.Config{
@@ -40,6 +42,7 @@ var Index = &ice.Context{Name: "mp", Help: "小程序",
 					"appid", m.Conf("login", "meta.appid"), "secret", m.Conf("login", "meta.appmm"))
 
 				// 用户登录
+				m.Option(ice.MSG_USERZONE, MP)
 				m.Echo(aaa.SessCreate(msg, msg.Append("openid"), aaa.UserRole(msg, msg.Append("openid"))))
 
 			case "info":

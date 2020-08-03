@@ -277,6 +277,7 @@ func (f *Frame) Start(m *ice.Message, arg ...string) bool {
 		m.Option("_option", ice.MSG_USERNAME)
 		m.Option(ice.MSG_USERNAME, cli.UserName)
 		m.Option(ice.MSG_USERROLE, aaa.ROOT)
+		m.Option(ice.MSG_USERZONE, "boot")
 		aaa.UserRoot(m)
 	default:
 		if s, e := os.Open(arg[0]); !m.Warn(e != nil, "%s", e) {

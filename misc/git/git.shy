@@ -5,3 +5,6 @@ refer "官网" `
 文档 https://git-scm.com/docs
 源码 https://github.com/git/git
 `
+
+field status web.code.git.status
+field total web.code.git.total

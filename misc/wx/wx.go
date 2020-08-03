@@ -73,6 +73,8 @@ func action(m *ice.Message) {
 	m.Info("what %v", m.Result())
 }
 
+const WX = "wx"
+
 var Index = &ice.Context{Name: "wx", Help: "公众号",
 	Caches: map[string]*ice.Cache{},
 	Configs: map[string]*ice.Config{
@@ -120,6 +122,7 @@ var Index = &ice.Context{Name: "wx", Help: "公众号",
 			parse(m)
 
 			// 用户登录
+			m.Option(ice.MSG_USERZONE, WX)
 			m.Option(ice.MSG_SESSID, aaa.SessCreate(m, m.Append("FromUserName"), aaa.UserRole(m, m.Append("FromUserName"))))
 
 			switch m.Option("MsgType") {

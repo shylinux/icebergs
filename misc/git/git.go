@@ -8,7 +8,6 @@ import (
 	"github.com/shylinux/icebergs/base/nfs"
 	"github.com/shylinux/icebergs/base/web"
 	"github.com/shylinux/icebergs/core/code"
-	"github.com/shylinux/icebergs/core/wiki"
 	kit "github.com/shylinux/toolkits"
 
 	"os"
@@ -120,9 +119,7 @@ var Index = &ice.Context{Name: "git", Help: "代码库",
 			})
 			m.Sort("name")
 		}},
-		"total": {Name: "total name=auto auto", Help: "提交统计", Meta: kit.Dict(
-			mdb.PLUGIN, wiki.DataPlugin,
-		), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		"total": {Name: "total name=auto auto", Help: "提交统计", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			if len(arg) > 0 {
 				// 提交详情
 				m.Richs("repos", nil, arg[0], func(key string, value map[string]interface{}) {

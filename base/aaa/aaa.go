@@ -10,6 +10,7 @@ const (
 )
 const (
 	USERNICK = "usernick"
+	USERZONE = "userzone"
 	USERNAME = "username"
 	PASSWORD = "password"
 	USERROLE = "userrole"

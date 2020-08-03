@@ -95,10 +95,8 @@ func init() {
 			RIVER: {Name: "river", Help: "群组", Value: kit.Data(
 				"template", kit.Dict(
 					"base", kit.Dict(
-						"main", []interface{}{
-							"web.code.inner",
-							"web.code.dream",
-							"web.code.space",
+						"admin", []interface{}{
+							"web.chat.user",
 						},
 					),
 				),

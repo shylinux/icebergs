@@ -34,6 +34,7 @@ const ( // MSG
 	MSG_USERPOD  = "user.pod"
 	MSG_USERNICK = "user.nick"
 	MSG_USERNAME = "user.name"
+	MSG_USERZONE = "user.zone"
 	MSG_USERROLE = "user.role"
 	MSG_USERDATA = "user.data"
 	MSG_USERADDR = "user.addr"

@@ -12,7 +12,7 @@ import (
 
 func _user_list(m *ice.Message) {
 	m.Richs(USER, nil, kit.MDB_FOREACH, func(key string, value map[string]interface{}) {
-		m.Push(key, value, []string{kit.MDB_TIME, USERNICK, USERNAME})
+		m.Push(key, value, []string{kit.MDB_TIME, USERZONE, USERNICK, USERNAME})
 	})
 	m.Sort(USERNAME)
 }
@@ -47,6 +47,8 @@ func _user_create(m *ice.Message, name, word string) {
 	m.Rich(USER, nil, kit.Dict(
 		USERNAME, name, PASSWORD, word,
 		USERNICK, name, USERNODE, cli.NodeName,
+		USERZONE, m.Option(ice.MSG_USERZONE),
+		USERNODE, cli.NodeName,
 	))
 	m.Log_CREATE(USERNAME, name)
 	m.Event(gdb.USER_CREATE, name)
@@ -75,6 +77,12 @@ func UserRoot(m *ice.Message) {
 func UserNick(m *ice.Message, username interface{}) (nick string) {
 	m.Richs(USER, nil, kit.Format(username), func(key string, value map[string]interface{}) {
 		nick = kit.Format(value[USERNICK])
+	})
+	return
+}
+func UserZone(m *ice.Message, username interface{}) (zone string) {
+	m.Richs(USER, nil, kit.Format(username), func(key string, value map[string]interface{}) {
+		zone = kit.Format(value[USERZONE])
 	})
 	return
 }

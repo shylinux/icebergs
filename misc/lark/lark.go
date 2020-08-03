@@ -289,6 +289,7 @@ var Index = &ice.Context{Name: "lark", Help: "机器人",
 		}},
 		TALK: {Name: "talk text", Help: "聊天", Hand: func(m *ice.Message, c *ice.Context, key string, arg ...string) {
 			// 用户权限
+			m.Option(ice.MSG_USERZONE, LARK)
 			m.Option(ice.MSG_USERNAME, m.Option(OPEN_ID))
 			m.Option(ice.MSG_USERNICK, aaa.UserNick(m, m.Option(ice.MSG_USERNAME)))
 			m.Option(ice.MSG_USERROLE, aaa.UserRole(m, m.Option(ice.MSG_USERNAME)))

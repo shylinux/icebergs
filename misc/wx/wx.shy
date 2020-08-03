@@ -11,6 +11,7 @@ chapter "应用"
 field "runtime" cli.runtime
 field "asset" web.mall.asset args `[ ]`
 field "task" web.team.task args `[ ]`
+field "miss" web.chat.meet.miss args `[ ]`
 
 chapter "项目"
 section "icebergs"

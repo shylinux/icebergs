@@ -5,12 +5,14 @@ refer "" `
 文档 https://developers.weixin.qq.com/miniprogram/dev/api/
 源码 https://github.com/shylinux/icebergs/blob/master/misc/mp/mp.go
 `
+image qrcode `https://weixin.qq.com`
 
 chapter "应用"
+field "asset" web.mall.asset args `[ ]`
+field "task" web.team.task args `[ ]`
 
 chapter "项目"
 section "icebergs"
 field "icebergs_统计" web.code.git.trend args `[ icebergs ]` action `{ height 200 speed 20 }`
 field "icebergs_源码" web.code.inner args `[ usr/icebergs misc/mp/mp.go 1 ]`
-field "icebergs_项目" web.code.git.spide args `[ icebergs ]`
 

@@ -200,16 +200,26 @@ func _task_action(m *ice.Message, status interface{}, action ...string) string {
 	}
 	return strings.Join(action, "")
 }
-func _task_input(m *ice.Message, key, value string) {
-	switch key {
+func _task_input(m *ice.Message, field, value string) {
+	switch field {
 	case "zone":
 		m.Richs(TASK, kit.Keys(kit.MDB_HASH, m.Optionv(ice.MSG_DOMAIN)), kit.MDB_FOREACH, func(key string, val map[string]interface{}) {
 			m.Push("zone", kit.Value(val, "meta.zone"))
 			m.Push("count", kit.Select("0", kit.Format(kit.Value(val, "meta.count"))))
 		})
 		m.Sort("count", "int_r")
-	case "name":
-	case "text":
+	case "name", "text":
+		list := map[string]int{}
+		m.Richs(TASK, kit.Keys(kit.MDB_HASH, m.Optionv(ice.MSG_DOMAIN)), kit.MDB_FOREACH, func(key string, val map[string]interface{}) {
+			m.Grows(TASK, kit.Keys(kit.MDB_HASH, m.Optionv(ice.MSG_DOMAIN), kit.MDB_HASH, key), "", "", func(index int, value map[string]interface{}) {
+				list[kit.Format(value[field])]++
+			})
+		})
+		for k, i := range list {
+			m.Push("key", k)
+			m.Push("count", i)
+		}
+		m.Sort("count", "int_r")
 	}
 }
 func _task_scope(m *ice.Message, arg ...string) (time.Time, time.Time) {
@@ -298,7 +308,7 @@ var Index = &ice.Context{Name: "team", Help: "团队中心",
 		}},
 		ice.CTX_EXIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) { m.Save(TASK) }},
 
-		TASK: {Name: "task zone=auto id=auto auto 添加:button 导出:button 导入:button", Help: "任务", Meta: kit.Dict(
+		TASK: {Name: "task zone=auto id=auto auto 添加:button", Help: "任务", Meta: kit.Dict(
 			"添加", _task_inputs,
 		), Action: map[string]*ice.Action{
 			mdb.INSERT: {Name: "insert [key value]...", Help: "添加", Hand: func(m *ice.Message, arg ...string) {
@@ -350,7 +360,7 @@ var Index = &ice.Context{Name: "team", Help: "团队中心",
 			}
 		}},
 		PLAN: {Name: "plan scale:select=day|week|month|year|long begin_time=@date auto 添加:button", Help: "计划", Meta: kit.Dict(
-			mdb.INSERT, _task_inputs,
+			"添加", _task_inputs,
 			"display", "/plugin/local/team/plan.js", "detail", []string{StatusPrepare, StatusProcess, StatusCancel, StatusFinish},
 		), Action: map[string]*ice.Action{
 			mdb.INSERT: {Name: "insert [key value]...", Help: "添加", Hand: func(m *ice.Message, arg ...string) {

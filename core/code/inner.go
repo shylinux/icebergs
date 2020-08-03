@@ -52,7 +52,7 @@ func _inner_list(m *ice.Message, ext, file, dir string, arg ...string) {
 func init() {
 	Index.Merge(&ice.Context{
 		Commands: map[string]*ice.Command{
-			INNER: {Name: "inner path=usr/demo file=hi.sh line=1 查看:button=auto", Help: "编辑器", Meta: kit.Dict(
+			INNER: {Name: "inner path=usr/demo file=hi.sh line=1 auto", Help: "编辑器", Meta: kit.Dict(
 				"display", "/plugin/local/code/inner.js", "style", "editor",
 			), Action: map[string]*ice.Action{
 				web.UPLOAD: {Name: "upload path name", Help: "上传", Hand: func(m *ice.Message, arg ...string) {

@@ -83,7 +83,7 @@ func _command_make(m *ice.Message, cmd *ice.Command) {
 		}
 	}
 	if len(cmd.List) == 0 {
-		cmd.List = append(cmd.List, kit.List(kit.MDB_INPUT, "text", "name", "name")...)
+		cmd.List = append(cmd.List, kit.List(kit.MDB_INPUT, "text", "name", "path")...)
 	}
 	if !button {
 		cmd.List = append(cmd.List, kit.List(kit.MDB_INPUT, "button", "name", "查看")...)

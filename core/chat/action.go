@@ -175,6 +175,14 @@ func init() {
 			ORDER: {Name: "order cmd...", Help: "定制", Hand: func(m *ice.Message, arg ...string) {
 				_action_order_list(m, m.Option(ice.MSG_RIVER), m.Option(ice.MSG_STORM), arg...)
 			}},
+
+			"command": {Name: "command", Help: "命令", Hand: func(m *ice.Message, arg ...string) {
+				if len(arg) == 1 {
+					m.Cmdy(ctx.COMMAND, arg[0])
+					return
+				}
+				m.Cmdy(arg[0], arg[1:])
+			}},
 		}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			if len(arg) == 0 {
 				// 命令列表

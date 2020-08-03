@@ -248,7 +248,7 @@ var Index = &ice.Context{Name: "mall", Help: "贸易中心",
 		}},
 		ice.CTX_EXIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) { m.Save(ASSET) }},
 
-		ASSET: {Name: "asset account=auto id=auto auto 支出:button 转账:button 收入:button 导出:button 导入:button", Help: "资产", Meta: kit.Dict(
+		ASSET: {Name: "asset account=auto id=auto auto 支出:button 转账:button 收入:button", Help: "资产", Meta: kit.Dict(
 			"支出", _input_spend, "转账", _input_trans, "收入", _input_bonus,
 		), Action: map[string]*ice.Action{
 			"spend": {Name: "insert [key value]...", Help: "支出", Hand: func(m *ice.Message, arg ...string) {

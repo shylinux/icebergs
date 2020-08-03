@@ -56,7 +56,7 @@ func init() {
 			SYSTEM: {Name: "system", Help: "系统命令", Value: kit.Data()},
 		},
 		Commands: map[string]*ice.Command{
-			SYSTEM: {Name: "system cmd arg", Help: "系统命令", Hand: func(m *ice.Message, c *ice.Context, key string, arg ...string) {
+			SYSTEM: {Name: "system cmd 执行:button 清空:button", Help: "系统命令", Hand: func(m *ice.Message, c *ice.Context, key string, arg ...string) {
 				cmd := exec.Command(arg[0], arg[1:]...)
 
 				// 运行目录

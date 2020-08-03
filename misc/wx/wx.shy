@@ -1,5 +1,4 @@
 title "微信公众号"
-
 refer "" `
 官网 https://weixin.qq.com/
 后台 https://mp.weixin.qq.com/
@@ -8,16 +7,13 @@ refer "" `
 `
 image qrcode `https://weixin.qq.com`
 
-
 chapter "应用"
-field "plan" web.team.plan args `[ ]`
-field "task" web.team.task args `[ ]`
+field "runtime" cli.runtime
 field "asset" web.mall.asset args `[ ]`
-
+field "task" web.team.task args `[ ]`
 
 chapter "项目"
 section "icebergs"
-field "icebergs_统计" web.code.git.trend args `[ icebergs ]` action `{ height 200 speed 20 }`
-field "icebergs_源码" web.code.inner args `[ usr/icebergs misc/wx/wx.go 1 ]`
-field "icebergs_项目" web.code.git.spide args `[ icebergs ]`
+field "icebergs 统计" web.code.git.trend args `[ icebergs ]` action `{ height 200 speed 20 }`
+field "icebergs 源码" web.code.inner args `[ usr/icebergs misc/wx/wx.go 1 ]`
 

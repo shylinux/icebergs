@@ -24,6 +24,9 @@ func _go_find(m *ice.Message, key string) {
 	}
 }
 func _go_tags(m *ice.Message, key string) {
+	ls := strings.Split(key, ".")
+	key = ls[len(ls)-1]
+
 	if _, e := os.Stat(path.Join(m.Option("_path"), ".tags")); e != nil {
 		m.Cmd(cli.SYSTEM, "gotags", "-R", "-f", ".tags", "./")
 	}

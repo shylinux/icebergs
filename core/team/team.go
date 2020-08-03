@@ -299,7 +299,7 @@ var Index = &ice.Context{Name: "team", Help: "团队中心",
 		ice.CTX_EXIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) { m.Save(TASK) }},
 
 		TASK: {Name: "task zone=auto id=auto auto 添加:button 导出:button 导入:button", Help: "任务", Meta: kit.Dict(
-			mdb.INSERT, _task_inputs,
+			"添加", _task_inputs,
 		), Action: map[string]*ice.Action{
 			mdb.INSERT: {Name: "insert [key value]...", Help: "添加", Hand: func(m *ice.Message, arg ...string) {
 				_task_create(m, arg[1])

@@ -1,10 +1,10 @@
 package mall
 
 import (
-	"github.com/shylinux/icebergs"
+	ice "github.com/shylinux/icebergs"
 	"github.com/shylinux/icebergs/base/mdb"
 	"github.com/shylinux/icebergs/base/web"
-	"github.com/shylinux/toolkits"
+	kit "github.com/shylinux/toolkits"
 
 	"encoding/csv"
 	"os"
@@ -170,6 +170,7 @@ func _asset_render(m *ice.Message, kind, name, text string, arg ...string) {
 func _asset_action(m *ice.Message, status interface{}, action ...string) string {
 	return strings.Join(action, "")
 }
+
 func _asset_input(m *ice.Message, key, value string) {
 	switch key {
 	case ACCOUNT:
@@ -194,10 +195,28 @@ func _asset_input(m *ice.Message, key, value string) {
 	m.Sort("count", "int_r")
 }
 
-var _asset_inputs = kit.List(
+var _input_spend = kit.List(
 	"_input", "text", "name", "account", "value", "@key",
 	"_input", "select", "name", "type", "values", []interface{}{
-		"支出", "收入",
+		"支出", "转账", "收入",
+	},
+	"_input", "text", "name", "amount",
+	"_input", "text", "name", "name", "value", "@key",
+	"_input", "text", "name", "text", "value", "@key",
+)
+var _input_trans = kit.List(
+	"_input", "text", "name", "account", "value", "@key",
+	"_input", "select", "name", "type", "values", []interface{}{
+		"转账", "支出", "收入",
+	},
+	"_input", "text", "name", "amount",
+	"_input", "text", "name", "name", "value", "@key",
+	"_input", "text", "name", "text", "value", "@key",
+)
+var _input_bonus = kit.List(
+	"_input", "text", "name", "account", "value", "@key",
+	"_input", "select", "name", "type", "values", []interface{}{
+		"收入", "转账", "支出",
 	},
 	"_input", "text", "name", "amount",
 	"_input", "text", "name", "name", "value", "@key",
@@ -228,9 +247,23 @@ var Index = &ice.Context{Name: "mall", Help: "贸易中心",
 			m.Cmd(mdb.RENDER, mdb.CREATE, ASSET, ASSET, m.Prefix())
 		}},
 		ice.CTX_EXIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) { m.Save(ASSET) }},
-		ASSET: {Name: "asset account=auto id=auto auto 添加:button 导出:button 导入:button", Help: "资产", Meta: kit.Dict(
-			mdb.INSERT, _asset_inputs,
+
+		ASSET: {Name: "asset account=auto id=auto auto 支出:button 转账:button 收入:button 导出:button 导入:button", Help: "资产", Meta: kit.Dict(
+			"支出", _input_spend, "转账", _input_trans, "收入", _input_bonus,
 		), Action: map[string]*ice.Action{
+			"spend": {Name: "insert [key value]...", Help: "支出", Hand: func(m *ice.Message, arg ...string) {
+				_asset_create(m, arg[1])
+				_asset_insert(m, arg[1], arg[2:]...)
+			}},
+			"trans": {Name: "insert [key value]...", Help: "转账", Hand: func(m *ice.Message, arg ...string) {
+				_asset_create(m, arg[1])
+				_asset_insert(m, arg[1], arg[2:]...)
+			}},
+			"bonus": {Name: "insert [key value]...", Help: "收入", Hand: func(m *ice.Message, arg ...string) {
+				_asset_create(m, arg[1])
+				_asset_insert(m, arg[1], arg[2:]...)
+			}},
+
 			mdb.INSERT: {Name: "insert [key value]...", Help: "添加", Hand: func(m *ice.Message, arg ...string) {
 				_asset_create(m, arg[1])
 				_asset_insert(m, arg[1], arg[2:]...)

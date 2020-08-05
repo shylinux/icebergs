@@ -1,0 +1,11 @@
+title "tmux"
+
+refer "官网" `
+官网 http://tmux.github.io/
+文档 https://git-scm.com/docs
+源码 https://github.com/tmux/tmux
+`
+chapter "应用"
+field text web.code.tmux.text
+field buffer web.code.tmux.buffer args 0
+field session web.code.tmux.session

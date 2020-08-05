@@ -359,7 +359,7 @@ var Index = &ice.Context{Name: "team", Help: "团队中心",
 				})
 			}
 		}},
-		PLAN: {Name: "plan scale:select=day|week|month|year|long begin_time=@date auto 添加:button", Help: "计划", Meta: kit.Dict(
+		PLAN: {Name: "plan scale:select=day|week|month|year|long begin_time=@date auto 添加:button 导出:button 导入:button", Help: "计划", Meta: kit.Dict(
 			"添加", _task_inputs,
 			"display", "/plugin/local/team/plan.js", "detail", []string{StatusPrepare, StatusProcess, StatusCancel, StatusFinish},
 			"style", "plan",
@@ -375,10 +375,10 @@ var Index = &ice.Context{Name: "team", Help: "团队中心",
 				_task_delete(m, m.Option(kit.MDB_ZONE), m.Option(kit.MDB_ID))
 			}},
 			mdb.EXPORT: {Name: "export file", Help: "导出", Hand: func(m *ice.Message, arg ...string) {
-				_task_export(m, kit.Select(path.Join(EXPORT, m.Option(ice.MSG_DOMAIN), "list.csv"), arg, 0))
+				_task_export(m, kit.Select(path.Join(EXPORT, m.Option(ice.MSG_DOMAIN), "list.csv")))
 			}},
 			mdb.IMPORT: {Name: "import file", Help: "导入", Hand: func(m *ice.Message, arg ...string) {
-				_task_import(m, kit.Select(path.Join(EXPORT, m.Option(ice.MSG_DOMAIN), "list.csv"), arg, 0))
+				_task_import(m, kit.Select(path.Join(EXPORT, m.Option(ice.MSG_DOMAIN), "list.csv")))
 			}},
 
 			gdb.BEGIN: {Name: "begin", Help: "开始", Hand: func(m *ice.Message, arg ...string) {

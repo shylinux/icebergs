@@ -39,6 +39,10 @@ func init() {
 				mdb.ENGINE: {Hand: func(m *ice.Message, arg ...string) {
 					m.Cmdy(cli.SYSTEM, path.Join(arg[2], arg[1]))
 				}},
+
+				"man": {Hand: func(m *ice.Message, arg ...string) {
+					m.Echo(_c_help(m, arg[0], arg[1]))
+				}},
 			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {}},
 		},
 		Configs: map[string]*ice.Config{

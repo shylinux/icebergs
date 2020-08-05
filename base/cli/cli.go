@@ -1,11 +1,14 @@
 package cli
 
 import (
+	"bytes"
+
 	ice "github.com/shylinux/icebergs"
 	"github.com/shylinux/icebergs/base/ctx"
 	"github.com/shylinux/icebergs/base/mdb"
 	kit "github.com/shylinux/toolkits"
 
+	"io/ioutil"
 	"os"
 	"os/user"
 	"path"
@@ -94,7 +97,36 @@ var Index = &ice.Context{Name: "cli", Help: "命令模块",
 
 		RUNTIME: {Name: "runtime name auto", Help: "运行环境", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			switch kit.Select("", arg, 0) {
+			case "procinfo":
+				m.Split(m.Cmdx(SYSTEM, "ps"), "", " ", "\n")
+
 			case "hostinfo":
+				if f, e := os.Open("/proc/cpuinfo"); e == nil {
+					defer f.Close()
+					if b, e := ioutil.ReadAll(f); e == nil {
+						m.Push("nCPU", bytes.Count(b, []byte("processor")))
+					}
+				}
+				if f, e := os.Open("/proc/meminfo"); e == nil {
+					defer f.Close()
+					if b, e := ioutil.ReadAll(f); e == nil {
+						for i, ls := range strings.Split(string(b), "\n") {
+							vs := kit.Split(ls, ": ")
+							m.Push(strings.TrimSpace(vs[0]), kit.FmtSize(kit.Int64(strings.TrimSpace(vs[1]))*1024))
+							if i > 1 {
+								break
+							}
+						}
+					}
+				}
+				m.Push("uptime", kit.Split(m.Cmdx(SYSTEM, "uptime"), ",")[0])
+			case "diskinfo":
+				m.Split(m.Cmdx(SYSTEM, "df", "-h"), "", " ", "\n")
+			case "ifconfig":
+				m.Cmdy("tcp.ip")
+			case "userinfo":
+				m.Split(m.Cmdx(SYSTEM, "who"), "user term time", " ", "\n")
+
 			case "hostname":
 				m.Conf(RUNTIME, "boot.hostname", arg[1])
 				HostName = arg[1]

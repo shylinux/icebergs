@@ -6,5 +6,6 @@ refer "官网" `
 源码 https://github.com/git/git
 `
 
+chapter "应用"
 field status web.code.git.status
 field total web.code.git.total

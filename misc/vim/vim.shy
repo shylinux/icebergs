@@ -6,9 +6,13 @@ refer "官网" `
 文档 http://vimdoc.sourceforge.net/htmldoc/usr_toc.html
 `
 
-field "启动配置" web.code.inner args `[ etc/conf/ vimrc ]`
+chapter "应用"
+
+chapter "操作"
 
 chapter "配置"
+
+field "启动配置" web.code.inner args `[ etc/conf/ vimrc ]`
 
 chapter "插件"
 

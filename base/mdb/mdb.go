@@ -65,11 +65,20 @@ func _hash_import(m *ice.Message, prefix, key, file string) {
 	}
 
 	count := 0
-	for _, data := range list {
-		// 导入数据
-		m.Rich(prefix, key, data)
-		count++
+	if m.Conf(prefix, kit.Keys(key, kit.MDB_META, kit.MDB_SHORT)) == "" {
+		for k, data := range list {
+			// 导入数据
+			m.Conf(prefix, kit.Keys(key, kit.MDB_HASH, k), data)
+			count++
+		}
+	} else {
+		for _, data := range list {
+			// 导入数据
+			m.Rich(prefix, key, data)
+			count++
+		}
 	}
+
 	m.Log_IMPORT(kit.MDB_KEY, kit.Keys(prefix, key), kit.MDB_COUNT, count)
 	m.Echo(kit.Keys(file, JSON))
 }

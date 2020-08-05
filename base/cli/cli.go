@@ -92,7 +92,7 @@ var Index = &ice.Context{Name: "cli", Help: "命令模块",
 			m.Save(RUNTIME, SYSTEM)
 		}},
 
-		RUNTIME: {Name: "runtime", Help: "运行环境", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		RUNTIME: {Name: "runtime name auto", Help: "运行环境", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			switch kit.Select("", arg, 0) {
 			case "hostinfo":
 			case "hostname":

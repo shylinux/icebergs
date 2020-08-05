@@ -89,6 +89,10 @@ func init() {
 								if m.Option(ice.MSG_USERUA) == "" {
 									continue
 								}
+								if value["照片"] == "" {
+									m.Push("照片", "")
+									continue
+								}
 								m.Push("照片", m.Cmdx(mdb.RENDER, web.RENDER.IMG, path.Join("/share/local", value["照片"])))
 							} else {
 								m.Push(k, value[k])

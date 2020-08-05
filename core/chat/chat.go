@@ -119,11 +119,15 @@ var Index = &ice.Context{Name: "chat", Help: "聊天中心",
 						}
 					case "/action":
 						if len(arg) > 0 {
-							m.Option(ice.MSG_RIVER, arg[0])
+							if arg[0] != "" {
+								m.Option(ice.MSG_RIVER, arg[0])
+							}
 							arg = arg[1:]
 						}
 						if len(arg) > 0 {
-							m.Option(ice.MSG_STORM, arg[0])
+							if arg[0] != "" {
+								m.Option(ice.MSG_STORM, arg[0])
+							}
 							arg = arg[1:]
 						}
 					}
@@ -142,6 +146,21 @@ var Index = &ice.Context{Name: "chat", Help: "聊天中心",
 
 							})
 						}) == nil {
+							if m.Option("share") != "" {
+								m.Richs(web.SHARE, "", m.Option("share"), func(key string, value map[string]interface{}) {
+									if m.Option(ice.MSG_RIVER) == kit.Value(value, "extra.river") && m.Richs(RIVER, kit.Keys(kit.MDB_HASH, m.Option(ice.MSG_RIVER), USER), kit.Value(value, "extra.username"), nil) != nil {
+										return
+									}
+
+									// m.Option(ice.MSG_USERNAME, kit.Value(value, "extra.username"))
+									// m.Option(ice.MSG_USERROLE, kit.Value(value, "extra.userrole"))
+									// m.Log_AUTH(web.SHARE, key, "username", m.Option(ice.MSG_USERNAME))
+									m.Render(web.STATUS, 403, "not join")
+									m.Option(ice.MSG_USERURL, "")
+									return
+								})
+								return
+							}
 							m.Render(web.STATUS, 403, "not join")
 							m.Option(ice.MSG_USERURL, "")
 							return
@@ -155,6 +174,7 @@ var Index = &ice.Context{Name: "chat", Help: "聊天中心",
 			if m.Right(m.Option(ice.MSG_USERURL), m.Optionv(ice.MSG_CMDS)) {
 				return
 			}
+
 			// 登录检查
 			if m.Warn(!m.Options(ice.MSG_USERNAME), "not login") {
 				if m.Option("share") == "" {
@@ -171,22 +191,12 @@ var Index = &ice.Context{Name: "chat", Help: "聊天中心",
 				m.Option(ice.MSG_USERURL, "")
 				return
 			}
+
 		}},
 
 		"tool": {Name: "tool", Help: "应用", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 		}},
 		"node": {Name: "node", Help: "设备", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-		}},
-		"user": {Name: "user", Help: "用户", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			m.Richs(RIVER, nil, m.Option(ice.MSG_RIVER), func(key string, value map[string]interface{}) {
-				m.Richs(RIVER, kit.Keys(kit.MDB_HASH, m.Option(ice.MSG_RIVER), USER), kit.MDB_FOREACH, func(key string, value map[string]interface{}) {
-					value = value[kit.MDB_META].(map[string]interface{})
-					m.Push(key, value, []string{kit.MDB_TIME})
-					m.Push(aaa.USERZONE, aaa.UserZone(m, value[aaa.USERNAME]))
-					m.Push(aaa.USERNICK, aaa.UserNick(m, value[aaa.USERNAME]))
-					m.Push(key, value, []string{aaa.USERNAME})
-				})
-			})
 		}},
 
 		"/ocean": {Name: "/ocean", Help: "大海洋", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {

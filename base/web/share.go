@@ -91,7 +91,12 @@ func _share_create(m *ice.Message, kind, name, text string, arg ...string) strin
 	h := m.Rich(SHARE, nil, kit.Dict(
 		kit.MDB_TIME, m.Time(m.Conf(SHARE, "meta.expire")),
 		kit.MDB_TYPE, kind, kit.MDB_NAME, name, kit.MDB_TEXT, text,
-		kit.MDB_EXTRA, kit.Dict(aaa.USERROLE, m.Option(ice.MSG_USERROLE), aaa.USERNAME, m.Option(ice.MSG_USERNAME), arg),
+		kit.MDB_EXTRA, kit.Dict(
+			aaa.USERROLE, m.Option(ice.MSG_USERROLE),
+			aaa.USERNAME, m.Option(ice.MSG_USERNAME),
+			"river", m.Option(ice.MSG_RIVER),
+			"storm", m.Option(ice.MSG_STORM),
+			arg),
 	))
 
 	// 创建列表
@@ -150,6 +155,8 @@ func _share_action(m *ice.Message, value map[string]interface{}, arg ...string) 
 func _share_action_redirect(m *ice.Message, value map[string]interface{}, share string) bool {
 	tool := kit.Value(value, "extra.tool.0").(map[string]interface{})
 	m.Render("redirect", "/share", "share", share, "title", kit.Format(value["name"]),
+		"river", kit.Format(kit.Value(value, "extra.river")),
+		"storm", kit.Format(kit.Value(value, "extra.storm")),
 		"pod", kit.Format(tool["pod"]), kit.UnMarshal(kit.Format(tool["val"])),
 	)
 	return true

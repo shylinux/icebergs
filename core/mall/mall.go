@@ -9,7 +9,6 @@ import (
 	"encoding/csv"
 	"os"
 	"path"
-	"strconv"
 	"strings"
 )
 
@@ -248,22 +247,9 @@ var Index = &ice.Context{Name: "mall", Help: "贸易中心",
 		}},
 		ice.CTX_EXIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) { m.Save(ASSET) }},
 
-		ASSET: {Name: "asset account=auto id=auto auto 支出:button 转账:button 收入:button 导出:button 导入:button", Help: "资产", Meta: kit.Dict(
-			"支出", _input_spend, "转账", _input_trans, "收入", _input_bonus,
+		ASSET: {Name: "asset account=auto id=auto auto 添加:button 导出:button 导入:button", Help: "资产", Meta: kit.Dict(
+			"添加", _input_spend,
 		), Action: map[string]*ice.Action{
-			"spend": {Name: "insert [key value]...", Help: "支出", Hand: func(m *ice.Message, arg ...string) {
-				_asset_create(m, arg[1])
-				_asset_insert(m, arg[1], arg[2:]...)
-			}},
-			"trans": {Name: "insert [key value]...", Help: "转账", Hand: func(m *ice.Message, arg ...string) {
-				_asset_create(m, arg[1])
-				_asset_insert(m, arg[1], arg[2:]...)
-			}},
-			"bonus": {Name: "insert [key value]...", Help: "收入", Hand: func(m *ice.Message, arg ...string) {
-				_asset_create(m, arg[1])
-				_asset_insert(m, arg[1], arg[2:]...)
-			}},
-
 			mdb.INSERT: {Name: "insert [key value]...", Help: "添加", Hand: func(m *ice.Message, arg ...string) {
 				_asset_create(m, arg[1])
 				_asset_insert(m, arg[1], arg[2:]...)
@@ -284,191 +270,15 @@ var Index = &ice.Context{Name: "mall", Help: "贸易中心",
 		}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			if _asset_list(m, kit.Select("", arg, 0), kit.Select("", arg, 1)); len(arg) < 2 {
 				m.Table(func(index int, value map[string]string, head []string) {
-				})
-			} else {
-				m.Table(func(index int, value map[string]string, head []string) {
-					if value["key"] == "status" {
-						m.Push("key", "action")
-						m.Push("value", _asset_action(m, value["value"]))
-					}
-				})
-			}
-			return
-			if m.Option("_action") == "保存" {
-				arg = []string{"action", "save"}
-			}
-			if len(arg) > 0 && arg[0] == "action" {
-				switch arg[1] {
-				case "modify":
-					// 修改数据
-					m.Richs(cmd, nil, m.Option("account"), func(key string, account map[string]interface{}) {
-						m.Grows(cmd, kit.Keys("hash", key), "id", arg[5], func(index int, current map[string]interface{}) {
-							m.Log(ice.LOG_MODIFY, "%s: %d %s: %s->%s", key, index, kit.Value(current, arg[2]), arg[2], arg[3])
-							kit.Value(current, arg[2], arg[3])
-						})
-					})
 
-				case "save":
-					// 保存数据
-					m.Option("cache.limit", -2)
-					if f, p, e := kit.Create(kit.Select("usr/local/asset.csv", arg, 2)); m.Assert(e) {
-						defer f.Close()
-
-						w := csv.NewWriter(f)
-						defer w.Flush()
-
-						w.Write([]string{"时间", "收支类型", "账目分类", "备注", "金额", "账户"})
-						m.Richs(cmd, nil, kit.Select("*", arg, 3), func(key string, account map[string]interface{}) {
-							if kit.Format(kit.Value(account, "meta.account")) == "流水" {
-								return
-							}
-							m.Grows(cmd, kit.Keys("hash", key), kit.Select("", arg, 4), kit.Select("", arg, 5), func(index int, current map[string]interface{}) {
-								w.Write([]string{
-									kit.Format(current["time"]),
-									kit.Format(current["type"]),
-									kit.Format(current["name"]),
-									kit.Format(current["text"]),
-									kit.Format(current["value"]),
-									kit.Format(kit.Value(account, "meta.account")),
-								})
-							})
-						})
-						m.Log(ice.LOG_EXPORT, "%s", p)
-						m.Cmdy(web.STORY, "catch", "csv", p)
-					}
-
-				case "load":
-					// 加载数据
-					m.CSV(m.Cmdx("nfs.cat", arg[2])).Table(func(index int, data map[string]string, head []string) {
-						v, _ := strconv.ParseFloat(data["金额"], 64)
-						for _, account := range []string{kit.Select(data["账户"], arg, 3), "流水"} {
-							// amount := kit.Int(v * 100)
-							item := kit.Dict(
-								"type", data["收支类型"], "name", data["账目分类"], "text", data["备注"], "value", kit.Int(v),
-								"time", data["时间"], "extra", kit.UnMarshal(data["extra"]),
-							)
-
-							if m.Richs(cmd, nil, account, nil) == nil {
-								// 添加账户
-								m.Log(ice.LOG_CREATE, "account: %s", account)
-								m.Rich(cmd, nil, kit.Data("account", account, "amount", "0", "bonus", "0", "spend", "0"))
-							}
-
-							m.Richs(cmd, nil, account, func(key string, value map[string]interface{}) {
-								// 账户流水
-								m.Grow(cmd, kit.Keys("hash", key), item)
-
-								// 账户结余
-								amount := kit.Int(kit.Value(value, "meta.amount")) + kit.Int(v)
-								m.Log(ice.LOG_INSERT, "%s: %v", key, amount)
-								kit.Value(value, "meta.amount", amount)
-
-								switch data["收支类型"] {
-								case "收入":
-									bonus := kit.Int(kit.Value(value, "meta.bonus")) + kit.Int(v)
-									kit.Value(value, "meta.bonus", bonus)
-								case "支出":
-									spend := kit.Int(kit.Value(value, "meta.spend")) + kit.Int(v)
-									kit.Value(value, "meta.spend", spend)
-								}
-							})
-						}
-					})
-				}
-				return
-			}
-
-			if len(arg) == 0 {
-				// 账户列表
-				m.Richs(cmd, nil, "*", func(key string, value map[string]interface{}) {
-					m.Push(key, value["meta"], []string{"account", "count", "amount", "bonus", "spend"})
 				})
 				m.Sort("amount", "int_r")
 				return
 			}
-
-			if len(arg) > 5 && m.Richs(cmd, nil, arg[0], nil) == nil {
-				// 添加账户
-				m.Rich(cmd, nil, kit.Data("account", arg[0], "amount", "0", "bonus", "0", "spend", "0"))
-				m.Log(ice.LOG_CREATE, "account: %s", arg[0])
-			}
-
-			field := []string{"time", "id", "value", "type", "name", "text"}
-			m.Richs(cmd, nil, arg[0], func(key string, value map[string]interface{}) {
-				if len(arg) == 1 {
-					// 消费流水
-					m.Grows(cmd, kit.Keys("hash", key), "", "", func(index int, value map[string]interface{}) {
-						m.Push("", value, field)
-					})
-					m.Sort("id", "int_r")
-					return
-				}
-				if len(arg) == 2 {
-					// 消费详情
-					m.Grows(cmd, kit.Keys("hash", key), "id", arg[1], func(index int, value map[string]interface{}) {
-						m.Push("detail", value)
-					})
-					return
-				}
-				if len(arg) < 6 {
-					// 消费查询
-					name, value := "type", arg[2]
-					switch len(arg) {
-					case 3:
-						// 消费分类
-						name, value = "type", arg[2]
-					case 4:
-						// 消费对象
-						name, value = "name", arg[3]
-					case 5:
-						// 消费备注
-						name, value = "text", arg[4]
-					}
-					m.Grows(cmd, kit.Keys("hash", key), name, value, func(index int, value map[string]interface{}) {
-						m.Push("", value, field)
-					})
-					m.Sort("id", "int_r")
-					return
-				}
-
-				// 词汇统计
-				web.Count(m, cmd, "meta.word.type", arg[2])
-				web.Count(m, cmd, "meta.word.name", arg[3])
-				web.Count(m, cmd, "meta.word.text", arg[4])
-				web.Count(m, cmd, "meta.word.value", strings.TrimPrefix(arg[5], "-"))
-
-				// 数据结构
-				amount := kit.Int(arg[5])
-				extra := kit.Dict()
-				data := kit.Dict(
-					kit.MDB_TYPE, arg[2], kit.MDB_NAME, arg[3], kit.MDB_TEXT, arg[4],
-					"value", amount, "extra", extra,
-				)
-				for i := 6; i < len(arg)-1; i += 2 {
-					switch arg[i] {
-					case kit.MDB_TIME:
-						kit.Value(data, arg[i], arg[i+1])
-					default:
-						kit.Value(extra, arg[i], arg[i+1])
-					}
-				}
-				// 添加流水
-				n := m.Grow(cmd, kit.Keys(kit.MDB_HASH, key), data)
-
-				// 账户结余
-				total := kit.Int(kit.Value(value, "meta.amount")) + amount
-				m.Log(ice.LOG_INSERT, "account: %s total: %v", arg[0], total)
-				kit.Value(value, "meta.amount", total)
-				m.Echo("%s: %d %d\n", arg[0], n, total)
-
-				// 收支统计
-				switch data["type"] {
-				case "收入":
-					bonus := kit.Int(kit.Value(value, "meta.bonus")) + amount
-					kit.Value(value, "meta.bonus", bonus)
-				case "支出":
-					spend := kit.Int(kit.Value(value, "meta.spend")) + amount
-					kit.Value(value, "meta.spend", spend)
+			m.Table(func(index int, value map[string]string, head []string) {
+				if value["key"] == "status" {
+					m.Push("key", "action")
+					m.Push("value", _asset_action(m, value["value"]))
 				}
 			})
 		}},

@@ -70,11 +70,13 @@ func _serve_handle(key string, cmd *ice.Command, msg *ice.Message, w http.Respon
 		msg.Option(v.Name, v.Value)
 	}
 
+	// 请求
 	msg.Option(ice.MSG_OUTPUT, "")
 	if u, e := url.Parse(r.Header.Get("Referer")); e == nil {
 		for k, v := range u.Query() {
-			msg.Logs("refer", k, v)
-			msg.Option(k, v)
+			if msg.Logs("refer", k, v); k != "name" {
+				msg.Option(k, v)
+			}
 		}
 	}
 

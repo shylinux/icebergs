@@ -19,6 +19,7 @@ import (
 const LOGIN = "_login"
 
 func _serve_login(msg *ice.Message, cmds []string, w http.ResponseWriter, r *http.Request) ([]string, bool) {
+	msg.Debug("what", msg.Conf("aaa.user"))
 	msg.Option(ice.MSG_USERNAME, "")
 	msg.Option(ice.MSG_USERROLE, "")
 
@@ -191,7 +192,15 @@ func _serve_main(m *ice.Message, w http.ResponseWriter, r *http.Request) bool {
 		if r.ParseForm(); r.FormValue(ice.MSG_SESSID) != "" {
 			return true
 		}
-		if c, e := r.Cookie(ice.MSG_SESSID); e != nil || c.Value == "" {
+
+		sessid := ""
+		if c, e := r.Cookie(ice.MSG_SESSID); e == nil {
+			m.Richs("aaa.sess", "", c.Value, func(key string, value map[string]interface{}) {
+				sessid = c.Value
+			})
+		}
+
+		if sessid == "" {
 			http.Redirect(w, r, m.Conf(SERVE, "meta.sso"), http.StatusTemporaryRedirect)
 			return false
 		}

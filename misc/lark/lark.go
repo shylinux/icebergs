@@ -524,14 +524,18 @@ var Index = &ice.Context{Name: "lark", Help: "机器人",
 						"app_access_token", m.Cmdx(APP, "token", "bot"),
 					))
 
+					m.Option(aaa.USERZONE, LARK)
 					m.Option(ice.MSG_USERROLE, aaa.ROOT)
 					user := kit.Format(kit.Value(data, "data.open_id"))
 					web.RenderCookie(m, aaa.SessCreate(m, user, aaa.UserRole(m, user)))
 					m.Render("redirect", m.Conf(web.SHARE, "meta.domain"))
 
-					m.Debug("data %v", kit.Format(data))
-					m.Cmd(aaa.USER, mdb.MODIFY, user,
-						aaa.USERNICK, kit.Value(data, "data.name"),
+					m.Option(aaa.USERNAME, user)
+					msg := m.Cmd(m.Prefix(USER), user)
+					m.Cmd(aaa.USER, mdb.MODIFY, aaa.USERZONE, LARK, aaa.USERNICK, msg.Append("name"),
+						"mobile", msg.Append("mobile"), "avatar_url", msg.Append("avatar_url"),
+						"gender", kit.Select("女", "男", msg.Append("gender") == "1"),
+						"country", msg.Append("country"), "city", msg.Append("city"),
 					)
 				})
 				return

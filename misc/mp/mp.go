@@ -47,14 +47,13 @@ var Index = &ice.Context{Name: "mp", Help: "小程序",
 
 			case "info":
 				// 用户信息
-				m.Cmd(aaa.USER, mdb.MODIFY, m.Option(ice.MSG_USERNAME),
-					"gender", m.Option("gender"),
-					"avatar", m.Option("avatarUrl"),
-					"usernick", m.Option("nickName"),
+				m.Option(aaa.USERNAME, m.Option(ice.MSG_USERNAME))
+				m.Cmd(aaa.USER, mdb.MODIFY, aaa.USERZONE, MP, aaa.USERNICK, m.Option("nickName"),
+					"avatar_url", m.Option("avatarUrl"),
+					"gender", kit.Select("女", "男", m.Option("gender") == "1"),
+					"country", m.Option("country"), "city", m.Option("city"),
 					"language", m.Option("language"),
 					"province", m.Option("province"),
-					"country", m.Option("country"),
-					"city", m.Option("city"),
 				)
 
 			case "scan":

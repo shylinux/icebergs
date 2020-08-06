@@ -95,10 +95,15 @@ func init() {
 			RIVER: {Name: "river", Help: "群组", Value: kit.Data(
 				"template", kit.Dict(
 					"base", kit.Dict(
-						"admin", []interface{}{
+						"info", []interface{}{
 							"web.chat.user",
 							"web.chat.tool",
 							"web.chat.info",
+						},
+						"miss", []interface{}{
+							"web.team.task",
+							"web.team.plan",
+							"web.wiki.word",
 						},
 					),
 				),
@@ -238,9 +243,6 @@ func init() {
 						_river_node(m, m.Option(ice.MSG_RIVER), arg...)
 					}},
 				}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-					if m.Option(ice.MSG_USERNICK) != "" {
-						m.Cmd(aaa.USER, mdb.MODIFY, m.Option(ice.MSG_USERNAME), aaa.USERNICK, m.Option(ice.MSG_USERNICK))
-					}
 					if len(arg) > 0 && arg[0] == "storm" {
 						m.Cmdy("/storm", arg[1:])
 						return

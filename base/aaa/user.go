@@ -36,21 +36,21 @@ func _user_modify(m *ice.Message, name string, arg ...string) {
 		_user_create(m, name, "")
 	}
 
+	m.Log_MODIFY(USERNAME, name, arg)
 	m.Richs(USER, nil, name, func(key string, value map[string]interface{}) {
-		m.Log_MODIFY(USERNAME, name, arg)
 		for i := 0; i < len(arg)-1; i += 2 {
 			kit.Value(value, arg[i], arg[i+1])
 		}
 	})
 }
 func _user_create(m *ice.Message, name, word string) {
-	m.Rich(USER, nil, kit.Dict(
+	h := m.Rich(USER, nil, kit.Dict(
 		USERNAME, name, PASSWORD, word,
 		USERNICK, name, USERNODE, cli.NodeName,
 		USERZONE, m.Option(ice.MSG_USERZONE),
 		USERNODE, cli.NodeName,
 	))
-	m.Log_CREATE(USERNAME, name)
+	m.Log_CREATE(USERNAME, name, "hash", h)
 	m.Event(gdb.USER_CREATE, name)
 }
 func _user_search(m *ice.Message, kind, name, text string, arg ...string) {
@@ -119,8 +119,8 @@ func init() {
 				mdb.CREATE: {Name: "create username [password]", Help: "创建", Hand: func(m *ice.Message, arg ...string) {
 					_user_create(m, arg[0], kit.Select("", arg, 1))
 				}},
-				mdb.MODIFY: {Name: "modify username [key value]...", Help: "编辑", Hand: func(m *ice.Message, arg ...string) {
-					_user_modify(m, m.Option("username"), arg[0], arg[1])
+				mdb.MODIFY: {Name: "modify [key value]...", Help: "编辑", Hand: func(m *ice.Message, arg ...string) {
+					_user_modify(m, m.Option(USERNAME), arg...)
 				}},
 				mdb.SEARCH: {Name: "search type name text arg...", Help: "搜索", Hand: func(m *ice.Message, arg ...string) {
 					_user_search(m, arg[0], arg[1], kit.Select("", arg, 2))

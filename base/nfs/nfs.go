@@ -24,6 +24,11 @@ func _file_ext(name string) string {
 }
 
 func _file_list(m *ice.Message, root string, name string, level int, deep bool, dir_type string, dir_reg *regexp.Regexp, fields []string) {
+	switch strings.Split(name, "/")[0] {
+	case "etc", "var":
+		return
+	}
+
 	if fs, e := ioutil.ReadDir(path.Join(root, name)); e != nil {
 		if f, e := os.Open(path.Join(root, name)); e == nil {
 			defer f.Close()

@@ -146,6 +146,7 @@ func init() {
 					} else {
 						m.Cmdy(cli.SYSTEM, GO, "run", "./"+arg[1])
 					}
+					m.Set(ice.MSG_APPEND)
 				}},
 			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {}},
 		},

@@ -13,6 +13,11 @@ func (m *Message) Prefix(arg ...string) string {
 }
 func (m *Message) Save(arg ...string) *Message {
 	list := []string{}
+	if len(arg) == 0 {
+		for k := range m.target.Configs {
+			arg = append(arg, k)
+		}
+	}
 	for _, k := range arg {
 		list = append(list, kit.Keys(m.Cap(CTX_FOLLOW), k))
 	}

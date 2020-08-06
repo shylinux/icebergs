@@ -83,7 +83,7 @@ func (m *Message) Push(key string, value interface{}, arg ...interface{}) *Messa
 			// 查找数据
 			var v interface{}
 			switch k {
-			case kit.MDB_KEY, kit.MDB_ZONE:
+			case kit.MDB_KEY, kit.MDB_ZONE, kit.MDB_HASH:
 				if key != "" {
 					v = key
 					break

@@ -19,6 +19,7 @@ func init() {
 				m.Cmd(mdb.SEARCH, mdb.CREATE, SH, SH, c.Cap(ice.CTX_FOLLOW))
 				m.Cmd(mdb.PLUGIN, mdb.CREATE, SH, SH, c.Cap(ice.CTX_FOLLOW))
 				m.Cmd(mdb.RENDER, mdb.CREATE, SH, SH, c.Cap(ice.CTX_FOLLOW))
+				m.Cmd(mdb.ENGINE, mdb.CREATE, SH, SH, c.Cap(ice.CTX_FOLLOW))
 			}},
 			SH: {Name: SH, Help: "sh", Action: map[string]*ice.Action{
 				mdb.SEARCH: {Name: "search type name text", Hand: func(m *ice.Message, arg ...string) {
@@ -37,7 +38,9 @@ func init() {
 					m.Cmdy(nfs.CAT, path.Join(arg[2], arg[1]))
 				}},
 				mdb.ENGINE: {Hand: func(m *ice.Message, arg ...string) {
-					m.Cmdy(cli.SYSTEM, path.Join(arg[2], arg[1]))
+					m.Option(cli.CMD_DIR, arg[2])
+					m.Cmdy(cli.SYSTEM, arg[1])
+					m.Set(ice.MSG_APPEND)
 				}},
 
 				"man": {Hand: func(m *ice.Message, arg ...string) {

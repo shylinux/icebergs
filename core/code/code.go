@@ -17,6 +17,11 @@ import (
 	"strings"
 )
 
+const (
+	VEDIO  = "vedio"
+	QRCODE = "qrcode"
+)
+
 const ( // CODE
 	INSTALL = "_install"
 	PREPARE = "_prepare"

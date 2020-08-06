@@ -23,6 +23,17 @@ func _hash_insert(m *ice.Message, prefix, key string, arg ...string) string {
 	return m.Rich(prefix, key, kit.Dict(arg))
 
 }
+func _hash_inputs(m *ice.Message, prefix, key string, field, value string) {
+	list := map[string]int{}
+	m.Richs(prefix, key, kit.MDB_FOREACH, func(key string, val map[string]interface{}) {
+		list[kit.Format(val[field])]++
+	})
+	for k, i := range list {
+		m.Push("key", k)
+		m.Push("count", i)
+	}
+	m.Sort("count", "int_r")
+}
 func _hash_modify(m *ice.Message, prefix, key string, field, value string, arg ...string) {
 	m.Richs(prefix, key, value, func(key string, value map[string]interface{}) {
 		for i := 0; i < len(arg)-1; i += 2 {
@@ -84,9 +95,7 @@ func _hash_import(m *ice.Message, prefix, key, file string) {
 }
 func _hash_select(m *ice.Message, prefix, key, field, value string) {
 	fields := strings.Split(kit.Select("time,name", m.Option("fields")), ",")
-	m.Debug("what %v %v", prefix, key, value)
 	m.Richs(prefix, key, value, func(key string, val map[string]interface{}) {
-		m.Debug("what %v %v", prefix, key)
 		if value == kit.MDB_FOREACH {
 			m.Push(key, val, fields)
 			return
@@ -279,6 +288,8 @@ const (
 	IMPORT = "import"
 	EXPORT = "export"
 
+	INPUTS = "inputs"
+
 	INSERT = "insert"
 	MODIFY = "modify"
 	DELETE = "delete"
@@ -338,6 +349,13 @@ var Index = &ice.Context{Name: "mdb", Help: "数据模块",
 				_list_import(m, arg[0], arg[1], file)
 			}
 		}},
+		INPUTS: {Name: "inputs conf key type field value", Help: "输入补全", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			switch arg[2] {
+			case HASH:
+				_hash_inputs(m, arg[0], arg[1], arg[3], kit.Select("", arg, 4))
+			case LIST:
+			}
+		}},
 	},
 }
 
@@ -346,5 +364,6 @@ func init() {
 		IMPORT, EXPORT, SELECT,
 		PLUGIN, ENGINE, SEARCH, RENDER,
 		INSERT, MODIFY, DELETE,
+		INPUTS,
 	)
 }

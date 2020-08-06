@@ -25,7 +25,7 @@ func _c_find(m *ice.Message, key string) {
 }
 func _c_grep(m *ice.Message, key string) {
 	m.Split(m.Cmd(cli.SYSTEM, GREP, "--exclude-dir=.git", "--exclude-dir=pluged", "--exclude=.[a-z]*",
-		"-rn", key, ".").Append(cli.CMD_OUT), "file:line:text", ":", "\n")
+		"-rn", "\\<"+key+"\\>", ".").Append(cli.CMD_OUT), "file:line:text", ":", "\n")
 }
 func _c_tags(m *ice.Message, key string) {
 	if _, e := os.Stat(path.Join(m.Option("_path"), m.Conf(C, "meta.tags"))); e != nil {

@@ -12,30 +12,10 @@ import (
 	"strings"
 )
 
-const (
-	INNER  = "inner"
-	VEDIO  = "vedio"
-	QRCODE = "qrcode"
-)
-
-const (
-	LIST = "list"
-	PLUG = "plug"
-	SHOW = "show"
-	SAVE = "save"
-)
-
 func _inner_ext(name string) string {
 	return strings.ToLower(kit.Select(path.Base(name), strings.TrimPrefix(path.Ext(name), ".")))
 }
 
-func _inner_show(m *ice.Message, ext, file, dir string, arg ...string) {
-	if m.Cmdy(mdb.ENGINE, ext, file, dir, arg); m.Result() == "" {
-		if ls := kit.Simple(m.Confv(INNER, kit.Keys("meta.show", ext))); len(ls) > 0 {
-			m.Cmdy(cli.SYSTEM, ls, path.Join(dir, file)).Set(ice.MSG_APPEND)
-		}
-	}
-}
 func _inner_list(m *ice.Message, ext, file, dir string, arg ...string) {
 	if !m.Right(strings.Split(dir, "/"), file) {
 		return
@@ -48,11 +28,30 @@ func _inner_list(m *ice.Message, ext, file, dir string, arg ...string) {
 		}
 	}
 }
+func _inner_show(m *ice.Message, ext, file, dir string, arg ...string) {
+	if m.Cmdy(mdb.ENGINE, ext, file, dir, arg); m.Result() == "" {
+		if ls := kit.Simple(m.Confv(INNER, kit.Keys("meta.show", ext))); len(ls) > 0 {
+			m.Cmdy(cli.SYSTEM, ls, path.Join(dir, file)).Set(ice.MSG_APPEND)
+		}
+	}
+}
+
+const (
+	LIST = "list"
+	PLUG = "plug"
+	SHOW = "show"
+	SAVE = "save"
+)
+
+const (
+	INNER = "inner"
+	VIMER = "vimer"
+)
 
 func init() {
 	Index.Merge(&ice.Context{
 		Commands: map[string]*ice.Command{
-			INNER: {Name: "inner path=usr/demo file=hi.sh line=1 auto", Help: "编辑器", Meta: kit.Dict(
+			INNER: {Name: "inner path=usr/demo file=hi.sh line=1 auto", Help: "阅读器", Meta: kit.Dict(
 				"display", "/plugin/local/code/inner.js", "style", "editor",
 			), Action: map[string]*ice.Action{
 				web.UPLOAD: {Name: "upload path name", Help: "上传", Hand: func(m *ice.Message, arg ...string) {
@@ -83,9 +82,14 @@ func init() {
 				}
 				_inner_list(m, _inner_ext(arg[1]), arg[1], arg[0])
 			}},
+			VIMER: {Name: "vimer path=usr/demo file=hi.sh line=1 auto", Help: "编辑器", Meta: kit.Dict(
+				"display", "/plugin/local/code/vimer.js", "style", "editor",
+			), Action: map[string]*ice.Action{}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+				m.Cmdy(INNER, arg)
+			}},
 		},
 		Configs: map[string]*ice.Config{
-			INNER: {Name: "inner", Help: "编辑器", Value: kit.Data(
+			INNER: {Name: "inner", Help: "阅读器", Value: kit.Data(
 				"source", kit.Dict(
 					"license", "true",
 					"makefile", "true",

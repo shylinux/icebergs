@@ -33,7 +33,7 @@ func _wiki_save(m *ice.Message, cmd, name, text string, arg ...string) {
 }
 func _wiki_upload(m *ice.Message, cmd string) {
 	m.Cmdy(web.CACHE, web.UPLOAD)
-	m.Cmdy(web.CACHE, web.WATCH, m.Option(web.DATA), path.Join(m.Option("path"), m.Option("name")))
+	m.Cmdy(web.CACHE, web.WATCH, m.Option(web.DATA), path.Join(m.Conf(cmd, "meta.path"), m.Option("path"), m.Option("name")))
 }
 
 func reply(m *ice.Message, cmd string, arg ...string) bool {

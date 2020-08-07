@@ -17,7 +17,7 @@ func init() {
 			ice.CTX_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) { m.Load() }},
 			ice.CTX_EXIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) { m.Save(PASTE) }},
 
-			PASTE: {Name: "paste text auto 添加:button", Help: "粘贴板", Meta: kit.Dict(
+			PASTE: {Name: "paste text auto 粘贴:button", Help: "粘贴板", Meta: kit.Dict(
 				"display", "/plugin/story/paste.js",
 			), Action: map[string]*ice.Action{
 				mdb.INSERT: {Name: "insert [key value]...", Help: "添加", Hand: func(m *ice.Message, arg ...string) {

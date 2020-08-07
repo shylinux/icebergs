@@ -1,10 +1,12 @@
 package wiki
 
 import (
-	"github.com/shylinux/icebergs"
+	"path"
+
+	ice "github.com/shylinux/icebergs"
 	"github.com/shylinux/icebergs/base/mdb"
 	"github.com/shylinux/icebergs/base/nfs"
-	"github.com/shylinux/toolkits"
+	kit "github.com/shylinux/toolkits"
 )
 
 func _data_show(m *ice.Message, name string, arg ...string) {
@@ -21,7 +23,7 @@ func init() {
 	Index.Merge(&ice.Context{Name: "data", Help: "数据表格",
 		Configs: map[string]*ice.Config{
 			DATA: {Name: "data", Help: "数据表格", Value: kit.Data(
-				kit.MDB_SHORT, "name", "path", "", "regs", ".*\\.csv",
+				"path", "usr/export", "regs", ".*\\.csv",
 			)},
 		},
 		Commands: map[string]*ice.Command{
@@ -31,7 +33,7 @@ func init() {
 				}},
 			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 				if !_wiki_list(m, DATA, kit.Select("./", arg, 0)) {
-					_data_show(m, arg[0])
+					_data_show(m, path.Join(m.Conf(DATA, "meta.path"), arg[0]))
 				}
 			}},
 		},

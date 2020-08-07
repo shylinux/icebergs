@@ -39,7 +39,7 @@ func init() {
 				}},
 				mdb.ENGINE: {Hand: func(m *ice.Message, arg ...string) {
 					m.Option(cli.CMD_DIR, arg[2])
-					m.Cmdy(cli.SYSTEM, arg[1])
+					m.Cmdy(cli.SYSTEM, "sh", arg[1])
 					m.Set(ice.MSG_APPEND)
 				}},
 

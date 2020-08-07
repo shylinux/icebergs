@@ -13,7 +13,7 @@ field "编辑器" web.code.vimer args `[ src/ main.go ]`
 
 field "资料库" web.chat.meet.miss args `[ ]`
 field "粘贴板" web.chat.paste.paste args `[ ]`
-field "相册集" web.wiki.feel args `[ usr/export/web.chat.meet.miss/feel/ ]`
+field "相册集" web.wiki.feel args `[ ]`
 field "思维导图" web.wiki.draw.draw args `[ src/ main.svg ]`
 
 field "任务" web.team.task args `[ ]`

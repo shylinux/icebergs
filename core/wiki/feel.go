@@ -16,7 +16,7 @@ func init() {
 	Index.Merge(&ice.Context{Name: "feel", Help: "影音媒体",
 		Configs: map[string]*ice.Config{
 			FEEL: {Name: "feel", Help: "影音媒体", Value: kit.Data(
-				"path", "", "regs", ".*.(qrc|png|PNG|jpg|jpeg|JPG|MOV|m4v|mp4)",
+				"path", "usr/image", "regs", ".*.(qrc|png|PNG|jpg|jpeg|JPG|MOV|m4v|mp4)",
 			)},
 		},
 		Commands: map[string]*ice.Command{
@@ -44,14 +44,11 @@ func init() {
 					}
 				}},
 			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+				m.Option("prefix", m.Conf(FEEL, "meta.path"))
 				if !_wiki_list(m, FEEL, kit.Select("./", arg, 0)) {
 					m.Echo(path.Join(m.Conf(FEEL, "meta.path"), arg[0]))
 					return
 				}
-				m.Table(func(index int, value map[string]string, head []string) {
-					m.Push("show", m.Cmdx(mdb.RENDER, web.RENDER.IMG, path.Join("/share/local", value["path"])))
-				})
-				m.Sort(kit.MDB_TIME, "time_r")
 			}},
 		},
 	}, nil)

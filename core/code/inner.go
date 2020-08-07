@@ -19,13 +19,15 @@ func _inner_list(m *ice.Message, ext, file, dir string, arg ...string) {
 	if !m.Right(strings.Split(dir, "/"), file) {
 		return
 	}
-	if m.Cmdy(mdb.RENDER, ext, file, dir, arg); m.Result() == "" {
-		if m.Conf(INNER, kit.Keys("meta.source", ext)) == "true" {
-			if m.Cmdy(mdb.RENDER, nfs.FILE, file, dir, arg); m.Result() == "" {
-				m.Echo(path.Join(dir, file))
-			}
+	if m.Cmdy(mdb.RENDER, ext, file, dir, arg); m.Result() != "" {
+		return
+	}
+	if m.Conf(INNER, kit.Keys("meta.source", ext)) == "true" {
+		if m.Cmdy(mdb.RENDER, nfs.FILE, file, dir, arg); m.Result() != "" {
+			return
 		}
 	}
+	m.Echo(path.Join(dir, file))
 }
 func _inner_show(m *ice.Message, ext, file, dir string, arg ...string) {
 	if m.Cmdy(mdb.ENGINE, ext, file, dir, arg); m.Result() == "" {
@@ -105,6 +107,7 @@ func init() {
 					"csv", "true", "json", "true",
 					"css", "true", "html", "true",
 					"txt", "true", "url", "true",
+					"log", "true", "err", "true",
 
 					"md", "true", "conf", "true",
 					"ts", "true", "tsx", "true", "vue", "true", "sass", "true",

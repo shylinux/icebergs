@@ -120,18 +120,6 @@ func init() {
 							"endif", "keyword",
 						),
 					),
-					"shy", kit.Dict(
-						"prefix", kit.Dict("#", "comment"),
-						"keyword", kit.Dict(
-							"title", "keyword",
-							"chapter", "keyword",
-							"section", "keyword",
-							"refer", "keyword",
-							"field", "keyword",
-							"label", "keyword",
-							"chain", "keyword",
-						),
-					),
 					"py", kit.Dict(
 						"prefix", kit.Dict("#", "comment"),
 						"keyword", kit.Dict("print", "keyword"),

@@ -10,24 +10,18 @@ import (
 	"path"
 )
 
-func _feel_show(m *ice.Message, name string, arg ...string) {
-	m.Echo(path.Join(m.Conf(FEEL, "meta.path"), name))
-}
-
 const FEEL = "feel"
-const FeelPlugin = "/plugin/local/wiki/feel.js"
 
 func init() {
 	Index.Merge(&ice.Context{Name: "feel", Help: "影音媒体",
 		Configs: map[string]*ice.Config{
 			FEEL: {Name: "feel", Help: "影音媒体", Value: kit.Data(
-				kit.MDB_SHORT, "name", "path", "", "regs", ".*.(qrc|png|PNG|jpg|jpeg|JPG|MOV|m4v|mp4)",
-				"height", "200", "page.limit", "3",
+				"path", "", "regs", ".*.(qrc|png|PNG|jpg|jpeg|JPG|MOV|m4v|mp4)",
 			)},
 		},
 		Commands: map[string]*ice.Command{
-			FEEL: {Name: "feel path=auto auto", Help: "影音媒体", Meta: kit.Dict(
-				web.PLUGIN, FeelPlugin, "detail", []string{"标签", "删除"},
+			FEEL: {Name: "feel path=auto 刷新:button=auto 上传:button 上一页:button 下一页:button 参数:button", Help: "影音媒体", Meta: kit.Dict(
+				"display", "/plugin/local/wiki/feel.js", "detail", []string{"标签", "删除"},
 			), Action: map[string]*ice.Action{
 				mdb.CREATE: {Name: "create", Help: "创建", Hand: func(m *ice.Message, arg ...string) {
 					m.Conf(FEEL, kit.Keys(path.Base(arg[2]), "-2"), arg[3])
@@ -50,11 +44,9 @@ func init() {
 					}
 				}},
 			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-				m.Option("prefix", m.Conf(FEEL, "meta.path"))
-				m.Option("height", m.Conf(FEEL, "meta.height"))
-				m.Option("limit", m.Conf(FEEL, "meta.page.limit"))
 				if !_wiki_list(m, FEEL, kit.Select("./", arg, 0)) {
-					_feel_show(m, arg[0])
+					m.Echo(path.Join(m.Conf(FEEL, "meta.path"), arg[0]))
+					return
 				}
 				m.Table(func(index int, value map[string]string, head []string) {
 					m.Push("show", m.Cmdx(mdb.RENDER, web.RENDER.IMG, path.Join("/share/local", value["path"])))

@@ -94,7 +94,7 @@ func _hash_import(m *ice.Message, prefix, key, file string) {
 	m.Echo(kit.Keys(file, JSON))
 }
 func _hash_select(m *ice.Message, prefix, key, field, value string) {
-	fields := strings.Split(kit.Select("time,name", m.Option("fields")), ",")
+	fields := strings.Split(kit.Select("time,hash,type,name,text", m.Option("fields")), ",")
 	m.Richs(prefix, key, value, func(key string, val map[string]interface{}) {
 		if value == kit.MDB_FOREACH {
 			m.Push(key, val, fields)
@@ -195,7 +195,7 @@ func _list_import(m *ice.Message, prefix, key, file string) {
 	m.Echo(kit.Keys(file, CSV))
 }
 func _list_select(m *ice.Message, prefix, key, field, value string) {
-	fields := strings.Split(kit.Select("time,name", m.Option("fields")), ",")
+	fields := strings.Split(kit.Select("time,type,name,text", m.Option("fields")), ",")
 	m.Grows(prefix, key, field, value, func(index int, value map[string]interface{}) {
 		if field == kit.MDB_ID {
 			m.Push("detail", value)
@@ -328,7 +328,7 @@ var Index = &ice.Context{Name: "mdb", Help: "数据模块",
 		SELECT: {Name: "select conf key type field value", Help: "数据查询", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			switch arg[2] {
 			case HASH:
-				_hash_select(m, arg[0], arg[1], arg[3], arg[4])
+				_hash_select(m, arg[0], arg[1], kit.Select("", arg, 3), kit.Select(kit.MDB_FOREACH, arg, 4))
 			case LIST:
 				_list_select(m, arg[0], arg[1], kit.Select("", arg, 3), kit.Select("", arg, 4))
 			}

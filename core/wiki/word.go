@@ -321,7 +321,7 @@ func init() {
 			VIDEO: {Name: VIDEO, Help: "视频", Value: kit.Data("template", video)},
 
 			WORD: {Name: WORD, Help: "语言文字", Value: kit.Data(
-				"path", "usr", "regs", ".*\\.shy", "alias", map[string]interface{}{
+				"path", "", "regs", ".*\\.shy", "alias", map[string]interface{}{
 					PREMENU: []interface{}{TITLE, PREMENU},
 					CHAPTER: []interface{}{TITLE, CHAPTER},
 					SECTION: []interface{}{TITLE, SECTION},
@@ -447,7 +447,7 @@ func init() {
 				_other_show(m, arg[0], kit.Select(arg[0], arg[1]), arg[2:]...)
 			}},
 
-			WORD: {Name: "word path=demo/hi.shy auto", Help: "语言文字", Meta: kit.Dict(
+			WORD: {Name: "word path=src/main.shy auto", Help: "语言文字", Meta: kit.Dict(
 				"display", "/plugin/local/wiki/word.js",
 			), Action: map[string]*ice.Action{
 				web.STORY: {Name: "story", Help: "运行", Hand: func(m *ice.Message, arg ...string) {

@@ -8,10 +8,18 @@ refer "" `
 image qrcode `https://weixin.qq.com`
 
 chapter "应用"
-field "runtime" cli.runtime
-field "asset" web.mall.asset args `[ ]`
-field "task" web.team.task args `[ ]`
-field "miss" web.chat.meet.miss args `[ ]`
+field "阅读器" web.code.inner args `[ src/ main.shy ]`
+field "编辑器" web.code.vimer args `[ src/ main.go ]`
+
+field "资料库" web.chat.meet.miss args `[ ]`
+field "粘贴板" web.chat.paste.paste args `[ ]`
+field "相册集" web.wiki.feel args `[ usr/export/web.chat.meet.miss/feel/ ]`
+field "思维导图" web.wiki.draw.draw args `[ src/ main.svg ]`
+
+field "任务" web.team.task args `[ ]`
+field "任务" web.team.plan args `[ ]`
+
+field "资产" web.mall.asset args `[ ]`
 
 chapter "项目"
 section "icebergs"

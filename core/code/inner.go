@@ -15,7 +15,6 @@ import (
 func _inner_ext(name string) string {
 	return strings.ToLower(kit.Select(path.Base(name), strings.TrimPrefix(path.Ext(name), ".")))
 }
-
 func _inner_list(m *ice.Message, ext, file, dir string, arg ...string) {
 	if !m.Right(strings.Split(dir, "/"), file) {
 		return
@@ -35,13 +34,15 @@ func _inner_show(m *ice.Message, ext, file, dir string, arg ...string) {
 		}
 	}
 }
-
-const (
-	LIST = "list"
-	PLUG = "plug"
-	SHOW = "show"
-	SAVE = "save"
-)
+func _vimer_save(m *ice.Message, ext, file, dir string, text string) {
+	if f, p, e := kit.Create(path.Join(dir, file)); e == nil {
+		defer f.Close()
+		if n, e := f.WriteString(text); m.Assert(e) {
+			m.Log_EXPORT("file", path.Join(dir, file), "size", n)
+		}
+		m.Echo(p)
+	}
+}
 
 const (
 	INNER = "inner"
@@ -51,23 +52,18 @@ const (
 func init() {
 	Index.Merge(&ice.Context{
 		Commands: map[string]*ice.Command{
-			INNER: {Name: "inner path=usr/demo file=hi.sh line=1 auto", Help: "阅读器", Meta: kit.Dict(
+			INNER: {Name: "inner path=usr/demo file=hi.sh line=1 auto 运行:button 项目:button 搜索:button", Help: "阅读器", Meta: kit.Dict(
 				"display", "/plugin/local/code/inner.js", "style", "editor",
 			), Action: map[string]*ice.Action{
-				web.UPLOAD: {Name: "upload path name", Help: "上传", Hand: func(m *ice.Message, arg ...string) {
-					m.Cmdy(web.CACHE, web.UPLOAD)
-					m.Cmdy(web.CACHE, web.WATCH, m.Option(web.DATA), path.Join(m.Option("path"), m.Option("name")))
-				}},
-
-				mdb.SEARCH: {Name: "search type name text arg...", Help: "搜索", Hand: func(m *ice.Message, arg ...string) {
-					m.Cmdy(mdb.SEARCH, arg)
-				}},
 				mdb.PLUGIN: {Name: "plugin type name text arg...", Help: "插件", Hand: func(m *ice.Message, arg ...string) {
 					if m.Cmdy(mdb.PLUGIN, arg); m.Result() == "" {
 						if m.Echo(m.Conf(INNER, kit.Keys("meta.plug", arg[0]))); m.Result() == "" {
 							m.Echo("{}")
 						}
 					}
+				}},
+				mdb.SEARCH: {Name: "search type name text arg...", Help: "搜索", Hand: func(m *ice.Message, arg ...string) {
+					m.Cmdy(mdb.SEARCH, arg)
 				}},
 				mdb.RENDER: {Name: "render type name text arg...", Help: "渲染", Hand: func(m *ice.Message, arg ...string) {
 					_inner_list(m, arg[0], arg[1], arg[2], arg[3:]...)
@@ -82,9 +78,21 @@ func init() {
 				}
 				_inner_list(m, _inner_ext(arg[1]), arg[1], arg[0])
 			}},
-			VIMER: {Name: "vimer path=usr/demo file=hi.sh line=1 auto", Help: "编辑器", Meta: kit.Dict(
+			VIMER: {Name: "vimer path=usr/demo file=hi.sh line=1 刷新:button=auto 编辑:button 保存:button 运行:button 项目:button", Help: "编辑器", Meta: kit.Dict(
 				"display", "/plugin/local/code/vimer.js", "style", "editor",
-			), Action: map[string]*ice.Action{}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			), Action: map[string]*ice.Action{
+				web.UPLOAD: {Name: "upload path name", Help: "上传", Hand: func(m *ice.Message, arg ...string) {
+					m.Cmdy(web.CACHE, web.UPLOAD)
+					m.Cmdy(web.CACHE, web.WATCH, m.Option(web.DATA), path.Join(m.Option("path"), m.Option("name")))
+				}},
+				nfs.SAVE: {Name: "save type file path", Help: "保存", Hand: func(m *ice.Message, arg ...string) {
+					_vimer_save(m, arg[0], arg[1], arg[2], m.Option("content"))
+				}},
+
+				"cmd": {Name: "cmd type file path", Help: "命令", Hand: func(m *ice.Message, arg ...string) {
+					m.Cmdy(arg)
+				}},
+			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 				m.Cmdy(INNER, arg)
 			}},
 		},
@@ -94,62 +102,57 @@ func init() {
 					"license", "true",
 					"makefile", "true",
 					"shy", "true", "py", "true",
-
-					"md", "true", "csv", "true",
+					"csv", "true", "json", "true",
+					"css", "true", "html", "true",
 					"txt", "true", "url", "true",
-					"conf", "true", "json", "true",
+
+					"md", "true", "conf", "true",
 					"ts", "true", "tsx", "true", "vue", "true", "sass", "true",
-					"html", "true", "css", "true",
 				),
 				"plug", kit.Dict(
+					"makefile", kit.Dict(
+						"prefix", kit.Dict("#", "comment"),
+						"suffix", kit.Dict(":", "comment"),
+						"keyword", kit.Dict(
+							"ifeq", "keyword",
+							"ifneq", "keyword",
+							"else", "keyword",
+							"endif", "keyword",
+						),
+					),
+					"shy", kit.Dict(
+						"prefix", kit.Dict("#", "comment"),
+						"keyword", kit.Dict(
+							"title", "keyword",
+							"chapter", "keyword",
+							"section", "keyword",
+							"refer", "keyword",
+							"field", "keyword",
+							"label", "keyword",
+							"chain", "keyword",
+						),
+					),
 					"py", kit.Dict(
 						"prefix", kit.Dict("#", "comment"),
 						"keyword", kit.Dict("print", "keyword"),
 					),
-					"md", kit.Dict("display", true, "profile", true),
 					"csv", kit.Dict("display", true),
-					"ts", kit.Dict(
-						"prefix", kit.Dict("//", "comment"),
+					"json", kit.Dict("link", true),
+					"html", kit.Dict(
 						"split", kit.Dict(
 							"space", " ",
-							"operator", "{[(.:,;!|)]}",
+							"operator", "<>",
 						),
 						"keyword", kit.Dict(
-							"import", "keyword",
-							"from", "keyword",
-							"new", "keyword",
-							"as", "keyword",
-							"const", "keyword",
-							"export", "keyword",
-							"default", "keyword",
-
-							"if", "keyword",
-							"return", "keyword",
-
-							"class", "keyword",
-							"extends", "keyword",
-							"interface", "keyword",
-							"declare", "keyword",
-							"async", "keyword",
-							"await", "keyword",
-							"try", "keyword",
-							"catch", "keyword",
-
-							"function", "function",
-							"arguments", "function",
-							"console", "function",
-							"this", "function",
-
-							"string", "datatype",
-							"number", "datatype",
-
-							"true", "string",
-							"false", "string",
+							"head", "keyword",
+							"body", "keyword",
 						),
 					),
-					"tsx", kit.Dict("link", "ts"),
-					"vue", kit.Dict("link", "ts"),
-					"sass", kit.Dict("link", "ts"),
+					"css", kit.Dict(
+						"suffix", kit.Dict("{", "comment"),
+					),
+
+					"md", kit.Dict("display", true, "profile", true),
 				),
 				"show", kit.Dict(
 					"sh", []string{"sh"},

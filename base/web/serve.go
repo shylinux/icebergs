@@ -19,7 +19,6 @@ import (
 const LOGIN = "_login"
 
 func _serve_login(msg *ice.Message, cmds []string, w http.ResponseWriter, r *http.Request) ([]string, bool) {
-	msg.Debug("what", msg.Conf("aaa.user"))
 	msg.Option(ice.MSG_USERNAME, "")
 	msg.Option(ice.MSG_USERROLE, "")
 

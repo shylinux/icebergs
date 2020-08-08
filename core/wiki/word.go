@@ -85,6 +85,7 @@ func _refer_show(m *ice.Message, name, text string, arg ...string) {
 	m.Render(ice.RENDER_TEMPLATE, m.Conf(REFER, "meta.template"))
 }
 func _spark_show(m *ice.Message, name, text string, arg ...string) {
+	m.Option("style", kit.Select("", name))
 	text = strings.TrimSpace(text)
 	m.Optionv("list", kit.Split(text, "\n"))
 
@@ -288,8 +289,9 @@ const (
 	IMAGE = "image"
 	VIDEO = "video"
 
-	BAIDU = "baidu"
-	OTHER = "other"
+	BAIDU   = "baidu"
+	OTHER   = "other"
+	SNIPPET = "snippet"
 
 	PREMENU = "premenu"
 	CHAPTER = "chapter"

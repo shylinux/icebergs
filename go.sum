@@ -11,6 +11,8 @@ github.com/nareix/joy4 v0.0.0-20200507095837-05a4ffbb5369 h1:Yp0zFEufLz0H7jzffb4
 github.com/nareix/joy4 v0.0.0-20200507095837-05a4ffbb5369/go.mod h1:aFJ1ZwLjvHN4yEzE5Bkz8rD8/d8Vlj3UIuvz2yfET7I=
 github.com/shylinux/toolkits v0.1.6 h1:x+Bs+oijuS11TWGAsdCEgwDbCS35uJvnP4jYDETJqig=
 github.com/shylinux/toolkits v0.1.6/go.mod h1:Y68Ot6xOmo1bun67YvqC3chDGeU2gDxtsUnvVDGJm4g=
+github.com/shylinux/toolkits v0.1.7 h1:RDUpZNTgnob6vaKJvJgNVaDE2UZRURjLG4StpSaAWF8=
+github.com/shylinux/toolkits v0.1.7/go.mod h1:Y68Ot6xOmo1bun67YvqC3chDGeU2gDxtsUnvVDGJm4g=
 github.com/skip2/go-qrcode v0.0.0-20200617195104-da1b6568686e h1:MRM5ITcdelLK2j1vwZ3Je0FKVCfqOLp5zO6trqMLYs0=
 github.com/skip2/go-qrcode v0.0.0-20200617195104-da1b6568686e/go.mod h1:XV66xRDqSt+GTGFMVlhk3ULuV0y9ZmzeVGR4mloJI3M=
 github.com/tuotoo/qrcode v0.0.0-20190222102259-ac9c44189bf2 h1:BWVtt2VBY+lmVDu9MGKqLGKl04B+iRHcrW1Ptyi/8tg=

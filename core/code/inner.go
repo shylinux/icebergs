@@ -80,7 +80,7 @@ func init() {
 				}
 				_inner_list(m, _inner_ext(arg[1]), arg[1], arg[0])
 			}},
-			VIMER: {Name: "vimer path=usr/demo file=hi.sh line=1 刷新:button=auto 编辑:button 保存:button 运行:button 项目:button", Help: "编辑器", Meta: kit.Dict(
+			VIMER: {Name: "vimer path=usr/demo file=hi.sh line=1 刷新:button=auto 保存:button 运行:button 项目:button", Help: "编辑器", Meta: kit.Dict(
 				"display", "/plugin/local/code/vimer.js", "style", "editor",
 			), Action: map[string]*ice.Action{
 				web.UPLOAD: {Name: "upload path name", Help: "上传", Hand: func(m *ice.Message, arg ...string) {

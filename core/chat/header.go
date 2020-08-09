@@ -27,6 +27,15 @@ func init() {
 				LOGIN: {Name: "login", Help: "用户登录", Hand: func(m *ice.Message, arg ...string) {
 					m.Echo(m.Option(ice.MSG_USERNAME))
 				}},
+
+				"pack": {Name: "pack", Help: "打包", Hand: func(m *ice.Message, arg ...string) {
+					if f, p, e := kit.Create("usr/volcanos/cache_data.js"); m.Assert(e) {
+						defer f.Close()
+						data := kit.UnMarshal(m.Option("content"))
+						f.WriteString(`Volcanos.meta.pack = ` + kit.Formats(data))
+						m.Echo(p)
+					}
+				}},
 			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 				m.Echo(m.Conf(HEADER, TITLE))
 			}},

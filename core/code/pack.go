@@ -126,6 +126,7 @@ func init() {
 				js, p, e := kit.Create("usr/volcanos/cache.js")
 				m.Assert(e)
 				defer js.Close()
+				m.Echo(p)
 
 				css, _, e := kit.Create("usr/volcanos/cache.css")
 				m.Assert(e)
@@ -147,9 +148,36 @@ func init() {
 					js.WriteString(`_can_name = "` + path.Join("/", k) + "\"\n")
 					js.WriteString(m.Cmdx(nfs.CAT, "usr/volcanos/"+k))
 				}
-
 				js.WriteString(`_can_name = ""` + "\n")
-				m.Echo(p)
+
+				if f, p, e := kit.Create("usr/volcanos/cache.html"); m.Assert(e) {
+					m.Debug("%v ", p)
+					f.WriteString(fmt.Sprintf(`
+<!DOCTYPE html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=0.7,user-scalable=no">
+    <title>volcanos</title>
+    <link rel="shortcut icon" type="image/ico" href="favicon.ico">
+    <style type="text/css">%s</style>
+    <style type="text/css">%s</style>
+</head>
+<body>
+    <script>%s</script>
+    <script>%s</script>
+    <script>%s</script>
+    <script>%s</script>
+</body>
+`,
+						m.Cmdx(nfs.CAT, "usr/volcanos/cache.css"),
+						m.Cmdx(nfs.CAT, "usr/volcanos/index.css"),
+
+						m.Cmdx(nfs.CAT, "usr/volcanos/proto.js"),
+						m.Cmdx(nfs.CAT, "usr/volcanos/cache.js"),
+						m.Cmdx(nfs.CAT, "usr/volcanos/cache_data.js"),
+						m.Cmdx(nfs.CAT, "usr/volcanos/index.js"),
+					))
+				}
 			}},
 			BINPACK: {Name: "binpack", Help: "打包", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 				pack, p, e := kit.Create("usr/icebergs/pack/binpack.go")

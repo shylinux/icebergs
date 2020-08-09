@@ -8,6 +8,7 @@ import (
 	"github.com/shylinux/icebergs/base/mdb"
 	"github.com/shylinux/icebergs/base/tcp"
 	kit "github.com/shylinux/toolkits"
+	log "github.com/shylinux/toolkits/logs"
 
 	"encoding/json"
 	"net/http"
@@ -207,6 +208,14 @@ func _serve_main(m *ice.Message, w http.ResponseWriter, r *http.Request) bool {
 	} else if r.URL.Path == "/share" && r.Method == "GET" {
 		http.ServeFile(w, r, m.Conf(SERVE, "meta.page.share"))
 	} else {
+		if b, ok := ice.BinPack[r.URL.Path]; ok {
+			log.Info("BinPack %v %v", r.URL.Path, len(b))
+			if strings.HasSuffix(r.URL.Path, ".css") {
+				w.Header().Set("Content-Type", "text/css; charset=utf-8")
+			}
+			w.Write(b)
+			return false
+		}
 		return true
 	}
 	return false

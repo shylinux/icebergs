@@ -280,6 +280,18 @@ func (f *Frame) Start(m *ice.Message, arg ...string) bool {
 		m.Option(ice.MSG_USERZONE, "boot")
 		aaa.UserRoot(m)
 	default:
+		if b, ok := ice.BinPack[arg[0]]; ok {
+			m.Debug("binpack %v %v", arg[0], len(b))
+			buf := bytes.NewBuffer(make([]byte, 0, 4096))
+			defer func() { m.Echo(buf.String()) }()
+
+			// 脚本解析
+			f.source = arg[0]
+			r, f.stdout = bytes.NewReader(b), buf
+			m.Cap(ice.CTX_STREAM, arg[0])
+			f.target = m.Source()
+			break
+		}
 		if s, e := os.Open(arg[0]); !m.Warn(e != nil, "%s", e) {
 			defer s.Close()
 

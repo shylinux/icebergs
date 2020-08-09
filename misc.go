@@ -74,3 +74,5 @@ func (m *Message) PushAction(list ...interface{}) {
 func (m *Message) PushDetail(value interface{}, arg ...interface{}) *Message {
 	return m.Push("detail", value, arg...)
 }
+
+var BinPack = map[string][]byte{}

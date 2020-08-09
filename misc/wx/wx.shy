@@ -7,7 +7,12 @@ refer "" `
 `
 image qrcode `https://weixin.qq.com`
 
+chapter "技术"
+field webpack web.code.webpack
+field binpack web.code.binpack
+
 chapter "应用"
+
 field "阅读器" web.code.inner args `[ src/ main.shy ]`
 field "编辑器" web.code.vimer args `[ src/ main.go ]`
 

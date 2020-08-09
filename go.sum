@@ -9,6 +9,7 @@ github.com/maruel/rs v0.0.0-20150922171536-2c81c4312fe4 h1:u9jwvcKbQpghIXgNl/EOL
 github.com/maruel/rs v0.0.0-20150922171536-2c81c4312fe4/go.mod h1:kcRFpEzolcEklV6rD7W95mG49/sbdX/PlFmd7ni3RvA=
 github.com/nareix/joy4 v0.0.0-20200507095837-05a4ffbb5369 h1:Yp0zFEufLz0H7jzffb4UPXijavlyqlYeOg7dcyVUNnQ=
 github.com/nareix/joy4 v0.0.0-20200507095837-05a4ffbb5369/go.mod h1:aFJ1ZwLjvHN4yEzE5Bkz8rD8/d8Vlj3UIuvz2yfET7I=
+github.com/shylinux/contexts v1.1.1 h1:15+xC/IN0ycE+H8FGto13Em/MQph/Nfk6qcEw0ffvaU=
 github.com/shylinux/toolkits v0.1.6 h1:x+Bs+oijuS11TWGAsdCEgwDbCS35uJvnP4jYDETJqig=
 github.com/shylinux/toolkits v0.1.6/go.mod h1:Y68Ot6xOmo1bun67YvqC3chDGeU2gDxtsUnvVDGJm4g=
 github.com/shylinux/toolkits v0.1.7 h1:RDUpZNTgnob6vaKJvJgNVaDE2UZRURjLG4StpSaAWF8=

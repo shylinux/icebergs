@@ -165,11 +165,11 @@ func init() {
     <style type="text/css">%s</style>
 </head>
 <body>
+<script>%s</script>
+<script>%s</script>
+<script>%s</script>
+<script>%s</script>
 <script>Volcanos.meta.webpack = true</script>
-<script>%s</script>
-<script>%s</script>
-<script>%s</script>
-<script>%s</script>
 </body>
 `,
 						m.Cmdx(nfs.CAT, "usr/volcanos/cache.css"),

@@ -80,8 +80,10 @@ func _pack_icebergs(m *ice.Message, pack *os.File) {
 				what = fmt.Sprintf("%v", b)
 			}
 		}
-		what = strings.ReplaceAll(what, " ", ",")
-		pack.WriteString(fmt.Sprintf(`        "%s": []byte{%v},`+"\n", "usr/icebergs/"+value["path"], what[1:len(what)-1]))
+		if len(what) > 0 {
+			what = strings.ReplaceAll(what, " ", ",")
+			pack.WriteString(fmt.Sprintf(`        "%s": []byte{%v},`+"\n", "usr/icebergs/"+value["path"], what[1:len(what)-1]))
+		}
 	})
 	pack.WriteString("\n")
 }
@@ -163,10 +165,11 @@ func init() {
     <style type="text/css">%s</style>
 </head>
 <body>
-    <script>%s</script>
-    <script>%s</script>
-    <script>%s</script>
-    <script>%s</script>
+<script>Volcanos.meta.webpack = true</script>
+<script>%s</script>
+<script>%s</script>
+<script>%s</script>
+<script>%s</script>
 </body>
 `,
 						m.Cmdx(nfs.CAT, "usr/volcanos/cache.css"),

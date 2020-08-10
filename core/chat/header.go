@@ -35,6 +35,7 @@ func init() {
 						f.WriteString(`Volcanos.meta.pack = ` + kit.Formats(data))
 						m.Echo(p)
 					}
+					m.Cmdy("web.code.webpack")
 				}},
 			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 				m.Echo(m.Conf(HEADER, TITLE))

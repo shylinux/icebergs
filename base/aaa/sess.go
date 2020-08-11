@@ -34,12 +34,12 @@ func _sess_check(m *ice.Message, sessid string) {
 					m.Option(ice.MSG_USERNICK, value[USERNAME])
 				}
 			}
+			m.Log_AUTH(
+				USERNICK, m.Option(ice.MSG_USERNICK, value[USERNICK]),
+				USERNAME, m.Option(ice.MSG_USERNAME, value[USERNAME]),
+				USERROLE, m.Option(ice.MSG_USERROLE, kit.Select(UserRole(m, value[USERNAME]))),
+			)
 		})
-		m.Log_AUTH(
-			USERNICK, m.Option(ice.MSG_USERNICK, value[USERNICK]),
-			USERNAME, m.Option(ice.MSG_USERNAME, value[USERNAME]),
-			USERROLE, m.Option(ice.MSG_USERROLE, kit.Select(UserRole(m, value[USERNAME]))),
-		)
 	})
 }
 func _sess_create(m *ice.Message, username string) string {

@@ -2,7 +2,10 @@ package chat
 
 import (
 	"github.com/shylinux/icebergs"
+	"github.com/shylinux/icebergs/base/nfs"
 	"github.com/shylinux/toolkits"
+
+	"fmt"
 )
 
 const (
@@ -11,6 +14,24 @@ const (
 	TITLE = "title"
 )
 const HEADER = "header"
+const _pack = `
+<!DOCTYPE html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=0.7,user-scalable=no">
+    <title>volcanos</title>
+    <link rel="shortcut icon" type="image/ico" href="favicon.ico">
+    <style type="text/css">%s</style>
+    <style type="text/css">%s</style>
+</head>
+<body>
+<script>%s</script>
+<script>%s</script>
+<script>%s</script>
+<script>%s</script>
+<script>Volcanos.meta.webpack = true</script>
+</body>
+`
 
 func init() {
 	Index.Merge(&ice.Context{
@@ -29,13 +50,26 @@ func init() {
 				}},
 
 				"pack": {Name: "pack", Help: "打包", Hand: func(m *ice.Message, arg ...string) {
-					if f, p, e := kit.Create("usr/volcanos/cache_data.js"); m.Assert(e) {
+					m.Cmdy("web.code.webpack", "pack")
+
+					if f, _, e := kit.Create("usr/volcanos/pack/" + m.Option("name") + "/cache.js"); m.Assert(e) {
 						defer f.Close()
 						data := kit.UnMarshal(m.Option("content"))
 						f.WriteString(`Volcanos.meta.pack = ` + kit.Formats(data))
+					}
+
+					if f, p, e := kit.Create("usr/volcanos/pack/" + m.Option("name") + "/index.html"); m.Assert(e) {
+						f.WriteString(fmt.Sprintf(_pack,
+							m.Cmdx(nfs.CAT, "usr/volcanos/cache.css"),
+							m.Cmdx(nfs.CAT, "usr/volcanos/index.css"),
+
+							m.Cmdx(nfs.CAT, "usr/volcanos/proto.js"),
+							m.Cmdx(nfs.CAT, "usr/volcanos/cache.js"),
+							m.Cmdx(nfs.CAT, "usr/volcanos/pack/"+m.Option("name")+"/cache.js"),
+							m.Cmdx(nfs.CAT, "usr/volcanos/index.js"),
+						))
 						m.Echo(p)
 					}
-					m.Cmdy("web.code.webpack")
 				}},
 			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 				m.Echo(m.Conf(HEADER, TITLE))

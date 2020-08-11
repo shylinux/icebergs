@@ -152,8 +152,7 @@ func init() {
 				}
 				js.WriteString(`_can_name = ""` + "\n")
 
-				if f, p, e := kit.Create("usr/volcanos/cache.html"); m.Assert(e) {
-					m.Debug("%v ", p)
+				if f, _, e := kit.Create("usr/volcanos/cache.html"); m.Assert(e) {
 					f.WriteString(fmt.Sprintf(`
 <!DOCTYPE html>
 <head>

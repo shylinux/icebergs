@@ -1,9 +1,9 @@
 package aaa
 
 import (
-	"github.com/shylinux/icebergs"
+	ice "github.com/shylinux/icebergs"
 	"github.com/shylinux/icebergs/base/mdb"
-	"github.com/shylinux/toolkits"
+	kit "github.com/shylinux/toolkits"
 )
 
 func _sess_list(m *ice.Message) {
@@ -36,9 +36,9 @@ func _sess_check(m *ice.Message, sessid string) {
 			}
 		})
 		m.Log_AUTH(
+			USERNICK, m.Option(ice.MSG_USERNICK, value[USERNICK]),
 			USERNAME, m.Option(ice.MSG_USERNAME, value[USERNAME]),
 			USERROLE, m.Option(ice.MSG_USERROLE, kit.Select(UserRole(m, value[USERNAME]))),
-			USERNICK, m.Option(ice.MSG_USERROLE),
 		)
 	})
 }

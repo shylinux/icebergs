@@ -56,11 +56,14 @@ var Index = &ice.Context{Name: "tmux", Help: "工作台",
 		)},
 	},
 	Commands: map[string]*ice.Command{
-		TEXT: {Name: "text 保存:button text:textarea", Help: "文本", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		TEXT: {Name: "text 保存:button 清空:button text:textarea", Help: "文本", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			if len(arg) > 0 && arg[0] != "" {
 				m.Cmd(_tmux, "set-buffer", arg[0])
+				m.Cmdy("web.wiki.image", "qrcode", arg[0])
+				m.Echo("\n")
 			}
 			m.Echo(m.Cmdx(_tmux, "show-buffer"))
+			m.Render("")
 		}},
 		BUFFER: {Name: "buffer [buffer=auto [value]] auto", Help: "缓存", Action: map[string]*ice.Action{
 			mdb.MODIFY: {Name: "modify", Help: "编辑", Hand: func(m *ice.Message, arg ...string) {

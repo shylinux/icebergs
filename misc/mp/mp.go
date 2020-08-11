@@ -1,12 +1,12 @@
 package mp
 
 import (
-	"github.com/shylinux/icebergs"
+	ice "github.com/shylinux/icebergs"
 	"github.com/shylinux/icebergs/base/aaa"
 	"github.com/shylinux/icebergs/base/mdb"
 	"github.com/shylinux/icebergs/base/web"
 	"github.com/shylinux/icebergs/core/chat"
-	"github.com/shylinux/toolkits"
+	kit "github.com/shylinux/toolkits"
 
 	"net/http"
 	"path"
@@ -15,7 +15,6 @@ import (
 const MP = "mp"
 
 var Index = &ice.Context{Name: "mp", Help: "小程序",
-	Caches: map[string]*ice.Cache{},
 	Configs: map[string]*ice.Config{
 		"login": {Name: "login", Help: "认证", Value: kit.Data(
 			"auth", "/sns/jscode2session?grant_type=authorization_code",

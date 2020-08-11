@@ -1,7 +1,11 @@
 package code
 
 import (
+	"bufio"
+	"bytes"
+
 	ice "github.com/shylinux/icebergs"
+	"github.com/shylinux/icebergs/base/cli"
 	"github.com/shylinux/icebergs/base/mdb"
 	"github.com/shylinux/icebergs/base/nfs"
 	"github.com/shylinux/icebergs/base/web"
@@ -117,6 +121,7 @@ func _pack_intshell(m *ice.Message, pack *os.File) {
 const (
 	WEBPACK = "webpack"
 	BINPACK = "binpack"
+	MODPACK = "modpack"
 )
 
 func init() {
@@ -160,28 +165,161 @@ func init() {
 				m.Option(nfs.DIR_DEEP, "true")
 				m.Cmdy(nfs.DIR, "pack")
 				m.Table(func(index int, value map[string]string, head []string) {
-					m.Push("link", m.Cmdx(mdb.RENDER, web.RENDER.A, "/"+value["path"]))
+					m.Push("link", m.Cmdx(mdb.RENDER, web.RENDER.Download, "/"+value["path"]))
 				})
 			}},
-			BINPACK: {Name: "binpack", Help: "打包", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-				pack, p, e := kit.Create("usr/icebergs/pack/binpack.go")
-				m.Assert(e)
-				defer pack.Close()
+			BINPACK: {Name: "binpack", Help: "打包", Action: map[string]*ice.Action{
+				"pack": {Name: "pack", Help: "pack", Hand: func(m *ice.Message, arg ...string) {
+					pack, p, e := kit.Create("usr/icebergs/pack/binpack.go")
+					m.Assert(e)
+					defer pack.Close()
 
-				pack.WriteString(`package pack` + "\n\n")
-				pack.WriteString(`import "github.com/shylinux/icebergs"` + "\n\n")
-				pack.WriteString(`func init() {` + "\n")
-				pack.WriteString(`    ice.BinPack = map[string][]byte{` + "\n")
+					pack.WriteString(`package pack` + "\n\n")
+					pack.WriteString(`import "github.com/shylinux/icebergs"` + "\n\n")
+					pack.WriteString(`func init() {` + "\n")
+					pack.WriteString(`    ice.BinPack = map[string][]byte{` + "\n")
 
-				_pack_volcanos(m, pack)
-				_pack_learning(m, pack)
-				_pack_icebergs(m, pack)
-				_pack_intshell(m, pack)
+					_pack_volcanos(m, pack)
+					_pack_learning(m, pack)
+					_pack_icebergs(m, pack)
+					_pack_intshell(m, pack)
 
-				pack.WriteString(`    }` + "\n")
-				pack.WriteString(`}` + "\n")
-				m.Echo(p)
+					pack.WriteString(`    }` + "\n")
+					pack.WriteString(`}` + "\n")
+					m.Echo(p)
+				}},
+			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+				m.Option(nfs.DIR_ROOT, "usr/icebergs")
+				m.Option(nfs.DIR_TYPE, nfs.FILE)
+				m.Option(nfs.DIR_DEEP, "true")
+				m.Cmdy(nfs.DIR, "pack")
+				m.Table(func(index int, value map[string]string, head []string) {
+					m.Push("link", m.Cmdx(mdb.RENDER, web.RENDER.Download, value["path"], "/share/local/usr/icebergs/"+value["path"]))
+				})
 			}},
+			MODPACK: {Name: "modpack path=auto 查看:button 返回:button 创建:button", Help: "打包", Meta: kit.Dict(
+				"style", "editor", "创建", kit.List("_input", "text", "name", "name"),
+			), Action: map[string]*ice.Action{
+				mdb.CREATE: {Name: "create", Help: "创建", Hand: func(m *ice.Message, arg ...string) {
+					m.Option("name", "hi")
+					m.Option("help", "hello")
+					for i := 0; i < len(arg)-1; i += 2 {
+						m.Option(arg[i], arg[i+1])
+					}
+					os.Mkdir(path.Join("src/", arg[1]), ice.MOD_DIR)
+					name := m.Option("name")
+
+					kit.Fetch(m.Confv(MODPACK, "meta.base"), func(key string, value string) {
+						p := path.Join("src/", arg[1], arg[1]+"."+key)
+						if _, e := os.Stat(p); e != nil && os.IsNotExist(e) {
+							if f, p, e := kit.Create(p); m.Assert(e) {
+								if b, e := kit.Render(value, m); m.Assert(e) {
+									if n, e := f.Write(b); m.Assert(e) {
+										m.Log_EXPORT("file", p, arg[1], "size", n)
+										m.Echo(p)
+									}
+								}
+							}
+						}
+					})
+
+					mod := ""
+					if f, e := os.Open("go.mod"); e == nil {
+						defer f.Close()
+						for bio := bufio.NewScanner(f); bio.Scan(); {
+							if strings.HasPrefix(bio.Text(), "module") {
+								mod = strings.Split(bio.Text(), " ")[1]
+								break
+							}
+						}
+					}
+
+					begin, has := false, false
+					if f, e := os.Open("src/main.go"); e == nil {
+						for bio := bufio.NewScanner(f); bio.Scan(); {
+							if strings.HasPrefix(bio.Text(), "import (") {
+								begin = true
+								continue
+							}
+							if strings.HasPrefix(bio.Text(), "import") {
+								begin = true
+								continue
+							}
+							if strings.HasPrefix(bio.Text(), ")") {
+								begin = false
+								continue
+							}
+							if begin {
+								if strings.Contains(bio.Text(), mod+"/src/"+name) {
+									has = true
+								}
+							}
+						}
+						f.Close()
+					}
+					if !has {
+						if f, e := os.Open("src/main.go"); e == nil {
+							if b, e := ioutil.ReadAll(f); e == nil {
+								f.Close()
+
+								if f, e := os.Create("src/main.go"); e == nil {
+									for bio := bufio.NewScanner(bytes.NewBuffer(b)); bio.Scan(); {
+										f.WriteString(bio.Text())
+										f.WriteString("\n")
+										if strings.HasPrefix(bio.Text(), "package") {
+											f.WriteString("\n")
+											f.WriteString(`import _ "` + mod + "/src/" + name + `"`)
+											f.WriteString("\n")
+
+											m.Debug("src/main.go import: %v", begin, mod+"/src/"+name)
+										}
+									}
+								}
+							}
+						}
+					}
+
+					m.Cmd(cli.SYSTEM, "gofmt", "-w", "src/main.go")
+				}},
+			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+				m.Option(nfs.DIR_TYPE, nfs.FILE)
+				m.Option(nfs.DIR_DEEP, "true")
+				m.Option(nfs.DIR_ROOT, "src")
+				m.Cmdy(nfs.DIR, kit.Select("", arg, 0))
+				if len(arg) > 0 {
+					m.Option("_display", "/plugin/local/code/inner.js")
+				}
+			}},
+		},
+		Configs: map[string]*ice.Config{
+			MODPACK: {Name: MODPACK, Help: "modpack", Value: kit.Data(
+				"base", kit.Dict(
+					"shy", `title {{.Option "name"}}
+`,
+					"go", `package {{.Option "name"}}
+
+import (
+	ice "github.com/shylinux/icebergs"
+	"github.com/shylinux/icebergs/base/web"
+	"github.com/shylinux/icebergs/core/chat"
+	kit "github.com/shylinux/toolkits"
+)
+
+var Index = &ice.Context{Name: "{{.Option "name"}}", Help: "{{.Option "help"}}",
+	Configs: map[string]*ice.Config{
+		"{{.Option "name"}}": {Name: "{{.Option "name"}}", Help: "{{.Option "name"}}", Value: kit.Data()},
+	},
+	Commands: map[string]*ice.Command{
+		"{{.Option "name"}}": {Name: "{{.Option "name"}}", Help: "{{.Option "name"}}", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			m.Echo("hello {{.Option "name"}} world")
+		}},
+	},
+}
+
+func init() { chat.Index.Register(Index, &web.Frame{}) }
+`,
+				),
+			)},
 		},
 	}, nil)
 }

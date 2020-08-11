@@ -108,12 +108,16 @@ var RENDER = struct {
 	Field  string
 	Frame  string
 	Button string
+
+	Download string
 }{
 	A:      "a",
 	IMG:    "img",
 	Field:  "field",
 	Frame:  "frame",
 	Button: "button",
+
+	Download: "download",
 }
 
 func init() {
@@ -136,6 +140,10 @@ func init() {
 				}},
 				RENDER.Button: {Hand: func(m *ice.Message, arg ...string) {
 					m.Echo(`<input type="button" value="%s">`, arg[0])
+				}},
+				RENDER.Download: {Hand: func(m *ice.Message, arg ...string) {
+					u := kit.Select(arg[0], arg, 1)
+					m.Echo(`<a href="%s" target="_blank" download="%s">%s</a>`, u, path.Base(arg[0]), arg[0])
 				}},
 			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 				if arg[0] == mdb.RENDER {

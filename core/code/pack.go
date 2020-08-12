@@ -5,7 +5,6 @@ import (
 	"bytes"
 
 	ice "github.com/shylinux/icebergs"
-	"github.com/shylinux/icebergs/base/cli"
 	"github.com/shylinux/icebergs/base/mdb"
 	"github.com/shylinux/icebergs/base/nfs"
 	"github.com/shylinux/icebergs/base/web"
@@ -206,22 +205,22 @@ func init() {
 					for i := 0; i < len(arg)-1; i += 2 {
 						m.Option(arg[i], arg[i+1])
 					}
-					os.Mkdir(path.Join("src/", arg[1]), ice.MOD_DIR)
-					name := m.Option("name")
 
+					name := m.Option("name")
+					os.Mkdir(path.Join("src/", name), ice.MOD_DIR)
 					kit.Fetch(m.Confv(MODPACK, "meta.base"), func(key string, value string) {
-						p := path.Join("src/", arg[1], arg[1]+"."+key)
+						p := path.Join("src/", name, name+"."+key)
 						if _, e := os.Stat(p); e != nil && os.IsNotExist(e) {
 							if f, p, e := kit.Create(p); m.Assert(e) {
 								if b, e := kit.Render(value, m); m.Assert(e) {
 									if n, e := f.Write(b); m.Assert(e) {
-										m.Log_EXPORT("file", p, arg[1], "size", n)
-										m.Echo(p)
+										m.Log_EXPORT("file", p, "size", n)
 									}
 								}
 							}
 						}
 					})
+					defer m.Cmdy(nfs.DIR, "src/"+name)
 
 					mod := ""
 					if f, e := os.Open("go.mod"); e == nil {
@@ -237,11 +236,16 @@ func init() {
 					begin, has := false, false
 					if f, e := os.Open("src/main.go"); e == nil {
 						for bio := bufio.NewScanner(f); bio.Scan(); {
-							if strings.HasPrefix(bio.Text(), "import (") {
-								begin = true
+							if strings.HasPrefix(strings.TrimSpace(bio.Text()), "//") {
 								continue
 							}
 							if strings.HasPrefix(bio.Text(), "import") {
+								if strings.Contains(bio.Text(), mod+"/src/"+name) {
+									has = true
+								}
+								continue
+							}
+							if strings.HasPrefix(bio.Text(), "import (") {
 								begin = true
 								continue
 							}
@@ -257,36 +261,33 @@ func init() {
 						}
 						f.Close()
 					}
-					if !has {
-						if f, e := os.Open("src/main.go"); e == nil {
-							if b, e := ioutil.ReadAll(f); e == nil {
-								f.Close()
+					if has {
+						return
+					}
 
-								if f, e := os.Create("src/main.go"); e == nil {
-									for bio := bufio.NewScanner(bytes.NewBuffer(b)); bio.Scan(); {
-										f.WriteString(bio.Text())
+					if f, e := os.Open("src/main.go"); e == nil {
+						if b, e := ioutil.ReadAll(f); e == nil {
+							f.Close()
+
+							if f, e := os.Create("src/main.go"); e == nil {
+								defer f.Close()
+								for bio := bufio.NewScanner(bytes.NewBuffer(b)); bio.Scan(); {
+									f.WriteString(bio.Text())
+									f.WriteString("\n")
+									if strings.HasPrefix(bio.Text(), "import (") {
+										m.Info("src/main.go import: %v", mod+"/src/"+name)
+										f.WriteString("\t_ \"" + mod + "/src/" + name + `"`)
 										f.WriteString("\n")
-										if strings.HasPrefix(bio.Text(), "package") {
-											f.WriteString("\n")
-											f.WriteString(`import _ "` + mod + "/src/" + name + `"`)
-											f.WriteString("\n")
-
-											m.Debug("src/main.go import: %v", begin, mod+"/src/"+name)
-										}
+										f.WriteString("\n")
 									}
 								}
 							}
 						}
 					}
-
-					m.Cmd(cli.SYSTEM, "gofmt", "-w", "src/main.go")
 				}},
 			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-				m.Option(nfs.DIR_TYPE, nfs.FILE)
-				m.Option(nfs.DIR_DEEP, "true")
 				m.Option(nfs.DIR_ROOT, "src")
-				m.Cmdy(nfs.DIR, kit.Select("", arg, 0))
-				if len(arg) > 0 {
+				if m.Cmdy(nfs.DIR, kit.Select("", arg, 0)); len(m.Resultv()) > 0 {
 					m.Option("_display", "/plugin/local/code/inner.js")
 				}
 			}},

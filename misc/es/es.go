@@ -5,6 +5,7 @@ import (
 	"github.com/shylinux/icebergs/base/cli"
 	"github.com/shylinux/icebergs/base/mdb"
 	"github.com/shylinux/icebergs/base/tcp"
+	"github.com/shylinux/icebergs/base/web"
 	"github.com/shylinux/icebergs/core/code"
 	kit "github.com/shylinux/toolkits"
 
@@ -66,7 +67,12 @@ var Index = &ice.Context{Name: ES, Help: "搜索",
 			}
 		}},
 
-		"command": {Name: "command 执行:button method:select=GET|PUT|POST|DELETE cmd data:textarea", Help: "命令", Action: map[string]*ice.Action{}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		"command": {Name: "command 执行:button method:select=GET|PUT|POST|DELETE cmd=/ data:textarea", Help: "命令", Action: map[string]*ice.Action{}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			if pod := m.Option("_pod"); pod != "" {
+				m.Option("_pod", "")
+				m.Cmdy(web.SPACE, pod, "web.code.es.command", arg)
+				return
+			}
 			m.Option("header", "Content-Type", "application/json")
 			m.Echo(kit.Formats(kit.UnMarshal(m.Cmdx("web.spide", "dev", "raw", arg[0], "http://localhost:9200/"+arg[1], "data", arg[2]))))
 		}},

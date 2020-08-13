@@ -26,9 +26,10 @@ spark shell `
 $ curl http://localhost:9200
 `
 
-field command web.code.es.command option `{ pod centos.remote }`
+field command web.code.es.command option `{ _pod centos.remote }`
+field es web.code.es.es
+return
 
 field document web.code.es.document
-field es web.code.es.es
 field install web.code.install
 

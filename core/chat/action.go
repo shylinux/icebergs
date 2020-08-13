@@ -130,6 +130,7 @@ func _action_show(m *ice.Message, river, storm, index string, arg ...string) {
 	} else {
 		return
 	}
+
 	if len(cmds) == 0 {
 		if p := m.Option(POD); p != "" {
 			m.Option(POD, "")

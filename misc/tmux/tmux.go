@@ -217,7 +217,7 @@ var Index = &ice.Context{Name: "tmux", Help: "工作台",
 				})
 			}}))
 		}},
-		code.INSTALL: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		"_install": {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			m.Option("cmd_dir", m.Conf("install", "meta.path"))
 			m.Cmd(cli.SYSTEM, "git", "clone", "https://github.com/tmux/tmux")
 		}},

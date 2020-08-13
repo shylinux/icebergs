@@ -43,6 +43,9 @@ func (m *Message) log(level string, str string, arg ...interface{}) *Message {
 	default:
 		suffix += " " + kit.FileLine(3, 2)
 	}
+	if len(BinPack) > 0 {
+		prefix, suffix = "", ""
+	}
 
 	// 输出日志
 	log.Info(fmt.Sprintf("%02d %9s %s%s %s%s", m.code, fmt.Sprintf("%4s->%-4s", m.source.Name, m.target.Name),

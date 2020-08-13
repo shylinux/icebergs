@@ -145,10 +145,14 @@ func init() {
 					// 请求方法
 					method := kit.Select("POST", client["method"])
 					switch arg = arg[1:]; arg[0] {
-					case "POST":
-						method, arg = "POST", arg[1:]
 					case "GET":
 						method, arg = "GET", arg[1:]
+					case "PUT":
+						method, arg = "PUT", arg[1:]
+					case "POST":
+						method, arg = "POST", arg[1:]
+					case "DELETE":
+						method, arg = "DELETE", arg[1:]
 					}
 
 					// 请求地址
@@ -240,9 +244,7 @@ func init() {
 					if web.Client == nil {
 						web.Client = &http.Client{Timeout: kit.Duration(kit.Format(client["timeout"]))}
 					}
-					if method == "POST" {
-						m.Info("%s: %s", req.Header.Get("Content-Length"), req.Header.Get("Content-Type"))
-					}
+					m.Info("%s: %s", req.Header.Get("Content-Length"), req.Header.Get("Content-Type"))
 
 					// 发送请求
 					res, e := web.Client.Do(req)
@@ -251,8 +253,10 @@ func init() {
 					}
 
 					// 检查结果
-					if m.Cost("%s %s: %s", res.Status, res.Header.Get("Content-Length"), res.Header.Get("Content-Type")); m.Warn(res.StatusCode != http.StatusOK, "%s", res.Status) {
-						return
+					m.Cost("%s %s: %s", res.Status, res.Header.Get("Content-Length"), res.Header.Get("Content-Type"))
+					if m.Warn(res.StatusCode != http.StatusOK, "%s", res.Status) {
+						m.Set(ice.MSG_RESULT)
+						// return
 					}
 
 					// 缓存变量

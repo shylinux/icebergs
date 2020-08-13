@@ -44,31 +44,34 @@ func _totp_get(key string, num int, per int64) string {
 }
 
 const TOTP = "totp"
+const (
+	NEW = "new"
+	GET = "get"
+)
 
-var Index = &ice.Context{Name: "totp", Help: "动态码",
-	Caches: map[string]*ice.Cache{},
+var Index = &ice.Context{Name: TOTP, Help: "动态码",
 	Configs: map[string]*ice.Config{
-		TOTP: {Name: "totp", Help: "动态码", Value: kit.Data(
-			kit.MDB_SHORT, "name", "share", "otpauth://totp/%s?secret=%s",
+		TOTP: {Name: TOTP, Help: "动态码", Value: kit.Data(
+			kit.MDB_SHORT, kit.MDB_NAME, kit.MDB_LINK, "otpauth://totp/%s?secret=%s",
 		)},
 	},
 	Commands: map[string]*ice.Command{
 		ice.CTX_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {}},
 		ice.CTX_EXIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {}},
 
-		"new": {Name: "new user [secret]", Help: "创建密钥", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		NEW: {Name: "new user [secret]", Help: "创建密钥", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			if len(arg) == 0 {
 				// 密钥列表
-				m.Richs("totp", nil, "*", func(key string, value map[string]interface{}) {
-					m.Push(key, value, []string{"time", "name"})
+				m.Richs(TOTP, nil, kit.MDB_FOREACH, func(key string, value map[string]interface{}) {
+					m.Push(key, value, []string{kit.MDB_TIME, kit.MDB_NAME})
 				})
 				return
 			}
 
-			if m.Richs("totp", nil, arg[0], func(key string, value map[string]interface{}) {
+			if m.Richs(TOTP, nil, arg[0], func(key string, value map[string]interface{}) {
 				// 密钥详情
 				if len(arg) > 1 {
-					m.Render(ice.RENDER_QRCODE, kit.Format(m.Conf("totp", "meta.share"), value["name"], value["text"]))
+					m.Render(ice.RENDER_QRCODE, kit.Format(m.Conf(TOTP, "meta.link"), value[kit.MDB_NAME], value[kit.MDB_TEXT]))
 				} else {
 					m.Push("detail", value)
 				}
@@ -82,14 +85,16 @@ var Index = &ice.Context{Name: "totp", Help: "动态码",
 			}
 
 			// 添加密钥
-			m.Log(ice.LOG_CREATE, "%s: %s", arg[0], m.Rich("totp", nil, kit.Dict(
+			m.Log(ice.LOG_CREATE, "%s: %s", arg[0], m.Rich(TOTP, nil, kit.Dict(
 				kit.MDB_NAME, arg[0], kit.MDB_TEXT, arg[1], kit.MDB_EXTRA, kit.Dict(arg[2:]),
 			)))
 		}},
-		"get": {Name: "get [name [number [period]]] auto", Help: "获取密码", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		GET: {Name: "get [name [number [period]]] auto", Help: "获取密码", Meta: kit.Dict(
+			"_refresh", "1000",
+		), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			if len(arg) == 0 {
 				// 密码列表
-				m.Richs("totp", nil, "*", func(key string, value map[string]interface{}) {
+				m.Richs(TOTP, nil, kit.MDB_FOREACH, func(key string, value map[string]interface{}) {
 					per := kit.Int64(kit.Select("30", value["period"]))
 					m.Push("time", m.Time())
 					m.Push("rest", per-time.Now().Unix()%per)
@@ -97,12 +102,13 @@ var Index = &ice.Context{Name: "totp", Help: "动态码",
 					m.Push("code", _totp_get(kit.Format(value["text"]), kit.Int(kit.Select("6", value["number"])), per))
 
 				})
+				m.Sort(kit.MDB_NAME)
 				return
 			}
 
-			m.Richs("totp", nil, arg[0], func(key string, value map[string]interface{}) {
+			m.Richs(TOTP, nil, arg[0], func(key string, value map[string]interface{}) {
 				// 获取密码
-				m.Echo(_totp_get(kit.Format(value["text"]), kit.Int(kit.Select("6", arg, 1)), kit.Int64(kit.Select("30", arg, 2))))
+				m.Echo(_totp_get(kit.Format(value[kit.MDB_TEXT]), kit.Int(kit.Select("6", arg, 1)), kit.Int64(kit.Select("30", arg, 2))))
 			})
 		}},
 	},

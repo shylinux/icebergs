@@ -299,6 +299,10 @@ func init() {
 				_share_repos(m, path.Join(strings.Split(cmd, "/")[2:5]...), arg[6:]...)
 			}},
 			"/publish/": {Name: "/publish/", Help: "空间站", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+				if arg[0] == "order.js" && len(ice.BinPack) > 0 {
+					m.Render(ice.RENDER_RESULT, "{}")
+					return
+				}
 				if p := m.Option("pod"); p != "" {
 					m.Option("pod", "")
 					_share_remote(m, p, arg...)

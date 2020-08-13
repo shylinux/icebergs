@@ -52,20 +52,20 @@ func init() {
 				"pack": {Name: "pack", Help: "打包", Hand: func(m *ice.Message, arg ...string) {
 					m.Cmdy("web.code.webpack", "pack")
 
-					if f, _, e := kit.Create("usr/volcanos/pack/" + m.Option("name") + ".js"); m.Assert(e) {
+					if f, _, e := kit.Create("usr/publish/webpack/" + m.Option("name") + ".js"); m.Assert(e) {
 						defer f.Close()
-						data := kit.UnMarshal(m.Option("content"))
-						f.WriteString(`Volcanos.meta.pack = ` + kit.Formats(data))
+
+						f.WriteString(`Volcanos.meta.pack = ` + kit.Formats(kit.UnMarshal(m.Option("content"))))
 					}
 
-					if f, p, e := kit.Create("usr/volcanos/pack/" + m.Option("name") + ".html"); m.Assert(e) {
+					if f, p, e := kit.Create("usr/publish/webpack/" + m.Option("name") + ".html"); m.Assert(e) {
 						f.WriteString(fmt.Sprintf(_pack,
 							m.Cmdx(nfs.CAT, "usr/volcanos/cache.css"),
 							m.Cmdx(nfs.CAT, "usr/volcanos/index.css"),
 
 							m.Cmdx(nfs.CAT, "usr/volcanos/proto.js"),
 							m.Cmdx(nfs.CAT, "usr/volcanos/cache.js"),
-							m.Cmdx(nfs.CAT, "usr/volcanos/pack/"+m.Option("name")+".js"),
+							m.Cmdx(nfs.CAT, "usr/publish/webpack/"+m.Option("name")+".js"),
 							m.Cmdx(nfs.CAT, "usr/volcanos/index.js"),
 						))
 						m.Echo(p)

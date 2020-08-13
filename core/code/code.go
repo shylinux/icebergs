@@ -23,14 +23,14 @@ const (
 )
 
 const ( // CODE
-	INSTALL = "_install"
+	// INSTALL = "_install"
 	PREPARE = "_prepare"
 	PROJECT = "_project"
 )
 
 var Index = &ice.Context{Name: "code", Help: "编程中心",
 	Configs: map[string]*ice.Config{
-		INSTALL: {Name: "install", Help: "安装", Value: kit.Data(
+		"_install": {Name: "install", Help: "安装", Value: kit.Data(
 			"path", "usr/install", "target", "usr/local",
 			"linux", "https://dl.google.com/go/go1.14.2.linux-amd64.tar.gz",
 			"darwin", "https://dl.google.com/go/go1.14.6.darwin-amd64.tar.gz",
@@ -52,21 +52,21 @@ var Index = &ice.Context{Name: "code", Help: "编程中心",
 			m.Cmd(mdb.ENGINE, mdb.CREATE, BENCH)
 		}},
 		ice.CTX_EXIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			m.Save("login")
+			m.Save("login", INSTALL)
 		}},
 
-		INSTALL: {Name: "install url 安装:button", Help: "安装", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			target := m.Conf(INSTALL, kit.Keys("meta", runtime.GOOS))
+		"_install": {Name: "install url 安装:button", Help: "安装", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			target := m.Conf("_install", kit.Keys("meta", runtime.GOOS))
 
-			p := path.Join(m.Conf(INSTALL, "meta.path"), path.Base(target))
+			p := path.Join(m.Conf("_install", "meta.path"), path.Base(target))
 			if _, e := os.Stat(p); e != nil {
 				// 下载
 				msg := m.Cmd(web.SPIDE, "dev", web.CACHE, http.MethodGet, target)
 				m.Cmd(web.CACHE, web.WATCH, msg.Append(web.DATA), p)
 			}
 
-			os.MkdirAll(m.Conf(INSTALL, kit.Keys("meta.target")), ice.MOD_DIR)
-			m.Cmdy(cli.SYSTEM, "tar", "xvf", p, "-C", m.Conf(INSTALL, kit.Keys("meta.target")))
+			os.MkdirAll(m.Conf("_install", kit.Keys("meta.target")), ice.MOD_DIR)
+			m.Cmdy(cli.SYSTEM, "tar", "xvf", p, "-C", m.Conf("_install", kit.Keys("meta.target")))
 		}},
 		PREPARE: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			export := []string{}
@@ -78,7 +78,7 @@ var Index = &ice.Context{Name: "code", Help: "编程中心",
 export GOROOT=%s GOPATH=%s:$GOPATH GOBIN=%s
 export PATH=$GOBIN:$GOROOT/bin:$PATH
 export %s
-`, kit.Path(m.Conf(INSTALL, kit.Keys("meta.target")), "go"), kit.Path("src"), kit.Path("bin"), strings.Join(export, " ")))
+`, kit.Path(m.Conf("_install", kit.Keys("meta.target")), "go"), kit.Path("src"), kit.Path("bin"), strings.Join(export, " ")))
 		}},
 		PROJECT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 		}},

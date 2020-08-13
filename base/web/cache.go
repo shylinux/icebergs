@@ -104,14 +104,19 @@ func _cache_upload(m *ice.Message, r *http.Request) (kind, name, file, size stri
 func _cache_download(m *ice.Message, r *http.Response) (file, size string) {
 	defer r.Body.Close()
 
+	progress, _ := m.Optionv("progress").(func(int, int))
+
 	total := kit.Int(kit.Select("1", r.Header.Get("Content-Length")))
 	if f, p, e := kit.Create(path.Join("var/tmp", kit.Hashs("uniq"))); m.Assert(e) {
 		size, buf := 0, make([]byte, 1024)
 		for {
 			if n, _ := r.Body.Read(buf); n > 0 {
 				f.Write(buf[0:n])
-				size += n
-				m.Log_IMPORT(kit.MDB_FILE, p, "per", size*100/total, kit.MDB_SIZE, kit.FmtSize(int64(size)), "total", kit.FmtSize(int64(total)))
+				if size += n; progress != nil {
+					progress(size, total)
+				} else {
+					m.Log_IMPORT(kit.MDB_FILE, p, "per", size*100/total, kit.MDB_SIZE, kit.FmtSize(int64(size)), "total", kit.FmtSize(int64(total)))
+				}
 			} else {
 				f.Close()
 				break

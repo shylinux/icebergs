@@ -4,9 +4,9 @@ refer `
 源码 https://github.com/elastic/elasticsearch
 文档 https://www.elastic.co/guide/index.html
 安装 https://www.elastic.co/guide/en/elasticsearch/reference/current/install-elasticsearch.html
-简介 https://www.jianshu.com/p/403c9d5b1463
 入门 https://www.cnblogs.com/sunsky303/p/9438737.html
 `
+
 section 下载
 refer `
 windows https://elasticsearch.thans.cn/downloads/elasticsearch/elasticsearch-7.3.2-windows-x86_64.zip
@@ -21,8 +21,12 @@ $ cd elasticsearch-7.3.2
 $ ./bin/elasticsearch
 `
 
-section 创建索引
+section 体验
 spark shell `
 $ curl http://localhost:9200
-$ curl -XPUT "localhost:9200/index_test"
 `
+
+field document web.code.es.document
+field es web.code.es.es
+field install web.code.install
+

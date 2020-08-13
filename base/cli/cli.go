@@ -92,7 +92,7 @@ var Index = &ice.Context{Name: "cli", Help: "命令模块",
 			}}))
 		}},
 		ice.CTX_EXIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			m.Save(RUNTIME, SYSTEM)
+			m.Save(RUNTIME, SYSTEM, DAEMON)
 		}},
 
 		RUNTIME: {Name: "runtime name auto", Help: "运行环境", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {

@@ -5,6 +5,7 @@ import (
 	"github.com/shylinux/icebergs/base/aaa"
 	"github.com/shylinux/icebergs/base/cli"
 	"github.com/shylinux/icebergs/base/mdb"
+	"github.com/shylinux/icebergs/base/tcp"
 	"github.com/shylinux/icebergs/base/web"
 	kit "github.com/shylinux/toolkits"
 )
@@ -247,7 +248,7 @@ func init() {
 						m.Cmdy("/storm", arg[1:])
 						return
 					}
-					if m.Option("_source") == "" && m.Option(ice.MSG_SESSID) == "" {
+					if m.Option("_source") == "" && m.Option(ice.MSG_SESSID) == "" && !tcp.IPIsLocal(m, m.Option(ice.MSG_USERIP)) {
 						m.Render("status", "401")
 						return
 					}

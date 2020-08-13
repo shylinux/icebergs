@@ -333,7 +333,7 @@ var Index = &ice.Context{Name: GIT, Help: "代码库",
 			})
 		}},
 
-		code.INSTALL: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		"_install": {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			m.Option("cmd_dir", m.Conf("install", "meta.path"))
 			m.Cmd(cli.SYSTEM, "git", "clone", m.Conf("git", "meta.source"))
 

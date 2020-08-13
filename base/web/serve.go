@@ -179,7 +179,7 @@ func _serve_main(m *ice.Message, w http.ResponseWriter, r *http.Request) bool {
 		r.URL.Path = strings.Replace(r.URL.Path, "/debug", "/code", -1)
 	}
 
-	if r.URL.Path == "/" && m.Conf(SERVE, "meta.init") != "true" {
+	if r.URL.Path == "/" && m.Conf(SERVE, "meta.init") != "true" && len(ice.BinPack) == 0 {
 		if _, e := os.Stat(m.Conf(SERVE, "meta.volcanos.path")); e == nil {
 			// 初始化成功
 			m.Conf(SERVE, "meta.init", "true")

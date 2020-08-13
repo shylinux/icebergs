@@ -156,7 +156,8 @@ func Run(arg ...string) string {
 		arg = os.Args[1:]
 	}
 	if len(arg) == 0 {
-		arg = append(arg, "web.space", "connect", "self")
+		// arg = append(arg, "web.space", "connect", "self")
+		arg = append(arg, "web.serve", "dev")
 	}
 
 	frame := &Frame{}

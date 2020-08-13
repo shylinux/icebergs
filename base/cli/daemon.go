@@ -33,11 +33,9 @@ func _daemon_show(m *ice.Message, cmd *exec.Cmd, out, err string) {
 	}
 
 	h := m.Rich(DAEMON, nil, kit.Dict(
-		kit.MDB_TYPE, "shell", kit.MDB_NAME, cmd.Process.Pid, kit.MDB_TEXT, strings.Join(cmd.Args, " "),
-		kit.MDB_EXTRA, kit.Dict(
-			kit.MDB_STATUS, StatusStart,
-			CMD_STDOUT, out, CMD_STDERR, err,
-		),
+		kit.MDB_TYPE, "shell", kit.MDB_NAME, strings.Join(cmd.Args, " "),
+		kit.MDB_DIR, cmd.Dir, kit.MDB_PID, cmd.Process.Pid, kit.MDB_STATUS, StatusStart,
+		kit.MDB_EXTRA, kit.Dict(CMD_STDOUT, out, CMD_STDERR, err),
 	))
 	m.Log_EXPORT(kit.MDB_META, DAEMON, kit.MDB_KEY, h, kit.MDB_PID, cmd.Process.Pid)
 	m.Echo("%d", cmd.Process.Pid)
@@ -46,13 +44,13 @@ func _daemon_show(m *ice.Message, cmd *exec.Cmd, out, err string) {
 		if e := cmd.Wait(); e != nil {
 			m.Warn(e != nil, "%v wait: %s", cmd.Args, e)
 			m.Richs(DAEMON, nil, h, func(key string, value map[string]interface{}) {
-				kit.Value(value, kit.Keys(kit.MDB_EXTRA, kit.MDB_STATUS), StatusError)
+				kit.Value(value, kit.MDB_STATUS, StatusError)
 				kit.Value(value, kit.Keys(kit.MDB_EXTRA, kit.MDB_ERROR), e)
 			})
 		} else {
 			m.Cost("%v exit: %v", cmd.Args, cmd.ProcessState.ExitCode())
 			m.Richs(DAEMON, nil, h, func(key string, value map[string]interface{}) {
-				kit.Value(value, kit.Keys(kit.MDB_EXTRA, kit.MDB_STATUS), StatusClose)
+				kit.Value(value, kit.MDB_STATUS, StatusClose)
 			})
 		}
 	})
@@ -66,7 +64,28 @@ func init() {
 			DAEMON: {Name: "daemon", Help: "守护进程", Value: kit.Data()},
 		},
 		Commands: map[string]*ice.Command{
-			DAEMON: {Name: "daemon cmd arg...", Help: "守护进程", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			DAEMON: {Name: "daemon hash 查看:button=auto 清理:button", Help: "守护进程", Action: map[string]*ice.Action{
+				"delete": {Name: "delete", Help: "删除", Hand: func(m *ice.Message, arg ...string) {
+					m.Cmdy("mdb.delete", DAEMON, "", "hash", "hash", m.Option("hash"))
+				}},
+
+				"prune": {Name: "prune", Help: "清理", Hand: func(m *ice.Message, arg ...string) {
+					m.Richs(DAEMON, "", kit.MDB_FOREACH, func(key string, value map[string]interface{}) {
+						if strings.Count(m.Cmdx(SYSTEM, "ps", value["pid"]), "\n") > 1 {
+							value["status"] = "start"
+							return
+						}
+						m.Conf(DAEMON, kit.Keys("hash", key), "")
+					})
+				}},
+			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+				if len(arg) == 0 {
+					m.Option("fields", "time,hash,status,pid,name,dir")
+					m.Cmdy("mdb.select", DAEMON, "", "hash")
+					m.Sort("time", "time_r")
+					return
+				}
+
 				m.Option(CMD_TYPE, DAEMON)
 				m.Cmdy(SYSTEM, arg)
 			}},

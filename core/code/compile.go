@@ -4,7 +4,6 @@ import (
 	ice "github.com/shylinux/icebergs"
 	"github.com/shylinux/icebergs/base/cli"
 	"github.com/shylinux/icebergs/base/nfs"
-	"github.com/shylinux/icebergs/base/web"
 	kit "github.com/shylinux/toolkits"
 
 	"os"
@@ -39,7 +38,15 @@ func init() {
 				main := kit.Select("src/main.go", arg, 2)
 				arch := kit.Select(m.Conf(cli.RUNTIME, "host.GOARCH"), arg, 1)
 				goos := kit.Select(m.Conf(cli.RUNTIME, "host.GOOS"), arg, 0)
-				file := path.Join(m.Conf(cmd, "meta.path"), kit.Keys("ice", goos, arch))
+				file := ""
+				if m.Option(cli.CMD_DIR) == "" {
+					file = path.Join(m.Conf(cmd, "meta.path"), kit.Keys(kit.Select("ice", m.Option("name")), goos, arch))
+				} else {
+					file = kit.Keys(kit.Select("ice", m.Option("name")), goos, arch)
+				}
+				if goos == "windows" {
+					file += ".exe"
+				}
 
 				// 编译参数
 				m.Optionv(cli.CMD_ENV, kit.Simple(m.Confv(COMPILE, "meta.env"), "GOARCH", arch, "GOOS", goos))
@@ -49,7 +56,7 @@ func init() {
 				}
 
 				// 编译记录
-				m.Cmdy(web.STORY, web.CATCH, "bin", file)
+				// m.Cmdy(web.STORY, web.CATCH, "bin", file)
 				m.Log_EXPORT("source", main, "target", file)
 			}},
 		},

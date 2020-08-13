@@ -5,6 +5,7 @@ import (
 	"bytes"
 
 	ice "github.com/shylinux/icebergs"
+	"github.com/shylinux/icebergs/base/cli"
 	"github.com/shylinux/icebergs/base/mdb"
 	"github.com/shylinux/icebergs/base/nfs"
 	"github.com/shylinux/icebergs/base/web"
@@ -116,6 +117,26 @@ func _pack_intshell(m *ice.Message, pack *os.File) {
 		pack.WriteString(fmt.Sprintf(`        "%s": []byte{%v},`+"\n", "usr/intshell/"+value["path"], what[1:len(what)-1]))
 	})
 }
+func _pack_contexts(m *ice.Message, pack *os.File) {
+	m.Option(nfs.DIR_ROOT, "src")
+	m.Option(nfs.DIR_DEEP, "true")
+	m.Option(nfs.DIR_TYPE, nfs.FILE)
+
+	what := ""
+	for _, file := range []string{"src/main.go", "src/main.shy", "src/main.svg"} {
+		if f, e := os.Open(file); e == nil {
+			defer f.Close()
+			if b, e := ioutil.ReadAll(f); e == nil {
+				what = fmt.Sprintf("%v", b)
+			}
+		}
+		if len(what) > 0 {
+			what = strings.ReplaceAll(what, " ", ",")
+			pack.WriteString(fmt.Sprintf(`        "%s": []byte{%v},`+"\n", file, what[1:len(what)-1]))
+		}
+	}
+	pack.WriteString("\n")
+}
 
 const (
 	WEBPACK = "webpack"
@@ -129,13 +150,12 @@ func init() {
 			WEBPACK: {Name: "webpack", Help: "打包", Action: map[string]*ice.Action{
 				"pack": {Name: "pack", Help: "打包", Hand: func(m *ice.Message, arg ...string) {
 					m.Option(nfs.DIR_ROOT, "usr/volcanos")
-					m.Option(nfs.DIR_DEEP, "true")
 					m.Option(nfs.DIR_TYPE, nfs.FILE)
+					m.Option(nfs.DIR_DEEP, "true")
 
-					js, p, e := kit.Create("usr/volcanos/cache.js")
+					js, _, e := kit.Create("usr/volcanos/cache.js")
 					m.Assert(e)
 					defer js.Close()
-					m.Echo(p)
 
 					css, _, e := kit.Create("usr/volcanos/cache.css")
 					m.Assert(e)
@@ -153,47 +173,56 @@ func init() {
 							}
 						})
 					}
+
 					for _, k := range []string{"frame.js"} {
 						js.WriteString(`_can_name = "` + path.Join("/", k) + "\"\n")
 						js.WriteString(m.Cmdx(nfs.CAT, "usr/volcanos/"+k))
 					}
 				}},
 			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-				m.Option(nfs.DIR_ROOT, "usr/volcanos")
+				m.Option(nfs.DIR_ROOT, "usr/publish")
 				m.Option(nfs.DIR_TYPE, nfs.FILE)
 				m.Option(nfs.DIR_DEEP, "true")
-				m.Cmdy(nfs.DIR, "pack")
-				m.Table(func(index int, value map[string]string, head []string) {
-					m.Push("link", m.Cmdx(mdb.RENDER, web.RENDER.Download, "/"+value["path"]))
+
+				m.Cmdy(nfs.DIR, "webpack").Table(func(index int, value map[string]string, head []string) {
+					m.Push("link", m.Cmdx(mdb.RENDER, web.RENDER.Download, "/publish/"+value["path"]))
 				})
 			}},
-			BINPACK: {Name: "binpack", Help: "打包", Action: map[string]*ice.Action{
-				"pack": {Name: "pack", Help: "pack", Hand: func(m *ice.Message, arg ...string) {
-					pack, p, e := kit.Create("usr/icebergs/pack/binpack.go")
-					m.Assert(e)
-					defer pack.Close()
+			BINPACK: {Name: "binpack path 查看:button 返回:button 打包:button", Help: "打包", Action: map[string]*ice.Action{
+				"pack": {Name: "pack", Help: "打包", Hand: func(m *ice.Message, arg ...string) {
+					m.Option("name", "demo")
+					if pack, p, e := kit.Create("usr/publish/binpack/" + m.Option("name") + ".go"); m.Assert(e) {
+						defer pack.Close()
 
-					pack.WriteString(`package pack` + "\n\n")
-					pack.WriteString(`import "github.com/shylinux/icebergs"` + "\n\n")
-					pack.WriteString(`func init() {` + "\n")
-					pack.WriteString(`    ice.BinPack = map[string][]byte{` + "\n")
+						pack.WriteString(m.Cmdx(nfs.CAT, "src/main.go"))
 
-					_pack_volcanos(m, pack)
-					_pack_learning(m, pack)
-					_pack_icebergs(m, pack)
-					_pack_intshell(m, pack)
+						pack.WriteString("\n")
+						pack.WriteString(`func init() {` + "\n")
+						pack.WriteString(`    ice.BinPack = map[string][]byte{` + "\n")
 
-					pack.WriteString(`    }` + "\n")
-					pack.WriteString(`}` + "\n")
-					m.Echo(p)
+						_pack_volcanos(m, pack)
+						_pack_learning(m, pack)
+						_pack_icebergs(m, pack)
+						_pack_intshell(m, pack)
+						_pack_contexts(m, pack)
+
+						pack.WriteString(`    }` + "\n")
+						pack.WriteString(`}` + "\n")
+						m.Echo(p)
+					}
+
+					m.Option(cli.CMD_DIR, "usr/publish/binpack")
+					m.Cmd("compile", "linux", "amd64", m.Option("name")+".go")
+					m.Cmd("compile", "darwin", "amd64", m.Option("name")+".go")
+					m.Cmd("compile", "windows", "amd64", m.Option("name")+".go")
 				}},
 			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-				m.Option(nfs.DIR_ROOT, "usr/icebergs")
+				m.Option(nfs.DIR_ROOT, "usr/publish")
 				m.Option(nfs.DIR_TYPE, nfs.FILE)
 				m.Option(nfs.DIR_DEEP, "true")
-				m.Cmdy(nfs.DIR, "pack")
-				m.Table(func(index int, value map[string]string, head []string) {
-					m.Push("link", m.Cmdx(mdb.RENDER, web.RENDER.Download, value["path"], "/share/local/usr/icebergs/"+value["path"]))
+
+				m.Cmdy(nfs.DIR, "binpack").Table(func(index int, value map[string]string, head []string) {
+					m.Push("link", m.Cmdx(mdb.RENDER, web.RENDER.Download, "/publish/"+value["path"]))
 				})
 			}},
 			MODPACK: {Name: "modpack path=auto 查看:button 返回:button 创建:button", Help: "打包", Meta: kit.Dict(

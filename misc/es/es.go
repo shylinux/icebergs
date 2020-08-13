@@ -1,17 +1,17 @@
 package es
 
 import (
-	"net/http"
-	"path"
-	"runtime"
-
 	ice "github.com/shylinux/icebergs"
+	"github.com/shylinux/icebergs/base/cli"
+	"github.com/shylinux/icebergs/base/mdb"
+	"github.com/shylinux/icebergs/base/tcp"
+	"github.com/shylinux/icebergs/core/code"
 	kit "github.com/shylinux/toolkits"
 
-	"github.com/shylinux/icebergs/base/cli"
-	"github.com/shylinux/icebergs/base/nfs"
-	"github.com/shylinux/icebergs/base/web"
-	"github.com/shylinux/icebergs/core/code"
+	"os"
+	"path"
+	"runtime"
+	"strings"
 )
 
 const ES = "es"
@@ -28,15 +28,74 @@ var Index = &ice.Context{Name: ES, Help: "搜索",
 		ice.CTX_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {}},
 		ice.CTX_EXIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {}},
 
-		ES: {Name: "es 安装:button", Help: "搜索", Action: map[string]*ice.Action{
+		ES: {Name: "es hash=auto auto 启动:button 安装:button", Help: "搜索", Action: map[string]*ice.Action{
 			"install": {Name: "install", Help: "安装", Hand: func(m *ice.Message, arg ...string) {
-				name := path.Base(m.Conf(ES, kit.Keys("meta", runtime.GOOS)))
-				msg := m.Cmd(web.SPIDE, "dev", "cache", http.MethodGet, m.Conf(ES, kit.Keys("meta", runtime.GOOS)))
-				m.Cmdy(nfs.LINK, path.Join("usr/install/", name), msg.Append("file"))
-				m.Option(cli.CMD_DIR, "usr/install")
-				m.Cmd(cli.SYSTEM, "tar", "xvf", name)
+				m.Cmdy("web.code.install", "download", m.Conf(ES, kit.Keys(kit.MDB_META, runtime.GOOS)))
+			}},
+
+			"start": {Name: "start", Help: "启动", Hand: func(m *ice.Message, arg ...string) {
+				name := path.Base(m.Conf(ES, kit.Keys(kit.MDB_META, runtime.GOOS)))
+				name = strings.Join(strings.Split(name, "-")[:2], "-")
+
+				port := m.Cmdx(tcp.PORT, "get")
+				p := "var/daemon/" + port
+				os.MkdirAll(p, ice.MOD_DIR)
+				for _, dir := range []string{"bin", "jdk", "lib", "logs", "config", "modules", "plugins"} {
+					m.Cmd(cli.SYSTEM, "cp", "-r", "usr/install/"+name+"/"+dir, p)
+				}
+
+				m.Option(cli.CMD_DIR, p)
+				m.Cmdy(cli.DAEMON, "bin/elasticsearch")
 			}},
 		}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			if len(arg) == 0 {
+				m.Cmdy(cli.DAEMON)
+				return
+			}
+
+			if len(arg) == 1 {
+				m.Richs(cli.DAEMON, "", arg[0], func(key string, value map[string]interface{}) {
+					m.Cmdy("web.spide", "dev", "raw", "GET", "http://localhost:9200")
+				})
+			}
+
+			if len(arg) == 2 {
+				m.Richs(cli.DAEMON, "", arg[0], func(key string, value map[string]interface{}) {
+					m.Cmdy("web.spide", "dev", "raw", "GET", "http://localhost:9200")
+				})
+			}
+		}},
+
+		"index": {Name: "table index 创建:button", Help: "索引", Action: map[string]*ice.Action{}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			if len(arg) == 0 {
+				m.Cmdy(cli.DAEMON)
+				return
+			}
+
+			m.Option("header", "Content-Type", "application/json")
+			m.Echo(kit.Formats(kit.UnMarshal(m.Cmdx("web.spide", "dev", "raw", "PUT", "http://localhost:9200/"+arg[0]))))
+		}},
+
+		"mapping": {Name: "mapping index mapping 创建:button text:textarea", Help: "映射", Action: map[string]*ice.Action{}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			if len(arg) == 0 {
+				m.Cmdy(cli.DAEMON)
+				return
+			}
+
+			m.Option("header", "Content-Type", "application/json")
+			m.Echo(kit.Formats(kit.UnMarshal(m.Cmdx("web.spide", "dev", "raw", "PUT", "http://localhost:9200/"+arg[0]+"/_mapping/"+arg[1], "data", arg[2]))))
+		}},
+
+		"document": {Name: "table index=index_test mapping=mapping_test id=1 查看:button 添加:button data:textarea", Help: "文档", Action: map[string]*ice.Action{
+			mdb.INSERT: {Name: "insert", Help: "添加", Hand: func(m *ice.Message, arg ...string) {
+				if len(arg) > 3 {
+					m.Option("header", "Content-Type", "application/json")
+					m.Echo(kit.Formats(kit.UnMarshal(m.Cmdx("web.spide", "dev", "raw", "PUT", "http://localhost:9200/"+arg[0]+"/"+arg[1]+"/"+arg[2], "data", arg[3]))))
+				}
+			}},
+		}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			m.Option("header", "Content-Type", "application/json")
+			m.Echo(kit.Formats(kit.UnMarshal(m.Cmdx("web.spide", "dev", "raw", "GET", "http://localhost:9200/"+arg[0]+"/"+arg[1]+"/"+arg[2]))))
 		}},
 	},
 }

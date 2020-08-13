@@ -118,7 +118,7 @@ var Index = &ice.Context{Name: "vim", Help: "编辑器",
 				m.Cmdy(nfs.CAT, path.Join(arg[2], arg[1]))
 			}},
 		}},
-		code.INSTALL: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		"_install": {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			p := path.Join(m.Conf("install", "meta.path"), m.Conf("vim", "meta.version"))
 			if _, e := os.Stat(p); e != nil {
 				// 下载源码

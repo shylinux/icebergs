@@ -171,13 +171,18 @@ func _field_show(m *ice.Message, name, text string, arg ...string) {
 		} else {
 			m.Parse("option", arg[i], arg[i+1])
 		}
+
 		data[arg[i]] = m.Optionv(arg[i])
-		if arg[i] == "args" {
+		switch arg[i] {
+		case "content":
+			data[arg[i]] = arg[i+1]
+
+		case "args":
 			args := kit.Simple(m.Optionv(arg[i]))
 
 			count := 0
 			kit.Fetch(data["inputs"], func(index int, value map[string]interface{}) {
-				if value["_input"] == "text" || value["type"] == "text" {
+				if value["_input"] != "button" && value["type"] != "button" {
 					count++
 				}
 			})
@@ -367,6 +372,20 @@ func init() {
 				}
 				if len(arg) == 1 {
 					arg = []string{"", arg[0]}
+				}
+				if arg[0] == "shell" {
+					arg[1] = strings.TrimSpace(arg[1])
+					m.Echo(`<div class="story" data-type="spark" data-name="shell" data-text="%s">`, arg[1])
+					for _, l := range strings.Split(arg[1], "\n") {
+						m.Echo("<div>")
+						m.Echo("$ ")
+						m.Echo("<span>")
+						m.Echo(l)
+						m.Echo("</span>")
+						m.Echo("</div>")
+					}
+					m.Echo("</div>")
+					return
 				}
 				_spark_show(m, arg[0], kit.Select(arg[0], arg[1]), arg[2:]...)
 			}},

@@ -54,27 +54,35 @@ var Index = &ice.Context{Name: ES, Help: "搜索",
 				return
 			}
 
-			if len(arg) == 1 {
-				m.Richs(cli.DAEMON, "", arg[0], func(key string, value map[string]interface{}) {
-					m.Cmdy("web.spide", "dev", "raw", "GET", "http://localhost:9200")
-				})
-			}
-
-			if len(arg) == 2 {
-				m.Richs(cli.DAEMON, "", arg[0], func(key string, value map[string]interface{}) {
-					m.Cmdy("web.spide", "dev", "raw", "GET", "http://localhost:9200")
-				})
-			}
+			m.Richs(cli.DAEMON, "", arg[0], func(key string, value map[string]interface{}) {
+				m.Cmdy("web.spide", "dev", "raw", "GET", "http://localhost:9200")
+			})
 		}},
 
-		"command": {Name: "command 执行:button method:select=GET|PUT|POST|DELETE cmd=/ data:textarea", Help: "命令", Action: map[string]*ice.Action{}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		"GET": {Name: "GET 查看:button cmd=/", Help: "命令", Action: map[string]*ice.Action{}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			if pod := m.Option("_pod"); pod != "" {
 				m.Option("_pod", "")
 				m.Cmdy(web.SPACE, pod, "web.code.es.command", arg)
 				return
 			}
+
 			m.Option("header", "Content-Type", "application/json")
-			m.Echo(kit.Formats(kit.UnMarshal(m.Cmdx("web.spide", "dev", "raw", arg[0], "http://localhost:9200/"+arg[1], "data", arg[2]))))
+			m.Echo(kit.Formats(kit.UnMarshal(m.Cmdx("web.spide", "dev", "raw", "GET", kit.MergeURL2("http://localhost:9200", kit.Select("/", arg, 0))))))
+		}},
+		"CMD": {Name: "CMD 执行:button method:select=GET|PUT|POST|DELETE cmd=/ data:textarea", Help: "命令", Action: map[string]*ice.Action{}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			if pod := m.Option("_pod"); pod != "" {
+				m.Option("_pod", "")
+				m.Cmdy(web.SPACE, pod, "web.code.es.CMD", arg)
+				return
+			}
+
+			if arg[0] == "GET" {
+				m.Option("header", "Content-Type", "application/json")
+				m.Echo(kit.Formats(kit.UnMarshal(m.Cmdx("web.spide", "dev", "raw", arg[0], kit.MergeURL2("http://localhost:9200", arg[1])))))
+				return
+			}
+			m.Option("header", "Content-Type", "application/json")
+			m.Echo(kit.Formats(kit.UnMarshal(m.Cmdx("web.spide", "dev", "raw", arg[0], kit.MergeURL2("http://localhost:9200", arg[1]), "data", arg[2]))))
 		}},
 
 		"index": {Name: "table index 创建:button", Help: "索引", Action: map[string]*ice.Action{}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {

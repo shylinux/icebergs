@@ -16,20 +16,27 @@ linux https://elasticsearch.thans.cn/downloads/elasticsearch/elasticsearch-7.3.2
 
 section 启动
 spark shell `
-$ tar xvf elasticsearch-7.3.2-linux-x86_64.tar.gz
-$ cd elasticsearch-7.3.2
-$ ./bin/elasticsearch
+tar xvf elasticsearch-7.3.2-linux-x86_64.tar.gz
+cd elasticsearch-7.3.2
+./bin/elasticsearch
 `
 
 section 体验
 spark shell `
-$ curl http://localhost:9200
+curl http://localhost:9200
 `
 
-field command web.code.es.command option `{ _pod centos.remote }`
+# field command web.code.es.command option `{ _pod centos.remote }`
+field GET web.code.es.GET style command args `[ /index_test/test_type/1 ]`
+
+field CMD web.code.es.CMD style command args `[ POST /index_test/test_type/1 ] ` content `{
+    "name": "lisi",
+    "age" : "12"
+}`
+
 field es web.code.es.es
+field install web.code.install
 return
 
 field document web.code.es.document
-field install web.code.install
 

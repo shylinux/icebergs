@@ -311,7 +311,6 @@ var Index = &ice.Context{Name: GIT, Help: "代码库",
 				} else {
 					m.Option(cli.CMD_DIR, path.Join("usr", m.Option("name")))
 				}
-				m.Option(cli.CMD_DIR, path.Join("usr", m.Option("name")))
 				m.Cmdy(cli.SYSTEM, "git", "push")
 			}},
 		}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {

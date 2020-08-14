@@ -292,45 +292,32 @@ var Index = &ice.Context{Name: GIT, Help: "代码库",
 		}},
 
 		"status": {Name: "status name=auto auto 提交:button", Help: "文件状态", Meta: kit.Dict(
-			"提交", kit.List("_input", "text", "name", "text"),
+			"提交", kit.List(
+				"_input", "select", "name", "action", "values", []string{"add", "opt"},
+				"_input", "text", "name", "text", "value", "some",
+			),
 		), Action: map[string]*ice.Action{
 			"submit": {Name: "submit", Help: "提交", Hand: func(m *ice.Message, arg ...string) {
-				m.Cmdy(cli.SYSTEM, "commit", "-am", arg[0])
+				m.Option(cli.CMD_DIR, path.Join("usr", m.Option("name")))
+				m.Cmdy(cli.SYSTEM, "git", "commit", "-am", kit.Select("opt some", strings.Join(arg, " ")))
 			}},
 		}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			prefix := []string{cli.SYSTEM, "git"}
-			if len(arg) > 1 && arg[0] == "action" {
-				m.Richs("repos", nil, m.Option("name"), func(key string, value map[string]interface{}) {
-					m.Option("cmd_dir", kit.Value(value, "meta.path"))
-					switch arg[1] {
-					case "add":
-						m.Cmdy(prefix, arg[1], m.Option("file"))
-					case "reset":
-						m.Cmdy(prefix, arg[1], m.Option("file"))
-					case "checkout":
-						m.Cmdy(prefix, arg[1], m.Option("file"))
-					case "commit":
-						m.Cmdy(prefix, arg[1], "-m", m.Option("comment"))
-					}
-				})
-				return
-			}
-
-			m.Richs("repos", nil, kit.Select("*", arg, 0), func(key string, value map[string]interface{}) {
-				if m.Option("cmd_dir", kit.Value(value, "meta.path")); len(arg) > 0 {
+			m.Richs(REPOS, nil, kit.Select(kit.MDB_FOREACH, arg, 0), func(key string, value map[string]interface{}) {
+				if m.Option(cli.CMD_DIR, kit.Value(value, "meta.path")); len(arg) > 0 {
 					// 更改详情
-					m.Echo(m.Cmdx(prefix, "diff"))
+					m.Echo(m.Cmdx(cli.SYSTEM, GIT, "diff"))
 					return
 				}
 
 				// 更改列表
-				for _, v := range strings.Split(strings.TrimSpace(m.Cmdx(prefix, "status", "-sb")), "\n") {
+				for _, v := range strings.Split(strings.TrimSpace(m.Cmdx(cli.SYSTEM, GIT, "status", "-sb")), "\n") {
 					vs := strings.SplitN(strings.TrimSpace(v), " ", 2)
 					m.Push("name", kit.Value(value, "meta.name"))
 					m.Push("tags", vs[0])
 					m.Push("file", vs[1])
 				}
 			})
+			m.PushAction("提交")
 		}},
 
 		"_install": {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {

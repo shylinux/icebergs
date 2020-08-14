@@ -301,6 +301,10 @@ var Index = &ice.Context{Name: GIT, Help: "代码库",
 				m.Option(cli.CMD_DIR, path.Join("usr", m.Option("name")))
 				m.Cmdy(cli.SYSTEM, "git", "commit", "-am", kit.Select("opt some", strings.Join(arg, " ")))
 			}},
+			"push": {Name: "push", Help: "上传", Hand: func(m *ice.Message, arg ...string) {
+				m.Option(cli.CMD_DIR, path.Join("usr", m.Option("name")))
+				m.Cmdy(cli.SYSTEM, "git", "push")
+			}},
 		}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			m.Richs(REPOS, nil, kit.Select(kit.MDB_FOREACH, arg, 0), func(key string, value map[string]interface{}) {
 				if m.Option(cli.CMD_DIR, kit.Value(value, "meta.path")); len(arg) > 0 {
@@ -317,7 +321,7 @@ var Index = &ice.Context{Name: GIT, Help: "代码库",
 					m.Push("file", vs[1])
 				}
 			})
-			m.PushAction("提交")
+			m.PushAction("提交", "上传")
 		}},
 
 		"_install": {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {

@@ -61,28 +61,34 @@ const DAEMON = "daemon"
 func init() {
 	Index.Merge(&ice.Context{
 		Configs: map[string]*ice.Config{
-			DAEMON: {Name: "daemon", Help: "守护进程", Value: kit.Data()},
+			DAEMON: {Name: DAEMON, Help: "守护进程", Value: kit.Data()},
 		},
 		Commands: map[string]*ice.Command{
 			DAEMON: {Name: "daemon hash 查看:button=auto 清理:button", Help: "守护进程", Action: map[string]*ice.Action{
-				"delete": {Name: "delete", Help: "删除", Hand: func(m *ice.Message, arg ...string) {
-					m.Cmdy("mdb.delete", DAEMON, "", "hash", "hash", m.Option("hash"))
-				}},
-
 				"prune": {Name: "prune", Help: "清理", Hand: func(m *ice.Message, arg ...string) {
 					m.Richs(DAEMON, "", kit.MDB_FOREACH, func(key string, value map[string]interface{}) {
-						if strings.Count(m.Cmdx(SYSTEM, "ps", value["pid"]), "\n") > 1 {
-							value["status"] = "start"
+						if strings.Count(m.Cmdx(SYSTEM, "ps", value[kit.MDB_PID]), "\n") > 1 {
+							value[kit.MDB_STATUS] = StatusStart
 							return
 						}
-						m.Conf(DAEMON, kit.Keys("hash", key), "")
+						m.Conf(DAEMON, kit.Keys(kit.MDB_HASH, key), "")
+					})
+				}},
+				"stop": {Name: "stop", Help: "停止", Hand: func(m *ice.Message, arg ...string) {
+					m.Richs(DAEMON, "", m.Option(kit.MDB_HASH), func(key string, value map[string]interface{}) {
+						m.Cmdy(SYSTEM, "kill", value[kit.MDB_PID])
+						if strings.Count(m.Cmdx(SYSTEM, "ps", value[kit.MDB_PID]), "\n") == 1 {
+							value[kit.MDB_STATUS] = StatusClose
+							return
+						}
 					})
 				}},
 			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 				if len(arg) == 0 {
 					m.Option("fields", "time,hash,status,pid,name,dir")
-					m.Cmdy("mdb.select", DAEMON, "", "hash")
+					m.Cmdy("mdb.select", DAEMON, "", kit.MDB_HASH)
 					m.Sort("time", "time_r")
+					m.PushAction("停止")
 					return
 				}
 

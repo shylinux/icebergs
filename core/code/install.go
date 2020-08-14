@@ -2,12 +2,14 @@ package code
 
 import (
 	"net/http"
+	"os"
 	"path"
 
 	ice "github.com/shylinux/icebergs"
 	"github.com/shylinux/icebergs/base/cli"
 	"github.com/shylinux/icebergs/base/mdb"
 	"github.com/shylinux/icebergs/base/nfs"
+	"github.com/shylinux/icebergs/base/tcp"
 	"github.com/shylinux/icebergs/base/web"
 	kit "github.com/shylinux/toolkits"
 )
@@ -45,6 +47,18 @@ func init() {
 					m.Option(cli.CMD_DIR, m.Conf(INSTALL, "meta.path"))
 					m.Cmd(cli.SYSTEM, "tar", "xvf", name)
 					m.Echo(p)
+				}},
+				"start": {Name: "start source", Help: "启动", Hand: func(m *ice.Message, arg ...string) {
+					port := m.Cmdx(tcp.PORT, "get")
+					p := "var/daemon/" + port
+					os.MkdirAll(p, ice.MOD_DIR)
+
+					m.Cmd(nfs.DIR, "usr/install/"+arg[0]).Table(func(index int, value map[string]string, head []string) {
+						m.Cmd(cli.SYSTEM, "cp", "-r", value["path"], p)
+					})
+
+					m.Option(cli.CMD_DIR, p)
+					m.Cmdy(cli.DAEMON, arg[1])
 				}},
 			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 				m.Option("fields", "time,progress,size,total,name,link")

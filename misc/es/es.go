@@ -3,13 +3,10 @@ package es
 import (
 	ice "github.com/shylinux/icebergs"
 	"github.com/shylinux/icebergs/base/cli"
-	"github.com/shylinux/icebergs/base/mdb"
-	"github.com/shylinux/icebergs/base/tcp"
 	"github.com/shylinux/icebergs/base/web"
 	"github.com/shylinux/icebergs/core/code"
 	kit "github.com/shylinux/toolkits"
 
-	"os"
 	"path"
 	"runtime"
 	"strings"
@@ -20,6 +17,7 @@ const ES = "es"
 var Index = &ice.Context{Name: ES, Help: "搜索",
 	Configs: map[string]*ice.Config{
 		ES: {Name: ES, Help: "搜索", Value: kit.Data(
+			"address", "http://localhost:9200",
 			"windows", "https://elasticsearch.thans.cn/downloads/elasticsearch/elasticsearch-7.3.2-windows-x86_64.zip",
 			"darwin", "https://elasticsearch.thans.cn/downloads/elasticsearch/elasticsearch-7.3.2-darwin-x86_64.tar.gz",
 			"linux", "https://elasticsearch.thans.cn/downloads/elasticsearch/elasticsearch-7.3.2-linux-x86_64.tar.gz",
@@ -30,23 +28,14 @@ var Index = &ice.Context{Name: ES, Help: "搜索",
 		ice.CTX_EXIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {}},
 
 		ES: {Name: "es hash=auto auto 启动:button 安装:button", Help: "搜索", Action: map[string]*ice.Action{
-			"install": {Name: "install", Help: "安装", Hand: func(m *ice.Message, arg ...string) {
+			"download": {Name: "download", Help: "安装", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmdy("web.code.install", "download", m.Conf(ES, kit.Keys(kit.MDB_META, runtime.GOOS)))
 			}},
 
 			"start": {Name: "start", Help: "启动", Hand: func(m *ice.Message, arg ...string) {
 				name := path.Base(m.Conf(ES, kit.Keys(kit.MDB_META, runtime.GOOS)))
 				name = strings.Join(strings.Split(name, "-")[:2], "-")
-
-				port := m.Cmdx(tcp.PORT, "get")
-				p := "var/daemon/" + port
-				os.MkdirAll(p, ice.MOD_DIR)
-				for _, dir := range []string{"bin", "jdk", "lib", "logs", "config", "modules", "plugins"} {
-					m.Cmd(cli.SYSTEM, "cp", "-r", "usr/install/"+name+"/"+dir, p)
-				}
-
-				m.Option(cli.CMD_DIR, p)
-				m.Cmdy(cli.DAEMON, "bin/elasticsearch")
+				m.Cmdy("web.code.install", "start", name, "bin/elasticsearch")
 			}},
 		}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			if len(arg) == 0 {
@@ -55,66 +44,43 @@ var Index = &ice.Context{Name: ES, Help: "搜索",
 			}
 
 			m.Richs(cli.DAEMON, "", arg[0], func(key string, value map[string]interface{}) {
-				m.Cmdy("web.spide", "dev", "raw", "GET", "http://localhost:9200")
+				m.Cmdy(web.SPIDE, web.SPIDE_DEV, web.SPIDE_RAW, web.SPIDE_GET, m.Conf(ES, "meta.address"))
 			})
 		}},
 
 		"GET": {Name: "GET 查看:button cmd=/", Help: "命令", Action: map[string]*ice.Action{}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			if pod := m.Option("_pod"); pod != "" {
 				m.Option("_pod", "")
-				m.Cmdy(web.SPACE, pod, "web.code.es.GET", arg)
-				return
+				m.Cmdy(web.SPACE, pod, m.Prefix(cmd), arg)
+
+				if m.Result(0) != ice.ErrWarn || m.Result(1) != ice.ErrNotFound {
+					return
+				}
+				m.Set(ice.MSG_RESULT)
 			}
 
-			m.Option("header", "Content-Type", "application/json")
-			m.Echo(kit.Formats(kit.UnMarshal(m.Cmdx("web.spide", "dev", "raw", "GET", kit.MergeURL2("http://localhost:9200", kit.Select("/", arg, 0))))))
+			m.Option(web.SPIDE_HEADER, web.ContentType, web.ContentJSON)
+			m.Echo(kit.Formats(kit.UnMarshal(m.Cmdx(web.SPIDE, web.SPIDE_DEV, web.SPIDE_RAW,
+				web.SPIDE_GET, kit.MergeURL2(m.Conf(ES, "meta.address"), kit.Select("/", arg, 0))))))
 		}},
 		"CMD": {Name: "CMD 执行:button method:select=GET|PUT|POST|DELETE cmd=/ data:textarea", Help: "命令", Action: map[string]*ice.Action{}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			if pod := m.Option("_pod"); pod != "" {
 				m.Option("_pod", "")
-				m.Cmdy(web.SPACE, pod, "web.code.es.CMD", arg)
-				return
-			}
+				m.Cmdy(web.SPACE, pod, m.Prefix(cmd), arg)
 
-			if arg[0] == "GET" {
-				m.Option("header", "Content-Type", "application/json")
-				m.Echo(kit.Formats(kit.UnMarshal(m.Cmdx("web.spide", "dev", "raw", arg[0], kit.MergeURL2("http://localhost:9200", arg[1])))))
-				return
-			}
-			m.Option("header", "Content-Type", "application/json")
-			m.Echo(kit.Formats(kit.UnMarshal(m.Cmdx("web.spide", "dev", "raw", arg[0], kit.MergeURL2("http://localhost:9200", arg[1]), "data", arg[2]))))
-		}},
-
-		"index": {Name: "table index 创建:button", Help: "索引", Action: map[string]*ice.Action{}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			if len(arg) == 0 {
-				m.Cmdy(cli.DAEMON)
-				return
-			}
-
-			m.Option("header", "Content-Type", "application/json")
-			m.Echo(kit.Formats(kit.UnMarshal(m.Cmdx("web.spide", "dev", "raw", "PUT", "http://localhost:9200/"+arg[0]))))
-		}},
-
-		"mapping": {Name: "mapping index mapping 创建:button text:textarea", Help: "映射", Action: map[string]*ice.Action{}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			if len(arg) == 0 {
-				m.Cmdy(cli.DAEMON)
-				return
-			}
-
-			m.Option("header", "Content-Type", "application/json")
-			m.Echo(kit.Formats(kit.UnMarshal(m.Cmdx("web.spide", "dev", "raw", "PUT", "http://localhost:9200/"+arg[0]+"/_mapping/"+arg[1], "data", arg[2]))))
-		}},
-
-		"document": {Name: "table index=index_test mapping=mapping_test id=1 查看:button 添加:button data:textarea", Help: "文档", Action: map[string]*ice.Action{
-			mdb.INSERT: {Name: "insert", Help: "添加", Hand: func(m *ice.Message, arg ...string) {
-				if len(arg) > 3 {
-					m.Option("header", "Content-Type", "application/json")
-					m.Echo(kit.Formats(kit.UnMarshal(m.Cmdx("web.spide", "dev", "raw", "PUT", "http://localhost:9200/"+arg[0]+"/"+arg[1]+"/"+arg[2], "data", arg[3]))))
+				if m.Result(0) != ice.ErrWarn || m.Result(1) != ice.ErrNotFound {
+					return
 				}
-			}},
-		}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			m.Option("header", "Content-Type", "application/json")
-			m.Echo(kit.Formats(kit.UnMarshal(m.Cmdx("web.spide", "dev", "raw", "GET", "http://localhost:9200/"+arg[0]+"/"+arg[1]+"/"+arg[2]))))
+				m.Set(ice.MSG_RESULT)
+			}
+
+			m.Option(web.SPIDE_HEADER, web.ContentType, web.ContentJSON)
+			prefix := []string{web.SPIDE, web.SPIDE_DEV, web.SPIDE_RAW, arg[0], kit.MergeURL2(m.Conf(ES, "meta.address"), arg[1])}
+
+			if len(arg) > 2 {
+				prefix = append(prefix, web.SPIDE_DATA, arg[2])
+			}
+			m.Echo(kit.Formats(kit.UnMarshal(m.Cmdx(prefix))))
 		}},
 	},
 }

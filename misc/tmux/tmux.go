@@ -30,8 +30,7 @@ const (
 
 var _tmux = []string{cli.SYSTEM, TMUX}
 
-var Index = &ice.Context{Name: "tmux", Help: "工作台",
-	Caches: map[string]*ice.Cache{},
+var Index = &ice.Context{Name: TMUX, Help: "工作台",
 	Configs: map[string]*ice.Config{
 		SESSION: {Name: "session", Help: "会话", Value: kit.Data(
 			"format", "#{session_id},#{session_attached},#{session_name},#{session_windows},#{session_height},#{session_width}",
@@ -59,10 +58,14 @@ var Index = &ice.Context{Name: "tmux", Help: "工作台",
 		TEXT: {Name: "text 保存:button 清空:button text:textarea", Help: "文本", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			if len(arg) > 0 && arg[0] != "" {
 				m.Cmd(_tmux, "set-buffer", arg[0])
-				m.Cmdy("web.wiki.image", "qrcode", arg[0])
-				m.Echo("\n")
 			}
-			m.Echo(m.Cmdx(_tmux, "show-buffer"))
+
+			text := m.Cmdx(_tmux, "show-buffer")
+			m.Cmdy("web.wiki.image", "qrcode", text)
+
+			m.Echo("\n")
+			m.Echo(text)
+			m.Echo("\n")
 			m.Render("")
 		}},
 		BUFFER: {Name: "buffer [buffer=auto [value]] auto", Help: "缓存", Action: map[string]*ice.Action{

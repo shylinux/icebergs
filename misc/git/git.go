@@ -298,7 +298,7 @@ var Index = &ice.Context{Name: GIT, Help: "代码库",
 			),
 		), Action: map[string]*ice.Action{
 			"submit": {Name: "submit", Help: "提交", Hand: func(m *ice.Message, arg ...string) {
-				m.Option(cli.CMD_DIR, path.Join("usr", m.Option("name")))
+				m.Option(cli.CMD_DIR, path.Join(kit.Select("usr", "", path.IsAbs(m.Option("name"))), m.Option("name")))
 				m.Cmdy(cli.SYSTEM, "git", "commit", "-am", kit.Select("opt some", strings.Join(arg, " ")))
 			}},
 			"push": {Name: "push", Help: "上传", Hand: func(m *ice.Message, arg ...string) {

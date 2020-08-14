@@ -62,7 +62,7 @@ var Index = &ice.Context{Name: ES, Help: "搜索",
 		"GET": {Name: "GET 查看:button cmd=/", Help: "命令", Action: map[string]*ice.Action{}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			if pod := m.Option("_pod"); pod != "" {
 				m.Option("_pod", "")
-				m.Cmdy(web.SPACE, pod, "web.code.es.command", arg)
+				m.Cmdy(web.SPACE, pod, "web.code.es.GET", arg)
 				return
 			}
 

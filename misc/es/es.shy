@@ -27,12 +27,12 @@ curl http://localhost:9200
 `
 
 # field command web.code.es.command option `{ _pod centos.remote }`
-field GET web.code.es.GET style command args `[ /index_test/test_type/1 ]`
+field GET web.code.es.GET style command args `[ /index_test/test_type/1 ]` option `{ _pod centos.remote }`
 
 field CMD web.code.es.CMD style command args `[ POST /index_test/test_type/1 ] ` content `{
     "name": "lisi",
     "age" : "12"
-}`
+}` option `{ _pod centos.remote }`
 
 field es web.code.es.es
 field install web.code.install

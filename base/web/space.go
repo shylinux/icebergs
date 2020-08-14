@@ -114,7 +114,7 @@ func _space_send(m *ice.Message, space string, arg ...string) {
 				return nil
 			})
 		}
-	}) == nil, "not found %s", space)
+	}) == nil, ice.ErrNotFound, space)
 }
 
 func _space_echo(msg *ice.Message, source, target []string, c *websocket.Conn, name string) {

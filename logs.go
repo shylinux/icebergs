@@ -10,7 +10,9 @@ import (
 
 var ErrWarn = "warn: "
 var ErrNotAuth = "not auth: "
+var ErrNotJoin = "not join: "
 var ErrNotFound = "not found: "
+var ErrNotEnough = "not enough: "
 
 func (m *Message) log(level string, str string, arg ...interface{}) *Message {
 	if str = strings.TrimSpace(kit.Format(str, arg...)); Log != nil {

@@ -57,7 +57,7 @@ var Index = &ice.Context{Name: ES, Help: "搜索",
 			})
 		}},
 
-		"GET": {Name: "GET 查看:button cmd=/", Help: "命令", Action: map[string]*ice.Action{}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		"GET": {Name: "GET 查看:button cmd:text=/", Help: "命令", Action: map[string]*ice.Action{}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			if pod := m.Option("_pod"); pod != "" {
 				m.Option("_pod", "")
 				m.Cmdy(web.SPACE, pod, m.Prefix(cmd), arg)
@@ -72,7 +72,7 @@ var Index = &ice.Context{Name: ES, Help: "搜索",
 			m.Echo(kit.Formats(kit.UnMarshal(m.Cmdx(web.SPIDE, web.SPIDE_DEV, web.SPIDE_RAW,
 				web.SPIDE_GET, kit.MergeURL2(m.Conf(ES, "meta.address"), kit.Select("/", arg, 0))))))
 		}},
-		"CMD": {Name: "CMD 执行:button method:select=GET|PUT|POST|DELETE cmd=/ data:textarea", Help: "命令", Action: map[string]*ice.Action{}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		"CMD": {Name: "CMD 执行:button method:select=GET|PUT|POST|DELETE cmd:text=/ data:textarea", Help: "命令", Action: map[string]*ice.Action{}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			if pod := m.Option("_pod"); pod != "" {
 				m.Option("_pod", "")
 				m.Cmdy(web.SPACE, pod, m.Prefix(cmd), arg)

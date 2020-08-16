@@ -1,25 +1,60 @@
 title "vim"
 
+premenu
 refer "官网" `
 官网 https://www.vim.org
 源码 https://github.com/vim/vim
 文档 http://vimdoc.sourceforge.net/htmldoc/usr_toc.html
 `
 
-chapter "应用"
+chapter "安装"
+section "下载源码"
+refer `
+下载 ftp://ftp.vim.org/pub/vim/unix/vim-8.1.tar.bz2
+`
 
-chapter "操作"
+section "编译安装"
+spark shell `
+tar xvf vim-81.tar.bz2 && cd vim81
+./configure --prefix=/usr/local --enable-multibyte=yes
+make -j4
+make install
+`
+
+section "使用体验"
+spark shell `
+vim
+`
+section "项目"
+field "安装" web.code.vim.vim
+field "源码" web.code.inner args `[ usr/install/vim81/ src/main.c 110 ]`
+field "脚本" web.code.inner args `[ usr/local/share/vim/vim81/ filetype.vim ]`
+field "文档" web.code.inner args `[ usr/local/share/vim/vim81/doc/ help.txt ]`
+
+chapter "使用"
 
 chapter "配置"
 
-field "启动配置" web.code.inner args `[ etc/conf/ vimrc ]`
+refer `
+启动脚本 https://github.com/shylinux/contexts/blob/master/etc/conf/vimrc
+`
+field "启动脚本" web.code.inner args `[ etc/conf/ vimrc ]`
 
 chapter "插件"
-
 refer `
 插件管理器 https://github.com/junegunn/vim-plug
 `
+field "插件管理器" web.code.inner args `[ etc/conf/ plug.vim ]`
+
 section "状态栏"
 refer `
-插件管理器 https://github.com/vim-airline/vim-airline
+插件 https://github.com/vim-airline/vim-airline
 `
+
+chapter "应用"
+
+section "收藏夹"
+field favor web.favor args `[ vim.history ]`
+
+section "输入法"
+# field input web.code.input.find `[ shwq ]`

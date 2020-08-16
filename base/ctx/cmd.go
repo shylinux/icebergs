@@ -66,7 +66,7 @@ func _command_make(m *ice.Message, cmd *ice.Command) {
 			cmd.List = append(cmd.List, kit.List(kit.MDB_INPUT, "button", "name", "返回", "value", "Last")...)
 			button = true
 		default:
-			kind, value := "text", ""
+			kind, value := kit.Select("text", "button", button), ""
 			if len(ls) == 3 {
 				kind, value = ls[1], ls[2]
 			} else if len(ls) == 2 {

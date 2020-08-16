@@ -20,7 +20,7 @@ func init() {
 			)},
 		},
 		Commands: map[string]*ice.Command{
-			FEEL: {Name: "feel path=auto 刷新:button=auto 上传:button 上一页:button 下一页:button 参数:button", Help: "影音媒体", Meta: kit.Dict(
+			FEEL: {Name: "feel path=auto auto 上传:button 上一页:button 下一页:button 参数:button", Help: "影音媒体", Meta: kit.Dict(
 				"display", "/plugin/local/wiki/feel.js", "detail", []string{"标签", "删除"},
 			), Action: map[string]*ice.Action{
 				mdb.CREATE: {Name: "create", Help: "创建", Hand: func(m *ice.Message, arg ...string) {
@@ -49,6 +49,7 @@ func init() {
 					m.Echo(path.Join(m.Conf(FEEL, "meta.path"), arg[0]))
 					return
 				}
+				m.Sort("time", "time_r")
 			}},
 		},
 	}, nil)

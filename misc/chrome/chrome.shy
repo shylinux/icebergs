@@ -1,24 +1,21 @@
 title "HTML5"
+premenu
 
 refer "官网" `
 官网 https://www.w3.org/
 文档 https://developer.mozilla.org/
 源码 https://github.com/chromium/chromium/
-插件 chrome://extensions
 `
 
-chapter "应用"
-field draw web.wiki.draw.draw args hi.svg
-field trend web.code.git.trend args icebergs
-field spide web.code.git.spide args icebergs
+chapter "安装"
+field chrome web.code.chrome.chrome
 
-chapter "本地"
+chapter "应用"
+section "收藏夹"
+field favor web.favor args `[ url.history ]`
+
+section "命令行"
 refer `
 终端 terminal://
 博客 https://www.cnblogs.com/lymvv/p/8431238.html
 `
-field chrome web.code.chrome.chrome
-field bookmark web.code.chrome.bookmark
-
-# other "https://www.cnblogs.com/lymvv/p/8431238.html"
-# baidu "html"

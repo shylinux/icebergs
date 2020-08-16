@@ -26,6 +26,7 @@ func init() {
 			}},
 			"show": {Name: "show name", Help: "渲染", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 				if file, e := avutil.Open(arg[0]); m.Assert(e) {
+					defer file.Close()
 					if streams, e := file.Streams(); m.Assert(e) {
 						for _, stream := range streams {
 							if stream.Type().IsAudio() {

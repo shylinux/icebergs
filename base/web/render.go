@@ -105,6 +105,7 @@ func RenderStatus(msg *ice.Message, code int, text string) { // name path expire
 var RENDER = struct {
 	A      string
 	IMG    string
+	Video  string
 	Field  string
 	Frame  string
 	Button string
@@ -113,6 +114,7 @@ var RENDER = struct {
 }{
 	A:      "a",
 	IMG:    "img",
+	Video:  "video",
 	Field:  "field",
 	Frame:  "frame",
 	Button: "button",
@@ -131,6 +133,9 @@ func init() {
 				}},
 				RENDER.IMG: {Hand: func(m *ice.Message, arg ...string) {
 					m.Echo(`<img src="%s" height=%s>`, arg[0], kit.Select("120", arg, 1))
+				}},
+				RENDER.Video: {Hand: func(m *ice.Message, arg ...string) {
+					m.Echo(`<video src="%s" height=%s controls>`, arg[0], kit.Select("120", arg, 1))
 				}},
 				RENDER.Field: {Hand: func(m *ice.Message, arg ...string) {
 					m.Echo(`<fieldset><legend>%s(%s)</legend><form></form></fieldset>`, arg[0], arg[1])

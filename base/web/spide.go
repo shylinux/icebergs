@@ -103,6 +103,37 @@ func _spide_render(m *ice.Message, kind, name, text string, arg ...string) {
 }
 
 const SPIDE = "spide"
+const (
+	SPIDE_SHY  = "shy"
+	SPIDE_DEV  = "dev"
+	SPIDE_SELF = "self"
+
+	SPIDE_MSG   = "msg"
+	SPIDE_RAW   = "raw"
+	SPIDE_CACHE = "cache"
+
+	SPIDE_GET    = "GET"
+	SPIDE_PUT    = "PUT"
+	SPIDE_POST   = "POST"
+	SPIDE_DELETE = "DELETE"
+
+	SPIDE_FILE = "file"
+	SPIDE_DATA = "data"
+	SPIDE_PART = "part"
+	SPIDE_FORM = "form"
+	SPIDE_JSON = "json"
+
+	SPIDE_CLIENT = "client"
+	SPIDE_HEADER = "header"
+	SPIDE_COOKIE = "cookie"
+	SPIDE_METHOD = "method"
+
+	ContentType   = "Content-Type"
+	ContentLength = "Content-Length"
+	ContentFORM   = "application/x-www-form-urlencoded"
+	ContentJSON   = "application/json"
+	ContentHTML   = "text/html"
+)
 
 func init() {
 	Index.Merge(&ice.Context{
@@ -130,29 +161,29 @@ func init() {
 				}
 
 				m.Richs(SPIDE, nil, arg[0], func(key string, value map[string]interface{}) {
-					client := value["client"].(map[string]interface{})
+					client := value[SPIDE_CLIENT].(map[string]interface{})
 					// 缓存数据
 					cache := ""
 					switch arg[1] {
-					case "raw":
+					case SPIDE_MSG:
 						cache, arg = arg[1], arg[1:]
-					case "msg":
+					case SPIDE_RAW:
 						cache, arg = arg[1], arg[1:]
-					case "cache":
+					case SPIDE_CACHE:
 						cache, arg = arg[1], arg[1:]
 					}
 
 					// 请求方法
-					method := kit.Select("POST", client["method"])
+					method := kit.Select(SPIDE_POST, client[SPIDE_METHOD])
 					switch arg = arg[1:]; arg[0] {
-					case "GET":
-						method, arg = "GET", arg[1:]
-					case "PUT":
-						method, arg = "PUT", arg[1:]
-					case "POST":
-						method, arg = "POST", arg[1:]
-					case "DELETE":
-						method, arg = "DELETE", arg[1:]
+					case SPIDE_GET:
+						method, arg = SPIDE_GET, arg[1:]
+					case SPIDE_PUT:
+						method, arg = SPIDE_PUT, arg[1:]
+					case SPIDE_POST:
+						method, arg = SPIDE_POST, arg[1:]
+					case SPIDE_DELETE:
+						method, arg = SPIDE_DELETE, arg[1:]
 					}
 
 					// 请求地址
@@ -161,18 +192,18 @@ func init() {
 					// 渲染引擎
 					head := map[string]string{}
 					body, ok := m.Optionv("body").(io.Reader)
-					if !ok && len(arg) > 0 && method != "GET" {
+					if !ok && len(arg) > 0 && method != SPIDE_GET {
 						switch arg[0] {
-						case "file":
+						case SPIDE_FILE:
 							if f, e := os.Open(arg[1]); m.Warn(e != nil, "%s", e) {
 								return
 							} else {
 								defer f.Close()
 								body, arg = f, arg[2:]
 							}
-						case "data":
+						case SPIDE_DATA:
 							body, arg = bytes.NewBufferString(arg[1]), arg[2:]
-						case "part":
+						case SPIDE_PART:
 							buf := &bytes.Buffer{}
 							mp := multipart.NewWriter(buf)
 							for i := 1; i < len(arg)-1; i += 2 {
@@ -188,16 +219,16 @@ func init() {
 								}
 							}
 							mp.Close()
-							head["Content-Type"] = mp.FormDataContentType()
+							head[ContentType] = mp.FormDataContentType()
 							body = buf
-						case "form":
+						case SPIDE_FORM:
 							data := []string{}
 							for i := 1; i < len(arg)-1; i += 2 {
 								data = append(data, url.QueryEscape(arg[i])+"="+url.QueryEscape(arg[i+1]))
 							}
 							body = bytes.NewBufferString(strings.Join(data, "&"))
-							head["Content-Type"] = "application/x-www-form-urlencoded"
-						case "json":
+							head[ContentType] = ContentFORM
+						case SPIDE_JSON:
 							arg = arg[1:]
 							fallthrough
 						default:
@@ -206,7 +237,7 @@ func init() {
 								kit.Value(data, arg[i], arg[i+1])
 							}
 							if b, e := json.Marshal(data); m.Assert(e) {
-								head["Content-Type"] = "application/json"
+								head[ContentType] = ContentJSON
 								body = bytes.NewBuffer(b)
 							}
 							m.Log(ice.LOG_EXPORT, "json: %s", kit.Format(data))
@@ -223,14 +254,14 @@ func init() {
 					m.Assert(e)
 
 					// 请求变量
-					kit.Fetch(value["cookie"], func(key string, value string) {
+					kit.Fetch(value[SPIDE_COOKIE], func(key string, value string) {
 						req.AddCookie(&http.Cookie{Name: key, Value: value})
 						m.Info("%s: %s", key, value)
 					})
-					kit.Fetch(value["header"], func(key string, value string) {
+					kit.Fetch(value[SPIDE_HEADER], func(key string, value string) {
 						req.Header.Set(key, value)
 					})
-					list := kit.Simple(m.Optionv("header"))
+					list := kit.Simple(m.Optionv(SPIDE_HEADER))
 					for i := 0; i < len(list)-1; i += 2 {
 						req.Header.Set(list[i], list[i+1])
 						m.Info("%s: %s", list[i], list[i+1])
@@ -244,7 +275,7 @@ func init() {
 					if web.Client == nil {
 						web.Client = &http.Client{Timeout: kit.Duration(kit.Format(client["timeout"]))}
 					}
-					m.Info("%s: %s", req.Header.Get("Content-Length"), req.Header.Get("Content-Type"))
+					m.Info("%s: %s", req.Header.Get(ContentLength), req.Header.Get(ContentType))
 
 					// 发送请求
 					res, e := web.Client.Do(req)
@@ -253,7 +284,7 @@ func init() {
 					}
 
 					// 检查结果
-					m.Cost("%s %s: %s", res.Status, res.Header.Get("Content-Length"), res.Header.Get("Content-Type"))
+					m.Cost("%s %s: %s", res.Status, res.Header.Get(ContentLength), res.Header.Get(ContentType))
 					if m.Warn(res.StatusCode != http.StatusOK, "%s", res.Status) {
 						m.Set(ice.MSG_RESULT)
 						// return
@@ -267,15 +298,15 @@ func init() {
 
 					// 解析引擎
 					switch cache {
-					case "cache":
+					case SPIDE_CACHE:
 						m.Optionv("response", res)
-						m.Cmdy(CACHE, DOWNLOAD, res.Header.Get("Content-Type"), uri)
+						m.Cmdy(CACHE, DOWNLOAD, res.Header.Get(ContentType), uri)
 						m.Echo(m.Append(DATA))
-					case "raw":
+					case SPIDE_RAW:
 						if b, e := ioutil.ReadAll(res.Body); m.Assert(e) {
 							m.Echo(string(b))
 						}
-					case "msg":
+					case SPIDE_MSG:
 						var data map[string][]string
 						m.Assert(json.NewDecoder(res.Body).Decode(&data))
 						m.Info("res: %s", kit.Formats(data))
@@ -286,7 +317,7 @@ func init() {
 						}
 						m.Resultv(data[ice.MSG_RESULT])
 					default:
-						if strings.HasPrefix(res.Header.Get("Content-Type"), "text/html") {
+						if strings.HasPrefix(res.Header.Get(ContentType), ContentHTML) {
 							b, _ := ioutil.ReadAll(res.Body)
 							m.Echo(string(b))
 							break

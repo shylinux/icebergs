@@ -147,13 +147,13 @@ const (
 func init() {
 	Index.Merge(&ice.Context{
 		Commands: map[string]*ice.Command{
-			WEBPACK: {Name: "webpack", Help: "打包", Action: map[string]*ice.Action{
+			WEBPACK: {Name: "webpack path=auto auto 打包", Help: "打包", Action: map[string]*ice.Action{
 				"pack": {Name: "pack", Help: "打包", Hand: func(m *ice.Message, arg ...string) {
 					m.Option(nfs.DIR_ROOT, "usr/volcanos")
 					m.Option(nfs.DIR_TYPE, nfs.FILE)
 					m.Option(nfs.DIR_DEEP, "true")
 
-					js, _, e := kit.Create("usr/volcanos/cache.js")
+					js, p, e := kit.Create("usr/volcanos/cache.js")
 					m.Assert(e)
 					defer js.Close()
 
@@ -178,8 +178,13 @@ func init() {
 						js.WriteString(`_can_name = "` + path.Join("/", k) + "\"\n")
 						js.WriteString(m.Cmdx(nfs.CAT, "usr/volcanos/"+k))
 					}
+					m.Echo(p)
 				}},
 			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+				if len(arg) > 0 {
+					m.Cmdy(nfs.CAT, path.Join("usr/publish", arg[0]))
+					return
+				}
 				m.Option(nfs.DIR_ROOT, "usr/publish")
 				m.Option(nfs.DIR_TYPE, nfs.FILE)
 				m.Option(nfs.DIR_DEEP, "true")

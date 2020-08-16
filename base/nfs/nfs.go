@@ -26,6 +26,12 @@ func _file_ext(name string) string {
 func _file_list(m *ice.Message, root string, name string, level int, deep bool, dir_type string, dir_reg *regexp.Regexp, fields []string) {
 	switch strings.Split(name, "/")[0] {
 	case "etc", "var":
+		if m.Option(ice.MSG_USERROLE) == "root" {
+			break
+		}
+		if m.Option(ice.MSG_USERROLE) == "tech" {
+			break
+		}
 		return
 	}
 
@@ -48,13 +54,14 @@ func _file_list(m *ice.Message, root string, name string, level int, deep bool, 
 			}
 
 			p := path.Join(root, name, f.Name())
-			if f, e = os.Lstat(p); e != nil {
-				m.Log("info", "%s", e)
-				continue
-			} else if (f.Mode()&os.ModeSymlink) != 0 && f.IsDir() {
-				continue
-			}
-
+			// if f, e = os.Lstat(p); e != nil {
+			// 	m.Log("info", "%s", e)
+			// 	continue
+			// } else if (f.Mode()&os.ModeSymlink) != 0 && f.IsDir() {
+			// 	// continue
+			// } else {
+			// }
+			//
 			if !(dir_type == "file" && f.IsDir() || dir_type == "dir" && !f.IsDir()) && (dir_reg == nil || dir_reg.MatchString(f.Name())) {
 				for _, field := range fields {
 					switch field {
@@ -93,7 +100,15 @@ func _file_list(m *ice.Message, root string, name string, level int, deep bool, 
 							m.Push("tree", strings.Repeat("| ", level-1)+"|-"+f.Name())
 						}
 					case "size":
-						m.Push("size", kit.FmtSize(f.Size()))
+						if f.IsDir() {
+							if ls, e := ioutil.ReadDir(path.Join(root, name, f.Name())); e == nil {
+								m.Push("size", len(ls))
+							} else {
+								m.Push("size", 0)
+							}
+						} else {
+							m.Push("size", kit.FmtSize(f.Size()))
+						}
 					case "line":
 						if f.IsDir() {
 							if d, e := ioutil.ReadDir(p); m.Assert(e) {

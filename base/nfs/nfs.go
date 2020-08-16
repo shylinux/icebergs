@@ -162,8 +162,9 @@ func _file_list(m *ice.Message, root string, name string, level int, deep bool, 
 	}
 }
 func _file_show(m *ice.Message, name string) {
-	if f, e := os.OpenFile(name, os.O_RDONLY, 0640); m.Assert(e) {
+	if f, e := os.OpenFile(path.Join(m.Option(DIR_ROOT), name), os.O_RDONLY, 0640); m.Assert(e) {
 		defer f.Close()
+
 		if s, e := f.Stat(); m.Assert(e) {
 			buf := make([]byte, s.Size())
 			if n, e := f.Read(buf); m.Assert(e) {

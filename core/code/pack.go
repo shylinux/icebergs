@@ -1,9 +1,6 @@
 package code
 
 import (
-	"bufio"
-	"bytes"
-
 	ice "github.com/shylinux/icebergs"
 	"github.com/shylinux/icebergs/base/cli"
 	"github.com/shylinux/icebergs/base/mdb"
@@ -11,6 +8,8 @@ import (
 	"github.com/shylinux/icebergs/base/web"
 	kit "github.com/shylinux/toolkits"
 
+	"bufio"
+	"bytes"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -18,122 +17,58 @@ import (
 	"strings"
 )
 
-func _pack_volcanos(m *ice.Message, pack *os.File) {
-	m.Option(nfs.DIR_ROOT, "usr/volcanos")
+func _pack_file(m *ice.Message, file string) string {
+	list := ""
+	if f, e := os.Open(file); e == nil {
+		defer f.Close()
+		if b, e := ioutil.ReadAll(f); e == nil {
+			list = fmt.Sprintf("%v", b)
+		}
+	}
+	list = strings.ReplaceAll(list, " ", ",")
+	if len(list) > 0 {
+		return fmt.Sprintf(`[]byte{%v}`, list[1:len(list)-1])
+	}
+	return "[]byte{}"
+}
+func _pack_dir(m *ice.Message, pack *os.File, dir string) {
+	m.Option(nfs.DIR_ROOT, dir)
+	m.Option(nfs.DIR_DEEP, "true")
+	m.Option(nfs.DIR_TYPE, nfs.FILE)
+
+	m.Cmd(nfs.DIR, "./").Table(func(index int, value map[string]string, head []string) {
+		switch strings.Split(value[kit.MDB_PATH], "/")[0] {
+		case "pluged", "trash":
+			return
+		}
+
+		pack.WriteString(fmt.Sprintf("        \"/%s\": %s,\n",
+			path.Join(dir, value[kit.MDB_PATH]), _pack_file(m, path.Join(dir, value[kit.MDB_PATH]))))
+	})
+	pack.WriteString("\n")
+}
+
+func _pack_volcanos(m *ice.Message, pack *os.File, dir string) {
+	m.Option(nfs.DIR_ROOT, dir)
 	m.Option(nfs.DIR_DEEP, "true")
 	m.Option(nfs.DIR_TYPE, nfs.FILE)
 
 	for _, k := range []string{"favicon.ico", "index.html", "index.css", "index.js", "proto.js", "frame.js", "cache.js", "cache.css"} {
-		what := ""
-		if f, e := os.Open("usr/volcanos/" + k); e == nil {
-			defer f.Close()
-			if b, e := ioutil.ReadAll(f); e == nil {
-				what = fmt.Sprintf("%v", b)
-			}
-		}
-		if k == "index.html" {
-			k = ""
-		}
-		what = strings.ReplaceAll(what, " ", ",")
-		pack.WriteString(fmt.Sprintf(`        "%s": []byte{%v},`+"\n", "/"+k, what[1:len(what)-1]))
+		pack.WriteString(fmt.Sprintf("        \"/%s\": %s,\n",
+			kit.Select("", k, k != "index.html"), _pack_file(m, path.Join(dir, k))))
 	}
 	for _, k := range []string{"lib", "pane", "plugin"} {
 		m.Cmd(nfs.DIR, k).Table(func(index int, value map[string]string, head []string) {
-			what := ""
-			if f, e := os.Open("usr/volcanos/" + value["path"]); e == nil {
-				defer f.Close()
-				if b, e := ioutil.ReadAll(f); e == nil {
-					what = fmt.Sprintf("%v", b)
-				}
-			}
-			what = strings.ReplaceAll(what, " ", ",")
-			pack.WriteString(fmt.Sprintf(`        "%s": []byte{%v},`+"\n", "/"+value["path"], what[1:len(what)-1]))
+			pack.WriteString(fmt.Sprintf("        \"/%s\": %s,\n",
+				value[kit.MDB_PATH], _pack_file(m, path.Join(dir, value[kit.MDB_PATH]))))
 		})
 	}
 	pack.WriteString("\n")
 }
-func _pack_learning(m *ice.Message, pack *os.File) {
-	m.Option(nfs.DIR_ROOT, "usr/learning")
-	m.Option(nfs.DIR_DEEP, "true")
-	m.Option(nfs.DIR_TYPE, nfs.FILE)
-
-	m.Cmd(nfs.DIR, "./").Table(func(index int, value map[string]string, head []string) {
-		what := ""
-		if f, e := os.Open("usr/learning/" + value["path"]); e == nil {
-			defer f.Close()
-			if b, e := ioutil.ReadAll(f); e == nil {
-				what = fmt.Sprintf("%v", b)
-			}
-		}
-		what = strings.ReplaceAll(what, " ", ",")
-		pack.WriteString(fmt.Sprintf(`        "%s": []byte{%v},`+"\n", "usr/learning/"+value["path"], what[1:len(what)-1]))
-	})
-	pack.WriteString("\n")
-}
-func _pack_icebergs(m *ice.Message, pack *os.File) {
-	m.Option(nfs.DIR_ROOT, "usr/icebergs")
-	m.Option(nfs.DIR_DEEP, "true")
-	m.Option(nfs.DIR_TYPE, nfs.FILE)
-
-	m.Cmd(nfs.DIR, "./").Table(func(index int, value map[string]string, head []string) {
-		what := ""
-		if strings.HasPrefix(value["path"], "pack") {
-			return
-		}
-		if f, e := os.Open("usr/icebergs/" + value["path"]); e == nil {
-			defer f.Close()
-			if b, e := ioutil.ReadAll(f); e == nil {
-				what = fmt.Sprintf("%v", b)
-			}
-		}
-		if len(what) > 0 {
-			what = strings.ReplaceAll(what, " ", ",")
-			pack.WriteString(fmt.Sprintf(`        "%s": []byte{%v},`+"\n", "usr/icebergs/"+value["path"], what[1:len(what)-1]))
-		}
-	})
-	pack.WriteString("\n")
-}
-func _pack_intshell(m *ice.Message, pack *os.File) {
-	m.Option(nfs.DIR_ROOT, "usr/intshell")
-	m.Option(nfs.DIR_DEEP, "true")
-	m.Option(nfs.DIR_TYPE, nfs.FILE)
-
-	m.Cmd(nfs.DIR, "./").Table(func(index int, value map[string]string, head []string) {
-		if strings.HasPrefix(value["path"], "pluged") {
-			return
-		}
-		what := ""
-		if f, e := os.Open("usr/intshell/" + value["path"]); e != nil {
-			return
-		} else {
-			defer f.Close()
-			if b, e := ioutil.ReadAll(f); e != nil {
-				return
-			} else {
-				what = fmt.Sprintf("%v", b)
-			}
-		}
-		what = strings.ReplaceAll(what, " ", ",")
-		pack.WriteString(fmt.Sprintf(`        "%s": []byte{%v},`+"\n", "usr/intshell/"+value["path"], what[1:len(what)-1]))
-	})
-}
 func _pack_contexts(m *ice.Message, pack *os.File) {
-	m.Option(nfs.DIR_ROOT, "src")
-	m.Option(nfs.DIR_DEEP, "true")
-	m.Option(nfs.DIR_TYPE, nfs.FILE)
-
-	what := ""
-	for _, file := range []string{"src/main.go", "src/main.shy", "src/main.svg"} {
-		if f, e := os.Open(file); e == nil {
-			defer f.Close()
-			if b, e := ioutil.ReadAll(f); e == nil {
-				what = fmt.Sprintf("%v", b)
-			}
-		}
-		if len(what) > 0 {
-			what = strings.ReplaceAll(what, " ", ",")
-			pack.WriteString(fmt.Sprintf(`        "%s": []byte{%v},`+"\n", file, what[1:len(what)-1]))
-		}
+	for _, k := range []string{"src/main.go", "src/main.shy", "src/main.svg"} {
+		pack.WriteString(fmt.Sprintf("        \"/%s\": %s,\n",
+			k, _pack_file(m, k)))
 	}
 	pack.WriteString("\n")
 }
@@ -147,56 +82,58 @@ const (
 func init() {
 	Index.Merge(&ice.Context{
 		Commands: map[string]*ice.Command{
-			WEBPACK: {Name: "webpack path=auto auto 打包", Help: "打包", Action: map[string]*ice.Action{
+			WEBPACK: {Name: "webpack path auto 打包", Help: "打包", Action: map[string]*ice.Action{
 				"pack": {Name: "pack", Help: "打包", Hand: func(m *ice.Message, arg ...string) {
-					m.Option(nfs.DIR_ROOT, "usr/volcanos")
-					m.Option(nfs.DIR_TYPE, nfs.FILE)
-					m.Option(nfs.DIR_DEEP, "true")
-
-					js, p, e := kit.Create("usr/volcanos/cache.js")
-					m.Assert(e)
-					defer js.Close()
-
-					css, _, e := kit.Create("usr/volcanos/cache.css")
+					css, _, e := kit.Create(path.Join(m.Conf(WEBPACK, kit.META_PATH), "cache.css"))
 					m.Assert(e)
 					defer css.Close()
 
+					js, p, e := kit.Create(path.Join(m.Conf(WEBPACK, kit.META_PATH), "cache.js"))
+					m.Assert(e)
+					defer js.Close()
+
+					m.Option(nfs.DIR_ROOT, m.Conf(WEBPACK, kit.META_PATH))
+					m.Option(nfs.DIR_TYPE, nfs.FILE)
+					m.Option(nfs.DIR_DEEP, true)
+
 					for _, k := range []string{"lib", "pane", "plugin"} {
 						m.Cmd(nfs.DIR, k).Table(func(index int, value map[string]string, head []string) {
-							if strings.HasSuffix(value["path"], ".css") {
-								js.WriteString(`Volcanos.meta.cache["` + path.Join("/", value["path"]) + "\"] = []\n")
-								css.WriteString(m.Cmdx(nfs.CAT, "usr/volcanos/"+value["path"]))
+							if strings.HasSuffix(value[kit.MDB_PATH], ".css") {
+								js.WriteString(`Volcanos.meta.cache["` + path.Join("/", value[kit.MDB_PATH]) + "\"] = []\n")
+								css.WriteString(m.Cmdx(nfs.CAT, value[kit.MDB_PATH]))
 							}
-							if strings.HasSuffix(value["path"], ".js") {
-								js.WriteString(`_can_name = "` + path.Join("/", value["path"]) + "\"\n")
-								js.WriteString(m.Cmdx(nfs.CAT, "usr/volcanos/"+value["path"]))
+
+							if strings.HasSuffix(value[kit.MDB_PATH], ".js") {
+								js.WriteString(`_can_name = "` + path.Join("/", value[kit.MDB_PATH]) + "\"\n")
+								js.WriteString(m.Cmdx(nfs.CAT, value[kit.MDB_PATH]))
 							}
 						})
 					}
 
 					for _, k := range []string{"frame.js"} {
 						js.WriteString(`_can_name = "` + path.Join("/", k) + "\"\n")
-						js.WriteString(m.Cmdx(nfs.CAT, "usr/volcanos/"+k))
+						js.WriteString(m.Cmdx(nfs.CAT, k))
 					}
 					m.Echo(p)
 				}},
 			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-				if len(arg) > 0 {
-					m.Cmdy(nfs.CAT, path.Join("usr/publish", arg[0]))
+				m.Option(nfs.DIR_ROOT, m.Conf(PUBLISH, kit.META_PATH))
+				m.Option(nfs.DIR_TYPE, nfs.FILE)
+				m.Option(nfs.DIR_DEEP, true)
+
+				if len(arg) == 0 {
+					m.Cmdy(nfs.DIR, WEBPACK).Table(func(index int, value map[string]string, head []string) {
+						m.Push(kit.MDB_LINK, m.Cmdx(mdb.RENDER, web.RENDER.Download, "/publish/"+value[kit.MDB_PATH]))
+					})
 					return
 				}
-				m.Option(nfs.DIR_ROOT, "usr/publish")
-				m.Option(nfs.DIR_TYPE, nfs.FILE)
-				m.Option(nfs.DIR_DEEP, "true")
 
-				m.Cmdy(nfs.DIR, "webpack").Table(func(index int, value map[string]string, head []string) {
-					m.Push("link", m.Cmdx(mdb.RENDER, web.RENDER.Download, "/publish/"+value["path"]))
-				})
+				m.Cmdy(nfs.CAT, arg[0])
 			}},
-			BINPACK: {Name: "binpack path 查看:button 返回:button 打包:button", Help: "打包", Action: map[string]*ice.Action{
+			BINPACK: {Name: "binpack path auto 打包", Help: "打包", Action: map[string]*ice.Action{
 				"pack": {Name: "pack", Help: "打包", Hand: func(m *ice.Message, arg ...string) {
-					m.Option("name", "demo")
-					if pack, p, e := kit.Create("usr/publish/binpack/" + m.Option("name") + ".go"); m.Assert(e) {
+					name := kit.Keys(kit.Select(m.Option(kit.MDB_NAME), "demo"), "go")
+					if pack, p, e := kit.Create(path.Join(m.Conf(PUBLISH, kit.META_PATH), BINPACK, name)); m.Assert(e) {
 						defer pack.Close()
 
 						pack.WriteString(m.Cmdx(nfs.CAT, "src/main.go"))
@@ -205,10 +142,10 @@ func init() {
 						pack.WriteString(`func init() {` + "\n")
 						pack.WriteString(`    ice.BinPack = map[string][]byte{` + "\n")
 
-						_pack_volcanos(m, pack)
-						_pack_learning(m, pack)
-						_pack_icebergs(m, pack)
-						_pack_intshell(m, pack)
+						_pack_volcanos(m, pack, "usr/volcanos")
+						_pack_dir(m, pack, "usr/learning")
+						_pack_dir(m, pack, "usr/icebergs")
+						_pack_dir(m, pack, "usr/intshell")
 						_pack_contexts(m, pack)
 
 						pack.WriteString(`    }` + "\n")
@@ -216,21 +153,21 @@ func init() {
 						m.Echo(p)
 					}
 
-					m.Option(cli.CMD_DIR, "usr/publish/binpack")
-					m.Cmd("compile", "linux", "amd64", m.Option("name")+".go")
-					m.Cmd("compile", "darwin", "amd64", m.Option("name")+".go")
-					m.Cmd("compile", "windows", "amd64", m.Option("name")+".go")
+					m.Option(cli.CMD_DIR, path.Join(m.Conf(PUBLISH, kit.META_PATH), BINPACK))
+					m.Cmd(COMPILE, "windows", "amd64", name)
+					m.Cmd(COMPILE, "darwin", "amd64", name)
+					m.Cmd(COMPILE, "linux", "amd64", name)
 				}},
 			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-				m.Option(nfs.DIR_ROOT, "usr/publish")
+				m.Option(nfs.DIR_ROOT, m.Conf(PUBLISH, kit.META_PATH))
 				m.Option(nfs.DIR_TYPE, nfs.FILE)
-				m.Option(nfs.DIR_DEEP, "true")
+				m.Option(nfs.DIR_DEEP, true)
 
-				m.Cmdy(nfs.DIR, "binpack").Table(func(index int, value map[string]string, head []string) {
-					m.Push("link", m.Cmdx(mdb.RENDER, web.RENDER.Download, "/publish/"+value["path"]))
+				m.Cmdy(nfs.DIR, BINPACK).Table(func(index int, value map[string]string, head []string) {
+					m.Push(kit.MDB_LINK, m.Cmdx(mdb.RENDER, web.RENDER.Download, "/publish/"+value[kit.MDB_PATH]))
 				})
 			}},
-			MODPACK: {Name: "modpack path=auto 查看:button 返回:button 创建:button", Help: "打包", Meta: kit.Dict(
+			MODPACK: {Name: "modpack path=auto auto 创建", Help: "打包", Meta: kit.Dict(
 				"style", "editor", "创建", kit.List("_input", "text", "name", "name"),
 			), Action: map[string]*ice.Action{
 				mdb.CREATE: {Name: "create", Help: "创建", Hand: func(m *ice.Message, arg ...string) {
@@ -240,7 +177,8 @@ func init() {
 						m.Option(arg[i], arg[i+1])
 					}
 
-					name := m.Option("name")
+					// 生成文件
+					name := m.Option(kit.MDB_NAME)
 					os.Mkdir(path.Join("src/", name), ice.MOD_DIR)
 					kit.Fetch(m.Confv(MODPACK, "meta.base"), func(key string, value string) {
 						p := path.Join("src/", name, name+"."+key)
@@ -248,7 +186,7 @@ func init() {
 							if f, p, e := kit.Create(p); m.Assert(e) {
 								if b, e := kit.Render(value, m); m.Assert(e) {
 									if n, e := f.Write(b); m.Assert(e) {
-										m.Log_EXPORT("file", p, "size", n)
+										m.Log_EXPORT(kit.MDB_FILE, p, kit.MDB_SIZE, n)
 									}
 								}
 							}
@@ -256,6 +194,7 @@ func init() {
 					})
 					defer m.Cmdy(nfs.DIR, "src/"+name)
 
+					// 模块名称
 					mod := ""
 					if f, e := os.Open("go.mod"); e == nil {
 						defer f.Close()
@@ -267,6 +206,7 @@ func init() {
 						}
 					}
 
+					// 检查模块
 					begin, has := false, false
 					if f, e := os.Open("src/main.go"); e == nil {
 						for bio := bufio.NewScanner(f); bio.Scan(); {
@@ -299,20 +239,20 @@ func init() {
 						return
 					}
 
-					if f, e := os.Open("src/main.go"); e == nil {
-						if b, e := ioutil.ReadAll(f); e == nil {
-							f.Close()
-
-							if f, e := os.Create("src/main.go"); e == nil {
+					// 插入模块
+					if f, e := os.Open("src/main.go"); m.Assert(e) {
+						defer f.Close()
+						if b, e := ioutil.ReadAll(f); m.Assert(e) {
+							if f, e := os.Create("src/main.go"); m.Assert(e) {
 								defer f.Close()
+
 								for bio := bufio.NewScanner(bytes.NewBuffer(b)); bio.Scan(); {
 									f.WriteString(bio.Text())
 									f.WriteString("\n")
 									if strings.HasPrefix(bio.Text(), "import (") {
 										m.Info("src/main.go import: %v", mod+"/src/"+name)
 										f.WriteString("\t_ \"" + mod + "/src/" + name + `"`)
-										f.WriteString("\n")
-										f.WriteString("\n")
+										f.WriteString("\n\n")
 									}
 								}
 							}
@@ -327,6 +267,10 @@ func init() {
 			}},
 		},
 		Configs: map[string]*ice.Config{
+			WEBPACK: {Name: WEBPACK, Help: "webpack", Value: kit.Data(
+				kit.MDB_PATH, "usr/volcanos",
+			)},
+			BINPACK: {Name: BINPACK, Help: "binpack", Value: kit.Data()},
 			MODPACK: {Name: MODPACK, Help: "modpack", Value: kit.Data(
 				"base", kit.Dict(
 					"shy", `title {{.Option "name"}}
@@ -342,10 +286,10 @@ import (
 
 var Index = &ice.Context{Name: "{{.Option "name"}}", Help: "{{.Option "help"}}",
 	Configs: map[string]*ice.Config{
-		"{{.Option "name"}}": {Name: "{{.Option "name"}}", Help: "{{.Option "name"}}", Value: kit.Data()},
+		"{{.Option "name"}}": {Name: "{{.Option "name"}}", Help: "{{.Option "help"}}", Value: kit.Data()},
 	},
 	Commands: map[string]*ice.Command{
-		"{{.Option "name"}}": {Name: "{{.Option "name"}}", Help: "{{.Option "name"}}", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		"{{.Option "name"}}": {Name: "{{.Option "name"}}", Help: "{{.Option "help"}}", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			m.Echo("hello {{.Option "name"}} world")
 		}},
 	},

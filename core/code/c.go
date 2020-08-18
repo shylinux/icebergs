@@ -78,6 +78,7 @@ func _c_help(m *ice.Message, section, key string) string {
 	return string(res)
 }
 
+const CC = "cc"
 const C = "c"
 const H = "h"
 const MAN1 = "man1"
@@ -96,6 +97,10 @@ func init() {
 	Index.Register(&ice.Context{Name: C, Help: "c",
 		Commands: map[string]*ice.Command{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+				m.Cmd(mdb.SEARCH, mdb.CREATE, CC, C, c.Cap(ice.CTX_FOLLOW))
+				m.Cmd(mdb.PLUGIN, mdb.CREATE, CC, C, c.Cap(ice.CTX_FOLLOW))
+				m.Cmd(mdb.RENDER, mdb.CREATE, CC, C, c.Cap(ice.CTX_FOLLOW))
+
 				m.Cmd(mdb.SEARCH, mdb.CREATE, C, C, c.Cap(ice.CTX_FOLLOW))
 				m.Cmd(mdb.PLUGIN, mdb.CREATE, C, C, c.Cap(ice.CTX_FOLLOW))
 				m.Cmd(mdb.RENDER, mdb.CREATE, C, C, c.Cap(ice.CTX_FOLLOW))

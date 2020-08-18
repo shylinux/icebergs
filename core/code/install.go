@@ -40,8 +40,11 @@ func init() {
 					m.Cmd(mdb.INSERT, m.Prefix(INSTALL), "", mdb.HASH, kit.MDB_NAME, name, kit.MDB_LINK, arg[0])
 					m.Richs(INSTALL, "", name, func(key string, value map[string]interface{}) {
 						m.Optionv("progress", func(size int, total int) {
-							value["progress"], value["size"], value["total"] = size*100/total, size, total
-							m.Log_IMPORT(kit.MDB_FILE, name, "per", size*100/total, kit.MDB_SIZE, kit.FmtSize(int64(size)), "total", kit.FmtSize(int64(total)))
+							p := size * 100 / total
+							if p != kit.Int(value["progress"]) && p%10 == 0 {
+								m.Log_IMPORT(kit.MDB_FILE, name, "per", size*100/total, kit.MDB_SIZE, kit.FmtSize(int64(size)), "total", kit.FmtSize(int64(total)))
+							}
+							value["progress"], value["size"], value["total"] = p, size, total
 						})
 					})
 

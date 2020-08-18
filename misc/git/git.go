@@ -179,13 +179,10 @@ var Index = &ice.Context{Name: GIT, Help: "代码库",
 							del = dels[0]
 							// } else if adds[1] == "insertions(+)" {
 						} else if strings.Contains(adds[1], "insertion") {
-							m.Debug("what %v", fs)
 							add = adds[0]
 						} else {
-							m.Debug("what %v", adds[1])
 							del = adds[0]
 						}
-						m.Debug("what %v", fs)
 					}
 
 					if total {

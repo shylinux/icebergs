@@ -1,13 +1,12 @@
 package cli
 
 import (
-	"bytes"
-
 	ice "github.com/shylinux/icebergs"
 	"github.com/shylinux/icebergs/base/ctx"
 	"github.com/shylinux/icebergs/base/mdb"
 	kit "github.com/shylinux/toolkits"
 
+	"bytes"
 	"io/ioutil"
 	"os"
 	"os/user"
@@ -95,6 +94,27 @@ var Index = &ice.Context{Name: "cli", Help: "命令模块",
 			m.Save(RUNTIME, SYSTEM, DAEMON)
 		}},
 
+		"proc": {Name: "proc name=auto PID=auto auto", Help: "进程管理", Action: map[string]*ice.Action{
+			"kill": {Name: "kill", Help: "结束", Hand: func(m *ice.Message, arg ...string) {
+				if p, e := os.FindProcess(kit.Int(m.Option("PID"))); m.Assert(e) {
+					m.Assert(p.Kill())
+				}
+			}},
+		}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			msg := m.Spawn()
+			msg.Split(m.Cmdx(SYSTEM, "ps", "aux"), "", " ", "\n")
+			msg.Table(func(index int, value map[string]string, head []string) {
+				if m.Appendv(ice.MSG_APPEND, "action", head); len(arg) == 2 && value["PID"] == arg[1] {
+					m.Push("action", m.Cmdx(mdb.RENDER, "button", "结束"))
+					m.Push("", value)
+					return
+				}
+				if len(arg) == 0 || len(arg) == 1 && strings.Contains(value["COMMAND"], arg[0]) {
+					m.Push("action", m.Cmdx(mdb.RENDER, "button", "结束"))
+					m.Push("", value)
+				}
+			})
+		}},
 		RUNTIME: {Name: "runtime name auto", Help: "运行环境", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			switch kit.Select("", arg, 0) {
 			case "procinfo":

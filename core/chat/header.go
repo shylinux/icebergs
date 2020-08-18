@@ -58,6 +58,7 @@ func init() {
 						f.WriteString(`Volcanos.meta.pack = ` + kit.Formats(kit.UnMarshal(m.Option("content"))))
 					}
 
+					m.Option(nfs.DIR_ROOT, "")
 					if f, p, e := kit.Create("usr/publish/webpack/" + m.Option("name") + ".html"); m.Assert(e) {
 						f.WriteString(fmt.Sprintf(_pack,
 							m.Cmdx(nfs.CAT, "usr/volcanos/cache.css"),

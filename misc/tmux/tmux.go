@@ -351,10 +351,6 @@ var Index = &ice.Context{Name: TMUX, Help: "工作台",
 			}
 		}},
 
-		"local": {Name: "local name name", Help: "虚拟机", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			m.Cmd("web.code.docker.auto", arg[1])
-			m.Cmdy(_tmux, "send-keys", "-t", arg[1], "docker exec -it ", arg[1], " bash", "Enter")
-		}},
 		"relay": {Name: "relay [name [favor]]", Help: "跳板机", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			if len(arg) == 0 {
 				// 认证列表

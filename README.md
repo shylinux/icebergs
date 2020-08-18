@@ -120,7 +120,6 @@ replace github.com/shylinux/icebergs => ./usr/icebergs
 ## 6 其它模块 misc/
 ### 6.1 终端管理 misc/zsh/
 ### 6.1 终端管理 misc/tmux/
-### 6.1 容器管理 misc/docker/
 ### 6.1 代码管理 misc/git/
 ### 6.1 代码管理 misc/vim/
 ### 6.1 公众号 misc/mp/

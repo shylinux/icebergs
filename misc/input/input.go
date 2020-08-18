@@ -1,11 +1,11 @@
 package input
 
 import (
-	"github.com/shylinux/icebergs"
+	ice "github.com/shylinux/icebergs"
 	"github.com/shylinux/icebergs/base/cli"
 	"github.com/shylinux/icebergs/base/web"
 	"github.com/shylinux/icebergs/core/code"
-	"github.com/shylinux/toolkits"
+	kit "github.com/shylinux/toolkits"
 	"github.com/shylinux/toolkits/task"
 
 	"bufio"
@@ -188,10 +188,10 @@ const (
 	WEIGHT = "weight"
 )
 
-var Index = &ice.Context{Name: "input", Help: "输入法",
+var Index = &ice.Context{Name: INPUT, Help: "输入法",
 	Configs: map[string]*ice.Config{
-		INPUT: {Name: "input", Help: "输入法", Value: kit.Data(
-			"repos", "wubi-dict", "local", "person",
+		INPUT: {Name: INPUT, Help: "输入法", Value: kit.Data(
+			"repos", "wubi-dict",
 			kit.MDB_STORE, "usr/export/input", kit.MDB_FSIZE, "200000",
 			kit.MDB_LIMIT, "5000", kit.MDB_LEAST, "1000",
 			kit.MDB_SHORT, "zone",

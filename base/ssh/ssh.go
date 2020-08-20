@@ -175,8 +175,10 @@ func (f *Frame) change(m *ice.Message, ls []string) []string {
 func (f *Frame) alias(m *ice.Message, ls []string) []string {
 	// 命令替换
 	if alias, ok := m.Optionv(ice.MSG_ALIAS).(map[string]interface{}); ok {
-		if a := kit.Simple(alias[ls[0]]); len(a) > 0 {
-			ls = append(append([]string{}, a...), ls[1:]...)
+		if len(ls) > 0 {
+			if a := kit.Simple(alias[ls[0]]); len(a) > 0 {
+				ls = append(append([]string{}, a...), ls[1:]...)
+			}
 		}
 	}
 	return ls

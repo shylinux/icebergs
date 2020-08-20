@@ -1,10 +1,10 @@
 package tcp
 
 import (
-	"github.com/shylinux/icebergs"
+	ice "github.com/shylinux/icebergs"
 	"github.com/shylinux/icebergs/base/aaa"
 	"github.com/shylinux/icebergs/base/cli"
-	"github.com/shylinux/toolkits"
+	kit "github.com/shylinux/toolkits"
 
 	"bufio"
 	"net"
@@ -15,8 +15,8 @@ import (
 func _port_list(m *ice.Message) string {
 	return ""
 }
-func _port_get(m *ice.Message) string {
-	current := kit.Int(m.Conf(PORT, "meta.current"))
+func _port_get(m *ice.Message, begin string) string {
+	current := kit.Int(kit.Select(m.Conf(PORT, "meta.current"), begin))
 	end := kit.Int(m.Conf(PORT, "meta.end"))
 	if current >= end {
 		current = kit.Int(m.Conf(PORT, "meta.begin"))
@@ -109,7 +109,10 @@ var Index = &ice.Context{Name: "tcp", Help: "通信模块",
 		}},
 		PORT: {Name: "port", Help: "端口", Action: map[string]*ice.Action{
 			"get": {Name: "get", Help: "分配端口", Hand: func(m *ice.Message, arg ...string) {
-				m.Echo(_port_get(m))
+				m.Echo(_port_get(m, ""))
+			}},
+			"select": {Name: "select [begin]", Help: "分配端口", Hand: func(m *ice.Message, arg ...string) {
+				m.Echo(_port_get(m, kit.Select("", arg, 0)))
 			}},
 		}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			_port_list(m)

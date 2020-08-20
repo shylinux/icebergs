@@ -315,7 +315,13 @@ func init() {
 			TITLE: {Name: TITLE, Help: "标题", Value: kit.Data("template", title)},
 			BRIEF: {Name: BRIEF, Help: "摘要", Value: kit.Data("template", brief)},
 			REFER: {Name: REFER, Help: "参考", Value: kit.Data("template", refer)},
-			SPARK: {Name: SPARK, Help: "段落", Value: kit.Data("template", spark)},
+			SPARK: {Name: SPARK, Help: "段落", Value: kit.Data(
+				"template", spark,
+				"prompt", kit.Dict(
+					"shell", "$ ",
+					"mysql", "mysql> ",
+				),
+			)},
 
 			CHART: {Name: CHART, Help: "图表", Value: kit.Data("template", chart, "suffix", `</svg>`)},
 			FIELD: {Name: FIELD, Help: "插件", Value: kit.Data("template", field)},
@@ -373,12 +379,13 @@ func init() {
 				if len(arg) == 1 {
 					arg = []string{"", arg[0]}
 				}
-				if arg[0] == "shell" {
+				switch arg[0] {
+				case "shell", "mysql":
 					arg[1] = strings.TrimSpace(arg[1])
-					m.Echo(`<div class="story" data-type="spark" data-name="shell" data-text="%s">`, arg[1])
+					m.Echo(`<div class="story" data-type="spark" data-name="%s" data-text="%s">`, arg[0], arg[1])
 					for _, l := range strings.Split(arg[1], "\n") {
 						m.Echo("<div>")
-						m.Echo("$ ")
+						m.Echo(kit.Select("$ ", m.Conf(SPARK, kit.Keys("meta.prompt", arg[0]))))
 						m.Echo("<span>")
 						m.Echo(l)
 						m.Echo("</span>")

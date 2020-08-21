@@ -1,6 +1,9 @@
 package tcp
 
 import (
+	"os"
+	"path"
+
 	ice "github.com/shylinux/icebergs"
 	"github.com/shylinux/icebergs/base/aaa"
 	"github.com/shylinux/icebergs/base/cli"
@@ -112,7 +115,16 @@ var Index = &ice.Context{Name: "tcp", Help: "通信模块",
 				m.Echo(_port_get(m, ""))
 			}},
 			"select": {Name: "select [begin]", Help: "分配端口", Hand: func(m *ice.Message, arg ...string) {
-				m.Echo(_port_get(m, kit.Select("", arg, 0)))
+				port, p := kit.Select("", arg, 0), ""
+				for {
+					port = _port_get(m, port)
+					p = path.Join(m.Conf(cli.DAEMON, kit.META_PATH), port)
+					if _, e := os.Stat(p); e != nil && os.IsNotExist(e) {
+						break
+					}
+					port = kit.Format(kit.Int(port) + 1)
+				}
+				m.Echo(port)
 			}},
 		}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			_port_list(m)

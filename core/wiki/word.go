@@ -317,10 +317,7 @@ func init() {
 			REFER: {Name: REFER, Help: "参考", Value: kit.Data("template", refer)},
 			SPARK: {Name: SPARK, Help: "段落", Value: kit.Data(
 				"template", spark,
-				"prompt", kit.Dict(
-					"shell", "$ ",
-					"mysql", "mysql> ",
-				),
+				"prompt", kit.Dict("shell", "$ "),
 			)},
 
 			CHART: {Name: CHART, Help: "图表", Value: kit.Data("template", chart, "suffix", `</svg>`)},
@@ -380,12 +377,12 @@ func init() {
 					arg = []string{"", arg[0]}
 				}
 				switch arg[0] {
-				case "shell", "mysql":
+				case "shell", "mysql", "redis":
 					arg[1] = strings.TrimSpace(arg[1])
 					m.Echo(`<div class="story" data-type="spark" data-name="%s" data-text="%s">`, arg[0], arg[1])
 					for _, l := range strings.Split(arg[1], "\n") {
 						m.Echo("<div>")
-						m.Echo(kit.Select("$ ", m.Conf(SPARK, kit.Keys("meta.prompt", arg[0]))))
+						m.Echo(kit.Select(arg[0]+"> ", m.Conf(SPARK, kit.Keys("meta.prompt", arg[0]))))
 						m.Echo("<span>")
 						m.Echo(l)
 						m.Echo("</span>")

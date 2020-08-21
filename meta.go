@@ -187,19 +187,19 @@ func (m *Message) Sort(key string, arg ...string) *Message {
 	}
 
 	// 排序因子
-	number := map[int]int{}
+	number := map[int]int64{}
 	table := []map[string]string{}
 	m.Table(func(index int, line map[string]string, head []string) {
 		table = append(table, line)
 		switch cmp {
 		case "int":
-			number[index] = kit.Int(line[key])
+			number[index] = kit.Int64(line[key])
 		case "int_r":
-			number[index] = -kit.Int(line[key])
+			number[index] = -kit.Int64(line[key])
 		case "time":
-			number[index] = int(kit.Time(line[key]))
+			number[index] = int64(kit.Time(line[key]))
 		case "time_r":
-			number[index] = -int(kit.Time(line[key]))
+			number[index] = -int64(kit.Time(line[key]))
 		}
 	})
 

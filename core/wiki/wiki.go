@@ -13,6 +13,7 @@ import (
 )
 
 func _wiki_list(m *ice.Message, cmd, name string, arg ...string) bool {
+	m.Debug(name)
 	if strings.HasSuffix(name, "/") {
 		m.Option(nfs.DIR_ROOT, m.Conf(cmd, "meta.path"))
 		m.Option(nfs.DIR_TYPE, nfs.TYPE_DIR)

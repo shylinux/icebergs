@@ -20,7 +20,7 @@ func init() {
 			)},
 		},
 		Commands: map[string]*ice.Command{
-			FEEL: {Name: "feel path=auto auto 上传:button 上一页:button 下一页:button 参数:button", Help: "影音媒体", Meta: kit.Dict(
+			FEEL: {Name: "feel path=auto auto 上传:button 上一页:button 下一页:button 下载:button 参数:button", Help: "影音媒体", Meta: kit.Dict(
 				"display", "/plugin/local/wiki/feel.js", "detail", []string{"标签", "删除"},
 			), Action: map[string]*ice.Action{
 				mdb.CREATE: {Name: "create", Help: "创建", Hand: func(m *ice.Message, arg ...string) {
@@ -34,6 +34,9 @@ func init() {
 					m.Assert(os.Remove(path.Join(m.Conf(FEEL, "meta.path"), m.Option("path"))))
 				}},
 				web.UPLOAD: {Name: "upload", Help: "上传", Hand: func(m *ice.Message, arg ...string) {
+					if m.Option(ice.MSG_DOMAIN) != "" {
+						m.Option("path", path.Join("local", m.Option(ice.MSG_DOMAIN), m.Option("path")))
+					}
 					_wiki_upload(m, FEEL)
 				}},
 				web.SPIDE: {Name: "spide type title url poster", Help: "爬虫", Hand: func(m *ice.Message, arg ...string) {
@@ -45,9 +48,10 @@ func init() {
 				}},
 			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 				m.Option("prefix", m.Conf(FEEL, "meta.path"))
-				if !_wiki_list(m, FEEL, kit.Select("./", arg, 0)) {
-					m.Echo(path.Join(m.Conf(FEEL, "meta.path"), arg[0]))
-					return
+				if m.Option(ice.MSG_DOMAIN) == "" {
+					_wiki_list(m, FEEL, path.Join(kit.Select("", arg, 0))+"/")
+				} else {
+					_wiki_list(m, FEEL, path.Join("local", m.Option(ice.MSG_DOMAIN), kit.Select("", arg, 0))+"/")
 				}
 				m.Sort("time", "time_r")
 			}},

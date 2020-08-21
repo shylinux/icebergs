@@ -15,7 +15,7 @@ const (
 	DATE = "date"
 )
 
-var _miss_select = "time,name,性别,年龄,身高,籍贯,户口,学历,职业,公司,年薪,资产,家境,照片"
+var _miss_select = "time,name,照片,性别,年龄,身高,籍贯,户口,学历,职业,公司,年薪,资产,家境"
 var _miss_insert = kit.List(
 	"_input", "text", "name", "name",
 	"_input", "text", "name", "性别",
@@ -93,7 +93,7 @@ func init() {
 									m.Push("照片", "")
 									continue
 								}
-								m.Push("照片", m.Cmdx(mdb.RENDER, web.RENDER.IMG, path.Join("/share/local", value["照片"])))
+								m.Push("照片", m.Cmdx(mdb.RENDER, web.RENDER.IMG, path.Join("/share/local/usr/image/local/", m.Option(ice.MSG_DOMAIN), value["照片"])))
 							} else {
 								m.Push(k, value[k])
 							}
@@ -102,11 +102,12 @@ func init() {
 					if m.Option(ice.MSG_USERUA) == "" {
 						return
 					}
-					m.PushAction("喜欢", "删除")
+					m.PushAction("喜欢", "约会")
+					m.Sort("time", "time_r")
 				} else {
 					msg.Table(func(index int, value map[string]string, head []string) {
 						if value["key"] == "照片" {
-							value["value"] = m.Cmdx(mdb.RENDER, web.RENDER.IMG, path.Join("/share/local", value["value"]), "400")
+							value["value"] = m.Cmdx(mdb.RENDER, web.RENDER.IMG, path.Join("/share/local/usr/image/local/", m.Option(ice.MSG_DOMAIN), value["value"]), "640")
 						}
 						m.Push("key", value["key"])
 						m.Push("value", value["value"])

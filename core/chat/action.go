@@ -146,7 +146,6 @@ func _action_show(m *ice.Message, river, storm, index string, arg ...string) {
 		return
 	}
 
-	m.Debug("what %v", cmds)
 	if p := m.Option(POD); p != "" {
 		if len(cmds) > 1 && cmds[1] == "action" {
 			switch cmds[2] {

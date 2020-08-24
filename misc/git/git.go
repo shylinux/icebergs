@@ -55,6 +55,7 @@ var Index = &ice.Context{Name: GIT, Help: "代码库",
 				"wubi-dict", "true", "word-dict", "true",
 			),
 		)},
+		"progress": {Name: "progress", Help: "进度", Value: kit.Data()},
 	},
 	Commands: map[string]*ice.Command{
 		ice.CTX_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
@@ -292,7 +293,7 @@ var Index = &ice.Context{Name: GIT, Help: "代码库",
 			m.Sort("line", "int")
 		}},
 
-		"status": {Name: "status name=auto auto 提交:button", Help: "文件状态", Meta: kit.Dict(
+		"status": {Name: "status name=auto auto 提交:button 下载:button", Help: "文件状态", Meta: kit.Dict(
 			"提交", kit.List(
 				"_input", "select", "name", "action", "values", []string{"opt", "add"},
 				"_input", "text", "name", "text", "value", "some",
@@ -326,6 +327,32 @@ var Index = &ice.Context{Name: GIT, Help: "代码库",
 					m.Option(cli.CMD_DIR, path.Join("usr", m.Option("name")))
 				}
 				m.Cmdy(cli.SYSTEM, "git", "push")
+			}},
+			"pull": {Name: "pull", Help: "下载", Hand: func(m *ice.Message, arg ...string) {
+				if m.Richs("progress", "", m.Option("_progress"), func(key string, value map[string]interface{}) {
+					m.Push("count", value["count"])
+					m.Push("total", value["total"])
+					m.Push("name", value["name"])
+				}) != nil {
+					return
+				}
+
+				count, total := 0, len(m.Confm(REPOS, "hash"))
+				h := m.Rich("progress", "", kit.Dict("progress", 0, "count", count, "total", total))
+				m.Gos(m, func(m *ice.Message) {
+					m.Richs(REPOS, nil, kit.Select(kit.MDB_FOREACH, arg, 0), func(key string, value map[string]interface{}) {
+						count++
+						m.Conf("progress", kit.Keys("hash", h, "name"), kit.Value(value, "meta.name"))
+						m.Conf("progress", kit.Keys("hash", h, "count"), count)
+						m.Conf("progress", kit.Keys("hash", h, "progress"), count*100/total)
+						m.Option(cli.CMD_DIR, kit.Value(value, "meta.path"))
+						m.Echo(m.Cmdx(cli.SYSTEM, GIT, "pull"))
+					})
+				})
+				m.Option("_progress", h)
+				m.Push("count", count)
+				m.Push("total", total)
+				m.Push("name", "")
 			}},
 		}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			m.Richs(REPOS, nil, kit.Select(kit.MDB_FOREACH, arg, 0), func(key string, value map[string]interface{}) {

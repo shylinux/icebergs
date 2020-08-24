@@ -65,11 +65,15 @@ func (b *Block) Data(m *ice.Message, root interface{}) Chart {
 	return b
 }
 func (b *Block) Draw(m *ice.Message, x, y int) Chart {
+	float := 0
+	if strings.Contains(m.Option(ice.MSG_USERUA), "iPhone") {
+		float += 5
+	}
 	m.Echo(`<rect x="%d" y="%d" width="%d" height="%d" rx="4" ry="4" fill="%s" %v/>`,
 		x+b.MarginX/2, y+b.MarginY/2, b.GetWidth(), b.GetHeight(), b.BackGround, b.RectData)
 	m.Echo("\n")
 	m.Echo(`<text x="%d" y="%d" stroke-width="1" fill="%s" stroke=%s %v>%v</text>`,
-		x+b.GetWidths()/2, y+b.GetHeights()/2, b.FontColor, b.FontColor, b.TextData, b.Text)
+		x+b.GetWidths()/2, y+b.GetHeights()/2+float, b.FontColor, b.FontColor, b.TextData, b.Text)
 	m.Echo("\n")
 	return b
 }

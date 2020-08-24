@@ -32,6 +32,9 @@ func _cache_list(m *ice.Message, key string) {
 	})
 }
 func _cache_save(m *ice.Message, kind, name, text string, arg ...string) { // file size
+	if name == "" {
+		return
+	}
 	if len(text) > 512 {
 		// 存入文件
 		p := m.Cmdx(nfs.SAVE, _cache_name(m, kit.Hashs(text)), text)
@@ -84,7 +87,7 @@ func _cache_catch(m *ice.Message, name string) (file, size string) {
 	return "", "0"
 }
 func _cache_upload(m *ice.Message, r *http.Request) (kind, name, file, size string) {
-	if buf, h, e := r.FormFile(UPLOAD); m.Assert(e) {
+	if buf, h, e := r.FormFile(UPLOAD); e == nil {
 		defer buf.Close()
 
 		// 创建文件

@@ -147,8 +147,7 @@ func init() {
 					m.Echo(`<input type="button" value="%s">`, arg[0])
 				}},
 				RENDER.Download: {Hand: func(m *ice.Message, arg ...string) {
-					u := kit.Select(arg[0], arg, 1)
-					m.Echo(`<a href="%s" target="_blank" download="%s">%s</a>`, u, path.Base(arg[0]), arg[0])
+					m.Echo(`<a href="%s" target="_blank" download="%s">%s</a>`, arg[0], kit.Select(path.Base(arg[0]), arg, 1), kit.Select(arg[0], arg, 1))
 				}},
 			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 				if arg[0] == mdb.RENDER {

@@ -93,6 +93,14 @@ func _file_list(m *ice.Message, root string, name string, level int, deep bool, 
 						}
 					case "name":
 						m.Push("name", f.Name())
+					case "link":
+						if f.IsDir() {
+							m.Push("link", "")
+						} else {
+							m.Push("link", m.Cmdx("mdb.render", "download",
+								kit.MergeURL(path.Join("/share/local/", root, name, f.Name()), "pod", m.Option("user.pod")), f.Name()))
+						}
+
 					case "tree":
 						if level == 0 {
 							m.Push("tree", f.Name())
@@ -200,6 +208,7 @@ func _file_copy(m *ice.Message, name string, from ...string) {
 }
 func _file_link(m *ice.Message, name string, from string) {
 	os.MkdirAll(path.Dir(name), 0760)
+	os.Remove(name)
 	os.Link(from, name)
 	m.Echo(name)
 }
@@ -321,7 +330,16 @@ var Index = &ice.Context{Name: "nfs", Help: "存储模块",
 			}},
 		}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 		}},
-		DIR: {Name: "dir path field...", Help: "目录", Action: map[string]*ice.Action{
+		DIR: {Name: "dir path=auto field... 查看:button=auto 返回 上传", Help: "目录", Action: map[string]*ice.Action{
+			"upload": {Name: "upload", Help: "上传", Hand: func(m *ice.Message, arg ...string) {
+				if m.Cmdy("cache", "upload"); m.Option("pod") == "" {
+					m.Cmdy("cache", "watch", m.Option("data"), path.Join(m.Option("path"), m.Option("name")))
+					return
+				}
+				m.Cmdy("space", m.Option("pod"), "spide", "dev", "save", path.Join(m.Option("path"), m.Option("name")),
+					kit.MergeURL2(m.Option(ice.MSG_USERWEB), path.Join("/share/local/", m.Option("data"))))
+
+			}},
 			mdb.SEARCH: {Name: "search type name text", Help: "搜索", Hand: func(m *ice.Message, arg ...string) {
 				_file_search(m, arg[0], arg[1], arg[2], arg[3:]...)
 			}},

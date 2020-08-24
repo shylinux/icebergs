@@ -12,6 +12,7 @@ import (
 	"os"
 	"path"
 	"strings"
+	"time"
 )
 
 func _share_list(m *ice.Message, key string, fields ...string) {
@@ -70,8 +71,16 @@ func _share_local(m *ice.Message, arg ...string) {
 	p := path.Join(arg...)
 	if m.Option("pod") != "" {
 		// 远程文件
-		m.Cmdy(SPACE, m.Option("pod"), "nfs.cat", p)
-		m.Render(ice.RENDER_RESULT)
+
+		pp := path.Join("var/proxy", m.Option("pod"), p)
+		cache := time.Now().Add(-time.Hour * 240000)
+		if s, e := os.Stat(pp); e == nil {
+			cache = s.ModTime()
+		}
+		m.Cmdy(SPACE, m.Option("pod"), SPIDE, "dev", kit.MergeURL2(m.Option(ice.MSG_USERWEB), "/share/proxy/"),
+			"part", "pod", m.Option("pod"), "path", p, "cache", cache.Format(ice.MOD_TIME), "upload", "@"+p)
+
+		m.Render(ice.RENDER_DOWNLOAD, path.Join("var/proxy", m.Option("pod"), p))
 		return
 	}
 
@@ -82,6 +91,10 @@ func _share_local(m *ice.Message, arg ...string) {
 	}
 	// 本地文件
 	m.Render(ice.RENDER_DOWNLOAD, p)
+}
+func _share_proxy(m *ice.Message, arg ...string) {
+	m.Cmdy(CACHE, UPLOAD)
+	m.Cmdy(CACHE, WATCH, m.Option("data"), path.Join("var/proxy", m.Option("pod"), m.Option("path")))
 }
 func _share_remote(m *ice.Message, pod string, arg ...string) {
 	m.Cmdy(SPACE, pod, "web./publish/", arg)
@@ -254,6 +267,9 @@ func init() {
 			}},
 			"/share/local/": {Name: "/share/local/", Help: "共享链", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 				_share_local(m, arg...)
+			}},
+			"/share/proxy/": {Name: "/share/proxy/", Help: "缓存池", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+				_share_proxy(m, arg...)
 			}},
 			"/share/": {Name: "/share/", Help: "共享链", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 				m.Richs(SHARE, nil, kit.Select(m.Option(kit.MDB_SHARE), arg, 0), func(key string, value map[string]interface{}) {

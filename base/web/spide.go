@@ -17,6 +17,7 @@ import (
 	"os"
 	"path"
 	"strings"
+	"time"
 )
 
 func _spide_list(m *ice.Message, name string) {
@@ -110,6 +111,7 @@ const (
 
 	SPIDE_MSG   = "msg"
 	SPIDE_RAW   = "raw"
+	SPIDE_SAVE  = "save"
 	SPIDE_CACHE = "cache"
 
 	SPIDE_GET    = "GET"
@@ -163,12 +165,14 @@ func init() {
 				m.Richs(SPIDE, nil, arg[0], func(key string, value map[string]interface{}) {
 					client := value[SPIDE_CLIENT].(map[string]interface{})
 					// 缓存数据
-					cache := ""
+					cache, save := "", ""
 					switch arg[1] {
 					case SPIDE_MSG:
 						cache, arg = arg[1], arg[1:]
 					case SPIDE_RAW:
 						cache, arg = arg[1], arg[1:]
+					case SPIDE_SAVE:
+						cache, save, arg = arg[1], arg[2], arg[2:]
 					case SPIDE_CACHE:
 						cache, arg = arg[1], arg[1:]
 					}
@@ -206,8 +210,19 @@ func init() {
 						case SPIDE_PART:
 							buf := &bytes.Buffer{}
 							mp := multipart.NewWriter(buf)
+							cache := time.Now().Add(-time.Hour * 240000)
 							for i := 1; i < len(arg)-1; i += 2 {
+								if arg[i] == "cache" {
+									if t, e := time.ParseInLocation(ice.MOD_TIME, arg[i+1], time.Local); e == nil {
+										cache = t
+									}
+								}
 								if strings.HasPrefix(arg[i+1], "@") {
+									if s, e := os.Stat(arg[i+1][1:]); e == nil {
+										if s.ModTime().Before(cache) {
+											return
+										}
+									}
 									if f, e := os.Open(arg[i+1][1:]); m.Assert(e) {
 										defer f.Close()
 										if p, e := mp.CreateFormFile(arg[i], path.Base(arg[i+1][1:])); m.Assert(e) {
@@ -296,12 +311,19 @@ func init() {
 						m.Log(ice.LOG_IMPORT, "%s: %s", v.Name, v.Value)
 					}
 
+					defer res.Body.Close()
+
 					// 解析引擎
 					switch cache {
 					case SPIDE_CACHE:
 						m.Optionv("response", res)
 						m.Cmdy(CACHE, DOWNLOAD, res.Header.Get(ContentType), uri)
 						m.Echo(m.Append(DATA))
+					case SPIDE_SAVE:
+						if f, p, e := kit.Create(save); m.Assert(e) {
+							io.Copy(f, res.Body)
+							m.Echo(p)
+						}
 					case SPIDE_RAW:
 						if b, e := ioutil.ReadAll(res.Body); m.Assert(e) {
 							m.Echo(string(b))

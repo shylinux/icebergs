@@ -21,7 +21,7 @@ const LOGIN = "_login"
 
 func _serve_login(msg *ice.Message, cmds []string, w http.ResponseWriter, r *http.Request) ([]string, bool) {
 	msg.Option(ice.MSG_USERNAME, "")
-	msg.Option(ice.MSG_USERROLE, "")
+	msg.Option(ice.MSG_USERROLE, "void")
 
 	if msg.Options(ice.MSG_SESSID) {
 		// 会话认证
@@ -82,6 +82,7 @@ func _serve_handle(key string, cmd *ice.Command, msg *ice.Message, w http.Respon
 	}
 
 	// 用户请求
+	msg.Option(ice.MSG_METHOD, r.Method)
 	msg.Option(ice.MSG_USERWEB, kit.Select(msg.Conf(SHARE, "meta.domain"), r.Header.Get("Referer")))
 	msg.Option(ice.MSG_USERIP, r.Header.Get(ice.MSG_USERIP))
 	msg.Option(ice.MSG_USERUA, r.Header.Get("User-Agent"))
@@ -118,6 +119,9 @@ func _serve_handle(key string, cmd *ice.Command, msg *ice.Message, w http.Respon
 
 	// 请求参数
 	for k, v := range r.Form {
+		for i, p := range v {
+			v[i], _ = url.QueryUnescape(p)
+		}
 		if msg.Optionv(k, v); k == ice.MSG_SESSID {
 			msg.Render(COOKIE, v[0])
 		}

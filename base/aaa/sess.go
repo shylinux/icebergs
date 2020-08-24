@@ -35,9 +35,9 @@ func _sess_check(m *ice.Message, sessid string) {
 				}
 			}
 			m.Log_AUTH(
+				USERROLE, m.Option(ice.MSG_USERROLE, kit.Select(UserRole(m, value[USERNAME]))),
 				USERNICK, m.Option(ice.MSG_USERNICK, value[USERNICK]),
 				USERNAME, m.Option(ice.MSG_USERNAME, value[USERNAME]),
-				USERROLE, m.Option(ice.MSG_USERROLE, kit.Select(UserRole(m, value[USERNAME]))),
 			)
 		})
 	})

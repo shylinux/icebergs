@@ -1,15 +1,15 @@
 package chat
 
 import (
-	"strings"
-
 	ice "github.com/shylinux/icebergs"
 	"github.com/shylinux/icebergs/base/aaa"
 	"github.com/shylinux/icebergs/base/ctx"
 	"github.com/shylinux/icebergs/base/web"
 	kit "github.com/shylinux/toolkits"
 
+	"path"
 	"strconv"
+	"strings"
 )
 
 func _action_share_create(m *ice.Message, name, text string, arg ...string) {
@@ -144,6 +144,21 @@ func _action_show(m *ice.Message, river, storm, index string, arg ...string) {
 	if !m.Right(cmds) {
 		m.Render("status", 403, "not auth")
 		return
+	}
+
+	m.Debug("what %v", cmds)
+	if p := m.Option(POD); p != "" {
+		if len(cmds) > 1 && cmds[1] == "action" {
+			switch cmds[2] {
+			case "upload":
+				msg := m.Cmd(web.CACHE, web.UPLOAD)
+				file := path.Join("var/proxy", p, msg.Option("path"), msg.Option("name"))
+				m.Cmd("cache", "watch", msg.Option("data"), file)
+				m.Cmdy(_action_proxy(m), cmds[0], "action", "upload", msg.Append("name"), msg.Option("path"),
+					kit.MergeURL2(m.Option(ice.MSG_USERWEB), "/share/proxy/", "pod", p))
+				return
+			}
+		}
 	}
 	m.Cmdy(_action_proxy(m), cmds)
 }

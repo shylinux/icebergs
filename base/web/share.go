@@ -9,6 +9,7 @@ import (
 	kit "github.com/shylinux/toolkits"
 
 	"fmt"
+	"net/http"
 	"os"
 	"path"
 	"strings"
@@ -69,32 +70,45 @@ func _share_repos(m *ice.Message, repos string, arg ...string) {
 }
 func _share_local(m *ice.Message, arg ...string) {
 	p := path.Join(arg...)
+	switch ls := strings.Split(p, "/"); ls[0] {
+	case "etc", "var":
+		// 私有文件
+		m.Render(STATUS, http.StatusUnauthorized, "not auth")
+		return
+	default:
+		if m.Warn(!m.Right(ls), ice.ErrNotAuth, m.Option(ice.MSG_USERROLE), " of ", p) {
+			m.Render(STATUS, http.StatusUnauthorized, "not auth")
+			return
+		}
+	}
+
 	if m.Option("pod") != "" {
 		// 远程文件
-
 		pp := path.Join("var/proxy", m.Option("pod"), p)
 		cache := time.Now().Add(-time.Hour * 240000)
 		if s, e := os.Stat(pp); e == nil {
 			cache = s.ModTime()
 		}
-		m.Cmdy(SPACE, m.Option("pod"), SPIDE, "dev", kit.MergeURL2(m.Option(ice.MSG_USERWEB), "/share/proxy/"),
+		m.Cmdy(SPACE, m.Option("pod"), SPIDE, "dev", "raw", kit.MergeURL2(m.Option(ice.MSG_USERWEB), "/share/proxy/"),
 			"part", "pod", m.Option("pod"), "path", p, "cache", cache.Format(ice.MOD_TIME), "upload", "@"+p)
 
 		m.Render(ice.RENDER_DOWNLOAD, path.Join("var/proxy", m.Option("pod"), p))
 		return
 	}
 
-	switch ls := strings.Split(p, "/"); ls[0] {
-	case "etc", "var":
-		// 私有文件
-		return
-	}
 	// 本地文件
 	m.Render(ice.RENDER_DOWNLOAD, p)
 }
 func _share_proxy(m *ice.Message, arg ...string) {
-	m.Cmdy(CACHE, UPLOAD)
-	m.Cmdy(CACHE, WATCH, m.Option("data"), path.Join("var/proxy", m.Option("pod"), m.Option("path")))
+	switch m.Option(ice.MSG_METHOD) {
+	case http.MethodGet:
+		m.Render(ice.RENDER_DOWNLOAD, path.Join("var/proxy", path.Join(m.Option("pod"), m.Option("path"), m.Option("name"))))
+	case http.MethodPost:
+		m.Cmdy(CACHE, UPLOAD)
+		m.Cmdy(CACHE, WATCH, m.Option("data"), path.Join("var/proxy", m.Option("pod"), m.Option("path")))
+		m.Render(ice.RENDER_RESULT, m.Option("path"))
+	}
+
 }
 func _share_remote(m *ice.Message, pod string, arg ...string) {
 	m.Cmdy(SPACE, pod, "web./publish/", arg)

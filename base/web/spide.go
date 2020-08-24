@@ -321,8 +321,10 @@ func init() {
 						m.Echo(m.Append(DATA))
 					case SPIDE_SAVE:
 						if f, p, e := kit.Create(save); m.Assert(e) {
-							io.Copy(f, res.Body)
-							m.Echo(p)
+							if n, e := io.Copy(f, res.Body); m.Assert(e) {
+								m.Log_EXPORT(kit.MDB_SIZE, n, kit.MDB_FILE, p)
+								m.Echo(p)
+							}
 						}
 					case SPIDE_RAW:
 						if b, e := ioutil.ReadAll(res.Body); m.Assert(e) {

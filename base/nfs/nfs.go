@@ -332,13 +332,13 @@ var Index = &ice.Context{Name: "nfs", Help: "存储模块",
 		}},
 		DIR: {Name: "dir path=auto field... 查看:button=auto 返回 上传", Help: "目录", Action: map[string]*ice.Action{
 			"upload": {Name: "upload", Help: "上传", Hand: func(m *ice.Message, arg ...string) {
-				if m.Cmdy("cache", "upload"); m.Option("pod") == "" {
-					m.Cmdy("cache", "watch", m.Option("data"), path.Join(m.Option("path"), m.Option("name")))
-					return
+				if len(arg) > 0 {
+					m.Cmdy("spide", "dev", "cache", "GET", kit.MergeURL(arg[2], "path", arg[1], "name", arg[0]))
+					m.Option("name", arg[0])
+				} else {
+					m.Cmdy("cache", "upload")
 				}
-				m.Cmdy("space", m.Option("pod"), "spide", "dev", "save", path.Join(m.Option("path"), m.Option("name")),
-					kit.MergeURL2(m.Option(ice.MSG_USERWEB), path.Join("/share/local/", m.Option("data"))))
-
+				m.Cmdy("cache", "watch", m.Option("data"), path.Join(m.Option("path"), m.Option("name")))
 			}},
 			mdb.SEARCH: {Name: "search type name text", Help: "搜索", Hand: func(m *ice.Message, arg ...string) {
 				_file_search(m, arg[0], arg[1], arg[2], arg[3:]...)

@@ -42,6 +42,7 @@ const ( // MSG
 	MSG_RIVER  = "sess.river"
 	MSG_STORM  = "sess.storm"
 	MSG_ACTIVE = "sess.active"
+	MSG_METHOD = "sess.method"
 )
 const ( // CTX
 	CTX_STREAM = "stream"

@@ -124,6 +124,7 @@ var Index = &ice.Context{Name: "tcp", Help: "通信模块",
 					}
 					port = kit.Format(kit.Int(port) + 1)
 				}
+				os.MkdirAll(p, ice.MOD_DIR)
 				m.Echo(port)
 			}},
 		}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {

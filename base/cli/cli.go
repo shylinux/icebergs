@@ -102,7 +102,7 @@ var Index = &ice.Context{Name: "cli", Help: "命令模块",
 			}},
 		}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			msg := m.Spawn()
-			msg.Split(m.Cmdx(SYSTEM, "ps", "aux"), "", " ", "\n")
+			msg.Split(m.Cmdx(SYSTEM, "ps", "u"), "", " ", "\n")
 			msg.Table(func(index int, value map[string]string, head []string) {
 				if m.Appendv(ice.MSG_APPEND, "action", head); len(arg) == 2 && value["PID"] == arg[1] {
 					m.Push("action", m.Cmdx(mdb.RENDER, "button", "结束"))
@@ -118,7 +118,7 @@ var Index = &ice.Context{Name: "cli", Help: "命令模块",
 		RUNTIME: {Name: "runtime name auto", Help: "运行环境", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			switch kit.Select("", arg, 0) {
 			case "procinfo":
-				m.Split(m.Cmdx(SYSTEM, "ps"), "", " ", "\n")
+				m.Split(m.Cmdx(SYSTEM, "ps", "u"), "", " ", "\n")
 
 			case "hostinfo":
 				if f, e := os.Open("/proc/cpuinfo"); e == nil {

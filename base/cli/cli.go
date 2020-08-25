@@ -102,7 +102,7 @@ var Index = &ice.Context{Name: "cli", Help: "命令模块",
 			}},
 		}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			msg := m.Spawn()
-			msg.Split(m.Cmdx(SYSTEM, "ps", "u"), "", " ", "\n")
+			msg.Split(m.Cmdx(SYSTEM, "ps", "ux"), "", " ", "\n")
 			msg.Table(func(index int, value map[string]string, head []string) {
 				if m.Appendv(ice.MSG_APPEND, "action", head); len(arg) == 2 && value["PID"] == arg[1] {
 					m.Push("action", m.Cmdx(mdb.RENDER, "button", "结束"))

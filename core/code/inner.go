@@ -109,7 +109,7 @@ func init() {
 					"txt", "true", "url", "true",
 					"log", "true", "err", "true",
 
-					"md", "true", "conf", "true",
+					"md", "true", "conf", "true", "toml", "true",
 					"ts", "true", "tsx", "true", "vue", "true", "sass", "true",
 				),
 				"plug", kit.Dict(

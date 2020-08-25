@@ -166,13 +166,17 @@ func _field_show(m *ice.Message, name, text string, arg ...string) {
 
 	// 扩展参数
 	for i := 0; i < len(arg)-1; i += 2 {
-		if data := m.Confv("field", kit.Keys("meta.some", arg[i+1], arg[i])); data != nil {
-			m.Option(arg[i], data)
+		if strings.HasPrefix(arg[i], "args.") {
+			m.Option(arg[i], strings.TrimSpace(arg[i+1]))
+			kit.Value(data, arg[i], m.Option(arg[i]))
+		} else if strings.HasPrefix(arg[i], "args") {
+			m.Option(arg[i], kit.Split(strings.TrimSuffix(strings.TrimPrefix(arg[i+1], "["), "]")))
+			kit.Value(data, arg[i], m.Optionv(arg[i]))
 		} else {
 			m.Parse("option", arg[i], arg[i+1])
+			kit.Value(data, arg[i], m.Optionv(arg[i]))
 		}
 
-		data[arg[i]] = m.Optionv(arg[i])
 		switch arg[i] {
 		case "content":
 			data[arg[i]] = arg[i+1]
@@ -200,6 +204,7 @@ func _field_show(m *ice.Message, name, text string, arg ...string) {
 			}
 		}
 	}
+	m.Debug("what %v", data)
 
 	// 渲染引擎
 	m.Option("meta", data)

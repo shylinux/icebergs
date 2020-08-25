@@ -288,6 +288,7 @@ const (
 	IMPORT = "import"
 	EXPORT = "export"
 
+	FIELDS = "fields"
 	INPUTS = "inputs"
 
 	INSERT = "insert"

@@ -141,7 +141,11 @@ var Index = &ice.Context{Name: "cli", Help: "命令模块",
 				}
 				m.Push("uptime", kit.Split(m.Cmdx(SYSTEM, "uptime"), ",")[0])
 			case "diskinfo":
-				m.Split(m.Cmdx(SYSTEM, "df", "-h"), "", " ", "\n")
+				m.Spawn().Split(m.Cmdx(SYSTEM, "df", "-h"), "", " ", "\n").Table(func(index int, value map[string]string, head []string) {
+					if strings.HasPrefix(value["Filesystem"], "/dev") {
+						m.Push("", value, head)
+					}
+				})
 			case "ifconfig":
 				m.Cmdy("tcp.ip")
 			case "userinfo":

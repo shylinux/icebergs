@@ -330,16 +330,16 @@ var Index = &ice.Context{Name: "nfs", Help: "存储模块",
 			}},
 		}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 		}},
-		DIR: {Name: "dir path=auto field... 查看:button=auto 返回 上传", Help: "目录", Action: map[string]*ice.Action{
-			"upload": {Name: "upload", Help: "上传", Hand: func(m *ice.Message, arg ...string) {
+		DIR: {Name: "dir path=auto field... auto 上传", Help: "目录", Action: map[string]*ice.Action{
+			"upload": {Name: "upload [name path dev]", Help: "上传", Hand: func(m *ice.Message, arg ...string) {
 				if len(arg) > 0 {
-					m.Cmdy("spide", "dev", "cache", "GET", kit.MergeURL(arg[2], "path", arg[1], "name", arg[0]))
-					m.Option("name", arg[0])
+					m.Cmdy("spide", "dev", "cache", "GET", kit.MergeURL(arg[2], "path", arg[1], "name", m.Option("name", arg[0])))
 				} else {
 					m.Cmdy("cache", "upload")
 				}
 				m.Cmdy("cache", "watch", m.Option("data"), path.Join(m.Option("path"), m.Option("name")))
 			}},
+
 			mdb.SEARCH: {Name: "search type name text", Help: "搜索", Hand: func(m *ice.Message, arg ...string) {
 				_file_search(m, arg[0], arg[1], arg[2], arg[3:]...)
 			}},
@@ -351,7 +351,7 @@ var Index = &ice.Context{Name: "nfs", Help: "存储模块",
 			rg, _ := regexp.Compile(m.Option(DIR_REG))
 			_file_list(m, kit.Select("./", m.Option(DIR_ROOT)), kit.Select("", arg, 0),
 				0, m.Options(DIR_DEEP), kit.Select("both", m.Option(DIR_TYPE)), rg,
-				strings.Split(kit.Select("time size line path", strings.Join(arg[1:], " ")), " "))
+				strings.Split(kit.Select("time size path", strings.Join(arg[1:], " ")), " "))
 		}},
 		CAT: {Name: "cat file", Help: "查看", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			_file_show(m, arg[0])

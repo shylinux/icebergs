@@ -25,6 +25,9 @@ section 体验
 spark shell `
 curl http://localhost:9200
 `
+field "进程管理" cli.daemon
+field "下载管理" web.code.install
+field "编辑器" web.code.vimer args `[ src/ main.go ]`
 
 # field command web.code.es.command option `{ _pod centos.remote }`
 field "查询数据" web.code.es.GET args `[ /index_test/test_type/1 ]` style command option `{ _pod centos.remote }`
@@ -35,6 +38,5 @@ field "提交数据" web.code.es.CMD args `[ POST /index_test/test_type/1 ] ` co
 }` style command option `{ _pod centos.remote }`
 
 section 管理
+field "文件夹" nfs.dir args `[ "'usr/publish/'" "'time size path link'" ]`
 field "服务管理" web.code.es.es
-field "进程管理" cli.daemon
-field "下载管理" web.code.install

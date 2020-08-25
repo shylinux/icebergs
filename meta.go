@@ -53,8 +53,15 @@ func (m *Message) Set(key string, arg ...string) *Message {
 func (m *Message) Push(key string, value interface{}, arg ...interface{}) *Message {
 	switch value := value.(type) {
 	case map[string]string:
-		for k, v := range value {
-			m.Push(k, v)
+		head := kit.Simple(arg)
+		if len(head) == 0 {
+			for k := range value {
+				head = append(head, k)
+			}
+		}
+
+		for _, k := range head {
+			m.Push(k, value[k])
 		}
 		return m
 	case map[string]interface{}:

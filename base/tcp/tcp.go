@@ -27,7 +27,7 @@ func _port_get(m *ice.Message, begin string) string {
 	for i := current; i < end; i++ {
 		if m.Cmd(cli.SYSTEM, "lsof", "-i", kit.Format(":%d", i)).Append(cli.CMD_CODE) != "0" {
 			m.Conf(PORT, "meta.current", i)
-			m.Log_CREATE(PORT, i)
+			m.Log_SELECT(PORT, i)
 			return kit.Format("%d", i)
 		}
 	}
@@ -116,7 +116,7 @@ var Index = &ice.Context{Name: "tcp", Help: "通信模块",
 			}},
 			"select": {Name: "select [begin]", Help: "分配端口", Hand: func(m *ice.Message, arg ...string) {
 				port, p := kit.Select("", arg, 0), ""
-				for {
+				for i := 0; i < 10; i++ {
 					port = _port_get(m, port)
 					p = path.Join(m.Conf(cli.DAEMON, kit.META_PATH), port)
 					if _, e := os.Stat(p); e != nil && os.IsNotExist(e) {

@@ -73,7 +73,7 @@ func init() {
 				}},
 				"prune": {Name: "prune", Help: "清理", Hand: func(m *ice.Message, arg ...string) {
 					m.Richs(DAEMON, "", kit.MDB_FOREACH, func(key string, value map[string]interface{}) {
-						if strings.Count(m.Cmdx(SYSTEM, "ps", value[kit.MDB_PID]), "\n") == 1 {
+						if value["status"] == "error" || strings.Count(m.Cmdx(SYSTEM, "ps", value[kit.MDB_PID]), "\n") == 1 {
 							m.Conf(DAEMON, kit.Keys(kit.MDB_HASH, key), "")
 							m.Log_DELETE(DAEMON, kit.Format(value))
 						}

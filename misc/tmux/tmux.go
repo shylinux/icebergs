@@ -5,6 +5,7 @@ import (
 	"github.com/shylinux/icebergs/base/cli"
 	"github.com/shylinux/icebergs/base/gdb"
 	"github.com/shylinux/icebergs/base/mdb"
+	"github.com/shylinux/icebergs/base/tcp"
 	"github.com/shylinux/icebergs/base/web"
 	"github.com/shylinux/icebergs/core/code"
 	kit "github.com/shylinux/toolkits"
@@ -32,6 +33,9 @@ var _tmux = []string{cli.SYSTEM, TMUX}
 
 var Index = &ice.Context{Name: TMUX, Help: "工作台",
 	Configs: map[string]*ice.Config{
+		TMUX: {Name: "tmux", Help: "终端", Value: kit.Data(
+			"source", "https://github.com/tmux/tmux/releases/download/3.1b/tmux-3.1b.tar.gz",
+		)},
 		SESSION: {Name: "session", Help: "会话", Value: kit.Data(
 			"format", "#{session_id},#{session_attached},#{session_name},#{session_windows},#{session_height},#{session_width}",
 			"fields", "id,tag,session,windows,height,width",
@@ -55,6 +59,59 @@ var Index = &ice.Context{Name: TMUX, Help: "工作台",
 		)},
 	},
 	Commands: map[string]*ice.Command{
+		TMUX: {Name: "tmux 启动:button 编译:button 下载:button", Help: "终端", Action: map[string]*ice.Action{
+			"download": {Name: "download", Help: "下载", Hand: func(m *ice.Message, arg ...string) {
+				m.Cmdy(code.INSTALL, "download", m.Conf(TMUX, "meta.source"))
+			}},
+			"compile": {Name: "compile", Help: "编译", Hand: func(m *ice.Message, arg ...string) {
+				name := path.Base(strings.TrimSuffix(strings.TrimSuffix(m.Conf(TMUX, "meta.source"), ".tar.gz"), "zip"))
+				p := m.Option(cli.CMD_DIR, path.Join(m.Conf(code.INSTALL, kit.META_PATH), name))
+				m.Cmdy(cli.SYSTEM, "./configure", "--prefix="+kit.Path(path.Join(p, "install")))
+				m.Cmdy(cli.SYSTEM, "make", "-j8")
+			}},
+			"start": {Name: "start", Help: "启动", Hand: func(m *ice.Message, arg ...string) {
+				// 分配
+				port, p := "", ""
+				for {
+					port = m.Cmdx(tcp.PORT, "select", port)
+					p = path.Join(m.Conf(cli.DAEMON, kit.META_PATH), port)
+					if _, e := os.Stat(p); e != nil && os.IsNotExist(e) {
+						break
+					}
+					port = kit.Format(kit.Int(port) + 1)
+				}
+				os.MkdirAll(path.Join(p, "logs"), ice.MOD_DIR)
+				os.MkdirAll(path.Join(p, "bin"), ice.MOD_DIR)
+				os.MkdirAll(p, ice.MOD_DIR)
+
+				// 复制
+				name := path.Base(strings.TrimSuffix(strings.TrimSuffix(m.Conf(TMUX, "meta.source"), ".tar.gz"), "zip"))
+				m.Cmd(cli.SYSTEM, "cp", "-r", path.Join(m.Conf(code.INSTALL, kit.META_PATH), name, "src/redis-cli"), path.Join(p, "bin"))
+				m.Cmd(cli.SYSTEM, "cp", "-r", path.Join(m.Conf(code.INSTALL, kit.META_PATH), name, "src/redis-server"), path.Join(p, "bin"))
+				m.Cmd(cli.SYSTEM, "cp", "-r", path.Join(m.Conf(code.INSTALL, kit.META_PATH), name, "src/redis-benchmark"), path.Join(p, "bin"))
+
+				// 启动
+				m.Option(cli.CMD_DIR, p)
+				m.Cmdy(cli.DAEMON, "bin/redis-server", "--port", port)
+			}},
+		}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			if len(arg) > 0 && arg[0] != "" {
+				m.Cmdy(cli.SYSTEM, "bin/redis-cli", "-p", arg[0], kit.Split(kit.Select("info", arg, 1)))
+				return
+			}
+
+			m.Cmd(cli.DAEMON).Table(func(index int, value map[string]string, head []string) {
+				if strings.HasPrefix(value[kit.MDB_NAME], "bin/redis") {
+					m.Push(kit.MDB_TIME, value[kit.MDB_TIME])
+					m.Push(kit.MDB_PORT, path.Base(value[kit.MDB_DIR]))
+					m.Push(kit.MDB_DIR, value[kit.MDB_DIR])
+					m.Push(kit.MDB_STATUS, value[kit.MDB_STATUS])
+					m.Push(kit.MDB_PID, value[kit.MDB_PID])
+					m.Push(kit.MDB_NAME, value[kit.MDB_NAME])
+				}
+			})
+			m.Sort("time", "time_r")
+		}},
 		TEXT: {Name: "text 保存:button 清空:button text:textarea", Help: "文本", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			if len(arg) > 0 && arg[0] != "" {
 				m.Cmd(_tmux, "set-buffer", arg[0])
@@ -62,11 +119,7 @@ var Index = &ice.Context{Name: TMUX, Help: "工作台",
 
 			text := m.Cmdx(_tmux, "show-buffer")
 			m.Cmdy("web.wiki.image", "qrcode", text)
-
-			m.Echo("\n")
-			m.Echo(text)
-			m.Echo("\n")
-			m.Render("")
+			m.Echo("\n<span>%s</span>", text).Render("")
 		}},
 		BUFFER: {Name: "buffer [buffer=auto [value]] auto", Help: "缓存", Action: map[string]*ice.Action{
 			mdb.MODIFY: {Name: "modify", Help: "编辑", Hand: func(m *ice.Message, arg ...string) {

@@ -1,1 +1,6 @@
 title "zsh"
+refer `
+官网 https://www.zsh.org/
+源码 https://github.com/zsh-users/zsh/
+文档 http://zsh.sourceforge.net/Doc/Release/zsh_toc.html
+`

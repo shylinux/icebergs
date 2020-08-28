@@ -1,9 +1,30 @@
 title "tmux"
-
 refer "官网" `
 官网 http://tmux.github.io/
-文档 https://git-scm.com/docs
 源码 https://github.com/tmux/tmux
+文档 http://man.openbsd.org/OpenBSD-current/man1/tmux.1
+`
+premenu
+
+field tmux web.code.tmux.tmux
+field tmux web.code.inner args `[ usr/install/tmux-3.1b input.c ]`
+
+chapter "安装"
+section "libevent"
+spark shell `
+wget https://github.com/libevent/libevent/releases/download/release-2.1.12-stable/libevent-2.1.12-stable.tar.gz
+tar xvf libevent-2.1.12-stable.tar.gz && cd libevent-2.1.12-stable
+./configure
+make -j8
+make install
+`
+section "ncureses"
+spark shell `
+wget https://invisible-island.net/datafiles/release/ncurses.tar.gz
+tar xvf ncurese.tar.gz && cd ncurese-6.2
+./configure
+make -j8
+make install
 `
 chapter "应用"
 field text web.code.tmux.text

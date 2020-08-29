@@ -317,41 +317,12 @@ var Index = &ice.Context{Name: GIT, Help: "代码库",
 			m.Sort("line", "int")
 		}},
 
-		"status": {Name: "status name=auto auto 提交:button 下载:button", Help: "文件状态", Meta: kit.Dict(
+		"status": {Name: "status name=auto auto 下载 编译 提交 上传", Help: "文件状态", Meta: kit.Dict(
 			"提交", kit.List(
 				"_input", "select", "name", "action", "values", []string{"opt", "add"},
 				"_input", "text", "name", "text", "value", "some",
 			),
 		), Action: map[string]*ice.Action{
-			"add": {Name: "add", Help: "添加", Hand: func(m *ice.Message, arg ...string) {
-				if strings.Contains(m.Option("name"), ":\\") {
-					m.Option(cli.CMD_DIR, m.Option("name"))
-				} else {
-					m.Option(cli.CMD_DIR, path.Join("usr", m.Option("name")))
-				}
-				m.Cmdy(cli.SYSTEM, "git", "add", m.Option("file"))
-			}},
-			"submit": {Name: "submit", Help: "提交", Hand: func(m *ice.Message, arg ...string) {
-				if strings.Contains(m.Option("name"), ":\\") {
-					m.Option(cli.CMD_DIR, m.Option("name"))
-				} else {
-					m.Option(cli.CMD_DIR, path.Join("usr", m.Option("name")))
-				}
-
-				if arg[0] == "action" {
-					m.Cmdy(cli.SYSTEM, "git", "commit", "-am", kit.Select("opt some", arg[1]+" "+arg[3]))
-				} else {
-					m.Cmdy(cli.SYSTEM, "git", "commit", "-am", kit.Select("opt some", strings.Join(arg, " ")))
-				}
-			}},
-			"push": {Name: "push", Help: "上传", Hand: func(m *ice.Message, arg ...string) {
-				if strings.Contains(m.Option("name"), ":\\") {
-					m.Option(cli.CMD_DIR, m.Option("name"))
-				} else {
-					m.Option(cli.CMD_DIR, path.Join("usr", m.Option("name")))
-				}
-				m.Cmdy(cli.SYSTEM, "git", "push")
-			}},
 			"pull": {Name: "pull", Help: "下载", Hand: func(m *ice.Message, arg ...string) {
 				if m.Richs("progress", "", m.Option("_progress"), func(key string, value map[string]interface{}) {
 					m.Push("count", value["count"])
@@ -377,6 +348,46 @@ var Index = &ice.Context{Name: GIT, Help: "代码库",
 				m.Push("count", count)
 				m.Push("total", total)
 				m.Push("name", "")
+			}},
+			"compile": {Name: "compile", Help: "编译", Hand: func(m *ice.Message, arg ...string) {
+				m.Cmdy(cli.SYSTEM, "make")
+			}},
+
+			"add": {Name: "add", Help: "添加", Hand: func(m *ice.Message, arg ...string) {
+				if strings.Contains(m.Option("name"), ":\\") {
+					m.Option(cli.CMD_DIR, m.Option("name"))
+				} else {
+					m.Option(cli.CMD_DIR, path.Join("usr", m.Option("name")))
+				}
+				m.Cmdy(cli.SYSTEM, "git", "add", m.Option("file"))
+			}},
+			"submit": {Name: "submit", Help: "提交", Hand: func(m *ice.Message, arg ...string) {
+				if m.Option("name") == "" {
+					return
+				}
+
+				if strings.Contains(m.Option("name"), ":\\") {
+					m.Option(cli.CMD_DIR, m.Option("name"))
+				} else {
+					m.Option(cli.CMD_DIR, path.Join("usr", m.Option("name")))
+				}
+
+				if arg[0] == "action" {
+					m.Cmdy(cli.SYSTEM, "git", "commit", "-am", kit.Select("opt some", arg[1]+" "+arg[3]))
+				} else {
+					m.Cmdy(cli.SYSTEM, "git", "commit", "-am", kit.Select("opt some", strings.Join(arg, " ")))
+				}
+			}},
+			"push": {Name: "push", Help: "上传", Hand: func(m *ice.Message, arg ...string) {
+				if m.Option("name") == "" {
+					return
+				}
+				if strings.Contains(m.Option("name"), ":\\") {
+					m.Option(cli.CMD_DIR, m.Option("name"))
+				} else {
+					m.Option(cli.CMD_DIR, path.Join("usr", m.Option("name")))
+				}
+				m.Cmdy(cli.SYSTEM, "git", "push")
 			}},
 		}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			m.Richs(REPOS, nil, kit.Select(kit.MDB_FOREACH, arg, 0), func(key string, value map[string]interface{}) {

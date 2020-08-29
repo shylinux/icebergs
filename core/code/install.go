@@ -86,7 +86,7 @@ func init() {
 					target := path.Join(m.Conf(cli.DAEMON, kit.META_PATH), port)
 					source := path.Join(m.Conf(INSTALL, kit.META_PATH), kit.TrimExt(arg[0]))
 
-					m.Cmd(nfs.DIR, path.Join(source, INSTALL)).Table(func(index int, value map[string]string, head []string) {
+					m.Cmd(nfs.DIR, path.Join(source, kit.Select("install", m.Option("install")))).Table(func(index int, value map[string]string, head []string) {
 						m.Cmd(cli.SYSTEM, "cp", "-r", strings.TrimSuffix(value[kit.MDB_PATH], "/"), target)
 					})
 					m.Echo(target)

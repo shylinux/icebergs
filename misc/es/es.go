@@ -2,7 +2,6 @@ package es
 
 import (
 	ice "github.com/shylinux/icebergs"
-	"github.com/shylinux/icebergs/base/cli"
 	"github.com/shylinux/icebergs/base/web"
 	"github.com/shylinux/icebergs/core/code"
 	kit "github.com/shylinux/toolkits"
@@ -27,34 +26,21 @@ var Index = &ice.Context{Name: ES, Help: "搜索",
 		ice.CTX_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {}},
 		ice.CTX_EXIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {}},
 
-		ES: {Name: "es hash=auto auto 启动:button 安装:button", Help: "搜索", Action: map[string]*ice.Action{
-			"download": {Name: "download", Help: "安装", Hand: func(m *ice.Message, arg ...string) {
-				m.Cmdy("web.code.install", "download", m.Conf(ES, kit.Keys(kit.MDB_META, runtime.GOOS)))
+		ES: {Name: "es port=auto path=auto auto 启动:button 下载", Help: "搜索", Action: map[string]*ice.Action{
+			"download": {Name: "download", Help: "下载", Hand: func(m *ice.Message, arg ...string) {
+				m.Cmdy(code.INSTALL, "download", m.Conf(ES, kit.Keys(kit.MDB_META, runtime.GOOS)))
 			}},
 
 			"start": {Name: "start", Help: "启动", Hand: func(m *ice.Message, arg ...string) {
+				m.Option("install", ".")
 				name := path.Base(m.Conf(ES, kit.Keys(kit.MDB_META, runtime.GOOS)))
 				name = strings.Join(strings.Split(name, "-")[:2], "-")
-				m.Cmdy("web.code.install", "start", name, "bin/elasticsearch")
+				m.Cmdy(code.INSTALL, "start", name, "bin/elasticsearch")
 			}},
 		}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			if len(arg) == 0 {
-				m.Cmd(cli.DAEMON).Table(func(index int, value map[string]string, head []string) {
-					if strings.HasPrefix(value["name"], "bin/elasticsearch") {
-						m.Push("time", value["time"])
-						m.Push("hash", value["hash"])
-						m.Push("status", value["status"])
-						m.Push("pid", value["pid"])
-						m.Push("name", value["name"])
-						m.Push("dir", value["dir"])
-					}
-				})
-				return
-			}
-
-			m.Richs(cli.DAEMON, "", arg[0], func(key string, value map[string]interface{}) {
-				m.Cmdy(web.SPIDE, web.SPIDE_DEV, web.SPIDE_RAW, web.SPIDE_GET, m.Conf(ES, "meta.address"))
-			})
+			name := path.Base(m.Conf(ES, kit.Keys(kit.MDB_META, runtime.GOOS)))
+			name = strings.Join(strings.Split(name, "-")[:2], "-")
+			m.Cmdy(code.INSTALL, name, arg)
 		}},
 
 		"GET": {Name: "GET 查看:button cmd:text=/", Help: "命令", Action: map[string]*ice.Action{}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {

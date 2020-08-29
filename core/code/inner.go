@@ -78,6 +78,10 @@ func init() {
 					_inner_list(m, nfs.DIR, "", kit.Select("", arg, 0))
 					return
 				}
+				if strings.HasPrefix("http", arg[0]) {
+					m.Cmdy(web.SPIDE, "dev", "raw", "GET", arg[0]+arg[1])
+					return
+				}
 				_inner_list(m, _inner_ext(arg[1]), arg[1], arg[0])
 			}},
 			VIMER: {Name: "vimer path=usr/demo file=hi.sh line=1 刷新:button=auto 保存:button 运行:button 项目:button", Help: "编辑器", Meta: kit.Dict(

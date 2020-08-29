@@ -52,6 +52,11 @@ func init() {
 					p := path.Join(m.Conf(INSTALL, kit.META_PATH), name)
 					m.Cmd(cli.SYSTEM, "touch", p)
 
+					// 代理
+					to := m.Cmd("web.spide_rewrite", arg[0]).Append("to")
+					m.Debug("to: %s", to)
+					arg[0] = kit.Select(arg[0], to)
+
 					// 下载
 					m.Option(cli.CMD_DIR, m.Conf(INSTALL, kit.META_PATH))
 					if strings.HasPrefix(arg[0], "ftp") {

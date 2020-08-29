@@ -170,6 +170,15 @@ func _file_list(m *ice.Message, root string, name string, level int, deep bool, 
 	}
 }
 func _file_show(m *ice.Message, name string) {
+	if n := m.Cmd("file_rewrite", name).Append("to"); n != "" {
+		m.Logs("rewrite", "from", name, "to", n)
+		name = n
+	}
+	if strings.HasPrefix(name, "http") {
+		m.Cmdy("web.spide", "dev", "raw", "GET", name)
+		return
+	}
+
 	if f, e := os.OpenFile(path.Join(m.Option(DIR_ROOT), name), os.O_RDONLY, 0640); m.Assert(e) {
 		defer f.Close()
 
@@ -302,8 +311,19 @@ var Index = &ice.Context{Name: "nfs", Help: "存储模块",
 				"json", "true",
 			),
 		)},
+
+		"file_rewrite": {Name: "file_rewrite", Help: "重定向", Value: kit.Data(kit.MDB_SHORT, "from")},
 	},
 	Commands: map[string]*ice.Command{
+		"file_rewrite": {Name: "file_rewrite", Help: "重定向", Action: map[string]*ice.Action{
+			mdb.CREATE: {Name: "create from to", Help: "创建", Hand: func(m *ice.Message, arg ...string) {
+				m.Cmdy(mdb.INSERT, m.Prefix("file_rewrite"), "", mdb.HASH, arg)
+			}},
+		}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			m.Option(mdb.FIELDS, "time,hash,from,to")
+			m.Cmdy(mdb.SELECT, m.Prefix("file_rewrite"), "", mdb.HASH, "from", arg)
+		}},
+
 		ice.CTX_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			m.Cmd(mdb.SEARCH, mdb.CREATE, FILE)
 			m.Cmd(mdb.SEARCH, mdb.CREATE, DIR)

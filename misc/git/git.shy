@@ -1,9 +1,26 @@
 title "git"
-
 refer "官网" `
 官网 https://git-scm.com/
-文档 https://git-scm.com/docs
 源码 https://github.com/git/git
+文档 https://git-scm.com/docs
+`
+premenu
+field "安装" web.code.git.git
+field "源码" web.code.inner args `[ usr/install/git-1.8.3.1/ shell.c 145 ]`
+
+chapter "安装"
+section "编译安装"
+spark shell `
+wget https://mirrors.edge.kernel.org/pub/software/scm/git/git-1.8.3.1.tar.gz
+tar xvf git-1.8.3.1.tar.gz && cd git-1.8.3.1
+./configure --prefix=$PWD/install
+make -j4 && make install
+`
+
+section "使用体验"
+spark shell `
+cd ./install
+./bin/git
 `
 
 chapter "应用"

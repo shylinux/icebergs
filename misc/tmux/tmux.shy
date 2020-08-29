@@ -10,13 +10,34 @@ field tmux web.code.tmux.tmux
 field tmux web.code.inner args `[ usr/install/tmux-3.1b cmd-bind-key.c ]`
 
 chapter "安装"
+section "编译安装"
+spark shell `
+wget https://github.com/tmux/tmux/releases/download/3.1b/tmux-3.1b.tar.gz
+tar xvf tmux-3.1b.tar.gz && cd tmux-3.1b
+./configure --prefix=$PWD/install
+make -j8 && make install
+`
+
+section "使用体验"
+spark shell `
+cd ./install
+./bin/tmux
+`
+
+chapter "应用"
+field text web.code.tmux.text
+field buffer web.code.tmux.buffer args 0
+field session web.code.tmux.session
+
+chapter "项目"
+field icebergs web.code.inner args `[ usr/icebergs misc/tmux/tmux.go ]`
+return
 section "libevent"
 spark shell `
 wget https://github.com/libevent/libevent/releases/download/release-2.1.12-stable/libevent-2.1.12-stable.tar.gz
 tar xvf libevent-2.1.12-stable.tar.gz && cd libevent-2.1.12-stable
-./configure
-make -j8
-make install
+./configure --prefix=$PWD/install
+make -j8 && make install
 `
 section "ncurses"
 spark shell `
@@ -26,16 +47,4 @@ tar xvf ncurses.tar.gz && cd ncurses-6.2
 make -j8
 make install
 `
-section "tmux"
-spark shell `
-wget https://github.com/tmux/tmux/releases/download/3.1b/tmux-3.1b.tar.gz
-tar xvf tmux-3.1b.tar.gz && cd tmux-3.1b
-./configure
-make -j8
-make install
-`
 
-chapter "应用"
-field text web.code.tmux.text
-field buffer web.code.tmux.buffer args 0
-field session web.code.tmux.session

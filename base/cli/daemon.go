@@ -81,7 +81,7 @@ func init() {
 				}},
 				"stop": {Name: "stop", Help: "停止", Hand: func(m *ice.Message, arg ...string) {
 					m.Richs(DAEMON, "", m.Option(kit.MDB_HASH), func(key string, value map[string]interface{}) {
-						m.Cmdy(SYSTEM, "kill", value[kit.MDB_PID])
+						m.Cmdy(SYSTEM, "kill", "-9", value[kit.MDB_PID])
 						if strings.Count(m.Cmdx(SYSTEM, "ps", value[kit.MDB_PID]), "\n") == 1 {
 							value[kit.MDB_STATUS] = StatusClose
 						}

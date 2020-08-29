@@ -50,6 +50,12 @@ func (m *Message) log(level string, str string, arg ...interface{}) *Message {
 		prefix, suffix = "", ""
 	}
 
+	switch level {
+	case LOG_INFO, "send", "recv":
+		if len(str) > 200 {
+			str = str[:200]
+		}
+	}
 	// 输出日志
 	log.Info(fmt.Sprintf("%02d %9s %s%s %s%s", m.code, fmt.Sprintf("%4s->%-4s", m.source.Name, m.target.Name),
 		prefix, level, str, suffix))

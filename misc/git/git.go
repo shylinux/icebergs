@@ -40,7 +40,7 @@ const (
 var Index = &ice.Context{Name: GIT, Help: "代码库",
 	Configs: map[string]*ice.Config{
 		GIT: {Name: GIT, Help: "代码库", Value: kit.Data(
-			"source", "https://github.com/git/git.git", "config", kit.Dict(
+			"source", "https://mirrors.edge.kernel.org/pub/software/scm/git/git-1.8.3.1.tar.gz", "config", kit.Dict(
 				"alias", kit.Dict("s", "status", "b", "branch"),
 				"color", kit.Dict("ui", "true"),
 				"push", kit.Dict("default", "simple"),
@@ -73,6 +73,30 @@ var Index = &ice.Context{Name: GIT, Help: "代码库",
 				_repos_insert(m, value["name"], value["path"])
 			})
 		}},
+
+		GIT: {Name: "git port=auto path=auto auto 启动:button 构建:button 下载:button", Help: "编辑器", Action: map[string]*ice.Action{
+			"download": {Name: "download", Help: "下载", Hand: func(m *ice.Message, arg ...string) {
+				m.Cmdy(code.INSTALL, "download", m.Conf(GIT, kit.META_SOURCE))
+			}},
+			"build": {Name: "build", Help: "构建", Hand: func(m *ice.Message, arg ...string) {
+				m.Cmdy(code.INSTALL, "build", m.Conf(GIT, kit.META_SOURCE))
+			}},
+			"start": {Name: "start", Help: "启动", Hand: func(m *ice.Message, arg ...string) {
+				m.Optionv("prepare", func(p string) []string {
+					m.Option(cli.CMD_DIR, p)
+					kit.Fetch(m.Confv(GIT, "meta.config"), func(conf string, value interface{}) {
+						kit.Fetch(value, func(key string, value string) {
+							m.Cmd(cli.SYSTEM, "bin/git", "config", "--global", conf+"."+key, value)
+						})
+					})
+					return []string{}
+				})
+				m.Cmdy(code.INSTALL, "start", m.Conf(GIT, kit.META_SOURCE), "bin/git")
+			}},
+		}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			m.Cmdy(code.INSTALL, path.Base(m.Conf(GIT, kit.META_SOURCE)), arg)
+		}},
+
 		REPOS: {Name: "repos [name=auto [path [remote [branch]]]] auto", Help: "代码仓库", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			if len(arg) > 1 {
 				if _, e := os.Stat(path.Join(arg[1], ".git")); e != nil && os.IsNotExist(e) {
@@ -385,27 +409,6 @@ var Index = &ice.Context{Name: GIT, Help: "代码库",
 				}
 			})
 			m.Sort("name")
-		}},
-
-		"_install": {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			m.Option("cmd_dir", m.Conf("install", "meta.path"))
-			m.Cmd(cli.SYSTEM, "git", "clone", m.Conf("git", "meta.source"))
-
-			m.Option("cmd_dir", path.Join(m.Conf("install", "meta.path"), "git"))
-			m.Cmd(cli.SYSTEM, "make", "configure")
-			m.Cmd(cli.SYSTEM, "./configure", "--prefix="+kit.Path("usr/local"))
-
-			m.Cmd(cli.SYSTEM, "make", "-j4")
-			m.Cmd(cli.SYSTEM, "make", "install")
-		}},
-		code.PREPARE: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			kit.Fetch(m.Confv("git", "meta.config"), func(conf string, value interface{}) {
-				kit.Fetch(value, func(key string, value string) {
-					m.Cmd(cli.SYSTEM, "git", "config", "--global", conf+"."+key, value)
-				})
-			})
-		}},
-		code.PROJECT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 		}},
 	},
 }

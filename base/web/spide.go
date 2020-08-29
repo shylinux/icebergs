@@ -75,7 +75,7 @@ func _spide_create(m *ice.Message, name, address string, arg ...string) {
 					"name", name, "url", address, "method", "POST",
 					"protocol", uri.Scheme, "hostname", uri.Host,
 					"path", dir, "file", file, "query", uri.RawQuery,
-					"timeout", "100s", "logheaders", false,
+					"timeout", "600s", "logheaders", false,
 				),
 			))
 		}
@@ -141,10 +141,21 @@ func init() {
 	Index.Merge(&ice.Context{
 		Configs: map[string]*ice.Config{
 			SPIDE: {Name: "spide", Help: "蜘蛛侠", Value: kit.Data(kit.MDB_SHORT, "client.name")},
+
+			"spide_rewrite": {Name: "spide_rewrite", Help: "重定向", Value: kit.Data(kit.MDB_SHORT, "from")},
 		},
 		Commands: map[string]*ice.Command{
+			"spide_rewrite": {Name: "spide name=auto [action:select=msg|raw|cache] [method:select=POST|GET] url [format:select=json|form|part|data|file] arg... auto", Help: "蜘蛛侠", Action: map[string]*ice.Action{
+				mdb.CREATE: {Name: "create from to", Help: "创建", Hand: func(m *ice.Message, arg ...string) {
+					m.Cmdy(mdb.INSERT, m.Prefix("spide_rewrite"), "", mdb.HASH, arg)
+				}},
+			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+				m.Option(mdb.FIELDS, "time,hash,from,to")
+				m.Cmdy(mdb.SELECT, m.Prefix("spide_rewrite"), "", mdb.HASH, "from", arg)
+			}},
+
 			SPIDE: {Name: "spide name=auto [action:select=msg|raw|cache] [method:select=POST|GET] url [format:select=json|form|part|data|file] arg... auto", Help: "蜘蛛侠", Action: map[string]*ice.Action{
-				mdb.CREATE: {Name: "create name address", Help: "", Hand: func(m *ice.Message, arg ...string) {
+				mdb.CREATE: {Name: "create name address", Help: "创建", Hand: func(m *ice.Message, arg ...string) {
 					_spide_create(m, arg[0], arg[1])
 				}},
 				mdb.SEARCH: {Name: "search type name text arg...", Help: "搜索", Hand: func(m *ice.Message, arg ...string) {
@@ -192,6 +203,10 @@ func init() {
 
 					// 请求地址
 					uri, arg := arg[0], arg[1:]
+					if n := m.Cmd("spide_rewrite", uri).Append("to"); n != "" && n != uri {
+						m.Logs("rewrite", "from", uri, "to", n)
+						uri = n
+					}
 
 					// 渲染引擎
 					head := map[string]string{}
@@ -294,7 +309,7 @@ func init() {
 
 					// 发送请求
 					res, e := web.Client.Do(req)
-					if m.Warn(e != nil, "%s", e) {
+					if m.Warn(e != nil, ice.ErrNotFound, e) {
 						return
 					}
 

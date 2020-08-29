@@ -15,10 +15,19 @@ import (
 	"unicode"
 )
 
-var Index = &ice.Context{Name: "zsh", Help: "命令行",
-	Caches: map[string]*ice.Cache{},
+const (
+	BASH = "bash"
+	ZSH  = "zsh"
+)
+
+var Index = &ice.Context{Name: ZSH, Help: "命令行",
 	Configs: map[string]*ice.Config{
-		"zsh": {Name: "zsh", Help: "命令行", Value: kit.Data(
+		BASH: {Name: BASH, Help: "命令行", Value: kit.Data(
+			"source", "http://mirrors.aliyun.com/gnu/bash/bash-4.2.53.tar.gz",
+		)},
+		ZSH: {Name: ZSH, Help: "命令行", Value: kit.Data(
+			"source", "https://sourceforge.net/projects/zsh/files/zsh/5.8/zsh-5.8.tar.xz",
+
 			"proxy", "tmux", "history", "zsh.history", "script", []interface{}{
 				".vim/syntax/sh.vim", "etc/conf/sh.vim",
 				".bashrc", "etc/conf/bashrc",
@@ -27,7 +36,44 @@ var Index = &ice.Context{Name: "zsh", Help: "命令行",
 		)},
 	},
 	Commands: map[string]*ice.Command{
+		BASH: {Name: "bash port=auto path=auto auto 启动:button 构建:button 下载:button", Help: "命令行", Action: map[string]*ice.Action{
+			"download": {Name: "download", Help: "下载", Hand: func(m *ice.Message, arg ...string) {
+				m.Cmdy(code.INSTALL, "download", m.Conf(BASH, kit.META_SOURCE))
+			}},
+			"build": {Name: "build", Help: "构建", Hand: func(m *ice.Message, arg ...string) {
+				m.Cmdy(code.INSTALL, "build", m.Conf(BASH, kit.META_SOURCE))
+			}},
+			"start": {Name: "start", Help: "启动", Hand: func(m *ice.Message, arg ...string) {
+				m.Optionv("prepare", func(p string) []string {
+					m.Option(cli.CMD_DIR, p)
+					return []string{}
+				})
+				m.Cmdy(code.INSTALL, "start", m.Conf(BASH, kit.META_SOURCE), "bin/bash")
+			}},
+		}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			m.Cmdy(code.INSTALL, path.Base(m.Conf(BASH, kit.META_SOURCE)), arg)
+		}},
+		ZSH: {Name: "zsh port=auto path=auto auto 启动:button 构建:button 下载:button", Help: "命令行", Action: map[string]*ice.Action{
+			"download": {Name: "download", Help: "下载", Hand: func(m *ice.Message, arg ...string) {
+				m.Cmdy(code.INSTALL, "download", m.Conf(ZSH, kit.META_SOURCE))
+			}},
+			"build": {Name: "build", Help: "构建", Hand: func(m *ice.Message, arg ...string) {
+				m.Cmdy(code.INSTALL, "build", m.Conf(ZSH, kit.META_SOURCE))
+			}},
+			"start": {Name: "start", Help: "启动", Hand: func(m *ice.Message, arg ...string) {
+				m.Optionv("prepare", func(p string) []string {
+					m.Option(cli.CMD_DIR, p)
+					return []string{}
+				})
+				m.Cmdy(code.INSTALL, "start", m.Conf(ZSH, kit.META_SOURCE), "bin/zsh")
+			}},
+		}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			m.Cmdy(code.INSTALL, path.Base(m.Conf(ZSH, kit.META_SOURCE)), arg)
+		}},
+
 		ice.CTX_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			m.Cmd("web.spide_rewrite", "create", "from", "https://sourceforge.net/projects/zsh/files/zsh/5.8/zsh-5.8.tar.xz", "to", "http://localhost:9020/publish/zsh-5.8.tar.gz")
+
 			m.Conf(web.FAVOR, "meta.render.shell", m.AddCmd(&ice.Command{Name: "render type name text", Help: "渲染引擎", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 				value, _ := m.Optionv(kit.MDB_VALUE).(map[string]interface{})
 				m.Option("cmd_dir", kit.Value(value, "extra.pwd"))

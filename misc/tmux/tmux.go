@@ -58,14 +58,22 @@ var Index = &ice.Context{Name: TMUX, Help: "工作台",
 		)},
 	},
 	Commands: map[string]*ice.Command{
-		TMUX: {Name: "tmux 启动:button 编译:button 下载:button", Help: "终端", Action: map[string]*ice.Action{
+		TMUX: {Name: "git port=auto path=auto auto 启动:button 构建:button 下载:button", Help: "命令行", Action: map[string]*ice.Action{
 			"download": {Name: "download", Help: "下载", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmdy(code.INSTALL, "download", m.Conf(TMUX, kit.META_SOURCE))
 			}},
 			"build": {Name: "build", Help: "构建", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmdy(code.INSTALL, "build", m.Conf(TMUX, kit.META_SOURCE))
 			}},
+			"start": {Name: "start", Help: "启动", Hand: func(m *ice.Message, arg ...string) {
+				m.Optionv("prepare", func(p string) []string {
+					m.Option(cli.CMD_DIR, p)
+					return []string{}
+				})
+				m.Cmdy(code.INSTALL, "start", m.Conf(TMUX, kit.META_SOURCE), "bin/tmux")
+			}},
 		}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			m.Cmdy(code.INSTALL, path.Base(m.Conf(TMUX, kit.META_SOURCE)), arg)
 		}},
 
 		TEXT: {Name: "text 保存:button 清空:button text:textarea", Help: "文本", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {

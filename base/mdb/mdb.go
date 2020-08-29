@@ -103,7 +103,8 @@ func _hash_select(m *ice.Message, prefix, key, field, value string) {
 		if field != "" && value != val[field] {
 			return
 		}
-		m.Push("detail", val)
+		m.Push(key, val, fields)
+		// m.Push("detail", val)
 	})
 }
 func _hash_search(m *ice.Message, prefix, key, field, value string) {

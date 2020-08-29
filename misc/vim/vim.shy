@@ -10,22 +10,21 @@ chapter "安装"
 section "编译安装"
 spark shell `
 wget ftp://ftp.vim.org/pub/vim/unix/vim-8.1.tar.bz2
-tar xvf vim-81.tar.bz2 && cd vim81
-./configure --prefix=/usr/local --enable-multibyte=yes
-make -j4
-make install
+tar xvf vim-8.1.tar.bz2 && cd vim81
+./configure --prefix=$PWD/install --enable-multibyte=yes
+make -j4 && make install
 `
 
 section "使用体验"
 spark shell `
-vim
+cd ./install
+./bin/vim
 `
 section "项目"
 field "安装" web.code.vim.vim
 field "源码" web.code.inner args `[ usr/install/vim81/ src/main.c 110 ]`
-field "脚本" web.code.inner args `[ usr/local/share/vim/vim81/ filetype.vim ]`
-field "文档" web.code.inner args `[ usr/local/share/vim/vim81/doc/ help.txt ]`
-
+field "脚本" web.code.inner args `[ usr/install/vim81/install/share/vim/vim81/ filetype.vim ]`
+field "文档" web.code.inner args `[ usr/install/vim81/install/share/vim/vim81/doc/ help.txt ]`
 
 chapter "使用"
 
@@ -34,13 +33,13 @@ chapter "配置"
 refer `
 启动脚本 https://github.com/shylinux/contexts/blob/master/etc/conf/vimrc
 `
-field "启动脚本" web.code.inner args `[ etc/conf/ vimrc ]`
+field "启动脚本" web.code.inner args `[ https://raw.githubusercontent.com/shylinux/contexts/master/etc/conf/ vimrc ]`
 
 chapter "插件"
 refer `
-插件管理器 https://github.com/junegunn/vim-plug
+插件管理器 https://github.com/junegunn/vim-plug/plug.vim
 `
-field "插件管理器" web.code.inner args `[ etc/conf/ plug.vim ]`
+field "插件管理器" web.code.inner args `[ https://raw.githubusercontent.com/shylinux/contexts/master/etc/conf/ plug.vim ]`
 
 section "状态栏"
 refer `
@@ -48,9 +47,5 @@ refer `
 `
 
 chapter "应用"
-
 section "收藏夹"
-field favor web.favor args `[ vim.history ]`
-
 section "输入法"
-# field input web.code.input.find `[ shwq ]`

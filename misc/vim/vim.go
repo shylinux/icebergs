@@ -19,7 +19,7 @@ import (
 const VIM = "vim"
 const VIMRC = "vimrc"
 
-var Index = &ice.Context{Name: "vim", Help: "编辑器",
+var Index = &ice.Context{Name: VIM, Help: "编辑器",
 	Commands: map[string]*ice.Command{
 		ice.CTX_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			m.Conf(web.FAVOR, "meta.render.vimrc", m.AddCmd(&ice.Command{Name: "render favor id", Help: "渲染引擎", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
@@ -46,32 +46,35 @@ var Index = &ice.Context{Name: "vim", Help: "编辑器",
 			m.Cmd(mdb.RENDER, mdb.CREATE, VIMRC, VIM, c.Cap(ice.CTX_FOLLOW))
 			m.Cmd(mdb.PLUGIN, mdb.CREATE, VIM, VIM, c.Cap(ice.CTX_FOLLOW))
 			m.Cmd(mdb.RENDER, mdb.CREATE, VIM, VIM, c.Cap(ice.CTX_FOLLOW))
+
+			m.Cmd("web.spide_rewrite", "create", "from", "ftp://ftp.vim.org/pub/vim/unix/vim-8.1.tar.bz2", "to", "http://localhost:9020/publish/vim-8.1.tar.bz2")
+			m.Cmd("web.spide_rewrite", "create", "from", "https://raw.githubusercontent.com/shylinux/contexts/master/etc/conf/vimrc", "to", "http://localhost:9020/publish/vimrc")
+			m.Cmd("web.spide_rewrite", "create", "from", "https://raw.githubusercontent.com/shylinux/contexts/master/etc/conf/plug.vim", "to", "http://localhost:9020/publish/plug.vim")
+			m.Cmd("nfs.file_rewrite", "create", "from", "etc/conf/plug.vim", "to", "https://raw.githubusercontent.com/shylinux/contexts/master/etc/conf/plug.vim")
 		}},
-		VIM: {Name: "vim 配置:button 编译:button 下载:button", Help: "vim", Action: map[string]*ice.Action{
+		VIM: {Name: "vim port=auto path=auto auto 启动:button 构建:button 下载:button", Help: "编辑器", Action: map[string]*ice.Action{
 			"download": {Name: "download", Help: "下载", Hand: func(m *ice.Message, arg ...string) {
-				m.Cmdy(code.INSTALL, "download", m.Conf(VIM, "meta.source"))
+				m.Cmdy(code.INSTALL, "download", m.Conf(VIM, kit.META_SOURCE))
 			}},
-			"compile": {Name: "compile", Help: "编译", Hand: func(m *ice.Message, arg ...string) {
-				name := path.Base(strings.TrimSuffix(m.Conf(VIM, "meta.source"), ".tar.bz2"))
-				name = strings.ReplaceAll(strings.ReplaceAll(name, "-", ""), ".", "")
-				m.Option(cli.CMD_DIR, path.Join(m.Conf(code.INSTALL, kit.META_PATH), name))
-
-				m.Cmdy(cli.SYSTEM, "./configure", "--prefix="+kit.Path(m.Conf(VIM, "meta.target")),
-					"--enable-multibyte=yes", m.Confv(VIM, "meta.config"))
-				m.Cmdy(cli.SYSTEM, "make", "-j4")
-				m.Cmdy(cli.SYSTEM, "make", "install")
+			"build": {Name: "build", Help: "构建", Hand: func(m *ice.Message, arg ...string) {
+				m.Cmdy(code.INSTALL, "build",
+					strings.Replace(strings.Replace(kit.TrimExt(m.Conf(VIM, kit.META_SOURCE)), ".", "", -1), "-", "", -1))
 			}},
-			"prepare": {Name: "prepare", Help: "配置", Hand: func(m *ice.Message, arg ...string) {
-				// 语法脚本
-				for _, s := range []string{"go.vim", "shy.vim", "javascript.vim"} {
-					m.Cmd(nfs.LINK, path.Join(os.Getenv("HOME"), ".vim/syntax/"+s), "etc/conf/"+s)
-				}
-
-				// 启动脚本
-				m.Cmd(nfs.LINK, path.Join(os.Getenv("HOME"), ".vim/autoload/plug.vim"), "etc/conf/plug.vim")
-				m.Cmd(nfs.LINK, path.Join(os.Getenv("HOME"), ".vimrc"), "etc/conf/vimrc")
+			"start": {Name: "start", Help: "启动", Hand: func(m *ice.Message, arg ...string) {
+				m.Optionv("prepare", func(p string) []string {
+					list := kit.Simple(m.Confv(VIM, "meta.start"))
+					for i := 0; i < len(list); i += 2 {
+						m.Cmd(web.SPIDE, "dev", web.SPIDE_SAVE, path.Join(os.Getenv("HOME"), list[i]),
+							web.SPIDE_GET, m.Conf(VIM, "meta.remote")+list[i+1])
+					}
+					return []string{"-T", "screen", "-c", "PlugInstall", "-c", "exit", "-c", "exit"}
+				})
+				m.Cmdy(code.INSTALL, "start",
+					strings.Replace(strings.Replace(kit.TrimExt(m.Conf(VIM, kit.META_SOURCE)), ".", "", -1), "-", "", -1),
+					"bin/vim")
 
 				// 安装插件
+				m.Echo("\n")
 				m.Echo("vim -c PlugInstall\n")
 				m.Echo("vim -c GoInstallBinaries\n")
 			}},
@@ -80,8 +83,14 @@ var Index = &ice.Context{Name: "vim", Help: "编辑器",
 				m.Echo(m.Conf(VIM, "meta.plug"))
 			}},
 			mdb.RENDER: {Hand: func(m *ice.Message, arg ...string) {
+				if strings.HasPrefix(arg[2], "http") {
+					m.Cmdy(web.SPIDE, "dev", "raw", "GET", arg[2]+arg[1])
+					return
+				}
 				m.Cmdy(nfs.CAT, path.Join(arg[2], arg[1]))
 			}},
+		}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			m.Cmdy(code.INSTALL, path.Base(m.Conf(VIM, kit.META_SOURCE)), arg)
 		}},
 
 		"/sync": {Name: "/sync", Help: "同步", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
@@ -148,10 +157,19 @@ var Index = &ice.Context{Name: "vim", Help: "编辑器",
 	Configs: map[string]*ice.Config{
 		VIM: {Name: "vim", Help: "编辑器", Value: kit.Data(
 			"source", "ftp://ftp.vim.org/pub/vim/unix/vim-8.1.tar.bz2",
-			"target", "usr/local", "config", []interface{}{
+			"remote", "https://raw.githubusercontent.com/shylinux/contexts/master/etc/conf/",
+			"build", []interface{}{
+				"--enable-multibyte=yes",
 				"--enable-pythoninterp=yes",
 				"--enable-luainterp=yes",
 				"--enable-cscope=yes",
+			},
+			"start", []interface{}{
+				".vimrc", "vimrc",
+				".vim/autoload/plug.vim", "plug.vim",
+				".vim/syntax/javascript.vim", "javascript.vim",
+				".vim/syntax/shy.vim", "shy.vim",
+				".vim/syntax/go.vim", "go.vim",
 			},
 
 			"history", "vim.history",

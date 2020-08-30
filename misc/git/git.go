@@ -317,7 +317,7 @@ var Index = &ice.Context{Name: GIT, Help: "代码库",
 			m.Sort("line", "int")
 		}},
 
-		"status": {Name: "status name=auto auto 下载 编译 提交 上传", Help: "文件状态", Meta: kit.Dict(
+		"status": {Name: "status name=auto auto 提交 编译 下载", Help: "文件状态", Meta: kit.Dict(
 			"提交", kit.List(
 				"_input", "select", "name", "action", "values", []string{"opt", "add"},
 				"_input", "text", "name", "text", "value", "some",

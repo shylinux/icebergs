@@ -72,7 +72,7 @@ var Index = &ice.Context{Name: ZSH, Help: "命令行",
 		}},
 
 		ice.CTX_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			m.Cmd("web.spide_rewrite", "create", "from", "https://sourceforge.net/projects/zsh/files/zsh/5.8/zsh-5.8.tar.xz", "to", "http://localhost:9020/publish/zsh-5.8.tar.gz")
+			// m.Cmd("web.spide_rewrite", "create", "from", "https://sourceforge.net/projects/zsh/files/zsh/5.8/zsh-5.8.tar.xz", "to", "http://localhost:9020/publish/zsh-5.8.tar.gz")
 
 			m.Conf(web.FAVOR, "meta.render.shell", m.AddCmd(&ice.Command{Name: "render type name text", Help: "渲染引擎", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 				value, _ := m.Optionv(kit.MDB_VALUE).(map[string]interface{})

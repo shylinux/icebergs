@@ -294,7 +294,14 @@ func (f *Frame) Start(m *ice.Message, arg ...string) bool {
 			f.target = m.Source()
 			break
 		}
-		if s, e := os.Open(arg[0]); !m.Warn(e != nil, "%s", e) {
+		s, e := os.Open(arg[0])
+		if os.IsNotExist(e) && strings.HasPrefix(arg[0], "usr") {
+			ls := strings.Split(arg[0], "/")
+			m.Cmd("web.code.git.repos", ls[1], "usr/"+ls[1])
+			s, e = os.Open(arg[0])
+		}
+
+		if !m.Warn(e != nil, "%s", e) {
 			defer s.Close()
 
 			buf := bytes.NewBuffer(make([]byte, 0, 4096))

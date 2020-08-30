@@ -74,7 +74,7 @@ var Index = &ice.Context{Name: GIT, Help: "代码库",
 			})
 		}},
 
-		GIT: {Name: "git port=auto path=auto auto 启动:button 构建:button 下载:button", Help: "编辑器", Action: map[string]*ice.Action{
+		GIT: {Name: "git port=auto path=auto auto 构建 下载", Help: "编辑器", Action: map[string]*ice.Action{
 			"download": {Name: "download", Help: "下载", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmdy(code.INSTALL, "download", m.Conf(GIT, kit.META_SOURCE))
 			}},

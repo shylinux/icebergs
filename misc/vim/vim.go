@@ -52,7 +52,7 @@ var Index = &ice.Context{Name: VIM, Help: "编辑器",
 			m.Cmd("web.spide_rewrite", "create", "from", "https://raw.githubusercontent.com/shylinux/contexts/master/etc/conf/plug.vim", "to", "http://localhost:9020/publish/plug.vim")
 			m.Cmd("nfs.file_rewrite", "create", "from", "etc/conf/plug.vim", "to", "https://raw.githubusercontent.com/shylinux/contexts/master/etc/conf/plug.vim")
 		}},
-		VIM: {Name: "vim port=auto path=auto auto 启动:button 构建:button 下载:button", Help: "编辑器", Action: map[string]*ice.Action{
+		VIM: {Name: "vim port=auto path=auto auto 构建 下载", Help: "编辑器", Action: map[string]*ice.Action{
 			"download": {Name: "download", Help: "下载", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmdy(code.INSTALL, "download", m.Conf(VIM, kit.META_SOURCE))
 			}},

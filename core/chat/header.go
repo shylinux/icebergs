@@ -2,6 +2,7 @@ package chat
 
 import (
 	ice "github.com/shylinux/icebergs"
+	"github.com/shylinux/icebergs/base/aaa"
 	"github.com/shylinux/icebergs/base/nfs"
 	kit "github.com/shylinux/toolkits"
 
@@ -42,6 +43,10 @@ func init() {
 		},
 		Commands: map[string]*ice.Command{
 			"/" + HEADER: {Name: "/header", Help: "标题栏", Action: map[string]*ice.Action{
+				"userrole": {Name: "userrole", Help: "登录检查", Hand: func(m *ice.Message, arg ...string) {
+					m.Echo(aaa.UserRole(m, m.Option("who")))
+				}},
+
 				CHECK: {Name: "check", Help: "登录检查", Hand: func(m *ice.Message, arg ...string) {
 					m.Echo(m.Option(ice.MSG_USERNAME))
 				}},

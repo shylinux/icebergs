@@ -3,6 +3,8 @@ package aaa
 import (
 	ice "github.com/shylinux/icebergs"
 	kit "github.com/shylinux/toolkits"
+
+	"strings"
 )
 
 const ( // 用户角色
@@ -108,13 +110,13 @@ func init() {
 		Commands: map[string]*ice.Command{
 			ROLE: {Name: "role [role [user...]]", Help: "角色", Action: map[string]*ice.Action{
 				White: {Name: "white role chain...", Help: "白名单", Hand: func(m *ice.Message, arg ...string) {
-					_role_white(m, arg[0], kit.Keys(arg[1:]), true)
+					_role_white(m, arg[0], strings.ReplaceAll(kit.Keys(arg[1:]), "/", "."), true)
 				}},
 				Black: {Name: "black role chain...", Help: "黑名单", Hand: func(m *ice.Message, arg ...string) {
-					_role_black(m, arg[0], kit.Keys(arg[1:]), true)
+					_role_black(m, arg[0], strings.ReplaceAll(kit.Keys(arg[1:]), "/", "."), true)
 				}},
 				Right: {Name: "right role chain...", Help: "查看权限", Hand: func(m *ice.Message, arg ...string) {
-					if _role_right(m, arg[0], kit.Split(kit.Keys(arg[1:]), ".")...) {
+					if _role_right(m, arg[0], kit.Split(strings.ReplaceAll(kit.Keys(arg[1:]), "/", "."), ".")...) {
 						m.Echo(OK)
 					}
 				}},

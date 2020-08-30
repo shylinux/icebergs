@@ -54,7 +54,7 @@ func _serve_login(msg *ice.Message, cmds []string, w http.ResponseWriter, r *htt
 			msg.Render(STATUS, 401, "not login")
 			return cmds, false
 		}
-		if !msg.Right(msg.Option(ice.MSG_USERURL)) {
+		if msg.Warn(!msg.Right(msg.Option(ice.MSG_USERURL))) {
 			msg.Render(STATUS, 403, "not auth")
 			return cmds, false
 		}

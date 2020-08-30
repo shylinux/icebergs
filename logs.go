@@ -52,8 +52,8 @@ func (m *Message) log(level string, str string, arg ...interface{}) *Message {
 
 	switch level {
 	case LOG_INFO, "send", "recv":
-		if len(str) > 200 {
-			str = str[:200]
+		if len(str) > 1000 {
+			str = str[:1000]
 		}
 	}
 	// 输出日志
@@ -77,7 +77,10 @@ func (m *Message) Info(str string, arg ...interface{}) *Message {
 }
 func (m *Message) Warn(err bool, arg ...interface{}) bool {
 	if err {
-		m.meta[MSG_RESULT] = append([]string{ErrWarn}, kit.Simple(arg...)...)
+		list := kit.Simple(arg...)
+		if len(list) > 1 || len(m.meta[MSG_RESULT]) > 0 && m.meta[MSG_RESULT][0] != ErrWarn {
+			m.meta[MSG_RESULT] = append([]string{ErrWarn}, list...)
+		}
 		return m.log(LOG_WARN, fmt.Sprint(arg...)) != nil
 	}
 	return false

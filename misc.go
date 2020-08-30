@@ -45,7 +45,7 @@ func (m *Message) Event(key string, arg ...string) *Message {
 	return m
 }
 func (m *Message) Right(arg ...interface{}) bool {
-	return m.Option(MSG_USERROLE) == "root" || !m.Warn(m.Cmdx("aaa.role", "right", m.Option(MSG_USERROLE), kit.Keys(arg...)) != "ok", ErrNotAuth, m.Option(MSG_USERROLE), " of ", strings.Join(kit.Simple(arg), "."))
+	return m.Option(MSG_USERROLE) == "root" || !m.Warn(m.Cmdx("aaa.role", "right", m.Option(MSG_USERROLE), strings.ReplaceAll(kit.Keys(arg...), "/", ".")) != "ok", ErrNotAuth, m.Option(MSG_USERROLE), " of ", strings.Join(kit.Simple(arg), "."))
 }
 func (m *Message) Space(arg interface{}) []string {
 	if arg == nil || arg == "" || kit.Format(arg) == m.Conf("cli.runtime", "node.name") {

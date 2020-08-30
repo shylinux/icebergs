@@ -407,7 +407,7 @@ func init() {
 			}},
 			FIELD: {Name: "field name cmd", Help: "插件", Action: map[string]*ice.Action{
 				"run": {Name: "run", Help: "运行", Hand: func(m *ice.Message, arg ...string) {
-					if m.Right(arg[1:]) {
+					if !m.Warn(!m.Right(arg[1:]), ice.ErrNotAuth, arg[1:]) {
 						m.Cmdy(arg[1:])
 					}
 				}},

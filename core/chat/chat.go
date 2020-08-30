@@ -171,7 +171,7 @@ var Index = &ice.Context{Name: "chat", Help: "聊天中心",
 				}
 			}
 
-			if m.Right(m.Option(ice.MSG_USERURL), m.Optionv(ice.MSG_CMDS)) {
+			if m.Warn(m.Right(m.Option(ice.MSG_USERURL), m.Optionv(ice.MSG_CMDS))) {
 				return
 			}
 
@@ -247,7 +247,7 @@ var Index = &ice.Context{Name: "chat", Help: "聊天中心",
 				return
 			}
 
-			if !m.Right(cmd, arg[1]) {
+			if m.Warn(!m.Right(cmd, arg[1])) {
 				m.Render("status", 403, "not auth")
 				return
 			}

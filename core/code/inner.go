@@ -16,7 +16,7 @@ func _inner_ext(name string) string {
 	return strings.ToLower(kit.Select(path.Base(name), strings.TrimPrefix(path.Ext(name), ".")))
 }
 func _inner_list(m *ice.Message, ext, file, dir string, arg ...string) {
-	if !m.Right(strings.Split(dir, "/"), file) {
+	if m.Warn(!m.Right(dir, file), ice.ErrNotAuth, path.Join(dir, file)) {
 		return
 	}
 	if m.Cmdy(mdb.RENDER, ext, file, dir, arg); m.Result() != "" {

@@ -126,7 +126,7 @@ func _space_echo(msg *ice.Message, source, target []string, c *websocket.Conn, n
 	msg.Log("send", "%v->%v %v %v", source, target, msg.Detailv(), msg.Format("meta"))
 }
 func _space_exec(msg *ice.Message, source, target []string, c *websocket.Conn, name string) {
-	if msg.Right(msg.Detailv()) {
+	if !msg.Warn(!msg.Right(msg.Detailv()), ice.ErrNotAuth) {
 		msg = msg.Cmd()
 	}
 	msg.Set("_option")
@@ -145,9 +145,13 @@ func _space_handle(m *ice.Message, safe bool, send map[string]*ice.Message, c *w
 			msg.Log("recv", "%v<-%v %s %v", target, source, msg.Detailv(), msg.Format("meta"))
 
 			if len(target) == 0 {
-				msg.Option(ice.MSG_USERROLE, aaa.UserRole(msg, msg.Option(ice.MSG_USERNAME)))
+				if msg.Option(ice.MSG_USERROLE, aaa.UserRole(msg, msg.Option(ice.MSG_USERNAME))) == aaa.VOID {
+					role := msg.Cmdx(SPIDE, SPIDE_DEV, SPIDE_MSG, SPIDE_GET, "/chat/header", "_action", aaa.USERROLE, "who", msg.Option(ice.MSG_USERNAME))
+					msg.Option(ice.MSG_USERROLE, kit.Select(role, aaa.TECH, role == aaa.ROOT))
+				}
+
 				msg.Log_AUTH(aaa.USERNAME, msg.Option(ice.MSG_USERNAME), aaa.USERROLE, msg.Option(ice.MSG_USERROLE))
-				if msg.Optionv(ice.MSG_HANDLE, "true"); !msg.Warn(!safe, "no right") {
+				if msg.Optionv(ice.MSG_HANDLE, "true"); !msg.Warn(!safe, ice.ErrNotAuth) {
 					// 本地执行
 					msg.Option("_dev", name)
 					task.Put(nil, func(task *task.Task) error {

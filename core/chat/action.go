@@ -124,7 +124,7 @@ func _action_show(m *ice.Message, river, storm, index string, arg ...string) {
 				cmds = kit.Simple(kit.Keys(value[CTX], value[CMD]), arg)
 			}
 		})
-	} else if m.Right(index) {
+	} else if !m.Warn(!m.Right(index), ice.ErrNotAuth) {
 		// 定制命令
 		cmds = kit.Simple(index, arg)
 	} else {
@@ -141,7 +141,7 @@ func _action_show(m *ice.Message, river, storm, index string, arg ...string) {
 		m.Render("status", 404, "not found")
 		return
 	}
-	if !m.Right(cmds) {
+	if m.Warn(!m.Right(cmds), ice.ErrNotAuth) {
 		m.Render("status", 403, "not auth")
 		return
 	}

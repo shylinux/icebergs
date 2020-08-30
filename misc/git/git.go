@@ -10,6 +10,7 @@ import (
 	"github.com/shylinux/icebergs/core/code"
 	kit "github.com/shylinux/toolkits"
 
+	"net/http"
 	"os"
 	"path"
 	"strings"
@@ -420,6 +421,14 @@ var Index = &ice.Context{Name: GIT, Help: "代码库",
 				}
 			})
 			m.Sort("name")
+		}},
+
+		"/repos/": {Name: "/repos/", Help: "缓存池", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			switch arg[2] {
+			case "info":
+				http.ServeFile(m.W, m.R, path.Join("demo.git", path.Join(arg[3:]...)))
+			}
+			m.Render(ice.RENDER_VOID)
 		}},
 	},
 }

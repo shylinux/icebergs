@@ -347,6 +347,8 @@ var Index = &ice.Context{Name: "ssh", Help: "终端模块",
 			"PS2", []interface{}{"count", " ", "target", "> "},
 		)},
 		REMOTE: {Name: "remote", Help: "远程连接", Value: kit.Data()},
+
+		"dial": {Name: "dial", Help: "远程连接", Value: kit.Data()},
 	},
 	Commands: map[string]*ice.Command{
 		ice.CTX_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) { m.Load() }},
@@ -354,6 +356,7 @@ var Index = &ice.Context{Name: "ssh", Help: "终端模块",
 			if _, ok := m.Target().Server().(*Frame); ok {
 				m.Done()
 			}
+			m.Save()
 		}},
 
 		SOURCE: {Name: "source file", Help: "脚本解析", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {

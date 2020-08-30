@@ -171,7 +171,7 @@ var Index = &ice.Context{Name: "chat", Help: "聊天中心",
 				}
 			}
 
-			if m.Warn(m.Right(m.Option(ice.MSG_USERURL), m.Optionv(ice.MSG_CMDS))) {
+			if m.Warn(!m.Right(m.Option(ice.MSG_USERURL), m.Optionv(ice.MSG_CMDS))) {
 				return
 			}
 

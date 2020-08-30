@@ -31,6 +31,7 @@ type Config struct {
 type Action struct {
 	Name string
 	Help string
+	List []interface{}
 	Hand func(m *Message, arg ...string)
 }
 type Command struct {
@@ -132,6 +133,7 @@ func (c *Context) Register(s *Context, x Server, name ...string) *Context {
 	for _, n := range name {
 		Name(n, s)
 	}
+	s.Merge(s, x)
 
 	Pulse.Log("register", "%s <- %s", c.Name, s.Name)
 	if c.contexts == nil {
@@ -155,6 +157,15 @@ func (c *Context) Merge(s *Context, x Server) *Context {
 	}
 	for k, v := range s.Commands {
 		c.Commands[k] = v
+		if v.Meta == nil {
+			v.Meta = kit.Dict()
+		}
+		for k, a := range v.Action {
+			if a.List != nil {
+				v.Meta[a.Help] = a.List
+				v.Meta[k] = a.List
+			}
+		}
 	}
 	for k, v := range s.Configs {
 		c.Configs[k] = v

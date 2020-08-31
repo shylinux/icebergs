@@ -3,24 +3,25 @@ package ssh
 import (
 	ice "github.com/shylinux/icebergs"
 	"github.com/shylinux/icebergs/base/aaa"
+	"github.com/shylinux/icebergs/base/cli"
 	"github.com/shylinux/icebergs/base/mdb"
 	"github.com/shylinux/icebergs/base/nfs"
 	kit "github.com/shylinux/toolkits"
 
+	"bytes"
 	"encoding/base64"
 	"encoding/binary"
 	"errors"
 	"github.com/kr/pty"
 	"golang.org/x/crypto/ssh"
-	"syscall"
-	"unsafe"
-
-	"bytes"
 	"io"
 	"net"
 	"os"
 	"os/exec"
 	"path"
+	"strings"
+	"syscall"
+	"unsafe"
 )
 
 type Winsize struct {
@@ -71,6 +72,7 @@ func init() {
 					for i := 0; i < len(arg); i += 2 {
 						m.Option(arg[i], arg[i+1])
 					}
+
 					connect, e := ssh.Dial("tcp", m.Option("hostport"), &ssh.ClientConfig{
 						User: m.Option("username"), Auth: []ssh.AuthMethod{ssh.Password(m.Option("password"))},
 						HostKeyCallback: ssh.InsecureIgnoreHostKey(),
@@ -81,7 +83,6 @@ func init() {
 						"hostport", m.Option("hostport"),
 						"username", m.Option("username"),
 						"password", m.Option("password"),
-
 						"connect", connect,
 					))
 					m.Echo(h)
@@ -118,8 +119,9 @@ func init() {
 				})
 			}},
 			"listen": {Name: "listen host:port", Help: "守护进程", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-				key, err := ssh.ParsePrivateKey([]byte(m.Cmdx(nfs.CAT, path.Join(os.Getenv("HOME"), ".ssh/id_rsa"))))
-				m.Assert(err)
+				m.Richs(aaa.USER, "", cli.UserName, func(key string, value map[string]interface{}) {
+					value["publicKey"] = m.Cmdx(nfs.CAT, path.Join(os.Getenv("HOME"), ".ssh/id_rsa.pub"))
+				})
 
 				config := &ssh.ServerConfig{
 					BannerCallback: func(conn ssh.ConnMetadata) string {
@@ -130,30 +132,19 @@ func init() {
 						res := errors.New(ice.ErrNotAuth)
 						m.TryCatch(m, true, func(m *ice.Message) {
 							m.Richs(aaa.USER, "", conn.User(), func(k string, value map[string]interface{}) {
-								if value["publicKey"] == nil {
+								if kit.Format(value["publicKey"]) == "" {
 									return
 								}
-								if value["publicKey"] == "" {
-									return
+								if s, e := base64.StdEncoding.DecodeString(strings.Split(kit.Format(value["publicKey"]), " ")[1]); !m.Warn(e != nil, e) {
+									if pub, e := ssh.ParsePublicKey([]byte(s)); !m.Warn(e != nil) {
+										if bytes.Compare(pub.Marshal(), key.Marshal()) == 0 {
+											res = nil
+										}
+									}
 								}
-								s, e := base64.StdEncoding.DecodeString(kit.Format(value["publicKey"]))
-								m.Assert(e)
-
-								pub, e := ssh.ParsePublicKey([]byte(s))
-								m.Assert(e)
-
-								from, save := key.Marshal(), pub.Marshal()
-								if len(save) != len(from) || bytes.Compare(from, save) != 0 {
-									return
-								}
-								res = nil
 							})
 						})
-						m.Info("%s %s->%s %#s", conn.User(), conn.RemoteAddr(), conn.LocalAddr(), res)
-						if res != nil {
-							return nil, res
-						}
-						return &ssh.Permissions{Extensions: map[string]string{"key-id": "1"}}, nil
+						return &ssh.Permissions{Extensions: map[string]string{"method": "publickey"}}, res
 					},
 					// KeyboardInteractiveCallback: func(conn ssh.ConnMetadata, client ssh.KeyboardInteractiveChallenge) (*ssh.Permissions, error) {
 					// 	m.Debug("what")
@@ -163,65 +154,72 @@ func init() {
 						res := errors.New(ice.ErrNotAuth)
 						m.TryCatch(m, true, func(m *ice.Message) {
 							m.Richs(aaa.USER, "", conn.User(), func(k string, value map[string]interface{}) {
-								if string(password) != kit.Format(value["password"]) {
-									return
+								if string(password) == kit.Format(value["password"]) {
+									res = nil
 								}
-								res = nil
 							})
 						})
-						m.Info("%s %s->%s %#s", conn.User(), conn.RemoteAddr(), conn.LocalAddr(), res)
-						if res != nil {
-							return nil, res
-						}
-						return &ssh.Permissions{Extensions: map[string]string{"key-id": "3"}}, nil
+						return &ssh.Permissions{Extensions: map[string]string{"method": "password"}}, res
 					},
 					AuthLogCallback: func(conn ssh.ConnMetadata, method string, err error) {
-						m.Debug("what")
+						m.Info("%s %s->%s %v", conn.User(), conn.RemoteAddr(), conn.LocalAddr(), err)
 					},
 				}
-				config.AddHostKey(key)
+
+				if key, err := ssh.ParsePrivateKey([]byte(m.Cmdx(nfs.CAT, path.Join(os.Getenv("HOME"), ".ssh/id_rsa")))); m.Assert(err) {
+					config.AddHostKey(key)
+				}
 
 				l, e := net.Listen("tcp", arg[0])
 				m.Assert(e)
+				m.Logs("listen", "address", l.Addr())
+
 				for {
 					c, e := l.Accept()
-					m.Assert(e)
+					if m.Warn(e != nil, e) {
+						continue
+					}
 
 					go func(c net.Conn) {
-						m.Info("connect")
+						defer c.Close()
+						defer m.Logs("disconn", "remote", c.RemoteAddr(), "local", c.LocalAddr())
+
 						_, sessions, req, err := ssh.NewServerConn(c, config)
-						if err != nil {
+						if m.Warn(err != nil, err) {
 							return
 						}
 						go ssh.DiscardRequests(req)
-						m.Info("connect")
 
 						for session := range sessions {
-							channel, requests, e := session.Accept()
-							m.Assert(e)
-							m.Info("connect")
+							channel, requests, err := session.Accept()
+							if m.Warn(err != nil, err) {
+								continue
+							}
 
 							go func(channel ssh.Channel, requests <-chan *ssh.Request) {
-								m.Info("channel")
-
+								defer m.Logs("dischan", "remote", c.RemoteAddr(), "local", c.LocalAddr())
+								m.Logs("channel", "remote", c.RemoteAddr(), "local", c.LocalAddr())
 								shell := kit.Select("bash", os.Getenv("SHELL"))
 								list := []string{"PATH=" + os.Getenv("PATH")}
 
-								f, tty, err := pty.Open()
-								m.Assert(err)
-								defer tty.Close()
+								tty, f, err := pty.Open()
+								if m.Warn(err != nil, err) {
+									return
+								}
+								defer f.Close()
 
 								for request := range requests {
-									m.Info("request %v", request.Type)
+									m.Logs("request", "type", request.Type)
+
 									switch request.Type {
 									case "pty-req":
 										termLen := request.Payload[3]
 										termEnv := string(request.Payload[4 : termLen+4])
-										_ssh_size(f.Fd(), request.Payload[termLen+4:])
+										_ssh_size(tty.Fd(), request.Payload[termLen+4:])
 										list = append(list, "TERM="+termEnv)
 
 									case "window-change":
-										_ssh_size(f.Fd(), request.Payload)
+										_ssh_size(tty.Fd(), request.Payload)
 
 									case "env":
 										var env struct {
@@ -237,9 +235,9 @@ func init() {
 										_ssh_exec(m, shell, []string{"-c", string(request.Payload[4 : request.Payload[3]+4])}, list,
 											channel, func() { channel.Close() })
 									case "shell":
-										_ssh_exec(m, shell, nil, list, tty, func() { channel.Close() })
-										go func() { io.Copy(channel, f) }()
-										go func() { io.Copy(f, channel) }()
+										_ssh_exec(m, shell, nil, list, f, func() { channel.Close() })
+										go func() { io.Copy(channel, tty) }()
+										go func() { io.Copy(tty, channel) }()
 									}
 									request.Reply(true, nil)
 								}

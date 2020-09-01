@@ -186,6 +186,10 @@ func (f *Frame) alias(m *ice.Message, ls []string) []string {
 func (f *Frame) parse(m *ice.Message, line string) string {
 	for _, one := range kit.Split(line, ";", ";", ";") {
 		m.Log_IMPORT("stdin", one, "length", len(one))
+		async, one := false, strings.TrimSpace(one)
+		if strings.TrimSuffix(one, "&") != one {
+			async, one = true, strings.TrimSuffix(one, "&")
+		}
 
 		ls := kit.Split(one)
 		if m.Option("scan_mode") == "scan" {
@@ -204,6 +208,12 @@ func (f *Frame) parse(m *ice.Message, line string) string {
 		ls = f.change(msg, ls)
 		ls = f.option(msg, ls)
 		if len(ls) == 0 {
+			continue
+		}
+
+		if async {
+			m.Debug("async %v", ls)
+			go msg.Cmd(ls[0], ls[1:])
 			continue
 		}
 

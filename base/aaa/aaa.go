@@ -1,20 +1,21 @@
 package aaa
 
 import (
-	"github.com/shylinux/icebergs"
-	"github.com/shylinux/toolkits"
+	ice "github.com/shylinux/icebergs"
+	kit "github.com/shylinux/toolkits"
 )
 
 const (
 	ErrNotAuth = "not auth: "
 )
 const (
-	USERNICK = "usernick"
 	USERZONE = "userzone"
+	USERNICK = "usernick"
 	USERNAME = "username"
 	PASSWORD = "password"
 	USERROLE = "userrole"
 	USERNODE = "usernode"
+	HOSTPORT = "hostport"
 
 	SESSID = "sessid"
 )

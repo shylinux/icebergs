@@ -347,7 +347,6 @@ const (
 )
 
 var Index = &ice.Context{Name: "ssh", Help: "终端模块",
-	Caches: map[string]*ice.Cache{},
 	Configs: map[string]*ice.Config{
 		SOURCE: {Name: "prompt", Help: "命令提示", Value: kit.Data(
 			web.FAVOR, "cmd.history",
@@ -366,6 +365,8 @@ var Index = &ice.Context{Name: "ssh", Help: "终端模块",
 			if _, ok := m.Target().Server().(*Frame); ok {
 				m.Done()
 			}
+			m.Conf(SESSION, kit.MDB_HASH, "")
+			m.Conf(CONNECT, kit.MDB_HASH, "")
 			m.Save()
 		}},
 

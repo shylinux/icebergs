@@ -1,6 +1,9 @@
 package ssh
 
 import (
+	"fmt"
+	"time"
+
 	ice "github.com/shylinux/icebergs"
 	"github.com/shylinux/icebergs/base/aaa"
 	"github.com/shylinux/icebergs/base/mdb"
@@ -50,214 +53,356 @@ func _ssh_exec(m *ice.Message, cmd string, arg []string, env []string, tty io.Re
 	err := c.Start()
 	m.Assert(err)
 
-	go func() {
+	m.Gos(m, func(m *ice.Message) {
 		defer done()
-		_, err := c.Process.Wait()
-		m.Assert(err)
-	}()
+		c.Process.Wait()
+	})
+}
+func _ssh_close(m *ice.Message, c net.Conn, channel ssh.Channel) {
+	defer channel.Close()
+	channel.Write([]byte(m.Conf(PUBLIC, "meta.goodbye")))
+}
+func _ssh_reopen(m *ice.Message, c net.Conn, channel ssh.Channel) {
+}
+func _ssh_handle(m *ice.Message, hostname string, c net.Conn, channel ssh.Channel, requests <-chan *ssh.Request) {
+	m.Logs(CHANNEL, aaa.HOSTPORT, c.RemoteAddr(), "->", c.LocalAddr())
+	defer m.Logs("dischan", aaa.HOSTPORT, c.RemoteAddr(), "->", c.LocalAddr())
+
+	shell := kit.Select("bash", os.Getenv("SHELL"))
+	list := []string{"PATH=" + os.Getenv("PATH")}
+
+	tty, f, err := pty.Open()
+	if m.Warn(err != nil, err) {
+		return
+	}
+	defer f.Close()
+
+	h := m.Cmdx(mdb.INSERT, m.Prefix(SESSION), "", mdb.HASH, aaa.HOSTPORT, c.RemoteAddr().String(), kit.MDB_STATUS, "open", "tty", tty.Name())
+
+	for request := range requests {
+		m.Logs(REQUEST, aaa.HOSTPORT, c.RemoteAddr(), "type", request.Type)
+
+		switch request.Type {
+		case "pty-req":
+			termLen := request.Payload[3]
+			termEnv := string(request.Payload[4 : termLen+4])
+			_ssh_size(tty.Fd(), request.Payload[termLen+4:])
+			list = append(list, "TERM="+termEnv)
+
+		case "window-change":
+			_ssh_size(tty.Fd(), request.Payload)
+
+		case "env":
+			var env struct {
+				Name  string
+				Value string
+			}
+			if err := ssh.Unmarshal(request.Payload, &env); err != nil {
+				continue
+			}
+			list = append(list, env.Name+"="+env.Value)
+
+		case "exec":
+			_ssh_exec(m, shell, []string{"-c", string(request.Payload[4 : request.Payload[3]+4])}, list,
+				channel, func() { channel.Close() })
+		case "shell":
+			_ssh_exec(m, shell, nil, list, f, func() {
+				defer m.Cmd(mdb.MODIFY, m.Prefix(SESSION), "", mdb.HASH, kit.MDB_HASH, h, kit.MDB_STATUS, "close")
+				_ssh_close(m, c, channel)
+			})
+			m.Gos(m, func(m *ice.Message) {
+				r, w := io.Pipe()
+				bio := io.TeeReader(channel, w)
+				m.Gos(m, func(m *ice.Message) {
+					i, buf := 0, make([]byte, 1024)
+					for {
+						n, e := bio.Read(buf[i:])
+						if e != nil {
+							break
+						}
+						switch buf[i] {
+						case ' ':
+						case '\r', '\n':
+							cmd := strings.TrimSpace(string(buf[:i+n]))
+							m.Cmd(mdb.MODIFY, m.Prefix(SESSION), "", mdb.HASH, kit.MDB_HASH, h, "cmd", cmd)
+							m.Log_IMPORT(h, hostname, "cmd", cmd)
+							i = 0
+						}
+						if i += n; i >= 1024 {
+							i = 0
+						}
+					}
+				})
+				io.Copy(tty, r)
+			})
+			m.Gos(m, func(m *ice.Message) {
+				io.Copy(channel, tty)
+			})
+		}
+		request.Reply(true, nil)
+	}
+}
+func _ssh_listen(m *ice.Message, hostport string) {
+	h := m.Cmdx(mdb.INSERT, m.Prefix(LISTEN), "", mdb.HASH, aaa.HOSTPORT, hostport, kit.MDB_STATUS, "listen")
+	defer m.Cmd(mdb.MODIFY, m.Prefix(LISTEN), "", mdb.HASH, kit.MDB_HASH, h, kit.MDB_STATUS, "close")
+
+	config := _ssh_config(m)
+
+	l, e := net.Listen("tcp", hostport)
+	m.Assert(e)
+	defer l.Close()
+	m.Logs(LISTEN, ADDRESS, l.Addr())
+
+	for {
+		c, e := l.Accept()
+		if m.Warn(e != nil, e) {
+			continue
+		}
+
+		func(c net.Conn) {
+			m.Gos(m.Spawn(), func(msg *ice.Message) {
+				defer c.Close()
+
+				m.Logs(CONNECT, aaa.HOSTPORT, c.RemoteAddr(), "->", c.LocalAddr())
+				defer m.Logs("disconn", aaa.HOSTPORT, c.RemoteAddr(), "->", c.LocalAddr())
+
+				sc, sessions, req, err := ssh.NewServerConn(c, config)
+				if m.Warn(err != nil, err) {
+					return
+				}
+
+				hostname := sc.Permissions.Extensions["hostname"]
+				begin := time.Now()
+				h := m.Cmdx(mdb.INSERT, m.Prefix(CONNECT), "", mdb.HASH, aaa.HOSTPORT, c.RemoteAddr().String(), kit.MDB_STATUS, "connect", "hostname", hostname)
+				defer m.Cmd(mdb.MODIFY, m.Prefix(CONNECT), "", mdb.HASH, kit.MDB_HASH, h, kit.MDB_STATUS, "close", "close_time", time.Now().Format(ice.MOD_TIME), "duration", time.Now().Sub(begin).String())
+
+				m.Gos(m, func(m *ice.Message) {
+					ssh.DiscardRequests(req)
+				})
+
+				for session := range sessions {
+					channel, requests, err := session.Accept()
+					if m.Warn(err != nil, err) {
+						continue
+					}
+
+					func(channel ssh.Channel, requests <-chan *ssh.Request) {
+						m.Gos(m, func(m *ice.Message) {
+							_ssh_handle(m, hostname, c, channel, requests)
+						})
+					}(channel, requests)
+				}
+			})
+		}(c)
+	}
+}
+func _ssh_config(m *ice.Message) *ssh.ServerConfig {
+	config := &ssh.ServerConfig{
+		BannerCallback: func(conn ssh.ConnMetadata) string {
+			m.Log_IMPORT(aaa.HOSTPORT, conn.RemoteAddr(), aaa.USERNAME, conn.User())
+			return m.Conf(PUBLIC, "meta.welcome")
+		},
+		PublicKeyCallback: func(conn ssh.ConnMetadata, key ssh.PublicKey) (*ssh.Permissions, error) {
+			meta, res := map[string]string{}, errors.New(ice.ErrNotAuth)
+			m.Richs(PUBLIC, "", kit.MDB_FOREACH, func(k string, value map[string]interface{}) {
+				if !strings.HasPrefix(kit.Format(value[kit.MDB_NAME]), conn.User()+"@") {
+					return
+				}
+				if s, e := base64.StdEncoding.DecodeString(kit.Format(value[kit.MDB_TEXT])); !m.Warn(e != nil, e) {
+					if pub, e := ssh.ParsePublicKey([]byte(s)); !m.Warn(e != nil) {
+						if bytes.Compare(pub.Marshal(), key.Marshal()) == 0 {
+							m.Log_AUTH(aaa.HOSTPORT, conn.RemoteAddr(), aaa.USERNAME, conn.User(), "publickey", value[kit.MDB_NAME])
+							meta["hostname"] = kit.Format(value[kit.MDB_NAME])
+							res = nil
+						}
+					}
+				}
+			})
+			return &ssh.Permissions{Extensions: meta}, res
+		},
+		PasswordCallback: func(conn ssh.ConnMetadata, password []byte) (*ssh.Permissions, error) {
+			res := errors.New(ice.ErrNotAuth)
+			m.Richs(aaa.USER, "", conn.User(), func(k string, value map[string]interface{}) {
+				if string(password) == kit.Format(value[aaa.PASSWORD]) {
+					m.Log_AUTH(aaa.HOSTPORT, conn.RemoteAddr(), aaa.USERNAME, conn.User(), aaa.PASSWORD, strings.Repeat("*", len(kit.Format(value[aaa.PASSWORD]))))
+					res = nil
+				}
+			})
+			return &ssh.Permissions{}, res
+		},
+	}
+
+	if key, err := ssh.ParsePrivateKey([]byte(m.Cmdx(nfs.CAT, path.Join(os.Getenv("HOME"), m.Conf(PUBLIC, "meta.private"))))); m.Assert(err) {
+		config.AddHostKey(key)
+	}
+	return config
+}
+func _ssh_dial(m *ice.Message, username, hostport string) (*ssh.Client, error) {
+	methods := []ssh.AuthMethod{}
+	if key, e := ssh.ParsePrivateKey([]byte(m.Cmdx(nfs.CAT, path.Join(os.Getenv("HOME"), m.Conf(PUBLIC, "meta.private"))))); !m.Warn(e != nil) {
+		methods = append(methods, ssh.PublicKeys(key))
+	} else {
+		return nil, e
+	}
+
+	connect, e := ssh.Dial("tcp", hostport, &ssh.ClientConfig{User: username, Auth: methods,
+		HostKeyCallback: func(hostname string, remote net.Addr, key ssh.PublicKey) error {
+			m.Logs(CONNECT, "hostname", hostname, aaa.HOSTPORT, remote.String())
+			return nil
+		},
+	})
+	return connect, e
 }
 
 const (
+	ADDRESS = "address"
+	CONNECT = "connect"
+	CHANNEL = "channel"
+	SESSION = "session"
+	REQUEST = "request"
+)
+const (
+	METHOD = "method"
 	PUBLIC = "public"
 	LISTEN = "listen"
+	DIAL   = "dial"
 )
 
 func init() {
 	Index.Merge(&ice.Context{
 		Configs: map[string]*ice.Config{
-			PUBLIC: {Name: PUBLIC, Help: "公钥", Value: kit.Data(kit.MDB_SHORT, kit.MDB_TEXT)},
-			LISTEN: {Name: LISTEN, Help: "服务", Value: kit.Data()},
+			PUBLIC: {Name: PUBLIC, Help: "公钥", Value: kit.Data(
+				"private", ".ssh/id_rsa", "public", ".ssh/id_rsa.pub",
+				"welcome", "\r\nwelcome to context world\r\n",
+				"goodbye", "\r\ngoodbye of context world\r\n",
+				kit.MDB_SHORT, kit.MDB_TEXT,
+			)},
+			LISTEN: {Name: LISTEN, Help: "服务", Value: kit.Data(kit.MDB_SHORT, aaa.HOSTPORT,
+				mdb.FIELDS, "time,hash,hostport,status",
+			)},
+			CONNECT: {Name: CONNECT, Help: "连接", Value: kit.Data(
+				mdb.FIELDS, "time,hash,hostport,status,duration,close_time,hostname",
+			)},
+			SESSION: {Name: SESSION, Help: "会话", Value: kit.Data(
+				mdb.FIELDS, "time,hash,hostport,status,tty,cmd",
+			)},
 
-			"dial": {Name: "dial", Help: "远程连接", Value: kit.Data()},
+			DIAL: {Name: DIAL, Help: "连接", Value: kit.Data(
+				mdb.FIELDS, "time,hash,hostport,username",
+			)},
 		},
 		Commands: map[string]*ice.Command{
-			PUBLIC: {Name: "public hash auto 创建 导入", Help: "公钥", Meta: kit.Dict(), Action: map[string]*ice.Action{
+			PUBLIC: {Name: "public hash=auto auto 添加 导出 导入", Help: "公钥", Action: map[string]*ice.Action{
 				mdb.IMPORT: {Name: "import", Help: "导入", List: kit.List(
-					kit.MDB_INPUT, "text", kit.MDB_NAME, "file", kit.MDB_VALUE, ".ssh/id_rsa.pub",
+					kit.MDB_INPUT, "text", kit.MDB_NAME, "file", kit.MDB_VALUE, ".ssh/authorized_keys",
 				), Hand: func(m *ice.Message, arg ...string) {
-					for _, pub := range strings.Split(m.Cmdx(nfs.CAT, path.Join(os.Getenv("HOME"), kit.Select(arg[0], arg, 1))), "\n") {
+					p := path.Join(os.Getenv("HOME"), kit.Select(arg[0], arg, 1))
+					for _, pub := range strings.Split(m.Cmdx(nfs.CAT, p), "\n") {
 						if len(pub) > 10 {
 							m.Cmd(PUBLIC, mdb.CREATE, pub)
 						}
 					}
+					m.Echo(p)
 				}},
-				mdb.CREATE: {Name: "create", Help: "创建", List: kit.List(
-					kit.MDB_INPUT, "textarea", kit.MDB_NAME, "publickey", kit.MDB_VALUE, "", kit.MDB_STYLE, kit.Dict("width", "200", "height", "100"),
+				mdb.EXPORT: {Name: "export", Help: "导出", List: kit.List(
+					kit.MDB_INPUT, "text", kit.MDB_NAME, "file", kit.MDB_VALUE, ".ssh/authorized_keys",
+				), Hand: func(m *ice.Message, arg ...string) {
+					list := []string{}
+					m.Richs(PUBLIC, "", kit.MDB_FOREACH, func(key string, value map[string]interface{}) {
+						list = append(list, fmt.Sprintf("%s %s %s", value[kit.MDB_TYPE], value[kit.MDB_TEXT], value[kit.MDB_NAME]))
+					})
+					if len(list) > 0 {
+						m.Cmdy(nfs.SAVE, path.Join(os.Getenv("HOME"), kit.Select(arg[0], arg, 1)), strings.Join(list, "\n")+"\n")
+					}
+				}},
+				mdb.CREATE: {Name: "create", Help: "添加", List: kit.List(
+					kit.MDB_INPUT, "textarea", kit.MDB_NAME, "publickey", kit.MDB_VALUE, "", kit.MDB_STYLE, kit.Dict("width", "800", "height", "100"),
 				), Hand: func(m *ice.Message, arg ...string) {
 					ls := kit.Split(kit.Select(arg[0], arg, 1))
-					m.Cmdy(mdb.INSERT, m.Prefix(PUBLIC), "", mdb.HASH, kit.MDB_TYPE, ls[0], kit.MDB_NAME, ls[len(ls)-1], kit.MDB_TEXT, strings.Join(ls[1:len(ls)-1], "+"))
+					m.Cmdy(mdb.INSERT, m.Prefix(PUBLIC), "", mdb.HASH, kit.MDB_TYPE, ls[0],
+						kit.MDB_NAME, ls[len(ls)-1], kit.MDB_TEXT, strings.Join(ls[1:len(ls)-1], "+"))
 				}},
 				mdb.DELETE: {Name: "delete", Help: "删除", Hand: func(m *ice.Message, arg ...string) {
 					m.Cmdy(mdb.DELETE, m.Prefix(PUBLIC), "", mdb.HASH, kit.MDB_HASH, m.Option(kit.MDB_HASH))
 				}},
 			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+				if len(arg) > 0 {
+					m.Option(mdb.FIELDS, "detail")
+				}
 				m.Cmdy(mdb.SELECT, m.Prefix(PUBLIC), "", mdb.HASH, kit.MDB_HASH, arg)
 				m.PushAction("删除")
 			}},
 
-			LISTEN: {Name: "listen host:port", Help: "服务", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-				m.Cmd(PUBLIC, mdb.IMPORT, ".ssh/id_rsa.pub")
-
-				config := &ssh.ServerConfig{
-					BannerCallback: func(conn ssh.ConnMetadata) string {
-						m.Logs("banner", "remote", conn.RemoteAddr(), aaa.USERNAME, conn.User())
-						return "hello context world\n"
-					},
-					PublicKeyCallback: func(conn ssh.ConnMetadata, key ssh.PublicKey) (*ssh.Permissions, error) {
-						res := errors.New(ice.ErrNotAuth)
-						m.Richs(PUBLIC, "", kit.MDB_FOREACH, func(k string, value map[string]interface{}) {
-							if !strings.HasPrefix(kit.Format(value[kit.MDB_NAME]), conn.User()+"@") {
-								return
-							}
-							if s, e := base64.StdEncoding.DecodeString(kit.Format(value[kit.MDB_TEXT])); !m.Warn(e != nil, e) {
-								if pub, e := ssh.ParsePublicKey([]byte(s)); !m.Warn(e != nil) {
-									if bytes.Compare(pub.Marshal(), key.Marshal()) == 0 {
-										m.Log_AUTH("remote", conn.RemoteAddr(), aaa.USERNAME, conn.User(), "publickey", value[kit.MDB_NAME])
-										res = nil
-									}
-								}
-							}
-						})
-						return &ssh.Permissions{Extensions: map[string]string{"method": "publickey"}}, res
-					},
-					// KeyboardInteractiveCallback: func(conn ssh.ConnMetadata, client ssh.KeyboardInteractiveChallenge) (*ssh.Permissions, error) {
-					// 	m.Debug("what")
-					// 	return &ssh.Permissions{Extensions: map[string]string{"key-id": "2"}}, nil
-					// },
-					PasswordCallback: func(conn ssh.ConnMetadata, password []byte) (*ssh.Permissions, error) {
-						res := errors.New(ice.ErrNotAuth)
-						m.Richs(aaa.USER, "", conn.User(), func(k string, value map[string]interface{}) {
-							if string(password) == kit.Format(value[aaa.PASSWORD]) {
-								m.Log_AUTH("remote", conn.RemoteAddr(), aaa.USERNAME, conn.User(), aaa.PASSWORD, strings.Repeat("*", len(kit.Format(value[aaa.PASSWORD]))))
-								res = nil
-							}
-						})
-						return &ssh.Permissions{Extensions: map[string]string{"method": aaa.PASSWORD}}, res
-					},
+			LISTEN: {Name: "listen hash auto", Help: "服务", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+				if len(arg) == 0 {
+					m.Option(mdb.FIELDS, m.Conf(LISTEN, kit.META_FIELDS))
+					m.Cmdy(mdb.SELECT, m.Prefix(LISTEN), "", mdb.HASH)
+					return
 				}
-
-				if key, err := ssh.ParsePrivateKey([]byte(m.Cmdx(nfs.CAT, path.Join(os.Getenv("HOME"), ".ssh/id_rsa")))); m.Assert(err) {
-					config.AddHostKey(key)
+				m.Gos(m, func(m *ice.Message) { _ssh_listen(m, arg[0]) })
+			}},
+			CONNECT: {Name: "connect hash auto 清理", Help: "连接", Action: map[string]*ice.Action{
+				mdb.PRUNES: {Name: "prunes", Help: "清理", Hand: func(m *ice.Message, arg ...string) {
+					m.Cmdy(mdb.PRUNES, m.Prefix(CONNECT), "", mdb.HASH, kit.MDB_STATUS, "close")
+				}},
+			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+				if len(arg) == 0 {
+					m.Option(mdb.FIELDS, m.Conf(CONNECT, kit.META_FIELDS))
+				} else {
+					m.Option(mdb.FIELDS, "detail")
 				}
-
-				l, e := net.Listen("tcp", arg[0])
-				m.Assert(e)
-				m.Logs(LISTEN, "address", l.Addr())
-
-				for {
-					c, e := l.Accept()
-					if m.Warn(e != nil, e) {
-						continue
-					}
-
-					go func(c net.Conn) {
-						defer c.Close()
-						defer m.Logs("disconn", "remote", c.RemoteAddr(), "->", c.LocalAddr())
-						m.Logs("connect", "remote", c.RemoteAddr(), "->", c.LocalAddr())
-
-						_, sessions, req, err := ssh.NewServerConn(c, config)
-						if m.Warn(err != nil, err) {
-							return
-						}
-						go ssh.DiscardRequests(req)
-
-						for session := range sessions {
-							channel, requests, err := session.Accept()
-							if m.Warn(err != nil, err) {
-								continue
-							}
-
-							go func(channel ssh.Channel, requests <-chan *ssh.Request) {
-								defer m.Logs("dischan", "remote", c.RemoteAddr(), "->", c.LocalAddr())
-								m.Logs("channel", "remote", c.RemoteAddr(), "->", c.LocalAddr())
-								shell := kit.Select("bash", os.Getenv("SHELL"))
-								list := []string{"PATH=" + os.Getenv("PATH")}
-
-								tty, f, err := pty.Open()
-								if m.Warn(err != nil, err) {
-									return
-								}
-								defer f.Close()
-
-								for request := range requests {
-									m.Logs("request", "remote", c.RemoteAddr(), "type", request.Type)
-
-									switch request.Type {
-									case "pty-req":
-										termLen := request.Payload[3]
-										termEnv := string(request.Payload[4 : termLen+4])
-										_ssh_size(tty.Fd(), request.Payload[termLen+4:])
-										list = append(list, "TERM="+termEnv)
-
-									case "window-change":
-										_ssh_size(tty.Fd(), request.Payload)
-
-									case "env":
-										var env struct {
-											Name  string
-											Value string
-										}
-										if err := ssh.Unmarshal(request.Payload, &env); err != nil {
-											continue
-										}
-										list = append(list, env.Name+"="+env.Value)
-
-									case "exec":
-										_ssh_exec(m, shell, []string{"-c", string(request.Payload[4 : request.Payload[3]+4])}, list,
-											channel, func() { channel.Close() })
-									case "shell":
-										_ssh_exec(m, shell, nil, list, f, func() { channel.Close() })
-										go func() { io.Copy(channel, tty) }()
-										go func() { io.Copy(tty, channel) }()
-									}
-									request.Reply(true, nil)
-								}
-							}(channel, requests)
-						}
-					}(c)
+				m.Cmdy(mdb.SELECT, m.Prefix(CONNECT), "", mdb.HASH, kit.MDB_HASH, arg)
+			}},
+			SESSION: {Name: "session hash auto 清理", Help: "会话", Action: map[string]*ice.Action{
+				mdb.PRUNES: {Name: "prunes", Help: "清理", Hand: func(m *ice.Message, arg ...string) {
+					m.Cmdy(mdb.PRUNES, m.Prefix(SESSION), "", mdb.HASH, kit.MDB_STATUS, "close")
+				}},
+			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+				if len(arg) == 0 {
+					m.Option(mdb.FIELDS, m.Conf(SESSION, kit.META_FIELDS))
+				} else {
+					m.Option(mdb.FIELDS, "detail")
 				}
+				m.Cmdy(mdb.SELECT, m.Prefix(SESSION), "", mdb.HASH, kit.MDB_HASH, arg)
 			}},
 
-			"dial": {Name: "dial hash cmd auto 创建", Help: "守护进程", Meta: kit.Dict(), Action: map[string]*ice.Action{
-				"create": {Name: "create", Help: "创建", List: kit.List(
-					kit.MDB_INPUT, "text", "name", "hostport", "value", "shylinux.com:22",
-					kit.MDB_INPUT, "text", "name", "username", "value", "shy",
-					kit.MDB_INPUT, "password", "name", "password", "value", "",
+			DIAL: {Name: "dial hash auto 登录 cmd:textarea=pwd", Help: "连接", Action: map[string]*ice.Action{
+				mdb.CREATE: {Name: "create", Help: "登录", List: kit.List(
+					kit.MDB_INPUT, "text", kit.MDB_NAME, aaa.USERNAME, kit.MDB_VALUE, "shy",
+					kit.MDB_INPUT, "text", kit.MDB_NAME, aaa.HOSTPORT, kit.MDB_VALUE, "shylinux.com:22",
 				), Hand: func(m *ice.Message, arg ...string) {
 					for i := 0; i < len(arg); i += 2 {
 						m.Option(arg[i], arg[i+1])
 					}
 
-					connect, e := ssh.Dial("tcp", m.Option("hostport"), &ssh.ClientConfig{
-						User: m.Option("username"), Auth: []ssh.AuthMethod{ssh.Password(m.Option("password"))},
-						HostKeyCallback: ssh.InsecureIgnoreHostKey(),
-					})
+					connect, e := _ssh_dial(m, m.Option(aaa.USERNAME), m.Option(aaa.HOSTPORT))
 					m.Assert(e)
 
-					h := m.Rich("dial", "", kit.Dict(
-						"hostport", m.Option("hostport"),
-						"username", m.Option("username"),
-						"password", m.Option("password"),
-						"connect", connect,
+					h := m.Rich(DIAL, "", kit.Dict(
+						aaa.USERNAME, m.Option(aaa.USERNAME),
+						aaa.HOSTPORT, m.Option(aaa.HOSTPORT),
+						CONNECT, connect,
 					))
 					m.Echo(h)
 				}},
+
+				mdb.DELETE: {Name: "delete", Help: "删除", Hand: func(m *ice.Message, arg ...string) {
+					m.Cmdy(mdb.DELETE, m.Prefix(DIAL), "", mdb.HASH, kit.MDB_HASH, m.Option(kit.MDB_HASH))
+				}},
 			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-				if len(arg) == 0 {
-					m.Option(mdb.FIELDS, "time,hash,hostport,username")
-					m.Cmdy(mdb.SELECT, m.Prefix("dial"), "", mdb.HASH)
+				if len(arg) == 0 || arg[0] == "" {
+					m.Option(mdb.FIELDS, m.Conf(DIAL, kit.META_FIELDS))
+					m.Cmdy(mdb.SELECT, m.Prefix(DIAL), "", mdb.HASH)
+					m.PushAction("删除")
 					return
 				}
 
-				m.Richs("dial", "", arg[0], func(key string, value map[string]interface{}) {
-					connect, ok := value["connect"].(*ssh.Client)
+				m.Richs(DIAL, "", arg[0], func(key string, value map[string]interface{}) {
+					connect, ok := value[CONNECT].(*ssh.Client)
 					if !ok {
-						connect, e := ssh.Dial("tcp", kit.Format(value["hostport"]), &ssh.ClientConfig{
-							User: kit.Format(value["username"]), Auth: []ssh.AuthMethod{ssh.Password(kit.Format(value["password"]))},
-							HostKeyCallback: ssh.InsecureIgnoreHostKey(),
-						})
-						m.Assert(e)
-						value["connect"] = connect
+						if c, e := _ssh_dial(m, kit.Format(value[aaa.USERNAME]), kit.Format(value[aaa.HOSTPORT])); m.Assert(e) {
+							connect, value[CONNECT] = c, c
+						}
 					}
 
 					session, e := connect.NewSession()
@@ -269,7 +414,6 @@ func init() {
 
 					err := session.Run(arg[1])
 					m.Assert(err)
-
 					m.Echo(b.String())
 				})
 			}},

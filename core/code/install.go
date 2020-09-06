@@ -9,6 +9,7 @@ import (
 	"github.com/shylinux/icebergs/base/web"
 	kit "github.com/shylinux/toolkits"
 
+	"fmt"
 	"os"
 	"path"
 	"strings"
@@ -21,10 +22,95 @@ func init() {
 		Configs: map[string]*ice.Config{
 			INSTALL: {Name: INSTALL, Help: "安装", Value: kit.Data(
 				kit.MDB_SHORT, kit.MDB_NAME, kit.MDB_PATH, "usr/install",
+				"contexts", kit.Dict(
+					"tmux", kit.Dict(
+						"centos", `
+yum update -y && yum install -y wget tmux curl
+wget {{.Option "host"}}/publish/tmux.conf
+tmux -f tmux.conf
+						`,
+						"ubuntu", `
+apt update -y && apt install -y wget tmux curl
+wget {{.Option "host"}}/publish/tmux.conf
+tmux -f tmux.conf
+`,
+						"alpine", `
+apk update && apk add wget tmux curl
+wget {{.Option "host"}}/publish/tmux.conf
+tmux -f tmux.conf
+						`,
+						"darwin", `
+brew update && brew install wget tmux curl
+wget {{.Option "host"}}/publish/tmux.conf
+tmux -f tmux.conf
+`,
+					),
+					"base", kit.Dict(
+						"centos", `
+yum update -y && yum install -y curl
+mkdir contexts; cd contexts
+ctx_dev={{.Option "host"}}; curl $ctx_dev/publish/ice.sh | sh
+`,
+						"ubuntu", `
+apt update -y && apt install -y curl
+mkdir contexts; cd contexts
+ctx_dev={{.Option "host"}}; curl $ctx_dev/publish/ice.sh | sh
+`,
+						"alpine", `
+apk update && apk add curl
+mkdir contexts; cd contexts
+ctx_dev={{.Option "host"}}; curl $ctx_dev/publish/ice.sh | sh
+`,
+						"darwin", `
+brew update && brew install curl
+mkdir contexts; cd contexts
+ctx_dev={{.Option "host"}}; curl $ctx_dev/publish/ice.sh | sh
+`,
+					),
+					"miss", kit.Dict(
+						"centos", `
+yum update -y && yum install -y git vim make go
+git clone https://github.com/shylinux/contexts && cd contexts
+source etc/miss.sh
+`,
+						"ubuntu", `
+apt update -y && apt install -y git vim make golang
+git clone https://github.com/shylinux/contexts && cd contexts
+source etc/miss.sh
+`,
+						"alpine", `
+apk update && apk add git vim make go
+git clone https://github.com/shylinux/contexts && cd contexts
+source etc/miss.sh
+`,
+						"darwin", `
+brew update && brew install git vim make
+git clone https://github.com/shylinux/contexts && cd contexts
+source etc/miss.sh
+`,
+					),
+				),
 			)},
 		},
 		Commands: map[string]*ice.Command{
 			INSTALL: {Name: "install name=auto port=auto path=auto auto", Help: "安装", Meta: kit.Dict(), Action: map[string]*ice.Action{
+				"contexts": {Name: "contexts item os", Help: "下载", Hand: func(m *ice.Message, arg ...string) {
+					u := kit.ParseURL(m.Option(ice.MSG_USERWEB))
+					m.Option("host", fmt.Sprintf("%s://%s:%s", u.Scheme, strings.Split(u.Host, ":")[0], kit.Select(kit.Select("80", "443", u.Scheme == "https"), strings.Split(u.Host, ":"), 1)))
+
+					txt, sys := "hello world", kit.Select("centos", arg, 1)
+					switch text := m.Confv(INSTALL, kit.Keys("meta.contexts", kit.Select("tmux", arg, 0))).(type) {
+					case map[string]interface{}:
+						m.Cmdy("web.wiki.spark", sys)
+						txt = kit.Format(text[sys])
+					case string:
+						txt = text
+					}
+
+					if buf, err := kit.Render(txt, m); m.Assert(err) {
+						m.Cmdy("web.wiki.spark", "shell", string(buf))
+					}
+				}},
 				"download": {Name: "download link", Help: "下载", Hand: func(m *ice.Message, arg ...string) {
 					name := path.Base(arg[0])
 					if m.Richs(INSTALL, "", name, func(key string, value map[string]interface{}) {

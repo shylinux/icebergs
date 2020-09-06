@@ -171,6 +171,10 @@ var Index = &ice.Context{Name: "chat", Help: "聊天中心",
 				}
 			}
 
+			if m.Option(ice.MSG_USERURL) == "/header" {
+				// 免检
+				return
+			}
 			if m.Warn(!m.Right(m.Option(ice.MSG_USERURL), m.Optionv(ice.MSG_CMDS))) {
 				return
 			}

@@ -52,7 +52,7 @@ var Index = &ice.Context{Name: "code", Help: "编程中心",
 			m.Cmd(mdb.ENGINE, mdb.CREATE, BENCH)
 		}},
 		ice.CTX_EXIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			m.Save("login", INSTALL)
+			m.Save("login")
 		}},
 
 		"_install": {Name: "install url 安装:button", Help: "安装", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {

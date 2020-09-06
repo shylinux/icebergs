@@ -384,7 +384,7 @@ func init() {
 				switch arg[0] {
 				case "shell", "mysql", "redis":
 					arg[1] = strings.TrimSpace(arg[1])
-					m.Echo(`<div class="story" data-type="spark" data-name="%s" data-text="%s">`, arg[0], arg[1])
+					m.Echo(`<div class="story" data-type="spark" data-name="%s">`, arg[0])
 					for _, l := range strings.Split(arg[1], "\n") {
 						m.Echo("<div>")
 						m.Echo(kit.Select(arg[0]+"> ", m.Conf(SPARK, kit.Keys("meta.prompt", arg[0]))))

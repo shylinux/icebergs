@@ -42,6 +42,7 @@ func init() {
 		Commands: map[string]*ice.Command{
 			PUBLISH: {Name: "publish path=auto auto 火山架 冰山架 神农架", Help: "发布", Action: map[string]*ice.Action{
 				"ish": {Name: "ish", Help: "神农架", Hand: func(m *ice.Message, arg ...string) {
+					_publish_file(m, "etc/conf/tmux.conf")
 					m.Option(nfs.DIR_REG, ".*\\.(sh|vim|conf)")
 					m.Cmdy(nfs.DIR, m.Conf(PUBLISH, kit.META_PATH), "time size line path link")
 				}},

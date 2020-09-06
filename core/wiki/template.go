@@ -19,7 +19,7 @@ var refer = `<ul class="story"
 {{range $k, $v := .Optionv "extra"}}data-{{$k}}='{{$v}}'{{end}} 
 data-type="{{.Option "type"}}" data-name="{{.Option "name"}}" data-text="{{.Option "text"}}">
 {{range $index, $value := .Optionv "list"}}<li>{{index $value 0}}: <a href="{{index $value 1}}" target="_blank">{{index $value 1}}</a></li>{{end}}</ul>`
-var spark = `<p class="story {{.Option "style"}}" {{range $k, $v := .Optionv "extra"}}data-{{$k}}='{{$v}}'{{end}} data-type="{{.Option "type"}}" data-name="{{.Option "name"}}" data-text="{{.Option "text"}}">{{.Option "text"}}</p>`
+var spark = `<p class="story {{.Option "style"}}" {{range $k, $v := .Optionv "extra"}}data-{{$k}}='{{$v}}'{{end}} data-type="{{.Option "type"}}" data-name="{{.Option "name"}}">{{.Option "text"}}</p>`
 
 var chart = `<svg class="story" vertion="1.1" xmlns="http://www.w3.org/2000/svg" dominant-baseline="middle" text-anchor="middle"
 	data-type="{{.Option "type"}}" data-name="{{.Option "name"}}" data-text="{{.Option "text"}}"

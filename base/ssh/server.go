@@ -218,6 +218,7 @@ func _ssh_config(m *ice.Message) *ssh.ServerConfig {
 					}
 				}
 			})
+			res = nil
 			return &ssh.Permissions{Extensions: meta}, res
 		},
 		PasswordCallback: func(conn ssh.ConnMetadata, password []byte) (*ssh.Permissions, error) {

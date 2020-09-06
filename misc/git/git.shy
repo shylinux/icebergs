@@ -24,6 +24,9 @@ cd ./install
 `
 
 chapter "应用"
+refer `
+go https://github.com/google/gitprotocolio
+`
 field "代码统计" web.code.git.total
 field "提交趋势" web.code.git.trend args icebergs
 field "代码结构" web.code.git.spide args icebergs

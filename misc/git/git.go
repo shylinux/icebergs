@@ -423,13 +423,9 @@ var Index = &ice.Context{Name: GIT, Help: "代码库",
 		}},
 
 		"/proxy/": {Name: "/repos/", Help: "缓存池", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			s := &httpProxyServer{"http://127.0.0.1:9020/code/git/serve/" + path.Join(arg...)}
-			s.infoRefsHandler(m.W, m.R)
 			m.Render(ice.RENDER_VOID)
 		}},
 		"/serve/": {Name: "/repos/", Help: "缓存池", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			p := kit.Path(path.Join(".ish/pluged/github.com", path.Join(arg[:2]...)))
-			m.Cmdy(cli.SYSTEM, "git-upload-pack", p)
 			m.Render(ice.RENDER_RESULT)
 		}},
 	},

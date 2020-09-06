@@ -1,19 +1,18 @@
 package ssh
 
 import (
-	"fmt"
-	"time"
-
 	ice "github.com/shylinux/icebergs"
 	"github.com/shylinux/icebergs/base/aaa"
 	"github.com/shylinux/icebergs/base/mdb"
 	"github.com/shylinux/icebergs/base/nfs"
+	"github.com/shylinux/icebergs/base/tcp"
 	kit "github.com/shylinux/toolkits"
 
 	"bytes"
 	"encoding/base64"
 	"encoding/binary"
 	"errors"
+	"fmt"
 	"io"
 	"net"
 	"os"
@@ -21,6 +20,7 @@ import (
 	"path"
 	"strings"
 	"syscall"
+	"time"
 	"unsafe"
 
 	"github.com/kr/pty"
@@ -218,7 +218,9 @@ func _ssh_config(m *ice.Message) *ssh.ServerConfig {
 					}
 				}
 			})
-			res = nil
+			if tcp.IPIsLocal(m, strings.Split(conn.RemoteAddr().String(), ":")[0]) {
+				res = nil
+			}
 			return &ssh.Permissions{Extensions: meta}, res
 		},
 		PasswordCallback: func(conn ssh.ConnMetadata, password []byte) (*ssh.Permissions, error) {

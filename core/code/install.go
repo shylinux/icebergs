@@ -27,10 +27,16 @@ func init() {
 export ctx_dev={{.Option "httphost"}}; curl $ctx_dev/publish/ice.sh | sh
 bin/ice.sh`,
 					"miss", `
-touch ~/.ssh/config; [ -z "$(cat ~/.ssh/config|grep 'Host {{.Option "hostname"}}')" ] && echo -e "HOST {{.Option "hostname"}}\n    Port 9030" >> ~/.ssh/config
-git clone {{.Option "user.name"}}@{{.Option "hostname"}}:{{.Option "hostpath"}} && cd contexts
-git clone {{.Option "httphost"}}/code/git/proxy/shylinux/contexts && cd contexts
-source etc/miss.sh`,
+yum install -y git vim make go
+mkdir ~/.ssh &>/dev/null; touch ~/.ssh/config; [ -z "$(cat ~/.ssh/config|grep 'HOST {{.Option "hostname"}}')" ] && echo -e "HOST {{.Option "hostname"}}\n    Port 9030" >> ~/.ssh/config
+export ISH_CONF_HUB_PROXY={{.Option "userhost"}}:.ish/pluged/
+git clone $ISH_CONF_HUB_PROXY/github.com/shylinux/contexts && cd contexts
+source etc/miss.sh
+
+touch ~/.gitconfig; [ -z "$(cat ~/.gitconfig|grep '\[url \"{{.Option "userhost"}}')" ] && echo -e "[url \"{{.Option "userhost"}}:ish/pluged/\"]\n    insteadOf=\"https://github.com/\"\n" >> ~/.gitconfig
+git clone https://github.com/shylinux/contexts && cd contexts
+source etc/miss.sh
+`,
 				),
 			)},
 		},
@@ -38,10 +44,12 @@ source etc/miss.sh`,
 			INSTALL: {Name: "install name=auto port=auto path=auto auto", Help: "安装", Meta: kit.Dict(), Action: map[string]*ice.Action{
 				"contexts": {Name: "contexts item os", Help: "下载", Hand: func(m *ice.Message, arg ...string) {
 					u := kit.ParseURL(m.Option(ice.MSG_USERWEB))
+					m.Option("userhost", fmt.Sprintf("%s@%s", m.Option(ice.MSG_USERNAME), strings.Split(u.Host, ":")[0]))
+					m.Option("hostpath", kit.Path("./.ish/pluged"))
+
 					m.Option("httphost", fmt.Sprintf("%s://%s:%s", u.Scheme, strings.Split(u.Host, ":")[0], kit.Select(kit.Select("80", "443", u.Scheme == "https"), strings.Split(u.Host, ":"), 1)))
 					m.Option("hostport", fmt.Sprintf("%s:%s", strings.Split(u.Host, ":")[0], kit.Select(kit.Select("80", "443", u.Scheme == "https"), strings.Split(u.Host, ":"), 1)))
 					m.Option("hostname", strings.Split(u.Host, ":")[0])
-					m.Option("hostpath", kit.Path("./"))
 
 					if buf, err := kit.Render(m.Conf(INSTALL, kit.Keys("meta.contexts", kit.Select("base", arg, 0))), m); m.Assert(err) {
 						m.Cmdy("web.wiki.spark", "shell", string(buf))

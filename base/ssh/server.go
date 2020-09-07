@@ -14,6 +14,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"net"
 	"os"
 	"os/exec"
@@ -62,9 +63,37 @@ func _ssh_close(m *ice.Message, c net.Conn, channel ssh.Channel) {
 	defer channel.Close()
 	channel.Write([]byte(m.Conf(PUBLIC, "meta.goodbye")))
 }
+func _ssh_watch(m *ice.Message, meta map[string]string, input io.Reader, output io.Writer) {
+	m.Gos(m, func(m *ice.Message) {
+		r, w := io.Pipe()
+		bio := io.TeeReader(input, w)
+		m.Gos(m, func(m *ice.Message) {
+			i, buf := 0, make([]byte, 1024)
+			for {
+				n, e := bio.Read(buf[i:])
+				if e != nil {
+					break
+				}
+				switch buf[i] {
+				case ' ':
+				case '\r', '\n':
+					cmd := strings.TrimSpace(string(buf[:i+n]))
+					m.Log_IMPORT("hostname", meta["hostname"], "username", meta["username"], "cmd", cmd)
+					i = 0
+				default:
+					m.Debug("what %v", buf[i])
+				}
+				if i += n; i >= 1024 {
+					i = 0
+				}
+			}
+		})
+		io.Copy(output, r)
+	})
+}
 func _ssh_reopen(m *ice.Message, c net.Conn, channel ssh.Channel) {
 }
-func _ssh_handle(m *ice.Message, hostname string, c net.Conn, channel ssh.Channel, requests <-chan *ssh.Request) {
+func _ssh_handle(m *ice.Message, meta map[string]string, c net.Conn, channel ssh.Channel, requests <-chan *ssh.Request) {
 	m.Logs(CHANNEL, aaa.HOSTPORT, c.RemoteAddr(), "->", c.LocalAddr())
 	defer m.Logs("dischan", aaa.HOSTPORT, c.RemoteAddr(), "->", c.LocalAddr())
 
@@ -78,6 +107,9 @@ func _ssh_handle(m *ice.Message, hostname string, c net.Conn, channel ssh.Channe
 	defer f.Close()
 
 	h := m.Cmdx(mdb.INSERT, m.Prefix(SESSION), "", mdb.HASH, aaa.HOSTPORT, c.RemoteAddr().String(), kit.MDB_STATUS, "open", "tty", tty.Name())
+	m.Richs(SESSION, "", h, func(key string, value map[string]interface{}) {
+		value["channel"] = channel
+	})
 
 	for request := range requests {
 		m.Logs(REQUEST, aaa.HOSTPORT, c.RemoteAddr(), "type", request.Type)
@@ -103,41 +135,67 @@ func _ssh_handle(m *ice.Message, hostname string, c net.Conn, channel ssh.Channe
 			list = append(list, env.Name+"="+env.Value)
 
 		case "exec":
+			if meta["username"] == "revert" {
+				n, e := channel.Write([]byte("pwd"))
+				n, e = channel.Write([]byte("pwd"))
+				n, e = channel.Write([]byte("pwd"))
+				n, e = channel.Write([]byte("pwd"))
+				n, e = channel.Write([]byte("pwd"))
+				m.Debug("what %v %v", n, e)
+				m.Debug("what %v %v", n, e)
+				m.Debug("what %v %v", n, e)
+				m.Debug("what %v %v", n, e)
+				m.Debug("what %v %v", n, e)
+				m.Debug("what %v %v", n, e)
+				m.Debug("what %v %v", n, e)
+				m.Debug("what %v %v", n, e)
+				m.Debug("what %v %v", n, e)
+				m.Debug("what %v %v", n, e)
+				m.Debug("what %v %v", n, e)
+				break
+			}
 			_ssh_exec(m, shell, []string{"-c", string(request.Payload[4 : request.Payload[3]+4])}, list,
 				channel, func() { channel.Close() })
 		case "shell":
-			_ssh_exec(m, shell, nil, list, f, func() {
-				defer m.Cmd(mdb.MODIFY, m.Prefix(SESSION), "", mdb.HASH, kit.MDB_HASH, h, kit.MDB_STATUS, "close")
-				_ssh_close(m, c, channel)
-			})
-			m.Gos(m, func(m *ice.Message) {
-				r, w := io.Pipe()
-				bio := io.TeeReader(channel, w)
+			if m.Richs(SESSION, "", meta["username"], func(key string, value map[string]interface{}) {
+				ttyp := value["channel"].(ssh.Channel)
+				m.Gos(m, func(m *ice.Message) { io.Copy(channel, tty) })
+				_ssh_watch(m, meta, channel, ttyp)
+			}) != nil {
+				break
+			}
+
+			if meta["username"] == "revert" {
+				n, e := channel.Write([]byte("pwd"))
+				m.Debug("what %v %v", n, e)
+				m.Debug("what %v %v", n, e)
+				m.Debug("what %v %v", n, e)
+				m.Debug("what %v %v", n, e)
+				m.Debug("what %v %v", n, e)
+				m.Debug("what %v %v", n, e)
+				m.Debug("what %v %v", n, e)
+				m.Debug("what %v %v", n, e)
+				m.Debug("what %v %v", n, e)
+				m.Debug("what %v %v", n, e)
+				m.Debug("what %v %v", n, e)
+				break
+
+			} else if meta["username"] == "ssh" {
+				m.I, m.O = f, f
+				m.Render(ice.RENDER_VOID)
 				m.Gos(m, func(m *ice.Message) {
-					i, buf := 0, make([]byte, 1024)
-					for {
-						n, e := bio.Read(buf[i:])
-						if e != nil {
-							break
-						}
-						switch buf[i] {
-						case ' ':
-						case '\r', '\n':
-							cmd := strings.TrimSpace(string(buf[:i+n]))
-							m.Cmd(mdb.MODIFY, m.Prefix(SESSION), "", mdb.HASH, kit.MDB_HASH, h, "cmd", cmd)
-							m.Log_IMPORT(h, hostname, "cmd", cmd)
-							i = 0
-						}
-						if i += n; i >= 1024 {
-							i = 0
-						}
-					}
+					m.Cmdy(SOURCE, tty.Name())
+					_ssh_close(m, c, channel)
 				})
-				io.Copy(tty, r)
-			})
-			m.Gos(m, func(m *ice.Message) {
-				io.Copy(channel, tty)
-			})
+			} else {
+				_ssh_exec(m, shell, nil, list, f, func() {
+					defer m.Cmd(mdb.MODIFY, m.Prefix(SESSION), "", mdb.HASH, kit.MDB_HASH, h, kit.MDB_STATUS, "close")
+					_ssh_close(m, c, channel)
+				})
+			}
+
+			m.Gos(m, func(m *ice.Message) { io.Copy(channel, tty) })
+			_ssh_watch(m, meta, channel, tty)
 		}
 		request.Reply(true, nil)
 	}
@@ -172,9 +230,11 @@ func _ssh_listen(m *ice.Message, hostport string) {
 				}
 
 				hostname := sc.Permissions.Extensions["hostname"]
+				username := sc.Permissions.Extensions["username"]
 				begin := time.Now()
-				h := m.Cmdx(mdb.INSERT, m.Prefix(CONNECT), "", mdb.HASH, aaa.HOSTPORT, c.RemoteAddr().String(), kit.MDB_STATUS, "connect", "hostname", hostname)
+				h := m.Cmdx(mdb.INSERT, m.Prefix(CONNECT), "", mdb.HASH, aaa.HOSTPORT, c.RemoteAddr().String(), kit.MDB_STATUS, "connect", "hostname", hostname, "username", username)
 				defer m.Cmd(mdb.MODIFY, m.Prefix(CONNECT), "", mdb.HASH, kit.MDB_HASH, h, kit.MDB_STATUS, "close", "close_time", time.Now().Format(ice.MOD_TIME), "duration", time.Now().Sub(begin).String())
+				sc.Permissions.Extensions["connhash"] = h
 
 				m.Gos(m, func(m *ice.Message) {
 					ssh.DiscardRequests(req)
@@ -188,7 +248,7 @@ func _ssh_listen(m *ice.Message, hostport string) {
 
 					func(channel ssh.Channel, requests <-chan *ssh.Request) {
 						m.Gos(m, func(m *ice.Message) {
-							_ssh_handle(m, hostname, c, channel, requests)
+							_ssh_handle(m, sc.Permissions.Extensions, c, channel, requests)
 						})
 					}(channel, requests)
 				}
@@ -203,23 +263,25 @@ func _ssh_config(m *ice.Message) *ssh.ServerConfig {
 			return m.Conf(PUBLIC, "meta.welcome")
 		},
 		PublicKeyCallback: func(conn ssh.ConnMetadata, key ssh.PublicKey) (*ssh.Permissions, error) {
-			meta, res := map[string]string{}, errors.New(ice.ErrNotAuth)
-			m.Richs(PUBLIC, "", kit.MDB_FOREACH, func(k string, value map[string]interface{}) {
-				if !strings.HasPrefix(kit.Format(value[kit.MDB_NAME]), conn.User()+"@") {
-					return
-				}
-				if s, e := base64.StdEncoding.DecodeString(kit.Format(value[kit.MDB_TEXT])); !m.Warn(e != nil, e) {
-					if pub, e := ssh.ParsePublicKey([]byte(s)); !m.Warn(e != nil) {
-						if bytes.Compare(pub.Marshal(), key.Marshal()) == 0 {
-							m.Log_AUTH(aaa.HOSTPORT, conn.RemoteAddr(), aaa.USERNAME, conn.User(), "publickey", value[kit.MDB_NAME])
-							meta["hostname"] = kit.Format(value[kit.MDB_NAME])
-							res = nil
+			meta, res := map[string]string{"username": conn.User()}, errors.New(ice.ErrNotAuth)
+			if tcp.IPIsLocal(m, strings.Split(conn.RemoteAddr().String(), ":")[0]) {
+				m.Log_AUTH(aaa.HOSTPORT, conn.RemoteAddr(), aaa.USERNAME, conn.User(), "white", conn.RemoteAddr())
+				res = nil
+			} else {
+				m.Richs(PUBLIC, "", kit.MDB_FOREACH, func(k string, value map[string]interface{}) {
+					if !strings.HasPrefix(kit.Format(value[kit.MDB_NAME]), conn.User()+"@") {
+						return
+					}
+					if s, e := base64.StdEncoding.DecodeString(kit.Format(value[kit.MDB_TEXT])); !m.Warn(e != nil, e) {
+						if pub, e := ssh.ParsePublicKey([]byte(s)); !m.Warn(e != nil) {
+							if bytes.Compare(pub.Marshal(), key.Marshal()) == 0 {
+								m.Log_AUTH(aaa.HOSTPORT, conn.RemoteAddr(), aaa.USERNAME, conn.User(), "publickey", value[kit.MDB_NAME])
+								meta["hostname"] = kit.Format(value[kit.MDB_NAME])
+								res = nil
+							}
 						}
 					}
-				}
-			})
-			if tcp.IPIsLocal(m, strings.Split(conn.RemoteAddr().String(), ":")[0]) {
-				res = nil
+				})
 			}
 			return &ssh.Permissions{Extensions: meta}, res
 		},
@@ -284,7 +346,7 @@ func init() {
 				mdb.FIELDS, "time,hash,hostport,status",
 			)},
 			CONNECT: {Name: CONNECT, Help: "连接", Value: kit.Data(
-				mdb.FIELDS, "time,hash,hostport,status,duration,close_time,hostname",
+				mdb.FIELDS, "time,hash,hostport,status,duration,close_time,hostname,username",
 			)},
 			SESSION: {Name: SESSION, Help: "会话", Value: kit.Data(
 				mdb.FIELDS, "time,hash,hostport,status,tty,cmd",
@@ -369,7 +431,7 @@ func init() {
 				m.Cmdy(mdb.SELECT, m.Prefix(SESSION), "", mdb.HASH, kit.MDB_HASH, arg)
 			}},
 
-			DIAL: {Name: "dial hash auto 登录 cmd:textarea=pwd", Help: "连接", Action: map[string]*ice.Action{
+			DIAL: {Name: "dial hash auto 受控 登录 cmd:textarea=pwd", Help: "连接", Action: map[string]*ice.Action{
 				mdb.CREATE: {Name: "create", Help: "登录", List: kit.List(
 					kit.MDB_INPUT, "text", kit.MDB_NAME, aaa.USERNAME, kit.MDB_VALUE, "shy",
 					kit.MDB_INPUT, "text", kit.MDB_NAME, aaa.HOSTPORT, kit.MDB_VALUE, "shylinux.com:22",
@@ -386,6 +448,33 @@ func init() {
 						aaa.HOSTPORT, m.Option(aaa.HOSTPORT),
 						CONNECT, connect,
 					))
+					m.Echo(h)
+				}},
+				"revert": {Name: "revert", Help: "受控", List: kit.List(
+					kit.MDB_INPUT, "text", kit.MDB_NAME, aaa.HOSTPORT, kit.MDB_VALUE, "192.168.0.105:9030",
+				), Hand: func(m *ice.Message, arg ...string) {
+					for i := 0; i < len(arg); i += 2 {
+						m.Option(arg[i], arg[i+1])
+					}
+
+					connect, e := _ssh_dial(m, "revert", m.Option(aaa.HOSTPORT))
+					m.Assert(e)
+
+					h := m.Rich(DIAL, "", kit.Dict(
+						aaa.USERNAME, "revert",
+						aaa.HOSTPORT, m.Option(aaa.HOSTPORT),
+						CONNECT, connect,
+					))
+
+					session, e := connect.NewSession()
+					m.Assert(e)
+
+					r, w := io.Pipe()
+					session.Stdout = w
+
+					_ssh_watch(m, map[string]string{}, r, ioutil.Discard)
+
+					session.Start("bash")
 					m.Echo(h)
 				}},
 

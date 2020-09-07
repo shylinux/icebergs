@@ -203,10 +203,10 @@ func init() {
 
 					// 请求地址
 					uri, arg := arg[0], arg[1:]
-					if n := m.Cmd("spide_rewrite", uri).Append("to"); n != "" && n != uri {
-						m.Logs("rewrite", "from", uri, "to", n)
-						uri = n
-					}
+					// if n := m.Cmd("spide_rewrite", uri).Append("to"); n != "" && n != uri {
+					// 	m.Logs("rewrite", "from", uri, "to", n)
+					// 	uri = n
+					// }
 
 					// 渲染引擎
 					head := map[string]string{}
@@ -315,7 +315,7 @@ func init() {
 
 					// 检查结果
 					m.Cost("%s %s: %s", res.Status, res.Header.Get(ContentLength), res.Header.Get(ContentType))
-					if m.Warn(res.StatusCode != http.StatusOK, "%s", res.Status) {
+					if m.Warn(res.StatusCode != http.StatusOK, res.Status) {
 						m.Set(ice.MSG_RESULT)
 						// return
 					}

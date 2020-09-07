@@ -67,6 +67,30 @@ func Render(msg *ice.Message, cmd string, args ...interface{}) {
 	msg.Append(ice.MSG_OUTPUT, ice.RENDER_OUTPUT)
 }
 
+func _ssh_script(m *ice.Message, name string) io.Reader {
+	if strings.Contains(m.Option("_script"), "/") {
+		name = path.Join(path.Dir(m.Option("_script")), name)
+	}
+	m.Option("_script", name)
+
+	if s, e := os.Open(name); e == nil {
+		return s
+	}
+
+	if msg := m.Cmd("web.spide", "dev", "GET", path.Join("/share/local/", name)); msg.Result(0) != ice.ErrWarn {
+		bio := bytes.NewBuffer([]byte(msg.Result()))
+		return bio
+	}
+
+	if strings.HasPrefix(name, "usr") {
+		ls := strings.Split(name, "/")
+		m.Cmd("web.code.git.repos", ls[1], "usr/"+ls[1])
+		if s, e := os.Open(name); e == nil {
+			return s
+		}
+	}
+	return nil
+}
 func (f *Frame) history(m *ice.Message, line string) string {
 	favor := m.Conf(SOURCE, kit.Keys(kit.MDB_META, web.FAVOR))
 	if strings.HasPrefix(strings.TrimSpace(line), "!!") {
@@ -104,7 +128,7 @@ func (f *Frame) printf(m *ice.Message, res string, arg ...interface{}) *Frame {
 	return f
 }
 func (f *Frame) prompt(m *ice.Message, list ...string) *Frame {
-	if f.stdout != os.Stdout {
+	if f.source != STDIO {
 		return f
 	}
 	if len(list) == 0 {
@@ -292,6 +316,13 @@ func (f *Frame) Start(m *ice.Message, arg ...string) bool {
 		m.Option(ice.MSG_USERZONE, "boot")
 		aaa.UserRoot(m)
 	default:
+		if strings.HasPrefix(arg[0], "/dev") {
+			// 脚本解析
+			r, f.stdout = m.I, m.O
+			f.source, f.target = STDIO, m.Source()
+			m.Cap(ice.CTX_STREAM, STDIO)
+			break
+		}
 		if b, ok := ice.BinPack[arg[0]]; ok {
 			m.Debug("binpack %v %v", arg[0], len(b))
 			buf := bytes.NewBuffer(make([]byte, 0, 4096))
@@ -304,27 +335,15 @@ func (f *Frame) Start(m *ice.Message, arg ...string) bool {
 			f.target = m.Source()
 			break
 		}
-		s, e := os.Open(arg[0])
-		if os.IsNotExist(e) && strings.HasPrefix(arg[0], "usr") {
-			ls := strings.Split(arg[0], "/")
-			m.Cmd("web.code.git.repos", ls[1], "usr/"+ls[1])
-			s, e = os.Open(arg[0])
-		}
 
-		if !m.Warn(e != nil, "%s", e) {
-			defer s.Close()
+		s := _ssh_script(m, arg[0])
+		buf := bytes.NewBuffer(make([]byte, 0, 4096))
+		defer func() { m.Echo(buf.String()) }()
 
-			buf := bytes.NewBuffer(make([]byte, 0, 4096))
-			defer func() { m.Echo(buf.String()) }()
-
-			// 脚本解析
-			f.source = arg[0]
-			r, f.stdout = s, buf
-			m.Cap(ice.CTX_STREAM, arg[0])
-			f.target = m.Source()
-			break
-		}
-		return true
+		// 脚本解析
+		r, f.stdout = s, buf
+		f.source, f.target = arg[0], m.Source()
+		m.Cap(ice.CTX_STREAM, arg[0])
 	}
 
 	f.scan(m, kit.Select(STDIO, arg, 0), "", r)
@@ -371,10 +390,6 @@ var Index = &ice.Context{Name: "ssh", Help: "终端模块",
 		}},
 
 		SOURCE: {Name: "source file", Help: "脚本解析", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			if _, e := os.Stat(arg[0]); e != nil {
-				arg[0] = path.Join(path.Dir(m.Option("_script")), arg[0])
-			}
-			m.Option("_script", arg[0])
 			m.Starts(strings.Replace(arg[0], ".", "_", -1), arg[0], arg[0:]...)
 		}},
 		TARGET: {Name: "target name", Help: "当前模块", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {

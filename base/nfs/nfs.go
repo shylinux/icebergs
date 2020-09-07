@@ -36,14 +36,14 @@ func _file_list(m *ice.Message, root string, name string, level int, deep bool, 
 	}
 
 	if fs, e := ioutil.ReadDir(path.Join(root, name)); e != nil {
-		if f, e := os.Open(path.Join(root, name)); e == nil {
+		if f, e := os.Open(path.Join(root, name)); e != nil {
+		} else {
 			defer f.Close()
 			if b, e := ioutil.ReadAll(f); e == nil {
 				m.Echo(string(b))
 				return
 			}
 		}
-		m.Log(ice.LOG_WARN, "%s", e)
 	} else {
 		for _, f := range fs {
 			if f.Name() == "." || f.Name() == ".." {
@@ -170,16 +170,18 @@ func _file_list(m *ice.Message, root string, name string, level int, deep bool, 
 	}
 }
 func _file_show(m *ice.Message, name string) {
-	if n := m.Cmd("file_rewrite", name).Append("to"); n != "" {
-		m.Logs("rewrite", "from", name, "to", n)
-		name = n
-	}
+	// if n := m.Cmd("file_rewrite", name).Append("to"); n != "" {
+	// 	m.Logs("rewrite", "from", name, "to", n)
+	// 	name = n
+	// }
 	if strings.HasPrefix(name, "http") {
 		m.Cmdy("web.spide", "dev", "raw", "GET", name)
 		return
 	}
 
-	if f, e := os.OpenFile(path.Join(m.Option(DIR_ROOT), name), os.O_RDONLY, 0640); m.Assert(e) {
+	if f, e := os.OpenFile(path.Join(m.Option(DIR_ROOT), name), os.O_RDONLY, 0640); os.IsNotExist(e) {
+		m.Cmdy("web.spide", "dev", "raw", "GET", path.Join("/share/local/", name))
+	} else if e == nil {
 		defer f.Close()
 
 		if s, e := f.Stat(); m.Assert(e) {

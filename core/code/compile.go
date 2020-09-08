@@ -45,7 +45,7 @@ func init() {
 					file = kit.Keys(kit.Select("ice", m.Option("name")), goos, arch)
 				}
 				if goos == "windows" {
-					file += ".exe"
+					// file += ".exe"
 				}
 
 				// 编译参数

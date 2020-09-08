@@ -456,6 +456,7 @@ func init() {
 					arg = []string{"", arg[0]}
 				}
 				_image_show(m, arg[0], kit.Select(arg[0], arg[1]), arg[2:]...)
+				m.Render("")
 			}},
 			VIDEO: {Name: "video name url", Help: "视频", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 				if len(arg) == 1 {

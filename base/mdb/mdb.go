@@ -38,7 +38,7 @@ func _hash_select(m *ice.Message, prefix, key, field, value string) {
 		if m.Option(FIELDS) == "detail" {
 			m.Push("detail", val)
 		} else {
-			m.Push(key, val, fields)
+			m.Push(key, val, fields, val[kit.MDB_META])
 		}
 	})
 	if m.Option(FIELDS) != "detail" {
@@ -47,6 +47,9 @@ func _hash_select(m *ice.Message, prefix, key, field, value string) {
 }
 func _hash_modify(m *ice.Message, prefix, key string, field, value string, arg ...string) {
 	m.Richs(prefix, key, value, func(key string, value map[string]interface{}) {
+		if value[kit.MDB_META] != nil {
+			value = value[kit.MDB_META].(map[string]interface{})
+		}
 		for i := 0; i < len(arg)-1; i += 2 {
 			if arg[i] == field {
 				continue
@@ -136,16 +139,19 @@ func _list_delete(m *ice.Message, prefix, chain, field, value string) {
 }
 func _list_select(m *ice.Message, prefix, key, field, value string) {
 	fields := strings.Split(kit.Select("time,type,name,text", m.Option("fields")), ",")
-	m.Grows(prefix, key, field, value, func(index int, value map[string]interface{}) {
-		if field == kit.MDB_ID {
-			m.Push("detail", value)
+	m.Grows(prefix, key, field, value, func(index int, val map[string]interface{}) {
+		if field == kit.MDB_ID && value != "" {
+			m.Push("detail", val)
 			return
 		}
-		m.Push("", value, fields)
+		m.Push("", val, fields, val[kit.MDB_META])
 	})
 }
 func _list_modify(m *ice.Message, prefix, key string, field, value string, arg ...string) {
 	m.Grows(prefix, key, field, value, func(index int, value map[string]interface{}) {
+		if value[kit.MDB_META] != nil {
+			value = value[kit.MDB_META].(map[string]interface{})
+		}
 		for i := 0; i < len(arg)-1; i += 2 {
 			if arg[i] == field {
 				continue

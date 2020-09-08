@@ -198,11 +198,6 @@ var Index = &ice.Context{Name: "chat", Help: "聊天中心",
 
 		}},
 
-		"tool": {Name: "tool", Help: "应用", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-		}},
-		"node": {Name: "node", Help: "设备", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-		}},
-
 		"/ocean": {Name: "/ocean", Help: "大海洋", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			if len(arg) == 0 {
 				// 用户列表

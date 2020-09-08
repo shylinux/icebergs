@@ -4,6 +4,7 @@ import (
 	ice "github.com/shylinux/icebergs"
 	"github.com/shylinux/icebergs/base/aaa"
 	"github.com/shylinux/icebergs/base/cli"
+	"github.com/shylinux/icebergs/base/ctx"
 	"github.com/shylinux/icebergs/base/mdb"
 	"github.com/shylinux/icebergs/base/tcp"
 	"github.com/shylinux/icebergs/base/web"
@@ -28,20 +29,6 @@ func _river_list(m *ice.Message) {
 			m.Push(key, value[kit.MDB_META], []string{kit.MDB_KEY, kit.MDB_NAME}, val[kit.MDB_META])
 		})
 	})
-}
-func _river_node(m *ice.Message, river string, node ...string) {
-	prefix := kit.Keys(kit.MDB_HASH, river, NODE)
-	for _, v := range node {
-		m.Rich(RIVER, prefix, kit.Data(kit.MDB_NAME, v))
-		m.Log_INSERT(RIVER, river, NODE, v)
-	}
-}
-func _river_user(m *ice.Message, river string, user ...string) {
-	prefix := kit.Keys(kit.MDB_HASH, river, USER)
-	for _, v := range user {
-		m.Rich(RIVER, prefix, kit.Data(aaa.USERNAME, v))
-		m.Log_INSERT(RIVER, river, USER, v)
-	}
 }
 func _river_share(m *ice.Message, river, name string, arg ...string) {
 	m.Cmdy(web.SHARE, RIVER, name, river, arg)
@@ -68,7 +55,10 @@ func _river_create(m *ice.Message, kind, name, text string, arg ...string) {
 	))
 	m.Log_CREATE(kit.MDB_META, RIVER, kit.MDB_TYPE, kind, kit.MDB_NAME, name)
 
-	_river_user(m, h, cli.UserName, m.Option(ice.MSG_USERNAME))
+	m.Option(ice.MSG_RIVER, h)
+	m.Cmdy(m.Prefix(USER), mdb.INSERT, aaa.USERNAME, cli.UserName)
+	m.Cmdy(m.Prefix(USER), mdb.INSERT, aaa.USERNAME, m.Option(ice.MSG_USERNAME))
+
 	kit.Fetch(m.Confv(RIVER, kit.Keys("meta.template", "base")), func(storm string, value interface{}) {
 		list := []string{}
 		kit.Fetch(value, func(index int, value string) {
@@ -97,9 +87,10 @@ func init() {
 				"template", kit.Dict(
 					"base", kit.Dict(
 						"info", []interface{}{
-							"web.chat.user",
-							"web.chat.tool",
 							"web.chat.info",
+							"web.chat.tool",
+							"web.chat.node",
+							"web.chat.user",
 						},
 						"miss", []interface{}{
 							"web.team.task",
@@ -143,84 +134,84 @@ func init() {
 					m.Push("detail", value[kit.MDB_META])
 				})
 			}},
-
-			"user": {Name: "user auto", Help: "用户", Action: map[string]*ice.Action{
-				mdb.DELETE: {Name: "delete", Help: "删除", Hand: func(m *ice.Message, arg ...string) {
-					if m.Option(aaa.USERNAME) == cli.UserName {
-						return
+			TOOL: {Name: "tool hash=auto auto 添加 创建", Help: "工具", Action: map[string]*ice.Action{
+				mdb.INPUTS: {Name: "inputs", Help: "补全", Hand: func(m *ice.Message, arg ...string) {
+					switch arg[0] {
+					case "storm":
+						_storm_list(m, m.Option(ice.MSG_RIVER))
+					case "ctx":
+						m.Cmdy(ctx.COMMAND)
+					case "cmd", "help":
+						m.Cmdy(ctx.COMMAND)
 					}
-					if m.Option(aaa.USERNAME) == m.Option(ice.MSG_USERNAME) {
-						return
-					}
-					m.Richs(RIVER, nil, m.Option(ice.MSG_RIVER), func(key string, value map[string]interface{}) {
-						m.Richs(RIVER, kit.Keys(kit.MDB_HASH, m.Option(ice.MSG_RIVER), USER), m.Option(aaa.USERNAME), func(key string, value map[string]interface{}) {
-							m.Conf(RIVER, kit.Keys(kit.MDB_HASH, m.Option(ice.MSG_RIVER), USER, kit.MDB_HASH, key), "")
-							m.Log_DELETE(RIVER, m.Option(ice.MSG_RIVER), USER, m.Option(aaa.USERNAME))
-						})
-					})
 				}},
-			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-				m.Richs(RIVER, nil, m.Option(ice.MSG_RIVER), func(key string, value map[string]interface{}) {
-					m.Richs(RIVER, kit.Keys(kit.MDB_HASH, m.Option(ice.MSG_RIVER), USER), kit.MDB_FOREACH, func(key string, value map[string]interface{}) {
-						value = value[kit.MDB_META].(map[string]interface{})
-						m.Push(key, value, []string{kit.MDB_TIME})
-						m.Push(aaa.USERZONE, aaa.UserZone(m, value[aaa.USERNAME]))
-						m.Push(aaa.USERNICK, aaa.UserNick(m, value[aaa.USERNAME]))
-						m.Push(key, value, []string{aaa.USERNAME})
-					})
-				})
-				m.PushAction("删除")
-			}},
-			"tool": {Name: "tool storm=auto id=auto auto", Help: "工具", Action: map[string]*ice.Action{
+				mdb.CREATE: {Name: "create type=public,protected,private name=hi text=hello", Help: "创建", Hand: func(m *ice.Message, arg ...string) {
+					_storm_create(m, m.Option(ice.MSG_RIVER), m.Option("type"), m.Option("name"), m.Option("text"))
+				}},
+				mdb.INSERT: {Name: "insert storm ctx cmd help", Help: "添加", Hand: func(m *ice.Message, arg ...string) {
+					m.Cmdy(mdb.INSERT, RIVER, kit.Keys(kit.MDB_HASH, m.Option(ice.MSG_RIVER), TOOL, kit.MDB_HASH, m.Option(kit.MDB_HASH)), mdb.LIST, arg)
+				}},
 				mdb.MODIFY: {Name: "modify", Help: "编辑", Hand: func(m *ice.Message, arg ...string) {
-					m.Richs(RIVER, nil, m.Option(ice.MSG_RIVER), func(key string, value map[string]interface{}) {
-						m.Richs(RIVER, kit.Keys(kit.MDB_HASH, m.Option(ice.MSG_RIVER), TOOL), m.Option("storm"), func(key string, value map[string]interface{}) {
-							switch arg[0] {
-							case kit.MDB_TIME, kit.MDB_ID:
-								return
-							}
-							if m.Option(kit.MDB_ID) == "" {
-								m.Log_MODIFY(RIVER, m.Option(ice.MSG_RIVER), arg[0], arg[1], "old", kit.Value(value, kit.Keys(kit.MDB_META, arg[0])))
-								kit.Value(value, kit.Keys(kit.MDB_META, arg[0]), arg[1])
-								return
-							}
-							m.Grows(RIVER, kit.Keys(kit.MDB_HASH, m.Option(ice.MSG_RIVER), TOOL, kit.MDB_HASH, key), kit.MDB_ID, m.Option(kit.MDB_ID), func(index int, value map[string]interface{}) {
-								m.Log_MODIFY(RIVER, m.Option(ice.MSG_RIVER), arg[0], arg[1], "old", kit.Value(value, kit.Keys(kit.MDB_META, arg[0])))
-								kit.Value(value, kit.Keys(kit.MDB_META, arg[0]), arg[1])
-							})
-						})
-					})
+					if m.Option(kit.MDB_ID) != "" {
+						m.Cmdy(mdb.MODIFY, RIVER, kit.Keys(kit.MDB_HASH, m.Option(ice.MSG_RIVER), TOOL, kit.MDB_HASH, m.Option(kit.MDB_HASH)), mdb.LIST, kit.MDB_ID, m.Option(kit.MDB_ID), arg)
+					} else {
+						m.Cmdy(mdb.MODIFY, RIVER, kit.Keys(kit.MDB_HASH, m.Option(ice.MSG_RIVER), TOOL), mdb.HASH, kit.MDB_HASH, m.Option(kit.MDB_HASH), arg)
+					}
 				}},
 			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 				if len(arg) == 0 {
-					m.Richs(RIVER, nil, m.Option(ice.MSG_RIVER), func(key string, value map[string]interface{}) {
-						m.Richs(RIVER, kit.Keys(kit.MDB_HASH, m.Option(ice.MSG_RIVER), TOOL), kit.MDB_FOREACH, func(key string, value map[string]interface{}) {
-							value = value[kit.MDB_META].(map[string]interface{})
-							m.Push("time", value[kit.MDB_TIME])
-							m.Push("storm", key)
-							m.Push("name", value[kit.MDB_NAME])
-							m.Push("count", value[kit.MDB_COUNT])
-						})
-					})
-					return
+					m.Option(mdb.FIELDS, "time,hash,name,count")
+					m.Cmdy(mdb.SELECT, RIVER, kit.Keys(kit.MDB_HASH, m.Option(ice.MSG_RIVER), TOOL), mdb.HASH)
+				} else {
+					m.Option(mdb.FIELDS, "time,id,ctx,cmd,help")
+					m.Cmdy(mdb.SELECT, RIVER, kit.Keys(kit.MDB_HASH, m.Option(ice.MSG_RIVER), TOOL, kit.MDB_HASH, arg[0]), mdb.LIST, kit.MDB_ID, arg[1:])
 				}
-
-				m.Richs(RIVER, nil, m.Option(ice.MSG_RIVER), func(key string, value map[string]interface{}) {
-					if len(arg) == 1 {
-						m.Grows(RIVER, kit.Keys(kit.MDB_HASH, m.Option(ice.MSG_RIVER), TOOL, kit.MDB_HASH, arg[0]), "", "", func(index int, value map[string]interface{}) {
-							value = value[kit.MDB_META].(map[string]interface{})
-							m.Push("time", value[kit.MDB_TIME])
-							m.Push("id", value[kit.MDB_ID])
-							m.Push("ctx", value["ctx"])
-							m.Push("cmd", value["cmd"])
-						})
-						return
-					}
-					m.Grows(RIVER, kit.Keys(kit.MDB_HASH, m.Option(ice.MSG_RIVER), TOOL, kit.MDB_HASH, arg[0]), kit.MDB_ID, arg[1], func(index int, value map[string]interface{}) {
-						value = value[kit.MDB_META].(map[string]interface{})
-						m.Push("detail", value)
-					})
+				m.PushAction("删除")
+			}},
+			NODE: {Name: "node hash=auto auto 添加 启动", Help: "设备", Action: map[string]*ice.Action{
+				"start": {Name: "start", Help: "启动", Hand: func(m *ice.Message, arg ...string) {
+					m.Cmdy("web.code.install", "contexts", "base")
+				}},
+				mdb.INPUTS: {Name: "inputs", Help: "补全", Hand: func(m *ice.Message, arg ...string) {
+					m.Cmdy(web.ROUTE)
+				}},
+				mdb.INSERT: {Name: "insert route", Help: "添加", Hand: func(m *ice.Message, arg ...string) {
+					m.Cmdy(mdb.INSERT, RIVER, kit.Keys(kit.MDB_HASH, m.Option(ice.MSG_RIVER), NODE), mdb.HASH, arg)
+				}},
+				mdb.DELETE: {Name: "delete", Help: "删除", Hand: func(m *ice.Message, arg ...string) {
+					m.Cmdy(mdb.DELETE, RIVER, kit.Keys(kit.MDB_HASH, m.Option(ice.MSG_RIVER), NODE), mdb.HASH, kit.MDB_HASH, m.Option(kit.MDB_HASH))
+				}},
+			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+				m.Option(mdb.FIELDS, "time,hash,route")
+				m.Cmdy(mdb.SELECT, RIVER, kit.Keys(kit.MDB_HASH, m.Option(ice.MSG_RIVER), NODE), mdb.HASH)
+				m.Table(func(index int, value map[string]string, head []string) {
+					m.Push(kit.MDB_LINK, kit.MergeURL(m.Option(ice.MSG_USERWEB), "pod", kit.Keys(m.Option("pod"), value["route"])))
 				})
+				m.PushAction("删除")
+			}},
+			USER: {Name: "user hash=auto auto 添加 邀请", Help: "用户", Action: map[string]*ice.Action{
+				"invite": {Name: "invite", Help: "邀请", Hand: func(m *ice.Message, arg ...string) {
+					m.Cmdy("web.wiki.spark", "inner", kit.MergeURL(m.Option(ice.MSG_USERWEB), "river", m.Option(ice.MSG_RIVER)))
+					m.Cmdy("web.wiki.image", "qrcode", kit.MergeURL(m.Option(ice.MSG_USERWEB), "river", m.Option(ice.MSG_RIVER)))
+					m.Render("")
+				}},
+				mdb.INPUTS: {Name: "inputs", Help: "补全", Hand: func(m *ice.Message, arg ...string) {
+					m.Cmdy(aaa.USER)
+				}},
+				mdb.INSERT: {Name: "insert username", Help: "添加", Hand: func(m *ice.Message, arg ...string) {
+					m.Cmdy(mdb.INSERT, RIVER, kit.Keys(kit.MDB_HASH, m.Option(ice.MSG_RIVER), USER), mdb.HASH, arg)
+				}},
+				mdb.DELETE: {Name: "delete", Help: "删除", Hand: func(m *ice.Message, arg ...string) {
+					m.Cmdy(mdb.DELETE, RIVER, kit.Keys(kit.MDB_HASH, m.Option(ice.MSG_RIVER), USER), mdb.HASH, kit.MDB_HASH, m.Option(kit.MDB_HASH))
+				}},
+			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+				m.Option(mdb.FIELDS, "time,hash,username")
+				m.Cmdy(mdb.SELECT, RIVER, kit.Keys(kit.MDB_HASH, m.Option(ice.MSG_RIVER), USER), mdb.HASH)
+				m.Table(func(index int, value map[string]string, head []string) {
+					m.Push(aaa.USERZONE, aaa.UserZone(m, value[aaa.USERNAME]))
+					m.Push(aaa.USERNICK, aaa.UserNick(m, value[aaa.USERNAME]))
+				})
+				m.PushAction("删除")
 			}},
 
 			"/river": {Name: "/river", Help: "小河流",
@@ -236,12 +227,6 @@ func init() {
 					}},
 					web.SHARE: {Name: "share name", Help: "共享", Hand: func(m *ice.Message, arg ...string) {
 						_river_share(m, m.Option(ice.MSG_RIVER), arg[0])
-					}},
-					USER: {Name: "user user...", Help: "添加用户", Hand: func(m *ice.Message, arg ...string) {
-						_river_user(m, m.Option(ice.MSG_RIVER), arg...)
-					}},
-					NODE: {Name: "node node...", Help: "添加设备", Hand: func(m *ice.Message, arg ...string) {
-						_river_node(m, m.Option(ice.MSG_RIVER), arg...)
 					}},
 				}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 					if len(arg) > 0 && arg[0] == "storm" {

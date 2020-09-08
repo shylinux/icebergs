@@ -10,7 +10,6 @@ import (
 
 	"bytes"
 	"encoding/base64"
-	"encoding/binary"
 	"errors"
 	"fmt"
 	"io"
@@ -20,9 +19,7 @@ import (
 	"os/exec"
 	"path"
 	"strings"
-	"syscall"
 	"time"
-	"unsafe"
 
 	"github.com/kr/pty"
 	"golang.org/x/crypto/ssh"
@@ -35,13 +32,6 @@ type Winsize struct {
 	y      uint16
 }
 
-func _ssh_size(fd uintptr, b []byte) {
-	w := binary.BigEndian.Uint32(b)
-	h := binary.BigEndian.Uint32(b[4:])
-
-	ws := &Winsize{Width: uint16(w), Height: uint16(h)}
-	syscall.Syscall(syscall.SYS_IOCTL, fd, uintptr(syscall.TIOCSWINSZ), uintptr(unsafe.Pointer(ws)))
-}
 func _ssh_exec(m *ice.Message, cmd string, arg []string, env []string, tty io.ReadWriter, done func()) {
 	m.Log_IMPORT("cmd", cmd, "arg", arg, "env", env)
 	c := exec.Command(cmd, arg...)
@@ -135,25 +125,6 @@ func _ssh_handle(m *ice.Message, meta map[string]string, c net.Conn, channel ssh
 			list = append(list, env.Name+"="+env.Value)
 
 		case "exec":
-			if meta["username"] == "revert" {
-				n, e := channel.Write([]byte("pwd"))
-				n, e = channel.Write([]byte("pwd"))
-				n, e = channel.Write([]byte("pwd"))
-				n, e = channel.Write([]byte("pwd"))
-				n, e = channel.Write([]byte("pwd"))
-				m.Debug("what %v %v", n, e)
-				m.Debug("what %v %v", n, e)
-				m.Debug("what %v %v", n, e)
-				m.Debug("what %v %v", n, e)
-				m.Debug("what %v %v", n, e)
-				m.Debug("what %v %v", n, e)
-				m.Debug("what %v %v", n, e)
-				m.Debug("what %v %v", n, e)
-				m.Debug("what %v %v", n, e)
-				m.Debug("what %v %v", n, e)
-				m.Debug("what %v %v", n, e)
-				break
-			}
 			_ssh_exec(m, shell, []string{"-c", string(request.Payload[4 : request.Payload[3]+4])}, list,
 				channel, func() { channel.Close() })
 		case "shell":
@@ -167,16 +138,6 @@ func _ssh_handle(m *ice.Message, meta map[string]string, c net.Conn, channel ssh
 
 			if meta["username"] == "revert" {
 				n, e := channel.Write([]byte("pwd"))
-				m.Debug("what %v %v", n, e)
-				m.Debug("what %v %v", n, e)
-				m.Debug("what %v %v", n, e)
-				m.Debug("what %v %v", n, e)
-				m.Debug("what %v %v", n, e)
-				m.Debug("what %v %v", n, e)
-				m.Debug("what %v %v", n, e)
-				m.Debug("what %v %v", n, e)
-				m.Debug("what %v %v", n, e)
-				m.Debug("what %v %v", n, e)
 				m.Debug("what %v %v", n, e)
 				break
 
@@ -286,14 +247,14 @@ func _ssh_config(m *ice.Message) *ssh.ServerConfig {
 			return &ssh.Permissions{Extensions: meta}, res
 		},
 		PasswordCallback: func(conn ssh.ConnMetadata, password []byte) (*ssh.Permissions, error) {
-			res := errors.New(ice.ErrNotAuth)
+			meta, res := map[string]string{"username": conn.User()}, errors.New(ice.ErrNotAuth)
 			m.Richs(aaa.USER, "", conn.User(), func(k string, value map[string]interface{}) {
 				if string(password) == kit.Format(value[aaa.PASSWORD]) {
 					m.Log_AUTH(aaa.HOSTPORT, conn.RemoteAddr(), aaa.USERNAME, conn.User(), aaa.PASSWORD, strings.Repeat("*", len(kit.Format(value[aaa.PASSWORD]))))
 					res = nil
 				}
 			})
-			return &ssh.Permissions{}, res
+			return &ssh.Permissions{Extensions: meta}, res
 		},
 	}
 

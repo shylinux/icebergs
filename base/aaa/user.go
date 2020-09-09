@@ -25,7 +25,6 @@ func _user_login(m *ice.Message, name, word string) (ok bool) {
 		if value[PASSWORD] == "" {
 			ok, value[PASSWORD] = true, word
 		} else if value[PASSWORD] == word {
-			m.Log_AUTH(USERNAME, name, PASSWORD, strings.Repeat("*", len(word)))
 			ok = true
 		}
 	})
@@ -101,7 +100,7 @@ func UserLogin(m *ice.Message, username, password string) bool {
 	if _user_login(m, username, password) {
 		m.Option(ice.MSG_USERNAME, username)
 		m.Option(ice.MSG_USERROLE, UserRole(m, username))
-		m.Info("%s: %s", m.Option(ice.MSG_USERROLE), m.Option(ice.MSG_USERNAME))
+		m.Log_AUTH(USERROLE, m.Option(ice.MSG_USERROLE), USERNAME, m.Option(ice.MSG_USERNAME), PASSWORD, strings.Repeat("*", len(password)))
 		return true
 	}
 	return false

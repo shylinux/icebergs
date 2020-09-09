@@ -6,60 +6,51 @@ import (
 	"github.com/shylinux/icebergs/base/cli"
 	"github.com/shylinux/icebergs/base/mdb"
 	kit "github.com/shylinux/toolkits"
-
-	"strings"
 )
-
-func _route_split(arg ...string) (string, string) {
-	target, rest := "*", ""
-	if len(arg) > 0 {
-		ls := strings.SplitN(arg[0], ".", 2)
-		if target = ls[0]; len(ls) > 1 {
-			rest = ls[1]
-		}
-	}
-	return target, rest
-}
 
 const ROUTE = "route"
 
 func init() {
 	Index.Merge(&ice.Context{
 		Configs: map[string]*ice.Config{
-			ROUTE: {Name: "route", Help: "路由", Value: kit.Data(kit.MDB_SHORT, kit.MDB_NAME)},
+			ROUTE: {Name: ROUTE, Help: "路由", Value: kit.Data(kit.MDB_SHORT, kit.MDB_ROUTE)},
 		},
 		Commands: map[string]*ice.Command{
-			ROUTE: {Name: "route name cmd auto", Help: "路由", Meta: kit.Dict("detail", []string{"分组"}), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-				if len(arg) > 1 && arg[0] == "action" {
-					switch arg[1] {
-					case "group", "分组":
-						if m.Option("grp") != "" && m.Option("name") != "" {
-							m.Cmdy(GROUP, m.Option("grp"), "add", m.Option("name"))
-						}
-					}
-					return
-				}
-				if len(arg) > 0 && arg[0] == "" {
-					m.Cmdy(arg[1:])
-					return
-				}
-
-				target, rest := _route_split(arg...)
-				m.Richs(SPACE, nil, target, func(key string, val map[string]interface{}) {
-					if len(arg) > 1 {
-						m.Call(false, func(res *ice.Message) *ice.Message { return res })
-						ls := []interface{}{SPACE, val[kit.MDB_NAME]}
-						// 发送命令
-						if rest != "" {
-							ls = append(ls, SPACE, rest)
-						}
-						m.Cmdy(ls, arg[1:])
+			ROUTE: {Name: "route route auto 启动 创建 邀请", Help: "路由", Action: map[string]*ice.Action{
+				"create": {Name: "create", Help: "创建", Hand: func(m *ice.Message, arg ...string) {
+					m.Cmdy("web.code.install", "contexts", kit.Select("base", m.Option("type")))
+				}},
+				"start": {Name: "start type=server,worker name@key", Help: "启动", Hand: func(m *ice.Message, arg ...string) {
+					if p := m.Option("route"); p != "" {
+						m.Option("route", "")
+						m.Cmdy(SPACE, p, "route", "create", arg)
 						return
 					}
+					m.Cmdy("dream", "start", m.Option("name"))
+					m.Sleep("3s")
+				}},
+				"stop": {Name: "stop", Help: "结束", Hand: func(m *ice.Message, arg ...string) {
+					m.Cmdy(SPACE, m.Option("route"), "exit")
+				}},
+				"inputs": {Name: "inputs", Help: "补全", Hand: func(m *ice.Message, arg ...string) {
+					m.Cmdy(SPACE, m.Option("route"), "dream")
+				}},
+				"invite": {Name: "invite", Help: "邀请", Hand: func(m *ice.Message, arg ...string) {
+					m.Cmdy("web.wiki.image", "qrcode", kit.MergeURL(m.Option(ice.MSG_USERWEB), "river", m.Option(ice.MSG_RIVER)))
+				}},
+			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+				if len(arg) > 0 {
+					m.Cmd(SPACE, arg[0], ROUTE).Table(func(index int, value map[string]string, head []string) {
+						m.Push(kit.MDB_TYPE, value[kit.MDB_TYPE])
+						m.Push(kit.MDB_ROUTE, kit.Keys(arg[0], value[kit.MDB_ROUTE]))
+					})
+					return
+				}
 
+				m.Richs(SPACE, nil, kit.MDB_FOREACH, func(key string, val map[string]interface{}) {
 					switch val[kit.MDB_TYPE] {
 					case SERVER:
-						if val[kit.MDB_NAME] == m.Conf(cli.RUNTIME, "node.name") {
+						if val[kit.MDB_NAME] == cli.NodeName {
 							// 避免循环
 							return
 						}
@@ -67,20 +58,30 @@ func init() {
 						// 远程查询
 						m.Cmd(SPACE, val[kit.MDB_NAME], ROUTE).Table(func(index int, value map[string]string, head []string) {
 							m.Push(kit.MDB_TYPE, value[kit.MDB_TYPE])
-							m.Push(kit.MDB_NAME, kit.Keys(val[kit.MDB_NAME], value[kit.MDB_NAME]))
+							m.Push(kit.MDB_ROUTE, kit.Keys(val[kit.MDB_NAME], value[kit.MDB_ROUTE]))
 						})
 						fallthrough
 					case WORKER:
 						// 本机查询
 						m.Push(kit.MDB_TYPE, val[kit.MDB_TYPE])
-						m.Push(kit.MDB_NAME, val[kit.MDB_NAME])
+						m.Push(kit.MDB_ROUTE, val[kit.MDB_NAME])
 					}
 				})
-				if m.W != nil && len(arg) < 2 {
-					m.Table(func(index int, value map[string]string, field []string) {
-						m.Push("link", m.Cmdx(mdb.RENDER, RENDER.A, value["name"], kit.MergeURL(m.Option(ice.MSG_USERWEB), "pod", value["name"])))
-					})
+				if m.W == nil {
+					return
 				}
+
+				m.Table(func(index int, value map[string]string, field []string) {
+					m.Push(kit.MDB_LINK, m.Cmdx(mdb.RENDER, RENDER.A, value[kit.MDB_ROUTE],
+						kit.MergeURL(m.Option(ice.MSG_USERWEB), "pod", value[kit.MDB_ROUTE])))
+					switch value[kit.MDB_TYPE] {
+					case SERVER:
+						m.Push("action", m.Cmdx(mdb.RENDER, RENDER.Button, "启动"))
+					case WORKER:
+						m.Push("action", m.Cmdx(mdb.RENDER, RENDER.Button, "结束"))
+					}
+				})
+				m.Sort("route")
 			}},
 			"/route/": {Name: "/route/", Help: "路由器", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 				switch arg[0] {

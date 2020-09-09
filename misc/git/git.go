@@ -317,12 +317,7 @@ var Index = &ice.Context{Name: GIT, Help: "代码库",
 			m.Sort("line", "int")
 		}},
 
-		"status": {Name: "status name=auto auto 提交 编译 下载", Help: "文件状态", Meta: kit.Dict(
-			"提交", kit.List(
-				"_input", "select", "name", "action", "values", []string{"opt", "add"},
-				"_input", "text", "name", "text", "value", "some",
-			),
-		), Action: map[string]*ice.Action{
+		"status": {Name: "status name=auto auto 提交 编译 下载", Help: "代码状态", Action: map[string]*ice.Action{
 			"pull": {Name: "pull", Help: "下载", Hand: func(m *ice.Message, arg ...string) {
 				if m.Richs("progress", "", m.Option("_progress"), func(key string, value map[string]interface{}) {
 					m.Push("count", value["count"])
@@ -361,7 +356,7 @@ var Index = &ice.Context{Name: GIT, Help: "代码库",
 				}
 				m.Cmdy(cli.SYSTEM, "git", "add", m.Option("file"))
 			}},
-			"submit": {Name: "submit", Help: "提交", Hand: func(m *ice.Message, arg ...string) {
+			"submit": {Name: "submit action=opt,add comment=some", Help: "提交", Hand: func(m *ice.Message, arg ...string) {
 				if m.Option("name") == "" {
 					return
 				}

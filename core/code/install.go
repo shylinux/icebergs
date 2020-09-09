@@ -24,7 +24,7 @@ func init() {
 				kit.MDB_SHORT, kit.MDB_NAME, kit.MDB_PATH, "usr/install",
 				"contexts", kit.Dict(
 					"base", `mkdir contexts; cd contexts
-export ctx_dev={{.Option "httphost"}}; curl $ctx_dev/publish/ice.sh | sh
+export ctx_dev={{.Option "httphost"}}; (curl $ctx_dev/publish/ice.sh || wget -O - $ctx_dev/publish/ice.sh) | sh
 bin/ice.sh`,
 					"miss", `
 yum install -y git vim make go

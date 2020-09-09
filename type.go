@@ -78,51 +78,37 @@ func (c *Context) Cap(key string, arg ...interface{}) string {
 	}
 	return c.Caches[key].Value
 }
+func (c *Context) _hand(m *Message, cmd *Command, key string, k string, h *Action, arg ...string) *Message {
+	m.Log(LOG_CMDS, "%s.%s %s %d %v %s", c.Name, key, k, len(arg), arg, kit.FileLine(h.Hand, 3))
+	for i := 0; i < len(arg)-1; i += 2 {
+		m.Option(arg[i], arg[i+1])
+	}
+	h.Hand(m, arg...)
+	return m
+}
 func (c *Context) cmd(m *Message, cmd *Command, key string, arg ...string) *Message {
 	if m.meta[MSG_DETAIL] = kit.Simple(key, arg); cmd == nil {
 		return m
 	}
 
-	action, args := m.Option("_action"), arg
-	if len(arg) > 0 && arg[0] == "action" {
-		action, args = arg[1], arg[2:]
-	}
-
-	if m.Hand = true; action != "" && cmd.Action != nil {
-		if h, ok := cmd.Action[action]; ok {
-			if action == m.Option("_action") {
-				m.Option("_action", "")
-			}
-			m.Log(LOG_CMDS, "%s.%s %d %v %s", c.Name, key, len(arg), arg, kit.FileLine(h.Hand, 3))
-			for i := 0; i < len(args)-1; i += 2 {
-				m.Debug("option %v %v", args[i], args[i+1])
-				m.Option(args[i], args[i+1])
-			}
-			h.Hand(m, args...)
-			return m
+	if m.Hand = true; len(arg) > 1 && arg[0] == "action" && cmd.Action != nil {
+		if h, ok := cmd.Action[arg[1]]; ok {
+			return c._hand(m, cmd, key, arg[1], h, arg[2:]...)
 		}
-		for _, h := range cmd.Action {
-			if h.Name == action || h.Help == action {
-				if action == m.Option("_action") {
-					m.Option("_action", "")
-				}
-				m.Log(LOG_CMDS, "%s.%s %d %v %s", c.Name, key, len(arg), arg, kit.FileLine(h.Hand, 3))
-				for i := 0; i < len(args)-1; i += 2 {
-					m.Option(args[i], args[i+1])
-				}
-				h.Hand(m, args...)
-				return m
+		for k, h := range cmd.Action {
+			if h.Name == arg[1] || h.Help == arg[1] {
+				return c._hand(m, cmd, key, k, h, arg[2:]...)
 			}
 		}
 	}
 	if len(arg) > 0 && cmd.Action != nil {
 		if h, ok := cmd.Action[arg[0]]; ok {
-			m.Log(LOG_CMDS, "%s.%s %d %v %s", c.Name, key, len(arg), arg, kit.FileLine(h.Hand, 3))
-			for i := 1; i < len(arg)-1; i += 2 {
-				m.Option(arg[i], arg[i+1])
+			return c._hand(m, cmd, key, arg[0], h, arg[1:]...)
+		}
+		for k, h := range cmd.Action {
+			if h.Name == arg[0] || h.Help == arg[0] {
+				return c._hand(m, cmd, key, k, h, arg[1:]...)
 			}
-			h.Hand(m, arg[1:]...)
-			return m
 		}
 	}
 

@@ -10,7 +10,6 @@ import (
 	kit "github.com/shylinux/toolkits"
 	"github.com/shylinux/toolkits/task"
 
-	"fmt"
 	"math/rand"
 	"net"
 	"net/url"
@@ -18,18 +17,11 @@ import (
 	"time"
 )
 
-func _link(m *ice.Message, pod interface{}) string {
-	if m.Option(ice.MSG_USERUA) == "" {
-		return kit.Format(pod)
-	}
-	return fmt.Sprintf(`<a target="_blank" href="%s?pod=%s">%s</a>`,
-		kit.Select(m.Conf(SHARE, "meta.domain"), m.Option(ice.MSG_USERWEB)), pod, pod)
-}
 func _space_list(m *ice.Message, space string) {
 	if space == "" {
 		m.Richs(SPACE, nil, kit.MDB_FOREACH, func(key string, value map[string]interface{}) {
 			m.Push(key, value, []string{kit.MDB_TIME, kit.MDB_TYPE, kit.MDB_NAME, kit.MDB_TEXT})
-			m.Push(kit.MDB_LINK, _link(m, value[kit.MDB_NAME]))
+			m.Push(kit.MDB_LINK, m.Cmdx(mdb.RENDER, RENDER.A, value[kit.MDB_NAME], kit.MergeURL(m.Option(ice.MSG_USERWEB), "pod", kit.Keys(m.Option("pod"), value[kit.MDB_NAME]))))
 		})
 		m.Sort(kit.MDB_NAME)
 		return
@@ -38,7 +30,7 @@ func _space_list(m *ice.Message, space string) {
 	m.Richs(SPACE, nil, space, func(key string, value map[string]interface{}) {
 		m.Push("detail", value)
 		m.Push(kit.MDB_KEY, kit.MDB_LINK)
-		m.Push(kit.MDB_VALUE, _link(m, value[kit.MDB_NAME]))
+		m.Push(kit.MDB_VALUE, kit.MergeURL(m.Option(ice.MSG_USERWEB), "pod", kit.Keys(m.Option("pod"), value[kit.MDB_NAME])))
 	})
 }
 func _space_dial(m *ice.Message, dev, name string, arg ...string) {

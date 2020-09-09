@@ -44,7 +44,7 @@ func (m *Message) log(level string, str string, arg ...interface{}) *Message {
 	case LOG_CMDS, LOG_INFO, "refer", "form":
 	case "register", "begin":
 	default:
-		suffix += " " + kit.FileLine(3, 2)
+		suffix += " " + kit.FileLine(3, 3)
 	}
 	if len(BinPack) > 0 {
 		prefix, suffix = "", ""

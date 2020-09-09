@@ -21,7 +21,7 @@ func _space_list(m *ice.Message, space string) {
 	if space == "" {
 		m.Richs(SPACE, nil, kit.MDB_FOREACH, func(key string, value map[string]interface{}) {
 			m.Push(key, value, []string{kit.MDB_TIME, kit.MDB_TYPE, kit.MDB_NAME, kit.MDB_TEXT})
-			m.Push(kit.MDB_LINK, m.Cmdx(mdb.RENDER, RENDER.A, value[kit.MDB_NAME], kit.MergeURL(m.Option(ice.MSG_USERWEB), "pod", kit.Keys(m.Option("pod"), value[kit.MDB_NAME]))))
+			m.PushRender(kit.MDB_LINK, "a", kit.Format(value[kit.MDB_NAME]), kit.MergeURL(m.Option(ice.MSG_USERWEB), "pod", kit.Keys(m.Option("pod"), value[kit.MDB_NAME])))
 		})
 		m.Sort(kit.MDB_NAME)
 		return
@@ -30,7 +30,7 @@ func _space_list(m *ice.Message, space string) {
 	m.Richs(SPACE, nil, space, func(key string, value map[string]interface{}) {
 		m.Push("detail", value)
 		m.Push(kit.MDB_KEY, kit.MDB_LINK)
-		m.Push(kit.MDB_VALUE, kit.MergeURL(m.Option(ice.MSG_USERWEB), "pod", kit.Keys(m.Option("pod"), value[kit.MDB_NAME])))
+		m.PushRender(kit.MDB_VALUE, "a", kit.MergeURL(m.Option(ice.MSG_USERWEB), "pod", kit.Keys(m.Option("pod"), value[kit.MDB_NAME])))
 	})
 }
 func _space_dial(m *ice.Message, dev, name string, arg ...string) {
@@ -138,11 +138,11 @@ func _space_handle(m *ice.Message, safe bool, send map[string]*ice.Message, c *w
 
 			if len(target) == 0 {
 				if msg.Option(ice.MSG_USERROLE, aaa.UserRole(msg, msg.Option(ice.MSG_USERNAME))) == aaa.VOID {
-					role := msg.Cmdx(SPIDE, SPIDE_DEV, SPIDE_MSG, SPIDE_GET, "/chat/header", "_action", aaa.USERROLE, "who", msg.Option(ice.MSG_USERNAME))
+					role := msg.Cmdx(SPIDE, SPIDE_DEV, SPIDE_MSG, SPIDE_GET, "/chat/header", "cmds", aaa.USERROLE, "who", msg.Option(ice.MSG_USERNAME))
 					msg.Option(ice.MSG_USERROLE, kit.Select(role, aaa.TECH, role == aaa.ROOT))
 				}
+				msg.Log_AUTH(aaa.USERROLE, msg.Option(ice.MSG_USERROLE), aaa.USERNAME, msg.Option(ice.MSG_USERNAME))
 
-				msg.Log_AUTH(aaa.USERNAME, msg.Option(ice.MSG_USERNAME), aaa.USERROLE, msg.Option(ice.MSG_USERROLE))
 				if msg.Optionv(ice.MSG_HANDLE, "true"); !msg.Warn(!safe, ice.ErrNotAuth) {
 					// 本地执行
 					msg.Option("_dev", name)
@@ -197,8 +197,6 @@ func _space_search(m *ice.Message, kind, name, text string, arg ...string) {
 	})
 }
 
-const SPACE = "space"
-
 const (
 	MASTER = "master"
 	SERVER = "server"
@@ -206,10 +204,12 @@ const (
 	BETTER = "better"
 )
 
+const SPACE = "space"
+
 func init() {
 	Index.Merge(&ice.Context{
 		Configs: map[string]*ice.Config{
-			SPACE: {Name: "space", Help: "空间站", Value: kit.Data(kit.MDB_SHORT, kit.MDB_NAME,
+			SPACE: {Name: SPACE, Help: "空间站", Value: kit.Data(kit.MDB_SHORT, kit.MDB_NAME,
 				"redial", kit.Dict("a", 3000, "b", 1000, "c", 1000, "r", 4096, "w", 4096),
 				"timeout", kit.Dict("c", "180s"),
 			)},

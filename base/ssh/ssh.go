@@ -76,6 +76,11 @@ func _ssh_script(m *ice.Message, name string) io.Reader {
 	if s, e := os.Open(name); e == nil {
 		return s
 	}
+	switch strings.Split(name, "/")[0] {
+	case "etc", "var":
+		m.Warn(true, ice.ErrNotFound)
+		return nil
+	}
 
 	if msg := m.Cmd("web.spide", "dev", "GET", path.Join("/share/local/", name)); msg.Result(0) != ice.ErrWarn {
 		bio := bytes.NewBuffer([]byte(msg.Result()))
@@ -337,6 +342,9 @@ func (f *Frame) Start(m *ice.Message, arg ...string) bool {
 		}
 
 		s := _ssh_script(m, arg[0])
+		if s == nil {
+			return true
+		}
 		buf := bytes.NewBuffer(make([]byte, 0, 4096))
 		defer func() { m.Echo(buf.String()) }()
 

@@ -76,14 +76,17 @@ var Index = &ice.Context{Name: TMUX, Help: "工作台",
 			m.Cmdy(code.INSTALL, path.Base(m.Conf(TMUX, kit.META_SOURCE)), arg)
 		}},
 
-		TEXT: {Name: "text 保存:button 清空:button text:textarea", Help: "文本", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			if len(arg) > 0 && arg[0] != "" {
-				m.Cmd(_tmux, "set-buffer", arg[0])
-			}
+		TEXT: {Name: "text auto 保存:button 清空:button text:textarea", Help: "文本", Action: map[string]*ice.Action{
+			"save": {Name: "save", Help: "保存", Hand: func(m *ice.Message, arg ...string) {
+				if len(arg) > 0 && arg[0] != "" {
+					m.Cmd(_tmux, "set-buffer", arg[0])
+				}
 
-			text := m.Cmdx(_tmux, "show-buffer")
-			m.Cmdy("web.wiki.image", "qrcode", text)
-			m.Echo("\n<span>%s</span>", text).Render("")
+				text := m.Cmdx(_tmux, "show-buffer")
+				m.Cmdy("web.wiki.image", "qrcode", text)
+				m.Echo("\n<span>%s</span>", text).Render("")
+			}},
+		}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 		}},
 		BUFFER: {Name: "buffer [buffer=auto [value]] auto", Help: "缓存", Action: map[string]*ice.Action{
 			mdb.MODIFY: {Name: "modify", Help: "编辑", Hand: func(m *ice.Message, arg ...string) {

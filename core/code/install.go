@@ -23,8 +23,12 @@ func init() {
 			INSTALL: {Name: INSTALL, Help: "安装", Value: kit.Data(
 				kit.MDB_SHORT, kit.MDB_NAME, kit.MDB_PATH, "usr/install",
 				"contexts", kit.Dict(
+					"tmux", `yum install -y tmux
+curl -o tmux.conf {{.Option "httphost"}}/publish/tmux.conf
+tmux -f tmux.conf`,
 					"base", `mkdir contexts; cd contexts
-export ctx_dev={{.Option "httphost"}}; (curl $ctx_dev/publish/ice.sh || wget -O - $ctx_dev/publish/ice.sh) | sh
+export ctx_dev={{.Option "httphost"}} ctx_log=/dev/stdout; curl $ctx_dev/publish/ice.sh |sh
+export ctx_dev={{.Option "httphost"}} ctx_log=/dev/stdout; wget -O - $ctx_dev/publish/ice.sh | sh
 bin/ice.sh`,
 					"miss", `
 yum install -y git vim make go

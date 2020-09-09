@@ -348,7 +348,7 @@ func init() {
 					case SPIDE_MSG:
 						var data map[string][]string
 						m.Assert(json.NewDecoder(res.Body).Decode(&data))
-						m.Info("res: %s", kit.Formats(data))
+						m.Info("res: %s", kit.Format(data))
 						for _, k := range data[ice.MSG_APPEND] {
 							for i := range data[k] {
 								m.Push(k, data[k][i])

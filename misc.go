@@ -62,6 +62,23 @@ func (m *Message) AddCmd(cmd *Command) string {
 	return kit.Keys(m.target.Cap(CTX_FOLLOW), name)
 }
 
+func (m *Message) PushRender(key, view, name string, arg ...string) *Message {
+	switch view {
+	case "button":
+		list := []string{}
+		for _, k := range kit.Split(name) {
+			list = append(list, fmt.Sprintf(`<input type="button" value="%s">`, k))
+		}
+		m.Push(key, strings.Join(list, ""))
+	case "a":
+		if m.W != nil {
+			m.Push(key, fmt.Sprintf(`<a href="%s" target="_blank">%s</a>`, kit.Select(name, arg, 0), name))
+		}
+	default:
+		m.Push(key, name)
+	}
+	return m
+}
 func (m *Message) PushAction(list ...interface{}) {
 	m.Table(func(index int, value map[string]string, head []string) {
 		action := []string{}

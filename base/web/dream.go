@@ -23,9 +23,7 @@ func _dream_list(m *ice.Message) {
 			m.Push(kit.MDB_TYPE, "none")
 			m.Push(kit.MDB_STATUS, gdb.STOP)
 		}
-		for _, k := range []string{"start", "stop", "restart"} {
-			m.Push(k, m.Cmdx("_render", RENDER.Button, k))
-		}
+		m.PushRender("action", "button", "start,stop,restart")
 	})
 	m.Sort(kit.MDB_NAME)
 }

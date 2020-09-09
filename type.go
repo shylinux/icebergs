@@ -161,7 +161,7 @@ func (c *Context) Merge(s *Context, x Server) *Context {
 				list := []interface{}{}
 				for _, v := range kit.Split(kit.Select(k, a.Name), " ", " ")[1:] {
 					item := kit.Dict(kit.MDB_INPUT, "text", kit.MDB_VALUE, "@key")
-					ls := kit.Split(v, " ", ":=@")
+					ls, value := kit.Split(v, " ", ":=@"), ""
 					kit.Value(item, kit.MDB_NAME, ls[0])
 					for i := 1; i < len(ls); i += 2 {
 						switch ls[i] {
@@ -173,9 +173,10 @@ func (c *Context) Merge(s *Context, x Server) *Context {
 								kit.Value(item, "values", strings.Split(ls[i+1], ","))
 							} else {
 								kit.Value(item, kit.MDB_VALUE, ls[i+1])
+								value = ls[i+1]
 							}
 						case "@":
-							kit.Value(item, kit.MDB_VALUE, "@"+ls[i+1]+"=")
+							kit.Value(item, kit.MDB_VALUE, "@"+ls[i+1]+"="+value)
 						}
 					}
 					list = append(list, item)

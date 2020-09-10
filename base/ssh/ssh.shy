@@ -1,0 +1,17 @@
+title "ssh"
+refer `
+官网 http://www.openssh.com/
+源码 https://github.com/openssh/openssh-portable
+文档 https://man.openbsd.org/ssh
+`
+
+chapter "应用"
+field "登录" ssh.dial
+
+field "公钥" ssh.public
+field "服务" ssh.listen
+field "连接" ssh.connect
+field "会话" ssh.session
+field "命令" ssh.command
+
+

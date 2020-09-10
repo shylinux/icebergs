@@ -37,6 +37,11 @@ func _dream_show(m *ice.Message, name string) {
 	p := path.Join(m.Conf(DREAM, "meta.path"), name)
 	os.MkdirAll(p, ice.MOD_DIR)
 
+	m.Debug("what %v", m.Option("repos"))
+	if m.Option("repos") != "" {
+		m.Cmd("web.code.git.repos", "create", "remote", m.Option("repos"), "path", p)
+	}
+
 	miss := path.Join(p, "etc/miss.sh")
 	if _, e := os.Stat(miss); e != nil {
 		m.Cmd(nfs.SAVE, miss, m.Conf(DREAM, "meta.miss"))

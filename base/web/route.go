@@ -60,7 +60,7 @@ func init() {
 						m.Cmdy(SPACE, m.Option("route"), "dream")
 					}
 				}},
-				"start": {Name: "start type=worker,server name=hi@key", Help: "启动", Hand: func(m *ice.Message, arg ...string) {
+				"start": {Name: "start type=worker,server name=hi@key repos", Help: "启动", Hand: func(m *ice.Message, arg ...string) {
 					m.Cmdy(SPACE, m.Option("route"), "dream", "start", arg)
 					m.Sleep("3s")
 				}},

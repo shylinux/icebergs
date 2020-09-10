@@ -301,6 +301,7 @@ const (
 )
 const (
 	FIELDS = "fields"
+	DETAIL = "detail"
 	CREATE = "create"
 	RENAME = "rename"
 	REMOVE = "remove"
@@ -313,8 +314,9 @@ const (
 
 	IMPORT = "import"
 	EXPORT = "export"
-	INPUTS = "inputs"
 	PRUNES = "prunes"
+	INPUTS = "inputs"
+	SCRIPT = "script"
 )
 
 var Index = &ice.Context{Name: "mdb", Help: "数据模块",

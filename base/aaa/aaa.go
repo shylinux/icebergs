@@ -12,6 +12,7 @@ const (
 	USERZONE = "userzone"
 	USERNICK = "usernick"
 	USERNAME = "username"
+	HOSTNAME = "hostname"
 	PASSWORD = "password"
 	USERROLE = "userrole"
 	USERNODE = "usernode"

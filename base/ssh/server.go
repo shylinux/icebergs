@@ -13,7 +13,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"net"
 	"os"
 	"os/exec"
@@ -104,18 +103,11 @@ func _ssh_watch(m *ice.Message, meta map[string]string, input io.Reader, output 
 				switch buf[i] {
 				case '\r', '\n':
 					cmd := strings.TrimSpace(string(buf[:i]))
-					m.Log_IMPORT("hostname", meta["hostname"], "username", meta["username"], "cmd", cmd, "buf", buf[:i+n])
+					m.Log_IMPORT(aaa.HOSTNAME, meta[aaa.HOSTNAME], aaa.USERNAME, meta[aaa.USERNAME], "cmd", cmd, "buf", buf[:i+n])
 					m.Conf(CONNECT, kit.Keys(kit.MDB_HASH, meta[CONNECT], "duration"), m.Format("cost"))
 					m.Conf(SESSION, kit.Keys(kit.MDB_HASH, meta[SESSION], "cmd"), cmd)
 
-					// msg := m.Cmd(cmd).Table()
-					// res := strings.TrimSpace(strings.ReplaceAll(msg.Result(), "\n", "\r\n"))
-					//
-					// m.Debug("%v", msg.Format("meta"))
-					// if len(res) > 0 {
-					// 	fmt.Fprintf(display, "\r\n")
-					// 	fmt.Fprintf(display, res)
-					// }
+					m.Cmdy(mdb.INSERT, m.Prefix(COMMAND), "", mdb.LIST, aaa.HOSTNAME, meta[aaa.HOSTNAME], aaa.USERNAME, meta[aaa.USERNAME], "cmd", cmd)
 					i = 0
 				default:
 					if i += n; i >= 1024 {
@@ -186,8 +178,8 @@ func _ssh_handle(m *ice.Message, meta map[string]string, c net.Conn, channel ssh
 			}
 
 			m.Gos(m, func(m *ice.Message) { io.Copy(channel, tty) })
-			// _ssh_watch(m, meta, channel, tty, channel)
-			_ssh_trace(m, meta, channel, tty, channel)
+			_ssh_watch(m, meta, channel, tty, channel)
+			// _ssh_trace(m, meta, channel, tty, channel)
 		}
 		request.Reply(true, nil)
 	}
@@ -317,12 +309,12 @@ const (
 	CHANNEL = "channel"
 	SESSION = "session"
 	REQUEST = "request"
+	COMMAND = "command"
 )
 const (
 	METHOD = "method"
 	PUBLIC = "public"
 	LISTEN = "listen"
-	COUNTS = "counts"
 	DIAL   = "dial"
 )
 
@@ -335,83 +327,77 @@ func init() {
 				"goodbye", "\r\ngoodbye of context world\r\n",
 				kit.MDB_SHORT, kit.MDB_TEXT,
 			)},
+
 			LISTEN: {Name: LISTEN, Help: "服务", Value: kit.Data(kit.MDB_SHORT, aaa.HOSTPORT,
-				mdb.FIELDS, "time,hash,hostport,status",
+				kit.MDB_FIELD, "time,hash,hostport,status",
 			)},
 			CONNECT: {Name: CONNECT, Help: "连接", Value: kit.Data(
-				mdb.FIELDS, "time,hash,hostport,status,duration,close_time,hostname,username",
+				kit.MDB_FIELD, "time,hash,hostport,status,duration,close_time,hostname,username",
 			)},
 			SESSION: {Name: SESSION, Help: "会话", Value: kit.Data(
-				mdb.FIELDS, "time,hash,hostport,status,tty,cmd",
+				kit.MDB_FIELD, "time,hash,hostport,status,tty,cmd",
 			)},
-			COUNTS: {Name: COUNTS, Help: "统计", Value: kit.Data(
-				mdb.FIELDS, "time,hash,hostport,status,tty,cmd",
+			COMMAND: {Name: COMMAND, Help: "命令", Value: kit.Data(
+				kit.MDB_FIELD, "time,id,username,hostname,cmd",
 			)},
 
 			DIAL: {Name: DIAL, Help: "连接", Value: kit.Data(
-				mdb.FIELDS, "time,hash,hostport,username",
+				kit.MDB_FIELD, "time,hash,hostport,username",
 			)},
 		},
 		Commands: map[string]*ice.Command{
 			PUBLIC: {Name: "public hash=auto auto 添加 导出 导入", Help: "公钥", Action: map[string]*ice.Action{
-				mdb.IMPORT: {Name: "import", Help: "导入", List: kit.List(
-					kit.MDB_INPUT, "text", kit.MDB_NAME, "file", kit.MDB_VALUE, ".ssh/authorized_keys",
-				), Hand: func(m *ice.Message, arg ...string) {
-					p := path.Join(os.Getenv("HOME"), kit.Select(arg[0], arg, 1))
-					for _, pub := range strings.Split(m.Cmdx(nfs.CAT, p), "\n") {
-						if len(pub) > 10 {
-							m.Cmd(PUBLIC, mdb.CREATE, pub)
-						}
-					}
-					m.Echo(p)
-				}},
-				mdb.EXPORT: {Name: "export", Help: "导出", List: kit.List(
-					kit.MDB_INPUT, "text", kit.MDB_NAME, "file", kit.MDB_VALUE, ".ssh/authorized_keys",
-				), Hand: func(m *ice.Message, arg ...string) {
-					list := []string{}
-					m.Richs(PUBLIC, "", kit.MDB_FOREACH, func(key string, value map[string]interface{}) {
-						list = append(list, fmt.Sprintf("%s %s %s", value[kit.MDB_TYPE], value[kit.MDB_TEXT], value[kit.MDB_NAME]))
-					})
-					if len(list) > 0 {
-						m.Cmdy(nfs.SAVE, path.Join(os.Getenv("HOME"), kit.Select(arg[0], arg, 1)), strings.Join(list, "\n")+"\n")
-					}
-				}},
-				mdb.CREATE: {Name: "create", Help: "添加", List: kit.List(
-					kit.MDB_INPUT, "textarea", kit.MDB_NAME, "publickey", kit.MDB_VALUE, "", kit.MDB_STYLE, kit.Dict("width", "800", "height", "100"),
-				), Hand: func(m *ice.Message, arg ...string) {
-					ls := kit.Split(kit.Select(arg[0], arg, 1))
+				mdb.CREATE: {Name: "create publickey:textarea", Help: "添加", Hand: func(m *ice.Message, arg ...string) {
+					ls := kit.Split(m.Option("publickey"))
 					m.Cmdy(mdb.INSERT, m.Prefix(PUBLIC), "", mdb.HASH, kit.MDB_TYPE, ls[0],
 						kit.MDB_NAME, ls[len(ls)-1], kit.MDB_TEXT, strings.Join(ls[1:len(ls)-1], "+"))
 				}},
 				mdb.DELETE: {Name: "delete", Help: "删除", Hand: func(m *ice.Message, arg ...string) {
 					m.Cmdy(mdb.DELETE, m.Prefix(PUBLIC), "", mdb.HASH, kit.MDB_HASH, m.Option(kit.MDB_HASH))
 				}},
+				mdb.EXPORT: {Name: "export file=.ssh/authorized_keys", Help: "导出", Hand: func(m *ice.Message, arg ...string) {
+					list := []string{}
+					if m.Cmd(mdb.SELECT, m.Prefix(PUBLIC), "", mdb.HASH).Table(func(index int, value map[string]string, head []string) {
+						list = append(list, fmt.Sprintf("%s %s %s", value[kit.MDB_TYPE], value[kit.MDB_TEXT], value[kit.MDB_NAME]))
+					}); len(list) > 0 {
+						m.Cmdy(nfs.SAVE, path.Join(os.Getenv("HOME"), m.Option(kit.MDB_FILE)), strings.Join(list, "\n")+"\n")
+					}
+				}},
+				mdb.IMPORT: {Name: "import file=.ssh/authorized_keys", Help: "导入", Hand: func(m *ice.Message, arg ...string) {
+					p := path.Join(os.Getenv("HOME"), m.Option(kit.MDB_FILE))
+					for _, pub := range strings.Split(m.Cmdx(nfs.CAT, p), "\n") {
+						if len(pub) > 10 {
+							m.Cmd(PUBLIC, mdb.CREATE, "publickey", pub)
+						}
+					}
+					m.Echo(p)
+				}},
 			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 				if len(arg) > 0 {
-					m.Option(mdb.FIELDS, "detail")
+					m.Option(mdb.FIELDS, mdb.DETAIL)
+				} else {
+					defer m.PushAction("删除")
 				}
 				m.Cmdy(mdb.SELECT, m.Prefix(PUBLIC), "", mdb.HASH, kit.MDB_HASH, arg)
-				m.Sort(kit.MDB_NAME)
-				m.PushAction("删除")
 			}},
 
-			LISTEN: {Name: "listen hash auto", Help: "服务", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-				if len(arg) == 0 {
-					m.Option(mdb.FIELDS, m.Conf(LISTEN, kit.META_FIELDS))
-					m.Cmdy(mdb.SELECT, m.Prefix(LISTEN), "", mdb.HASH)
-					return
+			LISTEN: {Name: "listen hash=auto auto", Help: "服务", Action: map[string]*ice.Action{
+				mdb.CREATE: {Name: "create port=9030", Help: "启动", Hand: func(m *ice.Message, arg ...string) {
+					m.Gos(m, func(m *ice.Message) { _ssh_listen(m, ":"+m.Option("port")) })
+				}},
+			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+				if m.Option(mdb.FIELDS, m.Conf(LISTEN, kit.META_FIELD)); len(arg) > 0 {
+					m.Option(mdb.FIELDS, mdb.DETAIL)
 				}
-				m.Gos(m, func(m *ice.Message) { _ssh_listen(m, arg[0]) })
+				m.Cmdy(mdb.SELECT, m.Prefix(LISTEN), "", mdb.HASH, kit.MDB_HASH, arg)
 			}},
-			CONNECT: {Name: "connect hash auto 清理", Help: "连接", Action: map[string]*ice.Action{
+			CONNECT: {Name: "connect hash=auto auto 清理", Help: "连接", Action: map[string]*ice.Action{
 				mdb.PRUNES: {Name: "prunes", Help: "清理", Hand: func(m *ice.Message, arg ...string) {
 					m.Cmdy(mdb.PRUNES, m.Prefix(CONNECT), "", mdb.HASH, kit.MDB_STATUS, "close")
 				}},
 			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-				if len(arg) == 0 {
-					m.Option(mdb.FIELDS, m.Conf(CONNECT, kit.META_FIELDS))
-				} else {
-					m.Option(mdb.FIELDS, "detail")
+				if m.Option(mdb.FIELDS, m.Conf(CONNECT, kit.META_FIELD)); len(arg) > 0 {
+					m.Option(mdb.FIELDS, mdb.DETAIL)
 				}
 				m.Cmdy(mdb.SELECT, m.Prefix(CONNECT), "", mdb.HASH, kit.MDB_HASH, arg)
 			}},
@@ -420,67 +406,38 @@ func init() {
 					m.Cmdy(mdb.PRUNES, m.Prefix(SESSION), "", mdb.HASH, kit.MDB_STATUS, "close")
 				}},
 			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-				if len(arg) == 0 {
-					m.Option(mdb.FIELDS, m.Conf(SESSION, kit.META_FIELDS))
-				} else {
-					m.Option(mdb.FIELDS, "detail")
+				if m.Option(mdb.FIELDS, m.Conf(SESSION, kit.META_FIELD)); len(arg) > 0 {
+					m.Option(mdb.FIELDS, mdb.DETAIL)
 				}
 				m.Cmdy(mdb.SELECT, m.Prefix(SESSION), "", mdb.HASH, kit.MDB_HASH, arg)
 			}},
-
-			DIAL: {Name: "dial hash auto 受控 登录 cmd:textarea=pwd", Help: "连接", Action: map[string]*ice.Action{
-				mdb.CREATE: {Name: "create", Help: "登录", List: kit.List(
-					kit.MDB_INPUT, "text", kit.MDB_NAME, aaa.USERNAME, kit.MDB_VALUE, "shy",
-					kit.MDB_INPUT, "text", kit.MDB_NAME, aaa.HOSTPORT, kit.MDB_VALUE, "shylinux.com:22",
-				), Hand: func(m *ice.Message, arg ...string) {
-					for i := 0; i < len(arg); i += 2 {
-						m.Option(arg[i], arg[i+1])
-					}
-
-					connect, e := _ssh_dial(m, m.Option(aaa.USERNAME), m.Option(aaa.HOSTPORT))
-					m.Assert(e)
-
-					h := m.Rich(DIAL, "", kit.Dict(
-						aaa.USERNAME, m.Option(aaa.USERNAME),
-						aaa.HOSTPORT, m.Option(aaa.HOSTPORT),
-						CONNECT, connect,
-					))
-					m.Echo(h)
+			COMMAND: {Name: "command id=auto auto", Help: "命令", Action: map[string]*ice.Action{
+				mdb.PRUNES: {Name: "prunes", Help: "清理", Hand: func(m *ice.Message, arg ...string) {
+					m.Cmdy(mdb.PRUNES, m.Prefix(CONNECT), "", mdb.HASH, kit.MDB_STATUS, "close")
 				}},
-				"revert": {Name: "revert", Help: "受控", List: kit.List(
-					kit.MDB_INPUT, "text", kit.MDB_NAME, aaa.HOSTPORT, kit.MDB_VALUE, "192.168.0.105:9030",
-				), Hand: func(m *ice.Message, arg ...string) {
-					for i := 0; i < len(arg); i += 2 {
-						m.Option(arg[i], arg[i+1])
+			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+				if m.Option(mdb.FIELDS, m.Conf(COMMAND, kit.META_FIELD)); len(arg) > 0 {
+					m.Option(mdb.FIELDS, mdb.DETAIL)
+				}
+				m.Cmdy(mdb.SELECT, m.Prefix(COMMAND), "", mdb.LIST, kit.MDB_ID, arg)
+			}},
+
+			DIAL: {Name: "dial hash=auto auto 登录 cmd:textarea=pwd", Help: "连接", Action: map[string]*ice.Action{
+				mdb.CREATE: {Name: "create username=shy hostname=shylinux.com port=22", Help: "登录", Hand: func(m *ice.Message, arg ...string) {
+					if connect, e := _ssh_dial(m, m.Option(aaa.USERNAME),
+						m.Option(aaa.HOSTPORT, m.Option("hostname")+":"+m.Option("port"))); m.Assert(e) {
+						h := m.Rich(DIAL, "", kit.Dict(
+							aaa.USERNAME, m.Option(aaa.USERNAME), aaa.HOSTPORT, m.Option(aaa.HOSTPORT), CONNECT, connect,
+						))
+						m.Echo(h)
 					}
-
-					connect, e := _ssh_dial(m, "revert", m.Option(aaa.HOSTPORT))
-					m.Assert(e)
-
-					h := m.Rich(DIAL, "", kit.Dict(
-						aaa.USERNAME, "revert",
-						aaa.HOSTPORT, m.Option(aaa.HOSTPORT),
-						CONNECT, connect,
-					))
-
-					session, e := connect.NewSession()
-					m.Assert(e)
-
-					r, w := io.Pipe()
-					session.Stdout = w
-
-					_ssh_watch(m, map[string]string{}, r, ioutil.Discard, ioutil.Discard)
-
-					session.Start("bash")
-					m.Echo(h)
 				}},
-
 				mdb.DELETE: {Name: "delete", Help: "删除", Hand: func(m *ice.Message, arg ...string) {
 					m.Cmdy(mdb.DELETE, m.Prefix(DIAL), "", mdb.HASH, kit.MDB_HASH, m.Option(kit.MDB_HASH))
 				}},
 			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 				if len(arg) == 0 || arg[0] == "" {
-					m.Option(mdb.FIELDS, m.Conf(DIAL, kit.META_FIELDS))
+					m.Option(mdb.FIELDS, m.Conf(DIAL, kit.META_FIELD))
 					m.Cmdy(mdb.SELECT, m.Prefix(DIAL), "", mdb.HASH)
 					m.PushAction("删除")
 					return
@@ -501,8 +458,7 @@ func init() {
 					var b bytes.Buffer
 					session.Stdout = &b
 
-					err := session.Run(arg[1])
-					m.Assert(err)
+					m.Assert(session.Run(arg[1]))
 					m.Echo(b.String())
 				})
 			}},

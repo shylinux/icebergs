@@ -105,12 +105,12 @@ var Index = &ice.Context{Name: "cli", Help: "命令模块",
 			msg.Split(m.Cmdx(SYSTEM, "ps", "ux"), "", " ", "\n")
 			msg.Table(func(index int, value map[string]string, head []string) {
 				if m.Appendv(ice.MSG_APPEND, "action", head); len(arg) == 2 && value["PID"] == arg[1] {
-					m.Push("action", m.Cmdx(mdb.RENDER, "button", "结束"))
+					m.PushRender("action", "button", "结束")
 					m.Push("", value)
 					return
 				}
 				if len(arg) == 0 || len(arg) == 1 && strings.Contains(value["COMMAND"], arg[0]) {
-					m.Push("action", m.Cmdx(mdb.RENDER, "button", "结束"))
+					m.PushRender("action", "button", "结束")
 					m.Push("", value)
 				}
 			})

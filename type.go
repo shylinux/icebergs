@@ -80,8 +80,10 @@ func (c *Context) Cap(key string, arg ...interface{}) string {
 }
 func (c *Context) _hand(m *Message, cmd *Command, key string, k string, h *Action, arg ...string) *Message {
 	m.Log(LOG_CMDS, "%s.%s %s %d %v %s", c.Name, key, k, len(arg), arg, kit.FileLine(h.Hand, 3))
-	for i := 0; i < len(arg)-1; i += 2 {
-		m.Option(arg[i], arg[i+1])
+	if len(h.List) > 0 {
+		for i := 0; i < len(arg)-1; i += 2 {
+			m.Option(arg[i], arg[i+1])
+		}
 	}
 	h.Hand(m, arg...)
 	return m
@@ -167,7 +169,16 @@ func (c *Context) Merge(s *Context, x Server) *Context {
 						switch ls[i] {
 						case ":":
 							kit.Value(item, kit.MDB_INPUT, ls[i+1])
+							switch ls[i+1] {
+							case "textarea":
+								kit.Value(item, "style.width", "300")
+								kit.Value(item, "style.height", "150")
+
+							}
 						case "=":
+							if len(ls) <= i+1 {
+								continue
+							}
 							if strings.Contains(ls[i+1], ",") {
 								kit.Value(item, kit.MDB_INPUT, "select")
 								kit.Value(item, "values", strings.Split(ls[i+1], ","))

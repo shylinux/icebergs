@@ -69,6 +69,9 @@ func (m *Message) PushRender(key, view, name string, arg ...string) *Message {
 		for _, k := range kit.Split(name) {
 			list = append(list, fmt.Sprintf(`<input type="button" value="%s">`, k))
 		}
+		for _, k := range arg {
+			list = append(list, fmt.Sprintf(`<input type="button" value="%s">`, k))
+		}
 		m.Push(key, strings.Join(list, ""))
 	case "a":
 		if m.W != nil {
@@ -81,11 +84,7 @@ func (m *Message) PushRender(key, view, name string, arg ...string) *Message {
 }
 func (m *Message) PushAction(list ...interface{}) {
 	m.Table(func(index int, value map[string]string, head []string) {
-		action := []string{}
-		for _, k := range kit.Simple(list...) {
-			action = append(action, m.Cmdx("render", "button", k))
-		}
-		m.Push("action", strings.Join(action, ""))
+		m.PushRender("action", "button", strings.Join(kit.Simple(list...), ","))
 	})
 }
 func (m *Message) PushDetail(value interface{}, arg ...interface{}) *Message {

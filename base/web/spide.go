@@ -305,7 +305,9 @@ func init() {
 					if web.Client == nil {
 						web.Client = &http.Client{Timeout: kit.Duration(kit.Format(client["timeout"]))}
 					}
-					m.Info("%s: %s", req.Header.Get(ContentLength), req.Header.Get(ContentType))
+					if req.Method == SPIDE_POST {
+						m.Info("%s: %s", req.Header.Get(ContentLength), req.Header.Get(ContentType))
+					}
 
 					// 发送请求
 					res, e := web.Client.Do(req)

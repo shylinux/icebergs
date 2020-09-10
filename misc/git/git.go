@@ -3,7 +3,6 @@ package git
 import (
 	ice "github.com/shylinux/icebergs"
 	"github.com/shylinux/icebergs/base/cli"
-	"github.com/shylinux/icebergs/base/gdb"
 	"github.com/shylinux/icebergs/base/mdb"
 	"github.com/shylinux/icebergs/base/nfs"
 	"github.com/shylinux/icebergs/base/web"
@@ -48,7 +47,8 @@ var Index = &ice.Context{Name: GIT, Help: "代码库",
 			),
 		)},
 		REPOS: {Name: REPOS, Help: "仓库", Value: kit.Data(
-			kit.MDB_SHORT, kit.MDB_NAME, "owner", "https://github.com/shylinux",
+			kit.MDB_SHORT, kit.MDB_NAME, kit.MDB_FIELD, "time,name,branch,last",
+			"owner", "https://github.com/shylinux",
 		)},
 		TOTAL: {Name: TOTAL, Help: "统计", Value: kit.Data(
 			kit.MDB_SHORT, kit.MDB_NAME, "skip", kit.Dict(
@@ -59,22 +59,18 @@ var Index = &ice.Context{Name: GIT, Help: "代码库",
 	},
 	Commands: map[string]*ice.Command{
 		ice.CTX_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			m.Watch(gdb.SYSTEM_INIT, m.AddCmd(&ice.Command{Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-				m.Cmd(REPOS, "volcanos", "usr/volcanos")
-			}}))
-		}},
-		"init": {Name: "init", Help: "初始化", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			// 系统项目
 			wd, _ := os.Getwd()
 			_repos_insert(m, path.Base(wd), wd)
-
+		}},
+		"init": {Name: "init", Help: "初始化", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			// 官方项目
 			m.Cmd(nfs.DIR, "usr", "name path").Table(func(index int, value map[string]string, head []string) {
 				_repos_insert(m, value["name"], value["path"])
 			})
 		}},
 
-		GIT: {Name: "git port=auto path=auto auto 构建 下载", Help: "编辑器", Action: map[string]*ice.Action{
+		GIT: {Name: "git port=auto path=auto auto 构建 下载", Help: "代码库", Action: map[string]*ice.Action{
 			"download": {Name: "download", Help: "下载", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmdy(code.INSTALL, "download", m.Conf(GIT, kit.META_SOURCE))
 			}},
@@ -97,30 +93,41 @@ var Index = &ice.Context{Name: GIT, Help: "代码库",
 			m.Cmdy(code.INSTALL, path.Base(m.Conf(GIT, kit.META_SOURCE)), arg)
 		}},
 
-		REPOS: {Name: "repos [name=auto [path [remote [branch]]]] auto", Help: "代码仓库", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			if len(arg) > 1 {
-				if _, e := os.Stat(path.Join(arg[1], ".git")); e != nil && os.IsNotExist(e) {
-					// 下载仓库
-					m.Cmd(cli.SYSTEM, GIT, "clone", "-b", kit.Select("master", arg, 3),
-						kit.Select(m.Conf(REPOS, "meta.owner")+"/"+arg[0], arg, 2), arg[1])
-					_repos_insert(m, arg[0], arg[1])
-				}
-			}
+		REPOS: {Name: "repos name=auto path=auto auto 添加", Help: "代码库", Action: map[string]*ice.Action{
+			mdb.CREATE: {Name: `create remote branch name path`, Help: "添加", Hand: func(m *ice.Message, arg ...string) {
+				m.Option("name", kit.Select(strings.TrimSuffix(path.Base(m.Option("remote")), ".git"), m.Option("name")))
+				m.Option("path", kit.Select(path.Join("usr", m.Option("name")), m.Option("path")))
+				m.Option("remote", kit.Select(m.Conf(REPOS, "meta.owner")+"/"+m.Option("name"), m.Option("remote")))
 
+				if _, e := os.Stat(path.Join(m.Option("path"), ".git")); e != nil && os.IsNotExist(e) {
+					// 下载仓库
+					if _, e := os.Stat(m.Option("path")); e == nil {
+						m.Option(cli.CMD_DIR, m.Option("path"))
+						m.Cmd(cli.SYSTEM, GIT, "init")
+						m.Cmd(cli.SYSTEM, GIT, "remote", "add", "origin", m.Option("remote"))
+						m.Cmd(cli.SYSTEM, GIT, "pull", "origin", "master")
+					} else {
+						m.Cmd(cli.SYSTEM, GIT, "clone", "-b", kit.Select("master", m.Option("branch")),
+							m.Option("remote"), m.Option("path"))
+
+					}
+					_repos_insert(m, m.Option("name"), m.Option("path"))
+				}
+			}},
+		}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			if len(arg) > 0 {
-				// 仓库详情
-				m.Richs(REPOS, nil, arg[0], func(key string, value map[string]interface{}) {
-					m.Push("detail", value[kit.MDB_META])
-				})
+				if wd, _ := os.Getwd(); arg[0] != path.Base(wd) {
+					m.Option(nfs.DIR_ROOT, path.Join("usr", arg[0]))
+				}
+				m.Cmdy(nfs.DIR, kit.Select("./", path.Join(arg[1:]...)))
 				return
 			}
 
-			// 仓库列表
-			m.Richs(REPOS, nil, kit.MDB_FOREACH, func(key string, value map[string]interface{}) {
-				m.Push(key, value[kit.MDB_META], []string{kit.MDB_TIME, kit.MDB_NAME, "branch", "last"})
-			})
+			m.Option(mdb.FIELDS, m.Conf(REPOS, kit.META_FIELD))
+			m.Cmdy(mdb.SELECT, m.Prefix(REPOS), "", mdb.HASH, kit.MDB_NAME, arg)
 			m.Sort(kit.MDB_NAME)
 		}},
+
 		TOTAL: {Name: "total name=auto auto", Help: "提交统计", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			if len(arg) > 0 {
 				// 提交详情
@@ -415,13 +422,6 @@ var Index = &ice.Context{Name: GIT, Help: "代码库",
 				}
 			})
 			m.Sort("name")
-		}},
-
-		"/proxy/": {Name: "/repos/", Help: "缓存池", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			m.Render(ice.RENDER_VOID)
-		}},
-		"/serve/": {Name: "/repos/", Help: "缓存池", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			m.Render(ice.RENDER_RESULT)
 		}},
 	},
 }

@@ -27,11 +27,11 @@ chapter "应用"
 refer `
 go https://github.com/google/gitprotocolio
 `
-field "代码统计" web.code.git.total
+field "代码库" web.code.git.repos
+field "统计量" web.code.git.total
+field "代码管理" web.code.git.status
 field "提交趋势" web.code.git.trend args icebergs
 field "代码结构" web.code.git.spide args icebergs
-
-field status web.code.git.status
 
 chapter "项目"
 field icebergs web.code.inner args `[ usr/icebergs misc/git/git.go ]`

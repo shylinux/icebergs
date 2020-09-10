@@ -98,7 +98,7 @@ require miss.sh
 		},
 		Commands: map[string]*ice.Command{
 			DREAM: {Name: "dream [name [cmd...]] auto", Help: "梦想家", Meta: kit.Dict("detail", []interface{}{"启动", "停止"}), Action: map[string]*ice.Action{
-				gdb.START: {Name: "start", Help: "启动", Hand: func(m *ice.Message, arg ...string) {
+				gdb.START: {Name: "start type name", Help: "启动", Hand: func(m *ice.Message, arg ...string) {
 					_dream_show(m, m.Option(kit.MDB_NAME))
 				}},
 				gdb.STOP: {Name: "stop", Help: "停止", Hand: func(m *ice.Message, arg ...string) {

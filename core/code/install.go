@@ -16,15 +16,19 @@ import (
 )
 
 var _contexts = kit.Dict(
-	"tmux", `yum install -y tmux
-curl -o tmux.conf {{.Option "httphost"}}/publish/tmux.conf
-tmux -f tmux.conf`,
-	"base", `mkdir contexts; cd contexts
+	"tmux", `
+# 终端环境
+curl -fLo /etc/yum.repos.d/CentOS-Base.repo https://mirrors.aliyun.com/repo/Centos-8.repo && yum -y update
+yum install -y tmux vim
+`,
+	"base", `
+# 生产环境
+mkdir contexts; cd contexts
 export ctx_dev={{.Option "httphost"}} ctx_log=/dev/stdout; curl $ctx_dev/publish/ice.sh |sh
-export ctx_dev={{.Option "httphost"}} ctx_log=/dev/stdout; wget -O - $ctx_dev/publish/ice.sh | sh
 bin/ice.sh`,
 	"miss", `
-yum install -y git vim make go
+# 开发环境
+yum install -y make git go
 mkdir ~/.ssh &>/dev/null; touch ~/.ssh/config; [ -z "$(cat ~/.ssh/config|grep 'HOST {{.Option "hostname"}}')" ] && echo -e "HOST {{.Option "hostname"}}\n    Port 9030" >> ~/.ssh/config
 export ISH_CONF_HUB_PROXY={{.Option "userhost"}}:.ish/pluged/
 git clone $ISH_CONF_HUB_PROXY/github.com/shylinux/contexts && cd contexts

@@ -50,6 +50,7 @@ var Index = &ice.Context{Name: "code", Help: "编程中心",
 		ice.CTX_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			m.Load()
 			m.Cmd(mdb.ENGINE, mdb.CREATE, BENCH)
+			m.Conf(INSTALL, "meta.contexts", _contexts)
 		}},
 		ice.CTX_EXIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			m.Save(INSTALL)

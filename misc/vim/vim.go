@@ -60,7 +60,12 @@ var Index = &ice.Context{Name: VIM, Help: "编辑器",
 			m.Cmdy(code.INSTALL, path.Base(m.Conf(VIM, kit.META_SOURCE)), arg)
 		}},
 
+		ice.CTX_EXIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			m.Save()
+		}},
 		ice.CTX_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			m.Load()
+
 			m.Conf(web.FAVOR, "meta.render.vimrc", m.AddCmd(&ice.Command{Name: "render favor id", Help: "渲染引擎", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 				value := m.Optionv("value").(map[string]interface{})
 				switch value["name"] {
@@ -85,72 +90,6 @@ var Index = &ice.Context{Name: VIM, Help: "编辑器",
 			m.Cmd(mdb.RENDER, mdb.CREATE, VIMRC, VIM, c.Cap(ice.CTX_FOLLOW))
 			m.Cmd(mdb.PLUGIN, mdb.CREATE, VIM, VIM, c.Cap(ice.CTX_FOLLOW))
 			m.Cmd(mdb.RENDER, mdb.CREATE, VIM, VIM, c.Cap(ice.CTX_FOLLOW))
-
-			m.Cmd("web.spide_rewrite", "create", "from", "ftp://ftp.vim.org/pub/vim/unix/vim-8.1.tar.bz2", "to", "http://localhost:9020/publish/vim-8.1.tar.bz2")
-			m.Cmd("web.spide_rewrite", "create", "from", "https://raw.githubusercontent.com/shylinux/contexts/master/etc/conf/vimrc", "to", "http://localhost:9020/publish/vimrc")
-			m.Cmd("web.spide_rewrite", "create", "from", "https://raw.githubusercontent.com/shylinux/contexts/master/etc/conf/plug.vim", "to", "http://localhost:9020/publish/plug.vim")
-			m.Cmd("nfs.file_rewrite", "create", "from", "etc/conf/plug.vim", "to", "https://raw.githubusercontent.com/shylinux/contexts/master/etc/conf/plug.vim")
-		}},
-
-		"/sync": {Name: "/sync", Help: "同步", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			m.Render(ice.RENDER_RESULT)
-			switch arg[0] {
-			case "read", "write", "exec", "insert":
-				m.Cmd(web.FAVOR, m.Conf(VIM, "meta.history"), web.TYPE_VIMRC, arg[0], kit.Select(m.Option("arg"), m.Option("sub")),
-					"pwd", m.Option("pwd"), "buf", m.Option("buf"), "row", m.Option("row"), "col", m.Option("col"))
-			case "trans":
-				if m.Cmdy(kit.Split(m.Option("arg"))); m.Result() == "" {
-					m.Table()
-				}
-			}
-		}},
-		"/input": {Name: "/input", Help: "补全", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			m.Render(ice.RENDER_RESULT)
-			arg[0] = strings.TrimSpace(arg[0])
-
-			if strings.HasPrefix(arg[0], "ice ") {
-				list := kit.Split(strings.TrimSpace(arg[0]))
-				switch list[1] {
-				case "add":
-					// ice add person 想你 shwq
-					m.Cmd("web.code.input.push", list[2:])
-					arg[0] = list[4]
-				default:
-					// ice command
-					if m.Cmdy(list[1:]); m.Result() == "" {
-						m.Echo("%s\n", arg[0])
-						m.Table()
-					}
-					return
-				}
-			}
-
-			// 词汇列表
-			m.Cmd("web.code.input.find", arg[0]).Table(func(index int, value map[string]string, head []string) {
-				m.Echo("%s\n", value["text"])
-			})
-		}},
-		"/favor": {Name: "/favor", Help: "收藏", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			m.Render(ice.RENDER_RESULT)
-			if m.Options("arg") {
-				// 添加收藏
-				m.Cmdy(web.FAVOR, kit.Select(m.Conf("vim", "meta.history"), m.Option("tab")),
-					web.TYPE_VIMRC, m.Option("note"), m.Option("arg"),
-					"pwd", m.Option("pwd"), "buf", m.Option("buf"), "row", m.Option("row"), "col", m.Option("col"))
-				return
-			}
-
-			// 查看收藏
-			m.Richs(web.FAVOR, nil, m.Option("tab"), func(key string, val map[string]interface{}) {
-				m.Grows(web.FAVOR, kit.Keys(kit.MDB_HASH, key), "", "", func(index int, value map[string]interface{}) {
-					extra := value["extra"].(map[string]interface{})
-					switch value[kit.MDB_TYPE] {
-					case web.TYPE_VIMRC:
-						m.Echo("%v\n", m.Option("tab")).Echo("%v:%v:%v:(%v): %v\n",
-							extra["buf"], extra["row"], extra["col"], value["name"], value["text"])
-					}
-				})
-			})
 		}},
 	},
 	Configs: map[string]*ice.Config{

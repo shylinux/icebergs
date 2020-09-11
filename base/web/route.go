@@ -49,7 +49,6 @@ func init() {
 		Commands: map[string]*ice.Command{
 			ROUTE: {Name: "route route=auto cmd=@key auto 启动 添加", Help: "路由", Action: map[string]*ice.Action{
 				"invite": {Name: "invite", Help: "添加", Hand: func(m *ice.Message, arg ...string) {
-					m.Cmdy("web.code.install", "contexts", "tmux")
 					m.Cmdy("web.code.install", "contexts", "base")
 				}},
 				"inputs": {Name: "inputs", Help: "补全", Hand: func(m *ice.Message, arg ...string) {

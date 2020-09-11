@@ -91,6 +91,9 @@ func init() {
 
 					// 占位
 					p := path.Join(m.Conf(INSTALL, kit.META_PATH), name)
+					if strings.Contains(p, "/") {
+						os.MkdirAll(path.Base(p), ice.MOD_DIR)
+					}
 					m.Cmd(cli.SYSTEM, "touch", p)
 
 					m.Option("_process", "_progress")

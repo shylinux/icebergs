@@ -25,7 +25,12 @@ spark shell `
 cd ./install
 ./bin/vim
 `
-chapter "使用"
+
+chapter "应用"
+field "同步流" web.code.vim.sync
+field "输入法" web.code.vim.input
+field "收藏夹" web.code.vim.favor
+field "输入法" web.code.input.wubi
 
 chapter "配置"
 
@@ -44,7 +49,3 @@ section "状态栏"
 refer `
 插件 https://github.com/vim-airline/vim-airline
 `
-
-chapter "应用"
-section "收藏夹"
-section "输入法"

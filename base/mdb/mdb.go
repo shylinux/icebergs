@@ -20,7 +20,7 @@ func _file_name(m *ice.Message, arg ...string) string {
 
 func _hash_insert(m *ice.Message, prefix, key string, arg ...string) string {
 	m.Log_INSERT("prefix", prefix, arg[0], arg[1])
-	return m.Rich(prefix, key, kit.Dict(arg))
+	return m.Rich(prefix, key, kit.Data(arg))
 
 }
 func _hash_delete(m *ice.Message, prefix, chain, field, value string) {
@@ -30,6 +30,9 @@ func _hash_delete(m *ice.Message, prefix, chain, field, value string) {
 	})
 }
 func _hash_select(m *ice.Message, prefix, key, field, value string) {
+	if field == "hash" && value == "random" {
+		value = kit.MDB_RANDOMS
+	}
 	fields := strings.Split(kit.Select("time,hash,type,name,text", m.Option(FIELDS)), ",")
 	m.Richs(prefix, key, value, func(key string, val map[string]interface{}) {
 		if field != "" && field != kit.MDB_HASH && value != val[field] && value != kit.MDB_FOREACH {

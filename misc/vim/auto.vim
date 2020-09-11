@@ -1,44 +1,33 @@
+" 基础函数{{{
 " 变量定义
 func! ShyDefine(name, value)
 	if !exists(a:name) | exec "let " . a:name . " = \"" . a:value . "\"" | endif
 endfunc
 
-" 输出日志
-call ShyDefine("g:ShyLog", "/dev/null")
-fun! ShyLog(...)
-    call writefile([strftime("%Y-%m-%d %H:%M:%S ") . join(a:000, " ")], g:ShyLog, "a")
-endfun
-
 " 后端通信
 call ShyDefine("g:ctx_url", (len($ctx_dev) > 1? $ctx_dev: "http://127.0.0.1:9020") . "/code/vim/")
 fun! ShySend(cmd, arg)
-    if has_key(a:arg, "sub") && a:arg["sub"] != ""
-        let temp = tempname()
+    if has_key(a:arg, "sub") && a:arg["sub"] != "" | let temp = tempname()
         call writefile(split(a:arg["sub"], "\n"), temp, "b")
         let a:arg["sub"] = "@" . temp
     endif
 
-    let a:arg["pwd"] = getcwd()
-    let a:arg["buf"] = bufname("%")
-    let a:arg["row"] = line(".")
-    let a:arg["col"] = col(".")
-    let args = ""
-    for k in sort(keys(a:arg))
-        let args = args . " -F '" . k . "=" . a:arg[k] . "' "
-    endfor
+    let a:arg["pwd"] = getcwd() | let a:arg["buf"] = bufname("%") | let a:arg["row"] = line(".") | let a:arg["col"] = col(".")
+    let args = "" | for k in sort(keys(a:arg)) | let args = args . " -F '" . k . "=" . a:arg[k] . "' " | endfor
     return system("curl -s " . g:ctx_url . a:cmd . args . " 2>/dev/null")
 endfun
-
+" }}}
+" 功能函数{{{
 " 数据同步
 fun! ShySync(target)
     if bufname("%") == "ControlP" | return | end
 
     if a:target == "read" || a:target == "write"
         call ShySend("sync", {"cmds": a:target, "arg": expand("<afile>")})
-    elseif a:target == "exec"
-        call ShySend("sync", {"cmds": a:target, "arg": getcmdline()})
     elseif a:target == "insert"
         call ShySend("sync", {"cmds": a:target, "sub": getreg(".")})
+    elseif a:target == "exec"
+        call ShySend("sync", {"cmds": a:target, "arg": getcmdline()})
     else
         let cmd = {"bufs": "buffers", "regs": "registers", "marks": "marks", "tags": "tags", "fixs": "clist"}
         call ShySend("sync", {"cmds": a:target, "sub": execute(cmd[a:target])})
@@ -52,7 +41,7 @@ endfun
 fun! ShyComplete(firststart, base)
     if a:firststart | let line = getline('.') | let start = col('.') - 1
         " 命令位置
-        if match(line, '\s*ice ') == 0 | return match(line, "ice ") | endif
+        if match(line, '\s*ice ') >= 0 | return match(line, "ice ") | endif
         " 符号位置
         if line[start-1] !~ '\a' | return start - 1 | end
         " 单词位置
@@ -64,32 +53,25 @@ fun! ShyComplete(firststart, base)
     if a:base == "," | return ["，", ","] | end
     if a:base == "." | return ["。", "."] | end
     if a:base == "\\" | return ["、", "\\"] | end
+
     " 单词转换
-    let list = ShyInput(a:base)
-    call ShyLog("trans", a:base, list)
-    return list
+    return ShyInput(a:base)
 endfun
 set completefunc=ShyComplete
-set encoding=utf-8
-colorscheme torte
-highlight Pmenu ctermfg=cyan ctermbg=darkblue
-highlight PmenuSel ctermfg=darkblue ctermbg=cyan
-highlight Comment ctermfg=cyan ctermbg=darkblue
 
 " 收藏列表
-call ShyDefine("g:favor_tab", "")
 call ShyDefine("g:favor_note", "")
-let shyList=["启动流程", "请求响应", "服务集群", "数据结构", "系统架构", "编译原理"]
-let g:favor_prefix=""
 fun! ShyFavor()
-    " let g:favor_tab = input("tab: ", g:favor_tab)
-    let g:favor_tab = g:shyList[inputlist(g:shyList)-1]
+    let tab_list = split(ShySend("favor", {"cmds": "select"}), "\n")
+    let tab = tab_list[inputlist(tab_list)-1]
     let g:favor_note = input("note: ", g:favor_note)
-    call ShySend("favor", {"tab": g:favor_prefix . g:favor_tab, "note": g:favor_note, "arg": getline("."), "row": getpos(".")[1], "col": getpos(".")[2]})
+    call ShySend("favor", {"cmds": "insert", "tab": tab, "note": g:favor_note, "arg": getline("."), "row": getpos(".")[1], "col": getpos(".")[2]})
 endfun
 fun! ShyFavors()
-    " let res = split(ShySend("favor", {"tab": input("tab: ", g:favor_tab)}), "\n")
-    let res = split(ShySend("favor", {"tab": g:shyList[inputlist(g:shyList)-1]}), "\n")
+    let tab_list = split(ShySend("favor", {"cmds": "topic"}), "\n")
+    let tab = tab_list[inputlist(tab_list)-1]
+
+    let res = split(ShySend("favor", {"tab": tab}), "\n")
     let page = "" | let note = ""
     for i in range(0, len(res)-1, 2)
         if res[i] != page
@@ -101,21 +83,13 @@ fun! ShyFavors()
     if note != "" | lexpr note | let note = "" | endif
 
     let view = inputlist(["列表", "默认", "垂直", "水平"])
-
-    for i in range(0, len(res)-1, 2)
-        if i < 5
-            if l:view == 4
-                split | lnext
-            elseif l:view == 3
-                vsplit | lnext
-            endif
-        endif
-    endfor
-    botright lopen
-    if l:view  == 1 | only | endif
+    for i in range(0, len(res)-1, 2) | if i < 5
+        if l:view == 4 | split | lnext | elseif l:view == 3 | vsplit | lnext | endif
+    endif | endfor
+    botright lopen | if l:view  == 1 | only | endif
 endfun
 
-" 搜索
+" 文件搜索
 call ShyDefine("g:grep_dir", "./")
 fun! ShyGrep(word)
     let g:grep_dir = input("dir: ", g:grep_dir, "file")
@@ -123,87 +97,18 @@ fun! ShyGrep(word)
     execute "grep -rn '\\<" . a:word . "\\>' " . g:grep_dir
     copen
 endfun
-
-" 自动刷新
-let ShyComeList = {}
-fun! ShyCome(buf, row, action, extra)
-    " 低配命令
-    if !exists("appendbufline")
-		execute a:extra["row"]
-
-		if a:extra["count"] > 0
-			execute "+1,+" . a:extra["count"] ."delete"
-		endif
-
-        let a:extra["count"] = 0
-        for line in reverse(split(ShySend("sync", {"cmds": "trans", "arg": getline(".")}), "\n"))
-			let a:extra["count"] += 1
-            call append(".", line)
-        endfor
-        return
-    endif
-    if a:action == "refresh"
-        " 清空历史
-        if a:extra["count"] > 0 | call deletebufline(a:buf, a:row+1, a:row+a:extra["count"]) | endif
-        let a:extra["count"] = 0
-    endif
-    " 刷新命令
-    for line in reverse(split(ShySend({"cmd": "trans", "arg": getbufline(a:buf, a:row)[0]}), "\n"))
-        call appendbufline(a:buf, a:row, line)
-        let a:extra["count"] += 1
-    endfor
-    " 插入表头
-    call appendbufline(a:buf, a:row, strftime(" ~~ %Y-%m-%d %H:%M:%S"))
-    let a:extra["count"] += 1
-endfun
-fun! ShyUpdate(timer)
-    let what = g:ShyComeList[a:timer]
-    call ShyLog("timer", a:timer, what)
-    call ShyCome(what["buf"], what["row"], what["action"], what)
-endfun
-fun! ShyComes(action)
-    if !exists("b:timer") | let b:timer = -1 | endif
-    " 清除定时
-    if b:timer > 0 | call timer_stop(b:timer) | let b:timer = -2 | return | endif
-    " 添加定时
-    let b:timer = timer_start(1000, funcref('ShyUpdate'), {"repeat": -1})
-    let g:ShyComeList[b:timer] = {"buf": bufname("."), "row": line("."), "pre": getline("."), "action": a:action, "count": 0}
-    call ShyLog("new timer", b:timer)
-endfun
-fun! ShyCheck(target)
-    if a:target == "cache"
-        call ShySync("bufs")
-        call ShySync("regs")
-        call ShySync("marks")
-        call ShySync("tags")
-    elseif a:target == "fixs"
-        let l = len(getqflist())
-        if l > 0
-            execute "copen " . (l > 10? 10: l + 1)
-            call ShySync("fixs")
-		else
-            cclose
-        end
-    end
-endfun
-
-" 事件回调
+" }}}
+" 事件回调{{{
 autocmd! BufReadPost * call ShySync("bufs")
 autocmd! BufReadPost * call ShySync("read")
 autocmd! BufWritePre * call ShySync("write")
-if exists("CmdlineLeave")
-    autocmd! CmdlineLeave * call ShySync("exec")
-else
-    autocmd! CmdWinLeave * call ShySync("exec")
-endif
-" autocmd! QuickFixCmdPost * call ShyCheck("fixs")
 autocmd! InsertLeave * call ShySync("insert")
-
-" 按键映射
+autocmd! CmdlineLeave * call ShySync("exec")
+"}}}
+" 按键映射{{{
 nnoremap <C-G><C-G> :call ShyGrep(expand("<cword>"))<CR>
 nnoremap <C-G><C-F> :call ShyFavor()<CR>
 nnoremap <C-G>f :call ShyFavors()<CR>
-" nnoremap <C-G><C-R> :call ShyCheck("cache")<CR>
-nnoremap <C-G><C-K> :call ShyComes("refresh")<CR>
 inoremap <C-K> <C-X><C-U>
+"}}}
 

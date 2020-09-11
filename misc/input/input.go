@@ -3,10 +3,11 @@ package input
 import (
 	ice "github.com/shylinux/icebergs"
 	"github.com/shylinux/icebergs/base/cli"
+	"github.com/shylinux/icebergs/base/mdb"
+	"github.com/shylinux/icebergs/base/nfs"
 	"github.com/shylinux/icebergs/base/web"
 	"github.com/shylinux/icebergs/core/code"
 	kit "github.com/shylinux/toolkits"
-	"github.com/shylinux/toolkits/task"
 
 	"bufio"
 	"bytes"
@@ -15,21 +16,23 @@ import (
 	"os"
 	"path"
 	"strings"
-	"sync"
 )
 
 func _input_list(m *ice.Message, lib string) {
 	if lib == "" {
 		m.Richs(INPUT, "", kit.MDB_FOREACH, func(key string, value map[string]interface{}) {
-			m.Push(key, value[kit.MDB_META], []string{kit.MDB_ZONE, kit.MDB_COUNT, kit.MDB_STORE})
+			m.Push(kit.MDB_TIME, kit.Value(value, "meta.time"))
+			m.Push(kit.MDB_ZONE, kit.Value(value, "meta.zone"))
+			m.Push(kit.MDB_COUNT, kit.Value(value, "meta.count"))
+			m.Push(kit.MDB_STORE, kit.Value(value, "meta.store"))
 		})
 		return
 	}
 
+	m.Option(nfs.DIR_DEEP, true)
+	m.Option(nfs.DIR_TYPE, nfs.FILE)
 	m.Richs(INPUT, "", lib, func(key string, value map[string]interface{}) {
-		m.Grows(INPUT, kit.Keys(kit.MDB_HASH, key), "", "", func(index int, value map[string]interface{}) {
-			m.Push(key, value, []string{kit.MDB_ID, CODE, TEXT, WEIGHT})
-		})
+		m.Cmdy(nfs.DIR, kit.Value(value, "meta.store"), "time size line path")
 	})
 }
 func _input_push(m *ice.Message, lib, text, code, weight string) {
@@ -70,11 +73,6 @@ func _input_find(m *ice.Message, method, word, limit string) {
 		} else if len(line) < 3 {
 
 		} else {
-			if method == WORD && i == 0 {
-				// 添加收藏
-				// web.FavorInsert(m.Spawn(), "input.word", "input", line[2], line[4], "id", line[3], WEIGHT, line[6])
-			}
-
 			// 输出词汇
 			m.Push(FILE, path.Base(line[0]))
 			m.Push(kit.MDB_ID, line[3])
@@ -84,40 +82,6 @@ func _input_find(m *ice.Message, method, word, limit string) {
 		}
 	}
 	m.Sort(WEIGHT, "int_r")
-}
-func _input_find2(m *ice.Message, method, word, limit string) {
-	list := []interface{}{}
-	files := map[string]bool{}
-	m.Richs(INPUT, "", kit.MDB_FOREACH, func(key string, value map[string]interface{}) {
-		kit.Fetch(kit.Value(value, "meta.record"), func(index int, value map[string]interface{}) {
-			file := value["file"].(string)
-			if _, ok := files[file]; ok {
-				list = append(list, file)
-			} else {
-				files[file] = true
-			}
-		})
-	})
-	defer m.Cost("some")
-
-	var mu sync.Mutex
-	task.Sync(list, func(task *task.Task, lock *task.Lock) error {
-		kit.CSV(kit.Format(task.Arg), 100000, func(index int, value map[string]string, head []string) {
-			if value["code"] != word {
-				return
-			}
-			mu.Lock()
-			defer mu.Unlock()
-
-			m.Push(FILE, task.Arg)
-			m.Push(kit.MDB_ID, value[kit.MDB_ID])
-			m.Push(CODE, value["code"])
-			m.Push(TEXT, value["text"])
-			m.Push(WEIGHT, value["weight"])
-			m.Push(kit.MDB_TIME, value["time"])
-		})
-		return nil
-	})
 }
 func _input_save(m *ice.Message, file string, lib ...string) {
 	if f, p, e := kit.Create(file); m.Assert(e) {
@@ -153,8 +117,6 @@ func _input_load(m *ice.Message, file string, libs ...string) {
 			kit.MDB_ZONE, lib,
 		)))
 
-		// 缓存配置
-
 		// 加载词库
 		for bio := bufio.NewScanner(f); bio.Scan(); {
 			if strings.HasPrefix(bio.Text(), "#") {
@@ -176,53 +138,53 @@ func _input_load(m *ice.Message, file string, libs ...string) {
 	}
 }
 
-const INPUT = "input"
-const (
-	WORD = "word"
-	LINE = "line"
-)
 const (
 	FILE   = "file"
 	CODE   = "code"
 	TEXT   = "text"
 	WEIGHT = "weight"
 )
+const (
+	WORD = "word"
+	LINE = "line"
+)
+const (
+	INPUT = "input"
+	WUBI  = "wubi"
+)
 
 var Index = &ice.Context{Name: INPUT, Help: "输入法",
 	Configs: map[string]*ice.Config{
 		INPUT: {Name: INPUT, Help: "输入法", Value: kit.Data(
-			"repos", "wubi-dict",
 			kit.MDB_STORE, "usr/export/input", kit.MDB_FSIZE, "200000",
 			kit.MDB_LIMIT, "5000", kit.MDB_LEAST, "1000",
-			kit.MDB_SHORT, "zone",
+			kit.MDB_SHORT, "zone", "repos", "wubi-dict",
 		)},
 	},
 	Commands: map[string]*ice.Command{
 		ice.CTX_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) { m.Load() }},
 		ice.CTX_EXIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) { m.Save(INPUT) }},
 
-		"list": {Name: "list [lib]", Help: "查看词库", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			_input_list(m, kit.Select("", arg, 0))
-		}},
-		"push": {Name: "push lib text code [weight]", Help: "添加字码", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			_input_push(m, arg[0], arg[1], arg[2], kit.Select("90919495", arg, 3))
-		}},
-		"find": {Name: "find key [word|line [limit]]", Help: "查找字码", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			if len(arg) == 0 {
-				web.FavorList(m, "input.word", "")
-				return
+		WUBI: {Name: "wubi path=auto auto 添加 导入", Help: "五笔", Action: map[string]*ice.Action{
+			mdb.INSERT: {Name: "insert zone=person text= code= weight=", Help: "添加", Hand: func(m *ice.Message, arg ...string) {
+				_input_push(m, kit.Select("person", m.Option("zone")), m.Option("text"), m.Option("code"), m.Option("weight"))
+			}},
+			mdb.SELECT: {Name: "select method=word code= ", Help: "查找", Hand: func(m *ice.Message, arg ...string) {
+				_input_find(m, kit.Select("word", m.Option("method")), m.Option("code"), m.Option("cache.limit"))
+			}},
+			mdb.EXPORT: {Name: "export file=usr/wubi-dict/person zone=person", Help: "导出", Hand: func(m *ice.Message, arg ...string) {
+				// _input_save(m, kit.Select("usr/wubi-dict/person", m.Option("file")), m.Option("zone"))
+			}},
+			mdb.IMPORT: {Name: "import file=usr/wubi-dict/person zone=", Help: "导入", Hand: func(m *ice.Message, arg ...string) {
+				_input_load(m, kit.Select("usr/wubi-dict/person", m.Option("file")), m.Option("zone"))
+			}},
+		}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			m.Option(nfs.DIR_ROOT, m.Conf(INPUT, "meta.store"))
+			if len(arg) > 0 && strings.HasSuffix(arg[0], "csv") {
+				m.CSV(m.Cmdx(nfs.CAT, arg[0]))
+			} else {
+				m.Cmdy(nfs.DIR, kit.Select("./", arg, 0))
 			}
-			_input_find(m, kit.Select(WORD, arg, 1), arg[0], kit.Select("100", arg, 2))
-		}},
-		"find2": {Name: "find2 key [word|line [limit]]", Help: "查找字码", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			_input_find2(m, kit.Select(WORD, arg, 1), arg[0], kit.Select("100", arg, 2))
-		}},
-
-		"save": {Name: "save file lib...", Help: "导出词库", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			_input_save(m, arg[0], arg[1:]...)
-		}},
-		"load": {Name: "load file lib", Help: "导入词库", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			_input_load(m, kit.Select("usr/wubi-dict/wubi86", arg, 0))
 		}},
 	},
 }

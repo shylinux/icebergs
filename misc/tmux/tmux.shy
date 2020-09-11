@@ -6,11 +6,11 @@ refer "官网" `
 `
 premenu
 
+chapter "源码"
 field tmux web.code.tmux.tmux
 field tmux web.code.inner args `[ usr/install/tmux-3.1b cmd-bind-key.c ]`
 
-chapter "安装"
-section "编译安装"
+section "构建"
 spark shell `
 yum install -y gcc make libevent-devel.x86_64 ncurses-devel.x86_64
 
@@ -19,13 +19,12 @@ tar xvf tmux-3.1b.tar.gz && cd tmux-3.1b
 
 ./configure --prefix=$PWD/install
 make -j8 && make install
-
 `
 
-section "使用体验"
+section "启动"
 spark shell `
 cd ./install
-./bin/tmux
+./bin/tmux -S $PWD/tmux.socket
 `
 
 chapter "应用"

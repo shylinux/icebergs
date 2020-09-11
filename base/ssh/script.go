@@ -66,7 +66,6 @@ func Render(msg *ice.Message, cmd string, args ...interface{}) {
 	}
 	msg.Append(ice.MSG_OUTPUT, ice.RENDER_OUTPUT)
 }
-
 func _ssh_script(m *ice.Message, name string) io.Reader {
 	if strings.Contains(m.Option("_script"), "/") {
 		name = path.Join(path.Dir(m.Option("_script")), name)
@@ -383,8 +382,6 @@ var Index = &ice.Context{Name: "ssh", Help: "终端模块",
 			"PS2", []interface{}{"count", " ", "target", "> "},
 		)},
 		REMOTE: {Name: "remote", Help: "远程连接", Value: kit.Data()},
-
-		"dial": {Name: "dial", Help: "远程连接", Value: kit.Data()},
 	},
 	Commands: map[string]*ice.Command{
 		ice.CTX_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) { m.Load() }},

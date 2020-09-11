@@ -58,7 +58,7 @@ var Index = &ice.Context{Name: TMUX, Help: "工作台",
 			"start": {Name: "start", Help: "启动", Hand: func(m *ice.Message, arg ...string) {
 				m.Optionv("prepare", func(p string) []string {
 					m.Option(cli.CMD_DIR, p)
-					return []string{}
+					return []string{"-S", kit.Path(p, "tmux.socket"), "new-session", "-dn", "miss"}
 				})
 				m.Cmdy(code.INSTALL, "start", m.Conf(TMUX, kit.META_SOURCE), "bin/tmux")
 			}},

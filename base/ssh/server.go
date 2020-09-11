@@ -422,18 +422,32 @@ func init() {
 				m.Cmdy(mdb.SELECT, m.Prefix(COMMAND), "", mdb.LIST, kit.MDB_ID, arg)
 			}},
 
-			DIAL: {Name: "dial hash=auto auto 登录 cmd:textarea=pwd", Help: "连接", Action: map[string]*ice.Action{
-				mdb.CREATE: {Name: "create username=shy hostname=shylinux.com port=22", Help: "登录", Hand: func(m *ice.Message, arg ...string) {
-					if connect, e := _ssh_dial(m, m.Option(aaa.USERNAME),
-						m.Option(aaa.HOSTPORT, m.Option("hostname")+":"+m.Option("port"))); m.Assert(e) {
-						h := m.Rich(DIAL, "", kit.Dict(
-							aaa.USERNAME, m.Option(aaa.USERNAME), aaa.HOSTPORT, m.Option(aaa.HOSTPORT), CONNECT, connect,
-						))
+			DIAL: {Name: "dial hash=auto auto 添加 导出 导入 cmd:textarea=pwd", Help: "连接", Action: map[string]*ice.Action{
+				mdb.CREATE: {Name: "create username=shy hostname=shylinux.com port=22", Help: "添加", Hand: func(m *ice.Message, arg ...string) {
+					if connect, e := _ssh_dial(m, m.Option(aaa.USERNAME), m.Option(aaa.HOSTPORT, m.Option("hostname")+":"+m.Option("port"))); m.Assert(e) {
+						h := m.Rich(DIAL, "", kit.Dict(aaa.USERNAME, m.Option(aaa.USERNAME), aaa.HOSTPORT, m.Option(aaa.HOSTPORT), CONNECT, connect))
 						m.Echo(h)
 					}
 				}},
 				mdb.DELETE: {Name: "delete", Help: "删除", Hand: func(m *ice.Message, arg ...string) {
 					m.Cmdy(mdb.DELETE, m.Prefix(DIAL), "", mdb.HASH, kit.MDB_HASH, m.Option(kit.MDB_HASH))
+				}},
+				mdb.EXPORT: {Name: "export file=.ssh/known_hosts", Help: "导出", Hand: func(m *ice.Message, arg ...string) {
+					list := []string{}
+					if m.Cmd(mdb.SELECT, m.Prefix(PUBLIC), "", mdb.HASH).Table(func(index int, value map[string]string, head []string) {
+						list = append(list, fmt.Sprintf("%s %s %s", value[kit.MDB_TYPE], value[kit.MDB_TEXT], value[kit.MDB_NAME]))
+					}); len(list) > 0 {
+						m.Cmdy(nfs.SAVE, path.Join(os.Getenv("HOME"), m.Option(kit.MDB_FILE)), strings.Join(list, "\n")+"\n")
+					}
+				}},
+				mdb.IMPORT: {Name: "import file=.ssh/known_hosts", Help: "导入", Hand: func(m *ice.Message, arg ...string) {
+					p := path.Join(os.Getenv("HOME"), m.Option(kit.MDB_FILE))
+					for _, pub := range strings.Split(m.Cmdx(nfs.CAT, p), "\n") {
+						if len(pub) > 10 {
+							m.Cmd(PUBLIC, mdb.CREATE, "publickey", pub)
+						}
+					}
+					m.Echo(p)
 				}},
 			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 				if len(arg) == 0 || arg[0] == "" {

@@ -114,18 +114,15 @@ func init() {
 					case func(string):
 						cb(p)
 					default:
-						m.Cmdy(cli.SYSTEM, "./configure", "--prefix="+kit.Path(path.Join(p, INSTALL)), arg[1:])
-						if m.Append(cli.CMD_CODE) != "0" {
+						if m.Cmdy(cli.SYSTEM, "./configure", "--prefix="+kit.Path(path.Join(p, INSTALL)), arg[1:]); m.Append(cli.CMD_CODE) != "0" {
 							return
 						}
 					}
 
-					m.Cmdy(cli.SYSTEM, "make", "-j8")
-					if m.Append(cli.CMD_CODE) != "0" {
+					if m.Cmdy(cli.SYSTEM, "make", "-j8"); m.Append(cli.CMD_CODE) != "0" {
 						return
 					}
-					m.Cmdy(cli.SYSTEM, "make", "PREFIX="+kit.Path(path.Join(p, INSTALL)), "install")
-					if m.Append(cli.CMD_CODE) != "0" {
+					if m.Cmdy(cli.SYSTEM, "make", "PREFIX="+kit.Path(path.Join(p, INSTALL)), "install"); m.Append(cli.CMD_CODE) != "0" {
 						return
 					}
 				}},

@@ -6,8 +6,13 @@ refer "官网" `
 `
 premenu
 
-chapter "安装"
-section "编译安装"
+chapter "源码"
+field "安装" web.code.vim.vim
+field "源码" web.code.inner args `[ usr/install/vim81/ src/main.c 110 ]`
+field "脚本" web.code.inner args `[ usr/install/vim81/install/share/vim/vim81/ filetype.vim ]`
+field "文档" web.code.inner args `[ usr/install/vim81/install/share/vim/vim81/doc/ help.txt ]`
+
+section "构建"
 spark shell `
 wget ftp://ftp.vim.org/pub/vim/unix/vim-8.1.tar.bz2
 tar xvf vim-8.1.tar.bz2 && cd vim81
@@ -15,17 +20,11 @@ tar xvf vim-8.1.tar.bz2 && cd vim81
 make -j4 && make install
 `
 
-section "使用体验"
+section "启动"
 spark shell `
 cd ./install
 ./bin/vim
 `
-section "项目"
-field "安装" web.code.vim.vim
-field "源码" web.code.inner args `[ usr/install/vim81/ src/main.c 110 ]`
-field "脚本" web.code.inner args `[ usr/install/vim81/install/share/vim/vim81/ filetype.vim ]`
-field "文档" web.code.inner args `[ usr/install/vim81/install/share/vim/vim81/doc/ help.txt ]`
-
 chapter "使用"
 
 chapter "配置"

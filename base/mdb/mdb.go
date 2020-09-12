@@ -35,6 +35,9 @@ func _hash_select(m *ice.Message, prefix, key, field, value string) {
 	}
 	fields := strings.Split(kit.Select("time,hash,type,name,text", m.Option(FIELDS)), ",")
 	m.Richs(prefix, key, value, func(key string, val map[string]interface{}) {
+		if val[kit.MDB_META] != nil {
+			val = val[kit.MDB_META].(map[string]interface{})
+		}
 		if field != "" && field != kit.MDB_HASH && value != val[field] && value != kit.MDB_FOREACH {
 			return
 		}
@@ -149,6 +152,9 @@ func _list_select(m *ice.Message, prefix, key, field, value string) {
 		}
 		m.Push("", val, fields, val[kit.MDB_META])
 	})
+	if m.Option(FIELDS) != "detail" {
+		m.Sort(kit.MDB_ID, "int_r")
+	}
 }
 func _list_modify(m *ice.Message, prefix, key string, field, value string, arg ...string) {
 	m.Grows(prefix, key, field, value, func(index int, value map[string]interface{}) {

@@ -35,7 +35,7 @@ type Action struct {
 	Hand func(m *Message, arg ...string)
 }
 type Command struct {
-	Name   interface{} // string []string
+	Name   string
 	Help   interface{} // string []string
 	List   []interface{}
 	Meta   map[string]interface{}
@@ -143,6 +143,50 @@ func (c *Context) Register(s *Context, x Server, name ...string) *Context {
 	s.server = x
 	return s
 }
+
+func (c *Context) _split(name string) []interface{} {
+	button, list := false, []interface{}{}
+	for _, v := range kit.Split(kit.Select("key", name), " ", " ")[1:] {
+		if v == "auto" {
+			list = append(list, kit.List(kit.MDB_INPUT, "button", "name", "查看", "value", "auto")...)
+			list = append(list, kit.List(kit.MDB_INPUT, "button", "name", "返回")...)
+			button = true
+			continue
+		}
+
+		ls, value := kit.Split(v, " ", ":=@"), ""
+		item := kit.Dict(kit.MDB_INPUT, kit.Select("text", "button", button))
+		if kit.Value(item, kit.MDB_NAME, ls[0]); item[kit.MDB_INPUT] == "text" {
+			kit.Value(item, kit.MDB_VALUE, kit.Select("@key", "auto", strings.Contains(name, "auto")))
+		}
+
+		for i := 1; i < len(ls); i += 2 {
+			switch ls[i] {
+			case ":":
+				switch kit.Value(item, kit.MDB_INPUT, ls[i+1]); ls[i+1] {
+				case "textarea":
+					kit.Value(item, "style.width", "300")
+					kit.Value(item, "style.height", "150")
+				case "button":
+					button = true
+				}
+			case "=":
+				if value = kit.Select("", ls, i+1); len(ls) > i+1 && strings.Contains(ls[i+1], ",") {
+					kit.Value(item, kit.MDB_INPUT, "select")
+					kit.Value(item, "values", strings.Split(ls[i+1], ","))
+				} else {
+					kit.Value(item, kit.MDB_VALUE, value)
+				}
+			case "@":
+				if len(ls) > i+1 {
+					kit.Value(item, kit.MDB_VALUE, "@"+ls[i+1]+"="+value)
+				}
+			}
+		}
+		list = append(list, item)
+	}
+	return list
+}
 func (c *Context) Merge(s *Context, x Server) *Context {
 	if c.Commands == nil {
 		c.Commands = map[string]*Command{}
@@ -155,48 +199,18 @@ func (c *Context) Merge(s *Context, x Server) *Context {
 	}
 	for k, v := range s.Commands {
 		c.Commands[k] = v
+		if v.List == nil {
+			v.List = c._split(v.Name)
+		}
 		if v.Meta == nil {
 			v.Meta = kit.Dict()
 		}
+
 		for k, a := range v.Action {
 			if a.List == nil {
-				list := []interface{}{}
-				for _, v := range kit.Split(kit.Select(k, a.Name), " ", " ")[1:] {
-					item := kit.Dict(kit.MDB_INPUT, "text", kit.MDB_VALUE, "@key")
-					ls, value := kit.Split(v, " ", ":=@"), ""
-					kit.Value(item, kit.MDB_NAME, ls[0])
-					for i := 1; i < len(ls); i += 2 {
-						switch ls[i] {
-						case ":":
-							kit.Value(item, kit.MDB_INPUT, ls[i+1])
-							switch ls[i+1] {
-							case "textarea":
-								kit.Value(item, "style.width", "300")
-								kit.Value(item, "style.height", "150")
-
-							}
-						case "=":
-							if len(ls) <= i+1 {
-								continue
-							}
-							if strings.Contains(ls[i+1], ",") {
-								kit.Value(item, kit.MDB_INPUT, "select")
-								kit.Value(item, "values", strings.Split(ls[i+1], ","))
-							} else {
-								kit.Value(item, kit.MDB_VALUE, ls[i+1])
-								value = ls[i+1]
-							}
-						case "@":
-							kit.Value(item, kit.MDB_VALUE, "@"+ls[i+1]+"="+value)
-						}
-					}
-					list = append(list, item)
-				}
-				if len(list) > 0 {
-					a.List = list
-				}
+				a.List = c._split(a.Name)
 			}
-			if a.List != nil {
+			if len(a.List) > 0 {
 				v.Meta[a.Help] = a.List
 				v.Meta[k] = a.List
 			}

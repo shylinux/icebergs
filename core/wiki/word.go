@@ -85,8 +85,22 @@ func _refer_show(m *ice.Message, name, text string, arg ...string) {
 	m.Render(ice.RENDER_TEMPLATE, m.Conf(REFER, "meta.template"))
 }
 func _spark_show(m *ice.Message, name, text string, arg ...string) {
+	switch text = strings.TrimSpace(text); name {
+	case "shell", "redis", "mysql":
+		m.Echo(`<div class="story" data-type="spark" data-name="%s">`, name)
+		for _, l := range strings.Split(text, "\n") {
+			m.Echo("<div>")
+			m.Echo(kit.Select(name+"> ", m.Conf(SPARK, kit.Keys("meta.prompt", name))))
+			m.Echo("<span>")
+			m.Echo(l)
+			m.Echo("</span>")
+			m.Echo("</div>")
+		}
+		m.Echo("</div>")
+		return
+	}
+
 	m.Option("style", kit.Select("", name))
-	text = strings.TrimSpace(text)
 	m.Optionv("list", kit.Split(text, "\n"))
 
 	_option(m, SPARK, name, text, arg...)
@@ -373,28 +387,13 @@ func init() {
 				}
 				_refer_show(m, arg[0], arg[1], arg[2:]...)
 			}},
-			SPARK: {Name: "spark [name] text", Help: "感悟", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			SPARK: {Name: "spark [name] text", Help: "灵感", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 				if len(arg) == 0 {
 					m.Echo(`<br class="story" data-type="spark">`)
 					return
 				}
 				if len(arg) == 1 {
 					arg = []string{"", arg[0]}
-				}
-				switch arg[0] {
-				case "shell", "mysql", "redis":
-					arg[1] = strings.TrimSpace(arg[1])
-					m.Echo(`<div class="story" data-type="spark" data-name="%s">`, arg[0])
-					for _, l := range strings.Split(arg[1], "\n") {
-						m.Echo("<div>")
-						m.Echo(kit.Select(arg[0]+"> ", m.Conf(SPARK, kit.Keys("meta.prompt", arg[0]))))
-						m.Echo("<span>")
-						m.Echo(l)
-						m.Echo("</span>")
-						m.Echo("</div>")
-					}
-					m.Echo("</div>")
-					return
 				}
 				_spark_show(m, arg[0], kit.Select(arg[0], arg[1]), arg[2:]...)
 			}},

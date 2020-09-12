@@ -14,6 +14,7 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"path"
 	"strings"
 )
 
@@ -177,6 +178,11 @@ func _serve_main(m *ice.Message, w http.ResponseWriter, r *http.Request) bool {
 				m.Info(" ")
 			}()
 		}
+
+		if r.URL.Path == "/" && strings.Contains(r.Header.Get("User-Agent"), "curl") {
+			http.ServeFile(w, r, path.Join(m.Conf(SERVE, "meta.intshell.path"), m.Conf(SERVE, "meta.intshell.index")))
+			return false
+		}
 	}
 
 	if strings.HasPrefix(r.URL.Path, "/debug") {
@@ -243,11 +249,15 @@ func init() {
 					"publish", true,
 				),
 
+				"intshell", kit.Dict(
+					"path", "usr/intshell", "index", "index.sh", "require", ".ish/pluged",
+					"repos", "https://github.com/shylinux/volcanos", "branch", "master",
+				),
+
 				"static", kit.Dict("/", "usr/volcanos/"),
-				"volcanos", kit.Dict("path", "usr/volcanos", "branch", "master",
-					"repos", "https://github.com/shylinux/volcanos",
-					"require", ".ish/pluged",
-					"refresh", "5",
+				"volcanos", kit.Dict("refresh", "5",
+					"path", "usr/volcanos", "require", ".ish/pluged",
+					"repos", "https://github.com/shylinux/volcanos", "branch", "master",
 				), "page", kit.Dict(
 					"index", "usr/volcanos/page/index.html",
 					"share", "usr/volcanos/page/share.html",

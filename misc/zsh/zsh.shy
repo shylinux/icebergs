@@ -5,22 +5,22 @@ refer `
 文档 http://zsh.sourceforge.net/Doc/Release/zsh_toc.html
 `
 
-field "安装" web.code.zsh.zsh
-field "源码" web.code.inner args `[ usr/install/zsh-5.8/ Src/main.c 91 ]`
+chapter "源码"
+field zsh web.code.zsh.zsh
+field zsh web.code.inner args `[ usr/install/zsh-5.8/ Src/main.c 91 ]`
 
-chapter "安装"
-section "编译安装"
+section "构建"
 spark shell `
 wget https://sourceforge.net/projects/zsh/files/zsh/5.8/zsh-5.8.tar.xz
 tar xvf zsh-5.8.tar.gz && cd zsh-5.8
-./configure --prefix=$PWD/install
+
+./configure --prefix=$PWD/_install
 make -j4 && make install
 `
 
-section "使用体验"
+section "启动"
 spark shell `
-cd ./install
+cd ./_install
 ./bin/zsh
 `
-
 

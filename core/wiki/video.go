@@ -1,4 +1,4 @@
-package code
+package wiki
 
 import (
 	ice "github.com/shylinux/icebergs"
@@ -15,7 +15,7 @@ func init() {
 
 	Index.Register(&ice.Context{Name: "m4v", Help: "视频",
 		Configs: map[string]*ice.Config{
-			VEDIO: {Name: "vedio", Help: "视频", Value: kit.Data()},
+			VIDEO: {Name: "video", Help: "视频", Value: kit.Data()},
 		},
 		Commands: map[string]*ice.Command{
 			"list": {Name: "list name", Help: "列表", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {

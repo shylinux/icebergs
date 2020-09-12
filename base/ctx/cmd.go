@@ -20,9 +20,6 @@ func _command_list(m *ice.Message, all bool, name string) {
 			m.Push("name", kit.Format(cmd.Name))
 			m.Push("help", kit.Simple(cmd.Help)[0])
 			m.Push("meta", kit.Format(cmd.Meta))
-			if len(cmd.List) == 0 {
-				_command_make(m, cmd)
-			}
 			m.Push("list", kit.Format(cmd.List))
 		})
 		return
@@ -43,51 +40,6 @@ func _command_list(m *ice.Message, all bool, name string) {
 		m.Push("key", k)
 		m.Push("name", kit.Format(v.Name))
 		m.Push("help", kit.Simple(v.Help)[0])
-	}
-}
-func _command_make(m *ice.Message, cmd *ice.Command) {
-	var list []string
-	switch name := cmd.Name.(type) {
-	case []string, []interface{}:
-		list = kit.Split(kit.Simple(name)[0])
-	default:
-		list = kit.Split(strings.Split(kit.Format(name), ";")[0])
-	}
-
-	button := false
-	for i, v := range list {
-		if i == 0 {
-			continue
-		}
-		switch ls := kit.Split(v, ":="); ls[0] {
-		case "[", "]":
-		case "auto":
-			cmd.List = append(cmd.List, kit.List(kit.MDB_INPUT, "button", "name", "查看", "value", "auto")...)
-			cmd.List = append(cmd.List, kit.List(kit.MDB_INPUT, "button", "name", "返回", "value", "Last")...)
-			button = true
-		default:
-			kind, value := kit.Select("text", "button", button), ""
-			if len(ls) == 3 {
-				kind, value = ls[1], ls[2]
-			} else if len(ls) == 2 {
-				if strings.Contains(v, "=") {
-					value = ls[1]
-				} else {
-					kind = ls[1]
-				}
-			}
-			if kind == "button" {
-				button = true
-			}
-			cmd.List = append(cmd.List, kit.List(kit.MDB_INPUT, kind, "name", ls[0], "value", value)...)
-		}
-	}
-	if len(cmd.List) == 0 {
-		cmd.List = append(cmd.List, kit.List(kit.MDB_INPUT, "text", "name", "path")...)
-	}
-	if !button {
-		cmd.List = append(cmd.List, kit.List(kit.MDB_INPUT, "button", "name", "查看")...)
-		cmd.List = append(cmd.List, kit.List(kit.MDB_INPUT, "button", "name", "返回")...)
 	}
 }
 

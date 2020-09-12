@@ -2,6 +2,7 @@ package web
 
 import (
 	ice "github.com/shylinux/icebergs"
+	"github.com/shylinux/icebergs/base/cli"
 	"github.com/shylinux/icebergs/base/mdb"
 	"github.com/shylinux/icebergs/base/tcp"
 	kit "github.com/shylinux/toolkits"
@@ -203,6 +204,10 @@ func init() {
 
 					// 请求地址
 					uri, arg := arg[0], arg[1:]
+					if strings.HasPrefix(uri, "ftp") {
+						m.Cmdy(cli.SYSTEM, "wget", uri)
+						return
+					}
 					// if n := m.Cmd("spide_rewrite", uri).Append("to"); n != "" && n != uri {
 					// 	m.Logs("rewrite", "from", uri, "to", n)
 					// 	uri = n

@@ -1,12 +1,11 @@
 package zsh
 
 import (
-	"path"
-
 	ice "github.com/shylinux/icebergs"
-	"github.com/shylinux/icebergs/base/cli"
 	"github.com/shylinux/icebergs/core/code"
 	kit "github.com/shylinux/toolkits"
+
+	"path"
 )
 
 const BASH = "bash"
@@ -19,7 +18,7 @@ func init() {
 			)},
 		},
 		Commands: map[string]*ice.Command{
-			BASH: {Name: "bash port=auto path=auto auto 启动:button 构建:button 下载:button", Help: "命令行", Action: map[string]*ice.Action{
+			BASH: {Name: "bash port path auto 启动 构建 下载", Help: "命令行", Action: map[string]*ice.Action{
 				"download": {Name: "download", Help: "下载", Hand: func(m *ice.Message, arg ...string) {
 					m.Cmdy(code.INSTALL, "download", m.Conf(BASH, kit.META_SOURCE))
 				}},
@@ -27,10 +26,6 @@ func init() {
 					m.Cmdy(code.INSTALL, "build", m.Conf(BASH, kit.META_SOURCE))
 				}},
 				"start": {Name: "start", Help: "启动", Hand: func(m *ice.Message, arg ...string) {
-					m.Optionv("prepare", func(p string) []string {
-						m.Option(cli.CMD_DIR, p)
-						return []string{}
-					})
 					m.Cmdy(code.INSTALL, "start", m.Conf(BASH, kit.META_SOURCE), "bin/bash")
 				}},
 			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {

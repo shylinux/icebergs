@@ -2,14 +2,18 @@ package zsh
 
 import (
 	ice "github.com/shylinux/icebergs"
+	"github.com/shylinux/icebergs/base/aaa"
 	"github.com/shylinux/icebergs/base/mdb"
-	"github.com/shylinux/icebergs/base/web"
 	kit "github.com/shylinux/toolkits"
 
-	"io/ioutil"
 	"strings"
 )
 
+const (
+	ARG = "arg"
+	SUB = "sub"
+	PWD = "pwd"
+)
 const SYNC = "sync"
 const SHELL = "shell"
 
@@ -17,58 +21,43 @@ func init() {
 	Index.Merge(&ice.Context{
 		Configs: map[string]*ice.Config{
 			SYNC: {Name: SYNC, Help: "同步流", Value: kit.Data(
-				kit.MDB_FIELD, "time,id,type,name,text",
+				kit.MDB_SHORT, kit.MDB_NAME, kit.MDB_FIELD, "time,id,type,name,text",
 			)},
 		},
 		Commands: map[string]*ice.Command{
-			web.LOGIN: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-				if f, _, e := m.R.FormFile("sub"); e == nil {
-					defer f.Close()
-					// 文件参数
-					if b, e := ioutil.ReadAll(f); e == nil {
-						m.Option("sub", string(b))
-					}
-				}
-
-				m.Option("you", m.Conf("zsh", "meta.proxy"))
-				m.Richs("login", nil, m.Option("sid"), func(key string, value map[string]interface{}) {
-					// 查找空间
-					m.Option("you", kit.Select(m.Conf("zsh", "meta.proxy"), value["you"]))
-				})
-
-				m.Option("arg", strings.ReplaceAll(m.Option("arg"), "%20", " "))
-				m.Logs(ice.LOG_AUTH, "you", m.Option("you"), "url", m.Option(ice.MSG_USERURL), "cmd", m.Optionv("cmds"), "sub", m.Optionv("sub"))
-				m.Option(ice.MSG_OUTPUT, ice.RENDER_RESULT)
-			}},
-
-			SYNC: {Name: "sync id=auto auto 导出 导入", Help: "同步流", Action: map[string]*ice.Action{
+			SYNC: {Name: "sync id auto 导出 导入", Help: "同步流", Action: map[string]*ice.Action{
 				mdb.EXPORT: {Name: "export", Help: "导出", Hand: func(m *ice.Message, arg ...string) {
 					m.Cmdy(mdb.EXPORT, m.Prefix(SYNC), "", mdb.LIST)
 				}},
 				mdb.IMPORT: {Name: "import", Help: "导入", Hand: func(m *ice.Message, arg ...string) {
 					m.Cmdy(mdb.IMPORT, m.Prefix(SYNC), "", mdb.LIST)
 				}},
+				FAVOR: {Name: "favor topic name", Help: "收藏", Hand: func(m *ice.Message, arg ...string) {
+					m.Cmdy(m.Prefix(FAVOR), mdb.INSERT, kit.MDB_TOPIC, m.Option(kit.MDB_TOPIC),
+						kit.MDB_TYPE, SHELL, kit.MDB_NAME, m.Option(kit.MDB_NAME), kit.MDB_TEXT, m.Option(kit.MDB_TEXT))
+				}},
+				mdb.INPUTS: {Name: "inputs", Help: "补全", Hand: func(m *ice.Message, arg ...string) {
+					switch arg[0] {
+					case kit.MDB_TOPIC:
+						m.Cmdy(m.Prefix(FAVOR)).Appendv(ice.MSG_APPEND, kit.MDB_TOPIC, kit.MDB_COUNT, kit.MDB_TIME)
+					}
+				}},
 			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 				m.Option(mdb.FIELDS, kit.Select(m.Conf(SYNC, kit.META_FIELD), mdb.DETAIL, len(arg) > 0))
 				m.Cmdy(mdb.SELECT, m.Prefix(SYNC), "", mdb.LIST, kit.MDB_ID, arg)
+				m.PushAction("收藏")
 			}},
 			"/sync": {Name: "/sync", Help: "同步", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 				switch arg[0] {
 				case "history":
-					vs := strings.SplitN(strings.TrimSpace(m.Option("arg")), " ", 4)
-					if strings.Contains(m.Option("SHELL"), "zsh") {
-						vs = []string{vs[0], m.Time("2006-01-02"), m.Time("15:04:05"), strings.Join(vs[1:], " ")}
-					}
+					vs := strings.SplitN(strings.TrimSpace(m.Option(ARG)), " ", 4)
 					m.Cmd(mdb.INSERT, m.Prefix(SYNC), "", mdb.LIST, kit.MDB_TYPE, SHELL, kit.MDB_NAME, vs[0],
-						kit.MDB_TEXT, kit.Select("", vs, 3), "pwd", m.Option("pwd"), kit.MDB_TIME, vs[1]+" "+vs[2])
+						aaa.HOSTNAME, m.Option(aaa.HOSTNAME), aaa.USERNAME, m.Option(aaa.USERNAME),
+						kit.MDB_TEXT, strings.Join(vs[3:], " "), PWD, m.Option(PWD), kit.MDB_TIME, vs[1]+" "+vs[2])
 
 				default:
-					m.Richs("login", nil, m.Option("sid"), func(key string, value map[string]interface{}) {
-						kit.Value(value, kit.Keys("sync", arg[0]), kit.Dict(
-							"time", m.Time(), "text", m.Option("sub"),
-							"pwd", m.Option("pwd"), "cmd", arg[1:],
-						))
-					})
+					m.Cmd(mdb.INSERT, m.Prefix(SYNC), "", mdb.HASH, kit.MDB_TYPE, SHELL, kit.MDB_NAME, arg[0],
+						kit.MDB_TEXT, m.Option(SUB), PWD, m.Option(PWD))
 				}
 			}},
 		},

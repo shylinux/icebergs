@@ -75,13 +75,6 @@ var Index = &ice.Context{Name: GIT, Help: "代码库",
 				m.Cmdy(code.INSTALL, "download", m.Conf(GIT, kit.META_SOURCE))
 			}},
 			"build": {Name: "build", Help: "构建", Hand: func(m *ice.Message, arg ...string) {
-				m.Optionv("prepare", func(p string) {
-					m.Option(cli.CMD_DIR, p)
-					m.Cmd(cli.SYSTEM, "mv", "INSTALL", "INSTALLS")
-					if m.Cmdy(cli.SYSTEM, "./configure", "--prefix="+kit.Path(path.Join(p, code.INSTALL))); m.Append(cli.CMD_CODE) != "0" {
-						return
-					}
-				})
 				m.Cmdy(code.INSTALL, "build", m.Conf(GIT, kit.META_SOURCE))
 			}},
 			"start": {Name: "start", Help: "启动", Hand: func(m *ice.Message, arg ...string) {

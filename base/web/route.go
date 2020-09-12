@@ -47,7 +47,7 @@ func init() {
 			ROUTE: {Name: ROUTE, Help: "路由器", Value: kit.Data(kit.MDB_SHORT, kit.MDB_ROUTE)},
 		},
 		Commands: map[string]*ice.Command{
-			ROUTE: {Name: "route route=auto cmd=@key auto 启动 添加", Help: "路由", Action: map[string]*ice.Action{
+			ROUTE: {Name: "route route cmd auto 启动 添加", Help: "路由", Action: map[string]*ice.Action{
 				"invite": {Name: "invite", Help: "添加", Hand: func(m *ice.Message, arg ...string) {
 					m.Cmdy("web.code.install", "contexts", "base")
 				}},

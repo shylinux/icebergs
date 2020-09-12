@@ -22,7 +22,7 @@ func init() {
 				mdb.CREATE: {Name: "create topic", Help: "创建", Hand: func(m *ice.Message, arg ...string) {
 					m.Cmdy(mdb.INSERT, m.Prefix(FAVOR), "", mdb.HASH, arg)
 				}},
-				mdb.INSERT: {Name: "insert topic=数据结构 name=hi text=hello file=hi.c line=1", Help: "添加", Hand: func(m *ice.Message, arg ...string) {
+				mdb.INSERT: {Name: "insert topic=数据结构 name=hi text=hello", Help: "添加", Hand: func(m *ice.Message, arg ...string) {
 					m.Richs(m.Prefix(FAVOR), "", m.Option("topic"), func(key string, value map[string]interface{}) {
 						m.Cmdy(mdb.INSERT, m.Prefix(FAVOR), kit.Keys(kit.MDB_HASH, key), mdb.LIST, arg)
 					})

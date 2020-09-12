@@ -1,17 +1,21 @@
 package zsh
 
 import (
+	ice "github.com/shylinux/icebergs"
+	"github.com/shylinux/icebergs/base/cli"
+	kit "github.com/shylinux/toolkits"
+
 	"strings"
 	"unicode"
-
-	ice "github.com/shylinux/icebergs"
-	kit "github.com/shylinux/toolkits"
 )
 
 func init() {
 	Index.Merge(&ice.Context{
 		Configs: map[string]*ice.Config{},
 		Commands: map[string]*ice.Command{
+			"/qrcode": {Name: "/qrcode", Help: "同步", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+				m.Cmdy(cli.PYTHON, "qrcode", "hi")
+			}},
 			"/input": {Name: "/input", Help: "补全", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 				list := kit.Split(m.Option("line"), m.Option("break"))
 				word := list[kit.Int(m.Option("index"))]

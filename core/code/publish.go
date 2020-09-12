@@ -10,6 +10,7 @@ import (
 	"os"
 	"path"
 	"runtime"
+	"strings"
 )
 
 const PUBLISH = "publish"
@@ -37,10 +38,24 @@ func init() {
 		Configs: map[string]*ice.Config{
 			PUBLISH: {Name: PUBLISH, Help: "发布", Value: kit.Data(
 				kit.MDB_SHORT, kit.MDB_NAME, kit.MDB_PATH, "usr/publish",
+				"contexts", _contexts,
 			)},
 		},
 		Commands: map[string]*ice.Command{
 			PUBLISH: {Name: "publish path=auto auto 火山架 冰山架 神农架", Help: "发布", Action: map[string]*ice.Action{
+				"contexts": {Name: "contexts", Help: "环境", Hand: func(m *ice.Message, arg ...string) {
+					u := kit.ParseURL(m.Option(ice.MSG_USERWEB))
+					m.Option("httphost", fmt.Sprintf("%s://%s:%s", u.Scheme, strings.Split(u.Host, ":")[0], kit.Select(kit.Select("80", "443", u.Scheme == "https"), strings.Split(u.Host, ":"), 1)))
+					m.Option("hostport", fmt.Sprintf("%s:%s", strings.Split(u.Host, ":")[0], kit.Select(kit.Select("80", "443", u.Scheme == "https"), strings.Split(u.Host, ":"), 1)))
+					m.Option("hostname", strings.Split(u.Host, ":")[0])
+
+					m.Option("userhost", fmt.Sprintf("%s@%s", m.Option(ice.MSG_USERNAME), strings.Split(u.Host, ":")[0]))
+					m.Option("hostpath", kit.Path("./.ish/pluged"))
+
+					if buf, err := kit.Render(m.Conf(INSTALL, kit.Keys("meta.contexts", kit.Select("base", arg, 0))), m); m.Assert(err) {
+						m.Cmdy("web.wiki.spark", "shell", string(buf))
+					}
+				}},
 				"ish": {Name: "ish", Help: "神农架", Hand: func(m *ice.Message, arg ...string) {
 					_publish_file(m, "etc/conf/tmux.conf")
 					m.Option(nfs.DIR_REG, ".*\\.(sh|vim|conf)")
@@ -64,3 +79,28 @@ func init() {
 		},
 	}, nil)
 }
+
+var _contexts = kit.Dict(
+	"tmux", `
+# 终端环境
+curl -fLo /etc/yum.repos.d/CentOS-Base.repo https://mirrors.aliyun.com/repo/Centos-8.repo && yum -y update
+yum install -y tmux
+`,
+	"base", `
+# 生产环境
+mkdir contexts; cd contexts
+export ctx_dev={{.Option "httphost"}} ctx_log=/dev/stdout; curl $ctx_dev/publish/ice.sh |sh
+bin/ice.sh`,
+	"miss", `
+# 开发环境
+yum install -y make git vim go
+mkdir ~/.ssh &>/dev/null; touch ~/.ssh/config; [ -z "$(cat ~/.ssh/config|grep 'HOST {{.Option "hostname"}}')" ] && echo -e "HOST {{.Option "hostname"}}\n    Port 9030" >> ~/.ssh/config
+export ISH_CONF_HUB_PROXY={{.Option "userhost"}}:.ish/pluged/
+git clone $ISH_CONF_HUB_PROXY/github.com/shylinux/contexts && cd contexts
+source etc/miss.sh
+
+touch ~/.gitconfig; [ -z "$(cat ~/.gitconfig|grep '\[url \"{{.Option "userhost"}}')" ] && echo -e "[url \"{{.Option "userhost"}}:ish/pluged/\"]\n    insteadOf=\"https://github.com/\"\n" >> ~/.gitconfig
+git clone https://github.com/shylinux/contexts && cd contexts
+source etc/miss.sh
+`,
+)

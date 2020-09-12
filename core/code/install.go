@@ -9,35 +9,9 @@ import (
 	"github.com/shylinux/icebergs/base/web"
 	kit "github.com/shylinux/toolkits"
 
-	"fmt"
 	"os"
 	"path"
 	"strings"
-)
-
-var _contexts = kit.Dict(
-	"tmux", `
-# 终端环境
-curl -fLo /etc/yum.repos.d/CentOS-Base.repo https://mirrors.aliyun.com/repo/Centos-8.repo && yum -y update
-yum install -y tmux vim
-`,
-	"base", `
-# 生产环境
-mkdir contexts; cd contexts
-export ctx_dev={{.Option "httphost"}} ctx_log=/dev/stdout; curl $ctx_dev/publish/ice.sh |sh
-bin/ice.sh`,
-	"miss", `
-# 开发环境
-yum install -y make git go
-mkdir ~/.ssh &>/dev/null; touch ~/.ssh/config; [ -z "$(cat ~/.ssh/config|grep 'HOST {{.Option "hostname"}}')" ] && echo -e "HOST {{.Option "hostname"}}\n    Port 9030" >> ~/.ssh/config
-export ISH_CONF_HUB_PROXY={{.Option "userhost"}}:.ish/pluged/
-git clone $ISH_CONF_HUB_PROXY/github.com/shylinux/contexts && cd contexts
-source etc/miss.sh
-
-touch ~/.gitconfig; [ -z "$(cat ~/.gitconfig|grep '\[url \"{{.Option "userhost"}}')" ] && echo -e "[url \"{{.Option "userhost"}}:ish/pluged/\"]\n    insteadOf=\"https://github.com/\"\n" >> ~/.gitconfig
-git clone https://github.com/shylinux/contexts && cd contexts
-source etc/miss.sh
-`,
 )
 
 const INSTALL = "install"
@@ -47,39 +21,32 @@ func init() {
 		Configs: map[string]*ice.Config{
 			INSTALL: {Name: INSTALL, Help: "安装", Value: kit.Data(
 				kit.MDB_SHORT, kit.MDB_NAME, kit.MDB_PATH, "usr/install",
-				"contexts", _contexts,
+				kit.MDB_FIELD, "time,step,size,total,name,link",
 			)},
 		},
 		Commands: map[string]*ice.Command{
-			INSTALL: {Name: "install name=auto port=auto path=auto auto", Help: "安装", Meta: kit.Dict(), Action: map[string]*ice.Action{
-				"contexts": {Name: "contexts", Help: "环境", Hand: func(m *ice.Message, arg ...string) {
-					u := kit.ParseURL(m.Option(ice.MSG_USERWEB))
-					m.Option("httphost", fmt.Sprintf("%s://%s:%s", u.Scheme, strings.Split(u.Host, ":")[0], kit.Select(kit.Select("80", "443", u.Scheme == "https"), strings.Split(u.Host, ":"), 1)))
-					m.Option("hostport", fmt.Sprintf("%s:%s", strings.Split(u.Host, ":")[0], kit.Select(kit.Select("80", "443", u.Scheme == "https"), strings.Split(u.Host, ":"), 1)))
-					m.Option("hostname", strings.Split(u.Host, ":")[0])
-
-					m.Option("userhost", fmt.Sprintf("%s@%s", m.Option(ice.MSG_USERNAME), strings.Split(u.Host, ":")[0]))
-					m.Option("hostpath", kit.Path("./.ish/pluged"))
-
-					if buf, err := kit.Render(m.Conf(INSTALL, kit.Keys("meta.contexts", kit.Select("base", arg, 0))), m); m.Assert(err) {
-						m.Cmdy("web.wiki.spark", "shell", string(buf))
-					}
-				}},
+			INSTALL: {Name: "install name port path auto", Help: "安装", Meta: kit.Dict(), Action: map[string]*ice.Action{
 				"download": {Name: "download link", Help: "下载", Hand: func(m *ice.Message, arg ...string) {
 					name := path.Base(arg[0])
-					if m.Richs(INSTALL, "", name, func(key string, value map[string]interface{}) {
-						if _, e := os.Stat(path.Join(m.Conf(INSTALL, kit.META_PATH), kit.Format(value[kit.MDB_NAME]))); e == nil {
-							m.Push(key, value, []string{kit.MDB_TIME, kit.MDB_STEP, kit.MDB_SIZE, kit.MDB_TOTAL, kit.MDB_NAME, kit.MDB_LINK})
-							m.Option("_process", "_progress")
+					p := path.Join(m.Conf(INSTALL, kit.META_PATH), name)
+
+					m.Option("_process", "_progress")
+					m.Option(mdb.FIELDS, m.Conf(INSTALL, kit.META_FIELD))
+					if m.Cmd(mdb.SELECT, m.Prefix(INSTALL), "", mdb.HASH, kit.MDB_NAME, name).Table(func(index int, value map[string]string, head []string) {
+						if _, e := os.Stat(p); e == nil {
+							m.Push("", value, kit.Split(m.Option(mdb.FIELDS)))
 						}
-					}) != nil && len(m.Appendv(kit.MDB_NAME)) > 0 {
-						// 已经下载
-						return
+					}); len(m.Appendv(kit.MDB_NAME)) > 0 {
+						return // 已经下载
 					}
+
+					// 占位
+					m.Cmd(nfs.SAVE, p, "")
 
 					// 进度
 					m.Cmd(mdb.INSERT, m.Prefix(INSTALL), "", mdb.HASH, kit.MDB_NAME, name, kit.MDB_LINK, arg[0])
 					m.Richs(INSTALL, "", name, func(key string, value map[string]interface{}) {
+						value = value[kit.MDB_META].(map[string]interface{})
 						m.Optionv("progress", func(size int, total int) {
 							s := size * 100 / total
 							if s != kit.Int(value[kit.MDB_STEP]) && s%10 == 0 {
@@ -89,23 +56,11 @@ func init() {
 						})
 					})
 
-					// 占位
-					p := path.Join(m.Conf(INSTALL, kit.META_PATH), name)
-					if strings.Contains(p, "/") {
-						os.MkdirAll(path.Base(p), ice.MOD_DIR)
-					}
-					m.Cmd(cli.SYSTEM, "touch", p)
-
-					m.Option("_process", "_progress")
 					m.Gos(m, func(m *ice.Message) {
 						// 下载
 						m.Option(cli.CMD_DIR, m.Conf(INSTALL, kit.META_PATH))
-						if strings.HasPrefix(arg[0], "ftp") {
-							m.Cmdy(cli.SYSTEM, "wget", arg[0])
-						} else {
-							msg := m.Cmd(web.SPIDE, web.SPIDE_DEV, web.SPIDE_CACHE, web.SPIDE_GET, arg[0])
-							m.Cmdy(nfs.LINK, p, msg.Append(kit.MDB_FILE))
-						}
+						msg := m.Cmd(web.SPIDE, web.SPIDE_DEV, web.SPIDE_CACHE, web.SPIDE_GET, arg[0])
+						m.Cmdy(nfs.LINK, p, msg.Append(kit.MDB_FILE))
 
 						// 解压
 						m.Cmd(cli.SYSTEM, "tar", "xvf", name)
@@ -117,7 +72,7 @@ func init() {
 					case func(string):
 						cb(p)
 					default:
-						if m.Cmdy(cli.SYSTEM, "./configure", "--prefix="+kit.Path(path.Join(p, INSTALL)), arg[1:]); m.Append(cli.CMD_CODE) != "0" {
+						if m.Cmdy(cli.SYSTEM, "./configure", "--prefix="+kit.Path(path.Join(p, kit.Select("_install", m.Option("install")))), arg[1:]); m.Append(cli.CMD_CODE) != "0" {
 							return
 						}
 					}
@@ -125,16 +80,16 @@ func init() {
 					if m.Cmdy(cli.SYSTEM, "make", "-j8"); m.Append(cli.CMD_CODE) != "0" {
 						return
 					}
-					if m.Cmdy(cli.SYSTEM, "make", "PREFIX="+kit.Path(path.Join(p, INSTALL)), "install"); m.Append(cli.CMD_CODE) != "0" {
-						return
-					}
+
+					m.Cmdy(cli.SYSTEM, "mv", "INSTALL", "INSTALLS")
+					m.Cmdy(cli.SYSTEM, "make", "PREFIX="+kit.Path(path.Join(p, kit.Select("_install", m.Option("install")))), "install")
 				}},
 				"spawn": {Name: "spawn link", Help: "新建", Hand: func(m *ice.Message, arg ...string) {
 					port := m.Cmdx(tcp.PORT, "select")
 					target := path.Join(m.Conf(cli.DAEMON, kit.META_PATH), port)
 					source := path.Join(m.Conf(INSTALL, kit.META_PATH), kit.TrimExt(arg[0]))
 
-					m.Cmd(nfs.DIR, path.Join(source, kit.Select("install", m.Option("install")))).Table(func(index int, value map[string]string, head []string) {
+					m.Cmd(nfs.DIR, path.Join(source, kit.Select("_install", m.Option("install")))).Table(func(index int, value map[string]string, head []string) {
 						m.Cmd(cli.SYSTEM, "cp", "-r", strings.TrimSuffix(value[kit.MDB_PATH], "/"), target)
 					})
 					m.Echo(target)
@@ -155,34 +110,30 @@ func init() {
 			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 				if len(arg) == 0 {
 					// 源码列表
-					m.Option(mdb.FIELDS, "time,step,size,total,name,link")
+					m.Option(mdb.FIELDS, m.Conf(INSTALL, kit.META_FIELD))
 					m.Cmdy(mdb.SELECT, m.Prefix(INSTALL), "", mdb.HASH)
-					m.Sort(kit.MDB_TIME, "time_r")
 					return
 				}
 
 				arg[0] = path.Base(arg[0])
 				if key := strings.Split(strings.Split(arg[0], "-")[0], ".")[0]; len(arg) == 1 {
-					// 服务列表
 					u := kit.ParseURL(m.Option(ice.MSG_USERWEB))
 					m.Cmd(cli.DAEMON).Table(func(index int, value map[string]string, head []string) {
+						// 服务列表
 						if strings.Contains(value[kit.MDB_NAME], key) {
 							m.Push(kit.MDB_TIME, value[kit.MDB_TIME])
 							m.Push(kit.MDB_PORT, path.Base(value[kit.MDB_DIR]))
 							m.Push(kit.MDB_STATUS, value[kit.MDB_STATUS])
 							m.Push(kit.MDB_NAME, value[kit.MDB_NAME])
-							m.Push(kit.MDB_LINK, m.Cmdx(mdb.RENDER, web.RENDER.A,
-								kit.Format("http://%s:%s", u.Hostname(), path.Base(value[kit.MDB_DIR]))))
+							m.PushRender(kit.MDB_LINK, "a", kit.Format("http://%s:%s", u.Hostname(), path.Base(value[kit.MDB_DIR])))
 						}
 					})
-					m.Sort(kit.MDB_TIME, "time_r")
 					return
 				}
 
 				// 目录列表
 				m.Option(nfs.DIR_ROOT, path.Join(m.Conf(cli.DAEMON, kit.META_PATH), arg[1]))
 				m.Cmdy(nfs.DIR, kit.Select("./", arg, 2))
-				m.Sort(kit.MDB_TIME, "time_r")
 			}},
 		},
 	}, nil)

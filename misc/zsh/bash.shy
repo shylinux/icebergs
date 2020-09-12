@@ -1,9 +1,10 @@
 title "bash"
 refer `
 官网 https://www.gnu.org/software/bash/
-源码 http://ftp.gnu.org/gnu/bash/
 文档 https://www.gnu.org/software/bash/manual/bash.html
+源码 http://ftp.gnu.org/gnu/bash/
 `
+
 chapter "源码"
 field "bash" web.code.zsh.bash
 field "bash" web.code.inner args `[ usr/install/bash-4.2.53/ input.c 625 ]`
@@ -13,16 +14,19 @@ spark shell `
 wget http://mirrors.aliyun.com/gnu/bash/bash-4.2.53.tar.gz
 tar xvf bash-4.2.53.tar.gz && cd bash-4.2.53
 
-./configure --prefix=$PWD/install
+./configure --prefix=$PWD/_install
 make -j4 && make install
 `
 
-section "使用体验"
+section "启动"
 spark shell `
-cd ./install
+cd ./_install
 ./bin/bash
 `
-chapter "应用"
 
+chapter "应用"
+web.code.zsh.sess contexts
+field "会话" web.code.zsh.sess
+field "收藏夹" web.code.zsh.favor
 field "同步流" web.code.zsh.sync
-field "同步流" web.favor
+

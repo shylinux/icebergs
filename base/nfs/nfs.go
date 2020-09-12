@@ -218,6 +218,9 @@ func _file_copy(m *ice.Message, name string, from ...string) {
 	}
 }
 func _file_link(m *ice.Message, name string, from string) {
+	if from == "" {
+		return
+	}
 	os.MkdirAll(path.Dir(name), 0760)
 	os.Remove(name)
 	os.Link(from, name)

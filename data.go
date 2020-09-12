@@ -33,6 +33,18 @@ func (m *Message) Grows(key string, chain interface{}, match string, value strin
 	if cache == nil {
 		return nil
 	}
+
+	begin := kit.Int(m.Option("cache.begin"))
+	limit := kit.Int(m.Option("cache.limit"))
+	count := kit.Int(m.Option("cache.count", kit.Int(kit.Value(cache, "meta.count"))))
+	if begin >= 0 || m.Option("cache.limit") == "" {
+		if begin > 0 {
+			begin -= 1
+		}
+		m.Option("cache.offend", count-begin-limit)
+	} else {
+		m.Option("cache.offend", -begin-limit)
+	}
 	return miss.Grows(kit.Keys(key, chain), cache,
 		kit.Int(kit.Select("0", m.Option("cache.offend"))),
 		kit.Int(kit.Select("10", m.Option("cache.limit"))),

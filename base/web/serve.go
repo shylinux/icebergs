@@ -83,6 +83,7 @@ func _serve_handle(key string, cmd *ice.Command, msg *ice.Message, w http.Respon
 	}
 
 	// 用户请求
+	msg.Option("cache.limit", "10")
 	msg.Option(ice.MSG_METHOD, r.Method)
 	msg.Option(ice.MSG_USERWEB, kit.Select(msg.Conf(SHARE, "meta.domain"), r.Header.Get("Referer")))
 	msg.Option(ice.MSG_USERIP, r.Header.Get(ice.MSG_USERIP))
@@ -135,6 +136,9 @@ func _serve_handle(key string, cmd *ice.Command, msg *ice.Message, w http.Respon
 		}
 	}
 
+	if msg.Option("cache.begin") == "" {
+		msg.Option("cache.begin", -kit.Int(msg.Option("cache.limit")))
+	}
 	// 执行命令
 	if cmds, ok := _serve_login(msg, kit.Simple(msg.Optionv(ice.MSG_CMDS)), w, r); ok {
 		msg.Option("_option", msg.Optionv(ice.MSG_OPTION))

@@ -120,6 +120,9 @@ func _hash_inputs(m *ice.Message, prefix, key string, field, value string) {
 }
 func _hash_prunes(m *ice.Message, prefix, chain string, arg ...string) {
 	m.Richs(prefix, chain, kit.MDB_FOREACH, func(key string, val map[string]interface{}) {
+		if val[kit.MDB_META] != nil {
+			val = val[kit.MDB_META].(map[string]interface{})
+		}
 		for i := 0; i < len(arg)-1; i += 2 {
 			if val[arg[i]] != arg[i+1] {
 				return
@@ -347,6 +350,10 @@ var Index = &ice.Context{Name: "mdb", Help: "数据模块",
 			}
 		}},
 		SELECT: {Name: "select conf key type field value", Help: "数据查询", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			m.Conf(arg[0], arg[1])
+
+			m.Option("cache.begin")
+			m.Option("cache.begin")
 			switch arg[2] {
 			case HASH:
 				_hash_select(m, arg[0], arg[1], kit.Select("", arg, 3), kit.Select(kit.MDB_FOREACH, arg, 4))

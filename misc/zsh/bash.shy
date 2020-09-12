@@ -26,7 +26,8 @@ cd ./_install
 
 chapter "应用"
 web.code.zsh.sess contexts
-field "会话" web.code.zsh.sess
+
+field "命令行" web.code.zsh.sess
 field "收藏夹" web.code.zsh.favor
 field "同步流" web.code.zsh.sync
 

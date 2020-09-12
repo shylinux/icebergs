@@ -9,11 +9,6 @@ import (
 	"strings"
 )
 
-const (
-	ARG = "arg"
-	SUB = "sub"
-	PWD = "pwd"
-)
 const SYNC = "sync"
 const SHELL = "shell"
 
@@ -44,17 +39,28 @@ func init() {
 				}},
 			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 				m.Option(mdb.FIELDS, kit.Select(m.Conf(SYNC, kit.META_FIELD), mdb.DETAIL, len(arg) > 0))
-				m.Cmdy(mdb.SELECT, m.Prefix(SYNC), "", mdb.LIST, kit.MDB_ID, arg)
-				m.PushAction("收藏")
+				if m.Option("_control", "page"); m.Option("cache.limit") == "" {
+					m.Option("cache.limit", "10")
+				}
+				if m.Option("cache.value") == "" {
+					m.Cmdy(mdb.SELECT, m.Prefix(SYNC), "", mdb.LIST, kit.MDB_ID, arg)
+				} else {
+					m.Cmdy(mdb.SELECT, m.Prefix(SYNC), "", mdb.LIST, m.Option("cache.field"), m.Option("cache.value"))
+				}
+				if len(arg) == 0 {
+					m.PushAction("收藏")
+				}
 			}},
 			"/sync": {Name: "/sync", Help: "同步", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 				switch arg[0] {
 				case "history":
-					vs := strings.SplitN(strings.TrimSpace(m.Option(ARG)), " ", 4)
-					m.Cmd(mdb.INSERT, m.Prefix(SYNC), "", mdb.LIST, kit.MDB_TYPE, SHELL, kit.MDB_NAME, vs[0],
-						aaa.HOSTNAME, m.Option(aaa.HOSTNAME), aaa.USERNAME, m.Option(aaa.USERNAME),
-						kit.MDB_TEXT, strings.Join(vs[3:], " "), PWD, m.Option(PWD), kit.MDB_TIME, vs[1]+" "+vs[2])
+					ls := strings.SplitN(strings.TrimSpace(m.Option(ARG)), " ", 4)
+					if text := strings.TrimSpace(strings.Join(ls[3:], " ")); text != "" {
+						m.Cmd(mdb.INSERT, m.Prefix(SYNC), "", mdb.LIST, kit.MDB_TYPE, SHELL, kit.MDB_NAME, ls[0],
+							aaa.HOSTNAME, m.Option(aaa.HOSTNAME), aaa.USERNAME, m.Option(aaa.USERNAME),
+							kit.MDB_TEXT, text, PWD, m.Option(PWD), kit.MDB_TIME, ls[1]+" "+ls[2])
 
+					}
 				default:
 					m.Cmd(mdb.INSERT, m.Prefix(SYNC), "", mdb.HASH, kit.MDB_TYPE, SHELL, kit.MDB_NAME, arg[0],
 						kit.MDB_TEXT, m.Option(SUB), PWD, m.Option(PWD))

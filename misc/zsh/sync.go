@@ -39,15 +39,13 @@ func init() {
 				}},
 			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 				m.Option(mdb.FIELDS, kit.Select(m.Conf(SYNC, kit.META_FIELD), mdb.DETAIL, len(arg) > 0))
-				if m.Option("_control", "page"); m.Option("cache.limit") == "" {
-					m.Option("cache.limit", "10")
-				}
 				if m.Option("cache.value") == "" {
 					m.Cmdy(mdb.SELECT, m.Prefix(SYNC), "", mdb.LIST, kit.MDB_ID, arg)
 				} else {
+					if m.Option("_control", "page"); m.Option("cache.limit") == "" {
+						m.Option("cache.limit", "10")
+					}
 					m.Cmdy(mdb.SELECT, m.Prefix(SYNC), "", mdb.LIST, m.Option("cache.field"), m.Option("cache.value"))
-				}
-				if len(arg) == 0 {
 					m.PushAction("收藏")
 				}
 			}},

@@ -359,7 +359,7 @@ var Index = &ice.Context{Name: "team", Help: "团队中心",
 				})
 			}
 		}},
-		PLAN: {Name: "plan scale:select=day|week|month|year|long begin_time=@date auto 添加:button 导出:button 导入:button 筛选:button", Help: "计划", Meta: kit.Dict(
+		PLAN: {Name: "plan scale:select=day|week|month|year|long begin_time@date auto 添加:button 导出:button 导入:button 筛选:button", Help: "计划", Meta: kit.Dict(
 			"display", "/plugin/local/team/plan.js", "style", "plan",
 			"添加", _task_inputs,
 		), Action: map[string]*ice.Action{

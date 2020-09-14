@@ -27,10 +27,10 @@ cd ./install
 `
 
 chapter "应用"
-field "同步流" web.code.vim.sync
+field "编辑器" web.code.vim.sess
 field "输入法" web.code.vim.input
 field "收藏夹" web.code.vim.favor
-field "输入法" web.code.input.wubi
+field "同步流" web.code.vim.sync
 
 chapter "配置"
 

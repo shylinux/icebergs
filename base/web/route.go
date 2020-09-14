@@ -55,7 +55,7 @@ func init() {
 					switch arg[0] {
 					case "cmd":
 						m.Cmdy(SPACE, m.Option("route"), "command")
-					default:
+					case "name":
 						m.Cmdy(SPACE, m.Option("route"), "dream")
 					}
 				}},

@@ -37,7 +37,16 @@ func init() {
 				}},
 			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 				m.Option(mdb.FIELDS, kit.Select(m.Conf(SYNC, kit.META_FIELD), mdb.DETAIL, len(arg) > 0))
-				m.Cmdy(mdb.SELECT, m.Prefix(SYNC), "", mdb.LIST, kit.MDB_ID, arg)
+				if len(arg) > 0 {
+					m.Option("cache.field", kit.MDB_ID)
+					m.Option("cache.value", arg[0])
+				} else {
+					if m.Option("_control", "page"); m.Option("cache.limit") == "" {
+						m.Option("cache.limit", "10")
+					}
+				}
+
+				m.Cmdy(mdb.SELECT, m.Prefix(SYNC), "", mdb.LIST, m.Option("cache.field"), m.Option("cache.value"))
 			}},
 			"/sync": {Name: "/sync", Help: "同步", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 				m.Render(ice.RENDER_RESULT)

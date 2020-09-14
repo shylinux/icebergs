@@ -1,16 +1,14 @@
-package zsh
+package crx
 
 import (
 	ice "github.com/shylinux/icebergs"
-	"github.com/shylinux/icebergs/base/aaa"
 	"github.com/shylinux/icebergs/base/mdb"
+	"github.com/shylinux/icebergs/base/web"
 	kit "github.com/shylinux/toolkits"
-
-	"strings"
 )
 
 const SYNC = "sync"
-const SHELL = "shell"
+const SPIDE = "spide"
 
 func init() {
 	Index.Merge(&ice.Context{
@@ -29,7 +27,7 @@ func init() {
 				}},
 				FAVOR: {Name: "favor topic name", Help: "收藏", Hand: func(m *ice.Message, arg ...string) {
 					m.Cmdy(m.Prefix(FAVOR), mdb.INSERT, kit.MDB_TOPIC, m.Option(kit.MDB_TOPIC),
-						kit.MDB_TYPE, SHELL, kit.MDB_NAME, m.Option(kit.MDB_NAME), kit.MDB_TEXT, m.Option(kit.MDB_TEXT))
+						kit.MDB_TYPE, SPIDE, kit.MDB_NAME, m.Option(kit.MDB_NAME), kit.MDB_TEXT, m.Option(kit.MDB_TEXT))
 				}},
 				mdb.INPUTS: {Name: "inputs", Help: "补全", Hand: func(m *ice.Message, arg ...string) {
 					switch arg[0] {
@@ -52,19 +50,14 @@ func init() {
 				m.Cmdy(mdb.SELECT, m.Prefix(SYNC), "", mdb.LIST, m.Option("cache.field"), m.Option("cache.value"))
 			}},
 			"/sync": {Name: "/sync", Help: "同步", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-				switch arg[0] {
-				case "history":
-					ls := strings.SplitN(strings.TrimSpace(m.Option(ARG)), " ", 4)
-					if text := strings.TrimSpace(strings.Join(ls[3:], " ")); text != "" {
-						m.Cmd(mdb.INSERT, m.Prefix(SYNC), "", mdb.LIST, kit.MDB_TYPE, SHELL, kit.MDB_NAME, ls[0],
-							aaa.HOSTNAME, m.Option(aaa.HOSTNAME), aaa.USERNAME, m.Option(aaa.USERNAME),
-							kit.MDB_TEXT, text, PWD, m.Option(PWD), kit.MDB_TIME, ls[1]+" "+ls[2])
-
-					}
-				default:
-					m.Cmd(mdb.INSERT, m.Prefix(SYNC), "", mdb.HASH, kit.MDB_TYPE, SHELL, kit.MDB_NAME, arg[0],
-						kit.MDB_TEXT, m.Option(SUB), PWD, m.Option(PWD))
-				}
+				m.Cmdy(mdb.INSERT, m.Prefix(SYNC), "", mdb.LIST, kit.MDB_TYPE, SPIDE, kit.MDB_NAME, m.Option("name"), kit.MDB_TEXT, m.Option("note"))
+			}},
+			"/crx": {Name: "/crx", Help: "插件", Action: map[string]*ice.Action{
+				web.HISTORY: {Name: "history", Help: "历史记录", Hand: func(m *ice.Message, arg ...string) {
+					m.Cmdy(web.SPIDE, web.SPIDE_SELF, "/code/chrome/sync", "name", arg[1], "note", arg[2])
+					// m.Cmdy(web.SPIDE, web.SPIDE_DEV, "/code/chrome/sync", "name", arg[1], "note", arg[2])
+				}},
+			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			}},
 		},
 	}, nil)

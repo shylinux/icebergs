@@ -128,6 +128,7 @@ func _hash_prunes(m *ice.Message, prefix, chain string, arg ...string) {
 				return
 			}
 		}
+		m.Push(key, val)
 		_hash_delete(m, prefix, chain, kit.MDB_HASH, key)
 	})
 }

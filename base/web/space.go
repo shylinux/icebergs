@@ -215,7 +215,7 @@ func init() {
 			)},
 		},
 		Commands: map[string]*ice.Command{
-			SPACE: {Name: "space [name [cmd...]] auto", Help: "空间站", Action: map[string]*ice.Action{
+			SPACE: {Name: "space name cmd auto", Help: "空间站", Action: map[string]*ice.Action{
 				"connect": {Name: "connect [dev [name]]", Help: "连接", Hand: func(m *ice.Message, arg ...string) {
 					_space_dial(m, kit.Select("dev", arg, 0), kit.Select(cli.NodeName, arg, 2))
 				}},

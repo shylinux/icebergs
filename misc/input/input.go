@@ -123,10 +123,10 @@ func _input_load(m *ice.Message, file string, libs ...string) {
 				continue
 			}
 			line := kit.Split(bio.Text())
-			if len(line) < 3 || line[2] == "0" {
+			if len(line) < 2 || (len(line) > 2 && line[2] == "0") {
 				continue
 			}
-			m.Grow(INPUT, prefix, kit.Dict(TEXT, line[0], CODE, line[1], WEIGHT, line[2]))
+			m.Grow(INPUT, prefix, kit.Dict(TEXT, line[0], CODE, line[1], WEIGHT, kit.Select("999999", line, 2)))
 		}
 
 		// 保存词库

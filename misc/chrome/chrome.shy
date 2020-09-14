@@ -10,8 +10,9 @@ chapter "安装"
 field chrome web.code.chrome.chrome
 
 chapter "应用"
-section "收藏夹"
-field favor web.favor args `[ url.history ]`
+field "浏览器" web.space
+field "收藏夹" web.code.chrome.favor
+field "同步流" web.code.chrome.sync
 
 section "命令行"
 refer `

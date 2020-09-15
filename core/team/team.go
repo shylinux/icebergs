@@ -39,7 +39,7 @@ func _task_create(m *ice.Message, zone string) {
 func _task_insert(m *ice.Message, zone string, arg ...string) {
 	m.Richs(TASK, kit.Keys(kit.MDB_HASH, m.Optionv(ice.MSG_DOMAIN)), zone, func(key string, value map[string]interface{}) {
 		id := m.Grow(TASK, kit.Keys(kit.MDB_HASH, m.Optionv(ice.MSG_DOMAIN), kit.MDB_HASH, key), kit.Dict(
-			BEGIN_TIME, m.Time(), CLOSE_TIME, m.Time(), kit.MDB_EXTRA, kit.Dict(),
+			BEGIN_TIME, m.Time(), CLOSE_TIME, m.Time("30m"), kit.MDB_EXTRA, kit.Dict(),
 			STATUS, StatusPrepare, LEVEL, 3, SCORE, 3, arg,
 		))
 		m.Log_INSERT(kit.MDB_ZONE, zone, kit.MDB_ID, id, arg[0], arg[1])
@@ -187,7 +187,7 @@ func _task_render(m *ice.Message, kind, name, text string, arg ...string) {
 		})
 	})
 }
-func _task_action(m *ice.Message, status interface{}, action ...string) string {
+func _task_action(m *ice.Message, status interface{}, action ...string) []string {
 	switch status {
 	case StatusPrepare:
 		action = append(action, "开始")
@@ -195,10 +195,7 @@ func _task_action(m *ice.Message, status interface{}, action ...string) string {
 		action = append(action, "完成")
 	case StatusCancel, StatusFinish:
 	}
-	for i, v := range action {
-		action[i] = m.Cmdx(mdb.RENDER, web.RENDER.Button, v)
-	}
-	return strings.Join(action, "")
+	return action
 }
 func _task_input(m *ice.Message, field, value string) {
 	switch field {
@@ -252,19 +249,6 @@ func _task_scope(m *ice.Message, arg ...string) (time.Time, time.Time) {
 	return begin_time, end_time
 }
 
-var _task_inputs = kit.List(
-	"_input", "text", "name", "zone", "value", "@key",
-	"_input", "select", "name", "type", "values", []interface{}{
-		"once", "step", "week",
-	},
-	"_input", "text", "name", "name", "value", "@key",
-	"_input", "text", "name", "text", "value", "@key",
-	"_input", "text", "name", "extra.cmds",
-	"_input", "text", "name", "extra.args",
-	"_input", "text", "name", "begin_time", "value", "@date",
-	"_input", "text", "name", "close_time", "value", "@date",
-)
-
 const (
 	TASK = "task"
 	PLAN = "plan"
@@ -308,10 +292,8 @@ var Index = &ice.Context{Name: "team", Help: "团队中心",
 		}},
 		ice.CTX_EXIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) { m.Save(TASK) }},
 
-		TASK: {Name: "task zone=auto id=auto auto 添加:button 导出:button 导入:button", Help: "任务", Meta: kit.Dict(
-			"添加", _task_inputs,
-		), Action: map[string]*ice.Action{
-			mdb.INSERT: {Name: "insert [key value]...", Help: "添加", Hand: func(m *ice.Message, arg ...string) {
+		TASK: {Name: "task zone=auto id=auto auto 添加:button 导出:button 导入:button", Help: "任务", Action: map[string]*ice.Action{
+			mdb.INSERT: {Name: "insert zone type=once,step,week name text begin_time@date close_time@date", Help: "添加", Hand: func(m *ice.Message, arg ...string) {
 				_task_create(m, arg[1])
 				_task_insert(m, arg[1], arg[2:]...)
 			}},
@@ -348,26 +330,24 @@ var Index = &ice.Context{Name: "team", Help: "团队中心",
 		}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			if _task_list(m, kit.Select("", arg, 0), kit.Select("", arg, 1)); len(arg) < 2 {
 				m.Table(func(index int, value map[string]string, head []string) {
-					m.Push("action", _task_action(m, value[STATUS]))
+					m.PushAction(_task_action(m, value[STATUS]))
 				})
 			} else {
 				m.Table(func(index int, value map[string]string, head []string) {
 					if value["key"] == "status" {
 						m.Push("key", "action")
-						m.Push("value", _task_action(m, value["value"]))
 					}
 				})
 			}
 		}},
-		PLAN: {Name: "plan scale:select=day|week|month|year|long begin_time@date auto 添加:button 导出:button 导入:button 筛选:button", Help: "计划", Meta: kit.Dict(
+		PLAN: {Name: "plan scale=day,week,month,year,long begin_time@date auto 添加 导出 导入", Help: "计划", Meta: kit.Dict(
 			"display", "/plugin/local/team/plan.js", "style", "plan",
-			"添加", _task_inputs,
 		), Action: map[string]*ice.Action{
-			mdb.INSERT: {Name: "insert [key value]...", Help: "添加", Hand: func(m *ice.Message, arg ...string) {
+			mdb.INSERT: {Name: "insert zone type=once,step,week name text begin_time@date close_time@date", Help: "添加", Hand: func(m *ice.Message, arg ...string) {
 				_task_create(m, arg[1])
 				_task_insert(m, arg[1], arg[2:]...)
 			}},
-			mdb.MODIFY: {Name: "modify key value", Help: "编辑", Hand: func(m *ice.Message, arg ...string) {
+			mdb.MODIFY: {Name: "modify", Help: "编辑", Hand: func(m *ice.Message, arg ...string) {
 				_task_modify(m, m.Option(kit.MDB_ZONE), m.Option(kit.MDB_ID), arg[0], arg[1])
 			}},
 			mdb.DELETE: {Name: "delete", Help: "删除", Hand: func(m *ice.Message, arg ...string) {
@@ -378,6 +358,9 @@ var Index = &ice.Context{Name: "team", Help: "团队中心",
 			}},
 			mdb.IMPORT: {Name: "import file", Help: "导入", Hand: func(m *ice.Message, arg ...string) {
 				_task_import(m, kit.Select(path.Join(EXPORT, m.Option(ice.MSG_DOMAIN), "list.csv")))
+			}},
+			mdb.INPUTS: {Name: "inputs", Help: "补全", Hand: func(m *ice.Message, arg ...string) {
+				_task_input(m, kit.Select("", arg, 0), kit.Select("", arg, 1))
 			}},
 
 			gdb.BEGIN: {Name: "begin", Help: "开始", Hand: func(m *ice.Message, arg ...string) {
@@ -394,12 +377,8 @@ var Index = &ice.Context{Name: "team", Help: "团队中心",
 				}
 				m.Cmdy(arg[0], arg[1:])
 			}},
-			"input": {Name: "input key value", Help: "补全", Hand: func(m *ice.Message, arg ...string) {
-				_task_input(m, kit.Select("", arg, 0), kit.Select("", arg, 1))
-			}},
 		}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			begin_time, end_time := _task_scope(m, arg...)
-			m.Logs("info", "begin", begin_time, "end", end_time)
 
 			m.Set(ice.MSG_OPTION, "end_time")
 			m.Set(ice.MSG_OPTION, "begin_time")
@@ -410,7 +389,7 @@ var Index = &ice.Context{Name: "team", Help: "团队中心",
 					if begin_time.Before(begin) && begin.Before(end_time) {
 						m.Push(zone, value)
 						m.Push(kit.MDB_ZONE, zone)
-						m.Push("action", _task_action(m, value[STATUS], "插件"))
+						m.PushAction(_task_action(m, value[STATUS], "插件"))
 					}
 				})
 			})

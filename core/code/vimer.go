@@ -9,6 +9,16 @@ import (
 	"path"
 )
 
+func _vimer_save(m *ice.Message, ext, file, dir string, text string) {
+	if f, p, e := kit.Create(path.Join(dir, file)); e == nil {
+		defer f.Close()
+		if n, e := f.WriteString(text); m.Assert(e) {
+			m.Log_EXPORT("file", path.Join(dir, file), "size", n)
+		}
+		m.Echo(p)
+	}
+}
+
 const VIMER = "vimer"
 
 func init() {

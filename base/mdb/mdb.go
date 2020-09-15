@@ -1,9 +1,6 @@
 package mdb
 
 import (
-	"path"
-	"strings"
-
 	ice "github.com/shylinux/icebergs"
 	kit "github.com/shylinux/toolkits"
 	"github.com/shylinux/toolkits/task"
@@ -11,7 +8,9 @@ import (
 	"encoding/csv"
 	"encoding/json"
 	"os"
+	"path"
 	"sort"
+	"strings"
 )
 
 func _file_name(m *ice.Message, arg ...string) string {
@@ -236,7 +235,6 @@ func _list_export(m *ice.Message, prefix, key, file string) {
 	m.Log_EXPORT(kit.MDB_FILE, p, kit.MDB_COUNT, count)
 	m.Echo(p)
 }
-
 func _list_search(m *ice.Message, prefix, key, field, value string) {
 	list := []interface{}{}
 	files := map[string]bool{}
@@ -263,40 +261,6 @@ func _list_search(m *ice.Message, prefix, key, field, value string) {
 		})
 		return nil
 	})
-}
-
-func _dict_import(m *ice.Message, prefix, key, file string) {
-	f, e := os.Open(file)
-	m.Assert(e)
-	defer _story_catch(m, JSON, file)
-	defer f.Close()
-
-	data := map[string]interface{}{}
-	de := json.NewDecoder(f)
-	de.Decode(&data)
-
-	count := 0
-	for k, v := range data {
-		m.Log_MODIFY(kit.MDB_KEY, kit.Keys(prefix, key), "k", k, "v", v)
-		m.Conf(prefix, kit.Keys(key, k), v)
-		count++
-	}
-	m.Log_EXPORT(kit.MDB_FILE, file, kit.MDB_COUNT, count)
-}
-func _dict_export(m *ice.Message, prefix, key, file string) {
-	f, p, e := kit.Create(kit.Keys(file, JSON))
-	m.Assert(e)
-	defer _story_catch(m, JSON, p)
-	defer f.Close()
-
-	en := json.NewEncoder(f)
-	en.SetIndent("", "  ")
-	en.Encode(m.Confv(prefix, kit.Keys(key)))
-	m.Log_EXPORT(kit.MDB_FILE, p)
-}
-
-func _story_catch(m *ice.Message, kind, file string) {
-	m.Cmdy("web.story", "catch", kind, file)
 }
 
 const (
@@ -351,10 +315,6 @@ var Index = &ice.Context{Name: "mdb", Help: "数据模块",
 			}
 		}},
 		SELECT: {Name: "select conf key type field value", Help: "数据查询", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			m.Conf(arg[0], arg[1])
-
-			m.Option("cache.begin")
-			m.Option("cache.begin")
 			switch arg[2] {
 			case HASH:
 				_hash_select(m, arg[0], arg[1], kit.Select("", arg, 3), kit.Select(kit.MDB_FOREACH, arg, 4))
@@ -386,17 +346,17 @@ var Index = &ice.Context{Name: "mdb", Help: "数据模块",
 				_list_export(m, arg[0], arg[1], file)
 			}
 		}},
-		INPUTS: {Name: "inputs conf key type field value", Help: "输入补全", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			switch arg[2] {
-			case HASH:
-				_hash_inputs(m, arg[0], arg[1], arg[3], kit.Select("", arg, 4))
-			case LIST:
-			}
-		}},
 		PRUNES: {Name: "prunes conf key type [field value]...", Help: "清理数据", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			switch arg[2] {
 			case HASH:
 				_hash_prunes(m, arg[0], arg[1], arg[3:]...)
+			case LIST:
+			}
+		}},
+		INPUTS: {Name: "inputs conf key type field value", Help: "输入补全", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			switch arg[2] {
+			case HASH:
+				_hash_inputs(m, arg[0], arg[1], arg[3], kit.Select("", arg, 4))
 			case LIST:
 			}
 		}},
@@ -405,8 +365,8 @@ var Index = &ice.Context{Name: "mdb", Help: "数据模块",
 
 func init() {
 	ice.Index.Register(Index, nil,
-		PLUGIN, ENGINE, SEARCH, RENDER,
 		INSERT, DELETE, SELECT, MODIFY,
-		IMPORT, EXPORT, INPUTS, PRUNES,
+		IMPORT, EXPORT, PRUNES, INPUTS,
+		PLUGIN, RENDER, SEARCH, ENGINE,
 	)
 }

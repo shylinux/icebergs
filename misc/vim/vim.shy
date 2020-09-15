@@ -32,18 +32,11 @@ field "输入法" web.code.vim.input
 field "收藏夹" web.code.vim.favor
 field "同步流" web.code.vim.sync
 
-chapter "配置"
-
-refer `
-启动脚本 https://github.com/shylinux/contexts/blob/master/etc/conf/vimrc
-`
-field "启动脚本" web.code.inner args `[ https://raw.githubusercontent.com/shylinux/contexts/master/etc/conf/ vimrc ]`
-
 chapter "插件"
-refer `
-插件管理器 https://github.com/junegunn/vim-plug/plug.vim
-`
-field "插件管理器" web.code.inner args `[ https://raw.githubusercontent.com/shylinux/contexts/master/etc/conf/ plug.vim ]`
+field "插件管理器" web.code.inner args `[ usr/intshell/misc/vim/ plug.vim ]`
+
+chapter "配置"
+field "启动脚本" web.code.inner args `[ usr/intshell/misc/vim/ vimrc ]`
 
 section "状态栏"
 refer `

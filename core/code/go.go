@@ -84,14 +84,14 @@ func init() {
 	Index.Register(&ice.Context{Name: GO, Help: "go",
 		Commands: map[string]*ice.Command{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-				m.Cmd(mdb.SEARCH, mdb.CREATE, GO, GO, c.Cap(ice.CTX_FOLLOW))
 				m.Cmd(mdb.PLUGIN, mdb.CREATE, GO, GO, c.Cap(ice.CTX_FOLLOW))
 				m.Cmd(mdb.RENDER, mdb.CREATE, GO, GO, c.Cap(ice.CTX_FOLLOW))
+				m.Cmd(mdb.SEARCH, mdb.CREATE, GO, GO, c.Cap(ice.CTX_FOLLOW))
 				m.Cmd(mdb.ENGINE, mdb.CREATE, GO, GO, c.Cap(ice.CTX_FOLLOW))
 
-				m.Cmd(mdb.SEARCH, mdb.CREATE, GODOC, GO, c.Cap(ice.CTX_FOLLOW))
 				m.Cmd(mdb.PLUGIN, mdb.CREATE, GODOC, GO, c.Cap(ice.CTX_FOLLOW))
 				m.Cmd(mdb.RENDER, mdb.CREATE, GODOC, GODOC, c.Cap(ice.CTX_FOLLOW))
+				m.Cmd(mdb.SEARCH, mdb.CREATE, GODOC, GO, c.Cap(ice.CTX_FOLLOW))
 
 				m.Cmd(mdb.PLUGIN, mdb.CREATE, MOD, MOD, c.Cap(ice.CTX_FOLLOW))
 				m.Cmd(mdb.RENDER, mdb.CREATE, MOD, MOD, c.Cap(ice.CTX_FOLLOW))
@@ -100,7 +100,7 @@ func init() {
 				m.Cmd(mdb.RENDER, mdb.CREATE, SUM, SUM, c.Cap(ice.CTX_FOLLOW))
 
 			}},
-			MOD: {Name: MOD, Help: "mod", Action: map[string]*ice.Action{
+			SUM: {Name: SUM, Help: "sum", Action: map[string]*ice.Action{
 				mdb.PLUGIN: {Hand: func(m *ice.Message, arg ...string) {
 					m.Echo(m.Conf(GO, "meta.mod.plug"))
 				}},
@@ -108,7 +108,7 @@ func init() {
 					m.Cmdy(nfs.CAT, path.Join(arg[2], arg[1]))
 				}},
 			}},
-			SUM: {Name: SUM, Help: "sum", Action: map[string]*ice.Action{
+			MOD: {Name: MOD, Help: "mod", Action: map[string]*ice.Action{
 				mdb.PLUGIN: {Hand: func(m *ice.Message, arg ...string) {
 					m.Echo(m.Conf(GO, "meta.mod.plug"))
 				}},
@@ -123,7 +123,10 @@ func init() {
 				}},
 			}},
 			GO: {Name: GO, Help: "go", Action: map[string]*ice.Action{
-				mdb.SEARCH: {Name: "search type name text", Hand: func(m *ice.Message, arg ...string) {
+				mdb.PLUGIN: {Hand: func(m *ice.Message, arg ...string) {
+					m.Echo(m.Conf(GO, "meta.plug"))
+				}},
+				mdb.SEARCH: {Hand: func(m *ice.Message, arg ...string) {
 					if arg[0] == kit.MDB_FOREACH {
 						return
 					}
@@ -132,9 +135,6 @@ func init() {
 					_go_tags(m, kit.Select("main", arg, 1))
 					_go_help(m, kit.Select("main", arg, 1))
 					_go_grep(m, kit.Select("main", arg, 1))
-				}},
-				mdb.PLUGIN: {Hand: func(m *ice.Message, arg ...string) {
-					m.Echo(m.Conf(GO, "meta.plug"))
 				}},
 				mdb.RENDER: {Hand: func(m *ice.Message, arg ...string) {
 					m.Cmdy(nfs.CAT, path.Join(arg[2], arg[1]))

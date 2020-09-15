@@ -46,6 +46,8 @@ github.com/shylinux/toolkits v0.1.6 h1:x+Bs+oijuS11TWGAsdCEgwDbCS35uJvnP4jYDETJq
 github.com/shylinux/toolkits v0.1.6/go.mod h1:Y68Ot6xOmo1bun67YvqC3chDGeU2gDxtsUnvVDGJm4g=
 github.com/shylinux/toolkits v0.1.7 h1:RDUpZNTgnob6vaKJvJgNVaDE2UZRURjLG4StpSaAWF8=
 github.com/shylinux/toolkits v0.1.7/go.mod h1:Y68Ot6xOmo1bun67YvqC3chDGeU2gDxtsUnvVDGJm4g=
+github.com/shylinux/toolkits v0.1.8 h1:Lh5HkR1aRzhOOVu9eHwZ5y7dfW7hcFy29IR5tQ5qUeM=
+github.com/shylinux/toolkits v0.1.8/go.mod h1:Y68Ot6xOmo1bun67YvqC3chDGeU2gDxtsUnvVDGJm4g=
 github.com/skip2/go-qrcode v0.0.0-20200617195104-da1b6568686e h1:MRM5ITcdelLK2j1vwZ3Je0FKVCfqOLp5zO6trqMLYs0=
 github.com/skip2/go-qrcode v0.0.0-20200617195104-da1b6568686e/go.mod h1:XV66xRDqSt+GTGFMVlhk3ULuV0y9ZmzeVGR4mloJI3M=
 github.com/spf13/afero v1.1.2/go.mod h1:j4pytiNVoe2o6bmDsKpLACNPDBIoEAkihy7loJ1B0CQ=

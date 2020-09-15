@@ -7,7 +7,6 @@ import (
 	"github.com/shylinux/icebergs/base/web"
 	kit "github.com/shylinux/toolkits"
 
-	"fmt"
 	"io/ioutil"
 	"strings"
 )
@@ -26,19 +25,10 @@ func init() {
 		Configs: map[string]*ice.Config{
 			SESS: {Name: SESS, Help: "会话流", Value: kit.Data(
 				kit.MDB_FIELD, "time,hash,status,username,hostname,pid,pwd",
-				"contexts", `export ctx_dev={{.Option "httphost"}} ctx_temp=$(mktemp); curl -sL $ctx_dev >$ctx_temp; source $ctx_temp`,
 			)},
 		},
 		Commands: map[string]*ice.Command{
 			SESS: {Name: "sess hash auto 清理", Help: "会话流", Action: map[string]*ice.Action{
-				"contexts": {Name: "contexts", Help: "环境", Hand: func(m *ice.Message, arg ...string) {
-					u := kit.ParseURL(m.Option(ice.MSG_USERWEB))
-					m.Option("httphost", fmt.Sprintf("%s://%s:%s", u.Scheme, strings.Split(u.Host, ":")[0], kit.Select(kit.Select("80", "443", u.Scheme == "https"), strings.Split(u.Host, ":"), 1)))
-
-					if buf, err := kit.Render(m.Conf(m.Prefix(SESS), "meta.contexts"), m); m.Assert(err) {
-						m.Cmdy("web.wiki.spark", "shell", string(buf))
-					}
-				}},
 				mdb.PRUNES: {Name: "prunes", Help: "清理", Hand: func(m *ice.Message, arg ...string) {
 					m.Cmdy(mdb.PRUNES, m.Prefix(SESS), "", mdb.HASH, kit.MDB_STATUS, "logout")
 				}},

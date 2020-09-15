@@ -16,33 +16,35 @@ func _inner_ext(name string) string {
 	return strings.ToLower(kit.Select(path.Base(name), strings.TrimPrefix(path.Ext(name), ".")))
 }
 func _inner_list(m *ice.Message, ext, file, dir string, arg ...string) {
+	if strings.HasPrefix("http", dir) {
+		m.Cmdy(web.SPIDE, web.SPIDE_DEV, web.SPIDE_RAW, web.SPIDE_GET, dir+file)
+		return
+	}
+
 	if m.Warn(!m.Right(dir, file), ice.ErrNotAuth, path.Join(dir, file)) {
 		return
 	}
 	if m.Cmdy(mdb.RENDER, ext, file, dir, arg); m.Result() != "" {
 		return
 	}
+
 	if m.Conf(INNER, kit.Keys("meta.source", ext)) == "true" {
-		if m.Cmdy(mdb.RENDER, nfs.FILE, file, dir, arg); m.Result() != "" {
+		if m.Cmdy(nfs.CAT, path.Join(dir, file)); m.Result() != "" {
 			return
 		}
 	}
 	m.Echo(path.Join(dir, file))
 }
 func _inner_show(m *ice.Message, ext, file, dir string, arg ...string) {
-	if m.Cmdy(mdb.ENGINE, ext, file, dir, arg); m.Result() == "" {
-		if ls := kit.Simple(m.Confv(INNER, kit.Keys("meta.show", ext))); len(ls) > 0 {
-			m.Cmdy(cli.SYSTEM, ls, path.Join(dir, file)).Set(ice.MSG_APPEND)
-		}
+	if m.Warn(!m.Right(dir, file), ice.ErrNotAuth, path.Join(dir, file)) {
+		return
 	}
-}
-func _vimer_save(m *ice.Message, ext, file, dir string, text string) {
-	if f, p, e := kit.Create(path.Join(dir, file)); e == nil {
-		defer f.Close()
-		if n, e := f.WriteString(text); m.Assert(e) {
-			m.Log_EXPORT("file", path.Join(dir, file), "size", n)
-		}
-		m.Echo(p)
+	if m.Cmdy(mdb.ENGINE, ext, file, dir, arg); m.Result() != "" {
+		return
+	}
+
+	if ls := kit.Simple(m.Confv(INNER, kit.Keys("meta.show", ext))); len(ls) > 0 {
+		m.Cmdy(cli.SYSTEM, ls, path.Join(dir, file)).Set(ice.MSG_APPEND)
 	}
 }
 
@@ -51,32 +53,28 @@ const INNER = "inner"
 func init() {
 	Index.Merge(&ice.Context{
 		Commands: map[string]*ice.Command{
-			INNER: {Name: "inner path=usr/demo file=hi.sh line=1 auto 运行:button 项目:button 搜索:button", Help: "阅读器", Meta: kit.Dict(
+			INNER: {Name: "inner path=src/ file=main.go line=1 auto 项目 搜索 运行", Help: "阅读器", Meta: kit.Dict(
 				"display", "/plugin/local/code/inner.js", "style", "editor",
 			), Action: map[string]*ice.Action{
-				mdb.PLUGIN: {Name: "plugin type name text arg...", Help: "插件", Hand: func(m *ice.Message, arg ...string) {
+				mdb.PLUGIN: {Name: "plugin", Help: "插件", Hand: func(m *ice.Message, arg ...string) {
 					if m.Cmdy(mdb.PLUGIN, arg); m.Result() == "" {
 						if m.Echo(m.Conf(INNER, kit.Keys("meta.plug", arg[0]))); m.Result() == "" {
 							m.Echo("{}")
 						}
 					}
 				}},
-				mdb.SEARCH: {Name: "search type name text arg...", Help: "搜索", Hand: func(m *ice.Message, arg ...string) {
-					m.Cmdy(mdb.SEARCH, arg)
-				}},
-				mdb.RENDER: {Name: "render type name text arg...", Help: "渲染", Hand: func(m *ice.Message, arg ...string) {
+				mdb.RENDER: {Name: "render", Help: "渲染", Hand: func(m *ice.Message, arg ...string) {
 					_inner_list(m, arg[0], arg[1], arg[2], arg[3:]...)
 				}},
-				mdb.ENGINE: {Name: "engine type name text arg...", Help: "引擎", Hand: func(m *ice.Message, arg ...string) {
+				mdb.SEARCH: {Name: "search", Help: "搜索", Hand: func(m *ice.Message, arg ...string) {
+					m.Cmdy(mdb.SEARCH, arg)
+				}},
+				mdb.ENGINE: {Name: "engine", Help: "引擎", Hand: func(m *ice.Message, arg ...string) {
 					_inner_show(m, arg[0], arg[1], arg[2], arg[3:]...)
 				}},
 			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 				if len(arg) < 2 {
-					_inner_list(m, nfs.DIR, "", kit.Select("", arg, 0))
-					return
-				}
-				if strings.HasPrefix("http", arg[0]) {
-					m.Cmdy(web.SPIDE, "dev", "raw", "GET", arg[0]+arg[1])
+					m.Cmdy(nfs.DIR, kit.Select("./", arg, 0))
 					return
 				}
 				_inner_list(m, _inner_ext(arg[1]), arg[1], arg[0])

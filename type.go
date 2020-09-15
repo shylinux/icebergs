@@ -174,6 +174,9 @@ func (c *Context) _split(name string) []interface{} {
 				if value = kit.Select("", ls, i+1); len(ls) > i+1 && strings.Contains(ls[i+1], ",") {
 					kit.Value(item, kit.MDB_INPUT, "select")
 					kit.Value(item, "values", strings.Split(ls[i+1], ","))
+					if kit.Value(item, kit.MDB_NAME) == "scale" {
+						kit.Value(item, kit.MDB_VALUE, "week")
+					}
 				} else {
 					kit.Value(item, kit.MDB_VALUE, value)
 				}

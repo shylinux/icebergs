@@ -73,11 +73,18 @@ func init() {
 			}},
 			"status": {Name: "status name=auto auto 提交 编译 下载", Help: "代码状态", Action: map[string]*ice.Action{
 				"pull": {Name: "pull", Help: "下载", Hand: func(m *ice.Message, arg ...string) {
+					m.Option("_process", "_progress")
 					if m.Richs("progress", "", m.Option("_progress"), func(key string, value map[string]interface{}) {
+						m.Push("step", kit.Int(value["count"])*100/kit.Int(value["total"]))
 						m.Push("count", value["count"])
 						m.Push("total", value["total"])
 						m.Push("name", value["name"])
 					}) != nil {
+						if m.Append("count") == m.Append("total") {
+							m.Option("_process", "")
+							m.Set(ice.MSG_APPEND)
+							m.Cmdy("status")
+						}
 						return
 					}
 
@@ -94,6 +101,7 @@ func init() {
 						})
 					})
 					m.Option("_progress", h)
+					m.Push("step", count*100/total)
 					m.Push("count", count)
 					m.Push("total", total)
 					m.Push("name", "")

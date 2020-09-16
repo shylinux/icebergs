@@ -6,6 +6,8 @@ import (
 	"github.com/shylinux/icebergs/base/mdb"
 	"github.com/shylinux/icebergs/base/nfs"
 	kit "github.com/shylinux/toolkits"
+
+	"path"
 )
 
 const TRASH = "trash"
@@ -18,7 +20,7 @@ func init() {
 			)},
 		},
 		Commands: map[string]*ice.Command{
-			TRASH: {Name: "TRASH hash auto 清理", Help: "收藏夹", Action: map[string]*ice.Action{
+			TRASH: {Name: "TRASH hash path auto 清理", Help: "收藏夹", Action: map[string]*ice.Action{
 				mdb.INSERT: {Name: "insert from= to=", Help: "添加", Hand: func(m *ice.Message, arg ...string) {
 					m.Cmdy(mdb.INSERT, m.Prefix(TRASH), "", mdb.HASH, "from", m.Option("from"), "to", m.Option("to"))
 				}},
@@ -35,7 +37,7 @@ func init() {
 			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 				if len(arg) > 0 {
 					m.Cmd(mdb.SELECT, m.Prefix(TRASH), "", mdb.HASH, kit.MDB_HASH, arg).Table(func(index int, value map[string]string, head []string) {
-						m.Cmdy(nfs.DIR, value["to"])
+						m.Cmdy(nfs.DIR, path.Join(value["to"], kit.Select("", arg, 1)))
 					})
 					return
 				}

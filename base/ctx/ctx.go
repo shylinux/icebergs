@@ -1,8 +1,8 @@
 package ctx
 
 import (
-	"github.com/shylinux/icebergs"
-	"github.com/shylinux/toolkits"
+	ice "github.com/shylinux/icebergs"
+	kit "github.com/shylinux/toolkits"
 )
 
 func _parse_arg_all(m *ice.Message, arg ...string) (bool, []string) {
@@ -41,8 +41,10 @@ var Index = &ice.Context{Name: "ctx", Help: "配置模块",
 				return
 			}
 
-			if len(arg) == 1 {
-				m.Cmdy(COMMAND, arg[0])
+			if len(arg) > 1 && arg[1] == COMMAND {
+				m.Search(arg[0]+".", func(sup *ice.Context, sub *ice.Context, key string) {
+					m.Copy(m.Spawn(sub).Cmd(COMMAND))
+				})
 			} else {
 				m.Search(arg[0]+".", func(p *ice.Context, s *ice.Context, key string) {
 					msg := m.Spawn(s)

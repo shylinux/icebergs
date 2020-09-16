@@ -1,6 +1,8 @@
 package nfs
 
 import (
+	"bytes"
+
 	ice "github.com/shylinux/icebergs"
 	"github.com/shylinux/icebergs/base/cli"
 	"github.com/shylinux/icebergs/base/mdb"
@@ -180,15 +182,34 @@ func _file_show(m *ice.Message, name string) {
 	}
 
 	if f, e := os.OpenFile(path.Join(m.Option(DIR_ROOT), name), os.O_RDONLY, 0640); os.IsNotExist(e) {
-		m.Cmdy("web.spide", "dev", "raw", "GET", path.Join("/share/local/", name))
+
+		switch cb := m.Optionv(CAT_CB).(type) {
+		case func(string, int):
+			bio := bufio.NewScanner(bytes.NewBufferString(m.Cmdx("web.spide", "dev", "raw", "GET", path.Join("/share/local/", name))))
+			for i := 0; bio.Scan(); i++ {
+				cb(bio.Text(), i)
+			}
+
+		default:
+			m.Cmdy("web.spide", "dev", "raw", "GET", path.Join("/share/local/", name))
+		}
 	} else if e == nil {
 		defer f.Close()
 
 		if s, e := f.Stat(); m.Assert(e) {
-			buf := make([]byte, s.Size())
-			if n, e := f.Read(buf); m.Assert(e) {
-				m.Log_IMPORT(kit.MDB_FILE, name, kit.MDB_SIZE, n)
-				m.Echo(string(buf[:n]))
+			switch cb := m.Optionv(CAT_CB).(type) {
+			case func(string, int):
+				bio := bufio.NewScanner(f)
+				for i := 0; bio.Scan(); i++ {
+					cb(bio.Text(), i)
+				}
+
+			default:
+				buf := make([]byte, s.Size())
+				if n, e := f.Read(buf); m.Assert(e) {
+					m.Log_IMPORT(kit.MDB_FILE, name, kit.MDB_SIZE, n)
+					m.Echo(string(buf[:n]))
+				}
 			}
 		}
 	}
@@ -211,7 +232,7 @@ func _file_copy(m *ice.Message, name string, from ...string) {
 			if s, e := os.Open(v); !m.Warn(e != nil, "%s", e) {
 				defer s.Close()
 				if n, e := io.Copy(f, s); !m.Warn(e != nil, "%s", e) {
-					m.Log_IMPORT(kit.MDB_FILE, p, kit.MDB_SIZE, n)
+					m.Log_EXPORT(kit.MDB_FILE, p, kit.MDB_SIZE, n)
 				}
 			}
 		}
@@ -278,11 +299,12 @@ func _file_search(m *ice.Message, kind, name, text string, arg ...string) {
 }
 
 const (
-	CAT   = "cat"
-	SAVE  = "save"
-	COPY  = "copy"
-	LINK  = "link"
-	TRASH = "trash"
+	CAT_CB = "cat_cb"
+	CAT    = "cat"
+	SAVE   = "save"
+	COPY   = "copy"
+	LINK   = "link"
+	TRASH  = "trash"
 
 	DIR  = "dir"
 	FILE = "file"
@@ -352,6 +374,17 @@ var Index = &ice.Context{Name: "nfs", Help: "存储模块",
 			}},
 			mdb.RENDER: {Name: "render type name text", Help: "渲染", Hand: func(m *ice.Message, arg ...string) {
 				_file_show(m, path.Join(arg[2], arg[1]))
+			}},
+
+			"append": {Name: "append", Help: "追加", Hand: func(m *ice.Message, arg ...string) {
+				if f, e := os.OpenFile(arg[0], os.O_WRONLY|os.O_APPEND, 0664); m.Assert(e) {
+					defer f.Close()
+					for _, k := range arg[1:] {
+						if n, e := f.WriteString(k); m.Assert(e) {
+							m.Log_EXPORT(kit.MDB_FILE, arg[0], kit.MDB_SIZE, n)
+						}
+					}
+				}
 			}},
 		}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 		}},

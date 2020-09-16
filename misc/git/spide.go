@@ -39,7 +39,7 @@ func init() {
 				}
 				if len(arg) > 1 && arg[0] == "inner" {
 					// 代码详情
-					arg[1] = path.Join("usr", arg[1])
+					arg[1] = kit.Select(path.Join("usr", arg[1]), arg[1], arg[1] == "action")
 					m.Cmdy("web.code.inner", arg[1:])
 					return
 				}

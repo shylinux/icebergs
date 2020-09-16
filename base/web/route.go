@@ -4,6 +4,7 @@ import (
 	ice "github.com/shylinux/icebergs"
 	"github.com/shylinux/icebergs/base/aaa"
 	"github.com/shylinux/icebergs/base/cli"
+	"github.com/shylinux/icebergs/base/nfs"
 	kit "github.com/shylinux/toolkits"
 
 	"strings"
@@ -47,31 +48,56 @@ func init() {
 			ROUTE: {Name: ROUTE, Help: "路由器", Value: kit.Data(kit.MDB_SHORT, kit.MDB_ROUTE)},
 		},
 		Commands: map[string]*ice.Command{
-			ROUTE: {Name: "route route cmd auto 启动 添加", Help: "路由", Action: map[string]*ice.Action{
-				"invite": {Name: "invite", Help: "添加", Hand: func(m *ice.Message, arg ...string) {
-					m.Cmdy("web.code.publish", "contexts", "tmux")
-					m.Cmdy("web.code.publish", "contexts", "base")
-					m.Cmdy("web.code.publish", "contexts", "miss")
-				}},
+			ROUTE: {Name: "route route ctx cmd auto 启动 添加", Help: "路由", Action: map[string]*ice.Action{
 				"inputs": {Name: "inputs", Help: "补全", Hand: func(m *ice.Message, arg ...string) {
 					switch arg[0] {
 					case "cmd":
 						m.Cmdy(SPACE, m.Option("route"), "command")
 					case "name":
 						m.Cmdy(SPACE, m.Option("route"), "dream")
+					case "template":
+						m.Option(nfs.DIR_DEEP, true)
+						m.Cmdy(nfs.DIR, "usr/icebergs")
+						m.Sort("path")
 					}
+				}},
+				"invite": {Name: "invite", Help: "添加", Hand: func(m *ice.Message, arg ...string) {
+					m.Cmdy("web.code.publish", "contexts", "tmux")
+					m.Cmdy("web.code.publish", "contexts", "base")
+					m.Cmdy("web.code.publish", "contexts", "miss")
 				}},
 				"start": {Name: "start type=worker,server name=hi@key repos", Help: "启动", Hand: func(m *ice.Message, arg ...string) {
 					m.Cmdy(SPACE, m.Option("route"), "dream", "start", arg)
 					m.Sleep("3s")
+				}},
+				"gen": {Name: "gen module=hi@key template=usr/icebergs/misc/zsh/zsh.go@key", Help: "创建", Hand: func(m *ice.Message, arg ...string) {
+					m.Cmdy(SPACE, m.Option("route"), "web.code.autogen",
+						"create", "name", m.Option("module"), "from", m.Option("template"))
 				}},
 				"stop": {Name: "stop", Help: "结束", Hand: func(m *ice.Message, arg ...string) {
 					m.Cmdy(SPACE, m.Option("route"), "exit")
 					m.Sleep("3s")
 				}},
 			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+				if len(arg) > 2 && arg[0] != "" {
+					m.Cmdy(SPACE, arg[0], kit.Split(kit.Keys(arg[1], strings.Join(arg[2:], " "))))
+					return
+				}
 				if len(arg) > 1 && arg[0] != "" {
-					m.Cmdy(SPACE, arg[0], kit.Split(strings.Join(arg[1:], " ")))
+					m.Cmd(SPACE, arg[0], "context", arg[1], "command").Table(func(index int, value map[string]string, head []string) {
+						m.Push("cmd", value["key"])
+						m.Push("name", value["name"])
+						m.Push("help", value["help"])
+					})
+					return
+				}
+				if len(arg) > 0 && arg[0] != "" {
+					m.Cmd(SPACE, arg[0], "context").Table(func(index int, value map[string]string, head []string) {
+						m.Push("ctx", kit.Keys(value["ups"], value["name"]))
+						m.Push("status", value["status"])
+						m.Push("stream", value["stream"])
+						m.Push("help", value["help"])
+					})
 					return
 				}
 
@@ -84,9 +110,9 @@ func init() {
 						kit.MergeURL(m.Option(ice.MSG_USERWEB), "pod", kit.Keys(m.Option("pod", value[kit.MDB_ROUTE]))))
 					switch value[kit.MDB_TYPE] {
 					case SERVER:
-						m.PushRender("action", "button", "启动")
+						m.PushRender("action", "button", "创建", "启动")
 					case WORKER:
-						m.PushRender("action", "button", "结束")
+						m.PushRender("action", "button", "创建", "结束")
 					}
 				})
 				m.Sort(kit.MDB_ROUTE)

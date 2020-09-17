@@ -30,6 +30,7 @@ func init() {
 			CACHED: {Name: "cached hash=auto auto 清理:button 导出:button", Help: "网页爬虫", Action: map[string]*ice.Action{
 				"download": {Name: "download", Help: "下载", Hand: func(m *ice.Message, arg ...string) {
 					m.Richs(CACHED, "", m.Option("link"), func(key string, value map[string]interface{}) {
+						value = value[kit.MDB_META].(map[string]interface{})
 						m.Optionv("progress", func(size int, total int) {
 							value["progress"], value["size"], value["total"] = size*100/total, size, total
 							m.Log_IMPORT(kit.MDB_FILE, m.Option("name"), "per", size*100/total, kit.MDB_SIZE, kit.FmtSize(int64(size)), "total", kit.FmtSize(int64(total)))

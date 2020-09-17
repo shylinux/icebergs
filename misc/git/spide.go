@@ -7,7 +7,6 @@ import (
 	"github.com/shylinux/icebergs/base/nfs"
 	kit "github.com/shylinux/toolkits"
 
-	"path"
 	"strings"
 )
 
@@ -32,20 +31,19 @@ func init() {
 
 				if len(arg) == 1 {
 					// 目录列表
-					m.Option(nfs.DIR_ROOT, path.Join("usr", arg[0]))
+					m.Option(nfs.DIR_ROOT, arg[0])
 					m.Option(nfs.DIR_DEEP, "true")
 					m.Cmdy(nfs.DIR, "./")
 					return
 				}
 				if len(arg) > 1 && arg[0] == "inner" {
 					// 代码详情
-					arg[1] = kit.Select(path.Join("usr", arg[1]), arg[1], arg[1] == "action")
 					m.Cmdy("web.code.inner", arg[1:])
 					return
 				}
 
 				tags := ""
-				m.Option(cli.CMD_DIR, path.Join("usr", arg[0]))
+				m.Option(cli.CMD_DIR, arg[0])
 				if strings.HasSuffix(arg[1], ".go") {
 					tags = m.Cmdx(cli.SYSTEM, "gotags", arg[1])
 					for _, line := range strings.Split(tags, "\n") {

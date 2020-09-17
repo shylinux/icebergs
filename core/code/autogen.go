@@ -29,6 +29,7 @@ func init() {
 
 					p := path.Join("src", m.Option("name"), m.Option("name")+".go")
 					if kit.FileExists(p) {
+						m.Echo(p)
 						return
 					}
 
@@ -54,7 +55,7 @@ func init() {
 						list = append(list, line)
 					})
 					m.Cmd(nfs.CAT, m.Option("from"))
-					m.Cmd(nfs.SAVE, p, strings.Join(list, "\n"))
+					m.Cmdy(nfs.SAVE, p, strings.Join(list, "\n"))
 
 					// go.mod
 					mod := ""
@@ -77,7 +78,7 @@ func init() {
 					m.Cmd(nfs.CAT, "src/main.go")
 					m.Cmd(nfs.SAVE, "src/main.go", strings.Join(list, "\n"))
 
-					m.Cmdy(mdb.INSERT, m.Prefix(AUTOGEN), "", mdb.LIST, arg)
+					m.Cmd(mdb.INSERT, m.Prefix(AUTOGEN), "", mdb.LIST, arg)
 				}},
 				mdb.INPUTS: {Name: "inputs", Help: "补全", Hand: func(m *ice.Message, arg ...string) {
 					switch arg[0] {

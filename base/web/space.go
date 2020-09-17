@@ -199,9 +199,11 @@ func _space_search(m *ice.Message, kind, name, text string, arg ...string) {
 
 const (
 	MASTER = "master"
+	MYSELF = "myself"
+	BETTER = "better"
+	CHROME = "chrome"
 	SERVER = "server"
 	WORKER = "worker"
-	BETTER = "better"
 )
 
 const SPACE = "space"
@@ -228,7 +230,7 @@ func init() {
 					return
 				}
 
-				if arg[0] == "" {
+				if arg[0] == "" || arg[0] == MYSELF {
 					// 本地命令
 					m.Cmdy(arg[1:])
 					return

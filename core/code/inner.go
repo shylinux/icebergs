@@ -72,6 +72,13 @@ func init() {
 				mdb.ENGINE: {Name: "engine", Help: "引擎", Hand: func(m *ice.Message, arg ...string) {
 					_inner_show(m, arg[0], arg[1], arg[2], arg[3:]...)
 				}},
+
+				mdb.INPUTS: {Name: "inputs", Help: "补全", Hand: func(m *ice.Message, arg ...string) {
+					m.Cmdy(m.Prefix(FAVOR), mdb.INPUTS, arg)
+				}},
+				FAVOR: {Name: "favor", Help: "收藏", Hand: func(m *ice.Message, arg ...string) {
+					m.Cmdy(m.Prefix(FAVOR), mdb.INSERT, arg)
+				}},
 			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 				if len(arg) < 2 {
 					m.Cmdy(nfs.DIR, kit.Select("./", arg, 0))

@@ -109,12 +109,14 @@ func init() {
 				if _route_travel(m, kit.Select("", arg, 0)); m.W == nil {
 					return
 				}
+				m.Push("type", MYSELF)
+				m.Push("route", MYSELF)
 
 				m.Table(func(index int, value map[string]string, field []string) {
 					m.PushRender(kit.MDB_LINK, "a", value[kit.MDB_ROUTE],
 						kit.MergeURL(m.Option(ice.MSG_USERWEB), "pod", kit.Keys(m.Option("pod", value[kit.MDB_ROUTE]))))
 					switch value[kit.MDB_TYPE] {
-					case SERVER:
+					case MYSELF, SERVER:
 						m.PushRender("action", "button", "创建", "启动")
 					case WORKER:
 						m.PushRender("action", "button", "创建", "结束")

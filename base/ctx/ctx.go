@@ -43,7 +43,7 @@ var Index = &ice.Context{Name: "ctx", Help: "配置模块",
 
 			if len(arg) > 1 && arg[1] == COMMAND {
 				m.Search(arg[0]+".", func(sup *ice.Context, sub *ice.Context, key string) {
-					m.Copy(m.Spawn(sub).Cmd(COMMAND))
+					m.Copy(m.Spawn(sub).Cmd(COMMAND, arg[2:]))
 				})
 			} else {
 				m.Search(arg[0]+".", func(p *ice.Context, s *ice.Context, key string) {

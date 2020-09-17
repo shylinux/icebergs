@@ -6,8 +6,6 @@ import (
 	"github.com/shylinux/icebergs/base/cli"
 	"github.com/shylinux/icebergs/base/nfs"
 	kit "github.com/shylinux/toolkits"
-
-	"strings"
 )
 
 func _route_travel(m *ice.Message, route string) {
@@ -79,8 +77,15 @@ func init() {
 					m.Sleep("3s")
 				}},
 			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+				if len(arg) > 3 && arg[3] == "run" {
+					m.Cmdy(SPACE, arg[0], kit.Keys(arg[1], arg[2]), arg[4:])
+					return
+				}
 				if len(arg) > 2 && arg[0] != "" {
-					m.Cmdy(SPACE, arg[0], kit.Split(kit.Keys(arg[1], strings.Join(arg[2:], " "))))
+					// m.Cmdy(SPACE, arg[0], kit.Split(kit.Keys(arg[1], strings.Join(arg[2:], " "))))
+					m.Cmdy(SPACE, arg[0], "context", arg[1], "command", arg[2])
+					m.Option("_process", "_field")
+					m.Option("_prefix", arg[0], arg[1], arg[2], "run")
 					return
 				}
 				if len(arg) > 1 && arg[0] != "" {

@@ -46,7 +46,7 @@ func init() {
 			ROUTE: {Name: ROUTE, Help: "路由器", Value: kit.Data(kit.MDB_SHORT, kit.MDB_ROUTE)},
 		},
 		Commands: map[string]*ice.Command{
-			ROUTE: {Name: "route route ctx cmd auto 启动 添加", Help: "路由", Action: map[string]*ice.Action{
+			ROUTE: {Name: "route route ctx cmd auto 添加", Help: "路由", Action: map[string]*ice.Action{
 				"inputs": {Name: "inputs", Help: "补全", Hand: func(m *ice.Message, arg ...string) {
 					switch arg[0] {
 					case "cmd":
@@ -117,9 +117,9 @@ func init() {
 						kit.MergeURL(m.Option(ice.MSG_USERWEB), "pod", kit.Keys(m.Option("pod", value[kit.MDB_ROUTE]))))
 					switch value[kit.MDB_TYPE] {
 					case MYSELF, SERVER:
-						m.PushRender("action", "button", "创建", "启动")
+						m.PushRender("action", "button", "启动")
 					case WORKER:
-						m.PushRender("action", "button", "创建", "结束")
+						m.PushRender("action", "button", "结束")
 					}
 				})
 				m.Sort(kit.MDB_ROUTE)

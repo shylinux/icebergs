@@ -77,10 +77,12 @@ func (m *Message) PushRender(key, view, name string, arg ...string) *Message {
 			list = append(list, fmt.Sprintf(`<input type="button" value="%s">`, k))
 		}
 		m.Push(key, strings.Join(list, ""))
+	case "video":
+		m.Push(key, fmt.Sprintf(`<video src="%s" height=%s controls>`, name, kit.Select("120", arg, 0)))
+	case "img":
+		m.Push(key, fmt.Sprintf(`<img src="%s" height=%s>`, name, kit.Select("120", arg, 0)))
 	case "a":
-		if m.W != nil {
-			m.Push(key, fmt.Sprintf(`<a href="%s" target="_blank">%s</a>`, kit.Select(name, arg, 0), name))
-		}
+		m.Push(key, fmt.Sprintf(`<a href="%s" target="_blank">%s</a>`, kit.Select(name, arg, 0), name))
 	default:
 		m.Push(key, name)
 	}

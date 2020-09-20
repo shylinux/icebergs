@@ -9,18 +9,20 @@ import (
 
 const CHROME = "chrome"
 
-var Index = &ice.Context{Name: "chrome", Help: "浏览器",
+var Index = &ice.Context{Name: CHROME, Help: "浏览器",
 	Configs: map[string]*ice.Config{
-		CHROME: {Name: "chrome", Help: "浏览器", Value: kit.Data(
-			kit.MDB_SHORT, "name", "history", "url.history",
-		)},
+		CHROME: {Name: CHROME, Help: "浏览器", Value: kit.Data()},
 	},
 	Commands: map[string]*ice.Command{
 		ice.CTX_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) { m.Load() }},
 		ice.CTX_EXIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) { m.Save() }},
 
-		CHROME: {Name: "chrome wid=auto url auto 编译:button 下载:button", Help: "浏览器", Action: map[string]*ice.Action{
-			"compile": {Name: "compile", Help: "编译", Hand: func(m *ice.Message, arg ...string) {
+		CHROME: {Name: "chrome wid url auto 启动 构建 下载", Help: "浏览器", Action: map[string]*ice.Action{
+			"install": {Name: "install", Help: "下载", Hand: func(m *ice.Message, arg ...string) {
+			}},
+			"build": {Name: "build", Help: "构建", Hand: func(m *ice.Message, arg ...string) {
+			}},
+			"start": {Name: "start", Help: "启动", Hand: func(m *ice.Message, arg ...string) {
 			}},
 		}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			m.Cmdy(web.SPACE, CHROME, CHROME, arg)

@@ -90,7 +90,14 @@ func (m *Message) Push(key string, value interface{}, arg ...interface{}) *Messa
 			// 查找数据
 			var v interface{}
 			switch k {
-			case kit.MDB_KEY, kit.MDB_ZONE, kit.MDB_HASH:
+			case "action":
+				list := []string{}
+				for _, k := range kit.Simple(m.Optionv(MSG_ACTION)) {
+					list = append(list, fmt.Sprintf(`<input type="button" value="%s">`, k))
+				}
+				v = strings.Join(list, "")
+
+			case kit.MDB_KEY, kit.MDB_HASH:
 				if key != "" {
 					v = key
 					break

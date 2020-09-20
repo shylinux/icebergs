@@ -107,19 +107,29 @@ func _cache_upload(m *ice.Message, r *http.Request) (kind, name, file, size stri
 func _cache_download(m *ice.Message, r *http.Response) (file, size string) {
 	defer r.Body.Close()
 
-	progress, _ := m.Optionv("progress").(func(int, int))
-
 	total := kit.Int(kit.Select("1", r.Header.Get("Content-Length")))
 	if f, p, e := kit.Create(path.Join("var/tmp", kit.Hashs("uniq"))); m.Assert(e) {
 		size, buf := 0, make([]byte, 1024)
 		for {
 			if n, _ := r.Body.Read(buf); n > 0 {
 				f.Write(buf[0:n])
-				if size += n; progress != nil {
-					progress(size, total)
-				} else {
+				switch size += n; cb := m.Optionv("progress").(type) {
+				case []string:
+					m.Richs(cb[0], cb[1], cb[2], func(key string, value map[string]interface{}) {
+						value = value[kit.MDB_META].(map[string]interface{})
+
+						s := size * 100 / total
+						if s != kit.Int(value[kit.MDB_STEP]) && s%10 == 0 {
+							m.Log_IMPORT(kit.MDB_FILE, path.Base(cb[2]), kit.MDB_STEP, s, kit.MDB_SIZE, kit.FmtSize(int64(size)), kit.MDB_TOTAL, kit.FmtSize(int64(total)))
+						}
+						value[kit.MDB_STEP], value[kit.MDB_SIZE], value[kit.MDB_TOTAL] = kit.Format(s), size, total
+					})
+				case func(int, int):
+					cb(size, total)
+				default:
 					m.Log_IMPORT(kit.MDB_FILE, p, "per", size*100/total, kit.MDB_SIZE, kit.FmtSize(int64(size)), "total", kit.FmtSize(int64(total)))
 				}
+
 			} else {
 				f.Close()
 				break

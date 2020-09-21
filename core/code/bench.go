@@ -5,9 +5,7 @@ import (
 	"github.com/shylinux/icebergs/base/mdb"
 	"github.com/shylinux/icebergs/base/web"
 	kit "github.com/shylinux/toolkits"
-	log "github.com/shylinux/toolkits/logs"
 	"github.com/shylinux/toolkits/util/bench"
-	"github.com/shylinux/toolkits/util/bench/redis"
 
 	"io"
 	"io/ioutil"
@@ -15,7 +13,6 @@ import (
 	"os"
 	"strings"
 	"sync/atomic"
-	"time"
 )
 
 func _bench_list(m *ice.Message, zone string, id string, field ...interface{}) {
@@ -53,15 +50,6 @@ func _bench_show(m *ice.Message, nconn, nreq int64, list []*http.Request) {
 	m.Echo(s.Show())
 	m.Echo("body: %d\n", body)
 }
-func _bench_redis(m *ice.Message, nconn, nreq int64, hosts []string, cmds []string) {
-	m.Log_CONF(NCONN, nconn, NREQS, nreq, "cmds", cmds, "hosts", hosts)
-
-	s, e := redis.Redis(nconn, nreq, hosts, cmds, nil)
-	m.Assert(e)
-
-	m.Echo("cmds: %s QPS: %.2f n/s AVG: %s time: %s \n", cmds, s.QPS,
-		log.FmtDuration(s.Cost/time.Duration(s.NReq)), log.FmtDuration(s.EndTime.Sub(s.BeginTime)))
-}
 func _bench_engine(m *ice.Message, kind, name, target string, arg ...string) {
 	for i := 0; i < len(arg); i += 2 {
 		m.Option(arg[i], arg[i+1])
@@ -69,19 +57,6 @@ func _bench_engine(m *ice.Message, kind, name, target string, arg ...string) {
 	nconn := kit.Int64(kit.Select("10", m.Option(NCONN)))
 	nreqs := kit.Int64(kit.Select("1000", m.Option(NREQS)))
 	m.Echo("nconn: %d nreqs: %d\n", nconn, nreqs*nconn)
-
-	if strings.HasPrefix(target, "redis://") {
-		hosts := []string{}
-		for _, v := range strings.Split(target, ",") {
-			hosts = append(hosts, strings.TrimPrefix(v, "redis://"))
-		}
-
-		cmds := strings.Split(name, ",")
-		for _, cmd := range cmds {
-			_bench_redis(m, nconn, nreqs, hosts, []string{cmd})
-		}
-		return
-	}
 
 	list := []*http.Request{}
 	for _, v := range strings.Split(target, ",") {

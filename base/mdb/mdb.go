@@ -250,7 +250,7 @@ func _list_search(m *ice.Message, prefix, key, field, value string) {
 	})
 	defer m.Cost("search")
 
-	task.Sync(list, func(task *task.Task, lock *task.Lock) error {
+	task.Wait(list, func(task *task.Task, lock *task.Lock) error {
 		kit.CSV(kit.Format(task.Arg), 100000, func(index int, line map[string]string, head []string) {
 			if line[field] != value {
 				return

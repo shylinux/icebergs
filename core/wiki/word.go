@@ -218,7 +218,6 @@ func _field_show(m *ice.Message, name, text string, arg ...string) {
 			}
 		}
 	}
-	m.Debug("what %v", data)
 
 	// 渲染引擎
 	m.Option("meta", data)

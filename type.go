@@ -165,9 +165,10 @@ func (c *Context) _split(name string) []interface{} {
 			case ":":
 				switch kit.Value(item, kit.MDB_INPUT, ls[i+1]); ls[i+1] {
 				case "textarea":
-					kit.Value(item, "style.width", "300")
-					kit.Value(item, "style.height", "150")
+					kit.Value(item, "style.width", "360")
+					kit.Value(item, "style.height", "120")
 				case "button":
+					kit.Value(item, kit.MDB_VALUE, "")
 					button = true
 				}
 			case "=":

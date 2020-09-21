@@ -25,11 +25,14 @@ func _port_get(m *ice.Message, begin string) string {
 		current = kit.Int(m.Conf(PORT, "meta.begin"))
 	}
 	for i := current; i < end; i++ {
-		if m.Cmd(cli.SYSTEM, "lsof", "-i", kit.Format(":%d", i)).Append(cli.CMD_CODE) != "0" {
-			m.Conf(PORT, "meta.current", i)
-			m.Log_SELECT(PORT, i)
-			return kit.Format("%d", i)
+		if c, e := net.Dial("tcp", kit.Format(":%d", i)); e == nil {
+			m.Info("port exists %v", i)
+			defer c.Close()
+			continue
 		}
+		m.Conf(PORT, "meta.current", i)
+		m.Log_SELECT(PORT, i)
+		return kit.Format("%d", i)
 	}
 	return ""
 }

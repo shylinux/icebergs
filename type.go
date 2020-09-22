@@ -587,7 +587,7 @@ func (m *Message) Search(key interface{}, cb interface{}) *Message {
 				break
 			}
 
-			for _, p = range []*Context{p, m.target, m.source} {
+			for _, p := range []*Context{m.target, p, m.source} {
 				for c := p; c != nil; c = c.context {
 					if cmd, ok := c.Commands[key]; ok {
 						cb(c, p, key, cmd)
@@ -596,7 +596,7 @@ func (m *Message) Search(key interface{}, cb interface{}) *Message {
 				}
 			}
 		case func(p *Context, s *Context, key string, conf *Config):
-			for _, p = range []*Context{p, m.target, m.source} {
+			for _, p := range []*Context{m.target, p, m.source} {
 				for c := p; c != nil; c = c.context {
 					if cmd, ok := c.Configs[key]; ok {
 						cb(c.context, c, key, cmd)

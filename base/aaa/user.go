@@ -17,12 +17,14 @@ func _user_list(m *ice.Message) {
 	m.Sort(USERNAME)
 }
 func _user_login(m *ice.Message, name, word string) (ok bool) {
+	m.Debug("what %v %v", name, word)
 	if m.Richs(USER, nil, name, nil) == nil {
 		_user_create(m, name, "")
 	}
 
 	m.Richs(USER, nil, name, func(key string, value map[string]interface{}) {
-		if value[PASSWORD] == "" {
+		m.Debug("what %v %v", name, word)
+		if kit.Format(value[PASSWORD]) == "" {
 			ok, value[PASSWORD] = true, word
 		} else if value[PASSWORD] == word {
 			ok = true

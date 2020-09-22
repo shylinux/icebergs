@@ -95,6 +95,11 @@ export ctx_dev={{.Option "httphost"}} ctx_temp=$(mktemp); curl -sL $ctx_dev >$ct
 mkdir contexts; cd contexts
 export ctx_dev={{.Option "httphost"}} ctx_temp=$(mktemp); curl -sL $ctx_dev >$ctx_temp; source $ctx_temp dev
 `,
+	"tool", `
+# 生产环境
+mkdir contexts; cd contexts
+export ctx_dev={{.Option "httphost"}} ctx_share={{.Option "share"}} ctx_temp=$(mktemp); curl -sL $ctx_dev >$ctx_temp; source $ctx_temp dev
+`,
 )
 
 /*

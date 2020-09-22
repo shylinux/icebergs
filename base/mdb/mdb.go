@@ -147,13 +147,17 @@ func _list_insert(m *ice.Message, prefix, key string, arg ...string) int {
 func _list_delete(m *ice.Message, prefix, chain, field, value string) {
 }
 func _list_select(m *ice.Message, prefix, key, field, value string) {
-	fields := strings.Split(kit.Select("time,type,name,text", m.Option("fields")), ",")
+	fields := strings.Split(kit.Select("time,type,name,text", m.Option(FIELDS)), ",")
 	m.Grows(prefix, key, field, value, func(index int, val map[string]interface{}) {
-		if field == kit.MDB_ID && value != "" {
-			m.Push("detail", val)
-			return
+		if val[kit.MDB_META] != nil {
+			val = val[kit.MDB_META].(map[string]interface{})
 		}
-		m.Push("", val, fields, val[kit.MDB_META])
+
+		if m.Option(FIELDS) == "detail" {
+			m.Push("detail", val)
+		} else {
+			m.Push(key, val, fields, val[kit.MDB_META])
+		}
 	})
 	if m.Option(FIELDS) != "detail" {
 		m.Sort(kit.MDB_ID, "int_r")

@@ -67,6 +67,24 @@ func _action_order_list(m *ice.Message, river, storm string, arg ...string) {
 	}
 }
 func _action_list(m *ice.Message, river, storm string) {
+	m.Option(ice.MSG_RIVER, river)
+	m.Cmd(TOOL, storm).Table(func(index int, value map[string]string, head []string) {
+		m.Push(RIVER, river)
+		m.Push(STORM, storm)
+		m.Push(ACTION, value[kit.MDB_ID])
+
+		m.Push("node", value[POD])
+		m.Push("group", value[CTX])
+		m.Push("index", value[CMD])
+
+		msg := m.Cmd(m.Space(value[POD]), ctx.COMMAND, kit.Keys(value[CTX], value[CMD]))
+		ls := strings.Split(kit.Format(value[CMD]), ".")
+		m.Push("name", ls[len(ls)-1])
+		m.Push("help", kit.Select(msg.Append("help"), kit.Format(value["help"])))
+		m.Push("feature", msg.Append("meta"))
+		m.Push("inputs", msg.Append("list"))
+	})
+	return
 	if p := m.Option(POD); p != "" {
 		m.Option(POD, "")
 		// 代理列表
@@ -98,9 +116,32 @@ func _action_list(m *ice.Message, river, storm string) {
 		}
 	})
 }
+
+func _action_right(m *ice.Message, river string, storm string) (ok bool) {
+	if ok = true; m.Option(ice.MSG_USERROLE) == aaa.VOID {
+		m.Richs(RIVER, "", river, func(key string, value map[string]interface{}) {
+			if ok = m.Richs(RIVER, kit.Keys(kit.MDB_HASH, key, USER), m.Option(ice.MSG_USERNAME), nil) != nil; ok {
+				m.Log_AUTH(RIVER, river, STORM, storm)
+			}
+		})
+	}
+	return ok
+}
+
 func _action_show(m *ice.Message, river, storm, index string, arg ...string) {
+	cmds := []string{index}
 	prefix := kit.Keys(kit.MDB_HASH, river, TOOL, kit.MDB_HASH, storm)
-	cmds := []string{}
+	if m.Grows(RIVER, prefix, kit.MDB_ID, index, func(index int, value map[string]interface{}) {
+		if cmds = kit.Simple(kit.Keys(value[CTX], value[CMD])); value[POD] != "" {
+			m.Option(POD, value[POD])
+		}
+	}) == nil && m.Warn(!m.Right(cmds), ice.ErrNotAuth) {
+		m.Debug("what %v", prefix)
+		return
+	}
+
+	m.Cmdy(_action_proxy(m), cmds, arg)
+	return
 
 	if i, e := strconv.Atoi(index); e == nil {
 		m.Richs(web.SHARE, nil, m.Option("share"), func(key string, value map[string]interface{}) {
@@ -162,8 +203,8 @@ func _action_show(m *ice.Message, river, storm, index string, arg ...string) {
 	m.Cmdy(_action_proxy(m), cmds)
 }
 func _action_proxy(m *ice.Message) (proxy []string) {
-	if m.Option(POD) != "" {
-		proxy = append(proxy, web.SPACE, m.Option(POD))
+	if p := m.Option(POD); p != "" {
+		proxy = append(proxy, web.SPACE, p)
 		m.Option(POD, "")
 	}
 	return proxy
@@ -176,7 +217,19 @@ const ACTION = "action"
 
 func init() {
 	Index.Merge(&ice.Context{Commands: map[string]*ice.Command{
-		"/" + ACTION: {Name: "/action", Help: "工作台", Action: map[string]*ice.Action{
+		ACTION: {Name: "action hash auto 添加", Help: "群组", Action: map[string]*ice.Action{
+			ctx.COMMAND: {Name: "command", Help: "命令", Hand: func(m *ice.Message, arg ...string) {
+				m.Cmdy(ctx.COMMAND, arg[0])
+			}},
+		}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			if len(arg) == 0 {
+				_action_list(m, m.Option(ice.MSG_RIVER), m.Option(ice.MSG_STORM))
+				return
+			}
+			_action_show(m, m.Option(ice.MSG_RIVER), m.Option(ice.MSG_STORM), arg[0], arg[1:]...)
+		}},
+
+		"/action": {Name: "/action", Help: "工作台", Action: map[string]*ice.Action{
 			web.SHARE: {Name: "share name text [pod ctx cmd arg]...", Help: "共享", Hand: func(m *ice.Message, arg ...string) {
 				_action_share_create(m, arg[0], arg[1], arg[2:]...)
 			}},
@@ -191,21 +244,19 @@ func init() {
 				_action_order_list(m, m.Option(ice.MSG_RIVER), m.Option(ice.MSG_STORM), arg...)
 			}},
 
-			"command": {Name: "command", Help: "命令", Hand: func(m *ice.Message, arg ...string) {
-				if len(arg) == 1 {
-					m.Cmdy(ctx.COMMAND, arg[0])
-					return
-				}
-				m.Cmdy(arg[0], arg[1:])
+			ctx.COMMAND: {Name: "command", Help: "命令", Hand: func(m *ice.Message, arg ...string) {
+				m.Cmdy(ctx.COMMAND, arg[0])
 			}},
 		}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			if len(arg) == 0 {
-				// 命令列表
-				_action_list(m, m.Option(ice.MSG_RIVER), m.Option(ice.MSG_STORM))
+			if m.Warn(!_action_right(m, m.Option(ice.MSG_RIVER, arg[0]), m.Option(ice.MSG_STORM, arg[1])), ice.ErrNotAuth) {
 				return
 			}
-			// 执行命令
-			_action_show(m, m.Option(ice.MSG_RIVER), m.Option(ice.MSG_STORM), arg[0], arg[1:]...)
+
+			if len(arg) == 2 {
+				_action_list(m, arg[0], arg[1])
+				return
+			}
+			_action_show(m, arg[0], arg[1], arg[2], arg[3:]...)
 		}},
 	}}, nil)
 }

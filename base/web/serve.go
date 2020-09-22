@@ -4,7 +4,6 @@ import (
 	ice "github.com/shylinux/icebergs"
 	"github.com/shylinux/icebergs/base/aaa"
 	"github.com/shylinux/icebergs/base/cli"
-	"github.com/shylinux/icebergs/base/gdb"
 	"github.com/shylinux/icebergs/base/mdb"
 	"github.com/shylinux/icebergs/base/tcp"
 	kit "github.com/shylinux/toolkits"
@@ -13,7 +12,6 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/url"
-	"os"
 	"path"
 	"strings"
 )
@@ -193,16 +191,7 @@ func _serve_main(m *ice.Message, w http.ResponseWriter, r *http.Request) bool {
 		r.URL.Path = strings.Replace(r.URL.Path, "/debug", "/code", -1)
 	}
 
-	if r.URL.Path == "/" && m.Conf(SERVE, "meta.init") != "true" && len(ice.BinPack) == 0 {
-		if _, e := os.Stat(m.Conf(SERVE, "meta.volcanos.path")); e == nil {
-			// 初始化成功
-			m.Conf(SERVE, "meta.init", "true")
-		}
-		m.W = w
-		Render(m, "refresh", m.Conf(SERVE, "meta.volcanos.refresh"))
-		m.Event(gdb.SYSTEM_INIT)
-		m.W = nil
-	} else if r.URL.Path == "/" && m.Conf(SERVE, "meta.sso") != "" {
+	if r.URL.Path == "/" && m.Conf(SERVE, "meta.sso") != "" {
 		if r.ParseForm(); r.FormValue(ice.MSG_SESSID) != "" {
 			return true
 		}
@@ -220,7 +209,7 @@ func _serve_main(m *ice.Message, w http.ResponseWriter, r *http.Request) bool {
 		}
 		return true
 	} else if r.URL.Path == "/share" && r.Method == "GET" {
-		http.ServeFile(w, r, m.Conf(SERVE, "meta.page.share"))
+		http.ServeFile(w, r, m.Conf(SERVE, "meta.volcanos.share"))
 	} else {
 		if b, ok := ice.BinPack[r.URL.Path]; ok {
 			log.Info("BinPack %v %v", r.URL.Path, len(b))
@@ -241,9 +230,10 @@ func init() {
 	Index.Merge(&ice.Context{
 		Configs: map[string]*ice.Config{
 			SERVE: {Name: "serve", Help: "服务器", Value: kit.Data(
-				"init", "false", "logheaders", "false",
+				"logheaders", "false",
 				"black", kit.Dict(),
 				"white", kit.Dict(
+					"header", true,
 					"login", true,
 					"share", true,
 					"space", true,
@@ -254,19 +244,18 @@ func init() {
 				),
 
 				"intshell", kit.Dict(
-					"path", "usr/intshell", "index", "index.sh", "require", ".ish/pluged",
+					"index", "index.sh",
+					"path", "usr/intshell", "require", ".ish/pluged",
 					"repos", "https://github.com/shylinux/volcanos", "branch", "master",
 				),
 
-				"static", kit.Dict("/", "usr/volcanos/"),
 				"volcanos", kit.Dict("refresh", "5",
+					"share", "usr/volcanos/page/share.html",
 					"path", "usr/volcanos", "require", ".ish/pluged",
 					"repos", "https://github.com/shylinux/volcanos", "branch", "master",
-				), "page", kit.Dict(
-					"index", "usr/volcanos/page/index.html",
-					"share", "usr/volcanos/page/share.html",
 				), "publish", "usr/publish/",
 
+				"static", kit.Dict("/", "usr/volcanos/"),
 				"template", kit.Dict("path", "usr/template", "list", []interface{}{
 					`{{define "raw"}}{{.Result}}{{end}}`,
 				}),

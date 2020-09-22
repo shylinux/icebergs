@@ -4,6 +4,7 @@ import (
 	ice "github.com/shylinux/icebergs"
 	"github.com/shylinux/icebergs/base/aaa"
 	"github.com/shylinux/icebergs/base/nfs"
+	"github.com/shylinux/icebergs/base/web"
 	kit "github.com/shylinux/toolkits"
 
 	"fmt"
@@ -51,6 +52,10 @@ func init() {
 					m.Echo(m.Option(ice.MSG_USERNAME))
 				}},
 				LOGIN: {Name: "login", Help: "用户登录", Hand: func(m *ice.Message, arg ...string) {
+					if aaa.UserLogin(m, arg[0], arg[1]) {
+						m.Option(ice.MSG_SESSID, aaa.SessCreate(m, m.Option(ice.MSG_USERNAME), m.Option(ice.MSG_USERROLE)))
+						web.Render(m, web.COOKIE, m.Option(ice.MSG_SESSID))
+					}
 					m.Echo(m.Option(ice.MSG_USERNAME))
 				}},
 

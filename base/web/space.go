@@ -5,7 +5,6 @@ import (
 	ice "github.com/shylinux/icebergs"
 	aaa "github.com/shylinux/icebergs/base/aaa"
 	"github.com/shylinux/icebergs/base/cli"
-	"github.com/shylinux/icebergs/base/gdb"
 	"github.com/shylinux/icebergs/base/mdb"
 	kit "github.com/shylinux/toolkits"
 	"github.com/shylinux/toolkits/task"
@@ -13,6 +12,7 @@ import (
 	"math/rand"
 	"net"
 	"net/url"
+	"os"
 	"strings"
 	"time"
 )
@@ -41,7 +41,7 @@ func _space_dial(m *ice.Message, dev, name string, arg ...string) {
 
 		host := kit.Format(client["hostname"])
 		proto := kit.Select("ws", "wss", client["protocol"] == "https")
-		uri := kit.MergeURL(proto+"://"+host+"/space/", "name", name, "type", cli.NodeType)
+		uri := kit.MergeURL(proto+"://"+host+"/space/", "name", name, "type", cli.NodeType, "share", os.Getenv("ctx_share"), "river", os.Getenv("ctx_river"))
 		if u, e := url.Parse(uri); m.Assert(e) {
 
 			task.Put(dev, func(task *task.Task) error {
@@ -206,6 +206,10 @@ const (
 	WORKER = "worker"
 )
 
+const (
+	SPACE_START = "space.start"
+	SPACE_CLOSE = "space.close"
+)
 const SPACE = "space"
 
 func init() {
@@ -243,9 +247,11 @@ func init() {
 				if s, e := websocket.Upgrade(m.W, m.R, nil, m.Confi(SPACE, "meta.buffer.r"), m.Confi(SPACE, "meta.buffer.w")); m.Assert(e) {
 					name := m.Option(kit.MDB_NAME, strings.Replace(kit.Select(m.Option(ice.MSG_USERADDR), m.Option(kit.MDB_NAME)), ".", "_", -1))
 					kind := kit.Select(WORKER, m.Option(kit.MDB_TYPE))
+					share := m.Option("share")
+					river := m.Option("river")
 
 					// 添加节点
-					h := m.Rich(SPACE, nil, kit.Dict("socket", s,
+					h := m.Rich(SPACE, nil, kit.Dict("socket", s, "share", share, "river", river,
 						kit.MDB_TYPE, kind, kit.MDB_NAME, name, kit.MDB_TEXT, s.RemoteAddr().String(),
 					))
 					m.Log_CREATE(SPACE, name)
@@ -257,8 +263,8 @@ func init() {
 							m.Event(DREAM_START, name)
 							defer m.Event(DREAM_STOP, name)
 						default:
-							m.Event(gdb.SPACE_START, kind, name)
-							defer m.Event(gdb.SPACE_CLOSE, kind, name)
+							m.Event(SPACE_START, "type", kind, "name", name, "share", share, "river", river)
+							defer m.Event(SPACE_CLOSE, "type", kind, "name", name, "share", share, "river", river)
 						}
 						_space_handle(m, false, m.Target().Server().(*Frame).send, s, name)
 						m.Log(ice.LOG_CLOSE, "%s: %s", name, kit.Format(m.Confv(SPACE, kit.Keys(kit.MDB_HASH, h))))

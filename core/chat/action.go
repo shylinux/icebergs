@@ -248,6 +248,9 @@ func init() {
 				m.Cmdy(ctx.COMMAND, arg[0])
 			}},
 		}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			if m.Warn(m.Option(ice.MSG_USERNAME) == "", ice.ErrNotLogin) {
+				return
+			}
 			if m.Warn(!_action_right(m, m.Option(ice.MSG_RIVER, arg[0]), m.Option(ice.MSG_STORM, arg[1])), ice.ErrNotAuth) {
 				return
 			}

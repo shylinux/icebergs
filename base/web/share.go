@@ -253,32 +253,32 @@ func _trash(m *ice.Message, arg ...string) {
 	}
 }
 
-func ShareCreate(m *ice.Message, kind, name, text string, arg ...string) string {
-	return _share_create(m, kind, name, text, arg...)
-}
-
 const SHARE = "share"
 
 func init() {
 	Index.Merge(&ice.Context{
 		Configs: map[string]*ice.Config{
 			SHARE: {Name: "share", Help: "共享链", Value: kit.Data(
-				"template", share_template, "expire", "72h",
-				"limit", 10,
+				"expire", "72h", "template", share_template,
 			)},
 		},
 		Commands: map[string]*ice.Command{
-			SHARE: {Name: "share share=auto auto", Help: "共享链", Action: map[string]*ice.Action{
-				mdb.CREATE: {Name: "create type name text arg...", Help: "创建", Hand: func(m *ice.Message, arg ...string) {
-					_share_create(m, arg[0], arg[1], arg[2], arg[3:]...)
+			SHARE: {Name: "share hash auto", Help: "共享链", Action: map[string]*ice.Action{
+				mdb.CREATE: {Name: "create type name text", Help: "创建", Hand: func(m *ice.Message, arg ...string) {
+					m.Cmdy(mdb.INSERT, SHARE, "", mdb.HASH,
+						aaa.USERROLE, m.Option(ice.MSG_USERROLE), aaa.USERNAME, m.Option(ice.MSG_USERNAME),
+						"river", m.Option(ice.MSG_RIVER), "storm", m.Option(ice.MSG_STORM),
+						kit.MDB_TIME, m.Time(m.Conf(SHARE, "meta.expire")), arg)
+				}},
+				mdb.REMOVE: {Name: "remove", Help: "删除", Hand: func(m *ice.Message, arg ...string) {
+					m.Cmdy(mdb.DELETE, SHARE, "", mdb.HASH, kit.MDB_HASH, m.Option(kit.MDB_HASH))
 				}},
 			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-				if len(arg) < 2 {
-					_share_list(m, kit.Select("", arg, 0))
-					return
-				}
-				_share_create(m, arg[0], arg[1], arg[2], arg[3:]...)
+				m.Option(mdb.FIELDS, "time,hash,userrole,username,river,storm,type,name,text")
+				m.Cmdy(mdb.SELECT, SHARE, "", mdb.HASH, kit.MDB_HASH, arg)
+				m.PushAction("删除")
 			}},
+
 			"/share/local/": {Name: "/share/local/", Help: "共享链", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 				_share_local(m, arg...)
 			}},

@@ -9,6 +9,7 @@ import (
 )
 
 var ErrWarn = "warn: "
+var ErrNotLogin = "not login: "
 var ErrNotAuth = "not auth: "
 var ErrNotJoin = "not join: "
 var ErrNotFound = "not found: "

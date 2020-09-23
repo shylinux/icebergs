@@ -53,8 +53,8 @@ func init() {
 			}},
 			"/crx": {Name: "/crx", Help: "插件", Action: map[string]*ice.Action{
 				web.HISTORY: {Name: "history", Help: "历史记录", Hand: func(m *ice.Message, arg ...string) {
-					m.Cmdy(web.SPIDE, web.SPIDE_SELF, "/code/chrome/sync",
-						kit.MDB_NAME, arg[1], kit.MDB_TEXT, arg[2])
+					// m.Cmdy(web.SPIDE, web.SPIDE_SELF, "/code/chrome/sync",
+					// 	kit.MDB_NAME, arg[1], kit.MDB_TEXT, arg[2])
 				}},
 			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			}},

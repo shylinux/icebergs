@@ -16,6 +16,7 @@ var Index = &ice.Context{Name: CHAT, Help: "聊天中心",
 				"base", kit.Dict(
 					"info", []interface{}{
 						"web.chat.info",
+						"web.chat.code",
 						"web.chat.node",
 						"web.chat.tool",
 						"web.chat.user",
@@ -27,6 +28,8 @@ var Index = &ice.Context{Name: CHAT, Help: "聊天中心",
 					},
 				),
 			))
+			m.Watch(web.SPACE_START, m.Prefix(NODE))
+			m.Watch(web.SPACE_CLOSE, m.Prefix(NODE))
 		}},
 		ice.CTX_EXIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			m.Save(RIVER)

@@ -72,7 +72,7 @@ func _spide_create(m *ice.Message, name, address string, arg ...string) {
 			dir, file := path.Split(uri.EscapedPath())
 			m.Rich(SPIDE, nil, kit.Dict(
 				"cookie", kit.Dict(), "header", kit.Dict(), "client", kit.Dict(
-					"share", ShareCreate(m.Spawn(), SPIDE, name, address),
+					// "share", ShareCreate(m.Spawn(), SPIDE, name, address),
 					"name", name, "url", address, "method", "POST",
 					"protocol", uri.Scheme, "hostname", uri.Host,
 					"path", dir, "file", file, "query", uri.RawQuery,

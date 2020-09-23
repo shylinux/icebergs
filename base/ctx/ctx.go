@@ -51,7 +51,9 @@ var Index = &ice.Context{Name: "ctx", Help: "配置模块",
 			} else {
 				m.Search(arg[0]+".", func(p *ice.Context, s *ice.Context, key string) {
 					msg := m.Spawn(s)
-					switch arg[1] {
+					switch kit.Select(CONTEXT, arg, 1) {
+					case CONTEXT:
+						_context_list(msg, true)
 					case COMMAND:
 						msg.Cmdy(COMMAND, arg[0], arg[2:])
 					case CONFIG:

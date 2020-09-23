@@ -7,63 +7,30 @@ import (
 	"github.com/shylinux/icebergs/base/web"
 	"github.com/shylinux/icebergs/core/wiki"
 	kit "github.com/shylinux/toolkits"
-	"github.com/shylinux/toolkits/task"
 
-	"io/ioutil"
 	"os"
 	"path"
 	"strings"
-	"sync"
 )
 
 func _alpha_find(m *ice.Message, method, word string) {
 	// 搜索方法
 	switch word = strings.TrimSpace(word); method {
-	case LINE:
-	case WORD:
+	case "line":
+	case "word":
 		word = "," + word + "$"
 	}
 
 	// 搜索词汇
 	msg := m.Cmd(cli.SYSTEM, "grep", "-rh", word, m.Conf(ALPHA, "meta.store"))
-	msg.CSV(msg.Result(), kit.Simple(m.Confv(ALPHA, "meta.field"))...).Table(func(index int, line map[string]string, head []string) {
-		if method == WORD && index == 0 {
-			// 添加收藏
-			m.Cmd(web.FAVOR, m.Conf(ALPHA, "meta.favor"), ALPHA, line["word"], line["translation"],
-				"id", line["id"], "definition", line["definition"])
+	msg.CSV(msg.Result(), kit.Simple(m.Confv(ALPHA, "meta.field"))...).Table(func(index int, value map[string]string, head []string) {
+		if value["word"] == "" {
+			return
 		}
 		for _, k := range []string{"id", "word", "translation", "definition"} {
-			// 输出词汇
-			m.Push(k, line[k])
+			m.Push(k, value[k])
 		}
 	})
-}
-func _alpha_find2(m *ice.Message, method, word string) {
-	p := path.Join(m.Conf(ALPHA, "meta.store"), ALPHA+".ecdict")
-	if ls, e := ioutil.ReadDir(p); m.Assert(e) {
-		args := []interface{}{}
-		for _, v := range ls {
-			args = append(args, v)
-		}
-
-		var mu sync.Mutex
-		task.Wait(args, func(task *task.Task, lock *task.Lock) error {
-			info := task.Arg.(os.FileInfo)
-			file := path.Join(p, info.Name())
-			kit.CSV(file, 100000, func(index int, value map[string]string, head []string) {
-				if value["word"] != word {
-					return
-				}
-
-				mu.Lock()
-				defer mu.Unlock()
-				m.Push("word", value["word"])
-				m.Push("translation", value["translation"])
-				m.Push("definition", value["definition"])
-			})
-			return nil
-		})
-	}
 }
 func _alpha_load(m *ice.Message, file, name string) {
 	// 清空数据
@@ -89,36 +56,25 @@ func _alpha_load(m *ice.Message, file, name string) {
 }
 
 const ALPHA = "alpha"
-const (
-	WORD = "word"
-	LINE = "line"
-)
 
-var Index = &ice.Context{Name: "alpha", Help: "英汉词典",
+var Index = &ice.Context{Name: ALPHA, Help: "英汉词典",
 	Configs: map[string]*ice.Config{
-		ALPHA: {Name: "alpha", Help: "英汉词典", Value: kit.Data(
-			kit.MDB_STORE, "usr/export/alpha", kit.MDB_FSIZE, "2000000",
+		ALPHA: {Name: ALPHA, Help: "英汉词典", Value: kit.Data(
 			kit.MDB_LIMIT, "50000", kit.MDB_LEAST, "1000",
-			"repos", "word-dict", "local", "person",
-			"field", []interface{}{"audio", "bnc", "collins", "definition", "detail", "exchange", "frq", "id", "oxford", "phonetic", "pos", "tag", "time", "translation", "word"},
-			web.FAVOR, "alpha.word",
+			kit.MDB_STORE, "usr/export/alpha", kit.MDB_FSIZE, "2000000",
+			kit.MDB_REPOS, "word-dict", kit.MDB_FIELD, []interface{}{"audio", "bnc", "collins", "definition", "detail", "exchange", "frq", "id", "oxford", "phonetic", "pos", "tag", "time", "translation", "word"},
 		)},
 	},
 	Commands: map[string]*ice.Command{
 		ice.CTX_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) { m.Load() }},
-		ice.CTX_EXIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) { m.Save(ALPHA) }},
+		ice.CTX_EXIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) { m.Save() }},
 
-		"find": {Name: "find word=hi method auto", Help: "查找词汇", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			_alpha_find(m, kit.Select("word", arg, 1), arg[0])
-		}},
-		"find2": {Name: "find word=hi method auto", Help: "查找词汇", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			_alpha_find2(m, kit.Select("word", arg, 1), arg[0])
-		}},
-		"load": {Name: "load file [name]", Help: "加载词库", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			if meta := m.Confm(ALPHA, "meta"); len(arg) == 0 {
-				arg = append(arg, path.Join("usr", kit.Format(meta["repos"]), "ecdict"))
-			}
-			_alpha_load(m, arg[0], kit.Select(path.Base(arg[0]), arg, 1))
+		ALPHA: {Name: "alpha method=word,line word auto", Help: "英汉", Action: map[string]*ice.Action{
+			mdb.IMPORT: {Name: "import file=usr/word-dict/ecdict name", Help: "加载词库", Hand: func(m *ice.Message, arg ...string) {
+				_alpha_load(m, m.Option(kit.MDB_FILE), kit.Select(path.Base(m.Option(kit.MDB_FILE)), m.Option(kit.MDB_NAME)))
+			}},
+		}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			_alpha_find(m, arg[0], arg[1])
 		}},
 	},
 }

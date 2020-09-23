@@ -82,10 +82,9 @@ func init() {
 					return
 				}
 				if len(arg) > 2 && arg[0] != "" {
-					// m.Cmdy(SPACE, arg[0], kit.Split(kit.Keys(arg[1], strings.Join(arg[2:], " "))))
 					m.Cmdy(SPACE, arg[0], "context", arg[1], "command", arg[2])
-					m.Option("_process", "_field")
 					m.Option("_prefix", arg[0], arg[1], arg[2], "run")
+					m.Option("_process", "_field")
 					return
 				}
 				if len(arg) > 1 && arg[0] != "" {

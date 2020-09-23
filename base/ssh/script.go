@@ -258,6 +258,7 @@ func (f *Frame) parse(m *ice.Message, line string) string {
 	return ""
 }
 func (f *Frame) scan(m *ice.Message, file, line string, r io.Reader) *Frame {
+	m.Option("ssh.return", func() { f.exit = true })
 	f.ps1 = kit.Simple(m.Confv("prompt", "meta.PS1"))
 	f.ps2 = kit.Simple(m.Confv("prompt", "meta.PS2"))
 	ps := f.ps1
@@ -423,8 +424,10 @@ var Index = &ice.Context{Name: "ssh", Help: "终端模块",
 			f.printf(m, m.Cmdx(cli.PYTHON, "qrcode", strings.Join(arg, "")))
 		}},
 		RETURN: {Name: "return", Help: "结束脚本", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			f := m.Target().Server().(*Frame)
-			f.exit = true
+			switch cb := m.Optionv("ssh.return").(type) {
+			case func():
+				cb()
+			}
 		}},
 
 		REMOTE: {Name: "remote user remote port local", Help: "远程连接", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {

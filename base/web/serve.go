@@ -29,12 +29,12 @@ func _serve_login(msg *ice.Message, cmds []string, w http.ResponseWriter, r *htt
 
 	if !msg.Options(ice.MSG_USERNAME) && tcp.IPIsLocal(msg, msg.Option(ice.MSG_USERIP)) {
 		// 自动认证
-		// if aaa.UserLogin(msg, cli.UserName, cli.PassWord) {
-		// 	if strings.HasPrefix(msg.Option(ice.MSG_USERUA), "Mozilla/5.0") {
-		// 		// msg.Option(ice.MSG_SESSID, aaa.SessCreate(msg, msg.Option(ice.MSG_USERNAME), msg.Option(ice.MSG_USERROLE)))
-		// 		// Render(msg, "cookie", msg.Option(ice.MSG_SESSID))
-		// 	}
-		// }
+		if aaa.UserLogin(msg, cli.UserName, cli.PassWord) {
+			if strings.HasPrefix(msg.Option(ice.MSG_USERUA), "Mozilla/5.0") {
+				// msg.Option(ice.MSG_SESSID, aaa.SessCreate(msg, msg.Option(ice.MSG_USERNAME), msg.Option(ice.MSG_USERROLE)))
+				// Render(msg, "cookie", msg.Option(ice.MSG_SESSID))
+			}
+		}
 	}
 
 	if _, ok := msg.Target().Commands[LOGIN]; ok {

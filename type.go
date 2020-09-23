@@ -587,19 +587,19 @@ func (m *Message) Search(key interface{}, cb interface{}) *Message {
 				break
 			}
 
-			for _, p := range []*Context{m.target, p, m.source} {
-				for c := p; c != nil; c = c.context {
-					if cmd, ok := c.Commands[key]; ok {
-						cb(c, p, key, cmd)
+			for _, p := range []*Context{p, m.target, m.source} {
+				for s := p; s != nil; s = s.context {
+					if cmd, ok := s.Commands[key]; ok {
+						cb(s.context, s, key, cmd)
 						return m
 					}
 				}
 			}
 		case func(p *Context, s *Context, key string, conf *Config):
-			for _, p := range []*Context{m.target, p, m.source} {
-				for c := p; c != nil; c = c.context {
-					if cmd, ok := c.Configs[key]; ok {
-						cb(c.context, c, key, cmd)
+			for _, p := range []*Context{p, m.target, m.source} {
+				for s := p; s != nil; s = s.context {
+					if cmd, ok := s.Configs[key]; ok {
+						cb(s.context, s, key, cmd)
 						return m
 					}
 				}
@@ -626,9 +626,9 @@ func (m *Message) Cmd(arg ...interface{}) *Message {
 		return m
 	}
 
-	m.Search(list[0], func(p *Context, c *Context, key string, cmd *Command) {
-		m.TryCatch(m.Spawns(c), true, func(msg *Message) {
-			m = p.cmd(msg, cmd, key, list[1:]...)
+	m.Search(list[0], func(p *Context, s *Context, key string, cmd *Command) {
+		m.TryCatch(m.Spawns(s), true, func(msg *Message) {
+			m = s.cmd(msg, cmd, key, list[1:]...)
 		})
 	})
 

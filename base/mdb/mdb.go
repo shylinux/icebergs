@@ -287,6 +287,7 @@ const (
 	RENAME = "rename"
 	REMOVE = "remove"
 	COMMIT = "commit"
+	INVITE = "invite"
 
 	INSERT = "insert"
 	DELETE = "delete"

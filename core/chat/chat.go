@@ -16,10 +16,10 @@ var Index = &ice.Context{Name: CHAT, Help: "聊天中心",
 				"base", kit.Dict(
 					"info", []interface{}{
 						"web.chat.info",
-						"web.chat.code",
-						"web.chat.node",
-						"web.chat.tool",
+						"web.chat.auth",
 						"web.chat.user",
+						"web.chat.tool",
+						"web.chat.node",
 					},
 					"miss", []interface{}{
 						"web.team.task",

@@ -74,7 +74,7 @@ func _input_find(m *ice.Message, method, word, limit string) {
 
 		} else {
 			// 输出词汇
-			m.Push(FILE, path.Base(line[0]))
+			// m.Push(FILE, path.Base(line[0]))
 			m.Push(kit.MDB_ID, line[3])
 			m.Push(CODE, line[2])
 			m.Push(TEXT, line[4])
@@ -149,9 +149,9 @@ const (
 	LINE = "line"
 )
 const (
-	INPUT = "input"
-	WUBI  = "wubi"
+	WUBI = "wubi"
 )
+const INPUT = "input"
 
 var Index = &ice.Context{Name: INPUT, Help: "输入法",
 	Configs: map[string]*ice.Config{
@@ -165,12 +165,9 @@ var Index = &ice.Context{Name: INPUT, Help: "输入法",
 		ice.CTX_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) { m.Load() }},
 		ice.CTX_EXIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) { m.Save(INPUT) }},
 
-		WUBI: {Name: "wubi path=auto auto 添加 导入", Help: "五笔", Action: map[string]*ice.Action{
+		WUBI: {Name: "wubi method=word,line code= auto", Help: "五笔", Action: map[string]*ice.Action{
 			mdb.INSERT: {Name: "insert zone=person text= code= weight=", Help: "添加", Hand: func(m *ice.Message, arg ...string) {
 				_input_push(m, kit.Select("person", m.Option("zone")), m.Option("text"), m.Option("code"), m.Option("weight"))
-			}},
-			mdb.SELECT: {Name: "select method=word code= ", Help: "查找", Hand: func(m *ice.Message, arg ...string) {
-				_input_find(m, kit.Select("word", m.Option("method")), m.Option("code"), m.Option("cache.limit"))
 			}},
 			mdb.EXPORT: {Name: "export file=usr/wubi-dict/person zone=person", Help: "导出", Hand: func(m *ice.Message, arg ...string) {
 				// _input_save(m, kit.Select("usr/wubi-dict/person", m.Option("file")), m.Option("zone"))
@@ -179,12 +176,7 @@ var Index = &ice.Context{Name: INPUT, Help: "输入法",
 				_input_load(m, kit.Select("usr/wubi-dict/person", m.Option("file")), m.Option("zone"))
 			}},
 		}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			m.Option(nfs.DIR_ROOT, m.Conf(INPUT, "meta.store"))
-			if len(arg) > 0 && strings.HasSuffix(arg[0], "csv") {
-				m.CSV(m.Cmdx(nfs.CAT, arg[0]))
-			} else {
-				m.Cmdy(nfs.DIR, kit.Select("./", arg, 0))
-			}
+			_input_find(m, arg[0], arg[1], m.Option("cache.limit"))
 		}},
 	},
 }

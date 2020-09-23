@@ -175,6 +175,7 @@ func _space_handle(m *ice.Message, safe bool, send map[string]*ice.Message, c *w
 				// 下发失败
 				msg.Warn(true, "space error")
 				source, target = []string{}, kit.Revert(source)[1:]
+				continue
 			}
 
 			_space_echo(msg, source, target, socket, name)
@@ -266,7 +267,8 @@ func init() {
 							m.Event(SPACE_START, "type", kind, "name", name, "share", share, "river", river)
 							defer m.Event(SPACE_CLOSE, "type", kind, "name", name, "share", share, "river", river)
 						}
-						_space_handle(m, false, m.Target().Server().(*Frame).send, s, name)
+						frame := m.Target().Server().(*Frame)
+						_space_handle(m, false, frame.send, s, name)
 						m.Log(ice.LOG_CLOSE, "%s: %s", name, kit.Format(m.Confv(SPACE, kit.Keys(kit.MDB_HASH, h))))
 						m.Confv(SPACE, kit.Keys(kit.MDB_HASH, h), "")
 						return nil

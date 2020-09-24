@@ -118,7 +118,11 @@ func _hash_inputs(m *ice.Message, prefix, chain string, field, value string) {
 		if val[kit.MDB_META] != nil {
 			val = val[kit.MDB_META].(map[string]interface{})
 		}
-		list[kit.Format(val[field])]++
+		if field == kit.MDB_HASH {
+			list[key]++
+		} else {
+			list[kit.Format(val[field])]++
+		}
 	})
 	for k, i := range list {
 		m.Push(field, k)

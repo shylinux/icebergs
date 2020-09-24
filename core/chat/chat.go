@@ -31,9 +31,7 @@ var Index = &ice.Context{Name: CHAT, Help: "聊天中心",
 			m.Watch(web.SPACE_START, m.Prefix(NODE))
 			m.Watch(web.SPACE_CLOSE, m.Prefix(NODE))
 		}},
-		ice.CTX_EXIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			m.Save(RIVER)
-		}},
+		ice.CTX_EXIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) { m.Save() }},
 	},
 }
 

@@ -27,44 +27,23 @@ const (
 const LOCATION = "location"
 
 func init() {
-	Index.Register(&ice.Context{Name: LOCATION, Help: "地理位置",
+	Index.Merge(&ice.Context{
 		Configs: map[string]*ice.Config{
-			LOCATION: {Name: "location", Help: "地理位置", Value: kit.Data(kit.MDB_SHORT, kit.MDB_TEXT)},
+			LOCATION: {Name: LOCATION, Help: "地理位置", Value: kit.Data(kit.MDB_SHORT, kit.MDB_TEXT)},
 		},
 		Commands: map[string]*ice.Command{
-			ice.CTX_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-				m.Load(LOCATION)
-				m.Cmd(mdb.SEARCH, mdb.CREATE, LOCATION, m.Prefix(LOCATION))
-				m.Cmd(mdb.RENDER, mdb.CREATE, LOCATION, m.Prefix(LOCATION))
-			}},
-			ice.CTX_EXIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) { m.Save(LOCATION) }},
-
-			LOCATION: {Name: "location text auto 添加:button", Help: "地理位置", Action: map[string]*ice.Action{
-				mdb.INSERT: {Hand: func(m *ice.Message, arg ...string) {
-					m.Conf(LOCATION, kit.Keys(kit.MDB_META, m.Option(ice.MSG_RIVER), m.Option(ice.MSG_STORM), kit.MDB_META, kit.MDB_SHORT), kit.MDB_TEXT)
-
-					h := m.Rich(LOCATION, kit.Keys(kit.MDB_META, m.Option(ice.MSG_RIVER), m.Option(ice.MSG_STORM)), kit.Dict(
-						kit.MDB_TYPE, arg[0], kit.MDB_NAME, arg[1], kit.MDB_TEXT, arg[2],
-						LONGITUDE, arg[3], LATITUDE, arg[4],
-					))
-					m.Log_INSERT(LOCATION, arg[2])
-					m.Echo(h)
+			LOCATION: {Name: "location text auto 添加@location", Help: "地理位置", Action: map[string]*ice.Action{
+				mdb.CREATE: {Name: "insert type name text latitude longitude", Help: "添加", Hand: func(m *ice.Message, arg ...string) {
+					m.Conf(LOCATION, kit.Keys(m.Option(ice.MSG_DOMAIN), kit.MDB_META, kit.MDB_SHORT), kit.MDB_TEXT)
+					m.Cmdy(mdb.INSERT, LOCATION, m.Option(ice.MSG_DOMAIN), mdb.HASH, arg)
 				}},
 				mdb.MODIFY: {Name: "modify", Help: "编辑", Hand: func(m *ice.Message, arg ...string) {
-					m.Richs(LOCATION, kit.Keys(kit.MDB_META, m.Option(ice.MSG_RIVER), m.Option(ice.MSG_STORM)), m.Option(kit.MDB_TEXT), func(key string, value map[string]interface{}) {
-						if arg[0] == kit.MDB_TEXT {
-							return
-						}
-						m.Log_MODIFY(PASTE, m.Option(kit.MDB_TEXT))
-						value[arg[0]] = arg[1]
-					})
+					m.Cmdy(mdb.MODIFY, LOCATION, m.Option(ice.MSG_DOMAIN), mdb.HASH, kit.MDB_HASH, m.Option(kit.MDB_HASH), arg)
 				}},
 				mdb.REMOVE: {Name: "remove", Help: "删除", Hand: func(m *ice.Message, arg ...string) {
-					m.Richs(LOCATION, kit.Keys(kit.MDB_META, m.Option(ice.MSG_RIVER), m.Option(ice.MSG_STORM)), m.Option(kit.MDB_TEXT), func(key string, value map[string]interface{}) {
-						m.Log_REMOVE(LOCATION, m.Option(kit.MDB_TEXT))
-						m.Conf(LOCATION, kit.Keys(kit.MDB_META, m.Option(ice.MSG_RIVER), m.Option(ice.MSG_STORM), kit.MDB_HASH, key), "")
-					})
+					m.Cmdy(mdb.DELETE, LOCATION, m.Option(ice.MSG_DOMAIN), mdb.HASH, kit.MDB_TEXT, m.Option(kit.MDB_TEXT))
 				}},
+
 				mdb.SEARCH: {Name: "search type name text", Help: "搜索", Hand: func(m *ice.Message, arg ...string) {
 					m.Richs(LOCATION, kit.Keys(kit.MDB_META, m.Option(ice.MSG_RIVER), m.Option(ice.MSG_STORM)), kit.MDB_FOREACH, func(key string, value map[string]interface{}) {
 						if strings.Contains(kit.Format(value[kit.MDB_NAME]), arg[1]) ||
@@ -86,27 +65,21 @@ func init() {
 						"https://map.baidu.com/search/%s/@12958750.085,4825785.55,16z?querytype=s&da_src=shareurl&wd=%s",
 						arg[2], arg[2]))
 				}},
+
+				mdb.INPUTS: {Name: "inputs", Help: "补全", Hand: func(m *ice.Message, arg ...string) {
+					m.Cmdy(mdb.INPUTS, LOCATION, m.Option(ice.MSG_DOMAIN), mdb.HASH, arg)
+				}},
 			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-				m.Richs(LOCATION, kit.Keys(kit.MDB_META, m.Option(ice.MSG_RIVER), m.Option(ice.MSG_STORM)), kit.Select(kit.MDB_FOREACH, arg, 0), func(key string, value map[string]interface{}) {
-					if len(arg) == 0 {
-						m.Push(key, value, []string{kit.MDB_TIME, kit.MDB_TYPE, kit.MDB_NAME, kit.MDB_TEXT,
-							LONGITUDE, LATITUDE})
-						m.Debug(m.Option(ice.MSG_USERUA))
-						if strings.Contains(m.Option(ice.MSG_USERUA), "MicroMessenger") {
-							return
-						}
-						m.Push("action", m.Cmdx(mdb.RENDER, web.RENDER.Button, "删除"))
-						loc := m.Cmdx(mdb.RENDER, web.RENDER.A, "百度地图", kit.Format(
-							"https://map.baidu.com/search/%s/@12958750.085,4825785.55,16z?querytype=s&da_src=shareurl&wd=%s",
-							url.QueryEscape(kit.Format(value[kit.MDB_TEXT])),
-							url.QueryEscape(kit.Format(value[kit.MDB_TEXT])),
-						))
-						m.Push("location", loc)
-						return
-					}
-					m.Push("detail", value)
+				m.Option(mdb.FIELDS, "time,type,name,text,longitude,latitude")
+				m.Cmdy(mdb.SELECT, LOCATION, m.Option(ice.MSG_DOMAIN), mdb.HASH, kit.MDB_HASH, arg)
+				m.Table(func(index int, value map[string]string, head []string) {
+					m.PushRender(kit.MDB_LINK, "a", "百度地图", kit.Format(
+						"https://map.baidu.com/search/%s/@12958750.085,4825785.55,16z?querytype=s&da_src=shareurl&wd=%s",
+						url.QueryEscape(kit.Format(value[kit.MDB_TEXT])),
+						url.QueryEscape(kit.Format(value[kit.MDB_TEXT])),
+					))
 				})
-				m.Sort("time", "time_r")
+				m.PushAction("删除")
 			}},
 		},
 	}, nil)

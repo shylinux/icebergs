@@ -15,8 +15,9 @@ func init() {
 			PASTE: {Name: PASTE, Help: "粘贴板", Value: kit.Data(kit.MDB_SHORT, kit.MDB_TEXT)},
 		},
 		Commands: map[string]*ice.Command{
-			PASTE: {Name: "paste hash auto 添加 导出 导入", Help: "粘贴板", Action: map[string]*ice.Action{
+			PASTE: {Name: "paste hash auto 添加@paste", Help: "粘贴板", Action: map[string]*ice.Action{
 				mdb.INSERT: {Name: "insert text:textarea=hi", Help: "添加", Hand: func(m *ice.Message, arg ...string) {
+					m.Conf(PASTE, kit.Keys(m.Option(ice.MSG_DOMAIN), kit.MDB_META, kit.MDB_SHORT), kit.MDB_TEXT)
 					m.Cmdy(mdb.INSERT, m.Prefix(PASTE), m.Option(ice.MSG_DOMAIN), mdb.HASH, arg)
 				}},
 				mdb.DELETE: {Name: "delete", Help: "删除", Hand: func(m *ice.Message, arg ...string) {

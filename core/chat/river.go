@@ -245,6 +245,9 @@ func init() {
 				mdb.IMPORT: {Name: "import", Help: "导入", Hand: func(m *ice.Message, arg ...string) {
 					m.Cmdy(mdb.IMPORT, RIVER, "", mdb.HASH)
 				}},
+				mdb.INPUTS: {Name: "inputs", Help: "补全", Hand: func(m *ice.Message, arg ...string) {
+					m.Cmdy(mdb.INPUTS, RIVER, "", mdb.HASH, arg)
+				}},
 			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 				m.Cmdy(mdb.SELECT, RIVER, "", mdb.HASH, kit.MDB_HASH, arg)
 				m.PushAction("删除")

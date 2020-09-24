@@ -259,6 +259,14 @@ func init() {
 				_action_list(m, arg[0], arg[1])
 				return
 			}
+			if len(arg) > 2 && arg[2] == "order" {
+				for _, k := range arg[3:] {
+					m.Cmdy(ctx.COMMAND, k)
+					m.Push("action", k)
+					m.Push("index", k)
+				}
+				return
+			}
 			_action_show(m, arg[0], arg[1], arg[2], arg[3:]...)
 		}},
 	}}, nil)

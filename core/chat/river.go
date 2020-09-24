@@ -15,8 +15,8 @@ func _river_list(m *ice.Message) {
 	if m.Option("share") != "" && m.Option("share") != "" {
 		m.Option(ice.MSG_RIVER, m.Option("river"))
 		if m.Cmd(AUTH, m.Option("share")).Append(kit.MDB_TYPE) == USER {
-			if m.Cmd(USER, m.Option(ice.MSG_USERNAME)).Append(ice.MSG_USERNAME) == "" {
-				m.Cmd(USER, mdb.INSERT, aaa.USERNAME, m.Option(ice.MSG_USERNAME))
+			if m.Cmd(m.Prefix(USER), m.Option(ice.MSG_USERNAME)).Append(ice.MSG_USERNAME) == "" {
+				m.Cmd(m.Prefix(USER), mdb.INSERT, aaa.USERNAME, m.Option(ice.MSG_USERNAME))
 				// 加入群组
 			}
 		}
@@ -165,7 +165,7 @@ func init() {
 					return
 				}
 
-				m.Option(mdb.FIELDS, "time,id,pod,ctx,cmd,help")
+				m.Option(mdb.FIELDS, "time,id,pod,ctx,cmd,arg")
 				msg := m.Cmd(mdb.SELECT, RIVER, kit.Keys(kit.MDB_HASH, m.Option(ice.MSG_RIVER), TOOL, kit.MDB_HASH, arg[0]), mdb.LIST, kit.MDB_ID, kit.Select("", arg, 1))
 				if len(msg.Appendv(CMD)) == 0 && len(arg) > 1 {
 					msg.Push(CMD, arg[1])
@@ -215,7 +215,7 @@ func init() {
 
 					m.Conf(RIVER, kit.Keys(kit.MDB_HASH, h, USER, kit.MDB_META, kit.MDB_SHORT), aaa.USERNAME)
 					m.Conf(RIVER, kit.Keys(kit.MDB_HASH, h, NODE, kit.MDB_META, kit.MDB_SHORT), kit.MDB_NAME)
-					m.Cmd(USER, mdb.INSERT, aaa.USERNAME, m.Option(ice.MSG_USERNAME))
+					m.Cmd(m.Prefix(USER), mdb.INSERT, aaa.USERNAME, m.Option(ice.MSG_USERNAME))
 
 					kit.Fetch(m.Confv(RIVER, kit.Keys("meta.template", "base")), func(storm string, value interface{}) {
 						h := m.Cmdx(TOOL, mdb.CREATE, kit.MDB_TYPE, "public", kit.MDB_NAME, storm, kit.MDB_TEXT, storm)

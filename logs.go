@@ -13,7 +13,6 @@ var ErrNotLogin = "not login: "
 var ErrNotAuth = "not auth: "
 var ErrNotJoin = "not join: "
 var ErrNotFound = "not found: "
-var ErrNotEnough = "not enough: "
 var ErrStart = "err start: "
 
 func (m *Message) log(level string, str string, arg ...interface{}) *Message {

@@ -94,17 +94,12 @@ const (
 
 	BEGIN = "begin"
 	END   = "end"
-	START = "start"
-	STOP  = "stop"
 	OPEN  = "open"
 	CLOSE = "close"
+	START = "start"
+	STOP  = "stop"
 
-	RELOAD  = "reload"
 	RESTART = "restart"
-	CHANGE  = "change"
-	BUILD   = "build"
-	PRUNE   = "prune"
-	CLEAR   = "clear"
 )
 
 const (

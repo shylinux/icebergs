@@ -484,9 +484,12 @@ func (m *Message) Append(key string, arg ...interface{}) string {
 }
 func (m *Message) Appendv(key string, arg ...interface{}) []string {
 	if key == MSG_APPEND {
-		m.meta[MSG_APPEND] = kit.Simple(arg)
+		if len(arg) > 0 {
+			m.meta[MSG_APPEND] = kit.Simple(arg)
+		}
 		return m.meta[key]
 	}
+
 	if key == "_index" {
 		max := 0
 		for _, k := range m.meta[MSG_APPEND] {

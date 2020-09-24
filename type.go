@@ -544,11 +544,11 @@ func (m *Message) Search(key interface{}, cb interface{}) *Message {
 		p := m.target.root
 		if ctx, ok := names[key].(*Context); ok {
 			p = ctx
-		} else if strings.Contains(key, ":") {
-
 		} else if key == "." {
+			p, key = m.target, ""
+		} else if key == ".." {
 			if m.target.context != nil {
-				p = m.target.context
+				p, key = m.target.context, ""
 			}
 		} else if strings.Contains(key, ".") {
 			list := strings.Split(key, ".")
@@ -579,6 +579,14 @@ func (m *Message) Search(key interface{}, cb interface{}) *Message {
 
 		// 遍历命令
 		switch cb := cb.(type) {
+		case func(key string, cmd *Command):
+			if key == "" {
+				for k, v := range p.Commands {
+					cb(k, v)
+				}
+				break
+			}
+
 		case func(p *Context, s *Context, key string, cmd *Command):
 			if key == "" {
 				for k, v := range p.Commands {
@@ -639,22 +647,22 @@ func (m *Message) Cmd(arg ...interface{}) *Message {
 }
 func (m *Message) Confv(arg ...interface{}) (val interface{}) {
 	m.Search(arg[0], func(p *Context, s *Context, key string, conf *Config) {
-		if len(arg) > 1 {
-			if len(arg) > 2 {
-				if arg[1] == nil {
-					// 写配置
-					conf.Value = arg[2]
-				} else {
-					// 写修改项
-					kit.Value(conf.Value, arg[1:]...)
-				}
-			}
-			// 读配置项
-			val = kit.Value(conf.Value, arg[1])
-		} else {
-			// 读配置
+		if len(arg) == 1 {
 			val = conf.Value
+			return // 读配置
 		}
+
+		if len(arg) > 2 {
+			if arg[1] == nil || arg[1] == "" {
+				// 写配置
+				conf.Value = arg[2]
+			} else {
+				// 写修改项
+				kit.Value(conf.Value, arg[1:]...)
+			}
+		}
+		// 读配置项
+		val = kit.Value(conf.Value, arg[1])
 	})
 	return
 }

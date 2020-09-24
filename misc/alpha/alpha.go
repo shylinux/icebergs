@@ -13,7 +13,7 @@ import (
 	"strings"
 )
 
-func _alpha_find(m *ice.Message, method, word string) {
+func _alpha_find(m *ice.Message, method, word string) *ice.Message {
 	// 搜索方法
 	switch word = strings.TrimSpace(word); method {
 	case "line":
@@ -31,6 +31,7 @@ func _alpha_find(m *ice.Message, method, word string) {
 			m.Push(k, value[k])
 		}
 	})
+	return m
 }
 func _alpha_load(m *ice.Message, file, name string) {
 	// 清空数据
@@ -66,15 +67,27 @@ var Index = &ice.Context{Name: ALPHA, Help: "英汉词典",
 		)},
 	},
 	Commands: map[string]*ice.Command{
-		ice.CTX_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) { m.Load() }},
-		ice.CTX_EXIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) { m.Save() }},
-
 		ALPHA: {Name: "alpha method=word,line word auto", Help: "英汉", Action: map[string]*ice.Action{
 			mdb.IMPORT: {Name: "import file=usr/word-dict/ecdict name", Help: "加载词库", Hand: func(m *ice.Message, arg ...string) {
 				_alpha_load(m, m.Option(kit.MDB_FILE), kit.Select(path.Base(m.Option(kit.MDB_FILE)), m.Option(kit.MDB_NAME)))
 			}},
+			mdb.SEARCH: {Name: "search", Help: "搜索", Hand: func(m *ice.Message, arg ...string) {
+				_alpha_find(m.Spawn(), "word", arg[1]).Table(func(index int, value map[string]string, head []string) {
+					m.Push("file", "")
+					m.Push("line", arg[1])
+					m.Push("text", value["definition"]+"\n"+value["translation"])
+				})
+			}},
 		}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			_alpha_find(m, arg[0], arg[1])
+		}},
+
+		ice.CTX_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			m.Load()
+			m.Cmd(mdb.SEARCH, mdb.CREATE, ALPHA, ALPHA, c.Cap(ice.CTX_FOLLOW))
+		}},
+		ice.CTX_EXIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			m.Save()
 		}},
 	},
 }

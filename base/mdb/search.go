@@ -35,6 +35,10 @@ func init() {
 						m.Cmdy(kit.Keys(value[kit.MDB_TEXT], value[kit.MDB_NAME]), SEARCH, arg[0], arg[1], kit.Select("", arg, 2))
 					})
 				}
+
+				m.Richs(SEARCH, nil, "alpha", func(key string, value map[string]interface{}) {
+					m.Cmdy(kit.Keys(value[kit.MDB_TEXT], value[kit.MDB_NAME]), SEARCH, arg[0], strings.ToLower(arg[1]), kit.Select("", arg, 2))
+				})
 			}},
 		}}, nil)
 }

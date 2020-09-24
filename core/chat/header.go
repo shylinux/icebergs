@@ -11,52 +11,32 @@ import (
 )
 
 const (
-	CHECK = "check"
-	LOGIN = "login"
 	TITLE = "title"
+	LOGIN = "login"
+	CHECK = "check"
 )
 const HEADER = "header"
-const _pack = `
-<!DOCTYPE html>
-<head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width,initial-scale=0.7,user-scalable=no">
-    <title>volcanos</title>
-    <link rel="shortcut icon" type="image/ico" href="favicon.ico">
-    <style type="text/css">%s</style>
-    <style type="text/css">%s</style>
-</head>
-<body>
-<script>%s</script>
-<script>%s</script>
-<script>%s</script>
-<script>%s</script>
-<script>Volcanos.meta.webpack = true</script>
-</body>
-`
 
 func init() {
 	Index.Merge(&ice.Context{
 		Configs: map[string]*ice.Config{
-			HEADER: {Name: "header", Help: "标题栏", Value: kit.Dict(
-				TITLE, "github.com/shylinux/contexts",
-			)},
+			HEADER: {Name: HEADER, Help: "标题栏", Value: kit.Dict(TITLE, "github.com/shylinux/contexts")},
 		},
 		Commands: map[string]*ice.Command{
-			"/" + HEADER: {Name: "/header", Help: "标题栏", Action: map[string]*ice.Action{
-				"userrole": {Name: "userrole", Help: "登录检查", Hand: func(m *ice.Message, arg ...string) {
-					m.Echo(aaa.UserRole(m, m.Option("who")))
-				}},
-
-				CHECK: {Name: "check", Help: "登录检查", Hand: func(m *ice.Message, arg ...string) {
-					m.Echo(m.Option(ice.MSG_USERNAME))
-				}},
+			"/header": {Name: "/header", Help: "标题栏", Action: map[string]*ice.Action{
 				LOGIN: {Name: "login", Help: "用户登录", Hand: func(m *ice.Message, arg ...string) {
 					if aaa.UserLogin(m, arg[0], arg[1]) {
 						m.Option(ice.MSG_SESSID, aaa.SessCreate(m, m.Option(ice.MSG_USERNAME), m.Option(ice.MSG_USERROLE)))
 						web.Render(m, web.COOKIE, m.Option(ice.MSG_SESSID))
 					}
 					m.Echo(m.Option(ice.MSG_USERNAME))
+				}},
+				CHECK: {Name: "check", Help: "登录检查", Hand: func(m *ice.Message, arg ...string) {
+					m.Echo(m.Option(ice.MSG_USERNAME))
+				}},
+
+				"userrole": {Name: "userrole", Help: "登录检查", Hand: func(m *ice.Message, arg ...string) {
+					m.Echo(aaa.UserRole(m, m.Option("who")))
 				}},
 
 				"pack": {Name: "pack", Help: "打包", Hand: func(m *ice.Message, arg ...string) {
@@ -88,3 +68,22 @@ func init() {
 		},
 	}, nil)
 }
+
+const _pack = `
+<!DOCTYPE html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=0.7,user-scalable=no">
+    <title>volcanos</title>
+    <link rel="shortcut icon" type="image/ico" href="favicon.ico">
+    <style type="text/css">%s</style>
+    <style type="text/css">%s</style>
+</head>
+<body>
+<script>%s</script>
+<script>%s</script>
+<script>%s</script>
+<script>%s</script>
+<script>Volcanos.meta.webpack = true</script>
+</body>
+`

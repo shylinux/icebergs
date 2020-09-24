@@ -98,7 +98,7 @@ func _pprof_modify(m *ice.Message, zone, id, k, v, old string) {
 	m.Richs(PPROF, nil, kit.Select(kit.MDB_FOREACH, zone), func(key string, val map[string]interface{}) {
 		switch k {
 		case kit.MDB_ZONE, kit.MDB_ID, kit.MDB_TIME:
-			m.Warn(true, mdb.ErrDenyModify, k)
+			// m.Warn(true, mdb.ErrDenyModify, k)
 			return
 		case BINNARY, SERVICE, SECONDS:
 			// 修改信息

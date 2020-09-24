@@ -127,6 +127,7 @@ func (c *Context) Cmd(m *Message, cmd string, key string, arg ...string) *Messag
 func (c *Context) Server() Server {
 	return c.server
 }
+
 func (c *Context) Register(s *Context, x Server, name ...string) *Context {
 	for _, n := range name {
 		Name(n, s)
@@ -143,7 +144,44 @@ func (c *Context) Register(s *Context, x Server, name ...string) *Context {
 	s.server = x
 	return s
 }
+func (c *Context) Merge(s *Context, x Server) *Context {
+	if c.Commands == nil {
+		c.Commands = map[string]*Command{}
+	}
+	if c.Configs == nil {
+		c.Configs = map[string]*Config{}
+	}
+	if c.Caches == nil {
+		c.Caches = map[string]*Cache{}
+	}
+	for k, v := range s.Commands {
+		c.Commands[k] = v
+		if v.List == nil {
+			v.List = c._split(v.Name)
+		}
+		if v.Meta == nil {
+			v.Meta = kit.Dict()
+		}
 
+		for k, a := range v.Action {
+			if a.List == nil {
+				a.List = c._split(a.Name)
+			}
+			if len(a.List) > 0 {
+				v.Meta[a.Help] = a.List
+				v.Meta[k] = a.List
+			}
+		}
+	}
+	for k, v := range s.Configs {
+		c.Configs[k] = v
+	}
+	for k, v := range s.Caches {
+		c.Caches[k] = v
+	}
+	s.server = x
+	return c
+}
 func (c *Context) _split(name string) []interface{} {
 	button, list := false, []interface{}{}
 	for _, v := range kit.Split(kit.Select("key", name), " ", " ")[1:] {
@@ -190,44 +228,6 @@ func (c *Context) _split(name string) []interface{} {
 		list = append(list, item)
 	}
 	return list
-}
-func (c *Context) Merge(s *Context, x Server) *Context {
-	if c.Commands == nil {
-		c.Commands = map[string]*Command{}
-	}
-	if c.Configs == nil {
-		c.Configs = map[string]*Config{}
-	}
-	if c.Caches == nil {
-		c.Caches = map[string]*Cache{}
-	}
-	for k, v := range s.Commands {
-		c.Commands[k] = v
-		if v.List == nil {
-			v.List = c._split(v.Name)
-		}
-		if v.Meta == nil {
-			v.Meta = kit.Dict()
-		}
-
-		for k, a := range v.Action {
-			if a.List == nil {
-				a.List = c._split(a.Name)
-			}
-			if len(a.List) > 0 {
-				v.Meta[a.Help] = a.List
-				v.Meta[k] = a.List
-			}
-		}
-	}
-	for k, v := range s.Configs {
-		c.Configs[k] = v
-	}
-	for k, v := range s.Caches {
-		c.Caches[k] = v
-	}
-	s.server = x
-	return c
 }
 
 func (c *Context) Spawn(m *Message, name string, help string, arg ...string) *Context {
@@ -645,6 +645,14 @@ func (m *Message) Cmd(arg ...interface{}) *Message {
 	}
 	return m
 }
+func (m *Message) Confm(key string, chain interface{}, cbs ...interface{}) map[string]interface{} {
+	val := m.Confv(key, chain)
+	if len(cbs) > 0 {
+		kit.Fetch(val, cbs[0])
+	}
+	value, _ := val.(map[string]interface{})
+	return value
+}
 func (m *Message) Confv(arg ...interface{}) (val interface{}) {
 	m.Search(arg[0], func(p *Context, s *Context, key string, conf *Config) {
 		if len(arg) == 1 {
@@ -665,17 +673,6 @@ func (m *Message) Confv(arg ...interface{}) (val interface{}) {
 		val = kit.Value(conf.Value, arg[1])
 	})
 	return
-}
-func (m *Message) Confm(key string, chain interface{}, cbs ...interface{}) map[string]interface{} {
-	val := m.Confv(key, chain)
-	if len(cbs) > 0 {
-		kit.Fetch(val, cbs[0])
-	}
-	value, _ := val.(map[string]interface{})
-	return value
-}
-func (m *Message) Confi(arg ...interface{}) int {
-	return kit.Int(m.Confv(arg...))
 }
 func (m *Message) Conf(arg ...interface{}) string {
 	return kit.Format(m.Confv(arg...))

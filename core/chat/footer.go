@@ -16,7 +16,7 @@ func init() {
 			)},
 		},
 		Commands: map[string]*ice.Command{
-			"/" + FOOTER: {Name: "/footer", Help: "状态栏", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			"/footer": {Name: "/footer", Help: "状态栏", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 				kit.Fetch(m.Confv(FOOTER, LEGAL), func(index int, value string) { m.Echo(value) })
 			}},
 		},

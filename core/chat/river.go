@@ -46,12 +46,18 @@ func _river_proxy(m *ice.Message, pod string) (proxy []string) {
 }
 
 const (
+	POD = "pod"
+	CTX = "ctx"
+	CMD = "cmd"
+)
+const (
 	INFO = "info"
 	AUTH = "auth"
 	NODE = "node"
 	TOOL = "tool"
 	USER = "user"
 )
+const STORM = "storm"
 const RIVER = "river"
 
 func init() {

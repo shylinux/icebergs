@@ -82,7 +82,7 @@ func _bench_modify(m *ice.Message, zone, id, k, v, old string) {
 	m.Richs(BENCH, nil, zone, func(key string, val map[string]interface{}) {
 		switch k {
 		case kit.MDB_ZONE, kit.MDB_ID, kit.MDB_TIME:
-			m.Warn(true, mdb.ErrDenyModify, k)
+			// m.Warn(true, mdb.ErrDenyModify, k)
 			return
 		}
 

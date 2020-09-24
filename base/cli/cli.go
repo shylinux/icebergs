@@ -74,7 +74,7 @@ var Index = &ice.Context{Name: "cli", Help: "命令模块",
 			PathName = m.Conf(RUNTIME, "boot.pathname")
 
 			// 启动记录
-			count := m.Confi(RUNTIME, "boot.count") + 1
+			count := kit.Int(m.Conf(RUNTIME, "boot.count")) + 1
 			m.Conf(RUNTIME, "boot.count", count)
 
 			// 节点信息

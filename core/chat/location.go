@@ -6,15 +6,25 @@ import (
 	"github.com/shylinux/icebergs/base/web"
 	kit "github.com/shylinux/toolkits"
 
+	"math"
 	"net/url"
 	"strings"
 )
 
+func distance(lat1, long1, lat2, long2 float64) float64 {
+	lat1 = lat1 * math.Pi / 180
+	long1 = long1 * math.Pi / 180
+	lat2 = lat2 * math.Pi / 180
+	long2 = long2 * math.Pi / 180
+	return 2 * 6371 * math.Asin(math.Sqrt(math.Pow(math.Sin(math.Abs(lat1-lat2)/2), 2)+math.Cos(lat1)*math.Cos(lat2)*math.Pow(math.Sin(math.Abs(long1-long2)/2), 2)))
+}
+
 const (
-	LOCATION  = "location"
-	LONGITUDE = "longitude"
 	LATITUDE  = "latitude"
+	LONGITUDE = "longitude"
 )
+
+const LOCATION = "location"
 
 func init() {
 	Index.Register(&ice.Context{Name: LOCATION, Help: "地理位置",

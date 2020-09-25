@@ -104,7 +104,6 @@ func _spide_render(m *ice.Message, kind, name, text string, arg ...string) {
 	m.Echo(`<iframe src="%s" width=800 height=400></iframe>`, text)
 }
 
-const SPIDE = "spide"
 const (
 	SPIDE_SHY  = "shy"
 	SPIDE_DEV  = "dev"
@@ -138,6 +137,8 @@ const (
 	ContentHTML   = "text/html"
 )
 
+const SPIDE = "spide"
+
 func init() {
 	Index.Merge(&ice.Context{
 		Configs: map[string]*ice.Config{
@@ -155,7 +156,7 @@ func init() {
 				m.Cmdy(mdb.SELECT, m.Prefix("spide_rewrite"), "", mdb.HASH, "from", arg)
 			}},
 
-			SPIDE: {Name: "spide name=auto [action:select=msg|raw|cache] [method:select=POST|GET] url [format:select=json|form|part|data|file] arg... auto", Help: "蜘蛛侠", Action: map[string]*ice.Action{
+			SPIDE: {Name: "spide name=auto [action:select=msg|raw|save|cache] [method:select=POST|GET] url [format:select=json|form|part|data|file] arg... auto", Help: "蜘蛛侠", Action: map[string]*ice.Action{
 				mdb.CREATE: {Name: "create name address", Help: "创建", Hand: func(m *ice.Message, arg ...string) {
 					_spide_create(m, arg[0], arg[1])
 				}},

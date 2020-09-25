@@ -2,6 +2,7 @@ package web
 
 import (
 	ice "github.com/shylinux/icebergs"
+	"github.com/shylinux/icebergs/base/mdb"
 	"github.com/shylinux/icebergs/base/nfs"
 	kit "github.com/shylinux/toolkits"
 
@@ -191,7 +192,8 @@ func init() {
 					}
 				}},
 			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-				_cache_list(m, kit.Select("", arg, 0))
+				m.Option(mdb.FIELDS, "time,size,type,name,text,file")
+				m.Cmdy(mdb.SELECT, m.Prefix(CACHE), "", mdb.HASH, kit.MDB_HASH, arg)
 			}},
 			"/cache/": {Name: "/cache/", Help: "缓存池", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 				m.Richs(CACHE, nil, arg[0], func(key string, value map[string]interface{}) {

@@ -18,6 +18,12 @@ import (
 	"strings"
 )
 
+func _name(m *ice.Message, arg []string) []string {
+	if len(arg) == 1 {
+		return []string{"", arg[0]}
+	}
+	return arg
+}
 func _option(m *ice.Message, kind, name, text string, arg ...string) {
 	m.Option(kit.MDB_TYPE, kind)
 	m.Option(kit.MDB_NAME, name)
@@ -45,13 +51,13 @@ func _title_show(m *ice.Message, kind, text string, arg ...string) {
 		// 分节标题
 		title[SECTION]++
 		m.Option("level", "h3")
-		m.Option("prefix", fmt.Sprintf("%d.%d", title[CHAPTER], title[SECTION]))
+		m.Option("prefix", fmt.Sprintf("%d.%d ", title[CHAPTER], title[SECTION]))
 	case CHAPTER:
 		// 章节标题
 		title[CHAPTER]++
 		title[SECTION] = 0
 		m.Option("level", "h2")
-		m.Option("prefix", fmt.Sprintf("%d", title[CHAPTER]))
+		m.Option("prefix", fmt.Sprintf("%d ", title[CHAPTER]))
 	default:
 		// 文章标题
 		m.Option("level", "h1")
@@ -76,8 +82,8 @@ func _brief_show(m *ice.Message, name, text string, arg ...string) {
 }
 func _refer_show(m *ice.Message, name, text string, arg ...string) {
 	list := [][]string{}
-	for _, v := range kit.Split(strings.TrimSpace(text), "\n") {
-		list = append(list, kit.Split(v, " "))
+	for _, v := range kit.Split(strings.TrimSpace(text), "\n", "\n") {
+		list = append(list, kit.Split(v))
 	}
 	m.Optionv("list", list)
 
@@ -99,9 +105,7 @@ func _spark_show(m *ice.Message, name, text string, arg ...string) {
 		m.Echo("</div>")
 		return
 	}
-
-	m.Option("style", kit.Select("", name))
-	m.Optionv("list", kit.Split(text, "\n"))
+	m.Optionv("list", kit.Split(text, "\n", "\n"))
 
 	_option(m, SPARK, name, text, arg...)
 	m.Render(ice.RENDER_TEMPLATE, m.Conf(SPARK, "meta.template"))
@@ -295,6 +299,25 @@ func _word_show(m *ice.Message, name string, arg ...string) {
 	m.Optionv(ice.MSG_ALIAS, m.Confv(WORD, "meta.alias"))
 	m.Cmdy(ssh.SOURCE, path.Join(m.Conf(WORD, "meta.path"), name))
 }
+func reply(m *ice.Message, cmd string, arg ...string) bool {
+	m.Option(nfs.DIR_ROOT, m.Conf(cmd, "meta.path"))
+	if len(arg) == 0 || strings.HasSuffix(arg[0], "/") {
+		m.Option("_display", "table")
+		if m.Option(nfs.DIR_DEEP) != "true" {
+			// 目录列表
+			m.Option(nfs.DIR_TYPE, nfs.DIR)
+			m.Cmdy(nfs.DIR, kit.Select("./", arg, 0))
+
+		}
+
+		// 文件列表
+		m.Option(nfs.DIR_TYPE, nfs.FILE)
+		m.Option(nfs.DIR_REG, m.Conf(cmd, "meta.regs"))
+		m.Cmdy(nfs.DIR, kit.Select("./", arg, 0))
+		return true
+	}
+	return false
+}
 
 const (
 	TITLE = "title"
@@ -312,9 +335,8 @@ const (
 	IMAGE = "image"
 	VIDEO = "video"
 
-	BAIDU   = "baidu"
-	OTHER   = "other"
-	SNIPPET = "snippet"
+	BAIDU = "baidu"
+	OTHER = "other"
 
 	PREMENU = "premenu"
 	CHAPTER = "chapter"
@@ -333,8 +355,7 @@ func init() {
 			TITLE: {Name: TITLE, Help: "标题", Value: kit.Data("template", title)},
 			BRIEF: {Name: BRIEF, Help: "摘要", Value: kit.Data("template", brief)},
 			REFER: {Name: REFER, Help: "参考", Value: kit.Data("template", refer)},
-			SPARK: {Name: SPARK, Help: "段落", Value: kit.Data(
-				"template", spark,
+			SPARK: {Name: SPARK, Help: "段落", Value: kit.Data("template", spark,
 				"prompt", kit.Dict("shell", "$ "),
 			)},
 
@@ -365,9 +386,8 @@ func init() {
 					ns := strings.Split(cli.NodeName, "-")
 					arg = append(arg, kit.Select(ns[len(ns)-1], ""))
 				}
-				if len(arg) == 1 {
-					arg = append(arg, arg[0])
-				}
+
+				arg = _name(m, arg)
 				_title_show(m, arg[0], kit.Select(arg[0], arg[1]), arg[2:]...)
 			}},
 			BRIEF: {Name: "brief [name] text", Help: "摘要", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
@@ -375,15 +395,12 @@ func init() {
 					m.Echo(`<br class="story" data-type="brief">`)
 					return
 				}
-				if len(arg) == 1 {
-					arg = []string{"", arg[0]}
-				}
+
+				arg = _name(m, arg)
 				_brief_show(m, arg[0], kit.Select(arg[0], arg[1]), arg[2:]...)
 			}},
-			REFER: {Name: "refer name `[name url]...`", Help: "参考", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-				if len(arg) == 1 {
-					arg = []string{"", arg[0]}
-				}
+			REFER: {Name: "refer [name] `[name url]...`", Help: "参考", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+				arg = _name(m, arg)
 				_refer_show(m, arg[0], arg[1], arg[2:]...)
 			}},
 			SPARK: {Name: "spark [name] text", Help: "灵感", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
@@ -391,58 +408,50 @@ func init() {
 					m.Echo(`<br class="story" data-type="spark">`)
 					return
 				}
-				if len(arg) == 1 {
-					arg = []string{"", arg[0]}
-				}
+
+				arg = _name(m, arg)
 				_spark_show(m, arg[0], kit.Select(arg[0], arg[1]), arg[2:]...)
 			}},
 
-			CHART: {Name: "chart label|chain name text arg...", Help: "图表", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			CHART: {Name: "chart label|chain [name] text", Help: "图表", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 				if len(arg) == 2 {
 					arg = []string{arg[0], "", arg[1]}
 				}
 				_chart_show(m, arg[0], arg[1], arg[2], arg[3:]...)
 			}},
-			FIELD: {Name: "field name cmd", Help: "插件", Action: map[string]*ice.Action{
+			FIELD: {Name: "field [name] cmd", Help: "插件", Action: map[string]*ice.Action{
 				"run": {Name: "run", Help: "运行", Hand: func(m *ice.Message, arg ...string) {
 					if !m.Warn(!m.Right(arg[1:]), ice.ErrNotAuth, arg[1:]) {
 						m.Cmdy(arg[1:])
 					}
 				}},
 			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+				arg = _name(m, arg)
 				_field_show(m, strings.ReplaceAll(arg[0], " ", "_"), arg[1], arg[2:]...)
 			}},
 			SHELL: {Name: "shell [name] cmd", Help: "命令", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-				if len(arg) == 1 {
-					arg = []string{"", arg[0]}
-				}
+				arg = _name(m, arg)
 				_shell_show(m, arg[0], kit.Select(arg[0], arg[1]), arg[2:]...)
 			}},
-			LOCAL: {Name: "local [name] text", Help: "文件", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-				if len(arg) == 1 {
-					arg = []string{"", arg[0]}
-				}
+			LOCAL: {Name: "local [name] file", Help: "文件", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+				arg = _name(m, arg)
 				_local_show(m, arg[0], kit.Select(arg[0], arg[1]), arg[2:]...)
 			}},
 
-			ORDER: {Name: "order name `[item \n]...`", Help: "列表", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-				if len(arg) == 1 {
-					arg = []string{"", arg[0]}
-				}
+			ORDER: {Name: "order [name] `[item \n]...`", Help: "列表", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+				arg = _name(m, arg)
 				_order_show(m, arg[0], kit.Select(arg[0], arg[1]), arg[2:]...)
 			}},
-			TABLE: {Name: "table name `[item item\n]...`", Help: "表格", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			TABLE: {Name: "table [name] `[item item\n]...`", Help: "表格", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 				if arg[0] == "cmd" {
 					msg := m.Cmd(kit.Split(arg[1])).Table()
 					arg[1] = msg.Result()
 				}
 
-				if len(arg) == 1 {
-					arg = []string{"", arg[0]}
-				}
+				arg = _name(m, arg)
 				_table_show(m, arg[0], kit.Select(arg[0], arg[1]), arg[2:]...)
 			}},
-			IMAGE: {Name: "image name url", Help: "图片", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			IMAGE: {Name: "image [name] url", Help: "图片", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 				if arg[0] == "qrcode" {
 					buf := bytes.NewBuffer(make([]byte, 0, 4096))
 					if qr, e := qrcode.New(arg[1], qrcode.Medium); m.Assert(e) {
@@ -450,29 +459,22 @@ func init() {
 					}
 					arg[1] = "data:image/png;base64," + base64.StdEncoding.EncodeToString(buf.Bytes())
 				}
-				if len(arg) == 1 {
-					arg = []string{"", arg[0]}
-				}
+
+				arg = _name(m, arg)
 				_image_show(m, arg[0], kit.Select(arg[0], arg[1]), arg[2:]...)
 				m.Render("")
 			}},
-			VIDEO: {Name: "video name url", Help: "视频", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-				if len(arg) == 1 {
-					arg = []string{"", arg[0]}
-				}
+			VIDEO: {Name: "video [name] url", Help: "视频", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+				arg = _name(m, arg)
 				_video_show(m, arg[0], kit.Select(arg[0], arg[1]), arg[2:]...)
 			}},
 
-			BAIDU: {Name: "baidu word", Help: "百度", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-				if len(arg) == 1 {
-					arg = []string{"", arg[0]}
-				}
+			BAIDU: {Name: "baidu [name] word", Help: "百度", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+				arg = _name(m, arg)
 				_baidu_show(m, arg[0], kit.Select(arg[0], arg[1]), arg[2:]...)
 			}},
-			OTHER: {Name: "other word", Help: "网页", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-				if len(arg) == 1 {
-					arg = []string{"", arg[0]}
-				}
+			OTHER: {Name: "other [name] url", Help: "网页", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+				arg = _name(m, arg)
 				_other_show(m, arg[0], kit.Select(arg[0], arg[1]), arg[2:]...)
 			}},
 

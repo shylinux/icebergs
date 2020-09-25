@@ -23,6 +23,12 @@ func init() {
 				mdb.DELETE: {Name: "delete", Help: "删除", Hand: func(m *ice.Message, arg ...string) {
 					m.Cmdy(mdb.DELETE, m.Prefix(SCAN), m.Option(ice.MSG_DOMAIN), mdb.HASH, kit.MDB_TEXT, m.Option(kit.MDB_TEXT))
 				}},
+				mdb.EXPORT: {Name: "export", Help: "导出", Hand: func(m *ice.Message, arg ...string) {
+					m.Cmdy(mdb.EXPORT, m.Prefix(SCAN), m.Option(ice.MSG_DOMAIN), mdb.HASH)
+				}},
+				mdb.IMPORT: {Name: "import", Help: "导入", Hand: func(m *ice.Message, arg ...string) {
+					m.Cmdy(mdb.IMPORT, m.Prefix(SCAN), m.Option(ice.MSG_DOMAIN), mdb.HASH)
+				}},
 			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 				if len(arg) > 0 {
 					text := m.Cmd(mdb.SELECT, m.Prefix(SCAN), m.Option(ice.MSG_DOMAIN), mdb.HASH, kit.MDB_HASH, arg[0]).Append(kit.MDB_TEXT)

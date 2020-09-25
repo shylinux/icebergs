@@ -8,7 +8,6 @@ import (
 
 	"math"
 	"net/url"
-	"strings"
 )
 
 func distance(lat1, long1, lat2, long2 float64) float64 {
@@ -18,6 +17,11 @@ func distance(lat1, long1, lat2, long2 float64) float64 {
 	long2 = long2 * math.Pi / 180
 	return 2 * 6371 * math.Asin(math.Sqrt(math.Pow(math.Sin(math.Abs(lat1-lat2)/2), 2)+math.Cos(lat1)*math.Cos(lat2)*math.Pow(math.Sin(math.Abs(long1-long2)/2), 2)))
 }
+func _trans(arg []string, tr map[string]string) {
+	for i := 0; i < len(arg)-1; i += 2 {
+		arg[i] = kit.Select(arg[i], tr[arg[i]])
+	}
+}
 
 const (
 	LATITUDE  = "latitude"
@@ -26,11 +30,6 @@ const (
 
 const LOCATION = "location"
 
-func _trans(arg []string, tr map[string]string) {
-	for i := 0; i < len(arg)-1; i += 2 {
-		arg[i] = kit.Select(arg[i], tr[arg[i]])
-	}
-}
 func init() {
 	Index.Merge(&ice.Context{
 		Configs: map[string]*ice.Config{
@@ -49,31 +48,20 @@ func init() {
 				mdb.REMOVE: {Name: "remove", Help: "删除", Hand: func(m *ice.Message, arg ...string) {
 					m.Cmdy(mdb.DELETE, LOCATION, m.Option(ice.MSG_DOMAIN), mdb.HASH, kit.MDB_TEXT, m.Option(kit.MDB_TEXT))
 				}},
-
-				mdb.SEARCH: {Name: "search type name text", Help: "搜索", Hand: func(m *ice.Message, arg ...string) {
-					m.Richs(LOCATION, kit.Keys(kit.MDB_META, m.Option(ice.MSG_RIVER), m.Option(ice.MSG_STORM)), kit.MDB_FOREACH, func(key string, value map[string]interface{}) {
-						if strings.Contains(kit.Format(value[kit.MDB_NAME]), arg[1]) ||
-							strings.Contains(kit.Format(value[kit.MDB_TEXT]), arg[1]) {
-
-							m.Push("pod", m.Option("pod"))
-							m.Push("ctx", m.Cap(ice.CTX_FOLLOW))
-							m.Push("cmd", LOCATION)
-							m.Push(kit.MDB_TIME, value["time"])
-							m.Push(kit.MDB_SIZE, value["size"])
-							m.Push(kit.MDB_TYPE, LOCATION)
-							m.Push(kit.MDB_NAME, value["name"])
-							m.Push(kit.MDB_TEXT, value["text"])
-						}
-					})
+				mdb.EXPORT: {Name: "export", Help: "导出", Hand: func(m *ice.Message, arg ...string) {
+					m.Cmdy(mdb.EXPORT, m.Prefix(LOCATION), m.Option(ice.MSG_DOMAIN), mdb.HASH)
 				}},
+				mdb.IMPORT: {Name: "import", Help: "导入", Hand: func(m *ice.Message, arg ...string) {
+					m.Cmdy(mdb.IMPORT, m.Prefix(LOCATION), m.Option(ice.MSG_DOMAIN), mdb.HASH)
+				}},
+				mdb.INPUTS: {Name: "inputs", Help: "补全", Hand: func(m *ice.Message, arg ...string) {
+					m.Cmdy(mdb.INPUTS, LOCATION, m.Option(ice.MSG_DOMAIN), mdb.HASH, arg)
+				}},
+
 				mdb.RENDER: {Name: "render type name text", Help: "渲染", Hand: func(m *ice.Message, arg ...string) {
 					m.Cmdy(mdb.RENDER, web.RENDER.Frame, kit.Format(
 						"https://map.baidu.com/search/%s/@12958750.085,4825785.55,16z?querytype=s&da_src=shareurl&wd=%s",
 						arg[2], arg[2]))
-				}},
-
-				mdb.INPUTS: {Name: "inputs", Help: "补全", Hand: func(m *ice.Message, arg ...string) {
-					m.Cmdy(mdb.INPUTS, LOCATION, m.Option(ice.MSG_DOMAIN), mdb.HASH, arg)
 				}},
 			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 				m.Option(mdb.FIELDS, "time,type,name,text,longitude,latitude")

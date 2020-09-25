@@ -9,11 +9,11 @@ func init() {
 	Index.Merge(&ice.Context{
 		Commands: map[string]*ice.Command{
 			"/search": {Name: "/search", Help: "搜索引擎", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-				if arg[0] == "render" {
-					m.Cmdy(m.Space(m.Option("pod")), mdb.RENDER, arg[1:])
+				if arg[0] == mdb.RENDER {
+					m.Cmdy(m.Space(m.Option(POD)), mdb.RENDER, arg[1:])
 					return
 				}
-				m.Cmdy(m.Space(m.Option("pod")), mdb.SEARCH, arg)
+				m.Cmdy(m.Space(m.Option(POD)), mdb.SEARCH, arg)
 			}},
 		},
 	}, nil)

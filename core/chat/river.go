@@ -93,12 +93,12 @@ func init() {
 				m.Cmdy(mdb.SELECT, RIVER, kit.Keys(kit.MDB_HASH, m.Option(ice.MSG_RIVER), AUTH), mdb.HASH, kit.MDB_HASH, arg)
 				m.PushAction("删除")
 			}},
-			NODE: {Name: "node name ctx cmd auto 邀请", Help: "设备", Action: map[string]*ice.Action{
+			NODE: {Name: "node name ctx cmd auto 添加 邀请", Help: "设备", Action: map[string]*ice.Action{
 				mdb.INVITE: {Name: "invite", Help: "邀请", Hand: func(m *ice.Message, arg ...string) {
 					m.Option(web.SHARE, m.Cmdx(AUTH, mdb.CREATE, kit.MDB_TYPE, NODE))
 					m.Cmdy(code.PUBLISH, "contexts", "tool")
 				}},
-				mdb.INSERT: {Name: "insert", Help: "添加", Hand: func(m *ice.Message, arg ...string) {
+				mdb.INSERT: {Name: "insert type name share", Help: "添加", Hand: func(m *ice.Message, arg ...string) {
 					m.Cmdy(mdb.INSERT, RIVER, kit.Keys(kit.MDB_HASH, m.Option(RIVER), NODE), mdb.HASH, arg)
 				}},
 				web.SPACE_START: {Name: "start type name share river", Help: "启动", Hand: func(m *ice.Message, arg ...string) {
@@ -115,10 +115,17 @@ func init() {
 					m.Cmdy(mdb.DELETE, RIVER, kit.Keys(kit.MDB_HASH, m.Option(RIVER), NODE), mdb.HASH,
 						kit.MDB_NAME, m.Option(kit.MDB_NAME))
 				}},
+				mdb.INPUTS: {Name: "inputs", Help: "补全", Hand: func(m *ice.Message, arg ...string) {
+					m.Cmdy(web.SPACE)
+				}},
 			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 				if len(arg) == 0 {
 					m.Option(mdb.FIELDS, "time,type,name,share")
 					m.Cmdy(mdb.SELECT, RIVER, kit.Keys(kit.MDB_HASH, m.Option(ice.MSG_RIVER), NODE), mdb.HASH)
+					m.Table(func(index int, value map[string]string, head []string) {
+						m.PushRender(kit.MDB_LINK, "a", value[kit.MDB_NAME],
+							kit.MergeURL(m.Option(ice.MSG_USERWEB), kit.GDB_POD, kit.Keys(m.Option(kit.GDB_POD), value[kit.MDB_NAME])))
+					})
 					m.PushAction("删除")
 					return
 				}
@@ -194,25 +201,28 @@ func init() {
 					m.Cmdy(web.SPACE, value[POD], ctx.CONTEXT, value[CTX], ctx.COMMAND, value[CMD])
 				})
 			}},
-			USER: {Name: "user username auto 邀请", Help: "用户", Action: map[string]*ice.Action{
+			USER: {Name: "user username auto 添加 邀请", Help: "用户", Action: map[string]*ice.Action{
 				mdb.INVITE: {Name: "invite", Help: "邀请", Hand: func(m *ice.Message, arg ...string) {
 					share := m.Option(web.SHARE, m.Cmdx(AUTH, mdb.CREATE, kit.MDB_TYPE, USER))
 					m.Cmdy(wiki.SPARK, "inner", kit.MergeURL(m.Option(ice.MSG_USERWEB), "river", m.Option(ice.MSG_RIVER), "share", share))
 					m.Cmdy(wiki.IMAGE, "qrcode", kit.MergeURL(m.Option(ice.MSG_USERWEB), "river", m.Option(ice.MSG_RIVER), "share", share))
 					m.Render("")
 				}},
-				mdb.INSERT: {Name: "insert", Help: "添加", Hand: func(m *ice.Message, arg ...string) {
+				mdb.INSERT: {Name: "insert username userzone usernick", Help: "添加", Hand: func(m *ice.Message, arg ...string) {
 					m.Cmdy(mdb.INSERT, RIVER, kit.Keys(kit.MDB_HASH, m.Option(ice.MSG_RIVER), USER), mdb.HASH, arg)
 				}},
 				mdb.REMOVE: {Name: "remove", Help: "删除", Hand: func(m *ice.Message, arg ...string) {
 					m.Cmdy(mdb.DELETE, RIVER, kit.Keys(kit.MDB_HASH, m.Option(ice.MSG_RIVER), USER), mdb.HASH, aaa.USERNAME, m.Option(aaa.USERNAME))
 				}},
+				mdb.INPUTS: {Name: "inputs", Help: "补全", Hand: func(m *ice.Message, arg ...string) {
+					m.Cmdy(aaa.USER)
+				}},
 			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 				m.Option(mdb.FIELDS, "time,username")
 				m.Cmdy(mdb.SELECT, RIVER, kit.Keys(kit.MDB_HASH, m.Option(ice.MSG_RIVER), USER), mdb.HASH, aaa.USERNAME, arg)
 				m.Table(func(index int, value map[string]string, head []string) {
-					m.Push(aaa.USERZONE, aaa.UserZone(m, value[aaa.USERNAME]))
 					m.Push(aaa.USERNICK, aaa.UserNick(m, value[aaa.USERNAME]))
+					m.Push(aaa.USERZONE, aaa.UserZone(m, value[aaa.USERNAME]))
 				})
 				m.PushAction("删除")
 			}},
@@ -258,19 +268,26 @@ func init() {
 
 			"/river": {Name: "/river", Help: "小河流", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 				if m.Warn(m.Option(ice.MSG_USERNAME) == "", ice.ErrNotLogin) {
-					return
+					return // 没有登录
 				}
 				if len(arg) == 0 {
 					_river_list(m)
-					return
+					return // 群组列表
 				}
+				if len(arg) == 2 && arg[1] == TOOL {
+					m.Option(ice.MSG_RIVER, arg[0])
+					m.Cmdy(m.Prefix(arg[1]), arg[2:])
+					return // 应用列表
+				}
+				if m.Warn(!m.Right(RIVER, arg), ice.ErrNotAuth) {
+					return // 没有授权
+				}
+
 				switch kit.Select("", arg, 1) {
 				case USER, TOOL, NODE:
 					m.Option(ice.MSG_RIVER, arg[0])
 					m.Cmdy(m.Prefix(arg[1]), arg[2:])
-					return
-				}
-				if !m.Warn(!m.Right(RIVER, arg), ice.ErrNotAuth) {
+				default:
 					m.Cmdy(RIVER, arg)
 				}
 			}},

@@ -8,6 +8,13 @@ import (
 	kit "github.com/shylinux/toolkits"
 )
 
+func _action_upload(m *ice.Message, arg ...string) {
+	msg := m.Cmd(web.CACHE, web.UPLOAD)
+	m.Debug(msg.Formats("meta"))
+	m.Option("_upload", msg.Append("data"), msg.Append("name"))
+	m.Debug(m.Formats("meta"))
+
+}
 func _action_right(m *ice.Message, river string, storm string) (ok bool) {
 	if ok = true; m.Option(ice.MSG_USERROLE) == aaa.VOID {
 		m.Richs(RIVER, "", river, func(key string, value map[string]interface{}) {
@@ -28,13 +35,12 @@ func _action_show(m *ice.Message, river, storm, index string, arg ...string) {
 	cmds := []string{index}
 	prefix := kit.Keys(kit.MDB_HASH, river, TOOL, kit.MDB_HASH, storm)
 	if m.Grows(RIVER, prefix, kit.MDB_ID, index, func(index int, value map[string]interface{}) {
-		if cmds = kit.Simple(kit.Keys(value[CTX], value[CMD])); value[POD] != "" {
-			m.Option(POD, value[POD])
+		if cmds = kit.Simple(kit.Keys(value[CTX], value[CMD])); kit.Format(value[POD]) != "" {
+			m.Option(kit.GDB_POD, value[POD])
 		}
 	}) == nil && m.Warn(!m.Right(cmds), ice.ErrNotAuth) {
 		return
 	}
-
 	m.Cmdy(_action_proxy(m), cmds, arg)
 }
 func _action_proxy(m *ice.Message) (proxy []string) {
@@ -50,14 +56,6 @@ const ACTION = "action"
 func init() {
 	Index.Merge(&ice.Context{Commands: map[string]*ice.Command{
 		"/action": {Name: "/action", Help: "工作台", Action: map[string]*ice.Action{
-			web.UPLOAD: {Name: "upload", Help: "上传", Hand: func(m *ice.Message, arg ...string) {
-				msg := m.Cmd(web.STORY, web.UPLOAD)
-				m.Option(kit.MDB_NAME, msg.Append(kit.MDB_NAME))
-				m.Option(web.DATA, msg.Append(web.DATA))
-				_action_show(m, m.Option(ice.MSG_RIVER), m.Option(ice.MSG_STORM), m.Option(ice.MSG_ACTION),
-					append([]string{ACTION, web.UPLOAD}, arg...)...)
-			}},
-
 			ctx.COMMAND: {Name: "command", Help: "命令", Hand: func(m *ice.Message, arg ...string) {
 				for _, k := range arg {
 					m.Cmdy(ctx.COMMAND, k)
@@ -73,7 +71,11 @@ func init() {
 
 			if len(arg) == 2 {
 				_action_list(m, arg[0], arg[1])
-				return
+				return //命令列表
+			}
+
+			if m.Option("_upload") != "" {
+				_action_upload(m)
 			}
 			_action_show(m, arg[0], arg[1], arg[2], arg[3:]...)
 		}},

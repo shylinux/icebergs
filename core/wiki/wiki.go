@@ -1,35 +1,64 @@
 package wiki
 
 import (
+	"path"
+	"strings"
+
 	ice "github.com/shylinux/icebergs"
-	_ "github.com/shylinux/icebergs/base"
-	"github.com/shylinux/icebergs/base/mdb"
+	"github.com/shylinux/icebergs/base/nfs"
 	"github.com/shylinux/icebergs/base/web"
 	kit "github.com/shylinux/toolkits"
 )
 
+func _wiki_list(m *ice.Message, cmd string, arg ...string) bool {
+	m.Option(nfs.DIR_ROOT, m.Conf(cmd, "meta.path"))
+	if len(arg) == 0 || strings.HasSuffix(arg[0], "/") {
+		m.Option("_display", "table")
+		if m.Option(nfs.DIR_DEEP) != "true" {
+			// 目录列表
+			m.Option(nfs.DIR_TYPE, nfs.DIR)
+			m.Cmdy(nfs.DIR, kit.Select("./", arg, 0), "time size path")
+
+		}
+
+		// 文件列表
+		m.Option(nfs.DIR_TYPE, nfs.FILE)
+		m.Option(nfs.DIR_REG, m.Conf(cmd, "meta.regs"))
+		m.Cmdy(nfs.DIR, kit.Select("./", arg, 0), "time size path")
+		return true
+	}
+	return false
+}
+func _wiki_show(m *ice.Message, cmd, name string, arg ...string) {
+	m.Cmdy(nfs.CAT, path.Join(m.Conf(cmd, "meta.path"), name))
+}
+func _wiki_save(m *ice.Message, cmd, name, text string, arg ...string) {
+	m.Cmd(nfs.SAVE, path.Join(m.Conf(cmd, "meta.path"), name), text)
+}
+func _wiki_upload(m *ice.Message, cmd string) {
+	if up := kit.Simple(m.Optionv("_upload")); m.Option(ice.MSG_USERPOD) == "" {
+		m.Cmdy(web.CACHE, web.WATCH, up[0], path.Join(m.Conf(cmd, "meta.path"), m.Option("path"), up[1]))
+	} else {
+		m.Cmdy(web.SPIDE, web.SPIDE_DEV, web.SPIDE_SAVE, path.Join(m.Conf(cmd, "meta.path"), m.Option("path"), up[1]), web.SPIDE_GET, kit.MergeURL2(m.Option(ice.MSG_USERWEB), "/share/cache/"+up[0]))
+	}
+}
+
 const WIKI = "wiki"
 
 var Index = &ice.Context{Name: WIKI, Help: "文档中心",
-	Configs: map[string]*ice.Config{
-		WIKI: {Name: WIKI, Help: "文档中心", Value: kit.Data(
-			kit.MDB_FIELD, "time,hash,type,name,text",
-		)},
-	},
 	Commands: map[string]*ice.Command{
 		ice.CTX_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			m.Load()
 		}},
 		ice.CTX_EXIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-		}},
-
-		WIKI: {Name: WIKI, Help: "文档中心", Action: map[string]*ice.Action{
-			mdb.CREATE: {Name: "create", Help: "创建", Hand: func(m *ice.Message, arg ...string) {
-				m.Cmdy(mdb.INSERT, m.Prefix(WIKI), "", mdb.HASH, arg)
-			}},
-		}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			m.Cmdy(mdb.SELECT, m.Prefix(WIKI), "", mdb.HASH, kit.MDB_HASH, arg)
+			m.Save()
 		}},
 	},
 }
 
-func init() { web.Index.Register(Index, &web.Frame{}, SPARK, IMAGE) }
+func init() {
+	web.Index.Register(Index, &web.Frame{},
+		FEEL, WORD, DATA, DRAW,
+		SPARK, IMAGE,
+	)
+}

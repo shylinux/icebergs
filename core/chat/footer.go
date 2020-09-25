@@ -1,11 +1,13 @@
 package chat
 
 import (
-	"github.com/shylinux/icebergs"
-	"github.com/shylinux/toolkits"
+	ice "github.com/shylinux/icebergs"
+	kit "github.com/shylinux/toolkits"
 )
 
-const LEGAL = "legal"
+const (
+	LEGAL = "legal"
+)
 const FOOTER = "footer"
 
 func init() {

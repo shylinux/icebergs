@@ -11,14 +11,14 @@ import (
 const DRAW = "draw"
 
 func init() {
-	Index.Register(&ice.Context{Name: "draw", Help: "思维导图",
+	Index.Merge(&ice.Context{
 		Configs: map[string]*ice.Config{
-			DRAW: {Name: "draw", Help: "思维导图", Value: kit.Data(
+			DRAW: {Name: DRAW, Help: "思维导图", Value: kit.Data(
 				"path", "", "regs", ".*\\.svg",
 			)},
 		},
 		Commands: map[string]*ice.Command{
-			DRAW: {Name: "draw path=src/ file=main.svg 刷新:button=auto 编辑:button 保存:button 项目:button 变参:button", Help: "思维导图", Meta: kit.Dict(
+			DRAW: {Name: "draw path=src/ file=main.svg 刷新:button=auto 编辑 保存 项目 变参", Help: "思维导图", Meta: kit.Dict(
 				"display", "/plugin/local/wiki/draw.js", "style", "drawer",
 			), Action: map[string]*ice.Action{
 				nfs.SAVE: {Name: "save path file text", Help: "保存", Hand: func(m *ice.Message, arg ...string) {

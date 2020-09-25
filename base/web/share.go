@@ -110,6 +110,10 @@ func _share_proxy(m *ice.Message, arg ...string) {
 	}
 
 }
+func _share_cache(m *ice.Message, arg ...string) {
+	msg := m.Cmd(CACHE, arg[0])
+	m.Render(ice.RENDER_DOWNLOAD, msg.Append(kit.MDB_FILE), msg.Append(kit.MDB_TYPE), msg.Append(kit.MDB_NAME))
+}
 func _share_remote(m *ice.Message, pod string, arg ...string) {
 	m.Cmdy(SPACE, pod, "web./publish/", arg)
 	m.Render(ice.RENDER_RESULT)
@@ -284,6 +288,9 @@ func init() {
 			}},
 			"/share/proxy/": {Name: "/share/proxy/", Help: "缓存池", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 				_share_proxy(m, arg...)
+			}},
+			"/share/cache/": {Name: "/share/cache/", Help: "缓存池", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+				_share_cache(m, arg...)
 			}},
 			"/share/": {Name: "/share/", Help: "共享链", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 				m.Richs(SHARE, nil, kit.Select(m.Option(kit.MDB_SHARE), arg, 0), func(key string, value map[string]interface{}) {

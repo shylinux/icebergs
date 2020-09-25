@@ -544,6 +544,7 @@ var Index = &ice.Context{Name: "lark", Help: "机器人",
 			m.Richs(APP, nil, "bot", func(key string, value map[string]interface{}) {
 				m.Render("redirect", kit.MergeURL2(m.Conf(APP, "meta.lark"), "/open-apis/authen/v1/index"),
 					"app_id", value["id"], "redirect_uri", kit.MergeURL2(m.Conf(web.SHARE, "meta.domain"), "/chat/lark/sso"),
+					// "app_id", value["id"], "redirect_uri", "https://shylinux.com/chat/lark/sso",
 				)
 			})
 		}},

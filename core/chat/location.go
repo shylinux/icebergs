@@ -26,6 +26,11 @@ const (
 
 const LOCATION = "location"
 
+func _trans(arg []string, tr map[string]string) {
+	for i := 0; i < len(arg)-1; i += 2 {
+		arg[i] = kit.Select(arg[i], tr[arg[i]])
+	}
+}
 func init() {
 	Index.Merge(&ice.Context{
 		Configs: map[string]*ice.Config{
@@ -33,7 +38,8 @@ func init() {
 		},
 		Commands: map[string]*ice.Command{
 			LOCATION: {Name: "location text auto 添加@location", Help: "地理位置", Action: map[string]*ice.Action{
-				mdb.CREATE: {Name: "insert type name text latitude longitude", Help: "添加", Hand: func(m *ice.Message, arg ...string) {
+				mdb.CREATE: {Name: "insert type name address latitude longitude", Help: "添加", Hand: func(m *ice.Message, arg ...string) {
+					_trans(arg, map[string]string{"address": "text"})
 					m.Conf(LOCATION, kit.Keys(m.Option(ice.MSG_DOMAIN), kit.MDB_META, kit.MDB_SHORT), kit.MDB_TEXT)
 					m.Cmdy(mdb.INSERT, LOCATION, m.Option(ice.MSG_DOMAIN), mdb.HASH, arg)
 				}},

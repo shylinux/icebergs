@@ -423,6 +423,9 @@ var Index = &ice.Context{Name: "ssh", Help: "终端模块",
 			f := m.Target().Server().(*Frame)
 			f.printf(m, m.Cmdx(cli.PYTHON, "qrcode", strings.Join(arg, "")))
 		}},
+		"what": {Name: "return", Help: "结束脚本", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			m.Echo(kit.MergeURL2(m.Conf(web.SHARE, "meta.domain"), "/chat/lark/sso"))
+		}},
 		RETURN: {Name: "return", Help: "结束脚本", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			switch cb := m.Optionv("ssh.return").(type) {
 			case func():

@@ -98,6 +98,9 @@ func init() {
 					m.Option(web.SHARE, m.Cmdx(AUTH, mdb.CREATE, kit.MDB_TYPE, NODE))
 					m.Cmdy(code.PUBLISH, "contexts", "tool")
 				}},
+				mdb.INSERT: {Name: "insert", Help: "添加", Hand: func(m *ice.Message, arg ...string) {
+					m.Cmdy(mdb.INSERT, RIVER, kit.Keys(kit.MDB_HASH, m.Option(RIVER), NODE), mdb.HASH, arg)
+				}},
 				web.SPACE_START: {Name: "start type name share river", Help: "启动", Hand: func(m *ice.Message, arg ...string) {
 					if m.Option(ice.MSG_RIVER, m.Option(RIVER)) == "" {
 						return
@@ -261,9 +264,10 @@ func init() {
 					_river_list(m)
 					return
 				}
-				if len(arg) > 1 && arg[1] == TOOL {
+				switch kit.Select("", arg, 1) {
+				case USER, TOOL, NODE:
 					m.Option(ice.MSG_RIVER, arg[0])
-					m.Cmdy(TOOL, arg[2:])
+					m.Cmdy(m.Prefix(arg[1]), arg[2:])
 					return
 				}
 				if !m.Warn(!m.Right(RIVER, arg), ice.ErrNotAuth) {

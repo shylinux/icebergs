@@ -232,6 +232,115 @@ func _list_import(m *ice.Message, prefix, chain, file string) {
 	m.Log_IMPORT(kit.MDB_KEY, kit.Keys(prefix, chain), kit.MDB_COUNT, count)
 	m.Echo("%d", count)
 }
+func _list_inputs(m *ice.Message, prefix, chain string, field, value string) {
+	list := map[string]int{}
+	m.Grows(prefix, chain, "", "", func(index int, val map[string]interface{}) {
+		if val[kit.MDB_META] != nil {
+			val = val[kit.MDB_META].(map[string]interface{})
+		}
+		list[kit.Format(val[field])]++
+	})
+	for k, i := range list {
+		m.Push(field, k)
+		m.Push(kit.MDB_COUNT, i)
+	}
+	m.Sort(kit.MDB_COUNT, "int_r")
+}
+
+func _zone_select(m *ice.Message, prefix, chain, zone string, id string) {
+	fields := kit.Split(kit.Select("zone,id,time,type,name,text", m.Option(FIELDS)))
+	m.Richs(prefix, chain, kit.Select(kit.MDB_FOREACH, zone), func(key string, val map[string]interface{}) {
+		if val[kit.MDB_META] != nil {
+			val = val[kit.MDB_META].(map[string]interface{})
+		}
+		m.Grows(prefix, kit.Keys(chain, kit.MDB_HASH, key), kit.MDB_ID, id, func(index int, value map[string]interface{}) {
+			if value[kit.MDB_META] != nil {
+				value = value[kit.MDB_META].(map[string]interface{})
+			}
+
+			m.Push(zone, value, fields, val)
+		})
+	})
+
+}
+func _zone_export(m *ice.Message, prefix, chain, file string) {
+	f, p, e := kit.Create(kit.Keys(file, CSV))
+	m.Assert(e)
+	defer f.Close()
+
+	w := csv.NewWriter(f)
+	defer w.Flush()
+
+	fields := kit.Split(kit.Select("zone,id,time,type,name,text", m.Option(FIELDS)))
+	m.Assert(w.Write(fields))
+
+	count := 0
+	m.Richs(prefix, chain, kit.MDB_FOREACH, func(key string, val map[string]interface{}) {
+		if val[kit.MDB_META] != nil {
+			val = val[kit.MDB_META].(map[string]interface{})
+		}
+
+		m.Grows(prefix, kit.Keys(chain, kit.MDB_HASH, key), "", "", func(index int, value map[string]interface{}) {
+			if value[kit.MDB_META] != nil {
+				value = value[kit.MDB_META].(map[string]interface{})
+			}
+
+			list := []string{}
+			for _, k := range fields {
+				list = append(list, kit.Select(kit.Format(val[k]), kit.Format(value[k])))
+			}
+			m.Assert(w.Write(list))
+			count++
+		})
+	})
+
+	m.Log_EXPORT(kit.MDB_FILE, p, kit.MDB_COUNT, count)
+	m.Echo(p)
+}
+func _zone_import(m *ice.Message, prefix, chain, file string) {
+	f, e := os.Open(kit.Keys(file, CSV))
+	m.Assert(e)
+	defer f.Close()
+
+	r := csv.NewReader(f)
+	head, _ := r.Read()
+	count := 0
+
+	list := map[string]string{}
+
+	zkey := m.Option(FIELDS)
+
+	for {
+		line, e := r.Read()
+		if e != nil {
+			break
+		}
+
+		zone := ""
+		data := kit.Dict()
+		for i, k := range head {
+			switch k {
+			case zkey:
+				zone = line[i]
+			case kit.MDB_ID:
+				continue
+			case kit.MDB_EXTRA:
+				kit.Value(data, k, kit.UnMarshal(line[i]))
+			default:
+				kit.Value(data, k, line[i])
+			}
+		}
+		if list[zone] == "" {
+			list[zone] = m.Rich(prefix, chain, kit.Dict(zkey, zone))
+		}
+
+		m.Grow(prefix, kit.Keys(chain, kit.MDB_HASH, list[zone]), data)
+		count++
+	}
+
+	m.Log_IMPORT(kit.MDB_KEY, kit.Keys(prefix, chain), kit.MDB_COUNT, count)
+	m.Echo("%d", count)
+}
 
 const (
 	CSV  = "csv"
@@ -242,6 +351,7 @@ const (
 	META = "meta"
 	HASH = "hash"
 	LIST = "list"
+	ZONE = "zone"
 )
 const (
 	FIELDS = "fields"
@@ -252,8 +362,8 @@ const (
 
 	CREATE = "create"
 	INSERT = "insert"
-	SELECT = "select"
 	MODIFY = "modify"
+	SELECT = "select"
 	DELETE = "delete"
 	REMOVE = "remove"
 
@@ -282,14 +392,6 @@ var Index = &ice.Context{Name: "mdb", Help: "数据模块",
 				_list_delete(m, arg[0], arg[1], arg[3], arg[4])
 			}
 		}},
-		SELECT: {Name: "select conf key type field value", Help: "数据查询", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			switch arg[2] {
-			case HASH:
-				_hash_select(m, arg[0], arg[1], kit.Select("", arg, 3), kit.Select(kit.MDB_FOREACH, arg, 4))
-			case LIST:
-				_list_select(m, arg[0], arg[1], kit.Select("", arg, 3), kit.Select("", arg, 4))
-			}
-		}},
 		MODIFY: {Name: "modify conf key type field value arg...", Help: "编辑", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			switch arg[2] {
 			case HASH:
@@ -298,12 +400,25 @@ var Index = &ice.Context{Name: "mdb", Help: "数据模块",
 				_list_modify(m, arg[0], arg[1], arg[3], arg[4], arg[5:]...)
 			}
 		}},
+		SELECT: {Name: "select conf key type field value", Help: "数据查询", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			switch arg[2] {
+			case HASH:
+				_hash_select(m, arg[0], arg[1], kit.Select("", arg, 3), kit.Select(kit.MDB_FOREACH, arg, 4))
+			case LIST:
+				_list_select(m, arg[0], arg[1], kit.Select("", arg, 3), kit.Select("", arg, 4))
+			case ZONE:
+				_zone_select(m, arg[0], arg[1], kit.Select("", arg, 3), kit.Select("", arg, 4))
+			}
+		}},
 		EXPORT: {Name: "export conf key type file", Help: "导出数据", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			m.Option("cache.limit", -2)
 			switch file := _file_name(m, arg...); arg[2] {
 			case HASH:
 				_hash_export(m, arg[0], arg[1], file)
 			case LIST:
 				_list_export(m, arg[0], arg[1], file)
+			case ZONE:
+				_zone_export(m, arg[0], arg[1], file)
 			}
 		}},
 		IMPORT: {Name: "import conf key type file", Help: "导入数据", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
@@ -312,6 +427,8 @@ var Index = &ice.Context{Name: "mdb", Help: "数据模块",
 				_hash_import(m, arg[0], arg[1], file)
 			case LIST:
 				_list_import(m, arg[0], arg[1], file)
+			case ZONE:
+				_zone_import(m, arg[0], arg[1], file)
 			}
 		}},
 		PRUNES: {Name: "prunes conf key type [field value]...", Help: "清理数据", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {

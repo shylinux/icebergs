@@ -7,7 +7,7 @@ var endmenu = `<ul class="story" data-type="endmenu">{{$menu := .Optionv "menu"}
 
 var title = `<{{.Option "level"}} class="story"
 {{range $k, $v := .Optionv "extra"}}data-{{$k}}='{{$v}}'{{end}}
-data-type="{{.Option "type"}}" data-name="{{.Option "prefix"}}" data-text="{{.Option "text"}}"
+data-type="{{.Option "type"}}"
 >{{.Option "prefix"}} {{.Option "content"}}</{{.Option "level"}}>`
 
 var brief = `<p class="story"

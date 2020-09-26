@@ -147,7 +147,7 @@ var Index = &ice.Context{Name: "cli", Help: "命令模块",
 					}
 				})
 			case "ifconfig":
-				m.Cmdy("tcp.ip")
+				m.Cmdy("tcp.host")
 			case "userinfo":
 				m.Split(m.Cmdx(SYSTEM, "who"), "user term time", " ", "\n")
 

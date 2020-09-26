@@ -89,8 +89,13 @@ func (m *Message) PushRender(key, view, name string, arg ...string) *Message {
 	return m
 }
 func (m *Message) PushAction(list ...interface{}) {
+	if len(m.meta[MSG_APPEND]) > 0 && m.meta[MSG_APPEND][0] == kit.MDB_KEY {
+		m.Push(kit.MDB_KEY, kit.MDB_ACTION)
+		m.PushRender(kit.MDB_VALUE, kit.MDB_BUTTON, strings.Join(kit.Simple(list...), ","))
+		return
+	}
 	m.Table(func(index int, value map[string]string, head []string) {
-		m.PushRender("action", "button", strings.Join(kit.Simple(list...), ","))
+		m.PushRender(kit.MDB_ACTION, kit.MDB_BUTTON, strings.Join(kit.Simple(list...), ","))
 	})
 }
 func (m *Message) PushDetail(value interface{}, arg ...interface{}) *Message {
@@ -98,3 +103,17 @@ func (m *Message) PushDetail(value interface{}, arg ...interface{}) *Message {
 }
 
 var BinPack = map[string][]byte{}
+
+var ErrNameExists = "name already exists:"
+
+type Error struct {
+	Arg      []interface{}
+	FileLine string
+}
+
+func (e *Error) Error() string {
+	return e.FileLine + " " + strings.Join(kit.Simple(e.Arg), " ")
+}
+func NewError(n int, arg ...interface{}) *Error {
+	return &Error{Arg: arg, FileLine: kit.FileLine(n, 3)}
+}

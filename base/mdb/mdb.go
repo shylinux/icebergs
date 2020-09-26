@@ -248,17 +248,32 @@ func _list_inputs(m *ice.Message, prefix, chain string, field, value string) {
 }
 
 func _zone_select(m *ice.Message, prefix, chain, zone string, id string) {
+	cb := m.Optionv("cache.cb")
 	fields := kit.Split(kit.Select("zone,id,time,type,name,text", m.Option(FIELDS)))
 	m.Richs(prefix, chain, kit.Select(kit.MDB_FOREACH, zone), func(key string, val map[string]interface{}) {
 		if val[kit.MDB_META] != nil {
 			val = val[kit.MDB_META].(map[string]interface{})
 		}
+		if zone == "" {
+			m.Push(key, val, fields)
+			return
+		}
+
 		m.Grows(prefix, kit.Keys(chain, kit.MDB_HASH, key), kit.MDB_ID, id, func(index int, value map[string]interface{}) {
 			if value[kit.MDB_META] != nil {
 				value = value[kit.MDB_META].(map[string]interface{})
 			}
 
-			m.Push(zone, value, fields, val)
+			switch cb := cb.(type) {
+			case func(string, map[string]interface{}, map[string]interface{}):
+				cb(key, value, val)
+			default:
+				if len(fields) == 1 && fields[0] == DETAIL {
+					m.Push(DETAIL, value)
+					break
+				}
+				m.Push(key, value, fields, val)
+			}
 		})
 	})
 
@@ -450,7 +465,7 @@ var Index = &ice.Context{Name: "mdb", Help: "数据模块",
 
 func init() {
 	ice.Index.Register(Index, nil,
-		INSERT, DELETE, SELECT, MODIFY,
+		INSERT, DELETE, MODIFY, SELECT,
 		EXPORT, IMPORT, PRUNES, INPUTS,
 		PLUGIN, RENDER, SEARCH, ENGINE,
 	)

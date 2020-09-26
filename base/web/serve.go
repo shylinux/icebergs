@@ -27,7 +27,7 @@ func _serve_login(msg *ice.Message, cmds []string, w http.ResponseWriter, r *htt
 		aaa.SessCheck(msg, msg.Option(ice.MSG_SESSID))
 	}
 
-	if !msg.Options(ice.MSG_USERNAME) && tcp.IPIsLocal(msg, msg.Option(ice.MSG_USERIP)) {
+	if !msg.Options(ice.MSG_USERNAME) && tcp.IsLocalHost(msg, msg.Option(ice.MSG_USERIP)) {
 		// 自动认证
 		if aaa.UserLogin(msg, cli.UserName, cli.PassWord) {
 			if strings.HasPrefix(msg.Option(ice.MSG_USERUA), "Mozilla/5.0") {

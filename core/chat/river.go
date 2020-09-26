@@ -124,7 +124,7 @@ func init() {
 					m.Cmdy(mdb.SELECT, RIVER, kit.Keys(kit.MDB_HASH, m.Option(ice.MSG_RIVER), NODE), mdb.HASH)
 					m.Table(func(index int, value map[string]string, head []string) {
 						m.PushRender(kit.MDB_LINK, "a", value[kit.MDB_NAME],
-							kit.MergeURL(m.Option(ice.MSG_USERWEB), kit.GDB_POD, kit.Keys(m.Option(kit.GDB_POD), value[kit.MDB_NAME])))
+							kit.MergeURL(m.Option(ice.MSG_USERWEB), kit.SSH_POD, kit.Keys(m.Option(kit.SSH_POD), value[kit.MDB_NAME])))
 					})
 					m.PushAction("删除")
 					return

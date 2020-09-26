@@ -2,12 +2,9 @@ package code
 
 import (
 	ice "github.com/shylinux/icebergs"
-	"github.com/shylinux/icebergs/base/cli"
 	"github.com/shylinux/icebergs/base/mdb"
-	"github.com/shylinux/icebergs/base/tcp"
 	"github.com/shylinux/icebergs/base/web"
 	kit "github.com/shylinux/toolkits"
-	"github.com/shylinux/toolkits/task"
 
 	"net/http"
 	_ "net/http/pprof"
@@ -34,63 +31,6 @@ func _pprof_list(m *ice.Message, zone string, id string, field ...interface{}) {
 				m.Push(kit.MDB_VALUE, m.Cmdx(mdb.RENDER, web.RENDER.Button, "运行"))
 			})
 		}
-	})
-}
-func _pprof_show(m *ice.Message, zone string, id string) {
-	favor := m.Conf(PPROF, kit.Keys(kit.MDB_META, web.FAVOR))
-
-	m.Richs(PPROF, nil, zone, func(key string, val map[string]interface{}) {
-		val = val[kit.MDB_META].(map[string]interface{})
-
-		list := []string{}
-		task.Put(val, func(task *task.Task) error {
-			m.Sleep("1s")
-			m.Grows(PPROF, kit.Keys(kit.MDB_HASH, key), "", "", func(index int, value map[string]interface{}) {
-				// 压测命令
-				m.Log_EXPORT(kit.MDB_META, PPROF, kit.MDB_ZONE, zone, kit.MDB_VALUE, kit.Format(value))
-				cmd := kit.Format(value[kit.MDB_TYPE])
-				arg := kit.Format(value[kit.MDB_TEXT])
-				res := m.Cmd(mdb.ENGINE, value[kit.MDB_TYPE], value[kit.MDB_NAME], value[kit.MDB_TEXT], value[kit.MDB_EXTRA]).Result()
-				m.Cmd(web.FAVOR, favor, cmd, arg, res)
-				list = append(list, cmd+": "+arg, res)
-			})
-			return nil
-		})
-
-		// 收藏程序
-		msg := m.Cmd(web.CACHE, web.CATCH, kit.MIME_FILE, kit.Format(val[BINNARY]))
-		bin := msg.Append(kit.MDB_TEXT)
-		m.Cmd(web.FAVOR, favor, kit.MIME_FILE, bin, val[BINNARY])
-
-		// 性能分析
-		msg = m.Cmd(web.SPIDE, "self", web.CACHE, http.MethodGet, kit.Select("/code/pprof/profile", val[SERVICE]), "seconds", kit.Select("5", kit.Format(val[SECONDS])))
-		m.Cmd(web.FAVOR, favor, PPROF, msg.Append(kit.MDB_TEXT), kit.Keys(zone, "pd.gz"))
-
-		// 结果摘要
-		cmd := kit.Simple(m.Confv(PPROF, "meta.pprof"), "-text", val[BINNARY], msg.Append(kit.MDB_TEXT))
-		res := strings.Split(m.Cmdx(cli.SYSTEM, cmd), "\n")
-		if len(res) > 20 {
-			res = res[:20]
-		}
-		m.Cmd(web.FAVOR, favor, web.TYPE_SHELL, strings.Join(cmd, " "), strings.Join(res, "\n"))
-		list = append(list, web.TYPE_SHELL+": "+strings.Join(cmd, " "), strings.Join(res, "\n"))
-
-		// 结果展示
-		u := kit.ParseURL(m.Option(ice.MSG_USERWEB))
-		p := kit.Format("%s:%s", u.Hostname(), m.Cmdx(tcp.PORT, "get"))
-		m.Option(cli.CMD_STDOUT, "var/daemon/stdout")
-		m.Option(cli.CMD_STDERR, "var/daemon/stderr")
-		m.Cmd(cli.DAEMON, m.Confv(PPROF, "meta.pprof"), "-http="+p, val[BINNARY], msg.Append(kit.MDB_TEXT))
-
-		url := u.Scheme + "://" + p + "/ui/top"
-		m.Cmd(web.FAVOR, favor, web.SPIDE, url, msg.Append(kit.MDB_TEXT))
-		m.Set(ice.MSG_RESULT).Echo(url).Echo(" \n").Echo("\n")
-		m.Echo(strings.Join(list, "\n")).Echo("\n")
-
-		m.Push("url", url)
-		m.Push(PPROF, msg.Append(kit.MDB_TEXT))
-		m.Push(SERVICE, strings.Replace(kit.Format(val[SERVICE]), "profile", "", -1))
-		m.Push("bin", bin)
 	})
 }
 func _pprof_modify(m *ice.Message, zone, id, k, v, old string) {
@@ -141,7 +81,7 @@ func init() {
 	Index.Merge(&ice.Context{
 		Configs: map[string]*ice.Config{
 			PPROF: {Name: "pprof", Help: "性能分析", Value: kit.Data(kit.MDB_SHORT, kit.MDB_ZONE,
-				web.FAVOR, "pprof", PPROF, []string{"go", "tool", "pprof"},
+				PPROF, []string{"go", "tool", "pprof"},
 			)},
 		},
 		Commands: map[string]*ice.Command{
@@ -163,7 +103,7 @@ func init() {
 					_pprof_modify(m, m.Option(kit.MDB_ZONE), m.Option(kit.MDB_ID), arg[0], arg[1], kit.Select("", arg, 2))
 				}},
 				kit.MDB_SHOW: {Name: "show type name text arg...", Help: "运行", Hand: func(m *ice.Message, arg ...string) {
-					_pprof_show(m, m.Option(kit.MDB_ZONE), m.Option(kit.MDB_ID))
+					// _pprof_show(m, m.Option(kit.MDB_ZONE), m.Option(kit.MDB_ID))
 				}},
 			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 				_pprof_list(m, kit.Select(kit.MDB_FOREACH, arg, 0), kit.Select("", arg, 1))

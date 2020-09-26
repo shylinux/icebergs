@@ -184,16 +184,11 @@ func _ssh_handle(m *ice.Message, meta map[string]string, c net.Conn, channel ssh
 		request.Reply(true, nil)
 	}
 }
-func _ssh_listen(m *ice.Message, hostport string) {
+func _ssh_listen(m *ice.Message, l net.Listener, hostport string) {
 	h := m.Cmdx(mdb.INSERT, m.Prefix(LISTEN), "", mdb.HASH, aaa.HOSTPORT, hostport, kit.MDB_STATUS, "listen")
 	defer m.Cmd(mdb.MODIFY, m.Prefix(LISTEN), "", mdb.HASH, kit.MDB_HASH, h, kit.MDB_STATUS, "close")
 
 	config := _ssh_config(m)
-
-	l, e := net.Listen("tcp", hostport)
-	m.Assert(e)
-	defer l.Close()
-	m.Logs(LISTEN, ADDRESS, l.Addr())
 
 	for {
 		c, e := l.Accept()
@@ -248,7 +243,7 @@ func _ssh_config(m *ice.Message) *ssh.ServerConfig {
 		},
 		PublicKeyCallback: func(conn ssh.ConnMetadata, key ssh.PublicKey) (*ssh.Permissions, error) {
 			meta, res := map[string]string{"username": conn.User()}, errors.New(ice.ErrNotAuth)
-			if tcp.IPIsLocal(m, strings.Split(conn.RemoteAddr().String(), ":")[0]) {
+			if tcp.IsLocalHost(m, strings.Split(conn.RemoteAddr().String(), ":")[0]) {
 				m.Log_AUTH(aaa.HOSTPORT, conn.RemoteAddr(), aaa.USERNAME, conn.User())
 				res = nil
 			} else {
@@ -382,8 +377,13 @@ func init() {
 			}},
 
 			LISTEN: {Name: "listen hash=auto auto", Help: "服务", Action: map[string]*ice.Action{
-				mdb.CREATE: {Name: "create port=9030", Help: "启动", Hand: func(m *ice.Message, arg ...string) {
-					m.Gos(m, func(m *ice.Message) { _ssh_listen(m, ":"+m.Option("port")) })
+				mdb.CREATE: {Name: "create name=tcp port=9030", Help: "启动", Hand: func(m *ice.Message, arg ...string) {
+					m.Option(tcp.LISTEN_CB, func(l net.Listener) {
+						_ssh_listen(m, l, ":"+m.Option("port"))
+					})
+					m.Gos(m, func(m *ice.Message) {
+						m.Cmdy(tcp.SERVER, tcp.LISTEN, kit.MDB_NAME, "ssh", tcp.PORT, m.Option(tcp.PORT))
+					})
 				}},
 			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 				if m.Option(mdb.FIELDS, m.Conf(LISTEN, kit.META_FIELD)); len(arg) > 0 {

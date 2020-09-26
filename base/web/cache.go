@@ -120,10 +120,10 @@ func _cache_download(m *ice.Message, r *http.Response) (file, size string) {
 						value = value[kit.MDB_META].(map[string]interface{})
 
 						s := size * 100 / total
-						if s != kit.Int(value[kit.MDB_STEP]) && s%10 == 0 {
-							m.Log_IMPORT(kit.MDB_FILE, path.Base(cb[2]), kit.MDB_STEP, s, kit.MDB_SIZE, kit.FmtSize(int64(size)), kit.MDB_TOTAL, kit.FmtSize(int64(total)))
+						if s != kit.Int(value[kit.SSH_STEP]) && s%10 == 0 {
+							m.Log_IMPORT(kit.MDB_FILE, path.Base(cb[2]), kit.SSH_STEP, s, kit.MDB_SIZE, kit.FmtSize(int64(size)), kit.MDB_TOTAL, kit.FmtSize(int64(total)))
 						}
-						value[kit.MDB_STEP], value[kit.MDB_SIZE], value[kit.MDB_TOTAL] = kit.Format(s), size, total
+						value[kit.SSH_STEP], value[kit.MDB_SIZE], value[kit.MDB_TOTAL] = kit.Format(s), size, total
 					})
 				case func(int, int):
 					cb(size, total)

@@ -36,7 +36,7 @@ func _action_show(m *ice.Message, river, storm, index string, arg ...string) {
 	prefix := kit.Keys(kit.MDB_HASH, river, TOOL, kit.MDB_HASH, storm)
 	if m.Grows(RIVER, prefix, kit.MDB_ID, index, func(index int, value map[string]interface{}) {
 		if cmds = kit.Simple(kit.Keys(value[CTX], value[CMD])); kit.Format(value[POD]) != "" {
-			m.Option(kit.GDB_POD, value[POD])
+			m.Option(kit.SSH_POD, value[POD])
 		}
 	}) == nil && m.Warn(!m.Right(cmds), ice.ErrNotAuth) {
 		return

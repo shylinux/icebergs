@@ -8,14 +8,14 @@ import (
 )
 
 func _label_add(m *ice.Message, cmd string) {
-	if m.Option(cmd) != "" && m.Option(kit.MDB_GROUP) != "" && m.Option(kit.MDB_NAME) != "" {
-		m.Cmdy(cmd, m.Option(cmd), "add", m.Option(kit.MDB_GROUP), m.Option(kit.MDB_NAME))
+	if m.Option(cmd) != "" && m.Option(kit.SSH_GROUP) != "" && m.Option(kit.MDB_NAME) != "" {
+		m.Cmdy(cmd, m.Option(cmd), "add", m.Option(kit.SSH_GROUP), m.Option(kit.MDB_NAME))
 		m.Option(ice.FIELD_RELOAD, "true")
 	}
 }
 func _label_del(m *ice.Message, cmd string) {
-	if m.Option(cmd) != "" && m.Option(kit.MDB_GROUP) != "" && m.Option(kit.MDB_NAME) != "" {
-		m.Cmdy(cmd, m.Option(cmd), "del", m.Option(kit.MDB_GROUP), m.Option(kit.MDB_NAME))
+	if m.Option(cmd) != "" && m.Option(kit.SSH_GROUP) != "" && m.Option(kit.MDB_NAME) != "" {
+		m.Cmdy(cmd, m.Option(cmd), "del", m.Option(kit.SSH_GROUP), m.Option(kit.MDB_NAME))
 		m.Option(ice.FIELD_RELOAD, "true")
 	}
 }
@@ -23,7 +23,7 @@ func _label_prune(m *ice.Message, cmd string) {
 	m.Richs(cmd, nil, m.Option(cmd), func(key string, value map[string]interface{}) {
 		m.Richs(cmd, kit.Keys(kit.MDB_HASH, key), kit.MDB_FOREACH, func(sub string, value map[string]interface{}) {
 			if value[kit.MDB_STATUS] != "busy" {
-				m.Cmdy(cmd, m.Option(cmd), "del", value[kit.MDB_GROUP], value[kit.MDB_NAME])
+				m.Cmdy(cmd, m.Option(cmd), "del", value[kit.SSH_GROUP], value[kit.MDB_NAME])
 				m.Option(ice.FIELD_RELOAD, "true")
 			}
 		})
@@ -70,7 +70,7 @@ func _label_select(m *ice.Message, cmd string, arg ...string) {
 			if len(arg) < 2 {
 				// 二级列表
 				m.Option(ice.FIELD_DETAIL, "添加", "退还", "清理", "清空")
-				m.Push(key, value, []string{kit.MDB_TIME, kit.MDB_GROUP, kit.MDB_STATUS, kit.MDB_NAME})
+				m.Push(key, value, []string{kit.MDB_TIME, kit.SSH_GROUP, kit.MDB_STATUS, kit.MDB_NAME})
 				return
 			}
 			// 分组详情
@@ -94,7 +94,7 @@ func _label_create(m *ice.Message, cmd string, key string, arg ...string) {
 		}) == nil {
 			m.Logs(ice.LOG_INSERT, cmd, arg[0], kit.MDB_NAME, pod)
 			m.Rich(cmd, kit.Keys(kit.MDB_HASH, key), kit.Dict(
-				kit.MDB_NAME, pod, kit.MDB_GROUP, arg[2], kit.MDB_STATUS, "free",
+				kit.MDB_NAME, pod, kit.SSH_GROUP, arg[2], kit.MDB_STATUS, "free",
 			))
 		}
 		m.Echo(arg[0])
@@ -105,7 +105,7 @@ func _label_remove(m *ice.Message, cmd string, key string, arg ...string) {
 		if value[kit.MDB_STATUS] == "free" {
 			value[kit.MDB_STATUS] = "void"
 			m.Logs(ice.LOG_MODIFY, cmd, arg[0], kit.MDB_NAME, arg[3], kit.MDB_STATUS, "void")
-			m.Cmdx(GROUP, value[kit.MDB_GROUP], "put", arg[3])
+			m.Cmdx(GROUP, value[kit.SSH_GROUP], "put", arg[3])
 			m.Echo(arg[3])
 		}
 	})
@@ -176,7 +176,7 @@ func init() {
 						if arg[0] == "route" {
 							m.Cmd(ROUTE).Table(func(index int, value map[string]string, field []string) {
 								m.Rich(cmd, kit.Keys(kit.MDB_HASH, key), kit.Dict(
-									kit.MDB_NAME, value["name"], kit.MDB_GROUP, arg[0], kit.MDB_STATUS, "free",
+									kit.MDB_NAME, value["name"], kit.SSH_GROUP, arg[0], kit.MDB_STATUS, "free",
 								))
 							})
 						}

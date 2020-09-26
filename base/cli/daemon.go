@@ -34,10 +34,10 @@ func _daemon_show(m *ice.Message, cmd *exec.Cmd, out, err string) {
 
 	h := m.Rich(DAEMON, nil, kit.Dict(
 		kit.MDB_TYPE, "shell", kit.MDB_NAME, strings.Join(cmd.Args, " "),
-		kit.MDB_DIR, cmd.Dir, kit.MDB_PID, cmd.Process.Pid, kit.MDB_STATUS, StatusStart,
+		kit.SSH_DIR, cmd.Dir, kit.SSH_PID, cmd.Process.Pid, kit.MDB_STATUS, StatusStart,
 		kit.MDB_EXTRA, kit.Dict(CMD_STDOUT, out, CMD_STDERR, err),
 	))
-	m.Log_EXPORT(kit.MDB_META, DAEMON, kit.MDB_KEY, h, kit.MDB_PID, cmd.Process.Pid)
+	m.Log_EXPORT(kit.MDB_META, DAEMON, kit.MDB_KEY, h, kit.SSH_PID, cmd.Process.Pid)
 	m.Echo("%d", cmd.Process.Pid)
 
 	m.Gos(m, func(m *ice.Message) {
@@ -73,7 +73,7 @@ func init() {
 				}},
 				"prune": {Name: "prune", Help: "清理", Hand: func(m *ice.Message, arg ...string) {
 					m.Richs(DAEMON, "", kit.MDB_FOREACH, func(key string, value map[string]interface{}) {
-						if value["status"] == "error" || strings.Count(m.Cmdx(SYSTEM, "ps", value[kit.MDB_PID]), "\n") == 1 {
+						if value["status"] == "error" || strings.Count(m.Cmdx(SYSTEM, "ps", value[kit.SSH_PID]), "\n") == 1 {
 							m.Conf(DAEMON, kit.Keys(kit.MDB_HASH, key), "")
 							m.Log_DELETE(DAEMON, kit.Format(value))
 						}
@@ -81,8 +81,8 @@ func init() {
 				}},
 				"stop": {Name: "stop", Help: "停止", Hand: func(m *ice.Message, arg ...string) {
 					m.Richs(DAEMON, "", m.Option(kit.MDB_HASH), func(key string, value map[string]interface{}) {
-						m.Cmdy(SYSTEM, "kill", "-9", value[kit.MDB_PID])
-						if strings.Count(m.Cmdx(SYSTEM, "ps", value[kit.MDB_PID]), "\n") == 1 {
+						m.Cmdy(SYSTEM, "kill", "-9", value[kit.SSH_PID])
+						if strings.Count(m.Cmdx(SYSTEM, "ps", value[kit.SSH_PID]), "\n") == 1 {
 							value[kit.MDB_STATUS] = StatusClose
 						}
 					})

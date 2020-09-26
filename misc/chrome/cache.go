@@ -65,7 +65,7 @@ func init() {
 					m.Cmdy(mdb.DELETE, m.Prefix(CACHE), "", mdb.HASH, kit.MDB_HASH, m.Option(kit.MDB_HASH))
 				}},
 				mdb.PRUNES: {Name: "prunes", Help: "清理", Hand: func(m *ice.Message, arg ...string) {
-					m.Cmdy(mdb.PRUNES, m.Prefix(CACHE), "", mdb.HASH, kit.MDB_STEP, "100")
+					m.Cmdy(mdb.PRUNES, m.Prefix(CACHE), "", mdb.HASH, kit.SSH_STEP, "100")
 				}},
 			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 				m.Option(ice.MSG_ACTION, "删除")

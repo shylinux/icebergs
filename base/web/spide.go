@@ -2,6 +2,7 @@ package web
 
 import (
 	ice "github.com/shylinux/icebergs"
+	"github.com/shylinux/icebergs/base/aaa"
 	"github.com/shylinux/icebergs/base/cli"
 	"github.com/shylinux/icebergs/base/mdb"
 	"github.com/shylinux/icebergs/base/tcp"
@@ -61,7 +62,7 @@ func _spide_login(m *ice.Message, name string) {
 func _spide_create(m *ice.Message, name, address string, arg ...string) {
 	if uri, e := url.Parse(address); e == nil && address != "" {
 		if uri.Host == "random" {
-			uri.Host = ":" + m.Cmdx(tcp.PORT, "get")
+			uri.Host = ":" + m.Cmdx(tcp.PORT, aaa.Right)
 			address = strings.Replace(address, "random", uri.Host, -1)
 		}
 

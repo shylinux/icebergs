@@ -387,7 +387,9 @@ func init() {
 					arg = append(arg, kit.Select(ns[len(ns)-1], ""))
 				}
 
-				arg = _name(m, arg)
+				if len(arg) == 1 {
+					arg = append(arg, "")
+				}
 				_title_show(m, arg[0], kit.Select(arg[0], arg[1]), arg[2:]...)
 			}},
 			BRIEF: {Name: "brief [name] text", Help: "摘要", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {

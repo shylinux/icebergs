@@ -2,6 +2,7 @@ package code
 
 import (
 	ice "github.com/shylinux/icebergs"
+	"github.com/shylinux/icebergs/base/aaa"
 	"github.com/shylinux/icebergs/base/cli"
 	"github.com/shylinux/icebergs/base/mdb"
 	"github.com/shylinux/icebergs/base/nfs"
@@ -49,10 +50,10 @@ func init() {
 						value = value[kit.MDB_META].(map[string]interface{})
 						m.Optionv("progress", func(size int, total int) {
 							s := size * 100 / total
-							if s != kit.Int(value[kit.MDB_STEP]) && s%10 == 0 {
-								m.Log_IMPORT(kit.MDB_FILE, name, kit.MDB_STEP, s, kit.MDB_SIZE, kit.FmtSize(int64(size)), kit.MDB_TOTAL, kit.FmtSize(int64(total)))
+							if s != kit.Int(value[kit.SSH_STEP]) && s%10 == 0 {
+								m.Log_IMPORT(kit.MDB_FILE, name, kit.SSH_STEP, s, kit.MDB_SIZE, kit.FmtSize(int64(size)), kit.MDB_TOTAL, kit.FmtSize(int64(total)))
 							}
-							value[kit.MDB_STEP], value[kit.MDB_SIZE], value[kit.MDB_TOTAL] = s, size, total
+							value[kit.SSH_STEP], value[kit.MDB_SIZE], value[kit.MDB_TOTAL] = s, size, total
 						})
 					})
 
@@ -85,7 +86,7 @@ func init() {
 					m.Cmdy(cli.SYSTEM, "make", "PREFIX="+kit.Path(path.Join(p, kit.Select("_install", m.Option("install")))), "install")
 				}},
 				"spawn": {Name: "spawn link", Help: "新建", Hand: func(m *ice.Message, arg ...string) {
-					port := m.Cmdx(tcp.PORT, "select")
+					port := m.Cmdx(tcp.PORT, aaa.Right)
 					target := path.Join(m.Conf(cli.DAEMON, kit.META_PATH), port)
 					source := path.Join(m.Conf(INSTALL, kit.META_PATH), kit.TrimExt(arg[0]))
 
@@ -122,10 +123,10 @@ func init() {
 						// 服务列表
 						if strings.Contains(value[kit.MDB_NAME], key) {
 							m.Push(kit.MDB_TIME, value[kit.MDB_TIME])
-							m.Push(kit.MDB_PORT, path.Base(value[kit.MDB_DIR]))
+							m.Push(kit.SSH_PORT, path.Base(value[kit.SSH_DIR]))
 							m.Push(kit.MDB_STATUS, value[kit.MDB_STATUS])
 							m.Push(kit.MDB_NAME, value[kit.MDB_NAME])
-							m.PushRender(kit.MDB_LINK, "a", kit.Format("http://%s:%s", u.Hostname(), path.Base(value[kit.MDB_DIR])))
+							m.PushRender(kit.MDB_LINK, "a", kit.Format("http://%s:%s", u.Hostname(), path.Base(value[kit.SSH_DIR])))
 						}
 					})
 					return

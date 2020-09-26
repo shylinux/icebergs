@@ -7,10 +7,13 @@ import (
 	"github.com/shylinux/icebergs/base/ctx"
 	"github.com/shylinux/icebergs/base/gdb"
 	"github.com/shylinux/icebergs/base/mdb"
+	"github.com/shylinux/icebergs/base/tcp"
 	kit "github.com/shylinux/toolkits"
 
+	"net"
 	"net/http"
 	"path"
+	"strings"
 )
 
 type Frame struct {
@@ -70,19 +73,18 @@ func (web *Frame) Start(m *ice.Message, arg ...string) bool {
 		}
 	})
 
-	// TODO simple
 	m.Richs(SPIDE, nil, arg[0], func(key string, value map[string]interface{}) {
 		client := value["client"].(map[string]interface{})
 
-		// 服务地址
-		port := m.Cap(ice.CTX_STREAM, client["hostname"])
-		m.Log("serve", "listen %s %s %v", arg[0], port, m.Conf(cli.RUNTIME, "node"))
+		web.m, web.Server = m, &http.Server{Handler: web}
+		m.Option(tcp.LISTEN_CB, func(l net.Listener) {
+			m.Event(gdb.SERVE_START, arg[0])
+			m.Warn(true, "listen %s", web.Server.Serve(l))
+			m.Event(gdb.SERVE_CLOSE, arg[0])
+		})
 
-		// 启动服务
-		web.m, web.Server = m, &http.Server{Addr: port, Handler: web}
-		m.Event(gdb.SERVE_START, arg[0])
-		m.Warn(true, "listen %s", web.Server.ListenAndServe())
-		m.Event(gdb.SERVE_CLOSE, arg[0])
+		ls := strings.Split(m.Cap(ice.CTX_STREAM, client["hostname"]), ":")
+		m.Cmd(tcp.SERVER, tcp.LISTEN, kit.MDB_NAME, "web", tcp.HOST, ls[0], tcp.PORT, ls[1])
 	})
 	return true
 }
@@ -104,7 +106,6 @@ var Index = &ice.Context{Name: "web", Help: "网络模块",
 			m.Cmd(aaa.ROLE, aaa.White, aaa.VOID, "web", "/publish/")
 			m.Cmd(aaa.ROLE, aaa.White, aaa.VOID, ctx.COMMAND)
 
-			m.Cmd(mdb.SEARCH, mdb.CREATE, FAVOR)
 			m.Cmd(mdb.SEARCH, mdb.CREATE, SPIDE)
 			m.Cmd(mdb.RENDER, mdb.CREATE, SPIDE)
 			m.Cmd(mdb.SEARCH, mdb.CREATE, SPACE)
@@ -116,8 +117,7 @@ var Index = &ice.Context{Name: "web", Help: "网络模块",
 			})
 		}},
 		ice.CTX_EXIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			m.Save(SPIDE, SERVE, GROUP, LABEL,
-				FAVOR, CACHE, STORY, SHARE)
+			m.Save(SPIDE, SERVE, CACHE, SHARE, STORY)
 
 			m.Done()
 			m.Richs(SPACE, nil, "*", func(key string, value map[string]interface{}) {
@@ -131,7 +131,6 @@ var Index = &ice.Context{Name: "web", Help: "网络模块",
 
 func init() {
 	ice.Index.Register(Index, &Frame{},
-		SPIDE, SERVE, SPACE, DREAM,
-		CACHE, FAVOR, STORY, SHARE,
+		SPIDE, SERVE, SPACE, DREAM, CACHE, SHARE, STORY,
 	)
 }

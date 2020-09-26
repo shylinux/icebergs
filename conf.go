@@ -100,8 +100,8 @@ const ( // RENDER
 	RENDER_OUTPUT   = "_output"
 	RENDER_RESULT   = "_result"
 	RENDER_QRCODE   = "_qrcode"
-	RENDER_TEMPLATE = "_template"
 	RENDER_DOWNLOAD = "_download"
+	RENDER_TEMPLATE = "_template"
 )
 
 const ( // TODO

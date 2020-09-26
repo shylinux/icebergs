@@ -359,5 +359,45 @@ func init() {
 						m.Option(kit.MDB_NAME), m.Option(kit.MDB_TEXT), m.Option(kit.MDB_EXTRA))
 				}
 			}},
+			"/share/": {Name: "/share/", Help: "共享链", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+				m.Richs(SHARE, nil, kit.Select(m.Option(kit.SSH_SHARE), arg, 0), func(key string, value map[string]interface{}) {
+					m.Log_SELECT(kit.MDB_META, SHARE, "arg", arg, "value", kit.Format(value))
+					if m.Warn(m.Option(ice.MSG_USERROLE) != aaa.ROOT && kit.Time(kit.Format(value[kit.MDB_TIME])) < kit.Time(m.Time()), "expired") {
+						m.Echo("expired")
+						return
+					}
+
+					switch value[kit.MDB_TYPE] {
+					case STORY:
+						value = _share_story(m, value, arg...)
+					}
+
+					if _share_show(m, key, value, kit.Select("", arg, 1), kit.Select("", arg, 2)) {
+						return
+					}
+
+					switch value[kit.MDB_TYPE] {
+					case TYPE_RIVER:
+						// 共享群组
+						m.Render("redirect", "/", "share", key, "river", kit.Format(value["text"]))
+
+					case TYPE_STORM:
+						// 共享应用
+						m.Render("redirect", "/", "share", key, "storm", kit.Format(value["text"]), "river", kit.Format(kit.Value(value, "extra.river")))
+
+					case TYPE_ACTION:
+						_share_action(m, value, arg...)
+
+					default:
+						// 查看数据
+						m.Option(kit.MDB_VALUE, value)
+						m.Option(kit.MDB_TYPE, value[kit.MDB_TYPE])
+						m.Option(kit.MDB_NAME, value[kit.MDB_NAME])
+						m.Option(kit.MDB_TEXT, value[kit.MDB_TEXT])
+						m.Render(ice.RENDER_TEMPLATE, m.Conf(SHARE, "meta.template.simple"))
+						m.Option(ice.MSG_OUTPUT, ice.RENDER_RESULT)
+					}
+				})
+			}},
 		}}, nil)
 }

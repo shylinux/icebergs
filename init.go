@@ -97,7 +97,7 @@ var Index = &Context{Name: "ice", Help: "冰山模块",
 			m.root.Cmd(CTX_INIT)
 
 			m.target.root.wg = &sync.WaitGroup{}
-			for _, k := range kit.Split(kit.Select("gdb,log,ssh,ctx", os.Getenv("ctx_mod"))) {
+			for _, k := range kit.Split(kit.Select("gdb,log,ssh")) {
 				m.Start(k)
 			}
 
@@ -185,20 +185,6 @@ func Run(arg ...string) string {
 }
 
 var names = map[string]interface{}{}
-
-var ErrNameExists = "name already exists:"
-
-type Error struct {
-	Arg      []interface{}
-	FileLine string
-}
-
-func NewError(n int, arg ...interface{}) *Error {
-	return &Error{Arg: arg, FileLine: kit.FileLine(n, 3)}
-}
-func (e *Error) Error() string {
-	return e.FileLine + " " + strings.Join(kit.Simple(e.Arg), " ")
-}
 
 func Name(name string, value interface{}) string {
 	if s, ok := names[name]; ok {

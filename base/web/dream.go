@@ -99,7 +99,7 @@ ish_miss_prepare_install
 		Commands: map[string]*ice.Command{
 			DREAM: {Name: "dream [name [cmd...]] auto", Help: "梦想家", Meta: kit.Dict("detail", []interface{}{"启动", "停止"}), Action: map[string]*ice.Action{
 				gdb.START: {Name: "start type name", Help: "启动", Hand: func(m *ice.Message, arg ...string) {
-					m.Option(kit.MDB_NAME, kit.Select(path.Base(m.Option(kit.MDB_REPOS)), m.Option(kit.MDB_NAME)))
+					m.Option(kit.MDB_NAME, kit.Select(path.Base(m.Option(kit.SSH_REPOS)), m.Option(kit.MDB_NAME)))
 					_dream_show(m, m.Option(kit.MDB_NAME))
 				}},
 				gdb.STOP: {Name: "stop", Help: "停止", Hand: func(m *ice.Message, arg ...string) {

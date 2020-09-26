@@ -100,7 +100,7 @@ var Index = &ice.Context{Name: "mp", Help: "小程序",
 			case "upload":
 				msg := m.Cmd(web.CACHE, "upload")
 				m.Cmd(web.STORY, web.WATCH, msg.Append("data"), path.Join("usr/local/mp/", path.Base(msg.Append("name"))))
-				m.Cmd(web.FAVOR, "device", "file", msg.Append("name"), msg.Append("data"))
+				// m.Cmd(web.FAVOR, "device", "file", msg.Append("name"), msg.Append("data"))
 				m.Render(msg.Append("data"))
 
 			case "cmds":

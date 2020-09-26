@@ -16,8 +16,6 @@ const ( // 角色操作
 	White = "white"
 	Black = "black"
 	Right = "right"
-	Prune = "prune"
-	Clear = "clear"
 )
 const ( // 返回结果
 	OK = "ok"

@@ -63,7 +63,7 @@ var Index = &ice.Context{Name: ALPHA, Help: "英汉词典",
 		ALPHA: {Name: ALPHA, Help: "英汉词典", Value: kit.Data(
 			kit.MDB_LIMIT, "50000", kit.MDB_LEAST, "1000",
 			kit.MDB_STORE, "usr/export/alpha", kit.MDB_FSIZE, "2000000",
-			kit.MDB_REPOS, "word-dict", kit.MDB_FIELD, []interface{}{"audio", "bnc", "collins", "definition", "detail", "exchange", "frq", "id", "oxford", "phonetic", "pos", "tag", "time", "translation", "word"},
+			kit.SSH_REPOS, "word-dict", kit.MDB_FIELD, []interface{}{"audio", "bnc", "collins", "definition", "detail", "exchange", "frq", "id", "oxford", "phonetic", "pos", "tag", "time", "translation", "word"},
 		)},
 	},
 	Commands: map[string]*ice.Command{

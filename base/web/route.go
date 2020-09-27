@@ -109,7 +109,7 @@ func init() {
 					return
 				}
 				m.Push("type", MYSELF)
-				m.Push("route", MYSELF)
+				m.Push("route", cli.NodeName)
 
 				m.Table(func(index int, value map[string]string, field []string) {
 					m.PushRender(kit.MDB_LINK, "a", value[kit.SSH_ROUTE],

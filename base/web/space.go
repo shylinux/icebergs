@@ -18,19 +18,11 @@ import (
 )
 
 func _space_list(m *ice.Message, space string) {
-	if space == "" {
-		m.Richs(SPACE, nil, kit.MDB_FOREACH, func(key string, value map[string]interface{}) {
-			m.Push(key, value, []string{kit.MDB_TIME, kit.MDB_TYPE, kit.MDB_NAME, kit.MDB_TEXT})
-			m.PushRender(kit.MDB_LINK, "a", kit.Format(value[kit.MDB_NAME]), kit.MergeURL(m.Option(ice.MSG_USERWEB), "pod", kit.Keys(m.Option("pod"), value[kit.MDB_NAME])))
-		})
-		m.Sort(kit.MDB_NAME)
-		return
-	}
-
-	m.Richs(SPACE, nil, space, func(key string, value map[string]interface{}) {
-		m.Push("detail", value)
-		m.Push(kit.MDB_KEY, kit.MDB_LINK)
-		m.PushRender(kit.MDB_VALUE, "a", kit.MergeURL(m.Option(ice.MSG_USERWEB), "pod", kit.Keys(m.Option("pod"), value[kit.MDB_NAME])))
+	m.Option(mdb.FIELDS, "time,type,name,text")
+	m.Cmdy(mdb.SELECT, SPACE, "", mdb.HASH, kit.MDB_HASH, space)
+	m.Table(func(index int, value map[string]string, head []string) {
+		m.PushRender(kit.MDB_LINK, "a", kit.Format(value[kit.MDB_NAME]),
+			kit.MergeURL(m.Option(ice.MSG_USERWEB), kit.SSH_POD, kit.Keys(m.Option(kit.SSH_POD), value[kit.MDB_NAME])))
 	})
 }
 func _space_dial(m *ice.Message, dev, name string, arg ...string) {
@@ -235,7 +227,7 @@ func init() {
 					return
 				}
 
-				if arg[0] == "" || arg[0] == MYSELF {
+				if arg[0] == "" || arg[0] == MYSELF || arg[0] == cli.NodeName {
 					// 本地命令
 					m.Cmdy(arg[1:])
 					return

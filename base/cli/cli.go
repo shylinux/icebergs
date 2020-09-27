@@ -23,6 +23,7 @@ var NodeName = ""
 var NodeType = ""
 
 func NodeInfo(m *ice.Message, kind, name string) {
+	name = strings.ReplaceAll(name, ".", "_")
 	m.Conf(RUNTIME, "node.type", kind)
 	m.Conf(RUNTIME, "node.name", name)
 	NodeName = name

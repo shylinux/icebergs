@@ -63,6 +63,10 @@ func (m *Message) AddCmd(cmd *Command) string {
 }
 
 func (m *Message) PushRender(key, view, name string, arg ...string) *Message {
+	if m.Option(MSG_USERUA) == "" {
+		return m
+	}
+
 	if strings.Contains(m.Option(MSG_USERUA), "curl") {
 		return m
 	}

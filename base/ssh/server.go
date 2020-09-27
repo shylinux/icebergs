@@ -18,7 +18,6 @@ import (
 	"os/exec"
 	"path"
 	"strings"
-	"time"
 
 	"github.com/kr/pty"
 	"golang.org/x/crypto/ssh"
@@ -184,55 +183,25 @@ func _ssh_handle(m *ice.Message, meta map[string]string, c net.Conn, channel ssh
 		request.Reply(true, nil)
 	}
 }
-func _ssh_listen(m *ice.Message, l net.Listener, hostport string) {
-	h := m.Cmdx(mdb.INSERT, m.Prefix(LISTEN), "", mdb.HASH, aaa.HOSTPORT, hostport, kit.MDB_STATUS, "listen")
-	defer m.Cmd(mdb.MODIFY, m.Prefix(LISTEN), "", mdb.HASH, kit.MDB_HASH, h, kit.MDB_STATUS, "close")
+func _ssh_accept(m *ice.Message, c net.Conn) {
+	sc, sessions, req, err := ssh.NewServerConn(c, _ssh_config(m))
+	if m.Warn(err != nil, err) {
+		return
+	}
 
-	config := _ssh_config(m)
+	m.Gos(m, func(m *ice.Message) { ssh.DiscardRequests(req) })
 
-	for {
-		c, e := l.Accept()
-		if m.Warn(e != nil, e) {
+	for session := range sessions {
+		channel, requests, err := session.Accept()
+		if m.Warn(err != nil, err) {
 			continue
 		}
 
-		func(c net.Conn) {
-			m.Gos(m.Spawn(), func(msg *ice.Message) {
-				defer c.Close()
-
-				m.Logs(CONNECT, aaa.HOSTPORT, c.RemoteAddr(), "->", c.LocalAddr())
-				defer m.Logs("disconn", aaa.HOSTPORT, c.RemoteAddr(), "->", c.LocalAddr())
-
-				sc, sessions, req, err := ssh.NewServerConn(c, config)
-				if m.Warn(err != nil, err) {
-					return
-				}
-
-				hostname := sc.Permissions.Extensions["hostname"]
-				username := sc.Permissions.Extensions["username"]
-				begin := time.Now()
-				h := m.Cmdx(mdb.INSERT, m.Prefix(CONNECT), "", mdb.HASH, aaa.HOSTPORT, c.RemoteAddr().String(), kit.MDB_STATUS, "connect", "hostname", hostname, "username", username)
-				defer m.Cmd(mdb.MODIFY, m.Prefix(CONNECT), "", mdb.HASH, kit.MDB_HASH, h, kit.MDB_STATUS, "close", "close_time", time.Now().Format(ice.MOD_TIME), "duration", time.Now().Sub(begin).String())
-				sc.Permissions.Extensions[CONNECT] = h
-
-				m.Gos(m, func(m *ice.Message) {
-					ssh.DiscardRequests(req)
-				})
-
-				for session := range sessions {
-					channel, requests, err := session.Accept()
-					if m.Warn(err != nil, err) {
-						continue
-					}
-
-					func(channel ssh.Channel, requests <-chan *ssh.Request) {
-						m.Gos(m, func(m *ice.Message) {
-							_ssh_handle(m, sc.Permissions.Extensions, c, channel, requests)
-						})
-					}(channel, requests)
-				}
+		func(channel ssh.Channel, requests <-chan *ssh.Request) {
+			m.Gos(m, func(m *ice.Message) {
+				_ssh_handle(m, sc.Permissions.Extensions, c, channel, requests)
 			})
-		}(c)
+		}(channel, requests)
 	}
 }
 func _ssh_config(m *ice.Message) *ssh.ServerConfig {
@@ -378,8 +347,8 @@ func init() {
 
 			LISTEN: {Name: "listen hash=auto auto", Help: "服务", Action: map[string]*ice.Action{
 				mdb.CREATE: {Name: "create name=tcp port=9030", Help: "启动", Hand: func(m *ice.Message, arg ...string) {
-					m.Option(tcp.LISTEN_CB, func(l net.Listener) {
-						_ssh_listen(m, l, ":"+m.Option("port"))
+					m.Option(tcp.LISTEN_CB, func(c net.Conn) {
+						m.Gos(m.Spawn(), func(msg *ice.Message) { _ssh_accept(msg, c) })
 					})
 					m.Gos(m, func(m *ice.Message) {
 						m.Cmdy(tcp.SERVER, tcp.LISTEN, kit.MDB_NAME, "ssh", tcp.PORT, m.Option(tcp.PORT))

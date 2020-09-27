@@ -110,6 +110,8 @@ func (m *Message) Back(res *Message) *Message {
 	return m
 }
 func (m *Message) Gos(msg *Message, cb func(*Message)) *Message {
+	m.Cmd("gdb.routine", "create", "fileline", kit.FileLine(cb, 3))
+
 	task.Put(nil, func(task *task.Task) error {
 		msg.Optionv("_task", task)
 		msg.TryCatch(msg, true, func(msg *Message) { cb(msg) })

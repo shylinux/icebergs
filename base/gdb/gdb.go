@@ -3,6 +3,7 @@ package gdb
 import (
 	ice "github.com/shylinux/icebergs"
 	"github.com/shylinux/icebergs/base/cli"
+	"github.com/shylinux/icebergs/base/mdb"
 	"github.com/shylinux/icebergs/base/nfs"
 	kit "github.com/shylinux/toolkits"
 
@@ -107,14 +108,17 @@ const (
 	ACTION = "action"
 )
 const (
-	SIGNAL = "signal"
-	TIMER  = "timer"
-	EVENT  = "event"
-	DEBUG  = "debug"
+	ROUTINE = "routine"
+	SIGNAL  = "signal"
+	TIMER   = "timer"
+	EVENT   = "event"
+	DEBUG   = "debug"
 )
 
 var Index = &ice.Context{Name: "gdb", Help: "事件模块",
 	Configs: map[string]*ice.Config{
+		ROUTINE: {Name: "routine", Help: "协程", Value: kit.Data()},
+
 		SIGNAL: {Name: "signal", Help: "信号器", Value: kit.Dict(
 			kit.MDB_META, kit.Dict("pid", "var/run/ice.pid"),
 			kit.MDB_LIST, kit.List(),
@@ -158,6 +162,15 @@ var Index = &ice.Context{Name: "gdb", Help: "事件模块",
 				// 停止事件
 				close(f.d)
 			}
+		}},
+
+		ROUTINE: {Name: "routine hash auto", Help: "协程", Action: map[string]*ice.Action{
+			mdb.CREATE: {Name: "create", Help: "创建", Hand: func(m *ice.Message, arg ...string) {
+				m.Cmdy(mdb.INSERT, ROUTINE, "", mdb.LIST, arg)
+			}},
+		}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			m.Option(mdb.FIELDS, "time,fileline")
+			m.Cmdy(mdb.SELECT, ROUTINE, "", mdb.LIST, arg)
 		}},
 
 		SIGNAL: {Name: "signal", Help: "信号器", Action: map[string]*ice.Action{

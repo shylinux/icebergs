@@ -114,7 +114,11 @@ func (c *Context) cmd(m *Message, cmd *Command, key string, arg ...string) *Mess
 		}
 	}
 
-	m.Log(LOG_CMDS, "%s.%s %d %v %s", c.Name, key, len(arg), arg, kit.FileLine(cmd.Hand, 3))
+	if m.target.Name == "mdb" {
+		m.Log(LOG_CMDS, "%s.%s %d %v %s", c.Name, key, len(arg), arg, kit.FileLine(8, 3))
+	} else {
+		m.Log(LOG_CMDS, "%s.%s %d %v %s", c.Name, key, len(arg), arg, kit.FileLine(cmd.Hand, 3))
+	}
 	cmd.Hand(m, c, key, arg...)
 	return m
 }
@@ -620,12 +624,12 @@ func (m *Message) Search(key interface{}, cb interface{}) *Message {
 }
 
 func (m *Message) Cmdy(arg ...interface{}) *Message {
-	return m.Copy(m.Cmd(arg...))
+	return m.Copy(m.__cmd(arg...))
 }
 func (m *Message) Cmdx(arg ...interface{}) string {
-	return kit.Select("", m.Cmd(arg...).meta[MSG_RESULT], 0)
+	return kit.Select("", m.__cmd(arg...).meta[MSG_RESULT], 0)
 }
-func (m *Message) Cmd(arg ...interface{}) *Message {
+func (m *Message) __cmd(arg ...interface{}) *Message {
 	list := kit.Simple(arg...)
 	if len(list) == 0 && m.Hand == false {
 		list = m.meta[MSG_DETAIL]
@@ -644,6 +648,12 @@ func (m *Message) Cmd(arg ...interface{}) *Message {
 		return m.Set(MSG_RESULT).Cmd("cli.system", list)
 	}
 	return m
+}
+func (m *Message) Cmds(arg ...interface{}) *Message {
+	return m.Go(func() { m.__cmd(arg...) })
+}
+func (m *Message) Cmd(arg ...interface{}) *Message {
+	return m.__cmd(arg...)
 }
 func (m *Message) Confm(key string, chain interface{}, cbs ...interface{}) map[string]interface{} {
 	val := m.Confv(key, chain)

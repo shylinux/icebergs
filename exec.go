@@ -109,13 +109,29 @@ func (m *Message) Back(res *Message) *Message {
 	}
 	return m
 }
-func (m *Message) Gos(msg *Message, cb func(*Message)) *Message {
+func (m *Message) Gos(msg *Message, cb interface{}) *Message {
 	m.Cmd("gdb.routine", "create", "fileline", kit.FileLine(cb, 3))
 
 	task.Put(nil, func(task *task.Task) error {
 		msg.Optionv("_task", task)
-		msg.TryCatch(msg, true, func(msg *Message) { cb(msg) })
+		msg.TryCatch(msg, true, func(msg *Message) {
+			switch cb := cb.(type) {
+			case func(*Message):
+				cb(msg)
+			case func():
+				cb()
+			}
+		})
 		return nil
 	})
 	return m
+}
+func (m *Message) Go(cb interface{}) *Message {
+	switch cb := cb.(type) {
+	case func(*Message):
+		return m.Gos(m.Spawn(), cb)
+	case func():
+		return m.Gos(m, cb)
+	}
+	return m.Gos(m, cb)
 }

@@ -1,14 +1,14 @@
 package ssh
 
 import (
-	"io"
-
 	ice "github.com/shylinux/icebergs"
 	"github.com/shylinux/icebergs/base/ctx"
 	"github.com/shylinux/icebergs/base/mdb"
 	"github.com/shylinux/icebergs/base/tcp"
 	kit "github.com/shylinux/toolkits"
+
 	"golang.org/x/crypto/ssh"
+	"io"
 )
 
 func _ssh_sess(m *ice.Message, h string, client *ssh.Client) (*ssh.Session, error) {
@@ -23,7 +23,7 @@ func _ssh_sess(m *ice.Message, h string, client *ssh.Client) (*ssh.Session, erro
 
 	m.Go(func() {
 		for {
-			buf := make([]byte, 1024)
+			buf := make([]byte, 4096)
 			n, e := out.Read(buf)
 			if e != nil {
 				break
@@ -45,9 +45,10 @@ func _ssh_sess(m *ice.Message, h string, client *ssh.Client) (*ssh.Session, erro
 }
 
 const (
-	CMD = "cmd"
-	ARG = "arg"
+	TTY = "tty"
 	ENV = "env"
+	ARG = "arg"
+	CMD = "cmd"
 	RES = "res"
 )
 
@@ -63,7 +64,7 @@ func init() {
 				ctx.COMMAND: {Name: "command cmd=pwd", Help: "命令", Hand: func(m *ice.Message, arg ...string) {
 					m.Richs(SESSION, "", m.Option(kit.MDB_HASH), func(key string, value map[string]interface{}) {
 						if w, ok := kit.Value(value, "meta.input").(io.Writer); ok {
-							m.Grow(SESSION, kit.Keys(kit.MDB_HASH, key), kit.Dict(kit.MDB_TYPE, RES, kit.MDB_TEXT, m.Option(CMD)))
+							m.Grow(SESSION, kit.Keys(kit.MDB_HASH, key), kit.Dict(kit.MDB_TYPE, CMD, kit.MDB_TEXT, m.Option(CMD)))
 							n, e := w.Write([]byte(m.Option(CMD) + "\n"))
 							m.Debug("%v %v", n, e)
 						}
@@ -82,7 +83,7 @@ func init() {
 					return
 				}
 
-				m.Option(mdb.FIELDS, "time,id,type,text")
+				m.Option(mdb.FIELDS, kit.Select("time,id,type,text", mdb.DETAIL, len(arg) > 1))
 				m.Cmdy(mdb.SELECT, SESSION, kit.Keys(kit.MDB_HASH, arg[0]), mdb.LIST, kit.MDB_ID, arg[1:])
 				m.Sort(kit.MDB_ID)
 			}},

@@ -15,17 +15,16 @@ import (
 	"golang.org/x/crypto/ssh"
 )
 
-func _ssh_conn(m *ice.Message, conn net.Conn, username, host, port string) (*ssh.Client, error) {
-	methods := []ssh.AuthMethod{}
-	if key, e := ssh.ParsePrivateKey([]byte(m.Cmdx(nfs.CAT, path.Join(os.Getenv("HOME"), m.Conf(PUBLIC, "meta.private"))))); !m.Warn(e != nil) {
-		methods = append(methods, ssh.PublicKeys(key))
-	} else {
-		return nil, e
-	}
+func _ssh_conn(m *ice.Message, conn net.Conn, hostport, username string) (*ssh.Client, error) {
+	key, e := ssh.ParsePrivateKey([]byte(m.Cmdx(nfs.CAT, path.Join(os.Getenv("HOME"), m.Option("private")))))
+	m.Assert(e)
 
-	c, chans, reqs, err := ssh.NewClientConn(conn, host+":"+port, &ssh.ClientConfig{User: username, Auth: methods,
-		HostKeyCallback: func(hostname string, remote net.Addr, key ssh.PublicKey) error {
-			m.Logs(CONNECT, "hostname", hostname, aaa.HOSTPORT, remote.String())
+	methods := []ssh.AuthMethod{}
+	methods = append(methods, ssh.PublicKeys(key))
+
+	c, chans, reqs, err := ssh.NewClientConn(conn, hostport, &ssh.ClientConfig{
+		User: username, Auth: methods, HostKeyCallback: func(hostname string, remote net.Addr, key ssh.PublicKey) error {
+			m.Logs(CONNECT, aaa.HOSTNAME, hostname, aaa.HOSTPORT, remote.String())
 			return nil
 		},
 	})
@@ -45,9 +44,12 @@ func init() {
 		},
 		Commands: map[string]*ice.Command{
 			CONNECT: {Name: "connect hash auto 添加 清理", Help: "连接", Action: map[string]*ice.Action{
-				tcp.DIAL: {Name: "dial username=shy host=shylinux.com port=22", Help: "添加", Hand: func(m *ice.Message, arg ...string) {
+				tcp.DIAL: {Name: "dial username=shy host=shylinux.com port=22 private=.ssh/id_rsa", Help: "添加", Hand: func(m *ice.Message, arg ...string) {
 					m.Option(tcp.DIAL_CB, func(c net.Conn) {
-						client, e := _ssh_conn(m, c, kit.Select("shy", m.Option(aaa.USERNAME)), kit.Select(m.Option(tcp.HOST), "shylinux.com"), kit.Select("22", m.Option(tcp.PORT)))
+						client, e := _ssh_conn(m, c,
+							kit.Select(m.Option(tcp.HOST), "shylinux.com")+":"+kit.Select("22", m.Option(tcp.PORT)),
+							kit.Select("shy", m.Option(aaa.USERNAME)),
+						)
 						m.Assert(e)
 
 						h := m.Rich(CONNECT, "", kit.Dict(
@@ -65,14 +67,9 @@ func init() {
 				SESSION: {Name: "session hash", Help: "会话", Hand: func(m *ice.Message, arg ...string) {
 					m.Richs(CONNECT, "", m.Option(kit.MDB_HASH), func(key string, value map[string]interface{}) {
 						client, ok := value[CONNECT].(*ssh.Client)
-						if !ok {
-							return
-						}
+						m.Assert(ok)
 
-						h := m.Rich(SESSION, "", kit.Data(
-							kit.MDB_STATUS, tcp.OPEN,
-							CONNECT, key,
-						))
+						h := m.Rich(SESSION, "", kit.Data(kit.MDB_STATUS, tcp.OPEN, CONNECT, key))
 
 						if session, e := _ssh_sess(m, h, client); m.Assert(e) {
 							session.Shell()
@@ -85,7 +82,7 @@ func init() {
 					m.Cmdy(mdb.PRUNES, CONNECT, "", mdb.HASH, kit.MDB_STATUS, tcp.CLOSE)
 				}},
 			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-				m.Option(mdb.FIELDS, "time,hash,status,username,host,port")
+				m.Option(mdb.FIELDS, kit.Select("time,hash,status,username,host,port", mdb.DETAIL, len(arg) > 0))
 				m.Cmdy(mdb.SELECT, CONNECT, "", mdb.HASH, kit.MDB_HASH, arg)
 				m.PushAction("会话")
 			}},

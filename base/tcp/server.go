@@ -55,7 +55,8 @@ func (l Listener) Accept() (net.Conn, error) {
 	if strings.Contains(c.RemoteAddr().String(), "[") {
 		ls = strings.Split(strings.TrimPrefix(c.RemoteAddr().String(), "["), "]:")
 	}
-	h := l.m.Cmdx(mdb.INSERT, CLIENT, "", mdb.HASH, HOST, ls[0], PORT, ls[1], kit.MDB_STATUS, kit.Select(ERROR, OPEN, e == nil), kit.MDB_ERROR, kit.Format(e))
+	h := l.m.Cmdx(mdb.INSERT, CLIENT, "", mdb.HASH, HOST, ls[0], PORT, ls[1],
+		kit.MDB_NAME, l.m.Option(kit.MDB_NAME), kit.MDB_STATUS, kit.Select(ERROR, OPEN, e == nil), kit.MDB_ERROR, kit.Format(e))
 
 	c = &Conn{h: h, m: l.m, s: &Stat{}, Conn: c}
 	return c, e
@@ -105,9 +106,10 @@ func init() {
 					case func(net.Conn):
 						for {
 							c, e := l.Accept()
-							if cb(c); e != nil {
+							if e != nil {
 								break
 							}
+							cb(c)
 						}
 					case func(net.Conn, error):
 						for {

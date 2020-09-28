@@ -16,16 +16,16 @@ var Index = &ice.Context{Name: SSH, Help: "终端模块", Commands: map[string]*
 		if _, ok := m.Target().Server().(*Frame); ok {
 			m.Done()
 		}
-		m.Richs(CONNECT, "", kit.MDB_FOREACH, func(key string, value map[string]interface{}) {
-			if value[kit.MDB_META] != nil {
-				value = value[kit.MDB_META].(map[string]interface{})
-			}
-			kit.Value(value, "status", tcp.CLOSE)
+		m.Richs(SERVICE, "", kit.MDB_FOREACH, func(key string, value map[string]interface{}) {
+			kit.Value(value, "meta.status", tcp.CLOSE)
+		})
+		m.Richs(CHANNEL, "", kit.MDB_FOREACH, func(key string, value map[string]interface{}) {
+			kit.Value(value, "meta.status", tcp.CLOSE)
 		})
 		m.Richs(SESSION, "", kit.MDB_FOREACH, func(key string, value map[string]interface{}) {
-			if value[kit.MDB_META] != nil {
-				value = value[kit.MDB_META].(map[string]interface{})
-			}
+			kit.Value(value, "meta.status", tcp.CLOSE)
+		})
+		m.Richs(CONNECT, "", kit.MDB_FOREACH, func(key string, value map[string]interface{}) {
 			kit.Value(value, "status", tcp.CLOSE)
 		})
 		m.Save()
@@ -35,6 +35,7 @@ var Index = &ice.Context{Name: SSH, Help: "终端模块", Commands: map[string]*
 func init() {
 	ice.Index.Register(Index, &Frame{},
 		SOURCE, TARGET, PROMPT, RETURN,
-		CONNECT, SESSION, SERVICE,
+		CONNECT, SESSION,
+		SERVICE, CHANNEL,
 	)
 }

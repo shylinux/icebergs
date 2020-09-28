@@ -12,17 +12,17 @@ import (
 )
 
 func _file_name(m *ice.Message, arg ...string) string {
-	return kit.Select(path.Join("usr/export", kit.Select(arg[0], arg[0]+"/"+arg[1], arg[1] != ""), arg[2]), arg, 3)
+	return kit.Select(path.Join("usr/export", path.Join(arg[:2]...)), arg, 3)
 }
 
 func _hash_insert(m *ice.Message, prefix, chain string, arg ...string) {
-	m.Log_INSERT("prefix", prefix, arg[0], arg[1])
+	m.Log_INSERT(kit.MDB_PREFIX, prefix, arg[0], arg[1])
 	m.Echo(m.Rich(prefix, chain, kit.Data(arg)))
 
 }
 func _hash_delete(m *ice.Message, prefix, chain, field, value string) {
 	m.Richs(prefix, chain, value, func(key string, val map[string]interface{}) {
-		m.Log_DELETE("prefix", prefix, field, value, "value", kit.Format(val))
+		m.Log_DELETE(kit.MDB_PREFIX, prefix, field, value, kit.MDB_VALUE, kit.Format(val))
 		m.Conf(prefix, kit.Keys(chain, kit.MDB_HASH, key), "")
 	})
 }
@@ -46,17 +46,17 @@ func _hash_select(m *ice.Message, prefix, chain, field, value string) {
 	}
 }
 func _hash_modify(m *ice.Message, prefix, chain string, field, value string, arg ...string) {
-	m.Richs(prefix, chain, value, func(key string, value map[string]interface{}) {
-		if value[kit.MDB_META] != nil {
-			value = value[kit.MDB_META].(map[string]interface{})
+	m.Richs(prefix, chain, value, func(key string, val map[string]interface{}) {
+		if val[kit.MDB_META] != nil {
+			val = val[kit.MDB_META].(map[string]interface{})
 		}
 		for i := 0; i < len(arg)-1; i += 2 {
 			if arg[i] == field {
 				continue
 			}
-			kit.Value(value, arg[i], arg[i+1])
+			kit.Value(val, arg[i], arg[i+1])
 		}
-		m.Log_MODIFY("prefix", prefix, field, value, arg)
+		m.Log_MODIFY(kit.MDB_PREFIX, prefix, field, value, arg)
 	})
 }
 func _hash_export(m *ice.Message, prefix, chain, file string) {
@@ -95,7 +95,7 @@ func _hash_import(m *ice.Message, prefix, chain, file string) {
 		}
 	}
 
-	m.Log_IMPORT(kit.MDB_KEY, kit.Keys(prefix, chain), kit.MDB_COUNT, count)
+	m.Log_IMPORT(kit.MDB_PREFIX, prefix, kit.MDB_COUNT, count)
 	m.Echo("%d", count)
 }
 func _hash_prunes(m *ice.Message, prefix, chain string, arg ...string) {
@@ -132,13 +132,13 @@ func _hash_inputs(m *ice.Message, prefix, chain string, field, value string) {
 }
 
 func _list_insert(m *ice.Message, prefix, chain string, arg ...string) {
-	m.Log_INSERT("prefix", prefix, arg[0], arg[1])
+	m.Log_INSERT(kit.MDB_PREFIX, prefix, arg[0], arg[1])
 	m.Echo("%d", m.Grow(prefix, chain, kit.Dict(arg)))
 }
 func _list_delete(m *ice.Message, prefix, chain, field, value string) {
 }
 func _list_select(m *ice.Message, prefix, chain, field, value string) {
-	fields := kit.Split(kit.Select("time,id,type,name,text", m.Option(FIELDS)), ",")
+	fields := kit.Split(kit.Select("time,id,type,name,text", m.Option(FIELDS)))
 	m.Grows(prefix, chain, field, value, func(index int, val map[string]interface{}) {
 		if val[kit.MDB_META] != nil {
 			val = val[kit.MDB_META].(map[string]interface{})
@@ -155,17 +155,17 @@ func _list_select(m *ice.Message, prefix, chain, field, value string) {
 	}
 }
 func _list_modify(m *ice.Message, prefix, chain string, field, value string, arg ...string) {
-	m.Grows(prefix, chain, field, value, func(index int, value map[string]interface{}) {
-		if value[kit.MDB_META] != nil {
-			value = value[kit.MDB_META].(map[string]interface{})
+	m.Grows(prefix, chain, field, value, func(index int, val map[string]interface{}) {
+		if val[kit.MDB_META] != nil {
+			val = val[kit.MDB_META].(map[string]interface{})
 		}
 		for i := 0; i < len(arg)-1; i += 2 {
 			if arg[i] == field {
 				continue
 			}
-			kit.Value(value, arg[i], arg[i+1])
+			kit.Value(val, arg[i], arg[i+1])
 		}
-		m.Log_MODIFY("prefix", prefix, field, value, arg)
+		m.Log_MODIFY(kit.MDB_PREFIX, prefix, field, value, arg)
 	})
 }
 func _list_export(m *ice.Message, prefix, chain, file string) {
@@ -177,9 +177,9 @@ func _list_export(m *ice.Message, prefix, chain, file string) {
 	defer w.Flush()
 
 	count := 0
-	head := []string{}
+	head := kit.Split(m.Option(FIELDS))
 	m.Grows(prefix, chain, "", "", func(index int, value map[string]interface{}) {
-		if index == 0 {
+		if index == 0 && len(head) == 0 {
 			// 输出表头
 			for k := range value {
 				head = append(head, k)
@@ -224,7 +224,6 @@ func _list_import(m *ice.Message, prefix, chain, file string) {
 			}
 		}
 
-		// 导入数据
 		m.Grow(prefix, chain, data)
 		count++
 	}
@@ -268,15 +267,14 @@ func _zone_select(m *ice.Message, prefix, chain, zone string, id string) {
 			case func(string, map[string]interface{}, map[string]interface{}):
 				cb(key, value, val)
 			default:
-				if len(fields) == 1 && fields[0] == DETAIL {
+				if m.Option(FIELDS) == DETAIL {
 					m.Push(DETAIL, value)
-					break
+				} else {
+					m.Push(key, value, fields, val)
 				}
-				m.Push(key, value, fields, val)
 			}
 		})
 	})
-
 }
 func _zone_export(m *ice.Message, prefix, chain, file string) {
 	f, p, e := kit.Create(kit.Keys(file, CSV))
@@ -287,7 +285,7 @@ func _zone_export(m *ice.Message, prefix, chain, file string) {
 	defer w.Flush()
 
 	fields := kit.Split(kit.Select("zone,id,time,type,name,text", m.Option(FIELDS)))
-	m.Assert(w.Write(fields))
+	w.Write(fields)
 
 	count := 0
 	m.Richs(prefix, chain, kit.MDB_FOREACH, func(key string, val map[string]interface{}) {
@@ -304,7 +302,7 @@ func _zone_export(m *ice.Message, prefix, chain, file string) {
 			for _, k := range fields {
 				list = append(list, kit.Select(kit.Format(val[k]), kit.Format(value[k])))
 			}
-			m.Assert(w.Write(list))
+			w.Write(list)
 			count++
 		})
 	})
@@ -322,7 +320,6 @@ func _zone_import(m *ice.Message, prefix, chain, file string) {
 	count := 0
 
 	list := map[string]string{}
-
 	zkey := m.Option(FIELDS)
 
 	for {
@@ -353,7 +350,7 @@ func _zone_import(m *ice.Message, prefix, chain, file string) {
 		count++
 	}
 
-	m.Log_IMPORT(kit.MDB_KEY, kit.Keys(prefix, chain), kit.MDB_COUNT, count)
+	m.Log_IMPORT(kit.MDB_PREFIX, prefix, kit.MDB_COUNT, count)
 	m.Echo("%d", count)
 }
 

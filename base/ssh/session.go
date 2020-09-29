@@ -73,13 +73,20 @@ func init() {
 					m.Cmdy(SESSION, m.Option(kit.MDB_HASH))
 				}},
 
+				mdb.DELETE: {Name: "delete", Help: "删除", Hand: func(m *ice.Message, arg ...string) {
+					m.Cmdy(mdb.DELETE, SESSION, "", mdb.HASH, kit.MDB_HASH, m.Option(kit.MDB_HASH))
+				}},
 				mdb.PRUNES: {Name: "prunes", Help: "清理", Hand: func(m *ice.Message, arg ...string) {
 					m.Cmdy(mdb.PRUNES, SESSION, "", mdb.HASH, kit.MDB_STATUS, tcp.CLOSE)
 				}},
 			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 				if len(arg) == 0 {
 					m.Option(mdb.FIELDS, "time,hash,status,count,connect")
-					m.Cmdy(mdb.SELECT, SESSION, "", mdb.HASH, kit.MDB_HASH, arg)
+					if m.Cmdy(mdb.SELECT, SESSION, "", mdb.HASH, kit.MDB_HASH, arg); len(arg) == 0 {
+						m.Table(func(index int, value map[string]string, head []string) {
+							m.PushButton(kit.Select("", "删除", value[kit.MDB_STATUS] == tcp.CLOSE))
+						})
+					}
 					return
 				}
 

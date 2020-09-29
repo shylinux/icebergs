@@ -3,16 +3,13 @@ package ice
 import (
 	kit "github.com/shylinux/toolkits"
 
-	"fmt"
 	"os"
 	"strings"
 	"sync"
 	"time"
 )
 
-type Frame struct {
-	code int
-}
+type Frame struct{ code int }
 
 func (f *Frame) Spawn(m *Message, c *Context, arg ...string) Server {
 	return &Frame{}
@@ -59,7 +56,6 @@ func (f *Frame) Close(m *Message, arg ...string) bool {
 	return true
 }
 
-var wait = make(chan bool, 1)
 var Index = &Context{Name: "ice", Help: "冰山模块",
 	Caches: map[string]*Cache{
 		CTX_FOLLOW: {Value: ""},
@@ -70,19 +66,14 @@ var Index = &Context{Name: "ice", Help: "冰山模块",
 		"help": {Value: map[string]interface{}{
 			"index": []interface{}{
 				"^_^      欢迎使用冰山框架       ^_^",
-				"^_^  Welcome to Icebergs world  ^_^",
+				"^_^  Welcome to Icebergs World  ^_^",
 				"",
-				"Meet: shylinuxc@gmail.com",
+				"More: shylinuxc@gmail.com",
 				"More: https://shylinux.com",
 				"More: https://github.com/shylinux/icebergs",
 				"",
 			},
 		}},
-		"task": {Value: kit.Dict(
-			kit.MDB_STORE, "var/data",
-			kit.MDB_LIMIT, "110",
-			kit.MDB_LEAST, "100",
-		)},
 	},
 	Commands: map[string]*Command{
 		CTX_INIT: {Hand: func(m *Message, c *Context, cmd string, arg ...string) {
@@ -95,34 +86,19 @@ var Index = &Context{Name: "ice", Help: "冰山模块",
 		}},
 		"init": {Name: "init", Help: "启动", Hand: func(m *Message, c *Context, cmd string, arg ...string) {
 			m.root.Cmd(CTX_INIT)
-
 			m.target.root.wg = &sync.WaitGroup{}
-			for _, k := range kit.Split(kit.Select("gdb,log,ssh")) {
+			for _, k := range kit.Split(kit.Select("gdb,log,ssh,mdb")) {
 				m.Start(k)
 			}
-
 			m.Cmd("ssh.source", "etc/init.shy", "init.shy", "启动配置")
 			m.Cmdy(arg)
 		}},
 		"help": {Name: "help", Help: "帮助", Hand: func(m *Message, c *Context, cmd string, arg ...string) {
 			m.Echo(strings.Join(kit.Simple(m.Confv("help", "index")), "\n"))
 		}},
-		"name": {Name: "name", Help: "命名", Hand: func(m *Message, c *Context, cmd string, arg ...string) {
-			for k, v := range names {
-				m.Push("key", k)
-				switch v := v.(type) {
-				case *Context:
-					m.Push("value", v.Name)
-				default:
-					m.Push("value", "")
-				}
-			}
-			m.Sort("key")
-		}},
 		"exit": {Name: "exit", Help: "结束", Hand: func(m *Message, c *Context, cmd string, arg ...string) {
 			m.root.target.server.(*Frame).code = kit.Int(kit.Select("0", arg, 0))
 			m.Cmd("ssh.source", "etc/exit.shy", "exit.shy", "退出配置")
-
 			m.root.Cmd(CTX_EXIT)
 		}},
 		CTX_EXIT: {Hand: func(m *Message, c *Context, cmd string, arg ...string) {
@@ -138,26 +114,21 @@ var Index = &Context{Name: "ice", Help: "冰山模块",
 		}},
 	},
 }
-
 var Pulse = &Message{
 	time: time.Now(), code: 0,
 	meta: map[string][]string{},
 	data: map[string]interface{}{},
 
 	source: Index, target: Index, Hand: true,
-	messages: []*Message{}, message: nil, root: nil,
 }
-
-var Log func(*Message, string, string)
-var Loop func()
+var wait = make(chan bool, 1)
 
 func Run(arg ...string) string {
 	if len(arg) == 0 {
 		arg = os.Args[1:]
 	}
 	if len(arg) == 0 {
-		// arg = append(arg, "web.space", "connect", "self")
-		arg = append(arg, "web.serve", "dev")
+		arg = append(arg, "help")
 	}
 
 	frame := &Frame{}
@@ -168,20 +139,21 @@ func Run(arg ...string) string {
 	Pulse.Option("cache.limit", "30")
 	Pulse.Option("begin_time", Pulse.Time())
 
-	if frame.Begin(Pulse.Spawns(), arg...).Start(Pulse, arg...) {
-		if Loop != nil {
-			Loop()
+	switch kit.Select("", arg, 0) {
+	case "space", "serve":
+		if _log_disable = false; frame.Begin(Pulse.Spawns(), arg...).Start(Pulse, arg...) {
+			frame.Close(Pulse.Spawns(), arg...)
 		}
-		frame.Close(Pulse.Spawns(), arg...)
+
+		<-wait
+		os.Exit(frame.code)
+	default:
+		if m := Pulse.Cmdy(arg); m.Result() == "" {
+			m.Table()
+		}
 	}
 
-	if Pulse.Result() == "" {
-		Pulse.Table(nil)
-	}
-	fmt.Printf(Pulse.Result())
-	<-wait
-	os.Exit(frame.code)
-	return ""
+	return Pulse.Result()
 }
 
 var names = map[string]interface{}{}
@@ -195,6 +167,7 @@ func Name(name string, value interface{}) string {
 		}
 		panic(NewError(4, ErrNameExists, name, "last:", last))
 	}
+
 	names[name] = value
 	return name
 }

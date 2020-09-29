@@ -49,13 +49,11 @@ func init() {
 			SERVER: {Name: SERVER, Help: "服务器", Value: kit.Data()},
 		},
 		Commands: map[string]*ice.Command{
-			SERVER: {Name: "server hash auto 监听 清理", Help: "服务器", Action: map[string]*ice.Action{
-				LISTEN: {Name: "LISTEN host= port=9010", Help: "监听", Hand: func(m *ice.Message, arg ...string) {
+			SERVER: {Name: "server hash auto 清理", Help: "服务器", Action: map[string]*ice.Action{
+				LISTEN: {Name: "LISTEN port=9010 host=", Help: "监听", Hand: func(m *ice.Message, arg ...string) {
 					l, e := net.Listen(TCP, m.Option(HOST)+":"+m.Option(PORT))
-					h := m.Option(kit.MDB_HASH)
-					if h == "" {
-						h = m.Cmdx(mdb.INSERT, SERVER, "", mdb.HASH, kit.MDB_NAME, m.Option(kit.MDB_NAME), HOST, m.Option(HOST), PORT, m.Option(PORT), kit.MDB_STATUS, kit.Select(ERROR, OPEN, e == nil), kit.MDB_ERROR, kit.Format(e))
-					}
+					h := m.Cmdx(mdb.INSERT, SERVER, "", mdb.HASH, PORT, m.Option(PORT), HOST, m.Option(HOST),
+						kit.MDB_NAME, m.Option(kit.MDB_NAME), kit.MDB_STATUS, kit.Select(ERROR, OPEN, e == nil), kit.MDB_ERROR, kit.Format(e))
 
 					l = &Listener{m: m, h: h, s: &Stat{}, Listener: l}
 					if e == nil {
@@ -108,8 +106,11 @@ func init() {
 				}},
 			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 				m.Option(mdb.FIELDS, kit.Select("time,hash,status,name,host,port,error,nconn", mdb.DETAIL, len(arg) > 0))
-				m.Cmdy(mdb.SELECT, SERVER, "", mdb.HASH, kit.MDB_HASH, arg)
-				m.PushAction("删除")
+				if m.Cmdy(mdb.SELECT, SERVER, "", mdb.HASH, kit.MDB_HASH, arg); len(arg) == 0 {
+					m.Table(func(index int, value map[string]string, head []string) {
+						m.PushButton(kit.Select("", "删除", value[kit.MDB_STATUS] == CLOSE))
+					})
+				}
 			}},
 		},
 	}, nil)

@@ -164,8 +164,8 @@ func init() {
 					if m.Richs(SERVICE, "", m.Option(tcp.PORT), func(key string, value map[string]interface{}) {
 						kit.Value(value, "meta.status", tcp.OPEN)
 					}) == nil {
-						m.Cmd(mdb.INSERT, SERVICE, "", mdb.HASH, kit.MDB_STATUS, tcp.OPEN,
-							tcp.PORT, m.Option(tcp.PORT), "private", m.Option("private"), "auth", m.Option("auth"), arg)
+						m.Cmd(mdb.INSERT, SERVICE, "", mdb.HASH, tcp.PORT, m.Option(tcp.PORT),
+							"private", m.Option("private"), "auth", m.Option("auth"), kit.MDB_STATUS, tcp.OPEN, arg)
 						m.Cmd(SERVICE, mdb.IMPORT, kit.MDB_FILE, m.Option("auth"))
 					}
 

@@ -108,7 +108,7 @@ func (f *Frame) prompt(m *ice.Message, list ...string) *Frame {
 	for _, v := range list {
 		switch v {
 		case "count":
-			fmt.Fprintf(f.stdout, "%d", f.count+1)
+			fmt.Fprintf(f.stdout, "%d", f.count)
 		case "time":
 			fmt.Fprintf(f.stdout, time.Now().Format("15:04:05"))
 		case "target":
@@ -227,15 +227,19 @@ func (f *Frame) parse(m *ice.Message, line string) string {
 	}
 	return ""
 }
-func (f *Frame) scan(m *ice.Message, line string, r io.Reader) *Frame {
+func (f *Frame) scan(m *ice.Message, h, line string, r io.Reader) *Frame {
 	m.Option("ssh.return", func() { f.exit = true })
 	f.ps1 = kit.Simple(m.Confv("prompt", "meta.PS1"))
 	f.ps2 = kit.Simple(m.Confv("prompt", "meta.PS2"))
 	ps := f.ps1
 
+	f.count = 1
 	m.I, m.O = r, f.stdout
 	bio := bufio.NewScanner(r)
 	for f.prompt(m, ps...); bio.Scan() && !f.exit; f.prompt(m, ps...) {
+		m.Cmdx(mdb.INSERT, SOURCE, kit.Keys(kit.MDB_HASH, h), mdb.LIST, kit.MDB_TEXT, bio.Text())
+		f.count++
+
 		if len(bio.Text()) == 0 {
 			continue // 空行
 		}
@@ -253,10 +257,6 @@ func (f *Frame) scan(m *ice.Message, line string, r io.Reader) *Frame {
 			line = ""
 			continue // 注释
 		}
-		// if line = f.history(m, line); line == "" {
-		// 	// 历史命令
-		// 	continue
-		// }
 		if ps = f.ps1; f.stdout == os.Stdout {
 			// 清空格式
 			f.printf(m, "\033[0m")
@@ -304,7 +304,12 @@ func (f *Frame) Start(m *ice.Message, arg ...string) bool {
 		return true
 	}
 
-	f.scan(m, "", r)
+	if f.source == STDIO {
+		f.scan(m, STDIO, "", r)
+	} else {
+		h := m.Cmdx(mdb.INSERT, SOURCE, "", mdb.HASH, kit.MDB_NAME, f.source)
+		f.scan(m, h, "", r)
+	}
 	return true
 }
 func (f *Frame) Close(m *ice.Message, arg ...string) bool {
@@ -324,15 +329,36 @@ const (
 func init() {
 	Index.Merge(&ice.Context{
 		Configs: map[string]*ice.Config{
-			SOURCE: {Name: SOURCE, Help: "加载脚本", Value: kit.Data()},
+			SOURCE: {Name: SOURCE, Help: "加载脚本", Value: kit.Dict(
+				kit.MDB_HASH, kit.Dict(STDIO, kit.Data(kit.MDB_TIME, "2020-10-01 15:04:05", kit.MDB_NAME, STDIO)),
+			)},
 			PROMPT: {Name: PROMPT, Help: "命令提示", Value: kit.Data(
 				"PS1", []interface{}{"\033[33;44m", "count", "[", "time", "]", "\033[5m", "target", "\033[0m", "\033[44m", ">", "\033[0m ", "\033[?25h", "\033[32m"},
 				"PS2", []interface{}{"count", " ", "target", "> "},
 			)},
 		},
 		Commands: map[string]*ice.Command{
-			SOURCE: {Name: "source file", Help: "脚本解析", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-				m.Starts(strings.Replace(arg[0], ".", "_", -1), arg[0], arg[0:]...)
+			SOURCE: {Name: "source hash id auto", Help: "脚本解析", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+				if len(arg) > 0 && strings.HasSuffix(arg[0], ".shy") {
+					m.Starts(strings.Replace(arg[0], ".", "_", -1), arg[0], arg[0:]...)
+					return
+				}
+
+				if len(arg) == 0 {
+					m.Option(mdb.FIELDS, "time,hash,name,count")
+					m.Cmdy(mdb.SELECT, SOURCE, "", mdb.HASH)
+					m.Sort(kit.MDB_NAME)
+					return
+				}
+
+				if arg[0] == STDIO {
+					m.Option("_control", "page")
+				} else {
+					m.Option("cache.limit", "-1")
+				}
+				m.Option(mdb.FIELDS, kit.Select("time,id,text", mdb.DETAIL, len(arg) > 1))
+				m.Cmdy(mdb.SELECT, SOURCE, kit.Keys(kit.MDB_HASH, arg[0]), mdb.LIST, kit.MDB_ID, arg[1:])
+				m.Sort(kit.MDB_ID)
 			}},
 			TARGET: {Name: "target name", Help: "当前模块", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 				m.Search(arg[0], func(p *ice.Context, s *ice.Context, key string) {

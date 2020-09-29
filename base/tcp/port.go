@@ -13,11 +13,16 @@ import (
 )
 
 func _port_list(m *ice.Message, port string, dir string) {
-	if m.Cmdy(nfs.DIR, path.Join("var/daemon", port, dir)); port == "" {
-		m.Table(func(index int, value map[string]string, head []string) {
-			m.Push(PORT, path.Base(value["path"]))
-		})
+	if m.Option(nfs.DIR_ROOT, path.Join("var/daemon", port)); port != "" {
+		m.Cmdy(nfs.DIR, dir)
+		return
 	}
+
+	m.Cmd(nfs.DIR, "./").Table(func(index int, value map[string]string, head []string) {
+		m.Push(kit.MDB_TIME, value[kit.MDB_TIME])
+		m.Push(kit.MDB_SIZE, value[kit.MDB_SIZE])
+		m.Push(PORT, path.Base(value[kit.MDB_PATH]))
+	})
 }
 func _port_right(m *ice.Message, begin string) string {
 	current := kit.Int(kit.Select(m.Conf(PORT, "meta.current"), begin))

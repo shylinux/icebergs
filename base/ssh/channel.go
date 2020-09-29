@@ -73,13 +73,20 @@ func init() {
 		},
 		Commands: map[string]*ice.Command{
 			CHANNEL: {Name: "channel hash id auto 清理", Help: "通道", Action: map[string]*ice.Action{
+				mdb.DELETE: {Name: "delete", Help: "删除", Hand: func(m *ice.Message, arg ...string) {
+					m.Cmdy(mdb.DELETE, CHANNEL, "", mdb.HASH, kit.MDB_HASH, m.Option(kit.MDB_HASH))
+				}},
 				mdb.PRUNES: {Name: "prunes", Help: "清理", Hand: func(m *ice.Message, arg ...string) {
 					m.Cmdy(mdb.PRUNES, CHANNEL, "", mdb.HASH, kit.MDB_STATUS, tcp.CLOSE)
 				}},
 			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 				if len(arg) == 0 {
 					m.Option(mdb.FIELDS, "time,hash,status,username,hostname,hostport,tty,count")
-					m.Cmdy(mdb.SELECT, CHANNEL, "", mdb.HASH)
+					if m.Cmdy(mdb.SELECT, CHANNEL, "", mdb.HASH); len(arg) == 0 {
+						m.Table(func(index int, value map[string]string, head []string) {
+							m.PushButton(kit.Select("", "删除", value[kit.MDB_STATUS] == tcp.CLOSE))
+						})
+					}
 					return
 				}
 

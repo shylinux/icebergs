@@ -28,6 +28,11 @@ var Index = &ice.Context{Name: SSH, Help: "终端模块", Commands: map[string]*
 		m.Richs(CONNECT, "", kit.MDB_FOREACH, func(key string, value map[string]interface{}) {
 			kit.Value(value, "status", tcp.CLOSE)
 		})
+
+		m.Richs(SOURCE, "", STDIO, func(key string, value map[string]interface{}) {
+			m.Conf(SOURCE, kit.Keys(kit.MDB_HASH), "")
+			m.Conf(SOURCE, kit.Keys(kit.MDB_HASH, key), value)
+		})
 		m.Save()
 	}},
 }}

@@ -14,11 +14,31 @@ var ErrNotAuth = "not auth: "
 var ErrNotJoin = "not join: "
 var ErrNotFound = "not found: "
 var ErrStart = "err start: "
+var ErrNameExists = "name already exists:"
+
+var _log_disable = true
+
+type Error struct {
+	Arg      []interface{}
+	FileLine string
+}
+
+func (e *Error) Error() string {
+	return e.FileLine + " " + strings.Join(kit.Simple(e.Arg), " ")
+}
+func NewError(n int, arg ...interface{}) *Error {
+	return &Error{Arg: arg, FileLine: kit.FileLine(n, 3)}
+}
+
+var Log func(*Message, string, string)
 
 func (m *Message) log(level string, str string, arg ...interface{}) *Message {
 	if str = strings.TrimSpace(kit.Format(str, arg...)); Log != nil {
 		// 日志模块
 		Log(m, level, str)
+	}
+	if _log_disable {
+		return m
 	}
 
 	// 日志颜色

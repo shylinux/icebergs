@@ -103,10 +103,3 @@ const ( // RENDER
 	RENDER_DOWNLOAD = "_download"
 	RENDER_TEMPLATE = "_template"
 )
-
-const ( // TODO
-	EXPORT_LABEL = "lab"
-	EXPORT_GROUP = "grp"
-	FIELD_RELOAD = "field.reload"
-	FIELD_DETAIL = "field.detail"
-)

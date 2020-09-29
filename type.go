@@ -143,7 +143,7 @@ func (c *Context) Register(s *Context, x Server, name ...string) *Context {
 	}
 	s.Merge(s, x)
 
-	Pulse.Log("register", "%s <- %s", c.Name, s.Name)
+	// Pulse.Log("register", "%s <- %s", c.Name, s.Name)
 	if c.contexts == nil {
 		c.contexts = map[string]*Context{}
 	}

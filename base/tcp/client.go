@@ -55,14 +55,11 @@ func init() {
 			CLIENT: {Name: CLIENT, Help: "客户端", Value: kit.Data()},
 		},
 		Commands: map[string]*ice.Command{
-			CLIENT: {Name: "client hash auto 连接 清理", Help: "客户端", Action: map[string]*ice.Action{
+			CLIENT: {Name: "client hash auto 清理", Help: "客户端", Action: map[string]*ice.Action{
 				DIAL: {Name: "dial port=9010 host=", Help: "连接", Hand: func(m *ice.Message, arg ...string) {
 					c, e := net.Dial(TCP, m.Option(HOST)+":"+m.Option(PORT))
-					h := m.Option(kit.MDB_HASH)
-					if h == "" {
-						h = m.Cmdx(mdb.INSERT, CLIENT, "", mdb.HASH, HOST, m.Option(HOST), PORT, m.Option(PORT),
-							kit.MDB_NAME, m.Option(kit.MDB_NAME), kit.MDB_STATUS, kit.Select(ERROR, OPEN, e == nil), kit.MDB_ERROR, kit.Format(e))
-					}
+					h := m.Cmdx(mdb.INSERT, CLIENT, "", mdb.HASH, PORT, m.Option(PORT), HOST, m.Option(HOST),
+						kit.MDB_NAME, m.Option(kit.MDB_NAME), kit.MDB_STATUS, kit.Select(ERROR, OPEN, e == nil), kit.MDB_ERROR, kit.Format(e))
 
 					c = &Conn{m: m, h: h, s: &Stat{}, Conn: c}
 					if e == nil {
@@ -96,8 +93,11 @@ func init() {
 				}},
 			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 				m.Option(mdb.FIELDS, kit.Select("time,hash,status,name,host,port,error,nread,nwrite", mdb.DETAIL, len(arg) > 0))
-				m.Cmdy(mdb.SELECT, CLIENT, "", mdb.HASH, kit.MDB_HASH, arg)
-				m.PushAction("删除")
+				if m.Cmdy(mdb.SELECT, CLIENT, "", mdb.HASH, kit.MDB_HASH, arg); len(arg) == 0 {
+					m.Table(func(index int, value map[string]string, head []string) {
+						m.PushButton(kit.Select("", "删除", value[kit.MDB_STATUS] == CLOSE))
+					})
+				}
 			}},
 		},
 	}, nil)

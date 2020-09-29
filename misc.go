@@ -102,22 +102,11 @@ func (m *Message) PushAction(list ...interface{}) {
 		m.PushRender(kit.MDB_ACTION, kit.MDB_BUTTON, strings.Join(kit.Simple(list...), ","))
 	})
 }
+func (m *Message) PushButton(key string, arg ...string) {
+	m.PushRender("action", "button", key, arg...)
+}
 func (m *Message) PushDetail(value interface{}, arg ...interface{}) *Message {
 	return m.Push("detail", value, arg...)
 }
 
 var BinPack = map[string][]byte{}
-
-var ErrNameExists = "name already exists:"
-
-type Error struct {
-	Arg      []interface{}
-	FileLine string
-}
-
-func (e *Error) Error() string {
-	return e.FileLine + " " + strings.Join(kit.Simple(e.Arg), " ")
-}
-func NewError(n int, arg ...interface{}) *Error {
-	return &Error{Arg: arg, FileLine: kit.FileLine(n, 3)}
-}

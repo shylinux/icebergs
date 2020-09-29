@@ -25,7 +25,7 @@ func init() {
 		},
 		Commands: map[string]*ice.Command{
 			CACHE: {Name: "cache hash auto 添加 清理", Help: "爬虫缓存", Action: map[string]*ice.Action{
-				mdb.CREATE: {Name: "create link type name text", Help: "添加", Hand: func(m *ice.Message, arg ...string) {
+				mdb.CREATE: {Name: "create", Help: "添加", Hand: func(m *ice.Message, arg ...string) {
 					m.Option("_process", "_progress")
 					if m.Cmdy(mdb.SELECT, m.Prefix(CACHE), "", mdb.HASH, kit.MDB_LINK, m.Option(kit.MDB_LINK)); len(m.Appendv(kit.MDB_TOTAL)) > 0 {
 						return // 已经下载

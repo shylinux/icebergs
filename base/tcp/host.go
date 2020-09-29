@@ -66,17 +66,17 @@ func init() {
 	Index.Merge(&ice.Context{
 		Configs: map[string]*ice.Config{
 			HOST: {Name: HOST, Help: "主机", Value: kit.Data(
-				aaa.Black, kit.Dict(kit.MDB_SHORT, kit.MDB_TEXT),
+				aaa.Black, kit.Data(kit.MDB_SHORT, kit.MDB_TEXT),
 				aaa.White, kit.Data(kit.MDB_SHORT, kit.MDB_TEXT),
 			)},
 		},
 		Commands: map[string]*ice.Command{
 			HOST: {Name: "host name auto", Help: "主机", Action: map[string]*ice.Action{
-				aaa.White: {Name: "white", Help: "白名单", Hand: func(m *ice.Message, arg ...string) {
-					m.Rich(HOST, kit.Keys("meta.white"), kit.Dict(kit.MDB_NAME, "", kit.MDB_TEXT, arg[0]))
-				}},
 				aaa.Black: {Name: "black", Help: "黑名单", Hand: func(m *ice.Message, arg ...string) {
-					m.Rich(HOST, kit.Keys("meta.black"), kit.Dict(kit.MDB_NAME, "", kit.MDB_TEXT, arg[0]))
+					m.Rich(HOST, kit.Keys("meta.black"), kit.Dict(kit.MDB_TEXT, arg[0]))
+				}},
+				aaa.White: {Name: "white", Help: "白名单", Hand: func(m *ice.Message, arg ...string) {
+					m.Rich(HOST, kit.Keys("meta.white"), kit.Dict(kit.MDB_TEXT, arg[0]))
 				}},
 			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 				_host_list(m, kit.Select("", arg, 0))

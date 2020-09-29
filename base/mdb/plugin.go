@@ -14,7 +14,7 @@ func init() {
 		},
 		Commands: map[string]*ice.Command{
 			PLUGIN: {Name: "plugin type name text", Help: "插件", Action: map[string]*ice.Action{
-				CREATE: {Name: "create type [cmd [ctx]]", Help: "创建", Hand: func(m *ice.Message, arg ...string) {
+				CREATE: {Name: "create type cmd ctx", Help: "创建", Hand: func(m *ice.Message, arg ...string) {
 					m.Rich(PLUGIN, nil, kit.Dict(kit.MDB_TYPE, arg[0], kit.MDB_NAME, kit.Select(arg[0], arg, 1), kit.MDB_TEXT, kit.Select("", arg, 2)))
 				}},
 			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {

@@ -14,12 +14,7 @@ import (
 	"strings"
 )
 
-type Winsize struct {
-	Height uint16
-	Width  uint16
-	x      uint16
-	y      uint16
-}
+type Winsize struct{ Height, Width, x, y uint16 }
 
 func _ssh_exec(m *ice.Message, cmd string, arg []string, env []string, tty io.ReadWriter, done func()) {
 	m.Log_IMPORT(CMD, cmd, ARG, arg, ENV, env)
@@ -58,7 +53,7 @@ func _ssh_watch(m *ice.Message, meta map[string]string, h string, input io.Reade
 			case '\r', '\n':
 				cmd := strings.TrimSpace(string(buf[:i]))
 				m.Log_IMPORT(aaa.HOSTNAME, meta[aaa.HOSTNAME], aaa.USERNAME, meta[aaa.USERNAME], CMD, cmd)
-				m.Cmdy(mdb.INSERT, CHANNEL, kit.Keys(kit.MDB_HASH, h), mdb.LIST, CMD, cmd)
+				m.Cmdy(mdb.INSERT, CHANNEL, kit.Keys(kit.MDB_HASH, h), mdb.LIST, kit.MDB_TYPE, CMD, kit.MDB_TEXT, cmd)
 				i = 0
 			default:
 				if i += n; i >= 4096 {
@@ -83,12 +78,12 @@ func init() {
 				}},
 			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 				if len(arg) == 0 {
-					m.Option(mdb.FIELDS, "time,hash,status,tty,count")
+					m.Option(mdb.FIELDS, "time,hash,status,username,hostname,hostport,tty,count")
 					m.Cmdy(mdb.SELECT, CHANNEL, "", mdb.HASH)
 					return
 				}
 
-				m.Option(mdb.FIELDS, kit.Select("time,id,cmd", mdb.DETAIL, len(arg) > 1))
+				m.Option(mdb.FIELDS, kit.Select("time,id,type,text", mdb.DETAIL, len(arg) > 1))
 				m.Cmdy(mdb.SELECT, CHANNEL, kit.Keys(kit.MDB_HASH, arg[0]), mdb.LIST, kit.MDB_ID, arg[1:])
 			}},
 		},

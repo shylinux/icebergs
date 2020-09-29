@@ -34,8 +34,7 @@ var Index = &ice.Context{Name: SSH, Help: "终端模块", Commands: map[string]*
 
 func init() {
 	ice.Index.Register(Index, &Frame{},
+		CONNECT, SESSION, SERVICE, CHANNEL,
 		SOURCE, TARGET, PROMPT, RETURN,
-		CONNECT, SESSION,
-		SERVICE, CHANNEL,
 	)
 }

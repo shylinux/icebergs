@@ -15,7 +15,7 @@ import (
 	"golang.org/x/crypto/ssh"
 )
 
-func _ssh_conn(m *ice.Message, conn net.Conn, hostport, username string) (*ssh.Client, error) {
+func _ssh_conn(m *ice.Message, conn net.Conn, username, hostport string) (*ssh.Client, error) {
 	key, e := ssh.ParsePrivateKey([]byte(m.Cmdx(nfs.CAT, path.Join(os.Getenv("HOME"), m.Option("private")))))
 	m.Assert(e)
 
@@ -46,9 +46,8 @@ func init() {
 			CONNECT: {Name: "connect hash auto 添加 清理", Help: "连接", Action: map[string]*ice.Action{
 				tcp.DIAL: {Name: "dial username=shy host=shylinux.com port=22 private=.ssh/id_rsa", Help: "添加", Hand: func(m *ice.Message, arg ...string) {
 					m.Option(tcp.DIAL_CB, func(c net.Conn) {
-						client, e := _ssh_conn(m, c,
-							kit.Select(m.Option(tcp.HOST), "shylinux.com")+":"+kit.Select("22", m.Option(tcp.PORT)),
-							kit.Select("shy", m.Option(aaa.USERNAME)),
+						client, e := _ssh_conn(m, c, kit.Select("shy", m.Option(aaa.USERNAME)),
+							kit.Select("shylinux.com", m.Option(tcp.HOST))+":"+kit.Select("22", m.Option(tcp.PORT)),
 						)
 						m.Assert(e)
 
@@ -60,9 +59,11 @@ func init() {
 							CONNECT, client,
 						))
 						m.Cmd(CONNECT, SESSION, kit.MDB_HASH, h)
+						m.Echo(h)
 					})
 
 					m.Cmds(tcp.CLIENT, tcp.DIAL, arg)
+					m.Sleep("100ms")
 				}},
 				SESSION: {Name: "session hash", Help: "会话", Hand: func(m *ice.Message, arg ...string) {
 					m.Richs(CONNECT, "", m.Option(kit.MDB_HASH), func(key string, value map[string]interface{}) {

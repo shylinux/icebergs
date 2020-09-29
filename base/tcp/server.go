@@ -9,38 +9,9 @@ import (
 	"strings"
 )
 
-type Stat struct {
-	nc, nr, nw int
-}
-
-type Conn struct {
-	h string
-	m *ice.Message
-	s *Stat
-
-	net.Conn
-}
-
-func (c *Conn) Read(b []byte) (int, error) {
-	n, e := c.Conn.Read(b)
-	c.s.nr += n
-	c.m.Conf(CLIENT, kit.Keys(kit.MDB_HASH, c.h, kit.MDB_META, "nwrite"), c.s.nw)
-	return n, e
-}
-func (c *Conn) Write(b []byte) (int, error) {
-	n, e := c.Conn.Write(b)
-	c.s.nw += n
-	c.m.Conf(CLIENT, kit.Keys(kit.MDB_HASH, c.h, kit.MDB_META, "nread"), c.s.nr)
-	return n, e
-}
-func (c *Conn) Close() error {
-	c.m.Cmd(mdb.MODIFY, CLIENT, "", mdb.HASH, kit.MDB_HASH, c.h, kit.MDB_STATUS, CLOSE, "nread", c.s.nr, "nwrite", c.s.nw)
-	return c.Conn.Close()
-}
-
 type Listener struct {
-	h string
 	m *ice.Message
+	h string
 	s *Stat
 
 	net.Listener
@@ -58,19 +29,13 @@ func (l Listener) Accept() (net.Conn, error) {
 	h := l.m.Cmdx(mdb.INSERT, CLIENT, "", mdb.HASH, HOST, ls[0], PORT, ls[1],
 		kit.MDB_NAME, l.m.Option(kit.MDB_NAME), kit.MDB_STATUS, kit.Select(ERROR, OPEN, e == nil), kit.MDB_ERROR, kit.Format(e))
 
-	c = &Conn{h: h, m: l.m, s: &Stat{}, Conn: c}
-	return c, e
+	return &Conn{m: l.m, h: h, s: &Stat{}, Conn: c}, e
 }
 func (l Listener) Close() error {
 	l.m.Cmd(mdb.MODIFY, SERVER, "", mdb.HASH, kit.MDB_HASH, l.h, kit.MDB_STATUS, CLOSE)
 	return l.Listener.Close()
 }
 
-const (
-	OPEN  = "open"
-	CLOSE = "close"
-	ERROR = "error"
-)
 const (
 	LISTEN_CB = "listen.cb"
 	LISTEN    = "listen"
@@ -85,14 +50,14 @@ func init() {
 		},
 		Commands: map[string]*ice.Command{
 			SERVER: {Name: "server hash auto 监听 清理", Help: "服务器", Action: map[string]*ice.Action{
-				LISTEN: {Name: "LISTEN host=localhost port=9010", Help: "监听", Hand: func(m *ice.Message, arg ...string) {
+				LISTEN: {Name: "LISTEN host= port=9010", Help: "监听", Hand: func(m *ice.Message, arg ...string) {
 					l, e := net.Listen(TCP, m.Option(HOST)+":"+m.Option(PORT))
 					h := m.Option(kit.MDB_HASH)
 					if h == "" {
 						h = m.Cmdx(mdb.INSERT, SERVER, "", mdb.HASH, kit.MDB_NAME, m.Option(kit.MDB_NAME), HOST, m.Option(HOST), PORT, m.Option(PORT), kit.MDB_STATUS, kit.Select(ERROR, OPEN, e == nil), kit.MDB_ERROR, kit.Format(e))
 					}
 
-					l = &Listener{h: h, m: m, s: &Stat{}, Listener: l}
+					l = &Listener{m: m, h: h, s: &Stat{}, Listener: l}
 					if e == nil {
 						defer l.Close()
 					}
@@ -121,14 +86,14 @@ func init() {
 					default:
 						for {
 							c, e := l.Accept()
-							if e == nil {
-								b := make([]byte, 1024)
-								if n, e := c.Read(b); e == nil {
-									m.Info("nonce", string(b[:n]))
-									c.Write(b[:n])
-								}
-							} else {
+							if e != nil {
 								break
+							}
+
+							b := make([]byte, 4096)
+							if n, e := c.Read(b); e == nil {
+								m.Info("nonce", string(b[:n]))
+								c.Write(b[:n])
 							}
 							c.Close()
 						}
@@ -142,7 +107,7 @@ func init() {
 					m.Cmdy(mdb.PRUNES, SERVER, "", mdb.HASH, kit.MDB_STATUS, CLOSE)
 				}},
 			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-				m.Option(mdb.FIELDS, kit.Select(mdb.DETAIL, "time,hash,status,name,host,port,error,nconn", len(arg) == 0))
+				m.Option(mdb.FIELDS, kit.Select("time,hash,status,name,host,port,error,nconn", mdb.DETAIL, len(arg) > 0))
 				m.Cmdy(mdb.SELECT, SERVER, "", mdb.HASH, kit.MDB_HASH, arg)
 				m.PushAction("删除")
 			}},

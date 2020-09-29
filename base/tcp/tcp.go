@@ -18,16 +18,10 @@ var Index = &ice.Context{Name: TCP, Help: "通信模块",
 		}},
 		ice.CTX_EXIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			m.Richs(CLIENT, "", kit.MDB_FOREACH, func(key string, value map[string]interface{}) {
-				if value[kit.MDB_META] != nil {
-					value = value[kit.MDB_META].(map[string]interface{})
-				}
-				kit.Value(value, "status", CLOSE)
+				kit.Value(value, "meta.status", CLOSE)
 			})
 			m.Richs(SERVER, "", kit.MDB_FOREACH, func(key string, value map[string]interface{}) {
-				if value[kit.MDB_META] != nil {
-					value = value[kit.MDB_META].(map[string]interface{})
-				}
-				kit.Value(value, "status", CLOSE)
+				kit.Value(value, "meta.status", CLOSE)
 			})
 			m.Save()
 		}},

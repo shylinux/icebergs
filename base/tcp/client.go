@@ -8,6 +8,40 @@ import (
 	"net"
 )
 
+type Stat struct {
+	nc, nr, nw int
+}
+
+type Conn struct {
+	m *ice.Message
+	h string
+	s *Stat
+
+	net.Conn
+}
+
+func (c *Conn) Read(b []byte) (int, error) {
+	n, e := c.Conn.Read(b)
+	c.s.nr += n
+	c.m.Conf(CLIENT, kit.Keys(kit.MDB_HASH, c.h, kit.MDB_META, "nread"), c.s.nr)
+	return n, e
+}
+func (c *Conn) Write(b []byte) (int, error) {
+	n, e := c.Conn.Write(b)
+	c.s.nw += n
+	c.m.Conf(CLIENT, kit.Keys(kit.MDB_HASH, c.h, kit.MDB_META, "nwrite"), c.s.nw)
+	return n, e
+}
+func (c *Conn) Close() error {
+	c.m.Cmd(mdb.MODIFY, CLIENT, "", mdb.HASH, kit.MDB_HASH, c.h, kit.MDB_STATUS, CLOSE, "nread", c.s.nr, "nwrite", c.s.nw)
+	return c.Conn.Close()
+}
+
+const (
+	OPEN  = "open"
+	CLOSE = "close"
+	ERROR = "error"
+)
 const (
 	DIAL_CB = "dial.cb"
 	DIAL    = "dial"
@@ -22,12 +56,15 @@ func init() {
 		},
 		Commands: map[string]*ice.Command{
 			CLIENT: {Name: "client hash auto 连接 清理", Help: "客户端", Action: map[string]*ice.Action{
-				DIAL: {Name: "dial host=localhost port=9010", Help: "连接", Hand: func(m *ice.Message, arg ...string) {
+				DIAL: {Name: "dial port=9010 host=", Help: "连接", Hand: func(m *ice.Message, arg ...string) {
 					c, e := net.Dial(TCP, m.Option(HOST)+":"+m.Option(PORT))
-					h := m.Cmdx(mdb.INSERT, CLIENT, "", mdb.HASH, HOST, m.Option(HOST), PORT, m.Option(PORT),
-						kit.MDB_NAME, m.Option(kit.MDB_NAME), kit.MDB_STATUS, kit.Select(ERROR, OPEN, e == nil), kit.MDB_ERROR, kit.Format(e))
+					h := m.Option(kit.MDB_HASH)
+					if h == "" {
+						h = m.Cmdx(mdb.INSERT, CLIENT, "", mdb.HASH, HOST, m.Option(HOST), PORT, m.Option(PORT),
+							kit.MDB_NAME, m.Option(kit.MDB_NAME), kit.MDB_STATUS, kit.Select(ERROR, OPEN, e == nil), kit.MDB_ERROR, kit.Format(e))
+					}
 
-					c = &Conn{h: h, m: m, s: &Stat{}, Conn: c}
+					c = &Conn{m: m, h: h, s: &Stat{}, Conn: c}
 					if e == nil {
 						defer c.Close()
 					}
@@ -58,7 +95,7 @@ func init() {
 					m.Cmdy(mdb.PRUNES, CLIENT, "", mdb.HASH, kit.MDB_STATUS, CLOSE)
 				}},
 			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-				m.Option(mdb.FIELDS, kit.Select(mdb.DETAIL, "time,hash,status,name,host,port,error,nread,nwrite", len(arg) == 0))
+				m.Option(mdb.FIELDS, kit.Select("time,hash,status,name,host,port,error,nread,nwrite", mdb.DETAIL, len(arg) > 0))
 				m.Cmdy(mdb.SELECT, CLIENT, "", mdb.HASH, kit.MDB_HASH, arg)
 				m.PushAction("删除")
 			}},

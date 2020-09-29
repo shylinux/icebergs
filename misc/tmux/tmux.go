@@ -201,7 +201,7 @@ var Index = &ice.Context{Name: TMUX, Help: "工作台",
 				m.Cmdy(mdb.SELECT, SCRIPT, "", mdb.HASH)
 			}},
 
-			mdb.SCRIPT: {Name: "script name", Help: "脚本", Hand: func(m *ice.Message, arg ...string) {
+			"script": {Name: "script name", Help: "脚本", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmd(mdb.SELECT, SCRIPT, "", mdb.HASH, kit.MDB_NAME, m.Option(kit.MDB_NAME)).Table(func(index int, value map[string]string, head []string) {
 					switch value[kit.MDB_TYPE] {
 					case "shell":

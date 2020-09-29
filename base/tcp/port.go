@@ -27,7 +27,7 @@ func _port_right(m *ice.Message, begin string) string {
 	}
 
 	for i := current; i < end; i++ {
-		if c, e := net.Dial("tcp", kit.Format(":%d", i)); e == nil {
+		if c, e := net.Dial(TCP, kit.Format(":%d", i)); e == nil {
 			m.Info("port exists %v", i)
 			defer c.Close()
 			continue

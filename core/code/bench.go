@@ -38,8 +38,6 @@ func _bench_list(m *ice.Message, zone string, id string, field ...interface{}) {
 	})
 }
 func _bench_show(m *ice.Message, nconn, nreq int64, list []*http.Request) {
-	m.Log_CONF(NCONN, nconn, NREQS, nreq)
-
 	var body int64
 	s, e := bench.HTTP(nconn, nreq, list, func(req *http.Request, res *http.Response) {
 		n, _ := io.Copy(ioutil.Discard, res.Body)

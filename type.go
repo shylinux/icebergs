@@ -70,6 +70,9 @@ type Server interface {
 }
 
 func (c *Context) ID() int32 {
+	if c == nil {
+		return 1
+	}
 	return atomic.AddInt32(&c.id, 1)
 }
 func (c *Context) Cap(key string, arg ...interface{}) string {

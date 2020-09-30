@@ -9,14 +9,10 @@ import (
 )
 
 var ErrWarn = "warn: "
+var ErrNotFound = "not found: "
 var ErrNotLogin = "not login: "
 var ErrNotAuth = "not auth: "
 var ErrNotJoin = "not join: "
-var ErrNotFound = "not found: "
-var ErrStart = "err start: "
-var ErrNameExists = "name already exists:"
-
-var _log_disable = true
 
 type Error struct {
 	Arg      []interface{}
@@ -27,73 +23,66 @@ func (e *Error) Error() string {
 	return e.FileLine + " " + strings.Join(kit.Simple(e.Arg), " ")
 }
 func NewError(n int, arg ...interface{}) *Error {
-	return &Error{Arg: arg, FileLine: kit.FileLine(n, 3)}
+	return &Error{Arg: arg, FileLine: kit.FileLine(n+3, 3)}
 }
 
-var Log func(*Message, string, string)
+var _log_disable = true
+var Log func(m *Message, p, l, s string)
 
 func (m *Message) log(level string, str string, arg ...interface{}) *Message {
-	if str = strings.TrimSpace(kit.Format(str, arg...)); Log != nil {
-		// 日志模块
-		Log(m, level, str)
-	}
 	if _log_disable {
-		return m
+		return m // 禁用日志
+	}
+	if str = strings.TrimSpace(kit.Format(str, arg...)); Log != nil {
+		Log(m, m.Format("prefix"), level, str)
+		// 日志分流
 	}
 
 	// 日志颜色
 	prefix, suffix := "", ""
 	switch level {
-	case LOG_ENABLE, LOG_IMPORT, LOG_CREATE, LOG_INSERT, LOG_MODIFY, LOG_EXPORT:
+	case LOG_IMPORT, LOG_CREATE, LOG_INSERT, LOG_MODIFY, LOG_EXPORT:
 		prefix, suffix = "\033[36;44m", "\033[0m"
-
-	case LOG_LISTEN, LOG_SIGNAL, LOG_TIMERS, LOG_EVENTS:
+	case LOG_ENABLE, LOG_LISTEN, LOG_SIGNAL, LOG_TIMERS, LOG_EVENTS:
 		prefix, suffix = "\033[33m", "\033[0m"
 
 	case LOG_CMDS, LOG_START, LOG_SERVE:
 		prefix, suffix = "\033[32m", "\033[0m"
-	case LOG_AUTH, LOG_CONF, LOG_COST:
-		prefix, suffix = "\033[33m", "\033[0m"
 	case LOG_WARN, LOG_ERROR, LOG_CLOSE:
 		prefix, suffix = "\033[31m", "\033[0m"
+	case LOG_AUTH, LOG_COST:
+		prefix, suffix = "\033[33m", "\033[0m"
 	}
 
 	// 文件行号
 	switch level {
-	// case LOG_CMDS, LOG_INFO, LOG_WARN, "refer", "form":
 	case LOG_CMDS, LOG_INFO, "refer", "form":
-	case "register", "begin":
+	case "begin":
 	default:
 		suffix += " " + kit.FileLine(3, 3)
 	}
-	if len(BinPack) > 0 {
-		prefix, suffix = "", ""
-	}
 
+	// 长度截断
 	switch level {
 	case LOG_INFO, "send", "recv":
-		if len(str) > 1000 {
-			str = str[:1000]
+		if len(str) > 1024 {
+			str = str[:1024]
 		}
 	}
+
 	// 输出日志
-	log.Info(fmt.Sprintf("%02d %9s %s%s %s%s", m.code, fmt.Sprintf("%4s->%-4s", m.source.Name, m.target.Name),
-		prefix, level, str, suffix))
+	log.Info(fmt.Sprintf("%02d %9s %s%s %s%s", m.code,
+		fmt.Sprintf("%4s->%-4s", m.source.Name, m.target.Name), prefix, level, str, suffix))
 	return m
 }
 func (m *Message) Log(level string, str string, arg ...interface{}) *Message {
 	return m.log(level, str, arg...)
 }
-func (m *Message) Logs(level string, arg ...interface{}) *Message {
-	list := []string{}
-	for i := 0; i < len(arg)-1; i += 2 {
-		list = append(list, fmt.Sprintf("%v: %v", arg[i], arg[i+1]))
-	}
-	m.log(level, strings.Join(list, " "))
-	return m
-}
 func (m *Message) Info(str string, arg ...interface{}) *Message {
 	return m.log(LOG_INFO, str, arg...)
+}
+func (m *Message) Cost(str string, arg ...interface{}) *Message {
+	return m.log(LOG_COST, "%s: %s", m.Format("cost"), kit.Format(str, arg...))
 }
 func (m *Message) Warn(err bool, arg ...interface{}) bool {
 	if err {
@@ -126,11 +115,11 @@ func log_fields(arg ...interface{}) string {
 	}
 	return strings.Join(list, " ")
 }
-func (m *Message) Log_IMPORT(arg ...interface{}) *Message {
-	return m.log(LOG_IMPORT, log_fields(arg...))
+func (m *Message) Logs(level string, arg ...interface{}) *Message {
+	return m.log(level, log_fields(arg...))
 }
-func (m *Message) Log_EXPORT(arg ...interface{}) *Message {
-	return m.log(LOG_EXPORT, log_fields(arg...))
+func (m *Message) Log_AUTH(arg ...interface{}) *Message {
+	return m.log(LOG_AUTH, log_fields(arg...))
 }
 func (m *Message) Log_CREATE(arg ...interface{}) *Message {
 	return m.log(LOG_CREATE, log_fields(arg...))
@@ -150,13 +139,9 @@ func (m *Message) Log_SELECT(arg ...interface{}) *Message {
 func (m *Message) Log_MODIFY(arg ...interface{}) *Message {
 	return m.log(LOG_MODIFY, log_fields(arg...))
 }
-
-func (m *Message) Log_CONF(arg ...interface{}) *Message {
-	return m.log(LOG_CONF, log_fields(arg...))
+func (m *Message) Log_IMPORT(arg ...interface{}) *Message {
+	return m.log(LOG_IMPORT, log_fields(arg...))
 }
-func (m *Message) Log_AUTH(arg ...interface{}) *Message {
-	return m.log(LOG_AUTH, log_fields(arg...))
-}
-func (m *Message) Cost(str string, arg ...interface{}) *Message {
-	return m.log(LOG_COST, "%s: %s", m.Format("cost"), kit.Format(str, arg...))
+func (m *Message) Log_EXPORT(arg ...interface{}) *Message {
+	return m.log(LOG_EXPORT, log_fields(arg...))
 }

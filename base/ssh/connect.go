@@ -79,6 +79,28 @@ func init() {
 					})
 				}},
 
+				"open": {Name: "dial username=shy host=shylinux.com port=22 private=.ssh/id_rsa", Help: "添加", Hand: func(m *ice.Message, arg ...string) {
+					m.Option(tcp.DIAL_CB, func(c net.Conn) {
+						client, e := _ssh_conn(m, c, kit.Select("shy", m.Option(aaa.USERNAME)),
+							kit.Select("shylinux.com", m.Option(tcp.HOST))+":"+kit.Select("22", m.Option(tcp.PORT)),
+						)
+						m.Assert(e)
+
+						m.Debug("what")
+						m.Debug("some")
+						session, e := client.NewSession()
+						m.Assert(e)
+
+						session.Stdin = os.Stdin
+						session.Stdout = os.Stdout
+						session.Stderr = os.Stderr
+						session.Start("/bin/bash")
+						m.Debug("what")
+						m.Debug("some")
+					})
+
+					m.Cmd(tcp.CLIENT, tcp.DIAL, tcp.PORT, m.Option(tcp.PORT), tcp.HOST, m.Option(tcp.HOST), arg)
+				}},
 				mdb.DELETE: {Name: "delete", Help: "删除", Hand: func(m *ice.Message, arg ...string) {
 					m.Cmdy(mdb.DELETE, CONNECT, "", mdb.HASH, kit.MDB_HASH, m.Option(kit.MDB_HASH))
 				}},

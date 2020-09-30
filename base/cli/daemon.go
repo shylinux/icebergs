@@ -11,6 +11,9 @@ import (
 )
 
 const (
+	ErrStart = "daemon start: "
+)
+const (
 	StatusError = "error"
 	StatusStart = "start"
 	StatusClose = "close"
@@ -28,7 +31,7 @@ func _daemon_show(m *ice.Message, cmd *exec.Cmd, out, err string) {
 	}
 
 	cmd.Env = append(cmd.Env, fmt.Sprintf("PATH=%s", os.Getenv("PATH")))
-	if e := cmd.Start(); m.Warn(e != nil, ice.ErrStart, cmd.Args, " ", e) {
+	if e := cmd.Start(); m.Warn(e != nil, ErrStart, cmd.Args, " ", e) {
 		return
 	}
 
@@ -42,7 +45,7 @@ func _daemon_show(m *ice.Message, cmd *exec.Cmd, out, err string) {
 
 	m.Gos(m, func(m *ice.Message) {
 		if e := cmd.Wait(); e != nil {
-			m.Warn(e != nil, ice.ErrStart, cmd.Args, " ", e)
+			m.Warn(e != nil, ErrStart, cmd.Args, " ", e)
 			m.Richs(DAEMON, nil, h, func(key string, value map[string]interface{}) {
 				kit.Value(value, kit.MDB_STATUS, StatusError)
 				kit.Value(value, kit.Keys(kit.MDB_EXTRA, kit.MDB_ERROR), e)

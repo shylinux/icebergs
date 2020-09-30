@@ -138,7 +138,7 @@ func Run(arg ...string) string {
 	Pulse.root = Pulse
 	Pulse.Option("cache.limit", "30")
 	Pulse.Option("begin_time", Pulse.Time())
-
+	_log_disable = false
 	switch kit.Select("", arg, 0) {
 	case "space", "serve":
 		if _log_disable = false; frame.Begin(Pulse.Spawns(), arg...).Start(Pulse, arg...) {
@@ -150,6 +150,7 @@ func Run(arg ...string) string {
 	default:
 		if m := Pulse.Cmdy(arg); m.Result() == "" {
 			m.Table()
+			m.Sleep("100ms")
 		}
 	}
 
@@ -157,6 +158,7 @@ func Run(arg ...string) string {
 }
 
 var names = map[string]interface{}{}
+var ErrNameExists = "name already exists: "
 
 func Name(name string, value interface{}) string {
 	if s, ok := names[name]; ok {
@@ -165,7 +167,7 @@ func Name(name string, value interface{}) string {
 		case *Context:
 			last = s.Name
 		}
-		panic(NewError(4, ErrNameExists, name, "last:", last))
+		panic(NewError(1, ErrNameExists, name, "last: ", last))
 	}
 
 	names[name] = value

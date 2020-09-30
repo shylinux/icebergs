@@ -17,6 +17,60 @@ import (
 	"time"
 )
 
+type item struct {
+	c    chan []byte
+	last []byte
+}
+
+func (i item) Read(buf []byte) (int, error) {
+	b := <-i.c
+	n := copy(buf, b)
+	return n, nil
+}
+
+type tmux struct {
+	input io.Reader
+	waits []chan []byte
+}
+
+func (t *tmux) get() *item {
+	c := make(chan []byte)
+	t.waits = append(t.waits, c)
+	return &item{c: c}
+}
+func (t *tmux) loop() {
+	buf := make([]byte, 1024)
+	for {
+		n, e := t.input.Read(buf)
+		if e != nil {
+			break
+		}
+		if len(t.waits) > 0 {
+			wait := t.waits[len(t.waits)-1]
+			wait <- buf[:n]
+		}
+	}
+}
+func (t *tmux) read(cb func(buf []byte)) {
+	c := make(chan []byte)
+	t.waits = append(t.waits, c)
+	go func() {
+		for {
+			cb(<-c)
+		}
+	}()
+	return
+}
+func (t *tmux) over() {
+	if len(t.waits) > 0 {
+		t.waits = t.waits[:len(t.waits)-1]
+	}
+}
+
+var stdin = &tmux{input: os.Stdin}
+
+func init() { go stdin.loop() }
+
 func Render(msg *ice.Message, cmd string, args ...interface{}) {
 	defer func() { msg.Log_EXPORT(mdb.RENDER, cmd, kit.MDB_TEXT, args) }()
 
@@ -278,7 +332,8 @@ func (f *Frame) Start(m *ice.Message, arg ...string) bool {
 	var r io.Reader
 	switch m.Cap(ice.CTX_STREAM, f.source) {
 	case STDIO: // 终端交互
-		r, f.stdout = os.Stdin, os.Stdout
+		// r, f.stdout = os.Stdin, os.Stdout
+		r, f.stdout = stdin.get(), os.Stdout
 
 		m.Option("_option", ice.MSG_USERNAME)
 		m.Option(ice.MSG_USERNAME, cli.UserName)

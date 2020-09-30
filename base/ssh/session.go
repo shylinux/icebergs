@@ -1,14 +1,17 @@
 package ssh
 
 import (
+	"os"
+
 	ice "github.com/shylinux/icebergs"
 	"github.com/shylinux/icebergs/base/ctx"
 	"github.com/shylinux/icebergs/base/mdb"
 	"github.com/shylinux/icebergs/base/tcp"
 	kit "github.com/shylinux/toolkits"
 
-	"golang.org/x/crypto/ssh"
 	"io"
+
+	"golang.org/x/crypto/ssh"
 )
 
 func _ssh_sess(m *ice.Message, h string, client *ssh.Client) (*ssh.Session, error) {
@@ -44,6 +47,21 @@ func _ssh_sess(m *ice.Message, h string, client *ssh.Client) (*ssh.Session, erro
 	return session, nil
 }
 
+func _watch(m *ice.Message, from io.Reader, to io.Writer, cb func([]byte)) {
+	m.Go(func() {
+		buf := make([]byte, 1024)
+		for {
+			n, e := from.Read(buf)
+			if e != nil {
+				cb(nil)
+				break
+			}
+			cb(buf[:n])
+			to.Write(buf[:n])
+		}
+	})
+}
+
 const (
 	TTY = "tty"
 	ENV = "env"
@@ -72,6 +90,22 @@ func init() {
 					m.Sleep("300ms")
 					m.Cmdy(SESSION, m.Option(kit.MDB_HASH))
 				}},
+				"bind": {Name: "bind", Help: "绑定", Hand: func(m *ice.Message, arg ...string) {
+					m.Richs(SESSION, "", m.Option(kit.MDB_HASH), func(key string, value map[string]interface{}) {
+						value = kit.GetMeta(value)
+
+						input := value["input"].(io.Writer)
+						stdin.read(func(buf []byte) {
+							m.Debug("input %v", string(buf))
+							input.Write(buf)
+						})
+
+						output := value["output"].(io.Reader)
+						_watch(m, output, os.Stdout, func(buf []byte) {
+							m.Debug("output %v", string(buf))
+						})
+					})
+				}},
 
 				mdb.DELETE: {Name: "delete", Help: "删除", Hand: func(m *ice.Message, arg ...string) {
 					m.Cmdy(mdb.DELETE, SESSION, "", mdb.HASH, kit.MDB_HASH, m.Option(kit.MDB_HASH))
@@ -84,7 +118,7 @@ func init() {
 					m.Option(mdb.FIELDS, "time,hash,status,count,connect")
 					if m.Cmdy(mdb.SELECT, SESSION, "", mdb.HASH, kit.MDB_HASH, arg); len(arg) == 0 {
 						m.Table(func(index int, value map[string]string, head []string) {
-							m.PushButton(kit.Select("", "删除", value[kit.MDB_STATUS] == tcp.CLOSE))
+							m.PushButton(kit.Select("绑定", "删除", value[kit.MDB_STATUS] == tcp.CLOSE))
 						})
 					}
 					return

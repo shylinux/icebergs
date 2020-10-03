@@ -109,11 +109,11 @@ func (m *Message) Back(res *Message) *Message {
 	}
 	return m
 }
-func (m *Message) Gos(msg *Message, cb interface{}) *Message {
-	m.Cmd("gdb.routine", "create", "fileline", kit.FileLine(cb, 3))
-
-	task.Put(nil, func(task *task.Task) error {
+func (m *Message) Gos(msg *Message, cb interface{}, args ...interface{}) *Message {
+	task.Put(m.Cmdx("gdb.routine", "create", "fileline", kit.FileLine(cb, 3), "status", "start"), func(task *task.Task) error {
+		msg.Optionv("task.hash", task.Arg)
 		msg.Optionv("_task", task)
+
 		msg.TryCatch(msg, true, func(msg *Message) {
 			switch cb := cb.(type) {
 			case func(*Message):
@@ -122,16 +122,17 @@ func (m *Message) Gos(msg *Message, cb interface{}) *Message {
 				cb()
 			}
 		})
+
+		msg.Option(kit.MDB_HASH, task.Arg)
+		msg.Cmdx("gdb.routine", "modify", "status", "stop")
 		return nil
 	})
 	return m
 }
-func (m *Message) Go(cb interface{}) *Message {
+func (m *Message) Go(cb interface{}, args ...interface{}) *Message {
 	switch cb := cb.(type) {
 	case func(*Message):
-		return m.Gos(m.Spawn(), cb)
-	case func():
-		return m.Gos(m, cb)
+		return m.Gos(m.Spawn(), cb, args...)
 	}
-	return m.Gos(m, cb)
+	return m.Gos(m, cb, args...)
 }

@@ -95,9 +95,8 @@ func init() {
 						value = kit.GetMeta(value)
 
 						input := value["input"].(io.Writer)
-						stdin.read(func(buf []byte) {
+						_watch(m, os.Stdin, input, func(buf []byte) {
 							m.Debug("input %v", string(buf))
-							input.Write(buf)
 						})
 
 						output := value["output"].(io.Reader)

@@ -201,11 +201,22 @@ func init() {
 				mdb.PRUNES: {Name: "prunes", Help: "清理", Hand: func(m *ice.Message, arg ...string) {
 					m.Cmdy(mdb.PRUNES, SERVICE, "", mdb.HASH, kit.MDB_STATUS, tcp.CLOSE)
 				}},
+				mdb.INVITE: {Name: "invite", Help: "邀请", Hand: func(m *ice.Message, arg ...string) {
+					u := kit.ParseURL(m.Option(ice.MSG_USERWEB))
+					m.Option("hostname", strings.Split(u.Host, ":")[0])
+
+					m.Option("_process", "_inner")
+					if buf, err := kit.Render(`
+ssh {{.Option "user.name"}}@{{.Option "hostname"}} -p {{.Option "port"}}
+`, m); err == nil {
+						m.Cmdy("web.wiki.spark", "shell", string(buf))
+					}
+				}},
 			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 				if len(arg) == 0 {
 					m.Option(mdb.FIELDS, "time,status,port,private,auth,count")
 					m.Cmdy(mdb.SELECT, SERVICE, "", mdb.HASH)
-					m.PushAction("导入,添加,导出")
+					m.PushAction(mdb.IMPORT, mdb.INSERT, mdb.EXPORT, mdb.INVITE)
 					return
 				}
 

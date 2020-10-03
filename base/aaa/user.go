@@ -3,11 +3,14 @@ package aaa
 import (
 	ice "github.com/shylinux/icebergs"
 	"github.com/shylinux/icebergs/base/cli"
-	"github.com/shylinux/icebergs/base/gdb"
 	"github.com/shylinux/icebergs/base/mdb"
 	kit "github.com/shylinux/toolkits"
 
 	"strings"
+)
+
+const (
+	USER_CREATE = "user.create"
 )
 
 func _user_list(m *ice.Message) {
@@ -50,7 +53,7 @@ func _user_create(m *ice.Message, name, word string) {
 		USERNODE, cli.NodeName,
 	))
 	m.Log_CREATE(USERNAME, name, "hash", h)
-	m.Event(gdb.USER_CREATE, name)
+	m.Event(USER_CREATE, name)
 }
 func _user_search(m *ice.Message, kind, name, text string, arg ...string) {
 	m.Richs(USER, nil, kit.MDB_FOREACH, func(key string, val map[string]interface{}) {

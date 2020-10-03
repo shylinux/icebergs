@@ -9,8 +9,12 @@ import (
 	"os"
 	"path"
 	"sort"
+	"strings"
 )
 
+func _fields(m *ice.Message) []string {
+	return kit.Split(kit.Select("time,hash,type,name,text", strings.Join(kit.Simple(m.Optionv(FIELDS)), ",")))
+}
 func _file_name(m *ice.Message, arg ...string) string {
 	return kit.Select(path.Join("usr/export", path.Join(arg[:2]...)), arg, 3)
 }
@@ -29,7 +33,7 @@ func _hash_select(m *ice.Message, prefix, chain, field, value string) {
 	if field == kit.MDB_HASH && value == RANDOM {
 		value = kit.MDB_RANDOMS
 	}
-	fields := kit.Split(kit.Select("time,hash,type,name,text", m.Option(FIELDS)))
+	fields := _fields(m)
 	m.Richs(prefix, chain, value, func(key string, val map[string]interface{}) {
 		if val[kit.MDB_META] != nil {
 			val = val[kit.MDB_META].(map[string]interface{})

@@ -5,7 +5,6 @@ import (
 	"github.com/shylinux/icebergs/base/cli"
 	"github.com/shylinux/icebergs/base/mdb"
 	"github.com/shylinux/icebergs/base/nfs"
-	"github.com/shylinux/icebergs/base/web"
 	kit "github.com/shylinux/toolkits"
 
 	"os"
@@ -148,35 +147,37 @@ func init() {
 				}},
 			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 				m.Richs(REPOS, nil, kit.Select(kit.MDB_FOREACH, arg, 0), func(key string, value map[string]interface{}) {
-					if m.Option(cli.CMD_DIR, kit.Value(value, "meta.path")); len(arg) > 0 {
-						// 更改详情
+					value = kit.GetMeta(value)
+
+					if m.Option(cli.CMD_DIR, value[kit.MDB_PATH]); len(arg) > 0 {
 						m.Echo(m.Cmdx(cli.SYSTEM, GIT, "diff"))
-						return
+						return // 更改详情
 					}
 
 					// 更改列表
 					for _, v := range strings.Split(strings.TrimSpace(m.Cmdx(cli.SYSTEM, GIT, "status", "-sb")), "\n") {
 						vs := strings.SplitN(strings.TrimSpace(v), " ", 2)
-						m.Push("name", kit.Value(value, "meta.name"))
+						m.Push("name", value[kit.MDB_NAME])
 						m.Push("tags", vs[0])
 						m.Push("file", vs[1])
+
 						list := []string{}
 						switch vs[0] {
 						case "##":
 							if strings.Contains(vs[1], "ahead") {
-								list = append(list, m.Cmdx(mdb.RENDER, web.RENDER.Button, "上传"))
+								list = append(list, "上传")
 							}
 						default:
 							if strings.Contains(vs[0], "??") {
-								list = append(list, m.Cmdx(mdb.RENDER, web.RENDER.Button, "添加"))
+								list = append(list, "添加")
 							} else {
-								list = append(list, m.Cmdx(mdb.RENDER, web.RENDER.Button, "提交"))
+								list = append(list, "提交")
 							}
 						}
-						m.Push("action", strings.Join(list, ""))
+						m.PushButton(strings.Join(list, ","))
 					}
 				})
-				m.Sort("name")
+				m.Sort(kit.MDB_NAME)
 			}},
 		},
 	}, nil)

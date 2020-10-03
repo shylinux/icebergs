@@ -17,6 +17,10 @@ import (
 )
 
 const LOGIN = "_login"
+const (
+	SERVE_START = "serve.start"
+	SERVE_CLOSE = "serve.close"
+)
 
 func _serve_login(msg *ice.Message, cmds []string, w http.ResponseWriter, r *http.Request) ([]string, bool) {
 	msg.Option(ice.MSG_USERNAME, "")

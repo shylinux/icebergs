@@ -87,7 +87,7 @@ func (c *Context) _hand(m *Message, cmd *Command, key string, k string, h *Actio
 		for _, v := range h.List {
 			name := kit.Format(kit.Value(v, "name"))
 			value := kit.Format(kit.Value(v, "value"))
-			m.Option(name, value)
+			m.Option(name, kit.Select("", value, !strings.HasPrefix(value, "@")))
 		}
 		for i := 0; i < len(arg)-1; i += 2 {
 			m.Option(arg[i], arg[i+1])
@@ -101,6 +101,7 @@ func (c *Context) cmd(m *Message, cmd *Command, key string, arg ...string) *Mess
 		return m
 	}
 
+	m.cmd = cmd
 	if m.Hand = true; len(arg) > 1 && arg[0] == "action" && cmd.Action != nil {
 		if h, ok := cmd.Action[arg[1]]; ok {
 			return c._hand(m, cmd, key, arg[1], h, arg[2:]...)
@@ -176,6 +177,7 @@ func (c *Context) Merge(s *Context, x Server) *Context {
 		}
 
 		for k, a := range v.Action {
+			kit.Value(v.Meta, kit.Keys("trans", k), a.Help)
 			if a.List == nil {
 				a.List = c._split(a.Name)
 			}
@@ -287,7 +289,13 @@ func (c *Context) Start(m *Message, arg ...string) bool {
 	m.Hold(1)
 
 	wait := make(chan bool)
-	m.Gos(m, func(m *Message) {
+
+	var p interface{}
+	if c.server != nil {
+		p = c.server.Start
+	}
+
+	m.Go(func() {
 		m.Log(LOG_START, c.Cap(CTX_FOLLOW))
 		c.Cap(CTX_STATUS, CTX_START)
 
@@ -298,7 +306,7 @@ func (c *Context) Start(m *Message, arg ...string) bool {
 		if m.Done(); m.wait != nil {
 			m.wait <- true
 		}
-	})
+	}, p)
 	<-wait
 	return true
 }
@@ -327,6 +335,7 @@ type Message struct {
 
 	source *Context
 	target *Context
+	cmd    *Command
 
 	cb   func(*Message) *Message
 	W    http.ResponseWriter

@@ -86,22 +86,22 @@ var Index = &ice.Context{Name: TMUX, Help: "工作台",
 				}
 			}},
 			mdb.EXPORT: {Name: "export", Help: "导出", Hand: func(m *ice.Message, arg ...string) {
-				m.Conf(BUFFER, mdb.LIST, "")
-				m.Conf(BUFFER, kit.Keys(mdb.META, "count"), "0")
+				m.Conf(m.Prefix(BUFFER), mdb.LIST, "")
+				m.Conf(m.Prefix(BUFFER), kit.Keys(mdb.META, "count"), "0")
 
-				m.Cmd(BUFFER).Table(func(index int, value map[string]string, head []string) {
-					m.Grow(BUFFER, "", kit.Dict(
+				m.Cmd(m.Prefix(BUFFER)).Table(func(index int, value map[string]string, head []string) {
+					m.Grow(m.Prefix(BUFFER), "", kit.Dict(
 						"name", value[head[0]], "text", m.Cmdx(cli.SYSTEM, TMUX, "show-buffer", "-b", value[head[0]]),
 					))
 				})
 				m.Cmdy(mdb.EXPORT, m.Prefix(BUFFER), "", mdb.LIST)
 			}},
 			mdb.IMPORT: {Name: "import", Help: "导入", Hand: func(m *ice.Message, arg ...string) {
-				m.Conf(BUFFER, mdb.LIST, "")
-				m.Conf(BUFFER, kit.Keys(mdb.META, "count"), "0")
+				m.Conf(m.Prefix(BUFFER), mdb.LIST, "")
+				m.Conf(m.Prefix(BUFFER), kit.Keys(mdb.META, "count"), "0")
 
 				m.Cmdy(mdb.IMPORT, m.Prefix(BUFFER), "", mdb.LIST)
-				m.Grows(BUFFER, "", "", "", func(index int, value map[string]interface{}) {
+				m.Grows(m.Prefix(BUFFER), "", "", "", func(index int, value map[string]interface{}) {
 					m.Cmd(cli.SYSTEM, TMUX, "set-buffer", "-b", value["name"], value["text"])
 				})
 			}},
@@ -145,7 +145,7 @@ var Index = &ice.Context{Name: TMUX, Help: "工作台",
 				m.Cmdy(mdb.IMPORT, m.Prefix(SCRIPT), "", mdb.HASH)
 			}},
 		}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			if m.Option(mdb.FIELDS, m.Conf(SCRIPT, kit.META_FIELD)); len(arg) > 0 {
+			if m.Option(mdb.FIELDS, m.Conf(m.Prefix(SCRIPT), kit.META_FIELD)); len(arg) > 0 {
 				m.Option(mdb.FIELDS, mdb.DETAIL)
 			}
 			m.Cmdy(mdb.SELECT, m.Prefix(SCRIPT), "", mdb.HASH, kit.MDB_NAME, arg)
@@ -232,13 +232,13 @@ var Index = &ice.Context{Name: TMUX, Help: "工作台",
 
 			if len(arg) == 0 {
 				// 会话列表
-				m.Split(m.Cmdx(cli.SYSTEM, TMUX, "list-session", "-F", m.Conf(cmd, "meta.format")), m.Conf(cmd, "meta.fields"), ",", "\n")
+				m.Split(m.Cmdx(cli.SYSTEM, TMUX, "list-session", "-F", m.Conf(m.Prefix(cmd), "meta.format")), m.Conf(m.Prefix(cmd), "meta.fields"), ",", "\n")
 				m.Table(func(index int, value map[string]string, head []string) {
 					switch value["tag"] {
 					case "1":
-						m.PushRender("action", "button", "")
+						m.PushButton("")
 					default:
-						m.PushRender("action", "button", "进入", "删除")
+						m.PushButton("进入", "删除")
 					}
 				})
 				return
@@ -260,11 +260,11 @@ var Index = &ice.Context{Name: TMUX, Help: "工作台",
 		}},
 		WINDOW: {Name: "windows", Help: "窗口", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			m.Split(m.Cmdx(cli.SYSTEM, TMUX, "list-windows", "-t", kit.Select("", arg, 0),
-				"-F", m.Conf(cmd, "meta.format")), m.Conf(cmd, "meta.fields"), ",", "\n")
+				"-F", m.Conf(m.Prefix(cmd), "meta.format")), m.Conf(m.Prefix(cmd), "meta.fields"), ",", "\n")
 		}},
 		PANE: {Name: "panes", Help: "终端", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			m.Split(m.Cmdx(cli.SYSTEM, TMUX, "list-panes", "-t", kit.Select("", arg, 0),
-				"-F", m.Conf(cmd, "meta.format")), m.Conf(cmd, "meta.fields"), ",", "\n")
+				"-F", m.Conf(m.Prefix(cmd), "meta.format")), m.Conf(m.Prefix(cmd), "meta.fields"), ",", "\n")
 		}},
 		VIEW: {Name: "view", Help: "终端", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			m.Cmdy(cli.SYSTEM, TMUX, "capture-pane", "-pt", kit.Select("", arg, 0)).Set(ice.MSG_APPEND)

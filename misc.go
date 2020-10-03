@@ -37,11 +37,11 @@ func (m *Message) Watch(key string, arg ...string) *Message {
 	if len(arg) == 0 {
 		arg = append(arg, m.Prefix("auto"))
 	}
-	m.Cmd("gdb.event", "listen", key, arg)
+	m.Cmd("gdb.event", "listen", "event", key, "cmd", strings.Join(arg, " "))
 	return m
 }
 func (m *Message) Event(key string, arg ...string) *Message {
-	m.Cmd("gdb.event", "action", key, arg)
+	m.Cmd("gdb.event", "action", "event", key, strings.Join(arg, " "))
 	return m
 }
 func (m *Message) Right(arg ...interface{}) bool {
@@ -75,10 +75,8 @@ func (m *Message) PushRender(key, view, name string, arg ...string) *Message {
 	case "button":
 		list := []string{}
 		for _, k := range kit.Split(name) {
-			list = append(list, fmt.Sprintf(`<input type="button" value="%s">`, k))
-		}
-		for _, k := range arg {
-			list = append(list, fmt.Sprintf(`<input type="button" value="%s">`, k))
+			list = append(list, fmt.Sprintf(`<input type="button" name="%s" value="%s">`,
+				k, kit.Select(k, kit.Value(m.cmd.Meta, kit.Keys("trans", k)))))
 		}
 		m.Push(key, strings.Join(list, ""))
 	case "video":
@@ -104,6 +102,12 @@ func (m *Message) PushAction(list ...interface{}) {
 }
 func (m *Message) PushButton(key string, arg ...string) {
 	m.PushRender("action", "button", key, arg...)
+}
+func (m *Message) PushPlugin(key string, arg ...string) *Message {
+	m.Option("_process", "_field")
+	m.Option("_prefix", arg)
+	m.Cmdy("command", key)
+	return m
 }
 func (m *Message) PushDetail(value interface{}, arg ...interface{}) *Message {
 	return m.Push("detail", value, arg...)

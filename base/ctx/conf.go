@@ -60,7 +60,7 @@ func _config_load(m *ice.Message, name string, arg ...string) {
 
 		for k, v := range data {
 			msg.Search(k, func(p *ice.Context, s *ice.Context, key string) {
-				m.Log_IMPORT(CONFIG, kit.Keys(s.Name, key), kit.MDB_FILE, name)
+				// m.Log_IMPORT(CONFIG, kit.Keys(s.Name, key), kit.MDB_FILE, name)
 				s.Configs[key].Value = v
 			})
 		}

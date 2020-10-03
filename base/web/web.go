@@ -5,7 +5,6 @@ import (
 	"github.com/shylinux/icebergs/base/aaa"
 	"github.com/shylinux/icebergs/base/cli"
 	"github.com/shylinux/icebergs/base/ctx"
-	"github.com/shylinux/icebergs/base/gdb"
 	"github.com/shylinux/icebergs/base/mdb"
 	"github.com/shylinux/icebergs/base/tcp"
 	kit "github.com/shylinux/toolkits"
@@ -78,9 +77,9 @@ func (web *Frame) Start(m *ice.Message, arg ...string) bool {
 
 		web.m, web.Server = m, &http.Server{Handler: web}
 		m.Option(tcp.LISTEN_CB, func(l net.Listener) {
-			m.Event(gdb.SERVE_START, arg[0])
+			m.Event(SERVE_START, arg[0])
 			m.Warn(true, "listen %s", web.Server.Serve(l))
-			m.Event(gdb.SERVE_CLOSE, arg[0])
+			m.Event(SERVE_CLOSE, arg[0])
 		})
 
 		ls := strings.Split(m.Cap(ice.CTX_STREAM, client["hostname"]), ":")

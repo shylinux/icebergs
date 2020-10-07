@@ -12,17 +12,13 @@ import (
 	"strings"
 )
 
-func _config_list(m *ice.Message, all bool) {
+func _config_list(m *ice.Message) {
 	p := m.Spawn(m.Source())
-	if all {
-		p = ice.Pulse
-	}
 
 	list := []string{}
 	for k := range p.Target().Configs {
 		if k[0] == '/' || k[0] == '_' {
-			// 内部命令
-			continue
+			continue // 内部配置
 		}
 		list = append(list, k)
 	}
@@ -85,19 +81,19 @@ func _config_make(m *ice.Message, chain string, arg ...string) {
 	}
 }
 func _config_rich(m *ice.Message, name string, key string, arg ...string) {
-	m.Rich(name, key, kit.Dict(arg))
+	m.Rich(name, key, kit.Data(arg))
 }
 func _config_grow(m *ice.Message, name string, key string, arg ...string) {
 	m.Grow(name, key, kit.Dict(arg))
 }
 
-const CONFIG = "config"
 const (
 	SAVE = "save"
 	LOAD = "load"
 	RICH = "rich"
 	GROW = "grow"
 )
+const CONFIG = "config"
 
 func init() {
 	Index.Merge(&ice.Context{
@@ -105,7 +101,7 @@ func init() {
 			CONFIG: {Name: "config", Help: "配置", Value: kit.Data("path", "var/conf")},
 		},
 		Commands: map[string]*ice.Command{
-			CONFIG: {Name: "config [all] [chain [key [arg...]]]", Help: "配置", Action: map[string]*ice.Action{
+			CONFIG: {Name: "config key auto", Help: "配置", Action: map[string]*ice.Action{
 				SAVE: {Name: "save", Help: "保存", Hand: func(m *ice.Message, arg ...string) {
 					_config_save(m, arg[0], arg[1:]...)
 				}},
@@ -119,8 +115,8 @@ func init() {
 					_config_grow(m, arg[0], arg[1], arg[2:]...)
 				}},
 			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-				if all, arg := _parse_arg_all(m, arg...); len(arg) == 0 {
-					_config_list(m, all)
+				if len(arg) == 0 {
+					_config_list(m)
 					return
 				}
 				_config_make(m, arg[0], arg[1:]...)

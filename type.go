@@ -303,7 +303,7 @@ func (c *Context) Start(m *Message, arg ...string) bool {
 		if wait <- true; c.server != nil {
 			c.server.Start(m, arg...)
 		}
-		if m.Done(); m.wait != nil {
+		if m.Done(true); m.wait != nil {
 			m.wait <- true
 		}
 	}, p)
@@ -565,6 +565,8 @@ func (m *Message) Search(key interface{}, cb interface{}) *Message {
 		p := m.target.root
 		if ctx, ok := names[key].(*Context); ok {
 			p = ctx
+		} else if key == "ice." {
+			p, key = m.target.root, ""
 		} else if key == "." {
 			p, key = m.target, ""
 		} else if key == ".." {
@@ -625,7 +627,7 @@ func (m *Message) Search(key interface{}, cb interface{}) *Message {
 				}
 			}
 		case func(p *Context, s *Context, key string, conf *Config):
-			for _, p := range []*Context{p, m.target, m.source} {
+			for _, p := range []*Context{m.target, p, m.source} {
 				for s := p; s != nil; s = s.context {
 					if cmd, ok := s.Configs[key]; ok {
 						cb(s.context, s, key, cmd)

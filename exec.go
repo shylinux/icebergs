@@ -66,7 +66,10 @@ func (m *Message) Hold(n int) *Message {
 	m.Log(LOG_TRACE, "%s wait %s %v", ctx.Name, m.target.Name, ctx.wg)
 	return m
 }
-func (m *Message) Done() bool {
+func (m *Message) Done(b bool) bool {
+	if !b {
+		return false
+	}
 	defer func() { recover() }()
 
 	ctx := m.target.root
@@ -127,7 +130,7 @@ func (m *Message) Gos(msg *Message, cb interface{}, args ...interface{}) *Messag
 		msg.Cmdx("gdb.routine", "modify", "status", "stop")
 		return nil
 	})
-	return m
+	return msg
 }
 func (m *Message) Go(cb interface{}, args ...interface{}) *Message {
 	switch cb := cb.(type) {

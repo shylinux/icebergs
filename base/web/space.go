@@ -3,11 +3,10 @@ package web
 import (
 	"github.com/gorilla/websocket"
 	ice "github.com/shylinux/icebergs"
-	aaa "github.com/shylinux/icebergs/base/aaa"
-	"github.com/shylinux/icebergs/base/cli"
+	"github.com/shylinux/icebergs/base/aaa"
 	"github.com/shylinux/icebergs/base/mdb"
+	"github.com/shylinux/icebergs/base/tcp"
 	kit "github.com/shylinux/toolkits"
-	"github.com/shylinux/toolkits/task"
 
 	"math/rand"
 	"net"
@@ -18,54 +17,68 @@ import (
 )
 
 func _space_list(m *ice.Message, space string) {
-	m.Option(mdb.FIELDS, "time,type,name,text")
+	m.Option(mdb.FIELDS, kit.Select("time,type,name,text", mdb.DETAIL, space != ""))
 	m.Cmdy(mdb.SELECT, SPACE, "", mdb.HASH, kit.MDB_HASH, space)
 	m.Table(func(index int, value map[string]string, head []string) {
-		m.PushRender(kit.MDB_LINK, "a", kit.Format(value[kit.MDB_NAME]),
-			kit.MergeURL(m.Option(ice.MSG_USERWEB), kit.SSH_POD, kit.Keys(m.Option(kit.SSH_POD), value[kit.MDB_NAME])))
+		if p := kit.MergeURL(m.Option(ice.MSG_USERWEB), kit.SSH_POD, kit.Keys(m.Option(kit.SSH_POD), kit.Select(value[kit.MDB_VALUE], value[kit.MDB_NAME]))); space == "" {
+			m.PushRender(kit.MDB_LINK, "a", value[kit.MDB_NAME], p)
+		} else if value[kit.MDB_KEY] == kit.MDB_NAME {
+			m.Push(kit.MDB_KEY, kit.MDB_LINK)
+			m.PushRender(kit.MDB_VALUE, "a", value[kit.MDB_VALUE], p)
+		}
 	})
+	m.Sort(kit.MDB_NAME)
 }
 func _space_dial(m *ice.Message, dev, name string, arg ...string) {
+	m.Debug("what %v %v %v", dev, name, arg)
 	m.Richs(SPIDE, nil, dev, func(key string, value map[string]interface{}) {
+		m.Debug("what")
 		client := kit.Value(value, "client").(map[string]interface{})
 		redial := m.Confm(SPACE, "meta.redial")
 		web := m.Target().Server().(*Frame)
 
 		host := kit.Format(client["hostname"])
 		proto := kit.Select("ws", "wss", client["protocol"] == "https")
-		uri := kit.MergeURL(proto+"://"+host+"/space/", "name", name, "type", cli.NodeType, "share", os.Getenv("ctx_share"), "river", os.Getenv("ctx_river"))
+		uri := kit.MergeURL(proto+"://"+host+"/space/", "name", name, "type", ice.Info.NodeType, "share", os.Getenv("ctx_share"), "river", os.Getenv("ctx_river"))
 		if u, e := url.Parse(uri); m.Assert(e) {
+			m.Debug("what")
 
-			task.Put(dev, func(task *task.Task) error {
-				for i := 0; i < kit.Int(redial["c"]); i++ {
-					if s, e := net.Dial("tcp", host); !m.Warn(e != nil, "%s", e) {
-						if s, _, e := websocket.NewClient(s, u, nil, kit.Int(redial["r"]), kit.Int(redial["w"])); !m.Warn(e != nil, "%s", e) {
+			m.Go(func() {
+				m.Debug("what")
+				for i := 0; i >= 0 && i < kit.Int(redial["c"]); i++ {
+					m.Option(tcp.DIAL_CB, func(s net.Conn, e error) {
+						if m.Warn(e != nil, e) {
+							return
+						}
+						if s, _, e := websocket.NewClient(s, u, nil, kit.Int(redial["r"]), kit.Int(redial["w"])); !m.Warn(e != nil, e) {
+							m.Rich(SPACE, nil, kit.Dict("socket", s, kit.MDB_TYPE, MASTER, kit.MDB_NAME, dev, kit.MDB_TEXT, host))
+							m.Log_CREATE(SPACE, dev, "retry", i, "uri", uri)
 
 							// 连接成功
-							m.Rich(SPACE, nil, kit.Dict("socket", s,
-								kit.MDB_TYPE, MASTER, kit.MDB_NAME, dev, kit.MDB_TEXT, host,
-							))
-							m.Log_CREATE("space", dev, "retry", i, "uri", uri)
-
 							m = m.Spawns()
 							if i = 0; _space_handle(m, true, web.send, s, dev) {
-								// 连接关闭
-								break
+								i = -1 // 连接关闭
 							}
 						}
-					}
+					})
+					ls := strings.Split(host, ":")
+					m.Cmd(tcp.CLIENT, tcp.DIAL, kit.MDB_TYPE, "wss", kit.MDB_NAME, dev, tcp.HOST, ls[0], tcp.PORT, ls[1])
 
 					// 断线重连
 					sleep := time.Duration(rand.Intn(kit.Int(redial["a"])*i+2)+kit.Int(redial["b"])) * time.Millisecond
-					m.Cost("order: %d sleep: %s reconnect: %s", i, sleep, u)
+					m.Cost("order", i, "sleep", sleep, "reconnect", u)
 					time.Sleep(sleep)
 				}
-				return nil
 			})
 		}
 	})
 }
 func _space_send(m *ice.Message, space string, arg ...string) {
+	if space == "" || space == MYSELF || space == ice.Info.NodeName {
+		m.Cmdy(arg)
+		return // 本地命令
+	}
+
 	target := strings.Split(space, ".")
 	frame := m.Target().Server().(*Frame)
 	m.Warn(m.Richs(SPACE, nil, target[0], func(key string, value map[string]interface{}) {
@@ -93,7 +106,7 @@ func _space_send(m *ice.Message, space string, arg ...string) {
 			m.Call(m.Option("_async") == "", func(res *ice.Message) *ice.Message {
 				if delete(frame.send, id); res != nil && m != nil {
 					// 返回结果
-					return m.Cost("[%v]->%v %v %v", id, target, arg, m.Copy(res).Format("append"))
+					return m.Cost(kit.Format("[%v]->%v %v %v", id, target, arg, m.Copy(res).Format(ice.MSG_APPEND)))
 				}
 				return nil
 			})
@@ -115,7 +128,7 @@ func _space_exec(msg *ice.Message, source, target []string, c *websocket.Conn, n
 	}
 	msg.Set("_option")
 	_space_echo(msg, []string{}, kit.Revert(source)[1:], c, name)
-	msg.Cost("%v->%v %v %v", source, target, msg.Detailv(), msg.Format("append"))
+	msg.Cost(kit.Format("%v->%v %v %v", source, target, msg.Detailv(), msg.Format(ice.MSG_APPEND)))
 }
 func _space_handle(m *ice.Message, safe bool, send map[string]*ice.Message, c *websocket.Conn, name string) bool {
 	for running := true; running; {
@@ -138,10 +151,7 @@ func _space_handle(m *ice.Message, safe bool, send map[string]*ice.Message, c *w
 				if msg.Optionv(ice.MSG_HANDLE, "true"); !msg.Warn(!safe, ice.ErrNotAuth) {
 					// 本地执行
 					msg.Option("_dev", name)
-					task.Put(nil, func(task *task.Task) error {
-						_space_exec(msg, source, target, c, name)
-						return nil
-					})
+					msg.Go(func() { _space_exec(msg, source, target, c, name) })
 					continue
 				}
 			} else if msg.Richs(SPACE, nil, target[0], func(key string, value map[string]interface{}) {
@@ -176,20 +186,6 @@ func _space_handle(m *ice.Message, safe bool, send map[string]*ice.Message, c *w
 	return false
 }
 
-func _space_search(m *ice.Message, kind, name, text string, arg ...string) {
-	m.Richs(SPACE, nil, kit.Select(kit.MDB_FOREACH, name), func(key string, value map[string]interface{}) {
-		if name != "" && name != value[kit.MDB_NAME] && !strings.Contains(kit.Format(value[kit.MDB_TEXT]), name) {
-			return
-		}
-		m.Push("pod", m.Option("pod"))
-		m.Push("ctx", "web")
-		m.Push("cmd", SPACE)
-		m.Push(key, value, []string{kit.MDB_TIME})
-		m.Push(kit.MDB_SIZE, kit.FmtSize(int64(len(kit.Format(value[kit.MDB_TEXT])))))
-		m.Push(key, value, []string{kit.MDB_TYPE, kit.MDB_NAME, kit.MDB_TEXT})
-	})
-}
-
 const (
 	MASTER = "master"
 	MYSELF = "myself"
@@ -201,7 +197,7 @@ const (
 
 const (
 	SPACE_START = "space.start"
-	SPACE_CLOSE = "space.close"
+	SPACE_STOP  = "space.stop"
 )
 const SPACE = "space"
 
@@ -215,24 +211,14 @@ func init() {
 		},
 		Commands: map[string]*ice.Command{
 			SPACE: {Name: "space name cmd auto", Help: "空间站", Action: map[string]*ice.Action{
-				"connect": {Name: "connect [dev [name]]", Help: "连接", Hand: func(m *ice.Message, arg ...string) {
-					_space_dial(m, kit.Select("dev", arg, 0), kit.Select(cli.NodeName, arg, 2))
-				}},
-				mdb.SEARCH: {Name: "search type name text", Help: "搜索", Hand: func(m *ice.Message, arg ...string) {
-					_space_search(m, arg[0], arg[1], arg[2], arg[3:]...)
+				"connect": {Name: "connect dev name", Help: "连接", Hand: func(m *ice.Message, arg ...string) {
+					_space_dial(m, arg[0], kit.Select(ice.Info.NodeName, arg[1]))
 				}},
 			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 				if len(arg) < 2 {
 					_space_list(m, kit.Select("", arg, 0))
 					return
 				}
-
-				if arg[0] == "" || arg[0] == MYSELF || arg[0] == cli.NodeName {
-					// 本地命令
-					m.Cmdy(arg[1:])
-					return
-				}
-
 				_space_send(m, arg[0], arg[1:]...)
 			}},
 
@@ -247,23 +233,21 @@ func init() {
 					h := m.Rich(SPACE, nil, kit.Dict("socket", s, "share", share, "river", river,
 						kit.MDB_TYPE, kind, kit.MDB_NAME, name, kit.MDB_TEXT, s.RemoteAddr().String(),
 					))
-					m.Log_CREATE(SPACE, name)
 
-					task.Put(name, func(task *task.Task) error {
+					m.Go(func() {
 						// 监听消息
 						switch kind {
 						case WORKER:
-							m.Event(DREAM_START, name)
-							defer m.Event(DREAM_STOP, name)
+							m.Event(DREAM_START, "type", kind, "name", name, "share", share, "river", river)
+							defer m.Event(DREAM_STOP, "type", kind, "name", name, "share", share, "river", river)
 						default:
 							m.Event(SPACE_START, "type", kind, "name", name, "share", share, "river", river)
-							defer m.Event(SPACE_CLOSE, "type", kind, "name", name, "share", share, "river", river)
+							defer m.Event(SPACE_STOP, "type", kind, "name", name, "share", share, "river", river)
 						}
+
 						frame := m.Target().Server().(*Frame)
 						_space_handle(m, false, frame.send, s, name)
-						m.Log(ice.LOG_CLOSE, "%s: %s", name, kit.Format(m.Confv(SPACE, kit.Keys(kit.MDB_HASH, h))))
 						m.Confv(SPACE, kit.Keys(kit.MDB_HASH, h), "")
-						return nil
 					})
 				}
 			}},

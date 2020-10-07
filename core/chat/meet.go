@@ -3,10 +3,7 @@ package chat
 import (
 	ice "github.com/shylinux/icebergs"
 	"github.com/shylinux/icebergs/base/mdb"
-	"github.com/shylinux/icebergs/base/web"
 	kit "github.com/shylinux/toolkits"
-
-	"path"
 )
 
 const MEET = "meet"
@@ -93,7 +90,7 @@ func init() {
 									m.Push("照片", "")
 									continue
 								}
-								m.Push("照片", m.Cmdx(mdb.RENDER, web.RENDER.IMG, path.Join("/share/local/usr/image/local/", m.Option(ice.MSG_DOMAIN), value["照片"])))
+								// m.Push("照片", m.Cmdx(mdb.RENDER, web.RENDER.IMG, path.Join("/share/local/usr/image/local/", m.Option(ice.MSG_DOMAIN), value["照片"])))
 							} else {
 								m.Push(k, value[k])
 							}
@@ -107,7 +104,7 @@ func init() {
 				} else {
 					msg.Table(func(index int, value map[string]string, head []string) {
 						if value["key"] == "照片" {
-							value["value"] = m.Cmdx(mdb.RENDER, web.RENDER.IMG, path.Join("/share/local/usr/image/local/", m.Option(ice.MSG_DOMAIN), value["value"]), "640")
+							// value["value"] = m.Cmdx(mdb.RENDER, web.RENDER.IMG, path.Join("/share/local/usr/image/local/", m.Option(ice.MSG_DOMAIN), value["value"]), "640")
 						}
 						m.Push("key", value["key"])
 						m.Push("value", value["value"])

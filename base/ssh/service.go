@@ -23,7 +23,7 @@ import (
 )
 
 func _ssh_meta(conn ssh.ConnMetadata) map[string]string {
-	return map[string]string{aaa.USERNAME: conn.User(), aaa.HOSTPORT: conn.RemoteAddr().String()}
+	return map[string]string{aaa.USERNAME: conn.User(), tcp.HOSTPORT: conn.RemoteAddr().String()}
 }
 
 func _ssh_config(m *ice.Message, h string) *ssh.ServerConfig {
@@ -31,7 +31,7 @@ func _ssh_config(m *ice.Message, h string) *ssh.ServerConfig {
 		PublicKeyCallback: func(conn ssh.ConnMetadata, key ssh.PublicKey) (*ssh.Permissions, error) {
 			meta, err := _ssh_meta(conn), errors.New(ice.ErrNotAuth)
 			if tcp.IsLocalHost(m, strings.Split(conn.RemoteAddr().String(), ":")[0]) {
-				m.Log_AUTH(aaa.HOSTPORT, conn.RemoteAddr(), aaa.USERNAME, conn.User())
+				m.Log_AUTH(tcp.HOSTPORT, conn.RemoteAddr(), aaa.USERNAME, conn.User())
 				err = nil // 本机用户
 			} else {
 				m.Cmd(mdb.SELECT, SERVICE, kit.Keys(kit.MDB_HASH, h), mdb.LIST).Table(func(index int, value map[string]string, head []string) {
@@ -42,8 +42,8 @@ func _ssh_config(m *ice.Message, h string) *ssh.ServerConfig {
 						if pub, e := ssh.ParsePublicKey([]byte(s)); !m.Warn(e != nil, e) {
 
 							if bytes.Compare(pub.Marshal(), key.Marshal()) == 0 {
-								m.Log_AUTH(aaa.HOSTPORT, conn.RemoteAddr(), aaa.USERNAME, conn.User(), aaa.HOSTNAME, value[kit.MDB_NAME])
-								meta[aaa.HOSTNAME] = kit.Select("", kit.Split(value[kit.MDB_NAME], "@"), 1)
+								m.Log_AUTH(tcp.HOSTPORT, conn.RemoteAddr(), aaa.USERNAME, conn.User(), tcp.HOSTNAME, value[kit.MDB_NAME])
+								meta[tcp.HOSTNAME] = kit.Select("", kit.Split(value[kit.MDB_NAME], "@"), 1)
 								err = nil // 认证成功
 							}
 						}
@@ -56,7 +56,7 @@ func _ssh_config(m *ice.Message, h string) *ssh.ServerConfig {
 			meta, err := _ssh_meta(conn), errors.New(ice.ErrNotAuth)
 			m.Richs(aaa.USER, "", conn.User(), func(k string, value map[string]interface{}) {
 				if string(password) == kit.Format(value[aaa.PASSWORD]) {
-					m.Log_AUTH(aaa.HOSTPORT, conn.RemoteAddr(), aaa.USERNAME, conn.User(), aaa.PASSWORD, strings.Repeat("*", len(kit.Format(value[aaa.PASSWORD]))))
+					m.Log_AUTH(tcp.HOSTPORT, conn.RemoteAddr(), aaa.USERNAME, conn.User(), aaa.PASSWORD, strings.Repeat("*", len(kit.Format(value[aaa.PASSWORD]))))
 					err = nil // 密码登录
 				}
 			})
@@ -64,7 +64,7 @@ func _ssh_config(m *ice.Message, h string) *ssh.ServerConfig {
 		},
 
 		BannerCallback: func(conn ssh.ConnMetadata) string {
-			m.Log_IMPORT(aaa.HOSTPORT, conn.RemoteAddr(), aaa.USERNAME, conn.User())
+			m.Log_IMPORT(tcp.HOSTPORT, conn.RemoteAddr(), aaa.USERNAME, conn.User())
 			return m.Conf(SERVICE, "meta.welcome")
 		},
 	}
@@ -94,8 +94,8 @@ func _ssh_accept(m *ice.Message, h string, c net.Conn) {
 	}
 }
 func _ssh_handle(m *ice.Message, meta map[string]string, c net.Conn, channel ssh.Channel, requests <-chan *ssh.Request) {
-	m.Logs(CHANNEL, aaa.HOSTPORT, c.RemoteAddr(), "->", c.LocalAddr())
-	defer m.Logs("dischan", aaa.HOSTPORT, c.RemoteAddr(), "->", c.LocalAddr())
+	m.Logs(CHANNEL, tcp.HOSTPORT, c.RemoteAddr(), "->", c.LocalAddr())
+	defer m.Logs("dischan", tcp.HOSTPORT, c.RemoteAddr(), "->", c.LocalAddr())
 
 	shell := kit.Select("bash", os.Getenv("SHELL"))
 	list := []string{"PATH=" + os.Getenv("PATH")}
@@ -110,7 +110,7 @@ func _ssh_handle(m *ice.Message, meta map[string]string, c net.Conn, channel ssh
 	meta[CHANNEL] = h
 
 	for request := range requests {
-		m.Logs("request", aaa.HOSTPORT, c.RemoteAddr(), kit.MDB_TYPE, request.Type)
+		m.Logs("request", tcp.HOSTPORT, c.RemoteAddr(), kit.MDB_TYPE, request.Type)
 
 		switch request.Type {
 		case "pty-req":

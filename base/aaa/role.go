@@ -2,6 +2,7 @@ package aaa
 
 import (
 	ice "github.com/shylinux/icebergs"
+	"github.com/shylinux/icebergs/base/mdb"
 	kit "github.com/shylinux/toolkits"
 
 	"strings"
@@ -16,6 +17,9 @@ const ( // 角色操作
 	White = "white"
 	Black = "black"
 	Right = "right"
+
+	WHITE = "white"
+	BLACK = "black"
 )
 const ( // 返回结果
 	OK = "ok"
@@ -103,10 +107,10 @@ const ROLE = "role"
 func init() {
 	Index.Merge(&ice.Context{
 		Configs: map[string]*ice.Config{
-			ROLE: {Name: "role", Help: "角色", Value: kit.Data(kit.MDB_SHORT, kit.MDB_NAME)},
+			ROLE: {Name: ROLE, Help: "角色", Value: kit.Data(kit.MDB_SHORT, kit.MDB_NAME)},
 		},
 		Commands: map[string]*ice.Command{
-			ROLE: {Name: "role [role [user...]]", Help: "角色", Action: map[string]*ice.Action{
+			ROLE: {Name: "role role auto 添加", Help: "角色", Action: map[string]*ice.Action{
 				White: {Name: "white role chain...", Help: "白名单", Hand: func(m *ice.Message, arg ...string) {
 					_role_white(m, arg[0], strings.ReplaceAll(kit.Keys(arg[1:]), "/", "."), true)
 				}},
@@ -118,11 +122,27 @@ func init() {
 						m.Echo(OK)
 					}
 				}},
+				mdb.CREATE: {Name: "create zone=white,black role=void@key key=", Help: "添加", Hand: func(m *ice.Message, arg ...string) {
+					m.Richs(ROLE, nil, m.Option(ROLE), func(key string, value map[string]interface{}) {
+						list := value[m.Option(kit.MDB_ZONE)].(map[string]interface{})
+						m.Log_CREATE(ROLE, m.Option(ROLE), list[m.Option(kit.MDB_KEY)])
+						list[m.Option(kit.MDB_KEY)] = true
+					})
+				}},
+				mdb.REMOVE: {Name: "remove", Help: "删除", Hand: func(m *ice.Message, arg ...string) {
+					m.Richs(ROLE, nil, m.Option(ROLE), func(key string, value map[string]interface{}) {
+						list := value[m.Option(kit.MDB_ZONE)].(map[string]interface{})
+						m.Log_REMOVE(ROLE, m.Option(ROLE), list[m.Option(kit.MDB_KEY)])
+						delete(list, m.Option(kit.MDB_KEY))
+					})
+				}},
 			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 				if len(arg) > 1 {
 					_role_user(m, arg[0], arg[1:]...)
 				}
+
 				_role_list(m, kit.Select("", arg, 0))
+				m.PushAction(mdb.REMOVE)
 			}},
 		},
 	}, nil)

@@ -12,13 +12,13 @@ import (
 	"strings"
 )
 
-func _fields(m *ice.Message) []string {
-	return kit.Split(kit.Select("time,hash,type,name,text", strings.Join(kit.Simple(m.Optionv(FIELDS)), ",")))
-}
 func _file_name(m *ice.Message, arg ...string) string {
 	return kit.Select(path.Join("usr/export", path.Join(arg[:2]...)), arg, 3)
 }
 
+func _hash_fields(m *ice.Message) []string {
+	return kit.Split(kit.Select("time,hash,type,name,text", strings.Join(kit.Simple(m.Optionv(FIELDS)), ",")))
+}
 func _hash_insert(m *ice.Message, prefix, chain string, arg ...string) {
 	m.Log_INSERT(kit.MDB_KEY, path.Join(prefix, chain), arg[0], arg[1])
 	m.Echo(m.Rich(prefix, chain, kit.Data(arg)))
@@ -33,7 +33,7 @@ func _hash_select(m *ice.Message, prefix, chain, field, value string) {
 	if field == kit.MDB_HASH && value == RANDOM {
 		value = kit.MDB_RANDOMS
 	}
-	fields := _fields(m)
+	fields := _hash_fields(m)
 	m.Richs(prefix, chain, value, func(key string, val map[string]interface{}) {
 		if val[kit.MDB_META] != nil {
 			val = val[kit.MDB_META].(map[string]interface{})
@@ -86,13 +86,11 @@ func _hash_import(m *ice.Message, prefix, chain, file string) {
 	count := 0
 	if m.Conf(prefix, kit.Keys(chain, kit.MDB_META, kit.MDB_SHORT)) == "" {
 		for k, data := range list {
-			// 导入数据
 			m.Conf(prefix, kit.Keys(chain, kit.MDB_HASH, k), data)
 			count++
 		}
 	} else {
 		for _, data := range list {
-			// 导入数据
 			m.Rich(prefix, chain, data)
 			count++
 		}
@@ -102,7 +100,7 @@ func _hash_import(m *ice.Message, prefix, chain, file string) {
 	m.Echo("%d", count)
 }
 func _hash_prunes(m *ice.Message, prefix, chain string, arg ...string) {
-	fields := kit.Split(kit.Select("time,hash,type,name,text", m.Option(FIELDS)))
+	fields := _hash_fields(m)
 	m.Richs(prefix, chain, kit.MDB_FOREACH, func(key string, val map[string]interface{}) {
 		if val[kit.MDB_META] != nil {
 			val = val[kit.MDB_META].(map[string]interface{})
@@ -137,6 +135,9 @@ func _hash_inputs(m *ice.Message, prefix, chain string, field, value string) {
 	m.Sort(kit.MDB_COUNT, "int_r")
 }
 
+func _list_fields(m *ice.Message) []string {
+	return kit.Split(kit.Select("time,id,type,name,text", strings.Join(kit.Simple(m.Optionv(FIELDS)), ",")))
+}
 func _list_insert(m *ice.Message, prefix, chain string, arg ...string) {
 	m.Log_INSERT(kit.MDB_KEY, path.Join(prefix, chain), arg[0], arg[1])
 	m.Echo("%d", m.Grow(prefix, chain, kit.Dict(arg)))
@@ -144,8 +145,11 @@ func _list_insert(m *ice.Message, prefix, chain string, arg ...string) {
 func _list_delete(m *ice.Message, prefix, chain, field, value string) {
 }
 func _list_select(m *ice.Message, prefix, chain, field, value string) {
-	fields := kit.Split(kit.Select("time,id,type,name,text", m.Option(FIELDS)))
-	m.Grows(prefix, chain, field, value, func(index int, val map[string]interface{}) {
+	if value == "" {
+		field = ""
+	}
+	fields := _list_fields(m)
+	m.Grows(prefix, chain, kit.Select(m.Option("cache.field"), field), kit.Select(m.Option("cache.value"), value), func(index int, val map[string]interface{}) {
 		if val[kit.MDB_META] != nil {
 			val = val[kit.MDB_META].(map[string]interface{})
 		}
@@ -257,9 +261,12 @@ func _list_inputs(m *ice.Message, prefix, chain string, field, value string) {
 	m.Sort(kit.MDB_COUNT, "int_r")
 }
 
+func _zone_fields(m *ice.Message) []string {
+	return kit.Split(kit.Select("zone,id,time,type,name,text", strings.Join(kit.Simple(m.Optionv(FIELDS)), ",")))
+}
 func _zone_select(m *ice.Message, prefix, chain, zone string, id string) {
 	cb := m.Optionv("cache.cb")
-	fields := kit.Split(kit.Select("zone,id,time,type,name,text", m.Option(FIELDS)))
+	fields := _zone_fields(m)
 	m.Richs(prefix, chain, kit.Select(kit.MDB_FOREACH, zone), func(key string, val map[string]interface{}) {
 		if val[kit.MDB_META] != nil {
 			val = val[kit.MDB_META].(map[string]interface{})
@@ -301,7 +308,7 @@ func _zone_export(m *ice.Message, prefix, chain, file string) {
 	w := csv.NewWriter(f)
 	defer w.Flush()
 
-	fields := kit.Split(kit.Select("zone,id,time,type,name,text", m.Option(FIELDS)))
+	fields := _zone_fields(m)
 	w.Write(fields)
 
 	count := 0

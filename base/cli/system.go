@@ -2,19 +2,60 @@ package cli
 
 import (
 	ice "github.com/shylinux/icebergs"
+	"github.com/shylinux/icebergs/base/aaa"
+	"github.com/shylinux/icebergs/base/mdb"
 	kit "github.com/shylinux/toolkits"
 
 	"bytes"
 	"fmt"
+	"io"
 	"os"
 	"os/exec"
 	"strings"
-	"time"
 )
 
+func _system_show(m *ice.Message, cmd *exec.Cmd) {
+	m.Cmd(mdb.INSERT, SYSTEM, "", mdb.LIST, "cmd", strings.Join(cmd.Args, " "), "dir", cmd.Dir, "env", strings.Join(cmd.Env, ","),
+		aaa.USERNAME, m.Option(ice.MSG_USERNAME), aaa.USERROLE, m.Option(ice.MSG_USERROLE),
+		aaa.IP, m.Option(ice.MSG_USERIP), aaa.UA, m.Option(ice.MSG_USERUA),
+	)
+
+	if w, ok := m.Optionv("output").(io.WriteCloser); ok {
+		cmd.Stderr = w
+		cmd.Stdout = w
+
+		if e := cmd.Run(); e != nil {
+			m.Warn(e != nil, ErrRun, strings.Join(cmd.Args, " "), "\n", e.Error())
+		} else {
+			m.Cost("args", cmd.Args, "code", cmd.ProcessState.ExitCode())
+		}
+	} else {
+		err := bytes.NewBuffer(make([]byte, 0, 1024))
+		out := bytes.NewBuffer(make([]byte, 0, 1024))
+		cmd.Stderr = err
+		cmd.Stdout = out
+		defer func() {
+			m.Push(CMD_ERR, err.String())
+			m.Push(CMD_OUT, out.String())
+			m.Echo(kit.Select(err.String(), out.String()))
+		}()
+
+		if e := cmd.Run(); e != nil {
+			m.Warn(e != nil, ErrRun, strings.Join(cmd.Args, " "), "\n", kit.Select(e.Error(), err.String()))
+		} else {
+			m.Cost("args", cmd.Args, "code", cmd.ProcessState.ExitCode(), "err", err.Len(), "out", out.Len())
+		}
+	}
+
+	m.Push(kit.MDB_TIME, m.Time())
+	m.Push(CMD_CODE, int(cmd.ProcessState.ExitCode()))
+}
+
+const ErrRun = "cli run err: "
+
 const (
-	CMD_STDOUT = "cmd_stdout"
 	CMD_STDERR = "cmd_stderr"
+	CMD_STDOUT = "cmd_stdout"
 
 	CMD_TYPE = "cmd_type"
 	CMD_DIR  = "cmd_dir"
@@ -25,38 +66,25 @@ const (
 	CMD_CODE = "cmd_code"
 )
 
-const ErrRun = "run err "
-
-func _system_show(m *ice.Message, cmd *exec.Cmd) {
-	out := bytes.NewBuffer(make([]byte, 0, 1024))
-	err := bytes.NewBuffer(make([]byte, 0, 1024))
-	cmd.Stdout = out
-	cmd.Stderr = err
-	defer func() {
-		m.Cost("%v exit: %v out: %v err: %v ",
-			cmd.Args, cmd.ProcessState.ExitCode(), out.Len(), err.Len())
-	}()
-
-	if e := cmd.Run(); e != nil {
-		m.Warn(e != nil, ErrRun, strings.Join(cmd.Args, " "), "\n", kit.Select(e.Error(), err.String()))
-	}
-
-	m.Push(kit.MDB_TIME, m.Time())
-	m.Push(CMD_CODE, int(cmd.ProcessState.ExitCode()))
-	m.Push(CMD_ERR, err.String())
-	m.Push(CMD_OUT, out.String())
-	m.Echo(out.String())
-}
-
 const SYSTEM = "system"
 
 func init() {
 	Index.Merge(&ice.Context{
 		Configs: map[string]*ice.Config{
-			SYSTEM: {Name: "system", Help: "系统命令", Value: kit.Data()},
+			SYSTEM: {Name: SYSTEM, Help: "系统命令", Value: kit.Data()},
 		},
 		Commands: map[string]*ice.Command{
-			SYSTEM: {Name: "system cmd 执行:button 清空:button", Help: "系统命令", Hand: func(m *ice.Message, c *ice.Context, key string, arg ...string) {
+			SYSTEM: {Name: "system id auto", Help: "系统命令", Hand: func(m *ice.Message, c *ice.Context, key string, arg ...string) {
+				if len(arg) == 0 || kit.Int(arg[0]) > 0 {
+					m.Option("_control", "_page")
+					m.Option(mdb.FIELDS, kit.Select("time,id,cmd,dir,env", mdb.DETAIL, len(arg) > 0))
+					m.Cmdy(mdb.SELECT, SYSTEM, "", mdb.LIST, kit.MDB_ID, arg)
+					return
+				}
+
+				if len(arg) == 1 {
+					arg = kit.Split(arg[0])
+				}
 				cmd := exec.Command(arg[0], arg[1:]...)
 
 				// 运行目录
@@ -82,29 +110,6 @@ func init() {
 				default:
 					_system_show(m, cmd)
 				}
-			}},
-			"ssh_user": {Name: "ssh_user", Help: "ssh_user", Hand: func(m *ice.Message, c *ice.Context, key string, arg ...string) {
-				msg := m.Cmd(SYSTEM, "who")
-				msg.Split(msg.Result(), "name term begin", " \t", "\n")
-				msg.Table(func(index int, value map[string]string, head []string) {
-					m.Push("name", value["name"])
-					m.Push("term", value["term"])
-
-					ls := strings.Split(value["begin"], "(")
-					ls[0] = strings.Join(kit.Split(ls[0], " \t"), " ")
-					if len(ls) > 1 {
-						m.Push("ip", strings.TrimSuffix(ls[1], ")"))
-					}
-
-					t, e := time.ParseInLocation("2006 Jan 2 15:04", "2020 "+ls[0], time.Local)
-					if e != nil {
-						t, _ = time.ParseInLocation("2006-01-02 15:04", ls[0], time.Local)
-					}
-					m.Push("begin", t.Format("2006-01-02 15:04:05"))
-					d := time.Since(t)
-					d = d / time.Millisecond * time.Millisecond
-					m.Push("duration", d.String())
-				})
 			}},
 		},
 	}, nil)

@@ -150,7 +150,7 @@ var Index = &ice.Context{Name: "lark", Help: "机器人",
 
 					kit.Fetch(kit.Value(data, "data.user_list"), func(index int, value map[string]interface{}) {
 						msg := m.Cmd(m.Prefix(USER), value[OPEN_ID])
-						m.Push("avatar", m.Cmdx(mdb.RENDER, web.RENDER.IMG, msg.Append("avatar_72")))
+						// m.Push("avatar", m.Cmdx(mdb.RENDER, web.RENDER.IMG, msg.Append("avatar_72")))
 						m.Push("gender", kit.Select("男", "女", msg.Append("gender") == "2"))
 						m.Push(kit.MDB_NAME, msg.Append(kit.MDB_NAME))
 						m.Push("description", msg.Append("description"))
@@ -207,7 +207,7 @@ var Index = &ice.Context{Name: "lark", Help: "机器人",
 
 					kit.Fetch(kit.Value(data, "data.members"), func(index int, value map[string]interface{}) {
 						msg := m.Cmd(m.Prefix(USER), value[OPEN_ID])
-						m.Push("avatar", m.Cmdx(mdb.RENDER, web.RENDER.IMG, msg.Append("avatar_72")))
+						// m.Push("avatar", m.Cmdx(mdb.RENDER, web.RENDER.IMG, msg.Append("avatar_72")))
 						m.Push("gender", kit.Select("男", "女", msg.Append("gender") == "2"))
 						m.Push(kit.MDB_NAME, msg.Append(kit.MDB_NAME))
 						m.Push("description", msg.Append("description"))
@@ -223,7 +223,7 @@ var Index = &ice.Context{Name: "lark", Help: "机器人",
 					data := raw(m, "/open-apis/chat/v4/list")
 					kit.Fetch(kit.Value(data, "data.groups"), func(index int, value map[string]interface{}) {
 						m.Push(CHAT_ID, value[CHAT_ID])
-						m.Push("avatar", m.Cmdx(mdb.RENDER, web.RENDER.IMG, value["avatar"]))
+						// m.Push("avatar", m.Cmdx(mdb.RENDER, web.RENDER.IMG, value["avatar"]))
 						m.Push(kit.MDB_NAME, value[kit.MDB_NAME])
 						m.Push("description", value["description"])
 						m.Push(OPEN_ID, value["owner_open_id"])

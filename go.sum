@@ -4,6 +4,7 @@ github.com/gorilla/websocket v1.4.2/go.mod h1:YR8l580nyteQvAITg2hZ9XVh4b55+EU/ad
 github.com/kr/pty v1.1.1 h1:VkoXIwSboBpnk99O/KFauAEILuNHv5DVFKZMBN/gUgw=
 github.com/kr/pty v1.1.1/go.mod h1:pFQYn66WHrOpPYNljwOMqo10TkYh1fy3cYio2l3bCsQ=
 github.com/maruel/rs v0.0.0-20150922171536-2c81c4312fe4/go.mod h1:kcRFpEzolcEklV6rD7W95mG49/sbdX/PlFmd7ni3RvA=
+github.com/nareix/joy4 v0.0.0-20200507095837-05a4ffbb5369 h1:Yp0zFEufLz0H7jzffb4UPXijavlyqlYeOg7dcyVUNnQ=
 github.com/nareix/joy4 v0.0.0-20200507095837-05a4ffbb5369/go.mod h1:aFJ1ZwLjvHN4yEzE5Bkz8rD8/d8Vlj3UIuvz2yfET7I=
 github.com/shylinux/toolkits v0.1.8 h1:Lh5HkR1aRzhOOVu9eHwZ5y7dfW7hcFy29IR5tQ5qUeM=
 github.com/shylinux/toolkits v0.1.8/go.mod h1:Y68Ot6xOmo1bun67YvqC3chDGeU2gDxtsUnvVDGJm4g=

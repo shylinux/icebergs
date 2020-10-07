@@ -2,23 +2,12 @@ package aaa
 
 import (
 	ice "github.com/shylinux/icebergs"
-	"github.com/shylinux/icebergs/base/cli"
 	"github.com/shylinux/icebergs/base/mdb"
 	kit "github.com/shylinux/toolkits"
 
 	"strings"
 )
 
-const (
-	USER_CREATE = "user.create"
-)
-
-func _user_list(m *ice.Message) {
-	m.Richs(USER, nil, kit.MDB_FOREACH, func(key string, value map[string]interface{}) {
-		m.Push(key, value, []string{kit.MDB_TIME, USERZONE, USERNICK, USERNAME})
-	})
-	m.Sort(USERNAME)
-}
 func _user_login(m *ice.Message, name, word string) (ok bool) {
 	if m.Richs(USER, nil, name, nil) == nil {
 		_user_create(m, name, "")
@@ -33,24 +22,10 @@ func _user_login(m *ice.Message, name, word string) (ok bool) {
 	})
 	return ok
 }
-func _user_modify(m *ice.Message, name string, arg ...string) {
-	if m.Richs(USER, nil, name, nil) == nil {
-		_user_create(m, name, "")
-	}
-
-	m.Log_MODIFY(USERNAME, name, arg)
-	m.Richs(USER, nil, name, func(key string, value map[string]interface{}) {
-		for i := 0; i < len(arg)-1; i += 2 {
-			kit.Value(value, arg[i], arg[i+1])
-		}
-	})
-}
 func _user_create(m *ice.Message, name, word string) {
 	h := m.Rich(USER, nil, kit.Dict(
 		USERNAME, name, PASSWORD, word,
-		USERNICK, name, USERNODE, cli.NodeName,
-		USERZONE, m.Option(ice.MSG_USERZONE),
-		USERNODE, cli.NodeName,
+		USERNICK, name, USERZONE, m.Option(ice.MSG_USERZONE),
 	))
 	m.Log_CREATE(USERNAME, name, "hash", h)
 	m.Event(USER_CREATE, name)
@@ -72,27 +47,30 @@ func _user_search(m *ice.Message, kind, name, text string, arg ...string) {
 }
 
 func UserRoot(m *ice.Message) {
-	cli.PassWord = kit.Hashs("uniq")
-	cli.PassWord = cli.UserName
-	_user_create(m, cli.UserName, cli.PassWord)
+	ice.Info.PassWord = kit.Hashs("uniq")
+	ice.Info.PassWord = ice.Info.UserName
+	_user_create(m, ice.Info.UserName, ice.Info.PassWord)
 }
 func UserNick(m *ice.Message, username interface{}) (nick string) {
 	m.Richs(USER, nil, kit.Format(username), func(key string, value map[string]interface{}) {
+		value = kit.GetMeta(value)
 		nick = kit.Format(value[USERNICK])
 	})
 	return
 }
 func UserZone(m *ice.Message, username interface{}) (zone string) {
 	m.Richs(USER, nil, kit.Format(username), func(key string, value map[string]interface{}) {
+		value = kit.GetMeta(value)
 		zone = kit.Format(value[USERZONE])
 	})
 	return
 }
 func UserRole(m *ice.Message, username interface{}) (role string) {
-	if role = VOID; username == cli.UserName {
+	if role = VOID; username == ice.Info.UserName {
 		return ROOT
 	}
 	m.Richs(ROLE, nil, TECH, func(key string, value map[string]interface{}) {
+		value = kit.GetMeta(value)
 		if kit.Value(value, kit.Keys(USER, username)) == true {
 			role = TECH
 		}
@@ -109,28 +87,33 @@ func UserLogin(m *ice.Message, username, password string) bool {
 	return false
 }
 
+const (
+	USER_CREATE = "user.create"
+)
+
 const USER = "user"
 
 func init() {
 	Index.Merge(&ice.Context{
 		Configs: map[string]*ice.Config{
-			USER: {Name: "user", Help: "用户", Value: kit.Data(kit.MDB_SHORT, USERNAME)},
+			USER: {Name: USER, Help: "用户", Value: kit.Data(kit.MDB_SHORT, USERNAME)},
 		},
 		Commands: map[string]*ice.Command{
-			USER: {Name: "user", Help: "用户", Action: map[string]*ice.Action{
-				mdb.CREATE: {Name: "create username [password]", Help: "创建", Hand: func(m *ice.Message, arg ...string) {
-					_user_create(m, arg[0], kit.Select("", arg, 1))
+			USER: {Name: "user username auto", Help: "用户", Action: map[string]*ice.Action{
+				mdb.MODIFY: {Name: "modify", Help: "编辑", Hand: func(m *ice.Message, arg ...string) {
+					m.Cmdy(mdb.MODIFY, USER, "", mdb.HASH, USERNAME, m.Option(USERNAME), arg)
 				}},
-				mdb.MODIFY: {Name: "modify [key value]...", Help: "编辑", Hand: func(m *ice.Message, arg ...string) {
-					_user_modify(m, m.Option(USERNAME), arg...)
+				mdb.REMOVE: {Name: "remove", Help: "删除", Hand: func(m *ice.Message, arg ...string) {
+					m.Cmdy(mdb.REMOVE, USER, "", mdb.HASH, USERNAME, m.Option(USERNAME))
 				}},
 				mdb.SEARCH: {Name: "search type name text arg...", Help: "搜索", Hand: func(m *ice.Message, arg ...string) {
 					_user_search(m, arg[0], arg[1], kit.Select("", arg, 2))
 				}},
-				"login": {Name: "login username password", Help: "登录", Hand: func(m *ice.Message, arg ...string) {
-					_user_login(m, arg[0], arg[1])
-				}},
-			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) { _user_list(m) }},
+			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+				m.Option(mdb.FIELDS, kit.Select("time,userzone,usernick,username", mdb.DETAIL, len(arg) > 0))
+				m.Cmdy(mdb.SELECT, USER, "", mdb.HASH, USERNAME, arg)
+				m.PushAction(mdb.REMOVE)
+			}},
 		},
 	}, nil)
 }

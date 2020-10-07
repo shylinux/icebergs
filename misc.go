@@ -109,8 +109,5 @@ func (m *Message) PushPlugin(key string, arg ...string) *Message {
 	m.Cmdy("command", key)
 	return m
 }
-func (m *Message) PushDetail(value interface{}, arg ...interface{}) *Message {
-	return m.Push("detail", value, arg...)
-}
 
 var BinPack = map[string][]byte{}

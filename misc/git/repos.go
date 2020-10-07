@@ -37,21 +37,21 @@ func init() {
 		},
 		Commands: map[string]*ice.Command{
 			REPOS: {Name: "repos name=auto path=auto auto 添加", Help: "代码库", Action: map[string]*ice.Action{
-				mdb.CREATE: {Name: `create remote branch name path`, Help: "添加", Hand: func(m *ice.Message, arg ...string) {
-					m.Option("name", kit.Select(strings.TrimSuffix(path.Base(m.Option("remote")), ".git"), m.Option("name")))
+				mdb.CREATE: {Name: `create repos branch name path`, Help: "添加", Hand: func(m *ice.Message, arg ...string) {
+					m.Option("name", kit.Select(strings.TrimSuffix(path.Base(m.Option("repos")), ".git"), m.Option("name")))
 					m.Option("path", kit.Select(path.Join("usr", m.Option("name")), m.Option("path")))
-					m.Option("remote", kit.Select(m.Conf(REPOS, "meta.owner")+"/"+m.Option("name"), m.Option("remote")))
+					m.Option("repos", kit.Select(m.Conf(REPOS, "meta.owner")+"/"+m.Option("name"), m.Option("repos")))
 
 					if _, e := os.Stat(path.Join(m.Option("path"), ".git")); e != nil && os.IsNotExist(e) {
 						// 下载仓库
 						if _, e := os.Stat(m.Option("path")); e == nil {
 							m.Option(cli.CMD_DIR, m.Option("path"))
 							m.Cmd(cli.SYSTEM, GIT, "init")
-							m.Cmd(cli.SYSTEM, GIT, "remote", "add", "origin", m.Option("remote"))
+							m.Cmd(cli.SYSTEM, GIT, "remote", "add", "origin", m.Option("repos"))
 							m.Cmd(cli.SYSTEM, GIT, "pull", "origin", "master")
 						} else {
 							m.Cmd(cli.SYSTEM, GIT, "clone", "-b", kit.Select("master", m.Option("branch")),
-								m.Option("remote"), m.Option("path"))
+								m.Option("repos"), m.Option("path"))
 
 						}
 						_repos_insert(m, m.Option("name"), m.Option("path"))

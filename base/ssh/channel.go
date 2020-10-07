@@ -52,7 +52,7 @@ func _ssh_watch(m *ice.Message, meta map[string]string, h string, input io.Reade
 			switch buf[i] {
 			case '\r', '\n':
 				cmd := strings.TrimSpace(string(buf[:i]))
-				m.Log_IMPORT(aaa.HOSTNAME, meta[aaa.HOSTNAME], aaa.USERNAME, meta[aaa.USERNAME], CMD, cmd)
+				m.Log_IMPORT(tcp.HOSTNAME, meta[tcp.HOSTNAME], aaa.USERNAME, meta[aaa.USERNAME], CMD, cmd)
 				m.Cmdy(mdb.INSERT, CHANNEL, kit.Keys(kit.MDB_HASH, h), mdb.LIST, kit.MDB_TYPE, CMD, kit.MDB_TEXT, cmd)
 				i = 0
 			default:

@@ -2,6 +2,7 @@ package chat
 
 import (
 	ice "github.com/shylinux/icebergs"
+	"github.com/shylinux/icebergs/base/aaa"
 	"github.com/shylinux/icebergs/base/web"
 	kit "github.com/shylinux/toolkits"
 )
@@ -12,6 +13,8 @@ var Index = &ice.Context{Name: CHAT, Help: "聊天中心",
 	Commands: map[string]*ice.Command{
 		ice.CTX_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			m.Load()
+			m.Cmd(web.SERVE, aaa.WHITE, "header", "river", "action", "footer")
+
 			m.Conf(RIVER, "meta.template", kit.Dict(
 				"base", kit.Dict(
 					"info", []interface{}{
@@ -40,7 +43,7 @@ var Index = &ice.Context{Name: CHAT, Help: "聊天中心",
 				),
 			))
 			m.Watch(web.SPACE_START, m.Prefix(NODE))
-			m.Watch(web.SPACE_CLOSE, m.Prefix(NODE))
+			m.Watch(web.SPACE_STOP, m.Prefix(NODE))
 		}},
 		ice.CTX_EXIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) { m.Save() }},
 	},

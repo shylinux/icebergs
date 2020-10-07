@@ -4,9 +4,9 @@ import (
 	"github.com/shylinux/icebergs"
 )
 
-var Index = &ice.Context{Name: "yac", Help: "语法模块",
-	Caches:  map[string]*ice.Cache{},
-	Configs: map[string]*ice.Config{},
+const YAC = "yac"
+
+var Index = &ice.Context{Name: YAC, Help: "语法模块",
 	Commands: map[string]*ice.Command{
 		"hi": {Name: "hi", Help: "hello", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			m.Echo("hello %s world", c.Name)

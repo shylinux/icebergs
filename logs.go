@@ -81,8 +81,16 @@ func (m *Message) Log(level string, str string, arg ...interface{}) *Message {
 func (m *Message) Info(str string, arg ...interface{}) *Message {
 	return m.log(LOG_INFO, str, arg...)
 }
-func (m *Message) Cost(str string, arg ...interface{}) *Message {
-	return m.log(LOG_COST, "%s: %s", m.Format("cost"), kit.Format(str, arg...))
+func (m *Message) Cost(arg ...interface{}) *Message {
+	list := []string{m.Format("cost")}
+	for i := 0; i < len(arg); i += 2 {
+		if i == len(arg)-1 {
+			list = append(list, kit.Format(arg[i]))
+		} else {
+			list = append(list, kit.Format(arg[i])+":", kit.Format(arg[i+1]))
+		}
+	}
+	return m.log(LOG_COST, strings.Join(list, " "))
 }
 func (m *Message) Warn(err bool, arg ...interface{}) bool {
 	if err {

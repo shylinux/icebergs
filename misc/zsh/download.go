@@ -13,14 +13,14 @@ func init() {
 			"/download": {Name: "/download", Help: "下载", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 				if len(arg) == 0 || arg[0] == "" {
 					// 文件列表
-					m.Cmdy(web.PROXY, m.Option("you"), web.STORY).Table()
+					m.Cmdy(web.SPACE, m.Option("you"), web.STORY).Table()
 					return
 				}
 
 				// 查找文件
 				if m.Cmdy(web.STORY, "index", arg[0]).Append("text") == "" && m.Option("you") != "" {
 					// 上发文件
-					m.Cmd(web.PROXY, m.Option("you"), web.STORY, "push", arg[0], "dev", arg[0])
+					m.Cmd(web.SPACE, m.Option("you"), web.STORY, "push", arg[0], "dev", arg[0])
 					m.Cmdy(web.STORY, "index", arg[0])
 				}
 

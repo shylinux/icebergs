@@ -168,14 +168,14 @@ func init() {
 			)},
 		},
 		Commands: map[string]*ice.Command{
-			STORY: {Name: "story story=auto key=auto auto", Help: "故事会", Action: map[string]*ice.Action{
+			STORY: {Name: "story story auto", Help: "故事会", Action: map[string]*ice.Action{
 				WRITE: {Name: "write type name text arg...", Help: "添加", Hand: func(m *ice.Message, arg ...string) {
 					_story_write(m, arg[0], arg[1], arg[2], arg[3:]...)
 				}},
 				CATCH: {Name: "catch type name arg...", Help: "捕捉", Hand: func(m *ice.Message, arg ...string) {
 					_story_catch(m, arg[0], arg[1], arg[2:]...)
 				}},
-				WATCH: {Name: "watch key name", Help: "查看", Hand: func(m *ice.Message, arg ...string) {
+				WATCH: {Name: "watch key name", Help: "释放", Hand: func(m *ice.Message, arg ...string) {
 					_story_watch(m, arg[0], arg[1])
 				}},
 				INDEX: {Name: "index key", Help: "索引", Hand: func(m *ice.Message, arg ...string) {

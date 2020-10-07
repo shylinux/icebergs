@@ -68,22 +68,48 @@ func init() {
 					})
 				}},
 				"build": {Name: "build link", Help: "构建", Hand: func(m *ice.Message, arg ...string) {
-					p := m.Option(cli.CMD_DIR, path.Join(m.Conf(INSTALL, kit.META_PATH), kit.TrimExt(arg[0])))
-					switch cb := m.Optionv("prepare").(type) {
-					case func(string):
-						cb(p)
-					default:
-						if m.Cmdy(cli.SYSTEM, "./configure", "--prefix="+kit.Path(path.Join(p, kit.Select("_install", m.Option("install")))), arg[1:]); m.Append(cli.CMD_CODE) != "0" {
+					m.Option("cache.button", "构建")
+					m.Option("_process", "_follow")
+					if m.Option("cache.hash") != "" {
+						m.Cmdy(cli.OUTPUT, m.Option("cache.hash"))
+						m.Sort(kit.MDB_ID)
+						m.Table(func(index int, value map[string]string, head []string) {
+							m.Option("cache.begin", value[kit.MDB_ID])
+							m.Echo(value[kit.SSH_RES])
+						})
+						if len(m.Resultv()) > 0 {
 							return
 						}
-					}
 
-					if m.Cmdy(cli.SYSTEM, "make", "-j8"); m.Append(cli.CMD_CODE) != "0" {
+						if m.Conf(cli.OUTPUT, kit.Keys(kit.MDB_HASH, m.Option("cache.hash"), kit.MDB_META, kit.MDB_STATUS)) == "stop" {
+							m.Echo("stop")
+						}
 						return
 					}
+					m.Cmdy(cli.OUTPUT, mdb.CREATE, kit.MDB_NAME, arg[0])
+					m.Option("cache.hash", m.Result())
+					m.Option("cache.begin", 1)
 
-					m.Cmdy(cli.SYSTEM, "mv", "INSTALL", "INSTALLS")
-					m.Cmdy(cli.SYSTEM, "make", "PREFIX="+kit.Path(path.Join(p, kit.Select("_install", m.Option("install")))), "install")
+					m.Go(func() {
+						defer m.Cmdy(cli.OUTPUT, mdb.MODIFY, kit.MDB_STATUS, cli.Status.Stop)
+						defer m.Option(kit.MDB_HASH, m.Option("cache.hash"))
+
+						p := m.Option(cli.CMD_DIR, path.Join(m.Conf(INSTALL, kit.META_PATH), kit.TrimExt(arg[0])))
+						switch cb := m.Optionv("prepare").(type) {
+						case func(string):
+							cb(p)
+						default:
+							if m.Cmdy(cli.SYSTEM, "./configure", "--prefix="+kit.Path(path.Join(p, kit.Select("_install", m.Option("install")))), arg[1:]); m.Append(cli.CMD_CODE) != "0" {
+								return
+							}
+						}
+
+						if m.Cmdy(cli.SYSTEM, "make", "-j8"); m.Append(cli.CMD_CODE) != "0" {
+							return
+						}
+
+						m.Cmdy(cli.SYSTEM, "make", "PREFIX="+kit.Path(path.Join(p, kit.Select("_install", m.Option("install")))), "install")
+					})
 				}},
 				"spawn": {Name: "spawn link", Help: "新建", Hand: func(m *ice.Message, arg ...string) {
 					port := m.Cmdx(tcp.PORT, aaa.Right)
@@ -113,6 +139,17 @@ func init() {
 					// 源码列表
 					m.Option(mdb.FIELDS, m.Conf(INSTALL, kit.META_FIELD))
 					m.Cmdy(mdb.SELECT, m.Prefix(INSTALL), "", mdb.HASH)
+					return
+				}
+
+				if len(arg) == 1 {
+					// 服务列表
+					m.Option(mdb.FIELDS, "time,port,status,pid,cmd,dir")
+					m.Cmdy(mdb.SELECT, cli.DAEMON, "", mdb.HASH)
+					m.Appendv("port", []string{})
+					m.Table(func(index int, value map[string]string, head []string) {
+						m.Push(kit.SSH_PORT, path.Base(value[kit.SSH_DIR]))
+					})
 					return
 				}
 

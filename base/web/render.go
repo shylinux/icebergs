@@ -3,7 +3,6 @@ package web
 import (
 	ice "github.com/shylinux/icebergs"
 	"github.com/shylinux/icebergs/base/aaa"
-	"github.com/shylinux/icebergs/base/mdb"
 	kit "github.com/shylinux/toolkits"
 	"github.com/skip2/go-qrcode"
 
@@ -13,26 +12,6 @@ import (
 	"path"
 	"time"
 )
-
-func URL(m *ice.Message, path string, arg ...interface{}) string {
-	list := kit.Simple(arg)
-	if m.Option("pod") != "" {
-		list = append(list, "pod", m.Option("pod"))
-	}
-	return kit.MergeURL2(m.R.Header.Get("Origin"), path, list)
-}
-func Count(m *ice.Message, cmd, key, name string) int {
-	count := kit.Int(m.Conf(cmd, kit.Keys(key, name)))
-	m.Conf(cmd, kit.Keys(key, name), count+1)
-	return count
-}
-func Format(key string, arg ...interface{}) string {
-	switch args := kit.Simple(arg); key {
-	case "a":
-		return fmt.Sprintf("<a href='%s' target='_blank'>%s</a>", kit.Format(args[0]), kit.Select(kit.Format(args[0]), args, 1))
-	}
-	return ""
-}
 
 const (
 	STATUS = "status"
@@ -97,69 +76,7 @@ func RenderCookie(msg *ice.Message, value string, arg ...string) { // name path 
 	expire := time.Now().Add(kit.Duration(kit.Select(msg.Conf(aaa.SESS, "meta.expire"), arg, 2)))
 	http.SetCookie(msg.W, &http.Cookie{Value: value, Name: kit.Select(ice.MSG_SESSID, arg, 0), Path: kit.Select("/", arg, 1), Expires: expire})
 }
-func RenderStatus(msg *ice.Message, code int, text string) { // name path expire
+func RenderStatus(msg *ice.Message, code int, text string) {
 	msg.W.WriteHeader(code)
 	msg.W.Write([]byte(text))
-}
-
-var RENDER = struct {
-	A      string
-	IMG    string
-	Video  string
-	Field  string
-	Frame  string
-	Button string
-
-	Download string
-}{
-	A:      "a",
-	IMG:    "img",
-	Video:  "video",
-	Field:  "field",
-	Frame:  "frame",
-	Button: "button",
-
-	Download: "download",
-}
-
-func init() {
-	Index.Merge(&ice.Context{
-		Commands: map[string]*ice.Command{
-			"_render": {Action: map[string]*ice.Action{
-				RENDER.A: {Hand: func(m *ice.Message, arg ...string) {
-					// u := kit.Select(m.Conf(SHARE, "meta.domain"), arg, 1)
-					u := kit.Select(arg[0], arg, 1)
-					m.Echo(`<a href="%s" target="_blank">%s</a>`, u, arg[0])
-				}},
-				RENDER.IMG: {Hand: func(m *ice.Message, arg ...string) {
-					m.Echo(`<img src="%s" height=%s>`, arg[0], kit.Select("120", arg, 1))
-				}},
-				RENDER.Video: {Hand: func(m *ice.Message, arg ...string) {
-					m.Echo(`<video src="%s" height=%s controls>`, arg[0], kit.Select("120", arg, 1))
-				}},
-				RENDER.Field: {Hand: func(m *ice.Message, arg ...string) {
-					m.Echo(`<fieldset><legend>%s(%s)</legend><form></form></fieldset>`, arg[0], arg[1])
-				}},
-				RENDER.Frame: {Hand: func(m *ice.Message, arg ...string) {
-					m.Echo(`<iframe src=%s class="story" data-type="iframe" width=800 height=400 ></iframe>`, arg[0])
-				}},
-				RENDER.Button: {Hand: func(m *ice.Message, arg ...string) {
-					m.Echo(`<input type="button" value="%s">`, arg[0])
-				}},
-				RENDER.Download: {Hand: func(m *ice.Message, arg ...string) {
-					m.Echo(`<a href="%s" target="_blank" download="%s">%s</a>`, arg[0], kit.Select(path.Base(arg[0]), arg, 1), kit.Select(arg[0], arg, 1))
-				}},
-			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-				if arg[0] == mdb.RENDER {
-					m.Search("_render", func(p *ice.Context, s *ice.Context, key string, cmd *ice.Command) {
-						if action, ok := cmd.Action[arg[1]]; ok {
-							action.Hand(m, arg[2:]...)
-						}
-					})
-					return
-				}
-				m.Echo(`<input type="%s" value="%s">`, arg[1], arg[2])
-			}},
-		},
-	}, nil)
 }

@@ -8,19 +8,15 @@ import (
 	"strings"
 )
 
-func _command_list(m *ice.Message, all bool, name string) {
+func _command_list(m *ice.Message, name string) {
 	p := m.Spawn(m.Source())
-	if all {
-		p = ice.Pulse
-	}
-
 	if name != "" {
 		p.Search(name, func(p *ice.Context, s *ice.Context, key string, cmd *ice.Command) {
 			m.Push("key", s.Cap(ice.CTX_FOLLOW))
 			m.Push("name", kit.Format(cmd.Name))
 			m.Push("help", kit.Simple(cmd.Help)[0])
-			m.Push("meta", kit.Format(cmd.Meta))
-			m.Push("list", kit.Format(cmd.List))
+			m.Push("meta", kit.Formats(cmd.Meta))
+			m.Push("list", kit.Formats(cmd.List))
 		})
 		return
 	}
@@ -28,8 +24,7 @@ func _command_list(m *ice.Message, all bool, name string) {
 	list := []string{}
 	for k := range p.Target().Commands {
 		if k[0] == '/' || k[0] == '_' {
-			// 内部命令
-			continue
+			continue // 内部命令
 		}
 		list = append(list, k)
 	}
@@ -48,9 +43,8 @@ const COMMAND = "command"
 func init() {
 	Index.Merge(&ice.Context{
 		Commands: map[string]*ice.Command{
-			COMMAND: {Name: "command [all] command", Help: "命令", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-				all, arg := _parse_arg_all(m, arg...)
-				_command_list(m, all, strings.Join(arg, "."))
+			COMMAND: {Name: "command key auto", Help: "命令", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+				_command_list(m, strings.Join(arg, "."))
 			}},
 		},
 	}, nil)

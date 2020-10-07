@@ -2,9 +2,7 @@ package web
 
 import (
 	ice "github.com/shylinux/icebergs"
-	"github.com/shylinux/icebergs/base/aaa"
 	"github.com/shylinux/icebergs/base/cli"
-	"github.com/shylinux/icebergs/base/ctx"
 	"github.com/shylinux/icebergs/base/mdb"
 	"github.com/shylinux/icebergs/base/tcp"
 	kit "github.com/shylinux/toolkits"
@@ -12,7 +10,6 @@ import (
 	"net"
 	"net/http"
 	"path"
-	"strings"
 )
 
 type Frame struct {
@@ -72,57 +69,41 @@ func (web *Frame) Start(m *ice.Message, arg ...string) bool {
 		}
 	})
 
-	m.Richs(SPIDE, nil, arg[0], func(key string, value map[string]interface{}) {
-		client := value["client"].(map[string]interface{})
+	web.m, web.Server = m, &http.Server{Handler: web}
+	m.Option(tcp.LISTEN_CB, func(l net.Listener) {
+		m.Cmdy(mdb.INSERT, SERVE, "", mdb.HASH, arg, kit.MDB_STATUS, "start", "proto", m.Option("proto"), "dev", m.Option("dev"))
+		m.Event(SERVE_START, arg...)
+		defer m.Event(SERVE_CLOSE, arg...)
+		defer m.Cmd(mdb.MODIFY, SERVE, "", mdb.HASH, kit.MDB_NAME, m.Option(kit.MDB_NAME), kit.MDB_STATUS, "stop")
 
-		web.m, web.Server = m, &http.Server{Handler: web}
-		m.Option(tcp.LISTEN_CB, func(l net.Listener) {
-			m.Event(SERVE_START, arg[0])
-			m.Warn(true, "listen %s", web.Server.Serve(l))
-			m.Event(SERVE_CLOSE, arg[0])
-		})
-
-		ls := strings.Split(m.Cap(ice.CTX_STREAM, client["hostname"]), ":")
-		m.Cmd(tcp.SERVER, tcp.LISTEN, kit.MDB_NAME, "web", tcp.HOST, ls[0], tcp.PORT, ls[1])
+		m.Warn(true, SERVE, ": ", web.Server.Serve(l))
 	})
+
+	m.Cmd(tcp.SERVER, tcp.LISTEN, kit.MDB_TYPE, WEB, kit.MDB_NAME, m.Option(kit.MDB_NAME),
+		tcp.HOST, m.Option(tcp.HOST), tcp.PORT, m.Option(tcp.PORT))
 	return true
 }
 func (web *Frame) Close(m *ice.Message, arg ...string) bool {
 	return true
 }
 
-var Index = &ice.Context{Name: "web", Help: "网络模块",
-	Caches:  map[string]*ice.Cache{},
-	Configs: map[string]*ice.Config{},
+const WEB = "web"
+
+var Index = &ice.Context{Name: WEB, Help: "网络模块",
 	Commands: map[string]*ice.Command{
 		ice.CTX_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			m.Load()
 
-			m.Cmd(SPIDE, mdb.CREATE, "dev", kit.Select("http://:9020", m.Conf(cli.RUNTIME, "conf.ctx_dev")))
-			m.Cmd(SPIDE, mdb.CREATE, "self", kit.Select("http://:9020", m.Conf(cli.RUNTIME, "conf.ctx_self")))
-			m.Cmd(SPIDE, mdb.CREATE, "shy", kit.Select("https://shylinux.com:443", m.Conf(cli.RUNTIME, "conf.ctx_shy")))
-
-			m.Cmd(aaa.ROLE, aaa.White, aaa.VOID, "web", "/publish/")
-			m.Cmd(aaa.ROLE, aaa.White, aaa.VOID, ctx.COMMAND)
-
-			m.Cmd(mdb.SEARCH, mdb.CREATE, SPIDE)
-			m.Cmd(mdb.RENDER, mdb.CREATE, SPIDE)
-			m.Cmd(mdb.SEARCH, mdb.CREATE, SPACE)
-
-			m.Search("_render", func(p *ice.Context, s *ice.Context, key string, cmd *ice.Command) {
-				for k := range cmd.Action {
-					m.Cmd(mdb.RENDER, mdb.CREATE, k, "_render", "web")
-				}
-			})
+			m.Cmd(SPIDE, mdb.CREATE, SPIDE_DEV, kit.Select("http://:9020", m.Conf(cli.RUNTIME, "conf.ctx_dev")))
+			m.Cmd(SPIDE, mdb.CREATE, SPIDE_SELF, kit.Select("http://:9020", m.Conf(cli.RUNTIME, "conf.ctx_self")))
+			m.Cmd(SPIDE, mdb.CREATE, SPIDE_SHY, kit.Select("https://shylinux.com:443", m.Conf(cli.RUNTIME, "conf.ctx_shy")))
 		}},
 		ice.CTX_EXIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			m.Save(SPIDE, SERVE, CACHE, SHARE, STORY)
+			m.Save()
 
-			m.Done()
-			m.Richs(SPACE, nil, "*", func(key string, value map[string]interface{}) {
-				if kit.Format(value["type"]) == "master" {
-					m.Done()
-				}
+			m.Done(true)
+			m.Cmd(SERVE).Table(func(index int, value map[string]string, head []string) {
+				m.Done(value[kit.MDB_STATUS] == "start")
 			})
 		}},
 	},
@@ -130,6 +111,6 @@ var Index = &ice.Context{Name: "web", Help: "网络模块",
 
 func init() {
 	ice.Index.Register(Index, &Frame{},
-		SPIDE, SERVE, SPACE, DREAM, CACHE, SHARE, STORY,
+		SPIDE, SERVE, SPACE, DREAM, ROUTE, SHARE, CACHE, STORY,
 	)
 }

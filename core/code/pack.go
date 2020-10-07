@@ -5,7 +5,6 @@ import (
 	"github.com/shylinux/icebergs/base/cli"
 	"github.com/shylinux/icebergs/base/mdb"
 	"github.com/shylinux/icebergs/base/nfs"
-	"github.com/shylinux/icebergs/base/web"
 	kit "github.com/shylinux/toolkits"
 
 	"bufio"
@@ -127,7 +126,7 @@ func init() {
 
 				if len(arg) == 0 {
 					m.Cmdy(nfs.DIR, WEBPACK).Table(func(index int, value map[string]string, head []string) {
-						m.Push(kit.MDB_LINK, m.Cmdx(mdb.RENDER, web.RENDER.Download, "/publish/"+value[kit.MDB_PATH]))
+						// m.Push(kit.MDB_LINK, m.Cmdx(mdb.RENDER, web.RENDER.Download, "/publish/"+value[kit.MDB_PATH]))
 					})
 					return
 				}
@@ -168,7 +167,7 @@ func init() {
 				m.Option(nfs.DIR_DEEP, true)
 
 				m.Cmdy(nfs.DIR, BINPACK).Table(func(index int, value map[string]string, head []string) {
-					m.Push(kit.MDB_LINK, m.Cmdx(mdb.RENDER, web.RENDER.Download, "/publish/"+value[kit.MDB_PATH]))
+					// m.Push(kit.MDB_LINK, m.Cmdx(mdb.RENDER, web.RENDER.Download, "/publish/"+value[kit.MDB_PATH]))
 				})
 			}},
 			MODPACK: {Name: "modpack path=auto auto 创建", Help: "打包", Meta: kit.Dict(

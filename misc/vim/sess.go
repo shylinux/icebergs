@@ -4,6 +4,7 @@ import (
 	ice "github.com/shylinux/icebergs"
 	"github.com/shylinux/icebergs/base/aaa"
 	"github.com/shylinux/icebergs/base/mdb"
+	"github.com/shylinux/icebergs/base/tcp"
 	"github.com/shylinux/icebergs/base/web"
 	kit "github.com/shylinux/toolkits"
 
@@ -59,7 +60,7 @@ func init() {
 				m.Option(mdb.FIELDS, m.Conf(m.Prefix(SESS), kit.META_FIELD))
 				if strings.TrimSpace(m.Option(SID)) == "" {
 					m.Option(SID, m.Cmdx(mdb.INSERT, m.Prefix(SESS), "", mdb.HASH, kit.MDB_STATUS, "login",
-						aaa.USERNAME, m.Option(aaa.USERNAME), aaa.HOSTNAME, m.Option(aaa.HOSTNAME), PID, m.Option(PID), PWD, m.Option(PWD)))
+						aaa.USERNAME, m.Option(aaa.USERNAME), tcp.HOSTNAME, m.Option(tcp.HOSTNAME), PID, m.Option(PID), PWD, m.Option(PWD)))
 				} else {
 					m.Cmdy(mdb.MODIFY, m.Prefix(SESS), "", mdb.HASH, kit.MDB_HASH, m.Option(SID), kit.MDB_STATUS, "login")
 				}
@@ -79,7 +80,7 @@ func init() {
 					msg := m.Cmd(mdb.SELECT, m.Prefix(SESS), "", mdb.HASH, kit.MDB_HASH, strings.TrimSpace(m.Option(SID)))
 					if m.Option(SID, msg.Append(kit.MDB_HASH)) != "" {
 						m.Option(aaa.USERNAME, msg.Append(aaa.USERNAME))
-						m.Option(aaa.HOSTNAME, msg.Append(aaa.HOSTNAME))
+						m.Option(tcp.HOSTNAME, msg.Append(tcp.HOSTNAME))
 					}
 				}
 				m.Render(ice.RENDER_RESULT)

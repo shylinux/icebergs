@@ -3,7 +3,6 @@ package chat
 import (
 	ice "github.com/shylinux/icebergs"
 	"github.com/shylinux/icebergs/base/mdb"
-	"github.com/shylinux/icebergs/base/web"
 	kit "github.com/shylinux/toolkits"
 
 	"math"
@@ -59,9 +58,9 @@ func init() {
 				}},
 
 				mdb.RENDER: {Name: "render type name text", Help: "渲染", Hand: func(m *ice.Message, arg ...string) {
-					m.Cmdy(mdb.RENDER, web.RENDER.Frame, kit.Format(
-						"https://map.baidu.com/search/%s/@12958750.085,4825785.55,16z?querytype=s&da_src=shareurl&wd=%s",
-						arg[2], arg[2]))
+					// m.Cmdy(mdb.RENDER, web.RENDER.Frame, kit.Format(
+					// 	"https://map.baidu.com/search/%s/@12958750.085,4825785.55,16z?querytype=s&da_src=shareurl&wd=%s",
+					// 	arg[2], arg[2]))
 				}},
 			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 				m.Option(mdb.FIELDS, "time,type,name,text,longitude,latitude")

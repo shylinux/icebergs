@@ -13,31 +13,13 @@ import (
 )
 
 func _cache_name(m *ice.Message, h string) string {
-	return path.Join(m.Conf(CACHE, "meta.path"), h[:2], h)
-}
-
-func _cache_list(m *ice.Message, key string) {
-	if key == "" {
-		m.Grows(CACHE, nil, "", "", func(index int, value map[string]interface{}) {
-			// 缓存列表
-			m.Push("", value, []string{kit.MDB_TIME, kit.MDB_ID, DATA, kit.MDB_TYPE})
-			m.Push(kit.MDB_SIZE, kit.FmtSize(kit.Int64(value[kit.MDB_SIZE])))
-			m.Push("", value, []string{kit.MDB_NAME, kit.MDB_TEXT})
-		})
-		m.Sort(kit.MDB_ID, "int_r")
-		return
-	}
-	m.Richs(CACHE, nil, key, func(key string, value map[string]interface{}) {
-		// 缓存详情
-		m.Push("detail", value)
-	})
+	return path.Join(m.Conf(CACHE, kit.META_PATH), h[:2], h)
 }
 func _cache_save(m *ice.Message, kind, name, text string, arg ...string) { // file size
 	if name == "" {
 		return
 	}
-	if len(text) > 512 {
-		// 存入文件
+	if len(text) > 512 { // 存入文件
 		p := m.Cmdx(nfs.SAVE, _cache_name(m, kit.Hashs(text)), text)
 		text, arg = p, kit.Simple(p, len(text))
 	}
@@ -46,17 +28,9 @@ func _cache_save(m *ice.Message, kind, name, text string, arg ...string) { // fi
 	size := kit.Int(kit.Select(kit.Format(len(text)), arg, 1))
 	file := kit.Select("", arg, 0)
 	text = kit.Select(file, text)
-	h := m.Rich(CACHE, nil, kit.Dict(
+	h := m.Cmdx(mdb.INSERT, CACHE, "", mdb.HASH,
 		kit.MDB_TYPE, kind, kit.MDB_NAME, name, kit.MDB_TEXT, text,
-		kit.MDB_FILE, file, kit.MDB_SIZE, size,
-	))
-	m.Log_CREATE(CACHE, h, kit.MDB_TYPE, kind, kit.MDB_NAME, name)
-
-	// 添加记录
-	m.Grow(CACHE, nil, kit.Dict(
-		kit.MDB_TYPE, kind, kit.MDB_NAME, name, kit.MDB_TEXT, text,
-		kit.MDB_SIZE, size, DATA, h,
-	))
+		kit.MDB_FILE, file, kit.MDB_SIZE, size)
 
 	// 返回结果
 	m.Push(kit.MDB_TIME, m.Time())
@@ -68,15 +42,15 @@ func _cache_save(m *ice.Message, kind, name, text string, arg ...string) { // fi
 	m.Push(DATA, h)
 }
 func _cache_watch(m *ice.Message, key, file string) {
-	m.Richs(CACHE, nil, key, func(key string, value map[string]interface{}) {
-		if value[kit.MDB_FILE] == nil {
+	m.Option(mdb.FIELDS, "time,hash,size,type,name,text,file")
+	m.Cmd(mdb.SELECT, CACHE, "", mdb.HASH, kit.MDB_HASH, key).Table(func(index int, value map[string]string, head []string) {
+		if value[kit.MDB_FILE] == "" {
 			m.Cmdy(nfs.SAVE, file, value[kit.MDB_TEXT])
 		} else {
 			m.Cmdy(nfs.LINK, file, value[kit.MDB_FILE])
 		}
 	})
 }
-
 func _cache_catch(m *ice.Message, name string) (file, size string) {
 	if f, e := os.Open(name); m.Assert(e) {
 		defer f.Close()
@@ -99,7 +73,7 @@ func _cache_upload(m *ice.Message, r *http.Request) (kind, name, file, size stri
 			buf.Seek(0, os.SEEK_SET)
 			if n, e := io.Copy(f, buf); m.Assert(e) {
 				m.Log_IMPORT(kit.MDB_FILE, p, kit.MDB_SIZE, kit.FmtSize(int64(n)))
-				return h.Header.Get("Content-Type"), h.Filename, p, kit.Format(n)
+				return h.Header.Get(ContentType), h.Filename, p, kit.Format(n)
 			}
 		}
 	}
@@ -108,7 +82,7 @@ func _cache_upload(m *ice.Message, r *http.Request) (kind, name, file, size stri
 func _cache_download(m *ice.Message, r *http.Response) (file, size string) {
 	defer r.Body.Close()
 
-	total := kit.Int(kit.Select("1", r.Header.Get("Content-Length")))
+	total := kit.Int(kit.Select("1", r.Header.Get(ContentLength)))
 	if f, p, e := kit.Create(path.Join("var/tmp", kit.Hashs("uniq"))); m.Assert(e) {
 		size, buf := 0, make([]byte, 1024)
 		for {
@@ -160,18 +134,15 @@ const CACHE = "cache"
 func init() {
 	Index.Merge(&ice.Context{
 		Configs: map[string]*ice.Config{
-			CACHE: {Name: "cache", Help: "缓存池", Value: kit.Data(
-				kit.MDB_SHORT, kit.MDB_TEXT,
-				kit.MDB_PATH, "var/file",
-				kit.MDB_STORE, "var/data",
-				kit.MDB_FSIZE, "200000",
-				kit.MDB_LIMIT, "50",
-				kit.MDB_LEAST, "30",
+			CACHE: {Name: CACHE, Help: "缓存池", Value: kit.Data(
+				kit.MDB_SHORT, kit.MDB_TEXT, kit.MDB_PATH, "var/file",
+				kit.MDB_STORE, "var/data", kit.MDB_FSIZE, "200000",
+				kit.MDB_LIMIT, "50", kit.MDB_LEAST, "30",
 			)},
 		},
 		Commands: map[string]*ice.Command{
-			CACHE: {Name: "cache data=auto auto", Help: "缓存池", Action: map[string]*ice.Action{
-				WATCH: {Name: "watch key file", Help: "查看", Hand: func(m *ice.Message, arg ...string) {
+			CACHE: {Name: "cache hash auto", Help: "缓存池", Action: map[string]*ice.Action{
+				WATCH: {Name: "watch key file", Help: "释放", Hand: func(m *ice.Message, arg ...string) {
 					_cache_watch(m, arg[0], arg[1])
 				}},
 				WRITE: {Name: "write type name text", Help: "添加", Hand: func(m *ice.Message, arg ...string) {
@@ -186,15 +157,16 @@ func init() {
 					_cache_save(m, kind, name, "", file, size)
 				}},
 				DOWNLOAD: {Name: "download type name", Help: "下载", Hand: func(m *ice.Message, arg ...string) {
-					if r, ok := m.Optionv("response").(*http.Response); ok {
+					if r, ok := m.Optionv(RESPONSE).(*http.Response); ok {
 						file, size := _cache_download(m, r)
 						_cache_save(m, arg[0], arg[1], "", file, size)
 					}
 				}},
 			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-				m.Option(mdb.FIELDS, "time,size,type,name,text,file")
-				m.Cmdy(mdb.SELECT, m.Prefix(CACHE), "", mdb.HASH, kit.MDB_HASH, arg)
+				m.Option(mdb.FIELDS, "time,hash,size,type,name,text,file")
+				m.Cmdy(mdb.SELECT, CACHE, "", mdb.HASH, kit.MDB_HASH, arg)
 			}},
+
 			"/cache/": {Name: "/cache/", Help: "缓存池", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 				m.Richs(CACHE, nil, arg[0], func(key string, value map[string]interface{}) {
 					if value[kit.MDB_FILE] == nil {

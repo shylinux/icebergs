@@ -27,7 +27,8 @@ func (l Listener) Accept() (net.Conn, error) {
 		ls = strings.Split(strings.TrimPrefix(c.RemoteAddr().String(), "["), "]:")
 	}
 	h := l.m.Cmdx(mdb.INSERT, CLIENT, "", mdb.HASH, HOST, ls[0], PORT, ls[1],
-		kit.MDB_NAME, l.m.Option(kit.MDB_NAME), kit.MDB_STATUS, kit.Select(ERROR, OPEN, e == nil), kit.MDB_ERROR, kit.Format(e))
+		kit.MDB_TYPE, l.m.Option(kit.MDB_TYPE), kit.MDB_NAME, l.m.Option(kit.MDB_NAME),
+		kit.MDB_STATUS, kit.Select(ERROR, OPEN, e == nil), kit.MDB_ERROR, kit.Format(e))
 
 	return &Conn{m: l.m, h: h, s: &Stat{}, Conn: c}, e
 }
@@ -50,10 +51,10 @@ func init() {
 		},
 		Commands: map[string]*ice.Command{
 			SERVER: {Name: "server hash auto 清理", Help: "服务器", Action: map[string]*ice.Action{
-				LISTEN: {Name: "LISTEN port=9010 host=", Help: "监听", Hand: func(m *ice.Message, arg ...string) {
+				LISTEN: {Name: "LISTEN type name port=9010 host=", Help: "监听", Hand: func(m *ice.Message, arg ...string) {
 					l, e := net.Listen(TCP, m.Option(HOST)+":"+m.Option(PORT))
-					h := m.Cmdx(mdb.INSERT, SERVER, "", mdb.HASH, PORT, m.Option(PORT), HOST, m.Option(HOST),
-						kit.MDB_NAME, m.Option(kit.MDB_NAME), kit.MDB_STATUS, kit.Select(ERROR, OPEN, e == nil), kit.MDB_ERROR, kit.Format(e))
+					h := m.Cmdx(mdb.INSERT, SERVER, "", mdb.HASH, arg,
+						kit.MDB_STATUS, kit.Select(ERROR, OPEN, e == nil), kit.MDB_ERROR, kit.Format(e))
 
 					l = &Listener{m: m, h: h, s: &Stat{}, Listener: l}
 					if e == nil {
@@ -105,7 +106,7 @@ func init() {
 					m.Cmdy(mdb.PRUNES, SERVER, "", mdb.HASH, kit.MDB_STATUS, CLOSE)
 				}},
 			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-				m.Option(mdb.FIELDS, kit.Select("time,hash,status,name,host,port,error,nconn", mdb.DETAIL, len(arg) > 0))
+				m.Option(mdb.FIELDS, kit.Select("time,hash,status,type,name,host,port,error,nconn", mdb.DETAIL, len(arg) > 0))
 				if m.Cmdy(mdb.SELECT, SERVER, "", mdb.HASH, kit.MDB_HASH, arg); len(arg) == 0 {
 					m.Table(func(index int, value map[string]string, head []string) {
 						m.PushButton(kit.Select("", "删除", value[kit.MDB_STATUS] == CLOSE))

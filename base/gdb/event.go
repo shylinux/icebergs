@@ -13,7 +13,7 @@ func _event_listen(m *ice.Message, event string, cmd string) {
 func _event_action(m *ice.Message, event string, arg ...string) {
 	m.Option(mdb.FIELDS, "time,id,cmd")
 	m.Cmd(mdb.SELECT, EVENT, kit.Keys(kit.MDB_HASH, kit.Hashs(event)), mdb.LIST).Table(func(index int, value map[string]string, head []string) {
-		m.Cmd(kit.Split(value[kit.SSH_CMD]), event, arg).Cost("event %v %v", event, arg)
+		m.Cmd(kit.Split(value[kit.SSH_CMD]), event, arg).Cost(EVENT, event, "arg", arg)
 	})
 }
 

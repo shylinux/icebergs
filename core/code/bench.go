@@ -3,7 +3,6 @@ package code
 import (
 	ice "github.com/shylinux/icebergs"
 	"github.com/shylinux/icebergs/base/mdb"
-	"github.com/shylinux/icebergs/base/web"
 	kit "github.com/shylinux/toolkits"
 	"github.com/shylinux/toolkits/util/bench"
 
@@ -21,7 +20,7 @@ func _bench_list(m *ice.Message, zone string, id string, field ...interface{}) {
 		if zone = kit.Format(kit.Value(val, kit.MDB_ZONE)); id == "" {
 			m.Grows(BENCH, kit.Keys(kit.MDB_HASH, key), "", "", func(index int, value map[string]interface{}) {
 				// 查看信息
-				m.Push("操作", m.Cmdx(mdb.RENDER, web.RENDER.Button, "运行"))
+				// m.Push("操作", m.Cmdx(mdb.RENDER, web.RENDER.Button, "运行"))
 				m.Push(zone, value, []string{
 					kit.MDB_ZONE, kit.MDB_ID, kit.MDB_TYPE,
 					kit.MDB_NAME, NCONN, NREQS, kit.MDB_TEXT,
@@ -33,7 +32,7 @@ func _bench_list(m *ice.Message, zone string, id string, field ...interface{}) {
 			// 查看信息
 			m.Push("detail", value)
 			m.Push(kit.MDB_KEY, "操作")
-			m.Push(kit.MDB_VALUE, m.Cmdx(mdb.RENDER, web.RENDER.Button, "运行"))
+			// m.Push(kit.MDB_VALUE, m.Cmdx(mdb.RENDER, web.RENDER.Button, "运行"))
 		})
 	})
 }

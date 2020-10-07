@@ -4,7 +4,6 @@ import (
 	ice "github.com/shylinux/icebergs"
 	"github.com/shylinux/icebergs/base/cli"
 	"github.com/shylinux/icebergs/base/ctx"
-	"github.com/shylinux/icebergs/base/mdb"
 	"github.com/shylinux/icebergs/base/nfs"
 	"github.com/shylinux/icebergs/base/ssh"
 	"github.com/shylinux/icebergs/base/web"
@@ -284,11 +283,12 @@ func _video_show(m *ice.Message, name, text string, arg ...string) {
 }
 func _baidu_show(m *ice.Message, name, text string, arg ...string) {
 	_option(m, BAIDU, name, text, arg...)
-	m.Cmdy(mdb.RENDER, web.RENDER.Frame, kit.Format("https://baidu.com/s?wd=%s", text))
+
+	// m.Cmdy(mdb.RENDER, web.RENDER.Frame, kit.Format("https://baidu.com/s?wd=%s", text))
 }
 func _other_show(m *ice.Message, name, text string, arg ...string) {
 	_option(m, OTHER, name, text, arg...)
-	m.Cmdy(mdb.RENDER, web.RENDER.Frame, text)
+	// m.Cmdy(mdb.RENDER, web.RENDER.Frame, text)
 }
 
 func _word_show(m *ice.Message, name string, arg ...string) {
@@ -383,7 +383,7 @@ func init() {
 		Commands: map[string]*ice.Command{
 			TITLE: {Name: "title [premenu|chapter|section|endmenu] text", Help: "标题", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 				if len(arg) == 0 {
-					ns := strings.Split(cli.NodeName, "-")
+					ns := strings.Split(ice.Info.NodeName, "-")
 					arg = append(arg, kit.Select(ns[len(ns)-1], ""))
 				}
 

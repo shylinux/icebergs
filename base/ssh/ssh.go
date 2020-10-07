@@ -14,7 +14,7 @@ var Index = &ice.Context{Name: SSH, Help: "终端模块", Commands: map[string]*
 	}},
 	ice.CTX_EXIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 		if _, ok := m.Target().Server().(*Frame); ok {
-			m.Done()
+			m.Done(true)
 		}
 		m.Richs(SERVICE, "", kit.MDB_FOREACH, func(key string, value map[string]interface{}) {
 			kit.Value(value, "meta.status", tcp.CLOSE)

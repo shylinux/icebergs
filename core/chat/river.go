@@ -109,8 +109,6 @@ func init() {
 						m.Cmdy(mdb.INSERT, RIVER, kit.Keys(kit.MDB_HASH, m.Option(RIVER), NODE), mdb.HASH, arg)
 					}
 				}},
-				web.SPACE_CLOSE: {Name: "close", Help: "关闭", Hand: func(m *ice.Message, arg ...string) {
-				}},
 				mdb.REMOVE: {Name: "remove", Help: "删除", Hand: func(m *ice.Message, arg ...string) {
 					m.Cmdy(mdb.DELETE, RIVER, kit.Keys(kit.MDB_HASH, m.Option(RIVER), NODE), mdb.HASH,
 						kit.MDB_NAME, m.Option(kit.MDB_NAME))

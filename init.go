@@ -9,6 +9,22 @@ import (
 	"time"
 )
 
+var Info = struct {
+	HostName string
+	PathName string
+	UserName string
+	PassWord string
+	NodeName string
+	NodeType string
+
+	Build struct {
+		Time     string
+		Version  string
+		HostName string
+		UserName string
+	}
+}{}
+
 type Frame struct{ code int }
 
 func (f *Frame) Spawn(m *Message, c *Context, arg ...string) Server {

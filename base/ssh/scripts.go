@@ -283,7 +283,7 @@ func (f *Frame) Start(m *ice.Message, arg ...string) bool {
 		r, f.stdout = os.Stdin, os.Stdout
 
 		m.Option("_option", ice.MSG_USERNAME)
-		m.Option(ice.MSG_USERNAME, cli.UserName)
+		m.Option(ice.MSG_USERNAME, ice.Info.UserName)
 		m.Option(ice.MSG_USERROLE, aaa.ROOT)
 		m.Option(ice.MSG_USERZONE, "boot")
 		aaa.UserRoot(m)
@@ -355,7 +355,7 @@ func init() {
 				}
 
 				if arg[0] == STDIO {
-					m.Option("_control", "page")
+					m.Option("_control", "_page")
 				} else {
 					m.Option("cache.limit", "-1")
 				}

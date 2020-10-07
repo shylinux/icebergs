@@ -63,19 +63,14 @@ func (m *Message) Push(key string, value interface{}, arg ...interface{}) *Messa
 		for _, k := range head {
 			m.Push(k, value[k])
 		}
-		return m
-	case map[string]interface{}:
-		if key == "detail" {
-			// 格式转换
-			value = kit.KeyValue(map[string]interface{}{}, "", value)
-		}
 
+	case map[string]interface{}:
 		// 键值排序
 		list := []string{}
 		if len(arg) > 0 {
 			list = kit.Simple(arg[0])
 		} else {
-			for k := range value {
+			for k := range kit.KeyValue(map[string]interface{}{}, "", value) {
 				list = append(list, k)
 			}
 			sort.Strings(list)
@@ -90,13 +85,6 @@ func (m *Message) Push(key string, value interface{}, arg ...interface{}) *Messa
 			// 查找数据
 			var v interface{}
 			switch k {
-			case "action":
-				list := []string{}
-				for _, k := range kit.Simple(m.Optionv(MSG_ACTION)) {
-					list = append(list, fmt.Sprintf(`<input type="button" value="%s">`, k))
-				}
-				v = strings.Join(list, "")
-
 			case kit.MDB_KEY, kit.MDB_HASH:
 				if key != "" {
 					v = key
@@ -104,12 +92,12 @@ func (m *Message) Push(key string, value interface{}, arg ...interface{}) *Messa
 				}
 				fallthrough
 			default:
-				if v = value[k]; v == nil {
-					v = value["extra."+k]
+				if v = kit.Value(value, k); v == nil {
+					v = kit.Value(value, kit.Keys(kit.MDB_EXTRA, k))
 				}
 				if v == nil {
-					if v = val[k]; v == nil {
-						v = val["extra."+k]
+					if v = kit.Value(val, k); v == nil {
+						v = kit.Value(val, kit.Keys(kit.MDB_EXTRA, k))
 					}
 				}
 			}
@@ -123,12 +111,13 @@ func (m *Message) Push(key string, value interface{}, arg ...interface{}) *Messa
 				m.Add(MSG_APPEND, k, v)
 			}
 		}
-		return m
+
+	default:
+		for _, v := range kit.Simple(value) {
+			m.Add(MSG_APPEND, key, v)
+		}
 	}
 
-	for _, v := range kit.Simple(value) {
-		m.Add(MSG_APPEND, key, v)
-	}
 	return m
 }
 func (m *Message) Echo(str string, arg ...interface{}) *Message {

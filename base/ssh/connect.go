@@ -24,7 +24,7 @@ func _ssh_conn(m *ice.Message, conn net.Conn, username, hostport string) (*ssh.C
 
 	c, chans, reqs, err := ssh.NewClientConn(conn, hostport, &ssh.ClientConfig{
 		User: username, Auth: methods, HostKeyCallback: func(hostname string, remote net.Addr, key ssh.PublicKey) error {
-			m.Logs(CONNECT, aaa.HOSTNAME, hostname, aaa.HOSTPORT, remote.String())
+			m.Logs(CONNECT, tcp.HOSTNAME, hostname, tcp.HOSTPORT, remote.String())
 			return nil
 		},
 	})

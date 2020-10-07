@@ -77,8 +77,8 @@ const SHARE = "share"
 func init() {
 	Index.Merge(&ice.Context{
 		Configs: map[string]*ice.Config{
-			SHARE: {Name: "share", Help: "共享链", Value: kit.Data(
-				"expire", "72h", "template", share_template,
+			SHARE: {Name: SHARE, Help: "共享链", Value: kit.Data(
+				"expire", "72h",
 			)},
 		},
 		Commands: map[string]*ice.Command{

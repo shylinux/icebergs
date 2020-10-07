@@ -4,6 +4,7 @@ import (
 	ice "github.com/shylinux/icebergs"
 	"github.com/shylinux/icebergs/base/aaa"
 	"github.com/shylinux/icebergs/base/mdb"
+	"github.com/shylinux/icebergs/base/tcp"
 	kit "github.com/shylinux/toolkits"
 
 	"strings"
@@ -57,7 +58,7 @@ func init() {
 					ls := strings.SplitN(strings.TrimSpace(m.Option(ARG)), " ", 4)
 					if text := strings.TrimSpace(strings.Join(ls[3:], " ")); text != "" {
 						m.Cmd(mdb.INSERT, m.Prefix(SYNC), "", mdb.LIST, kit.MDB_TYPE, SHELL, kit.MDB_NAME, ls[0],
-							aaa.HOSTNAME, m.Option(aaa.HOSTNAME), aaa.USERNAME, m.Option(aaa.USERNAME),
+							tcp.HOSTNAME, m.Option(tcp.HOSTNAME), aaa.USERNAME, m.Option(aaa.USERNAME),
 							kit.MDB_TEXT, text, PWD, m.Option(PWD), kit.MDB_TIME, ls[1]+" "+ls[2])
 
 					}

@@ -50,12 +50,17 @@ func init() {
 			ROUTE: {Name: "route route ctx cmd auto invite share", Help: "路由", Action: map[string]*ice.Action{
 				SHARE: {Name: "share", Help: "共享", Hand: func(m *ice.Message, arg ...string) {
 					h := m.Cmdx(SHARE, mdb.CREATE, kit.MDB_TYPE, "login")
-					m.Cmdy("web.wiki.image", "qrcode", kit.MergeURL(m.Option(ice.MSG_USERWEB), SHARE, h))
+					p := kit.MergeURL(m.Option(ice.MSG_USERWEB), SHARE, h)
+					m.Cmdy("web.wiki.spark", "shell", p).Render("")
+					m.Cmdy("web.wiki.image", "qrcode", p)
 				}},
 				mdb.INVITE: {Name: "invite", Help: "添加", Hand: func(m *ice.Message, arg ...string) {
-					m.Cmdy("web.code.publish", "contexts", "tmux")
-					m.Cmdy("web.code.publish", "contexts", "base")
-					m.Cmdy("web.code.publish", "contexts", "miss")
+					for _, k := range []string{"tmux", "base", "miss"} {
+						m.Cmdy("web.code.publish", "contexts", k)
+						m.Cmdy("web.wiki.spark")
+					}
+
+					m.Cmdy("web.wiki.spark", "shell", m.Option(ice.MSG_USERWEB))
 					m.Cmdy("web.wiki.image", "qrcode", m.Option(ice.MSG_USERWEB))
 				}},
 				mdb.INPUTS: {Name: "inputs", Help: "补全", Hand: func(m *ice.Message, arg ...string) {

@@ -19,6 +19,7 @@ func init() {
 				"display", "/plugin/local/team/plan.js", "style", "plan",
 			), Action: map[string]*ice.Action{
 				mdb.INSERT: {Name: "insert zone type=once,step,week name text begin_time@date close_time@date", Help: "添加", Hand: func(m *ice.Message, arg ...string) {
+					_task_create(m, arg[1])
 					_task_insert(m, arg[1], arg[2:]...)
 				}},
 				mdb.MODIFY: {Name: "modify", Help: "编辑", Hand: func(m *ice.Message, arg ...string) {
@@ -65,7 +66,7 @@ func init() {
 					m.Push(key, value, fields, val)
 					m.PushRender(kit.MDB_ACTION, kit.MDB_BUTTON, _task_action(m, value[TaskField.STATUS], "插件"))
 				})
-				m.Cmdy(mdb.SELECT, m.Prefix(TASK), kit.Keys(m.Option(ice.MSG_DOMAIN)), mdb.ZONE)
+				m.Cmdy(mdb.SELECT, m.Prefix(TASK), kit.Keys(m.Option(ice.MSG_DOMAIN)), mdb.ZONE, kit.MDB_FOREACH)
 			}},
 		},
 	}, nil)

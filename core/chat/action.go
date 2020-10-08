@@ -10,10 +10,7 @@ import (
 
 func _action_upload(m *ice.Message, arg ...string) {
 	msg := m.Cmd(web.CACHE, web.UPLOAD)
-	m.Debug(msg.Formats("meta"))
 	m.Option("_upload", msg.Append("data"), msg.Append("name"))
-	m.Debug(m.Formats("meta"))
-
 }
 func _action_right(m *ice.Message, river string, storm string) (ok bool) {
 	if ok = true; m.Option(ice.MSG_USERROLE) == aaa.VOID {

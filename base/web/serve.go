@@ -56,12 +56,14 @@ func _serve_main(m *ice.Message, w http.ResponseWriter, r *http.Request) bool {
 	if r.URL.Path == "/" && r.FormValue(SHARE) != "" {
 		m.W = w
 		s := m.Cmd(SHARE, mdb.SELECT, kit.MDB_HASH, r.FormValue(SHARE))
-		Render(m, COOKIE, aaa.SessCreate(m,
-			s.Append(aaa.USERNAME), s.Append(aaa.USERROLE),
-		))
+		if s.Append(kit.MDB_TYPE) == "login" {
+			Render(m, COOKIE, aaa.SessCreate(m, s.Append(aaa.USERNAME), s.Append(aaa.USERROLE)))
+			http.Redirect(w, r, kit.MergeURL(r.URL.String(), SHARE, ""), http.StatusTemporaryRedirect)
+			m.W = nil
+			return false
+		}
 		m.W = nil
-		http.Redirect(w, r, kit.MergeURL(r.URL.String(), SHARE, ""), http.StatusTemporaryRedirect)
-		return false
+		return true
 	}
 
 	if strings.HasPrefix(r.URL.Path, "/debug") {
@@ -244,7 +246,7 @@ func init() {
 				"logheaders", "false",
 				"localhost", "true",
 				"black", kit.Dict(), "white", kit.Dict(
-					"login", true, "space", true, "share", true, "plugin", true, "publish", true,
+					"login", true, "space", true, "share", true, "plugin", true, "publish", true, "intshell", true,
 				),
 
 				"static", kit.Dict("/", "usr/volcanos/"),
@@ -289,6 +291,10 @@ func init() {
 			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 				m.Option(mdb.FIELDS, kit.Select("time,status,name,port,dev", mdb.DETAIL, len(arg) > 0))
 				m.Cmdy(mdb.SELECT, SERVE, "", mdb.HASH, kit.MDB_NAME, arg)
+			}},
+
+			"/intshell/": {Name: "/intshell/", Help: "脚本", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+				m.Render(ice.RENDER_DOWNLOAD, path.Join(m.Conf(SERVE, "meta.intshell.path"), path.Join(arg...)))
 			}},
 		}}, nil)
 }

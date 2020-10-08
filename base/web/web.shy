@@ -6,8 +6,8 @@ field "空间站" web.space
 field "梦想家" web.dream
 
 field "路由器" web.route
+field "共享链" web.share
 field "缓存池" web.cache
 return
-field "共享链" web.share
 field "故事会" web.story
 

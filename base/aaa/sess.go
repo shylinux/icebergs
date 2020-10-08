@@ -59,6 +59,7 @@ func SessCheck(m *ice.Message, sessid string) *ice.Message {
 	return m
 }
 func SessCreate(m *ice.Message, username, userrole string) string {
+	m.Set(ice.MSG_RESULT)
 	_sess_auth(m, _sess_create(m, username), username, userrole)
 	return m.Result()
 }

@@ -110,7 +110,7 @@ func init() {
 					_user_search(m, arg[0], arg[1], kit.Select("", arg, 2))
 				}},
 			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-				m.Option(mdb.FIELDS, kit.Select("time,userzone,usernick,username", mdb.DETAIL, len(arg) > 0))
+				m.Option(mdb.FIELDS, kit.Select(kit.Select("time,userzone,usernick,username", mdb.DETAIL, len(arg) > 0), m.Option(mdb.FIELDS)))
 				m.Cmdy(mdb.SELECT, USER, "", mdb.HASH, USERNAME, arg)
 				m.PushAction(mdb.REMOVE)
 			}},

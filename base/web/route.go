@@ -47,11 +47,17 @@ func init() {
 			ROUTE: {Name: ROUTE, Help: "路由器", Value: kit.Data(kit.MDB_SHORT, kit.SSH_ROUTE)},
 		},
 		Commands: map[string]*ice.Command{
-			ROUTE: {Name: "route route ctx cmd auto invite", Help: "路由", Action: map[string]*ice.Action{
+			ROUTE: {Name: "route route ctx cmd auto invite share", Help: "路由", Action: map[string]*ice.Action{
+				SHARE: {Name: "share", Help: "共享", Hand: func(m *ice.Message, arg ...string) {
+					h := m.Cmdx(SHARE, mdb.CREATE, kit.MDB_TYPE, "login")
+					m.Cmdy("web.wiki.image", "qrcode", kit.MergeURL(m.Option(ice.MSG_USERWEB), SHARE, h))
+				}},
 				mdb.INVITE: {Name: "invite", Help: "添加", Hand: func(m *ice.Message, arg ...string) {
 					m.Cmdy("web.code.publish", "contexts", "tmux")
 					m.Cmdy("web.code.publish", "contexts", "base")
 					m.Cmdy("web.code.publish", "contexts", "miss")
+
+					m.Cmdy("web.wiki.image", "qrcode", m.Option(ice.MSG_USERWEB))
 				}},
 				mdb.INPUTS: {Name: "inputs", Help: "补全", Hand: func(m *ice.Message, arg ...string) {
 					switch arg[0] {
@@ -83,22 +89,14 @@ func init() {
 						return
 					}
 
-					m.Cmd(tcp.HOST).Table(func(index int, value map[string]string, head []string) {
-						m.Push(kit.MDB_TYPE, MYSELF)
-						m.Push(ROUTE, value["ip"])
-					})
-
 					m.Table(func(index int, value map[string]string, field []string) {
-						switch value[kit.MDB_TYPE] {
-						case MYSELF:
-							m.PushRender(kit.MDB_LINK, "a", value[kit.SSH_ROUTE], m.Option(ice.MSG_USERWEB))
-						default:
+						if value[kit.MDB_TYPE] != MYSELF {
 							m.PushRender(kit.MDB_LINK, "a", value[kit.SSH_ROUTE],
 								kit.MergeURL(m.Option(ice.MSG_USERWEB), kit.SSH_POD, kit.Keys(m.Option(kit.SSH_POD, value[kit.SSH_ROUTE]))))
 						}
 
 						switch value[kit.MDB_TYPE] {
-						case MYSELF, SERVER:
+						case SERVER:
 							m.PushButton(gdb.START)
 						case WORKER:
 							m.PushButton(gdb.STOP)
@@ -106,6 +104,15 @@ func init() {
 							m.PushButton("")
 						}
 					})
+
+					m.Cmd(tcp.HOST).Table(func(index int, value map[string]string, head []string) {
+						m.Push(kit.MDB_TYPE, MYSELF)
+						m.Push(kit.SSH_ROUTE, ice.Info.NodeName)
+						u := kit.ParseURL(m.Option(ice.MSG_USERWEB))
+						m.PushRender(kit.MDB_LINK, "a", value["ip"], kit.Format("%s://%s:%s", u.Scheme, value["ip"], u.Port()))
+						m.PushButton(gdb.START)
+					})
+
 					m.Sort(kit.SSH_ROUTE)
 					return // 设备列表
 				}

@@ -257,7 +257,20 @@ func init() {
 					m.Cmdy(mdb.IMPORT, RIVER, "", mdb.HASH)
 				}},
 				mdb.INPUTS: {Name: "inputs", Help: "补全", Hand: func(m *ice.Message, arg ...string) {
-					m.Cmdy(mdb.INPUTS, RIVER, "", mdb.HASH, arg)
+					switch arg[0] {
+					case aaa.USERNAME:
+						m.Cmdy(aaa.USER)
+						m.Appendv(ice.MSG_APPEND, "username", "usernick", "userzone")
+					case aaa.USERROLE:
+						m.Push(aaa.USERROLE, aaa.VOID)
+						m.Push(aaa.USERROLE, aaa.TECH)
+						m.Push(aaa.USERROLE, aaa.ROOT)
+					default:
+						m.Cmdy(mdb.INPUTS, RIVER, "", mdb.HASH, arg)
+					}
+				}},
+				web.SHARE: {Name: "share name", Help: "共享", Hand: func(m *ice.Message, arg ...string) {
+					m.Cmdy(web.SHARE, mdb.CREATE, kit.MDB_TYPE, "login", arg)
 				}},
 			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 				m.Cmdy(mdb.SELECT, RIVER, "", mdb.HASH, kit.MDB_HASH, arg)
@@ -285,6 +298,9 @@ func init() {
 				case USER, TOOL, NODE:
 					m.Option(ice.MSG_RIVER, arg[0])
 					m.Cmdy(m.Prefix(arg[1]), arg[2:])
+				case "action":
+					m.Option(ice.MSG_RIVER, arg[0])
+					m.Cmdy(RIVER, arg[1:])
 				default:
 					m.Cmdy(RIVER, arg)
 				}

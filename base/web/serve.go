@@ -53,9 +53,19 @@ func _serve_main(m *ice.Message, w http.ResponseWriter, r *http.Request) bool {
 		}()
 	}
 
+	if r.URL.Path == "/" && r.FormValue(SHARE) != "" {
+		m.W = w
+		s := m.Cmd(SHARE, mdb.SELECT, kit.MDB_HASH, r.FormValue(SHARE))
+		Render(m, COOKIE, aaa.SessCreate(m,
+			s.Append(aaa.USERNAME), s.Append(aaa.USERROLE),
+		))
+		m.W = nil
+		http.Redirect(w, r, kit.MergeURL(r.URL.String(), SHARE, ""), http.StatusTemporaryRedirect)
+		return false
+	}
+
 	// 单点登录
 	if r.URL.Path == "/" && m.Conf(SERVE, "meta.sso") != "" {
-		r.ParseForm()
 		sessid := r.FormValue(ice.MSG_SESSID)
 		if sessid == "" {
 			if c, e := r.Cookie(ice.MSG_SESSID); e == nil {

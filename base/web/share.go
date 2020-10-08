@@ -77,9 +77,7 @@ const SHARE = "share"
 func init() {
 	Index.Merge(&ice.Context{
 		Configs: map[string]*ice.Config{
-			SHARE: {Name: SHARE, Help: "共享链", Value: kit.Data(
-				"expire", "72h",
-			)},
+			SHARE: {Name: SHARE, Help: "共享链", Value: kit.Data("expire", "72h")},
 		},
 		Commands: map[string]*ice.Command{
 			SHARE: {Name: "share hash auto", Help: "共享链", Action: map[string]*ice.Action{
@@ -89,13 +87,33 @@ func init() {
 						"river", m.Option(ice.MSG_RIVER), "storm", m.Option(ice.MSG_STORM),
 						kit.MDB_TIME, m.Time(m.Conf(SHARE, "meta.expire")), arg)
 				}},
+				mdb.SELECT: {Name: "select hash", Help: "查询", Hand: func(m *ice.Message, arg ...string) {
+					m.Option(mdb.FIELDS, "time,hash,userrole,username,river,storm,type,name,text")
+					m.Cmdy(mdb.SELECT, SHARE, "", mdb.HASH, kit.MDB_HASH, m.Option(kit.MDB_HASH))
+				}},
 				mdb.REMOVE: {Name: "remove", Help: "删除", Hand: func(m *ice.Message, arg ...string) {
 					m.Cmdy(mdb.DELETE, SHARE, "", mdb.HASH, kit.MDB_HASH, m.Option(kit.MDB_HASH))
 				}},
 			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-				m.Option(mdb.FIELDS, "time,hash,userrole,username,river,storm,type,name,text")
+				m.Option(mdb.FIELDS, kit.Select("time,hash,userrole,username,river,storm,type,name,text", mdb.DETAIL, len(arg) > 0))
 				m.Cmdy(mdb.SELECT, SHARE, "", mdb.HASH, kit.MDB_HASH, arg)
 				m.PushAction("删除")
+			}},
+			"/share/": {Name: "/share/", Help: "共享链", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+				m.Option(mdb.FIELDS, kit.Select("time,hash,userrole,username,river,storm,type,name,text"))
+				switch msg := m.Cmd(mdb.SELECT, SHARE, "", mdb.HASH, kit.MDB_HASH, arg[0]); msg.Append(kit.MDB_TYPE) {
+				case "login":
+					switch kit.Select("", arg, 1) {
+					case "share":
+						list := []string{}
+						for _, k := range []string{"river", "storm"} {
+							if msg.Append(k) != "" {
+								list = append(list, k, msg.Append(k))
+							}
+						}
+						m.Render(ice.RENDER_QRCODE, kit.MergeURL2(m.Option(ice.MSG_USERWEB), "/", SHARE, arg[0], list))
+					}
+				}
 			}},
 
 			"/share/local/": {Name: "/share/local/", Help: "共享链", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {

@@ -38,12 +38,7 @@ func init() {
 				main := kit.Select("src/main.go", arg, 2)
 				arch := kit.Select(m.Conf(cli.RUNTIME, "host.GOARCH"), arg, 1)
 				goos := kit.Select(m.Conf(cli.RUNTIME, "host.GOOS"), arg, 0)
-				file := ""
-				if m.Option(cli.CMD_DIR) == "" {
-					file = path.Join(m.Conf(cmd, "meta.path"), kit.Keys(kit.Select("ice", m.Option("name")), goos, arch))
-				} else {
-					file = kit.Keys(kit.Select("ice", m.Option("name")), goos, arch)
-				}
+				file := path.Join(m.Conf(cmd, "meta.path"), kit.Keys(kit.Select("ice"), goos, arch))
 				if goos == "windows" {
 					// file += ".exe"
 				}

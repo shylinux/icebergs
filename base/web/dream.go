@@ -60,7 +60,7 @@ func _dream_show(m *ice.Message, name string) {
 		m.Optionv(cli.CMD_DIR, p)
 		m.Optionv(cli.CMD_ENV, kit.Simple(
 			"ctx_dev", m.Conf(cli.RUNTIME, "conf.ctx_dev"),
-			"PATH", kit.Path(path.Join(p, "bin"))+":"+os.Getenv("PATH"),
+			"PATH", kit.Path(path.Join(p, "bin"))+":"+kit.Path("bin")+":"+os.Getenv("PATH"),
 			"USER", ice.Info.UserName, m.Confv(DREAM, "meta.env"),
 		))
 		// 启动任务

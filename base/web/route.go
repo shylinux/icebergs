@@ -56,7 +56,6 @@ func init() {
 					m.Cmdy("web.code.publish", "contexts", "tmux")
 					m.Cmdy("web.code.publish", "contexts", "base")
 					m.Cmdy("web.code.publish", "contexts", "miss")
-
 					m.Cmdy("web.wiki.image", "qrcode", m.Option(ice.MSG_USERWEB))
 				}},
 				mdb.INPUTS: {Name: "inputs", Help: "补全", Hand: func(m *ice.Message, arg ...string) {

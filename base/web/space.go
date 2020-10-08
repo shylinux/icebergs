@@ -212,7 +212,7 @@ func init() {
 		Commands: map[string]*ice.Command{
 			SPACE: {Name: "space name cmd auto", Help: "空间站", Action: map[string]*ice.Action{
 				"connect": {Name: "connect dev name", Help: "连接", Hand: func(m *ice.Message, arg ...string) {
-					_space_dial(m, arg[0], kit.Select(ice.Info.NodeName, arg[1]))
+					_space_dial(m, arg[0], kit.Select(ice.Info.NodeName, arg, 1))
 				}},
 			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 				if len(arg) < 2 {

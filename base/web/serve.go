@@ -64,6 +64,24 @@ func _serve_main(m *ice.Message, w http.ResponseWriter, r *http.Request) bool {
 		return false
 	}
 
+	if strings.HasPrefix(r.URL.Path, "/debug") {
+		r.URL.Path = strings.Replace(r.URL.Path, "/debug", "/code", -1)
+		return true
+	}
+
+	if b, ok := ice.BinPack[r.URL.Path]; ok {
+		if strings.HasSuffix(r.URL.Path, ".css") {
+			w.Header().Set("Content-Type", "text/css; charset=utf-8")
+		}
+		w.Write(b)
+		return false
+	}
+
+	if r.URL.Path == "/" && strings.Contains(r.Header.Get("User-Agent"), "curl") {
+		http.ServeFile(w, r, path.Join(m.Conf(SERVE, "meta.intshell.path"), m.Conf(SERVE, "meta.intshell.index")))
+		return false
+	}
+
 	// 单点登录
 	if r.URL.Path == "/" && m.Conf(SERVE, "meta.sso") != "" {
 		sessid := r.FormValue(ice.MSG_SESSID)
@@ -82,26 +100,8 @@ func _serve_main(m *ice.Message, w http.ResponseWriter, r *http.Request) bool {
 			http.Redirect(w, r, m.Conf(SERVE, "meta.sso"), http.StatusTemporaryRedirect)
 			return false
 		}
-		return true
 	}
 
-	if strings.HasPrefix(r.URL.Path, "/debug") {
-		r.URL.Path = strings.Replace(r.URL.Path, "/debug", "/code", -1)
-		return true
-	}
-
-	if b, ok := ice.BinPack[r.URL.Path]; ok {
-		if strings.HasSuffix(r.URL.Path, ".css") {
-			w.Header().Set("Content-Type", "text/css; charset=utf-8")
-		}
-		w.Write(b)
-		return false
-	}
-
-	if r.URL.Path == "/" && strings.Contains(r.Header.Get("User-Agent"), "curl") {
-		http.ServeFile(w, r, path.Join(m.Conf(SERVE, "meta.intshell.path"), m.Conf(SERVE, "meta.intshell.index")))
-		return false
-	}
 	return true
 }
 func _serve_handle(key string, cmd *ice.Command, msg *ice.Message, w http.ResponseWriter, r *http.Request) {
@@ -197,7 +197,7 @@ func _serve_login(msg *ice.Message, cmds []string, w http.ResponseWriter, r *htt
 		aaa.SessCheck(msg, msg.Option(ice.MSG_SESSID))
 	}
 
-	if !msg.Options(ice.MSG_USERNAME) && tcp.IsLocalHost(msg, msg.Option(ice.MSG_USERIP)) {
+	if !msg.Options(ice.MSG_USERNAME) && tcp.IsLocalHost(msg, msg.Option(ice.MSG_USERIP)) && msg.Conf(SERVE, "meta.localhost") == "true" {
 		// 自动认证
 		aaa.UserLogin(msg, ice.Info.UserName, ice.Info.PassWord)
 	}
@@ -241,8 +241,10 @@ func init() {
 		Configs: map[string]*ice.Config{
 			SERVE: {Name: SERVE, Help: "服务器", Value: kit.Data(
 				kit.MDB_SHORT, kit.MDB_NAME,
-				"logheaders", "false", "black", kit.Dict(), "white", kit.Dict(
-					"space", true, "share", true, "plugin", true, "publish", true,
+				"logheaders", "false",
+				"localhost", "true",
+				"black", kit.Dict(), "white", kit.Dict(
+					"login", true, "space", true, "share", true, "plugin", true, "publish", true,
 				),
 
 				"static", kit.Dict("/", "usr/volcanos/"),

@@ -6,8 +6,6 @@ import (
 	"github.com/shylinux/icebergs/base/mdb"
 	kit "github.com/shylinux/toolkits"
 
-	"fmt"
-	"os"
 	"os/exec"
 	"strings"
 )
@@ -23,7 +21,6 @@ func _daemon_show(m *ice.Message, cmd *exec.Cmd, out, err string) {
 		cmd.Stderr = f
 	}
 
-	cmd.Env = append(cmd.Env, fmt.Sprintf("PATH=%s", os.Getenv("PATH")))
 	if e := cmd.Start(); m.Warn(e != nil, ErrStart, cmd.Args, " ", e) {
 		return
 	}

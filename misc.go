@@ -37,11 +37,11 @@ func (m *Message) Watch(key string, arg ...string) *Message {
 	if len(arg) == 0 {
 		arg = append(arg, m.Prefix("auto"))
 	}
-	m.Cmd("gdb.event", "listen", "event", key, "cmd", strings.Join(arg, " "))
+	m.Cmd("gdb.event", "action", "listen", "event", key, "cmd", strings.Join(arg, " "))
 	return m
 }
 func (m *Message) Event(key string, arg ...string) *Message {
-	m.Cmd("gdb.event", "action", "event", key, strings.Join(arg, " "))
+	m.Cmd("gdb.event", "action", "action", "event", key, arg)
 	return m
 }
 func (m *Message) Right(arg ...interface{}) bool {

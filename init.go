@@ -154,7 +154,7 @@ func Run(arg ...string) string {
 	Pulse.root = Pulse
 	Pulse.Option("cache.limit", "30")
 	Pulse.Option("begin_time", Pulse.Time())
-	_log_disable = false
+	_log_disable = true
 	switch kit.Select("", arg, 0) {
 	case "space", "serve":
 		if _log_disable = false; frame.Begin(Pulse.Spawns(), arg...).Start(Pulse, arg...) {

@@ -67,7 +67,7 @@ const (
 const (
 	APP   = "app"
 	SHIP  = "ship"
-	USER  = "user"
+	USERS = "users"
 	GROUP = "group"
 
 	SEND = "send"
@@ -91,9 +91,9 @@ var Index = &ice.Context{Name: "lark", Help: "机器人",
 				ADD_BOT, "我来也~", P2P_CHAT_CREATE, "让我们做好朋友吧~",
 			),
 		)},
-		SHIP: {Name: SHIP, Help: "组织配置", Value: kit.Data(kit.MDB_SHORT, SHIP_ID)},
-		USER: {Name: USER, Help: "用户配置", Value: kit.Data(kit.MDB_SHORT, OPEN_ID)},
-		HOME: {Name: HOME, Help: "卡片配置", Value: kit.Data(kit.MDB_SHORT, OPEN_ID)},
+		SHIP:  {Name: SHIP, Help: "组织配置", Value: kit.Data(kit.MDB_SHORT, SHIP_ID)},
+		USERS: {Name: USERS, Help: "用户配置", Value: kit.Data(kit.MDB_SHORT, OPEN_ID)},
+		HOME:  {Name: HOME, Help: "卡片配置", Value: kit.Data(kit.MDB_SHORT, OPEN_ID)},
 		META: {Name: META, Help: "卡片配置", Value: kit.Data(
 			kit.MDB_SHORT, "url",
 		)},
@@ -105,7 +105,7 @@ var Index = &ice.Context{Name: "lark", Help: "机器人",
 			m.Cmd(DUTY, "boot", m.Conf(cli.RUNTIME, "boot.hostname"), m.Time())
 		}},
 		ice.CTX_EXIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			m.Save(APP, SHIP, USER, META)
+			m.Save(APP, SHIP, USERS, META)
 		}},
 
 		APP: {Name: "app [name] auto", Help: "应用", Action: map[string]*ice.Action{
@@ -143,13 +143,13 @@ var Index = &ice.Context{Name: "lark", Help: "机器人",
 					})
 				})
 			}},
-			"user": {Name: "user ship_id", Hand: func(m *ice.Message, arg ...string) {
+			"users": {Name: "users ship_id", Hand: func(m *ice.Message, arg ...string) {
 				m.Richs(APP, nil, "bot", func(key string, value map[string]interface{}) {
 					data := raw(m, "/open-apis/contact/v1/department/user/list",
 						"department_id", arg[0], "page_size", "100", "fetch_child", "true")
 
 					kit.Fetch(kit.Value(data, "data.user_list"), func(index int, value map[string]interface{}) {
-						msg := m.Cmd(m.Prefix(USER), value[OPEN_ID])
+						msg := m.Cmd(USERS, value[OPEN_ID])
 						// m.Push("avatar", m.Cmdx(mdb.RENDER, web.RENDER.IMG, msg.Append("avatar_72")))
 						m.Push("gender", kit.Select("男", "女", msg.Append("gender") == "2"))
 						m.Push(kit.MDB_NAME, msg.Append(kit.MDB_NAME))
@@ -174,13 +174,13 @@ var Index = &ice.Context{Name: "lark", Help: "机器人",
 			}
 			if len(arg) == 1 {
 				// 用户列表
-				m.Cmdy(m.Prefix(SHIP), USER, arg[0])
+				m.Cmdy(m.Prefix(SHIP), USERS, arg[0])
 				return
 			}
 			// 用户通知
 			m.Cmdy(m.Prefix(SEND), OPEN_ID, arg[1], arg[2:])
 		}},
-		USER: {Name: "user open_id|mobile|email", Help: "用户", Hand: func(m *ice.Message, c *ice.Context, key string, arg ...string) {
+		USERS: {Name: "users open_id|mobile|email", Help: "用户", Hand: func(m *ice.Message, c *ice.Context, key string, arg ...string) {
 			if strings.HasPrefix(arg[0], "ou_") {
 				m.Richs(APP, nil, "bot", func(key string, value map[string]interface{}) {
 					data := raw(m, "/open-apis/contact/v1/user/batch_get", "open_ids", arg[0])
@@ -201,12 +201,12 @@ var Index = &ice.Context{Name: "lark", Help: "机器人",
 			}
 		}},
 		GROUP: {Name: "group chat_id open_id text", Help: "群组", Action: map[string]*ice.Action{
-			"user": {Name: "user id", Hand: func(m *ice.Message, arg ...string) {
+			"users": {Name: "users id", Hand: func(m *ice.Message, arg ...string) {
 				m.Richs(APP, nil, "bot", func(key string, value map[string]interface{}) {
 					data := raw(m, "/open-apis/chat/v4/info", "chat_id", arg[0])
 
 					kit.Fetch(kit.Value(data, "data.members"), func(index int, value map[string]interface{}) {
-						msg := m.Cmd(m.Prefix(USER), value[OPEN_ID])
+						msg := m.Cmd(USERS, value[OPEN_ID])
 						// m.Push("avatar", m.Cmdx(mdb.RENDER, web.RENDER.IMG, msg.Append("avatar_72")))
 						m.Push("gender", kit.Select("男", "女", msg.Append("gender") == "2"))
 						m.Push(kit.MDB_NAME, msg.Append(kit.MDB_NAME))
@@ -234,7 +234,7 @@ var Index = &ice.Context{Name: "lark", Help: "机器人",
 			}
 			if len(arg) == 1 {
 				// 用户列表
-				m.Cmdy(m.Prefix(GROUP), USER, arg[0])
+				m.Cmdy(m.Prefix(GROUP), USERS, arg[0])
 				return
 			}
 			// 用户通知
@@ -328,7 +328,7 @@ var Index = &ice.Context{Name: "lark", Help: "机器人",
 			m.Cmdy(SEND, m.Conf(APP, "meta.duty"), arg)
 		}},
 		RAND: {Name: "rand", Help: "随机", Hand: func(m *ice.Message, c *ice.Context, key string, arg ...string) {
-			msg := m.Cmd(GROUP, "user", m.Option(OPEN_CHAT_ID))
+			msg := m.Cmd(GROUP, USERS, m.Option(OPEN_CHAT_ID))
 			list := msg.Appendv("name")
 			if strings.Contains(m.Option("content"), "誰") {
 				m.Echo(strings.Replace(m.Option("content"), "誰", list[rand.Intn(len(list))], 1))
@@ -531,7 +531,7 @@ var Index = &ice.Context{Name: "lark", Help: "机器人",
 					m.Render("redirect", m.Conf(web.SHARE, "meta.domain"))
 
 					m.Option(aaa.USERNAME, user)
-					msg := m.Cmd(m.Prefix(USER), user)
+					msg := m.Cmd(USERS, user)
 					m.Cmd(aaa.USER, mdb.MODIFY, aaa.USERZONE, LARK, aaa.USERNICK, msg.Append("name"),
 						"mobile", msg.Append("mobile"), "avatar_url", msg.Append("avatar_url"),
 						"gender", kit.Select("女", "男", msg.Append("gender") == "1"),

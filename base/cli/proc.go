@@ -10,7 +10,6 @@ import (
 
 func init() {
 	Index.Merge(&ice.Context{
-		Configs: map[string]*ice.Config{},
 		Commands: map[string]*ice.Command{
 			"proc": {Name: "proc name=ice.bin PID auto", Help: "进程管理", Action: map[string]*ice.Action{
 				"kill": {Name: "kill", Help: "结束", Hand: func(m *ice.Message, arg ...string) {
@@ -28,7 +27,7 @@ func init() {
 					if len(arg) > 0 && !strings.Contains(value["COMMAND"], arg[0]) {
 						return
 					}
-					m.PushButton("结束")
+					m.PushButton("kill")
 					m.Push("", value)
 				})
 			}},

@@ -29,8 +29,8 @@ func _daemon_show(m *ice.Message, cmd *exec.Cmd, out, err string) {
 		kit.MDB_STATUS, Status.Start, kit.SSH_CMD, strings.Join(cmd.Args, " "),
 		kit.SSH_DIR, cmd.Dir, kit.SSH_ENV, cmd.Env, kit.SSH_PID, cmd.Process.Pid,
 		CMD_STDOUT, out, CMD_STDERR, err,
-		aaa.USERNAME, m.Option(ice.MSG_USERNAME), aaa.USERROLE, m.Option(ice.MSG_USERROLE),
 		aaa.IP, m.Option(ice.MSG_USERIP), aaa.UA, m.Option(ice.MSG_USERUA),
+		aaa.USERNAME, m.Option(ice.MSG_USERNAME), aaa.USERROLE, m.Option(ice.MSG_USERROLE),
 	)
 	m.Echo("%d", cmd.Process.Pid)
 

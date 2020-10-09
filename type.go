@@ -84,13 +84,24 @@ func (c *Context) Cap(key string, arg ...interface{}) string {
 func (c *Context) _hand(m *Message, cmd *Command, key string, k string, h *Action, arg ...string) *Message {
 	m.Log(LOG_CMDS, "%s.%s %s %d %v %s", c.Name, key, k, len(arg), arg, kit.FileLine(h.Hand, 3))
 	if len(h.List) > 0 {
-		for _, v := range h.List {
+		order := false
+		for i, v := range h.List {
 			name := kit.Format(kit.Value(v, "name"))
 			value := kit.Format(kit.Value(v, "value"))
+
+			if i == 0 && len(arg) > 0 && arg[0] != name {
+				order = true
+			}
+			if order {
+				value = kit.Select(value, arg, i)
+			}
+
 			m.Option(name, kit.Select("", value, !strings.HasPrefix(value, "@")))
 		}
-		for i := 0; i < len(arg)-1; i += 2 {
-			m.Option(arg[i], arg[i+1])
+		if !order {
+			for i := 0; i < len(arg)-1; i += 2 {
+				m.Option(arg[i], arg[i+1])
+			}
 		}
 	}
 	h.Hand(m, arg...)

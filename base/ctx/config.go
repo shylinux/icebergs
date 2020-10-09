@@ -33,7 +33,7 @@ func _config_list(m *ice.Message) {
 }
 func _config_save(m *ice.Message, name string, arg ...string) {
 	msg := m.Spawn(m.Source())
-	name = path.Join(msg.Conf(CONFIG, "meta.path"), name)
+	name = path.Join(msg.Conf(CONFIG, kit.META_PATH), name)
 	if f, p, e := kit.Create(name); m.Assert(e) {
 		data := map[string]interface{}{}
 		for _, k := range arg {
@@ -49,7 +49,7 @@ func _config_save(m *ice.Message, name string, arg ...string) {
 }
 func _config_load(m *ice.Message, name string, arg ...string) {
 	msg := m.Spawn(m.Source())
-	name = path.Join(msg.Conf(CONFIG, "meta.path"), name)
+	name = path.Join(msg.Conf(CONFIG, kit.META_PATH), name)
 	if f, e := os.Open(name); e == nil {
 		data := map[string]interface{}{}
 		json.NewDecoder(f).Decode(&data)
@@ -98,7 +98,7 @@ const CONFIG = "config"
 func init() {
 	Index.Merge(&ice.Context{
 		Configs: map[string]*ice.Config{
-			CONFIG: {Name: "config", Help: "配置", Value: kit.Data("path", "var/conf")},
+			CONFIG: {Name: "config", Help: "配置", Value: kit.Data(kit.MDB_PATH, "var/conf")},
 		},
 		Commands: map[string]*ice.Command{
 			CONFIG: {Name: "config key auto", Help: "配置", Action: map[string]*ice.Action{

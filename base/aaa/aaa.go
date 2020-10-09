@@ -35,4 +35,4 @@ var Index = &ice.Context{Name: AAA, Help: "认证模块", Commands: map[string]*
 	}},
 }}
 
-func init() { ice.Index.Register(Index, nil, USER, SESS, ROLE) }
+func init() { ice.Index.Register(Index, nil, USER, SESS, ROLE, TOTP) }

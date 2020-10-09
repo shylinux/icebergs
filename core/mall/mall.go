@@ -456,7 +456,7 @@ var Index = &ice.Context{Name: "mall", Help: "贸易中心",
 					// }
 				}
 
-				switch m.Option(ice.MSG_ACTION) {
+				switch m.Option("_action") {
 				case "计算":
 				case "记录":
 					// 收入

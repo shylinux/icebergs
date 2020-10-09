@@ -13,7 +13,7 @@ func _event_listen(m *ice.Message, event string, cmd string) {
 func _event_action(m *ice.Message, event string, arg ...string) {
 	m.Option(mdb.FIELDS, "time,id,cmd")
 	m.Cmd(mdb.SELECT, EVENT, kit.Keys(kit.MDB_HASH, kit.Hashs(event)), mdb.LIST).Table(func(index int, value map[string]string, head []string) {
-		m.Cmd(kit.Split(value[kit.SSH_CMD]), event, arg).Cost(EVENT, event, "arg", arg)
+		m.Cmd(kit.Split(value[kit.SSH_CMD]), event, arg).Cost(EVENT, event, kit.SSH_ARG, arg)
 	})
 }
 
@@ -22,9 +22,7 @@ const EVENT = "event"
 func init() {
 	Index.Merge(&ice.Context{
 		Configs: map[string]*ice.Config{
-			EVENT: {Name: EVENT, Help: "事件流", Value: kit.Data(
-				kit.MDB_SHORT, EVENT,
-			)},
+			EVENT: {Name: EVENT, Help: "事件流", Value: kit.Data(kit.MDB_SHORT, EVENT)},
 		},
 		Commands: map[string]*ice.Command{
 			EVENT: {Name: "event event id auto 监听", Help: "事件流", Action: map[string]*ice.Action{

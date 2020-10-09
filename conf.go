@@ -21,9 +21,11 @@ const ( // MSG
 	MSG_SOURCE = "_source"
 	MSG_TARGET = "_target"
 	MSG_HANDLE = "_handle"
-	MSG_ACTION = "_action"
 	MSG_OUTPUT = "_output"
 	MSG_ARGS   = "_args"
+
+	MSG_CONTROL = "_control"
+	MSG_PROCESS = "_process"
 
 	MSG_CMDS     = "cmds"
 	MSG_SESSID   = "sessid"

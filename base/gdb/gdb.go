@@ -45,13 +45,12 @@ func (f *Frame) Close(m *ice.Message, arg ...string) bool {
 }
 
 const (
+	RESTART = "restart"
+	START   = "start"
+	STOP    = "stop"
+
 	BEGIN = "begin"
 	END   = "end"
-
-	START = "start"
-	STOP  = "stop"
-
-	RESTART = "restart"
 )
 
 const GDB = "gdb"
@@ -75,7 +74,5 @@ var Index = &ice.Context{Name: GDB, Help: "事件模块",
 }
 
 func init() {
-	ice.Index.Register(Index, &Frame{},
-		ROUTINE, SIGNAL, EVENT, TIMER,
-	)
+	ice.Index.Register(Index, &Frame{}, ROUTINE, SIGNAL, EVENT, TIMER)
 }

@@ -37,6 +37,7 @@ var Index = &ice.Context{Name: "ctx", Help: "配置模块",
 				})
 			}}))
 		}},
+		ice.CTX_EXIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {}},
 	},
 }
 

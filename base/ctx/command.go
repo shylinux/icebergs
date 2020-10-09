@@ -11,12 +11,13 @@ import (
 func _command_list(m *ice.Message, name string) {
 	p := m.Spawn(m.Source())
 	if name != "" {
+		// 命令详情
 		p.Search(name, func(p *ice.Context, s *ice.Context, key string, cmd *ice.Command) {
-			m.Push("key", s.Cap(ice.CTX_FOLLOW))
-			m.Push("name", kit.Format(cmd.Name))
-			m.Push("help", kit.Simple(cmd.Help)[0])
-			m.Push("meta", kit.Formats(cmd.Meta))
-			m.Push("list", kit.Formats(cmd.List))
+			m.Push(kit.MDB_KEY, s.Cap(ice.CTX_FOLLOW))
+			m.Push(kit.MDB_NAME, kit.Format(cmd.Name))
+			m.Push(kit.MDB_HELP, kit.Simple(cmd.Help)[0])
+			m.Push(kit.MDB_META, kit.Formats(cmd.Meta))
+			m.Push(kit.MDB_LIST, kit.Formats(cmd.List))
 		})
 		return
 	}
@@ -30,11 +31,12 @@ func _command_list(m *ice.Message, name string) {
 	}
 	sort.Strings(list)
 
+	// 命令列表
 	for _, k := range list {
 		v := p.Target().Commands[k]
-		m.Push("key", k)
-		m.Push("name", kit.Format(v.Name))
-		m.Push("help", kit.Simple(v.Help)[0])
+		m.Push(kit.MDB_KEY, k)
+		m.Push(kit.MDB_NAME, kit.Format(v.Name))
+		m.Push(kit.MDB_HELP, kit.Simple(v.Help)[0])
 	}
 }
 

@@ -170,7 +170,9 @@ func init() {
 					}
 
 					m.Option(tcp.LISTEN_CB, func(c net.Conn) { m.Go(func() { _ssh_accept(m, kit.Hashs(m.Option(tcp.PORT)), c) }) })
-					m.Go(func() { m.Cmdy(tcp.SERVER, tcp.LISTEN, kit.MDB_NAME, SSH, tcp.PORT, m.Option(tcp.PORT)) })
+					m.Go(func() {
+						m.Cmdy(tcp.SERVER, tcp.LISTEN, kit.MDB_TYPE, SSH, kit.MDB_NAME, tcp.PORT, tcp.PORT, m.Option(tcp.PORT))
+					})
 				}},
 
 				mdb.INSERT: {Name: "insert text:textarea", Help: "添加", Hand: func(m *ice.Message, arg ...string) {

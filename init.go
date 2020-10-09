@@ -1,6 +1,8 @@
 package ice
 
 import (
+	"encoding/json"
+
 	kit "github.com/shylinux/toolkits"
 
 	"os"
@@ -139,6 +141,16 @@ var Pulse = &Message{
 }
 var wait = make(chan bool, 1)
 
+func Init(file string) {
+	if f, e := os.Open(file); e == nil {
+		defer f.Close()
+
+		var data interface{}
+		json.NewDecoder(f).Decode(&data)
+
+		kit.Fetch(data, func(key string, value string) { Pulse.Option(key, value) })
+	}
+}
 func Run(arg ...string) string {
 	if len(arg) == 0 {
 		arg = os.Args[1:]
@@ -164,13 +176,14 @@ func Run(arg ...string) string {
 		os.Exit(frame.code)
 
 	default:
-		_log_disable = false
+		_log_disable = os.Getenv("ctx_debug") != "true"
 		if Pulse.Cmdy(arg); Pulse.Result() == "" {
 			Pulse.Table()
 		}
 		if strings.TrimSpace(Pulse.Result()) == "" {
 			Pulse.Set(MSG_RESULT).Cmdy("cli.system", arg)
 		}
+		Pulse.Sleep("10ms")
 	}
 
 	return Pulse.Result()

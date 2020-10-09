@@ -23,13 +23,13 @@ type Conn struct {
 func (c *Conn) Read(b []byte) (int, error) {
 	n, e := c.Conn.Read(b)
 	c.s.nr += n
-	c.m.Conf(CLIENT, kit.Keys(kit.MDB_HASH, c.h, kit.MDB_META, "nread"), c.s.nr)
+	// c.m.Conf(CLIENT, kit.Keys(kit.MDB_HASH, c.h, kit.MDB_META, "nread"), c.s.nr)
 	return n, e
 }
 func (c *Conn) Write(b []byte) (int, error) {
 	n, e := c.Conn.Write(b)
 	c.s.nw += n
-	c.m.Conf(CLIENT, kit.Keys(kit.MDB_HASH, c.h, kit.MDB_META, "nwrite"), c.s.nw)
+	// c.m.Conf(CLIENT, kit.Keys(kit.MDB_HASH, c.h, kit.MDB_META, "nwrite"), c.s.nw)
 	return n, e
 }
 func (c *Conn) Close() error {

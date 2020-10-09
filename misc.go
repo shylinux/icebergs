@@ -54,14 +54,6 @@ func (m *Message) Space(arg interface{}) []string {
 	return []string{"web.space", kit.Format(arg)}
 }
 
-var count = int32(0)
-
-func (m *Message) AddCmd(cmd *Command) string {
-	name := fmt.Sprintf("_cb_%d", atomic.AddInt32(&count, 1))
-	m.target.Commands[name] = cmd
-	return kit.Keys(m.target.Cap(CTX_FOLLOW), name)
-}
-
 func (m *Message) PushRender(key, view, name string, arg ...string) *Message {
 	if m.Option(MSG_USERUA) == "" {
 		return m
@@ -108,6 +100,14 @@ func (m *Message) PushPlugin(key string, arg ...string) *Message {
 	m.Option("_prefix", arg)
 	m.Cmdy("command", key)
 	return m
+}
+
+var count = int32(0)
+
+func (m *Message) AddCmd(cmd *Command) string {
+	name := fmt.Sprintf("_cb_%d", atomic.AddInt32(&count, 1))
+	m.target.Commands[name] = cmd
+	return kit.Keys(m.target.Cap(CTX_FOLLOW), name)
 }
 
 var BinPack = map[string][]byte{}

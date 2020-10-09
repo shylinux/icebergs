@@ -125,6 +125,13 @@ func init() {
 						w, h, e := terminal.GetSize(fd)
 						m.Assert(e)
 
+						fd1 := int(os.Stdout.Fd())
+						oldState1, err := terminal.MakeRaw(fd1)
+						if err != nil {
+							panic(err)
+						}
+						defer terminal.Restore(fd1, oldState1)
+
 						session.Stdin = os.Stdin
 						session.Stdout = os.Stdout
 						session.Stderr = os.Stderr

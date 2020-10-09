@@ -18,7 +18,7 @@ import (
 )
 
 func Render(msg *ice.Message, cmd string, args ...interface{}) {
-	defer func() { msg.Log_EXPORT(mdb.RENDER, cmd, kit.MDB_TEXT, args) }()
+	defer func() { msg.Log_EXPORT(mdb.RENDER, cmd, kit.Simple(args...)) }()
 
 	switch arg := kit.Simple(args...); cmd {
 	case ice.RENDER_VOID:
@@ -191,8 +191,6 @@ func (f *Frame) parse(m *ice.Message, line string) string {
 	}
 
 	for _, one := range kit.Split(line, ";", ";", ";") {
-		m.Log_IMPORT("stdin", one, "length", len(one))
-
 		async, one := false, strings.TrimSpace(one)
 		if strings.TrimSuffix(one, "&") != one {
 			async, one = true, strings.TrimSuffix(one, "&")

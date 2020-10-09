@@ -8,19 +8,41 @@ import (
 	"github.com/shylinux/icebergs/base/tcp"
 	kit "github.com/shylinux/toolkits"
 
+	"golang.org/x/crypto/ssh"
+	"golang.org/x/crypto/ssh/terminal"
+
+	"encoding/json"
 	"net"
 	"os"
 	"path"
-
-	"golang.org/x/crypto/ssh"
+	"strings"
 )
 
 func _ssh_conn(m *ice.Message, conn net.Conn, username, hostport string) (*ssh.Client, error) {
-	key, e := ssh.ParsePrivateKey([]byte(m.Cmdx(nfs.CAT, path.Join(os.Getenv("HOME"), m.Option("private")))))
-	m.Assert(e)
-
 	methods := []ssh.AuthMethod{}
-	methods = append(methods, ssh.PublicKeys(key))
+	methods = append(methods, ssh.KeyboardInteractive(func(user, instruction string, questions []string, echos []bool) (res []string, err error) {
+		for _, k := range questions {
+			switch strings.TrimSpace(strings.ToLower(k)) {
+			case "verification code:":
+				res = append(res, aaa.TOTP_GET(m.Option("verify"), 6, 30))
+			case "password:":
+				res = append(res, m.Option(aaa.PASSWORD))
+			default:
+			}
+		}
+		m.Debug("question: %v res: %d", questions, len(res))
+		return
+	}))
+
+	methods = append(methods, ssh.PublicKeysCallback(func() ([]ssh.Signer, error) {
+		key, err := ssh.ParsePrivateKey([]byte(m.Cmdx(nfs.CAT, path.Join(os.Getenv("HOME"), m.Option("private")))))
+		m.Debug("publickeys")
+		return []ssh.Signer{key}, err
+	}))
+	methods = append(methods, ssh.PasswordCallback(func() (string, error) {
+		m.Debug("password")
+		return m.Option(aaa.PASSWORD), nil
+	}))
 
 	c, chans, reqs, err := ssh.NewClientConn(conn, hostport, &ssh.ClientConfig{
 		User: username, Auth: methods, HostKeyCallback: func(hostname string, remote net.Addr, key ssh.PublicKey) error {
@@ -29,10 +51,7 @@ func _ssh_conn(m *ice.Message, conn net.Conn, username, hostport string) (*ssh.C
 		},
 	})
 
-	if err != nil {
-		return nil, err
-	}
-	return ssh.NewClient(c, chans, reqs), nil
+	return ssh.NewClient(c, chans, reqs), err
 }
 
 const CONNECT = "connect"
@@ -79,27 +98,52 @@ func init() {
 					})
 				}},
 
-				"open": {Name: "dial username=shy host=shylinux.com port=22 private=.ssh/id_rsa", Help: "添加", Hand: func(m *ice.Message, arg ...string) {
+				"open": {Name: "open authfile= username=shy password= verfiy= host=shylinux.com port=22 private=.ssh/id_rsa", Help: "终端", Hand: func(m *ice.Message, arg ...string) {
+					if f, e := os.Open(m.Option("authfile")); e == nil {
+						defer f.Close()
+
+						var data interface{}
+						json.NewDecoder(f).Decode(&data)
+
+						kit.Fetch(data, func(key string, value string) { m.Option(key, value) })
+					}
+
 					m.Option(tcp.DIAL_CB, func(c net.Conn) {
-						client, e := _ssh_conn(m, c, kit.Select("shy", m.Option(aaa.USERNAME)),
-							kit.Select("shylinux.com", m.Option(tcp.HOST))+":"+kit.Select("22", m.Option(tcp.PORT)),
-						)
+						client, e := _ssh_conn(m, c, m.Option(aaa.USERNAME), m.Option(tcp.HOST)+":"+m.Option(tcp.PORT))
 						m.Assert(e)
 
-						m.Debug("what")
-						m.Debug("some")
 						session, e := client.NewSession()
+						m.Assert(e)
+
+						fd := int(os.Stdin.Fd())
+						oldState, err := terminal.MakeRaw(fd)
+						if err != nil {
+							panic(err)
+						}
+						defer terminal.Restore(fd, oldState)
+
+						w, h, e := terminal.GetSize(fd)
 						m.Assert(e)
 
 						session.Stdin = os.Stdin
 						session.Stdout = os.Stdout
 						session.Stderr = os.Stderr
-						session.Start("/bin/bash")
-						m.Debug("what")
-						m.Debug("some")
+
+						modes := ssh.TerminalModes{
+							ssh.ECHO:          1,
+							ssh.TTY_OP_ISPEED: 14400,
+							ssh.TTY_OP_OSPEED: 14400,
+						}
+
+						session.RequestPty(os.Getenv("TERM"), h, w, modes)
+						session.Shell()
+						session.Wait()
 					})
 
-					m.Cmd(tcp.CLIENT, tcp.DIAL, tcp.PORT, m.Option(tcp.PORT), tcp.HOST, m.Option(tcp.HOST), arg)
+					m.Cmdy(tcp.CLIENT, tcp.DIAL, kit.MDB_TYPE, "ssh", kit.MDB_NAME, m.Option(tcp.HOST),
+						tcp.PORT, m.Option(tcp.PORT), tcp.HOST, m.Option(tcp.HOST), arg)
+
+					m.Echo("exit %s\n", m.Option(tcp.HOST))
 				}},
 				mdb.DELETE: {Name: "delete", Help: "删除", Hand: func(m *ice.Message, arg ...string) {
 					m.Cmdy(mdb.DELETE, CONNECT, "", mdb.HASH, kit.MDB_HASH, m.Option(kit.MDB_HASH))

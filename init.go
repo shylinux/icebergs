@@ -154,7 +154,6 @@ func Run(arg ...string) string {
 	Pulse.root = Pulse
 	Pulse.Option("cache.limit", "30")
 	Pulse.Option("begin_time", Pulse.Time())
-	_log_disable = true
 	switch kit.Select("", arg, 0) {
 	case "space", "serve":
 		if _log_disable = false; frame.Begin(Pulse.Spawns(), arg...).Start(Pulse, arg...) {
@@ -163,10 +162,14 @@ func Run(arg ...string) string {
 
 		<-wait
 		os.Exit(frame.code)
+
 	default:
-		if m := Pulse.Cmdy(arg); m.Result() == "" {
-			m.Table()
-			m.Sleep("100ms")
+		_log_disable = false
+		if Pulse.Cmdy(arg); Pulse.Result() == "" {
+			Pulse.Table()
+		}
+		if strings.TrimSpace(Pulse.Result()) == "" {
+			Pulse.Set(MSG_RESULT).Cmdy("cli.system", arg)
 		}
 	}
 

@@ -43,6 +43,8 @@ func _totp_get(key string, num int, per int64) string {
 	return kit.Format(kit.Format("%%0%dd", num), res%int64(math.Pow10(num)))
 }
 
+func TOTP_GET(key string, num int, per int64) string { return _totp_get(key, num, per) }
+
 const (
 	SECRET = "secret"
 	NUMBER = "number"

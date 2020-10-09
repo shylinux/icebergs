@@ -18,8 +18,6 @@ import (
 )
 
 func Render(msg *ice.Message, cmd string, args ...interface{}) {
-	defer func() { msg.Log_EXPORT(mdb.RENDER, cmd, kit.Simple(args...)) }()
-
 	switch arg := kit.Simple(args...); cmd {
 	case ice.RENDER_VOID:
 	case ice.RENDER_RESULT:
@@ -196,7 +194,7 @@ func (f *Frame) parse(m *ice.Message, line string) string {
 			async, one = true, strings.TrimSuffix(one, "&")
 		}
 
-		msg := m.Spawns(f.target)
+		msg := m.Spawn(f.target)
 		msg.Option("_cmd", one)
 
 		ls := kit.Split(one)
@@ -234,15 +232,17 @@ func (f *Frame) scan(m *ice.Message, h, line string, r io.Reader) *Frame {
 	m.I, m.O = r, f.stdout
 	bio := bufio.NewScanner(r)
 	for f.prompt(m, ps...); bio.Scan() && !f.exit; f.prompt(m, ps...) {
+		if h == STDIO && len(bio.Text()) == 0 {
+			continue // 空行
+		}
+
 		m.Cmdx(mdb.INSERT, SOURCE, kit.Keys(kit.MDB_HASH, h), mdb.LIST, kit.MDB_TEXT, bio.Text())
 		f.count++
 
 		if len(bio.Text()) == 0 {
-			if h == STDIO {
-				f.count--
-			}
 			continue // 空行
 		}
+
 		if strings.HasSuffix(bio.Text(), "\\") {
 			line += bio.Text()[:len(bio.Text())-1]
 			ps = f.ps2

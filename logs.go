@@ -14,18 +14,6 @@ var ErrNotLogin = "not login: "
 var ErrNotAuth = "not auth: "
 var ErrNotJoin = "not join: "
 
-type Error struct {
-	Arg      []interface{}
-	FileLine string
-}
-
-func (e *Error) Error() string {
-	return e.FileLine + " " + strings.Join(kit.Simple(e.Arg), " ")
-}
-func NewError(n int, arg ...interface{}) *Error {
-	return &Error{Arg: arg, FileLine: kit.FileLine(n+3, 3)}
-}
-
 var _log_disable = true
 var Log func(m *Message, p, l, s string)
 
@@ -43,8 +31,6 @@ func (m *Message) log(level string, str string, arg ...interface{}) *Message {
 	switch level {
 	case LOG_IMPORT, LOG_CREATE, LOG_INSERT, LOG_MODIFY, LOG_EXPORT:
 		prefix, suffix = "\033[36;44m", "\033[0m"
-	case LOG_ENABLE, LOG_LISTEN, LOG_SIGNAL, LOG_TIMERS, LOG_EVENTS:
-		prefix, suffix = "\033[33m", "\033[0m"
 
 	case LOG_CMDS, LOG_START, LOG_SERVE:
 		prefix, suffix = "\033[32m", "\033[0m"

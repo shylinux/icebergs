@@ -68,7 +68,6 @@ var Index = &ice.Context{Name: "log", Help: "日志模块",
 				ice.LOG_INSERT, ice.LOG_DELETE,
 				ice.LOG_SELECT, ice.LOG_MODIFY,
 				ice.LOG_EXPORT, ice.LOG_IMPORT,
-				ice.LOG_ENABLE,
 			}),
 			"bench", kit.Dict("path", "var/log/bench.log", "list", []string{}),
 			"error", kit.Dict("path", "var/log/error.log", "list", []string{

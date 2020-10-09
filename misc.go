@@ -54,6 +54,12 @@ func (m *Message) Space(arg interface{}) []string {
 	return []string{"web.space", kit.Format(arg)}
 }
 
+func (m *Message) PushPlugin(key string, arg ...string) *Message {
+	m.Option("_process", "_field")
+	m.Option("_prefix", arg)
+	m.Cmdy("command", key)
+	return m
+}
 func (m *Message) PushRender(key, view, name string, arg ...string) *Message {
 	if m.Option(MSG_USERUA) == "" {
 		return m
@@ -82,6 +88,9 @@ func (m *Message) PushRender(key, view, name string, arg ...string) *Message {
 	}
 	return m
 }
+func (m *Message) PushButton(key string, arg ...string) {
+	m.PushRender("action", "button", key, arg...)
+}
 func (m *Message) PushAction(list ...interface{}) {
 	if len(m.meta[MSG_APPEND]) > 0 && m.meta[MSG_APPEND][0] == kit.MDB_KEY {
 		m.Push(kit.MDB_KEY, kit.MDB_ACTION)
@@ -91,15 +100,6 @@ func (m *Message) PushAction(list ...interface{}) {
 	m.Table(func(index int, value map[string]string, head []string) {
 		m.PushRender(kit.MDB_ACTION, kit.MDB_BUTTON, strings.Join(kit.Simple(list...), ","))
 	})
-}
-func (m *Message) PushButton(key string, arg ...string) {
-	m.PushRender("action", "button", key, arg...)
-}
-func (m *Message) PushPlugin(key string, arg ...string) *Message {
-	m.Option("_process", "_field")
-	m.Option("_prefix", arg)
-	m.Cmdy("command", key)
-	return m
 }
 
 var count = int32(0)

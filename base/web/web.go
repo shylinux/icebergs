@@ -42,7 +42,7 @@ func (web *Frame) Start(m *ice.Message, arg ...string) bool {
 			w.ServeMux = http.NewServeMux()
 
 			// 静态路由
-			msg := m.Spawns(s)
+			msg := m.Spawn(s)
 			m.Confm(SERVE, "meta.static", func(key string, value string) {
 				m.Log("route", "%s <- %s <- %s", s.Name, key, value)
 				w.Handle(key, http.StripPrefix(key, http.FileServer(http.Dir(value))))
@@ -60,7 +60,7 @@ func (web *Frame) Start(m *ice.Message, arg ...string) bool {
 				if s == sub && k[0] == '/' {
 					msg.Log("route", "%s <- %s", s.Name, k)
 					w.HandleFunc(k, func(w http.ResponseWriter, r *http.Request) {
-						m.TryCatch(msg.Spawns(), true, func(msg *ice.Message) {
+						m.TryCatch(msg.Spawn(), true, func(msg *ice.Message) {
 							_serve_handle(k, x, msg, w, r)
 						})
 					})

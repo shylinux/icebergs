@@ -55,7 +55,7 @@ func _space_dial(m *ice.Message, dev, name string, arg ...string) {
 							m.Log_CREATE(SPACE, dev, "retry", i, "uri", uri)
 
 							// 连接成功
-							m = m.Spawns()
+							m = m.Spawn()
 							if i = 0; _space_handle(m, true, web.send, s, dev) {
 								i = -1 // 连接关闭
 							}
@@ -136,7 +136,7 @@ func _space_handle(m *ice.Message, safe bool, send map[string]*ice.Message, c *w
 			// 解析失败
 			break
 		} else {
-			socket, msg := c, m.Spawns(b)
+			socket, msg := c, m.Spawn(b)
 			target := kit.Simple(msg.Optionv(ice.MSG_TARGET))
 			source := kit.Simple(msg.Optionv(ice.MSG_SOURCE), name)
 			msg.Log("recv", "%v<-%v %s %v", target, source, msg.Detailv(), msg.Format("meta"))

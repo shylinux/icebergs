@@ -36,7 +36,7 @@ type Action struct {
 }
 type Command struct {
 	Name   string
-	Help   interface{} // string []string
+	Help   string
 	List   []interface{}
 	Meta   map[string]interface{}
 	Hand   func(m *Message, c *Context, key string, arg ...string)
@@ -44,8 +44,7 @@ type Command struct {
 }
 type Context struct {
 	Name string
-	Help interface{} // string []string
-	Test interface{} // string []string
+	Help string
 
 	Caches   map[string]*Cache
 	Configs  map[string]*Config
@@ -108,11 +107,11 @@ func (c *Context) _hand(m *Message, cmd *Command, key string, k string, h *Actio
 	return m
 }
 func (c *Context) cmd(m *Message, cmd *Command, key string, arg ...string) *Message {
-	if m.meta[MSG_DETAIL] = kit.Simple(key, arg); cmd == nil {
+	if m.cmd = cmd; cmd == nil {
 		return m
 	}
 
-	m.cmd = cmd
+	m.meta[MSG_DETAIL] = kit.Simple(key, arg)
 	if m.Hand = true; len(arg) > 1 && arg[0] == "action" && cmd.Action != nil {
 		if h, ok := cmd.Action[arg[1]]; ok {
 			return c._hand(m, cmd, key, arg[1], h, arg[2:]...)
@@ -134,11 +133,8 @@ func (c *Context) cmd(m *Message, cmd *Command, key string, arg ...string) *Mess
 		}
 	}
 
-	if m.target.Name == "mdb" {
-		m.Log(LOG_CMDS, "%s.%s %d %v %s", c.Name, key, len(arg), arg, kit.FileLine(8, 3))
-	} else {
-		m.Log(LOG_CMDS, "%s.%s %d %v %s", c.Name, key, len(arg), arg, kit.FileLine(cmd.Hand, 3))
-	}
+	m.Log(LOG_CMDS, "%s.%s %d %v %s", c.Name, key, len(arg), arg,
+		kit.Select(kit.FileLine(cmd.Hand, 3), kit.FileLine(8, 3), m.target.Name == "mdb"))
 	cmd.Hand(m, c, key, arg...)
 	return m
 }
@@ -158,11 +154,10 @@ func (c *Context) Register(s *Context, x Server, name ...string) *Context {
 	}
 	s.Merge(s, x)
 
-	// Pulse.Log("register", "%s <- %s", c.Name, s.Name)
 	if c.contexts == nil {
 		c.contexts = map[string]*Context{}
 	}
-	c.contexts[kit.Format(s.Name)] = s
+	c.contexts[s.Name] = s
 	s.root = c.root
 	s.context = c
 	s.server = x
@@ -171,12 +166,6 @@ func (c *Context) Register(s *Context, x Server, name ...string) *Context {
 func (c *Context) Merge(s *Context, x Server) *Context {
 	if c.Commands == nil {
 		c.Commands = map[string]*Command{}
-	}
-	if c.Configs == nil {
-		c.Configs = map[string]*Config{}
-	}
-	if c.Caches == nil {
-		c.Caches = map[string]*Cache{}
 	}
 	for k, v := range s.Commands {
 		c.Commands[k] = v
@@ -198,12 +187,21 @@ func (c *Context) Merge(s *Context, x Server) *Context {
 			}
 		}
 	}
+
+	if c.Configs == nil {
+		c.Configs = map[string]*Config{}
+	}
 	for k, v := range s.Configs {
 		c.Configs[k] = v
+	}
+
+	if c.Caches == nil {
+		c.Caches = map[string]*Cache{}
 	}
 	for k, v := range s.Caches {
 		c.Caches[k] = v
 	}
+
 	s.server = x
 	return c
 }
@@ -266,18 +264,9 @@ func (c *Context) Spawn(m *Message, name string, help string, arg ...string) *Co
 	return s
 }
 func (c *Context) Begin(m *Message, arg ...string) *Context {
-	if c.Caches == nil {
-		c.Caches = map[string]*Cache{}
-	}
-	if c.Configs == nil {
-		c.Configs = map[string]*Config{}
-	}
-	if c.Commands == nil {
-		c.Commands = map[string]*Command{}
-	}
 	c.Caches[CTX_FOLLOW] = &Cache{Name: CTX_FOLLOW, Value: ""}
-	c.Caches[CTX_STREAM] = &Cache{Name: CTX_STREAM, Value: ""}
 	c.Caches[CTX_STATUS] = &Cache{Name: CTX_STATUS, Value: ""}
+	c.Caches[CTX_STREAM] = &Cache{Name: CTX_STREAM, Value: ""}
 
 	if c.context == Index {
 		c.Cap(CTX_FOLLOW, c.Name)
@@ -288,36 +277,27 @@ func (c *Context) Begin(m *Message, arg ...string) *Context {
 	c.Cap(CTX_STATUS, CTX_BEGIN)
 
 	if c.begin = m; c.server != nil {
-		m.TryCatch(m, true, func(m *Message) {
-			// 初始化模块
-			c.server.Begin(m, arg...)
-		})
+		c.server.Begin(m, arg...)
 	}
 	return c
 }
 func (c *Context) Start(m *Message, arg ...string) bool {
-	c.start = m
-	m.Hold(1)
-
 	wait := make(chan bool)
-
-	var p interface{}
-	if c.server != nil {
-		p = c.server.Start
-	}
+	m.Hold(1)
 
 	m.Go(func() {
 		m.Log(LOG_START, c.Cap(CTX_FOLLOW))
 		c.Cap(CTX_STATUS, CTX_START)
+		c.start = m
 
-		// 启动模块
 		if wait <- true; c.server != nil {
 			c.server.Start(m, arg...)
 		}
 		if m.Done(true); m.wait != nil {
 			m.wait <- true
 		}
-	}, p)
+	})
+
 	<-wait
 	return true
 }
@@ -326,7 +306,6 @@ func (c *Context) Close(m *Message, arg ...string) bool {
 	c.Cap(CTX_STATUS, CTX_CLOSE)
 
 	if c.server != nil {
-		// 结束模块
 		return c.server.Close(m, arg...)
 	}
 	return true
@@ -372,8 +351,7 @@ func (m *Message) Time(args ...interface{}) string {
 	if len(args) > 0 {
 		switch arg := args[0].(type) {
 		case string:
-			f = arg
-			if len(args) > 1 {
+			if f = arg; len(args) > 1 {
 				// 时间格式
 				f = fmt.Sprintf(f, args[1:]...)
 			}
@@ -389,6 +367,8 @@ func (m *Message) Source() *Context {
 }
 func (m *Message) Format(key interface{}) string {
 	switch key := key.(type) {
+	case []byte:
+		json.Unmarshal(key, &m.meta)
 	case string:
 		switch key {
 		case "cost":
@@ -467,8 +447,6 @@ func (m *Message) Format(key interface{}) string {
 			}
 			return strings.Join(meta, "")
 		}
-	case []byte:
-		json.Unmarshal(key, &m.meta)
 	}
 	return m.time.Format(MOD_TIME)
 }
@@ -479,15 +457,10 @@ func (m *Message) Formats(key string) string {
 	}
 	return m.Format(key)
 }
-func (m *Message) Spawns(arg ...interface{}) *Message {
-	msg := m.Spawn(arg...)
-	msg.code = int(m.target.root.ID())
-	// m.messages = append(m.messages, msg)
-	return msg
-}
 func (m *Message) Spawn(arg ...interface{}) *Message {
 	msg := &Message{
-		code: -1, time: time.Now(),
+		time: time.Now(),
+		code: int(m.target.root.ID()),
 
 		meta: map[string][]string{},
 		data: map[string]interface{}{},
@@ -503,19 +476,17 @@ func (m *Message) Spawn(arg ...interface{}) *Message {
 
 	if len(arg) > 0 {
 		switch val := arg[0].(type) {
-		case *Context:
-			msg.target = val
 		case []byte:
 			json.Unmarshal(val, &msg.meta)
+		case *Context:
+			msg.target = val
 		}
 	}
 	return msg
 }
 func (m *Message) Start(key string, arg ...string) *Message {
-	m.Travel(func(p *Context, s *Context) {
-		if s.Name == key {
-			s.Start(m.Spawns(s), arg...)
-		}
+	m.Search(key+".", func(p *Context, s *Context) {
+		s.Start(m.Spawn(s), arg...)
 	})
 	return m
 }
@@ -648,17 +619,13 @@ func (m *Message) Search(key interface{}, cb interface{}) *Message {
 			}
 		case func(p *Context, s *Context, key string):
 			cb(p.context, p, key)
+		case func(p *Context, s *Context):
+			cb(p.context, p)
 		}
 	}
 	return m
 }
 
-func (m *Message) Cmdy(arg ...interface{}) *Message {
-	return m.Copy(m.__cmd(arg...))
-}
-func (m *Message) Cmdx(arg ...interface{}) string {
-	return kit.Select("", m.__cmd(arg...).meta[MSG_RESULT], 0)
-}
 func (m *Message) __cmd(arg ...interface{}) *Message {
 	list := kit.Simple(arg...)
 	if len(list) == 0 && m.Hand == false {
@@ -669,7 +636,7 @@ func (m *Message) __cmd(arg ...interface{}) *Message {
 	}
 
 	m.Search(list[0], func(p *Context, s *Context, key string, cmd *Command) {
-		m.TryCatch(m.Spawns(s), true, func(msg *Message) {
+		m.TryCatch(m.Spawn(s), true, func(msg *Message) {
 			m = s.cmd(msg, cmd, key, list[1:]...)
 		})
 	})
@@ -679,19 +646,17 @@ func (m *Message) __cmd(arg ...interface{}) *Message {
 	}
 	return m
 }
+func (m *Message) Cmdy(arg ...interface{}) *Message {
+	return m.Copy(m.__cmd(arg...))
+}
+func (m *Message) Cmdx(arg ...interface{}) string {
+	return kit.Select("", m.__cmd(arg...).meta[MSG_RESULT], 0)
+}
 func (m *Message) Cmds(arg ...interface{}) *Message {
 	return m.Go(func() { m.__cmd(arg...) })
 }
 func (m *Message) Cmd(arg ...interface{}) *Message {
 	return m.__cmd(arg...)
-}
-func (m *Message) Confm(key string, chain interface{}, cbs ...interface{}) map[string]interface{} {
-	val := m.Confv(key, chain)
-	if len(cbs) > 0 {
-		kit.Fetch(val, cbs[0])
-	}
-	value, _ := val.(map[string]interface{})
-	return value
 }
 func (m *Message) Confv(arg ...interface{}) (val interface{}) {
 	m.Search(arg[0], func(p *Context, s *Context, key string, conf *Config) {
@@ -713,6 +678,14 @@ func (m *Message) Confv(arg ...interface{}) (val interface{}) {
 		val = kit.Value(conf.Value, arg[1])
 	})
 	return
+}
+func (m *Message) Confm(key string, chain interface{}, cbs ...interface{}) map[string]interface{} {
+	val := m.Confv(key, chain)
+	if len(cbs) > 0 {
+		kit.Fetch(val, cbs[0])
+	}
+	value, _ := val.(map[string]interface{})
+	return value
 }
 func (m *Message) Conf(arg ...interface{}) string {
 	return kit.Format(m.Confv(arg...))

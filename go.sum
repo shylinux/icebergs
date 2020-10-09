@@ -4,10 +4,9 @@ github.com/gorilla/websocket v1.4.2/go.mod h1:YR8l580nyteQvAITg2hZ9XVh4b55+EU/ad
 github.com/kr/pty v1.1.1 h1:VkoXIwSboBpnk99O/KFauAEILuNHv5DVFKZMBN/gUgw=
 github.com/kr/pty v1.1.1/go.mod h1:pFQYn66WHrOpPYNljwOMqo10TkYh1fy3cYio2l3bCsQ=
 github.com/maruel/rs v0.0.0-20150922171536-2c81c4312fe4/go.mod h1:kcRFpEzolcEklV6rD7W95mG49/sbdX/PlFmd7ni3RvA=
-github.com/nareix/joy4 v0.0.0-20200507095837-05a4ffbb5369 h1:Yp0zFEufLz0H7jzffb4UPXijavlyqlYeOg7dcyVUNnQ=
 github.com/nareix/joy4 v0.0.0-20200507095837-05a4ffbb5369/go.mod h1:aFJ1ZwLjvHN4yEzE5Bkz8rD8/d8Vlj3UIuvz2yfET7I=
-github.com/shylinux/toolkits v0.1.8 h1:Lh5HkR1aRzhOOVu9eHwZ5y7dfW7hcFy29IR5tQ5qUeM=
-github.com/shylinux/toolkits v0.1.8/go.mod h1:Y68Ot6xOmo1bun67YvqC3chDGeU2gDxtsUnvVDGJm4g=
+github.com/shylinux/toolkits v0.1.9 h1:gfQnXSBBuCtUueNF5eL0kZAjJS8pzODrjxIL0WynqsQ=
+github.com/shylinux/toolkits v0.1.9/go.mod h1:Y68Ot6xOmo1bun67YvqC3chDGeU2gDxtsUnvVDGJm4g=
 github.com/skip2/go-qrcode v0.0.0-20200617195104-da1b6568686e h1:MRM5ITcdelLK2j1vwZ3Je0FKVCfqOLp5zO6trqMLYs0=
 github.com/skip2/go-qrcode v0.0.0-20200617195104-da1b6568686e/go.mod h1:XV66xRDqSt+GTGFMVlhk3ULuV0y9ZmzeVGR4mloJI3M=
 github.com/tuotoo/qrcode v0.0.0-20190222102259-ac9c44189bf2/go.mod h1:lPnW9HVS0vJdeYyQtOvIvlXgZPNhUAhwz+z5r8AJk0Y=
@@ -16,5 +15,6 @@ golang.org/x/crypto v0.0.0-20191011191535-87dc89f01550 h1:ObdrDkeb4kJdCP557AjRjq
 golang.org/x/crypto v0.0.0-20191011191535-87dc89f01550/go.mod h1:yigFU9vqHzYiE8UmvKecakEJjdnWj3jj499lnFckfCI=
 golang.org/x/net v0.0.0-20190404232315-eb5bcb51f2a3/go.mod h1:t9HGtf8HONx5eT2rtn7q6eTqICYqUVnKs3thJo3Qplg=
 golang.org/x/sys v0.0.0-20190215142949-d0b11bdaac8a/go.mod h1:STP8DvDyc/dI5b8T5hshtkjS+E42TnysNCUPdjciGhY=
+golang.org/x/sys v0.0.0-20190412213103-97732733099d h1:+R4KGOnez64A81RvjARKc4UT5/tI9ujCIVX+P5KiHuI=
 golang.org/x/sys v0.0.0-20190412213103-97732733099d/go.mod h1:h1NjWce9XRLGQEsW7wpKNCjG9DtNlClVuFLEZdDNbEs=
 golang.org/x/text v0.3.0/go.mod h1:NqM8EUOU14njkJ3fqMW+pc6Ldnwhi/IjpwHt7yyuwOQ=

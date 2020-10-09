@@ -1,8 +1,6 @@
 package ice
 
 import (
-	"encoding/json"
-
 	kit "github.com/shylinux/toolkits"
 
 	"os"
@@ -40,7 +38,7 @@ func (f *Frame) Begin(m *Message, arg ...string) Server {
 	m.Travel(func(p *Context, s *Context) {
 		s.root = m.target
 		if msg, ok := list[p]; ok && msg != nil {
-			list[s] = msg.Spawns(s)
+			list[s] = msg.Spawn(s)
 			s.Begin(list[s], arg...)
 		}
 	})
@@ -67,7 +65,7 @@ func (f *Frame) Close(m *Message, arg ...string) bool {
 	list := map[*Context]*Message{m.target: m}
 	m.Travel(func(p *Context, s *Context) {
 		if msg, ok := list[p]; ok && msg != nil {
-			list[s] = msg.Spawns(s)
+			list[s] = msg.Spawn(s)
 			s.Close(list[s], arg...)
 		}
 	})
@@ -98,7 +96,7 @@ var Index = &Context{Name: "ice", Help: "冰山模块",
 			defer m.Cost("_init ice")
 			m.Travel(func(p *Context, c *Context) {
 				if cmd, ok := c.Commands[CTX_INIT]; ok && p != nil {
-					c.cmd(m.Spawns(c), cmd, CTX_INIT, arg...)
+					c.cmd(m.Spawn(c), cmd, CTX_INIT, arg...)
 				}
 			})
 		}},
@@ -123,7 +121,7 @@ var Index = &Context{Name: "ice", Help: "冰山模块",
 			defer m.Cost(CTX_EXIT)
 			m.root.Travel(func(p *Context, c *Context) {
 				if cmd, ok := c.Commands[CTX_EXIT]; ok && p != nil {
-					m.TryCatch(m.Spawns(c), true, func(msg *Message) {
+					m.TryCatch(m.Spawn(c), true, func(msg *Message) {
 						c.cmd(msg, cmd, CTX_EXIT, arg...)
 					})
 				}
@@ -141,16 +139,6 @@ var Pulse = &Message{
 }
 var wait = make(chan bool, 1)
 
-func Init(file string) {
-	if f, e := os.Open(file); e == nil {
-		defer f.Close()
-
-		var data interface{}
-		json.NewDecoder(f).Decode(&data)
-
-		kit.Fetch(data, func(key string, value string) { Pulse.Option(key, value) })
-	}
-}
 func Run(arg ...string) string {
 	if len(arg) == 0 {
 		arg = os.Args[1:]
@@ -168,8 +156,8 @@ func Run(arg ...string) string {
 	Pulse.Option("begin_time", Pulse.Time())
 	switch kit.Select("", arg, 0) {
 	case "space", "serve":
-		if _log_disable = false; frame.Begin(Pulse.Spawns(), arg...).Start(Pulse, arg...) {
-			frame.Close(Pulse.Spawns(), arg...)
+		if _log_disable = false; frame.Begin(Pulse.Spawn(), arg...).Start(Pulse, arg...) {
+			frame.Close(Pulse.Spawn(), arg...)
 		}
 
 		<-wait
@@ -199,7 +187,7 @@ func Name(name string, value interface{}) string {
 		case *Context:
 			last = s.Name
 		}
-		panic(NewError(1, ErrNameExists, name, "last: ", last))
+		panic(kit.Format("name already exits: %s %v", name, last))
 	}
 
 	names[name] = value

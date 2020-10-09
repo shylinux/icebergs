@@ -48,17 +48,17 @@ const ( // MSG
 	MSG_METHOD = "sess.method"
 )
 const ( // CTX
-	CTX_STREAM = "stream"
-	CTX_STATUS = "status"
 	CTX_FOLLOW = "follow"
-
-	CTX_INIT = "_init"
-	CTX_EXIT = "_exit"
+	CTX_STATUS = "status"
+	CTX_STREAM = "stream"
 
 	CTX_BEGIN = "begin"
 	CTX_START = "start"
 	CTX_SERVE = "serve"
 	CTX_CLOSE = "close"
+
+	CTX_INIT = "_init"
+	CTX_EXIT = "_exit"
 )
 const ( // LOG
 	// 数据
@@ -71,16 +71,6 @@ const ( // LOG
 	LOG_SELECT = "select"
 	LOG_MODIFY = "modify"
 
-	// 事件
-	LOG_ENABLE = "enable"
-	LOG_STATUS = "status"
-	LOG_LISTEN = "listen"
-	LOG_ACCEPT = "accept"
-	LOG_FINISH = "finish"
-	LOG_SIGNAL = "signal"
-	LOG_TIMERS = "timers"
-	LOG_EVENTS = "events"
-
 	// 状态
 	LOG_BEGIN = "begin"
 	LOG_START = "start"
@@ -88,14 +78,12 @@ const ( // LOG
 	LOG_CLOSE = "close"
 
 	// 分类
-	LOG_CONF  = "conf"
 	LOG_CMDS  = "cmds"
 	LOG_AUTH  = "auth"
 	LOG_COST  = "cost"
 	LOG_INFO  = "info"
 	LOG_WARN  = "warn"
 	LOG_ERROR = "error"
-	LOG_TRACE = "trace"
 	LOG_DEBUG = "debug"
 )
 const ( // RENDER

@@ -2,13 +2,12 @@ package ice
 
 import (
 	kit "github.com/shylinux/toolkits"
+	"github.com/shylinux/toolkits/task"
 
 	"errors"
 	"fmt"
 	"io"
 	"time"
-
-	"github.com/shylinux/toolkits/task"
 )
 
 func (m *Message) TryCatch(msg *Message, safe bool, hand ...func(msg *Message)) *Message {
@@ -63,7 +62,6 @@ func (m *Message) Hold(n int) *Message {
 	}
 
 	ctx.wg.Add(n)
-	m.Log(LOG_TRACE, "%s wait %s %v", ctx.Name, m.target.Name, ctx.wg)
 	return m
 }
 func (m *Message) Done(b bool) bool {
@@ -77,7 +75,6 @@ func (m *Message) Done(b bool) bool {
 		ctx = c.context
 	}
 
-	m.Log(LOG_TRACE, "%s done %s %v", ctx.Name, m.target.Name, ctx.wg)
 	ctx.wg.Done()
 	return true
 }

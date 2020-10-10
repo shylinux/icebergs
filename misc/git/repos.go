@@ -70,7 +70,7 @@ func init() {
 				m.Cmdy(mdb.SELECT, m.Prefix(REPOS), "", mdb.HASH, kit.MDB_NAME, arg)
 				m.Sort(kit.MDB_NAME)
 			}},
-			"status": {Name: "status name=auto auto 提交 编译 下载", Help: "代码状态", Action: map[string]*ice.Action{
+			"status": {Name: "status name=auto auto submit compile pull", Help: "代码状态", Action: map[string]*ice.Action{
 				"pull": {Name: "pull", Help: "下载", Hand: func(m *ice.Message, arg ...string) {
 					m.Option("_process", "_progress")
 					if m.Richs("progress", "", m.Option("_progress"), func(key string, value map[string]interface{}) {

@@ -1,6 +1,8 @@
 package ice
 
 import (
+	"path"
+
 	kit "github.com/shylinux/toolkits"
 
 	"fmt"
@@ -83,13 +85,15 @@ func (m *Message) PushRender(key, view, name string, arg ...string) *Message {
 		m.Push(key, fmt.Sprintf(`<img src="%s" height=%s>`, name, kit.Select("120", arg, 0)))
 	case "a":
 		m.Push(key, fmt.Sprintf(`<a href="%s" target="_blank">%s</a>`, kit.Select(name, arg, 0), name))
+	case "download":
+		m.Push(key, fmt.Sprintf(`<a href="%s" download="%s">%s</a>`, kit.Select(name, arg, 0), path.Base(kit.Select(name, arg, 0)), name))
 	default:
 		m.Push(key, name)
 	}
 	return m
 }
-func (m *Message) PushButton(key string, arg ...string) {
-	m.PushRender("action", "button", key, arg...)
+func (m *Message) PushButton(arg ...string) {
+	m.PushRender("action", "button", strings.Join(arg, ","))
 }
 func (m *Message) PushAction(list ...interface{}) {
 	if len(m.meta[MSG_APPEND]) > 0 && m.meta[MSG_APPEND][0] == kit.MDB_KEY {
@@ -109,5 +113,3 @@ func (m *Message) AddCmd(cmd *Command) string {
 	m.target.Commands[name] = cmd
 	return kit.Keys(m.target.Cap(CTX_FOLLOW), name)
 }
-
-var BinPack = map[string][]byte{}

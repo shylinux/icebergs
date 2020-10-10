@@ -74,7 +74,7 @@ func (f *Frame) Close(m *Message, arg ...string) bool {
 
 var Index = &Context{Name: "ice", Help: "冰山模块",
 	Caches: map[string]*Cache{
-		CTX_FOLLOW: {Value: ""},
+		CTX_FOLLOW: {Value: "ice"},
 		CTX_STREAM: {Value: "shy"},
 		CTX_STATUS: {Value: "begin"},
 	},
@@ -177,6 +177,7 @@ func Run(arg ...string) string {
 	return Pulse.Result()
 }
 
+var BinPack = map[string][]byte{}
 var names = map[string]interface{}{}
 var ErrNameExists = "name already exists: "
 

@@ -15,12 +15,12 @@ const AUTOGEN = "autogen"
 func init() {
 	Index.Merge(&ice.Context{
 		Configs: map[string]*ice.Config{
-			AUTOGEN: {Name: AUTOGEN, Help: "生成器", Value: kit.Data(
+			AUTOGEN: {Name: AUTOGEN, Help: "生成", Value: kit.Data(
 				kit.MDB_FIELD, "time,id,name,from",
 			)},
 		},
 		Commands: map[string]*ice.Command{
-			AUTOGEN: {Name: "autogen auto 创建", Help: "生成器", Action: map[string]*ice.Action{
+			AUTOGEN: {Name: "autogen path auto create", Help: "生成", Action: map[string]*ice.Action{
 				mdb.CREATE: {Name: "create name=hi@key from=usr/icebergs/misc/zsh/zsh.go@key", Help: "创建", Hand: func(m *ice.Message, arg ...string) {
 					if p := path.Join("src", m.Option("name"), m.Option("name")+".shy"); !kit.FileExists(p) {
 						m.Cmd(nfs.SAVE, p, `chapter "`+m.Option("name")+`"`, "\n", `field "`+m.Option("name")+`" web.code.`+m.Option("name")+"."+m.Option("name"))
@@ -89,8 +89,13 @@ func init() {
 					}
 				}},
 			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-				m.Option(mdb.FIELDS, kit.Select(m.Conf(m.Prefix(AUTOGEN), kit.META_FIELD), mdb.DETAIL, len(arg) > 0))
-				m.Cmdy(mdb.SELECT, m.Prefix(AUTOGEN), "", mdb.LIST, kit.MDB_ID, arg)
+				if len(arg) > 0 && !strings.HasSuffix(arg[0], "/") {
+					m.Option(nfs.DIR_ROOT, "src")
+					m.Cmdy(nfs.CAT, kit.Select("./", arg, 0))
+					return
+				}
+				m.Option(nfs.DIR_ROOT, "src")
+				m.Cmdy(nfs.DIR, kit.Select("./", arg, 0))
 			}},
 		},
 	}, nil)

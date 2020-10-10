@@ -95,7 +95,7 @@ func (c *Context) _hand(m *Message, cmd *Command, key string, k string, h *Actio
 				value = kit.Select(value, arg, i)
 			}
 
-			m.Option(name, kit.Select("", value, !strings.HasPrefix(value, "@")))
+			m.Option(name, kit.Select(m.Option(name), value, !strings.HasPrefix(value, "@")))
 		}
 		if !order {
 			for i := 0; i < len(arg)-1; i += 2 {
@@ -116,20 +116,10 @@ func (c *Context) cmd(m *Message, cmd *Command, key string, arg ...string) *Mess
 		if h, ok := cmd.Action[arg[1]]; ok {
 			return c._hand(m, cmd, key, arg[1], h, arg[2:]...)
 		}
-		for k, h := range cmd.Action {
-			if h.Name == arg[1] || h.Help == arg[1] {
-				return c._hand(m, cmd, key, k, h, arg[2:]...)
-			}
-		}
 	}
 	if len(arg) > 0 && cmd.Action != nil {
 		if h, ok := cmd.Action[arg[0]]; ok {
 			return c._hand(m, cmd, key, arg[0], h, arg[1:]...)
-		}
-		for k, h := range cmd.Action {
-			if h.Name == arg[0] || h.Help == arg[0] {
-				return c._hand(m, cmd, key, k, h, arg[1:]...)
-			}
 		}
 	}
 
@@ -139,10 +129,7 @@ func (c *Context) cmd(m *Message, cmd *Command, key string, arg ...string) *Mess
 	return m
 }
 func (c *Context) Cmd(m *Message, cmd string, key string, arg ...string) *Message {
-	if s, ok := m.Target().Commands[cmd]; ok {
-		c.cmd(m, s, cmd, arg...)
-	}
-	return m
+	return c.cmd(m, m.Target().Commands[cmd], cmd, arg...)
 }
 func (c *Context) Server() Server {
 	return c.server
@@ -169,6 +156,7 @@ func (c *Context) Merge(s *Context, x Server) *Context {
 	}
 	for k, v := range s.Commands {
 		c.Commands[k] = v
+
 		if v.List == nil {
 			v.List = c._split(v.Name)
 		}
@@ -177,14 +165,13 @@ func (c *Context) Merge(s *Context, x Server) *Context {
 		}
 
 		for k, a := range v.Action {
-			kit.Value(v.Meta, kit.Keys("trans", k), a.Help)
 			if a.List == nil {
 				a.List = c._split(a.Name)
 			}
 			if len(a.List) > 0 {
-				v.Meta[a.Help] = a.List
 				v.Meta[k] = a.List
 			}
+			kit.Value(v.Meta, kit.Keys("trans", k), a.Help)
 		}
 	}
 
@@ -234,8 +221,10 @@ func (c *Context) _split(name string) []interface{} {
 				}
 			case "=":
 				if value = kit.Select("", ls, i+1); len(ls) > i+1 && strings.Contains(ls[i+1], ",") {
+					vs := strings.Split(ls[i+1], ",")
+					kit.Value(item, "values", vs)
+					kit.Value(item, kit.MDB_VALUE, vs[0])
 					kit.Value(item, kit.MDB_INPUT, "select")
-					kit.Value(item, "values", strings.Split(ls[i+1], ","))
 					if kit.Value(item, kit.MDB_NAME) == "scale" {
 						kit.Value(item, kit.MDB_VALUE, "week")
 					}
@@ -255,7 +244,7 @@ func (c *Context) _split(name string) []interface{} {
 
 func (c *Context) Spawn(m *Message, name string, help string, arg ...string) *Context {
 	s := &Context{Name: name, Help: help, Caches: map[string]*Cache{}, Configs: map[string]*Config{}}
-	if m.target.Server != nil {
+	if m.target.server != nil {
 		c.Register(s, m.target.server.Spawn(m, s, arg...))
 	} else {
 		c.Register(s, nil)
@@ -264,17 +253,10 @@ func (c *Context) Spawn(m *Message, name string, help string, arg ...string) *Co
 	return s
 }
 func (c *Context) Begin(m *Message, arg ...string) *Context {
-	c.Caches[CTX_FOLLOW] = &Cache{Name: CTX_FOLLOW, Value: ""}
-	c.Caches[CTX_STATUS] = &Cache{Name: CTX_STATUS, Value: ""}
+	c.Caches[CTX_FOLLOW] = &Cache{Name: CTX_FOLLOW, Value: kit.Keys(kit.Select("", c.context.Cap(CTX_FOLLOW), c.context != Index), c.Name)}
+	c.Caches[CTX_STATUS] = &Cache{Name: CTX_STATUS, Value: CTX_BEGIN}
 	c.Caches[CTX_STREAM] = &Cache{Name: CTX_STREAM, Value: ""}
-
-	if c.context == Index {
-		c.Cap(CTX_FOLLOW, c.Name)
-	} else if c.context != nil {
-		c.Cap(CTX_FOLLOW, kit.Keys(c.context.Cap(CTX_FOLLOW), c.Name))
-	}
 	m.Log(LOG_BEGIN, c.Cap(CTX_FOLLOW))
-	c.Cap(CTX_STATUS, CTX_BEGIN)
 
 	if c.begin = m; c.server != nil {
 		c.server.Begin(m, arg...)
@@ -283,14 +265,14 @@ func (c *Context) Begin(m *Message, arg ...string) *Context {
 }
 func (c *Context) Start(m *Message, arg ...string) bool {
 	wait := make(chan bool)
-	m.Hold(1)
 
+	m.Hold(1)
 	m.Go(func() {
 		m.Log(LOG_START, c.Cap(CTX_FOLLOW))
 		c.Cap(CTX_STATUS, CTX_START)
-		c.start = m
+		wait <- true
 
-		if wait <- true; c.server != nil {
+		if c.start = m; c.server != nil {
 			c.server.Start(m, arg...)
 		}
 		if m.Done(true); m.wait != nil {
@@ -302,7 +284,7 @@ func (c *Context) Start(m *Message, arg ...string) bool {
 	return true
 }
 func (c *Context) Close(m *Message, arg ...string) bool {
-	m.Log(LOG_CLOSE, "%s", c.Cap(CTX_FOLLOW))
+	m.Log(LOG_CLOSE, c.Cap(CTX_FOLLOW))
 	c.Cap(CTX_STATUS, CTX_CLOSE)
 
 	if c.server != nil {
@@ -319,9 +301,8 @@ type Message struct {
 	meta map[string][]string
 	data map[string]interface{}
 
-	messages []*Message
-	message  *Message
-	root     *Message
+	message *Message
+	root    *Message
 
 	source *Context
 	target *Context
@@ -501,7 +482,7 @@ func (m *Message) Travel(cb interface{}) *Message {
 	for i := 0; i < len(list); i++ {
 		switch cb := cb.(type) {
 		case func(*Context, *Context):
-			// 模块回调
+			// 遍历模块
 			cb(list[i].context, list[i])
 		case func(*Context, *Context, string, *Command):
 			ls := []string{}
@@ -509,8 +490,9 @@ func (m *Message) Travel(cb interface{}) *Message {
 				ls = append(ls, k)
 			}
 			sort.Strings(ls)
+
 			for _, k := range ls {
-				// 命令回调
+				// 遍历命令
 				cb(list[i].context, list[i], k, list[i].Commands[k])
 			}
 		case func(*Context, *Context, string, *Config):
@@ -519,114 +501,116 @@ func (m *Message) Travel(cb interface{}) *Message {
 				ls = append(ls, k)
 			}
 			sort.Strings(ls)
+
 			for _, k := range ls {
-				// 配置回调
+				// 遍历配置
 				cb(list[i].context, list[i], k, list[i].Configs[k])
 			}
 		}
 
-		// 下级模块
 		ls := []string{}
 		for k := range list[i].contexts {
 			ls = append(ls, k)
 		}
 		sort.Strings(ls)
+
+		// 遍历递进
 		for _, k := range ls {
 			list = append(list, list[i].contexts[k])
 		}
 	}
 	return m
 }
-func (m *Message) Search(key interface{}, cb interface{}) *Message {
+func (m *Message) Search(key string, cb interface{}) *Message {
 	if key == "" {
 		return m
 	}
-	switch key := key.(type) {
-	case string:
-		// 查找模块
-		p := m.target.root
-		if ctx, ok := names[key].(*Context); ok {
-			p = ctx
-		} else if key == "ice." {
-			p, key = m.target.root, ""
-		} else if key == "." {
-			p, key = m.target, ""
-		} else if key == ".." {
-			if m.target.context != nil {
-				p, key = m.target.context, ""
+
+	// 查找模块
+	p := m.target.root
+	if ctx, ok := names[key].(*Context); ok {
+		p = ctx
+	} else if key == "ice." {
+		p, key = m.target.root, ""
+	} else if key == "." {
+		p, key = m.target, ""
+	} else if key == ".." {
+		if m.target.context != nil {
+			p, key = m.target.context, ""
+		}
+	} else if strings.Contains(key, ".") {
+		list := strings.Split(key, ".")
+		for _, p = range []*Context{m.target.root, m.target, m.source} {
+			if p == nil {
+				continue
 			}
-		} else if strings.Contains(key, ".") {
-			list := strings.Split(key, ".")
-			for _, p = range []*Context{m.target.root, m.target, m.source} {
-				if p == nil {
-					continue
-				}
-				for _, v := range list[:len(list)-1] {
-					if s, ok := p.contexts[v]; ok {
-						p = s
-					} else {
-						p = nil
-						break
-					}
-				}
-				if p != nil {
+			for _, v := range list[:len(list)-1] {
+				if s, ok := p.contexts[v]; ok {
+					p = s
+				} else {
+					p = nil
 					break
 				}
 			}
-			if p == nil {
-				m.Log(LOG_WARN, "not found %s", key)
+			if p != nil {
 				break
 			}
-			key = list[len(list)-1]
-		} else {
-			p = m.target
+		}
+		if m.Warn(p == nil, ErrNotFound, key) {
+			return m
+		}
+		key = list[len(list)-1]
+	} else {
+		p = m.target
+	}
+
+	// 遍历命令
+	switch cb := cb.(type) {
+	case func(key string, cmd *Command):
+		if key == "" {
+			for k, v := range p.Commands {
+				cb(k, v)
+			}
+		} else if cmd, ok := p.Commands[key]; ok {
+			cb(key, cmd)
 		}
 
-		// 遍历命令
-		switch cb := cb.(type) {
-		case func(key string, cmd *Command):
-			if key == "" {
-				for k, v := range p.Commands {
-					cb(k, v)
-				}
-				break
+	case func(p *Context, s *Context, key string, cmd *Command):
+		if key == "" {
+			for k, v := range p.Commands {
+				cb(p.context, p, k, v)
 			}
-
-		case func(p *Context, s *Context, key string, cmd *Command):
-			if key == "" {
-				for k, v := range p.Commands {
-					cb(p.context, p, k, v)
-				}
-				break
-			}
-
-			for _, p := range []*Context{p, m.target, m.source} {
-				for s := p; s != nil; s = s.context {
-					if cmd, ok := s.Commands[key]; ok {
-						cb(s.context, s, key, cmd)
-						return m
-					}
-				}
-			}
-		case func(p *Context, s *Context, key string, conf *Config):
-			for _, p := range []*Context{m.target, p, m.source} {
-				for s := p; s != nil; s = s.context {
-					if cmd, ok := s.Configs[key]; ok {
-						cb(s.context, s, key, cmd)
-						return m
-					}
-				}
-			}
-		case func(p *Context, s *Context, key string):
-			cb(p.context, p, key)
-		case func(p *Context, s *Context):
-			cb(p.context, p)
+			break
 		}
+
+		// 查找命令
+		for _, p := range []*Context{p, m.target, m.source} {
+			for s := p; s != nil; s = s.context {
+				if cmd, ok := s.Commands[key]; ok {
+					cb(s.context, s, key, cmd)
+					return m
+				}
+			}
+		}
+	case func(p *Context, s *Context, key string, conf *Config):
+		// 查找配置
+		for _, p := range []*Context{m.target, p, m.source} {
+			for s := p; s != nil; s = s.context {
+				if cmd, ok := s.Configs[key]; ok {
+					cb(s.context, s, key, cmd)
+					return m
+				}
+			}
+		}
+	case func(p *Context, s *Context, key string):
+		cb(p.context, p, key)
+	case func(p *Context, s *Context):
+		cb(p.context, p)
 	}
 	return m
 }
 
-func (m *Message) __cmd(arg ...interface{}) *Message {
+func (m *Message) _hand(arg ...interface{}) *Message {
 	list := kit.Simple(arg...)
 	if len(list) == 0 && m.Hand == false {
 		list = m.meta[MSG_DETAIL]
@@ -647,19 +631,19 @@ func (m *Message) __cmd(arg ...interface{}) *Message {
 	return m
 }
 func (m *Message) Cmdy(arg ...interface{}) *Message {
-	return m.Copy(m.__cmd(arg...))
+	return m.Copy(m._hand(arg...))
 }
 func (m *Message) Cmdx(arg ...interface{}) string {
-	return kit.Select("", m.__cmd(arg...).meta[MSG_RESULT], 0)
+	return kit.Select("", m._hand(arg...).meta[MSG_RESULT], 0)
 }
 func (m *Message) Cmds(arg ...interface{}) *Message {
-	return m.Go(func() { m.__cmd(arg...) })
+	return m.Go(func() { m._hand(arg...) })
 }
 func (m *Message) Cmd(arg ...interface{}) *Message {
-	return m.__cmd(arg...)
+	return m._hand(arg...)
 }
 func (m *Message) Confv(arg ...interface{}) (val interface{}) {
-	m.Search(arg[0], func(p *Context, s *Context, key string, conf *Config) {
+	m.Search(kit.Format(arg[0]), func(p *Context, s *Context, key string, conf *Config) {
 		if len(arg) == 1 {
 			val = conf.Value
 			return // 读配置

@@ -25,6 +25,9 @@ func (m *Message) log(level string, str string, arg ...interface{}) *Message {
 		Log(m, m.Format("prefix"), level, str)
 		// 日志分流
 	}
+	if m.Option("_disable_log") == "true" {
+		return m // 屏蔽日志
+	}
 
 	// 日志颜色
 	prefix, suffix := "", ""
@@ -34,7 +37,7 @@ func (m *Message) log(level string, str string, arg ...interface{}) *Message {
 
 	case LOG_CMDS, LOG_START, LOG_SERVE:
 		prefix, suffix = "\033[32m", "\033[0m"
-	case LOG_WARN, LOG_ERROR, LOG_CLOSE:
+	case LOG_WARN, LOG_CLOSE, LOG_ERROR:
 		prefix, suffix = "\033[31m", "\033[0m"
 	case LOG_AUTH, LOG_COST:
 		prefix, suffix = "\033[33m", "\033[0m"

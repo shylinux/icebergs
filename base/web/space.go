@@ -30,9 +30,7 @@ func _space_list(m *ice.Message, space string) {
 	m.Sort(kit.MDB_NAME)
 }
 func _space_dial(m *ice.Message, dev, name string, arg ...string) {
-	m.Debug("what %v %v %v", dev, name, arg)
 	m.Richs(SPIDE, nil, dev, func(key string, value map[string]interface{}) {
-		m.Debug("what")
 		client := kit.Value(value, "client").(map[string]interface{})
 		redial := m.Confm(SPACE, "meta.redial")
 		web := m.Target().Server().(*Frame)
@@ -41,10 +39,8 @@ func _space_dial(m *ice.Message, dev, name string, arg ...string) {
 		proto := kit.Select("ws", "wss", client["protocol"] == "https")
 		uri := kit.MergeURL(proto+"://"+host+"/space/", "name", name, "type", ice.Info.NodeType, "share", os.Getenv("ctx_share"), "river", os.Getenv("ctx_river"))
 		if u, e := url.Parse(uri); m.Assert(e) {
-			m.Debug("what")
 
 			m.Go(func() {
-				m.Debug("what")
 				for i := 0; i >= 0 && i < kit.Int(redial["c"]); i++ {
 					m.Option(tcp.DIAL_CB, func(s net.Conn, e error) {
 						if m.Warn(e != nil, e) {
@@ -132,14 +128,13 @@ func _space_exec(msg *ice.Message, source, target []string, c *websocket.Conn, n
 }
 func _space_handle(m *ice.Message, safe bool, send map[string]*ice.Message, c *websocket.Conn, name string) bool {
 	for running := true; running; {
-		if t, b, e := c.ReadMessage(); m.Warn(e != nil, "space recv %d msg %v", t, e) {
-			// 解析失败
+		if _, b, e := c.ReadMessage(); m.Warn(e != nil, e) {
 			break
 		} else {
 			socket, msg := c, m.Spawn(b)
 			target := kit.Simple(msg.Optionv(ice.MSG_TARGET))
 			source := kit.Simple(msg.Optionv(ice.MSG_SOURCE), name)
-			msg.Log("recv", "%v<-%v %s %v", target, source, msg.Detailv(), msg.Format("meta"))
+			msg.Log("recv", "%v->%v %s %v", source, target, msg.Detailv(), msg.Format("meta"))
 
 			if len(target) == 0 {
 				if msg.Option(ice.MSG_USERROLE, aaa.UserRole(msg, msg.Option(ice.MSG_USERNAME))) == aaa.VOID {
@@ -152,35 +147,31 @@ func _space_handle(m *ice.Message, safe bool, send map[string]*ice.Message, c *w
 					// 本地执行
 					msg.Option("_dev", name)
 					msg.Go(func() { _space_exec(msg, source, target, c, name) })
-					continue
 				}
 			} else if msg.Richs(SPACE, nil, target[0], func(key string, value map[string]interface{}) {
 				// 查询节点
+				name := target[0]
 				if s, ok := value["socket"].(*websocket.Conn); ok {
 					socket, source, target = s, source, target[1:]
 				} else {
 					socket, source, target = s, source, target[1:]
 				}
+				_space_echo(msg, source, target, socket, name)
 			}) != nil {
 				// 转发报文
 
 			} else if res, ok := send[msg.Option(ice.MSG_TARGET)]; len(target) == 1 && ok {
 				// 接收响应
 				res.Back(msg)
-				continue
 
 			} else if msg.Warn(msg.Option("_handle") == "true", "space miss") {
 				// 回复失败
-				continue
 
 			} else {
 				// 下发失败
 				msg.Warn(true, "space error")
 				source, target = []string{}, kit.Revert(source)[1:]
-				continue
 			}
-
-			_space_echo(msg, source, target, socket, name)
 		}
 	}
 	return false

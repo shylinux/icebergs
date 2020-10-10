@@ -4,6 +4,7 @@ import (
 	ice "github.com/shylinux/icebergs"
 	"github.com/shylinux/icebergs/base/aaa"
 	"github.com/shylinux/icebergs/base/cli"
+	"github.com/shylinux/icebergs/base/gdb"
 	"github.com/shylinux/icebergs/base/mdb"
 	"github.com/shylinux/icebergs/base/nfs"
 	"github.com/shylinux/icebergs/base/tcp"
@@ -27,14 +28,15 @@ func init() {
 		},
 		Commands: map[string]*ice.Command{
 			INSTALL: {Name: "install name port path auto", Help: "安装", Meta: kit.Dict(), Action: map[string]*ice.Action{
-				"download": {Name: "download link", Help: "下载", Hand: func(m *ice.Message, arg ...string) {
-					name := path.Base(arg[0])
+				web.DOWNLOAD: {Name: "download link", Help: "下载", Hand: func(m *ice.Message, arg ...string) {
+					name := path.Base(m.Option(kit.MDB_LINK))
 					p := path.Join(m.Conf(INSTALL, kit.META_PATH), name)
 
-					m.Option("_process", "_progress")
+					m.Option(ice.MSG_PROCESS, "_progress")
 					m.Option(mdb.FIELDS, m.Conf(INSTALL, kit.META_FIELD))
-					if m.Cmd(mdb.SELECT, m.Prefix(INSTALL), "", mdb.HASH, kit.MDB_NAME, name).Table(func(index int, value map[string]string, head []string) {
+					if m.Cmd(mdb.SELECT, INSTALL, "", mdb.HASH, kit.MDB_NAME, name).Table(func(index int, value map[string]string, head []string) {
 						if _, e := os.Stat(p); e == nil {
+							m.Set(kit.MDB_LINK)
 							m.Push("", value, kit.Split(m.Option(mdb.FIELDS)))
 						}
 					}); len(m.Appendv(kit.MDB_NAME)) > 0 {
@@ -45,10 +47,10 @@ func init() {
 					m.Cmd(nfs.SAVE, p, "")
 
 					// 进度
-					m.Cmd(mdb.INSERT, m.Prefix(INSTALL), "", mdb.HASH, kit.MDB_NAME, name, kit.MDB_LINK, arg[0])
+					m.Cmd(mdb.INSERT, INSTALL, "", mdb.HASH, kit.MDB_NAME, name, kit.MDB_LINK, m.Option(kit.MDB_LINK))
 					m.Richs(INSTALL, "", name, func(key string, value map[string]interface{}) {
 						value = value[kit.MDB_META].(map[string]interface{})
-						m.Optionv("progress", func(size int, total int) {
+						m.Optionv(web.DOWNLOAD_CB, func(size int, total int) {
 							s := size * 100 / total
 							if s != kit.Int(value[kit.SSH_STEP]) && s%10 == 0 {
 								m.Log_IMPORT(kit.MDB_FILE, name, kit.SSH_STEP, s, kit.MDB_SIZE, kit.FmtSize(int64(size)), kit.MDB_TOTAL, kit.FmtSize(int64(total)))
@@ -57,23 +59,21 @@ func init() {
 						})
 					})
 
-					m.Gos(m, func(m *ice.Message) {
-						// 下载
+					// 下载
+					m.Go(func() {
 						m.Option(cli.CMD_DIR, m.Conf(INSTALL, kit.META_PATH))
-						msg := m.Cmd(web.SPIDE, web.SPIDE_DEV, web.SPIDE_CACHE, web.SPIDE_GET, arg[0])
-						m.Cmdy(nfs.LINK, p, msg.Append(kit.MDB_FILE))
+						msg := m.Cmd(web.SPIDE, web.SPIDE_DEV, web.SPIDE_CACHE, web.SPIDE_GET, m.Option(kit.MDB_LINK))
 
-						// 解压
+						m.Cmdy(nfs.LINK, p, msg.Append(kit.MDB_FILE))
 						m.Cmd(cli.SYSTEM, "tar", "xvf", name)
 					})
 				}},
-				"build": {Name: "build link", Help: "构建", Hand: func(m *ice.Message, arg ...string) {
-					m.Option("cache.button", "构建")
-					m.Option("_process", "_follow")
+				gdb.BUILD: {Name: "build link", Help: "构建", Hand: func(m *ice.Message, arg ...string) {
+					m.Option("cache.action", "build")
+					m.Option(ice.MSG_PROCESS, "_follow")
 					if m.Option("cache.hash") != "" {
 						m.Cmdy(cli.OUTPUT, m.Option("cache.hash"))
-						m.Sort(kit.MDB_ID)
-						m.Table(func(index int, value map[string]string, head []string) {
+						m.Sort(kit.MDB_ID).Table(func(index int, value map[string]string, head []string) {
 							m.Option("cache.begin", value[kit.MDB_ID])
 							m.Echo(value[kit.SSH_RES])
 						})
@@ -81,25 +81,27 @@ func init() {
 							return
 						}
 
-						if m.Conf(cli.OUTPUT, kit.Keys(kit.MDB_HASH, m.Option("cache.hash"), kit.MDB_META, kit.MDB_STATUS)) == "stop" {
-							m.Echo("stop")
+						if m.Conf(cli.OUTPUT, kit.Keys(kit.MDB_HASH, m.Option("cache.hash"), kit.MDB_META, kit.MDB_STATUS)) == gdb.STOP {
+							m.Echo(gdb.STOP)
 						}
 						return
 					}
-					m.Cmdy(cli.OUTPUT, mdb.CREATE, kit.MDB_NAME, arg[0])
+					m.Cmdy(cli.OUTPUT, mdb.CREATE, kit.MDB_NAME, m.Option(kit.MDB_LINK))
 					m.Option("cache.hash", m.Result())
 					m.Option("cache.begin", 1)
+					m.Set(ice.MSG_RESULT)
 
 					m.Go(func() {
 						defer m.Cmdy(cli.OUTPUT, mdb.MODIFY, kit.MDB_STATUS, cli.Status.Stop)
 						defer m.Option(kit.MDB_HASH, m.Option("cache.hash"))
 
-						p := m.Option(cli.CMD_DIR, path.Join(m.Conf(INSTALL, kit.META_PATH), kit.TrimExt(arg[0])))
+						p := m.Option(cli.CMD_DIR, path.Join(m.Conf(INSTALL, kit.META_PATH), kit.TrimExt(m.Option(kit.MDB_LINK))))
+						pp := kit.Path(path.Join(p, kit.Select("_install", m.Option("install"))))
 						switch cb := m.Optionv("prepare").(type) {
 						case func(string):
 							cb(p)
 						default:
-							if m.Cmdy(cli.SYSTEM, "./configure", "--prefix="+kit.Path(path.Join(p, kit.Select("_install", m.Option("install")))), arg[1:]); m.Append(cli.CMD_CODE) != "0" {
+							if m.Cmdy(cli.SYSTEM, "./configure", "--prefix="+pp, arg[1:]); m.Append(cli.CMD_CODE) != "0" {
 								return
 							}
 						}
@@ -108,21 +110,21 @@ func init() {
 							return
 						}
 
-						m.Cmdy(cli.SYSTEM, "make", "PREFIX="+kit.Path(path.Join(p, kit.Select("_install", m.Option("install")))), "install")
+						m.Cmdy(cli.SYSTEM, "make", "PREFIX="+pp, "install")
 					})
 				}},
-				"spawn": {Name: "spawn link", Help: "新建", Hand: func(m *ice.Message, arg ...string) {
+				gdb.SPAWN: {Name: "spawn link", Help: "新建", Hand: func(m *ice.Message, arg ...string) {
 					port := m.Cmdx(tcp.PORT, aaa.Right)
 					target := path.Join(m.Conf(cli.DAEMON, kit.META_PATH), port)
-					source := path.Join(m.Conf(INSTALL, kit.META_PATH), kit.TrimExt(arg[0]))
+					source := path.Join(m.Conf(INSTALL, kit.META_PATH), kit.TrimExt(m.Option(kit.MDB_LINK)))
 
 					m.Cmd(nfs.DIR, path.Join(source, kit.Select("_install", m.Option("install")))).Table(func(index int, value map[string]string, head []string) {
 						m.Cmd(cli.SYSTEM, "cp", "-r", strings.TrimSuffix(value[kit.MDB_PATH], "/"), target)
 					})
 					m.Echo(target)
 				}},
-				"start": {Name: "start link cmd...", Help: "启动", Hand: func(m *ice.Message, arg ...string) {
-					p := m.Option(cli.CMD_DIR, m.Cmdx(INSTALL, "spawn", arg[0]))
+				gdb.START: {Name: "start link cmd", Help: "启动", Hand: func(m *ice.Message, arg ...string) {
+					p := m.Option(cli.CMD_DIR, m.Cmdx(INSTALL, gdb.SPAWN))
 
 					args := []string{}
 					switch cb := m.Optionv("prepare").(type) {
@@ -132,39 +134,26 @@ func init() {
 
 					m.Cmdy(cli.DAEMON, arg[1:], args)
 				}},
-				"bench": {Name: "bench port cmd...", Help: "压测", Hand: func(m *ice.Message, arg ...string) {
-				}},
 			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 				if len(arg) == 0 {
 					// 源码列表
 					m.Option(mdb.FIELDS, m.Conf(INSTALL, kit.META_FIELD))
-					m.Cmdy(mdb.SELECT, m.Prefix(INSTALL), "", mdb.HASH)
+					m.Cmdy(mdb.SELECT, INSTALL, "", mdb.HASH)
 					return
 				}
 
 				if len(arg) == 1 {
 					// 服务列表
+					arg = kit.Split(arg[0], "-.")
 					m.Option(mdb.FIELDS, "time,port,status,pid,cmd,dir")
-					m.Cmdy(mdb.SELECT, cli.DAEMON, "", mdb.HASH)
-					m.Appendv("port", []string{})
+					m.Cmd(mdb.SELECT, cli.DAEMON, "", mdb.HASH).Table(func(index int, value map[string]string, head []string) {
+						if strings.Contains(value["cmd"], "bin/"+arg[0]) {
+							m.Push("", value, kit.Split(m.Option(mdb.FIELDS)))
+						}
+					})
+					m.Appendv(kit.SSH_PORT, []string{})
 					m.Table(func(index int, value map[string]string, head []string) {
 						m.Push(kit.SSH_PORT, path.Base(value[kit.SSH_DIR]))
-					})
-					return
-				}
-
-				arg[0] = path.Base(arg[0])
-				if key := strings.Split(strings.Split(arg[0], "-")[0], ".")[0]; len(arg) == 1 {
-					u := kit.ParseURL(m.Option(ice.MSG_USERWEB))
-					m.Cmd(cli.DAEMON).Table(func(index int, value map[string]string, head []string) {
-						// 服务列表
-						if strings.Contains(value[kit.MDB_NAME], key) {
-							m.Push(kit.MDB_TIME, value[kit.MDB_TIME])
-							m.Push(kit.SSH_PORT, path.Base(value[kit.SSH_DIR]))
-							m.Push(kit.MDB_STATUS, value[kit.MDB_STATUS])
-							m.Push(kit.MDB_NAME, value[kit.MDB_NAME])
-							m.PushRender(kit.MDB_LINK, "a", kit.Format("http://%s:%s", u.Hostname(), path.Base(value[kit.SSH_DIR])))
-						}
 					})
 					return
 				}

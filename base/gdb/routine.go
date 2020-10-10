@@ -19,7 +19,7 @@ func init() {
 			ROUTINE: {Name: ROUTINE, Help: "协程池", Value: kit.Data()},
 		},
 		Commands: map[string]*ice.Command{
-			ROUTINE: {Name: "routine hash auto 清理", Help: "协程池", Action: map[string]*ice.Action{
+			ROUTINE: {Name: "routine hash auto prunes", Help: "协程池", Action: map[string]*ice.Action{
 				mdb.CREATE: {Name: "create fileline status", Help: "创建", Hand: func(m *ice.Message, arg ...string) {
 					m.Cmdy(mdb.INSERT, ROUTINE, "", mdb.HASH, arg)
 				}},

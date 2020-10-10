@@ -1,0 +1,6 @@
+chapter "code"
+field "安装" web.code.install
+field "编译" web.code.compile
+field "发布" web.code.publish
+field "升级" web.code.upgrade
+field "编程" web.code.autogen

@@ -46,9 +46,12 @@ func (f *Frame) Close(m *ice.Message, arg ...string) bool {
 
 const (
 	RESTART = "restart"
+	BUILD   = "build"
+	SPAWN   = "spawn"
 	START   = "start"
 	STOP    = "stop"
 
+	BENCH = "bench"
 	BEGIN = "begin"
 	END   = "end"
 )

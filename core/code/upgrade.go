@@ -6,7 +6,6 @@ import (
 	"github.com/shylinux/icebergs/base/web"
 	kit "github.com/shylinux/toolkits"
 
-	"net/http"
 	"os"
 )
 
@@ -15,8 +14,8 @@ const UPGRADE = "upgrade"
 func init() {
 	Index.Merge(&ice.Context{
 		Configs: map[string]*ice.Config{
-			UPGRADE: {Name: "upgrade", Help: "升级", Value: kit.Dict(kit.MDB_HASH, kit.Dict(
-				"path", "usr/upgrade", "system", kit.Dict(kit.MDB_LIST, kit.List(
+			UPGRADE: {Name: UPGRADE, Help: "升级", Value: kit.Dict(kit.MDB_HASH, kit.Dict(
+				kit.MDB_PATH, "usr/upgrade", "system", kit.Dict(kit.MDB_LIST, kit.List(
 					kit.MDB_INPUT, "bin", "file", "ice.bin", "path", "bin/ice.bin",
 					kit.MDB_INPUT, "bin", "file", "ice.sh", "path", "bin/ice.sh",
 				)),
@@ -33,12 +32,12 @@ func init() {
 					}
 
 					// 下载文件
-					msg := m.Cmd(web.SPIDE, "dev", web.CACHE, http.MethodGet, "/publish/"+kit.Format(value[kit.MDB_FILE]))
+					msg := m.Cmd(web.SPIDE, web.SPIDE_DEV, web.SPIDE_CACHE, web.SPIDE_GET, "/publish/"+kit.Format(value[kit.MDB_FILE]))
 					m.Cmd(web.STORY, web.WATCH, msg.Append(kit.MDB_FILE), value[kit.MDB_PATH])
 					os.Chmod(kit.Format(value[kit.MDB_PATH]), 0770)
 				})
 				if exit {
-					m.Sleep("1s").Gos(m, func(m *ice.Message) { m.Cmd("exit", 1) })
+					m.Sleep("1s").Go(func() { m.Cmd("exit", 1) })
 				}
 			}},
 		},

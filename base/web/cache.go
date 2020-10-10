@@ -88,7 +88,7 @@ func _cache_download(m *ice.Message, r *http.Response) (file, size string) {
 		for {
 			if n, _ := r.Body.Read(buf); n > 0 {
 				f.Write(buf[0:n])
-				switch size += n; cb := m.Optionv("progress").(type) {
+				switch size += n; cb := m.Optionv(DOWNLOAD_CB).(type) {
 				case []string:
 					m.Richs(cb[0], cb[1], cb[2], func(key string, value map[string]interface{}) {
 						value = value[kit.MDB_META].(map[string]interface{})
@@ -126,8 +126,9 @@ const (
 	CATCH = "catch"
 	WRITE = "write"
 
-	UPLOAD   = "upload"
-	DOWNLOAD = "download"
+	UPLOAD      = "upload"
+	DOWNLOAD    = "download"
+	DOWNLOAD_CB = "download.cb"
 )
 const CACHE = "cache"
 

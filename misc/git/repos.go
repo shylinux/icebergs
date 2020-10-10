@@ -165,13 +165,13 @@ func init() {
 						switch vs[0] {
 						case "##":
 							if strings.Contains(vs[1], "ahead") {
-								list = append(list, "上传")
+								list = append(list, "push")
 							}
 						default:
 							if strings.Contains(vs[0], "??") {
-								list = append(list, "添加")
+								list = append(list, "add")
 							} else {
-								list = append(list, "提交")
+								list = append(list, "submit")
 							}
 						}
 						m.PushButton(strings.Join(list, ","))

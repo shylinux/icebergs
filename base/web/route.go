@@ -75,9 +75,8 @@ func init() {
 						m.Sort(kit.MDB_PATH)
 					}
 				}},
-				gdb.START: {Name: "start type=worker,server name=hi@key repos", Help: "启动", Hand: func(m *ice.Message, arg ...string) {
+				gdb.START: {Name: "start type=worker,server repos", Help: "启动", Hand: func(m *ice.Message, arg ...string) {
 					m.Cmdy(SPACE, m.Option(ROUTE), DREAM, gdb.START, arg)
-					m.Sleep("3s")
 				}},
 				gdb.STOP: {Name: "stop", Help: "结束", Hand: func(m *ice.Message, arg ...string) {
 					m.Cmdy(SPACE, m.Option(ROUTE), "exit")

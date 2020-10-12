@@ -11,15 +11,15 @@ import (
 )
 
 func _sub_key(m *ice.Message, zone string) string {
-	return kit.Keys(m.Option(ice.MSG_DOMAIN), kit.MDB_HASH, kit.Hashs(zone))
+	return kit.Keys(kit.MDB_HASH, kit.Hashs(zone))
 }
 
 func _task_action(m *ice.Message, status interface{}, action ...string) string {
 	switch status {
 	case TaskStatus.PREPARE:
-		action = append(action, "开始")
+		action = append(action, gdb.BEGIN)
 	case TaskStatus.PROCESS:
-		action = append(action, "完成")
+		action = append(action, gdb.END)
 	case TaskStatus.CANCEL:
 	case TaskStatus.FINISH:
 	}
@@ -42,12 +42,12 @@ func _task_list(m *ice.Message, zone string, id string) {
 			}
 		})
 	}
-	m.Cmdy(mdb.SELECT, m.Prefix(TASK), m.Option(ice.MSG_DOMAIN), mdb.ZONE, zone, id)
+	m.Cmdy(mdb.SELECT, m.Prefix(TASK), "", mdb.ZONE, zone, id)
 }
 func _task_create(m *ice.Message, zone string) {
-	if msg := m.Cmd(mdb.SELECT, m.Prefix(TASK), m.Option(ice.MSG_DOMAIN), mdb.HASH, kit.MDB_ZONE, zone); len(msg.Appendv(kit.MDB_HASH)) == 0 {
+	if msg := m.Cmd(mdb.SELECT, m.Prefix(TASK), "", mdb.HASH, kit.MDB_ZONE, zone); len(msg.Appendv(kit.MDB_HASH)) == 0 {
 		m.Conf(m.Prefix(TASK), kit.Keys(m.Option(ice.MSG_DOMAIN), kit.MDB_META, kit.MDB_SHORT), kit.MDB_ZONE)
-		m.Cmdy(mdb.INSERT, m.Prefix(TASK), m.Option(ice.MSG_DOMAIN), mdb.HASH, kit.MDB_ZONE, zone)
+		m.Cmdy(mdb.INSERT, m.Prefix(TASK), "", mdb.HASH, kit.MDB_ZONE, zone)
 	}
 }
 func _task_insert(m *ice.Message, zone string, arg ...string) {
@@ -73,46 +73,21 @@ func _task_delete(m *ice.Message, zone, id string) {
 }
 func _task_export(m *ice.Message, file string) {
 	m.Option(mdb.FIELDS, "zone,id,time,type,name,text,level,status,score,begin_time,close_time,extra")
-	m.Cmdy(mdb.EXPORT, m.Prefix(TASK), m.Option(ice.MSG_DOMAIN), mdb.ZONE, file)
+	m.Cmdy(mdb.EXPORT, m.Prefix(TASK), "", mdb.ZONE, file)
 }
 func _task_import(m *ice.Message, file string) {
 	m.Option(mdb.FIELDS, "zone")
-	m.Cmdy(mdb.IMPORT, m.Prefix(TASK), m.Option(ice.MSG_DOMAIN), mdb.ZONE, file)
+	m.Cmdy(mdb.IMPORT, m.Prefix(TASK), "", mdb.ZONE, file)
 }
 func _task_inputs(m *ice.Message, field, value string) {
 	switch field {
 	case kit.MDB_ZONE:
-		m.Cmdy(mdb.INPUTS, m.Prefix(TASK), m.Option(ice.MSG_DOMAIN), mdb.HASH, field, value)
+		m.Cmdy(mdb.INPUTS, m.Prefix(TASK), "", mdb.HASH, field, value)
 	case kit.MDB_TYPE, kit.MDB_NAME, kit.MDB_TEXT:
 		m.Cmdy(mdb.INPUTS, m.Prefix(TASK), _sub_key(m, m.Option(kit.MDB_ZONE)), mdb.LIST, field, value)
 	}
 }
 
-func _task_search(m *ice.Message, kind, name, text string, arg ...string) {
-	m.Richs(TASK, kit.Keys(kit.MDB_HASH, m.Optionv(ice.MSG_DOMAIN)), kit.MDB_FOREACH, func(key string, val map[string]interface{}) {
-		m.Grows(TASK, kit.Keys(kit.MDB_HASH, m.Optionv(ice.MSG_DOMAIN), kit.MDB_HASH, key), "", "", func(index int, value map[string]interface{}) {
-			if value[kit.MDB_NAME] == name || strings.Contains(kit.Format(value[kit.MDB_TEXT]), name) {
-				m.Push("pod", m.Option(ice.MSG_USERPOD))
-				m.Push("ctx", m.Prefix())
-				m.Push("cmd", TASK)
-				m.Push("time", value[kit.MDB_TIME])
-				m.Push("size", 1)
-				m.Push("type", TASK)
-				m.Push("name", value[kit.MDB_NAME])
-				m.Push("text", kit.Format("%s:%d", kit.Value(val, "meta.zone"), kit.Int(value[kit.MDB_ID])))
-
-			}
-		})
-	})
-}
-func _task_render(m *ice.Message, kind, name, text string, arg ...string) {
-	ls := strings.Split(text, ":")
-	m.Richs(TASK, kit.Keys(kit.MDB_HASH, m.Optionv(ice.MSG_DOMAIN)), ls[0], func(key string, val map[string]interface{}) {
-		m.Grows(TASK, kit.Keys(kit.MDB_HASH, m.Optionv(ice.MSG_DOMAIN), kit.MDB_HASH, key), "id", ls[1], func(index int, value map[string]interface{}) {
-			m.Push("detail", value)
-		})
-	})
-}
 func _task_scope(m *ice.Message, tz int, arg ...string) (time.Time, time.Time) {
 	begin_time := time.Now()
 	if len(arg) > 1 {
@@ -176,8 +151,8 @@ func init() {
 			TASK: {Name: TASK, Help: "任务", Value: kit.Data(kit.MDB_SHORT, kit.MDB_ZONE)},
 		},
 		Commands: map[string]*ice.Command{
-			TASK: {Name: "task zone id auto 添加 导出 导入", Help: "任务", Action: map[string]*ice.Action{
-				mdb.INSERT: {Name: "insert zone@key type=once,step,week name@key text@key begin_time@date close_time@date", Help: "添加", Hand: func(m *ice.Message, arg ...string) {
+			TASK: {Name: "task zone id auto insert export import", Help: "任务", Action: map[string]*ice.Action{
+				mdb.INSERT: {Name: "insert zone type=once,step,week name text begin_time@date close_time@date", Help: "添加", Hand: func(m *ice.Message, arg ...string) {
 					_task_create(m, arg[1])
 					_task_insert(m, arg[1], arg[2:]...)
 				}},
@@ -195,13 +170,6 @@ func init() {
 				}},
 				mdb.INPUTS: {Name: "inputs", Help: "补全", Hand: func(m *ice.Message, arg ...string) {
 					_task_inputs(m, kit.Select("", arg, 0), kit.Select("", arg, 1))
-				}},
-
-				mdb.SEARCH: {Name: "search type name text", Help: "搜索", Hand: func(m *ice.Message, arg ...string) {
-					_task_search(m, arg[0], arg[1], arg[2], arg[3:]...)
-				}},
-				mdb.RENDER: {Name: "render type name text", Help: "渲染", Hand: func(m *ice.Message, arg ...string) {
-					_task_render(m, arg[0], arg[1], arg[2], arg[3:]...)
 				}},
 
 				gdb.BEGIN: {Name: "begin", Help: "开始", Hand: func(m *ice.Message, arg ...string) {

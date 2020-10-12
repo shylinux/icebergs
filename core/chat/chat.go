@@ -19,6 +19,8 @@ var Index = &ice.Context{Name: CHAT, Help: "聊天中心",
 			m.Conf(ACTION, "meta.domain.web.chat.paste", "true")
 			m.Conf(ACTION, "meta.domain.web.chat.scan", "true")
 			m.Conf(ACTION, "meta.domain.web.wiki.feel", "true")
+			m.Conf(ACTION, "meta.domain.web.team.task", "true")
+			m.Conf(ACTION, "meta.domain.web.team.plan", "true")
 
 			m.Conf(RIVER, "meta.template", kit.Dict(
 				"base", kit.Dict(

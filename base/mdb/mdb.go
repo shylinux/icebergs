@@ -168,9 +168,7 @@ func _list_select(m *ice.Message, prefix, chain, field, value string) {
 }
 func _list_modify(m *ice.Message, prefix, chain string, field, value string, arg ...string) {
 	m.Grows(prefix, chain, field, value, func(index int, val map[string]interface{}) {
-		if val[kit.MDB_META] != nil {
-			val = val[kit.MDB_META].(map[string]interface{})
-		}
+		val = kit.GetMeta(val)
 		for i := 0; i < len(arg)-1; i += 2 {
 			if arg[i] == field {
 				continue
@@ -268,7 +266,7 @@ func _zone_fields(m *ice.Message) []string {
 	return kit.Split(kit.Select("zone,id,time,type,name,text", strings.Join(kit.Simple(m.Optionv(FIELDS)), ",")))
 }
 func _zone_select(m *ice.Message, prefix, chain, zone string, id string) {
-	cb := m.Optionv("cache.cb")
+	cb := m.Optionv(SELECT_CB)
 	fields := _zone_fields(m)
 	m.Richs(prefix, chain, kit.Select(kit.MDB_FOREACH, zone), func(key string, val map[string]interface{}) {
 		if val[kit.MDB_META] != nil {
@@ -289,6 +287,8 @@ func _zone_select(m *ice.Message, prefix, chain, zone string, id string) {
 			}
 
 			switch cb := cb.(type) {
+			case func(string, []string, map[string]interface{}, map[string]interface{}):
+				cb(key, fields, value, val)
 			case func(string, map[string]interface{}, map[string]interface{}):
 				cb(key, value, val)
 			case func(string, map[string]interface{}):
@@ -404,6 +404,8 @@ const (
 	DELETE = "delete"
 	REMOVE = "remove"
 
+	SELECT_CB = "select.cb"
+
 	EXPORT = "export"
 	IMPORT = "import"
 	PRUNES = "prunes"
@@ -482,7 +484,7 @@ var Index = &ice.Context{Name: MDB, Help: "数据模块", Commands: map[string]*
 		case HASH:
 			_hash_inputs(m, arg[0], _domain_chain(m, arg[1]), kit.Select("name", arg, 3), kit.Select("", arg, 4))
 		case LIST:
-			_hash_inputs(m, arg[0], _domain_chain(m, arg[1]), kit.Select("name", arg, 3), kit.Select("", arg, 4))
+			_list_inputs(m, arg[0], _domain_chain(m, arg[1]), kit.Select("name", arg, 3), kit.Select("", arg, 4))
 		}
 	}},
 }}

@@ -2,7 +2,6 @@ package cli
 
 import (
 	ice "github.com/shylinux/icebergs"
-	"github.com/shylinux/icebergs/base/aaa"
 	"github.com/shylinux/icebergs/base/mdb"
 	kit "github.com/shylinux/toolkits"
 
@@ -15,11 +14,6 @@ import (
 )
 
 func _system_show(m *ice.Message, cmd *exec.Cmd) {
-	m.Cmd(mdb.INSERT, SYSTEM, "", mdb.LIST, "cmd", strings.Join(cmd.Args, " "), "dir", cmd.Dir, "env", strings.Join(cmd.Env, ","),
-		aaa.USERNAME, m.Option(ice.MSG_USERNAME), aaa.USERROLE, m.Option(ice.MSG_USERROLE),
-		aaa.IP, m.Option(ice.MSG_USERIP), aaa.UA, m.Option(ice.MSG_USERUA),
-	)
-
 	if w, ok := m.Optionv("output").(io.WriteCloser); ok {
 		cmd.Stderr = w
 		cmd.Stdout = w

@@ -39,6 +39,7 @@ func _cache_save(m *ice.Message, kind, name, text string, arg ...string) { // fi
 	m.Push(kit.MDB_TEXT, text)
 	m.Push(kit.MDB_SIZE, size)
 	m.Push(kit.MDB_FILE, file)
+	m.Push(kit.MDB_HASH, h)
 	m.Push(DATA, h)
 }
 func _cache_watch(m *ice.Message, key, file string) {

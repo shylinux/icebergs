@@ -21,6 +21,7 @@ const ( // MSG
 	MSG_SOURCE = "_source"
 	MSG_TARGET = "_target"
 	MSG_HANDLE = "_handle"
+	MSG_UPLOAD = "_upload"
 	MSG_OUTPUT = "_output"
 	MSG_ARGS   = "_args"
 

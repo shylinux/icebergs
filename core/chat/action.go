@@ -8,9 +8,8 @@ import (
 	kit "github.com/shylinux/toolkits"
 )
 
-func _action_upload(m *ice.Message, arg ...string) {
-	msg := m.Cmd(web.CACHE, web.UPLOAD)
-	m.Option("_upload", msg.Append("data"), msg.Append("name"))
+func _action_domain(m *ice.Message, arg ...string) string {
+	return m.Option(ice.MSG_DOMAIN, kit.Keys("R"+kit.Select(m.Option(ice.MSG_RIVER), arg, 1), "S"+kit.Select(m.Option(ice.MSG_STORM), arg, 0)))
 }
 func _action_right(m *ice.Message, river string, storm string) (ok bool) {
 	if ok = true; m.Option(ice.MSG_USERROLE) == aaa.VOID {
@@ -33,7 +32,7 @@ func _action_show(m *ice.Message, river, storm, index string, arg ...string) {
 	prefix := kit.Keys(kit.MDB_HASH, river, TOOL, kit.MDB_HASH, storm)
 	if m.Grows(RIVER, prefix, kit.MDB_ID, index, func(index int, value map[string]interface{}) {
 		if cmds = kit.Simple(kit.Keys(value[CTX], value[CMD])); kit.Format(value[POD]) != "" {
-			m.Option(kit.SSH_POD, value[POD])
+			m.Option(POD, value[POD])
 		}
 	}) == nil && m.Warn(!m.Right(cmds), ice.ErrNotAuth) {
 		return
@@ -47,12 +46,16 @@ func _action_proxy(m *ice.Message) (proxy []string) {
 	}
 	return proxy
 }
+func _action_upload(m *ice.Message, arg ...string) {
+	msg := m.Cmd(web.CACHE, web.UPLOAD)
+	m.Option(ice.MSG_UPLOAD, msg.Append(kit.MDB_HASH), msg.Append(kit.MDB_NAME))
+}
 
 const ACTION = "action"
 
 func init() {
 	Index.Merge(&ice.Context{Commands: map[string]*ice.Command{
-		"/action": {Name: "/action", Help: "工作台", Action: map[string]*ice.Action{
+		"/action": {Name: "/action river storm action arg...", Help: "工作台", Action: map[string]*ice.Action{
 			ctx.COMMAND: {Name: "command", Help: "命令", Hand: func(m *ice.Message, arg ...string) {
 				for _, k := range arg {
 					m.Cmdy(ctx.COMMAND, k)
@@ -71,8 +74,9 @@ func init() {
 				return //命令列表
 			}
 
-			if m.Option("_upload") != "" {
-				_action_upload(m)
+			_action_domain(m)
+			if m.Option(ice.MSG_UPLOAD) != "" {
+				_action_upload(m) // 上传文件
 			}
 			_action_show(m, arg[0], arg[1], arg[2], arg[3:]...)
 		}},

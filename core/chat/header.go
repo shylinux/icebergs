@@ -35,7 +35,7 @@ func init() {
 					m.Echo(m.Option(ice.MSG_USERNAME))
 				}},
 
-				"userrole": {Name: "userrole", Help: "登录检查", Hand: func(m *ice.Message, arg ...string) {
+				aaa.USERROLE: {Name: "userrole", Help: "用户角色", Hand: func(m *ice.Message, arg ...string) {
 					m.Echo(aaa.UserRole(m, m.Option("who")))
 				}},
 

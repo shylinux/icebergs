@@ -233,7 +233,11 @@ func (c *Context) _split(name string) []interface{} {
 				}
 			case "@":
 				if len(ls) > i+1 {
-					kit.Value(item, kit.MDB_VALUE, "@"+ls[i+1]+"="+value)
+					if kit.Value(item, kit.MDB_INPUT) == "button" {
+						kit.Value(item, kit.MDB_ACTION, ls[i+1])
+					} else {
+						kit.Value(item, kit.MDB_VALUE, "@"+ls[i+1]+"="+value)
+					}
 				}
 			}
 		}

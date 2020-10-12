@@ -88,6 +88,8 @@ func UserLogin(m *ice.Message, username, password string) bool {
 }
 
 const (
+	AVATAR = "avatar"
+
 	USER_CREATE = "user.create"
 )
 

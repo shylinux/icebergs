@@ -492,6 +492,16 @@ func (m *Message) Appendv(key string, arg ...interface{}) []string {
 		}
 		return index
 	}
+
+	if len(m.meta[MSG_APPEND]) == 2 && m.meta[MSG_APPEND][0] == kit.MDB_KEY {
+		for i, k := range m.meta[kit.MDB_KEY] {
+			if k == key {
+				return []string{kit.Select("", m.meta[kit.MDB_VALUE], i)}
+			}
+		}
+		return nil
+	}
+
 	if len(arg) > 0 {
 		m.meta[key] = kit.Simple(arg...)
 	}

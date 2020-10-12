@@ -7,16 +7,16 @@ import (
 	"github.com/shylinux/icebergs/base/web"
 	"github.com/shylinux/icebergs/core/chat"
 	kit "github.com/shylinux/toolkits"
-
-	"net/http"
-	"path"
 )
 
+const (
+	LOGIN = "login"
+)
 const MP = "mp"
 
-var Index = &ice.Context{Name: "mp", Help: "小程序",
+var Index = &ice.Context{Name: MP, Help: "小程序",
 	Configs: map[string]*ice.Config{
-		"login": {Name: "login", Help: "认证", Value: kit.Data(
+		LOGIN: {Name: LOGIN, Help: "认证", Value: kit.Data(
 			"auth", "/sns/jscode2session?grant_type=authorization_code",
 			"weixin", "https://api.weixin.qq.com",
 			"appid", "", "appmm", "", "token", "",
@@ -25,27 +25,22 @@ var Index = &ice.Context{Name: "mp", Help: "小程序",
 	Commands: map[string]*ice.Command{
 		ice.CTX_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			m.Load()
-			m.Cmd(web.SPIDE, mdb.CREATE, "weixin", m.Conf("login", "meta.weixin"))
-			m.Confm("login", "meta.userrole", func(key string, value string) {
-				m.Cmd(aaa.ROLE, value, key)
-			})
+			m.Cmd(web.SPIDE, mdb.CREATE, "weixin", m.Conf(LOGIN, "meta.weixin"))
 		}},
 		ice.CTX_EXIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			m.Save("login")
+			m.Save()
 		}},
 
-		"/login/": {Name: "/login/", Help: "登录", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			switch arg[0] {
-			case "code":
-				msg := m.Cmd(web.SPIDE, "weixin", http.MethodGet, m.Conf("login", "meta.auth"), "js_code", m.Option("code"),
-					"appid", m.Conf("login", "meta.appid"), "secret", m.Conf("login", "meta.appmm"))
+		"/login/": {Name: "/login/", Help: "登录", Action: map[string]*ice.Action{
+			"code": {Name: "code", Help: "登录", Hand: func(m *ice.Message, arg ...string) {
+				msg := m.Cmd(web.SPIDE, "weixin", web.SPIDE_GET, m.Conf(LOGIN, "meta.auth"), "js_code", m.Option("code"),
+					"appid", m.Conf(LOGIN, "meta.appid"), "secret", m.Conf(LOGIN, "meta.appmm"))
 
 				// 用户登录
 				m.Option(ice.MSG_USERZONE, MP)
 				m.Echo(aaa.SessCreate(msg, msg.Append("openid"), aaa.UserRole(msg, msg.Append("openid"))))
-
-			case "info":
-				// 用户信息
+			}},
+			"info": {Name: "info", Help: "信息", Hand: func(m *ice.Message, arg ...string) {
 				m.Option(aaa.USERNAME, m.Option(ice.MSG_USERNAME))
 				m.Cmd(aaa.USER, mdb.MODIFY, aaa.USERZONE, MP, aaa.USERNICK, m.Option("nickName"),
 					"avatar_url", m.Option("avatarUrl"),
@@ -54,91 +49,15 @@ var Index = &ice.Context{Name: "mp", Help: "小程序",
 					"language", m.Option("language"),
 					"province", m.Option("province"),
 				)
-
-			case "scan":
-				if p := m.Option("pod"); p != "" {
-					m.Option("pod", "")
-					// 代理列表
-					m.Cmdy(web.SPACE, p, "web.chat.qrcode.qrcode", mdb.INSERT, "qrcode", m.Option("name"), m.Option("text"))
-					return
+			}},
+			"scan": {Name: "scan", Help: "scan", Hand: func(m *ice.Message, arg ...string) {
+				if m.Option(web.SHARE) != "" {
+					if m.Option(chat.RIVER) != "" {
+						m.Cmdy(chat.AUTH, mdb.INSERT)
+					}
 				}
-				m.Cmdy("web.chat.qrcode.qrcode", mdb.INSERT, "qrcode", m.Option("name"), m.Option("text"))
-
-			case "auth":
-				if !m.Options(ice.MSG_USERNAME) {
-					m.Render("status", 401, "not login")
-					break
-				}
-
-				switch kit.Select("active", m.Option("type")) {
-				case "share":
-					m.Richs(web.SHARE, nil, m.Option("text"), func(key string, value map[string]interface{}) {
-						switch value["type"] {
-						case "invite":
-							if m.Option(ice.MSG_USERROLE) != value["name"] {
-								m.Cmd(aaa.ROLE, value["name"], m.Option(ice.MSG_USERNAME))
-								m.Cmd("web.chat.auto", m.Option(ice.MSG_USERNAME), value["name"])
-							}
-							break
-						default:
-							m.Option("type", value["type"])
-							m.Option("name", value["name"])
-							m.Option("text", value["text"])
-						}
-					})
-				}
-
-				switch kit.Select("active", m.Option("type")) {
-				case "active":
-					// 网页登录
-					m.Cmdy(web.SPACE, m.Option("name"), "sessid", m.Cmdx(aaa.SESS, "create", m.Option(ice.MSG_USERNAME)))
-				case "login":
-					// 终端登录
-					m.Cmdy(aaa.SESS, "auth", m.Option("text"), m.Option(ice.MSG_USERNAME))
-				}
-
-			case "upload":
-				msg := m.Cmd(web.CACHE, "upload")
-				m.Cmd(web.STORY, web.WATCH, msg.Append("data"), path.Join("usr/local/mp/", path.Base(msg.Append("name"))))
-				// m.Cmd(web.FAVOR, "device", "file", msg.Append("name"), msg.Append("data"))
-				m.Render(msg.Append("data"))
-
-			case "cmds":
-				if !m.Options(ice.MSG_USERNAME) {
-					m.Render("status", 401, "not login")
-					break
-				}
-				if arg = kit.Split(arg[1]); !m.Right(arg) {
-					m.Render("status", 403, "not auth")
-					break
-				}
-
-				// 执行命令
-				m.Cmdy(arg)
-			}
-		}},
-
-		"scan": {Name: "scan", Help: "扫码", List: kit.List(
-			kit.MDB_INPUT, "text", "name", "location", "cb", "location",
-			kit.MDB_INPUT, "text", "name", "battery", "cb", "battery",
-			kit.MDB_INPUT, "text", "name", "paste", "cb", "paste",
-			kit.MDB_INPUT, "text", "name", "scan", "cb", "scan",
-			kit.MDB_INPUT, "text", "name", "wifi", "cb", "wifi",
-
-			kit.MDB_INPUT, "text", "name", "album", "cb", "album",
-			kit.MDB_INPUT, "text", "name", "finger", "cb", "finger",
-			kit.MDB_INPUT, "text", "name", "vibrate", "cb", "vibrate",
-			kit.MDB_INPUT, "text", "name", "wifiList", "cb", "wifiList",
-			kit.MDB_INPUT, "text", "name", "wifiConn", "cb", "wifiConn",
-
-			kit.MDB_INPUT, "textarea", "name", "scan", "cb", "scan",
-			kit.MDB_INPUT, "textarea", "name", "location", "cb", "location",
-			kit.MDB_INPUT, "button", "name", "scan", "cb", "scan",
-			kit.MDB_INPUT, "button", "name", "location", "cb", "location",
-			kit.MDB_INPUT, "button", "name", "text",
-			kit.MDB_INPUT, "button", "name", "share",
-		), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			m.Echo(arg[0])
+			}},
+		}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 		}},
 	},
 }

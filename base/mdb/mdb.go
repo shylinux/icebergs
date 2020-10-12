@@ -69,7 +69,7 @@ func _hash_export(m *ice.Message, prefix, chain, file string) {
 
 	en := json.NewEncoder(f)
 	en.SetIndent("", "  ")
-	en.Encode(m.Confv(prefix, kit.Keys(chain, HASH)))
+	e = en.Encode(m.Confv(prefix, kit.Keys(chain, HASH)))
 
 	m.Log_EXPORT(kit.MDB_KEY, path.Join(prefix, chain), kit.MDB_FILE, p)
 	m.Echo(p)

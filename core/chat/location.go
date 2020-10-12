@@ -35,8 +35,8 @@ func init() {
 			LOCATION: {Name: LOCATION, Help: "地理位置", Value: kit.Data(kit.MDB_SHORT, kit.MDB_TEXT)},
 		},
 		Commands: map[string]*ice.Command{
-			LOCATION: {Name: "location text auto 添加@location", Help: "地理位置", Action: map[string]*ice.Action{
-				mdb.CREATE: {Name: "insert type name address latitude longitude", Help: "添加", Hand: func(m *ice.Message, arg ...string) {
+			LOCATION: {Name: "location text auto create@location", Help: "地理位置", Action: map[string]*ice.Action{
+				mdb.CREATE: {Name: "insert type=text name address latitude longitude", Help: "添加", Hand: func(m *ice.Message, arg ...string) {
 					_trans(arg, map[string]string{"address": "text"})
 					m.Conf(LOCATION, kit.Keys(m.Option(ice.MSG_DOMAIN), kit.MDB_META, kit.MDB_SHORT), kit.MDB_TEXT)
 					m.Cmdy(mdb.INSERT, LOCATION, m.Option(ice.MSG_DOMAIN), mdb.HASH, arg)
@@ -68,11 +68,10 @@ func init() {
 				m.Table(func(index int, value map[string]string, head []string) {
 					m.PushRender(kit.MDB_LINK, "a", "百度地图", kit.Format(
 						"https://map.baidu.com/search/%s/@12958750.085,4825785.55,16z?querytype=s&da_src=shareurl&wd=%s",
-						url.QueryEscape(kit.Format(value[kit.MDB_TEXT])),
-						url.QueryEscape(kit.Format(value[kit.MDB_TEXT])),
+						url.QueryEscape(kit.Format(value[kit.MDB_TEXT])), url.QueryEscape(kit.Format(value[kit.MDB_TEXT])),
 					))
 				})
-				m.PushAction("删除")
+				m.PushAction(mdb.REMOVE)
 			}},
 		},
 	}, nil)

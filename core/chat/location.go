@@ -39,32 +39,26 @@ func init() {
 				mdb.CREATE: {Name: "insert type=text name address latitude longitude", Help: "添加", Hand: func(m *ice.Message, arg ...string) {
 					_trans(arg, map[string]string{"address": "text"})
 					m.Conf(LOCATION, kit.Keys(m.Option(ice.MSG_DOMAIN), kit.MDB_META, kit.MDB_SHORT), kit.MDB_TEXT)
-					m.Cmdy(mdb.INSERT, LOCATION, m.Option(ice.MSG_DOMAIN), mdb.HASH, arg)
+					m.Cmdy(mdb.INSERT, LOCATION, "", mdb.HASH, arg)
 				}},
 				mdb.MODIFY: {Name: "modify", Help: "编辑", Hand: func(m *ice.Message, arg ...string) {
-					m.Cmdy(mdb.MODIFY, LOCATION, m.Option(ice.MSG_DOMAIN), mdb.HASH, kit.MDB_HASH, m.Option(kit.MDB_HASH), arg)
+					m.Cmdy(mdb.MODIFY, LOCATION, "", mdb.HASH, kit.MDB_HASH, m.Option(kit.MDB_HASH), arg)
 				}},
 				mdb.REMOVE: {Name: "remove", Help: "删除", Hand: func(m *ice.Message, arg ...string) {
-					m.Cmdy(mdb.DELETE, LOCATION, m.Option(ice.MSG_DOMAIN), mdb.HASH, kit.MDB_TEXT, m.Option(kit.MDB_TEXT))
+					m.Cmdy(mdb.DELETE, LOCATION, "", mdb.HASH, kit.MDB_TEXT, m.Option(kit.MDB_TEXT))
 				}},
 				mdb.EXPORT: {Name: "export", Help: "导出", Hand: func(m *ice.Message, arg ...string) {
-					m.Cmdy(mdb.EXPORT, m.Prefix(LOCATION), m.Option(ice.MSG_DOMAIN), mdb.HASH)
+					m.Cmdy(mdb.EXPORT, m.Prefix(LOCATION), "", mdb.HASH)
 				}},
 				mdb.IMPORT: {Name: "import", Help: "导入", Hand: func(m *ice.Message, arg ...string) {
-					m.Cmdy(mdb.IMPORT, m.Prefix(LOCATION), m.Option(ice.MSG_DOMAIN), mdb.HASH)
+					m.Cmdy(mdb.IMPORT, m.Prefix(LOCATION), "", mdb.HASH)
 				}},
 				mdb.INPUTS: {Name: "inputs", Help: "补全", Hand: func(m *ice.Message, arg ...string) {
-					m.Cmdy(mdb.INPUTS, LOCATION, m.Option(ice.MSG_DOMAIN), mdb.HASH, arg)
-				}},
-
-				mdb.RENDER: {Name: "render type name text", Help: "渲染", Hand: func(m *ice.Message, arg ...string) {
-					// m.Cmdy(mdb.RENDER, web.RENDER.Frame, kit.Format(
-					// 	"https://map.baidu.com/search/%s/@12958750.085,4825785.55,16z?querytype=s&da_src=shareurl&wd=%s",
-					// 	arg[2], arg[2]))
+					m.Cmdy(mdb.INPUTS, LOCATION, "", mdb.HASH, arg)
 				}},
 			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-				m.Option(mdb.FIELDS, "time,type,name,text,longitude,latitude")
-				m.Cmdy(mdb.SELECT, LOCATION, m.Option(ice.MSG_DOMAIN), mdb.HASH, kit.MDB_HASH, arg)
+				m.Option(mdb.FIELDS, kit.Select("time,type,name,text,longitude,latitude", mdb.DETAIL, len(arg) > 0))
+				m.Cmdy(mdb.SELECT, LOCATION, "", mdb.HASH, kit.MDB_TEXT, arg)
 				m.Table(func(index int, value map[string]string, head []string) {
 					m.PushRender(kit.MDB_LINK, "a", "百度地图", kit.Format(
 						"https://map.baidu.com/search/%s/@12958750.085,4825785.55,16z?querytype=s&da_src=shareurl&wd=%s",

@@ -1,6 +1,7 @@
 package code
 
 import (
+	"fmt"
 	"strings"
 
 	ice "github.com/shylinux/icebergs"
@@ -25,7 +26,7 @@ func init() {
 					"GOPROXY", "https://goproxy.cn,direct",
 					"GOPRIVATE", "github.com",
 					"CGO_ENABLED", "0",
-				), "go", []interface{}{"go", "build", "-o"},
+				), "go", []interface{}{"go", "build"},
 			)},
 		},
 		Commands: map[string]*ice.Command{
@@ -52,10 +53,17 @@ func init() {
 
 				// 编译目标
 				file := path.Join(m.Conf(cmd, "meta.path"), kit.Keys(kit.Select("ice", path.Base(strings.TrimSuffix(main, ".go")), main != "src/main.go"), goos, arch))
+				args := []string{"-ldflags"}
+				list := []string{
+					fmt.Sprintf(`-X main.Time="%s"`, m.Time()),
+					fmt.Sprintf(`-X main.Version="%s"`, m.Cmdx(cli.SYSTEM, "git", "describe", "--tags")),
+					fmt.Sprintf(`-X main.HostName="%s"`, m.Conf(cli.RUNTIME, "boot.hostname")),
+					fmt.Sprintf(`-X main.UserName="%s"`, m.Conf(cli.RUNTIME, "boot.username")),
+				}
 
 				// 编译参数
 				m.Optionv(cli.CMD_ENV, kit.Simple(m.Confv(COMPILE, "meta.env"), "GOARCH", arch, "GOOS", goos))
-				if msg := m.Cmd(cli.SYSTEM, m.Confv(COMPILE, "meta.go"), file, main); msg.Append(cli.CMD_CODE) != "0" {
+				if msg := m.Cmd(cli.SYSTEM, m.Confv(COMPILE, "meta.go"), args, "'"+strings.Join(list, " ")+"'", "-o", file, main); msg.Append(cli.CMD_CODE) != "0" {
 					m.Copy(msg)
 				} else {
 					m.Log_EXPORT("source", main, "target", file)

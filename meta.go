@@ -54,7 +54,8 @@ func (m *Message) Push(key string, value interface{}, arg ...interface{}) *Messa
 	switch value := value.(type) {
 	case map[string]string:
 		head := kit.Simple(arg)
-		if len(head) == 0 {
+		if len(head) == 0 || (len(head) == 1 && head[0] == "detail") {
+			head = head[:0]
 			for k := range value {
 				head = append(head, k)
 			}
@@ -113,6 +114,13 @@ func (m *Message) Push(key string, value interface{}, arg ...interface{}) *Messa
 		}
 
 	default:
+		if m.Option("fields") == "detail" || (len(m.meta[MSG_APPEND]) == 2 && m.meta[MSG_APPEND][0] == kit.MDB_KEY && m.meta[MSG_APPEND][1] == kit.MDB_VALUE) {
+			if key != kit.MDB_KEY || key != kit.MDB_VALUE {
+				m.Add(MSG_APPEND, kit.MDB_KEY, key)
+				m.Add(MSG_APPEND, kit.MDB_VALUE, kit.Format(value))
+				break
+			}
+		}
 		for _, v := range kit.Simple(value) {
 			m.Add(MSG_APPEND, key, v)
 		}
@@ -245,6 +253,15 @@ func (m *Message) Sort(key string, arg ...string) *Message {
 }
 func (m *Message) Table(cbs ...func(index int, value map[string]string, head []string)) *Message {
 	if len(cbs) > 0 && cbs[0] != nil {
+		if len(m.meta[MSG_APPEND]) == 2 && m.meta[MSG_APPEND][0] == kit.MDB_KEY {
+			line := map[string]string{}
+			for i, k := range m.meta[kit.MDB_KEY] {
+				line[k] = kit.Select("", m.meta[kit.MDB_VALUE], i)
+			}
+			cbs[0](0, line, m.meta[kit.MDB_KEY])
+			return m
+		}
+
 		nrow := 0
 		for _, k := range m.meta[MSG_APPEND] {
 			if len(m.meta[k]) > nrow {

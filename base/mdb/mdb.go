@@ -13,7 +13,10 @@ import (
 )
 
 func _file_name(m *ice.Message, arg ...string) string {
-	return kit.Select(path.Join("usr/export", path.Join(arg[:2]...)), arg, 3)
+	return kit.Select(path.Join(m.Option(ice.MSG_LOCAL), "usr/export", path.Join(arg[:2]...), arg[2]), arg, 3)
+}
+func _domain_chain(m *ice.Message, chain string) string {
+	return kit.Keys(m.Option(ice.MSG_DOMAIN), chain)
 }
 
 func _hash_fields(m *ice.Message) []string {
@@ -415,71 +418,71 @@ var Index = &ice.Context{Name: MDB, Help: "数据模块", Commands: map[string]*
 	INSERT: {Name: "insert conf key type arg...", Help: "添加", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 		switch arg[2] {
 		case HASH:
-			_hash_insert(m, arg[0], arg[1], arg[3:]...)
+			_hash_insert(m, arg[0], _domain_chain(m, arg[1]), arg[3:]...)
 		case LIST:
-			_list_insert(m, arg[0], arg[1], arg[3:]...)
+			_list_insert(m, arg[0], _domain_chain(m, arg[1]), arg[3:]...)
 		}
 	}},
 	DELETE: {Name: "delete conf key type field value", Help: "删除", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 		switch arg[2] {
 		case HASH:
-			_hash_delete(m, arg[0], arg[1], arg[3], arg[4])
+			_hash_delete(m, arg[0], _domain_chain(m, arg[1]), arg[3], arg[4])
 		case LIST:
-			_list_delete(m, arg[0], arg[1], arg[3], arg[4])
+			_list_delete(m, arg[0], _domain_chain(m, arg[1]), arg[3], arg[4])
 		}
 	}},
 	MODIFY: {Name: "modify conf key type field value arg...", Help: "编辑", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 		switch arg[2] {
 		case HASH:
-			_hash_modify(m, arg[0], arg[1], arg[3], arg[4], arg[5:]...)
+			_hash_modify(m, arg[0], _domain_chain(m, arg[1]), arg[3], arg[4], arg[5:]...)
 		case LIST:
-			_list_modify(m, arg[0], arg[1], arg[3], arg[4], arg[5:]...)
+			_list_modify(m, arg[0], _domain_chain(m, arg[1]), arg[3], arg[4], arg[5:]...)
 		}
 	}},
 	SELECT: {Name: "select conf key type field value", Help: "查询", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 		switch arg[2] {
 		case HASH:
-			_hash_select(m, arg[0], arg[1], kit.Select("", arg, 3), kit.Select(kit.MDB_FOREACH, arg, 4))
+			_hash_select(m, arg[0], _domain_chain(m, arg[1]), kit.Select("", arg, 3), kit.Select(kit.MDB_FOREACH, arg, 4))
 		case LIST:
-			_list_select(m, arg[0], arg[1], kit.Select("", arg, 3), kit.Select("", arg, 4))
+			_list_select(m, arg[0], _domain_chain(m, arg[1]), kit.Select("", arg, 3), kit.Select("", arg, 4))
 		case ZONE:
-			_zone_select(m, arg[0], arg[1], kit.Select("", arg, 3), kit.Select("", arg, 4))
+			_zone_select(m, arg[0], _domain_chain(m, arg[1]), kit.Select("", arg, 3), kit.Select("", arg, 4))
 		}
 	}},
 	EXPORT: {Name: "export conf key type file", Help: "导出", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 		switch file := _file_name(m, arg...); arg[2] {
 		case HASH:
-			_hash_export(m, arg[0], arg[1], file)
+			_hash_export(m, arg[0], _domain_chain(m, arg[1]), file)
 		case LIST:
-			_list_export(m, arg[0], arg[1], file)
+			_list_export(m, arg[0], _domain_chain(m, arg[1]), file)
 		case ZONE:
-			_zone_export(m, arg[0], arg[1], file)
+			_zone_export(m, arg[0], _domain_chain(m, arg[1]), file)
 		}
 	}},
 	IMPORT: {Name: "import conf key type file", Help: "导入", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 		switch file := _file_name(m, arg...); arg[2] {
 		case HASH:
-			_hash_import(m, arg[0], arg[1], file)
+			_hash_import(m, arg[0], _domain_chain(m, arg[1]), file)
 		case LIST:
-			_list_import(m, arg[0], arg[1], file)
+			_list_import(m, arg[0], _domain_chain(m, arg[1]), file)
 		case ZONE:
-			_zone_import(m, arg[0], arg[1], file)
+			_zone_import(m, arg[0], _domain_chain(m, arg[1]), file)
 		}
 	}},
 	PRUNES: {Name: "prunes conf key type [field value]...", Help: "清理", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 		switch arg[2] {
 		case HASH:
-			_hash_prunes(m, arg[0], arg[1], arg[3:]...)
+			_hash_prunes(m, arg[0], _domain_chain(m, arg[1]), arg[3:]...)
 		case LIST:
-			_list_prunes(m, arg[0], arg[1], arg[3:]...)
+			_list_prunes(m, arg[0], _domain_chain(m, arg[1]), arg[3:]...)
 		}
 	}},
 	INPUTS: {Name: "inputs conf key type field value", Help: "补全", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 		switch arg[2] {
 		case HASH:
-			_hash_inputs(m, arg[0], arg[1], kit.Select("name", arg, 3), kit.Select("", arg, 4))
+			_hash_inputs(m, arg[0], _domain_chain(m, arg[1]), kit.Select("name", arg, 3), kit.Select("", arg, 4))
 		case LIST:
-			_hash_inputs(m, arg[0], arg[1], kit.Select("name", arg, 3), kit.Select("", arg, 4))
+			_hash_inputs(m, arg[0], _domain_chain(m, arg[1]), kit.Select("name", arg, 3), kit.Select("", arg, 4))
 		}
 	}},
 }}

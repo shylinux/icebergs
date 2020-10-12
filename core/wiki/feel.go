@@ -4,8 +4,6 @@ import (
 	ice "github.com/shylinux/icebergs"
 	"github.com/shylinux/icebergs/base/web"
 	kit "github.com/shylinux/toolkits"
-
-	"path"
 )
 
 const FEEL = "feel"
@@ -25,12 +23,7 @@ func init() {
 					_wiki_upload(m, FEEL)
 				}},
 			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-				m.Option("prefix", m.Conf(FEEL, "meta.path"))
-				if m.Option(ice.MSG_DOMAIN) == "" {
-					_wiki_list(m, FEEL, kit.Select("./", arg, 0))
-				} else {
-					_wiki_list(m, FEEL, path.Join("local", m.Option(ice.MSG_DOMAIN), kit.Select(".", arg, 0))+"/")
-				}
+				_wiki_list(m, FEEL, kit.Select("./", arg, 0))
 				m.Sort(kit.MDB_TIME, "time_r")
 				m.Option("_display", "")
 			}},

@@ -43,6 +43,7 @@ const ( // MSG
 	MSG_USERDATA = "user.data"
 	MSG_USERADDR = "user.addr"
 
+	MSG_LOCAL  = "sess.path"
 	MSG_RIVER  = "sess.river"
 	MSG_STORM  = "sess.storm"
 	MSG_ACTIVE = "sess.active"

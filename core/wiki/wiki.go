@@ -11,7 +11,8 @@ import (
 )
 
 func _wiki_list(m *ice.Message, cmd string, arg ...string) bool {
-	m.Option(nfs.DIR_ROOT, m.Conf(cmd, "meta.path"))
+	m.Option("prefix", path.Join(m.Option(ice.MSG_LOCAL), m.Conf(cmd, kit.META_PATH)))
+	m.Option(nfs.DIR_ROOT, path.Join(m.Option(ice.MSG_LOCAL), m.Conf(cmd, kit.META_PATH)))
 	if len(arg) == 0 || strings.HasSuffix(arg[0], "/") {
 		m.Option("_display", "table")
 		if m.Option(nfs.DIR_DEEP) != "true" {
@@ -36,10 +37,11 @@ func _wiki_save(m *ice.Message, cmd, name, text string, arg ...string) {
 	m.Cmd(nfs.SAVE, path.Join(m.Conf(cmd, "meta.path"), name), text)
 }
 func _wiki_upload(m *ice.Message, cmd string) {
-	if up := kit.Simple(m.Optionv("_upload")); m.Option(ice.MSG_USERPOD) == "" {
-		m.Cmdy(web.CACHE, web.WATCH, up[0], path.Join(m.Conf(cmd, "meta.path"), m.Option("path"), up[1]))
+	up := kit.Simple(m.Optionv(ice.MSG_UPLOAD))
+	if p := path.Join(m.Option(ice.MSG_LOCAL), m.Conf(cmd, kit.META_PATH), m.Option(kit.MDB_PATH), up[1]); m.Option(ice.MSG_USERPOD) == "" {
+		m.Cmdy(web.CACHE, web.WATCH, up[0], p)
 	} else {
-		m.Cmdy(web.SPIDE, web.SPIDE_DEV, web.SPIDE_SAVE, path.Join(m.Conf(cmd, "meta.path"), m.Option("path"), up[1]), web.SPIDE_GET, kit.MergeURL2(m.Option(ice.MSG_USERWEB), "/share/cache/"+up[0]))
+		m.Cmdy(web.SPIDE, web.SPIDE_DEV, web.SPIDE_SAVE, p, web.SPIDE_GET, kit.MergeURL2(m.Option(ice.MSG_USERWEB), "/share/cache/"+up[0]))
 	}
 }
 

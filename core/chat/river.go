@@ -25,12 +25,6 @@ func _river_list(m *ice.Message) {
 	m.Set(ice.MSG_OPTION, kit.MDB_HASH)
 	m.Set(ice.MSG_OPTION, kit.MDB_NAME)
 
-	if p := m.Option(POD); p != "" {
-		m.Option(POD, "")
-		m.Cmdy(web.SPACE, p, "web.chat./river")
-		// 代理列表
-	}
-
 	m.Richs(RIVER, nil, kit.MDB_FOREACH, func(key string, value map[string]interface{}) {
 		m.Richs(RIVER, kit.Keys(kit.MDB_HASH, key, USER), m.Option(ice.MSG_USERNAME), func(k string, val map[string]interface{}) {
 			m.Push(key, kit.GetMeta(value), []string{kit.MDB_HASH, kit.MDB_NAME}, kit.GetMeta(val))
@@ -63,7 +57,9 @@ const RIVER = "river"
 func init() {
 	Index.Merge(&ice.Context{
 		Configs: map[string]*ice.Config{
-			RIVER: {Name: RIVER, Help: "群组", Value: kit.Data()},
+			RIVER: {Name: RIVER, Help: "群组", Value: kit.Data(
+				kit.MDB_PATH, "usr/local/river",
+			)},
 		},
 		Commands: map[string]*ice.Command{
 			INFO: {Name: "info auto", Help: "信息", Action: map[string]*ice.Action{
@@ -161,18 +157,22 @@ func init() {
 				}},
 				mdb.EXPORT: {Name: "export", Help: "导出", Hand: func(m *ice.Message, arg ...string) {
 					if m.Option(kit.MDB_ID) != "" {
-						_action_domain(m, m.Option(kit.MDB_HASH))
 						m.Option(mdb.FIELDS, "time,id,pod,ctx,cmd,arg")
 						msg := m.Cmd(mdb.SELECT, RIVER, kit.Keys(kit.MDB_HASH, m.Option(ice.MSG_RIVER), TOOL, kit.MDB_HASH, m.Option(kit.MDB_HASH)), mdb.LIST, kit.MDB_ID, m.Option(kit.MDB_ID))
-						m.Cmdy(_river_proxy(msg, msg.Append(POD)), kit.Keys(msg.Append(CTX), msg.Append(CMD)), mdb.EXPORT)
+
+						cmd := kit.Keys(msg.Append(CTX), msg.Append(CMD))
+						_action_domain(m, cmd, m.Option(kit.MDB_HASH))
+						m.Cmdy(_river_proxy(msg, msg.Append(POD)), cmd, mdb.EXPORT)
 					}
 				}},
 				mdb.IMPORT: {Name: "import", Help: "导入", Hand: func(m *ice.Message, arg ...string) {
 					if m.Option(kit.MDB_ID) != "" {
-						_action_domain(m, m.Option(kit.MDB_HASH))
 						m.Option(mdb.FIELDS, "time,id,pod,ctx,cmd,arg")
 						msg := m.Cmd(mdb.SELECT, RIVER, kit.Keys(kit.MDB_HASH, m.Option(ice.MSG_RIVER), TOOL, kit.MDB_HASH, m.Option(kit.MDB_HASH)), mdb.LIST, kit.MDB_ID, m.Option(kit.MDB_ID))
-						m.Cmdy(_river_proxy(msg, msg.Append(POD)), kit.Keys(msg.Append(CTX), msg.Append(CMD)), mdb.IMPORT)
+
+						cmd := kit.Keys(msg.Append(CTX), msg.Append(CMD))
+						_action_domain(m, cmd, m.Option(kit.MDB_HASH))
+						m.Cmdy(_river_proxy(msg, msg.Append(POD)), cmd, mdb.IMPORT)
 					}
 				}},
 				mdb.INPUTS: {Name: "inputs", Help: "补全", Hand: func(m *ice.Message, arg ...string) {
@@ -199,7 +199,7 @@ func init() {
 				}},
 			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 				if len(arg) == 0 {
-					m.Option(mdb.FIELDS, "time,hash,name,count")
+					m.Option(mdb.FIELDS, "time,hash,type,name,count")
 					m.Cmdy(mdb.SELECT, RIVER, kit.Keys(kit.MDB_HASH, m.Option(ice.MSG_RIVER), TOOL), mdb.HASH)
 					m.PushAction(mdb.REMOVE)
 					return // 应用列表

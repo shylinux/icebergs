@@ -15,6 +15,11 @@ var Index = &ice.Context{Name: CHAT, Help: "聊天中心",
 			m.Load()
 			m.Cmd(web.SERVE, aaa.WHITE, "header", "river", "action", "footer")
 
+			m.Conf(ACTION, "meta.domain.web.chat.location", "true")
+			m.Conf(ACTION, "meta.domain.web.chat.paste", "true")
+			m.Conf(ACTION, "meta.domain.web.chat.scan", "true")
+			m.Conf(ACTION, "meta.domain.web.wiki.feel", "true")
+
 			m.Conf(RIVER, "meta.template", kit.Dict(
 				"base", kit.Dict(
 					"info", []interface{}{
@@ -32,12 +37,13 @@ var Index = &ice.Context{Name: CHAT, Help: "聊天中心",
 					"miss", []interface{}{
 						"web.team.task",
 						"web.team.plan",
-						"web.wiki.word",
-					},
-					"wiki", []interface{}{
 						"web.wiki.draw",
 						"web.wiki.data",
+						"web.wiki.word",
+					},
+					"meet", []interface{}{
 						"web.wiki.feel",
+						"web.chat.meet.miss",
 						"web.wiki.word",
 					},
 				),

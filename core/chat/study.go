@@ -34,27 +34,27 @@ func init() {
 				"添加", _target_insert,
 			), Action: map[string]*ice.Action{
 				mdb.INSERT: {Name: "insert [key value]...", Help: "添加", Hand: func(m *ice.Message, arg ...string) {
-					m.Cmdy(mdb.INSERT, m.Prefix(TARGET), m.Option(ice.MSG_DOMAIN), mdb.HASH, arg)
+					m.Cmdy(mdb.INSERT, m.Prefix(TARGET), "", mdb.HASH, arg)
 				}},
 				mdb.MODIFY: {Name: "modify key value", Help: "编辑", Hand: func(m *ice.Message, arg ...string) {
-					m.Cmdy(mdb.MODIFY, m.Prefix(TARGET), m.Option(ice.MSG_DOMAIN), mdb.HASH, "", m.Option("hash"), arg[0], arg[1])
+					m.Cmdy(mdb.MODIFY, m.Prefix(TARGET), "", mdb.HASH, "", m.Option("hash"), arg[0], arg[1])
 				}},
 				mdb.DELETE: {Name: "delete", Help: "删除", Hand: func(m *ice.Message, arg ...string) {
-					m.Cmdy(mdb.DELETE, m.Prefix(TARGET), m.Option(ice.MSG_DOMAIN), mdb.HASH, "", m.Option("hash"))
+					m.Cmdy(mdb.DELETE, m.Prefix(TARGET), "", mdb.HASH, "", m.Option("hash"))
 				}},
 				mdb.EXPORT: {Name: "export", Help: "导出", Hand: func(m *ice.Message, arg ...string) {
-					m.Cmdy(mdb.EXPORT, m.Prefix(TARGET), m.Option(ice.MSG_DOMAIN), mdb.HASH)
+					m.Cmdy(mdb.EXPORT, m.Prefix(TARGET), "", mdb.HASH)
 				}},
 				mdb.IMPORT: {Name: "import", Help: "导入", Hand: func(m *ice.Message, arg ...string) {
-					m.Cmdy(mdb.IMPORT, m.Prefix(TARGET), m.Option(ice.MSG_DOMAIN), mdb.HASH)
+					m.Cmdy(mdb.IMPORT, m.Prefix(TARGET), "", mdb.HASH)
 				}},
 
 				mdb.INPUTS: {Name: "inputs key value", Help: "补全", Hand: func(m *ice.Message, arg ...string) {
-					m.Cmdy(mdb.INPUTS, m.Prefix(TARGET), m.Option(ice.MSG_DOMAIN), mdb.HASH, arg)
+					m.Cmdy(mdb.INPUTS, m.Prefix(TARGET), "", mdb.HASH, arg)
 				}},
 			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 				m.Option("fields", "time,hash,type,name,text")
-				m.Cmdy(mdb.SELECT, m.Prefix(TARGET), m.Option(ice.MSG_DOMAIN), mdb.HASH, "", kit.Select(kit.MDB_FOREACH, arg, 0))
+				m.Cmdy(mdb.SELECT, m.Prefix(TARGET), "", mdb.HASH, "", kit.Select(kit.MDB_FOREACH, arg, 0))
 				if len(arg) == 0 {
 					m.PushAction("备课", "学习", "测试", "删除")
 				}

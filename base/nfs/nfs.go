@@ -277,6 +277,10 @@ func _file_search(m *ice.Message, kind, name, text string, arg ...string) {
 }
 
 const (
+	OPEN  = "open"
+	CLOSE = "close"
+)
+const (
 	CAT_CB = "cat_cb"
 	CAT    = "cat"
 	SAVE   = "save"

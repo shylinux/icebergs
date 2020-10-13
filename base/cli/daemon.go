@@ -2,7 +2,6 @@ package cli
 
 import (
 	ice "github.com/shylinux/icebergs"
-	"github.com/shylinux/icebergs/base/aaa"
 	"github.com/shylinux/icebergs/base/mdb"
 	kit "github.com/shylinux/toolkits"
 
@@ -27,10 +26,8 @@ func _daemon_show(m *ice.Message, cmd *exec.Cmd, out, err string) {
 
 	h := m.Cmdx(mdb.INSERT, DAEMON, "", mdb.HASH,
 		kit.MDB_STATUS, Status.Start, kit.SSH_CMD, strings.Join(cmd.Args, " "),
-		kit.SSH_DIR, cmd.Dir, kit.SSH_ENV, cmd.Env, kit.SSH_PID, cmd.Process.Pid,
+		kit.SSH_DIR, cmd.Dir, kit.SSH_ENV, kit.Select("", cmd.Env), kit.SSH_PID, cmd.Process.Pid,
 		CMD_STDOUT, out, CMD_STDERR, err,
-		aaa.IP, m.Option(ice.MSG_USERIP), aaa.UA, m.Option(ice.MSG_USERUA),
-		aaa.USERNAME, m.Option(ice.MSG_USERNAME), aaa.USERROLE, m.Option(ice.MSG_USERROLE),
 	)
 	m.Echo("%d", cmd.Process.Pid)
 
@@ -55,8 +52,9 @@ var Status = struct{ Error, Start, Stop string }{
 }
 
 const (
-	START = "start"
-	STOP  = "stop"
+	RESTART = "restart"
+	START   = "start"
+	STOP    = "stop"
 )
 
 const DAEMON = "daemon"
@@ -68,13 +66,21 @@ func init() {
 		},
 		Commands: map[string]*ice.Command{
 			DAEMON: {Name: "daemon hash auto 添加 清理", Help: "守护进程", Action: map[string]*ice.Action{
+				RESTART: {Name: "restart", Help: "重启", Hand: func(m *ice.Message, arg ...string) {
+					m.Cmd(DAEMON, STOP)
+					m.Cmd(DAEMON, START)
+				}},
 				START: {Name: "start cmd env dir", Help: "添加", Hand: func(m *ice.Message, arg ...string) {
 					m.Option(CMD_TYPE, DAEMON)
+					m.Option(CMD_DIR, m.Option("dir"))
+					m.Option(CMD_ENV, kit.Split(m.Option("env"), " ="))
 					m.Cmdy(SYSTEM, kit.Split(m.Option("cmd")))
 				}},
 				STOP: {Name: "stop", Help: "停止", Hand: func(m *ice.Message, arg ...string) {
+					m.Option(mdb.FIELDS, "time,hash,status,pid,cmd,dir,env")
 					m.Cmd(mdb.SELECT, DAEMON, "", mdb.HASH, kit.MDB_HASH, m.Option(kit.MDB_HASH)).Table(func(index int, value map[string]string, head []string) {
 						m.Cmd(mdb.MODIFY, DAEMON, "", mdb.HASH, kit.MDB_HASH, m.Option(kit.MDB_HASH), kit.MDB_STATUS, Status.Stop)
+						m.Debug("what %v", value)
 						m.Cmdy(SYSTEM, "kill", "-9", value[kit.SSH_PID])
 					})
 				}},
@@ -82,17 +88,18 @@ func init() {
 					m.Cmdy(mdb.DELETE, DAEMON, "", mdb.HASH, kit.MDB_HASH, m.Option(kit.MDB_HASH))
 				}},
 				mdb.PRUNES: {Name: "prunes", Help: "清理", Hand: func(m *ice.Message, arg ...string) {
+					m.Option(mdb.FIELDS, "time,hash,status,pid,cmd,dir,env")
 					m.Cmdy(mdb.PRUNES, DAEMON, "", mdb.HASH, kit.MDB_STATUS, Status.Error)
 					m.Cmdy(mdb.PRUNES, DAEMON, "", mdb.HASH, kit.MDB_STATUS, Status.Stop)
 				}},
 			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 				if len(arg) == 0 {
-					m.Option(mdb.FIELDS, "time,hash,status,pid,cmd,dir")
+					m.Option(mdb.FIELDS, "time,hash,status,pid,cmd,dir,env")
 					m.Cmdy(mdb.SELECT, DAEMON, "", mdb.HASH)
 					m.Table(func(index int, value map[string]string, head []string) {
 						switch value[kit.MDB_STATUS] {
 						case Status.Start:
-							m.PushButton(STOP)
+							m.PushButton(RESTART, STOP)
 						default:
 							m.PushButton(mdb.REMOVE)
 						}

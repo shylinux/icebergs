@@ -5,6 +5,7 @@ import (
 	"github.com/shylinux/icebergs/base/cli"
 	"github.com/shylinux/icebergs/base/gdb"
 	"github.com/shylinux/icebergs/base/mdb"
+	"github.com/shylinux/icebergs/base/nfs"
 	"github.com/shylinux/icebergs/base/web"
 	"github.com/shylinux/icebergs/core/code"
 	"github.com/shylinux/icebergs/core/wiki"
@@ -158,18 +159,20 @@ var Index = &ice.Context{Name: TMUX, Help: "工作台",
 			mdb.CREATE: {Name: "create name", Help: "添加", Hand: func(m *ice.Message, arg ...string) {
 				m.Option(cli.CMD_ENV, "TMUX", "")
 				if m.Option(PANE) != "" {
-					m.Cmd(cli.SYSTEM, TMUX, "split-window", "-t", m.Option(SESSION)+":"+m.Option(WINDOW)+"."+m.Option(PANE))
+					m.Cmdy(cli.SYSTEM, TMUX, "split-window", "-t", m.Option(SESSION)+":"+m.Option(WINDOW)+"."+m.Option(PANE))
 
 				} else if m.Option(WINDOW) != "" {
-					m.Cmd(cli.SYSTEM, TMUX, "split-window", "-t", m.Option(SESSION)+":"+m.Option(WINDOW))
+					m.Cmdy(cli.SYSTEM, TMUX, "split-window", "-t", m.Option(SESSION)+":"+m.Option(WINDOW))
 
 				} else if m.Option(SESSION) != "" {
 					// 创建窗口
-					m.Cmd(cli.SYSTEM, TMUX, "new-window", "-t", m.Option(SESSION), "-dn", m.Option("name"))
+					m.Cmdy(cli.SYSTEM, TMUX, "new-window", "-t", m.Option(SESSION), "-dn", m.Option(kit.MDB_NAME))
 				} else {
 					// 创建会话
-					m.Cmd(cli.SYSTEM, TMUX, "new-session", "-ds", m.Option("name"))
+					m.Option(cli.CMD_DIR, path.Join(m.Conf(web.DREAM, kit.META_PATH), m.Option(kit.MDB_NAME)))
+					m.Cmdy(cli.SYSTEM, TMUX, "new-session", "-ds", m.Option(kit.MDB_NAME))
 				}
+				m.Option(ice.MSG_PROCESS, "_refresh")
 			}},
 			mdb.MODIFY: {Name: "modify", Help: "编辑", Hand: func(m *ice.Message, arg ...string) {
 				switch arg[0] {
@@ -201,8 +204,14 @@ var Index = &ice.Context{Name: TMUX, Help: "工作台",
 			}},
 
 			mdb.INPUTS: {Name: "inputs", Help: "补全", Hand: func(m *ice.Message, arg ...string) {
-				m.Option(mdb.FIELDS, "name,type,text")
-				m.Cmdy(mdb.SELECT, SCRIPT, "", mdb.HASH)
+				switch arg[0] {
+				case kit.MDB_NAME:
+					m.Option(nfs.DIR_ROOT, m.Conf(web.DREAM, kit.META_PATH))
+					m.Cmdy(nfs.DIR, "./", "name size time")
+				default:
+					m.Option(mdb.FIELDS, "name,type,text")
+					m.Cmdy(mdb.SELECT, SCRIPT, "", mdb.HASH)
+				}
 			}},
 
 			SCRIPT: {Name: "script name", Help: "脚本", Hand: func(m *ice.Message, arg ...string) {

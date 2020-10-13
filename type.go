@@ -103,7 +103,11 @@ func (c *Context) _hand(m *Message, cmd *Command, key string, k string, h *Actio
 			}
 		}
 	}
-	h.Hand(m, arg...)
+	if h.Hand == nil {
+		m.Cmdy(kit.Split(h.Name))
+	} else {
+		h.Hand(m, arg...)
+	}
 	return m
 }
 func (c *Context) cmd(m *Message, cmd *Command, key string, arg ...string) *Message {
@@ -165,13 +169,16 @@ func (c *Context) Merge(s *Context, x Server) *Context {
 		}
 
 		for k, a := range v.Action {
+			kit.Value(v.Meta, kit.Keys("trans", k), a.Help)
+			if a.Hand == nil {
+				continue
+			}
 			if a.List == nil {
 				a.List = c._split(a.Name)
 			}
 			if len(a.List) > 0 {
 				v.Meta[k] = a.List
 			}
-			kit.Value(v.Meta, kit.Keys("trans", k), a.Help)
 		}
 	}
 

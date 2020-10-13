@@ -79,7 +79,7 @@ const DREAM = "dream"
 func init() {
 	Index.Merge(&ice.Context{
 		Configs: map[string]*ice.Config{
-			DREAM: {Name: DREAM, Help: "梦想家", Value: kit.Data("path", "usr/local/work",
+			DREAM: {Name: DREAM, Help: "梦想家", Value: kit.Data(kit.MDB_PATH, "usr/local/work",
 				"cmd", []interface{}{"ice.bin", SPACE, "connect"},
 				"env", kit.Dict("ctx_log", "bin/boot.log"),
 				"miss", `#!/bin/bash

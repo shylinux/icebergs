@@ -30,12 +30,16 @@ var Index = &ice.Context{Name: GIT, Help: "代码库",
 			// 系统项目
 			wd, _ := os.Getwd()
 			_repos_insert(m, path.Base(wd), wd)
-		}},
-		"init": {Name: "init", Help: "初始化", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			// 官方项目
+
 			m.Cmd(nfs.DIR, "usr", "name path").Table(func(index int, value map[string]string, head []string) {
 				_repos_insert(m, value["name"], value["path"])
 			})
+		}},
+		"init": {Name: "init", Help: "初始化", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			// 官方项目
+			// m.Cmd(nfs.DIR, "usr", "name path").Table(func(index int, value map[string]string, head []string) {
+			// 	_repos_insert(m, value["name"], value["path"])
+			// })
 		}},
 
 		GIT: {Name: "git port=auto path=auto auto 启动 构建 下载", Help: "代码库", Action: map[string]*ice.Action{

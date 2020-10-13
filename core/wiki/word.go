@@ -82,7 +82,11 @@ func _brief_show(m *ice.Message, name, text string, arg ...string) {
 func _refer_show(m *ice.Message, name, text string, arg ...string) {
 	list := [][]string{}
 	for _, v := range kit.Split(strings.TrimSpace(text), "\n", "\n") {
-		list = append(list, kit.Split(v))
+		if ls := kit.Split(v); len(ls) == 1 {
+			list = append(list, []string{path.Base(ls[0]), ls[0]})
+		} else {
+			list = append(list, ls)
+		}
 	}
 	m.Optionv("list", list)
 

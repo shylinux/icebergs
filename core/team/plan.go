@@ -21,18 +21,28 @@ func init() {
 				mdb.INSERT: {Name: "insert zone type=once,step,week name text begin_time@date close_time@date", Help: "添加", Hand: func(m *ice.Message, arg ...string) {
 					_task_create(m, arg[1])
 					_task_insert(m, arg[1], arg[2:]...)
+					m.Set(ice.MSG_RESULT)
+					m.Cmdy(m.Prefix(PLAN), m.Option("scale"))
 				}},
 				mdb.MODIFY: {Name: "modify", Help: "编辑", Hand: func(m *ice.Message, arg ...string) {
 					_task_modify(m, m.Option(kit.MDB_ZONE), m.Option(kit.MDB_ID), arg[0], arg[1])
+					m.Set(ice.MSG_RESULT)
+					m.Cmdy(m.Prefix(PLAN), m.Option("scale"))
 				}},
 				mdb.DELETE: {Name: "delete", Help: "删除", Hand: func(m *ice.Message, arg ...string) {
 					_task_delete(m, m.Option(kit.MDB_ZONE), m.Option(kit.MDB_ID))
+					m.Set(ice.MSG_RESULT)
+					m.Cmdy(m.Prefix(PLAN), m.Option("scale"))
 				}},
 				mdb.EXPORT: {Name: "export file", Help: "导出", Hand: func(m *ice.Message, arg ...string) {
 					_task_export(m, m.Option(kit.MDB_FILE))
+					m.Set(ice.MSG_RESULT)
+					m.Cmdy(m.Prefix(PLAN), m.Option("scale"))
 				}},
 				mdb.IMPORT: {Name: "import file", Help: "导入", Hand: func(m *ice.Message, arg ...string) {
 					_task_import(m, m.Option(kit.MDB_FILE))
+					m.Set(ice.MSG_RESULT)
+					m.Cmdy(m.Prefix(PLAN), m.Option("scale"))
 				}},
 				mdb.INPUTS: {Name: "inputs", Help: "补全", Hand: func(m *ice.Message, arg ...string) {
 					switch arg[0] {

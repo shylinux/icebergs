@@ -1,6 +1,8 @@
 package cli
 
 import (
+	"io"
+
 	ice "github.com/shylinux/icebergs"
 	"github.com/shylinux/icebergs/base/mdb"
 	kit "github.com/shylinux/toolkits"
@@ -10,13 +12,20 @@ import (
 )
 
 func _daemon_show(m *ice.Message, cmd *exec.Cmd, out, err string) {
-	if f, p, e := kit.Create(out); m.Assert(e) {
+	if w, ok := m.Optionv(CMD_STDOUT).(io.Writer); ok {
+		cmd.Stdout = w
+		cmd.Stderr = w
+	} else if f, p, e := kit.Create(out); m.Assert(e) {
 		m.Log_EXPORT(kit.MDB_META, DAEMON, CMD_STDOUT, p)
+		m.Optionv(CMD_STDOUT, f)
 		cmd.Stdout = f
 		cmd.Stderr = f
 	}
-	if f, p, e := kit.Create(err); m.Assert(e) {
+	if w, ok := m.Optionv(CMD_STDERR).(io.Writer); ok {
+		cmd.Stderr = w
+	} else if f, p, e := kit.Create(err); m.Assert(e) {
 		m.Log_EXPORT(kit.MDB_META, DAEMON, CMD_STDERR, p)
+		m.Optionv(CMD_STDERR, f)
 		cmd.Stderr = f
 	}
 
@@ -39,6 +48,12 @@ func _daemon_show(m *ice.Message, cmd *exec.Cmd, out, err string) {
 			m.Cost("args", cmd.Args, "code", cmd.ProcessState.ExitCode())
 			m.Cmd(mdb.MODIFY, DAEMON, "", mdb.HASH, kit.MDB_HASH, h,
 				kit.MDB_STATUS, Status.Stop)
+		}
+		if w, ok := m.Optionv(CMD_STDOUT).(io.Closer); ok {
+			w.Close()
+		}
+		if w, ok := m.Optionv(CMD_STDERR).(io.Closer); ok {
+			w.Close()
 		}
 	})
 }
@@ -68,6 +83,7 @@ func init() {
 			DAEMON: {Name: "daemon hash auto 添加 清理", Help: "守护进程", Action: map[string]*ice.Action{
 				RESTART: {Name: "restart", Help: "重启", Hand: func(m *ice.Message, arg ...string) {
 					m.Cmd(DAEMON, STOP)
+					m.Sleep("1s")
 					m.Cmd(DAEMON, START)
 				}},
 				START: {Name: "start cmd env dir", Help: "添加", Hand: func(m *ice.Message, arg ...string) {

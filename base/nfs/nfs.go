@@ -286,6 +286,7 @@ const (
 	SAVE   = "save"
 	COPY   = "copy"
 	LINK   = "link"
+	TAIL   = "tail"
 )
 const (
 	DIR_ROOT = "dir_root"
@@ -316,14 +317,28 @@ var Index = &ice.Context{Name: "nfs", Help: "存储模块",
 			),
 		)},
 		TRASH: {Name: TRASH, Help: "删除", Value: kit.Data("path", "var/trash")},
+
+		TAIL: {Name: TAIL, Help: "跟踪", Value: kit.Data()},
 	},
 	Commands: map[string]*ice.Command{
 		ice.CTX_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			m.Load()
 			m.Cmd(mdb.SEARCH, mdb.CREATE, DIR)
 			m.Cmd(mdb.RENDER, mdb.CREATE, DIR)
 
 			m.Cmd(mdb.SEARCH, mdb.CREATE, FILE, m.Prefix(FILE))
 			m.Cmd(mdb.RENDER, mdb.CREATE, FILE, m.Prefix(FILE))
+			m.Richs(TAIL, "", kit.MDB_FOREACH, func(key string, value map[string]interface{}) {
+				value = kit.GetMeta(value)
+				m.Option(kit.MDB_HASH, key)
+				m.Cmd(TAIL, mdb.CREATE,
+					kit.MDB_FILE, kit.Format(value[kit.MDB_FILE]),
+					kit.MDB_NAME, kit.Format(value[kit.MDB_NAME]),
+				)
+			})
+		}},
+		ice.CTX_EXIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			m.Save()
 		}},
 		DIR: {Name: "dir path field... auto 上传", Help: "目录", Action: map[string]*ice.Action{
 			mdb.SEARCH: {Name: "search type name text", Help: "搜索", Hand: func(m *ice.Message, arg ...string) {
@@ -385,7 +400,42 @@ var Index = &ice.Context{Name: "nfs", Help: "存储模块",
 		TRASH: {Name: "trash file", Help: "删除", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			_file_trash(m, arg[0])
 		}},
+
+		TAIL: {Name: "tail hash id auto create", Help: "文件", Action: map[string]*ice.Action{
+			mdb.CREATE: {Name: "create file name", Help: "创建", Hand: func(m *ice.Message, arg ...string) {
+				if m.Option(kit.MDB_HASH) == "" {
+					m.Cmdy(mdb.INSERT, TAIL, "", mdb.HASH, arg)
+					m.Option(kit.MDB_HASH, m.Result())
+				}
+				h := m.Option(kit.MDB_HASH)
+				for _, file := range kit.Split(m.Option(kit.MDB_FILE), ",") {
+					func(file string) {
+						r, w := io.Pipe()
+						m.Go(func(msg *ice.Message) {
+							for bio := bufio.NewScanner(r); bio.Scan(); {
+								m.Grow(TAIL, kit.Keys(kit.MDB_HASH, h), kit.Dict(
+									kit.MDB_FILE, file, kit.MDB_TEXT, bio.Text(),
+								))
+							}
+						})
+						m.Option(cli.CMD_STDOUT, w)
+						m.Option(cli.CMD_STDERR, w)
+						m.Cmd(cli.DAEMON, "tail", "-n", "0", "-f", file)
+					}(file)
+				}
+			}},
+			mdb.REMOVE: {Name: "remove", Help: "删除", Hand: func(m *ice.Message, arg ...string) {
+				m.Cmdy(mdb.DELETE, TAIL, "", mdb.HASH, kit.MDB_HASH, m.Option(kit.MDB_HASH))
+			}},
+		}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			m.Option(mdb.FIELDS, kit.Select("time,hash,count,name,file", kit.Select("time,id,file,text", mdb.DETAIL, len(arg) > 1), len(arg) > 0))
+			m.Cmdy(mdb.SELECT, TAIL, "", mdb.ZONE, arg)
+			m.PushAction(kit.Select("", mdb.REMOVE, len(arg) == 0))
+			if len(arg) == 1 {
+				m.Option(ice.MSG_CONTROL, "_page")
+			}
+		}},
 	},
 }
 
-func init() { ice.Index.Register(Index, nil, DIR, CAT, SAVE, COPY, LINK, TRASH) }
+func init() { ice.Index.Register(Index, nil, DIR, CAT, SAVE, COPY, LINK, TRASH, TAIL) }

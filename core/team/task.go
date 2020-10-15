@@ -28,30 +28,22 @@ func _task_action(m *ice.Message, status interface{}, action ...string) string {
 func _task_list(m *ice.Message, zone string, id string) {
 	if zone == "" {
 		m.Option(mdb.FIELDS, "time,zone,count")
-	} else if id == "" {
-		m.Option(mdb.FIELDS, "begin_time,id,status,level,score,type,name,text")
+	} else {
+		m.Option(mdb.FIELDS, kit.Select("begin_time,id,status,level,score,type,name,text", mdb.DETAIL, id != ""))
 		defer m.Table(func(index int, value map[string]string, head []string) {
 			m.PushRender(kit.MDB_ACTION, kit.MDB_BUTTON, _task_action(m, value[TaskField.STATUS]))
 		})
-	} else {
-		m.Option(mdb.FIELDS, mdb.DETAIL)
-		defer m.Table(func(index int, value map[string]string, head []string) {
-			if value[kit.MDB_KEY] == kit.MDB_STATUS {
-				m.Push(kit.MDB_KEY, kit.MDB_ACTION)
-				m.PushRender(kit.MDB_VALUE, kit.MDB_BUTTON, _task_action(m, value[kit.MDB_VALUE]))
-			}
-		})
 	}
-	m.Cmdy(mdb.SELECT, m.Prefix(TASK), "", mdb.ZONE, zone, id)
+	m.Cmdy(mdb.SELECT, TASK, "", mdb.ZONE, zone, id)
 }
 func _task_create(m *ice.Message, zone string) {
-	if msg := m.Cmd(mdb.SELECT, m.Prefix(TASK), "", mdb.HASH, kit.MDB_ZONE, zone); len(msg.Appendv(kit.MDB_HASH)) == 0 {
-		m.Conf(m.Prefix(TASK), kit.Keys(m.Option(ice.MSG_DOMAIN), kit.MDB_META, kit.MDB_SHORT), kit.MDB_ZONE)
-		m.Cmdy(mdb.INSERT, m.Prefix(TASK), "", mdb.HASH, kit.MDB_ZONE, zone)
+	if msg := m.Cmd(mdb.SELECT, TASK, "", mdb.HASH, kit.MDB_ZONE, zone); len(msg.Appendv(kit.MDB_HASH)) == 0 {
+		m.Conf(TASK, kit.Keys(m.Option(ice.MSG_DOMAIN), kit.MDB_META, kit.MDB_SHORT), kit.MDB_ZONE)
+		m.Cmdy(mdb.INSERT, TASK, "", mdb.HASH, kit.MDB_ZONE, zone)
 	}
 }
 func _task_insert(m *ice.Message, zone string, arg ...string) {
-	m.Cmdy(mdb.INSERT, m.Prefix(TASK), _sub_key(m, zone), mdb.LIST,
+	m.Cmdy(mdb.INSERT, TASK, _sub_key(m, zone), mdb.LIST,
 		TaskField.BEGIN_TIME, m.Time(), TaskField.CLOSE_TIME, m.Time("30m"),
 		TaskField.STATUS, TaskStatus.PREPARE, TaskField.LEVEL, 3, TaskField.SCORE, 3,
 		arg,
@@ -66,25 +58,25 @@ func _task_modify(m *ice.Message, zone, id, field, value string, arg ...string) 
 			arg = append(arg, TaskField.CLOSE_TIME, m.Time())
 		}
 	}
-	m.Cmdy(mdb.MODIFY, m.Prefix(TASK), _sub_key(m, zone), mdb.LIST, kit.MDB_ID, id, field, value, arg)
+	m.Cmdy(mdb.MODIFY, TASK, _sub_key(m, zone), mdb.LIST, kit.MDB_ID, id, field, value, arg)
 }
 func _task_delete(m *ice.Message, zone, id string) {
-	m.Cmdy(mdb.MODIFY, m.Prefix(TASK), _sub_key(m, zone), mdb.LIST, kit.MDB_ID, id, TaskField.STATUS, TaskStatus.CANCEL)
+	m.Cmdy(mdb.MODIFY, TASK, _sub_key(m, zone), mdb.LIST, kit.MDB_ID, id, TaskField.STATUS, TaskStatus.CANCEL)
 }
 func _task_export(m *ice.Message, file string) {
 	m.Option(mdb.FIELDS, "zone,id,time,type,name,text,level,status,score,begin_time,close_time,extra")
-	m.Cmdy(mdb.EXPORT, m.Prefix(TASK), "", mdb.ZONE, file)
+	m.Cmdy(mdb.EXPORT, TASK, "", mdb.ZONE, file)
 }
 func _task_import(m *ice.Message, file string) {
 	m.Option(mdb.FIELDS, "zone")
-	m.Cmdy(mdb.IMPORT, m.Prefix(TASK), "", mdb.ZONE, file)
+	m.Cmdy(mdb.IMPORT, TASK, "", mdb.ZONE, file)
 }
 func _task_inputs(m *ice.Message, field, value string) {
 	switch field {
 	case kit.MDB_ZONE:
-		m.Cmdy(mdb.INPUTS, m.Prefix(TASK), "", mdb.HASH, field, value)
-	case kit.MDB_TYPE, kit.MDB_NAME, kit.MDB_TEXT:
-		m.Cmdy(mdb.INPUTS, m.Prefix(TASK), _sub_key(m, m.Option(kit.MDB_ZONE)), mdb.LIST, field, value)
+		m.Cmdy(mdb.INPUTS, TASK, "", mdb.HASH, field, value)
+	default:
+		m.Cmdy(mdb.INPUTS, TASK, _sub_key(m, m.Option(kit.MDB_ZONE)), mdb.LIST, field, value)
 	}
 }
 
@@ -94,8 +86,12 @@ func _task_scope(m *ice.Message, tz int, arg ...string) (time.Time, time.Time) {
 		begin_time, _ = time.ParseInLocation(ice.MOD_TIME, arg[1], time.Local)
 	}
 
+	begin_time = begin_time.Add(time.Duration(tz) * time.Hour)
+	begin_time = begin_time.Add(-time.Duration(begin_time.UnixNano()) % (24 * time.Hour))
+	begin_time = begin_time.Add(-time.Duration(tz) * time.Hour)
+
 	end_time := begin_time
-	switch begin_time = begin_time.Add(-time.Duration(begin_time.UnixNano())%(24*time.Hour) - time.Duration(tz)*time.Hour); arg[0] {
+	switch arg[0] {
 	case TaskScale.DAY:
 		end_time = begin_time.AddDate(0, 0, 1)
 	case TaskScale.WEEK:
@@ -109,8 +105,8 @@ func _task_scope(m *ice.Message, tz int, arg ...string) (time.Time, time.Time) {
 		end_time = begin_time.AddDate(1, 0, 0)
 	case TaskScale.LONG:
 		begin_time = begin_time.AddDate(0, 0, -begin_time.YearDay()+1)
-		begin_time = begin_time.AddDate(-begin_time.Year()%5, 0, 0)
-		end_time = begin_time.AddDate(5, 0, 0)
+		begin_time = begin_time.AddDate(-5, 0, 0)
+		end_time = begin_time.AddDate(10, 0, 0)
 	}
 
 	return begin_time, end_time

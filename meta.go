@@ -460,6 +460,11 @@ func (m *Message) Optionv(key string, arg ...interface{}) interface{} {
 		default:
 			m.data[key] = str
 		}
+		if key == "fields" {
+			for _, k := range kit.Split(strings.Join(m.meta[key], ",")) {
+				delete(m.meta, k)
+			}
+		}
 	}
 
 	for msg := m; msg != nil; msg = msg.message {

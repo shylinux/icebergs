@@ -6,7 +6,7 @@ import (
 	kit "github.com/shylinux/toolkits"
 
 	"net"
-	"strings"
+	// "strings"
 )
 
 type Listener struct {
@@ -22,15 +22,16 @@ func (l Listener) Accept() (net.Conn, error) {
 	l.s.nc += 1
 	l.m.Conf(SERVER, kit.Keys(kit.MDB_HASH, l.h, kit.MDB_META, "nconn"), l.s.nc)
 
-	ls := strings.Split(c.RemoteAddr().String(), ":")
-	if strings.Contains(c.RemoteAddr().String(), "[") {
-		ls = strings.Split(strings.TrimPrefix(c.RemoteAddr().String(), "["), "]:")
-	}
-	h := l.m.Cmdx(mdb.INSERT, CLIENT, "", mdb.HASH, HOST, ls[0], PORT, ls[1],
-		kit.MDB_TYPE, l.m.Option(kit.MDB_TYPE), kit.MDB_NAME, l.m.Option(kit.MDB_NAME),
-		kit.MDB_STATUS, kit.Select(ERROR, OPEN, e == nil), kit.MDB_ERROR, kit.Format(e))
+	// ls := strings.Split(c.RemoteAddr().String(), ":")
+	// if strings.Contains(c.RemoteAddr().String(), "[") {
+	// 	ls = strings.Split(strings.TrimPrefix(c.RemoteAddr().String(), "["), "]:")
+	// }
+	// h := l.m.Cmdx(mdb.INSERT, CLIENT, "", mdb.HASH, HOST, ls[0], PORT, ls[1],
+	// 	kit.MDB_TYPE, l.m.Option(kit.MDB_TYPE), kit.MDB_NAME, l.m.Option(kit.MDB_NAME),
+	// 	kit.MDB_STATUS, kit.Select(ERROR, OPEN, e == nil), kit.MDB_ERROR, kit.Format(e))
 
-	return &Conn{m: l.m, h: h, s: &Stat{}, Conn: c}, e
+	// return &Conn{m: l.m, h: h, s: &Stat{}, Conn: c}, e
+	return &Conn{m: l.m, h: "", s: &Stat{}, Conn: c}, e
 }
 func (l Listener) Close() error {
 	l.m.Cmd(mdb.MODIFY, SERVER, "", mdb.HASH, kit.MDB_HASH, l.h, kit.MDB_STATUS, CLOSE)

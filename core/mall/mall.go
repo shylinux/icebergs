@@ -2,13 +2,11 @@ package mall
 
 import (
 	ice "github.com/shylinux/icebergs"
-	"github.com/shylinux/icebergs/base/mdb"
 	"github.com/shylinux/icebergs/base/web"
 	kit "github.com/shylinux/toolkits"
 
 	"encoding/csv"
 	"os"
-	"path"
 	"strings"
 )
 
@@ -29,28 +27,6 @@ func _asset_list(m *ice.Message, account string, id string, field ...interface{}
 		m.Grows(ASSET, kit.Keys(kit.MDB_HASH, m.Optionv(ice.MSG_DOMAIN), kit.MDB_HASH, key), kit.MDB_ID, id, func(index int, value map[string]interface{}) {
 			m.Push("detail", value)
 		})
-	})
-}
-func _asset_create(m *ice.Message, account string) {
-	if m.Richs(ASSET, kit.Keys(kit.MDB_HASH, m.Optionv(ice.MSG_DOMAIN)), account, nil) == nil {
-		m.Conf(ASSET, kit.Keys(kit.MDB_HASH, m.Optionv(ice.MSG_DOMAIN), kit.MDB_META, kit.MDB_SHORT), ACCOUNT)
-		m.Rich(ASSET, kit.Keys(kit.MDB_HASH, m.Optionv(ice.MSG_DOMAIN)), kit.Data(ACCOUNT, account, AMOUNT, 0))
-		m.Log_CREATE(ACCOUNT, account)
-	}
-}
-func _asset_insert(m *ice.Message, account string, arg ...string) {
-	m.Richs(ASSET, kit.Keys(kit.MDB_HASH, m.Optionv(ice.MSG_DOMAIN)), account, func(key string, value map[string]interface{}) {
-		for i := 0; i < len(arg)-1; i += 2 {
-			if arg[i] == "amount" {
-				kit.Value(value, "meta.amount", kit.Int(kit.Value(value, "meta.amount"))+kit.Int(arg[i+1]))
-			}
-		}
-		id := m.Grow(ASSET, kit.Keys(kit.MDB_HASH, m.Optionv(ice.MSG_DOMAIN), kit.MDB_HASH, key), kit.Dict(
-			kit.MDB_EXTRA, kit.Dict(),
-			arg,
-		))
-		m.Log_INSERT(ACCOUNT, account, kit.MDB_ID, id, arg[0], arg[1])
-		m.Echo("%d", id)
 	})
 }
 func _asset_modify(m *ice.Message, account, id, pro, set string) {
@@ -140,6 +116,29 @@ func _asset_import(m *ice.Message, file string) {
 	m.Log_IMPORT("file", file, "count", count)
 	m.Echo(file)
 }
+func _asset_inputs(m *ice.Message, key, value string) {
+	switch key {
+	case ACCOUNT:
+		m.Richs(ASSET, kit.Keys(kit.MDB_HASH, m.Optionv(ice.MSG_DOMAIN)), kit.MDB_FOREACH, func(key string, val map[string]interface{}) {
+			m.Push("account", kit.Value(val, "meta.account"))
+			m.Push("count", kit.Select("0", kit.Format(kit.Value(val, "meta.count"))))
+		})
+
+	case "name", "text":
+		list := map[string]int{}
+		m.Option("cache.limit", 10)
+		m.Richs(ASSET, kit.Keys(kit.MDB_HASH, m.Optionv(ice.MSG_DOMAIN)), kit.MDB_FOREACH, func(k string, val map[string]interface{}) {
+			m.Grows(ASSET, kit.Keys(kit.MDB_HASH, m.Optionv(ice.MSG_DOMAIN), kit.MDB_HASH, k), "", "", func(index int, value map[string]interface{}) {
+				list[kit.Format(value[key])]++
+			})
+		})
+		for k, i := range list {
+			m.Push("key", k)
+			m.Push("count", i)
+		}
+	}
+	m.Sort("count", "int_r")
+}
 
 func _asset_search(m *ice.Message, kind, name, text string, arg ...string) {
 	m.Richs(ASSET, kit.Keys(kit.MDB_HASH, m.Optionv(ice.MSG_DOMAIN)), kit.MDB_FOREACH, func(key string, val map[string]interface{}) {
@@ -168,30 +167,6 @@ func _asset_render(m *ice.Message, kind, name, text string, arg ...string) {
 }
 func _asset_action(m *ice.Message, status interface{}, action ...string) string {
 	return strings.Join(action, "")
-}
-
-func _asset_input(m *ice.Message, key, value string) {
-	switch key {
-	case ACCOUNT:
-		m.Richs(ASSET, kit.Keys(kit.MDB_HASH, m.Optionv(ice.MSG_DOMAIN)), kit.MDB_FOREACH, func(key string, val map[string]interface{}) {
-			m.Push("account", kit.Value(val, "meta.account"))
-			m.Push("count", kit.Select("0", kit.Format(kit.Value(val, "meta.count"))))
-		})
-
-	case "name", "text":
-		list := map[string]int{}
-		m.Option("cache.limit", 10)
-		m.Richs(ASSET, kit.Keys(kit.MDB_HASH, m.Optionv(ice.MSG_DOMAIN)), kit.MDB_FOREACH, func(k string, val map[string]interface{}) {
-			m.Grows(ASSET, kit.Keys(kit.MDB_HASH, m.Optionv(ice.MSG_DOMAIN), kit.MDB_HASH, k), "", "", func(index int, value map[string]interface{}) {
-				list[kit.Format(value[key])]++
-			})
-		})
-		for k, i := range list {
-			m.Push("key", k)
-			m.Push("count", i)
-		}
-	}
-	m.Sort("count", "int_r")
 }
 
 var _input_spend = kit.List(
@@ -223,7 +198,6 @@ var _input_bonus = kit.List(
 )
 
 const (
-	ASSET = "asset"
 	BONUS = "bonus"
 	SPEND = "spend"
 )
@@ -234,54 +208,11 @@ const (
 )
 
 var Index = &ice.Context{Name: "mall", Help: "贸易中心",
-	Caches: map[string]*ice.Cache{},
-	Configs: map[string]*ice.Config{
-		ASSET: {Name: ASSET, Help: "资产", Value: kit.Data(kit.MDB_SHORT, ACCOUNT)},
-	},
+	Caches:  map[string]*ice.Cache{},
+	Configs: map[string]*ice.Config{},
 	Commands: map[string]*ice.Command{
-		ice.CTX_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			m.Load()
-
-			m.Cmd(mdb.SEARCH, mdb.CREATE, ASSET, ASSET, m.Prefix())
-			m.Cmd(mdb.RENDER, mdb.CREATE, ASSET, ASSET, m.Prefix())
-		}},
-		ice.CTX_EXIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) { m.Save(ASSET) }},
-
-		ASSET: {Name: "asset account=auto id=auto auto 添加:button 导出:button 导入:button", Help: "资产", Meta: kit.Dict(
-			"添加", _input_spend,
-		), Action: map[string]*ice.Action{
-			mdb.INSERT: {Name: "insert [key value]...", Help: "添加", Hand: func(m *ice.Message, arg ...string) {
-				_asset_create(m, arg[1])
-				_asset_insert(m, arg[1], arg[2:]...)
-			}},
-			mdb.MODIFY: {Name: "modify key value", Help: "编辑", Hand: func(m *ice.Message, arg ...string) {
-				_asset_modify(m, m.Option(ACCOUNT), m.Option(kit.MDB_ID), arg[0], arg[1])
-			}},
-			mdb.EXPORT: {Name: "export file", Help: "导出", Hand: func(m *ice.Message, arg ...string) {
-				_asset_export(m, kit.Select(path.Join(EXPORT, m.Option(ice.MSG_DOMAIN), "list.csv"), arg, 0))
-			}},
-			mdb.IMPORT: {Name: "import file", Help: "导入", Hand: func(m *ice.Message, arg ...string) {
-				_asset_import(m, kit.Select(path.Join(EXPORT, m.Option(ice.MSG_DOMAIN), "list.csv"), arg, 0))
-			}},
-
-			"input": {Name: "input key value", Help: "补全", Hand: func(m *ice.Message, arg ...string) {
-				_asset_input(m, kit.Select("", arg, 0), kit.Select("", arg, 1))
-			}},
-		}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			if _asset_list(m, kit.Select("", arg, 0), kit.Select("", arg, 1)); len(arg) < 2 {
-				m.Table(func(index int, value map[string]string, head []string) {
-
-				})
-				m.Sort("amount", "int_r")
-				return
-			}
-			m.Table(func(index int, value map[string]string, head []string) {
-				if value["key"] == "status" {
-					m.Push("key", "action")
-					m.Push("value", _asset_action(m, value["value"]))
-				}
-			})
-		}},
+		ice.CTX_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) { m.Load() }},
+		ice.CTX_EXIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) { m.Save() }},
 
 		"spend": {Name: "spend account=@key to=@key name=@key 记录:button text:textarea value=@key time=@date",
 			Help: "支出", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {

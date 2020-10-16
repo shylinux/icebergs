@@ -15,12 +15,19 @@ var Index = &ice.Context{Name: CHAT, Help: "聊天中心",
 			m.Load()
 			m.Cmd(web.SERVE, aaa.WHITE, "header", "river", "action", "footer")
 
+			m.Conf(ACTION, "meta.domain.web.chat.meet.miss", "true")
+			m.Conf(ACTION, "meta.domain.web.chat.meet.mate", "true")
 			m.Conf(ACTION, "meta.domain.web.chat.location", "true")
 			m.Conf(ACTION, "meta.domain.web.chat.paste", "true")
 			m.Conf(ACTION, "meta.domain.web.chat.scan", "true")
 			m.Conf(ACTION, "meta.domain.web.wiki.feel", "true")
+			m.Conf(ACTION, "meta.domain.web.wiki.draw", "true")
+			m.Conf(ACTION, "meta.domain.web.wiki.data", "true")
+			m.Conf(ACTION, "meta.domain.web.wiki.word", "true")
 			m.Conf(ACTION, "meta.domain.web.team.task", "true")
 			m.Conf(ACTION, "meta.domain.web.team.plan", "true")
+			m.Conf(ACTION, "meta.domain.web.mall.asset", "true")
+			m.Conf(ACTION, "meta.domain.web.mall.salary", "true")
 
 			m.Conf(RIVER, "meta.template", kit.Dict(
 				"base", kit.Dict(
@@ -35,17 +42,19 @@ var Index = &ice.Context{Name: CHAT, Help: "聊天中心",
 						"web.chat.scan",
 						"web.chat.paste",
 						"web.chat.location",
+						"web.chat.meet.miss",
+						"web.wiki.feel",
 					},
-					"miss", []interface{}{
+					"task", []interface{}{
 						"web.team.task",
 						"web.team.plan",
-						"web.wiki.draw",
-						"web.wiki.data",
+						"web.mall.asset",
+						"web.mall.salary",
 						"web.wiki.word",
 					},
-					"meet", []interface{}{
-						"web.wiki.feel",
-						"web.chat.meet.miss",
+					"draw", []interface{}{
+						"web.wiki.draw",
+						"web.wiki.data",
 						"web.wiki.word",
 					},
 				),

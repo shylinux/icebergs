@@ -101,6 +101,13 @@ func (m *Message) PushAction(list ...interface{}) {
 	})
 }
 
+func (m *Message) SortStr(key string)   { m.Sort(key, "str") }
+func (m *Message) SortStrR(key string)  { m.Sort(key, "str_r") }
+func (m *Message) SortInt(key string)   { m.Sort(key, "int") }
+func (m *Message) SortIntR(key string)  { m.Sort(key, "int_r") }
+func (m *Message) SortTime(key string)  { m.Sort(key, "time") }
+func (m *Message) SortTimeR(key string) { m.Sort(key, "time_r") }
+
 var count = int32(0)
 
 func (m *Message) AddCmd(cmd *Command) string {

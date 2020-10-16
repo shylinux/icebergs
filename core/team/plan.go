@@ -5,7 +5,6 @@ import (
 	"github.com/shylinux/icebergs/base/ctx"
 	"github.com/shylinux/icebergs/base/gdb"
 	"github.com/shylinux/icebergs/base/mdb"
-	"github.com/shylinux/icebergs/base/web"
 	kit "github.com/shylinux/toolkits"
 
 	"time"
@@ -36,22 +35,11 @@ func init() {
 					m.Set(ice.MSG_RESULT).Cmdy(PLAN, m.Option("scale"))
 				}},
 				mdb.INPUTS: {Name: "inputs", Help: "补全", Hand: func(m *ice.Message, arg ...string) {
-					switch arg[0] {
-					case "pod", "extra.pod":
-						m.Cmdy(web.ROUTE)
-					case "ctx", "extra.ctx":
-						m.Cmdy(ctx.CONTEXT)
-					case "cmd", "extra.cmd":
-						m.Cmdy(ctx.CONTEXT, kit.Select(m.Option("ctx"), m.Option("extra.ctx")), ctx.COMMAND)
-					case "arg":
-
-					default:
-						_task_inputs(m, kit.Select("", arg, 0), kit.Select("", arg, 1))
-					}
+					_task_inputs(m, kit.Select("", arg, 0), kit.Select("", arg, 1))
 				}},
 
 				mdb.PLUGIN: {Name: "plugin extra.pod extra.ctx extra.cmd extra.arg", Help: "插件", Hand: func(m *ice.Message, arg ...string) {
-					_task_modify(m, m.Option(kit.MDB_ZONE), m.Option(kit.MDB_ID), kit.MDB_TIME, m.Time(), kit.Simple(kit.Dict(arg))...)
+					_task_modify(m, m.Option(kit.MDB_ZONE), m.Option(kit.MDB_ID), kit.MDB_TIME, m.Time(), kit.Simple(kit.KeyValue(nil, "", kit.Dict(arg)))...)
 					m.Set(ice.MSG_RESULT).Cmdy(PLAN, m.Option("scale"))
 				}},
 				ctx.COMMAND: {Name: "command", Help: "命令", Hand: func(m *ice.Message, arg ...string) {
@@ -59,7 +47,9 @@ func init() {
 						m.Cmdy(arg[1], arg[2:])
 						return
 					}
-					m.Cmdy(ctx.COMMAND, arg[0])
+					if len(arg) > 0 {
+						m.Cmdy(ctx.COMMAND, arg[0])
+					}
 				}},
 
 				gdb.BEGIN: {Name: "begin", Help: "开始", Hand: func(m *ice.Message, arg ...string) {

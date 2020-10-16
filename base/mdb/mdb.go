@@ -23,6 +23,9 @@ func _hash_fields(m *ice.Message) []string {
 	return kit.Split(kit.Select("time,hash,type,name,text", strings.Join(kit.Simple(m.Optionv(FIELDS)), ",")))
 }
 func _hash_insert(m *ice.Message, prefix, chain string, arg ...string) {
+	if m.Option(ice.MSG_DOMAIN) != "" {
+		m.Conf(prefix, kit.Keys(chain, kit.MDB_META, kit.MDB_SHORT), m.Conf(prefix, kit.Keys(kit.MDB_META, kit.MDB_SHORT)))
+	}
 	m.Log_INSERT(kit.MDB_KEY, path.Join(prefix, chain), arg[0], arg[1])
 	m.Echo(m.Rich(prefix, chain, kit.Data(arg)))
 }
@@ -38,9 +41,7 @@ func _hash_select(m *ice.Message, prefix, chain, field, value string) {
 	}
 	fields := _hash_fields(m)
 	m.Richs(prefix, chain, value, func(key string, val map[string]interface{}) {
-		if val[kit.MDB_META] != nil {
-			val = val[kit.MDB_META].(map[string]interface{})
-		}
+		val = kit.GetMeta(val)
 		if m.Option(FIELDS) == DETAIL {
 			m.Push(DETAIL, val)
 		} else {
@@ -53,9 +54,7 @@ func _hash_select(m *ice.Message, prefix, chain, field, value string) {
 }
 func _hash_modify(m *ice.Message, prefix, chain string, field, value string, arg ...string) {
 	m.Richs(prefix, chain, value, func(key string, val map[string]interface{}) {
-		if val[kit.MDB_META] != nil {
-			val = val[kit.MDB_META].(map[string]interface{})
-		}
+		val = kit.GetMeta(val)
 		for i := 0; i < len(arg)-1; i += 2 {
 			if arg[i] == field {
 				continue
@@ -122,9 +121,7 @@ func _hash_prunes(m *ice.Message, prefix, chain string, arg ...string) {
 func _hash_inputs(m *ice.Message, prefix, chain string, field, value string) {
 	list := map[string]int{}
 	m.Richs(prefix, chain, kit.MDB_FOREACH, func(key string, val map[string]interface{}) {
-		if val[kit.MDB_META] != nil {
-			val = val[kit.MDB_META].(map[string]interface{})
-		}
+		val = kit.GetMeta(val)
 		if field == kit.MDB_HASH {
 			list[key]++
 		} else {
@@ -152,15 +149,20 @@ func _list_select(m *ice.Message, prefix, chain, field, value string) {
 		field = ""
 	}
 	fields := _list_fields(m)
+	cb := m.Optionv(SELECT_CB)
 	m.Grows(prefix, chain, kit.Select(m.Option("cache.field"), field), kit.Select(m.Option("cache.value"), value), func(index int, val map[string]interface{}) {
-		if val[kit.MDB_META] != nil {
-			val = val[kit.MDB_META].(map[string]interface{})
+		val = kit.GetMeta(val)
+		switch cb := cb.(type) {
+		case func(fields []string, value map[string]interface{}):
+			cb(fields, val)
+		default:
+			if m.Option(FIELDS) == DETAIL {
+				m.Push(DETAIL, val)
+			} else {
+				m.Push("", val, fields)
+			}
 		}
-		if m.Option(FIELDS) == DETAIL {
-			m.Push(DETAIL, val)
-		} else {
-			m.Push("", val, fields)
-		}
+
 	})
 	if m.Option(FIELDS) != DETAIL {
 		m.Sort(kit.MDB_ID, "int_r")
@@ -189,9 +191,7 @@ func _list_export(m *ice.Message, prefix, chain, file string) {
 	count := 0
 	head := kit.Split(m.Option(FIELDS))
 	m.Grows(prefix, chain, "", "", func(index int, val map[string]interface{}) {
-		if val[kit.MDB_META] != nil {
-			val = val[kit.MDB_META].(map[string]interface{})
-		}
+		val = kit.GetMeta(val)
 
 		if index == 0 && len(head) == 0 {
 			// 输出表头
@@ -250,9 +250,7 @@ func _list_prunes(m *ice.Message, prefix, chain string, arg ...string) {
 func _list_inputs(m *ice.Message, prefix, chain string, field, value string) {
 	list := map[string]int{}
 	m.Grows(prefix, chain, "", "", func(index int, val map[string]interface{}) {
-		if val[kit.MDB_META] != nil {
-			val = val[kit.MDB_META].(map[string]interface{})
-		}
+		val = kit.GetMeta(val)
 		list[kit.Format(val[field])]++
 	})
 	for k, i := range list {
@@ -266,12 +264,10 @@ func _zone_fields(m *ice.Message) []string {
 	return kit.Split(kit.Select("zone,id,time,type,name,text", strings.Join(kit.Simple(m.Optionv(FIELDS)), ",")))
 }
 func _zone_select(m *ice.Message, prefix, chain, zone string, id string) {
-	cb := m.Optionv(SELECT_CB)
 	fields := _zone_fields(m)
+	cb := m.Optionv(SELECT_CB)
 	m.Richs(prefix, chain, kit.Select(kit.MDB_FOREACH, zone), func(key string, val map[string]interface{}) {
-		if val[kit.MDB_META] != nil {
-			val = val[kit.MDB_META].(map[string]interface{})
-		}
+		val = kit.GetMeta(val)
 		if zone == "" {
 			if m.Option(FIELDS) == DETAIL {
 				m.Push(DETAIL, val)
@@ -282,9 +278,7 @@ func _zone_select(m *ice.Message, prefix, chain, zone string, id string) {
 		}
 
 		m.Grows(prefix, kit.Keys(chain, kit.MDB_HASH, key), kit.MDB_ID, id, func(index int, value map[string]interface{}) {
-			if value[kit.MDB_META] != nil {
-				value = value[kit.MDB_META].(map[string]interface{})
-			}
+			value = kit.GetMeta(value)
 
 			switch cb := cb.(type) {
 			case func(string, []string, map[string]interface{}, map[string]interface{}):
@@ -316,14 +310,10 @@ func _zone_export(m *ice.Message, prefix, chain, file string) {
 
 	count := 0
 	m.Richs(prefix, chain, kit.MDB_FOREACH, func(key string, val map[string]interface{}) {
-		if val[kit.MDB_META] != nil {
-			val = val[kit.MDB_META].(map[string]interface{})
-		}
+		val = kit.GetMeta(val)
 
 		m.Grows(prefix, kit.Keys(chain, kit.MDB_HASH, key), "", "", func(index int, value map[string]interface{}) {
-			if value[kit.MDB_META] != nil {
-				value = value[kit.MDB_META].(map[string]interface{})
-			}
+			value = kit.GetMeta(value)
 
 			list := []string{}
 			for _, k := range fields {

@@ -62,7 +62,7 @@ func _task_list(m *ice.Message, zone string, id string) {
 	} else {
 		m.Option(mdb.FIELDS, kit.Select("begin_time,id,status,level,score,type,name,text", mdb.DETAIL, id != ""))
 		defer m.Table(func(index int, value map[string]string, head []string) {
-			m.PushRender(kit.MDB_ACTION, kit.MDB_BUTTON, _task_action(m, value[TaskField.STATUS]))
+			m.PushButton(_task_action(m, value[TaskField.STATUS]))
 		})
 	}
 	m.Cmdy(mdb.SELECT, TASK, "", mdb.ZONE, zone, id)

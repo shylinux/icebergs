@@ -3,7 +3,6 @@ package wiki
 import (
 	ice "github.com/shylinux/icebergs"
 	"github.com/shylinux/icebergs/base/cli"
-	"github.com/shylinux/icebergs/base/ctx"
 	"github.com/shylinux/icebergs/base/nfs"
 	"github.com/shylinux/icebergs/base/ssh"
 	"github.com/shylinux/icebergs/base/web"
@@ -175,14 +174,7 @@ func _field_show(m *ice.Message, name, text string, arg ...string) {
 	data := kit.Dict(kit.MDB_NAME, name)
 	cmds := kit.Split(text)
 	m.Search(cmds[0], func(p *ice.Context, s *ice.Context, key string, cmd *ice.Command) {
-		if ls := strings.Split(cmds[0], "."); len(ls) > 1 {
-			m.Cmd(ctx.COMMAND, strings.Join(ls[:len(ls)-1], "."), key)
-		} else {
-			m.Cmd(ctx.COMMAND, key)
-		}
-		if data["feature"], data["inputs"] = cmd.Meta, cmd.List; len(cmd.List) == 0 {
-			data["inputs"] = m.Confv("field", "meta.some.simple.inputs")
-		}
+		data["feature"], data["inputs"] = cmd.Meta, cmd.List
 	})
 
 	// 扩展参数
@@ -216,9 +208,7 @@ func _field_show(m *ice.Message, name, text string, arg ...string) {
 				list := data["inputs"].([]interface{})
 				for i := count; i < len(args); i++ {
 					list = append(list, kit.Dict(
-						"_input", "text",
-						"name", "args",
-						"value", args[i],
+						"_input", "text", "name", "args", "value", args[i],
 					))
 				}
 				data["inputs"] = list
@@ -287,7 +277,6 @@ func _video_show(m *ice.Message, name, text string, arg ...string) {
 }
 func _baidu_show(m *ice.Message, name, text string, arg ...string) {
 	_option(m, BAIDU, name, text, arg...)
-
 	// m.Cmdy(mdb.RENDER, web.RENDER.Frame, kit.Format("https://baidu.com/s?wd=%s", text))
 }
 func _other_show(m *ice.Message, name, text string, arg ...string) {
@@ -298,29 +287,12 @@ func _other_show(m *ice.Message, name, text string, arg ...string) {
 func _word_show(m *ice.Message, name string, arg ...string) {
 	m.Set(ice.MSG_RESULT)
 	m.Option("render", "raw")
-	m.Optionv(TITLE, map[string]int{})
-	m.Optionv("menu", map[string]interface{}{"list": []interface{}{}})
-	m.Optionv(ice.MSG_ALIAS, m.Confv(WORD, "meta.alias"))
-	m.Cmdy(ssh.SOURCE, path.Join(m.Conf(WORD, "meta.path"), name))
-}
-func reply(m *ice.Message, cmd string, arg ...string) bool {
-	m.Option(nfs.DIR_ROOT, m.Conf(cmd, "meta.path"))
-	if len(arg) == 0 || strings.HasSuffix(arg[0], "/") {
-		m.Option("_display", "table")
-		if m.Option(nfs.DIR_DEEP) != "true" {
-			// 目录列表
-			m.Option(nfs.DIR_TYPE, nfs.DIR)
-			m.Cmdy(nfs.DIR, kit.Select("./", arg, 0))
+	m.Option(TITLE, map[string]int{})
+	m.Option("menu", map[string]interface{}{"list": []interface{}{}})
 
-		}
-
-		// 文件列表
-		m.Option(nfs.DIR_TYPE, nfs.FILE)
-		m.Option(nfs.DIR_REG, m.Conf(cmd, "meta.regs"))
-		m.Cmdy(nfs.DIR, kit.Select("./", arg, 0))
-		return true
-	}
-	return false
+	m.Option(ice.MSG_ALIAS, m.Confv(WORD, "meta.alias"))
+	m.Option(nfs.DIR_ROOT, _wiki_path(m, WORD))
+	m.Cmdy(ssh.SOURCE, name)
 }
 
 const (
@@ -374,7 +346,7 @@ func init() {
 			VIDEO: {Name: VIDEO, Help: "视频", Value: kit.Data("template", video)},
 
 			WORD: {Name: WORD, Help: "语言文字", Value: kit.Data(
-				"path", "", "regs", ".*\\.shy", "alias", map[string]interface{}{
+				kit.MDB_PATH, "", "regs", ".*\\.shy", "alias", map[string]interface{}{
 					PREMENU: []interface{}{TITLE, PREMENU},
 					CHAPTER: []interface{}{TITLE, CHAPTER},
 					SECTION: []interface{}{TITLE, SECTION},
@@ -433,7 +405,7 @@ func init() {
 				}},
 			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 				arg = _name(m, arg)
-				_field_show(m, strings.ReplaceAll(arg[0], " ", "_"), arg[1], arg[2:]...)
+				_field_show(m, strings.ReplaceAll(kit.Select(path.Base(arg[1]), arg[0]), " ", "_"), arg[1], arg[2:]...)
 			}},
 			SHELL: {Name: "shell [name] cmd", Help: "命令", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 				arg = _name(m, arg)
@@ -491,7 +463,7 @@ func init() {
 					m.Cmdy(arg[0], "action", "run", arg[1:])
 				}},
 			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-				if m.Option(nfs.DIR_DEEP, "true"); reply(m, cmd, arg...) {
+				if m.Option(nfs.DIR_DEEP, "true"); _wiki_list(m, cmd, arg...) {
 					return
 				}
 				_word_show(m, arg[0])

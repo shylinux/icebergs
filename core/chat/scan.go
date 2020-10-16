@@ -17,7 +17,7 @@ func init() {
 		Commands: map[string]*ice.Command{
 			SCAN: {Name: "scan hash auto create@scan", Help: "扫码", Action: map[string]*ice.Action{
 				mdb.CREATE: {Name: "create type=text name=hi text:textarea=hi", Help: "添加", Hand: func(m *ice.Message, arg ...string) {
-					m.Conf(SCAN, kit.Keys(m.Option(ice.MSG_DOMAIN), kit.MDB_META, kit.MDB_SHORT), kit.MDB_TEXT)
+					m.Conf(m.Prefix(SCAN), kit.Keys(m.Option(ice.MSG_DOMAIN), kit.MDB_META, kit.MDB_SHORT), kit.MDB_TEXT)
 					m.Cmdy(mdb.INSERT, m.Prefix(SCAN), "", mdb.HASH, arg)
 				}},
 				mdb.REMOVE: {Name: "remove", Help: "删除", Hand: func(m *ice.Message, arg ...string) {
@@ -42,7 +42,7 @@ func init() {
 				}
 
 				m.Cmdy(mdb.SELECT, m.Prefix(SCAN), "", mdb.HASH)
-				m.Sort(kit.MDB_TIME, "time_r")
+				m.SortTimeR(kit.MDB_TIME)
 				m.PushAction(mdb.REMOVE)
 			}},
 		},

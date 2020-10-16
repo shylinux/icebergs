@@ -5,6 +5,7 @@ import (
 	"github.com/shylinux/icebergs/base/aaa"
 	"github.com/shylinux/icebergs/base/cli"
 	"github.com/shylinux/icebergs/base/mdb"
+	"github.com/shylinux/icebergs/base/nfs"
 	kit "github.com/shylinux/toolkits"
 
 	"bufio"
@@ -58,7 +59,7 @@ func Script(m *ice.Message, name string) io.Reader {
 	}
 	m.Option("_script", name)
 
-	if s, e := os.Open(name); e == nil {
+	if s, e := os.Open(path.Join(m.Option(nfs.DIR_ROOT), name)); e == nil {
 		return s
 	}
 	switch strings.Split(name, "/")[0] {

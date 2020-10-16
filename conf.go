@@ -26,6 +26,7 @@ const ( // MSG
 	MSG_ARGS   = "_args"
 
 	MSG_CONTROL = "_control"
+	MSG_DISPLAY = "_display"
 	MSG_PROCESS = "_process"
 
 	MSG_CMDS     = "cmds"

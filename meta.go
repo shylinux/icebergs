@@ -117,7 +117,7 @@ func (m *Message) Push(key string, value interface{}, arg ...interface{}) *Messa
 
 	default:
 		if m.Option("fields") == "detail" || (len(m.meta[MSG_APPEND]) == 2 && m.meta[MSG_APPEND][0] == kit.MDB_KEY && m.meta[MSG_APPEND][1] == kit.MDB_VALUE) {
-			if key != kit.MDB_KEY || key != kit.MDB_VALUE {
+			if key != kit.MDB_KEY && key != kit.MDB_VALUE {
 				m.Add(MSG_APPEND, kit.MDB_KEY, key)
 				m.Add(MSG_APPEND, kit.MDB_VALUE, kit.Format(value))
 				break

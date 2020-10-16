@@ -64,6 +64,7 @@ func _action_list(m *ice.Message, river, storm string) {
 	m.Cmdy(TOOL, storm).Table(func(index int, value map[string]string, head []string) {
 		m.Cmdy(m.Space(kit.Select(m.Option(POD), value[POD])), ctx.COMMAND, kit.Keys(value[CTX], value[CMD]))
 	})
+	m.SortInt(kit.MDB_ID)
 }
 func _action_show(m *ice.Message, river, storm, index string, arg ...string) {
 	cmds := []string{index}
@@ -98,9 +99,7 @@ const ACTION = "action"
 func init() {
 	Index.Merge(&ice.Context{
 		Configs: map[string]*ice.Config{
-			ACTION: {Name: ACTION, Help: "应用", Value: kit.Data(
-				DOMAIN, kit.Dict(),
-			)},
+			ACTION: {Name: ACTION, Help: "应用", Value: kit.Data(DOMAIN, kit.Dict())},
 		},
 		Commands: map[string]*ice.Command{
 			"/action": {Name: "/action river storm action arg...", Help: "工作台", Action: map[string]*ice.Action{

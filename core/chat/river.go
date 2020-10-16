@@ -43,6 +43,7 @@ const (
 	POD = "pod"
 	CTX = "ctx"
 	CMD = "cmd"
+	ARG = "arg"
 )
 const (
 	INFO = "info"
@@ -57,9 +58,7 @@ const RIVER = "river"
 func init() {
 	Index.Merge(&ice.Context{
 		Configs: map[string]*ice.Config{
-			RIVER: {Name: RIVER, Help: "群组", Value: kit.Data(
-				kit.MDB_PATH, "usr/local/river",
-			)},
+			RIVER: {Name: RIVER, Help: "群组", Value: kit.Data(kit.MDB_PATH, "usr/local/river")},
 		},
 		Commands: map[string]*ice.Command{
 			INFO: {Name: "info auto", Help: "信息", Action: map[string]*ice.Action{
@@ -245,7 +244,7 @@ func init() {
 					m.Appendv(ice.MSG_APPEND, aaa.USERNAME, aaa.USERNICK)
 				}},
 			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-				m.Option(mdb.FIELDS, "time,username")
+				m.Option(mdb.FIELDS, kit.Select("time,username", mdb.DETAIL, len(arg) > 0))
 				m.Cmdy(mdb.SELECT, RIVER, kit.Keys(kit.MDB_HASH, m.Option(ice.MSG_RIVER), USER), mdb.HASH, aaa.USERNAME, arg)
 				m.Table(func(index int, value map[string]string, head []string) {
 					m.Push(aaa.USERNICK, aaa.UserNick(m, value[aaa.USERNAME]))

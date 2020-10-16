@@ -1,10 +1,10 @@
 package wiki
 
 import (
-	"strings"
-
 	ice "github.com/shylinux/icebergs"
 	kit "github.com/shylinux/toolkits"
+
+	"strings"
 )
 
 // 图形接口

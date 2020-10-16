@@ -37,12 +37,12 @@ func init() {
 				}},
 				mdb.INPUTS: {Name: "inputs", Help: "补全", Hand: func(m *ice.Message, arg ...string) {
 					switch arg[0] {
+					case "pod", "extra.pod":
+						m.Cmdy(web.ROUTE)
 					case "ctx", "extra.ctx":
 						m.Cmdy(ctx.CONTEXT)
 					case "cmd", "extra.cmd":
 						m.Cmdy(ctx.CONTEXT, kit.Select(m.Option("ctx"), m.Option("extra.ctx")), ctx.COMMAND)
-					case "pod":
-						m.Cmdy(web.ROUTE)
 					case "arg":
 
 					default:

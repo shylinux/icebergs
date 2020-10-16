@@ -13,7 +13,37 @@ import (
 func _sub_key(m *ice.Message, zone string) string {
 	return kit.Keys(kit.MDB_HASH, kit.Hashs(zone))
 }
+func _task_scope(m *ice.Message, tz int, arg ...string) (time.Time, time.Time) {
+	begin_time := time.Now()
+	if len(arg) > 1 {
+		begin_time, _ = time.ParseInLocation(ice.MOD_TIME, arg[1], time.Local)
+	}
 
+	begin_time = begin_time.Add(time.Duration(tz) * time.Hour)
+	begin_time = begin_time.Add(-time.Duration(begin_time.UnixNano()) % (24 * time.Hour))
+	begin_time = begin_time.Add(-time.Duration(tz) * time.Hour)
+
+	end_time := begin_time
+	switch arg[0] {
+	case TaskScale.DAY:
+		end_time = begin_time.AddDate(0, 0, 1)
+	case TaskScale.WEEK:
+		begin_time = begin_time.AddDate(0, 0, -int(begin_time.Weekday()))
+		end_time = begin_time.AddDate(0, 0, 7)
+	case TaskScale.MONTH:
+		begin_time = begin_time.AddDate(0, 0, -begin_time.Day()+1)
+		end_time = begin_time.AddDate(0, 1, 0)
+	case TaskScale.YEAR:
+		begin_time = begin_time.AddDate(0, 0, -begin_time.YearDay()+1)
+		end_time = begin_time.AddDate(1, 0, 0)
+	case TaskScale.LONG:
+		begin_time = begin_time.AddDate(0, 0, -begin_time.YearDay()+1)
+		begin_time = begin_time.AddDate(-5, 0, 0)
+		end_time = begin_time.AddDate(10, 0, 0)
+	}
+
+	return begin_time, end_time
+}
 func _task_action(m *ice.Message, status interface{}, action ...string) string {
 	switch status {
 	case TaskStatus.PREPARE:
@@ -25,6 +55,7 @@ func _task_action(m *ice.Message, status interface{}, action ...string) string {
 	}
 	return strings.Join(action, ",")
 }
+
 func _task_list(m *ice.Message, zone string, id string) {
 	if zone == "" {
 		m.Option(mdb.FIELDS, "time,zone,count")
@@ -37,10 +68,7 @@ func _task_list(m *ice.Message, zone string, id string) {
 	m.Cmdy(mdb.SELECT, TASK, "", mdb.ZONE, zone, id)
 }
 func _task_create(m *ice.Message, zone string) {
-	if msg := m.Cmd(mdb.SELECT, TASK, "", mdb.HASH, kit.MDB_ZONE, zone); len(msg.Appendv(kit.MDB_HASH)) == 0 {
-		m.Conf(TASK, kit.Keys(m.Option(ice.MSG_DOMAIN), kit.MDB_META, kit.MDB_SHORT), kit.MDB_ZONE)
-		m.Cmdy(mdb.INSERT, TASK, "", mdb.HASH, kit.MDB_ZONE, zone)
-	}
+	m.Cmdy(mdb.INSERT, TASK, "", mdb.HASH, kit.MDB_ZONE, zone)
 }
 func _task_insert(m *ice.Message, zone string, arg ...string) {
 	m.Cmdy(mdb.INSERT, TASK, _sub_key(m, zone), mdb.LIST,
@@ -78,38 +106,6 @@ func _task_inputs(m *ice.Message, field, value string) {
 	default:
 		m.Cmdy(mdb.INPUTS, TASK, _sub_key(m, m.Option(kit.MDB_ZONE)), mdb.LIST, field, value)
 	}
-}
-
-func _task_scope(m *ice.Message, tz int, arg ...string) (time.Time, time.Time) {
-	begin_time := time.Now()
-	if len(arg) > 1 {
-		begin_time, _ = time.ParseInLocation(ice.MOD_TIME, arg[1], time.Local)
-	}
-
-	begin_time = begin_time.Add(time.Duration(tz) * time.Hour)
-	begin_time = begin_time.Add(-time.Duration(begin_time.UnixNano()) % (24 * time.Hour))
-	begin_time = begin_time.Add(-time.Duration(tz) * time.Hour)
-
-	end_time := begin_time
-	switch arg[0] {
-	case TaskScale.DAY:
-		end_time = begin_time.AddDate(0, 0, 1)
-	case TaskScale.WEEK:
-		begin_time = begin_time.AddDate(0, 0, -int(begin_time.Weekday()))
-		end_time = begin_time.AddDate(0, 0, 7)
-	case TaskScale.MONTH:
-		begin_time = begin_time.AddDate(0, 0, -begin_time.Day()+1)
-		end_time = begin_time.AddDate(0, 1, 0)
-	case TaskScale.YEAR:
-		begin_time = begin_time.AddDate(0, 0, -begin_time.YearDay()+1)
-		end_time = begin_time.AddDate(1, 0, 0)
-	case TaskScale.LONG:
-		begin_time = begin_time.AddDate(0, 0, -begin_time.YearDay()+1)
-		begin_time = begin_time.AddDate(-5, 0, 0)
-		end_time = begin_time.AddDate(10, 0, 0)
-	}
-
-	return begin_time, end_time
 }
 
 var TaskField = struct{ LEVEL, STATUS, SCORE, BEGIN_TIME, CLOSE_TIME string }{

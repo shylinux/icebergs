@@ -99,12 +99,19 @@ func (m *Message) Push(key string, value interface{}, arg ...interface{}) *Messa
 			}
 
 			// 追加数据
-			switch v := kit.Format(v); key {
+			switch vv := kit.Format(v); key {
 			case "detail":
+				if k == "extra" {
+					for k, v := range kit.KeyValue(map[string]interface{}{}, "", kit.UnMarshal(vv)) {
+						m.Add(MSG_APPEND, kit.MDB_KEY, "extra."+k)
+						m.Add(MSG_APPEND, kit.MDB_VALUE, kit.Format(v))
+					}
+					break
+				}
 				m.Add(MSG_APPEND, kit.MDB_KEY, k)
-				m.Add(MSG_APPEND, kit.MDB_VALUE, v)
+				m.Add(MSG_APPEND, kit.MDB_VALUE, vv)
 			default:
-				m.Add(MSG_APPEND, k, v)
+				m.Add(MSG_APPEND, k, vv)
 			}
 		}
 

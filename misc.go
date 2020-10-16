@@ -96,11 +96,6 @@ func (m *Message) PushButton(arg ...string) {
 	m.PushRender("action", "button", strings.Join(arg, ","))
 }
 func (m *Message) PushAction(list ...interface{}) {
-	if len(m.meta[MSG_APPEND]) > 0 && m.meta[MSG_APPEND][0] == kit.MDB_KEY {
-		m.Push(kit.MDB_KEY, kit.MDB_ACTION)
-		m.PushRender(kit.MDB_VALUE, kit.MDB_BUTTON, strings.Join(kit.Simple(list...), ","))
-		return
-	}
 	m.Table(func(index int, value map[string]string, head []string) {
 		m.PushRender(kit.MDB_ACTION, kit.MDB_BUTTON, strings.Join(kit.Simple(list...), ","))
 	})

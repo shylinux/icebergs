@@ -116,6 +116,12 @@ func init() {
 						m.PushButton(gdb.START)
 					})
 
+					m.Push(kit.MDB_TYPE, MYSELF)
+					m.Push(kit.SSH_ROUTE, ice.Info.NodeName)
+					u := kit.ParseURL(m.Option(ice.MSG_USERWEB))
+					m.PushRender(kit.MDB_LINK, "a", "localhost", kit.Format("%s://%s:%s", u.Scheme, "localhost", u.Port()))
+					m.PushButton(gdb.START)
+
 					m.Sort(kit.SSH_ROUTE)
 					return // 设备列表
 				}

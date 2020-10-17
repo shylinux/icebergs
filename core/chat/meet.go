@@ -38,7 +38,7 @@ func init() {
 					m.Cmdy(mdb.IMPORT, m.Prefix(MISS), "", mdb.HASH)
 				}},
 			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-				m.Option(mdb.FIELDS, kit.Select("time,name,照片,性别,年龄,身高,籍贯,户口,学历,职业,公司,年薪,资产,家境", mdb.DETAIL, len(arg) > 0))
+				m.Option(mdb.FIELDS, kit.Select("time,name,照片,性别,年龄,身高,体重,籍贯,户口,学历,学校,职业,公司,年薪,资产,家境", mdb.DETAIL, len(arg) > 0))
 				msg := m.Cmd(mdb.SELECT, m.Prefix(MISS), "", mdb.HASH, kit.MDB_NAME, arg)
 				msg.Table(func(index int, value map[string]string, head []string) {
 					value["照片"] = kit.Format(`<img src="%s" height=%s>`, value["照片"], kit.Select("100", "400", m.Option(mdb.FIELDS) == mdb.DETAIL))

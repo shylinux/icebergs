@@ -97,6 +97,10 @@ func init() {
 				m.Option(mdb.FIELDS, kit.Select("time,hash,userrole,username,type,name,text", mdb.DETAIL, len(arg) > 0))
 				m.Cmdy(mdb.SELECT, RIVER, kit.Keys(kit.MDB_HASH, m.Option(ice.MSG_RIVER), AUTH), mdb.HASH, kit.MDB_HASH, arg)
 				m.PushAction(mdb.REMOVE)
+				if len(arg) > 0 {
+					m.Push("qrcode", m.Cmdx(wiki.IMAGE, "qrcode", kit.MergeURL(m.Option(ice.MSG_USERWEB), RIVER, m.Option(ice.MSG_RIVER), web.SHARE, m.Option("share"))))
+					m.Push("inner", m.Cmdx(wiki.SPARK, "inner", kit.MergeURL(m.Option(ice.MSG_USERWEB), RIVER, m.Option(ice.MSG_RIVER), web.SHARE, m.Option("share"))))
+				}
 			}},
 			NODE: {Name: "node name ctx cmd auto insert invite", Help: "设备", Action: map[string]*ice.Action{
 				mdb.INSERT: {Name: "insert type name share", Help: "添加", Hand: func(m *ice.Message, arg ...string) {
@@ -201,6 +205,7 @@ func init() {
 					m.Option(mdb.FIELDS, "time,hash,type,name,count")
 					m.Cmdy(mdb.SELECT, RIVER, kit.Keys(kit.MDB_HASH, m.Option(ice.MSG_RIVER), TOOL), mdb.HASH)
 					m.PushAction(mdb.REMOVE)
+					m.Sort(kit.MDB_NAME)
 					return // 应用列表
 				}
 
@@ -216,6 +221,7 @@ func init() {
 				}
 				if m.Copy(msg); len(arg) < 2 {
 					m.PushAction(mdb.EXPORT, mdb.IMPORT)
+					m.SortInt(kit.MDB_ID)
 					return // 命令列表
 				}
 
@@ -247,9 +253,12 @@ func init() {
 				m.Option(mdb.FIELDS, kit.Select("time,username", mdb.DETAIL, len(arg) > 0))
 				m.Cmdy(mdb.SELECT, RIVER, kit.Keys(kit.MDB_HASH, m.Option(ice.MSG_RIVER), USER), mdb.HASH, aaa.USERNAME, arg)
 				m.Table(func(index int, value map[string]string, head []string) {
-					m.Push(aaa.USERNICK, aaa.UserNick(m, value[aaa.USERNAME]))
-					m.Push(aaa.USERZONE, aaa.UserZone(m, value[aaa.USERNAME]))
-					m.PushRender(aaa.AVATAR, "img", value["avatar_url"])
+					m.Richs(USER, nil, value[aaa.USERNAME], func(key string, val map[string]interface{}) {
+						val = kit.GetMeta(val)
+						m.Push(aaa.USERNICK, val[aaa.USERNICK])
+						m.PushRender(aaa.AVATAR, "img", kit.Format(val["avatar_url"]), kit.Select("60", "240", m.Option(mdb.FIELDS) == mdb.DETAIL))
+					})
+
 				})
 				m.PushAction(mdb.REMOVE)
 			}},

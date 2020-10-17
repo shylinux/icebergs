@@ -189,7 +189,7 @@ func _file_show(m *ice.Message, name string) {
 	}
 }
 func _file_save(m *ice.Message, name string, text ...string) {
-	if f, p, e := kit.Create(name); m.Assert(e) {
+	if f, p, e := kit.Create(path.Join(m.Option(DIR_ROOT), name)); m.Assert(e) {
 		defer f.Close()
 
 		for _, v := range text {

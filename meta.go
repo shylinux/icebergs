@@ -59,6 +59,7 @@ func (m *Message) Push(key string, value interface{}, arg ...interface{}) *Messa
 			for k := range value {
 				head = append(head, k)
 			}
+			sort.Strings(head)
 		}
 
 		for _, k := range head {
@@ -99,25 +100,18 @@ func (m *Message) Push(key string, value interface{}, arg ...interface{}) *Messa
 			}
 
 			// 追加数据
-			switch vv := kit.Format(v); key {
+			switch v := kit.Format(v); key {
 			case "detail":
-				if k == "extra" {
-					for k, v := range kit.KeyValue(map[string]interface{}{}, "", kit.UnMarshal(vv)) {
-						m.Add(MSG_APPEND, kit.MDB_KEY, "extra."+k)
-						m.Add(MSG_APPEND, kit.MDB_VALUE, kit.Format(v))
-					}
-					break
-				}
 				m.Add(MSG_APPEND, kit.MDB_KEY, k)
-				m.Add(MSG_APPEND, kit.MDB_VALUE, vv)
+				m.Add(MSG_APPEND, kit.MDB_VALUE, v)
 			default:
-				m.Add(MSG_APPEND, k, vv)
+				m.Add(MSG_APPEND, k, v)
 			}
 		}
 
 	default:
 		if m.Option("fields") == "detail" || (len(m.meta[MSG_APPEND]) == 2 && m.meta[MSG_APPEND][0] == kit.MDB_KEY && m.meta[MSG_APPEND][1] == kit.MDB_VALUE) {
-			if key != kit.MDB_KEY && key != kit.MDB_VALUE {
+			if key != kit.MDB_KEY || key != kit.MDB_VALUE {
 				m.Add(MSG_APPEND, kit.MDB_KEY, key)
 				m.Add(MSG_APPEND, kit.MDB_VALUE, kit.Format(value))
 				break

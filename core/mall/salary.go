@@ -15,7 +15,7 @@ func init() {
 		},
 		Commands: map[string]*ice.Command{
 			SALARY: {Name: "salary month auto create", Help: "工资", Action: map[string]*ice.Action{
-				mdb.CREATE: {Name: "create company month amount income tax 公积金 养老保险 医疗保险 工伤保险 失业保险 生育保险 企业公积金 企业养老保险 企业医疗保险 企业工伤保险 企业失业保险 企业生育保险", Help: "添加", Hand: func(m *ice.Message, arg ...string) {
+				mdb.CREATE: {Name: "create company month amount income tax 公积金 养老保险 医疗保险 生育保险 工伤保险 失业保险 企业公积金 企业养老保险 企业医疗保险 企业生育保险 企业工伤保险 企业失业保险", Help: "添加", Hand: func(m *ice.Message, arg ...string) {
 					m.Cmdy(mdb.INSERT, SALARY, "", mdb.HASH, arg)
 				}},
 				mdb.MODIFY: {Name: "modify", Help: "编辑", Hand: func(m *ice.Message, arg ...string) {

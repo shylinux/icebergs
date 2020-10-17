@@ -33,12 +33,12 @@ func _wiki_list(m *ice.Message, cmd string, arg ...string) bool {
 	return false
 }
 func _wiki_show(m *ice.Message, cmd, name string, arg ...string) {
-	m.Option(nfs.DIR_ROOT, "")
-	m.Cmdy(nfs.CAT, _wiki_path(m, cmd, name))
+	m.Option(nfs.DIR_ROOT, _wiki_path(m, cmd))
+	m.Cmdy(nfs.CAT, name)
 }
 func _wiki_save(m *ice.Message, cmd, name, text string, arg ...string) {
-	m.Option(nfs.DIR_ROOT, "")
-	m.Cmd(nfs.SAVE, _wiki_path(m, cmd, name), text)
+	m.Option(nfs.DIR_ROOT, _wiki_path(m, cmd))
+	m.Cmd(nfs.SAVE, name, text)
 }
 func _wiki_upload(m *ice.Message, cmd string, dir string) {
 	up := kit.Simple(m.Optionv(ice.MSG_UPLOAD))

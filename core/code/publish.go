@@ -9,7 +9,6 @@ import (
 	"fmt"
 	"os"
 	"path"
-	"runtime"
 	"strings"
 )
 
@@ -42,7 +41,7 @@ func init() {
 			)},
 		},
 		Commands: map[string]*ice.Command{
-			PUBLISH: {Name: "publish path auto can ice ish", Help: "发布", Action: map[string]*ice.Action{
+			PUBLISH: {Name: "publish path auto ish ice can", Help: "发布", Action: map[string]*ice.Action{
 				"contexts": {Name: "contexts", Help: "环境", Hand: func(m *ice.Message, arg ...string) {
 					u := kit.ParseURL(m.Option(ice.MSG_USERWEB))
 					m.Option("httphost", fmt.Sprintf("%s://%s:%s", u.Scheme, strings.Split(u.Host, ":")[0], kit.Select(kit.Select("80", "443", u.Scheme == "https"), strings.Split(u.Host, ":"), 1)))
@@ -52,28 +51,48 @@ func init() {
 					m.Option("userhost", fmt.Sprintf("%s@%s", m.Option(ice.MSG_USERNAME), strings.Split(u.Host, ":")[0]))
 					m.Option("hostpath", kit.Path("./.ish/pluged"))
 
-					if buf, err := kit.Render(m.Conf(PUBLISH, kit.Keys("meta.contexts", kit.Select("base", arg, 0))), m); m.Assert(err) {
-						m.Cmdy("web.wiki.spark", "shell", string(buf))
+					if len(arg) == 0 {
+						arg = append(arg, "base")
+					}
+					for _, k := range arg {
+						if buf, err := kit.Render(m.Conf(PUBLISH, kit.Keys("meta.contexts", k)), m); m.Assert(err) {
+							m.Cmdy("web.wiki.spark", "shell", string(buf))
+						}
 					}
 				}},
 				"ish": {Name: "ish", Help: "神农架", Hand: func(m *ice.Message, arg ...string) {
+					m.Option(nfs.DIR_DEEP, true)
 					m.Option(nfs.DIR_REG, ".*\\.(sh|vim|conf)")
-					m.Cmdy(nfs.DIR, m.Conf(PUBLISH, kit.META_PATH), "time size line path link")
+					m.Option(nfs.DIR_ROOT, m.Conf(PUBLISH, kit.META_PATH))
+					m.Cmdy(nfs.DIR, "./", "time size line path link")
+					m.Cmdy(PUBLISH, "contexts", "tmux")
 				}},
 				"ice": {Name: "ice", Help: "冰山架", Hand: func(m *ice.Message, arg ...string) {
-					_publish_file(m, "bin/ice.bin", fmt.Sprintf("ice.%s.%s", runtime.GOOS, runtime.GOARCH))
-					_publish_file(m, "bin/ice.sh")
-					m.Option(nfs.DIR_REG, "ice.*")
-					m.Cmdy(nfs.DIR, m.Conf(PUBLISH, kit.META_PATH), "time size path link")
+					p := m.Option(cli.CMD_DIR, m.Conf(PUBLISH, kit.META_PATH))
+					ls := strings.Split(m.Cmdx(cli.SYSTEM, "bash", "-c", "ls |xargs file |grep executable"), "\n")
+					for _, ls := range ls {
+						if file := strings.TrimSpace(strings.Split(ls, ":")[0]); file != "" {
+							if s, e := os.Stat(path.Join(p, file)); m.Assert(e) {
+								m.Push(kit.MDB_TIME, s.ModTime())
+								m.Push(kit.MDB_SIZE, kit.FmtSize(s.Size()))
+								m.Push(kit.MDB_FILE, file)
+								m.PushDownload(file, path.Join(p, file))
+							}
+						}
+					}
+					m.SortTimeR(kit.MDB_TIME)
+					m.Cmdy(PUBLISH, "contexts", "base")
 				}},
 				"can": {Name: "can", Help: "火山架", Hand: func(m *ice.Message, arg ...string) {
 					m.Option(nfs.DIR_DEEP, true)
 					m.Option(nfs.DIR_REG, ".*\\.(js|css|html)")
-					m.Cmdy(nfs.DIR, m.Conf(PUBLISH, kit.META_PATH), "time size line path link")
+					m.Option(nfs.DIR_ROOT, m.Conf(PUBLISH, kit.META_PATH))
+					m.Cmdy(nfs.DIR, "./", "time size line path link")
+					m.Cmdy(PUBLISH, "contexts", "miss")
 				}},
 			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-				m.Option(nfs.DIR_ROOT, m.Conf(cmd, kit.META_PATH))
-				m.Cmdy(nfs.DIR, kit.Select("", arg, 0), "time size path")
+				m.Option(nfs.DIR_ROOT, m.Conf(PUBLISH, kit.META_PATH))
+				m.Cmdy(nfs.DIR, kit.Select("", arg, 0), "time size path link")
 			}},
 		},
 	}, nil)

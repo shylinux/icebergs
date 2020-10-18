@@ -38,20 +38,19 @@ func init() {
 			LOCATION: {Name: "location text auto create@location", Help: "地理位置", Action: map[string]*ice.Action{
 				mdb.CREATE: {Name: "insert type=text name address latitude longitude", Help: "添加", Hand: func(m *ice.Message, arg ...string) {
 					_trans(arg, map[string]string{"address": "text"})
-					m.Conf(LOCATION, kit.Keys(m.Option(ice.MSG_DOMAIN), kit.MDB_META, kit.MDB_SHORT), kit.MDB_TEXT)
 					m.Cmdy(mdb.INSERT, LOCATION, "", mdb.HASH, arg)
 				}},
 				mdb.MODIFY: {Name: "modify", Help: "编辑", Hand: func(m *ice.Message, arg ...string) {
 					m.Cmdy(mdb.MODIFY, LOCATION, "", mdb.HASH, kit.MDB_HASH, m.Option(kit.MDB_HASH), arg)
 				}},
 				mdb.REMOVE: {Name: "remove", Help: "删除", Hand: func(m *ice.Message, arg ...string) {
-					m.Cmdy(mdb.DELETE, LOCATION, "", mdb.HASH, kit.MDB_TEXT, m.Option(kit.MDB_TEXT))
+					m.Cmdy(mdb.DELETE, LOCATION, "", mdb.HASH, kit.MDB_HASH, m.Option(kit.MDB_HASH))
 				}},
 				mdb.EXPORT: {Name: "export", Help: "导出", Hand: func(m *ice.Message, arg ...string) {
-					m.Cmdy(mdb.EXPORT, m.Prefix(LOCATION), "", mdb.HASH)
+					m.Cmdy(mdb.EXPORT, LOCATION, "", mdb.HASH)
 				}},
 				mdb.IMPORT: {Name: "import", Help: "导入", Hand: func(m *ice.Message, arg ...string) {
-					m.Cmdy(mdb.IMPORT, m.Prefix(LOCATION), "", mdb.HASH)
+					m.Cmdy(mdb.IMPORT, LOCATION, "", mdb.HASH)
 				}},
 				mdb.INPUTS: {Name: "inputs", Help: "补全", Hand: func(m *ice.Message, arg ...string) {
 					m.Cmdy(mdb.INPUTS, LOCATION, "", mdb.HASH, arg)

@@ -22,7 +22,7 @@ func init() {
 			))},
 		},
 		Commands: map[string]*ice.Command{
-			UPGRADE: {Name: "upgrade item", Help: "升级", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			UPGRADE: {Name: "upgrade item:select=system 执行:button", Help: "升级", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 				exit := false
 				m.Grows(cmd, kit.Keys(kit.MDB_HASH, kit.Select("system", arg, 0)), "", "", func(index int, value map[string]interface{}) {
 					if value[kit.MDB_FILE] == "ice.bin" {

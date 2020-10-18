@@ -1,6 +1,22 @@
 chapter "code"
-field "安装" web.code.install
-field "编译" web.code.compile
-field "发布" web.code.publish
-field "升级" web.code.upgrade
-field "编程" web.code.autogen
+
+# field "安装" web.code.install
+# field "生成" web.code.autogen
+# field "编译" web.code.compile
+# field "发布" web.code.publish
+# field "升级" web.code.upgrade
+
+field "查看" web.code.inner
+return
+
+field "编辑" web.code.vimer
+field "收藏" web.code.favor
+field "测试" web.code.bench
+field "优化" web.code.pprof
+return
+
+field "查看" web.code.c
+field "编辑" web.code.sh
+field "测试" web.code.shy
+field "收藏" web.code.go
+field "优化" web.code.js

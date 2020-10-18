@@ -45,15 +45,17 @@ func (f *Frame) Close(m *ice.Message, arg ...string) bool {
 }
 
 const (
-	RESTART = "restart"
-	BUILD   = "build"
-	SPAWN   = "spawn"
-	START   = "start"
-	STOP    = "stop"
+	BUILD = "build"
+	SPAWN = "spawn"
+	START = "start"
+	STOP  = "stop"
 
-	BENCH = "bench"
-	BEGIN = "begin"
-	END   = "end"
+	RESTART = "restart"
+	RELOAD  = "reload"
+	BENCH   = "bench"
+	PPROF   = "pprof"
+	BEGIN   = "begin"
+	END     = "end"
 )
 
 const GDB = "gdb"

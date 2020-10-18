@@ -88,8 +88,7 @@ func _file_list(m *ice.Message, root string, name string, level int, deep bool, 
 					if f.IsDir() {
 						m.Push("link", "")
 					} else {
-						m.PushRender("link", "a", kit.MergeURL(path.Join("/share/local/",
-							root, name, f.Name()), "pod", m.Option(ice.MSG_USERPOD)), f.Name())
+						m.PushDownload(f.Name(), path.Join(root, name, f.Name()))
 					}
 
 				case "size":
@@ -389,6 +388,9 @@ var Index = &ice.Context{Name: "nfs", Help: "存储模块",
 			_file_show(m, arg[0])
 		}},
 		SAVE: {Name: "save file text...", Help: "保存", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			if len(arg) == 1 {
+				arg = append(arg, m.Option("content"))
+			}
 			_file_save(m, arg[0], arg[1:]...)
 		}},
 		COPY: {Name: "copy file from...", Help: "复制", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {

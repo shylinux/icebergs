@@ -95,6 +95,17 @@ func (m *Message) PushRender(key, view, name string, arg ...string) *Message {
 func (m *Message) PushButton(arg ...string) {
 	m.PushRender("action", "button", strings.Join(arg, ","))
 }
+func (m *Message) PushAnchor(name string, arg ...string) {
+	m.PushRender("link", "a", name, arg...)
+}
+func (m *Message) PushDownload(name string, arg ...string) {
+	if len(arg) == 0 {
+		name = kit.MergeURL2(m.Option(MSG_USERWEB), path.Join("/share/local", name), "pod", m.Option(MSG_USERPOD))
+	} else {
+		arg[0] = kit.MergeURL2(m.Option(MSG_USERWEB), path.Join("/share/local", arg[0]), "pod", m.Option(MSG_USERPOD))
+	}
+	m.PushRender("link", "download", name, arg...)
+}
 func (m *Message) PushAction(list ...interface{}) {
 	m.Table(func(index int, value map[string]string, head []string) {
 		m.PushRender(kit.MDB_ACTION, kit.MDB_BUTTON, strings.Join(kit.Simple(list...), ","))

@@ -22,10 +22,10 @@ func _inner_list(m *ice.Message, ext, file, dir string, arg ...string) {
 	}
 
 	if m.Warn(!m.Right(dir, file), ice.ErrNotAuth, path.Join(dir, file)) {
-		return
+		return // 没有权限
 	}
 	if m.Cmdy(mdb.RENDER, ext, file, dir, arg); m.Result() != "" {
-		return
+		return // 解析成功
 	}
 
 	if m.Conf(INNER, kit.Keys("meta.source", ext)) == "true" {
@@ -37,10 +37,10 @@ func _inner_list(m *ice.Message, ext, file, dir string, arg ...string) {
 }
 func _inner_show(m *ice.Message, ext, file, dir string, arg ...string) {
 	if m.Warn(!m.Right(dir, file), ice.ErrNotAuth, path.Join(dir, file)) {
-		return
+		return // 没有权限
 	}
 	if m.Cmdy(mdb.ENGINE, ext, file, dir, arg); m.Result() != "" {
-		return
+		return // 执行成功
 	}
 
 	if ls := kit.Simple(m.Confv(INNER, kit.Keys("meta.show", ext))); len(ls) > 0 {
@@ -53,8 +53,9 @@ const INNER = "inner"
 func init() {
 	Index.Merge(&ice.Context{
 		Commands: map[string]*ice.Command{
-			INNER: {Name: "inner path=src/ file=main.go line=1 auto 项目", Help: "阅读器", Meta: kit.Dict(
+			INNER: {Name: "inner path=src/ file=main.go line=1 auto project search", Help: "阅读器", Meta: kit.Dict(
 				"display", "/plugin/local/code/inner.js", "style", "editor",
+				"trans", kit.Dict("project", "项目"),
 			), Action: map[string]*ice.Action{
 				mdb.PLUGIN: {Name: "plugin", Help: "插件", Hand: func(m *ice.Message, arg ...string) {
 					if m.Cmdy(mdb.PLUGIN, arg); m.Result() == "" {
@@ -66,18 +67,18 @@ func init() {
 				mdb.RENDER: {Name: "render", Help: "渲染", Hand: func(m *ice.Message, arg ...string) {
 					_inner_list(m, arg[0], arg[1], arg[2], arg[3:]...)
 				}},
-				mdb.SEARCH: {Name: "search", Help: "搜索", Hand: func(m *ice.Message, arg ...string) {
-					m.Cmdy(mdb.SEARCH, arg)
-				}},
 				mdb.ENGINE: {Name: "engine", Help: "引擎", Hand: func(m *ice.Message, arg ...string) {
 					_inner_show(m, arg[0], arg[1], arg[2], arg[3:]...)
 				}},
+				mdb.SEARCH: {Name: "search", Help: "搜索", Hand: func(m *ice.Message, arg ...string) {
+					m.Cmdy(mdb.SEARCH, arg)
+				}},
 
 				mdb.INPUTS: {Name: "inputs", Help: "补全", Hand: func(m *ice.Message, arg ...string) {
-					m.Cmdy(m.Prefix(FAVOR), mdb.INPUTS, arg)
+					m.Cmdy(FAVOR, mdb.INPUTS, arg)
 				}},
 				FAVOR: {Name: "favor", Help: "收藏", Hand: func(m *ice.Message, arg ...string) {
-					m.Cmdy(m.Prefix(FAVOR), mdb.INSERT, arg)
+					m.Cmdy(FAVOR, mdb.INSERT, arg)
 				}},
 			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 				if len(arg) < 2 {
@@ -90,8 +91,7 @@ func init() {
 		Configs: map[string]*ice.Config{
 			INNER: {Name: "inner", Help: "阅读器", Value: kit.Data(
 				"source", kit.Dict(
-					"license", "true",
-					"makefile", "true",
+					"license", "true", "makefile", "true",
 					"shy", "true", "py", "true",
 					"csv", "true", "json", "true",
 					"css", "true", "html", "true",

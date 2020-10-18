@@ -20,8 +20,8 @@ var Index = &ice.Context{Name: CODE, Help: "编程中心",
 
 func init() {
 	web.Index.Register(Index, &web.Frame{},
-		INSTALL, COMPILE, PUBLISH, UPGRADE,
-		INNER, VIMER, BENCH, PPROF,
-		C, SH, GO, SHY, JS,
+		INSTALL, AUTOGEN, COMPILE, PUBLISH, UPGRADE,
+		INNER, VIMER, FAVOR, BENCH, PPROF,
+		C, SH, SHY, GO, JS,
 	)
 }

@@ -166,7 +166,7 @@ func init() {
 				"plug", kit.Dict(
 					"split", kit.Dict(
 						"space", " \t",
-						"operator", "{[(&.,;!|<>)]}",
+						"operator", "{[(&.,:;!|<>)]}",
 					),
 					"prefix", kit.Dict(
 						"//", "comment",

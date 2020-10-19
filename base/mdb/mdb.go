@@ -264,6 +264,10 @@ func _zone_fields(m *ice.Message) []string {
 	return kit.Split(kit.Select("zone,id,time,type,name,text", strings.Join(kit.Simple(m.Optionv(FIELDS)), ",")))
 }
 func _zone_select(m *ice.Message, prefix, chain, zone string, id string) {
+	if zone == RANDOM {
+		zone = kit.MDB_RANDOMS
+	}
+
 	fields := _zone_fields(m)
 	cb := m.Optionv(SELECT_CB)
 	m.Richs(prefix, chain, kit.Select(kit.MDB_FOREACH, zone), func(key string, val map[string]interface{}) {

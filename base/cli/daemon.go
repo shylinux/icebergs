@@ -67,6 +67,12 @@ var Status = struct{ Error, Start, Stop string }{
 }
 
 const (
+	ENV = "env"
+	CMD = "cmd"
+	ARG = "arg"
+	DIR = "dir"
+)
+const (
 	RESTART = "restart"
 	START   = "start"
 	STOP    = "stop"
@@ -84,7 +90,7 @@ func init() {
 				RESTART: {Name: "restart", Help: "重启", Hand: func(m *ice.Message, arg ...string) {
 					m.Cmd(DAEMON, STOP)
 					m.Sleep("1s")
-					m.Cmd(DAEMON, START)
+					m.Cmdy(DAEMON, START)
 				}},
 				START: {Name: "start cmd env dir", Help: "添加", Hand: func(m *ice.Message, arg ...string) {
 					m.Option(CMD_TYPE, DAEMON)

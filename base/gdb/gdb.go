@@ -50,6 +50,7 @@ const (
 	START = "start"
 	STOP  = "stop"
 
+	STATUS  = "status"
 	RESTART = "restart"
 	RELOAD  = "reload"
 	BENCH   = "bench"

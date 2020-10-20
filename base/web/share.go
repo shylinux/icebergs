@@ -30,8 +30,10 @@ func _share_local(m *ice.Message, arg ...string) {
 	switch ls := strings.Split(p, "/"); ls[0] {
 	case "etc", "var":
 		// 私有文件
-		m.Render(STATUS, http.StatusUnauthorized, "not auth")
-		return
+		if m.Option(ice.MSG_USERROLE) == aaa.VOID {
+			m.Render(STATUS, http.StatusUnauthorized, "not auth")
+			return
+		}
 	default:
 		if m.Warn(!m.Right(ls), ice.ErrNotAuth, m.Option(ice.MSG_USERROLE), " of ", p) {
 			m.Render(STATUS, http.StatusUnauthorized, "not auth")

@@ -53,7 +53,7 @@ const INNER = "inner"
 func init() {
 	Index.Merge(&ice.Context{
 		Commands: map[string]*ice.Command{
-			INNER: {Name: "inner path=src/ file=main.go line=1 auto project search", Help: "阅读器", Meta: kit.Dict(
+			INNER: {Name: "inner path=src/ file=main.go line=1 auto project search", Help: "源代码", Meta: kit.Dict(
 				"display", "/plugin/local/code/inner.js", "style", "editor",
 				"trans", kit.Dict("project", "项目"),
 			), Action: map[string]*ice.Action{
@@ -71,18 +71,13 @@ func init() {
 					_inner_show(m, arg[0], arg[1], arg[2], arg[3:]...)
 				}},
 				mdb.SEARCH: {Name: "search", Help: "搜索", Hand: func(m *ice.Message, arg ...string) {
+					m.Option(mdb.FIELDS, "file,line,text")
 					m.Cmdy(mdb.SEARCH, arg)
 				}},
 
-				mdb.INPUTS: {Name: "inputs", Help: "补全", Hand: func(m *ice.Message, arg ...string) {
-					m.Cmdy(FAVOR, mdb.INPUTS, arg)
-				}},
-				FAVOR: {Name: "favor", Help: "收藏", Hand: func(m *ice.Message, arg ...string) {
-					m.Cmdy(FAVOR, mdb.INSERT, arg)
-				}},
-				nfs.DIR: {Name: "dir", Help: "目录", Hand: func(m *ice.Message, arg ...string) {
-					m.Cmdy(nfs.DIR, arg)
-				}},
+				FAVOR:      {Name: "favor insert", Help: "收藏"},
+				mdb.INPUTS: {Name: "favor inputs", Help: "补全"},
+				nfs.DIR:    {Name: "dir", Help: "目录"},
 			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 				if len(arg) < 2 {
 					m.Cmdy(nfs.DIR, kit.Select("./", arg, 0))
@@ -92,7 +87,7 @@ func init() {
 			}},
 		},
 		Configs: map[string]*ice.Config{
-			INNER: {Name: "inner", Help: "阅读器", Value: kit.Data(
+			INNER: {Name: "inner", Help: "源代码", Value: kit.Data(
 				"source", kit.Dict(
 					"license", "true", "makefile", "true",
 					"shy", "true", "py", "true",
@@ -102,7 +97,6 @@ func init() {
 					"log", "true", "err", "true",
 
 					"md", "true", "conf", "true", "toml", "true",
-					"ts", "true", "tsx", "true", "vue", "true", "sass", "true",
 				),
 				"plug", kit.Dict(
 					"makefile", kit.Dict(

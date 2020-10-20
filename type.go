@@ -104,7 +104,7 @@ func (c *Context) _hand(m *Message, cmd *Command, key string, k string, h *Actio
 		}
 	}
 	if h.Hand == nil {
-		m.Cmdy(kit.Split(h.Name))
+		m.Cmdy(kit.Split(h.Name), arg)
 	} else {
 		h.Hand(m, arg...)
 	}

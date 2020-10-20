@@ -6,10 +6,8 @@ chapter "code"
 # field "发布" web.code.publish
 # field "升级" web.code.upgrade
 
-field "查看" web.code.inner
-return
-
 field "编辑" web.code.vimer
+field "查看" web.code.inner
 field "收藏" web.code.favor
 field "测试" web.code.bench
 field "优化" web.code.pprof

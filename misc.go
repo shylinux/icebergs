@@ -86,7 +86,7 @@ func (m *Message) PushRender(key, view, name string, arg ...string) *Message {
 	case "a":
 		m.Push(key, fmt.Sprintf(`<a href="%s" target="_blank">%s</a>`, kit.Select(name, arg, 0), name))
 	case "download":
-		m.Push(key, fmt.Sprintf(`<a href="%s" download="%s">%s</a>`, kit.Select(name, arg, 0), path.Base(kit.Select(name, arg, 0)), name))
+		m.Push(key, fmt.Sprintf(`<a href="%s" download="%s">%s</a>`, kit.Select(name, arg, 0), path.Base(name), name))
 	default:
 		m.Push(key, name)
 	}

@@ -18,11 +18,12 @@ func init() {
 			FAVOR: {Name: FAVOR, Help: "收藏夹", Value: kit.Data(kit.MDB_SHORT, kit.MDB_TOPIC)},
 		},
 		Commands: map[string]*ice.Command{
-			FAVOR: {Name: "favor topic id auto create export import", Help: "收藏夹", Action: map[string]*ice.Action{
+			FAVOR: {Name: "favor topic id auto insert export import", Help: "收藏夹", Action: map[string]*ice.Action{
 				mdb.CREATE: {Name: "create topic", Help: "创建", Hand: func(m *ice.Message, arg ...string) {
 					m.Cmdy(mdb.INSERT, FAVOR, "", mdb.HASH, arg)
 				}},
 				mdb.INSERT: {Name: "insert topic=数据结构 type=go name=hi text=hello path file line", Help: "添加", Hand: func(m *ice.Message, arg ...string) {
+					m.Cmdy(mdb.INSERT, FAVOR, "", mdb.HASH, kit.MDB_TOPIC, arg[1])
 					m.Cmdy(mdb.INSERT, FAVOR, _sub_key(m, m.Option(kit.MDB_TOPIC)), mdb.LIST, arg[2:])
 				}},
 				mdb.MODIFY: {Name: "modify", Help: "编辑", Hand: func(m *ice.Message, arg ...string) {
@@ -46,7 +47,7 @@ func init() {
 					}
 				}},
 
-				INNER: {Name: "inner", Help: "inner", Hand: func(m *ice.Message, arg ...string) {
+				INNER: {Name: "inner", Help: "源代码", Hand: func(m *ice.Message, arg ...string) {
 					if len(arg) > 0 && arg[0] == mdb.RENDER {
 						m.Cmdy(INNER, arg[1:])
 						return
@@ -56,7 +57,7 @@ func init() {
 					m.Push(kit.SSH_ARG, kit.Format([]string{m.Option(kit.MDB_PATH), m.Option(kit.MDB_FILE), m.Option(kit.MDB_LINE)}))
 				}},
 			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-				m.Option(mdb.FIELDS, kit.Select("time,count,topic", kit.Select("time,id,type,name,text,path,file,line", mdb.DETAIL, len(arg) > 1)), len(arg) > 0)
+				m.Option(mdb.FIELDS, kit.Select("time,count,topic", kit.Select("time,id,type,name,text,path,file,line", mdb.DETAIL, len(arg) > 1), len(arg) > 0))
 				m.Cmdy(mdb.SELECT, FAVOR, "", mdb.ZONE, arg)
 				m.PushAction(kit.Select(mdb.REMOVE, INNER, len(arg) > 0))
 			}},

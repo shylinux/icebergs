@@ -71,6 +71,9 @@ const (
 	CMD = "cmd"
 	ARG = "arg"
 	DIR = "dir"
+	RUN = "run"
+	RES = "res"
+	ERR = "err"
 )
 const (
 	RESTART = "restart"

@@ -14,22 +14,32 @@ import (
 )
 
 func _go_find(m *ice.Message, key string) {
+	fields := kit.Split(m.Option(mdb.FIELDS))
 	for _, p := range strings.Split(m.Cmdx(cli.SYSTEM, "find", ".", "-name", key), "\n") {
 		if p == "" {
 			continue
 		}
-		m.Push("file", strings.TrimPrefix(p, "./"))
-		m.Push("line", 1)
-		m.Push("text", "")
+		for _, k := range fields {
+			switch k {
+			case kit.MDB_FILE:
+				m.Push(k, strings.TrimPrefix(p, "./"))
+			case kit.MDB_LINE:
+				m.Push(k, 1)
+			case kit.MDB_TEXT:
+				m.Push(k, "")
+			}
+		}
 	}
 }
 func _go_tags(m *ice.Message, key string) {
-	ls := strings.Split(key, ".")
-	key = ls[len(ls)-1]
-
 	if _, e := os.Stat(path.Join(m.Option(cli.CMD_DIR), ".tags")); e != nil {
 		m.Cmd(cli.SYSTEM, "gotags", "-R", "-f", ".tags", "./")
 	}
+
+	fields := kit.Split(m.Option(mdb.FIELDS))
+	ls := strings.Split(key, ".")
+	key = ls[len(ls)-1]
+
 	for _, l := range strings.Split(m.Cmdx(cli.SYSTEM, "grep", "^"+key+"\\>", ".tags"), "\n") {
 		ls := strings.SplitN(l, "\t", 2)
 		if len(ls) < 2 {
@@ -42,22 +52,35 @@ func _go_tags(m *ice.Message, key string) {
 		text := strings.TrimSuffix(strings.TrimPrefix(ls[0], "/^"), "$/")
 		line := kit.Int(text)
 
-		p := path.Join(m.Option(cli.CMD_DIR), file)
-		f, e := os.Open(p)
+		f, e := os.Open(path.Join(m.Option(cli.CMD_DIR), file))
 		m.Assert(e)
+		defer f.Close()
+
 		bio := bufio.NewScanner(f)
 		for i := 1; bio.Scan(); i++ {
 			if i == line || bio.Text() == text {
-				m.Push("file", strings.TrimPrefix(file, "./"))
-				m.Push("line", i)
-				m.Push("text", bio.Text())
+				for _, k := range fields {
+					switch k {
+					case kit.MDB_FILE:
+						m.Push(k, strings.TrimPrefix(file, "./"))
+					case kit.MDB_LINE:
+						m.Push(k, i)
+					case kit.MDB_TEXT:
+						m.Push(k, bio.Text())
+					}
+				}
 			}
 		}
 	}
-	m.Sort("line", "int")
 }
 func _go_grep(m *ice.Message, key string) {
-	m.Split(m.Cmd(cli.SYSTEM, "grep", "--exclude-dir=.git", "--exclude=.[a-z]*", "-rn", key, ".").Append(cli.CMD_OUT), "file:line:text", ":", "\n")
+	fields := kit.Split(m.Option(mdb.FIELDS))
+
+	msg := m.Spawn()
+	msg.Split(m.Cmd(cli.SYSTEM, "grep", "--exclude-dir=.git", "--exclude=.[a-z]*", "-rn", key, ".").Append(cli.CMD_OUT), "file:line:text", ":", "\n")
+	msg.Table(func(index int, value map[string]string, head []string) {
+		m.Push("", value, fields)
+	})
 }
 func _go_help(m *ice.Message, key string) {
 	p := m.Cmd(cli.SYSTEM, "go", "doc", key).Append(cli.CMD_OUT)
@@ -70,13 +93,20 @@ func _go_help(m *ice.Message, key string) {
 	}
 	res := strings.Join(ls, "\n")
 
-	m.Push("file", key+".godoc")
-	m.Push("line", 1)
-	m.Push("text", string(res))
+	for _, k := range kit.Split(m.Option(mdb.FIELDS)) {
+		switch k {
+		case kit.MDB_FILE:
+			m.Push(k, key+".godoc")
+		case kit.MDB_LINE:
+			m.Push(k, 1)
+		case kit.MDB_TEXT:
+			m.Push(k, string(res))
+		}
+	}
 }
 
 const GO = "go"
-const GODOC = "godoc"
+const DOC = "godoc"
 const MOD = "mod"
 const SUM = "sum"
 
@@ -84,20 +114,20 @@ func init() {
 	Index.Register(&ice.Context{Name: GO, Help: "go",
 		Commands: map[string]*ice.Command{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-				m.Cmd(mdb.PLUGIN, mdb.CREATE, GO, GO, c.Cap(ice.CTX_FOLLOW))
-				m.Cmd(mdb.RENDER, mdb.CREATE, GO, GO, c.Cap(ice.CTX_FOLLOW))
-				m.Cmd(mdb.SEARCH, mdb.CREATE, GO, GO, c.Cap(ice.CTX_FOLLOW))
-				m.Cmd(mdb.ENGINE, mdb.CREATE, GO, GO, c.Cap(ice.CTX_FOLLOW))
+				m.Cmd(mdb.PLUGIN, mdb.CREATE, GO, m.Prefix(GO))
+				m.Cmd(mdb.RENDER, mdb.CREATE, GO, m.Prefix(GO))
+				m.Cmd(mdb.ENGINE, mdb.CREATE, GO, m.Prefix(GO))
+				m.Cmd(mdb.SEARCH, mdb.CREATE, GO, m.Prefix(GO))
 
-				m.Cmd(mdb.PLUGIN, mdb.CREATE, GODOC, GO, c.Cap(ice.CTX_FOLLOW))
-				m.Cmd(mdb.RENDER, mdb.CREATE, GODOC, GODOC, c.Cap(ice.CTX_FOLLOW))
-				m.Cmd(mdb.SEARCH, mdb.CREATE, GODOC, GO, c.Cap(ice.CTX_FOLLOW))
+				m.Cmd(mdb.PLUGIN, mdb.CREATE, DOC, m.Prefix(DOC))
+				m.Cmd(mdb.RENDER, mdb.CREATE, DOC, m.Prefix(DOC))
+				m.Cmd(mdb.SEARCH, mdb.CREATE, DOC, m.Prefix(GO))
 
-				m.Cmd(mdb.PLUGIN, mdb.CREATE, MOD, MOD, c.Cap(ice.CTX_FOLLOW))
-				m.Cmd(mdb.RENDER, mdb.CREATE, MOD, MOD, c.Cap(ice.CTX_FOLLOW))
+				m.Cmd(mdb.PLUGIN, mdb.CREATE, MOD, m.Prefix(MOD))
+				m.Cmd(mdb.RENDER, mdb.CREATE, MOD, m.Prefix(MOD))
 
-				m.Cmd(mdb.PLUGIN, mdb.CREATE, SUM, SUM, c.Cap(ice.CTX_FOLLOW))
-				m.Cmd(mdb.RENDER, mdb.CREATE, SUM, SUM, c.Cap(ice.CTX_FOLLOW))
+				m.Cmd(mdb.PLUGIN, mdb.CREATE, SUM, m.Prefix(SUM))
+				m.Cmd(mdb.RENDER, mdb.CREATE, SUM, m.Prefix(SUM))
 
 			}},
 			SUM: {Name: SUM, Help: "sum", Action: map[string]*ice.Action{
@@ -116,7 +146,10 @@ func init() {
 					m.Cmdy(nfs.CAT, path.Join(arg[2], arg[1]))
 				}},
 			}},
-			GODOC: {Name: GODOC, Help: "godoc", Action: map[string]*ice.Action{
+			DOC: {Name: DOC, Help: "doc", Action: map[string]*ice.Action{
+				mdb.PLUGIN: {Hand: func(m *ice.Message, arg ...string) {
+					m.Echo(m.Conf(GO, "meta.plug"))
+				}},
 				mdb.RENDER: {Hand: func(m *ice.Message, arg ...string) {
 					m.Option(cli.CMD_DIR, arg[2])
 					m.Echo(m.Cmdx(cli.SYSTEM, GO, "doc", strings.TrimSuffix(arg[1], "."+arg[0])))
@@ -125,16 +158,6 @@ func init() {
 			GO: {Name: GO, Help: "go", Action: map[string]*ice.Action{
 				mdb.PLUGIN: {Hand: func(m *ice.Message, arg ...string) {
 					m.Echo(m.Conf(GO, "meta.plug"))
-				}},
-				mdb.SEARCH: {Hand: func(m *ice.Message, arg ...string) {
-					if arg[0] == kit.MDB_FOREACH {
-						return
-					}
-					m.Option(cli.CMD_DIR, kit.Select("src", arg, 2))
-					_go_find(m, kit.Select("main", arg, 1))
-					_go_tags(m, kit.Select("main", arg, 1))
-					_go_help(m, kit.Select("main", arg, 1))
-					_go_grep(m, kit.Select("main", arg, 1))
 				}},
 				mdb.RENDER: {Hand: func(m *ice.Message, arg ...string) {
 					m.Cmdy(nfs.CAT, path.Join(arg[2], arg[1]))
@@ -148,7 +171,17 @@ func init() {
 					}
 					m.Set(ice.MSG_APPEND)
 				}},
-			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {}},
+				mdb.SEARCH: {Hand: func(m *ice.Message, arg ...string) {
+					if arg[0] == kit.MDB_FOREACH {
+						return
+					}
+					m.Option(cli.CMD_DIR, kit.Select("src", arg, 2))
+					_go_find(m, kit.Select("main", arg, 1))
+					_go_tags(m, kit.Select("main", arg, 1))
+					_go_help(m, kit.Select("main", arg, 1))
+					_go_grep(m, kit.Select("main", arg, 1))
+				}},
+			}},
 		},
 		Configs: map[string]*ice.Config{
 			GO: {Name: GO, Help: "go", Value: kit.Data(
@@ -165,7 +198,7 @@ func init() {
 				),
 				"plug", kit.Dict(
 					"split", kit.Dict(
-						"space", " \t",
+						"space", "\t ",
 						"operator", "{[(&.,:;!|<>)]}",
 					),
 					"prefix", kit.Dict(

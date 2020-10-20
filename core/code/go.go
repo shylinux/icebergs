@@ -27,7 +27,7 @@ func _go_tags(m *ice.Message, key string) {
 	ls := strings.Split(key, ".")
 	key = ls[len(ls)-1]
 
-	if _, e := os.Stat(path.Join(m.Option("_path"), ".tags")); e != nil {
+	if _, e := os.Stat(path.Join(m.Option(cli.CMD_DIR), ".tags")); e != nil {
 		m.Cmd(cli.SYSTEM, "gotags", "-R", "-f", ".tags", "./")
 	}
 	for _, l := range strings.Split(m.Cmdx(cli.SYSTEM, "grep", "^"+key+"\\>", ".tags"), "\n") {
@@ -42,7 +42,7 @@ func _go_tags(m *ice.Message, key string) {
 		text := strings.TrimSuffix(strings.TrimPrefix(ls[0], "/^"), "$/")
 		line := kit.Int(text)
 
-		p := path.Join(m.Option("_path"), file)
+		p := path.Join(m.Option(cli.CMD_DIR), file)
 		f, e := os.Open(p)
 		m.Assert(e)
 		bio := bufio.NewScanner(f)
@@ -130,7 +130,7 @@ func init() {
 					if arg[0] == kit.MDB_FOREACH {
 						return
 					}
-					m.Option(cli.CMD_DIR, m.Option("_path"))
+					m.Option(cli.CMD_DIR, kit.Select("src", arg, 2))
 					_go_find(m, kit.Select("main", arg, 1))
 					_go_tags(m, kit.Select("main", arg, 1))
 					_go_help(m, kit.Select("main", arg, 1))

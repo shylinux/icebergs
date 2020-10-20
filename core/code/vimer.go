@@ -28,9 +28,9 @@ func init() {
 	Index.Merge(&ice.Context{
 		Configs: map[string]*ice.Config{},
 		Commands: map[string]*ice.Command{
-			VIMER: {Name: "vimer path=usr/demo file=hi.sh line=1 刷新:button=auto save project", Help: "编辑器", Meta: kit.Dict(
+			VIMER: {Name: "vimer path=usr/demo file=hi.sh line=1 刷新:button=auto save project search", Help: "编辑器", Meta: kit.Dict(
 				"display", "/plugin/local/code/vimer.js", "style", "editor",
-				"trans", kit.Dict("project", "项目"),
+				"trans", kit.Dict("project", "项目", "search", "搜索"),
 			), Action: map[string]*ice.Action{
 				web.UPLOAD: {Name: "upload", Help: "上传", Hand: func(m *ice.Message, arg ...string) {
 					_vimer_upload(m, m.Option(kit.MDB_PATH))

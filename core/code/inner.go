@@ -102,6 +102,7 @@ func init() {
 		Configs: map[string]*ice.Config{
 			INNER: {Name: "inner", Help: "源代码", Value: kit.Data(
 				"source", kit.Dict(
+					"s", "true", "S", "true",
 					"license", "true", "makefile", "true",
 					"shy", "true", "py", "true",
 					"csv", "true", "json", "true",
@@ -112,6 +113,17 @@ func init() {
 					"md", "true", "conf", "true", "toml", "true",
 				),
 				"plug", kit.Dict(
+					"s", kit.Dict(
+						PREFIX, kit.Dict("//", COMMENT),
+						KEYWORD, kit.Dict(
+							"TEXT", KEYWORD,
+							"RET", KEYWORD,
+						),
+					),
+					"S", kit.Dict(
+						PREFIX, kit.Dict("//", COMMENT),
+						KEYWORD, kit.Dict(),
+					),
 					"makefile", kit.Dict(
 						PREFIX, kit.Dict("#", COMMENT),
 						SUFFIX, kit.Dict(":", COMMENT),

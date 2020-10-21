@@ -69,30 +69,16 @@ func init() {
 					})
 				}},
 				gdb.BUILD: {Name: "build link", Help: "构建", Hand: func(m *ice.Message, arg ...string) {
-					m.Option(ice.MSG_PROCESS, "_follow")
-					if m.Option("cache.action", "build"); m.Option("cache.hash") != "" {
-						m.Cmdy(cli.OUTPUT, m.Option("cache.hash"))
-						m.Sort(kit.MDB_ID).Table(func(index int, value map[string]string, head []string) {
-							m.Option("cache.begin", value[kit.MDB_ID])
-							m.Echo(value[kit.SSH_RES])
-						})
-
-						if len(m.Resultv()) == 0 && m.Conf(cli.OUTPUT, kit.Keys(kit.MDB_HASH, m.Option("cache.hash"), kit.MDB_META, kit.MDB_STATUS)) == gdb.STOP {
-							m.Echo(gdb.STOP)
-						}
+					if cli.Follow(m) {
 						return
 					}
-					m.Cmdy(cli.OUTPUT, mdb.CREATE, kit.MDB_NAME, m.Option(kit.MDB_LINK))
-					m.Option("cache.hash", m.Result())
-					m.Option("cache.begin", 1)
-					m.Set(ice.MSG_RESULT)
 
 					m.Go(func() {
 						defer m.Cmdy(cli.OUTPUT, mdb.MODIFY, kit.MDB_STATUS, cli.Status.Stop)
 						defer m.Option(kit.MDB_HASH, m.Option("cache.hash"))
 
 						p := m.Option(cli.CMD_DIR, path.Join(m.Conf(INSTALL, kit.META_PATH), kit.TrimExt(m.Option(kit.MDB_LINK))))
-						pp := kit.Path(path.Join(p, kit.Select("_install", m.Option("install"))))
+						pp := kit.Path(path.Join(p, "_install"))
 						switch cb := m.Optionv("prepare").(type) {
 						case func(string):
 							cb(p)
@@ -156,7 +142,11 @@ func init() {
 
 				// 目录列表
 				m.Option(nfs.DIR_ROOT, path.Join(m.Conf(cli.DAEMON, kit.META_PATH), arg[1]))
-				m.Cmdy(nfs.DIR, kit.Select("./", arg, 2))
+				if strings.HasSuffix(kit.Select("./", arg, 2), "/") {
+					m.Cmdy(nfs.DIR, kit.Select("./", arg, 2))
+				} else {
+					m.Cmdy(nfs.CAT, kit.Select("./", arg, 2))
+				}
 			}},
 		},
 	}, nil)

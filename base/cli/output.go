@@ -10,6 +10,27 @@ import (
 
 const OUTPUT = "output"
 
+func Follow(m *ice.Message) bool {
+	m.Option(ice.MSG_PROCESS, "_follow")
+	if m.Option("cache.action", "build"); m.Option("cache.hash") != "" {
+		m.Cmdy(OUTPUT, m.Option("cache.hash"))
+		m.Sort(kit.MDB_ID).Table(func(index int, value map[string]string, head []string) {
+			m.Option("cache.begin", value[kit.MDB_ID])
+			m.Echo(value[kit.SSH_RES])
+		})
+
+		if len(m.Resultv()) == 0 && m.Conf(OUTPUT, kit.Keys(kit.MDB_HASH, m.Option("cache.hash"), kit.MDB_META, kit.MDB_STATUS)) == STOP {
+			m.Echo(STOP)
+		}
+		return true
+	}
+	m.Cmdy(OUTPUT, mdb.CREATE, kit.MDB_NAME, m.Option(kit.MDB_LINK))
+	m.Option("cache.hash", m.Result())
+	m.Option("cache.begin", 1)
+	m.Set(ice.MSG_RESULT)
+	return false
+}
+
 func init() {
 	Index.Merge(&ice.Context{
 		Configs: map[string]*ice.Config{

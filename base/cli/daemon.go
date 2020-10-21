@@ -89,7 +89,7 @@ func init() {
 			DAEMON: {Name: DAEMON, Help: "守护进程", Value: kit.Data(kit.MDB_PATH, "var/daemon")},
 		},
 		Commands: map[string]*ice.Command{
-			DAEMON: {Name: "daemon hash auto 添加 清理", Help: "守护进程", Action: map[string]*ice.Action{
+			DAEMON: {Name: "daemon hash auto start prunes", Help: "守护进程", Action: map[string]*ice.Action{
 				RESTART: {Name: "restart", Help: "重启", Hand: func(m *ice.Message, arg ...string) {
 					m.Cmd(DAEMON, STOP)
 					m.Sleep("1s")
@@ -105,7 +105,6 @@ func init() {
 					m.Option(mdb.FIELDS, "time,hash,status,pid,cmd,dir,env")
 					m.Cmd(mdb.SELECT, DAEMON, "", mdb.HASH, kit.MDB_HASH, m.Option(kit.MDB_HASH)).Table(func(index int, value map[string]string, head []string) {
 						m.Cmd(mdb.MODIFY, DAEMON, "", mdb.HASH, kit.MDB_HASH, m.Option(kit.MDB_HASH), kit.MDB_STATUS, Status.Stop)
-						m.Debug("what %v", value)
 						m.Cmdy(SYSTEM, "kill", "-9", value[kit.SSH_PID])
 					})
 				}},

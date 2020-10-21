@@ -159,7 +159,7 @@ func init() {
 			)},
 		},
 		Commands: map[string]*ice.Command{
-			SERVICE: {Name: "service port id auto 监听 清理", Help: "服务", Action: map[string]*ice.Action{
+			SERVICE: {Name: "service port id auto listen prunes", Help: "服务", Action: map[string]*ice.Action{
 				tcp.LISTEN: {Name: "listen port=9030 private=.ssh/id_rsa auth=.ssh/authorized_keys", Help: "监听", Hand: func(m *ice.Message, arg ...string) {
 					if m.Richs(SERVICE, "", m.Option(tcp.PORT), func(key string, value map[string]interface{}) {
 						kit.Value(value, "meta.status", tcp.OPEN)

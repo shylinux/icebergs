@@ -76,10 +76,16 @@ func init() {
 					m.Cmdy(mdb.DELETE, TOTP, "", mdb.HASH, kit.MDB_NAME, m.Option(kit.MDB_NAME))
 				}},
 			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+				if m.Option("_count") == "" {
+					m.Option("_count", "20")
+				}
+				if kit.Int(m.Option("_count")) > 0 {
+					m.Option(ice.MSG_PROCESS, "_refresh")
+				}
+
+				m.Option(mdb.FIELDS, kit.Select("time,name,secret,period,number", mdb.DETAIL, len(arg) > 0))
 				if len(arg) == 0 {
 					// 密码列表
-					m.Option(ice.MSG_PROCESS, "_refresh")
-					m.Option(mdb.FIELDS, "time,name,secret,period,number")
 					m.Cmd(mdb.SELECT, TOTP, "", mdb.HASH).Table(func(index int, value map[string]string, head []string) {
 						per := kit.Int64(value[PERIOD])
 						m.Push("time", m.Time())

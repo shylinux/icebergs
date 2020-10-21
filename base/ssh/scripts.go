@@ -334,9 +334,7 @@ const (
 func init() {
 	Index.Merge(&ice.Context{
 		Configs: map[string]*ice.Config{
-			SOURCE: {Name: SOURCE, Help: "加载脚本", Value: kit.Dict(
-				kit.MDB_HASH, kit.Dict(STDIO, kit.Data(kit.MDB_TIME, "2020-10-01 15:04:05", kit.MDB_NAME, STDIO)),
-			)},
+			SOURCE: {Name: SOURCE, Help: "加载脚本", Value: kit.Dict()},
 			PROMPT: {Name: PROMPT, Help: "命令提示", Value: kit.Data(
 				"PS1", []interface{}{"\033[33;44m", "count", "[", "time", "]", "\033[5m", "target", "\033[0m", "\033[44m", ">", "\033[0m ", "\033[?25h", "\033[32m"},
 				"PS2", []interface{}{"count", " ", "target", "> "},

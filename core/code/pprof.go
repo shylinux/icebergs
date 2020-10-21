@@ -64,7 +64,7 @@ func init() {
 				web.SERVE: {Name: "serve", Help: "展示", Hand: func(m *ice.Message, arg ...string) {
 					m.Option(ice.MSG_PROCESS, "_inner")
 					u := kit.ParseURL(m.Option(ice.MSG_USERWEB))
-					p := u.Hostname() + ":" + m.Cmdx(tcp.PORT, aaa.Right)
+					p := u.Hostname() + ":" + m.Cmdx(tcp.PORT, aaa.RIGHT)
 
 					m.Cmd(cli.DAEMON, m.Confv(PPROF, "meta.pprof"), "-http="+p, m.Option(BINNARY), m.Option(kit.MDB_FILE))
 					m.Echo("http://%s/ui/top", p)

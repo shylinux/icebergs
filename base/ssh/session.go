@@ -78,7 +78,7 @@ func init() {
 			SESSION: {Name: SESSION, Help: "会话", Value: kit.Data()},
 		},
 		Commands: map[string]*ice.Command{
-			SESSION: {Name: "session hash id auto 命令 清理", Help: "会话", Action: map[string]*ice.Action{
+			SESSION: {Name: "session hash id auto command prunes", Help: "会话", Action: map[string]*ice.Action{
 				ctx.COMMAND: {Name: "command cmd=pwd", Help: "命令", Hand: func(m *ice.Message, arg ...string) {
 					m.Richs(SESSION, "", m.Option(kit.MDB_HASH), func(key string, value map[string]interface{}) {
 						if w, ok := kit.Value(value, "meta.input").(io.Writer); ok {
@@ -106,7 +106,7 @@ func init() {
 					})
 				}},
 
-				mdb.DELETE: {Name: "delete", Help: "删除", Hand: func(m *ice.Message, arg ...string) {
+				mdb.REMOVE: {Name: "remove", Help: "删除", Hand: func(m *ice.Message, arg ...string) {
 					m.Cmdy(mdb.DELETE, SESSION, "", mdb.HASH, kit.MDB_HASH, m.Option(kit.MDB_HASH))
 				}},
 				mdb.PRUNES: {Name: "prunes", Help: "清理", Hand: func(m *ice.Message, arg ...string) {
@@ -117,7 +117,7 @@ func init() {
 					m.Option(mdb.FIELDS, "time,hash,status,count,connect")
 					if m.Cmdy(mdb.SELECT, SESSION, "", mdb.HASH, kit.MDB_HASH, arg); len(arg) == 0 {
 						m.Table(func(index int, value map[string]string, head []string) {
-							m.PushButton(kit.Select("绑定", "删除", value[kit.MDB_STATUS] == tcp.CLOSE))
+							m.PushButton(kit.Select("bind", mdb.REMOVE, value[kit.MDB_STATUS] == tcp.CLOSE))
 						})
 					}
 					return

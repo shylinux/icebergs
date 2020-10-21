@@ -51,7 +51,7 @@ func init() {
 			SERVER: {Name: SERVER, Help: "服务器", Value: kit.Data()},
 		},
 		Commands: map[string]*ice.Command{
-			SERVER: {Name: "server hash auto 清理", Help: "服务器", Action: map[string]*ice.Action{
+			SERVER: {Name: "server hash auto prunes", Help: "服务器", Action: map[string]*ice.Action{
 				LISTEN: {Name: "LISTEN type name port=9010 host=", Help: "监听", Hand: func(m *ice.Message, arg ...string) {
 					l, e := net.Listen(TCP, m.Option(HOST)+":"+m.Option(PORT))
 					h := m.Cmdx(mdb.INSERT, SERVER, "", mdb.HASH, arg,
@@ -99,7 +99,7 @@ func init() {
 						}
 					}
 				}},
-				mdb.DELETE: {Name: "delete", Help: "删除", Hand: func(m *ice.Message, arg ...string) {
+				mdb.REMOVE: {Name: "remove", Help: "删除", Hand: func(m *ice.Message, arg ...string) {
 					m.Cmdy(mdb.DELETE, SERVER, "", mdb.HASH, kit.MDB_HASH, m.Option(kit.MDB_HASH))
 				}},
 				mdb.PRUNES: {Name: "prunes", Help: "清理", Hand: func(m *ice.Message, arg ...string) {
@@ -110,7 +110,7 @@ func init() {
 				m.Option(mdb.FIELDS, kit.Select("time,hash,status,type,name,host,port,error,nconn", mdb.DETAIL, len(arg) > 0))
 				if m.Cmdy(mdb.SELECT, SERVER, "", mdb.HASH, kit.MDB_HASH, arg); len(arg) == 0 {
 					m.Table(func(index int, value map[string]string, head []string) {
-						m.PushButton(kit.Select("", "删除", value[kit.MDB_STATUS] == CLOSE))
+						m.PushButton(kit.Select("", mdb.REMOVE, value[kit.MDB_STATUS] == CLOSE))
 					})
 				}
 			}},

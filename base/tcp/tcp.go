@@ -13,7 +13,7 @@ var Index = &ice.Context{Name: TCP, Help: "通信模块",
 		ice.CTX_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			m.Load()
 			m.Cmd(HOST).Table(func(index int, value map[string]string, head []string) {
-				m.Cmd(HOST, aaa.White, value["ip"])
+				m.Cmd(HOST, aaa.WHITE, value["ip"])
 			})
 		}},
 		ice.CTX_EXIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {

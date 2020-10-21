@@ -33,8 +33,13 @@ func _file_list(m *ice.Message, root string, name string, level int, deep bool, 
 	}
 
 	fs, e := ioutil.ReadDir(path.Join(root, name))
-	if m.Warn(e != nil, ice.ErrNotFound, name) {
-		return // 查找失败
+	if e != nil {
+		ls, _ := ioutil.ReadDir(root)
+		for _, k := range ls {
+			if k.Name() == name {
+				fs = append(fs, k)
+			}
+		}
 	}
 
 	for _, f := range fs {

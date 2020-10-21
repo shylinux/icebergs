@@ -1,0 +1,15 @@
+source ctx/ctx.shy
+source cli/cli.shy
+source aaa/aaa.shy
+source web/web.shy
+
+source lex/lex.shy
+source yac/yac.shy
+source log/log.shy
+source gdb/gdb.shy
+
+source nfs/nfs.shy
+source tcp/tcp.shy
+source ssh/ssh.shy
+source mdb/mdb.shy
+

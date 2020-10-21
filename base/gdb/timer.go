@@ -41,7 +41,7 @@ func init() {
 			TIMER: {Name: TIMER, Help: "定时器", Value: kit.Data("tick", "100ms")},
 		},
 		Commands: map[string]*ice.Command{
-			TIMER: {Name: "timer hash id auto 添加 清理", Help: "定时器", Action: map[string]*ice.Action{
+			TIMER: {Name: "timer hash id auto create prunes", Help: "定时器", Action: map[string]*ice.Action{
 				mdb.CREATE: {Name: "create delay=10ms interval=10s order=3 cmd=runtime", Help: "添加", Hand: func(m *ice.Message, arg ...string) {
 					_timer_create(m, arg...)
 				}},

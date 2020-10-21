@@ -18,14 +18,10 @@ import (
 
 func _space_list(m *ice.Message, space string) {
 	m.Option(mdb.FIELDS, kit.Select("time,type,name,text", mdb.DETAIL, space != ""))
-	m.Cmdy(mdb.SELECT, SPACE, "", mdb.HASH, kit.MDB_HASH, space)
+	m.Cmdy(mdb.SELECT, SPACE, "", mdb.HASH, kit.MDB_NAME, space)
 	m.Table(func(index int, value map[string]string, head []string) {
-		if p := kit.MergeURL(m.Option(ice.MSG_USERWEB), kit.SSH_POD, kit.Keys(m.Option(kit.SSH_POD), kit.Select(value[kit.MDB_VALUE], value[kit.MDB_NAME]))); space == "" {
-			m.PushRender(kit.MDB_LINK, "a", value[kit.MDB_NAME], p)
-		} else if value[kit.MDB_KEY] == kit.MDB_NAME {
-			m.Push(kit.MDB_KEY, kit.MDB_LINK)
-			m.PushRender(kit.MDB_VALUE, "a", value[kit.MDB_VALUE], p)
-		}
+		p := kit.MergeURL(m.Option(ice.MSG_USERWEB), kit.SSH_POD, kit.Keys(m.Option(kit.SSH_POD), kit.Select(value[kit.MDB_VALUE], value[kit.MDB_NAME])))
+		m.PushRender(kit.MDB_LINK, "a", value[kit.MDB_NAME], p)
 	})
 	m.Sort(kit.MDB_NAME)
 }

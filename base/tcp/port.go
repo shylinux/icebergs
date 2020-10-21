@@ -56,7 +56,7 @@ func init() {
 		},
 		Commands: map[string]*ice.Command{
 			PORT: {Name: "port port path auto", Help: "端口", Action: map[string]*ice.Action{
-				aaa.Right: {Name: "right [begin]", Help: "分配", Hand: func(m *ice.Message, arg ...string) {
+				aaa.RIGHT: {Name: "right [begin]", Help: "分配", Hand: func(m *ice.Message, arg ...string) {
 					port, p := kit.Select("", arg, 0), ""
 					for i := 0; i < 10; i++ {
 						port = _port_right(m, port)

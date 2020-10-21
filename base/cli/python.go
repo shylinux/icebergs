@@ -18,7 +18,7 @@ func init() {
 			)},
 		},
 		Commands: map[string]*ice.Command{
-			PYTHON: {Name: "python port path auto 启动:button 构建 下载", Help: "脚本命令", Action: map[string]*ice.Action{
+			PYTHON: {Name: "python port path auto start build download", Help: "脚本命令", Action: map[string]*ice.Action{
 				"download": {Name: "download", Help: "下载", Hand: func(m *ice.Message, arg ...string) {
 					m.Cmdy("web.code.install", "download", m.Conf(PYTHON, "meta.source"))
 				}},

@@ -1,0 +1,13 @@
+source alpha/alpha.shy
+source input/input.shy
+source chrome/chrome.shy
+
+source zsh/zsh.shy
+source tmux/tmux.shy
+source git/git.shy
+source vim/vim.shy
+
+source lark/lark.shy
+source wx/wx.shy
+source mp/mp.shy
+

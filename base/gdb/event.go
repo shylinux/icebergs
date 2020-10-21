@@ -25,7 +25,7 @@ func init() {
 			EVENT: {Name: EVENT, Help: "事件流", Value: kit.Data(kit.MDB_SHORT, EVENT)},
 		},
 		Commands: map[string]*ice.Command{
-			EVENT: {Name: "event event id auto 监听", Help: "事件流", Action: map[string]*ice.Action{
+			EVENT: {Name: "event event id auto listen", Help: "事件流", Action: map[string]*ice.Action{
 				LISTEN: {Name: "listen event cmd", Help: "监听", Hand: func(m *ice.Message, arg ...string) {
 					_event_listen(m, m.Option(EVENT), m.Option(kit.SSH_CMD))
 				}},

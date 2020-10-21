@@ -55,7 +55,7 @@ func init() {
 			CLIENT: {Name: CLIENT, Help: "客户端", Value: kit.Data()},
 		},
 		Commands: map[string]*ice.Command{
-			CLIENT: {Name: "client hash auto 清理", Help: "客户端", Action: map[string]*ice.Action{
+			CLIENT: {Name: "client hash auto prunes", Help: "客户端", Action: map[string]*ice.Action{
 				DIAL: {Name: "dial type name port=9010 host=", Help: "连接", Hand: func(m *ice.Message, arg ...string) {
 					c, e := net.Dial(TCP, m.Option(HOST)+":"+m.Option(PORT))
 					h := m.Cmdx(mdb.INSERT, CLIENT, "", mdb.HASH, PORT, m.Option(PORT), HOST, m.Option(HOST),
@@ -85,7 +85,7 @@ func init() {
 						c.Write([]byte("hello world\n"))
 					}
 				}},
-				mdb.DELETE: {Name: "delete", Help: "删除", Hand: func(m *ice.Message, arg ...string) {
+				mdb.REMOVE: {Name: "remove", Help: "删除", Hand: func(m *ice.Message, arg ...string) {
 					m.Cmdy(mdb.DELETE, CLIENT, "", mdb.HASH, kit.MDB_HASH, m.Option(kit.MDB_HASH))
 				}},
 				mdb.PRUNES: {Name: "prunes", Help: "清理", Hand: func(m *ice.Message, arg ...string) {
@@ -96,7 +96,7 @@ func init() {
 				m.Option(mdb.FIELDS, kit.Select("time,hash,status,type,name,host,port,error,nread,nwrite", mdb.DETAIL, len(arg) > 0))
 				if m.Cmdy(mdb.SELECT, CLIENT, "", mdb.HASH, kit.MDB_HASH, arg); len(arg) == 0 {
 					m.Table(func(index int, value map[string]string, head []string) {
-						m.PushButton(kit.Select("", "删除", value[kit.MDB_STATUS] == OPEN))
+						m.PushButton(kit.Select("", mdb.REMOVE, value[kit.MDB_STATUS] == OPEN))
 					})
 				}
 			}},

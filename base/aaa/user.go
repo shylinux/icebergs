@@ -106,7 +106,7 @@ func init() {
 					m.Cmdy(mdb.MODIFY, USER, "", mdb.HASH, USERNAME, m.Option(USERNAME), arg)
 				}},
 				mdb.REMOVE: {Name: "remove", Help: "删除", Hand: func(m *ice.Message, arg ...string) {
-					m.Cmdy(mdb.REMOVE, USER, "", mdb.HASH, USERNAME, m.Option(USERNAME))
+					m.Cmdy(mdb.DELETE, USER, "", mdb.HASH, USERNAME, m.Option(USERNAME))
 				}},
 				mdb.SEARCH: {Name: "search type name text arg...", Help: "搜索", Hand: func(m *ice.Message, arg ...string) {
 					_user_search(m, arg[0], arg[1], kit.Select("", arg, 2))

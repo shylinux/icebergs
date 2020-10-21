@@ -37,7 +37,7 @@ func init() {
 			)},
 		},
 		Commands: map[string]*ice.Command{
-			SIGNAL: {Name: "signal auto 监听", Help: "信号器", Action: map[string]*ice.Action{
+			SIGNAL: {Name: "signal auto listen", Help: "信号器", Action: map[string]*ice.Action{
 				LISTEN: {Name: "listen signal name cmd", Help: "监听", Hand: func(m *ice.Message, arg ...string) {
 					_signal_listen(m, kit.Int(m.Option(SIGNAL)), arg...)
 				}},

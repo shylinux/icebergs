@@ -13,6 +13,7 @@ var Index = &ice.Context{Name: "ctx", Help: "配置模块",
 		ice.CTX_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			m.Cmd(mdb.SEARCH, mdb.CREATE, COMMAND, m.AddCmd(&ice.Command{Hand: func(m *ice.Message, c *ice.Context, cc string, arg ...string) {
 				arg = arg[1:]
+				fields := kit.Split(m.Option(mdb.FIELDS))
 				ice.Pulse.Travel(func(p *ice.Context, s *ice.Context, key string, cmd *ice.Command) {
 					if strings.HasPrefix(key, "_") || strings.HasPrefix(key, "/") {
 						return
@@ -24,16 +25,28 @@ var Index = &ice.Context{Name: "ctx", Help: "配置模块",
 						return
 					}
 
-					m.Push("pod", "")
-					m.Push("ctx", "web.chat")
-					m.Push("cmd", cc)
-
-					m.Push("time", m.Time())
-					m.Push("size", "")
-
-					m.Push("type", COMMAND)
-					m.Push("name", key)
-					m.Push("text", s.Cap(ice.CTX_FOLLOW))
+					for _, k := range fields {
+						switch k {
+						case kit.SSH_POD:
+							m.Push(k, m.Option(ice.MSG_USERPOD))
+						case kit.SSH_CTX:
+							m.Push(k, m.Prefix())
+						case kit.SSH_CMD:
+							m.Push(k, "_")
+						case kit.MDB_TIME:
+							m.Push(k, m.Time())
+						case kit.MDB_SIZE:
+							m.Push(k, len(cmd.List))
+						case kit.MDB_TYPE:
+							m.Push(k, COMMAND)
+						case kit.MDB_NAME:
+							m.Push(k, key)
+						case kit.MDB_TEXT:
+							m.Push(k, m.Prefix())
+						default:
+							m.Push(k, "")
+						}
+					}
 				})
 			}}))
 		}},

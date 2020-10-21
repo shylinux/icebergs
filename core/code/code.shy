@@ -1,20 +1,19 @@
 chapter "code"
 
-# field "安装" web.code.install
-# field "生成" web.code.autogen
-# field "编译" web.code.compile
-# field "发布" web.code.publish
-# field "升级" web.code.upgrade
+field "后端" web.code.binpack
+field "前端" web.code.webpack
 
-field "打包" web.code.binpack
-field "打包" web.code.webpack
+field "安装" web.code.install
+field "生成" web.code.autogen
+field "编译" web.code.compile
+field "发布" web.code.publish
+field "升级" web.code.upgrade
 
 field "编辑" web.code.vimer
 field "查看" web.code.inner
 field "收藏" web.code.favor
 field "测试" web.code.bench
 field "优化" web.code.pprof
-return
 
 field "系统" web.code.c
 field "命令" web.code.sh

@@ -126,6 +126,7 @@ func _serve_handle(key string, cmd *ice.Command, msg *ice.Message, w http.Respon
 	}
 
 	// 用户请求
+	msg.Option("cache.limit", "10")
 	msg.Option(ice.MSG_OUTPUT, "")
 	msg.Option(ice.MSG_METHOD, r.Method)
 	msg.Option(ice.MSG_USERWEB, kit.Select(msg.Conf(SHARE, "meta.domain"), r.Header.Get("Referer")))
@@ -267,7 +268,7 @@ func init() {
 			SERVE: {Name: "serve name auto start", Help: "服务器", Action: map[string]*ice.Action{
 				gdb.START: {Name: "start dev= name=self proto=http host= port=9020", Help: "启动", Hand: func(m *ice.Message, arg ...string) {
 					if cli.NodeInfo(m, SERVER, ice.Info.HostName); m.Option(tcp.PORT) == "random" {
-						m.Option(tcp.PORT, m.Cmdx(tcp.PORT, aaa.Right))
+						m.Option(tcp.PORT, m.Cmdx(tcp.PORT, aaa.RIGHT))
 					}
 
 					m.Target().Start(m, kit.MDB_NAME, m.Option(kit.MDB_NAME), tcp.HOST, m.Option(tcp.HOST), tcp.PORT, m.Option(tcp.PORT))

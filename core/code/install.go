@@ -110,7 +110,7 @@ func init() {
 					})
 				}},
 				gdb.SPAWN: {Name: "spawn link", Help: "新建", Hand: func(m *ice.Message, arg ...string) {
-					port := m.Cmdx(tcp.PORT, aaa.Right)
+					port := m.Cmdx(tcp.PORT, aaa.RIGHT)
 					target := path.Join(m.Conf(cli.DAEMON, kit.META_PATH), port)
 					source := path.Join(m.Conf(INSTALL, kit.META_PATH), kit.TrimExt(m.Option(kit.MDB_LINK)))
 

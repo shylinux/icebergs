@@ -165,7 +165,7 @@ func init() {
 					}
 				}},
 			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-				m.Option(mdb.FIELDS, "time,hash,size,type,name,text,file")
+				m.Option(mdb.FIELDS, kit.Select("time,hash,size,type,name,text,file", mdb.DETAIL, len(arg) > 0))
 				m.Cmdy(mdb.SELECT, CACHE, "", mdb.HASH, kit.MDB_HASH, arg)
 			}},
 

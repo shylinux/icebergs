@@ -2,4 +2,5 @@ chapter "nfs"
 
 field "目录" nfs.dir
 field "文件" nfs.file
+field "日志" nfs.tail
 

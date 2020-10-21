@@ -53,7 +53,7 @@ func _islocalhost(m *ice.Message, ip string) (ok bool) {
 		return false
 	}
 	if m.Richs(HOST, kit.Keys("meta.white"), ip, nil) != nil {
-		m.Log_AUTH(aaa.White, ip)
+		m.Log_AUTH(aaa.WHITE, ip)
 		return true
 	}
 	return false
@@ -70,16 +70,16 @@ func init() {
 	Index.Merge(&ice.Context{
 		Configs: map[string]*ice.Config{
 			HOST: {Name: HOST, Help: "主机", Value: kit.Data(
-				aaa.Black, kit.Data(kit.MDB_SHORT, kit.MDB_TEXT),
-				aaa.White, kit.Data(kit.MDB_SHORT, kit.MDB_TEXT),
+				aaa.BLACK, kit.Data(kit.MDB_SHORT, kit.MDB_TEXT),
+				aaa.WHITE, kit.Data(kit.MDB_SHORT, kit.MDB_TEXT),
 			)},
 		},
 		Commands: map[string]*ice.Command{
 			HOST: {Name: "host name auto", Help: "主机", Action: map[string]*ice.Action{
-				aaa.Black: {Name: "black", Help: "黑名单", Hand: func(m *ice.Message, arg ...string) {
+				aaa.BLACK: {Name: "black", Help: "黑名单", Hand: func(m *ice.Message, arg ...string) {
 					m.Rich(HOST, kit.Keys("meta.black"), kit.Dict(kit.MDB_TEXT, arg[0]))
 				}},
-				aaa.White: {Name: "white", Help: "白名单", Hand: func(m *ice.Message, arg ...string) {
+				aaa.WHITE: {Name: "white", Help: "白名单", Hand: func(m *ice.Message, arg ...string) {
 					m.Rich(HOST, kit.Keys("meta.white"), kit.Dict(kit.MDB_TEXT, arg[0]))
 				}},
 			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {

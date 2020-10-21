@@ -62,7 +62,7 @@ func init() {
 			CONNECT: {Name: CONNECT, Help: "连接", Value: kit.Data()},
 		},
 		Commands: map[string]*ice.Command{
-			CONNECT: {Name: "connect hash auto 添加 清理", Help: "连接", Action: map[string]*ice.Action{
+			CONNECT: {Name: "connect hash auto dial prunes", Help: "连接", Action: map[string]*ice.Action{
 				tcp.DIAL: {Name: "dial username=shy host=shylinux.com port=22 private=.ssh/id_rsa", Help: "添加", Hand: func(m *ice.Message, arg ...string) {
 					m.Option(tcp.DIAL_CB, func(c net.Conn) {
 						client, e := _ssh_conn(m, c, kit.Select("shy", m.Option(aaa.USERNAME)),
@@ -81,7 +81,7 @@ func init() {
 						m.Echo(h)
 					})
 
-					m.Cmds(tcp.CLIENT, tcp.DIAL, arg)
+					m.Cmds(tcp.CLIENT, tcp.DIAL, kit.MDB_TYPE, SSH, kit.MDB_NAME, m.Option(aaa.USERNAME), tcp.PORT, m.Option(tcp.PORT), tcp.HOST, m.Option(tcp.HOST))
 					m.Sleep("100ms")
 				}},
 				SESSION: {Name: "session hash", Help: "会话", Hand: func(m *ice.Message, arg ...string) {
@@ -152,7 +152,7 @@ func init() {
 
 					m.Echo("exit %s\n", m.Option(tcp.HOST))
 				}},
-				mdb.DELETE: {Name: "delete", Help: "删除", Hand: func(m *ice.Message, arg ...string) {
+				mdb.REMOVE: {Name: "remove", Help: "删除", Hand: func(m *ice.Message, arg ...string) {
 					m.Cmdy(mdb.DELETE, CONNECT, "", mdb.HASH, kit.MDB_HASH, m.Option(kit.MDB_HASH))
 				}},
 				mdb.PRUNES: {Name: "prunes", Help: "清理", Hand: func(m *ice.Message, arg ...string) {
@@ -162,7 +162,7 @@ func init() {
 				m.Option(mdb.FIELDS, kit.Select("time,hash,status,username,host,port", mdb.DETAIL, len(arg) > 0))
 				if m.Cmdy(mdb.SELECT, CONNECT, "", mdb.HASH, kit.MDB_HASH, arg); len(arg) == 0 {
 					m.Table(func(index int, value map[string]string, head []string) {
-						m.PushButton(kit.Select("", "删除", value[kit.MDB_STATUS] == tcp.CLOSE))
+						m.PushButton(kit.Select("", mdb.REMOVE, value[kit.MDB_STATUS] == tcp.CLOSE))
 					})
 				}
 			}},

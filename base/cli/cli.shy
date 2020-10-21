@@ -1,9 +1,8 @@
 chapter "cli"
 
+field "脚本" python
+field "守护" daemon
 field "命令" system
 field "输出" output
-field "守护" daemon
-field "脚本" python
-
 field "环境" runtime
 field "进程" cli.proc

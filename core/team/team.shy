@@ -1,4 +1,4 @@
-chapter "team"
+chapter "团队"
 
 field "任务" web.team.task
 field "计划" web.team.plan

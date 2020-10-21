@@ -12,6 +12,19 @@ import (
 	"strings"
 )
 
+const (
+	COMMENT  = "comment"
+	KEYWORD  = "keyword"
+	FUNCTION = "function"
+	DATATYPE = "datatype"
+	STRING   = "string"
+)
+const (
+	SPLIT  = "split"
+	PREFIX = "prefix"
+	SUFFIX = "suffix"
+)
+
 func _inner_ext(name string) string {
 	return strings.ToLower(kit.Select(path.Base(name), strings.TrimPrefix(path.Ext(name), ".")))
 }
@@ -28,7 +41,7 @@ func _inner_list(m *ice.Message, ext, file, dir string, arg ...string) {
 		return // 解析成功
 	}
 
-	if m.Conf(INNER, kit.Keys("meta.source", ext)) == "true" {
+	if m.Conf(INNER, kit.Keys(kit.META_SOURCE, ext)) == "true" {
 		if m.Cmdy(nfs.CAT, path.Join(dir, file)); m.Result() != "" {
 			return
 		}
@@ -100,39 +113,38 @@ func init() {
 				),
 				"plug", kit.Dict(
 					"makefile", kit.Dict(
-						"prefix", kit.Dict("#", "comment"),
-						"suffix", kit.Dict(":", "comment"),
-						"keyword", kit.Dict(
-							"ifeq", "keyword",
-							"ifneq", "keyword",
-							"else", "keyword",
-							"endif", "keyword",
+						PREFIX, kit.Dict("#", COMMENT),
+						SUFFIX, kit.Dict(":", COMMENT),
+						KEYWORD, kit.Dict(
+							"ifeq", KEYWORD,
+							"ifneq", KEYWORD,
+							"else", KEYWORD,
+							"endif", KEYWORD,
 						),
 					),
 					"py", kit.Dict(
-						"prefix", kit.Dict("#", "comment"),
-						"keyword", kit.Dict("print", "keyword"),
+						PREFIX, kit.Dict("#", COMMENT),
+						KEYWORD, kit.Dict("print", KEYWORD),
 					),
 					"csv", kit.Dict("display", true),
 					"json", kit.Dict("link", true),
 					"html", kit.Dict(
-						"split", kit.Dict(
+						SPLIT, kit.Dict(
 							"space", " ",
 							"operator", "<>",
 						),
-						"keyword", kit.Dict(
-							"head", "keyword",
-							"body", "keyword",
+						KEYWORD, kit.Dict(
+							"head", KEYWORD,
+							"body", KEYWORD,
 						),
 					),
 					"css", kit.Dict(
-						"suffix", kit.Dict("{", "comment"),
+						SUFFIX, kit.Dict("{", COMMENT),
 					),
 
-					"md", kit.Dict("display", true, "profile", true),
+					"md", kit.Dict(),
 				),
 				"show", kit.Dict(
-					"sh", []string{"sh"},
 					"py", []string{"python"},
 					"js", []string{"node"},
 				),

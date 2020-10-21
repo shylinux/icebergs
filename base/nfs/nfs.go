@@ -149,11 +149,6 @@ func _file_list(m *ice.Message, root string, name string, level int, deep bool, 
 	}
 }
 func _file_show(m *ice.Message, name string) {
-	if strings.HasPrefix(name, "http") {
-		m.Cmdy("web.spide", "dev", "raw", "GET", name)
-		return // 远程文件
-	}
-
 	if f, e := os.Open(path.Join(m.Option(DIR_ROOT), name)); e == nil {
 		defer f.Close()
 
@@ -174,6 +169,12 @@ func _file_show(m *ice.Message, name string) {
 			}
 		}
 		return
+	}
+
+	if b, ok := ice.BinPack["/"+name]; ok {
+		m.Info("binpack %v %v", len(b), name)
+		m.Echo(string(b))
+		return // 打包文件
 	}
 
 	// 远程文件

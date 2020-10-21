@@ -29,14 +29,12 @@ func init() {
 		Commands: map[string]*ice.Command{
 			COMPILE: {Name: "compile os=linux,darwin,windows arch=amd64,386,arm src=src/main.go@key 执行:button", Help: "编译", Action: map[string]*ice.Action{
 				mdb.INPUTS: {Name: "inputs", Help: "补全", Hand: func(m *ice.Message, arg ...string) {
-					m.Cmdy(nfs.DIR, "src")
-					m.Appendv(ice.MSG_APPEND, "path", "size", "time")
+					m.Cmdy(nfs.DIR, "src", "path,size,time")
 					m.Sort(kit.MDB_PATH)
 				}},
 			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 				if len(arg) == 0 {
-					// 目录列表
-					m.Cmdy(nfs.DIR, m.Conf(COMPILE, kit.META_PATH), "time size path")
+					m.Cmdy(nfs.DIR, m.Conf(COMPILE, kit.META_PATH), "time,size,path")
 					return
 				}
 
@@ -55,7 +53,8 @@ func init() {
 				}
 
 				// 编译目标
-				file := path.Join(m.Conf(cmd, kit.META_PATH), kit.Keys(kit.Select("ice", path.Base(strings.TrimSuffix(main, ".go")), main != "src/main.go"), goos, arch))
+
+				file := path.Join(kit.Select("", m.Conf(cmd, kit.META_PATH), m.Option(cli.CMD_DIR) == ""), kit.Keys(kit.Select("ice", path.Base(strings.TrimSuffix(main, ".go")), main != "src/main.go"), goos, arch))
 				args := []string{"-ldflags"}
 				list := []string{
 					fmt.Sprintf(`-X main.Time="%s"`, m.Time()),

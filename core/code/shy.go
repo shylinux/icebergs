@@ -13,23 +13,15 @@ import (
 const SHY = "shy"
 
 func init() {
-	Index.Register(&ice.Context{Name: SHY, Help: "shy",
+	Index.Register(&ice.Context{Name: SHY, Help: "脚本",
 		Commands: map[string]*ice.Command{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-				m.Cmd(mdb.SEARCH, mdb.CREATE, SHY, SHY, c.Cap(ice.CTX_FOLLOW))
 				m.Cmd(mdb.PLUGIN, mdb.CREATE, SHY, SHY, c.Cap(ice.CTX_FOLLOW))
 				m.Cmd(mdb.RENDER, mdb.CREATE, SHY, SHY, c.Cap(ice.CTX_FOLLOW))
 				m.Cmd(mdb.ENGINE, mdb.CREATE, SHY, SHY, c.Cap(ice.CTX_FOLLOW))
+				m.Cmd(mdb.SEARCH, mdb.CREATE, SHY, SHY, c.Cap(ice.CTX_FOLLOW))
 			}},
-			SHY: {Name: SHY, Help: "shy", Action: map[string]*ice.Action{
-				mdb.SEARCH: {Name: "search type name text", Hand: func(m *ice.Message, arg ...string) {
-					if arg[0] == kit.MDB_FOREACH {
-						return
-					}
-					m.Option(cli.CMD_DIR, m.Option("_path"))
-					_c_find(m, kit.Select("main", arg, 1))
-					_c_grep(m, kit.Select("main", arg, 1))
-				}},
+			SHY: {Name: SHY, Help: "脚本", Action: map[string]*ice.Action{
 				mdb.PLUGIN: {Hand: func(m *ice.Message, arg ...string) {
 					m.Echo(m.Conf(SHY, "meta.plug"))
 				}},
@@ -39,20 +31,28 @@ func init() {
 				mdb.ENGINE: {Hand: func(m *ice.Message, arg ...string) {
 					m.Cmdy("web.wiki.word", path.Join(arg[2], arg[1]))
 				}},
-			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {}},
+				mdb.SEARCH: {Hand: func(m *ice.Message, arg ...string) {
+					if arg[0] == kit.MDB_FOREACH {
+						return
+					}
+					m.Option(cli.CMD_DIR, kit.Select("src", arg, 2))
+					_go_find(m, kit.Select("main", arg, 1))
+					_go_grep(m, kit.Select("main", arg, 1))
+				}},
+			}},
 		},
 		Configs: map[string]*ice.Config{
-			SHY: {Name: SHY, Help: "shy", Value: kit.Data(
+			SHY: {Name: SHY, Help: "脚本", Value: kit.Data(
 				"plug", kit.Dict(
-					"prefix", kit.Dict("#", "comment"),
-					"keyword", kit.Dict(
-						"title", "keyword",
-						"chapter", "keyword",
-						"section", "keyword",
-						"refer", "keyword",
-						"field", "keyword",
-						"label", "keyword",
-						"chain", "keyword",
+					PREFIX, kit.Dict("#", COMMENT),
+					KEYWORD, kit.Dict(
+						"title", KEYWORD,
+						"chapter", KEYWORD,
+						"section", KEYWORD,
+						"refer", KEYWORD,
+						"field", KEYWORD,
+						"label", KEYWORD,
+						"chain", KEYWORD,
 					),
 				),
 			)},

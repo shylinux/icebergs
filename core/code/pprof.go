@@ -25,12 +25,12 @@ const PPROF = "pprof"
 func init() {
 	Index.Merge(&ice.Context{
 		Configs: map[string]*ice.Config{
-			PPROF: {Name: "pprof", Help: "性能分析", Value: kit.Data(kit.MDB_SHORT, kit.MDB_ZONE,
+			PPROF: {Name: PPROF, Help: "性能分析", Value: kit.Data(kit.MDB_SHORT, kit.MDB_ZONE,
 				PPROF, []string{"go", "tool", "pprof"},
 			)},
 		},
 		Commands: map[string]*ice.Command{
-			PPROF: {Name: "pprof zone=auto id=auto auto create", Help: "性能分析", Action: map[string]*ice.Action{
+			PPROF: {Name: "pprof zone id auto create", Help: "性能分析", Action: map[string]*ice.Action{
 				mdb.CREATE: {Name: "create zone binnary service seconds", Help: "创建", Hand: func(m *ice.Message, arg ...string) {
 					m.Cmdy(mdb.INSERT, PPROF, "", mdb.HASH, arg)
 				}},
@@ -38,7 +38,11 @@ func init() {
 					m.Cmdy(mdb.INSERT, PPROF, _sub_key(m, m.Option(kit.MDB_ZONE)), mdb.LIST, arg[2:])
 				}},
 				mdb.MODIFY: {Name: "modify", Help: "编辑", Hand: func(m *ice.Message, arg ...string) {
-					m.Cmdy(mdb.MODIFY, PPROF, _sub_key(m, m.Option(kit.MDB_ZONE)), mdb.LIST, kit.MDB_ID, m.Option(kit.MDB_ID), arg)
+					if m.Option(kit.MDB_ID) != "" {
+						m.Cmdy(mdb.MODIFY, PPROF, _sub_key(m, m.Option(kit.MDB_ZONE)), mdb.LIST, kit.MDB_ID, m.Option(kit.MDB_ID), arg)
+					} else {
+						m.Cmdy(mdb.MODIFY, PPROF, "", mdb.HASH, kit.MDB_ZONE, m.Option(kit.MDB_ZONE), arg)
+					}
 				}},
 				mdb.REMOVE: {Name: "remove", Help: "删除", Hand: func(m *ice.Message, arg ...string) {
 					m.Cmdy(mdb.DELETE, PPROF, "", mdb.HASH, kit.MDB_ZONE, m.Option(kit.MDB_ZONE))

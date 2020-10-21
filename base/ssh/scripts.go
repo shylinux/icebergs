@@ -49,23 +49,25 @@ func Render(msg *ice.Message, cmd string, args ...interface{}) {
 	}
 }
 func Script(m *ice.Message, name string) io.Reader {
-	if b, ok := ice.BinPack[name]; ok {
-		m.Debug("binpack %v %v", len(b), name)
-		return bytes.NewReader(b)
-	}
-
 	if strings.Contains(m.Option("_script"), "/") {
 		name = path.Join(path.Dir(m.Option("_script")), name)
 	}
 	m.Option("_script", name)
 
+	m.Debug("name %v", name)
 	if s, e := os.Open(path.Join(m.Option(nfs.DIR_ROOT), name)); e == nil {
 		return s
 	}
+
 	switch strings.Split(name, "/")[0] {
 	case "etc", "var":
 		m.Warn(true, ice.ErrNotFound)
 		return nil
+	}
+
+	if b, ok := ice.BinPack["/"+name]; ok {
+		m.Info("binpack %v %v", len(b), name)
+		return bytes.NewReader(b)
 	}
 
 	if msg := m.Cmd("web.spide", "dev", "GET", path.Join("/share/local/", name)); msg.Result(0) != ice.ErrWarn {

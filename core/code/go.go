@@ -27,6 +27,8 @@ func _go_find(m *ice.Message, key string) {
 				m.Push(k, 1)
 			case kit.MDB_TEXT:
 				m.Push(k, "")
+			default:
+				m.Push(k, "")
 			}
 		}
 	}
@@ -67,6 +69,8 @@ func _go_tags(m *ice.Message, key string) {
 						m.Push(k, i)
 					case kit.MDB_TEXT:
 						m.Push(k, bio.Text())
+					default:
+						m.Push(k, "")
 					}
 				}
 			}
@@ -101,6 +105,8 @@ func _go_help(m *ice.Message, key string) {
 			m.Push(k, 1)
 		case kit.MDB_TEXT:
 			m.Push(k, string(res))
+		default:
+			m.Push(k, "")
 		}
 	}
 }
@@ -111,7 +117,7 @@ const MOD = "mod"
 const SUM = "sum"
 
 func init() {
-	Index.Register(&ice.Context{Name: GO, Help: "go",
+	Index.Register(&ice.Context{Name: GO, Help: "后端",
 		Commands: map[string]*ice.Command{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 				m.Cmd(mdb.PLUGIN, mdb.CREATE, GO, m.Prefix(GO))
@@ -130,23 +136,23 @@ func init() {
 				m.Cmd(mdb.RENDER, mdb.CREATE, SUM, m.Prefix(SUM))
 
 			}},
-			SUM: {Name: SUM, Help: "sum", Action: map[string]*ice.Action{
+			SUM: {Name: SUM, Help: "版本", Action: map[string]*ice.Action{
 				mdb.PLUGIN: {Hand: func(m *ice.Message, arg ...string) {
-					m.Echo(m.Conf(GO, "meta.mod.plug"))
+					m.Echo(m.Conf(MOD, "meta.plug"))
 				}},
 				mdb.RENDER: {Hand: func(m *ice.Message, arg ...string) {
 					m.Cmdy(nfs.CAT, path.Join(arg[2], arg[1]))
 				}},
 			}},
-			MOD: {Name: MOD, Help: "mod", Action: map[string]*ice.Action{
+			MOD: {Name: MOD, Help: "模块", Action: map[string]*ice.Action{
 				mdb.PLUGIN: {Hand: func(m *ice.Message, arg ...string) {
-					m.Echo(m.Conf(GO, "meta.mod.plug"))
+					m.Echo(m.Conf(MOD, "meta.plug"))
 				}},
 				mdb.RENDER: {Hand: func(m *ice.Message, arg ...string) {
 					m.Cmdy(nfs.CAT, path.Join(arg[2], arg[1]))
 				}},
 			}},
-			DOC: {Name: DOC, Help: "doc", Action: map[string]*ice.Action{
+			DOC: {Name: DOC, Help: "文档", Action: map[string]*ice.Action{
 				mdb.PLUGIN: {Hand: func(m *ice.Message, arg ...string) {
 					m.Echo(m.Conf(GO, "meta.plug"))
 				}},
@@ -155,7 +161,7 @@ func init() {
 					m.Echo(m.Cmdx(cli.SYSTEM, GO, "doc", strings.TrimSuffix(arg[1], "."+arg[0])))
 				}},
 			}},
-			GO: {Name: GO, Help: "go", Action: map[string]*ice.Action{
+			GO: {Name: GO, Help: "后端", Action: map[string]*ice.Action{
 				mdb.PLUGIN: {Hand: func(m *ice.Message, arg ...string) {
 					m.Echo(m.Conf(GO, "meta.plug"))
 				}},
@@ -177,83 +183,85 @@ func init() {
 					}
 					m.Option(cli.CMD_DIR, kit.Select("src", arg, 2))
 					_go_find(m, kit.Select("main", arg, 1))
-					_go_tags(m, kit.Select("main", arg, 1))
 					_go_help(m, kit.Select("main", arg, 1))
+					_go_tags(m, kit.Select("main", arg, 1))
 					_go_grep(m, kit.Select("main", arg, 1))
 				}},
 			}},
 		},
 		Configs: map[string]*ice.Config{
-			GO: {Name: GO, Help: "go", Value: kit.Data(
-				"mod.plug", kit.Dict(
-					"prefix", kit.Dict(
-						"#", "comment",
+			MOD: {Name: MOD, Help: "模块", Value: kit.Data(
+				"plug", kit.Dict(
+					PREFIX, kit.Dict(
+						"#", COMMENT,
 					),
-					"keyword", kit.Dict(
-						"module", "keyword",
-						"require", "keyword",
-						"replace", "keyword",
-						"=>", "keyword",
+					KEYWORD, kit.Dict(
+						"module", KEYWORD,
+						"require", KEYWORD,
+						"replace", KEYWORD,
+						"=>", KEYWORD,
 					),
 				),
+			)},
+			GO: {Name: GO, Help: "后端", Value: kit.Data(
 				"plug", kit.Dict(
-					"split", kit.Dict(
+					SPLIT, kit.Dict(
 						"space", "\t ",
 						"operator", "{[(&.,:;!|<>)]}",
 					),
-					"prefix", kit.Dict(
-						"//", "comment",
-						"/*", "comment",
-						"*", "comment",
+					PREFIX, kit.Dict(
+						"//", COMMENT,
+						"/*", COMMENT,
+						"*", COMMENT,
 					),
-					"keyword", kit.Dict(
-						"package", "keyword",
-						"import", "keyword",
-						"const", "keyword",
-						"func", "keyword",
-						"var", "keyword",
-						"type", "keyword",
-						"struct", "keyword",
-						"interface", "keyword",
+					KEYWORD, kit.Dict(
+						"package", KEYWORD,
+						"import", KEYWORD,
+						"const", KEYWORD,
+						"func", KEYWORD,
+						"var", KEYWORD,
+						"type", KEYWORD,
+						"struct", KEYWORD,
+						"interface", KEYWORD,
 
-						"if", "keyword",
-						"else", "keyword",
-						"for", "keyword",
-						"range", "keyword",
-						"break", "keyword",
-						"continue", "keyword",
-						"switch", "keyword",
-						"case", "keyword",
-						"default", "keyword",
-						"fallthrough", "keyword",
+						"if", KEYWORD,
+						"else", KEYWORD,
+						"for", KEYWORD,
+						"range", KEYWORD,
+						"break", KEYWORD,
+						"continue", KEYWORD,
+						"switch", KEYWORD,
+						"case", KEYWORD,
+						"default", KEYWORD,
+						"fallthrough", KEYWORD,
 
-						"go", "keyword",
-						"select", "keyword",
-						"return", "keyword",
-						"defer", "keyword",
+						"go", KEYWORD,
+						"select", KEYWORD,
+						"return", KEYWORD,
+						"defer", KEYWORD,
 
-						"map", "datatype",
-						"chan", "datatype",
-						"string", "datatype",
-						"error", "datatype",
-						"bool", "datatype",
-						"byte", "datatype",
-						"int", "datatype",
-						"int64", "datatype",
-						"float64", "datatype",
+						"map", DATATYPE,
+						"chan", DATATYPE,
+						"string", DATATYPE,
+						"error", DATATYPE,
+						"bool", DATATYPE,
+						"byte", DATATYPE,
+						"int", DATATYPE,
+						"int64", DATATYPE,
+						"float64", DATATYPE,
 
-						"len", "function",
-						"cap", "function",
-						"copy", "function",
-						"append", "function",
-						"msg", "function",
-						"m", "function",
+						"len", FUNCTION,
+						"cap", FUNCTION,
+						"copy", FUNCTION,
+						"append", FUNCTION,
+						"msg", FUNCTION,
+						"m", FUNCTION,
 
-						"nil", "string",
-						"-1", "string",
-						"0", "string",
-						"1", "string",
-						"2", "string",
+						"nil", STRING,
+						"-1", STRING,
+						"0", STRING,
+						"1", STRING,
+						"2", STRING,
 					),
 				),
 			)},

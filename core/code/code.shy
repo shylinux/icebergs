@@ -6,6 +6,9 @@ chapter "code"
 # field "发布" web.code.publish
 # field "升级" web.code.upgrade
 
+field "打包" web.code.binpack
+field "打包" web.code.webpack
+
 field "编辑" web.code.vimer
 field "查看" web.code.inner
 field "收藏" web.code.favor
@@ -13,8 +16,8 @@ field "测试" web.code.bench
 field "优化" web.code.pprof
 return
 
-field "查看" web.code.c
-field "编辑" web.code.sh
-field "测试" web.code.shy
-field "收藏" web.code.go
-field "优化" web.code.js
+field "系统" web.code.c
+field "命令" web.code.sh
+field "脚本" web.code.shy
+field "后端" web.code.go
+field "前端" web.code.js

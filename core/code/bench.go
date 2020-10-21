@@ -15,7 +15,7 @@ import (
 	"sync/atomic"
 )
 
-func _bench_http(m *ice.Message, kind, name, target string, arg ...string) {
+func _bench_http(m *ice.Message, name, target string, arg ...string) {
 	nconn := kit.Int64(kit.Select("10", m.Option(NCONN)))
 	nreqs := kit.Int64(kit.Select("1000", m.Option(NREQS)))
 	m.Echo("nconn: %d nreqs: %d\n", nconn, nreqs*nconn)
@@ -49,6 +49,8 @@ func _bench_http(m *ice.Message, kind, name, target string, arg ...string) {
 	m.Echo("body: %d\n", body)
 	m.Option(ice.MSG_PROCESS, "_inner")
 }
+func _bench_redis(m *ice.Message, name, target string, arg ...string) {
+}
 
 const (
 	NCONN = "nconn"
@@ -63,7 +65,7 @@ func init() {
 			BENCH: {Name: BENCH, Help: "性能压测", Value: kit.Data(kit.MDB_SHORT, kit.MDB_ZONE)},
 		},
 		Commands: map[string]*ice.Command{
-			BENCH: {Name: "bench zone=auto id=auto auto insert", Help: "性能压测", Action: map[string]*ice.Action{
+			BENCH: {Name: "bench zone id auto insert", Help: "性能压测", Action: map[string]*ice.Action{
 				mdb.CREATE: {Name: "create zone", Help: "创建", Hand: func(m *ice.Message, arg ...string) {
 					m.Cmdy(mdb.INSERT, BENCH, "", mdb.HASH, arg)
 				}},
@@ -81,7 +83,9 @@ func init() {
 				cli.RUN: {Name: "run", Help: "运行", Hand: func(m *ice.Message, arg ...string) {
 					switch m.Option(kit.MDB_TYPE) {
 					case "http":
-						_bench_http(m, m.Option(kit.MDB_TYPE), m.Option(kit.MDB_NAME), m.Option(kit.MDB_TEXT))
+						_bench_http(m, m.Option(kit.MDB_NAME), m.Option(kit.MDB_TEXT))
+					case "redis":
+						_bench_redis(m, m.Option(kit.MDB_NAME), m.Option(kit.MDB_TEXT))
 					}
 				}},
 			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {

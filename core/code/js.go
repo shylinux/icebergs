@@ -8,151 +8,120 @@ import (
 	"github.com/shylinux/icebergs/base/web"
 	kit "github.com/shylinux/toolkits"
 
-	"net/http"
-	"os"
 	"path"
-	"strings"
 )
 
-func _js_find(m *ice.Message, key string) {
-	for _, p := range strings.Split(m.Cmdx(cli.SYSTEM, "find", ".", "-name", key), "\n") {
-		if p == "" {
-			continue
-		}
-		m.Push("file", strings.TrimPrefix(p, "./"))
-		m.Push("line", 1)
-		m.Push("text", "")
-	}
-}
-func _js_grep(m *ice.Message, key string) {
-	m.Split(m.Cmd(cli.SYSTEM, "grep", "--exclude-dir=.git", "--exclude=.[a-z]*", "-rn", key, ".").Append(cli.CMD_OUT), "file:line:text", ":", "\n")
-}
-
 const JS = "js"
-const TS = "ts"
-const TSX = "tsx"
 const CSS = "css"
 const HTML = "html"
 const NODE = "node"
 
 func init() {
-	Index.Register(&ice.Context{Name: JS, Help: "js",
+	Index.Register(&ice.Context{Name: JS, Help: "前端",
 		Commands: map[string]*ice.Command{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-				m.Cmd(mdb.SEARCH, mdb.CREATE, JS, JS, c.Cap(ice.CTX_FOLLOW))
-				m.Cmd(mdb.PLUGIN, mdb.CREATE, JS, JS, c.Cap(ice.CTX_FOLLOW))
-				m.Cmd(mdb.RENDER, mdb.CREATE, JS, JS, c.Cap(ice.CTX_FOLLOW))
+				m.Cmd(mdb.PLUGIN, mdb.CREATE, JS, m.Prefix(JS))
+				m.Cmd(mdb.RENDER, mdb.CREATE, JS, m.Prefix(JS))
+				m.Cmd(mdb.SEARCH, mdb.CREATE, JS, m.Prefix(JS))
 			}},
-			NODE: {Name: NODE, Help: "node", Action: map[string]*ice.Action{
-				"install": {Name: "install", Help: "下载", Hand: func(m *ice.Message, arg ...string) {
-					// 下载
-					source := m.Conf(NODE, "meta.source")
-					p := path.Join(m.Conf("web.code._install", "meta.path"), path.Base(source))
-					if _, e := os.Stat(p); e != nil {
-						msg := m.Cmd(web.SPIDE, "dev", web.CACHE, http.MethodGet, source)
-						m.Cmd(web.CACHE, web.WATCH, msg.Append(web.DATA), p)
-					}
-
-					// 解压
-					m.Option(cli.CMD_DIR, m.Conf("web.code._install", "meta.path"))
-					m.Cmd(cli.SYSTEM, "tar", "xvf", path.Base(source))
-					m.Echo(p)
-				}},
-			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {}},
-
-			JS: {Name: JS, Help: "js", Action: map[string]*ice.Action{
-				mdb.SEARCH: {Name: "search type name text", Hand: func(m *ice.Message, arg ...string) {
-					if arg[0] == kit.MDB_FOREACH {
-						return
-					}
-					m.Option(cli.CMD_DIR, m.Option("_path"))
-					_js_find(m, kit.Select("main", arg, 1))
-					_js_grep(m, kit.Select("main", arg, 1))
-				}},
+			JS: {Name: JS, Help: "前端", Action: map[string]*ice.Action{
 				mdb.PLUGIN: {Hand: func(m *ice.Message, arg ...string) {
 					m.Echo(m.Conf(JS, "meta.plug"))
 				}},
 				mdb.RENDER: {Hand: func(m *ice.Message, arg ...string) {
 					m.Cmdy(nfs.CAT, path.Join(arg[2], arg[1]))
 				}},
-			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {}},
+				mdb.SEARCH: {Name: "search type name text", Hand: func(m *ice.Message, arg ...string) {
+					if arg[0] == kit.MDB_FOREACH {
+						return
+					}
+					m.Option(cli.CMD_DIR, kit.Select("src", arg, 2))
+					_go_find(m, kit.Select("main", arg, 1))
+					_go_grep(m, kit.Select("main", arg, 1))
+				}},
+			}},
+			NODE: {Name: "node", Help: "前端", Action: map[string]*ice.Action{
+				web.DOWNLOAD: {Name: "download", Help: "下载", Hand: func(m *ice.Message, arg ...string) {
+					m.Cmdy(INSTALL, m.Conf(NODE, kit.META_SOURCE))
+				}},
+			}},
 		},
 		Configs: map[string]*ice.Config{
-			NODE: {Name: NODE, Help: "服务器", Value: kit.Data(
+			NODE: {Name: NODE, Help: "前端", Value: kit.Data(
 				"source", "https://nodejs.org/dist/v10.13.0/node-v10.13.0-linux-x64.tar.xz",
 			)},
 			JS: {Name: JS, Help: "js", Value: kit.Data(
 				"plug", kit.Dict(
-					"split", kit.Dict(
+					SPLIT, kit.Dict(
 						"space", " \t",
 						"operator", "{[(&.,;!|<>)]}",
 					),
-					"prefix", kit.Dict(
-						"//", "comment",
-						"/*", "comment",
-						"*", "comment",
+					PREFIX, kit.Dict(
+						"//", COMMENT,
+						"/*", COMMENT,
+						"*", COMMENT,
 					),
-					"keyword", kit.Dict(
-						"var", "keyword",
-						"new", "keyword",
-						"delete", "keyword",
-						"typeof", "keyword",
-						"function", "keyword",
+					KEYWORD, kit.Dict(
+						"var", KEYWORD,
+						"new", KEYWORD,
+						"delete", KEYWORD,
+						"typeof", KEYWORD,
+						"function", KEYWORD,
 
-						"if", "keyword",
-						"else", "keyword",
-						"for", "keyword",
-						"while", "keyword",
-						"break", "keyword",
-						"continue", "keyword",
-						"switch", "keyword",
-						"case", "keyword",
-						"default", "keyword",
-						"return", "keyword",
+						"if", KEYWORD,
+						"else", KEYWORD,
+						"for", KEYWORD,
+						"while", KEYWORD,
+						"break", KEYWORD,
+						"continue", KEYWORD,
+						"switch", KEYWORD,
+						"case", KEYWORD,
+						"default", KEYWORD,
+						"return", KEYWORD,
 
-						"window", "function",
-						"console", "function",
-						"document", "function",
-						"arguments", "function",
-						"event", "function",
-						"Date", "function",
-						"JSON", "function",
+						"window", FUNCTION,
+						"console", FUNCTION,
+						"document", FUNCTION,
+						"arguments", FUNCTION,
+						"event", FUNCTION,
+						"Date", FUNCTION,
+						"JSON", FUNCTION,
 
-						"0", "string",
-						"1", "string",
-						"10", "string",
-						"-1", "string",
-						"true", "string",
-						"false", "string",
-						"undefined", "string",
-						"null", "string",
+						"0", STRING,
+						"1", STRING,
+						"10", STRING,
+						"-1", STRING,
+						"true", STRING,
+						"false", STRING,
+						"undefined", STRING,
+						"null", STRING,
 
-						"__proto__", "function",
-						"setTimeout", "function",
-						"createElement", "function",
-						"appendChild", "function",
-						"removeChild", "function",
-						"parentNode", "function",
-						"childNodes", "function",
+						"__proto__", FUNCTION,
+						"setTimeout", FUNCTION,
+						"createElement", FUNCTION,
+						"appendChild", FUNCTION,
+						"removeChild", FUNCTION,
+						"parentNode", FUNCTION,
+						"childNodes", FUNCTION,
 
-						"Volcanos", "function",
-						"request", "function",
-						"require", "function",
+						"Volcanos", FUNCTION,
+						"request", FUNCTION,
+						"require", FUNCTION,
 
-						"cb", "function",
-						"cbs", "function",
-						"shy", "function",
-						"can", "function",
-						"sub", "function",
-						"msg", "function",
-						"res", "function",
-						"pane", "function",
-						"plugin", "function",
+						"cb", FUNCTION,
+						"cbs", FUNCTION,
+						"shy", FUNCTION,
+						"can", FUNCTION,
+						"sub", FUNCTION,
+						"msg", FUNCTION,
+						"res", FUNCTION,
+						"pane", FUNCTION,
+						"plugin", FUNCTION,
 
-						"-1", "string",
-						"0", "string",
-						"1", "string",
-						"2", "string",
+						"-1", STRING,
+						"0", STRING,
+						"1", STRING,
+						"2", STRING,
 					),
 				),
 			)},

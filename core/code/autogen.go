@@ -10,19 +10,15 @@ import (
 	"strings"
 )
 
-func _autogen_script(m *ice.Message, p string) {
-	// if b, e := kit.Render(m.Conf(AUTOGEN, "meta.shy"), m); m.Assert(e) {
-	if b, e := kit.Render(`
-chapter {{.Option "name"}}
-field {{.Option "name"}} web.code.{{.Option "name"}}.{{.Option "name"}}
-`, m); m.Assert(e) {
-		m.Cmd(nfs.SAVE, p, string(b))
+func _autogen_script(m *ice.Message, dir string) {
+	if b, e := kit.Render(m.Conf(AUTOGEN, "meta.shy"), m); m.Assert(e) {
+		m.Cmd(nfs.SAVE, dir, string(b))
 	}
 }
 func _autogen_source(m *ice.Message, name string) {
 	m.Cmd("nfs.file", "append", "src/main.shy", "\n", `source `+name+"/"+name+".shy", "\n")
 }
-func _autogen_index(m *ice.Message, p string, from string, ctx string) {
+func _autogen_index(m *ice.Message, dir string, from string, ctx string) {
 	list := []string{}
 
 	up, low := "", ""
@@ -43,16 +39,17 @@ func _autogen_index(m *ice.Message, p string, from string, ctx string) {
 
 		list = append(list, line)
 	})
-
 	m.Cmd(nfs.CAT, from)
-	m.Cmdy(nfs.SAVE, p, strings.Join(list, "\n"))
+
+	m.Cmdy(nfs.SAVE, dir, strings.Join(list, "\n"))
 }
 func _autogen_main(m *ice.Message, file string, mod string, ctx string) {
 	list := []string{}
+
 	m.Option(nfs.CAT_CB, func(line string, index int) {
 		list = append(list, line)
 		if strings.HasPrefix(line, "import (") {
-			list = append(list, `	_ "`+mod+"/src/"+ctx+`"`, "")
+			list = append(list, kit.Format(`	_ "%s/src/%s"`, mod, ctx), "")
 		}
 	})
 	m.Cmd(nfs.CAT, file)
@@ -76,7 +73,10 @@ func init() {
 	Index.Merge(&ice.Context{
 		Configs: map[string]*ice.Config{
 			AUTOGEN: {Name: AUTOGEN, Help: "生成", Value: kit.Data(
-				kit.MDB_FIELD, "time,id,name,from",
+				kit.MDB_FIELD, "time,id,name,from", "shy", `
+chapter "{{.Option "name"}}"
+field "{{.Option "name"}}" web.code.{{.Option "name"}}.{{.Option "name"}}
+`,
 			)},
 		},
 		Commands: map[string]*ice.Command{
@@ -95,13 +95,11 @@ func init() {
 				mdb.INPUTS: {Name: "inputs", Help: "补全", Hand: func(m *ice.Message, arg ...string) {
 					switch arg[0] {
 					case "main":
-						m.Cmdy(nfs.DIR, "src")
-						m.Appendv(ice.MSG_APPEND, "path", "size", "time")
+						m.Cmdy(nfs.DIR, "src", "path,size,time")
 						m.Sort(kit.MDB_PATH)
 					case "from":
 						m.Option(nfs.DIR_DEEP, true)
-						m.Cmdy(nfs.DIR, "usr/icebergs")
-						m.Appendv(ice.MSG_APPEND, "path", "size", "time")
+						m.Cmdy(nfs.DIR, "usr/icebergs", "path,size,time")
 						m.Sort(kit.MDB_PATH)
 					}
 				}},

@@ -7,8 +7,6 @@ import (
 	"github.com/shylinux/icebergs/base/nfs"
 	kit "github.com/shylinux/toolkits"
 
-	"bufio"
-	"bytes"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -20,12 +18,13 @@ func _pack_file(m *ice.Message, file string) string {
 	list := ""
 	if f, e := os.Open(file); e == nil {
 		defer f.Close()
+
 		if b, e := ioutil.ReadAll(f); e == nil {
 			list = fmt.Sprintf("%v", b)
 		}
 	}
-	list = strings.ReplaceAll(list, " ", ",")
-	if len(list) > 0 {
+
+	if list = strings.ReplaceAll(list, " ", ","); len(list) > 0 {
 		return fmt.Sprintf(`[]byte{%v}`, list[1:len(list)-1])
 	}
 	return "[]byte{}"
@@ -72,22 +71,57 @@ func _pack_contexts(m *ice.Message, pack *os.File) {
 	pack.WriteString("\n")
 }
 
-const (
-	WEBPACK = "webpack"
-	BINPACK = "binpack"
-	MODPACK = "modpack"
-)
+const WEBPACK = "webpack"
+const BINPACK = "binpack"
 
 func init() {
 	Index.Merge(&ice.Context{
 		Commands: map[string]*ice.Command{
-			WEBPACK: {Name: "webpack path auto 打包", Help: "打包", Action: map[string]*ice.Action{
-				"pack": {Name: "pack", Help: "打包", Hand: func(m *ice.Message, arg ...string) {
+			BINPACK: {Name: "binpack path auto create", Help: "打包", Action: map[string]*ice.Action{
+				mdb.CREATE: {Name: "create name=demo from=src/main.go", Help: "创建", Hand: func(m *ice.Message, arg ...string) {
+					name := kit.Keys(m.Option(kit.MDB_NAME), "go")
+					if pack, p, e := kit.Create(path.Join(m.Conf(PUBLISH, kit.META_PATH), BINPACK, name)); m.Assert(e) {
+						defer pack.Close()
+
+						pack.WriteString(m.Cmdx(nfs.CAT, m.Option("from")))
+
+						pack.WriteString("\n")
+						pack.WriteString(`func init() {` + "\n")
+						pack.WriteString(`    ice.BinPack = map[string][]byte{` + "\n")
+
+						_pack_volcanos(m, pack, "usr/volcanos")
+						_pack_dir(m, pack, "usr/learning")
+						_pack_dir(m, pack, "usr/icebergs")
+						_pack_dir(m, pack, "usr/toolkits")
+						_pack_dir(m, pack, "usr/intshell")
+						_pack_contexts(m, pack)
+
+						pack.WriteString(`    }` + "\n")
+						pack.WriteString(`}` + "\n")
+						m.Echo(p)
+					}
+
+					m.Option(cli.CMD_DIR, path.Join(m.Conf(PUBLISH, kit.META_PATH), BINPACK))
+					m.Cmd(COMPILE, "windows", "amd64", name)
+					m.Cmd(COMPILE, "darwin", "amd64", name)
+					m.Cmd(COMPILE, "linux", "amd64", name)
+				}},
+			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+				m.Option(nfs.DIR_ROOT, path.Join(m.Conf(PUBLISH, kit.META_PATH)))
+				m.Option(nfs.DIR_TYPE, nfs.FILE)
+
+				m.Cmdy(nfs.DIR, BINPACK).Table(func(index int, value map[string]string, head []string) {
+					m.PushDownload(value[kit.MDB_PATH])
+				})
+			}},
+
+			WEBPACK: {Name: "webpack path auto create", Help: "打包", Action: map[string]*ice.Action{
+				mdb.CREATE: {Name: "create name=demo", Help: "创建", Hand: func(m *ice.Message, arg ...string) {
 					css, _, e := kit.Create(path.Join(m.Conf(WEBPACK, kit.META_PATH), "cache.css"))
 					m.Assert(e)
 					defer css.Close()
 
-					js, p, e := kit.Create(path.Join(m.Conf(WEBPACK, kit.META_PATH), "cache.js"))
+					js, _, e := kit.Create(path.Join(m.Conf(WEBPACK, kit.META_PATH), "cache.js"))
 					m.Assert(e)
 					defer js.Close()
 
@@ -117,191 +151,59 @@ func init() {
 						js.WriteString(`_can_name = "` + path.Join("/", k) + "\"\n")
 						js.WriteString(m.Cmdx(nfs.CAT, k))
 					}
-					m.Echo(p)
-				}},
-			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-				m.Option(nfs.DIR_ROOT, m.Conf(PUBLISH, kit.META_PATH))
-				m.Option(nfs.DIR_TYPE, nfs.FILE)
-				m.Option(nfs.DIR_DEEP, true)
 
-				if len(arg) == 0 {
-					m.Cmdy(nfs.DIR, WEBPACK).Table(func(index int, value map[string]string, head []string) {
-						// m.Push(kit.MDB_LINK, m.Cmdx(mdb.RENDER, web.RENDER.Download, "/publish/"+value[kit.MDB_PATH]))
-					})
-					return
-				}
+					if f, _, e := kit.Create("usr/publish/webpack/" + m.Option("name") + ".js"); m.Assert(e) {
+						defer f.Close()
 
-				m.Cmdy(nfs.CAT, arg[0])
-			}},
-			BINPACK: {Name: "binpack path auto 打包", Help: "打包", Action: map[string]*ice.Action{
-				"pack": {Name: "pack", Help: "打包", Hand: func(m *ice.Message, arg ...string) {
-					name := kit.Keys(kit.Select(m.Option(kit.MDB_NAME), "demo"), "go")
-					if pack, p, e := kit.Create(path.Join(m.Conf(PUBLISH, kit.META_PATH), BINPACK, name)); m.Assert(e) {
-						defer pack.Close()
+						f.WriteString(`Volcanos.meta.pack = ` + kit.Formats(kit.UnMarshal(kit.Select("{}", m.Option("content")))))
+					}
 
-						pack.WriteString(m.Cmdx(nfs.CAT, "src/main.go"))
+					m.Option(nfs.DIR_ROOT, "")
+					if f, p, e := kit.Create("usr/publish/webpack/" + m.Option("name") + ".html"); m.Assert(e) {
+						f.WriteString(fmt.Sprintf(_pack,
+							m.Cmdx(nfs.CAT, "usr/volcanos/cache.css"),
+							m.Cmdx(nfs.CAT, "usr/volcanos/index.css"),
 
-						pack.WriteString("\n")
-						pack.WriteString(`func init() {` + "\n")
-						pack.WriteString(`    ice.BinPack = map[string][]byte{` + "\n")
-
-						_pack_volcanos(m, pack, "usr/volcanos")
-						_pack_dir(m, pack, "usr/learning")
-						_pack_dir(m, pack, "usr/icebergs")
-						_pack_dir(m, pack, "usr/intshell")
-						_pack_contexts(m, pack)
-
-						pack.WriteString(`    }` + "\n")
-						pack.WriteString(`}` + "\n")
+							m.Cmdx(nfs.CAT, "usr/volcanos/proto.js"),
+							m.Cmdx(nfs.CAT, "usr/volcanos/cache.js"),
+							m.Cmdx(nfs.CAT, "usr/publish/webpack/"+m.Option("name")+".js"),
+							m.Cmdx(nfs.CAT, "usr/volcanos/index.js"),
+						))
 						m.Echo(p)
 					}
-
-					m.Option(cli.CMD_DIR, path.Join(m.Conf(PUBLISH, kit.META_PATH), BINPACK))
-					m.Cmd(COMPILE, "windows", "amd64", name)
-					m.Cmd(COMPILE, "darwin", "amd64", name)
-					m.Cmd(COMPILE, "linux", "amd64", name)
 				}},
 			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 				m.Option(nfs.DIR_ROOT, m.Conf(PUBLISH, kit.META_PATH))
 				m.Option(nfs.DIR_TYPE, nfs.FILE)
 				m.Option(nfs.DIR_DEEP, true)
 
-				m.Cmdy(nfs.DIR, BINPACK).Table(func(index int, value map[string]string, head []string) {
-					// m.Push(kit.MDB_LINK, m.Cmdx(mdb.RENDER, web.RENDER.Download, "/publish/"+value[kit.MDB_PATH]))
+				m.Cmdy(nfs.DIR, WEBPACK).Table(func(index int, value map[string]string, head []string) {
+					m.PushDownload(path.Join(m.Option(nfs.DIR_ROOT), value[kit.MDB_PATH]))
 				})
-			}},
-			MODPACK: {Name: "modpack path=auto auto 创建", Help: "打包", Meta: kit.Dict(
-				"style", "editor", "创建", kit.List("_input", "text", "name", "name"),
-			), Action: map[string]*ice.Action{
-				mdb.CREATE: {Name: "create", Help: "创建", Hand: func(m *ice.Message, arg ...string) {
-					m.Option("name", "hi")
-					m.Option("help", "hello")
-					for i := 0; i < len(arg)-1; i += 2 {
-						m.Option(arg[i], arg[i+1])
-					}
-
-					// 生成文件
-					name := m.Option(kit.MDB_NAME)
-					os.Mkdir(path.Join("src/", name), ice.MOD_DIR)
-					kit.Fetch(m.Confv(MODPACK, "meta.base"), func(key string, value string) {
-						p := path.Join("src/", name, name+"."+key)
-						if _, e := os.Stat(p); e != nil && os.IsNotExist(e) {
-							if f, p, e := kit.Create(p); m.Assert(e) {
-								if b, e := kit.Render(value, m); m.Assert(e) {
-									if n, e := f.Write(b); m.Assert(e) {
-										m.Log_EXPORT(kit.MDB_FILE, p, kit.MDB_SIZE, n)
-									}
-								}
-							}
-						}
-					})
-					defer m.Cmdy(nfs.DIR, "src/"+name)
-
-					// 模块名称
-					mod := ""
-					if f, e := os.Open("go.mod"); e == nil {
-						defer f.Close()
-						for bio := bufio.NewScanner(f); bio.Scan(); {
-							if strings.HasPrefix(bio.Text(), "module") {
-								mod = strings.Split(bio.Text(), " ")[1]
-								break
-							}
-						}
-					}
-
-					// 检查模块
-					begin, has := false, false
-					if f, e := os.Open("src/main.go"); e == nil {
-						for bio := bufio.NewScanner(f); bio.Scan(); {
-							if strings.HasPrefix(strings.TrimSpace(bio.Text()), "//") {
-								continue
-							}
-							if strings.HasPrefix(bio.Text(), "import") {
-								if strings.Contains(bio.Text(), mod+"/src/"+name) {
-									has = true
-								}
-								continue
-							}
-							if strings.HasPrefix(bio.Text(), "import (") {
-								begin = true
-								continue
-							}
-							if strings.HasPrefix(bio.Text(), ")") {
-								begin = false
-								continue
-							}
-							if begin {
-								if strings.Contains(bio.Text(), mod+"/src/"+name) {
-									has = true
-								}
-							}
-						}
-						f.Close()
-					}
-					if has {
-						return
-					}
-
-					// 插入模块
-					if f, e := os.Open("src/main.go"); m.Assert(e) {
-						defer f.Close()
-						if b, e := ioutil.ReadAll(f); m.Assert(e) {
-							if f, e := os.Create("src/main.go"); m.Assert(e) {
-								defer f.Close()
-
-								for bio := bufio.NewScanner(bytes.NewBuffer(b)); bio.Scan(); {
-									f.WriteString(bio.Text())
-									f.WriteString("\n")
-									if strings.HasPrefix(bio.Text(), "import (") {
-										m.Info("src/main.go import: %v", mod+"/src/"+name)
-										f.WriteString("\t_ \"" + mod + "/src/" + name + `"`)
-										f.WriteString("\n\n")
-									}
-								}
-							}
-						}
-					}
-				}},
-			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-				m.Option(nfs.DIR_ROOT, "src")
-				if m.Cmdy(nfs.DIR, kit.Select("", arg, 0)); len(m.Resultv()) > 0 {
-					m.Option("_display", "/plugin/local/code/inner.js")
-				}
 			}},
 		},
 		Configs: map[string]*ice.Config{
-			WEBPACK: {Name: WEBPACK, Help: "webpack", Value: kit.Data(
-				kit.MDB_PATH, "usr/volcanos",
-			)},
+			WEBPACK: {Name: WEBPACK, Help: "webpack", Value: kit.Data(kit.MDB_PATH, "usr/volcanos")},
 			BINPACK: {Name: BINPACK, Help: "binpack", Value: kit.Data()},
-			MODPACK: {Name: MODPACK, Help: "modpack", Value: kit.Data(
-				"base", kit.Dict(
-					"shy", `title {{.Option "name"}}
-`,
-					"go", `package {{.Option "name"}}
-
-import (
-	ice "github.com/shylinux/icebergs"
-	"github.com/shylinux/icebergs/base/web"
-	"github.com/shylinux/icebergs/core/chat"
-	kit "github.com/shylinux/toolkits"
-)
-
-var Index = &ice.Context{Name: "{{.Option "name"}}", Help: "{{.Option "help"}}",
-	Configs: map[string]*ice.Config{
-		"{{.Option "name"}}": {Name: "{{.Option "name"}}", Help: "{{.Option "help"}}", Value: kit.Data()},
-	},
-	Commands: map[string]*ice.Command{
-		"{{.Option "name"}}": {Name: "{{.Option "name"}}", Help: "{{.Option "help"}}", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			m.Echo("hello {{.Option "name"}} world")
-		}},
-	},
-}
-
-func init() { chat.Index.Register(Index, &web.Frame{}) }
-`,
-				),
-			)},
 		},
 	}, nil)
 }
+
+const _pack = `
+<!DOCTYPE html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=0.7,user-scalable=no">
+    <title>volcanos</title>
+    <link rel="shortcut icon" type="image/ico" href="favicon.ico">
+    <style type="text/css">%s</style>
+    <style type="text/css">%s</style>
+</head>
+<body>
+<script>%s</script>
+<script>%s</script>
+<script>%s</script>
+<script>%s</script>
+<script>Volcanos.meta.webpack = true</script>
+</body>
+`

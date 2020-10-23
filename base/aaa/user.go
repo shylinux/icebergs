@@ -80,8 +80,9 @@ func UserRole(m *ice.Message, username interface{}) (role string) {
 func UserLogin(m *ice.Message, username, password string) bool {
 	if _user_login(m, username, password) {
 		m.Option(ice.MSG_USERNAME, username)
+		m.Option(ice.MSG_USERNICK, UserNick(m, username))
 		m.Option(ice.MSG_USERROLE, UserRole(m, username))
-		m.Log_AUTH(USERROLE, m.Option(ice.MSG_USERROLE), USERNAME, m.Option(ice.MSG_USERNAME), PASSWORD, strings.Repeat("*", len(password)))
+		m.Log_AUTH(USERROLE, m.Option(ice.MSG_USERROLE), USERNICK, m.Option(ice.MSG_USERNICK), USERNAME, m.Option(ice.MSG_USERNAME), PASSWORD, strings.Repeat("*", len(password)))
 		return true
 	}
 	return false
@@ -89,6 +90,14 @@ func UserLogin(m *ice.Message, username, password string) bool {
 
 const (
 	AVATAR = "avatar"
+	GENDER = "gender"
+	MOBILE = "mobile"
+	EMAIL  = "email"
+
+	CITY     = "city"
+	COUNTRY  = "country"
+	PROVINCE = "province"
+	LANGUAGE = "language"
 
 	USER_CREATE = "user.create"
 )

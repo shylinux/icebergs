@@ -39,6 +39,9 @@ func init() {
 				"pack": {Name: "pack", Help: "打包", Hand: func(m *ice.Message, arg ...string) {
 					m.Cmdy("web.code.webpack", "create")
 				}},
+				"wx": {Name: "wx", Help: "微信", Hand: func(m *ice.Message, arg ...string) {
+					m.Cmdy("web.chat.wx.access", "config")
+				}},
 			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 				m.Echo(m.Conf(HEADER, TITLE))
 			}},

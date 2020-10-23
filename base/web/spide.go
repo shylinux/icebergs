@@ -302,8 +302,10 @@ func init() {
 
 						var data interface{}
 						m.Assert(json.NewDecoder(res.Body).Decode(&data))
+						m.Optionv("content_data", data)
+
 						data = kit.KeyValue(map[string]interface{}{}, "", data)
-						m.Info("res: %s", kit.Format(data))
+						m.Debug("res: %s", kit.Formats(data))
 						m.Push("", data)
 					}
 				})

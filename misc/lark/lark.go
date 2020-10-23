@@ -7,6 +7,7 @@ import (
 	"github.com/shylinux/icebergs/base/mdb"
 	"github.com/shylinux/icebergs/base/web"
 	"github.com/shylinux/icebergs/core/chat"
+	"github.com/shylinux/icebergs/core/wiki"
 	"github.com/shylinux/toolkits"
 
 	"encoding/json"
@@ -16,19 +17,15 @@ import (
 	"time"
 )
 
-func raw(m *ice.Message, url string, arg ...interface{}) interface{} {
-	m.Option("header", "Authorization", "Bearer "+m.Cmdx(APP, "token", "bot"), "Content-Type", "application/json")
-	data := kit.UnMarshal(m.Cmdx(web.SPIDE, LARK, "raw", http.MethodGet, url, arg))
-	m.Debug(kit.Formats(data))
-	return data
+func _lark_get(m *ice.Message, bot string, arg ...interface{}) *ice.Message {
+	m.Option(web.SPIDE_HEADER, "Authorization", "Bearer "+m.Cmdx(APP, TOKEN, bot), web.ContentType, web.ContentJSON)
+	return m.Cmd(web.SPIDE, LARK, http.MethodGet, arg)
 }
-func post(m *ice.Message, bot string, arg ...interface{}) {
-	m.Richs(APP, nil, bot, func(key string, value map[string]interface{}) {
-		m.Option("header", "Authorization", "Bearer "+m.Cmdx(APP, "token", bot), "Content-Type", "application/json")
-		m.Cmdy(web.SPIDE, LARK, arg)
-	})
+func _lark_post(m *ice.Message, bot string, arg ...interface{}) *ice.Message {
+	m.Option(web.SPIDE_HEADER, "Authorization", "Bearer "+m.Cmdx(APP, TOKEN, bot), web.ContentType, web.ContentJSON)
+	return m.Cmd(web.SPIDE, LARK, arg)
 }
-func parse(m *ice.Message) {
+func _lark_parse(m *ice.Message) {
 	data := m.Optionv("content_data")
 	if data == nil {
 		json.NewDecoder(m.R.Body).Decode(&data)
@@ -40,153 +37,143 @@ func parse(m *ice.Message) {
 				switch d := v.(type) {
 				case map[string]interface{}:
 					for k, v := range d {
-						m.Add("option", k, kit.Format(v))
+						m.Add(ice.MSG_OPTION, k, kit.Format(v))
 					}
 				default:
 					for _, v := range kit.Simple(v) {
-						m.Add("option", "msg."+k, kit.Format(v))
+						m.Add(ice.MSG_OPTION, "msg."+k, kit.Format(v))
 					}
 				}
 			}
 		}
 	}
-	m.Info("msg: %v", kit.Formats(data))
+	m.Debug("msg: %v", kit.Format(data))
 }
 
 const (
-	ADD_BOT         = "add_bot"
 	P2P_CHAT_CREATE = "p2p_chat_create"
+	ADD_BOT         = "add_bot"
 )
 const (
 	SHIP_ID      = "ship_id"
 	OPEN_ID      = "open_id"
 	CHAT_ID      = "chat_id"
-	USER_OPEN_ID = "user_open_id"
 	OPEN_CHAT_ID = "open_chat_id"
+	USER_OPEN_ID = "user_open_id"
 )
 const (
-	APP   = "app"
-	SHIP  = "ship"
-	USERS = "users"
-	GROUP = "group"
+	LOGIN  = "login"
+	APPID  = "appid"
+	APPMM  = "appmm"
+	TOKEN  = "token"
+	EXPIRE = "expire"
+)
+const (
+	APP      = "app"
+	COMPANY  = "company"
+	EMPLOYEE = "employee"
+	GROUP    = "group"
 
 	SEND = "send"
-	FORM = "form"
 	DUTY = "duty"
+	HOME = "home"
+	FORM = "form"
 	TALK = "talk"
 	RAND = "rand"
-	HOME = "home"
-
-	DATE = "date"
-	META = "meta"
-	WORD = "word"
-
-	LARK = "lark"
 )
 
-var Index = &ice.Context{Name: "lark", Help: "机器人",
+const LARK = "lark"
+
+var Index = &ice.Context{Name: LARK, Help: "机器人",
 	Configs: map[string]*ice.Config{
 		APP: {Name: APP, Help: "服务配置", Value: kit.Data(kit.MDB_SHORT, kit.MDB_NAME,
-			LARK, "https://open.feishu.cn", DUTY, "", "welcome", kit.Dict(
+			LARK, "https://open.feishu.cn", DUTY, "", "template", kit.Dict(
 				ADD_BOT, "我来也~", P2P_CHAT_CREATE, "让我们做好朋友吧~",
 			),
 		)},
-		SHIP:  {Name: SHIP, Help: "组织配置", Value: kit.Data(kit.MDB_SHORT, SHIP_ID)},
-		USERS: {Name: USERS, Help: "用户配置", Value: kit.Data(kit.MDB_SHORT, OPEN_ID)},
-		HOME:  {Name: HOME, Help: "卡片配置", Value: kit.Data(kit.MDB_SHORT, OPEN_ID)},
-		META: {Name: META, Help: "卡片配置", Value: kit.Data(
-			kit.MDB_SHORT, "url",
-		)},
+		COMPANY:  {Name: COMPANY, Help: "组织配置", Value: kit.Data(kit.MDB_SHORT, SHIP_ID)},
+		EMPLOYEE: {Name: EMPLOYEE, Help: "用户配置", Value: kit.Data(kit.MDB_SHORT, OPEN_ID)},
 	},
 	Commands: map[string]*ice.Command{
 		ice.CTX_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			m.Load()
-			m.Cmd(web.SPIDE, mdb.CREATE, LARK, m.Conf(APP, "meta.lark"))
+			m.Cmd(web.SPIDE, mdb.CREATE, LARK, m.Conf(APP, kit.Keys(kit.MDB_META, LARK)))
 			m.Cmd(DUTY, "boot", m.Conf(cli.RUNTIME, "boot.hostname"), m.Time())
 		}},
 		ice.CTX_EXIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			m.Save(APP, SHIP, USERS, META)
+			m.Save()
 		}},
 
-		APP: {Name: "app [name] auto", Help: "应用", Action: map[string]*ice.Action{
-			"login": {Name: "login name id mm", Hand: func(m *ice.Message, arg ...string) {
-				m.Rich(APP, nil, kit.Dict("name", arg[0], "id", arg[1], "mm", arg[2]))
+		APP: {Name: "app name auto token login", Help: "应用", Action: map[string]*ice.Action{
+			LOGIN: {Name: "login name appid appmm", Help: "登录", Hand: func(m *ice.Message, arg ...string) {
+				m.Cmdy(mdb.INSERT, m.Prefix(APP), "", mdb.HASH, arg)
 			}},
-			"token": {Name: "token name", Hand: func(m *ice.Message, arg ...string) {
-				m.Richs(APP, nil, arg[0], func(key string, value map[string]interface{}) {
-					if now := time.Now().Unix(); kit.Format(value["token"]) == "" || kit.Int64(value["expire"]) < now {
-						m.Cmdy(web.SPIDE, LARK, "/open-apis/auth/v3/tenant_access_token/internal/", "app_id", value["id"], "app_secret", value["mm"])
-						value["expire"] = kit.Int64(m.Append("expire")) + now
-						value["token"] = m.Append("tenant_access_token")
-						m.Set(ice.MSG_RESULT)
-					}
-					m.Echo("%s", value["token"])
-				})
-			}},
-		}, Hand: func(m *ice.Message, c *ice.Context, key string, arg ...string) {
-			m.Richs(APP, nil, kit.Select(kit.MDB_FOREACH, arg, 0), func(key string, value map[string]interface{}) {
-				if len(arg) == 0 || arg[0] == "" {
-					m.Push(key, value, []string{"time", "name", "id", "expire"})
-					return
+			TOKEN: {Name: "token name", Help: "令牌", Hand: func(m *ice.Message, arg ...string) {
+				m.Option(mdb.FIELDS, "time,appid,appmm,token,expire")
+				msg := m.Cmd(mdb.SELECT, m.Prefix(APP), "", mdb.HASH, kit.MDB_NAME, m.Option(kit.MDB_NAME))
+				if now := time.Now().Unix(); msg.Append(TOKEN) == "" || now > kit.Int64(msg.Append(EXPIRE)) {
+					sub := m.Cmd(web.SPIDE, LARK, "/open-apis/auth/v3/tenant_access_token/internal/",
+						"app_id", msg.Append(APPID), "app_secret", msg.Append(APPMM))
+
+					m.Cmd(mdb.MODIFY, m.Prefix(APP), "", mdb.HASH, kit.MDB_NAME, m.Option(kit.MDB_NAME),
+						TOKEN, msg.Append(TOKEN, sub.Append("tenant_access_token")), EXPIRE, now+kit.Int64(sub.Append(EXPIRE)))
 				}
-				m.Push("detail", value)
-			})
+				m.Echo(msg.Append(TOKEN))
+			}},
+		}, Hand: func(m *ice.Message, c *ice.Context, key string, arg ...string) {
+			m.Option(mdb.FIELDS, kit.Select("time,name,appid,token,expire", mdb.DETAIL, len(arg) > 0))
+			m.Cmdy(mdb.SELECT, m.Prefix(APP), "", mdb.HASH, kit.MDB_NAME, arg)
 		}},
-		SHIP: {Name: "ship ship_id open_id text", Help: "组织", Action: map[string]*ice.Action{
+		COMPANY: {Name: "company ship_id open_id text auto", Help: "组织", Action: map[string]*ice.Action{
 			"info": {Name: "info ship_id", Hand: func(m *ice.Message, arg ...string) {
-				m.Richs(APP, nil, "bot", func(key string, value map[string]interface{}) {
-					data := raw(m, "/open-apis/contact/v1/department/detail/batch_get",
-						"department_ids", arg[0])
-
-					kit.Fetch(kit.Value(data, "data.department_infos"), func(index int, value map[string]interface{}) {
-						m.Push("name", value)
-					})
+				msg := _lark_get(m, "bot", "/open-apis/contact/v1/department/detail/batch_get", "department_ids", m.Option(SHIP_ID))
+				kit.Fetch(kit.Value(msg.Optionv("content_data"), "data.department_infos"), func(index int, value map[string]interface{}) {
+					m.Push("", value)
 				})
 			}},
-			"users": {Name: "users ship_id", Hand: func(m *ice.Message, arg ...string) {
-				m.Richs(APP, nil, "bot", func(key string, value map[string]interface{}) {
-					data := raw(m, "/open-apis/contact/v1/department/user/list",
-						"department_id", arg[0], "page_size", "100", "fetch_child", "true")
+			"list": {Name: "list ship_id", Hand: func(m *ice.Message, arg ...string) {
+				msg := _lark_get(m, "bot", "/open-apis/contact/v1/department/user/list",
+					"department_id", m.Option(SHIP_ID), "page_size", "100", "fetch_child", "true")
 
-					kit.Fetch(kit.Value(data, "data.user_list"), func(index int, value map[string]interface{}) {
-						msg := m.Cmd(USERS, value[OPEN_ID])
-						// m.Push("avatar", m.Cmdx(mdb.RENDER, web.RENDER.IMG, msg.Append("avatar_72")))
-						m.Push("gender", kit.Select("男", "女", msg.Append("gender") == "2"))
-						m.Push(kit.MDB_NAME, msg.Append(kit.MDB_NAME))
-						m.Push("description", msg.Append("description"))
-						m.Push(OPEN_ID, msg.Append(OPEN_ID))
-					})
+				kit.Fetch(kit.Value(msg.Optionv("content_data"), "data.user_list"), func(index int, value map[string]interface{}) {
+					msg := m.Cmd(EMPLOYEE, value[OPEN_ID])
+					m.PushRender(aaa.AVATAR, "img", msg.Append("avatar_72"))
+					m.Push(aaa.GENDER, kit.Select("女", "男", msg.Append(aaa.GENDER) == "1"))
+					m.Push(kit.MDB_NAME, msg.Append(kit.MDB_NAME))
+					m.Push(kit.MDB_TEXT, msg.Append("description"))
+					m.Push(OPEN_ID, msg.Append(OPEN_ID))
 				})
 			}},
 		}, Hand: func(m *ice.Message, c *ice.Context, key string, arg ...string) {
-			if len(arg) == 0 {
-				// 组织列表
-				data := raw(m, "/open-apis/contact/v1/scope/get/")
-				kit.Fetch(kit.Value(data, "data.authed_departments"), func(index int, value string) {
+			if len(arg) == 0 { // 组织列表
+				msg := _lark_get(m, "bot", "/open-apis/contact/v1/scope/get/")
+				kit.Fetch(kit.Value(msg.Optionv("content_data"), "data.authed_departments"), func(index int, value string) {
 					m.Push(SHIP_ID, value)
-					msg := m.Cmd(m.Prefix(SHIP), "info", value)
+					msg := m.Cmd(m.Prefix(COMPANY), "info", value)
 					m.Push(kit.MDB_NAME, msg.Append(kit.MDB_NAME))
-					m.Push("member_count", msg.Append("member_count"))
+					m.Push(kit.MDB_COUNT, msg.Append("member_count"))
 					m.Push(CHAT_ID, msg.Append(CHAT_ID))
 				})
 				m.Sort(kit.MDB_NAME)
-				return
+
+			} else if len(arg) == 1 { // 员工列表
+				m.Cmdy(m.Prefix(COMPANY), "list", arg[0])
+
+			} else if len(arg) == 2 { // 员工详情
+				m.Cmdy(EMPLOYEE, arg[1])
+
+			} else { // 员工通知
+				m.Cmdy(m.Prefix(SEND), OPEN_ID, arg[1], arg[2:])
 			}
-			if len(arg) == 1 {
-				// 用户列表
-				m.Cmdy(m.Prefix(SHIP), USERS, arg[0])
-				return
-			}
-			// 用户通知
-			m.Cmdy(m.Prefix(SEND), OPEN_ID, arg[1], arg[2:])
 		}},
-		USERS: {Name: "users open_id|mobile|email", Help: "用户", Hand: func(m *ice.Message, c *ice.Context, key string, arg ...string) {
+		EMPLOYEE: {Name: "employee open_id|mobile|email auto", Help: "员工", Hand: func(m *ice.Message, c *ice.Context, key string, arg ...string) {
+			if len(arg) == 0 {
+				return
+			}
 			if strings.HasPrefix(arg[0], "ou_") {
-				m.Richs(APP, nil, "bot", func(key string, value map[string]interface{}) {
-					data := raw(m, "/open-apis/contact/v1/user/batch_get", "open_ids", arg[0])
-					kit.Fetch(kit.Value(data, "data.user_infos"), func(index int, value map[string]interface{}) {
-						m.Push("name", value)
-					})
+				msg := _lark_get(m, "bot", "/open-apis/contact/v1/user/batch_get", "open_ids", arg[0])
+				kit.Fetch(kit.Value(msg.Optionv("content_data"), "data.user_infos"), func(index int, value map[string]interface{}) {
+					m.Push(mdb.DETAIL, value)
 				})
 				return
 			}
@@ -195,55 +182,49 @@ var Index = &ice.Context{Name: "lark", Help: "机器人",
 			for i := 0; i < len(arg); i++ {
 				us = append(us, kit.Select("mobiles", "emails", strings.Contains(arg[i], "@")), arg[i])
 			}
-			post(m, "bot", http.MethodGet, "/open-apis/user/v1/batch_get_id", us)
+
+			_lark_get(m, "bot", "/open-apis/user/v1/batch_get_id", us)
 			for i := 0; i < len(arg); i++ {
 				m.Echo(m.Append(kit.Keys("data.mobile_users", arg[i], "0.open_id")))
 			}
 		}},
-		GROUP: {Name: "group chat_id open_id text", Help: "群组", Action: map[string]*ice.Action{
-			"users": {Name: "users id", Hand: func(m *ice.Message, arg ...string) {
-				m.Richs(APP, nil, "bot", func(key string, value map[string]interface{}) {
-					data := raw(m, "/open-apis/chat/v4/info", "chat_id", arg[0])
-
-					kit.Fetch(kit.Value(data, "data.members"), func(index int, value map[string]interface{}) {
-						msg := m.Cmd(USERS, value[OPEN_ID])
-						// m.Push("avatar", m.Cmdx(mdb.RENDER, web.RENDER.IMG, msg.Append("avatar_72")))
-						m.Push("gender", kit.Select("男", "女", msg.Append("gender") == "2"))
-						m.Push(kit.MDB_NAME, msg.Append(kit.MDB_NAME))
-						m.Push("description", msg.Append("description"))
-						m.Push(OPEN_ID, msg.Append(OPEN_ID))
-					})
+		GROUP: {Name: "group chat_id open_id text auto", Help: "群组", Action: map[string]*ice.Action{
+			"list": {Name: "list chat_id", Hand: func(m *ice.Message, arg ...string) {
+				msg := _lark_get(m, "bot", "/open-apis/chat/v4/info", "chat_id", m.Option(CHAT_ID))
+				kit.Fetch(kit.Value(msg.Optionv("content_data"), "data.members"), func(index int, value map[string]interface{}) {
+					msg := m.Cmd(EMPLOYEE, value[OPEN_ID])
+					m.PushRender(aaa.AVATAR, "img", msg.Append("avatar_72"))
+					m.Push(aaa.GENDER, kit.Select("女", "男", msg.Append(aaa.GENDER) == "1"))
+					m.Push(kit.MDB_NAME, msg.Append(kit.MDB_NAME))
+					m.Push(kit.MDB_TEXT, msg.Append("description"))
+					m.Push(OPEN_ID, msg.Append(OPEN_ID))
 				})
 			}},
 		}, Hand: func(m *ice.Message, c *ice.Context, key string, arg ...string) {
-			if len(arg) == 0 {
-				// 群组列表
-				m.Richs(APP, nil, "bot", func(key string, value map[string]interface{}) {
-					m.Option("header", "Authorization", "Bearer "+m.Cmdx(APP, "token", "bot"), "Content-Type", "application/json")
-					data := raw(m, "/open-apis/chat/v4/list")
-					kit.Fetch(kit.Value(data, "data.groups"), func(index int, value map[string]interface{}) {
-						m.Push(CHAT_ID, value[CHAT_ID])
-						// m.Push("avatar", m.Cmdx(mdb.RENDER, web.RENDER.IMG, value["avatar"]))
-						m.Push(kit.MDB_NAME, value[kit.MDB_NAME])
-						m.Push("description", value["description"])
-						m.Push(OPEN_ID, value["owner_open_id"])
-					})
+			if len(arg) == 0 { // 群组列表
+				msg := _lark_get(m, "bot", "/open-apis/chat/v4/list")
+				kit.Fetch(kit.Value(msg.Optionv("content_data"), "data.groups"), func(index int, value map[string]interface{}) {
+					m.Push(CHAT_ID, value[CHAT_ID])
+					m.PushRender(aaa.AVATAR, "img", kit.Format(value[aaa.AVATAR]), "72")
+					m.Push(kit.MDB_NAME, value[kit.MDB_NAME])
+					m.Push(kit.MDB_TEXT, value["description"])
+					m.Push(OPEN_ID, value["owner_open_id"])
 				})
 				m.Sort(kit.MDB_NAME)
-				return
+
+			} else if len(arg) == 1 { // 组员列表
+				m.Cmdy(m.Prefix(GROUP), "list", arg[0])
+
+			} else if len(arg) == 2 { // 组员详情
+				m.Cmdy(EMPLOYEE, arg[1])
+
+			} else { // 组员通知
+				m.Cmdy(m.Prefix(SEND), CHAT_ID, arg[0], arg[2:])
 			}
-			if len(arg) == 1 {
-				// 用户列表
-				m.Cmdy(m.Prefix(GROUP), USERS, arg[0])
-				return
-			}
-			// 用户通知
-			m.Cmdy(m.Prefix(SEND), CHAT_ID, arg[0], arg[2:])
 		}},
 
-		SEND: {Name: "send [chat_id|open_id|user_id|email] user [title] text", Help: "消息", Hand: func(m *ice.Message, c *ice.Context, key string, arg ...string) {
+		SEND: {Name: "send [chat_id|open_id|user_id|email] target [title] text", Help: "消息", Hand: func(m *ice.Message, c *ice.Context, key string, arg ...string) {
 			var form = kit.Dict("content", kit.Dict())
-
 			switch arg[0] {
 			case CHAT_ID, OPEN_ID, "user_id", "email":
 				form[arg[0]], arg = arg[1], arg[2:]
@@ -270,108 +251,48 @@ var Index = &ice.Context{Name: "lark", Help: "机器人",
 						content, line = append(content, line), []interface{}{}
 						continue
 					}
-					line = append(line, map[string]interface{}{
-						"tag": "text", "text": v + " ",
-					})
+					line = append(line, map[string]interface{}{"tag": "text", "text": v + " "})
 				}
 				content = append(content, line)
 
 				kit.Value(form, "msg_type", "post")
 				kit.Value(form, "content.post", map[string]interface{}{
-					"zh_cn": map[string]interface{}{
-						"title":   arg[0],
-						"content": content,
-					},
+					"zh_cn": map[string]interface{}{"title": arg[0], "content": content},
 				})
 			}
 
-			post(m, "bot", "/open-apis/message/v4/send/", "data", kit.Formats(form))
-		}},
-		TALK: {Name: "talk text", Help: "聊天", Hand: func(m *ice.Message, c *ice.Context, key string, arg ...string) {
-			// 用户权限
-			m.Option(ice.MSG_USERZONE, LARK)
-			m.Option(ice.MSG_USERNAME, m.Option(OPEN_ID))
-			m.Option(ice.MSG_USERNICK, aaa.UserNick(m, m.Option(ice.MSG_USERNAME)))
-			m.Option(ice.MSG_USERROLE, aaa.UserRole(m, m.Option(ice.MSG_USERNAME)))
-			m.Info("%s: %s", m.Option(ice.MSG_USERROLE), m.Option(ice.MSG_USERNAME))
-
-			cmd := kit.Split(arg[0])
-			if !m.Right(cmd) {
-				// 群组权限
-				m.Option(ice.MSG_USERNAME, m.Option(OPEN_CHAT_ID))
-				m.Option(ice.MSG_USERROLE, aaa.UserRole(m, m.Option(ice.MSG_USERNAME)))
-				m.Info("%s: %s", m.Option(ice.MSG_USERROLE), m.Option(ice.MSG_USERNAME))
-
-				if !m.Right(cmd) {
-					// 没有权限
-					m.Cmd(DUTY, m.Option(OPEN_CHAT_ID), m.Option("text_without_at_bot"))
-					m.Cmd(HOME)
-					return
-				}
-			}
-			if len(cmd) == 0 {
-				m.Cmd(HOME)
-				return
-			}
-
-			// 执行命令
-			msg := m.Cmd(cmd)
-			if m.Hand = false; !msg.Hand {
-				msg = m.Cmd(cli.SYSTEM, cmd)
-			}
-			if m.Hand = true; msg.Result() == "" {
-				msg.Table()
-			}
-			m.Echo(msg.Result())
+			_lark_post(m, "bot", "/open-apis/message/v4/send/", web.SPIDE_DATA, kit.Format(form))
 		}},
 		DUTY: {Name: "duty [title] text", Help: "通告", Hand: func(m *ice.Message, c *ice.Context, key string, arg ...string) {
 			m.Cmdy(SEND, m.Conf(APP, "meta.duty"), arg)
 		}},
-		RAND: {Name: "rand", Help: "随机", Hand: func(m *ice.Message, c *ice.Context, key string, arg ...string) {
-			msg := m.Cmd(GROUP, USERS, m.Option(OPEN_CHAT_ID))
-			list := msg.Appendv("name")
-			if strings.Contains(m.Option("content"), "誰") {
-				m.Echo(strings.Replace(m.Option("content"), "誰", list[rand.Intn(len(list))], 1))
-				return
-			}
-			m.Echo(list[rand.Intn(len(list))])
-		}},
-		HOME: {Name: "home", Help: "首页", Hand: func(m *ice.Message, c *ice.Context, key string, arg ...string) {
-			list := []string{}
+		HOME: {Name: "home river storm title", Help: "首页", Hand: func(m *ice.Message, c *ice.Context, key string, arg ...string) {
 			name := kit.Select(m.Option(ice.MSG_USERNAME), m.Option(ice.MSG_USERNICK))
 			if len(name) > 10 {
 				name = name[:10]
 			}
-			name += "的应用列表"
-			link := "https://shylinux.com"
+			name += "的" + kit.Select("应用列表", arg, 2)
 			text := ""
+
+			link, list := m.Conf(web.SHARE, "meta.domain"), []string{}
 			if len(arg) == 0 {
-				m.Option("_source", ".")
 				m.Cmd("web.chat./river").Table(func(index int, val map[string]string, head []string) {
-					m.Option(ice.MSG_RIVER, val["key"])
-					m.Cmd("web.chat./storm").Table(func(index int, value map[string]string, head []string) {
-						list = append(list, val["name"]+"."+value["name"], "cmd", "home "+val["key"]+" "+value["key"])
+					m.Cmd("web.chat./river", val[kit.MDB_HASH], chat.TOOL).Table(func(index int, value map[string]string, head []string) {
+						list = append(list, kit.Keys(val[kit.MDB_NAME], value[kit.MDB_NAME]),
+							kit.SSH_CMD, kit.Format([]string{"home", val[kit.MDB_HASH], value[kit.MDB_HASH], val[kit.MDB_NAME] + "." + value[kit.MDB_NAME]}))
 					})
 				})
 			} else {
 				m.Option(ice.MSG_RIVER, arg[0])
 				m.Option(ice.MSG_STORM, arg[1])
-				m.Richs(chat.RIVER, nil, arg[0], func(key string, val map[string]interface{}) {
-					m.Richs(chat.RIVER, kit.Keys(kit.MDB_HASH, arg[0], chat.TOOL), arg[1], func(key string, value map[string]interface{}) {
-						text = kit.Keys(kit.Value(val, "meta.name"), kit.Value(value, "meta.name"))
-					})
+				link = kit.MergeURL(link, chat.RIVER, arg[0], chat.STORM, arg[1])
+				m.Cmd("web.chat./river", arg[0], chat.TOOL, arg[1]).Table(func(index int, value map[string]string, head []string) {
+					list = append(list, value[kit.SSH_CMD], kit.SSH_CMD, kit.Keys(value[kit.SSH_CTX], value[kit.SSH_CMD]))
 				})
-
-				m.Cmd("web.chat./action").Table(func(index int, value map[string]string, head []string) {
-					list = append(list, value["name"], "cmd", kit.Keys(value["group"], value["index"]))
-				})
-				link = "https://shylinux.com?river=" + arg[0] + "&storm=" + arg[1]
 			}
-			m.Cmd(FORM, CHAT_ID, m.Option(OPEN_CHAT_ID), name, text,
-				"网页应用", "url", link, list,
-			)
+			m.Cmd(FORM, CHAT_ID, m.Option(OPEN_CHAT_ID), name, text, "打开网页", "url", link, list)
 		}},
-		FORM: {Name: "form chat_id|open_id|user_id|email user title [text [confirm|value|url arg...]]...", Help: "消息", Hand: func(m *ice.Message, c *ice.Context, key string, arg ...string) {
+		FORM: {Name: "form chat_id|open_id|user_id|email target title text [confirm|value|url arg...]...", Help: "消息", Hand: func(m *ice.Message, c *ice.Context, key string, arg ...string) {
 			var form = map[string]interface{}{"content": map[string]interface{}{}}
 			switch arg[0] {
 			case CHAT_ID, OPEN_ID, "user_id", "email":
@@ -390,10 +311,9 @@ var Index = &ice.Context{Name: "lark", Help: "机器人",
 			actions := []interface{}{}
 			for i := 2; i < len(arg); i++ {
 				button := map[string]interface{}{
-					"tag": "button", "text": map[string]interface{}{
+					"type": "default", "tag": "button", "text": map[string]interface{}{
 						"tag": "plain_text", "content": arg[i],
 					},
-					"type": "default",
 				}
 
 				content := arg[i]
@@ -404,9 +324,7 @@ var Index = &ice.Context{Name: "lark", Help: "机器人",
 						"text":  map[string]interface{}{"tag": "lark_md", "content": arg[i+3]},
 					}, i+3
 				case "value":
-					button[arg[i+1]], i = map[string]interface{}{
-						arg[i+2]: arg[i+3],
-					}, i+3
+					button[arg[i+1]], i = map[string]interface{}{arg[i+2]: arg[i+3]}, i+3
 				case "url":
 					button[arg[i+1]], i = arg[i+2], i+2
 				default:
@@ -423,66 +341,70 @@ var Index = &ice.Context{Name: "lark", Help: "机器人",
 
 				actions = append(actions, button)
 			}
-			elements = append(elements, map[string]interface{}{
-				"tag": "action", "actions": actions,
-			})
+			elements = append(elements, map[string]interface{}{"tag": "action", "actions": actions})
 
 			kit.Value(form, "msg_type", "interactive")
 			kit.Value(form, "card", map[string]interface{}{
-				"config": map[string]interface{}{
-					"wide_screen_mode": true,
-				},
+				"config": map[string]interface{}{"wide_screen_mode": true},
 				"header": map[string]interface{}{
-					"title": map[string]interface{}{
-						"tag": "lark_md", "content": arg[0],
-					},
+					"title": map[string]interface{}{"tag": "lark_md", "content": arg[0]},
 				},
 				"elements": elements,
 			})
 
-			post(m, "bot", "/open-apis/message/v4/send/", "data", kit.Formats(form))
+			_lark_post(m, "bot", "/open-apis/message/v4/send/", web.SPIDE_DATA, kit.Formats(form))
+		}},
+		TALK: {Name: "talk text", Help: "聊天", Hand: func(m *ice.Message, c *ice.Context, key string, arg ...string) {
+			m.Option(ice.MSG_USERZONE, LARK)
+
+			cmds := kit.Split(strings.Join(arg, " "))
+			if aaa.UserLogin(m, m.Option(OPEN_ID), ""); !m.Right(cmds) {
+				if aaa.UserLogin(m, m.Option(OPEN_CHAT_ID), ""); !m.Right(cmds) {
+					m.Cmd(DUTY, m.Option(OPEN_CHAT_ID), m.Option("text_without_at_bot"))
+					m.Cmd(HOME)
+					return // 没有权限
+				}
+			}
+
+			if cmds[0] == HOME {
+				m.Cmd(HOME, cmds[1:])
+				return // 没有命令
+			}
+
+			// 执行命令
+			if msg := m.Cmd(cmds); msg.Hand == true {
+				if m.Copy(msg); len(m.Resultv()) == 0 {
+					m.Table()
+				}
+			} else {
+				m.Cmdy(cli.SYSTEM, cmds)
+			}
+		}},
+		RAND: {Name: "rand", Help: "随机", Hand: func(m *ice.Message, c *ice.Context, key string, arg ...string) {
+			msg := m.Cmd(GROUP, EMPLOYEE, m.Option(OPEN_CHAT_ID))
+			list := msg.Appendv("name")
+			if strings.Contains(m.Option("content"), "誰") {
+				m.Echo(strings.Replace(m.Option("content"), "誰", list[rand.Intn(len(list))], 1))
+				return
+			}
+			m.Echo(list[rand.Intn(len(list))])
 		}},
 
-		// DATE: {Name: "date id", Help: "日历", Hand: func(m *ice.Message, c *ice.Context, key string, arg ...string) {
-		// 	m.Richs(APP, nil, "bot", func(key string, value map[string]interface{}) {
-		// 		if len(arg) == 0 {
-		// 			data := raw(m, "/open-apis/calendar/v3/calendar_list")
-		// 			kit.Fetch(kit.Value(data, "data"), func(index int, value map[string]interface{}) {
-		// 				m.Push("", value)
-		// 			})
-		// 			return
-		// 		}
-		// 		data := raw(m, "/open-apis/calendar/v3/calendars/"+arg[0]+"/events")
-		// 		kit.Fetch(kit.Value(data, "data"), func(index int, value map[string]interface{}) {
-		// 			m.Push("", value)
-		// 		})
-		// 	})
-		// }},
-		// META: {Name: "meta", Help: "日历", Hand: func(m *ice.Message, c *ice.Context, key string, arg ...string) {
-		// 	m.Richs(META, nil, kit.MDB_FOREACH, func(key string, value map[string]interface{}) {
-		// 		m.Push("image", m.Cmdx(mdb.RENDER, web.RENDER.IMG, value["url"]))
-		// 	})
-		// }},
 		web.LOGIN: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {}},
 		"/msg": {Name: "/msg", Help: "聊天消息", Hand: func(m *ice.Message, c *ice.Context, key string, arg ...string) {
 			data := m.Optionv(ice.MSG_USERDATA)
 			if kit.Value(data, "action") != nil {
-				m.Option(ice.MSG_USERUA, "MicroMessenger")
+				m.Option(ice.MSG_USERUA, "")
+				kit.Fetch(kit.Value(data, "action.value"), func(key string, value string) { m.Option(key, value) })
 
-				kit.Fetch(kit.Value(data, "action.value"), func(key string, value string) {
-					m.Option(key, value)
-				})
-
-				m.Cmdy(TALK, m.Option("cmd"))
-				m.Cmd(SEND, CHAT_ID, m.Option(OPEN_CHAT_ID), m.Result())
+				m.Cmdy(TALK, kit.Parse(nil, "", kit.Split(m.Option(kit.SSH_CMD))...))
+				m.Cmd(SEND, CHAT_ID, m.Option(OPEN_CHAT_ID), m.Option(wiki.TITLE)+" "+m.Option(kit.SSH_CMD), m.Result())
 				return
 			}
 
-			switch parse(m); m.Option("msg.type") {
-			case "url_verification":
-				// 绑定验证
-				m.Option(ice.MSG_OUTPUT, ice.RENDER_RESULT)
-				m.Echo(kit.Format(map[string]interface{}{"challenge": m.Option("msg.challenge")}))
+			switch _lark_parse(m); m.Option("msg.type") {
+			case "url_verification": // 绑定验证
+				m.Render(ice.RENDER_RESULT, kit.Format(kit.Dict("challenge", m.Option("msg.challenge"))))
 
 			case "event_callback":
 				switch m.Option("type") {
@@ -491,24 +413,24 @@ var Index = &ice.Context{Name: "lark", Help: "机器人",
 				case P2P_CHAT_CREATE, ADD_BOT:
 					// 创建对话
 					if m.Options(OPEN_CHAT_ID) {
-						m.Cmdy(SEND, m.Option(OPEN_CHAT_ID), m.Conf(APP, kit.Dict(kit.MDB_META, "welcome", m.Option("type"))))
+						m.Cmdy(SEND, m.Option(OPEN_CHAT_ID), m.Conf(APP, kit.Keys(kit.MDB_META, "template", m.Option("type"))))
 					}
 				default:
 					switch m.Option("msg_type") {
 					case "location":
 					case "image":
-						m.Rich(META, nil, kit.Dict(
-							"url", m.Option("image_url"),
-							"width", m.Option("image_width"),
-							"height", m.Option("image_height"),
-						))
+						// m.Rich(META, nil, kit.Dict(
+						// 	"url", m.Option("image_url"),
+						// 	"width", m.Option("image_width"),
+						// 	"height", m.Option("image_height"),
+						// ))
 					default:
 						if m.Options(OPEN_CHAT_ID) {
 							if m.Cmdy(TALK, strings.TrimSpace(m.Option("text_without_at_bot"))); len(m.Resultv()) > 0 {
 								m.Cmd(SEND, m.Option(OPEN_CHAT_ID), m.Result())
 							}
 						} else {
-							m.Cmd(DUTY, m.Option("msg.type"), kit.Formats(data))
+							m.Cmd(DUTY, m.Option("type"), kit.Formats(data))
 						}
 					}
 				}
@@ -518,33 +440,27 @@ var Index = &ice.Context{Name: "lark", Help: "机器人",
 		}},
 		"/sso": {Name: "/sso", Help: "网页", Hand: func(m *ice.Message, c *ice.Context, key string, arg ...string) {
 			if m.Options("code") {
-				m.Richs(APP, nil, "bot", func(key string, value map[string]interface{}) {
-					data := kit.UnMarshal(m.Cmdx(web.SPIDE, LARK, "raw", "/open-apis/authen/v1/access_token",
-						"code", m.Option("code"), "grant_type", "authorization_code",
-						"app_access_token", m.Cmdx(APP, "token", "bot"),
-					))
+				msg := m.Cmd(web.SPIDE, LARK, "/open-apis/authen/v1/access_token", "grant_type", "authorization_code",
+					"code", m.Option("code"), "app_access_token", m.Cmdx(APP, "token", "bot"))
 
-					m.Option(aaa.USERZONE, LARK)
-					m.Option(ice.MSG_USERROLE, aaa.ROOT)
-					user := kit.Format(kit.Value(data, "data.open_id"))
-					web.RenderCookie(m, aaa.SessCreate(m, user, aaa.UserRole(m, user)))
-					m.Render("redirect", m.Conf(web.SHARE, "meta.domain"))
+				m.Option(aaa.USERZONE, LARK)
+				user := msg.Append("data.open_id")
+				web.RenderCookie(m, aaa.SessCreate(m, user, aaa.UserRole(m, user)))
+				m.Render("redirect", m.Conf(web.SHARE, "meta.domain"))
 
-					m.Option(aaa.USERNAME, user)
-					msg := m.Cmd(USERS, user)
-					m.Cmd(aaa.USER, mdb.MODIFY, aaa.USERZONE, LARK, aaa.USERNICK, msg.Append("name"),
-						"mobile", msg.Append("mobile"), "avatar_url", msg.Append("avatar_url"),
-						"gender", kit.Select("女", "男", msg.Append("gender") == "1"),
-						"country", msg.Append("country"), "city", msg.Append("city"),
-					)
-				})
+				msg = m.Cmd(EMPLOYEE, m.Option(aaa.USERNAME, user))
+				m.Cmd(aaa.USER, mdb.MODIFY, aaa.USERZONE, LARK, aaa.USERNICK, msg.Append(kit.MDB_NAME),
+					aaa.AVATAR, msg.Append("avatar_url"), aaa.GENDER, kit.Select("女", "男", msg.Append(aaa.GENDER) == "1"),
+					aaa.COUNTRY, msg.Append(aaa.COUNTRY), aaa.CITY, msg.Append(aaa.CITY),
+					aaa.MOBILE, msg.Append(aaa.MOBILE),
+				)
 				return
 			}
 
-			m.Richs(APP, nil, "bot", func(key string, value map[string]interface{}) {
-				m.Render("redirect", kit.MergeURL2(m.Conf(APP, "meta.lark"), "/open-apis/authen/v1/index"),
-					"app_id", value["id"], "redirect_uri", kit.MergeURL2(m.Conf(web.SHARE, "meta.domain"), "/chat/lark/sso"),
-					// "app_id", value["id"], "redirect_uri", "https://shylinux.com/chat/lark/sso",
+			m.Option(mdb.FIELDS, "time,appid,appmm,token,expire")
+			m.Cmd(mdb.SELECT, m.Prefix(APP), "", mdb.HASH, kit.MDB_NAME, "bot").Table(func(index int, value map[string]string, head []string) {
+				m.Render("redirect", kit.MergeURL2(m.Conf(APP, kit.Keys(kit.MDB_META, LARK)), "/open-apis/authen/v1/index"),
+					"app_id", value[APPID], "redirect_uri", kit.MergeURL2(m.Conf(web.SHARE, "meta.domain"), "/chat/lark/sso"),
 				)
 			})
 		}},

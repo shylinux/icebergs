@@ -15,8 +15,8 @@ func init() {
 			SCAN: {Name: SCAN, Help: "扫码", Value: kit.Data(kit.MDB_SHORT, kit.MDB_TEXT)},
 		},
 		Commands: map[string]*ice.Command{
-			SCAN: {Name: "scan hash auto create@scan", Help: "扫码", Action: map[string]*ice.Action{
-				mdb.CREATE: {Name: "create type=text name=hi text:textarea=hi", Help: "添加", Hand: func(m *ice.Message, arg ...string) {
+			SCAN: {Name: "scan hash auto create@scanQRCode scanQRCode0=应用扫码", Help: "扫码", Action: map[string]*ice.Action{
+				mdb.CREATE: {Name: "create type=text name=hi text:textarea=hi", Help: "扫码", Hand: func(m *ice.Message, arg ...string) {
 					m.Cmdy(mdb.INSERT, SCAN, "", mdb.HASH, arg)
 				}},
 				mdb.REMOVE: {Name: "remove", Help: "删除", Hand: func(m *ice.Message, arg ...string) {

@@ -94,8 +94,12 @@ func (m *Message) Push(key string, value interface{}, arg ...interface{}) *Messa
 				}
 				fallthrough
 			default:
-				if v = kit.Value(value, k); v == nil {
-					v = kit.Value(val, k)
+				if v = value[k]; v == nil {
+					if v = kit.Value(value, k); v == nil {
+						if v = val[k]; v == nil {
+							v = kit.Value(val, k)
+						}
+					}
 				}
 			}
 

@@ -1,19 +1,25 @@
 title "飞书机器人"
 refer "官网" `
 官网 https://www.feishu.cn/
-应用管理 https://open.feishu.cn/app
-后台管理 https://www.feishu.cn/admin
 文档 https://open.feishu.cn/document/uQjL04CN/ucDOz4yN4MjL3gzM
 源码 https://github.com/shylinux/icebergs/blob/master/misc/lark/lark.go
+后台管理 https://www.feishu.cn/admin
+应用管理 https://open.feishu.cn/app
 `
 image qrcode `https://www.feishu.cn/`
 
 chapter "应用"
-field "ship" web.chat.lark.ship
+field "app" web.chat.lark.app
+field "company" web.chat.lark.company
+# field "employee" web.chat.lark.employee
 field "group" web.chat.lark.group
+# field "send" web.chat.lark.send
+# field "duty" web.chat.lark.duty
+
+chapter "权限"
+field user aaa.user
+field sess aaa.sess
 
 chapter "项目"
-section "icebergs"
-field "icebergs_统计" web.code.git.trend args `[ icebergs ]` action `{ height 200 speed 20 }`
-field "icebergs_源码" web.code.inner args `[ usr/icebergs misc/lark/lark.go 74 ]`
-
+field "icebergs" web.code.git.trend args `icebergs`
+field "icebergs" web.code.inner args `usr/icebergs/ misc/lark/lark.go 1`

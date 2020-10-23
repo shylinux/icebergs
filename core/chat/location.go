@@ -6,7 +6,6 @@ import (
 	kit "github.com/shylinux/toolkits"
 
 	"math"
-	"net/url"
 )
 
 func distance(lat1, long1, lat2, long2 float64) float64 {
@@ -35,8 +34,8 @@ func init() {
 			LOCATION: {Name: LOCATION, Help: "地理位置", Value: kit.Data(kit.MDB_SHORT, kit.MDB_TEXT)},
 		},
 		Commands: map[string]*ice.Command{
-			LOCATION: {Name: "location text auto create@location", Help: "地理位置", Action: map[string]*ice.Action{
-				mdb.CREATE: {Name: "insert type=text name address latitude longitude", Help: "添加", Hand: func(m *ice.Message, arg ...string) {
+			LOCATION: {Name: "location text auto create@getLocation", Help: "地理位置", Action: map[string]*ice.Action{
+				mdb.CREATE: {Name: "create type=text name address latitude longitude", Help: "添加", Hand: func(m *ice.Message, arg ...string) {
 					_trans(arg, map[string]string{"address": "text"})
 					m.Cmdy(mdb.INSERT, LOCATION, "", mdb.HASH, arg)
 				}},
@@ -44,7 +43,7 @@ func init() {
 					m.Cmdy(mdb.MODIFY, LOCATION, "", mdb.HASH, kit.MDB_HASH, m.Option(kit.MDB_HASH), arg)
 				}},
 				mdb.REMOVE: {Name: "remove", Help: "删除", Hand: func(m *ice.Message, arg ...string) {
-					m.Cmdy(mdb.DELETE, LOCATION, "", mdb.HASH, kit.MDB_HASH, m.Option(kit.MDB_HASH))
+					m.Cmdy(mdb.DELETE, LOCATION, "", mdb.HASH, kit.MDB_TEXT, m.Option(kit.MDB_TEXT))
 				}},
 				mdb.EXPORT: {Name: "export", Help: "导出", Hand: func(m *ice.Message, arg ...string) {
 					m.Cmdy(mdb.EXPORT, LOCATION, "", mdb.HASH)
@@ -58,13 +57,7 @@ func init() {
 			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 				m.Option(mdb.FIELDS, kit.Select("time,type,name,text,longitude,latitude", mdb.DETAIL, len(arg) > 0))
 				m.Cmdy(mdb.SELECT, LOCATION, "", mdb.HASH, kit.MDB_TEXT, arg)
-				m.Table(func(index int, value map[string]string, head []string) {
-					m.PushRender(kit.MDB_LINK, "a", "百度地图", kit.Format(
-						"https://map.baidu.com/search/%s/@12958750.085,4825785.55,16z?querytype=s&da_src=shareurl&wd=%s",
-						url.QueryEscape(kit.Format(value[kit.MDB_TEXT])), url.QueryEscape(kit.Format(value[kit.MDB_TEXT])),
-					))
-				})
-				m.PushAction(mdb.REMOVE)
+				m.PushAction("openLocation", mdb.REMOVE)
 			}},
 		},
 	}, nil)

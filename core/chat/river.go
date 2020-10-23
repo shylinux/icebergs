@@ -256,7 +256,7 @@ func init() {
 					m.Richs(USER, nil, value[aaa.USERNAME], func(key string, val map[string]interface{}) {
 						val = kit.GetMeta(val)
 						m.Push(aaa.USERNICK, val[aaa.USERNICK])
-						m.PushRender(aaa.AVATAR, "img", kit.Format(val["avatar_url"]), kit.Select("60", "240", m.Option(mdb.FIELDS) == mdb.DETAIL))
+						m.PushRender(aaa.AVATAR, "img", kit.Format(val[aaa.AVATAR]), kit.Select("60", "240", m.Option(mdb.FIELDS) == mdb.DETAIL))
 					})
 
 				})

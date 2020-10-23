@@ -139,6 +139,7 @@ func _input_load(m *ice.Message, file string, libs ...string) {
 }
 
 const (
+	ZONE   = "zone"
 	FILE   = "file"
 	CODE   = "code"
 	TEXT   = "text"
@@ -163,17 +164,17 @@ var Index = &ice.Context{Name: INPUT, Help: "输入法",
 	},
 	Commands: map[string]*ice.Command{
 		ice.CTX_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) { m.Load() }},
-		ice.CTX_EXIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) { m.Save(INPUT) }},
+		ice.CTX_EXIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) { m.Save() }},
 
-		WUBI: {Name: "wubi method=word,line code= auto", Help: "五笔", Action: map[string]*ice.Action{
-			mdb.INSERT: {Name: "insert zone=person text= code= weight=", Help: "添加", Hand: func(m *ice.Message, arg ...string) {
-				_input_push(m, kit.Select("person", m.Option("zone")), m.Option("text"), m.Option("code"), m.Option("weight"))
+		WUBI: {Name: "wubi method=word,line code auto", Help: "五笔", Action: map[string]*ice.Action{
+			mdb.INSERT: {Name: "insert zone=person text code weight", Help: "添加", Hand: func(m *ice.Message, arg ...string) {
+				_input_push(m, kit.Select("person", m.Option(ZONE)), m.Option(TEXT), m.Option(CODE), m.Option(WEIGHT))
 			}},
 			mdb.EXPORT: {Name: "export file=usr/wubi-dict/person zone=person", Help: "导出", Hand: func(m *ice.Message, arg ...string) {
 				// _input_save(m, kit.Select("usr/wubi-dict/person", m.Option("file")), m.Option("zone"))
 			}},
 			mdb.IMPORT: {Name: "import file=usr/wubi-dict/person zone=", Help: "导入", Hand: func(m *ice.Message, arg ...string) {
-				_input_load(m, kit.Select("usr/wubi-dict/person", m.Option("file")), m.Option("zone"))
+				_input_load(m, kit.Select("usr/wubi-dict/person", m.Option(FILE)), m.Option(ZONE))
 			}},
 		}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			_input_find(m, arg[0], arg[1], m.Option("cache.limit"))

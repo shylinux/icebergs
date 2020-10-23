@@ -6,13 +6,19 @@ refer "" `
 源码 https://github.com/shylinux/icebergs/blob/master/misc/mp/mp.go
 `
 image qrcode `https://weixin.qq.com`
+spark
 
 chapter "应用"
-field "asset" web.mall.asset args `[ ]`
-field "task" web.team.task args `[ ]`
+field location web.chat.location
+field paste web.chat.paste
+field scan web.chat.scan
+field feel web.chat.feel
+
+chapter "权限"
+field access web.chat.mp.access
+field user aaa.user
+field sess aaa.sess
 
 chapter "项目"
-section "icebergs"
-field "icebergs_统计" web.code.git.trend args `[ icebergs ]` action `{ height 200 speed 20 }`
-field "icebergs_源码" web.code.inner args `[ usr/icebergs misc/mp/mp.go 1 ]`
-
+field "icebergs" web.code.git.trend args `icebergs`
+field "icebergs" web.code.inner args `usr/icebergs/ misc/mp/mp.go 1`

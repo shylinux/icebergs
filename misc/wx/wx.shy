@@ -6,24 +6,22 @@ refer "" `
 源码 https://github.com/shylinux/icebergs/blob/master/misc/wx/wx.go
 `
 image qrcode `https://weixin.qq.com`
+spark
 
 chapter "应用"
+field location web.chat.location
+field paste web.chat.paste
+field scan web.chat.scan
+field feel web.chat.feel
 
-field "阅读器" web.code.inner args `[ src/ main.shy ]`
-field "编辑器" web.code.vimer args `[ src/ main.go ]`
-
-field "资料库" web.chat.meet.miss args `[ ]`
-field "粘贴板" web.chat.paste.paste args `[ ]`
-field "相册集" web.wiki.feel args `[ ]`
-field "思维导图" web.wiki.draw.draw args `[ src/ main.svg ]`
-
-field "任务" web.team.task args `[ ]`
-field "任务" web.team.plan args `[ ]`
-
-field "资产" web.mall.asset args `[ ]`
+chapter "权限"
+field access web.chat.wx.access
+field menu web.chat.wx.menu
+field share web.share
+field user aaa.user
+field sess aaa.sess
 
 chapter "项目"
-section "icebergs"
-field "icebergs 统计" web.code.git.trend args `[ icebergs ]` action `{ height 200 speed 20 }`
-field "icebergs 源码" web.code.inner args `[ usr/icebergs misc/wx/wx.go 1 ]`
+field "icebergs" web.code.git.trend args `icebergs`
+field "icebergs" web.code.inner args `usr/icebergs/ misc/wx/wx.go 1`
 

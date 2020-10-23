@@ -90,7 +90,7 @@ func init() {
 						kit.MDB_TIME, m.Time(m.Conf(SHARE, "meta.expire")), arg)
 				}},
 				mdb.SELECT: {Name: "select hash", Help: "查询", Hand: func(m *ice.Message, arg ...string) {
-					m.Option(mdb.FIELDS, "time,hash,userrole,username,river,storm,type,name,text")
+					m.Option(mdb.FIELDS, "time,userrole,username,river,storm,type,name,text")
 					m.Cmdy(mdb.SELECT, SHARE, "", mdb.HASH, kit.MDB_HASH, m.Option(kit.MDB_HASH))
 				}},
 				mdb.REMOVE: {Name: "remove", Help: "删除", Hand: func(m *ice.Message, arg ...string) {
@@ -99,7 +99,7 @@ func init() {
 			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 				m.Option(mdb.FIELDS, kit.Select("time,hash,userrole,username,river,storm,type,name,text", mdb.DETAIL, len(arg) > 0))
 				m.Cmdy(mdb.SELECT, SHARE, "", mdb.HASH, kit.MDB_HASH, arg)
-				m.PushAction("删除")
+				m.PushAction(mdb.REMOVE)
 			}},
 			"/share/": {Name: "/share/", Help: "共享链", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 				m.Option(mdb.FIELDS, kit.Select("time,hash,userrole,username,river,storm,type,name,text"))

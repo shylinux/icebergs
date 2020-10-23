@@ -55,14 +55,24 @@ func _serve_main(m *ice.Message, w http.ResponseWriter, r *http.Request) bool {
 
 	if r.URL.Path == "/" && r.FormValue(SHARE) != "" {
 		m.W = w
-		s := m.Cmd(SHARE, mdb.SELECT, kit.MDB_HASH, r.FormValue(SHARE))
-		if s.Append(kit.MDB_TYPE) == "login" {
-			Render(m, COOKIE, aaa.SessCreate(m, s.Append(aaa.USERNAME), s.Append(aaa.USERROLE)))
-			http.Redirect(w, r, kit.MergeURL(r.URL.String(), SHARE, ""), http.StatusTemporaryRedirect)
-			m.W = nil
-			return false
+		defer func() { m.W = nil }()
+
+		if s := m.Cmd(SHARE, mdb.SELECT, kit.MDB_HASH, r.FormValue(SHARE)); s.Append(kit.MDB_TYPE) == "login" {
+			defer func() { http.Redirect(w, r, kit.MergeURL(r.URL.String(), SHARE, ""), http.StatusTemporaryRedirect) }()
+
+			msg := m.Spawn()
+			if c, e := r.Cookie(ice.MSG_SESSID); e == nil && c.Value != "" {
+				if aaa.SessCheck(msg, c.Value); msg.Option(ice.MSG_USERNAME) != "" {
+					return false // 复用会话
+				}
+			}
+
+			msg.Option(ice.MSG_USERUA, r.Header.Get("User-Agent"))
+			msg.Option(ice.MSG_USERIP, r.Header.Get(ice.MSG_USERIP))
+			Render(msg, COOKIE, aaa.SessCreate(msg, s.Append(aaa.USERNAME), s.Append(aaa.USERROLE)))
+			return false // 新建会话
 		}
-		m.W = nil
+
 		return true
 	}
 

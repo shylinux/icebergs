@@ -23,7 +23,7 @@ func init() {
 			)},
 		},
 		Commands: map[string]*ice.Command{
-			TOTAL: {Name: "total name=auto auto", Help: "提交统计", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			TOTAL: {Name: "total name auto", Help: "提交统计", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 				if len(arg) > 0 {
 					// 提交详情
 					m.Richs(REPOS, nil, arg[0], func(key string, value map[string]interface{}) {
@@ -33,15 +33,15 @@ func init() {
 				}
 
 				// 提交统计
-				days := 0
-				commit, adds, dels, rest := 0, 0, 0, 0
 				wg := &sync.WaitGroup{}
+				days, commit, adds, dels, rest := 0, 0, 0, 0, 0
 				m.Richs(REPOS, nil, kit.MDB_FOREACH, func(key string, value map[string]interface{}) {
 					if m.Conf(TOTAL, kit.Keys("meta.skip", kit.Value(value, "meta.name"))) == "true" {
 						return
 					}
+
 					wg.Add(1)
-					m.Gos(m, func(m *ice.Message) {
+					m.Go(func() {
 						msg := m.Cmd("_sum", kit.Value(value, "meta.path"), "total", "10000").Table(func(index int, value map[string]string, head []string) {
 							if kit.Int(value["days"]) > days {
 								days = kit.Int(value["days"])
@@ -57,13 +57,14 @@ func init() {
 					})
 				})
 				wg.Wait()
+
 				m.Push("name", "total")
 				m.Push("days", kit.Int(days)+1)
 				m.Push("commit", commit)
 				m.Push("adds", adds)
 				m.Push("dels", dels)
 				m.Push("rest", rest)
-				m.Sort("rest", "int_r")
+				m.SortIntR("rest")
 			}},
 			"_sum": {Name: "_sum [path] [total] [count|date] args...", Help: "统计", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 				if len(arg) > 0 {
@@ -104,7 +105,6 @@ func init() {
 								dels := strings.Split(fs[2], " ")
 								add = adds[0]
 								del = dels[0]
-								// } else if adds[1] == "insertions(+)" {
 							} else if strings.Contains(adds[1], "insertion") {
 								add = adds[0]
 							} else {
@@ -133,6 +133,7 @@ func init() {
 						m.Push("time", hs[1])
 					}
 				}
+
 				if total {
 					m.Push("days", int(total_day.Hours())/24)
 					m.Push("commit", count)

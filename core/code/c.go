@@ -103,12 +103,12 @@ func init() {
 					if arg[0] == kit.MDB_FOREACH {
 						return
 					}
-					for _, k := range []string{"1", "2", "3", "8"} {
-						if text := _c_help(m, k, kit.Select("main", arg, 1)); text != "" {
+					for _, i := range []string{"1", "2", "3", "8"} {
+						if text := _c_help(m, i, kit.Select("main", arg, 1)); text != "" {
 							for _, k := range kit.Split(m.Option(mdb.FIELDS)) {
 								switch k {
 								case kit.MDB_FILE:
-									m.Push(k, arg[1]+".man"+k)
+									m.Push(k, arg[1]+".man"+i)
 								case kit.MDB_LINE:
 									m.Push(k, 1)
 								case kit.MDB_TEXT:

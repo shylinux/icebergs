@@ -71,8 +71,8 @@ var Index = &ice.Context{Name: TMUX, Help: "工作台",
 			m.Cmdy(code.INSTALL, path.Base(m.Conf(TMUX, kit.META_SOURCE)), arg)
 		}},
 
-		TEXT: {Name: "text 查看:button save 清空 text:textarea", Help: "文本", Action: map[string]*ice.Action{
-			"save": {Name: "save", Help: "保存", Hand: func(m *ice.Message, arg ...string) {
+		TEXT: {Name: "text auto save text:textarea", Help: "文本", Action: map[string]*ice.Action{
+			nfs.SAVE: {Name: "save", Help: "保存", Hand: func(m *ice.Message, arg ...string) {
 				if len(arg) > 0 && arg[0] != "" {
 					m.Cmd(cli.SYSTEM, TMUX, "set-buffer", arg[0])
 				}
@@ -80,8 +80,8 @@ var Index = &ice.Context{Name: TMUX, Help: "工作台",
 			}},
 		}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			text := m.Cmdx(cli.SYSTEM, TMUX, "show-buffer")
-			m.Cmdy(wiki.SPARK, "inner", text)
 			m.Cmdy(wiki.IMAGE, "qrcode", text)
+			m.Cmdy(wiki.SPARK, "inner", text)
 			m.Render("")
 		}},
 		BUFFER: {Name: "buffer name value auto export import", Help: "缓存", Action: map[string]*ice.Action{

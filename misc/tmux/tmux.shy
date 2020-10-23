@@ -12,7 +12,8 @@ field tmux web.code.inner args `[ usr/install/tmux-3.1b cmd-bind-key.c ]`
 
 section "构建"
 spark shell `
-yum install -y wget make gcc libevent-devel.x86_64 ncurses-devel.x86_64
+yum install -y wget make gcc
+yum install -y libevent-devel.x86_64 ncurses-devel.x86_64
 
 wget https://github.com/tmux/tmux/releases/download/3.1b/tmux-3.1b.tar.gz
 tar xvf tmux-3.1b.tar.gz && cd tmux-3.1b

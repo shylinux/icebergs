@@ -360,7 +360,7 @@ var Index = &ice.Context{Name: "nfs", Help: "存储模块",
 			reg, _ := regexp.Compile(m.Option(DIR_REG))
 			_file_list(m, kit.Select("./", m.Option(DIR_ROOT)), arg[0],
 				0, m.Options(DIR_DEEP), kit.Select(TYPE_BOTH, m.Option(DIR_TYPE)), reg,
-				kit.Split(kit.Select("time size path", strings.Join(arg[1:], " ")), " "))
+				kit.Split(kit.Select("time size path", strings.Join(arg[1:], " "))))
 			m.Sort(kit.MDB_TIME, "time_r")
 		}},
 		FILE: {Name: "file path auto", Help: "文件", Action: map[string]*ice.Action{

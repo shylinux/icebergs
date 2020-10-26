@@ -29,7 +29,7 @@ func init() {
 			)},
 		},
 		Commands: map[string]*ice.Command{
-			SESS: {Name: "sess hash auto 清理", Help: "会话流", Action: map[string]*ice.Action{
+			SESS: {Name: "sess hash auto prunes", Help: "会话流", Action: map[string]*ice.Action{
 				mdb.PRUNES: {Name: "prunes", Help: "清理", Hand: func(m *ice.Message, arg ...string) {
 					m.Cmdy(mdb.PRUNES, m.Prefix(SESS), "", mdb.HASH, kit.MDB_STATUS, "logout")
 				}},
@@ -37,20 +37,7 @@ func init() {
 				m.Option(mdb.FIELDS, kit.Select(m.Conf(m.Prefix(SESS), kit.META_FIELD), mdb.DETAIL, len(arg) > 0))
 				m.Cmdy(mdb.SELECT, m.Prefix(SESS), "", mdb.HASH, kit.MDB_HASH, arg)
 			}},
-			"/sess": {Name: "/sess", Help: "会话", Action: map[string]*ice.Action{
-				"logout": {Name: "logout", Help: "退出", Hand: func(m *ice.Message, arg ...string) {
-					m.Cmdy(mdb.MODIFY, m.Prefix(SESS), "", mdb.HASH, kit.MDB_HASH, m.Option(SID), kit.MDB_STATUS, "logout")
-				}},
-			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-				m.Option(mdb.FIELDS, m.Conf(m.Prefix(SESS), kit.META_FIELD))
-				if strings.TrimSpace(m.Option(SID)) == "" {
-					m.Option(SID, m.Cmdx(mdb.INSERT, m.Prefix(SESS), "", mdb.HASH, kit.MDB_STATUS, "login",
-						aaa.USERNAME, m.Option(aaa.USERNAME), tcp.HOSTNAME, m.Option(tcp.HOSTNAME), PID, m.Option(PID), PWD, m.Option(PWD)))
-				} else {
-					m.Cmdy(mdb.MODIFY, m.Prefix(SESS), "", mdb.HASH, kit.MDB_HASH, m.Option(SID), kit.MDB_STATUS, "login")
-				}
-				m.Echo(m.Option(SID))
-			}},
+
 			web.LOGIN: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 				if f, _, e := m.R.FormFile(SUB); e == nil {
 					defer f.Close()
@@ -60,8 +47,8 @@ func init() {
 					}
 				}
 
-				m.Option(mdb.FIELDS, m.Conf(m.Prefix(SESS), kit.META_FIELD))
 				if strings.TrimSpace(m.Option(SID)) != "" {
+					m.Option(mdb.FIELDS, m.Conf(m.Prefix(SESS), kit.META_FIELD))
 					msg := m.Cmd(mdb.SELECT, m.Prefix(SESS), "", mdb.HASH, kit.MDB_HASH, strings.TrimSpace(m.Option(SID)))
 					if m.Option(SID, msg.Append(kit.MDB_HASH)) != "" {
 						m.Option(aaa.USERNAME, msg.Append(aaa.USERNAME))
@@ -69,6 +56,19 @@ func init() {
 					}
 				}
 				m.Render(ice.RENDER_RESULT)
+			}},
+			"/sess": {Name: "/sess", Help: "会话", Action: map[string]*ice.Action{
+				"logout": {Name: "logout", Help: "退出", Hand: func(m *ice.Message, arg ...string) {
+					m.Cmdy(mdb.MODIFY, m.Prefix(SESS), "", mdb.HASH, kit.MDB_HASH, m.Option(SID), kit.MDB_STATUS, "logout")
+				}},
+			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+				if strings.TrimSpace(m.Option(SID)) == "" {
+					m.Option(SID, m.Cmdx(mdb.INSERT, m.Prefix(SESS), "", mdb.HASH, kit.MDB_STATUS, "login",
+						aaa.USERNAME, m.Option(aaa.USERNAME), tcp.HOSTNAME, m.Option(tcp.HOSTNAME), PID, m.Option(PID), PWD, m.Option(PWD)))
+				} else {
+					m.Cmdy(mdb.MODIFY, m.Prefix(SESS), "", mdb.HASH, kit.MDB_HASH, m.Option(SID), kit.MDB_STATUS, "login")
+				}
+				m.Echo(m.Option(SID))
 			}},
 		},
 	}, nil)

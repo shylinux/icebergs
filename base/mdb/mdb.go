@@ -407,6 +407,15 @@ const (
 	INVITE = "invite"
 	COMMIT = "commit"
 )
+const (
+	CACHE_LIMIT = "cache.limit"
+	CACHE_FILED = "cache.field"
+	CACHE_VALUE = "cache.value"
+
+	CACHE_ACTION = "cache.action"
+	CACHE_BEGIN  = "cache.begin"
+	CACHE_HASH   = "cache.hash"
+)
 
 const MDB = "mdb"
 

@@ -1,8 +1,8 @@
 title "zsh"
 refer `
 官网 https://www.zsh.org/
-源码 https://github.com/zsh-users/zsh/
 文档 http://zsh.sourceforge.net/Doc/Release/zsh_toc.html
+源码 https://github.com/zsh-users/zsh/
 `
 
 chapter "源码"
@@ -11,11 +11,14 @@ field zsh web.code.inner args `[ usr/install/zsh-5.8/ Src/main.c 91 ]`
 
 section "构建"
 spark shell `
-wget https://sourceforge.net/projects/zsh/files/zsh/5.8/zsh-5.8.tar.xz
-tar xvf zsh-5.8.tar.gz && cd zsh-5.8
+yum install -y wget make gcc
+yum install -y ncurses-devel.x86_64
+
+wget https://nchc.dl.sourceforge.net/project/zsh/zsh/5.8/zsh-5.8.tar.xz
+tar xvf zsh-5.8.tar.xz && cd zsh-5.8
 
 ./configure --prefix=$PWD/_install
-make -j4 && make install
+make -j8 && make install
 `
 
 section "启动"

@@ -69,7 +69,7 @@ func init() {
 					})
 				}},
 				gdb.BUILD: {Name: "build link", Help: "构建", Hand: func(m *ice.Message, arg ...string) {
-					if cli.Follow(m) {
+					if cli.Follow(m, gdb.BUILD) {
 						return
 					}
 

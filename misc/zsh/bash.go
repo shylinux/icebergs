@@ -2,6 +2,8 @@ package zsh
 
 import (
 	ice "github.com/shylinux/icebergs"
+	"github.com/shylinux/icebergs/base/gdb"
+	"github.com/shylinux/icebergs/base/web"
 	"github.com/shylinux/icebergs/core/code"
 	kit "github.com/shylinux/toolkits"
 
@@ -18,15 +20,15 @@ func init() {
 			)},
 		},
 		Commands: map[string]*ice.Command{
-			BASH: {Name: "bash port path auto 启动 构建 下载", Help: "命令行", Action: map[string]*ice.Action{
-				"download": {Name: "download", Help: "下载", Hand: func(m *ice.Message, arg ...string) {
-					m.Cmdy(code.INSTALL, "download", m.Conf(BASH, kit.META_SOURCE))
+			BASH: {Name: "bash port path auto start build download", Help: "命令行", Action: map[string]*ice.Action{
+				web.DOWNLOAD: {Name: "download", Help: "下载", Hand: func(m *ice.Message, arg ...string) {
+					m.Cmdy(code.INSTALL, web.DOWNLOAD, m.Conf(BASH, kit.META_SOURCE))
 				}},
-				"build": {Name: "build", Help: "构建", Hand: func(m *ice.Message, arg ...string) {
-					m.Cmdy(code.INSTALL, "build", m.Conf(BASH, kit.META_SOURCE))
+				gdb.BUILD: {Name: "build", Help: "构建", Hand: func(m *ice.Message, arg ...string) {
+					m.Cmdy(code.INSTALL, gdb.BUILD, m.Conf(BASH, kit.META_SOURCE))
 				}},
-				"start": {Name: "start", Help: "启动", Hand: func(m *ice.Message, arg ...string) {
-					m.Cmdy(code.INSTALL, "start", m.Conf(BASH, kit.META_SOURCE), "bin/bash")
+				gdb.START: {Name: "start", Help: "启动", Hand: func(m *ice.Message, arg ...string) {
+					m.Cmdy(code.INSTALL, gdb.START, m.Conf(BASH, kit.META_SOURCE), "bin/bash")
 				}},
 			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 				m.Cmdy(code.INSTALL, path.Base(m.Conf(BASH, kit.META_SOURCE)), arg)

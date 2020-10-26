@@ -8,8 +8,6 @@ import (
 	"io"
 )
 
-const OUTPUT = "output"
-
 func _cli_progress(m *ice.Message, cb interface{}) {
 	m.Option(mdb.FIELDS, "time,name,step,count,total")
 	if m.Option(ice.MSG_PROCESS, "_progress"); m.Option("_progress") != "" {
@@ -32,23 +30,23 @@ func _cli_progress(m *ice.Message, cb interface{}) {
 		}
 	})
 }
-func Follow(m *ice.Message) bool {
+func Follow(m *ice.Message, action string) bool {
 	m.Option(ice.MSG_PROCESS, "_follow")
-	if m.Option("cache.action", "build"); m.Option("cache.hash") != "" {
-		m.Cmdy(OUTPUT, m.Option("cache.hash"))
+	if m.Option(mdb.CACHE_ACTION, action); m.Option(mdb.CACHE_HASH) != "" {
+		m.Cmdy(OUTPUT, m.Option(mdb.CACHE_HASH))
 		m.Sort(kit.MDB_ID).Table(func(index int, value map[string]string, head []string) {
-			m.Option("cache.begin", value[kit.MDB_ID])
+			m.Option(mdb.CACHE_BEGIN, value[kit.MDB_ID])
 			m.Echo(value[kit.SSH_RES])
 		})
 
-		if len(m.Resultv()) == 0 && m.Conf(OUTPUT, kit.Keys(kit.MDB_HASH, m.Option("cache.hash"), kit.MDB_META, kit.MDB_STATUS)) == STOP {
+		if len(m.Resultv()) == 0 && m.Conf(OUTPUT, kit.Keys(kit.MDB_HASH, m.Option(mdb.CACHE_HASH), kit.MDB_META, kit.MDB_STATUS)) == STOP {
 			m.Echo(STOP)
 		}
 		return true
 	}
 	m.Cmdy(OUTPUT, mdb.CREATE, kit.MDB_NAME, m.Option(kit.MDB_LINK))
-	m.Option("cache.hash", m.Result())
-	m.Option("cache.begin", 1)
+	m.Option(mdb.CACHE_HASH, m.Result())
+	m.Option(mdb.CACHE_BEGIN, 1)
 	m.Set(ice.MSG_RESULT)
 	return false
 }
@@ -58,6 +56,8 @@ const (
 )
 
 const PROGRESS = "progress"
+
+const OUTPUT = "output"
 
 func init() {
 	Index.Merge(&ice.Context{
@@ -113,7 +113,7 @@ func init() {
 					return
 				}
 
-				m.Option("_control", "_page")
+				m.Option(ice.MSG_CONTROL, "_page")
 				m.Option(mdb.FIELDS, kit.Select("time,id,res", mdb.DETAIL, len(arg) > 1))
 				m.Cmdy(mdb.SELECT, OUTPUT, kit.Keys(kit.MDB_HASH, arg[0]), mdb.LIST, kit.MDB_ID, arg[1:])
 				m.Sort(kit.MDB_ID)

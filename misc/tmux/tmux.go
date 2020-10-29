@@ -50,8 +50,13 @@ var Index = &ice.Context{Name: TMUX, Help: "工作台",
 		)},
 	},
 	Commands: map[string]*ice.Command{
-		ice.CTX_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) { m.Load() }},
-		ice.CTX_EXIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) { m.Save() }},
+		ice.CTX_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			m.Load()
+			m.Watch(web.DREAM_START, m.Prefix(SESSION))
+		}},
+		ice.CTX_EXIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			m.Save()
+		}},
 
 		TMUX: {Name: "tmux port path auto start build download", Help: "服务", Action: map[string]*ice.Action{
 			web.DOWNLOAD: {Name: "download", Help: "下载", Hand: func(m *ice.Message, arg ...string) {
@@ -156,6 +161,9 @@ var Index = &ice.Context{Name: TMUX, Help: "工作台",
 			m.PushAction(mdb.REMOVE)
 		}},
 		SESSION: {Name: "session session window pane cmd auto create script", Help: "会话管理", Action: map[string]*ice.Action{
+			web.DREAM_START: {Name: "dream.start type name share river", Help: "梦想", Hand: func(m *ice.Message, arg ...string) {
+				m.Cmd(m.Prefix(SESSION), mdb.CREATE)
+			}},
 			mdb.CREATE: {Name: "create name", Help: "添加", Hand: func(m *ice.Message, arg ...string) {
 				m.Option(cli.CMD_ENV, "TMUX", "")
 				if m.Option(PANE) != "" {

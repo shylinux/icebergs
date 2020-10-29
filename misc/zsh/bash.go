@@ -34,5 +34,5 @@ func init() {
 				m.Cmdy(code.INSTALL, path.Base(m.Conf(BASH, kit.META_SOURCE)), arg)
 			}},
 		},
-	}, nil)
+	})
 }

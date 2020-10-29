@@ -35,5 +35,5 @@ func init() {
 				m.Cmdy(INNER, arg)
 			}},
 		},
-	}, nil)
+	})
 }

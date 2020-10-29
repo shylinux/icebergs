@@ -64,5 +64,5 @@ func init() {
 				m.Cmd(mdb.INSERT, m.Prefix(INPUT), "", mdb.LIST, kit.MDB_TYPE, "wubi", kit.MDB_NAME, arg[0], kit.MDB_TEXT, m.Result())
 			}},
 		},
-	}, nil)
+	})
 }

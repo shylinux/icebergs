@@ -54,5 +54,5 @@ func init() {
 					"size", m.Option("size"), "from", m.Option("from"), "to", m.Option("to"))
 			}},
 		},
-	}, nil)
+	})
 }

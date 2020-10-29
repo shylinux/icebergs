@@ -89,5 +89,5 @@ func init() {
 				m.Render(ice.RENDER_VOID)
 			}},
 		},
-	}, nil)
+	})
 }

@@ -50,6 +50,14 @@ const ( // MSG
 	MSG_ACTIVE = "sess.active"
 	MSG_METHOD = "sess.method"
 )
+const (
+	CONTROL_PAGE = "_page"
+
+	PROCESS_REFRESH = "_refresh"
+	PROCESS_FOLLOW  = "_follow"
+	PROCESS_INNER   = "_inner"
+	PROCESS_FIELD   = "_field"
+)
 const ( // CTX
 	CTX_FOLLOW = "follow"
 	CTX_STATUS = "status"

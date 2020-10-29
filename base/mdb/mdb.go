@@ -40,16 +40,22 @@ func _hash_select(m *ice.Message, prefix, chain, field, value string) {
 		value = kit.MDB_RANDOMS
 	}
 	fields := _hash_fields(m)
+	cb := m.Optionv(SELECT_CB)
 	m.Richs(prefix, chain, value, func(key string, val map[string]interface{}) {
 		val = kit.GetMeta(val)
-		if m.Option(FIELDS) == DETAIL {
-			m.Push(DETAIL, val)
-		} else {
-			m.Push(key, val, fields)
+		switch cb := cb.(type) {
+		case func(fields []string, value map[string]interface{}):
+			cb(fields, val)
+		default:
+			if m.Option(FIELDS) == DETAIL {
+				m.Push(DETAIL, val)
+			} else {
+				m.Push(key, val, fields)
+			}
 		}
 	})
 	if m.Option(FIELDS) != DETAIL {
-		m.Sort(kit.MDB_TIME, "time_r")
+		m.SortTimeR(kit.MDB_TIME)
 	}
 }
 func _hash_modify(m *ice.Message, prefix, chain string, field, value string, arg ...string) {
@@ -150,7 +156,7 @@ func _list_select(m *ice.Message, prefix, chain, field, value string) {
 	}
 	fields := _list_fields(m)
 	cb := m.Optionv(SELECT_CB)
-	m.Grows(prefix, chain, kit.Select(m.Option("cache.field"), field), kit.Select(m.Option("cache.value"), value), func(index int, val map[string]interface{}) {
+	m.Grows(prefix, chain, kit.Select(m.Option("cache.field"), field), kit.Select(m.Option(CACHE_VALUE), value), func(index int, val map[string]interface{}) {
 		val = kit.GetMeta(val)
 		switch cb := cb.(type) {
 		case func(fields []string, value map[string]interface{}):
@@ -162,10 +168,9 @@ func _list_select(m *ice.Message, prefix, chain, field, value string) {
 				m.Push("", val, fields)
 			}
 		}
-
 	})
 	if m.Option(FIELDS) != DETAIL {
-		m.Sort(kit.MDB_ID, "int_r")
+		m.SortIntR(kit.MDB_ID)
 	}
 }
 func _list_modify(m *ice.Message, prefix, chain string, field, value string, arg ...string) {
@@ -412,9 +417,12 @@ const (
 	CACHE_FILED = "cache.field"
 	CACHE_VALUE = "cache.value"
 
+	CACHE_STATUS = "cache.status"
 	CACHE_ACTION = "cache.action"
 	CACHE_BEGIN  = "cache.begin"
 	CACHE_HASH   = "cache.hash"
+
+	CACHE_CLEAR_ON_EXIT = "cache.clear.on.exit"
 )
 
 const MDB = "mdb"

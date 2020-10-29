@@ -143,7 +143,7 @@ func (c *Context) Register(s *Context, x Server, name ...string) *Context {
 	for _, n := range name {
 		Name(n, s)
 	}
-	s.Merge(s, x)
+	s.Merge(s)
 
 	if c.contexts == nil {
 		c.contexts = map[string]*Context{}
@@ -154,7 +154,7 @@ func (c *Context) Register(s *Context, x Server, name ...string) *Context {
 	s.server = x
 	return s
 }
-func (c *Context) Merge(s *Context, x Server) *Context {
+func (c *Context) Merge(s *Context) *Context {
 	if c.Commands == nil {
 		c.Commands = map[string]*Command{}
 	}
@@ -195,8 +195,6 @@ func (c *Context) Merge(s *Context, x Server) *Context {
 	for k, v := range s.Caches {
 		c.Caches[k] = v
 	}
-
-	s.server = x
 	return c
 }
 func (c *Context) _split(name string) []interface{} {

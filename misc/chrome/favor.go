@@ -59,5 +59,5 @@ func init() {
 				m.PushAction("删除")
 			}},
 		},
-	}, nil)
+	})
 }

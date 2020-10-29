@@ -73,5 +73,5 @@ func init() {
 				_port_list(m, kit.Select("", arg, 0), kit.Select("", arg, 1))
 			}},
 		},
-	}, nil)
+	})
 }

@@ -123,5 +123,5 @@ func init() {
 
 				_action_show(m, arg[0], arg[1], arg[2], arg[3:]...)
 			}},
-		}}, nil)
+		}})
 }

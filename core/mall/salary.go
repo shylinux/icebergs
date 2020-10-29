@@ -32,5 +32,5 @@ func init() {
 				m.Cmdy(mdb.SELECT, SALARY, "", mdb.HASH, "month", arg)
 			}},
 		},
-	}, nil)
+	})
 }

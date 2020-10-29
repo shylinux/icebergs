@@ -148,5 +148,5 @@ func init() {
 				}
 				_share_local(m, p)
 			}},
-		}}, nil)
+		}})
 }

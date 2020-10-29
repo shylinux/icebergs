@@ -122,5 +122,5 @@ func init() {
 				_config_make(m, arg[0], arg[1:]...)
 			}},
 		},
-	}, nil)
+	})
 }

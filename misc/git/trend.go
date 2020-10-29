@@ -19,5 +19,5 @@ func init() {
 				m.Cmdy(TOTAL, arg)
 			}},
 		},
-	}, nil)
+	})
 }

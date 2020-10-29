@@ -94,5 +94,5 @@ func init() {
 				m.Cmdy(mdb.SELECT, CHANNEL, kit.Keys(kit.MDB_HASH, arg[0]), mdb.LIST, kit.MDB_ID, arg[1:])
 			}},
 		},
-	}, nil)
+	})
 }

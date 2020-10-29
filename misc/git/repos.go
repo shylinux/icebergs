@@ -70,5 +70,5 @@ func init() {
 				m.Sort(kit.MDB_NAME)
 			}},
 		},
-	}, nil)
+	})
 }

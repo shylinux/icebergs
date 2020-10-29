@@ -34,6 +34,7 @@ func _daemon_show(m *ice.Message, cmd *exec.Cmd, out, err string) {
 	}
 
 	h := m.Cmdx(mdb.INSERT, DAEMON, "", mdb.HASH,
+		mdb.CACHE_CLEAR_ON_EXIT, m.Option(mdb.CACHE_CLEAR_ON_EXIT),
 		kit.MDB_STATUS, Status.Start, kit.SSH_CMD, strings.Join(cmd.Args, " "),
 		kit.SSH_DIR, cmd.Dir, kit.SSH_ENV, kit.Select("", cmd.Env), kit.SSH_PID, cmd.Process.Pid,
 		CMD_STDOUT, out, CMD_STDERR, err,
@@ -139,5 +140,5 @@ func init() {
 				}
 			}},
 		},
-	}, nil)
+	})
 }

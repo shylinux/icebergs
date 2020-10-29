@@ -104,5 +104,5 @@ func init() {
 				m.Info("trans: %v", m.Result())
 			}},
 		},
-	}, nil)
+	})
 }

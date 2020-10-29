@@ -69,5 +69,5 @@ func init() {
 				m.Cmdy(ctx.CONFIG, RUNTIME, arg)
 			}},
 		},
-	}, nil)
+	})
 }

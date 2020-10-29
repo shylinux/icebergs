@@ -128,5 +128,5 @@ func init() {
 				m.Sort(kit.MDB_ID)
 			}},
 		},
-	}, nil)
+	})
 }

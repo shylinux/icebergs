@@ -44,5 +44,5 @@ func init() {
 				m.Cmdy("web.code.install", path.Base(m.Conf(PYTHON, kit.META_SOURCE)), arg)
 			}},
 		},
-	}, nil)
+	})
 }

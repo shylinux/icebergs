@@ -72,5 +72,5 @@ func init() {
 				m.Cmdy(mdb.SELECT, m.Prefix(CACHE), "", mdb.HASH)
 			}},
 		},
-	}, nil)
+	})
 }

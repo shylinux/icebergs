@@ -158,5 +158,5 @@ func init() {
 				_asset_list(m, kit.Select("", arg, 0), kit.Select("", arg, 1))
 			}},
 		},
-	}, nil)
+	})
 }

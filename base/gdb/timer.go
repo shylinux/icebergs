@@ -72,5 +72,5 @@ func init() {
 				return
 			}},
 		},
-	}, nil)
+	})
 }

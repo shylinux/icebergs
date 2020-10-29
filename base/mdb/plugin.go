@@ -29,5 +29,5 @@ func init() {
 					m.Cmdy(kit.Keys(value[kit.MDB_TEXT], value[kit.MDB_NAME]), PLUGIN, arg[0], arg[1], kit.Select("", arg, 2))
 				})
 			}},
-		}}, nil)
+		}})
 }

@@ -2,6 +2,7 @@ package cli
 
 import (
 	ice "github.com/shylinux/icebergs"
+	"github.com/shylinux/icebergs/base/mdb"
 	kit "github.com/shylinux/toolkits"
 
 	"os"
@@ -77,6 +78,15 @@ var Index = &ice.Context{Name: "cli", Help: "命令模块",
 			m.Conf(RUNTIME, "build.username", ice.Info.Build.UserName)
 		}},
 		ice.CTX_EXIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			list := []string{}
+			m.Richs(DAEMON, "", kit.MDB_FOREACH, func(key string, value map[string]interface{}) {
+				if value = kit.GetMeta(value); kit.Value(value, mdb.CACHE_CLEAR_ON_EXIT) == "true" {
+					list = append(list, key)
+				}
+			})
+			for _, k := range list {
+				m.Conf(DAEMON, kit.Keys(kit.MDB_HASH, k), "")
+			}
 			m.Save()
 		}},
 	},

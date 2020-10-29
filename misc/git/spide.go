@@ -83,5 +83,5 @@ func init() {
 				m.SortInt(kit.MDB_LINE)
 			}},
 		},
-	}, nil)
+	})
 }

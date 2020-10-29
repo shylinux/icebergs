@@ -31,5 +31,5 @@ func init() {
 				m.SortTimeR(kit.MDB_TIME)
 			}},
 		},
-	}, nil)
+	})
 }

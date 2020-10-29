@@ -86,5 +86,5 @@ func init() {
 				_host_list(m, kit.Select("", arg, 0))
 			}},
 		},
-	}, nil)
+	})
 }

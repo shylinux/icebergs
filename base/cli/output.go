@@ -40,7 +40,7 @@ func Follow(m *ice.Message, action string) bool {
 		})
 
 		if len(m.Resultv()) == 0 && m.Conf(OUTPUT, kit.Keys(kit.MDB_HASH, m.Option(mdb.CACHE_HASH), kit.MDB_META, kit.MDB_STATUS)) == STOP {
-			m.Echo(STOP)
+			m.Option(mdb.CACHE_STATUS, STOP)
 		}
 		return true
 	}
@@ -119,5 +119,5 @@ func init() {
 				m.Sort(kit.MDB_ID)
 			}},
 		},
-	}, nil)
+	})
 }

@@ -60,5 +60,5 @@ func init() {
 				m.PushAction("openLocation", mdb.REMOVE)
 			}},
 		},
-	}, nil)
+	})
 }

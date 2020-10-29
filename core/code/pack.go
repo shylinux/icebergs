@@ -186,7 +186,7 @@ func init() {
 			WEBPACK: {Name: WEBPACK, Help: "webpack", Value: kit.Data(kit.MDB_PATH, "usr/volcanos")},
 			BINPACK: {Name: BINPACK, Help: "binpack", Value: kit.Data()},
 		},
-	}, nil)
+	})
 }
 
 const _pack = `

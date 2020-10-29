@@ -74,5 +74,5 @@ func init() {
 				m.Cmdy(m.Prefix(FAVOR)).Table()
 			}},
 		},
-	}, nil)
+	})
 }

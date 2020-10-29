@@ -71,5 +71,5 @@ func init() {
 				m.Echo(m.Option(SID))
 			}},
 		},
-	}, nil)
+	})
 }

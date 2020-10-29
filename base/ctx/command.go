@@ -49,5 +49,5 @@ func init() {
 				_command_list(m, strings.Join(arg, "."))
 			}},
 		},
-	}, nil)
+	})
 }

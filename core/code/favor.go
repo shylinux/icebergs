@@ -62,5 +62,5 @@ func init() {
 				m.PushAction(kit.Select(mdb.REMOVE, INNER, len(arg) > 0))
 			}},
 		},
-	}, nil)
+	})
 }

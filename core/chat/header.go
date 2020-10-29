@@ -46,5 +46,5 @@ func init() {
 				m.Echo(m.Conf(HEADER, TITLE))
 			}},
 		},
-	}, nil)
+	})
 }

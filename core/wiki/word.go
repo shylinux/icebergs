@@ -469,5 +469,5 @@ func init() {
 				_word_show(m, arg[0])
 			}},
 		},
-	}, nil)
+	})
 }

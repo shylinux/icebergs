@@ -54,5 +54,5 @@ func init() {
 				m.Sort(SIGNAL)
 			}},
 		},
-	}, nil)
+	})
 }

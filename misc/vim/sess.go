@@ -86,5 +86,5 @@ func init() {
 				m.Render(ice.RENDER_RESULT)
 			}},
 		},
-	}, nil)
+	})
 }

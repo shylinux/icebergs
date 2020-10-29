@@ -54,5 +54,5 @@ func init() {
 					"pwd", m.Option("pwd"), "buf", m.Option("buf"), "row", m.Option("row"), "col", m.Option("col"))
 			}},
 		},
-	}, nil)
+	})
 }

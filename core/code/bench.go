@@ -98,5 +98,5 @@ func init() {
 				m.Cmdy(m.Optionv("cmd"))
 			}},
 		},
-	}, nil)
+	})
 }

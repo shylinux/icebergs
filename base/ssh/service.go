@@ -226,5 +226,5 @@ ssh {{.Option "user.name"}}@{{.Option "hostname"}} -p {{.Option "port"}}
 				m.Cmdy(mdb.SELECT, SERVICE, kit.Keys(kit.MDB_HASH, kit.Hashs(arg[0])), mdb.LIST, kit.MDB_ID, arg[1:])
 			}},
 		},
-	}, nil)
+	})
 }

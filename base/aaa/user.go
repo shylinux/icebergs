@@ -126,5 +126,5 @@ func init() {
 				m.PushAction(mdb.REMOVE)
 			}},
 		},
-	}, nil)
+	})
 }

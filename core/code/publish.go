@@ -95,7 +95,7 @@ func init() {
 				m.Cmdy(nfs.DIR, kit.Select("", arg, 0), "time size path link")
 			}},
 		},
-	}, nil)
+	})
 }
 
 var _contexts = kit.Dict(

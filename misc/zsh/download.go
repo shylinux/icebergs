@@ -37,5 +37,5 @@ func init() {
 				m.Echo("size: %s\n", msg.Append("size"))
 			}},
 		},
-	}, nil)
+	})
 }

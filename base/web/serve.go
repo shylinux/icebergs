@@ -136,7 +136,8 @@ func _serve_handle(key string, cmd *ice.Command, msg *ice.Message, w http.Respon
 	}
 
 	// 用户请求
-	msg.Option("cache.limit", "10")
+	msg.Option("name", "")
+	msg.Option(mdb.CACHE_LIMIT, "10")
 	msg.Option(ice.MSG_OUTPUT, "")
 	msg.Option(ice.MSG_METHOD, r.Method)
 	msg.Option(ice.MSG_USERWEB, kit.Select(msg.Conf(SHARE, "meta.domain"), r.Header.Get("Referer")))
@@ -306,5 +307,5 @@ func init() {
 			"/intshell/": {Name: "/intshell/", Help: "脚本", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 				m.Render(ice.RENDER_DOWNLOAD, path.Join(m.Conf(SERVE, "meta.intshell.path"), path.Join(arg...)))
 			}},
-		}}, nil)
+		}})
 }

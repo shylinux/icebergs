@@ -22,5 +22,5 @@ func init() {
 				kit.Fetch(m.Confv(FOOTER, LEGAL), func(index int, value string) { m.Echo(value) })
 			}},
 		},
-	}, nil)
+	})
 }

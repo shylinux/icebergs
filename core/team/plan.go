@@ -73,5 +73,5 @@ func init() {
 				m.Cmd(mdb.SELECT, TASK, "", mdb.ZONE, kit.MDB_FOREACH)
 			}},
 		},
-	}, nil)
+	})
 }

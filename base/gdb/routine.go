@@ -9,6 +9,9 @@ import (
 )
 
 const (
+	TASK_HASH = "task.hash"
+)
+const (
 	INNER = "inner"
 )
 const ROUTINE = "routine"
@@ -57,5 +60,5 @@ func init() {
 				m.PushAction(INNER, mdb.REMOVE)
 			}},
 		},
-	}, nil)
+	})
 }

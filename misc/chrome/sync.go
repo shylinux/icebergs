@@ -59,5 +59,5 @@ func init() {
 			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			}},
 		},
-	}, nil)
+	})
 }

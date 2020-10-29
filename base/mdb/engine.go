@@ -32,5 +32,5 @@ func init() {
 					m.Cmdy(kit.Keys(value[kit.MDB_TEXT], value[kit.MDB_NAME]), ENGINE, arg[0], arg[1], arg[2], arg[3:])
 				})
 			}},
-		}}, nil)
+		}})
 }

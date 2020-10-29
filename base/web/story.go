@@ -249,7 +249,7 @@ func init() {
 					m.Render(kit.Select(ice.RENDER_DOWNLOAD, ice.RENDER_RESULT, m.Append("file") == ""), m.Append("text"))
 				}
 			}},
-		}}, nil)
+		}})
 }
 
 func _story_pull(m *ice.Message, arg ...string) {

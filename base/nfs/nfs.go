@@ -365,7 +365,11 @@ var Index = &ice.Context{Name: "nfs", Help: "存储模块",
 		}},
 		FILE: {Name: "file path auto", Help: "文件", Action: map[string]*ice.Action{
 			"append": {Name: "append", Help: "追加", Hand: func(m *ice.Message, arg ...string) {
-				if f, e := os.OpenFile(arg[0], os.O_WRONLY|os.O_APPEND, 0664); m.Assert(e) {
+				if strings.Contains(arg[0], "/") {
+					os.MkdirAll(path.Dir(arg[0]), ice.MOD_DIR)
+				}
+
+				if f, e := os.OpenFile(arg[0], os.O_WRONLY|os.O_APPEND|os.O_CREATE, 0664); m.Assert(e) {
 					defer f.Close()
 
 					for _, k := range arg[1:] {
@@ -419,7 +423,7 @@ var Index = &ice.Context{Name: "nfs", Help: "存储模块",
 				for _, file := range kit.Split(m.Option(kit.MDB_FILE), ",") {
 					func(file string) {
 						r, w := io.Pipe()
-						m.Go(func(msg *ice.Message) {
+						m.Go(func() {
 							for bio := bufio.NewScanner(r); bio.Scan(); {
 								m.Grow(TAIL, kit.Keys(kit.MDB_HASH, h), kit.Dict(
 									kit.MDB_FILE, file, kit.MDB_TEXT, bio.Text(),
@@ -428,6 +432,7 @@ var Index = &ice.Context{Name: "nfs", Help: "存储模块",
 						})
 						m.Option(cli.CMD_STDOUT, w)
 						m.Option(cli.CMD_STDERR, w)
+						m.Option(mdb.CACHE_CLEAR_ON_EXIT, "true")
 						m.Cmd(cli.DAEMON, "tail", "-n", "0", "-f", file)
 					}(file)
 				}

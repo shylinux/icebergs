@@ -111,6 +111,7 @@ func init() {
 					"log", "true", "err", "true",
 
 					"md", "true", "conf", "true", "toml", "true",
+					"ini", "true",
 				),
 				"plug", kit.Dict(
 					"s", kit.Dict(

@@ -10,7 +10,9 @@ import (
 	"strings"
 )
 
-const SHELL = "shell"
+const (
+	SHELL = "shell"
+)
 const SYNC = "sync"
 
 func init() {

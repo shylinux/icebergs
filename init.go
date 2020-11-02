@@ -152,6 +152,7 @@ func Run(arg ...string) string {
 	Index.server = frame
 
 	Pulse.root = Pulse
+	Pulse.Option("name", "")
 	Pulse.Option("cache.limit", "30")
 	Pulse.Option("begin_time", Pulse.Time())
 	switch kit.Select("", arg, 0) {

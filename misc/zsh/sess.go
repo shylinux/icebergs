@@ -31,6 +31,7 @@ func init() {
 		Commands: map[string]*ice.Command{
 			SESS: {Name: "sess hash auto prunes", Help: "会话流", Action: map[string]*ice.Action{
 				mdb.PRUNES: {Name: "prunes", Help: "清理", Hand: func(m *ice.Message, arg ...string) {
+					m.Option(mdb.FIELDS, m.Conf(m.Prefix(SESS), kit.META_FIELD))
 					m.Cmdy(mdb.PRUNES, m.Prefix(SESS), "", mdb.HASH, kit.MDB_STATUS, "logout")
 				}},
 			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {

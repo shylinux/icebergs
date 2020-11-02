@@ -136,7 +136,6 @@ func _serve_handle(key string, cmd *ice.Command, msg *ice.Message, w http.Respon
 	}
 
 	// 用户请求
-	msg.Option("name", "")
 	msg.Option(mdb.CACHE_LIMIT, "10")
 	msg.Option(ice.MSG_OUTPUT, "")
 	msg.Option(ice.MSG_METHOD, r.Method)

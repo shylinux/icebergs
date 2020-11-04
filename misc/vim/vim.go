@@ -2,40 +2,44 @@ package vim
 
 import (
 	ice "github.com/shylinux/icebergs"
+	"github.com/shylinux/icebergs/base/gdb"
 	"github.com/shylinux/icebergs/base/mdb"
 	"github.com/shylinux/icebergs/base/nfs"
 	"github.com/shylinux/icebergs/base/web"
 	"github.com/shylinux/icebergs/core/code"
 	kit "github.com/shylinux/toolkits"
 
-	"os"
 	"path"
 	"strings"
 )
 
-const VIM = "vim"
+func _vim_pkg(m *ice.Message) string {
+	return strings.Replace(strings.Replace(kit.TrimExt(m.Conf(VIM, kit.META_SOURCE)), ".", "", -1), "-", "", -1)
+}
+
 const VIMRC = "vimrc"
+const VIM = "vim"
 
 var Index = &ice.Context{Name: VIM, Help: "编辑器",
 	Commands: map[string]*ice.Command{
-		VIM: {Name: "vim port=auto path=auto auto 启动 构建 下载", Help: "编辑器", Action: map[string]*ice.Action{
-			"download": {Name: "download", Help: "下载", Hand: func(m *ice.Message, arg ...string) {
-				m.Cmdy(code.INSTALL, "download", m.Conf(VIM, kit.META_SOURCE))
+		VIM: {Name: "vim port=auto path=auto auto start build download", Help: "编辑器", Action: map[string]*ice.Action{
+			web.DOWNLOAD: {Name: "download", Help: "下载", Hand: func(m *ice.Message, arg ...string) {
+				m.Cmdy(code.INSTALL, web.DOWNLOAD, m.Conf(VIM, kit.META_SOURCE))
 			}},
-			"build": {Name: "build", Help: "构建", Hand: func(m *ice.Message, arg ...string) {
-				m.Cmdy(code.INSTALL, "build", strings.Replace(strings.Replace(kit.TrimExt(m.Conf(VIM, kit.META_SOURCE)), ".", "", -1), "-", "", -1))
+			gdb.BUILD: {Name: "build", Help: "构建", Hand: func(m *ice.Message, arg ...string) {
+				m.Cmdy(code.INSTALL, gdb.BUILD, _vim_pkg(m), m.Confv(VIM, "meta.build"))
 			}},
-			"start": {Name: "start", Help: "启动", Hand: func(m *ice.Message, arg ...string) {
+			gdb.START: {Name: "start", Help: "启动", Hand: func(m *ice.Message, arg ...string) {
 				m.Optionv("prepare", func(p string) []string {
-					return []string{}
 					list := kit.Simple(m.Confv(VIM, "meta.start"))
 					for i := 0; i < len(list); i += 2 {
-						m.Cmd(web.SPIDE, "dev", web.SPIDE_SAVE, path.Join(os.Getenv("HOME"), list[i]),
-							web.SPIDE_GET, m.Conf(VIM, "meta.remote")+list[i+1])
+						m.Cmd(web.SPIDE, web.SPIDE_DEV, web.SPIDE_SAVE, path.Join(p, list[i]),
+							web.SPIDE_GET, "/share/local/usr/intshell/misc/vim/"+list[i+1])
 					}
+					return []string{}
 					return []string{"-T", "screen", "-c", "PlugInstall", "-c", "exit", "-c", "exit"}
 				})
-				m.Cmdy(code.INSTALL, "start", strings.Replace(strings.Replace(kit.TrimExt(m.Conf(VIM, kit.META_SOURCE)), ".", "", -1), "-", "", -1), "bin/vim")
+				m.Cmdy(code.INSTALL, gdb.START, _vim_pkg(m), "bin/vim")
 
 				// 安装插件
 				m.Echo("\n")
@@ -48,7 +52,7 @@ var Index = &ice.Context{Name: VIM, Help: "编辑器",
 			}},
 			mdb.RENDER: {Hand: func(m *ice.Message, arg ...string) {
 				if strings.HasPrefix(arg[2], "http") {
-					m.Cmdy(web.SPIDE, "dev", "raw", "GET", arg[2]+arg[1])
+					m.Cmdy(web.SPIDE, web.SPIDE_DEV, web.SPIDE_RAW, web.SPIDE_GET, arg[2]+arg[1])
 					return
 				}
 				m.Cmdy(nfs.CAT, path.Join(arg[2], arg[1]))
@@ -62,17 +66,15 @@ var Index = &ice.Context{Name: VIM, Help: "编辑器",
 		}},
 		ice.CTX_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			m.Load()
-
-			m.Cmd(mdb.PLUGIN, mdb.CREATE, VIMRC, VIM, c.Cap(ice.CTX_FOLLOW))
-			m.Cmd(mdb.RENDER, mdb.CREATE, VIMRC, VIM, c.Cap(ice.CTX_FOLLOW))
-			m.Cmd(mdb.PLUGIN, mdb.CREATE, VIM, VIM, c.Cap(ice.CTX_FOLLOW))
-			m.Cmd(mdb.RENDER, mdb.CREATE, VIM, VIM, c.Cap(ice.CTX_FOLLOW))
+			m.Cmd(mdb.PLUGIN, mdb.CREATE, VIM, m.Prefix(VIM))
+			m.Cmd(mdb.RENDER, mdb.CREATE, VIM, m.Prefix(VIM))
+			m.Cmd(mdb.PLUGIN, mdb.CREATE, VIMRC, m.Prefix(VIM))
+			m.Cmd(mdb.RENDER, mdb.CREATE, VIMRC, m.Prefix(VIM))
 		}},
 	},
 	Configs: map[string]*ice.Config{
 		VIM: {Name: "vim", Help: "编辑器", Value: kit.Data(
 			"source", "ftp://ftp.vim.org/pub/vim/unix/vim-8.1.tar.bz2",
-			"remote", "https://raw.githubusercontent.com/shylinux/contexts/master/etc/conf/",
 			"build", []interface{}{
 				"--enable-multibyte=yes",
 				"--enable-pythoninterp=yes",
@@ -82,12 +84,12 @@ var Index = &ice.Context{Name: VIM, Help: "编辑器",
 			"start", []interface{}{
 				".vimrc", "vimrc",
 				".vim/autoload/plug.vim", "plug.vim",
+				".vim/autoload/auto.vim", "auto.vim",
 				".vim/syntax/javascript.vim", "javascript.vim",
 				".vim/syntax/shy.vim", "shy.vim",
+				".vim/syntax/shy.vim", "sh.vim",
 				".vim/syntax/go.vim", "go.vim",
 			},
-
-			"history", "vim.history",
 
 			"plug", kit.Dict(
 				"split", kit.Dict(

@@ -411,6 +411,7 @@ const (
 	INPUTS = "inputs"
 	INVITE = "invite"
 	COMMIT = "commit"
+	SOURCE = "source"
 )
 const (
 	CACHE_LIMIT = "cache.limit"

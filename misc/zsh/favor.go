@@ -2,6 +2,7 @@ package zsh
 
 import (
 	ice "github.com/shylinux/icebergs"
+	"github.com/shylinux/icebergs/base/cli"
 	"github.com/shylinux/icebergs/base/mdb"
 	kit "github.com/shylinux/toolkits"
 )
@@ -16,7 +17,7 @@ func init() {
 			)},
 		},
 		Commands: map[string]*ice.Command{
-			FAVOR: {Name: "favor topic id auto 创建 导出 导入", Help: "收藏夹", Action: map[string]*ice.Action{
+			FAVOR: {Name: "favor topic id auto create export import", Help: "收藏夹", Action: map[string]*ice.Action{
 				mdb.CREATE: {Name: "create topic", Help: "创建", Hand: func(m *ice.Message, arg ...string) {
 					m.Cmdy(mdb.INSERT, m.Prefix(FAVOR), "", mdb.HASH, arg)
 				}},
@@ -44,6 +45,15 @@ func init() {
 						m.Cmdy(mdb.INPUTS, m.Prefix(FAVOR), kit.SubKey(m.Option(kit.MDB_TOPIC)), mdb.LIST, arg)
 					}
 				}},
+				cli.SYSTEM: {Name: "system", Help: "命令", Hand: func(m *ice.Message, arg ...string) {
+					if len(arg) > 0 && arg[0] == mdb.RENDER {
+						m.Cmdy(cli.SYSTEM, arg[1:])
+						return
+					}
+
+					m.PushPlugin(cli.SYSTEM, cli.SYSTEM, mdb.RENDER)
+					m.Push(kit.SSH_ARG, kit.Format([]string{m.Option(kit.MDB_TEXT)}))
+				}},
 			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 				if len(arg) == 0 {
 					m.Option(mdb.FIELDS, "time,count,topic")
@@ -52,12 +62,9 @@ func init() {
 					return
 				}
 
-				if len(arg) > 0 {
-					m.Option(mdb.FIELDS, kit.Select(m.Conf(m.Prefix(FAVOR), kit.META_FIELD), mdb.DETAIL, len(arg) > 1))
-					m.Richs(m.Prefix(FAVOR), "", arg[0], func(key string, value map[string]interface{}) {
-						m.Cmdy(mdb.SELECT, m.Prefix(FAVOR), kit.Keys(kit.MDB_HASH, key), mdb.LIST, kit.MDB_ID, arg[1:])
-					})
-				}
+				m.Option(mdb.FIELDS, kit.Select(m.Conf(m.Prefix(FAVOR), kit.META_FIELD), mdb.DETAIL, len(arg) > 1))
+				m.Cmdy(mdb.SELECT, m.Prefix(FAVOR), kit.SubKey(arg[0]), mdb.LIST, kit.MDB_ID, arg[1:])
+				m.PushAction(cli.SYSTEM)
 			}},
 
 			"/favor": {Name: "/favor", Help: "收藏", Action: map[string]*ice.Action{

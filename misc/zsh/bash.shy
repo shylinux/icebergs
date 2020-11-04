@@ -30,6 +30,7 @@ cd ./_install
 chapter "应用"
 web.code.zsh.sess contexts
 
+field "文件夹" web.chat.files
 field "会话流" web.code.zsh.sess
 field "回收站" web.code.zsh.trash
 field "收藏夹" web.code.zsh.favor

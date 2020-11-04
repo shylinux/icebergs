@@ -13,8 +13,8 @@ func init() {
 	Index.Merge(&ice.Context{
 		Configs: map[string]*ice.Config{},
 		Commands: map[string]*ice.Command{
-			"/qrcode": {Name: "/qrcode", Help: "同步", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-				m.Cmdy(cli.PYTHON, "qrcode", "hi")
+			"/qrcode": {Name: "/qrcode", Help: "二维码", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+				m.Cmdy(cli.SYSTEM, cli.QRCODE, kit.MDB_TEXT, m.Option(kit.MDB_TEXT))
 			}},
 			"/input": {Name: "/input", Help: "补全", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 				list := kit.Split(m.Option("line"), m.Option("break"))

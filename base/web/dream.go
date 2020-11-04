@@ -99,6 +99,9 @@ ish_miss_prepare_install
 		Commands: map[string]*ice.Command{
 			DREAM: {Name: "dream name path auto 启动", Help: "梦想家", Action: map[string]*ice.Action{
 				gdb.START: {Name: "start type=worker,server repos name", Help: "启动", Hand: func(m *ice.Message, arg ...string) {
+					if m.Option(kit.MDB_NAME) == "self" {
+						m.Option(kit.MDB_NAME, "")
+					}
 					_dream_show(m, m.Option(kit.MDB_NAME, kit.Select(path.Base(m.Option(kit.SSH_REPOS)), m.Option(kit.MDB_NAME))))
 				}},
 				gdb.STOP: {Name: "stop", Help: "停止", Hand: func(m *ice.Message, arg ...string) {

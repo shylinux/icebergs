@@ -19,7 +19,7 @@ func init() {
 			)},
 		},
 		Commands: map[string]*ice.Command{
-			INPUT: {Name: "sync id=auto auto 导出 导入", Help: "同步流", Action: map[string]*ice.Action{
+			INPUT: {Name: "sync id=auto auto export import", Help: "同步流", Action: map[string]*ice.Action{
 				mdb.EXPORT: {Name: "export", Help: "导出", Hand: func(m *ice.Message, arg ...string) {
 					m.Cmdy(mdb.EXPORT, m.Prefix(INPUT), "", mdb.LIST)
 				}},
@@ -30,9 +30,8 @@ func init() {
 				m.Option(mdb.FIELDS, kit.Select(m.Conf(INPUT, kit.META_FIELD), mdb.DETAIL, len(arg) > 0))
 				m.Cmdy(mdb.SELECT, m.Prefix(INPUT), "", mdb.LIST, kit.MDB_ID, arg)
 			}},
-			"/input": {Name: "/input", Help: "补全", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-				m.Render(ice.RENDER_RESULT)
 
+			"/input": {Name: "/input", Help: "补全", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 				if arg[0] = strings.TrimSpace(arg[0]); strings.HasPrefix(arg[0], "ice ") {
 					list := kit.Split(arg[0])
 					switch list[1] {

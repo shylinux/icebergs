@@ -1,6 +1,7 @@
 package cli
 
 import (
+	qrcodeTerminal "github.com/Baozisoftware/qrcode-terminal-go"
 	ice "github.com/shylinux/icebergs"
 	"github.com/shylinux/icebergs/base/mdb"
 	kit "github.com/shylinux/toolkits"
@@ -60,6 +61,9 @@ const (
 	CMD_CODE = "cmd_code"
 )
 
+const (
+	QRCODE = "qrcode"
+)
 const SYSTEM = "system"
 
 func init() {
@@ -68,7 +72,32 @@ func init() {
 			SYSTEM: {Name: SYSTEM, Help: "系统命令", Value: kit.Data()},
 		},
 		Commands: map[string]*ice.Command{
-			SYSTEM: {Name: "system id auto", Help: "系统命令", Hand: func(m *ice.Message, c *ice.Context, key string, arg ...string) {
+			SYSTEM: {Name: "system id auto", Help: "系统命令", Action: map[string]*ice.Action{
+				QRCODE: {Name: "qrcode text fg bg lv", Help: "二维码", Hand: func(m *ice.Message, arg ...string) {
+					fg := qrcodeTerminal.ConsoleColors.BrightBlue
+					bg := qrcodeTerminal.ConsoleColors.BrightWhite
+					switch m.Option("fg") {
+					case "black":
+						fg = qrcodeTerminal.ConsoleColors.BrightBlack
+					case "red":
+						fg = qrcodeTerminal.ConsoleColors.BrightRed
+					case "green":
+						fg = qrcodeTerminal.ConsoleColors.BrightGreen
+					case "yellow":
+						fg = qrcodeTerminal.ConsoleColors.BrightYellow
+					case "blue":
+						fg = qrcodeTerminal.ConsoleColors.BrightBlue
+					case "cyan":
+						fg = qrcodeTerminal.ConsoleColors.BrightCyan
+					case "magenta":
+						fg = qrcodeTerminal.ConsoleColors.BrightMagenta
+					case "white":
+						fg = qrcodeTerminal.ConsoleColors.BrightWhite
+					}
+					obj := qrcodeTerminal.New2(fg, bg, qrcodeTerminal.QRCodeRecoveryLevels.Medium)
+					m.Echo("%s", *obj.Get(m.Option(kit.MDB_TEXT)))
+				}},
+			}, Hand: func(m *ice.Message, c *ice.Context, key string, arg ...string) {
 				if len(arg) == 0 || kit.Int(arg[0]) > 0 {
 					m.Option("_control", "_page")
 					m.Option(mdb.FIELDS, kit.Select("time,id,cmd,dir,env", mdb.DETAIL, len(arg) > 0))

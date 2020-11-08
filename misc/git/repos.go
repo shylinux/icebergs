@@ -14,23 +14,30 @@ import (
 
 func _repos_insert(m *ice.Message, name string, dir string) {
 	if s, e := os.Stat(m.Option(cli.CMD_DIR, path.Join(dir, ".git"))); e == nil && s.IsDir() {
-		ls := strings.SplitN(strings.Trim(m.Cmdx(cli.SYSTEM, "git", "log", "-n1", `--pretty=format:"%ad %s"`, "--date=iso"), "\""), " ", 4)
+		ls := strings.SplitN(strings.Trim(m.Cmdx(cli.SYSTEM, GIT, "log", "-n1", `--pretty=format:"%ad %s"`, "--date=iso"), "\""), " ", 4)
 		m.Rich(REPOS, nil, kit.Data(
-			"name", name, "path", dir,
-			"last", kit.Select("", ls, 3), "time", strings.Join(ls[:2], " "),
-			"branch", strings.TrimSpace(m.Cmdx(cli.SYSTEM, "git", "branch")),
-			"remote", strings.TrimSpace(m.Cmdx(cli.SYSTEM, "git", "remote", "-v")),
+			kit.MDB_NAME, name, kit.MDB_PATH, dir,
+			COMMIT, kit.Select("", ls, 3), kit.MDB_TIME, strings.Join(ls[:2], " "),
+			BRANCH, strings.TrimSpace(m.Cmdx(cli.SYSTEM, GIT, BRANCH)),
+			REMOTE, strings.TrimSpace(m.Cmdx(cli.SYSTEM, GIT, REMOTE, "-v")),
 		))
 	}
 }
 
+const (
+	REMOTE = "remote"
+	ORIGIN = "origin"
+	BRANCH = "branch"
+	MASTER = "master"
+	COMMIT = "commit"
+)
 const REPOS = "repos"
 
 func init() {
 	Index.Merge(&ice.Context{
 		Configs: map[string]*ice.Config{
 			REPOS: {Name: REPOS, Help: "仓库", Value: kit.Data(
-				kit.MDB_SHORT, kit.MDB_NAME, kit.MDB_FIELD, "time,name,branch,last",
+				kit.MDB_SHORT, kit.MDB_NAME, kit.MDB_FIELD, "time,name,branch,commit",
 				"owner", "https://github.com/shylinux",
 			)},
 		},
@@ -46,10 +53,10 @@ func init() {
 						if _, e := os.Stat(m.Option(kit.MDB_PATH)); e == nil {
 							m.Option(cli.CMD_DIR, m.Option(kit.MDB_PATH))
 							m.Cmd(cli.SYSTEM, GIT, "init")
-							m.Cmd(cli.SYSTEM, GIT, "remote", "add", "origin", m.Option(kit.SSH_REPOS))
-							m.Cmd(cli.SYSTEM, GIT, "pull", "origin", "master")
+							m.Cmd(cli.SYSTEM, GIT, REMOTE, "add", ORIGIN, m.Option(kit.SSH_REPOS))
+							m.Cmd(cli.SYSTEM, GIT, "pull", ORIGIN, MASTER)
 						} else {
-							m.Cmd(cli.SYSTEM, GIT, "clone", "-b", kit.Select("master", m.Option("branch")),
+							m.Cmd(cli.SYSTEM, GIT, "clone", "-b", kit.Select(MASTER, m.Option(BRANCH)),
 								m.Option(kit.SSH_REPOS), m.Option(kit.MDB_PATH))
 
 						}
@@ -61,7 +68,12 @@ func init() {
 					if wd, _ := os.Getwd(); arg[0] != path.Base(wd) {
 						m.Option(nfs.DIR_ROOT, path.Join("usr", arg[0]))
 					}
-					m.Cmdy(nfs.DIR, kit.Select("./", path.Join(arg[1:]...)))
+					file := kit.Select("./", path.Join(arg[1:]...))
+					if strings.HasSuffix(file, "/") {
+						m.Cmdy(nfs.DIR, file)
+					} else {
+						m.Cmdy(nfs.CAT, file)
+					}
 					return
 				}
 

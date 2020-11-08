@@ -1,14 +1,13 @@
 title "tmux"
-refer "官网" `
+refer `
 官网 http://tmux.github.io/
-源码 https://github.com/tmux/tmux
 文档 http://man.openbsd.org/OpenBSD-current/man1/tmux.1
+源码 https://github.com/tmux/tmux
 `
-premenu
 
 chapter "源码"
 field tmux web.code.tmux.tmux
-field tmux web.code.inner args `[ usr/install/tmux-3.1b cmd-bind-key.c ]`
+field tmux web.code.inner args `usr/install/tmux-3.1b cmd-bind-key.c`
 
 section "构建"
 spark shell `
@@ -34,5 +33,3 @@ field buffer web.code.tmux.buffer
 field script web.code.tmux.script
 field session web.code.tmux.session
 
-chapter "项目"
-field icebergs web.code.inner args `[ usr/icebergs misc/tmux/tmux.go ]`

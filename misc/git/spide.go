@@ -1,9 +1,13 @@
 package git
 
 import (
+	"os"
+	"path"
+
 	ice "github.com/shylinux/icebergs"
 	"github.com/shylinux/icebergs/base/cli"
 	"github.com/shylinux/icebergs/base/ctx"
+	"github.com/shylinux/icebergs/base/mdb"
 	"github.com/shylinux/icebergs/base/nfs"
 	"github.com/shylinux/icebergs/core/code"
 	kit "github.com/shylinux/toolkits"
@@ -16,27 +20,35 @@ const SPIDE = "spide"
 func init() {
 	Index.Merge(&ice.Context{
 		Commands: map[string]*ice.Command{
-			SPIDE: {Name: "spide path file auto", Help: "结构图", Meta: kit.Dict(
+			SPIDE: {Name: "spide name=icebergs@key auto", Help: "结构图", Meta: kit.Dict(
 				"display", "/plugin/story/spide.js",
 			), Action: map[string]*ice.Action{
-				ctx.COMMAND: {Name: "ctx.command"},
+				mdb.INPUTS: {Name: "inputs", Help: "补全", Hand: func(m *ice.Message, arg ...string) {
+					m.Cmdy(REPOS).Appendv(ice.MSG_APPEND, kit.Split("name,branch,commit"))
+				}},
 				code.INNER:  {Name: "web.code.inner"},
+				ctx.COMMAND: {Name: "ctx.command"},
 			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 				if len(arg) == 0 {
 					// 仓库列表
 					m.Option(ice.MSG_DISPLAY, "table")
-					m.Cmdy(TOTAL, arg)
+					m.Cmdy(REPOS, arg)
 					return
+				}
+
+				if wd, _ := os.Getwd(); arg[0] == path.Base(wd) {
+					m.Option(nfs.DIR_ROOT, path.Join("src"))
+				} else {
+					m.Option(nfs.DIR_ROOT, path.Join("usr", arg[0]))
 				}
 				if len(arg) == 1 {
 					// 目录列表
-					m.Option(nfs.DIR_ROOT, arg[0])
 					m.Option(nfs.DIR_DEEP, "true")
 					m.Cmdy(nfs.DIR, "./")
 					return
 				}
 
-				if m.Option(cli.CMD_DIR, arg[0]); strings.HasSuffix(arg[1], ".go") {
+				if m.Option(cli.CMD_DIR, m.Option(nfs.DIR_ROOT)); strings.HasSuffix(arg[1], ".go") {
 					tags := m.Cmdx(cli.SYSTEM, "gotags", arg[1])
 
 					for _, line := range strings.Split(tags, "\n") {

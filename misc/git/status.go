@@ -10,19 +10,16 @@ import (
 	"strings"
 )
 
+const (
+	PULL = "pull"
+)
 const STATUS = "status"
 
 func init() {
 	Index.Merge(&ice.Context{
-		Configs: map[string]*ice.Config{
-			REPOS: {Name: REPOS, Help: "仓库", Value: kit.Data(
-				kit.MDB_SHORT, kit.MDB_NAME, kit.MDB_FIELD, "time,name,branch,last",
-				"owner", "https://github.com/shylinux",
-			)},
-		},
 		Commands: map[string]*ice.Command{
 			STATUS: {Name: "status name auto submit compile pull", Help: "代码状态", Action: map[string]*ice.Action{
-				"pull": {Name: "pull", Help: "下载", Hand: func(m *ice.Message, arg ...string) {
+				PULL: {Name: "pull", Help: "下载", Hand: func(m *ice.Message, arg ...string) {
 					m.Option(cli.PROGRESS_CB, func(cb func(name string, count, total int)) {
 						count, total := 0, len(m.Confm(REPOS, kit.MDB_HASH))
 						m.Richs(REPOS, nil, kit.Select(kit.MDB_FOREACH, arg, 0), func(key string, value map[string]interface{}) {
@@ -30,7 +27,7 @@ func init() {
 
 							cb(kit.Format(value[kit.MDB_NAME]), count, total)
 							m.Option(cli.CMD_DIR, value[kit.MDB_PATH])
-							m.Echo(m.Cmdx(cli.SYSTEM, GIT, "pull"))
+							m.Cmd(cli.SYSTEM, GIT, PULL)
 							count++
 						})
 						cb("", total, total)

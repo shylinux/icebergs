@@ -34,9 +34,9 @@ func _file_list(m *ice.Message, root string, name string, level int, deep bool, 
 
 	fs, e := ioutil.ReadDir(path.Join(root, name))
 	if e != nil {
-		ls, _ := ioutil.ReadDir(root)
+		ls, _ := ioutil.ReadDir(path.Dir(path.Join(root, name)))
 		for _, k := range ls {
-			if k.Name() == name {
+			if k.Name() == path.Base(name) {
 				fs = append(fs, k)
 			}
 		}

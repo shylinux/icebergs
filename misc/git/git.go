@@ -28,7 +28,6 @@ var Index = &ice.Context{Name: GIT, Help: "代码库",
 	},
 	Commands: map[string]*ice.Command{
 		ice.CTX_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			// 系统项目
 			wd, _ := os.Getwd()
 			_repos_insert(m, path.Base(wd), wd)
 

@@ -1,14 +1,14 @@
 package git
 
 import (
+	ice "github.com/shylinux/icebergs"
+	"github.com/shylinux/icebergs/base/cli"
+	kit "github.com/shylinux/toolkits"
+
 	"os"
 	"strings"
 	"sync"
 	"time"
-
-	ice "github.com/shylinux/icebergs"
-	"github.com/shylinux/icebergs/base/cli"
-	kit "github.com/shylinux/toolkits"
 )
 
 const TOTAL = "total"
@@ -17,9 +17,7 @@ func init() {
 	Index.Merge(&ice.Context{
 		Configs: map[string]*ice.Config{
 			TOTAL: {Name: TOTAL, Help: "统计", Value: kit.Data(
-				kit.MDB_SHORT, kit.MDB_NAME, "skip", kit.Dict(
-					"wubi-dict", "true", "word-dict", "true",
-				),
+				kit.MDB_SHORT, kit.MDB_NAME, "skip", kit.Dict("wubi-dict", "true", "word-dict", "true"),
 			)},
 		},
 		Commands: map[string]*ice.Command{
@@ -27,12 +25,13 @@ func init() {
 				if len(arg) > 0 {
 					// 提交详情
 					m.Richs(REPOS, nil, arg[0], func(key string, value map[string]interface{}) {
-						m.Cmdy("_sum", kit.Value(value, "meta.path"), arg[1:])
+						m.Cmdy("_sum", kit.Value(value, kit.META_PATH), arg[1:])
 					})
 					return
 				}
 
 				// 提交统计
+				mu := &sync.Mutex{}
 				wg := &sync.WaitGroup{}
 				days, commit, adds, dels, rest := 0, 0, 0, 0, 0
 				m.Richs(REPOS, nil, kit.MDB_FOREACH, func(key string, value map[string]interface{}) {
@@ -42,7 +41,14 @@ func init() {
 
 					wg.Add(1)
 					m.Go(func() {
-						msg := m.Cmd("_sum", kit.Value(value, "meta.path"), "total", "10000").Table(func(index int, value map[string]string, head []string) {
+						defer wg.Done()
+
+						msg := m.Cmd("_sum", kit.Value(value, "meta.path"), "total", "10000")
+
+						mu.Lock()
+						defer mu.Unlock()
+
+						msg.Table(func(index int, value map[string]string, head []string) {
 							if kit.Int(value["days"]) > days {
 								days = kit.Int(value["days"])
 							}
@@ -53,7 +59,6 @@ func init() {
 						})
 						m.Push("name", kit.Value(value, "meta.name"))
 						m.Copy(msg)
-						wg.Done()
 					})
 				})
 				wg.Wait()

@@ -55,6 +55,8 @@ func init() {
 				if strings.TrimSpace(m.Option(SID)) != "" {
 					m.Option(mdb.FIELDS, m.Conf(m.Prefix(SESS), kit.META_FIELD))
 					msg := m.Cmd(mdb.SELECT, m.Prefix(SESS), "", mdb.HASH, kit.MDB_HASH, strings.TrimSpace(m.Option(SID)))
+
+					// 用户信息
 					if m.Option(SID, msg.Append(kit.MDB_HASH)) != "" {
 						m.Option(aaa.USERNAME, msg.Append(aaa.USERNAME))
 						m.Option(tcp.HOSTNAME, msg.Append(tcp.HOSTNAME))

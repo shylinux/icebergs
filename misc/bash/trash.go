@@ -7,10 +7,12 @@ import (
 	"github.com/shylinux/icebergs/base/nfs"
 	"github.com/shylinux/icebergs/base/tcp"
 	kit "github.com/shylinux/toolkits"
-
-	"path"
 )
 
+const (
+	FROM = "from"
+	TO   = "to"
+)
 const TRASH = "trash"
 
 func init() {
@@ -23,36 +25,39 @@ func init() {
 		Commands: map[string]*ice.Command{
 			TRASH: {Name: "TRASH hash path auto prunes", Help: "回收站", Action: map[string]*ice.Action{
 				mdb.INSERT: {Name: "insert from= to=", Help: "添加", Hand: func(m *ice.Message, arg ...string) {
-					m.Cmdy(mdb.INSERT, m.Prefix(TRASH), "", mdb.HASH, "from", m.Option("from"), "to", m.Option("to"))
+					m.Cmdy(mdb.INSERT, m.Prefix(TRASH), "", mdb.HASH, FROM, m.Option(FROM), TO, m.Option(TO))
 				}},
 				mdb.REMOVE: {Name: "remove", Help: "删除", Hand: func(m *ice.Message, arg ...string) {
-					m.Cmdy(cli.SYSTEM, "rm", "-rf", m.Option("to"))
-					m.Cmdy(mdb.DELETE, m.Prefix(TRASH), "", mdb.HASH, kit.MDB_HASH, m.Option(kit.MDB_HASH))
-				}},
-				"reback": {Name: "reback", Help: "恢复", Hand: func(m *ice.Message, arg ...string) {
-					m.Cmdy(cli.SYSTEM, "mv", m.Option("to"), m.Option("from"))
+					m.Cmdy(cli.SYSTEM, "rm", "-rf", m.Option(TO))
 					m.Cmdy(mdb.DELETE, m.Prefix(TRASH), "", mdb.HASH, kit.MDB_HASH, m.Option(kit.MDB_HASH))
 				}},
 				mdb.PRUNES: {Name: "prunes", Help: "清理", Hand: func(m *ice.Message, arg ...string) {
 				}},
+				"reback": {Name: "reback", Help: "恢复", Hand: func(m *ice.Message, arg ...string) {
+					m.Cmdy(cli.SYSTEM, "mv", m.Option(TO), m.Option(FROM))
+					m.Cmdy(mdb.DELETE, m.Prefix(TRASH), "", mdb.HASH, kit.MDB_HASH, m.Option(kit.MDB_HASH))
+				}},
+				nfs.DIR: {Name: "dir", Help: "目录", Hand: func(m *ice.Message, arg ...string) {
+					if len(arg) > 0 && arg[0] == cli.RUN {
+						m.Option(nfs.DIR_ROOT, m.Option(TO))
+						m.Cmdy(nfs.DIR, kit.Select("", arg, 1))
+						return
+					}
+					m.PushPlugin(nfs.DIR, nfs.DIR, cli.RUN)
+				}},
 			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-				if len(arg) > 0 {
-					m.Cmd(mdb.SELECT, m.Prefix(TRASH), "", mdb.HASH, kit.MDB_HASH, arg).Table(func(index int, value map[string]string, head []string) {
-						m.Cmdy(nfs.DIR, path.Join(value["to"], kit.Select("", arg, 1)))
-					})
-					return
-				}
 				m.Option(mdb.FIELDS, kit.Select(m.Conf(m.Prefix(TRASH), kit.META_FIELD), mdb.DETAIL, len(arg) > 0))
 				m.Cmdy(mdb.SELECT, m.Prefix(TRASH), "", mdb.HASH, kit.MDB_HASH, arg)
-				m.PushAction("reback", mdb.REMOVE)
+				m.PushAction(nfs.DIR, "reback", mdb.REMOVE)
 			}},
 
 			"/trash": {Name: "/trash", Help: "回收", Action: map[string]*ice.Action{
-				mdb.EXPORT: {Name: "export", Help: "导出", Hand: func(m *ice.Message, arg ...string) {
+				mdb.INSERT: {Name: "insert from to", Help: "添加", Hand: func(m *ice.Message, arg ...string) {
+					m.Cmdy(mdb.INSERT, m.Prefix(TRASH), "", mdb.HASH, tcp.HOSTNAME, m.Option(tcp.HOSTNAME),
+						kit.MDB_SIZE, m.Option(kit.MDB_SIZE), FROM, m.Option(FROM), TO, m.Option(TO))
 				}},
 			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-				m.Cmdy(mdb.INSERT, m.Prefix(TRASH), "", mdb.HASH, tcp.HOSTNAME, m.Option(tcp.HOSTNAME),
-					kit.MDB_SIZE, m.Option(kit.MDB_SIZE), "from", m.Option("from"), "to", m.Option("to"))
+
 			}},
 		},
 	})

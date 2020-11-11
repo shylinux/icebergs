@@ -34,7 +34,7 @@ func init() {
 				mdb.INPUTS: {Name: "inputs", Help: "补全", Hand: func(m *ice.Message, arg ...string) {
 					switch arg[0] {
 					case kit.MDB_TOPIC:
-						m.Cmdy(m.Prefix(FAVOR)).Appendv(ice.MSG_APPEND, kit.MDB_TOPIC, kit.MDB_COUNT, kit.MDB_TIME)
+						m.Cmdy(m.Prefix(FAVOR), mdb.INPUTS)
 					}
 				}},
 				FAVOR: {Name: "favor topic type name text", Help: "收藏", Hand: func(m *ice.Message, arg ...string) {
@@ -44,15 +44,13 @@ func init() {
 			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 				if len(arg) > 0 {
 					m.Option(mdb.FIELDS, mdb.DETAIL)
-					m.Option(mdb.CACHE_FILED, kit.MDB_ID)
-					m.Option(mdb.CACHE_VALUE, arg[0])
 				} else {
 					m.Option(mdb.FIELDS, m.Conf(SYNC, kit.META_FIELD))
 					m.Option(ice.MSG_CONTROL, ice.CONTROL_PAGE)
 					defer m.PushAction(FAVOR)
 				}
 
-				m.Cmdy(mdb.SELECT, m.Prefix(SYNC), "", mdb.LIST, m.Option(mdb.CACHE_FILED), m.Option(mdb.CACHE_VALUE))
+				m.Cmdy(mdb.SELECT, m.Prefix(SYNC), "", mdb.LIST, kit.MDB_ID, arg)
 			}},
 			"/sync": {Name: "/sync", Help: "同步", Action: map[string]*ice.Action{
 				HISTORY: {Name: "history", Help: "历史", Hand: func(m *ice.Message, arg ...string) {

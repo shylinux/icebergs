@@ -3,6 +3,7 @@ package git
 import (
 	"os"
 	"path"
+	"strings"
 
 	ice "github.com/shylinux/icebergs"
 	"github.com/shylinux/icebergs/base/cli"
@@ -11,8 +12,6 @@ import (
 	"github.com/shylinux/icebergs/base/nfs"
 	"github.com/shylinux/icebergs/core/code"
 	kit "github.com/shylinux/toolkits"
-
-	"strings"
 )
 
 const SPIDE = "spide"

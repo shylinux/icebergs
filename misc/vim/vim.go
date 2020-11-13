@@ -22,7 +22,7 @@ const VIM = "vim"
 
 var Index = &ice.Context{Name: VIM, Help: "编辑器",
 	Commands: map[string]*ice.Command{
-		VIM: {Name: "vim port=auto path=auto auto start build download", Help: "编辑器", Action: map[string]*ice.Action{
+		VIM: {Name: "vim port path auto start build download", Help: "编辑器", Action: map[string]*ice.Action{
 			web.DOWNLOAD: {Name: "download", Help: "下载", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmdy(code.INSTALL, web.DOWNLOAD, m.Conf(VIM, kit.META_SOURCE))
 			}},

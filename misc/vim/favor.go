@@ -1,6 +1,8 @@
 package vim
 
 import (
+	"path"
+
 	ice "github.com/shylinux/icebergs"
 	"github.com/shylinux/icebergs/base/mdb"
 	"github.com/shylinux/icebergs/core/code"
@@ -9,6 +11,10 @@ import (
 	"strings"
 )
 
+const (
+	TAB  = "tab"
+	NOTE = "note"
+)
 const FAVOR = "favor"
 
 func init() {
@@ -19,11 +25,11 @@ func init() {
 			)},
 		},
 		Commands: map[string]*ice.Command{
-			FAVOR: {Name: "favor topic=auto id=auto auto create export import", Help: "收藏夹", Action: map[string]*ice.Action{
+			FAVOR: {Name: "favor topic id auto create export import", Help: "收藏夹", Action: map[string]*ice.Action{
 				mdb.CREATE: {Name: "create topic", Help: "创建", Hand: func(m *ice.Message, arg ...string) {
 					m.Cmdy(mdb.INSERT, m.Prefix(FAVOR), "", mdb.HASH, arg)
 				}},
-				mdb.INSERT: {Name: "insert topic=数据结构 name=hi text=hello", Help: "添加", Hand: func(m *ice.Message, arg ...string) {
+				mdb.INSERT: {Name: "insert topic=数据结构 name=hi text=hello file line", Help: "添加", Hand: func(m *ice.Message, arg ...string) {
 					m.Cmdy(mdb.INSERT, m.Prefix(FAVOR), "", mdb.HASH, kit.MDB_TOPIC, m.Option(kit.MDB_TOPIC))
 					m.Cmdy(mdb.INSERT, m.Prefix(FAVOR), kit.SubKey(m.Option(kit.MDB_TOPIC)), mdb.LIST, arg[2:])
 				}},
@@ -54,7 +60,7 @@ func init() {
 					}
 
 					m.PushPlugin(code.INNER, code.INNER, mdb.RENDER)
-					m.Push(kit.SSH_ARG, kit.Format([]string{kit.Select("./", m.Option(kit.MDB_PATH)), m.Option(kit.MDB_FILE), m.Option(kit.MDB_LINE)}))
+					m.Push(kit.SSH_ARG, kit.Format([]string{kit.Select("./", path.Dir(m.Option(kit.MDB_FILE))), path.Base(m.Option(kit.MDB_FILE)), m.Option(kit.MDB_LINE)}))
 				}},
 			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 				if len(arg) == 0 {
@@ -71,19 +77,19 @@ func init() {
 
 			"/favor": {Name: "/favor", Help: "收藏", Action: map[string]*ice.Action{
 				mdb.INSERT: {Name: "insert", Help: "添加", Hand: func(m *ice.Message, arg ...string) {
-					m.Cmd(m.Prefix(FAVOR), mdb.INSERT, kit.MDB_TOPIC, m.Option(TAB),
-						kit.MDB_NAME, m.Option("note"), kit.MDB_TEXT, m.Option(ARG), kit.MDB_FILE, m.Option(BUF), kit.MDB_LINE, m.Option(ROW),
+					m.Cmd(FAVOR, mdb.INSERT, kit.MDB_TOPIC, m.Option(TAB), kit.MDB_NAME, m.Option(NOTE),
+						kit.MDB_TEXT, m.Option(ARG), kit.MDB_FILE, m.Option(BUF), kit.MDB_LINE, m.Option(ROW),
 					)
 				}},
 				mdb.SELECT: {Name: "select", Help: "主题", Hand: func(m *ice.Message, arg ...string) {
 					list := []string{}
-					m.Cmd(m.Prefix(FAVOR)).Table(func(index int, value map[string]string, head []string) {
+					m.Cmd(FAVOR).Table(func(index int, value map[string]string, head []string) {
 						list = append(list, value[kit.MDB_TOPIC])
 					})
 					m.Echo(strings.Join(list, "\n"))
 				}},
 			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-				m.Cmd(m.Prefix(FAVOR), m.Option(TAB)).Table(func(index int, value map[string]string, head []string) {
+				m.Cmd(FAVOR, m.Option(TAB)).Table(func(index int, value map[string]string, head []string) {
 					m.Echo("%v\n", m.Option(TAB)).Echo("%v:%v:%v:(%v): %v\n",
 						value[kit.MDB_FILE], value[kit.MDB_LINE], "1", value[kit.MDB_NAME], value[kit.MDB_TEXT])
 				})

@@ -19,7 +19,7 @@ func init() {
 			)},
 		},
 		Commands: map[string]*ice.Command{
-			INPUT: {Name: "sync id=auto auto export import", Help: "同步流", Action: map[string]*ice.Action{
+			INPUT: {Name: "input id auto export import", Help: "输入法", Action: map[string]*ice.Action{
 				mdb.EXPORT: {Name: "export", Help: "导出", Hand: func(m *ice.Message, arg ...string) {
 					m.Cmdy(mdb.EXPORT, m.Prefix(INPUT), "", mdb.LIST)
 				}},
@@ -31,10 +31,9 @@ func init() {
 				m.Cmdy(mdb.SELECT, m.Prefix(INPUT), "", mdb.LIST, kit.MDB_ID, arg)
 			}},
 
-			"/input": {Name: "/input", Help: "补全", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			"/input": {Name: "/input", Help: "输入法", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 				if arg[0] = strings.TrimSpace(arg[0]); strings.HasPrefix(arg[0], "ice ") {
-					list := kit.Split(arg[0])
-					switch list[1] {
+					switch list := kit.Split(arg[0]); list[1] {
 					case "add":
 						// ice add 想你 shwq [9999 [person]]
 						m.Cmd("web.code.input.wubi", "insert", "text", list[2], "code", list[3],

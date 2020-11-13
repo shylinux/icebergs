@@ -1,10 +1,9 @@
 title "vim"
-refer "官网" `
+refer `
 官网 https://www.vim.org
 源码 https://github.com/vim/vim
 文档 http://vimdoc.sourceforge.net/htmldoc/usr_toc.html
 `
-premenu
 
 chapter "源码"
 field "安装" web.code.vim.vim
@@ -32,17 +31,18 @@ cd ./_install
 
 chapter "应用"
 field "编辑器" web.code.vim.sess
-field "输入法" web.code.vim.input
-field "收藏夹" web.code.vim.favor
 field "同步流" web.code.vim.sync
+field "收藏夹" web.code.vim.favor
+field "输入法" web.code.vim.input
 
 chapter "插件"
-field "插件管理器" web.code.inner args `[ usr/intshell/misc/vim/ plug.vim ]`
-
-chapter "配置"
-field "启动脚本" web.code.inner args `[ usr/intshell/misc/vim/ vimrc ]`
+field "插件管理器" web.code.inner args `usr/intshell/misc/vim/ plug.vim`
 
 section "状态栏"
 refer `
 插件 https://github.com/vim-airline/vim-airline
 `
+
+chapter "配置"
+field "启动脚本" web.code.inner args `usr/intshell/misc/vim/ vimrc`
+

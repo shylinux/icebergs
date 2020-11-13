@@ -19,9 +19,12 @@ const (
 	PWD = "pwd"
 	PID = "pid"
 	BUF = "buf"
-	TAB = "tab"
 	ROW = "row"
 	COL = "col"
+)
+const (
+	LOGOUT = "logout"
+	LOGIN  = "login"
 )
 const SESS = "sess"
 
@@ -35,11 +38,11 @@ func init() {
 		Commands: map[string]*ice.Command{
 			SESS: {Name: "sess hash auto prunes", Help: "会话流", Action: map[string]*ice.Action{
 				mdb.PRUNES: {Name: "prunes", Help: "清理", Hand: func(m *ice.Message, arg ...string) {
-					m.Option(mdb.FIELDS, m.Conf(m.Prefix(SESS), kit.META_FIELD))
-					m.Cmdy(mdb.PRUNES, m.Prefix(SESS), "", mdb.HASH, kit.MDB_STATUS, "logout")
+					m.Option(mdb.FIELDS, m.Conf(SESS, kit.META_FIELD))
+					m.Cmdy(mdb.PRUNES, m.Prefix(SESS), "", mdb.HASH, kit.MDB_STATUS, LOGOUT)
 				}},
 			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-				m.Option(mdb.FIELDS, kit.Select(m.Conf(m.Prefix(SESS), kit.META_FIELD), mdb.DETAIL, len(arg) > 0))
+				m.Option(mdb.FIELDS, kit.Select(m.Conf(SESS, kit.META_FIELD), mdb.DETAIL, len(arg) > 0))
 				m.Cmdy(mdb.SELECT, m.Prefix(SESS), "", mdb.HASH, kit.MDB_HASH, arg)
 			}},
 
@@ -52,26 +55,26 @@ func init() {
 					}
 				}
 
-				if strings.TrimSpace(m.Option(SID)) != "" {
-					m.Option(mdb.FIELDS, m.Conf(m.Prefix(SESS), kit.META_FIELD))
-					msg := m.Cmd(mdb.SELECT, m.Prefix(SESS), "", mdb.HASH, kit.MDB_HASH, strings.TrimSpace(m.Option(SID)))
-					if m.Option(SID, msg.Append(kit.MDB_HASH)) != "" {
+				if sid := strings.TrimSpace(m.Option(SID)); m.Option(SID, sid) != "" {
+					if msg := m.Cmd(SESS, sid); m.Option(SID, msg.Append(kit.MDB_HASH)) != "" {
 						m.Option(aaa.USERNAME, msg.Append(aaa.USERNAME))
 						m.Option(tcp.HOSTNAME, msg.Append(tcp.HOSTNAME))
+					} else {
+						// 登录失败
 					}
 				}
 				m.Render(ice.RENDER_RESULT)
 			}},
 			"/sess": {Name: "/sess", Help: "会话", Action: map[string]*ice.Action{
-				"logout": {Name: "logout", Help: "退出", Hand: func(m *ice.Message, arg ...string) {
-					m.Cmdy(mdb.MODIFY, m.Prefix(SESS), "", mdb.HASH, kit.MDB_HASH, m.Option(SID), kit.MDB_STATUS, "logout")
+				LOGOUT: {Name: "logout", Help: "退出", Hand: func(m *ice.Message, arg ...string) {
+					m.Cmdy(mdb.MODIFY, m.Prefix(SESS), "", mdb.HASH, kit.MDB_HASH, m.Option(SID), kit.MDB_STATUS, LOGOUT)
 				}},
 			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-				if strings.TrimSpace(m.Option(SID)) == "" {
-					m.Option(SID, m.Cmdx(mdb.INSERT, m.Prefix(SESS), "", mdb.HASH, kit.MDB_STATUS, "login",
+				if m.Option(SID) == "" { // 新建会话
+					m.Option(SID, m.Cmdx(mdb.INSERT, m.Prefix(SESS), "", mdb.HASH, kit.MDB_STATUS, LOGIN,
 						aaa.USERNAME, m.Option(aaa.USERNAME), tcp.HOSTNAME, m.Option(tcp.HOSTNAME), PID, m.Option(PID), PWD, m.Option(PWD)))
-				} else {
-					m.Cmdy(mdb.MODIFY, m.Prefix(SESS), "", mdb.HASH, kit.MDB_HASH, m.Option(SID), kit.MDB_STATUS, "login")
+				} else { // 复用会话
+					m.Cmdy(mdb.MODIFY, m.Prefix(SESS), "", mdb.HASH, kit.MDB_HASH, m.Option(SID), kit.MDB_STATUS, LOGIN)
 				}
 				m.Echo(m.Option(SID))
 			}},

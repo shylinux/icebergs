@@ -628,11 +628,17 @@ func (m *Message) _hand(arg ...interface{}) *Message {
 		return m
 	}
 
-	m.Search(list[0], func(p *Context, s *Context, key string, cmd *Command) {
-		m.TryCatch(m.Spawn(s), true, func(msg *Message) {
-			m = s.cmd(msg, cmd, key, list[1:]...)
+	if cmd, ok := m.target.Commands[list[0]]; ok {
+		m.TryCatch(m.Spawn(), true, func(msg *Message) {
+			m = m.target.cmd(msg, cmd, list[0], list[1:]...)
 		})
-	})
+	} else {
+		m.Search(list[0], func(p *Context, s *Context, key string, cmd *Command) {
+			m.TryCatch(m.Spawn(s), true, func(msg *Message) {
+				m = s.cmd(msg, cmd, key, list[1:]...)
+			})
+		})
+	}
 
 	if m.Warn(m.Hand == false, ErrNotFound, list) {
 		return m.Set(MSG_RESULT).Cmd("cli.system", list)

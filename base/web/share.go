@@ -144,9 +144,9 @@ func init() {
 				p := path.Join(kit.Simple(m.Conf(SERVE, "meta.publish"), arg)...)
 				if m.W == nil {
 					m.Cmdy("nfs.cat", p)
-					return
+				} else {
+					m.Render(ice.RENDER_DOWNLOAD, p)
 				}
-				_share_local(m, p)
 			}},
 		}})
 }

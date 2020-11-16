@@ -3,6 +3,7 @@ package bash
 import (
 	ice "github.com/shylinux/icebergs"
 	"github.com/shylinux/icebergs/base/aaa"
+	"github.com/shylinux/icebergs/base/cli"
 	"github.com/shylinux/icebergs/base/mdb"
 	"github.com/shylinux/icebergs/base/tcp"
 	kit "github.com/shylinux/toolkits"
@@ -34,10 +35,19 @@ func init() {
 				mdb.INPUTS: {Name: "inputs", Help: "补全", Hand: func(m *ice.Message, arg ...string) {
 					switch arg[0] {
 					case kit.MDB_TOPIC:
-						m.Cmdy(m.Prefix(FAVOR), mdb.INPUTS)
+						m.Cmdy(FAVOR, mdb.INPUTS, arg)
 					}
 				}},
-				FAVOR: {Name: "favor topic type name text", Help: "收藏", Hand: func(m *ice.Message, arg ...string) {
+				cli.SYSTEM: {Name: "system", Help: "命令", Hand: func(m *ice.Message, arg ...string) {
+					if len(arg) > 0 && arg[0] == cli.RUN {
+						m.Cmdy(cli.SYSTEM, arg[1:])
+						return
+					}
+
+					m.PushPlugin(cli.SYSTEM, cli.SYSTEM, cli.RUN)
+					m.Push(cli.ARG, kit.Format(kit.Simple(kit.Split(m.Option(kit.MDB_TEXT)))))
+				}},
+				FAVOR: {Name: "favor topic=some@key type name text", Help: "收藏", Hand: func(m *ice.Message, arg ...string) {
 					m.Cmdy(m.Prefix(FAVOR), mdb.INSERT, kit.MDB_TOPIC, m.Option(kit.MDB_TOPIC),
 						kit.MDB_TYPE, m.Option(kit.MDB_TYPE), kit.MDB_NAME, m.Option(kit.MDB_NAME), kit.MDB_TEXT, m.Option(kit.MDB_TEXT))
 				}},
@@ -47,7 +57,7 @@ func init() {
 				} else {
 					m.Option(mdb.FIELDS, m.Conf(SYNC, kit.META_FIELD))
 					m.Option(ice.MSG_CONTROL, ice.CONTROL_PAGE)
-					defer m.PushAction(FAVOR)
+					defer m.PushAction(cli.SYSTEM, FAVOR)
 				}
 
 				m.Cmdy(mdb.SELECT, m.Prefix(SYNC), "", mdb.LIST, kit.MDB_ID, arg)

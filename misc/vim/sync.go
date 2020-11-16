@@ -30,7 +30,8 @@ func init() {
 				m.Cmdy(mdb.SELECT, m.Prefix(SYNC), "", mdb.LIST, kit.MDB_ID, arg)
 			}},
 			"/sync": {Name: "/sync", Help: "同步", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-				if m.Option(ARG) == "qa" {
+				switch m.Option(ARG) {
+				case "wq", "q", "qa":
 					m.Cmd("/sess", LOGOUT)
 				}
 

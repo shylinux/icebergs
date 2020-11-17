@@ -66,13 +66,16 @@ func _dream_show(m *ice.Message, name string) {
 		// 启动任务
 		m.Optionv(cli.CMD_STDERR, path.Join(p, m.Conf(DREAM, "meta.env.ctx_log")))
 		m.Cmd(cli.DAEMON, m.Confv(DREAM, "meta.cmd"), "self", name)
+		m.Event(DREAM_CREATE, kit.MDB_TYPE, m.Option(kit.MDB_TYPE), kit.MDB_NAME, name)
+		m.Sleep("1s")
 	}
 	m.Cmdy(nfs.DIR, p)
 }
 
 const (
-	DREAM_START = "dream.start"
-	DREAM_STOP  = "dream.stop"
+	DREAM_CREATE = "dream.create"
+	DREAM_START  = "dream.start"
+	DREAM_STOP   = "dream.stop"
 )
 const DREAM = "dream"
 

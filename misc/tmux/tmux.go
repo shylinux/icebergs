@@ -52,7 +52,7 @@ var Index = &ice.Context{Name: TMUX, Help: "工作台",
 	Commands: map[string]*ice.Command{
 		ice.CTX_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			m.Load()
-			m.Watch(web.DREAM_START, m.Prefix(SESSION))
+			m.Watch(web.DREAM_CREATE, m.Prefix(SESSION))
 		}},
 		ice.CTX_EXIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			m.Save()
@@ -161,7 +161,7 @@ var Index = &ice.Context{Name: TMUX, Help: "工作台",
 			m.PushAction(mdb.REMOVE)
 		}},
 		SESSION: {Name: "session session window pane cmd auto create script", Help: "会话管理", Action: map[string]*ice.Action{
-			web.DREAM_START: {Name: "dream.start type name share river", Help: "梦想", Hand: func(m *ice.Message, arg ...string) {
+			web.DREAM_CREATE: {Name: "dream.create type name", Help: "梦想", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmd(m.Prefix(SESSION), mdb.CREATE)
 			}},
 			mdb.CREATE: {Name: "create name", Help: "添加", Hand: func(m *ice.Message, arg ...string) {
@@ -178,7 +178,20 @@ var Index = &ice.Context{Name: TMUX, Help: "工作台",
 				} else {
 					// 创建会话
 					m.Option(cli.CMD_DIR, path.Join(m.Conf(web.DREAM, kit.META_PATH), m.Option(kit.MDB_NAME)))
-					m.Cmdy(cli.SYSTEM, TMUX, "new-session", "-ds", m.Option(kit.MDB_NAME))
+					ls := kit.Split(m.Option(kit.MDB_NAME), "-_")
+					name := ls[len(ls)-1]
+
+					m.Cmdy(cli.SYSTEM, TMUX, "new-session", "-ds", m.Option(kit.MDB_NAME), "-n", name)
+					name = m.Option(kit.MDB_NAME) + ":" + ls[len(ls)-1]
+
+					m.Cmdy(cli.SYSTEM, TMUX, "split-window", "-t", kit.Keys(name, "1"), "-p", "20")
+					m.Cmdy(cli.SYSTEM, TMUX, "split-window", "-t", kit.Keys(name, "2"), "-h")
+
+					m.Cmd(cli.SYSTEM, TMUX, "send-keys", "-t", kit.Keys(name, "3"), "ish_miss_log", "Enter")
+					m.Cmd(cli.SYSTEM, TMUX, "send-keys", "-t", kit.Keys(name, "2"), "ish_miss_space dev")
+					m.Cmd(cli.SYSTEM, TMUX, "send-keys", "-t", kit.Keys(name, "1"), "vi etc/miss.sh", "Enter")
+
+					m.Cmdy(cli.SYSTEM, TMUX, "link-window", "-s", name, "-t", "miss:")
 				}
 				m.Option(ice.MSG_PROCESS, "_refresh")
 			}},

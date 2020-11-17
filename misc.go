@@ -21,17 +21,17 @@ func (m *Message) Save(arg ...string) *Message {
 		}
 	}
 	for _, k := range arg {
-		list = append(list, kit.Keys(m.Cap(CTX_FOLLOW), k))
+		list = append(list, m.Prefix(k))
 	}
-	m.Cmd("ctx.config", "save", kit.Keys(m.Cap(CTX_FOLLOW), "json"), list)
+	m.Cmd("ctx.config", "save", m.Prefix("json"), list)
 	return m
 }
 func (m *Message) Load(arg ...string) *Message {
 	list := []string{}
 	for _, k := range arg {
-		list = append(list, kit.Keys(m.Cap(CTX_FOLLOW), k))
+		list = append(list, m.Prefix(k))
 	}
-	m.Cmd("ctx.config", "load", kit.Keys(m.Cap(CTX_FOLLOW), "json"), list)
+	m.Cmd("ctx.config", "load", m.Prefix("json"), list)
 	return m
 }
 
@@ -57,7 +57,7 @@ func (m *Message) Space(arg interface{}) []string {
 }
 
 func (m *Message) PushPlugin(key string, arg ...string) *Message {
-	m.Option("_process", "_field")
+	m.Option(MSG_PROCESS, PROCESS_FIELD)
 	m.Option("_prefix", arg)
 	m.Cmdy("command", key)
 	return m

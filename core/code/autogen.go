@@ -2,6 +2,7 @@ package code
 
 import (
 	ice "github.com/shylinux/icebergs"
+	"github.com/shylinux/icebergs/base/cli"
 	"github.com/shylinux/icebergs/base/mdb"
 	"github.com/shylinux/icebergs/base/nfs"
 	kit "github.com/shylinux/toolkits"
@@ -60,7 +61,7 @@ func _autogen_mod(m *ice.Message, file string) (mod string) {
 	m.Option(nfs.CAT_CB, func(line string, index int) {
 		if strings.HasPrefix(line, "module") {
 			mod = strings.Split(line, " ")[1]
-			m.Info("module", mod)
+			m.Info("module %s", mod)
 		}
 	})
 	m.Cmd(nfs.CAT, "go.mod")
@@ -81,7 +82,7 @@ field "{{.Option "name"}}" web.code.{{.Option "name"}}.{{.Option "name"}}
 		},
 		Commands: map[string]*ice.Command{
 			AUTOGEN: {Name: "autogen path auto create", Help: "生成", Action: map[string]*ice.Action{
-				mdb.CREATE: {Name: "create main=src/main.go@key name=hi@key from=usr/icebergs/misc/zsh/zsh.go@key", Help: "创建", Hand: func(m *ice.Message, arg ...string) {
+				mdb.CREATE: {Name: "create main=src/main.go@key name=hi@key from=usr/icebergs/misc/bash/bash.go@key", Help: "创建", Hand: func(m *ice.Message, arg ...string) {
 					if p := path.Join("src", m.Option("name"), m.Option("name")+".shy"); !kit.FileExists(p) {
 						_autogen_script(m, p)
 						_autogen_source(m, m.Option("name"))
@@ -91,15 +92,18 @@ field "{{.Option "name"}}" web.code.{{.Option "name"}}.{{.Option "name"}}
 						_autogen_index(m, p, m.Option("from"), m.Option("name"))
 						_autogen_main(m, m.Option("main"), _autogen_mod(m, "go.mod"), m.Option("name"))
 					}
+					m.Cmdy(cli.SYSTEM, "make")
 				}},
 				mdb.INPUTS: {Name: "inputs", Help: "补全", Hand: func(m *ice.Message, arg ...string) {
 					switch arg[0] {
 					case "main":
+						m.Option(nfs.DIR_REG, ".*.go")
 						m.Cmdy(nfs.DIR, "src", "path,size,time")
 						m.Sort(kit.MDB_PATH)
 					case "from":
 						m.Option(nfs.DIR_DEEP, true)
-						m.Cmdy(nfs.DIR, "usr/icebergs", "path,size,time")
+						m.Option(nfs.DIR_REG, ".*.go")
+						m.Cmdy(nfs.DIR, "usr/icebergs/misc/", "path,size,time")
 						m.Sort(kit.MDB_PATH)
 					}
 				}},

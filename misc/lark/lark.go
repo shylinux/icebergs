@@ -1,14 +1,14 @@
 package lark
 
 import (
-	"github.com/shylinux/icebergs"
+	ice "github.com/shylinux/icebergs"
 	"github.com/shylinux/icebergs/base/aaa"
 	"github.com/shylinux/icebergs/base/cli"
 	"github.com/shylinux/icebergs/base/mdb"
 	"github.com/shylinux/icebergs/base/web"
 	"github.com/shylinux/icebergs/core/chat"
 	"github.com/shylinux/icebergs/core/wiki"
-	"github.com/shylinux/toolkits"
+	kit "github.com/shylinux/toolkits"
 
 	"encoding/json"
 	"math/rand"
@@ -98,7 +98,7 @@ var Index = &ice.Context{Name: LARK, Help: "机器人",
 		ice.CTX_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			m.Load()
 			m.Cmd(web.SPIDE, mdb.CREATE, LARK, m.Conf(APP, kit.Keys(kit.MDB_META, LARK)))
-			m.Cmd(DUTY, "boot", m.Conf(cli.RUNTIME, "boot.hostname"), m.Time())
+			// m.Cmd(DUTY, "boot", m.Conf(cli.RUNTIME, "boot.hostname"), m.Time())
 		}},
 		ice.CTX_EXIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			m.Save()

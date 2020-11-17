@@ -219,7 +219,7 @@ func (c *Context) _split(name string) []interface{} {
 				switch kit.Value(item, kit.MDB_INPUT, ls[i+1]); ls[i+1] {
 				case "textarea":
 					kit.Value(item, "style.width", "360")
-					kit.Value(item, "style.height", "120")
+					kit.Value(item, "style.height", "60")
 				case "button":
 					kit.Value(item, kit.MDB_VALUE, "")
 					button = true
@@ -631,6 +631,10 @@ func (m *Message) _hand(arg ...interface{}) *Message {
 	if cmd, ok := m.target.Commands[list[0]]; ok {
 		m.TryCatch(m.Spawn(), true, func(msg *Message) {
 			m = m.target.cmd(msg, cmd, list[0], list[1:]...)
+		})
+	} else if cmd, ok := m.source.Commands[list[0]]; ok {
+		m.TryCatch(m.Spawn(m.source), true, func(msg *Message) {
+			m = m.source.cmd(msg, cmd, list[0], list[1:]...)
 		})
 	} else {
 		m.Search(list[0], func(p *Context, s *Context, key string, cmd *Command) {

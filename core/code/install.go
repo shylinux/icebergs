@@ -16,6 +16,7 @@ import (
 	"strings"
 )
 
+const PREPARE = "prepare"
 const INSTALL = "install"
 
 func init() {

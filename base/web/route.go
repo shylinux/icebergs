@@ -64,6 +64,12 @@ func init() {
 					m.Cmdy("web.wiki.image", "qrcode", m.Option(ice.MSG_USERWEB))
 				}},
 				mdb.INPUTS: {Name: "inputs", Help: "补全", Hand: func(m *ice.Message, arg ...string) {
+					switch m.Option("action") {
+					case "autogen":
+						m.Cmdy(SPACE, m.Option(ROUTE), "web.code.autogen", "inputs", arg)
+						return
+					}
+
 					switch arg[0] {
 					case "cmd":
 						m.Cmdy(SPACE, m.Option(ROUTE), ctx.COMMAND)
@@ -82,9 +88,8 @@ func init() {
 					m.Cmdy(SPACE, m.Option(ROUTE), "exit")
 					m.Sleep("3s")
 				}},
-				"gen": {Name: "gen module=hi@key template=usr/icebergs/misc/zsh/zsh.go@key", Help: "创建", Hand: func(m *ice.Message, arg ...string) {
-					m.Cmdy(SPACE, m.Option(ROUTE), "web.code.autogen",
-						"create", "name", m.Option("module"), "from", m.Option("template"))
+				"autogen": {Name: "autogen main=src/main.go@key name=hi@key from=usr/icebergs/misc/bash/bash.go@key", Help: "创建", Hand: func(m *ice.Message, arg ...string) {
+					m.Cmdy(SPACE, m.Option(ROUTE), "web.code.autogen", "create", arg)
 				}},
 			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 				if len(arg) == 0 || arg[0] == "" {
@@ -102,7 +107,7 @@ func init() {
 						case SERVER:
 							m.PushButton(gdb.START)
 						case WORKER:
-							m.PushButton(gdb.STOP)
+							m.PushButton("autogen")
 						default:
 							m.PushButton("")
 						}
@@ -132,7 +137,7 @@ func init() {
 				} else if len(arg) > 2 { // 加载插件
 					m.Cmdy(SPACE, arg[0], ctx.CONTEXT, arg[1], ctx.COMMAND, arg[2])
 					m.Option("_prefix", arg[0], arg[1], arg[2], "run")
-					m.Option("_process", "_field")
+					m.Option(ice.MSG_PROCESS, ice.PROCESS_FIELD)
 
 				} else if len(arg) > 1 { // 命令列表
 					m.Cmd(SPACE, arg[0], ctx.CONTEXT, arg[1], ctx.COMMAND).Table(func(index int, value map[string]string, head []string) {

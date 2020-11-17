@@ -12,6 +12,12 @@ import (
 	"strings"
 )
 
+func _repos_path(name string) string {
+	if wd, _ := os.Getwd(); name != path.Base(wd) {
+		return path.Join("usr", name)
+	}
+	return "./"
+}
 func _repos_insert(m *ice.Message, name string, dir string) {
 	if s, e := os.Stat(m.Option(cli.CMD_DIR, path.Join(dir, ".git"))); e == nil && s.IsDir() {
 		ls := strings.SplitN(strings.Trim(m.Cmdx(cli.SYSTEM, GIT, "log", "-n1", `--pretty=format:"%ad %s"`, "--date=iso"), "\""), " ", 4)
@@ -29,7 +35,6 @@ const (
 	ORIGIN = "origin"
 	BRANCH = "branch"
 	MASTER = "master"
-	COMMIT = "commit"
 )
 const REPOS = "repos"
 

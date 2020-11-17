@@ -95,7 +95,6 @@ func init() {
 						list := []string{}
 						switch vs[0] {
 						case "##":
-							list = append(list, mdb.CREATE)
 							if strings.Contains(vs[1], "ahead") {
 								list = append(list, PUSH)
 							}

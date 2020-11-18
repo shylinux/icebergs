@@ -93,7 +93,7 @@ func init() {
 			DAEMON: {Name: "daemon hash auto start prunes", Help: "守护进程", Action: map[string]*ice.Action{
 				RESTART: {Name: "restart", Help: "重启", Hand: func(m *ice.Message, arg ...string) {
 					m.Cmd(DAEMON, STOP)
-					m.Sleep("1s")
+					m.Sleep("3s")
 					m.Cmdy(DAEMON, START)
 				}},
 				START: {Name: "start cmd env dir", Help: "添加", Hand: func(m *ice.Message, arg ...string) {

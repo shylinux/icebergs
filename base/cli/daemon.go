@@ -87,7 +87,7 @@ const DAEMON = "daemon"
 func init() {
 	Index.Merge(&ice.Context{
 		Configs: map[string]*ice.Config{
-			DAEMON: {Name: DAEMON, Help: "守护进程", Value: kit.Data(kit.MDB_PATH, "var/daemon")},
+			DAEMON: {Name: DAEMON, Help: "守护进程", Value: kit.Data(kit.MDB_PATH, "usr/local/daemon")},
 		},
 		Commands: map[string]*ice.Command{
 			DAEMON: {Name: "daemon hash auto start prunes", Help: "守护进程", Action: map[string]*ice.Action{

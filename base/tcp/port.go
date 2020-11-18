@@ -13,7 +13,7 @@ import (
 )
 
 func _port_list(m *ice.Message, port string, dir string) {
-	if m.Option(nfs.DIR_ROOT, path.Join("var/daemon", port)); port != "" {
+	if m.Option(nfs.DIR_ROOT, path.Join(m.Conf(cli.DAEMON, kit.META_PATH), port)); port != "" {
 		m.Cmdy(nfs.DIR, dir)
 		return
 	}

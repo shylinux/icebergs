@@ -68,6 +68,9 @@ func (m *Message) Log(level string, str string, arg ...interface{}) *Message {
 	return m.log(level, str, arg...)
 }
 func (m *Message) Info(str string, arg ...interface{}) *Message {
+	if m == nil {
+		return m
+	}
 	return m.log(LOG_INFO, str, arg...)
 }
 func (m *Message) Cost(arg ...interface{}) *Message {

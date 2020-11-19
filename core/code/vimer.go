@@ -17,7 +17,7 @@ const VIMER = "vimer"
 func init() {
 	Index.Merge(&ice.Context{
 		Commands: map[string]*ice.Command{
-			VIMER: {Name: "vimer path=src/ file=main.go line=1 刷新:button=auto save display project search", Help: "编辑器", Meta: kit.Dict(
+			VIMER: {Name: "vimer path=src/ file=main.go line=1 刷新:button=auto save project search", Help: "编辑器", Meta: kit.Dict(
 				"display", "/plugin/local/code/vimer.js", "style", "editor",
 				"trans", kit.Dict("display", "运行", "project", "项目", "search", "搜索"),
 			), Action: map[string]*ice.Action{

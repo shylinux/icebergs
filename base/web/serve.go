@@ -1,6 +1,9 @@
 package web
 
 import (
+	"io"
+	"os"
+
 	ice "github.com/shylinux/icebergs"
 	"github.com/shylinux/icebergs/base/aaa"
 	"github.com/shylinux/icebergs/base/cli"
@@ -16,6 +19,51 @@ import (
 	"strings"
 )
 
+func _serve_proxy(m *ice.Message, w http.ResponseWriter, r *http.Request) bool {
+	m.Option(SPIDE_CB, func(msg *ice.Message, req *http.Request, res *http.Response) {
+		p := path.Join("var/proxy", strings.ReplaceAll(r.URL.String(), "/", "_"))
+		size := 0
+		if s, e := os.Stat(p); os.IsNotExist(e) {
+			if f, p, e := kit.Create(p); m.Assert(e) {
+				defer f.Close()
+
+				if n, e := io.Copy(f, res.Body); m.Assert(e) {
+					m.Debug("proxy %s res: %v", p, n)
+					size = int(n)
+				}
+			}
+		} else {
+			size = int(s.Size())
+		}
+
+		h := w.Header()
+		for k, v := range res.Header {
+			for _, v := range v {
+				switch k {
+				case ContentLength:
+					h.Add(k, kit.Format(size))
+					m.Debug("proxy res: %v %v", k, size+1)
+				default:
+					m.Debug("proxy res: %v %v", k, v)
+					h.Add(k, v)
+				}
+			}
+		}
+		w.WriteHeader(res.StatusCode)
+
+		if f, e := os.Open(p); m.Assert(e) {
+			defer f.Close()
+
+			if n, e := io.Copy(w, f); e == nil {
+				m.Debug("proxy res: %v", n)
+			} else {
+				m.Debug("proxy res: %v %v", n, e)
+			}
+		}
+	})
+	m.Cmdx(SPIDE, r.URL.Host, SPIDE_PROXY, r.Method, r.URL.String())
+	return true
+}
 func _serve_main(m *ice.Message, w http.ResponseWriter, r *http.Request) bool {
 	if r.Header.Get("index.module") != "" {
 		return true
@@ -32,6 +80,13 @@ func _serve_main(m *ice.Message, w http.ResponseWriter, r *http.Request) bool {
 		r.Header.Set(ice.MSG_USERIP, strings.Split(r.RemoteAddr, ":")[0])
 	}
 	m.Info("").Info("%s %s %s", r.Header.Get(ice.MSG_USERIP), r.Method, r.URL)
+
+	if strings.HasPrefix(r.URL.String(), "http") {
+		if m == nil {
+			m = ice.Pulse.Spawn()
+		}
+		return _serve_proxy(m, w, r)
+	}
 
 	// 请求地址
 	r.Header.Set("index.module", m.Target().Name)

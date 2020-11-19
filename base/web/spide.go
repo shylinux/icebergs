@@ -48,6 +48,8 @@ const (
 	SPIDE_MSG   = "msg"
 	SPIDE_SAVE  = "save"
 	SPIDE_CACHE = "cache"
+	SPIDE_PROXY = "proxy"
+	SPIDE_CB    = "spide.cb"
 
 	SPIDE_GET    = "GET"
 	SPIDE_PUT    = "PUT"
@@ -113,7 +115,7 @@ func init() {
 					// 缓存数据
 					cache, save := "", ""
 					switch arg[1] {
-					case SPIDE_RAW:
+					case SPIDE_RAW, SPIDE_PROXY:
 						cache, arg = arg[1], arg[1:]
 					case SPIDE_MSG:
 						cache, arg = arg[1], arg[1:]
@@ -251,6 +253,13 @@ func init() {
 					// 检查结果
 					defer res.Body.Close()
 					m.Cost("status", res.Status, "length", res.Header.Get(ContentLength), "type", res.Header.Get(ContentType))
+
+					switch cb := m.Optionv(SPIDE_CB).(type) {
+					case func(*ice.Message, *http.Request, *http.Response):
+						cb(m, req, res)
+						return
+					}
+
 					if m.Warn(res.StatusCode != http.StatusOK, res.Status) {
 						m.Set(ice.MSG_RESULT)
 						// return
@@ -264,6 +273,11 @@ func init() {
 
 					// 解析引擎
 					switch cache {
+					case SPIDE_PROXY:
+						m.Optionv(RESPONSE, res)
+						m.Cmdy(CACHE, DOWNLOAD, res.Header.Get(ContentType), uri)
+						m.Echo(m.Append(DATA))
+
 					case SPIDE_CACHE:
 						m.Optionv(RESPONSE, res)
 						m.Cmdy(CACHE, DOWNLOAD, res.Header.Get(ContentType), uri)

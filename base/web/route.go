@@ -71,17 +71,12 @@ func init() {
 					}
 
 					switch arg[0] {
-					case "cmd":
-						m.Cmdy(SPACE, m.Option(ROUTE), ctx.COMMAND)
-					case "name":
-						m.Cmdy(SPACE, m.Option(ROUTE), DREAM)
-					case "template":
-						m.Option(nfs.DIR_DEEP, true)
-						m.Cmdy(nfs.DIR, "usr/icebergs")
-						m.Sort(kit.MDB_PATH)
+					case "name", "template":
+						m.Cmdy(nfs.DIR, m.Conf(DREAM, kit.META_PATH), "path,size,time")
+						m.SortStrR(kit.MDB_PATH)
 					}
 				}},
-				gdb.START: {Name: "start type=worker,server repos name", Help: "启动", Hand: func(m *ice.Message, arg ...string) {
+				gdb.START: {Name: "start type=worker,server repos name template", Help: "启动", Hand: func(m *ice.Message, arg ...string) {
 					m.Cmdy(SPACE, m.Option(ROUTE), DREAM, gdb.START, arg)
 				}},
 				gdb.STOP: {Name: "stop", Help: "结束", Hand: func(m *ice.Message, arg ...string) {

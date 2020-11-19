@@ -43,9 +43,32 @@ func _dream_show(m *ice.Message, name string) {
 		m.Cmd("web.code.git.repos", mdb.CREATE, kit.SSH_REPOS, m.Option(kit.SSH_REPOS), kit.MDB_PATH, p)
 	}
 
+	if m.Option("template") != "" {
+		for _, file := range []string{"etc/miss.sh", "go.mod", "src/main.go", "src/main.shy"} {
+			if _, e := os.Stat(path.Join(p, file)); os.IsNotExist(e) {
+				m.Cmdy(nfs.COPY, path.Join(p, file), path.Join(m.Option("template"), file))
+				switch file {
+				case "go.mod":
+					kit.Rewrite(path.Join(p, file), func(line string) string {
+						if strings.HasPrefix(line, "module") {
+							m.Info("module %s", name)
+							return "module " + name
+						}
+						return line
+					})
+				}
+			}
+		}
+
+		go func() {
+			m.Option(cli.CMD_DIR, p)
+			m.Cmd(cli.SYSTEM, "bash", "-c", "source etc/miss.sh")
+		}()
+	}
+
 	// 任务脚本
 	miss := path.Join(p, "etc/miss.sh")
-	if _, e := os.Stat(miss); e != nil {
+	if _, e := os.Stat(miss); os.IsNotExist(e) {
 		m.Cmd(nfs.SAVE, miss, m.Conf(DREAM, "meta.miss"))
 	}
 
@@ -57,7 +80,7 @@ func _dream_show(m *ice.Message, name string) {
 	}
 
 	if m.Richs(SPACE, nil, name, nil) == nil {
-		m.Optionv(cli.CMD_DIR, p)
+		m.Option(cli.CMD_DIR, p)
 		m.Optionv(cli.CMD_ENV, kit.Simple(
 			"ctx_dev", m.Conf(cli.RUNTIME, "conf.ctx_dev"),
 			"PATH", kit.Path(path.Join(p, "bin"))+":"+kit.Path("bin")+":"+os.Getenv("PATH"),

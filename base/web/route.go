@@ -8,6 +8,8 @@ import (
 	"github.com/shylinux/icebergs/base/nfs"
 	"github.com/shylinux/icebergs/base/tcp"
 	kit "github.com/shylinux/toolkits"
+
+	"strings"
 )
 
 func _route_travel(m *ice.Message, route string) {
@@ -60,7 +62,7 @@ func init() {
 						m.Cmdy("web.wiki.spark")
 					}
 
-					m.Cmdy("web.wiki.spark", "shell", m.Option(ice.MSG_USERWEB))
+					m.Cmdy("web.wiki.spark", "shell", strings.Join([]string{"# 共享环境", m.Option(ice.MSG_USERWEB)}, "\n"))
 					m.Cmdy("web.wiki.image", "qrcode", m.Option(ice.MSG_USERWEB))
 				}},
 				mdb.INPUTS: {Name: "inputs", Help: "补全", Hand: func(m *ice.Message, arg ...string) {
@@ -78,6 +80,7 @@ func init() {
 				}},
 				gdb.START: {Name: "start type=worker,server repos name template", Help: "启动", Hand: func(m *ice.Message, arg ...string) {
 					m.Cmdy(SPACE, m.Option(ROUTE), DREAM, gdb.START, arg)
+					m.Option(ice.MSG_PROCESS, ice.PROCESS_INNER)
 				}},
 				gdb.STOP: {Name: "stop", Help: "结束", Hand: func(m *ice.Message, arg ...string) {
 					m.Cmdy(SPACE, m.Option(ROUTE), "exit")
@@ -85,6 +88,7 @@ func init() {
 				}},
 				"autogen": {Name: "autogen main=src/main.go@key name=hi@key from=usr/icebergs/misc/bash/bash.go@key", Help: "创建", Hand: func(m *ice.Message, arg ...string) {
 					m.Cmdy(SPACE, m.Option(ROUTE), "web.code.autogen", "create", arg)
+					m.Option(ice.MSG_PROCESS, ice.PROCESS_INNER)
 				}},
 			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 				if len(arg) == 0 || arg[0] == "" {

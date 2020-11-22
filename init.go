@@ -156,6 +156,7 @@ func Run(arg ...string) string {
 	frame := &Frame{}
 	Index.root = Index
 	Index.server = frame
+	Index.Merge(Index)
 
 	Pulse.root = Pulse
 	Pulse.Option("name", "")

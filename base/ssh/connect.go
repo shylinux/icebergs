@@ -12,6 +12,7 @@ import (
 	"golang.org/x/crypto/ssh/terminal"
 
 	"encoding/json"
+	"io"
 	"net"
 	"os"
 	"path"
@@ -30,23 +31,24 @@ func _ssh_conn(m *ice.Message, conn net.Conn, username, hostport string) (*ssh.C
 			default:
 			}
 		}
-		m.Debug("question: %v res: %d", questions, len(res))
 		return
 	}))
 
 	methods = append(methods, ssh.PublicKeysCallback(func() ([]ssh.Signer, error) {
 		key, err := ssh.ParsePrivateKey([]byte(m.Cmdx(nfs.CAT, path.Join(os.Getenv("HOME"), m.Option("private")))))
-		m.Debug("publickeys")
 		return []ssh.Signer{key}, err
 	}))
 	methods = append(methods, ssh.PasswordCallback(func() (string, error) {
-		m.Debug("password")
 		return m.Option(aaa.PASSWORD), nil
 	}))
 
 	c, chans, reqs, err := ssh.NewClientConn(conn, hostport, &ssh.ClientConfig{
-		User: username, Auth: methods, HostKeyCallback: func(hostname string, remote net.Addr, key ssh.PublicKey) error {
+		User: username, Auth: methods,
+		HostKeyCallback: func(hostname string, remote net.Addr, key ssh.PublicKey) error {
 			m.Logs(CONNECT, tcp.HOSTNAME, hostname, tcp.HOSTPORT, remote.String())
+			return nil
+		},
+		BannerCallback: func(message string) error {
 			return nil
 		},
 	})
@@ -109,6 +111,7 @@ func init() {
 					}
 
 					m.Option(tcp.DIAL_CB, func(c net.Conn) {
+						pr, pw := io.Pipe()
 						client, e := _ssh_conn(m, c, m.Option(aaa.USERNAME), m.Option(tcp.HOST)+":"+m.Option(tcp.PORT))
 						m.Assert(e)
 
@@ -132,7 +135,18 @@ func init() {
 						}
 						defer terminal.Restore(fd1, oldState1)
 
-						session.Stdin = os.Stdin
+						m.Go(func() {
+							go func() {
+								buf := make([]byte, 1024)
+								for {
+									if n, e := os.Stdin.Read(buf); m.Assert(e) {
+										pw.Write(buf[:n])
+									}
+								}
+							}()
+						})
+
+						session.Stdin = pr
 						session.Stdout = os.Stdout
 						session.Stderr = os.Stderr
 
@@ -144,6 +158,11 @@ func init() {
 
 						session.RequestPty(os.Getenv("TERM"), h, w, modes)
 						session.Shell()
+						for _, k := range []string{"one", "two"} {
+							if m.Sleep("100ms"); m.Option(k) != "" {
+								pw.Write([]byte(m.Option(k) + "\n"))
+							}
+						}
 						session.Wait()
 					})
 

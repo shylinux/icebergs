@@ -62,7 +62,7 @@ func init() {
 
 					// 下载
 					m.Go(func() {
-						m.Option(cli.CMD_DIR, m.Conf(INSTALL, kit.META_PATH))
+						os.MkdirAll(m.Option(cli.CMD_DIR, m.Conf(INSTALL, kit.META_PATH)), ice.MOD_DIR)
 						msg := m.Cmd(web.SPIDE, web.SPIDE_DEV, web.SPIDE_CACHE, web.SPIDE_GET, link)
 
 						m.Cmdy(nfs.LINK, p, msg.Append(kit.MDB_FILE))

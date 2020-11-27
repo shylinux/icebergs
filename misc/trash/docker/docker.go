@@ -183,7 +183,6 @@ var Index = &ice.Context{Name: DOCKER, Help: "虚拟机",
 				args := []string{"--name", arg[0],
 					"-e", "ctx_user=" + cli.UserName,
 					"-e", "ctx_dev=" + m.Conf(cli.RUNTIME, "conf.ctx_dev"),
-					"-e", "ctx_pod=" + arg[0],
 				}
 				kit.Fetch(m.Confv(DOCKER, "meta.build"), func(index int, value string) {
 					switch value {

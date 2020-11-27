@@ -88,7 +88,7 @@ func _dream_show(m *ice.Message, name string) {
 		))
 		// 启动任务
 		m.Optionv(cli.CMD_STDERR, path.Join(p, m.Conf(DREAM, "meta.env.ctx_log")))
-		m.Cmd(cli.DAEMON, m.Confv(DREAM, "meta.cmd"), "self", name)
+		m.Cmd(cli.DAEMON, m.Confv(DREAM, "meta.cmd"), "dev", "self", "name", name)
 		m.Event(DREAM_CREATE, kit.MDB_TYPE, m.Option(kit.MDB_TYPE), kit.MDB_NAME, name)
 		m.Sleep("1s")
 	}

@@ -73,7 +73,10 @@ func init() {
 					}
 
 					switch arg[0] {
-					case "name", "template":
+					case "name":
+						m.Cmdy(nfs.DIR, m.Conf(DREAM, kit.META_PATH), "name,size,time")
+						m.SortStrR(kit.MDB_PATH)
+					case "template":
 						m.Cmdy(nfs.DIR, m.Conf(DREAM, kit.META_PATH), "path,size,time")
 						m.SortStrR(kit.MDB_PATH)
 					}

@@ -340,7 +340,7 @@ func init() {
 					m.Sleep("1s")
 
 					for _, k := range kit.Split(m.Option(SPIDE_DEV)) {
-						m.Cmd(SPACE, "connect", k)
+						m.Cmd(SPACE, "connect", "dev", k, "name", ice.Info.NodeName)
 					}
 				}},
 				aaa.WHITE: {Name: "white", Help: "白名单", Hand: func(m *ice.Message, arg ...string) {

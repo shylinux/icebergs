@@ -105,8 +105,7 @@ export ctx_dev={{.Option "httphost"}} ctx_temp=$(mktemp); curl -sL $ctx_dev >$ct
 `,
 	"base", `
 # 生产环境
-mkdir contexts; cd contexts
-export ctx_log=/dev/stdout ctx_dev={{.Option "httphost"}} ctx_temp=$(mktemp); curl -sL $ctx_dev >$ctx_temp; source $ctx_temp ice
+export ctx_dev={{.Option "httphost"}} ctx_temp=$(mktemp); curl -sL $ctx_dev >$ctx_temp; source $ctx_temp ice
 `,
 	"miss", `
 # 开发环境

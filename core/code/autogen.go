@@ -46,10 +46,8 @@ func _autogen_index(m *ice.Message, dir string, from string, ctx string) {
 }
 func _autogen_main(m *ice.Message, file string, mod string, ctx string) {
 	list := []string{}
-
 	m.Option(nfs.CAT_CB, func(line string, index int) {
-		list = append(list, line)
-		if strings.HasPrefix(line, "import (") {
+		if list = append(list, line); strings.HasPrefix(line, "import (") {
 			list = append(list, kit.Format(`	_ "%s/src/%s"`, mod, ctx), "")
 		}
 	})

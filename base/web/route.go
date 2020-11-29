@@ -81,7 +81,7 @@ func init() {
 						m.SortStrR(kit.MDB_PATH)
 					}
 				}},
-				gdb.START: {Name: "start type=worker,server repos name template", Help: "启动", Hand: func(m *ice.Message, arg ...string) {
+				gdb.START: {Name: "start name repos template", Help: "启动", Hand: func(m *ice.Message, arg ...string) {
 					m.Cmdy(SPACE, m.Option(ROUTE), DREAM, gdb.START, arg)
 					m.Option(ice.MSG_PROCESS, ice.PROCESS_INNER)
 				}},

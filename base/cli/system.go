@@ -15,6 +15,9 @@ import (
 )
 
 func _system_show(m *ice.Message, cmd *exec.Cmd) {
+	if r, ok := m.Optionv("input").(io.Reader); ok {
+		cmd.Stdin = r
+	}
 	if w, ok := m.Optionv("output").(io.WriteCloser); ok {
 		cmd.Stderr = w
 		cmd.Stdout = w

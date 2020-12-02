@@ -54,7 +54,6 @@ func Script(m *ice.Message, name string) io.Reader {
 	}
 	m.Option("_script", name)
 
-	m.Debug("name %v", name)
 	if s, e := os.Open(path.Join(m.Option(nfs.DIR_ROOT), name)); e == nil {
 		return s
 	}

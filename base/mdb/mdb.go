@@ -42,11 +42,9 @@ func _hash_select(m *ice.Message, prefix, chain, field, value string) {
 	fields := _hash_fields(m)
 	cb := m.Optionv(SELECT_CB)
 	m.Richs(prefix, chain, value, func(key string, val map[string]interface{}) {
-		m.Debug("what %v", val)
 		val = kit.GetMeta(val)
 		switch cb := cb.(type) {
 		case func(fields []string, value map[string]interface{}):
-			m.Debug("what %v", val)
 			cb(fields, val)
 		default:
 			if m.Option(FIELDS) == DETAIL {

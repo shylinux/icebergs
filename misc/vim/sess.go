@@ -55,7 +55,6 @@ func init() {
 					}
 				}
 
-				m.Debug("what %v", m.Option(SID))
 				if sid := strings.TrimSpace(m.Option(SID)); m.Option(SID, sid) != "" {
 					if msg := m.Cmd(SESS, sid); msg.Append(kit.MDB_STATUS) != "" {
 						m.Option(aaa.USERNAME, msg.Append(aaa.USERNAME))
@@ -64,7 +63,6 @@ func init() {
 						// 登录失败
 					}
 				}
-				m.Debug("what %v", m.Option(SID))
 				m.Render(ice.RENDER_RESULT)
 			}},
 			"/sess": {Name: "/sess", Help: "会话", Action: map[string]*ice.Action{

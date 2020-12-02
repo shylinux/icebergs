@@ -47,8 +47,10 @@ func init() {
 					PREFIX, kit.Dict("#", COMMENT),
 					KEYWORD, kit.Dict(
 						"title", KEYWORD,
+						"premenu", KEYWORD,
 						"chapter", KEYWORD,
 						"section", KEYWORD,
+						"source", KEYWORD,
 						"refer", KEYWORD,
 						"field", KEYWORD,
 						"label", KEYWORD,

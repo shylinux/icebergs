@@ -139,9 +139,7 @@ func (b *Label) Init(m *ice.Message, arg ...string) Chart {
 	return b
 }
 func (b *Label) Draw(m *ice.Message, x, y int) Chart {
-	m.Debug("arg %v", m.Option("order"))
 	order, _ := kit.Parse(nil, "", kit.Split(m.Option("order"))...).(map[string]interface{})
-	m.Debug("order", order)
 
 	top := y
 	for _, line := range b.data {
@@ -202,7 +200,6 @@ func (b *Chain) Init(m *ice.Message, arg ...string) Chart {
 	b.MarginX = kit.Int(m.Option("marginx"))
 	b.MarginY = kit.Int(m.Option("marginy"))
 
-	m.Debug("what %v", arg)
 	// 解析数据
 	b.data = kit.Parse(nil, "", b.show(m, arg[0])...).(map[string]interface{})
 

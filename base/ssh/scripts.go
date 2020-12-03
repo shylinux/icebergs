@@ -54,7 +54,13 @@ func Script(m *ice.Message, name string) io.Reader {
 	}
 	m.Option("_script", name)
 
-	if s, e := os.Open(path.Join(m.Option(nfs.DIR_ROOT), name)); e == nil {
+	back := kit.Split(m.Option(nfs.DIR_ROOT))
+	for i := len(back) - 1; i >= 0; i-- {
+		if s, e := os.Open(path.Join(path.Join(back[:i]...), name)); e == nil {
+			return s
+		}
+	}
+	if s, e := os.Open(name); e == nil {
 		return s
 	}
 

@@ -1,6 +1,8 @@
 package ssh
 
 import (
+	"fmt"
+
 	ice "github.com/shylinux/icebergs"
 	"github.com/shylinux/icebergs/base/aaa"
 	"github.com/shylinux/icebergs/base/mdb"
@@ -25,6 +27,14 @@ func _ssh_conn(m *ice.Message, conn net.Conn, username, hostport string) (*ssh.C
 		for _, k := range questions {
 			switch strings.TrimSpace(strings.ToLower(k)) {
 			case "verification code:":
+				if m.Option("verify") == "" {
+					verify := ""
+					fmt.Println("verify code: \n")
+					fmt.Println("verify code: ")
+					fmt.Scanf("%6s", &verify)
+					res = append(res, verify)
+					return
+				}
 				res = append(res, aaa.TOTP_GET(m.Option("verify"), 6, 30))
 			case "password:":
 				res = append(res, m.Option(aaa.PASSWORD))

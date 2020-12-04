@@ -97,6 +97,7 @@ var Index = &ice.Context{Name: WEB, Help: "网络模块",
 			m.Cmd(SPIDE, mdb.CREATE, SPIDE_DEV, kit.Select("http://:9020", m.Conf(cli.RUNTIME, "conf.ctx_dev")))
 			m.Cmd(SPIDE, mdb.CREATE, SPIDE_SELF, kit.Select("http://:9020", m.Conf(cli.RUNTIME, "conf.ctx_self")))
 			m.Cmd(SPIDE, mdb.CREATE, SPIDE_SHY, kit.Select("https://shylinux.com:443", m.Conf(cli.RUNTIME, "conf.ctx_shy")))
+			m.Cmd(mdb.SEARCH, mdb.CREATE, SPACE, SPACE, WEB)
 		}},
 		ice.CTX_EXIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			m.Save()

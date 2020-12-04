@@ -31,18 +31,33 @@ func _user_create(m *ice.Message, name, word string) {
 	m.Event(USER_CREATE, name)
 }
 func _user_search(m *ice.Message, kind, name, text string, arg ...string) {
+	fields := kit.Split(m.Option(mdb.FIELDS))
 	m.Richs(USER, nil, kit.MDB_FOREACH, func(key string, val map[string]interface{}) {
 		if name != "" && name != val[USERNAME] {
 			return
 		}
-		m.Push("pod", m.Option("pod"))
-		m.Push("ctx", "aaa")
-		m.Push("cmd", USER)
-		m.Push(key, val, []string{kit.MDB_TIME})
-		m.Push(kit.MDB_SIZE, kit.Format(""))
-		m.Push(kit.MDB_TYPE, kit.Format(UserRole(m, val[USERNAME])))
-		m.Push(kit.MDB_NAME, kit.Format(val[USERNICK]))
-		m.Push(kit.MDB_TEXT, kit.Format(val[USERNAME]))
+		for _, k := range fields {
+			switch k {
+			case kit.SSH_POD:
+				m.Push(k, m.Option(ice.MSG_USERPOD))
+			case kit.SSH_CTX:
+				m.Push(k, m.Prefix())
+			case kit.SSH_CMD:
+				m.Push(k, USER)
+			case kit.MDB_TIME:
+				m.Push(k, m.Time())
+			case kit.MDB_SIZE:
+				m.Push(k, "")
+			case kit.MDB_TYPE:
+				m.Push(k, kit.Format(UserRole(m, val[USERNAME])))
+			case kit.MDB_NAME:
+				m.Push(k, kit.Format(val[USERNICK]))
+			case kit.MDB_TEXT:
+				m.Push(k, kit.Format(val[USERNAME]))
+			default:
+				m.Push(k, "")
+			}
+		}
 	})
 }
 

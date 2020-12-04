@@ -115,6 +115,28 @@ func init() {
 						}
 						m.Render(ice.RENDER_QRCODE, kit.MergeURL2(m.Option(ice.MSG_USERWEB), "/", SHARE, arg[0], list))
 					}
+				case "river":
+					switch kit.Select("", arg, 1) {
+					case "share":
+						list := []string{}
+						for _, k := range []string{"river"} {
+							if msg.Append(k) != "" {
+								list = append(list, k, msg.Append(k))
+							}
+						}
+						m.Render(ice.RENDER_QRCODE, kit.MergeURL2(m.Option(ice.MSG_USERWEB), "/", SHARE, arg[0], list))
+					}
+				case "storm":
+					switch kit.Select("", arg, 1) {
+					case "share":
+						list := []string{}
+						for _, k := range []string{"river", "storm"} {
+							if msg.Append(k) != "" {
+								list = append(list, k, msg.Append(k))
+							}
+						}
+						m.Render(ice.RENDER_QRCODE, kit.MergeURL2(m.Option(ice.MSG_USERWEB), "/", SHARE, arg[0], list))
+					}
 				}
 			}},
 

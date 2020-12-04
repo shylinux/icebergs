@@ -309,7 +309,7 @@ func init() {
 						m.Cmdy(mdb.INPUTS, RIVER, "", mdb.HASH, arg)
 					}
 				}},
-				web.SHARE: {Name: "share name", Help: "共享", Hand: func(m *ice.Message, arg ...string) {
+				web.SHARE: {Name: "share type name", Help: "共享", Hand: func(m *ice.Message, arg ...string) {
 					m.Cmdy(web.SHARE, mdb.CREATE, kit.MDB_TYPE, "login", arg)
 				}},
 			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {

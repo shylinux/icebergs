@@ -42,7 +42,7 @@ var Index = &ice.Context{Name: "ctx", Help: "配置模块",
 						case kit.MDB_NAME:
 							m.Push(k, key)
 						case kit.MDB_TEXT:
-							m.Push(k, m.Prefix())
+							m.Push(k, s.Cap(ice.CTX_FOLLOW))
 						default:
 							m.Push(k, "")
 						}

@@ -8,8 +8,6 @@ import (
 
 	"path"
 	"strings"
-
-	"github.com/tealeg/xlsx"
 )
 
 func _wiki_path(m *ice.Message, cmd string, arg ...string) string {
@@ -52,19 +50,11 @@ func _wiki_upload(m *ice.Message, cmd string, dir string) {
 }
 
 const WIKI = "wiki"
-const XLSX = "xlsx"
 
 var Index = &ice.Context{Name: WIKI, Help: "文档中心",
 	Commands: map[string]*ice.Command{
 		ice.CTX_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) { m.Load() }},
 		ice.CTX_EXIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) { m.Save() }},
-
-		XLSX: {Name: "xlsx file=hi.xlsx 执行", Help: "影音媒体", Meta: kit.Dict(
-			"display", "/plugin/local/wiki/feel.js",
-		), Action: map[string]*ice.Action{}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			file, err := xlsx.OpenFile(arg[0])
-			m.Assert(err)
-		}},
 	},
 }
 

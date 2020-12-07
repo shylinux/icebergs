@@ -1,8 +1,6 @@
 package ssh
 
 import (
-	"fmt"
-
 	ice "github.com/shylinux/icebergs"
 	"github.com/shylinux/icebergs/base/aaa"
 	"github.com/shylinux/icebergs/base/mdb"
@@ -14,6 +12,7 @@ import (
 	"golang.org/x/crypto/ssh/terminal"
 
 	"encoding/json"
+	"fmt"
 	"io"
 	"net"
 	"os"
@@ -24,19 +23,19 @@ import (
 func _ssh_conn(m *ice.Message, conn net.Conn, username, hostport string) (*ssh.Client, error) {
 	methods := []ssh.AuthMethod{}
 	methods = append(methods, ssh.KeyboardInteractive(func(user, instruction string, questions []string, echos []bool) (res []string, err error) {
-		for _, k := range questions {
-			switch strings.TrimSpace(strings.ToLower(k)) {
-			case "verification code:":
-				if m.Option("verify") == "" {
-					verify := ""
-					fmt.Println("verify code: \n")
-					fmt.Println("verify code: ")
+		for _, q := range questions {
+			p := strings.TrimSpace(strings.ToLower(q))
+			switch {
+			case strings.HasSuffix(p, "verification code:"):
+				if verify := m.Option("verify"); verify == "" {
+					fmt.Printf(q)
 					fmt.Scanf("%6s", &verify)
+
 					res = append(res, verify)
-					return
+				} else {
+					res = append(res, aaa.TOTP_GET(verify, 6, 30))
 				}
-				res = append(res, aaa.TOTP_GET(m.Option("verify"), 6, 30))
-			case "password:":
+			case strings.HasSuffix(p, "password:"):
 				res = append(res, m.Option(aaa.PASSWORD))
 			default:
 			}

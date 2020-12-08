@@ -15,10 +15,24 @@ import (
 )
 
 func _system_show(m *ice.Message, cmd *exec.Cmd) {
-	if r, ok := m.Optionv("input").(io.Reader); ok {
+	if r, ok := m.Optionv(CMD_INPUT).(io.Reader); ok {
+		cmd.Stdin = r
+	} else if r, ok := m.Optionv("input").(io.Reader); ok {
 		cmd.Stdin = r
 	}
-	if w, ok := m.Optionv("output").(io.WriteCloser); ok {
+
+	if w, ok := m.Optionv(CMD_ERRPUT).(io.WriteCloser); ok {
+		cmd.Stderr = w
+	}
+	if w, ok := m.Optionv(CMD_OUTPUT).(io.WriteCloser); ok {
+		cmd.Stdout = w
+
+		if e := cmd.Run(); e != nil {
+			m.Warn(e != nil, ErrRun, strings.Join(cmd.Args, " "), "\n", e.Error())
+		} else {
+			m.Cost("args", cmd.Args, "code", cmd.ProcessState.ExitCode())
+		}
+	} else if w, ok := m.Optionv("output").(io.WriteCloser); ok {
 		cmd.Stderr = w
 		cmd.Stdout = w
 
@@ -52,6 +66,10 @@ func _system_show(m *ice.Message, cmd *exec.Cmd) {
 const ErrRun = "cli run err: "
 
 const (
+	CMD_INPUT  = "cmd_input"
+	CMD_OUTPUT = "cmd_output"
+	CMD_ERRPUT = "cmd_errput"
+
 	CMD_STDERR = "cmd_stderr"
 	CMD_STDOUT = "cmd_stdout"
 
@@ -101,6 +119,7 @@ func init() {
 					m.Echo("%s", *obj.Get(m.Option(kit.MDB_TEXT)))
 				}},
 			}, Hand: func(m *ice.Message, c *ice.Context, key string, arg ...string) {
+
 				if len(arg) == 0 || kit.Int(arg[0]) > 0 {
 					m.Option("_control", "_page")
 					m.Option(mdb.FIELDS, kit.Select("time,id,cmd,dir,env", mdb.DETAIL, len(arg) > 0))

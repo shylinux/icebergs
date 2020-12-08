@@ -20,7 +20,63 @@ import (
 	"strings"
 )
 
-func _ssh_conn(m *ice.Message, conn net.Conn, username, hostport string) (*ssh.Client, error) {
+func _ssh_password(m *ice.Message, file string) {
+	if f, e := os.Open(file); e == nil {
+		defer f.Close()
+
+		var data interface{}
+		json.NewDecoder(f).Decode(&data)
+
+		kit.Fetch(data, func(key string, value string) { m.Option(key, value) })
+	}
+}
+func _ssh_stream(m *ice.Message, stdin *os.File) (io.Reader, io.Writer) {
+	pr, pw := io.Pipe()
+	m.Go(func() {
+		buf := make([]byte, 1024)
+		for {
+			if n, e := stdin.Read(buf); m.Assert(e) {
+				pw.Write(buf[:n])
+			}
+		}
+	})
+	return pr, pw
+}
+func _ssh_store(stdio *os.File) func() {
+	fd := int(stdio.Fd())
+	oldState, err := terminal.MakeRaw(fd)
+	if err != nil {
+		panic(err)
+	}
+	return func() { terminal.Restore(fd, oldState) }
+}
+
+func _ssh_session(m *ice.Message, client *ssh.Client, w, h int, stdin io.Reader, stdout, stderr io.Writer) *ssh.Session {
+	session, e := client.NewSession()
+	m.Assert(e)
+
+	session.Stdin = stdin
+	session.Stdout = stdout
+	session.Stderr = stderr
+
+	modes := ssh.TerminalModes{
+		ssh.ECHO:          1,
+		ssh.TTY_OP_ISPEED: 14400,
+		ssh.TTY_OP_OSPEED: 14400,
+	}
+
+	session.RequestPty(os.Getenv("TERM"), h, w, modes)
+	session.Shell()
+	return session
+}
+func _ssh_init(m *ice.Message, pw io.Writer) {
+	for _, k := range []string{"one", "two"} {
+		if m.Sleep("100ms"); m.Option(k) != "" {
+			pw.Write([]byte(m.Option(k) + "\n"))
+		}
+	}
+}
+func _ssh_conn(m *ice.Message, conn net.Conn, username, hostport string) *ssh.Client {
 	methods := []ssh.AuthMethod{}
 	methods = append(methods, ssh.KeyboardInteractive(func(user, instruction string, questions []string, echos []bool) (res []string, err error) {
 		for _, q := range questions {
@@ -29,7 +85,7 @@ func _ssh_conn(m *ice.Message, conn net.Conn, username, hostport string) (*ssh.C
 			case strings.HasSuffix(p, "verification code:"):
 				if verify := m.Option("verify"); verify == "" {
 					fmt.Printf(q)
-					fmt.Scanf("%6s", &verify)
+					fmt.Scanf("%s\n", &verify)
 
 					res = append(res, verify)
 				} else {
@@ -52,17 +108,12 @@ func _ssh_conn(m *ice.Message, conn net.Conn, username, hostport string) (*ssh.C
 	}))
 
 	c, chans, reqs, err := ssh.NewClientConn(conn, hostport, &ssh.ClientConfig{
-		User: username, Auth: methods,
-		HostKeyCallback: func(hostname string, remote net.Addr, key ssh.PublicKey) error {
-			m.Logs(CONNECT, tcp.HOSTNAME, hostname, tcp.HOSTPORT, remote.String())
-			return nil
-		},
-		BannerCallback: func(message string) error {
-			return nil
-		},
+		User: username, Auth: methods, BannerCallback: func(message string) error { return nil },
+		HostKeyCallback: func(hostname string, remote net.Addr, key ssh.PublicKey) error { return nil },
 	})
 
-	return ssh.NewClient(c, chans, reqs), err
+	m.Assert(err)
+	return ssh.NewClient(c, chans, reqs)
 }
 
 const CONNECT = "connect"
@@ -76,10 +127,9 @@ func init() {
 			CONNECT: {Name: "connect hash auto dial prunes", Help: "连接", Action: map[string]*ice.Action{
 				tcp.DIAL: {Name: "dial username=shy host=shylinux.com port=22 private=.ssh/id_rsa", Help: "添加", Hand: func(m *ice.Message, arg ...string) {
 					m.Option(tcp.DIAL_CB, func(c net.Conn) {
-						client, e := _ssh_conn(m, c, kit.Select("shy", m.Option(aaa.USERNAME)),
+						client := _ssh_conn(m, c, kit.Select("shy", m.Option(aaa.USERNAME)),
 							kit.Select("shylinux.com", m.Option(tcp.HOST))+":"+kit.Select("22", m.Option(tcp.PORT)),
 						)
-						m.Assert(e)
 
 						h := m.Rich(CONNECT, "", kit.Dict(
 							aaa.USERNAME, m.Option(aaa.USERNAME),
@@ -110,68 +160,65 @@ func init() {
 				}},
 
 				"open": {Name: "open authfile= username=shy password= verfiy= host=shylinux.com port=22 private=.ssh/id_rsa", Help: "终端", Hand: func(m *ice.Message, arg ...string) {
-					if f, e := os.Open(m.Option("authfile")); e == nil {
-						defer f.Close()
+					var client *ssh.Client
+					w, h, _ := terminal.GetSize(int(os.Stdin.Fd()))
 
-						var data interface{}
-						json.NewDecoder(f).Decode(&data)
+					_ssh_password(m, m.Option("authfile"))
+					p := path.Join(os.Getenv("HOME"), ".ssh/", fmt.Sprintf("%s@%s", m.Option("username"), m.Option("host")))
+					if _, e := os.Stat(p); e == nil {
+						if c, e := net.Dial("unix", p); e == nil {
 
-						kit.Fetch(data, func(key string, value string) { m.Option(key, value) })
+							pr, pw := _ssh_stream(m, os.Stdin)
+							defer _ssh_store(os.Stdout)()
+							defer _ssh_store(os.Stdin)()
+
+							c.Write([]byte(fmt.Sprintf("height:%d,width:%d\n", h, w)))
+
+							m.Go(func() { io.Copy(c, pr) })
+							_ssh_init(m, pw)
+							m.Echo("logout\n")
+							io.Copy(os.Stdout, c)
+							return
+						} else {
+							os.Remove(p)
+						}
+					}
+
+					if l, e := net.Listen("unix", p); m.Assert(e) {
+						defer func() { os.Remove(p) }()
+						defer l.Close()
+
+						m.Go(func() {
+							for {
+								if c, e := l.Accept(); e == nil {
+									buf := make([]byte, 1024)
+									if n, e := c.Read(buf); m.Assert(e) {
+										fmt.Sscanf(string(buf[:n]), "height:%d,width:%d", &h, &w)
+									}
+
+									session := _ssh_session(m, client, w, h, c, c, c)
+									func(session *ssh.Session) {
+										m.Go(func() {
+											defer c.Close()
+											session.Wait()
+										})
+									}(session)
+								} else {
+									break
+								}
+							}
+						})
 					}
 
 					m.Option(tcp.DIAL_CB, func(c net.Conn) {
-						pr, pw := io.Pipe()
-						client, e := _ssh_conn(m, c, m.Option(aaa.USERNAME), m.Option(tcp.HOST)+":"+m.Option(tcp.PORT))
-						m.Assert(e)
+						client = _ssh_conn(m, c, m.Option(aaa.USERNAME), m.Option(tcp.HOST)+":"+m.Option(tcp.PORT))
 
-						session, e := client.NewSession()
-						m.Assert(e)
+						pr, pw := _ssh_stream(m, os.Stdin)
+						defer _ssh_store(os.Stdout)()
+						defer _ssh_store(os.Stdin)()
 
-						fd := int(os.Stdin.Fd())
-						oldState, err := terminal.MakeRaw(fd)
-						if err != nil {
-							panic(err)
-						}
-						defer terminal.Restore(fd, oldState)
-
-						w, h, e := terminal.GetSize(fd)
-						m.Assert(e)
-
-						fd1 := int(os.Stdout.Fd())
-						oldState1, err := terminal.MakeRaw(fd1)
-						if err != nil {
-							panic(err)
-						}
-						defer terminal.Restore(fd1, oldState1)
-
-						m.Go(func() {
-							go func() {
-								buf := make([]byte, 1024)
-								for {
-									if n, e := os.Stdin.Read(buf); m.Assert(e) {
-										pw.Write(buf[:n])
-									}
-								}
-							}()
-						})
-
-						session.Stdin = pr
-						session.Stdout = os.Stdout
-						session.Stderr = os.Stderr
-
-						modes := ssh.TerminalModes{
-							ssh.ECHO:          1,
-							ssh.TTY_OP_ISPEED: 14400,
-							ssh.TTY_OP_OSPEED: 14400,
-						}
-
-						session.RequestPty(os.Getenv("TERM"), h, w, modes)
-						session.Shell()
-						for _, k := range []string{"one", "two"} {
-							if m.Sleep("100ms"); m.Option(k) != "" {
-								pw.Write([]byte(m.Option(k) + "\n"))
-							}
-						}
+						session := _ssh_session(m, client, w, h, pr, os.Stdout, os.Stderr)
+						_ssh_init(m, pw)
 						session.Wait()
 					})
 

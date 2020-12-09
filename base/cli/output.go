@@ -30,7 +30,7 @@ func _cli_progress(m *ice.Message, cb interface{}) {
 		}
 	})
 }
-func Follow(m *ice.Message, action string) bool {
+func Follow(m *ice.Message, action string, cb func()) bool {
 	m.Option(ice.MSG_PROCESS, "_follow")
 	if m.Option(mdb.CACHE_ACTION, action); m.Option(mdb.CACHE_HASH) != "" {
 		m.Cmdy(OUTPUT, m.Option(mdb.CACHE_HASH))
@@ -48,6 +48,7 @@ func Follow(m *ice.Message, action string) bool {
 	m.Option(mdb.CACHE_HASH, m.Result())
 	m.Option(mdb.CACHE_BEGIN, 1)
 	m.Set(ice.MSG_RESULT)
+	m.Go(cb)
 	return false
 }
 

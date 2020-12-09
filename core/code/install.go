@@ -70,11 +70,7 @@ func init() {
 					})
 				}},
 				gdb.BUILD: {Name: "build link", Help: "构建", Hand: func(m *ice.Message, arg ...string) {
-					if cli.Follow(m, gdb.BUILD) {
-						return
-					}
-
-					m.Go(func() {
+					cli.Follow(m, gdb.BUILD, func() {
 						defer m.Cmdy(cli.OUTPUT, mdb.MODIFY, kit.MDB_STATUS, cli.Status.Stop)
 						defer m.Option(kit.MDB_HASH, m.Option("cache.hash"))
 
@@ -94,6 +90,7 @@ func init() {
 						}
 
 						m.Cmdy(cli.SYSTEM, "make", "PREFIX="+pp, "install")
+
 					})
 				}},
 				gdb.SPAWN: {Name: "spawn link", Help: "新建", Hand: func(m *ice.Message, arg ...string) {

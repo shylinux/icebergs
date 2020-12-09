@@ -4,13 +4,16 @@ import (
 	ice "github.com/shylinux/icebergs"
 	"github.com/shylinux/icebergs/base/cli"
 	"github.com/shylinux/icebergs/base/mdb"
+	"github.com/shylinux/icebergs/base/nfs"
 	kit "github.com/shylinux/toolkits"
+
 	"github.com/shylinux/toolkits/util/bench"
 
 	"io"
 	"io/ioutil"
 	"net/http"
 	"os"
+	"path"
 	"strings"
 	"sync/atomic"
 )
@@ -65,6 +68,53 @@ func init() {
 			BENCH: {Name: BENCH, Help: "性能压测", Value: kit.Data(kit.MDB_SHORT, kit.MDB_ZONE)},
 		},
 		Commands: map[string]*ice.Command{
+			"test": {Name: "test path func auto run func", Help: "测试用例", Action: map[string]*ice.Action{
+				"run": {Name: "run", Help: "运行", Hand: func(m *ice.Message, arg ...string) {
+					cli.Follow(m, "run", func() {
+						m.Option(cli.CMD_DIR, kit.Select(path.Dir(arg[0]), arg[0], strings.HasSuffix(arg[0], "/")))
+						m.Cmdy(cli.SYSTEM, "go", "test", "./", "-v", "-run="+arg[1])
+					})
+				}},
+				"func": {Name: "func", Help: "函数", Hand: func(m *ice.Message, arg ...string) {
+					msg := m.Spawn()
+					if strings.HasSuffix(arg[0], "/") {
+						msg.Option(cli.CMD_DIR, arg[0])
+						msg.Split(msg.Cmdx(cli.SYSTEM, "grep", "-r", "func Test.*(", "./"), "file:line", ":", "\n")
+						msg.Table(func(index int, value map[string]string, head []string) {
+							if strings.HasPrefix(strings.TrimSpace(value["line"]), "//") {
+								return
+							}
+							ls := kit.Split(value["line"], " (", " (", " (")
+							m.Push("file", value["file"])
+							m.Push("func", strings.TrimPrefix(ls[1], "Test"))
+						})
+					} else {
+						for _, line := range kit.Split(m.Cmdx(cli.SYSTEM, "grep", "^func Test.*(", arg[0]), "\n", "\n", "\n") {
+							ls := kit.Split(line, " (", " (", " (")
+							m.Push("func", strings.TrimPrefix(ls[1], "Test"))
+						}
+					}
+				}},
+			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+				if len(arg) == 0 || arg[0] == "" {
+					m.Cmdy(nfs.DIR, "./")
+					return
+				}
+				if len(arg) == 1 {
+					if strings.HasSuffix(arg[0], "/") {
+						m.Cmdy(nfs.DIR, arg[0])
+					} else {
+						for _, line := range kit.Split(m.Cmdx(cli.SYSTEM, "grep", "^func Test.*(", arg[0]), "\n", "\n", "\n") {
+							ls := kit.Split(line, " (", " (", " (")
+							m.Push("func", strings.TrimPrefix(ls[1], "Test"))
+						}
+					}
+					return
+				}
+
+				m.Option(cli.CMD_DIR, kit.Select(path.Dir(arg[0]), arg[0], strings.HasSuffix(arg[0], "/")))
+				m.Cmdy(cli.SYSTEM, "go", "test", "./", "-v", "-run="+arg[1])
+			}},
 			BENCH: {Name: "bench zone id auto insert", Help: "性能压测", Action: map[string]*ice.Action{
 				mdb.CREATE: {Name: "create zone", Help: "创建", Hand: func(m *ice.Message, arg ...string) {
 					m.Cmdy(mdb.INSERT, BENCH, "", mdb.HASH, arg)

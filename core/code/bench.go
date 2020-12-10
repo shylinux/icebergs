@@ -68,14 +68,14 @@ func init() {
 			BENCH: {Name: BENCH, Help: "性能压测", Value: kit.Data(kit.MDB_SHORT, kit.MDB_ZONE)},
 		},
 		Commands: map[string]*ice.Command{
-			"test": {Name: "test path func auto run func", Help: "测试用例", Action: map[string]*ice.Action{
+			"test": {Name: "test path func auto run case", Help: "测试用例", Action: map[string]*ice.Action{
 				"run": {Name: "run", Help: "运行", Hand: func(m *ice.Message, arg ...string) {
 					cli.Follow(m, "run", func() {
 						m.Option(cli.CMD_DIR, kit.Select(path.Dir(arg[0]), arg[0], strings.HasSuffix(arg[0], "/")))
 						m.Cmdy(cli.SYSTEM, "go", "test", "./", "-v", "-run="+arg[1])
 					})
 				}},
-				"func": {Name: "func", Help: "函数", Hand: func(m *ice.Message, arg ...string) {
+				"case": {Name: "case", Help: "用例", Hand: func(m *ice.Message, arg ...string) {
 					msg := m.Spawn()
 					if strings.HasSuffix(arg[0], "/") {
 						msg.Option(cli.CMD_DIR, arg[0])

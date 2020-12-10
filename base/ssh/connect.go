@@ -20,6 +20,17 @@ import (
 	"strings"
 )
 
+func _ssh_tick(m *ice.Message, pw io.Writer) {
+	if m.Option("tick") == "" {
+		return
+	}
+	m.Go(func() {
+		for {
+			m.Sleep(m.Option("tick"))
+			pw.Write([]byte("\n"))
+		}
+	})
+}
 func _ssh_password(m *ice.Message, file string) {
 	if f, e := os.Open(file); e == nil {
 		defer f.Close()
@@ -159,7 +170,7 @@ func init() {
 					})
 				}},
 
-				"open": {Name: "open authfile= username=shy password= verfiy= host=shylinux.com port=22 private=.ssh/id_rsa", Help: "终端", Hand: func(m *ice.Message, arg ...string) {
+				"open": {Name: "open authfile= username=shy password= verfiy= host=shylinux.com port=22 private=.ssh/id_rsa tick=", Help: "终端", Hand: func(m *ice.Message, arg ...string) {
 					var client *ssh.Client
 					w, h, _ := terminal.GetSize(int(os.Stdin.Fd()))
 
@@ -219,6 +230,7 @@ func init() {
 
 						session := _ssh_session(m, client, w, h, pr, os.Stdout, os.Stderr)
 						_ssh_init(m, pw)
+						_ssh_tick(m, pw)
 						session.Wait()
 					})
 

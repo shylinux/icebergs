@@ -35,7 +35,6 @@ func _space_dial(m *ice.Message, dev, name string, arg ...string) {
 		proto := kit.Select("ws", "wss", client["protocol"] == "https")
 		uri := kit.MergeURL(proto+"://"+host+"/space/", "name", name, "type", ice.Info.NodeType, "share", os.Getenv("ctx_share"), "river", os.Getenv("ctx_river"))
 		if u, e := url.Parse(uri); m.Assert(e) {
-
 			m.Go(func() {
 				for i := 0; i >= 0 && i < kit.Int(redial["c"]); i++ {
 					m.Option(tcp.DIAL_CB, func(s net.Conn, e error) {

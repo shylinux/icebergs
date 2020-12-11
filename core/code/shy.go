@@ -53,6 +53,8 @@ func init() {
 						"source", KEYWORD,
 						"refer", KEYWORD,
 						"field", KEYWORD,
+						"spark", KEYWORD,
+						"image", KEYWORD,
 						"label", KEYWORD,
 						"chain", KEYWORD,
 					),

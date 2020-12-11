@@ -14,16 +14,9 @@ import (
 	"time"
 )
 
-func _share_repos(m *ice.Message, repos string, arg ...string) {
-	prefix := m.Conf(SERVE, "meta.volcanos.require")
-	if _, e := os.Stat(path.Join(prefix, repos)); e != nil {
-		m.Cmd(cli.SYSTEM, "git", "clone", "https://"+repos, path.Join(prefix, repos))
-	}
-	m.Render(ice.RENDER_DOWNLOAD, path.Join(prefix, repos, path.Join(arg...)))
-}
-func _share_remote(m *ice.Message, pod string, arg ...string) {
-	m.Cmdy(SPACE, pod, "web./publish/", arg)
-	m.Render(ice.RENDER_RESULT)
+func _share_cache(m *ice.Message, arg ...string) {
+	msg := m.Cmd(CACHE, arg[0])
+	m.Render(ice.RENDER_DOWNLOAD, msg.Append(kit.MDB_FILE), msg.Append(kit.MDB_TYPE), msg.Append(kit.MDB_NAME))
 }
 func _share_local(m *ice.Message, arg ...string) {
 	p := path.Join(arg...)
@@ -67,11 +60,17 @@ func _share_proxy(m *ice.Message, arg ...string) {
 		m.Cmdy(CACHE, WATCH, m.Option("data"), path.Join("var/proxy", m.Option("pod"), m.Option("path")))
 		m.Render(ice.RENDER_RESULT, m.Option("path"))
 	}
-
 }
-func _share_cache(m *ice.Message, arg ...string) {
-	msg := m.Cmd(CACHE, arg[0])
-	m.Render(ice.RENDER_DOWNLOAD, msg.Append(kit.MDB_FILE), msg.Append(kit.MDB_TYPE), msg.Append(kit.MDB_NAME))
+func _share_repos(m *ice.Message, repos string, arg ...string) {
+	prefix := m.Conf(SERVE, "meta.volcanos.require")
+	if _, e := os.Stat(path.Join(prefix, repos)); e != nil {
+		m.Cmd(cli.SYSTEM, "git", "clone", "https://"+repos, path.Join(prefix, repos))
+	}
+	m.Render(ice.RENDER_DOWNLOAD, path.Join(prefix, repos, path.Join(arg...)))
+}
+func _share_remote(m *ice.Message, pod string, arg ...string) {
+	m.Cmdy(SPACE, pod, "web./publish/", arg)
+	m.Render(ice.RENDER_RESULT)
 }
 
 const SHARE = "share"
@@ -140,14 +139,14 @@ func init() {
 				}
 			}},
 
+			"/share/cache/": {Name: "/share/cache/", Help: "缓存池", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+				_share_cache(m, arg...)
+			}},
 			"/share/local/": {Name: "/share/local/", Help: "共享链", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 				_share_local(m, arg...)
 			}},
 			"/share/proxy/": {Name: "/share/proxy/", Help: "缓存池", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 				_share_proxy(m, arg...)
-			}},
-			"/share/cache/": {Name: "/share/cache/", Help: "缓存池", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-				_share_cache(m, arg...)
 			}},
 			"/plugin/github.com/": {Name: "/space/", Help: "空间站", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 				_share_repos(m, path.Join(strings.Split(cmd, "/")[2:5]...), arg[6:]...)

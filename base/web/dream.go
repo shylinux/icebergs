@@ -119,6 +119,7 @@ ish_miss_prepare_install
 # ish_miss_prepare_icebergs
 # ish_miss_prepare_toolkits
 
+make
 `,
 			)},
 		},

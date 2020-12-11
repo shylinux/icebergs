@@ -353,6 +353,15 @@ var Index = &ice.Context{Name: "nfs", Help: "存储模块",
 				_file_list(m, arg[2], arg[1], 0, m.Option(DIR_DEEP) == "true", kit.Select(TYPE_BOTH, m.Option(DIR_TYPE)),
 					nil, []string{"time", "size", "type", "path"})
 			}},
+			"upload": {Name: "render type name text", Help: "渲染", Hand: func(m *ice.Message, arg ...string) {
+				up := kit.Simple(m.Optionv(ice.MSG_UPLOAD))
+
+				if p := path.Join(m.Option("path"), up[1]); m.Option(ice.MSG_USERPOD) == "" {
+					m.Cmdy("cache", "watch", up[0], p)
+				} else {
+					m.Cmdy("spide", "dev", "save", p, "GET", kit.MergeURL2(m.Option(ice.MSG_USERWEB), "/share/cache/"+up[0]))
+				}
+			}},
 		}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			if len(arg) == 0 {
 				arg = append(arg, "")

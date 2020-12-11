@@ -13,6 +13,7 @@ section "构建"
 spark shell `
 yum install -y wget make gcc
 yum install -y libcurl-devel.x86_64 openssl-devel.x86_64
+yum install perl-ExtUtils-CBuilder perl-ExtUtils-MakeMaker
 
 wget https://mirrors.edge.kernel.org/pub/software/scm/git/git-1.8.3.1.tar.gz
 tar xvf git-1.8.3.1.tar.gz && cd git-1.8.3.1

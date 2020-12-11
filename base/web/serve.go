@@ -314,7 +314,7 @@ func init() {
 					"login", true, "space", true, "share", true, "plugin", true, "publish", true, "intshell", true,
 				),
 
-				"static", kit.Dict("/", "usr/volcanos/"),
+				"static", kit.Dict("/gitrepos/", "usr/repos/", "/", "usr/volcanos/"),
 
 				"volcanos", kit.Dict("refresh", "5",
 					"share", "usr/volcanos/page/share.html",

@@ -26,7 +26,7 @@ func _totp_get(key string, num int, per int64) string {
 
 	buf := []byte{}
 	for i := 0; i < 8; i++ {
-		buf = append(buf, byte((now >> ((7 - i) * 8))))
+		buf = append(buf, byte((uint64(now) >> uint64(((7 - i) * 8)))))
 	}
 
 	if l := len(key) % 8; l != 0 {

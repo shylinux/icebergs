@@ -82,7 +82,7 @@ func (c *Context) Cap(key string, arg ...interface{}) string {
 }
 func (c *Context) _hand(m *Message, cmd *Command, key string, k string, h *Action, arg ...string) *Message {
 	m.Log(LOG_CMDS, "%s.%s %s %d %v %s", c.Name, key, k, len(arg), arg, kit.FileLine(h.Hand, 3))
-	if len(h.List) > 0 {
+	if len(h.List) > 0 && k != "search" {
 		order := false
 		for i, v := range h.List {
 			name := kit.Format(kit.Value(v, "name"))

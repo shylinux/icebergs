@@ -345,7 +345,7 @@ var Index = &ice.Context{Name: "nfs", Help: "存储模块",
 		ice.CTX_EXIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			m.Save()
 		}},
-		DIR: {Name: "dir path field... auto 上传", Help: "目录", Action: map[string]*ice.Action{
+		DIR: {Name: "dir path field... auto upload", Help: "目录", Action: map[string]*ice.Action{
 			mdb.SEARCH: {Name: "search type name text", Help: "搜索", Hand: func(m *ice.Message, arg ...string) {
 				_file_search(m, arg[0], arg[1], arg[2], arg[3:]...)
 			}},
@@ -353,7 +353,7 @@ var Index = &ice.Context{Name: "nfs", Help: "存储模块",
 				_file_list(m, arg[2], arg[1], 0, m.Option(DIR_DEEP) == "true", kit.Select(TYPE_BOTH, m.Option(DIR_TYPE)),
 					nil, []string{"time", "size", "type", "path"})
 			}},
-			"upload": {Name: "render type name text", Help: "渲染", Hand: func(m *ice.Message, arg ...string) {
+			"upload": {Name: "upload", Help: "上传", Hand: func(m *ice.Message, arg ...string) {
 				up := kit.Simple(m.Optionv(ice.MSG_UPLOAD))
 
 				if p := path.Join(m.Option("path"), up[1]); m.Option(ice.MSG_USERPOD) == "" {

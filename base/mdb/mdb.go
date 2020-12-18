@@ -13,7 +13,7 @@ import (
 )
 
 func _file_name(m *ice.Message, arg ...string) string {
-	return kit.Select(path.Join(m.Option(ice.MSG_LOCAL), "usr/export", path.Join(arg[:2]...), arg[2]), arg, 3)
+	return kit.Select(path.Join(m.Option(ice.MSG_LOCAL), "usr/local/export", path.Join(arg[:2]...), arg[2]), arg, 3)
 }
 func _domain_chain(m *ice.Message, chain string) string {
 	return kit.Keys(m.Option(ice.MSG_DOMAIN), chain)

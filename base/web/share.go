@@ -149,7 +149,7 @@ func init() {
 				_share_proxy(m, arg...)
 			}},
 			"/plugin/github.com/": {Name: "/space/", Help: "空间站", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-				_share_repos(m, path.Join(strings.Split(cmd, "/")[2:5]...), arg[6:]...)
+				_share_repos(m, "github.com/"+arg[0]+"/"+arg[1], arg[2:]...)
 			}},
 			"/publish/": {Name: "/publish/", Help: "发布", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 				if arg[0] == "order.js" && len(ice.BinPack) > 0 {

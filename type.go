@@ -1,6 +1,3 @@
-// icebergs: 后端 冰山架 挨撕不可
-// CMS: a cluster manager system
-
 package ice
 
 import (

@@ -15,7 +15,7 @@ const DATA = "data"
 func init() {
 	Index.Merge(&ice.Context{
 		Configs: map[string]*ice.Config{
-			DATA: {Name: DATA, Help: "数据表格", Value: kit.Data(kit.MDB_PATH, "usr/export", "regs", ".*\\.csv")},
+			DATA: {Name: DATA, Help: "数据表格", Value: kit.Data(kit.MDB_PATH, "usr/local/export", "regs", ".*\\.csv")},
 		},
 		Commands: map[string]*ice.Command{
 			DATA: {Name: "data path auto", Help: "数据表格", Meta: kit.Dict(

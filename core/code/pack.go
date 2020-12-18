@@ -141,7 +141,7 @@ func init() {
 					for _, k := range []string{"lib", "pane", "plugin"} {
 						m.Cmd(nfs.DIR, k).Table(func(index int, value map[string]string, head []string) {
 							if strings.HasSuffix(value[kit.MDB_PATH], ".js") {
-								js.WriteString(`_can_name = "` + path.Join("/", value[kit.MDB_PATH]) + "\"\n")
+								js.WriteString(`_can_name = "` + path.Join("/", value[kit.MDB_PATH]) + "\";\n")
 								js.WriteString(m.Cmdx(nfs.CAT, value[kit.MDB_PATH]))
 							}
 						})

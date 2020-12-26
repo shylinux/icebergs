@@ -16,14 +16,13 @@ func init() {
 			)},
 		},
 		Commands: map[string]*ice.Command{
-			FAVOR: {Name: "favor topic id auto 创建 导出 导入", Help: "收藏夹", Action: map[string]*ice.Action{
+			FAVOR: {Name: "favor topic id auto create export import", Help: "收藏夹", Action: map[string]*ice.Action{
 				mdb.CREATE: {Name: "create topic", Help: "创建", Hand: func(m *ice.Message, arg ...string) {
 					m.Cmdy(mdb.INSERT, m.Prefix(FAVOR), "", mdb.HASH, arg)
 				}},
 				mdb.INSERT: {Name: "insert topic=数据结构 name=hi text=hello", Help: "添加", Hand: func(m *ice.Message, arg ...string) {
-					m.Richs(m.Prefix(FAVOR), "", m.Option(kit.MDB_TOPIC), func(key string, value map[string]interface{}) {
-						m.Cmdy(mdb.INSERT, m.Prefix(FAVOR), kit.Keys(kit.MDB_HASH, key), mdb.LIST, arg)
-					})
+					m.Cmdy(mdb.INSERT, m.Prefix(FAVOR), "", mdb.HASH, kit.MDB_TOPIC, m.Option(kit.MDB_TOPIC))
+					m.Cmdy(mdb.INSERT, m.Prefix(FAVOR), kit.Keys(kit.MDB_HASH, kit.Hashs(m.Option(kit.MDB_TOPIC))), mdb.LIST, arg)
 				}},
 				mdb.MODIFY: {Name: "modify", Help: "编辑", Hand: func(m *ice.Message, arg ...string) {
 					m.Richs(m.Prefix(FAVOR), "", m.Option(kit.MDB_TOPIC), func(key string, value map[string]interface{}) {
@@ -56,7 +55,7 @@ func init() {
 				}
 				m.Option(mdb.FIELDS, "time,count,topic")
 				m.Cmdy(mdb.SELECT, m.Prefix(FAVOR), "", mdb.HASH)
-				m.PushAction("删除")
+				m.PushAction(mdb.REMOVE)
 			}},
 		},
 	})

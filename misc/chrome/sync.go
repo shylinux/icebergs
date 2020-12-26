@@ -17,7 +17,7 @@ func init() {
 			)},
 		},
 		Commands: map[string]*ice.Command{
-			SYNC: {Name: "sync id auto 导出 导入", Help: "同步流", Action: map[string]*ice.Action{
+			SYNC: {Name: "sync id auto export import", Help: "同步流", Action: map[string]*ice.Action{
 				mdb.EXPORT: {Name: "export", Help: "导出", Hand: func(m *ice.Message, arg ...string) {
 					m.Cmdy(mdb.EXPORT, m.Prefix(SYNC), "", mdb.LIST)
 				}},
@@ -39,7 +39,7 @@ func init() {
 					m.Option("cache.field", kit.MDB_ID)
 					m.Option("cache.value", arg[0])
 				} else {
-					defer m.PushAction("收藏")
+					defer m.PushAction(FAVOR)
 					if m.Option("_control", "page"); m.Option("cache.limit") == "" {
 						m.Option("cache.limit", "10")
 					}
@@ -53,8 +53,8 @@ func init() {
 			}},
 			"/crx": {Name: "/crx", Help: "插件", Action: map[string]*ice.Action{
 				web.HISTORY: {Name: "history", Help: "历史记录", Hand: func(m *ice.Message, arg ...string) {
-					// m.Cmdy(web.SPIDE, web.SPIDE_SELF, "/code/chrome/sync",
-					// 	kit.MDB_NAME, arg[1], kit.MDB_TEXT, arg[2])
+					m.Cmdy("web.spide", web.SPIDE_SELF, "/code/chrome/sync",
+						kit.MDB_NAME, arg[1], kit.MDB_TEXT, arg[2])
 				}},
 			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			}},

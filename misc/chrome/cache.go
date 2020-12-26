@@ -30,7 +30,7 @@ func init() {
 					if m.Cmdy(mdb.SELECT, m.Prefix(CACHE), "", mdb.HASH, kit.MDB_LINK, m.Option(kit.MDB_LINK)); len(m.Appendv(kit.MDB_TOTAL)) > 0 {
 						return // 已经下载
 					}
-					m.Cmd(mdb.INSERT, m.Prefix(CACHE), "", mdb.HASH,
+					h := m.Cmd(mdb.INSERT, m.Prefix(CACHE), "", mdb.HASH,
 						kit.MDB_LINK, m.Option(kit.MDB_LINK),
 						kit.MDB_TYPE, m.Option(kit.MDB_TYPE),
 						kit.MDB_NAME, m.Option(kit.MDB_NAME),
@@ -38,7 +38,8 @@ func init() {
 					)
 
 					m.Option("progress", m.Prefix(CACHE), "", m.Option(kit.MDB_LINK))
-					msg := m.Cmd(web.SPIDE, web.SPIDE_DEV, web.SPIDE_CACHE, web.SPIDE_GET, m.Option(kit.MDB_LINK))
+					m.Option(web.DOWNLOAD_CB, m.Prefix(CACHE), "", kit.Keys(kit.MDB_HASH, h))
+					msg := m.Cmd("web.spide", web.SPIDE_DEV, web.SPIDE_CACHE, web.SPIDE_GET, m.Option(kit.MDB_LINK))
 
 					p := path.Join(m.Conf(m.Prefix(CACHE), kit.META_PATH), m.Option(kit.MDB_NAME))
 					m.Cmdy(nfs.LINK, p, msg.Append(kit.MDB_FILE))

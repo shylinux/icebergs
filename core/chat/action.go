@@ -109,13 +109,25 @@ func init() {
 					}
 				}},
 			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-				if m.Warn(m.Option(ice.MSG_USERNAME) == "", ice.ErrNotLogin) {
-					return // 没有登录
-				}
-				if m.Warn(!_action_right(m, m.Option(ice.MSG_RIVER, arg[0]), m.Option(ice.MSG_STORM, arg[1])), ice.ErrNotAuth) {
-					return // 没有授权
+				if arg[0] == "_share" {
+					switch msg := m.Cmd(web.SHARE, arg[1]); msg.Append("type") {
+					case "storm":
+						m.Debug(msg.Format("meta"))
+						arg[0] = msg.Append("river")
+						arg[1] = msg.Append("storm")
+						m.Option("title", msg.Append("name"))
+					}
+				} else {
+					if m.Warn(m.Option(ice.MSG_USERNAME) == "", ice.ErrNotLogin) {
+						return // 没有登录
+					}
+					if m.Warn(!_action_right(m, arg[0], arg[1]), ice.ErrNotAuth) {
+						return // 没有授权
+					}
 				}
 
+				m.Option(ice.MSG_RIVER, arg[0])
+				m.Option(ice.MSG_STORM, arg[1])
 				if len(arg) == 2 {
 					_action_list(m, arg[0], arg[1])
 					return //命令列表

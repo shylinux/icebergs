@@ -17,7 +17,7 @@ var Index = &ice.Context{Name: CHROME, Help: "浏览器",
 		ice.CTX_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) { m.Load() }},
 		ice.CTX_EXIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) { m.Save() }},
 
-		CHROME: {Name: "chrome wid url auto 启动 构建 下载", Help: "浏览器", Action: map[string]*ice.Action{
+		CHROME: {Name: "chrome wid tid url auto 启动 构建 下载", Help: "浏览器", Action: map[string]*ice.Action{
 			"install": {Name: "install", Help: "下载", Hand: func(m *ice.Message, arg ...string) {
 			}},
 			"build": {Name: "build", Help: "构建", Hand: func(m *ice.Message, arg ...string) {

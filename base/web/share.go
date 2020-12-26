@@ -102,7 +102,7 @@ func init() {
 			}},
 			"/share/": {Name: "/share/", Help: "共享链", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 				m.Option(mdb.FIELDS, kit.Select("time,hash,userrole,username,river,storm,type,name,text"))
-				switch msg := m.Cmd(mdb.SELECT, SHARE, "", mdb.HASH, kit.MDB_HASH, arg[0]); msg.Append(kit.MDB_TYPE) {
+				switch msg := m.Cmd(mdb.SELECT, SHARE, "", mdb.HASH, kit.MDB_HASH, kit.Select(m.Option("share"), arg, 0)); msg.Append(kit.MDB_TYPE) {
 				case "login":
 					switch kit.Select("", arg, 1) {
 					case "share":
@@ -124,6 +124,9 @@ func init() {
 							}
 						}
 						m.Render(ice.RENDER_QRCODE, kit.MergeURL2(m.Option(ice.MSG_USERWEB), "/", SHARE, arg[0], list))
+					default:
+						m.Render("redirect", "/", "river", msg.Append("river"))
+
 					}
 				case "storm":
 					switch kit.Select("", arg, 1) {
@@ -134,7 +137,9 @@ func init() {
 								list = append(list, k, msg.Append(k))
 							}
 						}
-						m.Render(ice.RENDER_QRCODE, kit.MergeURL2(m.Option(ice.MSG_USERWEB), "/", SHARE, arg[0], list))
+						m.Render(ice.RENDER_QRCODE, kit.MergeURL2(m.Option(ice.MSG_USERWEB), "/page/share.html", SHARE, arg[0], list))
+					default:
+						m.Render("redirect", "/page/share.html", "share", m.Option("share"))
 					}
 				}
 			}},

@@ -150,8 +150,7 @@ func init() {
 						m.Cmdy(mdb.MODIFY, RIVER, kit.Keys(kit.MDB_HASH, m.Option(ice.MSG_RIVER), TOOL, kit.MDB_HASH, m.Option(kit.MDB_HASH)), mdb.LIST,
 							kit.MDB_ID, m.Option(kit.MDB_ID), arg)
 					} else {
-						m.Cmdy(mdb.MODIFY, RIVER, kit.Keys(kit.MDB_HASH, m.Option(ice.MSG_RIVER), TOOL), mdb.HASH,
-							kit.MDB_HASH, m.Option(kit.MDB_HASH), arg)
+						m.Cmdy(mdb.MODIFY, RIVER, kit.Keys(kit.MDB_HASH, m.Option(ice.MSG_RIVER), TOOL), mdb.HASH, kit.MDB_HASH, m.Option(kit.MDB_HASH), arg)
 					}
 				}},
 				mdb.REMOVE: {Name: "remove", Help: "删除", Hand: func(m *ice.Message, arg ...string) {

@@ -11,7 +11,7 @@ image qrcode `https://www.feishu.cn/`
 chapter "应用"
 field "app" web.chat.lark.app
 field "company" web.chat.lark.company
-# field "employee" web.chat.lark.employee
+field "employee" web.chat.lark.employee
 field "group" web.chat.lark.group
 # field "send" web.chat.lark.send
 # field "duty" web.chat.lark.duty

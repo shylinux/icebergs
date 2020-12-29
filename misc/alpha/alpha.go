@@ -44,6 +44,7 @@ func _alpha_load(m *ice.Message, file, name string) {
 		kit.MDB_FSIZE, meta[kit.MDB_FSIZE],
 		kit.MDB_LIMIT, meta[kit.MDB_LIMIT],
 		kit.MDB_LEAST, meta[kit.MDB_LEAST],
+		kit.MDB_FIELD, meta[kit.MDB_FIELD],
 	))
 
 	m.Cmd(mdb.IMPORT, ALPHA, name, kit.MDB_LIST, file)

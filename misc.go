@@ -110,6 +110,32 @@ func (m *Message) PushAction(list ...interface{}) {
 		m.PushRender(kit.MDB_ACTION, kit.MDB_BUTTON, strings.Join(kit.Simple(list...), ","))
 	})
 }
+func (m *Message) PushSearch(args ...interface{}) *Message {
+	data := kit.Dict(args...)
+	for _, k := range kit.Split(m.Option("fields")) {
+		switch k {
+		case kit.SSH_POD:
+			m.Push(k, kit.Select(m.Option(MSG_USERPOD), data[kit.SSH_POD]))
+		case kit.SSH_CTX:
+			m.Push(k, m.Prefix())
+		case kit.SSH_CMD:
+			m.Push(k, data[kit.SSH_CMD])
+		case kit.MDB_TIME:
+			m.Push(k, m.Time())
+		case kit.MDB_SIZE:
+			m.Push(k, "")
+		case kit.MDB_TYPE:
+			m.Push(k, data[kit.MDB_TYPE])
+		case kit.MDB_NAME:
+			m.Push(k, data[kit.MDB_NAME])
+		case kit.MDB_TEXT:
+			m.Push(k, data[kit.MDB_TEXT])
+		default:
+			m.Push(k, data[k])
+		}
+	}
+	return m
+}
 
 func (m *Message) SortStr(key string)   { m.Sort(key, "str") }
 func (m *Message) SortStrR(key string)  { m.Sort(key, "str_r") }

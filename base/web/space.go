@@ -172,30 +172,9 @@ func _space_handle(m *ice.Message, safe bool, send map[string]*ice.Message, c *w
 	return false
 }
 func _space_search(m *ice.Message, kind, name, text string, arg ...string) {
-	fields := kit.Split(m.Option(mdb.FIELDS))
 	m.Richs(SPACE, nil, kit.MDB_FOREACH, func(key string, val map[string]interface{}) {
-		val = kit.GetMeta(val)
-		for _, k := range fields {
-			switch k {
-			case kit.SSH_POD:
-				m.Push(k, m.Option(ice.MSG_USERPOD))
-			case kit.SSH_CTX:
-				m.Push(k, m.Prefix())
-			case kit.SSH_CMD:
-				m.Push(k, SPACE)
-			case kit.MDB_TIME:
-				m.Push(k, m.Time())
-			case kit.MDB_SIZE:
-				m.Push(k, "")
-			case kit.MDB_TYPE:
-				m.Push(k, val[kit.MDB_TYPE])
-			case kit.MDB_NAME:
-				m.Push(k, val[kit.MDB_NAME])
-			case kit.MDB_TEXT:
-				m.Push(k, val[kit.MDB_TEXT])
-			default:
-				m.Push(k, "")
-			}
+		if val = kit.GetMeta(val); strings.Contains(kit.Format(val["name"]), name) {
+			m.PushSearch("cmd", SPACE, val)
 		}
 	})
 }

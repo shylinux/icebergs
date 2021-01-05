@@ -56,11 +56,10 @@ func (m *Message) Space(arg interface{}) []string {
 	return []string{"web.space", kit.Format(arg)}
 }
 
-func (m *Message) PushPlugin(key string, arg ...string) *Message {
+func (m *Message) PushPlugin(key string, arg ...string) {
 	m.Option(MSG_PROCESS, PROCESS_FIELD)
 	m.Option("_prefix", arg)
 	m.Cmdy("command", key)
-	return m
 }
 func (m *Message) PushRender(key, view, name string, arg ...string) *Message {
 	if m.Option(MSG_USERUA) == "" {
@@ -105,12 +104,7 @@ func (m *Message) PushDownload(name string, arg ...string) {
 	}
 	m.PushRender("link", "download", name, arg...)
 }
-func (m *Message) PushAction(list ...interface{}) {
-	m.Table(func(index int, value map[string]string, head []string) {
-		m.PushRender(kit.MDB_ACTION, kit.MDB_BUTTON, strings.Join(kit.Simple(list...), ","))
-	})
-}
-func (m *Message) PushSearch(args ...interface{}) *Message {
+func (m *Message) PushSearch(args ...interface{}) {
 	data := kit.Dict(args...)
 	for _, k := range kit.Split(m.Option("fields")) {
 		switch k {
@@ -134,7 +128,26 @@ func (m *Message) PushSearch(args ...interface{}) *Message {
 			m.Push(k, data[k])
 		}
 	}
-	return m
+}
+func (m *Message) PushAction(list ...interface{}) {
+	m.Table(func(index int, value map[string]string, head []string) {
+		m.PushRender(kit.MDB_ACTION, kit.MDB_BUTTON, strings.Join(kit.Simple(list...), ","))
+	})
+}
+func (m *Message) PushPodCmd(cmd string, arg ...string) {
+	m.Table(func(index int, value map[string]string, head []string) {
+		m.Push("pod", m.Option(MSG_USERPOD))
+	})
+
+	m.Cmd("web.space").Table(func(index int, value map[string]string, head []string) {
+		switch value["type"] {
+		case "worker", "server":
+			m.Cmd("web.space", value["name"], m.Prefix(cmd), arg).Table(func(index int, val map[string]string, head []string) {
+				val["pod"] = kit.Keys(value["name"], val["pod"])
+				m.Push("", val, head)
+			})
+		}
+	})
 }
 
 func (m *Message) SortStr(key string)   { m.Sort(key, "str") }

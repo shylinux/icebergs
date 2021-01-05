@@ -14,11 +14,14 @@ var Info = struct {
 	PathName string
 	UserName string
 	PassWord string
-	NodeName string
 	NodeType string
+	NodeName string
 
 	Build struct {
 		Time     string
+		Hash     string
+		Remote   string
+		Branch   string
 		Version  string
 		HostName string
 		UserName string

@@ -5,7 +5,6 @@ import (
 	"github.com/shylinux/icebergs/base/ctx"
 	"github.com/shylinux/icebergs/base/gdb"
 	"github.com/shylinux/icebergs/base/mdb"
-	"github.com/shylinux/icebergs/base/web"
 	kit "github.com/shylinux/toolkits"
 
 	"time"
@@ -66,21 +65,12 @@ func init() {
 					if begin_time.After(begin) || begin.After(end_time) {
 						return
 					}
-					m.Push("pod", m.Option(ice.MSG_USERPOD))
 					m.Push(key, value, fields, val)
 					m.PushButton(_task_action(m, value[TaskField.STATUS], mdb.PLUGIN))
 				})
 				m.Cmd(mdb.SELECT, TASK, "", mdb.ZONE, kit.MDB_FOREACH)
 
-				m.Cmd(web.SPACE).Table(func(index int, value map[string]string, head []string) {
-					switch value["type"] {
-					case "worker", "server":
-						m.Cmd(web.SPACE, value["name"], m.Prefix(PLAN), arg).Table(func(index int, val map[string]string, head []string) {
-							val["pod"] = kit.Keys(value["name"], val["pod"])
-							m.Push("", val, head)
-						})
-					}
-				})
+				m.PushPodCmd(PLAN, arg...)
 			}},
 		},
 	})

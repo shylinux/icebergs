@@ -110,15 +110,7 @@ func (m *Message) Back(res *Message) *Message {
 	return m
 }
 func (m *Message) Gos(msg *Message, cb interface{}, args ...interface{}) *Message {
-	// h := m.Cmdx("gdb.routine", "create", "fileline", kit.FileLine(cb, 3), "status", "start")
 	task.Put(kit.FileLine(3, 3), func(task *task.Task) error {
-		// msg.Optionv("task.hash", task.Arg)
-		// msg.Optionv("_task", task)
-		// defer func() {
-		// 	msg.Option(kit.MDB_HASH, task.Arg)
-		// 	msg.Cmdx("gdb.routine", "modify", "status", "stop")
-		// }()
-
 		msg.TryCatch(msg, true, func(msg *Message) {
 			switch cb := cb.(type) {
 			case func(*Message):

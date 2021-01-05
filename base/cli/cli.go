@@ -72,10 +72,9 @@ var Index = &ice.Context{Name: "cli", Help: "命令模块",
 			runtime.GOMAXPROCS(n)
 
 			// 版本信息
-			m.Conf(RUNTIME, "build.time", ice.Info.Build.Time)
-			m.Conf(RUNTIME, "build.version", ice.Info.Build.Version)
-			m.Conf(RUNTIME, "build.hostname", ice.Info.Build.HostName)
-			m.Conf(RUNTIME, "build.username", ice.Info.Build.UserName)
+			kit.Fetch(kit.UnMarshal(kit.Format(ice.Info.Build)), func(key string, value interface{}) {
+				m.Conf(RUNTIME, kit.Keys("build", strings.ToLower(key)), value)
+			})
 		}},
 		ice.CTX_EXIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			list := []string{}

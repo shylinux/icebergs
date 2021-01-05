@@ -5,6 +5,7 @@ import (
 	"github.com/shylinux/icebergs/base/ctx"
 	"github.com/shylinux/icebergs/base/gdb"
 	"github.com/shylinux/icebergs/base/mdb"
+	"github.com/shylinux/icebergs/base/web"
 	kit "github.com/shylinux/toolkits"
 
 	"time"
@@ -21,18 +22,16 @@ func init() {
 				mdb.INSERT: {Name: "insert zone type=once,step,week name text begin_time@date close_time@date", Help: "添加", Hand: func(m *ice.Message, arg ...string) {
 					_task_create(m, arg[1])
 					_task_insert(m, arg[1], arg[2:]...)
-					m.Set(ice.MSG_RESULT).Cmdy(PLAN, m.Option("scale"))
+					m.Option(ice.MSG_PROCESS, ice.PROCESS_REFRESH)
 				}},
 				mdb.MODIFY: {Name: "modify", Help: "编辑", Hand: func(m *ice.Message, arg ...string) {
 					_task_modify(m, m.Option(kit.MDB_ZONE), m.Option(kit.MDB_ID), arg[0], arg[1])
 				}},
 				mdb.EXPORT: {Name: "export file", Help: "导出", Hand: func(m *ice.Message, arg ...string) {
 					_task_export(m, m.Option(kit.MDB_FILE))
-					m.Set(ice.MSG_RESULT).Cmdy(PLAN, m.Option("scale"))
 				}},
 				mdb.IMPORT: {Name: "import file", Help: "导入", Hand: func(m *ice.Message, arg ...string) {
 					_task_import(m, m.Option(kit.MDB_FILE))
-					m.Set(ice.MSG_RESULT).Cmdy(PLAN, m.Option("scale"))
 				}},
 				mdb.INPUTS: {Name: "inputs", Help: "补全", Hand: func(m *ice.Message, arg ...string) {
 					_task_inputs(m, kit.Select("", arg, 0), kit.Select("", arg, 1))
@@ -67,10 +66,21 @@ func init() {
 					if begin_time.After(begin) || begin.After(end_time) {
 						return
 					}
+					m.Push("pod", m.Option(ice.MSG_USERPOD))
 					m.Push(key, value, fields, val)
 					m.PushButton(_task_action(m, value[TaskField.STATUS], mdb.PLUGIN))
 				})
 				m.Cmd(mdb.SELECT, TASK, "", mdb.ZONE, kit.MDB_FOREACH)
+
+				m.Cmd(web.SPACE).Table(func(index int, value map[string]string, head []string) {
+					switch value["type"] {
+					case "worker", "server":
+						m.Cmd(web.SPACE, value["name"], m.Prefix(PLAN), arg).Table(func(index int, val map[string]string, head []string) {
+							val["pod"] = kit.Keys(value["name"], val["pod"])
+							m.Push("", val, head)
+						})
+					}
+				})
 			}},
 		},
 	})

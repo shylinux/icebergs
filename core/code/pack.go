@@ -117,11 +117,11 @@ func init() {
 
 			WEBPACK: {Name: "webpack path auto create", Help: "打包", Action: map[string]*ice.Action{
 				mdb.CREATE: {Name: "create name=demo", Help: "创建", Hand: func(m *ice.Message, arg ...string) {
-					css, _, e := kit.Create(path.Join(m.Conf(WEBPACK, kit.META_PATH), "cache.css"))
+					css, _, e := kit.Create(path.Join(m.Conf(WEBPACK, kit.META_PATH), "page/cache.css"))
 					m.Assert(e)
 					defer css.Close()
 
-					js, _, e := kit.Create(path.Join(m.Conf(WEBPACK, kit.META_PATH), "cache.js"))
+					js, _, e := kit.Create(path.Join(m.Conf(WEBPACK, kit.META_PATH), "page/cache.js"))
 					m.Assert(e)
 					defer js.Close()
 
@@ -161,13 +161,13 @@ func init() {
 					m.Option(nfs.DIR_ROOT, "")
 					if f, p, e := kit.Create("usr/publish/webpack/" + m.Option("name") + ".html"); m.Assert(e) {
 						f.WriteString(fmt.Sprintf(_pack,
-							m.Cmdx(nfs.CAT, "usr/volcanos/cache.css"),
-							m.Cmdx(nfs.CAT, "usr/volcanos/index.css"),
+							m.Cmdx(nfs.CAT, "usr/volcanos/page/cache.css"),
+							m.Cmdx(nfs.CAT, "usr/volcanos/page/index.css"),
 
-							m.Cmdx(nfs.CAT, "usr/volcanos/proto.js"),
-							m.Cmdx(nfs.CAT, "usr/volcanos/cache.js"),
+							m.Cmdx(nfs.CAT, "usr/volcanos/page/proto.js"),
+							m.Cmdx(nfs.CAT, "usr/volcanos/page/cache.js"),
 							m.Cmdx(nfs.CAT, "usr/publish/webpack/"+m.Option("name")+".js"),
-							m.Cmdx(nfs.CAT, "usr/volcanos/index.js"),
+							m.Cmdx(nfs.CAT, "usr/volcanos/page/index.js"),
 						))
 						m.Echo(p)
 					}

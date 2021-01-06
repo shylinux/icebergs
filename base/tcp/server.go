@@ -54,10 +54,11 @@ func init() {
 			SERVER: {Name: "server hash auto prunes", Help: "服务器", Action: map[string]*ice.Action{
 				LISTEN: {Name: "LISTEN type name port=9010 host=", Help: "监听", Hand: func(m *ice.Message, arg ...string) {
 					l, e := net.Listen(TCP, m.Option(HOST)+":"+m.Option(PORT))
-					h := m.Cmdx(mdb.INSERT, SERVER, "", mdb.HASH, arg,
-						kit.MDB_STATUS, kit.Select(ERROR, OPEN, e == nil), kit.MDB_ERROR, kit.Format(e))
-
-					l = &Listener{m: m, h: h, s: &Stat{}, Listener: l}
+					// h := m.Cmdx(mdb.INSERT, SERVER, "", mdb.HASH, arg,
+					// 	kit.MDB_STATUS, kit.Select(ERROR, OPEN, e == nil), kit.MDB_ERROR, kit.Format(e))
+					//
+					// l = &Listener{m: m, h: h, s: &Stat{}, Listener: l}
+					l = &Listener{m: m, s: &Stat{}, Listener: l}
 					if e == nil {
 						defer l.Close()
 					}

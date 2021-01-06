@@ -333,7 +333,6 @@ func init() {
 			ORDER: {Name: ORDER, Help: "列表", Value: kit.Data("template", order)},
 			TABLE: {Name: TABLE, Help: "表格", Value: kit.Data("template", table)},
 			IMAGE: {Name: IMAGE, Help: "图片", Value: kit.Data("template", image)},
-			VIDEO: {Name: VIDEO, Help: "视频", Value: kit.Data("template", video)},
 
 			WORD: {Name: WORD, Help: "语言文字", Value: kit.Data(
 				kit.MDB_PATH, "", "regs", ".*\\.shy", "alias", map[string]interface{}{

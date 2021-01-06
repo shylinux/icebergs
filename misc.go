@@ -1,11 +1,11 @@
 package ice
 
 import (
-	"path"
-
 	kit "github.com/shylinux/toolkits"
 
 	"fmt"
+	"net/url"
+	"path"
 	"strings"
 	"sync/atomic"
 )
@@ -115,11 +115,30 @@ func (m *Message) PushSearch(args ...interface{}) {
 		case kit.SSH_CMD:
 			m.Push(k, data[kit.SSH_CMD])
 		case kit.MDB_TIME:
-			m.Push(k, kit.Select(m.Time(), data[kit.MDB_TIME]))
+			m.Push(k, m.Time())
+		case kit.MDB_SIZE:
+			m.Push(k, "")
+		case kit.MDB_TYPE:
+			m.Push(k, data[kit.MDB_TYPE])
+		case kit.MDB_NAME:
+			m.Push(k, data[kit.MDB_NAME])
+		case kit.MDB_TEXT:
+			m.Push(k, data[kit.MDB_TEXT])
 		default:
-			m.Push(k, kit.Select("", data[k]))
+			m.Push(k, data[k])
 		}
 	}
+}
+func (m *Message) PushSearchWeb(cmd string, name string) {
+	msg := m.Spawn()
+	msg.Option("fields", "type,name,text")
+	msg.Cmd("mdb.select", m.Prefix(cmd), "", "hash").Table(func(index int, value map[string]string, head []string) {
+		text := kit.MergeURL(value["text"], value["name"], name)
+		if value["name"] == "" {
+			text = kit.MergeURL(value["text"] + url.QueryEscape(name))
+		}
+		m.PushSearch("cmd", cmd, "type", kit.Select("", value["type"]), "name", name, "text", text)
+	})
 }
 func (m *Message) PushAction(list ...interface{}) {
 	m.Table(func(index int, value map[string]string, head []string) {

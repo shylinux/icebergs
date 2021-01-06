@@ -27,7 +27,8 @@ func _hash_insert(m *ice.Message, prefix, chain string, arg ...string) {
 		m.Conf(prefix, kit.Keys(chain, kit.MDB_META, kit.MDB_SHORT), m.Conf(prefix, kit.Keys(kit.MDB_META, kit.MDB_SHORT)))
 	}
 	m.Log_INSERT(kit.MDB_KEY, path.Join(prefix, chain), arg[0], arg[1])
-	m.Echo(m.Rich(prefix, chain, kit.Data(arg)))
+	h := m.Rich(prefix, chain, kit.Data(arg))
+	m.Echo(h)
 }
 func _hash_delete(m *ice.Message, prefix, chain, field, value string) {
 	m.Richs(prefix, chain, value, func(key string, val map[string]interface{}) {

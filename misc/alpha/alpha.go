@@ -12,7 +12,11 @@ import (
 	"strings"
 )
 
-func _alpha_find(m *ice.Message, method, word string) *ice.Message {
+func _alpha_find(m *ice.Message, method, word string) {
+	if word == "" {
+		return
+	}
+
 	// 搜索方法
 	switch word = strings.TrimSpace(word); method {
 	case "line":
@@ -28,7 +32,7 @@ func _alpha_find(m *ice.Message, method, word string) *ice.Message {
 		}
 		m.PushSearch("cmd", ALPHA, "type", method, "name", value["word"], "text", value["translation"], value)
 	})
-	return m
+	return
 }
 func _alpha_load(m *ice.Message, file, name string) {
 	// 清空数据

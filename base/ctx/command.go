@@ -10,6 +10,10 @@ import (
 )
 
 func _command_search(m *ice.Message, arg ...string) {
+	if !(arg[0] == "command" || arg[0] == "*" && arg[1] != "") {
+		return
+	}
+
 	ice.Pulse.Travel(func(p *ice.Context, s *ice.Context, key string, cmd *ice.Command) {
 		if strings.HasPrefix(key, "_") || strings.HasPrefix(key, "/") {
 			return

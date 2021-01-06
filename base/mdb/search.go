@@ -27,14 +27,14 @@ func init() {
 					return
 				}
 
-				if strings.Contains(arg[1], ";") {
-					arg = strings.Split(arg[1], ";")
-				}
 				m.Option(FIELDS, kit.Select("pod,ctx,cmd,time,size,type,name,text", kit.Select(m.Option(FIELDS), arg, 2)))
 				for _, k := range strings.Split(arg[0], ",") {
-					m.Richs(SEARCH, nil, k, func(key string, value map[string]interface{}) {
-						m.Cmdy(kit.Keys(value[kit.MDB_TEXT], value[kit.MDB_NAME]), SEARCH, arg[0], arg[1], kit.Select("", arg, 2))
-					})
+					for _, kk := range strings.Split(arg[1], ",") {
+						m.Richs(SEARCH, nil, k, func(key string, value map[string]interface{}) {
+							m.Debug("what %v --- %v %v ", k, kk, key)
+							m.Cmdy(kit.Keys(value[kit.MDB_TEXT], value[kit.MDB_NAME]), SEARCH, k, kk, kit.Select("", arg, 2))
+						})
+					}
 				}
 			}},
 		}})

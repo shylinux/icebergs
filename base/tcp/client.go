@@ -58,11 +58,12 @@ func init() {
 			CLIENT: {Name: "client hash auto prunes", Help: "客户端", Action: map[string]*ice.Action{
 				DIAL: {Name: "dial type name port=9010 host=", Help: "连接", Hand: func(m *ice.Message, arg ...string) {
 					c, e := net.Dial(TCP, m.Option(HOST)+":"+m.Option(PORT))
-					h := m.Cmdx(mdb.INSERT, CLIENT, "", mdb.HASH, PORT, m.Option(PORT), HOST, m.Option(HOST),
-						kit.MDB_TYPE, m.Option(kit.MDB_TYPE), kit.MDB_NAME, m.Option(kit.MDB_NAME),
-						kit.MDB_STATUS, kit.Select(ERROR, OPEN, e == nil), kit.MDB_ERROR, kit.Format(e))
-
-					c = &Conn{m: m, h: h, s: &Stat{}, Conn: c}
+					// h := m.Cmdx(mdb.INSERT, CLIENT, "", mdb.HASH, PORT, m.Option(PORT), HOST, m.Option(HOST),
+					// 	kit.MDB_TYPE, m.Option(kit.MDB_TYPE), kit.MDB_NAME, m.Option(kit.MDB_NAME),
+					// 	kit.MDB_STATUS, kit.Select(ERROR, OPEN, e == nil), kit.MDB_ERROR, kit.Format(e))
+					//
+					// c = &Conn{m: m, h: h, s: &Stat{}, Conn: c}
+					c = &Conn{m: m, s: &Stat{}, Conn: c}
 					if e == nil {
 						defer c.Close()
 					}

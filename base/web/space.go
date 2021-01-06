@@ -174,7 +174,7 @@ func _space_handle(m *ice.Message, safe bool, send map[string]*ice.Message, c *w
 func _space_search(m *ice.Message, kind, name, text string, arg ...string) {
 	m.Richs(SPACE, nil, kit.MDB_FOREACH, func(key string, val map[string]interface{}) {
 		if val = kit.GetMeta(val); strings.Contains(kit.Format(val["name"]), name) {
-			m.PushSearch("cmd", SPACE, val)
+			m.PushSearch("cmd", SPACE, "type", val["type"], "name", val["name"], "text", kit.MergeURL(m.Option(ice.MSG_USERWEB), "pod", val["name"]))
 		}
 	})
 }

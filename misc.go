@@ -115,17 +115,9 @@ func (m *Message) PushSearch(args ...interface{}) {
 		case kit.SSH_CMD:
 			m.Push(k, data[kit.SSH_CMD])
 		case kit.MDB_TIME:
-			m.Push(k, m.Time())
-		case kit.MDB_SIZE:
-			m.Push(k, "")
-		case kit.MDB_TYPE:
-			m.Push(k, data[kit.MDB_TYPE])
-		case kit.MDB_NAME:
-			m.Push(k, data[kit.MDB_NAME])
-		case kit.MDB_TEXT:
-			m.Push(k, data[kit.MDB_TEXT])
+			m.Push(k, kit.Select(m.Time(), data[kit.MDB_TIME]))
 		default:
-			m.Push(k, data[k])
+			m.Push(k, kit.Select("", data[k]))
 		}
 	}
 }

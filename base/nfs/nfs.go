@@ -270,14 +270,7 @@ func _file_search(m *ice.Message, kind, name, text string, arg ...string) {
 			ext = value["type"]
 		}
 
-		m.Push("pod", m.Option("pod"))
-		m.Push("ctx", "nfs")
-		m.Push("cmd", FILE)
-		m.Push(kit.MDB_TIME, value["time"])
-		m.Push(kit.MDB_SIZE, value["size"])
-		m.Push(kit.MDB_TYPE, ext)
-		m.Push(kit.MDB_NAME, value["path"])
-		m.Push(kit.MDB_TEXT, "")
+		m.PushSearch("cmd", FILE, "time", value["time"], "size", value["size"], "type", ext, "name", value["path"], "text", "")
 	})
 }
 
@@ -353,6 +346,7 @@ var Index = &ice.Context{Name: "nfs", Help: "存储模块",
 				_file_list(m, arg[2], arg[1], 0, m.Option(DIR_DEEP) == "true", kit.Select(TYPE_BOTH, m.Option(DIR_TYPE)),
 					nil, []string{"time", "size", "type", "path"})
 			}},
+
 			"upload": {Name: "upload", Help: "上传", Hand: func(m *ice.Message, arg ...string) {
 				up := kit.Simple(m.Optionv(ice.MSG_UPLOAD))
 
@@ -373,6 +367,13 @@ var Index = &ice.Context{Name: "nfs", Help: "存储模块",
 			m.Sort(kit.MDB_TIME, "time_r")
 		}},
 		FILE: {Name: "file path auto", Help: "文件", Action: map[string]*ice.Action{
+			mdb.SEARCH: {Name: "search type name text", Help: "搜索", Hand: func(m *ice.Message, arg ...string) {
+				_file_search(m, arg[0], arg[1], arg[2], arg[3:]...)
+			}},
+			mdb.RENDER: {Name: "render type name text", Help: "渲染", Hand: func(m *ice.Message, arg ...string) {
+				_file_show(m, path.Join(arg[2], arg[1]))
+			}},
+
 			"append": {Name: "append", Help: "追加", Hand: func(m *ice.Message, arg ...string) {
 				if strings.Contains(arg[0], "/") {
 					os.MkdirAll(path.Dir(arg[0]), ice.MOD_DIR)
@@ -387,13 +388,6 @@ var Index = &ice.Context{Name: "nfs", Help: "存储模块",
 						}
 					}
 				}
-			}},
-
-			mdb.SEARCH: {Name: "search type name text", Help: "搜索", Hand: func(m *ice.Message, arg ...string) {
-				_file_search(m, arg[0], arg[1], arg[2], arg[3:]...)
-			}},
-			mdb.RENDER: {Name: "render type name text", Help: "渲染", Hand: func(m *ice.Message, arg ...string) {
-				_file_show(m, path.Join(arg[2], arg[1]))
 			}},
 		}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			if len(arg) == 0 || strings.HasSuffix(arg[0], "/") {

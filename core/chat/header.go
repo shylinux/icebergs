@@ -36,6 +36,9 @@ func init() {
 					m.Echo(aaa.UserRole(m, m.Option("who")))
 				}},
 
+				"background": {Name: "background", Help: "背景图片", Hand: func(m *ice.Message, arg ...string) {
+					m.Option("background", m.Conf(HEADER, "background", arg[0]))
+				}},
 				"pack": {Name: "pack", Help: "打包", Hand: func(m *ice.Message, arg ...string) {
 					m.Cmdy("web.code.webpack", "create")
 				}},
@@ -43,6 +46,7 @@ func init() {
 					m.Cmdy("web.chat.wx.access", "config")
 				}},
 			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+				m.Option("background", m.Conf(HEADER, "background"))
 				m.Echo(m.Conf(HEADER, TITLE))
 			}},
 		},

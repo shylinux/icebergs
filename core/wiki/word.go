@@ -271,14 +271,6 @@ func _image_show(m *ice.Message, name, text string, arg ...string) {
 	_option(m, IMAGE, name, text, arg...)
 	m.Render(ice.RENDER_TEMPLATE, m.Conf(IMAGE, "meta.template"))
 }
-func _video_show(m *ice.Message, name, text string, arg ...string) {
-	_option(m, VIDEO, name, text, arg...)
-	m.Render(ice.RENDER_TEMPLATE, m.Conf(VIDEO, "meta.template"))
-}
-func _baidu_show(m *ice.Message, name, text string, arg ...string) {
-	_option(m, BAIDU, name, text, arg...)
-	// m.Cmdy(mdb.RENDER, web.RENDER.Frame, kit.Format("https://baidu.com/s?wd=%s", text))
-}
 func _other_show(m *ice.Message, name, text string, arg ...string) {
 	_option(m, OTHER, name, text, arg...)
 	// m.Cmdy(mdb.RENDER, web.RENDER.Frame, text)
@@ -309,9 +301,7 @@ const (
 	ORDER = "order"
 	TABLE = "table"
 	IMAGE = "image"
-	VIDEO = "video"
 
-	BAIDU = "baidu"
 	OTHER = "other"
 
 	PREMENU = "premenu"
@@ -442,15 +432,7 @@ func init() {
 				_image_show(m, arg[0], kit.Select(arg[0], arg[1]), arg[2:]...)
 				m.Render("")
 			}},
-			VIDEO: {Name: "video [name] url", Help: "视频", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-				arg = _name(m, arg)
-				_video_show(m, arg[0], kit.Select(arg[0], arg[1]), arg[2:]...)
-			}},
 
-			BAIDU: {Name: "baidu [name] word", Help: "百度", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-				arg = _name(m, arg)
-				_baidu_show(m, arg[0], kit.Select(arg[0], arg[1]), arg[2:]...)
-			}},
 			OTHER: {Name: "other [name] url", Help: "网页", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 				arg = _name(m, arg)
 				_other_show(m, arg[0], kit.Select(arg[0], arg[1]), arg[2:]...)

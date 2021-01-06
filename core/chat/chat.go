@@ -3,6 +3,7 @@ package chat
 import (
 	ice "github.com/shylinux/icebergs"
 	"github.com/shylinux/icebergs/base/aaa"
+	"github.com/shylinux/icebergs/base/mdb"
 	"github.com/shylinux/icebergs/base/web"
 	kit "github.com/shylinux/toolkits"
 )
@@ -12,6 +13,7 @@ const CHAT = "chat"
 var Index = &ice.Context{Name: CHAT, Help: "聊天中心",
 	Commands: map[string]*ice.Command{
 		ice.CTX_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			m.Cmd(mdb.SEARCH, mdb.CREATE, EMAIL, m.Prefix(EMAIL))
 			m.Load()
 			m.Cmd(web.SERVE, aaa.WHITE, "header", "river", "action", "footer")
 

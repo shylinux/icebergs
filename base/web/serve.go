@@ -1,9 +1,6 @@
 package web
 
 import (
-	"io"
-	"os"
-
 	ice "github.com/shylinux/icebergs"
 	"github.com/shylinux/icebergs/base/aaa"
 	"github.com/shylinux/icebergs/base/cli"
@@ -19,57 +16,14 @@ import (
 	"strings"
 )
 
-func _serve_proxy(m *ice.Message, w http.ResponseWriter, r *http.Request) bool {
-	m.Option(SPIDE_CB, func(msg *ice.Message, req *http.Request, res *http.Response) {
-		p := path.Join("var/proxy", strings.ReplaceAll(r.URL.String(), "/", "_"))
-		size := 0
-		if s, e := os.Stat(p); os.IsNotExist(e) {
-			if f, p, e := kit.Create(p); m.Assert(e) {
-				defer f.Close()
-
-				if n, e := io.Copy(f, res.Body); m.Assert(e) {
-					m.Debug("proxy %s res: %v", p, n)
-					size = int(n)
-				}
-			}
-		} else {
-			size = int(s.Size())
-		}
-
-		h := w.Header()
-		for k, v := range res.Header {
-			for _, v := range v {
-				switch k {
-				case ContentLength:
-					h.Add(k, kit.Format(size))
-					m.Debug("proxy res: %v %v", k, size+1)
-				default:
-					m.Debug("proxy res: %v %v", k, v)
-					h.Add(k, v)
-				}
-			}
-		}
-		w.WriteHeader(res.StatusCode)
-
-		if f, e := os.Open(p); m.Assert(e) {
-			defer f.Close()
-
-			if n, e := io.Copy(w, f); e == nil {
-				m.Debug("proxy res: %v", n)
-			} else {
-				m.Debug("proxy res: %v %v", n, e)
-			}
-		}
-	})
-	m.Cmdx(SPIDE, r.URL.Host, SPIDE_PROXY, r.Method, r.URL.String())
-	return true
-}
 func _serve_main(m *ice.Message, w http.ResponseWriter, r *http.Request) bool {
-	if r.Header.Get("index.module") != "" {
+	if r.Header.Get("index.module") == "" {
+		r.Header.Set("index.module", m.Target().Name)
+	} else {
 		return true
 	}
 
-	// 解析地址
+	// 用户地址
 	if ip := r.Header.Get("X-Forwarded-For"); ip != "" {
 		r.Header.Set(ice.MSG_USERIP, ip)
 	} else if ip := r.Header.Get("X-Real-Ip"); ip != "" {
@@ -80,18 +34,6 @@ func _serve_main(m *ice.Message, w http.ResponseWriter, r *http.Request) bool {
 		r.Header.Set(ice.MSG_USERIP, strings.Split(r.RemoteAddr, ":")[0])
 	}
 	m.Info("").Info("%s %s %s", r.Header.Get(ice.MSG_USERIP), r.Method, r.URL)
-
-	if strings.HasPrefix(r.URL.String(), "http") {
-		if m == nil {
-			m = ice.Pulse.Spawn()
-		}
-		return _serve_proxy(m, w, r)
-	}
-
-	// 请求地址
-	r.Header.Set("index.module", m.Target().Name)
-	r.Header.Set("index.path", r.URL.Path)
-	r.Header.Set("index.url", r.URL.String())
 
 	// 输出日志
 	if m.Conf(SERVE, "meta.logheaders") == "true" {
@@ -108,81 +50,40 @@ func _serve_main(m *ice.Message, w http.ResponseWriter, r *http.Request) bool {
 		}()
 	}
 
-	if r.URL.Path == "/" && r.FormValue(SHARE) != "" {
-		m.W = w
-		defer func() { m.W = nil }()
-
-		if s := m.Cmd(SHARE, mdb.SELECT, kit.MDB_HASH, r.FormValue(SHARE)); s.Append(kit.MDB_TYPE) == "login" {
-			defer func() { http.Redirect(w, r, kit.MergeURL(r.URL.String(), SHARE, ""), http.StatusTemporaryRedirect) }()
-
-			msg := m.Spawn()
-			if c, e := r.Cookie(ice.MSG_SESSID); e == nil && c.Value != "" {
-				if aaa.SessCheck(msg, c.Value); msg.Option(ice.MSG_USERNAME) != "" {
-					return false // 复用会话
-				}
-			}
-
-			msg.Option(ice.MSG_USERUA, r.Header.Get("User-Agent"))
-			msg.Option(ice.MSG_USERIP, r.Header.Get(ice.MSG_USERIP))
-			Render(msg, COOKIE, aaa.SessCreate(msg, s.Append(aaa.USERNAME), s.Append(aaa.USERROLE)))
-			return false // 新建会话
-		}
-
-		return true
-	}
-
+	// 调试接口
 	if strings.HasPrefix(r.URL.Path, "/debug") {
 		r.URL.Path = strings.Replace(r.URL.Path, "/debug", "/code", -1)
-		return true
-	}
-
-	if b, ok := ice.BinPack[r.URL.Path]; ok {
-		if strings.HasSuffix(r.URL.Path, ".css") {
-			w.Header().Set("Content-Type", "text/css; charset=utf-8")
-		}
-		w.Write(b)
 		return false
 	}
 
-	if r.URL.Path == "/" && strings.Contains(r.Header.Get("User-Agent"), "curl") {
-		http.ServeFile(w, r, path.Join(m.Conf(SERVE, "meta.intshell.path"), m.Conf(SERVE, "meta.intshell.index")))
+	// 主页接口
+	if r.Method == "GET" && r.URL.Path == "/" {
+		msg := m.Spawn()
+		if msg.W, msg.R = w, r; strings.Contains(r.Header.Get("User-Agent"), "curl") {
+			Render(msg, ice.RENDER_DOWNLOAD, kit.Path(m.Conf(SERVE, "meta.intshell.path"), m.Conf(SERVE, "meta.intshell.index")))
+		} else {
+			Render(msg, ice.RENDER_DOWNLOAD, kit.Path(m.Conf(SERVE, "meta.volcanos.path"), m.Conf(SERVE, "meta.volcanos.index")))
+		}
 		return false
 	}
 
-	// 单点登录
-	if r.URL.Path == "/" && m.Conf(SERVE, "meta.sso") != "" {
-		sessid := r.FormValue(ice.MSG_SESSID)
-		if sessid == "" {
-			if c, e := r.Cookie(ice.MSG_SESSID); e == nil {
-				sessid = c.Value
-			}
-		}
-
-		ok := false
-		m.Richs(aaa.SESS, "", sessid, func(key string, value map[string]interface{}) {
-			ok = true
-		})
-
-		if !ok {
-			http.Redirect(w, r, m.Conf(SERVE, "meta.sso"), http.StatusTemporaryRedirect)
-			return false
-		}
-	}
-
-	return true
+	// 内置文件
+	return !ice.DumpBinPack(w, r.URL.Path, func(name string) { RenderType(w, name) })
 }
 func _serve_handle(key string, cmd *ice.Command, msg *ice.Message, w http.ResponseWriter, r *http.Request) {
 	defer func() {
 		msg.Cost(kit.Format("%s %v %v", r.URL.Path, msg.Optionv(ice.MSG_CMDS), msg.Format(ice.MSG_APPEND)))
 	}()
 
-	// 请求变量
+	// 环境变量
+	msg.Option(mdb.CACHE_LIMIT, "10")
+	msg.Option(ice.MSG_OUTPUT, "")
 	msg.Option(ice.MSG_SESSID, "")
 	for _, v := range r.Cookies() {
 		msg.Option(v.Name, v.Value)
 	}
 
-	// 请求地址
+	// 请求变量
 	if u, e := url.Parse(r.Header.Get("Referer")); e == nil {
 		for k, v := range u.Query() {
 			msg.Logs("refer", k, v)
@@ -190,27 +91,23 @@ func _serve_handle(key string, cmd *ice.Command, msg *ice.Message, w http.Respon
 		}
 	}
 
-	// 用户请求
-	msg.Option(mdb.CACHE_LIMIT, "10")
-	msg.Option(ice.MSG_OUTPUT, "")
-	msg.Option(ice.MSG_METHOD, r.Method)
+	// 请求地址
 	msg.Option(ice.MSG_USERWEB, kit.Select(msg.Conf(SHARE, "meta.domain"), r.Header.Get("Referer")))
-	msg.Option(ice.MSG_USERIP, r.Header.Get(ice.MSG_USERIP))
 	msg.Option(ice.MSG_USERUA, r.Header.Get("User-Agent"))
-	msg.Option(ice.MSG_USERURL, r.URL.Path)
+	msg.Option(ice.MSG_USERIP, r.Header.Get(ice.MSG_USERIP))
 	if msg.R, msg.W = r, w; r.Header.Get("X-Real-Port") != "" {
 		msg.Option(ice.MSG_USERADDR, msg.Option(ice.MSG_USERIP)+":"+r.Header.Get("X-Real-Port"))
 	} else {
 		msg.Option(ice.MSG_USERADDR, r.RemoteAddr)
 	}
 
-	// 解析引擎
+	// 请求数据
 	switch r.Header.Get(ContentType) {
 	case ContentJSON:
 		var data interface{}
 		if e := json.NewDecoder(r.Body).Decode(&data); !msg.Warn(e != nil, e) {
+			msg.Log_IMPORT(kit.MDB_VALUE, kit.Format(data))
 			msg.Optionv(ice.MSG_USERDATA, data)
-			msg.Logs("json", "value", kit.Format(data))
 		}
 
 		switch d := data.(type) {
@@ -239,19 +136,19 @@ func _serve_handle(key string, cmd *ice.Command, msg *ice.Message, w http.Respon
 	}
 
 	// 请求命令
-	if msg.Option(ice.MSG_USERPOD, msg.Option("pod")); msg.Optionv(ice.MSG_CMDS) == nil {
-		if p := strings.TrimPrefix(msg.Option(ice.MSG_USERURL), key); p != "" {
+	if msg.Option(ice.MSG_USERPOD, msg.Option(kit.SSH_POD)); msg.Optionv(ice.MSG_CMDS) == nil {
+		if p := strings.TrimPrefix(r.URL.Path, key); p != "" {
 			msg.Optionv(ice.MSG_CMDS, strings.Split(p, "/"))
 		}
 	}
 
 	// 执行命令
 	if cmds, ok := _serve_login(msg, kit.Simple(msg.Optionv(ice.MSG_CMDS)), w, r); ok {
-		msg.Option("_option", msg.Optionv(ice.MSG_OPTION))
-		msg.Target().Cmd(msg, key, msg.Option(ice.MSG_USERURL), cmds...)
+		msg.Option(ice.MSG_USEROPT, msg.Optionv(ice.MSG_OPTION))
+		msg.Target().Cmd(msg, key, r.URL.Path, cmds...)
 	}
 
-	// 渲染引擎
+	// 输出响应
 	_args, _ := msg.Optionv(ice.MSG_ARGS).([]interface{})
 	Render(msg, msg.Option(ice.MSG_OUTPUT), _args...)
 }
@@ -263,35 +160,33 @@ func _serve_login(msg *ice.Message, cmds []string, w http.ResponseWriter, r *htt
 		// 会话认证
 		aaa.SessCheck(msg, msg.Option(ice.MSG_SESSID))
 	}
-
-	if !msg.Options(ice.MSG_USERNAME) && tcp.IsLocalHost(msg, msg.Option(ice.MSG_USERIP)) && msg.Conf(SERVE, "meta.localhost") == "true" {
+	if !msg.Options(ice.MSG_USERNAME) && tcp.IsLocalHost(msg, msg.Option(ice.MSG_USERIP)) && msg.Conf(SERVE, kit.Keym(tcp.LOCALHOST)) == "true" {
 		// 自动认证
 		aaa.UserLogin(msg, ice.Info.UserName, ice.Info.PassWord)
 	}
 
 	if _, ok := msg.Target().Commands[LOGIN]; ok {
 		// 权限检查
-		msg.Target().Cmd(msg, LOGIN, msg.Option(ice.MSG_USERURL), cmds...)
-		cmds = kit.Simple(msg.Optionv(ice.MSG_CMDS))
-
-	} else if ls := strings.Split(msg.Option(ice.MSG_USERURL), "/"); msg.Conf(SERVE, kit.Keys("meta.black", ls[1])) == "true" {
-		return cmds, false // 白名单
-
-	} else if msg.Conf(SERVE, kit.Keys("meta.white", ls[1])) == "true" {
-		return cmds, true // 黑名单
-
-	} else {
-		if msg.Warn(!msg.Options(ice.MSG_USERNAME), ice.ErrNotLogin, msg.Option(ice.MSG_USERURL)) {
-			msg.Render(STATUS, 401, ice.ErrNotLogin)
-			return cmds, false // 未登录
-		}
-		if msg.Warn(!msg.Right(msg.Option(ice.MSG_USERURL))) {
-			msg.Render(STATUS, 403, ice.ErrNotAuth)
-			return cmds, false // 未授权
-		}
+		msg.Target().Cmd(msg, LOGIN, r.URL.Path, cmds...)
+		return cmds, msg.Result() != "false"
 	}
 
-	return cmds, msg.Option(ice.MSG_USERURL) != ""
+	if ls := strings.Split(r.URL.Path, "/"); msg.Conf(SERVE, kit.Keym(aaa.BLACK, ls[1])) == "true" {
+		return cmds, false // 黑名单
+	} else if msg.Conf(SERVE, kit.Keym(aaa.WHITE, ls[1])) == "true" {
+		return cmds, true // 白名单
+	}
+
+	if msg.Warn(!msg.Options(ice.MSG_USERNAME), ice.ErrNotLogin, r.URL.Path) {
+		msg.Render(STATUS, 401, ice.ErrNotLogin)
+		return cmds, false // 未登录
+	}
+	if msg.Warn(!msg.Right(r.URL.Path)) {
+		msg.Render(STATUS, 403, ice.ErrNotAuth)
+		return cmds, false // 未授权
+	}
+
+	return cmds, true
 }
 
 const (
@@ -306,27 +201,20 @@ const SERVE = "serve"
 func init() {
 	Index.Merge(&ice.Context{
 		Configs: map[string]*ice.Config{
-			SERVE: {Name: SERVE, Help: "服务器", Value: kit.Data(
-				kit.MDB_SHORT, kit.MDB_NAME,
-				"logheaders", "false",
-				"localhost", "true",
-				"black", kit.Dict(), "white", kit.Dict(
-					"login", true, "space", true, "share", true, "plugin", true, "publish", true, "intshell", true,
-				),
+			SERVE: {Name: SERVE, Help: "服务器", Value: kit.Data(kit.MDB_SHORT, kit.MDB_NAME,
+				tcp.LOCALHOST, true, aaa.BLACK, kit.Dict(), aaa.WHITE, kit.Dict(
+					"intshell", true, "volcanos", true, "publish", true, "plugin", true,
+					"login", true, "space", true, "share", true,
+				), "logheaders", false,
 
-				"static", kit.Dict("/gitrepos/", "usr/repos/", "/", "usr/volcanos/"),
-
-				"volcanos", kit.Dict("refresh", "5",
-					"share", "usr/volcanos/page/share.html",
-					"path", "usr/volcanos", "require", ".ish/pluged",
+				"static", kit.Dict("/", "usr/volcanos/"),
+				"volcanos", kit.Dict("path", "usr/volcanos", "index", "page/index.html",
 					"repos", "https://github.com/shylinux/volcanos", "branch", "master",
 				), "publish", "usr/publish/",
 
-				"intshell", kit.Dict(
-					"index", "index.sh",
-					"path", "usr/intshell", "require", ".ish/pluged",
-					"repos", "https://github.com/shylinux/volcanos", "branch", "master",
-				),
+				"intshell", kit.Dict("path", "usr/intshell", "index", "index.sh",
+					"repos", "https://github.com/shylinux/intshell", "branch", "master",
+				), "require", ".ish/pluged",
 			)},
 		},
 		Commands: map[string]*ice.Command{
@@ -340,7 +228,7 @@ func init() {
 					m.Sleep("1s")
 
 					for _, k := range kit.Split(m.Option(SPIDE_DEV)) {
-						m.Cmd(SPACE, "connect", "dev", k, "name", ice.Info.NodeName)
+						m.Cmd(SPACE, tcp.DIAL, SPIDE_DEV, k, kit.MDB_NAME, ice.Info.NodeName)
 					}
 				}},
 				aaa.WHITE: {Name: "white", Help: "白名单", Hand: func(m *ice.Message, arg ...string) {
@@ -360,6 +248,15 @@ func init() {
 
 			"/intshell/": {Name: "/intshell/", Help: "脚本", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 				m.Render(ice.RENDER_DOWNLOAD, path.Join(m.Conf(SERVE, "meta.intshell.path"), path.Join(arg...)))
+			}},
+			"/volcanos/": {Name: "/volcanos/", Help: "脚本", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+				m.Render(ice.RENDER_DOWNLOAD, path.Join(m.Conf(SERVE, "meta.volcanos.path"), path.Join(arg...)))
+			}},
+			"/publish/": {Name: "/publish/", Help: "源码", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+				_share_local(m, m.Conf(SERVE, "meta.publish"), path.Join(arg...))
+			}},
+			"/plugin/github.com/": {Name: "/plugin/github.com/", Help: "源码", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+				_share_repos(m, "github.com/"+arg[0]+"/"+arg[1], arg[2:]...)
 			}},
 		}})
 }

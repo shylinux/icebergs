@@ -10,6 +10,7 @@ import (
 	"net/http"
 	"os"
 	"path"
+	"strings"
 	"time"
 )
 
@@ -43,10 +44,12 @@ func Render(msg *ice.Message, cmd string, args ...interface{}) {
 	case ice.RENDER_DOWNLOAD:
 		msg.W.Header().Set("Content-Disposition", fmt.Sprintf("filename=%s", kit.Select(path.Base(arg[0]), arg, 2)))
 		msg.W.Header().Set("Content-Type", kit.Select("text/html", arg, 1))
-		if _, e := os.Stat(arg[0]); e != nil {
-			arg[0] = "/" + arg[0]
+
+		if !ice.DumpBinPack(msg.W, arg[0], func(name string) { RenderType(msg.W, name) }) {
+			if _, e := os.Stat(arg[0]); e == nil {
+				http.ServeFile(msg.W, msg.R, arg[0])
+			}
 		}
-		http.ServeFile(msg.W, msg.R, arg[0])
 
 	case ice.RENDER_RESULT:
 		if len(arg) > 0 {
@@ -70,6 +73,11 @@ func Render(msg *ice.Message, cmd string, args ...interface{}) {
 		fmt.Fprint(msg.W, msg.Formats("meta"))
 	}
 	msg.Append(ice.MSG_OUTPUT, ice.RENDER_OUTPUT)
+}
+func RenderType(w http.ResponseWriter, name string) {
+	if strings.HasSuffix(name, ".css") {
+		w.Header().Set("Content-Type", "text/css; charset=utf-8")
+	}
 }
 
 func RenderCookie(msg *ice.Message, value string, arg ...string) { // name path expire

@@ -3,6 +3,7 @@ package ice
 import (
 	kit "github.com/shylinux/toolkits"
 
+	"io"
 	"os"
 	"strings"
 	"sync"
@@ -189,6 +190,18 @@ func Run(arg ...string) string {
 }
 
 var BinPack = map[string][]byte{}
+
+func DumpBinPack(w io.Writer, name string, cb func(string)) bool {
+	if b, ok := BinPack[name]; ok {
+		if cb != nil {
+			cb(name)
+		}
+		w.Write(b)
+		return true
+	}
+	return false
+}
+
 var names = map[string]interface{}{}
 var ErrNameExists = "name already exists: "
 

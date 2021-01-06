@@ -6,6 +6,7 @@ import (
 	"github.com/shylinux/icebergs/base/gdb"
 	"github.com/shylinux/icebergs/base/mdb"
 	"github.com/shylinux/icebergs/base/nfs"
+	"github.com/shylinux/icebergs/base/tcp"
 	kit "github.com/shylinux/toolkits"
 
 	"io/ioutil"
@@ -106,7 +107,7 @@ func init() {
 	Index.Merge(&ice.Context{
 		Configs: map[string]*ice.Config{
 			DREAM: {Name: DREAM, Help: "梦想家", Value: kit.Data(kit.MDB_PATH, "usr/local/work",
-				"cmd", []interface{}{"ice.bin", SPACE, "connect"},
+				"cmd", []interface{}{"ice.bin", SPACE, tcp.DIAL},
 				"env", kit.Dict("ctx_log", "bin/boot.log"),
 				"miss", `#!/bin/bash
 [ -f ~/.ish/plug.sh ] || [ -f ./.ish/plug.sh ] || git clone ${ISH_CONF_HUB_PROXY:="https://"}github.com/shylinux/intshell ./.ish

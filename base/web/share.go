@@ -21,56 +21,49 @@ func _share_cache(m *ice.Message, arg ...string) {
 func _share_local(m *ice.Message, arg ...string) {
 	p := path.Join(arg...)
 	switch ls := strings.Split(p, "/"); ls[0] {
-	case "etc", "var":
-		// 私有文件
+	case "etc", "var": // 私有文件
 		if m.Option(ice.MSG_USERROLE) == aaa.VOID {
 			m.Render(STATUS, http.StatusUnauthorized, "not auth")
-			return
+			return // 没有权限
 		}
 	default:
 		if m.Warn(!m.Right(ls), ice.ErrNotAuth, m.Option(ice.MSG_USERROLE), " of ", p) {
 			m.Render(STATUS, http.StatusUnauthorized, "not auth")
-			return
+			return // 没有权限
 		}
 	}
 
-	if m.Option("pod") != "" {
-		// 远程文件
-		pp := path.Join("var/proxy", m.Option("pod"), p)
+	if m.Option(kit.SSH_POD) != "" { // 远程文件
+		pp := path.Join("var/proxy", m.Option(kit.SSH_POD), p)
 		cache := time.Now().Add(-time.Hour * 240000)
 		if s, e := os.Stat(pp); e == nil {
 			cache = s.ModTime()
 		}
-		m.Cmdy(SPACE, m.Option("pod"), SPIDE, "dev", "raw", kit.MergeURL2(m.Option(ice.MSG_USERWEB), "/share/proxy/"),
-			"part", "pod", m.Option("pod"), "path", p, "cache", cache.Format(ice.MOD_TIME), "upload", "@"+p)
 
-		m.Render(ice.RENDER_DOWNLOAD, path.Join("var/proxy", m.Option("pod"), p))
-		return
+		m.Cmdy(SPACE, m.Option(kit.SSH_POD), SPIDE, SPIDE_DEV, SPIDE_RAW, kit.MergeURL2(m.Option(ice.MSG_USERWEB), "/share/proxy/"),
+			SPIDE_PART, kit.SSH_POD, m.Option(kit.SSH_POD), kit.MDB_PATH, p, "cache", cache.Format(ice.MOD_TIME), "upload", "@"+p)
+
+		p = path.Join("var/proxy", m.Option(kit.SSH_POD), p)
 	}
 
-	// 本地文件
 	m.Render(ice.RENDER_DOWNLOAD, p)
 }
 func _share_proxy(m *ice.Message, arg ...string) {
-	switch m.Option(ice.MSG_METHOD) {
+	switch m.R.Method {
 	case http.MethodGet:
-		m.Render(ice.RENDER_DOWNLOAD, path.Join("var/proxy", path.Join(m.Option("pod"), m.Option("path"), m.Option("name"))))
+		m.Render(ice.RENDER_DOWNLOAD, path.Join("var/proxy", path.Join(m.Option(kit.SSH_POD), m.Option(kit.MDB_PATH), m.Option(kit.MDB_NAME))))
 	case http.MethodPost:
 		m.Cmdy(CACHE, UPLOAD)
-		m.Cmdy(CACHE, WATCH, m.Option("data"), path.Join("var/proxy", m.Option("pod"), m.Option("path")))
-		m.Render(ice.RENDER_RESULT, m.Option("path"))
+		m.Cmdy(CACHE, WATCH, m.Option("data"), path.Join("var/proxy", m.Option(kit.SSH_POD), m.Option(kit.MDB_PATH)))
+		m.Render(ice.RENDER_RESULT, m.Option(kit.MDB_PATH))
 	}
 }
 func _share_repos(m *ice.Message, repos string, arg ...string) {
-	prefix := m.Conf(SERVE, "meta.volcanos.require")
+	prefix := kit.Path(m.Conf(SERVE, "meta.require"))
 	if _, e := os.Stat(path.Join(prefix, repos)); e != nil {
 		m.Cmd(cli.SYSTEM, "git", "clone", "https://"+repos, path.Join(prefix, repos))
 	}
 	m.Render(ice.RENDER_DOWNLOAD, path.Join(prefix, repos, path.Join(arg...)))
-}
-func _share_remote(m *ice.Message, pod string, arg ...string) {
-	m.Cmdy(SPACE, pod, "web./publish/", arg)
-	m.Render(ice.RENDER_RESULT)
 }
 
 const SHARE = "share"
@@ -78,7 +71,7 @@ const SHARE = "share"
 func init() {
 	Index.Merge(&ice.Context{
 		Configs: map[string]*ice.Config{
-			SHARE: {Name: SHARE, Help: "共享链", Value: kit.Data("expire", "72h")},
+			SHARE: {Name: SHARE, Help: "共享链", Value: kit.Data(kit.MDB_EXPIRE, "72h")},
 		},
 		Commands: map[string]*ice.Command{
 			SHARE: {Name: "share hash auto", Help: "共享链", Action: map[string]*ice.Action{
@@ -147,32 +140,14 @@ func init() {
 			"/share/cache/": {Name: "/share/cache/", Help: "缓存池", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 				_share_cache(m, arg...)
 			}},
-			"/share/local/": {Name: "/share/local/", Help: "共享链", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			"/share/local/": {Name: "/share/local/", Help: "文件夹", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 				_share_local(m, arg...)
 			}},
-			"/share/proxy/": {Name: "/share/proxy/", Help: "缓存池", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			"/share/proxy/": {Name: "/share/proxy/", Help: "文件流", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 				_share_proxy(m, arg...)
 			}},
-			"/plugin/github.com/": {Name: "/space/", Help: "空间站", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-				_share_repos(m, "github.com/"+arg[0]+"/"+arg[1], arg[2:]...)
-			}},
-			"/publish/": {Name: "/publish/", Help: "发布", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-				if arg[0] == "order.js" && len(ice.BinPack) > 0 {
-					m.Render(ice.RENDER_RESULT, "{}")
-					return
-				}
-				if p := m.Option("pod"); p != "" {
-					m.Option("pod", "")
-					_share_remote(m, p, arg...)
-					return
-				}
-
-				p := path.Join(kit.Simple(m.Conf(SERVE, "meta.publish"), arg)...)
-				if m.W == nil {
-					m.Cmdy("nfs.cat", p)
-				} else {
-					m.Render(ice.RENDER_DOWNLOAD, p)
-				}
+			"/share/repos/": {Name: "/share/repos/", Help: "代码库", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+				_share_repos(m, path.Join(arg[0], arg[1], arg[2]), arg[3:]...)
 			}},
 		}})
 }

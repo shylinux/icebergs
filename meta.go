@@ -170,7 +170,7 @@ func (m *Message) Copy(msg *Message, arg ...string) *Message {
 		if i := kit.IndexOf(m.meta[MSG_OPTION], k); i > -1 && len(m.meta[k]) > 0 {
 			m.meta[k] = m.meta[k][:0]
 		}
-		if i := kit.IndexOf(m.meta["_option"], k); i > -1 && len(m.meta[k]) > 0 {
+		if i := kit.IndexOf(m.meta[MSG_USEROPT], k); i > -1 && len(m.meta[k]) > 0 {
 			m.meta[k] = m.meta[k][:0]
 		}
 		if kit.IndexOf(m.meta[MSG_APPEND], k) == -1 {

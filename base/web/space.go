@@ -75,14 +75,14 @@ func _space_send(m *ice.Message, space string, arg ...string) {
 	m.Warn(m.Richs(SPACE, nil, target[0], func(key string, value map[string]interface{}) {
 		if socket, ok := value["socket"].(*websocket.Conn); !m.Warn(!ok, "socket err") {
 			// 复制选项
-			for _, k := range kit.Simple(m.Optionv("_option")) {
+			for _, k := range kit.Simple(m.Optionv(ice.MSG_USEROPT)) {
 				switch k {
 				case "detail", "cmds", ice.MSG_SESSID:
 				default:
 					m.Optionv(k, m.Optionv(k))
 				}
 			}
-			m.Optionv("_option", m.Optionv("_option"))
+			m.Optionv(ice.MSG_USEROPT, m.Optionv(ice.MSG_USEROPT))
 			m.Optionv("option", nil)
 
 			// 构造路由
@@ -106,6 +106,12 @@ func _space_send(m *ice.Message, space string, arg ...string) {
 }
 
 func _space_echo(msg *ice.Message, source, target []string, c *websocket.Conn, name string) {
+	_args, _ := msg.Optionv(ice.MSG_ARGS).([]interface{})
+	switch arg := kit.Simple(_args...); msg.Option(ice.MSG_OUTPUT) {
+	case ice.RENDER_DOWNLOAD:
+		msg.Cmdy("nfs.cat", arg[0])
+	}
+
 	msg.Optionv(ice.MSG_SOURCE, source)
 	msg.Optionv(ice.MSG_TARGET, target)
 	e := c.WriteMessage(1, []byte(msg.Format("meta")))
@@ -117,7 +123,7 @@ func _space_exec(msg *ice.Message, source, target []string, c *websocket.Conn, n
 	if !msg.Warn(!msg.Right(msg.Detailv()), ice.ErrNotAuth) {
 		msg = msg.Cmd()
 	}
-	msg.Set("_option")
+	msg.Set(ice.MSG_USEROPT)
 	_space_echo(msg, []string{}, kit.Revert(source)[1:], c, name)
 	msg.Cost(kit.Format("%v->%v %v %v", source, target, msg.Detailv(), msg.Format(ice.MSG_APPEND)))
 }
@@ -204,7 +210,7 @@ func init() {
 		},
 		Commands: map[string]*ice.Command{
 			SPACE: {Name: "space name cmd auto", Help: "空间站", Action: map[string]*ice.Action{
-				"connect": {Name: "connect dev name", Help: "连接", Hand: func(m *ice.Message, arg ...string) {
+				tcp.DIAL: {Name: "dial dev name", Help: "连接", Hand: func(m *ice.Message, arg ...string) {
 					_space_dial(m, m.Option("dev"), kit.Select(ice.Info.NodeName, m.Option(kit.MDB_NAME)))
 				}},
 				mdb.SEARCH: {Name: "search type name text arg...", Help: "搜索", Hand: func(m *ice.Message, arg ...string) {

@@ -29,6 +29,7 @@ func init() {
 					m.Echo(m.Option(ice.MSG_USERNAME))
 				}},
 				CHECK: {Name: "check", Help: "登录检查", Hand: func(m *ice.Message, arg ...string) {
+					m.Option("sso", m.Conf(web.SERVE, "meta.sso"))
 					m.Echo(m.Option(ice.MSG_USERNAME))
 				}},
 

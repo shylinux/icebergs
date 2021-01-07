@@ -39,8 +39,10 @@ func (c *Conn) Close() error {
 
 const (
 	OPEN  = "open"
-	CLOSE = "close"
+	START = "start"
 	ERROR = "error"
+	CLOSE = "close"
+	STOP  = "stop"
 )
 const (
 	DIAL_CB = "dial.cb"

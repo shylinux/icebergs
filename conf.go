@@ -30,8 +30,8 @@ const ( // MSG
 	MSG_PROCESS = "_process"
 
 	MSG_CMDS   = "cmds"
-	MSG_SESSID = "sessid"
 	MSG_DOMAIN = "domain"
+	MSG_SESSID = "sessid"
 
 	MSG_USERIP  = "user.ip"
 	MSG_USERUA  = "user.ua"
@@ -43,13 +43,19 @@ const ( // MSG
 	MSG_USERNAME = "user.name"
 	MSG_USERZONE = "user.zone"
 	MSG_USERROLE = "user.role"
-
 	MSG_USERDATA = "user.data"
 	MSG_USERADDR = "user.addr"
 
 	MSG_RIVER = "sess.river"
 	MSG_STORM = "sess.storm"
 	MSG_LOCAL = "sess.local"
+)
+const ( // RENDER
+	RENDER_VOID     = "_void"
+	RENDER_RESULT   = "_result"
+	RENDER_QRCODE   = "_qrcode"
+	RENDER_DOWNLOAD = "_download"
+	RENDER_TEMPLATE = "_template"
 )
 const (
 	CONTROL_PAGE = "_page"
@@ -97,12 +103,4 @@ const ( // LOG
 	LOG_WARN  = "warn"
 	LOG_ERROR = "error"
 	LOG_DEBUG = "debug"
-)
-const ( // RENDER
-	RENDER_VOID     = "_void"
-	RENDER_OUTPUT   = "_output"
-	RENDER_RESULT   = "_result"
-	RENDER_QRCODE   = "_qrcode"
-	RENDER_DOWNLOAD = "_download"
-	RENDER_TEMPLATE = "_template"
 )

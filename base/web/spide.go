@@ -73,6 +73,7 @@ const (
 	ContentFORM   = "application/x-www-form-urlencoded"
 	ContentJSON   = "application/json"
 	ContentHTML   = "text/html"
+	ContentPNG    = "image/png"
 )
 const (
 	ADDRESS  = "address"

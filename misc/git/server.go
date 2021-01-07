@@ -20,10 +20,10 @@ func init() {
 		},
 		Commands: map[string]*ice.Command{
 			web.LOGIN: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-				m.Option(ice.RENDER_OUTPUT, ice.RENDER_RESULT)
+				m.Render(ice.RENDER_RESULT)
 			}},
 			"/github.com/": {Name: "github.com", Help: "github.com", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-				m.Render(ice.RENDER_OUTPUT, ice.RENDER_VOID)
+				m.Render(ice.RENDER_VOID)
 				p := kit.Path(".ish/pluged")
 				m.Debug("what %v", p)
 				git := githttp.New(p)

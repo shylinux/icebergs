@@ -347,7 +347,7 @@ func (m *Message) Render(cmd string, args ...interface{}) *Message {
 	m.Optionv(MSG_ARGS, args)
 
 	switch cmd {
-	case RENDER_TEMPLATE:
+	case RENDER_TEMPLATE: // text [data [type]]
 		if len(args) == 1 {
 			args = append(args, m)
 		}

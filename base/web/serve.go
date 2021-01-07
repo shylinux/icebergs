@@ -68,7 +68,7 @@ func _serve_main(m *ice.Message, w http.ResponseWriter, r *http.Request) bool {
 	}
 
 	// 内置文件
-	return !ice.DumpBinPack(w, r.URL.Path, func(name string) { RenderType(w, name) })
+	return !ice.DumpBinPack(w, r.URL.Path, func(name string) { RenderType(w, name, "") })
 }
 func _serve_handle(key string, cmd *ice.Command, msg *ice.Message, w http.ResponseWriter, r *http.Request) {
 	defer func() {
@@ -219,16 +219,9 @@ func init() {
 		},
 		Commands: map[string]*ice.Command{
 			SERVE: {Name: "serve name auto start", Help: "服务器", Action: map[string]*ice.Action{
-				gdb.START: {Name: "start dev= name=self proto=http host= port=9020", Help: "启动", Hand: func(m *ice.Message, arg ...string) {
-					if cli.NodeInfo(m, SERVER, ice.Info.HostName); m.Option(tcp.PORT) == "random" {
-						m.Option(tcp.PORT, m.Cmdx(tcp.PORT, aaa.RIGHT))
-					}
-
-					m.Target().Start(m, kit.MDB_NAME, m.Option(kit.MDB_NAME), tcp.HOST, m.Option(tcp.HOST), tcp.PORT, m.Option(tcp.PORT))
-					m.Sleep("1s")
-
-					for _, k := range kit.Split(m.Option(SPIDE_DEV)) {
-						m.Cmd(SPACE, tcp.DIAL, SPIDE_DEV, k, kit.MDB_NAME, ice.Info.NodeName)
+				aaa.BLACK: {Name: "black", Help: "黑名单", Hand: func(m *ice.Message, arg ...string) {
+					for _, k := range arg {
+						m.Conf(SERVE, kit.Keys(kit.MDB_META, aaa.BLACK, k), true)
 					}
 				}},
 				aaa.WHITE: {Name: "white", Help: "白名单", Hand: func(m *ice.Message, arg ...string) {
@@ -236,9 +229,16 @@ func init() {
 						m.Conf(SERVE, kit.Keys(kit.MDB_META, aaa.WHITE, k), true)
 					}
 				}},
-				aaa.BLACK: {Name: "black", Help: "黑名单", Hand: func(m *ice.Message, arg ...string) {
-					for _, k := range arg {
-						m.Conf(SERVE, kit.Keys(kit.MDB_META, aaa.BLACK, k), true)
+				gdb.START: {Name: "start dev= name=self proto=http host= port=9020", Help: "启动", Hand: func(m *ice.Message, arg ...string) {
+					if cli.NodeInfo(m, SERVER, ice.Info.HostName); m.Option(tcp.PORT) == "random" {
+						m.Option(tcp.PORT, m.Cmdx(tcp.PORT, aaa.RIGHT))
+					}
+
+					m.Target().Start(m, kit.MDB_NAME, m.Option(kit.MDB_NAME), tcp.HOST, m.Option(tcp.HOST), tcp.PORT, m.Option(tcp.PORT))
+					m.Sleep(ice.MOD_TICK)
+
+					for _, k := range kit.Split(m.Option(SPIDE_DEV)) {
+						m.Cmd(SPACE, tcp.DIAL, SPIDE_DEV, k, kit.MDB_NAME, ice.Info.NodeName)
 					}
 				}},
 			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
@@ -253,10 +253,10 @@ func init() {
 				m.Render(ice.RENDER_DOWNLOAD, path.Join(m.Conf(SERVE, "meta.volcanos.path"), path.Join(arg...)))
 			}},
 			"/publish/": {Name: "/publish/", Help: "源码", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-				_share_local(m, m.Conf(SERVE, "meta.publish"), path.Join(arg...))
+				_share_local(m, m.Conf(SERVE, kit.Keym("publish")), path.Join(arg...))
 			}},
 			"/plugin/github.com/": {Name: "/plugin/github.com/", Help: "源码", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-				_share_repos(m, "github.com/"+arg[0]+"/"+arg[1], arg[2:]...)
+				_share_repos(m, path.Join("github.com", arg[0], arg[1]), arg[2:]...)
 			}},
 		}})
 }

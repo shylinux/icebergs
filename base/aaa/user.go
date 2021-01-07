@@ -98,6 +98,9 @@ const (
 
 	USER_CREATE = "user.create"
 )
+const (
+	INVITE = "invite"
+)
 
 const USER = "user"
 

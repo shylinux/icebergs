@@ -73,7 +73,7 @@ func _action_show(m *ice.Message, river, storm, index string, arg ...string) {
 		if cmds = kit.Simple(kit.Keys(value[CTX], value[CMD])); kit.Format(value[POD]) != "" {
 			m.Option(POD, value[POD])
 		}
-	}) == nil && m.Warn(!m.Right(cmds), ice.ErrNotAuth) {
+	}) == nil && m.Warn(!m.Right(cmds), ice.ErrNotRight) {
 		return
 	}
 
@@ -121,7 +121,7 @@ func init() {
 					if m.Warn(m.Option(ice.MSG_USERNAME) == "", ice.ErrNotLogin) {
 						return // 没有登录
 					}
-					if m.Warn(!_action_right(m, arg[0], arg[1]), ice.ErrNotAuth) {
+					if m.Warn(!_action_right(m, arg[0], arg[1]), ice.ErrNotRight) {
 						return // 没有授权
 					}
 				}

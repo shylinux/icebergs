@@ -6,7 +6,7 @@ const ( //MOD
 
 	MOD_CHAN = 16
 	MOD_TICK = "1s"
-	MOD_BUF  = 1024
+	MOD_BUFS = 1024
 
 	MOD_DATE = "2006-01-02"
 	MOD_TIME = "2006-01-02 15:04:05"
@@ -25,26 +25,25 @@ const ( // MSG
 	MSG_OUTPUT = "_output"
 	MSG_ARGS   = "_args"
 
+	MSG_PROCESS = "_process"
 	MSG_CONTROL = "_control"
 	MSG_DISPLAY = "_display"
-	MSG_PROCESS = "_process"
 
 	MSG_CMDS   = "cmds"
-	MSG_DOMAIN = "domain"
 	MSG_SESSID = "sessid"
+	MSG_DOMAIN = "domain"
+	MSG_OPTS   = "_option"
 
-	MSG_USERIP  = "user.ip"
-	MSG_USERUA  = "user.ua"
-	MSG_USERWEB = "user.web"
-	MSG_USERPOD = "user.pod"
-	// MSG_USEROPT  = "user.opt"
-	MSG_USEROPT  = "_option"
+	MSG_USERIP   = "user.ip"
+	MSG_USERUA   = "user.ua"
+	MSG_USERWEB  = "user.web"
+	MSG_USERPOD  = "user.pod"
+	MSG_USERADDR = "user.addr"
+	MSG_USERDATA = "user.data"
 	MSG_USERNICK = "user.nick"
 	MSG_USERNAME = "user.name"
 	MSG_USERZONE = "user.zone"
 	MSG_USERROLE = "user.role"
-	MSG_USERDATA = "user.data"
-	MSG_USERADDR = "user.addr"
 
 	MSG_RIVER = "sess.river"
 	MSG_STORM = "sess.storm"
@@ -53,41 +52,32 @@ const ( // MSG
 const ( // RENDER
 	RENDER_VOID     = "_void"
 	RENDER_RESULT   = "_result"
+	RENDER_ANCHOR   = "_anchor"
+	RENDER_BUTTON   = "_button"
 	RENDER_QRCODE   = "_qrcode"
+	RENDER_SCRIPT   = "_script"
 	RENDER_DOWNLOAD = "_download"
 	RENDER_TEMPLATE = "_template"
 )
-const (
-	CONTROL_PAGE = "_page"
-
+const ( // PROCESS
 	PROCESS_REFRESH = "_refresh"
 	PROCESS_FOLLOW  = "_follow"
 	PROCESS_INNER   = "_inner"
 	PROCESS_FIELD   = "_field"
-)
-const ( // CTX
-	CTX_FOLLOW = "follow"
-	CTX_STATUS = "status"
-	CTX_STREAM = "stream"
 
-	CTX_BEGIN = "begin"
-	CTX_START = "start"
-	CTX_SERVE = "serve"
-	CTX_CLOSE = "close"
-
-	CTX_INIT = "_init"
-	CTX_EXIT = "_exit"
+	FIELD_PREFIX = "_prefix"
+	CONTROL_PAGE = "_page"
 )
 const ( // LOG
 	// 数据
-	LOG_IMPORT = "import"
-	LOG_EXPORT = "export"
 	LOG_CREATE = "create"
 	LOG_REMOVE = "remove"
+	LOG_MODIFY = "modify"
 	LOG_INSERT = "insert"
 	LOG_DELETE = "delete"
 	LOG_SELECT = "select"
-	LOG_MODIFY = "modify"
+	LOG_EXPORT = "export"
+	LOG_IMPORT = "import"
 
 	// 状态
 	LOG_BEGIN = "begin"
@@ -103,4 +93,17 @@ const ( // LOG
 	LOG_WARN  = "warn"
 	LOG_ERROR = "error"
 	LOG_DEBUG = "debug"
+)
+const ( // CTX
+	CTX_FOLLOW = "follow"
+	CTX_STATUS = "status"
+	CTX_STREAM = "stream"
+
+	CTX_BEGIN = "begin"
+	CTX_START = "start"
+	CTX_SERVE = "serve"
+	CTX_CLOSE = "close"
+
+	CTX_INIT = "_init"
+	CTX_EXIT = "_exit"
 )

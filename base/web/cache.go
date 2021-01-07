@@ -62,6 +62,7 @@ func _cache_catch(m *ice.Message, name string) (file, size string) {
 	}
 	return "", "0"
 }
+
 func _cache_upload(m *ice.Message, r *http.Request) (kind, name, file, size string) {
 	if buf, h, e := r.FormFile(UPLOAD); e == nil {
 		defer buf.Close()
@@ -83,36 +84,41 @@ func _cache_upload(m *ice.Message, r *http.Request) (kind, name, file, size stri
 func _cache_download(m *ice.Message, r *http.Response) (file, size string) {
 	defer r.Body.Close()
 
-	total := kit.Int(kit.Select("1", r.Header.Get(ContentLength)))
 	if f, p, e := kit.Create(path.Join("var/tmp", kit.Hashs("uniq"))); m.Assert(e) {
-		size, buf := 0, make([]byte, 1024)
+		step, total := 0, kit.Int(kit.Select("1", r.Header.Get(ContentLength)))
+		size, buf := 0, make([]byte, ice.MOD_BUFS)
+
 		for {
 			if n, _ := r.Body.Read(buf); n > 0 {
+				size += n
 				f.Write(buf[0:n])
-				switch size += n; cb := m.Optionv(DOWNLOAD_CB).(type) {
-				case []string:
-					m.Richs(cb[0], cb[1], cb[2], func(key string, value map[string]interface{}) {
-						value = value[kit.MDB_META].(map[string]interface{})
+				s := size * 100 / total
 
-						s := size * 100 / total
-						if s != kit.Int(value[kit.SSH_STEP]) && s%10 == 0 {
-							m.Log_IMPORT(kit.MDB_FILE, path.Base(cb[2]), kit.SSH_STEP, s, kit.MDB_SIZE, kit.FmtSize(int64(size)), kit.MDB_TOTAL, kit.FmtSize(int64(total)))
-						}
-						value[kit.SSH_STEP], value[kit.MDB_SIZE], value[kit.MDB_TOTAL] = kit.Format(s), size, total
-					})
+				switch cb := m.Optionv(DOWNLOAD_CB).(type) {
 				case func(int, int):
 					cb(size, total)
+				case []string:
+					m.Richs(cb[0], cb[1], cb[2], func(key string, value map[string]interface{}) {
+						value = kit.GetMeta(value)
+						value[kit.SSH_STEP], value[kit.MDB_SIZE], value[kit.MDB_TOTAL] = kit.Format(s), size, total
+					})
 				default:
-					m.Log_IMPORT(kit.MDB_FILE, p, "per", size*100/total, kit.MDB_SIZE, kit.FmtSize(int64(size)), "total", kit.FmtSize(int64(total)))
+					if s != step && s%10 == 0 {
+						m.Log_IMPORT(kit.MDB_FILE, p, kit.SSH_STEP, s,
+							kit.MDB_SIZE, kit.FmtSize(int64(size)), kit.MDB_TOTAL, kit.FmtSize(int64(total)))
+					}
 				}
-
-			} else {
-				f.Close()
-				break
+				step = s
+				continue
 			}
+
+			f.Close()
+			break
 		}
+
 		if f, e := os.Open(p); m.Assert(e) {
 			defer f.Close()
+
 			m.Log_IMPORT(kit.MDB_FILE, p, kit.MDB_SIZE, kit.FmtSize(int64(size)))
 			c := _cache_name(m, kit.Hashs(f))
 			m.Cmd(nfs.LINK, c, p)
@@ -147,12 +153,12 @@ func init() {
 				WATCH: {Name: "watch key file", Help: "释放", Hand: func(m *ice.Message, arg ...string) {
 					_cache_watch(m, arg[0], arg[1])
 				}},
-				WRITE: {Name: "write type name text", Help: "添加", Hand: func(m *ice.Message, arg ...string) {
-					_cache_save(m, arg[0], arg[1], arg[2])
-				}},
 				CATCH: {Name: "catch type name", Help: "捕获", Hand: func(m *ice.Message, arg ...string) {
 					file, size := _cache_catch(m, arg[1])
 					_cache_save(m, arg[0], arg[1], "", file, size)
+				}},
+				WRITE: {Name: "write type name text", Help: "添加", Hand: func(m *ice.Message, arg ...string) {
+					_cache_save(m, arg[0], arg[1], arg[2])
 				}},
 				UPLOAD: {Name: "upload", Help: "上传", Hand: func(m *ice.Message, arg ...string) {
 					kind, name, file, size := _cache_upload(m, m.R)
@@ -165,8 +171,16 @@ func init() {
 					}
 				}},
 			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-				m.Option(mdb.FIELDS, kit.Select("time,hash,size,type,name,text,file", mdb.DETAIL, len(arg) > 0))
+				m.Option(mdb.FIELDS, kit.Select("time,hash,size,type,name,text", mdb.DETAIL, len(arg) > 0))
 				m.Cmdy(mdb.SELECT, CACHE, "", mdb.HASH, kit.MDB_HASH, arg)
+
+				if len(arg) > 0 {
+					if m.Append(kit.MDB_FILE) == "" {
+						m.Push(kit.MDB_LINK, m.Append(kit.MDB_TEXT))
+					} else {
+						m.PushAnchor(DOWNLOAD, kit.MergeURL2(m.Option(ice.MSG_USERWEB), "/share/cache/"+arg[0]))
+					}
+				}
 			}},
 
 			"/cache/": {Name: "/cache/", Help: "缓存池", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {

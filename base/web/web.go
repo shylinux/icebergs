@@ -72,8 +72,6 @@ func (web *Frame) Start(m *ice.Message, arg ...string) bool {
 	web.m, web.Server = m, &http.Server{Handler: web}
 	m.Option(tcp.LISTEN_CB, func(l net.Listener) {
 		m.Cmdy(mdb.INSERT, SERVE, "", mdb.HASH, arg, kit.MDB_STATUS, tcp.START, kit.MDB_PROTO, m.Option(kit.MDB_PROTO), SPIDE_DEV, m.Option(SPIDE_DEV))
-		m.Event(SERVE_START, arg...)
-		defer m.Event(SERVE_CLOSE, arg...)
 		defer m.Cmd(mdb.MODIFY, SERVE, "", mdb.HASH, kit.MDB_NAME, m.Option(kit.MDB_NAME), kit.MDB_STATUS, tcp.STOP)
 
 		// 启动服务
@@ -113,7 +111,7 @@ var Index = &ice.Context{Name: WEB, Help: "网络模块",
 
 func init() {
 	ice.Index.Register(Index, &Frame{},
-		SPIDE, SERVE, SPACE, DREAM,
-		ROUTE, CACHE, SHARE, STORY,
+		ROUTE, SERVE, SPACE, DREAM,
+		SPIDE, SHARE, CACHE, STORY,
 	)
 }

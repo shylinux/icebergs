@@ -3,7 +3,10 @@ package ice
 import (
 	kit "github.com/shylinux/toolkits"
 
+	"bytes"
+	"encoding/base64"
 	"fmt"
+	"github.com/skip2/go-qrcode"
 	"net/url"
 	"path"
 	"strings"
@@ -47,7 +50,9 @@ func (m *Message) Event(key string, arg ...string) *Message {
 	return m
 }
 func (m *Message) Right(arg ...interface{}) bool {
-	return m.Option(MSG_USERROLE) == "root" || !m.Warn(m.Cmdx("aaa.role", "right", m.Option(MSG_USERROLE), strings.ReplaceAll(kit.Keys(arg...), "/", ".")) != "ok", ErrNotAuth, m.Option(MSG_USERROLE), " of ", strings.Join(kit.Simple(arg), "."))
+	return m.Option(MSG_USERROLE) == "root" || !m.Warn(m.Cmdx("aaa.role", "right",
+		m.Option(MSG_USERROLE), strings.ReplaceAll(kit.Keys(arg...), "/", ".")) != "ok",
+		ErrNotRight, m.Option(MSG_USERROLE), " of ", strings.Join(kit.Simple(arg), "."), " at ", kit.FileLine(2, 3))
 }
 func (m *Message) Space(arg interface{}) []string {
 	if arg == nil || arg == "" || kit.Format(arg) == m.Conf("cli.runtime", "node.name") {
@@ -56,10 +61,15 @@ func (m *Message) Space(arg interface{}) []string {
 	return []string{"web.space", kit.Format(arg)}
 }
 
-func (m *Message) PushPlugin(key string, arg ...string) {
+func (m *Message) PushPlugins(pod, ctx, cmd string, arg ...string) {
+	m.Cmdy("space", pod, "context", ctx, "command", cmd)
 	m.Option(MSG_PROCESS, PROCESS_FIELD)
-	m.Option("_prefix", arg)
+	m.Option(FIELD_PREFIX, arg)
+}
+func (m *Message) PushPlugin(key string, arg ...string) {
 	m.Cmdy("command", key)
+	m.Option(MSG_PROCESS, PROCESS_FIELD)
+	m.Option(FIELD_PREFIX, arg)
 }
 func (m *Message) PushRender(key, view, name string, arg ...string) *Message {
 	if m.Option(MSG_USERUA) == "" {
@@ -81,22 +91,16 @@ func (m *Message) PushRender(key, view, name string, arg ...string) *Message {
 		m.Push(key, fmt.Sprintf(`<video src="%s" height=%s controls>`, name, kit.Select("120", arg, 0)))
 	case "img":
 		m.Push(key, fmt.Sprintf(`<img src="%s" height=%s>`, name, kit.Select("120", arg, 0)))
-	case "a":
+	case "a": // name [link]
 		m.Push(key, fmt.Sprintf(`<a href="%s" target="_blank">%s</a>`, kit.Select(name, arg, 0), name))
-	case "download":
+	case "download": // name [link]
 		m.Push(key, fmt.Sprintf(`<a href="%s" download="%s">%s</a>`, kit.Select(name, arg, 0), path.Base(name), name))
 	default:
 		m.Push(key, name)
 	}
 	return m
 }
-func (m *Message) PushButton(arg ...string) {
-	m.PushRender("action", "button", strings.Join(arg, ","))
-}
-func (m *Message) PushAnchor(name string, arg ...string) {
-	m.PushRender("link", "a", name, arg...)
-}
-func (m *Message) PushDownload(name string, arg ...string) {
+func (m *Message) PushDownload(name string, arg ...string) { // name [file]
 	if len(arg) == 0 {
 		name = kit.MergeURL2(m.Option(MSG_USERWEB), path.Join("/share/local", name), "pod", m.Option(MSG_USERPOD))
 	} else {
@@ -167,6 +171,80 @@ func (m *Message) SortInt(key string)   { m.Sort(key, "int") }
 func (m *Message) SortIntR(key string)  { m.Sort(key, "int_r") }
 func (m *Message) SortTime(key string)  { m.Sort(key, "time") }
 func (m *Message) SortTimeR(key string) { m.Sort(key, "time_r") }
+
+func _render(m *Message, cmd string, args ...interface{}) string {
+	switch arg := kit.Simple(args...); cmd {
+	case RENDER_ANCHOR: // [name] link
+		return fmt.Sprintf(`<a href="%s" target="_blank">%s</a>`, kit.Select(arg[0], arg, 1), arg[0])
+
+	case RENDER_BUTTON: // name...
+		list := []string{}
+		for _, k := range kit.Split(strings.Join(arg, ",")) {
+			list = append(list, fmt.Sprintf(`<input type="button" name="%s" value="%s">`,
+				k, kit.Select(k, kit.Value(m.cmd.Meta, kit.Keys("trans", k)))))
+		}
+		return strings.Join(list, "")
+
+	case RENDER_QRCODE: // text size height
+		buf := bytes.NewBuffer(make([]byte, 0, MOD_BUFS))
+		if qr, e := qrcode.New(arg[0], qrcode.Medium); m.Assert(e) {
+			m.Assert(qr.Write(kit.Int(kit.Select("240", arg, 1)), buf))
+		}
+		arg[0] = "data:image/png;base64," + base64.StdEncoding.EncodeToString(buf.Bytes())
+		return fmt.Sprintf(`<img src="%s" height=%s>`, arg[0], kit.Select("240", arg, 1))
+
+	case RENDER_SCRIPT: // type text
+		list := []string{}
+		list = append(list, kit.Format(`<div class="story" data-type="spark" data-name="%s">`, arg[0]))
+		for _, l := range strings.Split(arg[1], "\n") {
+			list = append(list, "<div>")
+			switch arg[0] {
+			case "shell":
+				list = append(list, "<label>$ </label>")
+			default:
+				list = append(list, "<label>&lt; </label>")
+			}
+			list = append(list, "<span>")
+			list = append(list, l)
+			list = append(list, "</span>")
+			list = append(list, "</div>")
+		}
+		list = append(list, "</div>")
+		return strings.Join(list, "")
+
+	case RENDER_DOWNLOAD: // file [link]
+		return fmt.Sprintf(`<a href="%s" download="%s">%s</a>`, kit.Select(arg[0], arg, 1), path.Base(arg[0]), arg[0])
+	}
+	return ""
+}
+func (m *Message) PushAnchor(arg ...interface{}) { // [name] link
+	m.Push("link", _render(m, RENDER_ANCHOR, arg...))
+}
+func (m *Message) PushButton(arg ...string) {
+	m.Push("action", _render(m, RENDER_BUTTON, strings.Join(arg, ",")))
+}
+func (m *Message) PushQRCode(key string, text string, arg ...string) { // text [size]
+	m.Push(key, _render(m, RENDER_QRCODE, text, arg))
+}
+func (m *Message) EchoAnchor(arg ...interface{}) *Message { // [name] link
+	return m.Echo(_render(m, RENDER_ANCHOR, arg...))
+}
+func (m *Message) EchoButton(arg ...string) *Message {
+	return m.Echo(_render(m, RENDER_BUTTON, strings.Join(arg, ",")))
+}
+func (m *Message) EchoQRCode(text string, arg ...string) *Message { // text [size]
+	return m.Echo(_render(m, RENDER_QRCODE, text, arg))
+}
+func (m *Message) EchoScript(text string, arg ...string) *Message {
+	if text == "break" {
+		return m.Echo("<br>")
+	}
+	mime := "shell"
+	if len(arg) > 0 {
+		mime, text = text, strings.Join(arg, "\n")
+	}
+	return m.Echo(_render(m, RENDER_SCRIPT, mime, text))
+}
 
 var count = int32(0)
 

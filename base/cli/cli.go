@@ -31,6 +31,8 @@ var Index = &ice.Context{Name: "cli", Help: "命令模块",
 			m.Conf(RUNTIME, "conf.ctx_shy", os.Getenv("ctx_shy"))
 			m.Conf(RUNTIME, "conf.ctx_pid", os.Getenv("ctx_pid"))
 			m.Conf(RUNTIME, "conf.ctx_user", os.Getenv("ctx_user"))
+			m.Conf(RUNTIME, "conf.ctx_share", os.Getenv("ctx_share"))
+			m.Conf(RUNTIME, "conf.ctx_river", os.Getenv("ctx_river"))
 
 			// 主机信息
 			m.Conf(RUNTIME, "host.GOARCH", runtime.GOARCH)
@@ -57,6 +59,9 @@ var Index = &ice.Context{Name: "cli", Help: "命令模块",
 			ice.Info.HostName = m.Conf(RUNTIME, "boot.hostname")
 			ice.Info.PathName = m.Conf(RUNTIME, "boot.pathname")
 			ice.Info.UserName = m.Conf(RUNTIME, "boot.username")
+
+			ice.Info.CtxShare = m.Conf(RUNTIME, "conf.ctx_share")
+			ice.Info.CtxRiver = m.Conf(RUNTIME, "conf.ctx_river")
 
 			// 启动记录
 			count := kit.Int(m.Conf(RUNTIME, "boot.count")) + 1

@@ -288,7 +288,7 @@ func (f *Frame) Start(m *ice.Message, arg ...string) bool {
 	case STDIO: // 终端交互
 		r, f.stdout = os.Stdin, os.Stdout
 
-		m.Option(ice.MSG_USEROPT, ice.MSG_USERNAME)
+		m.Option(ice.MSG_OPTS, ice.MSG_USERNAME)
 		m.Option(ice.MSG_USERNAME, ice.Info.UserName)
 		m.Option(ice.MSG_USERROLE, aaa.ROOT)
 		m.Option(ice.MSG_USERZONE, "boot")

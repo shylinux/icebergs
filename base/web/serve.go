@@ -4,7 +4,6 @@ import (
 	ice "github.com/shylinux/icebergs"
 	"github.com/shylinux/icebergs/base/aaa"
 	"github.com/shylinux/icebergs/base/cli"
-	"github.com/shylinux/icebergs/base/gdb"
 	"github.com/shylinux/icebergs/base/mdb"
 	"github.com/shylinux/icebergs/base/tcp"
 	kit "github.com/shylinux/toolkits"
@@ -19,7 +18,7 @@ import (
 func _serve_main(m *ice.Message, w http.ResponseWriter, r *http.Request) bool {
 	if r.Header.Get("index.module") == "" {
 		r.Header.Set("index.module", m.Target().Name)
-	} else {
+	} else { // 模块接口
 		return true
 	}
 
@@ -67,8 +66,11 @@ func _serve_main(m *ice.Message, w http.ResponseWriter, r *http.Request) bool {
 		return false
 	}
 
-	// 内置文件
-	return !ice.DumpBinPack(w, r.URL.Path, func(name string) { RenderType(w, name, "") })
+	// 文件接口
+	if ice.DumpBinPack(w, r.URL.Path, func(name string) { RenderType(w, name, "") }) {
+		return false
+	}
+	return true
 }
 func _serve_handle(key string, cmd *ice.Command, msg *ice.Message, w http.ResponseWriter, r *http.Request) {
 	defer func() {
@@ -98,7 +100,7 @@ func _serve_handle(key string, cmd *ice.Command, msg *ice.Message, w http.Respon
 	if msg.R, msg.W = r, w; r.Header.Get("X-Real-Port") != "" {
 		msg.Option(ice.MSG_USERADDR, msg.Option(ice.MSG_USERIP)+":"+r.Header.Get("X-Real-Port"))
 	} else {
-		msg.Option(ice.MSG_USERADDR, r.RemoteAddr)
+		msg.Option(ice.MSG_USERADDR, msg.Option(ice.MSG_USERIP))
 	}
 
 	// 请求数据
@@ -144,7 +146,7 @@ func _serve_handle(key string, cmd *ice.Command, msg *ice.Message, w http.Respon
 
 	// 执行命令
 	if cmds, ok := _serve_login(msg, kit.Simple(msg.Optionv(ice.MSG_CMDS)), w, r); ok {
-		msg.Option(ice.MSG_USEROPT, msg.Optionv(ice.MSG_OPTION))
+		msg.Option(ice.MSG_OPTS, msg.Optionv(ice.MSG_OPTION))
 		msg.Target().Cmd(msg, key, r.URL.Path, cmds...)
 	}
 
@@ -156,13 +158,13 @@ func _serve_login(msg *ice.Message, cmds []string, w http.ResponseWriter, r *htt
 	msg.Option(ice.MSG_USERROLE, aaa.VOID)
 	msg.Option(ice.MSG_USERNAME, "")
 
-	if msg.Options(ice.MSG_SESSID) {
-		// 会话认证
+	if msg.Option(ice.MSG_SESSID) != "" {
 		aaa.SessCheck(msg, msg.Option(ice.MSG_SESSID))
+		// 会话认证
 	}
-	if !msg.Options(ice.MSG_USERNAME) && tcp.IsLocalHost(msg, msg.Option(ice.MSG_USERIP)) && msg.Conf(SERVE, kit.Keym(tcp.LOCALHOST)) == "true" {
-		// 自动认证
+	if msg.Option(ice.MSG_USERNAME) == "" && tcp.IsLocalHost(msg, msg.Option(ice.MSG_USERIP)) && msg.Conf(SERVE, kit.Keym(tcp.LOCALHOST)) == "true" {
 		aaa.UserLogin(msg, ice.Info.UserName, ice.Info.PassWord)
+		// 主机认证
 	}
 
 	if _, ok := msg.Target().Commands[LOGIN]; ok {
@@ -177,24 +179,19 @@ func _serve_login(msg *ice.Message, cmds []string, w http.ResponseWriter, r *htt
 		return cmds, true // 白名单
 	}
 
-	if msg.Warn(!msg.Options(ice.MSG_USERNAME), ice.ErrNotLogin, r.URL.Path) {
-		msg.Render(STATUS, 401, ice.ErrNotLogin)
+	if msg.Warn(msg.Option(ice.MSG_USERNAME) == "", ice.ErrNotLogin, r.URL.Path) {
+		msg.Render(STATUS, http.StatusUnauthorized, ice.ErrNotLogin)
 		return cmds, false // 未登录
 	}
 	if msg.Warn(!msg.Right(r.URL.Path)) {
-		msg.Render(STATUS, 403, ice.ErrNotAuth)
+		msg.Render(STATUS, http.StatusForbidden, ice.ErrNotRight)
 		return cmds, false // 未授权
 	}
-
 	return cmds, true
 }
 
 const (
-	LOGIN = "_login"
-)
-const (
-	SERVE_START = "serve.start"
-	SERVE_CLOSE = "serve.close"
+	WEB_LOGIN = "_login"
 )
 const SERVE = "serve"
 
@@ -203,12 +200,13 @@ func init() {
 		Configs: map[string]*ice.Config{
 			SERVE: {Name: SERVE, Help: "服务器", Value: kit.Data(kit.MDB_SHORT, kit.MDB_NAME,
 				tcp.LOCALHOST, true, aaa.BLACK, kit.Dict(), aaa.WHITE, kit.Dict(
-					"intshell", true, "volcanos", true, "publish", true, "plugin", true,
-					"login", true, "space", true, "share", true,
+					"intshell", true, "volcanos", true,
+					"publish", true, "require", true,
+					SPACE, true, SHARE, true,
 				), "logheaders", false,
 
 				"static", kit.Dict("/", "usr/volcanos/"),
-				"volcanos", kit.Dict("path", "usr/volcanos", "index", "page/index.html",
+				"volcanos", kit.Dict("path", "usr/volcanos", "index", "index.html",
 					"repos", "https://github.com/shylinux/volcanos", "branch", "master",
 				), "publish", "usr/publish/",
 
@@ -229,7 +227,7 @@ func init() {
 						m.Conf(SERVE, kit.Keys(kit.MDB_META, aaa.WHITE, k), true)
 					}
 				}},
-				gdb.START: {Name: "start dev= name=self proto=http host= port=9020", Help: "启动", Hand: func(m *ice.Message, arg ...string) {
+				tcp.START: {Name: "start dev= name=self proto=http host= port=9020", Help: "启动", Hand: func(m *ice.Message, arg ...string) {
 					if cli.NodeInfo(m, SERVER, ice.Info.HostName); m.Option(tcp.PORT) == "random" {
 						m.Option(tcp.PORT, m.Cmdx(tcp.PORT, aaa.RIGHT))
 					}
@@ -255,8 +253,8 @@ func init() {
 			"/publish/": {Name: "/publish/", Help: "源码", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 				_share_local(m, m.Conf(SERVE, kit.Keym("publish")), path.Join(arg...))
 			}},
-			"/plugin/github.com/": {Name: "/plugin/github.com/", Help: "源码", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-				_share_repos(m, path.Join("github.com", arg[0], arg[1]), arg[2:]...)
+			"/require/": {Name: "/require/", Help: "源码", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+				_share_repos(m, path.Join(arg[0], arg[1], arg[2]), arg[3:]...)
 			}},
 		}})
 }

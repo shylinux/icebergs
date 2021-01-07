@@ -390,7 +390,7 @@ var Index = &ice.Context{Name: LARK, Help: "机器人",
 			m.Echo(list[rand.Intn(len(list))])
 		}},
 
-		web.LOGIN: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {}},
+		web.WEB_LOGIN: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {}},
 		"/msg": {Name: "/msg", Help: "聊天消息", Hand: func(m *ice.Message, c *ice.Context, key string, arg ...string) {
 			data := m.Optionv(ice.MSG_USERDATA)
 			if kit.Value(data, "action") != nil {

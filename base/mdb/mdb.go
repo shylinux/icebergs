@@ -410,7 +410,6 @@ const (
 	IMPORT = "import"
 	PRUNES = "prunes"
 	INPUTS = "inputs"
-	INVITE = "invite"
 	COMMIT = "commit"
 	SOURCE = "source"
 )

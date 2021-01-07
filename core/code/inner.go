@@ -34,7 +34,7 @@ func _inner_list(m *ice.Message, ext, file, dir string, arg ...string) {
 		return
 	}
 
-	if m.Warn(!m.Right(dir, file), ice.ErrNotAuth, path.Join(dir, file)) {
+	if m.Warn(!m.Right(dir, file), ice.ErrNotRight, path.Join(dir, file)) {
 		return // 没有权限
 	}
 	if m.Cmdy(mdb.RENDER, ext, file, dir, arg); m.Result() != "" {
@@ -49,7 +49,7 @@ func _inner_list(m *ice.Message, ext, file, dir string, arg ...string) {
 	m.Echo(path.Join(dir, file))
 }
 func _inner_show(m *ice.Message, ext, file, dir string, arg ...string) {
-	if m.Warn(!m.Right(dir, file), ice.ErrNotAuth, path.Join(dir, file)) {
+	if m.Warn(!m.Right(dir, file), ice.ErrNotRight, path.Join(dir, file)) {
 		return // 没有权限
 	}
 	if m.Cmdy(mdb.ENGINE, ext, file, dir, arg); m.Result() != "" {

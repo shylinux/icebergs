@@ -106,7 +106,7 @@ func init() {
 				mdb.INSERT: {Name: "insert type name share", Help: "添加", Hand: func(m *ice.Message, arg ...string) {
 					m.Cmdy(mdb.INSERT, RIVER, kit.Keys(kit.MDB_HASH, m.Option(RIVER), NODE), mdb.HASH, arg)
 				}},
-				mdb.INVITE: {Name: "invite", Help: "邀请", Hand: func(m *ice.Message, arg ...string) {
+				aaa.INVITE: {Name: "invite", Help: "邀请", Hand: func(m *ice.Message, arg ...string) {
 					m.Option(web.SHARE, m.Cmdx(m.Prefix(AUTH), mdb.CREATE, kit.MDB_TYPE, NODE))
 					m.Cmdy(code.PUBLISH, "contexts", "tool")
 				}},
@@ -232,7 +232,7 @@ func init() {
 				})
 			}},
 			USER: {Name: "user username auto insert invite", Help: "用户", Action: map[string]*ice.Action{
-				mdb.INVITE: {Name: "invite", Help: "邀请", Hand: func(m *ice.Message, arg ...string) {
+				aaa.INVITE: {Name: "invite", Help: "邀请", Hand: func(m *ice.Message, arg ...string) {
 					share := m.Option(web.SHARE, m.Cmdx(m.Prefix(AUTH), mdb.CREATE, kit.MDB_TYPE, USER))
 					m.Cmdy(wiki.SPARK, "inner", kit.MergeURL(m.Option(ice.MSG_USERWEB), RIVER, m.Option(ice.MSG_RIVER), web.SHARE, share))
 					m.Cmdy(wiki.IMAGE, "qrcode", kit.MergeURL(m.Option(ice.MSG_USERWEB), RIVER, m.Option(ice.MSG_RIVER), web.SHARE, share))
@@ -329,7 +329,7 @@ func init() {
 					m.Cmdy(m.Prefix(arg[1]), arg[2:])
 					return // 应用列表
 				}
-				if m.Warn(!m.Right(RIVER, arg), ice.ErrNotAuth) {
+				if m.Warn(!m.Right(RIVER, arg), ice.ErrNotRight) {
 					return // 没有授权
 				}
 

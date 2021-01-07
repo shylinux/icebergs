@@ -9,10 +9,10 @@ import (
 )
 
 var ErrWarn = "warn: "
-var ErrNotFound = "not found: "
 var ErrNotLogin = "not login: "
-var ErrNotAuth = "not auth: "
-var ErrNotJoin = "not join: "
+var ErrNotRight = "not right: "
+var ErrNotFound = "not found: "
+var ErrNotShare = "not share: "
 
 var _log_disable = true
 var Log func(m *Message, p, l, s string)

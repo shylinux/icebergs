@@ -15,8 +15,11 @@ var Info = struct {
 	PathName string
 	UserName string
 	PassWord string
+
 	NodeType string
 	NodeName string
+	CtxShare string
+	CtxRiver string
 
 	Build struct {
 		Time     string

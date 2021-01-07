@@ -63,6 +63,7 @@ func IsLocalHost(m *ice.Message, ip string) bool { return _islocalhost(m, ip) }
 const (
 	HOSTPORT = "hostport"
 	HOSTNAME = "hostname"
+	PROTOCOL = "protocol"
 
 	LOCALHOST = "localhost"
 )

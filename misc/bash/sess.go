@@ -43,7 +43,7 @@ func init() {
 				m.Cmdy(mdb.SELECT, m.Prefix(SESS), "", mdb.HASH, kit.MDB_HASH, arg)
 			}},
 
-			web.LOGIN: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			web.WEB_LOGIN: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 				if f, _, e := m.R.FormFile(SUB); e == nil {
 					defer f.Close()
 					// 文件参数

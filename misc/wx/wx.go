@@ -173,7 +173,7 @@ var Index = &ice.Context{Name: WX, Help: "公众号",
 
 		"/login/": {Name: "/login/", Help: "认证", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			check := kit.Sort([]string{m.Conf(LOGIN, "meta.token"), m.Option("timestamp"), m.Option("nonce")})
-			if b := sha1.Sum([]byte(strings.Join(check, ""))); m.Warn(m.Option("signature") != hex.EncodeToString(b[:]), ice.ErrNotAuth) {
+			if b := sha1.Sum([]byte(strings.Join(check, ""))); m.Warn(m.Option("signature") != hex.EncodeToString(b[:]), ice.ErrNotRight) {
 				return // 验证失败
 			}
 			if m.Option("echostr") != "" {
@@ -198,7 +198,7 @@ var Index = &ice.Context{Name: WX, Help: "公众号",
 				}
 
 			case "text":
-				if cmds := kit.Split(m.Option("Content")); m.Warn(!m.Right(cmds), ice.ErrNotAuth) {
+				if cmds := kit.Split(m.Option("Content")); m.Warn(!m.Right(cmds), ice.ErrNotRight) {
 					_wx_action(m.Cmdy("menu", mdb.CREATE))
 					break // 没有权限
 				} else {

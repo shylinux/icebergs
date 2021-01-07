@@ -29,7 +29,7 @@ func _ssh_meta(conn ssh.ConnMetadata) map[string]string {
 func _ssh_config(m *ice.Message, h string) *ssh.ServerConfig {
 	config := &ssh.ServerConfig{
 		PublicKeyCallback: func(conn ssh.ConnMetadata, key ssh.PublicKey) (*ssh.Permissions, error) {
-			meta, err := _ssh_meta(conn), errors.New(ice.ErrNotAuth)
+			meta, err := _ssh_meta(conn), errors.New(ice.ErrNotRight)
 			if tcp.IsLocalHost(m, strings.Split(conn.RemoteAddr().String(), ":")[0]) {
 				m.Log_AUTH(tcp.HOSTPORT, conn.RemoteAddr(), aaa.USERNAME, conn.User())
 				err = nil // 本机用户
@@ -53,7 +53,7 @@ func _ssh_config(m *ice.Message, h string) *ssh.ServerConfig {
 			return &ssh.Permissions{Extensions: meta}, err
 		},
 		PasswordCallback: func(conn ssh.ConnMetadata, password []byte) (*ssh.Permissions, error) {
-			meta, err := _ssh_meta(conn), errors.New(ice.ErrNotAuth)
+			meta, err := _ssh_meta(conn), errors.New(ice.ErrNotRight)
 			m.Richs(aaa.USER, "", conn.User(), func(k string, value map[string]interface{}) {
 				if string(password) == kit.Format(value[aaa.PASSWORD]) {
 					m.Log_AUTH(tcp.HOSTPORT, conn.RemoteAddr(), aaa.USERNAME, conn.User(), aaa.PASSWORD, strings.Repeat("*", len(kit.Format(value[aaa.PASSWORD]))))
@@ -203,7 +203,7 @@ func init() {
 				mdb.PRUNES: {Name: "prunes", Help: "清理", Hand: func(m *ice.Message, arg ...string) {
 					m.Cmdy(mdb.PRUNES, SERVICE, "", mdb.HASH, kit.MDB_STATUS, tcp.CLOSE)
 				}},
-				mdb.INVITE: {Name: "invite", Help: "邀请", Hand: func(m *ice.Message, arg ...string) {
+				aaa.INVITE: {Name: "invite", Help: "邀请", Hand: func(m *ice.Message, arg ...string) {
 					u := kit.ParseURL(m.Option(ice.MSG_USERWEB))
 					m.Option("hostname", strings.Split(u.Host, ":")[0])
 
@@ -218,7 +218,7 @@ ssh {{.Option "user.name"}}@{{.Option "hostname"}} -p {{.Option "port"}}
 				if len(arg) == 0 {
 					m.Option(mdb.FIELDS, "time,status,port,private,auth,count")
 					m.Cmdy(mdb.SELECT, SERVICE, "", mdb.HASH)
-					m.PushAction(mdb.IMPORT, mdb.INSERT, mdb.EXPORT, mdb.INVITE)
+					m.PushAction(mdb.IMPORT, mdb.INSERT, mdb.EXPORT, aaa.INVITE)
 					return
 				}
 

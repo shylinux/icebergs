@@ -3,7 +3,6 @@ package web
 import (
 	ice "github.com/shylinux/icebergs"
 	"github.com/shylinux/icebergs/base/aaa"
-	"github.com/shylinux/icebergs/base/cli"
 	"github.com/shylinux/icebergs/base/mdb"
 	kit "github.com/shylinux/toolkits"
 
@@ -21,14 +20,14 @@ func _share_cache(m *ice.Message, arg ...string) {
 func _share_local(m *ice.Message, arg ...string) {
 	p := path.Join(arg...)
 	switch ls := strings.Split(p, "/"); ls[0] {
-	case "etc", "var": // 私有文件
+	case kit.SSH_ETC, kit.SSH_VAR: // 私有文件
 		if m.Option(ice.MSG_USERROLE) == aaa.VOID {
-			m.Render(STATUS, http.StatusUnauthorized, "not auth")
+			m.Render(STATUS, http.StatusUnauthorized, ice.ErrNotRight)
 			return // 没有权限
 		}
 	default:
-		if m.Warn(!m.Right(ls), ice.ErrNotAuth, m.Option(ice.MSG_USERROLE), " of ", p) {
-			m.Render(STATUS, http.StatusUnauthorized, "not auth")
+		if !m.Right(ls) {
+			m.Render(STATUS, http.StatusUnauthorized, ice.ErrNotRight)
 			return // 没有权限
 		}
 	}
@@ -41,18 +40,19 @@ func _share_local(m *ice.Message, arg ...string) {
 		}
 
 		m.Cmdy(SPACE, m.Option(kit.SSH_POD), SPIDE, SPIDE_DEV, SPIDE_RAW, kit.MergeURL2(m.Option(ice.MSG_USERWEB), "/share/proxy/"),
-			SPIDE_PART, kit.SSH_POD, m.Option(kit.SSH_POD), kit.MDB_PATH, p, "cache", cache.Format(ice.MOD_TIME), "upload", "@"+p)
+			SPIDE_PART, kit.SSH_POD, m.Option(kit.SSH_POD), kit.MDB_PATH, p, CACHE, cache.Format(ice.MOD_TIME), UPLOAD, "@"+p)
 
-		p = path.Join("var/proxy", m.Option(kit.SSH_POD), p)
+		p = pp
 	}
 
 	m.Render(ice.RENDER_DOWNLOAD, p)
 }
 func _share_proxy(m *ice.Message, arg ...string) {
 	switch m.R.Method {
-	case http.MethodGet:
+	case http.MethodGet: // 下发文件
 		m.Render(ice.RENDER_DOWNLOAD, path.Join("var/proxy", path.Join(m.Option(kit.SSH_POD), m.Option(kit.MDB_PATH), m.Option(kit.MDB_NAME))))
-	case http.MethodPost:
+
+	case http.MethodPost: // 上传文件
 		m.Cmdy(CACHE, UPLOAD)
 		m.Cmdy(CACHE, WATCH, m.Option("data"), path.Join("var/proxy", m.Option(kit.SSH_POD), m.Option(kit.MDB_PATH)))
 		m.Render(ice.RENDER_RESULT, m.Option(kit.MDB_PATH))
@@ -61,11 +61,16 @@ func _share_proxy(m *ice.Message, arg ...string) {
 func _share_repos(m *ice.Message, repos string, arg ...string) {
 	prefix := kit.Path(m.Conf(SERVE, "meta.require"))
 	if _, e := os.Stat(path.Join(prefix, repos)); e != nil {
-		m.Cmd(cli.SYSTEM, "git", "clone", "https://"+repos, path.Join(prefix, repos))
+		m.Cmd("web.code.git.repos", mdb.CREATE, kit.SSH_REPOS, "https://"+repos, kit.MDB_PATH, path.Join(prefix, repos))
 	}
 	m.Render(ice.RENDER_DOWNLOAD, path.Join(prefix, repos, path.Join(arg...)))
 }
 
+const (
+	LOGIN = "login"
+	RIVER = "river"
+	STORM = "storm"
+)
 const SHARE = "share"
 
 func init() {
@@ -76,63 +81,53 @@ func init() {
 		Commands: map[string]*ice.Command{
 			SHARE: {Name: "share hash auto", Help: "共享链", Action: map[string]*ice.Action{
 				mdb.CREATE: {Name: "create type name text", Help: "创建", Hand: func(m *ice.Message, arg ...string) {
-					m.Cmdy(mdb.INSERT, SHARE, "", mdb.HASH,
+					m.Cmdy(mdb.INSERT, SHARE, "", mdb.HASH, kit.MDB_TIME, m.Time(m.Conf(SHARE, "meta.expire")),
 						aaa.USERROLE, m.Option(ice.MSG_USERROLE), aaa.USERNAME, m.Option(ice.MSG_USERNAME),
-						"river", m.Option(ice.MSG_RIVER), "storm", m.Option(ice.MSG_STORM),
-						kit.MDB_TIME, m.Time(m.Conf(SHARE, "meta.expire")), arg)
+						RIVER, m.Option(ice.MSG_RIVER), STORM, m.Option(ice.MSG_STORM), arg)
+				}},
+				mdb.REMOVE: {Name: "remove", Help: "删除", Hand: func(m *ice.Message, arg ...string) {
+					m.Cmdy(mdb.DELETE, SHARE, "", mdb.HASH, kit.MDB_HASH, m.Option(kit.MDB_HASH))
 				}},
 				mdb.SELECT: {Name: "select hash", Help: "查询", Hand: func(m *ice.Message, arg ...string) {
 					m.Option(mdb.FIELDS, "time,userrole,username,river,storm,type,name,text")
 					m.Cmdy(mdb.SELECT, SHARE, "", mdb.HASH, kit.MDB_HASH, m.Option(kit.MDB_HASH))
 				}},
-				mdb.REMOVE: {Name: "remove", Help: "删除", Hand: func(m *ice.Message, arg ...string) {
-					m.Cmdy(mdb.DELETE, SHARE, "", mdb.HASH, kit.MDB_HASH, m.Option(kit.MDB_HASH))
-				}},
 			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 				m.Option(mdb.FIELDS, kit.Select("time,hash,userrole,username,river,storm,type,name,text", mdb.DETAIL, len(arg) > 0))
 				m.Cmdy(mdb.SELECT, SHARE, "", mdb.HASH, kit.MDB_HASH, arg)
 				m.PushAction(mdb.REMOVE)
+
+				if len(arg) > 0 {
+					m.PushAnchor(kit.MergeURL2(m.Option(ice.MSG_USERWEB), "/share/"+arg[0], SHARE, arg[0]))
+					m.PushQRCode("share", kit.MergeURL2(m.Option(ice.MSG_USERWEB), "/share/"+arg[0], SHARE, arg[0]))
+				}
 			}},
 			"/share/": {Name: "/share/", Help: "共享链", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 				m.Option(mdb.FIELDS, kit.Select("time,hash,userrole,username,river,storm,type,name,text"))
-				switch msg := m.Cmd(mdb.SELECT, SHARE, "", mdb.HASH, kit.MDB_HASH, kit.Select(m.Option("share"), arg, 0)); msg.Append(kit.MDB_TYPE) {
-				case "login":
-					switch kit.Select("", arg, 1) {
-					case "share":
-						list := []string{}
-						for _, k := range []string{"river", "storm"} {
-							if msg.Append(k) != "" {
-								list = append(list, k, msg.Append(k))
-							}
-						}
-						m.Render(ice.RENDER_QRCODE, kit.MergeURL2(m.Option(ice.MSG_USERWEB), "/", SHARE, arg[0], list))
-					}
-				case "river":
-					switch kit.Select("", arg, 1) {
-					case "share":
-						list := []string{}
-						for _, k := range []string{"river"} {
-							if msg.Append(k) != "" {
-								list = append(list, k, msg.Append(k))
-							}
-						}
-						m.Render(ice.RENDER_QRCODE, kit.MergeURL2(m.Option(ice.MSG_USERWEB), "/", SHARE, arg[0], list))
-					default:
-						m.Render("redirect", "/", "river", msg.Append("river"))
+				msg := m.Cmd(mdb.SELECT, SHARE, "", mdb.HASH, kit.MDB_HASH, kit.Select(m.Option(SHARE), arg, 0))
 
+				list := []string{SHARE, kit.Select(m.Option(SHARE), arg, 0)}
+				for _, k := range []string{RIVER, STORM} {
+					if msg.Append(k) != "" {
+						list = append(list, k, msg.Append(k))
 					}
-				case "storm":
+				}
+
+				switch msg.Append(kit.MDB_TYPE) {
+				case LOGIN, RIVER:
 					switch kit.Select("", arg, 1) {
-					case "share":
-						list := []string{}
-						for _, k := range []string{"river", "storm"} {
-							if msg.Append(k) != "" {
-								list = append(list, k, msg.Append(k))
-							}
-						}
-						m.Render(ice.RENDER_QRCODE, kit.MergeURL2(m.Option(ice.MSG_USERWEB), "/page/share.html", SHARE, arg[0], list))
+					case SHARE:
+						m.Render(ice.RENDER_QRCODE, kit.MergeURL2(m.Option(ice.MSG_USERWEB), "/", list))
 					default:
-						m.Render("redirect", "/page/share.html", "share", m.Option("share"))
+						m.Render(REDIRECT, "/", list)
+					}
+
+				case STORM:
+					switch kit.Select("", arg, 1) {
+					case SHARE:
+						m.Render(ice.RENDER_QRCODE, kit.MergeURL2(m.Option(ice.MSG_USERWEB), "/page/share.html", list))
+					default:
+						m.Render(REDIRECT, "/page/share.html", SHARE, m.Option(SHARE))
 					}
 				}
 			}},

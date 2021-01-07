@@ -38,6 +38,8 @@ func (c *Conn) Close() error {
 }
 
 const (
+	SOCKET = "socket"
+
 	OPEN  = "open"
 	START = "start"
 	ERROR = "error"

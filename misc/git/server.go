@@ -19,7 +19,7 @@ func init() {
 			)},
 		},
 		Commands: map[string]*ice.Command{
-			web.LOGIN: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			web.WEB_LOGIN: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 				m.Render(ice.RENDER_RESULT)
 			}},
 			"/github.com/": {Name: "github.com", Help: "github.com", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {

@@ -98,10 +98,9 @@ func _spark_show(m *ice.Message, name, text string, arg ...string) {
 		m.Echo(`<div class="story" data-type="spark" data-name="%s">`, name)
 		for _, l := range strings.Split(text, "\n") {
 			m.Echo("<div>")
+			m.Echo("<label>")
 			m.Echo(kit.Select(name+"> ", m.Conf(SPARK, kit.Keys("meta.prompt", name))))
-			m.Echo("<span>")
-			m.Echo(l)
-			m.Echo("</span>")
+			m.Echo("</label>").Echo("<span>").Echo(l).Echo("</span>")
 			m.Echo("</div>")
 		}
 		m.Echo("</div>")

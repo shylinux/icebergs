@@ -75,14 +75,13 @@ func init() {
 			ROUTE: {Name: "route route ctx cmd auto invite share", Help: "路由器", Action: map[string]*ice.Action{
 				SHARE: {Name: "share", Help: "共享", Hand: func(m *ice.Message, arg ...string) {
 					p := kit.MergeURL(m.Option(ice.MSG_USERWEB), SHARE, m.Cmdx(SHARE, mdb.CREATE, kit.MDB_TYPE, LOGIN))
+					m.EchoAnchor(p)
 					m.EchoScript(p)
 					m.EchoQRCode(p)
-					m.EchoAnchor(p)
 				}},
 				aaa.INVITE: {Name: "invite", Help: "脚本", Hand: func(m *ice.Message, arg ...string) {
 					for _, k := range []string{"tmux", "base", "miss"} {
 						m.Cmdy("web.code.publish", "contexts", k)
-						m.EchoScript("break")
 					}
 
 					m.EchoScript("shell", "# 共享环境", m.Option(ice.MSG_USERWEB))

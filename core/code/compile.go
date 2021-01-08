@@ -70,7 +70,7 @@ func init() {
 				} else {
 					m.Log_EXPORT("source", main, "target", file)
 					m.Push(kit.MDB_TIME, m.Time())
-					m.PushRender(kit.MDB_LINK, "download", kit.MergeURL2(m.Option(ice.MSG_USERWEB), "/publish/"+path.Base(file)))
+					m.PushDownload(kit.MergeURL2(m.Option(ice.MSG_USERWEB), "/publish/"+path.Base(file)))
 					m.Echo(file)
 				}
 			}},

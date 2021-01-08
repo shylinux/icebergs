@@ -130,8 +130,8 @@ func init() {
 					m.Option(mdb.FIELDS, "time,type,name,share")
 					m.Cmdy(mdb.SELECT, RIVER, kit.Keys(kit.MDB_HASH, m.Option(ice.MSG_RIVER), NODE), mdb.HASH)
 					m.Table(func(index int, value map[string]string, head []string) {
-						m.PushRender(kit.MDB_LINK, "a", value[kit.MDB_NAME],
-							kit.MergeURL(m.Option(ice.MSG_USERWEB), kit.SSH_POD, kit.Keys(m.Option(kit.SSH_POD), value[kit.MDB_NAME])))
+						m.PushAnchor(value[kit.MDB_NAME], kit.MergeURL(m.Option(ice.MSG_USERWEB),
+							kit.SSH_POD, kit.Keys(m.Option(kit.SSH_POD), value[kit.MDB_NAME])))
 					})
 					m.PushAction(mdb.REMOVE)
 					return
@@ -255,7 +255,7 @@ func init() {
 					m.Richs(USER, nil, value[aaa.USERNAME], func(key string, val map[string]interface{}) {
 						val = kit.GetMeta(val)
 						m.Push(aaa.USERNICK, val[aaa.USERNICK])
-						m.PushRender(aaa.AVATAR, "img", kit.Format(val[aaa.AVATAR]), kit.Select("60", "240", m.Option(mdb.FIELDS) == mdb.DETAIL))
+						m.PushImages(aaa.AVATAR, kit.Format(val[aaa.AVATAR]), kit.Select("60", "240", m.Option(mdb.FIELDS) == mdb.DETAIL))
 					})
 
 				})

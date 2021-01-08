@@ -137,7 +137,7 @@ var Index = &ice.Context{Name: LARK, Help: "机器人",
 
 				kit.Fetch(kit.Value(msg.Optionv("content_data"), "data.user_list"), func(index int, value map[string]interface{}) {
 					msg := m.Cmd(EMPLOYEE, value[OPEN_ID])
-					m.PushRender(aaa.AVATAR, "img", msg.Append("avatar_72"))
+					m.PushImages(aaa.AVATAR, msg.Append("avatar_72"))
 					m.Push(aaa.GENDER, kit.Select("女", "男", msg.Append(aaa.GENDER) == "1"))
 					m.Push(kit.MDB_NAME, msg.Append(kit.MDB_NAME))
 					m.Push(kit.MDB_TEXT, msg.Append("description"))
@@ -193,7 +193,7 @@ var Index = &ice.Context{Name: LARK, Help: "机器人",
 				msg := _lark_get(m, "bot", "/open-apis/chat/v4/info", "chat_id", m.Option(CHAT_ID))
 				kit.Fetch(kit.Value(msg.Optionv("content_data"), "data.members"), func(index int, value map[string]interface{}) {
 					msg := m.Cmd(EMPLOYEE, value[OPEN_ID])
-					m.PushRender(aaa.AVATAR, "img", msg.Append("avatar_72"))
+					m.PushImages(aaa.AVATAR, msg.Append("avatar_72"))
 					m.Push(aaa.GENDER, kit.Select("女", "男", msg.Append(aaa.GENDER) == "1"))
 					m.Push(kit.MDB_NAME, msg.Append(kit.MDB_NAME))
 					m.Push(kit.MDB_TEXT, msg.Append("description"))
@@ -205,7 +205,7 @@ var Index = &ice.Context{Name: LARK, Help: "机器人",
 				msg := _lark_get(m, "bot", "/open-apis/chat/v4/list")
 				kit.Fetch(kit.Value(msg.Optionv("content_data"), "data.groups"), func(index int, value map[string]interface{}) {
 					m.Push(CHAT_ID, value[CHAT_ID])
-					m.PushRender(aaa.AVATAR, "img", kit.Format(value[aaa.AVATAR]), "72")
+					m.PushImages(aaa.AVATAR, kit.Format(value[aaa.AVATAR]), "72")
 					m.Push(kit.MDB_NAME, value[kit.MDB_NAME])
 					m.Push(kit.MDB_TEXT, value["description"])
 					m.Push(OPEN_ID, value["owner_open_id"])
@@ -390,7 +390,8 @@ var Index = &ice.Context{Name: LARK, Help: "机器人",
 			m.Echo(list[rand.Intn(len(list))])
 		}},
 
-		web.WEB_LOGIN: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {}},
+		web.WEB_LOGIN: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		}},
 		"/msg": {Name: "/msg", Help: "聊天消息", Hand: func(m *ice.Message, c *ice.Context, key string, arg ...string) {
 			data := m.Optionv(ice.MSG_USERDATA)
 			if kit.Value(data, "action") != nil {

@@ -167,9 +167,9 @@ func _serve_login(msg *ice.Message, cmds []string, w http.ResponseWriter, r *htt
 		// 主机认证
 	}
 
-	if _, ok := msg.Target().Commands[LOGIN]; ok {
+	if _, ok := msg.Target().Commands[WEB_LOGIN]; ok {
 		// 权限检查
-		msg.Target().Cmd(msg, LOGIN, r.URL.Path, cmds...)
+		msg.Target().Cmd(msg, WEB_LOGIN, r.URL.Path, cmds...)
 		return cmds, msg.Result() != "false"
 	}
 

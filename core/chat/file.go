@@ -27,7 +27,7 @@ func init() {
 				m.Option(mdb.FIELDS, kit.Select("time,hash,name", mdb.DETAIL, len(arg) > 0))
 				m.Cmdy(mdb.SELECT, FILES, "", mdb.HASH, "hash", arg)
 				m.Table(func(index int, value map[string]string, head []string) {
-					m.PushRender("link", "download", value[kit.MDB_NAME], kit.MergeURL2(m.Option(ice.MSG_USERWEB), "/share/cache/"+value["data"]))
+					m.PushDownload(value[kit.MDB_NAME], kit.MergeURL2(m.Option(ice.MSG_USERWEB), "/share/cache/"+value["data"]))
 				})
 				if len(arg) == 0 {
 					m.SortTimeR(kit.MDB_TIME)

@@ -99,6 +99,7 @@ func init() {
 
 				if len(arg) > 0 {
 					m.PushAnchor(kit.MergeURL2(m.Option(ice.MSG_USERWEB), "/share/"+arg[0], SHARE, arg[0]))
+					m.PushScript("shell", kit.MergeURL2(m.Option(ice.MSG_USERWEB), "/share/"+arg[0], SHARE, arg[0]))
 					m.PushQRCode("share", kit.MergeURL2(m.Option(ice.MSG_USERWEB), "/share/"+arg[0], SHARE, arg[0]))
 				}
 			}},

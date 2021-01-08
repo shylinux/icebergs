@@ -30,7 +30,7 @@ func init() {
 							m.Push(kit.MDB_TYPE, value[kit.MDB_TYPE])
 							m.Push(kit.MDB_NAME, value[kit.MDB_NAME])
 							m.PushButton("download")
-							m.PushRender(kit.MDB_TEXT, value[kit.MDB_TYPE], value[kit.MDB_LINK])
+							m.PushRenderOld(kit.MDB_TEXT, value[kit.MDB_TYPE], value[kit.MDB_LINK])
 							m.Push(kit.MDB_LINK, value[kit.MDB_LINK])
 						})
 						break

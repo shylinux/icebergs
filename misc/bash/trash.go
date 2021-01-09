@@ -43,7 +43,7 @@ func init() {
 						m.Cmdy(nfs.DIR, kit.Select("", arg, 1))
 						return
 					}
-					m.PushPlugin(nfs.DIR, nfs.DIR, cli.RUN)
+					m.ShowPlugin("", nfs.DIR, cli.RUN)
 				}},
 			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 				m.Option(mdb.FIELDS, kit.Select(m.Conf(m.Prefix(TRASH), kit.META_FIELD), mdb.DETAIL, len(arg) > 0))

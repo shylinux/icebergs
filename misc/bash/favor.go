@@ -51,7 +51,7 @@ func init() {
 						return
 					}
 
-					m.PushPlugin(cli.SYSTEM, cli.SYSTEM, cli.RUN)
+					m.ShowPlugin("", cli.SYSTEM, cli.RUN)
 					m.Push(kit.SSH_ARG, kit.Split(m.Option(kit.MDB_TEXT)))
 				}},
 			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {

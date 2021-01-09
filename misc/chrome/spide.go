@@ -18,7 +18,7 @@ func init() {
 		},
 		Commands: map[string]*ice.Command{
 			SPIDE: {Name: "spide wid tid cmd auto", Help: "网页爬虫", Action: map[string]*ice.Action{
-				"download": {Name: "download", Help: "下载", Hand: func(m *ice.Message, arg ...string) {
+				web.DOWNLOAD: {Name: "download", Help: "下载", Hand: func(m *ice.Message, arg ...string) {
 					m.Cmd(CACHE, mdb.CREATE, arg)
 				}},
 			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
@@ -29,8 +29,8 @@ func init() {
 							m.Push(kit.MDB_TIME, value[kit.MDB_TIME])
 							m.Push(kit.MDB_TYPE, value[kit.MDB_TYPE])
 							m.Push(kit.MDB_NAME, value[kit.MDB_NAME])
-							m.PushButton("download")
-							m.PushRenderOld(kit.MDB_TEXT, value[kit.MDB_TYPE], value[kit.MDB_LINK])
+							m.PushButton(web.DOWNLOAD)
+							m.PushRender(kit.MDB_TEXT, value[kit.MDB_TYPE], value[kit.MDB_LINK])
 							m.Push(kit.MDB_LINK, value[kit.MDB_LINK])
 						})
 						break

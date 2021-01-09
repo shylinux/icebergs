@@ -50,7 +50,7 @@ func init() {
 							ls[0] = strings.TrimPrefix(ls[0], "icebergs/")
 						}
 
-						m.PushPlugin(INNER, INNER, kit.SSH_RUN)
+						m.ShowPlugin("", INNER, kit.SSH_RUN)
 						m.Push("args", kit.Format([]string{"usr/icebergs/", ls[0], ls[1]}))
 					}
 				}},

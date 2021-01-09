@@ -53,7 +53,7 @@ func init() {
 						return
 					}
 
-					m.PushPlugin(INNER, INNER, mdb.RENDER)
+					m.ShowPlugin("", INNER, mdb.RENDER)
 					m.Push(kit.SSH_ARG, kit.Format([]string{m.Option(kit.MDB_PATH), m.Option(kit.MDB_FILE), m.Option(kit.MDB_LINE)}))
 				}},
 			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {

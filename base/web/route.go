@@ -124,7 +124,7 @@ func init() {
 					}
 
 				} else if len(arg) > 2 { // 加载插件
-					m.PushPlugins(arg[0], arg[1], arg[2], ctx.COMMAND)
+					m.ShowPlugin(arg[0], arg[1], arg[2], ctx.COMMAND)
 
 				} else if len(arg) > 1 { // 命令列表
 					m.Cmd(SPACE, arg[0], ctx.CONTEXT, arg[1], ctx.COMMAND).Table(func(index int, value map[string]string, head []string) {

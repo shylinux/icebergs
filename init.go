@@ -3,10 +3,12 @@ package ice
 import (
 	kit "github.com/shylinux/toolkits"
 
+	"fmt"
 	"io"
 	"os"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"time"
 )
 
@@ -30,6 +32,8 @@ var Info = struct {
 		HostName string
 		UserName string
 	}
+
+	nLocalCmd int32
 }{}
 
 type Frame struct{ code int }
@@ -220,4 +224,9 @@ func Name(name string, value interface{}) string {
 
 	names[name] = value
 	return name
+}
+func (m *Message) AddCmd(cmd *Command) string {
+	name := fmt.Sprintf("_cb_%d", atomic.AddInt32(&Info.nLocalCmd, 1))
+	m.target.Commands[name] = cmd
+	return kit.Keys(m.target.Cap(CTX_FOLLOW), name)
 }

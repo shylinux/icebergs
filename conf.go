@@ -55,6 +55,7 @@ const ( // RENDER
 	RENDER_ANCHOR   = "_anchor"
 	RENDER_BUTTON   = "_button"
 	RENDER_IMAGES   = "_images"
+	RENDER_VIDEOS   = "_videos"
 	RENDER_QRCODE   = "_qrcode"
 	RENDER_SCRIPT   = "_script"
 	RENDER_DOWNLOAD = "_download"

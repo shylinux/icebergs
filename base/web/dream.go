@@ -44,7 +44,7 @@ func _dream_show(m *ice.Message, name string) {
 
 	// 任务模板
 	if m.Option("template") != "" {
-		for _, file := range []string{"etc/miss.sh", "src/main.shy", "src/main.go", "go.mod"} {
+		for _, file := range []string{"etc/miss.sh", "src/main.shy", "src/main.go", "go.mod", "Makefile"} {
 			if _, e := os.Stat(path.Join(p, file)); os.IsNotExist(e) {
 				switch m.Cmdy(nfs.COPY, path.Join(p, file), path.Join(m.Option("template"), file)); file {
 				case "go.mod":

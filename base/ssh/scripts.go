@@ -244,7 +244,7 @@ func (f *Frame) scan(m *ice.Message, h, line string, r io.Reader) *Frame {
 			continue // 空行
 		}
 
-		m.Cmdx(mdb.INSERT, SOURCE, kit.Keys(kit.MDB_HASH, h), mdb.LIST, kit.MDB_TEXT, bio.Text())
+		// m.Cmdx(mdb.INSERT, SOURCE, kit.Keys(kit.MDB_HASH, h), mdb.LIST, kit.MDB_TEXT, bio.Text())
 		f.count++
 
 		if len(bio.Text()) == 0 {

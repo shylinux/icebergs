@@ -110,12 +110,14 @@ func init() {
 				}},
 			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 				if arg[0] == "_share" {
-					switch msg := m.Cmd(web.SHARE, arg[1]); msg.Append("type") {
-					case "storm":
-						m.Debug(msg.Format("meta"))
-						arg[0] = msg.Append("river")
-						arg[1] = msg.Append("storm")
-						m.Option("title", msg.Append("name"))
+					switch msg := m.Cmd(web.SHARE, arg[1]); msg.Append(kit.MDB_TYPE) {
+					case STORM:
+						m.Debug(msg.Format(kit.MDB_META))
+						arg[0] = msg.Append(RIVER)
+						arg[1] = msg.Append(STORM)
+						m.Option(kit.MDB_TITLE, msg.Append(kit.MDB_NAME))
+					default:
+						return
 					}
 				} else {
 					if m.Warn(m.Option(ice.MSG_USERNAME) == "", ice.ErrNotLogin) {

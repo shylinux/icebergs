@@ -320,7 +320,6 @@ func init() {
 						m.Optionv("content_data", data)
 
 						data = kit.KeyValue(map[string]interface{}{}, "", data)
-						m.Debug("res: %s", kit.Formats(data))
 						m.Push("", data)
 					}
 				})

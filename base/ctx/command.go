@@ -9,8 +9,8 @@ import (
 	"strings"
 )
 
-func _command_search(m *ice.Message, arg ...string) {
-	if !(arg[0] == "command" || arg[0] == "*" && arg[1] != "") {
+func _command_search(m *ice.Message, kind, name, text string) {
+	if !(kind == COMMAND || kind == kit.MDB_FOREACH && name != "") {
 		return
 	}
 
@@ -18,14 +18,11 @@ func _command_search(m *ice.Message, arg ...string) {
 		if strings.HasPrefix(key, "_") || strings.HasPrefix(key, "/") {
 			return
 		}
-		if arg[1] != "" && arg[1] != key && arg[1] != s.Name {
-			return
-		}
-		if arg[2] != "" && !strings.Contains(kit.Format(cmd.Name), arg[2]) && !strings.Contains(kit.Format(cmd.Help), arg[2]) {
+		if name != "" && name != key && name != s.Name {
 			return
 		}
 
-		m.PushSearch("cmd", "command", "type", arg[0], "name", key, "text", s.Cap(ice.CTX_FOLLOW))
+		m.PushSearch(kit.SSH_CMD, COMMAND, kit.MDB_TYPE, kind, kit.MDB_NAME, key, kit.MDB_TEXT, s.Cap(ice.CTX_FOLLOW))
 	})
 }
 func _command_list(m *ice.Message, name string) {

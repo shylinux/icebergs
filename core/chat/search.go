@@ -16,9 +16,6 @@ func init() {
 		},
 		Commands: map[string]*ice.Command{
 			P_SEARCH: {Name: "/search", Help: "搜索引擎", Action: map[string]*ice.Action{
-				mdb.RENDER: {Name: "render", Help: "渲染", Hand: func(m *ice.Message, arg ...string) {
-					m.Cmdy(m.Space(m.Option(POD)), mdb.RENDER, arg[1:])
-				}},
 				mdb.SEARCH: {Name: "search type name text", Help: "搜索", Hand: func(m *ice.Message, arg ...string) {
 					if arg[0] != P_SEARCH && arg[0] != kit.MDB_FOREACH {
 						return
@@ -30,12 +27,15 @@ func init() {
 						m.PushSearch(kit.SSH_CMD, P_SEARCH, value)
 					})
 				}},
-				ctx.COMMAND: {Name: "command", Help: "命令", Hand: func(m *ice.Message, arg ...string) {
+				mdb.PLUGIN: {Name: "plugin", Help: "插件", Hand: func(m *ice.Message, arg ...string) {
 					if len(arg) > 0 && arg[0] == "run" {
 						m.Cmdy(arg[1:])
 						return
 					}
 					m.Cmdy(ctx.COMMAND, arg)
+				}},
+				mdb.RENDER: {Name: "render", Help: "渲染", Hand: func(m *ice.Message, arg ...string) {
+					m.Cmdy(m.Space(m.Option(POD)), mdb.RENDER, arg[1:])
 				}},
 			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 				if kit.Contains(arg[1], ";") {

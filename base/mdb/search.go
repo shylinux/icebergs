@@ -31,7 +31,6 @@ func init() {
 				for _, k := range strings.Split(arg[0], ",") {
 					for _, kk := range strings.Split(arg[1], ",") {
 						m.Richs(SEARCH, nil, k, func(key string, value map[string]interface{}) {
-							m.Debug("what %v --- %v %v ", k, kk, key)
 							m.Cmdy(kit.Keys(value[kit.MDB_TEXT], value[kit.MDB_NAME]), SEARCH, k, kk, kit.Select("", arg, 2))
 						})
 					}

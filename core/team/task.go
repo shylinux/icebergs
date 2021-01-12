@@ -107,6 +107,19 @@ func _task_inputs(m *ice.Message, field, value string) {
 		m.Cmdy(mdb.INPUTS, TASK, _sub_key(m, m.Option(kit.MDB_ZONE)), mdb.LIST, field, value)
 	}
 }
+func _task_search(m *ice.Message, kind, name, text string) {
+	if kind != TASK && kind != kit.MDB_FOREACH {
+		return
+	}
+
+	m.Cmd(mdb.SELECT, m.Prefix(TASK), "", mdb.ZONE, kit.MDB_FOREACH, func(key string, value map[string]interface{}, val map[string]interface{}) {
+		if name != "" && !kit.Contains(value[kit.MDB_NAME], name) {
+			return
+		}
+		m.PushSearch(kit.SSH_CMD, TASK, kit.MDB_TYPE, val[kit.MDB_ZONE], kit.MDB_NAME, kit.Format(value[kit.MDB_ID]),
+			kit.MDB_TEXT, kit.Format("%v:%v", value[kit.MDB_NAME], value[kit.MDB_TEXT]), value)
+	})
+}
 
 var TaskField = struct{ LEVEL, STATUS, SCORE, BEGIN_TIME, CLOSE_TIME string }{
 	LEVEL:  "level",
@@ -162,6 +175,9 @@ func init() {
 				}},
 				mdb.INPUTS: {Name: "inputs", Help: "补全", Hand: func(m *ice.Message, arg ...string) {
 					_task_inputs(m, kit.Select("", arg, 0), kit.Select("", arg, 1))
+				}},
+				mdb.SEARCH: {Name: "search", Help: "搜索", Hand: func(m *ice.Message, arg ...string) {
+					_task_search(m, arg[0], arg[1], arg[2])
 				}},
 
 				gdb.BEGIN: {Name: "begin", Help: "开始", Hand: func(m *ice.Message, arg ...string) {

@@ -14,6 +14,7 @@ import (
 	"io"
 	"os"
 	"path"
+	"reflect"
 	"strings"
 	"time"
 )
@@ -22,10 +23,10 @@ func Render(msg *ice.Message, cmd string, args ...interface{}) {
 	switch arg := kit.Simple(args...); cmd {
 	case ice.RENDER_VOID:
 	case ice.RENDER_RESULT:
-		fmt.Fprintf(msg.O, msg.Result())
+		fmt.Fprint(msg.O, msg.Result())
 
 	case ice.RENDER_QRCODE:
-		fmt.Fprintf(msg.O, msg.Cmdx(cli.PYTHON, "qrcode", kit.Format(args[0], args[1:]...)))
+		fmt.Fprint(msg.O, msg.Cmdx(cli.PYTHON, "qrcode", kit.Format(args[0], args[1:]...)))
 
 	case ice.RENDER_DOWNLOAD:
 		if f, e := os.Open(arg[0]); e == nil {
@@ -43,8 +44,8 @@ func Render(msg *ice.Message, cmd string, args ...interface{}) {
 		args = append(args, "length:", len(res))
 
 		// 输出结果
-		if fmt.Fprintf(msg.O, res); !strings.HasSuffix(res, "\n") {
-			fmt.Fprintf(msg.O, "\n")
+		if fmt.Fprint(msg.O, res); !strings.HasSuffix(res, "\n") {
+			fmt.Fprint(msg.O, "\n")
 		}
 	}
 }
@@ -385,6 +386,18 @@ func init() {
 				case func():
 					cb()
 				}
+			}},
+
+			"hi": {Name: "hi", Help: "hi", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+				cb := func() {
+
+				}
+
+				t := reflect.TypeOf(cb)
+				v := reflect.ValueOf(cb)
+				m.Echo("what %#v", t.Kind())
+				m.Echo("what %#v", t)
+				m.Echo("what %v", v)
 			}},
 		},
 	})

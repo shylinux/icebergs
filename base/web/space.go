@@ -151,7 +151,7 @@ func _space_handle(m *ice.Message, safe bool, send map[string]*ice.Message, c *w
 			} else if msg.Richs(SPACE, nil, target[0], func(key string, value map[string]interface{}) {
 				if s, ok := value[tcp.SOCKET].(*websocket.Conn); ok {
 					socket, source, target = s, source, target[1:]
-					_space_echo(msg, source, target, socket, target[0])
+					_space_echo(msg, source, target, socket, kit.Select("", target))
 					return // 转发报文
 				}
 

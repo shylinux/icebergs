@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"reflect"
 	"runtime"
 	"sort"
 	"strings"
@@ -618,6 +619,17 @@ func (m *Message) Search(key string, cb interface{}) *Message {
 
 func (m *Message) _hand(arg ...interface{}) *Message {
 	list := kit.Simple(arg...)
+	if len(arg) > 0 {
+		switch cb := arg[len(arg)-1]; cbs := cb.(type) {
+		case string:
+		default:
+			if reflect.Func == reflect.TypeOf(cbs).Kind() {
+				m.Optionv(list[0]+".cb", cbs)
+				list = list[:len(list)-1]
+			}
+		}
+	}
+
 	if len(list) == 0 && m.Hand == false {
 		list = m.meta[MSG_DETAIL]
 	}

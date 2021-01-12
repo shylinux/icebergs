@@ -18,6 +18,7 @@ import (
 	"os"
 	"path"
 	"strings"
+	"time"
 )
 
 func _ssh_tick(m *ice.Message, pw io.Writer) {
@@ -27,7 +28,7 @@ func _ssh_tick(m *ice.Message, pw io.Writer) {
 	m.Go(func() {
 		for {
 			m.Sleep(m.Option("tick"))
-			pw.Write([]byte("# " + m.Time() + "\n"))
+			pw.Write([]byte("# " + time.Now().Format(ice.MOD_TIME) + "\n"))
 		}
 	})
 }

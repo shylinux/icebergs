@@ -27,7 +27,7 @@ func _ssh_tick(m *ice.Message, pw io.Writer) {
 	m.Go(func() {
 		for {
 			m.Sleep(m.Option("tick"))
-			pw.Write([]byte("\n"))
+			pw.Write([]byte("# " + m.Time() + "\n"))
 		}
 	})
 }

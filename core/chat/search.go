@@ -27,7 +27,7 @@ func init() {
 						m.PushSearch(kit.SSH_CMD, P_SEARCH, value)
 					})
 				}},
-				mdb.PLUGIN: {Name: "plugin", Help: "插件", Hand: func(m *ice.Message, arg ...string) {
+				ctx.COMMAND: {Name: "command", Help: "命令", Hand: func(m *ice.Message, arg ...string) {
 					if len(arg) > 0 && arg[0] == "run" {
 						m.Cmdy(arg[1:])
 						return

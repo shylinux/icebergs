@@ -101,6 +101,7 @@ func (c *Context) _hand(m *Message, cmd *Command, key string, k string, h *Actio
 			}
 		}
 	}
+
 	if h.Hand == nil {
 		m.Cmdy(kit.Split(h.Name), arg)
 	} else {
@@ -119,7 +120,7 @@ func (c *Context) cmd(m *Message, cmd *Command, key string, arg ...string) *Mess
 			return c._hand(m, cmd, key, arg[1], h, arg[2:]...)
 		}
 	}
-	if len(arg) > 0 && cmd.Action != nil {
+	if len(arg) > 0 && arg[0] != "command" && cmd.Action != nil {
 		if h, ok := cmd.Action[arg[0]]; ok {
 			return c._hand(m, cmd, key, arg[0], h, arg[1:]...)
 		}

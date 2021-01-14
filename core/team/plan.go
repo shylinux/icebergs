@@ -26,11 +26,12 @@ func init() {
 				mdb.MODIFY: {Name: "modify", Help: "编辑", Hand: func(m *ice.Message, arg ...string) {
 					_task_modify(m, m.Option(kit.MDB_ZONE), m.Option(kit.MDB_ID), arg[0], arg[1])
 				}},
-				mdb.EXPORT: {Name: "export file", Help: "导出", Hand: func(m *ice.Message, arg ...string) {
-					_task_export(m, m.Option(kit.MDB_FILE))
+				mdb.EXPORT: {Name: "export", Help: "导出", Hand: func(m *ice.Message, arg ...string) {
+					_task_export(m, "")
 				}},
-				mdb.IMPORT: {Name: "import file", Help: "导入", Hand: func(m *ice.Message, arg ...string) {
-					_task_import(m, m.Option(kit.MDB_FILE))
+				mdb.IMPORT: {Name: "import", Help: "导入", Hand: func(m *ice.Message, arg ...string) {
+					_task_import(m, "")
+					m.Option(ice.MSG_PROCESS, ice.PROCESS_REFRESH)
 				}},
 				mdb.INPUTS: {Name: "inputs", Help: "补全", Hand: func(m *ice.Message, arg ...string) {
 					_task_inputs(m, kit.Select("", arg, 0), kit.Select("", arg, 1))

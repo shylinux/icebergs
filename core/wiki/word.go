@@ -3,6 +3,7 @@ package wiki
 import (
 	ice "github.com/shylinux/icebergs"
 	"github.com/shylinux/icebergs/base/cli"
+	"github.com/shylinux/icebergs/base/mdb"
 	"github.com/shylinux/icebergs/base/nfs"
 	"github.com/shylinux/icebergs/base/ssh"
 	"github.com/shylinux/icebergs/base/web"
@@ -12,6 +13,7 @@ import (
 	"bytes"
 	"encoding/base64"
 	"fmt"
+	"net/url"
 	"path"
 	"strings"
 )
@@ -292,15 +294,15 @@ const (
 	REFER = "refer"
 	SPARK = "spark"
 
-	CHART = "chart"
-	FIELD = "field"
+	ORDER = "order"
+	TABLE = "table"
 	SHELL = "shell"
 	LOCAL = "local"
 
-	ORDER = "order"
-	TABLE = "table"
+	FIELD = "field"
 	IMAGE = "image"
-
+	CHART = "chart"
+	PARSE = "parse"
 	OTHER = "other"
 
 	PREMENU = "premenu"
@@ -324,13 +326,13 @@ func init() {
 				"prompt", kit.Dict("shell", "$ "),
 			)},
 
-			CHART: {Name: CHART, Help: "图表", Value: kit.Data("template", chart, "suffix", `</svg>`)},
-			FIELD: {Name: FIELD, Help: "插件", Value: kit.Data("template", field)},
+			ORDER: {Name: ORDER, Help: "列表", Value: kit.Data("template", order)},
+			TABLE: {Name: TABLE, Help: "表格", Value: kit.Data("template", table)},
 			SHELL: {Name: SHELL, Help: "命令", Value: kit.Data("template", shell)},
 			LOCAL: {Name: LOCAL, Help: "文件", Value: kit.Data("template", local)},
 
-			ORDER: {Name: ORDER, Help: "列表", Value: kit.Data("template", order)},
-			TABLE: {Name: TABLE, Help: "表格", Value: kit.Data("template", table)},
+			FIELD: {Name: FIELD, Help: "插件", Value: kit.Data("template", field)},
+			CHART: {Name: CHART, Help: "图表", Value: kit.Data("template", chart, "suffix", `</svg>`)},
 			IMAGE: {Name: IMAGE, Help: "图片", Value: kit.Data("template", image)},
 
 			WORD: {Name: WORD, Help: "语言文字", Value: kit.Data(
@@ -379,31 +381,6 @@ func init() {
 				_spark_show(m, arg[0], kit.Select(arg[0], arg[1]), arg[2:]...)
 			}},
 
-			CHART: {Name: "chart label|chain [name] text", Help: "图表", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-				if len(arg) == 2 {
-					arg = []string{arg[0], "", arg[1]}
-				}
-				_chart_show(m, arg[0], arg[1], arg[2], arg[3:]...)
-			}},
-			FIELD: {Name: "field [name] cmd", Help: "插件", Action: map[string]*ice.Action{
-				"run": {Name: "run", Help: "运行", Hand: func(m *ice.Message, arg ...string) {
-					if !m.Warn(!m.Right(arg[1:]), ice.ErrNotRight, arg[1:]) {
-						m.Cmdy(arg[1:])
-					}
-				}},
-			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-				arg = _name(m, arg)
-				_field_show(m, strings.ReplaceAll(kit.Select(path.Base(arg[1]), arg[0]), " ", "_"), arg[1], arg[2:]...)
-			}},
-			SHELL: {Name: "shell [name] cmd", Help: "命令", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-				arg = _name(m, arg)
-				_shell_show(m, arg[0], kit.Select(arg[0], arg[1]), arg[2:]...)
-			}},
-			LOCAL: {Name: "local [name] file", Help: "文件", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-				arg = _name(m, arg)
-				_local_show(m, arg[0], kit.Select(arg[0], arg[1]), arg[2:]...)
-			}},
-
 			ORDER: {Name: "order [name] `[item \n]...`", Help: "列表", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 				arg = _name(m, arg)
 				_order_show(m, arg[0], kit.Select(arg[0], arg[1]), arg[2:]...)
@@ -416,6 +393,25 @@ func init() {
 
 				arg = _name(m, arg)
 				_table_show(m, arg[0], kit.Select(arg[0], arg[1]), arg[2:]...)
+			}},
+			SHELL: {Name: "shell [name] cmd", Help: "命令", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+				arg = _name(m, arg)
+				_shell_show(m, arg[0], kit.Select(arg[0], arg[1]), arg[2:]...)
+			}},
+			LOCAL: {Name: "local [name] file", Help: "文件", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+				arg = _name(m, arg)
+				_local_show(m, arg[0], kit.Select(arg[0], arg[1]), arg[2:]...)
+			}},
+
+			FIELD: {Name: "field [name] cmd", Help: "插件", Action: map[string]*ice.Action{
+				"run": {Name: "run", Help: "运行", Hand: func(m *ice.Message, arg ...string) {
+					if !m.Warn(!m.Right(arg[1:]), ice.ErrNotRight, arg[1:]) {
+						m.Cmdy(arg[1:])
+					}
+				}},
+			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+				arg = _name(m, arg)
+				_field_show(m, strings.ReplaceAll(kit.Select(path.Base(arg[1]), arg[0]), " ", "_"), arg[1], arg[2:]...)
 			}},
 			IMAGE: {Name: "image [name] url", Help: "图片", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 				if arg[0] == "qrcode" {
@@ -430,17 +426,59 @@ func init() {
 				_image_show(m, arg[0], kit.Select(arg[0], arg[1]), arg[2:]...)
 				m.Render("")
 			}},
+			CHART: {Name: "chart label|chain [name] text", Help: "图表", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+				if len(arg) == 2 {
+					arg = []string{arg[0], "", arg[1]}
+				}
+				_chart_show(m, arg[0], arg[1], arg[2], arg[3:]...)
+			}},
+			PARSE: {Name: "parse type=auto,json,http,form,list auto text:textarea", Help: "结构", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+				if arg[0] == "auto" && (strings.HasPrefix(arg[1], "{") || strings.HasPrefix(arg[1], "[")) {
+					arg[0] = "json"
+				} else if strings.HasPrefix(arg[1], "http") {
+					arg[0] = "http"
+				} else if strings.Contains(arg[1], "=") {
+					arg[0] = "form"
+				} else {
+					arg[0] = "list"
+				}
 
+				m.Option(mdb.FIELDS, mdb.DETAIL)
+				switch arg[0] {
+				case "json":
+					m.Echo(kit.Formats(kit.UnMarshal(arg[1])))
+				case "http":
+					u, _ := url.Parse(arg[1])
+					for k, v := range u.Query() {
+						for _, v := range v {
+							m.Push(k, v)
+						}
+					}
+					m.EchoQRCode(arg[1])
+
+				case "form":
+					for _, v := range kit.Split(arg[1], "&", "&", "&") {
+						ls := kit.Split(v, "=", "=", "=")
+						key, _ := url.QueryUnescape(ls[0])
+						value, _ := url.QueryUnescape(kit.Select("", ls, 1))
+						m.Push(key, value)
+					}
+				case "list":
+					for i, v := range kit.Split(arg[1]) {
+						m.Push(kit.Format(i), v)
+					}
+				}
+			}},
 			OTHER: {Name: "other [name] url", Help: "网页", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 				arg = _name(m, arg)
 				_other_show(m, arg[0], kit.Select(arg[0], arg[1]), arg[2:]...)
 			}},
 
-			WORD: {Name: "word path=src/main.shy auto 演示", Help: "语言文字", Meta: kit.Dict(
+			WORD: {Name: "word path=src/main.shy auto", Help: "语言文字", Meta: kit.Dict(
 				"display", "/plugin/local/wiki/word.js",
 			), Action: map[string]*ice.Action{
 				web.STORY: {Name: "story", Help: "运行", Hand: func(m *ice.Message, arg ...string) {
-					m.Cmdy(arg[0], "action", "run", arg[1:])
+					m.Cmdy(arg[0], kit.MDB_ACTION, "run", arg[1:])
 				}},
 			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 				if m.Option(nfs.DIR_DEEP, "true"); _wiki_list(m, cmd, arg...) {

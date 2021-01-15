@@ -2,6 +2,7 @@ package git
 
 import (
 	ice "github.com/shylinux/icebergs"
+	"github.com/shylinux/icebergs/base/ctx"
 	"github.com/shylinux/icebergs/base/mdb"
 	kit "github.com/shylinux/toolkits"
 )
@@ -16,6 +17,11 @@ func init() {
 			), Action: map[string]*ice.Action{
 				mdb.INPUTS: {Name: "inputs", Help: "补全", Hand: func(m *ice.Message, arg ...string) {
 					m.Cmdy(REPOS).Appendv(ice.MSG_APPEND, kit.Split("name,branch,commit"))
+				}},
+				ctx.COMMAND: {Name: "command", Help: "命令", Hand: func(m *ice.Message, arg ...string) {
+					for _, k := range arg {
+						m.Cmdy(ctx.COMMAND, k)
+					}
 				}},
 			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 				if len(arg) == 0 {

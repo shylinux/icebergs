@@ -91,6 +91,10 @@ func init() {
 				FAVOR:      {Name: "favor insert", Help: "收藏"},
 				mdb.INPUTS: {Name: "favor inputs", Help: "补全"},
 				nfs.DIR:    {Name: "dir", Help: "目录"},
+
+				"project": {Name: "project", Help: "项目", Hand: func(m *ice.Message, arg ...string) {
+					m.Cmdy(nfs.DIR, kit.Select("./", arg, 0))
+				}},
 			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 				if len(arg) < 2 {
 					m.Cmdy(nfs.DIR, kit.Select("./", arg, 0))

@@ -79,7 +79,9 @@ var Index = &ice.Context{Name: ALPHA, Help: "英汉词典",
 				_alpha_load(m, m.Option(kit.MDB_FILE), kit.Select(path.Base(m.Option(kit.MDB_FILE)), m.Option(kit.MDB_NAME)))
 			}},
 			mdb.SEARCH: {Name: "search type name text", Help: "搜索", Hand: func(m *ice.Message, arg ...string) {
-				_alpha_find(m, kit.Select("word", arg, 2), arg[1])
+				if arg[0] == ALPHA {
+					_alpha_find(m, kit.Select("word", arg, 2), arg[1])
+				}
 			}},
 		}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			m.Option(mdb.FIELDS, "id,word,translation,definition")

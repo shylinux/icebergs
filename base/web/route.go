@@ -115,6 +115,7 @@ func init() {
 					m.Option(ice.MSG_PROCESS, ice.PROCESS_INNER)
 				}},
 				ctx.COMMAND: {Name: "command", Help: "命令", Hand: func(m *ice.Message, arg ...string) {
+					m.Debug(m.Option(ROUTE))
 					m.Cmdy(SPACE, m.Option(ROUTE), kit.Keys(m.Option(kit.SSH_CTX), m.Option(kit.SSH_CMD)), arg)
 				}},
 			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
@@ -124,7 +125,7 @@ func init() {
 					}
 
 				} else if len(arg) > 2 { // 加载插件
-					m.ShowPlugin(arg[0], arg[1], arg[2], ctx.COMMAND)
+					m.ShowPlugin(arg[0], arg[1], arg[2], kit.MDB_ACTION, ctx.COMMAND)
 
 				} else if len(arg) > 1 { // 命令列表
 					m.Cmd(SPACE, arg[0], ctx.CONTEXT, arg[1], ctx.COMMAND).Table(func(index int, value map[string]string, head []string) {

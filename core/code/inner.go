@@ -84,8 +84,8 @@ func init() {
 					_inner_show(m, arg[0], arg[1], arg[2], arg[3:]...)
 				}},
 				mdb.SEARCH: {Name: "search", Help: "搜索", Hand: func(m *ice.Message, arg ...string) {
-					m.Option(mdb.FIELDS, "file,line,text")
-					m.Cmdy(mdb.SEARCH, arg)
+					m.Option(cli.CMD_DIR, kit.Select("src", arg, 2))
+					m.Cmdy(mdb.SEARCH, arg[:2], "file,line,text")
 				}},
 
 				FAVOR:      {Name: "favor insert", Help: "收藏"},

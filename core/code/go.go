@@ -181,7 +181,6 @@ func init() {
 					if arg[0] == kit.MDB_FOREACH {
 						return
 					}
-					m.Option(cli.CMD_DIR, kit.Select("src", arg, 2))
 					_go_find(m, kit.Select("main", arg, 1))
 					_go_help(m, kit.Select("main", arg, 1))
 					_go_tags(m, kit.Select("main", arg, 1))

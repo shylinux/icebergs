@@ -66,6 +66,7 @@ func init() {
 					} else {
 						m.Cmdy(cli.SYSTEM, GIT, COMMIT, "-am", kit.Select("opt some", strings.Join(arg, " ")))
 					}
+					m.Option(ice.MSG_PROCESS, ice.PROCESS_REFRESH)
 				}},
 				PUSH: {Name: "push", Help: "上传", Hand: func(m *ice.Message, arg ...string) {
 					if m.Option(kit.MDB_NAME) == "" {

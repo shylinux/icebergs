@@ -304,6 +304,15 @@ func init() {
 				mdb.IMPORT: {Name: "import", Help: "导入", Hand: func(m *ice.Message, arg ...string) {
 					m.Cmdy(mdb.IMPORT, RIVER, "", mdb.HASH)
 				}},
+				aaa.INVITE: {Name: "invite", Help: "脚本", Hand: func(m *ice.Message, arg ...string) {
+					for _, k := range []string{"tmux", "base", "miss"} {
+						m.Cmdy("web.code.publish", "contexts", k)
+					}
+
+					m.EchoScript("shell", "# 共享环境", m.Option(ice.MSG_USERWEB))
+					m.EchoQRCode(m.Option(ice.MSG_USERWEB))
+					m.EchoAnchor(m.Option(ice.MSG_USERWEB))
+				}},
 				mdb.INPUTS: {Name: "inputs", Help: "补全", Hand: func(m *ice.Message, arg ...string) {
 					switch arg[0] {
 					case aaa.USERNAME:
@@ -349,7 +358,7 @@ func init() {
 				case USER, TOOL, NODE:
 					m.Option(ice.MSG_RIVER, arg[0])
 					m.Cmdy(m.Prefix(arg[1]), arg[2:])
-				case "action":
+				case kit.MDB_ACTION, aaa.INVITE:
 					m.Option(ice.MSG_RIVER, arg[0])
 					m.Cmdy(RIVER, arg[1:])
 				default:

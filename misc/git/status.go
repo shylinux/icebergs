@@ -4,6 +4,7 @@ import (
 	ice "github.com/shylinux/icebergs"
 	"github.com/shylinux/icebergs/base/cli"
 	"github.com/shylinux/icebergs/base/mdb"
+	"github.com/shylinux/icebergs/base/web"
 	"github.com/shylinux/icebergs/core/code"
 	kit "github.com/shylinux/toolkits"
 
@@ -23,25 +24,33 @@ const STATUS = "status"
 func init() {
 	Index.Merge(&ice.Context{
 		Commands: map[string]*ice.Command{
-			STATUS: {Name: "status name auto commit compile pull", Help: "代码状态", Action: map[string]*ice.Action{
+			STATUS: {Name: "status name auto pull compile create commit", Help: "代码状态", Action: map[string]*ice.Action{
 				PULL: {Name: "pull", Help: "下载", Hand: func(m *ice.Message, arg ...string) {
-					m.Option(cli.PROGRESS_CB, func(cb func(name string, count, total int)) {
+					m.Option(cli.PROGRESS_CB, func(update func(name string, count, total int)) {
 						count, total := 0, len(m.Confm(REPOS, kit.MDB_HASH))
 						m.Richs(REPOS, nil, kit.Select(kit.MDB_FOREACH, arg, 0), func(key string, value map[string]interface{}) {
 							value = kit.GetMeta(value)
+							update(kit.Format(value[kit.MDB_NAME]), count, total)
 
-							cb(kit.Format(value[kit.MDB_NAME]), count, total)
 							m.Option(cli.CMD_DIR, value[kit.MDB_PATH])
 							m.Cmd(cli.SYSTEM, GIT, PULL)
 							count++
 						})
-						cb("", total, total)
+						update("", total, total)
 					})
 					m.Cmdy(cli.PROGRESS, mdb.CREATE)
 				}},
 				COMPILE: {Name: "compile", Help: "编译", Hand: func(m *ice.Message, arg ...string) {
 					m.Cmdy(cli.SYSTEM, "make")
 				}},
+				mdb.CREATE: {Name: "create main=src/main.go@key name=hi@key from=usr/icebergs/misc/bash/bash.go@key", Help: "添加", Hand: func(m *ice.Message, arg ...string) {
+					m.Cmdy(web.SPACE, m.Option(web.ROUTE), "web.code.autogen", mdb.CREATE, arg)
+					m.Option(ice.MSG_PROCESS, ice.PROCESS_INNER)
+				}},
+				mdb.INPUTS: {Name: "inputs", Help: "补全", Hand: func(m *ice.Message, arg ...string) {
+					m.Cmdy(code.AUTOGEN, mdb.INPUTS, arg)
+				}},
+
 				ADD: {Name: "add", Help: "添加", Hand: func(m *ice.Message, arg ...string) {
 					m.Option(cli.CMD_DIR, _repos_path(m.Option(kit.MDB_NAME)))
 					m.Cmdy(cli.SYSTEM, GIT, ADD, m.Option(kit.MDB_FILE))
@@ -52,7 +61,7 @@ func init() {
 					}
 					m.Option(cli.CMD_DIR, _repos_path(m.Option(kit.MDB_NAME)))
 
-					if arg[0] == "action" {
+					if arg[0] == kit.MDB_ACTION {
 						m.Cmdy(cli.SYSTEM, GIT, COMMIT, "-am", kit.Select("opt some", arg[1]+" "+arg[3]))
 					} else {
 						m.Cmdy(cli.SYSTEM, GIT, COMMIT, "-am", kit.Select("opt some", strings.Join(arg, " ")))
@@ -68,13 +77,6 @@ func init() {
 						m.Option(cli.CMD_DIR, path.Join("usr", m.Option(kit.MDB_NAME)))
 					}
 					m.Cmdy(cli.SYSTEM, GIT, PUSH)
-				}},
-
-				mdb.CREATE: {Name: "create main=src/main.go@key name=hi@key from=usr/icebergs/misc/bash/bash.go@key", Help: "创建", Hand: func(m *ice.Message, arg ...string) {
-					m.Cmdy(code.AUTOGEN, mdb.CREATE, arg)
-				}},
-				mdb.INPUTS: {Name: "inputs", Help: "补全", Hand: func(m *ice.Message, arg ...string) {
-					m.Cmdy(code.AUTOGEN, mdb.INPUTS, arg)
 				}},
 			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 				m.Richs(REPOS, nil, kit.Select(kit.MDB_FOREACH, arg, 0), func(key string, value map[string]interface{}) {

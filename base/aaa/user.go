@@ -38,8 +38,8 @@ func _user_search(m *ice.Message, kind, name, text string, arg ...string) {
 		if name != "" && name != val[USERNAME] {
 			return
 		}
-		m.PushSearch("cmd", USER, "type", kit.Format(UserRole(m, val[USERNAME])),
-			"name", kit.Format(val[USERNICK]), "text", kit.Format(val[USERNAME]))
+		m.PushSearch(kit.SSH_CMD, USER, kit.MDB_TYPE, kit.Format(UserRole(m, val[USERNAME])),
+			kit.MDB_NAME, kit.Format(val[USERNICK]), kit.MDB_TEXT, kit.Format(val[USERNAME]), val)
 	})
 }
 

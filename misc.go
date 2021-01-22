@@ -85,7 +85,7 @@ func (m *Message) PushSearch(args ...interface{}) {
 	for _, k := range kit.Split(m.Option("fields")) {
 		switch k {
 		case kit.SSH_POD:
-			m.Push(k, kit.Select(m.Option(MSG_USERPOD), data[kit.SSH_POD]))
+			// m.Push(k, kit.Select(m.Option(MSG_USERPOD), data[kit.SSH_POD]))
 		case kit.SSH_CTX:
 			m.Push(k, m.Prefix())
 		case kit.SSH_CMD:
@@ -219,3 +219,5 @@ func (m *Message) SortStr(key string)   { m.Sort(key, "str") }
 func (m *Message) SortStrR(key string)  { m.Sort(key, "str_r") }
 func (m *Message) SortTime(key string)  { m.Sort(key, "time") }
 func (m *Message) SortTimeR(key string) { m.Sort(key, "time_r") }
+
+func (m *Message) FormatMeta() string { return m.Format("meta") }

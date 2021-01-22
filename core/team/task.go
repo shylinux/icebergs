@@ -4,6 +4,7 @@ import (
 	ice "github.com/shylinux/icebergs"
 	"github.com/shylinux/icebergs/base/gdb"
 	"github.com/shylinux/icebergs/base/mdb"
+	"github.com/shylinux/icebergs/base/web"
 	kit "github.com/shylinux/toolkits"
 
 	"strings"
@@ -186,6 +187,7 @@ func init() {
 				}},
 				mdb.SEARCH: {Name: "search", Help: "搜索", Hand: func(m *ice.Message, arg ...string) {
 					_task_search(m, arg[0], arg[1], arg[2])
+					m.PushPodCmd(TASK, kit.Simple(mdb.SEARCH, arg)...)
 				}},
 
 				gdb.BEGIN: {Name: "begin", Help: "开始", Hand: func(m *ice.Message, arg ...string) {
@@ -195,6 +197,10 @@ func init() {
 					_task_modify(m, m.Option(kit.MDB_ZONE), m.Option(kit.MDB_ID), TaskField.STATUS, TaskStatus.FINISH)
 				}},
 			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+				if m.Option(kit.SSH_POD) != "" {
+					m.Cmdy(web.SPACE, m.Option(kit.SSH_POD), m.Prefix(TASK), arg)
+					return
+				}
 				_task_list(m, kit.Select("", arg, 0), kit.Select("", arg, 1))
 			}},
 		},

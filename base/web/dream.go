@@ -33,6 +33,7 @@ func _dream_show(m *ice.Message, name string) {
 	if !strings.Contains(name, "-") || !strings.HasPrefix(name, "20") {
 		name = m.Time("20060102-") + strings.ReplaceAll(name, "-", "_")
 	}
+	m.Option("name", name)
 
 	// 任务目录
 	p := path.Join(m.Conf(DREAM, kit.META_PATH), name)
@@ -100,6 +101,9 @@ func init() {
 					switch arg[0] {
 					case kit.MDB_NAME:
 						m.Cmdy(nfs.DIR, m.Conf(DREAM, kit.META_PATH), "name,time")
+					case kit.SSH_TEMPLATE:
+						m.Cmdy(nfs.DIR, m.Conf(DREAM, kit.META_PATH), "path,size,time")
+						m.SortStrR(kit.MDB_PATH)
 					}
 				}},
 				mdb.CREATE: {Name: "create main=src/main.go@key name=hi@key from=usr/icebergs/misc/bash/bash.go@key", Help: "添加", Hand: func(m *ice.Message, arg ...string) {

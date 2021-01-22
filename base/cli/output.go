@@ -24,6 +24,7 @@ func _cli_progress(m *ice.Message, cb interface{}) {
 		switch cb := cb.(type) {
 		case func(cb func(name string, count, total int)):
 			cb(func(name string, count, total int) {
+				m.Debug("what %v", name)
 				m.Cmd(mdb.MODIFY, PROGRESS, "", mdb.HASH, kit.MDB_HASH, h, "name", name,
 					"step", count*100/total, "count", count, "total", total)
 			})

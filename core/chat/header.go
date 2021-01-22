@@ -29,6 +29,16 @@ func init() {
 					m.Echo(m.Option(ice.MSG_USERNAME))
 				}},
 				CHECK: {Name: "check", Help: "登录检查", Hand: func(m *ice.Message, arg ...string) {
+					if m.Option(web.SHARE) != "" {
+						switch msg := m.Cmd(web.SHARE, m.Option(web.SHARE)); msg.Append(kit.MDB_TYPE) {
+						case web.LOGIN:
+							if m.Option(ice.MSG_SESSID) == "" {
+								m.Option(ice.MSG_SESSID, aaa.SessCreate(m, msg.Append(aaa.USERNAME), msg.Append(aaa.USERROLE)))
+								web.Render(m, web.COOKIE, m.Option(ice.MSG_SESSID))
+							}
+						}
+					}
+
 					m.Option("sso", m.Conf(web.SERVE, "meta.sso"))
 					m.Echo(m.Option(ice.MSG_USERNAME))
 				}},

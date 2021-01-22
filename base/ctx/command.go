@@ -22,7 +22,10 @@ func _command_search(m *ice.Message, kind, name, text string) {
 			return
 		}
 
-		m.PushSearch(kit.SSH_CMD, COMMAND, kit.MDB_TYPE, kind, kit.MDB_NAME, key, kit.MDB_TEXT, s.Cap(ice.CTX_FOLLOW))
+		m.PushSearch(kit.SSH_CMD, COMMAND,
+			"context", s.Cap(ice.CTX_FOLLOW), "command", key,
+			kit.MDB_TYPE, kind, kit.MDB_NAME, key, kit.MDB_TEXT, s.Cap(ice.CTX_FOLLOW),
+		)
 	})
 }
 func _command_list(m *ice.Message, name string) {

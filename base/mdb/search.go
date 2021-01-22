@@ -27,7 +27,7 @@ func init() {
 					return
 				}
 
-				m.Option(FIELDS, kit.Select("pod,ctx,cmd,time,size,type,name,text", kit.Select(m.Option(FIELDS), arg, 2)))
+				m.Option(FIELDS, kit.Select("ctx,cmd,time,size,type,name,text", kit.Select(m.Option(FIELDS), arg, 2)))
 				for _, k := range strings.Split(arg[0], ",") {
 					for _, kk := range strings.Split(arg[1], ",") {
 						m.Richs(SEARCH, nil, k, func(key string, value map[string]interface{}) {

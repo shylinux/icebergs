@@ -5,6 +5,7 @@ import (
 	"github.com/shylinux/icebergs/base/aaa"
 	"github.com/shylinux/icebergs/base/ctx"
 	"github.com/shylinux/icebergs/base/mdb"
+	"github.com/shylinux/icebergs/base/tcp"
 	"github.com/shylinux/icebergs/base/web"
 	"github.com/shylinux/icebergs/core/code"
 	"github.com/shylinux/icebergs/core/wiki"
@@ -314,6 +315,12 @@ func init() {
 					m.EchoAnchor(m.Option(ice.MSG_USERWEB))
 				}},
 				mdb.INPUTS: {Name: "inputs", Help: "补全", Hand: func(m *ice.Message, arg ...string) {
+					switch m.Option("action") {
+					case "start":
+						m.Cmdy(web.DREAM, kit.MDB_ACTION, mdb.INPUTS, arg)
+						return
+					}
+
 					switch arg[0] {
 					case aaa.USERNAME:
 						m.Cmdy(aaa.USER)
@@ -329,7 +336,10 @@ func init() {
 					}
 				}},
 				web.SHARE: {Name: "share type name", Help: "共享", Hand: func(m *ice.Message, arg ...string) {
-					m.Cmdy(web.SHARE, mdb.CREATE, kit.MDB_TYPE, "login", arg)
+					m.Cmdy(web.SHARE, mdb.CREATE, kit.MDB_TYPE, LOGIN, arg)
+				}},
+				tcp.START: {Name: "start name repos template", Help: "启动", Hand: func(m *ice.Message, arg ...string) {
+					m.Cmdy(web.DREAM, tcp.START, arg)
 				}},
 			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 				m.Cmdy(mdb.SELECT, RIVER, "", mdb.HASH, kit.MDB_HASH, arg)

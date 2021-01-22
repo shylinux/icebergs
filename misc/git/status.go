@@ -4,7 +4,6 @@ import (
 	ice "github.com/shylinux/icebergs"
 	"github.com/shylinux/icebergs/base/cli"
 	"github.com/shylinux/icebergs/base/mdb"
-	"github.com/shylinux/icebergs/base/web"
 	"github.com/shylinux/icebergs/core/code"
 	kit "github.com/shylinux/toolkits"
 
@@ -44,8 +43,7 @@ func init() {
 					m.Cmdy(cli.SYSTEM, "make")
 				}},
 				mdb.CREATE: {Name: "create main=src/main.go@key name=hi@key from=usr/icebergs/misc/bash/bash.go@key", Help: "模块", Hand: func(m *ice.Message, arg ...string) {
-					m.Cmdy(web.SPACE, m.Option(web.ROUTE), "web.code.autogen", mdb.CREATE, arg)
-					m.Option(ice.MSG_PROCESS, ice.PROCESS_INNER)
+					m.Cmdy(code.AUTOGEN, mdb.CREATE, arg)
 				}},
 				mdb.INPUTS: {Name: "inputs", Help: "补全", Hand: func(m *ice.Message, arg ...string) {
 					m.Cmdy(code.AUTOGEN, mdb.INPUTS, arg)

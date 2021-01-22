@@ -102,7 +102,8 @@ field "{{.Option "name"}}" web.code.{{.Option "name"}}.{{.Option "name"}}
 						m.Option(nfs.DIR_DEEP, true)
 						m.Option(nfs.DIR_REG, ".*.go")
 						m.Cmdy(nfs.DIR, "usr/icebergs/misc/", "path,size,time")
-						m.Sort(kit.MDB_PATH)
+						m.Cmdy(nfs.DIR, "src/", "path,size,time")
+						m.SortTimeR(kit.MDB_PATH)
 					}
 				}},
 			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {

@@ -40,6 +40,7 @@ func _file_list(m *ice.Message, root string, name string, level int, deep bool, 
 				fs = append(fs, k)
 			}
 		}
+		name = path.Dir(name)
 	}
 
 	for _, f := range fs {

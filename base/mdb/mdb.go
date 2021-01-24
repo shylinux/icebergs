@@ -335,7 +335,7 @@ func _zone_export(m *ice.Message, prefix, chain, file string) {
 	})
 
 	m.Log_EXPORT(kit.MDB_KEY, path.Join(prefix, chain), kit.MDB_FILE, p, kit.MDB_COUNT, count)
-	m.Conf(prefix, chain, kit.MDB_HASH, "")
+	m.Conf(prefix, kit.Keys(chain, kit.MDB_HASH), "")
 	m.Echo(p)
 }
 func _zone_import(m *ice.Message, prefix, chain, file string) {

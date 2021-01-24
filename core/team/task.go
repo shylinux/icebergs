@@ -2,6 +2,7 @@ package team
 
 import (
 	ice "github.com/shylinux/icebergs"
+	"github.com/shylinux/icebergs/base/ctx"
 	"github.com/shylinux/icebergs/base/gdb"
 	"github.com/shylinux/icebergs/base/mdb"
 	"github.com/shylinux/icebergs/base/web"
@@ -102,6 +103,23 @@ func _task_import(m *ice.Message, file string) {
 }
 func _task_inputs(m *ice.Message, field, value string) {
 	switch field {
+	case "extra.pod":
+		m.Cmd(web.SPACE).Table(func(index int, value map[string]string, head []string) {
+			m.Push("extra.pod", value[kit.MDB_NAME])
+			m.Push("", value, []string{kit.MDB_TYPE})
+		})
+	case "extra.ctx":
+		m.Cmd(m.Space(m.Option("extra.pod")), ctx.CONTEXT).Table(func(index int, value map[string]string, head []string) {
+			m.Push("extra.ctx", value[kit.MDB_NAME])
+			m.Push("", value, []string{kit.MDB_HELP})
+		})
+	case "extra.cmd":
+		m.Cmd(m.Space(m.Option("extra.pod")), ctx.CONTEXT, m.Option("extra.ctx"), ctx.COMMAND).Table(func(index int, value map[string]string, head []string) {
+			m.Push("extra.cmd", value[kit.MDB_KEY])
+			m.Push("", value, []string{kit.MDB_HELP})
+		})
+	case "extra.arg":
+
 	case kit.MDB_ZONE:
 		m.Cmdy(mdb.INPUTS, TASK, "", mdb.HASH, field, value)
 	default:

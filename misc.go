@@ -117,9 +117,11 @@ func _render(m *Message, cmd string, args ...interface{}) string {
 	switch arg := kit.Simple(args...); cmd {
 	case RENDER_DOWNLOAD: // [name] file
 		if len(arg) == 1 {
-			arg[0] = kit.MergeURL2(m.Option(MSG_USERWEB), path.Join("/share/local", arg[0]), kit.SSH_POD, m.Option(MSG_USERPOD))
+			arg[0] = kit.MergeURL2(m.Option(MSG_USERWEB), path.Join(kit.Select("", "/share/local",
+				!strings.HasPrefix(arg[0], "/")), arg[0]), kit.SSH_POD, m.Option(MSG_USERPOD))
 		} else {
-			arg[1] = kit.MergeURL2(m.Option(MSG_USERWEB), path.Join("/share/local", arg[1]), kit.SSH_POD, m.Option(MSG_USERPOD))
+			arg[1] = kit.MergeURL2(m.Option(MSG_USERWEB), path.Join(kit.Select("", "/share/local",
+				!strings.HasPrefix(arg[1], "/")), arg[1]), kit.SSH_POD, m.Option(MSG_USERPOD))
 		}
 		return fmt.Sprintf(`<a href="%s" download="%s">%s</a>`, kit.Select(arg[0], arg, 1), path.Base(arg[0]), arg[0])
 

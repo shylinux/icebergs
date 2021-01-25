@@ -27,7 +27,7 @@ func _dream_list(m *ice.Message) {
 			m.PushButton(tcp.START)
 		}
 	})
-	m.SortStrR(kit.MDB_NAME)
+	m.SortStrR(kit.MDB_TIME)
 }
 func _dream_show(m *ice.Message, name string) {
 	if !strings.Contains(name, "-") || !strings.HasPrefix(name, "20") {

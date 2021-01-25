@@ -42,7 +42,9 @@ func _share_local(m *ice.Message, arg ...string) {
 		m.Cmdy(SPACE, m.Option(kit.SSH_POD), SPIDE, SPIDE_DEV, SPIDE_RAW, kit.MergeURL2(m.Option(ice.MSG_USERWEB), "/share/proxy/"),
 			SPIDE_PART, kit.SSH_POD, m.Option(kit.SSH_POD), kit.MDB_PATH, p, CACHE, cache.Format(ice.MOD_TIME), UPLOAD, "@"+p)
 
-		p = pp
+		if s, e := os.Stat(pp); e == nil && !s.IsDir() {
+			p = pp
+		}
 	}
 
 	m.Render(ice.RENDER_DOWNLOAD, p)

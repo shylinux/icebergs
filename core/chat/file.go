@@ -24,10 +24,10 @@ func init() {
 					m.Cmdy(mdb.DELETE, FILES, "", mdb.HASH, kit.MDB_HASH, m.Option(kit.MDB_HASH))
 				}},
 			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-				m.Option(mdb.FIELDS, kit.Select("time,hash,name", mdb.DETAIL, len(arg) > 0))
+				m.Option(mdb.FIELDS, kit.Select("time,hash,name,data", mdb.DETAIL, len(arg) > 0))
 				m.Cmdy(mdb.SELECT, FILES, "", mdb.HASH, "hash", arg)
 				m.Table(func(index int, value map[string]string, head []string) {
-					m.PushDownload(value[kit.MDB_NAME], kit.MergeURL2(m.Option(ice.MSG_USERWEB), "/share/cache/"+value["data"]))
+					m.PushDownload(value[kit.MDB_NAME], "/share/cache/"+value["data"])
 				})
 				if len(arg) == 0 {
 					m.SortTimeR(kit.MDB_TIME)

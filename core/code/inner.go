@@ -66,7 +66,7 @@ const INNER = "inner"
 func init() {
 	Index.Merge(&ice.Context{
 		Commands: map[string]*ice.Command{
-			INNER: {Name: "inner path=src/ file=main.go line=1 auto project search", Help: "源代码", Meta: kit.Dict(
+			INNER: {Name: "inner path=src/ file=main.go line=1 auto project searchShow", Help: "源代码", Meta: kit.Dict(
 				"display", "/plugin/local/code/inner.js", "style", "editor",
 				"trans", kit.Dict("project", "项目"),
 			), Action: map[string]*ice.Action{
@@ -92,6 +92,8 @@ func init() {
 				mdb.INPUTS: {Name: "favor inputs", Help: "补全"},
 				nfs.DIR:    {Name: "dir", Help: "目录"},
 
+				"searchShow": {Name: "searchShow", Help: "搜索", Hand: func(m *ice.Message, arg ...string) {
+				}},
 				"project": {Name: "project", Help: "项目", Hand: func(m *ice.Message, arg ...string) {
 					m.Cmdy(nfs.DIR, kit.Select("./", arg, 0))
 				}},

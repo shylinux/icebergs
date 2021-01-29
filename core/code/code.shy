@@ -20,3 +20,29 @@ field "命令" web.code.sh
 field "脚本" web.code.shy
 field "后端" web.code.go
 field "前端" web.code.js
+
+return
+
+inner.go
+vimer.go
+favor.go
+bench.go
+pprof.go
+
+install.go
+compile.go
+autogen.go
+publish.go
+upgrade.go
+
+c.go
+sh.go
+shy.go
+go.go
+js.go
+
+code.go
+code.shy
+csdn.go
+github.go
+pack.go

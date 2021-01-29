@@ -1,11 +1,7 @@
 package code
 
 import (
-	"strings"
-
 	ice "github.com/shylinux/icebergs"
-	"github.com/shylinux/icebergs/base/cli"
-	"github.com/shylinux/icebergs/base/ctx"
 	"github.com/shylinux/icebergs/base/nfs"
 	kit "github.com/shylinux/toolkits"
 
@@ -15,27 +11,13 @@ import (
 const VIMER = "vimer"
 
 func init() {
-	Index.Merge(&ice.Context{
-		Commands: map[string]*ice.Command{
-			VIMER: {Name: "vimer path=src/ file=main.go line=1 刷新:button=auto save project searchShow", Help: "编辑器", Meta: kit.Dict(
-				"display", "/plugin/local/code/vimer.js", "style", "editor",
-				"trans", kit.Dict("display", "运行", "project", "项目", "search", "搜索"),
-			), Action: map[string]*ice.Action{
-				"searchShow": {Name: "searchShow", Help: "搜索", Hand: func(m *ice.Message, arg ...string) {
-				}},
-				nfs.SAVE: {Name: "save type file path", Help: "保存", Hand: func(m *ice.Message, arg ...string) {
-					m.Cmdy(nfs.SAVE, path.Join(m.Option(kit.MDB_PATH), m.Option(kit.MDB_FILE)))
-				}},
-				ctx.COMMAND: {Name: "command", Help: "命令", Hand: func(m *ice.Message, arg ...string) {
-					if arg = kit.Split(strings.Join(arg, " ")); !m.Warn(!m.Right(arg)) {
-						if m.Cmdy(arg); len(m.Appendv(ice.MSG_APPEND)) == 0 && len(m.Resultv()) == 0 {
-							m.Cmdy(cli.SYSTEM, arg)
-						}
-					}
-				}},
-			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-				m.Cmdy(INNER, arg)
+	Index.Merge(&ice.Context{Commands: map[string]*ice.Command{
+		VIMER: {Name: "vimer path=src/ file=main.go line=1 刷新:button=auto save", Help: "编辑器", Meta: kit.Dict(
+			"display", "/plugin/local/code/vimer.js", "style", "editor",
+		), Action: map[string]*ice.Action{
+			nfs.SAVE: {Name: "save type file path", Help: "保存", Hand: func(m *ice.Message, arg ...string) {
+				m.Cmdy(nfs.SAVE, path.Join(m.Option(kit.MDB_PATH), m.Option(kit.MDB_FILE)))
 			}},
-		},
-	})
+		}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) { m.Cmdy(INNER, arg) }},
+	}})
 }

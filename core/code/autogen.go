@@ -70,14 +70,6 @@ const AUTOGEN = "autogen"
 
 func init() {
 	Index.Merge(&ice.Context{
-		Configs: map[string]*ice.Config{
-			AUTOGEN: {Name: AUTOGEN, Help: "生成", Value: kit.Data(
-				kit.MDB_FIELD, "time,id,name,from", "shy", `
-chapter "{{.Option "name"}}"
-field "{{.Option "name"}}" web.code.{{.Option "name"}}.{{.Option "name"}}
-`,
-			)},
-		},
 		Commands: map[string]*ice.Command{
 			AUTOGEN: {Name: "autogen path auto create", Help: "生成", Action: map[string]*ice.Action{
 				mdb.CREATE: {Name: "create main=src/main.go@key name=hi@key from=usr/icebergs/misc/bash/bash.go@key", Help: "创建", Hand: func(m *ice.Message, arg ...string) {
@@ -97,13 +89,14 @@ field "{{.Option "name"}}" web.code.{{.Option "name"}}.{{.Option "name"}}
 					case "main":
 						m.Option(nfs.DIR_REG, ".*.go")
 						m.Cmdy(nfs.DIR, "src", "path,size,time")
-						m.Sort(kit.MDB_PATH)
+						m.RenameAppend("path", arg[0])
+
 					case "from":
 						m.Option(nfs.DIR_DEEP, true)
 						m.Option(nfs.DIR_REG, ".*.go")
-						m.Cmdy(nfs.DIR, "usr/icebergs/misc/", "path,size,time")
 						m.Cmdy(nfs.DIR, "src/", "path,size,time")
-						m.SortTimeR(kit.MDB_PATH)
+						m.Cmdy(nfs.DIR, "usr/icebergs/misc/", "path,size,time")
+						m.RenameAppend("path", arg[0])
 					}
 				}},
 			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
@@ -113,6 +106,14 @@ field "{{.Option "name"}}" web.code.{{.Option "name"}}.{{.Option "name"}}
 					m.Cmdy(nfs.CAT, arg[0])
 				}
 			}},
+		},
+		Configs: map[string]*ice.Config{
+			AUTOGEN: {Name: AUTOGEN, Help: "生成", Value: kit.Data(
+				"shy", `
+chapter "{{.Option "name"}}"
+field "{{.Option "name"}}" web.code.{{.Option "name"}}.{{.Option "name"}}
+`,
+			)},
 		},
 	})
 }

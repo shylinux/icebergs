@@ -52,7 +52,7 @@ func _serve_main(m *ice.Message, w http.ResponseWriter, r *http.Request) bool {
 	// 调试接口
 	if strings.HasPrefix(r.URL.Path, "/debug") {
 		r.URL.Path = strings.Replace(r.URL.Path, "/debug", "/code", -1)
-		return false
+		return true
 	}
 
 	// 主页接口
@@ -61,6 +61,9 @@ func _serve_main(m *ice.Message, w http.ResponseWriter, r *http.Request) bool {
 		if msg.W, msg.R = w, r; strings.Contains(r.Header.Get("User-Agent"), "curl") {
 			Render(msg, ice.RENDER_DOWNLOAD, kit.Path(m.Conf(SERVE, "meta.intshell.path"), m.Conf(SERVE, "meta.intshell.index")))
 		} else {
+			if ice.DumpBinPack(w, r.URL.Path, func(name string) { RenderType(w, name, "") }) {
+				return false
+			}
 			Render(msg, ice.RENDER_DOWNLOAD, kit.Path(m.Conf(SERVE, "meta.volcanos.path"), m.Conf(SERVE, "meta.volcanos.index")))
 		}
 		return false

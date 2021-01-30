@@ -223,3 +223,12 @@ func (m *Message) SortTime(key string)  { m.Sort(key, "time") }
 func (m *Message) SortTimeR(key string) { m.Sort(key, "time_r") }
 
 func (m *Message) FormatMeta() string { return m.Format("meta") }
+func (m *Message) RenameAppend(from, to string) {
+	for i, v := range m.meta[MSG_APPEND] {
+		if v == from {
+			m.meta[MSG_APPEND][i] = to
+			m.meta[to] = m.meta[from]
+			delete(m.meta, from)
+		}
+	}
+}

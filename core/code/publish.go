@@ -28,7 +28,6 @@ func _publish_file(m *ice.Message, file string, arg ...string) string {
 	m.Cmd(nfs.LINK, target, file)
 
 	// 发布记录
-	// m.Cmdy(web.STORY, web.CATCH, "bin", target)
 	m.Log_EXPORT(PUBLISH, target, "from", file)
 	return target
 }
@@ -41,7 +40,10 @@ func init() {
 			)},
 		},
 		Commands: map[string]*ice.Command{
-			PUBLISH: {Name: "publish path auto ish ice can", Help: "发布", Action: map[string]*ice.Action{
+			PUBLISH: {Name: "publish path auto publish ish ice can", Help: "发布", Action: map[string]*ice.Action{
+				"publish": {Name: "publish file", Help: "添加", Hand: func(m *ice.Message, arg ...string) {
+					_publish_file(m, m.Option(kit.MDB_FILE))
+				}},
 				"contexts": {Name: "contexts", Help: "环境", Hand: func(m *ice.Message, arg ...string) {
 					u := kit.ParseURL(m.Option(ice.MSG_USERWEB))
 					m.Option("httphost", fmt.Sprintf("%s://%s:%s", u.Scheme, strings.Split(u.Host, ":")[0], kit.Select(kit.Select("80", "443", u.Scheme == "https"), strings.Split(u.Host, ":"), 1)))
@@ -55,16 +57,16 @@ func init() {
 						arg = append(arg, "base")
 					}
 					for _, k := range arg {
-						if buf, err := kit.Render(m.Conf(PUBLISH, kit.Keys("meta.contexts", k)), m); m.Assert(err) {
-							m.Cmdy("web.wiki.spark", "shell", string(buf))
+						if buf, err := kit.Render(m.Conf(PUBLISH, kit.Keym("contexts", k)), m); m.Assert(err) {
+							m.EchoScript(string(buf))
 						}
 					}
 				}},
 				"ish": {Name: "ish", Help: "神农架", Hand: func(m *ice.Message, arg ...string) {
 					m.Option(nfs.DIR_DEEP, true)
-					m.Option(nfs.DIR_REG, ".*\\.(sh|vim|conf)")
+					m.Option(nfs.DIR_REG, ".*\\.(sh|vim|conf)$")
 					m.Option(nfs.DIR_ROOT, m.Conf(PUBLISH, kit.META_PATH))
-					m.Cmdy(nfs.DIR, "./", "time size line path link")
+					m.Cmdy(nfs.DIR, "./", "time,size,line,path,link")
 					m.Cmdy(PUBLISH, "contexts", "tmux")
 				}},
 				"ice": {Name: "ice", Help: "冰山架", Hand: func(m *ice.Message, arg ...string) {
@@ -85,9 +87,9 @@ func init() {
 				}},
 				"can": {Name: "can", Help: "火山架", Hand: func(m *ice.Message, arg ...string) {
 					m.Option(nfs.DIR_DEEP, true)
-					m.Option(nfs.DIR_REG, ".*\\.(js|css|html)")
+					m.Option(nfs.DIR_REG, ".*\\.(js|css|html)$")
 					m.Option(nfs.DIR_ROOT, m.Conf(PUBLISH, kit.META_PATH))
-					m.Cmdy(nfs.DIR, "./", "time size line path link")
+					m.Cmdy(nfs.DIR, "./", "time,size,line,path,link")
 					m.Cmdy(PUBLISH, "contexts", "miss")
 				}},
 			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {

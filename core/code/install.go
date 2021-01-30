@@ -34,7 +34,7 @@ func init() {
 					name := path.Base(link)
 					p := path.Join(m.Conf(INSTALL, kit.META_PATH), name)
 
-					m.Option(ice.MSG_PROCESS, "_progress")
+					m.Option(ice.MSG_PROCESS, ice.PROCESS_PROGRESS)
 					m.Option(mdb.FIELDS, m.Conf(INSTALL, kit.META_FIELD))
 					if m.Cmd(mdb.SELECT, INSTALL, "", mdb.HASH, kit.MDB_NAME, name).Table(func(index int, value map[string]string, head []string) {
 						if _, e := os.Stat(p); e == nil {

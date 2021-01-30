@@ -50,7 +50,7 @@ func _bench_http(m *ice.Message, name, target string, arg ...string) {
 
 	m.Echo(s.Show())
 	m.Echo("body: %d\n", body)
-	m.Option(ice.MSG_PROCESS, "_inner")
+	m.Option(ice.MSG_PROCESS, ice.PROCESS_INNER)
 }
 func _bench_redis(m *ice.Message, name, target string, arg ...string) {
 }
@@ -68,6 +68,38 @@ func init() {
 			BENCH: {Name: BENCH, Help: "性能压测", Value: kit.Data(kit.MDB_SHORT, kit.MDB_ZONE)},
 		},
 		Commands: map[string]*ice.Command{
+			BENCH: {Name: "bench zone id auto insert", Help: "性能压测", Action: map[string]*ice.Action{
+				mdb.CREATE: {Name: "create zone", Help: "创建", Hand: func(m *ice.Message, arg ...string) {
+					m.Cmdy(mdb.INSERT, BENCH, "", mdb.HASH, arg)
+				}},
+				mdb.INSERT: {Name: "insert zone type=http,redis name text nconn=3 nreqs=10", Help: "添加", Hand: func(m *ice.Message, arg ...string) {
+					m.Cmdy(mdb.INSERT, BENCH, "", mdb.HASH, kit.MDB_ZONE, arg[1])
+					m.Cmdy(mdb.INSERT, BENCH, _sub_key(m, m.Option(kit.MDB_ZONE)), mdb.LIST, arg[2:])
+				}},
+				mdb.MODIFY: {Name: "modify", Help: "编辑", Hand: func(m *ice.Message, arg ...string) {
+					m.Cmdy(mdb.MODIFY, BENCH, _sub_key(m, m.Option(kit.MDB_ZONE)), mdb.LIST, kit.MDB_ID, m.Option(kit.MDB_ID), arg)
+				}},
+				mdb.REMOVE: {Name: "remove", Help: "删除", Hand: func(m *ice.Message, arg ...string) {
+					m.Cmdy(mdb.DELETE, BENCH, "", mdb.HASH, kit.MDB_ZONE, m.Option(kit.MDB_ZONE))
+				}},
+
+				cli.RUN: {Name: "run", Help: "运行", Hand: func(m *ice.Message, arg ...string) {
+					switch m.Option(kit.MDB_TYPE) {
+					case "http":
+						_bench_http(m, m.Option(kit.MDB_NAME), m.Option(kit.MDB_TEXT))
+					case "redis":
+						_bench_redis(m, m.Option(kit.MDB_NAME), m.Option(kit.MDB_TEXT))
+					}
+				}},
+			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+				m.Option(mdb.FIELDS, kit.Select("time,count,zone", kit.Select("time,id,type,name,text,nconn,nreqs", mdb.DETAIL, len(arg) > 1), len(arg) > 0))
+				m.Cmdy(mdb.SELECT, BENCH, "", mdb.ZONE, arg)
+				m.PushAction(kit.Select(mdb.REMOVE, cli.RUN, len(arg) > 0))
+			}},
+			"/bench": {Name: "/bench cmd...", Help: "性能压测", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+				m.Cmdy(m.Optionv("cmd"))
+			}},
+
 			"test": {Name: "test path func auto run case", Help: "测试用例", Action: map[string]*ice.Action{
 				"run": {Name: "run", Help: "运行", Hand: func(m *ice.Message, arg ...string) {
 					cli.Follow(m, "run", func() {
@@ -114,38 +146,6 @@ func init() {
 
 				m.Option(cli.CMD_DIR, kit.Select(path.Dir(arg[0]), arg[0], strings.HasSuffix(arg[0], "/")))
 				m.Cmdy(cli.SYSTEM, "go", "test", "./", "-v", "-run="+arg[1])
-			}},
-			BENCH: {Name: "bench zone id auto insert", Help: "性能压测", Action: map[string]*ice.Action{
-				mdb.CREATE: {Name: "create zone", Help: "创建", Hand: func(m *ice.Message, arg ...string) {
-					m.Cmdy(mdb.INSERT, BENCH, "", mdb.HASH, arg)
-				}},
-				mdb.INSERT: {Name: "insert zone type=http,redis name text nconn=3 nreqs=10", Help: "添加", Hand: func(m *ice.Message, arg ...string) {
-					m.Cmdy(mdb.INSERT, BENCH, "", mdb.HASH, kit.MDB_ZONE, arg[1])
-					m.Cmdy(mdb.INSERT, BENCH, _sub_key(m, m.Option(kit.MDB_ZONE)), mdb.LIST, arg[2:])
-				}},
-				mdb.MODIFY: {Name: "modify", Help: "编辑", Hand: func(m *ice.Message, arg ...string) {
-					m.Cmdy(mdb.MODIFY, BENCH, _sub_key(m, m.Option(kit.MDB_ZONE)), mdb.LIST, kit.MDB_ID, m.Option(kit.MDB_ID), arg)
-				}},
-				mdb.REMOVE: {Name: "remove", Help: "删除", Hand: func(m *ice.Message, arg ...string) {
-					m.Cmdy(mdb.DELETE, BENCH, "", mdb.HASH, kit.MDB_ZONE, m.Option(kit.MDB_ZONE))
-				}},
-
-				cli.RUN: {Name: "run", Help: "运行", Hand: func(m *ice.Message, arg ...string) {
-					switch m.Option(kit.MDB_TYPE) {
-					case "http":
-						_bench_http(m, m.Option(kit.MDB_NAME), m.Option(kit.MDB_TEXT))
-					case "redis":
-						_bench_redis(m, m.Option(kit.MDB_NAME), m.Option(kit.MDB_TEXT))
-					}
-				}},
-			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-				m.Option(mdb.FIELDS, kit.Select("time,count,zone", kit.Select("time,id,type,name,text,nconn,nreqs", mdb.DETAIL, len(arg) > 1), len(arg) > 0))
-				m.Cmdy(mdb.SELECT, BENCH, "", mdb.ZONE, arg)
-				m.PushAction(kit.Select(mdb.REMOVE, cli.RUN, len(arg) > 0))
-			}},
-
-			"/bench": {Name: "/bench cmd...", Help: "性能压测", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-				m.Cmdy(m.Optionv("cmd"))
 			}},
 		},
 	})

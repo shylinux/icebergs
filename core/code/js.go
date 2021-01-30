@@ -22,6 +22,7 @@ func init() {
 			ice.CTX_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 				m.Cmd(mdb.PLUGIN, mdb.CREATE, JS, m.Prefix(JS))
 				m.Cmd(mdb.RENDER, mdb.CREATE, JS, m.Prefix(JS))
+				m.Cmd(mdb.ENGINE, mdb.CREATE, JS, m.Prefix(JS))
 				m.Cmd(mdb.SEARCH, mdb.CREATE, JS, m.Prefix(JS))
 			}},
 			JS: {Name: JS, Help: "前端", Action: map[string]*ice.Action{
@@ -31,11 +32,15 @@ func init() {
 				mdb.RENDER: {Hand: func(m *ice.Message, arg ...string) {
 					m.Cmdy(nfs.CAT, path.Join(arg[2], arg[1]))
 				}},
-				mdb.SEARCH: {Name: "search type name text", Hand: func(m *ice.Message, arg ...string) {
+				mdb.ENGINE: {Hand: func(m *ice.Message, arg ...string) {
+					m.Option(cli.CMD_DIR, arg[2])
+					m.Cmdy(cli.SYSTEM, NODE, arg[1])
+					m.Set(ice.MSG_APPEND)
+				}},
+				mdb.SEARCH: {Hand: func(m *ice.Message, arg ...string) {
 					if arg[0] == kit.MDB_FOREACH {
 						return
 					}
-					m.Option(cli.CMD_DIR, kit.Select("src", arg, 2))
 					_go_find(m, kit.Select("main", arg, 1))
 					_go_grep(m, kit.Select("main", arg, 1))
 				}},

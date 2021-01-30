@@ -22,18 +22,11 @@ field "后端" web.code.go
 field "前端" web.code.js
 
 return
-
-inner.go
 vimer.go
+inner.go
 favor.go
 bench.go
 pprof.go
-
-install.go
-compile.go
-autogen.go
-publish.go
-upgrade.go
 
 c.go
 sh.go
@@ -41,8 +34,16 @@ shy.go
 go.go
 js.go
 
+install.go
+compile.go
+binpack.go
+webpack.go
+
+publish.go
+upgrade.go
+autogen.go
+
 code.go
 code.shy
 csdn.go
 github.go
-pack.go

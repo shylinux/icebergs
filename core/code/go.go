@@ -11,34 +11,22 @@ import (
 	"os"
 	"path"
 	"strings"
+	"time"
 )
 
 func _go_find(m *ice.Message, key string) {
-	fields := kit.Split(m.Option(mdb.FIELDS))
 	for _, p := range strings.Split(m.Cmdx(cli.SYSTEM, "find", ".", "-name", key), "\n") {
 		if p == "" {
 			continue
 		}
-		for _, k := range fields {
-			switch k {
-			case kit.MDB_FILE:
-				m.Push(k, strings.TrimPrefix(p, "./"))
-			case kit.MDB_LINE:
-				m.Push(k, 1)
-			case kit.MDB_TEXT:
-				m.Push(k, "")
-			default:
-				m.Push(k, "")
-			}
-		}
+		m.PushSearch(kit.SSH_CMD, "find", kit.MDB_FILE, strings.TrimPrefix(p, "./"), kit.MDB_LINE, 1, kit.MDB_TEXT, "")
 	}
 }
 func _go_tags(m *ice.Message, key string) {
-	if _, e := os.Stat(path.Join(m.Option(cli.CMD_DIR), ".tags")); e != nil {
+	if s, e := os.Stat(path.Join(m.Option(cli.CMD_DIR), ".tags")); os.IsNotExist(e) || s.ModTime().Before(time.Now().Add(kit.Duration("-72h"))) {
 		m.Cmd(cli.SYSTEM, "gotags", "-R", "-f", ".tags", "./")
 	}
 
-	fields := kit.Split(m.Option(mdb.FIELDS))
 	ls := strings.Split(key, ".")
 	key = ls[len(ls)-1]
 
@@ -61,54 +49,22 @@ func _go_tags(m *ice.Message, key string) {
 		bio := bufio.NewScanner(f)
 		for i := 1; bio.Scan(); i++ {
 			if i == line || bio.Text() == text {
-				for _, k := range fields {
-					switch k {
-					case kit.MDB_FILE:
-						m.Push(k, strings.TrimPrefix(file, "./"))
-					case kit.MDB_LINE:
-						m.Push(k, i)
-					case kit.MDB_TEXT:
-						m.Push(k, bio.Text())
-					default:
-						m.Push(k, "")
-					}
-				}
+				m.PushSearch(kit.SSH_CMD, "tags", kit.MDB_FILE, strings.TrimPrefix(file, "./"), kit.MDB_LINE, kit.Format(i), kit.MDB_TEXT, bio.Text())
 			}
 		}
 	}
 }
 func _go_grep(m *ice.Message, key string) {
-	fields := kit.Split(m.Option(mdb.FIELDS))
-
 	msg := m.Spawn()
 	msg.Split(m.Cmd(cli.SYSTEM, "grep", "--exclude-dir=.git", "--exclude=.[a-z]*", "-rn", key, ".").Append(cli.CMD_OUT), "file:line:text", ":", "\n")
-	msg.Table(func(index int, value map[string]string, head []string) {
-		m.Push("", value, fields)
-	})
+	msg.Table(func(index int, value map[string]string, head []string) { m.PushSearch(kit.SSH_CMD, "grep", value) })
 }
 func _go_help(m *ice.Message, key string) {
 	p := m.Cmd(cli.SYSTEM, "go", "doc", key).Append(cli.CMD_OUT)
 	if p == "" {
 		return
 	}
-	ls := strings.Split(p, "\n")
-	if len(ls) > 10 {
-		ls = ls[:10]
-	}
-	res := strings.Join(ls, "\n")
-
-	for _, k := range kit.Split(m.Option(mdb.FIELDS)) {
-		switch k {
-		case kit.MDB_FILE:
-			m.Push(k, key+".godoc")
-		case kit.MDB_LINE:
-			m.Push(k, 1)
-		case kit.MDB_TEXT:
-			m.Push(k, string(res))
-		default:
-			m.Push(k, "")
-		}
-	}
+	m.PushSearch(kit.SSH_CMD, "help", kit.MDB_FILE, key+".godoc", kit.MDB_LINE, 1, kit.MDB_TEXT, p)
 }
 
 const GO = "go"
@@ -134,7 +90,6 @@ func init() {
 
 				m.Cmd(mdb.PLUGIN, mdb.CREATE, SUM, m.Prefix(SUM))
 				m.Cmd(mdb.RENDER, mdb.CREATE, SUM, m.Prefix(SUM))
-
 			}},
 			SUM: {Name: SUM, Help: "版本", Action: map[string]*ice.Action{
 				mdb.PLUGIN: {Hand: func(m *ice.Message, arg ...string) {

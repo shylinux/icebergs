@@ -61,6 +61,7 @@ func init() {
 
 				m.Cmd(mdb.PLUGIN, mdb.CREATE, C, m.Prefix(C))
 				m.Cmd(mdb.RENDER, mdb.CREATE, C, m.Prefix(C))
+				m.Cmd(mdb.ENGINE, mdb.CREATE, C, m.Prefix(C))
 				m.Cmd(mdb.SEARCH, mdb.CREATE, C, m.Prefix(C))
 
 				m.Cmd(mdb.PLUGIN, mdb.CREATE, H, m.Prefix(C))
@@ -79,6 +80,12 @@ func init() {
 				}},
 				mdb.RENDER: {Hand: func(m *ice.Message, arg ...string) {
 					m.Cmdy(nfs.CAT, path.Join(arg[2], arg[1]))
+				}},
+				mdb.ENGINE: {Hand: func(m *ice.Message, arg ...string) {
+					m.Option(cli.CMD_DIR, arg[2])
+					name := strings.TrimSuffix(arg[1], path.Ext(arg[1])) + ".bin"
+					m.Cmd(cli.SYSTEM, "gcc", arg[1], "-o", name)
+					m.Cmdy(cli.SYSTEM, "./"+name)
 				}},
 				mdb.SEARCH: {Hand: func(m *ice.Message, arg ...string) {
 					if arg[0] == kit.MDB_FOREACH {

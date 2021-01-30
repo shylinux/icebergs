@@ -2,7 +2,6 @@ package code
 
 import (
 	ice "github.com/shylinux/icebergs"
-	"github.com/shylinux/icebergs/base/cli"
 	"github.com/shylinux/icebergs/base/mdb"
 	"github.com/shylinux/icebergs/base/nfs"
 	kit "github.com/shylinux/toolkits"
@@ -16,10 +15,10 @@ func init() {
 	Index.Register(&ice.Context{Name: SHY, Help: "脚本",
 		Commands: map[string]*ice.Command{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-				m.Cmd(mdb.PLUGIN, mdb.CREATE, SHY, SHY, c.Cap(ice.CTX_FOLLOW))
-				m.Cmd(mdb.RENDER, mdb.CREATE, SHY, SHY, c.Cap(ice.CTX_FOLLOW))
-				m.Cmd(mdb.ENGINE, mdb.CREATE, SHY, SHY, c.Cap(ice.CTX_FOLLOW))
-				m.Cmd(mdb.SEARCH, mdb.CREATE, SHY, SHY, c.Cap(ice.CTX_FOLLOW))
+				m.Cmd(mdb.PLUGIN, mdb.CREATE, SHY, m.Prefix(SHY))
+				m.Cmd(mdb.RENDER, mdb.CREATE, SHY, m.Prefix(SHY))
+				m.Cmd(mdb.ENGINE, mdb.CREATE, SHY, m.Prefix(SHY))
+				m.Cmd(mdb.SEARCH, mdb.CREATE, SHY, m.Prefix(SHY))
 			}},
 			SHY: {Name: SHY, Help: "脚本", Action: map[string]*ice.Action{
 				mdb.PLUGIN: {Hand: func(m *ice.Message, arg ...string) {
@@ -35,7 +34,6 @@ func init() {
 					if arg[0] == kit.MDB_FOREACH {
 						return
 					}
-					m.Option(cli.CMD_DIR, kit.Select("src", arg, 2))
 					_go_find(m, kit.Select("main", arg, 1))
 					_go_grep(m, kit.Select("main", arg, 1))
 				}},

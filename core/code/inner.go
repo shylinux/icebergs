@@ -72,23 +72,19 @@ func init() {
 					_inner_show(m, arg[0], arg[1], arg[2])
 				}},
 				mdb.SEARCH: {Name: "search", Help: "搜索", Hand: func(m *ice.Message, arg ...string) {
+					if strings.Contains(arg[1], ";") {
+						ls := strings.Split(arg[1], ";")
+						arg[0] = ls[0]
+						arg[1] = ls[1]
+					}
 					m.Option(cli.CMD_DIR, arg[2])
 					m.Option(nfs.DIR_ROOT, arg[2])
-					m.Cmdy(mdb.SEARCH, arg[:2], "file,line,text")
+					m.Cmdy(mdb.SEARCH, arg[:2], "cmd,file,line,text")
 				}},
+				mdb.INPUTS: {Name: "favor inputs", Help: "补全"},
 
-				FAVOR: {Name: "favor", Help: "收藏"},
-				ctx.COMMAND: {Name: "command", Help: "命令", Hand: func(m *ice.Message, arg ...string) {
-					if arg[0] == "run" {
-						if arg = kit.Split(strings.Join(arg[1:], " ")); !m.Warn(!m.Right(arg)) {
-							if m.Cmdy(arg); len(m.Appendv(ice.MSG_APPEND)) == 0 && len(m.Resultv()) == 0 {
-								m.Cmdy(cli.SYSTEM, arg)
-							}
-						}
-						return
-					}
-					m.Cmdy(ctx.COMMAND, arg[0])
-				}},
+				FAVOR:       {Name: "favor", Help: "收藏"},
+				ctx.COMMAND: {Name: "command", Help: "命令"},
 			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 				if len(arg) < 2 {
 					m.Cmdy(nfs.DIR, kit.Select("./", arg, 0))

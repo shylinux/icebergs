@@ -7,7 +7,6 @@ import (
 	"github.com/shylinux/icebergs/base/nfs"
 	kit "github.com/shylinux/toolkits"
 
-	"fmt"
 	"os"
 	"path"
 	"strings"
@@ -27,7 +26,7 @@ func init() {
 			)},
 		},
 		Commands: map[string]*ice.Command{
-			COMPILE: {Name: "compile os=linux,darwin,windows arch=amd64,386,arm src=src/main.go@key 执行:button", Help: "编译", Action: map[string]*ice.Action{
+			COMPILE: {Name: "compile arch=amd64,386,arm os=linux,darwin,windows src=src/main.go@key 执行:button", Help: "编译", Action: map[string]*ice.Action{
 				mdb.INPUTS: {Name: "inputs", Help: "补全", Hand: func(m *ice.Message, arg ...string) {
 					m.Cmdy(nfs.DIR, "src", "path,size,time")
 					m.Sort(kit.MDB_PATH)
@@ -53,26 +52,19 @@ func init() {
 				}
 
 				// 编译目标
-
 				file := path.Join(kit.Select("", m.Conf(cmd, kit.META_PATH), m.Option(cli.CMD_DIR) == ""), kit.Keys(kit.Select("ice", path.Base(strings.TrimSuffix(main, ".go")), main != "src/main.go"), goos, arch))
-				args := []string{"-ldflags"}
-				list := []string{
-					fmt.Sprintf(`-X main.Time="%s"`, m.Time()),
-					fmt.Sprintf(`-X main.Version="%s"`, m.Cmdx(cli.SYSTEM, "git", "describe", "--tags")),
-					fmt.Sprintf(`-X main.HostName="%s"`, m.Conf(cli.RUNTIME, "boot.hostname")),
-					fmt.Sprintf(`-X main.UserName="%s"`, m.Conf(cli.RUNTIME, "boot.username")),
-				}
 
 				// 编译参数
 				m.Optionv(cli.CMD_ENV, kit.Simple(m.Confv(COMPILE, "meta.env"), "GOARCH", arch, "GOOS", goos))
-				if msg := m.Cmd(cli.SYSTEM, m.Confv(COMPILE, "meta.go"), args, "'"+strings.Join(list, " ")+"'", "-o", file, main); msg.Append(cli.CMD_CODE) != "0" {
+				if msg := m.Cmd(cli.SYSTEM, m.Confv(COMPILE, "meta.go"), "-o", file, main); msg.Append(cli.CMD_CODE) != "0" {
 					m.Copy(msg)
-				} else {
-					m.Log_EXPORT("source", main, "target", file)
-					m.Push(kit.MDB_TIME, m.Time())
-					m.PushDownload(kit.MergeURL2(m.Option(ice.MSG_USERWEB), "/publish/"+path.Base(file)))
-					m.Echo(file)
+					return
 				}
+
+				m.Log_EXPORT("source", main, "target", file)
+				m.Push(kit.MDB_TIME, m.Time())
+				m.PushDownload(file)
+				m.Echo(file)
 			}},
 		},
 	})

@@ -18,17 +18,16 @@ func _wiki_path(m *ice.Message, cmd string, arg ...string) string {
 func _wiki_list(m *ice.Message, cmd string, arg ...string) bool {
 	m.Option("prefix", m.Option(nfs.DIR_ROOT, _wiki_path(m, cmd)))
 	if len(arg) == 0 || strings.HasSuffix(arg[0], "/") {
-		m.Option(ice.MSG_DISPLAY, "table")
 		if m.Option(nfs.DIR_DEEP) != "true" {
 			// 目录列表
 			m.Option(nfs.DIR_TYPE, nfs.DIR)
-			m.Cmdy(nfs.DIR, kit.Select("./", arg, 0), "time size path")
+			m.Cmdy(nfs.DIR, kit.Select("./", arg, 0), "time,size,path")
 		}
 
 		// 文件列表
 		m.Option(nfs.DIR_TYPE, nfs.FILE)
 		m.Option(nfs.DIR_REG, m.Conf(cmd, "meta.regs"))
-		m.Cmdy(nfs.DIR, kit.Select("./", arg, 0), "time size path")
+		m.Cmdy(nfs.DIR, kit.Select("./", arg, 0), "time,size,path")
 		return true
 	}
 	return false
@@ -65,7 +64,7 @@ var Index = &ice.Context{Name: WIKI, Help: "文档中心",
 
 func init() {
 	web.Index.Register(Index, &web.Frame{},
-		FEEL, WORD, DATA, DRAW,
+		FEEL, DRAW, DATA, WORD,
 		SPARK, IMAGE,
 	)
 }

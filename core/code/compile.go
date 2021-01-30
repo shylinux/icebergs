@@ -56,7 +56,7 @@ func init() {
 
 				// 编译参数
 				m.Optionv(cli.CMD_ENV, kit.Simple(m.Confv(COMPILE, "meta.env"), "GOARCH", arch, "GOOS", goos))
-				if msg := m.Cmd(cli.SYSTEM, m.Confv(COMPILE, "meta.go"), "-o", file, main); msg.Append(cli.CMD_CODE) != "0" {
+				if msg := m.Cmd(cli.SYSTEM, m.Confv(COMPILE, "meta.go"), "-o", file, main, "src/version.go"); msg.Append(cli.CMD_CODE) != "0" {
 					m.Copy(msg)
 					return
 				}

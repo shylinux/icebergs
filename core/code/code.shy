@@ -34,14 +34,14 @@ shy.go
 go.go
 js.go
 
-install.go
+autogen.go
 compile.go
-binpack.go
-webpack.go
-
 publish.go
 upgrade.go
-autogen.go
+
+webpack.go
+binpack.go
+install.go
 
 code.go
 code.shy

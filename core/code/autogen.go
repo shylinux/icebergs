@@ -83,6 +83,7 @@ func init() {
 						_autogen_main(m, m.Option("main"), _autogen_mod(m, "go.mod"), m.Option("name"))
 					}
 					m.Cmdy(cli.SYSTEM, "make")
+					m.Option(ice.MSG_PROCESS, ice.PROCESS_INNER)
 				}},
 				mdb.INPUTS: {Name: "inputs", Help: "补全", Hand: func(m *ice.Message, arg ...string) {
 					switch arg[0] {

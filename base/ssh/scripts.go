@@ -314,7 +314,7 @@ func (f *Frame) Start(m *ice.Message, arg ...string) bool {
 	}
 
 	if f.count = 1; f.source == STDIO {
-		m.Option("_disable_log", "true")
+		// m.Option("_disable_log", "true")
 		f.count = kit.Int(m.Conf(SOURCE, "hash.stdio.meta.count")) + 1
 		f.scan(m, STDIO, "", r)
 	} else {

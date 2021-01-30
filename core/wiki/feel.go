@@ -24,7 +24,6 @@ func init() {
 				}},
 			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 				_wiki_list(m, FEEL, kit.Select("./", arg, 0))
-				m.Option(ice.MSG_DISPLAY, "")
 				m.SortTimeR(kit.MDB_TIME)
 			}},
 		},

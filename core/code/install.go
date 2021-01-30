@@ -28,7 +28,7 @@ func init() {
 			)},
 		},
 		Commands: map[string]*ice.Command{
-			INSTALL: {Name: "install name port path auto", Help: "安装", Meta: kit.Dict(), Action: map[string]*ice.Action{
+			INSTALL: {Name: "install name port path auto download", Help: "安装", Meta: kit.Dict(), Action: map[string]*ice.Action{
 				web.DOWNLOAD: {Name: "download link", Help: "下载", Hand: func(m *ice.Message, arg ...string) {
 					link := m.Option(kit.MDB_LINK)
 					name := path.Base(link)

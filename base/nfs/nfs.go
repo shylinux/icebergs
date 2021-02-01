@@ -365,7 +365,7 @@ var Index = &ice.Context{Name: "nfs", Help: "存储模块",
 			_file_list(m, kit.Select("./", m.Option(DIR_ROOT)), arg[0],
 				0, m.Options(DIR_DEEP), kit.Select(TYPE_BOTH, m.Option(DIR_TYPE)), reg,
 				kit.Split(kit.Select("time size path", strings.Join(arg[1:], " "))))
-			m.Sort(kit.MDB_TIME, "time_r")
+			m.SortTimeR(kit.MDB_TIME)
 		}},
 		FILE: {Name: "file path auto", Help: "文件", Action: map[string]*ice.Action{
 			mdb.SEARCH: {Name: "search type name text", Help: "搜索", Hand: func(m *ice.Message, arg ...string) {

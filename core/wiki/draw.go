@@ -16,7 +16,7 @@ func init() {
 			DRAW: {Name: DRAW, Help: "思维导图", Value: kit.Data(kit.MDB_PATH, "", "regs", ".*\\.svg")},
 		},
 		Commands: map[string]*ice.Command{
-			DRAW: {Name: "draw path=src/ file=main.svg 刷新:button=auto 编辑 save 项目 变参", Help: "思维导图", Meta: kit.Dict(
+			DRAW: {Name: "draw path=src/ file=main.svg 刷新:button=auto 编辑 save 项目 参数", Help: "思维导图", Meta: kit.Dict(
 				"display", "/plugin/local/wiki/draw.js", "style", "drawer",
 			), Action: map[string]*ice.Action{
 				nfs.SAVE: {Name: "save", Help: "保存", Hand: func(m *ice.Message, arg ...string) {
@@ -25,9 +25,6 @@ func init() {
 			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 				if !_wiki_list(m, DRAW, kit.Select("./", path.Join(arg...))) {
 					_wiki_show(m, DRAW, path.Join(arg...))
-					if m.Result(0) == ice.ErrWarn {
-						m.Set(ice.MSG_RESULT)
-					}
 				}
 			}},
 		},

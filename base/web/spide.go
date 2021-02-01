@@ -264,6 +264,12 @@ func init() {
 					if m.Warn(res.StatusCode != http.StatusOK, res.Status) {
 						m.Set(ice.MSG_RESULT)
 						// return
+						switch res.StatusCode {
+						case http.StatusNotFound:
+							return
+						default:
+						}
+
 					}
 
 					// 缓存变量

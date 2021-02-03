@@ -1,5 +1,5 @@
 title "微信公众号"
-refer "" `
+refer `
 官网 https://weixin.qq.com/
 后台 https://mp.weixin.qq.com/
 文档 https://developers.weixin.qq.com/doc/offiaccount/Getting_Started/Overview.html
@@ -9,10 +9,10 @@ image qrcode `https://weixin.qq.com`
 spark
 
 chapter "应用"
-field location web.chat.location
-field paste web.chat.paste
 field scan web.chat.scan
-field feel web.chat.feel
+field paste web.chat.paste
+field files web.chat.files
+field location web.chat.location
 
 chapter "权限"
 field access web.chat.wx.access

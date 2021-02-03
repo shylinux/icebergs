@@ -10,13 +10,6 @@ import (
 	"path"
 )
 
-const (
-	DOMAIN    = "domain"
-	PUBLIC    = "public"
-	PROTECTED = "protected"
-	PRIVATE   = "private"
-)
-
 func _action_domain(m *ice.Message, cmd string, arg ...string) (domain string) {
 	m.Option(ice.MSG_LOCAL, "")
 	m.Option(ice.MSG_DOMAIN, "")
@@ -94,6 +87,14 @@ func _action_upload(m *ice.Message, arg ...string) {
 	m.Option(ice.MSG_UPLOAD, msg.Append(kit.MDB_HASH), msg.Append(kit.MDB_NAME))
 }
 
+const (
+	DOMAIN    = "domain"
+	PUBLIC    = "public"
+	PROTECTED = "protected"
+	PRIVATE   = "private"
+)
+
+const P_ACTION = "/action"
 const ACTION = "action"
 
 func init() {
@@ -102,7 +103,7 @@ func init() {
 			ACTION: {Name: ACTION, Help: "应用", Value: kit.Data(DOMAIN, kit.Dict())},
 		},
 		Commands: map[string]*ice.Command{
-			"/action": {Name: "/action river storm action arg...", Help: "工作台", Action: map[string]*ice.Action{
+			P_ACTION: {Name: "/action river storm action arg...", Help: "工作台", Action: map[string]*ice.Action{
 				ctx.COMMAND: {Name: "command", Help: "命令", Hand: func(m *ice.Message, arg ...string) {
 					for _, k := range arg {
 						m.Cmdy(ctx.COMMAND, k)
@@ -112,10 +113,9 @@ func init() {
 				if arg[0] == "_share" {
 					switch msg := m.Cmd(web.SHARE, arg[1]); msg.Append(kit.MDB_TYPE) {
 					case STORM:
-						m.Debug(msg.Format(kit.MDB_META))
+						m.Option(kit.MDB_TITLE, msg.Append(kit.MDB_NAME))
 						arg[0] = msg.Append(RIVER)
 						arg[1] = msg.Append(STORM)
-						m.Option(kit.MDB_TITLE, msg.Append(kit.MDB_NAME))
 					default:
 						return
 					}
@@ -130,11 +130,11 @@ func init() {
 
 				m.Option(ice.MSG_RIVER, arg[0])
 				m.Option(ice.MSG_STORM, arg[1])
+
 				if len(arg) == 2 {
 					_action_list(m, arg[0], arg[1])
 					return //命令列表
 				}
-
 				_action_show(m, arg[0], arg[1], arg[2], arg[3:]...)
 			}},
 		}})

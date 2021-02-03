@@ -16,6 +16,7 @@ const (
 
 	BACKGROUND = "background"
 )
+const P_HEADER = "/header"
 const HEADER = "header"
 
 func init() {
@@ -24,7 +25,7 @@ func init() {
 			HEADER: {Name: HEADER, Help: "标题栏", Value: kit.Dict(TITLE, "github.com/shylinux/contexts")},
 		},
 		Commands: map[string]*ice.Command{
-			"/header": {Name: "/header", Help: "标题栏", Action: map[string]*ice.Action{
+			P_HEADER: {Name: "/header", Help: "标题栏", Action: map[string]*ice.Action{
 				LOGIN: {Name: "login", Help: "用户登录", Hand: func(m *ice.Message, arg ...string) {
 					if aaa.UserLogin(m, arg[0], arg[1]) {
 						m.Option(ice.MSG_SESSID, aaa.SessCreate(m, m.Option(ice.MSG_USERNAME), m.Option(ice.MSG_USERROLE)))

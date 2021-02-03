@@ -27,6 +27,9 @@ func init() {
 						m.PushSearch(kit.SSH_CMD, P_SEARCH, value)
 					})
 				}},
+				mdb.RENDER: {Name: "render", Help: "渲染", Hand: func(m *ice.Message, arg ...string) {
+					m.Cmdy(m.Space(m.Option(POD)), mdb.RENDER, arg[1:])
+				}},
 				ctx.COMMAND: {Name: "command", Help: "命令", Hand: func(m *ice.Message, arg ...string) {
 					if len(arg) > 0 && arg[0] == "run" {
 						m.Cmdy(arg[1:])
@@ -34,14 +37,10 @@ func init() {
 					}
 					m.Cmdy(ctx.COMMAND, arg)
 				}},
-				mdb.RENDER: {Name: "render", Help: "渲染", Hand: func(m *ice.Message, arg ...string) {
-					m.Cmdy(m.Space(m.Option(POD)), mdb.RENDER, arg[1:])
-				}},
 			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 				if kit.Contains(arg[1], ";") {
 					arg = kit.Split(arg[1], ";", ";", ";")
 				}
-
 				if m.Cmdy(m.Space(m.Option(POD)), mdb.SEARCH, arg); arg[1] == "" {
 					return
 				}

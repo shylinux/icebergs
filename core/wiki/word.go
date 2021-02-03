@@ -475,7 +475,7 @@ func init() {
 			}},
 
 			WORD: {Name: "word path=src/main.shy auto 演示", Help: "语言文字", Meta: kit.Dict(
-				"display", "/plugin/local/wiki/word.js",
+				"display", "/plugin/local/wiki/word.js", "style", "word",
 			), Action: map[string]*ice.Action{
 				web.STORY: {Name: "story", Help: "运行", Hand: func(m *ice.Message, arg ...string) {
 					m.Cmdy(arg[0], kit.MDB_ACTION, "run", arg[1:])

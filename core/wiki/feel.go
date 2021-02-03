@@ -12,7 +12,7 @@ func init() {
 	Index.Merge(&ice.Context{
 		Configs: map[string]*ice.Config{
 			FEEL: {Name: FEEL, Help: "影音媒体", Value: kit.Data(
-				kit.MDB_PATH, "usr/image", "regs", ".*.(qrc|png|PNG|jpg|jpeg|JPG|MOV|m4v|mp4)",
+				kit.MDB_PATH, "usr/image", "regs", ".*.(png|PNG|jpg|JPG|jpeg|mp4|m4v|MOV)",
 			)},
 		},
 		Commands: map[string]*ice.Command{

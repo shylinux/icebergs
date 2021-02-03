@@ -17,7 +17,7 @@ func init() {
 		},
 		Commands: map[string]*ice.Command{
 			DRAW: {Name: "draw path=src/ file=main.svg 刷新:button=auto 编辑 save 项目 参数", Help: "思维导图", Meta: kit.Dict(
-				"display", "/plugin/local/wiki/draw.js", "style", "drawer",
+				"display", "/plugin/local/wiki/draw.js",
 			), Action: map[string]*ice.Action{
 				nfs.SAVE: {Name: "save", Help: "保存", Hand: func(m *ice.Message, arg ...string) {
 					_wiki_save(m, DRAW, path.Join(arg...), m.Option("content"))

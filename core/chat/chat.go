@@ -13,24 +13,30 @@ const CHAT = "chat"
 var Index = &ice.Context{Name: CHAT, Help: "聊天中心",
 	Commands: map[string]*ice.Command{
 		ice.CTX_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			m.Cmd(web.SERVE, aaa.WHITE, HEADER, RIVER, ACTION, FOOTER)
 			m.Cmd(mdb.SEARCH, mdb.CREATE, P_SEARCH, m.Prefix(P_SEARCH))
 			m.Cmd(mdb.SEARCH, mdb.CREATE, EMAIL, m.Prefix(EMAIL))
+			m.Watch(web.SPACE_START, m.Prefix(NODE))
+			m.Watch(web.SPACE_STOP, m.Prefix(NODE))
 			m.Load()
-			m.Cmd(web.SERVE, aaa.WHITE, "header", "river", "action", "footer")
 
-			m.Conf(ACTION, "meta.domain.web.chat.meet.miss", "true")
-			m.Conf(ACTION, "meta.domain.web.chat.meet.mate", "true")
-			m.Conf(ACTION, "meta.domain.web.chat.location", "true")
-			m.Conf(ACTION, "meta.domain.web.chat.paste", "true")
-			m.Conf(ACTION, "meta.domain.web.chat.scan", "true")
-			m.Conf(ACTION, "meta.domain.web.wiki.feel", "true")
-			m.Conf(ACTION, "meta.domain.web.wiki.draw", "true")
-			m.Conf(ACTION, "meta.domain.web.wiki.data", "true")
-			m.Conf(ACTION, "meta.domain.web.wiki.word", "true")
-			m.Conf(ACTION, "meta.domain.web.team.task", "true")
-			m.Conf(ACTION, "meta.domain.web.team.plan", "true")
-			m.Conf(ACTION, "meta.domain.web.mall.asset", "true")
-			m.Conf(ACTION, "meta.domain.web.mall.salary", "true")
+			for _, cmd := range []string{
+				"web.chat.meet.miss",
+				"web.chat.meet.mate",
+				"web.chat.location",
+				"web.chat.paste",
+				"web.chat.scan",
+				"web.wiki.feel",
+				"web.wiki.draw",
+				"web.wiki.data",
+				"web.wiki.word",
+				"web.team.task",
+				"web.team.plan",
+				"web.mall.asset",
+				"web.mall.salary",
+			} {
+				m.Conf(ACTION, kit.Keym("domain", cmd), "true")
+			}
 
 			m.Conf(RIVER, "meta.template", kit.Dict(
 				"base", kit.Dict(
@@ -62,8 +68,6 @@ var Index = &ice.Context{Name: CHAT, Help: "聊天中心",
 					},
 				),
 			))
-			m.Watch(web.SPACE_START, m.Prefix(NODE))
-			m.Watch(web.SPACE_STOP, m.Prefix(NODE))
 		}},
 		ice.CTX_EXIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) { m.Save() }},
 	},
@@ -72,6 +76,6 @@ var Index = &ice.Context{Name: CHAT, Help: "聊天中心",
 func init() {
 	web.Index.Register(Index, &web.Frame{},
 		HEADER, RIVER, STORM, ACTION, FOOTER,
-		LOCATION, PASTE, SCAN, FILES,
+		SCAN, PASTE, FILES, LOCATION,
 	)
 }

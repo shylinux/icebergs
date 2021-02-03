@@ -3,15 +3,15 @@ chapter "文档"
 wiki.go
 wiki.shy
 
-baidu.go
-music.go
-video.go
-
-chart.go
-template.go
-
 feel.go
 draw.go
 data.go
 word.go
+
+chart.go
+template.go
+
+baidu.go
+music.go
+video.go
 

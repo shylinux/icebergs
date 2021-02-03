@@ -8,10 +8,7 @@ import (
 	"github.com/shylinux/icebergs/base/ssh"
 	"github.com/shylinux/icebergs/base/web"
 	kit "github.com/shylinux/toolkits"
-	"github.com/skip2/go-qrcode"
 
-	"bytes"
-	"encoding/base64"
 	"fmt"
 	"net/url"
 	"path"
@@ -114,6 +111,62 @@ func _spark_show(m *ice.Message, name, text string, arg ...string) {
 	m.Render(ice.RENDER_TEMPLATE, m.Conf(SPARK, "meta.template"))
 }
 
+func _order_show(m *ice.Message, name, text string, arg ...string) {
+	m.Optionv("list", kit.Split(strings.TrimSpace(text), "\n"))
+	_option(m, ORDER, name, text, arg...)
+	m.Render(ice.RENDER_TEMPLATE, m.Conf(ORDER, "meta.template"))
+}
+func _table_show(m *ice.Message, name, text string, arg ...string) {
+	head, list := []string{}, [][]string{}
+	for i, v := range kit.Split(strings.TrimSpace(text), "\n") {
+		if v = strings.ReplaceAll(v, "%", "%%"); i == 0 {
+			head = kit.Split(v)
+		} else {
+			line := kit.Split(v)
+			for i, v := range line {
+				if ls := kit.Split(v); len(ls) > 1 {
+					style := []string{}
+					for i := 1; i < len(ls)-1; i += 2 {
+						switch ls[i] {
+						case "bg":
+							ls[i] = "background-color"
+						case "fg":
+							ls[i] = "color"
+						}
+						style = append(style, ls[i]+":"+ls[i+1])
+					}
+					line[i] = kit.Format(`<span style="%s">%s</span>`, strings.Join(style, ";"), ls[0])
+				}
+			}
+			list = append(list, line)
+		}
+	}
+	m.Optionv("head", head)
+	m.Optionv("list", list)
+
+	_option(m, TABLE, name, text, arg...)
+	m.Render(ice.RENDER_TEMPLATE, m.Conf(TABLE, "meta.template"))
+}
+func _shell_show(m *ice.Message, name, text string, arg ...string) {
+	m.Option("output", m.Cmdx(cli.SYSTEM, "sh", "-c", m.Option("input", text)))
+	_option(m, SHELL, name, text, arg...)
+	m.Render(ice.RENDER_TEMPLATE, m.Conf(SHELL, "meta.template"))
+}
+func _local_show(m *ice.Message, name, text string, arg ...string) {
+	m.Option("input", m.Cmdx(nfs.CAT, text))
+	_option(m, LOCAL, name, text, arg...)
+	m.Render(ice.RENDER_TEMPLATE, m.Conf(LOCAL, "meta.template"))
+}
+
+func _image_show(m *ice.Message, name, text string, arg ...string) {
+	if name == "qrcode" {
+		m.EchoQRCode(text)
+		return
+	}
+
+	_option(m, IMAGE, name, text, arg...)
+	m.Render(ice.RENDER_TEMPLATE, m.Conf(IMAGE, "meta.template"))
+}
 func _chart_show(m *ice.Message, kind, name, text string, arg ...string) {
 	var chart Chart
 	switch kind {
@@ -221,60 +274,9 @@ func _field_show(m *ice.Message, name, text string, arg ...string) {
 	m.Option("meta", data)
 	m.Render(ice.RENDER_TEMPLATE, m.Conf(FIELD, "meta.template"))
 }
-func _shell_show(m *ice.Message, name, text string, arg ...string) {
-	m.Option("output", m.Cmdx(cli.SYSTEM, "sh", "-c", m.Option("input", text)))
-	_option(m, SHELL, name, text, arg...)
-	m.Render(ice.RENDER_TEMPLATE, m.Conf(SHELL, "meta.template"))
-}
-func _local_show(m *ice.Message, name, text string, arg ...string) {
-	m.Option("input", m.Cmdx(nfs.CAT, text))
-	_option(m, LOCAL, name, text, arg...)
-	m.Render(ice.RENDER_TEMPLATE, m.Conf(LOCAL, "meta.template"))
-}
-
-func _order_show(m *ice.Message, name, text string, arg ...string) {
-	m.Optionv("list", kit.Split(strings.TrimSpace(text), "\n"))
-	_option(m, ORDER, name, text, arg...)
-	m.Render(ice.RENDER_TEMPLATE, m.Conf(ORDER, "meta.template"))
-}
-func _table_show(m *ice.Message, name, text string, arg ...string) {
-	head, list := []string{}, [][]string{}
-	for i, v := range kit.Split(strings.TrimSpace(text), "\n") {
-		if v = strings.ReplaceAll(v, "%", "%%"); i == 0 {
-			head = kit.Split(v)
-		} else {
-			line := kit.Split(v)
-			for i, v := range line {
-				if ls := kit.Split(v); len(ls) > 1 {
-					style := []string{}
-					for i := 1; i < len(ls)-1; i += 2 {
-						switch ls[i] {
-						case "bg":
-							ls[i] = "background-color"
-						case "fg":
-							ls[i] = "color"
-						}
-						style = append(style, ls[i]+":"+ls[i+1])
-					}
-					line[i] = kit.Format(`<span style="%s">%s</span>`, strings.Join(style, ";"), ls[0])
-				}
-			}
-			list = append(list, line)
-		}
-	}
-	m.Optionv("head", head)
-	m.Optionv("list", list)
-
-	_option(m, TABLE, name, text, arg...)
-	m.Render(ice.RENDER_TEMPLATE, m.Conf(TABLE, "meta.template"))
-}
-func _image_show(m *ice.Message, name, text string, arg ...string) {
-	_option(m, IMAGE, name, text, arg...)
-	m.Render(ice.RENDER_TEMPLATE, m.Conf(IMAGE, "meta.template"))
-}
 func _other_show(m *ice.Message, name, text string, arg ...string) {
 	_option(m, OTHER, name, text, arg...)
-	// m.Cmdy(mdb.RENDER, web.RENDER.Frame, text)
+	m.Render(ice.RENDER_TEMPLATE, m.Conf(OTHER, "meta.template"))
 }
 
 func _word_show(m *ice.Message, name string, arg ...string) {
@@ -299,11 +301,12 @@ const (
 	SHELL = "shell"
 	LOCAL = "local"
 
-	FIELD = "field"
 	IMAGE = "image"
 	CHART = "chart"
-	PARSE = "parse"
+	FIELD = "field"
 	OTHER = "other"
+
+	PARSE = "parse"
 
 	PREMENU = "premenu"
 	CHAPTER = "chapter"
@@ -322,18 +325,17 @@ func init() {
 			TITLE: {Name: TITLE, Help: "标题", Value: kit.Data("template", title)},
 			BRIEF: {Name: BRIEF, Help: "摘要", Value: kit.Data("template", brief)},
 			REFER: {Name: REFER, Help: "参考", Value: kit.Data("template", refer)},
-			SPARK: {Name: SPARK, Help: "段落", Value: kit.Data("template", spark,
-				"prompt", kit.Dict("shell", "$ "),
-			)},
+			SPARK: {Name: SPARK, Help: "段落", Value: kit.Data("template", spark, "prompt", kit.Dict("shell", "$ "))},
 
 			ORDER: {Name: ORDER, Help: "列表", Value: kit.Data("template", order)},
 			TABLE: {Name: TABLE, Help: "表格", Value: kit.Data("template", table)},
 			SHELL: {Name: SHELL, Help: "命令", Value: kit.Data("template", shell)},
 			LOCAL: {Name: LOCAL, Help: "文件", Value: kit.Data("template", local)},
 
-			FIELD: {Name: FIELD, Help: "插件", Value: kit.Data("template", field)},
-			CHART: {Name: CHART, Help: "图表", Value: kit.Data("template", chart, "suffix", `</svg>`)},
 			IMAGE: {Name: IMAGE, Help: "图片", Value: kit.Data("template", image)},
+			CHART: {Name: CHART, Help: "图表", Value: kit.Data("template", chart, "suffix", `</svg>`)},
+			FIELD: {Name: FIELD, Help: "插件", Value: kit.Data("template", field)},
+			OTHER: {Name: FIELD, Help: "网页", Value: kit.Data("template", other)},
 
 			WORD: {Name: WORD, Help: "语言文字", Value: kit.Data(
 				kit.MDB_PATH, "", "regs", ".*\\.shy", "alias", map[string]interface{}{
@@ -359,11 +361,6 @@ func init() {
 				_title_show(m, arg[0], kit.Select(arg[0], arg[1]), arg[2:]...)
 			}},
 			BRIEF: {Name: "brief [name] text", Help: "摘要", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-				if len(arg) == 0 {
-					m.Echo(`<br class="story" data-type="brief">`)
-					return
-				}
-
 				arg = _name(m, arg)
 				_brief_show(m, arg[0], kit.Select(arg[0], arg[1]), arg[2:]...)
 			}},
@@ -371,7 +368,7 @@ func init() {
 				arg = _name(m, arg)
 				_refer_show(m, arg[0], arg[1], arg[2:]...)
 			}},
-			SPARK: {Name: "spark [name] text", Help: "灵感", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			SPARK: {Name: "spark [name] text", Help: "段落", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 				if len(arg) == 0 {
 					m.Echo(`<br class="story" data-type="spark">`)
 					return
@@ -386,11 +383,6 @@ func init() {
 				_order_show(m, arg[0], kit.Select(arg[0], arg[1]), arg[2:]...)
 			}},
 			TABLE: {Name: "table [name] `[item item\n]...`", Help: "表格", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-				if arg[0] == "cmd" {
-					msg := m.Cmd(kit.Split(arg[1])).Table()
-					arg[1] = msg.Result()
-				}
-
 				arg = _name(m, arg)
 				_table_show(m, arg[0], kit.Select(arg[0], arg[1]), arg[2:]...)
 			}},
@@ -403,25 +395,7 @@ func init() {
 				_local_show(m, arg[0], kit.Select(arg[0], arg[1]), arg[2:]...)
 			}},
 
-			FIELD: {Name: "field [name] cmd", Help: "插件", Action: map[string]*ice.Action{
-				"run": {Name: "run", Help: "运行", Hand: func(m *ice.Message, arg ...string) {
-					if !m.Warn(!m.Right(arg[1:]), ice.ErrNotRight, arg[1:]) {
-						m.Cmdy(arg[1:])
-					}
-				}},
-			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-				arg = _name(m, arg)
-				_field_show(m, strings.ReplaceAll(kit.Select(path.Base(arg[1]), arg[0]), " ", "_"), arg[1], arg[2:]...)
-			}},
 			IMAGE: {Name: "image [name] url", Help: "图片", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-				if arg[0] == "qrcode" {
-					buf := bytes.NewBuffer(make([]byte, 0, 4096))
-					if qr, e := qrcode.New(arg[1], qrcode.Medium); m.Assert(e) {
-						m.Assert(qr.Write(kit.Int(kit.Select("256")), buf))
-					}
-					arg[1] = "data:image/png;base64," + base64.StdEncoding.EncodeToString(buf.Bytes())
-				}
-
 				arg = _name(m, arg)
 				_image_show(m, arg[0], kit.Select(arg[0], arg[1]), arg[2:]...)
 				m.Render("")
@@ -432,6 +406,21 @@ func init() {
 				}
 				_chart_show(m, arg[0], arg[1], arg[2], arg[3:]...)
 			}},
+			FIELD: {Name: "field [name] cmd", Help: "插件", Action: map[string]*ice.Action{
+				"run": {Name: "run", Help: "运行", Hand: func(m *ice.Message, arg ...string) {
+					if !m.Warn(!m.Right(arg[1:]), ice.ErrNotRight, arg[1:]) {
+						m.Cmdy(arg[1:])
+					}
+				}},
+			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+				arg = _name(m, arg)
+				_field_show(m, strings.ReplaceAll(kit.Select(path.Base(arg[1]), arg[0]), " ", "_"), arg[1], arg[2:]...)
+			}},
+			OTHER: {Name: "other [name] url", Help: "网页", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+				arg = _name(m, arg)
+				_other_show(m, arg[0], kit.Select(arg[0], arg[1]), arg[2:]...)
+			}},
+
 			PARSE: {Name: "parse type=auto,json,http,form,list auto text:textarea", Help: "结构", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 				if arg[0] == "auto" && (strings.HasPrefix(arg[1], "{") || strings.HasPrefix(arg[1], "[")) {
 					arg[0] = "json"
@@ -468,10 +457,6 @@ func init() {
 						m.Push(kit.Format(i), v)
 					}
 				}
-			}},
-			OTHER: {Name: "other [name] url", Help: "网页", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-				arg = _name(m, arg)
-				_other_show(m, arg[0], kit.Select(arg[0], arg[1]), arg[2:]...)
 			}},
 
 			WORD: {Name: "word path=src/main.shy auto 演示", Help: "语言文字", Meta: kit.Dict(

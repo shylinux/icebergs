@@ -3,7 +3,9 @@ package chat
 import (
 	ice "github.com/shylinux/icebergs"
 	"github.com/shylinux/icebergs/base/aaa"
+	"github.com/shylinux/icebergs/base/mdb"
 	"github.com/shylinux/icebergs/base/web"
+	"github.com/shylinux/icebergs/core/code"
 	kit "github.com/shylinux/toolkits"
 )
 
@@ -11,6 +13,8 @@ const (
 	TITLE = "title"
 	LOGIN = "login"
 	CHECK = "check"
+
+	BACKGROUND = "background"
 )
 const HEADER = "header"
 
@@ -46,18 +50,17 @@ func init() {
 				aaa.USERROLE: {Name: "userrole", Help: "用户角色", Hand: func(m *ice.Message, arg ...string) {
 					m.Echo(aaa.UserRole(m, m.Option("who")))
 				}},
-
-				"background": {Name: "background", Help: "背景图片", Hand: func(m *ice.Message, arg ...string) {
-					m.Option("background", m.Conf(HEADER, "background", arg[0]))
+				BACKGROUND: {Name: "background", Help: "背景图片", Hand: func(m *ice.Message, arg ...string) {
+					m.Option(BACKGROUND, m.Conf(HEADER, BACKGROUND, arg[0]))
 				}},
-				"pack": {Name: "pack", Help: "打包", Hand: func(m *ice.Message, arg ...string) {
-					m.Cmdy("web.code.webpack", "create")
+				code.WEBPACK: {Name: "webpack", Help: "打包", Hand: func(m *ice.Message, arg ...string) {
+					m.Cmdy(code.WEBPACK, mdb.CREATE)
 				}},
 				"wx": {Name: "wx", Help: "微信", Hand: func(m *ice.Message, arg ...string) {
 					m.Cmdy("web.chat.wx.access", "config")
 				}},
 			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-				m.Option("background", m.Conf(HEADER, "background"))
+				m.Option(BACKGROUND, m.Conf(HEADER, BACKGROUND))
 				m.Echo(m.Conf(HEADER, TITLE))
 			}},
 		},

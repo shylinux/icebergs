@@ -6,10 +6,11 @@ import (
 	"bytes"
 	"encoding/base64"
 	"fmt"
-	"github.com/skip2/go-qrcode"
 	"net/url"
 	"path"
 	"strings"
+
+	"github.com/skip2/go-qrcode"
 )
 
 func (m *Message) Prefix(arg ...string) string {
@@ -160,7 +161,7 @@ func _render(m *Message, cmd string, args ...interface{}) string {
 			case kit.SSH_SHELL:
 				list = append(list, "<label>", "$ ", "</label>")
 			default:
-				list = append(list, "<label>", "&lt; ", "</label>")
+				list = append(list, "<label>", "&gt; ", "</label>")
 			}
 			list = append(list, "<span>", l, "</span>")
 			list = append(list, "</div>")

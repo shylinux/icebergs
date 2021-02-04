@@ -22,8 +22,13 @@ func _trans(arg []string, tr map[string]string) {
 }
 
 const (
+	ADDRESS   = "address"
 	LATITUDE  = "latitude"
 	LONGITUDE = "longitude"
+)
+const (
+	GETLOCATION  = "getLocation"
+	OPENLOCATION = "openLocation"
 )
 
 const LOCATION = "location"
@@ -34,9 +39,15 @@ func init() {
 			LOCATION: {Name: LOCATION, Help: "地理位置", Value: kit.Data(kit.MDB_SHORT, kit.MDB_TEXT)},
 		},
 		Commands: map[string]*ice.Command{
-			LOCATION: {Name: "location text auto create@getLocation", Help: "地理位置", Action: map[string]*ice.Action{
+			LOCATION: {Name: "location text auto getLocation", Help: "地理位置", Action: map[string]*ice.Action{
+				OPENLOCATION: {Name: "create type=text name address latitude longitude", Help: "地图", Hand: func(m *ice.Message, arg ...string) {
+				}},
+				GETLOCATION: {Name: "create type=text name address latitude longitude", Help: "添加", Hand: func(m *ice.Message, arg ...string) {
+					_trans(arg, map[string]string{ADDRESS: "text"})
+					m.Cmdy(mdb.INSERT, LOCATION, "", mdb.HASH, arg)
+				}},
 				mdb.CREATE: {Name: "create type=text name address latitude longitude", Help: "添加", Hand: func(m *ice.Message, arg ...string) {
-					_trans(arg, map[string]string{"address": "text"})
+					_trans(arg, map[string]string{ADDRESS: "text"})
 					m.Cmdy(mdb.INSERT, LOCATION, "", mdb.HASH, arg)
 				}},
 				mdb.MODIFY: {Name: "modify", Help: "编辑", Hand: func(m *ice.Message, arg ...string) {
@@ -56,8 +67,8 @@ func init() {
 				}},
 			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 				m.Option(mdb.FIELDS, kit.Select("time,type,name,text,longitude,latitude", mdb.DETAIL, len(arg) > 0))
-				m.Cmdy(mdb.SELECT, LOCATION, "", mdb.HASH, kit.MDB_TEXT, arg)
-				m.PushAction("openLocation", mdb.REMOVE)
+				m.Cmdy(mdb.SELECT, cmd, "", mdb.HASH, kit.MDB_TEXT, arg)
+				m.PushAction(OPENLOCATION, mdb.REMOVE)
 			}},
 		},
 	})

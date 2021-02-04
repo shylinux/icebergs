@@ -1,14 +1,14 @@
 package wx
 
 import (
-	"github.com/shylinux/icebergs"
+	ice "github.com/shylinux/icebergs"
 	"github.com/shylinux/icebergs/base/aaa"
 	"github.com/shylinux/icebergs/base/cli"
 	"github.com/shylinux/icebergs/base/mdb"
 	"github.com/shylinux/icebergs/base/web"
 	"github.com/shylinux/icebergs/core/chat"
 	"github.com/shylinux/icebergs/core/wiki"
-	"github.com/shylinux/toolkits"
+	kit "github.com/shylinux/toolkits"
 
 	"crypto/sha1"
 	"encoding/hex"
@@ -31,6 +31,7 @@ func _wx_config(m *ice.Message, nonce string) {
 	m.Option(APPID, m.Conf(LOGIN, kit.Keys(kit.MDB_META, APPID)))
 	m.Option("signature", _wx_sign(m, m.Option("noncestr", nonce), m.Option("timestamp", kit.Format(time.Now().Unix()))))
 }
+
 func _wx_parse(m *ice.Message) {
 	data := struct {
 		FromUserName string
@@ -54,10 +55,11 @@ func _wx_parse(m *ice.Message) {
 	m.Option("Event", data.Event)
 }
 func _wx_reply(m *ice.Message, tmpl string) {
-	m.Render(m.Conf(LOGIN, kit.Keys("meta.template", tmpl)))
+	m.Render(m.Conf(LOGIN, kit.Keym(kit.MDB_TEMPLATE, tmpl)))
 }
 func _wx_action(m *ice.Message) {
 	m.Option(ice.MSG_OUTPUT, ice.RENDER_RESULT)
+	m.Set(ice.MSG_RESULT)
 
 	m.Echo(`<xml>
 <FromUserName><![CDATA[%s]]></FromUserName>
@@ -87,14 +89,19 @@ func _wx_action(m *ice.Message) {
 }
 
 const (
-	LOGIN  = "login"
-	APPID  = "appid"
-	APPMM  = "appmm"
-	TOKEN  = "token"
-	TICKET = "ticket"
+	LOGIN   = "login"
+	APPID   = "appid"
+	APPMM   = "appmm"
+	TOKEN   = "token"
+	EXPIRE  = "expire"
+	TICKET  = "ticket"
+	EXPIRES = "expires"
+	CONFIG  = "config"
+	WEIXIN  = "weixin"
+)
+const (
+	MENU   = "menu"
 	ACCESS = "access"
-	CONFIG = "config"
-	WEIXIN = "weixin"
 )
 const WX = "wx"
 
@@ -102,14 +109,7 @@ var Index = &ice.Context{Name: WX, Help: "公众号",
 	Configs: map[string]*ice.Config{
 		LOGIN: {Name: LOGIN, Help: "认证", Value: kit.Data(
 			WEIXIN, "https://api.weixin.qq.com", APPID, "", APPMM, "", TOKEN, "",
-			"template", kit.Dict("text", `<xml>
-				<FromUserName><![CDATA[{{.Option "ToUserName"}}]]></FromUserName>
-				<ToUserName><![CDATA[{{.Option "FromUserName"}}]]></ToUserName>
-				<CreateTime>{{.Option "CreateTime"}}</CreateTime>
-				<MsgType><![CDATA[text]]></MsgType>
-				<Content><![CDATA[{{.Result}}]]></Content>
-				</xml>`),
-			"menu", []interface{}{
+			kit.MDB_TEMPLATE, kit.Dict(kit.MDB_TEXT, text), MENU, []interface{}{
 				kit.Dict(wiki.TITLE, "主页", wiki.SPARK, "点击进入", wiki.IMAGE, "https://shylinux.com/static/volcanos/favicon.ico", wiki.REFER, "https://shylinux.com"),
 				kit.Dict(wiki.TITLE, "产品", wiki.SPARK, "工具", wiki.IMAGE, "https://shylinux.com/static/volcanos/favicon.ico", wiki.REFER, "https://shylinux.com?river=product"),
 				kit.Dict(wiki.TITLE, "研发", wiki.SPARK, "工具", wiki.IMAGE, "https://shylinux.com/static/volcanos/favicon.ico", wiki.REFER, "https://shylinux.com?river=project"),
@@ -118,12 +118,11 @@ var Index = &ice.Context{Name: WX, Help: "公众号",
 	},
 	Commands: map[string]*ice.Command{
 		ice.CTX_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			m.Load()
 			m.Cmd(web.SPIDE, mdb.CREATE, WEIXIN, m.Conf(LOGIN, kit.Keys(kit.MDB_META, WEIXIN)))
+			m.Load()
 		}},
-		ice.CTX_EXIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			m.Save()
-		}},
+		ice.CTX_EXIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) { m.Save() }},
+
 		ACCESS: {Name: "access appid auto ticket token login", Help: "认证", Action: map[string]*ice.Action{
 			LOGIN: {Name: "login appid appmm token", Help: "登录", Hand: func(m *ice.Message, arg ...string) {
 				m.Conf(LOGIN, kit.Keys(kit.MDB_META, APPID), m.Option(APPID))
@@ -131,48 +130,56 @@ var Index = &ice.Context{Name: WX, Help: "公众号",
 				m.Conf(LOGIN, kit.Keys(kit.MDB_META, TOKEN), m.Option(TOKEN))
 			}},
 			TOKEN: {Name: "token", Help: "令牌", Hand: func(m *ice.Message, arg ...string) {
-				if now := time.Now().Unix(); m.Conf(LOGIN, "meta.access.token") == "" || now > kit.Int64(m.Conf(LOGIN, "meta.access.expire")) {
-					msg := m.Cmd(web.SPIDE, "weixin", web.SPIDE_GET, "/cgi-bin/token?grant_type=client_credential",
+				if now := time.Now().Unix(); m.Conf(LOGIN, kit.Keym(ACCESS, TOKEN)) == "" || now > kit.Int64(m.Conf(LOGIN, kit.Keym(ACCESS, EXPIRE))) {
+					msg := m.Cmd(web.SPIDE, WEIXIN, web.SPIDE_GET, "/cgi-bin/token?grant_type=client_credential",
 						APPID, m.Conf(LOGIN, kit.Keys(kit.MDB_META, APPID)), "secret", m.Conf(LOGIN, kit.Keys(kit.MDB_META, APPMM)))
+					if m.Warn(msg.Append("errcode") != "", "%v: %v", msg.Append("errcode"), msg.Append("errmsg")) {
+						return
+					}
 
-					m.Conf(LOGIN, "meta.access.token", msg.Append("access_token"))
-					m.Conf(LOGIN, "meta.access.expire", now+kit.Int64(msg.Append("expires_in")))
+					m.Conf(LOGIN, kit.Keym(ACCESS, EXPIRE), now+kit.Int64(msg.Append("expires_in")))
+					m.Conf(LOGIN, kit.Keym(ACCESS, TOKEN), msg.Append("access_token"))
 				}
-				m.Echo(m.Conf(LOGIN, "meta.access.token"))
+				m.Echo(m.Conf(LOGIN, kit.Keym(ACCESS, TOKEN)))
 			}},
 			TICKET: {Name: "ticket", Help: "票据", Hand: func(m *ice.Message, arg ...string) {
-				if now := time.Now().Unix(); m.Conf(LOGIN, "meta.access.ticket") == "" || now > kit.Int64(m.Conf(LOGIN, "meta.access.expires")) {
-					msg := m.Cmd(web.SPIDE, "weixin", web.SPIDE_GET, "/cgi-bin/ticket/getticket?type=jsapi",
+				if now := time.Now().Unix(); m.Conf(LOGIN, kit.Keym(ACCESS, TICKET)) == "" || now > kit.Int64(m.Conf(LOGIN, kit.Keym(ACCESS, EXPIRES))) {
+					msg := m.Cmd(web.SPIDE, WEIXIN, web.SPIDE_GET, "/cgi-bin/ticket/getticket?type=jsapi",
 						"access_token", m.Cmdx(ACCESS, TOKEN))
+					if m.Warn(msg.Append("errcode") != "0", msg.Append("errcode"), msg.Append("errmsg")) {
+						return
+					}
 
-					m.Conf(LOGIN, "meta.access.ticket", msg.Append(TICKET))
-					m.Conf(LOGIN, "meta.access.expires", now+kit.Int64(msg.Append("expires_in")))
+					m.Conf(LOGIN, kit.Keym(ACCESS, EXPIRES), now+kit.Int64(msg.Append("expires_in")))
+					m.Conf(LOGIN, kit.Keym(ACCESS, TICKET), msg.Append(TICKET))
 				}
-				m.Echo(m.Conf(LOGIN, "meta.access.ticket"))
+				m.Echo(m.Conf(LOGIN, kit.Keym(ACCESS, TICKET)))
 			}},
 			CONFIG: {Name: "config", Help: "配置", Hand: func(m *ice.Message, arg ...string) {
 				_wx_config(m, "some")
 			}},
+			mdb.INPUTS: {Name: "inputs", Help: "补全", Hand: func(m *ice.Message, arg ...string) {
+			}},
 		}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			m.Push(APPID, m.Conf(LOGIN, kit.Keys(kit.MDB_META, APPID)))
+			m.Echo(m.Conf(LOGIN, kit.Keys(kit.MDB_META, APPID)))
 		}},
 
-		"menu": {Name: "menu name auto", Help: "菜单", Action: map[string]*ice.Action{
+		MENU: {Name: "menu name auto", Help: "菜单", Action: map[string]*ice.Action{
 			mdb.CREATE: {Name: "create", Help: "添加", Hand: func(m *ice.Message, arg ...string) {
-				share := m.Cmdx(web.SHARE, mdb.CREATE, kit.MDB_TYPE, "login")
-				kit.Fetch(m.Confv(LOGIN, "meta.menu"), func(index int, value map[string]interface{}) {
+				share := m.Cmdx(web.SHARE, mdb.CREATE, kit.MDB_TYPE, web.LOGIN)
+				kit.Fetch(m.Confv(LOGIN, kit.Keym(MENU)), func(index int, value map[string]interface{}) {
 					m.Push("", value, kit.Split("title,spark,image"))
 					m.Push(wiki.REFER, kit.MergeURL(kit.Format(value[wiki.REFER]), web.SHARE, share))
 				})
 			}},
 		}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			kit.Fetch(m.Confv(LOGIN, "meta.menu"), func(index int, value map[string]interface{}) {
+			kit.Fetch(m.Confv(LOGIN, kit.Keym(MENU)), func(index int, value map[string]interface{}) {
 				m.Push("", value, kit.Split("title,spark,image,refer"))
 			})
 		}},
 
 		"/login/": {Name: "/login/", Help: "认证", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			check := kit.Sort([]string{m.Conf(LOGIN, "meta.token"), m.Option("timestamp"), m.Option("nonce")})
+			check := kit.Sort([]string{m.Conf(LOGIN, kit.Keym(TOKEN)), m.Option("timestamp"), m.Option("nonce")})
 			if b := sha1.Sum([]byte(strings.Join(check, ""))); m.Warn(m.Option("signature") != hex.EncodeToString(b[:]), ice.ErrNotRight) {
 				return // 验证失败
 			}
@@ -191,21 +198,20 @@ var Index = &ice.Context{Name: WX, Help: "公众号",
 			switch m.Option("MsgType") {
 			case "event":
 				switch m.Option("Event") {
-				case "subscribe":
-					// 应用列表
-					_wx_action(m.Cmdy("menu", mdb.CREATE))
-				case "unsubscribe":
+				case "subscribe": // 关注事件
+					_wx_action(m.Cmdy(MENU, mdb.CREATE))
+				case "unsubscribe": // 取关事件
 				}
 
-			case "text":
+			case kit.MDB_TEXT:
 				if cmds := kit.Split(m.Option("Content")); m.Warn(!m.Right(cmds), ice.ErrNotRight) {
-					_wx_action(m.Cmdy("menu", mdb.CREATE))
+					_wx_action(m.Cmdy(MENU, mdb.CREATE))
 					break // 没有权限
 				} else {
 					switch cmds[0] {
-					case "menu":
+					case MENU:
 						// 应用列表
-						_wx_action(m.Cmdy("menu", mdb.CREATE))
+						_wx_action(m.Cmdy(MENU, mdb.CREATE))
 
 					default:
 						// 执行命令
@@ -216,7 +222,7 @@ var Index = &ice.Context{Name: WX, Help: "公众号",
 						}
 
 						// 返回结果
-						_wx_reply(m, "text")
+						_wx_reply(m, kit.MDB_TEXT)
 					}
 				}
 			}
@@ -225,3 +231,11 @@ var Index = &ice.Context{Name: WX, Help: "公众号",
 }
 
 func init() { chat.Index.Register(Index, &web.Frame{}) }
+
+var text = `<xml>
+<FromUserName><![CDATA[{{.Option "ToUserName"}}]]></FromUserName>
+<ToUserName><![CDATA[{{.Option "FromUserName"}}]]></ToUserName>
+<CreateTime>{{.Option "CreateTime"}}</CreateTime>
+<MsgType><![CDATA[text]]></MsgType>
+<Content><![CDATA[{{.Result}}]]></Content>
+</xml>`

@@ -203,9 +203,9 @@ func init() {
 		Configs: map[string]*ice.Config{
 			SERVE: {Name: SERVE, Help: "服务器", Value: kit.Data(kit.MDB_SHORT, kit.MDB_NAME,
 				tcp.LOCALHOST, true, aaa.BLACK, kit.Dict(), aaa.WHITE, kit.Dict(
-					"intshell", true, "volcanos", true,
-					"publish", true, "require", true,
-					SPACE, true, SHARE, true,
+					LOGIN, true, SPACE, true, SHARE, true,
+					"volcanos", true, "intshell", true,
+					"require", true, "publish", true,
 				), "logheaders", false,
 
 				"static", kit.Dict("/", "usr/volcanos/"),

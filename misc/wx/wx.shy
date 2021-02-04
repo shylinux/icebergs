@@ -6,7 +6,6 @@ refer `
 源码 https://github.com/shylinux/icebergs/blob/master/misc/wx/wx.go
 `
 image qrcode `https://weixin.qq.com`
-spark
 
 chapter "应用"
 field scan web.chat.scan

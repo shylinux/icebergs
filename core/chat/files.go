@@ -25,13 +25,17 @@ func init() {
 				}},
 			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 				m.Option(mdb.FIELDS, kit.Select("time,hash,name,data", mdb.DETAIL, len(arg) > 0))
-				m.Cmdy(mdb.SELECT, FILES, "", mdb.HASH, "hash", arg)
+				m.Cmdy(mdb.SELECT, cmd, "", mdb.HASH, kit.MDB_HASH, arg)
+
 				m.Table(func(index int, value map[string]string, head []string) {
 					m.PushDownload(value[kit.MDB_NAME], "/share/cache/"+value["data"])
+					if len(arg) > 0 {
+						switch kit.Ext(value["name"]) {
+						case "png":
+							m.PushImages("image", "/share/cache/"+value["data"])
+						}
+					}
 				})
-				if len(arg) == 0 {
-					m.SortTimeR(kit.MDB_TIME)
-				}
 				m.PushAction(mdb.REMOVE)
 			}},
 		},

@@ -257,8 +257,8 @@ func init() {
 					m.Cmdy(mdb.DELETE, RIVER, kit.Keys(kit.MDB_HASH, m.Option(ice.MSG_RIVER), USER), mdb.HASH, aaa.USERNAME, m.Option(aaa.USERNAME))
 				}},
 				mdb.INPUTS: {Name: "inputs", Help: "补全", Hand: func(m *ice.Message, arg ...string) {
-					m.Cmdy(aaa.USER)
-					m.Appendv(ice.MSG_APPEND, aaa.USERNAME, aaa.USERNICK)
+					m.Cmdy("aaa.user")
+					m.Appendv(ice.MSG_APPEND, aaa.USERNAME, aaa.USERZONE, aaa.USERNICK)
 				}},
 			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 				m.Option(mdb.FIELDS, kit.Select("time,username", mdb.DETAIL, len(arg) > 0))
@@ -348,6 +348,7 @@ func init() {
 
 			"/river": {Name: "/river", Help: "小河流", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 				if m.Warn(m.Option(ice.MSG_USERNAME) == "", ice.ErrNotLogin) {
+					m.Render(web.STATUS, 401)
 					return // 没有登录
 				}
 				if len(arg) == 0 {

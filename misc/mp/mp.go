@@ -27,19 +27,20 @@ var Index = &ice.Context{Name: MP, Help: "小程序",
 	},
 	Commands: map[string]*ice.Command{
 		ice.CTX_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			m.Load()
 			m.Cmd(web.SPIDE, mdb.CREATE, WEIXIN, m.Conf(LOGIN, kit.Keys(kit.MDB_META, WEIXIN)))
+			m.Load()
 		}},
 		ice.CTX_EXIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			m.Save()
 		}},
+
 		ACCESS: {Name: "access appid auto login", Help: "认证", Action: map[string]*ice.Action{
 			LOGIN: {Name: "login appid appmm", Help: "登录", Hand: func(m *ice.Message, arg ...string) {
 				m.Conf(LOGIN, kit.Keys(kit.MDB_META, APPID), m.Option(APPID))
 				m.Conf(LOGIN, kit.Keys(kit.MDB_META, APPMM), m.Option(APPMM))
 			}},
 		}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			m.Push(APPID, m.Conf(LOGIN, kit.Keys(kit.MDB_META, APPID)))
+			m.Echo(m.Conf(LOGIN, kit.Keys(kit.MDB_META, APPID)))
 		}},
 
 		"/login/": {Name: "/login/", Help: "认证", Action: map[string]*ice.Action{
@@ -66,7 +67,6 @@ var Index = &ice.Context{Name: MP, Help: "小程序",
 					m.Cmdy(chat.SCAN)
 				}
 			}},
-		}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 		}},
 	},
 }

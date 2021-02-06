@@ -121,7 +121,9 @@ var Index = &ice.Context{Name: WX, Help: "公众号",
 			m.Cmd(web.SPIDE, mdb.CREATE, WEIXIN, m.Conf(LOGIN, kit.Keys(kit.MDB_META, WEIXIN)))
 			m.Load()
 		}},
-		ice.CTX_EXIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) { m.Save() }},
+		ice.CTX_EXIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			m.Save()
+		}},
 
 		ACCESS: {Name: "access appid auto ticket token login", Help: "认证", Action: map[string]*ice.Action{
 			LOGIN: {Name: "login appid appmm token", Help: "登录", Hand: func(m *ice.Message, arg ...string) {

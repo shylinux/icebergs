@@ -39,7 +39,7 @@ func init() {
 			LOCATION: {Name: LOCATION, Help: "地理位置", Value: kit.Data(kit.MDB_SHORT, kit.MDB_TEXT)},
 		},
 		Commands: map[string]*ice.Command{
-			LOCATION: {Name: "location text auto getLocation", Help: "地理位置", Action: map[string]*ice.Action{
+			LOCATION: {Name: "location hash auto getLocation", Help: "地理位置", Action: map[string]*ice.Action{
 				OPENLOCATION: {Name: "create type=text name address latitude longitude", Help: "地图", Hand: func(m *ice.Message, arg ...string) {}},
 				GETLOCATION: {Name: "getLocation", Help: "添加", Hand: func(m *ice.Message, arg ...string) {
 					_trans(arg, map[string]string{ADDRESS: "text"})
@@ -65,8 +65,8 @@ func init() {
 					m.Cmdy(mdb.INPUTS, LOCATION, "", mdb.HASH, arg)
 				}},
 			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-				m.Option(mdb.FIELDS, kit.Select("time,type,name,text,longitude,latitude", mdb.DETAIL, len(arg) > 0))
-				m.Cmdy(mdb.SELECT, cmd, "", mdb.HASH, kit.MDB_TEXT, arg)
+				m.Option(mdb.FIELDS, kit.Select("time,hash,type,name,text,longitude,latitude", mdb.DETAIL, len(arg) > 0))
+				m.Cmdy(mdb.SELECT, cmd, "", mdb.HASH, kit.MDB_HASH, arg)
 				m.PushAction(OPENLOCATION, mdb.REMOVE)
 			}},
 		},

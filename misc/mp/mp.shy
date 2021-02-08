@@ -5,11 +5,12 @@ refer "" `
 文档 https://developers.weixin.qq.com/miniprogram/dev/api/
 源码 https://github.com/shylinux/icebergs/blob/master/misc/mp/mp.go
 `
-image qrcode `https://weixin.qq.com`
+image `/share/local/usr/image/gh_61ea404535e4_258.jpg`
 
 chapter "应用"
 field scan web.chat.scan
 field paste web.chat.paste
+field files web.chat.files
 field location web.chat.location
 
 chapter "权限"

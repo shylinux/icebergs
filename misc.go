@@ -212,6 +212,9 @@ func (m *Message) EchoButton(arg ...string) *Message {
 func (m *Message) EchoScript(arg ...string) *Message {
 	return m.Echo(_render(m, RENDER_SCRIPT, arg))
 }
+func (m *Message) EchoImages(src string, arg ...string) *Message {
+	return m.Echo(_render(m, RENDER_IMAGES, src, arg))
+}
 func (m *Message) EchoQRCode(text string, arg ...string) *Message { // text [size]
 	return m.Echo(_render(m, RENDER_QRCODE, text, arg))
 }

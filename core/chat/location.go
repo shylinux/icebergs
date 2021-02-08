@@ -40,13 +40,11 @@ func init() {
 		},
 		Commands: map[string]*ice.Command{
 			LOCATION: {Name: "location hash auto getLocation", Help: "地理位置", Action: map[string]*ice.Action{
-				OPENLOCATION: {Name: "create type=text name address latitude longitude", Help: "地图", Hand: func(m *ice.Message, arg ...string) {}},
-				GETLOCATION: {Name: "getLocation", Help: "添加", Hand: func(m *ice.Message, arg ...string) {
-					_trans(arg, map[string]string{ADDRESS: "text"})
+				OPENLOCATION: {Name: "openLocation", Help: "地图", Hand: func(m *ice.Message, arg ...string) {}},
+				GETLOCATION: {Name: "getLocation", Help: "打卡", Hand: func(m *ice.Message, arg ...string) {
 					m.Cmdy(mdb.INSERT, LOCATION, "", mdb.HASH, arg)
 				}},
-				mdb.CREATE: {Name: "create type=text name address latitude longitude", Help: "添加", Hand: func(m *ice.Message, arg ...string) {
-					_trans(arg, map[string]string{ADDRESS: "text"})
+				mdb.CREATE: {Name: "create type=text name text latitude longitude", Help: "添加", Hand: func(m *ice.Message, arg ...string) {
 					m.Cmdy(mdb.INSERT, LOCATION, "", mdb.HASH, arg)
 				}},
 				mdb.MODIFY: {Name: "modify", Help: "编辑", Hand: func(m *ice.Message, arg ...string) {

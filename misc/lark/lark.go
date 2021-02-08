@@ -26,10 +26,10 @@ func _lark_post(m *ice.Message, bot string, arg ...interface{}) *ice.Message {
 	return m.Cmd(web.SPIDE, LARK, arg)
 }
 func _lark_parse(m *ice.Message) {
-	data := m.Optionv("content_data")
+	data := m.Optionv(ice.MSG_USERDATA)
 	if data == nil {
 		json.NewDecoder(m.R.Body).Decode(&data)
-		m.Optionv("content_data", data)
+		m.Optionv(ice.MSG_USERDATA, data)
 
 		switch d := data.(type) {
 		case map[string]interface{}:
@@ -41,7 +41,7 @@ func _lark_parse(m *ice.Message) {
 					}
 				default:
 					for _, v := range kit.Simple(v) {
-						m.Add(ice.MSG_OPTION, "msg."+k, kit.Format(v))
+						m.Add(ice.MSG_OPTION, kit.Keys("msg", k), kit.Format(v))
 					}
 				}
 			}
@@ -87,18 +87,17 @@ const LARK = "lark"
 var Index = &ice.Context{Name: LARK, Help: "机器人",
 	Configs: map[string]*ice.Config{
 		APP: {Name: APP, Help: "服务配置", Value: kit.Data(kit.MDB_SHORT, kit.MDB_NAME,
-			LARK, "https://open.feishu.cn", DUTY, "", "template", kit.Dict(
+			LARK, "https://open.feishu.cn", DUTY, "", kit.MDB_TEMPLATE, kit.Dict(
 				ADD_BOT, "我来也~", P2P_CHAT_CREATE, "让我们做好朋友吧~",
 			),
 		)},
 		COMPANY:  {Name: COMPANY, Help: "组织配置", Value: kit.Data(kit.MDB_SHORT, SHIP_ID)},
-		EMPLOYEE: {Name: EMPLOYEE, Help: "用户配置", Value: kit.Data(kit.MDB_SHORT, OPEN_ID)},
+		EMPLOYEE: {Name: EMPLOYEE, Help: "员工配置", Value: kit.Data(kit.MDB_SHORT, OPEN_ID)},
 	},
 	Commands: map[string]*ice.Command{
 		ice.CTX_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			m.Load()
 			m.Cmd(web.SPIDE, mdb.CREATE, LARK, m.Conf(APP, kit.Keys(kit.MDB_META, LARK)))
-			// m.Cmd(DUTY, "boot", m.Conf(cli.RUNTIME, "boot.hostname"), m.Time())
 		}},
 		ice.CTX_EXIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			m.Save()
@@ -149,7 +148,7 @@ var Index = &ice.Context{Name: LARK, Help: "机器人",
 				msg := _lark_get(m, "bot", "/open-apis/contact/v1/scope/get/")
 				kit.Fetch(kit.Value(msg.Optionv("content_data"), "data.authed_departments"), func(index int, value string) {
 					m.Push(SHIP_ID, value)
-					msg := m.Cmd(m.Prefix(COMPANY), "info", value)
+					msg := m.Cmd(COMPANY, "info", value)
 					m.Push(kit.MDB_NAME, msg.Append(kit.MDB_NAME))
 					m.Push(kit.MDB_COUNT, msg.Append("member_count"))
 					m.Push(CHAT_ID, msg.Append(CHAT_ID))
@@ -157,13 +156,13 @@ var Index = &ice.Context{Name: LARK, Help: "机器人",
 				m.Sort(kit.MDB_NAME)
 
 			} else if len(arg) == 1 { // 员工列表
-				m.Cmdy(m.Prefix(COMPANY), "list", arg[0])
+				m.Cmdy(COMPANY, "list", arg[0])
 
 			} else if len(arg) == 2 { // 员工详情
 				m.Cmdy(EMPLOYEE, arg[1])
 
 			} else { // 员工通知
-				m.Cmdy(m.Prefix(SEND), OPEN_ID, arg[1], arg[2:])
+				m.Cmdy(SEND, OPEN_ID, arg[1], arg[2:])
 			}
 		}},
 		EMPLOYEE: {Name: "employee open_id|mobile|email auto", Help: "员工", Hand: func(m *ice.Message, c *ice.Context, key string, arg ...string) {
@@ -213,13 +212,13 @@ var Index = &ice.Context{Name: LARK, Help: "机器人",
 				m.Sort(kit.MDB_NAME)
 
 			} else if len(arg) == 1 { // 组员列表
-				m.Cmdy(m.Prefix(GROUP), "list", arg[0])
+				m.Cmdy(GROUP, "list", arg[0])
 
 			} else if len(arg) == 2 { // 组员详情
 				m.Cmdy(EMPLOYEE, arg[1])
 
 			} else { // 组员通知
-				m.Cmdy(m.Prefix(SEND), CHAT_ID, arg[0], arg[2:])
+				m.Cmdy(SEND, CHAT_ID, arg[0], arg[2:])
 			}
 		}},
 
@@ -261,10 +260,10 @@ var Index = &ice.Context{Name: LARK, Help: "机器人",
 				})
 			}
 
-			_lark_post(m, "bot", "/open-apis/message/v4/send/", web.SPIDE_DATA, kit.Format(form))
+			m.Copy(_lark_post(m, "bot", "/open-apis/message/v4/send/", web.SPIDE_DATA, kit.Format(form)))
 		}},
 		DUTY: {Name: "duty [title] text", Help: "通告", Hand: func(m *ice.Message, c *ice.Context, key string, arg ...string) {
-			m.Cmdy(SEND, m.Conf(APP, "meta.duty"), arg)
+			m.Cmdy(SEND, m.Conf(APP, kit.Keym(DUTY)), arg)
 		}},
 		HOME: {Name: "home river storm title", Help: "首页", Hand: func(m *ice.Message, c *ice.Context, key string, arg ...string) {
 			name := kit.Select(m.Option(ice.MSG_USERNAME), m.Option(ice.MSG_USERNICK))
@@ -390,8 +389,7 @@ var Index = &ice.Context{Name: LARK, Help: "机器人",
 			m.Echo(list[rand.Intn(len(list))])
 		}},
 
-		web.WEB_LOGIN: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-		}},
+		web.WEB_LOGIN: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {}},
 		"/msg": {Name: "/msg", Help: "聊天消息", Hand: func(m *ice.Message, c *ice.Context, key string, arg ...string) {
 			data := m.Optionv(ice.MSG_USERDATA)
 			if kit.Value(data, "action") != nil {

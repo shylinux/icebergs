@@ -64,9 +64,9 @@ const (
 	SPIDE_BODY = "body"
 
 	SPIDE_CLIENT = "client"
+	SPIDE_METHOD = "method"
 	SPIDE_HEADER = "header"
 	SPIDE_COOKIE = "cookie"
-	SPIDE_METHOD = "method"
 
 	ContentType   = "Content-Type"
 	ContentLength = "Content-Length"

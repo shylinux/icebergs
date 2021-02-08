@@ -28,7 +28,7 @@ func _wx_sign(m *ice.Message, nonce, stamp string) string {
 	return hex.EncodeToString(b[:])
 }
 func _wx_config(m *ice.Message, nonce string) {
-	m.Option(APPID, m.Conf(LOGIN, kit.Keys(kit.MDB_META, APPID)))
+	m.Option(APPID, m.Conf(LOGIN, kit.Keym(APPID)))
 	m.Option("signature", _wx_sign(m, m.Option("noncestr", nonce), m.Option("timestamp", kit.Format(time.Now().Unix()))))
 }
 
@@ -100,8 +100,8 @@ const (
 	WEIXIN  = "weixin"
 )
 const (
-	MENU   = "menu"
 	ACCESS = "access"
+	MENU   = "menu"
 )
 const WX = "wx"
 
@@ -110,16 +110,25 @@ var Index = &ice.Context{Name: WX, Help: "公众号",
 		LOGIN: {Name: LOGIN, Help: "认证", Value: kit.Data(
 			WEIXIN, "https://api.weixin.qq.com", APPID, "", APPMM, "", TOKEN, "",
 			kit.MDB_TEMPLATE, kit.Dict(kit.MDB_TEXT, text), MENU, []interface{}{
-				kit.Dict(wiki.TITLE, "主页", wiki.SPARK, "点击进入", wiki.IMAGE, "https://shylinux.com/static/volcanos/favicon.ico", wiki.REFER, "https://shylinux.com"),
-				kit.Dict(wiki.TITLE, "产品", wiki.SPARK, "工具", wiki.IMAGE, "https://shylinux.com/static/volcanos/favicon.ico", wiki.REFER, "https://shylinux.com?river=product"),
-				kit.Dict(wiki.TITLE, "研发", wiki.SPARK, "工具", wiki.IMAGE, "https://shylinux.com/static/volcanos/favicon.ico", wiki.REFER, "https://shylinux.com?river=project"),
+				kit.Dict(wiki.TITLE, "网站主页", wiki.SPARK, "点击进入", wiki.REFER, "https://shylinux.com",
+					wiki.IMAGE, "https://shylinux.com/share/local/usr/publish/3f265cd2455053b68976bc63bdd432d4.jpeg",
+				),
+				kit.Dict(wiki.TITLE, "产品工具", wiki.SPARK, "点击进入", wiki.REFER, "https://shylinux.com?river=product",
+					wiki.IMAGE, "https://shylinux.com/share/local/usr/publish/3f265cd2455053b68976bc63bdd432d4.jpeg",
+				),
+				kit.Dict(wiki.TITLE, "研发工具", wiki.SPARK, "点击进入", wiki.REFER, "https://shylinux.com?river=project",
+					wiki.IMAGE, "https://shylinux.com/share/local/usr/publish/3f265cd2455053b68976bc63bdd432d4.jpeg",
+				),
+				kit.Dict(wiki.TITLE, "测试工具", wiki.SPARK, "点击进入", wiki.REFER, "https://shylinux.com?river=profile",
+					wiki.IMAGE, "https://shylinux.com/share/local/usr/publish/3f265cd2455053b68976bc63bdd432d4.jpeg",
+				),
 			},
 		)},
 	},
 	Commands: map[string]*ice.Command{
 		ice.CTX_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			m.Cmd(web.SPIDE, mdb.CREATE, WEIXIN, m.Conf(LOGIN, kit.Keys(kit.MDB_META, WEIXIN)))
 			m.Load()
+			m.Cmd(web.SPIDE, mdb.CREATE, WEIXIN, m.Conf(LOGIN, kit.Keys(kit.MDB_META, WEIXIN)))
 		}},
 		ice.CTX_EXIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			m.Save()
@@ -160,8 +169,8 @@ var Index = &ice.Context{Name: WX, Help: "公众号",
 			CONFIG: {Name: "config", Help: "配置", Hand: func(m *ice.Message, arg ...string) {
 				_wx_config(m, "some")
 			}},
-			mdb.INPUTS: {Name: "inputs", Help: "补全", Hand: func(m *ice.Message, arg ...string) {
-			}},
+
+			mdb.INPUTS: {Name: "inputs", Help: "补全", Hand: func(m *ice.Message, arg ...string) {}},
 		}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			m.Echo(m.Conf(LOGIN, kit.Keys(kit.MDB_META, APPID)))
 		}},
@@ -176,7 +185,7 @@ var Index = &ice.Context{Name: WX, Help: "公众号",
 			}},
 		}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			kit.Fetch(m.Confv(LOGIN, kit.Keym(MENU)), func(index int, value map[string]interface{}) {
-				m.Push("", value, kit.Split("title,spark,image,refer"))
+				m.Push("", value, kit.Split("title,spark,refer,image"))
 			})
 		}},
 
@@ -198,7 +207,7 @@ var Index = &ice.Context{Name: WX, Help: "公众号",
 			aaa.UserLogin(m, m.Append("FromUserName"), "")
 
 			switch m.Option("MsgType") {
-			case "event":
+			case kit.MDB_EVENT:
 				switch m.Option("Event") {
 				case "subscribe": // 关注事件
 					_wx_action(m.Cmdy(MENU, mdb.CREATE))

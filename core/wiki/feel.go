@@ -23,7 +23,8 @@ func init() {
 					_wiki_upload(m, FEEL, m.Option(kit.MDB_PATH))
 				}},
 			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-				_wiki_list(m, FEEL, kit.Select("./", arg, 0))
+				if !_wiki_list(m, FEEL, kit.Select("./", arg, 0)) {
+				}
 			}},
 		},
 	})

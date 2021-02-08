@@ -50,6 +50,7 @@ var Index = &ice.Context{Name: CHAT, Help: "聊天中心",
 					"scan", []interface{}{
 						"web.chat.scan",
 						"web.chat.paste",
+						"web.chat.files",
 						"web.chat.location",
 						"web.chat.meet.miss",
 						"web.wiki.feel",

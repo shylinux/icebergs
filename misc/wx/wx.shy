@@ -9,16 +9,16 @@ image `/share/local/usr/image/qrcode_for_gh_1c21ed4eb46b_258.jpg`
 
 chapter "应用"
 field scan web.chat.scan
-field paste web.chat.paste
 field files web.chat.files
+field paste web.chat.paste
 field location web.chat.location
 
 chapter "权限"
 field access web.chat.wx.access
 field menu web.chat.wx.menu
 field share web.share
-field user aaa.user
 field sess aaa.sess
+field user aaa.user
 
 chapter "项目"
 field "icebergs" web.code.git.trend args `icebergs`

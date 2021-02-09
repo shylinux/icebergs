@@ -20,10 +20,10 @@ import (
 
 func _wx_sign(m *ice.Message, nonce, stamp string) string {
 	b := sha1.Sum([]byte(strings.Join(kit.Sort([]string{
-		fmt.Sprintf("noncestr=%s", nonce),
-		fmt.Sprintf("timestamp=%s", stamp),
-		fmt.Sprintf("url=%s", m.Option(ice.MSG_USERWEB)),
 		fmt.Sprintf("jsapi_ticket=%s", m.Cmdx(ACCESS, TICKET)),
+		fmt.Sprintf("url=%s", m.Option(ice.MSG_USERWEB)),
+		fmt.Sprintf("timestamp=%s", stamp),
+		fmt.Sprintf("noncestr=%s", nonce),
 	}), "&")))
 	return hex.EncodeToString(b[:])
 }
@@ -38,9 +38,9 @@ func _wx_parse(m *ice.Message) {
 		ToUserName   string
 		CreateTime   int64
 		MsgId        int64
+		Event        string
 		MsgType      string
 		Content      string
-		Event        string
 	}{}
 	xml.NewDecoder(m.R.Body).Decode(&data)
 	m.Debug("data: %#v", data)
@@ -48,11 +48,11 @@ func _wx_parse(m *ice.Message) {
 	m.Option("FromUserName", data.FromUserName)
 	m.Option("ToUserName", data.ToUserName)
 	m.Option("CreateTime", data.CreateTime)
-
 	m.Option("MsgId", data.MsgId)
+
+	m.Option("Event", data.Event)
 	m.Option("MsgType", data.MsgType)
 	m.Option("Content", data.Content)
-	m.Option("Event", data.Event)
 }
 func _wx_reply(m *ice.Message, tmpl string) {
 	m.Render(m.Conf(LOGIN, kit.Keym(kit.MDB_TEMPLATE, tmpl)))
@@ -75,10 +75,10 @@ func _wx_action(m *ice.Message) {
 	m.Echo(`<Articles>`)
 	m.Table(func(index int, value map[string]string, head []string) {
 		m.Echo(`<item>
-	<Title><![CDATA[%s]]></Title>
-	<Description><![CDATA[%s]]></Description>
-	<PicUrl><![CDATA[%s]]></PicUrl>
-	<Url><![CDATA[%s]]></Url>
+<Title><![CDATA[%s]]></Title>
+<Description><![CDATA[%s]]></Description>
+<PicUrl><![CDATA[%s]]></PicUrl>
+<Url><![CDATA[%s]]></Url>
 </item>
 `, value[wiki.TITLE], value[wiki.SPARK], value[wiki.IMAGE], value[wiki.REFER])
 	})
@@ -128,7 +128,7 @@ var Index = &ice.Context{Name: WX, Help: "公众号",
 	Commands: map[string]*ice.Command{
 		ice.CTX_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			m.Load()
-			m.Cmd(web.SPIDE, mdb.CREATE, WEIXIN, m.Conf(LOGIN, kit.Keys(kit.MDB_META, WEIXIN)))
+			m.Cmd(web.SPIDE, mdb.CREATE, WEIXIN, m.Conf(LOGIN, kit.Keym(WEIXIN)))
 		}},
 		ice.CTX_EXIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			m.Save()
@@ -136,14 +136,14 @@ var Index = &ice.Context{Name: WX, Help: "公众号",
 
 		ACCESS: {Name: "access appid auto ticket token login", Help: "认证", Action: map[string]*ice.Action{
 			LOGIN: {Name: "login appid appmm token", Help: "登录", Hand: func(m *ice.Message, arg ...string) {
-				m.Conf(LOGIN, kit.Keys(kit.MDB_META, APPID), m.Option(APPID))
-				m.Conf(LOGIN, kit.Keys(kit.MDB_META, APPMM), m.Option(APPMM))
-				m.Conf(LOGIN, kit.Keys(kit.MDB_META, TOKEN), m.Option(TOKEN))
+				m.Conf(LOGIN, kit.Keym(APPID), m.Option(APPID))
+				m.Conf(LOGIN, kit.Keym(APPMM), m.Option(APPMM))
+				m.Conf(LOGIN, kit.Keym(TOKEN), m.Option(TOKEN))
 			}},
 			TOKEN: {Name: "token", Help: "令牌", Hand: func(m *ice.Message, arg ...string) {
 				if now := time.Now().Unix(); m.Conf(LOGIN, kit.Keym(ACCESS, TOKEN)) == "" || now > kit.Int64(m.Conf(LOGIN, kit.Keym(ACCESS, EXPIRE))) {
 					msg := m.Cmd(web.SPIDE, WEIXIN, web.SPIDE_GET, "/cgi-bin/token?grant_type=client_credential",
-						APPID, m.Conf(LOGIN, kit.Keys(kit.MDB_META, APPID)), "secret", m.Conf(LOGIN, kit.Keys(kit.MDB_META, APPMM)))
+						APPID, m.Conf(LOGIN, kit.Keym(APPID)), "secret", m.Conf(LOGIN, kit.Keym(APPMM)))
 					if m.Warn(msg.Append("errcode") != "", "%v: %v", msg.Append("errcode"), msg.Append("errmsg")) {
 						return
 					}
@@ -172,7 +172,7 @@ var Index = &ice.Context{Name: WX, Help: "公众号",
 
 			mdb.INPUTS: {Name: "inputs", Help: "补全", Hand: func(m *ice.Message, arg ...string) {}},
 		}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			m.Echo(m.Conf(LOGIN, kit.Keys(kit.MDB_META, APPID)))
+			m.Echo(m.Conf(LOGIN, kit.Keym(APPID)))
 		}},
 
 		MENU: {Name: "menu name auto", Help: "菜单", Action: map[string]*ice.Action{

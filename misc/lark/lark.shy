@@ -6,7 +6,7 @@ refer "官网" `
 后台管理 https://www.feishu.cn/admin
 应用管理 https://open.feishu.cn/app
 `
-image qrcode `https://www.feishu.cn/`
+image qrcode `https://applink.feishu.cn/client/bot/open?appId=cli_9d3b9d146a7cd103`
 
 chapter "应用"
 field "app" web.chat.lark.app
@@ -14,8 +14,8 @@ field "group" web.chat.lark.group
 field "company" web.chat.lark.company
 
 chapter "权限"
-field user aaa.user
 field sess aaa.sess
+field user aaa.user
 
 chapter "项目"
 field "icebergs" web.code.git.trend args `icebergs`

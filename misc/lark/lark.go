@@ -97,7 +97,7 @@ var Index = &ice.Context{Name: LARK, Help: "机器人",
 	Commands: map[string]*ice.Command{
 		ice.CTX_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			m.Load()
-			m.Cmd(web.SPIDE, mdb.CREATE, LARK, m.Conf(APP, kit.Keys(kit.MDB_META, LARK)))
+			m.Cmd(web.SPIDE, mdb.CREATE, LARK, m.Conf(APP, kit.Keym(LARK)))
 		}},
 		ice.CTX_EXIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			m.Save()
@@ -371,7 +371,7 @@ var Index = &ice.Context{Name: LARK, Help: "机器人",
 			}
 
 			// 执行命令
-			if msg := m.Cmd(cmds); msg.Hand == true {
+			if msg := m.Cmd(cmds); len(msg.Appendv(ice.MSG_APPEND)) > 0 || len(msg.Resultv()) > 0 {
 				if m.Copy(msg); len(m.Resultv()) == 0 {
 					m.Table()
 				}
@@ -412,7 +412,7 @@ var Index = &ice.Context{Name: LARK, Help: "机器人",
 				case P2P_CHAT_CREATE, ADD_BOT:
 					// 创建对话
 					if m.Options(OPEN_CHAT_ID) {
-						m.Cmdy(SEND, m.Option(OPEN_CHAT_ID), m.Conf(APP, kit.Keys(kit.MDB_META, "template", m.Option("type"))))
+						m.Cmdy(SEND, m.Option(OPEN_CHAT_ID), m.Conf(APP, kit.Keym(kit.MDB_TEMPLATE, m.Option("type"))))
 					}
 				default:
 					switch m.Option("msg_type") {
@@ -458,8 +458,8 @@ var Index = &ice.Context{Name: LARK, Help: "机器人",
 
 			m.Option(mdb.FIELDS, "time,appid,appmm,token,expire")
 			m.Cmd(mdb.SELECT, m.Prefix(APP), "", mdb.HASH, kit.MDB_NAME, "bot").Table(func(index int, value map[string]string, head []string) {
-				m.Render("redirect", kit.MergeURL2(m.Conf(APP, kit.Keys(kit.MDB_META, LARK)), "/open-apis/authen/v1/index"),
-					"app_id", value[APPID], "redirect_uri", kit.MergeURL2(m.Conf(web.SHARE, "meta.domain"), "/chat/lark/sso"),
+				m.Render("redirect", kit.MergeURL2(m.Conf(APP, kit.Keym(LARK)), "/open-apis/authen/v1/index"),
+					"app_id", value[APPID], "redirect_uri", kit.MergeURL2(m.Conf(web.SHARE, kit.Keym(kit.MDB_DOMAIN)), "/chat/lark/sso"),
 				)
 			})
 		}},

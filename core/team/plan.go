@@ -37,8 +37,8 @@ func init() {
 					_task_inputs(m, kit.Select("", arg, 0), kit.Select("", arg, 1))
 				}},
 
-				mdb.PLUGIN: {Name: "plugin extra.pod extra.ctx extra.cmd extra.arg", Help: "插件", Hand: func(m *ice.Message, arg ...string) {
-					_task_modify(m, m.Option(kit.MDB_ZONE), m.Option(kit.MDB_ID), kit.MDB_TIME, m.Time(), kit.Simple(kit.KeyValue(nil, "", kit.Dict(arg)))...)
+				mdb.PLUGIN: {Name: "plugin extra.ctx extra.cmd extra.arg", Help: "插件", Hand: func(m *ice.Message, arg ...string) {
+					_task_modify(m, m.Option(kit.MDB_ZONE), m.Option(kit.MDB_ID), kit.MDB_TIME, m.Time(), arg...)
 					m.Set(ice.MSG_RESULT).Cmdy(PLAN, m.Option("scale"))
 				}},
 				ctx.COMMAND: {Name: "command", Help: "命令", Hand: func(m *ice.Message, arg ...string) {

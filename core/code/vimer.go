@@ -19,6 +19,10 @@ func init() {
 			"display", "/plugin/local/code/vimer.js", "style", "editor",
 		), Action: map[string]*ice.Action{
 			mdb.ENGINE: {Name: "engine", Help: "运行", Hand: func(m *ice.Message, arg ...string) {
+				if m.Cmdy(mdb.ENGINE, arg); len(m.Resultv()) > 0 || len(m.Appendv(ice.MSG_APPEND)) > 0 {
+					return
+				}
+
 				if arg = kit.Split(strings.Join(arg, " ")); !m.Warn(!m.Right(arg)) {
 					if m.Cmdy(arg); len(m.Appendv(ice.MSG_APPEND)) == 0 && len(m.Resultv()) == 0 {
 						m.Cmdy(cli.SYSTEM, arg)

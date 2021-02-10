@@ -76,10 +76,6 @@ func _serve_main(m *ice.Message, w http.ResponseWriter, r *http.Request) bool {
 	return true
 }
 func _serve_handle(key string, cmd *ice.Command, msg *ice.Message, w http.ResponseWriter, r *http.Request) {
-	defer func() {
-		msg.Cost(kit.Format("%s %v %v", r.URL.Path, msg.Optionv(ice.MSG_CMDS), msg.Format(ice.MSG_APPEND)))
-	}()
-
 	// 环境变量
 	msg.Option(mdb.CACHE_LIMIT, "10")
 	msg.Option(ice.MSG_OUTPUT, "")
@@ -151,6 +147,7 @@ func _serve_handle(key string, cmd *ice.Command, msg *ice.Message, w http.Respon
 	if cmds, ok := _serve_login(msg, kit.Simple(msg.Optionv(ice.MSG_CMDS)), w, r); ok {
 		msg.Option(ice.MSG_OPTS, msg.Optionv(ice.MSG_OPTION))
 		msg.Target().Cmd(msg, key, r.URL.Path, cmds...)
+		msg.Cost(kit.Format("%s %v %v", r.URL.Path, cmds, msg.Format(ice.MSG_APPEND)))
 	}
 
 	// 输出响应

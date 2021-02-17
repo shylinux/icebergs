@@ -11,10 +11,10 @@ const SCAN = "scan"
 func init() {
 	Index.Merge(&ice.Context{
 		Configs: map[string]*ice.Config{
-			SCAN: {Name: SCAN, Help: "扫码", Value: kit.Data(kit.MDB_SHORT, kit.MDB_TEXT)},
+			SCAN: {Name: SCAN, Help: "二维码", Value: kit.Data(kit.MDB_SHORT, kit.MDB_TEXT)},
 		},
 		Commands: map[string]*ice.Command{
-			SCAN: {Name: "scan hash auto scanQRCode scanQRCode0", Help: "扫码", Action: map[string]*ice.Action{
+			SCAN: {Name: "scan hash auto scanQRCode scanQRCode0", Help: "二维码", Action: map[string]*ice.Action{
 				"scanQRCode0": {Name: "create", Help: "本机扫码", Hand: func(m *ice.Message, arg ...string) {}},
 				"scanQRCode": {Name: "create", Help: "扫码", Hand: func(m *ice.Message, arg ...string) {
 					m.Cmdy(mdb.INSERT, SCAN, "", mdb.HASH, arg)

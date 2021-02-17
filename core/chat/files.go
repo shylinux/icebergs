@@ -12,10 +12,10 @@ const FILES = "files"
 func init() {
 	Index.Merge(&ice.Context{
 		Configs: map[string]*ice.Config{
-			FILES: {Name: FILES, Help: "文件", Value: kit.Data(kit.MDB_SHORT, kit.MDB_DATA)},
+			FILES: {Name: FILES, Help: "文件夹", Value: kit.Data(kit.MDB_SHORT, kit.MDB_DATA)},
 		},
 		Commands: map[string]*ice.Command{
-			FILES: {Name: "files hash auto upload", Help: "扫码", Action: map[string]*ice.Action{
+			FILES: {Name: "files hash auto upload", Help: "文件夹", Action: map[string]*ice.Action{
 				web.UPLOAD: {Name: "upload", Help: "上传", Hand: func(m *ice.Message, arg ...string) {
 					up := kit.Simple(m.Optionv(ice.MSG_UPLOAD))
 					m.Cmdy(mdb.INSERT, FILES, "", mdb.HASH, kit.MDB_NAME, up[1], kit.MDB_TYPE, kit.Ext(up[1]), kit.MDB_DATA, up[0])

@@ -19,6 +19,8 @@ github.com/shylinux/toolkits v0.2.0 h1:ZMJGFqqgZBXxu2jUw2Zqu8Vx8KhEgWcMBnlH3cR+M
 github.com/shylinux/toolkits v0.2.0/go.mod h1:Y68Ot6xOmo1bun67YvqC3chDGeU2gDxtsUnvVDGJm4g=
 github.com/shylinux/toolkits v0.2.1 h1:FNCL4Tz6KRHjJbJFGswRLAROzo/AJavW+MrcIOEuB34=
 github.com/shylinux/toolkits v0.2.1/go.mod h1:Y68Ot6xOmo1bun67YvqC3chDGeU2gDxtsUnvVDGJm4g=
+github.com/shylinux/toolkits v0.2.2 h1:98AsnjCetFifxV89HrsYv0sdusNiu41D3pvQHbWgPec=
+github.com/shylinux/toolkits v0.2.2/go.mod h1:oMwi/N00I2cXenmcAkqikEncTzB4u5JhTQ9mO5xj7sY=
 github.com/skip2/go-qrcode v0.0.0-20200617195104-da1b6568686e h1:MRM5ITcdelLK2j1vwZ3Je0FKVCfqOLp5zO6trqMLYs0=
 github.com/skip2/go-qrcode v0.0.0-20200617195104-da1b6568686e/go.mod h1:XV66xRDqSt+GTGFMVlhk3ULuV0y9ZmzeVGR4mloJI3M=
 github.com/tuotoo/qrcode v0.0.0-20190222102259-ac9c44189bf2/go.mod h1:lPnW9HVS0vJdeYyQtOvIvlXgZPNhUAhwz+z5r8AJk0Y=

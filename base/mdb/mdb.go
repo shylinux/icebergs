@@ -62,11 +62,11 @@ func _hash_select(m *ice.Message, prefix, chain, field, value string) {
 func _hash_modify(m *ice.Message, prefix, chain string, field, value string, arg ...string) {
 	m.Richs(prefix, chain, value, func(key string, val map[string]interface{}) {
 		val = kit.GetMeta(val)
-		for i := 0; i < len(arg)-1; i += 2 {
+		for i := 0; i < len(arg); i += 2 {
 			if arg[i] == field {
 				continue
 			}
-			kit.Value(val, arg[i], arg[i+1])
+			kit.Value(val, arg[i], kit.Select("", arg, i+1))
 		}
 		m.Log_MODIFY(kit.MDB_KEY, path.Join(prefix, chain), field, value, arg)
 	})
@@ -177,11 +177,11 @@ func _list_select(m *ice.Message, prefix, chain, field, value string) {
 func _list_modify(m *ice.Message, prefix, chain string, field, value string, arg ...string) {
 	m.Grows(prefix, chain, field, value, func(index int, val map[string]interface{}) {
 		val = kit.GetMeta(val)
-		for i := 0; i < len(arg)-1; i += 2 {
+		for i := 0; i < len(arg); i += 2 {
 			if arg[i] == field {
 				continue
 			}
-			kit.Value(val, arg[i], arg[i+1])
+			kit.Value(val, arg[i], kit.Select("", arg, i+1))
 		}
 		m.Log_MODIFY(kit.MDB_KEY, path.Join(prefix, chain), field, value, arg)
 	})

@@ -26,7 +26,7 @@ func _task_scope(m *ice.Message, tz int, arg ...string) (time.Time, time.Time) {
 	begin_time = begin_time.Add(-time.Duration(tz) * time.Hour)
 
 	end_time := begin_time
-	switch arg[0] {
+	switch kit.Select("week", arg, 0) {
 	case TaskScale.DAY:
 		end_time = begin_time.AddDate(0, 0, 1)
 	case TaskScale.WEEK:
@@ -58,7 +58,7 @@ func _task_action(m *ice.Message, status interface{}, action ...string) string {
 	return strings.Join(action, ",")
 }
 
-func _task_list(m *ice.Message, zone string, id string) {
+func _task_list(m *ice.Message, zone string, id string) *ice.Message {
 	if zone == "" {
 		m.Option(mdb.FIELDS, "time,zone,count")
 	} else {
@@ -67,7 +67,7 @@ func _task_list(m *ice.Message, zone string, id string) {
 			m.PushButton(_task_action(m, value[TaskField.STATUS]))
 		})
 	}
-	m.Cmdy(mdb.SELECT, TASK, "", mdb.ZONE, zone, id)
+	return m.Cmdy(mdb.SELECT, TASK, "", mdb.ZONE, zone, id)
 }
 func _task_create(m *ice.Message, zone string) {
 	m.Cmdy(mdb.INSERT, TASK, "", mdb.HASH, kit.MDB_ZONE, zone)

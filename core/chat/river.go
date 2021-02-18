@@ -220,7 +220,7 @@ func init() {
 					return // 应用列表
 				}
 
-				m.Option(mdb.FIELDS, "time,id,pod,ctx,cmd,arg")
+				m.Option(mdb.FIELDS, "time,id,pod,ctx,cmd,arg,display,style")
 				msg := m.Cmd(mdb.SELECT, RIVER, kit.Keys(kit.MDB_HASH, m.Option(ice.MSG_RIVER), TOOL, kit.MDB_HASH, arg[0]), mdb.LIST, kit.MDB_ID, kit.Select("", arg, 1))
 				if len(msg.Appendv(CMD)) == 0 && len(arg) > 1 {
 					msg.Push(CMD, arg[1])

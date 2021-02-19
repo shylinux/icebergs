@@ -25,9 +25,11 @@ func init() {
 
 			if _task_list(m, kit.Select("", arg, 0), kit.Select("", arg, 1)); len(arg) == 0 {
 				return
+			} else if len(arg) == 1 {
+				m.SortTime(TaskField.BEGIN_TIME)
 			}
 
-			m.SortTime(TaskField.BEGIN_TIME)
+			tz := int64(8)
 			m.Table(func(index int, value map[string]string, head []string) {
 				if value[kit.MDB_STATUS] == TaskStatus.CANCEL {
 					return
@@ -38,7 +40,7 @@ func init() {
 					show = append(show, kit.Format(`<div class="%v">%v</div>`, k, value[k]))
 				}
 
-				t := kit.Time(value[TaskField.BEGIN_TIME])/int64(time.Second)/3600/24 - time.Now().Unix()/3600/24
+				t := (kit.Time(value[TaskField.BEGIN_TIME])+int64(time.Hour)*tz)/int64(time.Second)/3600/24 - (time.Now().Unix()+3600*tz)/3600/24
 				m.Echo(`<div class="item %s" title="%s">距离 %v%v%v<span class="day"> %v </span>天</div>`,
 					kit.Select("gone", "come", t > 0), value[kit.MDB_TEXT],
 					strings.Split(value[TaskField.BEGIN_TIME], " ")[0],

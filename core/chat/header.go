@@ -51,6 +51,10 @@ func init() {
 				aaa.USERROLE: {Name: "userrole", Help: "用户角色", Hand: func(m *ice.Message, arg ...string) {
 					m.Echo(aaa.UserRole(m, m.Option("who")))
 				}},
+				aaa.USERNICK: {Name: "usernick", Help: "用户昵称", Hand: func(m *ice.Message, arg ...string) {
+					m.Option(aaa.USERNAME, m.Option(ice.MSG_USERNAME))
+					m.Cmdy("aaa.user", kit.MDB_ACTION, mdb.MODIFY, aaa.USERNICK, arg[0])
+				}},
 				BACKGROUND: {Name: "background", Help: "背景图片", Hand: func(m *ice.Message, arg ...string) {
 					m.Option(BACKGROUND, m.Conf(HEADER, BACKGROUND, arg[0]))
 				}},

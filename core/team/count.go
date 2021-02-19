@@ -33,12 +33,17 @@ func init() {
 					return
 				}
 
-				t := kit.Time(value[TaskField.BEGIN_TIME])/int64(time.Second) - time.Now().Unix()
-				m.Echo(`<div class="item %s" title="%s">距离 %v<div class="name">%v</div>%v <span class="day">%v</span> 天</div>`,
+				show := []string{}
+				for _, k := range []string{kit.MDB_NAME, kit.MDB_TEXT} {
+					show = append(show, kit.Format(`<div class="%v">%v</div>`, k, value[k]))
+				}
+
+				t := kit.Time(value[TaskField.BEGIN_TIME])/int64(time.Second)/3600/24 - time.Now().Unix()/3600/24
+				m.Echo(`<div class="item %s" title="%s">距离 %v%v%v<span class="day"> %v </span>天</div>`,
 					kit.Select("gone", "come", t > 0), value[kit.MDB_TEXT],
 					strings.Split(value[TaskField.BEGIN_TIME], " ")[0],
-					value[kit.MDB_NAME],
-					kit.Select("已经", "还有", t > 0), t/3600/24,
+					strings.Join(show, ""),
+					kit.Select("已经", "还有", t > 0), t,
 				)
 			})
 		}},

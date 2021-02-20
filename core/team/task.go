@@ -61,6 +61,7 @@ func _task_action(m *ice.Message, status interface{}, action ...string) string {
 func _task_list(m *ice.Message, zone string, id string) *ice.Message {
 	if zone == "" {
 		m.Option(mdb.FIELDS, "time,zone,count")
+		defer func() { m.PushAction(mdb.REMOVE) }()
 	} else {
 		m.Option(mdb.FIELDS, kit.Select("begin_time,id,status,level,score,type,name,text", mdb.DETAIL, id != ""))
 		defer m.Table(func(index int, value map[string]string, head []string) {
@@ -92,6 +93,9 @@ func _task_modify(m *ice.Message, zone, id, field, value string, arg ...string) 
 }
 func _task_delete(m *ice.Message, zone, id string) {
 	m.Cmdy(mdb.MODIFY, TASK, _sub_key(m, zone), mdb.LIST, kit.MDB_ID, id, TaskField.STATUS, TaskStatus.CANCEL)
+}
+func _task_remove(m *ice.Message, zone string) {
+	m.Cmdy(mdb.DELETE, TASK, "", mdb.HASH, kit.MDB_ZONE, zone)
 }
 func _task_export(m *ice.Message, file string) {
 	m.Option(mdb.FIELDS, "zone,id,time,type,name,text,level,status,score,begin_time,close_time,extra")
@@ -193,6 +197,9 @@ func init() {
 				}},
 				mdb.DELETE: {Name: "delete", Help: "删除", Hand: func(m *ice.Message, arg ...string) {
 					_task_delete(m, m.Option(kit.MDB_ZONE), m.Option(kit.MDB_ID))
+				}},
+				mdb.REMOVE: {Name: "remove", Help: "删除", Hand: func(m *ice.Message, arg ...string) {
+					_task_remove(m, m.Option(kit.MDB_ZONE))
 				}},
 				mdb.EXPORT: {Name: "export file", Help: "导出", Hand: func(m *ice.Message, arg ...string) {
 					_task_export(m, m.Option(kit.MDB_FILE))

@@ -71,8 +71,8 @@ const AUTOGEN = "autogen"
 func init() {
 	Index.Merge(&ice.Context{
 		Commands: map[string]*ice.Command{
-			AUTOGEN: {Name: "autogen path auto create", Help: "生成", Action: map[string]*ice.Action{
-				mdb.CREATE: {Name: "create main=src/main.go@key name=hi@key from=usr/icebergs/misc/bash/bash.go@key", Help: "创建", Hand: func(m *ice.Message, arg ...string) {
+			AUTOGEN: {Name: "autogen path auto create binpack", Help: "生成", Action: map[string]*ice.Action{
+				mdb.CREATE: {Name: "create main=src/main.go@key name=hi@key from=usr/icebergs/misc/bash/bash.go@key", Help: "模块", Hand: func(m *ice.Message, arg ...string) {
 					if p := path.Join("src", m.Option("name"), m.Option("name")+".shy"); !kit.FileExists(p) {
 						_autogen_script(m, p)
 						_autogen_source(m, m.Option("name"))
@@ -84,6 +84,9 @@ func init() {
 					}
 					m.Cmdy(cli.SYSTEM, "make")
 					m.Option(ice.MSG_PROCESS, ice.PROCESS_INNER)
+				}},
+				BINPACK: {Name: "binpack", Help: "打包", Hand: func(m *ice.Message, arg ...string) {
+					m.Cmdy(BINPACK, mdb.CREATE)
 				}},
 				mdb.INPUTS: {Name: "inputs", Help: "补全", Hand: func(m *ice.Message, arg ...string) {
 					switch arg[0] {

@@ -45,6 +45,9 @@ func _port_right(m *ice.Message, begin string) string {
 	return ""
 }
 
+const (
+	RANDOM = "random"
+)
 const PORT = "port"
 
 func init() {

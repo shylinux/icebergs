@@ -47,6 +47,12 @@ func _share_local(m *ice.Message, arg ...string) {
 		}
 	}
 
+	if p == "usr/publish/order.js" {
+		if _, e := os.Stat(p); os.IsNotExist(e) {
+			m.Render(ice.RENDER_RESULT, "")
+			return
+		}
+	}
 	m.Render(ice.RENDER_DOWNLOAD, p)
 }
 func _share_proxy(m *ice.Message, arg ...string) {

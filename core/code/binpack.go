@@ -2,7 +2,6 @@ package code
 
 import (
 	ice "github.com/shylinux/icebergs"
-	"github.com/shylinux/icebergs/base/cli"
 	"github.com/shylinux/icebergs/base/mdb"
 	"github.com/shylinux/icebergs/base/nfs"
 	kit "github.com/shylinux/toolkits"
@@ -14,6 +13,12 @@ import (
 	"strings"
 )
 
+func _pack_write(o *os.File, arg ...string) {
+	for _, v := range arg {
+		o.WriteString(v)
+	}
+	o.WriteString("\n")
+}
 func _pack_file(m *ice.Message, file string) string {
 	list := ""
 	if f, e := os.Open(file); e == nil {
@@ -77,31 +82,31 @@ func init() {
 		},
 		Commands: map[string]*ice.Command{
 			BINPACK: {Name: "binpack path auto create", Help: "打包", Action: map[string]*ice.Action{
-				mdb.CREATE: {Name: "create name=demo from=src/main.go", Help: "创建", Hand: func(m *ice.Message, arg ...string) {
-					name := kit.Keys(m.Option(kit.MDB_NAME), "go")
-					if pack, p, e := kit.Create(path.Join(m.Conf(PUBLISH, kit.META_PATH), BINPACK, name)); m.Assert(e) {
+				mdb.CREATE: {Name: "create", Help: "创建", Hand: func(m *ice.Message, arg ...string) {
+					if pack, p, e := kit.Create("src/binpack.go"); m.Assert(e) {
 						defer pack.Close()
 
-						pack.WriteString(m.Cmdx(nfs.CAT, m.Option("from")))
+						_pack_write(pack, `package main`)
+						_pack_write(pack, "")
+						_pack_write(pack, `import (`)
+						_pack_write(pack, `	ice "github.com/shylinux/icebergs"`)
+						_pack_write(pack, `)`)
+						_pack_write(pack, "")
 
-						pack.WriteString("\n")
-						pack.WriteString(`func init() {` + "\n")
-						pack.WriteString(`    ice.BinPack = map[string][]byte{` + "\n")
+						_pack_write(pack, `func init() {`)
+						_pack_write(pack, `    ice.BinPack = map[string][]byte{`)
 
 						_pack_volcanos(m, pack, "usr/volcanos")
 						_pack_dir(m, pack, "usr/learning")
-						_pack_dir(m, pack, "usr/icebergs")
-						_pack_dir(m, pack, "usr/toolkits")
-						_pack_dir(m, pack, "usr/intshell")
-						_pack_contexts(m, pack)
+						// _pack_dir(m, pack, "usr/icebergs")
+						// _pack_dir(m, pack, "usr/toolkits")
+						// _pack_dir(m, pack, "usr/intshell")
+						// _pack_contexts(m, pack)
 
-						pack.WriteString(`    }` + "\n")
-						pack.WriteString(`}` + "\n")
+						_pack_write(pack, `    }`)
+						_pack_write(pack, `}`)
 						m.Echo(p)
 					}
-
-					m.Option(cli.CMD_DIR, path.Join(m.Conf(PUBLISH, kit.META_PATH), BINPACK))
-					m.Cmd(COMPILE, name)
 				}},
 			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 				m.Option(nfs.DIR_ROOT, path.Join(m.Conf(PUBLISH, kit.META_PATH)))

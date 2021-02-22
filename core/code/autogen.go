@@ -5,8 +5,10 @@ import (
 	"github.com/shylinux/icebergs/base/cli"
 	"github.com/shylinux/icebergs/base/mdb"
 	"github.com/shylinux/icebergs/base/nfs"
+	"github.com/shylinux/icebergs/base/web"
 	kit "github.com/shylinux/toolkits"
 
+	"os"
 	"path"
 	"strings"
 )
@@ -96,7 +98,7 @@ const AUTOGEN = "autogen"
 func init() {
 	Index.Merge(&ice.Context{
 		Commands: map[string]*ice.Command{
-			AUTOGEN: {Name: "autogen path auto create binpack", Help: "生成", Action: map[string]*ice.Action{
+			AUTOGEN: {Name: "autogen path auto create binpack script", Help: "生成", Action: map[string]*ice.Action{
 				mdb.CREATE: {Name: "create main=src/main.go@key name=hi@key from=usr/icebergs/misc/bash/bash.go@key", Help: "模块", Hand: func(m *ice.Message, arg ...string) {
 					if p := path.Join("src", m.Option("name"), m.Option("name")+".shy"); !kit.FileExists(p) {
 						_autogen_script(m, p)
@@ -128,6 +130,13 @@ func init() {
 						m.Cmdy(nfs.DIR, "usr/icebergs/misc/", "path,size,time")
 						m.RenameAppend("path", arg[0])
 					}
+				}},
+				mdb.SCRIPT: {Name: "script", Help: "脚本", Hand: func(m *ice.Message, arg ...string) {
+					miss := "etc/miss.sh"
+					if _, e := os.Stat(miss); os.IsNotExist(e) {
+						m.Cmd(nfs.SAVE, miss, m.Conf(web.DREAM, "meta.miss"))
+					}
+					m.Echo(miss)
 				}},
 			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 				if m.Option(nfs.DIR_ROOT, "src"); len(arg) == 0 || strings.HasSuffix(arg[0], "/") {

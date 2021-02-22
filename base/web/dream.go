@@ -147,8 +147,8 @@ ish_miss_prepare_develop
 ish_miss_prepare_compile
 ish_miss_prepare_install
 
-# ish_miss_prepare_intshell
-# ish_miss_prepare_contexts
+# ish_miss_prepare_volcanos
+# ish_miss_prepare_learning
 # ish_miss_prepare_icebergs
 # ish_miss_prepare_toolkits
 

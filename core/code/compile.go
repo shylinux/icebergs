@@ -28,6 +28,7 @@ func init() {
 		Commands: map[string]*ice.Command{
 			COMPILE: {Name: "compile arch=amd64,386,arm os=linux,darwin,windows src=src/main.go@key 执行:button", Help: "编译", Action: map[string]*ice.Action{
 				mdb.INPUTS: {Name: "inputs", Help: "补全", Hand: func(m *ice.Message, arg ...string) {
+					m.Option(nfs.DIR_REG, `.*\.go$`)
 					m.Cmdy(nfs.DIR, "src", "path,size,time")
 					m.Sort(kit.MDB_PATH)
 				}},

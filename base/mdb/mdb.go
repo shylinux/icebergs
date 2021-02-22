@@ -411,6 +411,7 @@ const (
 	IMPORT = "import"
 	PRUNES = "prunes"
 	INPUTS = "inputs"
+	SCRIPT = "script"
 	COMMIT = "commit"
 	SOURCE = "source"
 )

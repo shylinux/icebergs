@@ -61,7 +61,6 @@ func _serve_main(m *ice.Message, w http.ResponseWriter, r *http.Request) bool {
 		if msg.W, msg.R = w, r; strings.Contains(r.Header.Get("User-Agent"), "curl") {
 			Render(msg, ice.RENDER_DOWNLOAD, kit.Path(m.Conf(SERVE, "meta.intshell.path"), m.Conf(SERVE, "meta.intshell.index")))
 		} else {
-			m.Debug("what %v %v", r.URL.Path, ice.BinPack)
 			if ice.DumpBinPack(w, r.URL.Path, func(name string) { RenderType(w, name, "") }) {
 				return false
 			}

@@ -52,7 +52,7 @@ var Index = &ice.Context{Name: TMUX, Help: "工作台",
 	Commands: map[string]*ice.Command{
 		ice.CTX_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			m.Load()
-			m.Watch(web.DREAM_CREATE, m.Prefix(SESSION))
+			// m.Watch(web.DREAM_CREATE, m.Prefix(SESSION))
 		}},
 		ice.CTX_EXIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			m.Save()

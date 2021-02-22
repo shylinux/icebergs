@@ -5,10 +5,8 @@ import (
 	"github.com/shylinux/icebergs/base/cli"
 	"github.com/shylinux/icebergs/base/mdb"
 	"github.com/shylinux/icebergs/base/nfs"
-	"github.com/shylinux/icebergs/base/web"
 	kit "github.com/shylinux/toolkits"
 
-	"os"
 	"path"
 	"strings"
 )
@@ -20,6 +18,31 @@ func _autogen_script(m *ice.Message, dir string) {
 }
 func _autogen_source(m *ice.Message, name string) {
 	m.Cmd("nfs.file", "append", "src/main.shy", "\n", `source `+name+"/"+name+".shy", "\n")
+}
+func _autogen_version(m *ice.Message) {
+	m.Cmdy(nfs.SAVE, "src/version.go", kit.Format(`package main
+
+import (
+	"github.com/shylinux/icebergs"
+)
+
+func init() {
+	ice.Info.Build.Time = "%s"
+	ice.Info.Build.Hash = "%s"
+	ice.Info.Build.Remote = "%s"
+	ice.Info.Build.Branch = "%s"
+	ice.Info.Build.Version = "%s"
+	ice.Info.Build.HostName = "%s"
+	ice.Info.Build.UserName = "%s"
+}
+`,
+		m.Time(),
+		strings.TrimSpace(m.Cmdx(cli.SYSTEM, "git", "log", "-n1", `--pretty=%H`)),
+		strings.TrimSpace(m.Cmdx(cli.SYSTEM, "git", "config", "remote.origin.url")),
+		strings.TrimSpace(m.Cmdx(cli.SYSTEM, "git", "rev-parse", "--abbrev-ref", "HEAD")),
+		strings.TrimSpace(m.Cmdx(cli.SYSTEM, "git", "describe", "--tags")),
+		ice.Info.HostName, ice.Info.UserName,
+	))
 }
 func _autogen_index(m *ice.Message, dir string, from string, ctx string) {
 	list := []string{}
@@ -73,7 +96,7 @@ const AUTOGEN = "autogen"
 func init() {
 	Index.Merge(&ice.Context{
 		Commands: map[string]*ice.Command{
-			AUTOGEN: {Name: "autogen path auto create binpack script", Help: "生成", Action: map[string]*ice.Action{
+			AUTOGEN: {Name: "autogen path auto create binpack", Help: "生成", Action: map[string]*ice.Action{
 				mdb.CREATE: {Name: "create main=src/main.go@key name=hi@key from=usr/icebergs/misc/bash/bash.go@key", Help: "模块", Hand: func(m *ice.Message, arg ...string) {
 					if p := path.Join("src", m.Option("name"), m.Option("name")+".shy"); !kit.FileExists(p) {
 						_autogen_script(m, p)
@@ -86,6 +109,10 @@ func init() {
 					}
 					m.Cmdy(cli.SYSTEM, "make")
 					m.Option(ice.MSG_PROCESS, ice.PROCESS_INNER)
+				}},
+				BINPACK: {Name: "binpack", Help: "打包", Hand: func(m *ice.Message, arg ...string) {
+					_autogen_version(m)
+					m.Cmdy(BINPACK, mdb.CREATE)
 				}},
 				mdb.INPUTS: {Name: "inputs", Help: "补全", Hand: func(m *ice.Message, arg ...string) {
 					switch arg[0] {
@@ -101,16 +128,6 @@ func init() {
 						m.Cmdy(nfs.DIR, "usr/icebergs/misc/", "path,size,time")
 						m.RenameAppend("path", arg[0])
 					}
-				}},
-				BINPACK: {Name: "binpack", Help: "打包", Hand: func(m *ice.Message, arg ...string) {
-					m.Cmdy(BINPACK, mdb.CREATE)
-				}},
-				mdb.SCRIPT: {Name: "script", Help: "脚本", Hand: func(m *ice.Message, arg ...string) {
-					miss := "etc/miss.sh"
-					if _, e := os.Stat(miss); os.IsNotExist(e) {
-						m.Cmd(nfs.SAVE, miss, m.Conf(web.DREAM, "meta.miss"))
-					}
-					m.Echo(miss)
 				}},
 			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 				if m.Option(nfs.DIR_ROOT, "src"); len(arg) == 0 || strings.HasSuffix(arg[0], "/") {

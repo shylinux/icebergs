@@ -3,6 +3,7 @@ package code
 import (
 	ice "github.com/shylinux/icebergs"
 	"github.com/shylinux/icebergs/base/cli"
+	"github.com/shylinux/icebergs/base/mdb"
 	"github.com/shylinux/icebergs/base/nfs"
 	kit "github.com/shylinux/toolkits"
 
@@ -40,8 +41,8 @@ func init() {
 			)},
 		},
 		Commands: map[string]*ice.Command{
-			PUBLISH: {Name: "publish path auto publish ish ice can", Help: "发布", Action: map[string]*ice.Action{
-				"publish": {Name: "publish file", Help: "添加", Hand: func(m *ice.Message, arg ...string) {
+			PUBLISH: {Name: "publish path auto create ish ice can", Help: "发布", Action: map[string]*ice.Action{
+				mdb.CREATE: {Name: "create file", Help: "添加", Hand: func(m *ice.Message, arg ...string) {
 					_publish_file(m, m.Option(kit.MDB_FILE))
 				}},
 				"contexts": {Name: "contexts", Help: "环境", Hand: func(m *ice.Message, arg ...string) {
@@ -84,6 +85,11 @@ func init() {
 					}
 					m.SortTimeR(kit.MDB_TIME)
 					m.Cmdy(PUBLISH, "contexts", "base")
+					m.PushAction(mdb.REMOVE)
+				}},
+				mdb.REMOVE: {Name: "remove", Help: "删除", Hand: func(m *ice.Message, arg ...string) {
+					p := m.Option(cli.CMD_DIR, m.Conf(PUBLISH, kit.META_PATH))
+					os.Remove(path.Join(p, m.Option(kit.MDB_FILE)))
 				}},
 				"can": {Name: "can", Help: "火山架", Hand: func(m *ice.Message, arg ...string) {
 					m.Option(nfs.DIR_DEEP, true)

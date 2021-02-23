@@ -49,11 +49,14 @@ func init() {
 					_publish_file(m, m.Option(kit.MDB_FILE))
 				}},
 				"can": {Name: "can", Help: "火山架", Hand: func(m *ice.Message, arg ...string) {
+					defer func() { m.Cmdy(PUBLISH, "contexts", "miss") }()
+					m.Cmd(PUBLISH, mdb.CREATE, kit.MDB_FILE, "etc/miss.sh")
+					m.Cmd(PUBLISH, mdb.CREATE, kit.MDB_FILE, "go.mod")
+
 					m.Option(nfs.DIR_DEEP, true)
 					m.Option(nfs.DIR_REG, `.*\.(html|css|js)$`)
 					m.Option(nfs.DIR_ROOT, m.Conf(PUBLISH, kit.META_PATH))
 					m.Cmdy(nfs.DIR, "./", "time,size,line,path,link")
-					m.Cmdy(PUBLISH, "contexts", "miss")
 				}},
 				"ice": {Name: "ice", Help: "冰山架", Hand: func(m *ice.Message, arg ...string) {
 					defer func() { m.Cmdy(PUBLISH, "contexts", "base") }()
@@ -75,11 +78,13 @@ func init() {
 					m.SortTimeR(kit.MDB_TIME)
 				}},
 				"ish": {Name: "ish", Help: "神农架", Hand: func(m *ice.Message, arg ...string) {
+					defer func() { m.Cmdy(PUBLISH, "contexts", "tmux") }()
+					m.Cmd(PUBLISH, mdb.CREATE, kit.MDB_FILE, "etc/miss.sh")
+
 					m.Option(nfs.DIR_DEEP, true)
 					m.Option(nfs.DIR_REG, ".*\\.(sh|vim|conf)$")
 					m.Option(nfs.DIR_ROOT, m.Conf(PUBLISH, kit.META_PATH))
 					m.Cmdy(nfs.DIR, "./", "time,size,line,path,link")
-					m.Cmdy(PUBLISH, "contexts", "tmux")
 				}},
 				"contexts": {Name: "contexts", Help: "环境", Hand: func(m *ice.Message, arg ...string) {
 					u := kit.ParseURL(m.Option(ice.MSG_USERWEB))

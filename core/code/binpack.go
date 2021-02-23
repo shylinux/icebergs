@@ -109,12 +109,11 @@ func init() {
 					}
 				}},
 			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-				m.Option(nfs.DIR_ROOT, path.Join(m.Conf(PUBLISH, kit.META_PATH)))
-				m.Option(nfs.DIR_TYPE, nfs.FILE)
-
-				m.Cmdy(nfs.DIR, BINPACK).Table(func(index int, value map[string]string, head []string) {
-					m.PushDownload(value[kit.MDB_PATH])
-				})
+				for k, v := range ice.BinPack {
+					m.Push(kit.MDB_NAME, k)
+					m.Push(kit.MDB_SIZE, len(v))
+				}
+				m.Sort(kit.MDB_NAME)
 			}},
 		},
 	})

@@ -72,13 +72,15 @@ func _dream_show(m *ice.Message, name string) {
 
 	if m.Richs(SPACE, nil, name, nil) == nil {
 		m.Option(cli.CMD_DIR, p)
-		// m.Conf(cli.RUNTIME, "conf.ctx_dev"),
 		m.Optionv(cli.CMD_ENV, kit.Simple(
-			"ctx_dev", strings.Split(m.Option(ice.MSG_USERWEB), "?")[0],
+			// "ctx_dev", m.Conf(cli.RUNTIME, "conf.ctx_dev"),
+			"ctx_dev", "http://:"+m.Cmd(SERVE).Append(tcp.PORT),
 			"PATH", kit.Path(path.Join(p, "bin"))+":"+kit.Path("bin")+":"+os.Getenv("PATH"),
 			"USER", ice.Info.UserName, m.Confv(DREAM, "meta.env"),
 		))
 		// 启动任务
+		kit.Path(os.Args[0])
+
 		m.Optionv(cli.CMD_STDERR, path.Join(p, m.Conf(DREAM, "meta.env.ctx_log")))
 		m.Cmd(cli.DAEMON, m.Confv(DREAM, "meta.cmd"), SPIDE_DEV, SPIDE_DEV, kit.MDB_NAME, name)
 		m.Event(DREAM_CREATE, kit.MDB_TYPE, m.Option(kit.MDB_TYPE), kit.MDB_NAME, name)

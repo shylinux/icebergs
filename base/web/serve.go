@@ -59,6 +59,9 @@ func _serve_main(m *ice.Message, w http.ResponseWriter, r *http.Request) bool {
 	if r.Method == "GET" && r.URL.Path == "/" {
 		msg := m.Spawn()
 		if msg.W, msg.R = w, r; strings.Contains(r.Header.Get("User-Agent"), "curl") {
+			if ice.DumpBinPack(w, "usr/intshell/index.sh", func(name string) { RenderType(w, name, "") }) {
+				return false
+			}
 			Render(msg, ice.RENDER_DOWNLOAD, kit.Path(m.Conf(SERVE, "meta.intshell.path"), m.Conf(SERVE, "meta.intshell.index")))
 		} else {
 			if ice.DumpBinPack(w, r.URL.Path, func(name string) { RenderType(w, name, "") }) {

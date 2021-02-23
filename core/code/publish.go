@@ -10,6 +10,7 @@ import (
 	"fmt"
 	"os"
 	"path"
+	"runtime"
 	"strings"
 )
 
@@ -22,6 +23,9 @@ func _publish_file(m *ice.Message, file string, arg ...string) string {
 		m.Cmd(cli.SYSTEM, "tar", "-zcf", p, file)
 		defer func() { os.Remove(p) }()
 		file = p
+	}
+	if strings.HasSuffix(file, "ice.bin") {
+		arg = append(arg, kit.Keys("ice", runtime.GOOS, runtime.GOARCH))
 	}
 
 	// 发布文件
@@ -36,14 +40,46 @@ func init() {
 	Index.Merge(&ice.Context{
 		Configs: map[string]*ice.Config{
 			PUBLISH: {Name: PUBLISH, Help: "发布", Value: kit.Data(
-				kit.MDB_SHORT, kit.MDB_NAME, kit.MDB_PATH, "usr/publish",
-				"contexts", _contexts,
+				kit.MDB_SHORT, kit.MDB_NAME, kit.MDB_PATH, "usr/publish", "contexts", _contexts,
 			)},
 		},
 		Commands: map[string]*ice.Command{
-			PUBLISH: {Name: "publish path auto create ish ice can", Help: "发布", Action: map[string]*ice.Action{
+			PUBLISH: {Name: "publish path auto create can ice ish", Help: "发布", Action: map[string]*ice.Action{
 				mdb.CREATE: {Name: "create file", Help: "添加", Hand: func(m *ice.Message, arg ...string) {
 					_publish_file(m, m.Option(kit.MDB_FILE))
+				}},
+				"can": {Name: "can", Help: "火山架", Hand: func(m *ice.Message, arg ...string) {
+					m.Option(nfs.DIR_DEEP, true)
+					m.Option(nfs.DIR_REG, `.*\.(html|css|js)$`)
+					m.Option(nfs.DIR_ROOT, m.Conf(PUBLISH, kit.META_PATH))
+					m.Cmdy(nfs.DIR, "./", "time,size,line,path,link")
+					m.Cmdy(PUBLISH, "contexts", "miss")
+				}},
+				"ice": {Name: "ice", Help: "冰山架", Hand: func(m *ice.Message, arg ...string) {
+					defer func() { m.Cmdy(PUBLISH, "contexts", "base") }()
+					m.Cmd(PUBLISH, mdb.CREATE, kit.MDB_FILE, "bin/ice.sh")
+					m.Cmd(PUBLISH, mdb.CREATE, kit.MDB_FILE, "bin/ice.bin")
+
+					p := m.Option(cli.CMD_DIR, m.Conf(PUBLISH, kit.META_PATH))
+					ls := strings.Split(strings.TrimSpace(m.Cmd(cli.SYSTEM, "bash", "-c", "ls |xargs file |grep executable").Append(cli.CMD_OUT)), "\n")
+					for _, ls := range ls {
+						if file := strings.TrimSpace(strings.Split(ls, ":")[0]); file != "" {
+							if s, e := os.Stat(path.Join(p, file)); e == nil {
+								m.Push(kit.MDB_TIME, s.ModTime())
+								m.Push(kit.MDB_SIZE, kit.FmtSize(s.Size()))
+								m.Push(kit.MDB_FILE, file)
+								m.PushDownload(file, path.Join(p, file))
+							}
+						}
+					}
+					m.SortTimeR(kit.MDB_TIME)
+				}},
+				"ish": {Name: "ish", Help: "神农架", Hand: func(m *ice.Message, arg ...string) {
+					m.Option(nfs.DIR_DEEP, true)
+					m.Option(nfs.DIR_REG, ".*\\.(sh|vim|conf)$")
+					m.Option(nfs.DIR_ROOT, m.Conf(PUBLISH, kit.META_PATH))
+					m.Cmdy(nfs.DIR, "./", "time,size,line,path,link")
+					m.Cmdy(PUBLISH, "contexts", "tmux")
 				}},
 				"contexts": {Name: "contexts", Help: "环境", Hand: func(m *ice.Message, arg ...string) {
 					u := kit.ParseURL(m.Option(ice.MSG_USERWEB))
@@ -63,44 +99,14 @@ func init() {
 						}
 					}
 				}},
-				"ish": {Name: "ish", Help: "神农架", Hand: func(m *ice.Message, arg ...string) {
-					m.Option(nfs.DIR_DEEP, true)
-					m.Option(nfs.DIR_REG, ".*\\.(sh|vim|conf)$")
-					m.Option(nfs.DIR_ROOT, m.Conf(PUBLISH, kit.META_PATH))
-					m.Cmdy(nfs.DIR, "./", "time,size,line,path,link")
-					m.Cmdy(PUBLISH, "contexts", "tmux")
-				}},
-				"ice": {Name: "ice", Help: "冰山架", Hand: func(m *ice.Message, arg ...string) {
-					p := m.Option(cli.CMD_DIR, m.Conf(PUBLISH, kit.META_PATH))
-					ls := strings.Split(m.Cmdx(cli.SYSTEM, "bash", "-c", "ls |xargs file |grep executable"), "\n")
-					for _, ls := range ls {
-						if file := strings.TrimSpace(strings.Split(ls, ":")[0]); file != "" {
-							if s, e := os.Stat(path.Join(p, file)); m.Assert(e) {
-								m.Push(kit.MDB_TIME, s.ModTime())
-								m.Push(kit.MDB_SIZE, kit.FmtSize(s.Size()))
-								m.Push(kit.MDB_FILE, file)
-								m.PushDownload(file, path.Join(p, file))
-							}
-						}
-					}
-					m.SortTimeR(kit.MDB_TIME)
-					m.Cmdy(PUBLISH, "contexts", "base")
-					m.PushAction(mdb.REMOVE)
-				}},
 				mdb.REMOVE: {Name: "remove", Help: "删除", Hand: func(m *ice.Message, arg ...string) {
 					p := m.Option(cli.CMD_DIR, m.Conf(PUBLISH, kit.META_PATH))
-					os.Remove(path.Join(p, m.Option(kit.MDB_FILE)))
-				}},
-				"can": {Name: "can", Help: "火山架", Hand: func(m *ice.Message, arg ...string) {
-					m.Option(nfs.DIR_DEEP, true)
-					m.Option(nfs.DIR_REG, ".*\\.(js|css|html)$")
-					m.Option(nfs.DIR_ROOT, m.Conf(PUBLISH, kit.META_PATH))
-					m.Cmdy(nfs.DIR, "./", "time,size,line,path,link")
-					m.Cmdy(PUBLISH, "contexts", "miss")
+					os.Remove(path.Join(p, m.Option(kit.MDB_PATH)))
 				}},
 			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 				m.Option(nfs.DIR_ROOT, m.Conf(PUBLISH, kit.META_PATH))
 				m.Cmdy(nfs.DIR, kit.Select("", arg, 0), "time size path link")
+				m.PushAction(mdb.REMOVE)
 			}},
 		},
 	})

@@ -45,7 +45,7 @@ func _pack_dir(m *ice.Message, pack *os.File, dir string) {
 			return
 		}
 
-		pack.WriteString(fmt.Sprintf("        \"/%s\": %s,\n",
+		pack.WriteString(fmt.Sprintf("        \"%s\": %s,\n",
 			path.Join(dir, value[kit.MDB_PATH]), _pack_file(m, path.Join(dir, value[kit.MDB_PATH]))))
 	})
 	pack.WriteString("\n")
@@ -100,7 +100,7 @@ func init() {
 						_pack_dir(m, pack, "usr/learning")
 						// _pack_dir(m, pack, "usr/icebergs")
 						// _pack_dir(m, pack, "usr/toolkits")
-						// _pack_dir(m, pack, "usr/intshell")
+						_pack_dir(m, pack, "usr/intshell")
 						// _pack_contexts(m, pack)
 
 						_pack_write(pack, `    }`)

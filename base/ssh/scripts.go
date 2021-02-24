@@ -111,7 +111,7 @@ func (f *Frame) prompt(m *ice.Message, list ...string) *Frame {
 		list = append(list, f.ps1...)
 	}
 
-	m.Sleep("10ms")
+	m.Sleep("30ms")
 	fmt.Fprintf(f.stdout, "\r")
 	for _, v := range list {
 		switch v {
@@ -241,6 +241,7 @@ func (f *Frame) scan(m *ice.Message, h, line string, r io.Reader) *Frame {
 
 	m.I, m.O = r, f.stdout
 	bio := bufio.NewScanner(r)
+	m.Sleep("3s")
 	for f.prompt(m, ps...); bio.Scan() && !f.exit; f.prompt(m, ps...) {
 		if h == STDIO && len(bio.Text()) == 0 {
 			continue // 空行

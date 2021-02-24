@@ -57,6 +57,9 @@ func init() {
 					if f, _, e := kit.Create("usr/publish/webpack/" + m.Option("name") + ".js"); m.Assert(e) {
 						defer f.Close()
 
+						f.WriteString("\n")
+						f.WriteString(kit.Format(`Volcanos.meta.args = {river: "%s", storm: "%s"}`, m.Option("river"), m.Option("storm")))
+						f.WriteString("\n")
 						f.WriteString(`Volcanos.meta.pack = ` + kit.Formats(kit.UnMarshal(kit.Select("{}", m.Option("content")))))
 					}
 

@@ -22,7 +22,7 @@ func init() {
 		"/upload": {Name: "/upload", Help: "上传", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			// 缓存文件
 			msg := m.Cmd(web.CACHE, web.UPLOAD)
-			m.Option(ice.MSG_UPLOAD, msg.Append(kit.MDB_HASH), msg.Append(kit.MDB_NAME))
+			m.Option(ice.MSG_UPLOAD, msg.Append(kit.MDB_HASH), msg.Append(kit.MDB_NAME), msg.Append(kit.MDB_SIZE))
 			m.Cmd(chat.FILES, web.UPLOAD)
 
 			for _, k := range []string{kit.MDB_DATA, kit.MDB_TIME, kit.MDB_TYPE, kit.MDB_NAME, kit.MDB_SIZE} {

@@ -174,6 +174,7 @@ func _space_handle(m *ice.Message, safe bool, send map[string]*ice.Message, c *w
 				}
 
 			} else { // 接收响应
+				m.Debug("what %v", 123)
 				res.Back(msg)
 			}
 		}

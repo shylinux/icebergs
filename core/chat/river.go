@@ -283,8 +283,8 @@ func init() {
 					m.Conf(RIVER, kit.Keys(kit.MDB_HASH, h, USER, kit.MDB_META, kit.MDB_SHORT), aaa.USERNAME)
 					m.Cmd(m.Prefix(USER), mdb.INSERT, aaa.USERNAME, m.Option(ice.MSG_USERNAME))
 
-					kit.Fetch(m.Confv(RIVER, kit.Keys("meta.template", kit.Select("base", m.Option("template")))), func(storm string, value interface{}) {
-						h := m.Cmdx(TOOL, mdb.CREATE, kit.MDB_TYPE, "public", kit.MDB_NAME, storm, kit.MDB_TEXT, storm)
+					kit.Fetch(m.Confv(RIVER, kit.Keym(kit.MDB_TEMPLATE, kit.Select("base", m.Option(kit.MDB_TEMPLATE)))), func(storm string, value interface{}) {
+						h := m.Cmdx(TOOL, mdb.CREATE, kit.MDB_TYPE, PUBLIC, kit.MDB_NAME, storm, kit.MDB_TEXT, storm)
 
 						kit.Fetch(value, func(index int, value string) {
 							m.Search(value, func(p *ice.Context, s *ice.Context, key string, cmd *ice.Command) {
@@ -309,14 +309,10 @@ func init() {
 					for _, k := range []string{"tmux", "base", "miss"} {
 						m.Cmdy("web.code.publish", "contexts", k)
 					}
-
-					m.EchoScript("shell", "# 共享环境", m.Option(ice.MSG_USERWEB))
-					m.EchoQRCode(m.Option(ice.MSG_USERWEB))
-					m.EchoAnchor(m.Option(ice.MSG_USERWEB))
 				}},
 				mdb.INPUTS: {Name: "inputs", Help: "补全", Hand: func(m *ice.Message, arg ...string) {
-					switch m.Option("action") {
-					case "start":
+					switch m.Option(kit.MDB_ACTION) {
+					case tcp.START:
 						m.Cmdy(web.DREAM, kit.MDB_ACTION, mdb.INPUTS, arg)
 						return
 					}
@@ -324,13 +320,13 @@ func init() {
 					switch arg[0] {
 					case aaa.USERNAME:
 						m.Cmdy(aaa.USER)
-						m.Appendv(ice.MSG_APPEND, "username", "usernick", "userzone")
+						m.Appendv(ice.MSG_APPEND, aaa.USERNAME, aaa.USERNICK, aaa.USERZONE)
 					case aaa.USERROLE:
 						m.Push(aaa.USERROLE, aaa.VOID)
 						m.Push(aaa.USERROLE, aaa.TECH)
 						m.Push(aaa.USERROLE, aaa.ROOT)
-					case "template":
-						m.Push("template", "base")
+					case kit.MDB_TEMPLATE:
+						m.Push(kit.MDB_TEMPLATE, "base")
 					default:
 						m.Cmdy(mdb.INPUTS, RIVER, "", mdb.HASH, arg)
 					}

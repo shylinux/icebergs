@@ -244,16 +244,16 @@ func init() {
 				m.Cmdy(mdb.SELECT, SERVE, "", mdb.HASH, kit.MDB_NAME, arg)
 			}},
 
-			"/intshell/": {Name: "/intshell/", Help: "脚本", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-				m.Render(ice.RENDER_DOWNLOAD, path.Join(m.Conf(SERVE, "meta.intshell.path"), path.Join(arg...)))
+			"/volcanos/": {Name: "/volcanos/", Help: "浏览器", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+				m.Render(ice.RENDER_DOWNLOAD, path.Join(m.Conf(SERVE, kit.Keym("volcanos.path")), path.Join(arg...)))
 			}},
-			"/volcanos/": {Name: "/volcanos/", Help: "脚本", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-				m.Render(ice.RENDER_DOWNLOAD, path.Join(m.Conf(SERVE, "meta.volcanos.path"), path.Join(arg...)))
+			"/intshell/": {Name: "/intshell/", Help: "命令行", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+				m.Render(ice.RENDER_DOWNLOAD, path.Join(m.Conf(SERVE, kit.Keym("intshell.path")), path.Join(arg...)))
 			}},
-			"/publish/": {Name: "/publish/", Help: "源码", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			"/publish/": {Name: "/publish/", Help: "私有云", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 				_share_local(m, m.Conf(SERVE, kit.Keym("publish")), path.Join(arg...))
 			}},
-			"/require/": {Name: "/require/", Help: "源码", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			"/require/": {Name: "/require/", Help: "公有云", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 				_share_repos(m, path.Join(arg[0], arg[1], arg[2]), arg[3:]...)
 			}},
 		}})

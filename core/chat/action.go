@@ -84,7 +84,7 @@ func _action_proxy(m *ice.Message) (proxy []string) {
 }
 func _action_upload(m *ice.Message, arg ...string) {
 	msg := m.Cmd(web.CACHE, web.UPLOAD)
-	m.Option(ice.MSG_UPLOAD, msg.Append(kit.MDB_HASH), msg.Append(kit.MDB_NAME))
+	m.Option(ice.MSG_UPLOAD, msg.Append(kit.MDB_HASH), msg.Append(kit.MDB_NAME), msg.Append(kit.MDB_SIZE))
 }
 
 const (

@@ -1,6 +1,6 @@
 package ice
 
-const ( //MOD
+const ( // MOD
 	MOD_DIR  = 0750
 	MOD_FILE = 0640
 
@@ -10,6 +10,26 @@ const ( //MOD
 
 	MOD_DATE = "2006-01-02"
 	MOD_TIME = "2006-01-02 15:04:05"
+)
+const ( // REPOS
+	VOLCANOS = "volcanos"
+	ICEBERGS = "icebergs"
+	CONTEXTS = "contexts"
+	INTSHELL = "intshell"
+)
+const ( // DIR
+	ETC_MISS    = "etc/miss.sh"
+	ETC_INIT    = "etc/init.shy"
+	ETC_EXIT    = "etc/exit.shy"
+	SRC_MAIN    = "src/main.shy"
+	SRC_MAIN_GO = "src/main.go"
+	BIN_ICE_BIN = "bin/ice.bin"
+	BIN_ICE     = "bin/ice.sh"
+	MAKEFILE    = "makefile"
+	ORDER_SH    = "order.sh"
+	ORDER_JS    = "order.js"
+	GO_MOD      = "go.mod"
+	GO_SUM      = "go.sum"
 )
 const ( // MSG
 	MSG_DETAIL = "detail"
@@ -67,6 +87,7 @@ const ( // PROCESS
 	PROCESS_FOLLOW   = "_follow"
 	PROCESS_INNER    = "_inner"
 	PROCESS_FIELD    = "_field"
+	PROCESS_OPEN     = "_open"
 
 	FIELD_PREFIX = "_prefix"
 	CONTROL_PAGE = "_page"

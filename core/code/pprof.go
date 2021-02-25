@@ -91,7 +91,7 @@ func init() {
 
 				} else {
 					m.Table(func(index int, value map[string]string, head []string) {
-						m.PushDownload("pprof.pd.gz", value[kit.MDB_FILE])
+						m.PushDownload(kit.MDB_LINK, "pprof.pd.gz", value[kit.MDB_FILE])
 						m.PushButton(web.SERVE)
 					})
 				}

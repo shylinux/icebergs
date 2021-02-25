@@ -30,7 +30,7 @@ func init() {
 					defer js.Close()
 
 					m.Option(nfs.DIR_ROOT, m.Conf(WEBPACK, kit.META_PATH))
-					m.Option(nfs.DIR_TYPE, nfs.FILE)
+					m.Option(nfs.DIR_TYPE, nfs.CAT)
 					m.Option(nfs.DIR_DEEP, true)
 
 					for _, k := range []string{"lib", "pane", "plugin"} {
@@ -79,11 +79,11 @@ func init() {
 				}},
 			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 				m.Option(nfs.DIR_ROOT, m.Conf(PUBLISH, kit.META_PATH))
-				m.Option(nfs.DIR_TYPE, nfs.FILE)
+				m.Option(nfs.DIR_TYPE, nfs.CAT)
 				m.Option(nfs.DIR_DEEP, true)
 
 				m.Cmdy(nfs.DIR, WEBPACK).Table(func(index int, value map[string]string, head []string) {
-					m.PushDownload(path.Join(m.Option(nfs.DIR_ROOT), value[kit.MDB_PATH]))
+					m.PushDownload(kit.MDB_LINK, path.Join(m.Option(nfs.DIR_ROOT), value[kit.MDB_PATH]))
 				})
 			}},
 		},

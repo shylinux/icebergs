@@ -241,7 +241,7 @@ func (f *Frame) scan(m *ice.Message, h, line string, r io.Reader) *Frame {
 
 	m.I, m.O = r, f.stdout
 	bio := bufio.NewScanner(r)
-	m.Sleep("3s")
+	m.Sleep("300ms")
 	for f.prompt(m, ps...); bio.Scan() && !f.exit; f.prompt(m, ps...) {
 		if h == STDIO && len(bio.Text()) == 0 {
 			continue // 空行

@@ -33,7 +33,7 @@ func _dream_show(m *ice.Message, name string) {
 	if !strings.Contains(name, "-") || !strings.HasPrefix(name, "20") {
 		name = m.Time("20060102-") + strings.ReplaceAll(name, "-", "_")
 	}
-	m.Option("name", name)
+	m.Option(kit.MDB_NAME, name)
 
 	// 任务目录
 	p := path.Join(m.Conf(DREAM, kit.META_PATH), name)
@@ -44,11 +44,11 @@ func _dream_show(m *ice.Message, name string) {
 	}
 
 	// 任务模板
-	if m.Option("template") != "" {
-		for _, file := range []string{"etc/miss.sh", "src/main.shy", "src/main.go", "go.mod", "Makefile"} {
+	if m.Option(kit.MDB_TEMPLATE) != "" {
+		for _, file := range []string{ice.ETC_MISS, ice.SRC_MAIN, ice.SRC_MAIN_GO, ice.GO_MOD, ice.MAKEFILE} {
 			if _, e := os.Stat(path.Join(p, file)); os.IsNotExist(e) {
-				switch m.Cmdy(nfs.COPY, path.Join(p, file), path.Join(m.Option("template"), file)); file {
-				case "go.mod":
+				switch m.Cmdy(nfs.COPY, path.Join(p, file), path.Join(m.Option(kit.MDB_TEMPLATE), file)); file {
+				case ice.GO_MOD:
 					kit.Rewrite(path.Join(p, file), func(line string) string {
 						return kit.Select(line, "module "+name, strings.HasPrefix(line, "module"))
 					})
@@ -58,12 +58,12 @@ func _dream_show(m *ice.Message, name string) {
 	}
 
 	// 任务脚本
-	miss := path.Join(p, "etc/miss.sh")
+	miss := path.Join(p, ice.ETC_MISS)
 	if _, e := os.Stat(miss); os.IsNotExist(e) {
-		m.Cmd(nfs.SAVE, miss, m.Conf(DREAM, "meta.miss"))
+		m.Cmd(nfs.SAVE, miss, m.Conf(DREAM, kit.Keym("miss")))
 	}
 
-	if b, e := ioutil.ReadFile(path.Join(p, m.Conf(gdb.SIGNAL, "meta.pid"))); e == nil {
+	if b, e := ioutil.ReadFile(path.Join(p, m.Conf(gdb.SIGNAL, kit.Keym(kit.SSH_PID)))); e == nil {
 		if s, e := os.Stat("/proc/" + string(b)); e == nil && s.IsDir() {
 			m.Info("already exists %v", string(b))
 			return // 已经启动
@@ -75,14 +75,14 @@ func _dream_show(m *ice.Message, name string) {
 		m.Optionv(cli.CMD_ENV, kit.Simple(
 			// "ctx_dev", m.Conf(cli.RUNTIME, "conf.ctx_dev"),
 			"ctx_dev", "http://:"+m.Cmd(SERVE).Append(tcp.PORT),
-			"PATH", kit.Path(path.Join(p, "bin"))+":"+kit.Path("bin")+":"+os.Getenv("PATH"),
-			"USER", ice.Info.UserName, m.Confv(DREAM, "meta.env"),
+			"PATH", kit.Path(path.Join(p, kit.SSH_BIN))+":"+kit.Path(kit.SSH_BIN)+":"+os.Getenv("PATH"),
+			"USER", ice.Info.UserName, m.Confv(DREAM, kit.Keym(kit.SSH_ENV)),
 		))
 		// 启动任务
 		kit.Path(os.Args[0])
 
-		m.Optionv(cli.CMD_STDERR, path.Join(p, m.Conf(DREAM, "meta.env.ctx_log")))
-		m.Cmd(cli.DAEMON, m.Confv(DREAM, "meta.cmd"), SPIDE_DEV, SPIDE_DEV, kit.MDB_NAME, name)
+		m.Optionv(cli.CMD_STDERR, path.Join(p, m.Conf(DREAM, kit.Keym(kit.SSH_ENV, "ctx_log"))))
+		m.Cmd(cli.DAEMON, m.Confv(DREAM, kit.Keym(kit.SSH_CMD)), SPIDE_DEV, SPIDE_DEV, kit.MDB_NAME, name)
 		m.Event(DREAM_CREATE, kit.MDB_TYPE, m.Option(kit.MDB_TYPE), kit.MDB_NAME, name)
 		m.Sleep(ice.MOD_TICK)
 	}
@@ -104,7 +104,7 @@ func init() {
 					switch arg[0] {
 					case kit.MDB_NAME:
 						m.Cmdy(nfs.DIR, m.Conf(DREAM, kit.META_PATH), "name,time")
-					case kit.SSH_TEMPLATE:
+					case kit.MDB_TEMPLATE:
 						m.Cmdy(nfs.DIR, m.Conf(DREAM, kit.META_PATH), "path,size,time")
 						m.SortStrR(kit.MDB_PATH)
 					}

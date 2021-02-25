@@ -37,7 +37,7 @@ func _pack_file(m *ice.Message, file string) string {
 func _pack_dir(m *ice.Message, pack *os.File, dir string) {
 	m.Option(nfs.DIR_ROOT, dir)
 	m.Option(nfs.DIR_DEEP, "true")
-	m.Option(nfs.DIR_TYPE, nfs.FILE)
+	m.Option(nfs.DIR_TYPE, nfs.CAT)
 
 	m.Cmd(nfs.DIR, "./").Table(func(index int, value map[string]string, head []string) {
 		switch strings.Split(value[kit.MDB_PATH], "/")[0] {
@@ -54,7 +54,7 @@ func _pack_dir(m *ice.Message, pack *os.File, dir string) {
 func _pack_volcanos(m *ice.Message, pack *os.File, dir string) {
 	m.Option(nfs.DIR_ROOT, dir)
 	m.Option(nfs.DIR_DEEP, "true")
-	m.Option(nfs.DIR_TYPE, nfs.FILE)
+	m.Option(nfs.DIR_TYPE, nfs.CAT)
 
 	for _, k := range []string{"favicon.ico", "proto.js", "frame.js", "index.html"} {
 		pack.WriteString(fmt.Sprintf("        \"/%s\": %s,\n",

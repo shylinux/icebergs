@@ -52,6 +52,7 @@ func (m *Message) Assert(arg interface{}) bool {
 	panic(errors.New(fmt.Sprintf("error: %v", arg)))
 }
 func (m *Message) Sleep(arg string) *Message {
+	m.Debug("sleep %s %s", arg, kit.FileLine(2, 3))
 	time.Sleep(kit.Duration(arg))
 	return m
 }

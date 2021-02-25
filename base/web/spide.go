@@ -70,10 +70,11 @@ const (
 
 	ContentType   = "Content-Type"
 	ContentLength = "Content-Length"
-	ContentFORM   = "application/x-www-form-urlencoded"
-	ContentJSON   = "application/json"
-	ContentHTML   = "text/html"
-	ContentPNG    = "image/png"
+
+	ContentFORM = "application/x-www-form-urlencoded"
+	ContentJSON = "application/json"
+	ContentHTML = "text/html"
+	ContentPNG  = "image/png"
 )
 const (
 	ADDRESS  = "address"

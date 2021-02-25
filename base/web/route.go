@@ -100,7 +100,7 @@ func init() {
 						m.Cmdy(nfs.DIR, m.Conf(DREAM, kit.META_PATH), "name,size,time")
 						m.SortStrR(kit.MDB_PATH)
 
-					case kit.SSH_TEMPLATE:
+					case kit.MDB_TEMPLATE:
 						m.Cmdy(nfs.DIR, m.Conf(DREAM, kit.META_PATH), "path,size,time")
 						m.SortStrR(kit.MDB_PATH)
 					}

@@ -30,7 +30,7 @@ func _input_list(m *ice.Message, lib string) {
 	}
 
 	m.Option(nfs.DIR_DEEP, true)
-	m.Option(nfs.DIR_TYPE, nfs.FILE)
+	m.Option(nfs.DIR_TYPE, nfs.CAT)
 	m.Richs(INPUT, "", lib, func(key string, value map[string]interface{}) {
 		m.Cmdy(nfs.DIR, kit.Value(value, "meta.store"), "time size line path")
 	})

@@ -1,6 +1,7 @@
 chapter "nfs"
 
+field "文件" nfs.cat
 field "目录" nfs.dir
-field "文件" nfs.file
-field "日志" nfs.tail
+field "跟踪" nfs.tail
+field "删除" nfs.trash
 

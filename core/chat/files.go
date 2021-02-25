@@ -28,7 +28,7 @@ func init() {
 				m.Cmd(mdb.SELECT, cmd, "", mdb.HASH, kit.MDB_HASH, arg).Table(func(index int, value map[string]string, head []string) {
 					m.Push("", value, kit.Split(kit.Select("time,size,type,name", "time,size,type,name", len(arg) > 0)))
 
-					if m.PushDownload(value[kit.MDB_NAME], "/share/cache/"+value[kit.MDB_DATA]); len(arg) > 0 {
+					if m.PushDownload(kit.MDB_LINK, value[kit.MDB_NAME], "/share/cache/"+value[kit.MDB_DATA]); len(arg) > 0 {
 						switch {
 						case kit.ExtIsImage(value[kit.MDB_NAME]):
 							m.PushImages(kit.MDB_IMAGE, "/share/cache/"+value[kit.MDB_DATA])

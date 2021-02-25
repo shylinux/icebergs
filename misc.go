@@ -117,6 +117,9 @@ func _render(m *Message, cmd string, args ...interface{}) string {
 
 	switch arg := kit.Simple(args...); cmd {
 	case RENDER_DOWNLOAD: // [name] file
+		if arg[0] == "" {
+			return ""
+		}
 		if len(arg) == 1 {
 			arg[0] = kit.MergeURL2(m.Option(MSG_USERWEB), path.Join(kit.Select("", "/share/local",
 				!strings.HasPrefix(arg[0], "/")), arg[0]), kit.SSH_POD, m.Option(MSG_USERPOD))
@@ -176,8 +179,8 @@ func _render(m *Message, cmd string, args ...interface{}) string {
 func (m *Message) PushRender(key, view, name string, arg ...string) *Message {
 	return m.Push(key, _render(m, view, name, arg))
 }
-func (m *Message) PushDownload(arg ...interface{}) { // [name] file
-	m.Push(kit.MDB_LINK, _render(m, RENDER_DOWNLOAD, arg...))
+func (m *Message) PushDownload(key string, arg ...interface{}) { // [name] file
+	m.Push(key, _render(m, RENDER_DOWNLOAD, arg...))
 }
 func (m *Message) PushAnchor(arg ...interface{}) { // [name] link
 	m.Push(kit.MDB_LINK, _render(m, RENDER_ANCHOR, arg...))
@@ -226,6 +229,10 @@ func (m *Message) SortStrR(key string)  { m.Sort(key, "str_r") }
 func (m *Message) SortTime(key string)  { m.Sort(key, "time") }
 func (m *Message) SortTimeR(key string) { m.Sort(key, "time_r") }
 
+func (m *Message) Process(action string, arg ...interface{}) {
+	m.Option(MSG_PROCESS, action)
+	m.Option("_arg", arg...)
+}
 func (m *Message) FormatMeta() string { return m.Format("meta") }
 func (m *Message) RenameAppend(from, to string) {
 	for i, v := range m.meta[MSG_APPEND] {

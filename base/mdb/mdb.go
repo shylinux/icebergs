@@ -414,6 +414,7 @@ const (
 	SCRIPT = "script"
 	COMMIT = "commit"
 	SOURCE = "source"
+	UPLOAD = "upload"
 )
 const (
 	CACHE_LIMIT = "cache.limit"

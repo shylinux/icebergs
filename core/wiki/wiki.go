@@ -24,7 +24,7 @@ func _wiki_list(m *ice.Message, cmd string, arg ...string) bool {
 		}
 
 		// 文件列表
-		m.Option(nfs.DIR_TYPE, nfs.FILE)
+		m.Option(nfs.DIR_TYPE, nfs.CAT)
 		m.Option(nfs.DIR_REG, m.Conf(cmd, "meta.regs"))
 		m.Cmdy(nfs.DIR, kit.Select("./", arg, 0), "time,size,path")
 		return true

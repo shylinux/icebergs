@@ -64,7 +64,7 @@ func init() {
 
 				m.Log_EXPORT("source", main, "target", file)
 				m.Push(kit.MDB_TIME, m.Time())
-				m.PushDownload(file)
+				m.PushDownload(kit.MDB_LINK, file)
 				m.Echo(file)
 			}},
 		},

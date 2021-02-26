@@ -16,6 +16,9 @@ const ( // REPOS
 	ICEBERGS = "icebergs"
 	CONTEXTS = "contexts"
 	INTSHELL = "intshell"
+
+	PUBLISH = "publish"
+	REQUIRE = "require"
 )
 const ( // DIR
 	ETC_MISS    = "etc/miss.sh"
@@ -23,6 +26,9 @@ const ( // DIR
 	ETC_EXIT    = "etc/exit.shy"
 	SRC_MAIN    = "src/main.shy"
 	SRC_MAIN_GO = "src/main.go"
+	SRC_VERSION = "src/version.go"
+	SRC_BINPACK = "src/binpack.go"
+	BIN_BOOTLOG = "bin/boot.log"
 	BIN_ICE_BIN = "bin/ice.bin"
 	BIN_ICE     = "bin/ice.sh"
 	MAKEFILE    = "makefile"
@@ -30,6 +36,10 @@ const ( // DIR
 	ORDER_JS    = "order.js"
 	GO_MOD      = "go.mod"
 	GO_SUM      = "go.sum"
+
+	CTX_DEV = "ctx_dev"
+	CTX_PID = "ctx_pid"
+	CTX_LOG = "ctx_log"
 )
 const ( // MSG
 	MSG_DETAIL = "detail"

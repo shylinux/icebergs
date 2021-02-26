@@ -8,19 +8,17 @@ import (
 	"github.com/shylinux/icebergs/base/web"
 	kit "github.com/shylinux/toolkits"
 
-	"os"
 	"path"
 	"strings"
 )
 
 func _autogen_script(m *ice.Message, dir string) {
 	if b, e := kit.Render(m.Conf(AUTOGEN, kit.Keym(SHY)), m); m.Assert(e) {
-		m.Cmd(nfs.SAVE, dir, string(b))
+		m.Cmd(nfs.DEFS, dir, string(b))
 	}
 }
 func _autogen_source(m *ice.Message, name string) {
-	m.Cmd(nfs.PUSH, path.Join(kit.SSH_SRC, kit.Keys(kit.MDB_MAIN, SHY)),
-		"\n", kit.SSH_SOURCE+` `+path.Join(name, kit.Keys(name, SHY)), "\n")
+	m.Cmd(nfs.PUSH, ice.SRC_MAIN, "\n", kit.SSH_SOURCE+` `+path.Join(name, kit.Keys(name, SHY)), "\n")
 }
 func _autogen_module(m *ice.Message, dir string, ctx string, from string) (list []string) {
 	name, value := "", ""
@@ -67,7 +65,7 @@ func _autogen_mod(m *ice.Message, file string) (mod string) {
 }
 
 func _autogen_version(m *ice.Message) {
-	file := "src/version.go"
+	file := ice.SRC_VERSION
 	m.Cmd(nfs.SAVE, file, kit.Format(`package main
 
 import (
@@ -91,17 +89,19 @@ func init() {
 		strings.TrimSpace(m.Cmdx(cli.SYSTEM, "git", "describe", "--tags")),
 		ice.Info.HostName, ice.Info.UserName,
 	))
-	m.Cmdy(nfs.DIR, "src/binpack.go", "time,size,line,path")
+	defer m.Cmdy(nfs.CAT, file)
+
 	m.Cmdy(nfs.DIR, file, "time,size,line,path")
-	m.Cmdy(nfs.CAT, file)
+	m.Cmdy(nfs.DIR, ice.SRC_BINPACK, "time,size,line,path")
+	m.Cmdy(nfs.DIR, ice.SRC_MAIN_GO, "time,size,line,path")
 }
 func _autogen_miss(m *ice.Message) {
-	file := "etc/miss.sh"
-	if _, e := os.Stat(file); os.IsNotExist(e) {
-		m.Cmd(nfs.SAVE, file, m.Conf(web.DREAM, kit.Keym("miss")))
-	}
-	m.Cmdy(nfs.DIR, file, "time,size,line,path")
-	m.Cmdy(nfs.CAT, file)
+	m.Cmd(nfs.DEFS, ice.ETC_MISS, m.Conf(web.DREAM, kit.Keym("miss")))
+	defer m.Cmdy(nfs.CAT, ice.ETC_MISS)
+
+	m.Cmdy(nfs.DIR, ice.ETC_MISS, "time,size,line,path")
+	m.Cmdy(nfs.DIR, ice.GO_MOD, "time,size,line,path")
+	m.Cmdy(nfs.DIR, ice.GO_SUM, "time,size,line,path")
 }
 
 const AUTOGEN = "autogen"

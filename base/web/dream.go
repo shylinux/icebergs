@@ -138,21 +138,25 @@ func init() {
 		},
 		Configs: map[string]*ice.Config{
 			DREAM: {Name: DREAM, Help: "梦想家", Value: kit.Data(kit.MDB_PATH, "usr/local/work",
-				"cmd", []interface{}{"ice.bin", SPACE, tcp.DIAL},
-				"env", kit.Dict("ctx_log", "bin/boot.log"),
+				kit.SSH_CMD, []interface{}{"ice.bin", SPACE, tcp.DIAL},
+				kit.SSH_ENV, kit.Dict(ice.CTX_LOG, ice.BIN_BOOTLOG),
 				"miss", `#!/bin/bash
-[ -f ~/.ish/plug.sh ] || [ -f $PWD/.ish/plug.sh ] || git clone ${ISH_CONF_HUB_PROXY:="https://"}github.com/shylinux/intshell $PWD/.ish
-[ "$ISH_CONF_PRE" != "" ] || source $PWD/.ish/plug.sh || source ~/.ish/plug.sh
+[ -f $PWD/.ish/plug.sh ] || [ -f $HOME/.ish/plug.sh ] || git clone ${ISH_CONF_HUB_PROXY:="https://"}github.com/shylinux/intshell $PWD/.ish
+[ "$ISH_CONF_PRE" != "" ] || source $PWD/.ish/plug.sh || source $HOME/.ish/plug.sh
 require miss.sh
 
+# ish_miss_prepare_compile
 ish_miss_prepare_develop
-ish_miss_prepare_compile
 ish_miss_prepare_install
 
-# ish_miss_prepare_volcanos
-# ish_miss_prepare_learning
+# ish_miss_prepare wubi-dict
+
+ish_miss_prepare_contexts
+# ish_miss_prepare_intshell
 # ish_miss_prepare_icebergs
 # ish_miss_prepare_toolkits
+# ish_miss_prepare_volcanos
+# ish_miss_prepare_learning
 
 make
 `,

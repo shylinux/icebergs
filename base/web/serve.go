@@ -35,7 +35,7 @@ func _serve_main(m *ice.Message, w http.ResponseWriter, r *http.Request) bool {
 	m.Info("").Info("%s %s %s", r.Header.Get(ice.MSG_USERIP), r.Method, r.URL)
 
 	// 输出日志
-	if m.Conf(SERVE, "meta.logheaders") == "true" {
+	if m.Conf(SERVE, kit.Keym("logheaders")) == "true" {
 		for k, v := range r.Header {
 			m.Info("%s: %v", k, kit.Format(v))
 		}
@@ -57,15 +57,16 @@ func _serve_main(m *ice.Message, w http.ResponseWriter, r *http.Request) bool {
 
 	// 主页接口
 	if r.Method == "GET" && r.URL.Path == "/" {
-		msg := m.Spawn()
+		msg, repos := m.Spawn(), ice.INTSHELL
 		if msg.W, msg.R = w, r; strings.Contains(r.Header.Get("User-Agent"), "curl") {
-			Render(msg, ice.RENDER_DOWNLOAD, path.Join(m.Conf(SERVE, "meta.intshell.path"), m.Conf(SERVE, "meta.intshell.index")))
+			repos = ice.INTSHELL
 		} else {
+			repos = ice.VOLCANOS
 			if ice.DumpBinPack(w, r.URL.Path, func(name string) { RenderType(w, name, "") }) {
 				return false
 			}
-			Render(msg, ice.RENDER_DOWNLOAD, path.Join(m.Conf(SERVE, "meta.volcanos.path"), m.Conf(SERVE, "meta.volcanos.index")))
 		}
+		Render(msg, ice.RENDER_DOWNLOAD, path.Join(m.Conf(SERVE, kit.Keym(repos, kit.SSH_PATH)), m.Conf(SERVE, kit.Keym(repos, kit.SSH_INDEX))))
 		return false
 	}
 
@@ -93,7 +94,7 @@ func _serve_handle(key string, cmd *ice.Command, msg *ice.Message, w http.Respon
 	}
 
 	// 请求地址
-	msg.Option(ice.MSG_USERWEB, kit.Select(msg.Conf(SHARE, "meta.domain"), r.Header.Get("Referer")))
+	msg.Option(ice.MSG_USERWEB, kit.Select(msg.Conf(SHARE, kit.Keym("domain")), r.Header.Get("Referer")))
 	msg.Option(ice.MSG_USERUA, r.Header.Get("User-Agent"))
 	msg.Option(ice.MSG_USERIP, r.Header.Get(ice.MSG_USERIP))
 	if msg.R, msg.W = r, w; r.Header.Get("X-Real-Port") != "" {
@@ -201,18 +202,18 @@ func init() {
 			SERVE: {Name: SERVE, Help: "服务器", Value: kit.Data(kit.MDB_SHORT, kit.MDB_NAME,
 				tcp.LOCALHOST, true, aaa.BLACK, kit.Dict(), aaa.WHITE, kit.Dict(
 					LOGIN, true, SPACE, true, SHARE, true,
-					"volcanos", true, "intshell", true,
-					"require", true, "publish", true,
+					ice.VOLCANOS, true, ice.INTSHELL, true,
+					ice.REQUIRE, true, ice.PUBLISH, true,
 				), "logheaders", false,
 
-				"static", kit.Dict("/", "usr/volcanos/"),
-				"volcanos", kit.Dict("path", "usr/volcanos", "index", "page/index.html",
-					"repos", "https://github.com/shylinux/volcanos", "branch", "master",
-				), "publish", "usr/publish/",
+				kit.SSH_STATIC, kit.Dict("/", "usr/volcanos/"),
+				ice.VOLCANOS, kit.Dict(kit.MDB_PATH, "usr/volcanos", kit.SSH_INDEX, "page/index.html",
+					kit.SSH_REPOS, "https://github.com/shylinux/volcanos", kit.SSH_BRANCH, "master",
+				), ice.PUBLISH, "usr/publish/",
 
-				"intshell", kit.Dict("path", "usr/intshell", "index", "index.sh",
-					"repos", "https://github.com/shylinux/intshell", "branch", "master",
-				), "require", ".ish/pluged",
+				ice.INTSHELL, kit.Dict(kit.MDB_PATH, "usr/intshell", kit.SSH_INDEX, "index.sh",
+					kit.SSH_REPOS, "https://github.com/shylinux/intshell", kit.SSH_BRANCH, "master",
+				), ice.REQUIRE, ".ish/pluged",
 			)},
 		},
 		Commands: map[string]*ice.Command{
@@ -251,7 +252,7 @@ func init() {
 				m.Render(ice.RENDER_DOWNLOAD, path.Join(m.Conf(SERVE, kit.Keym("intshell.path")), path.Join(arg...)))
 			}},
 			"/publish/": {Name: "/publish/", Help: "私有云", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-				_share_local(m, m.Conf(SERVE, kit.Keym("publish")), path.Join(arg...))
+				_share_local(m, m.Conf(SERVE, kit.Keym(ice.PUBLISH)), path.Join(arg...))
 			}},
 			"/require/": {Name: "/require/", Help: "公有云", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 				_share_repos(m, path.Join(arg[0], arg[1], arg[2]), arg[3:]...)

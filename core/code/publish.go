@@ -58,7 +58,7 @@ echo "hello world"
 			)},
 		},
 		Commands: map[string]*ice.Command{
-			PUBLISH: {Name: "publish path auto create dream volcanos icebergs intshell", Help: "发布", Action: map[string]*ice.Action{
+			PUBLISH: {Name: "publish path auto dream volcanos icebergs intshell", Help: "发布", Action: map[string]*ice.Action{
 				mdb.CREATE: {Name: "create file", Help: "添加", Hand: func(m *ice.Message, arg ...string) {
 					_publish_file(m, m.Option(kit.MDB_FILE))
 				}},

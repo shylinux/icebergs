@@ -14,7 +14,6 @@ import (
 	"io"
 	"os"
 	"path"
-	"reflect"
 	"strings"
 	"time"
 )
@@ -391,15 +390,7 @@ func init() {
 			}},
 
 			"hi": {Name: "hi", Help: "hi", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-				cb := func() {
-
-				}
-
-				t := reflect.TypeOf(cb)
-				v := reflect.ValueOf(cb)
-				m.Echo("what %#v", t.Kind())
-				m.Echo("what %#v", t)
-				m.Echo("what %v", v)
+				m.Echo("what %v", kit.FileLine(1, 100))
 			}},
 		},
 	})

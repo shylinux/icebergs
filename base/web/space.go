@@ -138,12 +138,7 @@ func _space_handle(m *ice.Message, safe bool, send map[string]*ice.Message, c *w
 			msg.Log("recv", "%v->%v %s %v", source, target, msg.Detailv(), msg.Format(kit.MDB_META))
 
 			if len(target) == 0 { // 本地执行
-				if msg.Option(ice.MSG_USERROLE, aaa.UserRole(msg, msg.Option(ice.MSG_USERNAME))) == aaa.VOID {
-					role := msg.Cmdx(SPIDE, SPIDE_DEV, SPIDE_MSG, SPIDE_GET, "/chat/header", "cmds", aaa.USERROLE, "who", msg.Option(ice.MSG_USERNAME))
-					msg.Option(ice.MSG_USERROLE, kit.Select(role, aaa.TECH, role == aaa.ROOT))
-				}
 				msg.Log_AUTH(aaa.USERROLE, msg.Option(ice.MSG_USERROLE), aaa.USERNAME, msg.Option(ice.MSG_USERNAME))
-
 				if msg.Optionv(ice.MSG_HANDLE, "true"); !msg.Warn(!safe, ice.ErrNotRight) {
 					msg.Go(func() { _space_exec(msg, source, target, c, name) })
 				}
@@ -183,7 +178,7 @@ func _space_handle(m *ice.Message, safe bool, send map[string]*ice.Message, c *w
 }
 func _space_search(m *ice.Message, kind, name, text string, arg ...string) {
 	m.Richs(SPACE, nil, kit.MDB_FOREACH, func(key string, value map[string]interface{}) {
-		if value = kit.GetMeta(value); strings.Contains(kit.Format(value[kit.MDB_NAME]), name) {
+		if value = kit.GetMeta(value); strings.Contains(kit.Format(value[kit.MDB_NAME]), name) && value[kit.MDB_TYPE] != MASTER {
 			m.PushSearch(kit.SSH_CMD, SPACE, kit.MDB_TYPE, value[kit.MDB_TYPE], kit.MDB_NAME, value[kit.MDB_NAME],
 				kit.MDB_TEXT, kit.MergeURL(m.Option(ice.MSG_USERWEB), kit.SSH_POD, kit.Keys(m.Option(ice.MSG_USERPOD), value[kit.MDB_NAME])))
 		}

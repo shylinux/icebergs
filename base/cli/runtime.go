@@ -55,9 +55,11 @@ func init() {
 					m.Cmdy("tcp.host")
 				}},
 				"hostname": {Name: "hostname", Help: "hostname", Hand: func(m *ice.Message, arg ...string) {
-					m.Conf(RUNTIME, "boot.hostname", arg[0])
-					m.Conf(RUNTIME, "node.name", arg[0])
-					ice.Info.HostName = arg[0]
+					if len(arg) > 0 {
+						m.Conf(RUNTIME, "boot.hostname", arg[0])
+						m.Conf(RUNTIME, "node.name", arg[0])
+						ice.Info.HostName = arg[0]
+					}
 					m.Echo(ice.Info.HostName)
 				}},
 				"userinfo": {Name: "userinfo", Help: "userinfo", Hand: func(m *ice.Message, arg ...string) {

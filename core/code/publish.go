@@ -68,6 +68,8 @@ echo "hello world"
 					m.Cmd(PUBLISH, mdb.CREATE, kit.MDB_FILE, ice.ETC_MISS)
 					m.Cmd(PUBLISH, mdb.CREATE, kit.MDB_FILE, ice.GO_MOD)
 					m.Cmd(nfs.DEFS, path.Join(m.Conf(PUBLISH, kit.META_PATH), ice.ORDER_JS), m.Conf(PUBLISH, kit.Keym(JS)))
+					m.Cmd(nfs.DEFS, "usr/volcanos/page/cache.css", "")
+					m.Cmd(nfs.DEFS, "usr/volcanos/page/cache.js", "")
 
 					m.Option(nfs.DIR_DEEP, true)
 					m.Option(nfs.DIR_REG, `.*\.(html|css|js)$`)

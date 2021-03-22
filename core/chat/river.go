@@ -335,7 +335,7 @@ func init() {
 					m.Cmdy(web.SHARE, mdb.CREATE, kit.MDB_TYPE, LOGIN, arg)
 				}},
 				tcp.START: {Name: "start name repos template", Help: "启动", Hand: func(m *ice.Message, arg ...string) {
-					m.Cmdy(web.DREAM, tcp.START, arg)
+					m.Cmdy(m.Space(m.Option(kit.SSH_POD)), web.DREAM, tcp.START, arg)
 				}},
 			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 				m.Cmdy(mdb.SELECT, RIVER, "", mdb.HASH, kit.MDB_HASH, arg)

@@ -122,6 +122,8 @@ const ( // LOG
 	// 分类
 	LOG_CMDS  = "cmds"
 	LOG_AUTH  = "auth"
+	LOG_SEND  = "send"
+	LOG_RECV  = "recv"
 	LOG_COST  = "cost"
 	LOG_INFO  = "info"
 	LOG_WARN  = "warn"

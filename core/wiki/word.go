@@ -421,7 +421,10 @@ func init() {
 				_other_show(m, arg[0], kit.Select(arg[0], arg[1]), arg[2:]...)
 			}},
 
-			PARSE: {Name: "parse type=auto,json,http,form,list auto text:textarea", Help: "结构", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			PARSE: {Name: "parse type=auto,json,http,form,list auto text:textarea", Help: "解析", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+				if len(arg) < 2 {
+					return
+				}
 				if arg[0] == "auto" && (strings.HasPrefix(arg[1], "{") || strings.HasPrefix(arg[1], "[")) {
 					arg[0] = "json"
 				} else if strings.HasPrefix(arg[1], "http") {

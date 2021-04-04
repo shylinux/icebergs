@@ -104,7 +104,7 @@ func init() {
 					"log", "true", "err", "true",
 
 					"md", "true", "license", "true", "makefile", "true",
-					"ini", "true", "conf", "true", "toml", "true",
+					"ini", "true", "conf", "true", "toml", "true", "yaml", "true",
 				),
 				"plug", kit.Dict(
 					"s", kit.Dict(
@@ -134,6 +134,9 @@ func init() {
 					),
 					"css", kit.Dict(
 						SUFFIX, kit.Dict("{", COMMENT),
+					),
+					"yaml", kit.Dict(
+						PREFIX, kit.Dict("#", COMMENT),
 					),
 
 					"md", kit.Dict(),

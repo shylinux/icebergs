@@ -90,7 +90,7 @@ func init() {
 			SPIDE: {Name: SPIDE, Help: "蜘蛛侠", Value: kit.Data(kit.MDB_SHORT, "client.name")},
 		},
 		Commands: map[string]*ice.Command{
-			SPIDE: {Name: "spide client.name action=raw,msg,save,cache method=GET,PUT,POST,DELETE url format=form,part,json,data,file arg auto 创建", Help: "蜘蛛侠", Action: map[string]*ice.Action{
+			SPIDE: {Name: "spide client.name action=raw,msg,save,cache method=GET,PUT,POST,DELETE url format=form,part,json,data,file arg 执行:button create", Help: "蜘蛛侠", Action: map[string]*ice.Action{
 				mdb.CREATE: {Name: "create name address", Help: "添加", Hand: func(m *ice.Message, arg ...string) {
 					if arg[0] != "name" {
 						m.Option("name", arg[0])
@@ -301,7 +301,8 @@ func init() {
 
 					case SPIDE_RAW:
 						if b, e := ioutil.ReadAll(res.Body); m.Assert(e) {
-							m.Echo(string(b))
+							m.Echo(kit.Formats(kit.UnMarshal(string(b))))
+							// m.Echo(string(b))
 						}
 
 					case SPIDE_MSG:

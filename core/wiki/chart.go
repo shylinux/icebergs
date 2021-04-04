@@ -174,7 +174,12 @@ func (b *Label) Draw(m *ice.Message, x, y int) Chart {
 			}
 
 			// 输出
-			if m.Option("compact") != "true" {
+			switch m.Option("compact") {
+			case "max":
+				item.Width = b.Width/len(line) - b.MarginX
+			case "true":
+
+			default:
 				item.Width = b.max[i]
 			}
 			item.Draw(m, left, top)

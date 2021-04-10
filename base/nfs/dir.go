@@ -1,10 +1,6 @@
 package nfs
 
 import (
-	ice "github.com/shylinux/icebergs"
-	"github.com/shylinux/icebergs/base/mdb"
-	kit "github.com/shylinux/toolkits"
-
 	"bufio"
 	"crypto/sha1"
 	"encoding/hex"
@@ -15,6 +11,10 @@ import (
 	"regexp"
 	"sort"
 	"strings"
+
+	ice "github.com/shylinux/icebergs"
+	"github.com/shylinux/icebergs/base/mdb"
+	kit "github.com/shylinux/toolkits"
 )
 
 func _dir_show(m *ice.Message, root string, name string, level int, deep bool, dir_type string, dir_reg *regexp.Regexp, fields []string) *ice.Message {
@@ -143,6 +143,14 @@ func _dir_search(m *ice.Message, kind, name string) {
 
 		m.PushSearch(kit.SSH_CMD, CAT, value)
 	})
+}
+
+func Dir(m *ice.Message, sort string) {
+	m.Option(DIR_TYPE, TYPE_DIR)
+	m.Copy(m.Cmd(DIR, "./").Sort(sort))
+
+	m.Option(DIR_TYPE, TYPE_CAT)
+	m.Copy(m.Cmd(DIR, "./").Sort(sort))
 }
 
 const (

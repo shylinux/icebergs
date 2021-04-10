@@ -87,7 +87,7 @@ func init() {
 				ctx.COMMAND: {Name: "command", Help: "命令"},
 			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 				if len(arg) < 2 {
-					m.Cmdy(nfs.DIR, kit.Select("./", arg, 0))
+					nfs.Dir(m, kit.MDB_PATH)
 					return
 				}
 				_inner_list(m, _inner_ext(arg[1]), arg[1], arg[0])

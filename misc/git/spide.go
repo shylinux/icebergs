@@ -13,78 +13,84 @@ import (
 	kit "github.com/shylinux/toolkits"
 )
 
+func _spide_for(text string, cb func([]string)) {
+	for _, line := range strings.Split(text, "\n") {
+		if len(line) == 0 || strings.HasPrefix(line, "!_") {
+			continue
+		}
+
+		cb(kit.Split(line, "\t ", "\t ", "\t "))
+	}
+}
+func _spide_go(m *ice.Message, file string) {
+	_spide_for(m.Cmdx(cli.SYSTEM, "gotags", file), func(ls []string) {
+		switch ls[3] {
+		case "m":
+			if strings.HasPrefix(ls[5], "ctype") {
+				ls[0] = strings.TrimPrefix(ls[5], "ctype:") + ":" + ls[0]
+			} else if strings.HasPrefix(ls[6], "ntype") {
+				ls[0] = "-" + ls[0]
+			} else {
+				ls[0] = ls[3] + ":" + ls[0]
+			}
+		case "w":
+			ls[0] = "-" + ls[0] + ":" + strings.TrimPrefix(ls[len(ls)-1], "type:")
+		default:
+			ls[0] = ls[3] + ":" + ls[0]
+		}
+
+		m.Push(kit.MDB_NAME, ls[0])
+		m.Push(kit.MDB_FILE, ls[1])
+		m.Push(kit.MDB_LINE, strings.TrimSuffix(ls[2], ";\""))
+		m.Push(kit.MDB_TYPE, ls[3])
+		m.Push(kit.MDB_EXTRA, strings.Join(ls[4:], " "))
+	})
+}
+func _spide_c(m *ice.Message, file string) {
+	_spide_for(m.Cmdx(cli.SYSTEM, "ctags", "-f", "-", file), func(ls []string) {
+		m.Push(kit.MDB_NAME, ls[0])
+		m.Push(kit.MDB_FILE, ls[1])
+		m.Push(kit.MDB_LINE, "1")
+	})
+}
+
 const SPIDE = "spide"
 
 func init() {
 	Index.Merge(&ice.Context{Commands: map[string]*ice.Command{
-		SPIDE: {Name: "spide name=icebergs auto", Help: "结构图", Meta: kit.Dict(
+		SPIDE: {Name: "spide name auto", Help: "构架图", Meta: kit.Dict(
 			kit.MDB_DISPLAY, "/plugin/story/spide.js",
 		), Action: map[string]*ice.Action{
 			ctx.COMMAND: {Name: "ctx.command"},
 			code.INNER:  {Name: "web.code.inner"},
 		}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			if len(arg) == 0 {
-				// 仓库列表
-				m.Option(ice.MSG_DISPLAY, "table")
-				m.Cmdy(REPOS, arg)
+			if len(arg) == 0 { // 仓库列表
+				m.Cmdy(REPOS)
 				return
 			}
 
 			if wd, _ := os.Getwd(); arg[0] == path.Base(wd) {
-				m.Option(nfs.DIR_ROOT, path.Join("src"))
+				m.Option(nfs.DIR_ROOT, path.Join(kit.SSH_SRC))
 			} else {
-				m.Option(nfs.DIR_ROOT, path.Join("usr", arg[0]))
+				m.Option(nfs.DIR_ROOT, path.Join(kit.SSH_USR, arg[0]))
 			}
-			if len(arg) == 1 {
-				// 目录列表
+
+			if len(arg) == 1 { // 目录列表
 				m.Option(nfs.DIR_DEEP, "true")
-				m.Cmdy(nfs.DIR, "./")
+				nfs.Dir(m, kit.MDB_PATH)
+				color := []string{"yellow", "blue", "cyan", "red"}
+				m.Table(func(index int, value map[string]string, head []string) {
+					m.Push(kit.MDB_COLOR, color[strings.Count(value[kit.MDB_PATH], "/")%len(color)])
+				})
 				return
 			}
 
-			if m.Option(cli.CMD_DIR, m.Option(nfs.DIR_ROOT)); strings.HasSuffix(arg[1], ".go") {
-				tags := m.Cmdx(cli.SYSTEM, "gotags", arg[1])
-
-				for _, line := range strings.Split(tags, "\n") {
-					if len(line) == 0 || strings.HasPrefix(line, "!_") {
-						continue
-					}
-
-					ls := kit.Split(line, "\t ", "\t ", "\t ")
-					name := ls[3] + ":" + ls[0]
-					switch ls[3] {
-					case "m":
-						if strings.HasPrefix(ls[5], "ctype") {
-							name = strings.TrimPrefix(ls[5], "ctype:") + ":" + ls[0]
-						} else if strings.HasPrefix(ls[6], "ntype") {
-							name = "-" + ls[0]
-						} else {
-
-						}
-					case "w":
-						t := ls[len(ls)-1]
-						name = "-" + ls[0] + ":" + strings.TrimPrefix(t, "type:")
-					}
-
-					m.Push("name", name)
-					m.Push("file", ls[1])
-					m.Push("line", strings.TrimSuffix(ls[2], ";\""))
-					m.Push("type", ls[3])
-					m.Push("extra", strings.Join(ls[4:], " "))
-				}
-			} else {
-				tags := m.Cmdx(cli.SYSTEM, "ctags", "-f", "-", arg[1])
-
-				for _, line := range strings.Split(tags, "\n") {
-					if len(line) == 0 || strings.HasPrefix(line, "!_") {
-						continue
-					}
-
-					ls := kit.Split(line, "\t ", "\t ", "\t ")
-					m.Push("name", ls[0])
-					m.Push("file", ls[1])
-					m.Push("line", "1")
-				}
+			// 语法解析
+			switch m.Option(cli.CMD_DIR, m.Option(nfs.DIR_ROOT)); kit.Ext(arg[1]) {
+			case code.GO:
+				_spide_go(m, arg[1])
+			default:
+				_spide_c(m, arg[1])
 			}
 			m.SortInt(kit.MDB_LINE)
 		}},

@@ -1,28 +1,25 @@
 package git
 
 import (
+	"fmt"
+	"os"
+	"path"
+	"strings"
+
 	ice "github.com/shylinux/icebergs"
 	"github.com/shylinux/icebergs/base/cli"
 	"github.com/shylinux/icebergs/base/mdb"
 	"github.com/shylinux/icebergs/base/nfs"
 	kit "github.com/shylinux/toolkits"
-
-	"os"
-	"path"
-	"strings"
 )
 
 func _repos_path(name string) string {
-	if wd, _ := os.Getwd(); name != path.Base(wd) {
-		return path.Join("usr", name)
-	}
-	return "./"
+	return kit.Select(path.Join(kit.SSH_USR, name), "./", name == path.Base(kit.Pwd()))
 }
 func _repos_insert(m *ice.Message, name string, dir string) {
 	if s, e := os.Stat(m.Option(cli.CMD_DIR, path.Join(dir, ".git"))); e == nil && s.IsDir() {
-		ls := strings.SplitN(strings.Trim(m.Cmdx(cli.SYSTEM, GIT, "log", "-n1", `--pretty=format:"%ad %s"`, "--date=iso"), "\""), " ", 4)
-		m.Rich(REPOS, nil, kit.Data(
-			kit.MDB_NAME, name, kit.MDB_PATH, dir,
+		ls := strings.SplitN(strings.Trim(m.Cmdx(cli.SYSTEM, GIT, "log", "-n1", `--pretty=format:"%ad %s"`, "--date=iso"), `"`), " ", 4)
+		m.Rich(REPOS, nil, kit.Data(kit.MDB_NAME, name, kit.MDB_PATH, dir,
 			COMMIT, kit.Select("", ls, 3), kit.MDB_TIME, strings.Join(ls[:2], " "),
 			BRANCH, strings.TrimSpace(m.Cmdx(cli.SYSTEM, GIT, BRANCH)),
 			REMOTE, strings.TrimSpace(m.Cmdx(cli.SYSTEM, GIT, REMOTE, "-v")),
@@ -35,56 +32,62 @@ const (
 	ORIGIN = "origin"
 	BRANCH = "branch"
 	MASTER = "master"
+
+	CLONE = "clone"
+	ADD   = "add"
+
+	INIT = "init"
+	PULL = "pull"
+	PUSH = "push"
 )
 const REPOS = "repos"
 
 func init() {
 	Index.Merge(&ice.Context{
 		Configs: map[string]*ice.Config{
-			REPOS: {Name: REPOS, Help: "仓库", Value: kit.Data(
-				kit.MDB_SHORT, kit.MDB_NAME, kit.MDB_FIELD, "time,name,branch,commit",
-				"owner", "https://github.com/shylinux",
+			REPOS: {Name: REPOS, Help: "代码库", Value: kit.Data(
+				kit.MDB_SHORT, kit.MDB_NAME, kit.SSH_REPOS, "https://github.com/shylinux",
 			)},
 		},
 		Commands: map[string]*ice.Command{
 			REPOS: {Name: "repos name path auto create", Help: "代码库", Action: map[string]*ice.Action{
 				mdb.CREATE: {Name: "create repos branch name path", Help: "添加", Hand: func(m *ice.Message, arg ...string) {
 					m.Option(kit.MDB_NAME, kit.Select(strings.TrimSuffix(path.Base(m.Option(kit.SSH_REPOS)), ".git"), m.Option(kit.MDB_NAME)))
-					m.Option(kit.MDB_PATH, kit.Select(path.Join("usr", m.Option(kit.MDB_NAME)), m.Option(kit.MDB_PATH)))
-					m.Option(kit.SSH_REPOS, kit.Select(m.Conf(REPOS, "meta.owner")+"/"+m.Option(kit.MDB_NAME), m.Option(kit.SSH_REPOS)))
+					m.Option(kit.MDB_PATH, kit.Select(path.Join(kit.SSH_USR, m.Option(kit.MDB_NAME)), m.Option(kit.MDB_PATH)))
+					m.Option(kit.SSH_REPOS, kit.Select(m.Conf(REPOS, kit.Keym(kit.SSH_REPOS))+"/"+m.Option(kit.MDB_NAME), m.Option(kit.SSH_REPOS)))
 
-					if _, e := os.Stat(path.Join(m.Option(kit.MDB_PATH), ".git")); e != nil && os.IsNotExist(e) {
-						// 下载仓库
-						if _, e := os.Stat(m.Option(kit.MDB_PATH)); e == nil {
-							m.Option(cli.CMD_DIR, m.Option(kit.MDB_PATH))
-							m.Cmd(cli.SYSTEM, GIT, "init")
-							m.Cmd(cli.SYSTEM, GIT, REMOTE, "add", ORIGIN, m.Option(kit.SSH_REPOS))
-							m.Cmd(cli.SYSTEM, GIT, "pull", ORIGIN, MASTER)
-						} else {
-							m.Cmd(cli.SYSTEM, GIT, "clone", "-b", kit.Select(MASTER, m.Option(BRANCH)),
-								m.Option(kit.SSH_REPOS), m.Option(kit.MDB_PATH))
-
-						}
-						_repos_insert(m, m.Option(kit.MDB_NAME), m.Option(kit.MDB_PATH))
+					if s, e := os.Stat(path.Join(m.Option(kit.MDB_PATH), ".git")); e == nil && s.IsDir() {
+						return
 					}
+
+					// 下载仓库
+					if s, e := os.Stat(m.Option(kit.MDB_PATH)); e == nil && s.IsDir() {
+						m.Option(cli.CMD_DIR, m.Option(kit.MDB_PATH))
+						m.Cmd(cli.SYSTEM, GIT, INIT)
+						m.Cmd(cli.SYSTEM, GIT, REMOTE, ADD, ORIGIN, m.Option(kit.SSH_REPOS))
+						m.Cmd(cli.SYSTEM, GIT, PULL, ORIGIN, MASTER)
+					} else {
+						m.Cmd(cli.SYSTEM, GIT, CLONE, "-b", kit.Select(MASTER, m.Option(BRANCH)),
+							m.Option(kit.SSH_REPOS), m.Option(kit.MDB_PATH))
+					}
+
+					_repos_insert(m, m.Option(kit.MDB_NAME), m.Option(kit.MDB_PATH))
 				}},
 			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-				if len(arg) > 0 {
-					if wd, _ := os.Getwd(); arg[0] != path.Base(wd) {
-						m.Option(nfs.DIR_ROOT, path.Join("usr", arg[0]))
-					}
-					file := kit.Select("./", path.Join(arg[1:]...))
-					if strings.HasSuffix(file, "/") {
-						m.Cmdy(nfs.DIR, file)
-					} else {
-						m.Cmdy(nfs.CAT, file)
-					}
+				if len(arg) == 0 { // 仓库列表
+					m.Option(mdb.FIELDS, "time,name,branch,commit")
+					m.Cmdy(mdb.SELECT, m.Prefix(REPOS), "", mdb.HASH)
+					m.Sort(kit.MDB_NAME)
 					return
 				}
 
-				m.Option(mdb.FIELDS, m.Conf(REPOS, kit.META_FIELD))
-				m.Cmdy(mdb.SELECT, m.Prefix(REPOS), "", mdb.HASH, kit.MDB_NAME, arg)
-				m.Sort(kit.MDB_NAME)
+				m.Option(nfs.DIR_ROOT, _repos_path(arg[0]))
+				m.Cmdy(nfs.CAT, kit.Select("./", arg, 1), "time,line,path")
+
+				m.Option(cli.CMD_DIR, _repos_path(arg[0]))
+				p := strings.TrimPrefix(strings.TrimPrefix(m.Cmdx(cli.SYSTEM, GIT, REMOTE, "get-url", ORIGIN), "http://"), "https://")
+				pp := kit.MergeURL2(m.Option(ice.MSG_USERWEB), fmt.Sprintf("/code/git/%s", strings.TrimSpace(p)))
+				m.EchoScript(fmt.Sprintf("git clone %s", pp))
 			}},
 		},
 	})

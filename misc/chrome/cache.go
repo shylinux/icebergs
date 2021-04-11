@@ -7,9 +7,6 @@ import (
 	"github.com/shylinux/icebergs/base/web"
 	kit "github.com/shylinux/toolkits"
 
-	"github.com/nareix/joy4/av"
-	"github.com/nareix/joy4/av/avutil"
-
 	"path"
 )
 
@@ -43,24 +40,6 @@ func init() {
 
 					p := path.Join(m.Conf(m.Prefix(CACHE), kit.META_PATH), m.Option(kit.MDB_NAME))
 					m.Cmdy(nfs.LINK, p, msg.Append(kit.MDB_FILE))
-
-					if file, e := avutil.Open(p); e == nil {
-						defer file.Close()
-
-						if streams, e := file.Streams(); e == nil {
-							for _, stream := range streams {
-
-								switch {
-								case stream.Type().IsAudio():
-								case stream.Type().IsVideo():
-									// 自动分屏
-									vstream := stream.(av.VideoCodecData)
-									m.Cmd(nfs.LINK, path.Join(m.Conf(m.Prefix(CACHE), kit.META_PATH),
-										kit.Select("竖屏", "横屏", vstream.Width() > vstream.Height()), m.Option(kit.MDB_NAME)), p)
-								}
-							}
-						}
-					}
 				}},
 				mdb.REMOVE: {Name: "remove", Help: "删除", Hand: func(m *ice.Message, arg ...string) {
 					m.Cmdy(mdb.DELETE, m.Prefix(CACHE), "", mdb.HASH, kit.MDB_HASH, m.Option(kit.MDB_HASH))

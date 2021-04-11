@@ -1,14 +1,14 @@
 package git
 
 import (
-	ice "github.com/shylinux/icebergs"
-	"github.com/shylinux/icebergs/base/cli"
-	kit "github.com/shylinux/toolkits"
-
 	"os"
 	"strings"
 	"sync"
 	"time"
+
+	ice "github.com/shylinux/icebergs"
+	"github.com/shylinux/icebergs/base/cli"
+	kit "github.com/shylinux/toolkits"
 )
 
 const TOTAL = "total"
@@ -16,14 +16,13 @@ const TOTAL = "total"
 func init() {
 	Index.Merge(&ice.Context{
 		Configs: map[string]*ice.Config{
-			TOTAL: {Name: TOTAL, Help: "统计", Value: kit.Data(
+			TOTAL: {Name: TOTAL, Help: "统计量", Value: kit.Data(
 				kit.MDB_SHORT, kit.MDB_NAME, "skip", kit.Dict("wubi-dict", "true", "word-dict", "true"),
 			)},
 		},
 		Commands: map[string]*ice.Command{
-			TOTAL: {Name: "total name auto", Help: "提交统计", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-				if len(arg) > 0 {
-					// 提交详情
+			TOTAL: {Name: "total name auto", Help: "统计量", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+				if len(arg) > 0 { // 提交详情
 					m.Richs(REPOS, nil, arg[0], func(key string, value map[string]interface{}) {
 						m.Cmdy("_sum", kit.Value(value, kit.META_PATH), arg[1:])
 					})
@@ -31,37 +30,31 @@ func init() {
 				}
 
 				// 提交统计
-				mu := &sync.Mutex{}
-				wg := &sync.WaitGroup{}
 				days, commit, adds, dels, rest := 0, 0, 0, 0, 0
-				m.Richs(REPOS, nil, kit.MDB_FOREACH, func(key string, value map[string]interface{}) {
-					if m.Conf(TOTAL, kit.Keys("meta.skip", kit.Value(value, "meta.name"))) == "true" {
+				m.Richs(REPOS, nil, kit.MDB_FOREACH, func(mu *sync.Mutex, key string, value map[string]interface{}) {
+					value = kit.GetMeta(value)
+					if m.Conf(TOTAL, kit.Keym("skip", value[kit.MDB_NAME])) == "true" {
 						return
 					}
 
-					wg.Add(1)
-					m.Go(func() {
-						defer wg.Done()
+					msg := m.Cmd("_sum", value[kit.MDB_PATH], "total", "10000")
 
-						msg := m.Cmd("_sum", kit.Value(value, "meta.path"), "total", "10000")
+					mu.Lock()
+					defer mu.Unlock()
 
-						mu.Lock()
-						defer mu.Unlock()
-
-						msg.Table(func(index int, value map[string]string, head []string) {
-							if kit.Int(value["days"]) > days {
-								days = kit.Int(value["days"])
-							}
-							commit += kit.Int(value["commit"])
-							adds += kit.Int(value["adds"])
-							dels += kit.Int(value["dels"])
-							rest += kit.Int(value["rest"])
-						})
-						m.Push("name", kit.Value(value, "meta.name"))
-						m.Copy(msg)
+					msg.Table(func(index int, value map[string]string, head []string) {
+						if kit.Int(value["days"]) > days {
+							days = kit.Int(value["days"])
+						}
+						commit += kit.Int(value["commit"])
+						adds += kit.Int(value["adds"])
+						dels += kit.Int(value["dels"])
+						rest += kit.Int(value["rest"])
 					})
+
+					m.Push("name", value[kit.MDB_NAME])
+					m.Copy(msg)
 				})
-				wg.Wait()
 
 				m.Push("name", "total")
 				m.Push("days", kit.Int(days)+1)
@@ -71,7 +64,7 @@ func init() {
 				m.Push("rest", rest)
 				m.SortIntR("rest")
 			}},
-			"_sum": {Name: "_sum [path] [total] [count|date] args...", Help: "统计", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			"_sum": {Name: "_sum [path] [total] [count|date] args...", Help: "统计量", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 				if len(arg) > 0 {
 					if s, e := os.Stat(arg[0] + "/.git"); e == nil && s.IsDir() {
 						m.Option(cli.CMD_DIR, arg[0])
@@ -85,58 +78,60 @@ func init() {
 				}
 
 				args := []string{}
-				args = append(args, "log", kit.Format("--author=%s\\|shylinux", m.Option(ice.MSG_USERNAME)), "--shortstat", "--pretty=commit: %ad %n%s", "--date=iso", "--reverse")
+				args = append(args, "log", kit.Format("--author=%s\\|shylinux", m.Option(ice.MSG_USERNAME)),
+					"--shortstat", "--pretty=commit: %ad %n%s", "--date=iso", "--reverse")
 				if len(arg) > 0 {
-					args = append(args, kit.Select("-n", "--since", strings.Contains(arg[0], "-")))
 					if strings.Contains(arg[0], "-") && !strings.Contains(arg[0], ":") {
 						arg[0] = arg[0] + " 00:00:00"
 					}
-					args = append(args, arg[0:]...)
+					args = append(args, kit.Select("-n", "--since", strings.Contains(arg[0], "-")))
+					args = append(args, arg...)
 				} else {
 					args = append(args, "-n", "30")
 				}
 
 				var total_day time.Duration
 				count, count_add, count_del := 0, 0, 0
-				for i, v := range strings.Split(m.Cmdx(cli.SYSTEM, "git", args), "commit: ") {
-					if i > 0 {
-						l := strings.Split(v, "\n")
-						hs := strings.Split(l[0], " ")
-
-						add, del := "0", "0"
-						if len(l) > 3 {
-							fs := strings.Split(strings.TrimSpace(l[3]), ", ")
-							if adds := strings.Split(fs[1], " "); len(fs) > 2 {
-								dels := strings.Split(fs[2], " ")
-								add = adds[0]
-								del = dels[0]
-							} else if strings.Contains(adds[1], "insertion") {
-								add = adds[0]
-							} else {
-								del = adds[0]
-							}
-						}
-
-						if total {
-							if count++; i == 1 {
-								if t, e := time.Parse("2006-01-02", hs[0]); e == nil {
-									total_day = time.Now().Sub(t)
-									m.Append("from", hs[0])
-								}
-							}
-							count_add += kit.Int(add)
-							count_del += kit.Int(del)
-							continue
-						}
-
-						m.Push("date", hs[0])
-						m.Push("adds", add)
-						m.Push("dels", del)
-						m.Push("rest", kit.Int(add)-kit.Int(del))
-						m.Push("note", l[1])
-						m.Push("hour", strings.Split(hs[1], ":")[0])
-						m.Push("time", hs[1])
+				for i, v := range strings.Split(m.Cmdx(cli.SYSTEM, GIT, args), "commit: ") {
+					l := strings.Split(v, "\n")
+					hs := strings.Split(l[0], " ")
+					if len(l) < 2 {
+						continue
 					}
+
+					add, del := "0", "0"
+					if len(l) > 3 {
+						fs := strings.Split(strings.TrimSpace(l[3]), ", ")
+						if adds := strings.Split(fs[1], " "); len(fs) > 2 {
+							dels := strings.Split(fs[2], " ")
+							add = adds[0]
+							del = dels[0]
+						} else if strings.Contains(adds[1], "insertion") {
+							add = adds[0]
+						} else {
+							del = adds[0]
+						}
+					}
+
+					if total {
+						if count++; i == 1 {
+							if t, e := time.Parse("2006-01-02", hs[0]); e == nil {
+								total_day = time.Now().Sub(t)
+								m.Append("from", hs[0])
+							}
+						}
+						count_add += kit.Int(add)
+						count_del += kit.Int(del)
+						continue
+					}
+
+					m.Push("date", hs[0])
+					m.Push("adds", add)
+					m.Push("dels", del)
+					m.Push("rest", kit.Int(add)-kit.Int(del))
+					m.Push("note", l[1])
+					m.Push("hour", strings.Split(hs[1], ":")[0])
+					m.Push("time", hs[1])
 				}
 
 				if total {

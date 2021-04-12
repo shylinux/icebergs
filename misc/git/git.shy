@@ -34,4 +34,5 @@ field "统计量" web.code.git.total
 field "趋势图" web.code.git.trend args `icebergs`
 field "架构图" web.code.git.spide args `icebergs`
 field "状态机" web.code.git.status
+field "服务器" web.code.git.server
 

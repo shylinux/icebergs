@@ -147,7 +147,7 @@ func init() {
 			MOD: {Name: MOD, Help: "模块", Value: kit.Data(
 				"plug", kit.Dict(
 					PREFIX, kit.Dict(
-						"#", COMMENT,
+						"//", COMMENT,
 					),
 					KEYWORD, kit.Dict(
 						"module", KEYWORD,

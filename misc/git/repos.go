@@ -50,7 +50,7 @@ func init() {
 			)},
 		},
 		Commands: map[string]*ice.Command{
-			REPOS: {Name: "repos name path auto create", Help: "代码库", Action: map[string]*ice.Action{
+			REPOS: {Name: "repos name path auto create proxy", Help: "代码库", Action: map[string]*ice.Action{
 				mdb.CREATE: {Name: "create repos branch name path", Help: "添加", Hand: func(m *ice.Message, arg ...string) {
 					m.Option(kit.MDB_NAME, kit.Select(strings.TrimSuffix(path.Base(m.Option(kit.SSH_REPOS)), ".git"), m.Option(kit.MDB_NAME)))
 					m.Option(kit.MDB_PATH, kit.Select(path.Join(kit.SSH_USR, m.Option(kit.MDB_NAME)), m.Option(kit.MDB_PATH)))
@@ -73,9 +73,12 @@ func init() {
 
 					_repos_insert(m, m.Option(kit.MDB_NAME), m.Option(kit.MDB_PATH))
 				}},
+				"proxy": {Name: "proxy from to", Help: "代理", Hand: func(m *ice.Message, arg ...string) {
+					m.Cmd(cli.SYSTEM, GIT, "config", "--global", fmt.Sprintf(`url.%s.insteadOf`, m.Option("to")), m.Option("from"))
+				}},
 			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 				if len(arg) == 0 { // 仓库列表
-					m.Option(mdb.FIELDS, "time,name,branch,commit")
+					m.Option(mdb.FIELDS, "time,name,branch,commit,remote")
 					m.Cmdy(mdb.SELECT, m.Prefix(REPOS), "", mdb.HASH)
 					m.Sort(kit.MDB_NAME)
 					return

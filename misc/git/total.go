@@ -69,6 +69,9 @@ func init() {
 					if s, e := os.Stat(arg[0] + "/.git"); e == nil && s.IsDir() {
 						m.Option(cli.CMD_DIR, arg[0])
 						arg = arg[1:]
+					} else if s, e := os.Stat(arg[0] + "/refs"); e == nil && s.IsDir() {
+						m.Option(cli.CMD_DIR, arg[0])
+						arg = arg[1:]
 					}
 				}
 

@@ -20,7 +20,7 @@ const STATUS = "status"
 
 func init() {
 	Index.Merge(&ice.Context{Commands: map[string]*ice.Command{
-		STATUS: {Name: "status name auto pull compile create commit", Help: "代码状态", Action: map[string]*ice.Action{
+		STATUS: {Name: "status name auto", Help: "代码状态", Action: map[string]*ice.Action{
 			PULL: {Name: "pull", Help: "下载", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmdy(cli.PROGRESS, mdb.CREATE, func(update func(name string, count, total int)) {
 					count, total := 0, len(m.Confm(REPOS, kit.MDB_HASH))
@@ -77,9 +77,11 @@ func init() {
 			m.Richs(REPOS, nil, kit.Select(kit.MDB_FOREACH, arg, 0), func(key string, value map[string]interface{}) {
 				value = kit.GetMeta(value)
 				if m.Option(cli.CMD_DIR, value[kit.MDB_PATH]); len(arg) > 0 {
+					m.Option("_action", kit.Format([]string{"commit"}))
 					m.Echo(m.Cmdx(cli.SYSTEM, GIT, DIFF))
 					return // 更改详情
 				}
+				m.Option("_action", kit.Format([]string{"pull", "compile", "create"}))
 
 				// 更改列表
 				for _, v := range strings.Split(strings.TrimSpace(m.Cmdx(cli.SYSTEM, GIT, STATUS, "-sb")), "\n") {

@@ -157,7 +157,7 @@ const INPUT = "input"
 var Index = &ice.Context{Name: INPUT, Help: "输入法",
 	Configs: map[string]*ice.Config{
 		INPUT: {Name: INPUT, Help: "输入法", Value: kit.Data(
-			kit.MDB_STORE, "usr/export/input", kit.MDB_FSIZE, "200000",
+			kit.MDB_STORE, "usr/local/export/input", kit.MDB_FSIZE, "200000",
 			kit.MDB_LIMIT, "5000", kit.MDB_LEAST, "1000",
 			kit.MDB_SHORT, "zone", "repos", "wubi-dict",
 		)},

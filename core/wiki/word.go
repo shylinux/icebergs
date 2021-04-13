@@ -163,6 +163,9 @@ func _image_show(m *ice.Message, name, text string, arg ...string) {
 		m.EchoQRCode(text)
 		return
 	}
+	if !strings.HasPrefix(text, "http") && !strings.HasPrefix(text, "/") {
+		text = "/share/local/usr/local/image/" + text
+	}
 
 	_option(m, IMAGE, name, text, arg...)
 	m.Render(ice.RENDER_TEMPLATE, m.Conf(IMAGE, "meta.template"))
@@ -463,7 +466,7 @@ func init() {
 			}},
 
 			WORD: {Name: "word path=src/main.shy auto 演示", Help: "语言文字", Meta: kit.Dict(
-				"display", "/plugin/local/wiki/word.js", "style", "word",
+				kit.MDB_DISPLAY, "/plugin/local/wiki/word.js", kit.MDB_STYLE, WORD,
 			), Action: map[string]*ice.Action{
 				web.STORY: {Name: "story", Help: "运行", Hand: func(m *ice.Message, arg ...string) {
 					m.Cmdy(arg[0], kit.MDB_ACTION, "run", arg[1:])

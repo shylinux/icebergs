@@ -262,7 +262,7 @@ func FavorShow(m *ice.Message, kind string, name, text interface{}, arg ...strin
 }
 
 const (
-	_EXPORT = "usr/export/web.favor/favor.csv"
+	_EXPORT = "usr/local/export/web.favor/favor.csv"
 )
 
 const FAVOR = "favor"

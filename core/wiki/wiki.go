@@ -1,13 +1,14 @@
 package wiki
 
 import (
+	"path"
+	"strings"
+
 	ice "github.com/shylinux/icebergs"
+	"github.com/shylinux/icebergs/base/mdb"
 	"github.com/shylinux/icebergs/base/nfs"
 	"github.com/shylinux/icebergs/base/web"
 	kit "github.com/shylinux/toolkits"
-
-	"path"
-	"strings"
 )
 
 func _wiki_path(m *ice.Message, cmd string, arg ...string) string {
@@ -52,7 +53,10 @@ const WIKI = "wiki"
 
 var Index = &ice.Context{Name: WIKI, Help: "文档中心",
 	Commands: map[string]*ice.Command{
-		ice.CTX_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) { m.Load() }},
+		ice.CTX_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			m.Cmd(mdb.RENDER, mdb.CREATE, "png", m.Prefix(IMAGE))
+			m.Load()
+		}},
 		ice.CTX_EXIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) { m.Save() }},
 	},
 }

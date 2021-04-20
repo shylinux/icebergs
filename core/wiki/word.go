@@ -398,7 +398,11 @@ func init() {
 				_local_show(m, arg[0], kit.Select(arg[0], arg[1]), arg[2:]...)
 			}},
 
-			IMAGE: {Name: "image [name] url", Help: "图片", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			IMAGE: {Name: "image [name] url", Help: "图片", Action: map[string]*ice.Action{
+				mdb.RENDER: {Hand: func(m *ice.Message, arg ...string) {
+					_image_show(m, arg[1], path.Join(arg[2], arg[1]))
+				}},
+			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 				arg = _name(m, arg)
 				_image_show(m, arg[0], kit.Select(arg[0], arg[1]), arg[2:]...)
 				m.Render("")

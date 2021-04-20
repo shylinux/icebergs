@@ -15,6 +15,7 @@ const JS = "js"
 const CSS = "css"
 const HTML = "html"
 const NODE = "node"
+const VUE = "vue"
 
 func init() {
 	Index.Register(&ice.Context{Name: JS, Help: "前端",
@@ -24,6 +25,11 @@ func init() {
 				m.Cmd(mdb.RENDER, mdb.CREATE, JS, m.Prefix(JS))
 				m.Cmd(mdb.ENGINE, mdb.CREATE, JS, m.Prefix(JS))
 				m.Cmd(mdb.SEARCH, mdb.CREATE, JS, m.Prefix(JS))
+
+				m.Cmd(mdb.PLUGIN, mdb.CREATE, VUE, m.Prefix(VUE))
+				m.Cmd(mdb.RENDER, mdb.CREATE, VUE, m.Prefix(VUE))
+				m.Cmd(mdb.ENGINE, mdb.CREATE, VUE, m.Prefix(VUE))
+				m.Cmd(mdb.SEARCH, mdb.CREATE, VUE, m.Prefix(VUE))
 			}},
 			JS: {Name: JS, Help: "前端", Action: map[string]*ice.Action{
 				mdb.PLUGIN: {Hand: func(m *ice.Message, arg ...string) {
@@ -50,10 +56,43 @@ func init() {
 					m.Cmdy(INSTALL, m.Conf(NODE, kit.META_SOURCE))
 				}},
 			}},
+			VUE: {Name: "vue", Help: "前端", Action: map[string]*ice.Action{
+				mdb.PLUGIN: {Hand: func(m *ice.Message, arg ...string) {
+					m.Echo(m.Conf(VUE, "meta.plug"))
+				}},
+				mdb.RENDER: {Hand: func(m *ice.Message, arg ...string) {
+					m.Cmdy(nfs.CAT, path.Join(arg[2], arg[1]))
+				}},
+				mdb.ENGINE: {Hand: func(m *ice.Message, arg ...string) {
+					m.Option(cli.CMD_DIR, arg[2])
+					m.Cmdy(cli.SYSTEM, NODE, arg[1])
+					m.Set(ice.MSG_APPEND)
+				}},
+				mdb.SEARCH: {Hand: func(m *ice.Message, arg ...string) {
+					if arg[0] == kit.MDB_FOREACH {
+						return
+					}
+					_go_find(m, kit.Select("main", arg, 1))
+					_go_grep(m, kit.Select("main", arg, 1))
+				}},
+			}},
 		},
 		Configs: map[string]*ice.Config{
+			VUE: {Name: VUE, Help: "vue", Value: kit.Data(
+				"plug", kit.Dict(
+					PREFIX, kit.Dict(
+						"//", COMMENT,
+						"/*", COMMENT,
+						"*", COMMENT,
+					),
+					SPLIT, kit.Dict(
+						"space", " \t",
+						"operator", "{[(&.,;!|<>)]}",
+					),
+				),
+			)},
 			NODE: {Name: NODE, Help: "前端", Value: kit.Data(
-				"source", "https://nodejs.org/dist/v10.13.0/node-v10.13.0-linux-x64.tar.xz",
+				kit.SSH_SOURCE, "https://nodejs.org/dist/v10.13.0/node-v10.13.0-linux-x64.tar.xz",
 			)},
 			JS: {Name: JS, Help: "js", Value: kit.Data(
 				"plug", kit.Dict(
@@ -67,10 +106,15 @@ func init() {
 						"*", COMMENT,
 					),
 					KEYWORD, kit.Dict(
+						"import", KEYWORD,
+						"from", KEYWORD,
+						"export", KEYWORD,
+
 						"var", KEYWORD,
 						"new", KEYWORD,
 						"delete", KEYWORD,
 						"typeof", KEYWORD,
+						"const", KEYWORD,
 						"function", KEYWORD,
 
 						"if", KEYWORD,
@@ -83,6 +127,10 @@ func init() {
 						"case", KEYWORD,
 						"default", KEYWORD,
 						"return", KEYWORD,
+						"try", KEYWORD,
+						"throw", KEYWORD,
+						"catch", KEYWORD,
+						"finally", KEYWORD,
 
 						"window", FUNCTION,
 						"console", FUNCTION,

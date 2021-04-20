@@ -1,11 +1,11 @@
 package aaa
 
 import (
+	"strings"
+
 	ice "github.com/shylinux/icebergs"
 	"github.com/shylinux/icebergs/base/mdb"
 	kit "github.com/shylinux/toolkits"
-
-	"strings"
 )
 
 func _user_login(m *ice.Message, name, word string) (ok bool) {
@@ -27,7 +27,7 @@ func _user_create(m *ice.Message, name, word string) {
 		USERNAME, name, PASSWORD, word,
 		USERNICK, name, USERZONE, m.Option(ice.MSG_USERZONE),
 	))
-	m.Log_CREATE(USERNAME, name, "hash", h)
+	m.Log_CREATE(USERNAME, name, kit.MDB_HASH, h)
 	m.Event(USER_CREATE, name)
 }
 func _user_search(m *ice.Message, kind, name, text string, arg ...string) {
@@ -117,7 +117,7 @@ func init() {
 				mdb.REMOVE: {Name: "remove", Help: "删除", Hand: func(m *ice.Message, arg ...string) {
 					m.Cmdy(mdb.DELETE, USER, "", mdb.HASH, USERNAME, m.Option(USERNAME))
 				}},
-				mdb.SEARCH: {Name: "search type name text arg...", Help: "搜索", Hand: func(m *ice.Message, arg ...string) {
+				mdb.SEARCH: {Name: "search type name text", Help: "搜索", Hand: func(m *ice.Message, arg ...string) {
 					_user_search(m, arg[0], arg[1], kit.Select("", arg, 2))
 				}},
 			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {

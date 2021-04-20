@@ -22,7 +22,7 @@ const HEADER = "header"
 func init() {
 	Index.Merge(&ice.Context{
 		Configs: map[string]*ice.Config{
-			HEADER: {Name: HEADER, Help: "标题栏", Value: kit.Dict(TITLE, "github.com/shylinux/contexts")},
+			HEADER: {Name: HEADER, Help: "标题栏", Value: kit.Data(TITLE, "github.com/shylinux/contexts")},
 		},
 		Commands: map[string]*ice.Command{
 			P_HEADER: {Name: "/header", Help: "标题栏", Action: map[string]*ice.Action{

@@ -238,6 +238,7 @@ func init() {
 					m.Target().Start(m, kit.MDB_NAME, m.Option(kit.MDB_NAME), tcp.HOST, m.Option(tcp.HOST), tcp.PORT, m.Option(tcp.PORT))
 					m.Sleep(ice.MOD_TICK)
 
+					m.Option(kit.MDB_NAME, "")
 					for _, k := range kit.Split(m.Option(SPIDE_DEV)) {
 						m.Cmd(SPACE, tcp.DIAL, SPIDE_DEV, k, kit.MDB_NAME, ice.Info.NodeName)
 					}

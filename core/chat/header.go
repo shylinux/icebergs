@@ -38,6 +38,11 @@ func init() {
 			HEADER: {Name: HEADER, Help: "标题栏", Value: kit.Data(TITLE, "github.com/shylinux/contexts")},
 		},
 		Commands: map[string]*ice.Command{
+			"toast": {Name: "toast target msg", Help: "命令行", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+				m.Option(ice.MSG_USERUA, "chrome")
+				m.Cmd(web.SPACE, arg[0], "Header.user.toast", "", ice.Render(m, ice.RENDER_QRCODE, arg[1]), arg[2:])
+			}},
+
 			P_HEADER: {Name: "/header", Help: "标题栏", Action: map[string]*ice.Action{
 				LOGIN: {Name: "login", Help: "用户登录", Hand: func(m *ice.Message, arg ...string) {
 					if aaa.UserLogin(m, arg[0], arg[1]) {

@@ -74,6 +74,9 @@ func (m *Message) PushPodCmd(cmd string, arg ...string) {
 	m.Cmd("web.space").Table(func(index int, value map[string]string, head []string) {
 		switch value[kit.MDB_TYPE] {
 		case "worker", "server":
+			if value[kit.MDB_NAME] == Info.HostName {
+				break
+			}
 			m.Cmd("web.space", value[kit.MDB_NAME], m.Prefix(cmd), arg).Table(func(index int, val map[string]string, head []string) {
 				val[kit.SSH_POD] = kit.Keys(value[kit.MDB_NAME], val[kit.SSH_POD])
 				m.Push("", val, head)
@@ -110,10 +113,12 @@ func (m *Message) PushSearchWeb(cmd string, name string) {
 	})
 }
 
-func _render(m *Message, cmd string, args ...interface{}) string {
+func Render(m *Message, cmd string, args ...interface{}) string {
+	m.Debug("waht %v", cmd)
 	if m.Option(MSG_USERUA) == "" || strings.Contains(m.Option(MSG_USERUA), "curl") {
 		return ""
 	}
+	m.Debug("waht %v", cmd)
 
 	switch arg := kit.Simple(args...); cmd {
 	case RENDER_DOWNLOAD: // [name] file
@@ -177,31 +182,28 @@ func _render(m *Message, cmd string, args ...interface{}) string {
 	return ""
 }
 func (m *Message) PushRender(key, view, name string, arg ...string) *Message {
-	return m.Push(key, _render(m, view, name, arg))
+	return m.Push(key, Render(m, view, name, arg))
 }
 func (m *Message) PushDownload(key string, arg ...interface{}) { // [name] file
-	m.Push(key, _render(m, RENDER_DOWNLOAD, arg...))
+	m.Push(key, Render(m, RENDER_DOWNLOAD, arg...))
 }
 func (m *Message) PushAnchor(arg ...interface{}) { // [name] link
-	m.Push(kit.MDB_LINK, _render(m, RENDER_ANCHOR, arg...))
+	m.Push(kit.MDB_LINK, Render(m, RENDER_ANCHOR, arg...))
 }
 func (m *Message) PushButton(arg ...string) {
-	if m.Option(MSG_USERUA) == "" || strings.Contains(m.Option(MSG_USERUA), "curl") {
-		return
-	}
-	m.Push(kit.MDB_ACTION, _render(m, RENDER_BUTTON, strings.Join(arg, ",")))
+	m.Push(kit.MDB_ACTION, Render(m, RENDER_BUTTON, strings.Join(arg, ",")))
 }
 func (m *Message) PushScript(arg ...string) *Message { // [type] text...
-	return m.Push(kit.MDB_SCRIPT, _render(m, RENDER_SCRIPT, arg))
+	return m.Push(kit.MDB_SCRIPT, Render(m, RENDER_SCRIPT, arg))
 }
 func (m *Message) PushImages(key, src string, arg ...string) { // key src [size]
-	m.Push(key, _render(m, RENDER_IMAGES, src, arg))
+	m.Push(key, Render(m, RENDER_IMAGES, src, arg))
 }
 func (m *Message) PushVideos(key, src string, arg ...string) { // key src [size]
-	m.Push(key, _render(m, RENDER_VIDEOS, src, arg))
+	m.Push(key, Render(m, RENDER_VIDEOS, src, arg))
 }
 func (m *Message) PushQRCode(key string, text string, arg ...string) { // key text [size]
-	m.Push(key, _render(m, RENDER_QRCODE, text, arg))
+	m.Push(key, Render(m, RENDER_QRCODE, text, arg))
 }
 func (m *Message) PushAction(list ...interface{}) {
 	m.Table(func(index int, value map[string]string, head []string) {
@@ -210,19 +212,19 @@ func (m *Message) PushAction(list ...interface{}) {
 }
 
 func (m *Message) EchoAnchor(arg ...interface{}) *Message { // [name] link
-	return m.Echo(_render(m, RENDER_ANCHOR, arg...))
+	return m.Echo(Render(m, RENDER_ANCHOR, arg...))
 }
 func (m *Message) EchoButton(arg ...string) *Message {
-	return m.Echo(_render(m, RENDER_BUTTON, strings.Join(arg, ",")))
+	return m.Echo(Render(m, RENDER_BUTTON, strings.Join(arg, ",")))
 }
 func (m *Message) EchoScript(arg ...string) *Message {
-	return m.Echo(_render(m, RENDER_SCRIPT, arg))
+	return m.Echo(Render(m, RENDER_SCRIPT, arg))
 }
 func (m *Message) EchoImages(src string, arg ...string) *Message {
-	return m.Echo(_render(m, RENDER_IMAGES, src, arg))
+	return m.Echo(Render(m, RENDER_IMAGES, src, arg))
 }
 func (m *Message) EchoQRCode(text string, arg ...string) *Message { // text [size]
-	return m.Echo(_render(m, RENDER_QRCODE, text, arg))
+	return m.Echo(Render(m, RENDER_QRCODE, text, arg))
 }
 
 func (m *Message) SortInt(key string)   { m.Sort(key, "int") }

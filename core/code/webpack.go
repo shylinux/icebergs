@@ -33,7 +33,7 @@ func init() {
 					m.Option(nfs.DIR_TYPE, nfs.CAT)
 					m.Option(nfs.DIR_DEEP, true)
 
-					for _, k := range []string{"lib", "pane", "plugin"} {
+					for _, k := range []string{"lib", "panel", "plugin"} {
 						m.Cmd(nfs.DIR, k).Table(func(index int, value map[string]string, head []string) {
 							if strings.HasSuffix(value[kit.MDB_PATH], ".css") {
 								js.WriteString(`Volcanos.meta.cache["` + path.Join("/", value[kit.MDB_PATH]) + "\"] = []\n")

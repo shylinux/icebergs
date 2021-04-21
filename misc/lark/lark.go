@@ -444,7 +444,7 @@ var Index = &ice.Context{Name: LARK, Help: "机器人",
 
 				m.Option(aaa.USERZONE, LARK)
 				user := msg.Append("data.open_id")
-				web.RenderCookie(m, aaa.SessCreate(m, user, aaa.UserRole(m, user)))
+				web.RenderCookie(m, aaa.SessCreate(m, user))
 				m.Render("redirect", m.Conf(web.SHARE, "meta.domain"))
 
 				msg = m.Cmd(EMPLOYEE, m.Option(aaa.USERNAME, user))

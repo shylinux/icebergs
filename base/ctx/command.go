@@ -10,10 +10,6 @@ import (
 )
 
 func _command_search(m *ice.Message, kind, name, text string) {
-	if !(kind == COMMAND || kind == kit.MDB_FOREACH && name != "") {
-		return
-	}
-
 	ice.Pulse.Travel(func(p *ice.Context, s *ice.Context, key string, cmd *ice.Command) {
 		if strings.HasPrefix(key, "_") || strings.HasPrefix(key, "/") {
 			return
@@ -67,7 +63,9 @@ func init() {
 		Commands: map[string]*ice.Command{
 			COMMAND: {Name: "command key auto", Help: "命令", Action: map[string]*ice.Action{
 				mdb.SEARCH: {Name: "search type name text", Help: "搜索", Hand: func(m *ice.Message, arg ...string) {
-					_command_search(m, arg[0], arg[1], arg[2])
+					if arg[0] == COMMAND {
+						_command_search(m, arg[0], arg[1], arg[2])
+					}
 				}},
 			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 				_command_list(m, strings.Join(arg, "."))

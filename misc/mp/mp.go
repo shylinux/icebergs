@@ -50,7 +50,7 @@ var Index = &ice.Context{Name: MP, Help: "小程序",
 
 				// 用户登录
 				m.Option(ice.MSG_USERZONE, MP)
-				m.Echo(aaa.SessCreate(msg, msg.Append(OPENID), aaa.UserRole(msg, msg.Append(OPENID))))
+				m.Echo(aaa.SessCreate(msg, msg.Append(OPENID)))
 			}},
 			aaa.USER: {Name: "user", Help: "用户", Hand: func(m *ice.Message, arg ...string) {
 				m.Option(aaa.USERNAME, m.Option(ice.MSG_USERNAME))

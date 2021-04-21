@@ -8,6 +8,7 @@ import (
 	"strings"
 )
 
+var OK = "ok"
 var ErrWarn = "warn: "
 var ErrNotLogin = "not login: "
 var ErrNotRight = "not right: "

@@ -10,13 +10,11 @@ import (
 
 func _user_login(m *ice.Message, name, word string) (ok bool) {
 	if m.Richs(USER, nil, name, nil) == nil {
-		_user_create(m, name, "")
+		_user_create(m, name, word)
 	}
 
 	m.Richs(USER, nil, name, func(key string, value map[string]interface{}) {
-		if kit.Format(value[PASSWORD]) == "" {
-			ok, value[PASSWORD] = true, word
-		} else if value[PASSWORD] == word {
+		if value[PASSWORD] == word {
 			ok = true
 		}
 	})
@@ -27,26 +25,31 @@ func _user_create(m *ice.Message, name, word string) {
 		USERNAME, name, PASSWORD, word,
 		USERNICK, name, USERZONE, m.Option(ice.MSG_USERZONE),
 	))
-	m.Log_CREATE(USERNAME, name, kit.MDB_HASH, h)
+	m.Log_CREATE(USER_CREATE, name, kit.MDB_HASH, h)
 	m.Event(USER_CREATE, name)
 }
-func _user_search(m *ice.Message, kind, name, text string, arg ...string) {
-	if kind != USER {
-		return
-	}
-	m.Richs(USER, nil, kit.MDB_FOREACH, func(key string, val map[string]interface{}) {
-		if name != "" && name != val[USERNAME] {
+func _user_remove(m *ice.Message, name string) {
+	m.Cmdy(mdb.DELETE, USER, "", mdb.HASH, USERNAME, name)
+	m.Log_REMOVE(USER_REMOVE, name, kit.MDB_HASH, kit.Hashs(name))
+	m.Event(USER_REMOVE, name)
+}
+func _user_search(m *ice.Message, kind, name, text string) {
+	m.Richs(USER, nil, kit.MDB_FOREACH, func(key string, value map[string]interface{}) {
+		value = kit.GetMeta(value)
+		if name != "" && name != value[USERNAME] {
 			return
 		}
-		m.PushSearch(kit.SSH_CMD, USER, kit.MDB_TYPE, kit.Format(UserRole(m, val[USERNAME])),
-			kit.MDB_NAME, kit.Format(val[USERNICK]), kit.MDB_TEXT, kit.Format(val[USERNAME]), val)
+		m.PushSearch(kit.SSH_CMD, USER, kit.MDB_TYPE, kit.Format(UserRole(m, value[USERNAME])),
+			kit.MDB_NAME, kit.Format(value[USERNICK]), kit.MDB_TEXT, kit.Format(value[USERNAME]), value)
 	})
 }
 
-func UserRoot(m *ice.Message) {
-	ice.Info.PassWord = kit.Hashs("uniq")
-	ice.Info.PassWord = ice.Info.UserName
-	_user_create(m, ice.Info.UserName, ice.Info.PassWord)
+func UserZone(m *ice.Message, username interface{}) (zone string) {
+	m.Richs(USER, nil, kit.Format(username), func(key string, value map[string]interface{}) {
+		value = kit.GetMeta(value)
+		zone = kit.Format(value[USERZONE])
+	})
+	return
 }
 func UserNick(m *ice.Message, username interface{}) (nick string) {
 	m.Richs(USER, nil, kit.Format(username), func(key string, value map[string]interface{}) {
@@ -55,36 +58,38 @@ func UserNick(m *ice.Message, username interface{}) (nick string) {
 	})
 	return
 }
-func UserZone(m *ice.Message, username interface{}) (zone string) {
-	m.Richs(USER, nil, kit.Format(username), func(key string, value map[string]interface{}) {
-		value = kit.GetMeta(value)
-		zone = kit.Format(value[USERZONE])
-	})
-	return
-}
 func UserRole(m *ice.Message, username interface{}) (role string) {
 	if role = VOID; username == ice.Info.UserName {
 		return ROOT
 	}
 	m.Richs(ROLE, nil, TECH, func(key string, value map[string]interface{}) {
-		value = kit.GetMeta(value)
-		if kit.Value(value, kit.Keys(USER, username)) == true {
+		if kit.Value(kit.GetMeta(value), kit.Keys(USER, username)) == true {
 			role = TECH
 		}
 	})
 	return
 }
+func UserRoot(m *ice.Message) {
+	ice.Info.PassWord = kit.Hashs("uniq")
+	ice.Info.PassWord = ice.Info.UserName
+	_user_create(m, ice.Info.UserName, ice.Info.PassWord)
+}
 func UserLogin(m *ice.Message, username, password string) bool {
 	if _user_login(m, username, password) {
-		m.Option(ice.MSG_USERNAME, username)
-		m.Option(ice.MSG_USERNICK, UserNick(m, username))
-		m.Option(ice.MSG_USERROLE, UserRole(m, username))
-		m.Log_AUTH(USERROLE, m.Option(ice.MSG_USERROLE), USERNICK, m.Option(ice.MSG_USERNICK), USERNAME, m.Option(ice.MSG_USERNAME), PASSWORD, strings.Repeat("*", len(password)))
+		m.Log_AUTH(
+			USERNICK, m.Option(ice.MSG_USERNICK, UserNick(m, username)),
+			USERROLE, m.Option(ice.MSG_USERROLE, UserRole(m, username)),
+			USERNAME, m.Option(ice.MSG_USERNAME, username),
+			PASSWORD, strings.Repeat("*", len(password)),
+		)
 		return true
 	}
 	return false
 }
 
+const (
+	INVITE = "invite"
+)
 const (
 	AVATAR = "avatar"
 	GENDER = "gender"
@@ -95,13 +100,18 @@ const (
 	COUNTRY  = "country"
 	PROVINCE = "province"
 	LANGUAGE = "language"
-
-	USER_CREATE = "user.create"
 )
 const (
-	INVITE = "invite"
+	USERZONE = "userzone"
+	USERNICK = "usernick"
+	USERROLE = "userrole"
+	USERNAME = "username"
+	PASSWORD = "password"
 )
-
+const (
+	USER_CREATE = "user.create"
+	USER_REMOVE = "user.remove"
+)
 const USER = "user"
 
 func init() {
@@ -110,20 +120,32 @@ func init() {
 			USER: {Name: USER, Help: "用户", Value: kit.Data(kit.MDB_SHORT, USERNAME)},
 		},
 		Commands: map[string]*ice.Command{
-			USER: {Name: "user username auto", Help: "用户", Action: map[string]*ice.Action{
+			USER: {Name: "user username auto create", Help: "用户", Action: map[string]*ice.Action{
+				mdb.CREATE: {Name: "create userrole=void,tech username password", Help: "创建", Hand: func(m *ice.Message, arg ...string) {
+					_user_create(m, m.Option(USERNAME), m.Option(PASSWORD))
+					_role_user(m, m.Option(USERROLE), m.Option(USERNAME))
+				}},
+				ROLE: {Name: "role userrole=void,tech", Help: "角色", Hand: func(m *ice.Message, arg ...string) {
+					_role_user(m, m.Option(USERROLE), m.Option(USERNAME))
+				}},
 				mdb.MODIFY: {Name: "modify", Help: "编辑", Hand: func(m *ice.Message, arg ...string) {
 					m.Cmdy(mdb.MODIFY, USER, "", mdb.HASH, USERNAME, m.Option(USERNAME), arg)
 				}},
 				mdb.REMOVE: {Name: "remove", Help: "删除", Hand: func(m *ice.Message, arg ...string) {
-					m.Cmdy(mdb.DELETE, USER, "", mdb.HASH, USERNAME, m.Option(USERNAME))
+					_user_remove(m, m.Option(USERNAME))
 				}},
 				mdb.SEARCH: {Name: "search type name text", Help: "搜索", Hand: func(m *ice.Message, arg ...string) {
-					_user_search(m, arg[0], arg[1], kit.Select("", arg, 2))
+					if arg[0] == USER {
+						_user_search(m, arg[0], arg[1], kit.Select("", arg, 2))
+					}
 				}},
 			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-				m.Option(mdb.FIELDS, kit.Select(kit.Select("time,userzone,usernick,username", mdb.DETAIL, len(arg) > 0), m.Option(mdb.FIELDS)))
+				m.Fields(len(arg) == 0, "time,username,userzone,usernick")
 				m.Cmdy(mdb.SELECT, USER, "", mdb.HASH, USERNAME, arg)
-				m.PushAction(mdb.REMOVE)
+				m.Table(func(index int, value map[string]string, head []string) {
+					m.Push(USERROLE, UserRole(m, value[USERNAME]))
+				})
+				m.PushAction(ROLE, mdb.REMOVE)
 			}},
 		},
 	})

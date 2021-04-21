@@ -186,6 +186,9 @@ func (m *Message) PushAnchor(arg ...interface{}) { // [name] link
 	m.Push(kit.MDB_LINK, _render(m, RENDER_ANCHOR, arg...))
 }
 func (m *Message) PushButton(arg ...string) {
+	if m.Option(MSG_USERUA) == "" || strings.Contains(m.Option(MSG_USERUA), "curl") {
+		return
+	}
 	m.Push(kit.MDB_ACTION, _render(m, RENDER_BUTTON, strings.Join(arg, ",")))
 }
 func (m *Message) PushScript(arg ...string) *Message { // [type] text...
@@ -242,4 +245,8 @@ func (m *Message) RenameAppend(from, to string) {
 			delete(m.meta, from)
 		}
 	}
+}
+
+func (m *Message) Fields(condition bool, fields string) string {
+	return m.Option("fields", kit.Select(kit.Select("detail", fields, condition), m.Option("fields")))
 }

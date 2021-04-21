@@ -193,6 +193,8 @@ func _serve_login(msg *ice.Message, cmds []string, w http.ResponseWriter, r *htt
 
 const (
 	WEB_LOGIN = "_login"
+
+	SSO = "sso"
 )
 const SERVE = "serve"
 

@@ -56,14 +56,16 @@ func _pack_volcanos(m *ice.Message, pack *os.File, dir string) {
 	m.Option(nfs.DIR_DEEP, "true")
 	m.Option(nfs.DIR_TYPE, nfs.CAT)
 
-	for _, k := range []string{"favicon.ico", "proto.js", "frame.js", "index.html"} {
+	for _, k := range []string{"favicon.ico", "proto.js", "frame.js"} {
 		pack.WriteString(fmt.Sprintf("        \"/%s\": %s,\n",
-			kit.Select("", k, k != "index.html"), _pack_file(m, path.Join(dir, k))))
+			kit.Select("", k, k != "index.html"),
+			_pack_file(m, path.Join(dir, k))))
 	}
-	for _, k := range []string{"lib", "page", "pane", "plugin"} {
+	for _, k := range []string{"lib", "page", "panel", "plugin"} {
 		m.Cmd(nfs.DIR, k).Table(func(index int, value map[string]string, head []string) {
 			pack.WriteString(fmt.Sprintf("        \"/%s\": %s,\n",
-				value[kit.MDB_PATH], _pack_file(m, path.Join(dir, value[kit.MDB_PATH]))))
+				kit.Select("", value[kit.MDB_PATH], value[kit.MDB_PATH] != "page/index.html"),
+				_pack_file(m, path.Join(dir, value[kit.MDB_PATH]))))
 		})
 	}
 	pack.WriteString("\n")

@@ -65,17 +65,12 @@ func Render(msg *ice.Message, cmd string, args ...interface{}) {
 		// no output
 
 	default:
-		msg.Set("_option")
-		msg.Set("_handle")
-		msg.Set("_output")
-
-		msg.Set("")
-		msg.Set("sessid")
-		msg.Set("domain")
-		msg.Set("river")
-		msg.Set("storm")
-		msg.Set("cmds")
-		msg.Set("fields")
+		for _, k := range []string{
+			"_option", "_handle", "_output", "",
+			"sessid", "domain", "river", "storm", "cmds", "fields",
+		} {
+			msg.Set(k)
+		}
 
 		if cmd != "" { // [str [arg...]]
 			msg.Echo(kit.Format(cmd, args...))

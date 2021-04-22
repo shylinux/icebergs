@@ -1,10 +1,6 @@
 package aaa
 
 import (
-	ice "github.com/shylinux/icebergs"
-	"github.com/shylinux/icebergs/base/mdb"
-	kit "github.com/shylinux/toolkits"
-
 	"bytes"
 	"crypto/hmac"
 	"crypto/sha1"
@@ -13,6 +9,10 @@ import (
 	"math"
 	"strings"
 	"time"
+
+	ice "github.com/shylinux/icebergs"
+	"github.com/shylinux/icebergs/base/mdb"
+	kit "github.com/shylinux/toolkits"
 )
 
 func _totp_gen(per int64) string {
@@ -47,8 +47,8 @@ func TOTP_GET(key string, num int, per int64) string { return _totp_get(key, num
 
 const (
 	SECRET = "secret"
-	NUMBER = "number"
 	PERIOD = "period"
+	NUMBER = "number"
 )
 const TOTP = "totp"
 
@@ -61,47 +61,35 @@ func init() {
 		},
 		Commands: map[string]*ice.Command{
 			TOTP: {Name: "totp name auto create", Help: "动态令牌", Action: map[string]*ice.Action{
-				mdb.CREATE: {Name: "create user secret period=30 number=6", Help: "添加", Hand: func(m *ice.Message, arg ...string) {
+				mdb.CREATE: {Name: "create name secret period=30 number=6", Help: "添加", Hand: func(m *ice.Message, arg ...string) {
 					if m.Option(SECRET) == "" { // 创建密钥
 						m.Option(SECRET, _totp_gen(kit.Int64(m.Option(PERIOD))))
 					}
 
-					// 添加密钥
-					m.Cmd(mdb.INSERT, TOTP, "", mdb.HASH, kit.MDB_NAME, m.Option("user"),
+					m.Cmd(mdb.INSERT, TOTP, "", mdb.HASH, kit.MDB_NAME, m.Option(kit.MDB_NAME),
 						SECRET, m.Option(SECRET), PERIOD, m.Option(PERIOD), NUMBER, m.Option(NUMBER),
 					)
-					m.Cmdy("web.wiki.image", "qrcode", kit.Format(m.Conf(TOTP, "meta.link"), m.Option("user"), m.Option(SECRET)))
+					m.Option(ice.MSG_PROCESS, ice.PROCESS_REFRESH)
 				}},
 				mdb.REMOVE: {Name: "remove", Help: "删除", Hand: func(m *ice.Message, arg ...string) {
 					m.Cmdy(mdb.DELETE, TOTP, "", mdb.HASH, kit.MDB_NAME, m.Option(kit.MDB_NAME))
 				}},
 			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-				if m.Option("_count") == "" {
-					m.Option("_count", "20")
-				}
-				if kit.Int(m.Option("_count")) > 0 {
-					m.Option(ice.MSG_PROCESS, "_refresh")
-				}
+				m.Fields(len(arg) == 0, "time,name,secret,period,number")
+				m.Cmd(mdb.SELECT, TOTP, "", mdb.HASH, kit.MDB_NAME, arg).Table(func(index int, value map[string]string, head []string) {
+					m.Push(kit.MDB_TIME, m.Time())
+					m.Push(kit.MDB_NAME, value[kit.MDB_NAME])
 
-				m.Option(mdb.FIELDS, kit.Select("time,name,secret,period,number", mdb.DETAIL, len(arg) > 0))
-				if len(arg) == 0 {
-					// 密码列表
-					m.Cmd(mdb.SELECT, TOTP, "", mdb.HASH).Table(func(index int, value map[string]string, head []string) {
-						per := kit.Int64(value[PERIOD])
-						m.Push("time", m.Time())
-						m.Push("rest", per-time.Now().Unix()%per)
-						m.Push("name", value["name"])
-						m.Push("code", _totp_get(value[SECRET], kit.Int(value[NUMBER]), per))
-					})
-					m.PushAction(mdb.REMOVE)
-					m.Sort(kit.MDB_NAME)
-					return
-				}
+					period := kit.Int64(value[PERIOD])
+					m.Push("rest", period-time.Now().Unix()%period)
+					m.Push("code", _totp_get(value[SECRET], kit.Int(value[NUMBER]), period))
 
-				// 获取密码
-				m.Cmd(mdb.SELECT, TOTP, "", mdb.HASH, kit.MDB_NAME, arg[0]).Table(func(index int, value map[string]string, head []string) {
-					m.Echo(_totp_get(value[SECRET], kit.Int(value[NUMBER]), kit.Int64(value[PERIOD])))
+					if len(arg) > 0 {
+						m.PushQRCode("show", kit.Format(m.Conf(TOTP, kit.Keym(kit.MDB_LINK)), value[kit.MDB_NAME], value[SECRET]))
+						m.Echo(_totp_get(value[SECRET], kit.Int(value[NUMBER]), kit.Int64(value[PERIOD])))
+					}
 				})
+				m.PushAction(mdb.REMOVE)
 			}},
 		},
 	})

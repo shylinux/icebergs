@@ -114,11 +114,9 @@ func (m *Message) PushSearchWeb(cmd string, name string) {
 }
 
 func Render(m *Message, cmd string, args ...interface{}) string {
-	m.Debug("waht %v", cmd)
 	if m.Option(MSG_USERUA) == "" || strings.Contains(m.Option(MSG_USERUA), "curl") {
 		return ""
 	}
-	m.Debug("waht %v", cmd)
 
 	switch arg := kit.Simple(args...); cmd {
 	case RENDER_DOWNLOAD: // [name] file

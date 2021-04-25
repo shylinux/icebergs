@@ -66,6 +66,7 @@ const (
 	PROTOCOL = "protocol"
 
 	LOCALHOST = "localhost"
+	IP        = "ip"
 )
 const HOST = "host"
 

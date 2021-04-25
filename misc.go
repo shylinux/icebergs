@@ -1,16 +1,12 @@
 package ice
 
 import (
-	kit "github.com/shylinux/toolkits"
-
-	"bytes"
-	"encoding/base64"
 	"fmt"
 	"net/url"
 	"path"
 	"strings"
 
-	"github.com/skip2/go-qrcode"
+	kit "github.com/shylinux/toolkits"
 )
 
 func (m *Message) Prefix(arg ...string) string {
@@ -115,6 +111,10 @@ func (m *Message) PushSearchWeb(cmd string, name string) {
 
 func Render(m *Message, cmd string, args ...interface{}) string {
 	if m.Option(MSG_USERUA) == "" || strings.Contains(m.Option(MSG_USERUA), "curl") {
+		switch arg := kit.Simple(args...); cmd {
+		case RENDER_QRCODE: // text [size]
+			return m.Cmdx("cli.qrcode", arg[0])
+		}
 		return ""
 	}
 
@@ -150,12 +150,7 @@ func Render(m *Message, cmd string, args ...interface{}) string {
 		return fmt.Sprintf(`<video src="%s" height=%s controls>`, arg[0], kit.Select("120", arg, 1))
 
 	case RENDER_QRCODE: // text [size]
-		buf := bytes.NewBuffer(make([]byte, 0, MOD_BUFS))
-		if qr, e := qrcode.New(arg[0], qrcode.Medium); m.Assert(e) {
-			m.Assert(qr.Write(kit.Int(kit.Select("240", arg, 1)), buf))
-		}
-		src := "data:image/png;base64," + base64.StdEncoding.EncodeToString(buf.Bytes())
-		return fmt.Sprintf(`<img src="%s" title='%s' height=%s>`, src, arg[0], kit.Select("240", arg, 1))
+		return m.Cmdx("cli.qrcode", arg[0])
 
 	case RENDER_SCRIPT: // type text
 		if len(arg) == 1 && arg[0] != kit.SSH_BREAK {

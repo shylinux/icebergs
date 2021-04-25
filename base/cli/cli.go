@@ -96,4 +96,6 @@ var Index = &ice.Context{Name: "cli", Help: "命令模块",
 	},
 }
 
-func init() { ice.Index.Register(Index, nil, RUNTIME, SYSTEM, DAEMON, PYTHON, OUTPUT, PROGRESS) }
+func init() {
+	ice.Index.Register(Index, nil, RUNTIME, SYSTEM, DAEMON, QRCODE, PYTHON, OUTPUT, PROGRESS)
+}

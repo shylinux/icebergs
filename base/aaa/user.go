@@ -139,6 +139,9 @@ func init() {
 						_user_search(m, arg[0], arg[1], kit.Select("", arg, 2))
 					}
 				}},
+				"login": {Name: "login", Help: "登录", Hand: func(m *ice.Message, arg ...string) {
+					m.EchoQRCode("hi")
+				}},
 			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 				m.Fields(len(arg) == 0, "time,username,userzone,usernick")
 				m.Cmdy(mdb.SELECT, USER, "", mdb.HASH, USERNAME, arg)

@@ -8,7 +8,6 @@ import (
 	"github.com/shylinux/icebergs/base/tcp"
 	"github.com/shylinux/icebergs/base/web"
 	"github.com/shylinux/icebergs/core/code"
-	"github.com/shylinux/icebergs/core/wiki"
 	kit "github.com/shylinux/toolkits"
 )
 
@@ -110,8 +109,8 @@ func init() {
 				m.Cmdy(mdb.SELECT, RIVER, kit.Keys(kit.MDB_HASH, m.Option(ice.MSG_RIVER), AUTH), mdb.HASH, kit.MDB_HASH, arg)
 				m.PushAction(mdb.REMOVE)
 				if len(arg) > 0 {
-					m.Push("qrcode", m.Cmdx(wiki.IMAGE, "qrcode", kit.MergeURL(m.Option(ice.MSG_USERWEB), RIVER, m.Option(ice.MSG_RIVER), web.SHARE, m.Option("share"))))
-					m.Push("inner", m.Cmdx(wiki.SPARK, "inner", kit.MergeURL(m.Option(ice.MSG_USERWEB), RIVER, m.Option(ice.MSG_RIVER), web.SHARE, m.Option("share"))))
+					m.PushQRCode("qrcode", kit.MergeURL(m.Option(ice.MSG_USERWEB), RIVER, m.Option(ice.MSG_RIVER), web.SHARE, m.Option("share")))
+					m.PushScript("script", kit.MergeURL(m.Option(ice.MSG_USERWEB), RIVER, m.Option(ice.MSG_RIVER), web.SHARE, m.Option("share")))
 				}
 			}},
 			NODE: {Name: "node name ctx cmd auto insert invite", Help: "设备", Action: map[string]*ice.Action{
@@ -246,8 +245,8 @@ func init() {
 			USER: {Name: "user username auto insert invite", Help: "用户", Action: map[string]*ice.Action{
 				aaa.INVITE: {Name: "invite", Help: "邀请", Hand: func(m *ice.Message, arg ...string) {
 					share := m.Option(web.SHARE, m.Cmdx(m.Prefix(AUTH), mdb.CREATE, kit.MDB_TYPE, USER))
-					m.Cmdy(wiki.SPARK, "inner", kit.MergeURL(m.Option(ice.MSG_USERWEB), RIVER, m.Option(ice.MSG_RIVER), web.SHARE, share))
-					m.Cmdy(wiki.IMAGE, "qrcode", kit.MergeURL(m.Option(ice.MSG_USERWEB), RIVER, m.Option(ice.MSG_RIVER), web.SHARE, share))
+					m.EchoScript(kit.MergeURL(m.Option(ice.MSG_USERWEB), RIVER, m.Option(ice.MSG_RIVER), web.SHARE, share))
+					m.EchoQRCode(kit.MergeURL(m.Option(ice.MSG_USERWEB), RIVER, m.Option(ice.MSG_RIVER), web.SHARE, share))
 					m.Render("")
 				}},
 				mdb.INSERT: {Name: "insert username", Help: "添加", Hand: func(m *ice.Message, arg ...string) {

@@ -4,7 +4,6 @@ import (
 	ice "github.com/shylinux/icebergs"
 	"github.com/shylinux/icebergs/base/aaa"
 	kit "github.com/shylinux/toolkits"
-	"github.com/skip2/go-qrcode"
 
 	"fmt"
 	"net/http"
@@ -48,10 +47,8 @@ func Render(msg *ice.Message, cmd string, args ...interface{}) {
 		}
 
 	case ice.RENDER_QRCODE: // text [size]
-		if qr, e := qrcode.New(arg[0], qrcode.Medium); msg.Assert(e) {
-			msg.W.Header().Set(ContentType, ContentPNG)
-			msg.Assert(qr.Write(kit.Int(kit.Select("256", arg, 1)), msg.W))
-		}
+		msg.W.Header().Set(ContentType, ContentPNG)
+		fmt.Fprint(msg.W, msg.Cmdx("cli.qrcode", arg))
 
 	case ice.RENDER_RESULT:
 		if len(arg) > 0 { // [str [arg...]]

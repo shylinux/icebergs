@@ -8,7 +8,6 @@ import (
 	"github.com/shylinux/icebergs/base/nfs"
 	"github.com/shylinux/icebergs/base/web"
 	"github.com/shylinux/icebergs/core/code"
-	"github.com/shylinux/icebergs/core/wiki"
 	kit "github.com/shylinux/toolkits"
 
 	"path"
@@ -85,8 +84,8 @@ var Index = &ice.Context{Name: TMUX, Help: "工作台",
 			}},
 		}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			text := m.Cmdx(cli.SYSTEM, TMUX, "show-buffer")
-			m.Cmdy(wiki.IMAGE, "qrcode", text)
-			m.Cmdy(wiki.SPARK, "inner", text)
+			m.EchoQRCode(text)
+			m.EchoScript(text)
 			m.Render("")
 		}},
 		BUFFER: {Name: "buffer name value auto export import", Help: "缓存", Action: map[string]*ice.Action{

@@ -3,7 +3,6 @@ package ssh
 import (
 	ice "github.com/shylinux/icebergs"
 	"github.com/shylinux/icebergs/base/aaa"
-	"github.com/shylinux/icebergs/base/cli"
 	"github.com/shylinux/icebergs/base/mdb"
 	"github.com/shylinux/icebergs/base/nfs"
 	kit "github.com/shylinux/toolkits"
@@ -25,7 +24,7 @@ func Render(msg *ice.Message, cmd string, args ...interface{}) {
 		fmt.Fprint(msg.O, msg.Result())
 
 	case ice.RENDER_QRCODE:
-		fmt.Fprint(msg.O, msg.Cmdx(cli.PYTHON, "qrcode", kit.Format(args[0], args[1:]...)))
+		fmt.Fprint(msg.O, msg.Cmdx("cli.qrcode", kit.Format(args[0], args[1:]...)))
 
 	case ice.RENDER_DOWNLOAD:
 		if f, e := os.Open(arg[0]); e == nil {

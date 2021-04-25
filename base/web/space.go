@@ -247,6 +247,10 @@ func init() {
 							m.Event(SPACE_START, args...)
 							defer m.Event(SPACE_STOP, args...)
 						}
+						switch kind {
+						case "chrome":
+							m.Cmd(SPACE, name, "pwd", name)
+						}
 
 						frame := m.Target().Server().(*Frame)
 						_space_handle(m, false, frame.send, s, name)

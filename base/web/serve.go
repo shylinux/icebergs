@@ -242,12 +242,6 @@ func init() {
 					for _, k := range kit.Split(m.Option(SPIDE_DEV)) {
 						m.Cmd(SPACE, tcp.DIAL, SPIDE_DEV, k, kit.MDB_NAME, ice.Info.NodeName)
 					}
-
-					if m.Conf(SERVE, kit.Keym(SHARE)) == "" {
-						share := kit.Format("%s://%s:%s", m.Option("proto"), m.Cmd(tcp.HOST).Append(tcp.IP), m.Option(tcp.PORT))
-						m.Debug("share: %v", share)
-						m.Conf(SERVE, kit.Keym(SHARE), share)
-					}
 				}},
 			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 				m.Option(mdb.FIELDS, kit.Select("time,status,name,port,dev", mdb.DETAIL, len(arg) > 0))

@@ -131,7 +131,7 @@ func init() {
 				mdb.MODIFY: {Name: "modify", Help: "编辑", Hand: func(m *ice.Message, arg ...string) {
 					m.Cmdy(mdb.MODIFY, USER, "", mdb.HASH, USERNAME, m.Option(USERNAME), arg)
 				}},
-				mdb.REMOVE: {Name: "remove", Help: "删除", Hand: func(m *ice.Message, arg ...string) {
+				mdb.REMOVE: {Name: "remove username", Help: "删除", Hand: func(m *ice.Message, arg ...string) {
 					_user_remove(m, m.Option(USERNAME))
 				}},
 				mdb.SEARCH: {Name: "search type name text", Help: "搜索", Hand: func(m *ice.Message, arg ...string) {

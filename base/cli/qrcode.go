@@ -40,8 +40,9 @@ func _qrcode_web(m *ice.Message, arg ...string) {
 	if qr, e := qrcode.New(arg[0], qrcode.Medium); m.Assert(e) {
 		m.Assert(qr.Write(kit.Int(kit.Select("240", arg, 1)), buf))
 	}
-	src := "data:image/png;base64," + base64.StdEncoding.EncodeToString(buf.Bytes())
-	m.Echo(`<img src="%s" title='%s' height=%s>`, src, arg[0], kit.Select("240", arg, 1))
+	m.Option("byte", buf.Bytes())
+	data := base64.StdEncoding.EncodeToString(buf.Bytes())
+	m.Echo(`<img src="data:image/png;base64,%s" title='%s' height=%s>`, data, arg[0], kit.Select("240", arg, 1))
 }
 
 const QRCODE = "qrcode"

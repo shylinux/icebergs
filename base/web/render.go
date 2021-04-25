@@ -3,6 +3,7 @@ package web
 import (
 	ice "github.com/shylinux/icebergs"
 	"github.com/shylinux/icebergs/base/aaa"
+	"github.com/shylinux/icebergs/base/cli"
 	kit "github.com/shylinux/toolkits"
 
 	"fmt"
@@ -47,8 +48,10 @@ func Render(msg *ice.Message, cmd string, args ...interface{}) {
 		}
 
 	case ice.RENDER_QRCODE: // text [size]
-		msg.W.Header().Set(ContentType, ContentPNG)
-		fmt.Fprint(msg.W, msg.Cmdx("cli.qrcode", arg))
+		if data, ok := msg.Cmd(cli.QRCODE, arg).Optionv("byte").([]byte); ok {
+			msg.W.Header().Set(ContentType, ContentPNG)
+			msg.W.Write(data)
+		}
 
 	case ice.RENDER_RESULT:
 		if len(arg) > 0 { // [str [arg...]]

@@ -78,6 +78,7 @@ const (
 	LOGIN = "login"
 	RIVER = "river"
 	STORM = "storm"
+	APPLY = "apply"
 )
 const SHARE = "share"
 
@@ -99,6 +100,18 @@ func init() {
 				mdb.SELECT: {Name: "select hash", Help: "查询", Hand: func(m *ice.Message, arg ...string) {
 					m.Option(mdb.FIELDS, "time,userrole,username,river,storm,type,name,text")
 					m.Cmdy(mdb.SELECT, SHARE, "", mdb.HASH, kit.MDB_HASH, m.Option(kit.MDB_HASH))
+				}},
+
+				LOGIN: {Name: "login", Help: "登录", Hand: func(m *ice.Message, arg ...string) {
+					m.EchoQRCode(kit.MergeURL(m.Conf(SHARE, kit.Keym(kit.MDB_DOMAIN)),
+						SHARE, m.Cmdx(SHARE, mdb.CREATE, kit.MDB_TYPE, LOGIN, aaa.USERNAME, ice.Info.UserName)))
+				}},
+				APPLY: {Name: "apply", Help: "申请", Hand: func(m *ice.Message, arg ...string) {
+					m.EchoQRCode(kit.MergeURL(m.Conf(SHARE, kit.Keym(kit.MDB_DOMAIN)),
+						SHARE, m.Cmdx(SHARE, mdb.CREATE, kit.MDB_TYPE, APPLY)))
+				}},
+				"auth": {Name: "auth", Help: "授权", Hand: func(m *ice.Message, arg ...string) {
+					m.Cmdy(mdb.MODIFY, SHARE, "", mdb.HASH, kit.MDB_HASH, arg)
 				}},
 			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 				m.Option(mdb.FIELDS, kit.Select("time,hash,userrole,username,river,storm,type,name,text", mdb.DETAIL, len(arg) > 0))
@@ -123,7 +136,7 @@ func init() {
 				}
 
 				switch msg.Append(kit.MDB_TYPE) {
-				case LOGIN, RIVER:
+				case LOGIN, APPLY, RIVER:
 					switch kit.Select("", arg, 1) {
 					case SHARE:
 						m.Render(ice.RENDER_QRCODE, kit.MergeURL2(m.Option(ice.MSG_USERWEB), "/", list))

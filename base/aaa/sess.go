@@ -69,9 +69,6 @@ func init() {
 		},
 		Commands: map[string]*ice.Command{
 			SESS: {Name: "sess hash auto", Help: "会话", Action: map[string]*ice.Action{
-				mdb.CREATE: {Name: "create", Help: "创建", Hand: func(m *ice.Message, arg ...string) {
-					m.EchoQRCode(kit.MergeURL(m.Conf("web.serve", "meta.share"), "share", m.Cmdx("web.share", mdb.CREATE, kit.MDB_TYPE, "login", USERNAME, ice.Info.UserName)))
-				}},
 				mdb.REMOVE: {Name: "remove", Help: "删除", Hand: func(m *ice.Message, arg ...string) {
 					m.Cmdy(mdb.DELETE, SESS, "", mdb.HASH, kit.MDB_HASH, m.Option(kit.MDB_HASH))
 				}},

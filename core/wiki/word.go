@@ -71,11 +71,11 @@ func _title_show(m *ice.Message, kind, text string, arg ...string) {
 
 	// 渲染引擎
 	_option(m, TITLE, text, text, arg...)
-	m.Render(ice.RENDER_TEMPLATE, m.Conf(TITLE, "meta.template"))
+	m.Render(ice.RENDER_TEMPLATE, m.Conf(TITLE, kit.Keym(kit.MDB_TEMPLATE)))
 }
 func _brief_show(m *ice.Message, name, text string, arg ...string) {
 	_option(m, BRIEF, name, text, arg...)
-	m.Render(ice.RENDER_TEMPLATE, m.Conf(BRIEF, "meta.template"))
+	m.Render(ice.RENDER_TEMPLATE, m.Conf(BRIEF, kit.Keym(kit.MDB_TEMPLATE)))
 }
 func _refer_show(m *ice.Message, name, text string, arg ...string) {
 	list := [][]string{}
@@ -89,7 +89,7 @@ func _refer_show(m *ice.Message, name, text string, arg ...string) {
 	m.Optionv("list", list)
 
 	_option(m, REFER, name, text, arg...)
-	m.Render(ice.RENDER_TEMPLATE, m.Conf(REFER, "meta.template"))
+	m.Render(ice.RENDER_TEMPLATE, m.Conf(REFER, kit.Keym(kit.MDB_TEMPLATE)))
 }
 func _spark_show(m *ice.Message, name, text string, arg ...string) {
 	switch text = strings.TrimSpace(text); name {
@@ -108,13 +108,13 @@ func _spark_show(m *ice.Message, name, text string, arg ...string) {
 	m.Optionv("list", kit.Split(text, "\n", "\n"))
 
 	_option(m, SPARK, name, text, arg...)
-	m.Render(ice.RENDER_TEMPLATE, m.Conf(SPARK, "meta.template"))
+	m.Render(ice.RENDER_TEMPLATE, m.Conf(SPARK, kit.Keym(kit.MDB_TEMPLATE)))
 }
 
 func _order_show(m *ice.Message, name, text string, arg ...string) {
 	m.Optionv("list", kit.Split(strings.TrimSpace(text), "\n"))
 	_option(m, ORDER, name, text, arg...)
-	m.Render(ice.RENDER_TEMPLATE, m.Conf(ORDER, "meta.template"))
+	m.Render(ice.RENDER_TEMPLATE, m.Conf(ORDER, kit.Keym(kit.MDB_TEMPLATE)))
 }
 func _table_show(m *ice.Message, name, text string, arg ...string) {
 	head, list := []string{}, [][]string{}
@@ -145,17 +145,17 @@ func _table_show(m *ice.Message, name, text string, arg ...string) {
 	m.Optionv("list", list)
 
 	_option(m, TABLE, name, text, arg...)
-	m.Render(ice.RENDER_TEMPLATE, m.Conf(TABLE, "meta.template"))
+	m.Render(ice.RENDER_TEMPLATE, m.Conf(TABLE, kit.Keym(kit.MDB_TEMPLATE)))
 }
 func _shell_show(m *ice.Message, name, text string, arg ...string) {
 	m.Option("output", m.Cmdx(cli.SYSTEM, "sh", "-c", m.Option("input", text)))
 	_option(m, SHELL, name, text, arg...)
-	m.Render(ice.RENDER_TEMPLATE, m.Conf(SHELL, "meta.template"))
+	m.Render(ice.RENDER_TEMPLATE, m.Conf(SHELL, kit.Keym(kit.MDB_TEMPLATE)))
 }
 func _local_show(m *ice.Message, name, text string, arg ...string) {
 	m.Option("input", m.Cmdx(nfs.CAT, text))
 	_option(m, LOCAL, name, text, arg...)
-	m.Render(ice.RENDER_TEMPLATE, m.Conf(LOCAL, "meta.template"))
+	m.Render(ice.RENDER_TEMPLATE, m.Conf(LOCAL, kit.Keym(kit.MDB_TEMPLATE)))
 }
 
 func _image_show(m *ice.Message, name, text string, arg ...string) {
@@ -168,7 +168,7 @@ func _image_show(m *ice.Message, name, text string, arg ...string) {
 	}
 
 	_option(m, IMAGE, name, text, arg...)
-	m.Render(ice.RENDER_TEMPLATE, m.Conf(IMAGE, "meta.template"))
+	m.Render(ice.RENDER_TEMPLATE, m.Conf(IMAGE, kit.Keym(kit.MDB_TEMPLATE)))
 }
 func _chart_show(m *ice.Message, kind, name, text string, arg ...string) {
 	var chart Chart
@@ -217,7 +217,7 @@ func _chart_show(m *ice.Message, kind, name, text string, arg ...string) {
 	m.Option("height", chart.GetHeight())
 
 	// 渲染引擎
-	m.Render(ice.RENDER_TEMPLATE, m.Conf(CHART, "meta.template"))
+	m.Render(ice.RENDER_TEMPLATE, m.Conf(CHART, kit.Keym(kit.MDB_TEMPLATE)))
 	chart.Draw(m, 0, 0)
 	m.Render(ice.RENDER_TEMPLATE, m.Conf(CHART, "meta.suffix"))
 }
@@ -275,11 +275,11 @@ func _field_show(m *ice.Message, name, text string, arg ...string) {
 
 	// 渲染引擎
 	m.Option("meta", data)
-	m.Render(ice.RENDER_TEMPLATE, m.Conf(FIELD, "meta.template"))
+	m.Render(ice.RENDER_TEMPLATE, m.Conf(FIELD, kit.Keym(kit.MDB_TEMPLATE)))
 }
 func _other_show(m *ice.Message, name, text string, arg ...string) {
 	_option(m, OTHER, name, text, arg...)
-	m.Render(ice.RENDER_TEMPLATE, m.Conf(OTHER, "meta.template"))
+	m.Render(ice.RENDER_TEMPLATE, m.Conf(OTHER, kit.Keym(kit.MDB_TEMPLATE)))
 }
 
 func _word_show(m *ice.Message, name string, arg ...string) {
@@ -325,20 +325,20 @@ const WORD = "word"
 func init() {
 	Index.Merge(&ice.Context{
 		Configs: map[string]*ice.Config{
-			TITLE: {Name: TITLE, Help: "标题", Value: kit.Data("template", title)},
-			BRIEF: {Name: BRIEF, Help: "摘要", Value: kit.Data("template", brief)},
-			REFER: {Name: REFER, Help: "参考", Value: kit.Data("template", refer)},
-			SPARK: {Name: SPARK, Help: "段落", Value: kit.Data("template", spark, "prompt", kit.Dict("shell", "$ "))},
+			TITLE: {Name: TITLE, Help: "标题", Value: kit.Data(kit.MDB_TEMPLATE, title)},
+			BRIEF: {Name: BRIEF, Help: "摘要", Value: kit.Data(kit.MDB_TEMPLATE, brief)},
+			REFER: {Name: REFER, Help: "参考", Value: kit.Data(kit.MDB_TEMPLATE, refer)},
+			SPARK: {Name: SPARK, Help: "段落", Value: kit.Data(kit.MDB_TEMPLATE, spark, "prompt", kit.Dict("shell", "$ "))},
 
-			ORDER: {Name: ORDER, Help: "列表", Value: kit.Data("template", order)},
-			TABLE: {Name: TABLE, Help: "表格", Value: kit.Data("template", table)},
-			SHELL: {Name: SHELL, Help: "命令", Value: kit.Data("template", shell)},
-			LOCAL: {Name: LOCAL, Help: "文件", Value: kit.Data("template", local)},
+			ORDER: {Name: ORDER, Help: "列表", Value: kit.Data(kit.MDB_TEMPLATE, order)},
+			TABLE: {Name: TABLE, Help: "表格", Value: kit.Data(kit.MDB_TEMPLATE, table)},
+			SHELL: {Name: SHELL, Help: "命令", Value: kit.Data(kit.MDB_TEMPLATE, shell)},
+			LOCAL: {Name: LOCAL, Help: "文件", Value: kit.Data(kit.MDB_TEMPLATE, local)},
 
-			IMAGE: {Name: IMAGE, Help: "图片", Value: kit.Data("template", image)},
-			CHART: {Name: CHART, Help: "图表", Value: kit.Data("template", chart, "suffix", `</svg>`)},
-			FIELD: {Name: FIELD, Help: "插件", Value: kit.Data("template", field)},
-			OTHER: {Name: FIELD, Help: "网页", Value: kit.Data("template", other)},
+			IMAGE: {Name: IMAGE, Help: "图片", Value: kit.Data(kit.MDB_TEMPLATE, image)},
+			CHART: {Name: CHART, Help: "图表", Value: kit.Data(kit.MDB_TEMPLATE, chart, "suffix", `</svg>`)},
+			FIELD: {Name: FIELD, Help: "插件", Value: kit.Data(kit.MDB_TEMPLATE, field)},
+			OTHER: {Name: FIELD, Help: "网页", Value: kit.Data(kit.MDB_TEMPLATE, other)},
 
 			WORD: {Name: WORD, Help: "语言文字", Value: kit.Data(
 				kit.MDB_PATH, "", "regs", ".*\\.shy", "alias", map[string]interface{}{

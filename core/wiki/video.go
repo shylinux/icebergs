@@ -8,7 +8,7 @@ import (
 
 func _video_show(m *ice.Message, name, text string, arg ...string) {
 	_option(m, VIDEO, name, text, arg...)
-	m.Render(ice.RENDER_TEMPLATE, m.Conf(VIDEO, "meta.template"))
+	m.Render(ice.RENDER_TEMPLATE, m.Conf(VIDEO, kit.Keym(kit.MDB_TEMPLATE)))
 }
 func _video_search(m *ice.Message, kind, name, text string) {
 	if kit.Contains(kind, "*") || kit.Contains(kind, VIDEO) {
@@ -22,7 +22,7 @@ func init() {
 	Index.Merge(&ice.Context{
 		Configs: map[string]*ice.Config{
 			VIDEO: {Name: "video", Help: "视频", Value: kit.Data(
-				kit.MDB_SHORT, kit.MDB_TEXT, "template", video,
+				kit.MDB_SHORT, kit.MDB_TEXT, kit.MDB_TEMPLATE, video,
 			)},
 		},
 		Commands: map[string]*ice.Command{

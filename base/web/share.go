@@ -102,9 +102,12 @@ func init() {
 					m.Cmdy(mdb.SELECT, SHARE, "", mdb.HASH, kit.MDB_HASH, m.Option(kit.MDB_HASH))
 				}},
 
-				LOGIN: {Name: "login", Help: "登录", Hand: func(m *ice.Message, arg ...string) {
+				LOGIN: {Name: "login userrole=void,tech username", Help: "登录", Hand: func(m *ice.Message, arg ...string) {
 					m.EchoQRCode(kit.MergeURL(m.Conf(SHARE, kit.Keym(kit.MDB_DOMAIN)),
-						SHARE, m.Cmdx(SHARE, mdb.CREATE, kit.MDB_TYPE, LOGIN, aaa.USERNAME, ice.Info.UserName)))
+						SHARE, m.Cmdx(SHARE, mdb.CREATE, kit.MDB_TYPE, LOGIN,
+							aaa.USERNAME, kit.Select(m.Option(ice.MSG_USERNAME), m.Option(aaa.USERNAME)),
+							aaa.USERROLE, m.Option(aaa.USERROLE),
+						)))
 				}},
 				APPLY: {Name: "apply", Help: "申请", Hand: func(m *ice.Message, arg ...string) {
 					m.EchoQRCode(kit.MergeURL(m.Conf(SHARE, kit.Keym(kit.MDB_DOMAIN)),
@@ -113,8 +116,10 @@ func init() {
 				"auth": {Name: "auth", Help: "授权", Hand: func(m *ice.Message, arg ...string) {
 					m.Cmdy(mdb.MODIFY, SHARE, "", mdb.HASH, kit.MDB_HASH, arg)
 				}},
+				mdb.INPUTS: {Name: "inputs", Help: "补全", Hand: func(m *ice.Message, arg ...string) {
+				}},
 			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-				m.Option(mdb.FIELDS, kit.Select("time,hash,userrole,username,river,storm,type,name,text", mdb.DETAIL, len(arg) > 0))
+				m.Fields(len(arg) == 0, "time,hash,type,name,text,userrole,username,river,storm")
 				m.Cmdy(mdb.SELECT, SHARE, "", mdb.HASH, kit.MDB_HASH, arg)
 				m.PushAction(mdb.REMOVE)
 
@@ -122,10 +127,12 @@ func init() {
 					m.PushAnchor(kit.MergeURL2(m.Option(ice.MSG_USERWEB), "/share/"+arg[0], SHARE, arg[0]))
 					m.PushScript("shell", kit.MergeURL2(m.Option(ice.MSG_USERWEB), "/share/"+arg[0], SHARE, arg[0]))
 					m.PushQRCode("share", kit.MergeURL2(m.Option(ice.MSG_USERWEB), "/share/"+arg[0], SHARE, arg[0]))
+				} else {
+					m.Option("_action", "login")
 				}
 			}},
 			"/share/": {Name: "/share/", Help: "共享链", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-				m.Option(mdb.FIELDS, kit.Select("time,hash,userrole,username,river,storm,type,name,text"))
+				m.Fields(true, "time,hash,userrole,username,river,storm,type,name,text")
 				msg := m.Cmd(mdb.SELECT, SHARE, "", mdb.HASH, kit.MDB_HASH, kit.Select(m.Option(SHARE), arg, 0))
 
 				list := []string{SHARE, kit.Select(m.Option(SHARE), arg, 0)}

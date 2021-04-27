@@ -16,7 +16,7 @@ import (
 )
 
 func _space_list(m *ice.Message, space string) {
-	m.Option(mdb.FIELDS, kit.Select("time,type,name,text", mdb.DETAIL, space != ""))
+	m.Fields(space == "", "time,type,name,text")
 	m.Cmdy(mdb.SELECT, SPACE, "", mdb.HASH, kit.MDB_NAME, space)
 
 	if space == "" {
@@ -180,8 +180,13 @@ func _space_search(m *ice.Message, kind, name, text string, arg ...string) {
 	m.Richs(SPACE, nil, kit.MDB_FOREACH, func(key string, value map[string]interface{}) {
 		if value = kit.GetMeta(value); strings.Contains(kit.Format(value[kit.MDB_NAME]), name) && value[kit.MDB_TYPE] != MASTER {
 			m.PushSearch(kit.SSH_CMD, SPACE, kit.MDB_TYPE, value[kit.MDB_TYPE], kit.MDB_NAME, value[kit.MDB_NAME],
-				kit.MDB_TEXT, kit.MergeURL(m.Option(ice.MSG_USERWEB), kit.SSH_POD, kit.Keys(m.Option(ice.MSG_USERPOD), value[kit.MDB_NAME])))
+				kit.MDB_TEXT, kit.MergeURL(m.Option(ice.MSG_USERWEB), kit.SSH_POD, kit.Keys(m.Option(ice.MSG_USERPOD), value)))
 		}
+	})
+
+	m.Cmd(tcp.HOST).Table(func(index int, value map[string]string, head []string) {
+		m.PushSearch(kit.SSH_CMD, SPACE, kit.MDB_TYPE, "local", kit.MDB_NAME, value[kit.MDB_NAME],
+			kit.MDB_TEXT, "http://"+value[tcp.IP]+":9020", kit.SSH_POD, kit.Keys(m.Option(ice.MSG_USERPOD), value))
 	})
 }
 

@@ -4,6 +4,7 @@ import (
 	"github.com/gorilla/websocket"
 	ice "github.com/shylinux/icebergs"
 	"github.com/shylinux/icebergs/base/aaa"
+	"github.com/shylinux/icebergs/base/cli"
 	"github.com/shylinux/icebergs/base/mdb"
 	"github.com/shylinux/icebergs/base/tcp"
 	kit "github.com/shylinux/toolkits"
@@ -254,7 +255,8 @@ func init() {
 						}
 						switch kind {
 						case "chrome":
-							m.Cmd(SPACE, name, "pwd", name)
+							link := kit.MergeURL(m.Conf(SHARE, kit.Keym(kit.MDB_DOMAIN)), "auth", name)
+							m.Cmd(SPACE, name, "pwd", name, link, m.Cmdx(cli.QRCODE, link))
 						}
 
 						frame := m.Target().Server().(*Frame)

@@ -53,11 +53,13 @@ func init() {
 			}},
 
 			P_HEADER: {Name: "/header", Help: "标题栏", Action: map[string]*ice.Action{
-				"auth": {Name: "auth share", Help: "用户授权", Hand: func(m *ice.Message, arg ...string) {
-					m.Cmd(web.SHARE, "auth", m.Option(web.SHARE), aaa.USERNAME, m.Option(ice.MSG_USERNAME))
+				"auth": {Name: "auth space", Help: "用户授权", Hand: func(m *ice.Message, arg ...string) {
+					if m.Option(ice.MSG_USERPOD) != "" {
+						m.Cmd(web.SPACE, m.Option(ice.MSG_USERPOD), m.Prefix(P_HEADER), kit.MDB_ACTION, "auth", arg)
+						return
+					}
 
-					space := m.Cmdy(web.SHARE, m.Option(web.SHARE)).Append(kit.MDB_NAME)
-					m.Cmd(web.SPACE, space, ice.MSG_SESSID, aaa.SessCreate(m, m.Option(ice.MSG_USERNAME)))
+					m.Cmd(web.SPACE, m.Option(web.SPACE), ice.MSG_SESSID, aaa.SessCreate(m, m.Option(ice.MSG_USERNAME)))
 				}},
 				APPLY: {Name: "apply", Help: "用户登录", Hand: func(m *ice.Message, arg ...string) {
 					m.Cmdy(web.SHARE, mdb.CREATE, kit.MDB_TYPE, web.APPLY, kit.MDB_NAME, m.Option(kit.MDB_NAME))

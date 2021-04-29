@@ -12,10 +12,11 @@ import (
 func _header_check(m *ice.Message) {
 	if m.Option(web.SHARE) != "" {
 		msg := m.Cmd(web.SHARE, m.Option(web.SHARE))
+
 		switch msg.Append(kit.MDB_TYPE) {
 		case web.LOGIN:
-			if m.Option(ice.MSG_SESSID) == "" {
-				web.Render(m, web.COOKIE, aaa.SessCreate(m, msg.Append(aaa.USERNAME)))
+			if m.Option(ice.MSG_USERNAME) != msg.Append(aaa.USERNAME) {
+				web.Render(m, web.COOKIE, aaa.SessCreate(m, m.Option(ice.MSG_USERNAME, msg.Append(aaa.USERNAME))))
 			}
 		case web.APPLY:
 		}
@@ -23,6 +24,7 @@ func _header_check(m *ice.Message) {
 		m.Option(kit.MDB_TYPE, msg.Append(kit.MDB_TYPE))
 		m.Option(kit.MDB_NAME, msg.Append(kit.MDB_NAME))
 		m.Option(kit.MDB_TEXT, msg.Append(kit.MDB_TEXT))
+		m.Option(aaa.USERNAME, msg.Append(aaa.USERNAME))
 	}
 	m.Option(web.SSO, m.Conf(web.SERVE, kit.Keym(web.SSO)))
 }
@@ -52,13 +54,13 @@ func init() {
 
 			P_HEADER: {Name: "/header", Help: "标题栏", Action: map[string]*ice.Action{
 				"auth": {Name: "auth share", Help: "用户授权", Hand: func(m *ice.Message, arg ...string) {
-					m.Cmd(web.SHARE, "auth", m.Option(web.SHARE), kit.MDB_NAME, m.Option(ice.MSG_USERNAME))
+					m.Cmd(web.SHARE, "auth", m.Option(web.SHARE), aaa.USERNAME, m.Option(ice.MSG_USERNAME))
 
-					space := m.Cmdy(web.SHARE, m.Option(web.SHARE)).Append(kit.MDB_TEXT)
+					space := m.Cmdy(web.SHARE, m.Option(web.SHARE)).Append(kit.MDB_NAME)
 					m.Cmd(web.SPACE, space, ice.MSG_SESSID, aaa.SessCreate(m, m.Option(ice.MSG_USERNAME)))
 				}},
 				APPLY: {Name: "apply", Help: "用户登录", Hand: func(m *ice.Message, arg ...string) {
-					m.Cmdy(web.SHARE, mdb.CREATE, kit.MDB_TYPE, web.APPLY, kit.MDB_TEXT, m.Option(kit.MDB_TEXT))
+					m.Cmdy(web.SHARE, mdb.CREATE, kit.MDB_TYPE, web.APPLY, kit.MDB_NAME, m.Option(kit.MDB_NAME))
 				}},
 				LOGIN: {Name: "login", Help: "用户登录", Hand: func(m *ice.Message, arg ...string) {
 					if aaa.UserLogin(m, arg[0], arg[1]) {

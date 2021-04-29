@@ -54,8 +54,9 @@ func init() {
 
 			P_HEADER: {Name: "/header", Help: "标题栏", Action: map[string]*ice.Action{
 				"auth": {Name: "auth space", Help: "用户授权", Hand: func(m *ice.Message, arg ...string) {
-					if m.Option(ice.MSG_USERPOD) != "" {
-						m.Cmd(web.SPACE, m.Option(ice.MSG_USERPOD), m.Prefix(P_HEADER), kit.MDB_ACTION, "auth", arg)
+					if pod := m.Option(kit.SSH_POD); pod != "" {
+						m.Option(kit.SSH_POD, "")
+						m.Cmd(web.SPACE, pod, m.Prefix(P_HEADER), kit.MDB_ACTION, "auth", arg)
 						return
 					}
 

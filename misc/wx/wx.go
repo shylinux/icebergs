@@ -29,6 +29,7 @@ func _wx_sign(m *ice.Message, nonce, stamp string) string {
 }
 func _wx_config(m *ice.Message, nonce string) {
 	m.Option(APPID, m.Conf(LOGIN, kit.Keym(APPID)))
+	m.Option("script", m.Conf(LOGIN, kit.Keym("script")))
 	m.Option("signature", _wx_sign(m, m.Option("noncestr", nonce), m.Option("timestamp", kit.Format(time.Now().Unix()))))
 }
 
@@ -108,6 +109,7 @@ const WX = "wx"
 var Index = &ice.Context{Name: WX, Help: "公众号",
 	Configs: map[string]*ice.Config{
 		LOGIN: {Name: LOGIN, Help: "认证", Value: kit.Data(
+			"script", "https://res.wx.qq.com/open/js/jweixin-1.6.0.js",
 			WEIXIN, "https://api.weixin.qq.com", APPID, "", APPMM, "", TOKEN, "",
 			kit.MDB_TEMPLATE, kit.Dict(kit.MDB_TEXT, text), MENU, []interface{}{
 				kit.Dict(wiki.TITLE, "网站主页", wiki.SPARK, "点击进入", wiki.REFER, "https://shylinux.com",

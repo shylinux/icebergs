@@ -181,7 +181,7 @@ func _space_search(m *ice.Message, kind, name, text string, arg ...string) {
 	m.Richs(SPACE, nil, kit.MDB_FOREACH, func(key string, value map[string]interface{}) {
 		if value = kit.GetMeta(value); strings.Contains(kit.Format(value[kit.MDB_NAME]), name) && value[kit.MDB_TYPE] != MASTER {
 			m.PushSearch(kit.SSH_CMD, SPACE, kit.MDB_TYPE, value[kit.MDB_TYPE], kit.MDB_NAME, value[kit.MDB_NAME],
-				kit.MDB_TEXT, kit.MergeURL(m.Option(ice.MSG_USERWEB), kit.SSH_POD, kit.Keys(m.Option(ice.MSG_USERPOD), value)))
+				kit.MDB_TEXT, kit.MergeURL(m.Option(ice.MSG_USERWEB), kit.SSH_POD, kit.Keys(m.Option(ice.MSG_USERPOD), value[kit.MDB_NAME])), value)
 		}
 	})
 
@@ -259,7 +259,7 @@ func init() {
 							if m.Option(ice.MSG_USERNAME) != "" {
 								break
 							}
-							link := kit.MergeURL(m.Conf(SHARE, kit.Keym(kit.MDB_DOMAIN)), "auth", name)
+							link := kit.MergeURL(m.Conf(SHARE, kit.Keym(kit.MDB_DOMAIN)), "grant", name)
 							go func() {
 								m.Sleep("100ms").Cmd(SPACE, name, "pwd", name, link, m.Cmdx(cli.QRCODE, link))
 							}()

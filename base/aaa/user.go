@@ -91,6 +91,8 @@ const (
 	INVITE = "invite"
 )
 const (
+	BACKGROUND = "background"
+
 	AVATAR = "avatar"
 	GENDER = "gender"
 	MOBILE = "mobile"

@@ -60,6 +60,7 @@ func init() {
 						return
 					}
 
+					m.Cmd(aaa.ROLE, kit.Select(aaa.TECH, aaa.VOID, m.Option(ice.MSG_USERROLE) == aaa.VOID), m.Option(ice.MSG_USERNAME))
 					m.Cmd(web.SPACE, m.Option(web.SPACE), ice.MSG_SESSID, aaa.SessCreate(m, m.Option(ice.MSG_USERNAME)))
 				}},
 				web.SHARE: {Name: "share type", Help: "共享", Hand: func(m *ice.Message, arg ...string) {

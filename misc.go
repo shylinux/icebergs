@@ -109,8 +109,12 @@ func (m *Message) PushSearchWeb(cmd string, name string) {
 	})
 }
 
+func (m *Message) IsTermUA() bool {
+	return m.Option(MSG_USERUA) == "" || strings.Contains(m.Option(MSG_USERUA), "curl")
+}
+
 func Render(m *Message, cmd string, args ...interface{}) string {
-	if m.Option(MSG_USERUA) == "" || strings.Contains(m.Option(MSG_USERUA), "curl") {
+	if m.IsTermUA() {
 		switch arg := kit.Simple(args...); cmd {
 		case RENDER_QRCODE: // text [size]
 			return m.Cmdx("cli.qrcode", arg[0])
@@ -181,9 +185,15 @@ func (m *Message) PushDownload(key string, arg ...interface{}) { // [name] file
 	m.Push(key, Render(m, RENDER_DOWNLOAD, arg...))
 }
 func (m *Message) PushAnchor(arg ...interface{}) { // [name] link
+	if m.IsTermUA() {
+		return
+	}
 	m.Push(kit.MDB_LINK, Render(m, RENDER_ANCHOR, arg...))
 }
 func (m *Message) PushButton(arg ...string) {
+	if m.IsTermUA() {
+		return
+	}
 	m.Push(kit.MDB_ACTION, Render(m, RENDER_BUTTON, strings.Join(arg, ",")))
 }
 func (m *Message) PushScript(arg ...string) *Message { // [type] text...

@@ -253,10 +253,16 @@ func init() {
 							m.Event(SPACE_START, args...)
 							defer m.Event(SPACE_STOP, args...)
 						}
+
 						switch kind {
-						case "chrome":
+						case CHROME:
+							if m.Option(ice.MSG_USERNAME) != "" {
+								break
+							}
 							link := kit.MergeURL(m.Conf(SHARE, kit.Keym(kit.MDB_DOMAIN)), "auth", name)
-							m.Cmd(SPACE, name, "pwd", name, link, m.Cmdx(cli.QRCODE, link))
+							go func() {
+								m.Sleep("100ms").Cmd(SPACE, name, "pwd", name, link, m.Cmdx(cli.QRCODE, link))
+							}()
 						}
 
 						frame := m.Target().Server().(*Frame)

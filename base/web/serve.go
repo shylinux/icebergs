@@ -57,15 +57,9 @@ func _serve_main(m *ice.Message, w http.ResponseWriter, r *http.Request) bool {
 
 	// 主页接口
 	if r.Method == "GET" && r.URL.Path == "/" {
-		msg, repos := m.Spawn(), ice.INTSHELL
-		if msg.W, msg.R = w, r; strings.Contains(r.Header.Get("User-Agent"), "curl") {
-			repos = ice.INTSHELL
-		} else {
-			repos = ice.VOLCANOS
-			if ice.DumpBinPack(w, r.URL.Path, func(name string) { RenderType(w, name, "") }) {
-				return false
-			}
-		}
+		msg := m.Spawn()
+		msg.W, msg.R = w, r
+		repos := kit.Select(ice.INTSHELL, ice.VOLCANOS, strings.Contains(r.Header.Get("User-Agent"), "Mozilla/5.0"))
 		Render(msg, ice.RENDER_DOWNLOAD, path.Join(m.Conf(SERVE, kit.Keym(repos, kit.SSH_PATH)), m.Conf(SERVE, kit.Keym(repos, kit.SSH_INDEX))))
 		return false
 	}

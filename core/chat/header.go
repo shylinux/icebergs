@@ -62,6 +62,9 @@ func init() {
 
 					m.Cmd(web.SPACE, m.Option(web.SPACE), ice.MSG_SESSID, aaa.SessCreate(m, m.Option(ice.MSG_USERNAME)))
 				}},
+				web.SHARE: {Name: "share type", Help: "共享", Hand: func(m *ice.Message, arg ...string) {
+					m.Cmdy(web.SHARE, mdb.CREATE, kit.MDB_TYPE, LOGIN, arg)
+				}},
 				APPLY: {Name: "apply", Help: "用户登录", Hand: func(m *ice.Message, arg ...string) {
 					m.Cmdy(web.SHARE, mdb.CREATE, kit.MDB_TYPE, web.APPLY, kit.MDB_NAME, m.Option(kit.MDB_NAME))
 				}},

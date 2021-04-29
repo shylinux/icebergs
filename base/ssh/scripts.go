@@ -387,10 +387,6 @@ func init() {
 					cb()
 				}
 			}},
-
-			"hi": {Name: "hi", Help: "hi", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-				m.Echo("what %v", kit.FileLine(1, 100))
-			}},
 		},
 	})
 }

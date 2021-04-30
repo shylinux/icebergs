@@ -33,6 +33,10 @@ func _header_grant(m *ice.Message, arg ...string) {
 	m.Cmd(aaa.ROLE, kit.Select(aaa.TECH, aaa.VOID, m.Option(ice.MSG_USERROLE) == aaa.VOID), m.Option(ice.MSG_USERNAME))
 	m.Cmd(web.SPACE, m.Option(web.SPACE), ice.MSG_SESSID, aaa.SessCreate(m, m.Option(ice.MSG_USERNAME)))
 }
+func _header_users(m *ice.Message, key string, arg ...string) {
+	m.Option(aaa.USERNAME, m.Option(ice.MSG_USERNAME))
+	m.Cmdy("aaa.user", kit.MDB_ACTION, mdb.MODIFY, key, m.Option(key, arg[0]))
+}
 
 const (
 	TITLE = "title"
@@ -74,19 +78,23 @@ func init() {
 				web.SHARE: {Name: "share type", Help: "用户共享", Hand: func(m *ice.Message, arg ...string) {
 					m.Cmdy(web.SHARE, mdb.CREATE, kit.MDB_TYPE, LOGIN, arg)
 				}},
+				aaa.AVATAR: {Name: "avatar", Help: "头像图片", Hand: func(m *ice.Message, arg ...string) {
+					_header_users(m, aaa.AVATAR, arg...)
+				}},
 				aaa.BACKGROUND: {Name: "background", Help: "背景图片", Hand: func(m *ice.Message, arg ...string) {
-					m.Option(aaa.USERNAME, m.Option(ice.MSG_USERNAME))
-					m.Cmdy("aaa.user", kit.MDB_ACTION, mdb.MODIFY, aaa.BACKGROUND, m.Option(aaa.BACKGROUND, arg[0]))
+					_header_users(m, aaa.BACKGROUND, arg...)
 				}},
 				aaa.USERNICK: {Name: "usernick", Help: "用户昵称", Hand: func(m *ice.Message, arg ...string) {
-					m.Option(aaa.USERNAME, m.Option(ice.MSG_USERNAME))
-					m.Cmdy("aaa.user", kit.MDB_ACTION, mdb.MODIFY, aaa.USERNICK, arg[0])
+					_header_users(m, aaa.USERNICK, arg...)
 				}},
 				aaa.USERROLE: {Name: "userrole", Help: "用户角色", Hand: func(m *ice.Message, arg ...string) {
 					m.Echo(aaa.UserRole(m, m.Option("who")))
 				}},
 			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-				m.Option(aaa.BACKGROUND, m.Cmd("aaa.user", m.Option(ice.MSG_USERNAME)).Append(aaa.BACKGROUND))
+				user := m.Cmd("aaa.user", m.Option(ice.MSG_USERNAME))
+				for _, k := range []string{aaa.AVATAR, aaa.BACKGROUND} {
+					m.Option(k, user.Append(k))
+				}
 				m.Echo(m.Conf(HEADER, kit.Keym(TITLE)))
 			}},
 		},

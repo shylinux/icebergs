@@ -140,8 +140,11 @@ func _space_handle(m *ice.Message, safe bool, send map[string]*ice.Message, c *w
 
 			if len(target) == 0 { // 本地执行
 				msg.Log_AUTH(aaa.USERROLE, msg.Option(ice.MSG_USERROLE), aaa.USERNAME, msg.Option(ice.MSG_USERNAME))
-				if msg.Optionv(ice.MSG_HANDLE, "true"); !msg.Warn(!safe, ice.ErrNotRight) {
+				if msg.Optionv(ice.MSG_HANDLE, "true"); safe {
 					msg.Go(func() { _space_exec(msg, source, target, c, name) })
+				} else {
+					msg.Push(kit.MDB_LINK, kit.MergePOD(_share_domain(msg), name))
+					_space_echo(msg, []string{}, kit.Revert(source)[1:], c, name)
 				}
 
 			} else if msg.Richs(SPACE, nil, target[0], func(key string, value map[string]interface{}) {
@@ -185,9 +188,10 @@ func _space_search(m *ice.Message, kind, name, text string, arg ...string) {
 		}
 	})
 
+	port := m.Cmd(SERVE, ice.Option{mdb.FIELDS, tcp.PORT}).Append(tcp.PORT)
 	m.Cmd(tcp.HOST).Table(func(index int, value map[string]string, head []string) {
-		m.PushSearch(kit.SSH_CMD, SPACE, kit.MDB_TYPE, "local", kit.MDB_NAME, value[kit.MDB_NAME],
-			kit.MDB_TEXT, "http://"+value[tcp.IP]+":9020", kit.SSH_POD, kit.Keys(m.Option(ice.MSG_USERPOD), value))
+		m.PushSearch(kit.SSH_CMD, SPACE, kit.MDB_TYPE, MYSELF, kit.MDB_NAME, value[kit.MDB_NAME],
+			kit.MDB_TEXT, kit.Format("http://%s:%s", value[tcp.IP], port), kit.SSH_POD, kit.Keys(m.Option(ice.MSG_USERPOD), value))
 	})
 }
 
@@ -231,7 +235,9 @@ func init() {
 
 			"/space/": {Name: "/space/ type name share river", Help: "空间站", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 				if s, e := websocket.Upgrade(m.W, m.R, nil, kit.Int(m.Conf(SPACE, "meta.buffer.r")), kit.Int(m.Conf(SPACE, "meta.buffer.w"))); m.Assert(e) {
-					name := m.Option(kit.MDB_NAME, strings.Replace(kit.Select(s.RemoteAddr().String(), m.Option(kit.MDB_NAME)), ".", "_", -1))
+					name := kit.Select(s.RemoteAddr().String(), m.Option(kit.MDB_NAME))
+					name = m.Option(kit.MDB_NAME, strings.Replace(name, ".", "_", -1))
+					name = m.Option(kit.MDB_NAME, strings.Replace(name, ":", "-", -1))
 					kind := kit.Select(WORKER, m.Option(kit.MDB_TYPE))
 					share := m.Option("share")
 					river := m.Option("river")
@@ -259,10 +265,11 @@ func init() {
 							if m.Option(ice.MSG_USERNAME) != "" {
 								break
 							}
-							link := kit.MergeURL(m.Conf(SHARE, kit.Keym(kit.MDB_DOMAIN)), "grant", name)
-							go func() {
-								m.Sleep("100ms").Cmd(SPACE, name, "pwd", name, link, m.Cmdx(cli.QRCODE, link))
-							}()
+
+							m.Go(func(msg *ice.Message) {
+								link := kit.MergeURL(_share_domain(msg), "grant", name)
+								msg.Sleep("100ms").Cmd(SPACE, name, "pwd", name, link, msg.Cmdx(cli.QRCODE, link))
+							})
 						}
 
 						frame := m.Target().Server().(*Frame)

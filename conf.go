@@ -75,6 +75,7 @@ const ( // MSG
 	MSG_USERZONE = "user.zone"
 	MSG_USERROLE = "user.role"
 
+	MSG_TITLE = "sess.title"
 	MSG_RIVER = "sess.river"
 	MSG_STORM = "sess.storm"
 	MSG_LOCAL = "sess.local"

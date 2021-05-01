@@ -143,7 +143,7 @@ func Render(m *Message, cmd string, args ...interface{}) string {
 		list := []string{}
 		for _, k := range kit.Split(strings.Join(arg, ",")) {
 			list = append(list, fmt.Sprintf(`<input type="button" name="%s" value="%s">`,
-				k, kit.Select(k, kit.Value(m.cmd.Meta, kit.Keys("trans", k)))))
+				k, kit.Select(k, kit.Value(m._cmd.Meta, kit.Keys("trans", k)))))
 		}
 		return strings.Join(list, "")
 
@@ -255,3 +255,11 @@ func (m *Message) RenameAppend(from, to string) {
 func (m *Message) Fields(condition bool, fields string) string {
 	return m.Option("fields", kit.Select(kit.Select("detail", fields, condition), m.Option("fields")))
 }
+
+type Option struct {
+	Name  string
+	Value interface{}
+}
+
+func OptionFields(str string) Option { return Option{"fields", str} }
+func OptionHash(str string) Option   { return Option{kit.MDB_HASH, str} }

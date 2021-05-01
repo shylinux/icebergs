@@ -1,13 +1,14 @@
 package chat
 
 import (
+	"path"
+	"strings"
+
 	ice "github.com/shylinux/icebergs"
 	"github.com/shylinux/icebergs/base/aaa"
 	"github.com/shylinux/icebergs/base/ctx"
 	"github.com/shylinux/icebergs/base/web"
 	kit "github.com/shylinux/toolkits"
-
-	"path"
 )
 
 func _action_domain(m *ice.Message, cmd string, arg ...string) (domain string) {
@@ -52,6 +53,29 @@ func _action_right(m *ice.Message, river string, storm string) (ok bool) {
 	}
 	return ok
 }
+func _action_share(m *ice.Message, cmd string, arg ...string) {
+	switch msg := m.Cmd(web.SHARE, arg[1]); msg.Append(kit.MDB_TYPE) {
+	case web.FIELD:
+		if cmd := kit.Keys(msg.Append(web.RIVER), msg.Append(web.STORM)); len(arg) == 2 {
+			m.Push("index", cmd)
+			m.Push("args", msg.Append(kit.MDB_TEXT))
+		} else {
+			if m.Warn(kit.Time() > kit.Time(msg.Append(kit.MDB_TIME)), ice.ErrExpire) {
+				return // 分享超时
+			}
+			m.Log_AUTH(
+				aaa.USERROLE, m.Option(ice.MSG_USERROLE, msg.Append(aaa.USERROLE)),
+				aaa.USERNAME, m.Option(ice.MSG_USERNAME, msg.Append(aaa.USERNAME)),
+			)
+			if m.Warn(!m.Right(arg[3:]), ice.ErrNotRight) {
+				return // 没有授权
+			}
+
+			m.Cmdy(cmd, arg[3:])
+		}
+	}
+}
+
 func _action_list(m *ice.Message, river, storm string) {
 	m.Option(ice.MSG_RIVER, river)
 	m.Cmdy(TOOL, storm).Table(func(index int, value map[string]string, head []string) {
@@ -106,26 +130,23 @@ func init() {
 			P_ACTION: {Name: "/action river storm action arg...", Help: "工作台", Action: map[string]*ice.Action{
 				ctx.COMMAND: {Name: "command", Help: "命令", Hand: func(m *ice.Message, arg ...string) {
 					for _, k := range arg {
-						m.Cmdy(ctx.COMMAND, k)
+						m.Cmdy(ctx.COMMAND, strings.TrimPrefix(k, "."))
 					}
+				}},
+				SHARE: {Name: "share", Help: "共享", Hand: func(m *ice.Message, arg ...string) {
+					_header_share(m, arg...)
 				}},
 			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 				if arg[0] == "_share" {
-					switch msg := m.Cmd(web.SHARE, arg[1]); msg.Append(kit.MDB_TYPE) {
-					case STORM:
-						m.Option(kit.MDB_TITLE, msg.Append(kit.MDB_NAME))
-						arg[0] = msg.Append(RIVER)
-						arg[1] = msg.Append(STORM)
-					default:
-						return
-					}
-				} else {
-					if m.Warn(m.Option(ice.MSG_USERNAME) == "", ice.ErrNotLogin) {
-						return // 没有登录
-					}
-					if m.Warn(!_action_right(m, arg[0], arg[1]), ice.ErrNotRight) {
-						return // 没有授权
-					}
+					_action_share(m, cmd, arg...)
+					return
+				}
+
+				if m.Warn(m.Option(ice.MSG_USERNAME) == "", ice.ErrNotLogin) {
+					return // 没有登录
+				}
+				if m.Warn(!_action_right(m, arg[0], arg[1]), ice.ErrNotRight) {
+					return // 没有授权
 				}
 
 				m.Option(ice.MSG_RIVER, arg[0])

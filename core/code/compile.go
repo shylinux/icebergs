@@ -51,6 +51,7 @@ func init() {
 						main = k
 					}
 				}
+				_autogen_version(m)
 
 				// 编译目标
 				file := path.Join(kit.Select("", m.Conf(cmd, kit.META_PATH), m.Option(cli.CMD_DIR) == ""), kit.Keys(kit.Select("ice", path.Base(strings.TrimSuffix(main, ".go")), main != "src/main.go"), goos, arch))

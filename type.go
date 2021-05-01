@@ -111,7 +111,7 @@ func (c *Context) _hand(m *Message, cmd *Command, key string, k string, h *Actio
 	return m
 }
 func (c *Context) cmd(m *Message, cmd *Command, key string, arg ...string) *Message {
-	if m.cmd = cmd; cmd == nil {
+	if m._cmd = cmd; cmd == nil {
 		return m
 	}
 
@@ -324,7 +324,7 @@ type Message struct {
 
 	source *Context
 	target *Context
-	cmd    *Command
+	_cmd   *Command
 
 	cb   func(*Message) *Message
 	W    http.ResponseWriter
@@ -628,10 +628,36 @@ func (m *Message) Search(key string, cb interface{}) *Message {
 	return m
 }
 
-func (m *Message) _hand(arg ...interface{}) *Message {
-	list := kit.Simple(arg...)
-	if len(arg) > 0 {
-		switch cb := arg[len(arg)-1]; cbs := cb.(type) {
+func (m *Message) Cmdy(arg ...interface{}) *Message {
+	return m.Copy(m.cmd(arg...))
+}
+func (m *Message) Cmdx(arg ...interface{}) string {
+	return kit.Select("", m.cmd(arg...).meta[MSG_RESULT], 0)
+}
+func (m *Message) Cmds(arg ...interface{}) *Message {
+	return m.Go(func() { m.cmd(arg...) })
+}
+func (m *Message) Cmd(arg ...interface{}) *Message {
+	return m.cmd(arg...)
+}
+func (m *Message) cmd(arg ...interface{}) *Message {
+	opts := map[string]interface{}{}
+	args := []interface{}{}
+
+	for _, v := range arg {
+		switch val := v.(type) {
+		case Option:
+			opts[val.Name] = val.Value
+		case *Option:
+			opts[val.Name] = val.Value
+		default:
+			args = append(args, v)
+		}
+	}
+
+	list := kit.Simple(args...)
+	if len(args) > 0 {
+		switch cb := args[len(args)-1]; cbs := cb.(type) {
 		case string:
 		default:
 			if reflect.Func == reflect.TypeOf(cbs).Kind() {
@@ -650,15 +676,24 @@ func (m *Message) _hand(arg ...interface{}) *Message {
 
 	if cmd, ok := m.target.Commands[list[0]]; ok {
 		m.TryCatch(m.Spawn(), true, func(msg *Message) {
+			for k, v := range opts {
+				msg.Option(k, v)
+			}
 			m = m.target.cmd(msg, cmd, list[0], list[1:]...)
 		})
 	} else if cmd, ok := m.source.Commands[list[0]]; ok {
 		m.TryCatch(m.Spawn(m.source), true, func(msg *Message) {
+			for k, v := range opts {
+				msg.Option(k, v)
+			}
 			m = m.source.cmd(msg, cmd, list[0], list[1:]...)
 		})
 	} else {
 		m.Search(list[0], func(p *Context, s *Context, key string, cmd *Command) {
 			m.TryCatch(m.Spawn(s), true, func(msg *Message) {
+				for k, v := range opts {
+					msg.Option(k, v)
+				}
 				m = s.cmd(msg, cmd, key, list[1:]...)
 			})
 		})
@@ -669,18 +704,7 @@ func (m *Message) _hand(arg ...interface{}) *Message {
 	}
 	return m
 }
-func (m *Message) Cmdy(arg ...interface{}) *Message {
-	return m.Copy(m._hand(arg...))
-}
-func (m *Message) Cmdx(arg ...interface{}) string {
-	return kit.Select("", m._hand(arg...).meta[MSG_RESULT], 0)
-}
-func (m *Message) Cmds(arg ...interface{}) *Message {
-	return m.Go(func() { m._hand(arg...) })
-}
-func (m *Message) Cmd(arg ...interface{}) *Message {
-	return m._hand(arg...)
-}
+
 func (m *Message) Confv(arg ...interface{}) (val interface{}) {
 	m.Search(kit.Format(arg[0]), func(p *Context, s *Context, key string, conf *Config) {
 		if len(arg) == 1 {

@@ -4,6 +4,7 @@ import (
 	ice "github.com/shylinux/icebergs"
 	"github.com/shylinux/icebergs/base/aaa"
 	"github.com/shylinux/icebergs/base/mdb"
+	"github.com/shylinux/icebergs/base/tcp"
 	kit "github.com/shylinux/toolkits"
 
 	"net/http"
@@ -13,6 +14,16 @@ import (
 	"time"
 )
 
+func _share_domain(m *ice.Message) string {
+	link := m.Conf(SHARE, kit.Keym(kit.MDB_DOMAIN))
+	if link == "" {
+		link = m.Cmd(SPACE, SPIDE_DEV, kit.SSH_PWD).Append(kit.MDB_LINK)
+	}
+	if link == "" {
+		link = kit.Format("http://%s:%s", m.Cmd(tcp.HOST).Append(tcp.IP), m.Cmd(SERVE).Append(tcp.PORT))
+	}
+	return link
+}
 func _share_cache(m *ice.Message, arg ...string) {
 	msg := m.Cmd(CACHE, arg[0])
 	m.Render(ice.RENDER_DOWNLOAD, msg.Append(kit.MDB_FILE), msg.Append(kit.MDB_TYPE), msg.Append(kit.MDB_NAME))
@@ -78,7 +89,7 @@ const (
 	LOGIN = "login"
 	RIVER = "river"
 	STORM = "storm"
-	APPLY = "apply"
+	FIELD = "field"
 )
 const SHARE = "share"
 
@@ -94,6 +105,9 @@ func init() {
 						aaa.USERROLE, m.Option(ice.MSG_USERROLE), aaa.USERNAME, m.Option(ice.MSG_USERNAME),
 						RIVER, m.Option(ice.MSG_RIVER), STORM, m.Option(ice.MSG_STORM), arg)
 				}},
+				mdb.MODIFY: {Name: "modify", Help: "编辑", Hand: func(m *ice.Message, arg ...string) {
+					m.Cmdy(mdb.MODIFY, SHARE, "", mdb.HASH, kit.MDB_HASH, m.Option(kit.MDB_HASH), arg)
+				}},
 				mdb.REMOVE: {Name: "remove", Help: "删除", Hand: func(m *ice.Message, arg ...string) {
 					m.Cmdy(mdb.DELETE, SHARE, "", mdb.HASH, kit.MDB_HASH, m.Option(kit.MDB_HASH))
 				}},
@@ -101,22 +115,14 @@ func init() {
 					m.Option(mdb.FIELDS, "time,userrole,username,river,storm,type,name,text")
 					m.Cmdy(mdb.SELECT, SHARE, "", mdb.HASH, kit.MDB_HASH, m.Option(kit.MDB_HASH))
 				}},
+				mdb.INPUTS: {Name: "inputs", Help: "补全", Hand: func(m *ice.Message, arg ...string) {}},
 
 				LOGIN: {Name: "login userrole=void,tech username", Help: "登录", Hand: func(m *ice.Message, arg ...string) {
-					m.EchoQRCode(kit.MergeURL(m.Conf(SHARE, kit.Keym(kit.MDB_DOMAIN)),
+					m.EchoQRCode(kit.MergeURL(_share_domain(m),
 						SHARE, m.Cmdx(SHARE, mdb.CREATE, kit.MDB_TYPE, LOGIN,
 							aaa.USERNAME, kit.Select(m.Option(ice.MSG_USERNAME), m.Option(aaa.USERNAME)),
 							aaa.USERROLE, m.Option(aaa.USERROLE),
 						)))
-				}},
-				APPLY: {Name: "apply", Help: "申请", Hand: func(m *ice.Message, arg ...string) {
-					m.EchoQRCode(kit.MergeURL(m.Conf(SHARE, kit.Keym(kit.MDB_DOMAIN)),
-						SHARE, m.Cmdx(SHARE, mdb.CREATE, kit.MDB_TYPE, APPLY)))
-				}},
-				"auth": {Name: "auth", Help: "授权", Hand: func(m *ice.Message, arg ...string) {
-					m.Cmdy(mdb.MODIFY, SHARE, "", mdb.HASH, kit.MDB_HASH, arg)
-				}},
-				mdb.INPUTS: {Name: "inputs", Help: "补全", Hand: func(m *ice.Message, arg ...string) {
 				}},
 			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 				m.Fields(len(arg) == 0, "time,hash,type,name,text,userrole,username,river,storm")
@@ -124,9 +130,14 @@ func init() {
 				m.PushAction(mdb.REMOVE)
 
 				if len(arg) > 0 {
-					m.PushAnchor(kit.MergeURL2(m.Option(ice.MSG_USERWEB), "/share/"+arg[0], SHARE, arg[0]))
-					m.PushScript("shell", kit.MergeURL2(m.Option(ice.MSG_USERWEB), "/share/"+arg[0], SHARE, arg[0]))
-					m.PushQRCode("share", kit.MergeURL2(m.Option(ice.MSG_USERWEB), "/share/"+arg[0], SHARE, arg[0]))
+					link := kit.MergeURL(m.Option(ice.MSG_USERWEB), SHARE, arg[0])
+					if strings.Contains(link, tcp.LOCALHOST) {
+						link = strings.Replace(link, tcp.LOCALHOST, m.Cmd(tcp.HOST, ice.OptionFields(tcp.IP)).Append(tcp.IP), 1)
+					}
+
+					m.PushAnchor(link)
+					m.PushScript("shell", link)
+					m.PushQRCode("qrcode", link)
 				} else {
 					m.Option("_action", "login")
 				}
@@ -143,7 +154,7 @@ func init() {
 				}
 
 				switch msg.Append(kit.MDB_TYPE) {
-				case LOGIN, APPLY, RIVER:
+				case LOGIN, RIVER:
 					switch kit.Select("", arg, 1) {
 					case SHARE:
 						m.Render(ice.RENDER_QRCODE, kit.MergeURL2(m.Option(ice.MSG_USERWEB), "/", list))

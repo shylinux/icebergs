@@ -15,6 +15,24 @@ func _river_list(m *ice.Message) {
 	m.Set(ice.MSG_OPTION, kit.MDB_HASH)
 	m.Set(ice.MSG_OPTION, kit.MDB_NAME)
 
+	if m.Option(web.SHARE) != "" {
+		switch msg := m.Cmd(web.SHARE, m.Option(web.SHARE)); msg.Append(kit.MDB_TYPE) {
+		case web.RIVER, web.STORM: // 应用入口
+			m.Option(ice.MSG_TITLE, msg.Append(kit.MDB_NAME))
+			m.Option(ice.MSG_RIVER, msg.Append(RIVER))
+			m.Option(ice.MSG_STORM, msg.Append(STORM))
+
+			if msg.Cmd(m.Prefix(USER), m.Option(ice.MSG_USERNAME)).Append(aaa.USERNAME) == "" {
+				// msg.Cmd(m.Prefix(USER), mdb.INSERT, aaa.USERNAME, m.Option(ice.MSG_USERNAME))
+				// 加入群组
+			}
+		case web.FIELD: // 应用入口
+			m.Option(ice.MSG_TITLE, msg.Append(kit.MDB_NAME))
+			m.Option(ice.MSG_RIVER, "_share")
+			return
+		}
+	}
+
 	m.Richs(RIVER, nil, kit.MDB_FOREACH, func(key string, value map[string]interface{}) {
 		m.Richs(RIVER, kit.Keys(kit.MDB_HASH, key, USER), m.Option(ice.MSG_USERNAME), func(k string, val map[string]interface{}) {
 			m.Push(key, kit.GetMeta(value), []string{kit.MDB_HASH, kit.MDB_NAME}, kit.GetMeta(val))
@@ -22,12 +40,8 @@ func _river_list(m *ice.Message) {
 	})
 }
 func _river_share(m *ice.Message) {
-	if m.Option(web.SHARE) == "" || m.Option(RIVER) == "" {
-		return
-	}
-
+	return
 	msg := m.Spawn()
-	msg.Option(mdb.FIELDS, "type,name,text,river,storm")
 	if res := msg.Cmd(web.SHARE, m.Option(web.SHARE)); res.Append(kit.MDB_TYPE) == RIVER {
 		msg.Option(ice.MSG_RIVER, res.Append(RIVER))
 	} else {
@@ -330,11 +344,12 @@ func init() {
 						m.Cmdy(mdb.INPUTS, RIVER, "", mdb.HASH, arg)
 					}
 				}},
-				web.SHARE: {Name: "share type name", Help: "共享", Hand: func(m *ice.Message, arg ...string) {
-					m.Cmdy(web.SHARE, mdb.CREATE, kit.MDB_TYPE, LOGIN, arg)
-				}},
 				tcp.START: {Name: "start name repos template", Help: "启动", Hand: func(m *ice.Message, arg ...string) {
 					m.Cmdy(m.Space(m.Option(kit.SSH_POD)), web.DREAM, tcp.START, arg)
+				}},
+
+				SHARE: {Name: "share", Help: "共享", Hand: func(m *ice.Message, arg ...string) {
+					_header_share(m, arg...)
 				}},
 			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 				m.Cmdy(mdb.SELECT, RIVER, "", mdb.HASH, kit.MDB_HASH, arg)

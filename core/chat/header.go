@@ -1,9 +1,12 @@
 package chat
 
 import (
+	"strings"
+
 	ice "github.com/shylinux/icebergs"
 	"github.com/shylinux/icebergs/base/aaa"
 	"github.com/shylinux/icebergs/base/mdb"
+	"github.com/shylinux/icebergs/base/tcp"
 	"github.com/shylinux/icebergs/base/web"
 	"github.com/shylinux/icebergs/core/code"
 	kit "github.com/shylinux/toolkits"
@@ -16,12 +19,25 @@ func _header_check(m *ice.Message) {
 			if m.Option(ice.MSG_USERNAME) != msg.Append(aaa.USERNAME) {
 				web.RenderCookie(m, aaa.SessCreate(m, m.Option(ice.MSG_USERNAME, msg.Append(aaa.USERNAME))))
 			}
+		case web.FIELD:
+			m.Option(ice.MSG_USERNAME, msg.Append(aaa.USERNAME))
 		}
 	}
 
 	if m.Option(ice.MSG_USERNAME) == "" { // 单点登录
 		m.Option(web.SSO, m.Conf(web.SERVE, kit.Keym(web.SSO)))
 	}
+}
+func _header_share(m *ice.Message, arg ...string) {
+	share := m.Cmdx(web.SHARE, mdb.CREATE, kit.MDB_TYPE, web.LOGIN, arg)
+
+	link := kit.MergeURL(m.Option(ice.MSG_USERWEB), web.SHARE, share)
+	if strings.Contains(link, tcp.LOCALHOST) {
+		link = strings.Replace(link, tcp.LOCALHOST, m.Cmd(tcp.HOST, ice.OptionFields(tcp.IP)).Append(tcp.IP), 1)
+	}
+
+	m.Push(kit.MDB_NAME, link)
+	m.PushQRCode(kit.MDB_TEXT, link)
 }
 func _header_grant(m *ice.Message, arg ...string) {
 	if pod := m.Option(kit.SSH_POD); pod != "" {
@@ -46,6 +62,8 @@ const (
 	GRANT = "grant"
 	SHARE = "share"
 	AGENT = "agent"
+
+	LOGOUT = "logout"
 )
 const P_HEADER = "/header"
 const HEADER = "header"
@@ -71,10 +89,13 @@ func init() {
 					_header_grant(m, arg...)
 				}},
 				SHARE: {Name: "share type", Help: "扫码登录", Hand: func(m *ice.Message, arg ...string) {
-					m.Cmdy(web.SHARE, mdb.CREATE, kit.MDB_TYPE, web.LOGIN, arg)
+					_header_share(m, arg...)
 				}},
 				AGENT: {Name: "agent", Help: "应用宿主", Hand: func(m *ice.Message, arg ...string) {
 					m.Cmdy("web.chat.wx.access", "config")
+				}},
+				LOGOUT: {Name: "logout", Help: "退出登录", Hand: func(m *ice.Message, arg ...string) {
+					m.Cmd(aaa.SESS, mdb.REMOVE, ice.OptionHash(m.Option(ice.MSG_SESSID)))
 				}},
 
 				code.WEBPACK: {Name: "webpack", Help: "网页打包", Hand: func(m *ice.Message, arg ...string) {

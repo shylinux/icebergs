@@ -4,6 +4,7 @@ import (
 	ice "github.com/shylinux/icebergs"
 	"github.com/shylinux/icebergs/base/mdb"
 	"github.com/shylinux/icebergs/base/nfs"
+	"github.com/shylinux/icebergs/base/web"
 	kit "github.com/shylinux/toolkits"
 
 	"fmt"
@@ -57,15 +58,18 @@ func _pack_volcanos(m *ice.Message, pack *os.File, dir string) {
 	m.Option(nfs.DIR_TYPE, nfs.CAT)
 
 	for _, k := range []string{"favicon.ico", "proto.js", "frame.js"} {
-		pack.WriteString(fmt.Sprintf("        \"/%s\": %s,\n",
-			kit.Select("", k, k != "index.html"),
-			_pack_file(m, path.Join(dir, k))))
+		pack.WriteString(fmt.Sprintf("        \"/%s\": %s,\n", k, _pack_file(m, path.Join(dir, k))))
 	}
 	for _, k := range []string{"lib", "page", "panel", "plugin"} {
 		m.Cmd(nfs.DIR, k).Table(func(index int, value map[string]string, head []string) {
+			if value[kit.MDB_PATH] == "page/index.html" {
+				pack.WriteString(fmt.Sprintf("        \"%s/%s\": %s,\n",
+					m.Conf(web.SERVE, kit.Keym(ice.VOLCANOS, kit.MDB_PATH)), value[kit.MDB_PATH],
+					_pack_file(m, path.Join(dir, value[kit.MDB_PATH]))))
+				return
+			}
 			pack.WriteString(fmt.Sprintf("        \"/%s\": %s,\n",
-				kit.Select("", value[kit.MDB_PATH], value[kit.MDB_PATH] != "page/index.html"),
-				_pack_file(m, path.Join(dir, value[kit.MDB_PATH]))))
+				value[kit.MDB_PATH], _pack_file(m, path.Join(dir, value[kit.MDB_PATH]))))
 		})
 	}
 	pack.WriteString("\n")

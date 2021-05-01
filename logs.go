@@ -10,6 +10,7 @@ import (
 
 var OK = "ok"
 var ErrWarn = "warn: "
+var ErrExpire = "expire: "
 var ErrNotLogin = "not login: "
 var ErrNotRight = "not right: "
 var ErrNotFound = "not found: "

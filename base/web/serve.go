@@ -1,23 +1,23 @@
 package web
 
 import (
+	"encoding/json"
+	"net/http"
+	"net/url"
+	"path"
+	"strings"
+
 	ice "github.com/shylinux/icebergs"
 	"github.com/shylinux/icebergs/base/aaa"
 	"github.com/shylinux/icebergs/base/cli"
 	"github.com/shylinux/icebergs/base/mdb"
 	"github.com/shylinux/icebergs/base/tcp"
 	kit "github.com/shylinux/toolkits"
-
-	"encoding/json"
-	"net/http"
-	"net/url"
-	"path"
-	"strings"
 )
 
 func _serve_main(m *ice.Message, w http.ResponseWriter, r *http.Request) bool {
 	if r.Header.Get("index.module") == "" {
-		r.Header.Set("index.module", m.Target().Name)
+		r.Header.Set("index.module", m.Prefix())
 	} else { // 模块接口
 		return true
 	}
@@ -34,18 +34,18 @@ func _serve_main(m *ice.Message, w http.ResponseWriter, r *http.Request) bool {
 	}
 	m.Info("").Info("%s %s %s", r.Header.Get(ice.MSG_USERIP), r.Method, r.URL)
 
-	// 输出日志
+	// 参数日志
 	if m.Conf(SERVE, kit.Keym("logheaders")) == "true" {
 		for k, v := range r.Header {
 			m.Info("%s: %v", k, kit.Format(v))
 		}
-		m.Info(" ")
+		m.Info("")
 
 		defer func() {
 			for k, v := range w.Header() {
 				m.Info("%s: %v", k, kit.Format(v))
 			}
-			m.Info(" ")
+			m.Info("")
 		}()
 	}
 
@@ -88,7 +88,7 @@ func _serve_handle(key string, cmd *ice.Command, msg *ice.Message, w http.Respon
 	}
 
 	// 请求地址
-	msg.Option(ice.MSG_USERWEB, kit.Select(msg.Conf(SHARE, kit.Keym("domain")), r.Header.Get("Referer")))
+	msg.Option(ice.MSG_USERWEB, kit.Select(msg.Conf(SHARE, kit.Keym(kit.MDB_DOMAIN)), r.Header.Get("Referer")))
 	msg.Option(ice.MSG_USERUA, r.Header.Get("User-Agent"))
 	msg.Option(ice.MSG_USERIP, r.Header.Get(ice.MSG_USERIP))
 	if msg.R, msg.W = r, w; r.Header.Get("X-Real-Port") != "" {
@@ -127,7 +127,7 @@ func _serve_handle(key string, cmd *ice.Command, msg *ice.Message, w http.Respon
 			v[i], _ = url.QueryUnescape(p)
 		}
 		if msg.Optionv(k, v); k == ice.MSG_SESSID {
-			msg.Render(COOKIE, v[0])
+			RenderCookie(msg, v[0])
 		}
 	}
 
@@ -238,15 +238,15 @@ func init() {
 					}
 				}},
 			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-				m.Option(mdb.FIELDS, kit.Select("time,status,name,port,dev", mdb.DETAIL, len(arg) > 0))
+				m.Fields(len(arg) == 0, "time,status,name,port,dev")
 				m.Cmdy(mdb.SELECT, SERVE, "", mdb.HASH, kit.MDB_NAME, arg)
 			}},
 
 			"/volcanos/": {Name: "/volcanos/", Help: "浏览器", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-				m.Render(ice.RENDER_DOWNLOAD, path.Join(m.Conf(SERVE, kit.Keym("volcanos.path")), path.Join(arg...)))
+				m.Render(ice.RENDER_DOWNLOAD, path.Join(m.Conf(SERVE, kit.Keym(ice.VOLCANOS, kit.MDB_PATH)), path.Join(arg...)))
 			}},
 			"/intshell/": {Name: "/intshell/", Help: "命令行", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-				m.Render(ice.RENDER_DOWNLOAD, path.Join(m.Conf(SERVE, kit.Keym("intshell.path")), path.Join(arg...)))
+				m.Render(ice.RENDER_DOWNLOAD, path.Join(m.Conf(SERVE, kit.Keym(ice.INTSHELL, kit.MDB_PATH)), path.Join(arg...)))
 			}},
 			"/publish/": {Name: "/publish/", Help: "私有云", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 				_share_local(m, m.Conf(SERVE, kit.Keym(ice.PUBLISH)), path.Join(arg...))

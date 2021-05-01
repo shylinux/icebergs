@@ -27,9 +27,10 @@ func _header_grant(m *ice.Message, arg ...string) {
 	if pod := m.Option(kit.SSH_POD); pod != "" {
 		m.Option(kit.SSH_POD, "")
 		m.Cmd(web.SPACE, pod, m.Prefix(P_HEADER), kit.MDB_ACTION, GRANT, arg)
-		return
+		return // 下发命令
 	}
 
+	// 授权登录
 	m.Cmd(aaa.ROLE, kit.Select(aaa.TECH, aaa.VOID, m.Option(ice.MSG_USERROLE) == aaa.VOID), m.Option(ice.MSG_USERNAME))
 	m.Cmd(web.SPACE, m.Option(web.SPACE), ice.MSG_SESSID, aaa.SessCreate(m, m.Option(ice.MSG_USERNAME)))
 }
@@ -40,9 +41,10 @@ func _header_users(m *ice.Message, key string, arg ...string) {
 
 const (
 	TITLE = "title"
-	LOGIN = "login"
 	CHECK = "check"
+	LOGIN = "login"
 	GRANT = "grant"
+	SHARE = "share"
 	AGENT = "agent"
 )
 const P_HEADER = "/header"
@@ -55,18 +57,21 @@ func init() {
 		},
 		Commands: map[string]*ice.Command{
 			P_HEADER: {Name: "/header", Help: "标题栏", Action: map[string]*ice.Action{
-				LOGIN: {Name: "login", Help: "用户登录", Hand: func(m *ice.Message, arg ...string) {
+				CHECK: {Name: "check", Help: "登录检查", Hand: func(m *ice.Message, arg ...string) {
+					_header_check(m)
+					m.Echo(m.Option(ice.MSG_USERNAME))
+				}},
+				LOGIN: {Name: "login", Help: "密码登录", Hand: func(m *ice.Message, arg ...string) {
 					if aaa.UserLogin(m, arg[0], arg[1]) {
 						web.RenderCookie(m, aaa.SessCreate(m, arg[0]))
 					}
 					m.Echo(m.Option(ice.MSG_USERNAME))
 				}},
-				CHECK: {Name: "check", Help: "登录检查", Hand: func(m *ice.Message, arg ...string) {
-					_header_check(m)
-					m.Echo(m.Option(ice.MSG_USERNAME))
-				}},
-				GRANT: {Name: "grant space", Help: "用户授权", Hand: func(m *ice.Message, arg ...string) {
+				GRANT: {Name: "grant space", Help: "扫码授权", Hand: func(m *ice.Message, arg ...string) {
 					_header_grant(m, arg...)
+				}},
+				SHARE: {Name: "share type", Help: "扫码登录", Hand: func(m *ice.Message, arg ...string) {
+					m.Cmdy(web.SHARE, mdb.CREATE, kit.MDB_TYPE, web.LOGIN, arg)
 				}},
 				AGENT: {Name: "agent", Help: "应用宿主", Hand: func(m *ice.Message, arg ...string) {
 					m.Cmdy("web.chat.wx.access", "config")
@@ -75,24 +80,18 @@ func init() {
 				code.WEBPACK: {Name: "webpack", Help: "网页打包", Hand: func(m *ice.Message, arg ...string) {
 					m.Cmdy(code.WEBPACK, mdb.CREATE)
 				}},
-				web.SHARE: {Name: "share type", Help: "用户共享", Hand: func(m *ice.Message, arg ...string) {
-					m.Cmdy(web.SHARE, mdb.CREATE, kit.MDB_TYPE, LOGIN, arg)
-				}},
-				aaa.AVATAR: {Name: "avatar", Help: "头像图片", Hand: func(m *ice.Message, arg ...string) {
-					_header_users(m, aaa.AVATAR, arg...)
-				}},
 				aaa.BACKGROUND: {Name: "background", Help: "背景图片", Hand: func(m *ice.Message, arg ...string) {
 					_header_users(m, aaa.BACKGROUND, arg...)
 				}},
 				aaa.USERNICK: {Name: "usernick", Help: "用户昵称", Hand: func(m *ice.Message, arg ...string) {
 					_header_users(m, aaa.USERNICK, arg...)
 				}},
-				aaa.USERROLE: {Name: "userrole", Help: "用户角色", Hand: func(m *ice.Message, arg ...string) {
-					m.Echo(aaa.UserRole(m, m.Option("who")))
+				aaa.AVATAR: {Name: "avatar", Help: "头像图片", Hand: func(m *ice.Message, arg ...string) {
+					_header_users(m, aaa.AVATAR, arg...)
 				}},
 			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 				user := m.Cmd("aaa.user", m.Option(ice.MSG_USERNAME))
-				for _, k := range []string{aaa.AVATAR, aaa.BACKGROUND} {
+				for _, k := range []string{aaa.BACKGROUND, aaa.AVATAR} {
 					m.Option(k, user.Append(k))
 				}
 				m.Echo(m.Conf(HEADER, kit.Keym(TITLE)))

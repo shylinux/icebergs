@@ -22,8 +22,11 @@ func _river_list(m *ice.Message) {
 			m.Option(ice.MSG_RIVER, msg.Append(RIVER))
 			m.Option(ice.MSG_STORM, msg.Append(STORM))
 
+			if m.Conf(RIVER, kit.Keys(kit.MDB_HASH, m.Option(ice.MSG_RIVER))) == "" {
+				break
+			}
 			if msg.Cmd(m.Prefix(USER), m.Option(ice.MSG_USERNAME)).Append(aaa.USERNAME) == "" {
-				// msg.Cmd(m.Prefix(USER), mdb.INSERT, aaa.USERNAME, m.Option(ice.MSG_USERNAME))
+				msg.Cmd(m.Prefix(USER), mdb.INSERT, aaa.USERNAME, m.Option(ice.MSG_USERNAME))
 				// 加入群组
 			}
 		case web.FIELD: // 应用入口

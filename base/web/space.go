@@ -1,6 +1,12 @@
 package web
 
 import (
+	"math/rand"
+	"net"
+	"net/url"
+	"strings"
+	"time"
+
 	"github.com/gorilla/websocket"
 	ice "github.com/shylinux/icebergs"
 	"github.com/shylinux/icebergs/base/aaa"
@@ -8,12 +14,6 @@ import (
 	"github.com/shylinux/icebergs/base/mdb"
 	"github.com/shylinux/icebergs/base/tcp"
 	kit "github.com/shylinux/toolkits"
-
-	"math/rand"
-	"net"
-	"net/url"
-	"strings"
-	"time"
 )
 
 func _space_list(m *ice.Message, space string) {
@@ -188,11 +188,13 @@ func _space_search(m *ice.Message, kind, name, text string, arg ...string) {
 		}
 	})
 
-	port := m.Cmd(SERVE, ice.Option{mdb.FIELDS, tcp.PORT}).Append(tcp.PORT)
-	m.Cmd(tcp.HOST).Table(func(index int, value map[string]string, head []string) {
-		m.PushSearch(kit.SSH_CMD, SPACE, kit.MDB_TYPE, MYSELF, kit.MDB_NAME, value[kit.MDB_NAME],
-			kit.MDB_TEXT, kit.Format("http://%s:%s", value[tcp.IP], port), kit.SSH_POD, kit.Keys(m.Option(ice.MSG_USERPOD), value))
-	})
+	if name == "" {
+		port := m.Cmd(SERVE, ice.Option{mdb.FIELDS, tcp.PORT}).Append(tcp.PORT)
+		m.Cmd(tcp.HOST).Table(func(index int, value map[string]string, head []string) {
+			m.PushSearch(kit.SSH_CMD, SPACE, kit.MDB_TYPE, MYSELF, kit.MDB_NAME, value[kit.MDB_NAME],
+				kit.MDB_TEXT, kit.Format("http://%s:%s", value[tcp.IP], port), kit.SSH_POD, kit.Keys(m.Option(ice.MSG_USERPOD), value))
+		})
+	}
 }
 
 const (
@@ -263,7 +265,7 @@ func init() {
 						switch kind {
 						case CHROME:
 							if m.Option(ice.MSG_USERNAME) != "" {
-								break
+								// break
 							}
 
 							m.Go(func(msg *ice.Message) {

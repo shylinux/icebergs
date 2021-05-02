@@ -643,30 +643,30 @@ func (m *Message) Cmd(arg ...interface{}) *Message {
 func (m *Message) cmd(arg ...interface{}) *Message {
 	opts := map[string]interface{}{}
 	args := []interface{}{}
+	var cbs interface{}
 
+	// 解析参数
 	for _, v := range arg {
 		switch val := v.(type) {
-		case Option:
-			opts[val.Name] = val.Value
+		case func(int, map[string]string, []string):
+			defer func() { m.Table(val) }()
+
 		case *Option:
 			opts[val.Name] = val.Value
-		default:
-			args = append(args, v)
-		}
-	}
+		case Option:
+			opts[val.Name] = val.Value
 
-	list := kit.Simple(args...)
-	if len(args) > 0 {
-		switch cb := args[len(args)-1]; cbs := cb.(type) {
-		case string:
 		default:
-			if reflect.Func == reflect.TypeOf(cbs).Kind() {
-				m.Optionv(list[0]+".cb", cbs)
-				list = list[:len(list)-1]
+			if reflect.Func == reflect.TypeOf(val).Kind() {
+				cbs = val
+			} else {
+				args = append(args, v)
 			}
 		}
 	}
 
+	// 解析命令
+	list := kit.Simple(args...)
 	if len(list) == 0 && m.Hand == false {
 		list = m.meta[MSG_DETAIL]
 	}
@@ -674,31 +674,32 @@ func (m *Message) cmd(arg ...interface{}) *Message {
 		return m
 	}
 
-	if cmd, ok := m.target.Commands[list[0]]; ok {
-		m.TryCatch(m.Spawn(), true, func(msg *Message) {
-			for k, v := range opts {
-				msg.Option(k, v)
-			}
-			m = m.target.cmd(msg, cmd, list[0], list[1:]...)
-		})
-	} else if cmd, ok := m.source.Commands[list[0]]; ok {
-		m.TryCatch(m.Spawn(m.source), true, func(msg *Message) {
-			for k, v := range opts {
-				msg.Option(k, v)
-			}
-			m = m.source.cmd(msg, cmd, list[0], list[1:]...)
-		})
-	} else {
-		m.Search(list[0], func(p *Context, s *Context, key string, cmd *Command) {
-			m.TryCatch(m.Spawn(s), true, func(msg *Message) {
-				for k, v := range opts {
-					msg.Option(k, v)
-				}
-				m = s.cmd(msg, cmd, key, list[1:]...)
-			})
+	run := func(msg *Message, ctx *Context, cmd *Command, key string, arg ...string) {
+		if cbs != nil {
+			msg.Option(list[0]+".cb", cbs)
+		}
+		for k, v := range opts {
+			msg.Option(k, v)
+		}
+
+		// 执行命令
+		m.TryCatch(msg, true, func(msg *Message) {
+			m = ctx.cmd(msg, cmd, key, arg...)
 		})
 	}
 
+	// 查找命令
+	if cmd, ok := m.target.Commands[list[0]]; ok {
+		run(m.Spawn(), m.target, cmd, list[0], list[1:]...)
+	} else if cmd, ok := m.source.Commands[list[0]]; ok {
+		run(m.Spawn(m.source), m.source, cmd, list[0], list[1:]...)
+	} else {
+		m.Search(list[0], func(p *Context, s *Context, key string, cmd *Command) {
+			run(m.Spawn(s), s, cmd, key, list[1:]...)
+		})
+	}
+
+	// 系统命令
 	if m.Warn(m.Hand == false, ErrNotFound, list) {
 		return m.Set(MSG_RESULT).Cmd("cli.system", list)
 	}

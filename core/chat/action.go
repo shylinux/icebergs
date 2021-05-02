@@ -7,6 +7,7 @@ import (
 	ice "github.com/shylinux/icebergs"
 	"github.com/shylinux/icebergs/base/aaa"
 	"github.com/shylinux/icebergs/base/ctx"
+	"github.com/shylinux/icebergs/base/mdb"
 	"github.com/shylinux/icebergs/base/web"
 	kit "github.com/shylinux/toolkits"
 )
@@ -58,6 +59,7 @@ func _action_share(m *ice.Message, cmd string, arg ...string) {
 	case web.FIELD:
 		if cmd := kit.Keys(msg.Append(web.RIVER), msg.Append(web.STORM)); len(arg) == 2 {
 			m.Push("index", cmd)
+			m.Push("title", msg.Append(kit.MDB_NAME))
 			m.Push("args", msg.Append(kit.MDB_TEXT))
 		} else {
 			if m.Warn(kit.Time() > kit.Time(msg.Append(kit.MDB_TIME)), ice.ErrExpire) {
@@ -132,6 +134,10 @@ func init() {
 					for _, k := range arg {
 						m.Cmdy(ctx.COMMAND, strings.TrimPrefix(k, "."))
 					}
+				}},
+				mdb.MODIFY: {Name: "modify", Help: "编辑", Hand: func(m *ice.Message, arg ...string) {
+					m.Cmdy(mdb.MODIFY, RIVER, kit.Keys(kit.MDB_HASH, m.Option(RIVER), TOOL, kit.MDB_HASH, m.Option(STORM)), mdb.LIST,
+						kit.MDB_ID, m.Option(kit.MDB_ID), arg)
 				}},
 				SHARE: {Name: "share", Help: "共享", Hand: func(m *ice.Message, arg ...string) {
 					_header_share(m, arg...)

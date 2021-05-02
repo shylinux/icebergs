@@ -14,6 +14,9 @@ import (
 )
 
 func _repos_path(name string) string {
+	if strings.Contains(name, ":\\") {
+		return name
+	}
 	return kit.Select(path.Join(kit.SSH_USR, name), "./", name == path.Base(kit.Pwd()))
 }
 func _repos_insert(m *ice.Message, name string, dir string) {
@@ -34,11 +37,8 @@ const (
 	MASTER = "master"
 
 	CLONE = "clone"
-	ADD   = "add"
 
 	INIT = "init"
-	PULL = "pull"
-	PUSH = "push"
 )
 const REPOS = "repos"
 
@@ -78,7 +78,7 @@ func init() {
 				}},
 			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 				if len(arg) == 0 { // 仓库列表
-					m.Option(mdb.FIELDS, "time,name,branch,commit,remote")
+					m.Fields(len(arg) == 0, "time,name,branch,commit,remote")
 					m.Cmdy(mdb.SELECT, m.Prefix(REPOS), "", mdb.HASH)
 					m.Sort(kit.MDB_NAME)
 					return

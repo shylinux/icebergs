@@ -51,6 +51,8 @@ const ( // MSG
 	MSG_SOURCE = "_source"
 	MSG_TARGET = "_target"
 	MSG_HANDLE = "_handle"
+	MSG_ACTION = "_action"
+	MSG_DAEMON = "_daemon"
 	MSG_UPLOAD = "_upload"
 	MSG_OUTPUT = "_output"
 	MSG_ARGS   = "_args"
@@ -99,6 +101,9 @@ const ( // PROCESS
 	PROCESS_INNER    = "_inner"
 	PROCESS_FIELD    = "_field"
 	PROCESS_OPEN     = "_open"
+
+	PROCESS_HOLD = "_hold"
+	PROCESS_BACK = "_back"
 
 	FIELD_PREFIX = "_prefix"
 	CONTROL_PAGE = "_page"

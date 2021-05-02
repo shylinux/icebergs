@@ -237,10 +237,6 @@ func (m *Message) SortStrR(key string)  { m.Sort(key, "str_r") }
 func (m *Message) SortTime(key string)  { m.Sort(key, "time") }
 func (m *Message) SortTimeR(key string) { m.Sort(key, "time_r") }
 
-func (m *Message) Process(action string, arg ...interface{}) {
-	m.Option(MSG_PROCESS, action)
-	m.Option("_arg", arg...)
-}
 func (m *Message) FormatMeta() string { return m.Format("meta") }
 func (m *Message) RenameAppend(from, to string) {
 	for i, v := range m.meta[MSG_APPEND] {
@@ -252,10 +248,6 @@ func (m *Message) RenameAppend(from, to string) {
 	}
 }
 
-func (m *Message) Fields(condition bool, fields string) string {
-	return m.Option("fields", kit.Select(kit.Select("detail", fields, condition), m.Option("fields")))
-}
-
 type Option struct {
 	Name  string
 	Value interface{}
@@ -263,3 +255,32 @@ type Option struct {
 
 func OptionFields(str string) Option { return Option{"fields", str} }
 func OptionHash(str string) Option   { return Option{kit.MDB_HASH, str} }
+
+func (m *Message) Toast(content string, arg ...interface{}) {
+	m.Cmd("web.space", m.Option("_daemon"), "toast", "", content, arg)
+}
+func (m *Message) GoToast(title string, cb func(func(string, int, int))) {
+	m.Go(func() {
+		cb(func(name string, count, total int) {
+			m.Toast(
+				kit.Format("%s %d/%d", name, count, total),
+				kit.Format("%s %d%%", title, count*100/total),
+				kit.Select("1000", "10000", count < total),
+				count*100/total,
+			)
+		})
+	})
+}
+
+func (m *Message) Fields(condition bool, fields string) string {
+	return m.Option("fields", kit.Select(kit.Select("detail", fields, condition), m.Option("fields")))
+}
+func (m *Message) Action(arg ...string) {
+	m.Option(MSG_ACTION, kit.Format(arg))
+}
+func (m *Message) Process(action string, arg ...interface{}) {
+	m.Option(MSG_PROCESS, action)
+	m.Option("_arg", arg...)
+}
+func (m *Message) ProcessHold() { m.Process(PROCESS_HOLD) }
+func (m *Message) ProcessBack() { m.Process(PROCESS_BACK) }

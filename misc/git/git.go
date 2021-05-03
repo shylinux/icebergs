@@ -17,7 +17,7 @@ const GIT = "git"
 var Index = &ice.Context{Name: GIT, Help: "代码库",
 	Configs: map[string]*ice.Config{
 		GIT: {Name: GIT, Help: "代码库", Value: kit.Data(
-			kit.SSH_SOURCE, "https://mirrors.edge.kernel.org/pub/software/scm/git/git-1.8.3.1.tar.gz", "config", kit.Dict(
+			kit.SSH_SOURCE, "https://mirrors.edge.kernel.org/pub/software/scm/git/git-1.8.3.1.tar.gz", CONFIG, kit.Dict(
 				"alias", kit.Dict("s", "status", "b", "branch"),
 				"credential", kit.Dict("helper", "store"),
 				"core", kit.Dict("quotepath", "false"),
@@ -28,14 +28,18 @@ var Index = &ice.Context{Name: GIT, Help: "代码库",
 	},
 	Commands: map[string]*ice.Command{
 		ice.CTX_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			_repos_insert(m, path.Base(kit.Pwd()), kit.Pwd())
+			m.Load()
 
+			_repos_insert(m, path.Base(kit.Pwd()), kit.Pwd())
 			m.Cmd(nfs.DIR, kit.SSH_USR, "name,path").Table(func(index int, value map[string]string, head []string) {
 				_repos_insert(m, value[kit.MDB_NAME], value[kit.MDB_PATH])
 			})
 		}},
+		ice.CTX_EXIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			m.Save(CONFIG)
+		}},
 
-		GIT: {Name: "git port path auto start build download", Help: "代码库", Action: map[string]*ice.Action{
+		GIT: {Name: "git port path auto start build download", Help: "源代码", Action: map[string]*ice.Action{
 			web.DOWNLOAD: {Name: "download", Help: "下载", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmdy(code.INSTALL, web.DOWNLOAD, m.Conf(GIT, kit.META_SOURCE))
 			}},

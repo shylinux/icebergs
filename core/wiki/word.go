@@ -274,7 +274,7 @@ func _field_show(m *ice.Message, name, text string, arg ...string) {
 	}
 
 	// 渲染引擎
-	m.Option("meta", data)
+	m.Option(kit.MDB_META, data)
 	m.Render(ice.RENDER_TEMPLATE, m.Conf(FIELD, kit.Keym(kit.MDB_TEMPLATE)))
 }
 func _other_show(m *ice.Message, name, text string, arg ...string) {

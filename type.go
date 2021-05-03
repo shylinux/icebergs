@@ -374,6 +374,12 @@ func (m *Message) Format(key interface{}) string {
 			return kit.FmtTime(kit.Int64(time.Now().Sub(m.time)))
 		case "meta":
 			return kit.Format(m.meta)
+		case "size":
+			if len(m.meta["append"]) == 0 {
+				return fmt.Sprintf("%dx%d", 0, 0)
+			} else {
+				return fmt.Sprintf("%dx%d", len(m.meta[m.meta["append"][0]]), len(m.meta["append"]))
+			}
 		case "append":
 			if len(m.meta["append"]) == 0 {
 				return fmt.Sprintf("%dx%d %s", 0, 0, "[]")

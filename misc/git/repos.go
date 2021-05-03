@@ -73,9 +73,6 @@ func init() {
 
 					_repos_insert(m, m.Option(kit.MDB_NAME), m.Option(kit.MDB_PATH))
 				}},
-				"proxy": {Name: "proxy from to", Help: "代理", Hand: func(m *ice.Message, arg ...string) {
-					m.Cmd(cli.SYSTEM, GIT, "config", "--global", fmt.Sprintf(`url.%s.insteadOf`, m.Option("to")), m.Option("from"))
-				}},
 			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 				if len(arg) == 0 { // 仓库列表
 					m.Fields(len(arg) == 0, "time,name,branch,commit,remote")

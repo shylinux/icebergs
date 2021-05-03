@@ -106,11 +106,16 @@ echo "hello world"
 				}},
 				ice.CONTEXTS: {Name: "contexts", Help: "环境", Hand: func(m *ice.Message, arg ...string) {
 					u := kit.ParseURL(m.Option(ice.MSG_USERWEB))
-					m.Option("httphost", fmt.Sprintf("%s://%s:%s", u.Scheme, strings.Split(u.Host, ":")[0], kit.Select(kit.Select("80", "443", u.Scheme == "https"), strings.Split(u.Host, ":"), 1)))
-					m.Option("hostport", fmt.Sprintf("%s:%s", strings.Split(u.Host, ":")[0], kit.Select(kit.Select("80", "443", u.Scheme == "https"), strings.Split(u.Host, ":"), 1)))
-					m.Option("hostname", strings.Split(u.Host, ":")[0])
+					host := u.Host
+					if strings.Contains(host, "localhost") {
+						host = strings.Replace(host, "localhost", m.Cmd(tcp.HOST).Append(tcp.IP), 1)
+					}
 
-					m.Option("userhost", fmt.Sprintf("%s@%s", m.Option(ice.MSG_USERNAME), strings.Split(u.Host, ":")[0]))
+					m.Option("httphost", fmt.Sprintf("%s://%s:%s", u.Scheme, strings.Split(host, ":")[0], kit.Select(kit.Select("80", "443", u.Scheme == "https"), strings.Split(host, ":"), 1)))
+					m.Option("hostport", fmt.Sprintf("%s:%s", strings.Split(host, ":")[0], kit.Select(kit.Select("80", "443", u.Scheme == "https"), strings.Split(host, ":"), 1)))
+					m.Option("hostname", strings.Split(host, ":")[0])
+
+					m.Option("userhost", fmt.Sprintf("%s@%s", m.Option(ice.MSG_USERNAME), strings.Split(host, ":")[0]))
 					m.Option("hostpath", kit.Path("./.ish/pluged"))
 
 					if len(arg) == 0 {

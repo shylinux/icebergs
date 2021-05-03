@@ -432,7 +432,7 @@ const (
 const MDB = "mdb"
 
 var Index = &ice.Context{Name: MDB, Help: "数据模块", Commands: map[string]*ice.Command{
-	INSERT: {Name: "insert conf key type arg...", Help: "添加", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+	INSERT: {Name: "insert key sub type arg...", Help: "添加", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 		switch arg[2] {
 		case HASH:
 			_hash_insert(m, arg[0], _domain_chain(m, arg[1]), arg[3:]...)
@@ -440,7 +440,7 @@ var Index = &ice.Context{Name: MDB, Help: "数据模块", Commands: map[string]*
 			_list_insert(m, arg[0], _domain_chain(m, arg[1]), arg[3:]...)
 		}
 	}},
-	DELETE: {Name: "delete conf key type field value", Help: "删除", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+	DELETE: {Name: "delete key sub type field value", Help: "删除", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 		switch arg[2] {
 		case HASH:
 			_hash_delete(m, arg[0], _domain_chain(m, arg[1]), arg[3], arg[4])
@@ -448,7 +448,7 @@ var Index = &ice.Context{Name: MDB, Help: "数据模块", Commands: map[string]*
 			_list_delete(m, arg[0], _domain_chain(m, arg[1]), arg[3], arg[4])
 		}
 	}},
-	MODIFY: {Name: "modify conf key type field value arg...", Help: "编辑", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+	MODIFY: {Name: "modify key sub type field value arg...", Help: "编辑", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 		switch arg[2] {
 		case HASH:
 			_hash_modify(m, arg[0], _domain_chain(m, arg[1]), arg[3], arg[4], arg[5:]...)
@@ -456,7 +456,7 @@ var Index = &ice.Context{Name: MDB, Help: "数据模块", Commands: map[string]*
 			_list_modify(m, arg[0], _domain_chain(m, arg[1]), arg[3], arg[4], arg[5:]...)
 		}
 	}},
-	SELECT: {Name: "select conf key type field value", Help: "查询", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+	SELECT: {Name: "select key sub type field value", Help: "查询", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 		switch arg[2] {
 		case HASH:
 			_hash_select(m, arg[0], _domain_chain(m, arg[1]), kit.Select("", arg, 3), kit.Select(kit.MDB_FOREACH, arg, 4))
@@ -466,7 +466,7 @@ var Index = &ice.Context{Name: MDB, Help: "数据模块", Commands: map[string]*
 			_zone_select(m, arg[0], _domain_chain(m, arg[1]), kit.Select("", arg, 3), kit.Select("", arg, 4))
 		}
 	}},
-	EXPORT: {Name: "export conf key type file", Help: "导出", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+	EXPORT: {Name: "export key sub type file", Help: "导出", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 		switch file := _file_name(m, arg...); arg[2] {
 		case HASH:
 			_hash_export(m, arg[0], _domain_chain(m, arg[1]), file)
@@ -476,7 +476,7 @@ var Index = &ice.Context{Name: MDB, Help: "数据模块", Commands: map[string]*
 			_zone_export(m, arg[0], _domain_chain(m, arg[1]), file)
 		}
 	}},
-	IMPORT: {Name: "import conf key type file", Help: "导入", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+	IMPORT: {Name: "import key sub type file", Help: "导入", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 		switch file := _file_name(m, arg...); arg[2] {
 		case HASH:
 			_hash_import(m, arg[0], _domain_chain(m, arg[1]), file)
@@ -486,7 +486,7 @@ var Index = &ice.Context{Name: MDB, Help: "数据模块", Commands: map[string]*
 			_zone_import(m, arg[0], _domain_chain(m, arg[1]), file)
 		}
 	}},
-	PRUNES: {Name: "prunes conf key type [field value]...", Help: "清理", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+	PRUNES: {Name: "prunes key sub type [field value]...", Help: "清理", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 		switch arg[2] {
 		case HASH:
 			_hash_prunes(m, arg[0], _domain_chain(m, arg[1]), arg[3:]...)
@@ -494,7 +494,7 @@ var Index = &ice.Context{Name: MDB, Help: "数据模块", Commands: map[string]*
 			_list_prunes(m, arg[0], _domain_chain(m, arg[1]), arg[3:]...)
 		}
 	}},
-	INPUTS: {Name: "inputs conf key type field value", Help: "补全", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+	INPUTS: {Name: "inputs key sub type field value", Help: "补全", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 		switch arg[2] {
 		case HASH:
 			_hash_inputs(m, arg[0], _domain_chain(m, arg[1]), kit.Select("name", arg, 3), kit.Select("", arg, 4))

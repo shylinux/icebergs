@@ -13,17 +13,43 @@ func _status_each(m *ice.Message, title string, cmds ...string) {
 		count, total := 0, len(m.Confm(REPOS, kit.MDB_HASH))
 		toast("begin", count, total)
 
+		list := []string{}
 		m.Cmd(REPOS, ice.OptionFields("name,path")).Table(func(index int, value map[string]string, head []string) {
 			toast(value[kit.MDB_NAME], count, total)
 
-			m.Cmd(cmds, ice.Option{cli.CMD_DIR, value[kit.MDB_PATH]})
+			msg := m.Cmd(cmds, ice.Option{cli.CMD_DIR, value[kit.MDB_PATH]})
+			if msg.Append(cli.CMD_CODE) != "0" {
+				list = append(list, value[kit.MDB_NAME])
+				m.Toast(msg.Append(cli.CMD_ERR), "error: "+value[kit.MDB_NAME], "3s")
+				m.Sleep("3s")
+			}
 			count++
 		})
 
-		toast("success", count, total)
+		if len(list) > 0 {
+			m.Toast(strings.Join(list, "\n"), "failure", "30s")
+		} else {
+			toast("success", count, total)
+		}
+
 	})
 }
-func _status_list(m *ice.Message) {
+func _status_stat(m *ice.Message, files, adds, dels int) (int, int, int) {
+	ls := kit.Split(m.Cmdx(cli.SYSTEM, GIT, DIFF, "--shortstat"), ",", ",")
+	for _, v := range ls {
+		n := kit.Int(kit.Split(strings.TrimSpace(v))[0])
+		switch {
+		case strings.Contains(v, "file"):
+			files += n
+		case strings.Contains(v, "insert"):
+			adds += n
+		case strings.Contains(v, "delet"):
+			dels += n
+		}
+	}
+	return files, adds, dels
+}
+func _status_list(m *ice.Message) (files, adds, dels int) {
 	m.Cmd(REPOS, ice.OptionFields("name,path")).Table(func(index int, value map[string]string, head []string) {
 		m.Option(cli.CMD_DIR, value[kit.MDB_PATH])
 		diff := m.Cmdx(cli.SYSTEM, GIT, STATUS, "-sb")
@@ -49,7 +75,10 @@ func _status_list(m *ice.Message) {
 			}
 			m.PushButton(strings.Join(list, ","))
 		}
+
+		files, adds, dels = _status_stat(m, files, adds, dels)
 	})
+	return
 }
 
 const (
@@ -65,7 +94,7 @@ const STATUS = "status"
 
 func init() {
 	Index.Merge(&ice.Context{Commands: map[string]*ice.Command{
-		STATUS: {Name: "status name auto", Help: "代码状态", Action: map[string]*ice.Action{
+		STATUS: {Name: "status name auto", Help: "状态机", Action: map[string]*ice.Action{
 			PULL: {Name: "pull", Help: "下载", Hand: func(m *ice.Message, arg ...string) {
 				_status_each(m, PULL, cli.SYSTEM, GIT, PULL)
 				m.ProcessHold()
@@ -104,13 +133,21 @@ func init() {
 			}},
 		}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			if len(arg) == 0 {
-				_status_list(m)
 				m.Action(PULL, MAKE, PUSH)
+
+				files, adds, dels := _status_list(m)
+				m.Status("files", files, "adds", adds, "dels", dels)
+				m.Toast(kit.Format("files: %d, adds: %d, dels: %d", files, adds, dels), ice.CONTEXTS, "3s")
 				return
 			}
 
-			m.Echo(m.Cmdx(cli.SYSTEM, GIT, DIFF, ice.Option{cli.CMD_DIR, _repos_path(arg[0])}))
+			m.Option(cli.CMD_DIR, _repos_path(arg[0]))
+			m.Echo(m.Cmdx(cli.SYSTEM, GIT, DIFF))
 			m.Action(COMMIT)
+
+			files, adds, dels := _status_stat(m, 0, 0, 0)
+			m.Status("files", files, "adds", adds, "dels", dels)
+			m.Toast(kit.Format("files: %d, adds: %d, dels: %d", files, adds, dels), arg[0], "3s")
 		}},
 	}})
 }

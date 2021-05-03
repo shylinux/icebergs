@@ -36,6 +36,8 @@ func _header_share(m *ice.Message, arg ...string) {
 		link = strings.Replace(link, tcp.LOCALHOST, m.Cmd(tcp.HOST, ice.OptionFields(tcp.IP)).Append(tcp.IP), 1)
 	}
 
+	m.Set(kit.MDB_NAME)
+	m.Set(kit.MDB_TEXT)
 	m.Push(kit.MDB_NAME, link)
 	m.PushQRCode(kit.MDB_TEXT, link)
 }

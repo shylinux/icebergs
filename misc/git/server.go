@@ -24,7 +24,7 @@ func init() {
 			SERVER: {Name: SERVER, Help: "服务器", Value: kit.Data(kit.MDB_PATH, "usr/local")},
 		},
 		Commands: map[string]*ice.Command{
-			SERVER: {Name: "server path auto create", Help: "server", Action: map[string]*ice.Action{
+			SERVER: {Name: "server path auto create", Help: "服务器", Action: map[string]*ice.Action{
 				mdb.CREATE: {Name: "create name", Help: "添加", Hand: func(m *ice.Message, arg ...string) {
 					m.Option(cli.CMD_DIR, path.Join(m.Conf(SERVER, kit.META_PATH), REPOS))
 					m.Cmd(cli.SYSTEM, GIT, INIT, "--bare", m.Option(kit.MDB_NAME))

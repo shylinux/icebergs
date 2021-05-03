@@ -206,6 +206,13 @@ func DumpBinPack(w io.Writer, name string, cb func(string)) bool {
 		w.Write(b)
 		return true
 	}
+	if b, ok := BinPack[strings.TrimPrefix(name, "usr/volcanos")]; ok {
+		if cb != nil {
+			cb(name)
+		}
+		w.Write(b)
+		return true
+	}
 	return false
 }
 

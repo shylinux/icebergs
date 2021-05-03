@@ -51,14 +51,16 @@ const ( // MSG
 	MSG_SOURCE = "_source"
 	MSG_TARGET = "_target"
 	MSG_HANDLE = "_handle"
-	MSG_ACTION = "_action"
-	MSG_DAEMON = "_daemon"
-	MSG_UPLOAD = "_upload"
 	MSG_OUTPUT = "_output"
 	MSG_ARGS   = "_args"
 
-	MSG_PROCESS = "_process"
+	MSG_DAEMON = "_daemon"
+	MSG_UPLOAD = "_upload"
+	MSG_ACTION = "_action"
+	MSG_STATUS = "_status"
+
 	MSG_CONTROL = "_control"
+	MSG_PROCESS = "_process"
 	MSG_DISPLAY = "_display"
 
 	MSG_CMDS   = "cmds"

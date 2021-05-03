@@ -5,6 +5,7 @@ import (
 	"net/url"
 	"path"
 	"strings"
+	"time"
 
 	kit "github.com/shylinux/toolkits"
 )
@@ -257,6 +258,14 @@ func OptionFields(str string) Option { return Option{"fields", str} }
 func OptionHash(str string) Option   { return Option{kit.MDB_HASH, str} }
 
 func (m *Message) Toast(content string, arg ...interface{}) {
+	if len(arg) > 1 {
+		switch val := arg[1].(type) {
+		case string:
+			if value, err := time.ParseDuration(val); err == nil {
+				arg[1] = int(value / time.Millisecond)
+			}
+		}
+	}
 	m.Cmd("web.space", m.Option("_daemon"), "toast", "", content, arg)
 }
 func (m *Message) GoToast(title string, cb func(func(string, int, int))) {
@@ -284,3 +293,21 @@ func (m *Message) Process(action string, arg ...interface{}) {
 }
 func (m *Message) ProcessHold() { m.Process(PROCESS_HOLD) }
 func (m *Message) ProcessBack() { m.Process(PROCESS_BACK) }
+
+func (m *Message) ProcessRefresh(delay string) {
+	if d, e := time.ParseDuration(delay); e == nil {
+		m.Option("_delay", int(d/time.Millisecond))
+	}
+	m.Process(PROCESS_REFRESH)
+}
+
+func (m *Message) Status(arg ...interface{}) {
+	args := kit.Simple(arg)
+	list := []map[string]string{}
+	for i := 0; i < len(args)-1; i += 2 {
+		list = append(list, map[string]string{
+			"name": args[i], "value": args[i+1],
+		})
+	}
+	m.Option(MSG_STATUS, kit.Format(list))
+}

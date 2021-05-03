@@ -4,7 +4,6 @@ import (
 	ice "github.com/shylinux/icebergs"
 	"github.com/shylinux/icebergs/base/mdb"
 	"github.com/shylinux/icebergs/base/nfs"
-	"github.com/shylinux/icebergs/base/web"
 	kit "github.com/shylinux/toolkits"
 
 	"fmt"
@@ -62,12 +61,6 @@ func _pack_volcanos(m *ice.Message, pack *os.File, dir string) {
 	}
 	for _, k := range []string{"lib", "page", "panel", "plugin"} {
 		m.Cmd(nfs.DIR, k).Table(func(index int, value map[string]string, head []string) {
-			if value[kit.MDB_PATH] == "page/index.html" {
-				pack.WriteString(fmt.Sprintf("        \"%s/%s\": %s,\n",
-					m.Conf(web.SERVE, kit.Keym(ice.VOLCANOS, kit.MDB_PATH)), value[kit.MDB_PATH],
-					_pack_file(m, path.Join(dir, value[kit.MDB_PATH]))))
-				return
-			}
 			pack.WriteString(fmt.Sprintf("        \"/%s\": %s,\n",
 				value[kit.MDB_PATH], _pack_file(m, path.Join(dir, value[kit.MDB_PATH]))))
 		})

@@ -54,27 +54,31 @@ func _action_right(m *ice.Message, river string, storm string) (ok bool) {
 	}
 	return ok
 }
-func _action_share(m *ice.Message, cmd string, arg ...string) {
+func _action_share(m *ice.Message, arg ...string) {
 	switch msg := m.Cmd(web.SHARE, arg[1]); msg.Append(kit.MDB_TYPE) {
 	case web.FIELD:
 		if cmd := kit.Keys(msg.Append(web.RIVER), msg.Append(web.STORM)); len(arg) == 2 {
 			m.Push("index", cmd)
 			m.Push("title", msg.Append(kit.MDB_NAME))
 			m.Push("args", msg.Append(kit.MDB_TEXT))
-		} else {
-			if m.Warn(kit.Time() > kit.Time(msg.Append(kit.MDB_TIME)), ice.ErrExpire) {
-				return // 分享超时
-			}
-			m.Log_AUTH(
-				aaa.USERROLE, m.Option(ice.MSG_USERROLE, msg.Append(aaa.USERROLE)),
-				aaa.USERNAME, m.Option(ice.MSG_USERNAME, msg.Append(aaa.USERNAME)),
-			)
-			if m.Warn(!m.Right(arg[3:]), ice.ErrNotRight) {
-				return // 没有授权
-			}
-
-			m.Cmdy(cmd, arg[3:])
+			break
 		}
+
+		if m.Warn(kit.Time() > kit.Time(msg.Append(kit.MDB_TIME)), ice.ErrExpire) {
+			break // 分享超时
+		}
+		m.Log_AUTH(
+			aaa.USERROLE, m.Option(ice.MSG_USERROLE, msg.Append(aaa.USERROLE)),
+			aaa.USERNAME, m.Option(ice.MSG_USERNAME, msg.Append(aaa.USERNAME)),
+		)
+		if m.Warn(!m.Right(arg[2:]), ice.ErrNotRight) {
+			break // 没有授权
+		}
+
+		if m.Option(ice.MSG_UPLOAD) != "" {
+			_action_upload(m) // 上传文件
+		}
+		m.Cmdy(arg[2:])
 	}
 }
 
@@ -144,7 +148,7 @@ func init() {
 				}},
 			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 				if arg[0] == "_share" {
-					_action_share(m, cmd, arg...)
+					_action_share(m, arg...)
 					return
 				}
 

@@ -1,16 +1,15 @@
 package web
 
 import (
+	"fmt"
+	"net/http"
+	"path"
+	"time"
+
 	ice "github.com/shylinux/icebergs"
 	"github.com/shylinux/icebergs/base/aaa"
 	"github.com/shylinux/icebergs/base/cli"
 	kit "github.com/shylinux/toolkits"
-
-	"fmt"
-	"net/http"
-	"path"
-	"strings"
-	"time"
 )
 
 const (
@@ -91,9 +90,17 @@ func RenderCookie(msg *ice.Message, value string, arg ...string) { // name path 
 func RenderType(w http.ResponseWriter, name, mime string) {
 	if mime != "" {
 		w.Header().Set(ContentType, mime)
-	} else if strings.HasSuffix(name, ".css") {
+		return
+	}
+
+	switch kit.Ext(name) {
+	case "css":
 		w.Header().Set(ContentType, "text/css; charset=utf-8")
-	} else {
+	case "pdf":
+		w.Header().Set(ContentType, "application/pdf")
+
+	default:
+		break
 		w.Header().Set(ContentType, ContentHTML)
 	}
 }

@@ -171,6 +171,12 @@ func _serve_login(msg *ice.Message, cmds []string, w http.ResponseWriter, r *htt
 	if ls := strings.Split(r.URL.Path, "/"); msg.Conf(SERVE, kit.Keym(aaa.BLACK, ls[1])) == "true" {
 		return cmds, false // 黑名单
 	} else if msg.Conf(SERVE, kit.Keym(aaa.WHITE, ls[1])) == "true" {
+		if msg.Option(ice.MSG_USERNAME) == "" && msg.Option(SHARE) != "" {
+			share := msg.Cmd(SHARE, msg.Option(SHARE))
+			msg.Option(ice.MSG_USERNAME, share.Append(aaa.USERNAME))
+			msg.Option(ice.MSG_USERROLE, share.Append(aaa.USERROLE))
+			msg.Debug("login ")
+		}
 		return cmds, true // 白名单
 	}
 

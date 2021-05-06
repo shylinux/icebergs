@@ -94,7 +94,7 @@ const CONFIG = "config"
 func init() {
 	Index.Merge(&ice.Context{
 		Configs: map[string]*ice.Config{
-			CONFIG: {Name: CONFIG, Help: "配置", Value: kit.Data(kit.MDB_PATH, "var/conf")},
+			CONFIG: {Name: CONFIG, Help: "配置", Value: kit.Data(kit.MDB_PATH, ice.VAR_CONF)},
 		},
 		Commands: map[string]*ice.Command{
 			CONFIG: {Name: "config key auto", Help: "配置", Action: map[string]*ice.Action{

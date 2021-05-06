@@ -1,8 +1,6 @@
 package ctx
 
 import (
-	"strings"
-
 	ice "github.com/shylinux/icebergs"
 	"github.com/shylinux/icebergs/base/mdb"
 	kit "github.com/shylinux/toolkits"
@@ -27,7 +25,7 @@ func _command_list(m *ice.Message, name string) {
 	m.Spawn(m.Source()).Search(name, func(p *ice.Context, s *ice.Context, key string, cmd *ice.Command) {
 		m.Push(kit.MDB_KEY, s.Cap(ice.CTX_FOLLOW))
 		m.Push(kit.MDB_NAME, kit.Format(cmd.Name))
-		m.Push(kit.MDB_HELP, kit.Simple(cmd.Help)[0])
+		m.Push(kit.MDB_HELP, kit.Format(cmd.Help))
 		m.Push(kit.MDB_META, kit.Formats(cmd.Meta))
 		m.Push(kit.MDB_LIST, kit.Formats(cmd.List))
 	})
@@ -58,7 +56,7 @@ func init() {
 				}
 			}},
 		}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			_command_list(m, strings.Join(arg, "."))
+			_command_list(m, kit.Keys(arg))
 		}},
 	}})
 }

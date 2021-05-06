@@ -21,6 +21,14 @@ const ( // REPOS
 	REQUIRE = "require"
 )
 const ( // DIR
+	USR_VOLCANOS = "usr/volcanos"
+	USR_INTSHELL = "usr/intshell"
+	USR_PUBLISH  = "usr/publish"
+
+	PROTO_JS = "proto.js"
+	FRAME_JS = "frame.js"
+
+	VAR_CONF    = "var/conf"
 	ETC_MISS    = "etc/miss.sh"
 	ETC_INIT    = "etc/init.shy"
 	ETC_EXIT    = "etc/exit.shy"

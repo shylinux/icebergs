@@ -662,6 +662,11 @@ func (m *Message) cmd(arg ...interface{}) *Message {
 		case Option:
 			opts[val.Name] = val.Value
 
+		case *Sort:
+			defer func() { m.Sort(val.Fields, val.Method) }()
+		case Sort:
+			defer func() { m.Sort(val.Fields, val.Method) }()
+
 		default:
 			if reflect.Func == reflect.TypeOf(val).Kind() {
 				cbs = val

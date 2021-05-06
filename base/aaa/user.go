@@ -67,11 +67,6 @@ func UserRole(m *ice.Message, username interface{}) (role string) {
 	})
 	return
 }
-func UserRoot(m *ice.Message) {
-	ice.Info.PassWord = kit.Hashs("uniq")
-	ice.Info.PassWord = ice.Info.UserName
-	_user_create(m, ice.Info.UserName, ice.Info.PassWord)
-}
 func UserLogin(m *ice.Message, username, password string) bool {
 	if _user_login(m, username, password) {
 		m.Log_AUTH(
@@ -88,8 +83,6 @@ const (
 	INVITE = "invite"
 )
 const (
-	BACKGROUND = "background"
-
 	AVATAR = "avatar"
 	GENDER = "gender"
 	MOBILE = "mobile"
@@ -99,6 +92,8 @@ const (
 	COUNTRY  = "country"
 	PROVINCE = "province"
 	LANGUAGE = "language"
+
+	BACKGROUND = "background"
 )
 const (
 	USERZONE = "userzone"
@@ -124,9 +119,6 @@ func init() {
 					_user_create(m, m.Option(USERNAME), m.Option(PASSWORD))
 					_role_user(m, m.Option(USERROLE), m.Option(USERNAME))
 				}},
-				ROLE: {Name: "role userrole=void,tech", Help: "角色", Hand: func(m *ice.Message, arg ...string) {
-					_role_user(m, m.Option(USERROLE), m.Option(USERNAME))
-				}},
 				mdb.MODIFY: {Name: "modify", Help: "编辑", Hand: func(m *ice.Message, arg ...string) {
 					m.Cmdy(mdb.MODIFY, USER, "", mdb.HASH, USERNAME, m.Option(USERNAME), arg)
 				}},
@@ -137,9 +129,6 @@ func init() {
 					if arg[0] == USER {
 						_user_search(m, arg[0], arg[1], kit.Select("", arg, 2))
 					}
-				}},
-				"login": {Name: "login", Help: "登录", Hand: func(m *ice.Message, arg ...string) {
-					m.EchoQRCode("hi")
 				}},
 			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 				m.Fields(len(arg) == 0, "time,username,userzone,usernick")

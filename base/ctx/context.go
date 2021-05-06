@@ -7,9 +7,9 @@ import (
 
 func _context_list(m *ice.Message, all bool) {
 	m.Travel(func(p *ice.Context, s *ice.Context) {
-		m.Push(kit.MDB_NAME, kit.Select("ice", s.Cap(ice.CTX_FOLLOW)))
-		m.Push(ice.CTX_STATUS, s.Cap(ice.CTX_STATUS))
-		m.Push(ice.CTX_STREAM, s.Cap(ice.CTX_STREAM))
+		m.Push(kit.MDB_NAME, s.Cap(ice.CTX_FOLLOW))
+		m.Push(kit.MDB_STATUS, s.Cap(ice.CTX_STATUS))
+		m.Push(kit.MDB_STREAM, s.Cap(ice.CTX_STREAM))
 		m.Push(kit.MDB_HELP, s.Help)
 	})
 }

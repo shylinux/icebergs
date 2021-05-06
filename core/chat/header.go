@@ -101,7 +101,7 @@ func init() {
 				}},
 
 				code.WEBPACK: {Name: "webpack", Help: "网页打包", Hand: func(m *ice.Message, arg ...string) {
-					m.Cmdy(code.WEBPACK, mdb.CREATE)
+					m.Cmdy(code.WEBPACK, mdb.CREATE, kit.MDB_NAME, m.Option(kit.MDB_NAME))
 				}},
 				aaa.BACKGROUND: {Name: "background", Help: "背景图片", Hand: func(m *ice.Message, arg ...string) {
 					_header_users(m, aaa.BACKGROUND, arg...)

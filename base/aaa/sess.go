@@ -44,7 +44,7 @@ func SessCreate(m *ice.Message, username string) string {
 	return m.Option(ice.MSG_SESSID, _sess_create(m, username))
 }
 func SessIsCli(m *ice.Message) bool {
-	if m.Option(ice.MSG_USERUA) == "" || strings.Contains(m.Option(ice.MSG_USERUA), "curl") {
+	if m.Option(ice.MSG_USERUA) == "" || !strings.HasPrefix(m.Option(ice.MSG_USERUA), "Mozilla/5.0") {
 		return true
 	}
 	return false

@@ -257,6 +257,11 @@ type Option struct {
 func OptionFields(str string) Option { return Option{"fields", str} }
 func OptionHash(str string) Option   { return Option{kit.MDB_HASH, str} }
 
+type Sort struct {
+	Fields string
+	Method string
+}
+
 func (m *Message) Toast(content string, arg ...interface{}) {
 	if len(arg) > 1 {
 		switch val := arg[1].(type) {

@@ -21,6 +21,7 @@ field sess aaa.sess
 field user aaa.user
 
 chapter "项目"
-field "icebergs" web.code.git.trend args `icebergs`
-field "icebergs" web.code.inner args `usr/icebergs/ misc/wx/wx.go`
+field "趋势图" web.code.git.trend args `icebergs`
+field "源代码" web.code.inner args `usr/icebergs/ misc/wx/wx.go`
+field "架构图" web.code.git.spide args `icebergs`
 

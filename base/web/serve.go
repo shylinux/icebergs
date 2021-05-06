@@ -173,9 +173,13 @@ func _serve_login(msg *ice.Message, cmds []string, w http.ResponseWriter, r *htt
 	} else if msg.Conf(SERVE, kit.Keym(aaa.WHITE, ls[1])) == "true" {
 		if msg.Option(ice.MSG_USERNAME) == "" && msg.Option(SHARE) != "" {
 			share := msg.Cmd(SHARE, msg.Option(SHARE))
-			msg.Option(ice.MSG_USERNAME, share.Append(aaa.USERNAME))
-			msg.Option(ice.MSG_USERROLE, share.Append(aaa.USERROLE))
-			msg.Debug("login ")
+			switch share.Append(kit.MDB_TYPE) {
+			case LOGIN:
+				// Render(msg, aaa.SessCreate(msg, share.Append(aaa.USERNAME)))
+			case FIELD:
+				msg.Option(ice.MSG_USERNAME, share.Append(aaa.USERNAME))
+				msg.Option(ice.MSG_USERROLE, share.Append(aaa.USERROLE))
+			}
 		}
 		return cmds, true // 白名单
 	}
@@ -208,13 +212,13 @@ func init() {
 					ice.REQUIRE, true, ice.PUBLISH, true,
 				), "logheaders", false,
 
-				kit.SSH_STATIC, kit.Dict("/", "usr/volcanos/"),
-				ice.VOLCANOS, kit.Dict(kit.MDB_PATH, "usr/volcanos", kit.SSH_INDEX, "page/index.html",
-					kit.SSH_REPOS, "https://github.com/shylinux/volcanos", kit.SSH_BRANCH, "master",
-				), ice.PUBLISH, "usr/publish/",
+				kit.SSH_STATIC, kit.Dict("/", ice.USR_VOLCANOS),
+				ice.VOLCANOS, kit.Dict(kit.MDB_PATH, ice.USR_VOLCANOS, kit.SSH_INDEX, "page/index.html",
+					kit.SSH_REPOS, "https://github.com/shylinux/volcanos", kit.SSH_BRANCH, kit.SSH_MASTER,
+				), ice.PUBLISH, ice.USR_PUBLISH,
 
-				ice.INTSHELL, kit.Dict(kit.MDB_PATH, "usr/intshell", kit.SSH_INDEX, "index.sh",
-					kit.SSH_REPOS, "https://github.com/shylinux/intshell", kit.SSH_BRANCH, "master",
+				ice.INTSHELL, kit.Dict(kit.MDB_PATH, ice.USR_INTSHELL, kit.SSH_INDEX, "index.sh",
+					kit.SSH_REPOS, "https://github.com/shylinux/intshell", kit.SSH_BRANCH, kit.SSH_MASTER,
 				), ice.REQUIRE, ".ish/pluged",
 			)},
 		},

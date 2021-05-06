@@ -293,7 +293,6 @@ func (f *Frame) Start(m *ice.Message, arg ...string) bool {
 		m.Option(ice.MSG_USERNAME, ice.Info.UserName)
 		m.Option(ice.MSG_USERROLE, aaa.ROOT)
 		m.Option(ice.MSG_USERZONE, "boot")
-		aaa.UserRoot(m)
 	default:
 		f.target = m.Source()
 

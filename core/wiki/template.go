@@ -41,10 +41,6 @@ var local = `<code class="story"
 data-type="{{.Option "type"}}" data-name="{{.Option "name"}}" data-text="{{.Option "text"}}"
 >{{range $index, $value := .Optionv "input"}}{{$value}}{{end}}</code>`
 
-var image = `<img class="story"
-{{range $k, $v := .Optionv "extra"}}data-{{$k}}='{{$v}}'{{end}}
-data-type="{{.Option "type"}}" data-name="{{.Option "name"}}" data-text="{{.Option "text"}}"
-title="{{.Option "text"}}" src="{{.Option "text"}}">`
 var chart = `<svg class="story" vertion="1.1" xmlns="http://www.w3.org/2000/svg" dominant-baseline="middle" text-anchor="middle"
 	data-type="{{.Option "type"}}" data-name="{{.Option "name"}}" data-text="{{.Option "text"}}"
 	width="{{.Option "width"}}" height="{{.Option "height"}}"
@@ -61,8 +57,3 @@ var field = `<fieldset class="story {{.Option "name"}}" data-type="{{.Option "ty
 </fieldset>
 `
 var other = ``
-
-var video = `<video class="story"
-{{range $k, $v := .Optionv "extra"}}data-{{$k}}='{{$v}}'{{end}}
-data-type="{{.Option "type"}}" data-name="{{.Option "name"}}" data-text="{{.Option "text"}}"
-title="{{.Option "text"}}" src="{{.Option "text"}}" controls></video>`

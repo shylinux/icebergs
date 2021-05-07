@@ -12,7 +12,7 @@ func init() {
 	Index.Merge(&ice.Context{
 		Configs: map[string]*ice.Config{
 			FEEL: {Name: FEEL, Help: "影音媒体", Value: kit.Data(
-				kit.MDB_PATH, "usr/local/image", "regs", ".*.(png|PNG|jpg|JPG|jpeg|mp4|m4v|MOV)",
+				kit.MDB_PATH, "usr/local/image", kit.MDB_REGEXP, ".*.(png|PNG|jpg|JPG|jpeg|mp4|m4v|MOV)",
 			)},
 		},
 		Commands: map[string]*ice.Command{
@@ -23,8 +23,7 @@ func init() {
 					_wiki_upload(m, FEEL, m.Option(kit.MDB_PATH))
 				}},
 			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-				if !_wiki_list(m, FEEL, kit.Select("./", arg, 0)) {
-				}
+				_wiki_list(m, FEEL, kit.Select("./", arg, 0))
 			}},
 		},
 	})

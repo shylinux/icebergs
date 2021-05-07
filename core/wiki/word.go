@@ -158,18 +158,6 @@ func _local_show(m *ice.Message, name, text string, arg ...string) {
 	m.Render(ice.RENDER_TEMPLATE, m.Conf(LOCAL, kit.Keym(kit.MDB_TEMPLATE)))
 }
 
-func _image_show(m *ice.Message, name, text string, arg ...string) {
-	if name == "qrcode" {
-		m.EchoQRCode(text)
-		return
-	}
-	if !strings.HasPrefix(text, "http") && !strings.HasPrefix(text, "/") {
-		text = "/share/local/usr/local/image/" + text
-	}
-
-	_option(m, IMAGE, name, text, arg...)
-	m.Render(ice.RENDER_TEMPLATE, m.Conf(IMAGE, kit.Keym(kit.MDB_TEMPLATE)))
-}
 func _chart_show(m *ice.Message, kind, name, text string, arg ...string) {
 	var chart Chart
 	switch kind {
@@ -304,7 +292,6 @@ const (
 	SHELL = "shell"
 	LOCAL = "local"
 
-	IMAGE = "image"
 	CHART = "chart"
 	FIELD = "field"
 	OTHER = "other"
@@ -335,13 +322,12 @@ func init() {
 			SHELL: {Name: SHELL, Help: "命令", Value: kit.Data(kit.MDB_TEMPLATE, shell)},
 			LOCAL: {Name: LOCAL, Help: "文件", Value: kit.Data(kit.MDB_TEMPLATE, local)},
 
-			IMAGE: {Name: IMAGE, Help: "图片", Value: kit.Data(kit.MDB_TEMPLATE, image)},
 			CHART: {Name: CHART, Help: "图表", Value: kit.Data(kit.MDB_TEMPLATE, chart, "suffix", `</svg>`)},
 			FIELD: {Name: FIELD, Help: "插件", Value: kit.Data(kit.MDB_TEMPLATE, field)},
 			OTHER: {Name: FIELD, Help: "网页", Value: kit.Data(kit.MDB_TEMPLATE, other)},
 
 			WORD: {Name: WORD, Help: "语言文字", Value: kit.Data(
-				kit.MDB_PATH, "", "regs", ".*\\.shy", "alias", map[string]interface{}{
+				kit.MDB_PATH, "", kit.MDB_REGEXP, ".*\\.shy", "alias", map[string]interface{}{
 					PREMENU: []interface{}{TITLE, PREMENU},
 					CHAPTER: []interface{}{TITLE, CHAPTER},
 					SECTION: []interface{}{TITLE, SECTION},
@@ -398,15 +384,6 @@ func init() {
 				_local_show(m, arg[0], kit.Select(arg[0], arg[1]), arg[2:]...)
 			}},
 
-			IMAGE: {Name: "image [name] url", Help: "图片", Action: map[string]*ice.Action{
-				mdb.RENDER: {Hand: func(m *ice.Message, arg ...string) {
-					_image_show(m, arg[1], path.Join(arg[2], arg[1]))
-				}},
-			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-				arg = _name(m, arg)
-				_image_show(m, arg[0], kit.Select(arg[0], arg[1]), arg[2:]...)
-				m.Render("")
-			}},
 			CHART: {Name: "chart label|chain [name] text", Help: "图表", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 				if len(arg) == 2 {
 					arg = []string{arg[0], "", arg[1]}

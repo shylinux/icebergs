@@ -13,7 +13,7 @@ const DRAW = "draw"
 func init() {
 	Index.Merge(&ice.Context{
 		Configs: map[string]*ice.Config{
-			DRAW: {Name: DRAW, Help: "思维导图", Value: kit.Data(kit.MDB_PATH, "", "regs", ".*\\.svg")},
+			DRAW: {Name: DRAW, Help: "思维导图", Value: kit.Data(kit.MDB_PATH, "", kit.MDB_REGEXP, ".*\\.svg")},
 		},
 		Commands: map[string]*ice.Command{
 			DRAW: {Name: "draw path=src/ file=main.svg 刷新:button=auto 编辑 save 项目 参数", Help: "思维导图", Meta: kit.Dict(

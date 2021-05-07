@@ -24,6 +24,7 @@ const ( // DIR
 	USR_VOLCANOS = "usr/volcanos"
 	USR_INTSHELL = "usr/intshell"
 	USR_PUBLISH  = "usr/publish"
+	USR_LOCAL    = "usr/local"
 
 	PROTO_JS = "proto.js"
 	FRAME_JS = "frame.js"

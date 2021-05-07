@@ -1,3 +1,10 @@
+qrcode hi
+image `qrcode_for_gh_1c21ed4eb46b_258.jpg`
+video `shg_1137499128_1047_36a6fc44db4a4100b7087e98c89bvide_f30.mp4`
+field feel
+
+return
+
 title "微信公众号"
 refer `
 官网 https://weixin.qq.com/
@@ -5,7 +12,6 @@ refer `
 文档 https://developers.weixin.qq.com/doc/offiaccount/Getting_Started/Overview.html
 源码 https://github.com/shylinux/icebergs/blob/master/misc/wx/wx.go
 `
-image `qrcode_for_gh_1c21ed4eb46b_258.jpg`
 
 chapter "应用"
 field scan web.chat.scan

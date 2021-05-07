@@ -42,6 +42,14 @@ func _user_search(m *ice.Message, kind, name, text string) {
 	})
 }
 
+func UserRoot(m *ice.Message) {
+	m.Option(ice.MSG_USERNAME, ice.Info.UserName)
+	m.Option(ice.MSG_USERROLE, ROOT)
+
+	if m.Richs(USER, "", ice.Info.UserName, nil) == nil {
+		_user_create(m, ice.Info.UserName, kit.Hashs())
+	}
+}
 func UserZone(m *ice.Message, username interface{}) (zone string) {
 	m.Richs(USER, nil, kit.Format(username), func(key string, value map[string]interface{}) {
 		value = kit.GetMeta(value)

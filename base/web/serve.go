@@ -157,8 +157,9 @@ func _serve_login(msg *ice.Message, cmds []string, w http.ResponseWriter, r *htt
 		aaa.SessCheck(msg, msg.Option(ice.MSG_SESSID))
 		// 会话认证
 	}
+
 	if msg.Option(ice.MSG_USERNAME) == "" && tcp.IsLocalHost(msg, msg.Option(ice.MSG_USERIP)) && msg.Conf(SERVE, kit.Keym(tcp.LOCALHOST)) == "true" {
-		aaa.UserLogin(msg, ice.Info.UserName, ice.Info.PassWord)
+		aaa.UserRoot(msg)
 		// 主机认证
 	}
 

@@ -332,6 +332,9 @@ func init() {
 						m.Resultv(data[ice.MSG_RESULT])
 
 					default:
+						b, _ := ioutil.ReadAll(res.Body)
+						m.Echo(string(b))
+						break
 						if strings.HasPrefix(res.Header.Get(ContentType), ContentHTML) {
 							b, _ := ioutil.ReadAll(res.Body)
 							m.Echo(string(b))

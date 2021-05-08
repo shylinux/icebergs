@@ -1,7 +1,6 @@
 package git
 
 import (
-	"os"
 	"path"
 	"strings"
 
@@ -25,6 +24,11 @@ func _spide_for(text string, cb func([]string)) {
 func _spide_go(m *ice.Message, file string) {
 	_spide_for(m.Cmdx(cli.SYSTEM, "gotags", file), func(ls []string) {
 		switch ls[3] {
+		case "i":
+			return
+		case "w", "e":
+			return
+			ls[0] = "-" + ls[0] + ":" + strings.TrimPrefix(ls[len(ls)-1], "type:")
 		case "m":
 			if strings.HasPrefix(ls[5], "ctype") {
 				ls[0] = strings.TrimPrefix(ls[5], "ctype:") + ":" + ls[0]
@@ -33,8 +37,6 @@ func _spide_go(m *ice.Message, file string) {
 			} else {
 				ls[0] = ls[3] + ":" + ls[0]
 			}
-		case "w":
-			ls[0] = "-" + ls[0] + ":" + strings.TrimPrefix(ls[len(ls)-1], "type:")
 		default:
 			ls[0] = ls[3] + ":" + ls[0]
 		}
@@ -69,7 +71,7 @@ func init() {
 				return
 			}
 
-			if wd, _ := os.Getwd(); arg[0] == path.Base(wd) {
+			if arg[0] == path.Base(kit.Pwd()) {
 				m.Option(nfs.DIR_ROOT, path.Join(kit.SSH_SRC))
 			} else {
 				m.Option(nfs.DIR_ROOT, path.Join(kit.SSH_USR, arg[0]))
@@ -78,6 +80,7 @@ func init() {
 			if len(arg) == 1 { // 目录列表
 				m.Option(nfs.DIR_DEEP, "true")
 				nfs.Dir(m, kit.MDB_PATH)
+
 				color := []string{"yellow", "blue", "cyan", "red"}
 				m.Table(func(index int, value map[string]string, head []string) {
 					m.Push(kit.MDB_COLOR, color[strings.Count(value[kit.MDB_PATH], "/")%len(color)])

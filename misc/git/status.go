@@ -2,6 +2,7 @@ package git
 
 import (
 	"strings"
+	"time"
 
 	ice "github.com/shylinux/icebergs"
 	"github.com/shylinux/icebergs/base/cli"
@@ -49,7 +50,7 @@ func _status_stat(m *ice.Message, files, adds, dels int) (int, int, int) {
 	}
 	return files, adds, dels
 }
-func _status_list(m *ice.Message) (files, adds, dels int) {
+func _status_list(m *ice.Message) (files, adds, dels int, last time.Time) {
 	m.Cmd(REPOS, ice.OptionFields("name,path")).Table(func(index int, value map[string]string, head []string) {
 		m.Option(cli.CMD_DIR, value[kit.MDB_PATH])
 		diff := m.Cmdx(cli.SYSTEM, GIT, STATUS, "-sb")
@@ -77,6 +78,10 @@ func _status_list(m *ice.Message) (files, adds, dels int) {
 		}
 
 		files, adds, dels = _status_stat(m, files, adds, dels)
+		now, _ := time.Parse("2006-01-02 15:04:05 -0700", strings.TrimSpace(m.Cmdx(cli.SYSTEM, GIT, "log", `--pretty=%cd`, "--date=iso", "-n1")))
+		if now.After(last) {
+			last = now
+		}
 	})
 	return
 }
@@ -135,8 +140,8 @@ func init() {
 			if len(arg) == 0 {
 				m.Action(PULL, MAKE, PUSH)
 
-				files, adds, dels := _status_list(m)
-				m.Status("files", files, "adds", adds, "dels", dels)
+				files, adds, dels, last := _status_list(m)
+				m.Status("files", files, "adds", adds, "dels", dels, "last", last.Format(ice.MOD_TIME))
 				m.Toast(kit.Format("files: %d, adds: %d, dels: %d", files, adds, dels), ice.CONTEXTS, "3s")
 				return
 			}

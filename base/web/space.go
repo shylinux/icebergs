@@ -182,7 +182,19 @@ func _space_handle(m *ice.Message, safe bool, send map[string]*ice.Message, c *w
 }
 func _space_search(m *ice.Message, kind, name, text string, arg ...string) {
 	m.Richs(SPACE, nil, kit.MDB_FOREACH, func(key string, value map[string]interface{}) {
-		if value = kit.GetMeta(value); strings.Contains(kit.Format(value[kit.MDB_NAME]), name) && value[kit.MDB_TYPE] != MASTER {
+		if value = kit.GetMeta(value); !strings.Contains(kit.Format(value[kit.MDB_NAME]), name) {
+			return
+		}
+
+		switch value[kit.MDB_TYPE] {
+		case MASTER:
+			m.Debug("what %v", m.Cmd(SPIDE, value[kit.MDB_NAME]).Append("client.url"))
+			m.Debug("what %v", m.Cmd(SPIDE, value[kit.MDB_NAME]))
+
+			m.PushSearch(kit.SSH_CMD, SPACE, kit.MDB_TYPE, value[kit.MDB_TYPE], kit.MDB_NAME, value[kit.MDB_NAME],
+				kit.MDB_TEXT, m.Cmd(SPIDE, value[kit.MDB_NAME], ice.OptionFields("client.url")).Append("client.url"), value)
+
+		default:
 			m.PushSearch(kit.SSH_CMD, SPACE, kit.MDB_TYPE, value[kit.MDB_TYPE], kit.MDB_NAME, value[kit.MDB_NAME],
 				kit.MDB_TEXT, kit.MergeURL(m.Option(ice.MSG_USERWEB), kit.SSH_POD, kit.Keys(m.Option(ice.MSG_USERPOD), value[kit.MDB_NAME])), value)
 		}

@@ -1,6 +1,10 @@
 package code
 
 import (
+	"os"
+	"path"
+	"strings"
+
 	ice "github.com/shylinux/icebergs"
 	"github.com/shylinux/icebergs/base/aaa"
 	"github.com/shylinux/icebergs/base/cli"
@@ -10,10 +14,6 @@ import (
 	"github.com/shylinux/icebergs/base/tcp"
 	"github.com/shylinux/icebergs/base/web"
 	kit "github.com/shylinux/toolkits"
-
-	"os"
-	"path"
-	"strings"
 )
 
 const PREPARE = "prepare"
@@ -23,8 +23,7 @@ func init() {
 	Index.Merge(&ice.Context{
 		Configs: map[string]*ice.Config{
 			INSTALL: {Name: INSTALL, Help: "安装", Value: kit.Data(
-				kit.MDB_SHORT, kit.MDB_NAME, kit.MDB_PATH, "usr/install",
-				kit.MDB_FIELD, "time,step,size,total,name,link",
+				kit.MDB_SHORT, kit.MDB_NAME, kit.MDB_PATH, ice.USR_INSTALL,
 			)},
 		},
 		Commands: map[string]*ice.Command{

@@ -20,6 +20,9 @@ func _share_domain(m *ice.Message) string {
 		link = m.Cmd(SPACE, SPIDE_DEV, kit.SSH_PWD).Append(kit.MDB_LINK)
 	}
 	if link == "" {
+		link = m.Cmd(SPACE, SPIDE_SHY, kit.SSH_PWD).Append(kit.MDB_LINK)
+	}
+	if link == "" {
 		link = kit.Format("http://%s:%s", m.Cmd(tcp.HOST).Append(tcp.IP), m.Cmd(SERVE).Append(tcp.PORT))
 	}
 	return link

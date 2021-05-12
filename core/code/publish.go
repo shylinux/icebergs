@@ -150,10 +150,11 @@ echo "hello world"
 
 var _contexts = kit.Dict(
 	"source", `# 源码安装
-curl -fsSL {{.Option "httphost"}} |sh -s source
+yum install -y tmux make git vim
+export ctx_dev={{.Option "httphost"}} ctx_temp=$(mktemp); curl -fsSL $ctx_dev -o $ctx_temp; source $ctx_temp source
 `,
 	"binary", `# 应用安装
-curl -fsSL {{.Option "httphost"}} |sh -s binary
+export ctx_dev={{.Option "httphost"}} ctx_temp=$(mktemp); curl -fsSL $ctx_dev -o $ctx_temp; source $ctx_temp binary
 `,
 	"tmux", `# 终端环境
 export ctx_dev={{.Option "httphost"}} ctx_temp=$(mktemp); curl -fsSL $ctx_dev -o $ctx_temp; source $ctx_temp

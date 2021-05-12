@@ -322,7 +322,7 @@ func init() {
 					m.Cmdy(mdb.IMPORT, RIVER, "", mdb.HASH)
 				}},
 				aaa.INVITE: {Name: "invite", Help: "脚本", Hand: func(m *ice.Message, arg ...string) {
-					for _, k := range []string{"tmux", "base", "miss"} {
+					for _, k := range []string{"tmux", "base", "miss", "binary", "source"} {
 						m.Cmdy("web.code.publish", "contexts", k)
 					}
 				}},

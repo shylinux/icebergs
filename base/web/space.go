@@ -202,6 +202,9 @@ func _space_search(m *ice.Message, kind, name, text string, arg ...string) {
 
 	if name == "" {
 		port := m.Cmd(SERVE, ice.Option{mdb.FIELDS, tcp.PORT}).Append(tcp.PORT)
+		if port == "" {
+			return
+		}
 		m.Cmd(tcp.HOST).Table(func(index int, value map[string]string, head []string) {
 			m.PushSearch(kit.SSH_CMD, SPACE, kit.MDB_TYPE, MYSELF, kit.MDB_NAME, value[kit.MDB_NAME],
 				kit.MDB_TEXT, kit.Format("http://%s:%s", value[tcp.IP], port), kit.SSH_POD, kit.Keys(m.Option(ice.MSG_USERPOD), value))

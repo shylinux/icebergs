@@ -1,6 +1,12 @@
 package code
 
 import (
+	"fmt"
+	"os"
+	"path"
+	"runtime"
+	"strings"
+
 	ice "github.com/shylinux/icebergs"
 	"github.com/shylinux/icebergs/base/cli"
 	"github.com/shylinux/icebergs/base/mdb"
@@ -8,12 +14,6 @@ import (
 	"github.com/shylinux/icebergs/base/tcp"
 	"github.com/shylinux/icebergs/base/web"
 	kit "github.com/shylinux/toolkits"
-
-	"fmt"
-	"os"
-	"path"
-	"runtime"
-	"strings"
 )
 
 func _publish_file(m *ice.Message, file string, arg ...string) string {
@@ -149,11 +149,17 @@ echo "hello world"
 }
 
 var _contexts = kit.Dict(
+	"source", `# 源码安装
+curl -fsSL {{.Option "httphost"}} |sh -s source
+`,
+	"binary", `# 应用安装
+curl -fsSL {{.Option "httphost"}} |sh -s binary
+`,
 	"tmux", `# 终端环境
 export ctx_dev={{.Option "httphost"}} ctx_temp=$(mktemp); curl -fsSL $ctx_dev -o $ctx_temp; source $ctx_temp
 `,
 	"base", `# 生产环境
-export ctx_dev={{.Option "httphost"}} ctx_temp=$(mktemp); curl -fsSL $ctx_dev -o $ctx_temp; source $ctx_temp ice
+export ctx_dev={{.Option "httphost"}} ctx_temp=$(mktemp); curl -fsSL $ctx_dev -o $ctx_temp; source $ctx_temp app
 `,
 	"miss", `# 开发环境
 export ctx_dev={{.Option "httphost"}} ctx_temp=$(mktemp); curl -fsSL $ctx_dev -o $ctx_temp; source $ctx_temp dev

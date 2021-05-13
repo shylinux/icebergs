@@ -59,7 +59,7 @@ func _space_dial(m *ice.Message, dev, name string, arg ...string) {
 						}
 					})
 					ls := strings.Split(host, ":")
-					msg.Cmd(tcp.CLIENT, tcp.DIAL, kit.MDB_TYPE, "wss", kit.MDB_NAME, dev, tcp.HOST, ls[0], tcp.PORT, ls[1])
+					msg.Cmd(tcp.CLIENT, tcp.DIAL, kit.MDB_TYPE, "wss", kit.MDB_NAME, dev, tcp.HOST, ls[0], tcp.PORT, kit.Select("443", ls, 1))
 
 					// 断线重连
 					sleep := time.Duration(rand.Intn(kit.Int(redial["a"])*i+2)+kit.Int(redial["b"])) * time.Millisecond

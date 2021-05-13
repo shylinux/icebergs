@@ -1,13 +1,13 @@
 package bash
 
 import (
+	"path"
+
 	ice "github.com/shylinux/icebergs"
 	"github.com/shylinux/icebergs/base/gdb"
 	"github.com/shylinux/icebergs/base/web"
 	"github.com/shylinux/icebergs/core/code"
 	kit "github.com/shylinux/toolkits"
-
-	"path"
 )
 
 const BASH = "bash"
@@ -15,7 +15,7 @@ const BASH = "bash"
 var Index = &ice.Context{Name: BASH, Help: "命令行",
 	Configs: map[string]*ice.Config{
 		BASH: {Name: BASH, Help: "命令行", Value: kit.Data(
-			"source", "http://mirrors.aliyun.com/gnu/bash/bash-4.2.53.tar.gz",
+			kit.SSH_SOURCE, "http://mirrors.aliyun.com/gnu/bash/bash-4.2.53.tar.gz",
 		)},
 	},
 	Commands: map[string]*ice.Command{

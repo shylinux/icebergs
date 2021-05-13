@@ -276,11 +276,11 @@ func (m *Message) Toast(content string, arg ...interface{}) {
 	}
 	m.Cmd("web.space", m.Option("_daemon"), "toast", "", content, arg)
 }
-func (m *Message) GoToast(title string, cb func(func(string, int, int))) {
+func (m *Message) GoToast(title string, cb func(toast func(string, int, int))) {
 	m.Go(func() {
 		cb(func(name string, count, total int) {
 			m.Toast(
-				kit.Format("%s %d/%d", name, count, total),
+				kit.Format("%s %s/%s", name, strings.TrimSuffix(kit.FmtSize(int64(count)), "B"), strings.TrimSuffix(kit.FmtSize(int64(total)), "B")),
 				kit.Format("%s %d%%", title, count*100/total),
 				kit.Select("1000", "10000", count < total),
 				count*100/total,

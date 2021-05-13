@@ -16,6 +16,21 @@ import (
 	kit "github.com/shylinux/toolkits"
 )
 
+type Buffer struct {
+	data []byte
+	m    *ice.Message
+	n    string
+}
+
+func (b *Buffer) Write(buf []byte) (int, error) {
+	b.data = append(b.data, buf...)
+	b.m.Cmd(web.SPACE, b.n, "grow", string(buf))
+	return len(buf), nil
+}
+func (b *Buffer) Close() error {
+	return nil
+}
+
 const PREPARE = "prepare"
 const INSTALL = "install"
 
@@ -31,66 +46,65 @@ func init() {
 				web.DOWNLOAD: {Name: "download link", Help: "下载", Hand: func(m *ice.Message, arg ...string) {
 					link := m.Option(kit.MDB_LINK)
 					name := path.Base(link)
-					p := path.Join(m.Conf(INSTALL, kit.META_PATH), name)
+					file := path.Join(m.Conf(INSTALL, kit.META_PATH), name)
 
-					m.Option(ice.MSG_PROCESS, ice.PROCESS_PROGRESS)
-					m.Option(mdb.FIELDS, m.Conf(INSTALL, kit.META_FIELD))
-					if m.Cmd(mdb.SELECT, INSTALL, "", mdb.HASH, kit.MDB_NAME, name).Table(func(index int, value map[string]string, head []string) {
-						if _, e := os.Stat(p); e == nil {
-							m.Push("", value, kit.Split(m.Option(mdb.FIELDS)))
-						}
-					}); len(m.Appendv(kit.MDB_NAME)) > 0 {
-						return // 已经下载
+					defer m.Cmdy(nfs.DIR, file)
+					if _, e := os.Stat(file); e == nil {
+						return // 文件存在
 					}
 
-					// 占位
-					m.Cmd(nfs.SAVE, p, "")
+					// 文件占位
+					m.Cmd(nfs.SAVE, file, "")
 
-					// 进度
-					m.Cmd(mdb.INSERT, INSTALL, "", mdb.HASH, kit.MDB_NAME, name, kit.MDB_LINK, link)
-					m.Richs(INSTALL, "", name, func(key string, value map[string]interface{}) {
-						value = kit.GetMeta(value)
-						m.Optionv(web.DOWNLOAD_CB, func(size int, total int) {
-							s := size * 100 / total
-							if s != kit.Int(value[kit.SSH_STEP]) && s%10 == 0 {
-								m.Log_IMPORT(kit.MDB_FILE, name, kit.SSH_STEP, s, kit.MDB_SIZE, kit.FmtSize(int64(size)), kit.MDB_TOTAL, kit.FmtSize(int64(total)))
-							}
-							value[kit.SSH_STEP], value[kit.MDB_SIZE], value[kit.MDB_TOTAL] = s, size, total
+					m.GoToast("download", func(toast func(string, int, int)) {
+						// 进度
+						m.Cmd(mdb.INSERT, INSTALL, "", mdb.HASH, kit.MDB_NAME, name, kit.MDB_LINK, link)
+						m.Richs(INSTALL, "", name, func(key string, value map[string]interface{}) {
+							value = kit.GetMeta(value)
+
+							p := 0
+							m.Optionv(web.DOWNLOAD_CB, func(size int, total int) {
+								if n := size * 100 / total; p != n {
+									value[kit.SSH_STEP], value[kit.MDB_SIZE], value[kit.MDB_TOTAL] = n, size, total
+									toast(name, size, total)
+									p = n
+								}
+							})
 						})
-					})
 
-					// 下载
-					m.Go(func() {
+						// 下载
 						os.MkdirAll(m.Option(cli.CMD_DIR, m.Conf(INSTALL, kit.META_PATH)), ice.MOD_DIR)
 						msg := m.Cmd(web.SPIDE, web.SPIDE_DEV, web.SPIDE_CACHE, web.SPIDE_GET, link)
 
-						m.Cmdy(nfs.LINK, p, msg.Append(kit.MDB_FILE))
+						// 解压
+						m.Cmdy(nfs.LINK, file, msg.Append(kit.MDB_FILE))
 						m.Cmd(cli.SYSTEM, "tar", "xvf", name)
 					})
 				}},
 				gdb.BUILD: {Name: "build link", Help: "构建", Hand: func(m *ice.Message, arg ...string) {
-					cli.Follow(m, gdb.BUILD, func() {
-						defer m.Cmdy(cli.OUTPUT, mdb.MODIFY, kit.MDB_STATUS, cli.Status.Stop)
-						defer m.Option(kit.MDB_HASH, m.Option("cache.hash"))
 
-						p := m.Option(cli.CMD_DIR, path.Join(m.Conf(INSTALL, kit.META_PATH), kit.TrimExt(m.Option(kit.MDB_LINK))))
-						pp := kit.Path(path.Join(p, "_install"))
-						switch cb := m.Optionv("prepare").(type) {
-						case func(string):
-							cb(p)
-						default:
-							if m.Cmdy(cli.SYSTEM, "./configure", "--prefix="+pp, arg[1:]); m.Append(cli.CMD_CODE) != "0" {
-								return
-							}
-						}
+					m.Option(cli.CMD_OUTPUT, &Buffer{m: m, n: m.Option(ice.MSG_DAEMON)})
+					defer func() {
+						m.Toast("success", "build")
+						m.ProcessHold()
+					}()
 
-						if m.Cmdy(cli.SYSTEM, "make", "-j8"); m.Append(cli.CMD_CODE) != "0" {
+					p := m.Option(cli.CMD_DIR, path.Join(m.Conf(INSTALL, kit.META_PATH), kit.TrimExt(m.Option(kit.MDB_LINK))))
+					pp := kit.Path(path.Join(p, "_install"))
+					switch cb := m.Optionv("prepare").(type) {
+					case func(string):
+						cb(p)
+					default:
+						if m.Cmd(cli.SYSTEM, "./configure", "--prefix="+pp, arg[1:]).Append(cli.CMD_CODE) != "0" {
 							return
 						}
+					}
 
-						m.Cmdy(cli.SYSTEM, "make", "PREFIX="+pp, "install")
+					if m.Cmd(cli.SYSTEM, "make", "-j8"); m.Append(cli.CMD_CODE) != "0" {
+						return
+					}
 
-					})
+					m.Cmd(cli.SYSTEM, "make", "PREFIX="+pp, "install")
 				}},
 				gdb.SPAWN: {Name: "spawn link", Help: "新建", Hand: func(m *ice.Message, arg ...string) {
 					port := m.Cmdx(tcp.PORT, aaa.RIGHT)

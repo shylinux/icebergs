@@ -1,6 +1,11 @@
 package wiki
 
 import (
+	"fmt"
+	"net/url"
+	"path"
+	"strings"
+
 	ice "github.com/shylinux/icebergs"
 	"github.com/shylinux/icebergs/base/cli"
 	"github.com/shylinux/icebergs/base/mdb"
@@ -8,11 +13,6 @@ import (
 	"github.com/shylinux/icebergs/base/ssh"
 	"github.com/shylinux/icebergs/base/web"
 	kit "github.com/shylinux/toolkits"
-
-	"fmt"
-	"net/url"
-	"path"
-	"strings"
 )
 
 func _name(m *ice.Message, arg []string) []string {
@@ -453,6 +453,7 @@ func init() {
 					m.Cmdy(arg[0], kit.MDB_ACTION, "run", arg[1:])
 				}},
 			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+				m.Option(nfs.DIR_REG, m.Conf(WORD, kit.Keym(kit.MDB_REGEXP)))
 				if m.Option(nfs.DIR_DEEP, "true"); _wiki_list(m, cmd, arg...) {
 					return
 				}

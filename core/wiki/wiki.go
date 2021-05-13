@@ -40,15 +40,7 @@ func _wiki_save(m *ice.Message, cmd, name, text string, arg ...string) {
 	m.Cmd(nfs.SAVE, name, text)
 }
 func _wiki_upload(m *ice.Message, cmd string, dir string) {
-	up := kit.Simple(m.Optionv(ice.MSG_UPLOAD))
-	if p := _wiki_path(m, cmd, dir, up[1]); m.Option(ice.MSG_USERPOD) == "" {
-		// 本机文件
-		m.Cmdy(web.CACHE, web.WATCH, up[0], p)
-	} else {
-		// 下发文件
-		m.Cmdy(web.SPIDE, web.SPIDE_DEV, web.SPIDE_SAVE, p, web.SPIDE_GET,
-			kit.MergeURL2(m.Option(ice.MSG_USERWEB), path.Join("/share/cache", up[0])))
-	}
+	m.Upload(_wiki_path(m, cmd, dir))
 }
 
 const WIKI = "wiki"

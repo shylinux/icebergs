@@ -17,19 +17,15 @@ import (
 )
 
 type Buffer struct {
-	data []byte
-	m    *ice.Message
-	n    string
+	m *ice.Message
+	n string
 }
 
 func (b *Buffer) Write(buf []byte) (int, error) {
-	b.data = append(b.data, buf...)
 	b.m.Cmd(web.SPACE, b.n, "grow", string(buf))
 	return len(buf), nil
 }
-func (b *Buffer) Close() error {
-	return nil
-}
+func (b *Buffer) Close() error { return nil }
 
 const PREPARE = "prepare"
 const INSTALL = "install"
@@ -37,9 +33,7 @@ const INSTALL = "install"
 func init() {
 	Index.Merge(&ice.Context{
 		Configs: map[string]*ice.Config{
-			INSTALL: {Name: INSTALL, Help: "安装", Value: kit.Data(
-				kit.MDB_SHORT, kit.MDB_NAME, kit.MDB_PATH, ice.USR_INSTALL,
-			)},
+			INSTALL: {Name: INSTALL, Help: "安装", Value: kit.Data(kit.MDB_SHORT, kit.MDB_NAME, kit.MDB_PATH, ice.USR_INSTALL)},
 		},
 		Commands: map[string]*ice.Command{
 			INSTALL: {Name: "install name port path auto download", Help: "安装", Meta: kit.Dict(), Action: map[string]*ice.Action{
@@ -53,7 +47,7 @@ func init() {
 						return // 文件存在
 					}
 
-					// 文件占位
+					// 创建文件
 					m.Cmd(nfs.SAVE, file, "")
 
 					m.GoToast("download", func(toast func(string, int, int)) {
@@ -73,25 +67,25 @@ func init() {
 						})
 
 						// 下载
-						os.MkdirAll(m.Option(cli.CMD_DIR, m.Conf(INSTALL, kit.META_PATH)), ice.MOD_DIR)
 						msg := m.Cmd(web.SPIDE, web.SPIDE_DEV, web.SPIDE_CACHE, web.SPIDE_GET, link)
+						m.Cmd(nfs.LINK, file, msg.Append(kit.MDB_FILE))
 
 						// 解压
-						m.Cmdy(nfs.LINK, file, msg.Append(kit.MDB_FILE))
+						m.Option(cli.CMD_DIR, path.Dir(file))
 						m.Cmd(cli.SYSTEM, "tar", "xvf", name)
 					})
 				}},
 				gdb.BUILD: {Name: "build link", Help: "构建", Hand: func(m *ice.Message, arg ...string) {
-
-					m.Option(cli.CMD_OUTPUT, &Buffer{m: m, n: m.Option(ice.MSG_DAEMON)})
-					defer func() {
-						m.Toast("success", "build")
-						m.ProcessHold()
-					}()
-
 					p := m.Option(cli.CMD_DIR, path.Join(m.Conf(INSTALL, kit.META_PATH), kit.TrimExt(m.Option(kit.MDB_LINK))))
 					pp := kit.Path(path.Join(p, "_install"))
-					switch cb := m.Optionv("prepare").(type) {
+
+					// 推流
+					m.Option(cli.CMD_OUTPUT, &Buffer{m: m, n: m.Option(ice.MSG_DAEMON)})
+					defer func() { m.Toast("success", "build") }()
+					defer func() { m.ProcessHold() }()
+
+					// 配置
+					switch cb := m.Optionv(PREPARE).(type) {
 					case func(string):
 						cb(p)
 					default:
@@ -100,10 +94,12 @@ func init() {
 						}
 					}
 
-					if m.Cmd(cli.SYSTEM, "make", "-j8"); m.Append(cli.CMD_CODE) != "0" {
+					// 编译
+					if m.Cmd(cli.SYSTEM, "make", "-j8").Append(cli.CMD_CODE) != "0" {
 						return
 					}
 
+					// 安装
 					m.Cmd(cli.SYSTEM, "make", "PREFIX="+pp, "install")
 				}},
 				gdb.SPAWN: {Name: "spawn link", Help: "新建", Hand: func(m *ice.Message, arg ...string) {
@@ -120,7 +116,7 @@ func init() {
 					p := m.Option(cli.CMD_DIR, m.Cmdx(INSTALL, gdb.SPAWN))
 
 					args := []string{}
-					switch cb := m.Optionv("prepare").(type) {
+					switch cb := m.Optionv(PREPARE).(type) {
 					case func(string) []string:
 						args = append(args, cb(p)...)
 					}
@@ -128,36 +124,32 @@ func init() {
 					m.Cmdy(cli.DAEMON, arg[1:], args)
 				}},
 			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-				if len(arg) == 0 {
-					// 源码列表
-					m.Option(mdb.FIELDS, m.Conf(INSTALL, kit.META_FIELD))
+				if len(arg) == 0 { // 源码列表
+					m.Fields(len(arg) == 0, "time,name,path")
 					m.Cmdy(mdb.SELECT, INSTALL, "", mdb.HASH)
 					return
 				}
 
-				if len(arg) == 1 {
-					// 服务列表
-					arg = kit.Split(path.Base(arg[0]), "-.")
-					m.Option(mdb.FIELDS, "time,port,status,pid,cmd,dir")
+				if len(arg) == 1 { // 服务列表
+					arg = kit.Split(path.Base(arg[0]), "-.")[:1]
+
+					m.Fields(len(arg) == 1, "time,port,status,pid,cmd,dir")
 					m.Cmd(mdb.SELECT, cli.DAEMON, "", mdb.HASH).Table(func(index int, value map[string]string, head []string) {
-						if strings.Contains(value["cmd"], "bin/"+arg[0]) {
+						if strings.Contains(value[cli.CMD], "bin/"+arg[0]) {
 							m.Push("", value, kit.Split(m.Option(mdb.FIELDS)))
 						}
 					})
-					m.Appendv(kit.SSH_PORT, []string{})
+
+					m.Appendv(tcp.PORT, []string{})
 					m.Table(func(index int, value map[string]string, head []string) {
-						m.Push(kit.SSH_PORT, path.Base(value[kit.SSH_DIR]))
+						m.Push(tcp.PORT, path.Base(value[nfs.DIR]))
 					})
 					return
 				}
 
 				// 目录列表
 				m.Option(nfs.DIR_ROOT, path.Join(m.Conf(cli.DAEMON, kit.META_PATH), arg[1]))
-				if strings.HasSuffix(kit.Select("./", arg, 2), "/") {
-					m.Cmdy(nfs.DIR, kit.Select("./", arg, 2))
-				} else {
-					m.Cmdy(nfs.CAT, kit.Select("./", arg, 2))
-				}
+				m.Cmdy(nfs.CAT, kit.Select("./", arg, 2))
 			}},
 		},
 	})

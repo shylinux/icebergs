@@ -295,20 +295,6 @@ func (m *Message) Fields(condition bool, fields string) string {
 func (m *Message) Action(arg ...string) {
 	m.Option(MSG_ACTION, kit.Format(arg))
 }
-func (m *Message) Process(action string, arg ...interface{}) {
-	m.Option(MSG_PROCESS, action)
-	m.Option("_arg", arg...)
-}
-func (m *Message) ProcessHold() { m.Process(PROCESS_HOLD) }
-func (m *Message) ProcessBack() { m.Process(PROCESS_BACK) }
-
-func (m *Message) ProcessRefresh(delay string) {
-	if d, e := time.ParseDuration(delay); e == nil {
-		m.Option("_delay", int(d/time.Millisecond))
-	}
-	m.Process(PROCESS_REFRESH)
-}
-
 func (m *Message) Status(arg ...interface{}) {
 	args := kit.Simple(arg)
 	list := []map[string]string{}
@@ -318,4 +304,29 @@ func (m *Message) Status(arg ...interface{}) {
 		})
 	}
 	m.Option(MSG_STATUS, kit.Format(list))
+}
+
+func (m *Message) Process(action string, arg ...interface{}) {
+	m.Option(MSG_PROCESS, action)
+	m.Option("_arg", arg...)
+}
+func (m *Message) ProcessRefresh(delay string) {
+	if d, e := time.ParseDuration(delay); e == nil {
+		m.Option("_delay", int(d/time.Millisecond))
+	}
+	m.Process(PROCESS_REFRESH)
+}
+func (m *Message) ProcessHold() { m.Process(PROCESS_HOLD) }
+func (m *Message) ProcessBack() { m.Process(PROCESS_BACK) }
+
+func (m *Message) Upload(dir string) {
+	up := kit.Simple(m.Optionv(MSG_UPLOAD))
+	if p := path.Join(dir, up[1]); m.Option(MSG_USERPOD) == "" {
+		// 本机文件
+		m.Cmdy("web.cache", "watch", up[0], p)
+	} else {
+		// 下拉文件
+		m.Cmdy("web.spide", "dev", "save", p, "GET",
+			kit.MergeURL2(m.Option(MSG_USERWEB), path.Join("/share/cache", up[0])))
+	}
 }

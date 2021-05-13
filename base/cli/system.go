@@ -1,16 +1,16 @@
 package cli
 
 import (
-	ice "github.com/shylinux/icebergs"
-	"github.com/shylinux/icebergs/base/mdb"
-	kit "github.com/shylinux/toolkits"
-
 	"bytes"
 	"fmt"
 	"io"
 	"os"
 	"os/exec"
 	"strings"
+
+	ice "github.com/shylinux/icebergs"
+	"github.com/shylinux/icebergs/base/mdb"
+	kit "github.com/shylinux/toolkits"
 )
 
 func _system_show(m *ice.Message, cmd *exec.Cmd) {
@@ -81,6 +81,11 @@ const (
 	CMD_CODE = "cmd_code"
 )
 
+const (
+	LINUX   = "linux"
+	DARWIN  = "darwin"
+	WINDOWS = "windows"
+)
 const SYSTEM = "system"
 
 func init() {

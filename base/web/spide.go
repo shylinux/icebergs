@@ -315,15 +315,16 @@ func init() {
 						}
 
 					case SPIDE_RAW:
-						if b, e := ioutil.ReadAll(res.Body); m.Assert(e) {
+						b, _ := ioutil.ReadAll(res.Body)
+						if strings.HasPrefix(res.Header.Get(ContentType), ContentJSON) {
 							m.Echo(kit.Formats(kit.UnMarshal(string(b))))
-							// m.Echo(string(b))
+						} else {
+							m.Echo(string(b))
 						}
 
 					case SPIDE_MSG:
 						var data map[string][]string
 						m.Assert(json.NewDecoder(res.Body).Decode(&data))
-						m.Info("res: %s", kit.Format(data))
 						for _, k := range data[ice.MSG_APPEND] {
 							for i := range data[k] {
 								m.Push(k, data[k][i])
@@ -333,18 +334,14 @@ func init() {
 
 					default:
 						b, _ := ioutil.ReadAll(res.Body)
-						m.Echo(string(b))
-						break
-						if strings.HasPrefix(res.Header.Get(ContentType), ContentHTML) {
-							b, _ := ioutil.ReadAll(res.Body)
+
+						var data interface{}
+						if e := json.Unmarshal(b, &data); e != nil {
 							m.Echo(string(b))
 							break
 						}
 
-						var data interface{}
-						m.Assert(json.NewDecoder(res.Body).Decode(&data))
 						m.Optionv("content_data", data)
-
 						data = kit.KeyValue(map[string]interface{}{}, "", data)
 						m.Push("", data)
 					}

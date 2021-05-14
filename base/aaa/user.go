@@ -76,7 +76,7 @@ func UserRole(m *ice.Message, username interface{}) (role string) {
 	return
 }
 func UserLogin(m *ice.Message, username, password string) bool {
-	if _user_login(m, username, password) {
+	if password == "" || _user_login(m, username, password) {
 		m.Log_AUTH(
 			USERNICK, m.Option(ice.MSG_USERNICK, UserNick(m, username)),
 			USERROLE, m.Option(ice.MSG_USERROLE, UserRole(m, username)),

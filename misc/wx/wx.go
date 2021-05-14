@@ -1,6 +1,13 @@
 package wx
 
 import (
+	"crypto/sha1"
+	"encoding/hex"
+	"encoding/xml"
+	"fmt"
+	"strings"
+	"time"
+
 	ice "github.com/shylinux/icebergs"
 	"github.com/shylinux/icebergs/base/aaa"
 	"github.com/shylinux/icebergs/base/cli"
@@ -9,13 +16,6 @@ import (
 	"github.com/shylinux/icebergs/core/chat"
 	"github.com/shylinux/icebergs/core/wiki"
 	kit "github.com/shylinux/toolkits"
-
-	"crypto/sha1"
-	"encoding/hex"
-	"encoding/xml"
-	"fmt"
-	"strings"
-	"time"
 )
 
 func _wx_sign(m *ice.Message, nonce, stamp string) string {
@@ -56,7 +56,11 @@ func _wx_parse(m *ice.Message) {
 	m.Option("Content", data.Content)
 }
 func _wx_reply(m *ice.Message, tmpl string) {
-	m.Render(m.Conf(LOGIN, kit.Keym(kit.MDB_TEMPLATE, tmpl)))
+	m.Option(ice.MSG_OUTPUT, ice.RENDER_RESULT)
+	res, _ := kit.Render(m.Conf(LOGIN, kit.Keym(kit.MDB_TEMPLATE, tmpl)), m)
+
+	m.Set(ice.MSG_RESULT)
+	m.Echo(string(res))
 }
 func _wx_action(m *ice.Message) {
 	m.Option(ice.MSG_OUTPUT, ice.RENDER_RESULT)
@@ -97,8 +101,12 @@ const (
 	EXPIRE  = "expire"
 	TICKET  = "ticket"
 	EXPIRES = "expires"
+	QRCODE  = "qrcode"
 	CONFIG  = "config"
 	WEIXIN  = "weixin"
+
+	ERRCODE = "errcode"
+	ERRMSG  = "errmsg"
 )
 const (
 	ACCESS = "access"
@@ -136,7 +144,7 @@ var Index = &ice.Context{Name: WX, Help: "公众号",
 			m.Save()
 		}},
 
-		ACCESS: {Name: "access appid auto ticket token login", Help: "认证", Action: map[string]*ice.Action{
+		ACCESS: {Name: "access appid auto menu qrcode ticket token login", Help: "认证", Action: map[string]*ice.Action{
 			LOGIN: {Name: "login appid appmm token", Help: "登录", Hand: func(m *ice.Message, arg ...string) {
 				m.Conf(LOGIN, kit.Keym(APPID), m.Option(APPID))
 				m.Conf(LOGIN, kit.Keym(APPMM), m.Option(APPMM))
@@ -146,7 +154,7 @@ var Index = &ice.Context{Name: WX, Help: "公众号",
 				if now := time.Now().Unix(); m.Conf(LOGIN, kit.Keym(ACCESS, TOKEN)) == "" || now > kit.Int64(m.Conf(LOGIN, kit.Keym(ACCESS, EXPIRE))) {
 					msg := m.Cmd(web.SPIDE, WEIXIN, web.SPIDE_GET, "/cgi-bin/token?grant_type=client_credential",
 						APPID, m.Conf(LOGIN, kit.Keym(APPID)), "secret", m.Conf(LOGIN, kit.Keym(APPMM)))
-					if m.Warn(msg.Append("errcode") != "", "%v: %v", msg.Append("errcode"), msg.Append("errmsg")) {
+					if m.Warn(msg.Append(ERRCODE) != "", "%v: %v", msg.Append(ERRCODE), msg.Append(ERRMSG)) {
 						return
 					}
 
@@ -159,7 +167,7 @@ var Index = &ice.Context{Name: WX, Help: "公众号",
 				if now := time.Now().Unix(); m.Conf(LOGIN, kit.Keym(ACCESS, TICKET)) == "" || now > kit.Int64(m.Conf(LOGIN, kit.Keym(ACCESS, EXPIRES))) {
 					msg := m.Cmd(web.SPIDE, WEIXIN, web.SPIDE_GET, "/cgi-bin/ticket/getticket?type=jsapi",
 						"access_token", m.Cmdx(ACCESS, TOKEN))
-					if m.Warn(msg.Append("errcode") != "0", msg.Append("errcode"), msg.Append("errmsg")) {
+					if m.Warn(msg.Append(ERRCODE) != "0", msg.Append(ERRCODE), msg.Append(ERRMSG)) {
 						return
 					}
 
@@ -167,6 +175,11 @@ var Index = &ice.Context{Name: WX, Help: "公众号",
 					m.Conf(LOGIN, kit.Keym(ACCESS, TICKET), msg.Append(TICKET))
 				}
 				m.Echo(m.Conf(LOGIN, kit.Keym(ACCESS, TICKET)))
+			}},
+			QRCODE: {Name: "qrcode", Help: "扫码", Hand: func(m *ice.Message, arg ...string) {
+				m.Cmdy(web.SPIDE, WEIXIN, web.SPIDE_POST, "/cgi-bin/qrcode/create?access_token="+m.Cmdx(ACCESS, TOKEN),
+					web.SPIDE_DATA, kit.Format(`{"expire_seconds": 604800, "action_name": "QR_STR_SCENE", "action_info": {"scene": {"scene_str": "test"}}}`))
+				m.EchoQRCode(m.Append("url"))
 			}},
 			CONFIG: {Name: "config", Help: "配置", Hand: func(m *ice.Message, arg ...string) {
 				_wx_config(m, "some")
@@ -179,7 +192,8 @@ var Index = &ice.Context{Name: WX, Help: "公众号",
 
 		MENU: {Name: "menu name auto", Help: "菜单", Action: map[string]*ice.Action{
 			mdb.CREATE: {Name: "create", Help: "添加", Hand: func(m *ice.Message, arg ...string) {
-				share := m.Cmdx(web.SHARE, mdb.CREATE, kit.MDB_TYPE, web.LOGIN)
+				share := m.Cmdx(web.SHARE, mdb.CREATE, kit.MDB_TYPE, web.LOGIN,
+					aaa.USERNAME, m.Option(ice.MSG_USERNAME), aaa.USERROLE, m.Option(ice.MSG_USERROLE))
 				kit.Fetch(m.Confv(LOGIN, kit.Keym(MENU)), func(index int, value map[string]interface{}) {
 					m.Push("", value, kit.Split("title,spark,image"))
 					m.Push(wiki.REFER, kit.MergeURL(kit.Format(value[wiki.REFER]), web.SHARE, share))
@@ -214,6 +228,10 @@ var Index = &ice.Context{Name: WX, Help: "公众号",
 				case "subscribe": // 关注事件
 					_wx_action(m.Cmdy(MENU, mdb.CREATE))
 				case "unsubscribe": // 取关事件
+
+				case "SCAN": // 扫码
+					m.Echo("hello world")
+					_wx_reply(m, kit.MDB_TEXT)
 				}
 
 			case kit.MDB_TEXT:

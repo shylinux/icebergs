@@ -5,7 +5,7 @@ refer "" `
 文档 https://developers.weixin.qq.com/miniprogram/dev/api/
 源码 https://github.com/shylinux/icebergs/blob/master/misc/mp/mp.go
 `
-image `gh_61ea404535e4_258.jpg`
+qrcode `https://mp.weixin.qq.com/a/~HkylKD4DZShrgSm5GuXWLQ~~`
 
 chapter "应用"
 field scan web.chat.scan

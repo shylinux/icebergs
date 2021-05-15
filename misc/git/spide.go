@@ -7,6 +7,7 @@ import (
 	ice "github.com/shylinux/icebergs"
 	"github.com/shylinux/icebergs/base/cli"
 	"github.com/shylinux/icebergs/base/ctx"
+	"github.com/shylinux/icebergs/base/mdb"
 	"github.com/shylinux/icebergs/base/nfs"
 	"github.com/shylinux/icebergs/core/code"
 	kit "github.com/shylinux/toolkits"
@@ -60,11 +61,12 @@ const SPIDE = "spide"
 
 func init() {
 	Index.Merge(&ice.Context{Commands: map[string]*ice.Command{
-		SPIDE: {Name: "spide name auto", Help: "构架图", Meta: kit.Dict(
+		SPIDE: {Name: "spide name@key auto", Help: "构架图", Meta: kit.Dict(
 			kit.MDB_DISPLAY, "/plugin/story/spide.js",
 		), Action: map[string]*ice.Action{
-			ctx.COMMAND: {Name: "ctx.command"},
-			code.INNER:  {Name: "web.code.inner"},
+			mdb.INPUTS: {Name: "inputs", Help: "补全", Hand: func(m *ice.Message, arg ...string) {
+				m.Cmdy(REPOS)
+			}}, ctx.COMMAND: {Name: "ctx.command"}, code.INNER: {Name: "web.code.inner"},
 		}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			if len(arg) == 0 { // 仓库列表
 				m.Cmdy(REPOS)

@@ -6,6 +6,7 @@ import (
 
 	ice "github.com/shylinux/icebergs"
 	"github.com/shylinux/icebergs/base/cli"
+	"github.com/shylinux/icebergs/base/mdb"
 	kit "github.com/shylinux/toolkits"
 )
 
@@ -129,7 +130,7 @@ func init() {
 				m.Cmdy(cli.SYSTEM, GIT, ADD, m.Option(kit.MDB_FILE))
 			}}, OPT: {Name: "opt", Help: "优化"}, PRO: {Name: "pro", Help: "体验"},
 
-			COMMIT: {Name: "commit action=pro,opt,add comment=some", Help: "提交", Hand: func(m *ice.Message, arg ...string) {
+			COMMIT: {Name: "commit action=pro,opt,add comment=some@key", Help: "提交", Hand: func(m *ice.Message, arg ...string) {
 				if arg[0] == kit.MDB_ACTION {
 					m.Option(kit.MDB_TEXT, arg[1]+" "+arg[3])
 				} else {
@@ -139,6 +140,22 @@ func init() {
 				m.Option(cli.CMD_DIR, _repos_path(m.Option(kit.MDB_NAME)))
 				m.Cmdy(cli.SYSTEM, GIT, COMMIT, "-am", m.Option(kit.MDB_TEXT))
 				m.ProcessBack()
+			}},
+			mdb.INPUTS: {Name: "inputs", Help: "补全", Hand: func(m *ice.Message, arg ...string) {
+				switch arg[0] {
+				case "name":
+					m.OptionFields("name,time")
+					m.Cmdy(REPOS)
+
+				case "comment":
+					ls := []string{}
+					ls = append(ls, kit.Split(m.Option(kit.MDB_FILE), " /")...)
+
+					m.Push(kit.MDB_TEXT, m.Option(kit.MDB_FILE))
+					for _, v := range ls {
+						m.Push(kit.MDB_TEXT, v)
+					}
+				}
 			}},
 		}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			if len(arg) == 0 {

@@ -330,3 +330,5 @@ func (m *Message) Upload(dir string) {
 			kit.MergeURL2(m.Option(MSG_USERWEB), path.Join("/share/cache", up[0])))
 	}
 }
+
+func (m *Message) OptionFields(str string) { m.Option("fields", str) }

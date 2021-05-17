@@ -128,9 +128,9 @@ func init() {
 			ADD: {Name: "add", Help: "添加", Hand: func(m *ice.Message, arg ...string) {
 				m.Option(cli.CMD_DIR, _repos_path(m.Option(kit.MDB_NAME)))
 				m.Cmdy(cli.SYSTEM, GIT, ADD, m.Option(kit.MDB_FILE))
-			}}, OPT: {Name: "opt", Help: "优化"}, PRO: {Name: "pro", Help: "体验"},
+			}}, OPT: {Name: "opt", Help: "优化"}, PRO: {Name: "pro", Help: "自举"},
 
-			COMMIT: {Name: "commit action=pro,opt,add comment=some@key", Help: "提交", Hand: func(m *ice.Message, arg ...string) {
+			COMMIT: {Name: "commit action=add,opt,pro comment=some@key", Help: "提交", Hand: func(m *ice.Message, arg ...string) {
 				if arg[0] == kit.MDB_ACTION {
 					m.Option(kit.MDB_TEXT, arg[1]+" "+arg[3])
 				} else {

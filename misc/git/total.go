@@ -57,7 +57,7 @@ func init() {
 				})
 
 				m.Push("name", "total")
-				m.Push("days", kit.Int(days)+1)
+				m.Push("days", days)
 				m.Push("commit", commit)
 				m.Push("adds", adds)
 				m.Push("dels", dels)

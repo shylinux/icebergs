@@ -109,13 +109,13 @@ const ( // RENDER
 const ( // PROCESS
 	PROCESS_PROGRESS = "_progress"
 	PROCESS_REFRESH  = "_refresh"
-	PROCESS_FOLLOW   = "_follow"
-	PROCESS_INNER    = "_inner"
 	PROCESS_FIELD    = "_field"
-	PROCESS_OPEN     = "_open"
+	PROCESS_INNER    = "_inner"
 
 	PROCESS_HOLD = "_hold"
 	PROCESS_BACK = "_back"
+	PROCESS_GROW = "_grow"
+	PROCESS_OPEN = "_open"
 
 	FIELD_PREFIX = "_prefix"
 	CONTROL_PAGE = "_page"

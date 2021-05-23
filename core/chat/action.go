@@ -56,6 +56,22 @@ func _action_right(m *ice.Message, river string, storm string) (ok bool) {
 }
 func _action_share(m *ice.Message, arg ...string) {
 	switch msg := m.Cmd(web.SHARE, arg[1]); msg.Append(kit.MDB_TYPE) {
+	case web.STORM:
+		if len(arg) == 2 {
+			_action_list(m, msg.Append(web.RIVER), msg.Append(web.STORM))
+			return
+		}
+
+		if m.Warn(kit.Time() > kit.Time(msg.Append(kit.MDB_TIME)), ice.ErrExpire) {
+			break // 分享超时
+		}
+		m.Log_AUTH(
+			aaa.USERROLE, m.Option(ice.MSG_USERROLE, msg.Append(aaa.USERROLE)),
+			aaa.USERNAME, m.Option(ice.MSG_USERNAME, msg.Append(aaa.USERNAME)),
+		)
+
+		_action_show(m, msg.Append(web.RIVER), msg.Append(web.STORM), arg[2], arg[3:]...)
+
 	case web.FIELD:
 		if cmd := kit.Keys(msg.Append(web.RIVER), msg.Append(web.STORM)); len(arg) == 2 {
 			m.Push("index", cmd)
@@ -71,6 +87,7 @@ func _action_share(m *ice.Message, arg ...string) {
 			aaa.USERROLE, m.Option(ice.MSG_USERROLE, msg.Append(aaa.USERROLE)),
 			aaa.USERNAME, m.Option(ice.MSG_USERNAME, msg.Append(aaa.USERNAME)),
 		)
+
 		if m.Warn(!m.Right(arg[2:]), ice.ErrNotRight) {
 			break // 没有授权
 		}
@@ -90,6 +107,9 @@ func _action_list(m *ice.Message, river, storm string) {
 	m.SortInt(kit.MDB_ID)
 }
 func _action_show(m *ice.Message, river, storm, index string, arg ...string) {
+	m.Option(ice.MSG_RIVER, river)
+	m.Option(ice.MSG_STORM, storm)
+
 	cmds := []string{index}
 	prefix := kit.Keys(kit.MDB_HASH, river, TOOL, kit.MDB_HASH, storm)
 	if m.Grows(RIVER, prefix, kit.MDB_ID, index, func(index int, value map[string]interface{}) {
@@ -159,13 +179,11 @@ func init() {
 					return // 没有授权
 				}
 
-				m.Option(ice.MSG_RIVER, arg[0])
-				m.Option(ice.MSG_STORM, arg[1])
-
 				if len(arg) == 2 {
 					_action_list(m, arg[0], arg[1])
 					return //命令列表
 				}
+
 				_action_show(m, arg[0], arg[1], arg[2], arg[3:]...)
 			}},
 		}})

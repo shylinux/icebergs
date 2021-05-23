@@ -32,7 +32,9 @@ func init() {
 				}},
 				ctx.COMMAND: {Name: "command", Help: "命令", Hand: func(m *ice.Message, arg ...string) {
 					if len(arg) > 0 && arg[0] == "run" {
-						m.Cmdy(arg[1:])
+						if m.Right(arg[1:]) {
+							m.Cmdy(arg[1:])
+						}
 						return
 					}
 					m.Cmdy(ctx.COMMAND, arg)

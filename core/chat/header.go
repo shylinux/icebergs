@@ -19,6 +19,8 @@ func _header_check(m *ice.Message) {
 			if m.Option(ice.MSG_USERNAME) != msg.Append(aaa.USERNAME) {
 				web.RenderCookie(m, aaa.SessCreate(m, m.Option(ice.MSG_USERNAME, msg.Append(aaa.USERNAME))))
 			}
+		case web.STORM:
+			m.Option(ice.MSG_USERNAME, msg.Append(aaa.USERNAME))
 		case web.FIELD:
 			m.Option(ice.MSG_USERNAME, msg.Append(aaa.USERNAME))
 		}
@@ -36,10 +38,9 @@ func _header_share(m *ice.Message, arg ...string) {
 		link = strings.Replace(link, tcp.LOCALHOST, m.Cmd(tcp.HOST, ice.OptionFields(tcp.IP)).Append(tcp.IP), 1)
 	}
 
-	m.Set(kit.MDB_NAME)
-	m.Set(kit.MDB_TEXT)
-	m.Push(kit.MDB_NAME, link)
+	m.Set(kit.MDB_NAME, kit.MDB_TEXT)
 	m.PushQRCode(kit.MDB_TEXT, link)
+	m.Push(kit.MDB_NAME, link)
 }
 func _header_grant(m *ice.Message, arg ...string) {
 	if pod := m.Option(kit.SSH_POD); pod != "" {

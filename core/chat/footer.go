@@ -2,6 +2,7 @@ package chat
 
 import (
 	ice "github.com/shylinux/icebergs"
+	"github.com/shylinux/icebergs/base/ctx"
 	kit "github.com/shylinux/toolkits"
 )
 
@@ -19,7 +20,17 @@ func init() {
 			)},
 		},
 		Commands: map[string]*ice.Command{
-			P_FOOTER: {Name: "/footer", Help: "状态栏", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			P_FOOTER: {Name: "/footer", Help: "状态栏", Action: map[string]*ice.Action{
+				ctx.COMMAND: {Name: "command", Help: "命令", Hand: func(m *ice.Message, arg ...string) {
+					if len(arg) > 0 && arg[0] == "run" {
+						if m.Right(arg[1:]) {
+							m.Cmdy(arg[1:])
+						}
+						return
+					}
+					m.Cmdy(ctx.COMMAND, arg)
+				}},
+			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 				kit.Fetch(m.Confv(FOOTER, LEGAL), func(index int, value string) { m.Echo(value) })
 			}},
 		},

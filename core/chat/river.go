@@ -17,7 +17,7 @@ func _river_list(m *ice.Message) {
 
 	if m.Option(web.SHARE) != "" {
 		switch msg := m.Cmd(web.SHARE, m.Option(web.SHARE)); msg.Append(kit.MDB_TYPE) {
-		case web.RIVER, web.STORM: // 应用入口
+		case web.RIVER: // 应用入口
 			m.Option(ice.MSG_TITLE, msg.Append(kit.MDB_NAME))
 			m.Option(ice.MSG_RIVER, msg.Append(RIVER))
 			m.Option(ice.MSG_STORM, msg.Append(STORM))
@@ -29,6 +29,11 @@ func _river_list(m *ice.Message) {
 				msg.Cmd(m.Prefix(USER), mdb.INSERT, aaa.USERNAME, m.Option(ice.MSG_USERNAME))
 				// 加入群组
 			}
+		case web.STORM: // 应用入口
+			m.Option(ice.MSG_TITLE, msg.Append(kit.MDB_NAME))
+			m.Option(ice.MSG_STORM, msg.Append(STORM))
+			m.Option(ice.MSG_RIVER, "_share")
+
 		case web.FIELD: // 应用入口
 			m.Option(ice.MSG_TITLE, msg.Append(kit.MDB_NAME))
 			m.Option(ice.MSG_RIVER, "_share")
@@ -41,23 +46,6 @@ func _river_list(m *ice.Message) {
 			m.Push(key, kit.GetMeta(value), []string{kit.MDB_HASH, kit.MDB_NAME}, kit.GetMeta(val))
 		})
 	})
-}
-func _river_share(m *ice.Message) {
-	return
-	msg := m.Spawn()
-	if res := msg.Cmd(web.SHARE, m.Option(web.SHARE)); res.Append(kit.MDB_TYPE) == RIVER {
-		msg.Option(ice.MSG_RIVER, res.Append(RIVER))
-	} else {
-		if res := msg.Cmd(m.Prefix(AUTH), m.Option(web.SHARE)); res.Append(kit.MDB_TYPE) == USER {
-		} else {
-			return
-		}
-	}
-
-	if msg.Cmd(m.Prefix(USER), m.Option(ice.MSG_USERNAME)).Append(aaa.USERNAME) == "" {
-		msg.Cmd(m.Prefix(USER), mdb.INSERT, aaa.USERNAME, m.Option(ice.MSG_USERNAME))
-		// 加入群组
-	}
 }
 func _river_proxy(m *ice.Message, pod string) (proxy []string) {
 	if p := kit.Select(m.Option(POD), pod); p != "" {
@@ -365,7 +353,6 @@ func init() {
 					return // 没有登录
 				}
 				if len(arg) == 0 {
-					_river_share(m)
 					_river_list(m)
 					return // 群组列表
 				}

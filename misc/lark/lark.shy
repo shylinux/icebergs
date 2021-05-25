@@ -6,7 +6,7 @@ refer "官网" `
 后台管理 https://www.feishu.cn/admin
 应用管理 https://open.feishu.cn/app
 `
-image qrcode `https://applink.feishu.cn/client/bot/open?appId=cli_9d3b9d146a7cd103`
+qrcode `https://applink.feishu.cn/client/bot/open?appId=cli_9d3b9d146a7cd103`
 
 chapter "应用"
 field "app" web.chat.lark.app

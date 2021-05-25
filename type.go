@@ -159,6 +159,23 @@ func (c *Context) Merge(s *Context) *Context {
 		c.Commands = map[string]*Command{}
 	}
 	for k, v := range s.Commands {
+		if o, ok := c.Commands[k]; ok && s != c {
+			func() {
+				switch last, next := o.Hand, v.Hand; k {
+				case CTX_INIT:
+					v.Hand = func(m *Message, c *Context, key string, arg ...string) {
+						last(m, c, key, arg...)
+						next(m, c, key, arg...)
+					}
+				case CTX_EXIT:
+					v.Hand = func(m *Message, c *Context, key string, arg ...string) {
+						next(m, c, key, arg...)
+						last(m, c, key, arg...)
+					}
+				}
+			}()
+		}
+
 		c.Commands[k] = v
 
 		if v.List == nil {

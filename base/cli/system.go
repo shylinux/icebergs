@@ -16,24 +16,14 @@ import (
 func _system_show(m *ice.Message, cmd *exec.Cmd) {
 	if r, ok := m.Optionv(CMD_INPUT).(io.Reader); ok {
 		cmd.Stdin = r
-	} else if r, ok := m.Optionv("input").(io.Reader); ok {
-		cmd.Stdin = r
 	}
 
-	if w, ok := m.Optionv(CMD_ERRPUT).(io.WriteCloser); ok {
-		cmd.Stderr = w
-	}
 	if w, ok := m.Optionv(CMD_OUTPUT).(io.WriteCloser); ok {
 		cmd.Stdout = w
-
-		if e := cmd.Run(); e != nil {
-			m.Warn(e != nil, ErrRun, strings.Join(cmd.Args, " "), "\n", e.Error())
-		} else {
-			m.Cost("args", cmd.Args, "code", cmd.ProcessState.ExitCode())
-		}
-	} else if w, ok := m.Optionv("output").(io.WriteCloser); ok {
 		cmd.Stderr = w
-		cmd.Stdout = w
+		if w, ok := m.Optionv(CMD_ERRPUT).(io.WriteCloser); ok {
+			cmd.Stderr = w
+		}
 
 		if e := cmd.Run(); e != nil {
 			m.Warn(e != nil, ErrRun, strings.Join(cmd.Args, " "), "\n", e.Error())
@@ -41,15 +31,16 @@ func _system_show(m *ice.Message, cmd *exec.Cmd) {
 			m.Cost("args", cmd.Args, "code", cmd.ProcessState.ExitCode())
 		}
 	} else {
-		err := bytes.NewBuffer(make([]byte, 0, 1024))
 		out := bytes.NewBuffer(make([]byte, 0, 1024))
-		cmd.Stderr = err
-		cmd.Stdout = out
+		err := bytes.NewBuffer(make([]byte, 0, 1024))
 		defer func() {
 			m.Push(CMD_ERR, err.String())
 			m.Push(CMD_OUT, out.String())
 			m.Echo(kit.Select(err.String(), out.String()))
 		}()
+
+		cmd.Stdout = out
+		cmd.Stderr = err
 
 		if e := cmd.Run(); e != nil {
 			m.Warn(e != nil, ErrRun, strings.Join(cmd.Args, " "), "\n", kit.Select(e.Error(), err.String()))
@@ -85,6 +76,9 @@ const (
 	LINUX   = "linux"
 	DARWIN  = "darwin"
 	WINDOWS = "windows"
+	SOURCE  = "source"
+	HOME    = "home"
+	PATH    = "path"
 )
 const SYSTEM = "system"
 

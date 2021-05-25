@@ -16,17 +16,6 @@ import (
 	kit "github.com/shylinux/toolkits"
 )
 
-type Buffer struct {
-	m *ice.Message
-	n string
-}
-
-func (b *Buffer) Write(buf []byte) (int, error) {
-	b.m.Cmd(web.SPACE, b.n, "grow", string(buf))
-	return len(buf), nil
-}
-func (b *Buffer) Close() error { return nil }
-
 const PREPARE = "prepare"
 const INSTALL = "install"
 
@@ -37,10 +26,10 @@ func init() {
 		},
 		Commands: map[string]*ice.Command{
 			INSTALL: {Name: "install name port path auto download", Help: "安装", Meta: kit.Dict(), Action: map[string]*ice.Action{
-				web.DOWNLOAD: {Name: "download link", Help: "下载", Hand: func(m *ice.Message, arg ...string) {
+				web.DOWNLOAD: {Name: "download link path", Help: "下载", Hand: func(m *ice.Message, arg ...string) {
 					link := m.Option(kit.MDB_LINK)
 					name := path.Base(link)
-					file := path.Join(m.Conf(INSTALL, kit.META_PATH), name)
+					file := path.Join(kit.Select(m.Conf(INSTALL, kit.META_PATH), m.Option(kit.MDB_PATH)), name)
 
 					defer m.Cmdy(nfs.DIR, file)
 					if _, e := os.Stat(file); e == nil {
@@ -80,7 +69,7 @@ func init() {
 					pp := kit.Path(path.Join(p, "_install"))
 
 					// 推流
-					m.Option(cli.CMD_OUTPUT, &Buffer{m: m, n: m.Option(ice.MSG_DAEMON)})
+					web.PushStream(m)
 					defer func() { m.Toast("success", "build") }()
 					defer func() { m.ProcessHold() }()
 

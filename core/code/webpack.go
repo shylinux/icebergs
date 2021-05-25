@@ -36,7 +36,12 @@ func init() {
 						case CSS:
 							js.WriteString(`Volcanos.meta.cache["` + path.Join("/", value[kit.MDB_PATH]) + "\"] = []\n")
 							css.WriteString(m.Cmdx(nfs.CAT, value[kit.MDB_PATH]))
-
+						}
+					})
+				}
+				for _, k := range []string{"lib", "panel", "plugin"} {
+					m.Cmd(nfs.DIR, k).Table(func(index int, value map[string]string, head []string) {
+						switch kit.Ext(value[kit.MDB_PATH]) {
 						case JS:
 							js.WriteString(`_can_name = "` + path.Join("/", value[kit.MDB_PATH]) + "\";\n")
 							js.WriteString(m.Cmdx(nfs.CAT, value[kit.MDB_PATH]))

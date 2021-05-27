@@ -134,6 +134,8 @@ var Index = &ice.Context{Name: WX, Help: "公众号",
 				),
 			},
 		)},
+		"favor":  {Name: "favor", Help: "收藏", Value: kit.Data(kit.MDB_SHORT, kit.MDB_TEXT)},
+		"favor2": {Name: "favor2", Help: "收藏", Value: kit.Data(kit.MDB_SHORT, kit.MDB_LINK)},
 	},
 	Commands: map[string]*ice.Command{
 		ice.CTX_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
@@ -203,6 +205,34 @@ var Index = &ice.Context{Name: WX, Help: "公众号",
 			kit.Fetch(m.Confv(LOGIN, kit.Keym(MENU)), func(index int, value map[string]interface{}) {
 				m.Push("", value, kit.Split("title,spark,refer,image"))
 			})
+		}},
+
+		"favor": {Name: "favor name auto create", Help: "收藏", Action: map[string]*ice.Action{
+			mdb.CREATE: {Name: "create name text", Help: "添加", Hand: func(m *ice.Message, arg ...string) {
+				m.Cmdy(mdb.INSERT, m.Prefix("favor"), "", mdb.HASH, arg)
+			}},
+			mdb.REMOVE: {Name: "remove", Help: "删除", Hand: func(m *ice.Message, arg ...string) {
+				m.Cmdy(mdb.DELETE, m.Prefix("favor"), "", mdb.HASH, kit.MDB_NAME, m.Option(kit.MDB_NAME))
+			}},
+		}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			m.Fields(len(arg) == 0, "time,name,text")
+			m.Cmdy(mdb.SELECT, m.Prefix("favor"), "", mdb.HASH, kit.MDB_HASH, arg)
+			m.Table(func(index int, value map[string]string, head []string) {
+				m.PushImages("qrcode", kit.MergeURL("https://open.weixin.qq.com/qr/code", aaa.USERNAME, value[kit.MDB_TEXT]))
+			})
+			m.PushAction(mdb.REMOVE)
+		}},
+		"favor2": {Name: "favor name auto create", Help: "收藏", Action: map[string]*ice.Action{
+			mdb.CREATE: {Name: "create name link", Help: "添加", Hand: func(m *ice.Message, arg ...string) {
+				m.Cmdy(mdb.INSERT, m.Prefix("favor2"), "", mdb.HASH, arg)
+			}},
+			mdb.REMOVE: {Name: "remove", Help: "删除", Hand: func(m *ice.Message, arg ...string) {
+				m.Cmdy(mdb.DELETE, m.Prefix("favor2"), "", mdb.HASH, kit.MDB_NAME, m.Option(kit.MDB_NAME))
+			}},
+		}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			m.Fields(len(arg) == 0, "time,name,link")
+			m.Cmdy(mdb.SELECT, m.Prefix("favor2"), "", mdb.HASH, kit.MDB_HASH, arg)
+			m.PushAction(mdb.REMOVE)
 		}},
 
 		"/login/": {Name: "/login/", Help: "认证", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {

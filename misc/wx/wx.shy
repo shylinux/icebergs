@@ -9,6 +9,8 @@ refer `
 qrcode `http://weixin.qq.com/r/_B1-Z7TEXOkjrfAE90jq`
 
 chapter "应用"
+field favor web.chat.wx.favor
+field favor web.chat.wx.favor2
 field scan web.chat.scan
 field files web.chat.files
 field paste web.chat.paste

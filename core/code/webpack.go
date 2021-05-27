@@ -49,7 +49,7 @@ func init() {
 					})
 				}
 
-				for _, k := range []string{"publish/order.js"} {
+				for _, k := range []string{"publish/order.js", "frame.js"} {
 					js.WriteString(`_can_name = "` + path.Join("/", k) + "\"\n")
 					js.WriteString(m.Cmdx(nfs.CAT, k))
 				}
@@ -70,9 +70,8 @@ func init() {
 						m.Cmdx(nfs.CAT, path.Join(ice.USR_VOLCANOS, "page/index.css")),
 
 						m.Cmdx(nfs.CAT, path.Join(ice.USR_VOLCANOS, ice.PROTO_JS)),
-						m.Cmdx(nfs.CAT, path.Join(ice.USR_VOLCANOS, ice.FRAME_JS)),
-
 						m.Cmdx(nfs.CAT, path.Join(ice.USR_PUBLISH, "webpack/"+m.Option(kit.MDB_NAME)+".js")),
+
 						m.Cmdx(nfs.CAT, path.Join(ice.USR_VOLCANOS, "page/cache.js")),
 						m.Cmdx(nfs.CAT, path.Join(ice.USR_VOLCANOS, "page/index.js")),
 					))

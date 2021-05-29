@@ -266,6 +266,10 @@ type Sort struct {
 }
 
 func (m *Message) Toast(content string, arg ...interface{}) {
+	if m.Option(MSG_USERPOD) == "" {
+		return
+	}
+
 	if len(arg) > 1 {
 		switch val := arg[1].(type) {
 		case string:
@@ -274,7 +278,7 @@ func (m *Message) Toast(content string, arg ...interface{}) {
 			}
 		}
 	}
-	m.Cmd("web.space", m.Option("_daemon"), "toast", "", content, arg)
+	m.Cmd("web.space", m.Option(MSG_DAEMON), "toast", "", content, arg)
 }
 func (m *Message) GoToast(title string, cb func(toast func(string, int, int))) {
 	m.Go(func() {

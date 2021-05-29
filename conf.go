@@ -17,8 +17,11 @@ const ( // REPOS
 	CONTEXTS = "contexts"
 	INTSHELL = "intshell"
 
-	PUBLISH = "publish"
 	REQUIRE = "require"
+	PUBLISH = "publish"
+
+	SUCCESS = "success"
+	FAILURE = "failure"
 )
 const ( // DIR
 	USR_VOLCANOS = "usr/volcanos"

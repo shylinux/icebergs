@@ -27,6 +27,7 @@ func _system_show(m *ice.Message, cmd *exec.Cmd) {
 
 		if e := cmd.Run(); e != nil {
 			m.Warn(e != nil, ErrRun, strings.Join(cmd.Args, " "), "\n", e.Error())
+			m.Push(CMD_ERR, e.Error())
 		} else {
 			m.Cost("args", cmd.Args, "code", cmd.ProcessState.ExitCode())
 		}
@@ -44,6 +45,7 @@ func _system_show(m *ice.Message, cmd *exec.Cmd) {
 
 		if e := cmd.Run(); e != nil {
 			m.Warn(e != nil, ErrRun, strings.Join(cmd.Args, " "), "\n", kit.Select(e.Error(), err.String()))
+			fmt.Fprintf(err, e.Error())
 		} else {
 			m.Cost("args", cmd.Args, "code", cmd.ProcessState.ExitCode(), "err", err.Len(), "out", out.Len())
 		}

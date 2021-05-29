@@ -70,26 +70,32 @@ func init() {
 
 					// 推流
 					web.PushStream(m)
-					defer func() { m.Toast("success", "build") }()
-					defer func() { m.ProcessHold() }()
 
 					// 配置
 					switch cb := m.Optionv(PREPARE).(type) {
 					case func(string):
 						cb(p)
 					default:
-						if m.Cmd(cli.SYSTEM, "./configure", "--prefix="+pp, arg[1:]).Append(cli.CMD_CODE) != "0" {
+						if msg := m.Cmd(cli.SYSTEM, "./configure", "--prefix="+pp, arg[1:]); msg.Append(cli.CMD_CODE) != "0" {
+							m.Echo(msg.Append(cli.CMD_ERR))
 							return
 						}
 					}
 
 					// 编译
-					if m.Cmd(cli.SYSTEM, "make", "-j8").Append(cli.CMD_CODE) != "0" {
+					if msg := m.Cmd(cli.SYSTEM, "make", "-j8"); msg.Append(cli.CMD_CODE) != "0" {
+						m.Echo(msg.Append(cli.CMD_ERR))
 						return
 					}
 
 					// 安装
-					m.Cmd(cli.SYSTEM, "make", "PREFIX="+pp, "install")
+					if msg := m.Cmd(cli.SYSTEM, "make", "PREFIX="+pp, "install"); msg.Append(cli.CMD_CODE) != "0" {
+						m.Echo(msg.Append(cli.CMD_ERR))
+						return
+					}
+
+					m.Toast(ice.SUCCESS, gdb.BUILD)
+					m.ProcessHold()
 				}},
 				gdb.SPAWN: {Name: "spawn link", Help: "新建", Hand: func(m *ice.Message, arg ...string) {
 					port := m.Cmdx(tcp.PORT, aaa.RIGHT)

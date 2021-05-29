@@ -188,9 +188,6 @@ func _space_search(m *ice.Message, kind, name, text string, arg ...string) {
 
 		switch value[kit.MDB_TYPE] {
 		case MASTER:
-			m.Debug("what %v", m.Cmd(SPIDE, value[kit.MDB_NAME]).Append("client.url"))
-			m.Debug("what %v", m.Cmd(SPIDE, value[kit.MDB_NAME]))
-
 			m.PushSearch(kit.SSH_CMD, SPACE, kit.MDB_TYPE, value[kit.MDB_TYPE], kit.MDB_NAME, value[kit.MDB_NAME],
 				kit.MDB_TEXT, m.Cmd(SPIDE, value[kit.MDB_NAME], ice.OptionFields("client.url")).Append("client.url"), value)
 

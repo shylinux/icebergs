@@ -266,7 +266,7 @@ type Sort struct {
 }
 
 func (m *Message) Toast(content string, arg ...interface{}) {
-	if m.Option(MSG_USERPOD) == "" {
+	if m.Option(MSG_USERPOD) != "" {
 		return
 	}
 

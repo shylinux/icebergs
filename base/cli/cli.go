@@ -1,15 +1,14 @@
 package cli
 
 import (
-	ice "github.com/shylinux/icebergs"
-	"github.com/shylinux/icebergs/base/mdb"
-	kit "github.com/shylinux/toolkits"
-
 	"os"
 	"os/user"
 	"path"
 	"runtime"
 	"strings"
+
+	ice "github.com/shylinux/icebergs"
+	kit "github.com/shylinux/toolkits"
 )
 
 func NodeInfo(m *ice.Message, kind, name string) {
@@ -26,13 +25,9 @@ var Index = &ice.Context{Name: "cli", Help: "命令模块",
 			m.Load()
 
 			// 启动配置
-			m.Conf(RUNTIME, "conf.ctx_self", os.Getenv("ctx_self"))
-			m.Conf(RUNTIME, "conf.ctx_dev", os.Getenv("ctx_dev"))
-			m.Conf(RUNTIME, "conf.ctx_shy", os.Getenv("ctx_shy"))
-			m.Conf(RUNTIME, "conf.ctx_pid", os.Getenv("ctx_pid"))
-			m.Conf(RUNTIME, "conf.ctx_user", os.Getenv("ctx_user"))
-			m.Conf(RUNTIME, "conf.ctx_share", os.Getenv("ctx_share"))
-			m.Conf(RUNTIME, "conf.ctx_river", os.Getenv("ctx_river"))
+			for _, k := range []string{"ctx_self", "ctx_dev", "ctx_shy", "ctx_pid", "ctx_user", "ctx_share", "ctx_river"} {
+				m.Conf(RUNTIME, kit.Keys("conf", k), os.Getenv(k))
+			}
 
 			// 主机信息
 			m.Conf(RUNTIME, "host.GOARCH", runtime.GOARCH)
@@ -63,7 +58,7 @@ var Index = &ice.Context{Name: "cli", Help: "命令模块",
 			ice.Info.CtxShare = m.Conf(RUNTIME, "conf.ctx_share")
 			ice.Info.CtxRiver = m.Conf(RUNTIME, "conf.ctx_river")
 
-			// 启动记录
+			// 启动次数
 			count := kit.Int(m.Conf(RUNTIME, "boot.count")) + 1
 			m.Conf(RUNTIME, "boot.count", count)
 
@@ -78,24 +73,13 @@ var Index = &ice.Context{Name: "cli", Help: "命令模块",
 
 			// 版本信息
 			kit.Fetch(kit.UnMarshal(kit.Format(ice.Info.Build)), func(key string, value interface{}) {
-				m.Conf(RUNTIME, kit.Keys("build", strings.ToLower(key)), value)
+				m.Conf(RUNTIME, kit.Keys("make", strings.ToLower(key)), value)
 			})
 		}},
 		ice.CTX_EXIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			list := []string{}
-			m.Richs(DAEMON, "", kit.MDB_FOREACH, func(key string, value map[string]interface{}) {
-				if value = kit.GetMeta(value); kit.Value(value, mdb.CACHE_CLEAR_ON_EXIT) == "true" {
-					list = append(list, key)
-				}
-			})
-			for _, k := range list {
-				m.Conf(DAEMON, kit.Keys(kit.MDB_HASH, k), "")
-			}
 			m.Save()
 		}},
 	},
 }
 
-func init() {
-	ice.Index.Register(Index, nil, RUNTIME, SYSTEM, DAEMON, QRCODE, PYTHON, OUTPUT, PROGRESS)
-}
+func init() { ice.Index.Register(Index, nil, RUNTIME, SYSTEM, DAEMON, QRCODE) }

@@ -81,7 +81,7 @@ func _dream_show(m *ice.Message, name string) {
 		// 启动任务
 		kit.Path(os.Args[0])
 
-		m.Optionv(cli.CMD_STDERR, path.Join(p, m.Conf(DREAM, kit.Keym(kit.SSH_ENV, "ctx_log"))))
+		m.Optionv(cli.CMD_ERRPUT, path.Join(p, m.Conf(DREAM, kit.Keym(kit.SSH_ENV, "ctx_log"))))
 		m.Cmd(cli.DAEMON, m.Confv(DREAM, kit.Keym(kit.SSH_CMD)), SPIDE_DEV, SPIDE_DEV, kit.MDB_NAME, name)
 		m.Event(DREAM_CREATE, kit.MDB_TYPE, m.Option(kit.MDB_TYPE), kit.MDB_NAME, name)
 		m.Sleep(ice.MOD_TICK)

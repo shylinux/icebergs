@@ -2,47 +2,49 @@ package cli
 
 import (
 	"io"
+	"os/exec"
+	"path"
+	"strings"
 
 	ice "github.com/shylinux/icebergs"
 	"github.com/shylinux/icebergs/base/mdb"
 	kit "github.com/shylinux/toolkits"
-
-	"os/exec"
-	"strings"
 )
 
 func _daemon_show(m *ice.Message, cmd *exec.Cmd, out, err string) {
-	if w, ok := m.Optionv(CMD_STDOUT).(io.Writer); ok {
+	if w, ok := m.Optionv(CMD_OUTPUT).(io.Writer); ok {
 		cmd.Stdout = w
 		cmd.Stderr = w
 	} else if f, p, e := kit.Create(out); m.Assert(e) {
-		m.Log_EXPORT(kit.MDB_META, DAEMON, CMD_STDOUT, p)
-		m.Optionv(CMD_STDOUT, f)
+		m.Log_EXPORT(kit.MDB_META, DAEMON, CMD_OUTPUT, p)
+		m.Optionv(CMD_OUTPUT, f)
 		cmd.Stdout = f
 		cmd.Stderr = f
 	}
-	if w, ok := m.Optionv(CMD_STDERR).(io.Writer); ok {
+	if w, ok := m.Optionv(CMD_ERRPUT).(io.Writer); ok {
 		cmd.Stderr = w
 	} else if f, p, e := kit.Create(err); m.Assert(e) {
-		m.Log_EXPORT(kit.MDB_META, DAEMON, CMD_STDERR, p)
-		m.Optionv(CMD_STDERR, f)
+		m.Log_EXPORT(kit.MDB_META, DAEMON, CMD_ERRPUT, p)
+		m.Optionv(CMD_ERRPUT, f)
 		cmd.Stderr = f
 	}
 
-	if e := cmd.Start(); m.Warn(e != nil, ErrStart, cmd.Args, " ", e) {
+	// 启动进程
+	if e := cmd.Start(); m.Warn(e != nil, cmd.Args, " ", e) {
 		return
 	}
-
-	h := m.Cmdx(mdb.INSERT, DAEMON, "", mdb.HASH,
-		mdb.CACHE_CLEAR_ON_EXIT, m.Option(mdb.CACHE_CLEAR_ON_EXIT),
-		kit.MDB_STATUS, Status.Start, kit.SSH_CMD, strings.Join(cmd.Args, " "),
-		kit.SSH_DIR, cmd.Dir, kit.SSH_ENV, kit.Select("", cmd.Env), kit.SSH_PID, cmd.Process.Pid,
-		CMD_STDOUT, out, CMD_STDERR, err,
-	)
 	m.Echo("%d", cmd.Process.Pid)
 
 	m.Go(func() {
-		if e := cmd.Wait(); m.Warn(e != nil, ErrStart, cmd.Args, " ", e) {
+		h := m.Cmdx(mdb.INSERT, DAEMON, "", mdb.HASH,
+			kit.MDB_STATUS, Status.Start, kit.SSH_PID, cmd.Process.Pid,
+			kit.SSH_CMD, strings.Join(cmd.Args, " "),
+			kit.SSH_DIR, cmd.Dir, kit.SSH_ENV, kit.Select("", cmd.Env),
+			mdb.CACHE_CLEAR_ON_EXIT, m.Option(mdb.CACHE_CLEAR_ON_EXIT),
+			CMD_OUTPUT, out, CMD_ERRPUT, err,
+		)
+
+		if e := cmd.Wait(); m.Warn(e != nil, cmd.Args, " ", e) {
 			m.Cmd(mdb.MODIFY, DAEMON, "", mdb.HASH, kit.MDB_HASH, h,
 				kit.MDB_STATUS, Status.Error, kit.MDB_ERROR, e)
 		} else {
@@ -50,16 +52,15 @@ func _daemon_show(m *ice.Message, cmd *exec.Cmd, out, err string) {
 			m.Cmd(mdb.MODIFY, DAEMON, "", mdb.HASH, kit.MDB_HASH, h,
 				kit.MDB_STATUS, Status.Stop)
 		}
-		if w, ok := m.Optionv(CMD_STDOUT).(io.Closer); ok {
+
+		if w, ok := m.Optionv(CMD_OUTPUT).(io.Closer); ok {
 			w.Close()
 		}
-		if w, ok := m.Optionv(CMD_STDERR).(io.Closer); ok {
+		if w, ok := m.Optionv(CMD_ERRPUT).(io.Closer); ok {
 			w.Close()
 		}
 	})
 }
-
-const ErrStart = "daemon start: "
 
 var Status = struct{ Error, Start, Stop string }{
 	Error: "error",
@@ -68,10 +69,10 @@ var Status = struct{ Error, Start, Stop string }{
 }
 
 const (
+	DIR = "dir"
 	ENV = "env"
 	CMD = "cmd"
 	ARG = "arg"
-	DIR = "dir"
 	RUN = "run"
 	RES = "res"
 	ERR = "err"
@@ -87,9 +88,23 @@ const DAEMON = "daemon"
 func init() {
 	Index.Merge(&ice.Context{
 		Configs: map[string]*ice.Config{
-			DAEMON: {Name: DAEMON, Help: "守护进程", Value: kit.Data(kit.MDB_PATH, "usr/local/daemon")},
+			DAEMON: {Name: DAEMON, Help: "守护进程", Value: kit.Data(kit.MDB_PATH, path.Join(ice.USR_LOCAL, DAEMON))},
 		},
 		Commands: map[string]*ice.Command{
+			ice.CTX_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			}},
+			ice.CTX_EXIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+				list := []string{}
+				m.Richs(DAEMON, "", kit.MDB_FOREACH, func(key string, value map[string]interface{}) {
+					if value = kit.GetMeta(value); kit.Value(value, mdb.CACHE_CLEAR_ON_EXIT) == ice.TRUE {
+						list = append(list, key)
+					}
+				})
+				for _, k := range list {
+					m.Conf(DAEMON, kit.Keys(kit.MDB_HASH, k), "")
+				}
+			}},
+
 			DAEMON: {Name: "daemon hash auto start prunes", Help: "守护进程", Action: map[string]*ice.Action{
 				RESTART: {Name: "restart", Help: "重启", Hand: func(m *ice.Message, arg ...string) {
 					m.Cmd(DAEMON, STOP)
@@ -98,9 +113,9 @@ func init() {
 				}},
 				START: {Name: "start cmd env dir", Help: "添加", Hand: func(m *ice.Message, arg ...string) {
 					m.Option(CMD_TYPE, DAEMON)
-					m.Option(CMD_DIR, m.Option("dir"))
-					m.Option(CMD_ENV, kit.Split(m.Option("env"), " ="))
-					m.Cmdy(SYSTEM, kit.Split(m.Option("cmd")))
+					m.Option(CMD_DIR, m.Option(DIR))
+					m.Option(CMD_ENV, kit.Split(m.Option(ENV), " ="))
+					m.Cmdy(SYSTEM, kit.Split(m.Option(CMD)))
 				}},
 				STOP: {Name: "stop", Help: "停止", Hand: func(m *ice.Message, arg ...string) {
 					m.Option(mdb.FIELDS, "time,hash,status,pid,cmd,dir,env")
@@ -118,8 +133,8 @@ func init() {
 					m.Cmdy(mdb.PRUNES, DAEMON, "", mdb.HASH, kit.MDB_STATUS, Status.Stop)
 				}},
 			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-				if len(arg) == 0 {
-					m.Option(mdb.FIELDS, "time,hash,status,pid,cmd,dir,env")
+				if len(arg) == 0 { // 进程列表
+					m.Fields(len(arg) == 0, "time,hash,status,pid,cmd,dir,env")
 					m.Cmdy(mdb.SELECT, DAEMON, "", mdb.HASH)
 					m.Table(func(index int, value map[string]string, head []string) {
 						switch value[kit.MDB_STATUS] {
@@ -130,11 +145,11 @@ func init() {
 						}
 					})
 
-				} else if m.Richs(DAEMON, "", arg[0], nil) != nil {
+				} else if m.Richs(DAEMON, "", arg[0], nil) != nil { // 进程详情
 					m.Option(mdb.FIELDS, mdb.DETAIL)
 					m.Cmdy(mdb.SELECT, DAEMON, "", mdb.HASH, kit.MDB_HASH, arg)
 
-				} else {
+				} else { // 启动进程
 					m.Option(CMD_TYPE, DAEMON)
 					m.Cmdy(SYSTEM, arg)
 				}

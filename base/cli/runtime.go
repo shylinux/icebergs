@@ -1,16 +1,25 @@
 package cli
 
 import (
-	ice "github.com/shylinux/icebergs"
-	"github.com/shylinux/icebergs/base/ctx"
-	kit "github.com/shylinux/toolkits"
-
 	"bytes"
 	"io/ioutil"
 	"os"
 	"strings"
+
+	ice "github.com/shylinux/icebergs"
+	"github.com/shylinux/icebergs/base/ctx"
+	kit "github.com/shylinux/toolkits"
 )
 
+const (
+	DISKINFO = "diskinfo"
+	IFCONFIG = "ifconfig"
+	HOSTNAME = "hostname"
+	HOSTINFO = "hostinfo"
+	USERINFO = "userinfo"
+	PROCINFO = "procinfo"
+	BOOTINFO = "bootinfo"
+)
 const RUNTIME = "runtime"
 
 func init() {
@@ -19,11 +28,26 @@ func init() {
 			RUNTIME: {Name: RUNTIME, Help: "运行环境", Value: kit.Dict()},
 		},
 		Commands: map[string]*ice.Command{
-			RUNTIME: {Name: "runtime info=procinfo,hostinfo,diskinfo,ifconfig,hostname,userinfo,bootinfo auto", Help: "运行环境", Action: map[string]*ice.Action{
-				"procinfo": {Name: "procinfo", Help: "procinfo", Hand: func(m *ice.Message, arg ...string) {
-					m.Split(m.Cmdx(SYSTEM, "ps", "u"), "", " ", "\n")
+			RUNTIME: {Name: "runtime info=diskinfo,ifconfig,hostname,hostinfo,userinfo,procinfo,bootinfo auto", Help: "运行环境", Action: map[string]*ice.Action{
+				DISKINFO: {Name: "diskinfo", Help: "磁盘信息", Hand: func(m *ice.Message, arg ...string) {
+					m.Spawn().Split(m.Cmdx(SYSTEM, "df", "-h"), "", " ", "\n").Table(func(index int, value map[string]string, head []string) {
+						if strings.HasPrefix(value["Filesystem"], "/dev") {
+							m.Push("", value, head)
+						}
+					})
 				}},
-				"hostinfo": {Name: "hostinfo", Help: "hostinfo", Hand: func(m *ice.Message, arg ...string) {
+				IFCONFIG: {Name: "ifconfig", Help: "网卡配置", Hand: func(m *ice.Message, arg ...string) {
+					m.Cmdy("tcp.host")
+				}},
+				HOSTNAME: {Name: "hostname", Help: "主机域名", Hand: func(m *ice.Message, arg ...string) {
+					if len(arg) > 0 {
+						m.Conf(RUNTIME, "boot.hostname", arg[0])
+						m.Conf(RUNTIME, "node.name", arg[0])
+						ice.Info.HostName = arg[0]
+					}
+					m.Echo(ice.Info.HostName)
+				}},
+				HOSTINFO: {Name: "hostinfo", Help: "主机信息", Hand: func(m *ice.Message, arg ...string) {
 					if f, e := os.Open("/proc/cpuinfo"); e == nil {
 						defer f.Close()
 						if b, e := ioutil.ReadAll(f); e == nil {
@@ -44,29 +68,14 @@ func init() {
 					}
 					m.Push("uptime", kit.Split(m.Cmdx(SYSTEM, "uptime"), ",")[0])
 				}},
-				"diskinfo": {Name: "diskinfo", Help: "diskinfo", Hand: func(m *ice.Message, arg ...string) {
-					m.Spawn().Split(m.Cmdx(SYSTEM, "df", "-h"), "", " ", "\n").Table(func(index int, value map[string]string, head []string) {
-						if strings.HasPrefix(value["Filesystem"], "/dev") {
-							m.Push("", value, head)
-						}
-					})
-				}},
-				"ifconfig": {Name: "ifconfig", Help: "ifconfig", Hand: func(m *ice.Message, arg ...string) {
-					m.Cmdy("tcp.host")
-				}},
-				"hostname": {Name: "hostname", Help: "hostname", Hand: func(m *ice.Message, arg ...string) {
-					if len(arg) > 0 {
-						m.Conf(RUNTIME, "boot.hostname", arg[0])
-						m.Conf(RUNTIME, "node.name", arg[0])
-						ice.Info.HostName = arg[0]
-					}
-					m.Echo(ice.Info.HostName)
-				}},
-				"userinfo": {Name: "userinfo", Help: "userinfo", Hand: func(m *ice.Message, arg ...string) {
+				USERINFO: {Name: "userinfo", Help: "用户信息", Hand: func(m *ice.Message, arg ...string) {
 					m.Split(m.Cmdx(SYSTEM, "who"), "user term time", " ", "\n")
 				}},
+				PROCINFO: {Name: "procinfo", Help: "进程信息", Hand: func(m *ice.Message, arg ...string) {
+					m.Split(m.Cmdx(SYSTEM, "ps", "u"), "", " ", "\n")
+				}},
 			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-				if len(arg) > 0 && arg[0] == "bootinfo" {
+				if len(arg) > 0 && arg[0] == BOOTINFO {
 					arg = arg[1:]
 				}
 				m.Cmdy(ctx.CONFIG, RUNTIME, arg)

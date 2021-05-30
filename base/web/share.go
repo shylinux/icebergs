@@ -158,20 +158,10 @@ func init() {
 
 				switch msg.Append(kit.MDB_TYPE) {
 				case LOGIN, RIVER:
-					switch kit.Select("", arg, 1) {
-					case SHARE:
-						m.Render(ice.RENDER_QRCODE, kit.MergeURL2(m.Option(ice.MSG_USERWEB), "/", list))
-					default:
-						m.Render(REDIRECT, "/", list)
-					}
+					m.Render(REDIRECT, "/", list)
 
 				case STORM:
-					switch kit.Select("", arg, 1) {
-					case SHARE:
-						m.Render(ice.RENDER_QRCODE, kit.MergeURL2(m.Option(ice.MSG_USERWEB), "/page/share.html", list))
-					default:
-						m.Render(REDIRECT, "/page/share.html", SHARE, m.Option(SHARE))
-					}
+					m.Render(REDIRECT, "/page/share.html", SHARE, m.Option(SHARE))
 				}
 			}},
 

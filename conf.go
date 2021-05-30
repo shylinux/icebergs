@@ -22,6 +22,7 @@ const ( // REPOS
 
 	SUCCESS = "success"
 	FAILURE = "failure"
+	TRUE    = "true"
 )
 const ( // DIR
 	USR_VOLCANOS = "usr/volcanos"

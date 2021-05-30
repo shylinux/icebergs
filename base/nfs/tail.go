@@ -26,8 +26,8 @@ func _tail_create(m *ice.Message, arg ...string) {
 			}
 		})
 
-		m.Option(cli.CMD_STDOUT, w)
-		m.Option(cli.CMD_STDERR, w)
+		m.Option(cli.CMD_OUTPUT, w)
+		m.Option(cli.CMD_ERRPUT, w)
 		m.Option(mdb.CACHE_CLEAR_ON_EXIT, "true")
 		m.Cmd(cli.DAEMON, TAIL, "-n", "0", "-f", file)
 	})

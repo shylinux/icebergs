@@ -1,14 +1,6 @@
 package ssh
 
 import (
-	ice "github.com/shylinux/icebergs"
-	"github.com/shylinux/icebergs/base/aaa"
-	"github.com/shylinux/icebergs/base/mdb"
-	"github.com/shylinux/icebergs/base/nfs"
-	"github.com/shylinux/icebergs/base/tcp"
-	kit "github.com/shylinux/toolkits"
-	"golang.org/x/crypto/ssh"
-
 	"bytes"
 	"encoding/base64"
 	"errors"
@@ -17,6 +9,14 @@ import (
 	"os"
 	"path"
 	"strings"
+
+	ice "github.com/shylinux/icebergs"
+	"github.com/shylinux/icebergs/base/aaa"
+	"github.com/shylinux/icebergs/base/mdb"
+	"github.com/shylinux/icebergs/base/nfs"
+	"github.com/shylinux/icebergs/base/tcp"
+	kit "github.com/shylinux/toolkits"
+	"golang.org/x/crypto/ssh"
 )
 
 func _ssh_meta(conn ssh.ConnMetadata) map[string]string {

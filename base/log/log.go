@@ -1,11 +1,11 @@
 package log
 
 import (
-	ice "github.com/shylinux/icebergs"
-	kit "github.com/shylinux/toolkits"
-
 	"bufio"
 	"path"
+
+	ice "github.com/shylinux/icebergs"
+	kit "github.com/shylinux/toolkits"
 )
 
 type Log struct {
@@ -35,19 +35,19 @@ func (f *Frame) Start(m *ice.Message, arg ...string) bool {
 				break
 			}
 
-			file := kit.Select("bench", m.Conf("show", kit.Keys(l.l, "file")))
-			view := m.Confm("view", m.Conf("show", kit.Keys(l.l, "view")))
-			bio := m.Confv("file", file+".file").(*bufio.Writer)
+			file := kit.Select(BENCH, m.Conf(SHOW, kit.Keys(l.l, FILE)))
+			view := m.Confm(VIEW, m.Conf(SHOW, kit.Keys(l.l, VIEW)))
+			bio := m.Confv(FILE, kit.Keys(file, FILE)).(*bufio.Writer)
 
 			bio.WriteString(l.p)
 			bio.WriteString(" ")
-			if p, ok := view["prefix"].(string); ok {
+			if p, ok := view[PREFIX].(string); ok {
 				bio.WriteString(p)
 			}
 			bio.WriteString(l.l)
 			bio.WriteString(" ")
 			bio.WriteString(l.s)
-			if p, ok := view["suffix"].(string); ok {
+			if p, ok := view[SUFFIX].(string); ok {
 				bio.WriteString(p)
 			}
 			bio.WriteString("\n")
@@ -60,50 +60,71 @@ func (f *Frame) Close(m *ice.Message, arg ...string) bool {
 	return true
 }
 
+const (
+	PREFIX = "prefix"
+	SUFFIX = "suffix"
+)
+const (
+	GREEN  = "green"
+	YELLOW = "yellow"
+	RED    = "red"
+)
+const (
+	WATCH = "watch"
+	BENCH = "bench"
+	ERROR = "error"
+	TRACE = "trace"
+)
+const (
+	FILE = "file"
+	VIEW = "view"
+	SHOW = "show"
+)
+
 var Index = &ice.Context{Name: "log", Help: "日志模块",
 	Configs: map[string]*ice.Config{
-		"file": {Name: "file", Help: "日志文件", Value: kit.Dict(
-			"watch", kit.Dict("path", "var/log/watch.log", "list", []string{
+		FILE: {Name: FILE, Help: "日志文件", Value: kit.Dict(
+			WATCH, kit.Dict(kit.MDB_PATH, path.Join(ice.VAR_LOG, "watch.log"), kit.MDB_LIST, []string{
 				ice.LOG_CREATE, ice.LOG_REMOVE,
 				ice.LOG_INSERT, ice.LOG_DELETE,
 				ice.LOG_SELECT, ice.LOG_MODIFY,
 				ice.LOG_EXPORT, ice.LOG_IMPORT,
 			}),
-			"bench", kit.Dict("path", "var/log/bench.log", "list", []string{}),
-			"error", kit.Dict("path", "var/log/error.log", "list", []string{
+			BENCH, kit.Dict(kit.MDB_PATH, path.Join(ice.VAR_LOG, "bench.log"), kit.MDB_LIST, []string{}),
+			ERROR, kit.Dict(kit.MDB_PATH, path.Join(ice.VAR_LOG, "error.log"), kit.MDB_LIST, []string{
 				ice.LOG_WARN, ice.LOG_ERROR,
 			}),
-			"trace", kit.Dict("path", "var/log/trace.log", "list", []string{}),
+			TRACE, kit.Dict(kit.MDB_PATH, path.Join(ice.VAR_LOG, "trace.log"), kit.MDB_LIST, []string{}),
 		)},
-		"view": {Name: "view", Help: "日志格式", Value: kit.Dict(
-			"green", kit.Dict("prefix", "\033[32m", "suffix", "\033[0m", "list", []string{
+		VIEW: {Name: VIEW, Help: "日志格式", Value: kit.Dict(
+			GREEN, kit.Dict(PREFIX, "\033[32m", SUFFIX, "\033[0m", kit.MDB_LIST, []string{
 				ice.LOG_START, ice.LOG_SERVE,
 				ice.LOG_CMDS,
 			}),
-			"yellow", kit.Dict("prefix", "\033[33m", "suffix", "\033[0m", "list", []string{
+			YELLOW, kit.Dict(PREFIX, "\033[33m", SUFFIX, "\033[0m", kit.MDB_LIST, []string{
 				ice.LOG_AUTH, ice.LOG_COST,
 			}),
-			"red", kit.Dict("prefix", "\033[31m", "suffix", "\033[0m", "list", []string{
+			RED, kit.Dict(PREFIX, "\033[31m", SUFFIX, "\033[0m", kit.MDB_LIST, []string{
 				ice.LOG_WARN, ice.LOG_CLOSE,
 			}),
 		)},
-		"show": {Name: "show", Help: "日志分流", Value: kit.Dict()},
+		SHOW: {Name: SHOW, Help: "日志分流", Value: kit.Dict()},
 	},
 	Commands: map[string]*ice.Command{
 		ice.CTX_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			m.Confm("view", nil, func(key string, value map[string]interface{}) {
-				kit.Fetch(value["list"], func(index int, k string) {
-					m.Conf("show", kit.Keys(k, "view"), key)
+			m.Confm(VIEW, nil, func(key string, value map[string]interface{}) {
+				kit.Fetch(value[kit.MDB_LIST], func(index int, k string) {
+					m.Conf(SHOW, kit.Keys(k, VIEW), key)
 				})
 			})
-			m.Confm("file", nil, func(key string, value map[string]interface{}) {
-				kit.Fetch(value["list"], func(index int, k string) {
-					m.Conf("show", kit.Keys(k, "file"), key)
+			m.Confm(FILE, nil, func(key string, value map[string]interface{}) {
+				kit.Fetch(value[kit.MDB_LIST], func(index int, k string) {
+					m.Conf(SHOW, kit.Keys(k, FILE), key)
 				})
 				// 日志文件
-				if f, p, e := kit.Create(kit.Format(value["path"])); m.Assert(e) {
+				if f, p, e := kit.Create(kit.Format(value[kit.MDB_PATH])); m.Assert(e) {
 					m.Cap(ice.CTX_STREAM, path.Base(p))
-					value["file"] = bufio.NewWriter(f)
+					value[FILE] = bufio.NewWriter(f)
 					m.Log_CREATE(kit.MDB_FILE, p)
 				}
 			})

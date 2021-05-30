@@ -131,12 +131,13 @@ func init() {
 					})
 				}},
 			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-				if len(arg) < 2 {
+				if len(arg) < 2 { // 角色列表
 					_role_list(m, kit.Select("", arg, 0))
 					m.PushAction(mdb.REMOVE)
 					return
 				}
 
+				// 设置角色
 				_role_user(m, arg[0], arg[1:]...)
 			}},
 		},

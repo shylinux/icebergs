@@ -34,7 +34,9 @@ const ( // DIR
 	PROTO_JS = "proto.js"
 	FRAME_JS = "frame.js"
 
+	VAR_LOG     = "var/log"
 	VAR_CONF    = "var/conf"
+	VAR_TRASH   = "var/trash"
 	ETC_MISS    = "etc/miss.sh"
 	ETC_INIT    = "etc/init.shy"
 	ETC_EXIT    = "etc/exit.shy"

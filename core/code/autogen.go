@@ -140,7 +140,7 @@ func init() {
 					_autogen_version(m)
 					m.Cmd(BINPACK, mdb.CREATE)
 				}},
-				mdb.SCRIPT: {Name: "script", Help: "脚本", Hand: func(m *ice.Message, arg ...string) {
+				"script": {Name: "script", Help: "脚本", Hand: func(m *ice.Message, arg ...string) {
 					_autogen_miss(m)
 				}},
 			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {

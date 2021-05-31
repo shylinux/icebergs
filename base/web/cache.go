@@ -1,15 +1,15 @@
 package web
 
 import (
-	ice "github.com/shylinux/icebergs"
-	"github.com/shylinux/icebergs/base/mdb"
-	"github.com/shylinux/icebergs/base/nfs"
-	kit "github.com/shylinux/toolkits"
-
 	"io"
 	"net/http"
 	"os"
 	"path"
+
+	ice "github.com/shylinux/icebergs"
+	"github.com/shylinux/icebergs/base/mdb"
+	"github.com/shylinux/icebergs/base/nfs"
+	kit "github.com/shylinux/toolkits"
 )
 
 func _cache_name(m *ice.Message, h string) string {
@@ -62,7 +62,6 @@ func _cache_catch(m *ice.Message, name string) (file, size string) {
 	}
 	return "", "0"
 }
-
 func _cache_upload(m *ice.Message, r *http.Request) (kind, name, file, size string) {
 	if buf, h, e := r.FormFile(UPLOAD); e == nil {
 		defer buf.Close()
@@ -84,7 +83,7 @@ func _cache_upload(m *ice.Message, r *http.Request) (kind, name, file, size stri
 func _cache_download(m *ice.Message, r *http.Response) (file, size string) {
 	defer r.Body.Close()
 
-	if f, p, e := kit.Create(path.Join("var/tmp", kit.Hashs("uniq"))); m.Assert(e) {
+	if f, p, e := kit.Create(path.Join(ice.VAR_TMP, kit.Hashs("uniq"))); m.Assert(e) {
 		step, total := 0, kit.Int(kit.Select("1", r.Header.Get(ContentLength)))
 		size, buf := 0, make([]byte, ice.MOD_BUFS)
 
@@ -94,7 +93,7 @@ func _cache_download(m *ice.Message, r *http.Response) (file, size string) {
 				f.Write(buf[0:n])
 				s := size * 100 / total
 
-				switch cb := m.Optionv(DOWNLOAD_CB).(type) {
+				switch cb := m.Optionv(kit.Keycb(DOWNLOAD)).(type) {
 				case func(int, int):
 					cb(size, total)
 				case []string:
@@ -129,13 +128,11 @@ func _cache_download(m *ice.Message, r *http.Response) (file, size string) {
 }
 
 const (
-	WATCH = "watch"
-	CATCH = "catch"
-	WRITE = "write"
-
-	UPLOAD      = "upload"
-	DOWNLOAD    = "download"
-	DOWNLOAD_CB = "download.cb"
+	WATCH    = "watch"
+	CATCH    = "catch"
+	WRITE    = "write"
+	UPLOAD   = "upload"
+	DOWNLOAD = "download"
 )
 const CACHE = "cache"
 
@@ -143,8 +140,8 @@ func init() {
 	Index.Merge(&ice.Context{
 		Configs: map[string]*ice.Config{
 			CACHE: {Name: CACHE, Help: "缓存池", Value: kit.Data(
-				kit.MDB_SHORT, kit.MDB_TEXT, kit.MDB_PATH, "var/file",
-				kit.MDB_STORE, "var/data", kit.MDB_FSIZE, "200000",
+				kit.MDB_SHORT, kit.MDB_TEXT, kit.MDB_PATH, ice.VAR_FILE,
+				kit.MDB_STORE, ice.VAR_DATA, kit.MDB_FSIZE, "200000",
 				kit.MDB_LIMIT, "50", kit.MDB_LEAST, "30",
 			)},
 		},
@@ -171,21 +168,21 @@ func init() {
 					}
 				}},
 			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-				m.Option(mdb.FIELDS, kit.Select("time,hash,size,type,name,text", mdb.DETAIL, len(arg) > 0))
-				m.Cmdy(mdb.SELECT, CACHE, "", mdb.HASH, kit.MDB_HASH, arg)
+				m.Fields(len(arg) == 0, "time,hash,size,type,name,text")
+				if m.Cmdy(mdb.SELECT, CACHE, "", mdb.HASH, kit.MDB_HASH, arg); len(arg) == 0 {
+					return
+				}
 
-				if len(arg) > 0 {
-					if m.Append(kit.MDB_FILE) == "" {
-						m.Push(kit.MDB_LINK, m.Append(kit.MDB_TEXT))
-					} else {
-						m.PushAnchor(DOWNLOAD, kit.MergeURL2(m.Option(ice.MSG_USERWEB), "/share/cache/"+arg[0]))
-					}
+				if m.Append(kit.MDB_FILE) == "" {
+					m.Push(kit.MDB_LINK, m.Append(kit.MDB_TEXT))
+				} else {
+					m.PushAnchor(DOWNLOAD, kit.MergeURL2(m.Option(ice.MSG_USERWEB), "/share/cache/"+arg[0]))
 				}
 			}},
 
 			"/cache/": {Name: "/cache/", Help: "缓存池", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 				m.Richs(CACHE, nil, arg[0], func(key string, value map[string]interface{}) {
-					if value[kit.MDB_FILE] == nil {
+					if kit.Format(value[kit.MDB_FILE]) == "" {
 						m.Render(ice.RENDER_DOWNLOAD, value[kit.MDB_FILE])
 					} else {
 						m.Render(ice.RENDER_RESULT, value[kit.MDB_TEXT])

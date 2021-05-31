@@ -35,7 +35,7 @@ func _serve_main(m *ice.Message, w http.ResponseWriter, r *http.Request) bool {
 	m.Info("").Info("%s %s %s", r.Header.Get(ice.MSG_USERIP), r.Method, r.URL)
 
 	// 参数日志
-	if m.Conf(SERVE, kit.Keym("logheaders")) == "true" {
+	if m.Conf(SERVE, kit.Keym(LOGHEADERS)) == "true" {
 		for k, v := range r.Header {
 			m.Info("%s: %v", k, kit.Format(v))
 		}
@@ -56,7 +56,7 @@ func _serve_main(m *ice.Message, w http.ResponseWriter, r *http.Request) bool {
 	}
 
 	// 主页接口
-	if r.Method == "GET" && r.URL.Path == "/" {
+	if r.Method == SPIDE_GET && r.URL.Path == "/" {
 		msg := m.Spawn()
 		msg.W, msg.R = w, r
 		repos := kit.Select(ice.INTSHELL, ice.VOLCANOS, strings.Contains(r.Header.Get("User-Agent"), "Mozilla/5.0"))
@@ -211,14 +211,14 @@ func init() {
 					LOGIN, true, SPACE, true, SHARE, true,
 					ice.VOLCANOS, true, ice.INTSHELL, true,
 					ice.REQUIRE, true, ice.PUBLISH, true,
-				), "logheaders", false,
+				), LOGHEADERS, false,
 
 				kit.SSH_STATIC, kit.Dict("/", ice.USR_VOLCANOS),
 				ice.VOLCANOS, kit.Dict(kit.MDB_PATH, ice.USR_VOLCANOS, kit.SSH_INDEX, "page/index.html",
 					kit.SSH_REPOS, "https://github.com/shylinux/volcanos", kit.SSH_BRANCH, kit.SSH_MASTER,
 				), ice.PUBLISH, ice.USR_PUBLISH,
 
-				ice.INTSHELL, kit.Dict(kit.MDB_PATH, ice.USR_INTSHELL, kit.SSH_INDEX, "index.sh",
+				ice.INTSHELL, kit.Dict(kit.MDB_PATH, ice.USR_INTSHELL, kit.SSH_INDEX, ice.INDEX_SH,
 					kit.SSH_REPOS, "https://github.com/shylinux/intshell", kit.SSH_BRANCH, kit.SSH_MASTER,
 				), ice.REQUIRE, ".ish/pluged",
 			)},

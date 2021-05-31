@@ -1,11 +1,11 @@
 package gdb
 
 import (
+	"time"
+
 	ice "github.com/shylinux/icebergs"
 	"github.com/shylinux/icebergs/base/mdb"
 	kit "github.com/shylinux/toolkits"
-
-	"time"
 )
 
 func _timer_create(m *ice.Message, arg ...string) {
@@ -61,15 +61,14 @@ func init() {
 				}},
 			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 				if len(arg) == 0 {
-					m.Option(mdb.FIELDS, kit.Select("time,hash,delay,interval,order,next,cmd", mdb.DETAIL, len(arg) > 0))
+					m.Fields(len(arg) == 0, "time,hash,delay,interval,order,next,cmd")
 					m.Cmdy(mdb.SELECT, TIMER, "", mdb.HASH, kit.MDB_HASH, arg)
 					m.PushAction(mdb.REMOVE)
 					return
 				}
 
-				m.Option(mdb.FIELDS, kit.Select("time,id,res", mdb.DETAIL, len(arg) > 1))
+				m.Fields(len(arg) == 1, "time,id,res")
 				m.Cmdy(mdb.SELECT, TIMER, kit.Keys(kit.MDB_HASH, arg[0]), mdb.LIST, kit.MDB_ID, arg[1:])
-				return
 			}},
 		},
 	})

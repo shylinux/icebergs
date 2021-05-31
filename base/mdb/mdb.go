@@ -1,15 +1,15 @@
 package mdb
 
 import (
-	ice "github.com/shylinux/icebergs"
-	kit "github.com/shylinux/toolkits"
-
 	"encoding/csv"
 	"encoding/json"
 	"os"
 	"path"
 	"sort"
 	"strings"
+
+	ice "github.com/shylinux/icebergs"
+	kit "github.com/shylinux/toolkits"
 )
 
 func _file_name(m *ice.Message, arg ...string) string {
@@ -41,7 +41,7 @@ func _hash_select(m *ice.Message, prefix, chain, field, value string) {
 		value = kit.MDB_RANDOMS
 	}
 	fields := _hash_fields(m)
-	cb := m.Optionv(SELECT_CB)
+	cb := m.Optionv(kit.Keycb(SELECT))
 	m.Richs(prefix, chain, value, func(key string, val map[string]interface{}) {
 		val = kit.GetMeta(val)
 		switch cb := cb.(type) {
@@ -156,7 +156,7 @@ func _list_select(m *ice.Message, prefix, chain, field, value string) {
 		field = ""
 	}
 	fields := _list_fields(m)
-	cb := m.Optionv(SELECT_CB)
+	cb := m.Optionv(kit.Keycb(SELECT))
 	m.Grows(prefix, chain, kit.Select(m.Option("cache.field"), field), kit.Select(m.Option(CACHE_VALUE), value), func(index int, val map[string]interface{}) {
 		val = kit.GetMeta(val)
 		switch cb := cb.(type) {
@@ -275,7 +275,7 @@ func _zone_select(m *ice.Message, prefix, chain, zone string, id string) {
 	}
 
 	fields := _zone_fields(m)
-	cb := m.Optionv(SELECT_CB)
+	cb := m.Optionv(kit.Keycb(SELECT))
 	m.Richs(prefix, chain, kit.Select(kit.MDB_FOREACH, zone), func(key string, val map[string]interface{}) {
 		val = kit.GetMeta(val)
 		if zone == "" {
@@ -405,16 +405,10 @@ const (
 	DELETE = "delete"
 	REMOVE = "remove"
 
-	SELECT_CB = "select.cb"
-
 	EXPORT = "export"
 	IMPORT = "import"
 	PRUNES = "prunes"
 	INPUTS = "inputs"
-	SCRIPT = "script"
-	COMMIT = "commit"
-	SOURCE = "source"
-	UPLOAD = "upload"
 )
 const (
 	CACHE_LIMIT = "cache.limit"

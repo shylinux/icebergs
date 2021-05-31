@@ -1,12 +1,13 @@
 package web
 
 import (
-	ice "github.com/shylinux/icebergs"
-	"github.com/shylinux/icebergs/base/nfs"
-	kit "github.com/shylinux/toolkits"
-
 	"os"
 	"time"
+
+	ice "github.com/shylinux/icebergs"
+	"github.com/shylinux/icebergs/base/mdb"
+	"github.com/shylinux/icebergs/base/nfs"
+	kit "github.com/shylinux/toolkits"
 )
 
 func _story_list(m *ice.Message, name string, key string) {
@@ -14,7 +15,7 @@ func _story_list(m *ice.Message, name string, key string) {
 		m.Richs(STORY, HEAD, kit.MDB_FOREACH, func(key string, value map[string]interface{}) {
 			m.Push(key, value, []string{kit.MDB_TIME, kit.MDB_COUNT, STORY})
 		})
-		m.Sort(kit.MDB_TIME, "time_r")
+		m.SortTimeR(kit.MDB_TIME)
 		return
 	}
 	if key == "" {
@@ -23,7 +24,7 @@ func _story_list(m *ice.Message, name string, key string) {
 	}
 
 	m.Richs(STORY, nil, key, func(key string, value map[string]interface{}) {
-		m.Push("detail", value)
+		m.Push(mdb.DETAIL, value)
 	})
 
 }
@@ -57,7 +58,7 @@ func _story_index(m *ice.Message, name string, withdata bool) {
 func _story_history(m *ice.Message, name string) {
 	// 历史记录
 	list := m.Cmd(STORY, INDEX, name).Append(LIST)
-	for i := 0; i < kit.Int(kit.Select("30", m.Option("cache.limit"))) && list != ""; i++ {
+	for i := 0; i < kit.Int(kit.Select("30", m.Option(mdb.CACHE_LIMIT))) && list != ""; i++ {
 		m.Richs(STORY, nil, list, func(key string, value map[string]interface{}) {
 			// 直连节点
 			m.Push(key, value, []string{kit.MDB_TIME, kit.MDB_KEY, kit.MDB_COUNT, SCENE, STORY})
@@ -155,9 +156,11 @@ const (
 	PUSH   = "push"
 	COMMIT = "commit"
 )
-const SCENE = "scene"
+const (
+	SCENE = "scene"
+	DRAMA = "drama"
+)
 const STORY = "story"
-const DRAMA = "drama"
 
 func init() {
 	Index.Merge(&ice.Context{
@@ -183,9 +186,6 @@ func init() {
 				}},
 				HISTORY: {Name: "history name", Help: "历史", Hand: func(m *ice.Message, arg ...string) {
 					_story_history(m, arg[0])
-				}},
-				"add": {Name: "add type name text arg...", Help: "淘汰", Hand: func(m *ice.Message, arg ...string) {
-					panic(m)
 				}},
 			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 				_story_list(m, kit.Select("", arg, 0), kit.Select("", arg, 1))

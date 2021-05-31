@@ -24,7 +24,6 @@ func init() {
 					m.Option(mdb.FIELDS, mdb.DETAIL)
 				} else {
 					m.Option(mdb.FIELDS, m.Conf(SYNC, kit.META_FIELD))
-					m.Option(ice.MSG_CONTROL, ice.CONTROL_PAGE)
 				}
 
 				m.Cmdy(mdb.SELECT, m.Prefix(SYNC), "", mdb.LIST, kit.MDB_ID, arg)

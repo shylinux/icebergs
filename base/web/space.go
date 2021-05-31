@@ -43,13 +43,13 @@ func _space_dial(m *ice.Message, dev, name string, arg ...string) {
 			m.Go(func() {
 				for i := 0; i >= 0 && i < kit.Int(redial["c"]); i++ {
 					msg := m.Spawn()
-					msg.Option(tcp.DIAL_CB, func(s net.Conn, e error) {
+					msg.Option(kit.Keycb(tcp.DIAL), func(s net.Conn, e error) {
 						if msg.Warn(e != nil, e) {
 							return
 						}
 
 						if s, _, e := websocket.NewClient(s, u, nil, kit.Int(redial["r"]), kit.Int(redial["w"])); !msg.Warn(e != nil, e) {
-							msg.Rich(SPACE, nil, kit.Dict(tcp.SOCKET, s, kit.MDB_TYPE, MASTER, kit.MDB_NAME, dev, kit.MDB_TEXT, host))
+							msg.Rich(SPACE, nil, kit.Dict(SOCKET, s, kit.MDB_TYPE, MASTER, kit.MDB_NAME, dev, kit.MDB_TEXT, host))
 							msg.Log_CREATE(SPACE, dev, "retry", i, "uri", uri)
 
 							// 连接成功
@@ -78,7 +78,7 @@ func _space_send(m *ice.Message, space string, arg ...string) {
 
 	target := kit.Split(space, ".", ".")
 	m.Warn(m.Richs(SPACE, nil, target[0], func(key string, value map[string]interface{}) {
-		if socket, ok := value[tcp.SOCKET].(*websocket.Conn); !m.Warn(!ok, ice.ErrNotFound, tcp.SOCKET) {
+		if socket, ok := value[SOCKET].(*websocket.Conn); !m.Warn(!ok, ice.ErrNotFound, SOCKET) {
 
 			// 复制选项
 			for _, k := range kit.Simple(m.Optionv(ice.MSG_OPTS)) {
@@ -148,7 +148,7 @@ func _space_handle(m *ice.Message, safe bool, send map[string]*ice.Message, c *w
 				}
 
 			} else if msg.Richs(SPACE, nil, target[0], func(key string, value map[string]interface{}) {
-				if s, ok := value[tcp.SOCKET].(*websocket.Conn); ok {
+				if s, ok := value[SOCKET].(*websocket.Conn); ok {
 					socket, source, target = s, source, target[1:]
 					_space_echo(msg, source, target, socket, kit.Select("", target))
 					return // 转发报文
@@ -220,6 +220,8 @@ const (
 const (
 	SPACE_START = "space.start"
 	SPACE_STOP  = "space.stop"
+
+	SOCKET = "socket"
 )
 const SPACE = "space"
 
@@ -257,7 +259,7 @@ func init() {
 					river := m.Option("river")
 
 					// 添加节点
-					h := m.Rich(SPACE, nil, kit.Dict(tcp.SOCKET, s, "share", share, "river", river,
+					h := m.Rich(SPACE, nil, kit.Dict(SOCKET, s, "share", share, "river", river,
 						kit.MDB_TYPE, kind, kit.MDB_NAME, name, kit.MDB_TEXT, s.RemoteAddr().String(),
 					))
 

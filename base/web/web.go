@@ -1,15 +1,15 @@
 package web
 
 import (
+	"net"
+	"net/http"
+	"path"
+
 	ice "github.com/shylinux/icebergs"
 	"github.com/shylinux/icebergs/base/cli"
 	"github.com/shylinux/icebergs/base/mdb"
 	"github.com/shylinux/icebergs/base/tcp"
 	kit "github.com/shylinux/toolkits"
-
-	"net"
-	"net/http"
-	"path"
 )
 
 type Frame struct {
@@ -43,16 +43,16 @@ func (web *Frame) Start(m *ice.Message, arg ...string) bool {
 
 			// 静态路由
 			msg := m.Spawn(s)
-			m.Confm(SERVE, "meta.static", func(key string, value string) {
+			m.Confm(SERVE, kit.Keym("static"), func(key string, value string) {
 				m.Log("route", "%s <- %s <- %s", s.Name, key, value)
 				w.Handle(key, http.StripPrefix(key, http.FileServer(http.Dir(value))))
 			})
 
 			// 级联路由
 			route := "/" + s.Name + "/"
-			if n, ok := p.Server().(*Frame); ok && n.ServeMux != nil {
+			if f, ok := p.Server().(*Frame); ok && f.ServeMux != nil {
 				msg.Log("route", "%s <= %s", p.Name, route)
-				n.Handle(route, http.StripPrefix(path.Dir(route), w))
+				f.Handle(route, http.StripPrefix(path.Dir(route), w))
 			}
 
 			// 命令路由
@@ -70,7 +70,7 @@ func (web *Frame) Start(m *ice.Message, arg ...string) bool {
 	})
 
 	web.m, web.Server = m, &http.Server{Handler: web}
-	m.Option(tcp.LISTEN_CB, func(l net.Listener) {
+	m.Option(kit.Keycb(tcp.LISTEN), func(l net.Listener) {
 		m.Cmdy(mdb.INSERT, SERVE, "", mdb.HASH, arg, kit.MDB_STATUS, tcp.START, kit.MDB_PROTO, m.Option(kit.MDB_PROTO), SPIDE_DEV, m.Option(SPIDE_DEV))
 		defer m.Cmd(mdb.MODIFY, SERVE, "", mdb.HASH, kit.MDB_NAME, m.Option(kit.MDB_NAME), kit.MDB_STATUS, tcp.STOP)
 
@@ -93,18 +93,18 @@ var Index = &ice.Context{Name: WEB, Help: "网络模块",
 		ice.CTX_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			m.Load()
 			m.Conf(SPACE, kit.MDB_HASH, "")
+			m.Cmd(mdb.SEARCH, mdb.CREATE, SPACE, m.Prefix(SPACE))
 
 			m.Cmd(SPIDE, mdb.CREATE, SPIDE_DEV, kit.Select("http://:9020", m.Conf(cli.RUNTIME, "conf.ctx_dev")))
 			m.Cmd(SPIDE, mdb.CREATE, SPIDE_SELF, kit.Select("http://:9020", m.Conf(cli.RUNTIME, "conf.ctx_self")))
 			m.Cmd(SPIDE, mdb.CREATE, SPIDE_SHY, kit.Select("https://shylinux.com:443", m.Conf(cli.RUNTIME, "conf.ctx_shy")))
-			m.Cmd(mdb.SEARCH, mdb.CREATE, SPACE, m.Prefix(SPACE))
 		}},
 		ice.CTX_EXIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			m.Save()
 
 			m.Done(true)
 			m.Cmd(SERVE).Table(func(index int, value map[string]string, head []string) {
-				m.Done(value[kit.MDB_STATUS] == "start")
+				m.Done(value[kit.MDB_STATUS] == tcp.START)
 			})
 		}},
 	},
@@ -112,7 +112,7 @@ var Index = &ice.Context{Name: WEB, Help: "网络模块",
 
 func init() {
 	ice.Index.Register(Index, &Frame{},
-		ROUTE, SERVE, SPACE, DREAM,
-		SPIDE, SHARE, CACHE, STORY,
+		SPIDE, CACHE, STORY, ROUTE,
+		SHARE, SERVE, SPACE, DREAM,
 	)
 }

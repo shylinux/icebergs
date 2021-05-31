@@ -50,7 +50,7 @@ func _bench_http(m *ice.Message, name, target string, arg ...string) {
 
 	m.Echo(s.Show())
 	m.Echo("body: %d\n", body)
-	m.Option(ice.MSG_PROCESS, ice.PROCESS_INNER)
+	m.ProcessInner()
 }
 func _bench_redis(m *ice.Message, name, target string, arg ...string) {
 }

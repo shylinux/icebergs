@@ -36,18 +36,15 @@ func init() {
 					m.Cmdy(mdb.DELETE, EVENT, "", mdb.HASH, EVENT, m.Option(EVENT))
 				}},
 			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-				if len(arg) == 0 {
+				if len(arg) == 0 { // 事件列表
 					m.Option(mdb.FIELDS, "time,event,count")
 					m.Cmdy(mdb.SELECT, EVENT, "", mdb.HASH)
 					m.PushAction(ACTION, mdb.REMOVE)
 					return
 				}
 
-				m.Option(mdb.FIELDS, kit.Select("time,id,cmd", mdb.DETAIL, len(arg) > 1))
+				m.Fields(len(arg) == 1, "time,id,cmd")
 				m.Cmdy(mdb.SELECT, EVENT, kit.Keys(kit.MDB_HASH, kit.Hashs(arg[0])), mdb.LIST, kit.MDB_ID, arg[1:])
-				if len(arg) == 1 {
-					m.Sort(kit.MDB_ID)
-				}
 			}},
 		},
 	})

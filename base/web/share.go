@@ -1,17 +1,17 @@
 package web
 
 import (
-	ice "github.com/shylinux/icebergs"
-	"github.com/shylinux/icebergs/base/aaa"
-	"github.com/shylinux/icebergs/base/mdb"
-	"github.com/shylinux/icebergs/base/tcp"
-	kit "github.com/shylinux/toolkits"
-
 	"net/http"
 	"os"
 	"path"
 	"strings"
 	"time"
+
+	ice "github.com/shylinux/icebergs"
+	"github.com/shylinux/icebergs/base/aaa"
+	"github.com/shylinux/icebergs/base/mdb"
+	"github.com/shylinux/icebergs/base/tcp"
+	kit "github.com/shylinux/toolkits"
 )
 
 func _share_domain(m *ice.Message) string {
@@ -47,7 +47,7 @@ func _share_local(m *ice.Message, arg ...string) {
 	}
 
 	if m.Option(kit.SSH_POD) != "" { // 远程文件
-		pp := path.Join("var/proxy", m.Option(kit.SSH_POD), p)
+		pp := path.Join(ice.VAR_PROXY, m.Option(kit.SSH_POD), p)
 		cache := time.Now().Add(-time.Hour * 240000)
 		if s, e := os.Stat(pp); e == nil {
 			cache = s.ModTime()
@@ -61,7 +61,7 @@ func _share_local(m *ice.Message, arg ...string) {
 		}
 	}
 
-	if p == "usr/publish/order.js" {
+	if p == path.Join(ice.USR_PUBLISH, ice.ORDER_JS) {
 		if _, e := os.Stat(p); os.IsNotExist(e) {
 			m.Render(ice.RENDER_RESULT, "")
 			return
@@ -72,16 +72,16 @@ func _share_local(m *ice.Message, arg ...string) {
 func _share_proxy(m *ice.Message, arg ...string) {
 	switch m.R.Method {
 	case http.MethodGet: // 下发文件
-		m.Render(ice.RENDER_DOWNLOAD, path.Join("var/proxy", path.Join(m.Option(kit.SSH_POD), m.Option(kit.MDB_PATH), m.Option(kit.MDB_NAME))))
+		m.Render(ice.RENDER_DOWNLOAD, path.Join(ice.VAR_PROXY, path.Join(m.Option(kit.SSH_POD), m.Option(kit.MDB_PATH), m.Option(kit.MDB_NAME))))
 
 	case http.MethodPost: // 上传文件
 		m.Cmdy(CACHE, UPLOAD)
-		m.Cmdy(CACHE, WATCH, m.Option("data"), path.Join("var/proxy", m.Option(kit.SSH_POD), m.Option(kit.MDB_PATH)))
+		m.Cmdy(CACHE, WATCH, m.Option(kit.MDB_DATA), path.Join(ice.VAR_PROXY, m.Option(kit.SSH_POD), m.Option(kit.MDB_PATH)))
 		m.Render(ice.RENDER_RESULT, m.Option(kit.MDB_PATH))
 	}
 }
 func _share_repos(m *ice.Message, repos string, arg ...string) {
-	prefix := kit.Path(m.Conf(SERVE, "meta.require"))
+	prefix := kit.Path(m.Conf(SERVE, kit.Keym(ice.REQUIRE)))
 	if _, e := os.Stat(path.Join(prefix, repos)); e != nil {
 		m.Cmd("web.code.git.repos", mdb.CREATE, kit.SSH_REPOS, "https://"+repos, kit.MDB_PATH, path.Join(prefix, repos))
 	}
@@ -104,7 +104,7 @@ func init() {
 		Commands: map[string]*ice.Command{
 			SHARE: {Name: "share hash auto", Help: "共享链", Action: map[string]*ice.Action{
 				mdb.CREATE: {Name: "create type name text", Help: "创建", Hand: func(m *ice.Message, arg ...string) {
-					m.Cmdy(mdb.INSERT, SHARE, "", mdb.HASH, kit.MDB_TIME, m.Time(m.Conf(SHARE, "meta.expire")),
+					m.Cmdy(mdb.INSERT, SHARE, "", mdb.HASH, kit.MDB_TIME, m.Time(m.Conf(SHARE, kit.Keym(kit.MDB_EXPIRE))),
 						aaa.USERROLE, m.Option(ice.MSG_USERROLE), aaa.USERNAME, m.Option(ice.MSG_USERNAME),
 						RIVER, m.Option(ice.MSG_RIVER), STORM, m.Option(ice.MSG_STORM), arg)
 				}},

@@ -1,6 +1,11 @@
 package web
 
 import (
+	"io/ioutil"
+	"os"
+	"path"
+	"strings"
+
 	ice "github.com/shylinux/icebergs"
 	"github.com/shylinux/icebergs/base/cli"
 	"github.com/shylinux/icebergs/base/gdb"
@@ -8,11 +13,6 @@ import (
 	"github.com/shylinux/icebergs/base/nfs"
 	"github.com/shylinux/icebergs/base/tcp"
 	kit "github.com/shylinux/toolkits"
-
-	"io/ioutil"
-	"os"
-	"path"
-	"strings"
 )
 
 func _dream_list(m *ice.Message) {
@@ -73,9 +73,8 @@ func _dream_show(m *ice.Message, name string) {
 	if m.Richs(SPACE, nil, name, nil) == nil {
 		m.Option(cli.CMD_DIR, p)
 		m.Optionv(cli.CMD_ENV, kit.Simple(
-			// "ctx_dev", m.Conf(cli.RUNTIME, "conf.ctx_dev"),
 			"ctx_dev", "http://:"+m.Cmd(SERVE).Append(tcp.PORT),
-			"PATH", kit.Path(path.Join(p, kit.SSH_BIN))+":"+kit.Path(kit.SSH_BIN)+":"+os.Getenv("PATH"),
+			cli.PATH, kit.Path(path.Join(p, kit.SSH_BIN))+":"+kit.Path(kit.SSH_BIN)+":"+os.Getenv(cli.PATH),
 			"USER", ice.Info.UserName, m.Confv(DREAM, kit.Keym(kit.SSH_ENV)),
 		))
 		// 启动任务
@@ -111,7 +110,7 @@ func init() {
 				}},
 				mdb.CREATE: {Name: "create main=src/main.go@key name=hi@key from=usr/icebergs/misc/bash/bash.go@key", Help: "添加", Hand: func(m *ice.Message, arg ...string) {
 					m.Cmdy(SPACE, m.Option(ROUTE), "web.code.autogen", mdb.CREATE, arg)
-					m.Option(ice.MSG_PROCESS, ice.PROCESS_INNER)
+					m.ProcessInner()
 				}},
 				tcp.START: {Name: "start name repos", Help: "启动", Hand: func(m *ice.Message, arg ...string) {
 					if m.Option(kit.MDB_NAME) == SPIDE_SELF {

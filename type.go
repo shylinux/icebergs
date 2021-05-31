@@ -1,8 +1,6 @@
 package ice
 
 import (
-	kit "github.com/shylinux/toolkits"
-
 	"encoding/json"
 	"fmt"
 	"io"
@@ -15,6 +13,8 @@ import (
 	"sync"
 	"sync/atomic"
 	"time"
+
+	kit "github.com/shylinux/toolkits"
 )
 
 type Cache struct {

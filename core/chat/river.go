@@ -241,8 +241,7 @@ func init() {
 				}
 
 				// 命令插件
-				m.Option(ice.MSG_PROCESS, "_field")
-				m.Option("_prefix", arg[0], arg[1], "run")
+				m.ProcessField(arg[0], arg[1], "run")
 				m.Table(func(index int, value map[string]string, head []string) {
 					m.Cmdy(web.SPACE, value[POD], ctx.CONTEXT, value[CTX], ctx.COMMAND, value[CMD])
 				})

@@ -73,15 +73,15 @@ func init() {
 
 					m.Cmd(mdb.INSERT, PPROF, _sub_key(m, m.Option(kit.MDB_ZONE)), mdb.LIST, kit.MDB_TEXT, strings.Join(res, "\n"), kit.MDB_FILE, msg.Append(kit.MDB_FILE))
 					m.Echo(strings.Join(res, "\n"))
-					m.Option(ice.MSG_PROCESS, ice.PROCESS_INNER)
+					m.ProcessInner()
 				}},
 				web.SERVE: {Name: "serve", Help: "展示", Hand: func(m *ice.Message, arg ...string) {
-					m.Option(ice.MSG_PROCESS, ice.PROCESS_INNER)
 					u := kit.ParseURL(m.Option(ice.MSG_USERWEB))
 					p := u.Hostname() + ":" + m.Cmdx(tcp.PORT, aaa.RIGHT)
 
 					m.Cmd(cli.DAEMON, m.Confv(PPROF, "meta.pprof"), "-http="+p, m.Option(BINNARY), m.Option(kit.MDB_FILE))
 					m.Echo("http://%s/ui/top", p)
+					m.ProcessInner()
 				}},
 			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 				m.Option(mdb.FIELDS, kit.Select("time,count,zone,binnary,service,seconds", kit.Select("time,id,text,binnary,file", mdb.DETAIL, len(arg) > 1), len(arg) > 0))

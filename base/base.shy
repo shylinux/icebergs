@@ -1,15 +1,21 @@
-source aaa/aaa.shy
-source cli/cli.shy
+label "base" `
+ctx cli web aaa
+lex yac gdb log
+tcp nfs ssh mdb
+`
+
 source ctx/ctx.shy
+source cli/cli.shy
 source web/web.shy
+source aaa/aaa.shy
 
-source gdb/gdb.shy
 source lex/lex.shy
-source log/log.shy
 source yac/yac.shy
+source gdb/gdb.shy
+source log/log.shy
 
-source mdb/mdb.shy
+source tcp/tcp.shy
 source nfs/nfs.shy
 source ssh/ssh.shy
-source tcp/tcp.shy
+source mdb/mdb.shy
 

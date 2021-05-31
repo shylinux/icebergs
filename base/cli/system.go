@@ -25,8 +25,8 @@ func _system_show(m *ice.Message, cmd *exec.Cmd) {
 		}
 
 	} else {
-		out := bytes.NewBuffer(make([]byte, 0, 1024))
-		err := bytes.NewBuffer(make([]byte, 0, 1024))
+		out := bytes.NewBuffer(make([]byte, 0, ice.MOD_BUFS))
+		err := bytes.NewBuffer(make([]byte, 0, ice.MOD_BUFS))
 		defer func() {
 			m.Push(CMD_ERR, err.String())
 			m.Push(CMD_OUT, out.String())
@@ -66,8 +66,10 @@ const (
 	DARWIN  = "darwin"
 	WINDOWS = "windows"
 	SOURCE  = "source"
-	HOME    = "home"
-	PATH    = "path"
+
+	USER = "USER"
+	HOME = "HOME"
+	PATH = "PATH"
 )
 const SYSTEM = "system"
 

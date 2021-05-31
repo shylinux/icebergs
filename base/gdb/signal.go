@@ -1,12 +1,12 @@
 package gdb
 
 import (
+	"os/signal"
+	"syscall"
+
 	ice "github.com/shylinux/icebergs"
 	"github.com/shylinux/icebergs/base/mdb"
 	kit "github.com/shylinux/toolkits"
-
-	"os/signal"
-	"syscall"
 )
 
 func _signal_listen(m *ice.Message, s int, arg ...string) {
@@ -37,7 +37,7 @@ func init() {
 			)},
 		},
 		Commands: map[string]*ice.Command{
-			SIGNAL: {Name: "signal auto listen", Help: "信号器", Action: map[string]*ice.Action{
+			SIGNAL: {Name: "signal signal auto listen", Help: "信号器", Action: map[string]*ice.Action{
 				LISTEN: {Name: "listen signal name cmd", Help: "监听", Hand: func(m *ice.Message, arg ...string) {
 					_signal_listen(m, kit.Int(m.Option(SIGNAL)), arg...)
 				}},
@@ -48,7 +48,7 @@ func init() {
 					m.Cmdy(mdb.DELETE, SIGNAL, "", mdb.HASH, SIGNAL, m.Option(SIGNAL))
 				}},
 			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-				m.Option(mdb.FIELDS, "time,signal,name,cmd")
+				m.Fields(len(arg) == 0, "time,signal,name,cmd")
 				m.Cmdy(mdb.SELECT, SIGNAL, "", mdb.HASH, SIGNAL, arg)
 				m.PushAction(ACTION, mdb.REMOVE)
 				m.Sort(SIGNAL)

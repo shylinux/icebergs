@@ -21,17 +21,10 @@ func Render(msg *ice.Message, cmd string, args ...interface{}) {
 	switch arg := kit.Simple(args...); cmd {
 	case ice.RENDER_VOID:
 	case ice.RENDER_RESULT:
-		fmt.Fprint(msg.O, msg.Result())
-
-	case ice.RENDER_QRCODE:
-		fmt.Fprint(msg.O, msg.Cmdx("cli.qrcode", kit.Format(args[0], args[1:]...)))
-
-	case ice.RENDER_DOWNLOAD:
-		if f, e := os.Open(arg[0]); e == nil {
-			defer f.Close()
-
-			io.Copy(msg.O, f)
+		if len(arg) > 0 {
+			msg.Resultv(arg)
 		}
+		fmt.Fprint(msg.O, msg.Result())
 
 	default:
 		// 转换结果
@@ -39,7 +32,6 @@ func Render(msg *ice.Message, cmd string, args ...interface{}) {
 		if res == "" {
 			res = msg.Table().Result()
 		}
-		args = append(args, "length:", len(res))
 
 		// 输出结果
 		if fmt.Fprint(msg.O, res); !strings.HasSuffix(res, "\n") {
@@ -48,11 +40,12 @@ func Render(msg *ice.Message, cmd string, args ...interface{}) {
 	}
 }
 func Script(m *ice.Message, name string) io.Reader {
-	if strings.Contains(m.Option("_script"), "/") {
-		name = path.Join(path.Dir(m.Option("_script")), name)
+	if strings.Contains(m.Option(ice.MSG_SCRIPT), "/") {
+		name = path.Join(path.Dir(m.Option(ice.MSG_SCRIPT)), name)
 	}
-	m.Option("_script", name)
+	m.Option(ice.MSG_SCRIPT, name)
 
+	// 本地文件
 	back := kit.Split(m.Option(nfs.DIR_ROOT))
 	for i := len(back) - 1; i >= 0; i-- {
 		if s, e := os.Open(path.Join(path.Join(back[:i]...), name)); e == nil {
@@ -64,24 +57,26 @@ func Script(m *ice.Message, name string) io.Reader {
 	}
 
 	switch strings.Split(name, "/")[0] {
-	case "etc", "var":
+	case kit.SSH_ETC, kit.SSH_VAR:
 		m.Warn(true, ice.ErrNotFound)
 		return nil
 	}
 
+	// 打包文件
 	if b, ok := ice.BinPack["/"+name]; ok {
 		m.Info("binpack %v %v", len(b), name)
 		return bytes.NewReader(b)
 	}
 
+	// 远程文件
 	if msg := m.Cmd("web.spide", "dev", "GET", path.Join("/share/local/", name)); msg.Result(0) != ice.ErrWarn {
-		bio := bytes.NewBuffer([]byte(msg.Result()))
-		return bio
+		return bytes.NewBuffer([]byte(msg.Result()))
 	}
 
-	if strings.HasPrefix(name, "usr") {
+	// 源码文件
+	if strings.HasPrefix(name, kit.SSH_USR) {
 		ls := strings.Split(name, "/")
-		m.Cmd("web.code.git.repos", ls[1], "usr/"+ls[1])
+		m.Cmd("web.code.git.repos", ls[1], path.Join(kit.SSH_USR, ls[1]))
 		if s, e := os.Open(name); e == nil {
 			return s
 		}
@@ -93,6 +88,8 @@ type Frame struct {
 	source string
 	target *ice.Context
 	stdout io.Writer
+	stdin  io.Reader
+	pipe   io.Writer
 
 	count int
 	ps1   []string
@@ -113,11 +110,11 @@ func (f *Frame) prompt(m *ice.Message, list ...string) *Frame {
 	fmt.Fprintf(f.stdout, "\r")
 	for _, v := range list {
 		switch v {
-		case "count":
+		case kit.MDB_COUNT:
 			fmt.Fprintf(f.stdout, "%d", f.count)
-		case "time":
+		case kit.MDB_TIME:
 			fmt.Fprintf(f.stdout, time.Now().Format("15:04:05"))
-		case "target":
+		case TARGET:
 			fmt.Fprintf(f.stdout, f.target.Name)
 		default:
 			fmt.Fprintf(f.stdout, v)
@@ -135,7 +132,7 @@ func (f *Frame) printf(m *ice.Message, res string, arg ...interface{}) *Frame {
 }
 func (f *Frame) option(m *ice.Message, ls []string) []string {
 	ln := []string{}
-	m.Option("cache.limit", 10)
+	m.Option(mdb.CACHE_LIMIT, 10)
 	for i := 0; i < len(ls); i++ {
 		if ls[i] == "--" {
 			ln = append(ln, ls[i+1:]...)
@@ -161,11 +158,10 @@ func (f *Frame) option(m *ice.Message, ls []string) []string {
 	return ln
 }
 func (f *Frame) change(m *ice.Message, ls []string) []string {
-	if len(ls) == 1 && ls[0] == "~" {
-		// 模块列表
+	if len(ls) == 1 && ls[0] == "~" { // 模块列表
 		ls = []string{"context"}
-	} else if len(ls) > 0 && strings.HasPrefix(ls[0], "~") {
-		// 切换模块
+
+	} else if len(ls) > 0 && strings.HasPrefix(ls[0], "~") { // 切换模块
 		target := ls[0][1:]
 		if ls = ls[1:]; len(target) == 0 && len(ls) > 0 {
 			target, ls = ls[0], ls[1:]
@@ -231,21 +227,21 @@ func (f *Frame) parse(m *ice.Message, line string) string {
 	}
 	return ""
 }
-func (f *Frame) scan(m *ice.Message, h, line string, r io.Reader) *Frame {
-	m.Option("ssh.return", func() { f.exit = true })
-	f.ps1 = kit.Simple(m.Confv("prompt", "meta.PS1"))
-	f.ps2 = kit.Simple(m.Confv("prompt", "meta.PS2"))
+func (f *Frame) scan(m *ice.Message, h, line string) *Frame {
+	m.Option(kit.Keycb(RETURN), func() { f.exit = true })
+	f.ps1 = kit.Simple(m.Confv(PROMPT, kit.Keym(PS1)))
+	f.ps2 = kit.Simple(m.Confv(PROMPT, kit.Keym(PS2)))
 	ps := f.ps1
 
-	m.I, m.O = r, f.stdout
-	bio := bufio.NewScanner(r)
 	m.Sleep("300ms")
+	m.I, m.O = f.stdin, f.stdout
+	bio := bufio.NewScanner(f.stdin)
 	for f.prompt(m, ps...); bio.Scan() && !f.exit; f.prompt(m, ps...) {
 		if h == STDIO && len(bio.Text()) == 0 {
 			continue // 空行
 		}
 
-		// m.Cmdx(mdb.INSERT, SOURCE, kit.Keys(kit.MDB_HASH, h), mdb.LIST, kit.MDB_TEXT, bio.Text())
+		m.Cmdx(mdb.INSERT, SOURCE, kit.Keys(kit.MDB_HASH, h), mdb.LIST, kit.MDB_TEXT, bio.Text())
 		f.count++
 
 		if len(bio.Text()) == 0 {
@@ -284,40 +280,43 @@ func (f *Frame) Spawn(m *ice.Message, c *ice.Context, arg ...string) ice.Server 
 func (f *Frame) Start(m *ice.Message, arg ...string) bool {
 	f.source, f.target = kit.Select(STDIO, arg, 0), m.Target()
 
-	var r io.Reader
 	switch m.Cap(ice.CTX_STREAM, f.source) {
 	case STDIO: // 终端交互
-		r, f.stdout = os.Stdin, os.Stdout
+		r, w, _ := os.Pipe()
+		m.Go(func() { io.Copy(w, os.Stdin) })
+		f.stdin, f.stdout = r, os.Stdout
+		f.pipe = w
 
 		m.Option(ice.MSG_OPTS, ice.MSG_USERNAME)
 		aaa.UserRoot(m)
 
-	default:
+	default: // 脚本文件
 		f.target = m.Source()
 
 		if strings.HasPrefix(f.source, "/dev") {
-			r, f.stdout = m.I, m.O
+			f.stdin, f.stdout = m.I, m.O
 			break
 		}
 
-		buf := bytes.NewBuffer(make([]byte, 0, 4096))
+		buf := bytes.NewBuffer(make([]byte, 0, ice.MOD_BUFS))
 		defer func() { m.Echo(buf.String()) }()
 
 		if s := Script(m, f.source); s != nil {
-			r, f.stdout = s, buf
+			f.stdin, f.stdout = s, buf
 			break
 		}
 
+		// 查找失败
 		return true
 	}
 
+	// 解析脚本
 	if f.count = 1; f.source == STDIO {
-		// m.Option("_disable_log", "true")
-		f.count = kit.Int(m.Conf(SOURCE, "hash.stdio.meta.count")) + 1
-		f.scan(m, STDIO, "", r)
+		f.count = kit.Int(m.Conf(SOURCE, kit.Keys("hash.stdio.meta.count"))) + 1
+		f.scan(m, STDIO, "")
 	} else {
 		h := m.Cmdx(mdb.INSERT, SOURCE, "", mdb.HASH, kit.MDB_NAME, f.source)
-		f.scan(m, h, "", r)
+		f.scan(m, h, "")
 	}
 	return true
 }
@@ -327,60 +326,80 @@ func (f *Frame) Close(m *ice.Message, arg ...string) bool {
 
 const (
 	STDIO = "stdio"
+	PS1   = "PS1"
+	PS2   = "PS2"
 )
 const (
 	SOURCE = "source"
 	TARGET = "target"
 	PROMPT = "prompt"
+	PRINTF = "printf"
 	RETURN = "return"
+
+	SCREEN = "screen"
 )
 
 func init() {
 	Index.Merge(&ice.Context{
 		Configs: map[string]*ice.Config{
-			SOURCE: {Name: SOURCE, Help: "加载脚本", Value: kit.Dict()},
+			SOURCE: {Name: SOURCE, Help: "加载脚本", Value: kit.Data(kit.MDB_SHORT, kit.MDB_NAME)},
 			PROMPT: {Name: PROMPT, Help: "命令提示", Value: kit.Data(
-				"PS1", []interface{}{"\033[33;44m", "count", "[", "time", "]", "\033[5m", "target", "\033[0m", "\033[44m", ">", "\033[0m ", "\033[?25h", "\033[32m"},
-				"PS2", []interface{}{"count", " ", "target", "> "},
+				PS1, []interface{}{"\033[33;44m", kit.MDB_COUNT, "[", kit.MDB_TIME, "]", "\033[5m", TARGET, "\033[0m", "\033[44m", ">", "\033[0m ", "\033[?25h", "\033[32m"},
+				PS2, []interface{}{kit.MDB_COUNT, " ", TARGET, "> "},
 			)},
 		},
 		Commands: map[string]*ice.Command{
-			SOURCE: {Name: "source hash id auto", Help: "脚本解析", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-				if len(arg) > 0 && strings.HasSuffix(arg[0], ".shy") {
+			SOURCE: {Name: "source hash id limit offend auto", Help: "脚本解析", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+				if len(arg) > 0 && kit.Ext(arg[0]) == "shy" { // 解析脚本
 					m.Starts(strings.Replace(arg[0], ".", "_", -1), arg[0], arg[0:]...)
 					return
 				}
 
-				if len(arg) == 0 {
-					m.Option(mdb.FIELDS, "time,hash,name,count")
+				if len(arg) == 0 { // 脚本列表
+					m.Fields(len(arg) == 0, "time,hash,name,count")
 					m.Cmdy(mdb.SELECT, SOURCE, "", mdb.HASH)
 					m.Sort(kit.MDB_NAME)
 					return
 				}
 
-				if arg[0] == STDIO {
-					m.Option("_control", "_page")
+				if m.Option(mdb.CACHE_OFFEND, kit.Select("0", arg, 3)); arg[0] == STDIO {
+					m.Option(mdb.CACHE_LIMIT, kit.Select("10", arg, 2))
 				} else {
-					m.Option("cache.limit", "-1")
+					m.Option(mdb.CACHE_LIMIT, kit.Select("-1", arg, 2))
 				}
-				m.Option(mdb.FIELDS, kit.Select("time,id,text", mdb.DETAIL, len(arg) > 1))
+
+				// 命令列表
+				m.Fields(len(arg) == 1 || arg[1] == "", "time,id,text")
 				m.Cmdy(mdb.SELECT, SOURCE, kit.Keys(kit.MDB_HASH, arg[0]), mdb.LIST, kit.MDB_ID, arg[1:])
-				m.Sort(kit.MDB_ID)
 			}},
-			TARGET: {Name: "target name", Help: "当前模块", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-				m.Search(arg[0], func(p *ice.Context, s *ice.Context, key string) {
-					f := m.Target().Server().(*Frame)
-					f.target = s
-					f.prompt(m)
-				})
+			TARGET: {Name: "target name 执行:button", Help: "当前模块", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+				f := m.Target().Server().(*Frame)
+				m.Search(arg[0]+".", func(p *ice.Context, s *ice.Context, key string) { f.target = s })
+				f.prompt(m)
+				m.Echo(arg[0])
 			}},
-			PROMPT: {Name: "prompt arg...", Help: "命令提示", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			PROMPT: {Name: "prompt arg 执行:button", Help: "命令提示", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 				f := m.Target().Server().(*Frame)
 				f.ps1 = arg
 				f.prompt(m)
+				m.Echo(arg[0])
+			}},
+			PRINTF: {Name: "printf 执行:button text:textarea", Help: "输出显示", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+				f := m.Target().Server().(*Frame)
+				f.printf(m, arg[0])
+				m.Echo(arg[0])
+			}},
+			SCREEN: {Name: "screen 执行:button text:textarea", Help: "输出命令", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+				f := m.Target().Server().(*Frame)
+				for _, line := range kit.Split(arg[0], "\n", "\n", "\n") {
+					f.printf(m, line+"\n")
+					fmt.Fprintf(f.pipe, line+"\n")
+					m.Sleep("300ms")
+				}
+				m.Echo(arg[0])
 			}},
 			RETURN: {Name: "return", Help: "结束脚本", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-				switch cb := m.Optionv("ssh.return").(type) {
+				switch cb := m.Optionv(kit.Keycb(RETURN)).(type) {
 				case func():
 					cb()
 				}

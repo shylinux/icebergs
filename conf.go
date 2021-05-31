@@ -73,6 +73,7 @@ const ( // MSG
 	MSG_RESULT = "result"
 
 	MSG_ALIAS  = "_alias"
+	MSG_SCRIPT = "_script"
 	MSG_SOURCE = "_source"
 	MSG_TARGET = "_target"
 	MSG_HANDLE = "_handle"

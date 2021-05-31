@@ -172,6 +172,13 @@ func init() {
 			CONNECT: {Name: CONNECT, Help: "连接", Value: kit.Data()},
 		},
 		Commands: map[string]*ice.Command{
+			ice.CTX_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+				m.Richs(CONNECT, "", kit.MDB_FOREACH, func(key string, value map[string]interface{}) {
+					if value = kit.GetMeta(value); kit.Value(value, kit.MDB_STATUS) == tcp.OPEN {
+						m.Cmd(CONNECT, tcp.DIAL, aaa.USERNAME, value[aaa.USERNAME], value)
+					}
+				})
+			}},
 			CONNECT: {Name: "connect hash auto dial prunes", Help: "连接", Action: map[string]*ice.Action{
 				tcp.OPEN: {Name: "open authfile= username=shy password= verfiy= host=shylinux.com port=22 private=.ssh/id_rsa", Help: "终端", Hand: func(m *ice.Message, arg ...string) {
 					_ssh_open(m, arg...)

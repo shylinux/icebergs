@@ -34,7 +34,7 @@ func _ssh_exec(m *ice.Message, cmd string, arg []string, env []string, tty io.Re
 }
 func _ssh_close(m *ice.Message, c net.Conn, channel ssh.Channel) {
 	defer channel.Close()
-	channel.Write([]byte(m.Conf(SERVICE, "meta.goodbye")))
+	channel.Write([]byte(m.Conf(SERVICE, kit.Keym(GOODBYE))))
 }
 func _ssh_watch(m *ice.Message, meta map[string]string, h string, input io.Reader, output io.Writer, display io.Writer) {
 	r, w := io.Pipe()
@@ -77,11 +77,13 @@ func init() {
 					m.Cmdy(mdb.DELETE, CHANNEL, "", mdb.HASH, kit.MDB_HASH, m.Option(kit.MDB_HASH))
 				}},
 				mdb.PRUNES: {Name: "prunes", Help: "清理", Hand: func(m *ice.Message, arg ...string) {
+					m.Option(mdb.FIELDS, "time,hash,status,username,hostport,tty,count")
+					m.Cmdy(mdb.PRUNES, SERVICE, "", mdb.HASH, kit.MDB_STATUS, tcp.ERROR)
 					m.Cmdy(mdb.PRUNES, CHANNEL, "", mdb.HASH, kit.MDB_STATUS, tcp.CLOSE)
 				}},
 			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-				if len(arg) == 0 {
-					m.Option(mdb.FIELDS, "time,hash,status,username,hostname,hostport,tty,count")
+				if len(arg) == 0 { // 通道列表
+					m.Fields(len(arg) == 0, "time,hash,status,username,hostport,tty,count")
 					if m.Cmdy(mdb.SELECT, CHANNEL, "", mdb.HASH); len(arg) == 0 {
 						m.Table(func(index int, value map[string]string, head []string) {
 							m.PushButton(kit.Select("", mdb.REMOVE, value[kit.MDB_STATUS] == tcp.CLOSE))
@@ -90,7 +92,8 @@ func init() {
 					return
 				}
 
-				m.Option(mdb.FIELDS, kit.Select("time,id,type,text", mdb.DETAIL, len(arg) > 1))
+				// 通道命令
+				m.Fields(len(arg) == 1, "time,id,type,text")
 				m.Cmdy(mdb.SELECT, CHANNEL, kit.Keys(kit.MDB_HASH, arg[0]), mdb.LIST, kit.MDB_ID, arg[1:])
 			}},
 		},

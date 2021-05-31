@@ -170,9 +170,9 @@ func _list_select(m *ice.Message, prefix, chain, field, value string) {
 			}
 		}
 	})
-	if m.Option(FIELDS) != DETAIL {
-		m.SortIntR(kit.MDB_ID)
-	}
+	// if m.Option(FIELDS) != DETAIL {
+	// 	m.SortIntR(kit.MDB_ID)
+	// }
 }
 func _list_modify(m *ice.Message, prefix, chain string, field, value string, arg ...string) {
 	m.Grows(prefix, chain, field, value, func(index int, val map[string]interface{}) {
@@ -412,9 +412,10 @@ const (
 	INPUTS = "inputs"
 )
 const (
-	CACHE_LIMIT = "cache.limit"
-	CACHE_FIELD = "cache.field"
-	CACHE_VALUE = "cache.value"
+	CACHE_LIMIT  = "cache.limit"
+	CACHE_FIELD  = "cache.field"
+	CACHE_VALUE  = "cache.value"
+	CACHE_OFFEND = "cache.offend"
 
 	CACHE_CLEAR_ON_EXIT = "cache.clear.on.exit"
 )

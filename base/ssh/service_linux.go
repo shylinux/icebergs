@@ -10,6 +10,7 @@ import (
 	"unsafe"
 
 	ice "github.com/shylinux/icebergs"
+	"github.com/shylinux/icebergs/base/cli"
 	"github.com/shylinux/icebergs/base/mdb"
 	"github.com/shylinux/icebergs/base/tcp"
 	kit "github.com/shylinux/toolkits"
@@ -28,7 +29,7 @@ func _ssh_handle(m *ice.Message, meta map[string]string, c net.Conn, channel ssh
 	defer m.Logs("dischan", tcp.HOSTPORT, c.RemoteAddr(), "->", c.LocalAddr())
 
 	shell := kit.Select("bash", os.Getenv("SHELL"))
-	list := []string{"PATH=" + os.Getenv("PATH")}
+	list := []string{cli.PATH + "=" + os.Getenv(cli.PATH)}
 
 	pty, tty, err := pty.Open()
 	if m.Warn(err != nil, err) {
@@ -40,7 +41,7 @@ func _ssh_handle(m *ice.Message, meta map[string]string, c net.Conn, channel ssh
 	meta[CHANNEL] = h
 
 	for request := range requests {
-		m.Logs("request", tcp.HOSTPORT, c.RemoteAddr(), kit.MDB_TYPE, request.Type)
+		m.Logs(REQUEST, tcp.HOSTPORT, c.RemoteAddr(), kit.MDB_TYPE, request.Type)
 
 		switch request.Type {
 		case "pty-req":

@@ -12,6 +12,7 @@ import (
 
 	ice "github.com/shylinux/icebergs"
 	"github.com/shylinux/icebergs/base/aaa"
+	"github.com/shylinux/icebergs/base/cli"
 	"github.com/shylinux/icebergs/base/mdb"
 	"github.com/shylinux/icebergs/base/nfs"
 	"github.com/shylinux/icebergs/base/tcp"
@@ -111,7 +112,7 @@ func _ssh_conn(m *ice.Message, conn net.Conn, username, hostport string) *ssh.Cl
 	}))
 
 	methods = append(methods, ssh.PublicKeysCallback(func() ([]ssh.Signer, error) {
-		key, err := ssh.ParsePrivateKey([]byte(m.Cmdx(nfs.CAT, path.Join(os.Getenv("HOME"), m.Option("private")))))
+		key, err := ssh.ParsePrivateKey([]byte(m.Cmdx(nfs.CAT, path.Join(os.Getenv(cli.HOME), m.Option("private")))))
 		return []ssh.Signer{key}, err
 	}))
 	methods = append(methods, ssh.PasswordCallback(func() (string, error) {
@@ -127,6 +128,76 @@ func _ssh_conn(m *ice.Message, conn net.Conn, username, hostport string) *ssh.Cl
 	return ssh.NewClient(c, chans, reqs)
 }
 
+func _ssh_open(m *ice.Message, arg ...string) {
+	var client *ssh.Client
+	w, h, _ := terminal.GetSize(int(os.Stdin.Fd()))
+
+	_ssh_password(m, m.Option("authfile"))
+	p := path.Join(os.Getenv("HOME"), ".ssh/", fmt.Sprintf("%s@%s", m.Option("username"), m.Option("host")))
+	if _, e := os.Stat(p); e == nil {
+		if c, e := net.Dial("unix", p); e == nil {
+
+			pr, pw := _ssh_stream(m, os.Stdin)
+			defer _ssh_store(os.Stdout)()
+			defer _ssh_store(os.Stdin)()
+
+			c.Write([]byte(fmt.Sprintf("height:%d,width:%d\n", h, w)))
+
+			m.Go(func() { io.Copy(c, pr) })
+			_ssh_init(m, pw)
+			m.Echo("logout\n")
+			io.Copy(os.Stdout, c)
+			return
+		} else {
+			os.Remove(p)
+		}
+	}
+
+	if l, e := net.Listen("unix", p); m.Assert(e) {
+		defer func() { os.Remove(p) }()
+		defer l.Close()
+
+		m.Go(func() {
+			for {
+				if c, e := l.Accept(); e == nil {
+					buf := make([]byte, 1024)
+					if n, e := c.Read(buf); m.Assert(e) {
+						fmt.Sscanf(string(buf[:n]), "height:%d,width:%d", &h, &w)
+					}
+
+					session := _ssh_session(m, client, w, h, c, c, c)
+					func(session *ssh.Session) {
+						m.Go(func() {
+							defer c.Close()
+							session.Wait()
+						})
+					}(session)
+				} else {
+					break
+				}
+			}
+		})
+	}
+
+	m.Option(kit.Keycb(tcp.DIAL), func(c net.Conn) {
+		client = _ssh_conn(m, c, m.Option(aaa.USERNAME), m.Option(tcp.HOST)+":"+m.Option(tcp.PORT))
+
+		pr, pw := _ssh_stream(m, os.Stdin)
+		defer _ssh_store(os.Stdout)()
+		defer _ssh_store(os.Stdin)()
+
+		session := _ssh_session(m, client, w, h, pr, os.Stdout, os.Stderr)
+		_ssh_init(m, pw)
+		_ssh_tick(m, pw)
+		session.Wait()
+	})
+
+	m.Cmdy(tcp.CLIENT, tcp.DIAL, kit.MDB_TYPE, "ssh", kit.MDB_NAME, m.Option(tcp.HOST),
+		tcp.PORT, m.Option(tcp.PORT), tcp.HOST, m.Option(tcp.HOST), arg)
+
+	m.Echo("exit %s\n", m.Option(tcp.HOST))
+}
+
 const CONNECT = "connect"
 
 func init() {
@@ -137,25 +208,34 @@ func init() {
 		Commands: map[string]*ice.Command{
 			CONNECT: {Name: "connect hash auto dial prunes", Help: "连接", Action: map[string]*ice.Action{
 				tcp.DIAL: {Name: "dial username=shy host=shylinux.com port=22 private=.ssh/id_rsa", Help: "添加", Hand: func(m *ice.Message, arg ...string) {
-					m.Option(tcp.DIAL_CB, func(c net.Conn) {
+					m.Option(kit.Keycb(tcp.DIAL), func(c net.Conn) {
 						client := _ssh_conn(m, c, kit.Select("shy", m.Option(aaa.USERNAME)),
 							kit.Select("shylinux.com", m.Option(tcp.HOST))+":"+kit.Select("22", m.Option(tcp.PORT)),
 						)
 
 						h := m.Rich(CONNECT, "", kit.Dict(
 							aaa.USERNAME, m.Option(aaa.USERNAME),
-							tcp.HOST, m.Option(tcp.HOST),
-							tcp.PORT, m.Option(tcp.PORT),
-							kit.MDB_STATUS, tcp.OPEN,
-							CONNECT, client,
+							tcp.HOST, m.Option(tcp.HOST), tcp.PORT, m.Option(tcp.PORT),
+							kit.MDB_STATUS, tcp.OPEN, CONNECT, client,
 						))
 						m.Cmd(CONNECT, SESSION, kit.MDB_HASH, h)
 						m.Echo(h)
 					})
 
-					m.Cmds(tcp.CLIENT, tcp.DIAL, kit.MDB_TYPE, SSH, kit.MDB_NAME, m.Option(aaa.USERNAME), tcp.PORT, m.Option(tcp.PORT), tcp.HOST, m.Option(tcp.HOST))
-					m.Sleep("100ms")
+					m.Cmds(tcp.CLIENT, tcp.DIAL, kit.MDB_TYPE, SSH, kit.MDB_NAME, m.Option(aaa.USERNAME),
+						tcp.PORT, m.Option(tcp.PORT), tcp.HOST, m.Option(tcp.HOST))
 				}},
+				tcp.OPEN: {Name: "open authfile= username=shy password= verfiy= host=shylinux.com port=22 private=.ssh/id_rsa tick=", Help: "终端", Hand: func(m *ice.Message, arg ...string) {
+					_ssh_open(m, arg...)
+				}},
+				mdb.REMOVE: {Name: "remove", Help: "删除", Hand: func(m *ice.Message, arg ...string) {
+					m.Cmdy(mdb.DELETE, CONNECT, "", mdb.HASH, kit.MDB_HASH, m.Option(kit.MDB_HASH))
+				}},
+				mdb.PRUNES: {Name: "prunes", Help: "清理", Hand: func(m *ice.Message, arg ...string) {
+					m.Cmdy(mdb.PRUNES, CONNECT, "", mdb.HASH, kit.MDB_STATUS, tcp.ERROR)
+					m.Cmdy(mdb.PRUNES, CONNECT, "", mdb.HASH, kit.MDB_STATUS, tcp.CLOSE)
+				}},
+
 				SESSION: {Name: "session hash", Help: "会话", Hand: func(m *ice.Message, arg ...string) {
 					m.Richs(CONNECT, "", m.Option(kit.MDB_HASH), func(key string, value map[string]interface{}) {
 						client, ok := value[CONNECT].(*ssh.Client)
@@ -169,84 +249,8 @@ func init() {
 						}
 					})
 				}},
-
-				"open": {Name: "open authfile= username=shy password= verfiy= host=shylinux.com port=22 private=.ssh/id_rsa tick=", Help: "终端", Hand: func(m *ice.Message, arg ...string) {
-					var client *ssh.Client
-					w, h, _ := terminal.GetSize(int(os.Stdin.Fd()))
-
-					_ssh_password(m, m.Option("authfile"))
-					p := path.Join(os.Getenv("HOME"), ".ssh/", fmt.Sprintf("%s@%s", m.Option("username"), m.Option("host")))
-					if _, e := os.Stat(p); e == nil {
-						if c, e := net.Dial("unix", p); e == nil {
-
-							pr, pw := _ssh_stream(m, os.Stdin)
-							defer _ssh_store(os.Stdout)()
-							defer _ssh_store(os.Stdin)()
-
-							c.Write([]byte(fmt.Sprintf("height:%d,width:%d\n", h, w)))
-
-							m.Go(func() { io.Copy(c, pr) })
-							_ssh_init(m, pw)
-							m.Echo("logout\n")
-							io.Copy(os.Stdout, c)
-							return
-						} else {
-							os.Remove(p)
-						}
-					}
-
-					if l, e := net.Listen("unix", p); m.Assert(e) {
-						defer func() { os.Remove(p) }()
-						defer l.Close()
-
-						m.Go(func() {
-							for {
-								if c, e := l.Accept(); e == nil {
-									buf := make([]byte, 1024)
-									if n, e := c.Read(buf); m.Assert(e) {
-										fmt.Sscanf(string(buf[:n]), "height:%d,width:%d", &h, &w)
-									}
-
-									session := _ssh_session(m, client, w, h, c, c, c)
-									func(session *ssh.Session) {
-										m.Go(func() {
-											defer c.Close()
-											session.Wait()
-										})
-									}(session)
-								} else {
-									break
-								}
-							}
-						})
-					}
-
-					m.Option(tcp.DIAL_CB, func(c net.Conn) {
-						client = _ssh_conn(m, c, m.Option(aaa.USERNAME), m.Option(tcp.HOST)+":"+m.Option(tcp.PORT))
-
-						pr, pw := _ssh_stream(m, os.Stdin)
-						defer _ssh_store(os.Stdout)()
-						defer _ssh_store(os.Stdin)()
-
-						session := _ssh_session(m, client, w, h, pr, os.Stdout, os.Stderr)
-						_ssh_init(m, pw)
-						_ssh_tick(m, pw)
-						session.Wait()
-					})
-
-					m.Cmdy(tcp.CLIENT, tcp.DIAL, kit.MDB_TYPE, "ssh", kit.MDB_NAME, m.Option(tcp.HOST),
-						tcp.PORT, m.Option(tcp.PORT), tcp.HOST, m.Option(tcp.HOST), arg)
-
-					m.Echo("exit %s\n", m.Option(tcp.HOST))
-				}},
-				mdb.REMOVE: {Name: "remove", Help: "删除", Hand: func(m *ice.Message, arg ...string) {
-					m.Cmdy(mdb.DELETE, CONNECT, "", mdb.HASH, kit.MDB_HASH, m.Option(kit.MDB_HASH))
-				}},
-				mdb.PRUNES: {Name: "prunes", Help: "清理", Hand: func(m *ice.Message, arg ...string) {
-					m.Cmdy(mdb.PRUNES, CONNECT, "", mdb.HASH, kit.MDB_STATUS, tcp.CLOSE)
-				}},
 			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-				m.Option(mdb.FIELDS, kit.Select("time,hash,status,username,host,port", mdb.DETAIL, len(arg) > 0))
+				m.Fields(len(arg) == 0, "time,hash,status,username,host,port")
 				if m.Cmdy(mdb.SELECT, CONNECT, "", mdb.HASH, kit.MDB_HASH, arg); len(arg) == 0 {
 					m.Table(func(index int, value map[string]string, head []string) {
 						m.PushButton(kit.Select("", mdb.REMOVE, value[kit.MDB_STATUS] == tcp.CLOSE))

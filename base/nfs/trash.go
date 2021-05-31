@@ -29,6 +29,9 @@ func _trash_create(m *ice.Message, name string) {
 		}
 	}
 }
+func _trash_prunes(m *ice.Message) {
+	m.Cmd(mdb.DELETE, TRASH, "", mdb.HASH, kit.MDB_HASH, m.Option(kit.MDB_HASH))
+}
 
 const TRASH = "trash"
 
@@ -40,16 +43,23 @@ func init() {
 			)},
 		},
 		Commands: map[string]*ice.Command{
-			TRASH: {Name: "trash file auto", Help: "回收站", Action: map[string]*ice.Action{
+			TRASH: {Name: "trash file auto prunes", Help: "回收站", Action: map[string]*ice.Action{
 				"recover": {Name: "recover", Help: "恢复", Hand: func(m *ice.Message, arg ...string) {
 					os.Rename(m.Option(kit.MDB_FILE), m.Option(kit.MDB_FROM))
 					m.Cmd(mdb.DELETE, TRASH, "", mdb.HASH, kit.MDB_HASH, m.Option(kit.MDB_HASH))
+				}},
+				mdb.REMOVE: {Name: "remove", Help: "删除", Hand: func(m *ice.Message, arg ...string) {
+					os.Remove(m.Option(kit.MDB_FILE))
+					m.Cmd(mdb.DELETE, TRASH, "", mdb.HASH, kit.MDB_HASH, m.Option(kit.MDB_HASH))
+				}},
+				mdb.PRUNES: {Name: "prunes", Help: "清理", Hand: func(m *ice.Message, arg ...string) {
+					_trash_prunes(m)
 				}},
 			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 				if len(arg) == 0 {
 					m.Option(mdb.FIELDS, "time,hash,file,from")
 					m.Cmdy(mdb.SELECT, TRASH, "", mdb.HASH)
-					m.PushAction("recover")
+					m.PushAction("recover", mdb.REMOVE)
 					return
 				}
 				_trash_create(m, arg[0])

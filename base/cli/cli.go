@@ -19,7 +19,9 @@ func NodeInfo(m *ice.Message, kind, name string) {
 	ice.Info.NodeType = kind
 }
 
-var Index = &ice.Context{Name: "cli", Help: "命令模块",
+const CLI = "cli"
+
+var Index = &ice.Context{Name: CLI, Help: "命令模块",
 	Commands: map[string]*ice.Command{
 		ice.CTX_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			m.Load()

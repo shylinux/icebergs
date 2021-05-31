@@ -1,9 +1,10 @@
 package ssh
 
 import (
+	"net"
+
 	ice "github.com/shylinux/icebergs"
 	"golang.org/x/crypto/ssh"
-	"net"
 )
 
 func _ssh_size(fd uintptr, b []byte) {

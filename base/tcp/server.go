@@ -1,12 +1,11 @@
 package tcp
 
 import (
+	"net"
+
 	ice "github.com/shylinux/icebergs"
 	"github.com/shylinux/icebergs/base/mdb"
 	kit "github.com/shylinux/toolkits"
-
-	"net"
-	// "strings"
 )
 
 type Listener struct {
@@ -20,17 +19,6 @@ type Listener struct {
 func (l Listener) Accept() (net.Conn, error) {
 	c, e := l.Listener.Accept()
 	l.s.nc += 1
-	l.m.Conf(SERVER, kit.Keys(kit.MDB_HASH, l.h, kit.MDB_META, "nconn"), l.s.nc)
-
-	// ls := strings.Split(c.RemoteAddr().String(), ":")
-	// if strings.Contains(c.RemoteAddr().String(), "[") {
-	// 	ls = strings.Split(strings.TrimPrefix(c.RemoteAddr().String(), "["), "]:")
-	// }
-	// h := l.m.Cmdx(mdb.INSERT, CLIENT, "", mdb.HASH, HOST, ls[0], PORT, ls[1],
-	// 	kit.MDB_TYPE, l.m.Option(kit.MDB_TYPE), kit.MDB_NAME, l.m.Option(kit.MDB_NAME),
-	// 	kit.MDB_STATUS, kit.Select(ERROR, OPEN, e == nil), kit.MDB_ERROR, kit.Format(e))
-
-	// return &Conn{m: l.m, h: h, s: &Stat{}, Conn: c}, e
 	return &Conn{m: l.m, h: "", s: &Stat{}, Conn: c}, e
 }
 func (l Listener) Close() error {
@@ -39,8 +27,7 @@ func (l Listener) Close() error {
 }
 
 const (
-	LISTEN_CB = "listen.cb"
-	LISTEN    = "listen"
+	LISTEN = "listen"
 )
 
 const SERVER = "server"
@@ -54,16 +41,15 @@ func init() {
 			SERVER: {Name: "server hash auto prunes", Help: "服务器", Action: map[string]*ice.Action{
 				LISTEN: {Name: "LISTEN type name port=9010 host=", Help: "监听", Hand: func(m *ice.Message, arg ...string) {
 					l, e := net.Listen(TCP, m.Option(HOST)+":"+m.Option(PORT))
-					// h := m.Cmdx(mdb.INSERT, SERVER, "", mdb.HASH, arg,
-					// 	kit.MDB_STATUS, kit.Select(ERROR, OPEN, e == nil), kit.MDB_ERROR, kit.Format(e))
-					//
-					// l = &Listener{m: m, h: h, s: &Stat{}, Listener: l}
-					l = &Listener{m: m, s: &Stat{}, Listener: l}
+					h := m.Cmdx(mdb.INSERT, SERVER, "", mdb.HASH, arg,
+						kit.MDB_STATUS, kit.Select(ERROR, OPEN, e == nil), kit.MDB_ERROR, kit.Format(e))
+
+					l = &Listener{m: m, h: h, s: &Stat{}, Listener: l}
 					if e == nil {
 						defer l.Close()
 					}
 
-					switch cb := m.Optionv(LISTEN_CB).(type) {
+					switch cb := m.Optionv(kit.Keycb(LISTEN)).(type) {
 					case func(net.Listener, error):
 						cb(l, e)
 					case func(net.Listener):
@@ -108,7 +94,7 @@ func init() {
 					m.Cmdy(mdb.PRUNES, SERVER, "", mdb.HASH, kit.MDB_STATUS, CLOSE)
 				}},
 			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-				m.Option(mdb.FIELDS, kit.Select("time,hash,status,type,name,host,port,error,nconn", mdb.DETAIL, len(arg) > 0))
+				m.Fields(len(arg) == 0, "time,hash,status,type,name,host,port,error,nconn")
 				if m.Cmdy(mdb.SELECT, SERVER, "", mdb.HASH, kit.MDB_HASH, arg); len(arg) == 0 {
 					m.Table(func(index int, value map[string]string, head []string) {
 						m.PushButton(kit.Select("", mdb.REMOVE, value[kit.MDB_STATUS] == CLOSE))

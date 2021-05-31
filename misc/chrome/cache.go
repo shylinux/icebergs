@@ -35,7 +35,7 @@ func init() {
 					)
 
 					m.Option("progress", m.Prefix(CACHE), "", m.Option(kit.MDB_LINK))
-					m.Option(web.DOWNLOAD_CB, m.Prefix(CACHE), "", kit.Keys(kit.MDB_HASH, h))
+					m.Option(kit.Keycb(web.DOWNLOAD), m.Prefix(CACHE), "", kit.Keys(kit.MDB_HASH, h))
 					msg := m.Cmd("web.spide", web.SPIDE_DEV, web.SPIDE_CACHE, web.SPIDE_GET, m.Option(kit.MDB_LINK))
 
 					p := path.Join(m.Conf(m.Prefix(CACHE), kit.META_PATH), m.Option(kit.MDB_NAME))

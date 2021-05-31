@@ -13,17 +13,17 @@ var Index = &ice.Context{Name: TCP, Help: "通信模块",
 		ice.CTX_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			m.Load()
 			m.Cmd(HOST).Table(func(index int, value map[string]string, head []string) {
-				m.Cmd(HOST, aaa.WHITE, value["ip"])
+				m.Cmd(HOST, aaa.WHITE, value[IP])
 			})
 		}},
 		ice.CTX_EXIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			m.Richs(CLIENT, "", kit.MDB_FOREACH, func(key string, value map[string]interface{}) {
-				kit.Value(value, "meta.status", CLOSE)
+				kit.Value(value, kit.Keym(kit.MDB_STATUS), CLOSE)
 			})
 			m.Richs(SERVER, "", kit.MDB_FOREACH, func(key string, value map[string]interface{}) {
-				kit.Value(value, "meta.status", CLOSE)
+				kit.Value(value, kit.Keym(kit.MDB_STATUS), CLOSE)
 			})
-			m.Save()
+			m.Save(PORT)
 		}},
 	},
 }

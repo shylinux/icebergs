@@ -192,7 +192,7 @@ var Index = &ice.Context{Name: TMUX, Help: "工作台",
 
 					m.Cmdy(cli.SYSTEM, TMUX, "link-window", "-s", name, "-t", "miss:")
 				}
-				m.Option(ice.MSG_PROCESS, "_refresh")
+				m.ProcessRefresh("1ms")
 			}},
 			mdb.MODIFY: {Name: "modify", Help: "编辑", Hand: func(m *ice.Message, arg ...string) {
 				switch arg[0] {

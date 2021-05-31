@@ -14,11 +14,11 @@ const ( // MOD
 const ( // REPOS
 	VOLCANOS = "volcanos"
 	ICEBERGS = "icebergs"
-	CONTEXTS = "contexts"
 	INTSHELL = "intshell"
+	CONTEXTS = "contexts"
 
-	REQUIRE = "require"
 	PUBLISH = "publish"
+	REQUIRE = "require"
 
 	SUCCESS = "success"
 	FAILURE = "failure"
@@ -26,6 +26,7 @@ const ( // REPOS
 )
 const ( // DIR
 	USR_VOLCANOS = "usr/volcanos"
+	USR_ICEBERGS = "usr/icebergs"
 	USR_INTSHELL = "usr/intshell"
 	USR_PUBLISH  = "usr/publish"
 	USR_INSTALL  = "usr/install"
@@ -33,23 +34,30 @@ const ( // DIR
 
 	PROTO_JS = "proto.js"
 	FRAME_JS = "frame.js"
+	INDEX_JS = "index.js"
+	ORDER_JS = "order.js"
+	ORDER_SH = "order.sh"
+	INDEX_SH = "index.sh"
 
+	VAR_TMP     = "var/tmp"
 	VAR_LOG     = "var/log"
 	VAR_CONF    = "var/conf"
+	VAR_DATA    = "var/data"
+	VAR_FILE    = "var/file"
+	VAR_PROXY   = "var/proxy"
 	VAR_TRASH   = "var/trash"
-	ETC_MISS    = "etc/miss.sh"
+	BIN_ICE     = "bin/ice.sh"
+	BIN_ICE_BIN = "bin/ice.bin"
+	BIN_BOOTLOG = "bin/boot.log"
 	ETC_INIT    = "etc/init.shy"
 	ETC_EXIT    = "etc/exit.shy"
+	ETC_MISS    = "etc/miss.sh"
+
 	SRC_MAIN    = "src/main.shy"
 	SRC_MAIN_GO = "src/main.go"
 	SRC_VERSION = "src/version.go"
 	SRC_BINPACK = "src/binpack.go"
-	BIN_BOOTLOG = "bin/boot.log"
-	BIN_ICE_BIN = "bin/ice.bin"
-	BIN_ICE     = "bin/ice.sh"
 	MAKEFILE    = "makefile"
-	ORDER_SH    = "order.sh"
-	ORDER_JS    = "order.js"
 	GO_MOD      = "go.mod"
 	GO_SUM      = "go.sum"
 
@@ -75,9 +83,8 @@ const ( // MSG
 	MSG_ACTION = "_action"
 	MSG_STATUS = "_status"
 
-	MSG_CONTROL = "_control"
-	MSG_PROCESS = "_process"
 	MSG_DISPLAY = "_display"
+	MSG_PROCESS = "_process"
 
 	MSG_CMDS   = "cmds"
 	MSG_SESSID = "sessid"
@@ -113,10 +120,10 @@ const ( // RENDER
 	RENDER_TEMPLATE = "_template"
 )
 const ( // PROCESS
-	PROCESS_PROGRESS = "_progress"
-	PROCESS_REFRESH  = "_refresh"
-	PROCESS_FIELD    = "_field"
-	PROCESS_INNER    = "_inner"
+	PROCESS_REFRESH = "_refresh"
+	PROCESS_REWRITE = "_rewrite"
+	PROCESS_FIELD   = "_field"
+	PROCESS_INNER   = "_inner"
 
 	PROCESS_HOLD = "_hold"
 	PROCESS_BACK = "_back"
@@ -124,7 +131,6 @@ const ( // PROCESS
 	PROCESS_OPEN = "_open"
 
 	FIELD_PREFIX = "_prefix"
-	CONTROL_PAGE = "_page"
 )
 const ( // LOG
 	// 数据

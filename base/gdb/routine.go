@@ -1,11 +1,11 @@
 package gdb
 
 import (
+	"strings"
+
 	ice "github.com/shylinux/icebergs"
 	"github.com/shylinux/icebergs/base/mdb"
 	kit "github.com/shylinux/toolkits"
-
-	"strings"
 )
 
 const (
@@ -55,7 +55,7 @@ func init() {
 					}
 				}},
 			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-				m.Option(mdb.FIELDS, kit.Select("time,hash,status,fileline", mdb.DETAIL, len(arg) > 0))
+				m.Fields(len(arg) == 0, "time,hash,status,fileline")
 				m.Cmdy(mdb.SELECT, ROUTINE, "", mdb.HASH, kit.MDB_HASH, arg)
 				m.PushAction(INNER, mdb.REMOVE)
 			}},

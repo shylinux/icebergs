@@ -182,13 +182,8 @@ func init() {
 						nil, kit.Split("time,size,type,path"))
 				}},
 
-				mdb.UPLOAD: {Name: "upload", Help: "上传", Hand: func(m *ice.Message, arg ...string) {
-					up := kit.Simple(m.Optionv(ice.MSG_UPLOAD))
-					if p := path.Join(m.Option(kit.MDB_PATH), up[1]); m.Option(ice.MSG_USERPOD) == "" {
-						m.Cmdy("web.cache", "watch", up[0], p)
-					} else {
-						m.Cmdy("web.spide", "dev", "save", p, "GET", kit.MergeURL2(m.Option(ice.MSG_USERWEB), "/share/cache/"+up[0]))
-					}
+				"upload": {Name: "upload", Help: "上传", Hand: func(m *ice.Message, arg ...string) {
+					m.Upload(m.Option(kit.MDB_PATH))
 				}},
 			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 				if len(arg) == 0 {

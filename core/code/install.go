@@ -46,7 +46,7 @@ func init() {
 							value = kit.GetMeta(value)
 
 							p := 0
-							m.Optionv(web.DOWNLOAD_CB, func(size int, total int) {
+							m.Optionv(kit.Keycb(web.DOWNLOAD), func(size int, total int) {
 								if n := size * 100 / total; p != n {
 									value[kit.SSH_STEP], value[kit.MDB_SIZE], value[kit.MDB_TOTAL] = n, size, total
 									toast(name, size, total)

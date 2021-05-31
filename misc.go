@@ -314,14 +314,23 @@ func (m *Message) Process(action string, arg ...interface{}) {
 	m.Option(MSG_PROCESS, action)
 	m.Option("_arg", arg...)
 }
+func (m *Message) ProcessRewrite(arg ...interface{}) {
+	m.Process(PROCESS_REWRITE)
+	m.Option("_arg", arg...)
+}
 func (m *Message) ProcessRefresh(delay string) {
 	if d, e := time.ParseDuration(delay); e == nil {
 		m.Option("_delay", int(d/time.Millisecond))
 	}
 	m.Process(PROCESS_REFRESH)
 }
-func (m *Message) ProcessHold() { m.Process(PROCESS_HOLD) }
-func (m *Message) ProcessBack() { m.Process(PROCESS_BACK) }
+func (m *Message) ProcessField(arg ...interface{}) {
+	m.Process(PROCESS_FIELD)
+	m.Option("_prefix", arg...)
+}
+func (m *Message) ProcessInner() { m.Process(PROCESS_INNER) }
+func (m *Message) ProcessHold()  { m.Process(PROCESS_HOLD) }
+func (m *Message) ProcessBack()  { m.Process(PROCESS_BACK) }
 
 func (m *Message) Upload(dir string) {
 	up := kit.Simple(m.Optionv(MSG_UPLOAD))

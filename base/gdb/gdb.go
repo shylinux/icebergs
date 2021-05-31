@@ -1,13 +1,13 @@
 package gdb
 
 import (
+	"os"
+	"time"
+
 	ice "github.com/shylinux/icebergs"
 	"github.com/shylinux/icebergs/base/cli"
 	"github.com/shylinux/icebergs/base/nfs"
 	kit "github.com/shylinux/toolkits"
-
-	"os"
-	"time"
 )
 
 type Frame struct {
@@ -53,10 +53,11 @@ const (
 	STATUS  = "status"
 	RESTART = "restart"
 	RELOAD  = "reload"
-	BENCH   = "bench"
-	PPROF   = "pprof"
-	BEGIN   = "begin"
-	END     = "end"
+
+	BENCH = "bench"
+	PPROF = "pprof"
+	BEGIN = "begin"
+	END   = "end"
 )
 
 const GDB = "gdb"

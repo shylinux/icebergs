@@ -17,9 +17,10 @@ import (
 	"time"
 )
 
-func _lark_get(m *ice.Message, bot string, arg ...interface{}) *ice.Message {
+func _lark_get(m *ice.Message, bot string, arg ...interface{}) (*ice.Message, interface{}) {
 	m.Option(web.SPIDE_HEADER, "Authorization", "Bearer "+m.Cmdx(APP, TOKEN, bot), web.ContentType, web.ContentJSON)
-	return m.Cmd(web.SPIDE, LARK, http.MethodGet, arg)
+	msg := m.Cmd(web.SPIDE, LARK, http.MethodGet, arg)
+	return msg, msg.Optionv(web.SPIDE_RES)
 }
 func _lark_post(m *ice.Message, bot string, arg ...interface{}) *ice.Message {
 	m.Option(web.SPIDE_HEADER, "Authorization", "Bearer "+m.Cmdx(APP, TOKEN, bot), web.ContentType, web.ContentJSON)
@@ -125,16 +126,16 @@ var Index = &ice.Context{Name: LARK, Help: "机器人",
 		}},
 		COMPANY: {Name: "company ship_id open_id text auto", Help: "组织", Action: map[string]*ice.Action{
 			"info": {Name: "info ship_id", Hand: func(m *ice.Message, arg ...string) {
-				msg := _lark_get(m, "bot", "/open-apis/contact/v1/department/detail/batch_get", "department_ids", m.Option(SHIP_ID))
-				kit.Fetch(kit.Value(msg.Optionv("content_data"), "data.department_infos"), func(index int, value map[string]interface{}) {
+				_, data := _lark_get(m, "bot", "/open-apis/contact/v1/department/detail/batch_get", "department_ids", m.Option(SHIP_ID))
+				kit.Fetch(kit.Value(data, "data.department_infos"), func(index int, value map[string]interface{}) {
 					m.Push("", value)
 				})
 			}},
 			"list": {Name: "list ship_id", Hand: func(m *ice.Message, arg ...string) {
-				msg := _lark_get(m, "bot", "/open-apis/contact/v1/department/user/list",
+				_, data := _lark_get(m, "bot", "/open-apis/contact/v1/department/user/list",
 					"department_id", m.Option(SHIP_ID), "page_size", "100", "fetch_child", "true")
 
-				kit.Fetch(kit.Value(msg.Optionv("content_data"), "data.user_list"), func(index int, value map[string]interface{}) {
+				kit.Fetch(kit.Value(data, "data.user_list"), func(index int, value map[string]interface{}) {
 					msg := m.Cmd(EMPLOYEE, value[OPEN_ID])
 					m.PushImages(aaa.AVATAR, msg.Append("avatar_72"))
 					m.Push(aaa.GENDER, kit.Select("女", "男", msg.Append(aaa.GENDER) == "1"))
@@ -145,8 +146,8 @@ var Index = &ice.Context{Name: LARK, Help: "机器人",
 			}},
 		}, Hand: func(m *ice.Message, c *ice.Context, key string, arg ...string) {
 			if len(arg) == 0 { // 组织列表
-				msg := _lark_get(m, "bot", "/open-apis/contact/v1/scope/get/")
-				kit.Fetch(kit.Value(msg.Optionv("content_data"), "data.authed_departments"), func(index int, value string) {
+				_, data := _lark_get(m, "bot", "/open-apis/contact/v1/scope/get/")
+				kit.Fetch(kit.Value(data, "data.authed_departments"), func(index int, value string) {
 					m.Push(SHIP_ID, value)
 					msg := m.Cmd(COMPANY, "info", value)
 					m.Push(kit.MDB_NAME, msg.Append(kit.MDB_NAME))
@@ -170,8 +171,8 @@ var Index = &ice.Context{Name: LARK, Help: "机器人",
 				return
 			}
 			if strings.HasPrefix(arg[0], "ou_") {
-				msg := _lark_get(m, "bot", "/open-apis/contact/v1/user/batch_get", "open_ids", arg[0])
-				kit.Fetch(kit.Value(msg.Optionv("content_data"), "data.user_infos"), func(index int, value map[string]interface{}) {
+				_, data := _lark_get(m, "bot", "/open-apis/contact/v1/user/batch_get", "open_ids", arg[0])
+				kit.Fetch(kit.Value(data, "data.user_infos"), func(index int, value map[string]interface{}) {
 					m.Push(mdb.DETAIL, value)
 				})
 				return
@@ -189,8 +190,8 @@ var Index = &ice.Context{Name: LARK, Help: "机器人",
 		}},
 		GROUP: {Name: "group chat_id open_id text auto", Help: "群组", Action: map[string]*ice.Action{
 			"list": {Name: "list chat_id", Hand: func(m *ice.Message, arg ...string) {
-				msg := _lark_get(m, "bot", "/open-apis/chat/v4/info", "chat_id", m.Option(CHAT_ID))
-				kit.Fetch(kit.Value(msg.Optionv("content_data"), "data.members"), func(index int, value map[string]interface{}) {
+				_, data := _lark_get(m, "bot", "/open-apis/chat/v4/info", "chat_id", m.Option(CHAT_ID))
+				kit.Fetch(kit.Value(data, "data.members"), func(index int, value map[string]interface{}) {
 					msg := m.Cmd(EMPLOYEE, value[OPEN_ID])
 					m.PushImages(aaa.AVATAR, msg.Append("avatar_72"))
 					m.Push(aaa.GENDER, kit.Select("女", "男", msg.Append(aaa.GENDER) == "1"))
@@ -201,8 +202,8 @@ var Index = &ice.Context{Name: LARK, Help: "机器人",
 			}},
 		}, Hand: func(m *ice.Message, c *ice.Context, key string, arg ...string) {
 			if len(arg) == 0 { // 群组列表
-				msg := _lark_get(m, "bot", "/open-apis/chat/v4/list")
-				kit.Fetch(kit.Value(msg.Optionv("content_data"), "data.groups"), func(index int, value map[string]interface{}) {
+				_, data := _lark_get(m, "bot", "/open-apis/chat/v4/list")
+				kit.Fetch(kit.Value(data, "data.groups"), func(index int, value map[string]interface{}) {
 					m.Push(CHAT_ID, value[CHAT_ID])
 					m.PushImages(aaa.AVATAR, kit.Format(value[aaa.AVATAR]), "72")
 					m.Push(kit.MDB_NAME, value[kit.MDB_NAME])

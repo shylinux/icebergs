@@ -14,18 +14,18 @@ import (
 )
 
 var _trans_web = map[string]color.Color{
-	"black":   color.RGBA{0, 0, 0, 255},
-	"red":     color.RGBA{255, 0, 0, 255},
-	"green":   color.RGBA{0, 255, 0, 255},
-	"yellow":  color.RGBA{255, 255, 0, 255},
-	"blue":    color.RGBA{0, 0, 255, 255},
-	"magenta": color.RGBA{255, 0, 255, 255},
-	"cyan":    color.RGBA{0, 255, 255, 255},
-	"white":   color.RGBA{255, 255, 255, 255},
+	BLACK:   color.RGBA{0, 0, 0, DARK},
+	RED:     color.RGBA{DARK, 0, 0, DARK},
+	YELLOW:  color.RGBA{DARK, DARK, 0, DARK},
+	GREEN:   color.RGBA{0, DARK, 0, DARK},
+	CYAN:    color.RGBA{0, DARK, DARK, DARK},
+	BLUE:    color.RGBA{0, 0, DARK, DARK},
+	MAGENTA: color.RGBA{DARK, 0, DARK, DARK},
+	WHITE:   color.RGBA{DARK, DARK, DARK, DARK},
 }
 
 func _parse_color(str string) color.Color {
-	if str == "random" {
+	if str == RANDOM {
 		list := []string{}
 		for k := range _trans_web {
 			list = append(list, k)
@@ -50,13 +50,13 @@ func _parse_color(str string) color.Color {
 func _trans_cli(str string) string {
 	res := 0
 	r, g, b, _ := _parse_color(str).RGBA()
-	if r > 128 {
+	if r > LIGHT {
 		res += 1
 	}
-	if g > 128 {
+	if g > LIGHT {
 		res += 2
 	}
-	if b > 128 {
+	if b > LIGHT {
 		res += 4
 	}
 	return kit.Format(res)
@@ -64,8 +64,8 @@ func _trans_cli(str string) string {
 
 func _qrcode_cli(m *ice.Message, text string, arg ...string) {
 	qr, _ := qrcode.New(text, qrcode.Medium)
-	fg := _trans_cli(m.Option("fg"))
-	bg := _trans_cli(m.Option("bg"))
+	fg := _trans_cli(m.Option(FG))
+	bg := _trans_cli(m.Option(BG))
 
 	data := qr.Bitmap()
 	for i, row := range data {
@@ -84,26 +84,45 @@ func _qrcode_cli(m *ice.Message, text string, arg ...string) {
 }
 func _qrcode_web(m *ice.Message, text string, arg ...string) {
 	qr, _ := qrcode.New(text, qrcode.Medium)
-	qr.ForegroundColor = _parse_color(m.Option("fg"))
-	qr.BackgroundColor = _parse_color(m.Option("bg"))
+	qr.ForegroundColor = _parse_color(m.Option(FG))
+	qr.BackgroundColor = _parse_color(m.Option(BG))
 
-	if data, err := qr.PNG(kit.Int(m.Option("size"))); m.Assert(err) {
+	if data, err := qr.PNG(kit.Int(m.Option(SIZE))); m.Assert(err) {
 		m.Echo(`<img src="data:image/png;base64,%s" title='%s'>`, base64.StdEncoding.EncodeToString(data), text)
 	}
 }
 
+const (
+	FG   = "fg"
+	BG   = "bg"
+	SIZE = "size"
+
+	DARK  = 255
+	LIGHT = 127
+)
+const (
+	BLACK   = "black"
+	RED     = "red"
+	YELLOW  = "yellow"
+	GREEN   = "green"
+	CYAN    = "cyan"
+	BLUE    = "blue"
+	MAGENTA = "magenta"
+	WHITE   = "white"
+	RANDOM  = "random"
+)
 const QRCODE = "qrcode"
 
 func init() {
 	Index.Merge(&ice.Context{
 		Configs: map[string]*ice.Config{
-			QRCODE: {Name: "qrcode", Help: "二维码", Value: kit.Data()},
+			QRCODE: {Name: QRCODE, Help: "二维码", Value: kit.Data()},
 		},
 		Commands: map[string]*ice.Command{
 			QRCODE: {Name: "qrcode text fg bg size auto", Help: "二维码", Action: map[string]*ice.Action{}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-				m.Option("fg", kit.Select("blue", arg, 1))
-				m.Option("bg", kit.Select("white", arg, 2))
-				m.Option("size", kit.Select("240", arg, 3))
+				m.Option(FG, kit.Select(BLUE, arg, 1))
+				m.Option(BG, kit.Select(WHITE, arg, 2))
+				m.Option(SIZE, kit.Select("240", arg, 3))
 
 				if aaa.SessIsCli(m) {
 					_qrcode_cli(m, arg[0])

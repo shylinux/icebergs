@@ -47,7 +47,7 @@ func _asset_list(m *ice.Message, account string, id string) {
 func _asset_check(m *ice.Message, account string) {
 	amount := 0
 	m.Option(mdb.FIELDS, "time,id,type,amount,name,text")
-	m.Option(mdb.SELECT_CB, func(fields []string, value map[string]interface{}) {
+	m.Option(kit.Keycb(mdb.SELECT), func(fields []string, value map[string]interface{}) {
 		amount += kit.Int(kit.Value(value, AMOUNT))
 	})
 	m.Cmd(mdb.SELECT, ASSET, _sub_key(m, account), mdb.LIST)

@@ -56,7 +56,7 @@ func init() {
 						m.Toast("已经是最后一页啦!")
 					}
 
-					m.Process("_rewrite", "offend", offend)
+					m.ProcessRewrite("offend", offend)
 				}},
 				"next": {Name: "next", Help: "下一页", Hand: func(m *ice.Message, arg ...string) {
 					offend := kit.Int(kit.Select("0", arg, 3)) - kit.Int(kit.Select("10", arg, 2))
@@ -64,7 +64,7 @@ func init() {
 						offend = 0
 						m.Toast("已经是第一页啦!")
 					}
-					m.Process("_rewrite", "offend", offend)
+					m.ProcessRewrite("offend", offend)
 				}},
 			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 				m.Option(mdb.FIELDS, kit.Select("time,hash,count,name,file", kit.Select("time,id,file,text", mdb.DETAIL, len(arg) > 1 && arg[1] != ""), len(arg) > 0))

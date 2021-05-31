@@ -109,8 +109,8 @@ func init() {
 				m.ProcessHold()
 			}},
 			MAKE: {Name: "make", Help: "编译", Hand: func(m *ice.Message, arg ...string) {
-				m.Toast("doing", "make", 100000)
-				defer m.Toast("success", "make", 1000)
+				m.Toast("building", MAKE, 100000)
+				defer m.Toast("success", MAKE, 1000)
 
 				m.Cmdy(cli.SYSTEM, MAKE)
 			}},
@@ -143,7 +143,7 @@ func init() {
 			}},
 			mdb.INPUTS: {Name: "inputs", Help: "补全", Hand: func(m *ice.Message, arg ...string) {
 				switch arg[0] {
-				case "name":
+				case kit.MDB_NAME:
 					m.OptionFields("name,time")
 					m.Cmdy(REPOS)
 

@@ -51,14 +51,14 @@ func _route_list(m *ice.Message) {
 	m.Cmd(tcp.HOST).Table(func(index int, value map[string]string, head []string) {
 		m.Push(kit.MDB_TYPE, MYSELF)
 		m.Push(kit.SSH_ROUTE, ice.Info.NodeName)
-		m.PushAnchor(value["ip"], kit.Format("%s://%s:%s", u.Scheme, value["ip"], u.Port()))
+		m.PushAnchor(value[tcp.IP], kit.Format("%s://%s:%s", u.Scheme, value[tcp.IP], u.Port()))
 		m.PushButton(tcp.START)
 	})
 
 	// 本机信息
 	m.Push(kit.MDB_TYPE, MYSELF)
 	m.Push(kit.SSH_ROUTE, ice.Info.NodeName)
-	m.PushAnchor("localhost", kit.Format("%s://%s:%s", u.Scheme, "localhost", u.Port()))
+	m.PushAnchor(tcp.LOCALHOST, kit.Format("%s://%s:%s", u.Scheme, tcp.LOCALHOST, u.Port()))
 	m.PushButton(tcp.START)
 
 	m.Sort(kit.SSH_ROUTE)
@@ -108,11 +108,11 @@ func init() {
 
 				mdb.CREATE: {Name: "create main=src/main.go@key name=hi@key from=usr/icebergs/misc/bash/bash.go@key", Help: "添加", Hand: func(m *ice.Message, arg ...string) {
 					m.Cmdy(SPACE, m.Option(ROUTE), "web.code.autogen", mdb.CREATE, arg)
-					m.Option(ice.MSG_PROCESS, ice.PROCESS_INNER)
+					m.ProcessInner()
 				}},
 				tcp.START: {Name: "start name repos template", Help: "启动", Hand: func(m *ice.Message, arg ...string) {
 					m.Cmdy(SPACE, m.Option(ROUTE), DREAM, tcp.START, arg)
-					m.Option(ice.MSG_PROCESS, ice.PROCESS_INNER)
+					m.ProcessInner()
 				}},
 				ctx.COMMAND: {Name: "command", Help: "命令", Hand: func(m *ice.Message, arg ...string) {
 					m.Debug(m.Option(ROUTE))

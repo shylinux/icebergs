@@ -1,18 +1,18 @@
 package tcp
 
 import (
+	"net"
+	"strings"
+
 	ice "github.com/shylinux/icebergs"
 	"github.com/shylinux/icebergs/base/aaa"
 	kit "github.com/shylinux/toolkits"
-
-	"net"
-	"strings"
 )
 
-func _host_list(m *ice.Message, ifname string) {
+func _host_list(m *ice.Message, name string) {
 	if ifs, e := net.Interfaces(); m.Assert(e) {
 		for _, v := range ifs {
-			if ifname != "" && !strings.Contains(v.Name, ifname) {
+			if name != "" && !strings.Contains(v.Name, name) {
 				continue
 			}
 			if len(v.HardwareAddr.String()) == 0 {
@@ -26,22 +26,22 @@ func _host_list(m *ice.Message, ifname string) {
 						continue
 					}
 
-					m.Push("index", v.Index)
-					m.Push("name", v.Name)
-					m.Push("ip", ip[0])
-					m.Push("mask", ip[1])
-					m.Push("hard", v.HardwareAddr.String())
+					m.Push(kit.MDB_INDEX, v.Index)
+					m.Push(kit.MDB_NAME, v.Name)
+					m.Push(IP, ip[0])
+					m.Push(MASK, ip[1])
+					m.Push(HARD, v.HardwareAddr.String())
 				}
 			}
 		}
 	}
 
-	if len(m.Appendv("ip")) == 0 {
-		m.Push("index", -1)
-		m.Push("name", "local")
-		m.Push("ip", "127.0.0.1")
-		m.Push("mask", "255.0.0.0")
-		m.Push("hard", "")
+	if len(m.Appendv(IP)) == 0 {
+		m.Push(kit.MDB_INDEX, -1)
+		m.Push(kit.MDB_NAME, LOCALHOST)
+		m.Push(IP, "127.0.0.1")
+		m.Push(MASK, "255.0.0.0")
+		m.Push(HARD, "")
 	}
 }
 
@@ -49,10 +49,10 @@ func _islocalhost(m *ice.Message, ip string) (ok bool) {
 	if ip == "::1" || strings.HasPrefix(ip, "127.") {
 		return true
 	}
-	if m.Richs(HOST, kit.Keys("meta.black"), ip, nil) != nil {
+	if m.Richs(HOST, kit.Keym(aaa.BLACK), ip, nil) != nil {
 		return false
 	}
-	if m.Richs(HOST, kit.Keys("meta.white"), ip, nil) != nil {
+	if m.Richs(HOST, kit.Keym(aaa.WHITE), ip, nil) != nil {
 		m.Log_AUTH(aaa.WHITE, ip)
 		return true
 	}
@@ -66,7 +66,10 @@ const (
 	PROTOCOL = "protocol"
 
 	LOCALHOST = "localhost"
-	IP        = "ip"
+
+	HARD = "hard"
+	MASK = "mask"
+	IP   = "ip"
 )
 const HOST = "host"
 
@@ -81,10 +84,10 @@ func init() {
 		Commands: map[string]*ice.Command{
 			HOST: {Name: "host name auto", Help: "主机", Action: map[string]*ice.Action{
 				aaa.BLACK: {Name: "black", Help: "黑名单", Hand: func(m *ice.Message, arg ...string) {
-					m.Rich(HOST, kit.Keys("meta.black"), kit.Dict(kit.MDB_TEXT, arg[0]))
+					m.Rich(HOST, kit.Keym(aaa.BLACK), kit.Dict(kit.MDB_TEXT, arg[0]))
 				}},
 				aaa.WHITE: {Name: "white", Help: "白名单", Hand: func(m *ice.Message, arg ...string) {
-					m.Rich(HOST, kit.Keys("meta.white"), kit.Dict(kit.MDB_TEXT, arg[0]))
+					m.Rich(HOST, kit.Keym(aaa.WHITE), kit.Dict(kit.MDB_TEXT, arg[0]))
 				}},
 			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 				_host_list(m, kit.Select("", arg, 0))

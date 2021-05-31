@@ -8,11 +8,11 @@ import (
 	"os"
 	"path"
 	"strings"
-	"time"
 
 	ice "github.com/shylinux/icebergs"
 	"github.com/shylinux/icebergs/base/aaa"
 	"github.com/shylinux/icebergs/base/cli"
+	"github.com/shylinux/icebergs/base/gdb"
 	"github.com/shylinux/icebergs/base/mdb"
 	"github.com/shylinux/icebergs/base/nfs"
 	"github.com/shylinux/icebergs/base/tcp"
@@ -21,72 +21,103 @@ import (
 	"golang.org/x/crypto/ssh/terminal"
 )
 
-func _ssh_tick(m *ice.Message, pw io.Writer) {
-	if m.Option("tick") == "" {
-		return
-	}
-	m.Go(func() {
-		for {
-			m.Sleep(m.Option("tick"))
-			pw.Write([]byte("# " + time.Now().Format(ice.MOD_TIME) + "\n"))
-		}
-	})
-}
-func _ssh_password(m *ice.Message, file string) {
-	if f, e := os.Open(file); e == nil {
+func _ssh_open(m *ice.Message, arg ...string) {
+	// 加载配置
+	if f, e := os.Open(m.Option("authfile")); e == nil {
 		defer f.Close()
 
 		var data interface{}
 		json.NewDecoder(f).Decode(&data)
 
-		kit.Fetch(data, func(key string, value string) { m.Option(key, value) })
+		kit.Fetch(data, func(key string, value interface{}) { m.Option(key, kit.Simple(value)) })
 	}
+
+	_ssh_dial(m, func(c net.Conn) {
+		// 保存界面
+		fd := int(os.Stdin.Fd())
+		if oldState, err := terminal.MakeRaw(fd); err == nil {
+			defer terminal.Restore(fd, oldState)
+		}
+
+		// 设置宽高
+		w, h, _ := terminal.GetSize(fd)
+		c.Write([]byte(fmt.Sprintf("height:%d,width:%d\n", h, w)))
+
+		// 初始命令
+		for _, item := range kit.Simple(m.Optionv("list")) {
+			m.Sleep("10ms")
+			c.Write([]byte(item + "\n"))
+		}
+
+		m.Go(func() { io.Copy(os.Stdout, c) })
+		io.Copy(c, os.Stdin)
+	}, arg...)
 }
-func _ssh_stream(m *ice.Message, stdin *os.File) (io.Reader, io.Writer) {
-	pr, pw := io.Pipe()
-	m.Go(func() {
-		buf := make([]byte, 1024)
-		for {
-			if n, e := stdin.Read(buf); m.Assert(e) {
-				pw.Write(buf[:n])
+func _ssh_dial(m *ice.Message, cb func(net.Conn), arg ...string) {
+	p := path.Join(os.Getenv(cli.HOME), ".ssh/", fmt.Sprintf("%s@%s:%s", m.Option(aaa.USERNAME), m.Option(tcp.HOST), m.Option(tcp.PORT)))
+	if _, e := os.Stat(p); e == nil {
+		if c, e := net.Dial("unix", p); e == nil {
+			cb(c) // 会话连接
+			return
+		}
+		os.Remove(p)
+	}
+
+	var client *ssh.Client
+	if l, e := net.Listen("unix", p); m.Assert(e) {
+		defer func() { os.Remove(p) }()
+		defer l.Close()
+
+		m.Go(func() {
+			for {
+				c, e := l.Accept()
+				m.Assert(e)
+
+				func(c net.Conn) {
+					w, h, _ := terminal.GetSize(int(os.Stdin.Fd()))
+					buf := make([]byte, ice.MOD_BUFS)
+					if n, e := c.Read(buf); m.Assert(e) {
+						fmt.Sscanf(string(buf[:n]), "height:%d,width:%d", &h, &w)
+					}
+
+					m.Go(func() {
+						defer c.Close()
+
+						session, e := client.NewSession()
+						m.Assert(e)
+
+						session.Stdin = c
+						session.Stdout = c
+						session.Stderr = c
+
+						session.RequestPty(os.Getenv("TERM"), h, w, ssh.TerminalModes{
+							ssh.ECHO:          1,
+							ssh.TTY_OP_ISPEED: 14400,
+							ssh.TTY_OP_OSPEED: 14400,
+						})
+
+						gdb.SignalNotify(m, 28, func() {
+							w, h, _ := terminal.GetSize(int(os.Stdin.Fd()))
+							session.WindowChange(h, w)
+						})
+
+						session.Shell()
+						session.Wait()
+					})
+				}(c)
 			}
+		})
+	}
+
+	m.Option(kit.Keycb(tcp.DIAL), func(c net.Conn) {
+		client = _ssh_conn(m, c, m.Option(aaa.USERNAME), m.Option(tcp.HOST)+":"+m.Option(tcp.PORT))
+
+		if c, e := net.Dial("unix", p); e == nil {
+			cb(c) // 会话连接
 		}
 	})
-	return pr, pw
-}
-func _ssh_store(stdio *os.File) func() {
-	fd := int(stdio.Fd())
-	oldState, err := terminal.MakeRaw(fd)
-	if err != nil {
-		panic(err)
-	}
-	return func() { terminal.Restore(fd, oldState) }
-}
-
-func _ssh_session(m *ice.Message, client *ssh.Client, w, h int, stdin io.Reader, stdout, stderr io.Writer) *ssh.Session {
-	session, e := client.NewSession()
-	m.Assert(e)
-
-	session.Stdin = stdin
-	session.Stdout = stdout
-	session.Stderr = stderr
-
-	modes := ssh.TerminalModes{
-		ssh.ECHO:          1,
-		ssh.TTY_OP_ISPEED: 14400,
-		ssh.TTY_OP_OSPEED: 14400,
-	}
-
-	session.RequestPty(os.Getenv("TERM"), h, w, modes)
-	session.Shell()
-	return session
-}
-func _ssh_init(m *ice.Message, pw io.Writer) {
-	for _, k := range []string{"one", "two"} {
-		if m.Sleep("100ms"); m.Option(k) != "" {
-			pw.Write([]byte(m.Option(k) + "\n"))
-		}
-	}
+	m.Cmdy(tcp.CLIENT, tcp.DIAL, kit.MDB_TYPE, SSH, kit.MDB_NAME, m.Option(tcp.HOST),
+		tcp.PORT, m.Option(tcp.PORT), tcp.HOST, m.Option(tcp.HOST), arg)
 }
 func _ssh_conn(m *ice.Message, conn net.Conn, username, hostport string) *ssh.Client {
 	methods := []ssh.AuthMethod{}
@@ -128,76 +159,6 @@ func _ssh_conn(m *ice.Message, conn net.Conn, username, hostport string) *ssh.Cl
 	return ssh.NewClient(c, chans, reqs)
 }
 
-func _ssh_open(m *ice.Message, arg ...string) {
-	var client *ssh.Client
-	w, h, _ := terminal.GetSize(int(os.Stdin.Fd()))
-
-	_ssh_password(m, m.Option("authfile"))
-	p := path.Join(os.Getenv("HOME"), ".ssh/", fmt.Sprintf("%s@%s", m.Option("username"), m.Option("host")))
-	if _, e := os.Stat(p); e == nil {
-		if c, e := net.Dial("unix", p); e == nil {
-
-			pr, pw := _ssh_stream(m, os.Stdin)
-			defer _ssh_store(os.Stdout)()
-			defer _ssh_store(os.Stdin)()
-
-			c.Write([]byte(fmt.Sprintf("height:%d,width:%d\n", h, w)))
-
-			m.Go(func() { io.Copy(c, pr) })
-			_ssh_init(m, pw)
-			m.Echo("logout\n")
-			io.Copy(os.Stdout, c)
-			return
-		} else {
-			os.Remove(p)
-		}
-	}
-
-	if l, e := net.Listen("unix", p); m.Assert(e) {
-		defer func() { os.Remove(p) }()
-		defer l.Close()
-
-		m.Go(func() {
-			for {
-				if c, e := l.Accept(); e == nil {
-					buf := make([]byte, 1024)
-					if n, e := c.Read(buf); m.Assert(e) {
-						fmt.Sscanf(string(buf[:n]), "height:%d,width:%d", &h, &w)
-					}
-
-					session := _ssh_session(m, client, w, h, c, c, c)
-					func(session *ssh.Session) {
-						m.Go(func() {
-							defer c.Close()
-							session.Wait()
-						})
-					}(session)
-				} else {
-					break
-				}
-			}
-		})
-	}
-
-	m.Option(kit.Keycb(tcp.DIAL), func(c net.Conn) {
-		client = _ssh_conn(m, c, m.Option(aaa.USERNAME), m.Option(tcp.HOST)+":"+m.Option(tcp.PORT))
-
-		pr, pw := _ssh_stream(m, os.Stdin)
-		defer _ssh_store(os.Stdout)()
-		defer _ssh_store(os.Stdin)()
-
-		session := _ssh_session(m, client, w, h, pr, os.Stdout, os.Stderr)
-		_ssh_init(m, pw)
-		_ssh_tick(m, pw)
-		session.Wait()
-	})
-
-	m.Cmdy(tcp.CLIENT, tcp.DIAL, kit.MDB_TYPE, "ssh", kit.MDB_NAME, m.Option(tcp.HOST),
-		tcp.PORT, m.Option(tcp.PORT), tcp.HOST, m.Option(tcp.HOST), arg)
-
-	m.Echo("exit %s\n", m.Option(tcp.HOST))
-}
-
 const CONNECT = "connect"
 
 func init() {
@@ -207,6 +168,9 @@ func init() {
 		},
 		Commands: map[string]*ice.Command{
 			CONNECT: {Name: "connect hash auto dial prunes", Help: "连接", Action: map[string]*ice.Action{
+				tcp.OPEN: {Name: "open authfile= username=shy password= verfiy= host=shylinux.com port=22 private=.ssh/id_rsa", Help: "终端", Hand: func(m *ice.Message, arg ...string) {
+					_ssh_open(m, arg...)
+				}},
 				tcp.DIAL: {Name: "dial username=shy host=shylinux.com port=22 private=.ssh/id_rsa", Help: "添加", Hand: func(m *ice.Message, arg ...string) {
 					m.Option(kit.Keycb(tcp.DIAL), func(c net.Conn) {
 						client := _ssh_conn(m, c, kit.Select("shy", m.Option(aaa.USERNAME)),
@@ -225,9 +189,6 @@ func init() {
 					m.Cmds(tcp.CLIENT, tcp.DIAL, kit.MDB_TYPE, SSH, kit.MDB_NAME, m.Option(aaa.USERNAME),
 						tcp.PORT, m.Option(tcp.PORT), tcp.HOST, m.Option(tcp.HOST))
 				}},
-				tcp.OPEN: {Name: "open authfile= username=shy password= verfiy= host=shylinux.com port=22 private=.ssh/id_rsa tick=", Help: "终端", Hand: func(m *ice.Message, arg ...string) {
-					_ssh_open(m, arg...)
-				}},
 				mdb.REMOVE: {Name: "remove", Help: "删除", Hand: func(m *ice.Message, arg ...string) {
 					m.Cmdy(mdb.DELETE, CONNECT, "", mdb.HASH, kit.MDB_HASH, m.Option(kit.MDB_HASH))
 				}},
@@ -243,7 +204,7 @@ func init() {
 
 						h := m.Rich(SESSION, "", kit.Data(kit.MDB_STATUS, tcp.OPEN, CONNECT, key))
 
-						if session, e := _ssh_sess(m, h, client); m.Assert(e) {
+						if session, e := _ssh_session(m, h, client); m.Assert(e) {
 							session.Shell()
 							session.Wait()
 						}

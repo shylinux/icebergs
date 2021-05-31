@@ -37,7 +37,7 @@ func _daemon_show(m *ice.Message, cmd *exec.Cmd, out, err string) {
 
 	m.Go(func() {
 		h := m.Cmdx(mdb.INSERT, DAEMON, "", mdb.HASH,
-			kit.MDB_STATUS, Status.Start, kit.SSH_PID, cmd.Process.Pid,
+			kit.MDB_STATUS, START, kit.SSH_PID, cmd.Process.Pid,
 			kit.SSH_CMD, strings.Join(cmd.Args, " "),
 			kit.SSH_DIR, cmd.Dir, kit.SSH_ENV, kit.Select("", cmd.Env),
 			mdb.CACHE_CLEAR_ON_EXIT, m.Option(mdb.CACHE_CLEAR_ON_EXIT),
@@ -46,11 +46,11 @@ func _daemon_show(m *ice.Message, cmd *exec.Cmd, out, err string) {
 
 		if e := cmd.Wait(); m.Warn(e != nil, cmd.Args, " ", e) {
 			m.Cmd(mdb.MODIFY, DAEMON, "", mdb.HASH, kit.MDB_HASH, h,
-				kit.MDB_STATUS, Status.Error, kit.MDB_ERROR, e)
+				kit.MDB_STATUS, ERROR, kit.MDB_ERROR, e)
 		} else {
 			m.Cost("args", cmd.Args, "code", cmd.ProcessState.ExitCode())
 			m.Cmd(mdb.MODIFY, DAEMON, "", mdb.HASH, kit.MDB_HASH, h,
-				kit.MDB_STATUS, Status.Stop)
+				kit.MDB_STATUS, STOP)
 		}
 
 		if w, ok := m.Optionv(CMD_OUTPUT).(io.Closer); ok {
@@ -60,12 +60,6 @@ func _daemon_show(m *ice.Message, cmd *exec.Cmd, out, err string) {
 			w.Close()
 		}
 	})
-}
-
-var Status = struct{ Error, Start, Stop string }{
-	Error: "error",
-	Start: "start",
-	Stop:  "stop",
 }
 
 const (
@@ -80,6 +74,7 @@ const (
 const (
 	RESTART = "restart"
 	START   = "start"
+	ERROR   = "error"
 	STOP    = "stop"
 )
 
@@ -120,7 +115,7 @@ func init() {
 				STOP: {Name: "stop", Help: "停止", Hand: func(m *ice.Message, arg ...string) {
 					m.Option(mdb.FIELDS, "time,hash,status,pid,cmd,dir,env")
 					m.Cmd(mdb.SELECT, DAEMON, "", mdb.HASH, kit.MDB_HASH, m.Option(kit.MDB_HASH)).Table(func(index int, value map[string]string, head []string) {
-						m.Cmd(mdb.MODIFY, DAEMON, "", mdb.HASH, kit.MDB_HASH, m.Option(kit.MDB_HASH), kit.MDB_STATUS, Status.Stop)
+						m.Cmd(mdb.MODIFY, DAEMON, "", mdb.HASH, kit.MDB_HASH, m.Option(kit.MDB_HASH), kit.MDB_STATUS, STOP)
 						m.Cmdy(SYSTEM, "kill", "-9", value[kit.SSH_PID])
 					})
 				}},
@@ -129,8 +124,8 @@ func init() {
 				}},
 				mdb.PRUNES: {Name: "prunes", Help: "清理", Hand: func(m *ice.Message, arg ...string) {
 					m.Option(mdb.FIELDS, "time,hash,status,pid,cmd,dir,env")
-					m.Cmdy(mdb.PRUNES, DAEMON, "", mdb.HASH, kit.MDB_STATUS, Status.Error)
-					m.Cmdy(mdb.PRUNES, DAEMON, "", mdb.HASH, kit.MDB_STATUS, Status.Stop)
+					m.Cmdy(mdb.PRUNES, DAEMON, "", mdb.HASH, kit.MDB_STATUS, ERROR)
+					m.Cmdy(mdb.PRUNES, DAEMON, "", mdb.HASH, kit.MDB_STATUS, STOP)
 				}},
 			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 				if len(arg) == 0 { // 进程列表
@@ -138,7 +133,7 @@ func init() {
 					m.Cmdy(mdb.SELECT, DAEMON, "", mdb.HASH)
 					m.Table(func(index int, value map[string]string, head []string) {
 						switch value[kit.MDB_STATUS] {
-						case Status.Start:
+						case START:
 							m.PushButton(RESTART, STOP)
 						default:
 							m.PushButton(mdb.REMOVE)

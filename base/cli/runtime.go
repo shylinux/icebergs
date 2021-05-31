@@ -14,7 +14,6 @@ import (
 const (
 	DISKINFO = "diskinfo"
 	IFCONFIG = "ifconfig"
-	HOSTNAME = "hostname"
 	HOSTINFO = "hostinfo"
 	USERINFO = "userinfo"
 	PROCINFO = "procinfo"
@@ -41,8 +40,8 @@ func init() {
 				}},
 				HOSTNAME: {Name: "hostname", Help: "主机域名", Hand: func(m *ice.Message, arg ...string) {
 					if len(arg) > 0 {
-						m.Conf(RUNTIME, "boot.hostname", arg[0])
-						m.Conf(RUNTIME, "node.name", arg[0])
+						m.Conf(RUNTIME, kit.Keys(NODE, kit.MDB_NAME), arg[0])
+						m.Conf(RUNTIME, kit.Keys(BOOT, HOSTNAME), arg[0])
 						ice.Info.HostName = arg[0]
 					}
 					m.Echo(ice.Info.HostName)

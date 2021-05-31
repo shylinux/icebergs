@@ -40,6 +40,7 @@ const ( // DIR
 	INDEX_SH = "index.sh"
 
 	VAR_TMP     = "var/tmp"
+	VAR_RUN     = "var/run"
 	VAR_LOG     = "var/log"
 	VAR_CONF    = "var/conf"
 	VAR_DATA    = "var/data"

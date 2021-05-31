@@ -85,7 +85,7 @@ func init() {
 					m.Push("code", _totp_get(value[SECRET], kit.Int(value[NUMBER]), period))
 
 					if len(arg) > 0 {
-						m.PushQRCode("show", kit.Format(m.Conf(TOTP, kit.Keym(kit.MDB_LINK)), value[kit.MDB_NAME], value[SECRET]))
+						m.PushQRCode("scan", kit.Format(m.Conf(TOTP, kit.Keym(kit.MDB_LINK)), value[kit.MDB_NAME], value[SECRET]))
 						m.Echo(_totp_get(value[SECRET], kit.Int(value[NUMBER]), kit.Int64(value[PERIOD])))
 					}
 				})

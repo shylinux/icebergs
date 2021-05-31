@@ -9,7 +9,7 @@ import (
 )
 
 func _timer_create(m *ice.Message, arg ...string) {
-	m.Cmdy(mdb.INSERT, TIMER, "", mdb.HASH, "delay", "10ms", "interval", "10m", "order", 1, "next", m.Time(m.Option("delay")), arg)
+	m.Cmdy(mdb.INSERT, TIMER, "", mdb.HASH, DELAY, "10ms", INTERVAL, "10m", ORDER, 1, NEXT, m.Time(m.Option(DELAY)), arg)
 }
 func _timer_action(m *ice.Message, arg ...string) {
 	now := time.Now().UnixNano()
@@ -20,19 +20,25 @@ func _timer_action(m *ice.Message, arg ...string) {
 			return
 		}
 
-		order := kit.Int(value["order"])
-		if n := kit.Time(kit.Format(value["next"])); now > n && order > 0 {
-			m.Logs(TIMER, "key", key, "order", order)
+		order := kit.Int(value[ORDER])
+		if n := kit.Time(kit.Format(value[NEXT])); now > n && order > 0 {
+			m.Logs(TIMER, kit.MDB_KEY, key, ORDER, order)
 
 			msg := m.Cmd(value[kit.SSH_CMD])
 			m.Grow(TIMER, kit.Keys(kit.MDB_HASH, key), kit.Dict("res", msg.Result()))
-			if value["order"] = kit.Format(order - 1); order > 1 {
-				value["next"] = msg.Time(value["interval"])
+			if value[ORDER] = kit.Format(order - 1); order > 1 {
+				value[NEXT] = msg.Time(value[INTERVAL])
 			}
 		}
 	})
 }
 
+const (
+	DELAY    = "delay"
+	INTERVAL = "interval"
+	ORDER    = "order"
+	NEXT     = "next"
+)
 const TIMER = "timer"
 
 func init() {
@@ -53,7 +59,7 @@ func init() {
 				}},
 				mdb.PRUNES: {Name: "prunes", Help: "清理", Hand: func(m *ice.Message, arg ...string) {
 					m.Option(mdb.FIELDS, "time,hash,delay,interval,order,next,cmd")
-					m.Cmdy(mdb.PRUNES, TIMER, "", mdb.HASH, "order", 0)
+					m.Cmdy(mdb.PRUNES, TIMER, "", mdb.HASH, ORDER, 0)
 				}},
 
 				ACTION: {Name: "action", Help: "执行", Hand: func(m *ice.Message, arg ...string) {

@@ -3,7 +3,6 @@ package ssh
 import (
 	"golang.org/x/crypto/ssh"
 	"io"
-	"os"
 
 	ice "github.com/shylinux/icebergs"
 	"github.com/shylinux/icebergs/base/ctx"
@@ -12,7 +11,7 @@ import (
 	kit "github.com/shylinux/toolkits"
 )
 
-func _ssh_sess(m *ice.Message, h string, client *ssh.Client) (*ssh.Session, error) {
+func _ssh_session(m *ice.Message, h string, client *ssh.Client) (*ssh.Session, error) {
 	session, e := client.NewSession()
 	m.Assert(e)
 
@@ -23,14 +22,13 @@ func _ssh_sess(m *ice.Message, h string, client *ssh.Client) (*ssh.Session, erro
 	m.Assert(e)
 
 	m.Go(func() {
+		buf := make([]byte, 4096)
 		for {
-			buf := make([]byte, 4096)
 			n, e := out.Read(buf)
 			if e != nil {
 				break
 			}
 
-			m.Debug(string(buf[:n]))
 			m.Grow(SESSION, kit.Keys(kit.MDB_HASH, h), kit.Dict(
 				kit.MDB_TYPE, RES, kit.MDB_TEXT, string(buf[:n]),
 			))
@@ -38,34 +36,23 @@ func _ssh_sess(m *ice.Message, h string, client *ssh.Client) (*ssh.Session, erro
 	})
 
 	m.Richs(SESSION, "", h, func(key string, value map[string]interface{}) {
-		kit.Value(value, "meta.output", out)
-		kit.Value(value, "meta.input", in)
+		kit.Value(value, kit.Keym(OUTPUT), out)
+		kit.Value(value, kit.Keym(INPUT), in)
 	})
 
 	return session, nil
 }
 
-func _watch(m *ice.Message, from io.Reader, to io.Writer, cb func([]byte)) {
-	m.Go(func() {
-		buf := make([]byte, 1024)
-		for {
-			n, e := from.Read(buf)
-			if e != nil {
-				cb(nil)
-				break
-			}
-			cb(buf[:n])
-			to.Write(buf[:n])
-		}
-	})
-}
-
 const (
 	TTY = "tty"
 	ENV = "env"
-	ARG = "arg"
 	CMD = "cmd"
+	ARG = "arg"
 	RES = "res"
+)
+const (
+	INPUT  = "input"
+	OUTPUT = "output"
 )
 
 const SESSION = "session"
@@ -77,9 +64,16 @@ func init() {
 		},
 		Commands: map[string]*ice.Command{
 			SESSION: {Name: "session hash id auto command prunes", Help: "会话", Action: map[string]*ice.Action{
+				mdb.REMOVE: {Name: "remove", Help: "删除", Hand: func(m *ice.Message, arg ...string) {
+					m.Cmdy(mdb.DELETE, SESSION, "", mdb.HASH, kit.MDB_HASH, m.Option(kit.MDB_HASH))
+				}},
+				mdb.PRUNES: {Name: "prunes", Help: "清理", Hand: func(m *ice.Message, arg ...string) {
+					m.Cmdy(mdb.PRUNES, SESSION, "", mdb.HASH, kit.MDB_STATUS, tcp.ERROR)
+					m.Cmdy(mdb.PRUNES, SESSION, "", mdb.HASH, kit.MDB_STATUS, tcp.CLOSE)
+				}},
 				ctx.COMMAND: {Name: "command cmd=pwd", Help: "命令", Hand: func(m *ice.Message, arg ...string) {
 					m.Richs(SESSION, "", m.Option(kit.MDB_HASH), func(key string, value map[string]interface{}) {
-						if w, ok := kit.Value(value, "meta.input").(io.Writer); ok {
+						if w, ok := kit.Value(value, kit.Keym(INPUT)).(io.Writer); ok {
 							m.Grow(SESSION, kit.Keys(kit.MDB_HASH, key), kit.Dict(kit.MDB_TYPE, CMD, kit.MDB_TEXT, m.Option(CMD)))
 							n, e := w.Write([]byte(m.Option(CMD) + "\n"))
 							m.Debug("%v %v", n, e)
@@ -87,42 +81,19 @@ func init() {
 					})
 					m.ProcessRefresh("300ms")
 				}},
-				"bind": {Name: "bind", Help: "绑定", Hand: func(m *ice.Message, arg ...string) {
-					m.Richs(SESSION, "", m.Option(kit.MDB_HASH), func(key string, value map[string]interface{}) {
-						value = kit.GetMeta(value)
-
-						input := value["input"].(io.Writer)
-						_watch(m, os.Stdin, input, func(buf []byte) {
-							m.Debug("input %v", string(buf))
-						})
-
-						output := value["output"].(io.Reader)
-						_watch(m, output, os.Stdout, func(buf []byte) {
-							m.Debug("output %v", string(buf))
-						})
-					})
-				}},
-
-				mdb.REMOVE: {Name: "remove", Help: "删除", Hand: func(m *ice.Message, arg ...string) {
-					m.Cmdy(mdb.DELETE, SESSION, "", mdb.HASH, kit.MDB_HASH, m.Option(kit.MDB_HASH))
-				}},
-				mdb.PRUNES: {Name: "prunes", Help: "清理", Hand: func(m *ice.Message, arg ...string) {
-					m.Cmdy(mdb.PRUNES, SESSION, "", mdb.HASH, kit.MDB_STATUS, tcp.CLOSE)
-				}},
 			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 				if len(arg) == 0 {
 					m.Option(mdb.FIELDS, "time,hash,status,count,connect")
 					if m.Cmdy(mdb.SELECT, SESSION, "", mdb.HASH, kit.MDB_HASH, arg); len(arg) == 0 {
 						m.Table(func(index int, value map[string]string, head []string) {
-							m.PushButton(kit.Select("bind", mdb.REMOVE, value[kit.MDB_STATUS] == tcp.CLOSE))
+							m.PushButton(kit.Select("", mdb.REMOVE, value[kit.MDB_STATUS] == tcp.CLOSE))
 						})
 					}
 					return
 				}
 
-				m.Option(mdb.FIELDS, kit.Select("time,id,type,text", mdb.DETAIL, len(arg) > 1))
+				m.Fields(len(arg) == 1, "time,id,type,text")
 				m.Cmdy(mdb.SELECT, SESSION, kit.Keys(kit.MDB_HASH, arg[0]), mdb.LIST, kit.MDB_ID, arg[1:])
-				m.Sort(kit.MDB_ID)
 			}},
 		},
 	})

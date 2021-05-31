@@ -178,7 +178,7 @@ func init() {
 					_dir_search(m, arg[0], arg[1])
 				}},
 				mdb.RENDER: {Name: "render type name text", Help: "渲染", Hand: func(m *ice.Message, arg ...string) {
-					_dir_show(m, arg[2], arg[1], 0, m.Option(DIR_DEEP) == "true", kit.Select(TYPE_BOTH, m.Option(DIR_TYPE)),
+					_dir_show(m, arg[2], arg[1], 0, m.Option(DIR_DEEP) == ice.TRUE, kit.Select(TYPE_BOTH, m.Option(DIR_TYPE)),
 						nil, kit.Split("time,size,type,path"))
 				}},
 

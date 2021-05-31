@@ -44,7 +44,7 @@ func init() {
 		},
 		Commands: map[string]*ice.Command{
 			TRASH: {Name: "trash file auto prunes", Help: "回收站", Action: map[string]*ice.Action{
-				"recover": {Name: "recover", Help: "恢复", Hand: func(m *ice.Message, arg ...string) {
+				mdb.REVERT: {Name: "revert", Help: "恢复", Hand: func(m *ice.Message, arg ...string) {
 					os.Rename(m.Option(kit.MDB_FILE), m.Option(kit.MDB_FROM))
 					m.Cmd(mdb.DELETE, TRASH, "", mdb.HASH, kit.MDB_HASH, m.Option(kit.MDB_HASH))
 				}},
@@ -59,7 +59,7 @@ func init() {
 				if len(arg) == 0 {
 					m.Option(mdb.FIELDS, "time,hash,file,from")
 					m.Cmdy(mdb.SELECT, TRASH, "", mdb.HASH)
-					m.PushAction("recover", mdb.REMOVE)
+					m.PushAction(mdb.REVERT, mdb.REMOVE)
 					return
 				}
 				_trash_create(m, arg[0])

@@ -13,7 +13,7 @@ import (
 )
 
 func _file_name(m *ice.Message, arg ...string) string {
-	return kit.Select(path.Join(m.Option(ice.MSG_LOCAL), "usr/local/export", path.Join(arg[:2]...), arg[2]), arg, 3)
+	return kit.Select(path.Join(m.Option(ice.MSG_LOCAL), ice.USR_LOCAL, EXPORT, path.Join(arg[:2]...), arg[2]), arg, 3)
 }
 func _domain_chain(m *ice.Message, chain string) string {
 	return kit.Keys(m.Option(ice.MSG_DOMAIN), chain)
@@ -157,7 +157,7 @@ func _list_select(m *ice.Message, prefix, chain, field, value string) {
 	}
 	fields := _list_fields(m)
 	cb := m.Optionv(kit.Keycb(SELECT))
-	m.Grows(prefix, chain, kit.Select(m.Option("cache.field"), field), kit.Select(m.Option(CACHE_VALUE), value), func(index int, val map[string]interface{}) {
+	m.Grows(prefix, chain, kit.Select(m.Option(CACHE_FIELD), field), kit.Select(m.Option(CACHE_VALUE), value), func(index int, val map[string]interface{}) {
 		val = kit.GetMeta(val)
 		switch cb := cb.(type) {
 		case func(fields []string, value map[string]interface{}):
@@ -263,7 +263,7 @@ func _list_inputs(m *ice.Message, prefix, chain string, field, value string) {
 		m.Push(field, k)
 		m.Push(kit.MDB_COUNT, i)
 	}
-	m.Sort(kit.MDB_COUNT, "int_r")
+	m.SortIntR(kit.MDB_COUNT)
 }
 
 func _zone_fields(m *ice.Message) []string {
@@ -404,6 +404,7 @@ const (
 	SELECT = "select"
 	DELETE = "delete"
 	REMOVE = "remove"
+	REVERT = "revert"
 
 	EXPORT = "export"
 	IMPORT = "import"
@@ -412,13 +413,8 @@ const (
 )
 const (
 	CACHE_LIMIT = "cache.limit"
-	CACHE_FILED = "cache.field"
+	CACHE_FIELD = "cache.field"
 	CACHE_VALUE = "cache.value"
-
-	CACHE_STATUS = "cache.status"
-	CACHE_ACTION = "cache.action"
-	CACHE_BEGIN  = "cache.begin"
-	CACHE_HASH   = "cache.hash"
 
 	CACHE_CLEAR_ON_EXIT = "cache.clear.on.exit"
 )

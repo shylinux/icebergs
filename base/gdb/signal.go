@@ -1,7 +1,9 @@
 package gdb
 
 import (
+	"os"
 	"os/signal"
+	"path"
 	"syscall"
 
 	ice "github.com/shylinux/icebergs"
@@ -23,6 +25,18 @@ func _signal_action(m *ice.Message, s int) {
 	})
 }
 
+func SignalNotify(m *ice.Message, sig int, cb func()) {
+	ch := make(chan os.Signal)
+	signal.Notify(ch, syscall.Signal(sig))
+	m.Go(func() {
+		for {
+			if _, ok := <-ch; ok {
+				cb()
+			}
+		}
+	})
+}
+
 const (
 	LISTEN = "listen"
 	ACTION = "action"
@@ -33,7 +47,7 @@ func init() {
 	Index.Merge(&ice.Context{
 		Configs: map[string]*ice.Config{
 			SIGNAL: {Name: SIGNAL, Help: "信号器", Value: kit.Data(
-				kit.MDB_PATH, "var/run/ice.pid", kit.MDB_SHORT, SIGNAL,
+				kit.MDB_PATH, path.Join(ice.VAR_RUN, "ice.pid"), kit.MDB_SHORT, SIGNAL,
 			)},
 		},
 		Commands: map[string]*ice.Command{

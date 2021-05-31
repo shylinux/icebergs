@@ -28,7 +28,7 @@ func _tail_create(m *ice.Message, arg ...string) {
 
 		m.Option(cli.CMD_OUTPUT, w)
 		m.Option(cli.CMD_ERRPUT, w)
-		m.Option(mdb.CACHE_CLEAR_ON_EXIT, "true")
+		m.Option(mdb.CACHE_CLEAR_ON_EXIT, ice.TRUE)
 		m.Cmd(cli.DAEMON, TAIL, "-n", "0", "-f", file)
 	})
 }
@@ -55,7 +55,6 @@ func init() {
 						offend = total - kit.Int(kit.Select("10", arg, 2))
 						m.Toast("已经是最后一页啦!")
 					}
-
 					m.ProcessRewrite("offend", offend)
 				}},
 				"next": {Name: "next", Help: "下一页", Hand: func(m *ice.Message, arg ...string) {
@@ -68,7 +67,7 @@ func init() {
 				}},
 			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 				m.Option(mdb.FIELDS, kit.Select("time,hash,count,name,file", kit.Select("time,id,file,text", mdb.DETAIL, len(arg) > 1 && arg[1] != ""), len(arg) > 0))
-				m.Option("cache.limit", kit.Select("10", arg, 2))
+				m.Option(mdb.CACHE_LIMIT, kit.Select("10", arg, 2))
 				m.Option("cache.offend", kit.Select("0", arg, 3))
 
 				if m.Cmdy(mdb.SELECT, TAIL, "", mdb.ZONE, arg); len(arg) == 0 {

@@ -1,13 +1,13 @@
 package ice
 
 import (
-	kit "github.com/shylinux/toolkits"
-	"github.com/shylinux/toolkits/task"
-
 	"errors"
 	"fmt"
 	"io"
 	"time"
+
+	kit "github.com/shylinux/toolkits"
+	"github.com/shylinux/toolkits/task"
 )
 
 func (m *Message) TryCatch(msg *Message, safe bool, hand ...func(msg *Message)) *Message {

@@ -13,14 +13,16 @@ var Index = &ice.Context{Name: SSH, Help: "终端模块", Commands: map[string]*
 		m.Load()
 		m.Conf(SOURCE, kit.Keys(kit.MDB_HASH, STDIO, kit.MDB_META, kit.MDB_NAME), STDIO)
 		m.Conf(SOURCE, kit.Keys(kit.MDB_HASH, STDIO, kit.MDB_META, kit.MDB_TIME), m.Time())
+
+		m.Richs(SERVICE, "", kit.MDB_FOREACH, func(key string, value map[string]interface{}) {
+			value = kit.GetMeta(value)
+			m.Cmd(SERVICE, tcp.LISTEN, tcp.PORT, value[tcp.PORT], value)
+		})
 	}},
 	ice.CTX_EXIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 		if _, ok := m.Target().Server().(*Frame); ok {
 			m.Done(true)
 		}
-		m.Richs(SERVICE, "", kit.MDB_FOREACH, func(key string, value map[string]interface{}) {
-			kit.Value(value, "meta.status", tcp.CLOSE)
-		})
 		m.Richs(CHANNEL, "", kit.MDB_FOREACH, func(key string, value map[string]interface{}) {
 			kit.Value(value, "meta.status", tcp.CLOSE)
 		})

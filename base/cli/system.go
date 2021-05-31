@@ -6,72 +6,59 @@ import (
 	"io"
 	"os"
 	"os/exec"
-	"strings"
 
 	ice "github.com/shylinux/icebergs"
-	"github.com/shylinux/icebergs/base/mdb"
 	kit "github.com/shylinux/toolkits"
 )
 
 func _system_show(m *ice.Message, cmd *exec.Cmd) {
+	// 输入流
 	if r, ok := m.Optionv(CMD_INPUT).(io.Reader); ok {
 		cmd.Stdin = r
 	}
 
-	if w, ok := m.Optionv(CMD_OUTPUT).(io.WriteCloser); ok {
-		cmd.Stdout = w
-		cmd.Stderr = w
-		if w, ok := m.Optionv(CMD_ERRPUT).(io.WriteCloser); ok {
+	// 输出流
+	if w, ok := m.Optionv(CMD_OUTPUT).(io.Writer); ok {
+		cmd.Stdout, cmd.Stderr = w, w
+		if w, ok := m.Optionv(CMD_ERRPUT).(io.Writer); ok {
 			cmd.Stderr = w
 		}
 
-		if e := cmd.Run(); e != nil {
-			m.Warn(e != nil, ErrRun, strings.Join(cmd.Args, " "), "\n", e.Error())
-			m.Push(CMD_ERR, e.Error())
-		} else {
-			m.Cost("args", cmd.Args, "code", cmd.ProcessState.ExitCode())
-		}
 	} else {
 		out := bytes.NewBuffer(make([]byte, 0, 1024))
 		err := bytes.NewBuffer(make([]byte, 0, 1024))
 		defer func() {
 			m.Push(CMD_ERR, err.String())
 			m.Push(CMD_OUT, out.String())
-			m.Echo(kit.Select(err.String(), out.String()))
+			m.Echo(kit.Select(out.String(), err.String()))
 		}()
 
-		cmd.Stdout = out
-		cmd.Stderr = err
+		cmd.Stdout, cmd.Stderr = out, err
+	}
 
-		if e := cmd.Run(); e != nil {
-			m.Warn(e != nil, ErrRun, strings.Join(cmd.Args, " "), "\n", kit.Select(e.Error(), err.String()))
-			fmt.Fprintf(err, e.Error())
-		} else {
-			m.Cost("args", cmd.Args, "code", cmd.ProcessState.ExitCode(), "err", err.Len(), "out", out.Len())
-		}
+	// 执行命令
+	if e := cmd.Run(); e != nil {
+		m.Warn(e != nil, cmd.Args, " ", e.Error())
+	} else {
+		m.Cost("code", cmd.ProcessState.ExitCode(), "args", cmd.Args)
 	}
 
 	m.Push(kit.MDB_TIME, m.Time())
 	m.Push(CMD_CODE, int(cmd.ProcessState.ExitCode()))
 }
 
-const ErrRun = "cli run err: "
-
 const (
+	CMD_DIR  = "cmd_dir"
+	CMD_ENV  = "cmd_env"
+	CMD_TYPE = "cmd_type"
+
 	CMD_INPUT  = "cmd_input"
 	CMD_OUTPUT = "cmd_output"
 	CMD_ERRPUT = "cmd_errput"
 
-	CMD_STDERR = "cmd_stderr"
-	CMD_STDOUT = "cmd_stdout"
-
-	CMD_TYPE = "cmd_type"
-	CMD_DIR  = "cmd_dir"
-	CMD_ENV  = "cmd_env"
-
-	CMD_OUT  = "cmd_out"
-	CMD_ERR  = "cmd_err"
 	CMD_CODE = "cmd_code"
+	CMD_ERR  = "cmd_err"
+	CMD_OUT  = "cmd_out"
 )
 
 const (
@@ -90,15 +77,7 @@ func init() {
 			SYSTEM: {Name: SYSTEM, Help: "系统命令", Value: kit.Data()},
 		},
 		Commands: map[string]*ice.Command{
-			SYSTEM: {Name: "system id auto", Help: "系统命令", Hand: func(m *ice.Message, c *ice.Context, key string, arg ...string) {
-
-				if len(arg) == 0 || kit.Int(arg[0]) > 0 {
-					m.Option("_control", "_page")
-					m.Option(mdb.FIELDS, kit.Select("time,id,cmd,dir,env", mdb.DETAIL, len(arg) > 0))
-					m.Cmdy(mdb.SELECT, SYSTEM, "", mdb.LIST, kit.MDB_ID, arg)
-					return
-				}
-
+			SYSTEM: {Name: "system cmd= 执行:button", Help: "系统命令", Hand: func(m *ice.Message, c *ice.Context, key string, arg ...string) {
 				if len(arg) == 1 {
 					arg = kit.Split(arg[0])
 				}
@@ -123,7 +102,7 @@ func init() {
 
 				switch m.Option(CMD_TYPE) {
 				case DAEMON:
-					_daemon_show(m, cmd, m.Option(CMD_STDOUT), m.Option(CMD_STDERR))
+					_daemon_show(m, cmd, m.Option(CMD_OUTPUT), m.Option(CMD_ERRPUT))
 				default:
 					_system_show(m, cmd)
 				}

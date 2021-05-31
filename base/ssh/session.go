@@ -1,6 +1,8 @@
 package ssh
 
 import (
+	"golang.org/x/crypto/ssh"
+	"io"
 	"os"
 
 	ice "github.com/shylinux/icebergs"
@@ -8,10 +10,6 @@ import (
 	"github.com/shylinux/icebergs/base/mdb"
 	"github.com/shylinux/icebergs/base/tcp"
 	kit "github.com/shylinux/toolkits"
-
-	"io"
-
-	"golang.org/x/crypto/ssh"
 )
 
 func _ssh_sess(m *ice.Message, h string, client *ssh.Client) (*ssh.Session, error) {
@@ -87,8 +85,7 @@ func init() {
 							m.Debug("%v %v", n, e)
 						}
 					})
-					m.Sleep("300ms")
-					m.Cmdy(SESSION, m.Option(kit.MDB_HASH))
+					m.ProcessRefresh("300ms")
 				}},
 				"bind": {Name: "bind", Help: "绑定", Hand: func(m *ice.Message, arg ...string) {
 					m.Richs(SESSION, "", m.Option(kit.MDB_HASH), func(key string, value map[string]interface{}) {

@@ -1,10 +1,11 @@
-package cli
+package code
 
 import (
-	ice "github.com/shylinux/icebergs"
-	kit "github.com/shylinux/toolkits"
-
 	"path"
+
+	ice "github.com/shylinux/icebergs"
+	"github.com/shylinux/icebergs/base/cli"
+	kit "github.com/shylinux/toolkits"
 )
 
 const PYTHON = "python"
@@ -13,8 +14,7 @@ func init() {
 	Index.Merge(&ice.Context{
 		Configs: map[string]*ice.Config{
 			PYTHON: {Name: "python", Help: "脚本命令", Value: kit.Data(
-				"python", "python",
-				"source", "http://mirrors.sohu.com/python/3.5.2/Python-3.5.2.tar.xz",
+				PYTHON, "python", cli.SOURCE, "http://mirrors.sohu.com/python/3.5.2/Python-3.5.2.tar.xz",
 			)},
 		},
 		Commands: map[string]*ice.Command{
@@ -30,10 +30,10 @@ func init() {
 				}},
 
 				"pip": {Name: "pip", Help: "安装", Hand: func(m *ice.Message, arg ...string) {
-					m.Cmdy(SYSTEM, m.Conf(PYTHON, "meta.pip"), "install", arg)
+					m.Cmdy(cli.SYSTEM, m.Conf(PYTHON, "meta.pip"), "install", arg)
 				}},
 				"run": {Name: "run", Help: "运行", Hand: func(m *ice.Message, arg ...string) {
-					m.Cmdy(SYSTEM, m.Conf(PYTHON, "meta.python"), arg)
+					m.Cmdy(cli.SYSTEM, m.Conf(PYTHON, "meta.python"), arg)
 				}},
 			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 				m.Cmdy("web.code.install", path.Base(m.Conf(PYTHON, kit.META_SOURCE)), arg)

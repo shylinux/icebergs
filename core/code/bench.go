@@ -102,10 +102,10 @@ func init() {
 
 			"test": {Name: "test path func auto run case", Help: "测试用例", Action: map[string]*ice.Action{
 				"run": {Name: "run", Help: "运行", Hand: func(m *ice.Message, arg ...string) {
-					cli.Follow(m, "run", func() {
-						m.Option(cli.CMD_DIR, kit.Select(path.Dir(arg[0]), arg[0], strings.HasSuffix(arg[0], "/")))
-						m.Cmdy(cli.SYSTEM, "go", "test", "./", "-v", "-run="+arg[1])
-					})
+					// cli.Follow(m, "run", func() {
+					m.Option(cli.CMD_DIR, kit.Select(path.Dir(arg[0]), arg[0], strings.HasSuffix(arg[0], "/")))
+					m.Cmdy(cli.SYSTEM, "go", "test", "./", "-v", "-run="+arg[1])
+					// })
 				}},
 				"case": {Name: "case", Help: "用例", Hand: func(m *ice.Message, arg ...string) {
 					msg := m.Spawn()

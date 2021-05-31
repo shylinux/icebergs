@@ -8,7 +8,6 @@ import (
 
 	ice "github.com/shylinux/icebergs"
 	"github.com/shylinux/icebergs/base/aaa"
-	"github.com/shylinux/icebergs/base/cli"
 	kit "github.com/shylinux/toolkits"
 )
 
@@ -44,12 +43,6 @@ func Render(msg *ice.Message, cmd string, args ...interface{}) {
 		msg.W.Header().Set("Content-Disposition", fmt.Sprintf("filename=%s", kit.Select(path.Base(arg[0]), arg, 2)))
 		if RenderType(msg.W, arg[0], kit.Select("", arg, 1)); !ice.DumpBinPack(msg.W, arg[0], nil) {
 			http.ServeFile(msg.W, msg.R, kit.Path(arg[0]))
-		}
-
-	case ice.RENDER_QRCODE: // text [size]
-		if data, ok := msg.Cmd(cli.QRCODE, arg).Optionv("byte").([]byte); ok {
-			msg.W.Header().Set(ContentType, ContentPNG)
-			msg.W.Write(data)
 		}
 
 	case ice.RENDER_RESULT:

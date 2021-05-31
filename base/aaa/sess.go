@@ -53,8 +53,6 @@ func SessIsCli(m *ice.Message) bool {
 const (
 	IP = "ip"
 	UA = "ua"
-
-	SESSID = "sessid"
 )
 
 const (

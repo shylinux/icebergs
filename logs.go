@@ -1,11 +1,11 @@
 package ice
 
 import (
-	kit "github.com/shylinux/toolkits"
-	log "github.com/shylinux/toolkits/logs"
-
 	"fmt"
 	"strings"
+
+	kit "github.com/shylinux/toolkits"
+	log "github.com/shylinux/toolkits/logs"
 )
 
 var OK = "ok"

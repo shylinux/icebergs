@@ -1,16 +1,7 @@
 chapter "cli"
 
-field "脚本" python
+field "扫码" qrcode
 field "守护" daemon
 field "命令" system
-field "输出" output
 field "环境" runtime
-field "进程" cli.proc
-
-section "python"
-refer `
-官网 https://www.python.org/
-源码 https://www.python.org/downloads/source/
-文档 https://docs.python.org/3/reference/index.html
-`
 

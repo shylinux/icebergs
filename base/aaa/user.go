@@ -33,8 +33,7 @@ func _user_remove(m *ice.Message, name string) {
 }
 func _user_search(m *ice.Message, kind, name, text string) {
 	m.Richs(USER, nil, kit.MDB_FOREACH, func(key string, value map[string]interface{}) {
-		value = kit.GetMeta(value)
-		if name != "" && name != value[USERNAME] {
+		if value = kit.GetMeta(value); name != "" && name != value[USERNAME] {
 			return
 		}
 		m.PushSearch(kit.SSH_CMD, USER, kit.MDB_TYPE, kit.Format(UserRole(m, value[USERNAME])),
@@ -144,7 +143,7 @@ func init() {
 				m.Table(func(index int, value map[string]string, head []string) {
 					m.Push(USERROLE, UserRole(m, value[USERNAME]))
 				})
-				m.PushAction(ROLE, mdb.REMOVE)
+				m.PushAction(mdb.REMOVE)
 			}},
 		},
 	})

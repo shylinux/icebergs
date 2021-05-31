@@ -155,8 +155,8 @@ func Dir(m *ice.Message, sort string) {
 
 const (
 	TYPE_ALL  = "all"
-	TYPE_DIR  = "dir"
 	TYPE_CAT  = "cat"
+	TYPE_DIR  = "dir"
 	TYPE_BOTH = "both"
 )
 const (
@@ -185,9 +185,9 @@ func init() {
 				mdb.UPLOAD: {Name: "upload", Help: "上传", Hand: func(m *ice.Message, arg ...string) {
 					up := kit.Simple(m.Optionv(ice.MSG_UPLOAD))
 					if p := path.Join(m.Option(kit.MDB_PATH), up[1]); m.Option(ice.MSG_USERPOD) == "" {
-						m.Cmdy("cache", "watch", up[0], p)
+						m.Cmdy("web.cache", "watch", up[0], p)
 					} else {
-						m.Cmdy("spide", "dev", "save", p, "GET", kit.MergeURL2(m.Option(ice.MSG_USERWEB), "/share/cache/"+up[0]))
+						m.Cmdy("web.spide", "dev", "save", p, "GET", kit.MergeURL2(m.Option(ice.MSG_USERWEB), "/share/cache/"+up[0]))
 					}
 				}},
 			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {

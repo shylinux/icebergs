@@ -45,12 +45,13 @@ func _ssh_open(m *ice.Message, arg ...string) {
 
 		// 初始命令
 		for _, item := range kit.Simple(m.Optionv("list")) {
-			m.Sleep("10ms")
+			m.Sleep("500ms")
 			c.Write([]byte(item + "\n"))
 		}
 
-		m.Go(func() { io.Copy(os.Stdout, c) })
-		io.Copy(c, os.Stdin)
+		m.Go(func() { io.Copy(c, os.Stdin) })
+
+		io.Copy(os.Stdout, c)
 	}, arg...)
 }
 func _ssh_dial(m *ice.Message, cb func(net.Conn), arg ...string) {
@@ -71,7 +72,9 @@ func _ssh_dial(m *ice.Message, cb func(net.Conn), arg ...string) {
 		m.Go(func() {
 			for {
 				c, e := l.Accept()
-				m.Assert(e)
+				if e != nil {
+					break
+				}
 
 				func(c net.Conn) {
 					w, h, _ := terminal.GetSize(int(os.Stdin.Fd()))
@@ -84,7 +87,9 @@ func _ssh_dial(m *ice.Message, cb func(net.Conn), arg ...string) {
 						defer c.Close()
 
 						session, e := client.NewSession()
-						m.Assert(e)
+						if e != nil {
+							return
+						}
 
 						session.Stdin = c
 						session.Stdout = c
@@ -170,6 +175,7 @@ func init() {
 			CONNECT: {Name: "connect hash auto dial prunes", Help: "连接", Action: map[string]*ice.Action{
 				tcp.OPEN: {Name: "open authfile= username=shy password= verfiy= host=shylinux.com port=22 private=.ssh/id_rsa", Help: "终端", Hand: func(m *ice.Message, arg ...string) {
 					_ssh_open(m, arg...)
+					m.Echo("exit %v:%v\n", m.Option(tcp.HOST), m.Option(tcp.PORT))
 				}},
 				tcp.DIAL: {Name: "dial username=shy host=shylinux.com port=22 private=.ssh/id_rsa", Help: "添加", Hand: func(m *ice.Message, arg ...string) {
 					m.Option(kit.Keycb(tcp.DIAL), func(c net.Conn) {

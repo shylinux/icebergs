@@ -70,7 +70,7 @@ func _ssh_config(m *ice.Message, h string) *ssh.ServerConfig {
 	return config
 }
 func _ssh_accept(m *ice.Message, h string, c net.Conn) {
-	sc, chans, reqs, err := ssh.NewServerConn(c, _ssh_config(m, h))
+	conn, chans, reqs, err := ssh.NewServerConn(c, _ssh_config(m, h))
 	if m.Warn(err != nil, err) {
 		return
 	}
@@ -84,7 +84,7 @@ func _ssh_accept(m *ice.Message, h string, c net.Conn) {
 		}
 
 		func(channel ssh.Channel, requests <-chan *ssh.Request) {
-			m.Go(func() { _ssh_handle(m, sc.Permissions.Extensions, c, channel, requests) })
+			m.Go(func() { _ssh_handle(m, conn.Permissions.Extensions, c, channel, requests) })
 		}(channel, requests)
 	}
 }

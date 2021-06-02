@@ -22,7 +22,7 @@ func _ssh_session(m *ice.Message, h string, client *ssh.Client) (*ssh.Session, e
 	m.Assert(e)
 
 	m.Go(func() {
-		buf := make([]byte, 4096)
+		buf := make([]byte, ice.MOD_BUFS)
 		for {
 			n, e := out.Read(buf)
 			if e != nil {
@@ -36,8 +36,7 @@ func _ssh_session(m *ice.Message, h string, client *ssh.Client) (*ssh.Session, e
 	})
 
 	m.Richs(SESSION, "", h, func(key string, value map[string]interface{}) {
-		kit.Value(value, kit.Keym(OUTPUT), out)
-		kit.Value(value, kit.Keym(INPUT), in)
+		kit.Value(value, kit.Keym(OUTPUT), out, kit.Keym(INPUT), in)
 	})
 
 	return session, nil
@@ -68,6 +67,7 @@ func init() {
 					m.Cmdy(mdb.DELETE, SESSION, "", mdb.HASH, kit.MDB_HASH, m.Option(kit.MDB_HASH))
 				}},
 				mdb.PRUNES: {Name: "prunes", Help: "清理", Hand: func(m *ice.Message, arg ...string) {
+					m.Option(mdb.FIELDS, "time,hash,status,count,connect")
 					m.Cmdy(mdb.PRUNES, SESSION, "", mdb.HASH, kit.MDB_STATUS, tcp.ERROR)
 					m.Cmdy(mdb.PRUNES, SESSION, "", mdb.HASH, kit.MDB_STATUS, tcp.CLOSE)
 				}},
@@ -75,18 +75,20 @@ func init() {
 					m.Richs(SESSION, "", m.Option(kit.MDB_HASH), func(key string, value map[string]interface{}) {
 						if w, ok := kit.Value(value, kit.Keym(INPUT)).(io.Writer); ok {
 							m.Grow(SESSION, kit.Keys(kit.MDB_HASH, key), kit.Dict(kit.MDB_TYPE, CMD, kit.MDB_TEXT, m.Option(CMD)))
-							n, e := w.Write([]byte(m.Option(CMD) + "\n"))
-							m.Debug("%v %v", n, e)
+							w.Write([]byte(m.Option(CMD) + "\n"))
 						}
 					})
 					m.ProcessRefresh("300ms")
 				}},
+				"repeat": {Name: "repeat", Help: "执行", Hand: func(m *ice.Message, arg ...string) {
+					m.Cmdy(SESSION, kit.MDB_ACTION, ctx.COMMAND, CMD, m.Option("text"))
+				}},
 			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 				if len(arg) == 0 {
-					m.Option(mdb.FIELDS, "time,hash,status,count,connect")
+					m.Fields(len(arg) == 0, "time,hash,status,count,connect")
 					if m.Cmdy(mdb.SELECT, SESSION, "", mdb.HASH, kit.MDB_HASH, arg); len(arg) == 0 {
 						m.Table(func(index int, value map[string]string, head []string) {
-							m.PushButton(kit.Select("", mdb.REMOVE, value[kit.MDB_STATUS] == tcp.CLOSE))
+							m.PushButton(kit.Select("", ctx.COMMAND, value[kit.MDB_STATUS] == tcp.OPEN), mdb.REMOVE)
 						})
 					}
 					return
@@ -94,6 +96,9 @@ func init() {
 
 				m.Fields(len(arg) == 1, "time,id,type,text")
 				m.Cmdy(mdb.SELECT, SESSION, kit.Keys(kit.MDB_HASH, arg[0]), mdb.LIST, kit.MDB_ID, arg[1:])
+				m.Table(func(index int, value map[string]string, head []string) {
+					m.PushButton(kit.Select("", "repeat", value["type"] == "cmd"))
+				})
 			}},
 		},
 	})

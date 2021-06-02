@@ -10,6 +10,8 @@ import (
 	"golang.org/x/crypto/ssh"
 )
 
+type Winsize struct{ Height, Width, x, y uint16 }
+
 func _ssh_size(fd uintptr, b []byte) {
 	w := binary.BigEndian.Uint32(b)
 	h := binary.BigEndian.Uint32(b[4:])

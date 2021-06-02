@@ -5,15 +5,14 @@ refer `
 源码 https://github.com/openssh/openssh-portable
 `
 
-field "服务" ssh.service
-field "通道" ssh.channel
 field "连接" ssh.connect
 field "会话" ssh.session
+field "服务" ssh.service
+field "通道" ssh.channel
 
 field "脚本" ssh.source
 field "模块" ssh.target
 field "提示" ssh.prompt
 field "输出" ssh.printf
 field "屏显" ssh.screen
-
 

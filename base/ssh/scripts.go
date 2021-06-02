@@ -17,14 +17,21 @@ import (
 	kit "github.com/shylinux/toolkits"
 )
 
-func Render(msg *ice.Message, cmd string, args ...interface{}) {
+func Render(msg *ice.Message, cmd string, args ...interface{}) string {
 	switch arg := kit.Simple(args...); cmd {
 	case ice.RENDER_VOID:
 	case ice.RENDER_RESULT:
+		// 转换结果
 		if len(arg) > 0 {
 			msg.Resultv(arg)
 		}
-		fmt.Fprint(msg.O, msg.Result())
+		res := msg.Result()
+
+		// 输出结果
+		if fmt.Fprint(msg.O, res); !strings.HasSuffix(res, "\n") {
+			fmt.Fprint(msg.O, "\n")
+		}
+		return res
 
 	default:
 		// 转换结果
@@ -37,7 +44,9 @@ func Render(msg *ice.Message, cmd string, args ...interface{}) {
 		if fmt.Fprint(msg.O, res); !strings.HasSuffix(res, "\n") {
 			fmt.Fprint(msg.O, "\n")
 		}
+		return res
 	}
+	return ""
 }
 func Script(m *ice.Message, name string) io.Reader {
 	if strings.Contains(m.Option(ice.MSG_SCRIPT), "/") {
@@ -92,6 +101,7 @@ type Frame struct {
 	pipe   io.Writer
 
 	count int
+	last  string
 	ps1   []string
 	ps2   []string
 
@@ -223,7 +233,7 @@ func (f *Frame) parse(m *ice.Message, line string) string {
 
 		// 渲染引擎
 		_args, _ := msg.Optionv(ice.MSG_ARGS).([]interface{})
-		Render(msg, msg.Option(ice.MSG_OUTPUT), _args...)
+		f.last = Render(msg, msg.Option(ice.MSG_OUTPUT), _args...)
 	}
 	return ""
 }
@@ -312,10 +322,16 @@ func (f *Frame) Start(m *ice.Message, arg ...string) bool {
 
 	// 解析脚本
 	if f.count = 1; f.source == STDIO {
-		f.count = kit.Int(m.Conf(SOURCE, kit.Keys("hash.stdio.meta.count"))) + 1
+		m.Conf(SOURCE, kit.Keys(kit.MDB_HASH, STDIO, kit.MDB_META, kit.MDB_NAME), STDIO)
+		m.Conf(SOURCE, kit.Keys(kit.MDB_HASH, STDIO, kit.MDB_META, kit.MDB_TIME), m.Time())
+
+		f.count = kit.Int(m.Conf(SOURCE, kit.Keys(kit.MDB_HASH, STDIO, kit.Keym(kit.MDB_COUNT)))) + 1
 		f.scan(m, STDIO, "")
 	} else {
 		h := m.Cmdx(mdb.INSERT, SOURCE, "", mdb.HASH, kit.MDB_NAME, f.source)
+		m.Conf(SOURCE, kit.Keys(kit.MDB_HASH, h, kit.Keym(kit.MDB_COUNT)), 0)
+		m.Conf(SOURCE, kit.Keys(kit.MDB_HASH, h, kit.MDB_LIST), "")
+
 		f.scan(m, h, "")
 	}
 	return true
@@ -349,7 +365,12 @@ func init() {
 			)},
 		},
 		Commands: map[string]*ice.Command{
-			SOURCE: {Name: "source hash id limit offend auto", Help: "脚本解析", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			SOURCE: {Name: "source hash id limit offend auto", Help: "脚本解析", Action: map[string]*ice.Action{
+				"repeat": {Name: "repeat", Help: "执行", Hand: func(m *ice.Message, arg ...string) {
+					m.Cmdy(SCREEN, m.Option("text"))
+					m.ProcessInner()
+				}},
+			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 				if len(arg) > 0 && kit.Ext(arg[0]) == "shy" { // 解析脚本
 					m.Starts(strings.Replace(arg[0], ".", "_", -1), arg[0], arg[0:]...)
 					return
@@ -371,6 +392,7 @@ func init() {
 				// 命令列表
 				m.Fields(len(arg) == 1 || arg[1] == "", "time,id,text")
 				m.Cmdy(mdb.SELECT, SOURCE, kit.Keys(kit.MDB_HASH, arg[0]), mdb.LIST, kit.MDB_ID, arg[1:])
+				m.PushAction("repeat")
 			}},
 			TARGET: {Name: "target name 执行:button", Help: "当前模块", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 				f := m.Target().Server().(*Frame)
@@ -396,7 +418,7 @@ func init() {
 					fmt.Fprintf(f.pipe, line+"\n")
 					m.Sleep("300ms")
 				}
-				m.Echo(arg[0])
+				m.Echo(f.last)
 			}},
 			RETURN: {Name: "return", Help: "结束脚本", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 				switch cb := m.Optionv(kit.Keycb(RETURN)).(type) {

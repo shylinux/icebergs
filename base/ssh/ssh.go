@@ -11,24 +11,17 @@ const SSH = "ssh"
 var Index = &ice.Context{Name: SSH, Help: "终端模块", Commands: map[string]*ice.Command{
 	ice.CTX_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 		m.Load()
-		m.Conf(SOURCE, kit.Keys(kit.MDB_HASH, STDIO, kit.MDB_META, kit.MDB_NAME), STDIO)
-		m.Conf(SOURCE, kit.Keys(kit.MDB_HASH, STDIO, kit.MDB_META, kit.MDB_TIME), m.Time())
+		m.Richs(SESSION, "", kit.MDB_FOREACH, func(key string, value map[string]interface{}) {
+			kit.Value(value, kit.Keym(kit.MDB_STATUS), tcp.CLOSE)
+		})
+		m.Richs(CHANNEL, "", kit.MDB_FOREACH, func(key string, value map[string]interface{}) {
+			kit.Value(value, kit.Keym(kit.MDB_STATUS), tcp.CLOSE)
+		})
 	}},
 	ice.CTX_EXIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 		if _, ok := m.Target().Server().(*Frame); ok {
 			m.Done(true)
 		}
-		m.Richs(CHANNEL, "", kit.MDB_FOREACH, func(key string, value map[string]interface{}) {
-			kit.Value(value, kit.Keym(kit.MDB_STATUS), tcp.CLOSE)
-		})
-		m.Richs(SESSION, "", kit.MDB_FOREACH, func(key string, value map[string]interface{}) {
-			kit.Value(value, kit.Keym(kit.MDB_STATUS), tcp.CLOSE)
-		})
-
-		m.Richs(SOURCE, "", STDIO, func(key string, value map[string]interface{}) {
-			m.Conf(SOURCE, kit.Keys(kit.MDB_HASH), "")
-			m.Conf(SOURCE, kit.Keys(kit.MDB_HASH, key), value)
-		})
 		m.Save()
 	}},
 }}
@@ -36,6 +29,6 @@ var Index = &ice.Context{Name: SSH, Help: "终端模块", Commands: map[string]*
 func init() {
 	ice.Index.Register(Index, &Frame{},
 		CONNECT, SESSION, SERVICE, CHANNEL,
-		SOURCE, TARGET, PROMPT, RETURN,
+		SOURCE, TARGET, PROMPT, PRINTF, SCREEN, RETURN,
 	)
 }

@@ -116,7 +116,7 @@ func (c *Context) cmd(m *Message, cmd *Command, key string, arg ...string) *Mess
 	}
 
 	m.meta[MSG_DETAIL] = kit.Simple(key, arg)
-	if m.Hand = true; len(arg) > 1 && arg[0] == "action" && cmd.Action != nil {
+	if m.Hand = true; len(arg) > 1 && arg[0] == kit.MDB_ACTION && cmd.Action != nil {
 		if h, ok := cmd.Action[arg[1]]; ok {
 			return c._hand(m, cmd, key, arg[1], h, arg[2:]...)
 		}

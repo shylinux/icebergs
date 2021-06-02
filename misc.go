@@ -1,8 +1,10 @@
 package ice
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/url"
+	"os"
 	"path"
 	"strings"
 	"time"
@@ -345,3 +347,14 @@ func (m *Message) Upload(dir string) {
 }
 
 func (m *Message) OptionFields(str string) { m.Option("fields", str) }
+func (m *Message) OptionLoad(file string) *Message {
+	if f, e := os.Open(file); e == nil {
+		defer f.Close()
+
+		var data interface{}
+		json.NewDecoder(f).Decode(&data)
+
+		kit.Fetch(data, func(key string, value interface{}) { m.Option(key, kit.Simple(value)) })
+	}
+	return m
+}

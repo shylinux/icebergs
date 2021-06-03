@@ -28,11 +28,6 @@ func _ssh_open(m *ice.Message, arg ...string) {
 			defer terminal.Restore(fd, oldState)
 		}
 
-		gdb.SignalNotify(m, 28, func() {
-			w, h, _ := terminal.GetSize(fd)
-			_ssh_sizes(os.Stdin.Fd(), w, h)
-		})
-
 		// 设置宽高
 		w, h, _ := terminal.GetSize(fd)
 		c.Write([]byte(fmt.Sprintf("#height:%d,width:%d\n", h, w)))
@@ -94,11 +89,11 @@ func _ssh_dial(m *ice.Message, cb func(net.Conn), arg ...string) {
 								ssh.TTY_OP_OSPEED: 14400,
 							})
 
-							// gdb.SignalNotify(m, 28, func() {
-							// 	w, h, _ := terminal.GetSize(int(os.Stdin.Fd()))
-							// 	session.WindowChange(h, w)
-							// })
-							//
+							gdb.SignalNotify(m, 28, func() {
+								w, h, _ := terminal.GetSize(int(os.Stdin.Fd()))
+								session.WindowChange(h, w)
+							})
+
 							session.Shell()
 							session.Wait()
 						})

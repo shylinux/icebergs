@@ -66,9 +66,22 @@ func init() {
 			SESS: {Name: SESS, Help: "会话", Value: kit.Data(kit.MDB_SHORT, "uniq", kit.MDB_EXPIRE, "720h")},
 		},
 		Commands: map[string]*ice.Command{
-			SESS: {Name: "sess hash auto", Help: "会话", Action: map[string]*ice.Action{
+			SESS: {Name: "sess hash auto prunes", Help: "会话", Action: map[string]*ice.Action{
 				mdb.REMOVE: {Name: "remove", Help: "删除", Hand: func(m *ice.Message, arg ...string) {
+					m.Option(mdb.FIELDS, "time,username,userrole,ip,ua")
 					m.Cmdy(mdb.DELETE, SESS, "", mdb.HASH, kit.MDB_HASH, m.Option(kit.MDB_HASH))
+				}},
+				mdb.PRUNES: {Name: "prunes before@date", Help: "清理", Hand: func(m *ice.Message, arg ...string) {
+					list := []string{}
+					m.Richs(SESS, "", kit.MDB_FOREACH, func(key string, value map[string]interface{}) {
+						if value = kit.GetMeta(value); kit.Time(kit.Format(value[kit.MDB_TIME])) < kit.Time(m.Option("before")) {
+							list = append(list, key)
+						}
+					})
+					m.Option(mdb.FIELDS, "time,username,userrole,ip,ua")
+					for _, v := range list {
+						m.Cmdy(mdb.DELETE, SESS, "", mdb.HASH, kit.MDB_HASH, v)
+					}
 				}},
 			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 				m.Fields(len(arg) == 0, "time,hash,username,userrole")

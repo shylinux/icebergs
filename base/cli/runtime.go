@@ -72,6 +72,11 @@ func init() {
 				}},
 				PROCINFO: {Name: "procinfo", Help: "进程信息", Hand: func(m *ice.Message, arg ...string) {
 					m.Split(m.Cmdx(SYSTEM, "ps", "u"), "", " ", "\n")
+					m.PushAction("kill")
+				}},
+				"kill": {Name: "kill", Help: "结束进程", Hand: func(m *ice.Message, arg ...string) {
+					m.Cmdy(SYSTEM, "kill", m.Option("PID"))
+					m.ProcessRefresh("10ms")
 				}},
 			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 				if len(arg) > 0 && arg[0] == BOOTINFO {

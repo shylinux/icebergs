@@ -58,6 +58,11 @@ func _status_list(m *ice.Message) (files, adds, dels int, last time.Time) {
 
 		for _, v := range strings.Split(strings.TrimSpace(diff), "\n") {
 			vs := strings.SplitN(strings.TrimSpace(v), " ", 2)
+			switch kit.Ext(vs[1]) {
+			case "swp", "bin":
+				continue
+			}
+
 			m.Push(kit.MDB_NAME, value[kit.MDB_NAME])
 			m.Push(kit.MDB_TYPE, vs[0])
 			m.Push(kit.MDB_FILE, vs[1])
@@ -96,8 +101,9 @@ const (
 	OPT = "opt"
 	PRO = "pro"
 
-	DIFF   = "diff"
-	COMMIT = "commit"
+	DIFF    = "diff"
+	COMMIT  = "commit"
+	COMMENT = "comment"
 )
 const STATUS = "status"
 
@@ -130,7 +136,7 @@ func init() {
 				m.Cmdy(cli.SYSTEM, GIT, ADD, m.Option(kit.MDB_FILE))
 			}}, OPT: {Name: "opt", Help: "优化"}, PRO: {Name: "pro", Help: "自举"},
 
-			COMMIT: {Name: "commit action=add,opt,pro comment=some@key", Help: "提交", Hand: func(m *ice.Message, arg ...string) {
+			COMMIT: {Name: "commit action=opt,add,pro comment=some@key", Help: "提交", Hand: func(m *ice.Message, arg ...string) {
 				if arg[0] == kit.MDB_ACTION {
 					m.Option(kit.MDB_TEXT, arg[1]+" "+arg[3])
 				} else {
@@ -144,10 +150,9 @@ func init() {
 			mdb.INPUTS: {Name: "inputs", Help: "补全", Hand: func(m *ice.Message, arg ...string) {
 				switch arg[0] {
 				case kit.MDB_NAME:
-					m.OptionFields("name,time")
-					m.Cmdy(REPOS)
+					m.Cmdy(REPOS, ice.OptionFields("name,time"))
 
-				case "comment":
+				case COMMENT:
 					ls := []string{}
 					ls = append(ls, kit.Split(m.Option(kit.MDB_FILE), " /")...)
 

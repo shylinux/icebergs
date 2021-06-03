@@ -6,8 +6,10 @@ import (
 	"io"
 	"os"
 	"os/exec"
+	"strings"
 
 	ice "github.com/shylinux/icebergs"
+	"github.com/shylinux/icebergs/base/mdb"
 	kit "github.com/shylinux/toolkits"
 )
 
@@ -80,6 +82,13 @@ func init() {
 		},
 		Commands: map[string]*ice.Command{
 			SYSTEM: {Name: "system cmd= 执行:button", Help: "系统命令", Hand: func(m *ice.Message, c *ice.Context, key string, arg ...string) {
+				if len(arg) == 0 {
+					m.Fields(len(arg) == 0, "time,id,cmd")
+					m.Cmdy(mdb.SELECT, SYSTEM, "", mdb.LIST)
+					return
+				}
+				m.Grow(SYSTEM, "", kit.Dict(kit.MDB_TIME, m.Time(), CMD, strings.Join(arg, " ")))
+
 				if len(arg) == 1 {
 					arg = kit.Split(arg[0])
 				}

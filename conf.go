@@ -6,7 +6,7 @@ const ( // MOD
 
 	MOD_CHAN = 16
 	MOD_TICK = "1s"
-	MOD_BUFS = 1024
+	MOD_BUFS = 4096
 
 	MOD_DATE = "2006-01-02"
 	MOD_TIME = "2006-01-02 15:04:05"

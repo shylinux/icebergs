@@ -35,7 +35,7 @@ func _ssh_close(m *ice.Message, c net.Conn, channel ssh.Channel) {
 	defer channel.Close()
 	channel.Write([]byte(m.Conf(SERVICE, kit.Keym(GOODBYE))))
 }
-func _ssh_watch(m *ice.Message, meta map[string]string, h string, input io.Reader, output io.Writer, display io.Writer) {
+func _ssh_watch(m *ice.Message, meta map[string]string, h string, input io.Reader, output io.Writer) {
 	r, w := io.Pipe()
 	bio := io.TeeReader(input, w)
 	m.Go(func() { io.Copy(output, r) })

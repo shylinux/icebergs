@@ -13,6 +13,7 @@ import (
 	"strings"
 
 	ice "github.com/shylinux/icebergs"
+	"github.com/shylinux/icebergs/base/aaa"
 	"github.com/shylinux/icebergs/base/mdb"
 	kit "github.com/shylinux/toolkits"
 )
@@ -181,9 +182,11 @@ func init() {
 					_dir_show(m, arg[2], arg[1], 0, m.Option(DIR_DEEP) == ice.TRUE, kit.Select(TYPE_BOTH, m.Option(DIR_TYPE)),
 						nil, kit.Split("time,size,type,path"))
 				}},
-
-				"upload": {Name: "upload", Help: "上传", Hand: func(m *ice.Message, arg ...string) {
+				mdb.UPLOAD: {Name: "upload", Help: "上传", Hand: func(m *ice.Message, arg ...string) {
 					m.Upload(m.Option(kit.MDB_PATH))
+				}},
+				TRASH: {Name: "trash", Help: "删除", Hand: func(m *ice.Message, arg ...string) {
+					m.Cmdy(TRASH, m.Option(kit.MDB_PATH))
 				}},
 			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 				if len(arg) == 0 {
@@ -193,6 +196,11 @@ func init() {
 					0, m.Options(DIR_DEEP), kit.Select(TYPE_BOTH, m.Option(DIR_TYPE)), kit.Regexp(m.Option(DIR_REG)),
 					kit.Split(kit.Select("time,size,path", strings.Join(arg[1:], ","))))
 				m.SortTimeR(kit.MDB_TIME)
+				if !aaa.SessIsCli(m) {
+					m.Table(func(index int, value map[string]string, head []string) {
+						m.PushButton(kit.Select("", TRASH, !strings.HasSuffix(value[kit.MDB_PATH], "/")))
+					})
+				}
 			}},
 		},
 	})

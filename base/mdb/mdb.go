@@ -409,8 +409,9 @@ const (
 	IMPORT = "import"
 	PRUNES = "prunes"
 	INPUTS = "inputs"
-	REPEAT = "repeat"
 	REVERT = "revert"
+	REPEAT = "repeat"
+	UPLOAD = "upload"
 )
 const (
 	CACHE_LIMIT  = "cache.limit"

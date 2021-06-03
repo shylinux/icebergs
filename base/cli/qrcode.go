@@ -121,14 +121,16 @@ func init() {
 		},
 		Commands: map[string]*ice.Command{
 			QRCODE: {Name: "qrcode text fg bg size auto", Help: "二维码", Action: map[string]*ice.Action{}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-				m.Option(FG, kit.Select(BLUE, arg, 1))
-				m.Option(BG, kit.Select(WHITE, arg, 2))
 				m.Option(SIZE, kit.Select("240", arg, 3))
+				m.Option(BG, kit.Select(WHITE, arg, 2))
+				m.Option(FG, kit.Select(BLUE, arg, 1))
 
-				if aaa.SessIsCli(m) {
-					_qrcode_cli(m, kit.Select("hi", arg, 0))
+				if len(arg) == 0 {
+
+				} else if aaa.SessIsCli(m) {
+					_qrcode_cli(m, arg[0])
 				} else {
-					_qrcode_web(m, kit.Select("hi", arg, 0))
+					_qrcode_web(m, arg[0])
 				}
 			}},
 		},

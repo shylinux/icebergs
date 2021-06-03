@@ -33,10 +33,12 @@ func init() {
 					m.Cmdy(mdb.DELETE, FAVOR, "", mdb.HASH, kit.MDB_TOPIC, m.Option(kit.MDB_TOPIC))
 				}},
 				mdb.EXPORT: {Name: "export", Help: "导出", Hand: func(m *ice.Message, arg ...string) {
-					m.Cmdy(mdb.EXPORT, FAVOR, "", mdb.HASH)
+					m.Option(mdb.FIELDS, "topic,id,time,type,name,text,path,file,line")
+					m.Cmdy(mdb.EXPORT, FAVOR, "", mdb.ZONE)
 				}},
 				mdb.IMPORT: {Name: "import", Help: "导入", Hand: func(m *ice.Message, arg ...string) {
-					m.Cmdy(mdb.IMPORT, FAVOR, "", mdb.HASH)
+					m.Option(mdb.FIELDS, kit.MDB_TOPIC)
+					m.Cmdy(mdb.IMPORT, FAVOR, "", mdb.ZONE)
 				}},
 				mdb.INPUTS: {Name: "inputs", Help: "补全", Hand: func(m *ice.Message, arg ...string) {
 					switch arg[0] {

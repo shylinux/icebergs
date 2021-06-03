@@ -71,29 +71,26 @@ const GO = "go"
 const DOC = "godoc"
 const MOD = "mod"
 const SUM = "sum"
+const PROTO = "proto"
+
+const PLUG = "plug"
 
 func init() {
 	Index.Register(&ice.Context{Name: GO, Help: "后端",
 		Commands: map[string]*ice.Command{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-				m.Cmd(mdb.PLUGIN, mdb.CREATE, GO, m.Prefix(GO))
-				m.Cmd(mdb.RENDER, mdb.CREATE, GO, m.Prefix(GO))
 				m.Cmd(mdb.ENGINE, mdb.CREATE, GO, m.Prefix(GO))
 				m.Cmd(mdb.SEARCH, mdb.CREATE, GO, m.Prefix(GO))
-
-				m.Cmd(mdb.PLUGIN, mdb.CREATE, DOC, m.Prefix(DOC))
-				m.Cmd(mdb.RENDER, mdb.CREATE, DOC, m.Prefix(DOC))
 				m.Cmd(mdb.SEARCH, mdb.CREATE, DOC, m.Prefix(GO))
 
-				m.Cmd(mdb.PLUGIN, mdb.CREATE, MOD, m.Prefix(MOD))
-				m.Cmd(mdb.RENDER, mdb.CREATE, MOD, m.Prefix(MOD))
-
-				m.Cmd(mdb.PLUGIN, mdb.CREATE, SUM, m.Prefix(SUM))
-				m.Cmd(mdb.RENDER, mdb.CREATE, SUM, m.Prefix(SUM))
+				for k := range c.Configs {
+					m.Cmd(mdb.PLUGIN, mdb.CREATE, k, m.Prefix(k))
+					m.Cmd(mdb.RENDER, mdb.CREATE, k, m.Prefix(k))
+				}
 			}},
 			SUM: {Name: SUM, Help: "版本", Action: map[string]*ice.Action{
 				mdb.PLUGIN: {Hand: func(m *ice.Message, arg ...string) {
-					m.Echo(m.Conf(MOD, "meta.plug"))
+					m.Echo(m.Conf(MOD, kit.Keym(PLUG)))
 				}},
 				mdb.RENDER: {Hand: func(m *ice.Message, arg ...string) {
 					m.Cmdy(nfs.CAT, path.Join(arg[2], arg[1]))
@@ -101,7 +98,15 @@ func init() {
 			}},
 			MOD: {Name: MOD, Help: "模块", Action: map[string]*ice.Action{
 				mdb.PLUGIN: {Hand: func(m *ice.Message, arg ...string) {
-					m.Echo(m.Conf(MOD, "meta.plug"))
+					m.Echo(m.Conf(MOD, kit.Keym(PLUG)))
+				}},
+				mdb.RENDER: {Hand: func(m *ice.Message, arg ...string) {
+					m.Cmdy(nfs.CAT, path.Join(arg[2], arg[1]))
+				}},
+			}},
+			PROTO: {Name: PROTO, Help: "协议", Action: map[string]*ice.Action{
+				mdb.PLUGIN: {Hand: func(m *ice.Message, arg ...string) {
+					m.Echo(m.Conf(PROTO, kit.Keym(PLUG)))
 				}},
 				mdb.RENDER: {Hand: func(m *ice.Message, arg ...string) {
 					m.Cmdy(nfs.CAT, path.Join(arg[2], arg[1]))
@@ -109,7 +114,7 @@ func init() {
 			}},
 			DOC: {Name: DOC, Help: "文档", Action: map[string]*ice.Action{
 				mdb.PLUGIN: {Hand: func(m *ice.Message, arg ...string) {
-					m.Echo(m.Conf(GO, "meta.plug"))
+					m.Echo(m.Conf(GO, kit.Keym(PLUG)))
 				}},
 				mdb.RENDER: {Hand: func(m *ice.Message, arg ...string) {
 					m.Option(cli.CMD_DIR, arg[2])
@@ -118,7 +123,7 @@ func init() {
 			}},
 			GO: {Name: GO, Help: "后端", Action: map[string]*ice.Action{
 				mdb.PLUGIN: {Hand: func(m *ice.Message, arg ...string) {
-					m.Echo(m.Conf(GO, "meta.plug"))
+					m.Echo(m.Conf(GO, kit.Keym(PLUG)))
 				}},
 				mdb.RENDER: {Hand: func(m *ice.Message, arg ...string) {
 					m.Cmdy(nfs.CAT, path.Join(arg[2], arg[1]))
@@ -144,8 +149,27 @@ func init() {
 			}},
 		},
 		Configs: map[string]*ice.Config{
+			PROTO: {Name: PROTO, Help: "协议", Value: kit.Data(
+				PLUG, kit.Dict(
+					PREFIX, kit.Dict(
+						"//", COMMENT,
+					),
+					KEYWORD, kit.Dict(
+						"syntax", KEYWORD,
+						"package", KEYWORD,
+						"import", KEYWORD,
+						"option", KEYWORD,
+						"service", KEYWORD,
+						"message", KEYWORD,
+
+						"string", DATATYPE,
+						"int64", DATATYPE,
+						"int32", DATATYPE,
+					),
+				),
+			)},
 			MOD: {Name: MOD, Help: "模块", Value: kit.Data(
-				"plug", kit.Dict(
+				PLUG, kit.Dict(
 					PREFIX, kit.Dict(
 						"//", COMMENT,
 					),
@@ -158,7 +182,7 @@ func init() {
 				),
 			)},
 			GO: {Name: GO, Help: "后端", Value: kit.Data(
-				"plug", kit.Dict(
+				PLUG, kit.Dict(
 					SPLIT, kit.Dict(
 						"space", "\t ",
 						"operator", "{[(&.,:;!|<>)]}",

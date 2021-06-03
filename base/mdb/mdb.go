@@ -404,12 +404,13 @@ const (
 	SELECT = "select"
 	DELETE = "delete"
 	REMOVE = "remove"
-	REVERT = "revert"
 
 	EXPORT = "export"
 	IMPORT = "import"
 	PRUNES = "prunes"
 	INPUTS = "inputs"
+	REPEAT = "repeat"
+	REVERT = "revert"
 )
 const (
 	CACHE_LIMIT  = "cache.limit"

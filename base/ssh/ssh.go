@@ -19,8 +19,8 @@ var Index = &ice.Context{Name: SSH, Help: "终端模块", Commands: map[string]*
 		})
 	}},
 	ice.CTX_EXIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-		if _, ok := m.Target().Server().(*Frame); ok {
-			m.Done(true)
+		if f, ok := m.Target().Server().(*Frame); ok {
+			f.close()
 		}
 		m.Save()
 	}},

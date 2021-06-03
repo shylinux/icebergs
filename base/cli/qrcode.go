@@ -2,11 +2,12 @@ package cli
 
 import (
 	"encoding/base64"
-	"github.com/skip2/go-qrcode"
 	"image/color"
 	"math/rand"
 	"strconv"
 	"strings"
+
+	"github.com/skip2/go-qrcode"
 
 	ice "github.com/shylinux/icebergs"
 	"github.com/shylinux/icebergs/base/aaa"
@@ -125,9 +126,9 @@ func init() {
 				m.Option(SIZE, kit.Select("240", arg, 3))
 
 				if aaa.SessIsCli(m) {
-					_qrcode_cli(m, arg[0])
+					_qrcode_cli(m, kit.Select("hi", arg, 0))
 				} else {
-					_qrcode_web(m, arg[0])
+					_qrcode_web(m, kit.Select("hi", arg, 0))
 				}
 			}},
 		},

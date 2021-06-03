@@ -211,6 +211,8 @@ func init() {
 						"msg", FUNCTION,
 						"m", FUNCTION,
 
+						"false", STRING,
+						"true", STRING,
 						"nil", STRING,
 						"-1", STRING,
 						"0", STRING,

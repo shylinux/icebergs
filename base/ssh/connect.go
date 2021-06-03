@@ -30,7 +30,7 @@ func _ssh_open(m *ice.Message, arg ...string) {
 
 		// 设置宽高
 		w, h, _ := terminal.GetSize(fd)
-		c.Write([]byte(fmt.Sprintf("height:%d,width:%d\n", h, w)))
+		c.Write([]byte(fmt.Sprintf("#height:%d,width:%d\n", h, w)))
 
 		// 初始命令
 		for _, item := range kit.Simple(m.Optionv(kit.MDB_LIST)) {
@@ -68,7 +68,7 @@ func _ssh_dial(m *ice.Message, cb func(net.Conn), arg ...string) {
 						w, h, _ := terminal.GetSize(int(os.Stdin.Fd()))
 						buf := make([]byte, ice.MOD_BUFS)
 						if n, e := c.Read(buf); m.Assert(e) {
-							fmt.Sscanf(string(buf[:n]), "height:%d,width:%d", &h, &w)
+							fmt.Sscanf(string(buf[:n]), "#height:%d,width:%d", &h, &w)
 						}
 
 						m.Go(func() {
@@ -202,7 +202,6 @@ func init() {
 					m.Richs(CONNECT, "", m.Option(kit.MDB_HASH), func(key string, value map[string]interface{}) {
 						client, _ = value[CONNECT].(*ssh.Client)
 					})
-					m.Debug("what %v", client)
 
 					h := m.Rich(SESSION, "", kit.Data(kit.MDB_STATUS, tcp.OPEN, CONNECT, m.Option(kit.MDB_HASH)))
 					if session, e := _ssh_session(m, h, client); m.Assert(e) {

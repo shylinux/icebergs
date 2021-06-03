@@ -1,8 +1,6 @@
 package ice
 
 import (
-	kit "github.com/shylinux/toolkits"
-
 	"fmt"
 	"io"
 	"os"
@@ -10,6 +8,8 @@ import (
 	"sync"
 	"sync/atomic"
 	"time"
+
+	kit "github.com/shylinux/toolkits"
 )
 
 var Info = struct {

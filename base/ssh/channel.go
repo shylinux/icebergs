@@ -55,7 +55,7 @@ func _ssh_watch(m *ice.Message, meta map[string]string, h string, input io.Reade
 				m.Cmdy(mdb.INSERT, CHANNEL, kit.Keys(kit.MDB_HASH, h), mdb.LIST, kit.MDB_TYPE, CMD, kit.MDB_TEXT, cmd)
 				i = 0
 			default:
-				if i += n; i >= 4096 {
+				if i += n; i >= ice.MOD_BUFS {
 					i = 0
 				}
 			}
@@ -80,6 +80,9 @@ func init() {
 					m.Cmdy(mdb.PRUNES, SERVICE, "", mdb.HASH, kit.MDB_STATUS, tcp.ERROR)
 					m.Cmdy(mdb.PRUNES, CHANNEL, "", mdb.HASH, kit.MDB_STATUS, tcp.CLOSE)
 				}},
+				mdb.REPEAT: {Name: "repeat", Help: "执行", Hand: func(m *ice.Message, arg ...string) {
+					m.Cmdy(CHANNEL, kit.MDB_ACTION, ctx.COMMAND, CMD, m.Option(kit.MDB_TEXT))
+				}},
 				ctx.COMMAND: {Name: "command cmd=pwd", Help: "命令", Hand: func(m *ice.Message, arg ...string) {
 					m.Cmdy(mdb.INSERT, CHANNEL, kit.Keys(kit.MDB_HASH, m.Option(kit.MDB_HASH)), mdb.LIST, kit.MDB_TYPE, CMD, kit.MDB_TEXT, m.Option(CMD))
 					m.Richs(CHANNEL, "", m.Option(kit.MDB_HASH), func(key string, value map[string]interface{}) {
@@ -88,9 +91,6 @@ func init() {
 						}
 					})
 					m.ProcessRefresh("300ms")
-				}},
-				"repeat": {Name: "repeat", Help: "执行", Hand: func(m *ice.Message, arg ...string) {
-					m.Cmdy(CHANNEL, kit.MDB_ACTION, ctx.COMMAND, CMD, m.Option("text"))
 				}},
 			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 				if len(arg) == 0 { // 通道列表
@@ -106,7 +106,7 @@ func init() {
 				// 通道命令
 				m.Fields(len(arg) == 1, "time,id,type,text")
 				m.Cmdy(mdb.SELECT, CHANNEL, kit.Keys(kit.MDB_HASH, arg[0]), mdb.LIST, kit.MDB_ID, arg[1:])
-				m.PushAction("repeat")
+				m.PushAction(mdb.REPEAT)
 			}},
 		},
 	})

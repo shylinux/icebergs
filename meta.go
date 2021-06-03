@@ -1,14 +1,14 @@
 package ice
 
 import (
-	kit "github.com/shylinux/toolkits"
-
 	"bytes"
 	"encoding/csv"
 	"fmt"
 	"sort"
 	"strconv"
 	"strings"
+
+	kit "github.com/shylinux/toolkits"
 )
 
 func (m *Message) Add(key string, arg ...string) *Message {

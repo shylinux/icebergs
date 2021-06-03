@@ -80,8 +80,8 @@ func init() {
 					})
 					m.ProcessRefresh("300ms")
 				}},
-				"repeat": {Name: "repeat", Help: "执行", Hand: func(m *ice.Message, arg ...string) {
-					m.Cmdy(SESSION, kit.MDB_ACTION, ctx.COMMAND, CMD, m.Option("text"))
+				mdb.REPEAT: {Name: "repeat", Help: "执行", Hand: func(m *ice.Message, arg ...string) {
+					m.Cmdy(SESSION, kit.MDB_ACTION, ctx.COMMAND, CMD, m.Option(kit.MDB_TEXT))
 				}},
 			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 				if len(arg) == 0 {
@@ -97,7 +97,7 @@ func init() {
 				m.Fields(len(arg) == 1, "time,id,type,text")
 				m.Cmdy(mdb.SELECT, SESSION, kit.Keys(kit.MDB_HASH, arg[0]), mdb.LIST, kit.MDB_ID, arg[1:])
 				m.Table(func(index int, value map[string]string, head []string) {
-					m.PushButton(kit.Select("", "repeat", value["type"] == "cmd"))
+					m.PushButton(kit.Select("", mdb.REPEAT, value[kit.MDB_TYPE] == CMD))
 				})
 			}},
 		},

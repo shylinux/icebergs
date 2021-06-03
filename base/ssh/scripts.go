@@ -104,8 +104,6 @@ type Frame struct {
 	last  string
 	ps1   []string
 	ps2   []string
-
-	exit bool
 }
 
 func (f *Frame) prompt(m *ice.Message, list ...string) *Frame {
@@ -238,7 +236,7 @@ func (f *Frame) parse(m *ice.Message, line string) string {
 	return ""
 }
 func (f *Frame) scan(m *ice.Message, h, line string) *Frame {
-	m.Option(kit.Keycb(RETURN), func() { f.exit = true })
+	m.Option(kit.Keycb(RETURN), func() { f.close() })
 	f.ps1 = kit.Simple(m.Confv(PROMPT, kit.Keym(PS1)))
 	f.ps2 = kit.Simple(m.Confv(PROMPT, kit.Keym(PS2)))
 	ps := f.ps1
@@ -246,7 +244,7 @@ func (f *Frame) scan(m *ice.Message, h, line string) *Frame {
 	m.Sleep("300ms")
 	m.I, m.O = f.stdin, f.stdout
 	bio := bufio.NewScanner(f.stdin)
-	for f.prompt(m, ps...); bio.Scan() && !f.exit; f.prompt(m, ps...) {
+	for f.prompt(m, ps...); bio.Scan() && f.stdin != nil; f.prompt(m, ps...) {
 		if h == STDIO && len(bio.Text()) == 0 {
 			continue // 空行
 		}
@@ -255,6 +253,9 @@ func (f *Frame) scan(m *ice.Message, h, line string) *Frame {
 		f.count++
 
 		if len(bio.Text()) == 0 {
+			if strings.Count(line, "`")%2 == 1 {
+				line += "\n"
+			}
 			continue // 空行
 		}
 
@@ -279,6 +280,14 @@ func (f *Frame) scan(m *ice.Message, h, line string) *Frame {
 		line = f.parse(m, line)
 	}
 	return f
+}
+func (f *Frame) close() {
+	fmt.Printf("what %v\n", 123)
+	if stdin, ok := f.stdin.(io.Closer); ok {
+		stdin.Close()
+		f.stdin = nil
+		fmt.Printf("what %v\n", 123)
+	}
 }
 
 func (f *Frame) Begin(m *ice.Message, arg ...string) ice.Server {
@@ -350,9 +359,8 @@ const (
 	TARGET = "target"
 	PROMPT = "prompt"
 	PRINTF = "printf"
-	RETURN = "return"
-
 	SCREEN = "screen"
+	RETURN = "return"
 )
 
 func init() {
@@ -366,8 +374,8 @@ func init() {
 		},
 		Commands: map[string]*ice.Command{
 			SOURCE: {Name: "source hash id limit offend auto", Help: "脚本解析", Action: map[string]*ice.Action{
-				"repeat": {Name: "repeat", Help: "执行", Hand: func(m *ice.Message, arg ...string) {
-					m.Cmdy(SCREEN, m.Option("text"))
+				mdb.REPEAT: {Name: "repeat", Help: "执行", Hand: func(m *ice.Message, arg ...string) {
+					m.Cmdy(SCREEN, m.Option(kit.MDB_TEXT))
 					m.ProcessInner()
 				}},
 			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
@@ -392,7 +400,7 @@ func init() {
 				// 命令列表
 				m.Fields(len(arg) == 1 || arg[1] == "", "time,id,text")
 				m.Cmdy(mdb.SELECT, SOURCE, kit.Keys(kit.MDB_HASH, arg[0]), mdb.LIST, kit.MDB_ID, arg[1:])
-				m.PushAction("repeat")
+				m.PushAction(mdb.REPEAT)
 			}},
 			TARGET: {Name: "target name 执行:button", Help: "当前模块", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 				f := m.Target().Server().(*Frame)

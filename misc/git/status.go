@@ -59,7 +59,7 @@ func _status_list(m *ice.Message) (files, adds, dels int, last time.Time) {
 		for _, v := range strings.Split(strings.TrimSpace(diff), "\n") {
 			vs := strings.SplitN(strings.TrimSpace(v), " ", 2)
 			switch kit.Ext(vs[1]) {
-			case "swp", "bin":
+			case "swp", "swo", "bin":
 				continue
 			}
 

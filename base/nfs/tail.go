@@ -66,9 +66,9 @@ func init() {
 					m.ProcessRewrite("offend", offend)
 				}},
 			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-				m.Option(mdb.FIELDS, kit.Select("time,hash,count,name,file", kit.Select("time,id,file,text", mdb.DETAIL, len(arg) > 1 && arg[1] != ""), len(arg) > 0))
+				m.Fields(true, kit.Select("time,hash,count,name,file", "time,id,file,text", len(arg) > 1 && arg[1] != ""))
+				m.Option(mdb.CACHE_OFFEND, kit.Select("0", arg, 3))
 				m.Option(mdb.CACHE_LIMIT, kit.Select("10", arg, 2))
-				m.Option("cache.offend", kit.Select("0", arg, 3))
 
 				if m.Cmdy(mdb.SELECT, TAIL, "", mdb.ZONE, arg); len(arg) == 0 {
 					m.PushAction(mdb.REMOVE)

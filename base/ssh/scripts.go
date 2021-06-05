@@ -12,6 +12,7 @@ import (
 
 	ice "github.com/shylinux/icebergs"
 	"github.com/shylinux/icebergs/base/aaa"
+	"github.com/shylinux/icebergs/base/ctx"
 	"github.com/shylinux/icebergs/base/mdb"
 	"github.com/shylinux/icebergs/base/nfs"
 	kit "github.com/shylinux/toolkits"
@@ -28,8 +29,8 @@ func Render(msg *ice.Message, cmd string, args ...interface{}) string {
 		res := msg.Result()
 
 		// 输出结果
-		if fmt.Fprint(msg.O, res); !strings.HasSuffix(res, "\n") {
-			fmt.Fprint(msg.O, "\n")
+		if fmt.Fprint(msg.O, res); !strings.HasSuffix(res, ice.MOD_NL) {
+			fmt.Fprint(msg.O, ice.MOD_NL)
 		}
 		return res
 
@@ -41,8 +42,8 @@ func Render(msg *ice.Message, cmd string, args ...interface{}) string {
 		}
 
 		// 输出结果
-		if fmt.Fprint(msg.O, res); !strings.HasSuffix(res, "\n") {
-			fmt.Fprint(msg.O, "\n")
+		if fmt.Fprint(msg.O, res); !strings.HasSuffix(res, ice.MOD_NL) {
+			fmt.Fprint(msg.O, ice.MOD_NL)
 		}
 		return res
 	}
@@ -167,7 +168,7 @@ func (f *Frame) option(m *ice.Message, ls []string) []string {
 }
 func (f *Frame) change(m *ice.Message, ls []string) []string {
 	if len(ls) == 1 && ls[0] == "~" { // 模块列表
-		ls = []string{"context"}
+		ls = []string{ctx.CONTEXT}
 
 	} else if len(ls) > 0 && strings.HasPrefix(ls[0], "~") { // 切换模块
 		target := ls[0][1:]
@@ -282,11 +283,9 @@ func (f *Frame) scan(m *ice.Message, h, line string) *Frame {
 	return f
 }
 func (f *Frame) close() {
-	fmt.Printf("what %v\n", 123)
 	if stdin, ok := f.stdin.(io.Closer); ok {
 		stdin.Close()
 		f.stdin = nil
-		fmt.Printf("what %v\n", 123)
 	}
 }
 
@@ -406,18 +405,15 @@ func init() {
 				f := m.Target().Server().(*Frame)
 				m.Search(arg[0]+".", func(p *ice.Context, s *ice.Context, key string) { f.target = s })
 				f.prompt(m)
-				m.Echo(arg[0])
 			}},
 			PROMPT: {Name: "prompt arg 执行:button", Help: "命令提示", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 				f := m.Target().Server().(*Frame)
 				f.ps1 = arg
 				f.prompt(m)
-				m.Echo(arg[0])
 			}},
 			PRINTF: {Name: "printf 执行:button text:textarea", Help: "输出显示", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 				f := m.Target().Server().(*Frame)
 				f.printf(m, arg[0])
-				m.Echo(arg[0])
 			}},
 			SCREEN: {Name: "screen 执行:button text:textarea", Help: "输出命令", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 				f := m.Target().Server().(*Frame)

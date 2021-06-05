@@ -7,11 +7,10 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/skip2/go-qrcode"
-
 	ice "github.com/shylinux/icebergs"
 	"github.com/shylinux/icebergs/base/aaa"
 	kit "github.com/shylinux/toolkits"
+	"github.com/skip2/go-qrcode"
 )
 
 var _trans_web = map[string]color.Color{
@@ -126,7 +125,7 @@ func init() {
 				m.Option(FG, kit.Select(BLUE, arg, 1))
 
 				if aaa.SessIsCli(m) {
-					_qrcode_cli(m, kit.Select(m.Conf("web.share", kit.Keym(kit.MDB_DOMAIN)), arg))
+					_qrcode_cli(m, kit.Select(m.Conf("web.share", kit.Keym(kit.MDB_DOMAIN)), arg, 0))
 				} else {
 					_qrcode_web(m, kit.Select(m.Option(ice.MSG_USERWEB), arg, 0))
 				}

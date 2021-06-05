@@ -57,7 +57,7 @@ func init() {
 				}},
 			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 				if len(arg) == 0 {
-					m.Option(mdb.FIELDS, "time,hash,file,from")
+					m.Fields(len(arg) == 0, "time,hash,file,from")
 					m.Cmdy(mdb.SELECT, TRASH, "", mdb.HASH)
 					m.PushAction(mdb.REVERT, mdb.REMOVE)
 					return

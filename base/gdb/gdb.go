@@ -48,6 +48,7 @@ const (
 	BUILD = "build"
 	SPAWN = "spawn"
 	START = "start"
+	ERROR = "error"
 	STOP  = "stop"
 
 	STATUS  = "status"

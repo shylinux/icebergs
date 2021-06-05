@@ -114,9 +114,16 @@ func _hash_prunes(m *ice.Message, prefix, chain string, arg ...string) {
 		if val[kit.MDB_META] != nil {
 			val = val[kit.MDB_META].(map[string]interface{})
 		}
-		for i := 0; i < len(arg)-1; i += 2 {
-			if val[arg[i]] != arg[i+1] {
+		switch cb := m.Optionv(kit.Keycb(PRUNES)).(type) {
+		case func(string, map[string]interface{}) bool:
+			if !cb(key, val) {
 				return
+			}
+		default:
+			for i := 0; i < len(arg)-1; i += 2 {
+				if val[arg[i]] != arg[i+1] {
+					return
+				}
 			}
 		}
 		m.Push(key, val, fields)
@@ -170,9 +177,6 @@ func _list_select(m *ice.Message, prefix, chain, field, value string) {
 			}
 		}
 	})
-	// if m.Option(FIELDS) != DETAIL {
-	// 	m.SortIntR(kit.MDB_ID)
-	// }
 }
 func _list_modify(m *ice.Message, prefix, chain string, field, value string, arg ...string) {
 	m.Grows(prefix, chain, field, value, func(index int, val map[string]interface{}) {

@@ -25,7 +25,7 @@ func _timer_action(m *ice.Message, arg ...string) {
 			m.Logs(TIMER, kit.MDB_KEY, key, ORDER, order)
 
 			msg := m.Cmd(value[kit.SSH_CMD])
-			m.Grow(TIMER, kit.Keys(kit.MDB_HASH, key), kit.Dict("res", msg.Result()))
+			m.Grow(TIMER, kit.Keys(kit.MDB_HASH, key), kit.Dict(kit.SSH_RES, msg.Result()))
 			if value[ORDER] = kit.Format(order - 1); order > 1 {
 				value[NEXT] = msg.Time(value[INTERVAL])
 			}

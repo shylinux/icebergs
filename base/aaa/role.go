@@ -104,18 +104,6 @@ func init() {
 		},
 		Commands: map[string]*ice.Command{
 			ROLE: {Name: "role role auto create", Help: "角色", Action: map[string]*ice.Action{
-				BLACK: {Name: "black role chain...", Help: "黑名单", Hand: func(m *ice.Message, arg ...string) {
-					_role_black(m, arg[0], strings.ReplaceAll(kit.Keys(arg[1:]), "/", "."), true)
-				}},
-				WHITE: {Name: "white role chain...", Help: "白名单", Hand: func(m *ice.Message, arg ...string) {
-					_role_white(m, arg[0], strings.ReplaceAll(kit.Keys(arg[1:]), "/", "."), true)
-				}},
-				RIGHT: {Name: "right role chain...", Help: "查看权限", Hand: func(m *ice.Message, arg ...string) {
-					if _role_right(m, arg[0], kit.Split(strings.ReplaceAll(kit.Keys(arg[1:]), "/", "."), ".")...) {
-						m.Echo(ice.OK)
-					}
-				}},
-
 				mdb.CREATE: {Name: "create role=void,tech zone=white,black key=", Help: "添加", Hand: func(m *ice.Message, arg ...string) {
 					m.Richs(ROLE, nil, m.Option(ROLE), func(key string, value map[string]interface{}) {
 						list := value[m.Option(kit.MDB_ZONE)].(map[string]interface{})
@@ -129,6 +117,18 @@ func init() {
 						m.Log_REMOVE(ROLE, m.Option(ROLE), list[m.Option(kit.MDB_KEY)])
 						delete(list, m.Option(kit.MDB_KEY))
 					})
+				}},
+
+				BLACK: {Name: "black role chain...", Help: "黑名单", Hand: func(m *ice.Message, arg ...string) {
+					_role_black(m, arg[0], strings.ReplaceAll(kit.Keys(arg[1:]), "/", "."), true)
+				}},
+				WHITE: {Name: "white role chain...", Help: "白名单", Hand: func(m *ice.Message, arg ...string) {
+					_role_white(m, arg[0], strings.ReplaceAll(kit.Keys(arg[1:]), "/", "."), true)
+				}},
+				RIGHT: {Name: "right role chain...", Help: "查看权限", Hand: func(m *ice.Message, arg ...string) {
+					if _role_right(m, arg[0], kit.Split(strings.ReplaceAll(kit.Keys(arg[1:]), "/", "."), ".")...) {
+						m.Echo(ice.OK)
+					}
 				}},
 			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 				if len(arg) < 2 { // 角色列表

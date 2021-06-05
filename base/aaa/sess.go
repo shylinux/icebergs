@@ -41,6 +41,9 @@ func SessCheck(m *ice.Message, sessid string) {
 	_sess_check(m, sessid)
 }
 func SessCreate(m *ice.Message, username string) string {
+	if username == "" {
+		return ""
+	}
 	return m.Option(ice.MSG_SESSID, _sess_create(m, username))
 }
 func SessIsCli(m *ice.Message) bool {
@@ -68,23 +71,21 @@ func init() {
 		Commands: map[string]*ice.Command{
 			SESS: {Name: "sess hash auto prunes", Help: "会话", Action: map[string]*ice.Action{
 				mdb.REMOVE: {Name: "remove", Help: "删除", Hand: func(m *ice.Message, arg ...string) {
-					m.Option(mdb.FIELDS, "time,username,userrole,ip,ua")
+					m.Option(mdb.FIELDS, "time,hash,username,userrole,ip,ua")
 					m.Cmdy(mdb.DELETE, SESS, "", mdb.HASH, kit.MDB_HASH, m.Option(kit.MDB_HASH))
 				}},
 				mdb.PRUNES: {Name: "prunes before@date", Help: "清理", Hand: func(m *ice.Message, arg ...string) {
-					list := []string{}
-					m.Richs(SESS, "", kit.MDB_FOREACH, func(key string, value map[string]interface{}) {
+					m.Option(mdb.FIELDS, "time,hash,username,userrole,ip,ua")
+					m.Cmd(mdb.PRUNES, SESS, "", mdb.HASH, func(key string, value map[string]interface{}) bool {
 						if value = kit.GetMeta(value); kit.Time(kit.Format(value[kit.MDB_TIME])) < kit.Time(m.Option("before")) {
-							list = append(list, key)
+							m.Push(key, value, kit.Split(m.Option(mdb.FIELDS)))
+							return true
 						}
+						return false
 					})
-					m.Option(mdb.FIELDS, "time,username,userrole,ip,ua")
-					for _, v := range list {
-						m.Cmdy(mdb.DELETE, SESS, "", mdb.HASH, kit.MDB_HASH, v)
-					}
 				}},
 			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-				m.Fields(len(arg) == 0, "time,hash,username,userrole")
+				m.Fields(len(arg) == 0, "time,hash,username,userrole,ip")
 				m.Cmdy(mdb.SELECT, SESS, "", mdb.HASH, kit.MDB_HASH, arg)
 				m.PushAction(mdb.REMOVE)
 			}},

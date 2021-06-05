@@ -1,9 +1,10 @@
 package gdb
 
 import (
-	"strings"
+	"path"
 
 	ice "github.com/shylinux/icebergs"
+	"github.com/shylinux/icebergs/base/ctx"
 	"github.com/shylinux/icebergs/base/mdb"
 	kit "github.com/shylinux/toolkits"
 )
@@ -34,6 +35,7 @@ func init() {
 				}},
 				mdb.PRUNES: {Name: "prunes", Help: "清理", Hand: func(m *ice.Message, arg ...string) {
 					m.Option(mdb.FIELDS, "time,hash,status,fileline")
+					m.Cmdy(mdb.PRUNES, ROUTINE, "", mdb.HASH, kit.MDB_STATUS, ERROR)
 					m.Cmdy(mdb.PRUNES, ROUTINE, "", mdb.HASH, kit.MDB_STATUS, STOP)
 				}},
 
@@ -43,15 +45,9 @@ func init() {
 						m.Cmdy(INNER, arg[1:])
 					default:
 						ls := kit.Split(m.Option("fileline"), ":")
-						switch kit.Split(ls[0], "/")[0] {
-						case "usr":
-							ls[0] = strings.TrimPrefix(ls[0], "usr/icebergs/")
-						case "icebergs":
-							ls[0] = strings.TrimPrefix(ls[0], "icebergs/")
-						}
-
-						m.ShowPlugin("", INNER, kit.SSH_RUN)
-						m.Push("args", kit.Format([]string{"usr/icebergs/", ls[0], ls[1]}))
+						m.ProcessField(INNER, kit.SSH_RUN)
+						m.Option(kit.SSH_ARG, kit.Format([]string{path.Dir(ls[0]), path.Base(ls[0]), ls[1]}))
+						m.Cmdy(ctx.COMMAND, INNER)
 					}
 				}},
 			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {

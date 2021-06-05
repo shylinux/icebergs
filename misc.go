@@ -361,3 +361,13 @@ func (m *Message) OptionLoad(file string) *Message {
 	}
 	return m
 }
+
+func (m *Message) Confi(key string, sub string) int {
+	return kit.Int(m.Conf(key, sub))
+}
+func (m *Message) Capi(key string, val ...interface{}) int {
+	if len(val) > 0 {
+		m.Cap(key, kit.Int(m.Cap(key))+kit.Int(val[0]))
+	}
+	return kit.Int(m.Cap(key))
+}

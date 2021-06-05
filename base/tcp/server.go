@@ -77,7 +77,7 @@ func init() {
 								break
 							}
 
-							b := make([]byte, 4096)
+							b := make([]byte, ice.MOD_BUFS)
 							if n, e := c.Read(b); e == nil {
 								m.Info("nonce", string(b[:n]))
 								c.Write(b[:n])

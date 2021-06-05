@@ -86,18 +86,9 @@ func init() {
 			DAEMON: {Name: DAEMON, Help: "守护进程", Value: kit.Data(kit.MDB_PATH, path.Join(ice.USR_LOCAL, DAEMON))},
 		},
 		Commands: map[string]*ice.Command{
-			ice.CTX_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			}},
+			ice.CTX_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {}},
 			ice.CTX_EXIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-				list := []string{}
-				m.Richs(DAEMON, "", kit.MDB_FOREACH, func(key string, value map[string]interface{}) {
-					if value = kit.GetMeta(value); kit.Value(value, mdb.CACHE_CLEAR_ON_EXIT) == ice.TRUE {
-						list = append(list, key)
-					}
-				})
-				for _, k := range list {
-					m.Conf(DAEMON, kit.Keys(kit.MDB_HASH, k), "")
-				}
+				m.Cmd(mdb.PRUNES, DAEMON, "", mdb.HASH, mdb.CACHE_CLEAR_ON_EXIT, ice.TRUE)
 			}},
 
 			DAEMON: {Name: "daemon hash auto start prunes", Help: "守护进程", Action: map[string]*ice.Action{
@@ -107,10 +98,9 @@ func init() {
 					m.Cmdy(DAEMON, START)
 				}},
 				START: {Name: "start cmd env dir", Help: "添加", Hand: func(m *ice.Message, arg ...string) {
-					m.Option(CMD_TYPE, DAEMON)
 					m.Option(CMD_DIR, m.Option(DIR))
 					m.Option(CMD_ENV, kit.Split(m.Option(ENV), " ="))
-					m.Cmdy(SYSTEM, kit.Split(m.Option(CMD)))
+					m.Cmdy(DAEMON, kit.Split(m.Option(CMD)))
 				}},
 				STOP: {Name: "stop", Help: "停止", Hand: func(m *ice.Message, arg ...string) {
 					m.Option(mdb.FIELDS, "time,hash,status,pid,cmd,dir,env")
@@ -130,8 +120,7 @@ func init() {
 			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 				if len(arg) == 0 { // 进程列表
 					m.Fields(len(arg) == 0, "time,hash,status,pid,cmd,dir,env")
-					m.Cmdy(mdb.SELECT, DAEMON, "", mdb.HASH)
-					m.Table(func(index int, value map[string]string, head []string) {
+					m.Cmdy(mdb.SELECT, DAEMON, "", mdb.HASH).Table(func(index int, value map[string]string, head []string) {
 						switch value[kit.MDB_STATUS] {
 						case START:
 							m.PushButton(RESTART, STOP)

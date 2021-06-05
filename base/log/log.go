@@ -21,7 +21,7 @@ func (f *Frame) Spawn(m *ice.Message, c *ice.Context, arg ...string) ice.Server 
 	return &Frame{}
 }
 func (f *Frame) Begin(m *ice.Message, arg ...string) ice.Server {
-	f.p = make(chan *Log, 4096)
+	f.p = make(chan *Log, ice.MOD_BUFS)
 	ice.Log = func(msg *ice.Message, p, l, s string) {
 		f.p <- &Log{m: msg, p: p, l: l, s: s}
 	}
@@ -40,17 +40,17 @@ func (f *Frame) Start(m *ice.Message, arg ...string) bool {
 			bio := m.Confv(FILE, kit.Keys(file, FILE)).(*bufio.Writer)
 
 			bio.WriteString(l.p)
-			bio.WriteString(" ")
+			bio.WriteString(ice.MOD_SP)
 			if p, ok := view[PREFIX].(string); ok {
 				bio.WriteString(p)
 			}
 			bio.WriteString(l.l)
-			bio.WriteString(" ")
+			bio.WriteString(ice.MOD_SP)
 			bio.WriteString(l.s)
 			if p, ok := view[SUFFIX].(string); ok {
 				bio.WriteString(p)
 			}
-			bio.WriteString("\n")
+			bio.WriteString(ice.MOD_NL)
 			bio.Flush()
 		}
 	}

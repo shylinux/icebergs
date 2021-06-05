@@ -1,7 +1,7 @@
 package yac
 
 import (
-	"github.com/shylinux/icebergs"
+	ice "github.com/shylinux/icebergs"
 )
 
 const YAC = "yac"

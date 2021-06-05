@@ -37,7 +37,7 @@ func init() {
 				}},
 			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 				if len(arg) == 0 { // 事件列表
-					m.Option(mdb.FIELDS, "time,event,count")
+					m.Fields(len(arg) == 0, "time,event,count")
 					m.Cmdy(mdb.SELECT, EVENT, "", mdb.HASH)
 					m.PushAction(ACTION, mdb.REMOVE)
 					return

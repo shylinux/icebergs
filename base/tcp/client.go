@@ -73,7 +73,7 @@ func init() {
 						m.Assert(e)
 						cb(c)
 					case func(net.Conn, []byte, error):
-						b := make([]byte, 4096)
+						b := make([]byte, ice.MOD_BUFS)
 						for {
 							n, e := c.Read(b)
 							if cb(c, b[:n], e); e != nil {

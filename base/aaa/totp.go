@@ -69,7 +69,7 @@ func init() {
 					m.Cmd(mdb.INSERT, TOTP, "", mdb.HASH, kit.MDB_NAME, m.Option(kit.MDB_NAME),
 						SECRET, m.Option(SECRET), PERIOD, m.Option(PERIOD), NUMBER, m.Option(NUMBER),
 					)
-					m.ProcessRefresh("1ms")
+					m.ProcessRefresh("30ms")
 				}},
 				mdb.REMOVE: {Name: "remove", Help: "删除", Hand: func(m *ice.Message, arg ...string) {
 					m.Cmdy(mdb.DELETE, TOTP, "", mdb.HASH, kit.MDB_NAME, m.Option(kit.MDB_NAME))

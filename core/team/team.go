@@ -14,7 +14,9 @@ var Index = &ice.Context{Name: TEAM, Help: "团队中心",
 			m.Cmd(mdb.SEARCH, mdb.CREATE, TASK, m.Prefix(TASK))
 			m.Load()
 		}},
-		ice.CTX_EXIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) { m.Save() }},
+		ice.CTX_EXIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			m.Save()
+		}},
 	},
 }
 

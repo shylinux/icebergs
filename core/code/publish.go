@@ -142,7 +142,6 @@ echo "hello world"
 			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 				m.Option(nfs.DIR_ROOT, m.Conf(PUBLISH, kit.META_PATH))
 				m.Cmdy(nfs.DIR, kit.Select("", arg, 0), "time,size,path,link")
-				m.PushAction(mdb.REMOVE)
 			}},
 		},
 	})

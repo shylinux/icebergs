@@ -146,6 +146,9 @@ func Render(m *Message, cmd string, args ...interface{}) string {
 		return fmt.Sprintf(`<a href="%s" target="_blank">%s</a>`, kit.Select(arg[0], arg, 1), arg[0])
 
 	case RENDER_BUTTON: // name...
+		if m._cmd == nil || m._cmd.Meta == nil {
+			return ""
+		}
 		list := []string{}
 		for _, k := range kit.Split(strings.Join(arg, ",")) {
 			list = append(list, fmt.Sprintf(`<input type="button" name="%s" value="%s">`,

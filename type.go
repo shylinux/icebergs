@@ -532,10 +532,12 @@ func (m *Message) Travel(cb interface{}) *Message {
 			}
 			sort.Strings(ls)
 
-			for _, k := range ls {
-				// 遍历命令
+			target := m.target
+			for _, k := range ls { // 命令列表
+				m.target = list[i]
 				cb(list[i].context, list[i], k, list[i].Commands[k])
 			}
+			m.target = target
 		case func(*Context, *Context, string, *Config):
 			ls := []string{}
 			for k := range list[i].Configs {
@@ -543,8 +545,7 @@ func (m *Message) Travel(cb interface{}) *Message {
 			}
 			sort.Strings(ls)
 
-			for _, k := range ls {
-				// 遍历配置
+			for _, k := range ls { // 配置列表
 				cb(list[i].context, list[i], k, list[i].Configs[k])
 			}
 		}
@@ -555,8 +556,7 @@ func (m *Message) Travel(cb interface{}) *Message {
 		}
 		sort.Strings(ls)
 
-		// 遍历递进
-		for _, k := range ls {
+		for _, k := range ls { // 遍历递进
 			list = append(list, list[i].contexts[k])
 		}
 	}

@@ -102,7 +102,7 @@ func init() {
 			SHARE: {Name: SHARE, Help: "共享链", Value: kit.Data(kit.MDB_EXPIRE, "72h")},
 		},
 		Commands: map[string]*ice.Command{
-			SHARE: {Name: "share hash auto", Help: "共享链", Action: map[string]*ice.Action{
+			SHARE: {Name: "share hash auto prunes", Help: "共享链", Action: map[string]*ice.Action{
 				mdb.CREATE: {Name: "create type name text", Help: "创建", Hand: func(m *ice.Message, arg ...string) {
 					m.Cmdy(mdb.INSERT, SHARE, "", mdb.HASH, kit.MDB_TIME, m.Time(m.Conf(SHARE, kit.Keym(kit.MDB_EXPIRE))),
 						aaa.USERROLE, m.Option(ice.MSG_USERROLE), aaa.USERNAME, m.Option(ice.MSG_USERNAME),
@@ -119,6 +119,18 @@ func init() {
 					m.Cmdy(mdb.SELECT, SHARE, "", mdb.HASH, kit.MDB_HASH, m.Option(kit.MDB_HASH))
 				}},
 				mdb.INPUTS: {Name: "inputs", Help: "补全", Hand: func(m *ice.Message, arg ...string) {}},
+				mdb.PRUNES: {Name: "prunes before@date", Help: "清理", Hand: func(m *ice.Message, arg ...string) {
+					list := []string{}
+					m.Richs(SHARE, "", kit.MDB_FOREACH, func(key string, value map[string]interface{}) {
+						if value = kit.GetMeta(value); kit.Time(kit.Format(value[kit.MDB_TIME])) < kit.Time(m.Option("before")) {
+							list = append(list, key)
+						}
+					})
+					m.Option(mdb.FIELDS, "time,userrole,username,river,storm,type,name,text")
+					for _, v := range list {
+						m.Cmdy(mdb.DELETE, SHARE, "", mdb.HASH, kit.MDB_HASH, v)
+					}
+				}},
 
 				LOGIN: {Name: "login userrole=void,tech username", Help: "登录", Hand: func(m *ice.Message, arg ...string) {
 					m.EchoQRCode(kit.MergeURL(_share_domain(m),
@@ -140,9 +152,9 @@ func init() {
 
 					m.PushAnchor(link)
 					m.PushScript("shell", link)
-					m.PushQRCode("qrcode", link)
+					m.PushQRCode("scan", link)
 				} else {
-					m.Option("_action", "login")
+					m.Action(LOGIN)
 				}
 			}},
 			"/share/": {Name: "/share/", Help: "共享链", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {

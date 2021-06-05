@@ -115,6 +115,12 @@ func _dir_show(m *ice.Message, root string, name string, level int, deep bool, d
 					}
 
 					m.Push(kit.MDB_HASH, kit.Select(hex.EncodeToString(h[:6]), hex.EncodeToString(h[:]), field == kit.MDB_HASH))
+				case kit.MDB_ACTION:
+					if !f.IsDir() && !aaa.SessIsCli(m) {
+						m.PushButton(TRASH)
+					} else {
+						m.Push(field, "")
+					}
 				default:
 					m.Push(field, "")
 				}
@@ -194,13 +200,8 @@ func init() {
 				}
 				_dir_show(m, kit.Select("./", m.Option(DIR_ROOT)), arg[0],
 					0, m.Options(DIR_DEEP), kit.Select(TYPE_BOTH, m.Option(DIR_TYPE)), kit.Regexp(m.Option(DIR_REG)),
-					kit.Split(kit.Select("time,size,path", strings.Join(arg[1:], ","))))
+					kit.Split(kit.Select("time,size,path,action", strings.Join(arg[1:], ","))))
 				m.SortTimeR(kit.MDB_TIME)
-				if !aaa.SessIsCli(m) {
-					m.Table(func(index int, value map[string]string, head []string) {
-						m.PushButton(kit.Select("", TRASH, !strings.HasSuffix(value[kit.MDB_PATH], "/")))
-					})
-				}
 			}},
 		},
 	})

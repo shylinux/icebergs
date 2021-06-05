@@ -125,12 +125,10 @@ func init() {
 				m.Option(BG, kit.Select(WHITE, arg, 2))
 				m.Option(FG, kit.Select(BLUE, arg, 1))
 
-				if len(arg) == 0 {
-
-				} else if aaa.SessIsCli(m) {
-					_qrcode_cli(m, arg[0])
+				if aaa.SessIsCli(m) {
+					_qrcode_cli(m, kit.Select(m.Conf("web.share", kit.Keym(kit.MDB_DOMAIN)), arg))
 				} else {
-					_qrcode_web(m, arg[0])
+					_qrcode_web(m, kit.Select(m.Option(ice.MSG_USERWEB), arg, 0))
 				}
 			}},
 		},

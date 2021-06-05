@@ -1,6 +1,8 @@
 package ctx
 
 import (
+	"strings"
+
 	ice "github.com/shylinux/icebergs"
 	"github.com/shylinux/icebergs/base/mdb"
 	kit "github.com/shylinux/toolkits"
@@ -35,12 +37,12 @@ func _command_search(m *ice.Message, kind, name, text string) {
 		if key[0] == '/' || key[0] == '_' {
 			return // 内部命令
 		}
-		if name != "" && name != key && name != s.Name {
+		if name != "" && !strings.HasPrefix(key, name) && !strings.Contains(s.Name, name) {
 			return
 		}
 
-		m.PushSearch(kit.SSH_CMD, COMMAND, CONTEXT, m.Prefix(), COMMAND, key,
-			kit.MDB_TYPE, kind, kit.MDB_NAME, key, kit.MDB_TEXT, m.Prefix(),
+		m.PushSearch(kit.SSH_CMD, COMMAND, CONTEXT, s.Cap(ice.CTX_FOLLOW), COMMAND, key,
+			kit.MDB_TYPE, kind, kit.MDB_NAME, key, kit.MDB_TEXT, s.Cap(ice.CTX_FOLLOW),
 		)
 	})
 }

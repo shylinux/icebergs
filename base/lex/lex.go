@@ -36,26 +36,14 @@ type Matrix struct {
 	trans map[byte][]byte
 	state map[State]*State
 	mat   []map[byte]*State
-
-	*ice.Context
-
-	nseed int
-	npage int
-	nhash int
-	nline int
-	nnode int
-	nreal int
 }
 
 func NewMatrix(m *ice.Message, nlang, ncell int) *Matrix {
-	mat := &Matrix{}
-	mat.nlang = nlang
-	mat.ncell = ncell
-
-	mat.page = map[string]int{"nil": 0}
-	mat.hand = map[int]string{0: "nil"}
-	mat.hash = map[string]int{"nil": 0}
-	mat.word = map[int]string{0: "nil"}
+	mat := &Matrix{nlang: nlang, ncell: ncell}
+	mat.page = map[string]int{}
+	mat.hand = map[int]string{}
+	mat.hash = map[string]int{}
+	mat.word = map[int]string{}
 
 	mat.trans = map[byte][]byte{}
 	for k, v := range map[byte]string{
@@ -67,8 +55,6 @@ func NewMatrix(m *ice.Message, nlang, ncell int) *Matrix {
 
 	mat.state = make(map[State]*State)
 	mat.mat = make([]map[byte]*State, nlang)
-
-	mat.nline = nlang
 	return mat
 }
 func (mat *Matrix) char(c byte) []byte {
@@ -85,7 +71,7 @@ func (mat *Matrix) index(m *ice.Message, hash string, h string) int {
 
 	if x, e := strconv.Atoi(h); e == nil {
 		if hash == NPAGE {
-			m.Assert(x <= mat.npage)
+			m.Assert(x <= len(mat.page))
 		} else {
 			mat.hash[h] = x
 		}
@@ -97,15 +83,13 @@ func (mat *Matrix) index(m *ice.Message, hash string, h string) int {
 	}
 
 	if hash == NPAGE {
-		mat.npage++
-		which[h] = mat.npage
+		which[h] = len(mat.page) + 1
 	} else {
-		mat.nhash++
-		which[h] = mat.nhash
+		which[h] = len(mat.hash) + 1
 	}
 
 	names[which[h]] = h
-	m.Assert(hash != NPAGE || mat.npage < mat.nlang)
+	m.Assert(hash != NPAGE || len(mat.page) < mat.nlang)
 	return which[h]
 }
 func (mat *Matrix) train(m *ice.Message, page int, hash int, seed []byte) int {
@@ -114,41 +98,41 @@ func (mat *Matrix) train(m *ice.Message, page int, hash int, seed []byte) int {
 	ss := []int{page}
 	cn := make([]bool, mat.ncell)
 	cc := make([]byte, 0, mat.ncell)
-	sn := make([]bool, mat.nline)
+	sn := make([]bool, len(mat.mat))
 
 	points := []*Point{}
 
-	for p := 0; p < len(seed); p++ {
+	for i := 0; i < len(seed); i++ {
 
-		switch seed[p] {
+		switch seed[i] {
 		case '[':
 			set := true
-			if p++; seed[p] == '^' {
-				set, p = false, p+1
+			if i++; seed[i] == '^' {
+				set, i = false, i+1
 			}
 
-			for ; seed[p] != ']'; p++ {
-				if seed[p] == '\\' {
-					p++
-					for _, c := range mat.char(seed[p]) {
+			for ; seed[i] != ']'; i++ {
+				if seed[i] == '\\' {
+					i++
+					for _, c := range mat.char(seed[i]) {
 						cn[c] = true
 					}
 					continue
 				}
 
-				if seed[p+1] == '-' {
-					begin, end := seed[p], seed[p+2]
+				if seed[i+1] == '-' {
+					begin, end := seed[i], seed[i+2]
 					if begin > end {
 						begin, end = end, begin
 					}
 					for c := begin; c <= end; c++ {
 						cn[c] = true
 					}
-					p += 2
+					i += 2
 					continue
 				}
 
-				cn[seed[p]] = true
+				cn[seed[i]] = true
 			}
 
 			for c := 0; c < len(cn); c++ {
@@ -164,22 +148,22 @@ func (mat *Matrix) train(m *ice.Message, page int, hash int, seed []byte) int {
 			}
 
 		case '\\':
-			p++
-			for _, c := range mat.char(seed[p]) {
+			i++
+			for _, c := range mat.char(seed[i]) {
 				cc = append(cc, c)
 			}
 		default:
-			cc = append(cc, seed[p])
+			cc = append(cc, seed[i])
 		}
 
 		m.Debug("page: \033[31m%d %v\033[0m", len(ss), ss)
 		m.Debug("cell: \033[32m%d %v\033[0m", len(cc), cc)
 
 		flag := '\000'
-		if p+1 < len(seed) {
-			switch flag = rune(seed[p+1]); flag {
+		if i+1 < len(seed) {
+			switch flag = rune(seed[i+1]); flag {
 			case '?', '+', '*':
-				p++
+				i++
 			}
 		}
 
@@ -189,8 +173,6 @@ func (mat *Matrix) train(m *ice.Message, page int, hash int, seed []byte) int {
 				state := &State{}
 				if mat.mat[s][c] != nil {
 					*state = *mat.mat[s][c]
-				} else {
-					mat.nnode++
 				}
 				m.Debug("GET(%d,%d): %v", s, c, state)
 
@@ -205,16 +187,15 @@ func (mat *Matrix) train(m *ice.Message, page int, hash int, seed []byte) int {
 				}
 
 				if state.next == 0 {
+					state.next = len(mat.mat)
 					mat.mat = append(mat.mat, make(map[byte]*State))
 					sn = append(sn, false)
-					state.next = mat.nline
-					mat.nline++
 				}
 				sn[state.next] = true
 
 				mat.mat[s][c] = state
 				points = append(points, &Point{s, c})
-				m.Debug("SET(%d,%d): %v(%d,%d)", s, c, state, mat.nnode, mat.nreal)
+				m.Debug("SET(%d,%d): %v", s, c, state)
 			}
 		}
 
@@ -232,9 +213,9 @@ func (mat *Matrix) train(m *ice.Message, page int, hash int, seed []byte) int {
 		}
 
 		if len(mat.mat[s]) == 0 {
-			last := mat.nline - 1
-			mat.mat, mat.nline = mat.mat[:s], s
-			m.Debug("DEL: %d-%d", last, mat.nline)
+			last := len(mat.mat) - 1
+			mat.mat = mat.mat[:s]
+			m.Debug("DEL: %d-%d", last, len(mat.mat))
 		}
 	}
 
@@ -254,14 +235,13 @@ func (mat *Matrix) train(m *ice.Message, page int, hash int, seed []byte) int {
 
 			if x, ok := mat.state[*state]; !ok {
 				mat.state[*state] = mat.mat[p.s][p.c]
-				mat.nreal++
 			} else {
 				mat.mat[p.s][p.c] = x
 			}
 		}
 	}
 
-	m.Debug("%s %s npage: %v nhash: %v nseed: %v", "train", "lex", mat.npage, mat.nhash, len(mat.seed))
+	m.Debug("%s %s npage: %v nhash: %v nseed: %v", "train", "lex", len(mat.page), len(mat.hash), len(mat.seed))
 	return hash
 }
 func (mat *Matrix) parse(m *ice.Message, page int, line []byte) (hash int, rest []byte, word []byte) {
@@ -342,11 +322,14 @@ func (mat *Matrix) show(m *ice.Message, page string) {
 	for _, i := range nrow {
 		m.Push("0", kit.Select(kit.Format(i), mat.hand[i]))
 		for _, j := range ncol {
-			node := mat.mat[i][byte(j)]
-			if node != nil {
-				m.Push(kit.Format("%c", j), kit.Format("%v", node.next))
-			} else {
+			if node := mat.mat[i][byte(j)]; node == nil {
 				m.Push(kit.Format("%c", j), "")
+			} else {
+				if node.next == 0 {
+					m.Push(kit.Format("%c", j), kit.Format("%v", mat.word[node.hash]))
+				} else {
+					m.Push(kit.Format("%c", j), kit.Format("%v", node.next))
+				}
 			}
 		}
 	}
@@ -385,7 +368,6 @@ var Index = &ice.Context{Name: LEX, Help: "词法模块",
 					if mat.mat[page] == nil {
 						mat.mat[page] = map[byte]*State{}
 					}
-					mat.seed = append(mat.seed, &Seed{page, hash, kit.Format(value[kit.MDB_TEXT])})
 					mat.train(m, page, hash, []byte(kit.Format(value[kit.MDB_TEXT])))
 				})
 				value[MATRIX] = mat
@@ -409,17 +391,14 @@ var Index = &ice.Context{Name: LEX, Help: "词法模块",
 					if mat.mat[page] == nil {
 						mat.mat[page] = map[byte]*State{}
 					}
+					mat.train(m, page, hash, []byte(m.Option(kit.MDB_TEXT)))
 
-					mat.seed = append(mat.seed, &Seed{page, hash, m.Option(kit.MDB_TEXT)})
 					m.Grow(m.Prefix(MATRIX), kit.Keys(kit.MDB_HASH, key), kit.Dict(
 						kit.MDB_TIME, m.Time(), NPAGE, m.Option(NPAGE), NHASH, m.Option(NHASH), kit.MDB_TEXT, m.Option(kit.MDB_TEXT),
 					))
 
-					mat.train(m, page, hash, []byte(m.Option(kit.MDB_TEXT)))
-
-					value[NSEED] = len(mat.seed)
-					value[NPAGE] = len(mat.page) - 1
-					value[NHASH] = len(mat.hash) - 1
+					value[NPAGE] = len(mat.page)
+					value[NHASH] = len(mat.hash)
 				})
 			}},
 			mdb.REMOVE: {Name: "create", Help: "删除", Hand: func(m *ice.Message, arg ...string) {
@@ -442,7 +421,6 @@ var Index = &ice.Context{Name: LEX, Help: "词法模块",
 			m.Richs(m.Prefix(MATRIX), "", arg[0], func(key string, value map[string]interface{}) {
 				value = kit.GetMeta(value)
 				mat, _ := value[MATRIX].(*Matrix)
-				m.Debug("what %#v", mat)
 
 				if len(arg) == 2 { // 词法矩阵
 					mat.show(m, arg[1])
@@ -450,8 +428,8 @@ var Index = &ice.Context{Name: LEX, Help: "词法模块",
 				}
 
 				hash, rest, word := mat.parse(m, mat.index(m, NPAGE, arg[1]), []byte(arg[2]))
-				m.Push("time", m.Time())
-				m.Push("hash", mat.word[hash])
+				m.Push(kit.MDB_TIME, m.Time())
+				m.Push(kit.MDB_HASH, mat.word[hash])
 				m.Push("word", string(word))
 				m.Push("rest", string(rest))
 			})

@@ -83,6 +83,7 @@ func init() {
 					"go", "true", "vim", "true", "js", "true",
 					"conf", "true", "json", "true",
 					"makefile", "true",
+					"yml", "true",
 				),
 			)},
 		},

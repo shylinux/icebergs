@@ -247,6 +247,7 @@ func (m *Message) SortTime(key string)  { m.Sort(key, "time") }
 func (m *Message) SortTimeR(key string) { m.Sort(key, "time_r") }
 
 func (m *Message) FormatMeta() string { return m.Format("meta") }
+func (m *Message) FormatSize() string { return m.Format("size") }
 func (m *Message) RenameAppend(from, to string) {
 	for i, v := range m.meta[MSG_APPEND] {
 		if v == from {

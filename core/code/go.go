@@ -1,17 +1,17 @@
 package code
 
 import (
-	ice "github.com/shylinux/icebergs"
-	"github.com/shylinux/icebergs/base/cli"
-	"github.com/shylinux/icebergs/base/mdb"
-	"github.com/shylinux/icebergs/base/nfs"
-	kit "github.com/shylinux/toolkits"
-
 	"bufio"
 	"os"
 	"path"
 	"strings"
 	"time"
+
+	ice "github.com/shylinux/icebergs"
+	"github.com/shylinux/icebergs/base/cli"
+	"github.com/shylinux/icebergs/base/mdb"
+	"github.com/shylinux/icebergs/base/nfs"
+	kit "github.com/shylinux/toolkits"
 )
 
 func _go_find(m *ice.Message, key string) {
@@ -87,6 +87,7 @@ func init() {
 					m.Cmd(mdb.PLUGIN, mdb.CREATE, k, m.Prefix(k))
 					m.Cmd(mdb.RENDER, mdb.CREATE, k, m.Prefix(k))
 				}
+				LoadPlug(m, GO)
 			}},
 			SUM: {Name: SUM, Help: "版本", Action: map[string]*ice.Action{
 				mdb.PLUGIN: {Hand: func(m *ice.Message, arg ...string) {
@@ -154,18 +155,15 @@ func init() {
 					PREFIX, kit.Dict(
 						"//", COMMENT,
 					),
-					KEYWORD, kit.Dict(
-						"syntax", KEYWORD,
-						"package", KEYWORD,
-						"import", KEYWORD,
-						"option", KEYWORD,
-						"service", KEYWORD,
-						"message", KEYWORD,
-
-						"string", DATATYPE,
-						"int64", DATATYPE,
-						"int32", DATATYPE,
+					"_keyword", kit.Dict(
+						KEYWORD, kit.Simple(
+							"syntax", "option", "package", "import", "service", "message",
+						),
+						DATATYPE, kit.Simple(
+							"string", "int64", "int32",
+						),
 					),
+					KEYWORD, kit.Dict(),
 				),
 			)},
 			MOD: {Name: MOD, Help: "模块", Value: kit.Data(
@@ -173,12 +171,12 @@ func init() {
 					PREFIX, kit.Dict(
 						"//", COMMENT,
 					),
-					KEYWORD, kit.Dict(
-						"module", KEYWORD,
-						"require", KEYWORD,
-						"replace", KEYWORD,
-						"=>", KEYWORD,
+					"_keyword", kit.Dict(
+						KEYWORD, kit.Simple(
+							"module", "require", "replace", "=>",
+						),
 					),
+					KEYWORD, kit.Dict(),
 				),
 			)},
 			GO: {Name: GO, Help: "后端", Value: kit.Data(
@@ -190,59 +188,27 @@ func init() {
 					PREFIX, kit.Dict(
 						"//", COMMENT,
 						"/*", COMMENT,
-						"*", COMMENT,
+						"* ", COMMENT,
 					),
-					KEYWORD, kit.Dict(
-						"package", KEYWORD,
-						"import", KEYWORD,
-						"const", KEYWORD,
-						"func", KEYWORD,
-						"var", KEYWORD,
-						"type", KEYWORD,
-						"struct", KEYWORD,
-						"interface", KEYWORD,
-
-						"if", KEYWORD,
-						"else", KEYWORD,
-						"for", KEYWORD,
-						"range", KEYWORD,
-						"break", KEYWORD,
-						"continue", KEYWORD,
-						"switch", KEYWORD,
-						"case", KEYWORD,
-						"default", KEYWORD,
-						"fallthrough", KEYWORD,
-
-						"go", KEYWORD,
-						"select", KEYWORD,
-						"return", KEYWORD,
-						"defer", KEYWORD,
-
-						"map", DATATYPE,
-						"chan", DATATYPE,
-						"string", DATATYPE,
-						"error", DATATYPE,
-						"bool", DATATYPE,
-						"byte", DATATYPE,
-						"int", DATATYPE,
-						"int64", DATATYPE,
-						"float64", DATATYPE,
-
-						"len", FUNCTION,
-						"cap", FUNCTION,
-						"copy", FUNCTION,
-						"append", FUNCTION,
-						"msg", FUNCTION,
-						"m", FUNCTION,
-
-						"false", STRING,
-						"true", STRING,
-						"nil", STRING,
-						"-1", STRING,
-						"0", STRING,
-						"1", STRING,
-						"2", STRING,
+					"_keyword", kit.Dict(
+						KEYWORD, kit.Simple(
+							"package", "import", "type", "struct", "interface", "const", "var", "func",
+							"if", "else", "for", "range", "break", "continue",
+							"switch", "case", "default", "fallthrough",
+							"go", "select", "defer", "return",
+						),
+						DATATYPE, kit.Simple(
+							"int", "int32", "int64", "float64",
+							"string", "byte", "bool", "error", "chan", "map",
+						),
+						FUNCTION, kit.Simple(
+							"len", "cap", "copy", "append", "msg", "m",
+						),
+						STRING, kit.Simple(
+							"false", "true", "nil", "-1", "0", "1", "2",
+						),
 					),
+					KEYWORD, kit.Dict(),
 				),
 			)},
 		},

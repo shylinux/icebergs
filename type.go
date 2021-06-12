@@ -140,6 +140,9 @@ func (c *Context) Server() Server {
 }
 
 func (c *Context) Register(s *Context, x Server, name ...string) *Context {
+	if s.Name == "" {
+		s.Name = kit.Split(kit.Split(kit.FileLine(2, 3), ":")[0], "/")[1]
+	}
 	for _, n := range name {
 		Name(n, s)
 	}
@@ -388,7 +391,7 @@ func (m *Message) Format(key interface{}) string {
 	case string:
 		switch key {
 		case "cost":
-			return kit.FmtTime(kit.Int64(time.Now().Sub(m.time)))
+			return kit.FmtTime(kit.Int64(time.Since(m.time)))
 		case "meta":
 			return kit.Format(m.meta)
 		case "size":
@@ -695,7 +698,7 @@ func (m *Message) cmd(arg ...interface{}) *Message {
 
 	// 解析命令
 	list := kit.Simple(args...)
-	if len(list) == 0 && m.Hand == false {
+	if len(list) == 0 && !m.Hand {
 		list = m.meta[MSG_DETAIL]
 	}
 	if len(list) == 0 {
@@ -728,7 +731,7 @@ func (m *Message) cmd(arg ...interface{}) *Message {
 	}
 
 	// 系统命令
-	if m.Warn(m.Hand == false, ErrNotFound, list) {
+	if m.Warn(!m.Hand, ErrNotFound, list) {
 		return m.Set(MSG_RESULT).Cmd("cli.system", list)
 	}
 	return m

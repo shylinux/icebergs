@@ -41,6 +41,13 @@ func _inner_show(m *ice.Message, ext, file, dir string, arg ...string) {
 		m.Set(ice.MSG_APPEND)
 	}
 }
+func LoadPlug(m *ice.Message, language string) {
+	m.Confm(language, kit.Keym(PLUG, "_keyword"), func(key string, value interface{}) {
+		for _, v := range kit.Simple(value) {
+			m.Conf(language, kit.Keym(PLUG, KEYWORD, v), key)
+		}
+	})
+}
 
 const (
 	COMMENT  = "comment"
@@ -102,9 +109,11 @@ func init() {
 					"css", "true", "html", "true",
 					"txt", "true", "url", "true",
 					"log", "true", "err", "true",
+					"yml", "true",
 
 					"md", "true", "license", "true", "makefile", "true",
 					"ini", "true", "conf", "true", "toml", "true", "yaml", "true",
+					"sql", "true",
 				),
 				"plug", kit.Dict(
 					"s", kit.Dict(
@@ -136,6 +145,9 @@ func init() {
 						SUFFIX, kit.Dict("{", COMMENT),
 					),
 					"yaml", kit.Dict(
+						PREFIX, kit.Dict("#", COMMENT),
+					),
+					"yml", kit.Dict(
 						PREFIX, kit.Dict("#", COMMENT),
 					),
 

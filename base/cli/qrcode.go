@@ -2,6 +2,7 @@ package cli
 
 import (
 	"encoding/base64"
+	"fmt"
 	"image/color"
 	"math/rand"
 	"strconv"
@@ -91,6 +92,21 @@ func _qrcode_web(m *ice.Message, text string, arg ...string) {
 		m.Echo(`<img src="data:image/png;base64,%s" title='%s'>`, base64.StdEncoding.EncodeToString(data), text)
 	}
 }
+
+func Color(m *ice.Message, c string, str string) string {
+	wrap, color := `<span style="color:%s">%s</span>`, c
+	if aaa.SessIsCli(m) {
+		wrap, color = "\033[3%sm%s\033[0m", map[string]string{
+			BLACK: "0",
+			RED:   "1", GREEN: "2", YELLOW: "3",
+			BLUE: "4", MAGENTA: "5", CYAN: "6",
+			WHITE: "7",
+		}[c]
+	}
+	return fmt.Sprintf(wrap, color, str)
+}
+func ColorRed(m *ice.Message, str string) string   { return Color(m, RED, str) }
+func ColorGreen(m *ice.Message, str string) string { return Color(m, GREEN, str) }
 
 const (
 	FG   = "fg"

@@ -1,9 +1,11 @@
 package lex
 
 import (
+	"sort"
 	"strconv"
 
 	ice "github.com/shylinux/icebergs"
+	"github.com/shylinux/icebergs/base/cli"
 	"github.com/shylinux/icebergs/base/mdb"
 	kit "github.com/shylinux/toolkits"
 )
@@ -88,7 +90,7 @@ func (mat *Matrix) index(m *ice.Message, hash string, h string) int {
 	return which[h]
 }
 func (mat *Matrix) Train(m *ice.Message, npage, nhash string, seed string) int {
-	m.Debug("%s %s page: %v hash: %v seed: %v", "train", "lex", npage, nhash, seed)
+	m.Debug("%s %s page: %v hash: %v seed: %v", TRAIN, LEX, npage, nhash, seed)
 
 	page := mat.index(m, NPAGE, npage)
 	hash := mat.index(m, NHASH, nhash)
@@ -143,7 +145,7 @@ func (mat *Matrix) Train(m *ice.Message, npage, nhash string, seed string) int {
 			}
 
 		case '.':
-			for c := 0; c < len(cn); c++ {
+			for c := 1; c < len(cn); c++ {
 				cc = append(cc, byte(c))
 			}
 
@@ -174,7 +176,7 @@ func (mat *Matrix) Train(m *ice.Message, npage, nhash string, seed string) int {
 				if mat.mat[s][c] != nil {
 					*state = *mat.mat[s][c]
 				}
-				m.Debug("GET(%d,%d): %v", s, c, state)
+				m.Debug("GET(%d,%d): %#v", s, c, state)
 
 				switch flag {
 				case '+':
@@ -189,13 +191,14 @@ func (mat *Matrix) Train(m *ice.Message, npage, nhash string, seed string) int {
 				if state.next == 0 {
 					state.next = len(mat.mat)
 					mat.mat = append(mat.mat, make(map[byte]*State))
-					sn = append(sn, false)
+					sn = append(sn, true)
+				} else {
+					sn[state.next] = true
 				}
-				sn[state.next] = true
 
 				mat.mat[s][c] = state
 				points = append(points, &Point{s, c})
-				m.Debug("SET(%d,%d): %v", s, c, state)
+				m.Debug("SET(%d,%d): %#v", s, c, state)
 			}
 		}
 
@@ -207,15 +210,17 @@ func (mat *Matrix) Train(m *ice.Message, npage, nhash string, seed string) int {
 		}
 	}
 
+	sort.Ints(ss)
+	sort.Reverse(sort.IntSlice(ss))
 	for _, s := range ss {
 		if s < mat.nlang || s >= len(mat.mat) {
 			continue
 		}
-
-		if len(mat.mat[s]) == 0 {
-			mat.mat = mat.mat[:s]
-			m.Debug("DEL: %d", len(mat.mat))
+		if len(mat.mat[s]) > 0 {
+			break
 		}
+		mat.mat = mat.mat[:s]
+		m.Debug("DEL: %d", len(mat.mat))
 	}
 
 	for _, s := range ss {
@@ -224,12 +229,12 @@ func (mat *Matrix) Train(m *ice.Message, npage, nhash string, seed string) int {
 			*state = *mat.mat[p.s][p.c]
 
 			if state.next == s {
-				m.Debug("GET(%d, %d): %v", p.s, p.c, state)
+				m.Debug("GET(%d, %d): %#v", p.s, p.c, state)
 				if state.hash = hash; state.next >= len(mat.mat) {
 					state.next = 0
 				}
 				mat.mat[p.s][p.c] = state
-				m.Debug("SET(%d, %d): %v", p.s, p.c, state)
+				m.Debug("SET(%d, %d): %#v", p.s, p.c, state)
 			}
 
 			if x, ok := mat.state[*state]; !ok {
@@ -267,9 +272,7 @@ func (mat *Matrix) Parse(m *ice.Message, npage string, line []byte) (hash int, w
 		}
 		// m.Debug("GET (%d,%d): %v", s, c, state)
 
-		word = append(word, c)
-
-		if state.star {
+		if word = append(word, c); state.star {
 			star = s
 		} else if x, ok := mat.mat[star][c]; !ok || !x.star {
 			star = 0
@@ -313,9 +316,9 @@ func (mat *Matrix) show(m *ice.Message) {
 			key := kit.Format("%c", j)
 			if node := mat.mat[i][byte(j)]; node != nil {
 				if node.hash == 0 {
-					m.Push(key, kit.Select(kit.Format("%02d", node.next), mat.hand[node.next]))
+					m.Push(key, kit.Select(kit.Format("%02d", node.next), cli.ColorRed(m, mat.hand[node.next])))
 				} else {
-					m.Push(key, kit.Select(kit.Format("w%02d", node.hash), mat.word[node.hash]))
+					m.Push(key, kit.Select(kit.Format("w%02d", node.hash), cli.ColorGreen(m, mat.word[node.hash])))
 				}
 			} else {
 				m.Push(key, "")

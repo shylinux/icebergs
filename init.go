@@ -23,7 +23,7 @@ var Info = struct {
 	CtxShare string
 	CtxRiver string
 
-	Build struct {
+	Make struct {
 		Time     string
 		Hash     string
 		Remote   string

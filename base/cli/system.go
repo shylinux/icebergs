@@ -30,8 +30,8 @@ func _system_show(m *ice.Message, cmd *exec.Cmd) {
 		out := bytes.NewBuffer(make([]byte, 0, ice.MOD_BUFS))
 		err := bytes.NewBuffer(make([]byte, 0, ice.MOD_BUFS))
 		defer func() {
-			m.Push(CMD_ERR, err.String())
 			m.Push(CMD_OUT, out.String())
+			m.Push(CMD_ERR, err.String())
 			m.Echo(kit.Select(out.String(), err.String()))
 		}()
 

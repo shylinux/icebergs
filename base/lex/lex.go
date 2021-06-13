@@ -10,7 +10,6 @@ const LEX = "lex"
 var Index = &ice.Context{Name: LEX, Help: "词法模块",
 	Commands: map[string]*ice.Command{
 		ice.CTX_INIT: {Hand: func(m *ice.Message, c *ice.Context, key string, arg ...string) {
-			return
 			m.Load()
 			m.Richs(m.Prefix(MATRIX), "", kit.MDB_FOREACH, func(key string, value map[string]interface{}) {
 				value = kit.GetMeta(value)
@@ -23,7 +22,6 @@ var Index = &ice.Context{Name: LEX, Help: "词法模块",
 			})
 		}},
 		ice.CTX_EXIT: {Hand: func(m *ice.Message, c *ice.Context, key string, arg ...string) {
-			return
 			m.Save()
 		}},
 	},

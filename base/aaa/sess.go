@@ -23,6 +23,9 @@ func _sess_check(m *ice.Message, sessid string) {
 	})
 }
 func _sess_create(m *ice.Message, username string) string {
+	if username == "" {
+		return ""
+	}
 	if m.Richs(USER, nil, username, nil) == nil {
 		_user_create(m, username, kit.Hashs())
 	}
@@ -41,9 +44,6 @@ func SessCheck(m *ice.Message, sessid string) {
 	_sess_check(m, sessid)
 }
 func SessCreate(m *ice.Message, username string) string {
-	if username == "" {
-		return ""
-	}
 	return m.Option(ice.MSG_SESSID, _sess_create(m, username))
 }
 func SessIsCli(m *ice.Message) bool {

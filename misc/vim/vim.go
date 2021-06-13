@@ -74,7 +74,7 @@ var Index = &ice.Context{Name: VIM, Help: "编辑器",
 	},
 	Configs: map[string]*ice.Config{
 		VIM: {Name: "vim", Help: "编辑器", Value: kit.Data(
-			"source", "ftp://ftp.vim.org/pub/vim/unix/vim-8.1.tar.bz2",
+			"source", "http://ftp.vim.org/pub/vim/unix/vim-8.1.tar.bz2",
 			"build", []interface{}{
 				"--enable-multibyte=yes",
 				"--enable-pythoninterp=yes",

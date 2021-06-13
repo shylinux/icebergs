@@ -10,11 +10,6 @@ import (
 	kit "github.com/shylinux/toolkits"
 )
 
-type Seed struct {
-	page int
-	hash int
-	word string
-}
 type Point struct {
 	s int
 	c byte
@@ -33,7 +28,7 @@ type Matrix struct {
 	hash map[string]int
 	word map[int]string
 
-	trans map[byte]string
+	trans map[byte][]byte
 	state map[State]*State
 	mat   []map[byte]*State
 }
@@ -45,9 +40,12 @@ func NewMatrix(m *ice.Message, nlang, ncell int) *Matrix {
 	mat.hash = map[string]int{}
 	mat.word = map[int]string{}
 
-	mat.trans = map[byte]string{
+	mat.trans = map[byte][]byte{}
+	for k, v := range map[byte]string{
 		't': "\t", 'n': "\n", 'b': "\t ", 's': "\t \n",
 		'd': "0123456789", 'x': "0123456789ABCDEFabcdef",
+	} {
+		mat.trans[k] = []byte(v)
 	}
 
 	mat.state = make(map[State]*State)
@@ -56,7 +54,7 @@ func NewMatrix(m *ice.Message, nlang, ncell int) *Matrix {
 }
 func (mat *Matrix) char(c byte) []byte {
 	if cs, ok := mat.trans[c]; ok {
-		return []byte(cs)
+		return cs
 	}
 	return []byte{c}
 }
@@ -254,7 +252,6 @@ func (mat *Matrix) Parse(m *ice.Message, npage string, line []byte) (hash int, w
 
 	pos := 0
 	for star, s := 0, page; s != 0 && pos < len(line); pos++ {
-
 		c := line[pos]
 		if c == '\\' && pos < len(line)-1 { //跳过转义
 			pos++
@@ -283,9 +280,7 @@ func (mat *Matrix) Parse(m *ice.Message, npage string, line []byte) (hash int, w
 		}
 	}
 
-	if pos == len(line) {
-		// hash, pos, word = -1, 0, word[:0]
-	} else if hash == 0 {
+	if hash == 0 {
 		pos, word = 0, word[:0]
 	}
 	rest = line[pos:]
@@ -316,9 +311,9 @@ func (mat *Matrix) show(m *ice.Message) {
 			key := kit.Format("%c", j)
 			if node := mat.mat[i][byte(j)]; node != nil {
 				if node.hash == 0 {
-					m.Push(key, kit.Select(kit.Format("%02d", node.next), cli.ColorRed(m, mat.hand[node.next])))
+					m.Push(key, kit.Select(kit.Format("%02d", node.next), cli.ColorGreen(m, kit.Select(kit.Format("%d", node.next), mat.hand[node.next]))))
 				} else {
-					m.Push(key, kit.Select(kit.Format("w%02d", node.hash), cli.ColorGreen(m, mat.word[node.hash])))
+					m.Push(key, kit.Select(kit.Format("w%02d", node.hash), cli.ColorRed(m, mat.word[node.hash])))
 				}
 			} else {
 				m.Push(key, "")
@@ -330,8 +325,8 @@ func (mat *Matrix) show(m *ice.Message) {
 const (
 	NLANG = "nlang"
 	NCELL = "ncell"
-
-	NSEED = "nseed"
+)
+const (
 	NPAGE = "npage"
 	NHASH = "nhash"
 )
@@ -351,7 +346,7 @@ func init() {
 				mdb.CREATE: {Name: "create nlang=32 ncell=256", Help: "创建", Hand: func(m *ice.Message, arg ...string) {
 					mat := NewMatrix(m, kit.Int(kit.Select("32", m.Option(NLANG))), kit.Int(kit.Select("256", m.Option(NCELL))))
 					h := m.Rich(m.Prefix(MATRIX), "", kit.Data(kit.MDB_TIME, m.Time(), MATRIX, mat, NLANG, mat.nlang, NCELL, mat.ncell))
-					switch cb := m.Optionv("matrix.cb").(type) {
+					switch cb := m.Optionv(kit.Keycb(MATRIX)).(type) {
 					case func(string, *Matrix):
 						cb(h, mat)
 					}
@@ -377,8 +372,7 @@ func init() {
 				"show": {Name: "show", Help: "矩阵", Hand: func(m *ice.Message, arg ...string) {
 					m.Richs(m.Prefix(MATRIX), "", m.Option(kit.MDB_HASH), func(key string, value map[string]interface{}) {
 						value = kit.GetMeta(value)
-						mat, _ := value[MATRIX].(*Matrix)
-						mat.show(m)
+						value[MATRIX].(*Matrix).show(m)
 					})
 					m.ProcessInner()
 				}},

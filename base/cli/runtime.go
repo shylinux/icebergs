@@ -11,6 +11,28 @@ import (
 	kit "github.com/shylinux/toolkits"
 )
 
+func _runtime_hostinfo(m *ice.Message) {
+	if f, e := os.Open("/proc/cpuinfo"); e == nil {
+		defer f.Close()
+		if b, e := ioutil.ReadAll(f); e == nil {
+			m.Push("nCPU", bytes.Count(b, []byte("processor")))
+		}
+	}
+	if f, e := os.Open("/proc/meminfo"); e == nil {
+		defer f.Close()
+		if b, e := ioutil.ReadAll(f); e == nil {
+			for i, ls := range strings.Split(string(b), "\n") {
+				vs := kit.Split(ls, ": ")
+				m.Push(strings.TrimSpace(vs[0]), kit.FmtSize(kit.Int64(strings.TrimSpace(vs[1]))*1024))
+				if i > 1 {
+					break
+				}
+			}
+		}
+	}
+	m.Push("uptime", kit.Split(m.Cmdx(SYSTEM, "uptime"), ",")[0])
+}
+
 const (
 	DISKINFO = "diskinfo"
 	IFCONFIG = "ifconfig"
@@ -47,25 +69,7 @@ func init() {
 					m.Echo(ice.Info.HostName)
 				}},
 				HOSTINFO: {Name: "hostinfo", Help: "主机信息", Hand: func(m *ice.Message, arg ...string) {
-					if f, e := os.Open("/proc/cpuinfo"); e == nil {
-						defer f.Close()
-						if b, e := ioutil.ReadAll(f); e == nil {
-							m.Push("nCPU", bytes.Count(b, []byte("processor")))
-						}
-					}
-					if f, e := os.Open("/proc/meminfo"); e == nil {
-						defer f.Close()
-						if b, e := ioutil.ReadAll(f); e == nil {
-							for i, ls := range strings.Split(string(b), "\n") {
-								vs := kit.Split(ls, ": ")
-								m.Push(strings.TrimSpace(vs[0]), kit.FmtSize(kit.Int64(strings.TrimSpace(vs[1]))*1024))
-								if i > 1 {
-									break
-								}
-							}
-						}
-					}
-					m.Push("uptime", kit.Split(m.Cmdx(SYSTEM, "uptime"), ",")[0])
+					_runtime_hostinfo(m)
 				}},
 				USERINFO: {Name: "userinfo", Help: "用户信息", Hand: func(m *ice.Message, arg ...string) {
 					m.Split(m.Cmdx(SYSTEM, "who"), "user term time", " ", "\n")

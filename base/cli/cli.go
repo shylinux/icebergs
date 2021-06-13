@@ -12,8 +12,12 @@ import (
 )
 
 func _cli_init(m *ice.Message) {
+	// 版本信息
+	kit.Fetch(kit.UnMarshal(kit.Format(ice.Info.Make)), func(key string, value interface{}) {
+		m.Conf(RUNTIME, kit.Keys(MAKE, strings.ToLower(key)), value)
+	})
 
-	// 启动配置
+	// 环境变量
 	for _, k := range []string{CTX_SELF, CTX_DEV, CTX_SHY, CTX_PID, CTX_USER, CTX_SHARE, CTX_RIVER} {
 		m.Conf(RUNTIME, kit.Keys(CONF, k), os.Getenv(k))
 	}
@@ -44,9 +48,6 @@ func _cli_init(m *ice.Message) {
 	ice.Info.PathName = m.Conf(RUNTIME, kit.Keys(BOOT, PATHNAME))
 	ice.Info.UserName = m.Conf(RUNTIME, kit.Keys(BOOT, USERNAME))
 
-	ice.Info.CtxShare = m.Conf(RUNTIME, kit.Keys(CONF, CTX_SHARE))
-	ice.Info.CtxRiver = m.Conf(RUNTIME, kit.Keys(CONF, CTX_RIVER))
-
 	// 启动次数
 	count := kit.Int(m.Conf(RUNTIME, kit.Keys(BOOT, kit.MDB_COUNT))) + 1
 	m.Conf(RUNTIME, kit.Keys(BOOT, kit.MDB_COUNT), count)
@@ -59,11 +60,6 @@ func _cli_init(m *ice.Message) {
 	n := kit.Int(kit.Select("1", m.Conf(RUNTIME, kit.Keys(HOST, "GOMAXPROCS"))))
 	m.Logs(HOST, "GOMAXPROCS", n)
 	runtime.GOMAXPROCS(n)
-
-	// 版本信息
-	kit.Fetch(kit.UnMarshal(kit.Format(ice.Info.Build)), func(key string, value interface{}) {
-		m.Conf(RUNTIME, kit.Keys(MAKE, strings.ToLower(key)), value)
-	})
 }
 func NodeInfo(m *ice.Message, kind, name string) {
 	name = strings.ReplaceAll(name, ".", "_")

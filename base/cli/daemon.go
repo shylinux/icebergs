@@ -49,8 +49,7 @@ func _daemon_show(m *ice.Message, cmd *exec.Cmd, out, err string) {
 				kit.MDB_STATUS, ERROR, kit.MDB_ERROR, e)
 		} else {
 			m.Cost("args", cmd.Args, "code", cmd.ProcessState.ExitCode())
-			m.Cmd(mdb.MODIFY, DAEMON, "", mdb.HASH, kit.MDB_HASH, h,
-				kit.MDB_STATUS, STOP)
+			m.Cmd(mdb.MODIFY, DAEMON, "", mdb.HASH, kit.MDB_HASH, h, kit.MDB_STATUS, STOP)
 		}
 
 		if w, ok := m.Optionv(CMD_OUTPUT).(io.Closer); ok {
@@ -86,7 +85,6 @@ func init() {
 			DAEMON: {Name: DAEMON, Help: "守护进程", Value: kit.Data(kit.MDB_PATH, path.Join(ice.USR_LOCAL, DAEMON))},
 		},
 		Commands: map[string]*ice.Command{
-			ice.CTX_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {}},
 			ice.CTX_EXIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 				m.Cmd(mdb.PRUNES, DAEMON, "", mdb.HASH, mdb.CACHE_CLEAR_ON_EXIT, ice.TRUE)
 			}},

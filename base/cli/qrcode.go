@@ -17,11 +17,11 @@ import (
 var _trans_web = map[string]color.Color{
 	BLACK:   color.RGBA{0, 0, 0, DARK},
 	RED:     color.RGBA{DARK, 0, 0, DARK},
-	YELLOW:  color.RGBA{DARK, DARK, 0, DARK},
 	GREEN:   color.RGBA{0, DARK, 0, DARK},
-	CYAN:    color.RGBA{0, DARK, DARK, DARK},
+	YELLOW:  color.RGBA{DARK, DARK, 0, DARK},
 	BLUE:    color.RGBA{0, 0, DARK, DARK},
 	MAGENTA: color.RGBA{DARK, 0, DARK, DARK},
+	CYAN:    color.RGBA{0, DARK, DARK, DARK},
 	WHITE:   color.RGBA{DARK, DARK, DARK, DARK},
 }
 
@@ -63,7 +63,7 @@ func _trans_cli(str string) string {
 	return kit.Format(res)
 }
 
-func _qrcode_cli(m *ice.Message, text string, arg ...string) {
+func _qrcode_cli(m *ice.Message, text string) {
 	qr, _ := qrcode.New(text, qrcode.Medium)
 	fg := _trans_cli(m.Option(FG))
 	bg := _trans_cli(m.Option(BG))
@@ -82,8 +82,9 @@ func _qrcode_cli(m *ice.Message, text string, arg ...string) {
 		}
 		m.Echo("\n")
 	}
+	m.Echo(text)
 }
-func _qrcode_web(m *ice.Message, text string, arg ...string) {
+func _qrcode_web(m *ice.Message, text string) {
 	qr, _ := qrcode.New(text, qrcode.Medium)
 	qr.ForegroundColor = _parse_color(m.Option(FG))
 	qr.BackgroundColor = _parse_color(m.Option(BG))
@@ -96,12 +97,7 @@ func _qrcode_web(m *ice.Message, text string, arg ...string) {
 func Color(m *ice.Message, c string, str string) string {
 	wrap, color := `<span style="color:%s">%s</span>`, c
 	if aaa.SessIsCli(m) {
-		wrap, color = "\033[3%sm%s\033[0m", map[string]string{
-			BLACK: "0",
-			RED:   "1", GREEN: "2", YELLOW: "3",
-			BLUE: "4", MAGENTA: "5", CYAN: "6",
-			WHITE: "7",
-		}[c]
+		wrap, color = "\033[3%sm%s\033[0m", _trans_cli(c)
 	}
 	return fmt.Sprintf(wrap, color, str)
 }
@@ -119,11 +115,11 @@ const (
 const (
 	BLACK   = "black"
 	RED     = "red"
-	YELLOW  = "yellow"
 	GREEN   = "green"
-	CYAN    = "cyan"
+	YELLOW  = "yellow"
 	BLUE    = "blue"
 	MAGENTA = "magenta"
+	CYAN    = "cyan"
 	WHITE   = "white"
 	RANDOM  = "random"
 )

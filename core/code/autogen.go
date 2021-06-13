@@ -73,13 +73,13 @@ import (
 )
 
 func init() {
-	ice.Info.Build.Time = "%s"
-	ice.Info.Build.Hash = "%s"
-	ice.Info.Build.Remote = "%s"
-	ice.Info.Build.Branch = "%s"
-	ice.Info.Build.Version = "%s"
-	ice.Info.Build.HostName = "%s"
-	ice.Info.Build.UserName = "%s"
+	ice.Info.Make.Time = "%s"
+	ice.Info.Make.Hash = "%s"
+	ice.Info.Make.Remote = "%s"
+	ice.Info.Make.Branch = "%s"
+	ice.Info.Make.Version = "%s"
+	ice.Info.Make.HostName = "%s"
+	ice.Info.Make.UserName = "%s"
 }
 `,
 		m.Time(),

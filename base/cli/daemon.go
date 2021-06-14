@@ -52,6 +52,10 @@ func _daemon_show(m *ice.Message, cmd *exec.Cmd, out, err string) {
 			m.Cmd(mdb.MODIFY, DAEMON, "", mdb.HASH, kit.MDB_HASH, h, kit.MDB_STATUS, STOP)
 		}
 
+		if m.Option(AUTO_RESTART) == ice.TRUE {
+			m.Cmd(DAEMON, START)
+		}
+
 		if w, ok := m.Optionv(CMD_OUTPUT).(io.Closer); ok {
 			w.Close()
 		}
@@ -71,10 +75,12 @@ const (
 	ERR = "err"
 )
 const (
-	RESTART = "restart"
-	START   = "start"
 	ERROR   = "error"
+	START   = "start"
+	RESTART = "restart"
 	STOP    = "stop"
+
+	AUTO_RESTART = "auto_restart"
 )
 
 const DAEMON = "daemon"
@@ -90,15 +96,15 @@ func init() {
 			}},
 
 			DAEMON: {Name: "daemon hash auto start prunes", Help: "守护进程", Action: map[string]*ice.Action{
-				RESTART: {Name: "restart", Help: "重启", Hand: func(m *ice.Message, arg ...string) {
-					m.Cmd(DAEMON, STOP)
-					m.Sleep("3s")
-					m.Cmdy(DAEMON, START)
-				}},
 				START: {Name: "start cmd env dir", Help: "添加", Hand: func(m *ice.Message, arg ...string) {
 					m.Option(CMD_DIR, m.Option(DIR))
 					m.Option(CMD_ENV, kit.Split(m.Option(ENV), " ="))
 					m.Cmdy(DAEMON, kit.Split(m.Option(CMD)))
+				}},
+				RESTART: {Name: "restart", Help: "重启", Hand: func(m *ice.Message, arg ...string) {
+					m.Cmd(DAEMON, STOP)
+					m.Sleep("3s")
+					m.Cmdy(DAEMON, START)
 				}},
 				STOP: {Name: "stop", Help: "停止", Hand: func(m *ice.Message, arg ...string) {
 					m.Option(mdb.FIELDS, "time,hash,status,pid,cmd,dir,env")

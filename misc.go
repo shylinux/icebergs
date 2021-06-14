@@ -315,6 +315,9 @@ func (m *Message) Status(arg ...interface{}) {
 	}
 	m.Option(MSG_STATUS, kit.Format(list))
 }
+func (m *Message) StatusTimeCount(arg ...interface{}) {
+	m.Status(kit.MDB_TIME, m.Time(), kit.MDB_COUNT, m.FormatSize(), arg)
+}
 
 func (m *Message) Process(action string, arg ...interface{}) {
 	m.Option(MSG_PROCESS, action)

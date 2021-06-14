@@ -71,6 +71,7 @@ func NodeInfo(m *ice.Message, kind, name string) {
 
 const (
 	MAKE = "make"
+	TEST = "test"
 	CONF = "conf"
 	HOST = "host"
 	BOOT = "boot"

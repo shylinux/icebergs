@@ -167,36 +167,45 @@ func (mat *Matrix) Train(m *ice.Message, npage, nhash string, seed string) int {
 			}
 		}
 
+		add := func(s int, c byte, cb func(*State)) {
+			state := &State{}
+			if mat.mat[s][c] != nil {
+				*state = *mat.mat[s][c]
+			}
+			m.Debug("GET(%d,%d): %#v", s, c, state)
+
+			cb(state)
+
+			if state.next == 0 {
+				sn = append(sn, true)
+				state.next = len(mat.mat)
+				mat.mat = append(mat.mat, make(map[byte]*State))
+			} else {
+				sn[state.next] = true
+			}
+
+			mat.mat[s][c] = state
+			points = append(points, &Point{s, c})
+			m.Debug("SET(%d,%d): %#v", s, c, state)
+		}
 		for _, s := range ss {
 			for _, c := range cc {
-
-				state := &State{}
-				if mat.mat[s][c] != nil {
-					*state = *mat.mat[s][c]
-				}
-				m.Debug("GET(%d,%d): %#v", s, c, state)
-
-				switch flag {
-				case '+':
-					state.star = true
-				case '*':
-					state.star = true
-					sn[s] = true
-				case '?':
-					sn[s] = true
-				}
-
-				if state.next == 0 {
-					state.next = len(mat.mat)
-					mat.mat = append(mat.mat, make(map[byte]*State))
-					sn = append(sn, true)
-				} else {
-					sn[state.next] = true
-				}
-
-				mat.mat[s][c] = state
-				points = append(points, &Point{s, c})
-				m.Debug("SET(%d,%d): %#v", s, c, state)
+				add(s, c, func(state *State) {
+					switch flag {
+					case '+':
+						sn = append(sn, true)
+						state.next = len(mat.mat)
+						mat.mat = append(mat.mat, make(map[byte]*State))
+						for _, c := range cc {
+							add(state.next, c, func(state *State) { state.star = true })
+						}
+					case '*':
+						state.star = true
+						sn[s] = true
+					case '?':
+						sn[s] = true
+					}
+				})
 			}
 		}
 

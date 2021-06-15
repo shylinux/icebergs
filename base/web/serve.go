@@ -123,8 +123,10 @@ func _serve_handle(key string, cmd *ice.Command, msg *ice.Message, w http.Respon
 
 	// 请求参数
 	for k, v := range r.Form {
-		for i, p := range v {
-			v[i], _ = url.QueryUnescape(p)
+		if r.Header.Get(ContentType) != ContentJSON {
+			// for i, p := range v {
+			// 	// v[i], _ = url.QueryUnescape(p)
+			// }
 		}
 		if msg.Optionv(k, v); k == ice.MSG_SESSID {
 			RenderCookie(msg, v[0])

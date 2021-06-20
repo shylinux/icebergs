@@ -101,8 +101,9 @@ func Color(m *ice.Message, c string, str interface{}) string {
 	}
 	return fmt.Sprintf(wrap, color, str)
 }
-func ColorRed(m *ice.Message, str interface{}) string   { return Color(m, RED, str) }
-func ColorGreen(m *ice.Message, str interface{}) string { return Color(m, GREEN, str) }
+func ColorRed(m *ice.Message, str interface{}) string    { return Color(m, RED, str) }
+func ColorGreen(m *ice.Message, str interface{}) string  { return Color(m, GREEN, str) }
+func ColorYellow(m *ice.Message, str interface{}) string { return Color(m, YELLOW, str) }
 
 const (
 	FG   = "fg"

@@ -6,16 +6,12 @@ import (
 	"strings"
 
 	ice "github.com/shylinux/icebergs"
+	"github.com/shylinux/icebergs/base/cli"
 	"github.com/shylinux/icebergs/base/lex"
 	"github.com/shylinux/icebergs/base/mdb"
 	kit "github.com/shylinux/toolkits"
 )
 
-type Seed struct {
-	page int
-	hash int
-	word []string
-}
 type Point struct {
 	s int
 	c int
@@ -35,11 +31,10 @@ type Matrix struct {
 	hash map[string]int
 	word map[int]string
 
-	state map[State]*State
-	mat   [][]*State
+	mat [][]*State
 
-	lex     *lex.Matrix
 	lex_key string
+	lex     *lex.Matrix
 }
 
 func NewMatrix(m *ice.Message, nlang, ncell int) *Matrix {
@@ -53,7 +48,6 @@ func NewMatrix(m *ice.Message, nlang, ncell int) *Matrix {
 	key := m.Cmdx("lex.matrix", mdb.CREATE, 32, 256)
 	m.Cmd("lex.matrix", mdb.INSERT, key, "space", "space", "[\t \n]")
 
-	mat.state = make(map[State]*State)
 	mat.mat = make([][]*State, nlang)
 	return mat
 }
@@ -83,15 +77,17 @@ func (mat *Matrix) index(m *ice.Message, hash string, h string) int {
 		return x
 	}
 
-	if hash == NPAGE {
-		which[h] = len(mat.page) + 1
-	} else {
-		which[h] = len(mat.hash) + 1
-	}
-
-	names[which[h]] = h
-	m.Assert(hash != NPAGE || len(mat.page) < mat.nlang)
+	m.Assert(hash != NPAGE || len(which)+1 < mat.nlang)
+	which[h], names[len(which)+1] = len(which)+1, h
 	return which[h]
+}
+func (mat *Matrix) isVoid(page int) bool {
+	for j := 1; j < len(mat.mat[page]); j++ {
+		if mat.mat[page][j] != nil {
+			return false
+		}
+	}
+	return false
 }
 func (mat *Matrix) train(m *ice.Message, page, hash int, word []string, level int) (int, []*Point, []*Point) {
 	m.Debug("%s %s\\%d page: %v hash: %v word: %v", TRAIN, strings.Repeat("#", level), level, page, hash, word)
@@ -116,19 +112,16 @@ func (mat *Matrix) train(m *ice.Message, page, hash int, word []string, level in
 				points = append(points, point...)
 				i += num - 1
 
-				for _, x := range end {
-					state := &State{}
-					*state = *mat.mat[x.s][x.c]
-					for i := len(sn); i <= state.next; i++ {
-						sn = append(sn, false)
+				for _, p := range end {
+					state := mat.mat[p.s][p.c]
+					if len(sn) <= state.next {
+						sn = append(sn, make([]bool, state.next-len(sn)+1)...)
 					}
 					sn[state.next] = true
 
-					points = append(points, x)
-					if word[i] == "rep{" {
+					if points = append(points, p); word[i] == "rep{" {
 						state.star = s
-						mat.mat[x.s][x.c] = state
-						m.Debug("REP(%d, %d): %v", x.s, x.c, state)
+						m.Debug("REP(%d, %d): %v", p.s, p.c, state)
 					}
 				}
 			case "mul{":
@@ -141,33 +134,33 @@ func (mat *Matrix) train(m *ice.Message, page, hash int, word []string, level in
 				}
 				fallthrough
 			default:
-				x, ok := mat.page[word[i]]
+				c, ok := mat.page[word[i]]
 				if !ok {
-					if x, _, _ = mat.lex.Parse(m, mat.name(s), []byte(word[i])); x == 0 {
-						// x = mat.lex.Train(m, mat.name(s), fmt.Sprintf("%d", len(mat.mat[s])+1), []byte(word[i]))
-						x = kit.Int(m.Cmdx("lex.matrix", mdb.INSERT, mat.lex_key, mat.name(s), len(mat.mat[s]), word[i]))
+					if c, _, _ = mat.lex.Parse(m, mat.name(s), []byte(word[i])); c == 0 {
+						// c = mat.lex.Train(m, mat.name(s), fmt.Sprintf("%d", len(mat.mat[s])+1), []byte(word[i]))
+						c = kit.Int(m.Cmdx("lex.matrix", mdb.INSERT, mat.lex_key, mat.name(s), len(mat.mat[s]), word[i]))
 						mat.mat[s] = append(mat.mat[s], nil)
 					}
 				}
 
-				c := x
-				state := &State{}
-				if mat.mat[s][c] != nil {
-					*state = *mat.mat[s][c]
+				state := mat.mat[s][c]
+				if state == nil {
+					state = &State{}
 				}
-				m.Debug("GET(%d,%d): %v", s, c, state)
+				m.Debug("GET(%d,%d): %#v", s, c, state)
 
 				if state.next == 0 {
 					state.next = len(mat.mat)
 					mat.mat = append(mat.mat, make([]*State, mat.ncell))
-					sn = append(sn, false)
+					sn = append(sn, true)
+				} else {
+					sn[state.next] = true
 				}
-				sn[state.next] = true
 
 				mat.mat[s][c] = state
-				m.Debug("SET(%d,%d): %v", s, c, state)
 				ends = append(ends, &Point{s, c})
 				points = append(points, &Point{s, c})
+				m.Debug("SET(%d,%d): %#v", s, c, state)
 			}
 		}
 	next:
@@ -181,45 +174,40 @@ func (mat *Matrix) train(m *ice.Message, page, hash int, word []string, level in
 		}
 	}
 
-	for _, s := range ss {
-		if s < mat.nlang || s >= len(mat.mat) {
-			continue
+	trans := map[int]int{page: page}
+loop:
+	for i := mat.nlang; i < len(mat.mat); i++ { // 去空
+		m.Debug("what %v %v", len(mat.mat[i]), mat.mat[i])
+		for j := 1; j < len(mat.mat[i]); j++ {
+			if mat.mat[i][j] != nil {
+				trans[i] = i
+				continue loop
+			}
 		}
-		void := true
-		for _, x := range mat.mat[s] {
-			if x != nil {
-				void = false
+
+		for j := i + 1; j < len(mat.mat); j++ {
+			if len(mat.mat[j]) > 0 {
+				mat.mat[i] = mat.mat[j]
+				mat.mat[j] = nil
+				trans[j] = i
 				break
 			}
 		}
-		if void {
-			mat.mat = mat.mat[:s]
-			m.Debug("DEL: %d", len(mat.mat))
+		if len(mat.mat[i]) == 0 {
+			mat.mat = mat.mat[:i]
+			break
 		}
 	}
+	m.Debug("DEL: %v", trans)
 
-	for _, s := range ss {
-		for _, p := range points {
-			state := &State{}
-			*state = *mat.mat[p.s][p.c]
-
-			if state.next == s {
-				m.Debug("GET(%d, %d): %v", p.s, p.c, state)
-				if state.next >= len(mat.mat) {
-					state.next = 0
-				}
-				if hash > 0 {
-					state.hash = hash
-				}
-				mat.mat[p.s][p.c] = state
-				m.Debug("SET(%d, %d): %v", p.s, p.c, state)
-			}
-			if x, ok := mat.state[*state]; !ok {
-				mat.state[*state] = mat.mat[p.s][p.c]
-			} else {
-				mat.mat[p.s][p.c] = x
-			}
+	for _, p := range points { // 去尾
+		p.s = trans[p.s]
+		state := mat.mat[p.s][p.c]
+		m.Debug("GET(%d, %d): %#v", p.s, p.c, state)
+		if state.next = trans[state.next]; state.next == 0 {
+			state.hash = hash
 		}
+		m.Debug("SET(%d, %d): %#v", p.s, p.c, state)
 	}
 
 	m.Debug("%s %s/%d word: %d point: %d end: %d", TRAIN, strings.Repeat("#", level), level, len(word), len(points), len(ends))
@@ -278,36 +266,42 @@ func (mat *Matrix) Parse(m *ice.Message, rewrite Rewrite, page int, line []byte,
 	return hash, word, rest
 }
 func (mat *Matrix) show(m *ice.Message) {
-	max := mat.ncell
+	showCol := map[int]bool{} // 有效列
 	for i := 1; i < len(mat.mat); i++ {
-		if len(mat.mat[i]) > max {
-			max = len(mat.mat[i])
+		for j := 1; j < len(mat.mat[i]); j++ {
+			if node := mat.mat[i][j]; node != nil {
+				showCol[j] = true
+			}
 		}
 	}
+
 	for i := 1; i < len(mat.mat); i++ {
-		if len(mat.mat[i]) == 0 {
+		if len(mat.mat[i]) == 0 { // 无效行
 			continue
 		}
 
 		m.Push("00", kit.Select(kit.Format("%02d", i), mat.hand[i]))
-		for j := 1; j < max; j++ {
-			if j > len(mat.page) && j < mat.ncell {
+		for j := 1; j < len(mat.mat[i]); j++ {
+			if !showCol[j] { // 无效列
 				continue
 			}
-			key := kit.Select(kit.Format("w%02d", j), mat.hand[j])
-			if j < len(mat.mat[i]) {
-				if node := mat.mat[i][j]; node != nil {
-					if node.next == 0 {
-						m.Push(key, mat.word[node.hash])
-					} else {
-						m.Push(key, kit.Select(kit.Format("%02d", node.next), mat.hand[node.next]))
-					}
-					continue
+			key, value := kit.Format("%d", j), []string{}
+			if node := mat.mat[i][j]; node != nil {
+				if node.star > 0 {
+					value = append(value, cli.ColorYellow(m, node.star))
+				}
+				if node.next > 0 {
+					value = append(value, cli.ColorGreen(m, node.next))
+				}
+				if node.hash > 0 {
+					value = append(value, cli.ColorRed(m, mat.word[node.hash]))
 				}
 			}
-			m.Push(key, "")
+			m.Push(key, strings.Join(value, ","))
 		}
 	}
+
+	m.Status(NLANG, mat.nlang, NCELL, mat.ncell, NPAGE, len(mat.page), NHASH, len(mat.hash))
 }
 
 type Rewrite func(m *ice.Message, nhash string, hash int, word []string, rest []byte) (int, []string, []byte)
@@ -315,7 +309,8 @@ type Rewrite func(m *ice.Message, nhash string, hash int, word []string, rest []
 const (
 	NLANG = "nlang"
 	NCELL = "ncell"
-	NSEED = "nseed"
+)
+const (
 	NPAGE = "npage"
 	NHASH = "nhash"
 )
@@ -334,8 +329,11 @@ func init() {
 			MATRIX: {Name: "matrix name npage text auto", Help: "魔方矩阵", Action: map[string]*ice.Action{
 				mdb.CREATE: {Name: "create name=shy nlang=32 ncell=32", Help: "创建", Hand: func(m *ice.Message, arg ...string) {
 					mat := NewMatrix(m, kit.Int(kit.Select("32", m.Option(NLANG))), kit.Int(kit.Select("32", m.Option(NCELL))))
-					h := m.Rich(m.Prefix(MATRIX), "", kit.Data(kit.MDB_TIME, m.Time(), kit.MDB_NAME, m.Option(kit.MDB_NAME), MATRIX, mat, NLANG, mat.nlang, NCELL, mat.ncell))
-					switch cb := m.Optionv("matrix.cb").(type) {
+					h := m.Rich(m.Prefix(MATRIX), "", kit.Data(
+						kit.MDB_TIME, m.Time(), kit.MDB_NAME, m.Option(kit.MDB_NAME),
+						MATRIX, mat, NLANG, mat.nlang, NCELL, mat.ncell,
+					))
+					switch cb := m.Optionv(kit.Keycb(MATRIX)).(type) {
 					case func(string, *Matrix):
 						cb(h, mat)
 					}

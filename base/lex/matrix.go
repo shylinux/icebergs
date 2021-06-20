@@ -92,19 +92,18 @@ func (mat *Matrix) Train(m *ice.Message, npage, nhash string, seed string) int {
 	cn := make([]bool, mat.ncell)
 	cc := make([]byte, 0, mat.ncell)
 	sn := make([]bool, len(mat.mat))
-	begin := len(mat.mat)
 
 	points := []*Point{}
 	for i := 0; i < len(seed); i++ {
-		switch seed[i] {
+		switch seed[i] { // 字符集
 		case '[':
 			set := true
-			if i++; seed[i] == '^' {
+			if i++; seed[i] == '^' { // 补集
 				set, i = false, i+1
 			}
 
 			for ; seed[i] != ']'; i++ {
-				if seed[i] == '\\' {
+				if seed[i] == '\\' { // 转义
 					i++
 					for _, c := range mat.char(seed[i]) {
 						cn[c] = true
@@ -112,7 +111,7 @@ func (mat *Matrix) Train(m *ice.Message, npage, nhash string, seed string) int {
 					continue
 				}
 
-				if seed[i+1] == '-' {
+				if seed[i+1] == '-' { // 区间
 					begin, end := seed[i], seed[i+2]
 					if begin > end {
 						begin, end = end, begin
@@ -124,10 +123,10 @@ func (mat *Matrix) Train(m *ice.Message, npage, nhash string, seed string) int {
 					continue
 				}
 
-				cn[seed[i]] = true
+				cn[seed[i]] = true // 单个
 			}
 
-			for c := 1; c < len(cn); c++ {
+			for c := 1; c < len(cn); c++ { // 序列
 				if (set && cn[c]) || (!set && !cn[c]) {
 					cc = append(cc, byte(c))
 				}
@@ -135,31 +134,31 @@ func (mat *Matrix) Train(m *ice.Message, npage, nhash string, seed string) int {
 			}
 
 		case '.':
-			for c := 1; c < len(cn); c++ {
+			for c := 1; c < len(cn); c++ { // 全集
 				cc = append(cc, byte(c))
 			}
 
 		case '\\':
 			i++
-			for _, c := range mat.char(seed[i]) {
+			for _, c := range mat.char(seed[i]) { // 转义
 				cc = append(cc, c)
 			}
 		default:
-			cc = append(cc, seed[i])
+			cc = append(cc, seed[i]) // 普通字符
 		}
 
 		m.Debug("page: \033[31m%d %v\033[0m", len(ss), ss)
 		m.Debug("cell: \033[32m%d %v\033[0m", len(cc), cc)
 
 		flag := '\000'
-		if i+1 < len(seed) {
+		if i+1 < len(seed) { // 次数
 			switch flag = rune(seed[i+1]); flag {
 			case '?', '+', '*':
 				i++
 			}
 		}
 
-		add := func(s int, c byte, cb func(*State)) {
+		add := func(s int, c byte, cb func(*State)) { // 添加节点
 			state := mat.mat[s][c]
 			if state == nil {
 				state = &State{}
@@ -182,7 +181,7 @@ func (mat *Matrix) Train(m *ice.Message, npage, nhash string, seed string) int {
 		for _, s := range ss {
 			for _, c := range cc {
 				add(s, c, func(state *State) {
-					switch flag {
+					switch flag { // 次数
 					case '+':
 						sn = append(sn, true)
 						state.next = len(mat.mat)
@@ -201,7 +200,7 @@ func (mat *Matrix) Train(m *ice.Message, npage, nhash string, seed string) int {
 		}
 
 		cc, ss = cc[:0], ss[:0]
-		for s, b := range sn {
+		for s, b := range sn { // 迭代
 			if sn[s] = false; b && s > 0 {
 				ss = append(ss, s)
 			}
@@ -209,13 +208,13 @@ func (mat *Matrix) Train(m *ice.Message, npage, nhash string, seed string) int {
 	}
 
 	trans := map[int]int{page: page}
-	for i := begin; i < len(mat.mat); i++ {
+	for i := mat.nlang; i < len(mat.mat); i++ { // 去空
 		if len(mat.mat[i]) > 0 {
 			trans[i] = i
 			continue
 		}
 
-		for j := i; j < len(mat.mat); j++ {
+		for j := i + 1; j < len(mat.mat); j++ {
 			if len(mat.mat[j]) > 0 {
 				mat.mat[i] = mat.mat[j]
 				mat.mat[j] = nil
@@ -230,14 +229,14 @@ func (mat *Matrix) Train(m *ice.Message, npage, nhash string, seed string) int {
 	}
 	m.Debug("DEL: %v", trans)
 
-	for _, p := range points {
+	for _, p := range points { // 去尾
 		p.s = trans[p.s]
 		state := mat.mat[p.s][p.c]
-		m.Debug("GET(%d, %d): %#v", p.s, p.c, state)
 		if state.next = trans[state.next]; state.next == 0 {
+			m.Debug("GET(%d, %d): %#v", p.s, p.c, state)
 			state.hash = hash
+			m.Debug("SET(%d, %d): %#v", p.s, p.c, state)
 		}
-		m.Debug("SET(%d, %d): %#v", p.s, p.c, state)
 	}
 
 	m.Debug("%s %s npage: %v nhash: %v", "train", "lex", len(mat.page), len(mat.hash))
@@ -286,23 +285,23 @@ func (mat *Matrix) Parse(m *ice.Message, npage string, line []byte) (hash int, w
 	return
 }
 func (mat *Matrix) show(m *ice.Message) {
-	show := map[int]bool{}
+	showCol := map[int]bool{} // 有效列
 	for j := 1; j < mat.ncell; j++ {
 		for i := 1; i < len(mat.mat); i++ {
 			if node := mat.mat[i][byte(j)]; node != nil {
-				show[j] = true
+				showCol[j] = true
 			}
 		}
 	}
 
 	for i := 1; i < len(mat.mat); i++ {
-		if len(mat.mat[i]) == 0 {
+		if len(mat.mat[i]) == 0 { // 无效行
 			continue
 		}
 
 		m.Push("00", kit.Select(kit.Format("%02d", i), mat.hand[i]))
 		for j := 1; j < mat.ncell; j++ {
-			if !show[j] {
+			if !showCol[j] { // 无效列
 				continue
 			}
 			key, value := kit.Format("%c", j), []string{}
@@ -314,7 +313,7 @@ func (mat *Matrix) show(m *ice.Message) {
 					value = append(value, cli.ColorGreen(m, node.next))
 				}
 				if node.hash > 0 {
-					value = append(value, cli.ColorRed(m, mat.word[node.hash]))
+					value = append(value, cli.ColorRed(m, kit.Select(kit.Format("%d", node.hash), mat.word[node.hash])))
 				}
 			}
 			m.Push(key, strings.Join(value, ","))
@@ -371,8 +370,20 @@ func init() {
 				mdb.REMOVE: {Name: "create", Help: "删除", Hand: func(m *ice.Message, arg ...string) {
 					m.Cmdy(mdb.DELETE, m.Prefix(MATRIX), "", mdb.HASH, kit.MDB_HASH, m.Option(kit.MDB_HASH))
 				}},
-				"show": {Name: "show", Help: "矩阵", Hand: func(m *ice.Message, arg ...string) {
+				PARSE: {Name: "parse hash npage text=123", Help: "解析", Hand: func(m *ice.Message, arg ...string) {
 					m.Richs(m.Prefix(MATRIX), "", m.Option(kit.MDB_HASH), func(key string, value map[string]interface{}) {
+						value = kit.GetMeta(value)
+						mat, _ := value[MATRIX].(*Matrix)
+
+						hash, word, rest := mat.Parse(m, m.Option(NPAGE), []byte(m.Option(kit.MDB_TEXT)))
+						m.Push(NHASH, mat.word[hash])
+						m.Push("word", string(word))
+						m.Push("rest", string(rest))
+					})
+					m.ProcessInner()
+				}},
+				"show": {Name: "show", Help: "矩阵", Hand: func(m *ice.Message, arg ...string) {
+					m.Richs(m.Prefix(MATRIX), "", kit.Select(m.Option(kit.MDB_HASH), arg, 0), func(key string, value map[string]interface{}) {
 						value = kit.GetMeta(value)
 						value[MATRIX].(*Matrix).show(m)
 					})
@@ -386,9 +397,10 @@ func init() {
 					return
 				}
 
-				if m.Action(mdb.INSERT); len(arg) == 1 { // 词法列表
+				if m.Action(mdb.INSERT, "show"); len(arg) == 1 { // 词法列表
 					m.Fields(len(arg) == 1, "time,npage,nhash,text")
 					m.Cmdy(mdb.SELECT, m.Prefix(MATRIX), kit.Keys(kit.MDB_HASH, arg[0]), mdb.LIST)
+					m.PushAction(PARSE)
 					return
 				}
 

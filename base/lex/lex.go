@@ -22,11 +22,11 @@ const LEX = "lex"
 var Index = &ice.Context{Name: LEX, Help: "词法模块",
 	Commands: map[string]*ice.Command{
 		ice.CTX_INIT: {Hand: func(m *ice.Message, c *ice.Context, key string, arg ...string) {
-			m.Load()
-			_lex_load(m)
+			// m.Load()
+			// _lex_load(m)
 		}},
 		ice.CTX_EXIT: {Hand: func(m *ice.Message, c *ice.Context, key string, arg ...string) {
-			m.Save()
+			// m.Save()
 		}},
 	},
 }

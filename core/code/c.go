@@ -1,15 +1,15 @@
 package code
 
 import (
+	"os"
+	"path"
+	"strings"
+
 	ice "github.com/shylinux/icebergs"
 	"github.com/shylinux/icebergs/base/cli"
 	"github.com/shylinux/icebergs/base/mdb"
 	"github.com/shylinux/icebergs/base/nfs"
 	kit "github.com/shylinux/toolkits"
-
-	"os"
-	"path"
-	"strings"
 )
 
 func _c_tags(m *ice.Message, key string) {

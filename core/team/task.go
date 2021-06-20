@@ -6,7 +6,6 @@ import (
 
 	ice "github.com/shylinux/icebergs"
 	"github.com/shylinux/icebergs/base/ctx"
-	"github.com/shylinux/icebergs/base/gdb"
 	"github.com/shylinux/icebergs/base/mdb"
 	"github.com/shylinux/icebergs/base/web"
 	kit "github.com/shylinux/toolkits"
@@ -49,9 +48,9 @@ func _task_scope(m *ice.Message, tz int, arg ...string) (time.Time, time.Time) {
 func _task_action(m *ice.Message, status interface{}, action ...string) string {
 	switch status {
 	case PREPARE:
-		action = append(action, gdb.BEGIN)
+		action = append(action, BEGIN)
 	case PROCESS:
-		action = append(action, gdb.END)
+		action = append(action, END)
 	case CANCEL:
 	case FINISH:
 	}
@@ -211,10 +210,10 @@ func init() {
 					}
 				}},
 
-				gdb.BEGIN: {Name: "begin", Help: "开始", Hand: func(m *ice.Message, arg ...string) {
+				BEGIN: {Name: "begin", Help: "开始", Hand: func(m *ice.Message, arg ...string) {
 					_task_modify(m, m.Option(kit.MDB_ZONE), m.Option(kit.MDB_ID), STATUS, PROCESS)
 				}},
-				gdb.END: {Name: "end", Help: "完成", Hand: func(m *ice.Message, arg ...string) {
+				END: {Name: "end", Help: "完成", Hand: func(m *ice.Message, arg ...string) {
 					_task_modify(m, m.Option(kit.MDB_ZONE), m.Option(kit.MDB_ID), STATUS, FINISH)
 				}},
 			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {

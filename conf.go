@@ -110,6 +110,7 @@ const ( // MSG
 	MSG_RIVER = "sess.river"
 	MSG_STORM = "sess.storm"
 	MSG_LOCAL = "sess.local"
+	MSG_TOAST = "sess.toast"
 )
 const ( // RENDER
 	RENDER_VOID     = "_void"

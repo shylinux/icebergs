@@ -94,7 +94,6 @@ const ( // 角色操作
 	WHITE = "white"
 	RIGHT = "right"
 )
-
 const ROLE = "role"
 
 func init() {

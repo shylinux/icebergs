@@ -1,8 +1,8 @@
 package lex
 
 import (
-	"sort"
 	"strconv"
+	"strings"
 
 	ice "github.com/shylinux/icebergs"
 	"github.com/shylinux/icebergs/base/cli"
@@ -29,7 +29,6 @@ type Matrix struct {
 	word map[int]string
 
 	trans map[byte][]byte
-	state map[State]*State
 	mat   []map[byte]*State
 }
 
@@ -48,7 +47,6 @@ func NewMatrix(m *ice.Message, nlang, ncell int) *Matrix {
 		mat.trans[k] = []byte(v)
 	}
 
-	mat.state = make(map[State]*State)
 	mat.mat = make([]map[byte]*State, nlang)
 	return mat
 }
@@ -77,14 +75,8 @@ func (mat *Matrix) index(m *ice.Message, hash string, h string) int {
 		return x
 	}
 
-	if hash == NPAGE {
-		which[h] = len(mat.page) + 1
-	} else {
-		which[h] = len(mat.hash) + 1
-	}
-
-	names[which[h]] = h
-	m.Assert(hash != NPAGE || len(mat.page) < mat.nlang)
+	m.Assert(hash != NPAGE || len(which)+1 < mat.nlang)
+	which[h], names[len(which)+1] = len(which)+1, h
 	return which[h]
 }
 func (mat *Matrix) Train(m *ice.Message, npage, nhash string, seed string) int {
@@ -100,9 +92,9 @@ func (mat *Matrix) Train(m *ice.Message, npage, nhash string, seed string) int {
 	cn := make([]bool, mat.ncell)
 	cc := make([]byte, 0, mat.ncell)
 	sn := make([]bool, len(mat.mat))
+	begin := len(mat.mat)
 
 	points := []*Point{}
-
 	for i := 0; i < len(seed); i++ {
 		switch seed[i] {
 		case '[':
@@ -135,7 +127,7 @@ func (mat *Matrix) Train(m *ice.Message, npage, nhash string, seed string) int {
 				cn[seed[i]] = true
 			}
 
-			for c := 0; c < len(cn); c++ {
+			for c := 1; c < len(cn); c++ {
 				if (set && cn[c]) || (!set && !cn[c]) {
 					cc = append(cc, byte(c))
 				}
@@ -168,15 +160,13 @@ func (mat *Matrix) Train(m *ice.Message, npage, nhash string, seed string) int {
 		}
 
 		add := func(s int, c byte, cb func(*State)) {
-			state := &State{}
-			if mat.mat[s][c] != nil {
-				*state = *mat.mat[s][c]
+			state := mat.mat[s][c]
+			if state == nil {
+				state = &State{}
 			}
 			m.Debug("GET(%d,%d): %#v", s, c, state)
 
-			cb(state)
-
-			if state.next == 0 {
+			if cb(state); state.next == 0 {
 				sn = append(sn, true)
 				state.next = len(mat.mat)
 				mat.mat = append(mat.mat, make(map[byte]*State))
@@ -188,6 +178,7 @@ func (mat *Matrix) Train(m *ice.Message, npage, nhash string, seed string) int {
 			points = append(points, &Point{s, c})
 			m.Debug("SET(%d,%d): %#v", s, c, state)
 		}
+
 		for _, s := range ss {
 			for _, c := range cc {
 				add(s, c, func(state *State) {
@@ -217,39 +208,36 @@ func (mat *Matrix) Train(m *ice.Message, npage, nhash string, seed string) int {
 		}
 	}
 
-	sort.Ints(ss)
-	sort.Reverse(sort.IntSlice(ss))
-	for _, s := range ss {
-		if s < mat.nlang || s >= len(mat.mat) {
+	trans := map[int]int{page: page}
+	for i := begin; i < len(mat.mat); i++ {
+		if len(mat.mat[i]) > 0 {
+			trans[i] = i
 			continue
 		}
-		if len(mat.mat[s]) > 0 {
+
+		for j := i; j < len(mat.mat); j++ {
+			if len(mat.mat[j]) > 0 {
+				mat.mat[i] = mat.mat[j]
+				mat.mat[j] = nil
+				trans[j] = i
+				break
+			}
+		}
+		if len(mat.mat[i]) == 0 {
+			mat.mat = mat.mat[:i]
 			break
 		}
-		mat.mat = mat.mat[:s]
-		m.Debug("DEL: %d", len(mat.mat))
 	}
+	m.Debug("DEL: %v", trans)
 
-	for _, s := range ss {
-		for _, p := range points {
-			state := &State{}
-			*state = *mat.mat[p.s][p.c]
-
-			if state.next == s {
-				m.Debug("GET(%d, %d): %#v", p.s, p.c, state)
-				if state.hash = hash; state.next >= len(mat.mat) {
-					state.next = 0
-				}
-				mat.mat[p.s][p.c] = state
-				m.Debug("SET(%d, %d): %#v", p.s, p.c, state)
-			}
-
-			if x, ok := mat.state[*state]; !ok {
-				mat.state[*state] = mat.mat[p.s][p.c]
-			} else {
-				mat.mat[p.s][p.c] = x
-			}
+	for _, p := range points {
+		p.s = trans[p.s]
+		state := mat.mat[p.s][p.c]
+		m.Debug("GET(%d, %d): %#v", p.s, p.c, state)
+		if state.next = trans[state.next]; state.next == 0 {
+			state.hash = hash
 		}
+		m.Debug("SET(%d, %d): %#v", p.s, p.c, state)
 	}
 
 	m.Debug("%s %s npage: %v nhash: %v", "train", "lex", len(mat.page), len(mat.hash))
@@ -317,18 +305,23 @@ func (mat *Matrix) show(m *ice.Message) {
 			if !show[j] {
 				continue
 			}
-			key := kit.Format("%c", j)
+			key, value := kit.Format("%c", j), []string{}
 			if node := mat.mat[i][byte(j)]; node != nil {
-				if node.hash == 0 {
-					m.Push(key, kit.Select(kit.Format("%02d", node.next), cli.ColorGreen(m, kit.Select(kit.Format("%d", node.next), mat.hand[node.next]))))
-				} else {
-					m.Push(key, kit.Select(kit.Format("w%02d", node.hash), cli.ColorRed(m, mat.word[node.hash])))
+				if node.star {
+					value = append(value, "*")
 				}
-			} else {
-				m.Push(key, "")
+				if node.next > 0 {
+					value = append(value, cli.ColorGreen(m, node.next))
+				}
+				if node.hash > 0 {
+					value = append(value, cli.ColorRed(m, mat.word[node.hash]))
+				}
 			}
+			m.Push(key, strings.Join(value, ","))
 		}
 	}
+
+	m.Status(NLANG, mat.nlang, NCELL, mat.ncell, NPAGE, len(mat.page), NHASH, len(mat.hash))
 }
 
 const (
@@ -389,7 +382,7 @@ func init() {
 				if m.Action(mdb.CREATE); len(arg) == 0 { // 矩阵列表
 					m.Fields(len(arg) == 0, "time,hash,npage,nhash")
 					m.Cmdy(mdb.SELECT, m.Prefix(MATRIX), "", mdb.HASH)
-					m.PushAction("show", mdb.INSERT, mdb.REMOVE)
+					m.PushAction(mdb.INSERT, "show", mdb.REMOVE)
 					return
 				}
 

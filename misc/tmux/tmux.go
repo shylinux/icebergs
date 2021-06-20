@@ -3,7 +3,6 @@ package tmux
 import (
 	ice "github.com/shylinux/icebergs"
 	"github.com/shylinux/icebergs/base/cli"
-	"github.com/shylinux/icebergs/base/gdb"
 	"github.com/shylinux/icebergs/base/mdb"
 	"github.com/shylinux/icebergs/base/nfs"
 	"github.com/shylinux/icebergs/base/web"
@@ -61,15 +60,15 @@ var Index = &ice.Context{Name: TMUX, Help: "工作台",
 			web.DOWNLOAD: {Name: "download", Help: "下载", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmdy(code.INSTALL, web.DOWNLOAD, m.Conf(TMUX, kit.META_SOURCE))
 			}},
-			gdb.BUILD: {Name: "build", Help: "构建", Hand: func(m *ice.Message, arg ...string) {
-				m.Cmdy(code.INSTALL, gdb.BUILD, m.Conf(TMUX, kit.META_SOURCE))
+			cli.BUILD: {Name: "build", Help: "构建", Hand: func(m *ice.Message, arg ...string) {
+				m.Cmdy(code.INSTALL, cli.BUILD, m.Conf(TMUX, kit.META_SOURCE))
 			}},
-			gdb.START: {Name: "start", Help: "启动", Hand: func(m *ice.Message, arg ...string) {
+			cli.START: {Name: "start", Help: "启动", Hand: func(m *ice.Message, arg ...string) {
 				m.Optionv("prepare", func(p string) []string {
 					m.Option(cli.CMD_DIR, p)
 					return []string{"-S", kit.Path(p, "tmux.socket"), "new-session", "-dn", "miss"}
 				})
-				m.Cmdy(code.INSTALL, gdb.START, m.Conf(TMUX, kit.META_SOURCE), "bin/tmux")
+				m.Cmdy(code.INSTALL, cli.START, m.Conf(TMUX, kit.META_SOURCE), "bin/tmux")
 			}},
 		}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			m.Cmdy(code.INSTALL, path.Base(m.Conf(TMUX, kit.META_SOURCE)), arg)

@@ -8,7 +8,6 @@ import (
 	ice "github.com/shylinux/icebergs"
 	"github.com/shylinux/icebergs/base/aaa"
 	"github.com/shylinux/icebergs/base/cli"
-	"github.com/shylinux/icebergs/base/gdb"
 	"github.com/shylinux/icebergs/base/mdb"
 	"github.com/shylinux/icebergs/base/nfs"
 	"github.com/shylinux/icebergs/base/tcp"
@@ -64,7 +63,7 @@ func init() {
 						m.Cmd(cli.SYSTEM, "tar", "xvf", name)
 					})
 				}},
-				gdb.BUILD: {Name: "build link", Help: "构建", Hand: func(m *ice.Message, arg ...string) {
+				cli.BUILD: {Name: "build link", Help: "构建", Hand: func(m *ice.Message, arg ...string) {
 					p := m.Option(cli.CMD_DIR, path.Join(m.Conf(INSTALL, kit.META_PATH), kit.TrimExt(m.Option(kit.MDB_LINK))))
 					pp := kit.Path(path.Join(p, "_install"))
 
@@ -94,10 +93,10 @@ func init() {
 						return
 					}
 
-					m.Toast(ice.SUCCESS, gdb.BUILD)
+					m.Toast(ice.SUCCESS, cli.BUILD)
 					m.ProcessHold()
 				}},
-				gdb.SPAWN: {Name: "spawn link", Help: "新建", Hand: func(m *ice.Message, arg ...string) {
+				cli.SPAWN: {Name: "spawn link", Help: "新建", Hand: func(m *ice.Message, arg ...string) {
 					port := m.Cmdx(tcp.PORT, aaa.RIGHT)
 					target := path.Join(m.Conf(cli.DAEMON, kit.META_PATH), port)
 					source := path.Join(m.Conf(INSTALL, kit.META_PATH), kit.TrimExt(m.Option(kit.MDB_LINK)))
@@ -107,8 +106,8 @@ func init() {
 					})
 					m.Echo(target)
 				}},
-				gdb.START: {Name: "start link cmd", Help: "启动", Hand: func(m *ice.Message, arg ...string) {
-					p := m.Option(cli.CMD_DIR, m.Cmdx(INSTALL, gdb.SPAWN))
+				cli.START: {Name: "start link cmd", Help: "启动", Hand: func(m *ice.Message, arg ...string) {
+					p := m.Option(cli.CMD_DIR, m.Cmdx(INSTALL, cli.SPAWN))
 
 					args := []string{}
 					switch cb := m.Optionv(PREPARE).(type) {

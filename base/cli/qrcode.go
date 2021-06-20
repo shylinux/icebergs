@@ -94,15 +94,15 @@ func _qrcode_web(m *ice.Message, text string) {
 	}
 }
 
-func Color(m *ice.Message, c string, str string) string {
-	wrap, color := `<span style="color:%s">%s</span>`, c
+func Color(m *ice.Message, c string, str interface{}) string {
+	wrap, color := `<span style="color:%s">%v</span>`, c
 	if aaa.SessIsCli(m) {
-		wrap, color = "\033[3%sm%s\033[0m", _trans_cli(c)
+		wrap, color = "\033[3%sm%v\033[0m", _trans_cli(c)
 	}
 	return fmt.Sprintf(wrap, color, str)
 }
-func ColorRed(m *ice.Message, str string) string   { return Color(m, RED, str) }
-func ColorGreen(m *ice.Message, str string) string { return Color(m, GREEN, str) }
+func ColorRed(m *ice.Message, str interface{}) string   { return Color(m, RED, str) }
+func ColorGreen(m *ice.Message, str interface{}) string { return Color(m, GREEN, str) }
 
 const (
 	FG   = "fg"

@@ -6,7 +6,6 @@ import (
 	ice "github.com/shylinux/icebergs"
 	"github.com/shylinux/icebergs/base/cli"
 	"github.com/shylinux/icebergs/base/ctx"
-	"github.com/shylinux/icebergs/base/gdb"
 	"github.com/shylinux/icebergs/base/mdb"
 	kit "github.com/shylinux/toolkits"
 )
@@ -25,6 +24,11 @@ func _plan_list(m *ice.Message, begin_time, end_time time.Time) *ice.Message {
 	m.Cmd(mdb.SELECT, TASK, "", mdb.ZONE, kit.MDB_FOREACH)
 	return m
 }
+
+const (
+	BEGIN = "begin"
+	END   = "end"
+)
 
 const PLAN = "plan"
 
@@ -67,10 +71,10 @@ func init() {
 					}
 				}},
 
-				gdb.BEGIN: {Name: "begin", Help: "开始", Hand: func(m *ice.Message, arg ...string) {
+				BEGIN: {Name: "begin", Help: "开始", Hand: func(m *ice.Message, arg ...string) {
 					_task_modify(m, m.Option(kit.MDB_ZONE), m.Option(kit.MDB_ID), STATUS, PROCESS)
 				}},
-				gdb.END: {Name: "end", Help: "结束", Hand: func(m *ice.Message, arg ...string) {
+				END: {Name: "end", Help: "结束", Hand: func(m *ice.Message, arg ...string) {
 					_task_modify(m, m.Option(kit.MDB_ZONE), m.Option(kit.MDB_ID), STATUS, FINISH)
 				}},
 			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {

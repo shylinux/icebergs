@@ -5,7 +5,6 @@ import (
 
 	ice "github.com/shylinux/icebergs"
 	"github.com/shylinux/icebergs/base/cli"
-	"github.com/shylinux/icebergs/base/gdb"
 	"github.com/shylinux/icebergs/base/nfs"
 	"github.com/shylinux/icebergs/base/web"
 	"github.com/shylinux/icebergs/core/code"
@@ -43,10 +42,10 @@ var Index = &ice.Context{Name: GIT, Help: "代码库",
 			web.DOWNLOAD: {Name: "download", Help: "下载", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmdy(code.INSTALL, web.DOWNLOAD, m.Conf(GIT, kit.META_SOURCE))
 			}},
-			gdb.BUILD: {Name: "build", Help: "构建", Hand: func(m *ice.Message, arg ...string) {
-				m.Cmdy(code.INSTALL, gdb.BUILD, m.Conf(GIT, kit.META_SOURCE))
+			cli.BUILD: {Name: "build", Help: "构建", Hand: func(m *ice.Message, arg ...string) {
+				m.Cmdy(code.INSTALL, cli.BUILD, m.Conf(GIT, kit.META_SOURCE))
 			}},
-			gdb.START: {Name: "start", Help: "启动", Hand: func(m *ice.Message, arg ...string) {
+			cli.START: {Name: "start", Help: "启动", Hand: func(m *ice.Message, arg ...string) {
 				m.Optionv(code.PREPARE, func(p string) []string {
 					m.Option(cli.CMD_DIR, p)
 					kit.Fetch(m.Confv(GIT, kit.Keym("config")), func(conf string, value interface{}) {
@@ -56,7 +55,7 @@ var Index = &ice.Context{Name: GIT, Help: "代码库",
 					})
 					return []string{}
 				})
-				m.Cmdy(code.INSTALL, gdb.START, m.Conf(GIT, kit.META_SOURCE), "bin/git")
+				m.Cmdy(code.INSTALL, cli.START, m.Conf(GIT, kit.META_SOURCE), "bin/git")
 			}},
 		}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			m.Cmdy(code.INSTALL, path.Base(m.Conf(GIT, kit.META_SOURCE)), arg)

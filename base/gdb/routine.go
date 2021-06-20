@@ -4,6 +4,7 @@ import (
 	"path"
 
 	ice "github.com/shylinux/icebergs"
+	"github.com/shylinux/icebergs/base/cli"
 	"github.com/shylinux/icebergs/base/ctx"
 	"github.com/shylinux/icebergs/base/mdb"
 	kit "github.com/shylinux/toolkits"
@@ -35,8 +36,8 @@ func init() {
 				}},
 				mdb.PRUNES: {Name: "prunes", Help: "清理", Hand: func(m *ice.Message, arg ...string) {
 					m.Option(mdb.FIELDS, "time,hash,status,fileline")
-					m.Cmdy(mdb.PRUNES, ROUTINE, "", mdb.HASH, kit.MDB_STATUS, ERROR)
-					m.Cmdy(mdb.PRUNES, ROUTINE, "", mdb.HASH, kit.MDB_STATUS, STOP)
+					m.Cmdy(mdb.PRUNES, ROUTINE, "", mdb.HASH, kit.MDB_STATUS, cli.ERROR)
+					m.Cmdy(mdb.PRUNES, ROUTINE, "", mdb.HASH, kit.MDB_STATUS, cli.STOP)
 				}},
 
 				INNER: {Name: "inner", Help: "源码", Hand: func(m *ice.Message, arg ...string) {

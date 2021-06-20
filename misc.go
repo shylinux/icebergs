@@ -272,10 +272,6 @@ type Sort struct {
 }
 
 func (m *Message) Toast(content string, arg ...interface{}) {
-	if m.Option(MSG_USERPOD) != "" {
-		return
-	}
-
 	if len(arg) > 1 {
 		switch val := arg[1].(type) {
 		case string:
@@ -284,7 +280,12 @@ func (m *Message) Toast(content string, arg ...interface{}) {
 			}
 		}
 	}
-	m.Cmd("web.space", m.Option(MSG_DAEMON), "toast", "", content, arg)
+
+	if m.Option(MSG_USERPOD) == "" {
+		m.Cmd("web.space", m.Option(MSG_DAEMON), "toast", "", content, arg)
+	} else {
+		m.Option(MSG_TOAST, kit.Simple(content, arg))
+	}
 }
 func (m *Message) GoToast(title string, cb func(toast func(string, int, int))) {
 	m.Go(func() {
@@ -333,6 +334,9 @@ func (m *Message) ProcessRefresh(delay string) {
 	}
 	m.Process(PROCESS_REFRESH)
 }
+func (m *Message) ProcessRefresh30ms()  { m.ProcessRefresh("30ms") }
+func (m *Message) ProcessRefresh300ms() { m.ProcessRefresh("300ms") }
+func (m *Message) ProcessRefresh3s()    { m.ProcessRefresh("3s") }
 func (m *Message) ProcessField(arg ...interface{}) {
 	m.Process(PROCESS_FIELD)
 	m.Option("_prefix", arg...)

@@ -4,6 +4,7 @@ import (
 	"time"
 
 	ice "github.com/shylinux/icebergs"
+	"github.com/shylinux/icebergs/base/cli"
 	"github.com/shylinux/icebergs/base/mdb"
 	kit "github.com/shylinux/toolkits"
 )
@@ -16,7 +17,7 @@ func _timer_action(m *ice.Message, arg ...string) {
 	m.Option(mdb.FIELDS, "time,hash,delay,interval,order,next,cmd")
 
 	m.Richs(TIMER, "", kit.MDB_FOREACH, func(key string, value map[string]interface{}) {
-		if value = kit.GetMeta(value); value[kit.MDB_STATUS] == STOP {
+		if value = kit.GetMeta(value); value[kit.MDB_STATUS] == cli.STOP {
 			return
 		}
 
@@ -38,13 +39,14 @@ const (
 	INTERVAL = "interval"
 	ORDER    = "order"
 	NEXT     = "next"
+	TICK     = "tick"
 )
 const TIMER = "timer"
 
 func init() {
 	Index.Merge(&ice.Context{
 		Configs: map[string]*ice.Config{
-			TIMER: {Name: TIMER, Help: "定时器", Value: kit.Data("tick", "100ms")},
+			TIMER: {Name: TIMER, Help: "定时器", Value: kit.Data(TICK, "10ms")},
 		},
 		Commands: map[string]*ice.Command{
 			TIMER: {Name: "timer hash id auto create prunes", Help: "定时器", Action: map[string]*ice.Action{

@@ -2,7 +2,7 @@ package vim
 
 import (
 	ice "github.com/shylinux/icebergs"
-	"github.com/shylinux/icebergs/base/gdb"
+	"github.com/shylinux/icebergs/base/cli"
 	"github.com/shylinux/icebergs/base/mdb"
 	"github.com/shylinux/icebergs/base/nfs"
 	"github.com/shylinux/icebergs/base/web"
@@ -26,10 +26,10 @@ var Index = &ice.Context{Name: VIM, Help: "编辑器",
 			web.DOWNLOAD: {Name: "download", Help: "下载", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmdy(code.INSTALL, web.DOWNLOAD, m.Conf(VIM, kit.META_SOURCE))
 			}},
-			gdb.BUILD: {Name: "build", Help: "构建", Hand: func(m *ice.Message, arg ...string) {
-				m.Cmdy(code.INSTALL, gdb.BUILD, _vim_pkg(m), m.Confv(VIM, "meta.build"))
+			cli.BUILD: {Name: "build", Help: "构建", Hand: func(m *ice.Message, arg ...string) {
+				m.Cmdy(code.INSTALL, cli.BUILD, _vim_pkg(m), m.Confv(VIM, "meta.build"))
 			}},
-			gdb.START: {Name: "start", Help: "启动", Hand: func(m *ice.Message, arg ...string) {
+			cli.START: {Name: "start", Help: "启动", Hand: func(m *ice.Message, arg ...string) {
 				m.Optionv("prepare", func(p string) []string {
 					list := kit.Simple(m.Confv(VIM, "meta.start"))
 					for i := 0; i < len(list); i += 2 {
@@ -39,7 +39,7 @@ var Index = &ice.Context{Name: VIM, Help: "编辑器",
 					return []string{}
 					return []string{"-T", "screen", "-c", "PlugInstall", "-c", "exit", "-c", "exit"}
 				})
-				m.Cmdy(code.INSTALL, gdb.START, _vim_pkg(m), "bin/vim")
+				m.Cmdy(code.INSTALL, cli.START, _vim_pkg(m), "bin/vim")
 
 				// 安装插件
 				m.Echo("\n")

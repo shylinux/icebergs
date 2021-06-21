@@ -46,17 +46,17 @@ func NewMatrix(m *ice.Message, nlang, ncell int) *Matrix {
 
 	m.Option("matrix.cb", func(key string, lex *lex.Matrix) { mat.lex, mat.lex_key = lex, key })
 	key := m.Cmdx("lex.matrix", mdb.CREATE, 32)
-	m.Cmd("lex.matrix", mdb.INSERT, key, "space", "space", "[\t \n]")
+	m.Cmd("lex.matrix", mdb.INSERT, key, "space", "space", "[\t \n]+")
 
 	mat.mat = make([][]*State, nlang)
 	return mat
 }
 
-func (mat *Matrix) name(page int) string {
-	if name, ok := mat.word[page]; ok {
+func (mat *Matrix) name(which map[int]string, index int) string {
+	if name, ok := which[index]; ok {
 		return name
 	}
-	return fmt.Sprintf("m%d", page)
+	return fmt.Sprintf("m%d", index)
 }
 func (mat *Matrix) index(m *ice.Message, hash string, h string) int {
 	which, names := mat.hash, mat.word
@@ -99,6 +99,7 @@ func (mat *Matrix) train(m *ice.Message, page, hash int, word []string, level in
 	for i, mul := 0, false; i < len(word); i++ {
 		if !mul {
 			if hash <= 0 && word[i] == "}" {
+				m.Debug("%s %s/%d word: %d point: %d end: %d", TRAIN, strings.Repeat("#", level), level, len(word), len(points), len(ends))
 				return i + 2, points, ends
 			}
 			ends = ends[:0]
@@ -110,7 +111,6 @@ func (mat *Matrix) train(m *ice.Message, page, hash int, word []string, level in
 				sn[s] = true
 				num, point, end := mat.train(m, s, 0, word[i+1:], level+1)
 				points = append(points, point...)
-				i += num - 1
 
 				for _, p := range end {
 					state := mat.mat[p.s][p.c]
@@ -124,6 +124,7 @@ func (mat *Matrix) train(m *ice.Message, page, hash int, word []string, level in
 						m.Debug("REP(%d, %d): %v", p.s, p.c, state)
 					}
 				}
+				i += num - 1
 			case "mul{":
 				mul = true
 				goto next
@@ -136,9 +137,9 @@ func (mat *Matrix) train(m *ice.Message, page, hash int, word []string, level in
 			default:
 				c, ok := mat.page[word[i]]
 				if !ok {
-					if c, _, _ = mat.lex.Parse(m, mat.name(s), []byte(word[i])); c == 0 {
+					if c, _, _ = mat.lex.Parse(m, mat.name(mat.hand, s), []byte(word[i])); c == 0 {
 						// c = mat.lex.Train(m, mat.name(s), fmt.Sprintf("%d", len(mat.mat[s])+1), []byte(word[i]))
-						c = kit.Int(m.Cmdx("lex.matrix", mdb.INSERT, mat.lex_key, mat.name(s), len(mat.mat[s]), word[i]))
+						c = kit.Int(m.Cmdx("lex.matrix", mdb.INSERT, mat.lex_key, mat.name(mat.hand, s), len(mat.mat[s]), word[i]))
 						mat.mat[s] = append(mat.mat[s], nil)
 					}
 				}
@@ -176,21 +177,20 @@ func (mat *Matrix) train(m *ice.Message, page, hash int, word []string, level in
 
 	trans := map[int]int{page: page}
 	for i := mat.nlang; i < len(mat.mat); i++ { // 去空
-		m.Debug("what %v %v", len(mat.mat[i]), mat.mat[i])
 		if !mat.isVoid(i) {
 			trans[i] = i
 			continue
 		}
 
 		for j := i + 1; j < len(mat.mat); j++ {
-			if len(mat.mat[j]) > 0 {
+			if !mat.isVoid(j) {
 				mat.mat[i] = mat.mat[j]
 				mat.mat[j] = nil
 				trans[j] = i
 				break
 			}
 		}
-		if len(mat.mat[i]) == 0 {
+		if mat.isVoid(i) {
 			mat.mat = mat.mat[:i]
 			break
 		}
@@ -212,15 +212,15 @@ func (mat *Matrix) train(m *ice.Message, page, hash int, word []string, level in
 }
 
 func (mat *Matrix) Parse(m *ice.Message, rewrite Rewrite, page int, line []byte, level int) (hash int, word []string, rest []byte) {
-	m.Debug("%s %s\\%d %s(%d): %s", PARSE, strings.Repeat("#", level), level, mat.name(page), page, string(line))
+	m.Debug("%s %s\\%d %s(%d): %s", PARSE, strings.Repeat("#", level), level, mat.name(mat.hand, page), page, string(line))
 
 	rest = line
 	h, w, r := 0, []byte{}, []byte{}
 	for p, i := 0, page; i > 0 && len(rest) > 0; {
 		// 解析空白
-		_, _, r = mat.lex.Parse(m, "space", rest)
+		h, w, r = mat.lex.Parse(m, "space", rest)
 		// 解析单词
-		h, w, r = mat.lex.Parse(m, mat.name(i), r)
+		h, w, r = mat.lex.Parse(m, mat.name(mat.hand, i), r)
 		// 解析状态
 		var s *State
 		if h < len(mat.mat[i]) {
@@ -259,7 +259,7 @@ func (mat *Matrix) Parse(m *ice.Message, rewrite Rewrite, page int, line []byte,
 	if hash == 0 {
 		word, rest = word[:0], line
 	} else {
-		hash, word, rest = rewrite(m, mat.hand[hash], hash, word, rest)
+		hash, word, rest = rewrite(m, mat.word[hash], hash, word, rest)
 	}
 
 	m.Debug("%s %s/%d %s(%d): %v %v", PARSE, strings.Repeat("#", level), level, mat.hand[hash], hash, word, rest)
@@ -285,16 +285,16 @@ func (mat *Matrix) show(m *ice.Message) {
 			if !showCol[j] { // 无效列
 				continue
 			}
-			key, value := kit.Format("%d", j), []string{}
+			key, value := kit.Format("%v", mat.name(mat.hand, j)), []string{}
 			if node := mat.mat[i][j]; node != nil {
 				if node.star > 0 {
-					value = append(value, cli.ColorYellow(m, node.star))
+					value = append(value, cli.ColorYellow(m, mat.name(mat.hand, node.star)))
 				}
 				if node.next > 0 {
 					value = append(value, cli.ColorGreen(m, node.next))
 				}
 				if node.hash > 0 {
-					value = append(value, cli.ColorRed(m, mat.word[node.hash]))
+					value = append(value, cli.ColorRed(m, mat.name(mat.hand, node.hash)))
 				}
 			}
 			m.Push(key, strings.Join(value, ","))
@@ -351,9 +351,10 @@ func init() {
 							mat.mat[page] = make([]*State, mat.ncell)
 						}
 
-						mat.train(m, page, hash, kit.Split(m.Option(kit.MDB_TEXT), " ", " ", " "), 1)
+						text := kit.Split(m.Option(kit.MDB_TEXT), " ", " ", " ")
+						mat.train(m, page, hash, text, 1)
 						m.Grow(m.Prefix(MATRIX), kit.Keys(kit.MDB_HASH, key), kit.Dict(
-							kit.MDB_TIME, m.Time(), NPAGE, m.Option(NPAGE), NHASH, m.Option(NHASH), kit.MDB_TEXT, m.Option(kit.MDB_TEXT),
+							kit.MDB_TIME, m.Time(), NPAGE, m.Option(NPAGE), NHASH, m.Option(NHASH), kit.MDB_TEXT, text,
 						))
 
 						value[NPAGE] = len(mat.page)
@@ -368,15 +369,18 @@ func init() {
 						value = kit.GetMeta(value)
 						mat, _ := value[MATRIX].(*Matrix)
 
-						hash, word, rest := mat.Parse(m, func(m *ice.Message, nhash string, hash int, word []string, rest []byte) (int, []string, []byte) {
-							m.Debug("\033[32mrun --- %v %v %v\033[0m", nhash, word, rest)
-							return hash, word, rest
-						}, mat.index(m, NPAGE, m.Option(NPAGE)), []byte(m.Option(kit.MDB_TEXT)), 1)
-
-						m.Push(kit.MDB_TIME, m.Time())
-						m.Push(kit.MDB_HASH, mat.word[hash])
-						m.Push("word", kit.Format(word))
-						m.Push("rest", string(rest))
+						for text := []byte(m.Option(kit.MDB_TEXT)); len(text) > 0; {
+							hash, _, rest := mat.Parse(m, func(m *ice.Message, nhash string, hash int, word []string, rest []byte) (int, []string, []byte) {
+								switch cb := m.Optionv(kit.Keycb(MATRIX)).(type) {
+								case func(string, int, []string, []byte) (int, []string, []byte):
+									return cb(nhash, hash, word, rest)
+								}
+								return hash, word, rest
+							}, mat.index(m, NPAGE, m.Option(NPAGE)), text, 1)
+							if text = rest; hash == 0 {
+								break
+							}
+						}
 					})
 					m.ProcessInner()
 				}},

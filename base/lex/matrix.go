@@ -183,6 +183,10 @@ func (mat *Matrix) Train(m *ice.Message, npage, nhash string, seed string) int {
 				add(s, c, func(state *State) {
 					switch flag { // 次数
 					case '+':
+						state.star = true
+						sn[s] = true
+						break
+
 						sn = append(sn, true)
 						state.next = len(mat.mat)
 						mat.mat = append(mat.mat, make(map[byte]*State))

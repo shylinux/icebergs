@@ -344,8 +344,8 @@ func init() {
 		},
 		Commands: map[string]*ice.Command{
 			MATRIX: {Name: "matrix hash npage text auto", Help: "魔方矩阵", Action: map[string]*ice.Action{
-				mdb.CREATE: {Name: "create nlang=32 ncell=256", Help: "创建", Hand: func(m *ice.Message, arg ...string) {
-					mat := NewMatrix(m, kit.Int(kit.Select("32", m.Option(NLANG))), kit.Int(kit.Select("256", m.Option(NCELL))))
+				mdb.CREATE: {Name: "create nlang=32 ncell=128", Help: "创建", Hand: func(m *ice.Message, arg ...string) {
+					mat := NewMatrix(m, kit.Int(kit.Select("32", m.Option(NLANG))), kit.Int(kit.Select("128", m.Option(NCELL))))
 					h := m.Rich(m.Prefix(MATRIX), "", kit.Data(kit.MDB_TIME, m.Time(), MATRIX, mat, NLANG, mat.nlang, NCELL, mat.ncell))
 					switch cb := m.Optionv(kit.Keycb(MATRIX)).(type) {
 					case func(string, *Matrix):
@@ -376,7 +376,7 @@ func init() {
 						mat, _ := value[MATRIX].(*Matrix)
 
 						hash, word, rest := mat.Parse(m, m.Option(NPAGE), []byte(m.Option(kit.MDB_TEXT)))
-						m.Push(NHASH, mat.word[hash])
+						m.Push(NHASH, kit.Select(kit.Format("%d", hash), mat.word[hash]))
 						m.Push("word", string(word))
 						m.Push("rest", string(rest))
 					})

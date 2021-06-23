@@ -1,6 +1,8 @@
 package lex
 
 import (
+	"bytes"
+	"io"
 	"strconv"
 	"strings"
 
@@ -9,6 +11,35 @@ import (
 	"github.com/shylinux/icebergs/base/mdb"
 	kit "github.com/shylinux/toolkits"
 )
+
+type Stream struct {
+	r io.Reader
+	b []byte
+	P int
+}
+
+func NewStream(r io.Reader) *Stream {
+	return &Stream{r: r}
+}
+func (s *Stream) Scan() bool {
+	if s.P < len(s.b) {
+		return true
+	}
+	buf := make([]byte, 1024)
+	if n, e := s.r.Read(buf); e == nil && n > 0 {
+		s.b = append(s.b, buf[:n]...)
+	}
+	return s.P < len(s.b)
+}
+func (s *Stream) Next() {
+	s.P++
+}
+func (s *Stream) Char() byte {
+	if s.Scan() {
+		return s.b[s.P]
+	}
+	return 0
+}
 
 type Point struct {
 	s int
@@ -80,7 +111,7 @@ func (mat *Matrix) index(m *ice.Message, hash string, h string) int {
 	return which[h]
 }
 func (mat *Matrix) Train(m *ice.Message, npage, nhash string, seed string) int {
-	m.Debug("%s %s page: %v hash: %v seed: %v", TRAIN, LEX, npage, nhash, seed)
+	// m.Debug("%s %s page: %v hash: %v seed: %v", TRAIN, LEX, npage, nhash, seed)
 
 	page := mat.index(m, NPAGE, npage)
 	hash := mat.index(m, NHASH, nhash)
@@ -147,8 +178,8 @@ func (mat *Matrix) Train(m *ice.Message, npage, nhash string, seed string) int {
 			cc = append(cc, seed[i]) // 普通字符
 		}
 
-		m.Debug("page: \033[31m%d %v\033[0m", len(ss), ss)
-		m.Debug("cell: \033[32m%d %v\033[0m", len(cc), cc)
+		// m.Debug("page: \033[31m%d %v\033[0m", len(ss), ss)
+		// m.Debug("cell: \033[32m%d %v\033[0m", len(cc), cc)
 
 		flag := '\000'
 		if i+1 < len(seed) { // 次数
@@ -163,7 +194,7 @@ func (mat *Matrix) Train(m *ice.Message, npage, nhash string, seed string) int {
 			if state == nil {
 				state = &State{}
 			}
-			m.Debug("GET(%d,%d): %#v", s, c, state)
+			// m.Debug("GET(%d,%d): %#v", s, c, state)
 
 			if cb(state); state.next == 0 {
 				sn = append(sn, true)
@@ -175,7 +206,7 @@ func (mat *Matrix) Train(m *ice.Message, npage, nhash string, seed string) int {
 
 			mat.mat[s][c] = state
 			points = append(points, &Point{s, c})
-			m.Debug("SET(%d,%d): %#v", s, c, state)
+			// m.Debug("SET(%d,%d): %#v", s, c, state)
 		}
 
 		for _, s := range ss {
@@ -231,31 +262,33 @@ func (mat *Matrix) Train(m *ice.Message, npage, nhash string, seed string) int {
 			break
 		}
 	}
-	m.Debug("DEL: %v", trans)
+	// m.Debug("DEL: %v", trans)
 
 	for _, p := range points { // 去尾
 		p.s = trans[p.s]
 		state := mat.mat[p.s][p.c]
 		if state.next = trans[state.next]; state.next == 0 {
-			m.Debug("GET(%d, %d): %#v", p.s, p.c, state)
+			// m.Debug("GET(%d, %d): %#v", p.s, p.c, state)
 			state.hash = hash
-			m.Debug("SET(%d, %d): %#v", p.s, p.c, state)
+			// m.Debug("SET(%d, %d): %#v", p.s, p.c, state)
 		}
 	}
 
-	m.Debug("%s %s npage: %v nhash: %v", "train", "lex", len(mat.page), len(mat.hash))
+	// m.Debug("%s %s npage: %v nhash: %v", TRAIN, LEX, len(mat.page), len(mat.hash))
 	return hash
 }
-func (mat *Matrix) Parse(m *ice.Message, npage string, line []byte) (hash int, word []byte, rest []byte) {
-	// m.Debug("%s %s page: %v line: %v", "parse", "lex", npage, line)
+func (mat *Matrix) Parse(m *ice.Message, npage string, stream *Stream) (hash int, word []byte) {
+	// m.Debug("%s %s page: %v pos: %v", LEX, PARSE, npage, stream.P)
 	page := mat.index(m, NPAGE, npage)
 
-	pos := 0
-	for star, s := 0, page; s != 0 && pos < len(line); pos++ {
-		c := line[pos]
-		if c == '\\' && pos < len(line)-1 { //跳过转义
-			pos++
-			c = mat.char(line[pos])[0]
+	pos := stream.P
+	for star, s := 0, page; stream.Scan() && s != 0; stream.Next() {
+		c := stream.Char()
+		if c == '\\' { //跳过转义
+			if stream.Next(); !stream.Scan() {
+				break
+			}
+			c = mat.char(stream.Char())[0]
 		}
 		if c > 127 { //跳过中文
 			word = append(word, c)
@@ -264,7 +297,7 @@ func (mat *Matrix) Parse(m *ice.Message, npage string, line []byte) (hash int, w
 
 		state := mat.mat[s][c]
 		if state == nil {
-			s, star, pos = star, 0, pos-1
+			s, star, stream.P = star, 0, stream.P-1
 			continue
 		}
 		// m.Debug("GET (%d,%d): %v", s, c, state)
@@ -281,11 +314,10 @@ func (mat *Matrix) Parse(m *ice.Message, npage string, line []byte) (hash int, w
 	}
 
 	if hash == 0 {
-		pos, word = 0, word[:0]
+		stream.P, word = pos, word[:0]
 	}
-	rest = line[pos:]
 
-	// m.Debug("%s %s hash: %v word: %v rest: %v", "parse", "lex", hash, word, rest)
+	// m.Debug("%s %s hash: %v word: %v", LEX, PARSE, mat.word[hash], string(word))
 	return
 }
 func (mat *Matrix) show(m *ice.Message) {
@@ -379,10 +411,11 @@ func init() {
 						value = kit.GetMeta(value)
 						mat, _ := value[MATRIX].(*Matrix)
 
-						hash, word, rest := mat.Parse(m, m.Option(NPAGE), []byte(m.Option(kit.MDB_TEXT)))
+						stream := NewStream(bytes.NewBufferString(m.Option(kit.MDB_TEXT)))
+						hash, word := mat.Parse(m, m.Option(NPAGE), stream)
 						m.Push(NHASH, kit.Select(kit.Format("%d", hash), mat.word[hash]))
 						m.Push("word", string(word))
-						m.Push("rest", string(rest))
+						m.Push("rest", string(stream.b[stream.P:]))
 					})
 					m.ProcessInner()
 				}},
@@ -417,11 +450,10 @@ func init() {
 						return
 					}
 
-					hash, word, rest := mat.Parse(m, arg[1], []byte(arg[2]))
+					hash, word := mat.Parse(m, arg[1], NewStream(bytes.NewBufferString(arg[2])))
 					m.Push(kit.MDB_TIME, m.Time())
 					m.Push(kit.MDB_HASH, mat.word[hash])
 					m.Push("word", string(word))
-					m.Push("rest", string(rest))
 				})
 			}},
 		},

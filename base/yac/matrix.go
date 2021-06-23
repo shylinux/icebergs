@@ -1,6 +1,7 @@
 package yac
 
 import (
+	"bytes"
 	"fmt"
 	"strconv"
 	"strings"
@@ -137,7 +138,7 @@ func (mat *Matrix) train(m *ice.Message, page, hash int, word []string, level in
 			default:
 				c, ok := mat.page[word[i]]
 				if !ok {
-					if c, _, _ = mat.lex.Parse(m, mat.name(mat.hand, s), []byte(word[i])); c == 0 {
+					if c, _ = mat.lex.Parse(m, mat.name(mat.hand, s), lex.NewStream(bytes.NewBufferString(word[i]))); c == 0 {
 						// c = mat.lex.Train(m, mat.name(s), fmt.Sprintf("%d", len(mat.mat[s])+1), []byte(word[i]))
 						c = kit.Int(m.Cmdx("lex.matrix", mdb.INSERT, mat.lex_key, mat.name(mat.hand, s), len(mat.mat[s]), word[i]))
 						mat.mat[s] = append(mat.mat[s], nil)
@@ -211,16 +212,17 @@ func (mat *Matrix) train(m *ice.Message, page, hash int, word []string, level in
 	return len(word), points, ends
 }
 
-func (mat *Matrix) Parse(m *ice.Message, rewrite Rewrite, page int, line []byte, level int) (hash int, word []string, rest []byte) {
-	m.Debug("%s %s\\%d %s(%d): %s", PARSE, strings.Repeat("#", level), level, mat.name(mat.hand, page), page, string(line))
+func (mat *Matrix) Parse(m *ice.Message, rewrite Rewrite, page int, stream *lex.Stream, level int) (hash int, word []string) {
+	// m.Debug("%s %s\\%d %s(%d)", PARSE, strings.Repeat("#", level), level, mat.name(mat.hand, page), page)
 
-	rest = line
-	h, w, r := 0, []byte{}, []byte{}
-	for p, i := 0, page; i > 0 && len(rest) > 0; {
+	begin := stream.P
+	h, w := 0, []byte{}
+	for p, i := 0, page; stream.Scan() && i > 0; {
 		// 解析空白
-		h, w, r = mat.lex.Parse(m, "space", rest)
+		h, w = mat.lex.Parse(m, "space", stream)
 		// 解析单词
-		h, w, r = mat.lex.Parse(m, mat.name(mat.hand, i), r)
+		begin := stream.P
+		h, w = mat.lex.Parse(m, mat.name(mat.hand, i), stream)
 		// 解析状态
 		var s *State
 		if h < len(mat.mat[i]) {
@@ -228,8 +230,11 @@ func (mat *Matrix) Parse(m *ice.Message, rewrite Rewrite, page int, line []byte,
 		}
 
 		if s != nil { // 全局语法检查
-			if hh, ww, _ := mat.lex.Parse(m, "key", rest); hh == 0 || len(ww) <= len(w) {
-				word, rest = append(word, string(w)), r
+			hold := stream.P
+			stream.P = begin
+			if hh, ww := mat.lex.Parse(m, "key", stream); hh == 0 || len(ww) <= len(w) {
+				stream.P = hold
+				word = append(word, string(w))
 			} else {
 				s = nil
 			}
@@ -238,14 +243,14 @@ func (mat *Matrix) Parse(m *ice.Message, rewrite Rewrite, page int, line []byte,
 		if s == nil { // 嵌套语法递归解析
 			for j := 1; j < len(mat.mat[i]); j++ {
 				if n := mat.mat[i][j]; j < mat.nlang && n != nil {
-					if _, w, r := mat.Parse(m, rewrite, j, rest, level+1); len(r) != len(rest) {
-						s, word, rest = n, append(word, w...), r
+					if h, w := mat.Parse(m, rewrite, j, stream, level+1); h != 0 {
+						s, word = n, append(word, w...)
 						break
 					}
 				}
 			}
 		} else {
-			m.Debug("%s %s|%d GET \033[33m%s\033[0m %#v", PARSE, strings.Repeat("#", level), level, w, s)
+			// m.Debug("%s %s|%d GET \033[33m%s\033[0m %#v", PARSE, strings.Repeat("#", level), level, w, s)
 		}
 
 		//语法切换
@@ -257,13 +262,13 @@ func (mat *Matrix) Parse(m *ice.Message, rewrite Rewrite, page int, line []byte,
 	}
 
 	if hash == 0 {
-		word, rest = word[:0], line
+		word, stream.P = word[:0], begin
 	} else {
-		hash, word, rest = rewrite(m, mat.word[hash], hash, word, rest)
+		hash, word = rewrite(m, mat.word[hash], hash, word, begin, stream)
 	}
 
-	m.Debug("%s %s/%d %s(%d): %v %v", PARSE, strings.Repeat("#", level), level, mat.hand[hash], hash, word, rest)
-	return hash, word, rest
+	// m.Debug("%s %s/%d %s(%d): %v %v", PARSE, strings.Repeat("#", level), level, mat.hand[hash], hash, word, stream.P)
+	return hash, word
 }
 func (mat *Matrix) show(m *ice.Message) {
 	showCol := map[int]bool{} // 有效列
@@ -304,7 +309,7 @@ func (mat *Matrix) show(m *ice.Message) {
 	m.Status(NLANG, mat.nlang, NCELL, mat.ncell, NPAGE, len(mat.page), NHASH, len(mat.hash))
 }
 
-type Rewrite func(m *ice.Message, nhash string, hash int, word []string, rest []byte) (int, []string, []byte)
+type Rewrite func(m *ice.Message, nhash string, hash int, word []string, begin int, stream *lex.Stream) (int, []string)
 
 const (
 	NLANG = "nlang"
@@ -351,6 +356,7 @@ func init() {
 							mat.mat[page] = make([]*State, mat.ncell)
 						}
 
+						m.Option(kit.MDB_TEXT, strings.ReplaceAll(m.Option(kit.MDB_TEXT), "\\", "\\\\"))
 						text := kit.Split(m.Option(kit.MDB_TEXT), " ", " ", " ")
 						mat.train(m, page, hash, text, 1)
 						m.Grow(m.Prefix(MATRIX), kit.Keys(kit.MDB_HASH, key), kit.Dict(
@@ -369,15 +375,16 @@ func init() {
 						value = kit.GetMeta(value)
 						mat, _ := value[MATRIX].(*Matrix)
 
-						for text := []byte(m.Option(kit.MDB_TEXT)); len(text) > 0; {
-							hash, _, rest := mat.Parse(m, func(m *ice.Message, nhash string, hash int, word []string, rest []byte) (int, []string, []byte) {
+						for stream := lex.NewStream(bytes.NewBufferString(m.Option(kit.MDB_TEXT))); stream.Scan(); {
+							hash, _ := mat.Parse(m, func(m *ice.Message, nhash string, hash int, word []string, begin int, stream *lex.Stream) (int, []string) {
 								switch cb := m.Optionv(kit.Keycb(MATRIX)).(type) {
-								case func(string, int, []string, []byte) (int, []string, []byte):
-									return cb(nhash, hash, word, rest)
+								case func(string, int, []string, int, *lex.Stream) (int, []string):
+									return cb(nhash, hash, word, begin, stream)
 								}
-								return hash, word, rest
-							}, mat.index(m, NPAGE, m.Option(NPAGE)), text, 1)
-							if text = rest; hash == 0 {
+								return hash, word
+							}, mat.index(m, NPAGE, m.Option(NPAGE)), stream, 1)
+
+							if hash == 0 {
 								break
 							}
 						}
@@ -392,6 +399,7 @@ func init() {
 					m.ProcessInner()
 				}},
 			}, Hand: func(m *ice.Message, c *ice.Context, key string, arg ...string) {
+				m.Option(mdb.CACHE_LIMIT, -1)
 				if m.Action(mdb.CREATE); len(arg) == 0 { // 矩阵列表
 					m.Fields(len(arg) == 0, "time,name,npage,nhash")
 					m.Cmdy(mdb.SELECT, m.Prefix(MATRIX), "", mdb.HASH)
@@ -406,24 +414,10 @@ func init() {
 					return
 				}
 
+				// 词法矩阵
 				m.Richs(m.Prefix(MATRIX), "", arg[0], func(key string, value map[string]interface{}) {
 					value = kit.GetMeta(value)
-					mat, _ := value[MATRIX].(*Matrix)
-
-					if len(arg) == 2 { // 词法矩阵
-						mat.show(m)
-						return
-					}
-
-					hash, word, rest := mat.Parse(m, func(m *ice.Message, nhash string, hash int, word []string, rest []byte) (int, []string, []byte) {
-						m.Debug("\033[32mrun --- %v %v %v\033[0m", nhash, word, rest)
-						return hash, word, rest
-					}, mat.index(m, NPAGE, arg[1]), []byte(arg[2]), 1)
-
-					m.Push(kit.MDB_TIME, m.Time())
-					m.Push(kit.MDB_HASH, mat.word[hash])
-					m.Push("word", kit.Format(word))
-					m.Push("rest", string(rest))
+					value[MATRIX].(*Matrix).show(m)
 				})
 			}},
 		},

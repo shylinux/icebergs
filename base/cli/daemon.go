@@ -52,8 +52,9 @@ func _daemon_show(m *ice.Message, cmd *exec.Cmd, out, err string) {
 			m.Cmd(mdb.MODIFY, DAEMON, "", mdb.HASH, kit.MDB_HASH, h, kit.MDB_STATUS, STOP)
 		}
 
-		if m.Option(AUTO_RESTART) == ice.TRUE {
-			m.Cmd(DAEMON, START)
+		switch cb := m.Optionv(kit.Keycb(DAEMON)).(type) {
+		case func():
+			cb()
 		}
 
 		if w, ok := m.Optionv(CMD_OUTPUT).(io.Closer); ok {
@@ -86,8 +87,6 @@ const (
 	RESTART = "restart"
 	RELOAD  = "reload"
 	STOP    = "stop"
-
-	AUTO_RESTART = "auto_restart"
 )
 
 const DAEMON = "daemon"

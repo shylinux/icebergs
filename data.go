@@ -1,6 +1,7 @@
 package ice
 
 import (
+	"strings"
 	"sync"
 
 	kit "github.com/shylinux/toolkits"
@@ -64,7 +65,7 @@ func (m *Message) Grows(prefix string, chain interface{}, match string, value st
 	}
 
 	return miss.Grows(kit.Keys(prefix, chain), cache,
-		kit.Int(kit.Select("0", m.Option("cache.offend"))),
+		kit.Int(kit.Select("0", strings.TrimPrefix(m.Option("cache.offend"), "-"))),
 		kit.Int(kit.Select("10", m.Option("cache.limit"))),
 		match, value, cb)
 }

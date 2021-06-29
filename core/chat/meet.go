@@ -1,7 +1,10 @@
 package chat
 
 import (
+	"math/rand"
+
 	ice "github.com/shylinux/icebergs"
+	"github.com/shylinux/icebergs/base/cli"
 	"github.com/shylinux/icebergs/base/mdb"
 	"github.com/shylinux/icebergs/base/tcp"
 	kit "github.com/shylinux/toolkits"
@@ -62,6 +65,12 @@ func init() {
 					value["照片"] = kit.Format(`<img src="%s" height=%s>`, value["照片"], kit.Select("100", "400", m.Option(mdb.FIELDS) == mdb.DETAIL))
 					m.Push("", value, kit.Split(m.Option(mdb.FIELDS)))
 				})
+			}},
+			"random": {Name: "random max auto", Help: "随机", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+				max := kit.Int(kit.Select("6", arg, 0))
+				n := rand.Intn(max + 1)
+				m.Echo(`<span style="font-size:48px">%s</span>`, cli.Color(m, cli.RED, kit.Format(n)))
+				m.Status("time", m.Time(), "max", max)
 			}},
 		},
 	}, nil)

@@ -422,9 +422,32 @@ const (
 	CACHE_FIELD  = "cache.field"
 	CACHE_VALUE  = "cache.value"
 	CACHE_OFFEND = "cache.offend"
+	CACHE_FILTER = "cache.filter"
 
 	CACHE_CLEAR_ON_EXIT = "cache.clear.on.exit"
 )
+
+func PrevPage(m *ice.Message, total string, arg ...string) {
+	limit, offend := kit.Select("10", arg, 0), kit.Select("0", arg, 1)
+	offends := kit.Int(offend) - kit.Int(limit)
+	if offends <= -kit.Int(total) || offends >= kit.Int(total) {
+		m.Toast("已经是最前一页啦!")
+		m.ProcessHold()
+		return
+	}
+	m.ProcessRewrite("offend", offends)
+
+}
+func NextPage(m *ice.Message, total string, arg ...string) {
+	limit, offend := kit.Select("10", arg, 0), kit.Select("0", arg, 1)
+	offends := kit.Int(offend) + kit.Int(limit)
+	if offends <= -kit.Int(total) || offends >= kit.Int(total) {
+		m.Toast("已经是最后一页啦!")
+		m.ProcessHold()
+		return
+	}
+	m.ProcessRewrite("offend", offends)
+}
 
 const MDB = "mdb"
 

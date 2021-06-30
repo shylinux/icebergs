@@ -319,6 +319,9 @@ func (m *Message) Status(arg ...interface{}) {
 func (m *Message) StatusTimeCount(arg ...interface{}) {
 	m.Status(kit.MDB_TIME, m.Time(), kit.MDB_COUNT, m.FormatSize(), arg)
 }
+func (m *Message) StatusTimeCountTotal(arg ...interface{}) {
+	m.Status(kit.MDB_TIME, m.Time(), kit.MDB_COUNT, m.FormatSize(), "total", arg)
+}
 
 func (m *Message) Process(action string, arg ...interface{}) {
 	m.Option(MSG_PROCESS, action)
@@ -378,4 +381,8 @@ func (m *Message) Capi(key string, val ...interface{}) int {
 		m.Cap(key, kit.Int(m.Cap(key))+kit.Int(val[0]))
 	}
 	return kit.Int(m.Cap(key))
+}
+func (m *Message) Cut(fields ...string) *Message {
+	m.meta[MSG_APPEND] = strings.Split(strings.Join(fields, ","), ",")
+	return m
 }

@@ -248,6 +248,7 @@ func (m *Message) SortTimeR(key string) { m.Sort(key, "time_r") }
 
 func (m *Message) FormatMeta() string { return m.Format("meta") }
 func (m *Message) FormatSize() string { return m.Format("size") }
+func (m *Message) FormatCost() string { return m.Format("cost") }
 func (m *Message) RenameAppend(from, to string) {
 	for i, v := range m.meta[MSG_APPEND] {
 		if v == from {
@@ -316,11 +317,12 @@ func (m *Message) Status(arg ...interface{}) {
 	}
 	m.Option(MSG_STATUS, kit.Format(list))
 }
+
 func (m *Message) StatusTimeCount(arg ...interface{}) {
-	m.Status(kit.MDB_TIME, m.Time(), kit.MDB_COUNT, m.FormatSize(), arg)
+	m.Status(kit.MDB_TIME, m.Time(), kit.MDB_COUNT, m.FormatSize(), arg, "cost", m.FormatCost())
 }
 func (m *Message) StatusTimeCountTotal(arg ...interface{}) {
-	m.Status(kit.MDB_TIME, m.Time(), kit.MDB_COUNT, m.FormatSize(), "total", arg)
+	m.Status(kit.MDB_TIME, m.Time(), kit.MDB_COUNT, m.FormatSize(), "total", arg, "cost", m.FormatCost())
 }
 
 func (m *Message) Process(action string, arg ...interface{}) {

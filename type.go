@@ -232,7 +232,6 @@ func (c *Context) _split(name string) []interface{} {
 		if v == "page" {
 			list = append(list, kit.List(kit.MDB_INPUT, "text", "name", "limit")...)
 			list = append(list, kit.List(kit.MDB_INPUT, "text", "name", "offend")...)
-			list = append(list, kit.List(kit.MDB_INPUT, "text", "name", "filter")...)
 			list = append(list, kit.List(kit.MDB_INPUT, "button", "name", "prev")...)
 			list = append(list, kit.List(kit.MDB_INPUT, "button", "name", "next")...)
 			continue

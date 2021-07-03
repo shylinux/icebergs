@@ -50,7 +50,7 @@ func init() {
 					m.Cmd(TAIL, mdb.CREATE, kit.MDB_FILE, kit.Format(value[kit.MDB_FILE]), kit.MDB_NAME, kit.Format(value[kit.MDB_NAME]))
 				})
 			}},
-			TAIL: {Name: "tail name id auto create page", Help: "日志流", Action: map[string]*ice.Action{
+			TAIL: {Name: "tail name id auto page filter:text create", Help: "日志流", Action: map[string]*ice.Action{
 				mdb.CREATE: {Name: "create file name", Help: "创建", Hand: func(m *ice.Message, arg ...string) {
 					_tail_create(m, arg...)
 				}},
@@ -78,7 +78,7 @@ func init() {
 				if len(arg) == 0 {
 					m.PushAction(mdb.REMOVE)
 				} else {
-					m.StatusTimeCount("total", m.Conf(TAIL, kit.Keys(kit.MDB_HASH, kit.Hashs(arg[0]), kit.MDB_META, kit.MDB_COUNT)))
+					m.StatusTimeCountTotal(m.Conf(TAIL, kit.Keys(kit.MDB_HASH, kit.Hashs(arg[0]), kit.MDB_META, kit.MDB_COUNT)))
 				}
 			}},
 		},

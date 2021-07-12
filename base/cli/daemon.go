@@ -71,6 +71,7 @@ const (
 	DIR = "dir"
 	ENV = "env"
 	CMD = "cmd"
+	API = "api"
 	ARG = "arg"
 	RUN = "run"
 	RES = "res"
@@ -80,6 +81,7 @@ const (
 	ERROR = "error"
 	BUILD = "build"
 	SPAWN = "spawn"
+	CHECK = "check"
 	BENCH = "bench"
 	PPROF = "pprof"
 

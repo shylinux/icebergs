@@ -91,6 +91,7 @@ const ( // MSG
 	MSG_PROCESS = "_process"
 
 	MSG_CMDS   = "cmds"
+	MSG_FIELDS = "fields"
 	MSG_SESSID = "sessid"
 	MSG_DOMAIN = "domain"
 	MSG_OPTS   = "_option"

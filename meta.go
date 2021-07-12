@@ -114,7 +114,7 @@ func (m *Message) Push(key string, value interface{}, arg ...interface{}) *Messa
 		}
 
 	default:
-		if m.Option("fields") == "detail" || (len(m.meta[MSG_APPEND]) == 2 && m.meta[MSG_APPEND][0] == kit.MDB_KEY && m.meta[MSG_APPEND][1] == kit.MDB_VALUE) {
+		if m.Option(MSG_FIELDS) == "detail" || (len(m.meta[MSG_APPEND]) == 2 && m.meta[MSG_APPEND][0] == kit.MDB_KEY && m.meta[MSG_APPEND][1] == kit.MDB_VALUE) {
 			if key != kit.MDB_KEY || key != kit.MDB_VALUE {
 				m.Add(MSG_APPEND, kit.MDB_KEY, key)
 				m.Add(MSG_APPEND, kit.MDB_VALUE, kit.Format(value))
@@ -184,6 +184,9 @@ func (m *Message) Copy(msg *Message, arg ...string) *Message {
 	return m
 }
 func (m *Message) Sort(key string, arg ...string) *Message {
+	if m.Option(MSG_FIELDS) == "detail" {
+		return m
+	}
 	// 排序方法
 	cmp := "str"
 	if len(arg) > 0 && arg[0] != "" {
@@ -465,7 +468,7 @@ func (m *Message) Optionv(key string, arg ...interface{}) interface{} {
 		default:
 			m.data[key] = str
 		}
-		if key == "fields" {
+		if key == MSG_FIELDS {
 			for _, k := range kit.Split(strings.Join(m.meta[key], ",")) {
 				delete(m.meta, k)
 			}

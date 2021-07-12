@@ -59,7 +59,8 @@ func Render(msg *ice.Message, cmd string, args ...interface{}) {
 	default:
 		for _, k := range []string{
 			"_option", "_handle", "_output", "",
-			"sessid", "domain", "river", "storm", "cmds", "fields",
+			"cmds", "fields", "sessid", "domain",
+			"river", "storm",
 		} {
 			msg.Set(k)
 		}

@@ -352,7 +352,7 @@ func _zone_import(m *ice.Message, prefix, chain, file string) {
 	count := 0
 
 	list := map[string]string{}
-	zkey := m.Option(FIELDS)
+	zkey := kit.Select(head[0], m.Option(FIELDS))
 
 	for {
 		line, e := r.Read()

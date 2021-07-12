@@ -15,6 +15,9 @@ import (
 func (m *Message) Prefix(arg ...string) string {
 	return kit.Keys(m.Cap(CTX_FOLLOW), arg)
 }
+func (m *Message) PrefixKey(arg ...string) string {
+	return kit.Keys(m.Cap(CTX_FOLLOW), m._key, arg)
+}
 func (m *Message) Save(arg ...string) *Message {
 	if len(arg) == 0 {
 		for k := range m.target.Configs {
@@ -85,7 +88,7 @@ func (m *Message) PushPodCmd(cmd string, arg ...string) {
 }
 func (m *Message) PushSearch(args ...interface{}) {
 	data := kit.Dict(args...)
-	for _, k := range kit.Split(m.Option("fields")) {
+	for _, k := range kit.Split(m.Option(MSG_FIELDS)) {
 		switch k {
 		case kit.SSH_POD:
 			// m.Push(k, kit.Select(m.Option(MSG_USERPOD), data[kit.SSH_POD]))
@@ -102,7 +105,7 @@ func (m *Message) PushSearch(args ...interface{}) {
 }
 func (m *Message) PushSearchWeb(cmd string, name string) {
 	msg := m.Spawn()
-	msg.Option("fields", "type,name,text")
+	msg.Option(MSG_FIELDS, "type,name,text")
 	msg.Cmd("mdb.select", m.Prefix(cmd), "", kit.MDB_HASH).Table(func(index int, value map[string]string, head []string) {
 		text := kit.MergeURL(value[kit.MDB_TEXT], value[kit.MDB_NAME], name)
 		if value[kit.MDB_NAME] == "" {
@@ -264,7 +267,7 @@ type Option struct {
 	Value interface{}
 }
 
-func OptionFields(str string) Option { return Option{"fields", str} }
+func OptionFields(str string) Option { return Option{MSG_FIELDS, str} }
 func OptionHash(str string) Option   { return Option{kit.MDB_HASH, str} }
 
 type Sort struct {
@@ -302,7 +305,7 @@ func (m *Message) GoToast(title string, cb func(toast func(string, int, int))) {
 }
 
 func (m *Message) Fields(condition bool, fields string) string {
-	return m.Option("fields", kit.Select(kit.Select("detail", fields, condition), m.Option("fields")))
+	return m.Option(MSG_FIELDS, kit.Select(kit.Select("detail", fields, condition), m.Option(MSG_FIELDS)))
 }
 func (m *Message) Action(arg ...string) {
 	m.Option(MSG_ACTION, kit.Format(arg))
@@ -362,7 +365,7 @@ func (m *Message) Upload(dir string) {
 	}
 }
 
-func (m *Message) OptionFields(str string) { m.Option("fields", str) }
+func (m *Message) OptionFields(str string) { m.Option(MSG_FIELDS, str) }
 func (m *Message) OptionLoad(file string) *Message {
 	if f, e := os.Open(file); e == nil {
 		defer f.Close()

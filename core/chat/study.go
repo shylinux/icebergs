@@ -53,7 +53,7 @@ func init() {
 					m.Cmdy(mdb.INPUTS, m.Prefix(TARGET), "", mdb.HASH, arg)
 				}},
 			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-				m.Option("fields", "time,hash,type,name,text")
+				m.Fields(len(arg) == 0, "time,hash,type,name,text")
 				m.Cmdy(mdb.SELECT, m.Prefix(TARGET), "", mdb.HASH, "", kit.Select(kit.MDB_FOREACH, arg, 0))
 				if len(arg) == 0 {
 					m.PushAction("备课", "学习", "测试", "删除")

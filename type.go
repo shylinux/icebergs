@@ -111,7 +111,7 @@ func (c *Context) _hand(m *Message, cmd *Command, key string, k string, h *Actio
 	return m
 }
 func (c *Context) cmd(m *Message, cmd *Command, key string, arg ...string) *Message {
-	if m._cmd = cmd; cmd == nil {
+	if m._key, m._cmd = key, cmd; cmd == nil {
 		return m
 	}
 
@@ -182,7 +182,7 @@ func (c *Context) Merge(s *Context) *Context {
 		c.Commands[k] = v
 
 		if v.List == nil {
-			v.List = c._split(v.Name)
+			v.List = c._split(k, v, v.Name)
 		}
 		if v.Meta == nil {
 			v.Meta = kit.Dict()
@@ -203,7 +203,7 @@ func (c *Context) Merge(s *Context) *Context {
 				continue
 			}
 			if a.List == nil {
-				a.List = c._split(a.Name)
+				a.List = c._split(k, nil, a.Name)
 			}
 			if len(a.List) > 0 {
 				v.Meta[k] = a.List
@@ -226,17 +226,17 @@ func (c *Context) Merge(s *Context) *Context {
 	}
 	return c
 }
-func (c *Context) _split(name string) []interface{} {
+func (c *Context) _split(key string, cmd *Command, name string) []interface{} {
 	button, list := false, []interface{}{}
 	for _, v := range kit.Split(kit.Select("key", name), " ", " ")[1:] {
-		if v == "page" {
+		switch v {
+		case "page":
 			list = append(list, kit.List(kit.MDB_INPUT, "text", "name", "limit")...)
 			list = append(list, kit.List(kit.MDB_INPUT, "text", "name", "offend")...)
 			list = append(list, kit.List(kit.MDB_INPUT, "button", "name", "prev")...)
 			list = append(list, kit.List(kit.MDB_INPUT, "button", "name", "next")...)
 			continue
-		}
-		if v == "auto" {
+		case "auto":
 			list = append(list, kit.List(kit.MDB_INPUT, "button", "name", "查看", "value", "auto")...)
 			list = append(list, kit.List(kit.MDB_INPUT, "button", "name", "返回")...)
 			button = true
@@ -342,6 +342,7 @@ type Message struct {
 	time time.Time
 	code int
 	Hand bool
+	wait chan bool
 
 	meta map[string][]string
 	data map[string]interface{}
@@ -352,13 +353,13 @@ type Message struct {
 	source *Context
 	target *Context
 	_cmd   *Command
+	_key   string
 
-	cb   func(*Message) *Message
-	W    http.ResponseWriter
-	R    *http.Request
-	O    io.Writer
-	I    io.Reader
-	wait chan bool
+	cb func(*Message) *Message
+	W  http.ResponseWriter
+	R  *http.Request
+	O  io.Writer
+	I  io.Reader
 }
 
 func (m *Message) Time(args ...interface{}) string {
@@ -683,6 +684,11 @@ func (m *Message) cmd(arg ...interface{}) *Message {
 		switch val := v.(type) {
 		case func(int, map[string]string, []string):
 			defer func() { m.Table(val) }()
+
+		case map[string]string:
+			for k, v := range val {
+				opts[k] = v
+			}
 
 		case *Option:
 			opts[val.Name] = val.Value

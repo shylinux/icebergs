@@ -128,6 +128,9 @@ func _spide_body(m *ice.Message, method string, arg ...string) (io.Reader, map[s
 			body, head[ContentType] = _spide_part(m, arg...)
 
 		case SPIDE_DATA:
+			if len(arg) == 1 {
+				arg = append(arg, "{}")
+			}
 			body, arg = bytes.NewBufferString(arg[1]), arg[2:]
 
 		case SPIDE_FILE:

@@ -8,13 +8,14 @@ import (
 	log "github.com/shylinux/toolkits/logs"
 )
 
-var OK = "ok"
-var ErrWarn = "warn: "
-var ErrExpire = "expire: "
-var ErrNotLogin = "not login: "
-var ErrNotRight = "not right: "
-var ErrNotFound = "not found: "
-var ErrNotShare = "not share: "
+const (
+	ErrWarn     = "warn: "
+	ErrExists   = "exists: "
+	ErrExpire   = "expire: "
+	ErrNotLogin = "not login: "
+	ErrNotFound = "not found: "
+	ErrNotRight = "not right: "
+)
 
 var _log_disable = true
 var Log func(m *Message, p, l, s string)

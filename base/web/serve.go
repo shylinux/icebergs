@@ -65,7 +65,7 @@ func _serve_main(m *ice.Message, w http.ResponseWriter, r *http.Request) bool {
 	}
 
 	// 文件接口
-	if ice.DumpBinPack(w, r.URL.Path, func(name string) { RenderType(w, name, "") }) {
+	if ice.Dump(w, r.URL.Path, func(name string) { RenderType(w, name, "") }) {
 		return false
 	}
 	return true

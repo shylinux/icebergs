@@ -79,7 +79,7 @@ func (c *Context) Cap(key string, arg ...interface{}) string {
 	}
 	return c.Caches[key].Value
 }
-func (c *Context) _hand(m *Message, cmd *Command, key string, k string, h *Action, arg ...string) *Message {
+func (c *Context) _cmd(m *Message, cmd *Command, key string, k string, h *Action, arg ...string) *Message {
 	m.Log(LOG_CMDS, "%s.%s %s %d %v %s", c.Name, key, k, len(arg), arg, kit.FileLine(h.Hand, 3))
 	if len(h.List) > 0 && k != "search" {
 		order := false
@@ -118,12 +118,12 @@ func (c *Context) cmd(m *Message, cmd *Command, key string, arg ...string) *Mess
 	m.meta[MSG_DETAIL] = kit.Simple(key, arg)
 	if m.Hand = true; len(arg) > 1 && arg[0] == kit.MDB_ACTION && cmd.Action != nil {
 		if h, ok := cmd.Action[arg[1]]; ok {
-			return c._hand(m, cmd, key, arg[1], h, arg[2:]...)
+			return c._cmd(m, cmd, key, arg[1], h, arg[2:]...)
 		}
 	}
 	if len(arg) > 0 && arg[0] != "command" && cmd.Action != nil {
 		if h, ok := cmd.Action[arg[0]]; ok {
-			return c._hand(m, cmd, key, arg[0], h, arg[1:]...)
+			return c._cmd(m, cmd, key, arg[0], h, arg[1:]...)
 		}
 	}
 
@@ -182,7 +182,7 @@ func (c *Context) Merge(s *Context) *Context {
 		c.Commands[k] = v
 
 		if v.List == nil {
-			v.List = c._split(k, v, v.Name)
+			v.List = c.split(k, v, v.Name)
 		}
 		if v.Meta == nil {
 			v.Meta = kit.Dict()
@@ -203,7 +203,7 @@ func (c *Context) Merge(s *Context) *Context {
 				continue
 			}
 			if a.List == nil {
-				a.List = c._split(k, nil, a.Name)
+				a.List = c.split(k, nil, a.Name)
 			}
 			if len(a.List) > 0 {
 				v.Meta[k] = a.List
@@ -226,7 +226,7 @@ func (c *Context) Merge(s *Context) *Context {
 	}
 	return c
 }
-func (c *Context) _split(key string, cmd *Command, name string) []interface{} {
+func (c *Context) split(key string, cmd *Command, name string) []interface{} {
 	button, list := false, []interface{}{}
 	for _, v := range kit.Split(kit.Select("key", name), " ", " ")[1:] {
 		switch v {
@@ -580,7 +580,7 @@ func (m *Message) Search(key string, cb interface{}) *Message {
 
 	// 查找模块
 	p := m.target.root
-	if ctx, ok := names[key].(*Context); ok {
+	if ctx, ok := Info.names[key].(*Context); ok {
 		p = ctx
 	} else if key == "ice." {
 		p, key = m.target.root, ""

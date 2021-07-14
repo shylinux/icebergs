@@ -1,6 +1,8 @@
 package ice
 
 import (
+	"bytes"
+	"encoding/csv"
 	"encoding/json"
 	"fmt"
 	"net/url"
@@ -113,13 +115,6 @@ func (m *Message) PushSearchWeb(cmd string, name string) {
 		}
 		m.PushSearch(kit.SSH_CMD, cmd, kit.MDB_TYPE, kit.Select("", value[kit.MDB_TYPE]), kit.MDB_NAME, name, kit.MDB_TEXT, text)
 	})
-}
-
-func (m *Message) IsCliUA() bool {
-	if m.Option(MSG_USERUA) == "" || !strings.HasPrefix(m.Option(MSG_USERUA), "Mozilla/5.0") {
-		return true
-	}
-	return false
 }
 
 func Render(m *Message, cmd string, args ...interface{}) string {
@@ -252,27 +247,62 @@ func (m *Message) SortTimeR(key string) { m.Sort(key, "time_r") }
 func (m *Message) FormatMeta() string { return m.Format("meta") }
 func (m *Message) FormatSize() string { return m.Format("size") }
 func (m *Message) FormatCost() string { return m.Format("cost") }
-func (m *Message) RenameAppend(from, to string) {
-	for i, v := range m.meta[MSG_APPEND] {
-		if v == from {
-			m.meta[MSG_APPEND][i] = to
-			m.meta[to] = m.meta[from]
-			delete(m.meta, from)
-		}
-	}
-}
 
+type Sort struct {
+	Fields string
+	Method string
+}
 type Option struct {
 	Name  string
 	Value interface{}
 }
 
-func OptionFields(str string) Option { return Option{MSG_FIELDS, str} }
-func OptionHash(str string) Option   { return Option{kit.MDB_HASH, str} }
+func OptionFields(str string) Option       { return Option{MSG_FIELDS, str} }
+func OptionHash(str string) Option         { return Option{kit.MDB_HASH, str} }
+func (m *Message) OptionFields(str string) { m.Option(MSG_FIELDS, str) }
+func (m *Message) OptionLoad(file string) *Message {
+	if f, e := os.Open(file); e == nil {
+		defer f.Close()
 
-type Sort struct {
-	Fields string
-	Method string
+		var data interface{}
+		json.NewDecoder(f).Decode(&data)
+
+		kit.Fetch(data, func(key string, value interface{}) { m.Option(key, kit.Simple(value)) })
+	}
+	return m
+}
+func (m *Message) Fields(condition bool, fields string) string {
+	return m.Option(MSG_FIELDS, kit.Select(kit.Select("detail", fields, condition), m.Option(MSG_FIELDS)))
+}
+func (m *Message) Upload(dir string) {
+	up := kit.Simple(m.Optionv(MSG_UPLOAD))
+	if p := path.Join(dir, up[1]); m.Option(MSG_USERPOD) == "" {
+		// 本机文件
+		m.Cmdy("web.cache", "watch", up[0], p)
+	} else {
+		// 下拉文件
+		m.Cmdy("web.spide", "dev", "save", p, "GET",
+			kit.MergeURL2(m.Option(MSG_USERWEB), path.Join("/share/cache", up[0])))
+	}
+}
+func (m *Message) Action(arg ...string) {
+	m.Option(MSG_ACTION, kit.Format(arg))
+}
+func (m *Message) Status(arg ...interface{}) {
+	args := kit.Simple(arg)
+	list := []map[string]string{}
+	for i := 0; i < len(args)-1; i += 2 {
+		list = append(list, map[string]string{
+			"name": args[i], "value": args[i+1],
+		})
+	}
+	m.Option(MSG_STATUS, kit.Format(list))
+}
+func (m *Message) StatusTimeCount(arg ...interface{}) {
+	m.Status(kit.MDB_TIME, m.Time(), kit.MDB_COUNT, m.FormatSize(), arg, "cost", m.FormatCost())
+}
+func (m *Message) StatusTimeCountTotal(arg ...interface{}) {
+	m.Status(kit.MDB_TIME, m.Time(), kit.MDB_COUNT, m.FormatSize(), "total", arg, "cost", m.FormatCost())
 }
 
 func (m *Message) Toast(content string, arg ...interface{}) {
@@ -303,31 +333,6 @@ func (m *Message) GoToast(title string, cb func(toast func(string, int, int))) {
 		})
 	})
 }
-
-func (m *Message) Fields(condition bool, fields string) string {
-	return m.Option(MSG_FIELDS, kit.Select(kit.Select("detail", fields, condition), m.Option(MSG_FIELDS)))
-}
-func (m *Message) Action(arg ...string) {
-	m.Option(MSG_ACTION, kit.Format(arg))
-}
-func (m *Message) Status(arg ...interface{}) {
-	args := kit.Simple(arg)
-	list := []map[string]string{}
-	for i := 0; i < len(args)-1; i += 2 {
-		list = append(list, map[string]string{
-			"name": args[i], "value": args[i+1],
-		})
-	}
-	m.Option(MSG_STATUS, kit.Format(list))
-}
-
-func (m *Message) StatusTimeCount(arg ...interface{}) {
-	m.Status(kit.MDB_TIME, m.Time(), kit.MDB_COUNT, m.FormatSize(), arg, "cost", m.FormatCost())
-}
-func (m *Message) StatusTimeCountTotal(arg ...interface{}) {
-	m.Status(kit.MDB_TIME, m.Time(), kit.MDB_COUNT, m.FormatSize(), "total", arg, "cost", m.FormatCost())
-}
-
 func (m *Message) Process(action string, arg ...interface{}) {
 	m.Option(MSG_PROCESS, action)
 	m.Option("_arg", arg...)
@@ -353,31 +358,6 @@ func (m *Message) ProcessInner() { m.Process(PROCESS_INNER) }
 func (m *Message) ProcessHold()  { m.Process(PROCESS_HOLD) }
 func (m *Message) ProcessBack()  { m.Process(PROCESS_BACK) }
 
-func (m *Message) Upload(dir string) {
-	up := kit.Simple(m.Optionv(MSG_UPLOAD))
-	if p := path.Join(dir, up[1]); m.Option(MSG_USERPOD) == "" {
-		// 本机文件
-		m.Cmdy("web.cache", "watch", up[0], p)
-	} else {
-		// 下拉文件
-		m.Cmdy("web.spide", "dev", "save", p, "GET",
-			kit.MergeURL2(m.Option(MSG_USERWEB), path.Join("/share/cache", up[0])))
-	}
-}
-
-func (m *Message) OptionFields(str string) { m.Option(MSG_FIELDS, str) }
-func (m *Message) OptionLoad(file string) *Message {
-	if f, e := os.Open(file); e == nil {
-		defer f.Close()
-
-		var data interface{}
-		json.NewDecoder(f).Decode(&data)
-
-		kit.Fetch(data, func(key string, value interface{}) { m.Option(key, kit.Simple(value)) })
-	}
-	return m
-}
-
 func (m *Message) Confi(key string, sub string) int {
 	return kit.Int(m.Conf(key, sub))
 }
@@ -390,4 +370,117 @@ func (m *Message) Capi(key string, val ...interface{}) int {
 func (m *Message) Cut(fields ...string) *Message {
 	m.meta[MSG_APPEND] = strings.Split(strings.Join(fields, ","), ",")
 	return m
+}
+func (m *Message) Render(cmd string, args ...interface{}) *Message {
+	m.Optionv(MSG_OUTPUT, cmd)
+	m.Optionv(MSG_ARGS, args)
+
+	switch cmd {
+	case RENDER_TEMPLATE: // text [data [type]]
+		if len(args) == 1 {
+			args = append(args, m)
+		}
+		if res, err := kit.Render(args[0].(string), args[1]); m.Assert(err) {
+			m.Echo(string(res))
+		}
+	}
+	return m
+}
+func (m *Message) Parse(meta string, key string, arg ...string) *Message {
+	list := []string{}
+	for _, line := range kit.Split(strings.Join(arg, " "), "\n") {
+		ls := kit.Split(line)
+		for i := 0; i < len(ls); i++ {
+			if strings.HasPrefix(ls[i], "#") {
+				ls = ls[:i]
+				break
+			}
+		}
+		list = append(list, ls...)
+	}
+
+	switch data := kit.Parse(nil, "", list...); meta {
+	case MSG_OPTION:
+		m.Option(key, data)
+	case MSG_APPEND:
+		m.Append(key, data)
+	}
+	return m
+}
+func (m *Message) Split(str string, field string, space string, enter string) *Message {
+	indexs := []int{}
+	fields := kit.Split(field, space, space, space)
+	for i, l := range kit.Split(str, enter, enter, enter) {
+		if strings.HasPrefix(l, "Binary") {
+			continue
+		}
+		if strings.TrimSpace(l) == "" {
+			continue
+		}
+		if i == 0 && (field == "" || field == "index") {
+			// 表头行
+			fields = kit.Split(l, space, space)
+			if field == "index" {
+				for _, v := range fields {
+					indexs = append(indexs, strings.Index(l, v))
+				}
+			}
+			continue
+		}
+
+		if len(indexs) > 0 {
+			// 数据行
+			for i, v := range indexs {
+				if i == len(indexs)-1 {
+					m.Push(kit.Select("some", fields, i), l[v:])
+				} else {
+					m.Push(kit.Select("some", fields, i), l[v:indexs[i+1]])
+				}
+			}
+			continue
+		}
+
+		ls := kit.Split(l, space, space)
+		for i, v := range ls {
+			if i == len(fields)-1 {
+				m.Push(kit.Select("some", fields, i), strings.Join(ls[i:], space))
+				break
+			}
+			m.Push(kit.Select("some", fields, i), v)
+		}
+	}
+	return m
+}
+func (m *Message) CSV(text string, head ...string) *Message {
+	bio := bytes.NewBufferString(text)
+	r := csv.NewReader(bio)
+
+	if len(head) == 0 {
+		head, _ = r.Read()
+	}
+	for {
+		line, e := r.Read()
+		if e != nil {
+			break
+		}
+		for i, k := range head {
+			m.Push(k, kit.Select("", line, i))
+		}
+	}
+	return m
+}
+func (m *Message) RenameAppend(from, to string) {
+	for i, v := range m.meta[MSG_APPEND] {
+		if v == from {
+			m.meta[MSG_APPEND][i] = to
+			m.meta[to] = m.meta[from]
+			delete(m.meta, from)
+		}
+	}
+}
+func (m *Message) IsCliUA() bool {
+	if m.Option(MSG_USERUA) == "" || !strings.HasPrefix(m.Option(MSG_USERUA), "Mozilla/5.0") {
+		return true
+	}
+	return false
 }

@@ -19,19 +19,21 @@ const ( // REPOS
 	INTSHELL = "intshell"
 	CONTEXTS = "contexts"
 
-	PUBLISH = "publish"
+	INSTALL = "install"
 	REQUIRE = "require"
+	PUBLISH = "publish"
 
 	SUCCESS = "success"
 	FAILURE = "failure"
 	TRUE    = "true"
+	OK      = "ok"
 )
 const ( // DIR
 	USR_VOLCANOS = "usr/volcanos"
 	USR_ICEBERGS = "usr/icebergs"
 	USR_INTSHELL = "usr/intshell"
-	USR_PUBLISH  = "usr/publish"
 	USR_INSTALL  = "usr/install"
+	USR_PUBLISH  = "usr/publish"
 	USR_LOCAL    = "usr/local"
 
 	PROTO_JS = "proto.js"
@@ -64,9 +66,10 @@ const ( // DIR
 	GO_MOD      = "go.mod"
 	GO_SUM      = "go.sum"
 
-	CTX_DEV = "ctx_dev"
-	CTX_PID = "ctx_pid"
-	CTX_LOG = "ctx_log"
+	CTX_DEBUG = "ctx_debug"
+	CTX_DEV   = "ctx_dev"
+	CTX_PID   = "ctx_pid"
+	CTX_LOG   = "ctx_log"
 )
 const ( // MSG
 	MSG_DETAIL = "detail"

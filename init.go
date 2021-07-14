@@ -1,42 +1,19 @@
 package ice
 
 import (
-	"fmt"
 	"io"
 	"os"
 	"strings"
 	"sync"
-	"sync/atomic"
 	"time"
 
 	kit "github.com/shylinux/toolkits"
 )
 
-var Info = struct {
-	HostName string
-	PathName string
-	UserName string
-	PassWord string
-
-	NodeType string
-	NodeName string
-	CtxShare string
-	CtxRiver string
-
-	Make struct {
-		Time     string
-		Hash     string
-		Remote   string
-		Branch   string
-		Version  string
-		HostName string
-		UserName string
-	}
-
-	nLocalCmd int32
-}{}
-
-type Frame struct{ code int }
+type Frame struct {
+	code int
+	wait chan bool
+}
 
 func (f *Frame) Spawn(m *Message, c *Context, arg ...string) Server {
 	return &Frame{}
@@ -131,7 +108,7 @@ var Index = &Context{Name: "ice", Help: "冰山模块",
 			}},
 		}, Hand: func(m *Message, c *Context, cmd string, arg ...string) {
 			m.root.target.server.(*Frame).code = kit.Int(kit.Select("0", arg, 0))
-			m.Cmd("ssh.source", "etc/exit.shy", "exit.shy", "退出配置")
+			m.Cmd("ssh.source", ETC_EXIT, "exit.shy", "退出配置")
 			m.root.Cmd(CTX_EXIT)
 		}},
 		CTX_EXIT: {Hand: func(m *Message, c *Context, cmd string, arg ...string) {
@@ -143,7 +120,8 @@ var Index = &Context{Name: "ice", Help: "冰山模块",
 					})
 				}
 			})
-			wait <- true
+			f := c.server.(*Frame)
+			f.wait <- true
 		}},
 	},
 }
@@ -154,8 +132,64 @@ var Pulse = &Message{
 
 	source: Index, target: Index, Hand: true,
 }
-var wait = make(chan bool, 1)
+var Info = struct {
+	HostName string
+	PathName string
+	UserName string
+	PassWord string
 
+	NodeType string
+	NodeName string
+	CtxShare string
+	CtxRiver string
+
+	Make struct {
+		Time     string
+		Hash     string
+		Remote   string
+		Branch   string
+		Version  string
+		HostName string
+		UserName string
+	}
+
+	BinPack map[string][]byte
+	names   map[string]interface{}
+}{
+	BinPack: map[string][]byte{},
+	names:   map[string]interface{}{},
+}
+
+func Dump(w io.Writer, name string, cb func(string)) bool {
+	if b, ok := Info.BinPack[name]; ok {
+		if cb != nil {
+			cb(name)
+		}
+		w.Write(b)
+		return true
+	}
+	if b, ok := Info.BinPack[strings.TrimPrefix(name, USR_VOLCANOS)]; ok {
+		if cb != nil {
+			cb(name)
+		}
+		w.Write(b)
+		return true
+	}
+	return false
+}
+func Name(name string, value interface{}) string {
+	if s, ok := Info.names[name]; ok {
+		last := ""
+		switch s := s.(type) {
+		case *Context:
+			last = s.Name
+		}
+		panic(kit.Format("%s %s %v", ErrExists, name, last))
+	}
+
+	Info.names[name] = value
+	return name
+}
 func Run(arg ...string) string {
 	if len(arg) == 0 {
 		arg = os.Args[1:]
@@ -164,7 +198,7 @@ func Run(arg ...string) string {
 		arg = append(arg, "help")
 	}
 
-	frame := &Frame{}
+	frame := &Frame{wait: make(chan bool, 1)}
 	Index.root = Index
 	Index.server = frame
 	Index.Merge(Index)
@@ -179,11 +213,11 @@ func Run(arg ...string) string {
 			frame.Close(Pulse.Spawn(), arg...)
 		}
 
-		<-wait
+		<-frame.wait
 		os.Exit(frame.code)
 
 	default:
-		_log_disable = os.Getenv("ctx_debug") != "true"
+		_log_disable = os.Getenv(CTX_DEBUG) != TRUE
 		if Pulse.Cmdy(arg); Pulse.Result() == "" {
 			Pulse.Table()
 		}
@@ -194,46 +228,4 @@ func Run(arg ...string) string {
 	}
 
 	return Pulse.Result()
-}
-
-var BinPack = map[string][]byte{}
-
-func DumpBinPack(w io.Writer, name string, cb func(string)) bool {
-	if b, ok := BinPack[name]; ok {
-		if cb != nil {
-			cb(name)
-		}
-		w.Write(b)
-		return true
-	}
-	if b, ok := BinPack[strings.TrimPrefix(name, "usr/volcanos")]; ok {
-		if cb != nil {
-			cb(name)
-		}
-		w.Write(b)
-		return true
-	}
-	return false
-}
-
-var names = map[string]interface{}{}
-var ErrNameExists = "name already exists: "
-
-func Name(name string, value interface{}) string {
-	if s, ok := names[name]; ok {
-		last := ""
-		switch s := s.(type) {
-		case *Context:
-			last = s.Name
-		}
-		panic(kit.Format("name already exits: %s %v", name, last))
-	}
-
-	names[name] = value
-	return name
-}
-func (m *Message) AddCmd(cmd *Command) string {
-	name := fmt.Sprintf("_cb_%d", atomic.AddInt32(&Info.nLocalCmd, 1))
-	m.target.Commands[name] = cmd
-	return kit.Keys(m.target.Cap(CTX_FOLLOW), name)
 }

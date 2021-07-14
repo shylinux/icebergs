@@ -41,7 +41,7 @@ func Render(msg *ice.Message, cmd string, args ...interface{}) {
 
 	case ice.RENDER_DOWNLOAD: // file [type [name]]
 		msg.W.Header().Set("Content-Disposition", fmt.Sprintf("filename=%s", kit.Select(path.Base(arg[0]), arg, 2)))
-		if RenderType(msg.W, arg[0], kit.Select("", arg, 1)); !ice.DumpBinPack(msg.W, arg[0], nil) {
+		if RenderType(msg.W, arg[0], kit.Select("", arg, 1)); !ice.Dump(msg.W, arg[0], nil) {
 			http.ServeFile(msg.W, msg.R, kit.Path(arg[0]))
 		}
 

@@ -108,7 +108,7 @@ func init() {
 					}
 				}},
 			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-				for k, v := range ice.BinPack {
+				for k, v := range ice.Info.BinPack {
 					m.Push(kit.MDB_NAME, k)
 					m.Push(kit.MDB_SIZE, len(v))
 				}

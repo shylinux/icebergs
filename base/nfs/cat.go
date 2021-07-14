@@ -54,7 +54,7 @@ func _cat_show(m *ice.Message, name string) {
 	}
 
 	// 打包文件
-	if b, ok := ice.BinPack[name]; ok {
+	if b, ok := ice.Info.BinPack[name]; ok {
 		m.Logs("binpack", name, kit.MDB_SIZE, len(b))
 		m.Echo(string(b))
 		return

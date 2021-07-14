@@ -1,8 +1,6 @@
 package ice
 
 import (
-	"bytes"
-	"encoding/csv"
 	"fmt"
 	"sort"
 	"strconv"
@@ -341,104 +339,6 @@ func (m *Message) Table(cbs ...func(index int, value map[string]string, head []s
 		// 依次回调
 		if !cb(row, wor, i) {
 			break
-		}
-	}
-	return m
-}
-func (m *Message) Render(cmd string, args ...interface{}) *Message {
-	m.Optionv(MSG_OUTPUT, cmd)
-	m.Optionv(MSG_ARGS, args)
-
-	switch cmd {
-	case RENDER_TEMPLATE: // text [data [type]]
-		if len(args) == 1 {
-			args = append(args, m)
-		}
-		if res, err := kit.Render(args[0].(string), args[1]); m.Assert(err) {
-			m.Echo(string(res))
-		}
-	}
-	return m
-}
-func (m *Message) Parse(meta string, key string, arg ...string) *Message {
-	list := []string{}
-	for _, line := range kit.Split(strings.Join(arg, " "), "\n") {
-		ls := kit.Split(line)
-		for i := 0; i < len(ls); i++ {
-			if strings.HasPrefix(ls[i], "#") {
-				ls = ls[:i]
-				break
-			}
-		}
-		list = append(list, ls...)
-	}
-
-	switch data := kit.Parse(nil, "", list...); meta {
-	case MSG_OPTION:
-		m.Option(key, data)
-	case MSG_APPEND:
-		m.Append(key, data)
-	}
-	return m
-}
-func (m *Message) Split(str string, field string, space string, enter string) *Message {
-	indexs := []int{}
-	fields := kit.Split(field, space, space, space)
-	for i, l := range kit.Split(str, enter, enter, enter) {
-		if strings.HasPrefix(l, "Binary") {
-			continue
-		}
-		if strings.TrimSpace(l) == "" {
-			continue
-		}
-		if i == 0 && (field == "" || field == "index") {
-			// 表头行
-			fields = kit.Split(l, space, space)
-			if field == "index" {
-				for _, v := range fields {
-					indexs = append(indexs, strings.Index(l, v))
-				}
-			}
-			continue
-		}
-
-		if len(indexs) > 0 {
-			// 数据行
-			for i, v := range indexs {
-				if i == len(indexs)-1 {
-					m.Push(kit.Select("some", fields, i), l[v:])
-				} else {
-					m.Push(kit.Select("some", fields, i), l[v:indexs[i+1]])
-				}
-			}
-			continue
-		}
-
-		ls := kit.Split(l, space, space)
-		for i, v := range ls {
-			if i == len(fields)-1 {
-				m.Push(kit.Select("some", fields, i), strings.Join(ls[i:], space))
-				break
-			}
-			m.Push(kit.Select("some", fields, i), v)
-		}
-	}
-	return m
-}
-func (m *Message) CSV(text string, head ...string) *Message {
-	bio := bytes.NewBufferString(text)
-	r := csv.NewReader(bio)
-
-	if len(head) == 0 {
-		head, _ = r.Read()
-	}
-	for {
-		line, e := r.Read()
-		if e != nil {
-			break
-		}
-		for i, k := range head {
-			m.Push(k, kit.Select("", line, i))
 		}
 	}
 	return m

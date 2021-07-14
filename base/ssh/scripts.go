@@ -73,7 +73,7 @@ func Script(m *ice.Message, name string) io.Reader {
 	}
 
 	// 打包文件
-	if b, ok := ice.BinPack["/"+name]; ok {
+	if b, ok := ice.Info.BinPack["/"+name]; ok {
 		m.Info("binpack %v %v", len(b), name)
 		return bytes.NewReader(b)
 	}

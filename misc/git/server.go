@@ -5,7 +5,7 @@ import (
 	"path"
 	"strings"
 
-	"github.com/AaronO/go-git-http"
+	githttp "github.com/AaronO/go-git-http"
 	"github.com/AaronO/go-git-http/auth"
 	ice "github.com/shylinux/icebergs"
 	"github.com/shylinux/icebergs/base/aaa"
@@ -66,7 +66,7 @@ func init() {
 			"/github.com/": {Name: "/github.com/", Help: "/github.com/", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 				auth.Authenticator(func(info auth.AuthInfo) (bool, error) {
 					if !aaa.UserLogin(m, info.Username, info.Password) {
-						return false, nil
+						// return false, nil
 					}
 
 					if info.Push && aaa.UserRole(m, info.Username) == aaa.VOID {

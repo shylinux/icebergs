@@ -93,7 +93,7 @@ func init() {
 						_pack_write(pack, "")
 
 						_pack_write(pack, `func init() {`)
-						_pack_write(pack, `    ice.BinPack = map[string][]byte{`)
+						_pack_write(pack, `    ice.Info.BinPack = map[string][]byte{`)
 
 						_pack_volcanos(m, pack, "usr/volcanos")
 						_pack_dir(m, pack, "usr/learning")

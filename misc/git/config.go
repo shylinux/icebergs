@@ -14,10 +14,24 @@ const CONFIG = "config"
 func init() {
 	Index.Merge(&ice.Context{
 		Configs: map[string]*ice.Config{
-			CONFIG: {Name: CONFIG, Help: "配置键", Value: kit.Data(kit.MDB_SHORT, kit.MDB_NAME)},
+			CONFIG: {Name: CONFIG, Help: "配置键", Value: kit.Data(kit.MDB_SHORT, kit.MDB_NAME, "init", kit.Dict(
+				"alias", kit.Dict("s", "status", "b", "branch"),
+				"credential", kit.Dict("helper", "store"),
+				"core", kit.Dict("quotepath", "false"),
+				"push", kit.Dict("default", "simple"),
+				"color", kit.Dict("ui", "always"),
+			))},
 		},
 		Commands: map[string]*ice.Command{
 			CONFIG: {Name: "server name auto create", Help: "配置键", Action: map[string]*ice.Action{
+				"init": {Name: "create name value", Help: "添加", Hand: func(m *ice.Message, arg ...string) {
+					kit.Fetch(m.Confv(GIT, kit.Keym("config")), func(conf string, value interface{}) {
+						kit.Fetch(value, func(key string, value string) {
+							m.Cmd(cli.SYSTEM, "bin/git", "config", "--global", conf+"."+key, value)
+						})
+					})
+				}},
+
 				mdb.CREATE: {Name: "create name value", Help: "添加", Hand: func(m *ice.Message, arg ...string) {
 					m.Cmd(cli.SYSTEM, GIT, CONFIG, "--global", m.Option(kit.MDB_NAME), m.Option(kit.MDB_VALUE))
 					m.Cmd(mdb.DELETE, m.Prefix(CONFIG), "", kit.MDB_HASH, kit.MDB_NAME, m.Option(kit.MDB_NAME))

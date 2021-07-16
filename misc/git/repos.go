@@ -1,7 +1,6 @@
 package git
 
 import (
-	"fmt"
 	"os"
 	"path"
 	"strings"
@@ -37,8 +36,7 @@ const (
 	MASTER = "master"
 
 	CLONE = "clone"
-
-	INIT = "init"
+	INIT  = "init"
 )
 const REPOS = "repos"
 
@@ -46,11 +44,18 @@ func init() {
 	Index.Merge(&ice.Context{
 		Configs: map[string]*ice.Config{
 			REPOS: {Name: REPOS, Help: "代码库", Value: kit.Data(
-				kit.MDB_SHORT, kit.MDB_NAME, kit.SSH_REPOS, "https://github.com/shylinux",
+				kit.MDB_SHORT, kit.MDB_NAME, kit.MDB_FIELD, "time,name,branch,commit,remote",
+				kit.SSH_REPOS, "https://github.com/shylinux",
 			)},
 		},
 		Commands: map[string]*ice.Command{
-			REPOS: {Name: "repos name path auto create proxy", Help: "代码库", Action: map[string]*ice.Action{
+			ice.CTX_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+				_repos_insert(m, path.Base(kit.Pwd()), kit.Pwd())
+				m.Cmd(nfs.DIR, kit.SSH_USR, "name,path").Table(func(index int, value map[string]string, head []string) {
+					_repos_insert(m, value[kit.MDB_NAME], value[kit.MDB_PATH])
+				})
+			}},
+			REPOS: {Name: "repos name path auto create", Help: "代码库", Action: map[string]*ice.Action{
 				mdb.CREATE: {Name: "create repos branch name path", Help: "添加", Hand: func(m *ice.Message, arg ...string) {
 					m.Option(kit.MDB_NAME, kit.Select(strings.TrimSuffix(path.Base(m.Option(kit.SSH_REPOS)), ".git"), m.Option(kit.MDB_NAME)))
 					m.Option(kit.MDB_PATH, kit.Select(path.Join(kit.SSH_USR, m.Option(kit.MDB_NAME)), m.Option(kit.MDB_PATH)))
@@ -75,7 +80,7 @@ func init() {
 				}},
 			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 				if len(arg) == 0 { // 仓库列表
-					m.Fields(len(arg) == 0, "time,name,branch,commit,remote")
+					m.Fields(len(arg) == 0, m.Conf(REPOS, kit.META_FIELD))
 					m.Cmdy(mdb.SELECT, m.Prefix(REPOS), "", mdb.HASH)
 					m.Sort(kit.MDB_NAME)
 					return
@@ -83,11 +88,6 @@ func init() {
 
 				m.Option(nfs.DIR_ROOT, _repos_path(arg[0]))
 				m.Cmdy(nfs.CAT, kit.Select("./", arg, 1), "time,line,path")
-
-				m.Option(cli.CMD_DIR, _repos_path(arg[0]))
-				p := strings.TrimPrefix(strings.TrimPrefix(m.Cmdx(cli.SYSTEM, GIT, REMOTE, "get-url", ORIGIN), "http://"), "https://")
-				pp := kit.MergeURL2(m.Option(ice.MSG_USERWEB), fmt.Sprintf("/code/git/%s", strings.TrimSpace(p)))
-				m.EchoScript(fmt.Sprintf("git clone %s", pp))
 			}},
 		},
 	})

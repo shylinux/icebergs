@@ -58,6 +58,10 @@ const (
 	UA = "ua"
 )
 const (
+	LOGIN  = "login"
+	LOGOUT = "logout"
+)
+const (
 	SESS_CREATE = "sess.create"
 )
 const SESS = "sess"

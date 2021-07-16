@@ -2,7 +2,6 @@ package bash
 
 import (
 	ice "github.com/shylinux/icebergs"
-	"github.com/shylinux/icebergs/base/cli"
 	kit "github.com/shylinux/toolkits"
 
 	"strings"
@@ -12,9 +11,6 @@ import (
 func init() {
 	Index.Merge(&ice.Context{
 		Commands: map[string]*ice.Command{
-			"/qrcode": {Name: "/qrcode", Help: "二维码", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-				m.Cmdy(cli.QRCODE, m.Option(kit.MDB_TEXT))
-			}},
 			"/input": {Name: "/input", Help: "补全", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 				list := kit.Split(m.Option("line"), m.Option("break"))
 				word := list[kit.Int(m.Option("index"))]

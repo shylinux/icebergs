@@ -124,9 +124,11 @@ func _serve_handle(key string, cmd *ice.Command, msg *ice.Message, w http.Respon
 	// 请求参数
 	for k, v := range r.Form {
 		if r.Header.Get(ContentType) != ContentJSON {
-			// for i, p := range v {
-			// 	// v[i], _ = url.QueryUnescape(p)
-			// }
+			if msg.IsCliUA() {
+				for i, p := range v {
+					v[i], _ = url.QueryUnescape(p)
+				}
+			}
 		}
 		if msg.Optionv(k, v); k == ice.MSG_SESSID {
 			RenderCookie(msg, v[0])
@@ -168,7 +170,7 @@ func _serve_login(msg *ice.Message, cmds []string, w http.ResponseWriter, r *htt
 	if _, ok := msg.Target().Commands[WEB_LOGIN]; ok {
 		// 权限检查
 		msg.Target().Cmd(msg, WEB_LOGIN, r.URL.Path, cmds...)
-		return cmds, msg.Result() != "false"
+		return cmds, msg.Result(0) != ice.ErrWarn && msg.Result() != ice.FALSE
 	}
 
 	if ls := strings.Split(r.URL.Path, "/"); msg.Conf(SERVE, kit.Keym(aaa.BLACK, ls[1])) == "true" {

@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	ice "github.com/shylinux/icebergs"
+	"github.com/shylinux/icebergs/base/ctx"
 	"github.com/shylinux/icebergs/base/mdb"
 	kit "github.com/shylinux/toolkits"
 )
@@ -47,6 +48,16 @@ func _system_show(m *ice.Message, cmd *exec.Cmd) {
 
 	m.Push(kit.MDB_TIME, m.Time())
 	m.Push(CMD_CODE, int(cmd.ProcessState.ExitCode()))
+}
+func SystemProcess(m *ice.Message, text string, arg ...string) {
+	if len(arg) > 0 && arg[0] == RUN {
+		m.Cmdy(SYSTEM, arg[1:])
+		return
+	}
+
+	m.Cmdy(ctx.COMMAND, SYSTEM)
+	m.ProcessField(SYSTEM, RUN)
+	m.Push(ARG, kit.Split(text))
 }
 
 const (

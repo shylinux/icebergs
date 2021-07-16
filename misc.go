@@ -189,19 +189,19 @@ func (m *Message) PushRender(key, view, name string, arg ...string) *Message {
 	return m.Push(key, Render(m, view, name, arg))
 }
 func (m *Message) PushDownload(key string, arg ...interface{}) { // [name] file
-	m.Push(key, Render(m, RENDER_DOWNLOAD, arg...))
+	if !m.IsCliUA() {
+		m.Push(key, Render(m, RENDER_DOWNLOAD, arg...))
+	}
 }
 func (m *Message) PushAnchor(arg ...interface{}) { // [name] link
-	if m.IsCliUA() {
-		return
+	if !m.IsCliUA() {
+		m.Push(kit.MDB_LINK, Render(m, RENDER_ANCHOR, arg...))
 	}
-	m.Push(kit.MDB_LINK, Render(m, RENDER_ANCHOR, arg...))
 }
 func (m *Message) PushButton(arg ...string) {
-	if m.IsCliUA() {
-		return
+	if !m.IsCliUA() {
+		m.Push(kit.MDB_ACTION, Render(m, RENDER_BUTTON, strings.Join(arg, ",")))
 	}
-	m.Push(kit.MDB_ACTION, Render(m, RENDER_BUTTON, strings.Join(arg, ",")))
 }
 func (m *Message) PushScript(arg ...string) *Message { // [type] text...
 	return m.Push(kit.MDB_SCRIPT, Render(m, RENDER_SCRIPT, arg))
@@ -257,9 +257,19 @@ type Option struct {
 	Value interface{}
 }
 
-func OptionFields(str string) Option       { return Option{MSG_FIELDS, str} }
-func OptionHash(str string) Option         { return Option{kit.MDB_HASH, str} }
-func (m *Message) OptionFields(str string) { m.Option(MSG_FIELDS, str) }
+func (m *Message) OptionSimple(key ...string) (res []string) {
+	for _, k := range strings.Split(strings.Join(key, ","), ",") {
+		res = append(res, k, m.Option(k))
+	}
+	return
+}
+func OptionFields(str ...string) Option       { return Option{MSG_FIELDS, strings.Join(str, ",")} }
+func OptionHash(str string) Option            { return Option{kit.MDB_HASH, str} }
+func (m *Message) OptionFields(str ...string) { m.Option(MSG_FIELDS, strings.Join(str, ",")) }
+func (m *Message) OptionPage(arg ...string) {
+	m.Option("cache.offend", kit.Select("0", arg, 1))
+	m.Option("cache.limit", kit.Select("10", arg, 0))
+}
 func (m *Message) OptionLoad(file string) *Message {
 	if f, e := os.Open(file); e == nil {
 		defer f.Close()
@@ -350,6 +360,19 @@ func (m *Message) ProcessRefresh(delay string) {
 func (m *Message) ProcessRefresh30ms()  { m.ProcessRefresh("30ms") }
 func (m *Message) ProcessRefresh300ms() { m.ProcessRefresh("300ms") }
 func (m *Message) ProcessRefresh3s()    { m.ProcessRefresh("3s") }
+func (m *Message) ProcessCommand(cmd, val string, arg ...string) {
+	if len(arg) > 0 && arg[0] == "run" {
+		m.Cmdy(cmd, arg[1:])
+		return
+	}
+
+	m.Cmdy("command", cmd)
+	m.ProcessField(cmd, "run")
+	m.Push("arg", kit.Format(kit.Split(val)))
+}
+func (m *Message) ProcessCommandOpt(arg ...string) {
+	m.Push("opt", kit.Format(m.OptionSimple(arg...)))
+}
 func (m *Message) ProcessField(arg ...interface{}) {
 	m.Process(PROCESS_FIELD)
 	m.Option("_prefix", arg...)

@@ -25,6 +25,7 @@ const ( // REPOS
 
 	SUCCESS = "success"
 	FAILURE = "failure"
+	FALSE   = "false"
 	TRUE    = "true"
 	OK      = "ok"
 )

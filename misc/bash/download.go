@@ -20,7 +20,7 @@ func init() {
 			m.Render(kit.Select(ice.RENDER_DOWNLOAD, ice.RENDER_RESULT, m.Append(kit.MDB_FILE) == ""), m.Append(kit.MDB_TEXT))
 		}},
 		"/upload": {Name: "/upload", Help: "上传", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			// 缓存文件
+			// 上传文件
 			msg := m.Cmd(web.CACHE, web.UPLOAD)
 			m.Option(ice.MSG_UPLOAD, msg.Append(kit.MDB_HASH), msg.Append(kit.MDB_NAME), msg.Append(kit.MDB_SIZE))
 			m.Cmd(chat.FILES, web.UPLOAD)

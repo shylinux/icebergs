@@ -31,7 +31,7 @@ func (c *Conn) Write(b []byte) (int, error) {
 	return n, e
 }
 func (c *Conn) Close() error {
-	c.m.Cmd(mdb.MODIFY, CLIENT, "", mdb.HASH, kit.MDB_HASH, c.h, kit.MDB_STATUS, CLOSE, "nread", c.s.nr, "nwrite", c.s.nw)
+	// c.m.Cmd(mdb.MODIFY, CLIENT, "", mdb.HASH, kit.MDB_HASH, c.h, kit.MDB_STATUS, CLOSE, "nread", c.s.nr, "nwrite", c.s.nw)
 	return c.Conn.Close()
 }
 

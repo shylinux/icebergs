@@ -201,23 +201,21 @@ func _list_export(m *ice.Message, prefix, chain, file string) {
 	count := 0
 	head := kit.Split(m.Option(FIELDS))
 	m.Grows(prefix, chain, "", "", func(index int, val map[string]interface{}) {
-		val = kit.GetMeta(val)
-
-		if index == 0 && len(head) == 0 {
-			// 输出表头
-			for k := range val {
-				head = append(head, k)
+		if val = kit.GetMeta(val); index == 0 {
+			if len(head) == 0 { // 默认表头
+				for k := range val {
+					head = append(head, k)
+				}
+				sort.Strings(head)
 			}
-			sort.Strings(head)
-			w.Write(head)
+			w.Write(head) // 输出表头
 		}
 
-		// 输出数据
 		data := []string{}
 		for _, k := range head {
 			data = append(data, kit.Format(val[k]))
 		}
-		w.Write(data)
+		w.Write(data) // 输出数据
 		count++
 	})
 
@@ -416,6 +414,9 @@ const (
 	REVERT = "revert"
 	REPEAT = "repeat"
 	UPLOAD = "upload"
+
+	NEXT = "next"
+	PREV = "prev"
 )
 const (
 	CACHE_LIMIT  = "cache.limit"
@@ -462,6 +463,8 @@ var Index = &ice.Context{Name: MDB, Help: "数据模块", Commands: map[string]*
 	}},
 	DELETE: {Name: "delete key sub type field value", Help: "删除", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 		switch arg[2] {
+		case ZONE:
+			_hash_delete(m, arg[0], _domain_chain(m, arg[1]), arg[3], arg[4])
 		case HASH:
 			_hash_delete(m, arg[0], _domain_chain(m, arg[1]), arg[3], arg[4])
 		case LIST:
@@ -470,6 +473,8 @@ var Index = &ice.Context{Name: MDB, Help: "数据模块", Commands: map[string]*
 	}},
 	MODIFY: {Name: "modify key sub type field value arg...", Help: "编辑", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 		switch arg[2] {
+		case ZONE:
+			_list_modify(m, arg[0], _domain_chain(m, kit.Keys(arg[1], kit.SubKey(arg[3]))), kit.MDB_ID, arg[4], arg[5:]...)
 		case HASH:
 			_hash_modify(m, arg[0], _domain_chain(m, arg[1]), arg[3], arg[4], arg[5:]...)
 		case LIST:

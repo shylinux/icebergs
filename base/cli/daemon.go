@@ -68,6 +68,7 @@ func _daemon_show(m *ice.Message, cmd *exec.Cmd, out, err string) {
 
 const (
 	PID = "pid"
+	PWD = "pwd"
 	DIR = "dir"
 	ENV = "env"
 	CMD = "cmd"

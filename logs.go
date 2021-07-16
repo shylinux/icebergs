@@ -88,14 +88,13 @@ func (m *Message) Cost(arg ...interface{}) *Message {
 	return m.log(LOG_COST, strings.Join(list, " "))
 }
 func (m *Message) Warn(err bool, arg ...interface{}) bool {
-	if err {
-		list := kit.Simple(arg...)
-		if len(list) > 1 || len(m.meta[MSG_RESULT]) > 0 && m.meta[MSG_RESULT][0] != ErrWarn {
-			m.meta[MSG_RESULT] = append([]string{ErrWarn}, list...)
-		}
-		return m.log(LOG_WARN, fmt.Sprint(arg...)) != nil
+	if !err || len(m.meta[MSG_RESULT]) > 0 && m.meta[MSG_RESULT][0] == ErrWarn {
+		return err
 	}
-	return false
+
+	m.meta[MSG_RESULT] = kit.Simple(ErrWarn, arg)
+	m.log(LOG_WARN, fmt.Sprint(arg...))
+	return err
 }
 func (m *Message) Error(err bool, str string, arg ...interface{}) bool {
 	if err {

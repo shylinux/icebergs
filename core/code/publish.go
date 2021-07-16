@@ -148,6 +148,9 @@ echo "hello world"
 }
 
 var _contexts = kit.Dict(
+	"module", `# 创建模块
+export ctx_dev={{.Option "httphost"}} ctx_temp=$(mktemp); curl -fsSL $ctx_dev -o $ctx_temp; source $ctx_temp module
+`,
 	"source", `# 源码安装
 export ctx_dev={{.Option "httphost"}} ctx_temp=$(mktemp); curl -fsSL $ctx_dev -o $ctx_temp; source $ctx_temp source
 `,

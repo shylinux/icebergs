@@ -128,7 +128,7 @@ func (c *Context) cmd(m *Message, cmd *Command, key string, arg ...string) *Mess
 	}
 
 	m.Log(LOG_CMDS, "%s.%s %d %v %s", c.Name, key, len(arg), arg,
-		kit.Select(kit.FileLine(cmd.Hand, 3), kit.FileLine(8, 3), m.target.Name == "mdb"))
+		kit.Select(kit.FileLine(cmd.Hand, 3), kit.FileLine(9, 3), m.target.Name == "mdb"))
 	cmd.Hand(m, c, key, arg...)
 	return m
 }

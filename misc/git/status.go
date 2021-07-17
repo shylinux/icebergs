@@ -19,19 +19,18 @@ func _status_each(m *ice.Message, title string, cmds ...string) {
 		m.Cmd(REPOS, ice.OptionFields("name,path")).Table(func(index int, value map[string]string, head []string) {
 			toast(value[kit.MDB_NAME], count, total)
 
-			msg := m.Cmd(cmds, ice.Option{cli.CMD_DIR, value[kit.MDB_PATH]})
-			if msg.Append(cli.CMD_CODE) != "0" {
-				list = append(list, value[kit.MDB_NAME])
+			if msg := m.Cmd(cmds, ice.Option{cli.CMD_DIR, value[kit.MDB_PATH]}); msg.Append(cli.CMD_CODE) != "0" {
 				m.Toast(msg.Append(cli.CMD_ERR), "error: "+value[kit.MDB_NAME], "3s")
+				list = append(list, value[kit.MDB_NAME])
 				m.Sleep("3s")
 			}
 			count++
 		})
 
 		if len(list) > 0 {
-			m.Toast(strings.Join(list, "\n"), "failure", "30s")
+			m.Toast(strings.Join(list, "\n"), ice.FAILURE, "30s")
 		} else {
-			toast("success", count, total)
+			toast(ice.SUCCESS, count, total)
 		}
 
 	})
@@ -53,8 +52,7 @@ func _status_stat(m *ice.Message, files, adds, dels int) (int, int, int) {
 }
 func _status_list(m *ice.Message) (files, adds, dels int, last time.Time) {
 	m.Cmd(REPOS, ice.OptionFields("name,path")).Table(func(index int, value map[string]string, head []string) {
-		m.Option(cli.CMD_DIR, value[kit.MDB_PATH])
-		diff := m.Cmdx(cli.SYSTEM, GIT, STATUS, "-sb")
+		diff := m.Cmdx(cli.SYSTEM, GIT, STATUS, "-sb", ice.Option{cli.CMD_DIR, value[kit.MDB_PATH]})
 
 		for _, v := range strings.Split(strings.TrimSpace(diff), "\n") {
 			vs := strings.SplitN(strings.TrimSpace(v), " ", 2)
@@ -80,7 +78,7 @@ func _status_list(m *ice.Message) (files, adds, dels int, last time.Time) {
 					list = append(list, COMMIT)
 				}
 			}
-			m.PushButton(strings.Join(list, ","))
+			m.PushButton(list...)
 		}
 
 		files, adds, dels = _status_stat(m, files, adds, dels)
@@ -116,7 +114,7 @@ func init() {
 			}},
 			MAKE: {Name: "make", Help: "编译", Hand: func(m *ice.Message, arg ...string) {
 				m.Toast("building", MAKE, 100000)
-				defer m.Toast("success", MAKE, 1000)
+				defer m.Toast(ice.SUCCESS, MAKE, 1000)
 
 				m.Cmdy(cli.SYSTEM, MAKE)
 			}},
@@ -127,13 +125,11 @@ func init() {
 					return
 				}
 
-				m.Option(cli.CMD_DIR, _repos_path(m.Option(kit.MDB_NAME)))
-				m.Cmdy(cli.SYSTEM, GIT, PUSH)
+				m.Cmdy(cli.SYSTEM, GIT, PUSH, ice.Option{cli.CMD_DIR, _repos_path(m.Option(kit.MDB_NAME))})
 			}},
 
 			ADD: {Name: "add", Help: "添加", Hand: func(m *ice.Message, arg ...string) {
-				m.Option(cli.CMD_DIR, _repos_path(m.Option(kit.MDB_NAME)))
-				m.Cmdy(cli.SYSTEM, GIT, ADD, m.Option(kit.MDB_FILE))
+				m.Cmdy(cli.SYSTEM, GIT, ADD, m.Option(kit.MDB_FILE), ice.Option{cli.CMD_DIR, _repos_path(m.Option(kit.MDB_NAME))})
 			}}, OPT: {Name: "opt", Help: "优化"}, PRO: {Name: "pro", Help: "自举"},
 
 			COMMIT: {Name: "commit action=opt,add,pro comment=some@key", Help: "提交", Hand: func(m *ice.Message, arg ...string) {
@@ -143,8 +139,7 @@ func init() {
 					m.Option(kit.MDB_TEXT, kit.Select("opt some", strings.Join(arg, " ")))
 				}
 
-				m.Option(cli.CMD_DIR, _repos_path(m.Option(kit.MDB_NAME)))
-				m.Cmdy(cli.SYSTEM, GIT, COMMIT, "-am", m.Option(kit.MDB_TEXT))
+				m.Cmdy(cli.SYSTEM, GIT, COMMIT, "-am", m.Option(kit.MDB_TEXT), ice.Option{cli.CMD_DIR, _repos_path(m.Option(kit.MDB_NAME))})
 				m.ProcessBack()
 			}},
 			mdb.INPUTS: {Name: "inputs", Help: "补全", Hand: func(m *ice.Message, arg ...string) {

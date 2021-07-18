@@ -68,13 +68,13 @@ func init() {
 				m.Echo(m.Option(SID))
 			}},
 			SESS: {Name: "sess hash auto prunes", Help: "会话流", Action: map[string]*ice.Action{
-				mdb.PRUNES: {Name: "prunes", Help: "清理", Hand: func(m *ice.Message, arg ...string) {
-					m.OptionFields(m.Conf(SESS, kit.META_FIELD))
-					m.Cmdy(mdb.PRUNES, m.Prefix(SESS), "", mdb.HASH, kit.MDB_STATUS, aaa.LOGOUT)
-				}},
 				mdb.REMOVE: {Name: "remove", Help: "删除", Hand: func(m *ice.Message, arg ...string) {
 					m.OptionFields(m.Conf(SESS, kit.META_FIELD))
 					m.Cmdy(mdb.DELETE, m.Prefix(SESS), "", mdb.HASH, m.OptionSimple(kit.MDB_HASH))
+				}},
+				mdb.PRUNES: {Name: "prunes", Help: "清理", Hand: func(m *ice.Message, arg ...string) {
+					m.OptionFields(m.Conf(SESS, kit.META_FIELD))
+					m.Cmdy(mdb.PRUNES, m.Prefix(SESS), "", mdb.HASH, kit.MDB_STATUS, aaa.LOGOUT)
 				}},
 			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 				m.Fields(len(arg) == 0, m.Conf(SESS, kit.META_FIELD))

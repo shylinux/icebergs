@@ -8,8 +8,6 @@ refer `
 chapter "源码"
 field "安装" web.code.vim.vim
 field "源码" web.code.inner args `usr/install/vim81/ src/main.c 110`
-field "脚本" web.code.inner args `usr/install/vim81/_install/share/vim/vim81/ filetype.vim`
-field "文档" web.code.inner args `usr/install/vim81/_install/share/vim/vim81/doc/ help.txt`
 
 section "构建"
 spark shell `
@@ -34,6 +32,7 @@ field "编辑器" web.code.vim.sess
 field "同步流" web.code.vim.sync
 field "收藏夹" web.code.vim.favor
 field "输入法" web.code.vim.input
+return
 
 chapter "插件"
 field "插件管理器" web.code.inner args `usr/intshell/misc/vim/ plug.vim`
@@ -46,3 +45,5 @@ refer `
 chapter "配置"
 field "启动脚本" web.code.inner args `usr/intshell/misc/vim/ vimrc`
 
+field "脚本" web.code.inner args `usr/install/vim81/_install/share/vim/vim81/ filetype.vim`
+field "文档" web.code.inner args `usr/install/vim81/_install/share/vim/vim81/doc/ help.txt`

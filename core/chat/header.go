@@ -31,9 +31,12 @@ func _header_check(m *ice.Message) {
 	}
 }
 func _header_share(m *ice.Message, arg ...string) {
-	share := m.Cmdx(web.SHARE, mdb.CREATE, kit.MDB_TYPE, web.LOGIN, arg)
+	if m.Option(kit.MDB_LINK) == "" {
+		share := m.Cmdx(web.SHARE, mdb.CREATE, kit.MDB_TYPE, web.LOGIN, arg)
+		m.Option(kit.MDB_LINK, kit.MergeURL(m.Option(ice.MSG_USERWEB), web.SHARE, share))
+	}
 
-	link := kit.MergeURL(m.Option(ice.MSG_USERWEB), web.SHARE, share)
+	link := m.Option(kit.MDB_LINK)
 	if strings.Contains(link, tcp.LOCALHOST) {
 		link = strings.Replace(link, tcp.LOCALHOST, m.Cmd(tcp.HOST, ice.OptionFields(tcp.IP)).Append(tcp.IP), 1)
 	}

@@ -248,6 +248,28 @@ func (m *Message) FormatMeta() string { return m.Format("meta") }
 func (m *Message) FormatSize() string { return m.Format("size") }
 func (m *Message) FormatCost() string { return m.Format("cost") }
 
+func (m *Message) Render(cmd string, args ...interface{}) *Message {
+	m.Optionv(MSG_OUTPUT, cmd)
+	m.Optionv(MSG_ARGS, args)
+
+	switch cmd {
+	case RENDER_TEMPLATE: // text [data [type]]
+		if len(args) == 1 {
+			args = append(args, m)
+		}
+		if res, err := kit.Render(args[0].(string), args[1]); m.Assert(err) {
+			m.Echo(string(res))
+		}
+	}
+	return m
+}
+func (m *Message) RenderResult(args ...interface{}) *Message {
+	return m.Render(RENDER_RESULT, args...)
+}
+func (m *Message) RenderDownload(args ...interface{}) *Message {
+	return m.Render(RENDER_DOWNLOAD, args...)
+}
+
 type Sort struct {
 	Fields string
 	Method string
@@ -392,21 +414,6 @@ func (m *Message) Capi(key string, val ...interface{}) int {
 }
 func (m *Message) Cut(fields ...string) *Message {
 	m.meta[MSG_APPEND] = strings.Split(strings.Join(fields, ","), ",")
-	return m
-}
-func (m *Message) Render(cmd string, args ...interface{}) *Message {
-	m.Optionv(MSG_OUTPUT, cmd)
-	m.Optionv(MSG_ARGS, args)
-
-	switch cmd {
-	case RENDER_TEMPLATE: // text [data [type]]
-		if len(args) == 1 {
-			args = append(args, m)
-		}
-		if res, err := kit.Render(args[0].(string), args[1]); m.Assert(err) {
-			m.Echo(string(res))
-		}
-	}
 	return m
 }
 func (m *Message) Parse(meta string, key string, arg ...string) *Message {

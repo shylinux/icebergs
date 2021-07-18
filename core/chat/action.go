@@ -6,6 +6,7 @@ import (
 
 	ice "github.com/shylinux/icebergs"
 	"github.com/shylinux/icebergs/base/aaa"
+	"github.com/shylinux/icebergs/base/cli"
 	"github.com/shylinux/icebergs/base/ctx"
 	"github.com/shylinux/icebergs/base/mdb"
 	"github.com/shylinux/icebergs/base/web"
@@ -185,6 +186,19 @@ func init() {
 				}
 
 				_action_show(m, arg[0], arg[1], arg[2], arg[3:]...)
+			}},
+			"/cmd/": {Name: "/cmd/", Help: "命令", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+				m.RenderDownload(path.Join(m.Conf(web.SERVE, kit.Keym(ice.VOLCANOS, kit.MDB_PATH)), "page/cmd.html"))
+			}},
+			"/cmd": {Name: "/cmd", Help: "命令", Action: map[string]*ice.Action{
+				ctx.COMMAND: {Name: "command", Help: "命令", Hand: func(m *ice.Message, arg ...string) {
+					m.Cmdy(ctx.COMMAND, arg)
+				}},
+				cli.RUN: {Name: "command", Help: "命令", Hand: func(m *ice.Message, arg ...string) {
+					m.Cmdy(arg)
+				}},
+			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+				m.Debug("waht %v %v", cmd, arg)
 			}},
 		}})
 }

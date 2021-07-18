@@ -21,10 +21,7 @@ import (
 func _input_list(m *ice.Message, lib string) {
 	if lib == "" {
 		m.Richs(INPUT, "", kit.MDB_FOREACH, func(key string, value map[string]interface{}) {
-			m.Push(kit.MDB_TIME, kit.Value(value, "meta.time"))
-			m.Push(kit.MDB_ZONE, kit.Value(value, "meta.zone"))
-			m.Push(kit.MDB_COUNT, kit.Value(value, "meta.count"))
-			m.Push(kit.MDB_STORE, kit.Value(value, "meta.store"))
+			m.Push("", kit.GetMeta(value), kit.Split("time,zone,count,store"))
 		})
 		return
 	}
@@ -32,24 +29,24 @@ func _input_list(m *ice.Message, lib string) {
 	m.Option(nfs.DIR_DEEP, true)
 	m.Option(nfs.DIR_TYPE, nfs.CAT)
 	m.Richs(INPUT, "", lib, func(key string, value map[string]interface{}) {
-		m.Cmdy(nfs.DIR, kit.Value(value, "meta.store"), "time size line path")
+		m.Cmdy(nfs.DIR, kit.Value(value, kit.Keym(kit.MDB_STORE)), "time size line path")
 	})
 }
 func _input_push(m *ice.Message, lib, text, code, weight string) {
 	if m.Richs(INPUT, "", lib, nil) == nil {
 		m.Rich(INPUT, "", kit.Data(
-			kit.MDB_STORE, path.Join(m.Conf(INPUT, "meta.store"), lib),
-			kit.MDB_FSIZE, m.Conf(INPUT, "meta.fsize"),
-			kit.MDB_LIMIT, m.Conf(INPUT, "meta.limit"),
-			kit.MDB_LEAST, m.Conf(INPUT, "meta.least"),
+			kit.MDB_STORE, path.Join(m.Conf(INPUT, kit.Keym(kit.MDB_STORE)), lib),
+			kit.MDB_FSIZE, m.Conf(INPUT, kit.Keym(kit.MDB_FSIZE)),
+			kit.MDB_LIMIT, m.Conf(INPUT, kit.Keym(kit.MDB_LIMIT)),
+			kit.MDB_LEAST, m.Conf(INPUT, kit.Keym(kit.MDB_LEAST)),
 			kit.MDB_ZONE, lib,
 		))
 	}
 
 	m.Richs(INPUT, "", lib, func(key string, value map[string]interface{}) {
 		prefix := kit.Keys(kit.MDB_HASH, key)
-		m.Conf(INPUT, kit.Keys(prefix, "meta.limit"), 0)
-		m.Conf(INPUT, kit.Keys(prefix, "meta.least"), 0)
+		m.Conf(INPUT, kit.Keys(prefix, kit.Keym(kit.MDB_LIMIT)), 0)
+		m.Conf(INPUT, kit.Keys(prefix, kit.Keym(kit.MDB_LEAST)), 0)
 		n := m.Grow(INPUT, prefix, kit.Dict(TEXT, text, CODE, code, WEIGHT, weight))
 		m.Log_IMPORT(CODE, code, TEXT, text)
 		m.Echo("%s: %d", lib, n)
@@ -64,7 +61,7 @@ func _input_find(m *ice.Message, method, word, limit string) {
 	}
 
 	// 搜索词汇
-	res := m.Cmdx(cli.SYSTEM, "grep", "-rn", word, m.Conf(INPUT, "meta.store"))
+	res := m.Cmdx(cli.SYSTEM, "grep", "-rn", word, m.Conf(INPUT, kit.Keym(kit.MDB_STORE)))
 	bio := csv.NewReader(bytes.NewBufferString(strings.Replace(res, ":", ",", -1)))
 
 	for i := 0; i < kit.Int(limit); i++ {
@@ -81,13 +78,13 @@ func _input_find(m *ice.Message, method, word, limit string) {
 			m.Push(WEIGHT, line[6])
 		}
 	}
-	m.Sort(WEIGHT, "int_r")
+	m.SortIntR(WEIGHT)
 }
 func _input_save(m *ice.Message, file string, lib ...string) {
 	if f, p, e := kit.Create(file); m.Assert(e) {
 		defer f.Close()
 		n := 0
-		m.Option("cache.limit", -2)
+		m.Option(mdb.CACHE_LIMIT, -2)
 		for _, lib := range lib {
 			m.Richs(INPUT, "", lib, func(key string, value map[string]interface{}) {
 				m.Grows(INPUT, kit.Keys(kit.MDB_HASH, key), "", "", func(index int, value map[string]interface{}) {
@@ -108,12 +105,12 @@ func _input_load(m *ice.Message, file string, libs ...string) {
 
 		// 清空数据
 		lib := kit.Select(path.Base(file), libs, 0)
-		m.Assert(os.RemoveAll(path.Join(m.Conf(INPUT, "meta.store"), lib)))
+		m.Assert(os.RemoveAll(path.Join(m.Conf(INPUT, kit.Keym(kit.MDB_STORE)), lib)))
 		prefix := kit.Keys(kit.MDB_HASH, m.Rich(INPUT, "", kit.Data(
-			kit.MDB_STORE, path.Join(m.Conf(INPUT, "meta.store"), lib),
-			kit.MDB_FSIZE, m.Conf(INPUT, "meta.fsize"),
-			kit.MDB_LIMIT, m.Conf(INPUT, "meta.limit"),
-			kit.MDB_LEAST, m.Conf(INPUT, "meta.least"),
+			kit.MDB_STORE, path.Join(m.Conf(INPUT, kit.Keym(kit.MDB_STORE)), lib),
+			kit.MDB_FSIZE, m.Conf(INPUT, kit.Keym(kit.MDB_FSIZE)),
+			kit.MDB_LIMIT, m.Conf(INPUT, kit.Keym(kit.MDB_LIMIT)),
+			kit.MDB_LEAST, m.Conf(INPUT, kit.Keym(kit.MDB_LEAST)),
 			kit.MDB_ZONE, lib,
 		)))
 
@@ -130,8 +127,8 @@ func _input_load(m *ice.Message, file string, libs ...string) {
 		}
 
 		// 保存词库
-		m.Conf(INPUT, kit.Keys(prefix, "meta.limit"), 0)
-		m.Conf(INPUT, kit.Keys(prefix, "meta.least"), 0)
+		m.Conf(INPUT, kit.Keys(prefix, kit.Keym(kit.MDB_LIMIT)), 0)
+		m.Conf(INPUT, kit.Keys(prefix, kit.Keym(kit.MDB_LEAST)), 0)
 		n := m.Grow(INPUT, prefix, kit.Dict(TEXT, "成功", CODE, "z", WEIGHT, "0"))
 		m.Log_IMPORT(INPUT, lib, kit.MDB_COUNT, n)
 		m.Echo("%s: %d", lib, n)
@@ -159,7 +156,7 @@ var Index = &ice.Context{Name: INPUT, Help: "输入法",
 		INPUT: {Name: INPUT, Help: "输入法", Value: kit.Data(
 			kit.MDB_STORE, "usr/local/export/input", kit.MDB_FSIZE, "200000",
 			kit.MDB_LIMIT, "5000", kit.MDB_LEAST, "1000",
-			kit.MDB_SHORT, "zone", "repos", "wubi-dict",
+			kit.MDB_SHORT, "zone", kit.SSH_REPOS, "wubi-dict",
 		)},
 	},
 	Commands: map[string]*ice.Command{
@@ -177,7 +174,7 @@ var Index = &ice.Context{Name: INPUT, Help: "输入法",
 				_input_load(m, kit.Select("usr/wubi-dict/person", m.Option(FILE)), m.Option(ZONE))
 			}},
 		}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			_input_find(m, arg[0], arg[1], m.Option("cache.limit"))
+			_input_find(m, arg[0], arg[1], m.Option(mdb.CACHE_LIMIT))
 		}},
 	},
 }

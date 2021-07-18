@@ -28,8 +28,8 @@ cd ./_install
 `
 
 chapter "应用"
-field text web.code.tmux.text
-field buffer web.code.tmux.buffer
-field script web.code.tmux.script
-field session web.code.tmux.session
+field "文本" web.code.tmux.text
+field "缓存" web.code.tmux.buffer
+field "脚本" web.code.tmux.script
+field "会话" web.code.tmux.session
 

@@ -48,7 +48,7 @@ func init() {
 						m.Cmdy(FAVOR, ice.OptionFields("zone,count,time"))
 					}
 				}},
-				FAVOR: {Name: "favor zone name", Help: "收藏", Hand: func(m *ice.Message, arg ...string) {
+				FAVOR: {Name: "favor zone=some name", Help: "收藏", Hand: func(m *ice.Message, arg ...string) {
 					m.Cmdy(m.Prefix(FAVOR), mdb.INSERT, m.OptionSimple("zone,type,name,text"))
 				}},
 			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {

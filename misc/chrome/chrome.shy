@@ -4,18 +4,16 @@ refer "官网" `
 文档 https://developer.mozilla.org/
 源码 https://github.com/chromium/chromium/
 `
-premenu
-
 chapter "安装"
 field chrome web.code.chrome.chrome
 
 chapter "应用"
 field "同步流" web.code.chrome.sync
 field "收藏夹" web.code.chrome.favor
-
-field "浏览器" web.space
 field "蜘蛛侠" web.code.chrome.spide
+
 field "缓存池" web.code.chrome.cache
+field "浏览器" web.space
 
 section "命令行"
 refer `

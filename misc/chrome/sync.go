@@ -3,9 +3,14 @@ package crx
 import (
 	ice "github.com/shylinux/icebergs"
 	"github.com/shylinux/icebergs/base/mdb"
-	"github.com/shylinux/icebergs/base/web"
 	kit "github.com/shylinux/toolkits"
 )
+
+const _sync_index = 1
+
+func _sync_count(m *ice.Message) string {
+	return m.Conf(SYNC, kit.Keym(kit.MDB_COUNT))
+}
 
 const SYNC = "sync"
 
@@ -17,8 +22,21 @@ func init() {
 			)},
 		},
 		Commands: map[string]*ice.Command{
-			SYNC: {Name: "sync id auto export import", Help: "同步流", Action: map[string]*ice.Action{
+			"/sync": {Name: "/sync", Help: "同步", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+				m.Cmdy(SYNC, mdb.INSERT, arg)
+			}},
+			SYNC: {Name: "sync id auto page export import", Help: "同步流", Action: map[string]*ice.Action{
+				mdb.PREV: {Name: "prev", Help: "上一页", Hand: func(m *ice.Message, arg ...string) {
+					mdb.PrevPage(m, _sync_count(m), kit.Slice(arg, _sync_index)...)
+				}},
+				mdb.NEXT: {Name: "next", Help: "下一页", Hand: func(m *ice.Message, arg ...string) {
+					mdb.NextPage(m, _sync_count(m), kit.Slice(arg, _sync_index)...)
+				}},
+				mdb.INSERT: {Name: "insert type name text", Help: "添加", Hand: func(m *ice.Message, arg ...string) {
+					m.Cmdy(mdb.INSERT, m.Prefix(SYNC), "", mdb.LIST, m.OptionSimple("type,name,text"))
+				}},
 				mdb.EXPORT: {Name: "export", Help: "导出", Hand: func(m *ice.Message, arg ...string) {
+					m.OptionFields(m.Conf(SYNC, kit.META_FIELD))
 					m.Cmdy(mdb.EXPORT, m.Prefix(SYNC), "", mdb.LIST)
 				}},
 				mdb.IMPORT: {Name: "import", Help: "导入", Hand: func(m *ice.Message, arg ...string) {
@@ -26,37 +44,19 @@ func init() {
 				}},
 				mdb.INPUTS: {Name: "inputs", Help: "补全", Hand: func(m *ice.Message, arg ...string) {
 					switch arg[0] {
-					case kit.MDB_TOPIC:
-						m.Cmdy(m.Prefix(FAVOR)).Appendv(ice.MSG_APPEND, kit.MDB_TOPIC, kit.MDB_COUNT, kit.MDB_TIME)
+					case kit.MDB_ZONE:
+						m.Cmdy(FAVOR, ice.OptionFields("zone,count,time"))
 					}
 				}},
-				FAVOR: {Name: "favor topic name", Help: "收藏", Hand: func(m *ice.Message, arg ...string) {
-					m.Cmdy(m.Prefix(FAVOR), mdb.INSERT, kit.MDB_TOPIC, m.Option(kit.MDB_TOPIC),
-						kit.MDB_TYPE, SPIDE, kit.MDB_NAME, m.Option(kit.MDB_NAME), kit.MDB_TEXT, m.Option(kit.MDB_TEXT))
+				FAVOR: {Name: "favor zone name", Help: "收藏", Hand: func(m *ice.Message, arg ...string) {
+					m.Cmdy(m.Prefix(FAVOR), mdb.INSERT, m.OptionSimple("zone,type,name,text"))
 				}},
 			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-				if m.Option(mdb.FIELDS, kit.Select(m.Conf(SYNC, kit.META_FIELD), mdb.DETAIL, len(arg) > 0)); len(arg) > 0 {
-					m.Option("cache.field", kit.MDB_ID)
-					m.Option("cache.value", arg[0])
-				} else {
-					defer m.PushAction(FAVOR)
-					if m.Option("_control", "page"); m.Option("cache.limit") == "" {
-						m.Option("cache.limit", "10")
-					}
-				}
-
-				m.Cmdy(mdb.SELECT, m.Prefix(SYNC), "", mdb.LIST, m.Option("cache.field"), m.Option("cache.value"))
-			}},
-			"/sync": {Name: "/sync", Help: "同步", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-				m.Cmdy(mdb.INSERT, m.Prefix(SYNC), "", mdb.LIST, kit.MDB_TYPE, SPIDE,
-					kit.MDB_NAME, m.Option(kit.MDB_NAME), kit.MDB_TEXT, m.Option(kit.MDB_TEXT))
-			}},
-			"/crx": {Name: "/crx", Help: "插件", Action: map[string]*ice.Action{
-				web.HISTORY: {Name: "history", Help: "历史记录", Hand: func(m *ice.Message, arg ...string) {
-					m.Cmdy("web.spide", web.SPIDE_SELF, "/code/chrome/sync",
-						kit.MDB_NAME, arg[1], kit.MDB_TEXT, arg[2])
-				}},
-			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+				m.OptionPage(kit.Slice(arg, _sync_index)...)
+				m.Fields(len(arg) == 0 || arg[0] == "", m.Conf(SYNC, kit.META_FIELD))
+				m.Cmdy(mdb.SELECT, m.Prefix(SYNC), "", mdb.LIST, kit.MDB_ID, arg)
+				m.StatusTimeCountTotal(_sync_count(m))
+				m.PushAction(FAVOR)
 			}},
 		},
 	})

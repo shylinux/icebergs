@@ -22,6 +22,8 @@ func init() {
 			)},
 		},
 		Commands: map[string]*ice.Command{
+			"/page": {Name: "/page", Help: "网页", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			}},
 			"/sync": {Name: "/sync", Help: "同步", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 				m.Cmdy(SYNC, mdb.INSERT, arg)
 			}},

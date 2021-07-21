@@ -2,6 +2,8 @@ package crx
 
 import (
 	ice "github.com/shylinux/icebergs"
+	"github.com/shylinux/icebergs/base/cli"
+	"github.com/shylinux/icebergs/base/ctx"
 	"github.com/shylinux/icebergs/base/mdb"
 	kit "github.com/shylinux/toolkits"
 )
@@ -22,7 +24,16 @@ func init() {
 			)},
 		},
 		Commands: map[string]*ice.Command{
-			"/page": {Name: "/page", Help: "网页", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			"/page": {Name: "/page", Help: "网页", Action: map[string]*ice.Action{
+				ctx.COMMAND: {Name: "command", Help: "命令", Hand: func(m *ice.Message, arg ...string) {
+					if arg[0] == cli.RUN {
+						m.Cmdy(arg[1:])
+						return
+					}
+					m.Cmdy(ctx.COMMAND, arg)
+				}},
+			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+
 			}},
 			"/sync": {Name: "/sync", Help: "同步", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 				m.Cmdy(SYNC, mdb.INSERT, arg)

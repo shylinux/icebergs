@@ -18,9 +18,4 @@ section "命令行"
 refer `
 终端 terminal://
 博客 https://www.cnblogs.com/lymvv/p/8431238.html
-
-`
-section "weixin"
-refer `
-weixin://dl/moments
 `

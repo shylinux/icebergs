@@ -21,7 +21,7 @@ func init() {
 						switch m.Option("hostname") {
 						case "music.163.com":
 							m.Option("top", "200")
-							m.Result("web.code.chrome.spide", "", m.Option("tid"))
+							m.Result(SPIDE, "", m.Option("tid"))
 							return
 						case "localhost", "fib.woa.com":
 							return

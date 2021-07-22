@@ -257,7 +257,9 @@ func (m *Message) Render(cmd string, args ...interface{}) *Message {
 		if len(args) == 1 {
 			args = append(args, m)
 		}
+		m.Debug("what %v", args)
 		if res, err := kit.Render(args[0].(string), args[1]); m.Assert(err) {
+			m.Debug("what")
 			m.Echo(string(res))
 		}
 	}
@@ -265,6 +267,9 @@ func (m *Message) Render(cmd string, args ...interface{}) *Message {
 }
 func (m *Message) RenderResult(args ...interface{}) *Message {
 	return m.Render(RENDER_RESULT, args...)
+}
+func (m *Message) RenderTemplate(args ...interface{}) *Message {
+	return m.Render(RENDER_TEMPLATE, args...)
 }
 func (m *Message) RenderDownload(args ...interface{}) *Message {
 	return m.Render(RENDER_DOWNLOAD, args...)

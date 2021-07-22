@@ -3,25 +3,24 @@ refer `
 官网 https://weixin.qq.com/
 后台 https://mp.weixin.qq.com/
 文档 https://developers.weixin.qq.com/doc/offiaccount/Getting_Started/Overview.html
-源码 https://github.com/shylinux/icebergs/blob/master/misc/wx/wx.go
 `
 
 qrcode `http://weixin.qq.com/r/_B1-Z7TEXOkjrfAE90jq`
 
 chapter "应用"
-field favor web.chat.wx.favor
-field favor web.chat.wx.favor2
-field scan web.chat.scan
-field files web.chat.files
-field paste web.chat.paste
-field location web.chat.location
+field "访问" web.chat.wx.access
+field "收藏" web.chat.wx.favor
+field "菜单" web.chat.wx.menu
+
+field "扫码" web.chat.scan
+field "复制" web.chat.paste
+field "文件" web.chat.files
+field "位置" web.chat.location
 
 chapter "权限"
-field access web.chat.wx.access
-field menu web.chat.wx.menu
-field share web.share
-field sess aaa.sess
-field user aaa.user
+field "共享" web.share
+field "会话" aaa.sess
+field "用户" aaa.user
 
 chapter "项目"
 field "趋势图" web.code.git.trend args `icebergs`

@@ -77,7 +77,11 @@ func (m *Message) Info(str string, arg ...interface{}) *Message {
 	return m.log(LOG_INFO, str, arg...)
 }
 func (m *Message) Cost(arg ...interface{}) *Message {
-	list := []string{m.Format("cost")}
+	list := []string{m.Format("cost"), m.join(arg...)}
+	return m.log(LOG_COST, strings.Join(list, " "))
+}
+func (m *Message) join(arg ...interface{}) string {
+	list := []string{}
 	for i := 0; i < len(arg); i += 2 {
 		if i == len(arg)-1 {
 			list = append(list, kit.Format(arg[i]))
@@ -85,7 +89,7 @@ func (m *Message) Cost(arg ...interface{}) *Message {
 			list = append(list, kit.Format(arg[i])+":", kit.Format(arg[i+1]))
 		}
 	}
-	return m.log(LOG_COST, strings.Join(list, " "))
+	return strings.Join(list, " ")
 }
 func (m *Message) Warn(err bool, arg ...interface{}) bool {
 	if !err || len(m.meta[MSG_RESULT]) > 0 && m.meta[MSG_RESULT][0] == ErrWarn {
@@ -93,7 +97,7 @@ func (m *Message) Warn(err bool, arg ...interface{}) bool {
 	}
 
 	m.meta[MSG_RESULT] = kit.Simple(ErrWarn, arg)
-	m.log(LOG_WARN, fmt.Sprint(arg...))
+	m.log(LOG_WARN, m.join(arg))
 	return err
 }
 func (m *Message) Error(err bool, str string, arg ...interface{}) bool {

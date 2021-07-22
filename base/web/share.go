@@ -28,6 +28,17 @@ func _share_domain(m *ice.Message) string {
 	return link
 }
 func _share_cache(m *ice.Message, arg ...string) {
+	if pod := m.Option(kit.SSH_POD); pod != "" {
+		m.Option(kit.SSH_POD, "")
+		msg := m.Cmd(SPACE, pod, CACHE, arg[0])
+		if msg.Append(kit.MDB_FILE) == "" {
+			m.Render(ice.RENDER_RESULT, msg.Append(kit.MDB_TEXT))
+		} else {
+			m.Option(kit.SSH_POD, pod)
+			_share_local(m, msg.Append(kit.MDB_FILE))
+		}
+		return
+	}
 	msg := m.Cmd(CACHE, arg[0])
 	m.Render(ice.RENDER_DOWNLOAD, msg.Append(kit.MDB_FILE), msg.Append(kit.MDB_TYPE), msg.Append(kit.MDB_NAME))
 }

@@ -77,6 +77,7 @@ func init() {
 				PROCINFO: {Name: "procinfo", Help: "进程信息", Hand: func(m *ice.Message, arg ...string) {
 					m.Split(m.Cmdx(SYSTEM, "ps", "u"), "", " ", "\n")
 					m.PushAction("kill")
+					m.StatusTimeCount()
 				}},
 				"kill": {Name: "kill", Help: "结束进程", Hand: func(m *ice.Message, arg ...string) {
 					m.Cmdy(SYSTEM, "kill", m.Option("PID"))

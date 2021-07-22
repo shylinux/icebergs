@@ -18,6 +18,15 @@ func init() {
 			"/page": {Name: "/page", Help: "网页", Action: map[string]*ice.Action{
 				ctx.COMMAND: {Name: "command", Help: "命令", Hand: func(m *ice.Message, arg ...string) {
 					if arg[0] == "get" {
+						switch m.Option("hostname") {
+						case "music.163.com":
+							m.Option("top", "200")
+							m.Result("web.code.chrome.spide", "", m.Option("tid"))
+							return
+						case "localhost", "fib.woa.com":
+							return
+						}
+						return
 						m.Option("top", "200")
 						m.Echo("cli.runtime")
 						return

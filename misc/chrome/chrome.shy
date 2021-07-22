@@ -11,12 +11,16 @@ chapter "应用"
 field "同步流" web.code.chrome.sync
 field "收藏夹" web.code.chrome.favor
 field "蜘蛛侠" web.code.chrome.spide
-
 field "缓存池" web.code.chrome.cache
-field "浏览器" web.space
+field "相册簿" web.wiki.feel
 
 section "命令行"
 refer `
 终端 terminal://
 博客 https://www.cnblogs.com/lymvv/p/8431238.html
+
+`
+section "weixin"
+refer `
+weixin://dl/moments
 `

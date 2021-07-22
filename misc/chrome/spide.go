@@ -11,11 +11,6 @@ const SPIDE = "spide"
 
 func init() {
 	Index.Merge(&ice.Context{
-		Configs: map[string]*ice.Config{
-			SPIDE: {Name: SPIDE, Help: "网页爬虫", Value: kit.Data(
-				kit.MDB_SHORT, kit.MDB_LINK, kit.MDB_PATH, "usr/spide",
-			)},
-		},
 		Commands: map[string]*ice.Command{
 			SPIDE: {Name: "spide wid tid cmd auto", Help: "网页爬虫", Action: map[string]*ice.Action{
 				web.DOWNLOAD: {Name: "download", Help: "下载", Hand: func(m *ice.Message, arg ...string) {
@@ -29,10 +24,18 @@ func init() {
 							m.Push(kit.MDB_TIME, value[kit.MDB_TIME])
 							m.Push(kit.MDB_TYPE, value[kit.MDB_TYPE])
 							m.Push(kit.MDB_NAME, value[kit.MDB_NAME])
-							m.PushButton(web.DOWNLOAD)
-							m.PushRender(kit.MDB_TEXT, value[kit.MDB_TYPE], value[kit.MDB_LINK])
+
+							switch m.PushButton(web.DOWNLOAD); value[kit.MDB_TYPE] {
+							case "img":
+								m.PushImages(kit.MDB_TEXT, value[kit.MDB_LINK])
+							case "video":
+								m.PushVideos(kit.MDB_TEXT, value[kit.MDB_LINK])
+							default:
+								m.Push(kit.MDB_TEXT, "")
+							}
 							m.Push(kit.MDB_LINK, value[kit.MDB_LINK])
 						})
+						m.StatusTimeCount()
 						break
 					}
 					fallthrough

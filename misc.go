@@ -257,9 +257,7 @@ func (m *Message) Render(cmd string, args ...interface{}) *Message {
 		if len(args) == 1 {
 			args = append(args, m)
 		}
-		m.Debug("what %v", args)
 		if res, err := kit.Render(args[0].(string), args[1]); m.Assert(err) {
-			m.Debug("what")
 			m.Echo(string(res))
 		}
 	}
@@ -273,6 +271,12 @@ func (m *Message) RenderTemplate(args ...interface{}) *Message {
 }
 func (m *Message) RenderDownload(args ...interface{}) *Message {
 	return m.Render(RENDER_DOWNLOAD, args...)
+}
+func (m *Message) RenderRedirect(args ...interface{}) *Message {
+	return m.Render(RENDER_REDIRECT, args...)
+}
+func (m *Message) RenderIndex(serve, repos string) *Message {
+	return m.RenderDownload(path.Join(m.Conf(serve, kit.Keym(repos, kit.SSH_PATH)), m.Conf(serve, kit.Keym(repos, kit.SSH_INDEX))))
 }
 
 type Sort struct {

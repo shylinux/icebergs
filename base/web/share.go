@@ -181,10 +181,10 @@ func init() {
 
 				switch msg.Append(kit.MDB_TYPE) {
 				case LOGIN, RIVER:
-					m.Render(REDIRECT, "/", list)
+					m.RenderRedirect("/", list)
 
 				case STORM:
-					m.Render(REDIRECT, "/page/share.html", SHARE, m.Option(SHARE))
+					m.RenderRedirect("/page/share.html", SHARE, m.Option(SHARE))
 				}
 			}},
 

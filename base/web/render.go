@@ -12,10 +12,9 @@ import (
 )
 
 const (
-	REDIRECT = "redirect"
-	REFRESH  = "refresh"
-	STATUS   = "status"
-	COOKIE   = "cookie"
+	REFRESH = "refresh"
+	STATUS  = "status"
+	COOKIE  = "cookie"
 )
 
 func Render(msg *ice.Message, cmd string, args ...interface{}) {
@@ -24,7 +23,7 @@ func Render(msg *ice.Message, cmd string, args ...interface{}) {
 	}
 
 	switch arg := kit.Simple(args...); cmd {
-	case REDIRECT: // url [arg...]
+	case ice.RENDER_REDIRECT: // url [arg...]
 		http.Redirect(msg.W, msg.R, kit.MergeURL(arg[0], arg[1:]), 307)
 
 	case REFRESH: // [delay [text]]

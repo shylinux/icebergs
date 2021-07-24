@@ -1,5 +1,6 @@
 title "飞书机器人"
 refer "官网" `
+官网 https://shylinux.com/chat/lark/sso
 官网 https://www.feishu.cn/
 文档 https://open.feishu.cn/document/uQjL04CN/ucDOz4yN4MjL3gzM
 源码 https://github.com/shylinux/icebergs/blob/master/misc/lark/lark.go
@@ -12,6 +13,7 @@ chapter "应用"
 field "app" web.chat.lark.app
 field "group" web.chat.lark.group
 field "company" web.chat.lark.company
+field "duty" web.chat.lark.duty
 
 chapter "权限"
 field sess aaa.sess

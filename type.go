@@ -718,8 +718,9 @@ func (m *Message) cmd(arg ...interface{}) *Message {
 		return m
 	}
 
+	ok := false
 	run := func(msg *Message, ctx *Context, cmd *Command, key string, arg ...string) {
-		if cbs != nil {
+		if ok = true; cbs != nil {
 			msg.Option(list[0]+".cb", cbs)
 		}
 		for k, v := range opts {
@@ -744,8 +745,8 @@ func (m *Message) cmd(arg ...interface{}) *Message {
 	}
 
 	// 系统命令
-	if m.Warn(!m.Hand, ErrNotFound, list) {
-		return m.Set(MSG_RESULT).Cmd("cli.system", list)
+	if m.Warn(!ok, ErrNotFound, list) {
+		return m.Set(MSG_RESULT).Cmdy("cli.system", list)
 	}
 	return m
 }

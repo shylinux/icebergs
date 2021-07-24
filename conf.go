@@ -126,8 +126,9 @@ const ( // RENDER
 	RENDER_VIDEOS   = "_videos"
 	RENDER_QRCODE   = "_qrcode"
 	RENDER_SCRIPT   = "_script"
-	RENDER_DOWNLOAD = "_download"
 	RENDER_TEMPLATE = "_template"
+	RENDER_DOWNLOAD = "_download"
+	RENDER_REDIRECT = "_redirect"
 )
 const ( // PROCESS
 	PROCESS_REFRESH = "_refresh"

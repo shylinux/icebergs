@@ -88,18 +88,15 @@ func init() {
 			"card": {Name: "", Help: "", Hand: func(m *ice.Message, arg ...string) {
 				data := m.Optionv(ice.MSG_USERDATA)
 				kit.Fetch(kit.Value(data, "action.value"), func(key string, value string) { m.Option(key, value) })
-
 				m.Cmdy(TALK, kit.Parse(nil, "", kit.Split(m.Option(kit.SSH_CMD))...))
 				m.Cmd(SEND, m.Option(APP_ID), CHAT_ID, m.Option(OPEN_CHAT_ID),
 					m.Option(wiki.TITLE)+" "+m.Option(kit.SSH_CMD), m.Result())
 			}},
 		}, Hand: func(m *ice.Message, c *ice.Context, key string, arg ...string) {
 			if m.Options(OPEN_CHAT_ID) {
-				if m.Cmdy(TALK, strings.TrimSpace(m.Option("text_without_at_bot"))); len(m.Resultv()) > 0 {
-					m.Cmd(SEND, m.Option(APP_ID), m.Option(OPEN_CHAT_ID), m.Result())
-				}
+				m.Cmdy(TALK, strings.TrimSpace(m.Option("text_without_at_bot")))
 			} else {
-				m.Cmd(DUTY, m.Option(APP_ID), m.Option(kit.MDB_TYPE), kit.Formats(m.Optionv(ice.MSG_USERDATA)))
+				m.Cmdy(DUTY, m.Option(kit.MDB_TYPE), kit.Formats(m.Optionv(ice.MSG_USERDATA)))
 			}
 		}},
 	}})

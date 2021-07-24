@@ -12,7 +12,7 @@ const FORM = "form"
 func init() {
 	Index.Merge(&ice.Context{Commands: map[string]*ice.Command{
 		FORM: {Name: "form [chat_id|open_id|user_id|email] target title text [confirm|value|url arg...]...", Help: "消息", Hand: func(m *ice.Message, c *ice.Context, key string, arg ...string) {
-			var form = kit.Dict(CONTENT, kit.Dict())
+			var form = kit.Dict()
 			switch arg[0] {
 			case CHAT_ID, OPEN_ID, USER_ID, aaa.EMAIL:
 				form[arg[0]], arg = arg[1], arg[2:]
@@ -47,11 +47,12 @@ func init() {
 				case "url":
 					button[arg[i+1]], i = arg[i+2], i+2
 				default:
-					button["value"], i = kit.Dict(
-						ice.MSG_RIVER, m.Option(ice.MSG_RIVER),
-						ice.MSG_STORM, m.Option(ice.MSG_STORM),
-						arg[i+1], arg[i+2],
-					), i+2
+					button["value"], i = map[string]interface{}{
+						ice.MSG_RIVER: m.Option(ice.MSG_RIVER),
+						ice.MSG_STORM: m.Option(ice.MSG_STORM),
+						APP_ID:        m.Option(APP_ID),
+						arg[i+1]:      arg[i+2],
+					}, i+2
 				}
 				kit.Value(button, "value.content", content)
 				kit.Value(button, "value.open_chat_id", m.Option(OPEN_CHAT_ID))

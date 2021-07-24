@@ -272,7 +272,6 @@ func init() {
 						m.Push(aaa.USERNICK, val[aaa.USERNICK])
 						m.PushImages(aaa.AVATAR, kit.Format(val[aaa.AVATAR]), kit.Select("60", "240", m.Option(mdb.FIELDS) == mdb.DETAIL))
 					})
-
 				})
 				m.PushAction(mdb.REMOVE)
 			}},

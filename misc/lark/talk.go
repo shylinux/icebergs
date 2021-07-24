@@ -5,6 +5,7 @@ import (
 
 	ice "github.com/shylinux/icebergs"
 	"github.com/shylinux/icebergs/base/aaa"
+	"github.com/shylinux/icebergs/base/web"
 	kit "github.com/shylinux/toolkits"
 )
 
@@ -16,14 +17,36 @@ func init() {
 			cmds := kit.Split(strings.Join(arg, " "))
 			if aaa.UserLogin(m, m.Option(OPEN_ID), ""); !m.Right(cmds) {
 				if aaa.UserLogin(m, m.Option(OPEN_CHAT_ID), ""); !m.Right(cmds) {
-					m.Cmd(DUTY, m.Option(APP_ID), m.Option(OPEN_CHAT_ID), m.Option("text_without_at_bot"))
+					m.Cmd(DUTY, m.Option(OPEN_CHAT_ID), m.Option("text_without_at_bot"))
 					m.Cmd(HOME)
 					return // 没有权限
 				}
 			}
 
 			// 执行命令
-			m.Cmdy(cmds)
+			if m.Cmdy(cmds); len(m.Resultv()) > 0 {
+				m.Cmd(SEND, m.Option(APP_ID), m.Option(OPEN_CHAT_ID), m.Result())
+				return
+			}
+
+			val := []string{}
+			m.Table(func(index int, value map[string]string, head []string) {
+				for _, key := range head {
+					val = append(val, kit.Format("%s:\t%s", key, value[key]))
+				}
+				val = append(val, "\n")
+			})
+
+			_lark_post(m, m.Option(APP_ID), "/open-apis/message/v4/send/", web.SPIDE_DATA, kit.Formats(
+				kit.Dict("msg_type", "interactive", "chat_id", m.Option(OPEN_CHAT_ID), "card", kit.Dict(
+					"header", kit.Dict("title", kit.Dict("tag", "lark_md", "content", strings.Join(cmds, " "))),
+					"elements", []interface{}{kit.Dict("tag", "div", "fields", []interface{}{
+						kit.Dict("is_short", true, "text", kit.Dict(
+							"tag", "lark_md", "content", strings.Join(val, "\n"),
+						)),
+					})},
+				)),
+			))
 		}},
 	}})
 }

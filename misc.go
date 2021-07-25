@@ -275,6 +275,7 @@ func (m *Message) RenderResult(args ...interface{}) *Message {
 	return m.Render(RENDER_RESULT, args...)
 }
 func (m *Message) RenderTemplate(args ...interface{}) *Message {
+
 	return m.Render(RENDER_TEMPLATE, args...)
 }
 func (m *Message) RenderDownload(args ...interface{}) *Message {

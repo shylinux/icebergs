@@ -24,10 +24,7 @@ func init() {
 		},
 		Configs: map[string]*ice.Config{
 			SHELL: {Name: SHELL, Help: "命令", Value: kit.Data(
-				kit.MDB_TEMPLATE, `<code class="story"
-{{range $k, $v := .Optionv "extra"}}data-{{$k}}='{{$v}}'{{end}}
-data-type="{{.Option "type"}}" data-name="{{.Option "name"}}" data-text="{{.Option "input"}}"
->$ {{.Option "input"}} # {{.Option "name"}}
+				kit.MDB_TEMPLATE, `<code {{.OptionTemplate}}>$ {{.Option "input"}} # {{.Option "name"}}
 {{.Option "output"}}</code>`,
 			)},
 		},

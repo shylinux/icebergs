@@ -51,9 +51,7 @@ func init() {
 		},
 		Configs: map[string]*ice.Config{
 			TABLE: {Name: TABLE, Help: "表格", Value: kit.Data(
-				kit.MDB_TEMPLATE, `<table class="story"
-{{range $k, $v := .Optionv "extra"}}data-{{$k}}='{{$v}}'{{end}}
-data-type="{{.Option "type"}}" data-name="{{.Option "name"}}" data-text="{{.Option "text"}}">
+				kit.MDB_TEMPLATE, `<table {{.OptionTemplate}}>
 <tr>{{range $i, $v := .Optionv "head"}}<th>{{$v}}</th>{{end}}</tr>
 {{range $index, $value := .Optionv "list"}}
 <tr>{{range $i, $v := $value}}<td>{{$v}}</td>{{end}}</tr>

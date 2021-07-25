@@ -1,27 +1,39 @@
+title
+title "hi"
+premenu
 chapter "文档"
+section "文档"
+endmenu
+return
 
 field "影音" web.wiki.feel
 field "数据" web.wiki.data
-field "绘图" web.wiki.draw
-return
 field "文档" web.wiki.word
-
-field "绘图" web.wiki.draw
-field "绘图" web.wiki.draw
 field "绘图" web.wiki.draw
 
-wiki.go
-wiki.shy
+title.go
+brief.go
+refer.go
+spark.go
 
-feel.go
-word.go
-data.go
-draw.go
-
+order.go
+table.go
 chart.go
+
 image.go
 video.go
 music.go
-baidu.go
-template.go
 
+field.go
+shell.go
+local.go
+parse.go
+other.go
+
+data.go
+draw.go
+feel.go
+word.go
+
+wiki.go
+wiki.shy

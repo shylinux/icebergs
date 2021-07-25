@@ -84,8 +84,7 @@ func init() {
 		},
 		Configs: map[string]*ice.Config{
 			FIELD: {Name: FIELD, Help: "插件", Value: kit.Data(
-				kit.MDB_TEMPLATE, `<fieldset class="story {{.Option "name"}}"
-data-type="{{.Option "type"}}" data-name="{{.Option "name"}}" data-text="{{.Option "text"}}" data-meta='{{.Optionv "meta"|Format}}'>
+				kit.MDB_TEMPLATE, `<fieldset {{.OptionTemplate}}" data-meta='{{.Optionv "meta"|Format}}'>
 <legend>{{.Option "name"}}</legend>
 <form class="option"></form>
 <div class="action"></div>

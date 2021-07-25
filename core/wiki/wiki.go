@@ -60,5 +60,6 @@ var Index = &ice.Context{Name: WIKI, Help: "文档中心",
 func init() {
 	web.Index.Register(Index, &web.Frame{},
 		FEEL, WORD, DATA, DRAW, IMAGE, SPARK,
+		TITLE,
 	)
 }

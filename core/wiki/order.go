@@ -25,10 +25,7 @@ func init() {
 		},
 		Configs: map[string]*ice.Config{
 			ORDER: {Name: ORDER, Help: "列表", Value: kit.Data(
-				kit.MDB_TEMPLATE, `<ul class="story"
-{{range $k, $v := .Optionv "extra"}}data-{{$k}}='{{$v}}'{{end}}
-data-type="{{.Option "type"}}" data-name="{{.Option "name"}}" data-text="{{.Option "text"}}">
-{{range $index, $value := .Optionv "list"}}<li>{{$value}}</li>{{end}}</ul>`,
+				kit.MDB_TEMPLATE, `<ul {{.OptionTemplate}}>{{range $index, $value := .Optionv "list"}}<li>{{$value}}</li>{{end}}</ul>`,
 			)},
 		},
 	})

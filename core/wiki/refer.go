@@ -35,10 +35,7 @@ func init() {
 		},
 		Configs: map[string]*ice.Config{
 			REFER: {Name: REFER, Help: "参考", Value: kit.Data(
-				kit.MDB_TEMPLATE, `<ul class="story"
-{{range $k, $v := .Optionv "extra"}}data-{{$k}}='{{$v}}'{{end}} 
-data-type="{{.Option "type"}}" data-name="{{.Option "name"}}" data-text="{{.Option "text"}}">
-{{range $index, $value := .Optionv "list"}}<li>{{index $value 0}}: <a href="{{index $value 1}}" target="_blank">{{index $value 1}}</a></li>{{end}}</ul>`,
+				kit.MDB_TEMPLATE, `<ul {{.OptionTemplate}}>{{range $index, $value := .Optionv "list"}}<li>{{index $value 0}}: <a href="{{index $value 1}}" target="_blank">{{index $value 1}}</a></li>{{end}}</ul>`,
 			)},
 		},
 	})

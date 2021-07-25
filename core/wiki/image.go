@@ -42,10 +42,7 @@ func init() {
 		},
 		Configs: map[string]*ice.Config{
 			IMAGE: {Name: IMAGE, Help: "图片", Value: kit.Data(
-				kit.MDB_TEMPLATE, `<img class="story"
-{{range $k, $v := .Optionv "extra"}}data-{{$k}}='{{$v}}'{{end}}
-data-type="{{.Option "type"}}" data-name="{{.Option "name"}}" data-text="{{.Option "text"}}"
-title="{{.Option "text"}}" src="{{.Option "text"}}">`,
+				kit.MDB_TEMPLATE, `<img {{.OptionTemplate}} title="{{.Option "text"}}" src="{{.Option "text"}}">`,
 			)},
 		},
 	})

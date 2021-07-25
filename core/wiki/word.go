@@ -31,9 +31,9 @@ func _option(m *ice.Message, kind, name, text string, arg ...string) {
 func _word_show(m *ice.Message, name string, arg ...string) {
 	m.Set(ice.MSG_RESULT)
 	m.Option(TITLE, map[string]int{})
-	m.Option("menu", kit.Dict("list", []interface{}{}))
+	m.Option(kit.MDB_MENU, kit.Dict(kit.MDB_LIST, []interface{}{}))
 
-	m.Option(ice.MSG_ALIAS, m.Confv(WORD, kit.Keym("alias")))
+	m.Option(ice.MSG_ALIAS, m.Confv(WORD, kit.Keym(kit.MDB_ALIAS)))
 	m.Option(nfs.DIR_ROOT, _wiki_path(m, WORD))
 	m.Option(ice.MSG_RENDER, ice.RENDER_RAW)
 	m.Cmdy(ssh.SOURCE, name)
@@ -50,7 +50,7 @@ func init() {
 	Index.Merge(&ice.Context{
 		Configs: map[string]*ice.Config{
 			WORD: {Name: WORD, Help: "语言文字", Value: kit.Data(
-				kit.MDB_PATH, "", kit.MDB_REGEXP, ".*\\.shy", "alias", kit.Dict(
+				kit.MDB_PATH, "", kit.MDB_REGEXP, ".*\\.shy", kit.MDB_ALIAS, kit.Dict(
 					PREMENU, []interface{}{TITLE, PREMENU},
 					CHAPTER, []interface{}{TITLE, CHAPTER},
 					SECTION, []interface{}{TITLE, SECTION},

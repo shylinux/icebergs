@@ -225,7 +225,7 @@ func (f *Frame) parse(m *ice.Message, line string) string {
 			msg.Cmdy(ls[0], ls[1:])
 		}
 
-		if strings.HasPrefix(msg.Result(), ice.ErrWarn) && m.Option("render") == "raw" {
+		if strings.HasPrefix(msg.Result(), ice.ErrWarn) && m.Option(ice.MSG_RENDER) == ice.RENDER_RAW {
 			fmt.Fprintf(msg.O, line)
 			continue
 		}

@@ -1,14 +1,15 @@
 package md
 
 import (
-	"github.com/shylinux/icebergs"
+	ice "github.com/shylinux/icebergs"
 	"github.com/shylinux/icebergs/core/wiki"
-	"github.com/shylinux/toolkits"
+	kit "github.com/shylinux/toolkits"
 
-	"github.com/gomarkdown/markdown"
 	"io/ioutil"
 	"path"
 	"strings"
+
+	"github.com/gomarkdown/markdown"
 )
 
 /*
@@ -42,7 +43,9 @@ var Index = &ice.Context{Name: "md", Help: "md",
 			m.Echo("hello world")
 		}},
 
-		"note": {Name: "note file", Help: "文档", Meta: kit.Dict("display", "inner"), List: kit.List(
+		"note": {Name: "note file", Help: "文档", Meta: kit.Dict(
+			ice.Display("inner"),
+		), List: kit.List(
 			kit.MDB_INPUT, "text", "name", "path", "value", "README.md", "action", "auto",
 			kit.MDB_INPUT, "button", "name", "执行", "action", "auto",
 			kit.MDB_INPUT, "button", "name", "返回", "cb", "Last",

@@ -544,11 +544,31 @@ func Display(file string, arg ...string) map[string]string {
 		file = kit.Select(file+".js", file, strings.HasSuffix(file, ".js"))
 		file = path.Join("/require/github.com/shylinux", path.Dir(ls[len(ls)-1]), file)
 	}
-	return map[string]string{kit.MDB_DISPLAY: file, kit.MDB_STYLE: kit.Select("", arg, 0)}
+	// return map[string]string{kit.MDB_DISPLAY: file, kit.MDB_STYLE: kit.Select("", arg, 0)}
+	return map[string]string{"display": file, kit.MDB_STYLE: kit.Select("", arg, 0)}
 }
 func (m *Message) OptionSplit(fields ...string) (res []string) {
 	for _, k := range strings.Split(strings.Join(fields, ","), ",") {
 		res = append(res, m.Option(k))
 	}
 	return res
+}
+func (m *Message) OptionTemplate() string {
+	res := []string{`class="story"`}
+	for _, key := range kit.Split("style") {
+		if m.Option(key) != "" {
+			res = append(res, kit.Format(`s="%s"`, key, m.Option(key)))
+		}
+	}
+	for _, key := range kit.Split("type,name,text") {
+		if m.Option(key) != "" {
+			res = append(res, kit.Format(`data-%s="%s"`, key, m.Option(key)))
+		}
+	}
+	kit.Fetch(m.Optionv("extra"), func(key string, value string) {
+		if value != "" {
+			res = append(res, kit.Format(`data-%s="%s"`, key, value))
+		}
+	})
+	return strings.Join(res, " ")
 }

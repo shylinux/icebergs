@@ -62,7 +62,7 @@ const SPIDE = "spide"
 func init() {
 	Index.Merge(&ice.Context{Commands: map[string]*ice.Command{
 		SPIDE: {Name: "spide name@key auto", Help: "构架图", Meta: kit.Dict(
-			kit.MDB_DISPLAY, "/plugin/story/spide.js",
+			ice.Display("/plugin/story/spide.js"),
 		), Action: map[string]*ice.Action{
 			mdb.INPUTS: {Name: "inputs", Help: "补全", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmdy(REPOS)

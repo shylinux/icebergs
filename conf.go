@@ -87,6 +87,7 @@ const ( // MSG
 	MSG_SOURCE = "_source"
 	MSG_TARGET = "_target"
 	MSG_HANDLE = "_handle"
+	MSG_RENDER = "_render"
 	MSG_OUTPUT = "_output"
 	MSG_ARGS   = "_args"
 
@@ -122,6 +123,7 @@ const ( // MSG
 	MSG_TOAST = "sess.toast"
 )
 const ( // RENDER
+	RENDER_RAW      = "_raw"
 	RENDER_VOID     = "_void"
 	RENDER_RESULT   = "_result"
 	RENDER_ANCHOR   = "_anchor"

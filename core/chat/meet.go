@@ -27,7 +27,7 @@ func init() {
 			ice.CTX_EXIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) { m.Save() }},
 
 			MEDIA: {Name: "media name auto open snapshot", Help: "视频会议", Meta: kit.Dict(
-				"display", "/plugin/local/chat/media.js",
+				ice.Display("/plugin/local/chat/media.js"),
 			), Action: map[string]*ice.Action{
 				tcp.OPEN: {Name: "open", Help: "打开摄相头", Hand: func(m *ice.Message, arg ...string) {
 					m.Cmdy(mdb.IMPORT, m.Prefix(MISS), "", mdb.HASH)

@@ -47,6 +47,9 @@ func _command_search(m *ice.Message, kind, name, text string) {
 	})
 }
 
+const (
+	ACTION = "action"
+)
 const COMMAND = "command"
 
 func init() {

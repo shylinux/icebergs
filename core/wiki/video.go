@@ -20,7 +20,7 @@ func _video_show(m *ice.Message, name, text string, arg ...string) {
 	}
 
 	_option(m, VIDEO, name, text, arg...)
-	m.Render(ice.RENDER_TEMPLATE, m.Conf(VIDEO, kit.Keym(kit.MDB_TEMPLATE)))
+	m.RenderTemplate(m.Conf(VIDEO, kit.Keym(kit.MDB_TEMPLATE)))
 }
 
 const (

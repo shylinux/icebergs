@@ -2,6 +2,7 @@ package web
 
 import (
 	ice "github.com/shylinux/icebergs"
+	"github.com/shylinux/icebergs/base/aaa"
 	"github.com/shylinux/icebergs/base/mdb"
 	kit "github.com/shylinux/toolkits"
 
@@ -394,7 +395,7 @@ func init() {
 						m.Option(kit.MDB_TYPE, value[kit.MDB_TYPE])
 						m.Option(kit.MDB_NAME, value[kit.MDB_NAME])
 						m.Option(kit.MDB_TEXT, value[kit.MDB_TEXT])
-						m.Render(ice.RENDER_TEMPLATE, m.Conf(SHARE, "meta.template.simple"))
+						m.RenderTemplate(m.Conf(SHARE, "meta.template.simple"))
 						m.Option(ice.MSG_OUTPUT, ice.RENDER_RESULT)
 					}
 				})

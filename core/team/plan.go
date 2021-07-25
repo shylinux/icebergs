@@ -36,7 +36,7 @@ func init() {
 	Index.Merge(&ice.Context{
 		Commands: map[string]*ice.Command{
 			PLAN: {Name: "plan scale=day,week,month,year,long begin_time@date auto insert export import", Help: "计划", Meta: kit.Dict(
-				kit.MDB_DISPLAY, "/plugin/local/team/plan.js", kit.MDB_STYLE, PLAN,
+				ice.Display("/plugin/local/team/plan.js", PLAN),
 			), Action: map[string]*ice.Action{
 				mdb.INSERT: {Name: "insert zone type=once,step,week name text begin_time@date close_time@date", Help: "添加", Hand: func(m *ice.Message, arg ...string) {
 					_task_create(m, arg[1])

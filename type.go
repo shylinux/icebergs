@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"path"
 	"reflect"
 	"runtime"
 	"sort"
@@ -188,11 +187,6 @@ func (c *Context) Merge(s *Context) *Context {
 			v.Meta = kit.Dict()
 		}
 
-		if p := kit.Format(v.Meta[kit.MDB_DISPLAY]); p != "" && !strings.HasPrefix(p, "/") {
-			ls := strings.Split(kit.FileLine(2, 100), "usr")
-			p = kit.Select(p+".js", p, strings.HasSuffix(p, ".js"))
-			v.Meta[kit.MDB_DISPLAY] = path.Join("/require/github.com/shylinux", path.Dir(ls[len(ls)-1]), p)
-		}
 		if p := kit.Format(v.Meta[kit.MDB_STYLE]); p == "" {
 			v.Meta[kit.MDB_STYLE] = k
 		}

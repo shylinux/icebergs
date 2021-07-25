@@ -1,17 +1,27 @@
 chapter "文档"
 
+field "影音" web.wiki.feel
+field "数据" web.wiki.data
+field "绘图" web.wiki.draw
+return
+field "文档" web.wiki.word
+
+field "绘图" web.wiki.draw
+field "绘图" web.wiki.draw
+field "绘图" web.wiki.draw
+
 wiki.go
 wiki.shy
 
 feel.go
-draw.go
-data.go
 word.go
+data.go
+draw.go
 
 chart.go
-template.go
-
-baidu.go
-music.go
+image.go
 video.go
+music.go
+baidu.go
+template.go
 

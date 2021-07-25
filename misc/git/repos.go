@@ -80,7 +80,7 @@ func init() {
 				}},
 			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 				if len(arg) == 0 { // 仓库列表
-					m.Fields(len(arg) == 0, m.Conf(REPOS, kit.META_FIELD))
+					m.Fields(len(arg), m.Conf(REPOS, kit.META_FIELD))
 					m.Cmdy(mdb.SELECT, m.Prefix(REPOS), "", mdb.HASH)
 					m.Sort(kit.MDB_NAME)
 					return

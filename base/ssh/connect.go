@@ -211,7 +211,7 @@ func init() {
 					m.Echo(h)
 				}},
 			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-				m.Fields(len(arg) == 0, "time,hash,status,username,host,port")
+				m.Fields(len(arg), "time,hash,status,username,host,port")
 				if m.Cmdy(mdb.SELECT, CONNECT, "", mdb.HASH, kit.MDB_HASH, arg); len(arg) == 0 {
 					m.Table(func(index int, value map[string]string, head []string) {
 						m.PushButton(kit.Select("", SESSION, value[kit.MDB_STATUS] == tcp.OPEN), mdb.REMOVE)

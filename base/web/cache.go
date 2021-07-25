@@ -168,7 +168,7 @@ func init() {
 					}
 				}},
 			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-				m.Fields(len(arg) == 0, "time,hash,size,type,name,text")
+				m.Fields(len(arg), "time,hash,size,type,name,text")
 				if m.Cmdy(mdb.SELECT, CACHE, "", mdb.HASH, kit.MDB_HASH, arg); len(arg) == 0 {
 					return
 				}

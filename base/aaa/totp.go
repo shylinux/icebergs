@@ -75,7 +75,7 @@ func init() {
 					m.Cmdy(mdb.DELETE, TOTP, "", mdb.HASH, kit.MDB_NAME, m.Option(kit.MDB_NAME))
 				}},
 			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-				m.Fields(len(arg) == 0, "time,name,secret,period,number")
+				m.Fields(len(arg), "time,name,secret,period,number")
 				m.Cmd(mdb.SELECT, TOTP, "", mdb.HASH, kit.MDB_NAME, arg).Table(func(index int, value map[string]string, head []string) {
 					m.Push(kit.MDB_TIME, m.Time())
 					m.Push(kit.MDB_NAME, value[kit.MDB_NAME])

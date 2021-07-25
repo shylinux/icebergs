@@ -94,7 +94,7 @@ func init() {
 					m.Cmdy(mdb.PRUNES, SERVER, "", mdb.HASH, kit.MDB_STATUS, CLOSE)
 				}},
 			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-				m.Fields(len(arg) == 0, "time,hash,status,type,name,host,port,error,nconn")
+				m.Fields(len(arg), "time,hash,status,type,name,host,port,error,nconn")
 				if m.Cmdy(mdb.SELECT, SERVER, "", mdb.HASH, kit.MDB_HASH, arg); len(arg) == 0 {
 					m.Table(func(index int, value map[string]string, head []string) {
 						m.PushButton(kit.Select("", mdb.REMOVE, value[kit.MDB_STATUS] == CLOSE))

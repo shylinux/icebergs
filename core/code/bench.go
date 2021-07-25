@@ -1,14 +1,6 @@
 package code
 
 import (
-	ice "github.com/shylinux/icebergs"
-	"github.com/shylinux/icebergs/base/cli"
-	"github.com/shylinux/icebergs/base/mdb"
-	"github.com/shylinux/icebergs/base/nfs"
-	kit "github.com/shylinux/toolkits"
-
-	"github.com/shylinux/toolkits/util/bench"
-
 	"io"
 	"io/ioutil"
 	"net/http"
@@ -16,6 +8,13 @@ import (
 	"path"
 	"strings"
 	"sync/atomic"
+
+	ice "github.com/shylinux/icebergs"
+	"github.com/shylinux/icebergs/base/cli"
+	"github.com/shylinux/icebergs/base/mdb"
+	"github.com/shylinux/icebergs/base/nfs"
+	kit "github.com/shylinux/toolkits"
+	"github.com/shylinux/toolkits/util/bench"
 )
 
 func _bench_http(m *ice.Message, name, target string, arg ...string) {
@@ -56,10 +55,13 @@ func _bench_redis(m *ice.Message, name, target string, arg ...string) {
 }
 
 const (
+	HTTP  = "http"
+	REDIS = "redis"
+)
+const (
 	NCONN = "nconn"
 	NREQS = "nreqs"
 )
-
 const BENCH = "bench"
 
 func init() {
@@ -68,36 +70,36 @@ func init() {
 			BENCH: {Name: BENCH, Help: "性能压测", Value: kit.Data(kit.MDB_SHORT, kit.MDB_ZONE)},
 		},
 		Commands: map[string]*ice.Command{
+			"/bench": {Name: "/bench cmd...", Help: "性能压测", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+				m.Cmdy(m.Optionv("cmd"))
+			}},
 			BENCH: {Name: "bench zone id auto insert", Help: "性能压测", Action: map[string]*ice.Action{
 				mdb.CREATE: {Name: "create zone", Help: "创建", Hand: func(m *ice.Message, arg ...string) {
 					m.Cmdy(mdb.INSERT, BENCH, "", mdb.HASH, arg)
 				}},
-				mdb.INSERT: {Name: "insert zone type=http,redis name text nconn=3 nreqs=10", Help: "添加", Hand: func(m *ice.Message, arg ...string) {
+				mdb.INSERT: {Name: "insert zone=some type=http,redis name=demo text nconn=3 nreqs=10", Help: "添加", Hand: func(m *ice.Message, arg ...string) {
 					m.Cmdy(mdb.INSERT, BENCH, "", mdb.HASH, kit.MDB_ZONE, arg[1])
-					m.Cmdy(mdb.INSERT, BENCH, _sub_key(m, m.Option(kit.MDB_ZONE)), mdb.LIST, arg[2:])
+					m.Cmdy(mdb.INSERT, BENCH, "", mdb.ZONE, m.Option(kit.MDB_ZONE), arg[2:])
 				}},
 				mdb.MODIFY: {Name: "modify", Help: "编辑", Hand: func(m *ice.Message, arg ...string) {
-					m.Cmdy(mdb.MODIFY, BENCH, _sub_key(m, m.Option(kit.MDB_ZONE)), mdb.LIST, kit.MDB_ID, m.Option(kit.MDB_ID), arg)
+					m.Cmdy(mdb.MODIFY, BENCH, "", mdb.ZONE, m.Option(kit.MDB_ZONE), m.Option(kit.MDB_ID), arg)
 				}},
 				mdb.REMOVE: {Name: "remove", Help: "删除", Hand: func(m *ice.Message, arg ...string) {
-					m.Cmdy(mdb.DELETE, BENCH, "", mdb.HASH, kit.MDB_ZONE, m.Option(kit.MDB_ZONE))
+					m.Cmdy(mdb.DELETE, BENCH, "", mdb.HASH, m.OptionSimple(kit.MDB_ZONE))
 				}},
 
-				cli.RUN: {Name: "run", Help: "运行", Hand: func(m *ice.Message, arg ...string) {
+				cli.RUN: {Name: "run", Help: "执行", Hand: func(m *ice.Message, arg ...string) {
 					switch m.Option(kit.MDB_TYPE) {
-					case "http":
+					case HTTP:
 						_bench_http(m, m.Option(kit.MDB_NAME), m.Option(kit.MDB_TEXT))
-					case "redis":
+					case REDIS:
 						_bench_redis(m, m.Option(kit.MDB_NAME), m.Option(kit.MDB_TEXT))
 					}
 				}},
 			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-				m.Option(mdb.FIELDS, kit.Select("time,count,zone", kit.Select("time,id,type,name,text,nconn,nreqs", mdb.DETAIL, len(arg) > 1), len(arg) > 0))
+				m.Fields(len(arg), "time,zone,count", "time,id,type,name,text,nconn,nreqs")
 				m.Cmdy(mdb.SELECT, BENCH, "", mdb.ZONE, arg)
 				m.PushAction(kit.Select(mdb.REMOVE, cli.RUN, len(arg) > 0))
-			}},
-			"/bench": {Name: "/bench cmd...", Help: "性能压测", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-				m.Cmdy(m.Optionv("cmd"))
 			}},
 
 			"test": {Name: "test path func auto run case", Help: "测试用例", Action: map[string]*ice.Action{

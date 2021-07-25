@@ -21,19 +21,15 @@ func init() {
 	Index.Register(&ice.Context{Name: JS, Help: "前端",
 		Commands: map[string]*ice.Command{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-				m.Cmd(mdb.PLUGIN, mdb.CREATE, JS, m.Prefix(JS))
-				m.Cmd(mdb.RENDER, mdb.CREATE, JS, m.Prefix(JS))
-				m.Cmd(mdb.ENGINE, mdb.CREATE, JS, m.Prefix(JS))
-				m.Cmd(mdb.SEARCH, mdb.CREATE, JS, m.Prefix(JS))
-
-				m.Cmd(mdb.PLUGIN, mdb.CREATE, VUE, m.Prefix(VUE))
-				m.Cmd(mdb.RENDER, mdb.CREATE, VUE, m.Prefix(VUE))
-				m.Cmd(mdb.ENGINE, mdb.CREATE, VUE, m.Prefix(VUE))
-				m.Cmd(mdb.SEARCH, mdb.CREATE, VUE, m.Prefix(VUE))
+				for _, cmd := range []string{mdb.PLUGIN, mdb.RENDER, mdb.ENGINE, mdb.SEARCH} {
+					m.Cmd(cmd, mdb.CREATE, VUE, m.Prefix(VUE))
+					m.Cmd(cmd, mdb.CREATE, JS, m.Prefix(JS))
+				}
+				LoadPlug(m, JS)
 			}},
 			JS: {Name: JS, Help: "前端", Action: map[string]*ice.Action{
 				mdb.PLUGIN: {Hand: func(m *ice.Message, arg ...string) {
-					m.Echo(m.Conf(JS, "meta.plug"))
+					m.Echo(m.Conf(JS, kit.Keym(PLUG)))
 				}},
 				mdb.RENDER: {Hand: func(m *ice.Message, arg ...string) {
 					m.Cmdy(nfs.CAT, path.Join(arg[2], arg[1]))
@@ -47,8 +43,8 @@ func init() {
 					if arg[0] == kit.MDB_FOREACH {
 						return
 					}
-					_go_find(m, kit.Select("main", arg, 1))
-					_go_grep(m, kit.Select("main", arg, 1))
+					_go_find(m, kit.Select(kit.MDB_MAIN, arg, 1))
+					_go_grep(m, kit.Select(kit.MDB_MAIN, arg, 1))
 				}},
 			}},
 			NODE: {Name: "node", Help: "前端", Action: map[string]*ice.Action{
@@ -58,7 +54,7 @@ func init() {
 			}},
 			VUE: {Name: "vue", Help: "前端", Action: map[string]*ice.Action{
 				mdb.PLUGIN: {Hand: func(m *ice.Message, arg ...string) {
-					m.Echo(m.Conf(VUE, "meta.plug"))
+					m.Echo(m.Conf(VUE, kit.Keym(PLUG)))
 				}},
 				mdb.RENDER: {Hand: func(m *ice.Message, arg ...string) {
 					m.Cmdy(nfs.CAT, path.Join(arg[2], arg[1]))
@@ -72,22 +68,22 @@ func init() {
 					if arg[0] == kit.MDB_FOREACH {
 						return
 					}
-					_go_find(m, kit.Select("main", arg, 1))
-					_go_grep(m, kit.Select("main", arg, 1))
+					_go_find(m, kit.Select(kit.MDB_MAIN, arg, 1))
+					_go_grep(m, kit.Select(kit.MDB_MAIN, arg, 1))
 				}},
 			}},
 		},
 		Configs: map[string]*ice.Config{
 			VUE: {Name: VUE, Help: "vue", Value: kit.Data(
-				"plug", kit.Dict(
+				PLUG, kit.Dict(
+					SPLIT, kit.Dict(
+						"space", " \t",
+						"operator", "{[(&.,;!|<>)]}",
+					),
 					PREFIX, kit.Dict(
 						"//", COMMENT,
 						"/*", COMMENT,
 						"*", COMMENT,
-					),
-					SPLIT, kit.Dict(
-						"space", " \t",
-						"operator", "{[(&.,;!|<>)]}",
 					),
 				),
 			)},
@@ -95,7 +91,7 @@ func init() {
 				kit.SSH_SOURCE, "https://nodejs.org/dist/v10.13.0/node-v10.13.0-linux-x64.tar.xz",
 			)},
 			JS: {Name: JS, Help: "js", Value: kit.Data(
-				"plug", kit.Dict(
+				PLUG, kit.Dict(
 					SPLIT, kit.Dict(
 						"space", " \t",
 						"operator", "{[(&.,;!|<>)]}",
@@ -105,77 +101,72 @@ func init() {
 						"/*", COMMENT,
 						"*", COMMENT,
 					),
-					KEYWORD, kit.Dict(
-						"import", KEYWORD,
-						"from", KEYWORD,
-						"export", KEYWORD,
+					PREPARE, kit.Dict(
+						KEYWORD, kit.Simple(
+							"import",
+							"from",
+							"export",
 
-						"var", KEYWORD,
-						"new", KEYWORD,
-						"delete", KEYWORD,
-						"typeof", KEYWORD,
-						"const", KEYWORD,
-						"function", KEYWORD,
+							"var",
+							"new",
+							"delete",
+							"typeof",
+							"const",
+							"function",
 
-						"if", KEYWORD,
-						"else", KEYWORD,
-						"for", KEYWORD,
-						"while", KEYWORD,
-						"break", KEYWORD,
-						"continue", KEYWORD,
-						"switch", KEYWORD,
-						"case", KEYWORD,
-						"default", KEYWORD,
-						"return", KEYWORD,
-						"try", KEYWORD,
-						"throw", KEYWORD,
-						"catch", KEYWORD,
-						"finally", KEYWORD,
+							"if",
+							"else",
+							"for",
+							"while",
+							"break",
+							"continue",
+							"switch",
+							"case",
+							"default",
+							"return",
+							"try",
+							"throw",
+							"catch",
+							"finally",
+						),
+						FUNCTION, kit.Simple(
+							"window",
+							"console",
+							"document",
+							"arguments",
+							"event",
+							"Date",
+							"JSON",
 
-						"window", FUNCTION,
-						"console", FUNCTION,
-						"document", FUNCTION,
-						"arguments", FUNCTION,
-						"event", FUNCTION,
-						"Date", FUNCTION,
-						"JSON", FUNCTION,
+							"__proto__",
+							"setTimeout",
+							"createElement",
+							"appendChild",
+							"removeChild",
+							"parentNode",
+							"childNodes",
 
-						"0", STRING,
-						"1", STRING,
-						"10", STRING,
-						"-1", STRING,
-						"true", STRING,
-						"false", STRING,
-						"undefined", STRING,
-						"null", STRING,
+							"Volcanos",
+							"request",
+							"require",
 
-						"__proto__", FUNCTION,
-						"setTimeout", FUNCTION,
-						"createElement", FUNCTION,
-						"appendChild", FUNCTION,
-						"removeChild", FUNCTION,
-						"parentNode", FUNCTION,
-						"childNodes", FUNCTION,
-
-						"Volcanos", FUNCTION,
-						"request", FUNCTION,
-						"require", FUNCTION,
-
-						"cb", FUNCTION,
-						"cbs", FUNCTION,
-						"shy", FUNCTION,
-						"can", FUNCTION,
-						"sub", FUNCTION,
-						"msg", FUNCTION,
-						"res", FUNCTION,
-						"pane", FUNCTION,
-						"plugin", FUNCTION,
-
-						"-1", STRING,
-						"0", STRING,
-						"1", STRING,
-						"2", STRING,
+							"cb",
+							"cbs",
+							"shy",
+							"can",
+							"sub",
+							"msg",
+							"res",
+							"pane",
+							"plugin",
+						),
+						CONSTANT, kit.Simple(
+							"true", "false",
+							"undefined", "null",
+							"-1", "0", "1", "2", "10",
+						),
 					),
+					KEYWORD, kit.Dict(),
 				),
 			)},
 		},

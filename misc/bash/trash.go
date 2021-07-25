@@ -45,11 +45,11 @@ func init() {
 				}},
 				nfs.DIR: {Name: "dir", Help: "目录", Hand: func(m *ice.Message, arg ...string) {
 					m.Option(nfs.DIR_ROOT, m.Option(TO))
-					m.ProcessCommand(nfs.DIR, "", arg...)
+					m.ProcessCommand(nfs.DIR, []string{}, arg...)
 					m.ProcessCommandOpt(TO)
 				}},
 			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-				m.Fields(len(arg) == 0, m.Conf(TRASH, kit.META_FIELD))
+				m.Fields(len(arg), m.Conf(TRASH, kit.META_FIELD))
 				m.Cmdy(mdb.SELECT, m.Prefix(TRASH), "", mdb.HASH, kit.MDB_HASH, arg)
 				m.PushAction(nfs.DIR, mdb.REVERT, mdb.REMOVE)
 			}},

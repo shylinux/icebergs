@@ -43,7 +43,7 @@ func init() {
 				}},
 			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 				m.OptionPage(kit.Slice(arg, _sync_index)...)
-				m.Fields(len(arg) == 0 || arg[0] == "", m.Conf(SYNC, kit.META_FIELD))
+				m.Fields(len(kit.Slice(arg, 0, 1)), m.Conf(SYNC, kit.META_FIELD))
 				m.Cmdy(mdb.SELECT, m.Prefix(SYNC), "", mdb.LIST, kit.MDB_ID, arg)
 				m.StatusTimeCountTotal(_sync_count(m))
 			}},

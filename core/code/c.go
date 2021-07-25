@@ -37,46 +37,40 @@ func _c_help(m *ice.Message, section, key string) string {
 	return string(res)
 }
 
-const H = "h"
-const C = "c"
-const CC = "cc"
-const MAN1 = "man1"
-const MAN2 = "man2"
-const MAN3 = "man3"
-const MAN8 = "man8"
-
+const (
+	H    = "h"
+	CC   = "cc"
+	MAN1 = "man1"
+	MAN2 = "man2"
+	MAN3 = "man3"
+	MAN8 = "man8"
+)
 const (
 	FIND = "find"
 	GREP = "grep"
 	MAN  = "man"
 )
+const C = "c"
 
 func init() {
 	Index.Register(&ice.Context{Name: C, Help: "系统",
 		Commands: map[string]*ice.Command{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-				m.Cmd(mdb.PLUGIN, mdb.CREATE, CC, m.Prefix(C))
-				m.Cmd(mdb.RENDER, mdb.CREATE, CC, m.Prefix(C))
-				m.Cmd(mdb.SEARCH, mdb.CREATE, CC, m.Prefix(C))
-
-				m.Cmd(mdb.PLUGIN, mdb.CREATE, C, m.Prefix(C))
-				m.Cmd(mdb.RENDER, mdb.CREATE, C, m.Prefix(C))
-				m.Cmd(mdb.ENGINE, mdb.CREATE, C, m.Prefix(C))
-				m.Cmd(mdb.SEARCH, mdb.CREATE, C, m.Prefix(C))
-
-				m.Cmd(mdb.PLUGIN, mdb.CREATE, H, m.Prefix(C))
-				m.Cmd(mdb.RENDER, mdb.CREATE, H, m.Prefix(C))
-				m.Cmd(mdb.SEARCH, mdb.CREATE, H, m.Prefix(C))
-
-				for _, k := range []string{MAN1, MAN2, MAN3, MAN8} {
-					m.Cmd(mdb.PLUGIN, mdb.CREATE, k, m.Prefix(MAN))
-					m.Cmd(mdb.RENDER, mdb.CREATE, k, m.Prefix(MAN))
-					m.Cmd(mdb.SEARCH, mdb.CREATE, k, m.Prefix(MAN))
+				for _, k := range []string{H, C, CC} {
+					for _, cmd := range []string{mdb.PLUGIN, mdb.RENDER, mdb.ENGINE, mdb.SEARCH} {
+						m.Cmd(cmd, mdb.CREATE, k, m.Prefix(C))
+					}
 				}
+				for _, k := range []string{MAN1, MAN2, MAN3, MAN8} {
+					for _, cmd := range []string{mdb.PLUGIN, mdb.RENDER, mdb.SEARCH} {
+						m.Cmd(cmd, mdb.CREATE, k, m.Prefix(MAN))
+					}
+				}
+				LoadPlug(m, C)
 			}},
 			C: {Name: C, Help: "系统", Action: map[string]*ice.Action{
 				mdb.PLUGIN: {Hand: func(m *ice.Message, arg ...string) {
-					m.Echo(m.Conf(C, "meta.plug"))
+					m.Echo(m.Conf(C, kit.Keym(PLUG)))
 				}},
 				mdb.RENDER: {Hand: func(m *ice.Message, arg ...string) {
 					m.Cmdy(nfs.CAT, path.Join(arg[2], arg[1]))
@@ -84,7 +78,10 @@ func init() {
 				mdb.ENGINE: {Hand: func(m *ice.Message, arg ...string) {
 					m.Option(cli.CMD_DIR, arg[2])
 					name := strings.TrimSuffix(arg[1], path.Ext(arg[1])) + ".bin"
-					m.Cmd(cli.SYSTEM, "gcc", arg[1], "-o", name)
+					if msg := m.Cmd(cli.SYSTEM, "gcc", arg[1], "-o", name); msg.Append(cli.CMD_CODE) != "0" {
+						m.Copy(msg)
+						return
+					}
 					m.Cmdy(cli.SYSTEM, "./"+name)
 				}},
 				mdb.SEARCH: {Hand: func(m *ice.Message, arg ...string) {
@@ -92,16 +89,17 @@ func init() {
 						return
 					}
 					m.Option(cli.CMD_DIR, kit.Select("src", arg, 2))
-					_go_find(m, kit.Select("main", arg, 1))
+					_go_find(m, kit.Select(kit.MDB_MAIN, arg, 1))
 					m.Cmdy(mdb.SEARCH, MAN2, arg[1:])
 					m.Cmdy(mdb.SEARCH, MAN3, arg[1:])
-					_c_tags(m, kit.Select("main", arg, 1))
-					_go_grep(m, kit.Select("main", arg, 1))
+					_c_tags(m, kit.Select(kit.MDB_MAIN, arg, 1))
+					_go_grep(m, kit.Select(kit.MDB_MAIN, arg, 1))
 				}},
-			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {}},
+			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			}},
 			MAN: {Name: MAN, Help: "手册", Action: map[string]*ice.Action{
 				mdb.PLUGIN: {Hand: func(m *ice.Message, arg ...string) {
-					m.Echo(m.Conf(MAN, "meta.plug"))
+					m.Echo(m.Conf(MAN, kit.Keym(PLUG)))
 				}},
 				mdb.RENDER: {Hand: func(m *ice.Message, arg ...string) {
 					m.Echo(_c_help(m, strings.TrimPrefix(arg[0], MAN), strings.TrimSuffix(arg[1], "."+arg[0])))
@@ -111,11 +109,11 @@ func init() {
 						return
 					}
 					for _, i := range []string{"1", "2", "3", "8"} {
-						if text := _c_help(m, i, kit.Select("main", arg, 1)); text != "" {
+						if text := _c_help(m, i, kit.Select(kit.MDB_MAIN, arg, 1)); text != "" {
 							for _, k := range kit.Split(m.Option(mdb.FIELDS)) {
 								switch k {
 								case kit.MDB_FILE:
-									m.Push(k, arg[1]+".man"+i)
+									m.Push(k, kit.Keys(arg[1], MAN+i))
 								case kit.MDB_LINE:
 									m.Push(k, 1)
 								case kit.MDB_TEXT:
@@ -130,22 +128,8 @@ func init() {
 			}},
 		},
 		Configs: map[string]*ice.Config{
-			MAN: {Name: MAN, Help: "手册", Value: kit.Data(
-				"plug", kit.Dict(
-					PREFIX, kit.Dict(
-						"NAME", COMMENT,
-						"LIBRARY", COMMENT,
-						"SYNOPSIS", COMMENT,
-						"DESCRIPTION", COMMENT,
-						"STANDARDS", COMMENT,
-						"SEE ALSO", COMMENT,
-						"HISTORY", COMMENT,
-						"BUGS", COMMENT,
-					),
-				),
-			)},
 			C: {Name: C, Help: "系统", Value: kit.Data(
-				"plug", kit.Dict(
+				PLUG, kit.Dict(
 					SPLIT, kit.Dict(
 						"space", " ",
 						"operator", "{[(.,:;!|<>)]}",
@@ -155,49 +139,65 @@ func init() {
 						"/*", COMMENT,
 						"*", COMMENT,
 					),
-					KEYWORD, kit.Dict(
-						"#include", KEYWORD,
-						"#define", KEYWORD,
-						"#ifndef", KEYWORD,
-						"#ifdef", KEYWORD,
-						"#else", KEYWORD,
-						"#endif", KEYWORD,
+					PREPARE, kit.Dict(
+						KEYWORD, kit.Simple(
+							"#include",
+							"#define",
+							"#ifndef",
+							"#ifdef",
+							"#else",
+							"#endif",
 
-						"if", KEYWORD,
-						"else", KEYWORD,
-						"for", KEYWORD,
-						"while", KEYWORD,
-						"do", KEYWORD,
-						"break", KEYWORD,
-						"continue", KEYWORD,
-						"switch", KEYWORD,
-						"case", KEYWORD,
-						"default", KEYWORD,
-						"return", KEYWORD,
+							"if",
+							"else",
+							"for",
+							"while",
+							"do",
+							"break",
+							"continue",
+							"switch",
+							"case",
+							"default",
+							"return",
 
-						"typedef", KEYWORD,
-						"extern", KEYWORD,
-						"static", KEYWORD,
-						"const", KEYWORD,
-						"sizeof", KEYWORD,
-
-						"union", DATATYPE,
-						"struct", DATATYPE,
-						"unsigned", DATATYPE,
-						"double", DATATYPE,
-						"void", DATATYPE,
-						"long", DATATYPE,
-						"char", DATATYPE,
-						"int", DATATYPE,
-
-						"assert", FUNCTION,
-						"zmalloc", FUNCTION,
-
-						"NULL", STRING,
-						"-1", STRING,
-						"0", STRING,
-						"1", STRING,
-						"2", STRING,
+							"typedef",
+							"sizeof",
+							"extern",
+							"static",
+							"const",
+						),
+						DATATYPE, kit.Simple(
+							"union",
+							"struct",
+							"unsigned",
+							"double",
+							"void",
+							"long",
+							"char",
+							"int",
+						),
+						FUNCTION, kit.Simple(
+							"assert",
+							"zmalloc",
+						),
+						CONSTANT, kit.Simple(
+							"NULL", "-1", "0", "1", "2",
+						),
+					),
+					KEYWORD, kit.Dict(),
+				),
+			)},
+			MAN: {Name: MAN, Help: "手册", Value: kit.Data(
+				PLUG, kit.Dict(
+					PREFIX, kit.Dict(
+						"NAME", COMMENT,
+						"LIBRARY", COMMENT,
+						"SYNOPSIS", COMMENT,
+						"DESCRIPTION", COMMENT,
+						"STANDARDS", COMMENT,
+						"SEE ALSO", COMMENT,
+						"HISTORY", COMMENT,
+						"BUGS", COMMENT,
 					),
 				),
 			)},

@@ -428,14 +428,14 @@ func init() {
 				}},
 			}, Hand: func(m *ice.Message, c *ice.Context, key string, arg ...string) {
 				if m.Action(mdb.CREATE); len(arg) == 0 { // 矩阵列表
-					m.Fields(len(arg) == 0, "time,hash,npage,nhash")
+					m.Fields(len(arg), "time,hash,npage,nhash")
 					m.Cmdy(mdb.SELECT, m.Prefix(MATRIX), "", mdb.HASH)
 					m.PushAction(mdb.INSERT, "show", mdb.REMOVE)
 					return
 				}
 
 				if m.Action(mdb.INSERT, "show"); len(arg) == 1 { // 词法列表
-					m.Fields(len(arg) == 1, "time,npage,nhash,text")
+					m.Fields(len(arg[1:]), "time,npage,nhash,text")
 					m.Cmdy(mdb.SELECT, m.Prefix(MATRIX), kit.Keys(kit.MDB_HASH, arg[0]), mdb.LIST)
 					m.PushAction(PARSE)
 					return

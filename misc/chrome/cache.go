@@ -45,7 +45,7 @@ func init() {
 					m.Cmdy(mdb.PRUNES, m.Prefix(CACHE), "", mdb.HASH, kit.SSH_STEP, "100")
 				}},
 			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-				m.Fields(len(arg) == 0, m.Conf(CACHE, kit.META_FIELD))
+				m.Fields(len(arg), m.Conf(CACHE, kit.META_FIELD))
 				m.Cmdy(mdb.SELECT, m.Prefix(CACHE), "", mdb.HASH, kit.MDB_HASH, arg)
 				m.PushAction(mdb.REMOVE)
 			}},

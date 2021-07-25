@@ -57,18 +57,6 @@ func _task_action(m *ice.Message, status interface{}, action ...string) string {
 	return strings.Join(action, ",")
 }
 
-func _task_list(m *ice.Message, zone string, id string) *ice.Message {
-	if zone == "" {
-		m.Fields(zone == "", "time,zone,count")
-		defer func() { m.PushAction(mdb.REMOVE) }()
-	} else {
-		m.Fields(id == "", "begin_time,id,status,level,score,type,name,text")
-		defer m.Table(func(index int, value map[string]string, head []string) {
-			m.PushButton(_task_action(m, value[STATUS]))
-		})
-	}
-	return m.Cmdy(mdb.SELECT, TASK, "", mdb.ZONE, zone, id)
-}
 func _task_create(m *ice.Message, zone string) {
 	m.Cmdy(mdb.INSERT, TASK, "", mdb.HASH, kit.MDB_ZONE, zone)
 }
@@ -217,7 +205,14 @@ func init() {
 					_task_modify(m, m.Option(kit.MDB_ZONE), m.Option(kit.MDB_ID), STATUS, FINISH)
 				}},
 			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-				_task_list(m, kit.Select("", arg, 0), kit.Select("", arg, 1))
+				m.Fields(len(arg), "time,zone,count", "begin_time,id,status,level,score,type,name,text")
+				if m.Cmdy(mdb.SELECT, TASK, "", mdb.ZONE, arg); len(arg) == 0 {
+					m.PushAction(mdb.REMOVE)
+				} else {
+					m.Table(func(index int, value map[string]string, head []string) {
+						m.PushButton(_task_action(m, value[STATUS]))
+					})
+				}
 			}},
 		},
 	})

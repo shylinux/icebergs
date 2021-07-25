@@ -71,7 +71,7 @@ var Index = &ice.Context{Name: VIM, Help: "编辑器",
 				code.PREFIX, kit.Dict(
 					"\"", "comment",
 				),
-				"_keyword", kit.Dict(
+				code.PREPARE, kit.Dict(
 					code.KEYWORD, kit.Simple(
 						"source", "finish",
 						"set", "let", "end",

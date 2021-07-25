@@ -31,7 +31,7 @@ func init() {
 					m.Cmdy(mdb.DELETE, m.Prefix(MENU), "", mdb.ZONE, m.OptionSimple(kit.MDB_ZONE))
 				}},
 			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-				m.Fields(len(arg) < 2, kit.Select(m.Conf(MENU, kit.META_FIELD), "time,zone,count", len(arg) == 0))
+				m.Fields(len(arg), "time,zone,count", m.Conf(MENU, kit.META_FIELD))
 				if m.Cmdy(mdb.SELECT, m.Prefix(MENU), "", mdb.ZONE, arg); len(arg) == 0 {
 					m.PushAction(mdb.REMOVE)
 				}

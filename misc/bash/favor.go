@@ -61,11 +61,11 @@ func init() {
 				}},
 				cli.SYSTEM: {Name: "system", Help: "命令", Hand: func(m *ice.Message, arg ...string) {
 					m.Option(cli.CMD_DIR, m.Option(cli.PWD))
-					m.ProcessCommand(cli.SYSTEM, m.Option(kit.MDB_TEXT), arg...)
+					m.ProcessCommand(cli.SYSTEM, kit.Split(m.Option(kit.MDB_TEXT)), arg...)
 					m.ProcessCommandOpt(cli.PWD)
 				}},
 			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-				m.Fields(len(arg) < 2, kit.Select(m.Conf(FAVOR, kit.META_FIELD), "time,zone,count", len(arg) == 0))
+				m.Fields(len(arg), "time,zone,count", m.Conf(FAVOR, kit.META_FIELD))
 				if m.Cmdy(mdb.SELECT, m.Prefix(FAVOR), "", mdb.ZONE, arg); len(arg) == 0 {
 					m.Action(mdb.CREATE, mdb.EXPORT, mdb.IMPORT)
 					m.PushAction(mdb.REMOVE)

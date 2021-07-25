@@ -131,14 +131,19 @@ func Render(m *Message, cmd string, args ...interface{}) string {
 		if arg[0] == "" {
 			return ""
 		}
+		list := []string{}
+		if m.Option(MSG_USERPOD) != "" {
+			list = append(list, kit.SSH_POD, m.Option(MSG_USERPOD))
+		}
 		if len(arg) == 1 {
 			arg[0] = kit.MergeURL2(m.Option(MSG_USERWEB), path.Join(kit.Select("", "/share/local",
-				!strings.HasPrefix(arg[0], "/")), arg[0]), kit.SSH_POD, m.Option(MSG_USERPOD))
+				!strings.HasPrefix(arg[0], "/")), arg[0]), list)
 		} else {
 			arg[1] = kit.MergeURL2(m.Option(MSG_USERWEB), path.Join(kit.Select("", "/share/local",
-				!strings.HasPrefix(arg[1], "/")), arg[1]), kit.SSH_POD, m.Option(MSG_USERPOD))
+				!strings.HasPrefix(arg[1], "/")), arg[1]), list, "filename", arg[0])
 		}
-		return fmt.Sprintf(`<a href="%s" download="%s">%s</a>`, kit.Select(arg[0], arg, 1), path.Base(arg[0]), arg[0])
+		arg[0] = m.ReplaceLocalhost(arg[0])
+		return fmt.Sprintf(`<a href="%s" download="%s">%s</a>`, m.ReplaceLocalhost(kit.Select(arg[0], arg, 1)), path.Base(arg[0]), arg[0])
 
 	case RENDER_ANCHOR: // [name] link
 		return fmt.Sprintf(`<a href="%s" target="_blank">%s</a>`, kit.Select(arg[0], arg, 1), arg[0])
@@ -236,6 +241,9 @@ func (m *Message) EchoImages(src string, arg ...string) *Message {
 func (m *Message) EchoQRCode(text string, arg ...string) *Message { // text [size]
 	return m.Echo(Render(m, RENDER_QRCODE, text, arg))
 }
+func (m *Message) EchoDownload(arg ...interface{}) { // [name] file
+	m.Echo(Render(m, RENDER_DOWNLOAD, arg...))
+}
 
 func (m *Message) SortInt(key string)   { m.Sort(key, "int") }
 func (m *Message) SortIntR(key string)  { m.Sort(key, "int_r") }
@@ -312,8 +320,8 @@ func (m *Message) OptionLoad(file string) *Message {
 	}
 	return m
 }
-func (m *Message) Fields(condition bool, fields string) string {
-	return m.Option(MSG_FIELDS, kit.Select(kit.Select("detail", fields, condition), m.Option(MSG_FIELDS)))
+func (m *Message) Fields(length int, fields ...string) string {
+	return m.Option(MSG_FIELDS, kit.Select(kit.Select("detail", fields, length), m.Option(MSG_FIELDS)))
 }
 func (m *Message) Upload(dir string) {
 	up := kit.Simple(m.Optionv(MSG_UPLOAD))
@@ -391,7 +399,7 @@ func (m *Message) ProcessRefresh(delay string) {
 func (m *Message) ProcessRefresh30ms()  { m.ProcessRefresh("30ms") }
 func (m *Message) ProcessRefresh300ms() { m.ProcessRefresh("300ms") }
 func (m *Message) ProcessRefresh3s()    { m.ProcessRefresh("3s") }
-func (m *Message) ProcessCommand(cmd, val string, arg ...string) {
+func (m *Message) ProcessCommand(cmd string, val []string, arg ...string) {
 	if len(arg) > 0 && arg[0] == "run" {
 		m.Cmdy(cmd, arg[1:])
 		return
@@ -399,7 +407,7 @@ func (m *Message) ProcessCommand(cmd, val string, arg ...string) {
 
 	m.Cmdy("command", cmd)
 	m.ProcessField(cmd, "run")
-	m.Push("arg", kit.Format(kit.Split(val)))
+	m.Push("arg", kit.Format(val))
 }
 func (m *Message) ProcessCommandOpt(arg ...string) {
 	m.Push("opt", kit.Format(m.OptionSimple(arg...)))
@@ -522,4 +530,25 @@ func (m *Message) IsCliUA() bool {
 		return true
 	}
 	return false
+}
+func (m *Message) ReplaceLocalhost(url string) string {
+	if strings.Contains(url, "://localhost") {
+		return strings.Replace(url, "localhost", m.Cmd("tcp.host").Append("ip"), 1)
+	}
+	return url
+}
+
+func Display(file string, arg ...string) map[string]string {
+	if file != "" && !strings.HasPrefix(file, "/") {
+		ls := strings.Split(kit.FileLine(2, 100), "usr")
+		file = kit.Select(file+".js", file, strings.HasSuffix(file, ".js"))
+		file = path.Join("/require/github.com/shylinux", path.Dir(ls[len(ls)-1]), file)
+	}
+	return map[string]string{kit.MDB_DISPLAY: file, kit.MDB_STYLE: kit.Select("", arg, 0)}
+}
+func (m *Message) OptionSplit(fields ...string) (res []string) {
+	for _, k := range strings.Split(strings.Join(fields, ","), ",") {
+		res = append(res, m.Option(k))
+	}
+	return res
 }

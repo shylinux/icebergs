@@ -52,7 +52,7 @@ func init() {
 					}
 				}},
 			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-				m.Fields(len(arg) == 0, "time,hash,status,fileline")
+				m.Fields(len(arg), "time,hash,status,fileline")
 				m.Cmdy(mdb.SELECT, ROUTINE, "", mdb.HASH, kit.MDB_HASH, arg)
 				m.PushAction(INNER, mdb.REMOVE)
 			}},

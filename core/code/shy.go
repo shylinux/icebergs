@@ -1,12 +1,12 @@
 package code
 
 import (
+	"path"
+
 	ice "github.com/shylinux/icebergs"
 	"github.com/shylinux/icebergs/base/mdb"
 	"github.com/shylinux/icebergs/base/nfs"
 	kit "github.com/shylinux/toolkits"
-
-	"path"
 )
 
 const SHY = "shy"
@@ -15,14 +15,14 @@ func init() {
 	Index.Register(&ice.Context{Name: SHY, Help: "脚本",
 		Commands: map[string]*ice.Command{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-				m.Cmd(mdb.PLUGIN, mdb.CREATE, SHY, m.Prefix(SHY))
-				m.Cmd(mdb.RENDER, mdb.CREATE, SHY, m.Prefix(SHY))
-				m.Cmd(mdb.ENGINE, mdb.CREATE, SHY, m.Prefix(SHY))
-				m.Cmd(mdb.SEARCH, mdb.CREATE, SHY, m.Prefix(SHY))
+				for _, cmd := range []string{mdb.PLUGIN, mdb.RENDER, mdb.ENGINE, mdb.SEARCH} {
+					m.Cmd(cmd, mdb.CREATE, SHY, m.Prefix(SHY))
+				}
+				LoadPlug(m, SHY)
 			}},
 			SHY: {Name: SHY, Help: "脚本", Action: map[string]*ice.Action{
 				mdb.PLUGIN: {Hand: func(m *ice.Message, arg ...string) {
-					m.Echo(m.Conf(SHY, "meta.plug"))
+					m.Echo(m.Conf(SHY, kit.Keym(PLUG)))
 				}},
 				mdb.RENDER: {Hand: func(m *ice.Message, arg ...string) {
 					m.Cmdy(nfs.CAT, path.Join(arg[2], arg[1]))
@@ -34,28 +34,31 @@ func init() {
 					if arg[0] == kit.MDB_FOREACH {
 						return
 					}
-					_go_find(m, kit.Select("main", arg, 1))
-					_go_grep(m, kit.Select("main", arg, 1))
+					_go_find(m, kit.Select(kit.MDB_MAIN, arg, 1))
+					_go_grep(m, kit.Select(kit.MDB_MAIN, arg, 1))
 				}},
 			}},
 		},
 		Configs: map[string]*ice.Config{
 			SHY: {Name: SHY, Help: "脚本", Value: kit.Data(
-				"plug", kit.Dict(
+				PLUG, kit.Dict(
 					PREFIX, kit.Dict("#", COMMENT),
-					KEYWORD, kit.Dict(
-						"title", KEYWORD,
-						"premenu", KEYWORD,
-						"chapter", KEYWORD,
-						"section", KEYWORD,
-						"source", KEYWORD,
-						"refer", KEYWORD,
-						"field", KEYWORD,
-						"spark", KEYWORD,
-						"image", KEYWORD,
-						"label", KEYWORD,
-						"chain", KEYWORD,
+					PREPARE, kit.Dict(
+						KEYWORD, kit.Simple(
+							"title",
+							"premenu",
+							"chapter",
+							"section",
+							"source",
+							"refer",
+							"field",
+							"spark",
+							"image",
+							"label",
+							"chain",
+						),
 					),
+					KEYWORD, kit.Dict(),
 				),
 			)},
 		},

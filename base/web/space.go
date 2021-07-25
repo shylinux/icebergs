@@ -17,7 +17,9 @@ import (
 )
 
 func _space_list(m *ice.Message, space string) {
-	m.Fields(space == "", "time,type,name,text")
+	if space == "" {
+		m.Fields(0, "time,type,name,text")
+	}
 	m.Cmdy(mdb.SELECT, SPACE, "", mdb.HASH, kit.MDB_NAME, space)
 
 	if space == "" {

@@ -37,13 +37,13 @@ func init() {
 				}},
 			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 				if len(arg) == 0 { // 事件列表
-					m.Fields(len(arg) == 0, "time,event,count")
+					m.Fields(len(arg), "time,event,count")
 					m.Cmdy(mdb.SELECT, EVENT, "", mdb.HASH)
 					m.PushAction(ACTION, mdb.REMOVE)
 					return
 				}
 
-				m.Fields(len(arg) == 1, "time,id,cmd")
+				m.Fields(len(arg[1:]), "time,id,cmd")
 				m.Cmdy(mdb.SELECT, EVENT, kit.Keys(kit.MDB_HASH, kit.Hashs(arg[0])), mdb.LIST, kit.MDB_ID, arg[1:])
 			}},
 		},

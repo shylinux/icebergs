@@ -67,7 +67,7 @@ func init() {
 				}},
 				cli.SYSTEM: {Name: "system", Help: "命令", Hand: func(m *ice.Message, arg ...string) {
 					m.Option(cli.CMD_DIR, m.Option(cli.PWD))
-					m.ProcessCommand(cli.SYSTEM, m.Option(kit.MDB_TEXT), arg...)
+					m.ProcessCommand(cli.SYSTEM, kit.Split(m.Option(kit.MDB_TEXT)), arg...)
 					m.ProcessCommandOpt(cli.PWD)
 				}},
 				FAVOR: {Name: "favor zone=some@key type name text pwd", Help: "收藏", Hand: func(m *ice.Message, arg ...string) {
@@ -75,7 +75,7 @@ func init() {
 				}},
 			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 				m.OptionPage(kit.Slice(arg, _sync_index)...)
-				m.Fields(len(arg) == 0 || arg[0] == "", m.Conf(SYNC, kit.META_FIELD))
+				m.Fields(len(kit.Slice(arg, 0, 1)), m.Conf(SYNC, kit.META_FIELD))
 				m.Cmdy(mdb.SELECT, m.Prefix(SYNC), "", mdb.LIST, kit.MDB_ID, arg)
 				m.PushAction(cli.SYSTEM, FAVOR)
 				m.StatusTimeCountTotal(_sync_count(m))

@@ -253,7 +253,7 @@ func init() {
 					}
 				}},
 			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-				m.Fields(len(arg) == 0, "time,status,name,port,dev")
+				m.Fields(len(arg), "time,status,name,port,dev")
 				m.Cmdy(mdb.SELECT, SERVE, "", mdb.HASH, kit.MDB_NAME, arg)
 			}},
 

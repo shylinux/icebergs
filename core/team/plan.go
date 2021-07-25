@@ -12,7 +12,7 @@ import (
 
 func _plan_list(m *ice.Message, begin_time, end_time time.Time) *ice.Message {
 	m.Option(mdb.CACHE_LIMIT, "100")
-	m.Fields(true, "begin_time,close_time,zone,id,level,status,score,type,name,text,extra")
+	m.Fields(0, "begin_time,close_time,zone,id,level,status,score,type,name,text,extra")
 	m.Option(kit.Keycb(mdb.SELECT), func(key string, fields []string, value, val map[string]interface{}) {
 		begin, _ := time.ParseInLocation(ice.MOD_TIME, kit.Format(value[BEGIN_TIME]), time.Local)
 		if begin_time.After(begin) || begin.After(end_time) {

@@ -64,7 +64,7 @@ func init() {
 					mdb.NextPage(m, _tail_count(m, arg[0]), kit.Slice(arg, 2)...)
 				}},
 			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-				m.Fields(len(arg) < 2 || (len(arg) > 1 && arg[1] == ""), kit.Select("time,name,count,name,file", "time,id,file,text", len(arg) > 0 && arg[0] != ""))
+				m.Fields(len(kit.Slice(arg, 0, 2)), "time,name,count,name,file", "time,id,file,text")
 				m.Option(mdb.CACHE_FILTER, kit.Select("", arg, 4))
 				m.Option(mdb.CACHE_OFFEND, kit.Select("0", arg, 3))
 				m.Option(mdb.CACHE_LIMIT, kit.Select("10", arg, 2))

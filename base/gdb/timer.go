@@ -69,13 +69,13 @@ func init() {
 				}},
 			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 				if len(arg) == 0 {
-					m.Fields(len(arg) == 0, "time,hash,delay,interval,order,next,cmd")
+					m.Fields(len(arg), "time,hash,delay,interval,order,next,cmd")
 					m.Cmdy(mdb.SELECT, TIMER, "", mdb.HASH, kit.MDB_HASH, arg)
 					m.PushAction(mdb.REMOVE)
 					return
 				}
 
-				m.Fields(len(arg) == 1, "time,id,res")
+				m.Fields(len(arg[1:]), "time,id,res")
 				m.Cmdy(mdb.SELECT, TIMER, kit.Keys(kit.MDB_HASH, arg[0]), mdb.LIST, kit.MDB_ID, arg[1:])
 			}},
 		},

@@ -198,7 +198,14 @@ func (c *Context) Merge(s *Context) *Context {
 		}
 
 		for k, a := range v.Action {
-			kit.Value(v.Meta, kit.Keys("trans", k), a.Help)
+			help := strings.SplitN(a.Help, "：", 2)
+			if len(help) == 1 || help[1] == "" {
+				help = strings.SplitN(help[0], ":", 2)
+			}
+			kit.Value(v.Meta, kit.Keys("trans", k), help[0])
+			if len(help) > 1 {
+				kit.Value(v.Meta, kit.Keys("title", k), help[1])
+			}
 			if a.Hand == nil {
 				continue
 			}

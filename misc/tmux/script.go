@@ -31,7 +31,7 @@ func init() {
 					m.Cmdy(mdb.IMPORT, m.Prefix(SCRIPT), "", mdb.HASH)
 				}},
 			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-				m.Fields(len(arg) == 0, m.Conf(SCRIPT, kit.META_FIELD))
+				m.Fields(len(arg), m.Conf(SCRIPT, kit.META_FIELD))
 				m.Cmdy(mdb.SELECT, m.Prefix(SCRIPT), "", mdb.HASH, kit.MDB_NAME, arg)
 				m.PushAction(mdb.REMOVE)
 			}},

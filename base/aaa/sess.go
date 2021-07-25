@@ -88,7 +88,7 @@ func init() {
 					})
 				}},
 			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-				m.Fields(len(arg) == 0, "time,hash,username,userrole,ip")
+				m.Fields(len(arg), "time,hash,username,userrole,ip")
 				m.Cmdy(mdb.SELECT, SESS, "", mdb.HASH, kit.MDB_HASH, arg)
 				m.PushAction(mdb.REMOVE)
 			}},

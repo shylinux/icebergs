@@ -15,7 +15,7 @@ const WEBPACK = "webpack"
 
 func init() {
 	Index.Merge(&ice.Context{Commands: map[string]*ice.Command{
-		WEBPACK: {Name: "webpack path auto create", Help: "打包", Action: map[string]*ice.Action{
+		WEBPACK: {Name: "webpack path auto create prunes", Help: "打包", Action: map[string]*ice.Action{
 			mdb.CREATE: {Name: "create name=demo", Help: "创建", Hand: func(m *ice.Message, arg ...string) {
 				dir := m.Conf(web.SERVE, kit.Keym(ice.VOLCANOS, kit.SSH_PATH))
 				css, _, e := kit.Create(path.Join(dir, "page/cache.css"))
@@ -32,8 +32,7 @@ func init() {
 
 				for _, k := range []string{"lib", "panel", "plugin"} {
 					m.Cmd(nfs.DIR, k).Table(func(index int, value map[string]string, head []string) {
-						switch kit.Ext(value[kit.MDB_PATH]) {
-						case CSS:
+						if kit.Ext(value[kit.MDB_PATH]) == CSS {
 							js.WriteString(`Volcanos.meta.cache["` + path.Join("/", value[kit.MDB_PATH]) + "\"] = []\n")
 							css.WriteString(m.Cmdx(nfs.CAT, value[kit.MDB_PATH]))
 						}
@@ -41,8 +40,7 @@ func init() {
 				}
 				for _, k := range []string{"lib", "panel", "plugin"} {
 					m.Cmd(nfs.DIR, k).Table(func(index int, value map[string]string, head []string) {
-						switch kit.Ext(value[kit.MDB_PATH]) {
-						case JS:
+						if kit.Ext(value[kit.MDB_PATH]) == JS {
 							js.WriteString(`_can_name = "` + path.Join("/", value[kit.MDB_PATH]) + "\";\n")
 							js.WriteString(m.Cmdx(nfs.CAT, value[kit.MDB_PATH]))
 						}
@@ -54,7 +52,7 @@ func init() {
 					js.WriteString(m.Cmdx(nfs.CAT, k))
 				}
 
-				if f, _, e := kit.Create("usr/publish/webpack/" + m.Option(kit.MDB_NAME) + ".js"); m.Assert(e) {
+				if f, _, e := kit.Create(path.Join(ice.USR_PUBLISH, WEBPACK, kit.Keys(m.Option(kit.MDB_NAME), JS))); m.Assert(e) {
 					defer f.Close()
 
 					f.WriteString("\n")
@@ -64,13 +62,13 @@ func init() {
 				}
 
 				m.Option(nfs.DIR_ROOT, "")
-				if f, p, e := kit.Create("usr/publish/webpack/" + m.Option(kit.MDB_NAME) + ".html"); m.Assert(e) {
+				if f, p, e := kit.Create(path.Join(ice.USR_PUBLISH, WEBPACK, kit.Keys(m.Option(kit.MDB_NAME), HTML))); m.Assert(e) {
 					f.WriteString(fmt.Sprintf(_pack,
 						m.Cmdx(nfs.CAT, path.Join(ice.USR_VOLCANOS, "page/cache.css")),
 						m.Cmdx(nfs.CAT, path.Join(ice.USR_VOLCANOS, "page/index.css")),
 
 						m.Cmdx(nfs.CAT, path.Join(ice.USR_VOLCANOS, ice.PROTO_JS)),
-						m.Cmdx(nfs.CAT, path.Join(ice.USR_PUBLISH, "webpack/"+m.Option(kit.MDB_NAME)+".js")),
+						m.Cmdx(nfs.CAT, path.Join(ice.USR_PUBLISH, path.Join(WEBPACK, kit.Keys(m.Option(kit.MDB_NAME), JS)))),
 
 						m.Cmdx(nfs.CAT, path.Join(ice.USR_VOLCANOS, "page/cache.js")),
 						m.Cmdx(nfs.CAT, path.Join(ice.USR_VOLCANOS, "page/index.js")),
@@ -78,14 +76,16 @@ func init() {
 					m.Echo(p)
 				}
 			}},
+			mdb.PRUNES: {Name: "prunes", Help: "清理", Hand: func(m *ice.Message, arg ...string) {
+				m.Cmd(nfs.SAVE, path.Join(ice.USR_VOLCANOS, "page/cache.css"), "")
+				m.Cmd(nfs.SAVE, path.Join(ice.USR_VOLCANOS, "page/cache.js"), "")
+			}},
 		}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			m.Option(nfs.DIR_ROOT, m.Conf(PUBLISH, kit.META_PATH))
-			m.Option(nfs.DIR_TYPE, nfs.CAT)
 			m.Option(nfs.DIR_DEEP, true)
+			m.Option(nfs.DIR_TYPE, nfs.CAT)
+			m.Option(nfs.DIR_ROOT, m.Conf(PUBLISH, kit.META_PATH))
 
-			m.Cmdy(nfs.DIR, WEBPACK).Table(func(index int, value map[string]string, head []string) {
-				m.PushDownload(kit.MDB_LINK, path.Join(m.Option(nfs.DIR_ROOT), value[kit.MDB_PATH]))
-			})
+			m.Cmdy(nfs.DIR, WEBPACK, "time,size,path,action,link")
 		}},
 	}})
 }
@@ -93,8 +93,13 @@ func init() {
 const _pack = `
 <!DOCTYPE html>
 <head>
+    <link rel="apple-touch-icon-precomposed" href="/publish/app.png"/>
+    <link rel="apple-touch-startup-image" href="/publish/splash.png"/>
+    <meta name="apple-mobile-web-app-capable" content="yes"/>
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+
+    <meta name="viewport" content="width=device-width,initial-scale=0.8,user-scalable=no">
     <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width,initial-scale=0.7,user-scalable=no">
     <title>volcanos</title>
     <style type="text/css">%s</style>
     <style type="text/css">%s</style>

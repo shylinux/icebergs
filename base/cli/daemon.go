@@ -132,7 +132,7 @@ func init() {
 				}},
 			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 				if len(arg) == 0 { // 进程列表
-					m.Fields(len(arg) == 0, "time,hash,status,pid,cmd,dir,env")
+					m.Fields(len(arg), "time,hash,status,pid,cmd,dir,env")
 					m.Cmdy(mdb.SELECT, DAEMON, "", mdb.HASH).Table(func(index int, value map[string]string, head []string) {
 						switch value[kit.MDB_STATUS] {
 						case START:

@@ -1,0 +1,7 @@
+section "python"
+refer `
+官网 https://www.python.org/
+源码 https://www.python.org/downloads/source/
+文档 https://docs.python.org/3/reference/index.html
+`
+

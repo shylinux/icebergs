@@ -138,7 +138,7 @@ func init() {
 					}
 				}},
 			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-				m.Fields(len(arg) == 0, "time,username,userzone,usernick")
+				m.Fields(len(arg), "time,username,userzone,usernick")
 				m.Cmdy(mdb.SELECT, USER, "", mdb.HASH, USERNAME, arg)
 				m.Table(func(index int, value map[string]string, head []string) {
 					m.Push(USERROLE, UserRole(m, value[USERNAME]))

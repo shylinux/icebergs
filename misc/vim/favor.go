@@ -65,14 +65,14 @@ func init() {
 					}
 				}},
 				code.INNER: {Name: "inner", Help: "源码", Hand: func(m *ice.Message, arg ...string) {
-					m.ProcessCommand(code.INNER, kit.Format([]string{
+					m.ProcessCommand(code.INNER, []string{
 						kit.Select("./", path.Dir(m.Option(kit.MDB_FILE))),
 						path.Base(m.Option(kit.MDB_FILE)),
 						m.Option(kit.MDB_LINE),
-					}), arg...)
+					}, arg...)
 				}},
 			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-				m.Fields(len(arg) < 2, kit.Select(m.Conf(FAVOR, kit.META_FIELD), "time,zone,count", len(arg) == 0))
+				m.Fields(len(arg), "time,zone,count", m.Conf(FAVOR, kit.META_FIELD))
 				if m.Cmdy(mdb.SELECT, m.Prefix(FAVOR), "", mdb.ZONE, arg); len(arg) == 0 {
 					m.Action(mdb.CREATE)
 					m.PushAction(mdb.REMOVE)

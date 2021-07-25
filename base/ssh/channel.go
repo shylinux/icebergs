@@ -94,7 +94,7 @@ func init() {
 				}},
 			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 				if len(arg) == 0 { // 通道列表
-					m.Fields(len(arg) == 0, "time,hash,status,username,hostport,tty,count")
+					m.Fields(len(arg), "time,hash,status,username,hostport,tty,count")
 					if m.Cmdy(mdb.SELECT, CHANNEL, "", mdb.HASH); len(arg) == 0 {
 						m.Table(func(index int, value map[string]string, head []string) {
 							m.PushButton(kit.Select("", ctx.COMMAND, value[kit.MDB_STATUS] == tcp.OPEN), mdb.REMOVE)
@@ -104,7 +104,7 @@ func init() {
 				}
 
 				// 通道命令
-				m.Fields(len(arg) == 1, "time,id,type,text")
+				m.Fields(len(arg[1:]), "time,id,type,text")
 				m.Cmdy(mdb.SELECT, CHANNEL, kit.Keys(kit.MDB_HASH, arg[0]), mdb.LIST, kit.MDB_ID, arg[1:])
 				m.PushAction(mdb.REPEAT)
 			}},

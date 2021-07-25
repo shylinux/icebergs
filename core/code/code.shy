@@ -1,13 +1,12 @@
 chapter "源码"
 
-field "后端" web.code.binpack
 field "前端" web.code.webpack
-
-field "安装" web.code.install
+field "后端" web.code.binpack
 field "生成" web.code.autogen
 field "编译" web.code.compile
-field "发布" web.code.publish
 field "升级" web.code.upgrade
+field "发布" web.code.publish
+field "安装" web.code.install
 
 field "编辑" web.code.vimer
 field "查看" web.code.inner
@@ -20,38 +19,4 @@ field "命令" web.code.sh
 field "脚本" web.code.shy
 field "后端" web.code.go
 field "前端" web.code.js
-
-return
-vimer.go
-inner.go
-favor.go
-bench.go
-pprof.go
-
-c.go
-sh.go
-shy.go
-go.go
-js.go
-
-autogen.go
-compile.go
-publish.go
-upgrade.go
-
-webpack.go
-binpack.go
-install.go
-
-code.go
-code.shy
-csdn.go
-github.go
-
-section "python"
-refer `
-官网 https://www.python.org/
-源码 https://www.python.org/downloads/source/
-文档 https://docs.python.org/3/reference/index.html
-`
 

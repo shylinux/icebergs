@@ -31,12 +31,14 @@ const ( // REPOS
 )
 const ( // DIR
 	USR_VOLCANOS = "usr/volcanos"
+	USR_LEARNING = "usr/learning"
 	USR_ICEBERGS = "usr/icebergs"
 	USR_INTSHELL = "usr/intshell"
 	USR_INSTALL  = "usr/install"
 	USR_PUBLISH  = "usr/publish"
 	USR_LOCAL    = "usr/local"
 
+	FAVICON  = "favicon.ico"
 	PROTO_JS = "proto.js"
 	FRAME_JS = "frame.js"
 	INDEX_JS = "index.js"
@@ -53,11 +55,13 @@ const ( // DIR
 	VAR_PROXY   = "var/proxy"
 	VAR_TRASH   = "var/trash"
 	BIN_ICE     = "bin/ice.sh"
+	BIN_ICE_SH  = "bin/ice.sh"
 	BIN_ICE_BIN = "bin/ice.bin"
 	BIN_BOOTLOG = "bin/boot.log"
 	ETC_INIT    = "etc/init.shy"
 	ETC_EXIT    = "etc/exit.shy"
 	ETC_MISS    = "etc/miss.sh"
+	ETC_MISS_SH = "etc/miss.sh"
 
 	SRC_MAIN    = "src/main.shy"
 	SRC_MAIN_GO = "src/main.go"

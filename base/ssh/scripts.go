@@ -384,7 +384,7 @@ func init() {
 				}
 
 				if len(arg) == 0 { // 脚本列表
-					m.Fields(len(arg) == 0, "time,hash,name,count")
+					m.Fields(len(arg), "time,hash,name,count")
 					m.Cmdy(mdb.SELECT, SOURCE, "", mdb.HASH)
 					m.Sort(kit.MDB_NAME)
 					return
@@ -397,7 +397,7 @@ func init() {
 				}
 
 				// 命令列表
-				m.Fields(len(arg) == 1 || arg[1] == "", "time,id,text")
+				m.Fields(len(arg[1:]), "time,id,text")
 				m.Cmdy(mdb.SELECT, SOURCE, kit.Keys(kit.MDB_HASH, arg[0]), mdb.LIST, kit.MDB_ID, arg[1:])
 				m.PushAction(mdb.REPEAT)
 			}},

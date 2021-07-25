@@ -170,14 +170,14 @@ func init() {
 				}},
 			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 				if len(arg) == 0 { // 服务列表
-					m.Fields(len(arg) == 0, "time,port,status,private,authkey,count")
+					m.Fields(len(arg), "time,port,status,private,authkey,count")
 					m.Cmdy(mdb.SELECT, SERVICE, "", mdb.HASH)
 					m.PushAction(mdb.IMPORT, mdb.INSERT, mdb.EXPORT, aaa.INVITE)
 					return
 				}
 
 				// 公钥列表
-				m.Fields(len(arg) == 1, "time,id,type,name,text")
+				m.Fields(len(arg[1:]), "time,id,type,name,text")
 				m.Cmdy(mdb.SELECT, SERVICE, kit.Keys(kit.MDB_HASH, kit.Hashs(arg[0])), mdb.LIST, kit.MDB_ID, arg[1:])
 			}},
 		},

@@ -151,7 +151,7 @@ func init() {
 						)))
 				}},
 			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-				m.Fields(len(arg) == 0, "time,hash,type,name,text,userrole,username,river,storm")
+				m.Fields(len(arg), "time,hash,type,name,text,userrole,username,river,storm")
 				m.Cmdy(mdb.SELECT, SHARE, "", mdb.HASH, kit.MDB_HASH, arg)
 				m.PushAction(mdb.REMOVE)
 
@@ -169,7 +169,7 @@ func init() {
 				}
 			}},
 			"/share/": {Name: "/share/", Help: "共享链", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-				m.Fields(true, "time,hash,userrole,username,river,storm,type,name,text")
+				m.Fields(0, "time,hash,userrole,username,river,storm,type,name,text")
 				msg := m.Cmd(mdb.SELECT, SHARE, "", mdb.HASH, kit.MDB_HASH, kit.Select(m.Option(SHARE), arg, 0))
 
 				list := []string{SHARE, kit.Select(m.Option(SHARE), arg, 0)}

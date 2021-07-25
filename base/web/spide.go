@@ -337,7 +337,7 @@ func init() {
 				}},
 			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 				if len(arg) < 2 || arg[0] == "" || (len(arg) > 3 && arg[3] == "") {
-					m.Fields(len(arg) == 0 || arg[0] == "", "time,client.name,client.url")
+					m.Fields(len(kit.Slice(arg, 0, 1)), "time,client.name,client.url")
 					m.Cmdy(mdb.SELECT, SPIDE, "", mdb.HASH, CLIENT_NAME, arg)
 					m.PushAction(mdb.REMOVE)
 					return

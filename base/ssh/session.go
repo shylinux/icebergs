@@ -85,7 +85,7 @@ func init() {
 				}},
 			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 				if len(arg) == 0 {
-					m.Fields(len(arg) == 0, "time,hash,status,count,connect")
+					m.Fields(len(arg), "time,hash,status,count,connect")
 					if m.Cmdy(mdb.SELECT, SESSION, "", mdb.HASH, kit.MDB_HASH, arg); len(arg) == 0 {
 						m.Table(func(index int, value map[string]string, head []string) {
 							m.PushButton(kit.Select("", ctx.COMMAND, value[kit.MDB_STATUS] == tcp.OPEN), mdb.REMOVE)
@@ -94,7 +94,7 @@ func init() {
 					return
 				}
 
-				m.Fields(len(arg) == 1, "time,id,type,text")
+				m.Fields(len(arg[1:]), "time,id,type,text")
 				m.Cmdy(mdb.SELECT, SESSION, kit.Keys(kit.MDB_HASH, arg[0]), mdb.LIST, kit.MDB_ID, arg[1:])
 				m.Table(func(index int, value map[string]string, head []string) {
 					m.PushButton(kit.Select("", mdb.REPEAT, value[kit.MDB_TYPE] == CMD))

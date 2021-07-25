@@ -1,13 +1,13 @@
 package code
 
 import (
+	"path"
+
 	ice "github.com/shylinux/icebergs"
 	"github.com/shylinux/icebergs/base/cli"
 	"github.com/shylinux/icebergs/base/mdb"
 	"github.com/shylinux/icebergs/base/nfs"
 	kit "github.com/shylinux/toolkits"
-
-	"path"
 )
 
 const SH = "sh"
@@ -16,14 +16,14 @@ func init() {
 	Index.Register(&ice.Context{Name: SH, Help: "命令",
 		Commands: map[string]*ice.Command{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-				m.Cmd(mdb.PLUGIN, mdb.CREATE, SH, SH, c.Cap(ice.CTX_FOLLOW))
-				m.Cmd(mdb.RENDER, mdb.CREATE, SH, SH, c.Cap(ice.CTX_FOLLOW))
-				m.Cmd(mdb.ENGINE, mdb.CREATE, SH, SH, c.Cap(ice.CTX_FOLLOW))
-				m.Cmd(mdb.SEARCH, mdb.CREATE, SH, SH, c.Cap(ice.CTX_FOLLOW))
+				for _, cmd := range []string{mdb.PLUGIN, mdb.RENDER, mdb.ENGINE, mdb.SEARCH} {
+					m.Cmd(cmd, mdb.CREATE, SH, m.Prefix(SH))
+				}
+				LoadPlug(m, SH)
 			}},
 			SH: {Name: SH, Help: "命令", Action: map[string]*ice.Action{
 				mdb.PLUGIN: {Hand: func(m *ice.Message, arg ...string) {
-					m.Echo(m.Conf(SH, "meta.plug"))
+					m.Echo(m.Conf(SH, kit.Keym(PLUG)))
 				}},
 				mdb.RENDER: {Hand: func(m *ice.Message, arg ...string) {
 					m.Cmdy(nfs.CAT, path.Join(arg[2], arg[1]))
@@ -38,10 +38,10 @@ func init() {
 						return
 					}
 					m.Option(cli.CMD_DIR, kit.Select("src", arg, 2))
-					_go_find(m, kit.Select("main", arg, 1))
+					_go_find(m, kit.Select(kit.MDB_MAIN, arg, 1))
 					m.Cmdy(mdb.SEARCH, MAN1, arg[1:])
 					m.Cmdy(mdb.SEARCH, MAN8, arg[1:])
-					_go_grep(m, kit.Select("main", arg, 1))
+					_go_grep(m, kit.Select(kit.MDB_MAIN, arg, 1))
 				}},
 
 				MAN: {Hand: func(m *ice.Message, arg ...string) {
@@ -51,7 +51,7 @@ func init() {
 		},
 		Configs: map[string]*ice.Config{
 			SH: {Name: SH, Help: "命令", Value: kit.Data(
-				"plug", kit.Dict(
+				PLUG, kit.Dict(
 					SPLIT, kit.Dict(
 						"space", " ",
 						"operator", "{[(.,;!|<>)]}",
@@ -62,44 +62,48 @@ func init() {
 					SUFFIX, kit.Dict(
 						"{", COMMENT,
 					),
-					KEYWORD, kit.Dict(
-						"export", KEYWORD,
-						"source", KEYWORD,
-						"require", KEYWORD,
+					PREPARE, kit.Dict(
+						KEYWORD, kit.Simple(
+							"export",
+							"source",
+							"require",
 
-						"if", KEYWORD,
-						"then", KEYWORD,
-						"else", KEYWORD,
-						"fi", KEYWORD,
-						"for", KEYWORD,
-						"while", KEYWORD,
-						"do", KEYWORD,
-						"done", KEYWORD,
-						"esac", KEYWORD,
-						"case", KEYWORD,
-						"in", KEYWORD,
-						"return", KEYWORD,
+							"if",
+							"then",
+							"else",
+							"fi",
+							"for",
+							"while",
+							"do",
+							"done",
+							"esac",
+							"case",
+							"in",
+							"return",
 
-						"shift", KEYWORD,
-						"local", KEYWORD,
-						"echo", KEYWORD,
-						"eval", KEYWORD,
-						"kill", KEYWORD,
-						"let", KEYWORD,
-						"cd", KEYWORD,
-
-						"xargs", FUNCTION,
-						"date", FUNCTION,
-						"find", FUNCTION,
-						"grep", FUNCTION,
-						"sed", FUNCTION,
-						"awk", FUNCTION,
-						"pwd", FUNCTION,
-						"ps", FUNCTION,
-						"ls", FUNCTION,
-						"rm", FUNCTION,
-						"go", FUNCTION,
+							"shift",
+							"local",
+							"echo",
+							"eval",
+							"kill",
+							"let",
+							"cd",
+						),
+						FUNCTION, kit.Simple(
+							"xargs",
+							"date",
+							"find",
+							"grep",
+							"sed",
+							"awk",
+							"pwd",
+							"ps",
+							"ls",
+							"rm",
+							"go",
+						),
 					),
+					KEYWORD, kit.Dict(),
 				),
 			)},
 		},

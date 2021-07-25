@@ -73,8 +73,6 @@ const MOD = "mod"
 const SUM = "sum"
 const PROTO = "proto"
 
-const PLUG = "plug"
-
 func init() {
 	Index.Register(&ice.Context{Name: GO, Help: "后端",
 		Commands: map[string]*ice.Command{
@@ -142,10 +140,10 @@ func init() {
 					if arg[0] == kit.MDB_FOREACH {
 						return
 					}
-					_go_find(m, kit.Select("main", arg, 1))
-					_go_help(m, kit.Select("main", arg, 1))
-					_go_tags(m, kit.Select("main", arg, 1))
-					_go_grep(m, kit.Select("main", arg, 1))
+					_go_find(m, kit.Select(kit.MDB_MAIN, arg, 1))
+					_go_help(m, kit.Select(kit.MDB_MAIN, arg, 1))
+					_go_tags(m, kit.Select(kit.MDB_MAIN, arg, 1))
+					_go_grep(m, kit.Select(kit.MDB_MAIN, arg, 1))
 				}},
 			}},
 		},
@@ -155,7 +153,7 @@ func init() {
 					PREFIX, kit.Dict(
 						"//", COMMENT,
 					),
-					"_keyword", kit.Dict(
+					PREPARE, kit.Dict(
 						KEYWORD, kit.Simple(
 							"syntax", "option", "package", "import", "service", "message",
 						),
@@ -171,7 +169,7 @@ func init() {
 					PREFIX, kit.Dict(
 						"//", COMMENT,
 					),
-					"_keyword", kit.Dict(
+					PREPARE, kit.Dict(
 						KEYWORD, kit.Simple(
 							"module", "require", "replace", "=>",
 						),
@@ -190,7 +188,7 @@ func init() {
 						"/*", COMMENT,
 						"* ", COMMENT,
 					),
-					"_keyword", kit.Dict(
+					PREPARE, kit.Dict(
 						KEYWORD, kit.Simple(
 							"package", "import", "type", "struct", "interface", "const", "var", "func",
 							"if", "else", "for", "range", "break", "continue",
@@ -204,7 +202,7 @@ func init() {
 						FUNCTION, kit.Simple(
 							"len", "cap", "copy", "append", "msg", "m",
 						),
-						STRING, kit.Simple(
+						CONSTANT, kit.Simple(
 							"false", "true", "nil", "-1", "0", "1", "2",
 						),
 					),

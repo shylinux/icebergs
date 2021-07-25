@@ -2,9 +2,7 @@ package code
 
 import (
 	ice "github.com/shylinux/icebergs"
-	"github.com/shylinux/icebergs/base/aaa"
 	"github.com/shylinux/icebergs/base/web"
-	kit "github.com/shylinux/toolkits"
 )
 
 const CODE = "code"
@@ -12,8 +10,6 @@ const CODE = "code"
 var Index = &ice.Context{Name: CODE, Help: "编程中心", Commands: map[string]*ice.Command{
 	ice.CTX_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 		m.Load()
-		m.Conf(PUBLISH, kit.Keym(ice.CONTEXTS), _contexts)
-		m.Cmd(aaa.ROLE, aaa.WHITE, aaa.VOID, m.Prefix(PUBLISH))
 	}},
 	ice.CTX_EXIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 		m.Save()
@@ -22,9 +18,8 @@ var Index = &ice.Context{Name: CODE, Help: "编程中心", Commands: map[string]
 
 func init() {
 	web.Index.Register(Index, &web.Frame{},
-		INSTALL, COMPILE, BINPACK, WEBPACK,
+		WEBPACK, BINPACK, AUTOGEN, COMPILE, UPGRADE, PUBLISH, INSTALL,
 		VIMER, INNER, FAVOR, BENCH, PPROF,
-		AUTOGEN, PUBLISH, UPGRADE,
 		C, SH, SHY, GO, JS,
 	)
 }

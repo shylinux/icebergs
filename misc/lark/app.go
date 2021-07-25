@@ -49,7 +49,7 @@ func init() {
 					m.Echo(msg.Append(TOKEN))
 				}},
 			}, Hand: func(m *ice.Message, c *ice.Context, key string, arg ...string) {
-				m.Fields(len(arg) == 0, m.Conf(APP, kit.META_FIELD))
+				m.Fields(len(arg), m.Conf(APP, kit.META_FIELD))
 				m.Cmdy(mdb.SELECT, m.Prefix(APP), "", mdb.HASH, APPID, arg)
 			}},
 		},

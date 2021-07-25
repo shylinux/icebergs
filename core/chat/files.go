@@ -26,7 +26,7 @@ func init() {
 					m.Cmdy(mdb.DELETE, m.Prefix(FILES), "", mdb.HASH, kit.MDB_HASH, m.Option(kit.MDB_HASH))
 				}},
 			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-				m.Fields(len(arg) == 0, m.Conf(FILES, kit.META_FIELD))
+				m.Fields(len(arg), m.Conf(FILES, kit.META_FIELD))
 				m.Cmd(mdb.SELECT, m.Prefix(FILES), "", mdb.HASH, kit.MDB_HASH, arg).Table(func(index int, value map[string]string, head []string) {
 					link := kit.MergeURL("/share/cache/"+value[kit.MDB_DATA], "pod", m.Option(ice.MSG_USERPOD))
 					m.Push("", value, kit.Split(m.Option(ice.MSG_FIELDS)))

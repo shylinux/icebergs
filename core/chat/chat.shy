@@ -7,13 +7,12 @@ header.go
 search.go
 river.go
 action.go
+
 footer.go
 
 scan.go
 paste.go
 files.go
 location.go
-study.go
-email.go
 meet.go
 

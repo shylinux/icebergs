@@ -15,8 +15,6 @@ var Index = &ice.Context{Name: CHAT, Help: "聊天中心",
 		ice.CTX_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			m.Cmd(web.SERVE, aaa.WHITE, HEADER, RIVER, ACTION, FOOTER)
 			m.Cmd(mdb.SEARCH, mdb.CREATE, P_SEARCH, m.Prefix(P_SEARCH))
-			m.Cmd(mdb.SEARCH, mdb.CREATE, EMAIL, m.Prefix(EMAIL))
-			m.Cmd(aaa.ROLE, aaa.WHITE, aaa.VOID, "usr/publish")
 			m.Watch(web.SPACE_START, m.Prefix(NODE))
 			m.Watch(web.SPACE_STOP, m.Prefix(NODE))
 			m.Load()

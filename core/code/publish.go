@@ -47,6 +47,7 @@ func init() {
 		Commands: map[string]*ice.Command{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 				m.Cmd(aaa.ROLE, aaa.WHITE, aaa.VOID, m.Prefix(PUBLISH))
+				m.Cmd(aaa.ROLE, aaa.WHITE, aaa.VOID, ice.USR_PUBLISH)
 				m.Conf(PUBLISH, kit.Keym(ice.CONTEXTS), _contexts)
 			}},
 			PUBLISH: {Name: "publish path auto create volcanos icebergs intshell dream", Help: "发布", Action: map[string]*ice.Action{

@@ -2,6 +2,7 @@ package chat
 
 import (
 	ice "github.com/shylinux/icebergs"
+	"github.com/shylinux/icebergs/base/cli"
 	"github.com/shylinux/icebergs/base/ctx"
 	kit "github.com/shylinux/toolkits"
 )
@@ -9,7 +10,6 @@ import (
 const (
 	LEGAL = "legal"
 )
-const P_FOOTER = "/footer"
 const FOOTER = "footer"
 
 func init() {
@@ -20,15 +20,14 @@ func init() {
 			)},
 		},
 		Commands: map[string]*ice.Command{
-			P_FOOTER: {Name: "/footer", Help: "状态栏", Action: map[string]*ice.Action{
+			"/footer": {Name: "/footer", Help: "状态栏", Action: map[string]*ice.Action{
 				ctx.COMMAND: {Name: "command", Help: "命令", Hand: func(m *ice.Message, arg ...string) {
-					if len(arg) > 0 && arg[0] == "run" {
-						if m.Right(arg[1:]) {
-							m.Cmdy(arg[1:])
-						}
-						return
-					}
 					m.Cmdy(ctx.COMMAND, arg)
+				}},
+				cli.RUN: {Name: "run", Help: "执行", Hand: func(m *ice.Message, arg ...string) {
+					if !m.Warn(!m.Right(arg), ice.ErrNotRight) {
+						m.Cmdy(arg)
+					}
 				}},
 			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 				kit.Fetch(m.Confv(FOOTER, LEGAL), func(index int, value string) { m.Echo(value) })

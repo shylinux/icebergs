@@ -7,9 +7,8 @@ import (
 )
 
 func _local_show(m *ice.Message, name, text string, arg ...string) {
-	m.Option("input", m.Cmdx(nfs.CAT, text))
-	_option(m, LOCAL, name, text, arg...)
-	m.RenderTemplate(m.Conf(LOCAL, kit.Keym(kit.MDB_TEMPLATE)))
+	m.Option(INPUT, m.Cmdx(nfs.CAT, text))
+	_wiki_template(m, LOCAL, name, text, arg...)
 }
 
 const LOCAL = "local"

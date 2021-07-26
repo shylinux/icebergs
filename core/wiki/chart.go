@@ -357,7 +357,7 @@ func Stack(m *ice.Message, name string, level int, data interface{}) {
 	m.Echo("</ul>")
 }
 
-func _chart_show(m *ice.Message, kind, name, text string, arg ...string) {
+func _chart_show(m *ice.Message, kind, text string, arg ...string) {
 	var chart Chart
 	switch kind {
 	case LABEL: // 标签
@@ -365,11 +365,6 @@ func _chart_show(m *ice.Message, kind, name, text string, arg ...string) {
 	case CHAIN: // 链接
 		chart = &Chain{}
 	}
-
-	// 基本参数
-	m.Option(kit.MDB_TYPE, strings.TrimSpace(kind))
-	m.Option(kit.MDB_NAME, strings.TrimSpace(name))
-	m.Option(kit.MDB_TEXT, strings.TrimSpace(text))
 
 	// 扩展参数
 	m.Option("font-size", "24")
@@ -397,13 +392,13 @@ func _chart_show(m *ice.Message, kind, name, text string, arg ...string) {
 	}
 
 	// 计算尺寸
-	chart.Init(m, m.Option(kit.MDB_TEXT))
-	m.Option("height", chart.GetHeight())
+	chart.Init(m, text)
 	m.Option("width", chart.GetWidth())
+	m.Option("height", chart.GetHeight())
 
 	// 渲染引擎
-	m.RenderTemplate(m.Conf(CHART, kit.Keym(kit.MDB_TEMPLATE)))
-	defer m.RenderTemplate(m.Conf(CHART, kit.Keym("suffix")))
+	_wiki_template(m, CHART, "", text)
+	defer m.Echo(`</svg>`)
 	chart.Draw(m, 0, 0)
 }
 
@@ -416,11 +411,8 @@ const CHART = "chart"
 func init() {
 	Index.Merge(&ice.Context{
 		Commands: map[string]*ice.Command{
-			CHART: {Name: "chart label|chain [name] text", Help: "图表", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-				if len(arg) == 2 {
-					arg = []string{arg[0], "", arg[1]}
-				}
-				_chart_show(m, arg[0], arg[1], arg[2], arg[3:]...)
+			CHART: {Name: "chart label|chain text", Help: "图表", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+				_chart_show(m, arg[0], strings.TrimSpace(arg[1]), arg[2:]...)
 			}},
 		},
 		Configs: map[string]*ice.Config{
@@ -430,7 +422,7 @@ vertion="1.1" xmlns="http://www.w3.org/2000/svg" dominant-baseline="middle" text
 font-size="{{.Option "font-size"}}" stroke="{{.Option "stroke"}}" fill="{{.Option "fill"}}"
 stroke-width="{{.Option "stroke-width"}}" font-family="{{.Option "font-family"}}"
 width="{{.Option "width"}}" height="{{.Option "height"}}"
->`, "suffix", `</svg>`,
+>`,
 			)},
 		},
 	})

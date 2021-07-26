@@ -13,6 +13,12 @@ import (
 func _wiki_path(m *ice.Message, cmd string, arg ...string) string {
 	return path.Join(m.Option(ice.MSG_LOCAL), m.Conf(cmd, kit.META_PATH), path.Join(arg...))
 }
+func _wiki_link(m *ice.Message, cmd string, text string) string {
+	if !strings.HasPrefix(text, "http") && !strings.HasPrefix(text, "/") {
+		text = path.Join("/share/local", _wiki_path(m, cmd, text))
+	}
+	return text
+}
 func _wiki_list(m *ice.Message, cmd string, arg ...string) bool {
 	m.Option(nfs.DIR_ROOT, _wiki_path(m, cmd))
 	if len(arg) == 0 || strings.HasSuffix(arg[0], "/") {
@@ -59,7 +65,9 @@ var Index = &ice.Context{Name: WIKI, Help: "文档中心",
 
 func init() {
 	web.Index.Register(Index, &web.Frame{},
-		FEEL, WORD, DATA, DRAW, IMAGE, SPARK,
-		TITLE,
+		FEEL, WORD, DATA, DRAW,
+		TITLE, BRIEF,
+
+		IMAGE, SPARK,
 	)
 }

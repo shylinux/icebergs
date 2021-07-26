@@ -2,20 +2,14 @@ package wiki
 
 import (
 	"path"
-	"strings"
 
 	ice "github.com/shylinux/icebergs"
 	"github.com/shylinux/icebergs/base/mdb"
 	kit "github.com/shylinux/toolkits"
 )
 
-func _video_show(m *ice.Message, name, text string, arg ...string) {
-	if !strings.HasPrefix(text, "http") && !strings.HasPrefix(text, "/") {
-		text = path.Join("/share/local", _wiki_path(m, FEEL, text))
-	}
-
-	_option(m, VIDEO, name, text, arg...)
-	m.RenderTemplate(m.Conf(VIDEO, kit.Keym(kit.MDB_TEMPLATE)))
+func _video_show(m *ice.Message, text string, arg ...string) {
+	_wiki_template(m, VIDEO, "", _wiki_link(m, VIDEO, text), arg...)
 }
 
 const (
@@ -29,18 +23,18 @@ const VIDEO = "video"
 func init() {
 	Index.Merge(&ice.Context{
 		Commands: map[string]*ice.Command{
-			VIDEO: {Name: "video [name] url", Help: "视频", Action: map[string]*ice.Action{
+			VIDEO: {Name: "video url", Help: "视频", Action: map[string]*ice.Action{
 				mdb.RENDER: {Name: "render", Help: "渲染", Hand: func(m *ice.Message, arg ...string) {
-					_video_show(m, arg[1], path.Join(arg[2], arg[1]))
+					_video_show(m, path.Join(arg[2], arg[1]))
 				}},
 			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-				arg = _name(m, arg)
-				_video_show(m, arg[0], arg[1], arg[2:]...)
+				_video_show(m, arg[0], arg[1:]...)
 			}},
 		},
 		Configs: map[string]*ice.Config{
 			VIDEO: {Name: "video", Help: "视频", Value: kit.Data(
 				kit.MDB_TEMPLATE, `<video {{.OptionTemplate}} title="{{.Option "text"}}" src="{{.Option "text"}}" controls></video>`,
+				kit.MDB_PATH, "usr/local/image",
 			)},
 		},
 	})

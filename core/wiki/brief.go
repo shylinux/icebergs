@@ -10,8 +10,8 @@ const BRIEF = "brief"
 func init() {
 	Index.Merge(&ice.Context{
 		Commands: map[string]*ice.Command{
-			BRIEF: {Name: "brief [name] text", Help: "摘要", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-				_word_template(m, cmd, arg...)
+			BRIEF: {Name: "brief text", Help: "摘要", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+				_wiki_template(m, cmd, "", arg[0], arg[1:]...)
 			}},
 		},
 		Configs: map[string]*ice.Config{

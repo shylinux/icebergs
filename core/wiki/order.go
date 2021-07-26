@@ -7,10 +7,9 @@ import (
 	kit "github.com/shylinux/toolkits"
 )
 
-func _order_show(m *ice.Message, name, text string, arg ...string) {
-	m.Optionv("list", kit.Split(strings.TrimSpace(text), "\n"))
-	_option(m, ORDER, name, text, arg...)
-	m.RenderTemplate(m.Conf(ORDER, kit.Keym(kit.MDB_TEMPLATE)))
+func _order_show(m *ice.Message, text string, arg ...string) {
+	m.Optionv(kit.MDB_LIST, kit.Split(strings.TrimSpace(text), ice.MOD_NL))
+	_wiki_template(m, ORDER, "", text, arg...)
 }
 
 const ORDER = "order"
@@ -18,9 +17,8 @@ const ORDER = "order"
 func init() {
 	Index.Merge(&ice.Context{
 		Commands: map[string]*ice.Command{
-			ORDER: {Name: "order [name] `[item \n]...`", Help: "列表", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-				arg = _name(m, arg)
-				_order_show(m, arg[0], kit.Select(arg[0], arg[1]), arg[2:]...)
+			ORDER: {Name: "order `[item\n]...`", Help: "列表", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+				_order_show(m, arg[0], arg[1:]...)
 			}},
 		},
 		Configs: map[string]*ice.Config{

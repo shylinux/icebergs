@@ -7,11 +7,14 @@ import (
 )
 
 func _shell_show(m *ice.Message, name, text string, arg ...string) {
-	m.Option("output", m.Cmdx(cli.SYSTEM, "sh", "-c", m.Option("input", text)))
-	_option(m, SHELL, name, text, arg...)
-	m.RenderTemplate(m.Conf(SHELL, kit.Keym(kit.MDB_TEMPLATE)))
+	m.Option(OUTPUT, m.Cmdx(cli.SYSTEM, "sh", "-c", m.Option(INPUT, text)))
+	_wiki_template(m, SHELL, name, text, arg...)
 }
 
+const (
+	INPUT  = "input"
+	OUTPUT = "output"
+)
 const SHELL = "shell"
 
 func init() {

@@ -7,9 +7,9 @@ import (
 	kit "github.com/shylinux/toolkits"
 )
 
-func _table_show(m *ice.Message, name, text string, arg ...string) {
+func _table_show(m *ice.Message, text string, arg ...string) {
 	head, list := []string{}, [][]string{}
-	for i, v := range kit.Split(strings.TrimSpace(text), "\n") {
+	for i, v := range kit.Split(strings.TrimSpace(text), ice.MOD_NL) {
 		if v = strings.ReplaceAll(v, "%", "%%"); i == 0 {
 			head = kit.Split(v)
 		} else {
@@ -35,8 +35,7 @@ func _table_show(m *ice.Message, name, text string, arg ...string) {
 	m.Optionv("head", head)
 	m.Optionv("list", list)
 
-	_option(m, TABLE, name, text, arg...)
-	m.RenderTemplate(m.Conf(TABLE, kit.Keym(kit.MDB_TEMPLATE)))
+	_wiki_template(m, ORDER, "", text, arg...)
 }
 
 const TABLE = "table"
@@ -44,9 +43,8 @@ const TABLE = "table"
 func init() {
 	Index.Merge(&ice.Context{
 		Commands: map[string]*ice.Command{
-			TABLE: {Name: "table [name] `[item item\n]...`", Help: "表格", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-				arg = _name(m, arg)
-				_table_show(m, arg[0], kit.Select(arg[0], arg[1]), arg[2:]...)
+			TABLE: {Name: "table `[item item\n]...`", Help: "表格", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+				_table_show(m, arg[0], arg[1:]...)
 			}},
 		},
 		Configs: map[string]*ice.Config{

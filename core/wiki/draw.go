@@ -22,7 +22,7 @@ func init() {
 				ice.Display("/plugin/local/wiki/draw.js"),
 			), Action: map[string]*ice.Action{
 				nfs.SAVE: {Name: "save path", Help: "保存", Hand: func(m *ice.Message, arg ...string) {
-					_wiki_save(m, DRAW, path.Join(arg...), m.Option("content"))
+					_wiki_save(m, DRAW, path.Join(arg...), m.Option(kit.MDB_CONTENT))
 				}},
 			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 				if !_wiki_list(m, DRAW, kit.Select("./", path.Join(arg...))) {

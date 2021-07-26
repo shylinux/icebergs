@@ -1,16 +1,3 @@
-title
-title "hi"
-premenu
-chapter "文档"
-section "文档"
-endmenu
-return
-
-field "影音" web.wiki.feel
-field "数据" web.wiki.data
-field "文档" web.wiki.word
-field "绘图" web.wiki.draw
-
 title.go
 brief.go
 refer.go
@@ -19,16 +6,13 @@ spark.go
 order.go
 table.go
 chart.go
-
 image.go
 video.go
-music.go
 
 field.go
 shell.go
 local.go
 parse.go
-other.go
 
 data.go
 draw.go
@@ -37,3 +21,9 @@ word.go
 
 wiki.go
 wiki.shy
+
+field "影音" web.wiki.feel
+field "数据" web.wiki.data
+field "文档" web.wiki.word
+field "绘图" web.wiki.draw
+

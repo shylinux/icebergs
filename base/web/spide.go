@@ -358,6 +358,11 @@ func init() {
 					m.Cmdy(mdb.DELETE, SPIDE, "", mdb.HASH, CLIENT_NAME, m.Option(CLIENT_NAME))
 				}},
 			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+				if len(arg) == 2 {
+					m.Option(SPIDE_HEADER, ContentType, ContentJSON)
+					m.Echo(kit.Formats(kit.UnMarshal(m.Cmdx(SPIDE, SPIDE_DEV, SPIDE_RAW, SPIDE_POST, arg[0], SPIDE_DATA, arg[1:]))))
+					return
+				}
 				m.Echo(kit.Formats(kit.UnMarshal(m.Cmdx(SPIDE, SPIDE_DEV, SPIDE_RAW, SPIDE_POST, arg[0], SPIDE_JSON, arg[1:]))))
 			}},
 		}})

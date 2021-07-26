@@ -1,7 +1,6 @@
 package wiki
 
 import (
-	"path"
 	"strings"
 
 	ice "github.com/shylinux/icebergs"
@@ -10,62 +9,66 @@ import (
 )
 
 func _field_show(m *ice.Message, name, text string, arg ...string) {
-	// 基本参数
-	m.Option(kit.MDB_TYPE, FIELD)
-	m.Option(kit.MDB_NAME, name)
-	m.Option(kit.MDB_TEXT, text)
-
 	// 命令参数
-	data := kit.Dict(kit.MDB_NAME, name)
-	cmds := kit.Split(text)
+	meta, cmds := kit.Dict(), kit.Split(text)
 	m.Search(cmds[0], func(p *ice.Context, s *ice.Context, key string, cmd *ice.Command) {
-		data["feature"], data["inputs"] = cmd.Meta, cmd.List
+		if meta[FEATURE], meta[INPUTS] = cmd.Meta, cmd.List; name == "" {
+			name = cmd.Help
+		}
 	})
+
+	name = strings.ReplaceAll(name, " ", "_")
+	meta[kit.MDB_NAME] = name
 
 	// 扩展参数
 	for i := 0; i < len(arg)-1; i += 2 {
 		if strings.HasPrefix(arg[i], "args.") {
 			m.Option(arg[i], strings.TrimSpace(arg[i+1]))
-			kit.Value(data, arg[i], m.Option(arg[i]))
-		} else if strings.HasPrefix(arg[i], "args") {
+			kit.Value(meta, arg[i], m.Option(arg[i]))
+		} else if strings.HasPrefix(arg[i], ARGS) {
 			m.Option(arg[i], kit.Split(strings.TrimSuffix(strings.TrimPrefix(arg[i+1], "["), "]")))
-			kit.Value(data, arg[i], m.Optionv(arg[i]))
+			kit.Value(meta, arg[i], m.Optionv(arg[i]))
 		} else {
-			m.Parse("option", arg[i], arg[i+1])
-			kit.Value(data, arg[i], m.Optionv(arg[i]))
+			m.Parse(ice.MSG_OPTION, arg[i], arg[i+1])
+			kit.Value(meta, arg[i], m.Optionv(arg[i]))
 		}
 
 		switch arg[i] {
-		case "content":
-			data[arg[i]] = arg[i+1]
+		case kit.MDB_CONTENT:
+			meta[arg[i]] = arg[i+1]
 
-		case "args":
+		case ARGS:
 			args := kit.Simple(m.Optionv(arg[i]))
 
 			count := 0
-			kit.Fetch(data["inputs"], func(index int, value map[string]interface{}) {
-				if value["_input"] != "button" && value["type"] != "button" {
+			kit.Fetch(meta[INPUTS], func(index int, value map[string]interface{}) {
+				if value[kit.MDB_INPUT] != kit.MDB_BUTTON && value[kit.MDB_TYPE] != kit.MDB_BUTTON {
 					count++
 				}
 			})
 
 			if len(args) > count {
-				list := data["inputs"].([]interface{})
+				list := meta[INPUTS].([]interface{})
 				for i := count; i < len(args); i++ {
 					list = append(list, kit.Dict(
-						"_input", "text", "name", "args", "value", args[i],
+						kit.MDB_INPUT, "text", kit.MDB_NAME, "args", kit.MDB_VALUE, args[i],
 					))
 				}
-				data["inputs"] = list
+				meta[INPUTS] = list
 			}
 		}
 	}
+	m.Option(kit.MDB_META, meta)
 
 	// 渲染引擎
-	m.Option(kit.MDB_META, data)
-	m.RenderTemplate(m.Conf(FIELD, kit.Keym(kit.MDB_TEMPLATE)))
+	_wiki_template(m, FIELD, name, text)
 }
 
+const (
+	FEATURE = "feature"
+	INPUTS  = "inputs"
+	ARGS    = "args"
+)
 const FIELD = "field"
 
 func init() {
@@ -79,7 +82,7 @@ func init() {
 				}},
 			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 				arg = _name(m, arg)
-				_field_show(m, strings.ReplaceAll(kit.Select(path.Base(arg[1]), arg[0]), " ", "_"), arg[1], arg[2:]...)
+				_field_show(m, arg[0], arg[1], arg[2:]...)
 			}},
 		},
 		Configs: map[string]*ice.Config{

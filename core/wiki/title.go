@@ -1,8 +1,6 @@
 package wiki
 
 import (
-	"strings"
-
 	ice "github.com/shylinux/icebergs"
 	kit "github.com/shylinux/toolkits"
 )
@@ -10,12 +8,12 @@ import (
 func _title_show(m *ice.Message, kind, text string, arg ...string) {
 	switch title, _ := m.Optionv(TITLE).(map[string]int); kind {
 	case PREMENU: // 前置目录
-		_option(m, kind, "", strings.TrimSpace(text), arg...)
+		_option(m, kind, "", "", arg...)
 		m.RenderTemplate(m.Conf(TITLE, kit.Keym(kind)))
 		return
 
 	case ENDMENU: // 后置目录
-		_option(m, kind, "", strings.TrimSpace(text), arg...)
+		_option(m, kind, "", "", arg...)
 		m.RenderTemplate(m.Conf(TITLE, kit.Keym(kind)))
 		return
 
@@ -60,10 +58,14 @@ func init() {
 					ns := kit.Split(ice.Info.NodeName, "-")
 					arg = append(arg, ns[len(ns)-1])
 				}
-				if len(arg) == 1 {
-					arg = append(arg, "")
+				switch arg[0] {
+				case PREMENU, ENDMENU:
+					_title_show(m, arg[0], "", arg[1:]...)
+				case CHAPTER, SECTION:
+					_title_show(m, arg[0], arg[1], arg[2:]...)
+				default:
+					_title_show(m, "", arg[0], arg[1:]...)
 				}
-				_title_show(m, arg[0], kit.Select(arg[0], arg[1]), arg[2:]...)
 			}},
 		},
 		Configs: map[string]*ice.Config{

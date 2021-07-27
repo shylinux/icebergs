@@ -35,9 +35,7 @@ func init() {
 					m.Cmdy(ctx.COMMAND, arg)
 				}},
 				cli.RUN: {Name: "run", Help: "执行", Hand: func(m *ice.Message, arg ...string) {
-					if !m.Warn(!m.Right(arg), ice.ErrNotRight) {
-						m.Cmdy(arg[1:])
-					}
+					m.Cmdy(arg)
 				}},
 			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 				if kit.Contains(arg[1], ";") {

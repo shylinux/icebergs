@@ -76,9 +76,7 @@ func init() {
 		Commands: map[string]*ice.Command{
 			FIELD: {Name: "field [name] cmd", Help: "插件", Action: map[string]*ice.Action{
 				cli.RUN: {Name: "run", Help: "执行", Hand: func(m *ice.Message, arg ...string) {
-					if !m.Warn(!m.Right(arg[1:]), ice.ErrNotRight, arg[1:]) {
-						m.Cmdy(arg[1:])
-					}
+					m.Cmdy(arg)
 				}},
 			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 				arg = _name(m, arg)

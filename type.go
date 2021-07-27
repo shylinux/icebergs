@@ -79,6 +79,10 @@ func (c *Context) Cap(key string, arg ...interface{}) string {
 	return c.Caches[key].Value
 }
 func (c *Context) _cmd(m *Message, cmd *Command, key string, k string, h *Action, arg ...string) *Message {
+	if k == "run" && m.Warn(!m.Right(arg), ErrNotRight, arg) {
+		return m
+	}
+
 	m.Log(LOG_CMDS, "%s.%s %s %d %v %s", c.Name, key, k, len(arg), arg, kit.FileLine(h.Hand, 3))
 	if len(h.List) > 0 && k != "search" {
 		order := false
@@ -196,7 +200,7 @@ func (c *Context) Merge(s *Context) *Context {
 			if len(help) == 1 || help[1] == "" {
 				help = strings.SplitN(help[0], ":", 2)
 			}
-			kit.Value(v.Meta, kit.Keys("trans", k), help[0])
+			kit.Value(v.Meta, kit.Keys("_trans", k), help[0])
 			if len(help) > 1 {
 				kit.Value(v.Meta, kit.Keys("title", k), help[1])
 			}
@@ -228,25 +232,41 @@ func (c *Context) Merge(s *Context) *Context {
 	return c
 }
 func (c *Context) split(key string, cmd *Command, name string) []interface{} {
+	const (
+		BUTTON   = "button"
+		SELECT   = "select"
+		TEXT     = "text"
+		TEXTAREA = "textarea"
+	)
+
 	button, list := false, []interface{}{}
 	for _, v := range kit.Split(kit.Select("key", name), " ", " ")[1:] {
+		if key == "spend" {
+			fmt.Printf("what %v %v\n", key, v)
+		}
 		switch v {
+		case "text":
+			list = append(list, kit.List(kit.MDB_INPUT, TEXTAREA, kit.MDB_NAME, "text")...)
+			if key == "spend" {
+				fmt.Printf("what %v %v\n", key, list)
+			}
+			continue
 		case "page":
-			list = append(list, kit.List(kit.MDB_INPUT, "text", "name", "limit")...)
-			list = append(list, kit.List(kit.MDB_INPUT, "text", "name", "offend")...)
-			list = append(list, kit.List(kit.MDB_INPUT, "button", "name", "prev")...)
-			list = append(list, kit.List(kit.MDB_INPUT, "button", "name", "next")...)
+			list = append(list, kit.List(kit.MDB_INPUT, TEXT, kit.MDB_NAME, "limit")...)
+			list = append(list, kit.List(kit.MDB_INPUT, TEXT, kit.MDB_NAME, "offend")...)
+			list = append(list, kit.List(kit.MDB_INPUT, BUTTON, kit.MDB_NAME, "prev")...)
+			list = append(list, kit.List(kit.MDB_INPUT, BUTTON, kit.MDB_NAME, "next")...)
 			continue
 		case "auto":
-			list = append(list, kit.List(kit.MDB_INPUT, "button", "name", "查看", "value", "auto")...)
-			list = append(list, kit.List(kit.MDB_INPUT, "button", "name", "返回")...)
+			list = append(list, kit.List(kit.MDB_INPUT, BUTTON, kit.MDB_NAME, "查看", kit.MDB_VALUE, "auto")...)
+			list = append(list, kit.List(kit.MDB_INPUT, BUTTON, kit.MDB_NAME, "返回")...)
 			button = true
 			continue
 		}
 
 		ls, value := kit.Split(v, " ", ":=@"), ""
-		item := kit.Dict(kit.MDB_INPUT, kit.Select("text", "button", button))
-		if kit.Value(item, kit.MDB_NAME, ls[0]); item[kit.MDB_INPUT] == "text" {
+		item := kit.Dict(kit.MDB_INPUT, kit.Select(TEXT, BUTTON, button))
+		if kit.Value(item, kit.MDB_NAME, ls[0]); item[kit.MDB_INPUT] == TEXT {
 			kit.Value(item, kit.MDB_VALUE, kit.Select("@key", "auto", strings.Contains(name, "auto")))
 		}
 
@@ -254,10 +274,10 @@ func (c *Context) split(key string, cmd *Command, name string) []interface{} {
 			switch ls[i] {
 			case ":":
 				switch kit.Value(item, kit.MDB_INPUT, ls[i+1]); ls[i+1] {
-				case "textarea":
+				case TEXTAREA:
 					kit.Value(item, "style.width", "360")
 					kit.Value(item, "style.height", "60")
-				case "button":
+				case BUTTON:
 					kit.Value(item, kit.MDB_VALUE, "")
 					button = true
 				}
@@ -266,7 +286,7 @@ func (c *Context) split(key string, cmd *Command, name string) []interface{} {
 					vs := strings.Split(ls[i+1], ",")
 					kit.Value(item, "values", vs)
 					kit.Value(item, kit.MDB_VALUE, vs[0])
-					kit.Value(item, kit.MDB_INPUT, "select")
+					kit.Value(item, kit.MDB_INPUT, SELECT)
 					if kit.Value(item, kit.MDB_NAME) == "scale" {
 						kit.Value(item, kit.MDB_VALUE, "week")
 					}
@@ -275,7 +295,7 @@ func (c *Context) split(key string, cmd *Command, name string) []interface{} {
 				}
 			case "@":
 				if len(ls) > i+1 {
-					if kit.Value(item, kit.MDB_INPUT) == "button" {
+					if kit.Value(item, kit.MDB_INPUT) == BUTTON {
 						kit.Value(item, kit.MDB_ACTION, ls[i+1])
 					} else {
 						kit.Value(item, kit.MDB_VALUE, "@"+ls[i+1]+"="+value)

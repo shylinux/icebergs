@@ -155,7 +155,7 @@ func Render(m *Message, cmd string, args ...interface{}) string {
 		list := []string{}
 		for _, k := range kit.Split(strings.Join(arg, ",")) {
 			list = append(list, fmt.Sprintf(`<input type="button" name="%s" value="%s">`,
-				k, kit.Select(k, kit.Value(m._cmd.Meta, kit.Keys("trans", k)))))
+				k, kit.Select(k, kit.Value(m._cmd.Meta, kit.Keys("_trans", k)))))
 		}
 		return strings.Join(list, "")
 
@@ -348,6 +348,10 @@ func (m *Message) Status(arg ...interface{}) {
 	}
 	m.Option(MSG_STATUS, kit.Format(list))
 }
+func (m *Message) StatusTime(arg ...interface{}) {
+	m.Status(kit.MDB_TIME, m.Time(), arg, "cost", m.FormatCost())
+}
+
 func (m *Message) StatusTimeCount(arg ...interface{}) {
 	m.Status(kit.MDB_TIME, m.Time(), kit.MDB_COUNT, m.FormatSize(), arg, "cost", m.FormatCost())
 }

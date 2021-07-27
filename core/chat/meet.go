@@ -22,7 +22,7 @@ func init() {
 			ice.CTX_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) { m.Load() }},
 			ice.CTX_EXIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) { m.Save() }},
 
-			MISS: {Name: "miss name auto create", Help: "资料", Meta: kit.Dict("trans", kit.Dict("name", "姓名")), Action: map[string]*ice.Action{
+			MISS: {Name: "miss name auto create", Help: "资料", Meta: kit.Dict("_trans", kit.Dict("name", "姓名")), Action: map[string]*ice.Action{
 				mdb.CREATE: {Name: "create name 照片 性别 年龄 身高 体重 籍贯 户口 学历 学校 职业 公司 年薪 资产 家境", Help: "添加", Hand: func(m *ice.Message, arg ...string) {
 					m.Cmdy(mdb.INSERT, m.Prefix(MISS), "", mdb.HASH, arg)
 				}},

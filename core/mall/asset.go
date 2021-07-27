@@ -2,15 +2,13 @@ package mall
 
 import (
 	ice "github.com/shylinux/icebergs"
+	"github.com/shylinux/icebergs/base/cli"
 	"github.com/shylinux/icebergs/base/ctx"
 	"github.com/shylinux/icebergs/base/mdb"
 	"github.com/shylinux/icebergs/base/web"
 	kit "github.com/shylinux/toolkits"
 )
 
-func _sub_key(m *ice.Message, account string) string {
-	return kit.Keys(kit.MDB_HASH, kit.Hashs(account))
-}
 func _sub_value(m *ice.Message, key string, arg ...string) string {
 	for i := 0; i < len(arg)-1; i += 2 {
 		if arg[i] == key {
@@ -28,29 +26,14 @@ func _sub_amount(m *ice.Message, arg []string) {
 		}
 	}
 }
-func _asset_list(m *ice.Message, account string, id string) {
-	if account == "" {
-		m.Option(mdb.FIELDS, "time,account,amount,count")
-		defer m.PushAction(CHECK)
-		defer m.SortIntR(AMOUNT)
-
-	} else if id == "" {
-		m.Option(mdb.FIELDS, "time,id,type,amount,name,text")
-
-	} else {
-		m.Option(mdb.FIELDS, mdb.DETAIL)
-		defer m.PushAction(mdb.PLUGIN)
-	}
-	m.Cmdy(mdb.SELECT, ASSET, "", mdb.ZONE, account, id)
-}
 
 func _asset_check(m *ice.Message, account string) {
 	amount := 0
-	m.Option(mdb.FIELDS, "time,id,type,amount,name,text")
+	m.OptionFields(m.Conf(ASSET, kit.META_FIELD))
 	m.Option(kit.Keycb(mdb.SELECT), func(fields []string, value map[string]interface{}) {
 		amount += kit.Int(kit.Value(value, AMOUNT))
 	})
-	m.Cmd(mdb.SELECT, ASSET, _sub_key(m, account), mdb.LIST)
+	m.Cmd(mdb.SELECT, ASSET, kit.KeyHash(account), mdb.LIST)
 
 	m.Cmdy(mdb.MODIFY, ASSET, "", mdb.HASH, ACCOUNT, account, AMOUNT, amount)
 }
@@ -59,23 +42,12 @@ func _asset_create(m *ice.Message, account string) {
 }
 func _asset_insert(m *ice.Message, account string, arg ...string) {
 	_asset_create(m, account)
-	m.Cmdy(mdb.INSERT, ASSET, _sub_key(m, account), mdb.LIST, arg)
+	m.Cmdy(mdb.INSERT, ASSET, kit.KeyHash(account), mdb.LIST, arg)
 
 	m.Option(mdb.FIELDS, "time,account,amount,count")
 	amount := kit.Int(m.Cmd(mdb.SELECT, ASSET, "", mdb.HASH, ACCOUNT, account).Append(AMOUNT))
 	amount += kit.Int(_sub_value(m, AMOUNT, arg...))
 	m.Cmdy(mdb.MODIFY, ASSET, "", mdb.HASH, ACCOUNT, account, AMOUNT, amount)
-}
-func _asset_modify(m *ice.Message, account, id string, arg ...string) {
-	m.Cmdy(mdb.MODIFY, ASSET, _sub_key(m, account), mdb.LIST, kit.MDB_ID, id, arg)
-}
-func _asset_export(m *ice.Message, file string) {
-	m.Option(mdb.FIELDS, "account,id,time,type,amount,name,text,extra")
-	m.Cmdy(mdb.EXPORT, ASSET, "", mdb.ZONE, file)
-}
-func _asset_import(m *ice.Message, file string) {
-	m.Option(mdb.FIELDS, "account")
-	m.Cmdy(mdb.IMPORT, ASSET, "", mdb.ZONE, file)
 }
 func _asset_inputs(m *ice.Message, field, value string) {
 	switch field {
@@ -87,19 +59,23 @@ func _asset_inputs(m *ice.Message, field, value string) {
 		m.Cmdy(ctx.CONTEXT, kit.Select(m.Option("ctx"), m.Option("extra.ctx")), ctx.COMMAND)
 	case "arg", "extra.arg":
 
-	case "from", "to", ACCOUNT:
+	case FROM, TO, ACCOUNT:
 		m.Cmdy(mdb.INPUTS, ASSET, "", mdb.HASH, ACCOUNT, value)
 	default:
-		m.Cmdy(mdb.INPUTS, ASSET, _sub_key(m, m.Option(ACCOUNT)), mdb.LIST, field, value)
+		m.Cmdy(mdb.INPUTS, ASSET, kit.KeyHash(m.Option(ACCOUNT)), mdb.LIST, field, value)
 	}
 }
 
 const (
 	ACCOUNT = "account"
 	AMOUNT  = "amount"
+	COUNT   = "count"
+
+	FROM = "from"
+	TO   = "to"
 
 	SPEND = "spend"
-	TRANC = "tranc"
+	TRANS = "trans"
 	BONUS = "bonus"
 	CHECK = "check"
 )
@@ -108,15 +84,19 @@ const ASSET = "asset"
 func init() {
 	Index.Merge(&ice.Context{
 		Configs: map[string]*ice.Config{
-			ASSET: {Name: ASSET, Help: "资产", Value: kit.Data(kit.MDB_SHORT, ACCOUNT)},
+			ASSET: {Name: ASSET, Help: "资产", Value: kit.Data(
+				kit.MDB_SHORT, ACCOUNT, kit.MDB_FIELD, "time,id,type,amount,name,text",
+			)},
 		},
 		Commands: map[string]*ice.Command{
-			ASSET: {Name: "asset account id auto spend tranc bonus", Help: "资产", Action: map[string]*ice.Action{
+			ASSET: {Name: "asset account id auto spend trans bonus check", Help: "资产", Meta: kit.Dict(
+				"_trans", kit.Dict(ACCOUNT, "账户", AMOUNT, "金额", FROM, "转出", TO, "转入", "time", "时间", "name", "商家", "text", "备注"),
+			), Action: map[string]*ice.Action{
 				SPEND: {Name: "spend account name amount time@date text", Help: "支出", Hand: func(m *ice.Message, arg ...string) {
 					_sub_amount(m, arg)
 					_asset_insert(m, arg[1], kit.Simple(kit.MDB_TYPE, "支出", arg[2:])...)
 				}},
-				TRANC: {Name: "tranc from to amount time@date text", Help: "转账", Hand: func(m *ice.Message, arg ...string) {
+				TRANS: {Name: "trans from to amount time@date text", Help: "转账", Hand: func(m *ice.Message, arg ...string) {
 					_asset_insert(m, arg[3], kit.Simple(kit.MDB_TYPE, "转入", kit.MDB_NAME, arg[1], arg[4:])...)
 					_sub_amount(m, arg)
 					_asset_insert(m, arg[1], kit.Simple(kit.MDB_TYPE, "转出", kit.MDB_NAME, arg[3], arg[4:])...)
@@ -124,38 +104,63 @@ func init() {
 				BONUS: {Name: "bonus account name amount time@date text", Help: "收入", Hand: func(m *ice.Message, arg ...string) {
 					_asset_insert(m, arg[1], kit.Simple(kit.MDB_TYPE, "收入", arg[2:])...)
 				}},
-				CHECK: {Name: "check account", Help: "核算", Hand: func(m *ice.Message, arg ...string) {
-					_asset_check(m, m.Option(ACCOUNT))
+				CHECK: {Name: "check", Help: "核算", Hand: func(m *ice.Message, arg ...string) {
+					if m.Option(ACCOUNT) == "" {
+						m.Cmd(ASSET).Table(func(index int, value map[string]string, head []string) {
+							_asset_check(m, value[ACCOUNT])
+						})
+						m.ProcessRefresh30ms()
+					} else {
+						_asset_check(m, m.Option(ACCOUNT))
+					}
+					m.Toast("核算成功")
 				}},
 
 				mdb.MODIFY: {Name: "modify", Help: "编辑", Hand: func(m *ice.Message, arg ...string) {
-					_asset_modify(m, m.Option(ACCOUNT), m.Option(kit.MDB_ID), arg[0], arg[1])
+					m.Cmdy(mdb.MODIFY, ASSET, "", mdb.ZONE, m.Option(ACCOUNT), m.Option(kit.MDB_ID), arg)
 				}},
-				mdb.EXPORT: {Name: "export file", Help: "导出", Hand: func(m *ice.Message, arg ...string) {
-					_asset_export(m, m.Option(kit.MDB_FILE))
+				mdb.EXPORT: {Name: "export", Help: "导出", Hand: func(m *ice.Message, arg ...string) {
+					m.OptionFields(ACCOUNT, m.Conf(ASSET, kit.META_FIELD), kit.MDB_EXTRA)
+					m.Cmdy(mdb.EXPORT, ASSET, "", mdb.ZONE)
 				}},
-				mdb.IMPORT: {Name: "import file", Help: "导入", Hand: func(m *ice.Message, arg ...string) {
-					_asset_import(m, m.Option(kit.MDB_FILE))
+				mdb.IMPORT: {Name: "import", Help: "导入", Hand: func(m *ice.Message, arg ...string) {
+					m.OptionFields(ACCOUNT)
+					m.Cmdy(mdb.IMPORT, ASSET, "", mdb.ZONE)
 				}},
 				mdb.INPUTS: {Name: "inputs", Help: "补全", Hand: func(m *ice.Message, arg ...string) {
 					_asset_inputs(m, kit.Select("", arg, 0), kit.Select("", arg, 1))
 				}},
 
 				mdb.PLUGIN: {Name: "plugin extra.pod extra.ctx extra.cmd extra.arg", Help: "插件", Hand: func(m *ice.Message, arg ...string) {
-					_asset_modify(m, m.Option(ACCOUNT), m.Option(kit.MDB_ID), kit.Simple(kit.Dict(arg))...)
+					m.Cmdy(mdb.MODIFY, ASSET, "", mdb.ZONE, m.Option(ACCOUNT), m.Option(kit.MDB_ID), arg)
 				}},
 				ctx.COMMAND: {Name: "command", Help: "命令", Hand: func(m *ice.Message, arg ...string) {
-					if arg[0] == "run" {
-						m.Cmdy(arg[1], arg[2:])
-						return
-					}
-					if len(arg) > 0 {
-						m.Cmdy(ctx.COMMAND, arg[0])
-						return
-					}
+					m.Cmdy(ctx.COMMAND, arg)
+				}},
+				cli.RUN: {Name: "run", Help: "执行", Hand: func(m *ice.Message, arg ...string) {
+					m.Cmdy(arg)
 				}},
 			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-				_asset_list(m, kit.Select("", arg, 0), kit.Select("", arg, 1))
+				amount, count := 0, 0
+				m.Fields(len(arg), "time,account,amount,count", m.Conf(ASSET, kit.META_FIELD))
+				if m.Cmdy(mdb.SELECT, ASSET, "", mdb.ZONE, arg); len(arg) == 0 {
+					m.PushAction(CHECK)
+					m.SortIntR(AMOUNT)
+
+					m.Table(func(index int, value map[string]string, head []string) {
+						amount += kit.Int(value[AMOUNT])
+						count += kit.Int(value[COUNT])
+					})
+
+				} else {
+					m.PushAction(mdb.PLUGIN)
+
+					m.Table(func(index int, value map[string]string, head []string) {
+						amount += kit.Int(value[AMOUNT])
+						count++
+					})
+				}
+				m.StatusTime(AMOUNT, amount, COUNT, count)
 			}},
 		},
 	})

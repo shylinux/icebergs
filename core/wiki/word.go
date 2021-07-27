@@ -65,7 +65,7 @@ func init() {
 				ice.Display("/plugin/local/wiki/word.js", WORD),
 			), Action: map[string]*ice.Action{
 				web.STORY: {Name: "story", Help: "运行", Hand: func(m *ice.Message, arg ...string) {
-					m.Cmdy(arg[0], ctx.ACTION, cli.RUN, arg[1:])
+					m.Cmdy(arg[0], ctx.ACTION, cli.RUN, arg[2:])
 				}},
 			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 				m.Option(nfs.DIR_REG, m.Conf(WORD, kit.Keym(kit.MDB_REGEXP)))

@@ -28,8 +28,15 @@ func init() {
 					m.Cmdy(mdb.INPUTS, SALARY, "", mdb.HASH, arg)
 				}},
 			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-				m.Option(mdb.FIELDS, kit.Select("time,month,company,amount,income,tax", mdb.DETAIL, len(arg) > 0))
+				m.Fields(len(arg), "time,month,company,amount,income,tax")
 				m.Cmdy(mdb.SELECT, SALARY, "", mdb.HASH, "month", arg)
+				amount, income, tax := 0, 0, 0
+				m.Table(func(index int, value map[string]string, head []string) {
+					amount += kit.Int(value["amount"])
+					income += kit.Int(value["income"])
+					tax += kit.Int(value["tax"])
+				})
+				m.StatusTime("amount", amount, "income", income, "tax", tax)
 			}},
 		},
 	})

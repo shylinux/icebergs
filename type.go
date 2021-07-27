@@ -241,15 +241,9 @@ func (c *Context) split(key string, cmd *Command, name string) []interface{} {
 
 	button, list := false, []interface{}{}
 	for _, v := range kit.Split(kit.Select("key", name), " ", " ")[1:] {
-		if key == "spend" {
-			fmt.Printf("what %v %v\n", key, v)
-		}
 		switch v {
 		case "text":
 			list = append(list, kit.List(kit.MDB_INPUT, TEXTAREA, kit.MDB_NAME, "text")...)
-			if key == "spend" {
-				fmt.Printf("what %v %v\n", key, list)
-			}
 			continue
 		case "page":
 			list = append(list, kit.List(kit.MDB_INPUT, TEXT, kit.MDB_NAME, "limit")...)
@@ -383,8 +377,7 @@ type Message struct {
 	I  io.Reader
 }
 
-func (m *Message) Time(args ...interface{}) string {
-	// [duration] [format [args...]]
+func (m *Message) Time(args ...interface{}) string { // [duration] [format [args...]]
 	t := m.time
 	if len(args) > 0 {
 		switch arg := args[0].(type) {

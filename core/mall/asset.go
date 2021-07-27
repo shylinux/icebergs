@@ -31,25 +31,24 @@ func _sub_amount(m *ice.Message, arg []string) {
 
 func _asset_check(m *ice.Message, account string) {
 	amount := 0
-	m.OptionFields(m.Conf(ASSET, kit.META_FIELD))
-	m.Option(kit.Keycb(mdb.SELECT), func(fields []string, value map[string]interface{}) {
+	m.Option(kit.Keycb(mdb.SELECT), func(key string, value map[string]interface{}) {
 		amount += kit.Int(kit.Value(value, AMOUNT))
 	})
-	m.Cmd(mdb.SELECT, ASSET, kit.KeyHash(account), mdb.LIST)
+	m.Cmd(mdb.SELECT, m.Prefix(ASSET), "", mdb.ZONE, account, ice.OptionFields(m.Conf(ASSET, kit.META_FIELD)))
 
-	m.Cmdy(mdb.MODIFY, ASSET, "", mdb.HASH, ACCOUNT, account, AMOUNT, amount)
+	m.Cmdy(mdb.MODIFY, m.Prefix(ASSET), "", mdb.HASH, ACCOUNT, account, AMOUNT, amount)
 }
 func _asset_create(m *ice.Message, account string) {
-	m.Cmdy(mdb.INSERT, ASSET, "", mdb.HASH, ACCOUNT, account)
+	m.Cmdy(mdb.INSERT, m.Prefix(ASSET), "", mdb.HASH, ACCOUNT, account)
 }
 func _asset_insert(m *ice.Message, account string, arg ...string) {
 	_asset_create(m, account)
-	m.Cmdy(mdb.INSERT, ASSET, kit.KeyHash(account), mdb.LIST, arg)
+	m.Cmdy(mdb.INSERT, m.Prefix(ASSET), "", mdb.ZONE, account, arg)
 
-	m.Option(mdb.FIELDS, "time,account,amount,count")
-	amount := kit.Int(m.Cmd(mdb.SELECT, ASSET, "", mdb.HASH, ACCOUNT, account).Append(AMOUNT))
+	m.OptionFields("time,account,amount,count")
+	amount := kit.Int(m.Cmd(mdb.SELECT, m.Prefix(ASSET), "", mdb.HASH, ACCOUNT, account).Append(AMOUNT))
 	amount += kit.Int(_sub_value(m, AMOUNT, arg...))
-	m.Cmdy(mdb.MODIFY, ASSET, "", mdb.HASH, ACCOUNT, account, AMOUNT, amount)
+	m.Cmdy(mdb.MODIFY, m.Prefix(ASSET), "", mdb.HASH, ACCOUNT, account, AMOUNT, amount)
 }
 func _asset_inputs(m *ice.Message, field, value string) {
 	switch strings.TrimPrefix(field, "extra.") {
@@ -62,9 +61,9 @@ func _asset_inputs(m *ice.Message, field, value string) {
 	case "arg":
 
 	case ACCOUNT, FROM, TO:
-		m.Cmdy(mdb.INPUTS, ASSET, "", mdb.HASH, ACCOUNT, value)
+		m.Cmdy(mdb.INPUTS, m.Prefix(ASSET), "", mdb.HASH, ACCOUNT, value)
 	default:
-		m.Cmdy(mdb.INPUTS, ASSET, kit.KeyHash(m.Option(ACCOUNT)), mdb.LIST, field, value)
+		m.Cmdy(mdb.INPUTS, m.Prefix(ASSET), "", mdb.ZONE, m.Option(ACCOUNT), field, value)
 	}
 }
 
@@ -119,22 +118,22 @@ func init() {
 				}},
 
 				mdb.MODIFY: {Name: "modify", Help: "编辑", Hand: func(m *ice.Message, arg ...string) {
-					m.Cmdy(mdb.MODIFY, ASSET, "", mdb.ZONE, m.Option(ACCOUNT), m.Option(kit.MDB_ID), arg)
+					m.Cmdy(mdb.MODIFY, m.Prefix(ASSET), "", mdb.ZONE, m.Option(ACCOUNT), m.Option(kit.MDB_ID), arg)
 				}},
 				mdb.EXPORT: {Name: "export", Help: "导出", Hand: func(m *ice.Message, arg ...string) {
 					m.OptionFields(ACCOUNT, m.Conf(ASSET, kit.META_FIELD), kit.MDB_EXTRA)
-					m.Cmdy(mdb.EXPORT, ASSET, "", mdb.ZONE)
+					m.Cmdy(mdb.EXPORT, m.Prefix(ASSET), "", mdb.ZONE)
 				}},
 				mdb.IMPORT: {Name: "import", Help: "导入", Hand: func(m *ice.Message, arg ...string) {
 					m.OptionFields(ACCOUNT)
-					m.Cmdy(mdb.IMPORT, ASSET, "", mdb.ZONE)
+					m.Cmdy(mdb.IMPORT, m.Prefix(ASSET), "", mdb.ZONE)
 				}},
 				mdb.INPUTS: {Name: "inputs", Help: "补全", Hand: func(m *ice.Message, arg ...string) {
 					_asset_inputs(m, kit.Select("", arg, 0), kit.Select("", arg, 1))
 				}},
 
 				mdb.PLUGIN: {Name: "plugin extra.pod extra.ctx extra.cmd extra.arg", Help: "插件", Hand: func(m *ice.Message, arg ...string) {
-					m.Cmdy(mdb.MODIFY, ASSET, "", mdb.ZONE, m.Option(ACCOUNT), m.Option(kit.MDB_ID), arg)
+					m.Cmdy(mdb.MODIFY, m.Prefix(ASSET), "", mdb.ZONE, m.Option(ACCOUNT), m.Option(kit.MDB_ID), arg)
 				}},
 				ctx.COMMAND: {Name: "command", Help: "命令", Hand: func(m *ice.Message, arg ...string) {
 					m.Cmdy(ctx.COMMAND, arg)
@@ -145,7 +144,7 @@ func init() {
 			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 				amount, count := 0, 0
 				m.Fields(len(arg), "time,account,amount,count", m.Conf(ASSET, kit.META_FIELD))
-				if m.Cmdy(mdb.SELECT, ASSET, "", mdb.ZONE, arg); len(arg) == 0 {
+				if m.Cmdy(mdb.SELECT, m.Prefix(ASSET), "", mdb.ZONE, arg); len(arg) == 0 {
 					m.PushAction(CHECK)
 					m.SortIntR(AMOUNT)
 

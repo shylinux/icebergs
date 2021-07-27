@@ -35,7 +35,6 @@ func init() {
 					m.Cmdy(mdb.INSERT, m.Prefix(APP), "", mdb.HASH, arg)
 				}},
 				TOKEN: {Name: "token appid", Help: "令牌", Hand: func(m *ice.Message, arg ...string) {
-					m.Debug("what %v", m.Option(APPID))
 					msg := m.Cmd(APP, m.Option(APPID), ice.OptionFields(m.Conf(APP, kit.META_FIELD)))
 					if now := time.Now().Unix(); msg.Append(TOKEN) == "" || now > kit.Int64(msg.Append(EXPIRE)) {
 						sub := m.Cmd(web.SPIDE, LARK, web.SPIDE_POST, "/open-apis/auth/v3/tenant_access_token/internal/",

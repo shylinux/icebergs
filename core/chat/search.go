@@ -2,6 +2,7 @@ package chat
 
 import (
 	ice "github.com/shylinux/icebergs"
+	"github.com/shylinux/icebergs/base/cli"
 	"github.com/shylinux/icebergs/base/ctx"
 	"github.com/shylinux/icebergs/base/mdb"
 	kit "github.com/shylinux/toolkits"
@@ -12,14 +13,14 @@ const P_SEARCH = "/search"
 func init() {
 	Index.Merge(&ice.Context{
 		Configs: map[string]*ice.Config{
-			P_SEARCH: {Name: "/search", Help: "搜索", Value: kit.Data(kit.MDB_SHORT, kit.MDB_NAME)},
+			P_SEARCH: {Name: P_SEARCH, Help: "搜索", Value: kit.Data(kit.MDB_SHORT, kit.MDB_NAME)},
 		},
 		Commands: map[string]*ice.Command{
-			P_SEARCH: {Name: "/search", Help: "搜索引擎", Action: map[string]*ice.Action{
+			ice.CTX_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+				m.Cmd(mdb.SEARCH, mdb.CREATE, P_SEARCH, m.Prefix(P_SEARCH))
+			}},
+			P_SEARCH: {Name: P_SEARCH, Help: "搜索引擎", Action: map[string]*ice.Action{
 				mdb.SEARCH: {Name: "search type name text", Help: "搜索", Hand: func(m *ice.Message, arg ...string) {
-					if arg[0] != P_SEARCH && arg[0] != kit.MDB_FOREACH {
-						return
-					}
 					m.Richs(P_SEARCH, "", kit.MDB_FOREACH, func(key string, value map[string]interface{}) {
 						if value = kit.GetMeta(value); arg[1] != "" && !kit.Contains(value[kit.MDB_NAME], arg[1]) {
 							return
@@ -31,13 +32,12 @@ func init() {
 					m.Cmdy(m.Space(m.Option(POD)), mdb.RENDER, arg[1:])
 				}},
 				ctx.COMMAND: {Name: "command", Help: "命令", Hand: func(m *ice.Message, arg ...string) {
-					if len(arg) > 0 && arg[0] == "run" {
-						if m.Right(arg[1:]) {
-							m.Cmdy(arg[1:])
-						}
-						return
-					}
 					m.Cmdy(ctx.COMMAND, arg)
+				}},
+				cli.RUN: {Name: "run", Help: "执行", Hand: func(m *ice.Message, arg ...string) {
+					if !m.Warn(!m.Right(arg), ice.ErrNotRight) {
+						m.Cmdy(arg[1:])
+					}
 				}},
 			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 				if kit.Contains(arg[1], ";") {

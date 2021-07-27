@@ -97,11 +97,11 @@ func (m *Message) PushSearch(args ...interface{}) {
 		case kit.SSH_CTX:
 			m.Push(k, m.Prefix())
 		case kit.SSH_CMD:
-			m.Push(k, data[kit.SSH_CMD])
+			m.Push(k, kit.Format(data[kit.SSH_CMD]))
 		case kit.MDB_TIME:
 			m.Push(k, kit.Select(m.Time(), data[k]))
 		default:
-			m.Push(k, kit.Select("", data[k]))
+			m.Push(k, kit.Format(kit.Select("", data[k])))
 		}
 	}
 }

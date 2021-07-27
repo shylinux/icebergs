@@ -17,6 +17,9 @@ func init() {
 		Commands: map[string]*ice.Command{
 			SEARCH: {Name: "search type word text auto", Help: "搜索", Action: map[string]*ice.Action{
 				CREATE: {Name: "create type cmd ctx", Help: "创建", Hand: func(m *ice.Message, arg ...string) {
+					if kit.Select(arg[0], arg, 1) == "" {
+						m.Debug(m.Format("stack"))
+					}
 					m.Rich(SEARCH, nil, kit.Dict(kit.MDB_TYPE, arg[0], kit.MDB_NAME, kit.Select(arg[0], arg, 1), kit.MDB_TEXT, kit.Select("", arg, 2)))
 				}},
 			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
@@ -27,7 +30,7 @@ func init() {
 					return
 				}
 
-				m.Option(FIELDS, kit.Select("ctx,cmd,time,size,type,name,text", kit.Select(m.Option(FIELDS), arg, 2)))
+				m.Option(ice.MSG_FIELDS, kit.Select("ctx,cmd,time,size,type,name,text", kit.Select(m.Option(ice.MSG_FIELDS), arg, 2)))
 				for _, k := range strings.Split(arg[0], ",") {
 					for _, kk := range strings.Split(arg[1], ",") {
 						m.Richs(SEARCH, nil, k, func(key string, value map[string]interface{}) {

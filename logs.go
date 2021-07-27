@@ -97,7 +97,7 @@ func (m *Message) Warn(err bool, arg ...interface{}) bool {
 	}
 
 	m.meta[MSG_RESULT] = kit.Simple(ErrWarn, arg)
-	m.log(LOG_WARN, m.join(arg))
+	m.log(LOG_WARN, m.join(kit.Simple(arg)))
 	return err
 }
 func (m *Message) Error(err bool, str string, arg ...interface{}) bool {

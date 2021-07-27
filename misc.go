@@ -340,10 +340,10 @@ func (m *Message) Action(arg ...string) {
 }
 func (m *Message) Status(arg ...interface{}) {
 	args := kit.Simple(arg)
-	list := []map[string]string{}
+	list := []map[string]interface{}{}
 	for i := 0; i < len(args)-1; i += 2 {
-		list = append(list, map[string]string{
-			"name": args[i], "value": args[i+1],
+		list = append(list, map[string]interface{}{
+			kit.MDB_NAME: args[i], kit.MDB_VALUE: args[i+1],
 		})
 	}
 	m.Option(MSG_STATUS, kit.Format(list))

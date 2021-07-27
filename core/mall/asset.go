@@ -1,6 +1,8 @@
 package mall
 
 import (
+	"strings"
+
 	ice "github.com/shylinux/icebergs"
 	"github.com/shylinux/icebergs/base/cli"
 	"github.com/shylinux/icebergs/base/ctx"
@@ -50,16 +52,16 @@ func _asset_insert(m *ice.Message, account string, arg ...string) {
 	m.Cmdy(mdb.MODIFY, ASSET, "", mdb.HASH, ACCOUNT, account, AMOUNT, amount)
 }
 func _asset_inputs(m *ice.Message, field, value string) {
-	switch field {
-	case "pod", "extra.pod":
+	switch strings.TrimPrefix(field, "extra.") {
+	case "pod":
 		m.Cmdy(web.ROUTE)
-	case "ctx", "extra.ctx":
+	case "ctx":
 		m.Cmdy(ctx.CONTEXT)
-	case "cmd", "extra.cmd":
+	case "cmd":
 		m.Cmdy(ctx.CONTEXT, kit.Select(m.Option("ctx"), m.Option("extra.ctx")), ctx.COMMAND)
-	case "arg", "extra.arg":
+	case "arg":
 
-	case FROM, TO, ACCOUNT:
+	case ACCOUNT, FROM, TO:
 		m.Cmdy(mdb.INPUTS, ASSET, "", mdb.HASH, ACCOUNT, value)
 	default:
 		m.Cmdy(mdb.INPUTS, ASSET, kit.KeyHash(m.Option(ACCOUNT)), mdb.LIST, field, value)

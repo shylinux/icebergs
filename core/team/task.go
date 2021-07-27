@@ -11,9 +11,6 @@ import (
 	kit "github.com/shylinux/toolkits"
 )
 
-func _sub_key(m *ice.Message, zone string) string {
-	return kit.Keys(kit.MDB_HASH, kit.Hashs(zone))
-}
 func _task_scope(m *ice.Message, tz int, arg ...string) (time.Time, time.Time) {
 	begin_time := time.Now()
 	if len(arg) > 1 {
@@ -61,7 +58,7 @@ func _task_create(m *ice.Message, zone string) {
 	m.Cmdy(mdb.INSERT, TASK, "", mdb.HASH, kit.MDB_ZONE, zone)
 }
 func _task_insert(m *ice.Message, zone string, arg ...string) {
-	m.Cmdy(mdb.INSERT, TASK, _sub_key(m, zone), mdb.LIST,
+	m.Cmdy(mdb.INSERT, TASK, kit.KeyHash(zone), mdb.LIST,
 		BEGIN_TIME, m.Time(), CLOSE_TIME, m.Time("30m"),
 		STATUS, PREPARE, LEVEL, 3, SCORE, 3, arg)
 }
@@ -74,45 +71,31 @@ func _task_modify(m *ice.Message, zone, id, field, value string, arg ...string) 
 			arg = append(arg, CLOSE_TIME, m.Time())
 		}
 	}
-	m.Cmdy(mdb.MODIFY, TASK, _sub_key(m, zone), mdb.LIST, kit.MDB_ID, id, field, value, arg)
-}
-func _task_delete(m *ice.Message, zone, id string) {
-	m.Cmdy(mdb.MODIFY, TASK, _sub_key(m, zone), mdb.LIST, kit.MDB_ID, id, STATUS, CANCEL)
-}
-func _task_remove(m *ice.Message, zone string) {
-	m.Cmdy(mdb.DELETE, TASK, "", mdb.HASH, kit.MDB_ZONE, zone)
-}
-func _task_export(m *ice.Message, file string) {
-	m.Option(mdb.FIELDS, "zone,id,time,type,name,text,level,status,score,begin_time,close_time,extra")
-	m.Cmdy(mdb.EXPORT, TASK, "", mdb.ZONE, file)
-}
-func _task_import(m *ice.Message, file string) {
-	m.Option(mdb.FIELDS, "zone")
-	m.Cmdy(mdb.IMPORT, TASK, "", mdb.ZONE, file)
+	m.Cmdy(mdb.MODIFY, TASK, "", mdb.ZONE, zone, id, field, value, arg)
 }
 func _task_inputs(m *ice.Message, field, value string) {
-	switch field {
-	case "extra.pod":
+	switch strings.TrimPrefix(field, "extra.") {
+	case "pod":
 		m.Cmd(web.SPACE).Table(func(index int, value map[string]string, head []string) {
-			m.Push("extra.pod", value[kit.MDB_NAME])
+			m.Push(field, value[kit.MDB_NAME])
 			m.Push("", value, []string{kit.MDB_TYPE})
 		})
-	case "extra.ctx":
+	case "ctx":
 		m.Cmd(m.Space(m.Option("extra.pod")), ctx.CONTEXT).Table(func(index int, value map[string]string, head []string) {
-			m.Push("extra.ctx", value[kit.MDB_NAME])
+			m.Push(field, value[kit.MDB_NAME])
 			m.Push("", value, []string{kit.MDB_HELP})
 		})
-	case "extra.cmd":
+	case "cmd":
 		m.Cmd(m.Space(m.Option("extra.pod")), ctx.CONTEXT, m.Option("extra.ctx"), ctx.COMMAND).Table(func(index int, value map[string]string, head []string) {
-			m.Push("extra.cmd", value[kit.MDB_KEY])
+			m.Push(field, value[kit.MDB_KEY])
 			m.Push("", value, []string{kit.MDB_HELP})
 		})
-	case "extra.arg":
+	case "arg":
 
 	case kit.MDB_ZONE:
 		m.Cmdy(mdb.INPUTS, TASK, "", mdb.HASH, field, value)
 	default:
-		m.Cmdy(mdb.INPUTS, TASK, _sub_key(m, m.Option(kit.MDB_ZONE)), mdb.LIST, field, value)
+		m.Cmdy(mdb.INPUTS, TASK, kit.KeyHash(m.Option(kit.MDB_ZONE)), mdb.LIST, field, value)
 	}
 }
 func _task_search(m *ice.Message, kind, name, text string) {
@@ -165,9 +148,14 @@ const TASK = "task"
 func init() {
 	Index.Merge(&ice.Context{
 		Configs: map[string]*ice.Config{
-			TASK: {Name: TASK, Help: "任务", Value: kit.Data(kit.MDB_SHORT, kit.MDB_ZONE)},
+			TASK: {Name: TASK, Help: "任务", Value: kit.Data(
+				kit.MDB_SHORT, kit.MDB_ZONE, kit.MDB_FIELD, "begin_time,id,status,level,score,type,name,text",
+			)},
 		},
 		Commands: map[string]*ice.Command{
+			ice.CTX_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+				m.Cmd(mdb.SEARCH, mdb.CREATE, TASK, m.Prefix(TASK))
+			}},
 			TASK: {Name: "task zone id auto insert export import", Help: "任务", Action: map[string]*ice.Action{
 				mdb.INSERT: {Name: "insert zone type=once,step,week name text begin_time@date close_time@date", Help: "添加", Hand: func(m *ice.Message, arg ...string) {
 					_task_create(m, arg[1])
@@ -177,16 +165,18 @@ func init() {
 					_task_modify(m, m.Option(kit.MDB_ZONE), m.Option(kit.MDB_ID), arg[0], arg[1])
 				}},
 				mdb.DELETE: {Name: "delete", Help: "删除", Hand: func(m *ice.Message, arg ...string) {
-					_task_delete(m, m.Option(kit.MDB_ZONE), m.Option(kit.MDB_ID))
+					_task_modify(m, m.Option(kit.MDB_ZONE), m.Option(kit.MDB_ID), STATUS, CANCEL)
 				}},
 				mdb.REMOVE: {Name: "remove", Help: "删除", Hand: func(m *ice.Message, arg ...string) {
-					_task_remove(m, m.Option(kit.MDB_ZONE))
+					m.Cmdy(mdb.DELETE, TASK, "", mdb.HASH, m.OptionSimple(kit.MDB_ZONE))
 				}},
-				mdb.EXPORT: {Name: "export file", Help: "导出", Hand: func(m *ice.Message, arg ...string) {
-					_task_export(m, m.Option(kit.MDB_FILE))
+				mdb.EXPORT: {Name: "export", Help: "导出", Hand: func(m *ice.Message, arg ...string) {
+					m.OptionFields(kit.MDB_ZONE, "time,id,type,name,text,level,status,score,begin_time,close_time,extra")
+					m.Cmdy(mdb.EXPORT, TASK, "", mdb.ZONE)
 				}},
-				mdb.IMPORT: {Name: "import file", Help: "导入", Hand: func(m *ice.Message, arg ...string) {
-					_task_import(m, m.Option(kit.MDB_FILE))
+				mdb.IMPORT: {Name: "import", Help: "导入", Hand: func(m *ice.Message, arg ...string) {
+					m.OptionFields(kit.MDB_ZONE)
+					m.Cmdy(mdb.IMPORT, TASK, "", mdb.ZONE)
 				}},
 				mdb.INPUTS: {Name: "inputs", Help: "补全", Hand: func(m *ice.Message, arg ...string) {
 					_task_inputs(m, kit.Select("", arg, 0), kit.Select("", arg, 1))
@@ -205,14 +195,17 @@ func init() {
 					_task_modify(m, m.Option(kit.MDB_ZONE), m.Option(kit.MDB_ID), STATUS, FINISH)
 				}},
 			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-				m.Fields(len(arg), "time,zone,count", "begin_time,id,status,level,score,type,name,text")
+				m.Fields(len(arg), "time,zone,count", m.Conf(TASK, kit.META_FIELD))
 				if m.Cmdy(mdb.SELECT, TASK, "", mdb.ZONE, arg); len(arg) == 0 {
 					m.PushAction(mdb.REMOVE)
-				} else {
-					m.Table(func(index int, value map[string]string, head []string) {
-						m.PushButton(_task_action(m, value[STATUS]))
-					})
+					return
 				}
+				status := map[string]int{}
+				m.Table(func(index int, value map[string]string, head []string) {
+					m.PushButton(_task_action(m, value[STATUS]))
+					status[value[kit.MDB_STATUS]]++
+				})
+				m.Status(status)
 			}},
 		},
 	})

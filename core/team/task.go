@@ -55,14 +55,14 @@ func _task_action(m *ice.Message, status interface{}, action ...string) string {
 }
 
 func _task_create(m *ice.Message, zone string) {
-	m.Cmdy(mdb.INSERT, TASK, "", mdb.HASH, kit.MDB_ZONE, zone)
+	m.Cmdy(mdb.INSERT, m.Prefix(TASK), "", mdb.HASH, kit.MDB_ZONE, zone)
 }
 func _task_insert(m *ice.Message, zone string, arg ...string) {
-	m.Cmdy(mdb.INSERT, TASK, kit.KeyHash(zone), mdb.LIST,
+	m.Cmdy(mdb.INSERT, m.Prefix(TASK), kit.KeyHash(zone), mdb.LIST,
 		BEGIN_TIME, m.Time(), CLOSE_TIME, m.Time("30m"),
 		STATUS, PREPARE, LEVEL, 3, SCORE, 3, arg)
 }
-func _task_modify(m *ice.Message, zone, id, field, value string, arg ...string) {
+func _task_modify(m *ice.Message, field, value string, arg ...string) {
 	if field == STATUS {
 		switch value {
 		case PROCESS:
@@ -71,7 +71,7 @@ func _task_modify(m *ice.Message, zone, id, field, value string, arg ...string) 
 			arg = append(arg, CLOSE_TIME, m.Time())
 		}
 	}
-	m.Cmdy(mdb.MODIFY, TASK, "", mdb.ZONE, zone, id, field, value, arg)
+	m.Cmdy(mdb.MODIFY, m.Prefix(TASK), "", mdb.ZONE, m.Option(kit.MDB_ZONE), m.Option(kit.MDB_ID), field, value, arg)
 }
 func _task_inputs(m *ice.Message, field, value string) {
 	switch strings.TrimPrefix(field, "extra.") {
@@ -93,9 +93,9 @@ func _task_inputs(m *ice.Message, field, value string) {
 	case "arg":
 
 	case kit.MDB_ZONE:
-		m.Cmdy(mdb.INPUTS, TASK, "", mdb.HASH, field, value)
+		m.Cmdy(mdb.INPUTS, m.Prefix(TASK), "", mdb.HASH, field, value)
 	default:
-		m.Cmdy(mdb.INPUTS, TASK, kit.KeyHash(m.Option(kit.MDB_ZONE)), mdb.LIST, field, value)
+		m.Cmdy(mdb.INPUTS, m.Prefix(TASK), kit.KeyHash(m.Option(kit.MDB_ZONE)), mdb.LIST, field, value)
 	}
 }
 func _task_search(m *ice.Message, kind, name, text string) {
@@ -162,21 +162,22 @@ func init() {
 					_task_insert(m, arg[1], arg[2:]...)
 				}},
 				mdb.MODIFY: {Name: "modify", Help: "编辑", Hand: func(m *ice.Message, arg ...string) {
-					_task_modify(m, m.Option(kit.MDB_ZONE), m.Option(kit.MDB_ID), arg[0], arg[1])
+					_task_modify(m, arg[0], arg[1])
 				}},
 				mdb.DELETE: {Name: "delete", Help: "删除", Hand: func(m *ice.Message, arg ...string) {
-					_task_modify(m, m.Option(kit.MDB_ZONE), m.Option(kit.MDB_ID), STATUS, CANCEL)
+					_task_modify(m, STATUS, CANCEL)
 				}},
 				mdb.REMOVE: {Name: "remove", Help: "删除", Hand: func(m *ice.Message, arg ...string) {
-					m.Cmdy(mdb.DELETE, TASK, "", mdb.HASH, m.OptionSimple(kit.MDB_ZONE))
+					m.Cmdy(mdb.DELETE, m.Prefix(TASK), "", mdb.HASH, m.OptionSimple(kit.MDB_ZONE))
 				}},
 				mdb.EXPORT: {Name: "export", Help: "导出", Hand: func(m *ice.Message, arg ...string) {
 					m.OptionFields(kit.MDB_ZONE, "time,id,type,name,text,level,status,score,begin_time,close_time,extra")
-					m.Cmdy(mdb.EXPORT, TASK, "", mdb.ZONE)
+					m.Cmdy(mdb.EXPORT, m.Prefix(TASK), "", mdb.ZONE)
 				}},
 				mdb.IMPORT: {Name: "import", Help: "导入", Hand: func(m *ice.Message, arg ...string) {
 					m.OptionFields(kit.MDB_ZONE)
-					m.Cmdy(mdb.IMPORT, TASK, "", mdb.ZONE)
+					m.Cmdy(mdb.IMPORT, m.Prefix(TASK), "", mdb.ZONE)
+					m.ProcessRefresh30ms()
 				}},
 				mdb.INPUTS: {Name: "inputs", Help: "补全", Hand: func(m *ice.Message, arg ...string) {
 					_task_inputs(m, kit.Select("", arg, 0), kit.Select("", arg, 1))
@@ -189,23 +190,23 @@ func init() {
 				}},
 
 				BEGIN: {Name: "begin", Help: "开始", Hand: func(m *ice.Message, arg ...string) {
-					_task_modify(m, m.Option(kit.MDB_ZONE), m.Option(kit.MDB_ID), STATUS, PROCESS)
+					_task_modify(m, STATUS, PROCESS)
 				}},
 				END: {Name: "end", Help: "完成", Hand: func(m *ice.Message, arg ...string) {
-					_task_modify(m, m.Option(kit.MDB_ZONE), m.Option(kit.MDB_ID), STATUS, FINISH)
+					_task_modify(m, STATUS, FINISH)
 				}},
 			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 				m.Fields(len(arg), "time,zone,count", m.Conf(TASK, kit.META_FIELD))
-				if m.Cmdy(mdb.SELECT, TASK, "", mdb.ZONE, arg); len(arg) == 0 {
+				if m.Cmdy(mdb.SELECT, m.Prefix(TASK), "", mdb.ZONE, arg); len(arg) == 0 {
 					m.PushAction(mdb.REMOVE)
-					return
+				} else {
+					status := map[string]int{}
+					m.Table(func(index int, value map[string]string, head []string) {
+						m.PushButton(_task_action(m, value[STATUS]))
+						status[value[kit.MDB_STATUS]]++
+					})
+					m.Status(status)
 				}
-				status := map[string]int{}
-				m.Table(func(index int, value map[string]string, head []string) {
-					m.PushButton(_task_action(m, value[STATUS]))
-					status[value[kit.MDB_STATUS]]++
-				})
-				m.Status(status)
 			}},
 		},
 	})

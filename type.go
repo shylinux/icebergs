@@ -243,7 +243,7 @@ func (c *Context) split(key string, cmd *Command, name string) []interface{} {
 	for _, v := range kit.Split(kit.Select("key", name), " ", " ")[1:] {
 		switch v {
 		case "text":
-			list = append(list, kit.List(kit.MDB_INPUT, TEXTAREA, kit.MDB_NAME, "text")...)
+			list = append(list, kit.List(kit.MDB_INPUT, TEXTAREA, kit.MDB_NAME, "text", kit.MDB_VALUE, "@key")...)
 			continue
 		case "page":
 			list = append(list, kit.List(kit.MDB_INPUT, TEXT, kit.MDB_NAME, "limit")...)

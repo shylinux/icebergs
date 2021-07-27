@@ -39,43 +39,25 @@ func init() {
 				ice.Display("/plugin/local/team/plan.js", PLAN),
 			), Action: map[string]*ice.Action{
 				mdb.INSERT: {Name: "insert zone type=once,step,week name text begin_time@date close_time@date", Help: "添加", Hand: func(m *ice.Message, arg ...string) {
-					_task_create(m, arg[1])
-					_task_insert(m, arg[1], arg[2:]...)
-					m.ProcessRefresh("30ms")
+					m.Cmdy(TASK, mdb.INSERT, arg)
+					m.ProcessRefresh30ms()
 				}},
-				mdb.MODIFY: {Name: "modify", Help: "编辑", Hand: func(m *ice.Message, arg ...string) {
-					_task_modify(m, m.Option(kit.MDB_ZONE), m.Option(kit.MDB_ID), arg[0], arg[1])
-				}},
-				mdb.EXPORT: {Name: "export", Help: "导出", Hand: func(m *ice.Message, arg ...string) {
-					m.Cmdy(TASK, mdb.EXPORT)
-				}},
-				mdb.IMPORT: {Name: "import", Help: "导入", Hand: func(m *ice.Message, arg ...string) {
-					m.Cmdy(TASK, mdb.IMPORT)
-				}},
-				mdb.INPUTS: {Name: "inputs", Help: "补全", Hand: func(m *ice.Message, arg ...string) {
-					_task_inputs(m, kit.Select("", arg, 0), kit.Select("", arg, 1))
-				}},
+				mdb.MODIFY: {Name: "task modify", Help: "编辑"},
+				mdb.EXPORT: {Name: "task export", Help: "导出"},
+				mdb.IMPORT: {Name: "task import", Help: "导入"},
+				mdb.INPUTS: {Name: "task inputs", Help: "补全"},
 
 				mdb.PLUGIN: {Name: "plugin extra.ctx extra.cmd extra.arg", Help: "插件", Hand: func(m *ice.Message, arg ...string) {
-					_task_modify(m, m.Option(kit.MDB_ZONE), m.Option(kit.MDB_ID), kit.MDB_TIME, m.Time(), arg...)
-					m.Set(ice.MSG_RESULT).Cmdy(PLAN, m.Option(SCALE))
+					_task_modify(m, arg[0], arg[1], arg[2:]...)
+					m.ProcessRefresh30ms()
 				}},
-				ctx.COMMAND: {Name: "command", Help: "命令", Hand: func(m *ice.Message, arg ...string) {
-					if arg[0] == cli.RUN {
-						m.Cmdy(arg[1], arg[2:])
-						return
-					}
-					if len(arg) > 0 {
-						m.Cmdy(ctx.COMMAND, arg[0])
-					}
+				ctx.COMMAND: {Name: "command", Help: "命令"},
+				cli.RUN: {Name: "run", Help: "执行", Hand: func(m *ice.Message, arg ...string) {
+					m.Cmdy(arg)
 				}},
 
-				BEGIN: {Name: "begin", Help: "开始", Hand: func(m *ice.Message, arg ...string) {
-					_task_modify(m, m.Option(kit.MDB_ZONE), m.Option(kit.MDB_ID), STATUS, PROCESS)
-				}},
-				END: {Name: "end", Help: "结束", Hand: func(m *ice.Message, arg ...string) {
-					_task_modify(m, m.Option(kit.MDB_ZONE), m.Option(kit.MDB_ID), STATUS, FINISH)
-				}},
+				BEGIN: {Name: "task begin", Help: "开始"},
+				END:   {Name: "task end", Help: "结束"},
 			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 				begin_time, end_time := _task_scope(m, 8, arg...)
 				_plan_list(m, begin_time, end_time)

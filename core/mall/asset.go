@@ -127,6 +127,7 @@ func init() {
 				mdb.IMPORT: {Name: "import", Help: "导入", Hand: func(m *ice.Message, arg ...string) {
 					m.OptionFields(ACCOUNT)
 					m.Cmdy(mdb.IMPORT, m.Prefix(ASSET), "", mdb.ZONE)
+					m.Cmdy(ASSET, CHECK)
 				}},
 				mdb.INPUTS: {Name: "inputs", Help: "补全", Hand: func(m *ice.Message, arg ...string) {
 					_asset_inputs(m, kit.Select("", arg, 0), kit.Select("", arg, 1))

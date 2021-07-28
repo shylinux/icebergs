@@ -140,8 +140,7 @@ func (m *Message) Copy(msg *Message, arg ...string) *Message {
 	if m == nil {
 		return m
 	}
-	if len(arg) > 0 {
-		// 精确复制
+	if len(arg) > 0 { // 精确复制
 		for _, k := range arg[1:] {
 			if kit.IndexOf(m.meta[arg[0]], k) == -1 {
 				m.meta[arg[0]] = append(m.meta[arg[0]], k)
@@ -151,8 +150,7 @@ func (m *Message) Copy(msg *Message, arg ...string) *Message {
 		return m
 	}
 
-	// 复制选项
-	for _, k := range msg.meta[MSG_OPTION] {
+	for _, k := range msg.meta[MSG_OPTION] { // 复制选项
 		if kit.IndexOf(m.meta[MSG_OPTION], k) == -1 {
 			m.meta[MSG_OPTION] = append(m.meta[MSG_OPTION], k)
 		}
@@ -163,8 +161,7 @@ func (m *Message) Copy(msg *Message, arg ...string) *Message {
 		}
 	}
 
-	// 复制数据
-	for _, k := range msg.meta[MSG_APPEND] {
+	for _, k := range msg.meta[MSG_APPEND] { // 复制数据
 		if i := kit.IndexOf(m.meta[MSG_OPTION], k); i > -1 && len(m.meta[k]) > 0 {
 			m.meta[k] = m.meta[k][:0]
 		}

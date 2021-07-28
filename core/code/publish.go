@@ -98,8 +98,8 @@ func init() {
 					m.Cmdy(nfs.DIR, "./", "time,size,line,path,link")
 				}},
 				ice.CONTEXTS: {Name: "contexts", Help: "环境", Hand: func(m *ice.Message, arg ...string) {
-					u := kit.ParseURL(m.Option(ice.MSG_USERWEB))
-					host := m.ReplaceLocalhost(u.Host)
+					u := kit.ParseURL(m.ReplaceLocalhost(m.Option(ice.MSG_USERWEB)))
+					host := u.Host
 
 					m.Option("httphost", fmt.Sprintf("%s://%s:%s", u.Scheme, strings.Split(host, ":")[0], kit.Select(kit.Select("80", "443", u.Scheme == "https"), strings.Split(host, ":"), 1)))
 					m.Option("hostport", fmt.Sprintf("%s:%s", strings.Split(host, ":")[0], kit.Select(kit.Select("80", "443", u.Scheme == "https"), strings.Split(host, ":"), 1)))

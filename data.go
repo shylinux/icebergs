@@ -56,7 +56,7 @@ func (m *Message) Grows(prefix string, chain interface{}, match string, value st
 
 	limit := kit.Int(m.Option("cache.limit"))
 	if begin := kit.Int(m.Option("cache.begin")); begin != 0 && limit > 0 {
-		count := kit.Int(m.Option("cache.count", kit.Int(kit.Value(cache, "meta.count"))))
+		count := kit.Int(m.Option("cache.count", kit.Int(kit.Value(cache, kit.Keym("count")))))
 		if begin > 0 {
 			m.Option("cache.offend", count-begin-limit)
 		} else {

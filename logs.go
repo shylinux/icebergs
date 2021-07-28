@@ -25,7 +25,7 @@ func (m *Message) log(level string, str string, arg ...interface{}) *Message {
 		return m // 禁用日志
 	}
 	if str = strings.TrimSpace(kit.Format(str, arg...)); Log != nil {
-		Log(m, m.Format("prefix"), level, str)
+		Log(m, m.Format(kit.MDB_PREFIX), level, str)
 		// 日志分流
 	}
 	if m.Option("_disable_log") == TRUE {

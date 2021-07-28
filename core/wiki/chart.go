@@ -375,7 +375,7 @@ func _chart_show(m *ice.Message, kind, text string, arg ...string) {
 	m.Option("stroke-width", "2")
 	m.Option("font-family", "monospace")
 	// 扩展参数
-	m.Option("compact", "false")
+	m.Option("compact", ice.FALSE)
 	m.Option("padding", "10")
 	m.Option("marginx", "10")
 	m.Option("marginy", "10")

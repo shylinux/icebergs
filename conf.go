@@ -36,8 +36,8 @@ const ( // DIR
 	USR_INTSHELL = "usr/intshell"
 	USR_INSTALL  = "usr/install"
 	USR_PUBLISH  = "usr/publish"
-	USR_LOCAL    = "usr/local"
 
+	USR_LOCAL        = "usr/local"
 	USR_LOCAL_WORK   = "usr/local/work"
 	USR_LOCAL_RIVER  = "usr/local/river"
 	USR_LOCAL_IMAGE  = "usr/local/image"

@@ -83,7 +83,7 @@ func _exp_true(m *ice.Message, arg string) bool {
 	if arg == ice.TRUE {
 		return true
 	}
-	if arg == "false" {
+	if arg == ice.FALSE {
 		return false
 	}
 	if n1, e1 := strconv.ParseInt(arg, 10, 64); e1 == nil {

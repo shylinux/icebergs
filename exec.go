@@ -22,18 +22,15 @@ func (m *Message) TryCatch(msg *Message, safe bool, hand ...func(msg *Message)) 
 			m.Log(LOG_WARN, "catch: %s %s", e, fileline)
 			m.Log("stack", msg.Format("stack"))
 			m.Log(LOG_WARN, "catch: %s %s", e, fileline)
-			if len(hand) > 1 {
-				// 捕获异常
+			if len(hand) > 1 { // 捕获异常
 				m.TryCatch(msg, safe, hand[1:]...)
-			} else if !safe {
-				// 抛出异常
+			} else if !safe { // 抛出异常
 				m.Assert(e)
 			}
 		}
 	}()
 
-	if len(hand) > 0 {
-		// 运行函数
+	if len(hand) > 0 { // 运行函数
 		hand[0](msg)
 	}
 	return m

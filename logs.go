@@ -28,7 +28,7 @@ func (m *Message) log(level string, str string, arg ...interface{}) *Message {
 		Log(m, m.Format("prefix"), level, str)
 		// 日志分流
 	}
-	if m.Option("_disable_log") == "true" {
+	if m.Option("_disable_log") == TRUE {
 		return m // 屏蔽日志
 	}
 

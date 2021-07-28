@@ -81,7 +81,7 @@ func init() {
 					m.Cmdy(mdb.PRUNES, CHANNEL, "", mdb.HASH, kit.MDB_STATUS, tcp.CLOSE)
 				}},
 				mdb.REPEAT: {Name: "repeat", Help: "执行", Hand: func(m *ice.Message, arg ...string) {
-					m.Cmdy(CHANNEL, kit.MDB_ACTION, ctx.COMMAND, CMD, m.Option(kit.MDB_TEXT))
+					m.Cmdy(CHANNEL, ctx.ACTION, ctx.COMMAND, CMD, m.Option(kit.MDB_TEXT))
 				}},
 				ctx.COMMAND: {Name: "command cmd=pwd", Help: "命令", Hand: func(m *ice.Message, arg ...string) {
 					m.Cmdy(mdb.INSERT, CHANNEL, kit.Keys(kit.MDB_HASH, m.Option(kit.MDB_HASH)), mdb.LIST, kit.MDB_TYPE, CMD, kit.MDB_TEXT, m.Option(CMD))

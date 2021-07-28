@@ -50,7 +50,7 @@ func _asset_insert(m *ice.Message, account string, arg ...string) {
 	m.Cmdy(mdb.MODIFY, m.Prefix(ASSET), "", mdb.HASH, ACCOUNT, account, AMOUNT, amount)
 }
 func _asset_inputs(m *ice.Message, field, value string) {
-	if cli.Inputs(m, field, value) {
+	if cli.Inputs(m, field) {
 		return
 	}
 

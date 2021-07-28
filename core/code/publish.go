@@ -109,7 +109,7 @@ func init() {
 					m.Option("hostpath", kit.Path("./.ish/pluged"))
 
 					if len(arg) == 0 {
-						arg = append(arg, "base")
+						arg = append(arg, "tmux", "base", "miss", "binary", "source", "module")
 					}
 					for _, k := range arg {
 						if buf, err := kit.Render(m.Conf(PUBLISH, kit.Keym(ice.CONTEXTS, k)), m); m.Assert(err) {
@@ -127,7 +127,7 @@ func init() {
 				web.DREAM: {Name: "dream name=hi repos", Help: "启动", Hand: func(m *ice.Message, arg ...string) {
 					m.Cmdy(web.DREAM, tcp.START, arg)
 					m.Process(ice.PROCESS_OPEN, kit.MergeURL(m.Option(ice.MSG_USERWEB),
-						kit.SSH_POD, kit.Keys(m.Option(ice.MSG_USERPOD), m.Option(kit.MDB_NAME))))
+						cli.POD, kit.Keys(m.Option(ice.MSG_USERPOD), m.Option(kit.MDB_NAME))))
 				}},
 			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 				m.Option(nfs.DIR_ROOT, m.Conf(PUBLISH, kit.META_PATH))
@@ -161,14 +161,14 @@ export ctx_dev={{.Option "httphost"}} ctx_temp=$(mktemp); curl -fsSL $ctx_dev -o
 	"binary", `# 应用安装
 export ctx_dev={{.Option "httphost"}} ctx_temp=$(mktemp); curl -fsSL $ctx_dev -o $ctx_temp; source $ctx_temp binary
 `,
-	"tmux", `# 终端环境
-export ctx_dev={{.Option "httphost"}} ctx_temp=$(mktemp); curl -fsSL $ctx_dev -o $ctx_temp; source $ctx_temp
+	"miss", `# 开发环境
+export ctx_dev={{.Option "httphost"}} ctx_temp=$(mktemp); curl -fsSL $ctx_dev -o $ctx_temp; source $ctx_temp dev
 `,
 	"base", `# 生产环境
 export ctx_dev={{.Option "httphost"}} ctx_temp=$(mktemp); curl -fsSL $ctx_dev -o $ctx_temp; source $ctx_temp app
 `,
-	"miss", `# 开发环境
-export ctx_dev={{.Option "httphost"}} ctx_temp=$(mktemp); curl -fsSL $ctx_dev -o $ctx_temp; source $ctx_temp dev
+	"tmux", `# 终端环境
+export ctx_dev={{.Option "httphost"}} ctx_temp=$(mktemp); curl -fsSL $ctx_dev -o $ctx_temp; source $ctx_temp
 `,
 	"tool", `# 群组环境
 mkdir contexts; cd contexts

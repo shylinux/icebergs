@@ -25,7 +25,7 @@ func _space_list(m *ice.Message, space string) {
 	if space == "" {
 		m.Table(func(index int, value map[string]string, head []string) {
 			m.PushAnchor(value[kit.MDB_NAME], kit.MergeURL(strings.Split(m.Option(ice.MSG_USERWEB), "?")[0],
-				kit.SSH_POD, kit.Keys(m.Option(ice.MSG_USERPOD), value[kit.MDB_NAME])))
+				cli.POD, kit.Keys(m.Option(ice.MSG_USERPOD), value[kit.MDB_NAME])))
 		})
 		m.SortStrR(kit.MDB_NAME)
 	}
@@ -142,7 +142,7 @@ func _space_handle(m *ice.Message, safe bool, send map[string]*ice.Message, c *w
 
 			if len(target) == 0 { // 本地执行
 				msg.Log_AUTH(aaa.USERROLE, msg.Option(ice.MSG_USERROLE), aaa.USERNAME, msg.Option(ice.MSG_USERNAME))
-				if msg.Optionv(ice.MSG_HANDLE, "true"); safe {
+				if msg.Optionv(ice.MSG_HANDLE, ice.TRUE); safe {
 					msg.Go(func() { _space_exec(msg, source, target, c, name) })
 				} else {
 					msg.Push(kit.MDB_LINK, kit.MergePOD(_share_domain(msg), name))
@@ -156,7 +156,7 @@ func _space_handle(m *ice.Message, safe bool, send map[string]*ice.Message, c *w
 					return // 转发报文
 				}
 
-				if msg.Warn(msg.Option(ice.MSG_HANDLE) == "true", ice.ErrNotFound) {
+				if msg.Warn(msg.Option(ice.MSG_HANDLE) == ice.TRUE, ice.ErrNotFound) {
 					// 回复失败
 
 				} else { // 下发失败
@@ -166,7 +166,7 @@ func _space_handle(m *ice.Message, safe bool, send map[string]*ice.Message, c *w
 			}) != nil { // 转发成功
 
 			} else if res, ok := send[msg.Option(ice.MSG_TARGET)]; len(target) != 1 || !ok {
-				if msg.Warn(msg.Option(ice.MSG_HANDLE) == "true", ice.ErrNotFound) {
+				if msg.Warn(msg.Option(ice.MSG_HANDLE) == ice.TRUE, ice.ErrNotFound) {
 					// 回复失败
 
 				} else { // 下发失败
@@ -190,12 +190,12 @@ func _space_search(m *ice.Message, kind, name, text string, arg ...string) {
 
 		switch value[kit.MDB_TYPE] {
 		case MASTER:
-			m.PushSearch(kit.SSH_CMD, SPACE, kit.MDB_TYPE, value[kit.MDB_TYPE], kit.MDB_NAME, value[kit.MDB_NAME],
+			m.PushSearch(cli.CMD, SPACE, kit.MDB_TYPE, value[kit.MDB_TYPE], kit.MDB_NAME, value[kit.MDB_NAME],
 				kit.MDB_TEXT, m.Cmd(SPIDE, value[kit.MDB_NAME], ice.OptionFields("client.url")).Append("client.url"), value)
 
 		default:
-			m.PushSearch(kit.SSH_CMD, SPACE, kit.MDB_TYPE, value[kit.MDB_TYPE], kit.MDB_NAME, value[kit.MDB_NAME],
-				kit.MDB_TEXT, kit.MergeURL(m.Option(ice.MSG_USERWEB), kit.SSH_POD, kit.Keys(m.Option(ice.MSG_USERPOD), value[kit.MDB_NAME])), value)
+			m.PushSearch(cli.CMD, SPACE, kit.MDB_TYPE, value[kit.MDB_TYPE], kit.MDB_NAME, value[kit.MDB_NAME],
+				kit.MDB_TEXT, kit.MergeURL(m.Option(ice.MSG_USERWEB), cli.POD, kit.Keys(m.Option(ice.MSG_USERPOD), value[kit.MDB_NAME])), value)
 		}
 	})
 
@@ -205,8 +205,8 @@ func _space_search(m *ice.Message, kind, name, text string, arg ...string) {
 			return
 		}
 		m.Cmd(tcp.HOST).Table(func(index int, value map[string]string, head []string) {
-			m.PushSearch(kit.SSH_CMD, SPACE, kit.MDB_TYPE, MYSELF, kit.MDB_NAME, value[kit.MDB_NAME],
-				kit.MDB_TEXT, kit.Format("http://%s:%s", value[tcp.IP], port), kit.SSH_POD, kit.Keys(m.Option(ice.MSG_USERPOD), value))
+			m.PushSearch(cli.CMD, SPACE, kit.MDB_TYPE, MYSELF, kit.MDB_NAME, value[kit.MDB_NAME],
+				kit.MDB_TEXT, kit.Format("http://%s:%s", value[tcp.IP], port), cli.POD, kit.Keys(m.Option(ice.MSG_USERPOD), value))
 		})
 	}
 }

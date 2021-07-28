@@ -3,6 +3,7 @@ package web
 import (
 	ice "github.com/shylinux/icebergs"
 	"github.com/shylinux/icebergs/base/aaa"
+	"github.com/shylinux/icebergs/base/cli"
 	"github.com/shylinux/icebergs/base/ctx"
 	"github.com/shylinux/icebergs/base/mdb"
 	"github.com/shylinux/icebergs/base/nfs"
@@ -34,7 +35,7 @@ func _route_list(m *ice.Message) {
 	// 链接操作
 	m.Table(func(index int, value map[string]string, field []string) {
 		m.PushAnchor(value[kit.SSH_ROUTE], kit.MergeURL(m.Option(ice.MSG_USERWEB),
-			kit.SSH_POD, kit.Keys(m.Option(ice.MSG_USERPOD), value[kit.SSH_ROUTE])))
+			cli.POD, kit.Keys(m.Option(ice.MSG_USERPOD), value[kit.SSH_ROUTE])))
 
 		switch value[kit.MDB_TYPE] {
 		case WORKER:
@@ -81,7 +82,7 @@ func init() {
 				}},
 				aaa.INVITE: {Name: "invite", Help: "脚本", Hand: func(m *ice.Message, arg ...string) {
 					for _, k := range []string{"tmux", "base", "miss"} {
-						m.Cmdy("web.code.publish", "contexts", k)
+						m.Cmdy("web.code.publish", ice.CONTEXTS, k)
 					}
 
 					m.EchoScript("shell", "# 共享环境", m.Option(ice.MSG_USERWEB))
@@ -89,7 +90,7 @@ func init() {
 					m.EchoAnchor(m.Option(ice.MSG_USERWEB))
 				}},
 				mdb.INPUTS: {Name: "inputs", Help: "补全", Hand: func(m *ice.Message, arg ...string) {
-					switch m.Option(kit.MDB_ACTION) {
+					switch m.Option(ctx.ACTION) {
 					case mdb.CREATE:
 						m.Cmdy(SPACE, m.Option(ROUTE), "web.code.autogen", mdb.INPUTS, arg)
 						return
@@ -116,7 +117,7 @@ func init() {
 				}},
 				ctx.COMMAND: {Name: "command", Help: "命令", Hand: func(m *ice.Message, arg ...string) {
 					m.Debug(m.Option(ROUTE))
-					m.Cmdy(SPACE, m.Option(ROUTE), kit.Keys(m.Option(kit.SSH_CTX), m.Option(kit.SSH_CMD)), arg)
+					m.Cmdy(SPACE, m.Option(ROUTE), kit.Keys(m.Option(cli.CTX), m.Option(cli.CMD)), arg)
 				}},
 			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 				if len(arg) == 0 || arg[0] == "" { // 路由列表
@@ -125,17 +126,17 @@ func init() {
 					}
 
 				} else if len(arg) > 2 { // 加载插件
-					m.ShowPlugin(arg[0], arg[1], arg[2], kit.MDB_ACTION, ctx.COMMAND)
+					m.ShowPlugin(arg[0], arg[1], arg[2], ctx.ACTION, ctx.COMMAND)
 
 				} else if len(arg) > 1 { // 命令列表
 					m.Cmd(SPACE, arg[0], ctx.CONTEXT, arg[1], ctx.COMMAND).Table(func(index int, value map[string]string, head []string) {
-						m.Push(kit.SSH_CMD, value[kit.MDB_KEY])
+						m.Push(cli.CMD, value[kit.MDB_KEY])
 						m.Push("", value, []string{kit.MDB_NAME, kit.MDB_HELP})
 					})
 
 				} else if len(arg) > 0 { // 模块列表
 					m.Cmd(SPACE, arg[0], ctx.CONTEXT).Table(func(index int, value map[string]string, head []string) {
-						m.Push(kit.SSH_CTX, kit.Keys(value["ups"], value[kit.MDB_NAME]))
+						m.Push(cli.CTX, kit.Keys(value["ups"], value[kit.MDB_NAME]))
 						m.Push("", value, []string{ice.CTX_STATUS, ice.CTX_STREAM, kit.MDB_HELP})
 					})
 				}

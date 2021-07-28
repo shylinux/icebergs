@@ -22,7 +22,7 @@ func _company_list(m *ice.Message, appid string) {
 }
 func _company_members(m *ice.Message, appid string, ship_id string) {
 	_, data := _lark_get(m, appid, "/open-apis/contact/v1/department/user/list",
-		"department_id", ship_id, "page_size", "100", "fetch_child", "true")
+		"department_id", ship_id, "page_size", "100", "fetch_child", ice.TRUE)
 
 	kit.Fetch(kit.Value(data, "data.user_list"), func(index int, value map[string]interface{}) {
 		msg := m.Cmd(EMPLOYEE, appid, value[OPEN_ID])

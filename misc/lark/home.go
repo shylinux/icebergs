@@ -2,6 +2,7 @@ package lark
 
 import (
 	ice "github.com/shylinux/icebergs"
+	"github.com/shylinux/icebergs/base/cli"
 	"github.com/shylinux/icebergs/base/web"
 	"github.com/shylinux/icebergs/core/chat"
 	kit "github.com/shylinux/toolkits"
@@ -23,7 +24,7 @@ func init() {
 				m.Cmd("web.chat./river").Table(func(index int, val map[string]string, head []string) {
 					m.Cmd("web.chat./river", val[kit.MDB_HASH], chat.TOOL).Table(func(index int, value map[string]string, head []string) {
 						list = append(list, kit.Keys(val[kit.MDB_NAME], value[kit.MDB_NAME]),
-							kit.SSH_CMD, kit.Format([]string{HOME, val[kit.MDB_HASH], value[kit.MDB_HASH], val[kit.MDB_NAME] + "." + value[kit.MDB_NAME]}))
+							cli.CMD, kit.Format([]string{HOME, val[kit.MDB_HASH], value[kit.MDB_HASH], val[kit.MDB_NAME] + "." + value[kit.MDB_NAME]}))
 					})
 				})
 			} else {
@@ -31,7 +32,7 @@ func init() {
 				m.Option(ice.MSG_STORM, arg[1])
 				link = kit.MergeURL(link, chat.RIVER, arg[0], chat.STORM, arg[1])
 				m.Cmd("web.chat./river", arg[0], chat.TOOL, arg[1]).Table(func(index int, value map[string]string, head []string) {
-					list = append(list, value[kit.SSH_CMD], kit.SSH_CMD, kit.Keys(value[kit.SSH_CTX], value[kit.SSH_CMD]))
+					list = append(list, value[cli.CMD], cli.CMD, kit.Keys(value[cli.CTX], value[cli.CMD]))
 				})
 			}
 			m.Cmd(FORM, CHAT_ID, m.Option(OPEN_CHAT_ID), name, text, "打开网页", "url", link, list)

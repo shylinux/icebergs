@@ -18,7 +18,7 @@ func init() {
 	Index.Merge(&ice.Context{
 		Configs: map[string]*ice.Config{
 			COMPILE: {Name: COMPILE, Help: "编译", Value: kit.Data(
-				kit.MDB_PATH, ice.USR_PUBLISH, kit.SSH_ENV, kit.Dict(
+				kit.MDB_PATH, ice.USR_PUBLISH, cli.ENV, kit.Dict(
 					"CGO_ENABLED", "0", "GOCACHE", os.Getenv("GOCACHE"),
 					cli.HOME, os.Getenv(cli.HOME), cli.PATH, os.Getenv(cli.PATH),
 					"GOPROXY", "https://goproxy.cn,direct", "GOPRIVATE", "github.com",

@@ -80,7 +80,7 @@ func _pop_stack(m *ice.Message) *frame {
 }
 
 func _exp_true(m *ice.Message, arg string) bool {
-	if arg == "true" {
+	if arg == ice.TRUE {
 		return true
 	}
 	if arg == "false" {

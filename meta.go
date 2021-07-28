@@ -299,7 +299,7 @@ func (m *Message) Table(cbs ...func(index int, value map[string]string, head []s
 	// 回调函数
 	rows := kit.Select("\n", m.Option("table.row_sep"))
 	cols := kit.Select(" ", m.Option("table.col_sep"))
-	compact := m.Option("table.compact") == "true"
+	compact := m.Option("table.compact") == TRUE
 	cb := func(value map[string]string, field []string, index int) bool {
 		for i, v := range field {
 			if k := m.meta[MSG_APPEND][i]; compact {

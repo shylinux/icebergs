@@ -35,7 +35,7 @@ func _serve_main(m *ice.Message, w http.ResponseWriter, r *http.Request) bool {
 	m.Info("").Info("%s %s %s", r.Header.Get(ice.MSG_USERIP), r.Method, r.URL)
 
 	// 参数日志
-	if m.Conf(SERVE, kit.Keym(LOGHEADERS)) == "true" {
+	if m.Conf(SERVE, kit.Keym(LOGHEADERS)) == ice.TRUE {
 		for k, v := range r.Header {
 			m.Info("%s: %v", k, kit.Format(v))
 		}
@@ -136,7 +136,7 @@ func _serve_handle(key string, cmd *ice.Command, msg *ice.Message, w http.Respon
 	}
 
 	// 请求命令
-	if msg.Option(ice.MSG_USERPOD, msg.Option(kit.SSH_POD)); msg.Optionv(ice.MSG_CMDS) == nil {
+	if msg.Option(ice.MSG_USERPOD, msg.Option(cli.POD)); msg.Optionv(ice.MSG_CMDS) == nil {
 		if p := strings.TrimPrefix(r.URL.Path, key); p != "" {
 			msg.Optionv(ice.MSG_CMDS, strings.Split(p, "/"))
 		}
@@ -162,7 +162,7 @@ func _serve_login(msg *ice.Message, cmds []string, w http.ResponseWriter, r *htt
 		// 会话认证
 	}
 
-	if msg.Option(ice.MSG_USERNAME) == "" && tcp.IsLocalHost(msg, msg.Option(ice.MSG_USERIP)) && msg.Conf(SERVE, kit.Keym(tcp.LOCALHOST)) == "true" {
+	if msg.Option(ice.MSG_USERNAME) == "" && tcp.IsLocalHost(msg, msg.Option(ice.MSG_USERIP)) && msg.Conf(SERVE, kit.Keym(tcp.LOCALHOST)) == ice.TRUE {
 		aaa.UserRoot(msg)
 		// 主机认证
 	}
@@ -173,9 +173,9 @@ func _serve_login(msg *ice.Message, cmds []string, w http.ResponseWriter, r *htt
 		return cmds, msg.Result(0) != ice.ErrWarn && msg.Result() != ice.FALSE
 	}
 
-	if ls := strings.Split(r.URL.Path, "/"); msg.Conf(SERVE, kit.Keym(aaa.BLACK, ls[1])) == "true" {
+	if ls := strings.Split(r.URL.Path, "/"); msg.Conf(SERVE, kit.Keym(aaa.BLACK, ls[1])) == ice.TRUE {
 		return cmds, false // 黑名单
-	} else if msg.Conf(SERVE, kit.Keym(aaa.WHITE, ls[1])) == "true" {
+	} else if msg.Conf(SERVE, kit.Keym(aaa.WHITE, ls[1])) == ice.TRUE {
 		if msg.Option(ice.MSG_USERNAME) == "" && msg.Option(SHARE) != "" {
 			share := msg.Cmd(SHARE, msg.Option(SHARE))
 			switch share.Append(kit.MDB_TYPE) {

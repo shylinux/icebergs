@@ -73,7 +73,7 @@ func _task_modify(m *ice.Message, field, value string, arg ...string) {
 	m.Cmdy(mdb.MODIFY, m.Prefix(TASK), "", mdb.ZONE, m.Option(kit.MDB_ZONE), m.Option(kit.MDB_ID), field, value, arg)
 }
 func _task_inputs(m *ice.Message, field, value string) {
-	if cli.Inputs(m, field, value) {
+	if cli.Inputs(m, field) {
 		return
 	}
 
@@ -90,11 +90,11 @@ func _task_search(m *ice.Message, kind, name, text string) {
 			return
 		}
 		if kind == TASK {
-			m.PushSearch(kit.SSH_CMD, TASK,
+			m.PushSearch(cli.CMD, TASK,
 				kit.MDB_ZONE, val[kit.MDB_ZONE], kit.MDB_ID, kit.Format(value[kit.MDB_ID]),
 				value)
 		} else {
-			m.PushSearch(kit.SSH_CMD, TASK,
+			m.PushSearch(cli.CMD, TASK,
 				kit.MDB_TYPE, val[kit.MDB_ZONE], kit.MDB_NAME, kit.Format(value[kit.MDB_ID]),
 				kit.MDB_TEXT, kit.Format("%v:%v", value[kit.MDB_NAME], value[kit.MDB_TEXT]),
 				value)

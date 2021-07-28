@@ -3,7 +3,6 @@ package cli
 import (
 	"io"
 	"os/exec"
-	"path"
 	"strings"
 
 	ice "github.com/shylinux/icebergs"
@@ -38,9 +37,9 @@ func _daemon_show(m *ice.Message, cmd *exec.Cmd, out, err string) {
 
 	m.Go(func() {
 		h := m.Cmdx(mdb.INSERT, DAEMON, "", mdb.HASH,
-			kit.MDB_STATUS, START, kit.SSH_PID, cmd.Process.Pid,
-			kit.SSH_CMD, strings.Join(cmd.Args, " "),
-			kit.SSH_DIR, cmd.Dir, kit.SSH_ENV, kit.Select("", cmd.Env),
+			kit.MDB_STATUS, START, PID, cmd.Process.Pid,
+			CMD, strings.Join(cmd.Args, " "),
+			DIR, cmd.Dir, ENV, kit.Select("", cmd.Env),
 			mdb.CACHE_CLEAR_ON_EXIT, m.Option(mdb.CACHE_CLEAR_ON_EXIT),
 			CMD_OUTPUT, out, CMD_ERRPUT, err,
 		)
@@ -67,7 +66,7 @@ func _daemon_show(m *ice.Message, cmd *exec.Cmd, out, err string) {
 	})
 }
 
-func Inputs(m *ice.Message, field, value string) bool {
+func Inputs(m *ice.Message, field string) bool {
 	switch strings.TrimPrefix(field, "extra.") {
 	case POD:
 		m.Cmdy("route")
@@ -107,6 +106,8 @@ const (
 	BENCH = "bench"
 	PPROF = "pprof"
 
+	OPEN    = "open"
+	CLOSE   = "close"
 	START   = "start"
 	RESTART = "restart"
 	RELOAD  = "reload"
@@ -118,7 +119,7 @@ const DAEMON = "daemon"
 func init() {
 	Index.Merge(&ice.Context{
 		Configs: map[string]*ice.Config{
-			DAEMON: {Name: DAEMON, Help: "守护进程", Value: kit.Data(kit.MDB_PATH, path.Join(ice.USR_LOCAL, DAEMON))},
+			DAEMON: {Name: DAEMON, Help: "守护进程", Value: kit.Data(kit.MDB_PATH, ice.USR_LOCAL_DAEMON)},
 		},
 		Commands: map[string]*ice.Command{
 			ice.CTX_EXIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
@@ -140,7 +141,7 @@ func init() {
 					m.Option(mdb.FIELDS, "time,hash,status,pid,cmd,dir,env")
 					m.Cmd(mdb.SELECT, DAEMON, "", mdb.HASH, kit.MDB_HASH, m.Option(kit.MDB_HASH)).Table(func(index int, value map[string]string, head []string) {
 						m.Cmd(mdb.MODIFY, DAEMON, "", mdb.HASH, kit.MDB_HASH, m.Option(kit.MDB_HASH), kit.MDB_STATUS, STOP)
-						m.Cmdy(SYSTEM, "kill", "-9", value[kit.SSH_PID])
+						m.Cmdy(SYSTEM, "kill", "-9", value[PID])
 					})
 				}},
 				mdb.REMOVE: {Name: "remove", Help: "删除", Hand: func(m *ice.Message, arg ...string) {

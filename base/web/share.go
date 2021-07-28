@@ -9,6 +9,7 @@ import (
 
 	ice "github.com/shylinux/icebergs"
 	"github.com/shylinux/icebergs/base/aaa"
+	"github.com/shylinux/icebergs/base/cli"
 	"github.com/shylinux/icebergs/base/mdb"
 	"github.com/shylinux/icebergs/base/tcp"
 	kit "github.com/shylinux/toolkits"
@@ -17,10 +18,10 @@ import (
 func _share_domain(m *ice.Message) string {
 	link := m.Conf(SHARE, kit.Keym(kit.MDB_DOMAIN))
 	if link == "" {
-		link = m.Cmd(SPACE, SPIDE_DEV, kit.SSH_PWD).Append(kit.MDB_LINK)
+		link = m.Cmd(SPACE, SPIDE_DEV, cli.PWD).Append(kit.MDB_LINK)
 	}
 	if link == "" {
-		link = m.Cmd(SPACE, SPIDE_SHY, kit.SSH_PWD).Append(kit.MDB_LINK)
+		link = m.Cmd(SPACE, SPIDE_SHY, cli.PWD).Append(kit.MDB_LINK)
 	}
 	if link == "" {
 		link = kit.Format("http://%s:%s", m.Cmd(tcp.HOST).Append(tcp.IP), m.Cmd(SERVE).Append(tcp.PORT))
@@ -28,13 +29,13 @@ func _share_domain(m *ice.Message) string {
 	return link
 }
 func _share_cache(m *ice.Message, arg ...string) {
-	if pod := m.Option(kit.SSH_POD); pod != "" {
-		m.Option(kit.SSH_POD, "")
+	if pod := m.Option(cli.POD); pod != "" {
+		m.Option(cli.POD, "")
 		msg := m.Cmd(SPACE, pod, CACHE, arg[0])
 		if msg.Append(kit.MDB_FILE) == "" {
 			m.Render(ice.RENDER_RESULT, msg.Append(kit.MDB_TEXT))
 		} else {
-			m.Option(kit.SSH_POD, pod)
+			m.Option(cli.POD, pod)
 			_share_local(m, msg.Append(kit.MDB_FILE))
 		}
 		return
@@ -57,15 +58,15 @@ func _share_local(m *ice.Message, arg ...string) {
 		}
 	}
 
-	if m.Option(kit.SSH_POD) != "" { // 远程文件
-		pp := path.Join(ice.VAR_PROXY, m.Option(kit.SSH_POD), p)
+	if m.Option(cli.POD) != "" { // 远程文件
+		pp := path.Join(ice.VAR_PROXY, m.Option(cli.POD), p)
 		cache := time.Now().Add(-time.Hour * 240000)
 		if s, e := os.Stat(pp); e == nil {
 			cache = s.ModTime()
 		}
 
-		m.Cmdy(SPACE, m.Option(kit.SSH_POD), SPIDE, SPIDE_DEV, SPIDE_RAW, kit.MergeURL2(m.Option(ice.MSG_USERWEB), "/share/proxy/"),
-			SPIDE_PART, kit.SSH_POD, m.Option(kit.SSH_POD), kit.MDB_PATH, p, CACHE, cache.Format(ice.MOD_TIME), UPLOAD, "@"+p)
+		m.Cmdy(SPACE, m.Option(cli.POD), SPIDE, SPIDE_DEV, SPIDE_RAW, kit.MergeURL2(m.Option(ice.MSG_USERWEB), "/share/proxy/"),
+			SPIDE_PART, cli.POD, m.Option(cli.POD), kit.MDB_PATH, p, CACHE, cache.Format(ice.MOD_TIME), UPLOAD, "@"+p)
 
 		if s, e := os.Stat(pp); e == nil && !s.IsDir() {
 			p = pp
@@ -83,11 +84,11 @@ func _share_local(m *ice.Message, arg ...string) {
 func _share_proxy(m *ice.Message, arg ...string) {
 	switch m.R.Method {
 	case http.MethodGet: // 下发文件
-		m.Render(ice.RENDER_DOWNLOAD, path.Join(ice.VAR_PROXY, path.Join(m.Option(kit.SSH_POD), m.Option(kit.MDB_PATH), m.Option(kit.MDB_NAME))))
+		m.Render(ice.RENDER_DOWNLOAD, path.Join(ice.VAR_PROXY, path.Join(m.Option(cli.POD), m.Option(kit.MDB_PATH), m.Option(kit.MDB_NAME))))
 
 	case http.MethodPost: // 上传文件
 		m.Cmdy(CACHE, UPLOAD)
-		m.Cmdy(CACHE, WATCH, m.Option(kit.MDB_DATA), path.Join(ice.VAR_PROXY, m.Option(kit.SSH_POD), m.Option(kit.MDB_PATH)))
+		m.Cmdy(CACHE, WATCH, m.Option(kit.MDB_DATA), path.Join(ice.VAR_PROXY, m.Option(cli.POD), m.Option(kit.MDB_PATH)))
 		m.Render(ice.RENDER_RESULT, m.Option(kit.MDB_PATH))
 	}
 }

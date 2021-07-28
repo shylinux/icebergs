@@ -42,12 +42,12 @@ func init() {
 
 				INNER: {Name: "inner", Help: "源码", Hand: func(m *ice.Message, arg ...string) {
 					switch kit.Select("", arg, 0) {
-					case kit.SSH_RUN:
+					case cli.RUN:
 						m.Cmdy(INNER, arg[1:])
 					default:
 						ls := kit.Split(m.Option("fileline"), ":")
-						m.ProcessField(INNER, kit.SSH_RUN)
-						m.Option(kit.SSH_ARG, kit.Format([]string{path.Dir(ls[0]), path.Base(ls[0]), ls[1]}))
+						m.ProcessField(INNER, cli.RUN)
+						m.Option(cli.ARG, kit.Format([]string{path.Dir(ls[0]), path.Base(ls[0]), ls[1]}))
 						m.Cmdy(ctx.COMMAND, INNER)
 					}
 				}},

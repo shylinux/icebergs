@@ -2,7 +2,9 @@ package chat
 
 import (
 	ice "github.com/shylinux/icebergs"
+	"github.com/shylinux/icebergs/base/cli"
 	"github.com/shylinux/icebergs/base/mdb"
+	"github.com/shylinux/icebergs/base/ssh"
 	kit "github.com/shylinux/toolkits"
 )
 
@@ -28,8 +30,8 @@ func init() {
 			}, mdb.HashAction(PASTE)), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 				m.Fields(len(arg), m.Conf(PASTE, kit.META_FIELD))
 				if m.Cmdy(mdb.SELECT, cmd, "", mdb.HASH, kit.MDB_HASH, arg); len(arg) > 0 {
-					m.PushScript("script", m.Append(kit.MDB_TEXT))
-					m.PushQRCode("qrcode", m.Append(kit.MDB_TEXT))
+					m.PushScript(ssh.SCRIPT, m.Append(kit.MDB_TEXT))
+					m.PushQRCode(cli.QRCODE, m.Append(kit.MDB_TEXT))
 				}
 				m.PushAction(mdb.REMOVE)
 			}},

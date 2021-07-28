@@ -80,7 +80,7 @@ func init() {
 			}
 
 			if len(arg) == 1 { // 目录列表
-				m.Option(nfs.DIR_DEEP, "true")
+				m.Option(nfs.DIR_DEEP, ice.TRUE)
 				nfs.Dir(m, kit.MDB_PATH)
 
 				color := []string{"yellow", "blue", "cyan", "red"}

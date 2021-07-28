@@ -36,7 +36,7 @@ func init() {
 		Configs: map[string]*ice.Config{
 			IMAGE: {Name: IMAGE, Help: "图片", Value: kit.Data(
 				kit.MDB_TEMPLATE, `<img {{.OptionTemplate}} title="{{.Option "text"}}" src="{{.Option "text"}}">`,
-				kit.MDB_PATH, "usr/local/image",
+				kit.MDB_PATH, ice.USR_LOCAL_IMAGE,
 			)},
 		},
 	})

@@ -177,7 +177,7 @@ func (b *Label) Draw(m *ice.Message, x, y int) Chart {
 			switch m.Option("compact") {
 			case "max":
 				item.Width = b.Width/len(line) - b.MarginX
-			case "true":
+			case ice.TRUE:
 
 			default:
 				item.Width = b.max[i]
@@ -299,7 +299,7 @@ func (b *Chain) draw(m *ice.Message, root map[string]interface{}, depth int, wid
 		MarginX:    b.MarginX,
 		MarginY:    b.MarginY,
 	}
-	if m.Option("compact") != "true" {
+	if m.Option("compact") != ice.TRUE {
 		item.Width = b.max[depth]
 	}
 	item.x = x

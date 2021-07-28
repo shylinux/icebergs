@@ -63,7 +63,7 @@ func _dream_show(m *ice.Message, name string) {
 		m.Cmd(nfs.SAVE, miss, m.Conf(DREAM, kit.Keym("miss")))
 	}
 
-	if b, e := ioutil.ReadFile(path.Join(p, m.Conf(gdb.SIGNAL, kit.Keym(kit.SSH_PID)))); e == nil {
+	if b, e := ioutil.ReadFile(path.Join(p, m.Conf(gdb.SIGNAL, kit.Keym(cli.PID)))); e == nil {
 		if s, e := os.Stat("/proc/" + string(b)); e == nil && s.IsDir() {
 			m.Info("already exists %v", string(b))
 			return // 已经启动
@@ -75,13 +75,13 @@ func _dream_show(m *ice.Message, name string) {
 		m.Optionv(cli.CMD_ENV, kit.Simple(
 			"ctx_dev", "http://:"+m.Cmd(SERVE).Append(tcp.PORT),
 			cli.PATH, kit.Path(path.Join(p, kit.SSH_BIN))+":"+kit.Path(kit.SSH_BIN)+":"+os.Getenv(cli.PATH),
-			"USER", ice.Info.UserName, m.Confv(DREAM, kit.Keym(kit.SSH_ENV)),
+			"USER", ice.Info.UserName, m.Confv(DREAM, kit.Keym(cli.ENV)),
 		))
 		// 启动任务
 		kit.Path(os.Args[0])
 
-		m.Optionv(cli.CMD_ERRPUT, path.Join(p, m.Conf(DREAM, kit.Keym(kit.SSH_ENV, "ctx_log"))))
-		m.Cmd(cli.DAEMON, m.Confv(DREAM, kit.Keym(kit.SSH_CMD)), SPIDE_DEV, SPIDE_DEV, kit.MDB_NAME, name)
+		m.Optionv(cli.CMD_ERRPUT, path.Join(p, m.Conf(DREAM, kit.Keym(cli.ENV, "ctx_log"))))
+		m.Cmd(cli.DAEMON, m.Confv(DREAM, kit.Keym(cli.CMD)), SPIDE_DEV, SPIDE_DEV, kit.MDB_NAME, name)
 		m.Event(DREAM_CREATE, kit.MDB_TYPE, m.Option(kit.MDB_TYPE), kit.MDB_NAME, name)
 		m.Sleep(ice.MOD_TICK)
 	}
@@ -136,9 +136,9 @@ func init() {
 			}},
 		},
 		Configs: map[string]*ice.Config{
-			DREAM: {Name: DREAM, Help: "梦想家", Value: kit.Data(kit.MDB_PATH, "usr/local/work",
-				kit.SSH_CMD, []interface{}{"ice.bin", SPACE, tcp.DIAL},
-				kit.SSH_ENV, kit.Dict(ice.CTX_LOG, ice.BIN_BOOTLOG),
+			DREAM: {Name: DREAM, Help: "梦想家", Value: kit.Data(kit.MDB_PATH, ice.USR_LOCAL_WORK,
+				cli.CMD, []interface{}{"ice.bin", SPACE, tcp.DIAL},
+				cli.ENV, kit.Dict(ice.CTX_LOG, ice.BIN_BOOTLOG),
 				"miss", `#!/bin/bash
 [ -f $PWD/.ish/plug.sh ] || [ -f $HOME/.ish/plug.sh ] || git clone ${ISH_CONF_HUB_PROXY:="https://"}github.com/shylinux/intshell $PWD/.ish
 [ "$ISH_CONF_PRE" != "" ] || source $PWD/.ish/plug.sh || source $HOME/.ish/plug.sh

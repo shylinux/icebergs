@@ -12,7 +12,7 @@ func init() {
 	Index.Merge(&ice.Context{
 		Configs: map[string]*ice.Config{
 			DATA: {Name: DATA, Help: "数据表格", Value: kit.Data(
-				kit.MDB_PATH, "usr/local/export", kit.MDB_REGEXP, ".*\\.csv",
+				kit.MDB_PATH, ice.USR_LOCAL_EXPORT, kit.MDB_REGEXP, ".*\\.csv",
 			)},
 		},
 		Commands: map[string]*ice.Command{

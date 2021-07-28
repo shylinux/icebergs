@@ -21,24 +21,24 @@ func init() {
 					case "label", "标签":
 						if m.Option(ice.EXPORT_LABEL) != "" && m.Option(cmd) != "" {
 							m.Cmdy(LABEL, m.Option(ice.EXPORT_LABEL), "add", m.Option(cmd), m.Option(kit.MDB_NAME))
-							m.Option(ice.FIELD_RELOAD, "true")
+							m.Option(ice.FIELD_RELOAD, ice.TRUE)
 						}
 					case "add", "添加":
 						if m.Option(cmd) != "" && m.Option(kit.MDB_NAME) != "" {
 							m.Cmdy(cmd, m.Option(cmd), "add", m.Option(kit.MDB_NAME))
-							m.Option(ice.FIELD_RELOAD, "true")
+							m.Option(ice.FIELD_RELOAD, ice.TRUE)
 						}
 					case "del", "退还":
 						if m.Option(cmd) != "" && m.Option(kit.MDB_NAME) != "" {
 							m.Cmdy(cmd, m.Option(cmd), "del", m.Option(kit.MDB_NAME))
-							m.Option(ice.FIELD_RELOAD, "true")
+							m.Option(ice.FIELD_RELOAD, ice.TRUE)
 						}
 					case "prune", "清理":
 						m.Richs(cmd, nil, m.Option(cmd), func(key string, value map[string]interface{}) {
 							m.Richs(cmd, kit.Keys(kit.MDB_HASH, key), kit.MDB_FOREACH, func(sub string, value map[string]interface{}) {
 								if value[kit.MDB_STATUS] != "busy" {
 									m.Cmdy(cmd, m.Option(cmd), "del", value[kit.MDB_NAME])
-									m.Option(ice.FIELD_RELOAD, "true")
+									m.Option(ice.FIELD_RELOAD, ice.TRUE)
 								}
 							})
 						})
@@ -49,7 +49,7 @@ func init() {
 									last := m.Conf(cmd, kit.Keys(kit.MDB_HASH, key, kit.MDB_HASH, sub))
 									m.Logs(ice.LOG_DELETE, cmd, m.Option(cmd), kit.MDB_NAME, value[kit.MDB_NAME], kit.MDB_VALUE, last)
 									m.Conf(cmd, kit.Keys(kit.MDB_HASH, key, kit.MDB_HASH, sub), "")
-									m.Option(ice.FIELD_RELOAD, "true")
+									m.Option(ice.FIELD_RELOAD, ice.TRUE)
 									m.Echo(last)
 								}
 							})
@@ -59,7 +59,7 @@ func init() {
 							m.Echo(m.Conf(cmd, kit.Keys(kit.MDB_HASH, key)))
 							m.Logs(ice.LOG_REMOVE, cmd, m.Option(cmd), kit.MDB_VALUE, m.Conf(cmd, kit.Keys(kit.MDB_HASH, key)))
 							m.Conf(cmd, kit.Keys(kit.MDB_HASH, key), "")
-							m.Option(ice.FIELD_RELOAD, "true")
+							m.Option(ice.FIELD_RELOAD, ice.TRUE)
 						})
 					}
 					return

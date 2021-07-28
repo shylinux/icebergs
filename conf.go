@@ -38,6 +38,12 @@ const ( // DIR
 	USR_PUBLISH  = "usr/publish"
 	USR_LOCAL    = "usr/local"
 
+	USR_LOCAL_WORK   = "usr/local/work"
+	USR_LOCAL_RIVER  = "usr/local/river"
+	USR_LOCAL_IMAGE  = "usr/local/image"
+	USR_LOCAL_EXPORT = "usr/local/export"
+	USR_LOCAL_DAEMON = "usr/local/daemon"
+
 	FAVICON  = "favicon.ico"
 	PROTO_JS = "proto.js"
 	FRAME_JS = "frame.js"

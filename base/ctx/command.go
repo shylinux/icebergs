@@ -41,7 +41,7 @@ func _command_search(m *ice.Message, kind, name, text string) {
 			return
 		}
 
-		m.PushSearch(kit.SSH_CMD, COMMAND, CONTEXT, s.Cap(ice.CTX_FOLLOW), COMMAND, key,
+		m.PushSearch("cmd", COMMAND, CONTEXT, s.Cap(ice.CTX_FOLLOW), COMMAND, key,
 			kit.MDB_TYPE, kind, kit.MDB_NAME, key, kit.MDB_TEXT, s.Cap(ice.CTX_FOLLOW),
 		)
 	})

@@ -119,7 +119,7 @@ func (c *Context) cmd(m *Message, cmd *Command, key string, arg ...string) *Mess
 	}
 
 	m.meta[MSG_DETAIL] = kit.Simple(key, arg)
-	if m.Hand = true; len(arg) > 1 && arg[0] == kit.MDB_ACTION && cmd.Action != nil {
+	if m.Hand = true; len(arg) > 1 && arg[0] == "action" && cmd.Action != nil {
 		if h, ok := cmd.Action[arg[1]]; ok {
 			return c._cmd(m, cmd, key, arg[1], h, arg[2:]...)
 		}
@@ -290,7 +290,7 @@ func (c *Context) split(key string, cmd *Command, name string) []interface{} {
 			case "@":
 				if len(ls) > i+1 {
 					if kit.Value(item, kit.MDB_INPUT) == BUTTON {
-						kit.Value(item, kit.MDB_ACTION, ls[i+1])
+						kit.Value(item, "action", ls[i+1])
 					} else {
 						kit.Value(item, kit.MDB_VALUE, "@"+ls[i+1]+"="+value)
 					}

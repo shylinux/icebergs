@@ -17,7 +17,7 @@ func init() {
 	Index.Merge(&ice.Context{
 		Configs: map[string]*ice.Config{
 			TOTAL: {Name: TOTAL, Help: "统计量", Value: kit.Data(
-				kit.MDB_SHORT, kit.MDB_NAME, "skip", kit.Dict("wubi-dict", "true", "word-dict", "true"),
+				kit.MDB_SHORT, kit.MDB_NAME, "skip", kit.Dict("wubi-dict", ice.TRUE, "word-dict", ice.TRUE),
 			)},
 		},
 		Commands: map[string]*ice.Command{
@@ -33,7 +33,7 @@ func init() {
 				days, commit, adds, dels, rest := 0, 0, 0, 0, 0
 				m.Richs(REPOS, nil, kit.MDB_FOREACH, func(mu *sync.Mutex, key string, value map[string]interface{}) {
 					value = kit.GetMeta(value)
-					if m.Conf(TOTAL, kit.Keym("skip", value[kit.MDB_NAME])) == "true" {
+					if m.Conf(TOTAL, kit.Keym("skip", value[kit.MDB_NAME])) == ice.TRUE {
 						return
 					}
 

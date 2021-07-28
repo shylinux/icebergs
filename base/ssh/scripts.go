@@ -154,7 +154,7 @@ func (f *Frame) option(m *ice.Message, ls []string) []string {
 					if i < j {
 						m.Option(ls[i][1:], ls[i+1:j+1])
 					} else {
-						m.Option(ls[i][1:], "true")
+						m.Option(ls[i][1:], ice.TRUE)
 					}
 					i = j
 					break
@@ -354,6 +354,7 @@ const (
 	PS2   = "PS2"
 )
 const (
+	SCRIPT = "script"
 	SOURCE = "source"
 	TARGET = "target"
 	PROMPT = "prompt"

@@ -36,7 +36,7 @@ func _user_search(m *ice.Message, kind, name, text string) {
 		if value = kit.GetMeta(value); name != "" && name != value[USERNAME] {
 			return
 		}
-		m.PushSearch(kit.SSH_CMD, USER, kit.MDB_TYPE, kit.Format(UserRole(m, value[USERNAME])),
+		m.PushSearch("cmd", USER, kit.MDB_TYPE, kit.Format(UserRole(m, value[USERNAME])),
 			kit.MDB_NAME, kit.Format(value[USERNICK]), kit.MDB_TEXT, kit.Format(value[USERNAME]), value)
 	})
 }

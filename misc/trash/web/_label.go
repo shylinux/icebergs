@@ -1,8 +1,8 @@
 package web
 
 import (
-	"github.com/shylinux/icebergs"
-	"github.com/shylinux/toolkits"
+	ice "github.com/shylinux/icebergs"
+	kit "github.com/shylinux/toolkits"
 
 	"sync"
 )
@@ -10,7 +10,7 @@ import (
 func _label_add(m *ice.Message, cmd string) {
 	if m.Option(cmd) != "" && m.Option(kit.SSH_GROUP) != "" && m.Option(kit.MDB_NAME) != "" {
 		m.Cmdy(cmd, m.Option(cmd), "add", m.Option(kit.SSH_GROUP), m.Option(kit.MDB_NAME))
-		m.Option(ice.FIELD_RELOAD, "true")
+		m.Option(ice.FIELD_RELOAD, ice.TRUE)
 	}
 }
 func _label_del(m *ice.Message, cmd string) {

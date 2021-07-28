@@ -81,7 +81,7 @@ func init() {
 					m.ProcessRefresh("300ms")
 				}},
 				mdb.REPEAT: {Name: "repeat", Help: "执行", Hand: func(m *ice.Message, arg ...string) {
-					m.Cmdy(SESSION, kit.MDB_ACTION, ctx.COMMAND, CMD, m.Option(kit.MDB_TEXT))
+					m.Cmdy(SESSION, ctx.ACTION, ctx.COMMAND, CMD, m.Option(kit.MDB_TEXT))
 				}},
 			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 				if len(arg) == 0 {

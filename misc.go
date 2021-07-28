@@ -46,7 +46,7 @@ func (m *Message) Watch(key string, arg ...string) *Message {
 	if len(arg) == 0 {
 		arg = append(arg, m.Prefix("auto"))
 	}
-	m.Cmd("gdb.event", "action", "listen", "event", key, kit.SSH_CMD, strings.Join(arg, " "))
+	m.Cmd("gdb.event", "action", "listen", "event", key, "cmd", strings.Join(arg, " "))
 	return m
 }
 func (m *Message) Event(key string, arg ...string) *Message {
@@ -72,7 +72,7 @@ func (m *Message) ShowPlugin(pod, ctx, cmd string, arg ...string) {
 }
 func (m *Message) PushPodCmd(cmd string, arg ...string) {
 	m.Table(func(index int, value map[string]string, head []string) {
-		m.Push(kit.SSH_POD, m.Option(MSG_USERPOD))
+		m.Push("pod", m.Option(MSG_USERPOD))
 	})
 
 	m.Cmd("web.space").Table(func(index int, value map[string]string, head []string) {
@@ -82,7 +82,7 @@ func (m *Message) PushPodCmd(cmd string, arg ...string) {
 				break
 			}
 			m.Cmd("web.space", value[kit.MDB_NAME], m.Prefix(cmd), arg).Table(func(index int, val map[string]string, head []string) {
-				val[kit.SSH_POD] = kit.Keys(value[kit.MDB_NAME], val[kit.SSH_POD])
+				val["pod"] = kit.Keys(value[kit.MDB_NAME], val["pod"])
 				m.Push("", val, head)
 			})
 		}
@@ -92,12 +92,12 @@ func (m *Message) PushSearch(args ...interface{}) {
 	data := kit.Dict(args...)
 	for _, k := range kit.Split(m.Option(MSG_FIELDS)) {
 		switch k {
-		case kit.SSH_POD:
+		case "pod":
 			// m.Push(k, kit.Select(m.Option(MSG_USERPOD), data[kit.SSH_POD]))
-		case kit.SSH_CTX:
+		case "ctx":
 			m.Push(k, m.Prefix())
-		case kit.SSH_CMD:
-			m.Push(k, kit.Format(data[kit.SSH_CMD]))
+		case "cmd":
+			m.Push(k, kit.Format(data["cmd"]))
 		case kit.MDB_TIME:
 			m.Push(k, kit.Select(m.Time(), data[k]))
 		default:
@@ -113,7 +113,7 @@ func (m *Message) PushSearchWeb(cmd string, name string) {
 		if value[kit.MDB_NAME] == "" {
 			text = kit.MergeURL(value[kit.MDB_TEXT] + url.QueryEscape(name))
 		}
-		m.PushSearch(kit.SSH_CMD, cmd, kit.MDB_TYPE, kit.Select("", value[kit.MDB_TYPE]), kit.MDB_NAME, name, kit.MDB_TEXT, text)
+		m.PushSearch("cmd", cmd, kit.MDB_TYPE, kit.Select("", value[kit.MDB_TYPE]), kit.MDB_NAME, name, kit.MDB_TEXT, text)
 	})
 }
 
@@ -133,7 +133,7 @@ func Render(m *Message, cmd string, args ...interface{}) string {
 		}
 		list := []string{}
 		if m.Option(MSG_USERPOD) != "" {
-			list = append(list, kit.SSH_POD, m.Option(MSG_USERPOD))
+			list = append(list, "pod", m.Option(MSG_USERPOD))
 		}
 		if len(arg) == 1 {
 			arg[0] = kit.MergeURL2(m.Option(MSG_USERWEB), path.Join(kit.Select("", "/share/local",
@@ -205,7 +205,7 @@ func (m *Message) PushAnchor(arg ...interface{}) { // [name] link
 }
 func (m *Message) PushButton(arg ...string) {
 	if !m.IsCliUA() {
-		m.Push(kit.MDB_ACTION, Render(m, RENDER_BUTTON, strings.Join(arg, ",")))
+		m.Push("action", Render(m, RENDER_BUTTON, strings.Join(arg, ",")))
 	}
 }
 func (m *Message) PushScript(arg ...string) *Message { // [type] text...
@@ -578,8 +578,8 @@ func (m *Message) OptionTemplate() string {
 	return strings.Join(res, " ")
 }
 func (m *Message) PodCmd(arg ...interface{}) bool {
-	if pod := m.Option(kit.SSH_POD); pod != "" {
-		m.Option(kit.SSH_POD, "")
+	if pod := m.Option("pod"); pod != "" {
+		m.Option("pod", "")
 		m.Cmd(append([]interface{}{"space", pod}, arg...))
 		return true
 	}

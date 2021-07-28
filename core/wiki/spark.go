@@ -4,6 +4,7 @@ import (
 	"strings"
 
 	ice "github.com/shylinux/icebergs"
+	"github.com/shylinux/icebergs/base/ssh"
 	kit "github.com/shylinux/toolkits"
 )
 
@@ -13,7 +14,7 @@ func _spark_show(m *ice.Message, name, text string, arg ...string) {
 		return
 	}
 
-	prompt := kit.Select(name+"> ", m.Conf(SPARK, kit.Keym(kit.MDB_PROMPT, name)))
+	prompt := kit.Select(name+"> ", m.Conf(SPARK, kit.Keym(ssh.PROMPT, name)))
 	m.Echo(`<div class="story" data-type="spark" data-name="%s">`, name)
 	for _, l := range strings.Split(text, "\n") {
 		m.Echo("<div>")
@@ -46,7 +47,7 @@ func init() {
 		Configs: map[string]*ice.Config{
 			SPARK: {Name: SPARK, Help: "段落", Value: kit.Data(
 				kit.MDB_TEMPLATE, `<p {{.OptionTemplate}}>{{.Option "text"}}</p>`,
-				kit.MDB_PROMPT, kit.Dict("shell", "$ "),
+				ssh.PROMPT, kit.Dict("shell", "$ "),
 			)},
 		},
 	})

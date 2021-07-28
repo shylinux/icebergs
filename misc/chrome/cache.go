@@ -17,7 +17,7 @@ func init() {
 		Configs: map[string]*ice.Config{
 			CACHE: {Name: CACHE, Help: "爬虫缓存", Value: kit.Data(
 				kit.MDB_SHORT, kit.MDB_LINK, kit.MDB_FIELD, "time,hash,step,size,total,type,name,text,link",
-				kit.MDB_PATH, "usr/local/image",
+				kit.MDB_PATH, ice.USR_LOCAL_IMAGE,
 			)},
 		},
 		Commands: map[string]*ice.Command{

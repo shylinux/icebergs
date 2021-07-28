@@ -25,7 +25,7 @@ func init() {
 						if value = kit.GetMeta(value); arg[1] != "" && !kit.Contains(value[kit.MDB_NAME], arg[1]) {
 							return
 						}
-						m.PushSearch(kit.SSH_CMD, P_SEARCH, value)
+						m.PushSearch(cli.CMD, P_SEARCH, value)
 					})
 				}},
 				mdb.RENDER: {Name: "render", Help: "渲染", Hand: func(m *ice.Message, arg ...string) {

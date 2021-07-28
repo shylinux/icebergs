@@ -6,6 +6,7 @@ import (
 
 	ice "github.com/shylinux/icebergs"
 	"github.com/shylinux/icebergs/base/cli"
+	"github.com/shylinux/icebergs/base/ctx"
 	"github.com/shylinux/icebergs/base/mdb"
 	kit "github.com/shylinux/toolkits"
 )
@@ -133,7 +134,7 @@ func init() {
 			}}, OPT: {Name: "opt", Help: "优化"}, PRO: {Name: "pro", Help: "自举"},
 
 			COMMIT: {Name: "commit action=opt,add,pro comment=some@key", Help: "提交", Hand: func(m *ice.Message, arg ...string) {
-				if arg[0] == kit.MDB_ACTION {
+				if arg[0] == ctx.ACTION {
 					m.Option(kit.MDB_TEXT, arg[1]+" "+arg[3])
 				} else {
 					m.Option(kit.MDB_TEXT, kit.Select("opt some", strings.Join(arg, " ")))

@@ -14,6 +14,8 @@ import (
 
 	ice "github.com/shylinux/icebergs"
 	"github.com/shylinux/icebergs/base/aaa"
+	"github.com/shylinux/icebergs/base/cli"
+	"github.com/shylinux/icebergs/base/ctx"
 	"github.com/shylinux/icebergs/base/mdb"
 	kit "github.com/shylinux/toolkits"
 )
@@ -115,7 +117,7 @@ func _dir_show(m *ice.Message, root string, name string, level int, deep bool, d
 					}
 
 					m.Push(kit.MDB_HASH, kit.Select(hex.EncodeToString(h[:6]), hex.EncodeToString(h[:]), field == kit.MDB_HASH))
-				case kit.MDB_ACTION:
+				case ctx.ACTION:
 					if !f.IsDir() && !aaa.SessIsCli(m) {
 						m.PushButton(TRASH)
 					} else {
@@ -148,7 +150,7 @@ func _dir_search(m *ice.Message, kind, name string) {
 			value[kit.MDB_TYPE] = _cat_ext(value[kit.MDB_NAME])
 		}
 
-		m.PushSearch(kit.SSH_CMD, CAT, value)
+		m.PushSearch(cli.CMD, CAT, value)
 	})
 }
 

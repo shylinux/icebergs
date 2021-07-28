@@ -140,8 +140,6 @@ const (
 const (
 	DICT = "dict"
 	META = "meta"
-	HASH = "hash"
-	LIST = "list"
 	ZONE = "zone"
 )
 const (

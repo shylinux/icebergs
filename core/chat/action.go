@@ -103,7 +103,7 @@ func _action_share(m *ice.Message, arg ...string) {
 func _action_list(m *ice.Message, river, storm string) {
 	m.Option(ice.MSG_RIVER, river)
 	m.Cmdy(TOOL, storm).Table(func(index int, value map[string]string, head []string) {
-		m.Cmdy(m.Space(kit.Select(m.Option(POD), value[POD])), ctx.COMMAND, kit.Keys(value[CTX], value[CMD]))
+		m.Cmdy(m.Space(kit.Select(m.Option(cli.POD), value[cli.POD])), ctx.COMMAND, kit.Keys(value[cli.CTX], value[cli.CMD]))
 	})
 	m.SortInt(kit.MDB_ID)
 }
@@ -114,8 +114,8 @@ func _action_show(m *ice.Message, river, storm, index string, arg ...string) {
 	cmds := []string{index}
 	prefix := kit.Keys(kit.MDB_HASH, river, TOOL, kit.MDB_HASH, storm)
 	if m.Grows(RIVER, prefix, kit.MDB_ID, index, func(index int, value map[string]interface{}) {
-		if cmds = kit.Simple(kit.Keys(value[CTX], value[CMD])); kit.Format(value[POD]) != "" {
-			m.Option(POD, value[POD])
+		if cmds = kit.Simple(kit.Keys(value[cli.CTX], value[cli.CMD])); kit.Format(value[cli.POD]) != "" {
+			m.Option(cli.POD, value[cli.POD])
 		}
 	}) == nil && m.Warn(!m.Right(cmds), ice.ErrNotRight) {
 		return
@@ -127,9 +127,9 @@ func _action_show(m *ice.Message, river, storm, index string, arg ...string) {
 	m.Cmdy(_action_proxy(m), cmds, arg)
 }
 func _action_proxy(m *ice.Message) (proxy []string) {
-	if p := m.Option(POD); p != "" {
+	if p := m.Option(cli.POD); p != "" {
 		proxy = append(proxy, web.SPACE, p)
-		m.Option(POD, "")
+		m.Option(cli.POD, "")
 	}
 	return proxy
 }

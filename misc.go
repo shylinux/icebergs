@@ -577,3 +577,25 @@ func (m *Message) OptionTemplate() string {
 	})
 	return strings.Join(res, " ")
 }
+func (m *Message) PodCmd(arg ...interface{}) bool {
+	if pod := m.Option(kit.SSH_POD); pod != "" {
+		m.Option(kit.SSH_POD, "")
+		m.Cmd(append([]interface{}{"space", pod}, arg...))
+		return true
+	}
+	return false
+}
+
+func MergeAction(list ...map[string]*Action) map[string]*Action {
+	if len(list) == 0 {
+		return nil
+	}
+	for _, item := range list[1:] {
+		for k, v := range item {
+			if _, ok := list[0][k]; !ok {
+				list[0][k] = v
+			}
+		}
+	}
+	return list[0]
+}

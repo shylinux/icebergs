@@ -59,6 +59,12 @@ func _islocalhost(m *ice.Message, ip string) (ok bool) {
 	return false
 }
 func IsLocalHost(m *ice.Message, ip string) bool { return _islocalhost(m, ip) }
+func ReplaceLocalhost(m *ice.Message, url string) string {
+	if strings.Contains(url, "://"+LOCALHOST) {
+		url = strings.Replace(url, "://"+LOCALHOST, "://"+m.Cmd(HOST, ice.OptionFields(IP)).Append(IP), 1)
+	}
+	return url
+}
 
 const (
 	HOSTPORT = "hostport"

@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	ice "github.com/shylinux/icebergs"
+	"github.com/shylinux/icebergs/base/ctx"
 	"github.com/shylinux/icebergs/base/mdb"
 	kit "github.com/shylinux/toolkits"
 )
@@ -66,15 +67,35 @@ func _daemon_show(m *ice.Message, cmd *exec.Cmd, out, err string) {
 	})
 }
 
+func Inputs(m *ice.Message, field, value string) bool {
+	switch strings.TrimPrefix(field, "extra.") {
+	case POD:
+		m.Cmdy("route")
+	case CTX:
+		m.Cmdy(ctx.CONTEXT)
+	case CMD:
+		m.Cmdy(ctx.CONTEXT, kit.Select(m.Option(CTX), m.Option(kit.Keys("extra", CTX))), ctx.COMMAND)
+	case ARG:
+
+	default:
+		return false
+	}
+	return true
+}
+
 const (
-	PID = "pid"
-	PWD = "pwd"
 	DIR = "dir"
 	ENV = "env"
+	PID = "pid"
+	PWD = "pwd"
+
+	POD = "pod"
+	CTX = "ctx"
 	CMD = "cmd"
-	API = "api"
 	ARG = "arg"
+
 	RUN = "run"
+	API = "api"
 	RES = "res"
 	ERR = "err"
 )

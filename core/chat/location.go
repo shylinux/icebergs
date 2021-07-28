@@ -40,7 +40,7 @@ func init() {
 			)},
 		},
 		Commands: map[string]*ice.Command{
-			LOCATION: {Name: "location hash auto getLocation", Help: "地理位置", Action: map[string]*ice.Action{
+			LOCATION: {Name: "location hash auto getLocation", Help: "地理位置", Action: ice.MergeAction(map[string]*ice.Action{
 				OPENLOCATION: {Name: "openLocation", Help: "地图", Hand: func(m *ice.Message, arg ...string) {}},
 				GETLOCATION: {Name: "getLocation", Help: "打卡", Hand: func(m *ice.Message, arg ...string) {
 					m.Cmdy(mdb.INSERT, m.Prefix(LOCATION), "", mdb.HASH, arg)
@@ -48,22 +48,7 @@ func init() {
 				mdb.CREATE: {Name: "create type=text name text latitude longitude", Help: "添加", Hand: func(m *ice.Message, arg ...string) {
 					m.Cmdy(mdb.INSERT, m.Prefix(LOCATION), "", mdb.HASH, arg)
 				}},
-				mdb.MODIFY: {Name: "modify", Help: "编辑", Hand: func(m *ice.Message, arg ...string) {
-					m.Cmdy(mdb.MODIFY, m.Prefix(LOCATION), "", mdb.HASH, m.OptionSimple(kit.MDB_HASH), arg)
-				}},
-				mdb.REMOVE: {Name: "remove", Help: "删除", Hand: func(m *ice.Message, arg ...string) {
-					m.Cmdy(mdb.DELETE, m.Prefix(LOCATION), "", mdb.HASH, m.OptionSimple(kit.MDB_TEXT))
-				}},
-				mdb.EXPORT: {Name: "export", Help: "导出", Hand: func(m *ice.Message, arg ...string) {
-					m.Cmdy(mdb.EXPORT, m.Prefix(LOCATION), "", mdb.HASH)
-				}},
-				mdb.IMPORT: {Name: "import", Help: "导入", Hand: func(m *ice.Message, arg ...string) {
-					m.Cmdy(mdb.IMPORT, m.Prefix(LOCATION), "", mdb.HASH)
-				}},
-				mdb.INPUTS: {Name: "inputs", Help: "补全", Hand: func(m *ice.Message, arg ...string) {
-					m.Cmdy(mdb.INPUTS, m.Prefix(LOCATION), "", mdb.HASH, arg)
-				}},
-			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			}, mdb.HashAction(LOCATION)), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 				m.Fields(len(arg), m.Conf(LOCATION, kit.META_FIELD))
 				m.Cmdy(mdb.SELECT, m.Prefix(LOCATION), "", mdb.HASH, kit.MDB_HASH, arg)
 				m.PushAction(OPENLOCATION, mdb.REMOVE)

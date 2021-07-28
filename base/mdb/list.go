@@ -129,3 +129,5 @@ func _list_inputs(m *ice.Message, prefix, chain string, field, value string) {
 	}
 	m.SortIntR(kit.MDB_COUNT)
 }
+
+const LIST = "list"

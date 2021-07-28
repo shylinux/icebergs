@@ -5,9 +5,8 @@ import (
 	"time"
 
 	ice "github.com/shylinux/icebergs"
-	"github.com/shylinux/icebergs/base/ctx"
+	"github.com/shylinux/icebergs/base/cli"
 	"github.com/shylinux/icebergs/base/mdb"
-	"github.com/shylinux/icebergs/base/web"
 	kit "github.com/shylinux/toolkits"
 )
 
@@ -74,24 +73,11 @@ func _task_modify(m *ice.Message, field, value string, arg ...string) {
 	m.Cmdy(mdb.MODIFY, m.Prefix(TASK), "", mdb.ZONE, m.Option(kit.MDB_ZONE), m.Option(kit.MDB_ID), field, value, arg)
 }
 func _task_inputs(m *ice.Message, field, value string) {
-	switch strings.TrimPrefix(field, "extra.") {
-	case "pod":
-		m.Cmd(web.SPACE).Table(func(index int, value map[string]string, head []string) {
-			m.Push(field, value[kit.MDB_NAME])
-			m.Push("", value, []string{kit.MDB_TYPE})
-		})
-	case "ctx":
-		m.Cmd(m.Space(m.Option("extra.pod")), ctx.CONTEXT).Table(func(index int, value map[string]string, head []string) {
-			m.Push(field, value[kit.MDB_NAME])
-			m.Push("", value, []string{kit.MDB_HELP})
-		})
-	case "cmd":
-		m.Cmd(m.Space(m.Option("extra.pod")), ctx.CONTEXT, m.Option("extra.ctx"), ctx.COMMAND).Table(func(index int, value map[string]string, head []string) {
-			m.Push(field, value[kit.MDB_KEY])
-			m.Push("", value, []string{kit.MDB_HELP})
-		})
-	case "arg":
+	if cli.Inputs(m, field, value) {
+		return
+	}
 
+	switch strings.TrimPrefix(field, "extra.") {
 	case kit.MDB_ZONE:
 		m.Cmdy(mdb.INPUTS, m.Prefix(TASK), "", mdb.HASH, field, value)
 	default:

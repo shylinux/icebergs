@@ -29,7 +29,7 @@ func init() {
 					})
 				}},
 				mdb.RENDER: {Name: "render", Help: "渲染", Hand: func(m *ice.Message, arg ...string) {
-					m.Cmdy(m.Space(m.Option(POD)), mdb.RENDER, arg[1:])
+					m.Cmdy(m.Space(m.Option(cli.POD)), mdb.RENDER, arg[1:])
 				}},
 				ctx.COMMAND: {Name: "command", Help: "命令", Hand: func(m *ice.Message, arg ...string) {
 					m.Cmdy(ctx.COMMAND, arg)
@@ -41,7 +41,7 @@ func init() {
 				if kit.Contains(arg[1], ";") {
 					arg = kit.Split(arg[1], ";", ";", ";")
 				}
-				if m.Cmdy(m.Space(m.Option(POD)), mdb.SEARCH, arg); arg[1] == "" {
+				if m.Cmdy(m.Space(m.Option(cli.POD)), mdb.SEARCH, arg); arg[1] == "" {
 					return
 				}
 				m.Cmd(mdb.INSERT, m.Prefix(P_SEARCH), "", mdb.HASH,

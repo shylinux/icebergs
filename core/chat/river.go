@@ -3,6 +3,7 @@ package chat
 import (
 	ice "github.com/shylinux/icebergs"
 	"github.com/shylinux/icebergs/base/aaa"
+	"github.com/shylinux/icebergs/base/cli"
 	"github.com/shylinux/icebergs/base/ctx"
 	"github.com/shylinux/icebergs/base/mdb"
 	"github.com/shylinux/icebergs/base/tcp"
@@ -48,19 +49,13 @@ func _river_list(m *ice.Message) {
 	})
 }
 func _river_proxy(m *ice.Message, pod string) (proxy []string) {
-	if p := kit.Select(m.Option(POD), pod); p != "" {
+	if p := kit.Select(m.Option(cli.POD), pod); p != "" {
 		proxy = append(proxy, web.SPACE, p)
-		m.Option(POD, "")
+		m.Option(cli.POD, "")
 	}
 	return proxy
 }
 
-const (
-	POD = "pod"
-	CTX = "ctx"
-	CMD = "cmd"
-	ARG = "arg"
-)
 const (
 	INFO = "info"
 	AUTH = "auth"
@@ -178,9 +173,9 @@ func init() {
 						m.Option(mdb.FIELDS, "time,id,pod,ctx,cmd,arg")
 						msg := m.Cmd(mdb.SELECT, RIVER, kit.Keys(kit.MDB_HASH, m.Option(ice.MSG_RIVER), TOOL, kit.MDB_HASH, m.Option(kit.MDB_HASH)), mdb.LIST, kit.MDB_ID, m.Option(kit.MDB_ID))
 
-						cmd := kit.Keys(msg.Append(CTX), msg.Append(CMD))
+						cmd := kit.Keys(msg.Append(cli.CTX), msg.Append(cli.CMD))
 						_action_domain(m, cmd, m.Option(kit.MDB_HASH))
-						m.Cmdy(_river_proxy(msg, msg.Append(POD)), cmd, mdb.EXPORT)
+						m.Cmdy(_river_proxy(msg, msg.Append(cli.POD)), cmd, mdb.EXPORT)
 					}
 				}},
 				mdb.IMPORT: {Name: "import", Help: "导入", Hand: func(m *ice.Message, arg ...string) {
@@ -188,9 +183,9 @@ func init() {
 						m.Option(mdb.FIELDS, "time,id,pod,ctx,cmd,arg")
 						msg := m.Cmd(mdb.SELECT, RIVER, kit.Keys(kit.MDB_HASH, m.Option(ice.MSG_RIVER), TOOL, kit.MDB_HASH, m.Option(kit.MDB_HASH)), mdb.LIST, kit.MDB_ID, m.Option(kit.MDB_ID))
 
-						cmd := kit.Keys(msg.Append(CTX), msg.Append(CMD))
+						cmd := kit.Keys(msg.Append(cli.CTX), msg.Append(cli.CMD))
 						_action_domain(m, cmd, m.Option(kit.MDB_HASH))
-						m.Cmdy(_river_proxy(msg, msg.Append(POD)), cmd, mdb.IMPORT)
+						m.Cmdy(_river_proxy(msg, msg.Append(cli.POD)), cmd, mdb.IMPORT)
 					}
 				}},
 				mdb.INPUTS: {Name: "inputs", Help: "补全", Hand: func(m *ice.Message, arg ...string) {
@@ -200,16 +195,16 @@ func init() {
 							m.Push(kit.MDB_HASH, value[kit.MDB_HASH])
 							m.Push(kit.MDB_NAME, value[kit.MDB_NAME])
 						})
-					case POD:
+					case cli.POD:
 						m.Cmdy(web.ROUTE)
-					case CTX:
+					case cli.CTX:
 						m.Cmd(ctx.CONTEXT, "web").Table(func(index int, value map[string]string, head []string) {
-							m.Push(CTX, kit.Keys(kit.Select("", value["ups"], value["ups"] != "shy"), value[kit.MDB_NAME]))
+							m.Push(cli.CTX, kit.Keys(kit.Select("", value["ups"], value["ups"] != "shy"), value[kit.MDB_NAME]))
 							m.Push(kit.MDB_HELP, value[kit.MDB_HELP])
 						})
-					case CMD, kit.MDB_HELP:
-						m.Cmd(ctx.CONTEXT, m.Option(CTX), ctx.COMMAND).Table(func(index int, value map[string]string, head []string) {
-							m.Push(CMD, value[kit.MDB_KEY])
+					case cli.CMD, kit.MDB_HELP:
+						m.Cmd(ctx.CONTEXT, m.Option(cli.CTX), ctx.COMMAND).Table(func(index int, value map[string]string, head []string) {
+							m.Push(cli.CMD, value[kit.MDB_KEY])
 							m.Push(kit.MDB_NAME, value[kit.MDB_NAME])
 							m.Push(kit.MDB_HELP, value[kit.MDB_HELP])
 						})
@@ -226,12 +221,12 @@ func init() {
 
 				m.Option(mdb.FIELDS, "time,id,pod,ctx,cmd,arg,display,style")
 				msg := m.Cmd(mdb.SELECT, RIVER, kit.Keys(kit.MDB_HASH, m.Option(ice.MSG_RIVER), TOOL, kit.MDB_HASH, arg[0]), mdb.LIST, kit.MDB_ID, kit.Select("", arg, 1))
-				if len(msg.Appendv(CMD)) == 0 && len(arg) > 1 {
-					msg.Push(CMD, arg[1])
+				if len(msg.Appendv(cli.CMD)) == 0 && len(arg) > 1 {
+					msg.Push(cli.CMD, arg[1])
 				}
 
 				if len(arg) > 2 && arg[2] == "run" {
-					m.Cmdy(_river_proxy(m, msg.Append(POD)), kit.Keys(msg.Append(CTX), msg.Append(CMD)), arg[3:])
+					m.Cmdy(_river_proxy(m, msg.Append(cli.POD)), kit.Keys(msg.Append(cli.CTX), msg.Append(cli.CMD)), arg[3:])
 					return // 执行命令
 				}
 				if m.Copy(msg); len(arg) < 2 {
@@ -243,7 +238,7 @@ func init() {
 				// 命令插件
 				m.ProcessField(arg[0], arg[1], "run")
 				m.Table(func(index int, value map[string]string, head []string) {
-					m.Cmdy(web.SPACE, value[POD], ctx.CONTEXT, value[CTX], ctx.COMMAND, value[CMD])
+					m.Cmdy(web.SPACE, value[cli.POD], ctx.CONTEXT, value[cli.CTX], ctx.COMMAND, value[cli.CMD])
 				})
 			}},
 			USER: {Name: "user username auto insert invite", Help: "用户", Action: map[string]*ice.Action{
@@ -290,7 +285,7 @@ func init() {
 
 						kit.Fetch(value, func(index int, value string) {
 							m.Search(value, func(p *ice.Context, s *ice.Context, key string, cmd *ice.Command) {
-								m.Cmd(TOOL, mdb.INSERT, kit.MDB_HASH, h, CTX, s.Cap(ice.CTX_FOLLOW), CMD, key, kit.MDB_HELP, cmd.Help)
+								m.Cmd(TOOL, mdb.INSERT, kit.MDB_HASH, h, cli.CTX, s.Cap(ice.CTX_FOLLOW), cli.CMD, key, kit.MDB_HELP, cmd.Help)
 							})
 						})
 					})

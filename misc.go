@@ -121,7 +121,8 @@ func Render(m *Message, cmd string, args ...interface{}) string {
 	if m.IsCliUA() {
 		switch arg := kit.Simple(args...); cmd {
 		case RENDER_QRCODE: // text [size]
-			return m.Cmdx("cli.qrcode", arg[0])
+			msg := m.Cmd("cli.qrcode", arg[0])
+			return msg.Result()
 		}
 		return ""
 	}

@@ -53,7 +53,8 @@ func _status_stat(m *ice.Message, files, adds, dels int) (int, int, int) {
 }
 func _status_list(m *ice.Message) (files, adds, dels int, last time.Time) {
 	m.Cmd(REPOS, ice.OptionFields("name,path")).Table(func(index int, value map[string]string, head []string) {
-		diff := m.Cmdx(cli.SYSTEM, GIT, STATUS, "-sb", ice.Option{cli.CMD_DIR, value[kit.MDB_PATH]})
+		m.Option(cli.CMD_DIR, value[kit.MDB_PATH])
+		diff := m.Cmdx(cli.SYSTEM, GIT, STATUS, "-sb")
 
 		for _, v := range strings.Split(strings.TrimSpace(diff), "\n") {
 			vs := strings.SplitN(strings.TrimSpace(v), " ", 2)

@@ -1,6 +1,7 @@
 package web
 
 import (
+	"fmt"
 	"net/http"
 	"os"
 	"path"
@@ -114,6 +115,27 @@ func init() {
 			SHARE: {Name: SHARE, Help: "共享链", Value: kit.Data(kit.MDB_EXPIRE, "72h")},
 		},
 		Commands: map[string]*ice.Command{
+			ice.CTX_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+				ice.AddRender(ice.RENDER_DOWNLOAD, func(m *ice.Message, cmd string, args ...interface{}) string {
+					arg := kit.Simple(args...)
+					if arg[0] == "" {
+						return ""
+					}
+					list := []string{}
+					if m.Option(ice.MSG_USERPOD) != "" {
+						list = append(list, "pod", m.Option(ice.MSG_USERPOD))
+					}
+					if len(arg) == 1 {
+						arg[0] = kit.MergeURL2(m.Option(ice.MSG_USERWEB), path.Join(kit.Select("", "/share/local",
+							!strings.HasPrefix(arg[0], "/")), arg[0]), list)
+					} else {
+						arg[1] = kit.MergeURL2(m.Option(ice.MSG_USERWEB), path.Join(kit.Select("", "/share/local",
+							!strings.HasPrefix(arg[1], "/")), arg[1]), list, "filename", arg[0])
+					}
+					arg[0] = m.ReplaceLocalhost(arg[0])
+					return fmt.Sprintf(`<a href="%s" download="%s">%s</a>`, m.ReplaceLocalhost(kit.Select(arg[0], arg, 1)), path.Base(arg[0]), arg[0])
+				})
+			}},
 			SHARE: {Name: "share hash auto prunes", Help: "共享链", Action: map[string]*ice.Action{
 				mdb.CREATE: {Name: "create type name text", Help: "创建", Hand: func(m *ice.Message, arg ...string) {
 					m.Cmdy(mdb.INSERT, SHARE, "", mdb.HASH, kit.MDB_TIME, m.Time(m.Conf(SHARE, kit.Keym(kit.MDB_EXPIRE))),

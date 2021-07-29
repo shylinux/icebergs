@@ -444,3 +444,14 @@ func (m *Message) Result(arg ...interface{}) string {
 	}
 	return strings.Join(m.Resultv(arg...), "")
 }
+
+func (m *Message) SortInt(key string)   { m.Sort(key, "int") }
+func (m *Message) SortIntR(key string)  { m.Sort(key, "int_r") }
+func (m *Message) SortStr(key string)   { m.Sort(key, "str") }
+func (m *Message) SortStrR(key string)  { m.Sort(key, "str_r") }
+func (m *Message) SortTime(key string)  { m.Sort(key, "time") }
+func (m *Message) SortTimeR(key string) { m.Sort(key, "time_r") }
+
+func (m *Message) FormatMeta() string { return m.Format("meta") }
+func (m *Message) FormatSize() string { return m.Format("size") }
+func (m *Message) FormatCost() string { return m.Format("cost") }

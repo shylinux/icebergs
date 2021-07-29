@@ -8,6 +8,34 @@ import (
 	"github.com/shylinux/toolkits/miss"
 )
 
+func (m *Message) Prefix(arg ...string) string {
+	return kit.Keys(m.Cap(CTX_FOLLOW), arg)
+}
+func (m *Message) PrefixKey(arg ...string) string {
+	return kit.Keys(m.Cap(CTX_FOLLOW), m._key, arg)
+}
+func (m *Message) Save(arg ...string) *Message {
+	if len(arg) == 0 {
+		for k := range m.target.Configs {
+			arg = append(arg, k)
+		}
+	}
+	list := []string{}
+	for _, k := range arg {
+		list = append(list, m.Prefix(k))
+	}
+	m.Cmd("ctx.config", "save", m.Prefix("json"), list)
+	return m
+}
+func (m *Message) Load(arg ...string) *Message {
+	list := []string{}
+	for _, k := range arg {
+		list = append(list, m.Prefix(k))
+	}
+	m.Cmd("ctx.config", "load", m.Prefix("json"), list)
+	return m
+}
+
 func (m *Message) Richs(prefix string, chain interface{}, raw interface{}, cb interface{}) (res map[string]interface{}) {
 	cache := m.Confm(prefix, chain)
 	if cache == nil {

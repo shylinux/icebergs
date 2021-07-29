@@ -132,6 +132,11 @@ func init() {
 			QRCODE: {Name: QRCODE, Help: "二维码", Value: kit.Data()},
 		},
 		Commands: map[string]*ice.Command{
+			ice.CTX_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+				ice.AddRender(ice.RENDER_QRCODE, func(m *ice.Message, cmd string, args ...interface{}) string {
+					return m.Cmd(QRCODE, kit.Simple(args...)).Result()
+				})
+			}},
 			QRCODE: {Name: "qrcode text fg bg size auto", Help: "二维码", Action: map[string]*ice.Action{}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 				m.Option(SIZE, kit.Select("240", arg, 3))
 				m.Option(BG, kit.Select(WHITE, arg, 2))

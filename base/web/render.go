@@ -12,9 +12,8 @@ import (
 )
 
 const (
-	REFRESH = "refresh"
-	STATUS  = "status"
-	COOKIE  = "cookie"
+	STATUS = "status"
+	COOKIE = "cookie"
 )
 
 func Render(msg *ice.Message, cmd string, args ...interface{}) {
@@ -23,20 +22,14 @@ func Render(msg *ice.Message, cmd string, args ...interface{}) {
 	}
 
 	switch arg := kit.Simple(args...); cmd {
-	case ice.RENDER_REDIRECT: // url [arg...]
-		http.Redirect(msg.W, msg.R, kit.MergeURL(arg[0], arg[1:]), 307)
-
-	case REFRESH: // [delay [text]]
-		arg = []string{"200", fmt.Sprintf(`<!DOCTYPE html><head><meta charset="utf-8"><meta http-equiv="Refresh" content="%d"></head><body>%s</body>`,
-			kit.Int(kit.Select("3", arg, 0)), kit.Select("请稍后，系统初始化中...", arg, 1),
-		)}
-		fallthrough
-
 	case STATUS: // [code [text]]
 		RenderStatus(msg, kit.Int(kit.Select("200", arg, 0)), kit.Select("", arg, 1))
 
 	case COOKIE: // value [name [path [expire]]]
 		RenderCookie(msg, arg[0], arg[1:]...)
+
+	case ice.RENDER_REDIRECT: // url [arg...]
+		http.Redirect(msg.W, msg.R, kit.MergeURL(arg[0], arg[1:]), 307)
 
 	case ice.RENDER_DOWNLOAD: // file [type [name]]
 		msg.W.Header().Set("Content-Disposition", fmt.Sprintf("filename=%s", kit.Select(path.Base(kit.Select(arg[0], msg.Option("filename"))), arg, 2)))
@@ -71,7 +64,6 @@ func Render(msg *ice.Message, cmd string, args ...interface{}) {
 		fmt.Fprint(msg.W, msg.Formats(kit.MDB_META))
 	}
 }
-
 func RenderStatus(msg *ice.Message, code int, text string) {
 	msg.W.WriteHeader(code)
 	msg.W.Write([]byte(text))

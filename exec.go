@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"strings"
 	"time"
 
 	kit "github.com/shylinux/toolkits"
@@ -76,6 +77,7 @@ func (m *Message) Done(b bool) bool {
 	ctx.wg.Done()
 	return true
 }
+
 func (m *Message) Call(sync bool, cb func(*Message) *Message) *Message {
 	wait := make(chan bool, 2)
 	p := kit.Select("10s", m.Option("timeout"))
@@ -127,4 +129,35 @@ func (m *Message) Go(cb interface{}, args ...interface{}) *Message {
 		return m.Gos(m.Spawn(), cb, args...)
 	}
 	return m.Gos(m, cb, args...)
+}
+
+func (m *Message) Watch(key string, arg ...string) *Message {
+	if len(arg) == 0 {
+		arg = append(arg, m.Prefix("auto"))
+	}
+	m.Cmd("gdb.event", "action", "listen", "event", key, "cmd", strings.Join(arg, " "))
+	return m
+}
+func (m *Message) Event(key string, arg ...string) *Message {
+	m.Cmd("gdb.event", "action", "action", "event", key, arg)
+	return m
+}
+func (m *Message) Right(arg ...interface{}) bool {
+	return m.Option(MSG_USERROLE) == "root" || !m.Warn(m.Cmdx("aaa.role", "right",
+		m.Option(MSG_USERROLE), strings.ReplaceAll(kit.Keys(arg...), "/", ".")) != "ok",
+		ErrNotRight, m.Option(MSG_USERROLE), " of ", strings.Join(kit.Simple(arg), "."), " at ", kit.FileLine(2, 3))
+}
+func (m *Message) Space(arg interface{}) []string {
+	if arg == nil || arg == "" || kit.Format(arg) == m.Conf("cli.runtime", "node.name") {
+		return nil
+	}
+	return []string{"web.space", kit.Format(arg)}
+}
+func (m *Message) PodCmd(arg ...interface{}) bool {
+	if pod := m.Option("pod"); pod != "" {
+		m.Option("pod", "")
+		m.Cmd(append([]interface{}{"space", pod}, arg...))
+		return true
+	}
+	return false
 }

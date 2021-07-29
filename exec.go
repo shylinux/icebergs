@@ -156,7 +156,7 @@ func (m *Message) Space(arg interface{}) []string {
 func (m *Message) PodCmd(arg ...interface{}) bool {
 	if pod := m.Option("pod"); pod != "" {
 		m.Option("pod", "")
-		m.Cmd(append([]interface{}{"space", pod}, arg...))
+		m.Cmdy(append([]interface{}{"space", pod}, arg...))
 		return true
 	}
 	return false

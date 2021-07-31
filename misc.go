@@ -101,6 +101,64 @@ func (m *Message) Split(str string, field string, space string, enter string) *M
 	}
 	return m
 }
+func (m *Message) FormatStack() string {
+	// 调用栈
+	pc := make([]uintptr, 100)
+	pc = pc[:runtime.Callers(5, pc)]
+	frames := runtime.CallersFrames(pc)
+
+	meta := []string{}
+	for {
+		frame, more := frames.Next()
+		file := strings.Split(frame.File, "/")
+		name := strings.Split(frame.Function, "/")
+		meta = append(meta, fmt.Sprintf("\n%s:%d\t%s", file[len(file)-1], frame.Line, name[len(name)-1]))
+		if !more {
+			break
+		}
+	}
+	return strings.Join(meta, "")
+}
+func (m *Message) FormatChain() string {
+	ms := []*Message{}
+	for msg := m; msg != nil; msg = msg.message {
+		ms = append(ms, msg)
+	}
+
+	meta := append([]string{}, "\n\n")
+	for i := len(ms) - 1; i >= 0; i-- {
+		msg := ms[i]
+
+		meta = append(meta, fmt.Sprintf("%s ", msg.Format("prefix")))
+		if len(msg.meta[MSG_DETAIL]) > 0 {
+			meta = append(meta, fmt.Sprintf("detail:%d %v", len(msg.meta[MSG_DETAIL]), msg.meta[MSG_DETAIL]))
+		}
+
+		if len(msg.meta[MSG_OPTION]) > 0 {
+			meta = append(meta, fmt.Sprintf("option:%d %v\n", len(msg.meta[MSG_OPTION]), msg.meta[MSG_OPTION]))
+			for _, k := range msg.meta[MSG_OPTION] {
+				if v, ok := msg.meta[k]; ok {
+					meta = append(meta, fmt.Sprintf("    %s: %d %v\n", k, len(v), v))
+				}
+			}
+		} else {
+			meta = append(meta, "\n")
+		}
+
+		if len(msg.meta[MSG_APPEND]) > 0 {
+			meta = append(meta, fmt.Sprintf("  append:%d %v\n", len(msg.meta[MSG_APPEND]), msg.meta[MSG_APPEND]))
+			for _, k := range msg.meta[MSG_APPEND] {
+				if v, ok := msg.meta[k]; ok {
+					meta = append(meta, fmt.Sprintf("    %s: %d %v\n", k, len(v), v))
+				}
+			}
+		}
+		if len(msg.meta[MSG_RESULT]) > 0 {
+			meta = append(meta, fmt.Sprintf("  result:%d %v\n", len(msg.meta[MSG_RESULT]), msg.meta[MSG_RESULT]))
+		}
+	}
+	return strings.Join(meta, "")
+}
 func (m *Message) Format(key interface{}) string {
 	switch key := key.(type) {
 	case []byte:
@@ -132,62 +190,9 @@ func (m *Message) Format(key interface{}) string {
 			return fmt.Sprintf("%s %d %s->%s", m.Time(), m.code, m.source.Name, m.target.Name)
 
 		case "chain":
-			// 调用链
-			ms := []*Message{}
-			for msg := m; msg != nil; msg = msg.message {
-				ms = append(ms, msg)
-			}
-
-			meta := append([]string{}, "\n\n")
-			for i := len(ms) - 1; i >= 0; i-- {
-				msg := ms[i]
-
-				meta = append(meta, fmt.Sprintf("%s ", msg.Format("prefix")))
-				if len(msg.meta[MSG_DETAIL]) > 0 {
-					meta = append(meta, fmt.Sprintf("detail:%d %v", len(msg.meta[MSG_DETAIL]), msg.meta[MSG_DETAIL]))
-				}
-
-				if len(msg.meta[MSG_OPTION]) > 0 {
-					meta = append(meta, fmt.Sprintf("option:%d %v\n", len(msg.meta[MSG_OPTION]), msg.meta[MSG_OPTION]))
-					for _, k := range msg.meta[MSG_OPTION] {
-						if v, ok := msg.meta[k]; ok {
-							meta = append(meta, fmt.Sprintf("    %s: %d %v\n", k, len(v), v))
-						}
-					}
-				} else {
-					meta = append(meta, "\n")
-				}
-
-				if len(msg.meta[MSG_APPEND]) > 0 {
-					meta = append(meta, fmt.Sprintf("  append:%d %v\n", len(msg.meta[MSG_APPEND]), msg.meta[MSG_APPEND]))
-					for _, k := range msg.meta[MSG_APPEND] {
-						if v, ok := msg.meta[k]; ok {
-							meta = append(meta, fmt.Sprintf("    %s: %d %v\n", k, len(v), v))
-						}
-					}
-				}
-				if len(msg.meta[MSG_RESULT]) > 0 {
-					meta = append(meta, fmt.Sprintf("  result:%d %v\n", len(msg.meta[MSG_RESULT]), msg.meta[MSG_RESULT]))
-				}
-			}
-			return strings.Join(meta, "")
+			return m.FormatChain()
 		case "stack":
-			// 调用栈
-			pc := make([]uintptr, 100)
-			pc = pc[:runtime.Callers(5, pc)]
-			frames := runtime.CallersFrames(pc)
-
-			meta := []string{}
-			for {
-				frame, more := frames.Next()
-				file := strings.Split(frame.File, "/")
-				name := strings.Split(frame.Function, "/")
-				meta = append(meta, fmt.Sprintf("\n%s:%d\t%s", file[len(file)-1], frame.Line, name[len(name)-1]))
-				if !more {
-					break
-				}
-			}
-			return strings.Join(meta, "")
+			return m.FormatStack()
 		}
 	}
 	return m.time.Format(MOD_TIME)

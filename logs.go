@@ -25,8 +25,7 @@ func (m *Message) log(level string, str string, arg ...interface{}) *Message {
 		return m // 禁用日志
 	}
 	if str = strings.TrimSpace(kit.Format(str, arg...)); Log != nil {
-		Log(m, m.Format(kit.MDB_PREFIX), level, str)
-		// 日志分流
+		Log(m, m.Format(kit.MDB_PREFIX), level, str) // 日志分流
 	}
 	if m.Option("_disable_log") == TRUE {
 		return m // 屏蔽日志
@@ -103,9 +102,9 @@ func (m *Message) Warn(err bool, arg ...interface{}) bool {
 func (m *Message) Error(err bool, str string, arg ...interface{}) bool {
 	if err {
 		m.Echo("error: ").Echo(str, arg...)
-		m.log(LOG_ERROR, m.Format("stack"))
+		m.log(LOG_ERROR, m.FormatStack())
 		m.log(LOG_ERROR, str, arg...)
-		m.log(LOG_ERROR, m.Format("chain"))
+		m.log(LOG_ERROR, m.FormatChain())
 		return true
 	}
 	return false

@@ -97,16 +97,13 @@ var Index = &Context{Name: "ice", Help: "冰山模块",
 			for _, k := range kit.Split(kit.Select("gdb,log,ssh,mdb")) {
 				m.Start(k)
 			}
-			m.Cmd("ssh.source", "etc/init.shy", "init.shy", "启动配置")
+			m.Cmd("ssh.source", ETC_INIT, "init.shy", "启动配置")
 			m.Cmdy(arg)
 		}},
 		"help": {Name: "help", Help: "帮助", Hand: func(m *Message, c *Context, cmd string, arg ...string) {
 			m.Echo(strings.Join(kit.Simple(m.Confv("help", "index")), "\n"))
 		}},
-		"exit": {Name: "exit restart:button", Help: "结束", Action: map[string]*Action{
-			"restart": {Name: "restart", Help: "重启", Hand: func(m *Message, arg ...string) {
-			}},
-		}, Hand: func(m *Message, c *Context, cmd string, arg ...string) {
+		"exit": {Name: "exit restart:button", Help: "结束", Hand: func(m *Message, c *Context, cmd string, arg ...string) {
 			m.root.target.server.(*Frame).code = kit.Int(kit.Select("0", arg, 0))
 			m.Cmd("ssh.source", ETC_EXIT, "exit.shy", "退出配置")
 			m.root.Cmd(CTX_EXIT)

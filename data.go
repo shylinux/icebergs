@@ -45,15 +45,17 @@ func (m *Message) Richs(prefix string, chain interface{}, raw interface{}, cb in
 	switch cb := cb.(type) {
 	case func(*sync.Mutex, string, map[string]interface{}):
 		mu := &sync.Mutex{}
+
 		wg := &sync.WaitGroup{}
+		defer wg.Wait()
 		res = miss.Richs(kit.Keys(prefix, chain), cache, raw, func(key string, value map[string]interface{}) {
 			wg.Add(1)
+
 			m.Go(func() {
 				defer wg.Done()
 				cb(mu, key, value)
 			})
 		})
-		wg.Wait()
 	default:
 		res = miss.Richs(kit.Keys(prefix, chain), cache, raw, cb)
 	}

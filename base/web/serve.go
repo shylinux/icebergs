@@ -239,7 +239,7 @@ func init() {
 						m.Conf(SERVE, kit.Keys(kit.MDB_META, aaa.WHITE, k), true)
 					}
 				}},
-				tcp.START: {Name: "start dev= name=self proto=http host= port=9020", Help: "启动", Hand: func(m *ice.Message, arg ...string) {
+				cli.START: {Name: "start dev= name=self proto=http host= port=9020", Help: "启动", Hand: func(m *ice.Message, arg ...string) {
 					if cli.NodeInfo(m, SERVER, ice.Info.HostName); m.Option(tcp.PORT) == tcp.RANDOM {
 						m.Option(tcp.PORT, m.Cmdx(tcp.PORT, aaa.RIGHT))
 					}

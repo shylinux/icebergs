@@ -11,7 +11,7 @@ import (
 	"github.com/shylinux/toolkits/task"
 )
 
-func (m *Message) TryCatch(msg *Message, safe bool, hand ...func(msg *Message)) *Message {
+func (m *Message) TryCatch(msg *Message, silent bool, hand ...func(msg *Message)) *Message {
 	defer func() {
 		switch e := recover(); e {
 		case io.EOF:
@@ -19,13 +19,13 @@ func (m *Message) TryCatch(msg *Message, safe bool, hand ...func(msg *Message)) 
 		default:
 			fileline := kit.FileLine(4, 5)
 			m.Log(LOG_WARN, "catch: %s %s", e, fileline)
-			m.Log("chain", msg.Format("chain"))
+			m.Log("chain", msg.FormatChain())
 			m.Log(LOG_WARN, "catch: %s %s", e, fileline)
-			m.Log("stack", msg.Format("stack"))
+			m.Log("stack", msg.FormatStack())
 			m.Log(LOG_WARN, "catch: %s %s", e, fileline)
 			if len(hand) > 1 { // 捕获异常
-				m.TryCatch(msg, safe, hand[1:]...)
-			} else if !safe { // 抛出异常
+				m.TryCatch(msg, silent, hand[1:]...)
+			} else if !silent { // 抛出异常
 				m.Assert(e)
 			}
 		}

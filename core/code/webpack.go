@@ -11,6 +11,13 @@ import (
 	kit "github.com/shylinux/toolkits"
 )
 
+func _volcanos(file ...string) string {
+	return path.Join(ice.USR_VOLCANOS, path.Join(file...))
+}
+func _publish(file ...string) string {
+	return path.Join(ice.USR_PUBLISH, path.Join(file...))
+}
+
 const WEBPACK = "webpack"
 
 func init() {
@@ -62,19 +69,22 @@ func init() {
 				}
 
 				m.Option(nfs.DIR_ROOT, "")
-				if f, p, e := kit.Create(path.Join(ice.USR_PUBLISH, WEBPACK, kit.Keys(m.Option(kit.MDB_NAME), HTML))); m.Assert(e) {
+				if f, p, e := kit.Create(_publish(WEBPACK, kit.Keys(m.Option(kit.MDB_NAME), HTML))); m.Assert(e) {
 					f.WriteString(fmt.Sprintf(_pack,
-						m.Cmdx(nfs.CAT, path.Join(ice.USR_VOLCANOS, "page/cache.css")),
-						m.Cmdx(nfs.CAT, path.Join(ice.USR_VOLCANOS, "page/index.css")),
+						m.Cmdx(nfs.CAT, _volcanos("page/cache.css")),
+						m.Cmdx(nfs.CAT, _volcanos("page/index.css")),
 
-						m.Cmdx(nfs.CAT, path.Join(ice.USR_VOLCANOS, ice.PROTO_JS)),
-						m.Cmdx(nfs.CAT, path.Join(ice.USR_PUBLISH, path.Join(WEBPACK, kit.Keys(m.Option(kit.MDB_NAME), JS)))),
+						m.Cmdx(nfs.CAT, _volcanos(ice.PROTO_JS)),
+						m.Cmdx(nfs.CAT, _publish(path.Join(WEBPACK, kit.Keys(m.Option(kit.MDB_NAME), JS)))),
 
-						m.Cmdx(nfs.CAT, path.Join(ice.USR_VOLCANOS, "page/cache.js")),
-						m.Cmdx(nfs.CAT, path.Join(ice.USR_VOLCANOS, "page/index.js")),
+						m.Cmdx(nfs.CAT, _volcanos("page/cache.js")),
+						m.Cmdx(nfs.CAT, _volcanos("page/index.js")),
 					))
 					m.Echo(p)
 				}
+
+				m.Cmd(nfs.COPY, _volcanos("page/can.css"), _volcanos("page/index.css"), _volcanos("page/cache.css"))
+				m.Cmd(nfs.COPY, _volcanos("page/can.js"), _volcanos("proto.js"), _volcanos("page/cache.js"))
 			}},
 			mdb.PRUNES: {Name: "prunes", Help: "清理", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmd(nfs.SAVE, path.Join(ice.USR_VOLCANOS, "page/cache.css"), "")

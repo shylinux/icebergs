@@ -205,16 +205,26 @@ func init() {
 				_action_show(m, arg[0], arg[1], arg[2], arg[3:]...)
 			}},
 
-			"/cmd/": {Name: "/cmd/", Help: "命令", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-				m.RenderDownload(path.Join(m.Conf(web.SERVE, kit.Keym(ice.VOLCANOS, kit.MDB_PATH)), "page/cmd.html"))
-			}},
 			"/cmd": {Name: "/cmd", Help: "命令", Action: map[string]*ice.Action{
 				ctx.COMMAND: {Name: "command", Help: "命令", Hand: func(m *ice.Message, arg ...string) {
+					if len(arg) == 0 {
+						m.Push("index", "cli.system")
+						m.Push("args", kit.Format(kit.Simple("pwd")))
+
+						m.Push("index", "cli.runtime")
+						m.Push("args", kit.Format(kit.Simple("procinfo")))
+						return
+					}
 					m.Cmdy(ctx.COMMAND, arg)
 				}},
 				cli.RUN: {Name: "command", Help: "执行", Hand: func(m *ice.Message, arg ...string) {
 					m.Cmdy(arg)
 				}},
+			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+				m.RenderDownload(path.Join(m.Conf(web.SERVE, kit.Keym(ice.VOLCANOS, kit.MDB_PATH)), "page/cmd.html"))
+			}},
+			"/cmd/": {Name: "/cmd/", Help: "命令", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+				m.RenderDownload(path.Join(m.Conf(web.SERVE, kit.Keym(ice.VOLCANOS, kit.MDB_PATH)), "page/cmd.html"))
 			}},
 		}})
 }

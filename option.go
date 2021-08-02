@@ -140,9 +140,11 @@ func (m *Message) Process(action string, arg ...interface{}) {
 	m.Option(MSG_PROCESS, action)
 	m.Option("_arg", arg...)
 }
+func (m *Message) ProcessLocation(arg ...interface{}) {
+	m.Process(PROCESS_LOCATION, arg...)
+}
 func (m *Message) ProcessRewrite(arg ...interface{}) {
-	m.Process(PROCESS_REWRITE)
-	m.Option("_arg", arg...)
+	m.Process(PROCESS_REWRITE, arg...)
 }
 func (m *Message) ProcessRefresh(delay string) {
 	if d, e := time.ParseDuration(delay); e == nil {

@@ -35,6 +35,14 @@ func _cat_show(m *ice.Message, name string) {
 		defer f.Close()
 
 		switch cb := m.Optionv(kit.Keycb(CAT)).(type) {
+		case func(string, int) string:
+			list := []string{}
+			bio := bufio.NewScanner(f)
+			for i := 0; bio.Scan(); i++ {
+				list = append(list, cb(bio.Text(), i))
+			}
+			m.Echo(strings.Join(list, "\n") + "\n")
+
 		case func(string, int):
 			bio := bufio.NewScanner(f)
 			for i := 0; bio.Scan(); i++ {
@@ -72,6 +80,10 @@ func _cat_show(m *ice.Message, name string) {
 	}
 }
 
+const (
+	PATH = "path"
+	SIZE = "size"
+)
 const CAT = "cat"
 
 func init() {

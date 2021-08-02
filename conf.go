@@ -143,10 +143,11 @@ const ( // RENDER
 	RENDER_REDIRECT = "_redirect"
 )
 const ( // PROCESS
-	PROCESS_REFRESH = "_refresh"
-	PROCESS_REWRITE = "_rewrite"
-	PROCESS_FIELD   = "_field"
-	PROCESS_INNER   = "_inner"
+	PROCESS_LOCATION = "_location"
+	PROCESS_REFRESH  = "_refresh"
+	PROCESS_REWRITE  = "_rewrite"
+	PROCESS_FIELD    = "_field"
+	PROCESS_INNER    = "_inner"
 
 	PROCESS_HOLD = "_hold"
 	PROCESS_BACK = "_back"

@@ -12,6 +12,11 @@ import (
 	kit "github.com/shylinux/toolkits"
 )
 
+func _cmd_render(m *ice.Message, cmd string, args ...interface{}) {
+	list := []interface{}{kit.Dict("index", cmd, "args", args)}
+	m.RenderResult(kit.Format(m.Conf(CMD, kit.Keym(kit.MDB_TEMPLATE)), kit.Format(list)))
+}
+
 const CMD = "cmd"
 
 func init() {
@@ -36,14 +41,24 @@ func init() {
 				}
 
 				switch p := path.Join(m.Conf(CMD, kit.META_PATH), path.Join(arg...)); kit.Ext(p) {
+				case "svg":
+					_cmd_render(m, "web.wiki.draw", path.Dir(p)+"/", path.Base(p))
+				case "json":
+					_cmd_render(m, "web.wiki.json", p)
 				case "shy":
-					list := []interface{}{kit.Dict("index", "web.wiki.word", "args", []interface{}{p})}
-					m.RenderResult(kit.Format(m.Conf(CMD, kit.Keym(kit.MDB_TEMPLATE)), kit.Format(list)))
+					_cmd_render(m, "web.wiki.word", p)
+				case "csv":
+					_cmd_render(m, "web.wiki.data", p)
+				case "go", "mod", "sum":
+					_cmd_render(m, "web.code.inner", path.Dir(p)+"/", path.Base(p))
 				default:
 					m.RenderDownload(p)
 				}
 			}},
-			CMD: {Name: "cmd path auto up", Help: "命令", Action: map[string]*ice.Action{
+			CMD: {Name: "cmd path auto up home", Help: "命令", Action: map[string]*ice.Action{
+				"home": {Name: "home", Help: "根目录", Hand: func(m *ice.Message, arg ...string) {
+					m.ProcessLocation("/chat/cmd/")
+				}},
 				"up": {Name: "up", Help: "上一级", Hand: func(m *ice.Message, arg ...string) {
 					if strings.TrimPrefix(m.R.URL.Path, "/cmd") == "/" {
 						m.Cmdy(CMD)

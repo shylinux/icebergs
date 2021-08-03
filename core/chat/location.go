@@ -48,7 +48,7 @@ func init() {
 				mdb.CREATE: {Name: "create type=text name text latitude longitude", Help: "添加", Hand: func(m *ice.Message, arg ...string) {
 					m.Cmdy(mdb.INSERT, m.Prefix(LOCATION), "", mdb.HASH, arg)
 				}},
-			}, mdb.HashAction(LOCATION)), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			}, mdb.HashAction()), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 				m.Fields(len(arg), m.Conf(LOCATION, kit.META_FIELD))
 				m.Cmdy(mdb.SELECT, m.Prefix(LOCATION), "", mdb.HASH, kit.MDB_HASH, arg)
 				m.PushAction(OPENLOCATION, mdb.REMOVE)

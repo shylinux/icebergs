@@ -23,7 +23,7 @@ func init() {
 					up := kit.Simple(m.Optionv(ice.MSG_UPLOAD))
 					m.Cmdy(mdb.INSERT, m.Prefix(FILES), "", mdb.HASH, kit.MDB_TYPE, kit.Ext(up[1]), kit.MDB_NAME, up[1], kit.MDB_SIZE, up[2], kit.MDB_DATA, up[0])
 				}},
-			}, mdb.HashAction(FILES)), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			}, mdb.HashAction()), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 				m.Fields(len(arg), m.Conf(FILES, kit.META_FIELD))
 				m.Cmdy(mdb.SELECT, m.Prefix(FILES), "", mdb.HASH, kit.MDB_HASH, arg)
 				m.Table(func(index int, value map[string]string, head []string) {

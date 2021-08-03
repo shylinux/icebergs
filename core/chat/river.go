@@ -179,7 +179,7 @@ func init() {
 				SHARE: {Name: "share", Help: "共享", Hand: func(m *ice.Message, arg ...string) {
 					_header_share(m, arg...)
 				}},
-			}, mdb.HashAction(RIVER)), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			}, mdb.HashAction()), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 				m.Cmdy(mdb.SELECT, RIVER, "", mdb.HASH, kit.MDB_HASH, arg)
 				m.PushAction(mdb.REMOVE)
 			}},

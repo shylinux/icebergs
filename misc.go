@@ -433,8 +433,10 @@ func MergeAction(list ...map[string]*Action) map[string]*Action {
 	}
 	for _, item := range list[1:] {
 		for k, v := range item {
-			if _, ok := list[0][k]; !ok {
+			if h, ok := list[0][k]; !ok {
 				list[0][k] = v
+			} else if h.Hand == nil {
+				h.Hand = v.Hand
 			}
 		}
 	}

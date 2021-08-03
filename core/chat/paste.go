@@ -27,7 +27,7 @@ func init() {
 					_trans(arg, map[string]string{"data": "text"})
 					m.Cmdy(mdb.INSERT, m.Prefix(PASTE), "", mdb.HASH, arg)
 				}},
-			}, mdb.HashAction(PASTE)), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			}, mdb.HashAction()), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 				m.Fields(len(arg), m.Conf(PASTE, kit.META_FIELD))
 				if m.Cmdy(mdb.SELECT, cmd, "", mdb.HASH, kit.MDB_HASH, arg); len(arg) > 0 {
 					m.PushScript(ssh.SCRIPT, m.Append(kit.MDB_TEXT))

@@ -26,7 +26,7 @@ func init() {
 				mdb.CREATE: {Name: "create type=text name=hi text:textarea=hi", Help: "添加", Hand: func(m *ice.Message, arg ...string) {
 					m.Cmdy(mdb.INSERT, m.Prefix(SCAN), "", mdb.HASH, arg)
 				}},
-			}, mdb.HashAction(SCAN)), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			}, mdb.HashAction()), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 				m.Fields(len(arg), m.Conf(SCAN, kit.META_FIELD))
 				if m.Cmdy(mdb.SELECT, m.Prefix(SCAN), "", mdb.HASH, kit.MDB_HASH, arg); len(arg) > 0 {
 					m.PushScript(ssh.SCRIPT, m.Append(kit.MDB_TEXT))

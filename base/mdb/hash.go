@@ -140,22 +140,22 @@ func _hash_inputs(m *ice.Message, prefix, chain string, field, value string) {
 	m.Sort(kit.MDB_COUNT, "int_r")
 }
 
-func HashAction(key string, fields ...string) map[string]*ice.Action {
+func HashAction(fields ...string) map[string]*ice.Action {
 	list := map[string]*ice.Action{
 		MODIFY: {Name: "modify", Help: "编辑", Hand: func(m *ice.Message, arg ...string) {
-			m.Cmdy(MODIFY, m.Prefix(key), "", HASH, m.OptionSimple(kit.MDB_HASH), arg)
+			m.Cmdy(MODIFY, m.PrefixKey(), "", HASH, m.OptionSimple(kit.MDB_HASH), arg)
 		}},
 		REMOVE: {Name: "remove", Help: "删除", Hand: func(m *ice.Message, arg ...string) {
-			m.Cmdy(DELETE, m.Prefix(key), "", HASH, m.OptionSimple(kit.MDB_HASH))
+			m.Cmdy(DELETE, m.PrefixKey(), "", HASH, m.OptionSimple(kit.MDB_HASH))
 		}},
 		EXPORT: {Name: "export", Help: "导出", Hand: func(m *ice.Message, arg ...string) {
-			m.Cmdy(EXPORT, m.Prefix(key), "", HASH)
+			m.Cmdy(EXPORT, m.PrefixKey(), "", HASH)
 		}},
 		IMPORT: {Name: "import", Help: "导入", Hand: func(m *ice.Message, arg ...string) {
-			m.Cmdy(IMPORT, m.Prefix(key), "", HASH)
+			m.Cmdy(IMPORT, m.PrefixKey(), "", HASH)
 		}},
 		INPUTS: {Name: "inputs", Help: "补全", Hand: func(m *ice.Message, arg ...string) {
-			m.Cmdy(INPUTS, m.Prefix(key), "", HASH, arg)
+			m.Cmdy(INPUTS, m.PrefixKey(), "", HASH, arg)
 		}},
 	}
 	if len(fields) == 0 {

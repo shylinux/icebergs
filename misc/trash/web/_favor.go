@@ -26,7 +26,7 @@ func _favor_list(m *ice.Message, zone, id string, fields ...string) {
 				// 列表信息
 				m.Push(zone, value, fields, val)
 			})
-			m.Sort(kit.MDB_ID, "int_r")
+			m.SortIntR(kit.MDB_ID)
 			return
 		}
 		m.Grows(FAVOR, kit.Keys(kit.MDB_HASH, key), kit.MDB_ID, id, func(index int, value map[string]interface{}) {

@@ -26,7 +26,7 @@ func init() {
 					m.Echo(kit.Formats(kit.UnMarshal(m.Cmdx(web.SPIDE, web.SPIDE_DEV, web.SPIDE_RAW,
 						m.Option(cli.CMD), m.Option(cli.API), web.SPIDE_DATA, m.Option(cli.ARG)))))
 					m.Info(`curl "` + m.Option(cli.API) + `" -H "Content-Type: application/json"` + ` -d '` + m.Option(cli.ARG) + `'`)
-					m.ProcessInner()
+					m.ProcessDisplay("/plugin/local/wiki/json.js")
 				}},
 				cli.CHECK: {Name: "check", Help: "检查", Hand: func(m *ice.Message, arg ...string) {
 					if m.ProcessInner(); len(arg) > 0 {

@@ -55,7 +55,11 @@ func init() {
 					m.RenderDownload(p)
 				}
 			}},
-			CMD: {Name: "cmd path auto up home", Help: "命令", Action: map[string]*ice.Action{
+			CMD: {Name: "cmd path auto upload up home", Help: "命令", Action: map[string]*ice.Action{
+				web.UPLOAD: {Name: "upload", Help: "上传", Hand: func(m *ice.Message, arg ...string) {
+					_action_upload(m)
+					m.Upload(path.Join(m.Conf(CMD, kit.META_PATH), strings.TrimPrefix(path.Dir(m.R.URL.Path), "/cmd")))
+				}},
 				"home": {Name: "home", Help: "根目录", Hand: func(m *ice.Message, arg ...string) {
 					m.ProcessLocation("/chat/cmd/")
 				}},

@@ -130,6 +130,9 @@ func _hash_inputs(m *ice.Message, prefix, chain string, field, value string) {
 		if field == kit.MDB_HASH {
 			list[key]++
 		} else {
+			if kit.Format(val["count"]) != "" {
+				list[kit.Format(val[field])] = kit.Int(val["count"])
+			}
 			list[kit.Format(val[field])]++
 		}
 	})
@@ -137,7 +140,7 @@ func _hash_inputs(m *ice.Message, prefix, chain string, field, value string) {
 		m.Push(field, k)
 		m.Push(kit.MDB_COUNT, i)
 	}
-	m.Sort(kit.MDB_COUNT, "int_r")
+	m.SortIntR(kit.MDB_COUNT)
 }
 
 func HashAction(fields ...string) map[string]*ice.Action {

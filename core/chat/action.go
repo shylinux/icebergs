@@ -86,7 +86,7 @@ func _action_show(m *ice.Message, river, storm, index string, arg ...string) {
 		m.Cmdy(cmds, arg) // 执行命令
 	}
 }
-func _action_upload(m *ice.Message, arg ...string) {
+func _action_upload(m *ice.Message) {
 	msg := m.Cmd(web.CACHE, web.UPLOAD)
 	m.Option(ice.MSG_UPLOAD, msg.Append(kit.MDB_HASH), msg.Append(kit.MDB_NAME), msg.Append(kit.MDB_SIZE))
 }

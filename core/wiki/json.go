@@ -11,14 +11,12 @@ const JSON = "json"
 func init() {
 	Index.Merge(&ice.Context{
 		Configs: map[string]*ice.Config{
-			JSON: {Name: JSON, Help: "数据表格", Value: kit.Data(
-				kit.MDB_PATH, ice.USR_LOCAL_EXPORT, kit.MDB_REGEXP, ".*\\.csv",
+			JSON: {Name: JSON, Help: "数据结构", Value: kit.Data(
+				kit.MDB_PATH, ice.USR_LOCAL_EXPORT, kit.MDB_REGEXP, ".*\\.json",
 			)},
 		},
 		Commands: map[string]*ice.Command{
-			JSON: {Name: "json path auto", Help: "数据结构", Meta: kit.Dict(
-				ice.Display("/plugin/local/wiki/json.js"),
-			), Action: map[string]*ice.Action{
+			JSON: {Name: "json path auto", Help: "数据结构", Meta: kit.Dict(ice.Display("/plugin/local/wiki/json.js")), Action: map[string]*ice.Action{
 				nfs.SAVE: {Name: "save path text", Help: "保存", Hand: func(m *ice.Message, arg ...string) {
 					_wiki_save(m, JSON, arg[0], arg[1])
 				}},

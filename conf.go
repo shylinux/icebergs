@@ -146,6 +146,7 @@ const ( // PROCESS
 	PROCESS_LOCATION = "_location"
 	PROCESS_REFRESH  = "_refresh"
 	PROCESS_REWRITE  = "_rewrite"
+	PROCESS_DISPLAY  = "_display"
 	PROCESS_FIELD    = "_field"
 	PROCESS_INNER    = "_inner"
 

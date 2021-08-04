@@ -142,7 +142,7 @@ func init() {
 			ice.CTX_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 				m.Cmd(mdb.SEARCH, mdb.CREATE, TASK, m.Prefix(TASK))
 			}},
-			TASK: {Name: "task zone id auto insert export import", Help: "任务", Action: map[string]*ice.Action{
+			TASK: {Name: "task zone id auto insert export import", Help: "任务", Action: ice.MergeAction(map[string]*ice.Action{
 				mdb.INSERT: {Name: "insert zone type=once,step,week name text begin_time@date close_time@date", Help: "添加", Hand: func(m *ice.Message, arg ...string) {
 					_task_create(m, arg[1])
 					_task_insert(m, arg[1], arg[2:]...)
@@ -181,7 +181,7 @@ func init() {
 				END: {Name: "end", Help: "完成", Hand: func(m *ice.Message, arg ...string) {
 					_task_modify(m, STATUS, FINISH)
 				}},
-			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			}, mdb.ZoneAction()), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 				m.Fields(len(arg), "time,zone,count", m.Conf(TASK, kit.META_FIELD))
 				if m.Cmdy(mdb.SELECT, m.Prefix(TASK), "", mdb.ZONE, arg); len(arg) == 0 {
 					m.PushAction(mdb.REMOVE)

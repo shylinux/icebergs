@@ -172,6 +172,10 @@ func (m *Message) ProcessField(arg ...interface{}) {
 	m.Process(PROCESS_FIELD)
 	m.Option("_prefix", arg...)
 }
+func (m *Message) ProcessDisplay(arg ...interface{}) {
+	m.Process(PROCESS_DISPLAY)
+	m.Option("_display", arg...)
+}
 func (m *Message) ProcessInner() { m.Process(PROCESS_INNER) }
 func (m *Message) ProcessHold()  { m.Process(PROCESS_HOLD) }
 func (m *Message) ProcessBack()  { m.Process(PROCESS_BACK) }

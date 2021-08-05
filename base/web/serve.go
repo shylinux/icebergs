@@ -79,11 +79,23 @@ func _serve_handle(key string, cmd *ice.Command, msg *ice.Message, w http.Respon
 		msg.Option(v.Name, v.Value)
 	}
 
+	if ls := strings.Split(r.URL.Path, "/"); len(ls) > 2 && ls[1] == "share" {
+		msg.Logs("refer", ls[1], ls[2])
+		msg.Option(ls[1], ls[2])
+	} else {
+		msg.Debug("%v", ls)
+	}
 	// 请求变量
 	if u, e := url.Parse(r.Header.Get("Referer")); e == nil {
 		for k, v := range u.Query() {
 			msg.Logs("refer", k, v)
 			msg.Option(k, v)
+		}
+		if ls := strings.Split(u.Path, "/"); len(ls) > 2 && ls[1] == "share" {
+			msg.Logs("refer", ls[1], ls[2])
+			msg.Option(ls[1], ls[2])
+		} else {
+			msg.Debug("%v", ls)
 		}
 	}
 

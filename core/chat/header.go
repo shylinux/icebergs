@@ -32,7 +32,7 @@ func _header_check(m *ice.Message, arg ...string) {
 func _header_share(m *ice.Message, arg ...string) {
 	if m.Option(kit.MDB_LINK) == "" {
 		share := m.Cmdx(web.SHARE, mdb.CREATE, kit.MDB_TYPE, web.LOGIN, arg)
-		m.Option(kit.MDB_LINK, kit.MergeURL(m.Option(ice.MSG_USERWEB), web.SHARE, share))
+		m.Option(kit.MDB_LINK, kit.MergeURL2(m.Option(ice.MSG_USERWEB), "/share/"+share))
 	}
 	link := tcp.ReplaceLocalhost(m, m.Option(kit.MDB_LINK))
 

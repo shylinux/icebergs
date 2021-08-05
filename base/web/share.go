@@ -208,6 +208,9 @@ func init() {
 
 				case STORM:
 					m.RenderRedirect("/page/share.html", SHARE, m.Option(SHARE))
+
+				case FIELD:
+					m.RenderDownload(path.Join(m.Conf(SERVE, kit.Keym(ice.VOLCANOS, kit.MDB_PATH)), "/page/index.html"))
 				}
 			}},
 

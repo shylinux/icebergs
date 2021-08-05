@@ -37,7 +37,12 @@ func init() {
 			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 				if strings.HasSuffix(m.R.URL.Path, "/") {
 					m.RenderDownload(path.Join(m.Conf(web.SERVE, kit.Keym(ice.VOLCANOS, kit.MDB_PATH)), m.Conf(CMD, kit.Keym(kit.MDB_INDEX))))
-					return
+					return // 目录
+				}
+
+				if msg := m.Cmd(ctx.COMMAND, arg[0]); msg.Append("meta") != "" {
+					_cmd_render(m, arg[0])
+					return // 命令
 				}
 
 				switch p := path.Join(m.Conf(CMD, kit.META_PATH), path.Join(arg...)); kit.Ext(p) {
@@ -85,10 +90,13 @@ func init() {
 		},
 		Configs: map[string]*ice.Config{
 			CMD: {Name: CMD, Help: "命令", Value: kit.Data(
-				kit.MDB_PATH, "./", kit.MDB_INDEX, "page/cmd.html", kit.MDB_TEMPLATE, `
-<!DOCTYPE html>
-<body><script src="/page/can.js"></script>
-	<script>app("/chat/", %s)</script>
+				kit.MDB_PATH, "./", kit.MDB_INDEX, "page/cmd.html", kit.MDB_TEMPLATE, `<!DOCTYPE html>
+<head>
+    <link rel="stylesheet" type="text/css" href="/page/cmd.css">
+</head>
+<body>
+	<script src="/page/cmd.js"></script>
+	<script>cmd(%s)</script>
 </body>
 `,
 			)},

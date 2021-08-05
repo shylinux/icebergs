@@ -83,8 +83,8 @@ func init() {
 					m.Echo(p)
 				}
 
-				m.Cmd(nfs.COPY, _volcanos("page/can.css"), _volcanos("page/index.css"), _volcanos("page/cache.css"))
-				m.Cmd(nfs.COPY, _volcanos("page/can.js"), _volcanos("proto.js"), _volcanos("page/cache.js"))
+				m.Cmd(nfs.COPY, _volcanos("page/cmd.css"), _volcanos("page/index.css"), _volcanos("page/cache.css"))
+				m.Cmd(nfs.COPY, _volcanos("page/cmd.js"), _volcanos("proto.js"), _volcanos("page/cache.js"))
 			}},
 			mdb.PRUNES: {Name: "prunes", Help: "清理", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmd(nfs.SAVE, path.Join(ice.USR_VOLCANOS, "page/cache.css"), "")

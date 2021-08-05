@@ -1,6 +1,7 @@
 package ice
 
 import (
+	"path"
 	"strings"
 
 	kit "github.com/shylinux/toolkits"
@@ -104,12 +105,6 @@ func (m *Message) IsCliUA() bool {
 	}
 	return false
 }
-func (m *Message) ReplaceLocalhost(url string) string {
-	if strings.Contains(url, "://localhost") {
-		return strings.Replace(url, "localhost", m.Cmd("tcp.host").Append("ip"), 1)
-	}
-	return url
-}
 
 func (m *Message) Render(cmd string, args ...interface{}) *Message {
 	m.Optionv(MSG_OUTPUT, cmd)
@@ -130,7 +125,6 @@ func (m *Message) RenderResult(args ...interface{}) *Message {
 	return m.Render(RENDER_RESULT, args...)
 }
 func (m *Message) RenderTemplate(args ...interface{}) *Message {
-
 	return m.Render(RENDER_TEMPLATE, args...)
 }
 func (m *Message) RenderDownload(args ...interface{}) *Message {
@@ -139,6 +133,6 @@ func (m *Message) RenderDownload(args ...interface{}) *Message {
 func (m *Message) RenderRedirect(args ...interface{}) *Message {
 	return m.Render(RENDER_REDIRECT, args...)
 }
-func (m *Message) RenderIndex(serve, repos string) *Message {
-	return m.RenderDownload(kit.Path(m.Conf(serve, kit.Keym(repos, kit.SSH_PATH)), m.Conf(serve, kit.Keym(repos, kit.SSH_INDEX))))
+func (m *Message) RenderIndex(serve, repos string, file ...string) *Message {
+	return m.RenderDownload(kit.Path(m.Conf(serve, kit.Keym(repos, kit.SSH_PATH)), kit.Select(m.Conf(serve, kit.Keym(repos, kit.SSH_INDEX)), path.Join(file...))))
 }

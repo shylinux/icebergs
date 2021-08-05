@@ -17,7 +17,20 @@ import (
 )
 
 func _space_link(m *ice.Message, pod string, arg ...interface{}) string {
-	return kit.MergeURL2(m.Option(ice.MSG_USERWEB), "/chat/pod/"+pod, arg...)
+	return _share_link(m, "/chat/pod/"+pod, arg...)
+}
+func _space_domain(m *ice.Message) string {
+	link := m.Conf(SHARE, kit.Keym(kit.MDB_DOMAIN))
+	if link == "" {
+		link = m.Cmd(SPACE, SPIDE_DEV, cli.PWD).Append(kit.MDB_LINK)
+	}
+	if link == "" {
+		link = m.Cmd(SPACE, SPIDE_SHY, cli.PWD).Append(kit.MDB_LINK)
+	}
+	if link == "" {
+		link = kit.Format("http://localhost:%s", m.Cmd(SERVE).Append(tcp.PORT))
+	}
+	return tcp.ReplaceLocalhost(m, link)
 }
 func _space_list(m *ice.Message, space string) {
 	if space == "" {
@@ -148,7 +161,7 @@ func _space_handle(m *ice.Message, safe bool, send map[string]*ice.Message, c *w
 				if msg.Optionv(ice.MSG_HANDLE, ice.TRUE); safe {
 					msg.Go(func() { _space_exec(msg, source, target, c, name) })
 				} else {
-					msg.Push(kit.MDB_LINK, kit.MergePOD(_share_domain(msg), name))
+					msg.Push(kit.MDB_LINK, kit.MergePOD(_space_domain(msg), name))
 					_space_echo(msg, []string{}, kit.Revert(source)[1:], c, name)
 				}
 
@@ -288,7 +301,7 @@ func init() {
 							}
 
 							m.Go(func(msg *ice.Message) {
-								link := kit.MergeURL(_share_domain(msg), "grant", name)
+								link := kit.MergeURL(_space_domain(msg), "grant", name)
 								msg.Sleep("100ms").Cmd(SPACE, name, "pwd", name, link, msg.Cmdx(cli.QRCODE, link))
 							})
 						}

@@ -98,7 +98,7 @@ func init() {
 					m.Cmdy(nfs.DIR, "./", "time,size,line,path,link")
 				}},
 				ice.CONTEXTS: {Name: "contexts", Help: "环境", Hand: func(m *ice.Message, arg ...string) {
-					u := kit.ParseURL(m.ReplaceLocalhost(m.Option(ice.MSG_USERWEB)))
+					u := kit.ParseURL(tcp.ReplaceLocalhost(m, m.Option(ice.MSG_USERWEB)))
 					host := u.Host
 
 					m.Option("httphost", fmt.Sprintf("%s://%s:%s", u.Scheme, strings.Split(host, ":")[0], kit.Select(kit.Select("80", "443", u.Scheme == "https"), strings.Split(host, ":"), 1)))
@@ -109,7 +109,7 @@ func init() {
 					m.Option("hostpath", kit.Path("./.ish/pluged"))
 
 					if len(arg) == 0 {
-						arg = append(arg, "tmux", "base", "miss", "binary", "source", "module")
+						arg = append(arg, "tmux", "base", "miss", "binary", "source", "project")
 					}
 					for _, k := range arg {
 						if buf, err := kit.Render(m.Conf(PUBLISH, kit.Keym(ice.CONTEXTS, k)), m); m.Assert(err) {
@@ -152,8 +152,8 @@ echo "hello world"
 }
 
 var _contexts = kit.Dict(
-	"module", `# 创建模块
-export ctx_dev={{.Option "httphost"}} ctx_temp=$(mktemp); curl -fsSL $ctx_dev -o $ctx_temp; source $ctx_temp module
+	"project", `# 创建项目
+export ctx_dev={{.Option "httphost"}} ctx_temp=$(mktemp); curl -fsSL $ctx_dev -o $ctx_temp; source $ctx_temp project
 `,
 	"source", `# 源码安装
 export ctx_dev={{.Option "httphost"}} ctx_temp=$(mktemp); curl -fsSL $ctx_dev -o $ctx_temp; source $ctx_temp source

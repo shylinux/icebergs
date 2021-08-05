@@ -42,8 +42,7 @@ func _wx_reply(m *ice.Message, tmpl string) {
 	}
 }
 func _wx_action(m *ice.Message) {
-	m.Option(ice.MSG_OUTPUT, ice.RENDER_RESULT)
-	m.Set(ice.MSG_RESULT)
+	m.RenderResult().Set(ice.MSG_RESULT)
 
 	m.Echo(`<xml>
 <FromUserName><![CDATA[%s]]></FromUserName>
@@ -98,7 +97,7 @@ func init() {
 					return // 验证失败
 				}
 				if m.Option("echostr") != "" {
-					m.Render(ice.RENDER_RESULT, m.Option("echostr"))
+					m.RenderResult(m.Option("echostr"))
 					return // 绑定验证
 				}
 

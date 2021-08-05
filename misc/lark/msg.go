@@ -72,7 +72,7 @@ func init() {
 
 			switch _lark_parse(m); m.Option("msg.type") {
 			case "url_verification": // 绑定验证
-				m.Render(ice.RENDER_RESULT, kit.Format(kit.Dict("challenge", m.Option("msg.challenge"))))
+				m.RenderResult(kit.Format(kit.Dict("challenge", m.Option("msg.challenge"))))
 
 			case "event_callback": // 事件回调
 				m.Cmd(EVENT, m.Option(kit.MDB_TYPE))

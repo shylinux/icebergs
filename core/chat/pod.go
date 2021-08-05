@@ -1,8 +1,6 @@
 package chat
 
 import (
-	"path"
-
 	ice "github.com/shylinux/icebergs"
 	"github.com/shylinux/icebergs/base/cli"
 	"github.com/shylinux/icebergs/base/ctx"
@@ -28,7 +26,7 @@ func init() {
 					m.Cmdy(arg)
 				}},
 			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-				m.RenderDownload(path.Join(m.Conf(web.SERVE, kit.Keym(ice.VOLCANOS, kit.MDB_PATH)), m.Conf(web.SERVE, kit.Keym(ice.VOLCANOS, kit.MDB_INDEX))))
+				m.RenderIndex(web.SERVE, ice.VOLCANOS)
 			}},
 		},
 		Configs: map[string]*ice.Config{

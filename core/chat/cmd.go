@@ -36,7 +36,7 @@ func init() {
 				}},
 			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 				if strings.HasSuffix(m.R.URL.Path, "/") {
-					m.RenderDownload(path.Join(m.Conf(web.SERVE, kit.Keym(ice.VOLCANOS, kit.MDB_PATH)), m.Conf(CMD, kit.Keym(kit.MDB_INDEX))))
+					m.RenderIndex(web.SERVE, ice.VOLCANOS)
 					return // 目录
 				}
 

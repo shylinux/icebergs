@@ -159,6 +159,9 @@ func (m *Message) FormatChain() string {
 	}
 	return strings.Join(meta, "")
 }
+func (m *Message) FormatTime() string {
+	return m.Format("time")
+}
 func (m *Message) Format(key interface{}) string {
 	switch key := key.(type) {
 	case []byte:

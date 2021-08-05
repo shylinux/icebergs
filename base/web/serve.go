@@ -273,10 +273,10 @@ func init() {
 			}},
 
 			"/volcanos/": {Name: "/volcanos/", Help: "浏览器", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-				m.RenderDownload(path.Join(m.Conf(SERVE, kit.Keym(ice.VOLCANOS, kit.MDB_PATH)), path.Join(arg...)))
+				m.RenderIndex(SERVE, ice.VOLCANOS, arg...)
 			}},
 			"/intshell/": {Name: "/intshell/", Help: "命令行", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-				m.RenderDownload(path.Join(m.Conf(SERVE, kit.Keym(ice.INTSHELL, kit.MDB_PATH)), path.Join(arg...)))
+				m.RenderIndex(SERVE, ice.INTSHELL, arg...)
 			}},
 			"/publish/": {Name: "/publish/", Help: "私有云", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 				_share_local(m, m.Conf(SERVE, kit.Keym(ice.PUBLISH)), path.Join(arg...))

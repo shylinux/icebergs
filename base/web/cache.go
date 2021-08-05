@@ -183,9 +183,9 @@ func init() {
 			"/cache/": {Name: "/cache/", Help: "缓存池", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 				m.Richs(CACHE, nil, arg[0], func(key string, value map[string]interface{}) {
 					if kit.Format(value[kit.MDB_FILE]) == "" {
-						m.Render(ice.RENDER_DOWNLOAD, value[kit.MDB_FILE])
+						m.RenderDownload(value[kit.MDB_FILE])
 					} else {
-						m.Render(ice.RENDER_RESULT, value[kit.MDB_TEXT])
+						m.RenderResult(value[kit.MDB_TEXT])
 					}
 				})
 			}},

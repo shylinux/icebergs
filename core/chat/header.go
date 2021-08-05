@@ -5,7 +5,6 @@ import (
 	"github.com/shylinux/icebergs/base/aaa"
 	"github.com/shylinux/icebergs/base/ctx"
 	"github.com/shylinux/icebergs/base/mdb"
-	"github.com/shylinux/icebergs/base/tcp"
 	"github.com/shylinux/icebergs/base/web"
 	"github.com/shylinux/icebergs/core/code"
 	kit "github.com/shylinux/toolkits"
@@ -31,14 +30,12 @@ func _header_check(m *ice.Message, arg ...string) {
 }
 func _header_share(m *ice.Message, arg ...string) {
 	if m.Option(kit.MDB_LINK) == "" {
-		share := m.Cmdx(web.SHARE, mdb.CREATE, kit.MDB_TYPE, web.LOGIN, arg)
-		m.Option(kit.MDB_LINK, kit.MergeURL2(m.Option(ice.MSG_USERWEB), "/share/"+share))
+		m.Cmdy(web.SHARE, mdb.CREATE, kit.MDB_TYPE, web.LOGIN, arg)
 	}
-	link := tcp.ReplaceLocalhost(m, m.Option(kit.MDB_LINK))
 
 	m.Set(kit.MDB_NAME, kit.MDB_TEXT)
-	m.PushQRCode(kit.MDB_TEXT, link)
-	m.Push(kit.MDB_NAME, link)
+	m.Push(kit.MDB_NAME, m.Option(kit.MDB_LINK))
+	m.PushQRCode(kit.MDB_TEXT, m.Option(kit.MDB_LINK))
 }
 func _header_grant(m *ice.Message, arg ...string) {
 	if m.PodCmd(m.Prefix("/header"), ctx.ACTION, GRANT, arg) {

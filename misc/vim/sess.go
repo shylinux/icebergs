@@ -39,7 +39,7 @@ func init() {
 					}
 				}
 
-				switch m.Render(ice.RENDER_RESULT); m.R.URL.String() {
+				switch m.RenderResult(); m.R.URL.String() {
 				case "/qrcode", "/input", "/sess": // 登录入口
 					return
 				}

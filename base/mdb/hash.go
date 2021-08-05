@@ -151,6 +151,18 @@ func HashAction(fields ...string) map[string]*ice.Action {
 		REMOVE: {Name: "remove", Help: "删除", Hand: func(m *ice.Message, arg ...string) {
 			m.Cmdy(DELETE, m.PrefixKey(), "", HASH, m.OptionSimple(kit.MDB_HASH))
 		}},
+		PRUNES: {Name: "prunes before@date", Help: "清理", Hand: func(m *ice.Message, arg ...string) {
+			list := []string{}
+			m.Richs(m.PrefixKey(), "", kit.MDB_FOREACH, func(key string, value map[string]interface{}) {
+				if value = kit.GetMeta(value); kit.Time(kit.Format(value[kit.MDB_TIME])) < kit.Time(m.Option("before")) {
+					list = append(list, key)
+				}
+			})
+			m.OptionFields(m.Conf(m.PrefixKey(), kit.META_FIELD))
+			for _, v := range list {
+				m.Cmdy(DELETE, m.PrefixKey(), "", HASH, kit.MDB_HASH, v)
+			}
+		}},
 		EXPORT: {Name: "export", Help: "导出", Hand: func(m *ice.Message, arg ...string) {
 			m.Cmdy(EXPORT, m.PrefixKey(), "", HASH)
 		}},

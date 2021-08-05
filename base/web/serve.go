@@ -70,6 +70,19 @@ func _serve_main(m *ice.Message, w http.ResponseWriter, r *http.Request) bool {
 	}
 	return true
 }
+func _serve_params(msg *ice.Message, path string) {
+	switch ls := strings.Split(path, "/"); kit.Select("", ls, 1) {
+	case "share":
+		msg.Logs("refer", ls[1], ls[2])
+		msg.Option(ls[1], ls[2])
+	case "chat":
+		switch kit.Select("", ls, 2) {
+		case "pod":
+			msg.Logs("refer", ls[2], ls[3])
+			msg.Option(ls[2], ls[3])
+		}
+	}
+}
 func _serve_handle(key string, cmd *ice.Command, msg *ice.Message, w http.ResponseWriter, r *http.Request) {
 	// 环境变量
 	msg.Option(mdb.CACHE_LIMIT, "10")
@@ -79,23 +92,13 @@ func _serve_handle(key string, cmd *ice.Command, msg *ice.Message, w http.Respon
 		msg.Option(v.Name, v.Value)
 	}
 
-	if ls := strings.Split(r.URL.Path, "/"); len(ls) > 2 && ls[1] == "share" {
-		msg.Logs("refer", ls[1], ls[2])
-		msg.Option(ls[1], ls[2])
-	} else {
-		msg.Debug("%v", ls)
-	}
 	// 请求变量
+	_serve_params(msg, r.URL.Path)
 	if u, e := url.Parse(r.Header.Get("Referer")); e == nil {
+		_serve_params(msg, u.Path)
 		for k, v := range u.Query() {
 			msg.Logs("refer", k, v)
 			msg.Option(k, v)
-		}
-		if ls := strings.Split(u.Path, "/"); len(ls) > 2 && ls[1] == "share" {
-			msg.Logs("refer", ls[1], ls[2])
-			msg.Option(ls[1], ls[2])
-		} else {
-			msg.Debug("%v", ls)
 		}
 	}
 

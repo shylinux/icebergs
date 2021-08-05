@@ -16,6 +16,9 @@ import (
 	kit "github.com/shylinux/toolkits"
 )
 
+func _space_link(m *ice.Message, pod string, arg ...interface{}) string {
+	return kit.MergeURL2(m.Option(ice.MSG_USERWEB), "/chat/pod/"+pod, arg...)
+}
 func _space_list(m *ice.Message, space string) {
 	if space == "" {
 		m.Fields(0, "time,type,name,text")
@@ -195,7 +198,7 @@ func _space_search(m *ice.Message, kind, name, text string, arg ...string) {
 
 		default:
 			m.PushSearch(cli.CMD, SPACE, kit.MDB_TYPE, value[kit.MDB_TYPE], kit.MDB_NAME, value[kit.MDB_NAME],
-				kit.MDB_TEXT, kit.MergeURL(m.Option(ice.MSG_USERWEB), cli.POD, kit.Keys(m.Option(ice.MSG_USERPOD), value[kit.MDB_NAME])), value)
+				kit.MDB_TEXT, _space_link(m, kit.Keys(m.Option(ice.MSG_USERPOD), value[kit.MDB_NAME])), value)
 		}
 	})
 

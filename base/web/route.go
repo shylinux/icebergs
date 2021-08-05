@@ -34,8 +34,7 @@ func _route_travel(m *ice.Message, route string) {
 func _route_list(m *ice.Message) {
 	// 链接操作
 	m.Table(func(index int, value map[string]string, field []string) {
-		m.PushAnchor(value[kit.SSH_ROUTE], kit.MergeURL(m.Option(ice.MSG_USERWEB),
-			cli.POD, kit.Keys(m.Option(ice.MSG_USERPOD), value[kit.SSH_ROUTE])))
+		m.PushAnchor(value[kit.SSH_ROUTE], _space_link(m, kit.Keys(m.Option(ice.MSG_USERPOD), value[kit.SSH_ROUTE])))
 
 		switch value[kit.MDB_TYPE] {
 		case WORKER:

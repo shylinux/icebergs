@@ -15,6 +15,7 @@ import (
 
 	ice "github.com/shylinux/icebergs"
 	"github.com/shylinux/icebergs/base/mdb"
+	"github.com/shylinux/icebergs/base/tcp"
 	kit "github.com/shylinux/toolkits"
 )
 
@@ -27,10 +28,10 @@ func _spide_create(m *ice.Message, name, address string) {
 			dir, file := path.Split(uri.EscapedPath())
 			m.Echo(m.Rich(SPIDE, nil, kit.Dict(
 				SPIDE_COOKIE, kit.Dict(), SPIDE_HEADER, kit.Dict(), SPIDE_CLIENT, kit.Dict(
-					"name", name, "url", address, "method", SPIDE_POST,
-					"protocol", uri.Scheme, "hostname", uri.Host,
-					"path", dir, "file", file, "query", uri.RawQuery,
-					"timeout", "600s", LOGHEADERS, false,
+					kit.MDB_NAME, name, "url", address, SPIDE_METHOD, SPIDE_POST,
+					tcp.PROTOCOL, uri.Scheme, tcp.HOSTNAME, uri.Host,
+					kit.MDB_PATH, dir, kit.MDB_FILE, file, "query", uri.RawQuery,
+					kit.MDB_TIMEOUT, "600s", LOGHEADERS, false,
 				),
 			)))
 		}
@@ -82,7 +83,7 @@ func _spide_show(m *ice.Message, arg ...string) {
 		_spide_head(m, req, head, value)
 
 		// 发送请求
-		res, e := _spide_send(m, req, kit.Format(client["timeout"]))
+		res, e := _spide_send(m, req, kit.Format(client[kit.MDB_TIMEOUT]))
 		if m.Warn(e != nil, ice.ErrNotFound, e) {
 			return
 		}
@@ -284,9 +285,9 @@ const (
 
 	SPIDE_FORM = "form"
 	SPIDE_PART = "part"
+	SPIDE_JSON = "json"
 	SPIDE_DATA = "data"
 	SPIDE_FILE = "file"
-	SPIDE_JSON = "json"
 	SPIDE_BODY = "body"
 
 	SPIDE_RES = "content_data"
@@ -308,7 +309,6 @@ const (
 	ADDRESS  = "address"
 	REQUEST  = "request"
 	RESPONSE = "response"
-	PROTOCOL = "protocol"
 
 	CLIENT_NAME = "client.name"
 	LOGHEADERS  = "logheaders"
@@ -318,31 +318,22 @@ const SPIDE = "spide"
 func init() {
 	Index.Merge(&ice.Context{
 		Configs: map[string]*ice.Config{
-			SPIDE: {Name: SPIDE, Help: "蜘蛛侠", Value: kit.Data(kit.MDB_SHORT, CLIENT_NAME)},
+			SPIDE: {Name: SPIDE, Help: "蜘蛛侠", Value: kit.Data(
+				kit.MDB_SHORT, CLIENT_NAME, kit.MDB_SHORT, "time,client.name,client.url",
+			)},
 		},
 		Commands: map[string]*ice.Command{
-			SPIDE: {Name: "spide client.name action=raw,msg,save,cache method=GET,PUT,POST,DELETE url format=form,part,data,file,json arg 执行:button create", Help: "蜘蛛侠", Action: map[string]*ice.Action{
+			SPIDE: {Name: "spide client.name action=raw,msg,save,cache method=GET,PUT,POST,DELETE url format=form,part,json,data,file arg 执行:button create", Help: "蜘蛛侠", Action: ice.MergeAction(map[string]*ice.Action{
 				mdb.CREATE: {Name: "create name address", Help: "添加", Hand: func(m *ice.Message, arg ...string) {
-					if arg[0] != kit.MDB_NAME {
-						m.Option(kit.MDB_NAME, arg[0])
-						m.Option(ADDRESS, arg[1])
-					}
 					_spide_create(m, m.Option(kit.MDB_NAME), m.Option(ADDRESS))
 				}},
-				mdb.MODIFY: {Name: "modify", Help: "编辑", Hand: func(m *ice.Message, arg ...string) {
-					m.Cmdy(mdb.MODIFY, SPIDE, "", mdb.HASH, CLIENT_NAME, m.Option(CLIENT_NAME), arg)
-				}},
-				mdb.REMOVE: {Name: "remove", Help: "删除", Hand: func(m *ice.Message, arg ...string) {
-					m.Cmdy(mdb.DELETE, SPIDE, "", mdb.HASH, CLIENT_NAME, m.Option(CLIENT_NAME))
-				}},
-			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			}, mdb.HashAction()), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 				if len(arg) < 2 || arg[0] == "" || (len(arg) > 3 && arg[3] == "") {
-					m.Fields(len(kit.Slice(arg, 0, 1)), "time,client.name,client.url")
-					m.Cmdy(mdb.SELECT, SPIDE, "", mdb.HASH, CLIENT_NAME, arg)
+					m.Fields(len(kit.Slice(arg, 0, 1)), m.Conf(SPIDE, kit.META_FIELD))
+					m.Cmdy(mdb.SELECT, m.PrefixKey(), "", mdb.HASH, CLIENT_NAME, arg)
 					m.PushAction(mdb.REMOVE)
 					return
 				}
-
 				_spide_show(m, arg...)
 			}},
 

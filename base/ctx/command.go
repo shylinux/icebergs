@@ -25,7 +25,7 @@ func _command_list(m *ice.Message, name string) {
 
 	// 命令详情
 	m.Spawn(m.Source()).Search(name, func(p *ice.Context, s *ice.Context, key string, cmd *ice.Command) {
-		m.Push(kit.MDB_KEY, s.Cap(ice.CTX_FOLLOW))
+		m.Push(kit.MDB_INDEX, s.Cap(ice.CTX_FOLLOW))
 		m.Push(kit.MDB_NAME, kit.Format(cmd.Name))
 		m.Push(kit.MDB_HELP, kit.Format(cmd.Help))
 		m.Push(kit.MDB_META, kit.Formats(cmd.Meta))

@@ -9,7 +9,6 @@ import (
 	"github.com/shylinux/icebergs/base/cli"
 	"github.com/shylinux/icebergs/base/ctx"
 	"github.com/shylinux/icebergs/base/mdb"
-	"github.com/shylinux/icebergs/base/nfs"
 	"github.com/shylinux/icebergs/base/web"
 	kit "github.com/shylinux/toolkits"
 )
@@ -204,48 +203,6 @@ func init() {
 
 				// 执行命令
 				_action_show(m, arg[0], arg[1], arg[2], arg[3:]...)
-			}},
-
-			"/cmd/": {Name: "/cmd/", Help: "命令", Action: map[string]*ice.Action{
-				ctx.COMMAND: {Name: "command", Help: "命令", Hand: func(m *ice.Message, arg ...string) {
-					if len(arg) == 0 {
-						m.Push("index", kit.Select("cmd"))
-						m.Push("args", "")
-						return
-					}
-					m.Cmdy(ctx.COMMAND, arg[0])
-				}},
-				cli.RUN: {Name: "command", Help: "执行", Hand: func(m *ice.Message, arg ...string) {
-					m.Cmdy(arg)
-				}},
-			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-				sp := m.Conf(web.SERVE, kit.Keym(ice.VOLCANOS, kit.MDB_PATH))
-				if strings.HasSuffix(m.R.URL.Path, "/") {
-					m.RenderDownload(path.Join(sp, "page/cmd.html"))
-					return
-				}
-				m.RenderDownload(path.Join(sp, path.Join(arg...)))
-			}},
-			"cmd": {Name: "cmd path auto up", Help: "命令", Action: map[string]*ice.Action{
-				"up": {Name: "up", Help: "上一级", Hand: func(m *ice.Message, arg ...string) {
-					if strings.TrimPrefix(m.R.URL.Path, "/cmd") == "/" {
-						m.Cmdy("cmd")
-						return
-					}
-					if strings.HasSuffix(m.R.URL.Path, "/") {
-						m.Process("_location", "../")
-					} else {
-						m.Process("_location", "./")
-					}
-				}},
-			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-				if len(arg) > 0 {
-					m.Process("_location", arg[0])
-					return
-				}
-				sup := m.Conf(web.SERVE, kit.Keym(ice.VOLCANOS, kit.MDB_PATH))
-				m.Option(nfs.DIR_ROOT, path.Join(sup, strings.TrimPrefix(path.Dir(m.R.URL.Path), "/cmd")))
-				m.Cmdy(nfs.DIR, arg)
 			}},
 		}})
 }

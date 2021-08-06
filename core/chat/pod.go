@@ -26,21 +26,15 @@ func init() {
 					m.Cmdy(arg)
 				}},
 			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+				if kit.Select("", arg, 0) == "" {
+					_cmd_render(m, web.ROUTE)
+					return
+				}
 				m.RenderIndex(web.SERVE, ice.VOLCANOS)
 			}},
 		},
 		Configs: map[string]*ice.Config{
-			POD: {Name: POD, Help: "节点", Value: kit.Data(
-				kit.MDB_PATH, "./", kit.MDB_INDEX, "page/cmd.html", kit.MDB_TEMPLATE, `<!DOCTYPE html>
-<head>
-    <link rel="stylesheet" type="text/css" href="/page/cmd.css">
-</head>
-<body>
-	<script src="/page/cmd.js"></script>
-	<script>cmd(%s)</script>
-</body>
-`,
-			)},
+			POD: {Name: POD, Help: "节点", Value: kit.Data()},
 		},
 	})
 }

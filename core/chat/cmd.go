@@ -13,7 +13,7 @@ import (
 )
 
 func _cmd_render(m *ice.Message, cmd string, args ...interface{}) {
-	list := []interface{}{kit.Dict("index", cmd, "args", args)}
+	list := []interface{}{kit.Dict("index", cmd, "args", kit.Simple(args))}
 	m.RenderResult(kit.Format(m.Conf(CMD, kit.Keym(kit.MDB_TEMPLATE)), kit.Format(list)))
 }
 
@@ -36,24 +36,24 @@ func init() {
 				}},
 			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 				if strings.HasSuffix(m.R.URL.Path, "/") {
-					m.RenderIndex(web.SERVE, ice.VOLCANOS)
+					m.RenderIndex(web.SERVE, ice.VOLCANOS, "page/cmd.html")
 					return // 目录
 				}
 
 				if msg := m.Cmd(ctx.COMMAND, arg[0]); msg.Append("meta") != "" {
-					_cmd_render(m, arg[0])
+					_cmd_render(m, arg[0], arg[1:])
 					return // 命令
 				}
 
 				switch p := path.Join(m.Conf(CMD, kit.META_PATH), path.Join(arg...)); kit.Ext(p) {
 				case "svg":
 					_cmd_render(m, "web.wiki.draw", path.Dir(p)+"/", path.Base(p))
+				case "csv":
+					_cmd_render(m, "web.wiki.data", p)
 				case "json":
 					_cmd_render(m, "web.wiki.json", p)
 				case "shy":
 					_cmd_render(m, "web.wiki.word", p)
-				case "csv":
-					_cmd_render(m, "web.wiki.data", p)
 				case "go", "mod", "sum":
 					_cmd_render(m, "web.code.inner", path.Dir(p)+"/", path.Base(p))
 				default:

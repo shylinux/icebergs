@@ -19,7 +19,7 @@ import (
 
 func _share_link(m *ice.Message, p string, arg ...interface{}) string {
 	p = kit.Select("", "/share/local/", !strings.HasPrefix(p, "/")) + p
-	return tcp.ReplaceLocalhost(m, kit.MergeURL2(m.Option(ice.MSG_USERWEB), p, arg...))
+	return tcp.ReplaceLocalhost(m, kit.MergeURL2(kit.Select(m.Conf(SHARE, kit.Keym("domain")), m.Option(ice.MSG_USERWEB)), p, arg...))
 }
 func _share_cache(m *ice.Message, arg ...string) {
 	if pod := m.Option(cli.POD); m.PodCmd(CACHE, arg[0]) {
@@ -130,8 +130,8 @@ func init() {
 					m.Option(kit.MDB_LINK, _share_link(m, "/share/"+m.Result()))
 				}},
 				LOGIN: {Name: "login userrole=void,tech username", Help: "登录", Hand: func(m *ice.Message, arg ...string) {
-					m.Cmdy(SHARE, mdb.CREATE, kit.MDB_TYPE, LOGIN, m.OptionSimple(aaa.USERROLE, aaa.USERNAME))
-					m.EchoQRCode(m.Option(kit.MDB_LINK))
+					msg := m.Cmd(SHARE, mdb.CREATE, kit.MDB_TYPE, LOGIN, m.OptionSimple(aaa.USERROLE, aaa.USERNAME))
+					m.EchoQRCode(msg.Option(kit.MDB_LINK))
 					m.ProcessInner()
 				}},
 			}, mdb.HashAction()), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {

@@ -46,6 +46,9 @@ func (m *Message) OptionSplit(fields ...string) (res []string) {
 }
 func (m *Message) OptionSimple(key ...string) (res []string) {
 	for _, k := range strings.Split(strings.Join(key, ","), ",") {
+		if k == "" || m.Option(k) == "" {
+			continue
+		}
 		res = append(res, k, m.Option(k))
 	}
 	return

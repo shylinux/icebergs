@@ -30,7 +30,9 @@ func _config_save(m *ice.Message, name string, arg ...string) {
 		msg := m.Spawn(m.Source())
 		data := map[string]interface{}{}
 		for _, k := range arg {
-			data[k] = msg.Confv(k)
+			if v := msg.Confv(k); v != "" {
+				data[k] = v
+			}
 		}
 
 		// 保存配置
@@ -109,6 +111,10 @@ func init() {
 				}},
 				GROW: {Name: "grow", Help: "成长", Hand: func(m *ice.Message, arg ...string) {
 					_config_grow(m, arg[0], arg[1], arg[2:]...)
+				}},
+				"clear": {Name: "clear", Help: "清空", Hand: func(m *ice.Message, arg ...string) {
+					m.Conf(arg[0], "", "")
+					m.Cmd("exit", 1)
 				}},
 			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 				if len(arg) == 0 {

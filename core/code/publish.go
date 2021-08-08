@@ -50,7 +50,7 @@ func init() {
 				m.Cmd(aaa.ROLE, aaa.WHITE, aaa.VOID, ice.USR_PUBLISH)
 				m.Conf(PUBLISH, kit.Keym(ice.CONTEXTS), _contexts)
 			}},
-			PUBLISH: {Name: "publish path auto create volcanos icebergs intshell dream", Help: "发布", Action: map[string]*ice.Action{
+			PUBLISH: {Name: "publish path auto create volcanos icebergs intshell package dream", Help: "发布", Action: map[string]*ice.Action{
 				mdb.CREATE: {Name: "create file", Help: "添加", Hand: func(m *ice.Message, arg ...string) {
 					_publish_file(m, m.Option(kit.MDB_FILE))
 				}},
@@ -116,6 +116,17 @@ func init() {
 							m.EchoScript(strings.TrimSpace(string(buf)))
 						}
 					}
+				}},
+				"package": {Name: "package", Help: "依赖", Hand: func(m *ice.Message, arg ...string) {
+					web.PushStream(m)
+					p := kit.Path(ice.USR_PUBLISH)
+					m.Option(cli.CMD_DIR, kit.Path(os.Getenv("HOME")))
+					// m.Cmdy(cli.SYSTEM, "tar", "-zcvf", "go.tar.gz", "go/pkg")
+					// m.Cmdy(cli.SYSTEM, "mv", "go.tar.gz", p)
+					m.Cmdy(cli.SYSTEM, "tar", "-zcvf", "vim.tar.gz", ".vim/plugged")
+					m.Cmdy(cli.SYSTEM, "mv", "vim.tar.gz", p)
+					m.Toast("打包成功")
+					m.ProcessHold()
 				}},
 				mdb.REMOVE: {Name: "remove", Help: "删除", Hand: func(m *ice.Message, arg ...string) {
 					p := m.Option(cli.CMD_DIR, m.Conf(PUBLISH, kit.META_PATH))

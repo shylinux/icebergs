@@ -1,10 +1,13 @@
 package chat
 
 import (
+	"path"
+
 	ice "github.com/shylinux/icebergs"
 	"github.com/shylinux/icebergs/base/aaa"
 	"github.com/shylinux/icebergs/base/ctx"
 	"github.com/shylinux/icebergs/base/mdb"
+	"github.com/shylinux/icebergs/base/nfs"
 	"github.com/shylinux/icebergs/base/web"
 	"github.com/shylinux/icebergs/core/code"
 	kit "github.com/shylinux/toolkits"
@@ -38,7 +41,7 @@ func _header_share(m *ice.Message, arg ...string) {
 	m.PushQRCode(kit.MDB_TEXT, m.Option(kit.MDB_LINK))
 }
 func _header_grant(m *ice.Message, arg ...string) {
-	if m.PodCmd(m.Prefix("/header"), ctx.ACTION, GRANT, arg) {
+	if m.PodCmd(m.PrefixKey(), ctx.ACTION, GRANT, arg) {
 		return // 下发命令
 	}
 
@@ -48,11 +51,14 @@ func _header_grant(m *ice.Message, arg ...string) {
 }
 func _header_users(m *ice.Message, key string, arg ...string) {
 	m.Option(aaa.USERNAME, m.Option(ice.MSG_USERNAME))
-	m.Cmdy("aaa.user", ctx.ACTION, mdb.MODIFY, key, m.Option(key, arg[0]))
+	m.Cmdy(aaa.USER, ctx.ACTION, mdb.MODIFY, key, m.Option(key, arg[0]))
 }
 
 const (
+	TOPIC = "topic"
 	TITLE = "title"
+	MENUS = "menus"
+	TRANS = "trans"
 	AGENT = "agent"
 	CHECK = "check"
 	SHARE = "share"
@@ -61,54 +67,59 @@ const (
 const HEADER = "header"
 
 func init() {
-	Index.Merge(&ice.Context{
-		Configs: map[string]*ice.Config{
-			HEADER: {Name: HEADER, Help: "标题栏", Value: kit.Data(TITLE, "github.com/shylinux/contexts")},
-		},
-		Commands: map[string]*ice.Command{
-			"/header": {Name: "/header", Help: "标题栏", Action: map[string]*ice.Action{
-				AGENT: {Name: "agent", Help: "应用宿主", Hand: func(m *ice.Message, arg ...string) {
-					m.Cmdy("web.chat.wx.access", "config")
-				}},
-				CHECK: {Name: "check", Help: "登录检查", Hand: func(m *ice.Message, arg ...string) {
-					_header_check(m, arg...)
-				}},
-				SHARE: {Name: "share type", Help: "扫码登录", Hand: func(m *ice.Message, arg ...string) {
-					_header_share(m, arg...)
-				}},
-				GRANT: {Name: "grant space", Help: "扫码授权", Hand: func(m *ice.Message, arg ...string) {
-					_header_grant(m, arg...)
-				}},
-
-				aaa.LOGIN: {Name: "login", Help: "密码登录", Hand: func(m *ice.Message, arg ...string) {
-					if aaa.UserLogin(m, arg[0], arg[1]) {
-						web.RenderCookie(m, aaa.SessCreate(m, arg[0]))
-					}
-					m.Echo(m.Option(ice.MSG_USERNAME))
-				}},
-				aaa.LOGOUT: {Name: "logout", Help: "退出登录", Hand: func(m *ice.Message, arg ...string) {
-					m.Cmd(aaa.SESS, mdb.REMOVE, ice.OptionHash(m.Option(ice.MSG_SESSID)))
-				}},
-
-				aaa.AVATAR: {Name: "avatar", Help: "头像图片", Hand: func(m *ice.Message, arg ...string) {
-					_header_users(m, aaa.AVATAR, arg...)
-				}},
-				aaa.USERNICK: {Name: "usernick", Help: "用户昵称", Hand: func(m *ice.Message, arg ...string) {
-					_header_users(m, aaa.USERNICK, arg...)
-				}},
-				aaa.BACKGROUND: {Name: "background", Help: "背景图片", Hand: func(m *ice.Message, arg ...string) {
-					_header_users(m, aaa.BACKGROUND, arg...)
-				}},
-				code.WEBPACK: {Name: "webpack", Help: "网页打包", Hand: func(m *ice.Message, arg ...string) {
-					m.Cmdy(code.WEBPACK, mdb.CREATE, m.OptionSimple(kit.MDB_NAME))
-				}},
-			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-				user := m.Cmd("aaa.user", m.Option(ice.MSG_USERNAME))
-				for _, k := range []string{aaa.BACKGROUND, aaa.AVATAR} {
-					m.Option(k, user.Append(k))
-				}
-				m.Echo(m.Conf(HEADER, kit.Keym(TITLE)))
+	Index.Merge(&ice.Context{Configs: map[string]*ice.Config{
+		HEADER: {Name: HEADER, Help: "标题栏", Value: kit.Data(
+			TITLE, "github.com/shylinux/contexts", MENUS, `["header", ["setting", "black", "white", "print", "webpack", "devops"]]`,
+		)},
+	}, Commands: map[string]*ice.Command{
+		"/header": {Name: "/header", Help: "标题栏", Action: map[string]*ice.Action{
+			AGENT: {Name: "agent", Help: "应用宿主", Hand: func(m *ice.Message, arg ...string) {
+				m.Cmdy("web.chat.wx.access", "config")
 			}},
-		},
-	})
+			CHECK: {Name: "check", Help: "登录检查", Hand: func(m *ice.Message, arg ...string) {
+				_header_check(m, arg...)
+			}},
+			SHARE: {Name: "share type", Help: "扫码登录", Hand: func(m *ice.Message, arg ...string) {
+				_header_share(m, arg...)
+			}},
+			GRANT: {Name: "grant space", Help: "扫码授权", Hand: func(m *ice.Message, arg ...string) {
+				_header_grant(m, arg...)
+			}},
+
+			aaa.LOGIN: {Name: "login", Help: "密码登录", Hand: func(m *ice.Message, arg ...string) {
+				if aaa.UserLogin(m, arg[0], arg[1]) {
+					web.RenderCookie(m, aaa.SessCreate(m, arg[0]))
+				}
+				m.Echo(m.Option(ice.MSG_USERNAME))
+			}},
+			aaa.LOGOUT: {Name: "logout", Help: "退出登录", Hand: func(m *ice.Message, arg ...string) {
+				m.Cmd(aaa.SESS, mdb.REMOVE, ice.OptionHash(m.Option(ice.MSG_SESSID)))
+			}},
+			aaa.AVATAR: {Name: "avatar", Help: "用户头像", Hand: func(m *ice.Message, arg ...string) {
+				_header_users(m, aaa.AVATAR, arg...)
+			}},
+			aaa.USERNICK: {Name: "usernick", Help: "用户昵称", Hand: func(m *ice.Message, arg ...string) {
+				_header_users(m, aaa.USERNICK, arg...)
+			}},
+			aaa.BACKGROUND: {Name: "background", Help: "用户壁纸", Hand: func(m *ice.Message, arg ...string) {
+				_header_users(m, aaa.BACKGROUND, arg...)
+			}},
+
+			code.WEBPACK: {Name: "webpack", Help: "打包页面", Hand: func(m *ice.Message, arg ...string) {
+				m.Cmdy(code.WEBPACK, mdb.CREATE, m.OptionSimple(kit.MDB_NAME))
+			}},
+			"devops": {Name: "devops", Help: "开发模式", Hand: func(m *ice.Message, arg ...string) {
+				m.Cmd(nfs.SAVE, path.Join(ice.USR_VOLCANOS, "page/cache.js"))
+				m.Cmd(nfs.SAVE, path.Join(ice.USR_VOLCANOS, "page/cache.css"))
+			}},
+		}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			m.Option(TRANS, kit.Format(kit.Value(c.Commands[cmd].Meta, "_trans")))
+			m.Option(MENUS, m.Conf(HEADER, kit.Keym(MENUS)))
+			msg := m.Cmd(aaa.USER, m.Option(ice.MSG_USERNAME))
+			for _, k := range []string{aaa.USERNICK, aaa.BACKGROUND, aaa.AVATAR} {
+				m.Option(k, msg.Append(k))
+			}
+			m.Echo(m.Conf(HEADER, kit.Keym(TITLE)))
+		}},
+	}})
 }

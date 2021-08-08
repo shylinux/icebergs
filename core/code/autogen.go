@@ -20,9 +20,14 @@ field "{{.Option "name"}}" web.code.{{.Option "name"}}.{{.Option "name"}}
 	}
 }
 func _autogen_source(m *ice.Message, name string) {
-	m.Cmd(nfs.PUSH, ice.SRC_MAIN, "\n", kit.SSH_SOURCE+` `+path.Join(name, kit.Keys(name, SHY)), "\n")
+	m.Cmd(nfs.PUSH, ice.SRC_MAIN_SHY, "\n", kit.SSH_SOURCE+` `+path.Join(name, kit.Keys(name, SHY)), "\n")
 }
 func _autogen_module(m *ice.Message, dir string, ctx string, from string) (list []string) {
+	m.Cmd(nfs.DEFS, ice.GO_MOD, kit.Format(`module %s
+
+go 1.11
+`, path.Base(kit.Path(""))))
+
 	name, value := "", ""
 	key := strings.ToUpper(ctx)
 	m.Cmd(nfs.CAT, from, func(line string, index int) {
@@ -47,6 +52,18 @@ func _autogen_module(m *ice.Message, dir string, ctx string, from string) (list 
 	return
 }
 func _autogen_import(m *ice.Message, main string, ctx string, mod string) (list []string) {
+	m.Cmd(nfs.DEFS, main, `package main
+
+import (
+	ice "github.com/shylinux/icebergs"
+	_ "github.com/shylinux/icebergs/base"
+	_ "github.com/shylinux/icebergs/core"
+	_ "github.com/shylinux/icebergs/misc"
+)
+
+func main() { print(ice.Run()) }
+`)
+
 	m.Cmd(nfs.CAT, main, func(line string, index int) {
 		if list = append(list, line); strings.HasPrefix(line, "import (") {
 			list = append(list, kit.Format(`	_ "%s/src/%s"`, mod, ctx), "")

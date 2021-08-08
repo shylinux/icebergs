@@ -319,7 +319,7 @@ func init() {
 	Index.Merge(&ice.Context{
 		Configs: map[string]*ice.Config{
 			SPIDE: {Name: SPIDE, Help: "蜘蛛侠", Value: kit.Data(
-				kit.MDB_SHORT, CLIENT_NAME, kit.MDB_SHORT, "time,client.name,client.url",
+				kit.MDB_SHORT, CLIENT_NAME, kit.MDB_FIELD, "time,client.name,client.url",
 			)},
 		},
 		Commands: map[string]*ice.Command{

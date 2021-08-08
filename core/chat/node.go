@@ -23,12 +23,12 @@ func init() {
 					if m.Option(ice.MSG_RIVER, m.Option(RIVER)) == "" {
 						return
 					}
-					if msg := m.Cmd(AUTH, m.Option(web.SHARE)); msg.Append(kit.MDB_TYPE) == NODE {
+					if msg := m.Cmd(web.SHARE, m.Option(web.SHARE)); msg.Append(kit.MDB_TYPE) == RIVER {
 						m.Cmdy(mdb.INSERT, RIVER, _river_key(m, NODE), mdb.HASH, arg)
 					}
 				}},
 				aaa.INVITE: {Name: "invite", Help: "邀请", Hand: func(m *ice.Message, arg ...string) {
-					m.Option(web.SHARE, m.Cmdx(AUTH, mdb.CREATE, kit.MDB_TYPE, NODE))
+					m.Option(web.SHARE, m.Cmdx(web.SHARE, mdb.CREATE, kit.MDB_TYPE, RIVER))
 					m.Cmdy(code.PUBLISH, ice.CONTEXTS, "tool")
 				}},
 				mdb.INSERT: {Name: "insert type name share", Help: "添加", Hand: func(m *ice.Message, arg ...string) {

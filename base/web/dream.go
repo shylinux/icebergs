@@ -45,7 +45,7 @@ func _dream_show(m *ice.Message, name string) {
 
 	// 任务模板
 	if m.Option(kit.MDB_TEMPLATE) != "" {
-		for _, file := range []string{ice.ETC_MISS, ice.SRC_MAIN, ice.SRC_MAIN_GO, ice.GO_MOD, ice.MAKEFILE} {
+		for _, file := range []string{ice.ETC_MISS, ice.SRC_MAIN_SHY, ice.SRC_MAIN_GO, ice.GO_MOD, ice.MAKEFILE} {
 			if _, e := os.Stat(path.Join(p, file)); os.IsNotExist(e) {
 				switch m.Cmdy(nfs.COPY, path.Join(p, file), path.Join(m.Option(kit.MDB_TEMPLATE), file)); file {
 				case ice.GO_MOD:
@@ -112,13 +112,13 @@ func init() {
 					m.Cmdy(SPACE, m.Option(ROUTE), "web.code.autogen", mdb.CREATE, arg)
 					m.ProcessInner()
 				}},
-				tcp.START: {Name: "start name repos", Help: "启动", Hand: func(m *ice.Message, arg ...string) {
+				cli.START: {Name: "start name repos", Help: "启动", Hand: func(m *ice.Message, arg ...string) {
 					if m.Option(kit.MDB_NAME) == SPIDE_SELF {
 						m.Option(kit.MDB_NAME, "")
 					}
 					_dream_show(m, m.Option(kit.MDB_NAME, kit.Select(path.Base(m.Option(kit.SSH_REPOS)), m.Option(kit.MDB_NAME))))
 				}},
-				tcp.STOP: {Name: "stop", Help: "停止", Hand: func(m *ice.Message, arg ...string) {
+				cli.STOP: {Name: "stop", Help: "停止", Hand: func(m *ice.Message, arg ...string) {
 					m.Cmdy(SPACE, m.Option(kit.MDB_NAME), "exit", "0")
 				}},
 			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {

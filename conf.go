@@ -1,5 +1,9 @@
 package ice
 
+const (
+	SP = " "
+	NL = "\n"
+)
 const ( // MOD
 	MOD_SP   = " "
 	MOD_NL   = "\n"
@@ -69,13 +73,13 @@ const ( // DIR
 	ETC_MISS    = "etc/miss.sh"
 	ETC_MISS_SH = "etc/miss.sh"
 
-	SRC_MAIN    = "src/main.shy"
-	SRC_MAIN_GO = "src/main.go"
-	SRC_VERSION = "src/version.go"
-	SRC_BINPACK = "src/binpack.go"
-	MAKEFILE    = "makefile"
-	GO_MOD      = "go.mod"
-	GO_SUM      = "go.sum"
+	SRC_MAIN_SHY = "src/main.shy"
+	SRC_MAIN_GO  = "src/main.go"
+	SRC_VERSION  = "src/version.go"
+	SRC_BINPACK  = "src/binpack.go"
+	MAKEFILE     = "makefile"
+	GO_MOD       = "go.mod"
+	GO_SUM       = "go.sum"
 
 	CTX_DEBUG = "ctx_debug"
 	CTX_DEV   = "ctx_dev"

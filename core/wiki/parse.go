@@ -34,12 +34,15 @@ func init() {
 				arg[0] = "list"
 			}
 
-			switch m.Option(mdb.FIELDS, mdb.DETAIL); arg[0] {
+			switch m.OptionFields(mdb.DETAIL); arg[0] {
 			case "json":
 				m.Echo(kit.Formats(kit.UnMarshal(arg[1])))
 
 			case "http":
 				u, _ := url.Parse(arg[1])
+				m.Push("proto", u.Scheme)
+				m.Push("host", u.Host)
+				m.Push("path", u.Path)
 				for k, v := range u.Query() {
 					for _, v := range v {
 						m.Push(k, v)

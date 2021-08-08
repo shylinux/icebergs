@@ -48,7 +48,7 @@ func _action_domain(m *ice.Message, cmd string, arg ...string) (domain string) {
 func _action_right(m *ice.Message, river string, storm string) (ok bool) {
 	if ok = true; m.Option(ice.MSG_USERROLE) == aaa.VOID {
 		m.Richs(RIVER, "", river, func(key string, value map[string]interface{}) {
-			if ok = m.Richs(RIVER, kit.Keys(kit.MDB_HASH, key, USER), m.Option(ice.MSG_USERNAME), nil) != nil; ok {
+			if ok = m.Richs(RIVER, kit.Keys(kit.MDB_HASH, key, USERS), m.Option(ice.MSG_USERNAME), nil) != nil; ok {
 				m.Log_AUTH(RIVER, river, STORM, storm)
 			}
 		})
@@ -148,61 +148,60 @@ const (
 const ACTION = "action"
 
 func init() {
-	Index.Merge(&ice.Context{
-		Configs: map[string]*ice.Config{
-			ACTION: {Name: ACTION, Help: "应用", Value: kit.Data(DOMAIN, kit.Dict())},
-		},
-		Commands: map[string]*ice.Command{
-			ice.CTX_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-				for _, cmd := range []string{
-					"web.chat.meet.miss",
-					"web.chat.meet.mate",
-					"web.chat.location",
-					"web.chat.paste",
-					"web.chat.scan",
-					"web.wiki.feel",
-					"web.wiki.draw",
-					"web.wiki.data",
-					"web.wiki.word",
-					"web.team.task",
-					"web.team.plan",
-					"web.mall.asset",
-					"web.mall.salary",
-				} {
-					m.Conf(ACTION, kit.Keym(DOMAIN, cmd), ice.TRUE)
+	Index.Merge(&ice.Context{Configs: map[string]*ice.Config{
+		ACTION: {Name: ACTION, Help: "应用", Value: kit.Data(DOMAIN, kit.Dict())},
+	}, Commands: map[string]*ice.Command{
+		ice.CTX_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			for _, cmd := range []string{
+				"web.chat.meet.miss",
+				"web.chat.meet.mate",
+				"web.chat.location",
+				"web.chat.paste",
+				"web.chat.scan",
+				"web.wiki.feel",
+				"web.wiki.draw",
+				"web.wiki.data",
+				"web.wiki.word",
+				"web.team.task",
+				"web.team.plan",
+				"web.mall.asset",
+				"web.mall.salary",
+			} {
+				m.Conf(ACTION, kit.Keym(DOMAIN, cmd), ice.TRUE)
+			}
+		}},
+		"/action": {Name: "/action river storm action arg...", Help: "工作台", Action: map[string]*ice.Action{
+			mdb.MODIFY: {Name: "modify", Help: "编辑", Hand: func(m *ice.Message, arg ...string) {
+				m.Cmdy(mdb.MODIFY, RIVER, kit.Keys(kit.MDB_HASH, m.Option(RIVER), TOOL, kit.MDB_HASH, m.Option(STORM)), mdb.LIST,
+					m.OptionSimple(kit.MDB_ID), arg)
+			}},
+			ctx.COMMAND: {Name: "command", Help: "命令", Hand: func(m *ice.Message, arg ...string) {
+				for _, k := range arg {
+					m.Cmdy(ctx.COMMAND, strings.TrimPrefix(k, "."))
 				}
 			}},
-			"/action": {Name: "/action river storm action arg...", Help: "工作台", Action: map[string]*ice.Action{
-				mdb.MODIFY: {Name: "modify", Help: "编辑", Hand: func(m *ice.Message, arg ...string) {
-					m.Cmdy(mdb.MODIFY, RIVER, kit.Keys(kit.MDB_HASH, m.Option(RIVER), TOOL, kit.MDB_HASH, m.Option(STORM)), mdb.LIST,
-						m.OptionSimple(kit.MDB_ID), arg)
-				}},
-				ctx.COMMAND: {Name: "command", Help: "命令", Hand: func(m *ice.Message, arg ...string) {
-					for _, k := range arg {
-						m.Cmdy(ctx.COMMAND, strings.TrimPrefix(k, "."))
-					}
-				}},
-				SHARE: {Name: "share", Help: "共享", Hand: func(m *ice.Message, arg ...string) {
-					_header_share(m, arg...)
-				}},
-				"_share": {Name: "_share", Help: "共享", Hand: func(m *ice.Message, arg ...string) {
-					_action_share(m, arg...)
-				}},
-			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-				if m.Warn(m.Option(ice.MSG_USERNAME) == "", ice.ErrNotLogin) {
-					return // 没有登录
-				}
-				if m.Warn(!_action_right(m, arg[0], arg[1]), ice.ErrNotRight) {
-					return // 没有授权
-				}
-
-				if len(arg) == 2 {
-					_action_list(m, arg[0], arg[1])
-					return //命令列表
-				}
-
-				// 执行命令
-				_action_show(m, arg[0], arg[1], arg[2], arg[3:]...)
+			SHARE: {Name: "share", Help: "共享", Hand: func(m *ice.Message, arg ...string) {
+				_header_share(m, arg...)
 			}},
-		}})
+			"_share": {Name: "_share", Help: "共享", Hand: func(m *ice.Message, arg ...string) {
+				_action_share(m, arg...)
+			}},
+		}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			if m.Warn(m.Option(ice.MSG_USERNAME) == "", ice.ErrNotLogin) {
+				return // 没有登录
+			}
+			if m.Warn(!_action_right(m, arg[0], arg[1]), ice.ErrNotRight) {
+				return // 没有授权
+			}
+
+			if len(arg) == 2 {
+				m.Option(MENUS, m.Conf(ACTION, kit.Keym(MENUS)))
+				_action_list(m, arg[0], arg[1])
+				return //命令列表
+			}
+
+			// 执行命令
+			_action_show(m, arg[0], arg[1], arg[2], arg[3:]...)
+		}},
+	}})
 }

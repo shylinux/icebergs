@@ -474,15 +474,12 @@ func (m *Message) Confv(arg ...interface{}) (val interface{}) {
 
 		if len(arg) > 2 {
 			if arg[1] == nil || arg[1] == "" {
-				// 写配置
-				conf.Value = arg[2]
+				conf.Value = arg[2] // 写配置
 			} else {
-				// 写修改项
-				kit.Value(conf.Value, arg[1:]...)
+				kit.Value(conf.Value, arg[1:]...) // 写配置项
 			}
 		}
-		// 读配置项
-		val = kit.Value(conf.Value, arg[1])
+		val = kit.Value(conf.Value, arg[1]) // 读配置项
 	})
 	return
 }

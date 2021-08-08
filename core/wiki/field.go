@@ -19,6 +19,7 @@ func _field_show(m *ice.Message, name, text string, arg ...string) {
 
 	name = strings.ReplaceAll(name, " ", "_")
 	meta[kit.MDB_NAME] = name
+	meta[kit.MDB_INDEX] = text
 
 	// 扩展参数
 	for i := 0; i < len(arg)-1; i += 2 {

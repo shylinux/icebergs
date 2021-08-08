@@ -31,8 +31,8 @@ func _river_list(m *ice.Message) {
 			if m.Conf(RIVER, kit.Keys(kit.MDB_HASH, m.Option(ice.MSG_RIVER))) == "" {
 				break
 			}
-			if msg.Cmd(USER, m.Option(ice.MSG_USERNAME)).Append(aaa.USERNAME) == "" {
-				msg.Cmd(USER, mdb.INSERT, aaa.USERNAME, m.Option(ice.MSG_USERNAME)) // 加入群组
+			if msg.Cmd(USERS, m.Option(ice.MSG_USERNAME)).Append(aaa.USERNAME) == "" {
+				msg.Cmd(USERS, mdb.INSERT, aaa.USERNAME, m.Option(ice.MSG_USERNAME)) // 加入群组
 			}
 
 		case web.STORM: // 共享应用
@@ -49,7 +49,7 @@ func _river_list(m *ice.Message) {
 	}
 
 	m.Richs(RIVER, nil, kit.MDB_FOREACH, func(key string, value map[string]interface{}) {
-		m.Richs(RIVER, kit.Keys(kit.MDB_HASH, key, USER), m.Option(ice.MSG_USERNAME), func(k string, val map[string]interface{}) {
+		m.Richs(RIVER, kit.Keys(kit.MDB_HASH, key, USERS), m.Option(ice.MSG_USERNAME), func(k string, val map[string]interface{}) {
 			m.Push(key, kit.GetMeta(value), []string{kit.MDB_HASH, kit.MDB_NAME}, kit.GetMeta(val))
 		})
 	})
@@ -60,7 +60,14 @@ const RIVER = "river"
 func init() {
 	Index.Merge(&ice.Context{
 		Configs: map[string]*ice.Config{
-			RIVER: {Name: RIVER, Help: "群组", Value: kit.Data(kit.MDB_PATH, ice.USR_LOCAL_RIVER)},
+			RIVER: {Name: RIVER, Help: "群组", Value: kit.Data(
+				kit.MDB_PATH, ice.USR_LOCAL_RIVER,
+				MENUS, `["river",
+	["添加", "创建群组", "添加应用", "添加工具", "添加用户", "添加设备", "创建空间"],
+	["访问", "内部系统", "访问应用", "访问工具", "访问用户", "访问设备", "工作任务"],
+	["共享", "共享群组", "共享应用", "共享工具", "共享主机"]
+]`,
+			)},
 		},
 		Commands: map[string]*ice.Command{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
@@ -68,7 +75,6 @@ func init() {
 					"base", kit.Dict(
 						"info", []interface{}{
 							"web.chat.info",
-							"web.chat.auth",
 							"web.chat.user",
 							"web.chat.tool",
 							"web.chat.node",
@@ -102,6 +108,7 @@ func init() {
 					return // 没有登录
 				}
 				if len(arg) == 0 {
+					m.Option(MENUS, m.Conf(RIVER, kit.Keym(MENUS)))
 					_river_list(m)
 					return // 群组列表
 				}
@@ -115,7 +122,7 @@ func init() {
 				}
 
 				switch kit.Select("", arg, 1) {
-				case USER, TOOL, NODE:
+				case USERS, TOOL, NODE:
 					m.Option(ice.MSG_RIVER, arg[0])
 					m.Cmdy(arg[1], arg[2:])
 
@@ -134,8 +141,8 @@ func init() {
 					m.Echo(h)
 
 					m.Conf(RIVER, kit.Keys(kit.MDB_HASH, h, NODE, kit.MDB_META, kit.MDB_SHORT), kit.MDB_NAME)
-					m.Conf(RIVER, kit.Keys(kit.MDB_HASH, h, USER, kit.MDB_META, kit.MDB_SHORT), aaa.USERNAME)
-					m.Cmd(USER, mdb.INSERT, aaa.USERNAME, m.Option(ice.MSG_USERNAME))
+					m.Conf(RIVER, kit.Keys(kit.MDB_HASH, h, USERS, kit.MDB_META, kit.MDB_SHORT), aaa.USERNAME)
+					m.Cmd(USERS, mdb.INSERT, aaa.USERNAME, m.Option(ice.MSG_USERNAME))
 
 					kit.Fetch(m.Confv(RIVER, kit.Keym(kit.MDB_TEMPLATE, kit.Select("base", m.Option(kit.MDB_TEMPLATE)))), func(storm string, value interface{}) {
 						h := m.Cmdx(TOOL, mdb.CREATE, kit.MDB_TYPE, PUBLIC, kit.MDB_NAME, storm, kit.MDB_TEXT, storm)

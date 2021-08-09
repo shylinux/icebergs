@@ -75,7 +75,7 @@ func init() {
 					m.Cmd(PUBLISH, mdb.CREATE, kit.MDB_FILE, ice.BIN_ICE_BIN)
 
 					p := m.Option(cli.CMD_DIR, m.Conf(PUBLISH, kit.META_PATH))
-					ls := strings.Split(strings.TrimSpace(m.Cmd(cli.SYSTEM, "bash", "-c", "ls |xargs file |grep executable").Append(cli.CMD_OUT)), ice.MOD_NL)
+					ls := strings.Split(strings.TrimSpace(m.Cmd(cli.SYSTEM, "bash", "-c", "ls |xargs file |grep executable").Append(cli.CMD_OUT)), ice.NL)
 					for _, ls := range ls {
 						if file := strings.TrimSpace(strings.Split(ls, ":")[0]); file != "" {
 							if s, e := os.Stat(path.Join(p, file)); e == nil {

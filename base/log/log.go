@@ -40,17 +40,17 @@ func (f *Frame) Start(m *ice.Message, arg ...string) bool {
 			bio := m.Confv(FILE, kit.Keys(file, FILE)).(*bufio.Writer)
 
 			bio.WriteString(l.p)
-			bio.WriteString(ice.MOD_SP)
+			bio.WriteString(ice.SP)
 			if p, ok := view[PREFIX].(string); ok {
 				bio.WriteString(p)
 			}
 			bio.WriteString(l.l)
-			bio.WriteString(ice.MOD_SP)
+			bio.WriteString(ice.SP)
 			bio.WriteString(l.s)
 			if p, ok := view[SUFFIX].(string); ok {
 				bio.WriteString(p)
 			}
-			bio.WriteString(ice.MOD_NL)
+			bio.WriteString(ice.NL)
 			bio.Flush()
 		}
 	}

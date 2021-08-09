@@ -68,14 +68,14 @@ func init() {
 					msg := m.Cmd(web.SPIDE, web.SPIDE_DEV, web.SPIDE_CACHE, web.SPIDE_GET, m.Option(SERVICE), SECONDS, m.Option(SECONDS))
 
 					cmd := kit.Simple(m.Confv(PPROF, kit.Keym(PPROF)), "-text", m.Option(BINNARY), msg.Append(kit.MDB_FILE))
-					res := strings.Split(m.Cmdx(cli.SYSTEM, cmd), ice.MOD_NL)
+					res := strings.Split(m.Cmdx(cli.SYSTEM, cmd), ice.NL)
 					if len(res) > 20 {
 						res = res[:20]
 					}
 
 					m.Cmd(mdb.INSERT, PPROF, "", mdb.ZONE, m.Option(kit.MDB_ZONE),
-						kit.MDB_TEXT, strings.Join(res, ice.MOD_NL), kit.MDB_FILE, msg.Append(kit.MDB_FILE))
-					m.Echo(strings.Join(res, ice.MOD_NL))
+						kit.MDB_TEXT, strings.Join(res, ice.NL), kit.MDB_FILE, msg.Append(kit.MDB_FILE))
+					m.Echo(strings.Join(res, ice.NL))
 					m.ProcessInner()
 				}},
 				web.SERVE: {Name: "serve", Help: "展示", Hand: func(m *ice.Message, arg ...string) {

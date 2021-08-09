@@ -48,7 +48,7 @@ go 1.11
 		list = append(list, line)
 	})
 
-	m.Cmd(nfs.SAVE, dir, strings.Join(list, ice.MOD_NL))
+	m.Cmd(nfs.SAVE, dir, strings.Join(list, ice.NL))
 	return
 }
 func _autogen_import(m *ice.Message, main string, ctx string, mod string) (list []string) {
@@ -70,7 +70,7 @@ func main() { print(ice.Run()) }
 		}
 	})
 
-	m.Cmd(nfs.SAVE, main, strings.Join(list, ice.MOD_NL))
+	m.Cmd(nfs.SAVE, main, strings.Join(list, ice.NL))
 	return
 }
 func _autogen_mod(m *ice.Message, file string) (mod string) {

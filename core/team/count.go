@@ -13,9 +13,7 @@ const COUNT = "count"
 
 func init() {
 	Index.Merge(&ice.Context{Commands: map[string]*ice.Command{
-		COUNT: {Name: "count begin_time@date end_time@date auto insert", Help: "倒计时", Meta: kit.Dict(
-			ice.Display(COUNT),
-		), Action: map[string]*ice.Action{
+		COUNT: {Name: "count begin_time@date end_time@date auto insert", Help: "倒计时", Meta: kit.Dict(ice.Display(COUNT)), Action: map[string]*ice.Action{
 			mdb.INSERT: {Name: "insert zone type=once,step,week name text begin_time@date close_time@date", Help: "添加", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmdy(TASK, mdb.INSERT, arg)
 			}},

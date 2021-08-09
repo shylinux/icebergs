@@ -5,8 +5,6 @@ const (
 	NL = "\n"
 )
 const ( // MOD
-	MOD_SP   = " "
-	MOD_NL   = "\n"
 	MOD_DIR  = 0750
 	MOD_FILE = 0640
 

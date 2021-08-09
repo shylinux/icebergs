@@ -427,7 +427,6 @@ func Display(file string, arg ...string) map[string]string {
 		file = kit.Select(file+".js", file, strings.HasSuffix(file, ".js"))
 		file = path.Join("/require/github.com/shylinux", path.Dir(ls[len(ls)-1]), file)
 	}
-	// return map[string]string{kit.MDB_DISPLAY: file, kit.MDB_STYLE: kit.Select("", arg, 0)}
 	return map[string]string{"display": file, kit.MDB_STYLE: kit.Select("", arg, 0)}
 }
 func MergeAction(list ...map[string]*Action) map[string]*Action {

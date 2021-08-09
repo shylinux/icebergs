@@ -10,7 +10,7 @@ import (
 
 func _refer_show(m *ice.Message, text string, arg ...string) {
 	list := [][]string{}
-	for _, v := range kit.Split(strings.TrimSpace(text), ice.MOD_NL, ice.MOD_NL) {
+	for _, v := range kit.Split(strings.TrimSpace(text), ice.NL, ice.NL) {
 		if ls := kit.Split(v); len(ls) == 1 {
 			list = append(list, []string{path.Base(ls[0]), ls[0]})
 		} else {

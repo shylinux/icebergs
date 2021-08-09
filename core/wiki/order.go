@@ -8,7 +8,7 @@ import (
 )
 
 func _order_show(m *ice.Message, text string, arg ...string) {
-	m.Optionv(kit.MDB_LIST, kit.Split(strings.TrimSpace(text), ice.MOD_NL))
+	m.Optionv(kit.MDB_LIST, kit.Split(strings.TrimSpace(text), ice.NL))
 	_wiki_template(m, ORDER, "", text, arg...)
 }
 

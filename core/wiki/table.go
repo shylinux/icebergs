@@ -9,7 +9,7 @@ import (
 
 func _table_show(m *ice.Message, text string, arg ...string) {
 	head, list := []string{}, [][]string{}
-	for i, v := range kit.Split(strings.TrimSpace(text), ice.MOD_NL) {
+	for i, v := range kit.Split(strings.TrimSpace(text), ice.NL) {
 		if v = strings.ReplaceAll(v, "%", "%%"); i == 0 {
 			head = kit.Split(v)
 		} else {

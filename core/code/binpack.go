@@ -17,7 +17,7 @@ func _pack_write(o *os.File, arg ...string) {
 	for _, v := range arg {
 		o.WriteString(v)
 	}
-	o.WriteString(ice.MOD_NL)
+	o.WriteString(ice.NL)
 }
 func _pack_file(m *ice.Message, file string) string {
 	list := ""
@@ -48,7 +48,7 @@ func _pack_dir(m *ice.Message, pack *os.File, dir string) {
 		pack.WriteString(fmt.Sprintf("        \"%s\": %s,\n",
 			path.Join(dir, value[kit.MDB_PATH]), _pack_file(m, path.Join(dir, value[kit.MDB_PATH]))))
 	})
-	pack.WriteString(ice.MOD_NL)
+	pack.WriteString(ice.NL)
 }
 
 func _pack_volcanos(m *ice.Message, pack *os.File, dir string) {
@@ -65,11 +65,11 @@ func _pack_volcanos(m *ice.Message, pack *os.File, dir string) {
 				value[kit.MDB_PATH], _pack_file(m, path.Join(dir, value[kit.MDB_PATH]))))
 		})
 	}
-	pack.WriteString(ice.MOD_NL)
+	pack.WriteString(ice.NL)
 }
 func _pack_contexts(m *ice.Message, pack *os.File) {
 	_pack_dir(m, pack, "src")
-	pack.WriteString(ice.MOD_NL)
+	pack.WriteString(ice.NL)
 }
 
 const BINPACK = "binpack"

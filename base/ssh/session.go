@@ -75,7 +75,7 @@ func init() {
 					m.Richs(SESSION, "", m.Option(kit.MDB_HASH), func(key string, value map[string]interface{}) {
 						if w, ok := kit.Value(value, kit.Keym(INPUT)).(io.Writer); ok {
 							m.Grow(SESSION, kit.Keys(kit.MDB_HASH, key), kit.Dict(kit.MDB_TYPE, CMD, kit.MDB_TEXT, m.Option(CMD)))
-							w.Write([]byte(m.Option(CMD) + ice.MOD_NL))
+							w.Write([]byte(m.Option(CMD) + ice.NL))
 						}
 					})
 					m.ProcessRefresh("300ms")

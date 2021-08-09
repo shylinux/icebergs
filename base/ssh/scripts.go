@@ -29,8 +29,8 @@ func Render(msg *ice.Message, cmd string, args ...interface{}) string {
 		res := msg.Result()
 
 		// 输出结果
-		if fmt.Fprint(msg.O, res); !strings.HasSuffix(res, ice.MOD_NL) {
-			fmt.Fprint(msg.O, ice.MOD_NL)
+		if fmt.Fprint(msg.O, res); !strings.HasSuffix(res, ice.NL) {
+			fmt.Fprint(msg.O, ice.NL)
 		}
 		return res
 
@@ -42,8 +42,8 @@ func Render(msg *ice.Message, cmd string, args ...interface{}) string {
 		}
 
 		// 输出结果
-		if fmt.Fprint(msg.O, res); !strings.HasSuffix(res, ice.MOD_NL) {
-			fmt.Fprint(msg.O, ice.MOD_NL)
+		if fmt.Fprint(msg.O, res); !strings.HasSuffix(res, ice.NL) {
+			fmt.Fprint(msg.O, ice.NL)
 		}
 		return res
 	}

@@ -96,6 +96,9 @@ var Index = &ice.Context{Name: ALPHA, Help: "英汉词典",
 				m.Cmdy(mdb.SELECT, m.Prefix("_cache"), "", mdb.HASH)
 			}},
 		}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			if len(arg) < 2 {
+				return
+			}
 			defer m.StatusTimeCount()
 			m.OptionFields("id,word,translation,definition")
 			if m.Cmdy(mdb.SELECT, m.Prefix("_cache"), "", mdb.HASH, "mw", arg[0]+arg[1]); len(m.Appendv("id")) > 0 {

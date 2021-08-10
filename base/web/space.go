@@ -107,7 +107,7 @@ func _space_send(m *ice.Message, space string, arg ...string) {
 				}
 			}
 			m.Optionv(ice.MSG_OPTS, m.Optionv(ice.MSG_OPTS))
-			m.Optionv(ice.MSG_OPTION, nil)
+			m.Optionv(ice.MSG_OPTION, m.Optionv(ice.MSG_OPTS))
 
 			// 构造路由
 			frame := m.Target().Server().(*Frame)

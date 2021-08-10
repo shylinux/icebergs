@@ -444,3 +444,14 @@ func MergeAction(list ...map[string]*Action) map[string]*Action {
 	}
 	return list[0]
 }
+
+func (m *Message) AppendSimple(key ...string) (res []string) {
+	if len(key) == 0 {
+		key = append(key, m.Appendv(MSG_APPEND)...)
+	}
+	for _,  k := range key {
+		res = append(res, k, m.Append(k))
+	}
+	return
+}
+

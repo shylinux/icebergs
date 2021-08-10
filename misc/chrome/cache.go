@@ -1,4 +1,4 @@
-package crx
+package chrome
 
 import (
 	"path"

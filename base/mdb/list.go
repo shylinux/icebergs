@@ -131,3 +131,35 @@ func _list_inputs(m *ice.Message, prefix, chain string, field, value string) {
 }
 
 const LIST = "list"
+
+func ListAction(fields ...string) map[string]*ice.Action {
+	return selectAction(map[string]*ice.Action{
+		INSERT: {Name: "insert type=go name=hi text=hello", Help: "添加", Hand: func(m *ice.Message, arg ...string) {
+			m.Cmdy(INSERT, m.PrefixKey(), "", LIST, arg)
+		}},
+		MODIFY: {Name: "modify", Help: "编辑", Hand: func(m *ice.Message, arg ...string) {
+			m.Cmdy(MODIFY, m.PrefixKey(), "", LIST, m.OptionSimple(kit.MDB_ID), arg)
+		}},
+		REMOVE: {Name: "remove", Help: "删除", Hand: func(m *ice.Message, arg ...string) {
+			m.Cmdy(DELETE, m.PrefixKey(), "", LIST, m.OptionSimple(kit.MDB_ID))
+		}},
+		EXPORT: {Name: "export", Help: "导出", Hand: func(m *ice.Message, arg ...string) {
+			m.OptionFields(m.Conf(m.PrefixKey(), kit.META_FIELD))
+			m.Cmdy(EXPORT, m.PrefixKey(), "", LIST)
+			m.Conf(m.PrefixKey(), kit.MDB_LIST, "")
+			m.Conf(m.PrefixKey(), kit.Keym(kit.MDB_COUNT), 0)
+		}},
+		IMPORT: {Name: "import", Help: "导入", Hand: func(m *ice.Message, arg ...string) {
+			m.Cmdy(IMPORT, m.PrefixKey(), "", LIST)
+		}},
+		INPUTS: {Name: "inputs", Help: "补全", Hand: func(m *ice.Message, arg ...string) {
+			m.Cmdy(INPUTS, m.PrefixKey(), "", LIST, arg)
+		}},
+		PREV: {Name: "prev", Help: "上一页", Hand: func(m *ice.Message, arg ...string) {
+			PrevPage(m, m.Conf(m.PrefixKey(), kit.Keym(kit.MDB_COUNT)), kit.Slice(arg, 1)...)
+		}},
+		NEXT: {Name: "next", Help: "下一页", Hand: func(m *ice.Message, arg ...string) {
+			NextPage(m, m.Conf(m.PrefixKey(), kit.Keym(kit.MDB_COUNT)), kit.Slice(arg, 1)...)
+		}},
+	}, fields...)
+}

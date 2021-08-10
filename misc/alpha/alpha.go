@@ -73,6 +73,7 @@ var Index = &ice.Context{Name: ALPHA, Help: "英汉词典",
 				"audio", "bnc", "collins", "definition", "detail", "exchange", "frq", "id", "oxford", "phonetic", "pos", "tag", "time", "translation", "word",
 			},
 		)},
+		"_cache": {Name: "_cache", Value: kit.Data(kit.MDB_SHORT, "mw")},
 	},
 	Commands: map[string]*ice.Command{
 		ice.CTX_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
@@ -81,7 +82,7 @@ var Index = &ice.Context{Name: ALPHA, Help: "英汉词典",
 		}},
 		ice.CTX_EXIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) { m.Save() }},
 
-		ALPHA: {Name: "alpha method=word,line word auto", Help: "英汉", Action: map[string]*ice.Action{
+		ALPHA: {Name: "alpha method=word,line word auto _cache", Help: "英汉", Action: map[string]*ice.Action{
 			mdb.IMPORT: {Name: "import file=usr/word-dict/ecdict name", Help: "加载词库", Hand: func(m *ice.Message, arg ...string) {
 				_alpha_load(m, m.Option(kit.MDB_FILE), kit.Select(path.Base(m.Option(kit.MDB_FILE)), m.Option(kit.MDB_NAME)))
 			}},
@@ -90,9 +91,19 @@ var Index = &ice.Context{Name: ALPHA, Help: "英汉词典",
 					_alpha_find(m, kit.Select(WORD, arg, 2), arg[1])
 				}
 			}},
+			"_cache": {Name: "_cache", Help: "缓存", Hand: func(m *ice.Message, arg ...string) {
+				m.OptionFields("time,id,word,translation,definition")
+				m.Cmdy(mdb.SELECT, m.Prefix("_cache"), "", mdb.HASH)
+			}},
 		}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			m.Option(mdb.FIELDS, "id,word,translation,definition")
-			_alpha_find(m, arg[0], arg[1])
+			defer m.StatusTimeCount()
+			m.OptionFields("id,word,translation,definition")
+			if m.Cmdy(mdb.SELECT, m.Prefix("_cache"), "", mdb.HASH, "mw", arg[0]+arg[1]); len(m.Appendv("id")) > 0 {
+				return
+			}
+			if _alpha_find(m, arg[0], arg[1]); len(m.Appendv("id")) > 0 {
+				m.Cmd(mdb.INSERT, m.Prefix("_cache"), "", mdb.HASH, "mw", arg[0]+arg[1], m.AppendSimple())
+			}
 		}},
 	},
 }

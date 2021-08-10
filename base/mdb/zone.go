@@ -5,11 +5,13 @@ import (
 	kit "github.com/shylinux/toolkits"
 )
 
+const ZONE_FIELD = "time,zone,count"
+
 func ZoneAction(fields ...string) map[string]*ice.Action {
 	_zone := func(m *ice.Message) string {
 		return kit.Select(kit.MDB_ZONE, m.Conf(m.PrefixKey(), kit.Keym(kit.MDB_SHORT)))
 	}
-	list := map[string]*ice.Action{
+	return selectAction(map[string]*ice.Action{
 		CREATE: {Name: "create zone", Help: "创建", Hand: func(m *ice.Message, arg ...string) {
 			m.Cmdy(INSERT, m.PrefixKey(), "", HASH, arg)
 		}},
@@ -40,14 +42,5 @@ func ZoneAction(fields ...string) map[string]*ice.Action {
 				m.Cmdy(INPUTS, m.PrefixKey(), "", ZONE, m.Option(_zone(m)), arg)
 			}
 		}},
-	}
-	if len(fields) == 0 {
-		return list
-	}
-
-	res := map[string]*ice.Action{}
-	for _, field := range fields {
-		res[field] = list[field]
-	}
-	return res
+	}, fields...)
 }

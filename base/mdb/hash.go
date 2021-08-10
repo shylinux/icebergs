@@ -143,8 +143,19 @@ func _hash_inputs(m *ice.Message, prefix, chain string, field, value string) {
 	m.SortIntR(kit.MDB_COUNT)
 }
 
+func selectAction(list map[string]*ice.Action, fields ...string) map[string]*ice.Action {
+	if len(fields) == 0 {
+		return list
+	}
+
+	res := map[string]*ice.Action{}
+	for _, field := range fields {
+		res[field] = list[field]
+	}
+	return res
+}
 func HashAction(fields ...string) map[string]*ice.Action {
-	list := map[string]*ice.Action{
+	return selectAction(map[string]*ice.Action{
 		MODIFY: {Name: "modify", Help: "编辑", Hand: func(m *ice.Message, arg ...string) {
 			m.Cmdy(MODIFY, m.PrefixKey(), "", HASH, m.OptionSimple(kit.MDB_HASH), arg)
 		}},
@@ -172,16 +183,7 @@ func HashAction(fields ...string) map[string]*ice.Action {
 		INPUTS: {Name: "inputs", Help: "补全", Hand: func(m *ice.Message, arg ...string) {
 			m.Cmdy(INPUTS, m.PrefixKey(), "", HASH, arg)
 		}},
-	}
-	if len(fields) == 0 {
-		return list
-	}
-
-	res := map[string]*ice.Action{}
-	for _, field := range fields {
-		res[field] = list[field]
-	}
-	return res
+	})
 }
 
 const HASH = "hash"

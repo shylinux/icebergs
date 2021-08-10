@@ -10,6 +10,7 @@ field chrome web.code.chrome.chrome
 chapter "应用"
 field "同步流" web.code.chrome.sync
 field "收藏夹" web.code.chrome.favor
+field "样式表" web.code.chrome.style
 field "蜘蛛侠" web.code.chrome.spide
 field "缓存池" web.code.chrome.cache
 field "相册簿" web.wiki.feel

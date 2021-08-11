@@ -51,31 +51,28 @@ const (
 const TITLE = "title"
 
 func init() {
-	Index.Merge(&ice.Context{
-		Commands: map[string]*ice.Command{
-			TITLE: {Name: "title [premenu|chapter|section|endmenu] text", Help: "标题", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-				if len(arg) == 0 {
-					ns := kit.Split(ice.Info.NodeName, "-")
-					arg = append(arg, ns[len(ns)-1])
-				}
-				switch arg[0] {
-				case PREMENU, ENDMENU:
-					_title_show(m, arg[0], "", arg[1:]...)
-				case CHAPTER, SECTION:
-					_title_show(m, arg[0], arg[1], arg[2:]...)
-				default:
-					_title_show(m, "", arg[0], arg[1:]...)
-				}
-			}},
-		},
-		Configs: map[string]*ice.Config{
-			TITLE: {Name: TITLE, Help: "标题", Value: kit.Data(
-				kit.MDB_TEMPLATE, `<{{.Option "level"}} {{.OptionTemplate}}>{{.Option "prefix"}} {{.Option "text"}}</{{.Option "level"}}>`,
-				PREMENU, `<ul {{.OptionTemplate}}></ul>`,
-				ENDMENU, `<ul {{.OptionTemplate}}>{{$menu := .Optionv "menu"}}
+	Index.Merge(&ice.Context{Commands: map[string]*ice.Command{
+		TITLE: {Name: "title [premenu|chapter|section|endmenu] text", Help: "标题", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			if len(arg) == 0 {
+				ns := kit.Split(ice.Info.NodeName, "-")
+				arg = append(arg, ns[len(ns)-1])
+			}
+			switch arg[0] {
+			case PREMENU, ENDMENU:
+				_title_show(m, arg[0], "", arg[1:]...)
+			case CHAPTER, SECTION:
+				_title_show(m, arg[0], arg[1], arg[2:]...)
+			default:
+				_title_show(m, "", arg[0], arg[1:]...)
+			}
+		}},
+	}, Configs: map[string]*ice.Config{
+		TITLE: {Name: TITLE, Help: "标题", Value: kit.Data(
+			kit.MDB_TEMPLATE, `<{{.Option "level"}} {{.OptionTemplate}}>{{.Option "prefix"}} {{.Option "text"}}</{{.Option "level"}}>`,
+			PREMENU, `<ul {{.OptionTemplate}}></ul>`,
+			ENDMENU, `<ul {{.OptionTemplate}}>{{$menu := .Optionv "menu"}}
 {{range $index, $value := Value $menu "list"}}<li>{{Value $value "prefix"}} {{Value $value "text"}}</li>{{end}}
 </ul>`,
-			)},
-		},
-	})
+		)},
+	}})
 }

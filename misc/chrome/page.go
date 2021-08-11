@@ -16,26 +16,14 @@ func init() {
 		"/page": {Name: "/page", Help: "网页", Action: map[string]*ice.Action{
 			ctx.COMMAND: {Name: "command", Help: "命令", Hand: func(m *ice.Message, arg ...string) {
 				if len(arg) == 0 {
-					m.Cmdy(STYLE, SYNC, m.OptionSimple("hostname"))
-
-					switch m.Option("hostname") {
-					case "golang.google.cn":
-						m.Option("top", "200")
-						m.Option("selection", "word")
-						m.Result("web.wiki.alpha.alpha")
-
-					case "music.163.com":
-						m.Option("top", "200")
-						m.Result(SPIDE, "", m.Option("tid"))
-					case "localhost", "fib.woa.com":
-						return
-					}
-					return
-					m.Option("top", "200")
-					m.Echo("cli.runtime")
+					m.Cmdy(STYLE, SYNC, m.OptionSimple("hostname"), ice.OptionFields(""))
+					m.Cmdy(FIELD, SYNC, m.OptionSimple("hostname"), ice.OptionFields(""))
 					return
 				}
 				m.Cmdy(ctx.COMMAND, arg)
+			}},
+			FIELD: {Name: "field", Help: "执行", Hand: func(m *ice.Message, arg ...string) {
+				m.Cmdy(FIELD, arg)
 			}},
 			cli.RUN: {Name: "run", Help: "执行", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmdy(arg)

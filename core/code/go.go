@@ -200,7 +200,7 @@ func init() {
 							"string", "byte", "bool", "error", "chan", "map",
 						),
 						FUNCTION, kit.Simple(
-							"len", "cap", "copy", "append", "msg", "m",
+							"new", "make", "len", "cap", "copy", "append", "delete", "msg", "m",
 						),
 						CONSTANT, kit.Simple(
 							"false", "true", "nil", "-1", "0", "1", "2",

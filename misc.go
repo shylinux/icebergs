@@ -316,6 +316,13 @@ func (c *Context) cmd(m *Message, cmd *Command, key string, arg ...string) *Mess
 	return m
 }
 func (c *Context) _cmd(m *Message, cmd *Command, key string, k string, h *Action, arg ...string) *Message {
+	if k == "command" && h.Hand == nil {
+		for _, cmd := range arg {
+			m.Cmdy("command", cmd)
+		}
+		return m
+	}
+
 	if k == "run" && m.Warn(!m.Right(arg), ErrNotRight, arg) {
 		return m
 	}

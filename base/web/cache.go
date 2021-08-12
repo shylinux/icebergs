@@ -19,7 +19,7 @@ func _cache_save(m *ice.Message, kind, name, text string, arg ...string) { // fi
 	if name == "" {
 		return
 	}
-	if len(text) > 512 { // 存入文件
+	if len(text) > 512 || kind == "go" { // 存入文件
 		p := m.Cmdx(nfs.SAVE, _cache_name(m, kit.Hashs(text)), text)
 		text, arg = p, kit.Simple(p, len(text))
 	}

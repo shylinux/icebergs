@@ -50,6 +50,7 @@ func init() {
 		},
 		Commands: map[string]*ice.Command{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+				m.Conf(REPOS, kit.MDB_HASH, "")
 				_repos_insert(m, path.Base(kit.Pwd()), kit.Pwd())
 				m.Cmd(nfs.DIR, kit.SSH_USR, "name,path").Table(func(index int, value map[string]string, head []string) {
 					_repos_insert(m, value[kit.MDB_NAME], value[kit.MDB_PATH])

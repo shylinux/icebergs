@@ -46,6 +46,12 @@ func _dir_show(m *ice.Message, root string, name string, level int, deep bool, d
 
 		p := path.Join(root, name, f.Name())
 		if !(dir_type == TYPE_CAT && f.IsDir() || dir_type == TYPE_DIR && !f.IsDir()) && (dir_reg == nil || dir_reg.MatchString(f.Name())) {
+			switch cb := m.Optionv(kit.Keycb(DIR)).(type) {
+			case func(p string):
+				cb(p)
+				continue
+			}
+
 			for _, field := range fields {
 				switch field {
 				case kit.MDB_TIME:

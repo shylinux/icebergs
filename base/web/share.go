@@ -135,6 +135,9 @@ func init() {
 					m.ProcessInner()
 				}},
 			}, mdb.HashAction()), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+				if m.PodCmd(SHARE, arg) {
+					return
+				}
 				m.Fields(len(arg), m.Conf(SHARE, kit.META_FIELD))
 				if m.Cmdy(mdb.SELECT, m.PrefixKey(), "", mdb.HASH, kit.MDB_HASH, arg); len(arg) > 0 {
 					link := _share_link(m, "/share/"+arg[0])

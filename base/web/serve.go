@@ -192,8 +192,7 @@ func _serve_login(msg *ice.Message, cmds []string, w http.ResponseWriter, r *htt
 		return cmds, false // 黑名单
 	} else if msg.Conf(SERVE, kit.Keym(aaa.WHITE, ls[1])) == ice.TRUE {
 		if msg.Option(ice.MSG_USERNAME) == "" && msg.Option(SHARE) != "" {
-			share := msg.Cmd(SHARE, msg.Option(SHARE))
-			switch share.Append(kit.MDB_TYPE) {
+			switch share := msg.Cmd(SHARE, msg.Option(SHARE)); share.Append(kit.MDB_TYPE) {
 			case LOGIN:
 				// Render(msg, aaa.SessCreate(msg, share.Append(aaa.USERNAME)))
 			case FIELD:

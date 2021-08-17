@@ -19,7 +19,7 @@ import (
 
 func _share_link(m *ice.Message, p string, arg ...interface{}) string {
 	p = kit.Select("", "/share/local/", !strings.HasPrefix(p, "/")) + p
-	return tcp.ReplaceLocalhost(m, kit.MergeURL2(kit.Select(m.Conf(SHARE, kit.Keym("domain")), m.Option(ice.MSG_USERWEB)), p, arg...))
+	return tcp.ReplaceLocalhost(m, kit.MergeURL2(kit.Select(m.Option(ice.MSG_USERWEB), m.Conf(SHARE, kit.Keym(kit.MDB_DOMAIN))), p, arg...))
 }
 func _share_cache(m *ice.Message, arg ...string) {
 	if pod := m.Option(cli.POD); m.PodCmd(CACHE, arg[0]) {

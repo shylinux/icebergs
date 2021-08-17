@@ -33,9 +33,7 @@ func _space_domain(m *ice.Message) string {
 	return tcp.ReplaceLocalhost(m, link)
 }
 func _space_list(m *ice.Message, space string) {
-	if space == "" {
-		m.Fields(0, "time,type,name,text")
-	}
+	m.OptionFields(kit.Select(ice.MSG_DETAIL, "time,type,name,text", space == ""))
 	m.Cmdy(mdb.SELECT, SPACE, "", mdb.HASH, kit.MDB_NAME, space)
 
 	if space == "" {
@@ -55,7 +53,7 @@ func _space_dial(m *ice.Message, dev, name string, arg ...string) {
 		host := kit.Format(client[tcp.HOSTNAME])
 		proto := strings.Replace(kit.Format(client[tcp.PROTOCOL]), "http", "ws", 1)
 		uri := kit.MergeURL(proto+"://"+host+"/space/", kit.MDB_TYPE, ice.Info.NodeType,
-			kit.MDB_NAME, name, "share", ice.Info.CtxShare, "river", ice.Info.CtxRiver, arg)
+			kit.MDB_NAME, name, SHARE, ice.Info.CtxShare, RIVER, ice.Info.CtxRiver, arg)
 
 		if u, e := url.Parse(uri); m.Assert(e) {
 			m.Go(func() {
@@ -244,72 +242,60 @@ const (
 const SPACE = "space"
 
 func init() {
-	Index.Merge(&ice.Context{
-		Configs: map[string]*ice.Config{
-			SPACE: {Name: SPACE, Help: "空间站", Value: kit.Data(kit.MDB_SHORT, kit.MDB_NAME,
-				"redial", kit.Dict("a", 3000, "b", 1000, "c", 1000, "r", ice.MOD_BUFS, "w", ice.MOD_BUFS),
-				"timeout", kit.Dict("c", "180s"),
-			)},
-		},
-		Commands: map[string]*ice.Command{
-			SPACE: {Name: "space name cmd auto", Help: "空间站", Action: map[string]*ice.Action{
-				tcp.DIAL: {Name: "dial dev name", Help: "连接", Hand: func(m *ice.Message, arg ...string) {
-					_space_dial(m, m.Option(SPIDE_DEV), kit.Select(ice.Info.NodeName, m.Option(kit.MDB_NAME)))
-				}},
-				mdb.SEARCH: {Name: "search type name text", Help: "搜索", Hand: func(m *ice.Message, arg ...string) {
-					_space_search(m, arg[0], arg[1], kit.Select("", arg, 2))
-				}},
-			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-				if len(arg) < 2 {
-					_space_list(m, kit.Select("", arg, 0))
-					return
-				}
-				_space_send(m, arg[0], arg[1:]...)
+	Index.Merge(&ice.Context{Configs: map[string]*ice.Config{
+		SPACE: {Name: SPACE, Help: "空间站", Value: kit.Data(kit.MDB_SHORT, kit.MDB_NAME,
+			"redial", kit.Dict("a", 3000, "b", 1000, "c", 1000, "r", ice.MOD_BUFS, "w", ice.MOD_BUFS),
+			"timeout", kit.Dict("c", "180s"),
+		)},
+	}, Commands: map[string]*ice.Command{
+		SPACE: {Name: "space name cmd auto", Help: "空间站", Action: map[string]*ice.Action{
+			tcp.DIAL: {Name: "dial dev name", Help: "连接", Hand: func(m *ice.Message, arg ...string) {
+				_space_dial(m, m.Option(SPIDE_DEV), kit.Select(ice.Info.NodeName, m.Option(kit.MDB_NAME)))
 			}},
-
-			"/space/": {Name: "/space/ type name share river", Help: "空间站", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-				if s, e := websocket.Upgrade(m.W, m.R, nil, kit.Int(m.Conf(SPACE, "meta.buffer.r")), kit.Int(m.Conf(SPACE, "meta.buffer.w"))); m.Assert(e) {
-					name := kit.Select(s.RemoteAddr().String(), m.Option(kit.MDB_NAME))
-					name = m.Option(kit.MDB_NAME, strings.Replace(name, ".", "_", -1))
-					name = m.Option(kit.MDB_NAME, strings.Replace(name, ":", "-", -1))
-					kind := kit.Select(WORKER, m.Option(kit.MDB_TYPE))
-					share := m.Option("share")
-					river := m.Option("river")
-
-					// 添加节点
-					h := m.Rich(SPACE, nil, kit.Dict(SOCKET, s, "share", share, "river", river,
-						kit.MDB_TYPE, kind, kit.MDB_NAME, name, kit.MDB_TEXT, s.RemoteAddr().String(),
-					))
-
-					m.Go(func() {
-						defer m.Confv(SPACE, kit.Keys(kit.MDB_HASH, h), "")
-
-						// 监听消息
-						switch args := []string{kit.MDB_TYPE, kind, kit.MDB_NAME, name, "share", share, "river", river}; kind {
-						case WORKER:
-							m.Event(DREAM_START, args...)
-							defer m.Event(DREAM_STOP, args...)
-						default:
-							m.Event(SPACE_START, args...)
-							defer m.Event(SPACE_STOP, args...)
-						}
-
-						switch kind {
-						case CHROME:
-							if m.Option(ice.MSG_USERNAME) != "" {
-								// break
-							}
-
-							m.Go(func(msg *ice.Message) {
-								link := kit.MergeURL(_space_domain(msg), "grant", name)
-								msg.Sleep("100ms").Cmd(SPACE, name, "pwd", name, link, msg.Cmdx(cli.QRCODE, link))
-							})
-						}
-
-						frame := m.Target().Server().(*Frame)
-						_space_handle(m, false, frame.send, s, name)
-					})
-				}
+			mdb.SEARCH: {Name: "search type name text", Help: "搜索", Hand: func(m *ice.Message, arg ...string) {
+				_space_search(m, arg[0], arg[1], kit.Select("", arg, 2))
 			}},
-		}})
+		}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			if len(arg) < 2 { // 节点列表
+				_space_list(m, kit.Select("", arg, 0))
+				return
+			}
+			// 下发命令
+			_space_send(m, arg[0], arg[1:]...)
+		}},
+
+		"/space/": {Name: "/space/ type name share river", Help: "空间站", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			if s, e := websocket.Upgrade(m.W, m.R, nil, kit.Int(m.Conf(SPACE, "meta.buffer.r")), kit.Int(m.Conf(SPACE, "meta.buffer.w"))); m.Assert(e) {
+				name := kit.Select(s.RemoteAddr().String(), m.Option(kit.MDB_NAME))
+				name = m.Option(kit.MDB_NAME, strings.Replace(name, ".", "_", -1))
+				name = m.Option(kit.MDB_NAME, strings.Replace(name, ":", "-", -1))
+				kind := kit.Select(WORKER, m.Option(kit.MDB_TYPE))
+
+				// 添加节点
+				args := append([]string{kit.MDB_TYPE, kind, kit.MDB_NAME, name}, m.OptionSimple(SHARE, RIVER)...)
+				h := m.Rich(SPACE, nil, kit.Dict(SOCKET, s, kit.MDB_TEXT, s.RemoteAddr().String(), args))
+
+				m.Go(func() {
+					defer m.Confv(SPACE, kit.Keys(kit.MDB_HASH, h), "")
+
+					switch kind {
+					case CHROME: // 交互节点
+						m.Go(func(msg *ice.Message) {
+							link := kit.MergeURL(_space_domain(msg), "grant", name)
+							msg.Sleep("100ms").Cmd(SPACE, name, "pwd", name, link, msg.Cmdx(cli.QRCODE, link))
+						})
+					case WORKER: // 工作节点
+						m.Event(DREAM_START, args...)
+						defer m.Event(DREAM_STOP, args...)
+					default: // 服务节点
+						m.Event(SPACE_START, args...)
+						defer m.Event(SPACE_STOP, args...)
+					}
+
+					frame := c.Server().(*Frame)
+					_space_handle(m, false, frame.send, s, name)
+				})
+			}
+		}},
+	}})
 }

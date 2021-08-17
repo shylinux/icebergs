@@ -22,6 +22,35 @@ field "{{.Option "name"}}" web.code.{{.Option "name"}}.{{.Option "name"}}
 func _autogen_source(m *ice.Message, name string) {
 	m.Cmd(nfs.PUSH, ice.SRC_MAIN_SHY, "\n", kit.SSH_SOURCE+` `+path.Join(name, kit.Keys(name, SHY)), "\n")
 }
+func _autogen_modules(m *ice.Message, dir string, ctx string, from string) {
+	m.Cmd(nfs.DEFS, ice.GO_MOD, kit.Format(`module %s
+
+go 1.11
+`, path.Base(kit.Path(""))))
+
+	m.Option(kit.MDB_NAME, ctx)
+	buf, _ := kit.Render(`package {{.Option "name"}}
+
+import (
+	"github.com/shylinux/ice"
+)
+
+type {{.Option "name"}} struct {
+	ice.Hash
+}
+
+func (h {{.Option "name"}}) List(m *ice.Message, arg ...string) {
+	h.Hash.List(m, arg...)
+}
+
+func init() {
+	ice.Cmd("web.code.{{.Option "name"}}", &{{.Option "name"}}{}, []*ice.Show{
+		{Name: "list hash auto create", Help: "{{.Option "name"}}"},
+	})
+}
+`, m)
+	m.Cmd(nfs.SAVE, dir, string(buf))
+}
 func _autogen_module(m *ice.Message, dir string, ctx string, from string) (list []string) {
 	m.Cmd(nfs.DEFS, ice.GO_MOD, kit.Format(`module %s
 
@@ -54,12 +83,7 @@ go 1.11
 func _autogen_import(m *ice.Message, main string, ctx string, mod string) (list []string) {
 	m.Cmd(nfs.DEFS, main, `package main
 
-import (
-	ice "github.com/shylinux/icebergs"
-	_ "github.com/shylinux/icebergs/base"
-	_ "github.com/shylinux/icebergs/core"
-	_ "github.com/shylinux/icebergs/misc"
-)
+import "github.com/shylinux/ice"
 
 func main() { print(ice.Run()) }
 `)
@@ -135,7 +159,8 @@ func init() {
 				}
 
 				if p := path.Join(kit.SSH_SRC, m.Option(kit.MDB_NAME), kit.Keys(m.Option(kit.MDB_NAME), GO)); !kit.FileExists(p) {
-					_autogen_module(m, p, m.Option(kit.MDB_NAME), m.Option(kit.MDB_FROM))
+					// _autogen_module(m, p, m.Option(kit.MDB_NAME), m.Option(kit.MDB_FROM))
+					_autogen_modules(m, p, m.Option(kit.MDB_NAME), m.Option(kit.MDB_FROM))
 					_autogen_import(m, m.Option(kit.MDB_MAIN), m.Option(kit.MDB_NAME), _autogen_mod(m, ice.GO_MOD))
 				}
 			}},

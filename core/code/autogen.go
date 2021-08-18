@@ -80,6 +80,31 @@ go 1.11
 	m.Cmd(nfs.SAVE, dir, strings.Join(list, ice.NL))
 	return
 }
+func _autogen_imports(m *ice.Message, main string, ctx string, mod string) (list []string) {
+	m.Cmd(nfs.DEFS, main, `package main
+
+import "github.com/shylinux/ice"
+
+func main() { print(ice.Run()) }
+`)
+
+	done := false
+	m.Cmd(nfs.CAT, main, func(line string, index int) {
+		if done {
+			return
+		}
+		if list = append(list, line); strings.HasPrefix(line, "import (") {
+			list = append(list, kit.Format(`	_ "%s/src/%s"`, mod, ctx), "")
+			done = true
+		} else if list = append(list, line); strings.HasPrefix(line, "import") {
+			list = append(list, "", kit.Format(`import _ "%s/src/%s"`, mod, ctx), "")
+			done = true
+		}
+	})
+
+	m.Cmd(nfs.SAVE, main, strings.Join(list, ice.NL))
+	return
+}
 func _autogen_import(m *ice.Message, main string, ctx string, mod string) (list []string) {
 	m.Cmd(nfs.DEFS, main, `package main
 
@@ -88,9 +113,14 @@ import "github.com/shylinux/ice"
 func main() { print(ice.Run()) }
 `)
 
+	done := false
 	m.Cmd(nfs.CAT, main, func(line string, index int) {
+		if done {
+			return
+		}
 		if list = append(list, line); strings.HasPrefix(line, "import (") {
 			list = append(list, kit.Format(`	_ "%s/src/%s"`, mod, ctx), "")
+			done = true
 		}
 	})
 
@@ -160,8 +190,9 @@ func init() {
 
 				if p := path.Join(kit.SSH_SRC, m.Option(kit.MDB_NAME), kit.Keys(m.Option(kit.MDB_NAME), GO)); !kit.FileExists(p) {
 					// _autogen_module(m, p, m.Option(kit.MDB_NAME), m.Option(kit.MDB_FROM))
+					// _autogen_import(m, m.Option(kit.MDB_MAIN), m.Option(kit.MDB_NAME), _autogen_mod(m, ice.GO_MOD))
 					_autogen_modules(m, p, m.Option(kit.MDB_NAME), m.Option(kit.MDB_FROM))
-					_autogen_import(m, m.Option(kit.MDB_MAIN), m.Option(kit.MDB_NAME), _autogen_mod(m, ice.GO_MOD))
+					_autogen_imports(m, m.Option(kit.MDB_MAIN), m.Option(kit.MDB_NAME), _autogen_mod(m, ice.GO_MOD))
 				}
 			}},
 			mdb.INPUTS: {Name: "inputs", Help: "补全", Hand: func(m *ice.Message, arg ...string) {

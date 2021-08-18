@@ -3,8 +3,8 @@ package wiki
 import (
 	"strings"
 
-	ice "github.com/shylinux/icebergs"
-	kit "github.com/shylinux/toolkits"
+	ice "shylinux.com/x/icebergs"
+	kit "shylinux.com/x/toolkits"
 )
 
 func _table_show(m *ice.Message, text string, arg ...string) {

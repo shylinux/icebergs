@@ -5,11 +5,11 @@ import (
 	"strconv"
 	"strings"
 
-	ice "github.com/shylinux/icebergs"
-	"github.com/shylinux/icebergs/base/cli"
-	"github.com/shylinux/icebergs/base/lex"
-	"github.com/shylinux/icebergs/base/mdb"
-	kit "github.com/shylinux/toolkits"
+	ice "shylinux.com/x/icebergs"
+	"shylinux.com/x/icebergs/base/cli"
+	"shylinux.com/x/icebergs/base/lex"
+	"shylinux.com/x/icebergs/base/mdb"
+	kit "shylinux.com/x/toolkits"
 )
 
 type frame struct {

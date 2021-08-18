@@ -3,14 +3,14 @@ package chat
 import (
 	"path"
 
-	ice "github.com/shylinux/icebergs"
-	"github.com/shylinux/icebergs/base/aaa"
-	"github.com/shylinux/icebergs/base/ctx"
-	"github.com/shylinux/icebergs/base/mdb"
-	"github.com/shylinux/icebergs/base/nfs"
-	"github.com/shylinux/icebergs/base/web"
-	"github.com/shylinux/icebergs/core/code"
-	kit "github.com/shylinux/toolkits"
+	ice "shylinux.com/x/icebergs"
+	"shylinux.com/x/icebergs/base/aaa"
+	"shylinux.com/x/icebergs/base/ctx"
+	"shylinux.com/x/icebergs/base/mdb"
+	"shylinux.com/x/icebergs/base/nfs"
+	"shylinux.com/x/icebergs/base/web"
+	"shylinux.com/x/icebergs/core/code"
+	kit "shylinux.com/x/toolkits"
 )
 
 func _header_check(m *ice.Message, arg ...string) {
@@ -69,7 +69,7 @@ const HEADER = "header"
 func init() {
 	Index.Merge(&ice.Context{Configs: map[string]*ice.Config{
 		HEADER: {Name: HEADER, Help: "标题栏", Value: kit.Data(
-			TITLE, "github.com/shylinux/contexts", MENUS, `["header", ["setting", "black", "white", "print", "webpack", "devops"]]`,
+			TITLE, "shylinux.com/x/contexts", MENUS, `["header", ["setting", "black", "white", "print", "webpack", "devops"]]`,
 		)},
 	}, Commands: map[string]*ice.Command{
 		"/header": {Name: "/header", Help: "标题栏", Action: map[string]*ice.Action{

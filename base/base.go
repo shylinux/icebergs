@@ -1,19 +1,19 @@
 package shy
 
 import (
-	_ "github.com/shylinux/icebergs/base/aaa"
-	_ "github.com/shylinux/icebergs/base/cli"
-	_ "github.com/shylinux/icebergs/base/ctx"
-	_ "github.com/shylinux/icebergs/base/web"
+	_ "shylinux.com/x/icebergs/base/aaa"
+	_ "shylinux.com/x/icebergs/base/cli"
+	_ "shylinux.com/x/icebergs/base/ctx"
+	_ "shylinux.com/x/icebergs/base/web"
 
-	_ "github.com/shylinux/icebergs/base/gdb"
-	_ "github.com/shylinux/icebergs/base/lex"
-	_ "github.com/shylinux/icebergs/base/log"
+	_ "shylinux.com/x/icebergs/base/gdb"
+	_ "shylinux.com/x/icebergs/base/lex"
+	_ "shylinux.com/x/icebergs/base/log"
 
-	_ "github.com/shylinux/icebergs/base/yac"
+	_ "shylinux.com/x/icebergs/base/yac"
 
-	_ "github.com/shylinux/icebergs/base/mdb"
-	_ "github.com/shylinux/icebergs/base/nfs"
-	_ "github.com/shylinux/icebergs/base/ssh"
-	_ "github.com/shylinux/icebergs/base/tcp"
+	_ "shylinux.com/x/icebergs/base/mdb"
+	_ "shylinux.com/x/icebergs/base/nfs"
+	_ "shylinux.com/x/icebergs/base/ssh"
+	_ "shylinux.com/x/icebergs/base/tcp"
 )

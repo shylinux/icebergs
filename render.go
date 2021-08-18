@@ -4,7 +4,7 @@ import (
 	"path"
 	"strings"
 
-	kit "github.com/shylinux/toolkits"
+	kit "shylinux.com/x/toolkits"
 )
 
 var renderList = map[string]func(*Message, string, ...interface{}) string{}

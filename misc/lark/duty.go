@@ -1,7 +1,7 @@
 package lark
 
 import (
-	ice "github.com/shylinux/icebergs"
+	ice "shylinux.com/x/icebergs"
 )
 
 const DUTY = "duty"

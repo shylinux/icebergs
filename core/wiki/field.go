@@ -3,9 +3,9 @@ package wiki
 import (
 	"strings"
 
-	ice "github.com/shylinux/icebergs"
-	"github.com/shylinux/icebergs/base/cli"
-	kit "github.com/shylinux/toolkits"
+	ice "shylinux.com/x/icebergs"
+	"shylinux.com/x/icebergs/base/cli"
+	kit "shylinux.com/x/toolkits"
 )
 
 func _field_show(m *ice.Message, name, text string, arg ...string) {

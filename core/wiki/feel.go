@@ -1,9 +1,9 @@
 package wiki
 
 import (
-	ice "github.com/shylinux/icebergs"
-	"github.com/shylinux/icebergs/base/web"
-	kit "github.com/shylinux/toolkits"
+	ice "shylinux.com/x/icebergs"
+	"shylinux.com/x/icebergs/base/web"
+	kit "shylinux.com/x/toolkits"
 )
 
 const FEEL = "feel"

@@ -7,10 +7,10 @@ import (
 	"path"
 	"strings"
 
-	ice "github.com/shylinux/icebergs"
-	"github.com/shylinux/icebergs/base/mdb"
-	"github.com/shylinux/icebergs/base/nfs"
-	kit "github.com/shylinux/toolkits"
+	ice "shylinux.com/x/icebergs"
+	"shylinux.com/x/icebergs/base/mdb"
+	"shylinux.com/x/icebergs/base/nfs"
+	kit "shylinux.com/x/toolkits"
 )
 
 func _pack_write(o *os.File, arg ...string) {
@@ -84,7 +84,7 @@ func init() {
 					_pack_write(pack, `package main`)
 					_pack_write(pack, "")
 					_pack_write(pack, `import (`)
-					_pack_write(pack, `	ice "github.com/shylinux/icebergs"`)
+					_pack_write(pack, `	ice "shylinux.com/x/icebergs"`)
 					_pack_write(pack, `)`)
 					_pack_write(pack, "")
 

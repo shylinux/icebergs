@@ -8,7 +8,7 @@ import (
 	"strings"
 	"time"
 
-	kit "github.com/shylinux/toolkits"
+	kit "shylinux.com/x/toolkits"
 )
 
 type Sort struct {

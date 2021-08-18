@@ -6,12 +6,12 @@ import (
 	"encoding/xml"
 	"strings"
 
-	ice "github.com/shylinux/icebergs"
-	"github.com/shylinux/icebergs/base/aaa"
-	"github.com/shylinux/icebergs/base/mdb"
-	"github.com/shylinux/icebergs/base/web"
-	"github.com/shylinux/icebergs/core/wiki"
-	kit "github.com/shylinux/toolkits"
+	ice "shylinux.com/x/icebergs"
+	"shylinux.com/x/icebergs/base/aaa"
+	"shylinux.com/x/icebergs/base/mdb"
+	"shylinux.com/x/icebergs/base/web"
+	"shylinux.com/x/icebergs/core/wiki"
+	kit "shylinux.com/x/toolkits"
 )
 
 func _wx_parse(m *ice.Message) {

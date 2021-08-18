@@ -7,8 +7,8 @@ import (
 	"strings"
 	"time"
 
-	kit "github.com/shylinux/toolkits"
-	"github.com/shylinux/toolkits/task"
+	kit "shylinux.com/x/toolkits"
+	"shylinux.com/x/toolkits/task"
 )
 
 func (m *Message) TryCatch(msg *Message, silent bool, hand ...func(msg *Message)) *Message {

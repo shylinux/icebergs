@@ -11,7 +11,7 @@ import (
 	"strings"
 	"time"
 
-	kit "github.com/shylinux/toolkits"
+	kit "shylinux.com/x/toolkits"
 )
 
 func (m *Message) Cut(fields ...string) *Message {
@@ -432,7 +432,7 @@ func Display(file string, arg ...string) map[string]string {
 	if file != "" && !strings.HasPrefix(file, "/") {
 		ls := strings.Split(kit.FileLine(2, 100), "usr")
 		file = kit.Select(file+".js", file, strings.HasSuffix(file, ".js"))
-		file = path.Join("/require/github.com/shylinux", path.Dir(ls[len(ls)-1]), file)
+		file = path.Join("/require/shylinux.com/x", path.Dir(ls[len(ls)-1]), file)
 	}
 	return map[string]string{"display": file, kit.MDB_STYLE: kit.Select("", arg, 0)}
 }
@@ -456,9 +456,8 @@ func (m *Message) AppendSimple(key ...string) (res []string) {
 	if len(key) == 0 {
 		key = append(key, m.Appendv(MSG_APPEND)...)
 	}
-	for _,  k := range key {
+	for _, k := range key {
 		res = append(res, k, m.Append(k))
 	}
 	return
 }
-

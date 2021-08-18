@@ -1,9 +1,9 @@
 package md
 
 import (
-	ice "github.com/shylinux/icebergs"
-	"github.com/shylinux/icebergs/core/wiki"
-	kit "github.com/shylinux/toolkits"
+	ice "shylinux.com/x/icebergs"
+	"shylinux.com/x/icebergs/core/wiki"
+	kit "shylinux.com/x/toolkits"
 
 	"io/ioutil"
 	"path"

@@ -1,8 +1,8 @@
 package code
 
 import (
-	ice "github.com/shylinux/icebergs"
-	"github.com/shylinux/icebergs/base/web"
+	ice "shylinux.com/x/icebergs"
+	"shylinux.com/x/icebergs/base/web"
 )
 
 const CODE = "code"

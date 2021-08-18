@@ -4,11 +4,11 @@ import (
 	"fmt"
 	"path"
 
-	ice "github.com/shylinux/icebergs"
-	"github.com/shylinux/icebergs/base/mdb"
-	"github.com/shylinux/icebergs/base/nfs"
-	"github.com/shylinux/icebergs/base/web"
-	kit "github.com/shylinux/toolkits"
+	ice "shylinux.com/x/icebergs"
+	"shylinux.com/x/icebergs/base/mdb"
+	"shylinux.com/x/icebergs/base/nfs"
+	"shylinux.com/x/icebergs/base/web"
+	kit "shylinux.com/x/toolkits"
 )
 
 func _volcanos(file ...string) string {
@@ -103,10 +103,10 @@ func init() {
 const _pack = `
 <!DOCTYPE html>
 <head>
-    <link rel="apple-touch-icon-precomposed" href="/publish/app.png"/>
-    <link rel="apple-touch-startup-image" href="/publish/splash.png"/>
-    <meta name="apple-mobile-web-app-capable" content="yes"/>
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+    <link rel="orange-touch-icon-precomposed" href="/publish/app.png"/>
+    <link rel="orange-touch-startup-image" href="/publish/splash.png"/>
+    <meta name="orange-mobile-web-app-capable" content="yes"/>
+    <meta name="orange-mobile-web-app-status-bar-style" content="black-translucent"/>
 
     <meta name="viewport" content="width=device-width,initial-scale=0.8,user-scalable=no">
     <meta charset="utf-8">

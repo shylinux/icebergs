@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"strings"
 
-	kit "github.com/shylinux/toolkits"
-	log "github.com/shylinux/toolkits/logs"
+	kit "shylinux.com/x/toolkits"
+	log "shylinux.com/x/toolkits/logs"
 )
 
 const (

@@ -68,11 +68,11 @@ template.sh tutor hello
 如果现有的框架，无法满足需求，还可以下载框架源码自行更改。
 
 ```sh
-git clone https://github.com/shylinux/icebergs usr/icebergs
+git clone https://shylinux.com/x/icebergs usr/icebergs
 ```
 修改go.mod文件，引用本地框架。
 ```go
-replace github.com/shylinux/icebergs => ./usr/icebergs
+replace shylinux.com/x/icebergs => ./usr/icebergs
 ```
 
 ## 2 原型 type.go

@@ -1,9 +1,9 @@
 package shy
 
 import (
-	_ "github.com/shylinux/icebergs/core/chat"
-	_ "github.com/shylinux/icebergs/core/code"
-	_ "github.com/shylinux/icebergs/core/mall"
-	_ "github.com/shylinux/icebergs/core/team"
-	_ "github.com/shylinux/icebergs/core/wiki"
+	_ "shylinux.com/x/icebergs/core/chat"
+	_ "shylinux.com/x/icebergs/core/code"
+	_ "shylinux.com/x/icebergs/core/mall"
+	_ "shylinux.com/x/icebergs/core/team"
+	_ "shylinux.com/x/icebergs/core/wiki"
 )

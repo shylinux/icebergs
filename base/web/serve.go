@@ -7,12 +7,12 @@ import (
 	"path"
 	"strings"
 
-	ice "github.com/shylinux/icebergs"
-	"github.com/shylinux/icebergs/base/aaa"
-	"github.com/shylinux/icebergs/base/cli"
-	"github.com/shylinux/icebergs/base/mdb"
-	"github.com/shylinux/icebergs/base/tcp"
-	kit "github.com/shylinux/toolkits"
+	ice "shylinux.com/x/icebergs"
+	"shylinux.com/x/icebergs/base/aaa"
+	"shylinux.com/x/icebergs/base/cli"
+	"shylinux.com/x/icebergs/base/mdb"
+	"shylinux.com/x/icebergs/base/tcp"
+	kit "shylinux.com/x/toolkits"
 )
 
 func _serve_main(m *ice.Message, w http.ResponseWriter, r *http.Request) bool {
@@ -49,6 +49,11 @@ func _serve_main(m *ice.Message, w http.ResponseWriter, r *http.Request) bool {
 		}()
 	}
 
+	// 代码管理
+	if strings.HasPrefix(r.URL.Path, "/x/") {
+		r.URL.Path = strings.Replace(r.URL.Path, "/x/", "/code/git/repos/", -1)
+		return true
+	}
 	// 调试接口
 	if strings.HasPrefix(r.URL.Path, "/debug") {
 		r.URL.Path = strings.Replace(r.URL.Path, "/debug", "/code", -1)
@@ -229,15 +234,16 @@ func init() {
 					LOGIN, true, SPACE, true, SHARE, true,
 					ice.VOLCANOS, true, ice.INTSHELL, true,
 					ice.REQUIRE, true, ice.PUBLISH, true,
+					"x", true, ice.PUBLISH, true,
 				), LOGHEADERS, false,
 
 				kit.SSH_STATIC, kit.Dict("/", ice.USR_VOLCANOS),
 				ice.VOLCANOS, kit.Dict(kit.MDB_PATH, ice.USR_VOLCANOS, kit.SSH_INDEX, "page/index.html",
-					kit.SSH_REPOS, "https://github.com/shylinux/volcanos", kit.SSH_BRANCH, kit.SSH_MASTER,
+					kit.SSH_REPOS, "https://shylinux.com/x/volcanos", kit.SSH_BRANCH, kit.SSH_MASTER,
 				), ice.PUBLISH, ice.USR_PUBLISH,
 
 				ice.INTSHELL, kit.Dict(kit.MDB_PATH, ice.USR_INTSHELL, kit.SSH_INDEX, ice.INDEX_SH,
-					kit.SSH_REPOS, "https://github.com/shylinux/intshell", kit.SSH_BRANCH, kit.SSH_MASTER,
+					kit.SSH_REPOS, "https://shylinux.com/x/intshell", kit.SSH_BRANCH, kit.SSH_MASTER,
 				), ice.REQUIRE, ".ish/pluged",
 			)},
 		},

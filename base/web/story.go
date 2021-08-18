@@ -4,10 +4,10 @@ import (
 	"os"
 	"time"
 
-	ice "github.com/shylinux/icebergs"
-	"github.com/shylinux/icebergs/base/mdb"
-	"github.com/shylinux/icebergs/base/nfs"
-	kit "github.com/shylinux/toolkits"
+	ice "shylinux.com/x/icebergs"
+	"shylinux.com/x/icebergs/base/mdb"
+	"shylinux.com/x/icebergs/base/nfs"
+	kit "shylinux.com/x/toolkits"
 )
 
 func _story_list(m *ice.Message, name string, key string) {

@@ -5,11 +5,11 @@ import (
 	"path"
 	"strings"
 
-	ice "github.com/shylinux/icebergs"
-	"github.com/shylinux/icebergs/base/cli"
-	"github.com/shylinux/icebergs/base/mdb"
-	"github.com/shylinux/icebergs/base/nfs"
-	kit "github.com/shylinux/toolkits"
+	ice "shylinux.com/x/icebergs"
+	"shylinux.com/x/icebergs/base/cli"
+	"shylinux.com/x/icebergs/base/mdb"
+	"shylinux.com/x/icebergs/base/nfs"
+	kit "shylinux.com/x/toolkits"
 )
 
 func _repos_path(name string) string {
@@ -45,7 +45,7 @@ func init() {
 		Configs: map[string]*ice.Config{
 			REPOS: {Name: REPOS, Help: "代码库", Value: kit.Data(
 				kit.MDB_SHORT, kit.MDB_NAME, kit.MDB_FIELD, "time,name,branch,commit,remote",
-				kit.SSH_REPOS, "https://github.com/shylinux",
+				kit.SSH_REPOS, "https://shylinux.com/x",
 			)},
 		},
 		Commands: map[string]*ice.Command{

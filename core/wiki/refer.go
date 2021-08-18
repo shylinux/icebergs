@@ -4,8 +4,8 @@ import (
 	"path"
 	"strings"
 
-	ice "github.com/shylinux/icebergs"
-	kit "github.com/shylinux/toolkits"
+	ice "shylinux.com/x/icebergs"
+	kit "shylinux.com/x/toolkits"
 )
 
 func _refer_show(m *ice.Message, text string, arg ...string) {

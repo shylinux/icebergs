@@ -1,9 +1,9 @@
 package railway
 
 import (
-	"github.com/shylinux/icebergs"
-	"github.com/shylinux/icebergs/core/wiki"
-	"github.com/shylinux/toolkits"
+	"shylinux.com/x/icebergs"
+	"shylinux.com/x/icebergs/core/wiki"
+	"shylinux.com/x/toolkits"
 )
 
 var Index = &ice.Context{Name: "railway", Help: "railway",

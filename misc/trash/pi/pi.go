@@ -1,9 +1,9 @@
 package pi
 
 import (
-	"github.com/shylinux/icebergs"
-	"github.com/shylinux/icebergs/core/chat"
-	"github.com/shylinux/toolkits"
+	"shylinux.com/x/icebergs"
+	"shylinux.com/x/icebergs/core/chat"
+	"shylinux.com/x/toolkits"
 	"os"
 	"path"
 )

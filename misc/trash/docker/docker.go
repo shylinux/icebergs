@@ -3,14 +3,14 @@ package docker
 import (
 	"path"
 
-	ice "github.com/shylinux/icebergs"
-	"github.com/shylinux/icebergs/base/cli"
-	"github.com/shylinux/icebergs/base/gdb"
-	"github.com/shylinux/icebergs/base/mdb"
-	"github.com/shylinux/icebergs/base/tcp"
-	"github.com/shylinux/icebergs/base/web"
-	"github.com/shylinux/icebergs/core/code"
-	kit "github.com/shylinux/toolkits"
+	ice "shylinux.com/x/icebergs"
+	"shylinux.com/x/icebergs/base/cli"
+	"shylinux.com/x/icebergs/base/gdb"
+	"shylinux.com/x/icebergs/base/mdb"
+	"shylinux.com/x/icebergs/base/tcp"
+	"shylinux.com/x/icebergs/base/web"
+	"shylinux.com/x/icebergs/core/code"
+	kit "shylinux.com/x/toolkits"
 
 	"strings"
 )

@@ -4,8 +4,8 @@ import (
 	"strings"
 	"sync"
 
-	kit "github.com/shylinux/toolkits"
-	"github.com/shylinux/toolkits/miss"
+	kit "shylinux.com/x/toolkits"
+	"shylinux.com/x/toolkits/miss"
 )
 
 func (m *Message) Prefix(arg ...string) string {

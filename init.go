@@ -7,7 +7,7 @@ import (
 	"sync"
 	"time"
 
-	kit "github.com/shylinux/toolkits"
+	kit "shylinux.com/x/toolkits"
 )
 
 type Frame struct {
@@ -74,7 +74,7 @@ var Index = &Context{Name: "ice", Help: "冰山模块",
 				"",
 				"report: shylinuxc@gmail.com",
 				"server: https://shylinux.com",
-				"source: https://github.com/shylinux/icebergs",
+				"source: https://shylinux.com/x/icebergs",
 				"",
 			},
 		}},

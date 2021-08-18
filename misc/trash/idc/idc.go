@@ -1,10 +1,10 @@
 package idc
 
 import (
-	"github.com/shylinux/icebergs"
-	"github.com/shylinux/icebergs/base/web"
-	"github.com/shylinux/icebergs/core/code"
-	"github.com/shylinux/toolkits"
+	"shylinux.com/x/icebergs"
+	"shylinux.com/x/icebergs/base/web"
+	"shylinux.com/x/icebergs/core/code"
+	"shylinux.com/x/toolkits"
 )
 
 var Index = &ice.Context{Name: "idc", Help: "idc",

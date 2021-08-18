@@ -1,8 +1,8 @@
 package wiki
 
 import (
-	ice "github.com/shylinux/icebergs"
-	kit "github.com/shylinux/toolkits"
+	ice "shylinux.com/x/icebergs"
+	kit "shylinux.com/x/toolkits"
 )
 
 func _title_show(m *ice.Message, kind, text string, arg ...string) {

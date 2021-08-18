@@ -11,7 +11,7 @@ import (
 	"sync/atomic"
 	"time"
 
-	kit "github.com/shylinux/toolkits"
+	kit "shylinux.com/x/toolkits"
 )
 
 type Cache struct {

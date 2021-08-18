@@ -1,8 +1,8 @@
 package mdb
 
 import (
-	ice "github.com/shylinux/icebergs"
-	kit "github.com/shylinux/toolkits"
+	ice "shylinux.com/x/icebergs"
+	kit "shylinux.com/x/toolkits"
 )
 
 const PLUGIN = "plugin"

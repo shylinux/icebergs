@@ -6,8 +6,8 @@ import (
 	"path"
 	"strings"
 
-	ice "github.com/shylinux/icebergs"
-	kit "github.com/shylinux/toolkits"
+	ice "shylinux.com/x/icebergs"
+	kit "shylinux.com/x/toolkits"
 )
 
 func _file_name(m *ice.Message, arg ...string) string {

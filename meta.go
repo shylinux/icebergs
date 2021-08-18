@@ -6,7 +6,7 @@ import (
 	"strconv"
 	"strings"
 
-	kit "github.com/shylinux/toolkits"
+	kit "shylinux.com/x/toolkits"
 )
 
 func (m *Message) Add(key string, arg ...string) *Message {

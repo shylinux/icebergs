@@ -1,9 +1,9 @@
 package aaa
 
 import (
-	ice "github.com/shylinux/icebergs"
-	"github.com/shylinux/icebergs/base/mdb"
-	kit "github.com/shylinux/toolkits"
+	ice "shylinux.com/x/icebergs"
+	"shylinux.com/x/icebergs/base/mdb"
+	kit "shylinux.com/x/toolkits"
 )
 
 func _user_login(m *ice.Message, name, word string) (ok bool) {

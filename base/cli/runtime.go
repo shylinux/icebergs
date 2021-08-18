@@ -6,9 +6,9 @@ import (
 	"os"
 	"strings"
 
-	ice "github.com/shylinux/icebergs"
-	"github.com/shylinux/icebergs/base/ctx"
-	kit "github.com/shylinux/toolkits"
+	ice "shylinux.com/x/icebergs"
+	"shylinux.com/x/icebergs/base/ctx"
+	kit "shylinux.com/x/toolkits"
 )
 
 func _runtime_hostinfo(m *ice.Message) {

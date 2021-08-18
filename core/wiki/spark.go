@@ -3,9 +3,9 @@ package wiki
 import (
 	"strings"
 
-	ice "github.com/shylinux/icebergs"
-	"github.com/shylinux/icebergs/base/ssh"
-	kit "github.com/shylinux/toolkits"
+	ice "shylinux.com/x/icebergs"
+	"shylinux.com/x/icebergs/base/ssh"
+	kit "shylinux.com/x/toolkits"
 )
 
 func _spark_show(m *ice.Message, name, text string, arg ...string) {

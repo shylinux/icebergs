@@ -6,7 +6,7 @@ import (
 	"syscall"
 	"unsafe"
 
-	ice "github.com/shylinux/icebergs"
+	ice "shylinux.com/x/icebergs"
 	"golang.org/x/crypto/ssh"
 )
 

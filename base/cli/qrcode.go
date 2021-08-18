@@ -8,9 +8,9 @@ import (
 	"strconv"
 	"strings"
 
-	ice "github.com/shylinux/icebergs"
-	"github.com/shylinux/icebergs/base/aaa"
-	kit "github.com/shylinux/toolkits"
+	ice "shylinux.com/x/icebergs"
+	"shylinux.com/x/icebergs/base/aaa"
+	kit "shylinux.com/x/toolkits"
 	"github.com/skip2/go-qrcode"
 )
 

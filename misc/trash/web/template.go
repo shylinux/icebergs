@@ -1,7 +1,7 @@
 package web
 
 import (
-	"github.com/shylinux/toolkits"
+	"shylinux.com/x/toolkits"
 )
 
 var share_template = kit.Dict(

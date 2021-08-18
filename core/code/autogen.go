@@ -4,12 +4,12 @@ import (
 	"path"
 	"strings"
 
-	ice "github.com/shylinux/icebergs"
-	"github.com/shylinux/icebergs/base/cli"
-	"github.com/shylinux/icebergs/base/mdb"
-	"github.com/shylinux/icebergs/base/nfs"
-	"github.com/shylinux/icebergs/base/web"
-	kit "github.com/shylinux/toolkits"
+	ice "shylinux.com/x/icebergs"
+	"shylinux.com/x/icebergs/base/cli"
+	"shylinux.com/x/icebergs/base/mdb"
+	"shylinux.com/x/icebergs/base/nfs"
+	"shylinux.com/x/icebergs/base/web"
+	kit "shylinux.com/x/toolkits"
 )
 
 func _autogen_script(m *ice.Message, dir string) {
@@ -32,7 +32,7 @@ go 1.11
 	buf, _ := kit.Render(`package {{.Option "name"}}
 
 import (
-	"github.com/shylinux/ice"
+	"shylinux.com/x/ice"
 )
 
 type {{.Option "name"}} struct {
@@ -83,7 +83,7 @@ go 1.11
 func _autogen_imports(m *ice.Message, main string, ctx string, mod string) (list []string) {
 	m.Cmd(nfs.DEFS, main, `package main
 
-import "github.com/shylinux/ice"
+import "shylinux.com/x/ice"
 
 func main() { print(ice.Run()) }
 `)
@@ -108,7 +108,7 @@ func main() { print(ice.Run()) }
 func _autogen_import(m *ice.Message, main string, ctx string, mod string) (list []string) {
 	m.Cmd(nfs.DEFS, main, `package main
 
-import "github.com/shylinux/ice"
+import "shylinux.com/x/ice"
 
 func main() { print(ice.Run()) }
 `)
@@ -142,7 +142,7 @@ func _autogen_version(m *ice.Message) {
 	m.Cmd(nfs.SAVE, file, kit.Format(`package main
 
 import (
-	"github.com/shylinux/icebergs"
+	"shylinux.com/x/icebergs"
 )
 
 func init() {

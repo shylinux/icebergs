@@ -1,9 +1,9 @@
 package ssh
 
 import (
-	ice "github.com/shylinux/icebergs"
-	"github.com/shylinux/icebergs/base/tcp"
-	kit "github.com/shylinux/toolkits"
+	ice "shylinux.com/x/icebergs"
+	"shylinux.com/x/icebergs/base/tcp"
+	kit "shylinux.com/x/toolkits"
 )
 
 const SSH = "ssh"

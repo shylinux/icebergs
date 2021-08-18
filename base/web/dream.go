@@ -6,13 +6,13 @@ import (
 	"path"
 	"strings"
 
-	ice "github.com/shylinux/icebergs"
-	"github.com/shylinux/icebergs/base/cli"
-	"github.com/shylinux/icebergs/base/gdb"
-	"github.com/shylinux/icebergs/base/mdb"
-	"github.com/shylinux/icebergs/base/nfs"
-	"github.com/shylinux/icebergs/base/tcp"
-	kit "github.com/shylinux/toolkits"
+	ice "shylinux.com/x/icebergs"
+	"shylinux.com/x/icebergs/base/cli"
+	"shylinux.com/x/icebergs/base/gdb"
+	"shylinux.com/x/icebergs/base/mdb"
+	"shylinux.com/x/icebergs/base/nfs"
+	"shylinux.com/x/icebergs/base/tcp"
+	kit "shylinux.com/x/toolkits"
 )
 
 func _dream_list(m *ice.Message) {
@@ -140,7 +140,7 @@ func init() {
 				cli.CMD, []interface{}{"ice.bin", SPACE, tcp.DIAL},
 				cli.ENV, kit.Dict(ice.CTX_LOG, ice.BIN_BOOTLOG),
 				"miss", `#!/bin/bash
-[ -f $PWD/.ish/plug.sh ] || [ -f $HOME/.ish/plug.sh ] || git clone ${ISH_CONF_HUB_PROXY:="https://"}github.com/shylinux/intshell $PWD/.ish
+[ -f $PWD/.ish/plug.sh ] || [ -f $HOME/.ish/plug.sh ] || git clone ${ISH_CONF_HUB_PROXY:="https://"}shylinux.com/x/intshell $PWD/.ish
 [ "$ISH_CONF_PRE" != "" ] || source $PWD/.ish/plug.sh || source $HOME/.ish/plug.sh
 require miss.sh
 

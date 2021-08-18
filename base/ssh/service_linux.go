@@ -9,11 +9,11 @@ import (
 	"unsafe"
 
 	"github.com/kr/pty"
-	ice "github.com/shylinux/icebergs"
-	"github.com/shylinux/icebergs/base/cli"
-	"github.com/shylinux/icebergs/base/mdb"
-	"github.com/shylinux/icebergs/base/tcp"
-	kit "github.com/shylinux/toolkits"
+	ice "shylinux.com/x/icebergs"
+	"shylinux.com/x/icebergs/base/cli"
+	"shylinux.com/x/icebergs/base/mdb"
+	"shylinux.com/x/icebergs/base/tcp"
+	kit "shylinux.com/x/toolkits"
 	"golang.org/x/crypto/ssh"
 )
 

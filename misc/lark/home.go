@@ -1,11 +1,11 @@
 package lark
 
 import (
-	ice "github.com/shylinux/icebergs"
-	"github.com/shylinux/icebergs/base/cli"
-	"github.com/shylinux/icebergs/base/web"
-	"github.com/shylinux/icebergs/core/chat"
-	kit "github.com/shylinux/toolkits"
+	ice "shylinux.com/x/icebergs"
+	"shylinux.com/x/icebergs/base/cli"
+	"shylinux.com/x/icebergs/base/web"
+	"shylinux.com/x/icebergs/core/chat"
+	kit "shylinux.com/x/toolkits"
 )
 
 const HOME = "home"

@@ -1,9 +1,9 @@
 package misc
 
 import (
-	_ "github.com/shylinux/icebergs/misc/bash"
-	_ "github.com/shylinux/icebergs/misc/tmux"
+	_ "shylinux.com/x/icebergs/misc/bash"
+	_ "shylinux.com/x/icebergs/misc/tmux"
 
-	_ "github.com/shylinux/icebergs/misc/git"
-	_ "github.com/shylinux/icebergs/misc/vim"
+	_ "shylinux.com/x/icebergs/misc/git"
+	_ "shylinux.com/x/icebergs/misc/vim"
 )

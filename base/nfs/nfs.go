@@ -1,8 +1,8 @@
 package nfs
 
 import (
-	ice "github.com/shylinux/icebergs"
-	"github.com/shylinux/icebergs/base/mdb"
+	ice "shylinux.com/x/icebergs"
+	"shylinux.com/x/icebergs/base/mdb"
 )
 
 var Index = &ice.Context{Name: "nfs", Help: "存储模块", Commands: map[string]*ice.Command{

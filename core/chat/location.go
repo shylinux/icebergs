@@ -3,9 +3,9 @@ package chat
 import (
 	"math"
 
-	ice "github.com/shylinux/icebergs"
-	"github.com/shylinux/icebergs/base/mdb"
-	kit "github.com/shylinux/toolkits"
+	ice "shylinux.com/x/icebergs"
+	"shylinux.com/x/icebergs/base/mdb"
+	kit "shylinux.com/x/toolkits"
 )
 
 func distance(lat1, long1, lat2, long2 float64) float64 {

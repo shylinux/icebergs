@@ -71,6 +71,11 @@ func init() {
 				m.Render(ice.RENDER_VOID)
 			}},
 			"/repos/": {Name: "/repos/", Help: "代码库", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+				if m.Option("go-get") == "1" {
+					p := m.Conf(web.SHARE, kit.Keym(kit.MDB_DOMAIN)) + "/x/" + path.Join(arg...)
+					m.RenderResult(`<meta name="go-import" content="%s git %s">`, strings.TrimPrefix(p, "https://"), p)
+					return
+				}
 				switch m.Option("service") {
 				case "git-receive-pack": // 上传代码
 					if err := _server_login(m); err != nil {

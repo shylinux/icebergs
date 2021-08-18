@@ -14,7 +14,7 @@ import (
 
 func _autogen_script(m *ice.Message, dir string) {
 	if b, e := kit.Render(`chapter "{{.Option "name"}}"
-field "{{.Option "name"}}" web.code.{{.Option "name"}}.{{.Option "name"}}
+field "{{.Option "name"}}" web.code.{{.Option "name"}}
 `, m); m.Assert(e) {
 		m.Cmd(nfs.DEFS, dir, string(b))
 	}

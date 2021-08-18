@@ -90,13 +90,13 @@ func main() { print(ice.Run()) }
 
 	done := false
 	m.Cmd(nfs.CAT, main, func(line string, index int) {
-		if done {
+		if list = append(list, line); done {
 			return
 		}
-		if list = append(list, line); strings.HasPrefix(line, "import (") {
+		if strings.HasPrefix(line, "import (") {
 			list = append(list, kit.Format(`	_ "%s/src/%s"`, mod, ctx), "")
 			done = true
-		} else if list = append(list, line); strings.HasPrefix(line, "import") {
+		} else if strings.HasPrefix(line, "import") {
 			list = append(list, "", kit.Format(`import _ "%s/src/%s"`, mod, ctx), "")
 			done = true
 		}

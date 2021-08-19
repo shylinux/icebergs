@@ -64,6 +64,9 @@ func Render(msg *ice.Message, cmd string, args ...interface{}) {
 		fmt.Fprint(msg.W, msg.Formats(kit.MDB_META))
 	}
 }
+func RenderHeader(msg *ice.Message, key, value string) {
+	msg.W.Header().Set(key, value)
+}
 func RenderStatus(msg *ice.Message, code int, text string) {
 	msg.W.WriteHeader(code)
 	msg.W.Write([]byte(text))
@@ -71,6 +74,10 @@ func RenderStatus(msg *ice.Message, code int, text string) {
 func RenderCookie(msg *ice.Message, value string, arg ...string) { // name path expire
 	expire := time.Now().Add(kit.Duration(kit.Select(msg.Conf(aaa.SESS, "meta.expire"), arg, 2)))
 	http.SetCookie(msg.W, &http.Cookie{Value: value, Name: kit.Select(ice.MSG_SESSID, arg, 0), Path: kit.Select("/", arg, 1), Expires: expire})
+}
+func RenderMeta(msg *ice.Message, name, content string) {
+	msg.W.Write([]byte(kit.Format(`<meta name="%s" content="%s">`, name, content)))
+	msg.W.Write([]byte(ice.NL))
 }
 func RenderType(w http.ResponseWriter, name, mime string) {
 	if mime != "" {
@@ -83,9 +90,6 @@ func RenderType(w http.ResponseWriter, name, mime string) {
 		w.Header().Set(ContentType, "text/css; charset=utf-8")
 	case "pdf":
 		w.Header().Set(ContentType, "application/pdf")
-
 	default:
-		break
-		w.Header().Set(ContentType, ContentHTML)
 	}
 }

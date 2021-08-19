@@ -12,75 +12,51 @@ import (
 	kit "shylinux.com/x/toolkits"
 )
 
-func _autogen_script(m *ice.Message, dir string) {
-	if b, e := kit.Render(`chapter "{{.Option "name"}}"
-field "{{.Option "name"}}" web.code.{{.Option "name"}}
-`, m); m.Assert(e) {
-		m.Cmd(nfs.DEFS, dir, string(b))
+func _defs(m *ice.Message, args ...string) {
+	for i := 0; i < len(args); i += 2 {
+		if m.Option(args[i]) == "" {
+			m.Option(args[i], args[i+1])
+		}
 	}
 }
-func _autogen_source(m *ice.Message, name string) {
-	m.Cmd(nfs.PUSH, ice.SRC_MAIN_SHY, "\n", kit.SSH_SOURCE+` `+path.Join(name, kit.Keys(name, SHY)), "\n")
+func _autogen_script(m *ice.Message, dir string) {
+	buf, _ := kit.Render(`chapter "{{.Option "name"}}"
+field "{{.Option "help"}}" {{.Option "key"}}
+`, m)
+	m.Cmd(nfs.DEFS, dir, string(buf))
 }
-func _autogen_modules(m *ice.Message, dir string, ctx string, from string) {
-	m.Cmd(nfs.DEFS, ice.GO_MOD, kit.Format(`module %s
-
-go 1.11
-`, path.Base(kit.Path(""))))
-
-	m.Option(kit.MDB_NAME, ctx)
-	buf, _ := kit.Render(`package {{.Option "name"}}
+func _autogen_source(m *ice.Message, zone, name string) {
+	m.Cmd(nfs.PUSH, ice.SRC_MAIN_SHY, "\n", kit.SSH_SOURCE+` `+path.Join(zone, kit.Keys(name, SHY)), "\n")
+}
+func _autogen_module(m *ice.Message, dir string) {
+	buf, _ := kit.Render(`package {{.Option "zone"}}
 
 import (
 	"shylinux.com/x/ice"
 )
 
 type {{.Option "name"}} struct {
-	ice.Hash
+	ice.{{.Option "type"}}
 }
 
 func (h {{.Option "name"}}) List(m *ice.Message, arg ...string) {
-	h.Hash.List(m, arg...)
+	h.{{.Option "type"}}.List(m, arg...)
 }
 
 func init() {
-	ice.Cmd("web.code.{{.Option "name"}}", &{{.Option "name"}}{}, []*ice.Show{
-		{Name: "list hash auto create", Help: "{{.Option "name"}}"},
+	ice.Cmd("{{.Option "key"}}", &{{.Option "name"}}{}, []*ice.Show{
+		{Name: "{{.Option "list"}}", Help: "{{.Option "help"}}"},
 	})
 }
 `, m)
 	m.Cmd(nfs.SAVE, dir, string(buf))
 }
-func _autogen_module(m *ice.Message, dir string, ctx string, from string) (list []string) {
+func _autogen_import(m *ice.Message, main string, ctx string, mod string) (list []string) {
 	m.Cmd(nfs.DEFS, ice.GO_MOD, kit.Format(`module %s
 
 go 1.11
 `, path.Base(kit.Path(""))))
 
-	name, value := "", ""
-	key := strings.ToUpper(ctx)
-	m.Cmd(nfs.CAT, from, func(line string, index int) {
-		if strings.HasPrefix(line, "package") {
-			line = "package " + ctx
-		}
-
-		if name == "" && strings.HasPrefix(line, "const") {
-			if ls := kit.Split(line); len(ls) > 3 {
-				name, value = ls[1], ls[3]
-			}
-		}
-		if name != "" {
-			line = strings.ReplaceAll(line, name, key)
-			line = strings.ReplaceAll(line, value, ctx)
-		}
-
-		list = append(list, line)
-	})
-
-	m.Cmd(nfs.SAVE, dir, strings.Join(list, ice.NL))
-	return
-}
-func _autogen_imports(m *ice.Message, main string, ctx string, mod string) (list []string) {
 	m.Cmd(nfs.DEFS, main, `package main
 
 import "shylinux.com/x/ice"
@@ -98,28 +74,6 @@ func main() { print(ice.Run()) }
 			done = true
 		} else if strings.HasPrefix(line, "import") {
 			list = append(list, "", kit.Format(`import _ "%s/src/%s"`, mod, ctx), "")
-			done = true
-		}
-	})
-
-	m.Cmd(nfs.SAVE, main, strings.Join(list, ice.NL))
-	return
-}
-func _autogen_import(m *ice.Message, main string, ctx string, mod string) (list []string) {
-	m.Cmd(nfs.DEFS, main, `package main
-
-import "shylinux.com/x/ice"
-
-func main() { print(ice.Run()) }
-`)
-
-	done := false
-	m.Cmd(nfs.CAT, main, func(line string, index int) {
-		if done {
-			return
-		}
-		if list = append(list, line); strings.HasPrefix(line, "import (") {
-			list = append(list, kit.Format(`	_ "%s/src/%s"`, mod, ctx), "")
 			done = true
 		}
 	})
@@ -182,17 +136,28 @@ const AUTOGEN = "autogen"
 func init() {
 	Index.Merge(&ice.Context{Commands: map[string]*ice.Command{
 		AUTOGEN: {Name: "autogen path auto create binpack script", Help: "生成", Action: map[string]*ice.Action{
-			mdb.CREATE: {Name: "create main=src/main.go@key name=hi@key from=usr/icebergs/misc/bash/bash.go@key", Help: "模块", Hand: func(m *ice.Message, arg ...string) {
-				if p := path.Join(kit.SSH_SRC, m.Option(kit.MDB_NAME), kit.Keys(m.Option(kit.MDB_NAME), SHY)); !kit.FileExists(p) {
-					_autogen_script(m, p)
-					_autogen_source(m, m.Option(kit.MDB_NAME))
+			mdb.CREATE: {Name: "create main=src/main.go@key key= zone= type=Zone,Hash,List,Data name=hi list= help=", Help: "模块", Hand: func(m *ice.Message, arg ...string) {
+				_defs(m, "zone", m.Option("name"), "help", m.Option("name"))
+				_defs(m, "key", kit.Keys("web.code", m.Option("zone"), m.Option("name")))
+				switch m.Option("type") {
+				case "Zone":
+					_defs(m, "list", "list zone id auto insert")
+				case "Hash":
+					_defs(m, "list", "list hash auto create")
+				case "List":
+					_defs(m, "list", "list id auto insert")
+				case "Data":
+					_defs(m, "list", "list path auto upload")
 				}
 
-				if p := path.Join(kit.SSH_SRC, m.Option(kit.MDB_NAME), kit.Keys(m.Option(kit.MDB_NAME), GO)); !kit.FileExists(p) {
-					// _autogen_module(m, p, m.Option(kit.MDB_NAME), m.Option(kit.MDB_FROM))
-					// _autogen_import(m, m.Option(kit.MDB_MAIN), m.Option(kit.MDB_NAME), _autogen_mod(m, ice.GO_MOD))
-					_autogen_modules(m, p, m.Option(kit.MDB_NAME), m.Option(kit.MDB_FROM))
-					_autogen_imports(m, m.Option(kit.MDB_MAIN), m.Option(kit.MDB_NAME), _autogen_mod(m, ice.GO_MOD))
+				if p := path.Join(kit.SSH_SRC, m.Option(kit.MDB_ZONE), kit.Keys(m.Option(kit.MDB_NAME), SHY)); !kit.FileExists(p) {
+					_autogen_script(m, p)
+					_autogen_source(m, m.Option(kit.MDB_ZONE), m.Option(kit.MDB_NAME))
+				}
+
+				if p := path.Join(kit.SSH_SRC, m.Option(kit.MDB_ZONE), kit.Keys(m.Option(kit.MDB_NAME), GO)); !kit.FileExists(p) {
+					_autogen_module(m, p)
+					_autogen_import(m, m.Option(kit.MDB_MAIN), m.Option(kit.MDB_ZONE), _autogen_mod(m, ice.GO_MOD))
 				}
 			}},
 			mdb.INPUTS: {Name: "inputs", Help: "补全", Hand: func(m *ice.Message, arg ...string) {
@@ -200,13 +165,6 @@ func init() {
 				case kit.MDB_MAIN:
 					m.Option(nfs.DIR_REG, `.*\.go`)
 					m.Cmdy(nfs.DIR, kit.SSH_SRC, "path,size,time")
-					m.RenameAppend(kit.MDB_PATH, arg[0])
-
-				case kit.MDB_FROM:
-					m.Option(nfs.DIR_REG, `.*\.go`)
-					m.Option(nfs.DIR_DEEP, ice.TRUE)
-					m.Cmdy(nfs.DIR, kit.SSH_SRC, "path,size,time")
-					m.Cmdy(nfs.DIR, "usr/icebergs/misc/", "path,size,time")
 					m.RenameAppend(kit.MDB_PATH, arg[0])
 				}
 			}},

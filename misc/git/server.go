@@ -8,7 +8,6 @@ import (
 	"io"
 	"net/http"
 	"os"
-	"os/exec"
 	"path"
 	"regexp"
 	"strconv"
@@ -23,38 +22,23 @@ import (
 	kit "shylinux.com/x/toolkits"
 )
 
-func requestReader(req *http.Request) (io.ReadCloser, error) {
-	switch req.Header.Get("content-encoding") {
-	case "gzip":
-		return gzip.NewReader(req.Body)
+func requestReader(m *ice.Message) (io.ReadCloser, error) {
+	switch m.R.Header.Get("content-encoding") {
 	case "deflate":
-		return flate.NewReader(req.Body), nil
+		return flate.NewReader(m.R.Body), nil
+	case "gzip":
+		return gzip.NewReader(m.R.Body)
 	}
-	return req.Body, nil
+	return m.R.Body, nil
 }
-func packetWrite(str string) []byte {
-	s := strconv.FormatInt(int64(len(str)+4), 16)
+func packetWrite(m *ice.Message, cmd string, str ...string) {
+	s := strconv.FormatInt(int64(len(cmd)+4), 16)
 	if len(s)%4 != 0 {
 		s = strings.Repeat("0", 4-len(s)%4) + s
 	}
-	return []byte(s + str)
-}
-func packetFlush() []byte {
-	return []byte("0000")
+	m.W.Write([]byte(s + cmd + "0000" + strings.Join(str, "")))
 }
 
-var basicAuthRegex = regexp.MustCompile("^([^:]*):(.*)$")
-
-func _server_param(m *ice.Message, arg ...string) (string, string) {
-	repos, service := path.Join(arg...), kit.Select(arg[len(arg)-1], m.Option("service"))
-	switch {
-	case strings.HasSuffix(repos, "info/refs"):
-		repos = strings.TrimSuffix(repos, "info/refs")
-	default:
-		repos = strings.TrimSuffix(repos, service)
-	}
-	return kit.Path(m.Conf(SERVER, kit.META_PATH), "repos", repos), strings.TrimPrefix(service, "git-")
-}
 func _server_login(m *ice.Message) error {
 	parts := strings.SplitN(m.R.Header.Get("Authorization"), " ", 2)
 	if len(parts) < 2 {
@@ -85,70 +69,45 @@ func _server_login(m *ice.Message) error {
 	}
 	return nil
 }
-func _server_repos(m *ice.Message, arg ...string) {
-	m.Option(cli.CMD_DIR, path.Join(m.Conf(SERVER, kit.META_PATH), REPOS))
-	p := strings.TrimSuffix(path.Join(arg...), "info/refs")
-	if _, e := os.Stat(path.Join(m.Option(cli.CMD_DIR), p)); os.IsNotExist(e) {
-		m.Cmd(cli.SYSTEM, GIT, INIT, "--bare", p) // 创建仓库
+func _server_param(m *ice.Message, arg ...string) (string, string) {
+	repos, service := path.Join(arg...), kit.Select(arg[len(arg)-1], m.Option("service"))
+	switch {
+	case strings.HasSuffix(repos, "info/refs"):
+		repos = strings.TrimSuffix(repos, "info/refs")
+	default:
+		repos = strings.TrimSuffix(repos, service)
 	}
+	return kit.Path(m.Conf(SERVER, kit.META_PATH), REPOS, repos), strings.TrimPrefix(service, "git-")
 }
-func _server_cmd(m *ice.Message, arg ...string) error {
+func _server_repos(m *ice.Message, arg ...string) error {
 	repos, service := _server_param(m, arg...)
 
+	m.Option(cli.CMD_DIR, repos)
 	if strings.HasSuffix(path.Join(arg...), "info/refs") {
-		command := exec.Command("/usr/bin/git", service, "--stateless-rpc", "--advertise-refs", ".")
-		command.Dir = repos
-		out, err := command.Output()
-		if err != nil {
-			return err
-		}
-
-		m.W.Header().Set("Expires", "Fri, 01 Jan 1980 00:00:00 GMT")
-		m.W.Header().Set("Pragma", "no-cache")
-		m.W.Header().Set("Cache-Control", "no-cache, max-age=0, must-revalidate")
-
+		// m.W.Header().Set("Pragma", "no-cache")
+		// m.W.Header().Set("Expires", "Fri, 01 Jan 1980 00:00:00 GMT")
+		// m.W.Header().Set("Cache-Control", "no-cache, max-age=0, must-revalidate")
 		m.W.Header().Set("Content-Type", fmt.Sprintf("application/x-git-%s-advertisement", service))
-		m.W.WriteHeader(http.StatusOK)
-		m.W.Write(packetWrite("# service=git-" + service + "\n"))
-		m.W.Write(packetFlush())
-		m.W.Write(out)
+		msg := m.Cmd(cli.SYSTEM, GIT, service, "--stateless-rpc", "--advertise-refs", ".")
+		packetWrite(m, "# service=git-"+service+"\n", msg.Result())
+
 		return nil
 	}
 
-	command := exec.Command("/usr/bin/git", service, "--stateless-rpc", ".")
-	command.Dir = repos
-
-	stdin, err := command.StdinPipe()
-	if err != nil {
-		return err
-	}
-	stdout, err := command.StdoutPipe()
-	if err != nil {
-		return err
-	}
-	defer stdout.Close()
-
-	if err = command.Start(); err != nil {
-		return err
-	}
-
-	reader, err := requestReader(m.R)
+	reader, err := requestReader(m)
 	if err != nil {
 		return err
 	}
 	defer reader.Close()
 
-	io.Copy(stdin, reader)
-	stdin.Close()
-
+	m.Option(cli.CMD_OUTPUT, m.W)
+	m.Option(cli.CMD_INPUT, reader)
 	m.W.Header().Set("Content-Type", fmt.Sprintf("application/x-git-%s-result", service))
-	io.Copy(m.W, stdout)
-
-	if err = command.Wait(); err != nil {
-		return err
-	}
+	m.Cmd(cli.SYSTEM, GIT, service, "--stateless-rpc", ".")
 	return nil
 }
+
+var basicAuthRegex = regexp.MustCompile("^([^:]*):(.*)$")
 
 const SERVER = "server"
 
@@ -166,20 +125,22 @@ func init() {
 				return
 			}
 
-			switch _, service := _server_param(m, arg...); service {
+			switch repos, service := _server_param(m, arg...); service {
 			case "receive-pack": // 上传代码
 				if err := _server_login(m); err != nil {
 					m.W.Header().Set("WWW-Authenticate", `Basic realm="git server"`)
 					http.Error(m.W, err.Error(), 401)
 					return // 认证失败
 				}
-				_server_repos(m, arg...)
+				if _, e := os.Stat(path.Join(repos)); os.IsNotExist(e) {
+					m.Cmd(cli.SYSTEM, GIT, INIT, "--bare", repos) // 创建仓库
+				}
 
 			case "upload-pack": // 下载代码
 
 			}
 
-			if err := _server_cmd(m, arg...); err != nil {
+			if err := _server_repos(m, arg...); err != nil {
 				http.Error(m.W, err.Error(), 500)
 				return // 未知错误
 			}

@@ -156,6 +156,9 @@ func selectAction(list map[string]*ice.Action, fields ...string) map[string]*ice
 }
 func HashAction(fields ...string) map[string]*ice.Action {
 	return selectAction(map[string]*ice.Action{
+		CREATE: {Name: "create type name text", Help: "创建", Hand: func(m *ice.Message, arg ...string) {
+			m.Cmdy(INSERT, m.PrefixKey(), "", HASH, arg)
+		}},
 		MODIFY: {Name: "modify", Help: "编辑", Hand: func(m *ice.Message, arg ...string) {
 			m.Cmdy(MODIFY, m.PrefixKey(), "", HASH, m.OptionSimple(kit.MDB_HASH), arg)
 		}},

@@ -154,6 +154,17 @@ func selectAction(list map[string]*ice.Action, fields ...string) map[string]*ice
 	}
 	return res
 }
+func CmdAction(fields ...string) map[string]*ice.Action {
+	return selectAction(map[string]*ice.Action{
+		"command": {Name: "command", Help: "命令", Hand: func(m *ice.Message, arg ...string) {
+			m.Cmdy("command", arg)
+		}},
+		"run": {Name: "run", Help: "执行", Hand: func(m *ice.Message, arg ...string) {
+			m.Cmdy(arg)
+		}},
+	}, fields...)
+}
+
 func HashAction(fields ...string) map[string]*ice.Action {
 	return selectAction(map[string]*ice.Action{
 		CREATE: {Name: "create type name text", Help: "创建", Hand: func(m *ice.Message, arg ...string) {
@@ -186,7 +197,7 @@ func HashAction(fields ...string) map[string]*ice.Action {
 		INPUTS: {Name: "inputs", Help: "补全", Hand: func(m *ice.Message, arg ...string) {
 			m.Cmdy(INPUTS, m.PrefixKey(), "", HASH, arg)
 		}},
-	})
+	}, fields...)
 }
 
 const HASH = "hash"

@@ -20,12 +20,12 @@ func init() {
 			kit.MDB_PATH, ice.USR_PUBLISH,
 		)},
 	}, Commands: map[string]*ice.Command{
-		DIV: {Name: "div hash auto create", Help: "定制", Action: ice.MergeAction(map[string]*ice.Action{
+		DIV: {Name: "div hash auto", Help: "定制", Action: ice.MergeAction(map[string]*ice.Action{
 			mdb.CREATE: {Name: "create type=page name=hi.html text", Help: "创建"},
 			cli.MAKE: {Name: "make", Help: "生成", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmdy(nfs.SAVE, path.Join(m.Conf(DIV, kit.META_PATH), m.Option(kit.MDB_NAME)), m.Option(kit.MDB_TEXT))
 			}},
-		}, mdb.HashAction()), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		}, mdb.HashAction(), mdb.CmdAction()), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			m.Fields(len(arg), m.Conf(DIV, kit.META_FIELD))
 			m.Cmdy(mdb.SELECT, m.PrefixKey(), "", mdb.HASH, kit.MDB_HASH, arg)
 			m.Table(func(index int, value map[string]string, head []string) {
@@ -33,6 +33,9 @@ func init() {
 			})
 			if m.PushAction(cli.MAKE, mdb.REMOVE); len(arg) > 0 {
 				m.Option(ice.MSG_DISPLAY, "/plugin/local/chat/div.js")
+				m.Action("添加", "保存", "预览")
+			} else {
+				m.Action(mdb.CREATE)
 			}
 		}},
 		"/div": {Name: "/div", Help: "定制", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {

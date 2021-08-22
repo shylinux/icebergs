@@ -8,6 +8,7 @@ import (
 	"shylinux.com/x/icebergs/base/ctx"
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/nfs"
+	"shylinux.com/x/icebergs/base/tcp"
 	"shylinux.com/x/icebergs/base/web"
 	"shylinux.com/x/icebergs/core/code"
 	kit "shylinux.com/x/toolkits"
@@ -34,6 +35,8 @@ func _header_check(m *ice.Message, arg ...string) {
 func _header_share(m *ice.Message, arg ...string) {
 	if m.Option(kit.MDB_LINK) == "" {
 		m.Cmdy(web.SHARE, mdb.CREATE, kit.MDB_TYPE, web.LOGIN, arg)
+	} else {
+		m.Option(kit.MDB_LINK, tcp.ReplaceLocalhost(m, m.Option(kit.MDB_LINK)))
 	}
 
 	m.Set(kit.MDB_NAME, kit.MDB_TEXT)

@@ -30,8 +30,8 @@ func _div_parse(m *ice.Message, root map[string]interface{}, list []string) int 
 		}
 
 		ls := kit.Split(list[i])
-		if ls[0] == "_left" {
-			ls = append([]string{"", "", "style", "left"}, ls[1:]...)
+		if ls[0] == "_span" {
+			ls = append([]string{"", "", "style", "span"}, ls[1:]...)
 		}
 		meta := kit.Dict(
 			"index", kit.Select("", ls, 0),

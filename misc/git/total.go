@@ -81,7 +81,8 @@ func init() {
 				}
 
 				args := []string{}
-				args = append(args, "log", kit.Format("--author=%s\\|shylinux", m.Option(ice.MSG_USERNAME)),
+				args = append(args, "log",
+					// kit.Format("--author=%s\\|shylinux", m.Option(ice.MSG_USERNAME)),
 					"--shortstat", "--pretty=commit: %ad %n%s", "--date=iso", "--reverse")
 				if len(arg) > 0 {
 					if strings.Contains(arg[0], "-") && !strings.Contains(arg[0], ":") {

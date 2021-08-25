@@ -4,6 +4,7 @@ import (
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/cli"
 	"shylinux.com/x/icebergs/base/ctx"
+	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/nfs"
 	"shylinux.com/x/icebergs/base/ssh"
 	"shylinux.com/x/icebergs/base/web"
@@ -63,11 +64,11 @@ func init() {
 		Commands: map[string]*ice.Command{
 			WORD: {Name: "word path=src/main.shy auto 演示", Help: "语言文字", Meta: kit.Dict(
 				ice.Display("/plugin/local/wiki/word.js", WORD),
-			), Action: map[string]*ice.Action{
+			), Action: ice.MergeAction(map[string]*ice.Action{
 				web.STORY: {Name: "story", Help: "运行", Hand: func(m *ice.Message, arg ...string) {
 					m.Cmdy(arg[0], ctx.ACTION, cli.RUN, arg[2:])
 				}},
-			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			}, mdb.CmdAction()), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 				m.Option(nfs.DIR_REG, m.Conf(WORD, kit.Keym(kit.MDB_REGEXP)))
 				if m.Option(nfs.DIR_DEEP, ice.TRUE); !_wiki_list(m, cmd, arg...) {
 					_word_show(m, arg[0])

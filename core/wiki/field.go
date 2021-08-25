@@ -23,7 +23,10 @@ func _field_show(m *ice.Message, name, text string, arg ...string) {
 
 	// 扩展参数
 	for i := 0; i < len(arg)-1; i += 2 {
-		if strings.HasPrefix(arg[i], "args.") {
+		if strings.HasPrefix(arg[i], "opts.") {
+			m.Option(arg[i], strings.TrimSpace(arg[i+1]))
+			kit.Value(meta, arg[i], m.Option(arg[i]))
+		} else if strings.HasPrefix(arg[i], "args.") {
 			m.Option(arg[i], strings.TrimSpace(arg[i+1]))
 			kit.Value(meta, arg[i], m.Option(arg[i]))
 		} else if strings.HasPrefix(arg[i], ARGS) {
@@ -80,7 +83,9 @@ func init() {
 					m.Cmdy(arg)
 				}},
 			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-				arg = _name(m, arg)
+				if arg = _name(m, arg); strings.Contains(arg[1], "\n") {
+					arg = append([]string{arg[0], "web.chat.div", "auto.cmd", "make", "opts.line", arg[1]}, arg[2:]...)
+				}
 				_field_show(m, arg[0], arg[1], arg[2:]...)
 			}},
 		},

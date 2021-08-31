@@ -92,6 +92,8 @@ func init() {
 			CMD: {Name: CMD, Help: "命令", Value: kit.Data(
 				kit.MDB_PATH, "./", kit.MDB_INDEX, "page/cmd.html", kit.MDB_TEMPLATE, `<!DOCTYPE html>
 <head>
+    <meta name="viewport" content="width=device-width,initial-scale=0.8,user-scalable=no">
+    <meta charset="utf-8">
     <link rel="stylesheet" type="text/css" href="/page/cmd.css">
 </head>
 <body>

@@ -151,10 +151,8 @@ func init() {
 				m.StatusTimeCount()
 			}},
 			"/share/": {Name: "/share/", Help: "共享链", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-				m.OptionFields(m.Conf(SHARE, kit.META_FIELD))
 				m.Option(SHARE, kit.Select(m.Option(SHARE), arg, 0))
-				msg := m.Cmd(mdb.SELECT, m.Prefix(SHARE), "", mdb.HASH, kit.MDB_HASH, m.Option(SHARE))
-				if kit.Int(msg.Append(kit.MDB_TIME)) < kit.Int(msg.FormatTime()) {
+				if msg := m.Cmd(SHARE, m.Option(SHARE)); kit.Int(msg.Append(kit.MDB_TIME)) < kit.Int(msg.FormatTime()) {
 					m.RenderResult("共享超时")
 					return
 				}

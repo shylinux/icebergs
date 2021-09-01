@@ -4,9 +4,29 @@ import (
 	"strings"
 
 	ice "shylinux.com/x/icebergs"
+	"shylinux.com/x/icebergs/base/cli"
 	kit "shylinux.com/x/toolkits"
 )
 
+func _table_run(m *ice.Message, arg ...string) {
+	msg := m.Cmd(arg)
+
+	list := [][]string{}
+	msg.Table(func(index int, value map[string]string, head []string) {
+		if index == 0 {
+			m.Optionv("head", head)
+		}
+
+		line := []string{}
+		for _, h := range head {
+			line = append(line, value[h])
+		}
+		list = append(list, line)
+	})
+	m.Optionv("list", list)
+
+	_wiki_template(m, TABLE, "", "")
+}
 func _table_show(m *ice.Message, text string, arg ...string) {
 	head, list := []string{}, [][]string{}
 	for i, v := range kit.Split(strings.TrimSpace(text), ice.NL) {
@@ -35,7 +55,7 @@ func _table_show(m *ice.Message, text string, arg ...string) {
 	m.Optionv("head", head)
 	m.Optionv("list", list)
 
-	_wiki_template(m, ORDER, "", text, arg...)
+	_wiki_template(m, TABLE, "", text, arg...)
 }
 
 const TABLE = "table"
@@ -43,7 +63,11 @@ const TABLE = "table"
 func init() {
 	Index.Merge(&ice.Context{
 		Commands: map[string]*ice.Command{
-			TABLE: {Name: "table `[item item\n]...`", Help: "表格", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			TABLE: {Name: "table `[item item\n]...`", Help: "表格", Action: map[string]*ice.Action{
+				cli.RUN: {Name: "run", Help: "执行", Hand: func(m *ice.Message, arg ...string) {
+					_table_run(m, arg...)
+				}},
+			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 				_table_show(m, arg[0], arg[1:]...)
 			}},
 		},

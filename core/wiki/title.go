@@ -1,6 +1,7 @@
 package wiki
 
 import (
+	"path"
 	"strings"
 
 	ice "shylinux.com/x/icebergs"
@@ -15,14 +16,14 @@ func _title_deep(str string) int {
 	}
 	return 0
 }
-func _title_parse(m *ice.Message, root map[string]interface{}, list []string) int {
+func _title_parse(m *ice.Message, dir string, root map[string]interface{}, list []string) int {
 	var last map[string]interface{}
 	deep := _title_deep(list[0])
 	for i := 0; i < len(list); i++ {
 		if d := _title_deep(list[i]); d < deep {
 			return i
 		} else if d > deep {
-			i += _title_parse(m, last, list[i:]) - 1
+			i += _title_parse(m, dir, last, list[i:]) - 1
 			continue
 		}
 
@@ -31,9 +32,11 @@ func _title_parse(m *ice.Message, root map[string]interface{}, list []string) in
 		case 0:
 			continue
 		case 1:
-		case 2:
 		default:
+			m.Debug("what %v %v", dir, ls)
+			ls[1] = path.Join(dir, ls[1])
 		}
+
 		meta := kit.Dict(
 			"name", kit.Select("", ls, 0),
 			"link", kit.Select("", ls, 1),
@@ -52,7 +55,7 @@ func _title_show(m *ice.Message, kind, text string, arg ...string) {
 	case NAVMENU: // 导航目录
 		_option(m, kind, "", text, arg...)
 		data := kit.Dict("meta", kit.Dict(), "list", kit.List())
-		_title_parse(m, data, strings.Split(text, ice.NL))
+		_title_parse(m, path.Dir(m.Option(ice.MSG_SCRIPT)), data, strings.Split(text, ice.NL))
 		m.RenderTemplate(kit.Format("<div {{.OptionTemplate}} data-data='%s'></div>", kit.Format(data)))
 		return
 

@@ -202,6 +202,8 @@ func _space_search(m *ice.Message, kind, name, text string, arg ...string) {
 		}
 
 		switch value[kit.MDB_TYPE] {
+		case CHROME:
+
 		case MASTER:
 			m.PushSearch(cli.CMD, SPACE, kit.MDB_TYPE, value[kit.MDB_TYPE], kit.MDB_NAME, value[kit.MDB_NAME],
 				kit.MDB_TEXT, m.Cmd(SPIDE, value[kit.MDB_NAME], ice.OptionFields("client.url")).Append("client.url"), value)

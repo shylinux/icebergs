@@ -52,16 +52,14 @@ func _wiki_template(m *ice.Message, cmd string, name, text string, arg ...string
 
 const WIKI = "wiki"
 
-var Index = &ice.Context{Name: WIKI, Help: "文档中心",
-	Commands: map[string]*ice.Command{
-		ice.CTX_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			m.Load()
-		}},
-		ice.CTX_EXIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			m.Save()
-		}},
-	},
-}
+var Index = &ice.Context{Name: WIKI, Help: "文档中心", Commands: map[string]*ice.Command{
+	ice.CTX_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		m.Load()
+	}},
+	ice.CTX_EXIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		m.Save()
+	}},
+}}
 
 func init() {
 	web.Index.Register(Index, &web.Frame{},

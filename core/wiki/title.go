@@ -1,12 +1,61 @@
 package wiki
 
 import (
+	"strings"
+
 	ice "shylinux.com/x/icebergs"
 	kit "shylinux.com/x/toolkits"
 )
 
+func _title_deep(str string) int {
+	for i, c := range str {
+		if c != ' ' {
+			return i
+		}
+	}
+	return 0
+}
+func _title_parse(m *ice.Message, root map[string]interface{}, list []string) int {
+	var last map[string]interface{}
+	deep := _title_deep(list[0])
+	for i := 0; i < len(list); i++ {
+		if d := _title_deep(list[i]); d < deep {
+			return i
+		} else if d > deep {
+			i += _title_parse(m, last, list[i:]) - 1
+			continue
+		}
+
+		ls := kit.Split(list[i])
+		switch len(ls) {
+		case 0:
+			continue
+		case 1:
+		case 2:
+		default:
+		}
+		meta := kit.Dict(
+			"name", kit.Select("", ls, 0),
+			"link", kit.Select("", ls, 1),
+		)
+		for i := 2; i < len(ls); i += 2 {
+			meta[ls[i]] = ls[i+1]
+		}
+		last = kit.Dict("meta", meta, "list", kit.List())
+		kit.Value(root, "list.-2", last)
+	}
+	return len(list)
+}
+
 func _title_show(m *ice.Message, kind, text string, arg ...string) {
 	switch title, _ := m.Optionv(TITLE).(map[string]int); kind {
+	case NAVMENU: // 导航目录
+		_option(m, kind, "", text, arg...)
+		data := kit.Dict("meta", kit.Dict(), "list", kit.List())
+		_title_parse(m, data, strings.Split(text, ice.NL))
+		m.RenderTemplate(kit.Format("<div {{.OptionTemplate}} data-data='%s'></div>", kit.Format(data)))
+		return
+
 	case PREMENU: // 前置目录
 		_option(m, kind, "", "", arg...)
 		m.RenderTemplate(m.Conf(TITLE, kit.Keym(kind)))
@@ -42,6 +91,7 @@ func _title_show(m *ice.Message, kind, text string, arg ...string) {
 }
 
 const (
+	NAVMENU = "navmenu"
 	PREMENU = "premenu"
 	CHAPTER = "chapter"
 	SECTION = "section"
@@ -58,6 +108,8 @@ func init() {
 				arg = append(arg, ns[len(ns)-1])
 			}
 			switch arg[0] {
+			case NAVMENU:
+				_title_show(m, arg[0], arg[1], arg[2:]...)
 			case PREMENU, ENDMENU:
 				_title_show(m, arg[0], "", arg[1:]...)
 			case CHAPTER, SECTION:

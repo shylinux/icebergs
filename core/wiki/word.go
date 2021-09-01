@@ -1,6 +1,9 @@
 package wiki
 
 import (
+	"net/http"
+	"strings"
+
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/cli"
 	"shylinux.com/x/icebergs/base/ctx"
@@ -48,32 +51,48 @@ func _word_template(m *ice.Message, cmd string, arg ...string) {
 const WORD = "word"
 
 func init() {
-	Index.Merge(&ice.Context{
-		Configs: map[string]*ice.Config{
-			WORD: {Name: WORD, Help: "语言文字", Value: kit.Data(
-				kit.MDB_PATH, "", kit.MDB_REGEXP, ".*\\.shy", kit.MDB_ALIAS, kit.Dict(
-					PREMENU, []interface{}{TITLE, PREMENU},
-					CHAPTER, []interface{}{TITLE, CHAPTER},
-					SECTION, []interface{}{TITLE, SECTION},
-					ENDMENU, []interface{}{TITLE, ENDMENU},
-					LABEL, []interface{}{CHART, LABEL},
-					CHAIN, []interface{}{CHART, CHAIN},
-				),
-			)},
-		},
-		Commands: map[string]*ice.Command{
-			WORD: {Name: "word path=src/main.shy auto 演示", Help: "语言文字", Meta: kit.Dict(
-				ice.Display("/plugin/local/wiki/word.js", WORD),
-			), Action: ice.MergeAction(map[string]*ice.Action{
-				web.STORY: {Name: "story", Help: "运行", Hand: func(m *ice.Message, arg ...string) {
-					m.Cmdy(arg[0], ctx.ACTION, cli.RUN, arg[2:])
-				}},
-			}, mdb.CmdAction()), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-				m.Option(nfs.DIR_REG, m.Conf(WORD, kit.Keym(kit.MDB_REGEXP)))
-				if m.Option(nfs.DIR_DEEP, ice.TRUE); !_wiki_list(m, cmd, arg...) {
-					_word_show(m, arg[0])
+	Index.Merge(&ice.Context{Configs: map[string]*ice.Config{
+		WORD: {Name: WORD, Help: "语言文字", Value: kit.Data(
+			kit.MDB_PATH, "", kit.MDB_REGEXP, ".*\\.shy", kit.MDB_ALIAS, kit.Dict(
+				NAVMENU, []interface{}{TITLE, NAVMENU},
+				PREMENU, []interface{}{TITLE, PREMENU},
+				CHAPTER, []interface{}{TITLE, CHAPTER},
+				SECTION, []interface{}{TITLE, SECTION},
+				ENDMENU, []interface{}{TITLE, ENDMENU},
+				LABEL, []interface{}{CHART, LABEL},
+				CHAIN, []interface{}{CHART, CHAIN},
+			),
+		)},
+	}, Commands: map[string]*ice.Command{
+		WORD: {Name: "word path=src/main.shy auto 演示", Help: "语言文字", Meta: kit.Dict(
+			ice.Display("/plugin/local/wiki/word.js", WORD),
+		), Action: ice.MergeAction(map[string]*ice.Action{
+			web.STORY: {Name: "story", Help: "运行", Hand: func(m *ice.Message, arg ...string) {
+				m.Cmdy(arg[0], ctx.ACTION, cli.RUN, arg[2:])
+			}},
+		}, mdb.CmdAction()), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			m.Option(nfs.DIR_REG, m.Conf(WORD, kit.Keym(kit.MDB_REGEXP)))
+			if m.Option(nfs.DIR_DEEP, ice.TRUE); !_wiki_list(m, cmd, arg...) {
+				_word_show(m, arg[0])
+			}
+		}},
+		"/word/": {Name: "word", Help: "文档", Meta: kit.Dict(
+			ice.Display("/plugin/local/wiki/word.js", WORD),
+		), Action: ice.MergeAction(map[string]*ice.Action{
+			web.STORY: {Name: "story", Help: "运行", Hand: func(m *ice.Message, arg ...string) {
+				m.Cmdy(arg[0], ctx.ACTION, cli.RUN, arg[2:])
+			}},
+			ctx.COMMAND: {Name: "command", Help: "命令", Hand: func(m *ice.Message, arg ...string) {
+				m.Cmdy(ctx.COMMAND, "web.wiki.word")
+				if ls := strings.Split(m.Option("_names"), "/word/"); len(ls) > 1 {
+					m.Push("args", ls[1])
 				}
 			}},
-		},
-	})
+		}, mdb.CmdAction()), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			if m.R.Method == http.MethodGet {
+				m.RenderIndex(web.SERVE, ice.VOLCANOS, "page/cmd.html")
+				return // 目录
+			}
+		}},
+	}})
 }

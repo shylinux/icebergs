@@ -35,6 +35,10 @@ func init() {
 			AUTOGEN: {Name: "create main=src/main.go@key key= zone= type=Zone,Hash,List,Data name=hi list= help=", Help: "模块", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmdy(AUTOGEN, mdb.CREATE, arg)
 			}},
+			COMPILE: {Name: "compile", Help: "编译", Hand: func(m *ice.Message, arg ...string) {
+				m.Cmdy(cli.SYSTEM, cli.MAKE)
+				m.ProcessInner()
+			}},
 			mdb.INPUTS: {Name: "inputs", Help: "补全", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmdy(AUTOGEN, mdb.INPUTS, arg)
 			}},

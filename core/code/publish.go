@@ -164,22 +164,22 @@ echo "hello world"
 
 var _contexts = kit.Dict(
 	"project", `# 创建项目
-ctx_temp=$(mktemp); curl -fsSL https://shylinux.com -o $ctx_temp; source $ctx_temp project
+source <(curl -fsSL https://shylinux.com) project
 `,
 	"source", `# 源码安装
-ctx_temp=$(mktemp); curl -fsSL https://shylinux.com -o $ctx_temp; source $ctx_temp source
+source <(curl -fsSL https://shylinux.com) source
 `,
 	"binary", `# 应用安装
-ctx_temp=$(mktemp); curl -fsSL https://shylinux.com -o $ctx_temp; source $ctx_temp binary
+source <(curl -fsSL https://shylinux.com) binary
 `,
 	"miss", `# 开发环境
-export ctx_dev={{.Option "httphost"}} ctx_temp=$(mktemp); curl -fsSL $ctx_dev -o $ctx_temp; source $ctx_temp dev
+export ctx_dev={{.Option "httphost"}}; source <(curl -fsSL $ctx_dev) dev
 `,
 	"base", `# 生产环境
-export ctx_dev={{.Option "httphost"}} ctx_temp=$(mktemp); curl -fsSL $ctx_dev -o $ctx_temp; source $ctx_temp app
+export ctx_dev={{.Option "httphost"}}; source <(curl -fsSL $ctx_dev) app
 `,
 	"tmux", `# 终端环境
-export ctx_dev={{.Option "httphost"}} ctx_temp=$(mktemp); curl -fsSL $ctx_dev -o $ctx_temp; source $ctx_temp
+export ctx_dev={{.Option "httphost"}}; source <(curl -fsSL $ctx_dev)
 `,
 	"tool", `# 群组环境
 mkdir contexts; cd contexts

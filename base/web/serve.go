@@ -78,8 +78,12 @@ func _serve_main(m *ice.Message, w http.ResponseWriter, r *http.Request) bool {
 func _serve_params(msg *ice.Message, path string) {
 	switch ls := strings.Split(path, "/"); kit.Select("", ls, 1) {
 	case "share":
-		msg.Logs("refer", ls[1], ls[2])
-		msg.Option(ls[1], ls[2])
+		switch ls[2] {
+		case "local":
+		default:
+			msg.Logs("refer", ls[1], ls[2])
+			msg.Option(ls[1], ls[2])
+		}
 	case "chat":
 		switch kit.Select("", ls, 2) {
 		case "pod":

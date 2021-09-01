@@ -134,5 +134,5 @@ func (m *Message) RenderRedirect(args ...interface{}) *Message {
 	return m.Render(RENDER_REDIRECT, args...)
 }
 func (m *Message) RenderIndex(serve, repos string, file ...string) *Message {
-	return m.RenderDownload(kit.Path(m.Conf(serve, kit.Keym(repos, kit.SSH_PATH)), kit.Select(m.Conf(serve, kit.Keym(repos, kit.SSH_INDEX)), path.Join(file...))))
+	return m.RenderDownload(path.Join(m.Conf(serve, kit.Keym(repos, kit.SSH_PATH)), kit.Select(m.Conf(serve, kit.Keym(repos, kit.SSH_INDEX)), path.Join(file...))))
 }

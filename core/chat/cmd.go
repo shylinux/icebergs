@@ -40,14 +40,9 @@ func init() {
 					return // 目录
 				}
 
-				if msg := m.Cmd(ctx.COMMAND, arg[0]); msg.Append("meta") != "" {
-					_cmd_render(m, arg[0], arg[1:])
-					return // 命令
-				}
-
 				switch p := path.Join(m.Conf(CMD, kit.META_PATH), path.Join(arg...)); kit.Ext(p) {
 				case "svg":
-					_cmd_render(m, "web.wiki.draw", path.Dir(p)+"/", path.Base(p))
+					_cmd_render(m, "web.wiki.draw", p)
 				case "csv":
 					_cmd_render(m, "web.wiki.data", p)
 				case "json":
@@ -57,6 +52,17 @@ func init() {
 				case "go", "mod", "sum":
 					_cmd_render(m, "web.code.inner", path.Dir(p)+"/", path.Base(p))
 				default:
+					if m.Option(cli.POD) != "" {
+						if m.PodCmd(ctx.COMMAND, arg[0]); m.Append("meta") != "" {
+							_cmd_render(m, arg[0], arg[1:])
+							return // 远程命令
+						}
+					} else {
+						if msg := m.Cmd(ctx.COMMAND, arg[0]); msg.Append("meta") != "" {
+							_cmd_render(m, arg[0], arg[1:])
+							return // 本地命令
+						}
+					}
 					m.RenderDownload(p)
 				}
 			}},

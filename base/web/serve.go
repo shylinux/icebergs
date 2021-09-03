@@ -90,6 +90,9 @@ func _serve_params(msg *ice.Message, path string) {
 			msg.Logs("refer", ls[2], ls[3])
 			msg.Option(ls[2], ls[3])
 		}
+	case "pod":
+		msg.Logs("refer", ls[1], ls[2])
+		msg.Option(ls[1], ls[2])
 	}
 }
 func _serve_handle(key string, cmd *ice.Command, msg *ice.Message, w http.ResponseWriter, r *http.Request) {

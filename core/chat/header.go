@@ -1,13 +1,10 @@
 package chat
 
 import (
-	"path"
-
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/aaa"
 	"shylinux.com/x/icebergs/base/ctx"
 	"shylinux.com/x/icebergs/base/mdb"
-	"shylinux.com/x/icebergs/base/nfs"
 	"shylinux.com/x/icebergs/base/tcp"
 	"shylinux.com/x/icebergs/base/web"
 	"shylinux.com/x/icebergs/core/code"
@@ -112,8 +109,7 @@ func init() {
 				m.Cmdy(code.WEBPACK, mdb.CREATE, m.OptionSimple(kit.MDB_NAME))
 			}},
 			"devops": {Name: "devops", Help: "开发模式", Hand: func(m *ice.Message, arg ...string) {
-				m.Cmd(nfs.SAVE, path.Join(ice.USR_VOLCANOS, "page/cache.js"))
-				m.Cmd(nfs.SAVE, path.Join(ice.USR_VOLCANOS, "page/cache.css"))
+				m.Cmdy(code.WEBPACK, "devops")
 			}},
 		}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			m.Option(TRANS, kit.Format(kit.Value(c.Commands[cmd].Meta, "_trans")))

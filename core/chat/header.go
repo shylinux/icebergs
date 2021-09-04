@@ -69,7 +69,7 @@ const HEADER = "header"
 func init() {
 	Index.Merge(&ice.Context{Configs: map[string]*ice.Config{
 		HEADER: {Name: HEADER, Help: "标题栏", Value: kit.Data(
-			TITLE, "shylinux.com/x/contexts", MENUS, `["header", ["setting", "black", "white", "print", "webpack", "devops"]]`,
+			TITLE, "shylinux.com/x/contexts", MENUS, `["header", ["setting", "black", "white", "print", "webpack", "unpack"]]`,
 		)},
 	}, Commands: map[string]*ice.Command{
 		"/header": {Name: "/header", Help: "标题栏", Action: map[string]*ice.Action{
@@ -108,8 +108,8 @@ func init() {
 			code.WEBPACK: {Name: "webpack", Help: "打包页面", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmdy(code.WEBPACK, mdb.CREATE, m.OptionSimple(kit.MDB_NAME))
 			}},
-			"devops": {Name: "devops", Help: "开发模式", Hand: func(m *ice.Message, arg ...string) {
-				m.Cmdy(code.WEBPACK, "devops")
+			"unpack": {Name: "unpack", Help: "开发模式", Hand: func(m *ice.Message, arg ...string) {
+				m.Cmdy(code.WEBPACK, "unpack")
 			}},
 		}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			m.Option(TRANS, kit.Format(kit.Value(c.Commands[cmd].Meta, "_trans")))

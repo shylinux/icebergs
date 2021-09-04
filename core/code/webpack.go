@@ -90,7 +90,7 @@ func init() {
 				m.Cmd(nfs.SAVE, path.Join(ice.USR_VOLCANOS, "page/cache.css"), "")
 				m.Cmd(nfs.SAVE, path.Join(ice.USR_VOLCANOS, "page/cache.js"), "")
 			}},
-			"devops": {Name: "devops", Help: "开发模式", Hand: func(m *ice.Message, arg ...string) {
+			"unpack": {Name: "unpack", Help: "开发模式", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmd(nfs.SAVE, path.Join(ice.USR_VOLCANOS, "page/cache.js"))
 				m.Cmd(nfs.SAVE, path.Join(ice.USR_VOLCANOS, "page/cache.css"))
 				m.Cmd(nfs.COPY, _volcanos("page/cmd.css"), _volcanos("page/index.css"), _volcanos("page/cache.css"))

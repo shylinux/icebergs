@@ -14,7 +14,6 @@ import (
 	"shylinux.com/x/icebergs/base/aaa"
 	"shylinux.com/x/icebergs/base/ctx"
 	"shylinux.com/x/icebergs/base/mdb"
-	"shylinux.com/x/icebergs/base/nfs"
 	kit "shylinux.com/x/toolkits"
 )
 
@@ -55,41 +54,9 @@ func Script(m *ice.Message, name string) io.Reader {
 	}
 	m.Option(ice.MSG_SCRIPT, name)
 
-	// 本地文件
-	back := kit.Split(m.Option(nfs.DIR_ROOT))
-	for i := len(back) - 1; i >= 0; i-- {
-		if s, e := os.Open(path.Join(path.Join(back[:i]...), name)); e == nil {
-			return s
-		}
-	}
-	if s, e := os.Open(name); e == nil {
-		return s
-	}
-
-	switch strings.Split(name, "/")[0] {
-	case kit.SSH_ETC, kit.SSH_VAR:
-		m.Warn(true, ice.ErrNotFound)
-		return nil
-	}
-
-	// 打包文件
-	if b, ok := ice.Info.BinPack["/"+name]; ok {
-		m.Info("binpack %v %v", len(b), name)
-		return bytes.NewReader(b)
-	}
-
 	// 远程文件
-	if msg := m.Cmd("web.spide", "dev", "GET", path.Join("/share/local/", name)); msg.Result(0) != ice.ErrWarn {
+	if msg := m.Cmd("nfs.cat", name); msg.Result(0) != ice.ErrWarn {
 		return bytes.NewBuffer([]byte(msg.Result()))
-	}
-
-	// 源码文件
-	if strings.HasPrefix(name, kit.SSH_USR) {
-		ls := strings.Split(name, "/")
-		m.Cmd("web.code.git.repos", ls[1], path.Join(kit.SSH_USR, ls[1]))
-		if s, e := os.Open(name); e == nil {
-			return s
-		}
 	}
 	return nil
 }

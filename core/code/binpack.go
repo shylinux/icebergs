@@ -40,6 +40,9 @@ func _pack_dir(m *ice.Message, pack *os.File, dir string) {
 	m.Option(nfs.DIR_ROOT, dir)
 
 	m.Cmd(nfs.DIR, "./").Table(func(index int, value map[string]string, head []string) {
+		if path.Base(value[kit.MDB_PATH]) == "binpack.go" {
+			return
+		}
 		switch strings.Split(value[kit.MDB_PATH], "/")[0] {
 		case "pluged", "trash":
 			return
@@ -67,7 +70,8 @@ func _pack_volcanos(m *ice.Message, pack *os.File, dir string) {
 	}
 	pack.WriteString(ice.NL)
 }
-func _pack_contexts(m *ice.Message, pack *os.File) {
+func _pack_ctx(m *ice.Message, pack *os.File) {
+	_pack_dir(m, pack, ice.SRC_HELP)
 	_pack_dir(m, pack, "src")
 	pack.WriteString(ice.NL)
 }
@@ -96,7 +100,7 @@ func init() {
 					// _pack_dir(m, pack, ice.USR_ICEBERGS)
 					// _pack_dir(m, pack, ice.USR_TOOLKITS)
 					_pack_dir(m, pack, ice.USR_INTSHELL)
-					// _pack_contexts(m, pack)
+					_pack_ctx(m, pack)
 
 					_pack_write(pack, `    }`)
 					_pack_write(pack, `}`)

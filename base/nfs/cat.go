@@ -3,6 +3,7 @@ package nfs
 import (
 	"bufio"
 	"bytes"
+	"io"
 	"os"
 	"path"
 	"strings"
@@ -25,58 +26,55 @@ func _cat_right(m *ice.Message, name string) bool {
 	}
 	return true
 }
+func _cat_find(m *ice.Message, name string) io.ReadCloser {
+	if f, e := os.Open(path.Join(m.Option(DIR_ROOT), name)); e == nil {
+		return f
+	}
+
+	if b, ok := ice.Info.BinPack[name]; ok {
+		m.Logs("binpack", len(b), name)
+		return kit.NewReadCloser(bytes.NewBuffer(b))
+	}
+
+	return kit.NewReadCloser(bytes.NewBufferString(m.Cmdx("web.spide", "dev", "raw", "GET", path.Join("/share/local/", name))))
+}
 func _cat_show(m *ice.Message, name string) {
 	if !_cat_right(m, name) {
 		return // 没有权限
 	}
 
 	// 本地文件
-	if f, e := os.Open(path.Join(m.Option(DIR_ROOT), name)); e == nil {
-		defer f.Close()
+	f := _cat_find(m, name)
+	defer f.Close()
 
-		switch cb := m.Optionv(kit.Keycb(CAT)).(type) {
-		case func(string, int) string:
-			list := []string{}
-			bio := bufio.NewScanner(f)
-			for i := 0; bio.Scan(); i++ {
-				list = append(list, cb(bio.Text(), i))
-			}
-			m.Echo(strings.Join(list, "\n") + "\n")
-
-		case func(string, int):
-			bio := bufio.NewScanner(f)
-			for i := 0; bio.Scan(); i++ {
-				cb(bio.Text(), i)
-			}
-
-		default:
-			if s, e := f.Stat(); m.Assert(e) {
-				buf := make([]byte, s.Size())
-				if n, e := f.Read(buf); m.Assert(e) {
-					m.Log_IMPORT(kit.MDB_FILE, name, kit.MDB_SIZE, n)
-					m.Echo(string(buf[:n]))
-				}
-			}
-		}
-		return
-	}
-
-	// 打包文件
-	if b, ok := ice.Info.BinPack[name]; ok {
-		m.Logs("binpack", name, kit.MDB_SIZE, len(b))
-		m.Echo(string(b))
-		return
-	}
-
-	// 远程文件
 	switch cb := m.Optionv(kit.Keycb(CAT)).(type) {
+	case func(string, int) string:
+		list := []string{}
+		bio := bufio.NewScanner(f)
+		for i := 0; bio.Scan(); i++ {
+			list = append(list, cb(bio.Text(), i))
+		}
+		m.Echo(strings.Join(list, "\n") + "\n")
+
 	case func(string, int):
-		bio := bufio.NewScanner(bytes.NewBufferString(m.Cmdx("web.spide", "dev", "raw", "GET", path.Join("/share/local/", name))))
+		bio := bufio.NewScanner(f)
 		for i := 0; bio.Scan(); i++ {
 			cb(bio.Text(), i)
 		}
+
 	default:
-		m.Cmdy("web.spide", "dev", "raw", "GET", path.Join("/share/local/", name))
+		buf := make([]byte, ice.MOD_BUFS)
+		for begin := 0; true; {
+			n, e := f.Read(buf[begin:])
+			m.Warn(e != nil && e != io.EOF, e)
+			m.Log_IMPORT(kit.MDB_FILE, name, kit.MDB_SIZE, n)
+			if begin += n; begin < len(buf) {
+				buf = buf[:begin]
+				break
+			}
+			buf = append(buf, make([]byte, ice.MOD_BUFS)...)
+		}
+		m.Echo(string(buf))
 	}
 }
 

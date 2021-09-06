@@ -71,6 +71,7 @@ const ( // DIR
 	ETC_MISS    = "etc/miss.sh"
 	ETC_MISS_SH = "etc/miss.sh"
 
+	SRC_HELP     = "src/help"
 	SRC_MAIN_SHY = "src/main.shy"
 	SRC_MAIN_GO  = "src/main.go"
 	SRC_VERSION  = "src/version.go"

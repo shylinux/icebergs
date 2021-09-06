@@ -461,3 +461,8 @@ func (m *Message) AppendSimple(key ...string) (res []string) {
 	}
 	return
 }
+
+func (m *Message) SetResult() {
+	m.Set(MSG_RESULT)
+	return
+}

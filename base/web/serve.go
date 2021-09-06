@@ -10,6 +10,7 @@ import (
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/aaa"
 	"shylinux.com/x/icebergs/base/cli"
+	"shylinux.com/x/icebergs/base/ctx"
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/tcp"
 	kit "shylinux.com/x/toolkits"
@@ -295,6 +296,12 @@ func init() {
 			}},
 			"/require/": {Name: "/require/", Help: "公有云", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 				_share_repos(m, path.Join(arg[0], arg[1], arg[2]), arg[3:]...)
+			}},
+			"/help/": {Name: "/help/", Help: "帮助", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+				if len(arg) > 0 && arg[0] != ctx.ACTION {
+					arg[0] = "src/help/" + arg[0]
+				}
+				m.Cmdy("web.chat./cmd/", arg)
 			}},
 		}})
 }

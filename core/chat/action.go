@@ -149,7 +149,9 @@ const ACTION = "action"
 
 func init() {
 	Index.Merge(&ice.Context{Configs: map[string]*ice.Config{
-		ACTION: {Name: ACTION, Help: "应用", Value: kit.Data(DOMAIN, kit.Dict())},
+		ACTION: {Name: ACTION, Help: "应用", Value: kit.Data(
+			MENUS, `[["help", "tutor", "manual", "service", "devops", "refer"]]`,
+		)},
 	}, Commands: map[string]*ice.Command{
 		ice.CTX_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			for _, cmd := range []string{

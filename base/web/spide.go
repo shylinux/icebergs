@@ -102,6 +102,10 @@ func _spide_show(m *ice.Message, arg ...string) {
 		if m.Warn(res.StatusCode != http.StatusOK, res.Status) {
 			switch m.Set(ice.MSG_RESULT); res.StatusCode {
 			case http.StatusNotFound:
+				m.Warn(true, ice.ErrNotFound, " of ", uri)
+				return
+			case http.StatusUnauthorized:
+				m.Warn(true, ice.ErrNotRight, " of ", uri)
 				return
 			default:
 			}

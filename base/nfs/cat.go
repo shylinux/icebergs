@@ -36,7 +36,11 @@ func _cat_find(m *ice.Message, name string) io.ReadCloser {
 		return kit.NewReadCloser(bytes.NewBuffer(b))
 	}
 
-	return kit.NewReadCloser(bytes.NewBufferString(m.Cmdx("web.spide", "dev", "raw", "GET", path.Join("/share/local/", name))))
+	msg := m.Cmd("web.spide", "dev", "raw", "GET", path.Join("/share/local/", name))
+	if msg.Result(0) == ice.ErrWarn {
+		return kit.NewReadCloser(bytes.NewBufferString(""))
+	}
+	return kit.NewReadCloser(bytes.NewBufferString(msg.Result()))
 }
 func _cat_show(m *ice.Message, name string) {
 	if !_cat_right(m, name) {

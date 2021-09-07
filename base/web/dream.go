@@ -81,7 +81,7 @@ func _dream_show(m *ice.Message, name string) {
 		kit.Path(os.Args[0])
 
 		m.Optionv(cli.CMD_ERRPUT, path.Join(p, m.Conf(DREAM, kit.Keym(cli.ENV, "ctx_log"))))
-		m.Cmd(cli.DAEMON, m.Confv(DREAM, kit.Keym(cli.CMD)), SPIDE_DEV, SPIDE_DEV, kit.MDB_NAME, name)
+		m.Cmd(cli.DAEMON, m.Confv(DREAM, kit.Keym(cli.CMD)), SPIDE_DEV, SPIDE_DEV, kit.MDB_NAME, name, RIVER, m.Option(RIVER))
 		m.Event(DREAM_CREATE, kit.MDB_TYPE, m.Option(kit.MDB_TYPE), kit.MDB_NAME, name)
 		m.Sleep(ice.MOD_TICK)
 	}
@@ -112,7 +112,7 @@ func init() {
 					m.Cmdy(SPACE, m.Option(ROUTE), "web.code.autogen", mdb.CREATE, arg)
 					m.ProcessInner()
 				}},
-				cli.START: {Name: "start name repos", Help: "启动", Hand: func(m *ice.Message, arg ...string) {
+				cli.START: {Name: "start name repos river", Help: "启动", Hand: func(m *ice.Message, arg ...string) {
 					if m.Option(kit.MDB_NAME) == SPIDE_SELF {
 						m.Option(kit.MDB_NAME, "")
 					}

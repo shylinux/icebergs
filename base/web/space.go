@@ -52,7 +52,7 @@ func _space_dial(m *ice.Message, dev, name string, arg ...string) {
 		host := kit.Format(client[tcp.HOSTNAME])
 		proto := strings.Replace(kit.Format(client[tcp.PROTOCOL]), "http", "ws", 1)
 		uri := kit.MergeURL(proto+"://"+host+"/space/", kit.MDB_TYPE, ice.Info.NodeType,
-			kit.MDB_NAME, name, SHARE, ice.Info.CtxShare, RIVER, ice.Info.CtxRiver, arg)
+			kit.MDB_NAME, name, SHARE, ice.Info.CtxShare, RIVER, kit.Select(ice.Info.CtxRiver, m.Option(RIVER)), arg)
 
 		if u, e := url.Parse(uri); m.Assert(e) {
 			m.Go(func() {
@@ -250,7 +250,7 @@ func init() {
 		)},
 	}, Commands: map[string]*ice.Command{
 		SPACE: {Name: "space name cmd auto", Help: "空间站", Action: map[string]*ice.Action{
-			tcp.DIAL: {Name: "dial dev name", Help: "连接", Hand: func(m *ice.Message, arg ...string) {
+			tcp.DIAL: {Name: "dial dev name river", Help: "连接", Hand: func(m *ice.Message, arg ...string) {
 				_space_dial(m, m.Option(SPIDE_DEV), kit.Select(ice.Info.NodeName, m.Option(kit.MDB_NAME)))
 			}},
 			mdb.SEARCH: {Name: "search type name text", Help: "搜索", Hand: func(m *ice.Message, arg ...string) {

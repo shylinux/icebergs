@@ -127,7 +127,8 @@ func init() {
 					m.Cmdy(mdb.INSERT, m.PrefixKey(), "", mdb.HASH, kit.MDB_TIME, m.Time(m.Conf(SHARE, kit.Keym(kit.MDB_EXPIRE))),
 						aaa.USERROLE, m.Option(ice.MSG_USERROLE), aaa.USERNAME, m.Option(ice.MSG_USERNAME),
 						RIVER, m.Option(ice.MSG_RIVER), STORM, m.Option(ice.MSG_STORM), arg)
-					m.Option(kit.MDB_LINK, _share_link(m, "/share/"+m.Result()))
+					// m.Option(kit.MDB_LINK, _share_link(m, "/share/"+m.Result()))
+					m.Option(kit.MDB_LINK, kit.MergeURL2(m.Option(ice.MSG_USERWEB), "/share/"+m.Result()))
 				}},
 				LOGIN: {Name: "login userrole=void,tech username", Help: "登录", Hand: func(m *ice.Message, arg ...string) {
 					msg := m.Cmd(SHARE, mdb.CREATE, kit.MDB_TYPE, LOGIN, m.OptionSimple(aaa.USERROLE, aaa.USERNAME))

@@ -22,6 +22,9 @@ func init() {
 					if strings.Contains(file, "bin/") {
 						return
 					}
+					if !strings.Contains(file, ".") {
+						return
+					}
 					switch kit.Ext(file) {
 					case "sum", "log":
 						return

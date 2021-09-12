@@ -54,6 +54,12 @@ func init() {
 				mdb.CREATE: {Name: "create file name", Help: "创建", Hand: func(m *ice.Message, arg ...string) {
 					_tail_create(m, arg...)
 				}},
+				mdb.INPUTS: {Name: "inputs", Help: "补全", Hand: func(m *ice.Message, arg ...string) {
+					switch arg[0] {
+					case "file":
+						m.Cmdy(DIR, kit.Select("./", arg, 1), "path")
+					}
+				}},
 				mdb.REMOVE: {Name: "remove", Help: "删除", Hand: func(m *ice.Message, arg ...string) {
 					m.Cmdy(mdb.DELETE, TAIL, "", mdb.HASH, kit.MDB_NAME, m.Option(kit.MDB_NAME))
 				}},

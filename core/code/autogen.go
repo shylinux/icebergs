@@ -1,6 +1,7 @@
 package code
 
 import (
+	"os"
 	"path"
 	"strings"
 
@@ -92,6 +93,13 @@ func _autogen_mod(m *ice.Message, file string) (mod string) {
 }
 
 func _autogen_version(m *ice.Message) {
+	if _, e := os.Stat(".git"); os.IsNotExist(e) {
+		m.Cmdy(cli.SYSTEM, "git", "init")
+	}
+	if _, e := os.Stat("go.mod"); os.IsNotExist(e) {
+		m.Cmdy(cli.SYSTEM, "go", "mod", "init", path.Base(kit.Path("")))
+	}
+
 	file := ice.SRC_VERSION
 	m.Cmd(nfs.SAVE, file, kit.Format(`package main
 

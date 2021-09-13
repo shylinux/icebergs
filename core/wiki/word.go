@@ -7,7 +7,6 @@ import (
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/cli"
 	"shylinux.com/x/icebergs/base/ctx"
-	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/nfs"
 	"shylinux.com/x/icebergs/base/ssh"
 	"shylinux.com/x/icebergs/base/web"
@@ -70,7 +69,7 @@ func init() {
 			web.STORY: {Name: "story", Help: "运行", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmdy(arg[0], ctx.ACTION, cli.RUN, arg[2:])
 			}},
-		}, mdb.CmdAction()), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		}, ctx.CmdAction()), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			m.Option(nfs.DIR_REG, m.Conf(WORD, kit.Keym(kit.MDB_REGEXP)))
 			if m.Option(nfs.DIR_DEEP, ice.TRUE); !_wiki_list(m, cmd, arg...) {
 				_word_show(m, arg[0])
@@ -88,7 +87,7 @@ func init() {
 					m.Push("args", ls[1])
 				}
 			}},
-		}, mdb.CmdAction()), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		}, ctx.CmdAction()), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			if m.R.Method == http.MethodGet {
 				m.RenderIndex(web.SERVE, ice.VOLCANOS, "page/cmd.html")
 				return // 目录

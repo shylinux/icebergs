@@ -19,7 +19,7 @@ func init() {
 			ice.CTX_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 				m.Cmd(mdb.SEARCH, mdb.CREATE, P_SEARCH, m.Prefix(P_SEARCH))
 			}},
-			P_SEARCH: {Name: P_SEARCH, Help: "搜索引擎", Action: map[string]*ice.Action{
+			P_SEARCH: {Name: P_SEARCH, Help: "搜索引擎", Action: ice.MergeAction(map[string]*ice.Action{
 				mdb.SEARCH: {Name: "search type name text", Help: "搜索", Hand: func(m *ice.Message, arg ...string) {
 					m.Richs(P_SEARCH, "", kit.MDB_FOREACH, func(key string, value map[string]interface{}) {
 						if value = kit.GetMeta(value); arg[1] != "" && !kit.Contains(value[kit.MDB_NAME], arg[1]) {
@@ -31,13 +31,7 @@ func init() {
 				mdb.RENDER: {Name: "render", Help: "渲染", Hand: func(m *ice.Message, arg ...string) {
 					m.Cmdy(m.Space(m.Option(cli.POD)), mdb.RENDER, arg[1:])
 				}},
-				ctx.COMMAND: {Name: "command", Help: "命令", Hand: func(m *ice.Message, arg ...string) {
-					m.Cmdy(ctx.COMMAND, arg)
-				}},
-				cli.RUN: {Name: "run", Help: "执行", Hand: func(m *ice.Message, arg ...string) {
-					m.Cmdy(arg)
-				}},
-			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			}, ctx.CmdAction()), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 				if kit.Contains(arg[1], ";") {
 					arg = kit.Split(arg[1], ";", ";", ";")
 				}

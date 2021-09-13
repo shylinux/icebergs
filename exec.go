@@ -156,6 +156,10 @@ func (m *Message) Space(arg interface{}) []string {
 func (m *Message) PodCmd(arg ...interface{}) bool {
 	if pod := m.Option("pod"); pod != "" {
 		m.Option("pod", "")
+		if m.Option("_upload") != "" {
+			msg := m.Cmd("cache", "upload")
+			m.Option(MSG_UPLOAD, msg.Append(kit.MDB_HASH), msg.Append(kit.MDB_NAME), msg.Append(kit.MDB_SIZE))
+		}
 		m.Cmdy(append([]interface{}{"space", pod}, arg...))
 		return true
 	}

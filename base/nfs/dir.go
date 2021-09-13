@@ -129,6 +129,16 @@ func _dir_show(m *ice.Message, root string, name string, level int, deep bool, d
 					} else {
 						m.Push(field, "")
 					}
+				case "show":
+					p := kit.MergeURL2(m.Option(ice.MSG_USERWEB), "/share/local/"+path.Join(name, f.Name()), "pod", m.Option(ice.MSG_USERPOD))
+					switch kit.Ext(f.Name()) {
+					case "jpg":
+						m.PushImages(field, p)
+					case "mp4":
+						m.PushVideos(field, p)
+					default:
+						m.Push(field, "")
+					}
 				default:
 					m.Push(field, "")
 				}

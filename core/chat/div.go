@@ -5,6 +5,7 @@ import (
 
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/cli"
+	"shylinux.com/x/icebergs/base/ctx"
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/web"
 	kit "shylinux.com/x/toolkits"
@@ -64,7 +65,7 @@ func init() {
 				m.ProcessDisplay("/plugin/local/chat/div.js")
 				m.Push("text", kit.Formats(node))
 			}},
-		}, mdb.HashAction(), mdb.CmdAction()), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		}, mdb.HashAction(), ctx.CmdAction()), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			m.Fields(len(arg), m.Conf(DIV, kit.META_FIELD))
 			m.Cmdy(mdb.SELECT, m.PrefixKey(), "", mdb.HASH, kit.MDB_HASH, arg)
 			m.Table(func(index int, value map[string]string, head []string) {

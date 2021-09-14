@@ -150,7 +150,7 @@ func init() {
 echo "hello world"
 `,
 			JS, `Volcanos("onengine", {_init: function(can, sub) {
-    can.base.Log("hello volcanos world")
+    can.misc.Log("hello volcanos world")
 }, river: {
 
 }})

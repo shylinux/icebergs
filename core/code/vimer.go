@@ -33,10 +33,6 @@ func init() {
 			nfs.SAVE: {Name: "save type file path", Help: "保存", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmdy(nfs.SAVE, path.Join(m.Option(kit.MDB_PATH), m.Option(kit.MDB_FILE)))
 			}},
-			BINPACK: {Name: "binpack", Help: "打包：生成 src/binpack.go", Hand: func(m *ice.Message, arg ...string) {
-				_autogen_version(m)
-				m.Cmd(BINPACK, mdb.CREATE)
-			}},
 			AUTOGEN: {Name: "create main=src/main.go@key key= zone= type=Zone,Hash,List,Data name=hi list= help=", Help: "模块", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmdy(AUTOGEN, mdb.CREATE, arg)
 			}},
@@ -44,6 +40,7 @@ func init() {
 				if p := os.Getenv(cli.PATH); !strings.Contains(p, "usr/local/go/bin") {
 					m.Option(cli.CMD_ENV, cli.PATH, kit.Path("usr/local/go/bin")+":"+p)
 				}
+				_autogen_version(m)
 				if m.Cmdy(cli.SYSTEM, "go", "build", "-v", "-o", "bin/ice.bin", "src/main.go", "src/version.go"); m.Append(cli.CMD_CODE) == "0" {
 					m.Cmd("exit", "1")
 				}

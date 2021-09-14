@@ -22,6 +22,7 @@ func _defs(m *ice.Message, args ...string) {
 }
 func _autogen_script(m *ice.Message, dir string) {
 	buf, _ := kit.Render(`chapter "{{.Option "name"}}"
+
 field "{{.Option "help"}}" {{.Option "key"}}
 `, m)
 	m.Cmd(nfs.DEFS, dir, string(buf))
@@ -38,17 +39,15 @@ import (
 
 type {{.Option "name"}} struct {
 	ice.{{.Option "type"}}
+
+	list string {{.Option "list"}}
 }
 
 func (h {{.Option "name"}}) List(m *ice.Message, arg ...string) {
 	h.{{.Option "type"}}.List(m, arg...)
 }
 
-func init() {
-	ice.Cmd("{{.Option "key"}}", &{{.Option "name"}}{}, []*ice.Show{
-		{Name: "{{.Option "list"}}", Help: "{{.Option "help"}}"},
-	})
-}
+func init() { ice.Cmd("{{.Option "key"}}", &{{.Option "name"}}{}) }
 `, m)
 	m.Cmd(nfs.SAVE, dir, string(buf))
 }
@@ -157,6 +156,7 @@ func init() {
 				case "Data":
 					_defs(m, "list", "list path auto upload")
 				}
+				m.Option("list", kit.Format("`name:\"%s\" help:\"%s\"`", m.Option("list"), m.Option("help")))
 
 				if p := path.Join(kit.SSH_SRC, m.Option(kit.MDB_ZONE), kit.Keys(m.Option(kit.MDB_NAME), SHY)); !kit.FileExists(p) {
 					_autogen_script(m, p)

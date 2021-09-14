@@ -70,6 +70,12 @@ func (web *Frame) Start(m *ice.Message, arg ...string) bool {
 	})
 
 	web.m, web.Server = m, &http.Server{Handler: web}
+	switch cb := m.Optionv(kit.Keycb(SERVE)).(type) {
+	case func(http.Handler):
+		cb(web)
+		return true
+	}
+
 	m.Option(kit.Keycb(tcp.LISTEN), func(l net.Listener) {
 		m.Cmdy(mdb.INSERT, SERVE, "", mdb.HASH, arg, kit.MDB_STATUS, tcp.START, kit.MDB_PROTO, m.Option(kit.MDB_PROTO), SPIDE_DEV, m.Option(SPIDE_DEV))
 		defer m.Cmd(mdb.MODIFY, SERVE, "", mdb.HASH, kit.MDB_NAME, m.Option(kit.MDB_NAME), kit.MDB_STATUS, tcp.STOP)
@@ -88,27 +94,25 @@ func (web *Frame) Close(m *ice.Message, arg ...string) bool {
 
 const WEB = "web"
 
-var Index = &ice.Context{Name: WEB, Help: "网络模块",
-	Commands: map[string]*ice.Command{
-		ice.CTX_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			m.Load()
-			m.Conf(SPACE, kit.MDB_HASH, "")
-			m.Cmd(mdb.SEARCH, mdb.CREATE, SPACE, m.Prefix(SPACE))
+var Index = &ice.Context{Name: WEB, Help: "网络模块", Commands: map[string]*ice.Command{
+	ice.CTX_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		m.Load()
+		m.Conf(SPACE, kit.MDB_HASH, "")
+		m.Cmd(mdb.SEARCH, mdb.CREATE, SPACE, m.Prefix(SPACE))
 
-			m.Cmd(SPIDE, mdb.CREATE, SPIDE_DEV, kit.Select("http://:9020", m.Conf(cli.RUNTIME, "conf.ctx_dev")))
-			m.Cmd(SPIDE, mdb.CREATE, SPIDE_SELF, kit.Select("http://:9020", m.Conf(cli.RUNTIME, "conf.ctx_self")))
-			m.Cmd(SPIDE, mdb.CREATE, SPIDE_SHY, kit.Select("https://shylinux.com:443", m.Conf(cli.RUNTIME, "conf.ctx_shy")))
-		}},
-		ice.CTX_EXIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			m.Save()
+		m.Cmd(SPIDE, mdb.CREATE, SPIDE_DEV, kit.Select("http://:9020", m.Conf(cli.RUNTIME, "conf.ctx_dev")))
+		m.Cmd(SPIDE, mdb.CREATE, SPIDE_SELF, kit.Select("http://:9020", m.Conf(cli.RUNTIME, "conf.ctx_self")))
+		m.Cmd(SPIDE, mdb.CREATE, SPIDE_SHY, kit.Select("https://shylinux.com:443", m.Conf(cli.RUNTIME, "conf.ctx_shy")))
+	}},
+	ice.CTX_EXIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		m.Save()
 
-			m.Done(true)
-			m.Cmd(SERVE).Table(func(index int, value map[string]string, head []string) {
-				m.Done(value[kit.MDB_STATUS] == tcp.START)
-			})
-		}},
-	},
-}
+		m.Done(true)
+		m.Cmd(SERVE).Table(func(index int, value map[string]string, head []string) {
+			m.Done(value[kit.MDB_STATUS] == tcp.START)
+		})
+	}},
+}}
 
 func init() {
 	ice.Index.Register(Index, &Frame{},

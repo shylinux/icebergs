@@ -12,6 +12,7 @@ import (
 	"shylinux.com/x/icebergs/base/cli"
 	"shylinux.com/x/icebergs/base/ctx"
 	"shylinux.com/x/icebergs/base/mdb"
+	"shylinux.com/x/icebergs/base/nfs"
 	"shylinux.com/x/icebergs/base/tcp"
 	kit "shylinux.com/x/toolkits"
 )
@@ -292,6 +293,12 @@ func init() {
 				m.RenderIndex(SERVE, ice.INTSHELL, arg...)
 			}},
 			"/publish/": {Name: "/publish/", Help: "私有云", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+				if arg[0] == ice.ORDER_JS {
+					if p := path.Join(ice.USR_PUBLISH, ice.ORDER_JS); m.PodCmd(nfs.CAT, p) {
+						m.RenderResult()
+						return
+					}
+				}
 				_share_local(m, m.Conf(SERVE, kit.Keym(ice.PUBLISH)), path.Join(arg...))
 			}},
 			"/require/": {Name: "/require/", Help: "公有云", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {

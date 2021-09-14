@@ -178,6 +178,7 @@ func _spide_part(m *ice.Message, arg ...string) (io.Reader, string) {
 		}
 		if strings.HasPrefix(arg[i+1], "@") {
 			if s, e := os.Stat(arg[i+1][1:]); e == nil {
+				m.Debug("local: %s cache: %s", s.ModTime(), cache)
 				if s.ModTime().Before(cache) {
 					break
 				}
@@ -185,7 +186,9 @@ func _spide_part(m *ice.Message, arg ...string) (io.Reader, string) {
 			if f, e := os.Open(arg[i+1][1:]); m.Assert(e) {
 				defer f.Close()
 				if p, e := mp.CreateFormFile(arg[i], path.Base(arg[i+1][1:])); m.Assert(e) {
-					io.Copy(p, f)
+					if n, e := io.Copy(p, f); m.Assert(e) {
+						m.Debug("upload: %s %d", arg[i+1], n)
+					}
 				}
 			}
 		} else {

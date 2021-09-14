@@ -57,6 +57,7 @@ func init() {
 				})
 
 				m.Push("name", "total")
+				m.Push("tags", "v3.0.0")
 				m.Push("days", days)
 				m.Push("commit", commit)
 				m.Push("adds", adds)
@@ -139,6 +140,7 @@ func init() {
 				}
 
 				if total {
+					m.Push("tags", m.Cmdx(cli.SYSTEM, GIT, "describe", "--tags"))
 					m.Push("days", int(total_day.Hours())/24)
 					m.Push("commit", count)
 					m.Push("adds", count_add)

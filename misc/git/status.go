@@ -55,6 +55,7 @@ func _status_list(m *ice.Message) (files, adds, dels int, last time.Time) {
 	m.Cmd(REPOS, ice.OptionFields("name,path")).Table(func(index int, value map[string]string, head []string) {
 		m.Option(cli.CMD_DIR, value[kit.MDB_PATH])
 		diff := m.Cmdx(cli.SYSTEM, GIT, STATUS, "-sb")
+		tags := m.Cmdx(cli.SYSTEM, GIT, "describe", "--tags")
 
 		for _, v := range strings.Split(strings.TrimSpace(diff), "\n") {
 			vs := strings.SplitN(strings.TrimSpace(v), " ", 2)
@@ -66,6 +67,7 @@ func _status_list(m *ice.Message) (files, adds, dels int, last time.Time) {
 			m.Push(kit.MDB_NAME, value[kit.MDB_NAME])
 			m.Push(kit.MDB_TYPE, vs[0])
 			m.Push(kit.MDB_FILE, vs[1])
+			m.Push("tags", tags)
 
 			list := []string{}
 			switch vs[0] {

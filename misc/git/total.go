@@ -64,6 +64,7 @@ func init() {
 				m.Push("dels", dels)
 				m.Push("rest", rest)
 				m.SortIntR("rest")
+				m.StatusTimeCount()
 			}},
 			"_sum": {Name: "_sum [path] [total] [count|date] args...", Help: "统计量", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 				if len(arg) > 0 {

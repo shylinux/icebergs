@@ -88,6 +88,10 @@ func _spide_show(m *ice.Message, arg ...string) {
 			return
 		}
 
+		for k, v := range res.Header {
+			m.Debug("%v: %v", k, v)
+		}
+
 		// 检查结果
 		defer res.Body.Close()
 		m.Cost(kit.MDB_STATUS, res.Status, kit.MDB_SIZE, res.Header.Get(ContentLength), kit.MDB_TYPE, res.Header.Get(ContentType))
@@ -108,6 +112,7 @@ func _spide_show(m *ice.Message, arg ...string) {
 				m.Warn(true, ice.ErrNotRight, " of ", uri)
 				return
 			default:
+
 			}
 		}
 

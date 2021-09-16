@@ -281,13 +281,15 @@ func init() {
 
 					switch kind {
 					case CHROME: // 交互节点
-						switch m.Option("cmd") {
-						case "pwd":
-							m.Go(func(msg *ice.Message) {
+						m.Go(func(msg *ice.Message) {
+							switch m.Option("cmd") {
+							case "pwd":
 								link := kit.MergeURL(_space_domain(msg), "grant", name)
 								msg.Sleep("100ms").Cmd(SPACE, name, "pwd", name, link, msg.Cmdx(cli.QRCODE, link))
-							})
-						}
+							default:
+								msg.Sleep("100ms").Cmd(SPACE, name, "pwd", name)
+							}
+						})
 					case WORKER: // 工作节点
 						m.Event(DREAM_START, args...)
 						defer m.Event(DREAM_STOP, args...)

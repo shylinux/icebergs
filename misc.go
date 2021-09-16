@@ -466,3 +466,11 @@ func (m *Message) SetResult() {
 	m.Set(MSG_RESULT)
 	return
 }
+
+func (m *Message) AppendTrans(cb func(value string, key string, index int) string) {
+	for _, k := range m.meta[MSG_APPEND] {
+		for i, v := range m.meta[k] {
+			m.meta[k][i] = cb(v, k, i)
+		}
+	}
+}

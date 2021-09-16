@@ -67,15 +67,16 @@ func _status_list(m *ice.Message) (files, adds, dels int, last time.Time) {
 			m.Push(kit.MDB_NAME, value[kit.MDB_NAME])
 			m.Push(kit.MDB_TYPE, vs[0])
 			m.Push(kit.MDB_FILE, vs[1])
-			m.Push("tags", tags)
 
 			list := []string{}
 			switch vs[0] {
 			case "##":
+				m.Push("tags", tags)
 				if strings.Contains(vs[1], "ahead") {
 					list = append(list, PUSH)
 				}
 			default:
+				m.Push("tags", "")
 				if strings.Contains(vs[0], "??") {
 					list = append(list, ADD)
 				} else {

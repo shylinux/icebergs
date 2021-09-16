@@ -140,11 +140,13 @@ func init() {
 				cli.CMD, []interface{}{"ice.bin", SPACE, tcp.DIAL},
 				cli.ENV, kit.Dict(ice.CTX_LOG, ice.BIN_BOOTLOG),
 				"miss", `#!/bin/bash
-[ -f $PWD/.ish/plug.sh ] || [ -f $HOME/.ish/plug.sh ] || git clone ${ISH_CONF_HUB_PROXY:="https://"}shylinux.com/x/intshell $PWD/.ish
-[ "$ISH_CONF_PRE" != "" ] || source $PWD/.ish/plug.sh || source $HOME/.ish/plug.sh
-require miss.sh
+if [ "$ISH_CONF_PRE" = "" ]; then
+	[ -f $PWD/.ish/plug.sh ] || [ -f $HOME/.ish/plug.sh ] || git clone ${ISH_CONF_HUB_PROXY:="https://"}shylinux.com/x/intshell $PWD/.ish
+	source $PWD/.ish/plug.sh || source $HOME/.ish/plug.sh
+fi
 
-# ish_miss_prepare_compile
+require miss.sh
+ish_miss_prepare_compile
 ish_miss_prepare_develop
 ish_miss_prepare_install
 

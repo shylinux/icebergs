@@ -305,6 +305,9 @@ func init() {
 				_share_repos(m, path.Join(arg[0], arg[1], arg[2]), arg[3:]...)
 			}},
 			"/help/": {Name: "/help/", Help: "帮助", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+				if len(arg) == 0 {
+					arg = append(arg, "tutor.shy")
+				}
 				if len(arg) > 0 && arg[0] != ctx.ACTION {
 					arg[0] = "src/help/" + arg[0]
 				}

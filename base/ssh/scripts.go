@@ -82,7 +82,6 @@ func (f *Frame) prompt(m *ice.Message, list ...string) *Frame {
 		list = append(list, f.ps1...)
 	}
 
-	m.Sleep("30ms")
 	fmt.Fprintf(f.stdout, "\r")
 	for _, v := range list {
 		switch v {

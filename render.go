@@ -59,7 +59,7 @@ func (m *Message) PushAnchor(arg ...interface{}) { // [name] link
 }
 func (m *Message) PushButton(arg ...string) {
 	if !m.IsCliUA() {
-		m.Push(kit.MDB_ACTION, Render(m, RENDER_BUTTON, kit.Join(arg)))
+		m.Push(kit.MDB_ACTION, Render(m, RENDER_BUTTON, strings.ToLower(kit.Join(arg))))
 	}
 }
 func (m *Message) PushScript(arg ...string) *Message { // [type] text...

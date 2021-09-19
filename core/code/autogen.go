@@ -40,14 +40,14 @@ import (
 type {{.Option "name"}} struct {
 	ice.{{.Option "type"}}
 
-	list string {{.Option "list"}}
+	list string {{.Option "tag"}}
 }
 
 func (h {{.Option "name"}}) List(m *ice.Message, arg ...string) {
 	h.{{.Option "type"}}.List(m, arg...)
 }
 
-func init() { ice.Cmd("{{.Option "key"}}", &{{.Option "name"}}{}) }
+func init() { ice.Cmd("{{.Option "key"}}", {{.Option "name"}}{}) }
 `, m)
 	m.Cmd(nfs.SAVE, dir, string(buf))
 }
@@ -143,7 +143,7 @@ const AUTOGEN = "autogen"
 func init() {
 	Index.Merge(&ice.Context{Commands: map[string]*ice.Command{
 		AUTOGEN: {Name: "autogen path auto create binpack script", Help: "生成", Action: map[string]*ice.Action{
-			mdb.CREATE: {Name: "create main=src/main.go@key key= zone= type=Zone,Hash,List,Data name=hi list= help=", Help: "模块", Hand: func(m *ice.Message, arg ...string) {
+			mdb.CREATE: {Name: "create main=src/main.go@key key= zone= type=Zone,Hash,Data name=hi list= help=", Help: "模块", Hand: func(m *ice.Message, arg ...string) {
 				_defs(m, "zone", m.Option("name"), "help", m.Option("name"))
 				_defs(m, "key", kit.Keys("web.code", m.Option("zone"), m.Option("name")))
 				switch m.Option("type") {
@@ -151,12 +151,10 @@ func init() {
 					_defs(m, "list", "list zone id auto insert")
 				case "Hash":
 					_defs(m, "list", "list hash auto create")
-				case "List":
-					_defs(m, "list", "list id auto insert")
 				case "Data":
 					_defs(m, "list", "list path auto upload")
 				}
-				m.Option("list", kit.Format("`name:\"%s\" help:\"%s\"`", m.Option("list"), m.Option("help")))
+				m.Option("tag", kit.Format("`name:\"%s\" help:\"%s\"`", m.Option("list"), m.Option("help")))
 
 				if p := path.Join(kit.SSH_SRC, m.Option(kit.MDB_ZONE), kit.Keys(m.Option(kit.MDB_NAME), SHY)); !kit.FileExists(p) {
 					_autogen_script(m, p)

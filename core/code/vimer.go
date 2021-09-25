@@ -37,9 +37,12 @@ func init() {
 				m.Cmdy(AUTOGEN, mdb.CREATE, arg)
 			}},
 			COMPILE: {Name: "compile", Help: "编译", Hand: func(m *ice.Message, arg ...string) {
-				if p := os.Getenv(cli.PATH); !strings.Contains(p, "usr/local/go/bin") {
-					m.Option(cli.CMD_ENV, cli.PATH, kit.Path("usr/local/go/bin")+":"+p)
-				}
+				m.Option(cli.CMD_ENV,
+					cli.HOME, os.Getenv(cli.HOME), cli.PATH, os.Getenv(cli.PATH),
+					"CGO_ENABLED", "0", "GOCACHE", os.Getenv("GOCACHE"),
+					"GOPRIVATE", "shylinux.com",
+				)
+
 				_autogen_version(m)
 				if m.Cmdy(cli.SYSTEM, "go", "build", "-v", "-o", "bin/ice.bin", "src/main.go", "src/version.go"); m.Append(cli.CMD_CODE) == "0" {
 					m.Cmd("exit", "1")

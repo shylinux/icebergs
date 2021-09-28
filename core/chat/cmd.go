@@ -31,7 +31,7 @@ func init() {
 					}
 					m.Cmdy(ctx.COMMAND, arg[0])
 				}},
-				cli.RUN: {Name: "command", Help: "执行", Hand: func(m *ice.Message, arg ...string) {
+				cli.RUN: {Name: "run", Help: "执行", Hand: func(m *ice.Message, arg ...string) {
 					m.Cmdy(arg)
 				}},
 			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {

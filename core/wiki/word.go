@@ -63,9 +63,10 @@ func init() {
 			),
 		)},
 	}, Commands: map[string]*ice.Command{
-		WORD: {Name: "word path=src/main.shy auto 演示", Help: "语言文字", Meta: kit.Dict(
+		WORD: {Name: "word path=src/main.shy auto play", Help: "语言文字", Meta: kit.Dict(
 			ice.Display("/plugin/local/wiki/word.js", WORD),
 		), Action: ice.MergeAction(map[string]*ice.Action{
+			"play": {Name: "play", Help: "演示"},
 			web.STORY: {Name: "story", Help: "运行", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmdy(arg[0], ctx.ACTION, cli.RUN, arg[2:])
 			}},

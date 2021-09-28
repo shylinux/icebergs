@@ -378,8 +378,8 @@ func (c *Context) split(key string, cmd *Command, name string) []interface{} {
 			list = append(list, kit.List(kit.MDB_INPUT, BUTTON, kit.MDB_NAME, "next")...)
 			continue
 		case "auto":
-			list = append(list, kit.List(kit.MDB_INPUT, BUTTON, kit.MDB_NAME, "查看", kit.MDB_VALUE, "auto")...)
-			list = append(list, kit.List(kit.MDB_INPUT, BUTTON, kit.MDB_NAME, "返回")...)
+			list = append(list, kit.List(kit.MDB_INPUT, BUTTON, kit.MDB_NAME, "list", kit.MDB_VALUE, "auto")...)
+			list = append(list, kit.List(kit.MDB_INPUT, BUTTON, kit.MDB_NAME, "back")...)
 			button = true
 			continue
 		}

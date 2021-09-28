@@ -26,7 +26,7 @@ func init() {
 						m.Cmdy(ctx.COMMAND, arg[0])
 					}
 				}},
-				cli.RUN: {Name: "command", Help: "执行", Hand: func(m *ice.Message, arg ...string) {
+				cli.RUN: {Name: "run", Help: "执行", Hand: func(m *ice.Message, arg ...string) {
 					if !m.PodCmd(arg) {
 						m.Cmdy(arg)
 					}

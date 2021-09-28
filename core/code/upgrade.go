@@ -27,7 +27,7 @@ func init() {
 			))},
 		},
 		Commands: map[string]*ice.Command{
-			UPGRADE: {Name: "upgrade item=system,source 执行:button", Help: "升级", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			UPGRADE: {Name: "upgrade item=system,source run:button", Help: "升级", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 				m.Grows(cmd, kit.Keys(kit.MDB_HASH, kit.Select(cli.SYSTEM, arg, 0)), "", "", func(index int, value map[string]interface{}) {
 					if value[kit.MDB_PATH] == ice.BIN_ICE_BIN { // 程序文件
 						value[kit.MDB_FILE] = kit.Keys("ice", m.Conf(cli.RUNTIME, "host.GOOS"), m.Conf(cli.RUNTIME, "host.GOARCH"))

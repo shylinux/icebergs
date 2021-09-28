@@ -79,10 +79,10 @@ func init() {
 			CHECK: {Name: "check", Help: "登录检查", Hand: func(m *ice.Message, arg ...string) {
 				_header_check(m, arg...)
 			}},
-			SHARE: {Name: "share type", Help: "扫码登录", Hand: func(m *ice.Message, arg ...string) {
+			SHARE: {Name: "share type", Help: "共享", Hand: func(m *ice.Message, arg ...string) {
 				_header_share(m, arg...)
 			}},
-			GRANT: {Name: "grant space", Help: "扫码授权", Hand: func(m *ice.Message, arg ...string) {
+			GRANT: {Name: "grant space", Help: "授权", Hand: func(m *ice.Message, arg ...string) {
 				_header_grant(m, arg...)
 			}},
 

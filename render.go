@@ -29,7 +29,7 @@ func Render(m *Message, cmd string, args ...interface{}) string {
 		list := []string{}
 		for _, k := range kit.Split(kit.Join(arg)) {
 			list = append(list, kit.Format(`<input type="button" name="%s" value="%s">`,
-				k, kit.Select(k, kit.Value(m._cmd.Meta, kit.Keys("_trans", k)))))
+				k, kit.Select(k, kit.Value(m._cmd.Meta, kit.Keys("_trans", k)), m.Option("language") != "en")))
 		}
 		return kit.Join(list, " ")
 

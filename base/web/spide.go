@@ -335,7 +335,7 @@ func init() {
 			)},
 		},
 		Commands: map[string]*ice.Command{
-			SPIDE: {Name: "spide client.name action=raw,msg,save,cache method=GET,PUT,POST,DELETE url format=form,part,json,data,file arg 执行:button create", Help: "蜘蛛侠", Action: ice.MergeAction(map[string]*ice.Action{
+			SPIDE: {Name: "spide client.name action=raw,msg,save,cache method=GET,PUT,POST,DELETE url format=form,part,json,data,file arg run:button create", Help: "蜘蛛侠", Action: ice.MergeAction(map[string]*ice.Action{
 				mdb.CREATE: {Name: "create name address", Help: "添加", Hand: func(m *ice.Message, arg ...string) {
 					_spide_create(m, m.Option(kit.MDB_NAME), m.Option(ADDRESS))
 				}},
@@ -349,14 +349,14 @@ func init() {
 				_spide_show(m, arg...)
 			}},
 
-			SPIDE_GET: {Name: "GET url key value 执行:button", Help: "蜘蛛侠", Action: map[string]*ice.Action{
+			SPIDE_GET: {Name: "GET url key value run:button", Help: "蜘蛛侠", Action: map[string]*ice.Action{
 				mdb.REMOVE: {Name: "remove", Help: "删除", Hand: func(m *ice.Message, arg ...string) {
 					m.Cmdy(mdb.DELETE, SPIDE, "", mdb.HASH, CLIENT_NAME, m.Option(CLIENT_NAME))
 				}},
 			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 				m.Echo(kit.Formats(kit.UnMarshal(m.Cmdx(SPIDE, SPIDE_DEV, SPIDE_RAW, SPIDE_GET, arg[0], arg[1:]))))
 			}},
-			SPIDE_POST: {Name: "POST url key value 执行:button", Help: "蜘蛛侠", Action: map[string]*ice.Action{
+			SPIDE_POST: {Name: "POST url key value run:button", Help: "蜘蛛侠", Action: map[string]*ice.Action{
 				mdb.REMOVE: {Name: "remove", Help: "删除", Hand: func(m *ice.Message, arg ...string) {
 					m.Cmdy(mdb.DELETE, SPIDE, "", mdb.HASH, CLIENT_NAME, m.Option(CLIENT_NAME))
 				}},

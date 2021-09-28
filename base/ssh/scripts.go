@@ -368,21 +368,21 @@ func init() {
 				m.Cmdy(mdb.SELECT, SOURCE, kit.Keys(kit.MDB_HASH, arg[0]), mdb.LIST, kit.MDB_ID, arg[1:])
 				m.PushAction(mdb.REPEAT)
 			}},
-			TARGET: {Name: "target name 执行:button", Help: "当前模块", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			TARGET: {Name: "target name run:button", Help: "当前模块", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 				f := m.Target().Server().(*Frame)
 				m.Search(arg[0]+".", func(p *ice.Context, s *ice.Context, key string) { f.target = s })
 				f.prompt(m)
 			}},
-			PROMPT: {Name: "prompt arg 执行:button", Help: "命令提示", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			PROMPT: {Name: "prompt arg run:button", Help: "命令提示", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 				f := m.Target().Server().(*Frame)
 				f.ps1 = arg
 				f.prompt(m)
 			}},
-			PRINTF: {Name: "printf 执行:button text:textarea", Help: "输出显示", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			PRINTF: {Name: "printf run:button text:textarea", Help: "输出显示", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 				f := m.Target().Server().(*Frame)
 				f.printf(m, arg[0])
 			}},
-			SCREEN: {Name: "screen 执行:button text:textarea", Help: "输出命令", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			SCREEN: {Name: "screen run:button text:textarea", Help: "输出命令", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 				f := m.Target().Server().(*Frame)
 				for _, line := range kit.Split(arg[0], "\n", "\n", "\n") {
 					f.printf(m, line+"\n")

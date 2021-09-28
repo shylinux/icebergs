@@ -93,7 +93,7 @@ func init() {
 			SYSTEM: {Name: SYSTEM, Help: "系统命令", Value: kit.Data()},
 		},
 		Commands: map[string]*ice.Command{
-			SYSTEM: {Name: "system cmd= 执行:button", Help: "系统命令", Hand: func(m *ice.Message, c *ice.Context, key string, arg ...string) {
+			SYSTEM: {Name: "system cmd= run:button", Help: "系统命令", Hand: func(m *ice.Message, c *ice.Context, key string, arg ...string) {
 				if len(arg) == 0 {
 					m.Fields(len(arg), "time,id,cmd")
 					m.Cmdy(mdb.SELECT, SYSTEM, "", mdb.LIST)

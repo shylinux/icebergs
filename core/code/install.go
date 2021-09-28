@@ -133,39 +133,37 @@ const (
 const INSTALL = "install"
 
 func init() {
-	Index.Merge(&ice.Context{
-		Configs: map[string]*ice.Config{
-			INSTALL: {Name: INSTALL, Help: "安装", Value: kit.Data(
-				kit.MDB_SHORT, kit.MDB_NAME, kit.MDB_PATH, ice.USR_INSTALL,
-			)},
-		},
-		Commands: map[string]*ice.Command{
-			INSTALL: {Name: "install name port path auto download", Help: "安装", Meta: kit.Dict(), Action: map[string]*ice.Action{
-				web.DOWNLOAD: {Name: "download link path", Help: "下载", Hand: func(m *ice.Message, arg ...string) {
-					_install_download(m)
-				}},
-				cli.BUILD: {Name: "build link", Help: "构建", Hand: func(m *ice.Message, arg ...string) {
-					_install_build(m, arg...)
-				}},
-				cli.SPAWN: {Name: "spawn link", Help: "新建", Hand: func(m *ice.Message, arg ...string) {
-					_install_spawn(m, arg...)
-				}},
-				cli.START: {Name: "start link cmd", Help: "启动", Hand: func(m *ice.Message, arg ...string) {
-					_install_start(m, arg...)
-				}},
-			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-				switch len(arg) {
-				case 0: // 源码列表
-					_install_package(m, arg...)
-
-				case 1: // 服务列表
-					_install_service(m, arg...)
-
-				default: // 目录列表
-					m.Option(nfs.DIR_ROOT, path.Join(m.Conf(cli.DAEMON, kit.META_PATH), arg[1]))
-					m.Cmdy(nfs.CAT, kit.Select("./", arg, 2))
-				}
+	Index.Merge(&ice.Context{Configs: map[string]*ice.Config{
+		INSTALL: {Name: INSTALL, Help: "安装", Value: kit.Data(
+			kit.MDB_SHORT, kit.MDB_NAME, kit.MDB_PATH, ice.USR_INSTALL,
+		)},
+	}, Commands: map[string]*ice.Command{
+		INSTALL: {Name: "install name port path auto download", Help: "安装", Meta: kit.Dict(), Action: map[string]*ice.Action{
+			web.DOWNLOAD: {Name: "download link path", Help: "下载", Hand: func(m *ice.Message, arg ...string) {
+				_install_download(m)
 			}},
-		},
+			cli.BUILD: {Name: "build link", Help: "构建", Hand: func(m *ice.Message, arg ...string) {
+				_install_build(m, arg...)
+			}},
+			cli.SPAWN: {Name: "spawn link", Help: "新建", Hand: func(m *ice.Message, arg ...string) {
+				_install_spawn(m, arg...)
+			}},
+			cli.START: {Name: "start link cmd", Help: "启动", Hand: func(m *ice.Message, arg ...string) {
+				_install_start(m, arg...)
+			}},
+		}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			switch len(arg) {
+			case 0: // 源码列表
+				_install_package(m, arg...)
+
+			case 1: // 服务列表
+				_install_service(m, arg...)
+
+			default: // 目录列表
+				m.Option(nfs.DIR_ROOT, path.Join(m.Conf(cli.DAEMON, kit.META_PATH), arg[1]))
+				m.Cmdy(nfs.CAT, kit.Select("./", arg, 2))
+			}
+		}},
+	},
 	})
 }

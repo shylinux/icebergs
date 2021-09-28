@@ -5,6 +5,7 @@ import (
 	"encoding/csv"
 	"encoding/json"
 	"fmt"
+	"net/url"
 	"path"
 	"reflect"
 	"runtime"
@@ -473,4 +474,8 @@ func (m *Message) AppendTrans(cb func(value string, key string, index int) strin
 			m.meta[k][i] = cb(v, k, i)
 		}
 	}
+}
+
+func (m *Message) OptionUserWeb() *url.URL {
+	return kit.ParseURL(m.Option(MSG_USERWEB))
 }

@@ -150,9 +150,12 @@ ish_miss_prepare_compile
 ish_miss_prepare_develop
 ish_miss_prepare_install
 
-ish_miss_prepare release
 # ish_miss_prepare wubi-dict
 # ish_miss_prepare word-dict
+
+# ish_miss_prepare linux-story
+# ish_miss_prepare mysql-story
+ish_miss_prepare release
 
 ish_miss_prepare_contexts
 # ish_miss_prepare_intshell

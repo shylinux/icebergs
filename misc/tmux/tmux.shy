@@ -1,21 +1,21 @@
 title "tmux"
 refer `
 官网 http://tmux.github.io/
-文档 http://man.openbsd.org/OpenBSD-current/man1/tmux.1
 源码 https://github.com/tmux/tmux
+文档 http://man.openbsd.org/OpenBSD-current/man1/tmux.1
 `
 
 chapter "源码"
 field tmux web.code.tmux.tmux
-field tmux web.code.inner args `usr/install/tmux-3.1b cmd-bind-key.c`
+field tmux web.code.inner args `usr/install/tmux-3.2 cmd-bind-key.c`
 
 section "构建"
 spark shell `
 yum install -y wget make gcc
 yum install -y libevent-devel.x86_64 ncurses-devel.x86_64
 
-wget https://github.com/tmux/tmux/releases/download/3.1b/tmux-3.1b.tar.gz
-tar xvf tmux-3.1b.tar.gz && cd tmux-3.1b
+wget http://mirrors.tencent.com/macports/distfiles/tmux/tmux-3.2.tar.gz
+tar xvf tmux-3.2.tar.gz && cd tmux-3.2
 
 ./configure --prefix=$PWD/_install
 make -j8 && make install
@@ -24,6 +24,7 @@ make -j8 && make install
 section "启动"
 spark shell `
 cd ./_install
+
 ./bin/tmux -S $PWD/tmux.socket
 `
 

@@ -143,19 +143,8 @@ func _hash_inputs(m *ice.Message, prefix, chain string, field, value string) {
 	m.SortIntR(kit.MDB_COUNT)
 }
 
-func selectAction(list map[string]*ice.Action, fields ...string) map[string]*ice.Action {
-	if len(fields) == 0 {
-		return list
-	}
-
-	res := map[string]*ice.Action{}
-	for _, field := range fields {
-		res[field] = list[field]
-	}
-	return res
-}
 func HashAction(fields ...string) map[string]*ice.Action {
-	return selectAction(map[string]*ice.Action{
+	return ice.SelectAction(map[string]*ice.Action{
 		CREATE: {Name: "create type name text", Help: "创建", Hand: func(m *ice.Message, arg ...string) {
 			m.Cmdy(INSERT, m.PrefixKey(), "", HASH, arg)
 		}},

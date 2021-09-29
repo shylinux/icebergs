@@ -479,3 +479,19 @@ func (m *Message) AppendTrans(cb func(value string, key string, index int) strin
 func (m *Message) OptionUserWeb() *url.URL {
 	return kit.ParseURL(m.Option(MSG_USERWEB))
 }
+
+func (m *Message) Config(key string) string {
+	return m.Conf(m.PrefixKey(), kit.Keym(key))
+}
+
+func SelectAction(list map[string]*Action, fields ...string) map[string]*Action {
+	if len(fields) == 0 {
+		return list
+	}
+
+	res := map[string]*Action{}
+	for _, field := range fields {
+		res[field] = list[field]
+	}
+	return res
+}

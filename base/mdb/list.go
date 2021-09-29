@@ -133,7 +133,7 @@ func _list_inputs(m *ice.Message, prefix, chain string, field, value string) {
 const LIST = "list"
 
 func ListAction(fields ...string) map[string]*ice.Action {
-	return selectAction(map[string]*ice.Action{
+	return ice.SelectAction(map[string]*ice.Action{
 		INSERT: {Name: "insert type=go name=hi text=hello", Help: "添加", Hand: func(m *ice.Message, arg ...string) {
 			m.Cmdy(INSERT, m.PrefixKey(), "", LIST, arg)
 		}},

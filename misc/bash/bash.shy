@@ -7,15 +7,15 @@ refer `
 
 chapter "源码"
 field "bash" web.code.bash.bash
-field "bash" web.code.inner args `usr/install/bash-4.4.18/ input.c 636`
+field "bash" web.code.inner args `usr/install/bash-5.1/ input.c 636`
 
 section "构建"
 spark shell `
 yum install -y wget make gcc
 yum install -y byacc.x86_64
 
-wget https://mirrors.aliyun.com/gnu/bash/bash-4.4.18.tar.gz
-tar xvf bash-4.4.18.tar.gz && cd bash-4.4.18
+wget http://mirrors.tencent.com/macports/distfiles/bash/5.1_1/bash-5.1.tar.gz
+tar xvf bash-5.1.tar.gz && cd bash-5.1
 
 ./configure --prefix=$PWD/_install
 make -j8 && make install
@@ -24,6 +24,7 @@ make -j8 && make install
 section "启动"
 spark shell `
 cd ./_install
+
 ./bin/bash
 `
 

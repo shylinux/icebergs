@@ -11,7 +11,7 @@ func ZoneAction(fields ...string) map[string]*ice.Action {
 	_zone := func(m *ice.Message) string {
 		return kit.Select(kit.MDB_ZONE, m.Conf(m.PrefixKey(), kit.Keym(kit.MDB_SHORT)))
 	}
-	return selectAction(map[string]*ice.Action{
+	return ice.SelectAction(map[string]*ice.Action{
 		CREATE: {Name: "create zone", Help: "创建", Hand: func(m *ice.Message, arg ...string) {
 			m.Cmdy(INSERT, m.PrefixKey(), "", HASH, arg)
 		}},

@@ -86,6 +86,10 @@ func _install_build(m *ice.Message, arg ...string) {
 	m.Toast(ice.SUCCESS, cli.BUILD)
 	m.ProcessHold()
 }
+func _install_order(m *ice.Message, arg ...string) {
+	m.Cmd(nfs.PUSH, "etc/path", kit.Path(m.Conf(INSTALL, kit.META_PATH), kit.TrimExt(m.Option(kit.MDB_LINK)), m.Option(kit.MDB_PATH)+"\n"))
+	m.Cmdy(nfs.CAT, "etc/path")
+}
 func _install_spawn(m *ice.Message, arg ...string) {
 	port := m.Cmdx(tcp.PORT, aaa.RIGHT)
 	target := path.Join(m.Conf(cli.DAEMON, kit.META_PATH), port)
@@ -145,11 +149,18 @@ func init() {
 			cli.BUILD: {Name: "build link", Help: "构建", Hand: func(m *ice.Message, arg ...string) {
 				_install_build(m, arg...)
 			}},
+			cli.ORDER: {Name: "order link path", Help: "加载", Hand: func(m *ice.Message, arg ...string) {
+				_install_order(m, arg...)
+			}},
 			cli.SPAWN: {Name: "spawn link", Help: "新建", Hand: func(m *ice.Message, arg ...string) {
 				_install_spawn(m, arg...)
 			}},
 			cli.START: {Name: "start link cmd", Help: "启动", Hand: func(m *ice.Message, arg ...string) {
 				_install_start(m, arg...)
+			}},
+			cli.SOURCE: {Name: "source link path", Help: "源码", Hand: func(m *ice.Message, arg ...string) {
+				m.Option(nfs.DIR_ROOT, path.Join(m.Conf(INSTALL, kit.META_PATH), kit.TrimExt(m.Option(kit.MDB_LINK)), "_install"))
+				m.Cmdy(nfs.DIR, m.Option(kit.MDB_PATH))
 			}},
 		}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			switch len(arg) {
@@ -166,4 +177,18 @@ func init() {
 		}},
 	},
 	})
+}
+
+func InstallAction(fields ...string) map[string]*ice.Action {
+	return ice.SelectAction(map[string]*ice.Action{
+		web.DOWNLOAD: {Name: "download", Help: "下载", Hand: func(m *ice.Message, arg ...string) {
+			m.Cmdy(INSTALL, web.DOWNLOAD, m.Config(cli.SOURCE))
+		}},
+		cli.BUILD: {Name: "build", Help: "构建", Hand: func(m *ice.Message, arg ...string) {
+			m.Cmdy(INSTALL, cli.BUILD, m.Config(cli.SOURCE))
+		}},
+		cli.ORDER: {Name: "order", Help: "加载", Hand: func(m *ice.Message, arg ...string) {
+			m.Cmd(INSTALL, cli.ORDER, m.Config(cli.SOURCE), "_install/bin")
+		}},
+	}, fields...)
 }

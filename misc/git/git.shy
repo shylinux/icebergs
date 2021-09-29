@@ -8,7 +8,7 @@ refer `
 
 chapter "源码"
 field "安装" web.code.git.git
-field "源码" web.code.inner args `usr/install/git-1.8.3.1/ shell.c 145`
+field "源码" web.code.inner args `usr/install/git-2.31.1/ shell.c 145`
 
 section "构建"
 spark shell `
@@ -16,8 +16,8 @@ yum install -y wget make gcc
 yum install -y libcurl-devel.x86_64 openssl-devel.x86_64
 yum install perl-ExtUtils-CBuilder perl-ExtUtils-MakeMaker
 
-wget https://mirrors.edge.kernel.org/pub/software/scm/git/git-1.8.3.1.tar.gz
-tar xvf git-1.8.3.1.tar.gz && cd git-1.8.3.1
+wget http://mirrors.tencent.com/macports/distfiles/git-cinnabar/git-2.31.1.tar.gz
+tar xvf git-2.31.1.tar.gz && cd git-2.31.1
 
 ./configure --prefix=$PWD/_install
 make -j8 && make install

@@ -101,6 +101,7 @@ const (
 const (
 	ERROR = "error"
 	BUILD = "build"
+	ORDER = "order"
 	SPAWN = "spawn"
 	CHECK = "check"
 	BENCH = "bench"

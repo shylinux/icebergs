@@ -74,6 +74,8 @@ func _status_list(m *ice.Message) (files, adds, dels int, last time.Time) {
 				m.Push("tags", tags)
 				if strings.Contains(vs[1], "ahead") {
 					list = append(list, PUSH)
+				} else if strings.Contains(tags, "-") {
+					list = append(list, TAG)
 				}
 			default:
 				m.Push("tags", "")
@@ -99,6 +101,7 @@ const (
 	PULL = "pull"
 	MAKE = "make"
 	PUSH = "push"
+	TAG  = "tag"
 
 	ADD = "add"
 	OPT = "opt"
@@ -131,6 +134,11 @@ func init() {
 				}
 
 				m.Cmdy(cli.SYSTEM, GIT, PUSH, ice.Option{cli.CMD_DIR, _repos_path(m.Option(kit.MDB_NAME))})
+				m.Cmdy(cli.SYSTEM, GIT, PUSH, "--tags")
+			}},
+			TAG: {Name: "tags version", Help: "标签", Hand: func(m *ice.Message, arg ...string) {
+				m.Cmdy(cli.SYSTEM, GIT, TAG, m.Option("version"))
+				m.Cmdy(cli.SYSTEM, GIT, PUSH, "--tags")
 			}},
 
 			ADD: {Name: "add", Help: "添加", Hand: func(m *ice.Message, arg ...string) {

@@ -2,6 +2,7 @@ package ice
 
 import (
 	"path"
+	"reflect"
 	"strings"
 
 	kit "shylinux.com/x/toolkits"
@@ -75,6 +76,12 @@ func (m *Message) PushVideos(key, src string, arg ...string) { // key src [size]
 	m.Push(key, Render(m, RENDER_VIDEOS, src, arg))
 }
 func (m *Message) PushAction(list ...interface{}) {
+	for i, item := range list {
+		if t := reflect.TypeOf(item); t.Kind() == reflect.Func {
+			list[i] = kit.FuncName(item)
+		}
+	}
+
 	m.Table(func(index int, value map[string]string, head []string) {
 		m.PushButton(kit.Simple(list...)...)
 	})

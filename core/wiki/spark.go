@@ -16,13 +16,19 @@ func _spark_show(m *ice.Message, name, text string, arg ...string) {
 
 	prompt := kit.Select(name+"> ", m.Conf(SPARK, kit.Keym(ssh.PROMPT, name)))
 	m.Echo(`<div class="story" data-type="spark" data-name="%s">`, name)
+	defer m.Echo("</div>")
+
+	if name == "inner" {
+		m.Echo(text)
+		return
+	}
+
 	for _, l := range strings.Split(text, "\n") {
 		m.Echo("<div>")
 		m.Echo("<label>").Echo(prompt).Echo("</label>")
 		m.Echo("<span>").Echo(l).Echo("</span>")
 		m.Echo("</div>")
 	}
-	m.Echo("</div>")
 }
 
 const (

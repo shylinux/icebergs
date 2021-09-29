@@ -65,106 +65,104 @@ const (
 const INNER = "inner"
 
 func init() {
-	Index.Merge(&ice.Context{
-		Commands: map[string]*ice.Command{
-			INNER: {Name: "inner path=src/ file=main.go line=1 auto", Help: "源代码", Meta: kit.Dict(
-				ice.Display("/plugin/local/code/inner.js", "editor"),
-			), Action: map[string]*ice.Action{
-				mdb.PLUGIN: {Name: "plugin", Help: "插件", Hand: func(m *ice.Message, arg ...string) {
-					if m.Cmdy(mdb.PLUGIN, arg); m.Result() == "" {
-						m.Echo(kit.Select("{}", m.Conf(INNER, kit.Keym(PLUG, arg[0]))))
-					}
-				}},
-				mdb.ENGINE: {Name: "engine", Help: "运行", Hand: func(m *ice.Message, arg ...string) {
-					_inner_show(m, arg[0], arg[1], arg[2])
-				}},
-				mdb.SEARCH: {Name: "search", Help: "搜索", Hand: func(m *ice.Message, arg ...string) {
-					if strings.Contains(arg[1], ";") {
-						ls := strings.Split(arg[1], ";")
-						arg[0] = ls[0]
-						arg[1] = ls[1]
-					}
-					m.Option(cli.CMD_DIR, arg[2])
-					m.Option(nfs.DIR_ROOT, arg[2])
-					m.Cmdy(mdb.SEARCH, arg[:2], "cmd,file,line,text")
-				}},
-				mdb.INPUTS:  {Name: "favor inputs", Help: "补全"},
-				ctx.COMMAND: {Name: "command", Help: "命令"},
-				FAVOR:       {Name: "favor", Help: "收藏"},
-			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-				if len(arg) < 2 {
-					nfs.Dir(m, kit.MDB_PATH)
-					return
+	Index.Merge(&ice.Context{Commands: map[string]*ice.Command{
+		INNER: {Name: "inner path=src/ file=main.go line=1 auto", Help: "源代码", Meta: kit.Dict(
+			ice.Display("/plugin/local/code/inner.js", "editor"),
+		), Action: map[string]*ice.Action{
+			mdb.PLUGIN: {Name: "plugin", Help: "插件", Hand: func(m *ice.Message, arg ...string) {
+				if m.Cmdy(mdb.PLUGIN, arg); m.Result() == "" {
+					m.Echo(kit.Select("{}", m.Conf(INNER, kit.Keym(PLUG, arg[0]))))
 				}
-				_inner_list(m, kit.Ext(arg[1]), arg[1], arg[0])
 			}},
-		},
-		Configs: map[string]*ice.Config{
-			INNER: {Name: "inner", Help: "源代码", Value: kit.Data(
-				cli.SOURCE, kit.Dict(
-					"s", ice.TRUE, "S", ice.TRUE,
-					"shy", ice.TRUE, "py", ice.TRUE,
-					"csv", ice.TRUE, "json", ice.TRUE,
-					"css", ice.TRUE, "html", ice.TRUE,
-					"txt", ice.TRUE, "url", ice.TRUE,
-					"log", ice.TRUE, "err", ice.TRUE,
+			mdb.ENGINE: {Name: "engine", Help: "运行", Hand: func(m *ice.Message, arg ...string) {
+				_inner_show(m, arg[0], arg[1], arg[2])
+			}},
+			mdb.SEARCH: {Name: "search", Help: "搜索", Hand: func(m *ice.Message, arg ...string) {
+				if strings.Contains(arg[1], ";") {
+					ls := strings.Split(arg[1], ";")
+					arg[0] = ls[0]
+					arg[1] = ls[1]
+				}
+				m.Option(cli.CMD_DIR, arg[2])
+				m.Option(nfs.DIR_ROOT, arg[2])
+				m.Cmdy(mdb.SEARCH, arg[:2], "cmd,file,line,text")
+			}},
+			mdb.INPUTS:  {Name: "favor inputs", Help: "补全"},
+			ctx.COMMAND: {Name: "command", Help: "命令"},
+			FAVOR:       {Name: "favor", Help: "收藏"},
+		}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			if len(arg) < 2 {
+				nfs.Dir(m, kit.MDB_PATH)
+				return
+			}
+			_inner_list(m, kit.Ext(arg[1]), arg[1], arg[0])
+		}},
+	}, Configs: map[string]*ice.Config{
+		INNER: {Name: "inner", Help: "源代码", Value: kit.Data(
+			cli.SOURCE, kit.Dict(
+				"s", ice.TRUE, "S", ice.TRUE,
+				"shy", ice.TRUE, "py", ice.TRUE,
+				"csv", ice.TRUE, "json", ice.TRUE,
+				"css", ice.TRUE, "html", ice.TRUE,
+				"txt", ice.TRUE, "url", ice.TRUE,
+				"log", ice.TRUE, "err", ice.TRUE,
 
-					"md", ice.TRUE, "license", ice.TRUE, "makefile", ice.TRUE, "sql", ice.TRUE,
-					"ini", ice.TRUE, "conf", ice.TRUE, "toml", ice.TRUE, "yaml", ice.TRUE, "yml", ice.TRUE,
+				"md", ice.TRUE, "license", ice.TRUE, "makefile", ice.TRUE, "sql", ice.TRUE,
+				"ini", ice.TRUE, "conf", ice.TRUE, "toml", ice.TRUE, "yaml", ice.TRUE, "yml", ice.TRUE,
+			),
+			PLUG, kit.Dict(
+				"s", kit.Dict(
+					PREFIX, kit.Dict("//", COMMENT),
+					KEYWORD, kit.Dict(
+						"TEXT", KEYWORD,
+						"RET", KEYWORD,
+					),
 				),
-				PLUG, kit.Dict(
-					"s", kit.Dict(
-						PREFIX, kit.Dict("//", COMMENT),
-						KEYWORD, kit.Dict(
-							"TEXT", KEYWORD,
-							"RET", KEYWORD,
-						),
+				"S", kit.Dict(
+					PREFIX, kit.Dict("//", COMMENT),
+					KEYWORD, kit.Dict(),
+				),
+				"py", kit.Dict(
+					PREFIX, kit.Dict("#", COMMENT),
+					KEYWORD, kit.Dict("print", KEYWORD),
+				),
+				"html", kit.Dict(
+					SPLIT, kit.Dict(
+						"space", " ",
+						"operator", "<>",
 					),
-					"S", kit.Dict(
-						PREFIX, kit.Dict("//", COMMENT),
-						KEYWORD, kit.Dict(),
+					KEYWORD, kit.Dict(
+						"head", KEYWORD,
+						"body", KEYWORD,
 					),
-					"py", kit.Dict(
-						PREFIX, kit.Dict("#", COMMENT),
-						KEYWORD, kit.Dict("print", KEYWORD),
-					),
-					"html", kit.Dict(
-						SPLIT, kit.Dict(
-							"space", " ",
-							"operator", "<>",
-						),
-						KEYWORD, kit.Dict(
-							"head", KEYWORD,
-							"body", KEYWORD,
-						),
-					),
-					"css", kit.Dict(
-						SUFFIX, kit.Dict("{", COMMENT),
-					),
-					"yaml", kit.Dict(
-						PREFIX, kit.Dict("#", COMMENT),
-					),
-					"yml", kit.Dict(
-						PREFIX, kit.Dict("#", COMMENT),
-					),
+				),
+				"css", kit.Dict(
+					SUFFIX, kit.Dict("{", COMMENT),
+				),
+				"yaml", kit.Dict(
+					PREFIX, kit.Dict("#", COMMENT),
+				),
+				"yml", kit.Dict(
+					PREFIX, kit.Dict("#", COMMENT),
+				),
 
-					"md", kit.Dict(),
-					"makefile", kit.Dict(
-						PREFIX, kit.Dict("#", COMMENT),
-						SUFFIX, kit.Dict(":", COMMENT),
-						KEYWORD, kit.Dict(
-							"ifeq", KEYWORD,
-							"ifneq", KEYWORD,
-							"else", KEYWORD,
-							"endif", KEYWORD,
-						),
+				"md", kit.Dict(),
+				"makefile", kit.Dict(
+					PREFIX, kit.Dict("#", COMMENT),
+					SUFFIX, kit.Dict(":", COMMENT),
+					KEYWORD, kit.Dict(
+						"ifeq", KEYWORD,
+						"ifneq", KEYWORD,
+						"else", KEYWORD,
+						"endif", KEYWORD,
 					),
 				),
-				SHOW, kit.Dict(
-					"py", []string{"python"},
-					"js", []string{"node"},
-				),
-			)},
-		},
+			),
+			SHOW, kit.Dict(
+				"py", []string{"python"},
+				"js", []string{"node"},
+			),
+		)},
+	},
 	})
 }

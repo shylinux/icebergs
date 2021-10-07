@@ -45,15 +45,20 @@ func _daemon_show(m *ice.Message, cmd *exec.Cmd, out, err string) {
 		)
 
 		if e := cmd.Wait(); m.Warn(e != nil, cmd.Args, " ", e) {
-			m.Cmd(mdb.MODIFY, DAEMON, "", mdb.HASH, kit.MDB_HASH, h,
-				kit.MDB_STATUS, ERROR, kit.MDB_ERROR, e)
+			if m.Conf(DAEMON, kit.Keys(kit.MDB_HASH, h, kit.Keym(kit.MDB_STATUS))) == START {
+				m.Cmd(mdb.MODIFY, DAEMON, "", mdb.HASH, kit.MDB_HASH, h, kit.MDB_STATUS, ERROR, ERROR, e)
+			}
 		} else {
 			m.Cost("args", cmd.Args, "code", cmd.ProcessState.ExitCode())
 			m.Cmd(mdb.MODIFY, DAEMON, "", mdb.HASH, kit.MDB_HASH, h, kit.MDB_STATUS, STOP)
 		}
 
 		switch cb := m.Optionv(kit.Keycb(DAEMON)).(type) {
+		case func(string):
+			m.Sleep("1s")
+			cb(m.Conf(DAEMON, kit.Keys(kit.MDB_HASH, h, kit.Keym(kit.MDB_STATUS))))
 		case func():
+			m.Sleep("1s")
 			cb()
 		}
 
@@ -168,6 +173,12 @@ func init() {
 				} else if m.Richs(DAEMON, "", arg[0], nil) != nil { // 进程详情
 					m.Option(mdb.FIELDS, mdb.DETAIL)
 					m.Cmdy(mdb.SELECT, DAEMON, "", mdb.HASH, kit.MDB_HASH, arg)
+					switch m.Append(kit.MDB_STATUS) {
+					case START:
+						m.PushButton(RESTART, STOP)
+					default:
+						m.PushButton(mdb.REMOVE)
+					}
 
 				} else { // 启动进程
 					m.Option(CMD_TYPE, DAEMON)

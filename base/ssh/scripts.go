@@ -251,8 +251,8 @@ func (f *Frame) scan(m *ice.Message, h, line string) *Frame {
 func (f *Frame) close() {
 	if stdin, ok := f.stdin.(io.Closer); ok {
 		stdin.Close()
-		f.stdin = nil
 	}
+	f.stdin = nil
 }
 
 func (f *Frame) Begin(m *ice.Message, arg ...string) ice.Server {

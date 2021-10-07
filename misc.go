@@ -463,11 +463,6 @@ func (m *Message) AppendSimple(key ...string) (res []string) {
 	return
 }
 
-func (m *Message) SetResult() {
-	m.Set(MSG_RESULT)
-	return
-}
-
 func (m *Message) AppendTrans(cb func(value string, key string, index int) string) {
 	for _, k := range m.meta[MSG_APPEND] {
 		for i, v := range m.meta[k] {
@@ -482,6 +477,9 @@ func (m *Message) OptionUserWeb() *url.URL {
 
 func (m *Message) Config(key string) string {
 	return m.Conf(m.PrefixKey(), kit.Keym(key))
+}
+func (m *Message) ConfigSimple(key string) []string {
+	return []string{key, m.Conf(m.PrefixKey(), kit.Keym(key))}
 }
 
 func SelectAction(list map[string]*Action, fields ...string) map[string]*Action {

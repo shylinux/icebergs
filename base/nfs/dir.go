@@ -216,9 +216,10 @@ func init() {
 				if len(arg) == 0 {
 					arg = append(arg, "")
 				}
+				m.Debug("dir_root: %s", m.Option(DIR_ROOT))
 				_dir_show(m, kit.Select("./", m.Option(DIR_ROOT)), arg[0],
 					0, m.Options(DIR_DEEP), kit.Select(TYPE_BOTH, m.Option(DIR_TYPE)), kit.Regexp(m.Option(DIR_REG)),
-					kit.Split(kit.Select(kit.Select("time,size,path,action", m.Option(mdb.FIELDS)), strings.Join(arg[1:], ","))))
+					kit.Split(kit.Select(kit.Select("time,path,size,action", m.Option(mdb.FIELDS)), strings.Join(arg[1:], ","))))
 				m.SortTimeR(kit.MDB_TIME)
 			}},
 		},

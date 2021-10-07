@@ -33,7 +33,6 @@ func _title_parse(m *ice.Message, dir string, root map[string]interface{}, list 
 			continue
 		case 1:
 		default:
-			m.Debug("what %v %v", dir, ls)
 			ls[1] = path.Join(dir, ls[1])
 		}
 

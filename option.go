@@ -20,9 +20,14 @@ type Option struct {
 	Value interface{}
 }
 
-func OptionHash(str string) Option            { return Option{kit.MDB_HASH, str} }
-func OptionFields(str ...string) Option       { return Option{MSG_FIELDS, strings.Join(str, ",")} }
-func (m *Message) OptionFields(str ...string) { m.Option(MSG_FIELDS, strings.Join(str, ",")) }
+func OptionHash(str string) Option      { return Option{kit.MDB_HASH, str} }
+func OptionFields(str ...string) Option { return Option{MSG_FIELDS, strings.Join(str, ",")} }
+func (m *Message) OptionFields(str ...string) string {
+	if len(str) > 0 {
+		m.Option(MSG_FIELDS, strings.Join(str, ","))
+	}
+	return m.Option(MSG_FIELDS)
+}
 func (m *Message) OptionPage(arg ...string) {
 	m.Option("cache.offend", kit.Select("0", arg, 1))
 	m.Option("cache.limit", kit.Select("10", arg, 0))
@@ -179,9 +184,11 @@ func (m *Message) ProcessDisplay(arg ...interface{}) {
 	m.Process(PROCESS_DISPLAY)
 	m.Option("_display", arg...)
 }
-func (m *Message) ProcessInner() { m.Process(PROCESS_INNER) }
-func (m *Message) ProcessHold()  { m.Process(PROCESS_HOLD) }
-func (m *Message) ProcessBack()  { m.Process(PROCESS_BACK) }
+func (m *Message) ProcessInner()          { m.Process(PROCESS_INNER) }
+func (m *Message) ProcessAgain()          { m.Process(PROCESS_AGAIN) }
+func (m *Message) ProcessHold()           { m.Process(PROCESS_HOLD) }
+func (m *Message) ProcessBack()           { m.Process(PROCESS_BACK) }
+func (m *Message) ProcessOpen(url string) { m.Process(PROCESS_OPEN, url) }
 
 func (m *Message) ShowPlugin(pod, ctx, cmd string, arg ...string) {
 	m.Cmdy("web.space", pod, "context", ctx, "command", cmd)

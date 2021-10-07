@@ -84,6 +84,7 @@ func _cat_show(m *ice.Message, name string) {
 
 const (
 	PATH = "path"
+	FILE = "file"
 	SIZE = "size"
 )
 const CAT = "cat"

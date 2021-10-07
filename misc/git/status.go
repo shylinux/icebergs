@@ -85,7 +85,7 @@ func _status_list(m *ice.Message) (files, adds, dels int, last time.Time) {
 					list = append(list, COMMIT)
 				}
 			}
-			m.PushButton(list...)
+			m.PushButton(list)
 		}
 
 		files, adds, dels = _status_stat(m, files, adds, dels)

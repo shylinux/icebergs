@@ -58,10 +58,16 @@ func (m *Message) PushAnchor(arg ...interface{}) { // [name] link
 		m.Push(kit.MDB_LINK, Render(m, RENDER_ANCHOR, arg...))
 	}
 }
-func (m *Message) PushButton(arg ...string) {
-	if !m.IsCliUA() {
-		m.Push(kit.MDB_ACTION, Render(m, RENDER_BUTTON, strings.ToLower(kit.Join(arg))))
+func (m *Message) PushButton(list ...interface{}) {
+	if m.IsCliUA() {
+		return
 	}
+	for i, item := range list {
+		if t := reflect.TypeOf(item); t.Kind() == reflect.Func {
+			list[i] = kit.FuncName(item)
+		}
+	}
+	m.Push(kit.MDB_ACTION, Render(m, RENDER_BUTTON, strings.ToLower(kit.Join(kit.Simple(list)))))
 }
 func (m *Message) PushScript(arg ...string) *Message { // [type] text...
 	return m.Push(kit.MDB_SCRIPT, Render(m, RENDER_SCRIPT, arg))
@@ -76,14 +82,8 @@ func (m *Message) PushVideos(key, src string, arg ...string) { // key src [size]
 	m.Push(key, Render(m, RENDER_VIDEOS, src, arg))
 }
 func (m *Message) PushAction(list ...interface{}) {
-	for i, item := range list {
-		if t := reflect.TypeOf(item); t.Kind() == reflect.Func {
-			list[i] = kit.FuncName(item)
-		}
-	}
-
 	m.Table(func(index int, value map[string]string, head []string) {
-		m.PushButton(kit.Simple(list...)...)
+		m.PushButton(list...)
 	})
 }
 

@@ -88,8 +88,10 @@ func _spide_show(m *ice.Message, arg ...string) {
 			return
 		}
 
-		for k, v := range res.Header {
-			m.Debug("%v: %v", k, v)
+		if m.Config("logheaders") == ice.TRUE {
+			for k, v := range res.Header {
+				m.Debug("%v: %v", k, v)
+			}
 		}
 
 		// 检查结果
@@ -125,6 +127,9 @@ func _spide_body(m *ice.Message, method string, arg ...string) (io.Reader, map[s
 	head := map[string]string{}
 	body, ok := m.Optionv(SPIDE_BODY).(io.Reader)
 	if !ok && len(arg) > 0 && method != SPIDE_GET {
+		if len(arg) == 1 {
+			arg = []string{SPIDE_DATA, arg[0]}
+		}
 		switch arg[0] {
 		case SPIDE_FORM:
 			data := []string{}
@@ -142,6 +147,7 @@ func _spide_body(m *ice.Message, method string, arg ...string) (io.Reader, map[s
 				arg = append(arg, "{}")
 			}
 			body, arg = bytes.NewBufferString(arg[1]), arg[2:]
+			head[ContentType] = ContentJSON
 
 		case SPIDE_FILE:
 			if f, e := os.Open(arg[1]); m.Assert(e) {
@@ -332,6 +338,7 @@ func init() {
 		Configs: map[string]*ice.Config{
 			SPIDE: {Name: SPIDE, Help: "蜘蛛侠", Value: kit.Data(
 				kit.MDB_SHORT, CLIENT_NAME, kit.MDB_FIELD, "time,client.name,client.url",
+				"logheaders", "false",
 			)},
 		},
 		Commands: map[string]*ice.Command{

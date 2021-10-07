@@ -152,6 +152,7 @@ const ( // PROCESS
 	PROCESS_DISPLAY  = "_display"
 	PROCESS_FIELD    = "_field"
 	PROCESS_INNER    = "_inner"
+	PROCESS_AGAIN    = "_again"
 
 	PROCESS_HOLD = "_hold"
 	PROCESS_BACK = "_back"

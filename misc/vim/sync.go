@@ -36,10 +36,10 @@ func init() {
 			}},
 			SYNC: {Name: "sync id auto page", Help: "同步流", Action: map[string]*ice.Action{
 				mdb.PREV: {Name: "prev", Help: "上一页", Hand: func(m *ice.Message, arg ...string) {
-					mdb.PrevPage(m, _sync_count(m), kit.Slice(arg, _sync_index)...)
+					mdb.PrevPage(m, arg[0], arg[1:]...)
 				}},
 				mdb.NEXT: {Name: "next", Help: "下一页", Hand: func(m *ice.Message, arg ...string) {
-					mdb.NextPage(m, _sync_count(m), kit.Slice(arg, _sync_index)...)
+					mdb.NextPage(m, arg[0], arg[1:]...)
 				}},
 			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 				m.OptionPage(kit.Slice(arg, _sync_index)...)

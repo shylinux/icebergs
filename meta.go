@@ -24,6 +24,13 @@ func (m *Message) Add(key string, arg ...string) *Message {
 	}
 	return m
 }
+func (m *Message) SetResult(arg ...interface{}) *Message {
+	m.Set(MSG_RESULT)
+	if len(arg) > 0 {
+		m.Echo(kit.Format(arg[0]), arg[1:]...)
+	}
+	return m
+}
 func (m *Message) Set(key string, arg ...string) *Message {
 	switch key {
 	case MSG_DETAIL, MSG_RESULT:
@@ -41,6 +48,20 @@ func (m *Message) Set(key string, arg ...string) *Message {
 			return m
 		}
 	default:
+		if len(m.meta[MSG_APPEND]) == 2 && m.meta[MSG_APPEND][0] == kit.MDB_KEY && m.meta[MSG_APPEND][1] == kit.MDB_VALUE {
+			for i := 0; i < len(m.meta[kit.MDB_KEY]); i++ {
+				if m.meta[kit.MDB_KEY][i] == key {
+					for ; i < len(m.meta[kit.MDB_KEY])-1; i++ {
+						m.meta[kit.MDB_KEY][i] = m.meta[kit.MDB_KEY][i+1]
+						m.meta[kit.MDB_VALUE][i] = m.meta[kit.MDB_VALUE][i+1]
+					}
+					m.meta[kit.MDB_KEY] = kit.Slice(m.meta[kit.MDB_KEY], 0, -1)
+					m.meta[kit.MDB_VALUE] = kit.Slice(m.meta[kit.MDB_VALUE], 0, -1)
+					break
+				}
+			}
+			break
+		}
 		delete(m.meta, key)
 		for _, k := range arg {
 			delete(m.meta, k)

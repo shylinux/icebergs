@@ -229,6 +229,10 @@ func (m *Message) cmd(arg ...interface{}) *Message {
 		case func(int, map[string]string, []string):
 			defer func() { m.Table(val) }()
 
+		case map[string]interface{}:
+			for k, v := range val {
+				opts[k] = v
+			}
 		case map[string]string:
 			for k, v := range val {
 				opts[k] = v

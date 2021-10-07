@@ -136,7 +136,8 @@ func init() {
 				m.Cmdy(cli.SYSTEM, GIT, PUSH, ice.Option{cli.CMD_DIR, _repos_path(m.Option(kit.MDB_NAME))})
 				m.Cmdy(cli.SYSTEM, GIT, PUSH, "--tags")
 			}},
-			TAG: {Name: "tags version", Help: "标签", Hand: func(m *ice.Message, arg ...string) {
+			TAG: {Name: "tags version@key", Help: "标签", Hand: func(m *ice.Message, arg ...string) {
+				m.Option(cli.CMD_DIR, _repos_path(m.Option(kit.MDB_NAME)))
 				m.Cmdy(cli.SYSTEM, GIT, TAG, m.Option("version"))
 				m.Cmdy(cli.SYSTEM, GIT, PUSH, "--tags")
 			}},
@@ -159,6 +160,21 @@ func init() {
 				switch arg[0] {
 				case kit.MDB_NAME:
 					m.Cmdy(REPOS, ice.OptionFields("name,time"))
+
+				case "version":
+					ls := kit.Split(strings.TrimPrefix(kit.Split(m.Option("tags"), "-")[0], "v"), ".")
+					if v := kit.Int(ls[2]); v < 9 {
+						m.Push("version", kit.Format("v%v.%v.%v", ls[0], ls[1], v+1))
+						return
+					}
+					if v := kit.Int(ls[1]); v < 9 {
+						m.Push("version", kit.Format("v%v.%v.0", ls[0], v+1))
+						return
+					}
+					if v := kit.Int(ls[0]); v < 9 {
+						m.Push("version", kit.Format("v%v.0.0", v+1))
+						return
+					}
 
 				case COMMENT:
 					ls := []string{}

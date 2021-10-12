@@ -497,3 +497,7 @@ func SelectAction(list map[string]*Action, fields ...string) map[string]*Action 
 	}
 	return res
 }
+
+func (m *Message) SetAppend(key ...string) {
+	m.Set(MSG_APPEND, key...)
+}

@@ -158,19 +158,14 @@ var Info = struct {
 }
 
 func Dump(w io.Writer, name string, cb func(string)) bool {
-	if b, ok := Info.BinPack[name]; ok {
-		if cb != nil {
-			cb(name)
+	for _, key := range []string{name, strings.TrimPrefix(name, USR_VOLCANOS)} {
+		if b, ok := Info.BinPack[key]; ok {
+			if cb != nil {
+				cb(name)
+			}
+			w.Write(b)
+			return true
 		}
-		w.Write(b)
-		return true
-	}
-	if b, ok := Info.BinPack[strings.TrimPrefix(name, USR_VOLCANOS)]; ok {
-		if cb != nil {
-			cb(name)
-		}
-		w.Write(b)
-		return true
 	}
 	return false
 }

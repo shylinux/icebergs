@@ -80,7 +80,7 @@ const BINPACK = "binpack"
 
 func init() {
 	Index.Merge(&ice.Context{Commands: map[string]*ice.Command{
-		BINPACK: {Name: "binpack path auto create", Help: "打包", Action: map[string]*ice.Action{
+		BINPACK: {Name: "binpack path auto create remove export", Help: "打包", Action: map[string]*ice.Action{
 			mdb.CREATE: {Name: "create", Help: "创建", Hand: func(m *ice.Message, arg ...string) {
 				if pack, p, e := kit.Create(ice.SRC_BINPACK); m.Assert(e) {
 					defer pack.Close()
@@ -105,6 +105,18 @@ func init() {
 					_pack_write(pack, `    }`)
 					_pack_write(pack, `}`)
 					m.Echo(p)
+				}
+			}},
+			mdb.REMOVE: {Name: "remove", Help: "删除", Hand: func(m *ice.Message, arg ...string) {
+				ice.Info.BinPack = map[string][]byte{}
+			}},
+			mdb.EXPORT: {Name: "export", Help: "导出", Hand: func(m *ice.Message, arg ...string) {
+				for key, value := range ice.Info.BinPack {
+					if strings.HasPrefix(key, "/") {
+						key = ice.USR_VOLCANOS + key
+					}
+					m.Warn(os.MkdirAll(path.Dir(key), ice.MOD_DIR) != nil, "key: ", key)
+					m.Warn(ioutil.WriteFile(key, value, ice.MOD_FILE) != nil, "key: ", key)
 				}
 			}},
 		}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {

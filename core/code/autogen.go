@@ -9,6 +9,7 @@ import (
 	"shylinux.com/x/icebergs/base/cli"
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/nfs"
+	"shylinux.com/x/icebergs/base/ssh"
 	"shylinux.com/x/icebergs/base/web"
 	kit "shylinux.com/x/toolkits"
 )
@@ -52,11 +53,6 @@ func init() { ice.Cmd("{{.Option "key"}}", {{.Option "name"}}{}) }
 	m.Cmd(nfs.SAVE, dir, string(buf))
 }
 func _autogen_import(m *ice.Message, main string, ctx string, mod string) (list []string) {
-	m.Cmd(nfs.DEFS, ice.GO_MOD, kit.Format(`module %s
-
-go 1.11
-`, path.Base(kit.Path(""))))
-
 	m.Cmd(nfs.DEFS, main, `package main
 
 import "shylinux.com/x/ice"
@@ -82,6 +78,11 @@ func main() { print(ice.Run()) }
 	return
 }
 func _autogen_mod(m *ice.Message, file string) (mod string) {
+	m.Cmd(nfs.DEFS, ice.GO_MOD, kit.Format(`module %s
+
+go 1.11
+`, path.Base(kit.Path(""))))
+
 	m.Cmd(nfs.CAT, file, func(line string, index int) {
 		if strings.HasPrefix(line, "module") {
 			mod = strings.Split(line, " ")[1]
@@ -178,7 +179,7 @@ func init() {
 				_autogen_version(m)
 				m.Cmd(BINPACK, mdb.CREATE)
 			}},
-			"script": {Name: "script", Help: "脚本：生成 etc/miss.sh", Hand: func(m *ice.Message, arg ...string) {
+			ssh.SCRIPT: {Name: "script", Help: "脚本：生成 etc/miss.sh", Hand: func(m *ice.Message, arg ...string) {
 				_autogen_miss(m)
 			}},
 		}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {

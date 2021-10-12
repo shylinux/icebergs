@@ -149,11 +149,7 @@ func init() {
 			SH, `#!/bin/bash
 echo "hello world"
 `,
-			JS, `Volcanos("onengine", {_init: function(can, sub) {
-    can.misc.Log("hello volcanos world")
-}, river: {
-
-}})
+			JS, `Volcanos("onengine", {})
 `,
 		)},
 	}})

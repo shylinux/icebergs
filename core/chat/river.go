@@ -180,7 +180,7 @@ func init() {
 					m.Cmd(code.PUBLISH, mdb.CREATE, kit.MDB_FILE, ice.BIN_ICE_SH)
 					m.Cmd(code.PUBLISH, mdb.CREATE, kit.MDB_FILE, ice.BIN_ICE_BIN)
 				}},
-				cli.START: {Name: "start name repos template", Help: "启动", Hand: func(m *ice.Message, arg ...string) {
+				cli.START: {Name: "start name=hi repos template", Help: "启动", Hand: func(m *ice.Message, arg ...string) {
 					m.Cmdy(m.Space(m.Option(cli.POD)), web.DREAM, cli.START, arg)
 				}},
 

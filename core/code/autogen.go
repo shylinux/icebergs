@@ -100,7 +100,7 @@ func _autogen_version(m *ice.Message) {
 		m.Cmdy(cli.SYSTEM, "go", "mod", "init", path.Base(kit.Path("")))
 	}
 
-	file := ice.SRC_VERSION
+	file := ice.SRC_VERSION_GO
 	m.Cmd(nfs.SAVE, file, kit.Format(`package main
 
 import (
@@ -127,14 +127,14 @@ func init() {
 	defer m.Cmdy(nfs.CAT, file)
 
 	m.Cmdy(nfs.DIR, file, "time,size,line,path")
-	m.Cmdy(nfs.DIR, ice.SRC_BINPACK, "time,size,line,path")
+	m.Cmdy(nfs.DIR, ice.SRC_BINPACK_GO, "time,size,line,path")
 	m.Cmdy(nfs.DIR, ice.SRC_MAIN_GO, "time,size,line,path")
 }
 func _autogen_miss(m *ice.Message) {
-	m.Cmd(nfs.DEFS, ice.ETC_MISS, m.Conf(web.DREAM, kit.Keym("miss")))
-	defer m.Cmdy(nfs.CAT, ice.ETC_MISS)
+	m.Cmd(nfs.DEFS, ice.ETC_MISS_SH, m.Conf(web.DREAM, kit.Keym("miss")))
+	defer m.Cmdy(nfs.CAT, ice.ETC_MISS_SH)
 
-	m.Cmdy(nfs.DIR, ice.ETC_MISS, "time,size,line,path")
+	m.Cmdy(nfs.DIR, ice.ETC_MISS_SH, "time,size,line,path")
 	m.Cmdy(nfs.DIR, ice.GO_MOD, "time,size,line,path")
 	m.Cmdy(nfs.DIR, ice.GO_SUM, "time,size,line,path")
 }
@@ -144,7 +144,7 @@ const AUTOGEN = "autogen"
 func init() {
 	Index.Merge(&ice.Context{Commands: map[string]*ice.Command{
 		AUTOGEN: {Name: "autogen path auto create binpack script", Help: "生成", Action: map[string]*ice.Action{
-			mdb.CREATE: {Name: "create main=src/main.go@key key= zone= type=Zone,Hash,Data name=hi list= help=", Help: "模块", Hand: func(m *ice.Message, arg ...string) {
+			mdb.CREATE: {Name: "create main=src/main.go@key key zone type=Zone,Hash,Data name=hi list help", Help: "模块", Hand: func(m *ice.Message, arg ...string) {
 				_defs(m, "zone", m.Option("name"), "help", m.Option("name"))
 				_defs(m, "key", kit.Keys("web.code", m.Option("zone"), m.Option("name")))
 				switch m.Option("type") {

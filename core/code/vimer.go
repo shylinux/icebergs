@@ -33,7 +33,7 @@ func init() {
 			nfs.SAVE: {Name: "save type file path", Help: "保存", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmdy(nfs.SAVE, path.Join(m.Option(kit.MDB_PATH), m.Option(kit.MDB_FILE)))
 			}},
-			AUTOGEN: {Name: "create main=src/main.go@key key= zone= type=Zone,Hash,Data name=hi list= help=", Help: "模块", Hand: func(m *ice.Message, arg ...string) {
+			AUTOGEN: {Name: "create main=src/main.go@key key zone type=Zone,Hash,Data name=hi list help", Help: "模块", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmdy(AUTOGEN, mdb.CREATE, arg)
 			}},
 			COMPILE: {Name: "compile", Help: "编译", Hand: func(m *ice.Message, arg ...string) {

@@ -185,7 +185,7 @@ func (f *Frame) parse(m *ice.Message, line string) string {
 		}
 
 		if async {
-			msg.Gos(msg, func(msg *ice.Message) { msg.Cmd(ls[0], ls[1:]) })
+			msg.Go(func() { msg.Cmd(ls[0], ls[1:]) })
 			continue
 		} else {
 			msg.Cmdy(ls[0], ls[1:])

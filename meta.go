@@ -9,21 +9,6 @@ import (
 	kit "shylinux.com/x/toolkits"
 )
 
-func (m *Message) Add(key string, arg ...string) *Message {
-	switch key {
-	case MSG_DETAIL, MSG_RESULT:
-		m.meta[key] = append(m.meta[key], arg...)
-
-	case MSG_OPTION, MSG_APPEND:
-		if len(arg) > 0 {
-			if kit.IndexOf(m.meta[key], arg[0]) == -1 {
-				m.meta[key] = append(m.meta[key], arg[0])
-			}
-			m.meta[arg[0]] = append(m.meta[arg[0]], arg[1:]...)
-		}
-	}
-	return m
-}
 func (m *Message) SetResult(arg ...interface{}) *Message {
 	m.Set(MSG_RESULT)
 	if len(arg) > 0 {
@@ -69,6 +54,25 @@ func (m *Message) Set(key string, arg ...string) *Message {
 	}
 	return m.Add(key, arg...)
 }
+func (m *Message) Add(key string, arg ...string) *Message {
+	switch key {
+	case MSG_DETAIL, MSG_RESULT:
+		m.meta[key] = append(m.meta[key], arg...)
+
+	case MSG_OPTION, MSG_APPEND:
+		if len(arg) > 0 {
+			if kit.IndexOf(m.meta[key], arg[0]) == -1 {
+				m.meta[key] = append(m.meta[key], arg[0])
+			}
+			m.meta[arg[0]] = append(m.meta[arg[0]], arg[1:]...)
+		}
+	}
+	return m
+}
+func (m *Message) Cut(fields ...string) *Message {
+	m.meta[MSG_APPEND] = kit.Split(kit.Join(fields))
+	return m
+}
 func (m *Message) Push(key string, value interface{}, arg ...interface{}) *Message {
 	switch value := value.(type) {
 	case map[string]string:
@@ -87,14 +91,14 @@ func (m *Message) Push(key string, value interface{}, arg ...interface{}) *Messa
 
 	case map[string]interface{}:
 		// 键值排序
-		list := []string{}
+		head := kit.Simple()
 		if len(arg) > 0 {
-			list = kit.Simple(arg[0])
+			head = kit.Simple(arg[0])
 		} else {
 			for k := range kit.KeyValue(map[string]interface{}{}, "", value) {
-				list = append(list, k)
+				head = append(head, k)
 			}
-			sort.Strings(list)
+			sort.Strings(head)
 		}
 
 		var val map[string]interface{}
@@ -102,7 +106,7 @@ func (m *Message) Push(key string, value interface{}, arg ...interface{}) *Messa
 			val, _ = arg[1].(map[string]interface{})
 		}
 
-		for _, k := range list {
+		for _, k := range head {
 			// 查找数据
 			var v interface{}
 			switch k {
@@ -472,7 +476,3 @@ func (m *Message) SortStr(key string)   { m.Sort(key, "str") }
 func (m *Message) SortStrR(key string)  { m.Sort(key, "str_r") }
 func (m *Message) SortTime(key string)  { m.Sort(key, "time") }
 func (m *Message) SortTimeR(key string) { m.Sort(key, "time_r") }
-
-func (m *Message) FormatMeta() string { return m.Format("meta") }
-func (m *Message) FormatSize() string { return m.Format("size") }
-func (m *Message) FormatCost() string { return m.Format("cost") }

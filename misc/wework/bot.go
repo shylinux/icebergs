@@ -1,6 +1,14 @@
 package wework
 
 import (
+	"crypto/aes"
+	"crypto/cipher"
+	"crypto/sha1"
+	"encoding/base64"
+	"encoding/hex"
+	"sort"
+	"strings"
+
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/web"
@@ -9,30 +17,44 @@ import (
 
 const BOT = "bot"
 
-type Bot struct {
-	short string `data:"name"`
-	field string `data:"time,name,token,ekey,hook"`
+func init() {
+	Index.Merge(&ice.Context{Configs: map[string]*ice.Config{
+		BOT: {Name: "bot", Help: "机器人", Value: kit.Data(
+			kit.MDB_SHORT, "name", kit.MDB_FIELD, "time,name,token,ekey,hook",
+		)},
+	}, Commands: map[string]*ice.Command{
+		ice.CTX_INIT:  {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) { m.Load() }},
+		ice.CTX_EXIT:  {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) { m.Save() }},
+		web.WEB_LOGIN: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {}},
+		"/bot/": {Name: "/bot", Help: "机器人", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			msg := m.Cmd(BOT, arg[0])
+			list := []string{msg.Append("token"), m.Option("nonce"), m.Option("timestamp"), m.Option("echostr")}
+			sort.Strings(list)
+			res := sha1.Sum([]byte(strings.Join(list, "")))
+			m.Debug(hex.EncodeToString(res[:]))
 
-	create string `name:"list name token ekey hook" help:"创建"`
-	list   string `name:"list name chat text:textarea auto create" help:"机器人"`
-}
+			aeskey, err := base64.StdEncoding.DecodeString(msg.Append("ekey"))
+			m.Assert(err)
+			en_msg, err := base64.StdEncoding.DecodeString(m.Option("echostr"))
+			m.Assert(err)
+			block, err := aes.NewCipher(aeskey)
+			m.Assert(err)
+			mode := cipher.NewCBCDecrypter(block, aeskey[:aes.BlockSize])
+			mode.CryptBlocks(en_msg, en_msg)
 
-func (b Bot) Create(m *ice.Message, arg ...string) {
-	m.Cmdy(mdb.INSERT, m.PrefixKey(), "", mdb.HASH, arg)
+		}},
+		BOT: {Name: "bot name chat text:textarea auto create", Help: "机器人", Action: ice.MergeAction(map[string]*ice.Action{
+			mdb.CREATE: {Name: "create name token ekey hook", Help: "创建"},
+		}, mdb.HashAction()), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			if mdb.HashSelect(m, arg...); len(arg) > 2 {
+				m.SetAppend()
+				m.Cmd(web.SPIDE, mdb.CREATE, arg[0], m.Append("hook"))
+				m.Cmdy(web.SPIDE, arg[0], "", kit.Format(kit.Dict(
+					"chatid", arg[1], "msgtype", "text", "text.content", arg[2],
+				)))
+			} else {
+				m.PushAction(mdb.REMOVE)
+			}
+		}},
+	}})
 }
-func (b Bot) List(m *ice.Message, arg ...string) {
-	m.Fields(len(arg), m.Config(kit.MDB_FIELD))
-	m.Cmdy(mdb.SELECT, m.PrefixKey(), "", mdb.HASH, m.Config(kit.MDB_SHORT), arg)
-	if len(arg) > 2 {
-		m.Cmd(web.SPIDE, mdb.CREATE, arg[0], m.Append("hook"))
-		m.SetAppend()
-		m.Cmdy(web.SPIDE, arg[0], "", kit.Format(kit.Dict(
-			"chatid", arg[1],
-			"msgtype", "text", "text", kit.Dict(
-				"content", arg[2],
-			),
-		)))
-	}
-}
-
-func init() { ice.Cmd("web.chat.wework.bot", Bot{}) }

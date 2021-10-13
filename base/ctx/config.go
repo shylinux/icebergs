@@ -116,6 +116,13 @@ func init() {
 					m.Conf(arg[0], "", "")
 					m.Cmd("exit", 1)
 				}},
+				"list": {Name: "list", Help: "列表", Hand: func(m *ice.Message, arg ...string) {
+					list := []interface{}{}
+					for _, v := range arg[2:] {
+						list = append(list, v)
+					}
+					m.Confv(arg[0], arg[1], kit.List(list...))
+				}},
 			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 				if len(arg) == 0 {
 					_config_list(m)

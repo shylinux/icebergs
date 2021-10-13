@@ -100,8 +100,8 @@ var Index = &ice.Context{Name: WEB, Help: "网络模块", Commands: map[string]*
 		m.Conf(SPACE, kit.MDB_HASH, "")
 		m.Cmd(mdb.SEARCH, mdb.CREATE, SPACE, m.Prefix(SPACE))
 
+		m.Cmd(SPIDE, mdb.CREATE, SPIDE_WEB, kit.Select("http://:9020", m.Conf(cli.RUNTIME, "conf.ctx_web")))
 		m.Cmd(SPIDE, mdb.CREATE, SPIDE_DEV, kit.Select("http://:9020", m.Conf(cli.RUNTIME, "conf.ctx_dev")))
-		m.Cmd(SPIDE, mdb.CREATE, SPIDE_SELF, kit.Select("http://:9020", m.Conf(cli.RUNTIME, "conf.ctx_self")))
 		m.Cmd(SPIDE, mdb.CREATE, SPIDE_SHY, kit.Select("https://shylinux.com:443", m.Conf(cli.RUNTIME, "conf.ctx_shy")))
 	}},
 	ice.CTX_EXIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {

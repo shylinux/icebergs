@@ -1,8 +1,8 @@
 package ice
 
 import (
+	"net/url"
 	"path"
-	"reflect"
 	"strings"
 
 	kit "shylinux.com/x/toolkits"
@@ -28,9 +28,9 @@ func Render(m *Message, cmd string, args ...interface{}) string {
 			break
 		}
 		list := []string{}
-		for _, k := range kit.Split(kit.Join(arg)) {
+		for _, k := range kit.Split(strings.ToLower(kit.Join(arg))) {
 			list = append(list, kit.Format(`<input type="button" name="%s" value="%s">`,
-				k, kit.Select(k, kit.Value(m._cmd.Meta, kit.Keys("_trans", k)), m.Option("language") != "en")))
+				k, kit.Select(k, kit.Value(m._cmd.Meta, kit.Keys("_trans", k)), m.Option(MSG_LANGUAGE) != "en")))
 		}
 		return kit.Join(list, " ")
 
@@ -45,8 +45,12 @@ func Render(m *Message, cmd string, args ...interface{}) string {
 	}
 	return ""
 }
-func (m *Message) PushRender(key, view, name string, arg ...string) *Message {
-	return m.Push(key, Render(m, view, name, arg))
+
+func (m *Message) IsCliUA() bool {
+	if m.Option(MSG_USERUA) == "" || !strings.HasPrefix(m.Option(MSG_USERUA), "Mozilla/5.0") {
+		return true
+	}
+	return false
 }
 func (m *Message) PushDownload(key string, arg ...interface{}) { // [name] file
 	if !m.IsCliUA() {
@@ -58,59 +62,107 @@ func (m *Message) PushAnchor(arg ...interface{}) { // [name] link
 		m.Push(kit.MDB_LINK, Render(m, RENDER_ANCHOR, arg...))
 	}
 }
-func (m *Message) PushButton(list ...interface{}) {
-	if m.IsCliUA() {
-		return
+func (m *Message) PushButton(arg ...interface{}) { // name...
+	if !m.IsCliUA() {
+		m.Push(kit.MDB_ACTION, Render(m, RENDER_BUTTON, arg...))
 	}
-	for i, item := range list {
-		if t := reflect.TypeOf(item); t.Kind() == reflect.Func {
-			list[i] = kit.FuncName(item)
-		}
+}
+func (m *Message) PushScript(arg ...string) { // [type] text...
+	if !m.IsCliUA() {
+		m.Push(kit.MDB_SCRIPT, Render(m, RENDER_SCRIPT, arg))
 	}
-	m.Push(kit.MDB_ACTION, Render(m, RENDER_BUTTON, strings.ToLower(kit.Join(kit.Simple(list)))))
 }
-func (m *Message) PushScript(arg ...string) *Message { // [type] text...
-	return m.Push(kit.MDB_SCRIPT, Render(m, RENDER_SCRIPT, arg))
-}
-func (m *Message) PushQRCode(key string, text string, arg ...string) { // key text [size]
-	m.Push(key, Render(m, RENDER_QRCODE, text, arg))
+func (m *Message) PushQRCode(key string, src string, arg ...string) { // key src [size]
+	if !m.IsCliUA() {
+		m.Push(key, Render(m, RENDER_QRCODE, src, arg))
+	}
 }
 func (m *Message) PushImages(key, src string, arg ...string) { // key src [size]
-	m.Push(key, Render(m, RENDER_IMAGES, src, arg))
+	if !m.IsCliUA() {
+		m.Push(key, Render(m, RENDER_IMAGES, src, arg))
+	}
 }
 func (m *Message) PushVideos(key, src string, arg ...string) { // key src [size]
-	m.Push(key, Render(m, RENDER_VIDEOS, src, arg))
+	if !m.IsCliUA() {
+		m.Push(key, Render(m, RENDER_VIDEOS, src, arg))
+	}
 }
+
 func (m *Message) PushAction(list ...interface{}) {
 	m.Table(func(index int, value map[string]string, head []string) {
 		m.PushButton(list...)
 	})
 }
+func (m *Message) PushPodCmd(cmd string, arg ...string) {
+	if strings.Contains(m.OptionFields(), "pod") {
+		m.Table(func(index int, value map[string]string, head []string) {
+			m.Push("pod", m.Option(MSG_USERPOD))
+		})
+	}
 
-func (m *Message) EchoDownload(arg ...interface{}) { // [name] file
-	m.Echo(Render(m, RENDER_DOWNLOAD, arg...))
+	m.Cmd("web.space").Table(func(index int, value map[string]string, head []string) {
+		switch value[kit.MDB_TYPE] {
+		case "worker", "server":
+			if value[kit.MDB_NAME] == Info.HostName {
+				break
+			}
+			m.Cmd("web.space", value[kit.MDB_NAME], m.Prefix(cmd), arg).Table(func(index int, val map[string]string, head []string) {
+				val["pod"] = kit.Keys(value[kit.MDB_NAME], val["pod"])
+				m.Push("", val, head)
+			})
+		}
+	})
+}
+func (m *Message) PushSearch(args ...interface{}) {
+	data := kit.Dict(args...)
+	for _, k := range kit.Split(m.OptionFields()) {
+		switch k {
+		case "pod":
+			m.Push(k, "")
+			// m.Push(k, kit.Select(m.Option(MSG_USERPOD), data[kit.SSH_POD]))
+		case "ctx":
+			m.Push(k, m.Prefix())
+		case "cmd":
+			m.Push(k, kit.Format(data["cmd"]))
+		case kit.MDB_TIME:
+			m.Push(k, kit.Select(m.Time(), data[k]))
+		default:
+			m.Push(k, kit.Format(kit.Select("", data[k])))
+		}
+	}
+}
+func (m *Message) PushSearchWeb(cmd string, name string) {
+	msg := m.Spawn()
+	msg.Option(MSG_FIELDS, "type,name,text")
+	msg.Cmd("mdb.select", m.Prefix(cmd), "", kit.MDB_HASH).Table(func(index int, value map[string]string, head []string) {
+		text := kit.MergeURL(value[kit.MDB_TEXT], value[kit.MDB_NAME], name)
+		if value[kit.MDB_NAME] == "" {
+			text = kit.MergeURL(value[kit.MDB_TEXT] + url.QueryEscape(name))
+		}
+		m.PushSearch("cmd", cmd, kit.MDB_TYPE, kit.Select("", value[kit.MDB_TYPE]), kit.MDB_NAME, name, kit.MDB_TEXT, text)
+	})
+}
+
+func (m *Message) EchoDownload(arg ...interface{}) *Message { // [name] file
+	return m.Echo(Render(m, RENDER_DOWNLOAD, arg...))
 }
 func (m *Message) EchoAnchor(arg ...interface{}) *Message { // [name] link
 	return m.Echo(Render(m, RENDER_ANCHOR, arg...))
 }
-func (m *Message) EchoButton(arg ...string) *Message {
-	return m.Echo(Render(m, RENDER_BUTTON, kit.Join(arg)))
+func (m *Message) EchoButton(arg ...interface{}) *Message { // name...
+	return m.Echo(Render(m, RENDER_BUTTON, arg...))
 }
-func (m *Message) EchoScript(arg ...string) *Message {
+func (m *Message) EchoScript(arg ...string) *Message { // [type] text...
 	return m.Echo(Render(m, RENDER_SCRIPT, arg))
 }
-func (m *Message) EchoQRCode(text string, arg ...string) *Message { // text [size]
-	return m.Echo(Render(m, RENDER_QRCODE, text, arg))
+func (m *Message) EchoQRCode(src string, arg ...string) *Message { // src [size]
+	return m.Echo(Render(m, RENDER_QRCODE, src, arg))
 }
-func (m *Message) EchoImages(src string, arg ...string) *Message {
+func (m *Message) EchoImages(src string, arg ...string) *Message { // src [size]
 	return m.Echo(Render(m, RENDER_IMAGES, src, arg))
 }
-
-func (m *Message) IsCliUA() bool {
-	if m.Option(MSG_USERUA) == "" || !strings.HasPrefix(m.Option(MSG_USERUA), "Mozilla/5.0") {
-		return true
-	}
-	return false
+func (m *Message) EchoVideos(src string, arg ...string) *Message { // src [size]
+	return m.Echo(Render(m, RENDER_VIDEOS, src, arg))
 }
 
 func (m *Message) Render(cmd string, args ...interface{}) *Message {
@@ -134,11 +186,11 @@ func (m *Message) RenderResult(args ...interface{}) *Message {
 func (m *Message) RenderTemplate(args ...interface{}) *Message {
 	return m.Render(RENDER_TEMPLATE, args...)
 }
-func (m *Message) RenderDownload(args ...interface{}) *Message {
-	return m.Render(RENDER_DOWNLOAD, args...)
-}
 func (m *Message) RenderRedirect(args ...interface{}) *Message {
 	return m.Render(RENDER_REDIRECT, args...)
+}
+func (m *Message) RenderDownload(args ...interface{}) *Message {
+	return m.Render(RENDER_DOWNLOAD, args...)
 }
 func (m *Message) RenderIndex(serve, repos string, file ...string) *Message {
 	return m.RenderDownload(path.Join(m.Conf(serve, kit.Keym(repos, kit.SSH_PATH)), kit.Select(m.Conf(serve, kit.Keym(repos, kit.SSH_INDEX)), path.Join(file...))))

@@ -3,22 +3,14 @@ package ice
 import (
 	"bytes"
 	"encoding/csv"
-	"encoding/json"
-	"fmt"
 	"net/url"
 	"path"
 	"reflect"
-	"runtime"
 	"strings"
-	"time"
 
 	kit "shylinux.com/x/toolkits"
 )
 
-func (m *Message) Cut(fields ...string) *Message {
-	m.meta[MSG_APPEND] = strings.Split(strings.Join(fields, ","), ",")
-	return m
-}
 func (m *Message) CSV(text string, head ...string) *Message {
 	bio := bytes.NewBufferString(text)
 	r := csv.NewReader(bio)
@@ -102,111 +94,17 @@ func (m *Message) Split(str string, field string, space string, enter string) *M
 	}
 	return m
 }
-func (m *Message) FormatStack() string {
-	// 调用栈
-	pc := make([]uintptr, 100)
-	pc = pc[:runtime.Callers(5, pc)]
-	frames := runtime.CallersFrames(pc)
 
-	meta := []string{}
-	for {
-		frame, more := frames.Next()
-		file := strings.Split(frame.File, "/")
-		name := strings.Split(frame.Function, "/")
-		meta = append(meta, fmt.Sprintf("\n%s:%d\t%s", file[len(file)-1], frame.Line, name[len(name)-1]))
-		if !more {
-			break
-		}
-	}
-	return strings.Join(meta, "")
+func (m *Message) ShowPlugin(pod, ctx, cmd string, arg ...string) {
+	m.Cmdy("web.space", pod, "context", ctx, "command", cmd)
+	m.Option(MSG_PROCESS, PROCESS_FIELD)
+	m.Option(FIELD_PREFIX, arg)
 }
-func (m *Message) FormatChain() string {
-	ms := []*Message{}
-	for msg := m; msg != nil; msg = msg.message {
-		ms = append(ms, msg)
-	}
-
-	meta := append([]string{}, "\n\n")
-	for i := len(ms) - 1; i >= 0; i-- {
-		msg := ms[i]
-
-		meta = append(meta, fmt.Sprintf("%s ", msg.Format("prefix")))
-		if len(msg.meta[MSG_DETAIL]) > 0 {
-			meta = append(meta, fmt.Sprintf("detail:%d %v", len(msg.meta[MSG_DETAIL]), msg.meta[MSG_DETAIL]))
-		}
-
-		if len(msg.meta[MSG_OPTION]) > 0 {
-			meta = append(meta, fmt.Sprintf("option:%d %v\n", len(msg.meta[MSG_OPTION]), msg.meta[MSG_OPTION]))
-			for _, k := range msg.meta[MSG_OPTION] {
-				if v, ok := msg.meta[k]; ok {
-					meta = append(meta, fmt.Sprintf("    %s: %d %v\n", k, len(v), v))
-				}
-			}
-		} else {
-			meta = append(meta, "\n")
-		}
-
-		if len(msg.meta[MSG_APPEND]) > 0 {
-			meta = append(meta, fmt.Sprintf("  append:%d %v\n", len(msg.meta[MSG_APPEND]), msg.meta[MSG_APPEND]))
-			for _, k := range msg.meta[MSG_APPEND] {
-				if v, ok := msg.meta[k]; ok {
-					meta = append(meta, fmt.Sprintf("    %s: %d %v\n", k, len(v), v))
-				}
-			}
-		}
-		if len(msg.meta[MSG_RESULT]) > 0 {
-			meta = append(meta, fmt.Sprintf("  result:%d %v\n", len(msg.meta[MSG_RESULT]), msg.meta[MSG_RESULT]))
-		}
-	}
-	return strings.Join(meta, "")
+func (m *Message) OptionUserWeb() *url.URL {
+	return kit.ParseURL(m.Option(MSG_USERWEB))
 }
-func (m *Message) FormatTime() string {
-	return m.Format("time")
-}
-func (m *Message) Format(key interface{}) string {
-	switch key := key.(type) {
-	case []byte:
-		json.Unmarshal(key, &m.meta)
-	case string:
-		switch key {
-		case "cost":
-			return kit.FmtTime(kit.Int64(time.Since(m.time)))
-		case "meta":
-			return kit.Format(m.meta)
-		case "size":
-			if len(m.meta["append"]) == 0 {
-				return fmt.Sprintf("%dx%d", 0, 0)
-			} else {
-				return fmt.Sprintf("%dx%d", len(m.meta[m.meta["append"][0]]), len(m.meta["append"]))
-			}
-		case "append":
-			if len(m.meta["append"]) == 0 {
-				return fmt.Sprintf("%dx%d %s", 0, 0, "[]")
-			} else {
-				return fmt.Sprintf("%dx%d %s", len(m.meta[m.meta["append"][0]]), len(m.meta["append"]), kit.Format(m.meta["append"]))
-			}
-
-		case "time":
-			return m.Time()
-		case "ship":
-			return fmt.Sprintf("%s->%s", m.source.Name, m.target.Name)
-		case "prefix":
-			return fmt.Sprintf("%s %d %s->%s", m.Time(), m.code, m.source.Name, m.target.Name)
-
-		case "chain":
-			return m.FormatChain()
-		case "stack":
-			return m.FormatStack()
-		}
-	}
-	return m.time.Format(MOD_TIME)
-}
-func (m *Message) Formats(key string) string {
-	switch key {
-	case "meta":
-		return kit.Formats(m.meta)
-	}
-	return m.Format(key)
+func (m *Message) SetAppend(key ...string) {
+	m.Set(MSG_APPEND, key...)
 }
 func (m *Message) RenameAppend(from, to string) {
 	for i, v := range m.meta[MSG_APPEND] {
@@ -214,6 +112,22 @@ func (m *Message) RenameAppend(from, to string) {
 			m.meta[MSG_APPEND][i] = to
 			m.meta[to] = m.meta[from]
 			delete(m.meta, from)
+		}
+	}
+}
+func (m *Message) AppendSimple(key ...string) (res []string) {
+	if len(key) == 0 {
+		key = append(key, m.Appendv(MSG_APPEND)...)
+	}
+	for _, k := range key {
+		res = append(res, k, m.Append(k))
+	}
+	return
+}
+func (m *Message) AppendTrans(cb func(value string, key string, index int) string) {
+	for _, k := range m.meta[MSG_APPEND] {
+		for i, v := range m.meta[k] {
+			m.meta[k][i] = cb(v, k, i)
 		}
 	}
 }
@@ -362,73 +276,57 @@ func (c *Context) _cmd(m *Message, cmd *Command, key string, k string, h *Action
 	}
 	return m
 }
-func (c *Context) split(key string, cmd *Command, name string) []interface{} {
+func (c *Context) split(name string) (list []interface{}) {
 	const (
-		BUTTON   = "button"
-		SELECT   = "select"
 		TEXT     = "text"
 		TEXTAREA = "textarea"
+		SELECT   = "select"
+		BUTTON   = "button"
 	)
 
-	button, list := false, []interface{}{}
-	for _, v := range kit.Split(kit.Select("key", name), " ", " ")[1:] {
-		switch v {
+	item, button := kit.Dict(), false
+	ls := kit.Split(name, " ", ":=@")
+	for i := 1; i < len(ls); i++ {
+		switch ls[i] {
 		case "text":
-			list = append(list, kit.List(kit.MDB_INPUT, TEXTAREA, kit.MDB_NAME, "text", kit.MDB_VALUE, "@key")...)
-			continue
-		case "page":
-			list = append(list, kit.List(kit.MDB_INPUT, TEXT, kit.MDB_NAME, "limit")...)
-			list = append(list, kit.List(kit.MDB_INPUT, TEXT, kit.MDB_NAME, "offend")...)
-			list = append(list, kit.List(kit.MDB_INPUT, BUTTON, kit.MDB_NAME, "prev")...)
-			list = append(list, kit.List(kit.MDB_INPUT, BUTTON, kit.MDB_NAME, "next")...)
-			continue
+			list = append(list, kit.List(kit.MDB_TYPE, TEXTAREA, kit.MDB_NAME, "text")...)
 		case "auto":
-			list = append(list, kit.List(kit.MDB_INPUT, BUTTON, kit.MDB_NAME, "list", kit.MDB_VALUE, "auto")...)
-			list = append(list, kit.List(kit.MDB_INPUT, BUTTON, kit.MDB_NAME, "back")...)
+			list = append(list, kit.List(kit.MDB_TYPE, BUTTON, kit.MDB_NAME, "list", kit.MDB_VALUE, "auto")...)
+			list = append(list, kit.List(kit.MDB_TYPE, BUTTON, kit.MDB_NAME, "back")...)
 			button = true
-			continue
-		}
+		case "page":
+			list = append(list, kit.List(kit.MDB_TYPE, TEXT, kit.MDB_NAME, "limit")...)
+			list = append(list, kit.List(kit.MDB_TYPE, TEXT, kit.MDB_NAME, "offend")...)
+			list = append(list, kit.List(kit.MDB_TYPE, BUTTON, kit.MDB_NAME, "prev")...)
+			list = append(list, kit.List(kit.MDB_TYPE, BUTTON, kit.MDB_NAME, "next")...)
 
-		ls, value := kit.Split(v, " ", ":=@"), ""
-		item := kit.Dict(kit.MDB_INPUT, kit.Select(TEXT, BUTTON, button))
-		if kit.Value(item, kit.MDB_NAME, ls[0]); item[kit.MDB_INPUT] == TEXT {
-			kit.Value(item, kit.MDB_VALUE, kit.Select("@key", "auto", strings.Contains(name, "auto")))
-		}
-
-		for i := 1; i < len(ls); i += 2 {
-			switch ls[i] {
-			case ":":
-				switch kit.Value(item, kit.MDB_INPUT, ls[i+1]); ls[i+1] {
-				case TEXTAREA:
-					kit.Value(item, "style.width", "360")
-					kit.Value(item, "style.height", "60")
-				case BUTTON:
-					kit.Value(item, kit.MDB_VALUE, "")
-					button = true
-				}
-			case "=":
-				if value = kit.Select("", ls, i+1); len(ls) > i+1 && strings.Contains(ls[i+1], ",") {
-					vs := strings.Split(ls[i+1], ",")
-					kit.Value(item, "values", vs)
-					kit.Value(item, kit.MDB_VALUE, vs[0])
-					kit.Value(item, kit.MDB_INPUT, SELECT)
-					if kit.Value(item, kit.MDB_NAME) == "scale" {
-						kit.Value(item, kit.MDB_VALUE, "week")
-					}
-				} else {
-					kit.Value(item, kit.MDB_VALUE, value)
-				}
-			case "@":
-				if len(ls) > i+1 {
-					if kit.Value(item, kit.MDB_INPUT) == BUTTON {
-						kit.Value(item, "action", ls[i+1])
-					} else {
-						kit.Value(item, kit.MDB_VALUE, "@"+ls[i+1]+"="+value)
-					}
-				}
+		case ":":
+			if item[kit.MDB_TYPE] = kit.Select("", ls, i+1); item[kit.MDB_TYPE] == BUTTON {
+				button = true
 			}
+			i++
+		case "=":
+			if value := kit.Select("", ls, i+1); strings.Contains(value, ",") {
+				vs := strings.Split(value, ",")
+				if strings.Count(value, vs[0]) > 1 {
+					item["values"] = vs[1:]
+				} else {
+					item["values"] = vs
+				}
+				item[kit.MDB_VALUE] = vs[0]
+				item[kit.MDB_TYPE] = SELECT
+			} else {
+				item[kit.MDB_VALUE] = value
+			}
+			i++
+		case "@":
+			item["action"] = kit.Select("", ls, i+1)
+			i++
+
+		default:
+			item = kit.Dict(kit.MDB_TYPE, kit.Select(TEXT, BUTTON, button), kit.MDB_NAME, ls[i])
+			list = append(list, item)
 		}
-		list = append(list, item)
 	}
 	return list
 }
@@ -456,36 +354,6 @@ func MergeAction(list ...map[string]*Action) map[string]*Action {
 	}
 	return list[0]
 }
-
-func (m *Message) AppendSimple(key ...string) (res []string) {
-	if len(key) == 0 {
-		key = append(key, m.Appendv(MSG_APPEND)...)
-	}
-	for _, k := range key {
-		res = append(res, k, m.Append(k))
-	}
-	return
-}
-
-func (m *Message) AppendTrans(cb func(value string, key string, index int) string) {
-	for _, k := range m.meta[MSG_APPEND] {
-		for i, v := range m.meta[k] {
-			m.meta[k][i] = cb(v, k, i)
-		}
-	}
-}
-
-func (m *Message) OptionUserWeb() *url.URL {
-	return kit.ParseURL(m.Option(MSG_USERWEB))
-}
-
-func (m *Message) Config(key string) string {
-	return m.Conf(m.PrefixKey(), kit.Keym(key))
-}
-func (m *Message) ConfigSimple(key string) []string {
-	return []string{key, m.Conf(m.PrefixKey(), kit.Keym(key))}
-}
-
 func SelectAction(list map[string]*Action, fields ...string) map[string]*Action {
 	if len(fields) == 0 {
 		return list
@@ -496,8 +364,4 @@ func SelectAction(list map[string]*Action, fields ...string) map[string]*Action 
 		res[field] = list[field]
 	}
 	return res
-}
-
-func (m *Message) SetAppend(key ...string) {
-	m.Set(MSG_APPEND, key...)
 }

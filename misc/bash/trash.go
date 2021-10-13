@@ -30,7 +30,7 @@ func init() {
 				}},
 			}},
 			TRASH: {Name: "TRASH hash path auto prunes", Help: "回收站", Action: map[string]*ice.Action{
-				mdb.INSERT: {Name: "insert from= to=", Help: "添加", Hand: func(m *ice.Message, arg ...string) {
+				mdb.INSERT: {Name: "insert from to", Help: "添加", Hand: func(m *ice.Message, arg ...string) {
 					m.Cmdy(mdb.INSERT, m.Prefix(TRASH), "", mdb.HASH, m.OptionSimple(aaa.USERNAME, tcp.HOSTNAME, kit.MDB_SIZE, FROM, TO))
 				}},
 				mdb.REVERT: {Name: "revert", Help: "恢复", Hand: func(m *ice.Message, arg ...string) {

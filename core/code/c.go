@@ -110,18 +110,7 @@ func init() {
 					}
 					for _, i := range []string{"1", "2", "3", "8"} {
 						if text := _c_help(m, i, kit.Select(kit.MDB_MAIN, arg, 1)); text != "" {
-							for _, k := range kit.Split(m.Option(mdb.FIELDS)) {
-								switch k {
-								case kit.MDB_FILE:
-									m.Push(k, kit.Keys(arg[1], MAN+i))
-								case kit.MDB_LINE:
-									m.Push(k, 1)
-								case kit.MDB_TEXT:
-									m.Push(k, text)
-								default:
-									m.Push(k, "")
-								}
-							}
+							m.PushSearch(cli.CMD, "c", kit.MDB_FILE, kit.Keys(arg[1], MAN+i), kit.MDB_LINE, 1, kit.MDB_TEXT, text)
 						}
 					}
 				}},

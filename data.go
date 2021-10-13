@@ -8,11 +8,17 @@ import (
 	"shylinux.com/x/toolkits/miss"
 )
 
+func (m *Message) PrefixKey(arg ...string) string {
+	return kit.Keys(m.Cap(CTX_FOLLOW), strings.TrimPrefix(m._key, "/"), arg)
+}
 func (m *Message) Prefix(arg ...string) string {
 	return kit.Keys(m.Cap(CTX_FOLLOW), arg)
 }
-func (m *Message) PrefixKey(arg ...string) string {
-	return kit.Keys(m.Cap(CTX_FOLLOW), m._key, arg)
+func (m *Message) Config(key string) string {
+	return m.Conf(m.PrefixKey(), kit.Keym(key))
+}
+func (m *Message) ConfigSimple(key string) []string {
+	return []string{key, m.Conf(m.PrefixKey(), kit.Keym(key))}
 }
 func (m *Message) Save(arg ...string) *Message {
 	if len(arg) == 0 {
@@ -24,7 +30,7 @@ func (m *Message) Save(arg ...string) *Message {
 	for _, k := range arg {
 		list = append(list, m.Prefix(k))
 	}
-	m.Cmd("ctx.config", "save", m.Prefix("json"), list)
+	m.Cmd("ctx.config", SAVE, m.Prefix("json"), list)
 	return m
 }
 func (m *Message) Load(arg ...string) *Message {
@@ -32,7 +38,7 @@ func (m *Message) Load(arg ...string) *Message {
 	for _, k := range arg {
 		list = append(list, m.Prefix(k))
 	}
-	m.Cmd("ctx.config", "load", m.Prefix("json"), list)
+	m.Cmd("ctx.config", LOAD, m.Prefix("json"), list)
 	return m
 }
 
@@ -48,6 +54,7 @@ func (m *Message) Richs(prefix string, chain interface{}, raw interface{}, cb in
 
 		wg := &sync.WaitGroup{}
 		defer wg.Wait()
+
 		res = miss.Richs(kit.Keys(prefix, chain), cache, raw, func(key string, value map[string]interface{}) {
 			wg.Add(1)
 
@@ -84,18 +91,18 @@ func (m *Message) Grows(prefix string, chain interface{}, match string, value st
 		return nil
 	}
 
-	limit := kit.Int(m.Option("cache.limit"))
-	if begin := kit.Int(m.Option("cache.begin")); begin != 0 && limit > 0 {
-		count := kit.Int(m.Option("cache.count", kit.Int(kit.Value(cache, kit.Keym("count")))))
+	limit := kit.Int(m.Option(CACHE_LIMIT))
+	if begin := kit.Int(m.Option(CACHE_BEGIN)); begin != 0 && limit > 0 {
+		count := kit.Int(m.Option(CACHE_COUNT, kit.Int(kit.Value(cache, kit.Keym(kit.MDB_COUNT)))))
 		if begin > 0 {
-			m.Option("cache.offend", count-begin-limit)
+			m.Option(CACHE_OFFEND, count-begin-limit)
 		} else {
-			m.Option("cache.offend", -begin-limit)
+			m.Option(CACHE_OFFEND, -begin-limit)
 		}
 	}
 
 	return miss.Grows(kit.Keys(prefix, chain), cache,
-		kit.Int(kit.Select("0", strings.TrimPrefix(m.Option("cache.offend"), "-"))),
-		kit.Int(kit.Select("10", m.Option("cache.limit"))),
+		kit.Int(kit.Select("0", strings.TrimPrefix(m.Option(CACHE_OFFEND), "-"))),
+		kit.Int(kit.Select("10", m.Option(CACHE_LIMIT))),
 		match, value, cb)
 }

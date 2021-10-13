@@ -174,7 +174,7 @@ func _serve_handle(key string, cmd *ice.Command, msg *ice.Message, w http.Respon
 	// 执行命令
 	if cmds, ok := _serve_login(msg, kit.Simple(msg.Optionv(ice.MSG_CMDS)), w, r); ok {
 		msg.Option(ice.MSG_OPTS, msg.Optionv(ice.MSG_OPTION))
-		msg.Target().Cmd(msg, key, r.URL.Path, cmds...)
+		msg.Target().Cmd(msg, key, cmds...)
 		msg.Cost(kit.Format("%s %v %v", r.URL.Path, cmds, msg.Format(ice.MSG_APPEND)))
 	}
 
@@ -198,7 +198,7 @@ func _serve_login(msg *ice.Message, cmds []string, w http.ResponseWriter, r *htt
 
 	if _, ok := msg.Target().Commands[WEB_LOGIN]; ok {
 		// 权限检查
-		msg.Target().Cmd(msg, WEB_LOGIN, r.URL.Path, cmds...)
+		msg.Target().Cmd(msg, WEB_LOGIN, cmds...)
 		return cmds, msg.Result(0) != ice.ErrWarn && msg.Result() != ice.FALSE
 	}
 
@@ -268,7 +268,7 @@ func init() {
 						m.Conf(SERVE, kit.Keys(kit.MDB_META, aaa.WHITE, k), true)
 					}
 				}},
-				cli.START: {Name: "start dev= name=self proto=http host= port=9020", Help: "启动", Hand: func(m *ice.Message, arg ...string) {
+				cli.START: {Name: "start dev name=web proto=http host port=9020", Help: "启动", Hand: func(m *ice.Message, arg ...string) {
 					if cli.NodeInfo(m, SERVER, ice.Info.HostName); m.Option(tcp.PORT) == tcp.RANDOM {
 						m.Option(tcp.PORT, m.Cmdx(tcp.PORT, aaa.RIGHT))
 					}

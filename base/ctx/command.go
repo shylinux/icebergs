@@ -33,7 +33,7 @@ func _command_list(m *ice.Message, name string) {
 	})
 }
 func _command_search(m *ice.Message, kind, name, text string) {
-	ice.Pulse.Travel(func(p *ice.Context, s *ice.Context, key string, cmd *ice.Command) {
+	m.Travel(func(p *ice.Context, s *ice.Context, key string, cmd *ice.Command) {
 		if key[0] == '/' || key[0] == '_' {
 			return // 内部命令
 		}
@@ -41,8 +41,9 @@ func _command_search(m *ice.Message, kind, name, text string) {
 			return
 		}
 
-		m.PushSearch("cmd", COMMAND, CONTEXT, s.Cap(ice.CTX_FOLLOW), COMMAND, key,
+		m.PushSearch("cmd", COMMAND,
 			kit.MDB_TYPE, kind, kit.MDB_NAME, key, kit.MDB_TEXT, s.Cap(ice.CTX_FOLLOW),
+			CONTEXT, s.Cap(ice.CTX_FOLLOW), COMMAND, key,
 		)
 	})
 }

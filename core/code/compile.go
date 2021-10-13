@@ -59,7 +59,7 @@ func init() {
 				// 编译参数
 				m.Optionv(cli.CMD_ENV, kit.Simple(m.Confv(COMPILE, kit.Keym(cli.ENV)), "GOARCH", arch, "GOOS", goos))
 				if msg := m.Cmd(cli.SYSTEM, m.Confv(COMPILE, kit.Keym(GO)),
-					"-o", file, main, ice.SRC_VERSION, ice.SRC_BINPACK); msg.Append(cli.CMD_CODE) != "0" {
+					"-o", file, main, ice.SRC_VERSION_GO, ice.SRC_BINPACK_GO); msg.Append(cli.CMD_CODE) != "0" {
 					m.Copy(msg)
 					return
 				}

@@ -56,7 +56,7 @@ func init() {
 			ice.VOLCANOS: {Name: "volcanos", Help: "火山架", Hand: func(m *ice.Message, arg ...string) {
 				defer func() { m.EchoQRCode(m.Option(ice.MSG_USERWEB)) }()
 				defer func() { m.Cmdy(PUBLISH, ice.CONTEXTS, "miss") }()
-				m.Cmd(PUBLISH, mdb.CREATE, kit.MDB_FILE, ice.ETC_MISS)
+				m.Cmd(PUBLISH, mdb.CREATE, kit.MDB_FILE, ice.ETC_MISS_SH)
 				m.Cmd(PUBLISH, mdb.CREATE, kit.MDB_FILE, ice.GO_MOD)
 
 				m.Cmd(nfs.DEFS, path.Join(m.Conf(PUBLISH, kit.META_PATH), ice.ORDER_JS), m.Conf(PUBLISH, kit.Keym(JS)))

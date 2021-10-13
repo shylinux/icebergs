@@ -170,7 +170,7 @@ var Index = &ice.Context{Name: INPUT, Help: "输入法",
 			mdb.EXPORT: {Name: "export file=usr/wubi-dict/person zone=person", Help: "导出", Hand: func(m *ice.Message, arg ...string) {
 				// _input_save(m, kit.Select("usr/wubi-dict/person", m.Option("file")), m.Option("zone"))
 			}},
-			mdb.IMPORT: {Name: "import file=usr/wubi-dict/person zone=", Help: "导入", Hand: func(m *ice.Message, arg ...string) {
+			mdb.IMPORT: {Name: "import file=usr/wubi-dict/person zone", Help: "导入", Hand: func(m *ice.Message, arg ...string) {
 				_input_load(m, kit.Select("usr/wubi-dict/person", m.Option(FILE)), m.Option(ZONE))
 			}},
 		}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {

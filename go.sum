@@ -15,7 +15,5 @@ golang.org/x/term v0.0.0-20201126162022-7de9c90e9dd1 h1:v+OssWQX+hTHEmOBgwxdZxK4
 golang.org/x/term v0.0.0-20201126162022-7de9c90e9dd1/go.mod h1:bj7SfCRtBDWHUb9snDiAeCFNEtKQo2Wmx5Cou7ajbmo=
 golang.org/x/text v0.3.3/go.mod h1:5Zoc/QRtKVWzQhOtBMvqHzDpF6irO9z98xDceosuGiQ=
 golang.org/x/tools v0.0.0-20180917221912-90fa682c2a6e/go.mod h1:n7NCudcB/nEzxVGmLbDWY5pfWTLqBcC2KZ6jyYvM4mQ=
-shylinux.com/x/toolkits v0.3.0 h1:rF9SIE02VCfgpuI2P/H7EoJaWpf+zomxAaRHiYD7yjE=
-shylinux.com/x/toolkits v0.3.0/go.mod h1:8LbYHe7oxBIqb6s4MSOD+4d28QvPdvkyCVtwB/JW7AA=
 shylinux.com/x/toolkits v0.3.3 h1:yNH54CANAv7cPT264tpnDt9G2BVfGwLC9y3rxtU6pkg=
 shylinux.com/x/toolkits v0.3.3/go.mod h1:8LbYHe7oxBIqb6s4MSOD+4d28QvPdvkyCVtwB/JW7AA=

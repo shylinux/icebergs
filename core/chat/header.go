@@ -1,6 +1,8 @@
 package chat
 
 import (
+	"strings"
+
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/aaa"
 	"shylinux.com/x/icebergs/base/ctx"
@@ -27,6 +29,7 @@ func _header_check(m *ice.Message, arg ...string) {
 
 	if m.Option(ice.MSG_USERNAME) == "" { // 单点登录
 		m.Option(web.SSO, m.Conf(web.SERVE, kit.Keym(web.SSO)))
+		m.Option(web.LOGIN, m.Config(web.LOGIN))
 	}
 }
 func _header_share(m *ice.Message, arg ...string) {
@@ -35,6 +38,8 @@ func _header_share(m *ice.Message, arg ...string) {
 	} else {
 		m.Option(kit.MDB_LINK, tcp.ReplaceLocalhost(m, m.Option(kit.MDB_LINK)))
 	}
+
+	m.Option(kit.MDB_LINK, strings.Split(m.Option(kit.MDB_LINK), "?")[0])
 
 	m.Set(kit.MDB_NAME, kit.MDB_TEXT)
 	m.Push(kit.MDB_NAME, m.Option(kit.MDB_LINK))
@@ -63,6 +68,7 @@ const (
 	CHECK = "check"
 	SHARE = "share"
 	GRANT = "grant"
+	LOGIN = "login"
 )
 const HEADER = "header"
 
@@ -70,6 +76,7 @@ func init() {
 	Index.Merge(&ice.Context{Configs: map[string]*ice.Config{
 		HEADER: {Name: HEADER, Help: "标题栏", Value: kit.Data(
 			TITLE, "shylinux.com/x/contexts", MENUS, `["header", ["setting", "black", "white", "print", "webpack", "unpack"]]`,
+			LOGIN, kit.List("登录", "扫码"),
 		)},
 	}, Commands: map[string]*ice.Command{
 		"/header": {Name: "/header", Help: "标题栏", Action: map[string]*ice.Action{

@@ -47,7 +47,7 @@ func _dream_show(m *ice.Message, name string) {
 
 	// 任务模板
 	if m.Option(kit.MDB_TEMPLATE) != "" {
-		for _, file := range []string{ice.ETC_MISS, ice.SRC_MAIN_SHY, ice.SRC_MAIN_GO, ice.GO_MOD, ice.MAKEFILE} {
+		for _, file := range []string{ice.ETC_MISS_SH, ice.SRC_MAIN_SHY, ice.SRC_MAIN_GO, ice.GO_MOD, ice.MAKEFILE} {
 			if _, e := os.Stat(path.Join(p, file)); os.IsNotExist(e) {
 				switch m.Cmdy(nfs.COPY, path.Join(p, file), path.Join(m.Option(kit.MDB_TEMPLATE), file)); file {
 				case ice.GO_MOD:
@@ -60,7 +60,7 @@ func _dream_show(m *ice.Message, name string) {
 	}
 
 	// 任务脚本
-	miss := path.Join(p, ice.ETC_MISS)
+	miss := path.Join(p, ice.ETC_MISS_SH)
 	if _, e := os.Stat(miss); os.IsNotExist(e) {
 		m.Cmd(nfs.SAVE, miss, m.Conf(DREAM, kit.Keym("miss")))
 	}
@@ -115,7 +115,7 @@ func init() {
 					m.ProcessInner()
 				}},
 				cli.START: {Name: "start name repos river", Help: "启动", Hand: func(m *ice.Message, arg ...string) {
-					if m.Option(kit.MDB_NAME) == SPIDE_SELF {
+					if m.Option(kit.MDB_NAME) == SPIDE_WEB {
 						m.Option(kit.MDB_NAME, "")
 					}
 					_dream_show(m, m.Option(kit.MDB_NAME, kit.Select(path.Base(m.Option(kit.SSH_REPOS)), m.Option(kit.MDB_NAME))))
@@ -140,7 +140,7 @@ func init() {
 		Configs: map[string]*ice.Config{
 			DREAM: {Name: DREAM, Help: "梦想家", Value: kit.Data(kit.MDB_PATH, ice.USR_LOCAL_WORK,
 				cli.CMD, []interface{}{"ice.bin", SPACE, tcp.DIAL},
-				cli.ENV, kit.Dict(ice.CTX_LOG, ice.BIN_BOOTLOG),
+				cli.ENV, kit.Dict(cli.CTX_LOG, ice.BIN_BOOTLOG),
 				"miss", `#!/bin/bash
 if [ "$ISH_CONF_PRE" = "" ]; then
 	[ -f $PWD/.ish/plug.sh ] || [ -f $HOME/.ish/plug.sh ] || git clone ${ISH_CONF_HUB_PROXY:="https://"}shylinux.com/x/intshell $PWD/.ish

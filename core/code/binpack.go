@@ -82,7 +82,7 @@ func init() {
 	Index.Merge(&ice.Context{Commands: map[string]*ice.Command{
 		BINPACK: {Name: "binpack path auto create remove export", Help: "打包", Action: map[string]*ice.Action{
 			mdb.CREATE: {Name: "create", Help: "创建", Hand: func(m *ice.Message, arg ...string) {
-				if pack, p, e := kit.Create(ice.SRC_BINPACK); m.Assert(e) {
+				if pack, p, e := kit.Create(ice.SRC_BINPACK_GO); m.Assert(e) {
 					defer pack.Close()
 
 					_pack_write(pack, `package main`)
@@ -93,7 +93,7 @@ func init() {
 					_pack_write(pack, "")
 
 					_pack_write(pack, `func init() {`)
-					_pack_write(pack, `    ice.Info.BinPack = map[string][]byte{`)
+					_pack_write(pack, `    ice.Info.Pack = map[string][]byte{`)
 
 					_pack_volcanos(m, pack, ice.USR_VOLCANOS)
 					_pack_dir(m, pack, ice.USR_LEARNING)
@@ -108,10 +108,10 @@ func init() {
 				}
 			}},
 			mdb.REMOVE: {Name: "remove", Help: "删除", Hand: func(m *ice.Message, arg ...string) {
-				ice.Info.BinPack = map[string][]byte{}
+				ice.Info.Pack = map[string][]byte{}
 			}},
 			mdb.EXPORT: {Name: "export", Help: "导出", Hand: func(m *ice.Message, arg ...string) {
-				for key, value := range ice.Info.BinPack {
+				for key, value := range ice.Info.Pack {
 					if strings.HasPrefix(key, "/") {
 						key = ice.USR_VOLCANOS + key
 					}
@@ -120,7 +120,7 @@ func init() {
 				}
 			}},
 		}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			for k, v := range ice.Info.BinPack {
+			for k, v := range ice.Info.Pack {
 				m.Push(kit.MDB_NAME, k)
 				m.Push(kit.MDB_SIZE, len(v))
 			}

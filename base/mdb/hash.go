@@ -152,10 +152,10 @@ func HashAction(fields ...string) map[string]*ice.Action {
 			m.Cmdy(INSERT, m.PrefixKey(), "", HASH, arg)
 		}},
 		REMOVE: {Name: "remove", Help: "删除", Hand: func(m *ice.Message, arg ...string) {
-			m.Cmdy(DELETE, m.PrefixKey(), "", HASH, m.OptionSimple(kit.MDB_HASH))
+			m.Cmdy(DELETE, m.PrefixKey(), "", HASH, m.OptionSimple(m.Config(kit.MDB_SHORT)))
 		}},
 		MODIFY: {Name: "modify", Help: "编辑", Hand: func(m *ice.Message, arg ...string) {
-			m.Cmdy(MODIFY, m.PrefixKey(), "", HASH, m.OptionSimple(kit.MDB_HASH), arg)
+			m.Cmdy(MODIFY, m.PrefixKey(), "", HASH, m.OptionSimple(m.Config(kit.MDB_SHORT)), arg)
 		}},
 		EXPORT: {Name: "export", Help: "导出", Hand: func(m *ice.Message, arg ...string) {
 			m.Cmdy(EXPORT, m.PrefixKey(), "", HASH)
@@ -176,4 +176,8 @@ func HashAction(fields ...string) map[string]*ice.Action {
 			}
 		}},
 	}, fields...)
+}
+func HashSelect(m *ice.Message, arg ...string) {
+	m.Fields(len(arg), m.Config(kit.MDB_FIELD))
+	m.Cmdy(SELECT, m.PrefixKey(), "", HASH, m.Config(kit.MDB_SHORT), arg)
 }

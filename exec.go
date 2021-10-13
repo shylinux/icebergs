@@ -2,7 +2,6 @@ package ice
 
 import (
 	"errors"
-	"fmt"
 	"io"
 	"strings"
 	"time"
@@ -36,22 +35,22 @@ func (m *Message) TryCatch(msg *Message, silent bool, hand ...func(msg *Message)
 	}
 	return m
 }
-func (m *Message) Assert(arg interface{}) bool {
-	switch arg := arg.(type) {
+func (m *Message) Assert(expr interface{}) bool {
+	switch expr := expr.(type) {
 	case nil:
 		return true
+	case error:
+		panic(expr)
 	case bool:
-		if arg == true {
+		if expr == true {
 			return true
 		}
-	case error:
-		panic(arg)
 	}
-	panic(errors.New(fmt.Sprintf("error: %v", arg)))
+	panic(errors.New(kit.Format("error: %v", expr)))
 }
-func (m *Message) Sleep(arg string) *Message {
-	m.Debug("sleep %s %s", arg, kit.FileLine(2, 3))
-	time.Sleep(kit.Duration(arg))
+func (m *Message) Sleep(d string) *Message {
+	m.Debug("sleep %s %s", d, kit.FileLine(2, 3))
+	time.Sleep(kit.Duration(d))
 	return m
 }
 func (m *Message) Hold(n int) *Message {
@@ -77,15 +76,16 @@ func (m *Message) Done(b bool) bool {
 	ctx.wg.Done()
 	return true
 }
-
 func (m *Message) Call(sync bool, cb func(*Message) *Message) *Message {
 	wait := make(chan bool, 2)
+
 	p := kit.Select("10s", m.Option("timeout"))
 	t := time.AfterFunc(kit.Duration(p), func() {
 		m.Warn(true, "%s timeout %v", p, m.Detailv())
 		wait <- false
 		m.Back(nil)
 	})
+
 	m.cb = func(sub *Message) *Message {
 		if sync {
 			wait <- true
@@ -109,26 +109,19 @@ func (m *Message) Back(res *Message) *Message {
 	}
 	return m
 }
-func (m *Message) Gos(msg *Message, cb interface{}, args ...interface{}) *Message {
+func (m *Message) Go(cb interface{}, args ...interface{}) *Message {
 	task.Put(kit.FileLine(3, 3), func(task *task.Task) error {
-		msg.TryCatch(msg, true, func(msg *Message) {
+		m.TryCatch(m, true, func(m *Message) {
 			switch cb := cb.(type) {
 			case func(*Message):
-				cb(msg)
+				cb(m.Spawn())
 			case func():
 				cb()
 			}
 		})
 		return nil
 	})
-	return msg
-}
-func (m *Message) Go(cb interface{}, args ...interface{}) *Message {
-	switch cb := cb.(type) {
-	case func(*Message):
-		return m.Gos(m.Spawn(), cb, args...)
-	}
-	return m.Gos(m, cb, args...)
+	return m
 }
 
 func (m *Message) Watch(key string, arg ...string) *Message {

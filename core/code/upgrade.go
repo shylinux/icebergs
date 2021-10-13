@@ -16,7 +16,7 @@ func init() {
 		Configs: map[string]*ice.Config{
 			UPGRADE: {Name: UPGRADE, Help: "升级", Value: kit.Dict(kit.MDB_HASH, kit.Dict(
 				cli.SYSTEM, kit.Dict(kit.MDB_LIST, kit.List(
-					kit.MDB_INPUT, "bin", kit.MDB_FILE, "ice.sh", kit.MDB_PATH, ice.BIN_ICE,
+					kit.MDB_INPUT, "bin", kit.MDB_FILE, "ice.sh", kit.MDB_PATH, ice.BIN_ICE_SH,
 					kit.MDB_INPUT, "bin", kit.MDB_FILE, "ice.bin", kit.MDB_PATH, ice.BIN_ICE_BIN,
 				)),
 				cli.SOURCE, kit.Dict(kit.MDB_LIST, kit.List(

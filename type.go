@@ -27,16 +27,22 @@ type Config struct {
 type Action struct {
 	Name string
 	Help string
-	List []interface{}
 	Hand func(m *Message, arg ...string)
+	List []interface{}
 }
 type Command struct {
 	Name   string
 	Help   string
-	List   []interface{}
+	Action map[string]*Action
 	Meta   map[string]interface{}
 	Hand   func(m *Message, c *Context, key string, arg ...string)
-	Action map[string]*Action
+	List   []interface{}
+}
+type Server interface {
+	Spawn(m *Message, c *Context, arg ...string) Server
+	Begin(m *Message, arg ...string) Server
+	Start(m *Message, arg ...string) bool
+	Close(m *Message, arg ...string) bool
 }
 type Context struct {
 	Name string
@@ -57,12 +63,6 @@ type Context struct {
 	wg *sync.WaitGroup
 	id int32
 }
-type Server interface {
-	Spawn(m *Message, c *Context, arg ...string) Server
-	Begin(m *Message, arg ...string) Server
-	Start(m *Message, arg ...string) bool
-	Close(m *Message, arg ...string) bool
-}
 
 func (c *Context) ID() int32 {
 	if c == nil {
@@ -76,21 +76,21 @@ func (c *Context) Cap(key string, arg ...interface{}) string {
 	}
 	return c.Caches[key].Value
 }
-func (c *Context) Cmd(m *Message, cmd string, key string, arg ...string) *Message {
-	return c.cmd(m, m.Target().Commands[cmd], cmd, arg...)
+func (c *Context) Cmd(m *Message, key string, arg ...string) *Message {
+	return c.cmd(m, m.target.Commands[key], key, arg...)
 }
 func (c *Context) Server() Server {
 	return c.server
 }
 
 func (c *Context) Register(s *Context, x Server, name ...string) *Context {
-	if s.Name == "" {
+	if s.Merge(s); s.Name == "" {
 		s.Name = kit.Split(kit.Split(kit.FileLine(2, 3), ":")[0], "/")[1]
 	}
+
 	for _, n := range name {
 		Name(n, s)
 	}
-	s.Merge(s)
 
 	if c.contexts == nil {
 		c.contexts = map[string]*Context{}
@@ -123,17 +123,14 @@ func (c *Context) Merge(s *Context) *Context {
 			}()
 		}
 
-		c.Commands[k] = v
-
-		if v.List == nil {
-			v.List = c.split(k, v, v.Name)
-		}
 		if v.Meta == nil {
 			v.Meta = kit.Dict()
 		}
-
 		if p := kit.Format(v.Meta[kit.MDB_STYLE]); p == "" {
 			v.Meta[kit.MDB_STYLE] = k
+		}
+		if c.Commands[k] = v; v.List == nil {
+			v.List = c.split(v.Name)
 		}
 
 		for k, a := range v.Action {
@@ -149,7 +146,7 @@ func (c *Context) Merge(s *Context) *Context {
 				continue
 			}
 			if a.List == nil {
-				a.List = c.split(k, nil, a.Name)
+				a.List = c.split(a.Name)
 			}
 			if len(a.List) > 0 {
 				v.Meta[k] = a.List
@@ -252,9 +249,8 @@ func (m *Message) Time(args ...interface{}) string { // [duration] [format [args
 	t := m.time
 	if len(args) > 0 {
 		switch arg := args[0].(type) {
-		case string:
+		case string: // 时间偏移
 			if d, e := time.ParseDuration(arg); e == nil {
-				// 时间偏移
 				t, args = t.Add(d), args[1:]
 			}
 		}
@@ -262,9 +258,8 @@ func (m *Message) Time(args ...interface{}) string { // [duration] [format [args
 	f := MOD_TIME
 	if len(args) > 0 {
 		switch arg := args[0].(type) {
-		case string:
+		case string: // 时间格式
 			if f = arg; len(args) > 1 {
-				// 时间格式
 				f = fmt.Sprintf(f, args[1:]...)
 			}
 		}
@@ -279,19 +274,13 @@ func (m *Message) Source() *Context {
 }
 func (m *Message) Spawn(arg ...interface{}) *Message {
 	msg := &Message{
-		time: time.Now(),
-		code: int(m.target.root.ID()),
-
+		time: time.Now(), code: int(m.target.root.ID()),
 		meta: map[string][]string{},
 		data: map[string]interface{}{},
 
 		message: m, root: m.root,
-
-		source: m.target,
-		target: m.target,
-
-		W: m.W, R: m.R,
-		O: m.O, I: m.I,
+		source: m.target, target: m.target,
+		W: m.W, R: m.R, O: m.O, I: m.I,
 	}
 
 	if len(arg) > 0 {

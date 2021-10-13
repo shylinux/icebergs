@@ -31,7 +31,7 @@ func _cat_find(m *ice.Message, name string) io.ReadCloser {
 		return f
 	}
 
-	if b, ok := ice.Info.BinPack[name]; ok {
+	if b, ok := ice.Info.Pack[name]; ok {
 		m.Logs("binpack", len(b), name)
 		return kit.NewReadCloser(bytes.NewBuffer(b))
 	}

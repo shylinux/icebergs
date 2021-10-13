@@ -21,7 +21,7 @@ func init() {
 				mdb.CREATE: {Name: "create zone", Help: "创建", Hand: func(m *ice.Message, arg ...string) {
 					m.Cmdy(mdb.INSERT, m.Prefix(FAVOR), "", mdb.HASH, arg)
 				}},
-				mdb.INSERT: {Name: "insert zone=数据结构 type= name=hi text=hello", Help: "添加", Hand: func(m *ice.Message, arg ...string) {
+				mdb.INSERT: {Name: "insert zone=数据结构 type name=hi text=hello", Help: "添加", Hand: func(m *ice.Message, arg ...string) {
 					m.Cmdy(mdb.INSERT, m.Prefix(FAVOR), "", mdb.HASH, m.OptionSimple(kit.MDB_ZONE))
 					m.Cmdy(mdb.INSERT, m.Prefix(FAVOR), kit.KeyHash(m.Option(kit.MDB_ZONE)), mdb.LIST, arg)
 				}},

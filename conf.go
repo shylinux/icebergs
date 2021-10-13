@@ -3,6 +3,23 @@ package ice
 const (
 	SP = " "
 	NL = "\n"
+
+	OK      = "ok"
+	TRUE    = "true"
+	FALSE   = "false"
+	SUCCESS = "success"
+	FAILURE = "failure"
+
+	INIT = "init"
+	EXIT = "exit"
+	SAVE = "save"
+	LOAD = "load"
+	HELP = "help"
+
+	ICE = "ice"
+	SHY = "shy"
+	DEV = "dev"
+	WEB = "web"
 )
 const ( // MOD
 	MOD_DIR  = 0750
@@ -21,15 +38,9 @@ const ( // REPOS
 	INTSHELL = "intshell"
 	CONTEXTS = "contexts"
 
-	INSTALL = "install"
 	REQUIRE = "require"
+	INSTALL = "install"
 	PUBLISH = "publish"
-
-	SUCCESS = "success"
-	FAILURE = "failure"
-	FALSE   = "false"
-	TRUE    = "true"
-	OK      = "ok"
 )
 const ( // DIR
 	USR_VOLCANOS = "usr/volcanos"
@@ -41,10 +52,10 @@ const ( // DIR
 
 	USR_LOCAL        = "usr/local"
 	USR_LOCAL_WORK   = "usr/local/work"
-	USR_LOCAL_RIVER  = "usr/local/river"
 	USR_LOCAL_IMAGE  = "usr/local/image"
-	USR_LOCAL_EXPORT = "usr/local/export"
+	USR_LOCAL_RIVER  = "usr/local/river"
 	USR_LOCAL_DAEMON = "usr/local/daemon"
+	USR_LOCAL_EXPORT = "usr/local/export"
 
 	FAVICON  = "favicon.ico"
 	PROTO_JS = "proto.js"
@@ -54,36 +65,29 @@ const ( // DIR
 	ORDER_SH = "order.sh"
 	INDEX_SH = "index.sh"
 
-	VAR_TMP     = "var/tmp"
-	VAR_RUN     = "var/run"
-	VAR_LOG     = "var/log"
-	VAR_CONF    = "var/conf"
-	VAR_DATA    = "var/data"
-	VAR_FILE    = "var/file"
-	VAR_PROXY   = "var/proxy"
-	VAR_TRASH   = "var/trash"
-	BIN_ICE     = "bin/ice.sh"
-	BIN_ICE_SH  = "bin/ice.sh"
-	BIN_ICE_BIN = "bin/ice.bin"
-	BIN_BOOTLOG = "bin/boot.log"
-	ETC_INIT    = "etc/init.shy"
-	ETC_EXIT    = "etc/exit.shy"
-	ETC_MISS    = "etc/miss.sh"
-	ETC_MISS_SH = "etc/miss.sh"
+	VAR_RUN      = "var/run"
+	VAR_TMP      = "var/tmp"
+	VAR_LOG      = "var/log"
+	VAR_CONF     = "var/conf"
+	VAR_DATA     = "var/data"
+	VAR_FILE     = "var/file"
+	VAR_PROXY    = "var/proxy"
+	VAR_TRASH    = "var/trash"
+	BIN_ICE_SH   = "bin/ice.sh"
+	BIN_ICE_BIN  = "bin/ice.bin"
+	BIN_BOOTLOG  = "bin/boot.log"
+	ETC_INIT_SHY = "etc/init.shy"
+	ETC_EXIT_SHY = "etc/exit.shy"
+	ETC_MISS_SH  = "etc/miss.sh"
 
-	SRC_HELP     = "src/help"
-	SRC_MAIN_SHY = "src/main.shy"
-	SRC_MAIN_GO  = "src/main.go"
-	SRC_VERSION  = "src/version.go"
-	SRC_BINPACK  = "src/binpack.go"
-	MAKEFILE     = "makefile"
-	GO_MOD       = "go.mod"
-	GO_SUM       = "go.sum"
-
-	CTX_DEBUG = "ctx_debug"
-	CTX_DEV   = "ctx_dev"
-	CTX_PID   = "ctx_pid"
-	CTX_LOG   = "ctx_log"
+	SRC_HELP       = "src/help"
+	SRC_MAIN_SHY   = "src/main.shy"
+	SRC_MAIN_GO    = "src/main.go"
+	SRC_VERSION_GO = "src/version.go"
+	SRC_BINPACK_GO = "src/binpack.go"
+	MAKEFILE       = "makefile"
+	GO_MOD         = "go.mod"
+	GO_SUM         = "go.sum"
 )
 const ( // MSG
 	MSG_DETAIL = "detail"
@@ -124,12 +128,18 @@ const ( // MSG
 	MSG_USERNAME = "user.name"
 	MSG_USERZONE = "user.zone"
 	MSG_USERROLE = "user.role"
+	MSG_LANGUAGE = "user.lang"
 
 	MSG_TITLE = "sess.title"
 	MSG_RIVER = "sess.river"
 	MSG_STORM = "sess.storm"
 	MSG_LOCAL = "sess.local"
 	MSG_TOAST = "sess.toast"
+
+	CACHE_LIMIT  = "cache.limit"
+	CACHE_BEGIN  = "cache.begin"
+	CACHE_COUNT  = "cache.count"
+	CACHE_OFFEND = "cache.offend"
 )
 const ( // RENDER
 	RENDER_RAW      = "_raw"
@@ -137,40 +147,51 @@ const ( // RENDER
 	RENDER_RESULT   = "_result"
 	RENDER_ANCHOR   = "_anchor"
 	RENDER_BUTTON   = "_button"
+	RENDER_SCRIPT   = "_script"
+	RENDER_QRCODE   = "_qrcode"
 	RENDER_IMAGES   = "_images"
 	RENDER_VIDEOS   = "_videos"
-	RENDER_QRCODE   = "_qrcode"
-	RENDER_SCRIPT   = "_script"
 	RENDER_TEMPLATE = "_template"
 	RENDER_DOWNLOAD = "_download"
 	RENDER_REDIRECT = "_redirect"
 )
 const ( // PROCESS
 	PROCESS_LOCATION = "_location"
-	PROCESS_REFRESH  = "_refresh"
 	PROCESS_REWRITE  = "_rewrite"
+	PROCESS_REFRESH  = "_refresh"
 	PROCESS_DISPLAY  = "_display"
 	PROCESS_FIELD    = "_field"
 	PROCESS_INNER    = "_inner"
 	PROCESS_AGAIN    = "_again"
 
+	PROCESS_OPEN = "_open"
 	PROCESS_HOLD = "_hold"
 	PROCESS_BACK = "_back"
 	PROCESS_GROW = "_grow"
-	PROCESS_OPEN = "_open"
 
 	FIELD_PREFIX = "_prefix"
 )
+const ( // Err
+	ErrWarn     = "warn: "
+	ErrExpire   = "expire: "
+	ErrExists   = "exists: "
+	ErrNotLogin = "not login: "
+	ErrNotFound = "not found: "
+	ErrNotRight = "not right: "
+)
 const ( // LOG
-	// 数据
-	LOG_CREATE = "create"
-	LOG_REMOVE = "remove"
-	LOG_MODIFY = "modify"
-	LOG_INSERT = "insert"
-	LOG_DELETE = "delete"
-	LOG_SELECT = "select"
-	LOG_EXPORT = "export"
-	LOG_IMPORT = "import"
+	// 通用
+	LOG_INFO  = "info"
+	LOG_COST  = "cost"
+	LOG_WARN  = "warn"
+	LOG_ERROR = "error"
+	LOG_DEBUG = "debug"
+
+	// 命令
+	LOG_AUTH = "auth"
+	LOG_CMDS = "cmds"
+	LOG_SEND = "send"
+	LOG_RECV = "recv"
 
 	// 状态
 	LOG_BEGIN = "begin"
@@ -178,16 +199,15 @@ const ( // LOG
 	LOG_SERVE = "serve"
 	LOG_CLOSE = "close"
 
-	// 分类
-	LOG_CMDS  = "cmds"
-	LOG_AUTH  = "auth"
-	LOG_SEND  = "send"
-	LOG_RECV  = "recv"
-	LOG_COST  = "cost"
-	LOG_INFO  = "info"
-	LOG_WARN  = "warn"
-	LOG_ERROR = "error"
-	LOG_DEBUG = "debug"
+	// 数据
+	LOG_CREATE = "create"
+	LOG_REMOVE = "remove"
+	LOG_INSERT = "insert"
+	LOG_DELETE = "delete"
+	LOG_MODIFY = "modify"
+	LOG_SELECT = "select"
+	LOG_EXPORT = "export"
+	LOG_IMPORT = "import"
 )
 const ( // CTX
 	CTX_FOLLOW = "follow"

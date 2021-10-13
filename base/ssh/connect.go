@@ -8,6 +8,8 @@ import (
 	"path"
 	"strings"
 
+	"golang.org/x/crypto/ssh"
+	"golang.org/x/crypto/ssh/terminal"
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/aaa"
 	"shylinux.com/x/icebergs/base/cli"
@@ -16,8 +18,6 @@ import (
 	"shylinux.com/x/icebergs/base/nfs"
 	"shylinux.com/x/icebergs/base/tcp"
 	kit "shylinux.com/x/toolkits"
-	"golang.org/x/crypto/ssh"
-	"golang.org/x/crypto/ssh/terminal"
 )
 
 func _ssh_open(m *ice.Message, arg ...string) {
@@ -166,7 +166,7 @@ func init() {
 				})
 			}},
 			CONNECT: {Name: "connect hash auto dial prunes", Help: "连接", Action: map[string]*ice.Action{
-				tcp.OPEN: {Name: "open authfile= username=shy password= verfiy= host=shylinux.com port=22 private=.ssh/id_rsa", Help: "终端", Hand: func(m *ice.Message, arg ...string) {
+				tcp.OPEN: {Name: "open authfile username=shy password verfiy host=shylinux.com port=22 private=.ssh/id_rsa", Help: "终端", Hand: func(m *ice.Message, arg ...string) {
 					_ssh_open(m.OptionLoad(m.Option("authfile")), arg...)
 					m.Echo("exit %v:%v\n", m.Option(tcp.HOST), m.Option(tcp.PORT))
 				}},

@@ -136,7 +136,7 @@ func ZoneAction(fields ...string) map[string]*ice.Action {
 		CREATE: {Name: "create zone", Help: "创建", Hand: func(m *ice.Message, arg ...string) {
 			m.Cmdy(INSERT, m.PrefixKey(), "", HASH, arg)
 		}},
-		INSERT: {Name: "insert zone= type=go name=hi text=hello", Help: "添加", Hand: func(m *ice.Message, arg ...string) {
+		INSERT: {Name: "insert zone type=go name=hi text=hello", Help: "添加", Hand: func(m *ice.Message, arg ...string) {
 			m.Cmdy(INSERT, m.PrefixKey(), "", HASH, _zone(m), arg[1])
 			m.Cmdy(INSERT, m.PrefixKey(), "", ZONE, m.Option(_zone(m)), arg[2:])
 		}},

@@ -287,9 +287,9 @@ func _spide_save(m *ice.Message, cache, save, uri string, res *http.Response) {
 }
 
 const (
-	SPIDE_SHY  = "shy"
-	SPIDE_DEV  = "dev"
-	SPIDE_SELF = "self"
+	SPIDE_SHY = "shy"
+	SPIDE_DEV = "dev"
+	SPIDE_WEB = "web"
 
 	SPIDE_RAW   = "raw"
 	SPIDE_MSG   = "msg"

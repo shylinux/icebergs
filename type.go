@@ -306,7 +306,7 @@ func (m *Message) Starts(name string, help string, arg ...string) *Message {
 	return m
 }
 func (m *Message) Travel(cb interface{}) *Message {
-	list := []*Context{m.target}
+	list := []*Context{m.root.target}
 	for i := 0; i < len(list); i++ {
 		switch cb := cb.(type) {
 		case func(*Context, *Context):

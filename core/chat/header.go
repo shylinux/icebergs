@@ -89,9 +89,6 @@ func init() {
 			SHARE: {Name: "share type", Help: "共享", Hand: func(m *ice.Message, arg ...string) {
 				_header_share(m, arg...)
 			}},
-			GRANT: {Name: "grant space", Help: "授权", Hand: func(m *ice.Message, arg ...string) {
-				_header_grant(m, arg...)
-			}},
 
 			aaa.LOGIN: {Name: "login", Help: "密码登录", Hand: func(m *ice.Message, arg ...string) {
 				if aaa.UserLogin(m, arg[0], arg[1]) {
@@ -126,6 +123,12 @@ func init() {
 				m.Option(k, msg.Append(k))
 			}
 			m.Echo(m.Conf(HEADER, kit.Keym(TITLE)))
+		}},
+		HEADER: {Name: "header", Help: "标题栏", Action: map[string]*ice.Action{
+			GRANT: {Name: "grant space", Help: "授权", Hand: func(m *ice.Message, arg ...string) {
+				_header_grant(m, arg...)
+			}},
+		}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 		}},
 	}})
 }

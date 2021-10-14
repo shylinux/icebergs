@@ -10,11 +10,6 @@ import (
 	kit "shylinux.com/x/toolkits"
 )
 
-type Sort struct {
-	Fields string
-	Method string
-}
-
 type Option struct {
 	Name  string
 	Value interface{}
@@ -61,7 +56,7 @@ func (m *Message) OptionSimple(key ...string) (res []string) {
 }
 func (m *Message) OptionTemplate() string {
 	res := []string{`class="story"`}
-	for _, key := range kit.Split("style") {
+	for _, key := range kit.Split(kit.MDB_STYLE) {
 		if m.Option(key) != "" {
 			res = append(res, kit.Format(`s="%s"`, key, m.Option(key)))
 		}
@@ -71,12 +66,12 @@ func (m *Message) OptionTemplate() string {
 			res = append(res, kit.Format(`data-%s="%s"`, key, m.Option(key)))
 		}
 	}
-	kit.Fetch(m.Optionv("extra"), func(key string, value string) {
+	kit.Fetch(m.Optionv(kit.MDB_EXTRA), func(key string, value string) {
 		if value != "" {
 			res = append(res, kit.Format(`data-%s="%s"`, key, value))
 		}
 	})
-	return strings.Join(res, " ")
+	return kit.Join(res, SP)
 }
 
 func (m *Message) Fields(length int, fields ...string) string {
@@ -89,7 +84,7 @@ func (m *Message) Upload(dir string) {
 		m.Cmdy("web.cache", "watch", up[0], p)
 	} else {
 		// 下拉文件
-		m.Cmdy("web.spide", "dev", "save", p, "GET",
+		m.Cmdy("web.spide", DEV, SAVE, p, "GET",
 			kit.MergeURL2(m.Option(MSG_USERWEB), path.Join("/share/cache", up[0])))
 	}
 }
@@ -164,25 +159,25 @@ func (m *Message) ProcessRefresh300ms() { m.ProcessRefresh("300ms") }
 func (m *Message) ProcessRefresh3s()    { m.ProcessRefresh("3s") }
 func (m *Message) ProcessDisplay(arg ...interface{}) {
 	m.Process(PROCESS_DISPLAY)
-	m.Option("_display", arg...)
+	m.Option(MSG_DISPLAY, arg...)
 }
 
 func (m *Message) ProcessCommand(cmd string, val []string, arg ...string) {
-	if len(arg) > 0 && arg[0] == "run" {
+	if len(arg) > 0 && arg[0] == RUN {
 		m.Cmdy(cmd, arg[1:])
 		return
 	}
 
 	m.Cmdy("command", cmd)
-	m.ProcessField(cmd, "run")
-	m.Push("arg", kit.Format(val))
+	m.ProcessField(cmd, RUN)
+	m.Push(ARG, kit.Format(val))
 }
 func (m *Message) ProcessCommandOpt(arg ...string) {
-	m.Push("opt", kit.Format(m.OptionSimple(arg...)))
+	m.Push(OPT, kit.Format(m.OptionSimple(arg...)))
 }
 func (m *Message) ProcessField(arg ...interface{}) {
 	m.Process(PROCESS_FIELD)
-	m.Option("_prefix", arg...)
+	m.Option(FIELD_PREFIX, arg...)
 }
 func (m *Message) ProcessInner()          { m.Process(PROCESS_INNER) }
 func (m *Message) ProcessAgain()          { m.Process(PROCESS_AGAIN) }

@@ -3,6 +3,7 @@ package ice
 const (
 	SP = " "
 	NL = "\n"
+	PT = "."
 
 	OK      = "ok"
 	TRUE    = "true"
@@ -11,15 +12,29 @@ const (
 	FAILURE = "failure"
 
 	INIT = "init"
-	EXIT = "exit"
-	SAVE = "save"
 	LOAD = "load"
+	AUTO = "auto"
 	HELP = "help"
+	SAVE = "save"
+	EXIT = "exit"
 
-	ICE = "ice"
 	SHY = "shy"
 	DEV = "dev"
 	WEB = "web"
+	ICE = "ice"
+	RUN = "run"
+
+	POD = "pod"
+	CTX = "ctx"
+	CMD = "cmd"
+	ARG = "arg"
+	OPT = "opt"
+
+	SRC = "src"
+	ETC = "etc"
+	BIN = "bin"
+	VAR = "var"
+	USR = "usr"
 )
 const ( // MOD
 	MOD_DIR  = 0750
@@ -75,10 +90,11 @@ const ( // DIR
 	VAR_TRASH    = "var/trash"
 	BIN_ICE_SH   = "bin/ice.sh"
 	BIN_ICE_BIN  = "bin/ice.bin"
-	BIN_BOOTLOG  = "bin/boot.log"
+	BIN_BOOT_LOG = "bin/boot.log"
 	ETC_INIT_SHY = "etc/init.shy"
 	ETC_EXIT_SHY = "etc/exit.shy"
 	ETC_MISS_SH  = "etc/miss.sh"
+	ETC_PATH     = "etc/path"
 
 	SRC_HELP       = "src/help"
 	SRC_MAIN_SHY   = "src/main.shy"
@@ -104,8 +120,8 @@ const ( // MSG
 	MSG_OUTPUT = "_output"
 	MSG_ARGS   = "_args"
 
-	MSG_DAEMON = "_daemon"
 	MSG_UPLOAD = "_upload"
+	MSG_DAEMON = "_daemon"
 	MSG_ACTION = "_action"
 	MSG_STATUS = "_status"
 
@@ -126,11 +142,12 @@ const ( // MSG
 	MSG_USERDATA = "user.data"
 	MSG_USERNICK = "user.nick"
 	MSG_USERNAME = "user.name"
-	MSG_USERZONE = "user.zone"
 	MSG_USERROLE = "user.role"
+	MSG_USERZONE = "user.zone"
 	MSG_LANGUAGE = "user.lang"
 
 	MSG_TITLE = "sess.title"
+	MSG_TOPIC = "sess.topic"
 	MSG_RIVER = "sess.river"
 	MSG_STORM = "sess.storm"
 	MSG_LOCAL = "sess.local"
@@ -152,13 +169,13 @@ const ( // RENDER
 	RENDER_IMAGES   = "_images"
 	RENDER_VIDEOS   = "_videos"
 	RENDER_TEMPLATE = "_template"
-	RENDER_DOWNLOAD = "_download"
 	RENDER_REDIRECT = "_redirect"
+	RENDER_DOWNLOAD = "_download"
 )
 const ( // PROCESS
 	PROCESS_LOCATION = "_location"
-	PROCESS_REWRITE  = "_rewrite"
 	PROCESS_REFRESH  = "_refresh"
+	PROCESS_REWRITE  = "_rewrite"
 	PROCESS_DISPLAY  = "_display"
 	PROCESS_FIELD    = "_field"
 	PROCESS_INNER    = "_inner"
@@ -173,8 +190,8 @@ const ( // PROCESS
 )
 const ( // Err
 	ErrWarn     = "warn: "
-	ErrExpire   = "expire: "
 	ErrExists   = "exists: "
+	ErrExpire   = "expire: "
 	ErrNotLogin = "not login: "
 	ErrNotFound = "not found: "
 	ErrNotRight = "not right: "

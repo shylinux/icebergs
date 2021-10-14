@@ -76,7 +76,7 @@ func _dream_show(m *ice.Message, name string) {
 		m.Option(cli.CMD_DIR, p)
 		m.Optionv(cli.CMD_ENV, kit.Simple(
 			"ctx_dev", "http://:"+m.Cmd(SERVE).Append(tcp.PORT),
-			cli.PATH, kit.Path(path.Join(p, kit.SSH_BIN))+":"+kit.Path(kit.SSH_BIN)+":"+os.Getenv(cli.PATH),
+			cli.PATH, kit.Path(path.Join(p, ice.BIN))+":"+kit.Path(ice.BIN)+":"+os.Getenv(cli.PATH),
 			"USER", ice.Info.UserName, m.Confv(DREAM, kit.Keym(cli.ENV)),
 		))
 		// 启动任务
@@ -140,7 +140,7 @@ func init() {
 		Configs: map[string]*ice.Config{
 			DREAM: {Name: DREAM, Help: "梦想家", Value: kit.Data(kit.MDB_PATH, ice.USR_LOCAL_WORK,
 				cli.CMD, []interface{}{"ice.bin", SPACE, tcp.DIAL},
-				cli.ENV, kit.Dict(cli.CTX_LOG, ice.BIN_BOOTLOG),
+				cli.ENV, kit.Dict(cli.CTX_LOG, ice.BIN_BOOT_LOG),
 				"miss", `#!/bin/bash
 if [ "$ISH_CONF_PRE" = "" ]; then
 	[ -f $PWD/.ish/plug.sh ] || [ -f $HOME/.ish/plug.sh ] || git clone ${ISH_CONF_HUB_PROXY:="https://"}shylinux.com/x/intshell $PWD/.ish

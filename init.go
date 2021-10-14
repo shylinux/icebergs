@@ -17,7 +17,7 @@ func (f *Frame) Spawn(m *Message, c *Context, arg ...string) Server {
 	return &Frame{}
 }
 func (f *Frame) Begin(m *Message, arg ...string) Server {
-	m.Log(LOG_BEGIN, "ice")
+	m.Log(LOG_BEGIN, ICE)
 	defer m.Cost("begin ice")
 
 	list := map[*Context]*Message{m.target: m}
@@ -31,7 +31,7 @@ func (f *Frame) Begin(m *Message, arg ...string) Server {
 	return f
 }
 func (f *Frame) Start(m *Message, arg ...string) bool {
-	m.Log(LOG_START, "ice")
+	m.Log(LOG_START, ICE)
 	defer m.Cost("start ice")
 
 	m.Cap(CTX_STATUS, CTX_START)
@@ -41,11 +41,9 @@ func (f *Frame) Start(m *Message, arg ...string) bool {
 	return true
 }
 func (f *Frame) Close(m *Message, arg ...string) bool {
-	m.TryCatch(m, true, func(m *Message) {
-		m.target.wg.Wait()
-	})
+	m.TryCatch(m, true, func(m *Message) { m.target.wg.Wait() })
 
-	m.Log(LOG_CLOSE, "ice")
+	m.Log(LOG_CLOSE, ICE)
 	defer m.Cost("close ice")
 
 	list := map[*Context]*Message{m.target: m}
@@ -59,7 +57,7 @@ func (f *Frame) Close(m *Message, arg ...string) bool {
 }
 
 var Index = &Context{Name: "ice", Help: "冰山模块", Caches: map[string]*Cache{
-	CTX_FOLLOW: {Value: "ice"}, CTX_STREAM: {Value: "shy"}, CTX_STATUS: {Value: CTX_BEGIN},
+	CTX_FOLLOW: {Value: ICE}, CTX_STREAM: {Value: SHY}, CTX_STATUS: {Value: CTX_BEGIN},
 }, Configs: map[string]*Config{
 	HELP: {Value: kit.Data("index", _help)},
 }, Commands: map[string]*Command{

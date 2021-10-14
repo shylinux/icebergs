@@ -9,13 +9,6 @@ import (
 	kit "shylinux.com/x/toolkits"
 )
 
-func (m *Message) SetResult(arg ...interface{}) *Message {
-	m.Set(MSG_RESULT)
-	if len(arg) > 0 {
-		m.Echo(kit.Format(arg[0]), arg[1:]...)
-	}
-	return m
-}
 func (m *Message) Set(key string, arg ...string) *Message {
 	switch key {
 	case MSG_DETAIL, MSG_RESULT:
@@ -304,7 +297,7 @@ func (m *Message) Table(cbs ...func(index int, value map[string]string, head []s
 	}
 
 	//计算列宽
-	space := kit.Select(" ", m.Option("table.space"))
+	space := kit.Select(SP, m.Option("table.space"))
 	depth, width := 0, map[string]int{}
 	for _, k := range m.meta[MSG_APPEND] {
 		if len(m.meta[k]) > depth {
@@ -319,8 +312,8 @@ func (m *Message) Table(cbs ...func(index int, value map[string]string, head []s
 	}
 
 	// 回调函数
-	rows := kit.Select("\n", m.Option("table.row_sep"))
-	cols := kit.Select(" ", m.Option("table.col_sep"))
+	rows := kit.Select(NL, m.Option("table.row_sep"))
+	cols := kit.Select(SP, m.Option("table.col_sep"))
 	compact := m.Option("table.compact") == TRUE
 	cb := func(value map[string]string, field []string, index int) bool {
 		for i, v := range field {
@@ -374,8 +367,7 @@ func (m *Message) Detailv(arg ...interface{}) []string {
 }
 func (m *Message) Optionv(key string, arg ...interface{}) interface{} {
 	if len(arg) > 0 {
-		// 写数据
-		if kit.IndexOf(m.meta[MSG_OPTION], key) == -1 {
+		if kit.IndexOf(m.meta[MSG_OPTION], key) == -1 { // 写数据
 			m.meta[MSG_OPTION] = append(m.meta[MSG_OPTION], key)
 		}
 
@@ -391,7 +383,7 @@ func (m *Message) Optionv(key string, arg ...interface{}) interface{} {
 			m.data[key] = str
 		}
 		if key == MSG_FIELDS {
-			for _, k := range kit.Split(strings.Join(m.meta[key], ",")) {
+			for _, k := range kit.Split(kit.Join(m.meta[key])) {
 				delete(m.meta, k)
 			}
 		}
@@ -399,12 +391,10 @@ func (m *Message) Optionv(key string, arg ...interface{}) interface{} {
 
 	for msg := m; msg != nil; msg = msg.message {
 		if list, ok := msg.data[key]; ok {
-			// 读数据
-			return list
+			return list // 读数据
 		}
 		if list, ok := msg.meta[key]; ok {
-			// 读选项
-			return list
+			return list // 读选项
 		}
 	}
 	return nil

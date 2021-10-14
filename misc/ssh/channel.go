@@ -6,13 +6,13 @@ import (
 	"os/exec"
 	"strings"
 
+	"golang.org/x/crypto/ssh"
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/aaa"
 	"shylinux.com/x/icebergs/base/ctx"
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/tcp"
 	kit "shylinux.com/x/toolkits"
-	"golang.org/x/crypto/ssh"
 )
 
 func _ssh_exec(m *ice.Message, cmd string, arg []string, env []string, input io.Reader, output io.Writer, done func()) {
@@ -71,6 +71,11 @@ func init() {
 			CHANNEL: {Name: "channel", Help: "通道", Value: kit.Data()},
 		},
 		Commands: map[string]*ice.Command{
+			ice.CTX_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+				m.Richs(CHANNEL, "", kit.MDB_FOREACH, func(key string, value map[string]interface{}) {
+					kit.Value(value, kit.Keym(kit.MDB_STATUS), tcp.CLOSE)
+				})
+			}},
 			CHANNEL: {Name: "channel hash id auto command prunes", Help: "通道", Action: map[string]*ice.Action{
 				mdb.REMOVE: {Name: "remove", Help: "删除", Hand: func(m *ice.Message, arg ...string) {
 					m.Cmdy(mdb.DELETE, CHANNEL, "", mdb.HASH, kit.MDB_HASH, m.Option(kit.MDB_HASH))

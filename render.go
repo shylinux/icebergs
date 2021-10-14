@@ -32,7 +32,7 @@ func Render(m *Message, cmd string, args ...interface{}) string {
 			list = append(list, kit.Format(`<input type="button" name="%s" value="%s">`,
 				k, kit.Select(k, kit.Value(m._cmd.Meta, kit.Keys("_trans", k)), m.Option(MSG_LANGUAGE) != "en")))
 		}
-		return kit.Join(list, " ")
+		return kit.Join(list, SP)
 
 	case RENDER_IMAGES: // src [size]
 		return kit.Format(`<img src="%s" height=%s>`, arg[0], kit.Select("120", arg, 1))
@@ -94,9 +94,9 @@ func (m *Message) PushAction(list ...interface{}) {
 	})
 }
 func (m *Message) PushPodCmd(cmd string, arg ...string) {
-	if strings.Contains(m.OptionFields(), "pod") {
+	if strings.Contains(m.OptionFields(), POD) {
 		m.Table(func(index int, value map[string]string, head []string) {
-			m.Push("pod", m.Option(MSG_USERPOD))
+			m.Push(POD, m.Option(MSG_USERPOD))
 		})
 	}
 
@@ -107,7 +107,7 @@ func (m *Message) PushPodCmd(cmd string, arg ...string) {
 				break
 			}
 			m.Cmd("web.space", value[kit.MDB_NAME], m.Prefix(cmd), arg).Table(func(index int, val map[string]string, head []string) {
-				val["pod"] = kit.Keys(value[kit.MDB_NAME], val["pod"])
+				val[POD] = kit.Keys(value[kit.MDB_NAME], val[POD])
 				m.Push("", val, head)
 			})
 		}
@@ -117,13 +117,13 @@ func (m *Message) PushSearch(args ...interface{}) {
 	data := kit.Dict(args...)
 	for _, k := range kit.Split(m.OptionFields()) {
 		switch k {
-		case "pod":
+		case POD:
 			m.Push(k, "")
 			// m.Push(k, kit.Select(m.Option(MSG_USERPOD), data[kit.SSH_POD]))
-		case "ctx":
+		case CTX:
 			m.Push(k, m.Prefix())
-		case "cmd":
-			m.Push(k, kit.Format(data["cmd"]))
+		case CMD:
+			m.Push(k, kit.Format(data[CMD]))
 		case kit.MDB_TIME:
 			m.Push(k, kit.Select(m.Time(), data[k]))
 		default:
@@ -139,7 +139,7 @@ func (m *Message) PushSearchWeb(cmd string, name string) {
 		if value[kit.MDB_NAME] == "" {
 			text = kit.MergeURL(value[kit.MDB_TEXT] + url.QueryEscape(name))
 		}
-		m.PushSearch("cmd", cmd, kit.MDB_TYPE, kit.Select("", value[kit.MDB_TYPE]), kit.MDB_NAME, name, kit.MDB_TEXT, text)
+		m.PushSearch(CMD, cmd, kit.MDB_TYPE, kit.Select("", value[kit.MDB_TYPE]), kit.MDB_NAME, name, kit.MDB_TEXT, text)
 	})
 }
 
@@ -193,5 +193,5 @@ func (m *Message) RenderDownload(args ...interface{}) *Message {
 	return m.Render(RENDER_DOWNLOAD, args...)
 }
 func (m *Message) RenderIndex(serve, repos string, file ...string) *Message {
-	return m.RenderDownload(path.Join(m.Conf(serve, kit.Keym(repos, kit.SSH_PATH)), kit.Select(m.Conf(serve, kit.Keym(repos, kit.SSH_INDEX)), path.Join(file...))))
+	return m.RenderDownload(path.Join(m.Conf(serve, kit.Keym(repos, kit.MDB_PATH)), kit.Select(m.Conf(serve, kit.Keym(repos, kit.MDB_INDEX)), path.Join(file...))))
 }

@@ -37,7 +37,7 @@ func _share_cache(m *ice.Message, arg ...string) {
 func _share_local(m *ice.Message, arg ...string) {
 	p := path.Join(arg...)
 	switch ls := strings.Split(p, "/"); ls[0] {
-	case kit.SSH_ETC, kit.SSH_VAR: // 私有文件
+	case ice.ETC, ice.VAR: // 私有文件
 		if m.Option(ice.MSG_USERROLE) == aaa.VOID {
 			m.Render(STATUS, http.StatusUnauthorized, ice.ErrNotRight)
 			return // 没有权限

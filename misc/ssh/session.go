@@ -3,12 +3,12 @@ package ssh
 import (
 	"io"
 
+	"golang.org/x/crypto/ssh"
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/ctx"
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/tcp"
 	kit "shylinux.com/x/toolkits"
-	"golang.org/x/crypto/ssh"
 )
 
 func _ssh_session(m *ice.Message, h string, client *ssh.Client) (*ssh.Session, error) {
@@ -62,6 +62,11 @@ func init() {
 			SESSION: {Name: SESSION, Help: "会话", Value: kit.Data()},
 		},
 		Commands: map[string]*ice.Command{
+			ice.CTX_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+				m.Richs(SESSION, "", kit.MDB_FOREACH, func(key string, value map[string]interface{}) {
+					kit.Value(value, kit.Keym(kit.MDB_STATUS), tcp.CLOSE)
+				})
+			}},
 			SESSION: {Name: "session hash id auto command prunes", Help: "会话", Action: map[string]*ice.Action{
 				mdb.REMOVE: {Name: "remove", Help: "删除", Hand: func(m *ice.Message, arg ...string) {
 					m.Cmdy(mdb.DELETE, SESSION, "", mdb.HASH, kit.MDB_HASH, m.Option(kit.MDB_HASH))

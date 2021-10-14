@@ -99,11 +99,11 @@ func _cache_download(m *ice.Message, r *http.Response) (file, size string) {
 				case []string:
 					m.Richs(cb[0], cb[1], cb[2], func(key string, value map[string]interface{}) {
 						value = kit.GetMeta(value)
-						value[kit.SSH_STEP], value[kit.MDB_SIZE], value[kit.MDB_TOTAL] = kit.Format(s), size, total
+						value[kit.MDB_STEP], value[kit.MDB_SIZE], value[kit.MDB_TOTAL] = kit.Format(s), size, total
 					})
 				default:
 					if s != step && s%10 == 0 {
-						m.Log_IMPORT(kit.MDB_FILE, p, kit.SSH_STEP, s,
+						m.Log_IMPORT(kit.MDB_FILE, p, kit.MDB_STEP, s,
 							kit.MDB_SIZE, kit.FmtSize(int64(size)), kit.MDB_TOTAL, kit.FmtSize(int64(total)))
 					}
 				}

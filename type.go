@@ -140,7 +140,7 @@ func (c *Context) Merge(s *Context) *Context {
 			}
 			kit.Value(v.Meta, kit.Keys("_trans", k), help[0])
 			if len(help) > 1 {
-				kit.Value(v.Meta, kit.Keys("title", k), help[1])
+				kit.Value(v.Meta, kit.Keys(kit.MDB_TITLE, k), help[1])
 			}
 			if a.Hand == nil {
 				continue

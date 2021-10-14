@@ -30,7 +30,7 @@ func init() {
 					h := m.Cmdx(mdb.INSERT, m.Prefix(CACHE), "", mdb.HASH, m.OptionSimple("type,name,text,link"))
 					value := kit.GetMeta(m.Confm(CACHE, kit.Keys(kit.MDB_HASH, h)))
 					m.Option(kit.Keycb(web.DOWNLOAD), func(size, total int) {
-						value[kit.MDB_TOTAL], value[kit.MDB_SIZE], value[kit.SSH_STEP] = total, size, kit.Format(size*100/total)
+						value[kit.MDB_TOTAL], value[kit.MDB_SIZE], value[kit.MDB_STEP] = total, size, kit.Format(size*100/total)
 					})
 					msg := m.Cmd("web.spide", web.SPIDE_DEV, web.SPIDE_CACHE, web.SPIDE_GET, m.Option(kit.MDB_LINK))
 
@@ -42,7 +42,7 @@ func init() {
 					m.Cmdy(mdb.DELETE, m.Prefix(CACHE), "", mdb.HASH, kit.MDB_HASH, m.Option(kit.MDB_HASH))
 				}},
 				mdb.PRUNES: {Name: "prunes", Help: "清理", Hand: func(m *ice.Message, arg ...string) {
-					m.Cmdy(mdb.PRUNES, m.Prefix(CACHE), "", mdb.HASH, kit.SSH_STEP, "100")
+					m.Cmdy(mdb.PRUNES, m.Prefix(CACHE), "", mdb.HASH, kit.MDB_STEP, "100")
 				}},
 			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 				m.Fields(len(arg), m.Conf(CACHE, kit.META_FIELD))

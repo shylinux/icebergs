@@ -31,7 +31,7 @@ func (m *Message) CSV(text string, head ...string) *Message {
 }
 func (m *Message) Parse(meta string, key string, arg ...string) *Message {
 	list := []string{}
-	for _, line := range kit.Split(strings.Join(arg, " "), "\n") {
+	for _, line := range kit.Split(strings.Join(arg, SP), NL) {
 		ls := kit.Split(line)
 		for i := 0; i < len(ls); i++ {
 			if strings.HasPrefix(ls[i], "#") {
@@ -157,11 +157,6 @@ func (m *Message) cmd(arg ...interface{}) *Message {
 		case Option:
 			opts[val.Name] = val.Value
 
-		case *Sort:
-			defer func() { m.Sort(val.Fields, val.Method) }()
-		case Sort:
-			defer func() { m.Sort(val.Fields, val.Method) }()
-
 		default:
 			if reflect.Func == reflect.TypeOf(val).Kind() {
 				cbs = val
@@ -183,7 +178,7 @@ func (m *Message) cmd(arg ...interface{}) *Message {
 	ok := false
 	run := func(msg *Message, ctx *Context, cmd *Command, key string, arg ...string) {
 		if ok = true; cbs != nil {
-			msg.Option(list[0]+".cb", cbs)
+			msg.Option(kit.Keycb(list[0]), cbs)
 		}
 		for k, v := range opts {
 			msg.Option(k, v)
@@ -242,7 +237,7 @@ func (c *Context) _cmd(m *Message, cmd *Command, key string, k string, h *Action
 		return m
 	}
 
-	if k == "run" && m.Warn(!m.Right(arg), ErrNotRight, arg) {
+	if k == RUN && m.Warn(!m.Right(arg), ErrNotRight, arg) {
 		return m
 	}
 
@@ -250,8 +245,8 @@ func (c *Context) _cmd(m *Message, cmd *Command, key string, k string, h *Action
 	if len(h.List) > 0 && k != "search" {
 		order := false
 		for i, v := range h.List {
-			name := kit.Format(kit.Value(v, "name"))
-			value := kit.Format(kit.Value(v, "value"))
+			name := kit.Format(kit.Value(v, kit.MDB_NAME))
+			value := kit.Format(kit.Value(v, kit.MDB_VALUE))
 
 			if i == 0 && len(arg) > 0 && arg[0] != name {
 				order = true
@@ -285,13 +280,13 @@ func (c *Context) split(name string) (list []interface{}) {
 	)
 
 	item, button := kit.Dict(), false
-	ls := kit.Split(name, " ", ":=@")
+	ls := kit.Split(name, SP, ":=@")
 	for i := 1; i < len(ls); i++ {
 		switch ls[i] {
 		case "text":
 			list = append(list, kit.List(kit.MDB_TYPE, TEXTAREA, kit.MDB_NAME, "text")...)
 		case "auto":
-			list = append(list, kit.List(kit.MDB_TYPE, BUTTON, kit.MDB_NAME, "list", kit.MDB_VALUE, "auto")...)
+			list = append(list, kit.List(kit.MDB_TYPE, BUTTON, kit.MDB_NAME, "list", kit.MDB_VALUE, AUTO)...)
 			list = append(list, kit.List(kit.MDB_TYPE, BUTTON, kit.MDB_NAME, "back")...)
 			button = true
 		case "page":
@@ -307,7 +302,7 @@ func (c *Context) split(name string) (list []interface{}) {
 			i++
 		case "=":
 			if value := kit.Select("", ls, i+1); strings.Contains(value, ",") {
-				vs := strings.Split(value, ",")
+				vs := kit.Split(value)
 				if strings.Count(value, vs[0]) > 1 {
 					item["values"] = vs[1:]
 				} else {
@@ -320,7 +315,7 @@ func (c *Context) split(name string) (list []interface{}) {
 			}
 			i++
 		case "@":
-			item["action"] = kit.Select("", ls, i+1)
+			item[kit.MDB_ACTION] = kit.Select("", ls, i+1)
 			i++
 
 		default:

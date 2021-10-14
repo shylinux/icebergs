@@ -19,7 +19,7 @@ func _cat_ext(name string) string {
 }
 func _cat_right(m *ice.Message, name string) bool {
 	switch strings.Split(name, "/")[0] {
-	case kit.SSH_ETC, kit.SSH_VAR:
+	case ice.ETC, ice.VAR:
 		if m.Warn(m.Option(ice.MSG_USERROLE) == aaa.VOID, ice.ErrNotRight, "of", name) {
 			return false
 		}

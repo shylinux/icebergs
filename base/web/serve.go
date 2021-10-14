@@ -67,7 +67,7 @@ func _serve_main(m *ice.Message, w http.ResponseWriter, r *http.Request) bool {
 		msg := m.Spawn()
 		msg.W, msg.R = w, r
 		repos := kit.Select(ice.INTSHELL, ice.VOLCANOS, strings.Contains(r.Header.Get("User-Agent"), "Mozilla/5.0"))
-		Render(msg, ice.RENDER_DOWNLOAD, path.Join(m.Conf(SERVE, kit.Keym(repos, kit.SSH_PATH)), m.Conf(SERVE, kit.Keym(repos, kit.SSH_INDEX))))
+		Render(msg, ice.RENDER_DOWNLOAD, path.Join(m.Conf(SERVE, kit.Keym(repos, kit.MDB_PATH)), m.Conf(SERVE, kit.Keym(repos, kit.MDB_INDEX))))
 		return false
 	}
 
@@ -246,12 +246,12 @@ func init() {
 					"x", true, ice.PUBLISH, true,
 				), LOGHEADERS, false,
 
-				kit.SSH_STATIC, kit.Dict("/", ice.USR_VOLCANOS),
-				ice.VOLCANOS, kit.Dict(kit.MDB_PATH, ice.USR_VOLCANOS, kit.SSH_INDEX, "page/index.html",
+				"static", kit.Dict("/", ice.USR_VOLCANOS),
+				ice.VOLCANOS, kit.Dict(kit.MDB_PATH, ice.USR_VOLCANOS, kit.MDB_INDEX, "page/index.html",
 					kit.SSH_REPOS, "https://shylinux.com/x/volcanos", kit.SSH_BRANCH, kit.SSH_MASTER,
 				), ice.PUBLISH, ice.USR_PUBLISH,
 
-				ice.INTSHELL, kit.Dict(kit.MDB_PATH, ice.USR_INTSHELL, kit.SSH_INDEX, ice.INDEX_SH,
+				ice.INTSHELL, kit.Dict(kit.MDB_PATH, ice.USR_INTSHELL, kit.MDB_INDEX, ice.INDEX_SH,
 					kit.SSH_REPOS, "https://shylinux.com/x/intshell", kit.SSH_BRANCH, kit.SSH_MASTER,
 				), ice.REQUIRE, ".ish/pluged",
 			)},

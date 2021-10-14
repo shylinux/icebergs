@@ -18,9 +18,9 @@ func (m *Message) TryCatch(msg *Message, silent bool, hand ...func(msg *Message)
 		default:
 			fileline := kit.FileLine(4, 5)
 			m.Log(LOG_WARN, "catch: %s %s", e, fileline)
-			m.Log("chain", msg.FormatChain())
+			m.Log(kit.MDB_CHAIN, msg.FormatChain())
 			m.Log(LOG_WARN, "catch: %s %s", e, fileline)
-			m.Log("stack", msg.FormatStack())
+			m.Log(kit.MDB_STACK, msg.FormatStack())
 			m.Log(LOG_WARN, "catch: %s %s", e, fileline)
 			if len(hand) > 1 { // 捕获异常
 				m.TryCatch(msg, silent, hand[1:]...)
@@ -79,7 +79,7 @@ func (m *Message) Done(b bool) bool {
 func (m *Message) Call(sync bool, cb func(*Message) *Message) *Message {
 	wait := make(chan bool, 2)
 
-	p := kit.Select("10s", m.Option("timeout"))
+	p := kit.Select("10s", m.Option(kit.MDB_TIMEOUT))
 	t := time.AfterFunc(kit.Duration(p), func() {
 		m.Warn(true, "%s timeout %v", p, m.Detailv())
 		wait <- false
@@ -126,9 +126,9 @@ func (m *Message) Go(cb interface{}, args ...interface{}) *Message {
 
 func (m *Message) Watch(key string, arg ...string) *Message {
 	if len(arg) == 0 {
-		arg = append(arg, m.Prefix("auto"))
+		arg = append(arg, m.Prefix(AUTO))
 	}
-	m.Cmd("gdb.event", "action", "listen", "event", key, "cmd", strings.Join(arg, " "))
+	m.Cmd("gdb.event", "action", "listen", "event", key, CMD, strings.Join(arg, SP))
 	return m
 }
 func (m *Message) Event(key string, arg ...string) *Message {
@@ -137,8 +137,8 @@ func (m *Message) Event(key string, arg ...string) *Message {
 }
 func (m *Message) Right(arg ...interface{}) bool {
 	return m.Option(MSG_USERROLE) == "root" || !m.Warn(m.Cmdx("aaa.role", "right",
-		m.Option(MSG_USERROLE), strings.ReplaceAll(kit.Keys(arg...), "/", ".")) != "ok",
-		ErrNotRight, m.Option(MSG_USERROLE), " of ", strings.Join(kit.Simple(arg), "."), " at ", kit.FileLine(2, 3))
+		m.Option(MSG_USERROLE), strings.ReplaceAll(kit.Keys(arg...), "/", PT)) != OK,
+		ErrNotRight, m.Option(MSG_USERROLE), " of ", strings.Join(kit.Simple(arg), PT), " at ", kit.FileLine(2, 3))
 }
 func (m *Message) Space(arg interface{}) []string {
 	if arg == nil || arg == "" || kit.Format(arg) == m.Conf("cli.runtime", "node.name") {
@@ -147,9 +147,9 @@ func (m *Message) Space(arg interface{}) []string {
 	return []string{"web.space", kit.Format(arg)}
 }
 func (m *Message) PodCmd(arg ...interface{}) bool {
-	if pod := m.Option("pod"); pod != "" {
-		m.Option("pod", "")
-		if m.Option("_upload") != "" {
+	if pod := m.Option(POD); pod != "" {
+		m.Option(POD, "")
+		if m.Option(MSG_UPLOAD) != "" {
 			msg := m.Cmd("cache", "upload")
 			m.Option(MSG_UPLOAD, msg.Append(kit.MDB_HASH), msg.Append(kit.MDB_NAME), msg.Append(kit.MDB_SIZE))
 		}

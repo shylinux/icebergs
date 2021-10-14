@@ -30,6 +30,8 @@ func _spide_go(m *ice.Message, file string) {
 		case "w", "e":
 			return
 			ls[0] = "-" + ls[0] + ":" + strings.TrimPrefix(ls[len(ls)-1], "type:")
+		case "-":
+			return
 		case "m":
 			if strings.HasPrefix(ls[5], "ctype") {
 				ls[0] = strings.TrimPrefix(ls[5], "ctype:") + ":" + ls[0]
@@ -74,9 +76,9 @@ func init() {
 			}
 
 			if arg[0] == path.Base(kit.Pwd()) {
-				m.Option(nfs.DIR_ROOT, path.Join(kit.SSH_SRC))
+				m.Option(nfs.DIR_ROOT, path.Join(ice.SRC))
 			} else {
-				m.Option(nfs.DIR_ROOT, path.Join(kit.SSH_USR, arg[0]))
+				m.Option(nfs.DIR_ROOT, path.Join(ice.USR, arg[0]))
 			}
 
 			if len(arg) == 1 { // 目录列表

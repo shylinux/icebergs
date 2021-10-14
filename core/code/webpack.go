@@ -24,7 +24,7 @@ func init() {
 	Index.Merge(&ice.Context{Commands: map[string]*ice.Command{
 		WEBPACK: {Name: "webpack path auto create prunes", Help: "打包", Action: map[string]*ice.Action{
 			mdb.CREATE: {Name: "create name=demo", Help: "创建", Hand: func(m *ice.Message, arg ...string) {
-				dir := m.Conf(web.SERVE, kit.Keym(ice.VOLCANOS, kit.SSH_PATH))
+				dir := m.Conf(web.SERVE, kit.Keym(ice.VOLCANOS, kit.MDB_PATH))
 				css, _, e := kit.Create(path.Join(dir, "page/cache.css"))
 				m.Assert(e)
 				defer css.Close()

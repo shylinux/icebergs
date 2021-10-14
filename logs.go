@@ -2,7 +2,6 @@ package ice
 
 import (
 	"encoding/json"
-	"fmt"
 	"runtime"
 	"strings"
 	"time"
@@ -52,8 +51,8 @@ func (m *Message) log(level string, str string, arg ...interface{}) *Message {
 	}
 
 	// 输出日志
-	log.Info(fmt.Sprintf("%02d %9s %s%s %s%s", m.code,
-		fmt.Sprintf("%4s->%-4s", m.source.Name, m.target.Name), prefix, level, str, suffix))
+	log.Info(kit.Format("%02d %9s %s%s %s%s", m.code,
+		kit.Format("%4s->%-4s", m.source.Name, m.target.Name), prefix, level, str, suffix))
 	return m
 }
 func (m *Message) join(arg ...interface{}) string {
@@ -146,7 +145,7 @@ func (m *Message) FormatStack() string {
 		frame, more := frames.Next()
 		file := strings.Split(frame.File, "/")
 		name := strings.Split(frame.Function, "/")
-		meta = append(meta, fmt.Sprintf("\n%s:%d\t%s", file[len(file)-1], frame.Line, name[len(name)-1]))
+		meta = append(meta, kit.Format("\n%s:%d\t%s", file[len(file)-1], frame.Line, name[len(name)-1]))
 		if !more {
 			break
 		}
@@ -163,16 +162,16 @@ func (m *Message) FormatChain() string {
 	for i := len(ms) - 1; i >= 0; i-- {
 		msg := ms[i]
 
-		meta = append(meta, fmt.Sprintf("%s ", msg.Format("prefix")))
+		meta = append(meta, kit.Format("%s ", msg.Format("prefix")))
 		if len(msg.meta[MSG_DETAIL]) > 0 {
-			meta = append(meta, fmt.Sprintf("detail:%d %v", len(msg.meta[MSG_DETAIL]), msg.meta[MSG_DETAIL]))
+			meta = append(meta, kit.Format("%s:%d %v", MSG_DETAIL, len(msg.meta[MSG_DETAIL]), msg.meta[MSG_DETAIL]))
 		}
 
 		if len(msg.meta[MSG_OPTION]) > 0 {
-			meta = append(meta, fmt.Sprintf("option:%d %v\n", len(msg.meta[MSG_OPTION]), msg.meta[MSG_OPTION]))
+			meta = append(meta, kit.Format("%s:%d %v\n", MSG_OPTION, len(msg.meta[MSG_OPTION]), msg.meta[MSG_OPTION]))
 			for _, k := range msg.meta[MSG_OPTION] {
 				if v, ok := msg.meta[k]; ok {
-					meta = append(meta, fmt.Sprintf("    %s: %d %v\n", k, len(v), v))
+					meta = append(meta, kit.Format("    %s: %d %v\n", k, len(v), v))
 				}
 			}
 		} else {
@@ -180,30 +179,30 @@ func (m *Message) FormatChain() string {
 		}
 
 		if len(msg.meta[MSG_APPEND]) > 0 {
-			meta = append(meta, fmt.Sprintf("  append:%d %v\n", len(msg.meta[MSG_APPEND]), msg.meta[MSG_APPEND]))
+			meta = append(meta, kit.Format("  %s:%d %v\n", MSG_APPEND, len(msg.meta[MSG_APPEND]), msg.meta[MSG_APPEND]))
 			for _, k := range msg.meta[MSG_APPEND] {
 				if v, ok := msg.meta[k]; ok {
-					meta = append(meta, fmt.Sprintf("    %s: %d %v\n", k, len(v), v))
+					meta = append(meta, kit.Format("    %s: %d %v\n", k, len(v), v))
 				}
 			}
 		}
 		if len(msg.meta[MSG_RESULT]) > 0 {
-			meta = append(meta, fmt.Sprintf("  result:%d %v\n", len(msg.meta[MSG_RESULT]), msg.meta[MSG_RESULT]))
+			meta = append(meta, kit.Format("  %s:%d %v\n", MSG_RESULT, len(msg.meta[MSG_RESULT]), msg.meta[MSG_RESULT]))
 		}
 	}
 	return strings.Join(meta, "")
 }
 func (m *Message) FormatTime() string {
-	return m.Format("time")
+	return m.Format(kit.MDB_TIME)
 }
 func (m *Message) FormatMeta() string {
-	return m.Format("meta")
+	return m.Format(kit.MDB_META)
 }
 func (m *Message) FormatSize() string {
-	return m.Format("size")
+	return m.Format(kit.MDB_SIZE)
 }
 func (m *Message) FormatCost() string {
-	return m.Format("cost")
+	return m.Format(kit.MDB_COST)
 }
 func (m *Message) Format(key interface{}) string {
 	switch key := key.(type) {
@@ -211,33 +210,31 @@ func (m *Message) Format(key interface{}) string {
 		json.Unmarshal(key, &m.meta)
 	case string:
 		switch key {
-		case "cost":
+		case kit.MDB_COST:
 			return kit.FmtTime(kit.Int64(time.Since(m.time)))
-		case "meta":
+		case kit.MDB_SIZE:
+			if len(m.meta[MSG_APPEND]) == 0 {
+				return kit.Format("%dx%d", 0, 0)
+			} else {
+				return kit.Format("%dx%d", len(m.meta[m.meta[MSG_APPEND][0]]), len(m.meta[MSG_APPEND]))
+			}
+		case kit.MDB_META:
 			return kit.Format(m.meta)
-		case "size":
-			if len(m.meta["append"]) == 0 {
-				return fmt.Sprintf("%dx%d", 0, 0)
+		case kit.MDB_SHIP:
+			return kit.Format("%s->%s", m.source.Name, m.target.Name)
+		case kit.MDB_PREFIX:
+			return kit.Format("%s %d %s->%s", m.Time(), m.code, m.source.Name, m.target.Name)
+
+		case MSG_APPEND:
+			if len(m.meta[MSG_APPEND]) == 0 {
+				return kit.Format("%dx%d %s", 0, 0, "[]")
 			} else {
-				return fmt.Sprintf("%dx%d", len(m.meta[m.meta["append"][0]]), len(m.meta["append"]))
-			}
-		case "append":
-			if len(m.meta["append"]) == 0 {
-				return fmt.Sprintf("%dx%d %s", 0, 0, "[]")
-			} else {
-				return fmt.Sprintf("%dx%d %s", len(m.meta[m.meta["append"][0]]), len(m.meta["append"]), kit.Format(m.meta["append"]))
+				return kit.Format("%dx%d %s", len(m.meta[m.meta[MSG_APPEND][0]]), len(m.meta[MSG_APPEND]), kit.Format(m.meta[MSG_APPEND]))
 			}
 
-		case "time":
-			return m.Time()
-		case "ship":
-			return fmt.Sprintf("%s->%s", m.source.Name, m.target.Name)
-		case "prefix":
-			return fmt.Sprintf("%s %d %s->%s", m.Time(), m.code, m.source.Name, m.target.Name)
-
-		case "chain":
+		case kit.MDB_CHAIN:
 			return m.FormatChain()
-		case "stack":
+		case kit.MDB_STACK:
 			return m.FormatStack()
 		}
 	}
@@ -245,7 +242,7 @@ func (m *Message) Format(key interface{}) string {
 }
 func (m *Message) Formats(key string) string {
 	switch key {
-	case "meta":
+	case kit.MDB_META:
 		return kit.Formats(m.meta)
 	}
 	return m.Format(key)

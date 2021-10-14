@@ -157,12 +157,12 @@ func init() {
 				}
 				m.Option("tag", kit.Format("`name:\"%s\" help:\"%s\"`", m.Option("list"), m.Option("help")))
 
-				if p := path.Join(kit.SSH_SRC, m.Option(kit.MDB_ZONE), kit.Keys(m.Option(kit.MDB_NAME), SHY)); !kit.FileExists(p) {
+				if p := path.Join(ice.SRC, m.Option(kit.MDB_ZONE), kit.Keys(m.Option(kit.MDB_NAME), SHY)); !kit.FileExists(p) {
 					_autogen_script(m, p)
 					_autogen_source(m, m.Option(kit.MDB_ZONE), m.Option(kit.MDB_NAME))
 				}
 
-				if p := path.Join(kit.SSH_SRC, m.Option(kit.MDB_ZONE), kit.Keys(m.Option(kit.MDB_NAME), GO)); !kit.FileExists(p) {
+				if p := path.Join(ice.SRC, m.Option(kit.MDB_ZONE), kit.Keys(m.Option(kit.MDB_NAME), GO)); !kit.FileExists(p) {
 					_autogen_module(m, p)
 					_autogen_import(m, m.Option(kit.MDB_MAIN), m.Option(kit.MDB_ZONE), _autogen_mod(m, ice.GO_MOD))
 				}
@@ -171,7 +171,7 @@ func init() {
 				switch arg[0] {
 				case kit.MDB_MAIN:
 					m.Option(nfs.DIR_REG, `.*\.go`)
-					m.Cmdy(nfs.DIR, kit.SSH_SRC, "path,size,time")
+					m.Cmdy(nfs.DIR, ice.SRC, "path,size,time")
 					m.RenameAppend(kit.MDB_PATH, arg[0])
 				}
 			}},
@@ -183,7 +183,7 @@ func init() {
 				_autogen_miss(m)
 			}},
 		}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			if m.Option(nfs.DIR_ROOT, kit.SSH_SRC); len(arg) == 0 || strings.HasSuffix(arg[0], "/") {
+			if m.Option(nfs.DIR_ROOT, ice.SRC); len(arg) == 0 || strings.HasSuffix(arg[0], "/") {
 				m.Cmdy(nfs.DIR, kit.Select("./", arg, 0))
 			} else {
 				m.Cmdy(nfs.CAT, arg[0])

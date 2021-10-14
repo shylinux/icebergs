@@ -268,7 +268,7 @@ func init() {
 						m.Conf(SERVE, kit.Keys(kit.MDB_META, aaa.WHITE, k), true)
 					}
 				}},
-				cli.START: {Name: "start dev name=web proto=http host port=9020", Help: "启动", Hand: func(m *ice.Message, arg ...string) {
+				cli.START: {Name: "start dev name=ops proto=http host port=9020", Help: "启动", Hand: func(m *ice.Message, arg ...string) {
 					if cli.NodeInfo(m, SERVER, ice.Info.HostName); m.Option(tcp.PORT) == tcp.RANDOM {
 						m.Option(tcp.PORT, m.Cmdx(tcp.PORT, aaa.RIGHT))
 					}
@@ -277,8 +277,8 @@ func init() {
 					m.Sleep(ice.MOD_TICK)
 
 					m.Option(kit.MDB_NAME, "")
-					for _, k := range kit.Split(m.Option(SPIDE_DEV)) {
-						m.Cmd(SPACE, tcp.DIAL, SPIDE_DEV, k, kit.MDB_NAME, ice.Info.NodeName)
+					for _, k := range kit.Split(m.Option(ice.DEV)) {
+						m.Cmd(SPACE, tcp.DIAL, ice.DEV, k, kit.MDB_NAME, ice.Info.NodeName)
 					}
 				}},
 			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {

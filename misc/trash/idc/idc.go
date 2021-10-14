@@ -1,10 +1,10 @@
 package idc
 
 import (
-	"shylinux.com/x/icebergs"
+	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/web"
 	"shylinux.com/x/icebergs/core/code"
-	"shylinux.com/x/toolkits"
+	kit "shylinux.com/x/toolkits"
 )
 
 var Index = &ice.Context{Name: "idc", Help: "idc",
@@ -27,7 +27,7 @@ var Index = &ice.Context{Name: "idc", Help: "idc",
 			}
 
 			m.Optionv("header", "Content-Type", "application/json")
-			m.Cmdy(ice.WEB_SPIDE, "dev", "msg", "POST", "/code/idc/show", "data", kit.Format(kit.Dict("cmds", append([]string{}, arg...))))
+			m.Cmdy(ice.WEB_SPIDE, ice.DEV, "msg", "POST", "/code/idc/show", "data", kit.Format(kit.Dict("cmds", append([]string{}, arg...))))
 		}},
 
 		"/show": {Name: "/show key type name text", Help: "show", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {

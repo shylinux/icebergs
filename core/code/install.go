@@ -45,7 +45,7 @@ func _install_download(m *ice.Message) {
 		})
 
 		// 下载
-		msg := m.Cmd(web.SPIDE, web.SPIDE_DEV, web.SPIDE_CACHE, web.SPIDE_GET, link)
+		msg := m.Cmd(web.SPIDE, ice.DEV, web.SPIDE_CACHE, web.SPIDE_GET, link)
 		m.Cmd(nfs.LINK, file, msg.Append(kit.MDB_FILE))
 
 		// 解压

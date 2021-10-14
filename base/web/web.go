@@ -77,7 +77,7 @@ func (web *Frame) Start(m *ice.Message, arg ...string) bool {
 	}
 
 	m.Option(kit.Keycb(tcp.LISTEN), func(l net.Listener) {
-		m.Cmdy(mdb.INSERT, SERVE, "", mdb.HASH, arg, kit.MDB_STATUS, tcp.START, kit.MDB_PROTO, m.Option(kit.MDB_PROTO), SPIDE_DEV, m.Option(SPIDE_DEV))
+		m.Cmdy(mdb.INSERT, SERVE, "", mdb.HASH, arg, kit.MDB_STATUS, tcp.START, kit.MDB_PROTO, m.Option(kit.MDB_PROTO), ice.DEV, m.Option(ice.DEV))
 		defer m.Cmd(mdb.MODIFY, SERVE, "", mdb.HASH, kit.MDB_NAME, m.Option(kit.MDB_NAME), kit.MDB_STATUS, tcp.STOP)
 
 		// 启动服务
@@ -100,9 +100,9 @@ var Index = &ice.Context{Name: WEB, Help: "网络模块", Commands: map[string]*
 		m.Conf(SPACE, kit.MDB_HASH, "")
 		m.Cmd(mdb.SEARCH, mdb.CREATE, SPACE, m.Prefix(SPACE))
 
-		m.Cmd(SPIDE, mdb.CREATE, SPIDE_WEB, kit.Select("http://:9020", m.Conf(cli.RUNTIME, "conf.ctx_web")))
-		m.Cmd(SPIDE, mdb.CREATE, SPIDE_DEV, kit.Select("http://:9020", m.Conf(cli.RUNTIME, "conf.ctx_dev")))
-		m.Cmd(SPIDE, mdb.CREATE, SPIDE_SHY, kit.Select("https://shylinux.com:443", m.Conf(cli.RUNTIME, "conf.ctx_shy")))
+		m.Cmd(SPIDE, mdb.CREATE, ice.OPS, kit.Select("http://:9020", m.Conf(cli.RUNTIME, "conf.ctx_ops")))
+		m.Cmd(SPIDE, mdb.CREATE, ice.DEV, kit.Select("http://:9020", m.Conf(cli.RUNTIME, "conf.ctx_dev")))
+		m.Cmd(SPIDE, mdb.CREATE, ice.SHY, kit.Select("https://shylinux.com:443", m.Conf(cli.RUNTIME, "conf.ctx_shy")))
 	}},
 	ice.CTX_EXIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 		m.Save()

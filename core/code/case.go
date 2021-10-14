@@ -21,7 +21,7 @@ func init() {
 
 			cli.RUN: {Name: "run", Help: "运行", Hand: func(m *ice.Message, arg ...string) {
 				m.Option(web.SPIDE_HEADER, web.ContentType, web.ContentJSON)
-				m.Echo(kit.Formats(kit.UnMarshal(m.Cmdx(web.SPIDE, web.SPIDE_DEV, web.SPIDE_RAW,
+				m.Echo(kit.Formats(kit.UnMarshal(m.Cmdx(web.SPIDE, ice.DEV, web.SPIDE_RAW,
 					m.Option(cli.CMD), m.Option(cli.API), web.SPIDE_DATA, m.Option(cli.ARG)))))
 				m.Info(`curl "` + m.Option(cli.API) + `" -H "Content-Type: application/json"` + ` -d '` + m.Option(cli.ARG) + `'`)
 				m.ProcessDisplay("/plugin/local/wiki/json.js")

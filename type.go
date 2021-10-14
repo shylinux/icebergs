@@ -294,7 +294,7 @@ func (m *Message) Spawn(arg ...interface{}) *Message {
 	return msg
 }
 func (m *Message) Start(key string, arg ...string) *Message {
-	m.Search(key+".", func(p *Context, s *Context) {
+	m.Search(key+PT, func(p *Context, s *Context) {
 		s.Start(m.Spawn(s), arg...)
 	})
 	return m
@@ -360,14 +360,14 @@ func (m *Message) Search(key string, cb interface{}) *Message {
 		p = ctx
 	} else if key == "ice." {
 		p, key = m.target.root, ""
-	} else if key == "." {
+	} else if key == PT {
 		p, key = m.target, ""
 	} else if key == ".." {
 		if m.target.context != nil {
 			p, key = m.target.context, ""
 		}
-	} else if strings.Contains(key, ".") {
-		list := strings.Split(key, ".")
+	} else if strings.Contains(key, PT) {
+		list := strings.Split(key, PT)
 		for _, p = range []*Context{m.target.root, m.target, m.source} {
 			if p == nil {
 				continue

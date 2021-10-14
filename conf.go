@@ -20,7 +20,7 @@ const (
 
 	SHY = "shy"
 	DEV = "dev"
-	WEB = "web"
+	OPS = "ops"
 	ICE = "ice"
 	RUN = "run"
 

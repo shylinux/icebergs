@@ -32,7 +32,7 @@ func init() {
 					m.Option(kit.Keycb(web.DOWNLOAD), func(size, total int) {
 						value[kit.MDB_TOTAL], value[kit.MDB_SIZE], value[kit.MDB_STEP] = total, size, kit.Format(size*100/total)
 					})
-					msg := m.Cmd("web.spide", web.SPIDE_DEV, web.SPIDE_CACHE, web.SPIDE_GET, m.Option(kit.MDB_LINK))
+					msg := m.Cmd("web.spide", ice.DEV, web.SPIDE_CACHE, web.SPIDE_GET, m.Option(kit.MDB_LINK))
 
 					p := path.Join(m.Conf(CACHE, kit.META_PATH), m.Option(kit.MDB_NAME))
 					m.Cmdy(nfs.LINK, p, msg.Append(kit.MDB_FILE))

@@ -75,7 +75,7 @@ func _dream_show(m *ice.Message, name string) {
 	if m.Richs(SPACE, nil, name, nil) == nil {
 		m.Option(cli.CMD_DIR, p)
 		m.Optionv(cli.CMD_ENV, kit.Simple(
-			"ctx_dev", "http://:"+m.Cmd(SERVE).Append(tcp.PORT),
+			cli.CTX_DEV, "http://:"+m.Cmd(SERVE).Append(tcp.PORT),
 			cli.PATH, kit.Path(path.Join(p, ice.BIN))+":"+kit.Path(ice.BIN)+":"+os.Getenv(cli.PATH),
 			"USER", ice.Info.UserName, m.Confv(DREAM, kit.Keym(cli.ENV)),
 		))
@@ -83,7 +83,7 @@ func _dream_show(m *ice.Message, name string) {
 		kit.Path(os.Args[0])
 
 		m.Optionv(cli.CMD_ERRPUT, path.Join(p, m.Conf(DREAM, kit.Keym(cli.ENV, "ctx_log"))))
-		m.Cmd(cli.DAEMON, m.Confv(DREAM, kit.Keym(cli.CMD)), SPIDE_DEV, SPIDE_DEV, kit.MDB_NAME, name, RIVER, m.Option(RIVER))
+		m.Cmd(cli.DAEMON, m.Confv(DREAM, kit.Keym(cli.CMD)), ice.DEV, ice.DEV, kit.MDB_NAME, name, RIVER, m.Option(RIVER))
 		m.Event(DREAM_CREATE, kit.MDB_TYPE, m.Option(kit.MDB_TYPE), kit.MDB_NAME, name)
 		m.Sleep(ice.MOD_TICK)
 	}
@@ -115,7 +115,7 @@ func init() {
 					m.ProcessInner()
 				}},
 				cli.START: {Name: "start name repos river", Help: "启动", Hand: func(m *ice.Message, arg ...string) {
-					if m.Option(kit.MDB_NAME) == SPIDE_WEB {
+					if m.Option(kit.MDB_NAME) == ice.OPS {
 						m.Option(kit.MDB_NAME, "")
 					}
 					_dream_show(m, m.Option(kit.MDB_NAME, kit.Select(path.Base(m.Option(kit.SSH_REPOS)), m.Option(kit.MDB_NAME))))

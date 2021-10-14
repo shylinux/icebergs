@@ -22,10 +22,10 @@ func _space_link(m *ice.Message, pod string, arg ...interface{}) string {
 func _space_domain(m *ice.Message) string {
 	link := m.Conf(SHARE, kit.Keym(kit.MDB_DOMAIN))
 	if link == "" {
-		link = m.Cmd(SPACE, SPIDE_DEV, cli.PWD).Append(kit.MDB_LINK)
+		link = m.Cmd(SPACE, ice.DEV, cli.PWD).Append(kit.MDB_LINK)
 	}
 	if link == "" {
-		link = m.Cmd(SPACE, SPIDE_SHY, cli.PWD).Append(kit.MDB_LINK)
+		link = m.Cmd(SPACE, ice.SHY, cli.PWD).Append(kit.MDB_LINK)
 	}
 	if link == "" {
 		link = kit.Format("http://localhost:%s", m.Cmd(SERVE).Append(tcp.PORT))
@@ -46,7 +46,7 @@ func _space_list(m *ice.Message, space string) {
 func _space_dial(m *ice.Message, dev, name string, arg ...string) {
 	m.Richs(SPIDE, nil, dev, func(key string, value map[string]interface{}) {
 		client := kit.Value(value, tcp.CLIENT).(map[string]interface{})
-		redial := m.Confm(SPACE, "meta.redial")
+		redial := m.Confm(SPACE, kit.Keym("redial"))
 		frame := m.Target().Server().(*Frame)
 
 		host := kit.Format(client[tcp.HOSTNAME])
@@ -251,7 +251,7 @@ func init() {
 	}, Commands: map[string]*ice.Command{
 		SPACE: {Name: "space name cmd auto", Help: "空间站", Action: map[string]*ice.Action{
 			tcp.DIAL: {Name: "dial dev name river", Help: "连接", Hand: func(m *ice.Message, arg ...string) {
-				_space_dial(m, m.Option(SPIDE_DEV), kit.Select(ice.Info.NodeName, m.Option(kit.MDB_NAME)))
+				_space_dial(m, m.Option(ice.DEV), kit.Select(ice.Info.NodeName, m.Option(kit.MDB_NAME)))
 			}},
 			mdb.SEARCH: {Name: "search type name text", Help: "搜索", Hand: func(m *ice.Message, arg ...string) {
 				_space_search(m, arg[0], arg[1], kit.Select("", arg, 2))

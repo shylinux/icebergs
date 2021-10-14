@@ -65,7 +65,7 @@ func init() {
 				}},
 
 				cli.RUN: {Name: "run", Help: "执行", Hand: func(m *ice.Message, arg ...string) {
-					msg := m.Cmd(web.SPIDE, web.SPIDE_DEV, web.SPIDE_CACHE, web.SPIDE_GET, m.Option(SERVICE), SECONDS, m.Option(SECONDS))
+					msg := m.Cmd(web.SPIDE, ice.DEV, web.SPIDE_CACHE, web.SPIDE_GET, m.Option(SERVICE), SECONDS, m.Option(SECONDS))
 
 					cmd := kit.Simple(m.Confv(PPROF, kit.Keym(PPROF)), "-text", m.Option(BINNARY), msg.Append(kit.MDB_FILE))
 					res := strings.Split(m.Cmdx(cli.SYSTEM, cmd), ice.NL)

@@ -28,11 +28,23 @@ var Info = struct {
 		UserName string
 	}
 
-	Pack  map[string][]byte
-	names map[string]interface{}
+	Help   string
+	Pack   map[string][]byte
+	names  map[string]interface{}
+	render map[string]func(*Message, string, ...interface{}) string
+	Log    func(m *Message, p, l, s string)
 }{
-	Pack:  map[string][]byte{},
-	names: map[string]interface{}{},
+	Help: `
+^_^      欢迎使用冰山框架       ^_^
+^_^  Welcome to Icebergs World  ^_^
+
+report: shylinuxc@gmail.com
+server: https://shylinux.com
+source: https://shylinux.com/x/icebergs
+`,
+	Pack:   map[string][]byte{},
+	names:  map[string]interface{}{},
+	render: map[string]func(*Message, string, ...interface{}) string{},
 }
 
 func Dump(w io.Writer, name string, cb func(string)) bool {

@@ -11,6 +11,7 @@ import (
 	"shylinux.com/x/icebergs/base/aaa"
 	"shylinux.com/x/icebergs/base/ctx"
 	"shylinux.com/x/icebergs/base/mdb"
+	psh "shylinux.com/x/icebergs/base/ssh"
 	"shylinux.com/x/icebergs/base/tcp"
 	kit "shylinux.com/x/toolkits"
 )
@@ -66,7 +67,7 @@ func _ssh_watch(m *ice.Message, meta map[string]string, h string, input io.Reade
 const CHANNEL = "channel"
 
 func init() {
-	Index.Merge(&ice.Context{
+	psh.Index.Merge(&ice.Context{
 		Configs: map[string]*ice.Config{
 			CHANNEL: {Name: "channel", Help: "通道", Value: kit.Data()},
 		},

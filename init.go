@@ -7,6 +7,7 @@ import (
 	"time"
 
 	kit "shylinux.com/x/toolkits"
+	log "shylinux.com/x/toolkits/logs"
 )
 
 type Frame struct {
@@ -59,7 +60,7 @@ func (f *Frame) Close(m *Message, arg ...string) bool {
 var Index = &Context{Name: "ice", Help: "冰山模块", Caches: map[string]*Cache{
 	CTX_FOLLOW: {Value: ICE}, CTX_STREAM: {Value: SHY}, CTX_STATUS: {Value: CTX_BEGIN},
 }, Configs: map[string]*Config{
-	HELP: {Value: kit.Data("index", _help)},
+	HELP: {Value: kit.Data("index", Info.Help)},
 }, Commands: map[string]*Command{
 	CTX_INIT: {Hand: func(m *Message, c *Context, cmd string, arg ...string) {
 		defer m.Cost(CTX_INIT)
@@ -124,7 +125,7 @@ func Run(arg ...string) string {
 
 	switch kit.Select("", arg, 0) {
 	case "space", "serve":
-		if _log_disable = false; frame.Begin(Pulse.Spawn(), arg...).Start(Pulse, arg...) {
+		if log.LogDisable = false; frame.Begin(Pulse.Spawn(), arg...).Start(Pulse, arg...) {
 			frame.Close(Pulse.Spawn(), arg...)
 		}
 
@@ -142,12 +143,3 @@ func Run(arg ...string) string {
 
 	return Pulse.Result()
 }
-
-var _help = `
-^_^      欢迎使用冰山框架       ^_^
-^_^  Welcome to Icebergs World  ^_^
-
-report: shylinuxc@gmail.com
-server: https://shylinux.com
-source: https://shylinux.com/x/icebergs
-`

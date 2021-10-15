@@ -10,15 +10,12 @@ import (
 	log "shylinux.com/x/toolkits/logs"
 )
 
-var _log_disable = true
-var Log func(m *Message, p, l, s string)
-
 func (m *Message) log(level string, str string, arg ...interface{}) *Message {
-	if _log_disable {
+	if log.LogDisable {
 		return m // 禁用日志
 	}
-	if str = strings.TrimSpace(kit.Format(str, arg...)); Log != nil {
-		Log(m, m.Format(kit.MDB_PREFIX), level, str) // 日志分流
+	if str = strings.TrimSpace(kit.Format(str, arg...)); Info.Log != nil {
+		Info.Log(m, m.Format(kit.MDB_PREFIX), level, str) // 日志分流
 	}
 
 	// 日志颜色

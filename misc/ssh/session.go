@@ -7,6 +7,7 @@ import (
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/ctx"
 	"shylinux.com/x/icebergs/base/mdb"
+	psh "shylinux.com/x/icebergs/base/ssh"
 	"shylinux.com/x/icebergs/base/tcp"
 	kit "shylinux.com/x/toolkits"
 )
@@ -57,7 +58,7 @@ const (
 const SESSION = "session"
 
 func init() {
-	Index.Merge(&ice.Context{
+	psh.Index.Merge(&ice.Context{
 		Configs: map[string]*ice.Config{
 			SESSION: {Name: SESSION, Help: "会话", Value: kit.Data()},
 		},

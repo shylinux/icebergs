@@ -10,14 +10,15 @@ import (
 	"path"
 	"strings"
 
+	"golang.org/x/crypto/ssh"
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/aaa"
 	"shylinux.com/x/icebergs/base/cli"
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/nfs"
+	psh "shylinux.com/x/icebergs/base/ssh"
 	"shylinux.com/x/icebergs/base/tcp"
 	kit "shylinux.com/x/toolkits"
-	"golang.org/x/crypto/ssh"
 )
 
 func _ssh_meta(conn ssh.ConnMetadata) map[string]string {
@@ -99,7 +100,7 @@ const (
 const SERVICE = "service"
 
 func init() {
-	Index.Merge(&ice.Context{
+	psh.Index.Merge(&ice.Context{
 		Configs: map[string]*ice.Config{
 			SERVICE: {Name: SERVICE, Help: "服务", Value: kit.Data(
 				WELCOME, "\r\nwelcome to context world\r\n",

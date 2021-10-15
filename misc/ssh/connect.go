@@ -16,6 +16,7 @@ import (
 	"shylinux.com/x/icebergs/base/gdb"
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/nfs"
+	psh "shylinux.com/x/icebergs/base/ssh"
 	"shylinux.com/x/icebergs/base/tcp"
 	kit "shylinux.com/x/toolkits"
 )
@@ -150,10 +151,11 @@ func _ssh_conn(m *ice.Message, cb func(*ssh.Client), arg ...string) {
 		tcp.PORT, m.Option(tcp.PORT), tcp.HOST, m.Option(tcp.HOST), arg)
 }
 
+const SSH = "ssh"
 const CONNECT = "connect"
 
 func init() {
-	Index.Merge(&ice.Context{
+	psh.Index.Merge(&ice.Context{
 		Configs: map[string]*ice.Config{
 			CONNECT: {Name: CONNECT, Help: "连接", Value: kit.Data()},
 		},

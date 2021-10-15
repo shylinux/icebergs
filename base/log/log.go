@@ -22,7 +22,7 @@ func (f *Frame) Spawn(m *ice.Message, c *ice.Context, arg ...string) ice.Server 
 }
 func (f *Frame) Begin(m *ice.Message, arg ...string) ice.Server {
 	f.p = make(chan *Log, ice.MOD_BUFS)
-	ice.Log = func(msg *ice.Message, p, l, s string) {
+	ice.Info.Log = func(msg *ice.Message, p, l, s string) {
 		f.p <- &Log{m: msg, p: p, l: l, s: s}
 	}
 	return f
@@ -132,7 +132,7 @@ var Index = &ice.Context{Name: "log", Help: "日志模块",
 		ice.CTX_EXIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			if f, ok := m.Target().Server().(*Frame); ok {
 				// 关闭日志
-				ice.Log = nil
+				ice.Info.Log = nil
 				close(f.p)
 			}
 		}},

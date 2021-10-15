@@ -8,13 +8,11 @@ import (
 	kit "shylinux.com/x/toolkits"
 )
 
-var renderList = map[string]func(*Message, string, ...interface{}) string{}
-
 func AddRender(key string, render func(*Message, string, ...interface{}) string) {
-	renderList[key] = render
+	Info.render[key] = render
 }
 func Render(m *Message, cmd string, args ...interface{}) string {
-	if render, ok := renderList[cmd]; ok {
+	if render, ok := Info.render[cmd]; ok {
 		m.Debug("render: %v %v", cmd, kit.FileLine(render, 3))
 		return render(m, cmd, args...)
 	}

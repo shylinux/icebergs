@@ -30,13 +30,11 @@ func _spide_go(m *ice.Message, file string) {
 		case "w", "e":
 			return
 			ls[0] = "-" + ls[0] + ":" + strings.TrimPrefix(ls[len(ls)-1], "type:")
-		case "-":
-			return
 		case "m":
-			if strings.HasPrefix(ls[5], "ctype") {
+			if strings.HasPrefix(ls[6], "ntype") {
+				return
+			} else if strings.HasPrefix(ls[5], "ctype") {
 				ls[0] = strings.TrimPrefix(ls[5], "ctype:") + ":" + ls[0]
-			} else if strings.HasPrefix(ls[6], "ntype") {
-				ls[0] = "-" + ls[0]
 			} else {
 				ls[0] = ls[3] + ":" + ls[0]
 			}

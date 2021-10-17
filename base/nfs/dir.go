@@ -163,7 +163,7 @@ func _dir_search(m *ice.Message, kind, name string) {
 		}
 
 		if value[kit.MDB_TYPE] == CAT {
-			value[kit.MDB_TYPE] = _cat_ext(value[kit.MDB_NAME])
+			value[kit.MDB_TYPE] = kit.Ext(value[kit.MDB_NAME])
 		}
 
 		m.PushSearch(cli.CMD, CAT, value)

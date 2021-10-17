@@ -1,8 +1,6 @@
 package chat
 
 import (
-	"strings"
-
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/aaa"
 	"shylinux.com/x/icebergs/base/ctx"
@@ -39,7 +37,7 @@ func _header_share(m *ice.Message, arg ...string) {
 		m.Option(kit.MDB_LINK, tcp.ReplaceLocalhost(m, m.Option(kit.MDB_LINK)))
 	}
 
-	m.Option(kit.MDB_LINK, strings.Split(m.Option(kit.MDB_LINK), "?")[0])
+	m.Option(kit.MDB_LINK, kit.MergeURL(m.Option(kit.MDB_LINK), RIVER, "", STORM, ""))
 
 	m.Set(kit.MDB_NAME, kit.MDB_TEXT)
 	m.Push(kit.MDB_NAME, m.Option(kit.MDB_LINK))

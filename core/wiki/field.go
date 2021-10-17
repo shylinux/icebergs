@@ -46,7 +46,7 @@ func _field_show(m *ice.Message, name, text string, arg ...string) {
 
 			count := 0
 			kit.Fetch(meta[INPUTS], func(index int, value map[string]interface{}) {
-				if value[kit.MDB_INPUT] != kit.MDB_BUTTON && value[kit.MDB_TYPE] != kit.MDB_BUTTON {
+				if value[kit.MDB_TYPE] != kit.MDB_BUTTON {
 					count++
 				}
 			})
@@ -55,7 +55,7 @@ func _field_show(m *ice.Message, name, text string, arg ...string) {
 				list := meta[INPUTS].([]interface{})
 				for i := count; i < len(args); i++ {
 					list = append(list, kit.Dict(
-						kit.MDB_INPUT, "text", kit.MDB_NAME, "args", kit.MDB_VALUE, args[i],
+						kit.MDB_TYPE, "text", kit.MDB_NAME, "args", kit.MDB_VALUE, args[i],
 					))
 				}
 				meta[INPUTS] = list

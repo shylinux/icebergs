@@ -16,13 +16,13 @@ func init() {
 		Configs: map[string]*ice.Config{
 			UPGRADE: {Name: UPGRADE, Help: "升级", Value: kit.Dict(kit.MDB_HASH, kit.Dict(
 				cli.SYSTEM, kit.Dict(kit.MDB_LIST, kit.List(
-					kit.MDB_INPUT, "bin", kit.MDB_FILE, "ice.sh", kit.MDB_PATH, ice.BIN_ICE_SH,
-					kit.MDB_INPUT, "bin", kit.MDB_FILE, "ice.bin", kit.MDB_PATH, ice.BIN_ICE_BIN,
+					kit.MDB_TYPE, "bin", kit.MDB_FILE, "ice.sh", kit.MDB_PATH, ice.BIN_ICE_SH,
+					kit.MDB_TYPE, "bin", kit.MDB_FILE, "ice.bin", kit.MDB_PATH, ice.BIN_ICE_BIN,
 				)),
 				cli.SOURCE, kit.Dict(kit.MDB_LIST, kit.List(
-					kit.MDB_INPUT, "txt", kit.MDB_FILE, "main.go", kit.MDB_PATH, ice.SRC_MAIN_GO,
-					kit.MDB_INPUT, "txt", kit.MDB_FILE, "miss.sh", kit.MDB_PATH, ice.ETC_MISS_SH,
-					kit.MDB_INPUT, "txt", kit.MDB_FILE, "go.mod", kit.MDB_PATH, ice.GO_MOD,
+					kit.MDB_TYPE, "txt", kit.MDB_FILE, "main.go", kit.MDB_PATH, ice.SRC_MAIN_GO,
+					kit.MDB_TYPE, "txt", kit.MDB_FILE, "miss.sh", kit.MDB_PATH, ice.ETC_MISS_SH,
+					kit.MDB_TYPE, "txt", kit.MDB_FILE, "go.mod", kit.MDB_PATH, ice.GO_MOD,
 				)),
 			))},
 		},

@@ -2,8 +2,8 @@ package ice
 
 const (
 	SP = " "
-	NL = "\n"
 	PT = "."
+	NL = "\n"
 
 	OK      = "ok"
 	TRUE    = "true"
@@ -49,7 +49,9 @@ const ( // MOD
 )
 const ( // REPOS
 	VOLCANOS = "volcanos"
+	LEARNING = "learning"
 	ICEBERGS = "icebergs"
+	TOOLKITS = "toolkits"
 	INTSHELL = "intshell"
 	CONTEXTS = "contexts"
 
@@ -61,16 +63,10 @@ const ( // DIR
 	USR_VOLCANOS = "usr/volcanos"
 	USR_LEARNING = "usr/learning"
 	USR_ICEBERGS = "usr/icebergs"
+	USR_TOOLKITS = "usr/toolkits"
 	USR_INTSHELL = "usr/intshell"
 	USR_INSTALL  = "usr/install"
 	USR_PUBLISH  = "usr/publish"
-
-	USR_LOCAL        = "usr/local"
-	USR_LOCAL_WORK   = "usr/local/work"
-	USR_LOCAL_IMAGE  = "usr/local/image"
-	USR_LOCAL_RIVER  = "usr/local/river"
-	USR_LOCAL_DAEMON = "usr/local/daemon"
-	USR_LOCAL_EXPORT = "usr/local/export"
 
 	FAVICON  = "favicon.ico"
 	PROTO_JS = "proto.js"
@@ -79,6 +75,13 @@ const ( // DIR
 	ORDER_JS = "order.js"
 	ORDER_SH = "order.sh"
 	INDEX_SH = "index.sh"
+
+	USR_LOCAL        = "usr/local"
+	USR_LOCAL_WORK   = "usr/local/work"
+	USR_LOCAL_IMAGE  = "usr/local/image"
+	USR_LOCAL_RIVER  = "usr/local/river"
+	USR_LOCAL_DAEMON = "usr/local/daemon"
+	USR_LOCAL_EXPORT = "usr/local/export"
 
 	VAR_RUN      = "var/run"
 	VAR_TMP      = "var/tmp"

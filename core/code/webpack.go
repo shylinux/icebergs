@@ -45,6 +45,7 @@ func init() {
 						}
 					})
 				}
+				js.WriteString(ice.NL)
 				for _, k := range []string{"lib", "panel", "plugin"} {
 					m.Cmd(nfs.DIR, k).Table(func(index int, value map[string]string, head []string) {
 						if kit.Ext(value[kit.MDB_PATH]) == JS {
@@ -62,9 +63,9 @@ func init() {
 				if f, _, e := kit.Create(path.Join(ice.USR_PUBLISH, WEBPACK, kit.Keys(m.Option(kit.MDB_NAME), JS))); m.Assert(e) {
 					defer f.Close()
 
-					f.WriteString("\n")
+					f.WriteString(ice.NL)
 					f.WriteString(kit.Format(`Volcanos.meta.args = {river: "%s", storm: "%s"}`, m.Option("river"), m.Option("storm")))
-					f.WriteString("\n")
+					f.WriteString(ice.NL)
 					f.WriteString(`Volcanos.meta.pack = ` + kit.Formats(kit.UnMarshal(kit.Select("{}", m.Option("content")))))
 				}
 

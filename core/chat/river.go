@@ -153,6 +153,9 @@ func init() {
 						})
 					})
 				}},
+				mdb.REMOVE: {Name: "remove", Help: "添加", Hand: func(m *ice.Message, arg ...string) {
+					m.Cmdy(mdb.DELETE, m.PrefixKey(), "", mdb.HASH, m.OptionSimple(kit.MDB_HASH))
+				}},
 				mdb.INPUTS: {Name: "inputs", Help: "补全", Hand: func(m *ice.Message, arg ...string) {
 					switch m.Option(ctx.ACTION) {
 					case cli.START:

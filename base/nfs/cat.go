@@ -48,9 +48,9 @@ func _cat_right(m *ice.Message, name string) bool {
 	return true
 }
 func _cat_find(m *ice.Message, name string) io.ReadCloser {
-	if m.Option("content") != "" {
-		return NewReadCloser(bytes.NewBufferString(m.Option("content")))
-	}
+	// if m.Option("content") != "" {
+	// 	return NewReadCloser(bytes.NewBufferString(m.Option("content")))
+	// }
 
 	if f, e := os.Open(path.Join(m.Option(DIR_ROOT), name)); e == nil {
 		return f

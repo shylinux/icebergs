@@ -10,6 +10,7 @@ const (
 	FALSE   = "false"
 	SUCCESS = "success"
 	FAILURE = "failure"
+	PROCESS = "process"
 
 	INIT = "init"
 	LOAD = "load"

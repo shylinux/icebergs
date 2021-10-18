@@ -14,7 +14,7 @@ import (
 func _status_each(m *ice.Message, title string, cmds ...string) {
 	m.GoToast(title, func(toast func(string, int, int)) {
 		count, total := 0, len(m.Confm(REPOS, kit.MDB_HASH))
-		toast("begin", count, total)
+		toast(cli.BEGIN, count, total)
 
 		list := []string{}
 		m.Cmd(REPOS, ice.OptionFields("name,path")).Table(func(index int, value map[string]string, head []string) {
@@ -29,23 +29,21 @@ func _status_each(m *ice.Message, title string, cmds ...string) {
 		})
 
 		if len(list) > 0 {
-			m.Toast(strings.Join(list, "\n"), ice.FAILURE, "30s")
+			m.Toast(strings.Join(list, ice.NL), ice.FAILURE, "30s")
 		} else {
 			toast(ice.SUCCESS, count, total)
 		}
-
 	})
 }
 func _status_stat(m *ice.Message, files, adds, dels int) (int, int, int) {
-	ls := kit.Split(m.Cmdx(cli.SYSTEM, GIT, DIFF, "--shortstat"), ",", ",")
-	for _, v := range ls {
+	for _, v := range kit.Split(m.Cmdx(cli.SYSTEM, GIT, DIFF, "--shortstat"), ",", ",") {
 		n := kit.Int(kit.Split(strings.TrimSpace(v))[0])
 		switch {
 		case strings.Contains(v, "file"):
 			files += n
 		case strings.Contains(v, "insert"):
 			adds += n
-		case strings.Contains(v, "delet"):
+		case strings.Contains(v, "delete"):
 			dels += n
 		}
 	}
@@ -57,8 +55,8 @@ func _status_list(m *ice.Message) (files, adds, dels int, last time.Time) {
 		diff := m.Cmdx(cli.SYSTEM, GIT, STATUS, "-sb")
 		tags := m.Cmdx(cli.SYSTEM, GIT, "describe", "--tags")
 
-		for _, v := range strings.Split(strings.TrimSpace(diff), "\n") {
-			vs := strings.SplitN(strings.TrimSpace(v), " ", 2)
+		for _, v := range strings.Split(strings.TrimSpace(diff), ice.NL) {
+			vs := strings.SplitN(strings.TrimSpace(v), ice.SP, 2)
 			switch kit.Ext(vs[1]) {
 			case "swp", "swo", "bin":
 				continue
@@ -71,14 +69,18 @@ func _status_list(m *ice.Message) (files, adds, dels int, last time.Time) {
 			list := []string{}
 			switch vs[0] {
 			case "##":
-				m.Push("tags", tags)
+				m.Push(TAGS, tags)
+				if tags == ice.ErrWarn {
+					list = append(list, TAG)
+				}
+
 				if strings.Contains(vs[1], "ahead") {
 					list = append(list, PUSH)
 				} else if strings.Contains(tags, "-") {
 					list = append(list, TAG)
 				}
 			default:
-				m.Push("tags", "")
+				m.Push(TAGS, "")
 				if strings.Contains(vs[0], "??") {
 					list = append(list, ADD)
 				} else {
@@ -101,15 +103,17 @@ const (
 	PULL = "pull"
 	MAKE = "make"
 	PUSH = "push"
-	TAG  = "tag"
 
+	TAG = "tag"
 	ADD = "add"
 	OPT = "opt"
 	PRO = "pro"
 
+	TAGS    = "tags"
 	DIFF    = "diff"
 	COMMIT  = "commit"
 	COMMENT = "comment"
+	VERSION = "version"
 )
 const STATUS = "status"
 
@@ -121,9 +125,8 @@ func init() {
 				m.ProcessHold()
 			}},
 			MAKE: {Name: "make", Help: "编译", Hand: func(m *ice.Message, arg ...string) {
-				m.Toast("building", MAKE, 100000)
-				defer m.Toast(ice.SUCCESS, MAKE, 1000)
-
+				m.Toast(ice.PROCESS, MAKE, "30s")
+				defer m.Toast(ice.SUCCESS, MAKE, "3s")
 				m.Cmdy(cli.SYSTEM, MAKE)
 			}},
 			PUSH: {Name: "push", Help: "上传", Hand: func(m *ice.Message, arg ...string) {
@@ -136,52 +139,48 @@ func init() {
 				m.Cmdy(cli.SYSTEM, GIT, PUSH, ice.Option{cli.CMD_DIR, _repos_path(m.Option(kit.MDB_NAME))})
 				m.Cmdy(cli.SYSTEM, GIT, PUSH, "--tags")
 			}},
-			TAG: {Name: "tags version@key", Help: "标签", Hand: func(m *ice.Message, arg ...string) {
+
+			TAG: {Name: "tag version@key", Help: "标签", Hand: func(m *ice.Message, arg ...string) {
 				m.Option(cli.CMD_DIR, _repos_path(m.Option(kit.MDB_NAME)))
-				m.Cmdy(cli.SYSTEM, GIT, TAG, m.Option("version"))
+				m.Cmdy(cli.SYSTEM, GIT, TAG, m.Option(VERSION))
 				m.Cmdy(cli.SYSTEM, GIT, PUSH, "--tags")
 			}},
-
 			ADD: {Name: "add", Help: "添加", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmdy(cli.SYSTEM, GIT, ADD, m.Option(kit.MDB_FILE), ice.Option{cli.CMD_DIR, _repos_path(m.Option(kit.MDB_NAME))})
-			}}, OPT: {Name: "opt", Help: "优化"}, PRO: {Name: "pro", Help: "自举"},
-
+			}}, OPT: {Name: "opt", Help: "优化"}, PRO: {Name: "pro", Help: "升级"},
 			COMMIT: {Name: "commit action=opt,add,pro comment=some@key", Help: "提交", Hand: func(m *ice.Message, arg ...string) {
 				if arg[0] == ctx.ACTION {
-					m.Option(kit.MDB_TEXT, arg[1]+" "+arg[3])
+					m.Option(kit.MDB_TEXT, arg[1]+ice.SP+arg[3])
 				} else {
-					m.Option(kit.MDB_TEXT, kit.Select("opt some", strings.Join(arg, " ")))
+					m.Option(kit.MDB_TEXT, kit.Select("opt some", strings.Join(arg, ice.SP)))
 				}
 
 				m.Cmdy(cli.SYSTEM, GIT, COMMIT, "-am", m.Option(kit.MDB_TEXT), ice.Option{cli.CMD_DIR, _repos_path(m.Option(kit.MDB_NAME))})
 				m.ProcessBack()
 			}},
-			mdb.INPUTS: {Name: "inputs tags", Help: "补全", Hand: func(m *ice.Message, arg ...string) {
+			mdb.INPUTS: {Name: "inputs", Help: "补全", Hand: func(m *ice.Message, arg ...string) {
 				switch arg[0] {
 				case kit.MDB_NAME:
 					m.Cmdy(REPOS, ice.OptionFields("name,time"))
 
-				case "tags", "version":
-					ls := kit.Split(strings.TrimPrefix(kit.Split(m.Option("tags"), "-")[0], "v"), ".")
+				case TAGS, VERSION:
+					if m.Option(TAGS) == ice.ErrWarn {
+						m.Push(VERSION, kit.Format("v0.0.%d", 1))
+						return
+					}
+
+					ls := kit.Split(strings.TrimPrefix(kit.Split(m.Option(TAGS), "-")[0], "v"), ".")
 					if v := kit.Int(ls[2]); v < 9 {
-						m.Push("version", kit.Format("v%v.%v.%v", ls[0], ls[1], v+1))
-						return
-					}
-					if v := kit.Int(ls[1]); v < 9 {
-						m.Push("version", kit.Format("v%v.%v.0", ls[0], v+1))
-						return
-					}
-					if v := kit.Int(ls[0]); v < 9 {
-						m.Push("version", kit.Format("v%v.0.0", v+1))
-						return
+						m.Push(VERSION, kit.Format("v%v.%v.%v", ls[0], ls[1], v+1))
+					} else if v := kit.Int(ls[1]); v < 9 {
+						m.Push(VERSION, kit.Format("v%v.%v.0", ls[0], v+1))
+					} else if v := kit.Int(ls[0]); v < 9 {
+						m.Push(VERSION, kit.Format("v%v.0.0", v+1))
 					}
 
 				case COMMENT:
-					ls := []string{}
-					ls = append(ls, kit.Split(m.Option(kit.MDB_FILE), " /")...)
-
 					m.Push(kit.MDB_TEXT, m.Option(kit.MDB_FILE))
-					for _, v := range ls {
+					for _, v := range kit.Split(m.Option(kit.MDB_FILE), " /") {
 						m.Push(kit.MDB_TEXT, v)
 					}
 				}

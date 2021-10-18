@@ -112,12 +112,15 @@ const (
 	BENCH = "bench"
 	PPROF = "pprof"
 
-	OPEN    = "open"
-	CLOSE   = "close"
 	START   = "start"
 	RESTART = "restart"
 	RELOAD  = "reload"
 	STOP    = "stop"
+
+	OPEN  = "open"
+	CLOSE = "close"
+	BEGIN = "begin"
+	END   = "end"
 )
 
 const DAEMON = "daemon"

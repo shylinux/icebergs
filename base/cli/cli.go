@@ -55,11 +55,8 @@ func _cli_init(m *ice.Message) {
 	// 节点信息
 	m.Conf(RUNTIME, kit.Keys(NODE, kit.MDB_TIME), m.Time())
 	NodeInfo(m, "worker", m.Conf(RUNTIME, kit.Keys(BOOT, PATHNAME)))
-	m.Info("runtime %v", kit.Formats(m.Confv(RUNTIME)))
 
-	n := kit.Int(kit.Select("1", m.Conf(RUNTIME, kit.Keys(HOST, "GOMAXPROCS"))))
-	m.Logs(HOST, "GOMAXPROCS", n)
-	runtime.GOMAXPROCS(n)
+	runtime.GOMAXPROCS(kit.Int(kit.Select("1", m.Conf(RUNTIME, kit.Keys(HOST, "GOMAXPROCS")))))
 }
 func NodeInfo(m *ice.Message, kind, name string) {
 	name = strings.ReplaceAll(name, ".", "_")

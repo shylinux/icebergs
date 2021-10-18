@@ -112,9 +112,9 @@ func _action_share(m *ice.Message, arg ...string) {
 		_action_show(m, msg.Append(web.RIVER), msg.Append(web.STORM), arg[1], arg[2:]...)
 
 	case web.FIELD:
-		if cmd := kit.Keys(msg.Append(web.RIVER), msg.Append(web.STORM)); len(arg) == 1 {
-			m.Push("index", cmd)
-			m.Push("title", msg.Append(kit.MDB_NAME))
+		if arg[0] = msg.Append(kit.MDB_NAME); len(arg) == 1 {
+			m.Push("title", msg.Append(kit.MDB_TITLE))
+			m.Push("index", msg.Append(kit.MDB_NAME))
 			m.Push("args", msg.Append(kit.MDB_TEXT))
 			break // 命令列表
 		}

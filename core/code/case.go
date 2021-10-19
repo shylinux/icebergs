@@ -16,12 +16,15 @@ func init() {
 			kit.MDB_SHORT, kit.MDB_ZONE, kit.MDB_FIELD, "time,id,name,cmd,api,arg,res",
 		)},
 	}, Commands: map[string]*ice.Command{
-		CASE: {Name: "case zone id auto", Help: "用例", Action: ice.MergeAction(map[string]*ice.Action{
-			mdb.INSERT: {Name: "create zone name=hi cmd=POST,GET api arg:textarea res:textarea", Help: "添加"},
+		CASE: {Name: "case dev zone id auto", Help: "用例", Action: ice.MergeAction(map[string]*ice.Action{
+			mdb.CREATE: {Name: "create name address", Help: "创建", Hand: func(m *ice.Message, arg ...string) {
+				m.Cmdy(web.SPIDE, mdb.CREATE, arg)
+			}},
+			mdb.INSERT: {Name: "insert zone name=hi cmd=POST,GET api arg:textarea res:textarea", Help: "添加"},
 
 			cli.RUN: {Name: "run", Help: "运行", Hand: func(m *ice.Message, arg ...string) {
 				m.Option(web.SPIDE_HEADER, web.ContentType, web.ContentJSON)
-				m.Echo(kit.Formats(kit.UnMarshal(m.Cmdx(web.SPIDE, ice.DEV, web.SPIDE_RAW,
+				m.Echo(kit.Formats(kit.UnMarshal(m.Cmdx(web.SPIDE, m.Option(ice.DEV), web.SPIDE_RAW,
 					m.Option(cli.CMD), m.Option(cli.API), web.SPIDE_DATA, m.Option(cli.ARG)))))
 				m.Info(`curl "` + m.Option(cli.API) + `" -H "Content-Type: application/json"` + ` -d '` + m.Option(cli.ARG) + `'`)
 				m.ProcessDisplay("/plugin/local/wiki/json.js")
@@ -58,9 +61,17 @@ func init() {
 				m.Echo(ice.OK)
 			}},
 		}, mdb.ZoneAction()), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			m.Fields(len(arg), "time,zone,count", m.Conf(m.PrefixKey(), kit.META_FIELD))
-			if m.Cmdy(mdb.SELECT, m.PrefixKey(), "", mdb.ZONE, arg); len(arg) == 0 {
-				m.Action(mdb.CREATE, mdb.EXPORT, mdb.IMPORT)
+			if len(arg) == 0 {
+				m.Action(mdb.CREATE)
+				m.Cmdy(web.SPIDE)
+				m.RenameAppend("client.name", "dev")
+				m.RenameAppend("client.url", "address")
+				return
+			}
+
+			m.Fields(len(arg)-1, "time,zone,count", m.Config(kit.MDB_FIELD))
+			if m.Cmdy(mdb.SELECT, m.PrefixKey(), "", mdb.ZONE, arg[1:]); len(arg) == 1 {
+				m.Action(mdb.INSERT, mdb.EXPORT, mdb.IMPORT)
 				m.PushAction(mdb.INSERT, cli.CHECK, mdb.REMOVE)
 			} else {
 				m.Action(mdb.INSERT, cli.CHECK)

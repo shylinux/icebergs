@@ -100,8 +100,10 @@ func _autogen_version(m *ice.Message) {
 		m.Cmdy(cli.SYSTEM, "go", "mod", "init", path.Base(kit.Path("")))
 	}
 
-	file := ice.SRC_VERSION_GO
-	m.Cmd(nfs.SAVE, file, kit.Format(`package main
+	m.Cmd(nfs.DEFS, ice.SRC_BINPACK_GO, kit.Format(`package main
+`))
+
+	m.Cmd(nfs.SAVE, ice.SRC_VERSION_GO, kit.Format(`package main
 
 import (
 	"shylinux.com/x/icebergs"
@@ -124,10 +126,9 @@ func init() {
 		strings.TrimSpace(m.Cmdx(cli.SYSTEM, "git", "describe", "--tags")),
 		ice.Info.HostName, ice.Info.UserName,
 	))
-	defer m.Cmdy(nfs.CAT, file)
 
-	m.Cmdy(nfs.DIR, file, "time,size,line,path")
 	m.Cmdy(nfs.DIR, ice.SRC_BINPACK_GO, "time,size,line,path")
+	m.Cmdy(nfs.DIR, ice.SRC_VERSION_GO, "time,size,line,path")
 	m.Cmdy(nfs.DIR, ice.SRC_MAIN_GO, "time,size,line,path")
 }
 func _autogen_miss(m *ice.Message) {

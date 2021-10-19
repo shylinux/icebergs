@@ -144,6 +144,7 @@ func _hash_prunes(m *ice.Message, prefix, chain string, arg ...string) {
 const HASH = "hash"
 
 func HashAction(fields ...string) map[string]*ice.Action {
+	_key := func(m *ice.Message) string { return kit.Select(kit.MDB_HASH, m.Config(kit.MDB_SHORT)) }
 	return ice.SelectAction(map[string]*ice.Action{
 		INPUTS: {Name: "inputs", Help: "补全", Hand: func(m *ice.Message, arg ...string) {
 			m.Cmdy(INPUTS, m.PrefixKey(), "", HASH, arg)
@@ -152,16 +153,16 @@ func HashAction(fields ...string) map[string]*ice.Action {
 			m.Cmdy(INSERT, m.PrefixKey(), "", HASH, arg)
 		}},
 		REMOVE: {Name: "remove", Help: "删除", Hand: func(m *ice.Message, arg ...string) {
-			m.Cmdy(DELETE, m.PrefixKey(), "", HASH, m.OptionSimple(kit.Select(kit.MDB_HASH, m.Config(kit.MDB_SHORT))), arg)
+			m.Cmdy(DELETE, m.PrefixKey(), "", HASH, m.OptionSimple(_key(m)), arg)
 		}},
 		MODIFY: {Name: "modify", Help: "编辑", Hand: func(m *ice.Message, arg ...string) {
-			m.Cmdy(MODIFY, m.PrefixKey(), "", HASH, m.OptionSimple(kit.Select(kit.MDB_HASH, m.Config(kit.MDB_SHORT))), arg)
+			m.Cmdy(MODIFY, m.PrefixKey(), "", HASH, m.OptionSimple(_key(m)), arg)
 		}},
 		EXPORT: {Name: "export", Help: "导出", Hand: func(m *ice.Message, arg ...string) {
-			m.Cmdy(EXPORT, m.PrefixKey(), "", HASH)
+			m.Cmdy(EXPORT, m.PrefixKey(), "", HASH, arg)
 		}},
 		IMPORT: {Name: "import", Help: "导入", Hand: func(m *ice.Message, arg ...string) {
-			m.Cmdy(IMPORT, m.PrefixKey(), "", HASH)
+			m.Cmdy(IMPORT, m.PrefixKey(), "", HASH, arg)
 		}},
 		PRUNES: {Name: "prunes before@date", Help: "清理", Hand: func(m *ice.Message, arg ...string) {
 			list := []string{}
@@ -170,7 +171,7 @@ func HashAction(fields ...string) map[string]*ice.Action {
 					list = append(list, key)
 				}
 			})
-			m.OptionFields(m.Conf(m.PrefixKey(), kit.META_FIELD))
+			m.OptionFields(m.Config(kit.MDB_FIELD))
 			for _, v := range list {
 				m.Cmdy(DELETE, m.PrefixKey(), "", HASH, kit.MDB_HASH, v)
 			}

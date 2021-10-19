@@ -126,68 +126,65 @@ const (
 const DAEMON = "daemon"
 
 func init() {
-	Index.Merge(&ice.Context{
-		Configs: map[string]*ice.Config{
-			DAEMON: {Name: DAEMON, Help: "守护进程", Value: kit.Data(kit.MDB_PATH, ice.USR_LOCAL_DAEMON)},
-		},
-		Commands: map[string]*ice.Command{
-			ice.CTX_EXIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-				m.Cmd(mdb.PRUNES, DAEMON, "", mdb.HASH, mdb.CACHE_CLEAR_ON_EXIT, ice.TRUE)
+	Index.Merge(&ice.Context{Configs: map[string]*ice.Config{
+		DAEMON: {Name: DAEMON, Help: "守护进程", Value: kit.Data(kit.MDB_PATH, ice.USR_LOCAL_DAEMON)},
+	}, Commands: map[string]*ice.Command{
+		ice.CTX_EXIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			m.Cmd(mdb.PRUNES, DAEMON, "", mdb.HASH, mdb.CACHE_CLEAR_ON_EXIT, ice.TRUE)
+		}},
+
+		DAEMON: {Name: "daemon hash auto start prunes", Help: "守护进程", Action: map[string]*ice.Action{
+			START: {Name: "start cmd env dir", Help: "添加", Hand: func(m *ice.Message, arg ...string) {
+				m.Option(CMD_DIR, m.Option(DIR))
+				m.Option(CMD_ENV, kit.Split(m.Option(ENV), " ="))
+				m.Cmdy(DAEMON, kit.Split(m.Option(CMD)))
 			}},
-
-			DAEMON: {Name: "daemon hash auto start prunes", Help: "守护进程", Action: map[string]*ice.Action{
-				START: {Name: "start cmd env dir", Help: "添加", Hand: func(m *ice.Message, arg ...string) {
-					m.Option(CMD_DIR, m.Option(DIR))
-					m.Option(CMD_ENV, kit.Split(m.Option(ENV), " ="))
-					m.Cmdy(DAEMON, kit.Split(m.Option(CMD)))
-				}},
-				RESTART: {Name: "restart", Help: "重启", Hand: func(m *ice.Message, arg ...string) {
-					m.Cmd(DAEMON, STOP)
-					m.Sleep("3s")
-					m.Cmdy(DAEMON, START)
-				}},
-				STOP: {Name: "stop", Help: "停止", Hand: func(m *ice.Message, arg ...string) {
-					m.Option(mdb.FIELDS, "time,hash,status,pid,cmd,dir,env")
-					m.Cmd(mdb.SELECT, DAEMON, "", mdb.HASH, kit.MDB_HASH, m.Option(kit.MDB_HASH)).Table(func(index int, value map[string]string, head []string) {
-						m.Cmd(mdb.MODIFY, DAEMON, "", mdb.HASH, kit.MDB_HASH, m.Option(kit.MDB_HASH), kit.MDB_STATUS, STOP)
-						m.Cmdy(SYSTEM, "kill", "-9", value[PID])
-					})
-				}},
-				mdb.REMOVE: {Name: "remove", Help: "删除", Hand: func(m *ice.Message, arg ...string) {
-					m.Cmdy(mdb.DELETE, DAEMON, "", mdb.HASH, kit.MDB_HASH, m.Option(kit.MDB_HASH))
-				}},
-				mdb.PRUNES: {Name: "prunes", Help: "清理", Hand: func(m *ice.Message, arg ...string) {
-					m.Option(mdb.FIELDS, "time,hash,status,pid,cmd,dir,env")
-					m.Cmdy(mdb.PRUNES, DAEMON, "", mdb.HASH, kit.MDB_STATUS, ERROR)
-					m.Cmdy(mdb.PRUNES, DAEMON, "", mdb.HASH, kit.MDB_STATUS, STOP)
-				}},
-			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-				if len(arg) == 0 { // 进程列表
-					m.Fields(len(arg), "time,hash,status,pid,cmd,dir,env")
-					m.Cmdy(mdb.SELECT, DAEMON, "", mdb.HASH).Table(func(index int, value map[string]string, head []string) {
-						switch value[kit.MDB_STATUS] {
-						case START:
-							m.PushButton(RESTART, STOP)
-						default:
-							m.PushButton(mdb.REMOVE)
-						}
-					})
-
-				} else if m.Richs(DAEMON, "", arg[0], nil) != nil { // 进程详情
-					m.Option(mdb.FIELDS, mdb.DETAIL)
-					m.Cmdy(mdb.SELECT, DAEMON, "", mdb.HASH, kit.MDB_HASH, arg)
-					switch m.Append(kit.MDB_STATUS) {
+			RESTART: {Name: "restart", Help: "重启", Hand: func(m *ice.Message, arg ...string) {
+				m.Cmd(DAEMON, STOP)
+				m.Sleep("3s")
+				m.Cmdy(DAEMON, START)
+			}},
+			STOP: {Name: "stop", Help: "停止", Hand: func(m *ice.Message, arg ...string) {
+				m.Option(mdb.FIELDS, "time,hash,status,pid,cmd,dir,env")
+				m.Cmd(mdb.SELECT, DAEMON, "", mdb.HASH, kit.MDB_HASH, m.Option(kit.MDB_HASH)).Table(func(index int, value map[string]string, head []string) {
+					m.Cmd(mdb.MODIFY, DAEMON, "", mdb.HASH, kit.MDB_HASH, m.Option(kit.MDB_HASH), kit.MDB_STATUS, STOP)
+					m.Cmdy(SYSTEM, "kill", "-9", value[PID])
+				})
+			}},
+			mdb.REMOVE: {Name: "remove", Help: "删除", Hand: func(m *ice.Message, arg ...string) {
+				m.Cmdy(mdb.DELETE, DAEMON, "", mdb.HASH, kit.MDB_HASH, m.Option(kit.MDB_HASH))
+			}},
+			mdb.PRUNES: {Name: "prunes", Help: "清理", Hand: func(m *ice.Message, arg ...string) {
+				m.Option(mdb.FIELDS, "time,hash,status,pid,cmd,dir,env")
+				m.Cmdy(mdb.PRUNES, DAEMON, "", mdb.HASH, kit.MDB_STATUS, ERROR)
+				m.Cmdy(mdb.PRUNES, DAEMON, "", mdb.HASH, kit.MDB_STATUS, STOP)
+			}},
+		}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			if len(arg) == 0 { // 进程列表
+				m.Fields(len(arg), "time,hash,status,pid,cmd,dir,env")
+				m.Cmdy(mdb.SELECT, DAEMON, "", mdb.HASH).Table(func(index int, value map[string]string, head []string) {
+					switch value[kit.MDB_STATUS] {
 					case START:
 						m.PushButton(RESTART, STOP)
 					default:
 						m.PushButton(mdb.REMOVE)
 					}
+				})
 
-				} else { // 启动进程
-					m.Option(CMD_TYPE, DAEMON)
-					m.Cmdy(SYSTEM, arg)
+			} else if m.Richs(DAEMON, "", arg[0], nil) != nil { // 进程详情
+				m.Option(mdb.FIELDS, mdb.DETAIL)
+				m.Cmdy(mdb.SELECT, DAEMON, "", mdb.HASH, kit.MDB_HASH, arg)
+				switch m.Append(kit.MDB_STATUS) {
+				case START:
+					m.PushButton(RESTART, STOP)
+				default:
+					m.PushButton(mdb.REMOVE)
 				}
-			}},
-		},
-	})
+
+			} else { // 启动进程
+				m.Option(CMD_TYPE, DAEMON)
+				m.Cmdy(SYSTEM, arg)
+			}
+		}},
+	}})
 }

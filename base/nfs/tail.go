@@ -47,7 +47,7 @@ func init() {
 				m.Cmd(TAIL, mdb.CREATE, kit.MDB_FILE, kit.Format(value[kit.MDB_FILE]), kit.MDB_NAME, kit.Format(value[kit.MDB_NAME]))
 			})
 		}},
-		TAIL: {Name: "tail name id auto page filter:text create", Help: "日志流", Action: map[string]*ice.Action{
+		TAIL: {Name: "tail name id auto page filter:text create", Help: "日志流", Action: ice.MergeAction(map[string]*ice.Action{
 			mdb.INPUTS: {Name: "inputs", Help: "补全", Hand: func(m *ice.Message, arg ...string) {
 				switch arg[0] {
 				case FILE:
@@ -55,21 +55,17 @@ func init() {
 					m.ProcessAgain()
 				case kit.MDB_NAME:
 					m.Push(arg[0], kit.Split(m.Option(FILE), "/"))
+				case "limit":
+					m.Push("limit", 10)
+					m.Push("limit", 20)
+					m.Push("limit", 30)
+					m.Push("limit", 50)
 				}
 			}},
 			mdb.CREATE: {Name: "create file name", Help: "创建", Hand: func(m *ice.Message, arg ...string) {
 				_tail_create(m, arg...)
 			}},
-			mdb.REMOVE: {Name: "remove", Help: "删除", Hand: func(m *ice.Message, arg ...string) {
-				m.Cmdy(mdb.DELETE, TAIL, "", mdb.HASH, m.OptionSimple(kit.MDB_NAME))
-			}},
-			mdb.PREV: {Name: "prev", Help: "上一页", Hand: func(m *ice.Message, arg ...string) {
-				mdb.PrevPage(m, arg[0], arg[1:]...)
-			}},
-			mdb.NEXT: {Name: "next", Help: "下一页", Hand: func(m *ice.Message, arg ...string) {
-				mdb.NextPageLimit(m, arg[0], arg[1:]...)
-			}},
-		}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		}, mdb.ZoneAction()), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			m.Fields(len(kit.Slice(arg, 0, 2)), "time,name,count,file", "time,id,file,text")
 			m.Option(mdb.CACHE_FILTER, kit.Select("", arg, 4))
 			m.Option(mdb.CACHE_OFFEND, kit.Select("0", arg, 3))

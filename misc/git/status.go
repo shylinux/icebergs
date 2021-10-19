@@ -131,20 +131,18 @@ func init() {
 				m.Cmdy(cli.SYSTEM, MAKE)
 			}},
 			TAGS: {Name: "tags", Help: "标签", Hand: func(m *ice.Message, arg ...string) {
-				m.ProcessHold()
 				vs := map[string]string{}
 				m.Cmd(STATUS).Table(func(index int, value map[string]string, head []string) {
-					if value["type"] == "##" {
-						if value["name"] == "release" {
-							value["name"] = "ice"
+					if value[kit.MDB_TYPE] == "##" {
+						if value[kit.MDB_NAME] == "release" {
+							value[kit.MDB_NAME] = "ice"
 						}
 
-						vs[value["name"]] = strings.Split(value["tags"], "-")[0]
+						vs[value[kit.MDB_NAME]] = strings.Split(value[TAGS], "-")[0]
 					}
 				})
 
-				m.Option(nfs.CAT_LOCAL, ice.TRUE)
-
+				m.ProcessHold()
 				m.GoToast(TAGS, func(toast func(string, int, int)) {
 					count, total := 0, len(vs)
 					toast(cli.BEGIN, count, total)
@@ -158,30 +156,34 @@ func init() {
 						}
 
 						change := false
+						m.Option(nfs.CAT_LOCAL, ice.TRUE)
 						m.Option(nfs.DIR_ROOT, _repos_path(k))
 						mod := m.Cmdx(nfs.CAT, ice.GO_MOD, func(text string, line int) string {
-							ls := kit.Split(text)
-							if len(ls) < 2 || ls[1] == "=>" || !strings.Contains(ls[0], "/") {
+							ls := kit.Split(strings.TrimPrefix(text, "require"))
+							if len(ls) < 2 || !strings.Contains(ls[0], "/") || !strings.Contains(ls[1], ".") {
 								return text
 							}
 							if v, ok := vs[kit.Slice(strings.Split(ls[0], "/"), -1)[0]]; ok && ls[1] != v {
+								m.Debug("upgrade to %v %v from %v", ls[0], ls[1], v)
 								text = ice.TB + ls[0] + ice.SP + v
 								change = true
 							}
 							return text
 						})
 
-						if change {
-							m.Cmd(nfs.SAVE, ice.GO_SUM, "")
-							m.Cmd(nfs.SAVE, ice.GO_MOD, mod)
-							m.Option(cli.CMD_DIR, _repos_path(k))
-							if k == ice.CONTEXTS {
-								continue
-							}
-							if k == ice.ICEBERGS {
-								m.Cmd(cli.SYSTEM, "go", "build")
-								continue
-							}
+						if !change || mod == "" {
+							continue
+						}
+
+						m.Cmd(nfs.SAVE, ice.GO_SUM, "")
+						m.Cmd(nfs.SAVE, ice.GO_MOD, mod)
+						m.Option(cli.CMD_DIR, _repos_path(k))
+
+						switch k {
+						case ice.CONTEXTS:
+						case ice.ICEBERGS:
+							m.Cmd(cli.SYSTEM, "go", "build")
+						default:
 							m.Cmd(cli.SYSTEM, cli.MAKE)
 						}
 					}

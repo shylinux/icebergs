@@ -51,6 +51,10 @@ func init() {
 			}},
 			BINPACK: {Name: "binpack", Help: "打包", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmdy(AUTOGEN, BINPACK)
+				p := path.Join("src/release", ice.GO_MOD)
+				if _, e := os.Stat(p); e == nil {
+					m.Cmd(nfs.COPY, ice.GO_MOD, p)
+				}
 				m.ProcessInner()
 			}},
 			mdb.INPUTS: {Name: "inputs", Help: "补全", Hand: func(m *ice.Message, arg ...string) {

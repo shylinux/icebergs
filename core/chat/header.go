@@ -1,10 +1,14 @@
 package chat
 
 import (
+	"os"
+	"path"
+
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/aaa"
 	"shylinux.com/x/icebergs/base/ctx"
 	"shylinux.com/x/icebergs/base/mdb"
+	"shylinux.com/x/icebergs/base/nfs"
 	"shylinux.com/x/icebergs/base/tcp"
 	"shylinux.com/x/icebergs/base/web"
 	"shylinux.com/x/icebergs/core/code"
@@ -112,6 +116,11 @@ func init() {
 			}},
 			"unpack": {Name: "unpack", Help: "开发模式", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmdy(code.WEBPACK, "unpack")
+
+				p := path.Join("src/debug", ice.GO_MOD)
+				if _, e := os.Stat(p); e == nil {
+					m.Cmd(nfs.COPY, ice.GO_MOD, p)
+				}
 			}},
 		}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			m.Option(TRANS, kit.Format(kit.Value(c.Commands[cmd].Meta, "_trans")))

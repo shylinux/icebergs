@@ -119,7 +119,7 @@ func init() {
 			"package": {Name: "package", Help: "依赖", Hand: func(m *ice.Message, arg ...string) {
 				web.PushStream(m)
 				p := kit.Path(ice.USR_PUBLISH)
-				m.Option(cli.CMD_DIR, kit.Path(os.Getenv("HOME")))
+				m.Option(cli.CMD_DIR, kit.Path(os.Getenv(cli.HOME)))
 				// m.Cmdy(cli.SYSTEM, "tar", "-zcvf", "go.tar.gz", "go/pkg")
 				// m.Cmdy(cli.SYSTEM, "mv", "go.tar.gz", p)
 				m.Cmdy(cli.SYSTEM, "tar", "-zcvf", "vim.tar.gz", ".vim/plugged")

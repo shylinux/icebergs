@@ -49,6 +49,10 @@ func init() {
 				}
 				m.ProcessInner()
 			}},
+			BINPACK: {Name: "binpack", Help: "打包", Hand: func(m *ice.Message, arg ...string) {
+				m.Cmdy(AUTOGEN, BINPACK)
+				m.ProcessInner()
+			}},
 			mdb.INPUTS: {Name: "inputs", Help: "补全", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmdy(AUTOGEN, mdb.INPUTS, arg)
 			}},

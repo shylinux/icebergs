@@ -8,6 +8,7 @@ import (
 	"shylinux.com/x/icebergs/base/cli"
 	"shylinux.com/x/icebergs/base/ctx"
 	"shylinux.com/x/icebergs/base/mdb"
+	"shylinux.com/x/icebergs/base/nfs"
 	kit "shylinux.com/x/toolkits"
 )
 
@@ -69,7 +70,7 @@ func _status_list(m *ice.Message) (files, adds, dels int, last time.Time) {
 			list := []string{}
 			switch vs[0] {
 			case "##":
-				m.Push(TAGS, tags)
+				m.Push(TAGS, strings.TrimSpace(tags))
 				if tags == ice.ErrWarn {
 					list = append(list, TAG)
 				}
@@ -129,6 +130,57 @@ func init() {
 				defer m.Toast(ice.SUCCESS, MAKE, "3s")
 				m.Cmdy(cli.SYSTEM, MAKE)
 			}},
+			TAGS: {Name: "tags", Help: "标签", Hand: func(m *ice.Message, arg ...string) {
+				m.ProcessHold()
+				vs := map[string]string{}
+				m.Cmd(STATUS).Table(func(index int, value map[string]string, head []string) {
+					if value["type"] == "##" {
+						if value["name"] == "release" {
+							value["name"] = "ice"
+						}
+						vs[value["name"]] = strings.Split(value["tags"], "-")[0]
+					}
+				})
+
+				m.GoToast(TAGS, func(toast func(string, int, int)) {
+					count, total := 0, len(vs)
+					toast(cli.BEGIN, count, total)
+
+					for k := range vs {
+						count++
+						toast(k, count, total)
+
+						change := false
+						m.Option(nfs.DIR_ROOT, _repos_path(k))
+						mod := m.Cmdx(nfs.CAT, ice.GO_MOD, func(text string, line int) string {
+							ls := kit.Split(text)
+							if len(ls) < 2 || ls[1] == "=>" {
+								return text
+							}
+							if v, ok := vs[kit.Slice(strings.Split(ls[0], "/"), -1)[0]]; ok {
+								text = ice.TB + ls[0] + ice.SP + v
+								change = true
+							}
+							return text
+						})
+
+						if change {
+							m.Cmd(nfs.SAVE, ice.GO_SUM, "")
+							m.Cmd(nfs.SAVE, ice.GO_MOD, mod)
+							m.Option(cli.CMD_DIR, _repos_path(k))
+							if k == ice.CONTEXTS {
+								continue
+							}
+							if k == ice.ICEBERGS {
+								m.Cmd(cli.SYSTEM, "go", "build")
+								continue
+							}
+							m.Cmd(cli.SYSTEM, cli.MAKE)
+						}
+					}
+					toast(ice.SUCCESS, count, total)
+				})
+			}},
 			PUSH: {Name: "push", Help: "上传", Hand: func(m *ice.Message, arg ...string) {
 				if m.Option(kit.MDB_NAME) == "" {
 					_status_each(m, PUSH, cli.SYSTEM, GIT, PUSH)
@@ -187,7 +239,7 @@ func init() {
 			}},
 		}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			if len(arg) == 0 {
-				m.Action(PULL, MAKE, PUSH)
+				m.Action(PULL, MAKE, PUSH, TAGS)
 
 				files, adds, dels, last := _status_list(m)
 				m.Status("files", files, "adds", adds, "dels", dels, "last", last.Format(ice.MOD_TIME))

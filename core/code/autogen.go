@@ -178,6 +178,7 @@ func init() {
 			BINPACK: {Name: "binpack", Help: "打包：生成 src/binpack.go", Hand: func(m *ice.Message, arg ...string) {
 				_autogen_version(m)
 				m.Cmd(BINPACK, mdb.CREATE)
+				m.Cmd(cli.SYSTEM, "sh", "-c", `cat src/binpack.go|sed 's/package main/package ice/g' > usr/release/binpack.go`)
 			}},
 			ssh.SCRIPT: {Name: "script", Help: "脚本：生成 etc/miss.sh", Hand: func(m *ice.Message, arg ...string) {
 				_autogen_miss(m)

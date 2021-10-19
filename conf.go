@@ -1,6 +1,7 @@
 package ice
 
 const (
+	TB = "\t"
 	SP = " "
 	PT = "."
 	NL = "\n"

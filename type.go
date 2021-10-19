@@ -279,7 +279,7 @@ func (m *Message) Spawn(arg ...interface{}) *Message {
 		data: map[string]interface{}{},
 
 		message: m, root: m.root,
-		source: m.target, target: m.target,
+		source: m.target, target: m.target, _key: m._key,
 		W: m.W, R: m.R, O: m.O, I: m.I,
 	}
 

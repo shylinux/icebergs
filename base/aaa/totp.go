@@ -68,7 +68,10 @@ func init() {
 				m.Cmd(mdb.INSERT, TOTP, "", mdb.HASH, m.OptionSimple(kit.MDB_NAME, SECRET, PERIOD, NUMBER))
 			}},
 		}, mdb.HashAction()), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			mdb.HashSelect(m.Spawn(), arg...).Table(func(index int, value map[string]string, head []string) {
+			mdb.HashSelect(m.Spawn(c), arg...).Table(func(index int, value map[string]string, head []string) {
+				if len(arg) > 0 {
+					m.OptionFields("detail")
+				}
 				m.Push(kit.MDB_TIME, m.Time())
 				m.Push(kit.MDB_NAME, value[kit.MDB_NAME])
 
@@ -81,6 +84,7 @@ func init() {
 					m.Echo(_totp_get(value[SECRET], kit.Int(value[NUMBER]), kit.Int64(value[PERIOD])))
 				}
 			})
+			m.PushAction(mdb.REMOVE)
 		}},
 	}})
 }

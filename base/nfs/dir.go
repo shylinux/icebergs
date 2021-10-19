@@ -124,7 +124,7 @@ func _dir_show(m *ice.Message, root string, name string, level int, deep bool, d
 
 					m.Push(kit.MDB_HASH, kit.Select(hex.EncodeToString(h[:6]), hex.EncodeToString(h[:]), field == kit.MDB_HASH))
 				case ctx.ACTION:
-					if !f.IsDir() && !aaa.SessIsCli(m) && m.Option(ice.MSG_USERROLE) != aaa.VOID {
+					if !f.IsDir() && !m.IsCliUA() && m.Option(ice.MSG_USERROLE) != aaa.VOID {
 						m.PushButton(TRASH)
 					} else {
 						m.Push(field, "")

@@ -8,10 +8,9 @@ import (
 	"strconv"
 	"strings"
 
-	ice "shylinux.com/x/icebergs"
-	"shylinux.com/x/icebergs/base/aaa"
-	kit "shylinux.com/x/toolkits"
 	"github.com/skip2/go-qrcode"
+	ice "shylinux.com/x/icebergs"
+	kit "shylinux.com/x/toolkits"
 )
 
 var _trans_web = map[string]color.Color{
@@ -96,7 +95,7 @@ func _qrcode_web(m *ice.Message, text string) {
 
 func Color(m *ice.Message, c string, str interface{}) string {
 	wrap, color := `<span style="color:%s">%v</span>`, c
-	if aaa.SessIsCli(m) {
+	if m.IsCliUA() {
 		wrap, color = "\033[3%sm%v\033[0m", _trans_cli(c)
 	}
 	return fmt.Sprintf(wrap, color, str)
@@ -142,7 +141,7 @@ func init() {
 				m.Option(BG, kit.Select(WHITE, arg, 2))
 				m.Option(FG, kit.Select(BLUE, arg, 1))
 
-				if aaa.SessIsCli(m) {
+				if m.IsCliUA() {
 					_qrcode_cli(m, kit.Select(m.Conf("web.share", kit.Keym(kit.MDB_DOMAIN)), arg, 0))
 				} else {
 					_qrcode_web(m, kit.Select(m.Option(ice.MSG_USERWEB), arg, 0))

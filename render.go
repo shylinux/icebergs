@@ -116,16 +116,16 @@ func (m *Message) PushSearch(args ...interface{}) {
 	for _, k := range kit.Split(m.OptionFields()) {
 		switch k {
 		case POD:
-			m.Push(k, "")
-			// m.Push(k, kit.Select(m.Option(MSG_USERPOD), data[kit.SSH_POD]))
+			m.Push(k, kit.Select("", data[k]))
+			// m.Push(k, kit.Select(m.Option(MSG_USERPOD), data[POD]))
 		case CTX:
-			m.Push(k, m.Prefix())
+			m.Push(k, kit.Select(m.Prefix(), data[CTX]))
 		case CMD:
-			m.Push(k, kit.Format(data[CMD]))
+			m.Push(k, kit.Select(m.CommandKey(), data[CMD]))
 		case kit.MDB_TIME:
 			m.Push(k, kit.Select(m.Time(), data[k]))
 		default:
-			m.Push(k, kit.Format(kit.Select("", data[k])))
+			m.Push(k, kit.Select("", data[k]))
 		}
 	}
 }

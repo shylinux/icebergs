@@ -1,6 +1,6 @@
 chapter "aaa"
 
-field "用户" user
-field "会话" sess
 field "角色" role
+field "会话" sess
 field "令牌" totp
+field "用户" user

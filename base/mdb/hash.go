@@ -144,7 +144,12 @@ func _hash_prunes(m *ice.Message, prefix, chain string, arg ...string) {
 const HASH = "hash"
 
 func HashAction(fields ...string) map[string]*ice.Action {
-	_key := func(m *ice.Message) string { return kit.Select(kit.MDB_HASH, m.Config(kit.MDB_SHORT)) }
+	_key := func(m *ice.Message) string {
+		if m.Config(kit.MDB_HASH) == "uniq" {
+			return kit.MDB_HASH
+		}
+		return kit.Select(kit.MDB_HASH, m.Config(kit.MDB_SHORT))
+	}
 	return ice.SelectAction(map[string]*ice.Action{
 		INPUTS: {Name: "inputs", Help: "补全", Hand: func(m *ice.Message, arg ...string) {
 			m.Cmdy(INPUTS, m.PrefixKey(), "", HASH, arg)
@@ -178,7 +183,8 @@ func HashAction(fields ...string) map[string]*ice.Action {
 		}},
 	}, fields...)
 }
-func HashSelect(m *ice.Message, arg ...string) {
+func HashSelect(m *ice.Message, arg ...string) *ice.Message {
 	m.Fields(len(arg), m.Config(kit.MDB_FIELD))
 	m.Cmdy(SELECT, m.PrefixKey(), "", HASH, m.Config(kit.MDB_SHORT), arg)
+	return m
 }

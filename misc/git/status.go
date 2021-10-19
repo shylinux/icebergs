@@ -161,7 +161,7 @@ func init() {
 						m.Option(nfs.DIR_ROOT, _repos_path(k))
 						mod := m.Cmdx(nfs.CAT, ice.GO_MOD, func(text string, line int) string {
 							ls := kit.Split(text)
-							if len(ls) < 2 || ls[1] == "=>" {
+							if len(ls) < 2 || ls[1] == "=>" || !strings.Contains(ls[0], "/") {
 								return text
 							}
 							if v, ok := vs[kit.Slice(strings.Split(ls[0], "/"), -1)[0]]; ok && ls[1] != v {

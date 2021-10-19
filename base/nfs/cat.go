@@ -56,6 +56,10 @@ func _cat_find(m *ice.Message, name string) io.ReadCloser {
 		return f
 	}
 
+	if m.Option(CAT_LOCAL) == ice.TRUE {
+		return nil
+	}
+
 	if b, ok := ice.Info.Pack[name]; ok {
 		m.Logs("binpack", len(b), name)
 		return NewReadCloser(bytes.NewBuffer(b))
@@ -73,6 +77,9 @@ func _cat_show(m *ice.Message, name string) {
 	}
 
 	f := _cat_find(m, name)
+	if f == nil {
+		return
+	}
 	defer f.Close()
 
 	switch cb := m.Optionv(kit.Keycb(CAT)).(type) {
@@ -113,6 +120,8 @@ const (
 	PATH = "path"
 	FILE = "file"
 	SIZE = "size"
+
+	CAT_LOCAL = "cat_local"
 )
 const CAT = "cat"
 

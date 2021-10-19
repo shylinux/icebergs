@@ -138,9 +138,12 @@ func init() {
 						if value["name"] == "release" {
 							value["name"] = "ice"
 						}
+
 						vs[value["name"]] = strings.Split(value["tags"], "-")[0]
 					}
 				})
+
+				m.Option(nfs.CAT_LOCAL, ice.TRUE)
 
 				m.GoToast(TAGS, func(toast func(string, int, int)) {
 					count, total := 0, len(vs)
@@ -150,6 +153,10 @@ func init() {
 						count++
 						toast(k, count, total)
 
+						if k == "ice" {
+							k = "release"
+						}
+
 						change := false
 						m.Option(nfs.DIR_ROOT, _repos_path(k))
 						mod := m.Cmdx(nfs.CAT, ice.GO_MOD, func(text string, line int) string {
@@ -157,7 +164,7 @@ func init() {
 							if len(ls) < 2 || ls[1] == "=>" {
 								return text
 							}
-							if v, ok := vs[kit.Slice(strings.Split(ls[0], "/"), -1)[0]]; ok {
+							if v, ok := vs[kit.Slice(strings.Split(ls[0], "/"), -1)[0]]; ok && ls[1] != v {
 								text = ice.TB + ls[0] + ice.SP + v
 								change = true
 							}

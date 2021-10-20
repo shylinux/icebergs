@@ -91,16 +91,14 @@ const (
 )
 const CLI = "cli"
 
-var Index = &ice.Context{Name: CLI, Help: "命令模块",
-	Commands: map[string]*ice.Command{
-		ice.CTX_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			m.Load()
-			_cli_init(m)
-		}},
-		ice.CTX_EXIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			m.Save()
-		}},
-	},
-}
+var Index = &ice.Context{Name: CLI, Help: "命令模块", Commands: map[string]*ice.Command{
+	ice.CTX_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		m.Load()
+		_cli_init(m)
+	}},
+	ice.CTX_EXIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		m.Save()
+	}},
+}}
 
 func init() { ice.Index.Register(Index, nil, RUNTIME, SYSTEM, DAEMON, QRCODE) }

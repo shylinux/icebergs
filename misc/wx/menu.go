@@ -3,8 +3,43 @@ package wx
 import (
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/mdb"
+	"shylinux.com/x/icebergs/base/web"
+	"shylinux.com/x/icebergs/core/wiki"
 	kit "shylinux.com/x/toolkits"
 )
+
+func _wx_action(m *ice.Message) {
+	m.Set(ice.MSG_RESULT).RenderResult()
+
+	m.Echo(`<xml>
+<FromUserName><![CDATA[%s]]></FromUserName>
+<ToUserName><![CDATA[%s]]></ToUserName>
+<CreateTime>%s</CreateTime>
+<MsgType><![CDATA[%s]]></MsgType>
+`, m.Option("ToUserName"), m.Option("FromUserName"), m.Option("CreateTime"), "news")
+
+	count := 0
+	m.Table(func(index int, value map[string]string, head []string) { count++ })
+	m.Echo(`<ArticleCount>%d</ArticleCount>`, count)
+
+	share := m.Cmdx(web.SHARE, mdb.CREATE, kit.MDB_TYPE, web.LOGIN)
+
+	m.Echo(`<Articles>`)
+	m.Table(func(index int, value map[string]string, head []string) {
+		m.Echo(`<item>
+<Title><![CDATA[%s]]></Title>
+<Description><![CDATA[%s]]></Description>
+<PicUrl><![CDATA[%s]]></PicUrl>
+<Url><![CDATA[%s]]></Url>
+</item>
+`, value[wiki.TITLE], value[wiki.SPARK], value[wiki.IMAGE],
+			kit.MergeURL(kit.Format(value[wiki.REFER]), web.SHARE, share))
+	})
+	m.Echo(`</Articles>`)
+	m.Echo(`</xml>`)
+
+	m.Debug("echo: %v", m.Result())
+}
 
 const MENU = "menu"
 

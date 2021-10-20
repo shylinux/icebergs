@@ -105,6 +105,12 @@ func (c *Context) Merge(s *Context) *Context {
 	if c.Commands == nil {
 		c.Commands = map[string]*Command{}
 	}
+	if c.Commands[CTX_INIT] == nil {
+		c.Commands[CTX_INIT] = &Command{Hand: func(m *Message, c *Context, cmd string, arg ...string) { m.Load() }}
+	}
+	if c.Commands[CTX_EXIT] == nil {
+		c.Commands[CTX_EXIT] = &Command{Hand: func(m *Message, c *Context, cmd string, arg ...string) { m.Save() }}
+	}
 	for k, v := range s.Commands {
 		if o, ok := c.Commands[k]; ok && s != c {
 			func() {

@@ -6,6 +6,8 @@ import (
 	"shylinux.com/x/icebergs/core/chat"
 )
 
-var Index = &ice.Context{Name: "wework", Help: "企业微信"}
+const WEWORK = "wework"
+
+var Index = &ice.Context{Name: WEWORK, Help: "企业微信"}
 
 func init() { chat.Index.Register(Index, &web.Frame{}) }

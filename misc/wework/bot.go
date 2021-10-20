@@ -5,8 +5,6 @@ import (
 	"crypto/cipher"
 	"crypto/sha1"
 	"encoding/base64"
-	"encoding/hex"
-	"sort"
 	"strings"
 
 	ice "shylinux.com/x/icebergs"
@@ -20,35 +18,40 @@ const BOT = "bot"
 func init() {
 	Index.Merge(&ice.Context{Configs: map[string]*ice.Config{
 		BOT: {Name: "bot", Help: "机器人", Value: kit.Data(
-			kit.MDB_SHORT, "name", kit.MDB_FIELD, "time,name,token,ekey,hook",
+			kit.MDB_SHORT, kit.MDB_NAME, kit.MDB_FIELD, "time,name,token,ekey,hook",
 		)},
 	}, Commands: map[string]*ice.Command{
-		ice.CTX_INIT:  {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) { m.Load() }},
-		ice.CTX_EXIT:  {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) { m.Save() }},
 		web.WEB_LOGIN: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {}},
-		"/bot/": {Name: "/bot", Help: "机器人", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		"/bot/": {Name: "/bot/", Help: "机器人", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			msg := m.Cmd(BOT, arg[0])
-			list := []string{msg.Append("token"), m.Option("nonce"), m.Option("timestamp"), m.Option("echostr")}
-			sort.Strings(list)
-			res := sha1.Sum([]byte(strings.Join(list, "")))
-			m.Debug(hex.EncodeToString(res[:]))
+			check := kit.Sort([]string{msg.Append("token"), m.Option("nonce"), m.Option("timestamp"), m.Option("echostr")})
+			sig := kit.Format(sha1.Sum([]byte(strings.Join(check, ""))))
+			m.Debug("what %v", sig)
+			m.Debug("what %v", check)
+			if m.Warn(sig != m.Option("msg_signature"), ice.ErrNotRight) {
+				// return
+			}
 
-			aeskey, err := base64.StdEncoding.DecodeString(msg.Append("ekey"))
+			m.Debug("what %v", msg.Append("ekey"))
+			aeskey, err := base64.RawURLEncoding.DecodeString(msg.Append("ekey"))
 			m.Assert(err)
-			en_msg, err := base64.StdEncoding.DecodeString(m.Option("echostr"))
+
+			en_msg, err := base64.RawURLEncoding.DecodeString(m.Option("echostr"))
 			m.Assert(err)
+
 			block, err := aes.NewCipher(aeskey)
 			m.Assert(err)
+
 			mode := cipher.NewCBCDecrypter(block, aeskey[:aes.BlockSize])
 			mode.CryptBlocks(en_msg, en_msg)
-
 		}},
 		BOT: {Name: "bot name chat text:textarea auto create", Help: "机器人", Action: ice.MergeAction(map[string]*ice.Action{
-			mdb.CREATE: {Name: "create name token ekey hook", Help: "创建"},
+			mdb.CREATE: {Name: "create name token ekey hook", Help: "创建", Hand: func(m *ice.Message, arg ...string) {
+				m.Cmd(web.SPIDE, mdb.CREATE, m.Option("name"), m.Option("hook"))
+				m.Cmdy(mdb.INSERT, m.PrefixKey(), "", mdb.HASH, arg)
+			}},
 		}, mdb.HashAction()), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			if mdb.HashSelect(m, arg...); len(arg) > 2 {
-				m.SetAppend()
-				m.Cmd(web.SPIDE, mdb.CREATE, arg[0], m.Append("hook"))
 				m.Cmdy(web.SPIDE, arg[0], "", kit.Format(kit.Dict(
 					"chatid", arg[1], "msgtype", "text", "text.content", arg[2],
 				)))

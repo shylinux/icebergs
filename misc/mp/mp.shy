@@ -1,5 +1,5 @@
 title "微信小程序"
-refer "" `
+refer `
 官网 https://weixin.qq.com/
 后台 https://mp.weixin.qq.com/
 文档 https://developers.weixin.qq.com/miniprogram/dev/api/

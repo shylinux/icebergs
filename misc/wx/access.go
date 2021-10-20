@@ -21,6 +21,7 @@ func _wx_sign(m *ice.Message, nonce, stamp string) string {
 		kit.Format("noncestr=%s", nonce),
 	}), "&"))))
 }
+
 func _wx_config(m *ice.Message, nonce string) {
 	m.Option(APPID, m.Config(APPID))
 	m.Option(ssh.SCRIPT, m.Config(ssh.SCRIPT))
@@ -36,7 +37,6 @@ const (
 	EXPIRES = "expires"
 )
 const (
-	WEIXIN  = "weixin"
 	ERRCODE = "errcode"
 	ERRMSG  = "errmsg"
 )
@@ -51,7 +51,7 @@ func init() {
 		)},
 	}, Commands: map[string]*ice.Command{
 		ice.CTX_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			m.Cmd(web.SPIDE, mdb.CREATE, WEIXIN, m.Config(tcp.SERVER))
+			m.Cmd(web.SPIDE, mdb.CREATE, WX, m.Conf(ACCESS, kit.Keym(tcp.SERVER)))
 		}},
 		ACCESS: {Name: "access appid auto ticket token login", Help: "认证", Action: map[string]*ice.Action{
 			LOGIN: {Name: "login appid appmm token", Help: "登录", Hand: func(m *ice.Message, arg ...string) {
@@ -61,7 +61,7 @@ func init() {
 			}},
 			TOKEN: {Name: "token", Help: "令牌", Hand: func(m *ice.Message, arg ...string) {
 				if now := time.Now().Unix(); m.Config(TOKEN) == "" || now > kit.Int64(m.Config(EXPIRE)) {
-					msg := m.Cmd(web.SPIDE, WEIXIN, web.SPIDE_GET, "/cgi-bin/token?grant_type=client_credential",
+					msg := m.Cmd(web.SPIDE, WX, web.SPIDE_GET, "/cgi-bin/token?grant_type=client_credential",
 						APPID, m.Config(APPID), "secret", m.Config(APPMM))
 					if m.Warn(msg.Append(ERRCODE) != "", msg.Append(ERRCODE), msg.Append(ERRMSG)) {
 						return
@@ -74,7 +74,7 @@ func init() {
 			}},
 			TICKET: {Name: "ticket", Help: "票据", Hand: func(m *ice.Message, arg ...string) {
 				if now := time.Now().Unix(); m.Conf(TICKET) == "" || now > kit.Int64(m.Config(EXPIRES)) {
-					msg := m.Cmd(web.SPIDE, WEIXIN, web.SPIDE_GET, "/cgi-bin/ticket/getticket?type=jsapi", "access_token", m.Cmdx(ACCESS, TOKEN))
+					msg := m.Cmd(web.SPIDE, WX, web.SPIDE_GET, "/cgi-bin/ticket/getticket?type=jsapi", "access_token", m.Cmdx(ACCESS, TOKEN))
 					if m.Warn(msg.Append(ERRCODE) != "0", msg.Append(ERRCODE), msg.Append(ERRMSG)) {
 						return
 					}
@@ -88,7 +88,7 @@ func init() {
 				_wx_config(m, "some")
 			}},
 		}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			m.Echo(kit.Formats(m.Confv(ACCESS)))
+			m.Echo(m.Config(APPID))
 		}},
 	}})
 }

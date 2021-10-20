@@ -5,6 +5,7 @@ const (
 	SP = " "
 	PT = "."
 	NL = "\n"
+	OF = " of "
 
 	OK      = "ok"
 	TRUE    = "true"

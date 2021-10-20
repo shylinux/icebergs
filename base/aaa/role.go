@@ -29,6 +29,9 @@ func _role_list(m *ice.Message, userrole string) {
 		}
 	})
 }
+func _role_chain(arg ...string) string {
+	return strings.ReplaceAll(kit.Keys(arg), "/", ice.PT)
+}
 func _role_black(m *ice.Message, userrole, chain string, status bool) {
 	m.Richs(ROLE, nil, userrole, func(key string, value map[string]interface{}) {
 		m.Log_MODIFY(ROLE, userrole, BLACK, chain)
@@ -57,7 +60,7 @@ func _role_right(m *ice.Message, userrole string, keys ...string) (ok bool) {
 			}
 		}
 
-		if m.Warn(!ok, ice.ErrNotRight, userrole, " of ", keys) {
+		if m.Warn(!ok, ice.ErrNotRight, userrole, ice.OF, keys) {
 			return
 		}
 		if userrole == TECH {
@@ -72,7 +75,7 @@ func _role_right(m *ice.Message, userrole string, keys ...string) (ok bool) {
 			}
 		}
 
-		if m.Warn(!ok, ice.ErrNotRight, userrole, " of ", keys) {
+		if m.Warn(!ok, ice.ErrNotRight, userrole, ice.OF, keys) {
 			return
 		}
 		// 普通用户
@@ -117,13 +120,13 @@ func init() {
 			}},
 
 			BLACK: {Name: "black role chain...", Help: "黑名单", Hand: func(m *ice.Message, arg ...string) {
-				_role_black(m, arg[0], strings.ReplaceAll(kit.Keys(arg[1:]), "/", ice.PT), true)
+				_role_black(m, arg[0], _role_chain(arg[1:]...), true)
 			}},
 			WHITE: {Name: "white role chain...", Help: "白名单", Hand: func(m *ice.Message, arg ...string) {
-				_role_white(m, arg[0], strings.ReplaceAll(kit.Keys(arg[1:]), "/", ice.PT), true)
+				_role_white(m, arg[0], _role_chain(arg[1:]...), true)
 			}},
 			RIGHT: {Name: "right role chain...", Help: "查看权限", Hand: func(m *ice.Message, arg ...string) {
-				if _role_right(m, arg[0], kit.Split(strings.ReplaceAll(kit.Keys(arg[1:]), "/", ice.PT), ice.PT)...) {
+				if _role_right(m, arg[0], kit.Split(_role_chain(arg[1:]...), ice.PT)...) {
 					m.Echo(ice.OK)
 				}
 			}},

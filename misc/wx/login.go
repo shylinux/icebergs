@@ -2,7 +2,6 @@ package wx
 
 import (
 	"crypto/sha1"
-	"encoding/hex"
 	"encoding/xml"
 	"strings"
 
@@ -19,7 +18,7 @@ func _wx_parse(m *ice.Message) {
 		FromUserName string
 		ToUserName   string
 		CreateTime   int64
-		MsgId        int64
+		MsgID        int64
 		Event        string
 		MsgType      string
 		Content      string
@@ -30,19 +29,19 @@ func _wx_parse(m *ice.Message) {
 	m.Option("FromUserName", data.FromUserName)
 	m.Option("ToUserName", data.ToUserName)
 	m.Option("CreateTime", data.CreateTime)
-	m.Option("MsgId", data.MsgId)
+	m.Option("MsgID", data.MsgID)
 
 	m.Option("Event", data.Event)
 	m.Option("MsgType", data.MsgType)
 	m.Option("Content", data.Content)
 }
 func _wx_reply(m *ice.Message, tmpl string) {
-	if res, err := kit.Render(m.Conf(LOGIN, kit.Keym(kit.MDB_TEMPLATE, tmpl)), m); err == nil {
+	if res, err := kit.Render(m.Config(kit.MDB_TEMPLATE), m); err == nil {
 		m.Set(ice.MSG_RESULT).RenderResult(string(res))
 	}
 }
 func _wx_action(m *ice.Message) {
-	m.RenderResult().Set(ice.MSG_RESULT)
+	m.Set(ice.MSG_RESULT).RenderResult()
 
 	m.Echo(`<xml>
 <FromUserName><![CDATA[%s]]></FromUserName>
@@ -55,8 +54,7 @@ func _wx_action(m *ice.Message) {
 	m.Table(func(index int, value map[string]string, head []string) { count++ })
 	m.Echo(`<ArticleCount>%d</ArticleCount>`, count)
 
-	share := m.Cmdx(web.SHARE, mdb.CREATE, kit.MDB_TYPE, web.LOGIN,
-		aaa.USERNAME, m.Option(ice.MSG_USERNAME), aaa.USERROLE, m.Option(ice.MSG_USERROLE))
+	share := m.Cmdx(web.SHARE, mdb.CREATE, kit.MDB_TYPE, web.LOGIN)
 
 	m.Echo(`<Articles>`)
 	m.Table(func(index int, value map[string]string, head []string) {
@@ -75,58 +73,40 @@ func _wx_action(m *ice.Message) {
 	m.Debug("echo: %v", m.Result())
 }
 
-const (
-	APPID = "appid"
-	APPMM = "appmm"
-	TOKEN = "token"
-)
 const LOGIN = "login"
 
 func init() {
-	Index.Merge(&ice.Context{
-		Configs: map[string]*ice.Config{
-			LOGIN: {Name: LOGIN, Help: "登录", Value: kit.Data(
-				APPID, "", APPMM, "", TOKEN, "",
-				kit.MDB_TEMPLATE, kit.Dict(TEXT, text),
-			)},
-		},
-		Commands: map[string]*ice.Command{
-			"/login/": {Name: "/login/", Help: "认证", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-				check := kit.Sort([]string{m.Conf(LOGIN, kit.Keym(TOKEN)), m.Option("timestamp"), m.Option("nonce")})
-				if b := sha1.Sum([]byte(strings.Join(check, ""))); m.Warn(m.Option("signature") != hex.EncodeToString(b[:]), ice.ErrNotRight) {
-					return // 验证失败
+	Index.Merge(&ice.Context{Configs: map[string]*ice.Config{
+		LOGIN: {Name: LOGIN, Help: "登录", Value: kit.Data()},
+	}, Commands: map[string]*ice.Command{
+		"/login/": {Name: "/login/", Help: "认证", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			check := kit.Sort([]string{m.Conf(ACCESS, "meta.tokens"), m.Option("timestamp"), m.Option("nonce")})
+			if sig := kit.Format(sha1.Sum([]byte(strings.Join(check, "")))); m.Warn(sig != m.Option("signature"), ice.ErrNotRight) {
+				return // 验证失败
+			}
+			if m.Option("echostr") != "" {
+				m.RenderResult(m.Option("echostr"))
+				return // 绑定验证
+			}
+
+			// 解析数据
+			_wx_parse(m)
+
+			// 用户登录
+			m.Option(ice.MSG_USERZONE, WX)
+			aaa.UserLogin(m, m.Append("FromUserName"), "")
+
+			switch m.Option("MsgType") {
+			case EVENT: // 事件
+				m.Cmdy(EVENT, m.Option("Event"))
+
+			case TEXT: // 文本
+				cmds := kit.Split(m.Option("Content"))
+				if m.Warn(!m.Right(cmds), ice.ErrNotRight) {
+					cmds = []string{MENU, mdb.CREATE}
 				}
-				if m.Option("echostr") != "" {
-					m.RenderResult(m.Option("echostr"))
-					return // 绑定验证
-				}
-
-				// 解析数据
-				_wx_parse(m)
-
-				// 用户登录
-				m.Option(ice.MSG_USERZONE, "wx")
-				aaa.UserLogin(m, m.Append("FromUserName"), "")
-
-				switch m.Option("MsgType") {
-				case EVENT: // 事件
-					m.Cmdy(EVENT, m.Option("Event"))
-
-				case TEXT: // 文本
-					cmds := kit.Split(m.Option("Content"))
-					if m.Warn(!m.Right(cmds), ice.ErrNotRight) {
-						cmds = []string{MENU, mdb.CREATE}
-					}
-					m.Cmdy(TEXT, cmds)
-				}
-			}},
-		}})
+				m.Cmdy(TEXT, cmds)
+			}
+		}},
+	}})
 }
-
-var text = `<xml>
-<FromUserName><![CDATA[{{.Option "ToUserName"}}]]></FromUserName>
-<ToUserName><![CDATA[{{.Option "FromUserName"}}]]></ToUserName>
-<CreateTime>{{.Option "CreateTime"}}</CreateTime>
-<MsgType><![CDATA[text]]></MsgType>
-<Content><![CDATA[{{.Result}}]]></Content>
-</xml>`

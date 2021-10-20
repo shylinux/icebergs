@@ -124,7 +124,7 @@ func init() {
 			}},
 			SHARE: {Name: "share hash auto prunes", Help: "共享链", Action: ice.MergeAction(map[string]*ice.Action{
 				mdb.CREATE: {Name: "create type name text", Help: "创建", Hand: func(m *ice.Message, arg ...string) {
-					m.Cmdy(mdb.INSERT, m.PrefixKey(), "", mdb.HASH, kit.MDB_TIME, m.Time(m.Conf(SHARE, kit.Keym(kit.MDB_EXPIRE))),
+					m.Cmdy(mdb.INSERT, m.PrefixKey(), "", mdb.HASH, kit.MDB_TIME, m.Time(m.Config(kit.MDB_EXPIRE)),
 						aaa.USERROLE, m.Option(ice.MSG_USERROLE), aaa.USERNAME, m.Option(ice.MSG_USERNAME),
 						RIVER, m.Option(ice.MSG_RIVER), STORM, m.Option(ice.MSG_STORM), arg)
 					// m.Option(kit.MDB_LINK, _share_link(m, "/share/"+m.Result()))

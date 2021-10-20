@@ -4,14 +4,13 @@ import (
 	"encoding/csv"
 	"os"
 	"path"
-	"strings"
 
 	ice "shylinux.com/x/icebergs"
 	kit "shylinux.com/x/toolkits"
 )
 
 func _zone_fields(m *ice.Message) []string {
-	return kit.Split(kit.Select("zone,id,time,type,name,text", strings.Join(kit.Simple(m.Optionv(FIELDS)), ",")))
+	return kit.Split(kit.Select("zone,id,time,type,name,text", kit.Join(kit.Simple(m.Optionv(FIELDS)))))
 }
 func _zone_select(m *ice.Message, prefix, chain, zone string, id string) {
 	if zone == RANDOM {
@@ -169,4 +168,9 @@ func ZoneAction(fields ...string) map[string]*ice.Action {
 			NextPageLimit(m, arg[0], arg[1:]...)
 		}},
 	}, fields...)
+}
+func ZoneSelect(m *ice.Message, arg ...string) *ice.Message {
+	m.Fields(len(arg), kit.Fields(kit.MDB_TIME, m.Config(kit.MDB_SHORT), kit.MDB_COUNT), m.Config(kit.MDB_FIELD))
+	m.Cmdy(SELECT, m.PrefixKey(), "", ZONE, arg)
+	return m
 }

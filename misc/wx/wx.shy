@@ -9,6 +9,7 @@ qrcode `http://weixin.qq.com/r/_B1-Z7TEXOkjrfAE90jq`
 
 chapter "应用"
 field "访问" web.chat.wx.access
+field "收藏" web.chat.wx.login
 field "收藏" web.chat.wx.favor
 field "菜单" web.chat.wx.menu
 
@@ -23,7 +24,7 @@ field "会话" aaa.sess
 field "用户" aaa.user
 
 chapter "项目"
-field "趋势图" web.code.git.trend args `icebergs`
 field "源代码" web.code.inner args `usr/icebergs/ misc/wx/wx.go`
+field "趋势图" web.code.git.trend args `icebergs`
 field "架构图" web.code.git.spide args `icebergs`
 

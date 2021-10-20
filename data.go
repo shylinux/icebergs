@@ -8,16 +8,19 @@ import (
 	"shylinux.com/x/toolkits/miss"
 )
 
-func (m *Message) CommandKey(arg ...string) string {
-	return strings.TrimPrefix(m._key, "/")
+func (m *Message) CommandKey() string {
+	return strings.TrimSuffix(strings.TrimPrefix(m._key, "/"), "/")
 }
 func (m *Message) PrefixKey(arg ...string) string {
-	return kit.Keys(m.Cap(CTX_FOLLOW), strings.TrimPrefix(m._key, "/"), arg)
+	return kit.Keys(m.Cap(CTX_FOLLOW), m.CommandKey(), arg)
 }
 func (m *Message) Prefix(arg ...string) string {
 	return kit.Keys(m.Cap(CTX_FOLLOW), arg)
 }
-func (m *Message) Config(key string) string {
+func (m *Message) Config(key string, arg ...interface{}) string {
+	if len(arg) > 0 {
+		m.Conf(m.PrefixKey(), kit.Keym(key), arg[0])
+	}
 	return m.Conf(m.PrefixKey(), kit.Keym(key))
 }
 func (m *Message) ConfigSimple(key string) []string {

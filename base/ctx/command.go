@@ -41,7 +41,7 @@ func _command_search(m *ice.Message, kind, name, text string) {
 			return
 		}
 
-		m.PushSearch(kit.MDB_TYPE, COMMAND, kit.MDB_NAME, name, kit.MDB_TEXT, help, CONTEXT, s.Cap(ice.CTX_FOLLOW), COMMAND, key)
+		m.PushSearch(kit.MDB_TYPE, COMMAND, kit.MDB_NAME, cmd.Name, kit.MDB_TEXT, cmd.Help, CONTEXT, s.Cap(ice.CTX_FOLLOW), COMMAND, key)
 	})
 }
 

@@ -14,7 +14,6 @@ import (
 
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/aaa"
-	"shylinux.com/x/icebergs/base/cli"
 	"shylinux.com/x/icebergs/base/ctx"
 	"shylinux.com/x/icebergs/base/mdb"
 	kit "shylinux.com/x/toolkits"
@@ -166,7 +165,7 @@ func _dir_search(m *ice.Message, kind, name string) {
 			value[kit.MDB_TYPE] = kit.Ext(value[kit.MDB_NAME])
 		}
 
-		m.PushSearch(cli.CMD, CAT, value)
+		m.PushSearch(ice.CMD, CAT, value)
 	})
 }
 

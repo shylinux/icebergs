@@ -165,7 +165,7 @@ func _serve_handle(key string, cmd *ice.Command, msg *ice.Message, w http.Respon
 	}
 
 	// 请求命令
-	if msg.Option(ice.MSG_USERPOD, msg.Option(cli.POD)); msg.Optionv(ice.MSG_CMDS) == nil {
+	if msg.Option(ice.MSG_USERPOD, msg.Option(ice.POD)); msg.Optionv(ice.MSG_CMDS) == nil {
 		if p := strings.TrimPrefix(r.URL.Path, key); p != "" {
 			msg.Optionv(ice.MSG_CMDS, strings.Split(p, "/"))
 		}

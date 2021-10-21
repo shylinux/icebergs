@@ -19,7 +19,7 @@ const CONTEXT = "context"
 func init() {
 	Index.Merge(&ice.Context{Commands: map[string]*ice.Command{
 		CONTEXT: {Name: "context name=web.chat action=context,command,config key auto", Help: "模块", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			m.Search(kit.Select("ice", arg, 0)+".", func(p *ice.Context, s *ice.Context, key string) {
+			m.Search(kit.Select(ice.ICE, arg, 0)+ice.PT, func(p *ice.Context, s *ice.Context, key string) {
 				msg := m.Spawn(s)
 				defer m.Copy(msg)
 

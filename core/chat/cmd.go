@@ -5,7 +5,6 @@ import (
 	"strings"
 
 	ice "shylinux.com/x/icebergs"
-	"shylinux.com/x/icebergs/base/cli"
 	"shylinux.com/x/icebergs/base/ctx"
 	"shylinux.com/x/icebergs/base/nfs"
 	"shylinux.com/x/icebergs/base/web"
@@ -31,7 +30,7 @@ func init() {
 					}
 					m.Cmdy(ctx.COMMAND, arg[0])
 				}},
-				cli.RUN: {Name: "run", Help: "执行", Hand: func(m *ice.Message, arg ...string) {
+				ice.RUN: {Name: "run", Help: "执行", Hand: func(m *ice.Message, arg ...string) {
 					m.Cmdy(arg)
 				}},
 			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
@@ -52,7 +51,7 @@ func init() {
 				case "go", "mod", "sum":
 					_cmd_render(m, "web.code.inner", path.Dir(p)+"/", path.Base(p))
 				default:
-					if m.Option(cli.POD) != "" {
+					if m.Option(ice.POD) != "" {
 						if m.PodCmd(ctx.COMMAND, arg[0]); m.Append("meta") != "" {
 							_cmd_render(m, arg[0], arg[1:])
 							return // 远程命令

@@ -33,19 +33,19 @@ func init() {
 			mdb.EXPORT: {Name: "export", Help: "导出", Hand: func(m *ice.Message, arg ...string) {
 				if m.Option(kit.MDB_ID) != "" {
 					msg := m.Cmd(TOOL, m.Option(kit.MDB_HASH), m.Option(kit.MDB_ID))
-					cmd := kit.Keys(msg.Append(cli.CTX), msg.Append(cli.CMD))
+					cmd := kit.Keys(msg.Append(ice.CTX), msg.Append(ice.CMD))
 
 					_action_domain(m, cmd, m.Option(kit.MDB_HASH))
-					m.Cmdy(m.Space(msg.Append(cli.POD)), cmd, mdb.EXPORT)
+					m.Cmdy(m.Space(msg.Append(ice.POD)), cmd, mdb.EXPORT)
 				}
 			}},
 			mdb.IMPORT: {Name: "import", Help: "导入", Hand: func(m *ice.Message, arg ...string) {
 				if m.Option(kit.MDB_ID) != "" {
 					msg := m.Cmd(TOOL, m.Option(kit.MDB_HASH), m.Option(kit.MDB_ID))
-					cmd := kit.Keys(msg.Append(cli.CTX), msg.Append(cli.CMD))
+					cmd := kit.Keys(msg.Append(ice.CTX), msg.Append(ice.CMD))
 
 					_action_domain(m, cmd, m.Option(kit.MDB_HASH))
-					m.Cmdy(m.Space(msg.Append(cli.POD)), cmd, mdb.IMPORT)
+					m.Cmdy(m.Space(msg.Append(ice.POD)), cmd, mdb.IMPORT)
 				}
 			}},
 			mdb.INPUTS: {Name: "inputs", Help: "补全", Hand: func(m *ice.Message, arg ...string) {
@@ -69,12 +69,12 @@ func init() {
 
 			m.OptionFields("time,id,pod,ctx,cmd,arg,display,style")
 			msg := m.Cmd(mdb.SELECT, RIVER, _river_key(m, TOOL, kit.MDB_HASH, arg[0]), mdb.LIST, kit.MDB_ID, kit.Select("", arg, 1))
-			if len(msg.Appendv(cli.CMD)) == 0 && len(arg) > 1 {
-				msg.Push(cli.CMD, arg[1])
+			if len(msg.Appendv(ice.CMD)) == 0 && len(arg) > 1 {
+				msg.Push(ice.CMD, arg[1])
 			}
 
-			if len(arg) > 2 && arg[2] == cli.RUN {
-				m.Cmdy(m.Space(msg.Append(cli.POD)), kit.Keys(msg.Append(cli.CTX), msg.Append(cli.CMD)), arg[3:])
+			if len(arg) > 2 && arg[2] == ice.RUN {
+				m.Cmdy(m.Space(msg.Append(ice.POD)), kit.Keys(msg.Append(ice.CTX), msg.Append(ice.CMD)), arg[3:])
 				return // 执行命令
 			}
 
@@ -84,9 +84,9 @@ func init() {
 			}
 
 			// 命令插件
-			m.ProcessField(arg[0], arg[1], cli.RUN)
+			m.ProcessField(arg[0], arg[1], ice.RUN)
 			m.Table(func(index int, value map[string]string, head []string) {
-				m.Cmdy(m.Space(value[cli.POD]), ctx.CONTEXT, value[cli.CTX], ctx.COMMAND, value[cli.CMD])
+				m.Cmdy(m.Space(value[ice.POD]), ctx.CONTEXT, value[ice.CTX], ctx.COMMAND, value[ice.CMD])
 			})
 		}},
 	}})

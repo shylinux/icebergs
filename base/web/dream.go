@@ -83,7 +83,7 @@ func _dream_show(m *ice.Message, name string) {
 		kit.Path(os.Args[0])
 
 		m.Optionv(cli.CMD_ERRPUT, path.Join(p, m.Conf(DREAM, kit.Keym(cli.ENV, "ctx_log"))))
-		m.Cmd(cli.DAEMON, m.Confv(DREAM, kit.Keym(cli.CMD)), ice.DEV, ice.DEV, kit.MDB_NAME, name, RIVER, m.Option(RIVER))
+		m.Cmd(cli.DAEMON, m.Confv(DREAM, kit.Keym(ice.CMD)), ice.DEV, ice.DEV, kit.MDB_NAME, name, RIVER, m.Option(RIVER))
 		m.Event(DREAM_CREATE, kit.MDB_TYPE, m.Option(kit.MDB_TYPE), kit.MDB_NAME, name)
 		m.Sleep(ice.MOD_TICK)
 	}
@@ -139,7 +139,7 @@ func init() {
 		},
 		Configs: map[string]*ice.Config{
 			DREAM: {Name: DREAM, Help: "梦想家", Value: kit.Data(kit.MDB_PATH, ice.USR_LOCAL_WORK,
-				cli.CMD, []interface{}{"ice.bin", SPACE, tcp.DIAL},
+				ice.CMD, []interface{}{"ice.bin", SPACE, tcp.DIAL},
 				cli.ENV, kit.Dict(cli.CTX_LOG, ice.BIN_BOOT_LOG),
 				"miss", `#!/bin/bash
 if [ "$ISH_CONF_PRE" = "" ]; then

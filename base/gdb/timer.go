@@ -25,8 +25,8 @@ func _timer_action(m *ice.Message, arg ...string) {
 		if n := kit.Time(kit.Format(value[NEXT])); now > n && order > 0 {
 			m.Logs(TIMER, kit.MDB_KEY, key, ORDER, order)
 
-			msg := m.Cmd(value[cli.CMD])
-			m.Grow(TIMER, kit.Keys(kit.MDB_HASH, key), kit.Dict(cli.RES, msg.Result()))
+			msg := m.Cmd(value[ice.CMD])
+			m.Grow(TIMER, kit.Keys(kit.MDB_HASH, key), kit.Dict(ice.RES, msg.Result()))
 			if value[ORDER] = kit.Format(order - 1); order > 1 {
 				value[NEXT] = msg.Time(value[INTERVAL])
 			}

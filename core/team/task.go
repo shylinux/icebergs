@@ -90,11 +90,11 @@ func _task_search(m *ice.Message, kind, name, text string) {
 			return
 		}
 		if kind == TASK {
-			m.PushSearch(cli.CMD, TASK,
+			m.PushSearch(ice.CMD, TASK,
 				kit.MDB_ZONE, val[kit.MDB_ZONE], kit.MDB_ID, kit.Format(value[kit.MDB_ID]),
 				value)
 		} else {
-			m.PushSearch(cli.CMD, TASK,
+			m.PushSearch(ice.CMD, TASK,
 				kit.MDB_TYPE, val[kit.MDB_ZONE], kit.MDB_NAME, kit.Format(value[kit.MDB_ID]),
 				kit.MDB_TEXT, kit.Format("%v:%v", value[kit.MDB_NAME], value[kit.MDB_TEXT]),
 				value)

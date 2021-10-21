@@ -148,7 +148,7 @@ func init() {
 
 						kit.Fetch(value, func(index int, value string) {
 							m.Search(value, func(p *ice.Context, s *ice.Context, key string, cmd *ice.Command) {
-								m.Cmd(TOOL, mdb.INSERT, kit.MDB_HASH, h, cli.CTX, s.Cap(ice.CTX_FOLLOW), cli.CMD, key, kit.MDB_HELP, cmd.Help)
+								m.Cmd(TOOL, mdb.INSERT, kit.MDB_HASH, h, ice.CTX, s.Cap(ice.CTX_FOLLOW), ice.CMD, key, kit.MDB_HELP, cmd.Help)
 							})
 						})
 					})
@@ -184,7 +184,7 @@ func init() {
 					m.Cmd(code.PUBLISH, mdb.CREATE, kit.MDB_FILE, ice.BIN_ICE_BIN)
 				}},
 				cli.START: {Name: "start name=hi repos template", Help: "启动", Hand: func(m *ice.Message, arg ...string) {
-					m.Cmdy(m.Space(m.Option(cli.POD)), web.DREAM, cli.START, arg)
+					m.Cmdy(m.Space(m.Option(ice.POD)), web.DREAM, cli.START, arg)
 				}},
 
 				SHARE: {Name: "share", Help: "共享", Hand: func(m *ice.Message, arg ...string) {

@@ -30,7 +30,7 @@ func init() {
 				cli.START: {Name: "start", Help: "启动", Hand: func(m *ice.Message, arg ...string) {
 					m.Cmdy(INSTALL, cli.START, m.Conf(PYTHON, kit.Keym(cli.SOURCE)), "bin/python3")
 				}},
-				cli.RUN: {Name: "run", Help: "运行", Hand: func(m *ice.Message, arg ...string) {
+				ice.RUN: {Name: "run", Help: "运行", Hand: func(m *ice.Message, arg ...string) {
 					m.Cmdy(cli.SYSTEM, m.Conf(PYTHON, kit.Keym(PYTHON)), arg)
 				}},
 				"pip": {Name: "pip", Help: "安装", Hand: func(m *ice.Message, arg ...string) {

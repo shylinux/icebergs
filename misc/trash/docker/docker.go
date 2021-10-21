@@ -175,7 +175,7 @@ var Index = &ice.Context{Name: DOCKER, Help: "虚拟机",
 		}},
 		gdb.AUTO: {Name: "auto", Help: "自动化", Action: map[string]*ice.Action{
 			web.DREAM_START: {Hand: func(m *ice.Message, arg ...string) {
-				if m.Cmd(_container, "start", arg[0]).Append(cli.CMD_CODE) == "0" {
+				if cli.IsSuccess(m.Cmd(_container, "start", arg[0])) {
 					// 重启容器
 					return
 				}

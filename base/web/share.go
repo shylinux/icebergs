@@ -22,11 +22,11 @@ func _share_link(m *ice.Message, p string, arg ...interface{}) string {
 	return tcp.ReplaceLocalhost(m, kit.MergeURL2(kit.Select(m.Option(ice.MSG_USERWEB), m.Conf(SHARE, kit.Keym(kit.MDB_DOMAIN))), p, arg...))
 }
 func _share_cache(m *ice.Message, arg ...string) {
-	if pod := m.Option(cli.POD); m.PodCmd(CACHE, arg[0]) {
+	if pod := m.Option(ice.POD); m.PodCmd(CACHE, arg[0]) {
 		if m.Append(kit.MDB_FILE) == "" {
 			m.RenderResult(m.Append(kit.MDB_TEXT))
 		} else {
-			m.Option(cli.POD, pod)
+			m.Option(ice.POD, pod)
 			_share_local(m, m.Append(kit.MDB_FILE))
 		}
 		return
@@ -49,16 +49,16 @@ func _share_local(m *ice.Message, arg ...string) {
 		}
 	}
 
-	if m.Option(cli.POD) != "" { // 远程文件
-		pp := path.Join(ice.VAR_PROXY, m.Option(cli.POD), p)
+	if m.Option(ice.POD) != "" { // 远程文件
+		pp := path.Join(ice.VAR_PROXY, m.Option(ice.POD), p)
 		cache := time.Now().Add(-time.Hour * 240000)
 		if s, e := os.Stat(pp); e == nil {
 			cache = s.ModTime()
 		}
 
 		// 上传文件
-		m.Cmdy(SPACE, m.Option(cli.POD), SPIDE, ice.DEV, SPIDE_RAW, kit.MergeURL2(m.Option(ice.MSG_USERWEB), "/share/proxy/"),
-			SPIDE_PART, m.OptionSimple(cli.POD), kit.MDB_PATH, p, CACHE, cache.Format(ice.MOD_TIME), UPLOAD, "@"+p)
+		m.Cmdy(SPACE, m.Option(ice.POD), SPIDE, ice.DEV, SPIDE_RAW, kit.MergeURL2(m.Option(ice.MSG_USERWEB), "/share/proxy/"),
+			SPIDE_PART, m.OptionSimple(ice.POD), kit.MDB_PATH, p, CACHE, cache.Format(ice.MOD_TIME), UPLOAD, "@"+p)
 
 		if s, e := os.Stat(pp); e == nil && !s.IsDir() {
 			p = pp
@@ -73,7 +73,7 @@ func _share_local(m *ice.Message, arg ...string) {
 	m.RenderDownload(p)
 }
 func _share_proxy(m *ice.Message, arg ...string) {
-	switch p := path.Join(ice.VAR_PROXY, m.Option(cli.POD), m.Option(kit.MDB_PATH)); m.R.Method {
+	switch p := path.Join(ice.VAR_PROXY, m.Option(ice.POD), m.Option(kit.MDB_PATH)); m.R.Method {
 	case http.MethodGet: // 下发文件
 		m.RenderDownload(path.Join(p, m.Option(kit.MDB_NAME)))
 
@@ -111,7 +111,7 @@ func init() {
 				ice.AddRender(ice.RENDER_DOWNLOAD, func(m *ice.Message, cmd string, args ...interface{}) string {
 					list := []string{}
 					if m.Option(ice.MSG_USERPOD) != "" {
-						list = append(list, cli.POD, m.Option(ice.MSG_USERPOD))
+						list = append(list, ice.POD, m.Option(ice.MSG_USERPOD))
 					}
 
 					arg := kit.Simple(args...)

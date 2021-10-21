@@ -7,7 +7,6 @@ import (
 	"syscall"
 
 	ice "shylinux.com/x/icebergs"
-	"shylinux.com/x/icebergs/base/cli"
 	"shylinux.com/x/icebergs/base/mdb"
 	kit "shylinux.com/x/toolkits"
 )
@@ -22,7 +21,7 @@ func _signal_action(m *ice.Message, s int) {
 	m.Option(mdb.FIELDS, "time,signal,name,cmd")
 	msg := m.Cmd(mdb.SELECT, SIGNAL, "", mdb.HASH, SIGNAL, s)
 	msg.Table(func(index int, value map[string]string, head []string) {
-		m.Cmdy(kit.Split(value[cli.CMD]))
+		m.Cmdy(kit.Split(value[ice.CMD]))
 	})
 }
 

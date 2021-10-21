@@ -4,7 +4,6 @@ import (
 	"strings"
 
 	ice "shylinux.com/x/icebergs"
-	"shylinux.com/x/icebergs/base/cli"
 	kit "shylinux.com/x/toolkits"
 )
 
@@ -64,7 +63,7 @@ func init() {
 	Index.Merge(&ice.Context{
 		Commands: map[string]*ice.Command{
 			TABLE: {Name: "table `[item item\n]...`", Help: "表格", Action: map[string]*ice.Action{
-				cli.RUN: {Name: "run", Help: "执行", Hand: func(m *ice.Message, arg ...string) {
+				ice.RUN: {Name: "run", Help: "执行", Hand: func(m *ice.Message, arg ...string) {
 					_table_run(m, arg...)
 				}},
 			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {

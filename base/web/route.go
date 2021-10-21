@@ -3,7 +3,6 @@ package web
 import (
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/aaa"
-	"shylinux.com/x/icebergs/base/cli"
 	"shylinux.com/x/icebergs/base/ctx"
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/nfs"
@@ -116,7 +115,7 @@ func init() {
 				}},
 				ctx.COMMAND: {Name: "command", Help: "命令", Hand: func(m *ice.Message, arg ...string) {
 					m.Debug(m.Option(ROUTE))
-					m.Cmdy(SPACE, m.Option(ROUTE), kit.Keys(m.Option(cli.CTX), m.Option(cli.CMD)), arg)
+					m.Cmdy(SPACE, m.Option(ROUTE), kit.Keys(m.Option(ice.CTX), m.Option(ice.CMD)), arg)
 				}},
 			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 				if len(arg) == 0 || arg[0] == "" { // 路由列表
@@ -129,13 +128,13 @@ func init() {
 
 				} else if len(arg) > 1 { // 命令列表
 					m.Cmd(SPACE, arg[0], ctx.CONTEXT, arg[1], ctx.COMMAND).Table(func(index int, value map[string]string, head []string) {
-						m.Push(cli.CMD, value[kit.MDB_KEY])
+						m.Push(ice.CMD, value[kit.MDB_KEY])
 						m.Push("", value, []string{kit.MDB_NAME, kit.MDB_HELP})
 					})
 
 				} else if len(arg) > 0 { // 模块列表
 					m.Cmd(SPACE, arg[0], ctx.CONTEXT).Table(func(index int, value map[string]string, head []string) {
-						m.Push(cli.CTX, kit.Keys(value["ups"], value[kit.MDB_NAME]))
+						m.Push(ice.CTX, kit.Keys(value["ups"], value[kit.MDB_NAME]))
 						m.Push("", value, []string{ice.CTX_STATUS, ice.CTX_STREAM, kit.MDB_HELP})
 					})
 				}

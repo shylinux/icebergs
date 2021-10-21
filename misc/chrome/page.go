@@ -2,7 +2,6 @@ package chrome
 
 import (
 	ice "shylinux.com/x/icebergs"
-	"shylinux.com/x/icebergs/base/cli"
 	"shylinux.com/x/icebergs/base/ctx"
 	kit "shylinux.com/x/toolkits"
 )
@@ -25,7 +24,7 @@ func init() {
 			FIELD: {Name: "field", Help: "执行", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmdy(FIELD, arg)
 			}},
-			cli.RUN: {Name: "run", Help: "执行", Hand: func(m *ice.Message, arg ...string) {
+			ice.RUN: {Name: "run", Help: "执行", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmdy(arg)
 			}},
 		}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {

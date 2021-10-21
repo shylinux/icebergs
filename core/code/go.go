@@ -19,7 +19,7 @@ func _go_find(m *ice.Message, key string) {
 		if p == "" {
 			continue
 		}
-		m.PushSearch(cli.CMD, "find", kit.MDB_FILE, strings.TrimPrefix(p, "./"), kit.MDB_LINE, 1, kit.MDB_TEXT, "")
+		m.PushSearch(ice.CMD, "find", kit.MDB_FILE, strings.TrimPrefix(p, "./"), kit.MDB_LINE, 1, kit.MDB_TEXT, "")
 	}
 }
 func _go_tags(m *ice.Message, key string) {
@@ -49,7 +49,7 @@ func _go_tags(m *ice.Message, key string) {
 		bio := bufio.NewScanner(f)
 		for i := 1; bio.Scan(); i++ {
 			if i == line || bio.Text() == text {
-				m.PushSearch(cli.CMD, "tags", kit.MDB_FILE, strings.TrimPrefix(file, "./"), kit.MDB_LINE, kit.Format(i), kit.MDB_TEXT, bio.Text())
+				m.PushSearch(ice.CMD, "tags", kit.MDB_FILE, strings.TrimPrefix(file, "./"), kit.MDB_LINE, kit.Format(i), kit.MDB_TEXT, bio.Text())
 			}
 		}
 	}
@@ -57,14 +57,14 @@ func _go_tags(m *ice.Message, key string) {
 func _go_grep(m *ice.Message, key string) {
 	msg := m.Spawn()
 	msg.Split(m.Cmd(cli.SYSTEM, "grep", "--exclude-dir=.git", "--exclude=.[a-z]*", "-rn", key, ".").Append(cli.CMD_OUT), "file:line:text", ":", "\n")
-	msg.Table(func(index int, value map[string]string, head []string) { m.PushSearch(cli.CMD, "grep", value) })
+	msg.Table(func(index int, value map[string]string, head []string) { m.PushSearch(ice.CMD, "grep", value) })
 }
 func _go_help(m *ice.Message, key string) {
 	p := m.Cmd(cli.SYSTEM, "go", "doc", key).Append(cli.CMD_OUT)
 	if p == "" {
 		return
 	}
-	m.PushSearch(cli.CMD, "help", kit.MDB_FILE, key+".godoc", kit.MDB_LINE, 1, kit.MDB_TEXT, p)
+	m.PushSearch(ice.CMD, "help", kit.MDB_FILE, key+".godoc", kit.MDB_LINE, 1, kit.MDB_TEXT, p)
 }
 
 const GO = "go"

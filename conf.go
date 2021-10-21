@@ -25,7 +25,10 @@ const (
 	DEV = "dev"
 	OPS = "ops"
 	ICE = "ice"
+
 	RUN = "run"
+	RES = "res"
+	ERR = "err"
 
 	POD = "pod"
 	CTX = "ctx"

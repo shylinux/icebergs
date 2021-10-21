@@ -5,7 +5,6 @@ import (
 	"strings"
 
 	ice "shylinux.com/x/icebergs"
-	"shylinux.com/x/icebergs/base/cli"
 	"shylinux.com/x/icebergs/base/ctx"
 	"shylinux.com/x/icebergs/base/nfs"
 	"shylinux.com/x/icebergs/base/ssh"
@@ -68,7 +67,7 @@ func init() {
 		), Action: ice.MergeAction(map[string]*ice.Action{
 			"play": {Name: "play", Help: "演示"},
 			web.STORY: {Name: "story", Help: "运行", Hand: func(m *ice.Message, arg ...string) {
-				m.Cmdy(arg[0], ctx.ACTION, cli.RUN, arg[2:])
+				m.Cmdy(arg[0], ctx.ACTION, ice.RUN, arg[2:])
 			}},
 		}, ctx.CmdAction()), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			m.Option(nfs.DIR_REG, m.Conf(WORD, kit.Keym(kit.MDB_REGEXP)))
@@ -80,7 +79,7 @@ func init() {
 			ice.Display("/plugin/local/wiki/word.js", WORD),
 		), Action: ice.MergeAction(map[string]*ice.Action{
 			web.STORY: {Name: "story", Help: "运行", Hand: func(m *ice.Message, arg ...string) {
-				m.Cmdy(arg[0], ctx.ACTION, cli.RUN, arg[2:])
+				m.Cmdy(arg[0], ctx.ACTION, ice.RUN, arg[2:])
 			}},
 			ctx.COMMAND: {Name: "command", Help: "命令", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmdy(ctx.COMMAND, "web.wiki.word")

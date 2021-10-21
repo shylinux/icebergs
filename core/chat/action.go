@@ -6,7 +6,6 @@ import (
 
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/aaa"
-	"shylinux.com/x/icebergs/base/cli"
 	"shylinux.com/x/icebergs/base/ctx"
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/web"
@@ -59,7 +58,7 @@ func _action_right(m *ice.Message, river string, storm string) (ok bool) {
 func _action_list(m *ice.Message, river, storm string) {
 	m.Option(ice.MSG_RIVER, river)
 	m.Cmdy(TOOL, storm).Table(func(index int, value map[string]string, head []string) {
-		m.Cmdy(m.Space(kit.Select(m.Option(cli.POD), value[cli.POD])), ctx.COMMAND, kit.Keys(value[cli.CTX], value[cli.CMD]))
+		m.Cmdy(m.Space(kit.Select(m.Option(ice.POD), value[ice.POD])), ctx.COMMAND, kit.Keys(value[ice.CTX], value[ice.CMD]))
 	})
 	m.SortInt(kit.MDB_ID)
 }
@@ -70,8 +69,8 @@ func _action_show(m *ice.Message, river, storm, index string, arg ...string) {
 	cmds := []string{index}
 	prefix := kit.Keys(kit.MDB_HASH, river, TOOL, kit.MDB_HASH, storm)
 	if m.Grows(RIVER, prefix, kit.MDB_ID, index, func(index int, value map[string]interface{}) {
-		if cmds = kit.Simple(kit.Keys(value[cli.CTX], value[cli.CMD])); kit.Format(value[cli.POD]) != "" {
-			m.Option(cli.POD, value[cli.POD]) // 远程节点
+		if cmds = kit.Simple(kit.Keys(value[ice.CTX], value[ice.CMD])); kit.Format(value[ice.POD]) != "" {
+			m.Option(ice.POD, value[ice.POD]) // 远程节点
 		}
 	}) == nil && m.Warn(!m.Right(cmds), ice.ErrNotRight) {
 		return // 没有授权

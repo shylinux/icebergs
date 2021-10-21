@@ -88,7 +88,7 @@ func init() {
 					m.Cmdy(mdb.DELETE, BENCH, "", mdb.HASH, m.OptionSimple(kit.MDB_ZONE))
 				}},
 
-				cli.RUN: {Name: "run", Help: "执行", Hand: func(m *ice.Message, arg ...string) {
+				ice.RUN: {Name: "run", Help: "执行", Hand: func(m *ice.Message, arg ...string) {
 					switch m.Option(kit.MDB_TYPE) {
 					case HTTP:
 						_bench_http(m, m.Option(kit.MDB_NAME), m.Option(kit.MDB_TEXT))
@@ -99,7 +99,7 @@ func init() {
 			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 				m.Fields(len(arg), "time,zone,count", "time,id,type,name,text,nconn,nreqs")
 				m.Cmdy(mdb.SELECT, BENCH, "", mdb.ZONE, arg)
-				m.PushAction(kit.Select(mdb.REMOVE, cli.RUN, len(arg) > 0))
+				m.PushAction(kit.Select(mdb.REMOVE, ice.RUN, len(arg) > 0))
 			}},
 
 			"test": {Name: "test path func auto run case", Help: "测试用例", Action: map[string]*ice.Action{

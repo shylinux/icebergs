@@ -64,7 +64,7 @@ func init() {
 					}
 				}},
 
-				cli.RUN: {Name: "run", Help: "执行", Hand: func(m *ice.Message, arg ...string) {
+				ice.RUN: {Name: "run", Help: "执行", Hand: func(m *ice.Message, arg ...string) {
 					msg := m.Cmd(web.SPIDE, ice.DEV, web.SPIDE_CACHE, web.SPIDE_GET, m.Option(SERVICE), SECONDS, m.Option(SECONDS))
 
 					cmd := kit.Simple(m.Confv(PPROF, kit.Keym(PPROF)), "-text", m.Option(BINNARY), msg.Append(kit.MDB_FILE))
@@ -89,7 +89,7 @@ func init() {
 			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 				m.Fields(len(arg), "time,zone,count,binnary,service,seconds", "time,id,text,file")
 				if m.Cmdy(mdb.SELECT, PPROF, "", mdb.ZONE, arg); len(arg) == 0 {
-					m.PushAction(cli.RUN, mdb.REMOVE)
+					m.PushAction(ice.RUN, mdb.REMOVE)
 					return
 				}
 

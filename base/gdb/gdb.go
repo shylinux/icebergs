@@ -52,8 +52,8 @@ var Index = &ice.Context{Name: GDB, Help: "事件模块",
 			m.Cmd(nfs.SAVE, kit.Select(m.Conf(SIGNAL, kit.META_PATH), m.Conf(cli.RUNTIME, kit.Keys(cli.CONF, cli.CTX_PID))),
 				m.Conf(cli.RUNTIME, kit.Keys(cli.HOST, cli.PID)))
 
-			m.Cmd(SIGNAL, LISTEN, SIGNAL, "3", kit.MDB_NAME, "退出", cli.CMD, "exit 0")
-			m.Cmd(SIGNAL, LISTEN, SIGNAL, "2", kit.MDB_NAME, "重启", cli.CMD, "exit 1")
+			m.Cmd(SIGNAL, LISTEN, SIGNAL, "3", kit.MDB_NAME, "退出", ice.CMD, "exit 0")
+			m.Cmd(SIGNAL, LISTEN, SIGNAL, "2", kit.MDB_NAME, "重启", ice.CMD, "exit 1")
 			m.Load()
 		}},
 		ice.CTX_EXIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {

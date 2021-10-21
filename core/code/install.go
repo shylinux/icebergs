@@ -65,20 +65,20 @@ func _install_build(m *ice.Message, arg ...string) {
 	case func(string):
 		cb(p)
 	default:
-		if msg := m.Cmd(cli.SYSTEM, "./configure", "--prefix="+pp, arg[1:]); msg.Append(cli.CMD_CODE) != "0" {
+		if msg := m.Cmd(cli.SYSTEM, "./configure", "--prefix="+pp, arg[1:]); !cli.IsSuccess(msg) {
 			m.Echo(msg.Append(cli.CMD_ERR))
 			return
 		}
 	}
 
 	// 编译
-	if msg := m.Cmd(cli.SYSTEM, "make", "-j8"); msg.Append(cli.CMD_CODE) != "0" {
+	if msg := m.Cmd(cli.SYSTEM, "make", "-j8"); !cli.IsSuccess(msg) {
 		m.Echo(msg.Append(cli.CMD_ERR))
 		return
 	}
 
 	// 安装
-	if msg := m.Cmd(cli.SYSTEM, "make", "PREFIX="+pp, "install"); msg.Append(cli.CMD_CODE) != "0" {
+	if msg := m.Cmd(cli.SYSTEM, "make", "PREFIX="+pp, "install"); !cli.IsSuccess(msg) {
 		m.Echo(msg.Append(cli.CMD_ERR))
 		return
 	}
@@ -120,7 +120,7 @@ func _install_service(m *ice.Message, arg ...string) {
 
 	m.Fields(len(arg[1:]), "time,port,status,pid,cmd,dir")
 	m.Cmd(mdb.SELECT, cli.DAEMON, "", mdb.HASH).Table(func(index int, value map[string]string, head []string) {
-		if strings.Contains(value[cli.CMD], "bin/"+arg[0]) {
+		if strings.Contains(value[ice.CMD], "bin/"+arg[0]) {
 			m.Push("", value, kit.Split(m.Option(mdb.FIELDS)))
 		}
 	})

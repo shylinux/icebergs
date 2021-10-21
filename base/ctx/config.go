@@ -94,42 +94,39 @@ const (
 const CONFIG = "config"
 
 func init() {
-	Index.Merge(&ice.Context{
-		Configs: map[string]*ice.Config{
-			CONFIG: {Name: CONFIG, Help: "配置", Value: kit.Data(kit.MDB_PATH, ice.VAR_CONF)},
-		},
-		Commands: map[string]*ice.Command{
-			CONFIG: {Name: "config key auto", Help: "配置", Action: map[string]*ice.Action{
-				SAVE: {Name: "save", Help: "保存", Hand: func(m *ice.Message, arg ...string) {
-					_config_save(m, arg[0], arg[1:]...)
-				}},
-				LOAD: {Name: "load", Help: "加载", Hand: func(m *ice.Message, arg ...string) {
-					_config_load(m, arg[0], arg[1:]...)
-				}},
-				RICH: {Name: "rich", Help: "富有", Hand: func(m *ice.Message, arg ...string) {
-					_config_rich(m, arg[0], arg[1], arg[2:]...)
-				}},
-				GROW: {Name: "grow", Help: "成长", Hand: func(m *ice.Message, arg ...string) {
-					_config_grow(m, arg[0], arg[1], arg[2:]...)
-				}},
-				"clear": {Name: "clear", Help: "清空", Hand: func(m *ice.Message, arg ...string) {
-					m.Conf(arg[0], "", "")
-					m.Cmd("exit", 1)
-				}},
-				"list": {Name: "list", Help: "列表", Hand: func(m *ice.Message, arg ...string) {
-					list := []interface{}{}
-					for _, v := range arg[2:] {
-						list = append(list, v)
-					}
-					m.Confv(arg[0], arg[1], kit.List(list...))
-				}},
-			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-				if len(arg) == 0 {
-					_config_list(m)
-					return
-				}
-				_config_make(m, arg[0], arg[1:]...)
+	Index.Merge(&ice.Context{Configs: map[string]*ice.Config{
+		CONFIG: {Name: CONFIG, Help: "配置", Value: kit.Data(kit.MDB_PATH, ice.VAR_CONF)},
+	}, Commands: map[string]*ice.Command{
+		CONFIG: {Name: "config key auto", Help: "配置", Action: map[string]*ice.Action{
+			SAVE: {Name: "save", Help: "保存", Hand: func(m *ice.Message, arg ...string) {
+				_config_save(m, arg[0], arg[1:]...)
 			}},
-		},
-	})
+			LOAD: {Name: "load", Help: "加载", Hand: func(m *ice.Message, arg ...string) {
+				_config_load(m, arg[0], arg[1:]...)
+			}},
+			RICH: {Name: "rich", Help: "富有", Hand: func(m *ice.Message, arg ...string) {
+				_config_rich(m, arg[0], arg[1], arg[2:]...)
+			}},
+			GROW: {Name: "grow", Help: "成长", Hand: func(m *ice.Message, arg ...string) {
+				_config_grow(m, arg[0], arg[1], arg[2:]...)
+			}},
+			"list": {Name: "list", Help: "列表", Hand: func(m *ice.Message, arg ...string) {
+				list := []interface{}{}
+				for _, v := range arg[2:] {
+					list = append(list, v)
+				}
+				m.Confv(arg[0], arg[1], kit.List(list...))
+			}},
+			"clear": {Name: "clear", Help: "清空", Hand: func(m *ice.Message, arg ...string) {
+				m.Conf(arg[0], "", "")
+				m.Cmd(ice.EXIT, 1)
+			}},
+		}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			if len(arg) == 0 {
+				_config_list(m)
+				return
+			}
+			_config_make(m, arg[0], arg[1:]...)
+		}},
+	}})
 }

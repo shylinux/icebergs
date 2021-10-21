@@ -2,6 +2,7 @@ package code
 
 import (
 	"os"
+	"runtime"
 
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/cli"
@@ -30,7 +31,7 @@ func init() {
 			UPGRADE: {Name: "upgrade item=system,source run:button", Help: "升级", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 				m.Grows(cmd, kit.Keys(kit.MDB_HASH, kit.Select(cli.SYSTEM, arg, 0)), "", "", func(index int, value map[string]interface{}) {
 					if value[kit.MDB_PATH] == ice.BIN_ICE_BIN { // 程序文件
-						value[kit.MDB_FILE] = kit.Keys("ice", m.Conf(cli.RUNTIME, "host.GOOS"), m.Conf(cli.RUNTIME, "host.GOARCH"))
+						value[kit.MDB_FILE] = kit.Keys("ice", runtime.GOOS, runtime.GOARCH)
 						m.Option("exit", ice.TRUE)
 					}
 

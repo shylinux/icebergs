@@ -2,19 +2,18 @@ package gdb
 
 import (
 	ice "shylinux.com/x/icebergs"
-	"shylinux.com/x/icebergs/base/cli"
 	"shylinux.com/x/icebergs/base/mdb"
 	kit "shylinux.com/x/toolkits"
 )
 
 func _event_listen(m *ice.Message, event string, cmd string) {
 	h := m.Cmdx(mdb.INSERT, EVENT, "", mdb.HASH, EVENT, event)
-	m.Cmdy(mdb.INSERT, EVENT, kit.Keys(kit.MDB_HASH, h), mdb.LIST, cli.CMD, cmd)
+	m.Cmdy(mdb.INSERT, EVENT, kit.Keys(kit.MDB_HASH, h), mdb.LIST, ice.CMD, cmd)
 }
 func _event_action(m *ice.Message, event string, arg ...string) {
 	m.Option(mdb.FIELDS, "time,id,cmd")
 	m.Cmd(mdb.SELECT, EVENT, kit.Keys(kit.MDB_HASH, kit.Hashs(event)), mdb.LIST).Table(func(index int, value map[string]string, head []string) {
-		m.Cmd(kit.Split(value[cli.CMD]), event, arg).Cost(EVENT, event, cli.ARG, arg)
+		m.Cmd(kit.Split(value[ice.CMD]), event, arg).Cost(EVENT, event, ice.ARG, arg)
 	})
 }
 
@@ -28,7 +27,7 @@ func init() {
 		Commands: map[string]*ice.Command{
 			EVENT: {Name: "event event id auto listen", Help: "事件流", Action: map[string]*ice.Action{
 				LISTEN: {Name: "listen event cmd", Help: "监听", Hand: func(m *ice.Message, arg ...string) {
-					_event_listen(m, m.Option(EVENT), m.Option(cli.CMD))
+					_event_listen(m, m.Option(EVENT), m.Option(ice.CMD))
 				}},
 				ACTION: {Name: "action event arg", Help: "触发", Hand: func(m *ice.Message, arg ...string) {
 					_event_action(m, m.Option(EVENT), arg[2:]...)

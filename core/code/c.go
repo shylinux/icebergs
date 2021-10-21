@@ -78,7 +78,7 @@ func init() {
 				mdb.ENGINE: {Hand: func(m *ice.Message, arg ...string) {
 					m.Option(cli.CMD_DIR, arg[2])
 					name := strings.TrimSuffix(arg[1], path.Ext(arg[1])) + ".bin"
-					if msg := m.Cmd(cli.SYSTEM, "gcc", arg[1], "-o", name); msg.Append(cli.CMD_CODE) != "0" {
+					if msg := m.Cmd(cli.SYSTEM, "gcc", arg[1], "-o", name); !cli.IsSuccess(msg) {
 						m.Copy(msg)
 						return
 					}
@@ -110,7 +110,7 @@ func init() {
 					}
 					for _, i := range []string{"1", "2", "3", "8"} {
 						if text := _c_help(m, i, kit.Select(kit.MDB_MAIN, arg, 1)); text != "" {
-							m.PushSearch(cli.CMD, "c", kit.MDB_FILE, kit.Keys(arg[1], MAN+i), kit.MDB_LINE, 1, kit.MDB_TEXT, text)
+							m.PushSearch(ice.CMD, "c", kit.MDB_FILE, kit.Keys(arg[1], MAN+i), kit.MDB_LINE, 1, kit.MDB_TEXT, text)
 						}
 					}
 				}},

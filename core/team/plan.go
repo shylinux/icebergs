@@ -4,7 +4,6 @@ import (
 	"time"
 
 	ice "shylinux.com/x/icebergs"
-	"shylinux.com/x/icebergs/base/cli"
 	"shylinux.com/x/icebergs/base/ctx"
 	"shylinux.com/x/icebergs/base/mdb"
 	kit "shylinux.com/x/toolkits"
@@ -52,7 +51,7 @@ func init() {
 					m.ProcessRefresh30ms()
 				}},
 				ctx.COMMAND: {Name: "command", Help: "命令"},
-				cli.RUN: {Name: "run", Help: "执行", Hand: func(m *ice.Message, arg ...string) {
+				ice.RUN: {Name: "run", Help: "执行", Hand: func(m *ice.Message, arg ...string) {
 					m.Cmdy(arg)
 				}},
 

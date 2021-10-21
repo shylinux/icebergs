@@ -6,7 +6,6 @@ import (
 	"strings"
 
 	ice "shylinux.com/x/icebergs"
-	"shylinux.com/x/icebergs/base/cli"
 	"shylinux.com/x/icebergs/base/web"
 	"shylinux.com/x/icebergs/core/wiki"
 	kit "shylinux.com/x/toolkits"
@@ -89,9 +88,9 @@ func init() {
 			"card": {Name: "", Help: "", Hand: func(m *ice.Message, arg ...string) {
 				data := m.Optionv(ice.MSG_USERDATA)
 				kit.Fetch(kit.Value(data, "action.value"), func(key string, value string) { m.Option(key, value) })
-				m.Cmdy(TALK, kit.Parse(nil, "", kit.Split(m.Option(cli.CMD))...))
+				m.Cmdy(TALK, kit.Parse(nil, "", kit.Split(m.Option(ice.CMD))...))
 				m.Cmd(SEND, m.Option(APP_ID), CHAT_ID, m.Option(OPEN_CHAT_ID),
-					m.Option(wiki.TITLE)+" "+m.Option(cli.CMD), m.Result())
+					m.Option(wiki.TITLE)+" "+m.Option(ice.CMD), m.Result())
 			}},
 		}, Hand: func(m *ice.Message, c *ice.Context, key string, arg ...string) {
 			if m.Options(OPEN_CHAT_ID) {

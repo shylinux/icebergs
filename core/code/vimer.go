@@ -44,7 +44,7 @@ func init() {
 				)
 
 				_autogen_version(m)
-				if m.Cmdy(cli.SYSTEM, "go", "build", "-v", "-o", "bin/ice.bin", "src/main.go", "src/version.go"); m.Append(cli.CMD_CODE) == "0" {
+				if m.Cmdy(cli.SYSTEM, "go", "build", "-v", "-o", "bin/ice.bin", "src/main.go", "src/version.go"); cli.IsSuccess(m) {
 					m.Cmd("exit", "1")
 				}
 				m.ProcessInner()

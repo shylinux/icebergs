@@ -205,11 +205,11 @@ func _space_search(m *ice.Message, kind, name, text string, arg ...string) {
 		case CHROME:
 
 		case MASTER:
-			m.PushSearch(cli.CMD, SPACE, kit.MDB_TYPE, value[kit.MDB_TYPE], kit.MDB_NAME, value[kit.MDB_NAME],
+			m.PushSearch(ice.CMD, SPACE, kit.MDB_TYPE, value[kit.MDB_TYPE], kit.MDB_NAME, value[kit.MDB_NAME],
 				kit.MDB_TEXT, m.Cmd(SPIDE, value[kit.MDB_NAME], ice.OptionFields("client.url")).Append("client.url"), value)
 
 		default:
-			m.PushSearch(cli.CMD, SPACE, kit.MDB_TYPE, value[kit.MDB_TYPE], kit.MDB_NAME, value[kit.MDB_NAME],
+			m.PushSearch(ice.CMD, SPACE, kit.MDB_TYPE, value[kit.MDB_TYPE], kit.MDB_NAME, value[kit.MDB_NAME],
 				kit.MDB_TEXT, _space_link(m, kit.Keys(m.Option(ice.MSG_USERPOD), value[kit.MDB_NAME])), value)
 		}
 	})
@@ -220,7 +220,7 @@ func _space_search(m *ice.Message, kind, name, text string, arg ...string) {
 			return
 		}
 		m.Cmd(tcp.HOST).Table(func(index int, value map[string]string, head []string) {
-			m.PushSearch(cli.CMD, SPACE, kit.MDB_TYPE, MYSELF, kit.MDB_NAME, value[kit.MDB_NAME],
+			m.PushSearch(ice.CMD, SPACE, kit.MDB_TYPE, MYSELF, kit.MDB_NAME, value[kit.MDB_NAME],
 				kit.MDB_TEXT, kit.Format("http://%s:%s", value[tcp.IP], port))
 		})
 	}

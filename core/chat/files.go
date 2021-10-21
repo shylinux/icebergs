@@ -2,7 +2,6 @@ package chat
 
 import (
 	ice "shylinux.com/x/icebergs"
-	"shylinux.com/x/icebergs/base/cli"
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/web"
 	kit "shylinux.com/x/toolkits"
@@ -27,7 +26,7 @@ func init() {
 				m.Fields(len(arg), m.Conf(FILES, kit.META_FIELD))
 				m.Cmdy(mdb.SELECT, m.Prefix(FILES), "", mdb.HASH, kit.MDB_HASH, arg)
 				m.Table(func(index int, value map[string]string, head []string) {
-					link := kit.MergeURL("/share/cache/"+value[kit.MDB_DATA], cli.POD, m.Option(ice.MSG_USERPOD))
+					link := kit.MergeURL("/share/cache/"+value[kit.MDB_DATA], ice.POD, m.Option(ice.MSG_USERPOD))
 					if m.PushDownload(kit.MDB_LINK, value[kit.MDB_NAME], link); len(arg) > 0 && kit.ExtIsImage(value[kit.MDB_NAME]) {
 						m.PushImages(kit.MDB_IMAGE, link)
 					}

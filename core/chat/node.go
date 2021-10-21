@@ -3,7 +3,6 @@ package chat
 import (
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/aaa"
-	"shylinux.com/x/icebergs/base/cli"
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/web"
 	"shylinux.com/x/icebergs/core/code"
@@ -53,7 +52,7 @@ func init() {
 					m.Cmdy(mdb.SELECT, RIVER, kit.Keys(kit.MDB_HASH, m.Option(ice.MSG_RIVER), NODE), mdb.HASH)
 					m.Table(func(index int, value map[string]string, head []string) {
 						m.PushAnchor(value[kit.MDB_NAME], kit.MergeURL2(m.Option(ice.MSG_USERWEB),
-							"/chat/pod/"+kit.Keys(m.Option(cli.POD), value[kit.MDB_NAME])))
+							"/chat/pod/"+kit.Keys(m.Option(ice.POD), value[kit.MDB_NAME])))
 					})
 					m.RenameAppend("name", "pod")
 					m.PushAction(mdb.REMOVE)

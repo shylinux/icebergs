@@ -61,7 +61,6 @@ func _trans_cli(str string) string {
 	}
 	return kit.Format(res)
 }
-
 func _qrcode_cli(m *ice.Message, text string) {
 	qr, _ := qrcode.New(text, qrcode.Medium)
 	fg := _trans_cli(m.Option(FG))
@@ -79,7 +78,7 @@ func _qrcode_cli(m *ice.Message, text string) {
 
 			m.Echo("\033[4%sm  \033[0m", kit.Select(bg, fg, col))
 		}
-		m.Echo("\n")
+		m.Echo(ice.NL)
 	}
 	m.Echo(text)
 }
@@ -126,27 +125,24 @@ const (
 const QRCODE = "qrcode"
 
 func init() {
-	Index.Merge(&ice.Context{
-		Configs: map[string]*ice.Config{
-			QRCODE: {Name: QRCODE, Help: "二维码", Value: kit.Data()},
-		},
-		Commands: map[string]*ice.Command{
-			ice.CTX_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-				ice.AddRender(ice.RENDER_QRCODE, func(m *ice.Message, cmd string, args ...interface{}) string {
-					return m.Cmd(QRCODE, kit.Simple(args...)).Result()
-				})
-			}},
-			QRCODE: {Name: "qrcode text fg bg size auto", Help: "二维码", Action: map[string]*ice.Action{}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-				m.Option(SIZE, kit.Select("240", arg, 3))
-				m.Option(BG, kit.Select(WHITE, arg, 2))
-				m.Option(FG, kit.Select(BLUE, arg, 1))
+	Index.Merge(&ice.Context{Configs: map[string]*ice.Config{
+		QRCODE: {Name: QRCODE, Help: "二维码", Value: kit.Data()},
+	}, Commands: map[string]*ice.Command{
+		ice.CTX_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			ice.AddRender(ice.RENDER_QRCODE, func(m *ice.Message, cmd string, args ...interface{}) string {
+				return m.Cmd(QRCODE, kit.Simple(args...)).Result()
+			})
+		}},
+		QRCODE: {Name: "qrcode text fg bg size auto", Help: "二维码", Action: map[string]*ice.Action{}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			m.Option(SIZE, kit.Select("240", arg, 3))
+			m.Option(BG, kit.Select(WHITE, arg, 2))
+			m.Option(FG, kit.Select(BLUE, arg, 1))
 
-				if m.IsCliUA() {
-					_qrcode_cli(m, kit.Select(m.Conf("web.share", kit.Keym(kit.MDB_DOMAIN)), arg, 0))
-				} else {
-					_qrcode_web(m, kit.Select(m.Option(ice.MSG_USERWEB), arg, 0))
-				}
-			}},
-		},
-	})
+			if m.IsCliUA() {
+				_qrcode_cli(m, kit.Select(m.Conf("web.share", kit.Keym(kit.MDB_DOMAIN)), arg, 0))
+			} else {
+				_qrcode_web(m, kit.Select(m.Option(ice.MSG_USERWEB), arg, 0))
+			}
+		}},
+	}})
 }

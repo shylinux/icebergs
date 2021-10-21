@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 
 	ice "shylinux.com/x/icebergs"
-	"shylinux.com/x/icebergs/base/cli"
 	"shylinux.com/x/icebergs/base/nfs"
 	kit "shylinux.com/x/toolkits"
 )
@@ -62,7 +61,7 @@ func init() {
 				nfs.SAVE: {Name: "save path text", Help: "保存", Hand: func(m *ice.Message, arg ...string) {
 					_wiki_save(m, JSON, arg[0], arg[1])
 				}},
-				cli.RUN: {Name: "run", Help: "执行", Hand: func(m *ice.Message, arg ...string) {
+				ice.RUN: {Name: "run", Help: "执行", Hand: func(m *ice.Message, arg ...string) {
 					var data interface{}
 					json.Unmarshal([]byte(m.Cmdx(arg)), &data)
 					m.Option("type", "json")

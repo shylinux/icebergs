@@ -137,7 +137,7 @@ func init() {
 			web.DREAM: {Name: "dream name=hi repos", Help: "启动", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmdy(web.DREAM, tcp.START, arg)
 				m.Process(ice.PROCESS_OPEN, kit.MergeURL(m.Option(ice.MSG_USERWEB),
-					cli.POD, kit.Keys(m.Option(ice.MSG_USERPOD), m.Option(kit.MDB_NAME))))
+					ice.POD, kit.Keys(m.Option(ice.MSG_USERPOD), m.Option(kit.MDB_NAME))))
 			}},
 		}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			m.Option(nfs.DIR_ROOT, m.Conf(PUBLISH, kit.META_PATH))

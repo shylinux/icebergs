@@ -1,7 +1,7 @@
 chapter "cli"
 
-field "扫码" qrcode
-field "守护" daemon
-field "命令" system
 field "环境" runtime
+field "命令" system
+field "守护" daemon
+field "扫码" qrcode
 

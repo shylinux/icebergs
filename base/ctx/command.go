@@ -41,11 +41,23 @@ func _command_search(m *ice.Message, kind, name, text string) {
 			return
 		}
 
-		m.PushSearch("cmd", COMMAND,
-			kit.MDB_TYPE, kind, kit.MDB_NAME, key, kit.MDB_TEXT, s.Cap(ice.CTX_FOLLOW),
-			CONTEXT, s.Cap(ice.CTX_FOLLOW), COMMAND, key,
-		)
+		m.PushSearch(kit.MDB_TYPE, COMMAND, kit.MDB_NAME, name, kit.MDB_TEXT, help, CONTEXT, s.Cap(ice.CTX_FOLLOW), COMMAND, key)
 	})
+}
+
+func CmdAction(fields ...string) map[string]*ice.Action {
+	return ice.SelectAction(map[string]*ice.Action{
+		COMMAND: {Name: "command", Help: "命令", Hand: func(m *ice.Message, arg ...string) {
+			if !m.PodCmd(COMMAND, arg) {
+				m.Cmdy(COMMAND, arg)
+			}
+		}},
+		ice.RUN: {Name: "run", Help: "执行", Hand: func(m *ice.Message, arg ...string) {
+			if !m.PodCmd(arg) {
+				m.Cmdy(arg)
+			}
+		}},
+	}, fields...)
 }
 
 const (
@@ -55,6 +67,9 @@ const COMMAND = "command"
 
 func init() {
 	Index.Merge(&ice.Context{Commands: map[string]*ice.Command{
+		ice.CTX_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			m.Cmd(mdb.SEARCH, mdb.CREATE, COMMAND, m.Prefix(COMMAND))
+		}},
 		COMMAND: {Name: "command key auto", Help: "命令", Action: map[string]*ice.Action{
 			mdb.SEARCH: {Name: "search type name text", Help: "搜索", Hand: func(m *ice.Message, arg ...string) {
 				if arg[0] == COMMAND || arg[1] != "" {

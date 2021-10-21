@@ -21,7 +21,7 @@ func _status_each(m *ice.Message, title string, cmds ...string) {
 		m.Cmd(REPOS, ice.OptionFields("name,path")).Table(func(index int, value map[string]string, head []string) {
 			toast(value[kit.MDB_NAME], count, total)
 
-			if msg := m.Cmd(cmds, ice.Option{cli.CMD_DIR, value[kit.MDB_PATH]}); msg.Append(cli.CMD_CODE) != "0" {
+			if msg := m.Cmd(cmds, ice.Option{cli.CMD_DIR, value[kit.MDB_PATH]}); !cli.IsSuccess(msg) {
 				m.Toast(msg.Append(cli.CMD_ERR), "error: "+value[kit.MDB_NAME], "3s")
 				list = append(list, value[kit.MDB_NAME])
 				m.Sleep("3s")
@@ -57,6 +57,9 @@ func _status_list(m *ice.Message) (files, adds, dels int, last time.Time) {
 		tags := m.Cmdx(cli.SYSTEM, GIT, "describe", "--tags")
 
 		for _, v := range strings.Split(strings.TrimSpace(diff), ice.NL) {
+			if v == "" {
+				continue
+			}
 			vs := strings.SplitN(strings.TrimSpace(v), ice.SP, 2)
 			switch kit.Ext(vs[1]) {
 			case "swp", "swo", "bin":

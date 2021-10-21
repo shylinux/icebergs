@@ -1,4 +1,4 @@
-label "base" `
+label `
 ctx cli web aaa
 lex yac gdb log
 tcp nfs ssh mdb

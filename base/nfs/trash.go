@@ -29,41 +29,35 @@ func _trash_create(m *ice.Message, name string) {
 		}
 	}
 }
-func _trash_prunes(m *ice.Message) {
-	m.Cmd(mdb.DELETE, TRASH, "", mdb.HASH, kit.MDB_HASH, m.Option(kit.MDB_HASH))
-}
 
 const TRASH = "trash"
 
 func init() {
-	Index.Merge(&ice.Context{
-		Configs: map[string]*ice.Config{
-			TRASH: {Name: TRASH, Help: "回收站", Value: kit.Data(
-				kit.MDB_SHORT, kit.MDB_FROM, kit.MDB_PATH, ice.VAR_TRASH,
-			)},
-		},
-		Commands: map[string]*ice.Command{
-			TRASH: {Name: "trash file auto prunes", Help: "回收站", Action: map[string]*ice.Action{
-				mdb.REVERT: {Name: "revert", Help: "恢复", Hand: func(m *ice.Message, arg ...string) {
-					os.Rename(m.Option(kit.MDB_FILE), m.Option(kit.MDB_FROM))
-					m.Cmd(mdb.DELETE, TRASH, "", mdb.HASH, kit.MDB_HASH, m.Option(kit.MDB_HASH))
-				}},
-				mdb.REMOVE: {Name: "remove", Help: "删除", Hand: func(m *ice.Message, arg ...string) {
-					os.Remove(m.Option(kit.MDB_FILE))
-					m.Cmd(mdb.DELETE, TRASH, "", mdb.HASH, kit.MDB_HASH, m.Option(kit.MDB_HASH))
-				}},
-				mdb.PRUNES: {Name: "prunes", Help: "清理", Hand: func(m *ice.Message, arg ...string) {
-					_trash_prunes(m)
-				}},
-			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-				if len(arg) == 0 {
-					m.Fields(len(arg), "time,hash,file,from")
-					m.Cmdy(mdb.SELECT, TRASH, "", mdb.HASH)
-					m.PushAction(mdb.REVERT, mdb.REMOVE)
-					return
-				}
-				_trash_create(m, arg[0])
+	Index.Merge(&ice.Context{Configs: map[string]*ice.Config{
+		TRASH: {Name: TRASH, Help: "回收站", Value: kit.Data(
+			kit.MDB_SHORT, kit.MDB_FROM, kit.MDB_FIELD, "time,hash,file,from",
+			kit.MDB_PATH, ice.VAR_TRASH,
+		)},
+	}, Commands: map[string]*ice.Command{
+		TRASH: {Name: "trash file auto prunes", Help: "回收站", Action: ice.MergeAction(map[string]*ice.Action{
+			mdb.REVERT: {Name: "revert", Help: "恢复", Hand: func(m *ice.Message, arg ...string) {
+				os.Rename(m.Option(kit.MDB_FILE), m.Option(kit.MDB_FROM))
+				m.Cmd(mdb.DELETE, TRASH, "", mdb.HASH, m.OptionSimple(kit.MDB_HASH))
 			}},
-		},
-	})
+			mdb.REMOVE: {Name: "remove", Help: "删除", Hand: func(m *ice.Message, arg ...string) {
+				os.Remove(m.Option(kit.MDB_FILE))
+				m.Cmd(mdb.DELETE, TRASH, "", mdb.HASH, m.OptionSimple(kit.MDB_HASH))
+			}},
+			mdb.PRUNES: {Name: "prunes", Help: "清理", Hand: func(m *ice.Message, arg ...string) {
+				m.Cmd(mdb.DELETE, TRASH, "", mdb.HASH, m.OptionSimple(kit.MDB_HASH))
+			}},
+		}, mdb.HashAction()), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			if len(arg) == 0 {
+				mdb.HashSelect(m, arg...)
+				m.PushAction(mdb.REVERT, mdb.REMOVE)
+				return
+			}
+			_trash_create(m, arg[0])
+		}},
+	}})
 }

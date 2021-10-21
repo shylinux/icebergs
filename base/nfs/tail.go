@@ -39,7 +39,9 @@ const TAIL = "tail"
 
 func init() {
 	Index.Merge(&ice.Context{Configs: map[string]*ice.Config{
-		TAIL: {Name: TAIL, Help: "日志流", Value: kit.Data(kit.MDB_SHORT, kit.MDB_NAME)},
+		TAIL: {Name: TAIL, Help: "日志流", Value: kit.Data(
+			kit.MDB_SHORT, kit.MDB_NAME, kit.MDB_FIELD, "time,id,file,text",
+		)},
 	}, Commands: map[string]*ice.Command{
 		ice.CTX_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			m.Richs(TAIL, "", kit.MDB_FOREACH, func(key string, value map[string]interface{}) {
@@ -55,11 +57,8 @@ func init() {
 					m.ProcessAgain()
 				case kit.MDB_NAME:
 					m.Push(arg[0], kit.Split(m.Option(FILE), "/"))
-				case "limit":
-					m.Push("limit", 10)
-					m.Push("limit", 20)
-					m.Push("limit", 30)
-					m.Push("limit", 50)
+				case kit.MDB_LIMIT:
+					m.Push(arg[0], kit.List("10", "20", "30", "50"))
 				}
 			}},
 			mdb.CREATE: {Name: "create file name", Help: "创建", Hand: func(m *ice.Message, arg ...string) {
@@ -71,7 +70,7 @@ func init() {
 			m.Option(mdb.CACHE_OFFEND, kit.Select("0", arg, 3))
 			m.Option(mdb.CACHE_LIMIT, kit.Select("10", arg, 2))
 
-			m.Cmd(mdb.SELECT, TAIL, "", mdb.ZONE, arg).Table(func(index int, value map[string]string, head []string) {
+			mdb.ZoneSelect(m.Spawn(c), arg...).Table(func(index int, value map[string]string, head []string) {
 				if strings.Contains(value[kit.MDB_TEXT], m.Option(mdb.CACHE_FILTER)) {
 					m.Push("", value, head)
 				}
@@ -83,6 +82,5 @@ func init() {
 				m.StatusTimeCountTotal(_tail_count(m, arg[0]))
 			}
 		}},
-	},
-	})
+	}})
 }

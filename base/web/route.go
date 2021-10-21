@@ -50,7 +50,7 @@ func _route_list(m *ice.Message) {
 	m.Cmd(tcp.HOST).Table(func(index int, value map[string]string, head []string) {
 		m.Push(kit.MDB_TYPE, MYSELF)
 		m.Push(kit.SSH_ROUTE, ice.Info.NodeName)
-		m.PushAnchor(value[tcp.IP], kit.Format("%s://%s:%s", u.Scheme, value[tcp.IP], u.Port()))
+		m.PushAnchor(value[aaa.IP], kit.Format("%s://%s:%s", u.Scheme, value[aaa.IP], u.Port()))
 		m.PushButton(tcp.START)
 	})
 

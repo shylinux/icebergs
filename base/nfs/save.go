@@ -22,6 +22,11 @@ func _save_file(m *ice.Message, name string, text ...string) {
 		m.Echo(p)
 	}
 }
+func _defs_file(m *ice.Message, name string, text ...string) {
+	if _, e := os.Stat(path.Join(m.Option(DIR_ROOT), name)); os.IsNotExist(e) {
+		_save_file(m, name, text...)
+	}
+}
 func _push_file(m *ice.Message, name string, text ...string) {
 	p := path.Join(m.Option(DIR_ROOT), name)
 	if strings.Contains(p, "/") {
@@ -65,42 +70,35 @@ func _link_file(m *ice.Message, name string, from string) {
 	os.Link(from, name)
 	m.Echo(name)
 }
-func _defs_file(m *ice.Message, name string, text ...string) {
-	if _, e := os.Stat(path.Join(m.Option(DIR_ROOT), name)); os.IsNotExist(e) {
-		_save_file(m, name, text...)
-	}
-}
 
 const SAVE = "save"
+const DEFS = "defs"
 const PUSH = "push"
 const COPY = "copy"
 const LINK = "link"
-const DEFS = "defs"
 
 func init() {
-	Index.Merge(&ice.Context{
-		Commands: map[string]*ice.Command{
-			SAVE: {Name: "save file text...", Help: "保存", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-				if len(arg) == 1 {
-					arg = append(arg, m.Option(kit.MDB_CONTENT))
-				}
-				_save_file(m, arg[0], arg[1:]...)
-			}},
-			PUSH: {Name: "push file text...", Help: "追加", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-				if len(arg) == 1 {
-					arg = append(arg, m.Option(kit.MDB_CONTENT))
-				}
-				_push_file(m, arg[0], arg[1:]...)
-			}},
-			COPY: {Name: "copy file from...", Help: "复制", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-				_copy_file(m, arg[0], arg[1:]...)
-			}},
-			LINK: {Name: "link file from", Help: "链接", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-				_link_file(m, arg[0], arg[1])
-			}},
-			DEFS: {Name: "defs file text...", Help: "默认", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-				_defs_file(m, arg[0], arg[1:]...)
-			}},
-		},
-	})
+	Index.Merge(&ice.Context{Commands: map[string]*ice.Command{
+		SAVE: {Name: "save file text...", Help: "保存", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			if len(arg) == 1 {
+				arg = append(arg, m.Option(kit.MDB_CONTENT))
+			}
+			_save_file(m, arg[0], arg[1:]...)
+		}},
+		PUSH: {Name: "push file text...", Help: "追加", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			if len(arg) == 1 {
+				arg = append(arg, m.Option(kit.MDB_CONTENT))
+			}
+			_push_file(m, arg[0], arg[1:]...)
+		}},
+		DEFS: {Name: "defs file text...", Help: "默认", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			_defs_file(m, arg[0], arg[1:]...)
+		}},
+		COPY: {Name: "copy file from...", Help: "复制", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			_copy_file(m, arg[0], arg[1:]...)
+		}},
+		LINK: {Name: "link file from", Help: "链接", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			_link_file(m, arg[0], arg[1])
+		}},
+	}})
 }

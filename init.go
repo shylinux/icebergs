@@ -77,7 +77,7 @@ var Index = &Context{Name: "ice", Help: "冰山模块", Caches: map[string]*Cach
 	}},
 	INIT: {Name: "init", Help: "启动", Hand: func(m *Message, c *Context, cmd string, arg ...string) {
 		m.root.Cmd(CTX_INIT)
-		m.Cmd("ssh.source", ETC_INIT_SHY, "init.shy", "启动配置")
+		m.Cmd("ssh.source", ETC_INIT_SHY)
 		m.Cmdy(arg)
 	}},
 	HELP: {Name: "help", Help: "帮助", Hand: func(m *Message, c *Context, cmd string, arg ...string) {
@@ -85,7 +85,7 @@ var Index = &Context{Name: "ice", Help: "冰山模块", Caches: map[string]*Cach
 	}},
 	EXIT: {Name: "exit", Help: "结束", Hand: func(m *Message, c *Context, cmd string, arg ...string) {
 		m.root.Option(EXIT, kit.Select("0", arg, 0))
-		m.Cmd("ssh.source", ETC_EXIT_SHY, "exit.shy", "退出配置")
+		m.Cmd("ssh.source", ETC_EXIT_SHY)
 		m.root.Cmd(CTX_EXIT)
 	}},
 	CTX_EXIT: {Hand: func(m *Message, c *Context, cmd string, arg ...string) {

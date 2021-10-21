@@ -221,7 +221,7 @@ func _space_search(m *ice.Message, kind, name, text string, arg ...string) {
 		}
 		m.Cmd(tcp.HOST).Table(func(index int, value map[string]string, head []string) {
 			m.PushSearch(ice.CMD, SPACE, kit.MDB_TYPE, MYSELF, kit.MDB_NAME, value[kit.MDB_NAME],
-				kit.MDB_TEXT, kit.Format("http://%s:%s", value[tcp.IP], port))
+				kit.MDB_TEXT, kit.Format("http://%s:%s", value[aaa.IP], port))
 		})
 	}
 }

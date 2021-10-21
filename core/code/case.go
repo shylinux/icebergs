@@ -22,13 +22,6 @@ func init() {
 			}},
 			mdb.INSERT: {Name: "insert zone name=hi cmd=POST,GET api arg:textarea res:textarea", Help: "添加"},
 
-			ice.RUN: {Name: "run", Help: "运行", Hand: func(m *ice.Message, arg ...string) {
-				m.Option(web.SPIDE_HEADER, web.ContentType, web.ContentJSON)
-				m.Echo(kit.Formats(kit.UnMarshal(m.Cmdx(web.SPIDE, m.Option(ice.DEV), web.SPIDE_RAW,
-					m.Option(ice.CMD), m.Option(cli.API), web.SPIDE_DATA, m.Option(ice.ARG)))))
-				m.Info(`curl "` + m.Option(cli.API) + `" -H "Content-Type: application/json"` + ` -d '` + m.Option(ice.ARG) + `'`)
-				m.ProcessDisplay("/plugin/local/wiki/json.js")
-			}},
 			cli.CHECK: {Name: "check", Help: "检查", Hand: func(m *ice.Message, arg ...string) {
 				if m.ProcessInner(); len(arg) > 0 {
 					success := 0
@@ -60,17 +53,23 @@ func init() {
 				}
 				m.Echo(ice.OK)
 			}},
+			ice.RUN: {Name: "run", Help: "运行", Hand: func(m *ice.Message, arg ...string) {
+				m.Option(web.SPIDE_HEADER, web.ContentType, web.ContentJSON)
+				m.Echo(kit.Formats(kit.UnMarshal(m.Cmdx(web.SPIDE, m.Option(ice.DEV), web.SPIDE_RAW,
+					m.Option(ice.CMD), m.Option(cli.API), web.SPIDE_DATA, m.Option(ice.ARG)))))
+				m.Info(`curl "` + m.Option(cli.API) + `" -H "Content-Type: application/json"` + ` -d '` + m.Option(ice.ARG) + `'`)
+				m.ProcessDisplay("/plugin/local/wiki/json.js")
+			}},
 		}, mdb.ZoneAction()), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			if len(arg) == 0 {
-				m.Action(mdb.CREATE)
 				m.Cmdy(web.SPIDE)
+				m.Action(mdb.CREATE)
 				m.RenameAppend("client.name", "dev")
 				m.RenameAppend("client.url", "address")
 				return
 			}
 
-			m.Fields(len(arg)-1, "time,zone,count", m.Config(kit.MDB_FIELD))
-			if m.Cmdy(mdb.SELECT, m.PrefixKey(), "", mdb.ZONE, arg[1:]); len(arg) == 1 {
+			if mdb.ZoneSelect(m, arg[1:]...); len(arg) == 1 {
 				m.Action(mdb.INSERT, mdb.EXPORT, mdb.IMPORT)
 				m.PushAction(mdb.INSERT, cli.CHECK, mdb.REMOVE)
 			} else {

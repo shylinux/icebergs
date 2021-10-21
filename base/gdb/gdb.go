@@ -5,8 +5,6 @@ import (
 	"time"
 
 	ice "shylinux.com/x/icebergs"
-	"shylinux.com/x/icebergs/base/cli"
-	"shylinux.com/x/icebergs/base/nfs"
 	kit "shylinux.com/x/toolkits"
 )
 
@@ -34,8 +32,8 @@ func (f *Frame) Start(m *ice.Message, arg ...string) bool {
 		case s := <-f.s:
 			m.Cmd(SIGNAL, ACTION, SIGNAL, s)
 
-		case <-f.t:
-			_timer_action(m.Spawn())
+			// case <-f.t:
+			// m.Cmd(TIMER, ACTION)
 		}
 	}
 	return true
@@ -46,23 +44,18 @@ func (f *Frame) Close(m *ice.Message, arg ...string) bool {
 
 const GDB = "gdb"
 
-var Index = &ice.Context{Name: GDB, Help: "事件模块",
-	Commands: map[string]*ice.Command{
-		ice.CTX_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			m.Cmd(nfs.SAVE, kit.Select(m.Conf(SIGNAL, kit.META_PATH), m.Conf(cli.RUNTIME, kit.Keys(cli.CONF, cli.CTX_PID))),
-				m.Conf(cli.RUNTIME, kit.Keys(cli.HOST, cli.PID)))
-
-			m.Cmd(SIGNAL, LISTEN, SIGNAL, "3", kit.MDB_NAME, "退出", ice.CMD, "exit 0")
-			m.Cmd(SIGNAL, LISTEN, SIGNAL, "2", kit.MDB_NAME, "重启", ice.CMD, "exit 1")
-			m.Load()
-		}},
-		ice.CTX_EXIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			if f, ok := m.Target().Server().(*Frame); ok {
-				f.e <- true
-			}
-			m.Save(TIMER)
-		}},
-	},
-}
+var Index = &ice.Context{Name: GDB, Help: "事件模块", Commands: map[string]*ice.Command{
+	ice.CTX_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		m.Cmd(SIGNAL, LISTEN, SIGNAL, "3", kit.MDB_NAME, "退出", ice.CMD, "exit 0")
+		m.Cmd(SIGNAL, LISTEN, SIGNAL, "2", kit.MDB_NAME, "重启", ice.CMD, "exit 1")
+		m.Load()
+	}},
+	ice.CTX_EXIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		if f, ok := m.Target().Server().(*Frame); ok {
+			f.e <- true
+		}
+		m.Save()
+	}},
+}}
 
 func init() { ice.Index.Register(Index, &Frame{}, ROUTINE, SIGNAL, EVENT, TIMER) }

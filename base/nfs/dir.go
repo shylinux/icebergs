@@ -3,23 +3,19 @@ package nfs
 import (
 	"bufio"
 	"crypto/sha1"
-	"encoding/hex"
-	"fmt"
 	"io/ioutil"
 	"os"
 	"path"
 	"regexp"
-	"sort"
 	"strings"
 
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/aaa"
-	"shylinux.com/x/icebergs/base/ctx"
 	"shylinux.com/x/icebergs/base/mdb"
 	kit "shylinux.com/x/toolkits"
 )
 
-func _dir_show(m *ice.Message, root string, name string, level int, deep bool, dir_type string, dir_reg *regexp.Regexp, fields []string) *ice.Message {
+func _dir_list(m *ice.Message, root string, name string, level int, deep bool, dir_type string, dir_reg *regexp.Regexp, fields []string) *ice.Message {
 	if !_cat_right(m, name) {
 		return m // 没有权限
 	}
@@ -66,16 +62,12 @@ func _dir_show(m *ice.Message, root string, name string, level int, deep bool, d
 					}
 				case "full":
 					m.Push(field, path.Join(root, name, f.Name())+kit.Select("", "/", f.IsDir()))
-
 				case kit.MDB_PATH:
 					m.Push(field, path.Join(name, f.Name())+kit.Select("", "/", f.IsDir()))
 				case kit.MDB_FILE:
 					m.Push(field, f.Name()+kit.Select("", "/", f.IsDir()))
 				case kit.MDB_NAME:
 					m.Push(field, f.Name())
-
-				case kit.MDB_LINK:
-					m.PushDownload(kit.MDB_LINK, kit.Select("", f.Name(), !f.IsDir()), path.Join(root, name, f.Name()))
 
 				case kit.MDB_SIZE:
 					if f.IsDir() {
@@ -110,9 +102,9 @@ func _dir_show(m *ice.Message, root string, name string, level int, deep bool, d
 						if d, e := ioutil.ReadDir(p); m.Assert(e) {
 							meta := []string{}
 							for _, v := range d {
-								meta = append(meta, fmt.Sprintf("%s%d%s", v.Name(), v.Size(), v.ModTime()))
+								meta = append(meta, kit.Format("%s%d%s", v.Name(), v.Size(), v.ModTime()))
 							}
-							sort.Strings(meta)
+							kit.Sort(meta)
 							h = sha1.Sum([]byte(strings.Join(meta, "")))
 						}
 					} else {
@@ -121,23 +113,24 @@ func _dir_show(m *ice.Message, root string, name string, level int, deep bool, d
 						}
 					}
 
-					m.Push(kit.MDB_HASH, kit.Select(hex.EncodeToString(h[:6]), hex.EncodeToString(h[:]), field == kit.MDB_HASH))
-				case ctx.ACTION:
-					if !f.IsDir() && !m.IsCliUA() && m.Option(ice.MSG_USERROLE) != aaa.VOID {
-						m.PushButton(TRASH)
-					} else {
-						m.Push(field, "")
-					}
+					m.Push(kit.MDB_HASH, kit.Select(kit.Format(h[:6]), kit.Format(h[:]), field == kit.MDB_HASH))
+				case kit.MDB_LINK:
+					m.PushDownload(kit.MDB_LINK, kit.Select("", f.Name(), !f.IsDir()), path.Join(root, name, f.Name()))
 				case "show":
-					p := kit.MergeURL2(m.Option(ice.MSG_USERWEB), "/share/local/"+path.Join(name, f.Name()), "pod", m.Option(ice.MSG_USERPOD))
+					p := kit.MergeURL2(m.Option(ice.MSG_USERWEB), "/share/local/"+path.Join(name, f.Name()), ice.POD, m.Option(ice.MSG_USERPOD))
 					switch kit.Ext(f.Name()) {
-					case "jpg":
+					case "jpg", "png":
 						m.PushImages(field, p)
 					case "mp4":
 						m.PushVideos(field, p)
 					default:
 						m.Push(field, "")
 					}
+				case kit.MDB_ACTION:
+					if m.IsCliUA() || m.Option(ice.MSG_USERROLE) == aaa.VOID {
+						break
+					}
+					m.PushButton(kit.Select("", TRASH, !f.IsDir()))
 				default:
 					m.Push(field, "")
 				}
@@ -145,17 +138,13 @@ func _dir_show(m *ice.Message, root string, name string, level int, deep bool, d
 		}
 
 		if f.IsDir() && deep {
-			_dir_show(m, root, path.Join(name, f.Name()), level+1, deep, dir_type, dir_reg, fields)
+			_dir_list(m, root, path.Join(name, f.Name()), level+1, deep, dir_type, dir_reg, fields)
 		}
 	}
 	return m
 }
 func _dir_search(m *ice.Message, kind, name string) {
-	if kind == kit.MDB_FOREACH {
-		return
-	}
-
-	msg := _dir_show(m.Spawn(), "./", "", 0, true, TYPE_BOTH, nil, strings.Split("time,type,name,text", ","))
+	msg := _dir_list(m.Spawn(), "./", "", 0, true, TYPE_BOTH, nil, kit.Split("time,type,name"))
 	msg.Table(func(index int, value map[string]string, head []string) {
 		if !strings.Contains(value[kit.MDB_NAME], name) {
 			return
@@ -192,35 +181,35 @@ const (
 const DIR = "dir"
 
 func init() {
-	Index.Merge(&ice.Context{
-		Configs: map[string]*ice.Config{
-			DIR: {Name: DIR, Help: "目录", Value: kit.Data()},
-		},
-		Commands: map[string]*ice.Command{
-			DIR: {Name: "dir path field... auto upload", Help: "目录", Action: map[string]*ice.Action{
-				mdb.SEARCH: {Name: "search type name", Help: "搜索", Hand: func(m *ice.Message, arg ...string) {
-					_dir_search(m, arg[0], arg[1])
-				}},
-				mdb.RENDER: {Name: "render type name text", Help: "渲染", Hand: func(m *ice.Message, arg ...string) {
-					_dir_show(m, arg[2], arg[1], 0, m.Option(DIR_DEEP) == ice.TRUE, kit.Select(TYPE_BOTH, m.Option(DIR_TYPE)),
-						nil, kit.Split("time,size,type,path"))
-				}},
-				mdb.UPLOAD: {Name: "upload", Help: "上传", Hand: func(m *ice.Message, arg ...string) {
-					m.Upload(m.Option(kit.MDB_PATH))
-				}},
-				TRASH: {Name: "trash", Help: "删除", Hand: func(m *ice.Message, arg ...string) {
-					m.Cmdy(TRASH, m.Option(kit.MDB_PATH))
-				}},
-			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-				if len(arg) == 0 {
-					arg = append(arg, "")
+	Index.Merge(&ice.Context{Configs: map[string]*ice.Config{
+		DIR: {Name: DIR, Help: "目录", Value: kit.Data()},
+	}, Commands: map[string]*ice.Command{
+		ice.CTX_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			m.Cmd(mdb.SEARCH, mdb.CREATE, DIR)
+			m.Cmd(mdb.RENDER, mdb.CREATE, DIR)
+		}},
+		DIR: {Name: "dir path field... auto upload", Help: "目录", Action: map[string]*ice.Action{
+			mdb.SEARCH: {Name: "search type name", Help: "搜索", Hand: func(m *ice.Message, arg ...string) {
+				if arg[0] == kit.MDB_FOREACH {
+					return
 				}
-				m.Debug("dir_root: %s", m.Option(DIR_ROOT))
-				_dir_show(m, kit.Select("./", m.Option(DIR_ROOT)), arg[0],
-					0, m.Options(DIR_DEEP), kit.Select(TYPE_BOTH, m.Option(DIR_TYPE)), kit.Regexp(m.Option(DIR_REG)),
-					kit.Split(kit.Select(kit.Select("time,path,size,action", m.Option(mdb.FIELDS)), strings.Join(arg[1:], ","))))
-				m.SortTimeR(kit.MDB_TIME)
+				_dir_search(m, arg[0], arg[1])
 			}},
-		},
-	})
+			mdb.RENDER: {Name: "render type name text", Help: "渲染", Hand: func(m *ice.Message, arg ...string) {
+				_dir_list(m, arg[2], arg[1], 0, m.Option(DIR_DEEP) == ice.TRUE, kit.Select(TYPE_BOTH, m.Option(DIR_TYPE)),
+					nil, kit.Split(kit.Select("time,size,type,path", m.OptionFields())))
+			}},
+			mdb.UPLOAD: {Name: "upload", Help: "上传", Hand: func(m *ice.Message, arg ...string) {
+				m.Upload(m.Option(kit.MDB_PATH))
+			}},
+			TRASH: {Name: "trash", Help: "删除", Hand: func(m *ice.Message, arg ...string) {
+				m.Cmdy(TRASH, m.Option(kit.MDB_PATH))
+			}},
+		}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			_dir_list(m, kit.Select("./", m.Option(DIR_ROOT)), kit.Select("", arg, 0),
+				0, m.Option(DIR_DEEP) == ice.TRUE, kit.Select(TYPE_BOTH, m.Option(DIR_TYPE)), kit.Regexp(m.Option(DIR_REG)),
+				kit.Split(kit.Select(kit.Select("time,path,size,action", m.OptionFields()), kit.Join(kit.Slice(arg, 1)))))
+			m.SortTimeR(kit.MDB_TIME)
+		}},
+	}})
 }

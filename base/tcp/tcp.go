@@ -2,30 +2,10 @@ package tcp
 
 import (
 	ice "shylinux.com/x/icebergs"
-	"shylinux.com/x/icebergs/base/aaa"
-	kit "shylinux.com/x/toolkits"
 )
 
 const TCP = "tcp"
 
-var Index = &ice.Context{Name: TCP, Help: "通信模块",
-	Commands: map[string]*ice.Command{
-		ice.CTX_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			m.Load()
-			m.Cmd(HOST).Table(func(index int, value map[string]string, head []string) {
-				m.Cmd(HOST, aaa.WHITE, value[IP])
-			})
-		}},
-		ice.CTX_EXIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			m.Richs(CLIENT, "", kit.MDB_FOREACH, func(key string, value map[string]interface{}) {
-				kit.Value(value, kit.Keym(kit.MDB_STATUS), CLOSE)
-			})
-			m.Richs(SERVER, "", kit.MDB_FOREACH, func(key string, value map[string]interface{}) {
-				kit.Value(value, kit.Keym(kit.MDB_STATUS), CLOSE)
-			})
-			m.Save(PORT)
-		}},
-	},
-}
+var Index = &ice.Context{Name: TCP, Help: "通信模块"}
 
 func init() { ice.Index.Register(Index, nil, HOST, PORT, CLIENT, SERVER) }

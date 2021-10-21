@@ -36,22 +36,18 @@ func _cat_right(m *ice.Message, name string) bool {
 	case ice.USR:
 		switch kit.Select("", ls, 1) {
 		case "local":
-			if m.Warn(m.Option(ice.MSG_USERROLE) == aaa.VOID, ice.ErrNotRight, "of", name) {
+			if m.Warn(m.Option(ice.MSG_USERROLE) == aaa.VOID, ice.ErrNotRight, ice.OF, name) {
 				return false
 			}
 		}
 	case ice.ETC, ice.VAR:
-		if m.Warn(m.Option(ice.MSG_USERROLE) == aaa.VOID, ice.ErrNotRight, "of", name) {
+		if m.Warn(m.Option(ice.MSG_USERROLE) == aaa.VOID, ice.ErrNotRight, ice.OF, name) {
 			return false
 		}
 	}
 	return true
 }
 func _cat_find(m *ice.Message, name string) io.ReadCloser {
-	// if m.Option("content") != "" {
-	// 	return NewReadCloser(bytes.NewBufferString(m.Option("content")))
-	// }
-
 	if f, e := os.Open(path.Join(m.Option(DIR_ROOT), name)); e == nil {
 		return f
 	}
@@ -71,7 +67,7 @@ func _cat_find(m *ice.Message, name string) io.ReadCloser {
 	}
 	return NewReadCloser(bytes.NewBufferString(msg.Result()))
 }
-func _cat_show(m *ice.Message, name string) {
+func _cat_list(m *ice.Message, name string) {
 	if !_cat_right(m, name) {
 		return // 没有权限
 	}
@@ -119,6 +115,7 @@ func _cat_show(m *ice.Message, name string) {
 const (
 	PATH = "path"
 	FILE = "file"
+	LINE = "line"
 	SIZE = "size"
 
 	CAT_LOCAL = "cat_local"
@@ -129,23 +126,26 @@ func init() {
 	Index.Merge(&ice.Context{Configs: map[string]*ice.Config{
 		CAT: {Name: CAT, Help: "文件", Value: kit.Data(
 			kit.SSH_SOURCE, kit.Dict(
-				"sh", "true", "shy", "true", "py", "true",
-				"go", "true", "vim", "true", "js", "true",
-				"json", "true", "conf", "true", "yml", "true",
-				"makefile", "true",
+				"sh", ice.TRUE, "shy", ice.TRUE, "py", ice.TRUE,
+				"go", ice.TRUE, "vim", ice.TRUE, "js", ice.TRUE,
+				"json", ice.TRUE, "conf", ice.TRUE, "yml", ice.TRUE,
+				"makefile", ice.TRUE, "license", ice.TRUE, "md", ice.TRUE,
 			),
 		)},
 	}, Commands: map[string]*ice.Command{
+		ice.CTX_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			m.Cmd(mdb.RENDER, mdb.CREATE, CAT)
+		}},
 		CAT: {Name: "cat path auto", Help: "文件", Action: map[string]*ice.Action{
 			mdb.RENDER: {Name: "render type name text", Help: "渲染", Hand: func(m *ice.Message, arg ...string) {
-				_cat_show(m, path.Join(arg[2], arg[1]))
+				_cat_list(m, path.Join(arg[2], arg[1]))
 			}},
 		}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			if len(arg) == 0 || strings.HasSuffix(arg[0], "/") {
 				m.Cmdy(DIR, arg)
-			} else {
-				_cat_show(m, arg[0])
+				return
 			}
+			_cat_list(m, arg[0])
 		}},
 	}})
 }

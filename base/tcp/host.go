@@ -28,20 +28,20 @@ func _host_list(m *ice.Message, name string) {
 
 					m.Push(kit.MDB_INDEX, v.Index)
 					m.Push(kit.MDB_NAME, v.Name)
-					m.Push(IP, ip[0])
-					m.Push(MASK, ip[1])
-					m.Push(HARD, v.HardwareAddr.String())
+					m.Push(aaa.IP, ip[0])
+					m.Push("mask", ip[1])
+					m.Push("hard", v.HardwareAddr.String())
 				}
 			}
 		}
 	}
 
-	if len(m.Appendv(IP)) == 0 {
+	if len(m.Appendv(aaa.IP)) == 0 {
 		m.Push(kit.MDB_INDEX, -1)
 		m.Push(kit.MDB_NAME, LOCALHOST)
-		m.Push(IP, "127.0.0.1")
-		m.Push(MASK, "255.0.0.0")
-		m.Push(HARD, "")
+		m.Push(aaa.IP, "127.0.0.1")
+		m.Push("mask", "255.0.0.0")
+		m.Push("hard", "")
 	}
 }
 
@@ -61,43 +61,37 @@ func _islocalhost(m *ice.Message, ip string) (ok bool) {
 func IsLocalHost(m *ice.Message, ip string) bool { return _islocalhost(m, ip) }
 func ReplaceLocalhost(m *ice.Message, url string) string {
 	if strings.Contains(url, "://"+LOCALHOST) {
-		url = strings.Replace(url, "://"+LOCALHOST, "://"+m.Cmd(HOST, ice.OptionFields(IP)).Append(IP), 1)
+		url = strings.Replace(url, "://"+LOCALHOST, "://"+m.Cmd(HOST).Append(aaa.IP), 1)
 	}
 	return url
 }
 
 const (
-	HOSTPORT = "hostport"
-	HOSTNAME = "hostname"
-	PROTOCOL = "protocol"
-
 	LOCALHOST = "localhost"
-
-	HARD = "hard"
-	MASK = "mask"
-	IP   = "ip"
 )
 const HOST = "host"
 
 func init() {
-	Index.Merge(&ice.Context{
-		Configs: map[string]*ice.Config{
-			HOST: {Name: HOST, Help: "主机", Value: kit.Data(
-				aaa.BLACK, kit.Data(kit.MDB_SHORT, kit.MDB_TEXT),
-				aaa.WHITE, kit.Data(kit.MDB_SHORT, kit.MDB_TEXT),
-			)},
-		},
-		Commands: map[string]*ice.Command{
-			HOST: {Name: "host name auto", Help: "主机", Action: map[string]*ice.Action{
-				aaa.BLACK: {Name: "black", Help: "黑名单", Hand: func(m *ice.Message, arg ...string) {
-					m.Rich(HOST, kit.Keym(aaa.BLACK), kit.Dict(kit.MDB_TEXT, arg[0]))
-				}},
-				aaa.WHITE: {Name: "white", Help: "白名单", Hand: func(m *ice.Message, arg ...string) {
-					m.Rich(HOST, kit.Keym(aaa.WHITE), kit.Dict(kit.MDB_TEXT, arg[0]))
-				}},
-			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-				_host_list(m, kit.Select("", arg, 0))
+	Index.Merge(&ice.Context{Configs: map[string]*ice.Config{
+		HOST: {Name: HOST, Help: "主机", Value: kit.Data(
+			aaa.BLACK, kit.Data(kit.MDB_SHORT, kit.MDB_TEXT),
+			aaa.WHITE, kit.Data(kit.MDB_SHORT, kit.MDB_TEXT),
+		)},
+	}, Commands: map[string]*ice.Command{
+		ice.CTX_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			m.Cmd(HOST).Table(func(index int, value map[string]string, head []string) {
+				m.Cmd(HOST, aaa.WHITE, value[aaa.IP])
+			})
+		}},
+		HOST: {Name: "host name auto", Help: "主机", Action: map[string]*ice.Action{
+			aaa.BLACK: {Name: "black", Help: "黑名单", Hand: func(m *ice.Message, arg ...string) {
+				m.Rich(HOST, kit.Keym(aaa.BLACK), kit.Dict(kit.MDB_TEXT, arg[0]))
 			}},
-		},
-	})
+			aaa.WHITE: {Name: "white", Help: "白名单", Hand: func(m *ice.Message, arg ...string) {
+				m.Rich(HOST, kit.Keym(aaa.WHITE), kit.Dict(kit.MDB_TEXT, arg[0]))
+			}},
+		}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			_host_list(m, kit.Select("", arg, 0))
+		}},
+	}})
 }

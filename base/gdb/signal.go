@@ -7,8 +7,11 @@ import (
 	"syscall"
 
 	ice "shylinux.com/x/icebergs"
+	"shylinux.com/x/icebergs/base/cli"
 	"shylinux.com/x/icebergs/base/mdb"
+	"shylinux.com/x/icebergs/base/nfs"
 	kit "shylinux.com/x/toolkits"
+	log "shylinux.com/x/toolkits/logs"
 )
 
 func _signal_listen(m *ice.Message, s int, arg ...string) {
@@ -17,10 +20,8 @@ func _signal_listen(m *ice.Message, s int, arg ...string) {
 		signal.Notify(f.s, syscall.Signal(s))
 	}
 }
-func _signal_action(m *ice.Message, s int) {
-	m.Option(mdb.FIELDS, "time,signal,name,cmd")
-	msg := m.Cmd(mdb.SELECT, SIGNAL, "", mdb.HASH, SIGNAL, s)
-	msg.Table(func(index int, value map[string]string, head []string) {
+func _signal_action(m *ice.Message, arg ...string) {
+	mdb.HashSelect(m.Spawn(), arg...).Table(func(index int, value map[string]string, head []string) {
 		m.Cmdy(kit.Split(value[ice.CMD]))
 	})
 }
@@ -44,29 +45,32 @@ const (
 const SIGNAL = "signal"
 
 func init() {
-	Index.Merge(&ice.Context{
-		Configs: map[string]*ice.Config{
-			SIGNAL: {Name: SIGNAL, Help: "信号器", Value: kit.Data(
-				kit.MDB_PATH, path.Join(ice.VAR_RUN, "ice.pid"), kit.MDB_SHORT, SIGNAL,
-			)},
-		},
-		Commands: map[string]*ice.Command{
-			SIGNAL: {Name: "signal signal auto listen", Help: "信号器", Action: map[string]*ice.Action{
-				LISTEN: {Name: "listen signal name cmd", Help: "监听", Hand: func(m *ice.Message, arg ...string) {
-					_signal_listen(m, kit.Int(m.Option(SIGNAL)), arg...)
-				}},
-				ACTION: {Name: "action signal", Help: "触发", Hand: func(m *ice.Message, arg ...string) {
-					_signal_action(m, kit.Int(m.Option(SIGNAL)))
-				}},
-				mdb.REMOVE: {Name: "remove", Help: "删除", Hand: func(m *ice.Message, arg ...string) {
-					m.Cmdy(mdb.DELETE, SIGNAL, "", mdb.HASH, SIGNAL, m.Option(SIGNAL))
-				}},
-			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-				m.Fields(len(arg), "time,signal,name,cmd")
-				m.Cmdy(mdb.SELECT, SIGNAL, "", mdb.HASH, SIGNAL, arg)
-				m.PushAction(ACTION, mdb.REMOVE)
-				m.Sort(SIGNAL)
+	Index.Merge(&ice.Context{Configs: map[string]*ice.Config{
+		SIGNAL: {Name: SIGNAL, Help: "信号器", Value: kit.Data(
+			kit.MDB_SHORT, SIGNAL, kit.MDB_FIELD, "time,signal,name,cmd",
+			kit.MDB_PATH, path.Join(ice.VAR_RUN, "ice.pid"),
+		)},
+	}, Commands: map[string]*ice.Command{
+		ice.CTX_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			if log.LogDisable {
+				return // 禁用日志
+			}
+			m.Cmd(nfs.SAVE, kit.Select(m.Conf(SIGNAL, kit.META_PATH), m.Conf(cli.RUNTIME, kit.Keys(cli.CONF, cli.CTX_PID))),
+				m.Conf(cli.RUNTIME, kit.Keys(cli.HOST, cli.PID)))
+
+			m.Cmd(SIGNAL, LISTEN, SIGNAL, "3", kit.MDB_NAME, "退出", ice.CMD, "exit 0")
+			m.Cmd(SIGNAL, LISTEN, SIGNAL, "2", kit.MDB_NAME, "重启", ice.CMD, "exit 1")
+		}},
+		SIGNAL: {Name: "signal signal auto listen", Help: "信号器", Action: ice.MergeAction(map[string]*ice.Action{
+			LISTEN: {Name: "listen signal name cmd", Help: "监听", Hand: func(m *ice.Message, arg ...string) {
+				_signal_listen(m, kit.Int(m.Option(SIGNAL)), arg...)
 			}},
-		},
-	})
+			ACTION: {Name: "action signal", Help: "触发", Hand: func(m *ice.Message, arg ...string) {
+				_signal_action(m, m.Option(SIGNAL))
+			}},
+		}, mdb.HashAction()), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			mdb.HashSelect(m, arg...).Sort(SIGNAL)
+			m.PushAction(ACTION, mdb.REMOVE)
+		}},
+	}})
 }

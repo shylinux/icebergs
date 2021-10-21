@@ -5,57 +5,35 @@ import (
 
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/cli"
-	"shylinux.com/x/icebergs/base/ctx"
 	"shylinux.com/x/icebergs/base/mdb"
 	kit "shylinux.com/x/toolkits"
 )
 
-const (
-	TASK_HASH = "task.hash"
-)
 const (
 	INNER = "inner"
 )
 const ROUTINE = "routine"
 
 func init() {
-	Index.Merge(&ice.Context{
-		Configs: map[string]*ice.Config{
-			ROUTINE: {Name: ROUTINE, Help: "协程池", Value: kit.Data()},
-		},
-		Commands: map[string]*ice.Command{
-			ROUTINE: {Name: "routine hash auto prunes", Help: "协程池", Action: map[string]*ice.Action{
-				mdb.CREATE: {Name: "create fileline status", Help: "创建", Hand: func(m *ice.Message, arg ...string) {
-					m.Cmdy(mdb.INSERT, ROUTINE, "", mdb.HASH, arg)
-				}},
-				mdb.MODIFY: {Name: "modify", Help: "编辑", Hand: func(m *ice.Message, arg ...string) {
-					m.Cmdy(mdb.MODIFY, ROUTINE, "", mdb.HASH, kit.MDB_HASH, m.Option(kit.MDB_HASH), arg)
-				}},
-				mdb.REMOVE: {Name: "remove", Help: "删除", Hand: func(m *ice.Message, arg ...string) {
-					m.Cmdy(mdb.DELETE, ROUTINE, "", mdb.HASH, kit.MDB_HASH, m.Option(kit.MDB_HASH))
-				}},
-				mdb.PRUNES: {Name: "prunes", Help: "清理", Hand: func(m *ice.Message, arg ...string) {
-					m.Option(mdb.FIELDS, "time,hash,status,fileline")
-					m.Cmdy(mdb.PRUNES, ROUTINE, "", mdb.HASH, kit.MDB_STATUS, cli.ERROR)
-					m.Cmdy(mdb.PRUNES, ROUTINE, "", mdb.HASH, kit.MDB_STATUS, cli.STOP)
-				}},
-
-				INNER: {Name: "inner", Help: "源码", Hand: func(m *ice.Message, arg ...string) {
-					switch kit.Select("", arg, 0) {
-					case ice.RUN:
-						m.Cmdy(INNER, arg[1:])
-					default:
-						ls := kit.Split(m.Option("fileline"), ":")
-						m.ProcessField(INNER, ice.RUN)
-						m.Option(ice.ARG, kit.Format([]string{path.Dir(ls[0]), path.Base(ls[0]), ls[1]}))
-						m.Cmdy(ctx.COMMAND, INNER)
-					}
-				}},
-			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-				m.Fields(len(arg), "time,hash,status,fileline")
-				m.Cmdy(mdb.SELECT, ROUTINE, "", mdb.HASH, kit.MDB_HASH, arg)
-				m.PushAction(INNER, mdb.REMOVE)
+	Index.Merge(&ice.Context{Configs: map[string]*ice.Config{
+		ROUTINE: {Name: ROUTINE, Help: "协程池", Value: kit.Data(
+			kit.MDB_SHORT, "time,hash,status,fileline",
+		)},
+	}, Commands: map[string]*ice.Command{
+		ROUTINE: {Name: "routine hash auto prunes", Help: "协程池", Action: ice.MergeAction(map[string]*ice.Action{
+			mdb.CREATE: {Name: "create fileline status", Help: "创建"},
+			mdb.PRUNES: {Name: "prunes", Help: "清理", Hand: func(m *ice.Message, arg ...string) {
+				m.OptionFields(m.Config(kit.MDB_SHORT))
+				m.Cmdy(mdb.PRUNES, ROUTINE, "", mdb.HASH, kit.MDB_STATUS, cli.STOP)
+				m.Cmdy(mdb.PRUNES, ROUTINE, "", mdb.HASH, kit.MDB_STATUS, cli.ERROR)
 			}},
-		},
-	})
+			INNER: {Name: "inner", Help: "源码", Hand: func(m *ice.Message, arg ...string) {
+				ls := kit.Split(m.Option("fileline"), ":")
+				m.ProcessCommand(INNER, []string{path.Dir(ls[0]), path.Base(ls[0]), ls[1]}, arg...)
+			}},
+		}, mdb.HashAction()), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			mdb.HashSelect(m, arg...)
+			m.PushAction(INNER, mdb.REMOVE)
+		}},
+	}})
 }

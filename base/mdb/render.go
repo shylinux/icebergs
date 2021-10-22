@@ -13,6 +13,7 @@ func init() {
 	}, Commands: map[string]*ice.Command{
 		RENDER: {Name: "render type name text auto", Help: "渲染", Action: map[string]*ice.Action{
 			CREATE: {Name: "create type cmd ctx", Help: "创建", Hand: func(m *ice.Message, arg ...string) {
+				m.Log_CREATE(RENDER, arg[0], kit.MDB_NAME, kit.Select(arg[0], arg, 1))
 				m.Rich(RENDER, nil, kit.Dict(kit.MDB_TYPE, arg[0], kit.MDB_NAME, kit.Select(arg[0], arg, 1), kit.MDB_TEXT, kit.Select("", arg, 2)))
 			}},
 		}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {

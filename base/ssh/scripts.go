@@ -259,6 +259,11 @@ func init() {
 			PS2, []interface{}{kit.MDB_COUNT, " ", TARGET, "> "},
 		)},
 	}, Commands: map[string]*ice.Command{
+		ice.CTX_EXIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			if f, ok := m.Target().Server().(*Frame); ok {
+				f.close()
+			}
+		}},
 		SOURCE: {Name: "source file", Help: "脚本解析", Action: ice.MergeAction(map[string]*ice.Action{
 			mdb.REPEAT: {Name: "repeat", Help: "执行", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmdy(SCREEN, m.Option(kit.MDB_TEXT))

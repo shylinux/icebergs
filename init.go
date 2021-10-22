@@ -39,6 +39,11 @@ func (f *Frame) Start(m *Message, arg ...string) bool {
 	m.Cap(CTX_STREAM, strings.Split(m.Time(), " ")[1])
 
 	m.Cmdy(INIT, arg)
+	m.target.root.wg = &sync.WaitGroup{}
+	for _, k := range kit.Split(kit.Select("ssh,gdb,log")) {
+		m.Start(k)
+	}
+	m.Cmdy(arg)
 	return true
 }
 func (f *Frame) Close(m *Message, arg ...string) bool {
@@ -69,16 +74,10 @@ var Index = &Context{Name: "ice", Help: "冰山模块", Caches: map[string]*Cach
 				c.cmd(m.Spawn(c), cmd, CTX_INIT, arg...)
 			}
 		})
-
-		m.target.root.wg = &sync.WaitGroup{}
-		for _, k := range kit.Split(kit.Select("gdb,log,ssh,mdb")) {
-			m.Start(k)
-		}
 	}},
 	INIT: {Name: "init", Help: "启动", Hand: func(m *Message, c *Context, cmd string, arg ...string) {
 		m.root.Cmd(CTX_INIT)
 		m.Cmd("ssh.source", ETC_INIT_SHY)
-		m.Cmdy(arg)
 	}},
 	HELP: {Name: "help", Help: "帮助", Hand: func(m *Message, c *Context, cmd string, arg ...string) {
 		m.Echo(m.Config("index"))
@@ -97,7 +96,6 @@ var Index = &Context{Name: "ice", Help: "冰山模块", Caches: map[string]*Cach
 				})
 			}
 		})
-
 		c.server.(*Frame).wait <- kit.Int(m.root.Option(EXIT))
 	}},
 }}

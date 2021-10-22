@@ -81,6 +81,9 @@ func init() {
 			LOGIN, kit.List("登录", "扫码"),
 		)},
 	}, Commands: map[string]*ice.Command{
+		ice.CTX_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			m.Cmd(web.SERVE, aaa.WHITE, HEADER, RIVER, ACTION, FOOTER)
+		}},
 		"/header": {Name: "/header", Help: "标题栏", Action: map[string]*ice.Action{
 			AGENT: {Name: "agent", Help: "应用宿主", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmdy("web.chat.wx.access", "config")

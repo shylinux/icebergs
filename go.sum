@@ -1,4 +1,0 @@
-github.com/gorilla/websocket v1.4.2/go.mod h1:YR8l580nyteQvAITg2hZ9XVh4b55+EU/adAjf1fMHhE=
-github.com/skip2/go-qrcode v0.0.0-20200617195104-da1b6568686e/go.mod h1:XV66xRDqSt+GTGFMVlhk3ULuV0y9ZmzeVGR4mloJI3M=
-shylinux.com/x/toolkits v0.3.6 h1:vScxphySLIULkRps0i22yMW7b+sd5MbCBaZRfUmzTu0=
-shylinux.com/x/toolkits v0.3.6/go.mod h1:8LbYHe7oxBIqb6s4MSOD+4d28QvPdvkyCVtwB/JW7AA=

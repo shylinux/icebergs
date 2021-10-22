@@ -114,8 +114,8 @@ func init() {
 		}},
 		"/repos/": {Name: "/repos/", Help: "代码库", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			if m.Option("go-get") == "1" { // 下载地址
-				p := m.Conf(web.SHARE, kit.Keym(kit.MDB_DOMAIN)) + "/x/" + path.Join(arg...)
-				web.RenderMeta(m, "go-import", kit.Format(`%s git %s`, strings.TrimPrefix(p, "https://"), p))
+				p := kit.Split(kit.MergeURL2(m.Option(ice.MSG_USERWEB), "/x/"+path.Join(arg...)), "?")[0]
+				m.RenderResult(kit.Format(`<meta name="%s" content="%s">`, "go-import", kit.Format(`%s git %s`, strings.TrimPrefix(p, "https://"), p)))
 				return
 			}
 

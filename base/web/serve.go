@@ -263,11 +263,13 @@ func init() {
 		SERVE: {Name: "serve name auto start", Help: "服务器", Action: ice.MergeAction(map[string]*ice.Action{
 			aaa.BLACK: {Name: "black", Help: "黑名单", Hand: func(m *ice.Message, arg ...string) {
 				for _, k := range arg {
+					m.Log_CREATE(aaa.BLACK, k)
 					m.Config(kit.Keys(aaa.BLACK, k), ice.TRUE)
 				}
 			}},
 			aaa.WHITE: {Name: "white", Help: "白名单", Hand: func(m *ice.Message, arg ...string) {
 				for _, k := range arg {
+					m.Log_CREATE(aaa.WHITE, k)
 					m.Config(kit.Keys(aaa.WHITE, k), ice.TRUE)
 				}
 			}},

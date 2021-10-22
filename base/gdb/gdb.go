@@ -33,7 +33,7 @@ func (f *Frame) Start(m *ice.Message, arg ...string) bool {
 			// m.Cmd(TIMER, ACTION)
 
 		case s := <-f.s:
-			m.Cmd(SIGNAL, ACTION, SIGNAL, s)
+			m.Cmd(SIGNAL, ACTION, ACTION, SIGNAL, s)
 		}
 	}
 	return true
@@ -46,13 +46,13 @@ const GDB = "gdb"
 
 var Index = &ice.Context{Name: GDB, Help: "事件模块", Commands: map[string]*ice.Command{
 	ice.CTX_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-		m.Load()
+		m.Load(TIMER)
 	}},
 	ice.CTX_EXIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 		if f, ok := m.Target().Server().(*Frame); ok {
 			f.e <- true
 		}
-		m.Save()
+		m.Save(TIMER)
 	}},
 }}
 

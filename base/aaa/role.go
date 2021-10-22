@@ -34,14 +34,14 @@ func _role_chain(arg ...string) string {
 }
 func _role_black(m *ice.Message, userrole, chain string, status bool) {
 	m.Richs(ROLE, nil, userrole, func(key string, value map[string]interface{}) {
-		m.Log_MODIFY(ROLE, userrole, BLACK, chain)
+		m.Log_CREATE(ROLE, userrole, BLACK, chain)
 		list := value[BLACK].(map[string]interface{})
 		list[chain] = status
 	})
 }
 func _role_white(m *ice.Message, userrole, chain string, status bool) {
 	m.Richs(ROLE, nil, userrole, func(key string, value map[string]interface{}) {
-		m.Log_MODIFY(ROLE, userrole, WHITE, chain)
+		m.Log_CREATE(ROLE, userrole, WHITE, chain)
 		list := value[WHITE].(map[string]interface{})
 		list[chain] = status
 	})

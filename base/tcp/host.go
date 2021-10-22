@@ -85,9 +85,11 @@ func init() {
 		}},
 		HOST: {Name: "host name auto", Help: "主机", Action: map[string]*ice.Action{
 			aaa.BLACK: {Name: "black", Help: "黑名单", Hand: func(m *ice.Message, arg ...string) {
+				m.Log_CREATE(aaa.BLACK, arg[0])
 				m.Rich(HOST, kit.Keym(aaa.BLACK), kit.Dict(kit.MDB_TEXT, arg[0]))
 			}},
 			aaa.WHITE: {Name: "white", Help: "白名单", Hand: func(m *ice.Message, arg ...string) {
+				m.Log_CREATE(aaa.WHITE, arg[0])
 				m.Rich(HOST, kit.Keym(aaa.WHITE), kit.Dict(kit.MDB_TEXT, arg[0]))
 			}},
 		}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {

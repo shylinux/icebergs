@@ -26,7 +26,7 @@ func init() {
 		)},
 	}, Commands: map[string]*ice.Command{
 		ice.CTX_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			m.Cmd(web.SPIDE, mdb.CREATE, LARK, m.Config(LARK))
+			m.Cmd(web.SPIDE, mdb.CREATE, LARK, m.Conf(APP, kit.Keym(LARK)))
 		}},
 		APP: {Name: "app appid auto token login", Help: "应用", Action: ice.MergeAction(map[string]*ice.Action{
 			LOGIN: {Name: "login appid appmm duty", Help: "登录", Hand: func(m *ice.Message, arg ...string) {

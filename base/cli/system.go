@@ -7,7 +7,6 @@ import (
 	"os/exec"
 
 	ice "shylinux.com/x/icebergs"
-	"shylinux.com/x/icebergs/base/ctx"
 	"shylinux.com/x/icebergs/base/mdb"
 	kit "shylinux.com/x/toolkits"
 )
@@ -76,16 +75,6 @@ func _system_exec(m *ice.Message, cmd *exec.Cmd) {
 	m.Push(kit.MDB_TIME, m.Time())
 	m.Push(kit.MDB_CODE, int(cmd.ProcessState.ExitCode()))
 }
-func SystemProcess(m *ice.Message, text string, arg ...string) {
-	if len(arg) > 0 && arg[0] == ice.RUN {
-		m.Cmdy(SYSTEM, arg[1:])
-		return
-	}
-
-	m.Cmdy(ctx.COMMAND, SYSTEM)
-	m.ProcessField(SYSTEM, ice.RUN)
-	m.Push(ice.ARG, kit.Split(text))
-}
 func IsSuccess(m *ice.Message) bool {
 	return m.Append(kit.MDB_CODE) == "0"
 }
@@ -110,8 +99,7 @@ func init() {
 	}, Commands: map[string]*ice.Command{
 		SYSTEM: {Name: "system cmd run:button", Help: "系统命令", Hand: func(m *ice.Message, c *ice.Context, key string, arg ...string) {
 			if len(arg) == 0 {
-				m.Fields(len(arg), m.Config(kit.MDB_FIELD))
-				m.Cmdy(mdb.SELECT, SYSTEM, "", mdb.LIST)
+				mdb.ListSelect(m, arg)
 				return
 			}
 			m.Grow(SYSTEM, "", kit.Dict(kit.MDB_TIME, m.Time(), ice.CMD, kit.Join(arg, ice.SP)))

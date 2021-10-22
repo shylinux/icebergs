@@ -70,7 +70,7 @@ func init() {
 		}, mdb.HashAction()), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			mdb.HashSelect(m.Spawn(c), arg...).Table(func(index int, value map[string]string, head []string) {
 				if len(arg) > 0 {
-					m.OptionFields("detail")
+					m.OptionFields(mdb.DETAIL)
 				}
 				m.Push(kit.MDB_TIME, m.Time())
 				m.Push(kit.MDB_NAME, value[kit.MDB_NAME])

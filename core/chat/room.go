@@ -40,8 +40,7 @@ func init() {
 			}},
 			"exit": {Name: "exit", Help: "退出"},
 		}, mdb.ZoneAction()), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			m.Fields(len(arg), mdb.ZONE_FIELD, m.Conf(ROOM, kit.META_FIELD))
-			m.Cmdy(mdb.SELECT, m.Prefix(ROOM), "", mdb.ZONE, arg)
+			mdb.ZoneSelect(m, arg...)
 		}},
 		JOIN: {Name: "join zone hash auto", Help: "join", Action: ice.MergeAction(map[string]*ice.Action{
 			mdb.CREATE: {Name: "create zone", Help: "创建", Hand: func(m *ice.Message, arg ...string) {
@@ -58,8 +57,7 @@ func init() {
 				m.Cmdy(mdb.DELETE, m.Prefix(JOIN), kit.KeyHash(m.Option(kit.MDB_ZONE)), mdb.HASH, m.OptionSimple(web.SOCKET))
 			}},
 		}), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			m.Fields(len(arg), mdb.ZONE_FIELD, m.Conf(JOIN, kit.META_FIELD))
-			if len(arg) == 0 {
+			if mdb.ZoneSelect(m, arg...); len(arg) == 0 {
 				m.Cmdy(mdb.SELECT, m.Prefix(JOIN), "", mdb.HASH)
 			} else {
 				m.Cmdy(mdb.SELECT, m.Prefix(JOIN), kit.KeyHash(arg[0]), mdb.HASH, arg[1:])

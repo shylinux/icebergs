@@ -16,15 +16,15 @@ import (
 )
 
 func _dream_list(m *ice.Message) {
-	m.Cmdy(nfs.DIR, m.Conf(DREAM, kit.META_PATH), "time,size,name").Table(func(index int, value map[string]string, head []string) {
+	m.Cmdy(nfs.DIR, m.Config(kit.MDB_PATH), "time,size,name").Table(func(index int, value map[string]string, head []string) {
 		if m.Richs(SPACE, nil, value[kit.MDB_NAME], func(key string, value map[string]interface{}) {
 			m.Push(kit.MDB_TYPE, value[kit.MDB_TYPE])
-			m.Push(kit.MDB_STATUS, tcp.START)
-			m.PushButton(tcp.STOP)
+			m.Push(kit.MDB_STATUS, cli.START)
+			m.PushButton(cli.STOP)
 		}) == nil {
 			m.Push(kit.MDB_TYPE, WORKER)
-			m.Push(kit.MDB_STATUS, tcp.STOP)
-			m.PushButton(tcp.START)
+			m.Push(kit.MDB_STATUS, cli.STOP)
+			m.PushButton(cli.START)
 		}
 	})
 	m.SortStrR(kit.MDB_TIME)
@@ -36,9 +36,9 @@ func _dream_show(m *ice.Message, name string) {
 	m.Option(kit.MDB_NAME, name)
 
 	// 任务目录
-	p := path.Join(m.Conf(DREAM, kit.META_PATH), name)
+	p := path.Join(m.Config(kit.MDB_PATH), name)
 	if m.Option(kit.SSH_REPOS) != "" { // 下载源码
-		m.Cmd("web.code.git.repos", mdb.CREATE, kit.SSH_REPOS, m.Option(kit.SSH_REPOS), kit.MDB_PATH, p)
+		m.Cmd("web.code.git.repos", mdb.CREATE, m.OptionSimple(kit.SSH_REPOS), kit.MDB_PATH, p)
 	} else { // 创建目录
 		os.MkdirAll(p, ice.MOD_DIR)
 	}
@@ -62,7 +62,7 @@ func _dream_show(m *ice.Message, name string) {
 	// 任务脚本
 	miss := path.Join(p, ice.ETC_MISS_SH)
 	if _, e := os.Stat(miss); os.IsNotExist(e) {
-		m.Cmd(nfs.SAVE, miss, m.Conf(DREAM, kit.Keym("miss")))
+		m.Cmd(nfs.SAVE, miss, m.Config("miss"))
 	}
 
 	if b, e := ioutil.ReadFile(path.Join(p, m.Conf(gdb.SIGNAL, kit.Keym(cli.PID)))); e == nil {
@@ -77,13 +77,12 @@ func _dream_show(m *ice.Message, name string) {
 		m.Optionv(cli.CMD_ENV, kit.Simple(
 			cli.CTX_DEV, "http://:"+m.Cmd(SERVE).Append(tcp.PORT),
 			cli.PATH, kit.Path(path.Join(p, ice.BIN))+":"+kit.Path(ice.BIN)+":"+os.Getenv(cli.PATH),
-			"USER", ice.Info.UserName, m.Confv(DREAM, kit.Keym(cli.ENV)),
+			cli.USER, ice.Info.UserName, m.Confv(DREAM, kit.Keym(cli.ENV)),
 		))
-		// 启动任务
-		kit.Path(os.Args[0])
 
-		m.Optionv(cli.CMD_ERRPUT, path.Join(p, m.Conf(DREAM, kit.Keym(cli.ENV, "ctx_log"))))
-		m.Cmd(cli.DAEMON, m.Confv(DREAM, kit.Keym(ice.CMD)), ice.DEV, ice.DEV, kit.MDB_NAME, name, RIVER, m.Option(RIVER))
+		// 启动任务
+		m.Optionv(cli.CMD_OUTPUT, path.Join(p, m.Config(kit.Keys(cli.ENV, cli.CTX_LOG))))
+		m.Cmd(cli.DAEMON, m.Confv(DREAM, kit.Keym(ice.CMD)), ice.DEV, ice.DEV, kit.MDB_NAME, name, m.OptionSimple(RIVER))
 		m.Event(DREAM_CREATE, kit.MDB_TYPE, m.Option(kit.MDB_TYPE), kit.MDB_NAME, name)
 		m.Sleep(ice.MOD_TICK)
 	}
@@ -98,50 +97,41 @@ const (
 const DREAM = "dream"
 
 func init() {
-	Index.Merge(&ice.Context{
-		Commands: map[string]*ice.Command{
-			DREAM: {Name: "dream name path auto start create", Help: "梦想家", Action: map[string]*ice.Action{
-				mdb.INPUTS: {Name: "inputs", Help: "补全", Hand: func(m *ice.Message, arg ...string) {
-					switch arg[0] {
-					case kit.MDB_NAME:
-						m.Cmdy(nfs.DIR, m.Conf(DREAM, kit.META_PATH), "name,time")
-					case kit.MDB_TEMPLATE:
-						m.Cmdy(nfs.DIR, m.Conf(DREAM, kit.META_PATH), "path,size,time")
-						m.SortStrR(kit.MDB_PATH)
-					}
-				}},
-				mdb.CREATE: {Name: "create main=src/main.go@key name=hi@key from=usr/icebergs/misc/bash/bash.go@key", Help: "添加", Hand: func(m *ice.Message, arg ...string) {
-					m.Cmdy(SPACE, m.Option(ROUTE), "web.code.autogen", mdb.CREATE, arg)
-					m.ProcessInner()
-				}},
-				cli.START: {Name: "start name repos river", Help: "启动", Hand: func(m *ice.Message, arg ...string) {
-					if m.Option(kit.MDB_NAME) == ice.OPS {
-						m.Option(kit.MDB_NAME, "")
-					}
-					_dream_show(m, m.Option(kit.MDB_NAME, kit.Select(path.Base(m.Option(kit.SSH_REPOS)), m.Option(kit.MDB_NAME))))
-				}},
-				cli.STOP: {Name: "stop", Help: "停止", Hand: func(m *ice.Message, arg ...string) {
-					m.Cmdy(SPACE, m.Option(kit.MDB_NAME), "exit", "0")
-				}},
-			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-				if len(arg) == 0 {
-					_dream_list(m)
-					return
-				}
-
-				m.Option(nfs.DIR_ROOT, path.Join(m.Conf(DREAM, kit.META_PATH), arg[0]))
-				if len(arg) == 1 || strings.HasSuffix(arg[1], "/") {
-					m.Cmdy(nfs.DIR, arg[1:])
-				} else {
-					m.Cmdy(nfs.CAT, arg[1:])
+	Index.Merge(&ice.Context{Commands: map[string]*ice.Command{
+		DREAM: {Name: "dream name path auto start create", Help: "梦想家", Action: map[string]*ice.Action{
+			mdb.INPUTS: {Name: "inputs", Help: "补全", Hand: func(m *ice.Message, arg ...string) {
+				switch arg[0] {
+				case kit.MDB_NAME:
+					m.Cmdy(nfs.DIR, m.Config(kit.MDB_PATH), "name,time")
+				case kit.MDB_TEMPLATE:
+					m.Cmdy(nfs.DIR, m.Config(kit.MDB_PATH), "path,size,time")
+					m.SortStrR(kit.MDB_PATH)
 				}
 			}},
-		},
-		Configs: map[string]*ice.Config{
-			DREAM: {Name: DREAM, Help: "梦想家", Value: kit.Data(kit.MDB_PATH, ice.USR_LOCAL_WORK,
-				ice.CMD, []interface{}{"ice.bin", SPACE, tcp.DIAL},
-				cli.ENV, kit.Dict(cli.CTX_LOG, ice.BIN_BOOT_LOG),
-				"miss", `#!/bin/bash
+			mdb.CREATE: {Name: "create main=src/main.go@key name=hi@key from=usr/icebergs/misc/bash/bash.go@key", Help: "添加", Hand: func(m *ice.Message, arg ...string) {
+				m.Cmdy(SPACE, m.Option(ROUTE), "web.code.autogen", mdb.CREATE, arg)
+				m.ProcessInner()
+			}},
+			cli.START: {Name: "start name repos river", Help: "启动", Hand: func(m *ice.Message, arg ...string) {
+				_dream_show(m, m.Option(kit.MDB_NAME, kit.Select(path.Base(m.Option(kit.SSH_REPOS)), m.Option(kit.MDB_NAME))))
+			}},
+			cli.STOP: {Name: "stop", Help: "停止", Hand: func(m *ice.Message, arg ...string) {
+				m.Cmdy(SPACE, m.Option(kit.MDB_NAME), "exit", "0")
+			}},
+		}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			if len(arg) == 0 {
+				_dream_list(m)
+				return
+			}
+
+			m.Option(nfs.DIR_ROOT, path.Join(m.Config(kit.MDB_PATH), arg[0]))
+			m.Cmdy(nfs.CAT, arg[1:])
+		}},
+	}, Configs: map[string]*ice.Config{
+		DREAM: {Name: DREAM, Help: "梦想家", Value: kit.Data(kit.MDB_PATH, ice.USR_LOCAL_WORK,
+			ice.CMD, []interface{}{"ice.bin", SPACE, tcp.DIAL},
+			cli.ENV, kit.Dict(cli.CTX_LOG, ice.BIN_BOOT_LOG),
+			"miss", `#!/bin/bash
 if [ "$ISH_CONF_PRE" = "" ]; then
 	[ -f $PWD/.ish/plug.sh ] || [ -f $HOME/.ish/plug.sh ] || git clone ${ISH_CONF_HUB_PROXY:="https://"}shylinux.com/x/intshell $PWD/.ish
 	source $PWD/.ish/plug.sh || source $HOME/.ish/plug.sh
@@ -168,7 +158,6 @@ ish_miss_prepare_contexts
 
 make
 `,
-			)},
-		},
-	})
+		)},
+	}})
 }

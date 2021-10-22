@@ -28,8 +28,8 @@ func _command_list(m *ice.Message, name string) {
 		m.Push(kit.MDB_INDEX, kit.Keys(s.Cap(ice.CTX_FOLLOW), key))
 		m.Push(kit.MDB_NAME, kit.Format(cmd.Name))
 		m.Push(kit.MDB_HELP, kit.Format(cmd.Help))
-		m.Push(kit.MDB_META, kit.Formats(cmd.Meta))
-		m.Push(kit.MDB_LIST, kit.Formats(cmd.List))
+		m.Push(kit.MDB_META, kit.Format(cmd.Meta))
+		m.Push(kit.MDB_LIST, kit.Format(cmd.List))
 	})
 }
 func _command_search(m *ice.Message, kind, name, text string) {

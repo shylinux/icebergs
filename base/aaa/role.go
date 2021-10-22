@@ -17,16 +17,16 @@ func _role_user(m *ice.Message, userrole string, username ...string) {
 }
 func _role_list(m *ice.Message, userrole string) {
 	m.Richs(ROLE, nil, kit.Select(kit.MDB_FOREACH, userrole), func(key string, value map[string]interface{}) {
-		for k := range value[WHITE].(map[string]interface{}) {
+		kit.Fetch(value[WHITE], func(k string, v interface{}) {
 			m.Push(ROLE, kit.Value(value, kit.MDB_NAME))
 			m.Push(kit.MDB_ZONE, WHITE)
 			m.Push(kit.MDB_KEY, k)
-		}
-		for k := range value[BLACK].(map[string]interface{}) {
+		})
+		kit.Fetch(value[BLACK], func(k string, v interface{}) {
 			m.Push(ROLE, kit.Value(value, kit.MDB_NAME))
 			m.Push(kit.MDB_ZONE, BLACK)
 			m.Push(kit.MDB_KEY, k)
-		}
+		})
 	})
 }
 func _role_chain(arg ...string) string {

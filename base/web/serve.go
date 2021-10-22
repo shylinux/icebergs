@@ -37,7 +37,7 @@ func _serve_main(m *ice.Message, w http.ResponseWriter, r *http.Request) bool {
 	m.Info("").Info("%s %s %s", r.Header.Get(ice.MSG_USERIP), r.Method, r.URL)
 
 	// 参数日志
-	if m.Conf(SERVE, kit.Keym(LOGHEADERS)) == ice.TRUE {
+	if m.Config(LOGHEADERS) == ice.TRUE {
 		for k, v := range r.Header {
 			m.Info("%s: %v", k, kit.Format(v))
 		}
@@ -67,7 +67,7 @@ func _serve_main(m *ice.Message, w http.ResponseWriter, r *http.Request) bool {
 		msg := m.Spawn()
 		msg.W, msg.R = w, r
 		repos := kit.Select(ice.INTSHELL, ice.VOLCANOS, strings.Contains(r.Header.Get("User-Agent"), "Mozilla/5.0"))
-		Render(msg, ice.RENDER_DOWNLOAD, path.Join(m.Conf(SERVE, kit.Keym(repos, kit.MDB_PATH)), m.Conf(SERVE, kit.Keym(repos, kit.MDB_INDEX))))
+		Render(msg, ice.RENDER_DOWNLOAD, path.Join(m.Config(kit.Keys(repos, kit.MDB_PATH)), m.Config(kit.Keys(repos, kit.MDB_INDEX))))
 		return false
 	}
 
@@ -107,7 +107,6 @@ func _serve_handle(key string, cmd *ice.Command, msg *ice.Message, w http.Respon
 	}
 
 	// 请求变量
-	_serve_params(msg, r.URL.Path)
 	if u, e := url.Parse(r.Header.Get("Referer")); e == nil {
 		_serve_params(msg, u.Path)
 		for k, v := range u.Query() {
@@ -115,6 +114,7 @@ func _serve_handle(key string, cmd *ice.Command, msg *ice.Message, w http.Respon
 			msg.Option(k, v)
 		}
 	}
+	_serve_params(msg, r.URL.Path)
 
 	// 请求地址
 	msg.Option(ice.MSG_USERWEB, kit.Select(msg.Conf(SHARE, kit.Keym(kit.MDB_DOMAIN)), r.Header.Get("Referer")))
@@ -142,7 +142,7 @@ func _serve_handle(key string, cmd *ice.Command, msg *ice.Message, w http.Respon
 			}
 		}
 	default:
-		r.ParseMultipartForm(kit.Int64(kit.Select(r.Header.Get(ContentLength), "4096")))
+		r.ParseMultipartForm(kit.Int64(kit.Select("4096", r.Header.Get(ContentLength))))
 		if r.ParseForm(); len(r.PostForm) > 0 {
 			for k, v := range r.PostForm {
 				msg.Logs("form", k, v)
@@ -152,11 +152,9 @@ func _serve_handle(key string, cmd *ice.Command, msg *ice.Message, w http.Respon
 
 	// 请求参数
 	for k, v := range r.Form {
-		if r.Header.Get(ContentType) != ContentJSON {
-			if msg.IsCliUA() {
-				for i, p := range v {
-					v[i], _ = url.QueryUnescape(p)
-				}
+		if msg.IsCliUA() {
+			for i, p := range v {
+				v[i], _ = url.QueryUnescape(p)
 			}
 		}
 		if msg.Optionv(k, v); k == ice.MSG_SESSID {
@@ -191,7 +189,7 @@ func _serve_login(msg *ice.Message, cmds []string, w http.ResponseWriter, r *htt
 		// 会话认证
 	}
 
-	if msg.Option(ice.MSG_USERNAME) == "" && tcp.IsLocalHost(msg, msg.Option(ice.MSG_USERIP)) && msg.Conf(SERVE, kit.Keym(tcp.LOCALHOST)) == ice.TRUE {
+	if msg.Option(ice.MSG_USERNAME) == "" && msg.Config(tcp.LOCALHOST) == ice.TRUE && tcp.IsLocalHost(msg, msg.Option(ice.MSG_USERIP)) {
 		aaa.UserRoot(msg)
 		// 主机认证
 	}
@@ -199,12 +197,12 @@ func _serve_login(msg *ice.Message, cmds []string, w http.ResponseWriter, r *htt
 	if _, ok := msg.Target().Commands[WEB_LOGIN]; ok {
 		// 权限检查
 		msg.Target().Cmd(msg, WEB_LOGIN, cmds...)
-		return cmds, msg.Result(0) != ice.ErrWarn && msg.Result() != ice.FALSE
+		return cmds, msg.Result(0) != ice.ErrWarn && msg.Result(0) != ice.FALSE
 	}
 
-	if ls := strings.Split(r.URL.Path, "/"); msg.Conf(SERVE, kit.Keym(aaa.BLACK, ls[1])) == ice.TRUE {
+	if ls := strings.Split(r.URL.Path, "/"); msg.Config(kit.Keys(aaa.BLACK, ls[1])) == ice.TRUE {
 		return cmds, false // 黑名单
-	} else if msg.Conf(SERVE, kit.Keym(aaa.WHITE, ls[1])) == ice.TRUE {
+	} else if msg.Config(kit.Keys(aaa.WHITE, ls[1])) == ice.TRUE {
 		if msg.Option(ice.MSG_USERNAME) == "" && msg.Option(SHARE) != "" {
 			switch share := msg.Cmd(SHARE, msg.Option(SHARE)); share.Append(kit.MDB_TYPE) {
 			case LOGIN:
@@ -236,82 +234,86 @@ const (
 const SERVE = "serve"
 
 func init() {
-	Index.Merge(&ice.Context{
-		Configs: map[string]*ice.Config{
-			SERVE: {Name: SERVE, Help: "服务器", Value: kit.Data(kit.MDB_SHORT, kit.MDB_NAME,
-				tcp.LOCALHOST, true, aaa.BLACK, kit.Dict(), aaa.WHITE, kit.Dict(
-					LOGIN, true, SPACE, true, SHARE, true,
-					ice.VOLCANOS, true, ice.INTSHELL, true,
-					ice.REQUIRE, true, ice.PUBLISH, true,
-					"x", true, ice.PUBLISH, true,
-				), LOGHEADERS, false,
+	Index.Merge(&ice.Context{Configs: map[string]*ice.Config{
+		SERVE: {Name: SERVE, Help: "服务器", Value: kit.Data(
+			kit.MDB_SHORT, kit.MDB_NAME, kit.MDB_FIELD, "time,status,name,port,dev",
+			tcp.LOCALHOST, ice.TRUE, aaa.BLACK, kit.Dict(), aaa.WHITE, kit.Dict(
+				LOGIN, ice.TRUE, SHARE, ice.TRUE, SPACE, ice.TRUE,
+				ice.VOLCANOS, ice.TRUE, ice.PUBLISH, ice.TRUE,
+				ice.INTSHELL, ice.TRUE, ice.REQUIRE, ice.TRUE,
+				"x", ice.TRUE,
+			), LOGHEADERS, ice.FALSE,
 
-				"static", kit.Dict("/", ice.USR_VOLCANOS),
-				ice.VOLCANOS, kit.Dict(kit.MDB_PATH, ice.USR_VOLCANOS, kit.MDB_INDEX, "page/index.html",
-					kit.SSH_REPOS, "https://shylinux.com/x/volcanos", kit.SSH_BRANCH, kit.SSH_MASTER,
-				), ice.PUBLISH, ice.USR_PUBLISH,
+			kit.MDB_PATH, kit.Dict("/", ice.USR_VOLCANOS),
+			ice.VOLCANOS, kit.Dict(kit.MDB_PATH, ice.USR_VOLCANOS, kit.MDB_INDEX, "page/index.html",
+				kit.SSH_REPOS, "https://shylinux.com/x/volcanos", kit.SSH_BRANCH, kit.SSH_MASTER,
+			), ice.PUBLISH, ice.USR_PUBLISH,
 
-				ice.INTSHELL, kit.Dict(kit.MDB_PATH, ice.USR_INTSHELL, kit.MDB_INDEX, ice.INDEX_SH,
-					kit.SSH_REPOS, "https://shylinux.com/x/intshell", kit.SSH_BRANCH, kit.SSH_MASTER,
-				), ice.REQUIRE, ".ish/pluged",
-			)},
-		},
-		Commands: map[string]*ice.Command{
-			SERVE: {Name: "serve name auto start", Help: "服务器", Action: map[string]*ice.Action{
-				aaa.BLACK: {Name: "black", Help: "黑名单", Hand: func(m *ice.Message, arg ...string) {
-					for _, k := range arg {
-						m.Conf(SERVE, kit.Keys(kit.MDB_META, aaa.BLACK, k), true)
-					}
-				}},
-				aaa.WHITE: {Name: "white", Help: "白名单", Hand: func(m *ice.Message, arg ...string) {
-					for _, k := range arg {
-						m.Conf(SERVE, kit.Keys(kit.MDB_META, aaa.WHITE, k), true)
-					}
-				}},
-				cli.START: {Name: "start dev name=ops proto=http host port=9020", Help: "启动", Hand: func(m *ice.Message, arg ...string) {
-					if cli.NodeInfo(m, SERVER, ice.Info.HostName); m.Option(tcp.PORT) == tcp.RANDOM {
-						m.Option(tcp.PORT, m.Cmdx(tcp.PORT, aaa.RIGHT))
-					}
-
-					m.Target().Start(m, kit.MDB_NAME, m.Option(kit.MDB_NAME), tcp.HOST, m.Option(tcp.HOST), tcp.PORT, m.Option(tcp.PORT))
-					m.Sleep(ice.MOD_TICK)
-
-					m.Option(kit.MDB_NAME, "")
-					for _, k := range kit.Split(m.Option(ice.DEV)) {
-						m.Cmd(SPACE, tcp.DIAL, ice.DEV, k, kit.MDB_NAME, ice.Info.NodeName)
-					}
-				}},
-			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-				m.Fields(len(arg), "time,status,name,port,dev")
-				m.Cmdy(mdb.SELECT, SERVE, "", mdb.HASH, kit.MDB_NAME, arg)
-			}},
-
-			"/volcanos/": {Name: "/volcanos/", Help: "浏览器", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-				m.RenderIndex(SERVE, ice.VOLCANOS, arg...)
-			}},
-			"/intshell/": {Name: "/intshell/", Help: "命令行", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-				m.RenderIndex(SERVE, ice.INTSHELL, arg...)
-			}},
-			"/publish/": {Name: "/publish/", Help: "私有云", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-				if arg[0] == ice.ORDER_JS {
-					if p := path.Join(ice.USR_PUBLISH, ice.ORDER_JS); m.PodCmd(nfs.CAT, p) {
-						m.RenderResult()
-						return
-					}
+			ice.INTSHELL, kit.Dict(kit.MDB_PATH, ice.USR_INTSHELL, kit.MDB_INDEX, ice.INDEX_SH,
+				kit.SSH_REPOS, "https://shylinux.com/x/intshell", kit.SSH_BRANCH, kit.SSH_MASTER,
+			), ice.REQUIRE, ".ish/pluged",
+		)},
+	}, Commands: map[string]*ice.Command{
+		ice.CTX_EXIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			m.Done(true)
+			m.Cmd(SERVE).Table(func(index int, value map[string]string, head []string) {
+				m.Done(value[kit.MDB_STATUS] == tcp.START)
+			})
+		}},
+		SERVE: {Name: "serve name auto start", Help: "服务器", Action: ice.MergeAction(map[string]*ice.Action{
+			aaa.BLACK: {Name: "black", Help: "黑名单", Hand: func(m *ice.Message, arg ...string) {
+				for _, k := range arg {
+					m.Config(kit.Keys(aaa.BLACK, k), ice.TRUE)
 				}
-				_share_local(m, m.Conf(SERVE, kit.Keym(ice.PUBLISH)), path.Join(arg...))
 			}},
-			"/require/": {Name: "/require/", Help: "公有云", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-				_share_repos(m, path.Join(arg[0], arg[1], arg[2]), arg[3:]...)
-			}},
-			"/help/": {Name: "/help/", Help: "帮助", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-				if len(arg) == 0 {
-					arg = append(arg, "tutor.shy")
+			aaa.WHITE: {Name: "white", Help: "白名单", Hand: func(m *ice.Message, arg ...string) {
+				for _, k := range arg {
+					m.Config(kit.Keys(aaa.WHITE, k), ice.TRUE)
 				}
-				if len(arg) > 0 && arg[0] != ctx.ACTION {
-					arg[0] = "src/help/" + arg[0]
-				}
-				m.Cmdy("web.chat./cmd/", arg)
 			}},
-		}})
+			cli.START: {Name: "start dev name=ops proto=http host port=9020", Help: "启动", Hand: func(m *ice.Message, arg ...string) {
+				if cli.NodeInfo(m, SERVER, ice.Info.HostName); m.Option(tcp.PORT) == tcp.RANDOM {
+					m.Option(tcp.PORT, m.Cmdx(tcp.PORT, aaa.RIGHT))
+				}
+
+				m.Target().Start(m, m.OptionSimple(kit.MDB_NAME, tcp.HOST, tcp.PORT)...)
+				m.Sleep(ice.MOD_TICK)
+
+				m.Option(kit.MDB_NAME, "")
+				for _, k := range kit.Split(m.Option(ice.DEV)) {
+					m.Cmd(SPACE, tcp.DIAL, ice.DEV, k, kit.MDB_NAME, ice.Info.NodeName)
+				}
+			}},
+		}, mdb.HashAction()), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			mdb.HashSelect(m, arg...)
+		}},
+
+		"/intshell/": {Name: "/intshell/", Help: "命令行", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			m.RenderIndex(SERVE, ice.INTSHELL, arg...)
+		}},
+		"/volcanos/": {Name: "/volcanos/", Help: "浏览器", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			m.RenderIndex(SERVE, ice.VOLCANOS, arg...)
+		}},
+		"/require/": {Name: "/require/", Help: "代码库", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			_share_repos(m, path.Join(arg[0], arg[1], arg[2]), arg[3:]...)
+		}},
+		"/publish/": {Name: "/publish/", Help: "定制化", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			if arg[0] == ice.ORDER_JS {
+				if p := path.Join(ice.USR_PUBLISH, ice.ORDER_JS); m.PodCmd(nfs.CAT, p) {
+					m.RenderResult()
+					return
+				}
+			}
+			_share_local(m, m.Conf(SERVE, kit.Keym(ice.PUBLISH)), path.Join(arg...))
+		}},
+		"/help/": {Name: "/help/", Help: "帮助", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			if len(arg) == 0 {
+				arg = append(arg, "tutor.shy")
+			}
+			if len(arg) > 0 && arg[0] != ctx.ACTION {
+				arg[0] = "src/help/" + arg[0]
+			}
+			m.Cmdy("web.chat./cmd/", arg)
+		}},
+	}})
 }

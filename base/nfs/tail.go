@@ -65,10 +65,8 @@ func init() {
 				_tail_create(m, arg...)
 			}},
 		}, mdb.ZoneAction()), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			m.Fields(len(kit.Slice(arg, 0, 2)), "time,name,count,file", "time,id,file,text")
-			m.Option(mdb.CACHE_FILTER, kit.Select("", arg, 4))
-			m.Option(mdb.CACHE_OFFEND, kit.Select("0", arg, 3))
-			m.Option(mdb.CACHE_LIMIT, kit.Select("10", arg, 2))
+			m.Fields(len(kit.Slice(arg, 0, 2)), "time,name,count,file", m.Config(kit.MDB_FIELD))
+			mdb.SetPage(m, kit.Slice(arg, 2)...)
 
 			mdb.ZoneSelect(m.Spawn(c), arg...).Table(func(index int, value map[string]string, head []string) {
 				if strings.Contains(value[kit.MDB_TEXT], m.Option(mdb.CACHE_FILTER)) {

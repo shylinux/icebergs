@@ -4,26 +4,21 @@ import (
 	"encoding/json"
 	"os"
 	"path"
-	"strings"
 
 	ice "shylinux.com/x/icebergs"
 	kit "shylinux.com/x/toolkits"
 )
 
 func _hash_fields(m *ice.Message) []string {
-	return kit.Split(kit.Select("time,hash,type,name,text", strings.Join(kit.Simple(m.Optionv(FIELDS)), ",")))
+	return kit.Split(kit.Select("time,hash,type,name,text", kit.Join(kit.Simple(m.Optionv(FIELDS)))))
 }
 func _hash_inputs(m *ice.Message, prefix, chain string, field, value string) {
 	list := map[string]int{}
 	m.Richs(prefix, chain, kit.MDB_FOREACH, func(key string, val map[string]interface{}) {
-		if val = kit.GetMeta(val); field == kit.MDB_HASH {
-			list[key]++
+		if val = kit.GetMeta(val); kit.Format(val[kit.MDB_COUNT]) != "" {
+			list[kit.Format(val[field])] = kit.Int(val[kit.MDB_COUNT])
 		} else {
-			if kit.Format(val[kit.MDB_COUNT]) != "" {
-				list[kit.Format(val[field])] = kit.Int(val[kit.MDB_COUNT])
-			} else {
-				list[kit.Format(val[field])]++
-			}
+			list[kit.Format(val[field])]++
 		}
 	})
 	for k, i := range list {
@@ -89,6 +84,7 @@ func _hash_export(m *ice.Message, prefix, chain, file string) {
 	e = en.Encode(m.Confv(prefix, kit.Keys(chain, HASH)))
 
 	m.Log_EXPORT(kit.MDB_KEY, path.Join(prefix, chain), kit.MDB_FILE, p)
+	m.Conf(prefix, kit.Keys(chain, kit.MDB_HASH), "")
 	m.Echo(p)
 }
 func _hash_import(m *ice.Message, prefix, chain, file string) {
@@ -164,15 +160,16 @@ func HashAction(fields ...string) map[string]*ice.Action {
 			m.Cmdy(MODIFY, m.PrefixKey(), "", HASH, m.OptionSimple(_key(m)), arg)
 		}},
 		EXPORT: {Name: "export", Help: "导出", Hand: func(m *ice.Message, arg ...string) {
+			m.OptionFields(m.Config(kit.META_FIELD))
 			m.Cmdy(EXPORT, m.PrefixKey(), "", HASH, arg)
 		}},
 		IMPORT: {Name: "import", Help: "导入", Hand: func(m *ice.Message, arg ...string) {
 			m.Cmdy(IMPORT, m.PrefixKey(), "", HASH, arg)
 		}},
 		PRUNES: {Name: "prunes before@date", Help: "清理", Hand: func(m *ice.Message, arg ...string) {
-			list := []string{}
+			list, before := []string{}, kit.Time(kit.Select(m.Time("-72h"), m.Option(kit.MDB_BEFORE)))
 			m.Richs(m.PrefixKey(), "", kit.MDB_FOREACH, func(key string, value map[string]interface{}) {
-				if value = kit.GetMeta(value); kit.Time(kit.Format(value[kit.MDB_TIME])) < kit.Time(m.Option(kit.MDB_BEFORE)) {
+				if value = kit.GetMeta(value); kit.Time(kit.Format(value[kit.MDB_TIME])) < before {
 					list = append(list, key)
 				}
 			})

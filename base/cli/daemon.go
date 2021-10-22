@@ -142,8 +142,7 @@ func init() {
 				m.Cmdy(mdb.PRUNES, DAEMON, "", mdb.HASH, kit.MDB_STATUS, ERROR)
 			}},
 		}, mdb.HashAction()), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			m.Fields(len(arg), m.Config(kit.MDB_FIELD))
-			m.Cmdy(mdb.SELECT, DAEMON, "", mdb.HASH, kit.MDB_HASH, arg).Table(func(index int, value map[string]string, head []string) {
+			mdb.HashSelect(m, arg...).Table(func(index int, value map[string]string, head []string) {
 				switch value[kit.MDB_STATUS] {
 				case START:
 					m.PushButton(RESTART, STOP)

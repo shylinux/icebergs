@@ -27,8 +27,7 @@ func init() {
 				})
 			}},
 		}, mdb.ZoneAction()), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			m.Fields(len(arg), mdb.ZONE_FIELD, m.Conf(FIELD, kit.META_FIELD))
-			if m.Cmdy(mdb.SELECT, m.PrefixKey(), "", mdb.ZONE, arg); len(arg) == 0 {
+			if mdb.ZoneSelect(m, arg...); len(arg) == 0 {
 				m.PushAction(mdb.REMOVE)
 			}
 		}},

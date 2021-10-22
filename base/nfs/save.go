@@ -85,14 +85,14 @@ func init() {
 			}
 			_save_file(m, arg[0], arg[1:]...)
 		}},
+		DEFS: {Name: "defs file text...", Help: "默认", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			_defs_file(m, arg[0], arg[1:]...)
+		}},
 		PUSH: {Name: "push file text...", Help: "追加", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			if len(arg) == 1 {
 				arg = append(arg, m.Option(kit.MDB_CONTENT))
 			}
 			_push_file(m, arg[0], arg[1:]...)
-		}},
-		DEFS: {Name: "defs file text...", Help: "默认", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			_defs_file(m, arg[0], arg[1:]...)
 		}},
 		COPY: {Name: "copy file from...", Help: "复制", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			_copy_file(m, arg[0], arg[1:]...)

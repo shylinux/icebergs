@@ -99,7 +99,7 @@ func init() {
 	}, Commands: map[string]*ice.Command{
 		SYSTEM: {Name: "system cmd run:button", Help: "系统命令", Hand: func(m *ice.Message, c *ice.Context, key string, arg ...string) {
 			if len(arg) == 0 {
-				mdb.ListSelect(m, arg)
+				mdb.ListSelect(m, arg...)
 				return
 			}
 			m.Grow(SYSTEM, "", kit.Dict(kit.MDB_TIME, m.Time(), ice.CMD, kit.Join(arg, ice.SP)))

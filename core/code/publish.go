@@ -127,8 +127,8 @@ func init() {
 				m.Toast("打包成功")
 				m.ProcessHold()
 			}},
-			mdb.REMOVE: {Name: "remove", Help: "删除", Hand: func(m *ice.Message, arg ...string) {
-				p := m.Option(cli.CMD_DIR, m.Conf(PUBLISH, kit.META_PATH))
+			nfs.TRASH: {Name: "trash", Help: "删除", Hand: func(m *ice.Message, arg ...string) {
+				p := m.Option(cli.CMD_DIR, m.Config(kit.MDB_PATH))
 				os.Remove(path.Join(p, m.Option(kit.MDB_PATH)))
 			}},
 			mdb.INPUTS: {Name: "inputs", Help: "补全", Hand: func(m *ice.Message, arg ...string) {

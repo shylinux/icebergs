@@ -119,6 +119,10 @@ func init() {
 
 			code.WEBPACK: {Name: "webpack", Help: "打包页面", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmdy(code.WEBPACK, mdb.CREATE, m.OptionSimple(kit.MDB_NAME))
+				p := path.Join("src/release", ice.GO_MOD)
+				if _, e := os.Stat(p); e == nil {
+					m.Cmd(nfs.COPY, ice.GO_MOD, p)
+				}
 			}},
 			"unpack": {Name: "unpack", Help: "开发模式", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmdy(code.WEBPACK, "unpack")

@@ -37,7 +37,6 @@ func _word_show(m *ice.Message, name string, arg ...string) {
 
 	m.Option(ice.MSG_ALIAS, m.Confv(WORD, kit.Keym(kit.MDB_ALIAS)))
 	m.Option(nfs.DIR_ROOT, _wiki_path(m, WORD))
-	m.Option(ice.MSG_RENDER, ice.RENDER_RAW)
 	m.Cmdy(ssh.SOURCE, name)
 }
 

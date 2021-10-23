@@ -3,6 +3,7 @@ package ice
 const (
 	TB = "\t"
 	SP = " "
+	PS = "/"
 	PT = "."
 	NL = "\n"
 	OF = " of "
@@ -106,11 +107,11 @@ const ( // DIR
 	ETC_PATH     = "etc/path"
 
 	SRC_HELP       = "src/help"
-	SRC_MAIN_SHY   = "src/main.shy"
 	SRC_MAIN_GO    = "src/main.go"
+	SRC_MAIN_SHY   = "src/main.shy"
 	SRC_VERSION_GO = "src/version.go"
 	SRC_BINPACK_GO = "src/binpack.go"
-	MAKEFILE       = "makefile"
+	MAKEFILE       = "Makefile"
 	GO_MOD         = "go.mod"
 	GO_SUM         = "go.sum"
 )
@@ -125,7 +126,6 @@ const ( // MSG
 	MSG_SOURCE = "_source"
 	MSG_TARGET = "_target"
 	MSG_HANDLE = "_handle"
-	MSG_RENDER = "_render"
 	MSG_OUTPUT = "_output"
 	MSG_ARGS   = "_args"
 
@@ -149,9 +149,9 @@ const ( // MSG
 	MSG_USERPOD  = "user.pod"
 	MSG_USERADDR = "user.addr"
 	MSG_USERDATA = "user.data"
-	MSG_USERNICK = "user.nick"
-	MSG_USERNAME = "user.name"
 	MSG_USERROLE = "user.role"
+	MSG_USERNAME = "user.name"
+	MSG_USERNICK = "user.nick"
 	MSG_USERZONE = "user.zone"
 	MSG_LANGUAGE = "user.lang"
 
@@ -159,13 +159,16 @@ const ( // MSG
 	MSG_TOPIC = "sess.topic"
 	MSG_RIVER = "sess.river"
 	MSG_STORM = "sess.storm"
-	MSG_LOCAL = "sess.local"
 	MSG_TOAST = "sess.toast"
+	MSG_LOCAL = "sess.local"
 
 	CACHE_LIMIT  = "cache.limit"
 	CACHE_BEGIN  = "cache.begin"
 	CACHE_COUNT  = "cache.count"
 	CACHE_OFFEND = "cache.offend"
+	CACHE_FILTER = "cache.filter"
+	CACHE_VALUE  = "cache.value"
+	CACHE_FIELD  = "cache.field"
 )
 const ( // RENDER
 	RENDER_RAW      = "_raw"
@@ -198,12 +201,13 @@ const ( // PROCESS
 	FIELD_PREFIX = "_prefix"
 )
 const ( // Err
-	ErrWarn     = "warn: "
-	ErrExists   = "exists: "
-	ErrExpire   = "expire: "
-	ErrNotLogin = "not login: "
-	ErrNotFound = "not found: "
-	ErrNotRight = "not right: "
+	ErrWarn         = "warn: "
+	ErrExists       = "exists: "
+	ErrExpire       = "expire: "
+	ErrNotLogin     = "not login: "
+	ErrNotFound     = "not found: "
+	ErrNotRight     = "not right: "
+	ErrNotImplement = "not implement: "
 )
 const ( // LOG
 	// 通用

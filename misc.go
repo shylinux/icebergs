@@ -29,41 +29,17 @@ func (m *Message) CSV(text string, head ...string) *Message {
 	}
 	return m
 }
-func (m *Message) Parse(meta string, key string, arg ...string) *Message {
-	list := []string{}
-	for _, line := range kit.Split(strings.Join(arg, SP), NL) {
-		ls := kit.Split(line)
-		for i := 0; i < len(ls); i++ {
-			if strings.HasPrefix(ls[i], "#") {
-				ls = ls[:i]
-				break
-			}
-		}
-		list = append(list, ls...)
-	}
-
-	switch data := kit.Parse(nil, "", list...); meta {
-	case MSG_OPTION:
-		m.Option(key, data)
-	case MSG_APPEND:
-		m.Append(key, data)
-	}
-	return m
-}
-func (m *Message) Split(str string, field string, space string, enter string) *Message {
-	indexs := []int{}
-	fields := kit.Split(field, space, space, space)
-	for i, l := range kit.Split(str, enter, enter, enter) {
+func (m *Message) Split(str string, field string, sp string, nl string) *Message {
+	fields, indexs := kit.Split(field, sp, sp, sp), []int{}
+	for i, l := range kit.Split(str, nl, nl, nl) {
 		if strings.HasPrefix(l, "Binary") {
 			continue
 		}
 		if strings.TrimSpace(l) == "" {
 			continue
 		}
-		if i == 0 && (field == "" || field == "index") {
-			// 表头行
-			fields = kit.Split(l, space, space)
-			if field == "index" {
+		if i == 0 && (field == "" || field == "index") { // 表头行
+			if fields = kit.Split(l, sp, sp); field == "index" {
 				for _, v := range fields {
 					indexs = append(indexs, strings.Index(l, v))
 				}
@@ -71,40 +47,40 @@ func (m *Message) Split(str string, field string, space string, enter string) *M
 			continue
 		}
 
-		if len(indexs) > 0 {
-			// 数据行
+		if len(indexs) > 0 { // 按位切分
 			for i, v := range indexs {
 				if i == len(indexs)-1 {
-					m.Push(kit.Select("some", fields, i), l[v:])
+					m.Push(kit.Select(SP, fields, i), l[v:])
 				} else {
-					m.Push(kit.Select("some", fields, i), l[v:indexs[i+1]])
+					m.Push(kit.Select(SP, fields, i), l[v:indexs[i+1]])
 				}
 			}
 			continue
 		}
 
-		ls := kit.Split(l, space, space)
+		ls := kit.Split(l, sp, sp)
 		for i, v := range ls {
 			if i == len(fields)-1 {
-				m.Push(kit.Select("some", fields, i), strings.Join(ls[i:], space))
+				m.Push(kit.Select(SP, fields, i), strings.Join(ls[i:], sp))
 				break
 			}
-			m.Push(kit.Select("some", fields, i), v)
+			m.Push(kit.Select(SP, fields, i), v)
 		}
 	}
 	return m
 }
 
-func (m *Message) ShowPlugin(pod, ctx, cmd string, arg ...string) {
-	m.Cmdy("web.space", pod, "context", ctx, "command", cmd)
-	m.Option(MSG_PROCESS, PROCESS_FIELD)
-	m.Option(FIELD_PREFIX, arg)
+func (m *Message) FieldsIsDetail() bool {
+	if m.OptionFields() == "detail" {
+		return true
+	}
+	if len(m.meta[MSG_APPEND]) == 2 && m.meta[MSG_APPEND][0] == kit.MDB_KEY && m.meta[MSG_APPEND][1] == kit.MDB_VALUE {
+		return true
+	}
+	return false
 }
 func (m *Message) OptionUserWeb() *url.URL {
 	return kit.ParseURL(m.Option(MSG_USERWEB))
-}
-func (m *Message) SetAppend(key ...string) {
-	m.Set(MSG_APPEND, key...)
 }
 func (m *Message) RenameAppend(from, to string) {
 	for i, v := range m.meta[MSG_APPEND] {
@@ -157,6 +133,8 @@ func (m *Message) cmd(arg ...interface{}) *Message {
 		case Option:
 			opts[val.Name] = val.Value
 
+		case string:
+			args = append(args, v)
 		default:
 			if reflect.Func == reflect.TypeOf(val).Kind() {
 				cbs = val
@@ -185,9 +163,7 @@ func (m *Message) cmd(arg ...interface{}) *Message {
 		}
 
 		// 执行命令
-		m.TryCatch(msg, true, func(msg *Message) {
-			m = ctx.cmd(msg, cmd, key, arg...)
-		})
+		m.TryCatch(msg, true, func(msg *Message) { m = ctx.cmd(msg, cmd, key, arg...) })
 	}
 
 	// 查找命令
@@ -203,7 +179,7 @@ func (m *Message) cmd(arg ...interface{}) *Message {
 
 	// 系统命令
 	if m.Warn(!ok, ErrNotFound, list) {
-		return m.Set(MSG_RESULT).Cmdy("cli.system", list)
+		return m.Set(MSG_RESULT).Cmdy("system", list)
 	}
 	return m
 }
@@ -252,10 +228,12 @@ func (c *Context) _cmd(m *Message, cmd *Command, key string, k string, h *Action
 				order = true
 			}
 			if order {
-				value = kit.Select(value, arg, i)
+				m.Option(name, kit.Select(value, arg, i))
+			} else {
+				if m.Option(name) == "" {
+					m.Option(name, value)
+				}
 			}
-
-			m.Option(name, kit.Select(m.Option(name), value, !strings.HasPrefix(value, "@")))
 		}
 		if !order {
 			for i := 0; i < len(arg)-1; i += 2 {

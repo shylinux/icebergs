@@ -99,7 +99,7 @@ func _serve_params(msg *ice.Message, path string) {
 }
 func _serve_handle(key string, cmd *ice.Command, msg *ice.Message, w http.ResponseWriter, r *http.Request) {
 	// 环境变量
-	msg.Option(mdb.CACHE_LIMIT, "10")
+	msg.Option(ice.CACHE_LIMIT, "10")
 	msg.Option(ice.MSG_OUTPUT, "")
 	msg.Option(ice.MSG_SESSID, "")
 	for _, v := range r.Cookies() {
@@ -173,7 +173,7 @@ func _serve_handle(key string, cmd *ice.Command, msg *ice.Message, w http.Respon
 	if cmds, ok := _serve_login(msg, kit.Simple(msg.Optionv(ice.MSG_CMDS)), w, r); ok {
 		msg.Option(ice.MSG_OPTS, msg.Optionv(ice.MSG_OPTION))
 		msg.Target().Cmd(msg, key, cmds...)
-		msg.Cost(kit.Format("%s %v %v", r.URL.Path, cmds, msg.Format(ice.MSG_APPEND)))
+		msg.Cost(kit.Format("%s %v %v", r.URL.Path, cmds, msg.FormatSize()))
 	}
 
 	// 输出响应
@@ -255,7 +255,6 @@ func init() {
 		)},
 	}, Commands: map[string]*ice.Command{
 		ice.CTX_EXIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			m.Done(true)
 			m.Cmd(SERVE).Table(func(index int, value map[string]string, head []string) {
 				m.Done(value[kit.MDB_STATUS] == tcp.START)
 			})

@@ -58,7 +58,7 @@ func _story_index(m *ice.Message, name string, withdata bool) {
 func _story_history(m *ice.Message, name string) {
 	// 历史记录
 	list := m.Cmd(STORY, INDEX, name).Append(LIST)
-	for i := 0; i < kit.Int(kit.Select("30", m.Option(mdb.CACHE_LIMIT))) && list != ""; i++ {
+	for i := 0; i < kit.Int(kit.Select("30", m.Option(ice.CACHE_LIMIT))) && list != ""; i++ {
 		m.Richs(STORY, nil, list, func(key string, value map[string]interface{}) {
 			// 直连节点
 			m.Push(key, value, []string{kit.MDB_TIME, kit.MDB_KEY, kit.MDB_COUNT, SCENE, STORY})

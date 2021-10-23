@@ -93,10 +93,10 @@ func init() {
 					m.Option(wiki.TITLE)+" "+m.Option(ice.CMD), m.Result())
 			}},
 		}, Hand: func(m *ice.Message, c *ice.Context, key string, arg ...string) {
-			if m.Options(OPEN_CHAT_ID) {
-				m.Cmdy(TALK, strings.TrimSpace(m.Option("text_without_at_bot")))
-			} else {
+			if m.Option(OPEN_CHAT_ID) == "" {
 				m.Cmdy(DUTY, m.Option(kit.MDB_TYPE), kit.Formats(m.Optionv(ice.MSG_USERDATA)))
+			} else {
+				m.Cmdy(TALK, strings.TrimSpace(m.Option("text_without_at_bot")))
 			}
 		}},
 	}})

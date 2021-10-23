@@ -10,7 +10,7 @@ import (
 )
 
 func _hash_fields(m *ice.Message) []string {
-	return kit.Split(kit.Select("time,hash,type,name,text", kit.Join(kit.Simple(m.Optionv(FIELDS)))))
+	return kit.Split(kit.Select("time,hash,type,name,text", m.OptionFields()))
 }
 func _hash_inputs(m *ice.Message, prefix, chain string, field, value string) {
 	list := map[string]int{}
@@ -57,9 +57,8 @@ func _hash_select(m *ice.Message, prefix, chain, field, value string) {
 		value = kit.MDB_RANDOMS
 	}
 	fields := _hash_fields(m)
-	cb := m.Optionv(kit.Keycb(SELECT))
 	m.Richs(prefix, chain, value, func(key string, val map[string]interface{}) {
-		switch val = kit.GetMeta(val); cb := cb.(type) {
+		switch val = kit.GetMeta(val); cb := m.Optionv(kit.Keycb(SELECT)).(type) {
 		case func(fields []string, value map[string]interface{}):
 			cb(fields, val)
 		default:
@@ -81,7 +80,7 @@ func _hash_export(m *ice.Message, prefix, chain, file string) {
 
 	en := json.NewEncoder(f)
 	en.SetIndent("", "  ")
-	e = en.Encode(m.Confv(prefix, kit.Keys(chain, HASH)))
+	m.Assert(en.Encode(m.Confv(prefix, kit.Keys(chain, HASH))))
 
 	m.Log_EXPORT(kit.MDB_KEY, path.Join(prefix, chain), kit.MDB_FILE, p)
 	m.Conf(prefix, kit.Keys(chain, kit.MDB_HASH), "")
@@ -93,8 +92,7 @@ func _hash_import(m *ice.Message, prefix, chain, file string) {
 	defer f.Close()
 
 	list := map[string]interface{}{}
-	de := json.NewDecoder(f)
-	de.Decode(&list)
+	m.Assert(json.NewDecoder(f).Decode(&list))
 
 	count := 0
 	if m.Conf(prefix, kit.Keys(chain, kit.MDB_META, kit.MDB_SHORT)) == "" {
@@ -115,10 +113,7 @@ func _hash_import(m *ice.Message, prefix, chain, file string) {
 func _hash_prunes(m *ice.Message, prefix, chain string, arg ...string) {
 	fields := _hash_fields(m)
 	m.Richs(prefix, chain, kit.MDB_FOREACH, func(key string, val map[string]interface{}) {
-		if val[kit.MDB_META] != nil {
-			val = val[kit.MDB_META].(map[string]interface{})
-		}
-		switch cb := m.Optionv(kit.Keycb(PRUNES)).(type) {
+		switch val = kit.GetMeta(val); cb := m.Optionv(kit.Keycb(PRUNES)).(type) {
 		case func(string, map[string]interface{}) bool:
 			if !cb(key, val) {
 				return

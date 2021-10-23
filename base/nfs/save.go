@@ -29,7 +29,7 @@ func _defs_file(m *ice.Message, name string, text ...string) {
 }
 func _push_file(m *ice.Message, name string, text ...string) {
 	p := path.Join(m.Option(DIR_ROOT), name)
-	if strings.Contains(p, "/") {
+	if strings.Contains(p, ice.PS) {
 		os.MkdirAll(path.Dir(p), ice.MOD_DIR)
 	}
 
@@ -67,7 +67,7 @@ func _link_file(m *ice.Message, name string, from string) {
 	}
 	os.Remove(name)
 	os.MkdirAll(path.Dir(name), ice.MOD_DIR)
-	os.Link(from, name)
+	m.Warn(os.Link(from, name) != nil, "link err of", from)
 	m.Echo(name)
 }
 

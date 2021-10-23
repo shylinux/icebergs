@@ -88,6 +88,7 @@ func (web *Frame) Start(m *ice.Message, arg ...string) bool {
 	return true
 }
 func (web *Frame) Close(m *ice.Message, arg ...string) bool {
+	m.Done(true)
 	return true
 }
 

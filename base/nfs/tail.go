@@ -56,7 +56,7 @@ func init() {
 					m.Cmdy(DIR, kit.Select("./", arg, 1), PATH).RenameAppend(PATH, FILE)
 					m.ProcessAgain()
 				case kit.MDB_NAME:
-					m.Push(arg[0], kit.Split(m.Option(FILE), "/"))
+					m.Push(arg[0], kit.Split(m.Option(FILE), ice.PS))
 				case kit.MDB_LIMIT:
 					m.Push(arg[0], kit.List("10", "20", "30", "50"))
 				}
@@ -66,10 +66,10 @@ func init() {
 			}},
 		}, mdb.ZoneAction()), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			m.Fields(len(kit.Slice(arg, 0, 2)), "time,name,count,file", m.Config(kit.MDB_FIELD))
-			mdb.SetPage(m, kit.Slice(arg, 2)...)
+			m.OptionPage(kit.Slice(arg, 2)...)
 
 			mdb.ZoneSelect(m.Spawn(c), arg...).Table(func(index int, value map[string]string, head []string) {
-				if strings.Contains(value[kit.MDB_TEXT], m.Option(mdb.CACHE_FILTER)) {
+				if strings.Contains(value[kit.MDB_TEXT], m.Option(ice.CACHE_FILTER)) {
 					m.Push("", value, head)
 				}
 			})

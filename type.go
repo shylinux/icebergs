@@ -65,9 +65,6 @@ type Context struct {
 }
 
 func (c *Context) ID() int32 {
-	if c == nil {
-		return 1
-	}
 	return atomic.AddInt32(&c.id, 1)
 }
 func (c *Context) Cap(key string, arg ...interface{}) string {
@@ -84,10 +81,6 @@ func (c *Context) Server() Server {
 }
 
 func (c *Context) Register(s *Context, x Server, name ...string) *Context {
-	if s.Merge(s); s.Name == "" {
-		s.Name = kit.Split(kit.Split(kit.FileLine(2, 3), ":")[0], "/")[1]
-	}
-
 	for _, n := range name {
 		Name(n, s)
 	}
@@ -99,6 +92,7 @@ func (c *Context) Register(s *Context, x Server, name ...string) *Context {
 	s.root = c.root
 	s.context = c
 	s.server = x
+	s.Merge(s)
 	return s
 }
 func (c *Context) Merge(s *Context) *Context {
@@ -112,28 +106,23 @@ func (c *Context) Merge(s *Context) *Context {
 		c.Commands[CTX_EXIT] = &Command{Hand: func(m *Message, c *Context, cmd string, arg ...string) { m.Save() }}
 	}
 	for k, v := range s.Commands {
-		if o, ok := c.Commands[k]; ok && s != c {
-			func() {
-				switch last, next := o.Hand, v.Hand; k {
-				case CTX_INIT:
-					v.Hand = func(m *Message, c *Context, key string, arg ...string) {
-						last(m, c, key, arg...)
-						next(m, c, key, arg...)
-					}
-				case CTX_EXIT:
-					v.Hand = func(m *Message, c *Context, key string, arg ...string) {
-						next(m, c, key, arg...)
-						last(m, c, key, arg...)
-					}
+		if p, ok := c.Commands[k]; ok && s != c {
+			switch last, next := p.Hand, v.Hand; k {
+			case CTX_INIT:
+				v.Hand = func(m *Message, c *Context, key string, arg ...string) {
+					last(m, c, key, arg...)
+					next(m, c, key, arg...)
 				}
-			}()
+			case CTX_EXIT:
+				v.Hand = func(m *Message, c *Context, key string, arg ...string) {
+					next(m, c, key, arg...)
+					last(m, c, key, arg...)
+				}
+			}
 		}
 
 		if v.Meta == nil {
 			v.Meta = kit.Dict()
-		}
-		if p := kit.Format(v.Meta[kit.MDB_STYLE]); p == "" {
-			v.Meta[kit.MDB_STYLE] = k
 		}
 		if c.Commands[k] = v; v.List == nil {
 			v.List = c.split(v.Name)
@@ -144,12 +133,8 @@ func (c *Context) Merge(s *Context) *Context {
 			if len(help) == 1 || help[1] == "" {
 				help = strings.SplitN(help[0], ":", 2)
 			}
-			kit.Value(v.Meta, kit.Keys("_trans", k), help[0])
-			if len(help) > 1 {
+			if kit.Value(v.Meta, kit.Keys("_trans", k), help[0]); len(help) > 1 {
 				kit.Value(v.Meta, kit.Keys(kit.MDB_TITLE, k), help[1])
-			}
-			if a.Hand == nil {
-				continue
 			}
 			if a.List == nil {
 				a.List = c.split(a.Name)
@@ -198,28 +183,22 @@ func (c *Context) Begin(m *Message, arg ...string) *Context {
 	return c
 }
 func (c *Context) Start(m *Message, arg ...string) bool {
-	wait := make(chan bool)
-
 	m.Hold(1)
 	m.Go(func() {
-		m.Log(LOG_START, c.Cap(CTX_FOLLOW))
+		defer m.Done(true)
+
 		c.Cap(CTX_STATUS, CTX_START)
-		wait <- true
+		m.Log(LOG_START, c.Cap(CTX_FOLLOW))
 
 		if c.start = m; c.server != nil {
 			c.server.Start(m, arg...)
 		}
-		if m.Done(true); m.wait != nil {
-			m.wait <- true
-		}
 	})
-
-	<-wait
 	return true
 }
 func (c *Context) Close(m *Message, arg ...string) bool {
-	m.Log(LOG_CLOSE, c.Cap(CTX_FOLLOW))
 	c.Cap(CTX_STATUS, CTX_CLOSE)
+	m.Log(LOG_CLOSE, c.Cap(CTX_FOLLOW))
 
 	if c.server != nil {
 		return c.server.Close(m, arg...)
@@ -231,7 +210,6 @@ type Message struct {
 	time time.Time
 	code int
 	Hand bool
-	wait chan bool
 
 	meta map[string][]string
 	data map[string]interface{}
@@ -281,11 +259,10 @@ func (m *Message) Source() *Context {
 func (m *Message) Spawn(arg ...interface{}) *Message {
 	msg := &Message{
 		time: time.Now(), code: int(m.target.root.ID()),
-		meta: map[string][]string{},
-		data: map[string]interface{}{},
+		meta: map[string][]string{}, data: map[string]interface{}{},
 
 		message: m, root: m.root,
-		source: m.target, target: m.target, _key: m._key,
+		source: m.target, target: m.target, _cmd: m._cmd, _key: m._key,
 		W: m.W, R: m.R, O: m.O, I: m.I,
 	}
 
@@ -300,24 +277,16 @@ func (m *Message) Spawn(arg ...interface{}) *Message {
 	return msg
 }
 func (m *Message) Start(key string, arg ...string) *Message {
-	m.Search(key+PT, func(p *Context, s *Context) {
-		s.Start(m.Spawn(s), arg...)
-	})
-	return m
-}
-func (m *Message) Starts(name string, help string, arg ...string) *Message {
-	m.wait = make(chan bool)
-	m.target.Spawn(m, name, help, arg...).Begin(m, arg...).Start(m, arg...)
-	<-m.wait
+	m.Search(key+PT, func(p *Context, s *Context) { s.Start(m.Spawn(s), arg...) })
 	return m
 }
 func (m *Message) Travel(cb interface{}) *Message {
 	list := []*Context{m.root.target}
 	for i := 0; i < len(list); i++ {
 		switch cb := cb.(type) {
-		case func(*Context, *Context):
-			// 遍历模块
+		case func(*Context, *Context): // 遍历模块
 			cb(list[i].context, list[i])
+
 		case func(*Context, *Context, string, *Command):
 			ls := []string{}
 			for k := range list[i].Commands {
@@ -331,6 +300,7 @@ func (m *Message) Travel(cb interface{}) *Message {
 				cb(list[i].context, list[i], k, list[i].Commands[k])
 			}
 			m.target = target
+
 		case func(*Context, *Context, string, *Config):
 			ls := []string{}
 			for k := range list[i].Configs {
@@ -338,9 +308,12 @@ func (m *Message) Travel(cb interface{}) *Message {
 			}
 			sort.Strings(ls)
 
+			target := m.target
 			for _, k := range ls { // 配置列表
+				m.target = list[i]
 				cb(list[i].context, list[i], k, list[i].Configs[k])
 			}
+			m.target = target
 		}
 
 		ls := []string{}
@@ -369,9 +342,10 @@ func (m *Message) Search(key string, cb interface{}) *Message {
 	} else if key == PT {
 		p, key = m.target, ""
 	} else if key == ".." {
-		if m.target.context != nil {
-			p, key = m.target.context, ""
+		if m.target.context == nil {
+			return m
 		}
+		p, key = m.target.context, ""
 	} else if strings.Contains(key, PT) {
 		list := strings.Split(key, PT)
 		for _, p = range []*Context{m.target.root, m.target, m.source} {
@@ -390,6 +364,7 @@ func (m *Message) Search(key string, cb interface{}) *Message {
 				break
 			}
 		}
+
 		if m.Warn(p == nil, ErrNotFound, key) {
 			return m
 		}
@@ -398,9 +373,8 @@ func (m *Message) Search(key string, cb interface{}) *Message {
 		p = m.target
 	}
 
-	// 遍历命令
 	switch cb := cb.(type) {
-	case func(key string, cmd *Command):
+	case func(key string, cmd *Command): // 遍历命令
 		if key == "" {
 			for k, v := range p.Commands {
 				cb(k, v)
@@ -417,21 +391,19 @@ func (m *Message) Search(key string, cb interface{}) *Message {
 			break
 		}
 
-		// 查找命令
 		for _, p := range []*Context{p, m.target, m.source} {
 			for s := p; s != nil; s = s.context {
 				if cmd, ok := s.Commands[key]; ok {
-					cb(s.context, s, key, cmd)
+					cb(s.context, s, key, cmd) // 查找命令
 					return m
 				}
 			}
 		}
 	case func(p *Context, s *Context, key string, conf *Config):
-		// 查找配置
-		for _, p := range []*Context{m.target, p, m.source} {
+		for _, p := range []*Context{p, m.target, m.source} {
 			for s := p; s != nil; s = s.context {
 				if cmd, ok := s.Configs[key]; ok {
-					cb(s.context, s, key, cmd)
+					cb(s.context, s, key, cmd) // 查找配置
 					return m
 				}
 			}
@@ -440,6 +412,8 @@ func (m *Message) Search(key string, cb interface{}) *Message {
 		cb(p.context, p, key)
 	case func(p *Context, s *Context):
 		cb(p.context, p)
+	default:
+		m.Error(true, ErrNotImplement)
 	}
 	return m
 }

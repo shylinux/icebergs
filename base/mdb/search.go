@@ -26,7 +26,7 @@ func init() {
 				return
 			}
 
-			m.Option(ice.MSG_FIELDS, kit.Select("ctx,cmd,time,size,type,name,text", kit.Select(m.Option(ice.MSG_FIELDS), arg, 2)))
+			m.OptionFields(kit.Select("ctx,cmd,time,size,type,name,text", kit.Select(m.OptionFields(), arg, 2)))
 			for _, k := range strings.Split(arg[0], ",") {
 				for _, kk := range strings.Split(arg[1], ",") {
 					m.Richs(SEARCH, nil, k, func(key string, value map[string]interface{}) {

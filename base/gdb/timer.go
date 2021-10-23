@@ -43,8 +43,7 @@ const TIMER = "timer"
 func init() {
 	Index.Merge(&ice.Context{Configs: map[string]*ice.Config{
 		TIMER: {Name: TIMER, Help: "定时器", Value: kit.Data(
-			kit.MDB_FIELD, "time,hash,delay,interval,order,next,cmd",
-			TICK, "1s",
+			kit.MDB_FIELD, "time,hash,delay,interval,order,next,cmd", TICK, "1s",
 		)},
 	}, Commands: map[string]*ice.Command{
 		TIMER: {Name: "timer hash id auto create prunes", Help: "定时器", Action: ice.MergeAction(map[string]*ice.Action{

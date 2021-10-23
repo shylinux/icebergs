@@ -9,9 +9,6 @@ import (
 	kit "shylinux.com/x/toolkits"
 )
 
-const (
-	INNER = "inner"
-)
 const ROUTINE = "routine"
 
 func init() {
@@ -27,13 +24,13 @@ func init() {
 				m.Cmdy(mdb.PRUNES, ROUTINE, "", mdb.HASH, kit.MDB_STATUS, cli.STOP)
 				m.Cmdy(mdb.PRUNES, ROUTINE, "", mdb.HASH, kit.MDB_STATUS, cli.ERROR)
 			}},
-			INNER: {Name: "inner", Help: "源码", Hand: func(m *ice.Message, arg ...string) {
+			"inner": {Name: "inner", Help: "源码", Hand: func(m *ice.Message, arg ...string) {
 				ls := kit.Split(m.Option("fileline"), ":")
-				m.ProcessCommand(INNER, []string{path.Dir(ls[0]), path.Base(ls[0]), ls[1]}, arg...)
+				m.ProcessCommand("inner", []string{path.Dir(ls[0]), path.Base(ls[0]), ls[1]}, arg...)
 			}},
 		}, mdb.HashAction()), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			mdb.HashSelect(m, arg...)
-			m.PushAction(INNER, mdb.REMOVE)
+			m.PushAction("inner", mdb.REMOVE)
 		}},
 	}})
 }

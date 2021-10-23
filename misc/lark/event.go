@@ -18,7 +18,7 @@ func init() {
 	Index.Merge(&ice.Context{Commands: map[string]*ice.Command{
 		EVENT: {Name: "event", Help: "事件", Action: map[string]*ice.Action{
 			P2P_CHAT_CREATE: {Name: "", Help: "", Hand: func(m *ice.Message, arg ...string) {
-				if m.Options(OPEN_CHAT_ID) {
+				if m.Option(OPEN_CHAT_ID) != "" {
 					m.Cmdy(SEND, m.Option(APP_ID), m.Option(OPEN_CHAT_ID), m.Conf(APP, kit.Keym(kit.MDB_TEMPLATE, m.Option(kit.MDB_TYPE))))
 				}
 			}},
@@ -27,7 +27,7 @@ func init() {
 			CHAT_DISBAND: {Name: "", Help: "", Hand: func(m *ice.Message, arg ...string) {
 			}},
 			ADD_BOT: {Name: "", Help: "", Hand: func(m *ice.Message, arg ...string) {
-				if m.Options(OPEN_CHAT_ID) {
+				if m.Option(OPEN_CHAT_ID) != "" {
 					m.Cmdy(SEND, m.Option(APP_ID), m.Option(OPEN_CHAT_ID), m.Conf(APP, kit.Keym(kit.MDB_TEMPLATE, m.Option(kit.MDB_TYPE))))
 				}
 			}},

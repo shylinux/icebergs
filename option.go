@@ -22,11 +22,12 @@ func (m *Message) OptionFields(arg ...string) string {
 	if len(arg) > 0 {
 		m.Option(MSG_FIELDS, kit.Join(arg))
 	}
-	return m.Option(MSG_FIELDS)
+	return kit.Join(kit.Simple(m.Optionv(MSG_FIELDS)))
 }
 func (m *Message) OptionPage(arg ...string) {
 	m.Option(CACHE_LIMIT, kit.Select("10", arg, 0))
 	m.Option(CACHE_OFFEND, kit.Select("0", arg, 1))
+	m.Option(CACHE_FILTER, kit.Select("", arg, 2))
 }
 func (m *Message) OptionLoad(file string) *Message {
 	if f, e := os.Open(file); e == nil {
@@ -80,12 +81,9 @@ func (m *Message) Fields(length int, fields ...string) string {
 func (m *Message) Upload(dir string) {
 	up := kit.Simple(m.Optionv(MSG_UPLOAD))
 	if p := path.Join(dir, up[1]); m.Option(MSG_USERPOD) == "" {
-		// 本机文件
-		m.Cmdy("web.cache", "watch", up[0], p)
-	} else {
-		// 下拉文件
-		m.Cmdy("web.spide", DEV, SAVE, p, "GET",
-			kit.MergeURL2(m.Option(MSG_USERWEB), path.Join("/share/cache", up[0])))
+		m.Cmdy("cache", "watch", up[0], p) // 本机文件
+	} else { // 下发文件
+		m.Cmdy("spide", DEV, SAVE, p, "GET", kit.MergeURL2(m.Option(MSG_USERWEB), path.Join("/share/cache", up[0])))
 	}
 }
 func (m *Message) Action(arg ...string) {
@@ -109,7 +107,7 @@ func (m *Message) StatusTimeCountTotal(arg ...interface{}) {
 	m.Status(kit.MDB_TIME, m.Time(), kit.MDB_COUNT, m.FormatSize(), kit.MDB_TOTAL, arg, kit.MDB_COST, m.FormatCost())
 }
 
-func (m *Message) Toast(text string, arg ...interface{}) { // [title [duration]]
+func (m *Message) Toast(text string, arg ...interface{}) { // [title [duration [progress]]]
 	if len(arg) > 1 {
 		switch val := arg[1].(type) {
 		case string:
@@ -120,7 +118,7 @@ func (m *Message) Toast(text string, arg ...interface{}) { // [title [duration]]
 	}
 
 	if m.Option(MSG_USERPOD) == "" {
-		m.Cmd("web.space", m.Option(MSG_DAEMON), "toast", "", text, arg)
+		m.Cmd("space", m.Option(MSG_DAEMON), "toast", "", text, arg)
 	} else {
 		m.Option(MSG_TOAST, kit.Simple(text, arg))
 	}

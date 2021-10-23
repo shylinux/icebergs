@@ -22,7 +22,7 @@ func _trash_create(m *ice.Message, name string) {
 			defer f.Close()
 
 			h := kit.Hashs(f)
-			p := path.Join(m.Conf(TRASH, kit.META_PATH), h[:2], h)
+			p := path.Join(m.Config(kit.MDB_PATH), h[:2], h)
 			os.MkdirAll(path.Dir(p), ice.MOD_DIR)
 			os.Rename(name, p)
 			m.Cmdy(mdb.INSERT, TRASH, "", mdb.HASH, kit.MDB_FILE, p, kit.MDB_FROM, name)

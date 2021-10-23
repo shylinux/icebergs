@@ -95,8 +95,8 @@ func (f *Frame) change(m *ice.Message, ls []string) []string {
 		if target == "~" {
 			target = ""
 		}
-		m.Spawn(f.target).Search(target+".", func(p *ice.Context, s *ice.Context, key string) {
-			m.Info("choice: %s", s.Name)
+		m.Spawn(f.target).Search(target+ice.PT, func(p *ice.Context, s *ice.Context, key string) {
+			m.Log_SELECT(ctx.CONTEXT, s.Name)
 			f.target = s
 		})
 	}
@@ -113,20 +113,14 @@ func (f *Frame) alias(m *ice.Message, ls []string) []string {
 	return ls
 }
 func (f *Frame) parse(m *ice.Message, line string) string {
-	if strings.HasPrefix(line, "<") {
-		fmt.Fprintf(m.O, line)
-		return ""
-	}
-
 	for _, one := range kit.Split(line, ";", ";", ";") {
-		one = strings.TrimSpace(one)
 		msg := m.Spawn(f.target)
-		msg.Option("_cmd", one)
 
-		ls := f.change(msg, f.alias(msg, kit.Split(one)))
+		ls := f.change(msg, f.alias(msg, kit.Split(strings.TrimSpace(one))))
 		if len(ls) == 0 {
 			continue
 		}
+
 		msg.Cmdy(ls[0], ls[1:])
 
 		_args, _ := msg.Optionv(ice.MSG_ARGS).([]interface{})
@@ -176,12 +170,6 @@ func (f *Frame) scan(m *ice.Message, h, line string) *Frame {
 	}
 	return f
 }
-func (f *Frame) close() {
-	if stdin, ok := f.stdin.(io.Closer); ok {
-		stdin.Close()
-	}
-	f.stdin = nil
-}
 
 func (f *Frame) Begin(m *ice.Message, arg ...string) ice.Server {
 	return f
@@ -211,7 +199,7 @@ func (f *Frame) Start(m *ice.Message, arg ...string) bool {
 		f.scan(m, STDIO, "")
 
 	default: // 脚本文件
-		if strings.Contains(m.Option(ice.MSG_SCRIPT), "/") {
+		if strings.Contains(m.Option(ice.MSG_SCRIPT), ice.PS) {
 			f.source = path.Join(path.Dir(m.Option(ice.MSG_SCRIPT)), f.source)
 		}
 		m.Option(ice.MSG_SCRIPT, f.source)
@@ -232,6 +220,10 @@ func (f *Frame) Start(m *ice.Message, arg ...string) bool {
 	return true
 }
 func (f *Frame) Close(m *ice.Message, arg ...string) bool {
+	if stdin, ok := f.stdin.(io.Closer); ok {
+		stdin.Close()
+	}
+	f.stdin = nil
 	return true
 }
 
@@ -259,11 +251,6 @@ func init() {
 			PS2, []interface{}{kit.MDB_COUNT, " ", TARGET, "> "},
 		)},
 	}, Commands: map[string]*ice.Command{
-		ice.CTX_EXIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			if f, ok := m.Target().Server().(*Frame); ok {
-				f.close()
-			}
-		}},
 		SOURCE: {Name: "source file", Help: "脚本解析", Action: ice.MergeAction(map[string]*ice.Action{
 			mdb.REPEAT: {Name: "repeat", Help: "执行", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmdy(SCREEN, m.Option(kit.MDB_TEXT))
@@ -300,7 +287,7 @@ func init() {
 		}},
 		RETURN: {Name: "return", Help: "结束脚本", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			f := m.Optionv(FRAME).(*Frame)
-			f.close()
+			f.Close(m, arg...)
 		}},
 	}})
 }

@@ -21,7 +21,7 @@ func _host_list(m *ice.Message, name string) {
 
 			if ips, e := v.Addrs(); m.Assert(e) {
 				for _, x := range ips {
-					ip := strings.Split(x.String(), "/")
+					ip := strings.Split(x.String(), ice.PS)
 					if strings.Contains(ip[0], ":") || len(ip) == 0 {
 						continue
 					}

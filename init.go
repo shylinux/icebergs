@@ -10,16 +10,14 @@ import (
 	log "shylinux.com/x/toolkits/logs"
 )
 
-type Frame struct {
-	wait chan int
-}
+type Frame struct{}
 
 func (f *Frame) Spawn(m *Message, c *Context, arg ...string) Server {
 	return &Frame{}
 }
 func (f *Frame) Begin(m *Message, arg ...string) Server {
 	m.Log(LOG_BEGIN, ICE)
-	defer m.Cost("begin ice")
+	defer m.Cost(LOG_BEGIN, ICE)
 
 	list := map[*Context]*Message{m.target: m}
 	m.Travel(func(p *Context, s *Context) {
@@ -33,24 +31,25 @@ func (f *Frame) Begin(m *Message, arg ...string) Server {
 }
 func (f *Frame) Start(m *Message, arg ...string) bool {
 	m.Log(LOG_START, ICE)
-	defer m.Cost("start ice")
+	defer m.Cost(LOG_START, ICE)
 
 	m.Cap(CTX_STATUS, CTX_START)
-	m.Cap(CTX_STREAM, strings.Split(m.Time(), " ")[1])
+	m.Cap(CTX_STREAM, strings.Split(m.Time(), SP)[1])
 
 	m.Cmdy(INIT, arg)
+
 	m.target.root.wg = &sync.WaitGroup{}
-	for _, k := range kit.Split(kit.Select("ssh,gdb,log")) {
+	for _, k := range kit.Split("log,gdb,ssh") {
 		m.Start(k)
 	}
+	defer m.TryCatch(m, true, func(msg *Message) { m.target.root.wg.Wait() })
+
 	m.Cmdy(arg)
 	return true
 }
 func (f *Frame) Close(m *Message, arg ...string) bool {
-	m.TryCatch(m, true, func(m *Message) { m.target.wg.Wait() })
-
 	m.Log(LOG_CLOSE, ICE)
-	defer m.Cost("close ice")
+	defer m.Cost(LOG_CLOSE, ICE)
 
 	list := map[*Context]*Message{m.target: m}
 	m.Travel(func(p *Context, s *Context) {
@@ -63,7 +62,7 @@ func (f *Frame) Close(m *Message, arg ...string) bool {
 }
 
 var Index = &Context{Name: "ice", Help: "冰山模块", Caches: map[string]*Cache{
-	CTX_FOLLOW: {Value: ICE}, CTX_STREAM: {Value: SHY}, CTX_STATUS: {Value: CTX_BEGIN},
+	CTX_FOLLOW: {Value: ICE}, CTX_STATUS: {Value: CTX_BEGIN}, CTX_STREAM: {Value: SHY},
 }, Configs: map[string]*Config{
 	HELP: {Value: kit.Data("index", Info.Help)},
 }, Commands: map[string]*Command{
@@ -77,14 +76,15 @@ var Index = &Context{Name: "ice", Help: "冰山模块", Caches: map[string]*Cach
 	}},
 	INIT: {Name: "init", Help: "启动", Hand: func(m *Message, c *Context, cmd string, arg ...string) {
 		m.root.Cmd(CTX_INIT)
-		m.Cmd("ssh.source", ETC_INIT_SHY)
+		m.Cmd("source", ETC_INIT_SHY)
 	}},
 	HELP: {Name: "help", Help: "帮助", Hand: func(m *Message, c *Context, cmd string, arg ...string) {
 		m.Echo(m.Config("index"))
 	}},
 	EXIT: {Name: "exit", Help: "结束", Hand: func(m *Message, c *Context, cmd string, arg ...string) {
+		defer c.server.(*Frame).Close(m.root.Spawn(), arg...)
 		m.root.Option(EXIT, kit.Select("0", arg, 0))
-		m.Cmd("ssh.source", ETC_EXIT_SHY)
+		m.Cmd("source", ETC_EXIT_SHY)
 		m.root.Cmd(CTX_EXIT)
 	}},
 	CTX_EXIT: {Hand: func(m *Message, c *Context, cmd string, arg ...string) {
@@ -96,7 +96,6 @@ var Index = &Context{Name: "ice", Help: "冰山模块", Caches: map[string]*Cach
 				})
 			}
 		})
-		c.server.(*Frame).wait <- kit.Int(m.root.Option(EXIT))
 	}},
 }}
 var Pulse = &Message{
@@ -115,7 +114,7 @@ func Run(arg ...string) string {
 		arg = append(arg, HELP)
 	}
 
-	frame := &Frame{wait: make(chan int, 1)}
+	frame := &Frame{}
 	Index.Merge(Index)
 	Index.server = frame
 	Index.root = Index
@@ -124,17 +123,12 @@ func Run(arg ...string) string {
 	switch kit.Select("", arg, 0) {
 	case "space", "serve":
 		if log.LogDisable = false; frame.Begin(Pulse.Spawn(), arg...).Start(Pulse, arg...) {
-			frame.Close(Pulse.Spawn(), arg...)
+			os.Exit(kit.Int(Pulse.Option(EXIT)))
 		}
-
-		os.Exit(<-frame.wait)
 
 	default:
 		if Pulse.Cmdy(arg); Pulse.Result() == "" {
 			Pulse.Table()
-		}
-		if strings.TrimSpace(Pulse.Result()) == "" {
-			Pulse.Set(MSG_RESULT).Cmdy("cli.system", arg)
 		}
 		Pulse.Sleep("10ms")
 	}

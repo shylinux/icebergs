@@ -145,10 +145,10 @@ func init() {
 	}, Commands: map[string]*ice.Command{
 		"/cache/": {Name: "/cache/", Help: "缓存池", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			m.Richs(CACHE, nil, arg[0], func(key string, value map[string]interface{}) {
-				if kit.Format(value[kit.MDB_FILE]) != "" {
-					m.RenderDownload(value[kit.MDB_FILE])
-				} else {
+				if kit.Format(value[kit.MDB_FILE]) == "" {
 					m.RenderResult(value[kit.MDB_TEXT])
+				} else {
+					m.RenderDownload(value[kit.MDB_FILE])
 				}
 			})
 		}},

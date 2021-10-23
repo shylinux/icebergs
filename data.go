@@ -24,7 +24,7 @@ func (m *Message) Config(key string, arg ...interface{}) string {
 	return m.Conf(m.PrefixKey(), kit.Keym(key))
 }
 func (m *Message) ConfigSimple(key string) []string {
-	return []string{key, m.Conf(m.PrefixKey(), kit.Keym(key))}
+	return []string{key, m.Config(key)}
 }
 func (m *Message) Save(arg ...string) *Message {
 	if len(arg) == 0 {
@@ -36,7 +36,7 @@ func (m *Message) Save(arg ...string) *Message {
 	for _, k := range arg {
 		list = append(list, m.Prefix(k))
 	}
-	m.Cmd("ctx.config", SAVE, m.Prefix("json"), list)
+	m.Cmd("config", SAVE, m.Prefix("json"), list)
 	return m
 }
 func (m *Message) Load(arg ...string) *Message {
@@ -44,7 +44,7 @@ func (m *Message) Load(arg ...string) *Message {
 	for _, k := range arg {
 		list = append(list, m.Prefix(k))
 	}
-	m.Cmd("ctx.config", LOAD, m.Prefix("json"), list)
+	m.Cmd("config", LOAD, m.Prefix("json"), list)
 	return m
 }
 
@@ -57,7 +57,6 @@ func (m *Message) Richs(prefix string, chain interface{}, raw interface{}, cb in
 	switch cb := cb.(type) {
 	case func(*sync.Mutex, string, map[string]interface{}):
 		mu := &sync.Mutex{}
-
 		wg := &sync.WaitGroup{}
 		defer wg.Wait()
 

@@ -39,6 +39,7 @@ func (f *Frame) Start(m *ice.Message, arg ...string) bool {
 	return true
 }
 func (f *Frame) Close(m *ice.Message, arg ...string) bool {
+	f.e <- true
 	return true
 }
 
@@ -49,9 +50,6 @@ var Index = &ice.Context{Name: GDB, Help: "事件模块", Commands: map[string]*
 		m.Load(TIMER)
 	}},
 	ice.CTX_EXIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-		if f, ok := m.Target().Server().(*Frame); ok {
-			f.e <- true
-		}
 		m.Save(TIMER)
 	}},
 }}

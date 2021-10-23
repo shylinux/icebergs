@@ -61,6 +61,8 @@ func (f *Frame) Start(m *ice.Message, arg ...string) bool {
 	return true
 }
 func (f *Frame) Close(m *ice.Message, arg ...string) bool {
+	ice.Info.Log = nil
+	close(f.p)
 	return true
 }
 
@@ -90,30 +92,32 @@ var Index = &ice.Context{Name: "log", Help: "日志模块", Configs: map[string]
 		WATCH, kit.Dict(kit.MDB_PATH, path.Join(ice.VAR_LOG, "watch.log"), kit.MDB_LIST, []string{
 			ice.LOG_CREATE, ice.LOG_REMOVE,
 			ice.LOG_INSERT, ice.LOG_DELETE,
-			ice.LOG_SELECT, ice.LOG_MODIFY,
+			ice.LOG_MODIFY, ice.LOG_SELECT,
 			ice.LOG_EXPORT, ice.LOG_IMPORT,
 		}),
 		BENCH, kit.Dict(kit.MDB_PATH, path.Join(ice.VAR_LOG, "bench.log"), kit.MDB_LIST, []string{}),
 		ERROR, kit.Dict(kit.MDB_PATH, path.Join(ice.VAR_LOG, "error.log"), kit.MDB_LIST, []string{
-			ice.LOG_WARN, ice.LOG_ERROR,
+			ice.LOG_WARN, ice.LOG_ERROR, ice.LOG_DEBUG,
 		}),
 		TRACE, kit.Dict(kit.MDB_PATH, path.Join(ice.VAR_LOG, "trace.log"), kit.MDB_LIST, []string{}),
 	)},
 	VIEW: {Name: VIEW, Help: "日志格式", Value: kit.Dict(
 		GREEN, kit.Dict(PREFIX, "\033[32m", SUFFIX, "\033[0m", kit.MDB_LIST, []string{
-			ice.LOG_START, ice.LOG_SERVE,
-			ice.LOG_CMDS,
+			ice.LOG_START, ice.LOG_SERVE, ice.LOG_CMDS,
 		}),
 		YELLOW, kit.Dict(PREFIX, "\033[33m", SUFFIX, "\033[0m", kit.MDB_LIST, []string{
 			ice.LOG_AUTH, ice.LOG_COST,
 		}),
 		RED, kit.Dict(PREFIX, "\033[31m", SUFFIX, "\033[0m", kit.MDB_LIST, []string{
-			ice.LOG_WARN, ice.LOG_CLOSE,
+			ice.LOG_CLOSE, ice.LOG_WARN,
 		}),
 	)},
 	SHOW: {Name: SHOW, Help: "日志分流", Value: kit.Dict()},
 }, Commands: map[string]*ice.Command{
 	ice.CTX_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		if log.LogDisable {
+			return // 禁用日志
+		}
 		m.Confm(VIEW, nil, func(key string, value map[string]interface{}) {
 			kit.Fetch(value[kit.MDB_LIST], func(index int, k string) {
 				m.Conf(SHOW, kit.Keys(k, VIEW), key)
@@ -123,9 +127,6 @@ var Index = &ice.Context{Name: "log", Help: "日志模块", Configs: map[string]
 			kit.Fetch(value[kit.MDB_LIST], func(index int, k string) {
 				m.Conf(SHOW, kit.Keys(k, FILE), key)
 			})
-			if log.LogDisable {
-				return // 禁用日志
-			}
 			// 日志文件
 			if f, p, e := kit.Create(kit.Format(value[kit.MDB_PATH])); m.Assert(e) {
 				m.Cap(ice.CTX_STREAM, path.Base(p))
@@ -135,10 +136,6 @@ var Index = &ice.Context{Name: "log", Help: "日志模块", Configs: map[string]
 		})
 	}},
 	ice.CTX_EXIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-		if f, ok := m.Target().Server().(*Frame); ok { // 关闭日志
-			ice.Info.Log = nil
-			close(f.p)
-		}
 	}},
 }}
 

@@ -84,7 +84,7 @@ func _input_save(m *ice.Message, file string, lib ...string) {
 	if f, p, e := kit.Create(file); m.Assert(e) {
 		defer f.Close()
 		n := 0
-		m.Option(mdb.CACHE_LIMIT, -2)
+		m.Option(ice.CACHE_LIMIT, -2)
 		for _, lib := range lib {
 			m.Richs(INPUT, "", lib, func(key string, value map[string]interface{}) {
 				m.Grows(INPUT, kit.Keys(kit.MDB_HASH, key), "", "", func(index int, value map[string]interface{}) {
@@ -174,7 +174,7 @@ var Index = &ice.Context{Name: INPUT, Help: "输入法",
 				_input_load(m, kit.Select("usr/wubi-dict/person", m.Option(FILE)), m.Option(ZONE))
 			}},
 		}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			_input_find(m, arg[0], arg[1], m.Option(mdb.CACHE_LIMIT))
+			_input_find(m, arg[0], arg[1], m.Option(ice.CACHE_LIMIT))
 		}},
 	},
 }

@@ -83,7 +83,7 @@ func _space_handle(m *ice.Message, safe bool, send map[string]*ice.Message, c *w
 			socket, msg := c, m.Spawn(b)
 			target := kit.Simple(msg.Optionv(ice.MSG_TARGET))
 			source := kit.Simple(msg.Optionv(ice.MSG_SOURCE), name)
-			msg.Log("recv", "%v->%v %s %v", source, target, msg.Detailv(), msg.Format(kit.MDB_META))
+			msg.Log("recv", "%v->%v %s %v", source, target, msg.Detailv(), msg.FormatMeta())
 
 			if len(target) == 0 { // 本地执行
 				msg.Log_AUTH(aaa.USERROLE, msg.Option(ice.MSG_USERROLE), aaa.USERNAME, msg.Option(ice.MSG_USERNAME))
@@ -134,15 +134,15 @@ func _space_exec(msg *ice.Message, source, target []string, c *websocket.Conn, n
 
 	msg.Set(ice.MSG_OPTS)
 	_space_echo(msg, []string{}, kit.Revert(source)[1:], c, name)
-	msg.Cost(kit.Format("%v->%v %v %v", source, target, msg.Detailv(), msg.Format(ice.MSG_APPEND)))
+	msg.Cost(kit.Format("%v->%v %v %v", source, target, msg.Detailv(), msg.FormatSize()))
 }
 func _space_echo(msg *ice.Message, source, target []string, c *websocket.Conn, name string) {
 	msg.Optionv(ice.MSG_SOURCE, source)
 	msg.Optionv(ice.MSG_TARGET, target)
-	msg.Assert(c.WriteMessage(1, []byte(msg.Format(kit.MDB_META))))
+	msg.Assert(c.WriteMessage(1, []byte(msg.FormatMeta())))
 
 	target = append([]string{name}, target...)
-	msg.Log("send", "%v->%v %v %v", source, target, msg.Detailv(), msg.Format(kit.MDB_META))
+	msg.Log("send", "%v->%v %v %v", source, target, msg.Detailv(), msg.FormatMeta())
 }
 func _space_send(m *ice.Message, space string, arg ...string) {
 	if space == "" || space == MYSELF || space == ice.Info.NodeName {

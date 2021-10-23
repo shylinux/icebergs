@@ -7,6 +7,27 @@ import (
 	kit "shylinux.com/x/toolkits"
 )
 
+func Parse(m *ice.Message, meta string, key string, arg ...string) *ice.Message {
+	list := []string{}
+	for _, line := range kit.Split(strings.Join(arg, ice.SP), ice.NL) {
+		ls := kit.Split(line)
+		for i := 0; i < len(ls); i++ {
+			if strings.HasPrefix(ls[i], "#") {
+				ls = ls[:i]
+				break
+			}
+		}
+		list = append(list, ls...)
+	}
+
+	switch data := kit.Parse(nil, "", list...); meta {
+	case ice.MSG_OPTION:
+		m.Option(key, data)
+	case ice.MSG_APPEND:
+		m.Append(key, data)
+	}
+	return m
+}
 func _field_show(m *ice.Message, name, text string, arg ...string) {
 	// 命令参数
 	meta, cmds := kit.Dict(), kit.Split(text)
@@ -32,7 +53,7 @@ func _field_show(m *ice.Message, name, text string, arg ...string) {
 			m.Option(arg[i], kit.Split(strings.TrimSuffix(strings.TrimPrefix(arg[i+1], "["), "]")))
 			kit.Value(meta, arg[i], m.Optionv(arg[i]))
 		} else {
-			m.Parse(ice.MSG_OPTION, arg[i], arg[i+1])
+			Parse(m, ice.MSG_OPTION, arg[i], arg[i+1])
 			kit.Value(meta, arg[i], m.Optionv(arg[i]))
 		}
 

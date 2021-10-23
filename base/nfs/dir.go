@@ -16,7 +16,7 @@ import (
 )
 
 func _dir_list(m *ice.Message, root string, name string, level int, deep bool, dir_type string, dir_reg *regexp.Regexp, fields []string) *ice.Message {
-	if !_cat_right(m, name) {
+	if !_cat_right(m, path.Join(root, name)) {
 		return m // 没有权限
 	}
 
@@ -32,10 +32,10 @@ func _dir_list(m *ice.Message, root string, name string, level int, deep bool, d
 	}
 
 	for _, f := range fs {
-		if f.Name() == "." || f.Name() == ".." {
+		if f.Name() == ice.PT || f.Name() == ".." {
 			continue
 		}
-		if strings.HasPrefix(f.Name(), ".") && dir_type != TYPE_ALL {
+		if strings.HasPrefix(f.Name(), ice.PT) && dir_type != TYPE_ALL {
 			continue
 		}
 
@@ -61,11 +61,11 @@ func _dir_list(m *ice.Message, root string, name string, level int, deep bool, d
 						m.Push(field, strings.Repeat("| ", level-1)+"|-"+f.Name())
 					}
 				case "full":
-					m.Push(field, path.Join(root, name, f.Name())+kit.Select("", "/", f.IsDir()))
+					m.Push(field, path.Join(root, name, f.Name())+kit.Select("", ice.PS, f.IsDir()))
 				case kit.MDB_PATH:
-					m.Push(field, path.Join(name, f.Name())+kit.Select("", "/", f.IsDir()))
+					m.Push(field, path.Join(name, f.Name())+kit.Select("", ice.PS, f.IsDir()))
 				case kit.MDB_FILE:
-					m.Push(field, f.Name()+kit.Select("", "/", f.IsDir()))
+					m.Push(field, f.Name()+kit.Select("", ice.PS, f.IsDir()))
 				case kit.MDB_NAME:
 					m.Push(field, f.Name())
 

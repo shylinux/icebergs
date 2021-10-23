@@ -46,12 +46,6 @@ const (
 	PREV = "prev"
 )
 const (
-	CACHE_LIMIT  = "cache.limit"
-	CACHE_FIELD  = "cache.field"
-	CACHE_VALUE  = "cache.value"
-	CACHE_OFFEND = "cache.offend"
-	CACHE_FILTER = "cache.filter"
-
 	CACHE_CLEAR_ON_EXIT = "cache.clear.on.exit"
 )
 
@@ -92,19 +86,12 @@ func NextPageLimit(m *ice.Message, total string, arg ...string) {
 		m.ProcessHold()
 	}
 }
-func SetPage(m *ice.Message, arg ...string) {
-	m.Option(CACHE_LIMIT, kit.Select("10", arg, 0))
-	m.Option(CACHE_OFFEND, kit.Select("0", arg, 1))
-	m.Option(CACHE_FILTER, kit.Select("", arg, 2))
-}
 
 const MDB = "mdb"
 
 var Index = &ice.Context{Name: MDB, Help: "数据模块", Commands: map[string]*ice.Command{
-	ice.CTX_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-	}},
-	ice.CTX_EXIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-	}},
+	ice.CTX_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {}},
+	ice.CTX_EXIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {}},
 	INSERT: {Name: "insert key sub type arg...", Help: "添加", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 		switch arg[2] {
 		case ZONE:
@@ -168,11 +155,11 @@ var Index = &ice.Context{Name: MDB, Help: "数据模块", Commands: map[string]*
 	INPUTS: {Name: "inputs key sub type field value", Help: "补全", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 		switch arg[2] {
 		case ZONE:
-			_list_inputs(m, arg[0], _domain_chain(m, kit.Keys(arg[1], kit.KeyHash(arg[3]))), kit.Select("name", arg, 4), kit.Select("", arg, 5))
+			_list_inputs(m, arg[0], _domain_chain(m, kit.Keys(arg[1], kit.KeyHash(arg[3]))), kit.Select(kit.MDB_NAME, arg, 4), kit.Select("", arg, 5))
 		case HASH:
-			_hash_inputs(m, arg[0], _domain_chain(m, arg[1]), kit.Select("name", arg, 3), kit.Select("", arg, 4))
+			_hash_inputs(m, arg[0], _domain_chain(m, arg[1]), kit.Select(kit.MDB_NAME, arg, 3), kit.Select("", arg, 4))
 		case LIST:
-			_list_inputs(m, arg[0], _domain_chain(m, arg[1]), kit.Select("name", arg, 3), kit.Select("", arg, 4))
+			_list_inputs(m, arg[0], _domain_chain(m, arg[1]), kit.Select(kit.MDB_NAME, arg, 3), kit.Select("", arg, 4))
 		}
 	}},
 	PRUNES: {Name: "prunes key sub type [field value]...", Help: "清理", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {

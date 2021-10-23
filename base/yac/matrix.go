@@ -418,7 +418,7 @@ func init() {
 				m.ProcessInner()
 			}},
 		}, Hand: func(m *ice.Message, c *ice.Context, key string, arg ...string) {
-			m.Option(mdb.CACHE_LIMIT, -1)
+			m.Option(ice.CACHE_LIMIT, -1)
 			if m.Action(mdb.CREATE); len(arg) == 0 { // 矩阵列表
 				m.Fields(len(arg), "time,name,npage,nhash")
 				m.Cmdy(mdb.SELECT, m.Prefix(MATRIX), "", mdb.HASH)

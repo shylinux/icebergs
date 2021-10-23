@@ -1,7 +1,6 @@
 package ice
 
 import (
-	"net/url"
 	"path"
 	"strings"
 
@@ -42,6 +41,37 @@ func Render(m *Message, cmd string, args ...interface{}) string {
 		return arg[0]
 	}
 	return ""
+}
+
+func (m *Message) Render(cmd string, args ...interface{}) *Message {
+	m.Optionv(MSG_OUTPUT, cmd)
+	m.Optionv(MSG_ARGS, args)
+
+	switch cmd {
+	case RENDER_TEMPLATE: // text [data [type]]
+		if len(args) == 1 {
+			args = append(args, m)
+		}
+		if res, err := kit.Render(args[0].(string), args[1]); m.Assert(err) {
+			m.Echo(string(res))
+		}
+	}
+	return m
+}
+func (m *Message) RenderResult(args ...interface{}) *Message {
+	return m.Render(RENDER_RESULT, args...)
+}
+func (m *Message) RenderTemplate(args ...interface{}) *Message {
+	return m.Render(RENDER_TEMPLATE, args...)
+}
+func (m *Message) RenderRedirect(args ...interface{}) *Message {
+	return m.Render(RENDER_REDIRECT, args...)
+}
+func (m *Message) RenderDownload(args ...interface{}) *Message {
+	return m.Render(RENDER_DOWNLOAD, args...)
+}
+func (m *Message) RenderIndex(serve, repos string, file ...string) *Message {
+	return m.RenderDownload(path.Join(m.Conf(serve, kit.Keym(repos, kit.MDB_PATH)), kit.Select(m.Conf(serve, kit.Keym(repos, kit.MDB_INDEX)), path.Join(file...))))
 }
 
 func (m *Message) IsCliUA() bool {
@@ -98,13 +128,13 @@ func (m *Message) PushPodCmd(cmd string, arg ...string) {
 		})
 	}
 
-	m.Cmd("web.space").Table(func(index int, value map[string]string, head []string) {
+	m.Cmd("space").Table(func(index int, value map[string]string, head []string) {
 		switch value[kit.MDB_TYPE] {
-		case "worker", "server":
+		case "server", "worker":
 			if value[kit.MDB_NAME] == Info.HostName {
 				break
 			}
-			m.Cmd("web.space", value[kit.MDB_NAME], m.Prefix(cmd), arg).Table(func(index int, val map[string]string, head []string) {
+			m.Cmd("space", value[kit.MDB_NAME], m.Prefix(cmd), arg).Table(func(index int, val map[string]string, head []string) {
 				val[POD] = kit.Keys(value[kit.MDB_NAME], val[POD])
 				m.Push("", val, head)
 			})
@@ -117,28 +147,16 @@ func (m *Message) PushSearch(args ...interface{}) {
 		switch k {
 		case POD:
 			m.Push(k, kit.Select("", data[k]))
-			// m.Push(k, kit.Select(m.Option(MSG_USERPOD), data[POD]))
 		case CTX:
-			m.Push(k, kit.Select(m.Prefix(), data[CTX]))
+			m.Push(k, kit.Select(m.Prefix(), data[k]))
 		case CMD:
-			m.Push(k, kit.Select(m.CommandKey(), data[CMD]))
+			m.Push(k, kit.Select(m.CommandKey(), data[k]))
 		case kit.MDB_TIME:
 			m.Push(k, kit.Select(m.Time(), data[k]))
 		default:
 			m.Push(k, kit.Select("", data[k]))
 		}
 	}
-}
-func (m *Message) PushSearchWeb(cmd string, name string) {
-	msg := m.Spawn()
-	msg.Option(MSG_FIELDS, "type,name,text")
-	msg.Cmd("mdb.select", m.Prefix(cmd), "", kit.MDB_HASH).Table(func(index int, value map[string]string, head []string) {
-		text := kit.MergeURL(value[kit.MDB_TEXT], value[kit.MDB_NAME], name)
-		if value[kit.MDB_NAME] == "" {
-			text = kit.MergeURL(value[kit.MDB_TEXT] + url.QueryEscape(name))
-		}
-		m.PushSearch(CMD, cmd, kit.MDB_TYPE, kit.Select("", value[kit.MDB_TYPE]), kit.MDB_NAME, name, kit.MDB_TEXT, text)
-	})
 }
 
 func (m *Message) EchoDownload(arg ...interface{}) *Message { // [name] file
@@ -161,35 +179,4 @@ func (m *Message) EchoImages(src string, arg ...string) *Message { // src [size]
 }
 func (m *Message) EchoVideos(src string, arg ...string) *Message { // src [size]
 	return m.Echo(Render(m, RENDER_VIDEOS, src, arg))
-}
-
-func (m *Message) Render(cmd string, args ...interface{}) *Message {
-	m.Optionv(MSG_OUTPUT, cmd)
-	m.Optionv(MSG_ARGS, args)
-
-	switch cmd {
-	case RENDER_TEMPLATE: // text [data [type]]
-		if len(args) == 1 {
-			args = append(args, m)
-		}
-		if res, err := kit.Render(args[0].(string), args[1]); m.Assert(err) {
-			m.Echo(string(res))
-		}
-	}
-	return m
-}
-func (m *Message) RenderResult(args ...interface{}) *Message {
-	return m.Render(RENDER_RESULT, args...)
-}
-func (m *Message) RenderTemplate(args ...interface{}) *Message {
-	return m.Render(RENDER_TEMPLATE, args...)
-}
-func (m *Message) RenderRedirect(args ...interface{}) *Message {
-	return m.Render(RENDER_REDIRECT, args...)
-}
-func (m *Message) RenderDownload(args ...interface{}) *Message {
-	return m.Render(RENDER_DOWNLOAD, args...)
-}
-func (m *Message) RenderIndex(serve, repos string, file ...string) *Message {
-	return m.RenderDownload(path.Join(m.Conf(serve, kit.Keym(repos, kit.MDB_PATH)), kit.Select(m.Conf(serve, kit.Keym(repos, kit.MDB_INDEX)), path.Join(file...))))
 }

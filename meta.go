@@ -1,7 +1,6 @@
 package ice
 
 import (
-	"fmt"
 	"sort"
 	"strconv"
 	"strings"
@@ -26,9 +25,13 @@ func (m *Message) Set(key string, arg ...string) *Message {
 			return m
 		}
 	default:
-		if len(m.meta[MSG_APPEND]) == 2 && m.meta[MSG_APPEND][0] == kit.MDB_KEY && m.meta[MSG_APPEND][1] == kit.MDB_VALUE {
+		if m.FieldsIsDetail() {
 			for i := 0; i < len(m.meta[kit.MDB_KEY]); i++ {
 				if m.meta[kit.MDB_KEY][i] == key {
+					if len(arg) > 0 {
+						m.meta[kit.MDB_VALUE][i] = arg[0]
+						return m
+					}
 					for ; i < len(m.meta[kit.MDB_KEY])-1; i++ {
 						m.meta[kit.MDB_KEY][i] = m.meta[kit.MDB_KEY][i+1]
 						m.meta[kit.MDB_VALUE][i] = m.meta[kit.MDB_VALUE][i+1]
@@ -38,12 +41,9 @@ func (m *Message) Set(key string, arg ...string) *Message {
 					break
 				}
 			}
-			break
+			return m
 		}
 		delete(m.meta, key)
-		for _, k := range arg {
-			delete(m.meta, k)
-		}
 	}
 	return m.Add(key, arg...)
 }
@@ -68,26 +68,11 @@ func (m *Message) Cut(fields ...string) *Message {
 }
 func (m *Message) Push(key string, value interface{}, arg ...interface{}) *Message {
 	switch value := value.(type) {
-	case map[string]string:
-		head := kit.Simple(arg)
-		if len(head) == 0 || (len(head) == 1 && head[0] == "detail") {
-			head = head[:0]
-			for k := range value {
-				head = append(head, k)
-			}
-			sort.Strings(head)
-		}
-
-		for _, k := range head {
-			m.Push(k, value[k])
-		}
-
 	case map[string]interface{}:
-		// 键值排序
 		head := kit.Simple()
 		if len(arg) > 0 {
 			head = kit.Simple(arg[0])
-		} else {
+		} else { // 键值排序
 			for k := range kit.KeyValue(map[string]interface{}{}, "", value) {
 				head = append(head, k)
 			}
@@ -104,7 +89,7 @@ func (m *Message) Push(key string, value interface{}, arg ...interface{}) *Messa
 			var v interface{}
 			switch k {
 			case kit.MDB_KEY, kit.MDB_HASH:
-				if key != "" {
+				if key != "" && key != "detail" {
 					v = key
 					break
 				}
@@ -129,8 +114,23 @@ func (m *Message) Push(key string, value interface{}, arg ...interface{}) *Messa
 			}
 		}
 
+	case map[string]string:
+		head := kit.Simple()
+		if len(arg) > 0 {
+			head = kit.Simple(arg[0])
+		} else { // 键值排序
+			for k := range value {
+				head = append(head, k)
+			}
+			sort.Strings(head)
+		}
+
+		for _, k := range head {
+			m.Push(k, value[k])
+		}
+
 	default:
-		if m.Option(MSG_FIELDS) == "detail" || (len(m.meta[MSG_APPEND]) == 2 && m.meta[MSG_APPEND][0] == kit.MDB_KEY && m.meta[MSG_APPEND][1] == kit.MDB_VALUE) {
+		if m.FieldsIsDetail() {
 			if key != kit.MDB_KEY || key != kit.MDB_VALUE {
 				m.Add(MSG_APPEND, kit.MDB_KEY, key)
 				m.Add(MSG_APPEND, kit.MDB_VALUE, kit.Format(value))
@@ -145,59 +145,31 @@ func (m *Message) Push(key string, value interface{}, arg ...interface{}) *Messa
 	return m
 }
 func (m *Message) Echo(str string, arg ...interface{}) *Message {
-	if len(arg) > 0 {
-		str = fmt.Sprintf(str, arg...)
-	}
-	m.meta[MSG_RESULT] = append(m.meta[MSG_RESULT], str)
+	m.meta[MSG_RESULT] = append(m.meta[MSG_RESULT], kit.Format(str, arg...))
 	return m
 }
 func (m *Message) Copy(msg *Message, arg ...string) *Message {
-	if m == msg {
-		return m
-	}
-	if m == nil {
+	if m == nil || m == msg {
 		return m
 	}
 	if len(arg) > 0 { // 精确复制
 		for _, k := range arg[1:] {
-			if kit.IndexOf(m.meta[arg[0]], k) == -1 {
-				m.meta[arg[0]] = append(m.meta[arg[0]], k)
-			}
-			m.meta[k] = append(m.meta[k], msg.meta[k]...)
+			m.Add(arg[0], kit.Simple(k, msg.meta[k])...)
 		}
 		return m
 	}
 
-	for _, k := range msg.meta[MSG_OPTION] { // 复制选项
-		if kit.IndexOf(m.meta[MSG_OPTION], k) == -1 {
-			m.meta[MSG_OPTION] = append(m.meta[MSG_OPTION], k)
-		}
-		if _, ok := msg.meta[k]; ok {
-			m.meta[k] = msg.meta[k]
-		} else {
-			m.data[k] = msg.data[k]
-		}
+	for _, k := range msg.meta[MSG_OPTION] {
+		m.Add(MSG_OPTION, kit.Simple(k, msg.meta[k])...)
 	}
-
-	for _, k := range msg.meta[MSG_APPEND] { // 复制数据
-		if i := kit.IndexOf(m.meta[MSG_OPTION], k); i > -1 && len(m.meta[k]) > 0 {
-			m.meta[k] = m.meta[k][:0]
-		}
-		if i := kit.IndexOf(m.meta[MSG_OPTS], k); i > -1 && len(m.meta[k]) > 0 {
-			m.meta[k] = m.meta[k][:0]
-		}
-		if kit.IndexOf(m.meta[MSG_APPEND], k) == -1 {
-			m.meta[MSG_APPEND] = append(m.meta[MSG_APPEND], k)
-		}
-		m.meta[k] = append(m.meta[k], msg.meta[k]...)
+	for _, k := range msg.meta[MSG_APPEND] {
+		m.Add(MSG_APPEND, kit.Simple(k, msg.meta[k])...)
 	}
-
-	// 复制文本
 	m.meta[MSG_RESULT] = append(m.meta[MSG_RESULT], msg.meta[MSG_RESULT]...)
 	return m
 }
 func (m *Message) Sort(key string, arg ...string) *Message {
-	if m.Option(MSG_FIELDS) == "detail" {
+	if m.FieldsIsDetail() && key != kit.MDB_KEY {
 		return m
 	}
 	// 排序方法
@@ -217,8 +189,7 @@ func (m *Message) Sort(key string, arg ...string) *Message {
 	number := map[int]int64{}
 	table := []map[string]string{}
 	m.Table(func(index int, line map[string]string, head []string) {
-		table = append(table, line)
-		switch cmp {
+		switch table = append(table, line); cmp {
 		case "int":
 			number[index] = kit.Int64(line[key])
 		case "int_r":
@@ -269,7 +240,7 @@ func (m *Message) Sort(key string, arg ...string) *Message {
 }
 func (m *Message) Table(cbs ...func(index int, value map[string]string, head []string)) *Message {
 	if len(cbs) > 0 && cbs[0] != nil {
-		if len(m.meta[MSG_APPEND]) == 2 && m.meta[MSG_APPEND][0] == kit.MDB_KEY {
+		if m.FieldsIsDetail() {
 			line := map[string]string{}
 			for i, k := range m.meta[kit.MDB_KEY] {
 				line[k] = kit.Select("", m.meta[kit.MDB_VALUE], i)
@@ -290,7 +261,6 @@ func (m *Message) Table(cbs ...func(index int, value map[string]string, head []s
 			for _, k := range m.meta[MSG_APPEND] {
 				line[k] = kit.Select("", m.meta[k], i)
 			}
-			// 依次回调
 			cbs[0](i, line, m.meta[MSG_APPEND])
 		}
 		return m
@@ -330,8 +300,7 @@ func (m *Message) Table(cbs ...func(index int, value map[string]string, head []s
 	}
 
 	// 输出表头
-	row := map[string]string{}
-	wor := []string{}
+	row, wor := map[string]string{}, []string{}
 	for _, k := range m.meta[MSG_APPEND] {
 		row[k], wor = k, append(wor, k+strings.Repeat(space, width[k]-kit.Width(k, len(space))))
 	}
@@ -341,8 +310,7 @@ func (m *Message) Table(cbs ...func(index int, value map[string]string, head []s
 
 	// 输出数据
 	for i := 0; i < depth; i++ {
-		row := map[string]string{}
-		wor := []string{}
+		row, wor := map[string]string{}, []string{}
 		for _, k := range m.meta[MSG_APPEND] {
 			data := ""
 			if i < len(m.meta[k]) {
@@ -351,7 +319,6 @@ func (m *Message) Table(cbs ...func(index int, value map[string]string, head []s
 
 			row[k], wor = data, append(wor, data+strings.Repeat(space, width[k]-kit.Width(data, len(space))))
 		}
-		// 依次回调
 		if !cb(row, wor, i) {
 			break
 		}
@@ -375,17 +342,12 @@ func (m *Message) Optionv(key string, arg ...interface{}) interface{} {
 		case nil:
 			delete(m.meta, key)
 		case string:
-			m.meta[key] = kit.Simple(arg)
+			m.meta[key] = kit.Simple(arg...)
 		case []string:
-			m.meta[key] = str
 			delete(m.data, key)
+			m.meta[key] = str
 		default:
 			m.data[key] = str
-		}
-		if key == MSG_FIELDS {
-			for _, k := range kit.Split(kit.Join(m.meta[key])) {
-				delete(m.meta, k)
-			}
 		}
 	}
 
@@ -398,9 +360,6 @@ func (m *Message) Optionv(key string, arg ...interface{}) interface{} {
 		}
 	}
 	return nil
-}
-func (m *Message) Options(key string, arg ...interface{}) bool {
-	return kit.Select("", kit.Simple(m.Optionv(key, arg...)), 0) != ""
 }
 func (m *Message) Option(key string, arg ...interface{}) string {
 	return kit.Select("", kit.Simple(m.Optionv(key, arg...)), 0)
@@ -416,21 +375,7 @@ func (m *Message) Appendv(key string, arg ...interface{}) []string {
 		return m.meta[key]
 	}
 
-	if key == "_index" {
-		max := 0
-		for _, k := range m.meta[MSG_APPEND] {
-			if len(m.meta[k]) > max {
-				max = len(m.meta[k])
-			}
-		}
-		index := []string{}
-		for i := 0; i < max; i++ {
-			index = append(index, kit.Format(i))
-		}
-		return index
-	}
-
-	if len(m.meta[MSG_APPEND]) == 2 && m.meta[MSG_APPEND][0] == kit.MDB_KEY {
+	if m.FieldsIsDetail() {
 		for i, k := range m.meta[kit.MDB_KEY] {
 			if k == key {
 				return []string{kit.Select("", m.meta[kit.MDB_VALUE], i)}

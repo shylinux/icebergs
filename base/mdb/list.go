@@ -4,14 +4,13 @@ import (
 	"encoding/csv"
 	"os"
 	"path"
-	"sort"
 
 	ice "shylinux.com/x/icebergs"
 	kit "shylinux.com/x/toolkits"
 )
 
 func _list_fields(m *ice.Message) []string {
-	return kit.Split(kit.Select("time,id,type,name,text", kit.Join(kit.Simple(m.Optionv(FIELDS)))))
+	return kit.Split(kit.Select("time,id,type,name,text", m.OptionFields()))
 }
 func _list_inputs(m *ice.Message, prefix, chain string, field, value string) {
 	list := map[string]int{}
@@ -51,9 +50,8 @@ func _list_select(m *ice.Message, prefix, chain, field, value string) {
 		field = ""
 	}
 	fields := _list_fields(m)
-	cb := m.Optionv(kit.Keycb(SELECT))
-	m.Grows(prefix, chain, kit.Select(m.Option(CACHE_FIELD), field), kit.Select(m.Option(CACHE_VALUE), value), func(index int, val map[string]interface{}) {
-		switch val = kit.GetMeta(val); cb := cb.(type) {
+	m.Grows(prefix, chain, kit.Select(m.Option(ice.CACHE_FIELD), field), kit.Select(m.Option(ice.CACHE_VALUE), value), func(index int, val map[string]interface{}) {
+		switch val = kit.GetMeta(val); cb := m.Optionv(kit.Keycb(SELECT)).(type) {
 		case func(fields []string, value map[string]interface{}):
 			cb(fields, val)
 		default:
@@ -74,14 +72,14 @@ func _list_export(m *ice.Message, prefix, chain, file string) {
 	defer w.Flush()
 
 	count := 0
-	head := kit.Split(m.Option(FIELDS))
+	head := kit.Split(m.OptionFields())
 	m.Grows(prefix, chain, "", "", func(index int, val map[string]interface{}) {
 		if val = kit.GetMeta(val); index == 0 {
-			if len(head) == 0 { // 默认表头
+			if len(head) == 0 || head[0] == "detail" { // 默认表头
 				for k := range val {
 					head = append(head, k)
 				}
-				sort.Strings(head)
+				kit.Sort(head)
 			}
 			w.Write(head) // 输出表头
 		}
@@ -95,6 +93,8 @@ func _list_export(m *ice.Message, prefix, chain, file string) {
 	})
 
 	m.Log_EXPORT(kit.MDB_KEY, path.Join(prefix, chain), kit.MDB_FILE, p, kit.MDB_COUNT, count)
+	m.Conf(prefix, kit.Keys(chain, kit.Keym(kit.MDB_COUNT)), 0)
+	m.Conf(prefix, kit.Keys(chain, kit.MDB_LIST), "")
 	m.Echo(p)
 }
 func _list_import(m *ice.Message, prefix, chain, file string) {
@@ -154,7 +154,7 @@ func ListAction(fields ...string) map[string]*ice.Action {
 			m.Config(kit.MDB_COUNT, 0)
 		}},
 		IMPORT: {Name: "import", Help: "导入", Hand: func(m *ice.Message, arg ...string) {
-			m.Cmdy(IMPORT, m.PrefixKey(), "", LIST)
+			m.Cmdy(IMPORT, m.PrefixKey(), "", LIST, arg)
 		}},
 		PRUNES: {Name: "prunes", Help: "清理", Hand: func(m *ice.Message, arg ...string) {
 			m.Cmdy(PRUNES, m.PrefixKey(), "", LIST, arg)

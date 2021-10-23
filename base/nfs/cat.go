@@ -61,7 +61,7 @@ func _cat_find(m *ice.Message, name string) io.ReadCloser {
 		return NewReadCloser(bytes.NewBuffer(b))
 	}
 
-	msg := m.Cmd("web.spide", ice.DEV, "raw", "GET", path.Join("/share/local/", name))
+	msg := m.Cmd("spide", ice.DEV, "raw", "GET", path.Join("/share/local/", name))
 	if msg.Result(0) == ice.ErrWarn {
 		return NewReadCloser(bytes.NewBufferString(""))
 	}
@@ -74,7 +74,7 @@ func _cat_list(m *ice.Message, name string) {
 
 	f := _cat_find(m, name)
 	if f == nil {
-		return
+		return // 没有文件
 	}
 	defer f.Close()
 
@@ -141,7 +141,7 @@ func init() {
 				_cat_list(m, path.Join(arg[2], arg[1]))
 			}},
 		}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			if len(arg) == 0 || strings.HasSuffix(arg[0], "/") {
+			if len(arg) == 0 || strings.HasSuffix(arg[0], ice.PS) {
 				m.Cmdy(DIR, arg)
 				return
 			}

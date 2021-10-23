@@ -15,7 +15,7 @@ func (m *Message) log(level string, str string, arg ...interface{}) *Message {
 		return m // 禁用日志
 	}
 	if str = strings.TrimSpace(kit.Format(str, arg...)); Info.Log != nil {
-		Info.Log(m, m.Format(kit.MDB_PREFIX), level, str) // 日志分流
+		Info.Log(m, m.FormatPrefix(), level, str) // 日志分流
 	}
 
 	// 日志颜色
@@ -41,7 +41,7 @@ func (m *Message) log(level string, str string, arg ...interface{}) *Message {
 
 	// 长度截断
 	switch level {
-	case LOG_INFO, "send", "recv":
+	case LOG_INFO, LOG_SEND, LOG_RECV:
 		if len(str) > 1024 {
 			str = str[:1024]
 		}
@@ -61,7 +61,7 @@ func (m *Message) join(arg ...interface{}) string {
 			list = append(list, kit.Format(arg[i])+":", kit.Format(arg[i+1]))
 		}
 	}
-	return strings.Join(list, " ")
+	return kit.Join(list, SP)
 }
 
 func (m *Message) Log(level string, str string, arg ...interface{}) *Message {
@@ -72,7 +72,7 @@ func (m *Message) Info(str string, arg ...interface{}) *Message {
 }
 func (m *Message) Cost(arg ...interface{}) *Message {
 	list := []string{m.FormatCost(), m.join(arg...)}
-	return m.log(LOG_COST, strings.Join(list, " "))
+	return m.log(LOG_COST, kit.Join(list, SP))
 }
 func (m *Message) Warn(err bool, arg ...interface{}) bool {
 	if !err || len(m.meta[MSG_RESULT]) > 0 && m.meta[MSG_RESULT][0] == ErrWarn {
@@ -85,7 +85,7 @@ func (m *Message) Warn(err bool, arg ...interface{}) bool {
 }
 func (m *Message) Error(err bool, str string, arg ...interface{}) bool {
 	if err {
-		m.Echo("error: ").Echo(str, arg...)
+		m.Echo(ErrWarn).Echo(str, arg...)
 		m.log(LOG_ERROR, m.FormatStack())
 		m.log(LOG_ERROR, str, arg...)
 		m.log(LOG_ERROR, m.FormatChain())
@@ -131,8 +131,29 @@ func (m *Message) Log_IMPORT(arg ...interface{}) *Message {
 	return m.log(LOG_IMPORT, m.join(arg...))
 }
 
+func (m *Message) FormatPrefix() string {
+	return kit.Format("%s %d %s->%s", m.Time(), m.code, m.source.Name, m.target.Name)
+}
+func (m *Message) FormatTime() string {
+	return m.Time()
+}
+func (m *Message) FormatShip() string {
+	return kit.Format("%s->%s", m.source.Name, m.target.Name)
+}
+func (m *Message) FormatCost() string {
+	return kit.FmtTime(kit.Int64(time.Since(m.time)))
+}
+func (m *Message) FormatSize() string {
+	if len(m.meta[MSG_APPEND]) == 0 {
+		return kit.Format("%dx%d %s", 0, 0, "[]")
+	} else {
+		return kit.Format("%dx%d %v", len(m.meta[m.meta[MSG_APPEND][0]]), len(m.meta[MSG_APPEND]), kit.Format(m.meta[MSG_APPEND]))
+	}
+}
+func (m *Message) FormatMeta() string {
+	return kit.Format(m.meta)
+}
 func (m *Message) FormatStack() string {
-	// 调用栈
 	pc := make([]uintptr, 100)
 	pc = pc[:runtime.Callers(5, pc)]
 	frames := runtime.CallersFrames(pc)
@@ -140,14 +161,14 @@ func (m *Message) FormatStack() string {
 	meta := []string{}
 	for {
 		frame, more := frames.Next()
-		file := strings.Split(frame.File, "/")
-		name := strings.Split(frame.Function, "/")
-		meta = append(meta, kit.Format("\n%s:%d\t%s", file[len(file)-1], frame.Line, name[len(name)-1]))
+		file := kit.Split(frame.File, "/")
+		name := kit.Split(frame.Function, "/")
+		meta = append(meta, kit.Format("%s:%d\t%s", file[len(file)-1], frame.Line, name[len(name)-1]))
 		if !more {
 			break
 		}
 	}
-	return strings.Join(meta, "")
+	return kit.Join(meta, NL)
 }
 func (m *Message) FormatChain() string {
 	ms := []*Message{}
@@ -155,51 +176,40 @@ func (m *Message) FormatChain() string {
 		ms = append(ms, msg)
 	}
 
-	meta := append([]string{}, "\n\n")
+	meta := append([]string{}, NL)
 	for i := len(ms) - 1; i >= 0; i-- {
 		msg := ms[i]
 
-		meta = append(meta, kit.Format("%s ", msg.Format("prefix")))
 		if len(msg.meta[MSG_DETAIL]) > 0 {
-			meta = append(meta, kit.Format("%s:%d %v", MSG_DETAIL, len(msg.meta[MSG_DETAIL]), msg.meta[MSG_DETAIL]))
+			meta = append(meta, kit.Format("%s %s:%d %v", msg.FormatPrefix(), MSG_DETAIL, len(msg.meta[MSG_DETAIL]), msg.meta[MSG_DETAIL]))
+		} else {
+			meta = append(meta, kit.Format("%s ", msg.FormatPrefix()))
 		}
 
 		if len(msg.meta[MSG_OPTION]) > 0 {
-			meta = append(meta, kit.Format("%s:%d %v\n", MSG_OPTION, len(msg.meta[MSG_OPTION]), msg.meta[MSG_OPTION]))
+			meta = append(meta, kit.Format("%s:%d %v", MSG_OPTION, len(msg.meta[MSG_OPTION]), msg.meta[MSG_OPTION]))
 			for _, k := range msg.meta[MSG_OPTION] {
 				if v, ok := msg.meta[k]; ok {
-					meta = append(meta, kit.Format("    %s: %d %v\n", k, len(v), v))
+					meta = append(meta, kit.Format("\t%s: %d %v", k, len(v), v))
 				}
 			}
 		} else {
-			meta = append(meta, "\n")
+			meta = append(meta, NL)
 		}
 
 		if len(msg.meta[MSG_APPEND]) > 0 {
-			meta = append(meta, kit.Format("  %s:%d %v\n", MSG_APPEND, len(msg.meta[MSG_APPEND]), msg.meta[MSG_APPEND]))
+			meta = append(meta, kit.Format("%s:%d %v", MSG_APPEND, len(msg.meta[MSG_APPEND]), msg.meta[MSG_APPEND]))
 			for _, k := range msg.meta[MSG_APPEND] {
 				if v, ok := msg.meta[k]; ok {
-					meta = append(meta, kit.Format("    %s: %d %v\n", k, len(v), v))
+					meta = append(meta, kit.Format("\t%s: %d %v", k, len(v), v))
 				}
 			}
 		}
 		if len(msg.meta[MSG_RESULT]) > 0 {
-			meta = append(meta, kit.Format("  %s:%d %v\n", MSG_RESULT, len(msg.meta[MSG_RESULT]), msg.meta[MSG_RESULT]))
+			meta = append(meta, kit.Format("%s:%d %v", MSG_RESULT, len(msg.meta[MSG_RESULT]), msg.meta[MSG_RESULT]))
 		}
 	}
-	return strings.Join(meta, "")
-}
-func (m *Message) FormatTime() string {
-	return m.Format(kit.MDB_TIME)
-}
-func (m *Message) FormatMeta() string {
-	return m.Format(kit.MDB_META)
-}
-func (m *Message) FormatSize() string {
-	return m.Format(kit.MDB_SIZE)
-}
-func (m *Message) FormatCost() string {
-	return m.Format(kit.MDB_COST)
+	return kit.Join(meta, NL)
 }
 func (m *Message) Format(key interface{}) string {
 	switch key := key.(type) {
@@ -207,35 +217,23 @@ func (m *Message) Format(key interface{}) string {
 		json.Unmarshal(key, &m.meta)
 	case string:
 		switch key {
-		case kit.MDB_COST:
-			return kit.FmtTime(kit.Int64(time.Since(m.time)))
-		case kit.MDB_SIZE:
-			if len(m.meta[MSG_APPEND]) == 0 {
-				return kit.Format("%dx%d", 0, 0)
-			} else {
-				return kit.Format("%dx%d", len(m.meta[m.meta[MSG_APPEND][0]]), len(m.meta[MSG_APPEND]))
-			}
-		case kit.MDB_META:
-			return kit.Format(m.meta)
-		case kit.MDB_SHIP:
-			return kit.Format("%s->%s", m.source.Name, m.target.Name)
 		case kit.MDB_PREFIX:
-			return kit.Format("%s %d %s->%s", m.Time(), m.code, m.source.Name, m.target.Name)
-
-		case MSG_APPEND:
-			if len(m.meta[MSG_APPEND]) == 0 {
-				return kit.Format("%dx%d %s", 0, 0, "[]")
-			} else {
-				return kit.Format("%dx%d %s", len(m.meta[m.meta[MSG_APPEND][0]]), len(m.meta[MSG_APPEND]), kit.Format(m.meta[MSG_APPEND]))
-			}
-
+			return m.FormatPrefix()
+		case kit.MDB_SHIP:
+			return m.FormatShip()
+		case kit.MDB_COST:
+			return m.FormatCost()
+		case kit.MDB_SIZE:
+			return m.FormatSize()
+		case kit.MDB_META:
+			return m.FormatMeta()
 		case kit.MDB_CHAIN:
 			return m.FormatChain()
 		case kit.MDB_STACK:
 			return m.FormatStack()
 		}
 	}
-	return m.time.Format(MOD_TIME)
+	return m.FormatTime()
 }
 func (m *Message) Formats(key string) string {
 	switch key {

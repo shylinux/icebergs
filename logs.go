@@ -144,11 +144,7 @@ func (m *Message) FormatCost() string {
 	return kit.FmtTime(kit.Int64(time.Since(m.time)))
 }
 func (m *Message) FormatSize() string {
-	if len(m.meta[MSG_APPEND]) == 0 {
-		return kit.Format("%dx%d %s", 0, 0, "[]")
-	} else {
-		return kit.Format("%dx%d %v", len(m.meta[m.meta[MSG_APPEND][0]]), len(m.meta[MSG_APPEND]), kit.Simple(m.meta[MSG_APPEND]))
-	}
+	return kit.Format("%dx%d %v", m.Length(), len(m.meta[MSG_APPEND]), kit.Simple(m.meta[MSG_APPEND]))
 }
 func (m *Message) FormatMeta() string {
 	return kit.Format(m.meta)

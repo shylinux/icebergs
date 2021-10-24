@@ -106,10 +106,10 @@ func (m *Message) StatusTime(arg ...interface{}) {
 	m.Status(kit.MDB_TIME, m.Time(), arg, kit.MDB_COST, m.FormatCost())
 }
 func (m *Message) StatusTimeCount(arg ...interface{}) {
-	m.Status(kit.MDB_TIME, m.Time(), kit.MDB_COUNT, m.FormatSize(), arg, kit.MDB_COST, m.FormatCost())
+	m.Status(kit.MDB_TIME, m.Time(), kit.MDB_COUNT, kit.Split(m.FormatSize())[0], arg, kit.MDB_COST, m.FormatCost())
 }
 func (m *Message) StatusTimeCountTotal(arg ...interface{}) {
-	m.Status(kit.MDB_TIME, m.Time(), kit.MDB_COUNT, m.FormatSize(), kit.MDB_TOTAL, arg, kit.MDB_COST, m.FormatCost())
+	m.Status(kit.MDB_TIME, m.Time(), kit.MDB_COUNT, kit.Split(m.FormatSize())[0], kit.MDB_TOTAL, arg, kit.MDB_COST, m.FormatCost())
 }
 
 func (m *Message) Toast(text string, arg ...interface{}) { // [title [duration [progress]]]

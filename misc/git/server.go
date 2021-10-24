@@ -76,7 +76,7 @@ func _server_param(m *ice.Message, arg ...string) (string, string) {
 	default:
 		repos = strings.TrimSuffix(repos, service)
 	}
-	return kit.Path(m.Conf(SERVER, kit.META_PATH), REPOS, repos), strings.TrimPrefix(service, "git-")
+	return kit.Path(ice.USR_LOCAL, REPOS, repos), strings.TrimPrefix(service, "git-")
 }
 func _server_repos(m *ice.Message, arg ...string) error {
 	repos, service := _server_param(m, arg...)
@@ -138,11 +138,11 @@ func init() {
 		}},
 		SERVER: {Name: "server path auto create", Help: "服务器", Action: map[string]*ice.Action{
 			mdb.CREATE: {Name: "create name", Help: "添加", Hand: func(m *ice.Message, arg ...string) {
-				m.Option(cli.CMD_DIR, path.Join(m.Conf(SERVER, kit.META_PATH), REPOS))
+				m.Option(cli.CMD_DIR, path.Join(ice.USR_LOCAL, REPOS))
 				m.Cmdy(cli.SYSTEM, GIT, INIT, "--bare", m.Option(kit.MDB_NAME))
 			}},
 		}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			if m.Option(nfs.DIR_ROOT, path.Join(m.Conf(SERVER, kit.META_PATH), REPOS)); len(arg) == 0 {
+			if m.Option(nfs.DIR_ROOT, path.Join(ice.USR_LOCAL, REPOS)); len(arg) == 0 {
 				m.Cmdy(nfs.DIR, "./")
 				return
 			}

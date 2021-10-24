@@ -151,7 +151,7 @@ func init() {
 				}
 			})
 
-			if len(arg) == 0 || len(m.Appendv(ice.MSG_APPEND)) > 0 {
+			if len(arg) == 0 || m.Length() > 0 {
 				return
 			}
 			_daemon_exec(m, _system_cmd(m, arg...))

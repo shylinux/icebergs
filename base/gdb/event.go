@@ -7,6 +7,7 @@ import (
 )
 
 func _event_listen(m *ice.Message, event string, cmd string) {
+	m.Cmdy(mdb.INSERT, EVENT, "", mdb.HASH, EVENT, event)
 	m.Cmdy(mdb.INSERT, EVENT, "", mdb.ZONE, event, ice.CMD, cmd)
 }
 func _event_action(m *ice.Message, event string, arg ...string) {

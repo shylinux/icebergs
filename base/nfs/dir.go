@@ -185,8 +185,8 @@ func init() {
 		DIR: {Name: DIR, Help: "目录", Value: kit.Data()},
 	}, Commands: map[string]*ice.Command{
 		ice.CTX_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			m.Cmd(mdb.SEARCH, mdb.CREATE, DIR)
-			m.Cmd(mdb.RENDER, mdb.CREATE, DIR)
+			m.Cmd(mdb.SEARCH, mdb.CREATE, DIR, m.Prefix(DIR))
+			m.Cmd(mdb.RENDER, mdb.CREATE, DIR, m.Prefix(DIR))
 		}},
 		DIR: {Name: "dir path field... auto upload", Help: "目录", Action: map[string]*ice.Action{
 			mdb.SEARCH: {Name: "search type name", Help: "搜索", Hand: func(m *ice.Message, arg ...string) {

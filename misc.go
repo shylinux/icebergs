@@ -11,6 +11,14 @@ import (
 	kit "shylinux.com/x/toolkits"
 )
 
+func (m *Message) Length() (max int) {
+	for _, k := range m.meta[MSG_APPEND] {
+		if l := len(m.meta[k]); l > max {
+			max = l
+		}
+	}
+	return max
+}
 func (m *Message) CSV(text string, head ...string) *Message {
 	bio := bytes.NewBufferString(text)
 	r := csv.NewReader(bio)
@@ -202,6 +210,7 @@ func (c *Context) cmd(m *Message, cmd *Command, key string, arg ...string) *Mess
 
 	m.Log(LOG_CMDS, "%s.%s %d %v %s", c.Name, key, len(arg), arg,
 		kit.Select(kit.FileLine(cmd.Hand, 3), kit.FileLine(9, 3), m.target.Name == "mdb"))
+
 	cmd.Hand(m, c, key, arg...)
 	return m
 }

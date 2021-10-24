@@ -5,8 +5,11 @@ import (
 	kit "shylinux.com/x/toolkits"
 )
 
-func _context_list(m *ice.Message, all bool) {
+func _context_list(m *ice.Message, sub *ice.Context) {
 	m.Travel(func(p *ice.Context, s *ice.Context) {
+		if sub != nil && sub != p {
+			return
+		}
 		m.Push(kit.MDB_NAME, s.Cap(ice.CTX_FOLLOW))
 		m.Push(kit.MDB_STATUS, s.Cap(ice.CTX_STATUS))
 		m.Push(kit.MDB_STREAM, s.Cap(ice.CTX_STREAM))
@@ -25,7 +28,7 @@ func init() {
 
 				switch kit.Select(CONTEXT, arg, 1) {
 				case CONTEXT:
-					_context_list(msg, true)
+					_context_list(msg, s)
 				case COMMAND:
 					msg.Cmdy(COMMAND, arg[2:])
 				case CONFIG:

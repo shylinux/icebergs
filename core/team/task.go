@@ -140,7 +140,7 @@ func init() {
 		},
 		Commands: map[string]*ice.Command{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-				m.Cmd(mdb.SEARCH, mdb.CREATE, TASK, m.Prefix(TASK))
+				// m.Cmd(mdb.SEARCH, mdb.CREATE, TASK, m.Prefix(TASK))
 			}},
 			TASK: {Name: "task zone id auto insert export import", Help: "任务", Action: ice.MergeAction(map[string]*ice.Action{
 				mdb.INSERT: {Name: "insert zone type=once,step,week name text begin_time@date close_time@date", Help: "添加", Hand: func(m *ice.Message, arg ...string) {

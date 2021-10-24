@@ -46,7 +46,7 @@ func init() {
 			kit.MDB_FIELD, "time,hash,delay,interval,order,next,cmd", TICK, "1s",
 		)},
 	}, Commands: map[string]*ice.Command{
-		TIMER: {Name: "timer hash id auto create prunes", Help: "定时器", Action: ice.MergeAction(map[string]*ice.Action{
+		TIMER: {Name: "timer hash id auto create action prunes", Help: "定时器", Action: ice.MergeAction(map[string]*ice.Action{
 			mdb.CREATE: {Name: "create delay=10ms interval=10s order=3 cmd=runtime", Help: "添加", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmdy(mdb.INSERT, TIMER, "", mdb.HASH, DELAY, "10ms", INTERVAL, "10m", ORDER, 1, NEXT, m.Time(m.Option(DELAY)), arg)
 			}},
@@ -58,13 +58,10 @@ func init() {
 				_timer_action(m, arg...)
 			}},
 		}, mdb.ZoneAction()), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			if len(arg) == 0 {
-				m.OptionFields(m.Config(kit.MDB_FIELD))
-				defer m.PushAction(mdb.REMOVE)
-			} else {
-				m.OptionFields("time,id,res")
+			m.Fields(len(arg), m.Config(kit.MDB_FIELD), "time,id,res")
+			if mdb.ZoneSelect(m, arg...); len(arg) == 0 {
+				m.PushAction(mdb.REMOVE)
 			}
-			mdb.ZoneSelect(m, arg...)
 		}},
 	}})
 }

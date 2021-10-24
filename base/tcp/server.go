@@ -94,6 +94,7 @@ func init() {
 			m.Richs(SERVER, "", kit.MDB_FOREACH, func(key string, value map[string]interface{}) {
 				kit.Value(value, kit.Keym(kit.MDB_STATUS), CLOSE)
 			})
+			m.Cmdy(SERVER, mdb.PRUNES)
 		}},
 		SERVER: {Name: "server hash auto prunes", Help: "服务器", Action: ice.MergeAction(map[string]*ice.Action{
 			LISTEN: {Name: "LISTEN type name port=9030 host=", Help: "监听", Hand: func(m *ice.Message, arg ...string) {

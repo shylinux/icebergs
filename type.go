@@ -385,8 +385,8 @@ func (m *Message) Search(key string, cb interface{}) *Message {
 
 	case func(p *Context, s *Context, key string, cmd *Command):
 		if key == "" {
-			for k, v := range p.Commands {
-				cb(p.context, p, k, v)
+			for key, cmd := range p.Commands {
+				cb(p.context, p, key, cmd)
 			}
 			break
 		}

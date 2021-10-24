@@ -147,7 +147,7 @@ func (m *Message) FormatSize() string {
 	if len(m.meta[MSG_APPEND]) == 0 {
 		return kit.Format("%dx%d %s", 0, 0, "[]")
 	} else {
-		return kit.Format("%dx%d %v", len(m.meta[m.meta[MSG_APPEND][0]]), len(m.meta[MSG_APPEND]), kit.Format(m.meta[MSG_APPEND]))
+		return kit.Format("%dx%d %v", len(m.meta[m.meta[MSG_APPEND][0]]), len(m.meta[MSG_APPEND]), kit.Simple(m.meta[MSG_APPEND]))
 	}
 }
 func (m *Message) FormatMeta() string {
@@ -155,16 +155,14 @@ func (m *Message) FormatMeta() string {
 }
 func (m *Message) FormatStack() string {
 	pc := make([]uintptr, 100)
-	pc = pc[:runtime.Callers(5, pc)]
-	frames := runtime.CallersFrames(pc)
+	frames := runtime.CallersFrames(pc[:runtime.Callers(5, pc)])
 
 	meta := []string{}
 	for {
 		frame, more := frames.Next()
-		file := kit.Split(frame.File, "/")
-		name := kit.Split(frame.Function, "/")
-		meta = append(meta, kit.Format("%s:%d\t%s", file[len(file)-1], frame.Line, name[len(name)-1]))
-		if !more {
+		file := kit.Slice(kit.Split(frame.File, PS, PS), -1)[0]
+		name := kit.Slice(kit.Split(frame.Function, PS, PS), -1)[0]
+		if meta = append(meta, kit.Format("%s:%d\t%s", file, frame.Line, name)); !more {
 			break
 		}
 	}
@@ -180,33 +178,27 @@ func (m *Message) FormatChain() string {
 	for i := len(ms) - 1; i >= 0; i-- {
 		msg := ms[i]
 
-		if len(msg.meta[MSG_DETAIL]) > 0 {
-			meta = append(meta, kit.Format("%s %s:%d %v", msg.FormatPrefix(), MSG_DETAIL, len(msg.meta[MSG_DETAIL]), msg.meta[MSG_DETAIL]))
-		} else {
-			meta = append(meta, kit.Format("%s ", msg.FormatPrefix()))
-		}
+		meta = append(meta, kit.Format("%s %s:%d %v %s:%d %v %s:%d %v %s:%d %v", msg.FormatPrefix(),
+			MSG_DETAIL, len(msg.meta[MSG_DETAIL]), msg.meta[MSG_DETAIL],
+			MSG_OPTION, len(msg.meta[MSG_OPTION]), msg.meta[MSG_OPTION],
+			MSG_APPEND, len(msg.meta[MSG_APPEND]), msg.meta[MSG_APPEND],
+			MSG_RESULT, len(msg.meta[MSG_RESULT]), msg.meta[MSG_RESULT],
+		))
 
 		if len(msg.meta[MSG_OPTION]) > 0 {
-			meta = append(meta, kit.Format("%s:%d %v", MSG_OPTION, len(msg.meta[MSG_OPTION]), msg.meta[MSG_OPTION]))
 			for _, k := range msg.meta[MSG_OPTION] {
 				if v, ok := msg.meta[k]; ok {
 					meta = append(meta, kit.Format("\t%s: %d %v", k, len(v), v))
 				}
 			}
-		} else {
-			meta = append(meta, NL)
 		}
 
 		if len(msg.meta[MSG_APPEND]) > 0 {
-			meta = append(meta, kit.Format("%s:%d %v", MSG_APPEND, len(msg.meta[MSG_APPEND]), msg.meta[MSG_APPEND]))
 			for _, k := range msg.meta[MSG_APPEND] {
 				if v, ok := msg.meta[k]; ok {
 					meta = append(meta, kit.Format("\t%s: %d %v", k, len(v), v))
 				}
 			}
-		}
-		if len(msg.meta[MSG_RESULT]) > 0 {
-			meta = append(meta, kit.Format("%s:%d %v", MSG_RESULT, len(msg.meta[MSG_RESULT]), msg.meta[MSG_RESULT]))
 		}
 	}
 	return kit.Join(meta, NL)

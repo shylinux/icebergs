@@ -43,7 +43,9 @@ func (m *Message) Set(key string, arg ...string) *Message {
 			}
 			return m
 		}
-		delete(m.meta, key)
+		for _, k := range kit.Split(key) {
+			delete(m.meta, k)
+		}
 	}
 	return m.Add(key, arg...)
 }
@@ -161,6 +163,12 @@ func (m *Message) Copy(msg *Message, arg ...string) *Message {
 
 	for _, k := range msg.meta[MSG_OPTION] {
 		m.Add(MSG_OPTION, kit.Simple(k, msg.meta[k])...)
+	}
+	for _, k := range msg.meta[MSG_APPEND] {
+		if i := kit.IndexOf(m.meta[MSG_OPTION], k); i > -1 {
+			m.meta[MSG_OPTION][i] = ""
+			delete(m.meta, k)
+		}
 	}
 	for _, k := range msg.meta[MSG_APPEND] {
 		m.Add(MSG_APPEND, kit.Simple(k, msg.meta[k])...)

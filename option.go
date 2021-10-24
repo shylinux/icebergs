@@ -80,6 +80,11 @@ func (m *Message) Fields(length int, fields ...string) string {
 }
 func (m *Message) Upload(dir string) {
 	up := kit.Simple(m.Optionv(MSG_UPLOAD))
+	if len(up) < 2 {
+		msg := m.Cmd("cache", "upload")
+		up = kit.Simple(msg.Append(kit.MDB_HASH), msg.Append(kit.MDB_NAME), msg.Append(kit.MDB_SIZE))
+	}
+
 	if p := path.Join(dir, up[1]); m.Option(MSG_USERPOD) == "" {
 		m.Cmdy("cache", "watch", up[0], p) // 本机文件
 	} else { // 下发文件

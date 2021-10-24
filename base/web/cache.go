@@ -138,7 +138,7 @@ const CACHE = "cache"
 func init() {
 	Index.Merge(&ice.Context{Configs: map[string]*ice.Config{
 		CACHE: {Name: CACHE, Help: "缓存池", Value: kit.Data(
-			kit.MDB_SHORT, kit.MDB_TEXT, kit.MDB_SHORT, "time,hash,size,type,name,text",
+			kit.MDB_SHORT, kit.MDB_TEXT, kit.MDB_FIELD, "time,hash,size,type,name,text",
 			kit.MDB_STORE, ice.VAR_DATA, kit.MDB_PATH, ice.VAR_FILE, kit.MDB_FSIZE, "200000",
 			kit.MDB_LIMIT, "50", kit.MDB_LEAST, "30",
 		)},

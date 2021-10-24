@@ -61,6 +61,7 @@ func init() {
 					m.Push(PORT, path.Base(value[kit.MDB_PATH]))
 					m.Push(kit.MDB_SIZE, value[kit.MDB_SIZE])
 				})
+				m.SortInt(PORT)
 				return
 			}
 			m.Option(nfs.DIR_ROOT, path.Join(m.Conf(cli.DAEMON, kit.META_PATH), arg[0]))

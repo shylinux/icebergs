@@ -76,8 +76,8 @@ const (
 	RED    = "red"
 )
 const (
-	WATCH = "watch"
 	BENCH = "bench"
+	WATCH = "watch"
 	ERROR = "error"
 	TRACE = "trace"
 )
@@ -89,17 +89,19 @@ const (
 
 var Index = &ice.Context{Name: "log", Help: "日志模块", Configs: map[string]*ice.Config{
 	FILE: {Name: FILE, Help: "日志文件", Value: kit.Dict(
+		BENCH, kit.Dict(kit.MDB_PATH, path.Join(ice.VAR_LOG, "bench.log"), kit.MDB_LIST, []string{}),
 		WATCH, kit.Dict(kit.MDB_PATH, path.Join(ice.VAR_LOG, "watch.log"), kit.MDB_LIST, []string{
 			ice.LOG_CREATE, ice.LOG_REMOVE,
 			ice.LOG_INSERT, ice.LOG_DELETE,
 			ice.LOG_MODIFY, ice.LOG_SELECT,
 			ice.LOG_EXPORT, ice.LOG_IMPORT,
 		}),
-		BENCH, kit.Dict(kit.MDB_PATH, path.Join(ice.VAR_LOG, "bench.log"), kit.MDB_LIST, []string{}),
 		ERROR, kit.Dict(kit.MDB_PATH, path.Join(ice.VAR_LOG, "error.log"), kit.MDB_LIST, []string{
-			ice.LOG_WARN, ice.LOG_ERROR, ice.LOG_DEBUG,
+			ice.LOG_WARN, ice.LOG_ERROR,
 		}),
-		TRACE, kit.Dict(kit.MDB_PATH, path.Join(ice.VAR_LOG, "trace.log"), kit.MDB_LIST, []string{}),
+		TRACE, kit.Dict(kit.MDB_PATH, path.Join(ice.VAR_LOG, "trace.log"), kit.MDB_LIST, []string{
+			ice.LOG_DEBUG,
+		}),
 	)},
 	VIEW: {Name: VIEW, Help: "日志格式", Value: kit.Dict(
 		GREEN, kit.Dict(PREFIX, "\033[32m", SUFFIX, "\033[0m", kit.MDB_LIST, []string{
@@ -135,8 +137,7 @@ var Index = &ice.Context{Name: "log", Help: "日志模块", Configs: map[string]
 			}
 		})
 	}},
-	ice.CTX_EXIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-	}},
+	ice.CTX_EXIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {}},
 }}
 
 func init() { ice.Index.Register(Index, &Frame{}) }

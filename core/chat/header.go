@@ -43,7 +43,7 @@ func _header_share(m *ice.Message, arg ...string) {
 
 	m.Option(kit.MDB_LINK, kit.MergeURL(m.Option(kit.MDB_LINK), RIVER, "", STORM, ""))
 
-	m.Set(kit.MDB_NAME, kit.MDB_TEXT)
+	m.Set("name,text")
 	m.Push(kit.MDB_NAME, m.Option(kit.MDB_LINK))
 	m.PushQRCode(kit.MDB_TEXT, m.Option(kit.MDB_LINK))
 }

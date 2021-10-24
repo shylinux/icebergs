@@ -134,7 +134,7 @@ func init() {
 		)},
 	}, Commands: map[string]*ice.Command{
 		ice.CTX_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			m.Cmd(mdb.RENDER, mdb.CREATE, CAT)
+			m.Cmd(mdb.RENDER, mdb.CREATE, CAT, m.Prefix(CAT))
 		}},
 		CAT: {Name: "cat path auto", Help: "文件", Action: map[string]*ice.Action{
 			mdb.RENDER: {Name: "render type name text", Help: "渲染", Hand: func(m *ice.Message, arg ...string) {

@@ -83,8 +83,8 @@ func _dream_show(m *ice.Message, name string) {
 		// 启动任务
 		m.Optionv(cli.CMD_OUTPUT, path.Join(p, m.Config(kit.Keys(cli.ENV, cli.CTX_LOG))))
 		m.Cmd(cli.DAEMON, m.Confv(DREAM, kit.Keym(ice.CMD)), ice.DEV, ice.DEV, kit.MDB_NAME, name, m.OptionSimple(RIVER))
-		m.Event(DREAM_CREATE, kit.MDB_TYPE, m.Option(kit.MDB_TYPE), kit.MDB_NAME, name)
 		m.Sleep(ice.MOD_TICK)
+		m.Event(DREAM_CREATE, kit.MDB_TYPE, m.Option(kit.MDB_TYPE), kit.MDB_NAME, name)
 	}
 	m.Cmdy(nfs.DIR, p)
 }

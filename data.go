@@ -32,9 +32,20 @@ func (m *Message) Save(arg ...string) *Message {
 			arg = append(arg, k)
 		}
 	}
+	for i, k := range arg {
+		arg[i] = m.Prefix(k)
+	}
 	return m.Cmd("config", SAVE, m.Prefix("json"), arg)
 }
 func (m *Message) Load(arg ...string) *Message {
+	if len(arg) == 0 {
+		for k := range m.target.Configs {
+			arg = append(arg, k)
+		}
+	}
+	for i, k := range arg {
+		arg[i] = m.Prefix(k)
+	}
 	return m.Cmd("config", LOAD, m.Prefix("json"), arg)
 }
 

@@ -91,8 +91,17 @@ func _install_order(m *ice.Message, arg ...string) {
 	m.Cmdy(nfs.CAT, "etc/path")
 }
 func _install_spawn(m *ice.Message, arg ...string) {
-	port := m.Cmdx(tcp.PORT, aaa.RIGHT)
-	target := path.Join(m.Conf(cli.DAEMON, kit.META_PATH), port)
+	if kit.Int(m.Option(tcp.PORT)) >= 10000 {
+		p := path.Join(m.Conf(cli.DAEMON, kit.META_PATH), m.Option(tcp.PORT))
+		if _, e := os.Stat(p); e == nil {
+			m.Echo(p)
+			return
+		}
+	} else {
+		m.Option(tcp.PORT, m.Cmdx(tcp.PORT, aaa.RIGHT))
+	}
+
+	target := path.Join(m.Conf(cli.DAEMON, kit.META_PATH), m.Option(tcp.PORT))
 	source := path.Join(m.Conf(INSTALL, kit.META_PATH), kit.TrimExt(m.Option(kit.MDB_LINK)))
 
 	m.Cmd(nfs.DIR, path.Join(source, kit.Select("_install", m.Option("install")))).Table(func(index int, value map[string]string, head []string) {

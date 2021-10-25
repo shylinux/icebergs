@@ -161,6 +161,7 @@ func (m *Message) Copy(msg *Message, arg ...string) *Message {
 	}
 
 	for _, k := range msg.meta[MSG_OPTION] {
+		m.Set(MSG_OPTION, k)
 		m.Add(MSG_OPTION, kit.Simple(k, msg.meta[k])...)
 	}
 	for _, k := range msg.meta[MSG_APPEND] {
@@ -248,6 +249,9 @@ func (m *Message) Sort(key string, arg ...string) *Message {
 func (m *Message) Table(cbs ...func(index int, value map[string]string, head []string)) *Message {
 	if len(cbs) > 0 && cbs[0] != nil {
 		if m.FieldsIsDetail() {
+			if m.Length() == 0 {
+				return m
+			}
 			line := map[string]string{}
 			for i, k := range m.meta[kit.MDB_KEY] {
 				line[k] = kit.Select("", m.meta[kit.MDB_VALUE], i)
@@ -256,14 +260,7 @@ func (m *Message) Table(cbs ...func(index int, value map[string]string, head []s
 			return m
 		}
 
-		nrow := 0
-		for _, k := range m.meta[MSG_APPEND] {
-			if len(m.meta[k]) > nrow {
-				nrow = len(m.meta[k])
-			}
-		}
-
-		for i := 0; i < nrow; i++ {
+		for i := 0; i < m.Length(); i++ {
 			line := map[string]string{}
 			for _, k := range m.meta[MSG_APPEND] {
 				line[k] = kit.Select("", m.meta[k], i)

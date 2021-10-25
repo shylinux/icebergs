@@ -22,15 +22,15 @@ func (m *Message) TryCatch(msg *Message, silent bool, hand ...func(msg *Message)
 			m.Log(LOG_WARN, "catch: %s %s", e, fileline)
 			m.Log(kit.MDB_STACK, msg.FormatStack())
 			m.Log(LOG_WARN, "catch: %s %s", e, fileline)
-			if len(hand) > 1 { // 捕获异常
+			if len(hand) > 1 {
 				m.TryCatch(msg, silent, hand[1:]...)
-			} else if !silent { // 抛出异常
-				m.Assert(e)
+			} else if !silent {
+				m.Assert(e) // 抛出异常
 			}
 		}
 	}()
 
-	if len(hand) > 0 { // 运行函数
+	if len(hand) > 0 {
 		hand[0](msg)
 	}
 	return m
@@ -54,44 +54,44 @@ func (m *Message) Sleep(d string) *Message {
 	return m
 }
 func (m *Message) Hold(n int) *Message {
-	ctx := m.target.root
-	if c := m.target; c.context != nil && c.context.wg != nil {
-		ctx = c.context
+	for ctx := m.target; ctx != nil; ctx = ctx.context {
+		if ctx.wg != nil {
+			ctx.wg.Add(n)
+			break
+		}
 	}
-
-	ctx.wg.Add(n)
 	return m
 }
-func (m *Message) Done(b bool) bool {
-	if !b {
+func (m *Message) Done(ok bool) bool {
+	if !ok {
 		return false
 	}
 	defer func() { recover() }()
 
-	ctx := m.target.root
-	if c := m.target; c.context != nil && c.context.wg != nil {
-		ctx = c.context
+	for ctx := m.target; ctx != nil; ctx = ctx.context {
+		if ctx.wg != nil {
+			ctx.wg.Done()
+			break
+		}
 	}
-
-	ctx.wg.Done()
-	return true
+	return ok
 }
 func (m *Message) Call(sync bool, cb func(*Message) *Message) *Message {
 	wait := make(chan bool, 2)
 
 	p := kit.Select("10s", m.Option(kit.MDB_TIMEOUT))
 	t := time.AfterFunc(kit.Duration(p), func() {
-		m.Warn(true, "%s timeout %v", p, m.Detailv())
+		m.Warn(true, "timeout", p, "of", m.Detailv())
 		m.Back(nil)
 		wait <- false
 	})
 
-	m.cb = func(sub *Message) *Message {
-		if sync {
+	m.cb = func(res *Message) *Message {
+		if res = cb(res); sync {
 			wait <- true
 			t.Stop()
 		}
-		return cb(sub)
+		return res
 	}
 
 	if sync {
@@ -128,7 +128,7 @@ func (m *Message) Watch(key string, arg ...string) *Message {
 	if len(arg) == 0 {
 		arg = append(arg, m.Prefix(AUTO))
 	}
-	m.Cmd("event", "action", "listen", "event", key, CMD, strings.Join(arg, SP))
+	m.Cmd("event", "action", "listen", "event", key, CMD, kit.Join(arg, SP))
 	return m
 }
 func (m *Message) Event(key string, arg ...string) *Message {
@@ -137,8 +137,8 @@ func (m *Message) Event(key string, arg ...string) *Message {
 }
 func (m *Message) Right(arg ...interface{}) bool {
 	return m.Option(MSG_USERROLE) == "root" || !m.Warn(m.Cmdx("role", "right",
-		m.Option(MSG_USERROLE), strings.ReplaceAll(kit.Keys(arg...), "/", PT)) != OK,
-		ErrNotRight, m.Option(MSG_USERROLE), OF, strings.Join(kit.Simple(arg), PT), " at ", kit.FileLine(2, 3))
+		m.Option(MSG_USERROLE), strings.ReplaceAll(kit.Keys(arg...), PS, PT)) != OK,
+		ErrNotRight, m.Option(MSG_USERROLE), OF, kit.Join(kit.Simple(arg), PT), " at ", kit.FileLine(2, 3))
 }
 func (m *Message) Space(arg interface{}) []string {
 	if arg == nil || arg == "" || kit.Format(arg) == m.Conf("runtime", "node.name") {
@@ -152,7 +152,7 @@ func (m *Message) PodCmd(arg ...interface{}) bool {
 			msg := m.Cmd("cache", "upload")
 			m.Option(MSG_UPLOAD, msg.Append(kit.MDB_HASH), msg.Append(kit.MDB_NAME), msg.Append(kit.MDB_SIZE))
 		}
-		m.Cmdy(append([]interface{}{"space", pod}, arg...))
+		m.Cmdy(append(kit.List("space", pod), arg...))
 		return true
 	}
 	return false

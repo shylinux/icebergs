@@ -62,7 +62,7 @@ func Render(msg *ice.Message, cmd string, args ...interface{}) {
 			msg.Echo(kit.Format(cmd, args...))
 		}
 		msg.W.Header().Set(ContentType, ContentJSON)
-		fmt.Fprint(msg.W, msg.Formats(kit.MDB_META))
+		fmt.Fprint(msg.W, msg.FormatMeta())
 	}
 }
 func RenderHeader(msg *ice.Message, key, value string) {

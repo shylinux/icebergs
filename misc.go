@@ -185,10 +185,7 @@ func (m *Message) cmd(arg ...interface{}) *Message {
 		})
 	}
 
-	// 系统命令
-	if m.Warn(!ok, ErrNotFound, list) {
-		return m.Set(MSG_RESULT).Cmdy("system", list)
-	}
+	m.Warn(!ok, ErrNotFound, list)
 	return m
 }
 func (c *Context) cmd(m *Message, cmd *Command, key string, arg ...string) *Message {
@@ -273,7 +270,7 @@ func (c *Context) split(name string) (list []interface{}) {
 		case "text":
 			list = append(list, kit.List(kit.MDB_TYPE, TEXTAREA, kit.MDB_NAME, "text")...)
 		case "auto":
-			list = append(list, kit.List(kit.MDB_TYPE, BUTTON, kit.MDB_NAME, "list", kit.MDB_VALUE, AUTO)...)
+			list = append(list, kit.List(kit.MDB_TYPE, BUTTON, kit.MDB_NAME, "list", kit.MDB_ACTION, AUTO)...)
 			list = append(list, kit.List(kit.MDB_TYPE, BUTTON, kit.MDB_NAME, "back")...)
 			button = true
 		case "page":
@@ -314,12 +311,13 @@ func (c *Context) split(name string) (list []interface{}) {
 }
 
 func Display(file string, arg ...string) map[string]string {
-	if file != "" && !strings.HasPrefix(file, "/") {
-		ls := strings.Split(kit.FileLine(2, 100), "usr")
-		file = kit.Select(file+".js", file, strings.HasSuffix(file, ".js"))
-		file = path.Join("/require/shylinux.com/x", path.Dir(ls[len(ls)-1]), file)
+	if file == "" {
+		file = kit.FileName(2) + ".js"
 	}
-	return map[string]string{"display": file, kit.MDB_STYLE: kit.Select("", arg, 0)}
+	if !strings.HasPrefix(file, "/") {
+		file = path.Join("/require", kit.ModPath(2, file))
+	}
+	return map[string]string{"display": file, kit.MDB_STYLE: kit.Join(arg, " ")}
 }
 func MergeAction(list ...map[string]*Action) map[string]*Action {
 	if len(list) == 0 {

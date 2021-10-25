@@ -151,7 +151,6 @@ func (c *Context) Merge(s *Context) *Context {
 	for k, v := range s.Configs {
 		c.Configs[k] = v
 	}
-
 	if c.Caches == nil {
 		c.Caches = map[string]*Cache{}
 	}
@@ -162,7 +161,7 @@ func (c *Context) Merge(s *Context) *Context {
 }
 
 func (c *Context) Spawn(m *Message, name string, help string, arg ...string) *Context {
-	s := &Context{Name: name, Help: help, Caches: map[string]*Cache{}, Configs: map[string]*Config{}}
+	s := &Context{Name: name, Help: help}
 	if m.target.server != nil {
 		c.Register(s, m.target.server.Spawn(m, s, arg...))
 	} else {
@@ -172,7 +171,11 @@ func (c *Context) Spawn(m *Message, name string, help string, arg ...string) *Co
 	return s
 }
 func (c *Context) Begin(m *Message, arg ...string) *Context {
-	c.Caches[CTX_FOLLOW] = &Cache{Name: CTX_FOLLOW, Value: kit.Keys(kit.Select("", c.context.Cap(CTX_FOLLOW), c.context != Index), c.Name)}
+	follow := c.Name
+	if c.context != nil && c.context != Index {
+		follow = kit.Keys(c.context.Cap(CTX_FOLLOW), c.Name)
+	}
+	c.Caches[CTX_FOLLOW] = &Cache{Name: CTX_FOLLOW, Value: follow}
 	c.Caches[CTX_STATUS] = &Cache{Name: CTX_STATUS, Value: CTX_BEGIN}
 	c.Caches[CTX_STREAM] = &Cache{Name: CTX_STREAM, Value: ""}
 	m.Log(LOG_BEGIN, c.Cap(CTX_FOLLOW))
@@ -183,10 +186,14 @@ func (c *Context) Begin(m *Message, arg ...string) *Context {
 	return c
 }
 func (c *Context) Start(m *Message, arg ...string) bool {
+	wait := make(chan bool)
+	defer func() { <-wait }()
+
 	m.Hold(1)
 	m.Go(func() {
 		defer m.Done(true)
 
+		wait <- true
 		c.Cap(CTX_STATUS, CTX_START)
 		m.Log(LOG_START, c.Cap(CTX_FOLLOW))
 
@@ -335,6 +342,7 @@ func (m *Message) Search(key string, cb interface{}) *Message {
 
 	// 查找模块
 	p := m.target.root
+	key = strings.TrimPrefix(key, "ice.")
 	if ctx, ok := Info.names[key].(*Context); ok {
 		p = ctx
 	} else if key == "ice." {
@@ -479,12 +487,10 @@ func (m *Message) Capv(arg ...interface{}) interface{} {
 	for _, s := range []*Context{m.target} {
 		for c := s; c != nil; c = c.context {
 			if caps, ok := c.Caches[key]; ok {
-				if len(arg) > 0 {
-					// 写数据
+				if len(arg) > 0 { // 写数据
 					caps.Value = kit.Format(arg[0])
 				}
-				// 读数据
-				return caps.Value
+				return caps.Value // 读数据
 			}
 		}
 	}

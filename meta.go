@@ -143,7 +143,6 @@ func (m *Message) Push(key string, value interface{}, arg ...interface{}) *Messa
 			m.Add(MSG_APPEND, key, v)
 		}
 	}
-
 	return m
 }
 func (m *Message) Echo(str string, arg ...interface{}) *Message {
@@ -154,7 +153,7 @@ func (m *Message) Copy(msg *Message, arg ...string) *Message {
 	if m == nil || m == msg {
 		return m
 	}
-	if len(arg) > 0 { // 精确复制
+	if len(arg) > 0 {
 		for _, k := range arg[1:] {
 			m.Add(arg[0], kit.Simple(k, msg.meta[k])...)
 		}
@@ -346,13 +345,12 @@ func (m *Message) Optionv(key string, arg ...interface{}) interface{} {
 			m.meta[MSG_OPTION] = append(m.meta[MSG_OPTION], key)
 		}
 
-		switch str := arg[0].(type) {
+		switch delete(m.data, key); str := arg[0].(type) {
 		case nil:
 			delete(m.meta, key)
 		case string:
 			m.meta[key] = kit.Simple(arg...)
 		case []string:
-			delete(m.data, key)
 			m.meta[key] = str
 		default:
 			m.data[key] = str
@@ -386,8 +384,16 @@ func (m *Message) Appendv(key string, arg ...interface{}) []string {
 	if m.FieldsIsDetail() {
 		for i, k := range m.meta[kit.MDB_KEY] {
 			if k == key {
+				if len(arg) > 0 {
+					m.meta[kit.MDB_VALUE][i] = kit.Format(arg[0])
+				}
 				return []string{kit.Select("", m.meta[kit.MDB_VALUE], i)}
 			}
+		}
+		if len(arg) > 0 {
+			m.Add(MSG_APPEND, kit.MDB_KEY, key)
+			m.Add(MSG_APPEND, kit.MDB_VALUE, kit.Format(arg[0]))
+			return []string{kit.Format(arg[0])}
 		}
 		return nil
 	}

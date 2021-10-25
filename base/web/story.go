@@ -207,7 +207,7 @@ func init() {
 							break
 						}
 					}
-					m.Log(ice.LOG_EXPORT, "%s %s", m.Option("begin"), m.Format("append"))
+					m.Log(ice.LOG_EXPORT, "%s %s", m.Option("begin"), m.FormatSize())
 
 				case PUSH:
 					if m.Richs(CACHE, nil, m.Option("data"), nil) == nil {

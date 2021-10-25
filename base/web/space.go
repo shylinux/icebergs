@@ -177,7 +177,7 @@ func _space_send(m *ice.Message, space string, arg ...string) {
 			m.Call(m.Option("_async") == "", func(res *ice.Message) *ice.Message {
 				// 返回结果
 				if delete(frame.send, id); res != nil && m != nil {
-					return m.Cost(kit.Format("[%v]->%v %v %v", id, target, arg, m.Copy(res).Format(ice.MSG_APPEND)))
+					return m.Cost(kit.Format("[%v]->%v %v %v", id, target, arg, m.Copy(res).FormatSize()))
 				}
 				return nil
 			})

@@ -36,12 +36,6 @@ const (
 	CMD = "cmd"
 	ARG = "arg"
 	OPT = "opt"
-
-	SRC = "src"
-	ETC = "etc"
-	BIN = "bin"
-	VAR = "var"
-	USR = "usr"
 )
 const ( // MOD
 	MOD_DIR  = 0750
@@ -67,6 +61,12 @@ const ( // REPOS
 	PUBLISH = "publish"
 )
 const ( // DIR
+	SRC = "src"
+	ETC = "etc"
+	BIN = "bin"
+	VAR = "var"
+	USR = "usr"
+
 	USR_VOLCANOS = "usr/volcanos"
 	USR_LEARNING = "usr/learning"
 	USR_ICEBERGS = "usr/icebergs"

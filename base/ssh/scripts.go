@@ -12,6 +12,7 @@ import (
 
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/aaa"
+	"shylinux.com/x/icebergs/base/cli"
 	"shylinux.com/x/icebergs/base/ctx"
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/nfs"
@@ -121,7 +122,9 @@ func (f *Frame) parse(m *ice.Message, line string) string {
 			continue
 		}
 
-		msg.Cmdy(ls[0], ls[1:])
+		if msg.Cmdy(ls[0], ls[1:]); msg.Result(1) == ice.ErrNotFound {
+			msg.Set(ice.MSG_RESULT).Cmdy(cli.SYSTEM, ls)
+		}
 
 		_args, _ := msg.Optionv(ice.MSG_ARGS).([]interface{})
 		f.res = Render(msg, msg.Option(ice.MSG_OUTPUT), _args...)

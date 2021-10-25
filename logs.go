@@ -1,7 +1,6 @@
 package ice
 
 import (
-	"encoding/json"
 	"runtime"
 	"strings"
 	"time"
@@ -21,11 +20,11 @@ func (m *Message) log(level string, str string, arg ...interface{}) *Message {
 	// 日志颜色
 	prefix, suffix := "", ""
 	switch level {
-	case LOG_IMPORT, LOG_CREATE, LOG_INSERT, LOG_MODIFY, LOG_EXPORT:
+	case LOG_CREATE, LOG_INSERT, LOG_MODIFY, LOG_EXPORT, LOG_IMPORT:
 		prefix, suffix = "\033[36;44m", "\033[0m"
 	case LOG_CMDS, LOG_START, LOG_SERVE:
 		prefix, suffix = "\033[32m", "\033[0m"
-	case LOG_WARN, LOG_CLOSE, LOG_ERROR:
+	case LOG_WARN, LOG_ERROR, LOG_CLOSE:
 		prefix, suffix = "\033[31m", "\033[0m"
 	case LOG_AUTH, LOG_COST:
 		prefix, suffix = "\033[33m", "\033[0m"
@@ -33,10 +32,10 @@ func (m *Message) log(level string, str string, arg ...interface{}) *Message {
 
 	// 文件行号
 	switch level {
-	case LOG_CMDS, LOG_INFO, "refer", "form":
+	case LOG_INFO, LOG_CMDS, "refer", "form":
 	case LOG_BEGIN:
 	default:
-		suffix += " " + kit.FileLine(3, 3)
+		suffix += SP + kit.FileLine(3, 3)
 	}
 
 	// 长度截断
@@ -173,60 +172,22 @@ func (m *Message) FormatChain() string {
 	meta := append([]string{}, NL)
 	for i := len(ms) - 1; i >= 0; i-- {
 		msg := ms[i]
-
 		meta = append(meta, kit.Format("%s %s:%d %v %s:%d %v %s:%d %v %s:%d %v", msg.FormatPrefix(),
 			MSG_DETAIL, len(msg.meta[MSG_DETAIL]), msg.meta[MSG_DETAIL],
 			MSG_OPTION, len(msg.meta[MSG_OPTION]), msg.meta[MSG_OPTION],
 			MSG_APPEND, len(msg.meta[MSG_APPEND]), msg.meta[MSG_APPEND],
 			MSG_RESULT, len(msg.meta[MSG_RESULT]), msg.meta[MSG_RESULT],
 		))
-
-		if len(msg.meta[MSG_OPTION]) > 0 {
-			for _, k := range msg.meta[MSG_OPTION] {
-				if v, ok := msg.meta[k]; ok {
-					meta = append(meta, kit.Format("\t%s: %d %v", k, len(v), v))
-				}
+		for _, k := range msg.meta[MSG_OPTION] {
+			if v, ok := msg.meta[k]; ok {
+				meta = append(meta, kit.Format("\t%s: %d %v", k, len(v), v))
 			}
 		}
-
-		if len(msg.meta[MSG_APPEND]) > 0 {
-			for _, k := range msg.meta[MSG_APPEND] {
-				if v, ok := msg.meta[k]; ok {
-					meta = append(meta, kit.Format("\t%s: %d %v", k, len(v), v))
-				}
+		for _, k := range msg.meta[MSG_APPEND] {
+			if v, ok := msg.meta[k]; ok {
+				meta = append(meta, kit.Format("\t%s: %d %v", k, len(v), v))
 			}
 		}
 	}
 	return kit.Join(meta, NL)
-}
-func (m *Message) Format(key interface{}) string {
-	switch key := key.(type) {
-	case []byte:
-		json.Unmarshal(key, &m.meta)
-	case string:
-		switch key {
-		case kit.MDB_PREFIX:
-			return m.FormatPrefix()
-		case kit.MDB_SHIP:
-			return m.FormatShip()
-		case kit.MDB_COST:
-			return m.FormatCost()
-		case kit.MDB_SIZE:
-			return m.FormatSize()
-		case kit.MDB_META:
-			return m.FormatMeta()
-		case kit.MDB_CHAIN:
-			return m.FormatChain()
-		case kit.MDB_STACK:
-			return m.FormatStack()
-		}
-	}
-	return m.FormatTime()
-}
-func (m *Message) Formats(key string) string {
-	switch key {
-	case kit.MDB_META:
-		return kit.Formats(m.meta)
-	}
-	return m.Format(key)
 }

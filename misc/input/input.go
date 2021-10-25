@@ -13,105 +13,22 @@ import (
 	"shylinux.com/x/icebergs/base/cli"
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/nfs"
-	"shylinux.com/x/icebergs/base/web"
 	"shylinux.com/x/icebergs/core/code"
 	kit "shylinux.com/x/toolkits"
 )
 
-func _input_list(m *ice.Message, lib string) {
-	if lib == "" {
-		m.Richs(INPUT, "", kit.MDB_FOREACH, func(key string, value map[string]interface{}) {
-			m.Push("", kit.GetMeta(value), kit.Split("time,zone,count,store"))
-		})
-		return
-	}
-
-	m.Option(nfs.DIR_DEEP, true)
-	m.Option(nfs.DIR_TYPE, nfs.CAT)
-	m.Richs(INPUT, "", lib, func(key string, value map[string]interface{}) {
-		m.Cmdy(nfs.DIR, kit.Value(value, kit.Keym(kit.MDB_STORE)), "time size line path")
-	})
-}
-func _input_push(m *ice.Message, lib, text, code, weight string) {
-	if m.Richs(INPUT, "", lib, nil) == nil {
-		m.Rich(INPUT, "", kit.Data(
-			kit.MDB_STORE, path.Join(m.Conf(INPUT, kit.Keym(kit.MDB_STORE)), lib),
-			kit.MDB_FSIZE, m.Conf(INPUT, kit.Keym(kit.MDB_FSIZE)),
-			kit.MDB_LIMIT, m.Conf(INPUT, kit.Keym(kit.MDB_LIMIT)),
-			kit.MDB_LEAST, m.Conf(INPUT, kit.Keym(kit.MDB_LEAST)),
-			kit.MDB_ZONE, lib,
-		))
-	}
-
-	m.Richs(INPUT, "", lib, func(key string, value map[string]interface{}) {
-		prefix := kit.Keys(kit.MDB_HASH, key)
-		m.Conf(INPUT, kit.Keys(prefix, kit.Keym(kit.MDB_LIMIT)), 0)
-		m.Conf(INPUT, kit.Keys(prefix, kit.Keym(kit.MDB_LEAST)), 0)
-		n := m.Grow(INPUT, prefix, kit.Dict(TEXT, text, CODE, code, WEIGHT, weight))
-		m.Log_IMPORT(CODE, code, TEXT, text)
-		m.Echo("%s: %d", lib, n)
-	})
-}
-func _input_find(m *ice.Message, method, word, limit string) {
-	// 搜索方法
-	switch method {
-	case LINE:
-	case WORD:
-		word = "^" + word + ","
-	}
-
-	// 搜索词汇
-	res := m.Cmdx(cli.SYSTEM, "grep", "-rn", word, m.Conf(INPUT, kit.Keym(kit.MDB_STORE)))
-	bio := csv.NewReader(bytes.NewBufferString(strings.Replace(res, ":", ",", -1)))
-
-	for i := 0; i < kit.Int(limit); i++ {
-		if line, e := bio.Read(); e != nil {
-			break
-		} else if len(line) < 3 {
-
-		} else {
-			// 输出词汇
-			// m.Push(FILE, path.Base(line[0]))
-			m.Push(kit.MDB_ID, line[3])
-			m.Push(CODE, line[2])
-			m.Push(TEXT, line[4])
-			m.Push(WEIGHT, line[6])
-		}
-	}
-	m.SortIntR(WEIGHT)
-}
-func _input_save(m *ice.Message, file string, lib ...string) {
-	if f, p, e := kit.Create(file); m.Assert(e) {
-		defer f.Close()
-		n := 0
-		m.Option(ice.CACHE_LIMIT, -2)
-		for _, lib := range lib {
-			m.Richs(INPUT, "", lib, func(key string, value map[string]interface{}) {
-				m.Grows(INPUT, kit.Keys(kit.MDB_HASH, key), "", "", func(index int, value map[string]interface{}) {
-					if value[CODE] != "z" {
-						fmt.Fprintf(f, "%s %s %s\n", value[TEXT], value[CODE], value[WEIGHT])
-						n++
-					}
-				})
-			})
-		}
-		m.Log_EXPORT(FILE, p, kit.MDB_COUNT, n)
-		m.Echo("%s: %d", p, n)
-	}
-}
 func _input_load(m *ice.Message, file string, libs ...string) {
 	if f, e := os.Open(file); m.Assert(e) {
 		defer f.Close()
 
 		// 清空数据
 		lib := kit.Select(path.Base(file), libs, 0)
-		m.Assert(os.RemoveAll(path.Join(m.Conf(INPUT, kit.Keym(kit.MDB_STORE)), lib)))
-		prefix := kit.Keys(kit.MDB_HASH, m.Rich(INPUT, "", kit.Data(
-			kit.MDB_STORE, path.Join(m.Conf(INPUT, kit.Keym(kit.MDB_STORE)), lib),
-			kit.MDB_FSIZE, m.Conf(INPUT, kit.Keym(kit.MDB_FSIZE)),
-			kit.MDB_LIMIT, m.Conf(INPUT, kit.Keym(kit.MDB_LIMIT)),
-			kit.MDB_LEAST, m.Conf(INPUT, kit.Keym(kit.MDB_LEAST)),
-			kit.MDB_ZONE, lib,
+		m.Assert(os.RemoveAll(path.Join(m.Config(kit.MDB_STORE), lib)))
+		m.Cmd(mdb.DELETE, m.PrefixKey(), "", mdb.HASH, kit.MDB_ZONE, lib)
+		prefix := kit.Keys(kit.MDB_HASH, m.Rich(m.PrefixKey(), "", kit.Data(
+			kit.MDB_STORE, path.Join(m.Config(kit.MDB_STORE), lib),
+			m.ConfigSimple(kit.MDB_FSIZE, kit.MDB_LIMIT, kit.MDB_LEAST),
+			kit.MDB_ZONE, lib, kit.MDB_COUNT, 0,
 		)))
 
 		// 加载词库
@@ -123,16 +40,96 @@ func _input_load(m *ice.Message, file string, libs ...string) {
 			if len(line) < 2 || (len(line) > 2 && line[2] == "0") {
 				continue
 			}
-			m.Grow(INPUT, prefix, kit.Dict(TEXT, line[0], CODE, line[1], WEIGHT, kit.Select("999999", line, 2)))
+			m.Grow(m.PrefixKey(), prefix, kit.Dict(TEXT, line[0], CODE, line[1], WEIGHT, kit.Select("999999", line, 2)))
 		}
 
 		// 保存词库
-		m.Conf(INPUT, kit.Keys(prefix, kit.Keym(kit.MDB_LIMIT)), 0)
-		m.Conf(INPUT, kit.Keys(prefix, kit.Keym(kit.MDB_LEAST)), 0)
-		n := m.Grow(INPUT, prefix, kit.Dict(TEXT, "成功", CODE, "z", WEIGHT, "0"))
-		m.Log_IMPORT(INPUT, lib, kit.MDB_COUNT, n)
+		m.Conf(m.PrefixKey(), kit.Keys(prefix, kit.Keym(kit.MDB_LIMIT)), 0)
+		m.Conf(m.PrefixKey(), kit.Keys(prefix, kit.Keym(kit.MDB_LEAST)), 0)
+		n := m.Grow(m.PrefixKey(), prefix, kit.Dict(TEXT, "成功", CODE, "z", WEIGHT, "0"))
+		m.Log_IMPORT(m.PrefixKey(), lib, kit.MDB_COUNT, n)
 		m.Echo("%s: %d", lib, n)
 	}
+}
+func _input_push(m *ice.Message, lib, text, code, weight string) {
+	if m.Richs(m.PrefixKey(), "", lib, nil) == nil {
+		m.Rich(m.PrefixKey(), "", kit.Data(
+			kit.MDB_STORE, path.Join(m.Config(kit.MDB_STORE), lib),
+			kit.MDB_FSIZE, m.Config(kit.MDB_FSIZE),
+			kit.MDB_LIMIT, m.Config(kit.MDB_LIMIT),
+			kit.MDB_LEAST, m.Config(kit.MDB_LEAST),
+			kit.MDB_ZONE, lib,
+		))
+	}
+
+	m.Richs(m.PrefixKey(), "", lib, func(key string, value map[string]interface{}) {
+		prefix := kit.Keys(kit.MDB_HASH, key)
+		m.Conf(m.PrefixKey(), kit.Keys(prefix, kit.Keym(kit.MDB_LIMIT)), 0)
+		m.Conf(m.PrefixKey(), kit.Keys(prefix, kit.Keym(kit.MDB_LEAST)), 0)
+		n := m.Grow(m.PrefixKey(), prefix, kit.Dict(TEXT, text, CODE, code, WEIGHT, weight))
+		m.Log_IMPORT(CODE, code, TEXT, text)
+		m.Echo("%s: %d", lib, n)
+	})
+}
+func _input_save(m *ice.Message, file string, lib ...string) {
+	if f, p, e := kit.Create(file); m.Assert(e) {
+		defer f.Close()
+		n := 0
+		m.Option(ice.CACHE_LIMIT, -2)
+		for _, lib := range lib {
+			m.Richs(m.PrefixKey(), "", lib, func(key string, value map[string]interface{}) {
+				m.Grows(m.PrefixKey(), kit.Keys(kit.MDB_HASH, key), "", "", func(index int, value map[string]interface{}) {
+					if value[CODE] != "z" {
+						fmt.Fprintf(f, "%s %s %s\n", value[TEXT], value[CODE], value[WEIGHT])
+						n++
+					}
+				})
+			})
+		}
+		m.Log_EXPORT(FILE, p, kit.MDB_COUNT, n)
+		m.Echo("%s: %d", p, n)
+	}
+}
+
+func _input_find(m *ice.Message, method, word, limit string) {
+	switch method {
+	case LINE:
+	case WORD:
+		word = "^" + word + ","
+	}
+
+	// 搜索词汇
+	res := m.Cmdx(cli.SYSTEM, "grep", "-rn", word, m.Config(kit.MDB_STORE))
+	bio := csv.NewReader(bytes.NewBufferString(strings.Replace(res, ":", ",", -1)))
+
+	for i := 0; i < kit.Int(limit); i++ {
+		if line, e := bio.Read(); e != nil {
+			break
+		} else if len(line) < 3 {
+
+		} else {
+			// 输出词汇
+			m.Push(kit.MDB_ID, line[3])
+			m.Push(CODE, line[2])
+			m.Push(TEXT, line[4])
+			m.Push(WEIGHT, line[6])
+		}
+	}
+	m.SortIntR(WEIGHT)
+}
+func _input_list(m *ice.Message, lib string) {
+	if lib == "" {
+		m.Richs(m.PrefixKey(), "", kit.MDB_FOREACH, func(key string, value map[string]interface{}) {
+			m.Push("", kit.GetMeta(value), kit.Split("time,zone,count,store"))
+		})
+		return
+	}
+
+	m.Option(nfs.DIR_DEEP, true)
+	m.Option(nfs.DIR_TYPE, nfs.CAT)
+	m.Richs(m.PrefixKey(), "", lib, func(key string, value map[string]interface{}) {
+		m.Cmdy(nfs.DIR, kit.Value(value, kit.Keym(kit.MDB_STORE)), "time size line path")
+	})
 }
 
 const (
@@ -146,37 +143,8 @@ const (
 	WORD = "word"
 	LINE = "line"
 )
-const (
-	WUBI = "wubi"
-)
 const INPUT = "input"
 
-var Index = &ice.Context{Name: INPUT, Help: "输入法",
-	Configs: map[string]*ice.Config{
-		INPUT: {Name: INPUT, Help: "输入法", Value: kit.Data(
-			kit.MDB_STORE, path.Join(ice.USR_LOCAL_EXPORT, INPUT), kit.MDB_FSIZE, "200000",
-			kit.MDB_LIMIT, "5000", kit.MDB_LEAST, "1000",
-			kit.MDB_SHORT, "zone", kit.SSH_REPOS, "wubi-dict",
-		)},
-	},
-	Commands: map[string]*ice.Command{
-		ice.CTX_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) { m.Load() }},
-		ice.CTX_EXIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) { m.Save() }},
+var Index = &ice.Context{Name: INPUT, Help: "输入法"}
 
-		WUBI: {Name: "wubi method=word,line code auto", Help: "五笔", Action: map[string]*ice.Action{
-			mdb.INSERT: {Name: "insert zone=person text code weight", Help: "添加", Hand: func(m *ice.Message, arg ...string) {
-				_input_push(m, kit.Select("person", m.Option(ZONE)), m.Option(TEXT), m.Option(CODE), m.Option(WEIGHT))
-			}},
-			mdb.EXPORT: {Name: "export file=usr/wubi-dict/person zone=person", Help: "导出", Hand: func(m *ice.Message, arg ...string) {
-				// _input_save(m, kit.Select("usr/wubi-dict/person", m.Option("file")), m.Option("zone"))
-			}},
-			mdb.IMPORT: {Name: "import file=usr/wubi-dict/person zone", Help: "导入", Hand: func(m *ice.Message, arg ...string) {
-				_input_load(m, kit.Select("usr/wubi-dict/person", m.Option(FILE)), m.Option(ZONE))
-			}},
-		}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			_input_find(m, arg[0], arg[1], m.Option(ice.CACHE_LIMIT))
-		}},
-	},
-}
-
-func init() { code.Index.Register(Index, &web.Frame{}) }
+func init() { code.Index.Register(Index, nil) }

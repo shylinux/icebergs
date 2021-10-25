@@ -23,8 +23,11 @@ func (m *Message) Config(key string, arg ...interface{}) string {
 	}
 	return m.Conf(m.PrefixKey(), kit.Keym(key))
 }
-func (m *Message) ConfigSimple(key string) []string {
-	return []string{key, m.Config(key)}
+func (m *Message) ConfigSimple(key ...string) (list []string) {
+	for _, k := range kit.Split(kit.Join(key)) {
+		list = append(list, k, m.Config(k))
+	}
+	return
 }
 func (m *Message) Save(arg ...string) *Message {
 	if len(arg) == 0 {

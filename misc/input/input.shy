@@ -1,4 +1,4 @@
 chapter "input"
 
-field "五笔" web.wiki.alpha.alpha
+field "五笔" web.code.input.wubi
 

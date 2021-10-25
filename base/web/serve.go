@@ -117,7 +117,7 @@ func _serve_handle(key string, cmd *ice.Command, msg *ice.Message, w http.Respon
 	_serve_params(msg, r.URL.Path)
 
 	// 请求地址
-	msg.Option(ice.MSG_USERWEB, kit.Select(msg.Conf(SHARE, kit.Keym(kit.MDB_DOMAIN)), r.Header.Get("Referer")))
+	msg.Option(ice.MSG_USERWEB, kit.Select(msg.Conf(SPACE, kit.Keym(kit.MDB_DOMAIN)), kit.Select(r.Header.Get("X-Host"), r.Header.Get("Referer"))))
 	msg.Option(ice.MSG_USERUA, r.Header.Get("User-Agent"))
 	msg.Option(ice.MSG_USERIP, r.Header.Get(ice.MSG_USERIP))
 	if msg.R, msg.W = r, w; r.Header.Get("X-Real-Port") != "" {

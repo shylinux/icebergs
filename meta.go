@@ -161,8 +161,12 @@ func (m *Message) Copy(msg *Message, arg ...string) *Message {
 	}
 
 	for _, k := range msg.meta[MSG_OPTION] {
-		m.Set(MSG_OPTION, k)
-		m.Add(MSG_OPTION, kit.Simple(k, msg.meta[k])...)
+		if v, ok := msg.data[k]; ok {
+			m.data[k] = v
+		} else {
+			m.Set(MSG_OPTION, k)
+			m.Add(MSG_OPTION, kit.Simple(k, msg.meta[k])...)
+		}
 	}
 	for _, k := range msg.meta[MSG_APPEND] {
 		if i := kit.IndexOf(m.meta[MSG_OPTION], k); i > -1 {

@@ -9,12 +9,12 @@ import (
 	"unsafe"
 
 	"github.com/kr/pty"
+	"golang.org/x/crypto/ssh"
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/cli"
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/tcp"
 	kit "shylinux.com/x/toolkits"
-	"golang.org/x/crypto/ssh"
 )
 
 type Winsize struct{ Height, Width, x, y uint16 }
@@ -38,7 +38,7 @@ func _ssh_handle(m *ice.Message, meta map[string]string, c net.Conn, channel ssh
 	list := []string{cli.PATH + "=" + os.Getenv(cli.PATH)}
 
 	pty, tty, err := pty.Open()
-	if m.Warn(err != nil, err) {
+	if m.Warn(err) {
 		return
 	}
 	defer tty.Close()

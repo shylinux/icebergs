@@ -60,7 +60,7 @@ func _role_right(m *ice.Message, userrole string, keys ...string) (ok bool) {
 			}
 		}
 
-		if m.Warn(!ok, ice.ErrNotRight, userrole, ice.OF, keys) {
+		if m.Warn(!ok, ice.ErrNotRight, keys, USERROLE, userrole) {
 			return
 		}
 		if userrole == TECH {
@@ -75,7 +75,7 @@ func _role_right(m *ice.Message, userrole string, keys ...string) (ok bool) {
 			}
 		}
 
-		if m.Warn(!ok, ice.ErrNotRight, userrole, ice.OF, keys) {
+		if m.Warn(!ok, ice.ErrNotRight, keys, USERROLE, userrole) {
 			return
 		}
 		// 普通用户

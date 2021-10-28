@@ -4,14 +4,24 @@ chat.go
 chat.shy
 
 header.go
-river.go
-action.go
-
 search.go
+river.go
+storm.go
+ocean.go
+action.go
 footer.go
+
+pod.go
+cmd.go
+div.go
+
 scan.go
+scan.js
 paste.go
 files.go
 location.go
-meet.go
 
+info.go
+node.go
+meet.go
+room.go

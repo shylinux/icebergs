@@ -22,7 +22,6 @@ func _trans(arg []string, tr map[string]string) {
 }
 
 const (
-	ADDRESS   = "address"
 	LATITUDE  = "latitude"
 	LONGITUDE = "longitude"
 )
@@ -33,26 +32,18 @@ const (
 const LOCATION = "location"
 
 func init() {
-	Index.Merge(&ice.Context{
-		Configs: map[string]*ice.Config{
-			LOCATION: {Name: LOCATION, Help: "地理位置", Value: kit.Data(
-				kit.MDB_SHORT, kit.MDB_TEXT, kit.MDB_FIELD, "time,hash,type,name,text,longitude,latitude",
-			)},
-		},
-		Commands: map[string]*ice.Command{
-			LOCATION: {Name: "location hash auto getLocation", Help: "地理位置", Action: ice.MergeAction(map[string]*ice.Action{
-				OPENLOCATION: {Name: "openLocation", Help: "地图", Hand: func(m *ice.Message, arg ...string) {}},
-				GETLOCATION: {Name: "getLocation", Help: "打卡", Hand: func(m *ice.Message, arg ...string) {
-					m.Cmdy(mdb.INSERT, m.Prefix(LOCATION), "", mdb.HASH, arg)
-				}},
-				mdb.CREATE: {Name: "create type=text name text latitude longitude", Help: "添加", Hand: func(m *ice.Message, arg ...string) {
-					m.Cmdy(mdb.INSERT, m.Prefix(LOCATION), "", mdb.HASH, arg)
-				}},
-			}, mdb.HashAction()), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-				m.Fields(len(arg), m.Conf(LOCATION, kit.META_FIELD))
-				m.Cmdy(mdb.SELECT, m.Prefix(LOCATION), "", mdb.HASH, kit.MDB_HASH, arg)
-				m.PushAction(OPENLOCATION, mdb.REMOVE)
-			}},
-		},
-	})
+	Index.Merge(&ice.Context{Configs: map[string]*ice.Config{
+		LOCATION: {Name: LOCATION, Help: "地理位置", Value: kit.Data(
+			kit.MDB_SHORT, kit.MDB_TEXT, kit.MDB_FIELD, "time,hash,type,name,text,longitude,latitude",
+		)},
+	}, Commands: map[string]*ice.Command{
+		LOCATION: {Name: "location hash auto getLocation", Help: "地理位置", Action: ice.MergeAction(map[string]*ice.Action{
+			OPENLOCATION: {Name: "location", Help: "地图"},
+			GETLOCATION:  {Name: "location create", Help: "打卡"},
+			mdb.CREATE:   {Name: "create type=text name text latitude longitude", Help: "添加"},
+		}, mdb.HashAction()), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			mdb.HashSelect(m, arg...)
+			m.PushAction(OPENLOCATION, mdb.REMOVE)
+		}},
+	}})
 }

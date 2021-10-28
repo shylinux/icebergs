@@ -39,12 +39,12 @@ func init() {
 					}
 				}
 
-				switch m.RenderResult(); m.R.URL.String() {
+				switch m.RenderResult(); arg[0] {
 				case "/qrcode", "/input", "/sess": // 登录入口
 					return
 				}
 
-				if m.Warn(m.Option(SID, strings.TrimSpace(m.Option(SID))) == "", ice.ErrNotLogin) {
+				if m.Warn(m.Option(SID, strings.TrimSpace(m.Option(SID))) == "", ice.ErrNotLogin, arg[0]) {
 					return
 				}
 
@@ -52,7 +52,7 @@ func init() {
 					ice.OptionFields(m.Conf(SESS, kit.META_FIELD)))
 				m.Option(aaa.USERNAME, msg.Append(aaa.USERNAME))
 				m.Option(tcp.HOSTNAME, msg.Append(tcp.HOSTNAME))
-				m.Warn(m.Option(aaa.USERNAME) == "", ice.ErrNotLogin)
+				m.Warn(m.Option(aaa.USERNAME) == "", ice.ErrNotLogin, arg[0])
 			}},
 			"/sess": {Name: "/sess", Help: "会话", Action: map[string]*ice.Action{
 				aaa.LOGOUT: {Name: "logout", Help: "退出", Hand: func(m *ice.Message, arg ...string) {

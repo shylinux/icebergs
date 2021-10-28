@@ -105,45 +105,65 @@ func (c *Context) Merge(s *Context) *Context {
 	if c.Commands[CTX_EXIT] == nil {
 		c.Commands[CTX_EXIT] = &Command{Hand: func(m *Message, c *Context, cmd string, arg ...string) { m.Save() }}
 	}
-	for k, v := range s.Commands {
-		if p, ok := c.Commands[k]; ok && s != c {
-			switch last, next := p.Hand, v.Hand; k {
+
+	for key, cmd := range s.Commands {
+		if p, ok := c.Commands[key]; ok && s != c {
+			switch last, next := p.Hand, cmd.Hand; key {
 			case CTX_INIT:
-				v.Hand = func(m *Message, c *Context, key string, arg ...string) {
+				cmd.Hand = func(m *Message, c *Context, key string, arg ...string) {
 					last(m, c, key, arg...)
 					next(m, c, key, arg...)
 				}
 			case CTX_EXIT:
-				v.Hand = func(m *Message, c *Context, key string, arg ...string) {
+				cmd.Hand = func(m *Message, c *Context, key string, arg ...string) {
 					next(m, c, key, arg...)
 					last(m, c, key, arg...)
 				}
 			}
 		}
 
-		if v.Meta == nil {
-			v.Meta = kit.Dict()
+		if cmd.Meta == nil {
+			cmd.Meta = kit.Dict()
 		}
-		if c.Commands[k] = v; v.List == nil {
-			v.List = c.split(v.Name)
+		if c.Commands[key] = cmd; cmd.List == nil {
+			cmd.List = c.split(cmd.Name)
 		}
 
-		for k, a := range v.Action {
+		for k, a := range cmd.Action {
+			if p, ok := c.Commands[k]; ok {
+				switch last, next := p.Hand, a.Hand; k {
+				case CTX_INIT:
+					p.Hand = func(m *Message, c *Context, _key string, arg ...string) {
+						last(m, c, _key, arg...)
+						m._key, m._cmd = key, cmd
+						next(m, arg...)
+						m._key, m._cmd = _key, p
+					}
+				case CTX_EXIT:
+					p.Hand = func(m *Message, c *Context, _key string, arg ...string) {
+						m._key, m._cmd = key, cmd
+						next(m, arg...)
+						m._key, m._cmd = _key, p
+						last(m, c, _key, arg...)
+					}
+				}
+			}
+
 			help := strings.SplitN(a.Help, "：", 2)
 			if len(help) == 1 || help[1] == "" {
 				help = strings.SplitN(help[0], ":", 2)
 			}
-			if kit.Value(v.Meta, kit.Keys("_trans", k), help[0]); len(help) > 1 {
-				kit.Value(v.Meta, kit.Keys(kit.MDB_TITLE, k), help[1])
+			if kit.Value(cmd.Meta, kit.Keys("_trans", k), help[0]); len(help) > 1 {
+				kit.Value(cmd.Meta, kit.Keys(kit.MDB_TITLE, k), help[1])
 			}
 			if a.Hand == nil {
-				continue
+				continue // alias cmd
 			}
 			if a.List == nil {
 				a.List = c.split(a.Name)
 			}
 			if len(a.List) > 0 {
-				v.Meta[k] = a.List
+				cmd.Meta[k] = a.List
 			}
 		}
 	}

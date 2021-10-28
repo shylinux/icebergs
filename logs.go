@@ -1,6 +1,7 @@
 package ice
 
 import (
+	"io"
 	"runtime"
 	"strings"
 	"time"
@@ -52,12 +53,13 @@ func (m *Message) log(level string, str string, arg ...interface{}) *Message {
 	return m
 }
 func (m *Message) join(arg ...interface{}) string {
+	args := kit.Simple(arg...)
 	list := []string{}
-	for i := 0; i < len(arg); i += 2 {
-		if i == len(arg)-1 {
-			list = append(list, kit.Format(arg[i]))
+	for i := 0; i < len(args); i += 2 {
+		if i == len(args)-1 {
+			list = append(list, args[i])
 		} else {
-			list = append(list, kit.Format(arg[i])+":", kit.Format(arg[i+1]))
+			list = append(list, args[i]+kit.Select("", ":", !strings.HasSuffix(strings.TrimSpace(args[i]), ":")), args[i+1])
 		}
 	}
 	return kit.Join(list, SP)
@@ -73,14 +75,23 @@ func (m *Message) Cost(arg ...interface{}) *Message {
 	list := []string{m.FormatCost(), m.join(arg...)}
 	return m.log(LOG_COST, kit.Join(list, SP))
 }
-func (m *Message) Warn(err bool, arg ...interface{}) bool {
-	if !err || len(m.meta[MSG_RESULT]) > 0 && m.meta[MSG_RESULT][0] == ErrWarn {
-		return err
+func (m *Message) Warn(err interface{}, arg ...interface{}) bool {
+	switch err := err.(type) {
+	case error:
+		if err == io.EOF {
+			return false
+		}
+		arg = append(arg, "err", err)
+	case bool:
+		if !err {
+			return false
+		}
+	case nil:
+		return false
 	}
-
-	m.meta[MSG_RESULT] = kit.Simple(ErrWarn, arg)
-	m.log(LOG_WARN, m.join(kit.Simple(arg)))
-	return err
+	m.meta[MSG_RESULT] = kit.Simple(ErrWarn, kit.Simple(arg...))
+	m.log(LOG_WARN, m.join(kit.Simple(arg...)))
+	return true
 }
 func (m *Message) Error(err bool, str string, arg ...interface{}) bool {
 	if err {
@@ -147,6 +158,9 @@ func (m *Message) FormatSize() string {
 }
 func (m *Message) FormatMeta() string {
 	return kit.Format(m.meta)
+}
+func (m *Message) FormatsMeta() string {
+	return kit.Formats(m.meta)
 }
 func (m *Message) FormatStack() string {
 	pc := make([]uintptr, 100)

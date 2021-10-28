@@ -45,7 +45,7 @@ const ACCESS = "access"
 func init() {
 	Index.Merge(&ice.Context{Configs: map[string]*ice.Config{
 		ACCESS: {Name: ACCESS, Help: "认证", Value: kit.Data(
-			ssh.SCRIPT, "https://res.wx.qq.com/open/js/jweixin-1.6.0.js",
+			ssh.SCRIPT, "/plugin/local/chat/wx.js",
 			tcp.SERVER, "https://api.weixin.qq.com",
 			APPID, "", APPMM, "", "tokens", "",
 		)},

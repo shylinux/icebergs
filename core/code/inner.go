@@ -13,7 +13,7 @@ import (
 )
 
 func _inner_list(m *ice.Message, ext, file, dir string, arg ...string) {
-	if m.Warn(!m.Right(dir, file), ice.ErrNotRight, path.Join(dir, file)) {
+	if !m.Right(dir, file) {
 		return // 没有权限
 	}
 	if m.Cmdy(mdb.RENDER, ext, file, dir, arg); m.Result() != "" {
@@ -25,7 +25,7 @@ func _inner_list(m *ice.Message, ext, file, dir string, arg ...string) {
 	}
 }
 func _inner_show(m *ice.Message, ext, file, dir string, arg ...string) {
-	if m.Warn(!m.Right(dir, file), ice.ErrNotRight, path.Join(dir, file)) {
+	if !m.Right(dir, file) {
 		return // 没有权限
 	}
 	if m.Cmdy(mdb.ENGINE, ext, file, dir, arg); m.Result() != "" {
@@ -93,6 +93,12 @@ func init() {
 		}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			if len(arg) < 2 {
 				nfs.Dir(m, kit.MDB_PATH)
+				return
+			}
+			if !strings.HasSuffix(arg[0], ice.PS) {
+				arg[1] = kit.Slice(strings.Split(arg[0], ice.PS), -1)[0]
+				arg[0] = strings.TrimSuffix(arg[0], arg[1])
+				m.ProcessRewrite("path", arg[0], "file", arg[1])
 				return
 			}
 			_inner_list(m, kit.Ext(arg[1]), arg[1], arg[0])

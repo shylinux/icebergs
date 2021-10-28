@@ -56,7 +56,7 @@ func CmdAction(fields ...string) map[string]*ice.Action {
 			}
 		}},
 		ice.RUN: {Name: "run", Help: "执行", Hand: func(m *ice.Message, arg ...string) {
-			if !m.PodCmd(arg) {
+			if m.Right(arg) && !m.PodCmd(arg) {
 				m.Cmdy(arg)
 			}
 		}},
@@ -80,7 +80,9 @@ func init() {
 				}
 			}},
 		}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			_command_list(m, kit.Keys(arg))
+			for _, key := range arg {
+				_command_list(m, key)
+			}
 		}},
 	}})
 }

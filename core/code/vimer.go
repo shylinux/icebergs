@@ -24,7 +24,7 @@ func init() {
 					return
 				}
 
-				if arg = kit.Split(strings.Join(arg, " ")); !m.Warn(!m.Right(arg)) {
+				if arg = kit.Split(strings.Join(arg, " ")); m.Right(arg) {
 					if m.Cmdy(arg); len(m.Appendv(ice.MSG_APPEND)) == 0 && len(m.Resultv()) == 0 {
 						m.Cmdy(cli.SYSTEM, arg)
 					}

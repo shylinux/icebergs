@@ -81,7 +81,7 @@ func (m *Message) Call(sync bool, cb func(*Message) *Message) *Message {
 
 	p := kit.Select("10s", m.Option(kit.MDB_TIMEOUT))
 	t := time.AfterFunc(kit.Duration(p), func() {
-		m.Warn(true, "timeout", p, "of", m.Detailv())
+		m.Warn(true, ErrTimeout, m.Detailv())
 		m.Back(nil)
 		wait <- false
 	})
@@ -136,9 +136,9 @@ func (m *Message) Event(key string, arg ...string) *Message {
 	return m
 }
 func (m *Message) Right(arg ...interface{}) bool {
-	return m.Option(MSG_USERROLE) == "root" || !m.Warn(m.Cmdx("role", "right",
-		m.Option(MSG_USERROLE), strings.ReplaceAll(kit.Keys(arg...), PS, PT)) != OK,
-		ErrNotRight, m.Option(MSG_USERROLE), OF, kit.Join(kit.Simple(arg), PT), " at ", kit.FileLine(2, 3))
+	key := strings.ReplaceAll(kit.Keys(arg...), PS, PT)
+	return m.Option(MSG_USERROLE) == "root" || !m.Warn(m.Cmdx("role", "right", m.Option(MSG_USERROLE), key) != OK,
+		ErrNotRight, kit.Join(kit.Simple(arg), PT), "userrole", m.Option(MSG_USERROLE), "fileline", kit.FileLine(2, 3))
 }
 func (m *Message) Space(arg interface{}) []string {
 	if arg == nil || arg == "" || kit.Format(arg) == m.Conf("runtime", "node.name") {

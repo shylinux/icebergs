@@ -22,6 +22,10 @@ const (
 	SAVE = "save"
 	EXIT = "exit"
 
+	BASE = "base"
+	CORE = "core"
+	MISC = "misc"
+
 	SHY = "shy"
 	DEV = "dev"
 	OPS = "ops"
@@ -107,6 +111,8 @@ const ( // DIR
 	ETC_PATH     = "etc/path"
 
 	SRC_HELP       = "src/help"
+	SRC_DEBUG      = "src/debug"
+	SRC_RELEASE    = "src/release"
 	SRC_MAIN_GO    = "src/main.go"
 	SRC_MAIN_SHY   = "src/main.shy"
 	SRC_VERSION_GO = "src/version.go"
@@ -204,9 +210,11 @@ const ( // Err
 	ErrWarn         = "warn: "
 	ErrExists       = "exists: "
 	ErrExpire       = "expire: "
+	ErrTimeout      = "timeout: "
 	ErrNotLogin     = "not login: "
 	ErrNotFound     = "not found: "
 	ErrNotRight     = "not right: "
+	ErrNotStart     = "not start: "
 	ErrNotImplement = "not implement: "
 )
 const ( // LOG

@@ -4,10 +4,10 @@ import (
 	"path"
 
 	ice "shylinux.com/x/icebergs"
-	"shylinux.com/x/icebergs/base/cli"
 	"shylinux.com/x/icebergs/base/ctx"
+	"shylinux.com/x/icebergs/base/lex"
 	"shylinux.com/x/icebergs/base/mdb"
-	"shylinux.com/x/icebergs/base/web"
+	"shylinux.com/x/icebergs/base/nfs"
 	kit "shylinux.com/x/toolkits"
 )
 
@@ -32,11 +32,12 @@ func _div_parse(m *ice.Message, root map[string]interface{}, list []string) int 
 
 		ls := kit.Split(list[i])
 		if ls[0] == "_span" {
-			ls = append([]string{"", "", "style", "span"}, ls[1:]...)
+			ls = append([]string{"", "", "style", kit.Select("span", ls, 1)}, kit.Slice(ls, 2)...)
 		}
 		meta := kit.Dict(
 			"index", kit.Select("", ls, 0),
 			"args", kit.Select("", ls, 1),
+			"name", "hi",
 		)
 		for i := 2; i < len(ls); i += 2 {
 			meta[ls[i]] = ls[i+1]
@@ -57,30 +58,31 @@ func init() {
 		)},
 	}, Commands: map[string]*ice.Command{
 		DIV: {Name: "div hash auto", Help: "定制", Action: ice.MergeAction(map[string]*ice.Action{
-			mdb.CREATE: {Name: "create type=page name=hi.html text", Help: "创建"},
-			cli.MAKE: {Name: "make name=some line:textarea", Help: "生成", Hand: func(m *ice.Message, arg ...string) {
+			lex.SPLIT: {Name: "split name=some text", Help: "生成", Hand: func(m *ice.Message, arg ...string) {
 				m.Fields(0)
-				node := kit.Dict("meta", kit.Dict("name", m.Option("name")), "list", []interface{}{})
-				_div_parse(m, node, kit.Split(m.Option("line"), "\n", "\n", "\n"))
+				node := kit.Data(m.OptionSimple(kit.MDB_NAME))
+				_div_parse(m, node, kit.Split(m.Option(kit.MDB_TEXT), ice.NL, ice.NL, ice.NL))
 				m.ProcessDisplay("/plugin/local/chat/div.js")
-				m.Push("text", kit.Formats(node))
+				m.Push(kit.MDB_TEXT, kit.Formats(node))
 			}},
+			mdb.CREATE: {Name: "create type=page name=hi.html text", Help: "创建"},
 		}, mdb.HashAction(), ctx.CmdAction()), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			m.Fields(len(arg), m.Conf(DIV, kit.META_FIELD))
-			m.Cmdy(mdb.SELECT, m.PrefixKey(), "", mdb.HASH, kit.MDB_HASH, arg)
+			if mdb.HashSelect(m, arg...); len(arg) > 0 {
+				if m.Option(ice.MSG_DISPLAY, "/plugin/local/chat/div.js"); m.Length() == 0 {
+					m.Cmdy(DIV, lex.SPLIT, ice.Option{kit.MDB_TEXT, m.Cmdx(nfs.CAT, arg[0])})
+					return
+				}
+				m.Action("添加", "保存", "预览")
+			} else {
+				m.Action(lex.SPLIT, mdb.CREATE)
+			}
 			m.Table(func(index int, value map[string]string, head []string) {
 				m.PushAnchor("/" + path.Join(ice.PUBLISH, value[kit.MDB_NAME]))
 			})
-			if m.PushAction(cli.MAKE, mdb.REMOVE); len(arg) > 0 {
-				m.Option(ice.MSG_DISPLAY, "/plugin/local/chat/div.js")
-				m.Action("添加", "保存", "预览")
-			} else {
-				m.Action(mdb.CREATE, cli.MAKE)
-			}
+			m.PushAction(mdb.REMOVE)
 		}},
-		"/div": {Name: "/div", Help: "定制", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			m.RenderIndex(web.SERVE, ice.VOLCANOS, "page/div.html")
+		"/div/": {Name: "/div/", Help: "定制", Action: ice.MergeAction(ctx.CmdAction()), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			m.RenderCmd(m.Prefix(DIV), path.Join(arg...))
 		}},
 	}})
-
 }

@@ -36,12 +36,12 @@ func _cat_right(m *ice.Message, name string) bool {
 	case ice.USR:
 		switch kit.Select("", ls, 1) {
 		case "local":
-			if m.Warn(m.Option(ice.MSG_USERROLE) == aaa.VOID, ice.ErrNotRight, ice.OF, name) {
+			if m.Warn(m.Option(ice.MSG_USERROLE) == aaa.VOID, ice.ErrNotRight, name) {
 				return false
 			}
 		}
 	case ice.ETC, ice.VAR:
-		if m.Warn(m.Option(ice.MSG_USERROLE) == aaa.VOID, ice.ErrNotRight, ice.OF, name) {
+		if m.Warn(m.Option(ice.MSG_USERROLE) == aaa.VOID, ice.ErrNotRight, name) {
 			return false
 		}
 	}
@@ -99,7 +99,7 @@ func _cat_list(m *ice.Message, name string) {
 	default:
 		buf := make([]byte, ice.MOD_BUFS)
 		for begin := 0; true; {
-			if n, e := f.Read(buf[begin:]); !m.Warn(e != nil && e != io.EOF, e) {
+			if n, e := f.Read(buf[begin:]); !m.Warn(e, ice.ErrNotFound, name) {
 				m.Log_IMPORT(kit.MDB_FILE, name, kit.MDB_SIZE, n)
 				if begin += n; begin < len(buf) {
 					buf = buf[:begin]

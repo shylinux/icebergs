@@ -49,10 +49,10 @@ func _copy_file(m *ice.Message, name string, from ...string) {
 		defer f.Close()
 
 		for _, v := range from {
-			if s, e := os.Open(v); !m.Warn(e != nil, e) {
+			if s, e := os.Open(v); !m.Warn(e, ice.ErrNotFound, name) {
 				defer s.Close()
 
-				if n, e := io.Copy(f, s); !m.Warn(e != nil, e) {
+				if n, e := io.Copy(f, s); !m.Warn(e, ice.ErrNotFound, name) {
 					m.Log_IMPORT(kit.MDB_FILE, v, kit.MDB_SIZE, n)
 					m.Log_EXPORT(kit.MDB_FILE, p, kit.MDB_SIZE, n)
 				}
@@ -67,7 +67,7 @@ func _link_file(m *ice.Message, name string, from string) {
 	}
 	os.Remove(name)
 	os.MkdirAll(path.Dir(name), ice.MOD_DIR)
-	m.Warn(os.Link(from, name) != nil, "link err of", from)
+	m.Warn(os.Link(from, name), ice.ErrNotFound, from)
 	m.Echo(name)
 }
 
@@ -95,7 +95,11 @@ func init() {
 			_push_file(m, arg[0], arg[1:]...)
 		}},
 		COPY: {Name: "copy file from...", Help: "复制", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			_copy_file(m, arg[0], arg[1:]...)
+			for _, file := range arg[1:] {
+				if _, e := os.Stat(file); e == nil {
+					_copy_file(m, arg[0], arg[1:]...)
+				}
+			}
 		}},
 		LINK: {Name: "link file from", Help: "链接", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			_link_file(m, arg[0], arg[1])

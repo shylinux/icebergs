@@ -73,6 +73,23 @@ func (m *Message) RenderDownload(args ...interface{}) *Message {
 func (m *Message) RenderIndex(serve, repos string, file ...string) *Message {
 	return m.RenderDownload(path.Join(m.Conf(serve, kit.Keym(repos, kit.MDB_PATH)), kit.Select(m.Conf(serve, kit.Keym(repos, kit.MDB_INDEX)), path.Join(file...))))
 }
+func (m *Message) RenderCmd(index string, args ...interface{}) {
+	list := index
+	if index != "" {
+		list = kit.Format(kit.List(kit.Dict("index", index, "args", kit.Simple(args))))
+	}
+	m.RenderResult(kit.Format(`<!DOCTYPE html>
+<head>
+    <meta name="viewport" content="width=device-width,initial-scale=0.8,user-scalable=no">
+    <meta charset="utf-8">
+    <link rel="stylesheet" type="text/css" href="/page/cmd.css">
+</head>
+<body>
+	<script src="/page/cmd.js"></script>
+	<script>cmd(%s)</script>
+</body>
+`, list))
+}
 
 func (m *Message) IsCliUA() bool {
 	if m.Option(MSG_USERUA) == "" || !strings.HasPrefix(m.Option(MSG_USERUA), "Mozilla/5.0") {

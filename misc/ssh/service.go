@@ -36,8 +36,8 @@ func _ssh_config(m *ice.Message, h string) *ssh.ServerConfig {
 					if !strings.HasPrefix(value[kit.MDB_NAME], conn.User()+"@") {
 						return
 					}
-					if s, e := base64.StdEncoding.DecodeString(value[kit.MDB_TEXT]); !m.Warn(e != nil, e) {
-						if pub, e := ssh.ParsePublicKey([]byte(s)); !m.Warn(e != nil, e) {
+					if s, e := base64.StdEncoding.DecodeString(value[kit.MDB_TEXT]); !m.Warn(e) {
+						if pub, e := ssh.ParsePublicKey([]byte(s)); !m.Warn(e) {
 
 							if bytes.Compare(pub.Marshal(), key.Marshal()) == 0 {
 								m.Log_AUTH(tcp.HOSTPORT, conn.RemoteAddr(), aaa.USERNAME, conn.User(), tcp.HOSTNAME, value[kit.MDB_NAME])
@@ -72,7 +72,7 @@ func _ssh_config(m *ice.Message, h string) *ssh.ServerConfig {
 }
 func _ssh_accept(m *ice.Message, h string, c net.Conn) {
 	conn, chans, reqs, err := ssh.NewServerConn(c, _ssh_config(m, h))
-	if m.Warn(err != nil, err) {
+	if m.Warn(err) {
 		return
 	}
 
@@ -80,7 +80,7 @@ func _ssh_accept(m *ice.Message, h string, c net.Conn) {
 
 	for ch := range chans {
 		channel, requests, err := ch.Accept()
-		if m.Warn(err != nil, err) {
+		if m.Warn(err) {
 			continue
 		}
 

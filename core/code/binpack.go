@@ -115,8 +115,8 @@ func init() {
 					if strings.HasPrefix(key, "/") {
 						key = ice.USR_VOLCANOS + key
 					}
-					m.Warn(os.MkdirAll(path.Dir(key), ice.MOD_DIR) != nil, "key: ", key)
-					m.Warn(ioutil.WriteFile(key, value, ice.MOD_FILE) != nil, "key: ", key)
+					m.Warn(os.MkdirAll(path.Dir(key), ice.MOD_DIR), "mkdir", key)
+					m.Warn(ioutil.WriteFile(key, value, ice.MOD_FILE), "write", key)
 				}
 			}},
 		}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {

@@ -21,7 +21,7 @@ func _daemon_exec(m *ice.Message, cmd *exec.Cmd) {
 	}
 
 	// 启动进程
-	if e := cmd.Start(); m.Warn(e != nil, cmd.Args, ice.SP, e) {
+	if e := cmd.Start(); m.Warn(e, ice.ErrNotStart, cmd.Args) {
 		return // 启动失败
 	}
 	m.Echo("%d", cmd.Process.Pid)
@@ -33,7 +33,7 @@ func _daemon_exec(m *ice.Message, cmd *exec.Cmd) {
 			m.OptionSimple(CMD_OUTPUT, CMD_ERRPUT, mdb.CACHE_CLEAR_ON_EXIT),
 		)
 
-		if e := cmd.Wait(); m.Warn(e != nil, cmd.Args, ice.SP, e) {
+		if e := cmd.Wait(); m.Warn(e, ice.ErrNotStart, cmd.Args) {
 			if m.Conf(DAEMON, kit.Keys(kit.MDB_HASH, h, kit.Keym(kit.MDB_STATUS))) == START {
 				m.Cmd(mdb.MODIFY, DAEMON, "", mdb.HASH, kit.MDB_HASH, h, kit.MDB_STATUS, ERROR, ERROR, e)
 			}

@@ -99,7 +99,6 @@ func _serve_params(msg *ice.Message, path string) {
 }
 func _serve_handle(key string, cmd *ice.Command, msg *ice.Message, w http.ResponseWriter, r *http.Request) {
 	// 环境变量
-	msg.Option(ice.CACHE_LIMIT, "10")
 	msg.Option(ice.MSG_OUTPUT, "")
 	msg.Option(ice.MSG_SESSID, "")
 	for _, v := range r.Cookies() {
@@ -130,7 +129,7 @@ func _serve_handle(key string, cmd *ice.Command, msg *ice.Message, w http.Respon
 	switch r.Header.Get(ContentType) {
 	case ContentJSON:
 		var data interface{}
-		if e := json.NewDecoder(r.Body).Decode(&data); !msg.Warn(e != nil, e) {
+		if e := json.NewDecoder(r.Body).Decode(&data); !msg.Warn(e, ice.ErrNotFound, data) {
 			msg.Log_IMPORT(kit.MDB_VALUE, kit.Format(data))
 			msg.Optionv(ice.MSG_USERDATA, data)
 		}
@@ -170,7 +169,7 @@ func _serve_handle(key string, cmd *ice.Command, msg *ice.Message, w http.Respon
 	}
 
 	// 执行命令
-	if cmds, ok := _serve_login(msg, kit.Simple(msg.Optionv(ice.MSG_CMDS)), w, r); ok {
+	if cmds, ok := _serve_login(msg, key, kit.Simple(msg.Optionv(ice.MSG_CMDS)), w, r); ok {
 		msg.Option(ice.MSG_OPTS, msg.Optionv(ice.MSG_OPTION))
 		msg.Target().Cmd(msg, key, cmds...)
 		msg.Cost(kit.Format("%s %v %v", r.URL.Path, cmds, msg.FormatSize()))
@@ -180,7 +179,7 @@ func _serve_handle(key string, cmd *ice.Command, msg *ice.Message, w http.Respon
 	_args, _ := msg.Optionv(ice.MSG_ARGS).([]interface{})
 	Render(msg, msg.Option(ice.MSG_OUTPUT), _args...)
 }
-func _serve_login(msg *ice.Message, cmds []string, w http.ResponseWriter, r *http.Request) ([]string, bool) {
+func _serve_login(msg *ice.Message, key string, cmds []string, w http.ResponseWriter, r *http.Request) ([]string, bool) {
 	msg.Option(ice.MSG_USERROLE, aaa.VOID)
 	msg.Option(ice.MSG_USERNAME, "")
 
@@ -196,7 +195,7 @@ func _serve_login(msg *ice.Message, cmds []string, w http.ResponseWriter, r *htt
 
 	if _, ok := msg.Target().Commands[WEB_LOGIN]; ok {
 		// 权限检查
-		msg.Target().Cmd(msg, WEB_LOGIN, cmds...)
+		msg.Target().Cmd(msg, WEB_LOGIN, kit.Simple(key, cmds)...)
 		return cmds, msg.Result(0) != ice.ErrWarn && msg.Result(0) != ice.FALSE
 	}
 
@@ -219,7 +218,7 @@ func _serve_login(msg *ice.Message, cmds []string, w http.ResponseWriter, r *htt
 		msg.Render(STATUS, http.StatusUnauthorized, ice.ErrNotLogin)
 		return cmds, false // 未登录
 	}
-	if msg.Warn(!msg.Right(r.URL.Path)) {
+	if !msg.Right(r.URL.Path) {
 		msg.Render(STATUS, http.StatusForbidden, ice.ErrNotRight)
 		return cmds, false // 未授权
 	}

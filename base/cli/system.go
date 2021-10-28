@@ -68,7 +68,7 @@ func _system_exec(m *ice.Message, cmd *exec.Cmd) {
 	}
 
 	// 执行命令
-	if e := cmd.Run(); !m.Warn(e != nil, cmd.Args, ice.SP, e) {
+	if e := cmd.Run(); !m.Warn(e, ice.ErrNotFound, cmd.Args) {
 		m.Cost(kit.MDB_CODE, cmd.ProcessState.ExitCode(), kit.MDB_ARGS, cmd.Args)
 	}
 

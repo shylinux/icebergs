@@ -41,7 +41,7 @@ func init() {
 					return
 				}
 
-				if m.Warn(m.Option(SID, strings.TrimSpace(m.Option(SID))) == "", ice.ErrNotLogin) {
+				if m.Warn(m.Option(SID, strings.TrimSpace(m.Option(SID))) == "", ice.ErrNotLogin, arg) {
 					return
 				}
 
@@ -49,7 +49,7 @@ func init() {
 					ice.OptionFields(m.Conf(SESS, kit.META_FIELD)))
 				m.Option(aaa.USERNAME, msg.Append(aaa.USERNAME))
 				m.Option(tcp.HOSTNAME, msg.Append(tcp.HOSTNAME))
-				m.Warn(m.Option(aaa.USERNAME) == "", ice.ErrNotLogin)
+				m.Warn(m.Option(aaa.USERNAME) == "", ice.ErrNotLogin, arg)
 			}},
 			"/qrcode": {Name: "/qrcode", Help: "二维码", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 				m.Cmdy(cli.QRCODE, m.Option(kit.MDB_TEXT), m.Option(cli.FG), m.Option(cli.BG))

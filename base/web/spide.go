@@ -76,7 +76,7 @@ func _spide_list(m *ice.Message, arg ...string) {
 
 		// 构造请求
 		req, e := http.NewRequest(method, kit.MergeURL2(kit.Format(client["url"]), uri, arg), body)
-		if m.Warn(e != nil, ice.ErrNotFound, e) {
+		if m.Warn(e, ice.ErrNotFound, uri) {
 			return
 		}
 
@@ -85,7 +85,7 @@ func _spide_list(m *ice.Message, arg ...string) {
 
 		// 发送请求
 		res, e := _spide_send(m, req, kit.Format(client[kit.MDB_TIMEOUT]))
-		if m.Warn(e != nil, ice.ErrNotFound, e) {
+		if m.Warn(e, ice.ErrNotFound, uri) {
 			return
 		}
 
@@ -106,13 +106,13 @@ func _spide_list(m *ice.Message, arg ...string) {
 		}
 
 		// 错误信息
-		if m.Warn(res.StatusCode != http.StatusOK, res.Status) {
+		if m.Warn(res.StatusCode != http.StatusOK, ice.ErrNotFound, uri, "status", res.Status) {
 			switch m.Set(ice.MSG_RESULT); res.StatusCode {
 			case http.StatusNotFound:
-				m.Warn(true, ice.ErrNotFound, ice.OF, uri)
+				m.Warn(true, ice.ErrNotFound, uri)
 				return
 			case http.StatusUnauthorized:
-				m.Warn(true, ice.ErrNotRight, ice.OF, uri)
+				m.Warn(true, ice.ErrNotRight, uri)
 				return
 			}
 		}

@@ -26,13 +26,10 @@ func init() {
 			msg := m.Cmd(BOT, arg[0])
 			check := kit.Sort([]string{msg.Append("token"), m.Option("nonce"), m.Option("timestamp"), m.Option("echostr")})
 			sig := kit.Format(sha1.Sum([]byte(strings.Join(check, ""))))
-			m.Debug("what %v", sig)
-			m.Debug("what %v", check)
-			if m.Warn(sig != m.Option("msg_signature"), ice.ErrNotRight) {
+			if m.Warn(sig != m.Option("msg_signature"), ice.ErrNotRight, arg) {
 				// return
 			}
 
-			m.Debug("what %v", msg.Append("ekey"))
 			aeskey, err := base64.RawURLEncoding.DecodeString(msg.Append("ekey"))
 			m.Assert(err)
 

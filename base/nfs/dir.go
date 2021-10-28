@@ -206,6 +206,7 @@ func init() {
 				m.Cmdy(TRASH, m.Option(kit.MDB_PATH))
 			}},
 		}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			m.Info("dir_root: %v", m.Option(DIR_ROOT))
 			_dir_list(m, kit.Select("./", m.Option(DIR_ROOT)), kit.Select("", arg, 0),
 				0, m.Option(DIR_DEEP) == ice.TRUE, kit.Select(TYPE_BOTH, m.Option(DIR_TYPE)), kit.Regexp(m.Option(DIR_REG)),
 				kit.Split(kit.Select(kit.Select("time,path,size,action", m.OptionFields()), kit.Join(kit.Slice(arg, 1)))))

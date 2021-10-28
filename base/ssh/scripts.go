@@ -163,9 +163,12 @@ func (f *Frame) scan(m *ice.Message, h, line string) *Frame {
 			ps = f.ps2
 			continue // 多行
 		}
-		if line = kit.Split(line, "#", "#", "#")[0]; len(line) == 0 {
-			continue // 注释
+		if strings.HasPrefix(strings.TrimSpace(line), "#") {
+			continue
 		}
+		// if line = strings.Split(line, " # ")[0]; len(line) == 0 {
+		// 	continue // 注释
+		// }
 		if ps = f.ps1; f.stdout == os.Stdout {
 			f.printf(m, "\033[0m") // 清空格式
 		}

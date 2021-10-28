@@ -106,7 +106,9 @@ func Run(arg ...string) string {
 	}
 
 	Index.root, Pulse.root = Index, Pulse
+	Pulse.Option(CACHE_LIMIT, "10")
 
+	log.LogDisable = false
 	switch Index.Merge(Index).Begin(Pulse.Spawn(), arg...); kit.Select("", arg, 0) {
 	case "serve", "space":
 		if log.LogDisable = false; Index.Start(Pulse, arg...) {

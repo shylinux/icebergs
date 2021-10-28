@@ -80,7 +80,7 @@ func (web *Frame) Start(m *ice.Message, arg ...string) bool {
 		defer m.Cmd(mdb.MODIFY, SERVE, "", mdb.HASH, kit.MDB_NAME, m.Option(kit.MDB_NAME), kit.MDB_STATUS, tcp.STOP)
 
 		// 启动服务
-		m.Warn(true, SERVE, ": ", web.Server.Serve(l))
+		m.Warn(web.Server.Serve(l))
 	})
 
 	m.Cmd(tcp.SERVER, tcp.LISTEN, kit.MDB_TYPE, WEB, kit.MDB_NAME, m.Option(kit.MDB_NAME),

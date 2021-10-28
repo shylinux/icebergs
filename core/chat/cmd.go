@@ -6,107 +6,75 @@ import (
 
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/ctx"
+	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/nfs"
 	"shylinux.com/x/icebergs/base/web"
 	kit "shylinux.com/x/toolkits"
 )
 
-func _cmd_render(m *ice.Message, cmd string, args ...interface{}) {
-	list := []interface{}{kit.Dict("index", cmd, "args", kit.Simple(args))}
-	m.RenderResult(kit.Format(m.Conf(CMD, kit.Keym(kit.MDB_TEMPLATE)), kit.Format(list)))
-}
-
 const CMD = "cmd"
 
 func init() {
-	Index.Merge(&ice.Context{
-		Commands: map[string]*ice.Command{
-			"/cmd/": {Name: "/cmd/", Help: "命令", Action: map[string]*ice.Action{
-				ctx.COMMAND: {Name: "command", Help: "命令", Hand: func(m *ice.Message, arg ...string) {
-					if len(arg) == 0 {
-						m.Push("index", CMD)
-						m.Push("args", "")
-						return
-					}
-					m.Cmdy(ctx.COMMAND, arg[0])
-				}},
-				ice.RUN: {Name: "run", Help: "执行", Hand: func(m *ice.Message, arg ...string) {
-					m.Cmdy(arg)
-				}},
-			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-				if strings.HasSuffix(m.R.URL.Path, "/") {
-					m.RenderIndex(web.SERVE, ice.VOLCANOS, "page/cmd.html")
-					return // 目录
-				}
+	Index.Merge(&ice.Context{Configs: map[string]*ice.Config{
+		CMD: {Name: CMD, Help: "命令", Value: kit.Data(
+			kit.MDB_SHORT, "type", kit.MDB_PATH, "./",
+		)},
+	}, Commands: map[string]*ice.Command{
+		"/cmd/": {Name: "/cmd/", Help: "命令", Action: ice.MergeAction(map[string]*ice.Action{
+			ice.CTX_INIT: {Name: "_init", Help: "初始化", Hand: func(m *ice.Message, arg ...string) {
+				m.Cmdy(CMD, mdb.CREATE, kit.MDB_TYPE, "go", kit.MDB_NAME, "web.code.inner")
+				m.Cmdy(CMD, mdb.CREATE, kit.MDB_TYPE, "mod", kit.MDB_NAME, "web.code.inner")
+				m.Cmdy(CMD, mdb.CREATE, kit.MDB_TYPE, "sum", kit.MDB_NAME, "web.code.inner")
+				m.Cmdy(CMD, mdb.CREATE, kit.MDB_TYPE, "shy", kit.MDB_NAME, "web.wiki.word")
+				m.Cmdy(CMD, mdb.CREATE, kit.MDB_TYPE, "svg", kit.MDB_NAME, "web.wiki.draw")
+				m.Cmdy(CMD, mdb.CREATE, kit.MDB_TYPE, "csv", kit.MDB_NAME, "web.wiki.data")
+				m.Cmdy(CMD, mdb.CREATE, kit.MDB_TYPE, "json", kit.MDB_NAME, "web.wiki.json")
+			}},
+		}, ctx.CmdAction()), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			if strings.HasSuffix(m.R.URL.Path, ice.PS) {
+				m.RenderCmd(CMD)
+				return // 目录
+			}
 
-				switch p := path.Join(m.Conf(CMD, kit.META_PATH), path.Join(arg...)); kit.Ext(p) {
-				case "svg":
-					_cmd_render(m, "web.wiki.draw", p)
-				case "csv":
-					_cmd_render(m, "web.wiki.data", p)
-				case "json":
-					_cmd_render(m, "web.wiki.json", p)
-				case "shy":
-					_cmd_render(m, "web.wiki.word", p)
-				case "go", "mod", "sum":
-					_cmd_render(m, "web.code.inner", path.Dir(p)+"/", path.Base(p))
-				default:
-					if m.Option(ice.POD) != "" {
-						if m.PodCmd(ctx.COMMAND, arg[0]); m.Append("meta") != "" {
-							_cmd_render(m, arg[0], arg[1:])
-							return // 远程命令
-						}
-					} else {
-						if msg := m.Cmd(ctx.COMMAND, arg[0]); msg.Append("meta") != "" {
-							_cmd_render(m, arg[0], arg[1:])
-							return // 本地命令
-						}
-					}
-					m.RenderDownload(p)
+			p := path.Join(m.Config(kit.MDB_PATH), path.Join(arg...))
+			if mdb.HashSelect(m, kit.Ext(m.R.URL.Path)).Table(func(index int, value map[string]string, head []string) {
+				m.RenderCmd(value[kit.MDB_NAME], p)
+			}).Length() > 0 {
+				return // 插件
+			}
+
+			if m.PodCmd(ctx.COMMAND, arg[0]) && m.Length() > 0 {
+				m.RenderCmd(arg[0], arg[1:]) // 远程命令
+			} else if m.Cmdy(ctx.COMMAND, arg[0]); m.Length() > 0 {
+				m.RenderCmd(arg[0], arg[1:]) // 本地命令
+			} else {
+				m.RenderDownload(p) // 文件
+			}
+		}},
+		CMD: {Name: "cmd path auto upload up home", Help: "命令", Action: ice.MergeAction(map[string]*ice.Action{
+			web.UPLOAD: {Name: "upload", Help: "上传", Hand: func(m *ice.Message, arg ...string) {
+				m.Upload(path.Join(m.Config(kit.MDB_PATH), strings.TrimPrefix(path.Dir(m.R.URL.Path), "/cmd")))
+			}},
+
+			"home": {Name: "home", Help: "根目录", Hand: func(m *ice.Message, arg ...string) {
+				m.ProcessLocation("/chat/cmd/")
+			}},
+			"up": {Name: "up", Help: "上一级", Hand: func(m *ice.Message, arg ...string) {
+				if strings.TrimPrefix(m.R.URL.Path, "/cmd") == ice.PS {
+					m.Cmdy(CMD)
+				} else if strings.HasSuffix(m.R.URL.Path, ice.PS) {
+					m.ProcessLocation("../")
+				} else {
+					m.ProcessLocation("./")
 				}
 			}},
-			CMD: {Name: "cmd path auto upload up home", Help: "命令", Action: map[string]*ice.Action{
-				web.UPLOAD: {Name: "upload", Help: "上传", Hand: func(m *ice.Message, arg ...string) {
-					_action_upload(m)
-					m.Upload(path.Join(m.Conf(CMD, kit.META_PATH), strings.TrimPrefix(path.Dir(m.R.URL.Path), "/cmd")))
-				}},
-				"home": {Name: "home", Help: "根目录", Hand: func(m *ice.Message, arg ...string) {
-					m.ProcessLocation("/chat/cmd/")
-				}},
-				"up": {Name: "up", Help: "上一级", Hand: func(m *ice.Message, arg ...string) {
-					if strings.TrimPrefix(m.R.URL.Path, "/cmd") == "/" {
-						m.Cmdy(CMD)
-						return
-					}
-					if strings.HasSuffix(m.R.URL.Path, "/") {
-						m.ProcessLocation("../")
-					} else {
-						m.ProcessLocation("./")
-					}
-				}},
-			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-				if len(arg) > 0 {
-					m.ProcessLocation(arg[0])
-					return
-				}
-				m.Option(nfs.DIR_ROOT, path.Join(m.Conf(CMD, kit.META_PATH), strings.TrimPrefix(path.Dir(m.R.URL.Path), "/cmd")))
-				m.Cmdy(nfs.DIR, arg)
-			}},
-		},
-		Configs: map[string]*ice.Config{
-			CMD: {Name: CMD, Help: "命令", Value: kit.Data(
-				kit.MDB_PATH, "./", kit.MDB_INDEX, "page/cmd.html", kit.MDB_TEMPLATE, `<!DOCTYPE html>
-<head>
-    <meta name="viewport" content="width=device-width,initial-scale=0.8,user-scalable=no">
-    <meta charset="utf-8">
-    <link rel="stylesheet" type="text/css" href="/page/cmd.css">
-</head>
-<body>
-	<script src="/page/cmd.js"></script>
-	<script>cmd(%s)</script>
-</body>
-`,
-			)},
-		},
-	})
+		}, mdb.HashAction()), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			if len(arg) > 0 {
+				m.ProcessLocation(arg[0])
+				return
+			}
+			m.Option(nfs.DIR_ROOT, path.Join(m.Config(kit.MDB_PATH), strings.TrimPrefix(path.Dir(m.R.URL.Path), "/cmd")))
+			m.Cmdy(nfs.DIR, arg)
+		}},
+	}})
 }

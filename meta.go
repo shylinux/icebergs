@@ -55,12 +55,20 @@ func (m *Message) Add(key string, arg ...string) *Message {
 		m.meta[key] = append(m.meta[key], arg...)
 
 	case MSG_OPTION, MSG_APPEND:
-		if len(arg) > 0 {
-			if kit.IndexOf(m.meta[key], arg[0]) == -1 {
-				m.meta[key] = append(m.meta[key], arg[0])
-			}
-			m.meta[arg[0]] = append(m.meta[arg[0]], arg[1:]...)
+		if len(arg) == 0 {
+			break
 		}
+		if key == MSG_APPEND {
+			if i := kit.IndexOf(m.meta[MSG_OPTION], arg[0]); i > -1 {
+				m.meta[MSG_OPTION][i] = ""
+				delete(m.meta, arg[0])
+			}
+		}
+
+		if kit.IndexOf(m.meta[key], arg[0]) == -1 {
+			m.meta[key] = append(m.meta[key], arg[0])
+		}
+		m.meta[arg[0]] = append(m.meta[arg[0]], arg[1:]...)
 	}
 	return m
 }

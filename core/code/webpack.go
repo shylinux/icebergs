@@ -18,6 +18,7 @@ func _publish(file ...string) string {
 	return path.Join(ice.USR_PUBLISH, path.Join(file...))
 }
 
+const DEVPACK = "devpack"
 const WEBPACK = "webpack"
 
 func init() {
@@ -85,15 +86,11 @@ func init() {
 				}
 
 				m.Cmd(nfs.COPY, _volcanos("page/cmd.css"), _volcanos("page/index.css"), _volcanos("page/cache.css"))
-				m.Cmd(nfs.COPY, _volcanos("page/cmd.js"), _volcanos("proto.js"), _volcanos("page/cache.js"))
+				m.Cmd(nfs.COPY, _volcanos("page/cmd.js"), _volcanos("proto.js"), _volcanos("frame.js"), _volcanos("page/cache.js"))
 			}},
-			mdb.PRUNES: {Name: "prunes", Help: "清理", Hand: func(m *ice.Message, arg ...string) {
-				m.Cmd(nfs.SAVE, path.Join(ice.USR_VOLCANOS, "page/cache.css"), "")
-				m.Cmd(nfs.SAVE, path.Join(ice.USR_VOLCANOS, "page/cache.js"), "")
-			}},
-			"unpack": {Name: "unpack", Help: "开发模式", Hand: func(m *ice.Message, arg ...string) {
-				m.Cmd(nfs.SAVE, path.Join(ice.USR_VOLCANOS, "page/cache.js"))
-				m.Cmd(nfs.SAVE, path.Join(ice.USR_VOLCANOS, "page/cache.css"))
+			mdb.REMOVE: {Name: "remove", Help: "删除", Hand: func(m *ice.Message, arg ...string) {
+				m.Cmd(nfs.SAVE, _volcanos("page/cache.js"))
+				m.Cmd(nfs.SAVE, _volcanos("page/cache.css"))
 				m.Cmd(nfs.COPY, _volcanos("page/cmd.css"), _volcanos("page/index.css"), _volcanos("page/cache.css"))
 				m.Cmd(nfs.COPY, _volcanos("page/cmd.js"), _volcanos("proto.js"), _volcanos("page/cache.js"))
 			}},

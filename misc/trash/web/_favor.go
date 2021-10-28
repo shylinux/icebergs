@@ -145,7 +145,7 @@ func _favor_modify(m *ice.Message, zone, id, pro, set, old string) {
 	m.Richs(FAVOR, nil, zone, func(key string, val map[string]interface{}) {
 		switch pro {
 		case kit.MDB_ZONE, kit.MDB_ID, kit.MDB_TIME:
-			m.Warn(true, "deny modify %v", pro)
+			m.Warn(true, ice.ErrNotRight, pro)
 			return
 		}
 
@@ -363,7 +363,7 @@ func init() {
 			"/share/": {Name: "/share/", Help: "共享链", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 				m.Richs(SHARE, nil, kit.Select(m.Option(kit.SSH_SHARE), arg, 0), func(key string, value map[string]interface{}) {
 					m.Log_SELECT(kit.MDB_META, SHARE, "arg", arg, "value", kit.Format(value))
-					if m.Warn(m.Option(ice.MSG_USERROLE) != aaa.ROOT && kit.Time(kit.Format(value[kit.MDB_TIME])) < kit.Time(m.Time()), "expired") {
+					if m.Warn(m.Option(ice.MSG_USERROLE) != aaa.ROOT && kit.Time(kit.Format(value[kit.MDB_TIME])) < kit.Time(m.Time()), ice.ErrExpire, arg) {
 						m.Echo("expired")
 						return
 					}

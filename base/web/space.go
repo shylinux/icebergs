@@ -50,11 +50,11 @@ func _space_dial(m *ice.Message, dev, name string, arg ...string) {
 			for i := 0; i >= 0 && i < kit.Int(redial["c"]); i++ {
 				msg := m.Spawn()
 				msg.Option(kit.Keycb(tcp.DIAL), func(s net.Conn, e error) {
-					if msg.Warn(e != nil, e) {
+					if msg.Warn(e) {
 						return
 					}
 
-					if s, _, e := websocket.NewClient(s, u, nil, kit.Int(redial["r"]), kit.Int(redial["w"])); !msg.Warn(e != nil, e) {
+					if s, _, e := websocket.NewClient(s, u, nil, kit.Int(redial["r"]), kit.Int(redial["w"])); !msg.Warn(e) {
 						msg.Rich(SPACE, nil, kit.Dict(SOCKET, s, kit.MDB_TYPE, MASTER, kit.MDB_NAME, dev, kit.MDB_TEXT, host))
 						msg.Log_CREATE(SPACE, dev, "retry", i, "uri", uri)
 
@@ -69,7 +69,7 @@ func _space_dial(m *ice.Message, dev, name string, arg ...string) {
 
 				// 断线重连
 				sleep := time.Duration(rand.Intn(kit.Int(redial["a"])*i+2)+kit.Int(redial["b"])) * time.Millisecond
-				msg.Cost("order", i, "sleep", sleep, "reconnect", u)
+				msg.Cost("order", i, "sleep", sleep, "reconnect", dev)
 				time.Sleep(sleep)
 			}
 		})
@@ -77,7 +77,7 @@ func _space_dial(m *ice.Message, dev, name string, arg ...string) {
 }
 func _space_handle(m *ice.Message, safe bool, send map[string]*ice.Message, c *websocket.Conn, name string) bool {
 	for running := true; running; {
-		if _, b, e := c.ReadMessage(); m.Warn(e != nil, e) {
+		if _, b, e := c.ReadMessage(); m.Warn(e, "space", name) {
 			break
 		} else {
 			socket, msg := c, m.Spawn(b)
@@ -101,21 +101,21 @@ func _space_handle(m *ice.Message, safe bool, send map[string]*ice.Message, c *w
 					return // 转发报文
 				}
 
-				if msg.Warn(msg.Option(ice.MSG_HANDLE) == ice.TRUE, ice.ErrNotFound) {
+				if msg.Warn(msg.Option(ice.MSG_HANDLE) == ice.TRUE, ice.ErrNotFound, "already handled") {
 					// 回复失败
 
 				} else { // 下发失败
-					msg.Warn(true, ice.ErrNotFound)
+					msg.Warn(true, ice.ErrNotFound, target)
 					source, target = []string{}, kit.Revert(source)[1:]
 				}
 			}) != nil { // 转发成功
 
 			} else if res, ok := send[msg.Option(ice.MSG_TARGET)]; len(target) != 1 || !ok {
-				if msg.Warn(msg.Option(ice.MSG_HANDLE) == ice.TRUE, ice.ErrNotFound) {
+				if msg.Warn(msg.Option(ice.MSG_HANDLE) == ice.TRUE, ice.ErrNotFound, target) {
 					// 回复失败
 
 				} else { // 下发失败
-					msg.Warn(true, ice.ErrNotFound)
+					msg.Warn(true, ice.ErrNotFound, target)
 					source, target = []string{}, kit.Revert(source)[1:]
 				}
 
@@ -128,7 +128,7 @@ func _space_handle(m *ice.Message, safe bool, send map[string]*ice.Message, c *w
 	return false
 }
 func _space_exec(msg *ice.Message, source, target []string, c *websocket.Conn, name string) {
-	if !msg.Warn(!msg.Right(msg.Detailv()), ice.ErrNotRight) {
+	if msg.Right(msg.Detailv()) {
 		msg = msg.Cmd()
 	}
 
@@ -272,6 +272,7 @@ func init() {
 				// 添加节点
 				args := append([]string{kit.MDB_TYPE, kind, kit.MDB_NAME, name}, m.OptionSimple(SHARE, RIVER)...)
 				h := m.Rich(SPACE, nil, kit.Dict(SOCKET, s, kit.MDB_TEXT, s.RemoteAddr().String(), args))
+				m.Log_CREATE(SPACE, name, "type", kind)
 
 				m.Go(func() {
 					defer m.Confv(SPACE, kit.Keys(kit.MDB_HASH, h), "")

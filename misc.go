@@ -185,7 +185,7 @@ func (m *Message) cmd(arg ...interface{}) *Message {
 		})
 	}
 
-	m.Warn(!ok, ErrNotFound, list)
+	m.Warn(!ok, ErrNotFound, kit.Format(list))
 	return m
 }
 func (c *Context) cmd(m *Message, cmd *Command, key string, arg ...string) *Message {
@@ -219,7 +219,7 @@ func (c *Context) _cmd(m *Message, cmd *Command, key string, k string, h *Action
 		return m
 	}
 
-	if k == RUN && m.Warn(!m.Right(arg), ErrNotRight, arg) {
+	if k == RUN && !m.Right(arg) {
 		return m
 	}
 

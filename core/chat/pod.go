@@ -12,38 +12,23 @@ import (
 const POD = "pod"
 
 func init() {
-	Index.Merge(&ice.Context{
-		Commands: map[string]*ice.Command{
-			"/pod/": {Name: "/pod/", Help: "节点", Action: map[string]*ice.Action{
-				ctx.COMMAND: {Name: "command", Help: "命令", Hand: func(m *ice.Message, arg ...string) {
-					if len(arg) == 0 {
-						m.Push("index", CMD)
-						m.Push("args", "")
-						return
-					}
-					if !m.PodCmd(ctx.COMMAND, arg[0]) {
-						m.Cmdy(ctx.COMMAND, arg[0])
-					}
-				}},
-				ice.RUN: {Name: "run", Help: "执行", Hand: func(m *ice.Message, arg ...string) {
-					if !m.PodCmd(arg) {
-						m.Cmdy(arg)
-					}
-				}},
-			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-				if kit.Select("", arg, 0) == "" {
-					_cmd_render(m, web.ROUTE)
-					return
-				}
-				if len(arg) == 1 {
-					m.RenderIndex(web.SERVE, ice.VOLCANOS)
-					return
-				}
-				m.Cmdy(m.Prefix("/cmd/"), path.Join(arg[2:]...))
+	Index.Merge(&ice.Context{Configs: map[string]*ice.Config{
+		POD: {Name: POD, Help: "节点", Value: kit.Data()},
+	}, Commands: map[string]*ice.Command{
+		"/pod/": {Name: "/pod/", Help: "节点", Action: ice.MergeAction(map[string]*ice.Action{
+			ice.CTX_INIT: {Name: "_init", Help: "初始化", Hand: func(m *ice.Message, arg ...string) {
 			}},
-		},
-		Configs: map[string]*ice.Config{
-			POD: {Name: POD, Help: "节点", Value: kit.Data()},
-		},
-	})
+		}, ctx.CmdAction()), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			if kit.Select("", arg, 0) == "" {
+				m.RenderCmd(web.ROUTE)
+				return // 节点列表
+			}
+			if len(arg) == 1 {
+				m.RenderIndex(web.SERVE, ice.VOLCANOS)
+				return // 节点首页
+			}
+			// 节点命令
+			m.Cmdy("/cmd/", path.Join(arg[2:]...))
+		}},
+	}})
 }

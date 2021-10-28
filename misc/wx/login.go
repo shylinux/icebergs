@@ -13,7 +13,7 @@ import (
 
 func _wx_check(m *ice.Message) bool {
 	check := kit.Sort([]string{m.Conf(ACCESS, "meta.tokens"), m.Option("timestamp"), m.Option("nonce")})
-	if sig := kit.Format(sha1.Sum([]byte(strings.Join(check, "")))); m.Warn(sig != m.Option("signature"), ice.ErrNotRight) {
+	if sig := kit.Format(sha1.Sum([]byte(strings.Join(check, "")))); m.Warn(sig != m.Option("signature"), ice.ErrNotRight, check) {
 		return false // 验证失败
 	}
 	if m.Option("echostr") != "" {
@@ -74,7 +74,7 @@ func init() {
 
 			case TEXT: // 文本
 				cmds := kit.Split(m.Option("Content"))
-				if m.Warn(!m.Right(cmds), ice.ErrNotRight) {
+				if !m.Right(cmds) {
 					cmds = []string{MENU, mdb.CREATE}
 				}
 				m.Cmdy(TEXT, cmds)

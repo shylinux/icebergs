@@ -80,6 +80,9 @@ func init() {
 				}
 			}},
 		}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			if len(arg) == 0 {
+				_command_list(m, "")
+			}
 			for _, key := range arg {
 				_command_list(m, key)
 			}

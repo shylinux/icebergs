@@ -212,13 +212,6 @@ func (c *Context) cmd(m *Message, cmd *Command, key string, arg ...string) *Mess
 	return m
 }
 func (c *Context) _cmd(m *Message, cmd *Command, key string, k string, h *Action, arg ...string) *Message {
-	if k == "command" && h.Hand == nil {
-		for _, cmd := range arg {
-			m.Cmdy("command", cmd)
-		}
-		return m
-	}
-
 	if k == RUN && !m.Right(arg) {
 		return m
 	}
@@ -319,20 +312,31 @@ func Display(file string, arg ...string) map[string]string {
 	}
 	return map[string]string{"display": file, kit.MDB_STYLE: kit.Join(arg, " ")}
 }
-func MergeAction(list ...map[string]*Action) map[string]*Action {
+func MergeAction(list ...interface{}) map[string]*Action {
 	if len(list) == 0 {
 		return nil
 	}
+	base := list[0].(map[string]*Action)
 	for _, item := range list[1:] {
-		for k, v := range item {
-			if h, ok := list[0][k]; !ok {
-				list[0][k] = v
-			} else if h.Hand == nil {
-				h.Hand = v.Hand
+		switch item := item.(type) {
+		case map[string]*Action:
+			for k, v := range item {
+				if h, ok := base[k]; !ok {
+					base[k] = v
+				} else if h.Hand == nil {
+					h.Hand = v.Hand
+				}
 			}
+		case string:
+			base[CTX_INIT] = &Action{Hand: func(m *Message, arg ...string) {
+				m.Search(item, func(p *Context, s *Context, key string, cmd *Command) {
+					MergeAction(base, cmd.Action)
+					m.target.Merge(m.target)
+				})
+			}}
 		}
 	}
-	return list[0]
+	return base
 }
 func SelectAction(list map[string]*Action, fields ...string) map[string]*Action {
 	if len(fields) == 0 {

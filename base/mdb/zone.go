@@ -4,6 +4,7 @@ import (
 	"encoding/csv"
 	"os"
 	"path"
+	"strings"
 
 	ice "shylinux.com/x/icebergs"
 	kit "shylinux.com/x/toolkits"
@@ -56,6 +57,7 @@ func _zone_export(m *ice.Message, prefix, chain, file string) {
 	defer w.Flush()
 
 	fields := _zone_fields(m)
+	fields = append(fields, kit.MDB_EXTRA)
 	w.Write(fields)
 
 	count := 0
@@ -129,8 +131,20 @@ func ZoneAction(fields ...string) map[string]*ice.Action {
 
 	return ice.SelectAction(map[string]*ice.Action{
 		INPUTS: {Name: "inputs", Help: "补全", Hand: func(m *ice.Message, arg ...string) {
+			arg[0] = strings.TrimPrefix(arg[0], "extra.")
+			arg[0] = kit.Select(arg[0], m.Config(kit.Keys(kit.MDB_ALIAS, arg[0])))
+			m.Debug("what %v", arg[0])
 			switch arg[0] {
+			case ice.POD:
+				m.Cmdy("route")
+			case ice.CTX:
+				m.Cmdy("context")
+			case ice.CMD:
+				m.Cmdy("context", kit.Select(m.Option(ice.CTX), m.Option(kit.Keys(kit.MDB_EXTRA, ice.CTX))), "command")
+			case ice.ARG:
+
 			case _zone(m):
+				m.Debug("what %v", arg[0])
 				m.Cmdy(INPUTS, m.PrefixKey(), "", HASH, arg)
 			default:
 				m.Cmdy(INPUTS, m.PrefixKey(), "", ZONE, m.Option(_zone(m)), arg)
@@ -156,6 +170,9 @@ func ZoneAction(fields ...string) map[string]*ice.Action {
 		IMPORT: {Name: "import", Help: "导入", Hand: func(m *ice.Message, arg ...string) {
 			m.OptionFields(_zone(m))
 			m.Cmdy(IMPORT, m.PrefixKey(), "", ZONE)
+		}},
+		PLUGIN: {Name: "plugin extra.pod extra.ctx extra.cmd extra.arg", Help: "插件", Hand: func(m *ice.Message, arg ...string) {
+			m.Cmdy(MODIFY, m.PrefixKey(), "", ZONE, m.Option(_zone(m)), m.Option(kit.MDB_ID), arg)
 		}},
 		PREV: {Name: "prev", Help: "上一页", Hand: func(m *ice.Message, arg ...string) {
 			PrevPage(m, arg[0], arg[1:]...)

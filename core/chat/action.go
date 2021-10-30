@@ -2,7 +2,6 @@ package chat
 
 import (
 	"path"
-	"strings"
 
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/aaa"
@@ -47,7 +46,7 @@ func _action_exec(m *ice.Message, river, storm, index string, arg ...string) {
 		_action_upload(m) // 上传文件
 	}
 
-	if !m.PodCmd(cmds, arg) {
+	if cmds[0] == "web.chat.node" || !m.PodCmd(cmds, arg) {
 		m.Cmdy(cmds, arg) // 执行命令
 	}
 }
@@ -158,7 +157,7 @@ func init() {
 			kit.MDB_PATH, ice.USR_LOCAL_RIVER,
 		)},
 	}, Commands: map[string]*ice.Command{
-		"/action": {Name: "/action river storm action arg...", Help: "工作台", Action: map[string]*ice.Action{
+		"/action": {Name: "/action river storm action arg...", Help: "工作台", Action: ice.MergeAction(map[string]*ice.Action{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
 				for _, cmd := range []string{
 					"web.chat.meet.miss",
@@ -181,18 +180,13 @@ func init() {
 			mdb.MODIFY: {Name: "modify", Help: "编辑", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmdy(mdb.MODIFY, RIVER, _action_key(m), mdb.LIST, m.OptionSimple(kit.MDB_ID), arg)
 			}},
-			ctx.COMMAND: {Name: "command", Help: "命令", Hand: func(m *ice.Message, arg ...string) {
-				for _, k := range arg {
-					m.Cmdy(ctx.COMMAND, strings.TrimPrefix(k, "."))
-				}
-			}},
 			SHARE: {Name: "share", Help: "共享", Hand: func(m *ice.Message, arg ...string) {
 				_header_share(m, arg...)
 			}},
 			"_share": {Name: "_share", Help: "共享", Hand: func(m *ice.Message, arg ...string) {
 				_action_share(m, arg...)
 			}},
-		}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		}, ctx.CmdAction()), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			if m.Warn(m.Option(ice.MSG_USERNAME) == "", ice.ErrNotLogin, arg) {
 				return // 没有登录
 			}

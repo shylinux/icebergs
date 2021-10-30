@@ -63,8 +63,8 @@ func init() {
 					"base", kit.Dict(
 						"info", kit.List(
 							"web.chat.info",
-							"web.chat.user",
-							"web.chat.tool",
+							"web.chat.ocean",
+							"web.chat.storm",
 							"web.chat.node",
 						),
 						"scan", kit.List(
@@ -110,7 +110,7 @@ func init() {
 			}
 
 			switch kit.Select("", arg, 1) {
-			case OCEAN, NODE:
+			case STORM, OCEAN, NODE:
 				m.Option(ice.MSG_RIVER, arg[0])
 				m.Cmdy(arg[1], arg[2:])
 

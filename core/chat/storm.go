@@ -81,15 +81,14 @@ func init() {
 				return
 			}
 
-			if m.Copy(msg); len(arg) == 1 { // 命令列表
+			if m.Copy(msg); len(arg) > 1 { // 命令插件
+				m.ProcessField(arg[0], arg[1], ice.RUN)
+				m.Table(func(index int, value map[string]string, head []string) {
+					m.Cmdy(m.Space(value[ice.POD]), ctx.CONTEXT, value[ice.CTX], ctx.COMMAND, value[ice.CMD])
+				})
+			} else {
 				m.PushAction(mdb.EXPORT, mdb.IMPORT)
 			}
-
-			// 命令插件
-			m.ProcessField(arg[0], arg[1], ice.RUN)
-			m.Table(func(index int, value map[string]string, head []string) {
-				m.Cmdy(m.Space(value[ice.POD]), ctx.CONTEXT, value[ice.CTX], ctx.COMMAND, value[ice.CMD])
-			})
 		}},
 	}})
 }

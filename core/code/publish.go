@@ -176,6 +176,6 @@ export ctx_dev={{.Option "httphost"}}; ctx_temp=$(mktemp); curl -fsSL $ctx_dev -
 `,
 	"tool", `# 群组环境
 mkdir contexts; cd contexts
-export ctx_log=/dev/stdout ctx_dev={{.Option "httphost"}} ctx_river={{.Option "sess.river"}} ctx_share={{.Option "share"}} ctx_temp=$(mktemp); curl -fsSL $ctx_dev -o $ctx_temp; source $ctx_temp ice
+export ctx_dev={{.Option "httphost"}} ctx_share={{.Option "share"}} ctx_river={{.Option "sess.river"}} ctx_temp=$(mktemp); curl -fsSL $ctx_dev -o $ctx_temp; source $ctx_temp app
 `,
 )

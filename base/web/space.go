@@ -42,8 +42,8 @@ func _space_dial(m *ice.Message, dev, name string, arg ...string) {
 
 		host := kit.Format(client[tcp.HOSTNAME])
 		proto := strings.Replace(kit.Format(client[tcp.PROTOCOL]), "http", "ws", 1)
-		uri := kit.MergeURL(proto+"://"+host+"/space/", kit.MDB_TYPE, ice.Info.NodeType,
-			kit.MDB_NAME, name, SHARE, ice.Info.CtxShare, RIVER, kit.Select(ice.Info.CtxRiver, m.Option(RIVER)), arg)
+		uri := kit.MergeURL(proto+"://"+host+"/space/", kit.MDB_TYPE, ice.Info.NodeType, kit.MDB_NAME, name,
+			SHARE, m.Conf(cli.RUNTIME, kit.Keys("conf.ctx_share")), RIVER, m.Conf(cli.RUNTIME, kit.Keys("conf.ctx_river")), arg)
 		u := kit.ParseURL(uri)
 
 		m.Go(func() {

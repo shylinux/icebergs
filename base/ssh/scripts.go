@@ -164,6 +164,7 @@ func (f *Frame) scan(m *ice.Message, h, line string) *Frame {
 			continue // 多行
 		}
 		if strings.HasPrefix(strings.TrimSpace(line), "#") {
+			line = ""
 			continue
 		}
 		// if line = strings.Split(line, " # ")[0]; len(line) == 0 {
@@ -188,7 +189,9 @@ func (f *Frame) Start(m *ice.Message, arg ...string) bool {
 	switch f.source = kit.Select(STDIO, arg, 0); f.source {
 	case STDIO: // 终端交互
 		m.Cap(ice.CTX_STREAM, f.source)
-		f.target = m.Target()
+		if f.target == nil {
+			f.target = m.Target()
+		}
 
 		r, w, _ := os.Pipe()
 		m.Go(func() { io.Copy(w, os.Stdin) })
@@ -269,7 +272,7 @@ func init() {
 			}
 		}},
 		TARGET: {Name: "target name run:button", Help: "当前模块", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			f := m.Optionv(FRAME).(*Frame)
+			f := c.Server().(*Frame)
 			m.Search(arg[0]+ice.PT, func(p *ice.Context, s *ice.Context, key string) { f.target = s })
 			f.prompt(m)
 		}},

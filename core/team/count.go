@@ -13,14 +13,15 @@ const COUNT = "count"
 
 func init() {
 	Index.Merge(&ice.Context{Commands: map[string]*ice.Command{
-		COUNT: {Name: "count begin_time@date end_time@date auto insert", Help: "倒计时", Meta: kit.Dict(ice.Display(COUNT)), Action: map[string]*ice.Action{
+		COUNT: {Name: "count begin_time@date end_time@date auto insert", Help: "倒计时", Meta: kit.Dict(
+			ice.Display(""),
+		), Action: ice.MergeAction(map[string]*ice.Action{
 			mdb.INSERT: {Name: "insert zone type=once,step,week name text begin_time@date close_time@date", Help: "添加", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmdy(TASK, mdb.INSERT, arg)
 			}},
-		}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		}, TASK), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			begin_time, end_time := _task_scope(m, 8, append([]string{LONG}, arg...)...)
 			msg := _plan_list(m.Spawn(), begin_time, end_time)
-			// m.PushPodCmd(COUNT, arg...)
 			msg.SortTime(BEGIN_TIME)
 
 			tz := int64(8)

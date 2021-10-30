@@ -68,7 +68,7 @@ func init() {
 	Index.Merge(&ice.Context{Commands: map[string]*ice.Command{
 		INNER: {Name: "inner path=src/ file=main.go line=1 auto", Help: "源代码", Meta: kit.Dict(
 			ice.Display("/plugin/local/code/inner.js", "editor"),
-		), Action: map[string]*ice.Action{
+		), Action: ice.MergeAction(map[string]*ice.Action{
 			mdb.PLUGIN: {Name: "plugin", Help: "插件", Hand: func(m *ice.Message, arg ...string) {
 				if m.Cmdy(mdb.PLUGIN, arg); m.Result() == "" {
 					m.Echo(kit.Select("{}", m.Conf(INNER, kit.Keym(PLUG, arg[0]))))
@@ -87,10 +87,9 @@ func init() {
 				m.Option(nfs.DIR_ROOT, arg[2])
 				m.Cmdy(mdb.SEARCH, arg[:2], "cmd,file,line,text")
 			}},
-			mdb.INPUTS:  {Name: "favor inputs", Help: "补全"},
-			ctx.COMMAND: {Name: "command", Help: "命令"},
-			FAVOR:       {Name: "favor", Help: "收藏"},
-		}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			mdb.INPUTS: {Name: "favor inputs", Help: "补全"},
+			FAVOR:      {Name: "favor", Help: "收藏"},
+		}, ctx.CmdAction()), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			if len(arg) < 2 {
 				nfs.Dir(m, kit.MDB_PATH)
 				return

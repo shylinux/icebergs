@@ -7,13 +7,6 @@ import (
 
 const TEAM = "team"
 
-var Index = &ice.Context{Name: TEAM, Help: "团队中心", Commands: map[string]*ice.Command{
-	ice.CTX_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-		m.Load()
-	}},
-	ice.CTX_EXIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-		m.Save()
-	}},
-}}
+var Index = &ice.Context{Name: TEAM, Help: "团队中心"}
 
 func init() { web.Index.Register(Index, nil, TASK, PLAN) }

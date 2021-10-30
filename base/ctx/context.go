@@ -7,9 +7,6 @@ import (
 
 func _context_list(m *ice.Message, sub *ice.Context) {
 	m.Travel(func(p *ice.Context, s *ice.Context) {
-		if sub != nil && sub != p {
-			return
-		}
 		m.Push(kit.MDB_NAME, s.Cap(ice.CTX_FOLLOW))
 		m.Push(kit.MDB_STATUS, s.Cap(ice.CTX_STATUS))
 		m.Push(kit.MDB_STREAM, s.Cap(ice.CTX_STREAM))

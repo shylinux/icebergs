@@ -11,12 +11,22 @@ import (
 	kit "shylinux.com/x/toolkits"
 )
 
-func _volcanos(file ...string) string {
-	return path.Join(ice.USR_VOLCANOS, path.Join(file...))
+func _volcanos(m *ice.Message, file ...string) string {
+	return path.Join(m.Conf(web.SERVE, kit.Keym(ice.VOLCANOS, kit.MDB_PATH)), path.Join(file...))
 }
-func _publish(file ...string) string {
-	return path.Join(ice.USR_PUBLISH, path.Join(file...))
+func _publish(m *ice.Message, file ...string) string {
+	return path.Join(m.Conf(PUBLISH, kit.Keym(kit.MDB_PATH)), path.Join(file...))
 }
+
+const (
+	PUBLISH_ORDER_JS = "publish/order.js"
+	PAGE_CACHE_CSS   = "page/cache.css"
+	PAGE_INDEX_CSS   = "page/index.css"
+	PAGE_CACHE_JS    = "page/cache.js"
+	PAGE_INDEX_JS    = "page/index.js"
+	PAGE_CMD_CSS     = "page/cmd.css"
+	PAGE_CMD_JS      = "page/cmd.js"
+)
 
 const DEVPACK = "devpack"
 const WEBPACK = "webpack"
@@ -24,13 +34,13 @@ const WEBPACK = "webpack"
 func init() {
 	Index.Merge(&ice.Context{Commands: map[string]*ice.Command{
 		WEBPACK: {Name: "webpack path auto create prunes", Help: "打包", Action: map[string]*ice.Action{
-			mdb.CREATE: {Name: "create name=demo", Help: "创建", Hand: func(m *ice.Message, arg ...string) {
-				dir := m.Conf(web.SERVE, kit.Keym(ice.VOLCANOS, kit.MDB_PATH))
-				css, _, e := kit.Create(path.Join(dir, "page/cache.css"))
+			mdb.CREATE: {Name: "create name=hi", Help: "创建", Hand: func(m *ice.Message, arg ...string) {
+				dir := _volcanos(m)
+				css, _, e := kit.Create(path.Join(dir, PAGE_CACHE_CSS))
 				m.Assert(e)
 				defer css.Close()
 
-				js, _, e := kit.Create(path.Join(dir, "page/cache.js"))
+				js, _, e := kit.Create(path.Join(dir, PAGE_CACHE_JS))
 				m.Assert(e)
 				defer js.Close()
 
@@ -41,7 +51,7 @@ func init() {
 				for _, k := range []string{"lib", "panel", "plugin"} {
 					m.Cmd(nfs.DIR, k).Table(func(index int, value map[string]string, head []string) {
 						if kit.Ext(value[kit.MDB_PATH]) == CSS {
-							js.WriteString(`Volcanos.meta.cache["` + path.Join("/", value[kit.MDB_PATH]) + "\"] = []\n")
+							js.WriteString(`Volcanos.meta.cache["` + path.Join(ice.PS, value[kit.MDB_PATH]) + "\"] = []\n")
 							css.WriteString(m.Cmdx(nfs.CAT, value[kit.MDB_PATH]))
 						}
 					})
@@ -50,49 +60,52 @@ func init() {
 				for _, k := range []string{"lib", "panel", "plugin"} {
 					m.Cmd(nfs.DIR, k).Table(func(index int, value map[string]string, head []string) {
 						if kit.Ext(value[kit.MDB_PATH]) == JS {
-							js.WriteString(`_can_name = "` + path.Join("/", value[kit.MDB_PATH]) + "\";\n")
+							js.WriteString(`_can_name = "` + path.Join(ice.PS, value[kit.MDB_PATH]) + "\";\n")
 							js.WriteString(m.Cmdx(nfs.CAT, value[kit.MDB_PATH]))
 						}
 					})
 				}
 
-				for _, k := range []string{"publish/order.js", "frame.js"} {
-					js.WriteString(`_can_name = "` + path.Join("/", k) + "\"\n")
+				for _, k := range []string{PUBLISH_ORDER_JS, ice.FRAME_JS} {
+					js.WriteString(`_can_name = "` + path.Join(ice.PS, k) + "\"\n")
 					js.WriteString(m.Cmdx(nfs.CAT, k))
 				}
 
-				if f, _, e := kit.Create(path.Join(ice.USR_PUBLISH, WEBPACK, kit.Keys(m.Option(kit.MDB_NAME), JS))); m.Assert(e) {
+				if f, _, e := kit.Create(_publish(m, WEBPACK, kit.Keys(m.Option(kit.MDB_NAME), JS))); m.Assert(e) {
 					defer f.Close()
 
 					f.WriteString(ice.NL)
-					f.WriteString(kit.Format(`Volcanos.meta.args = {river: "%s", storm: "%s"}`, m.Option("river"), m.Option("storm")))
+					f.WriteString(kit.Format(`Volcanos.meta.args = {river: "%s", storm: "%s"}`, m.Option(web.RIVER), m.Option(web.STORM)))
 					f.WriteString(ice.NL)
 					f.WriteString(`Volcanos.meta.pack = ` + kit.Formats(kit.UnMarshal(kit.Select("{}", m.Option("content")))))
 				}
 
 				m.Option(nfs.DIR_ROOT, "")
-				if f, p, e := kit.Create(_publish(WEBPACK, kit.Keys(m.Option(kit.MDB_NAME), HTML))); m.Assert(e) {
+				if f, p, e := kit.Create(_publish(m, WEBPACK, kit.Keys(m.Option(kit.MDB_NAME), HTML))); m.Assert(e) {
+					defer f.Close()
+
 					f.WriteString(fmt.Sprintf(_pack,
-						m.Cmdx(nfs.CAT, _volcanos("page/cache.css")),
-						m.Cmdx(nfs.CAT, _volcanos("page/index.css")),
+						m.Cmdx(nfs.CAT, _volcanos(m, PAGE_CACHE_CSS)),
+						m.Cmdx(nfs.CAT, _volcanos(m, PAGE_INDEX_CSS)),
 
-						m.Cmdx(nfs.CAT, _volcanos(ice.PROTO_JS)),
-						m.Cmdx(nfs.CAT, _publish(path.Join(WEBPACK, kit.Keys(m.Option(kit.MDB_NAME), JS)))),
+						m.Cmdx(nfs.CAT, _volcanos(m, ice.PROTO_JS)),
+						m.Cmdx(nfs.CAT, _publish(m, path.Join(WEBPACK, kit.Keys(m.Option(kit.MDB_NAME), JS)))),
 
-						m.Cmdx(nfs.CAT, _volcanos("page/cache.js")),
-						m.Cmdx(nfs.CAT, _volcanos("page/index.js")),
+						m.Cmdx(nfs.CAT, _volcanos(m, PAGE_CACHE_JS)),
+						m.Cmdx(nfs.CAT, _volcanos(m, PAGE_INDEX_JS)),
 					))
 					m.Echo(p)
 				}
 
-				m.Cmd(nfs.COPY, _volcanos("page/cmd.css"), _volcanos("page/index.css"), _volcanos("page/cache.css"))
-				m.Cmd(nfs.COPY, _volcanos("page/cmd.js"), _volcanos("proto.js"), _volcanos("frame.js"), _volcanos("page/cache.js"))
+				m.Cmd(nfs.COPY, _volcanos(m, PAGE_CMD_CSS), _volcanos(m, PAGE_INDEX_CSS), _volcanos(m, PAGE_CACHE_CSS))
+				m.Cmd(nfs.COPY, _volcanos(m, PAGE_CMD_JS), _volcanos(m, ice.PROTO_JS), _volcanos(m, PAGE_CACHE_JS))
 			}},
 			mdb.REMOVE: {Name: "remove", Help: "删除", Hand: func(m *ice.Message, arg ...string) {
-				m.Cmd(nfs.SAVE, _volcanos("page/cache.js"))
-				m.Cmd(nfs.SAVE, _volcanos("page/cache.css"))
-				m.Cmd(nfs.COPY, _volcanos("page/cmd.css"), _volcanos("page/index.css"), _volcanos("page/cache.css"))
-				m.Cmd(nfs.COPY, _volcanos("page/cmd.js"), _volcanos("proto.js"), _volcanos("page/cache.js"))
+				m.Cmd(nfs.SAVE, _volcanos(m, PAGE_CACHE_JS))
+				m.Cmd(nfs.SAVE, _volcanos(m, PAGE_CACHE_CSS))
+
+				m.Cmd(nfs.COPY, _volcanos(m, PAGE_CMD_CSS), _volcanos(m, PAGE_INDEX_CSS), _volcanos(m, PAGE_CACHE_CSS))
+				m.Cmd(nfs.COPY, _volcanos(m, PAGE_CMD_JS), _volcanos(m, ice.PROTO_JS), _volcanos(m, PAGE_CACHE_JS))
 			}},
 		}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			m.Option(nfs.DIR_DEEP, true)
@@ -107,14 +120,7 @@ func init() {
 const _pack = `
 <!DOCTYPE html>
 <head>
-    <link rel="orange-touch-icon-precomposed" href="/publish/app.png"/>
-    <link rel="orange-touch-startup-image" href="/publish/splash.png"/>
-    <meta name="orange-mobile-web-app-capable" content="yes"/>
-    <meta name="orange-mobile-web-app-status-bar-style" content="black-translucent"/>
-
-    <meta name="viewport" content="width=device-width,initial-scale=0.8,user-scalable=no">
     <meta charset="utf-8">
-    <title>volcanos</title>
     <style type="text/css">%s</style>
     <style type="text/css">%s</style>
 </head>

@@ -1,9 +1,13 @@
 package code
 
 import (
+	"path"
+	"strings"
+
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/cli"
 	"shylinux.com/x/icebergs/base/mdb"
+	"shylinux.com/x/icebergs/base/nfs"
 	"shylinux.com/x/icebergs/base/web"
 	kit "shylinux.com/x/toolkits"
 )
@@ -77,6 +81,53 @@ func init() {
 				m.PushAction(ice.RUN, cli.CHECK)
 			}
 			m.StatusTimeCount()
+		}},
+		"test": {Name: "test path func auto run case", Help: "测试用例", Action: map[string]*ice.Action{
+			"run": {Name: "run", Help: "运行", Hand: func(m *ice.Message, arg ...string) {
+				// cli.Follow(m, "run", func() {
+				m.Option(cli.CMD_DIR, kit.Select(path.Dir(arg[0]), arg[0], strings.HasSuffix(arg[0], "/")))
+				m.Cmdy(cli.SYSTEM, "go", "test", "./", "-v", "-run="+arg[1])
+				// })
+			}},
+			"case": {Name: "case", Help: "用例", Hand: func(m *ice.Message, arg ...string) {
+				msg := m.Spawn()
+				if strings.HasSuffix(arg[0], "/") {
+					msg.Option(cli.CMD_DIR, arg[0])
+					msg.Split(msg.Cmdx(cli.SYSTEM, "grep", "-r", "func Test.*(", "./"), "file:line", ":", "\n")
+					msg.Table(func(index int, value map[string]string, head []string) {
+						if strings.HasPrefix(strings.TrimSpace(value["line"]), "//") {
+							return
+						}
+						ls := kit.Split(value["line"], " (", " (", " (")
+						m.Push("file", value["file"])
+						m.Push("func", strings.TrimPrefix(ls[1], "Test"))
+					})
+				} else {
+					for _, line := range kit.Split(m.Cmdx(cli.SYSTEM, "grep", "^func Test.*(", arg[0]), "\n", "\n", "\n") {
+						ls := kit.Split(line, " (", " (", " (")
+						m.Push("func", strings.TrimPrefix(ls[1], "Test"))
+					}
+				}
+			}},
+		}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			if len(arg) == 0 || arg[0] == "" {
+				m.Cmdy(nfs.DIR, "./")
+				return
+			}
+			if len(arg) == 1 {
+				if strings.HasSuffix(arg[0], "/") {
+					m.Cmdy(nfs.DIR, arg[0])
+				} else {
+					for _, line := range kit.Split(m.Cmdx(cli.SYSTEM, "grep", "^func Test.*(", arg[0]), "\n", "\n", "\n") {
+						ls := kit.Split(line, " (", " (", " (")
+						m.Push("func", strings.TrimPrefix(ls[1], "Test"))
+					}
+				}
+				return
+			}
+
+			m.Option(cli.CMD_DIR, kit.Select(path.Dir(arg[0]), arg[0], strings.HasSuffix(arg[0], "/")))
+			m.Cmdy(cli.SYSTEM, "go", "test", "./", "-v", "-run="+arg[1])
 		}},
 	}})
 }

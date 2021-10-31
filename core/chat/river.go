@@ -109,6 +109,7 @@ func init() {
 				return // 没有授权
 			}
 
+			m.Debug("what %v-------", arg)
 			switch kit.Select("", arg, 1) {
 			case STORM, OCEAN, NODE:
 				m.Option(ice.MSG_RIVER, arg[0])

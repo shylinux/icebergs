@@ -88,7 +88,7 @@ func init() {
 			switch arg[0] {
 			case "/header":
 				switch kit.Select("", arg, 1) {
-				case AGENT, CHECK:
+				case AGENT, CHECK, aaa.LOGIN:
 					return // 非登录态
 				}
 			}

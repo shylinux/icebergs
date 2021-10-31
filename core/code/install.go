@@ -18,7 +18,7 @@ import (
 func _install_download(m *ice.Message) {
 	link := m.Option(kit.MDB_LINK)
 	name := path.Base(link)
-	file := path.Join(kit.Select(m.Conf(INSTALL, kit.META_PATH), m.Option(kit.MDB_PATH)), name)
+	file := path.Join(kit.Select(m.Config(kit.MDB_PATH), m.Option(kit.MDB_PATH)), name)
 
 	defer m.Cmdy(nfs.DIR, file)
 	if _, e := os.Stat(file); e == nil {
@@ -54,7 +54,7 @@ func _install_download(m *ice.Message) {
 	})
 }
 func _install_build(m *ice.Message, arg ...string) {
-	p := m.Option(cli.CMD_DIR, path.Join(m.Conf(INSTALL, kit.META_PATH), kit.TrimExt(m.Option(kit.MDB_LINK))))
+	p := m.Option(cli.CMD_DIR, path.Join(m.Config(kit.MDB_PATH), kit.TrimExt(m.Option(kit.MDB_LINK))))
 	pp := kit.Path(path.Join(p, "_install"))
 
 	// 推流
@@ -87,8 +87,8 @@ func _install_build(m *ice.Message, arg ...string) {
 	m.ProcessHold()
 }
 func _install_order(m *ice.Message, arg ...string) {
-	m.Cmd(nfs.PUSH, "etc/path", kit.Path(m.Conf(INSTALL, kit.META_PATH), kit.TrimExt(m.Option(kit.MDB_LINK)), m.Option(kit.MDB_PATH)+"\n"))
-	m.Cmdy(nfs.CAT, "etc/path")
+	m.Cmd(nfs.PUSH, ice.ETC_PATH, kit.Path(m.Config(kit.MDB_PATH), kit.TrimExt(m.Option(kit.MDB_LINK)), m.Option(kit.MDB_PATH)+ice.NL))
+	m.Cmdy(nfs.CAT, ice.ETC_PATH)
 }
 func _install_spawn(m *ice.Message, arg ...string) {
 	if kit.Int(m.Option(tcp.PORT)) >= 10000 {
@@ -102,10 +102,10 @@ func _install_spawn(m *ice.Message, arg ...string) {
 	}
 
 	target := path.Join(m.Conf(cli.DAEMON, kit.META_PATH), m.Option(tcp.PORT))
-	source := path.Join(m.Conf(INSTALL, kit.META_PATH), kit.TrimExt(m.Option(kit.MDB_LINK)))
+	source := path.Join(m.Config(kit.MDB_PATH), kit.TrimExt(m.Option(kit.MDB_LINK)))
 
 	m.Cmd(nfs.DIR, path.Join(source, kit.Select("_install", m.Option("install")))).Table(func(index int, value map[string]string, head []string) {
-		m.Cmd(cli.SYSTEM, "cp", "-r", strings.TrimSuffix(value[kit.MDB_PATH], "/"), target)
+		m.Cmd(cli.SYSTEM, "cp", "-r", strings.TrimSuffix(value[kit.MDB_PATH], ice.PS), target)
 	})
 	m.Echo(target)
 }
@@ -168,7 +168,7 @@ func init() {
 				_install_start(m, arg...)
 			}},
 			cli.SOURCE: {Name: "source link path", Help: "源码", Hand: func(m *ice.Message, arg ...string) {
-				m.Option(nfs.DIR_ROOT, path.Join(m.Conf(INSTALL, kit.META_PATH), kit.TrimExt(m.Option(kit.MDB_LINK)), "_install"))
+				m.Option(nfs.DIR_ROOT, path.Join(m.Config(kit.MDB_PATH), kit.TrimExt(m.Option(kit.MDB_LINK)), "_install"))
 				m.Cmdy(nfs.DIR, m.Option(kit.MDB_PATH))
 			}},
 		}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
@@ -184,8 +184,7 @@ func init() {
 				m.Cmdy(nfs.CAT, kit.Select("./", arg, 2))
 			}
 		}},
-	},
-	})
+	}})
 }
 
 func InstallAction(fields ...string) map[string]*ice.Action {

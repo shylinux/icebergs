@@ -76,7 +76,13 @@ func (m *Message) RenderIndex(serve, repos string, file ...string) *Message {
 func (m *Message) RenderCmd(index string, args ...interface{}) {
 	list := index
 	if index != "" {
-		list = kit.Format(kit.List(kit.Dict("index", index, "args", kit.Simple(args))))
+		msg := m.Cmd("command", index)
+		list = kit.Format(kit.List(kit.Dict(
+			kit.MDB_INDEX, index, kit.MDB_ARGS, kit.Simple(args),
+			msg.AppendSimple(kit.MDB_NAME, kit.MDB_HELP),
+			"feature", kit.UnMarshal(msg.Append("meta")),
+			"inputs", kit.UnMarshal(msg.Append("list")),
+		)))
 	}
 	m.RenderResult(kit.Format(`<!DOCTYPE html>
 <head>

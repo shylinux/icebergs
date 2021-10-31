@@ -2,6 +2,7 @@ package code
 
 import (
 	"fmt"
+	"io"
 	"io/ioutil"
 	"os"
 	"path"
@@ -13,11 +14,11 @@ import (
 	kit "shylinux.com/x/toolkits"
 )
 
-func _pack_write(o *os.File, arg ...string) {
+func _pack_write(o io.Writer, arg ...string) {
 	for _, v := range arg {
-		o.WriteString(v)
+		fmt.Fprint(o, v)
 	}
-	o.WriteString(ice.NL)
+	fmt.Fprintln(o)
 }
 func _pack_file(m *ice.Message, file string) string {
 	list := ""
@@ -29,7 +30,7 @@ func _pack_file(m *ice.Message, file string) string {
 		}
 	}
 
-	if list = strings.ReplaceAll(list, " ", ","); len(list) > 0 {
+	if list = strings.ReplaceAll(list, ice.SP, ","); len(list) > 0 {
 		return fmt.Sprintf(`[]byte{%v}`, list[1:len(list)-1])
 	}
 	return "[]byte{}"
@@ -43,7 +44,7 @@ func _pack_dir(m *ice.Message, pack *os.File, dir string) {
 		if path.Base(value[kit.MDB_PATH]) == "binpack.go" {
 			return
 		}
-		switch strings.Split(value[kit.MDB_PATH], "/")[0] {
+		switch strings.Split(value[kit.MDB_PATH], ice.PS)[0] {
 		case "pluged", "trash":
 			return
 		}
@@ -72,8 +73,8 @@ func _pack_volcanos(m *ice.Message, pack *os.File, dir string) {
 }
 func _pack_ctx(m *ice.Message, pack *os.File) {
 	_pack_dir(m, pack, ice.SRC_HELP)
-	_pack_dir(m, pack, "src")
-	pack.WriteString(ice.NL)
+	_pack_dir(m, pack, ice.SRC)
+	_pack_write(pack)
 }
 
 const BINPACK = "binpack"
@@ -84,27 +85,25 @@ func init() {
 			mdb.CREATE: {Name: "create", Help: "创建", Hand: func(m *ice.Message, arg ...string) {
 				if pack, p, e := kit.Create(ice.SRC_BINPACK_GO); m.Assert(e) {
 					defer pack.Close()
+					defer m.Echo(p)
 
 					_pack_write(pack, `package main`)
-					_pack_write(pack, "")
+					_pack_write(pack)
 					_pack_write(pack, `import (`)
 					_pack_write(pack, `	ice "shylinux.com/x/icebergs"`)
 					_pack_write(pack, `)`)
-					_pack_write(pack, "")
+					_pack_write(pack)
 
 					_pack_write(pack, `func init() {`)
-					_pack_write(pack, `    ice.Info.Pack = map[string][]byte{`)
+					_pack_write(pack, `	ice.Info.Pack = map[string][]byte{`)
 
 					_pack_volcanos(m, pack, ice.USR_VOLCANOS)
 					_pack_dir(m, pack, ice.USR_LEARNING)
-					// _pack_dir(m, pack, ice.USR_ICEBERGS)
-					// _pack_dir(m, pack, ice.USR_TOOLKITS)
 					_pack_dir(m, pack, ice.USR_INTSHELL)
 					_pack_ctx(m, pack)
 
-					_pack_write(pack, `    }`)
+					_pack_write(pack, `	}`)
 					_pack_write(pack, `}`)
-					m.Echo(p)
 				}
 			}},
 			mdb.REMOVE: {Name: "remove", Help: "删除", Hand: func(m *ice.Message, arg ...string) {
@@ -112,7 +111,7 @@ func init() {
 			}},
 			mdb.EXPORT: {Name: "export", Help: "导出", Hand: func(m *ice.Message, arg ...string) {
 				for key, value := range ice.Info.Pack {
-					if strings.HasPrefix(key, "/") {
+					if strings.HasPrefix(key, ice.PS) {
 						key = ice.USR_VOLCANOS + key
 					}
 					m.Warn(os.MkdirAll(path.Dir(key), ice.MOD_DIR), "mkdir", key)

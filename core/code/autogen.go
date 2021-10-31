@@ -21,16 +21,6 @@ func _defs(m *ice.Message, args ...string) {
 		}
 	}
 }
-func _autogen_script(m *ice.Message, dir string) {
-	buf, _ := kit.Render(`chapter "{{.Option "name"}}"
-
-field "{{.Option "help"}}" {{.Option "key"}}
-`, m)
-	m.Cmd(nfs.DEFS, dir, string(buf))
-}
-func _autogen_source(m *ice.Message, zone, name string) {
-	m.Cmd(nfs.PUSH, ice.SRC_MAIN_SHY, "\n", kit.SSH_SOURCE+` `+path.Join(zone, kit.Keys(name, SHY)), "\n")
-}
 func _autogen_module(m *ice.Message, dir string) {
 	buf, _ := kit.Render(`package {{.Option "zone"}}
 
@@ -74,8 +64,18 @@ func main() { print(ice.Run()) }
 		}
 	})
 
-	m.Cmd(nfs.SAVE, main, strings.Join(list, ice.NL))
+	m.Cmd(nfs.SAVE, main, kit.Join(list, ice.NL))
 	return
+}
+func _autogen_script(m *ice.Message, dir string) {
+	buf, _ := kit.Render(`chapter "{{.Option "name"}}"
+
+field "{{.Option "help"}}" {{.Option "key"}}
+`, m)
+	m.Cmd(nfs.DEFS, dir, string(buf))
+}
+func _autogen_source(m *ice.Message, zone, name string) {
+	m.Cmd(nfs.PUSH, ice.SRC_MAIN_SHY, ice.NL, kit.SSH_SOURCE+ice.SP+path.Join(zone, kit.Keys(name, SHY)), ice.NL)
 }
 func _autogen_mod(m *ice.Message, file string) (mod string) {
 	m.Cmd(nfs.DEFS, ice.GO_MOD, kit.Format(`module %s
@@ -85,7 +85,7 @@ go 1.11
 
 	m.Cmd(nfs.CAT, file, func(line string, index int) {
 		if strings.HasPrefix(line, "module") {
-			mod = strings.Split(line, " ")[1]
+			mod = kit.Split(line, ice.SP)[1]
 			m.Logs("module", mod)
 		}
 	})
@@ -127,17 +127,17 @@ func init() {
 		ice.Info.HostName, ice.Info.UserName,
 	))
 
-	m.Cmdy(nfs.DIR, ice.SRC_BINPACK_GO, "time,size,line,path")
-	m.Cmdy(nfs.DIR, ice.SRC_VERSION_GO, "time,size,line,path")
-	m.Cmdy(nfs.DIR, ice.SRC_MAIN_GO, "time,size,line,path")
+	m.Cmdy(nfs.DIR, ice.SRC_BINPACK_GO)
+	m.Cmdy(nfs.DIR, ice.SRC_VERSION_GO)
+	m.Cmdy(nfs.DIR, ice.SRC_MAIN_GO)
 }
 func _autogen_miss(m *ice.Message) {
 	m.Cmd(nfs.DEFS, ice.ETC_MISS_SH, m.Conf(web.DREAM, kit.Keym("miss")))
 	defer m.Cmdy(nfs.CAT, ice.ETC_MISS_SH)
 
-	m.Cmdy(nfs.DIR, ice.ETC_MISS_SH, "time,size,line,path")
-	m.Cmdy(nfs.DIR, ice.GO_MOD, "time,size,line,path")
-	m.Cmdy(nfs.DIR, ice.GO_SUM, "time,size,line,path")
+	m.Cmdy(nfs.DIR, ice.ETC_MISS_SH)
+	m.Cmdy(nfs.DIR, ice.GO_MOD)
+	m.Cmdy(nfs.DIR, ice.GO_SUM)
 }
 
 const AUTOGEN = "autogen"
@@ -145,10 +145,17 @@ const AUTOGEN = "autogen"
 func init() {
 	Index.Merge(&ice.Context{Commands: map[string]*ice.Command{
 		AUTOGEN: {Name: "autogen path auto create binpack script", Help: "生成", Action: map[string]*ice.Action{
+			mdb.INPUTS: {Name: "inputs", Help: "补全", Hand: func(m *ice.Message, arg ...string) {
+				switch arg[0] {
+				case kit.MDB_MAIN:
+					m.Cmdy(nfs.DIR, ice.SRC, "path,size,time", ice.Option{nfs.DIR_REG, `.*\.go`})
+					m.RenameAppend(kit.MDB_PATH, arg[0])
+				}
+			}},
 			mdb.CREATE: {Name: "create main=src/main.go@key key zone type=Zone,Hash,Data name=hi list help", Help: "模块", Hand: func(m *ice.Message, arg ...string) {
-				_defs(m, "zone", m.Option("name"), "help", m.Option("name"))
-				_defs(m, "key", kit.Keys("web.code", m.Option("zone"), m.Option("name")))
-				switch m.Option("type") {
+				_defs(m, kit.MDB_ZONE, m.Option(kit.MDB_NAME), kit.MDB_HELP, m.Option(kit.MDB_NAME))
+				_defs(m, kit.MDB_KEY, kit.Keys("web.code", m.Option(kit.MDB_ZONE), m.Option(kit.MDB_NAME)))
+				switch m.Option(kit.MDB_TYPE) {
 				case "Zone":
 					_defs(m, "list", "list zone id auto insert")
 				case "Hash":
@@ -158,34 +165,26 @@ func init() {
 				}
 				m.Option("tag", kit.Format("`name:\"%s\" help:\"%s\"`", m.Option("list"), m.Option("help")))
 
-				if p := path.Join(ice.SRC, m.Option(kit.MDB_ZONE), kit.Keys(m.Option(kit.MDB_NAME), SHY)); !kit.FileExists(p) {
-					_autogen_script(m, p)
-					_autogen_source(m, m.Option(kit.MDB_ZONE), m.Option(kit.MDB_NAME))
-				}
-
 				if p := path.Join(ice.SRC, m.Option(kit.MDB_ZONE), kit.Keys(m.Option(kit.MDB_NAME), GO)); !kit.FileExists(p) {
 					_autogen_module(m, p)
 					_autogen_import(m, m.Option(kit.MDB_MAIN), m.Option(kit.MDB_ZONE), _autogen_mod(m, ice.GO_MOD))
 				}
-			}},
-			mdb.INPUTS: {Name: "inputs", Help: "补全", Hand: func(m *ice.Message, arg ...string) {
-				switch arg[0] {
-				case kit.MDB_MAIN:
-					m.Option(nfs.DIR_REG, `.*\.go`)
-					m.Cmdy(nfs.DIR, ice.SRC, "path,size,time")
-					m.RenameAppend(kit.MDB_PATH, arg[0])
+
+				if p := path.Join(ice.SRC, m.Option(kit.MDB_ZONE), kit.Keys(m.Option(kit.MDB_NAME), SHY)); !kit.FileExists(p) {
+					_autogen_script(m, p)
+					_autogen_source(m, m.Option(kit.MDB_ZONE), m.Option(kit.MDB_NAME))
 				}
+			}},
+			ssh.SCRIPT: {Name: "script", Help: "脚本：生成 etc/miss.sh", Hand: func(m *ice.Message, arg ...string) {
+				_autogen_miss(m)
 			}},
 			BINPACK: {Name: "binpack", Help: "打包：生成 src/binpack.go", Hand: func(m *ice.Message, arg ...string) {
 				_autogen_version(m)
 				m.Cmd(BINPACK, mdb.CREATE)
 				m.Cmd(cli.SYSTEM, "sh", "-c", `cat src/binpack.go|sed 's/package main/package ice/g' > usr/release/binpack.go`)
 			}},
-			ssh.SCRIPT: {Name: "script", Help: "脚本：生成 etc/miss.sh", Hand: func(m *ice.Message, arg ...string) {
-				_autogen_miss(m)
-			}},
 		}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			if m.Option(nfs.DIR_ROOT, ice.SRC); len(arg) == 0 || strings.HasSuffix(arg[0], "/") {
+			if m.Option(nfs.DIR_ROOT, ice.SRC); len(arg) == 0 || strings.HasSuffix(arg[0], ice.PS) {
 				m.Cmdy(nfs.DIR, kit.Select("./", arg, 0))
 			} else {
 				m.Cmdy(nfs.CAT, arg[0])

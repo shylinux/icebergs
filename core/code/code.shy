@@ -20,3 +20,29 @@ field "脚本" web.code.shy
 field "后端" web.code.go
 field "前端" web.code.js
 
+code.go
+code.shy
+
+autogen.go
+webpack.go
+binpack.go
+compile.go
+publish.go
+upgrade.go
+install.go
+
+vimer.go
+inner.go
+favor.go
+bench.go
+pprof.go
+
+c.go
+sh.go
+shy.go
+go.go
+js.go
+
+python.go
+python.shy
+case.go

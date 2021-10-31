@@ -7,18 +7,11 @@ import (
 
 const CODE = "code"
 
-var Index = &ice.Context{Name: CODE, Help: "编程中心", Commands: map[string]*ice.Command{
-	ice.CTX_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-		m.Load()
-	}},
-	ice.CTX_EXIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-		m.Save()
-	}},
-}}
+var Index = &ice.Context{Name: CODE, Help: "编程中心"}
 
 func init() {
 	web.Index.Register(Index, &web.Frame{},
-		WEBPACK, BINPACK, AUTOGEN, COMPILE, UPGRADE, PUBLISH, INSTALL,
+		AUTOGEN, WEBPACK, BINPACK, COMPILE, PUBLISH, UPGRADE, INSTALL,
 		VIMER, INNER, FAVOR, BENCH, PPROF,
 		C, SH, SHY, GO, JS,
 	)

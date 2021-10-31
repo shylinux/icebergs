@@ -23,6 +23,12 @@ func (m *Message) Config(key string, arg ...interface{}) string {
 	}
 	return m.Conf(m.PrefixKey(), kit.Keym(key))
 }
+func (m *Message) Configv(key string, arg ...interface{}) interface{} {
+	if len(arg) > 0 {
+		m.Confv(m.PrefixKey(), kit.Keym(key), arg[0])
+	}
+	return m.Confv(m.PrefixKey(), kit.Keym(key))
+}
 func (m *Message) ConfigSimple(key ...string) (list []string) {
 	for _, k := range kit.Split(kit.Join(key)) {
 		list = append(list, k, m.Config(k))

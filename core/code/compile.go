@@ -31,7 +31,7 @@ func init() {
 			}},
 		}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			if len(arg) == 0 {
-				m.Cmdy(nfs.DIR, m.Config(nfs.PATH), "time,size,path")
+				m.Cmdy(nfs.DIR, m.Config(nfs.PATH))
 				return
 			}
 
@@ -52,12 +52,12 @@ func init() {
 				}
 			}
 			file := path.Join(kit.Select("", m.Config(nfs.PATH), m.Option(cli.CMD_DIR) == ""),
-				kit.Keys(kit.Select(ice.ICE, kit.TrimExt(main, ".go"), main != ice.SRC_MAIN_GO), goos, arch))
+				kit.Keys(kit.Select(ice.ICE, kit.TrimExt(main), main != ice.SRC_MAIN_GO), goos, arch))
 
 			// 执行编译
 			_autogen_version(m.Spawn())
-			m.Optionv(cli.CMD_ENV, kit.Simple(m.Confv(COMPILE, kit.Keym(cli.ENV)), cli.GOOS, goos, cli.GOARCH, arch))
-			if msg := m.Cmd(cli.SYSTEM, m.Confv(COMPILE, kit.Keym(GO)), "-o", file, main, ice.SRC_VERSION_GO, ice.SRC_BINPACK_GO); !cli.IsSuccess(msg) {
+			m.Optionv(cli.CMD_ENV, kit.Simple(m.Configv(cli.ENV), cli.GOOS, goos, cli.GOARCH, arch))
+			if msg := m.Cmd(cli.SYSTEM, m.Configv(GO), "-o", file, main, ice.SRC_VERSION_GO, ice.SRC_BINPACK_GO); !cli.IsSuccess(msg) {
 				m.Copy(msg)
 				return
 			}
@@ -65,7 +65,7 @@ func init() {
 			// 编译成功
 			m.Log_EXPORT(cli.SOURCE, main, cli.TARGET, file)
 			m.Cmdy(nfs.DIR, file, "time,path,size,link,action")
-			m.Cmdy(PUBLISH, ice.CONTEXTS, "base")
+			m.Cmdy(PUBLISH, ice.CONTEXTS, ice.BASE)
 			m.StatusTimeCount()
 		}},
 	}})

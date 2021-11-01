@@ -36,14 +36,11 @@ func _title_parse(m *ice.Message, dir string, root map[string]interface{}, list 
 			ls[1] = path.Join(dir, ls[1])
 		}
 
-		meta := kit.Dict(
-			"name", kit.Select("", ls, 0),
-			"link", kit.Select("", ls, 1),
-		)
+		meta := kit.Dict(kit.MDB_NAME, kit.Select("", ls, 0), kit.MDB_LINK, kit.Select("", ls, 1))
 		for i := 2; i < len(ls); i += 2 {
 			meta[ls[i]] = ls[i+1]
 		}
-		last = kit.Dict("meta", meta, "list", kit.List())
+		last = kit.Data(meta)
 		kit.Value(root, "list.-2", last)
 	}
 	return len(list)
@@ -53,19 +50,19 @@ func _title_show(m *ice.Message, kind, text string, arg ...string) {
 	switch title, _ := m.Optionv(TITLE).(map[string]int); kind {
 	case NAVMENU: // 导航目录
 		_option(m, kind, "", text, arg...)
-		data := kit.Dict("meta", kit.Dict(), "list", kit.List())
+		data := kit.Data()
 		_title_parse(m, path.Dir(m.Option(ice.MSG_SCRIPT)), data, strings.Split(text, ice.NL))
 		m.RenderTemplate(kit.Format("<div {{.OptionTemplate}} data-data='%s'></div>", kit.Format(data)))
 		return
 
 	case PREMENU: // 前置目录
 		_option(m, kind, "", "", arg...)
-		m.RenderTemplate(m.Conf(TITLE, kit.Keym(kind)))
+		m.RenderTemplate(m.Config(kind))
 		return
 
 	case ENDMENU: // 后置目录
 		_option(m, kind, "", "", arg...)
-		m.RenderTemplate(m.Conf(TITLE, kit.Keym(kind)))
+		m.RenderTemplate(m.Config(kind))
 		return
 
 	case SECTION: // 分节标题
@@ -104,7 +101,7 @@ const TITLE = "title"
 
 func init() {
 	Index.Merge(&ice.Context{Commands: map[string]*ice.Command{
-		TITLE: {Name: "title [premenu|chapter|section|endmenu] text", Help: "标题", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		TITLE: {Name: "title [navmenu|premenu|chapter|section|endmenu] text", Help: "标题", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			if len(arg) == 0 {
 				ns := kit.Split(ice.Info.NodeName, "-")
 				arg = append(arg, ns[len(ns)-1])

@@ -76,7 +76,7 @@ func init() {
 			if arg[0] == path.Base(kit.Pwd()) {
 				m.Option(nfs.DIR_ROOT, path.Join(ice.SRC))
 			} else {
-				m.Option(nfs.DIR_ROOT, path.Join(ice.USR, arg[0]))
+				m.Option(nfs.DIR_ROOT, path.Join(ice.USR, arg[0])+ice.PS)
 			}
 
 			if len(arg) == 1 { // 目录列表

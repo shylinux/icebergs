@@ -38,9 +38,9 @@ func _table_show(m *ice.Message, text string, arg ...string) {
 					style := []string{}
 					for i := 1; i < len(ls)-1; i += 2 {
 						switch ls[i] {
-						case "bg":
+						case BG:
 							ls[i] = "background-color"
-						case "fg":
+						case FG:
 							ls[i] = "color"
 						}
 						style = append(style, ls[i]+":"+ls[i+1])
@@ -60,25 +60,22 @@ func _table_show(m *ice.Message, text string, arg ...string) {
 const TABLE = "table"
 
 func init() {
-	Index.Merge(&ice.Context{
-		Commands: map[string]*ice.Command{
-			TABLE: {Name: "table `[item item\n]...`", Help: "表格", Action: map[string]*ice.Action{
-				ice.RUN: {Name: "run", Help: "执行", Hand: func(m *ice.Message, arg ...string) {
-					_table_run(m, arg...)
-				}},
-			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-				_table_show(m, arg[0], arg[1:]...)
+	Index.Merge(&ice.Context{Commands: map[string]*ice.Command{
+		TABLE: {Name: "table `[item item\n]...`", Help: "表格", Action: map[string]*ice.Action{
+			ice.RUN: {Name: "run", Help: "执行", Hand: func(m *ice.Message, arg ...string) {
+				_table_run(m, arg...)
 			}},
-		},
-		Configs: map[string]*ice.Config{
-			TABLE: {Name: TABLE, Help: "表格", Value: kit.Data(
-				kit.MDB_TEMPLATE, `<table {{.OptionTemplate}}>
+		}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			_table_show(m, arg[0], arg[1:]...)
+		}},
+	}, Configs: map[string]*ice.Config{
+		TABLE: {Name: TABLE, Help: "表格", Value: kit.Data(
+			kit.MDB_TEMPLATE, `<table {{.OptionTemplate}}>
 <tr>{{range $i, $v := .Optionv "head"}}<th>{{$v}}</th>{{end}}</tr>
 {{range $index, $value := .Optionv "list"}}
 <tr>{{range $i, $v := $value}}<td>{{$v}}</td>{{end}}</tr>
 {{end}}
 </table>`,
-			)},
-		},
-	})
+		)},
+	}})
 }

@@ -22,8 +22,8 @@ Volcanos("onimport", {help: "导入数据", list: [], _init: function(can, msg, 
                 return can.onimport._task(can, msg, get(begin_time, col, row, hash), set(begin_time, col, row))
             })}
         }) }])
-        can.core.Timer(10, function() {
-            var target = can.sup.task._target||can.sup.task._target
+        can.core.Timer(10, function() { if (!can.sup.task) { return }
+            var target = can.sup.task._target||can.task._target
             can.sup.task = null, target.click()
             can.Status("count", msg.Length())
         })

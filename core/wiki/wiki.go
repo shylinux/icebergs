@@ -10,18 +10,36 @@ import (
 	kit "shylinux.com/x/toolkits"
 )
 
+func _name(m *ice.Message, arg []string) []string {
+	if len(arg) == 1 {
+		return []string{"", arg[0]}
+	}
+	return arg
+}
+func _option(m *ice.Message, kind, name, text string, arg ...string) {
+	m.Option(kit.MDB_TYPE, kind)
+	m.Option(kit.MDB_NAME, name)
+	m.Option(kit.MDB_TEXT, text)
+
+	extra := kit.Dict()
+	m.Optionv(kit.MDB_EXTRA, extra)
+	for i := 0; i < len(arg); i += 2 {
+		extra[arg[i]] = kit.Format(kit.Parse(nil, "", kit.Split(arg[i+1])...))
+	}
+}
+
 func _wiki_path(m *ice.Message, cmd string, arg ...string) string {
-	return path.Join(m.Option(ice.MSG_LOCAL), m.Conf(cmd, kit.META_PATH), path.Join(arg...))
+	return path.Join(m.Option(ice.MSG_LOCAL), m.Conf(cmd, kit.Keym(nfs.PATH)), path.Join(arg...))
 }
 func _wiki_link(m *ice.Message, cmd string, text string) string {
-	if !strings.HasPrefix(text, "http") && !strings.HasPrefix(text, "/") {
+	if !strings.HasPrefix(text, "http") && !strings.HasPrefix(text, ice.PS) {
 		text = path.Join("/share/local", _wiki_path(m, cmd, text))
 	}
 	return text
 }
 func _wiki_list(m *ice.Message, cmd string, arg ...string) bool {
 	m.Option(nfs.DIR_ROOT, _wiki_path(m, cmd))
-	if len(arg) == 0 || strings.HasSuffix(arg[0], "/") {
+	if len(arg) == 0 || strings.HasSuffix(arg[0], ice.PS) {
 		if m.Option(nfs.DIR_DEEP) != ice.TRUE { // 目录列表
 			m.Option(nfs.DIR_TYPE, nfs.DIR)
 			m.Cmdy(nfs.DIR, kit.Select("./", arg, 0))
@@ -52,20 +70,13 @@ func _wiki_template(m *ice.Message, cmd string, name, text string, arg ...string
 
 const WIKI = "wiki"
 
-var Index = &ice.Context{Name: WIKI, Help: "文档中心", Commands: map[string]*ice.Command{
-	ice.CTX_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-		m.Load()
-	}},
-	ice.CTX_EXIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-		m.Save()
-	}},
-}}
+var Index = &ice.Context{Name: WIKI, Help: "文档中心"}
 
 func init() {
 	web.Index.Register(Index, &web.Frame{},
-		FEEL, WORD, DATA, DRAW,
-		TITLE, BRIEF, REFER, SPARK,
-		ORDER, TABLE, CHART, IMAGE, VIDEO,
+		TITLE, BRIEF, REFER, SPARK, CHART,
+		ORDER, TABLE, IMAGE, VIDEO,
 		FIELD, SHELL, LOCAL, PARSE,
+		FEEL, DRAW, WORD, DATA,
 	)
 }

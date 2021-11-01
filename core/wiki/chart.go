@@ -2,6 +2,7 @@ package wiki
 
 import (
 	ice "shylinux.com/x/icebergs"
+	"shylinux.com/x/icebergs/base/cli"
 	kit "shylinux.com/x/toolkits"
 
 	"strings"
@@ -38,22 +39,22 @@ type Block struct {
 
 func (b *Block) Init(m *ice.Message, arg ...string) Chart {
 	b.Text = kit.Select(b.Text, arg, 0)
-	b.FontSize = kit.Int(kit.Select(m.Option("font-size"), kit.Select(kit.Format(b.FontSize), arg, 1)))
-	b.FontColor = kit.Select(m.Option("stroke"), kit.Select(b.FontColor, arg, 2))
-	b.BackGround = kit.Select(m.Option("fill"), kit.Select(b.BackGround, arg, 3))
-	b.Padding = kit.Int(kit.Select(m.Option("padding"), kit.Select(kit.Format(b.Padding), arg, 4)))
-	b.MarginX = kit.Int(kit.Select(m.Option("marginx"), kit.Select(kit.Format(b.MarginX), arg, 5)))
-	b.MarginY = kit.Int(kit.Select(m.Option("marginy"), kit.Select(kit.Format(b.MarginY), arg, 5)))
+	b.FontSize = kit.Int(kit.Select(m.Option(FONT_SIZE), kit.Select(kit.Format(b.FontSize), arg, 1)))
+	b.FontColor = kit.Select(m.Option(STROKE), kit.Select(b.FontColor, arg, 2))
+	b.BackGround = kit.Select(m.Option(FILL), kit.Select(b.BackGround, arg, 3))
+	b.Padding = kit.Int(kit.Select(m.Option(PADDING), kit.Select(kit.Format(b.Padding), arg, 4)))
+	b.MarginX = kit.Int(kit.Select(m.Option(MARGINX), kit.Select(kit.Format(b.MarginX), arg, 5)))
+	b.MarginY = kit.Int(kit.Select(m.Option(MARGINY), kit.Select(kit.Format(b.MarginY), arg, 5)))
 	return b
 }
 func (b *Block) Data(m *ice.Message, root interface{}) Chart {
-	b.Text = kit.Select(b.Text, kit.Value(root, "text"))
+	b.Text = kit.Select(b.Text, kit.Value(root, kit.MDB_TEXT))
 	kit.Fetch(root, func(key string, value string) {
 		switch key {
-		case "fg":
-			b.TextData += kit.Format("%s='%s' ", "fill", value)
-		case "bg":
-			b.RectData += kit.Format("%s='%s' ", "fill", value)
+		case FG:
+			b.TextData += kit.Format("%s='%s' ", FILL, value)
+		case BG:
+			b.RectData += kit.Format("%s='%s' ", FILL, value)
 		}
 	})
 	kit.Fetch(kit.Value(root, "data"), func(key string, value string) {
@@ -71,7 +72,7 @@ func (b *Block) Draw(m *ice.Message, x, y int) Chart {
 	}
 	m.Echo(`<rect x="%d" y="%d" width="%d" height="%d" rx="4" ry="4" fill="%s" %v/>`,
 		x+b.MarginX/2, y+b.MarginY/2, b.GetWidth(), b.GetHeight(), b.BackGround, b.RectData)
-	m.Echo("\n")
+	m.Echo(ice.NL)
 	m.Echo(`<text x="%d" y="%d" stroke-width="1" fill="%s" stroke=%s %v>%v</text>`,
 		x+b.GetWidths()/2, y+b.GetHeights()/2+float, b.FontColor, b.FontColor, b.TextData, b.Text)
 	m.Echo("\n")
@@ -109,19 +110,19 @@ type Label struct {
 
 func (b *Label) Init(m *ice.Message, arg ...string) Chart {
 	b.Text = kit.Select(b.Text, arg, 0)
-	b.FontSize = kit.Int(m.Option("font-size"))
-	b.Padding = kit.Int(m.Option("padding"))
-	b.MarginX = kit.Int(m.Option("marginx"))
-	b.MarginY = kit.Int(m.Option("marginy"))
+	b.FontSize = kit.Int(m.Option(FONT_SIZE))
+	b.Padding = kit.Int(m.Option(PADDING))
+	b.MarginX = kit.Int(m.Option(MARGINX))
+	b.MarginY = kit.Int(m.Option(MARGINY))
 
 	// 解析数据
 	b.max = map[int]int{}
-	for _, v := range strings.Split(arg[0], "\n") {
-		l := kit.Split(v, " ", " ")
+	for _, v := range strings.Split(arg[0], ice.NL) {
+		l := kit.Split(v, ice.SP, ice.SP)
 		for i, v := range l {
 			switch data := kit.Parse(nil, "", kit.Split(v)...).(type) {
 			case map[string]interface{}:
-				v = kit.Select("", data["text"])
+				v = kit.Select("", data[kit.MDB_TEXT])
 			}
 
 			if w := b.GetWidth(v); w > b.max[i] {
@@ -157,9 +158,9 @@ func (b *Label) Draw(m *ice.Message, x, y int) Chart {
 				if w := kit.Int(kit.Value(order, "index")); w != 0 && i%w == 0 {
 					for k, v := range order {
 						switch k {
-						case "fg":
+						case FG:
 							item.FontColor = kit.Format(v)
-						case "bg":
+						case BG:
 							item.BackGround = kit.Format(v)
 						}
 					}
@@ -168,13 +169,13 @@ func (b *Label) Draw(m *ice.Message, x, y int) Chart {
 
 			switch data := kit.Parse(nil, "", kit.Split(text)...).(type) {
 			case map[string]interface{}:
-				item.Init(m, kit.Select(text, data["text"])).Data(m, data)
+				item.Init(m, kit.Select(text, data[kit.MDB_TEXT])).Data(m, data)
 			default:
 				item.Init(m, text)
 			}
 
 			// 输出
-			switch m.Option("compact") {
+			switch m.Option(COMPACT) {
 			case "max":
 				item.Width = b.Width/len(line) - b.MarginX
 			case ice.TRUE:
@@ -200,10 +201,10 @@ type Chain struct {
 }
 
 func (b *Chain) Init(m *ice.Message, arg ...string) Chart {
-	b.FontSize = kit.Int(m.Option("font-size"))
-	b.Padding = kit.Int(m.Option("padding"))
-	b.MarginX = kit.Int(m.Option("marginx"))
-	b.MarginY = kit.Int(m.Option("marginy"))
+	b.FontSize = kit.Int(m.Option(FONT_SIZE))
+	b.Padding = kit.Int(m.Option(PADDING))
+	b.MarginX = kit.Int(m.Option(MARGINX))
+	b.MarginY = kit.Int(m.Option(MARGINY))
 
 	// 解析数据
 	b.data = kit.Parse(nil, "", b.show(m, arg[0])...).(map[string]interface{})
@@ -222,7 +223,7 @@ func (b *Chain) Draw(m *ice.Message, x, y int) Chart {
 }
 func (b *Chain) show(m *ice.Message, str string) (res []string) {
 	miss := []int{}
-	for _, line := range kit.Split(str, "\n", "\n") {
+	for _, line := range kit.Split(str, ice.NL, ice.NL) {
 		// 计算缩进
 		dep := 0
 	loop:
@@ -269,7 +270,7 @@ func (b *Chain) size(m *ice.Message, root map[string]interface{}, depth int, wid
 	meta := root[kit.MDB_META].(map[string]interface{})
 
 	// 最大宽度
-	if w := b.GetWidths(kit.Format(meta["text"])); w > width[depth] {
+	if w := b.GetWidths(kit.Format(meta[kit.MDB_TEXT])); w > width[depth] {
 		width[depth] = w
 	}
 
@@ -283,7 +284,7 @@ func (b *Chain) size(m *ice.Message, root map[string]interface{}, depth int, wid
 		height = 1
 	}
 
-	meta["height"] = height
+	meta[HEIGHT] = height
 	return height
 }
 func (b *Chain) draw(m *ice.Message, root map[string]interface{}, depth int, width map[int]int, x, y int, p *Block) int {
@@ -292,19 +293,19 @@ func (b *Chain) draw(m *ice.Message, root map[string]interface{}, depth int, wid
 
 	// 当前节点
 	item := &Block{
-		BackGround: kit.Select(b.BackGround, kit.Select(p.BackGround, meta["bg"])),
-		FontColor:  kit.Select(b.FontColor, kit.Select(p.FontColor, meta["fg"])),
+		BackGround: kit.Select(b.BackGround, kit.Select(p.BackGround, meta[BG])),
+		FontColor:  kit.Select(b.FontColor, kit.Select(p.FontColor, meta[FG])),
 		FontSize:   b.FontSize,
 		Padding:    b.Padding,
 		MarginX:    b.MarginX,
 		MarginY:    b.MarginY,
 	}
-	if m.Option("compact") != ice.TRUE {
+	if m.Option(COMPACT) != ice.TRUE {
 		item.Width = b.max[depth]
 	}
 	item.x = x
-	item.y = y + (kit.Int(meta["height"])-1)*b.GetHeights()/2
-	item.Init(m, kit.Format(meta["text"])).Data(m, meta)
+	item.y = y + (kit.Int(meta[HEIGHT])-1)*b.GetHeights()/2
+	item.Init(m, kit.Format(meta[kit.MDB_TEXT])).Data(m, meta)
 	item.Draw(m, item.x, item.y)
 
 	if p != nil && p.y != 0 {
@@ -328,35 +329,6 @@ func (b *Chain) draw(m *ice.Message, root map[string]interface{}, depth int, wid
 	return h
 }
 
-// 栈
-func Stack(m *ice.Message, name string, level int, data interface{}) {
-	style := []string{}
-	kit.Fetch(kit.Value(data, "meta"), func(key string, value string) {
-		switch key {
-		case "bg":
-			style = append(style, "background:"+value)
-		case "fg":
-			style = append(style, "color:"+value)
-		}
-	})
-
-	l, ok := kit.Value(data, "list").([]interface{})
-	if !ok || len(l) == 0 {
-		m.Echo(`<div class="%s" style="%s"><span class="state">o</span> %s</div>`, name, strings.Join(style, ";"), kit.Value(data, "meta.text"))
-		return
-	}
-	m.Echo(`<div class="%s %s" style="%s"><span class="state">%s</span> %s</div>`,
-		kit.Select("span", "fold", level > 2), name, strings.Join(style, ";"), kit.Select("v", ">", level > 2), kit.Value(data, "meta.text"))
-
-	m.Echo("<ul class='%s' %s>", name, kit.Select("", `style="display:none"`, level > 2))
-	kit.Fetch(kit.Value(data, "list"), func(index int, value map[string]interface{}) {
-		m.Echo("<li>")
-		Stack(m, name, level+1, value)
-		m.Echo("</li>")
-	})
-	m.Echo("</ul>")
-}
-
 func _chart_show(m *ice.Message, kind, text string, arg ...string) {
 	var chart Chart
 	switch kind {
@@ -367,34 +339,34 @@ func _chart_show(m *ice.Message, kind, text string, arg ...string) {
 	}
 
 	// 扩展参数
-	m.Option("font-size", "24")
-	m.Option("stroke", "blue")
-	m.Option("fill", "yellow")
+	m.Option(FONT_SIZE, "24")
+	m.Option(STROKE, cli.BLUE)
+	m.Option(FILL, cli.YELLOW)
 	// 扩展参数
-	m.Option("style", "")
-	m.Option("stroke-width", "2")
-	m.Option("font-family", "monospace")
+	m.Option(STYLE, "")
+	m.Option(STROKE_WIDTH, "2")
+	m.Option(FONT_FAMILY, "monospace")
 	// 扩展参数
-	m.Option("compact", ice.FALSE)
-	m.Option("padding", "10")
-	m.Option("marginx", "10")
-	m.Option("marginy", "10")
+	m.Option(COMPACT, ice.FALSE)
+	m.Option(PADDING, "10")
+	m.Option(MARGINX, "10")
+	m.Option(MARGINY, "10")
 	// m.Option("font-family", kit.Select("", "monospace", len(text) == len([]rune(text))))
 
 	for i := 0; i < len(arg)-1; i++ {
 		m.Option(arg[i], arg[i+1])
 	}
-	if m.Option("bg") != "" {
-		m.Option("fill", m.Option("bg"))
+	if m.Option(BG) != "" {
+		m.Option(FILL, m.Option(BG))
 	}
-	if m.Option("fg") != "" {
-		m.Option("stroke", m.Option("fg"))
+	if m.Option(FG) != "" {
+		m.Option(STROKE, m.Option(FG))
 	}
 
 	// 计算尺寸
 	chart.Init(m, text)
-	m.Option("width", chart.GetWidth())
-	m.Option("height", chart.GetHeight())
+	m.Option(WIDTH, chart.GetWidth())
+	m.Option(HEIGHT, chart.GetHeight())
 
 	// 渲染引擎
 	_wiki_template(m, CHART, "", text)
@@ -403,27 +375,43 @@ func _chart_show(m *ice.Message, kind, text string, arg ...string) {
 }
 
 const (
+	FG     = "fg"
+	BG     = "bg"
+	FILL   = "fill"
+	STROKE = "stroke"
+
+	STYLE   = "style"
+	WIDTH   = "width"
+	HEIGHT  = "height"
+	PADDING = "padding"
+	MARGINX = "marginx"
+	MARGINY = "marginy"
+
+	FONT_SIZE   = "font-size"
+	FONT_FAMILY = "font-family"
+
+	STROKE_WIDTH = "stroke-width"
+
+	COMPACT = "compact"
+
 	LABEL = "label"
 	CHAIN = "chain"
 )
 const CHART = "chart"
 
 func init() {
-	Index.Merge(&ice.Context{
-		Commands: map[string]*ice.Command{
-			CHART: {Name: "chart label|chain text", Help: "图表", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-				_chart_show(m, arg[0], strings.TrimSpace(arg[1]), arg[2:]...)
-			}},
-		},
-		Configs: map[string]*ice.Config{
-			CHART: {Name: CHART, Help: "图表", Value: kit.Data(
-				kit.MDB_TEMPLATE, `<svg {{.OptionTemplate}}
+	Index.Merge(&ice.Context{Commands: map[string]*ice.Command{
+		CHART: {Name: "chart label|chain text", Help: "图表", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			_chart_show(m, arg[0], strings.TrimSpace(arg[1]), arg[2:]...)
+		}},
+	}, Configs: map[string]*ice.Config{
+		CHART: {Name: CHART, Help: "图表", Value: kit.Data(
+			kit.MDB_TEMPLATE, `<svg {{.OptionTemplate}}
 vertion="1.1" xmlns="http://www.w3.org/2000/svg" dominant-baseline="middle" text-anchor="middle"
 font-size="{{.Option "font-size"}}" stroke="{{.Option "stroke"}}" fill="{{.Option "fill"}}"
 stroke-width="{{.Option "stroke-width"}}" font-family="{{.Option "font-family"}}"
 width="{{.Option "width"}}" height="{{.Option "height"}}"
 >`,
-			)},
-		},
-	})
+		)},
+	}})
 }

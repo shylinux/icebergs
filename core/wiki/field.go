@@ -37,7 +37,7 @@ func _field_show(m *ice.Message, name, text string, arg ...string) {
 		}
 	})
 
-	name = strings.ReplaceAll(name, " ", "_")
+	name = strings.ReplaceAll(name, ice.SP, "_")
 	meta[kit.MDB_NAME] = name
 	meta[kit.MDB_INDEX] = text
 
@@ -96,29 +96,26 @@ const (
 const FIELD = "field"
 
 func init() {
-	Index.Merge(&ice.Context{
-		Commands: map[string]*ice.Command{
-			FIELD: {Name: "field [name] cmd", Help: "插件", Action: map[string]*ice.Action{
-				ice.RUN: {Name: "run", Help: "执行", Hand: func(m *ice.Message, arg ...string) {
-					m.Cmdy(arg)
-				}},
-			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-				if arg = _name(m, arg); strings.Contains(arg[1], "\n") {
-					arg = append([]string{arg[0], "web.chat.div", "auto.cmd", "make", "opts.line", arg[1]}, arg[2:]...)
-				}
-				_field_show(m, arg[0], arg[1], arg[2:]...)
+	Index.Merge(&ice.Context{Commands: map[string]*ice.Command{
+		FIELD: {Name: "field [name] cmd", Help: "插件", Action: map[string]*ice.Action{
+			ice.RUN: {Name: "run", Help: "执行", Hand: func(m *ice.Message, arg ...string) {
+				m.Cmdy(arg)
 			}},
-		},
-		Configs: map[string]*ice.Config{
-			FIELD: {Name: FIELD, Help: "插件", Value: kit.Data(
-				kit.MDB_TEMPLATE, `<fieldset {{.OptionTemplate}}" data-meta='{{.Optionv "meta"|Format}}'>
+		}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			if arg = _name(m, arg); strings.Contains(arg[1], ice.NL) {
+				arg = append([]string{arg[0], "web.chat.div", "auto.cmd", "split", "opts.text", arg[1]}, arg[2:]...)
+			}
+			_field_show(m, arg[0], arg[1], arg[2:]...)
+		}},
+	}, Configs: map[string]*ice.Config{
+		FIELD: {Name: FIELD, Help: "插件", Value: kit.Data(
+			kit.MDB_TEMPLATE, `<fieldset {{.OptionTemplate}}" data-meta='{{.Optionv "meta"|Format}}'>
 <legend>{{.Option "name"}}</legend>
 <form class="option"></form>
 <div class="action"></div>
 <div class="output"></div>
 <div class="status"></div>
 </fieldset>`,
-			)},
-		},
-	})
+		)},
+	}})
 }

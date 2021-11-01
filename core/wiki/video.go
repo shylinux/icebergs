@@ -21,21 +21,18 @@ const (
 const VIDEO = "video"
 
 func init() {
-	Index.Merge(&ice.Context{
-		Commands: map[string]*ice.Command{
-			VIDEO: {Name: "video url", Help: "视频", Action: map[string]*ice.Action{
-				mdb.RENDER: {Name: "render", Help: "渲染", Hand: func(m *ice.Message, arg ...string) {
-					_video_show(m, path.Join(arg[2], arg[1]))
-				}},
-			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-				_video_show(m, arg[0], arg[1:]...)
+	Index.Merge(&ice.Context{Commands: map[string]*ice.Command{
+		VIDEO: {Name: "video url", Help: "视频", Action: map[string]*ice.Action{
+			mdb.RENDER: {Name: "render", Help: "渲染", Hand: func(m *ice.Message, arg ...string) {
+				_video_show(m, path.Join(arg[2], arg[1]))
 			}},
-		},
-		Configs: map[string]*ice.Config{
-			VIDEO: {Name: "video", Help: "视频", Value: kit.Data(
-				kit.MDB_TEMPLATE, `<video {{.OptionTemplate}} title="{{.Option "text"}}" src="{{.Option "text"}}" controls></video>`,
-				kit.MDB_PATH, ice.USR_LOCAL_IMAGE,
-			)},
-		},
-	})
+		}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			_video_show(m, arg[0], arg[1:]...)
+		}},
+	}, Configs: map[string]*ice.Config{
+		VIDEO: {Name: "video", Help: "视频", Value: kit.Data(
+			kit.MDB_TEMPLATE, `<video {{.OptionTemplate}} title="{{.Option "text"}}" src="{{.Option "text"}}" controls></video>`,
+			kit.MDB_PATH, ice.USR_LOCAL_IMAGE,
+		)},
+	}})
 }

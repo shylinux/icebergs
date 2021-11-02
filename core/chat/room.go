@@ -54,7 +54,7 @@ func init() {
 		}},
 		JOIN: {Name: "join space zone auto", Help: "join", Action: ice.MergeAction(map[string]*ice.Action{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
-				m.Watch(web.SPACE_START, m.PrefixKey())
+				// m.Watch(web.SPACE_START, m.PrefixKey())
 			}},
 			web.SPACE_START: {Name: "space_start", Help: "下线", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmdy(mdb.INSERT, m.Prefix(ROOM), "", mdb.HASH, m.OptionSimple(kit.MDB_ZONE))

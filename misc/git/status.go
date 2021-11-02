@@ -12,6 +12,17 @@ import (
 	kit "shylinux.com/x/toolkits"
 )
 
+func _status_tags(m *ice.Message, tags string) string {
+	ls := kit.Split(strings.TrimPrefix(kit.Split(tags, "-")[0], "v"), ".")
+	if v := kit.Int(ls[2]); v < 9 {
+		return kit.Format("v%v.%v.%v", ls[0], ls[1], v+1)
+	} else if v := kit.Int(ls[1]); v < 9 {
+		return kit.Format("v%v.%v.0", ls[0], v+1)
+	} else if v := kit.Int(ls[0]); v < 9 {
+		return kit.Format("v%v.0.0", v+1)
+	}
+	return "v0.0.1"
+}
 func _status_each(m *ice.Message, title string, cmds ...string) {
 	m.GoToast(title, func(toast func(string, int, int)) {
 		count, total := 0, len(m.Confm(REPOS, kit.MDB_HASH))
@@ -205,6 +216,9 @@ func init() {
 			}},
 
 			TAG: {Name: "tag version@key", Help: "标签", Hand: func(m *ice.Message, arg ...string) {
+				if m.Option(VERSION) == "" {
+					m.Option(VERSION, _status_tags(m, m.Option(TAGS)))
+				}
 				m.Option(cli.CMD_DIR, _repos_path(m.Option(kit.MDB_NAME)))
 				m.Cmdy(cli.SYSTEM, GIT, TAG, m.Option(VERSION))
 				m.Cmdy(cli.SYSTEM, GIT, PUSH, "--tags")
@@ -230,16 +244,8 @@ func init() {
 				case TAGS, VERSION:
 					if m.Option(TAGS) == ice.ErrWarn {
 						m.Push(VERSION, kit.Format("v0.0.%d", 1))
-						return
-					}
-
-					ls := kit.Split(strings.TrimPrefix(kit.Split(m.Option(TAGS), "-")[0], "v"), ".")
-					if v := kit.Int(ls[2]); v < 9 {
-						m.Push(VERSION, kit.Format("v%v.%v.%v", ls[0], ls[1], v+1))
-					} else if v := kit.Int(ls[1]); v < 9 {
-						m.Push(VERSION, kit.Format("v%v.%v.0", ls[0], v+1))
-					} else if v := kit.Int(ls[0]); v < 9 {
-						m.Push(VERSION, kit.Format("v%v.0.0", v+1))
+					} else {
+						m.Push(VERSION, _status_tags(m, m.Option(TAGS)))
 					}
 
 				case COMMENT:

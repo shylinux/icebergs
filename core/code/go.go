@@ -92,7 +92,7 @@ func init() {
 			m.Cmd(mdb.SEARCH, mdb.CREATE, GO, m.Prefix(GO))
 			m.Cmd(mdb.ENGINE, mdb.CREATE, GO, m.Prefix(GO))
 
-			for k := range c.Configs {
+			for _, k := range []string{GODOC, PROTO, SUM, MOD, GO} {
 				m.Cmd(mdb.PLUGIN, mdb.CREATE, k, m.Prefix(k))
 				m.Cmd(mdb.RENDER, mdb.CREATE, k, m.Prefix(k))
 			}

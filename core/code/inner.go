@@ -32,7 +32,7 @@ func _inner_list(m *ice.Message, ext, file, dir string, arg ...string) {
 	if m.Cmdy(mdb.RENDER, ext, file, dir, arg); m.Result() != "" {
 		return // 解析成功
 	}
-	if m.Config(ssh.SOURCE, ext) == ice.TRUE {
+	if m.Config(kit.Keys(ssh.SOURCE, ext)) == ice.TRUE {
 		m.Cmdy(nfs.CAT, path.Join(dir, file))
 	}
 }

@@ -14,7 +14,7 @@ import (
 )
 
 func _spide_for(text string, cb func([]string)) {
-	for _, line := range strings.Split(text, "\n") {
+	for _, line := range strings.Split(text, ice.NL) {
 		if len(line) == 0 || strings.HasPrefix(line, "!_") {
 			continue
 		}
@@ -46,7 +46,7 @@ func _spide_go(m *ice.Message, file string) {
 		m.Push(kit.MDB_FILE, ls[1])
 		m.Push(kit.MDB_LINE, strings.TrimSuffix(ls[2], ";\""))
 		m.Push(kit.MDB_TYPE, ls[3])
-		m.Push(kit.MDB_EXTRA, strings.Join(ls[4:], " "))
+		m.Push(kit.MDB_EXTRA, strings.Join(ls[4:], ice.SP))
 	})
 }
 func _spide_c(m *ice.Message, file string) {
@@ -83,9 +83,9 @@ func init() {
 				m.Option(nfs.DIR_DEEP, ice.TRUE)
 				nfs.Dir(m, kit.MDB_PATH)
 
-				color := []string{"yellow", "blue", "cyan", "red"}
+				color := []string{cli.YELLOW, cli.BLUE, cli.CYAN, cli.RED}
 				m.Table(func(index int, value map[string]string, head []string) {
-					m.Push(kit.MDB_COLOR, color[strings.Count(value[kit.MDB_PATH], "/")%len(color)])
+					m.Push(kit.MDB_COLOR, color[strings.Count(value[kit.MDB_PATH], ice.PS)%len(color)])
 				})
 				return
 			}

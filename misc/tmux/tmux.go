@@ -8,16 +8,6 @@ import (
 	kit "shylinux.com/x/toolkits"
 )
 
-const (
-	TEXT    = "text"
-	BUFFER  = "buffer"
-	SCRIPT  = "script"
-	SESSION = "session"
-	WINDOW  = "window"
-	PANE    = "pane"
-	VIEW    = "view"
-)
-
 const TMUX = "tmux"
 
 var Index = &ice.Context{Name: TMUX, Help: "工作台", Configs: map[string]*ice.Config{
@@ -25,9 +15,6 @@ var Index = &ice.Context{Name: TMUX, Help: "工作台", Configs: map[string]*ice
 		cli.SOURCE, "http://mirrors.tencent.com/macports/distfiles/tmux/tmux-3.2.tar.gz",
 	)},
 }, Commands: map[string]*ice.Command{
-	ice.CTX_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) { m.Load() }},
-	ice.CTX_EXIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) { m.Save() }},
-
 	TMUX: {Name: "tmux path auto start order build download", Help: "服务", Action: ice.MergeAction(map[string]*ice.Action{
 		cli.START: {Name: "start", Help: "启动", Hand: func(m *ice.Message, arg ...string) {
 			m.Optionv(code.PREPARE, func(p string) []string {

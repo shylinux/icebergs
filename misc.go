@@ -260,8 +260,12 @@ func (c *Context) split(name string) (list []interface{}) {
 	ls := kit.Split(name, SP, ":=@")
 	for i := 1; i < len(ls); i++ {
 		switch ls[i] {
+		case "run":
+			item = kit.Dict(kit.MDB_TYPE, BUTTON, kit.MDB_NAME, "run")
+			list = append(list, item)
 		case "text":
-			list = append(list, kit.List(kit.MDB_TYPE, TEXTAREA, kit.MDB_NAME, "text")...)
+			item = kit.Dict(kit.MDB_TYPE, TEXTAREA, kit.MDB_NAME, "text")
+			list = append(list, item)
 		case "auto":
 			list = append(list, kit.List(kit.MDB_TYPE, BUTTON, kit.MDB_NAME, "list", kit.MDB_ACTION, AUTO)...)
 			list = append(list, kit.List(kit.MDB_TYPE, BUTTON, kit.MDB_NAME, "back")...)

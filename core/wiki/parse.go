@@ -17,7 +17,7 @@ const PARSE = "parse"
 
 func init() {
 	Index.Merge(&ice.Context{Commands: map[string]*ice.Command{
-		PARSE: {Name: "parse type=auto,base64,json,http,form,time,list auto text:textarea", Help: "解析", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		PARSE: {Name: "parse type=auto,base64,json,http,form,time,list auto text", Help: "解析", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			if len(arg) < 2 {
 				return
 			}

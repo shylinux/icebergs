@@ -3,8 +3,10 @@ package ice
 const (
 	TB = "\t"
 	SP = " "
+	DF = ":"
 	PS = "/"
 	PT = "."
+	FS = ","
 	NL = "\n"
 	OF = " of "
 

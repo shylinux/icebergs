@@ -6,8 +6,8 @@ refer `
 `
 
 chapter "源码"
-field tmux web.code.tmux.tmux
-field tmux web.code.inner args `usr/install/tmux-3.2 cmd-bind-key.c`
+field "下载" web.code.tmux.tmux
+field "源码" web.code.inner args `usr/install/tmux-3.2/ cmd-bind-key.c`
 
 section "构建"
 spark shell `

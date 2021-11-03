@@ -10,9 +10,10 @@ import (
 	kit "shylinux.com/x/toolkits"
 )
 
-const TEXT = "text"
-
-const BUFFER = "buffer"
+const (
+	BUFFER = "buffer"
+	TEXT   = "text"
+)
 
 func init() {
 	Index.Merge(&ice.Context{Configs: map[string]*ice.Config{
@@ -40,6 +41,7 @@ func init() {
 				m.Config(mdb.LIST, "")
 				m.Config(kit.MDB_COUNT, "0")
 
+				m.Option(ice.CACHE_LIMIT, "-1")
 				m.Cmdy(mdb.IMPORT, m.PrefixKey(), "", mdb.LIST)
 				m.Grows(m.PrefixKey(), "", "", "", func(index int, value map[string]interface{}) {
 					m.Cmd(cli.SYSTEM, TMUX, "set-buffer", "-b", value[kit.MDB_NAME], value[kit.MDB_TEXT])
@@ -77,7 +79,6 @@ func init() {
 			text := m.Cmdx(cli.SYSTEM, TMUX, "show-buffer")
 			m.EchoQRCode(text)
 			m.EchoScript(text)
-			m.Render("")
 		}},
 	}})
 }

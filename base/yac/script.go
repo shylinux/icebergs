@@ -96,7 +96,7 @@ const SCRIPT = "script"
 
 func init() {
 	Index.Merge(&ice.Context{Commands: map[string]*ice.Command{
-		SCRIPT: {Name: "script name npage text:textarea auto create", Help: "脚本解析", Action: map[string]*ice.Action{
+		SCRIPT: {Name: "script name npage text auto create", Help: "脚本解析", Action: map[string]*ice.Action{
 			mdb.CREATE: {Name: "create name=shy text=etc/yac.txt", Help: "创建", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmd(MATRIX, mdb.CREATE, m.Option(kit.MDB_NAME))
 				if buf, err := ioutil.ReadFile(m.Option(kit.MDB_TEXT)); err == nil {

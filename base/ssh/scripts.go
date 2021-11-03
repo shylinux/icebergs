@@ -281,11 +281,11 @@ func init() {
 			f.ps1 = arg
 			f.prompt(m)
 		}},
-		PRINTF: {Name: "printf run:button text:textarea", Help: "输出显示", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		PRINTF: {Name: "printf run:button text", Help: "输出显示", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			f := m.Optionv(FRAME).(*Frame)
 			f.printf(m, arg[0])
 		}},
-		SCREEN: {Name: "screen run:button text:textarea", Help: "输出命令", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		SCREEN: {Name: "screen run:button text", Help: "输出命令", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			f := m.Optionv(FRAME).(*Frame)
 			for _, line := range kit.Split(arg[0], ice.NL, ice.NL) {
 				fmt.Fprintf(f.pipe, line+ice.NL)

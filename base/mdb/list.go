@@ -14,7 +14,6 @@ func _list_fields(m *ice.Message) []string {
 }
 func _list_inputs(m *ice.Message, prefix, chain string, field, value string) {
 	list := map[string]int{}
-	m.Debug("what %v %v", prefix, chain)
 	m.Grows(prefix, chain, "", "", func(index int, val map[string]interface{}) {
 		if val = kit.GetMeta(val); kit.Format(val[kit.MDB_COUNT]) != "" {
 			list[kit.Format(val[field])] = kit.Int(val[kit.MDB_COUNT])
@@ -74,6 +73,7 @@ func _list_export(m *ice.Message, prefix, chain, file string) {
 
 	count := 0
 	head := kit.Split(m.OptionFields())
+	m.Option(ice.CACHE_LIMIT, "-1")
 	m.Grows(prefix, chain, "", "", func(index int, val map[string]interface{}) {
 		if val = kit.GetMeta(val); index == 0 {
 			if len(head) == 0 || head[0] == "detail" { // 默认表头

@@ -20,7 +20,7 @@ func init() {
 				m.Cmdy(TASK, mdb.INSERT, arg)
 			}},
 		}, TASK), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			begin_time, end_time := _task_scope(m, 8, append([]string{LONG}, arg...)...)
+			begin_time, end_time := _plan_scope(m, 8, append([]string{LONG}, arg...)...)
 			msg := _plan_list(m.Spawn(), begin_time, end_time)
 			msg.SortTime(BEGIN_TIME)
 

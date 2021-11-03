@@ -1,10 +1,8 @@
 package team
 
 import (
-	"strings"
-
 	ice "shylinux.com/x/icebergs"
-	"shylinux.com/x/icebergs/base/cli"
+	"shylinux.com/x/icebergs/base/ctx"
 	"shylinux.com/x/icebergs/base/mdb"
 	kit "shylinux.com/x/toolkits"
 )
@@ -64,16 +62,6 @@ func init() {
 		)},
 	}, Commands: map[string]*ice.Command{
 		TASK: {Name: "task zone id auto insert export import", Help: "任务", Action: ice.MergeAction(map[string]*ice.Action{
-			mdb.INPUTS: {Name: "inputs", Help: "补全", Hand: func(m *ice.Message, arg ...string) {
-				if cli.Inputs(m, arg[0]) {
-					return
-				}
-				if arg[0] == m.Conf(TASK, kit.Keym(kit.MDB_SHORT)) {
-					m.Cmdy(mdb.INPUTS, m.Prefix(TASK), "", mdb.HASH, arg[0], arg[1:])
-					return
-				}
-				m.Cmdy(mdb.INPUTS, m.Prefix(TASK), "", mdb.ZONE, m.Option(kit.MDB_ZONE), strings.TrimPrefix(arg[0], "extra."), arg[1:])
-			}},
 			mdb.INSERT: {Name: "insert zone type=once,step,week name text begin_time@date close_time@date", Help: "添加", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmdy(mdb.INSERT, m.Prefix(TASK), "", mdb.HASH, m.OptionSimple(kit.MDB_ZONE))
 				m.Cmdy(mdb.INSERT, m.Prefix(TASK), "", mdb.ZONE, m.Option(kit.MDB_ZONE),
@@ -87,17 +75,9 @@ func init() {
 			mdb.DELETE: {Name: "delete", Help: "删除", Hand: func(m *ice.Message, arg ...string) {
 				_task_modify(m, STATUS, CANCEL)
 			}},
-			mdb.REMOVE: {Name: "remove", Help: "删除", Hand: func(m *ice.Message, arg ...string) {
-				m.Cmdy(mdb.DELETE, m.Prefix(TASK), "", mdb.HASH, m.OptionSimple(kit.MDB_ZONE))
-			}},
 			mdb.EXPORT: {Name: "export", Help: "导出", Hand: func(m *ice.Message, arg ...string) {
 				m.OptionFields(kit.MDB_ZONE, "time,id,type,name,text,level,status,score,begin_time,close_time,extra")
 				m.Cmdy(mdb.EXPORT, m.Prefix(TASK), "", mdb.ZONE)
-				m.ProcessRefresh30ms()
-			}},
-			mdb.IMPORT: {Name: "import", Help: "导入", Hand: func(m *ice.Message, arg ...string) {
-				m.OptionFields(kit.MDB_ZONE)
-				m.Cmdy(mdb.IMPORT, m.Prefix(TASK), "", mdb.ZONE)
 				m.ProcessRefresh30ms()
 			}},
 
@@ -107,7 +87,7 @@ func init() {
 			END: {Name: "end", Help: "完成", Hand: func(m *ice.Message, arg ...string) {
 				_task_modify(m, STATUS, FINISH)
 			}},
-		}, mdb.ZoneAction()), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		}, mdb.ZoneAction(), ctx.CmdAction()), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			if mdb.ZoneSelect(m, arg...); len(arg) == 0 {
 				m.PushAction(mdb.REMOVE)
 			} else {

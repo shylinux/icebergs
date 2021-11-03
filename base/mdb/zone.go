@@ -133,7 +133,6 @@ func ZoneAction(fields ...string) map[string]*ice.Action {
 		INPUTS: {Name: "inputs", Help: "补全", Hand: func(m *ice.Message, arg ...string) {
 			arg[0] = strings.TrimPrefix(arg[0], "extra.")
 			arg[0] = kit.Select(arg[0], m.Config(kit.Keys(kit.MDB_ALIAS, arg[0])))
-			m.Debug("what %v", arg[0])
 			switch arg[0] {
 			case ice.POD:
 				m.Cmdy("route")
@@ -144,7 +143,6 @@ func ZoneAction(fields ...string) map[string]*ice.Action {
 			case ice.ARG:
 
 			case _zone(m):
-				m.Debug("what %v", arg[0])
 				m.Cmdy(INPUTS, m.PrefixKey(), "", HASH, arg)
 			default:
 				m.Cmdy(INPUTS, m.PrefixKey(), "", ZONE, m.Option(_zone(m)), arg)

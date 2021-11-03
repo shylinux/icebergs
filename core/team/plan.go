@@ -4,12 +4,11 @@ import (
 	"time"
 
 	ice "shylinux.com/x/icebergs"
-	"shylinux.com/x/icebergs/base/ctx"
 	"shylinux.com/x/icebergs/base/mdb"
 	kit "shylinux.com/x/toolkits"
 )
 
-func _task_scope(m *ice.Message, tz int, arg ...string) (time.Time, time.Time) {
+func _plan_scope(m *ice.Message, tz int, arg ...string) (time.Time, time.Time) {
 	begin_time := time.Now()
 	if len(arg) > 1 {
 		begin_time, _ = time.ParseInLocation(ice.MOD_TIME, arg[1], time.Local)
@@ -45,7 +44,6 @@ func _plan_list(m *ice.Message, begin_time, end_time time.Time) *ice.Message {
 	m.Fields(0, "begin_time,close_time,zone,id,level,status,score,type,name,text,extra")
 	m.Option(kit.Keycb(mdb.SELECT), func(key string, fields []string, value, val map[string]interface{}) {
 		begin, _ := time.ParseInLocation(ice.MOD_TIME, kit.Format(value[BEGIN_TIME]), time.Local)
-		m.Debug("what %v %v", begin_time, begin)
 		if begin_time.After(begin) || begin.After(end_time) {
 			return
 		}
@@ -76,15 +74,18 @@ func init() {
 			}},
 			ice.RUN: {Name: "run", Help: "执行", Hand: func(m *ice.Message, arg ...string) {
 				msg := m.Cmd(TASK, arg[0], arg[1])
-				args := kit.Simple(kit.Keys(msg.Append("extra.pod"), msg.Append("extra.cmd")), arg[2:])
+				if pod := msg.Append(kit.KeyExtra(ice.POD)); pod != "" {
+					m.Option(ice.POD, pod)
+				}
+				args := kit.Simple(kit.Keys(msg.Append(kit.KeyExtra(ice.CTX)), msg.Append(kit.KeyExtra(ice.CMD))), arg[2:])
 				if !m.PodCmd(args) {
 					m.Cmdy(args)
 				}
 			}},
-		}, TASK, ctx.CmdAction()), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			begin_time, end_time := _task_scope(m, 8, arg...)
+		}, TASK), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			begin_time, end_time := _plan_scope(m, 8, arg...)
 			_plan_list(m, begin_time, end_time)
-			m.PushPodCmd(PLAN, arg...)
+			m.PushPodCmd(cmd, arg...)
 		}},
 	}})
 }

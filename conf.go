@@ -210,6 +210,7 @@ const ( // PROCESS
 )
 const ( // Err
 	ErrWarn         = "warn: "
+	ErrPanic        = "panic: "
 	ErrExists       = "exists: "
 	ErrExpire       = "expire: "
 	ErrTimeout      = "timeout: "

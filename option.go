@@ -34,9 +34,11 @@ func (m *Message) OptionLoad(file string) *Message {
 		defer f.Close()
 
 		var data interface{}
-		json.NewDecoder(f).Decode(&data)
+		m.Assert(json.NewDecoder(f).Decode(&data))
 
-		kit.Fetch(data, func(key string, value interface{}) { m.Option(key, kit.Simple(value)) })
+		kit.Fetch(data, func(key string, value interface{}) {
+			m.Option(key, kit.Simple(value))
+		})
 	}
 	return m
 }

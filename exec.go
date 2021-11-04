@@ -40,13 +40,15 @@ func (m *Message) Assert(expr interface{}) bool {
 	case nil:
 		return true
 	case error:
-		panic(expr)
 	case bool:
 		if expr == true {
 			return true
 		}
+	default:
+		expr = errors.New(kit.Format("error: %v", expr))
 	}
-	panic(errors.New(kit.Format("error: %v", expr)))
+	m.Result(ErrPanic, expr)
+	panic(expr)
 }
 func (m *Message) Sleep(d string) *Message {
 	m.Debug("sleep %s %s", d, kit.FileLine(2, 3))

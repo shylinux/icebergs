@@ -30,6 +30,16 @@ func init() {
 			PPROF, kit.List(GO, "tool", PPROF),
 		)},
 	}, Commands: map[string]*ice.Command{
+		ice.CTX_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			web.AddRewrite(func(w http.ResponseWriter, r *http.Request) bool {
+				if p := r.URL.Path; strings.HasPrefix(p, "/debug") {
+					r.URL.Path = strings.Replace(r.URL.Path, "/debug", "/code", -1)
+					m.Debug("rewrite %v -> %v", p, r.URL.Path)
+					return true
+				}
+				return false
+			})
+		}},
 		"/pprof/": {Name: "/pprof/", Help: "性能分析", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			m.R.URL.Path = strings.Replace("/code"+m.R.URL.Path, "code", "debug", 1)
 			http.DefaultServeMux.ServeHTTP(m.W, m.R)

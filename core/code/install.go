@@ -87,7 +87,10 @@ func _install_build(m *ice.Message, arg ...string) {
 	m.ProcessHold()
 }
 func _install_order(m *ice.Message, arg ...string) {
-	m.Cmd(nfs.PUSH, ice.ETC_PATH, kit.Path(m.Config(kit.MDB_PATH), kit.TrimExt(m.Option(kit.MDB_LINK)), m.Option(kit.MDB_PATH)+ice.NL))
+	p := kit.Path(m.Config(kit.MDB_PATH), kit.TrimExt(m.Option(kit.MDB_LINK)), m.Option(kit.MDB_PATH)+ice.NL)
+	if !strings.Contains(m.Cmdx(nfs.CAT, ice.ETC_PATH), p) {
+		m.Cmd(nfs.PUSH, ice.ETC_PATH, p)
+	}
 	m.Cmdy(nfs.CAT, ice.ETC_PATH)
 }
 func _install_spawn(m *ice.Message, arg ...string) {
@@ -169,6 +172,7 @@ func init() {
 			}},
 			cli.SOURCE: {Name: "source link path", Help: "源码", Hand: func(m *ice.Message, arg ...string) {
 				m.Option(nfs.DIR_ROOT, path.Join(m.Config(kit.MDB_PATH), kit.TrimExt(m.Option(kit.MDB_LINK)), "_install"))
+				defer m.StatusTime(nfs.PATH, m.Option(nfs.DIR_ROOT))
 				m.Cmdy(nfs.DIR, m.Option(kit.MDB_PATH))
 			}},
 		}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {

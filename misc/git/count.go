@@ -5,6 +5,7 @@ import (
 
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/nfs"
+	"shylinux.com/x/icebergs/core/code"
 	kit "shylinux.com/x/toolkits"
 )
 
@@ -12,17 +13,21 @@ const COUNT = "count"
 
 func init() {
 	Index.Merge(&ice.Context{Commands: map[string]*ice.Command{
-		COUNT: {Name: "count path auto count", Help: "统计", Action: map[string]*ice.Action{
+		COUNT: {Name: "count path auto count", Help: "代码行", Action: map[string]*ice.Action{
 			COUNT: {Name: "count", Help: "计数", Hand: func(m *ice.Message, arg ...string) {
+				if len(arg) == 0 || arg[0] == "usr/" {
+					m.Echo("to many file, please choice sub dir")
+					return
+				}
 				files := map[string]int{}
 				lines := map[string]int{}
 				m.Option(nfs.DIR_DEEP, ice.TRUE)
 				m.Option(nfs.DIR_TYPE, nfs.TYPE_CAT)
 				m.Cmdy(nfs.DIR, arg, func(file string) {
-					if strings.Contains(file, "bin/") {
+					if !strings.Contains(file, ice.PT) {
 						return
 					}
-					if !strings.Contains(file, ".") {
+					if strings.Contains(file, "bin/") {
 						return
 					}
 					switch kit.Ext(file) {
@@ -30,10 +35,10 @@ func init() {
 						return
 					}
 
-					files["total"]++
+					files[kit.MDB_TOTAL]++
 					files[kit.Ext(file)]++
 					m.Cmdy(nfs.CAT, file, func(text string, line int) {
-						if kit.Ext(file) == "go" {
+						if kit.Ext(file) == code.GO {
 							switch {
 							case strings.HasPrefix(text, "func"):
 								lines["_func"]++
@@ -42,7 +47,7 @@ func init() {
 							}
 						}
 
-						lines["total"]++
+						lines[kit.MDB_TOTAL]++
 						lines[kit.Ext(file)]++
 					})
 				})

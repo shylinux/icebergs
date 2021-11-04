@@ -15,7 +15,7 @@ var Index = &ice.Context{Name: TMUX, Help: "工作台", Configs: map[string]*ice
 		cli.SOURCE, "http://mirrors.tencent.com/macports/distfiles/tmux/tmux-3.2.tar.gz",
 	)},
 }, Commands: map[string]*ice.Command{
-	TMUX: {Name: "tmux session window auto start order build download", Help: "服务", Action: ice.MergeAction(map[string]*ice.Action{
+	TMUX: {Name: "tmux path auto start order build download", Help: "服务", Action: ice.MergeAction(map[string]*ice.Action{
 		cli.START: {Name: "start", Help: "启动", Hand: func(m *ice.Message, arg ...string) {
 			m.Optionv(code.PREPARE, func(p string) []string {
 				return []string{"-S", kit.Path(m.Option(cli.CMD_DIR, p), "tmux.socket"), "new-session", "-dn", "miss"}
@@ -23,7 +23,7 @@ var Index = &ice.Context{Name: TMUX, Help: "工作台", Configs: map[string]*ice
 			m.Cmdy(code.INSTALL, cli.START, m.Config(cli.SOURCE), "bin/tmux")
 		}},
 	}, code.InstallAction()), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-		m.Cmdy(SESSION, arg)
+		m.Cmdy(code.INSTALL, cli.SOURCE, m.Config(cli.SOURCE), arg)
 	}},
 }}
 

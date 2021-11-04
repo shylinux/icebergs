@@ -69,6 +69,14 @@ func init() {
 		PLAN: {Name: "plan scale=week,day,week,month,year,long begin_time@date place@province auto insert export import", Help: "计划", Meta: kit.Dict(
 			ice.Display("/plugin/local/team/plan.js"),
 		), Action: ice.MergeAction(map[string]*ice.Action{
+			mdb.INPUTS: {Name: "inputs", Help: "补全", Hand: func(m *ice.Message, arg ...string) {
+				switch arg[0] {
+				case m.Conf(TASK, kit.Keym(kit.MDB_SHORT)):
+					m.Cmdy(mdb.INPUTS, m.Prefix(TASK), "", mdb.HASH, arg)
+				default:
+					m.Cmdy(mdb.INPUTS, m.Prefix(TASK), "", mdb.ZONE, m.Option(m.Conf(TASK, kit.Keym(kit.MDB_SHORT))), arg)
+				}
+			}},
 			mdb.PLUGIN: {Name: "plugin extra.ctx extra.cmd extra.arg", Help: "插件", Hand: func(m *ice.Message, arg ...string) {
 				_task_modify(m, arg[0], arg[1], arg[2:]...)
 			}},

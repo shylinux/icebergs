@@ -49,6 +49,8 @@ func Render(msg *ice.Message, cmd string, args ...interface{}) {
 	case ice.RENDER_VOID:
 		// no output
 
+	case ice.RENDER_RAW:
+		fallthrough
 	default:
 		for _, k := range []string{
 			"_option", "_handle", "_output", "",
@@ -58,7 +60,7 @@ func Render(msg *ice.Message, cmd string, args ...interface{}) {
 			msg.Set(k)
 		}
 
-		if cmd != "" { // [str [arg...]]
+		if cmd != "" && cmd != ice.RENDER_RAW { // [str [arg...]]
 			msg.Echo(kit.Format(cmd, args...))
 		}
 		msg.W.Header().Set(ContentType, ContentJSON)

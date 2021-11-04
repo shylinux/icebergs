@@ -158,12 +158,13 @@ func _dir_search(m *ice.Message, kind, name string) {
 	})
 }
 
-func Dir(m *ice.Message, sort string) {
+func Dir(m *ice.Message, sort string) *ice.Message {
 	m.Option(DIR_TYPE, TYPE_DIR)
 	m.Copy(m.Cmd(DIR, "./").Sort(sort))
 
 	m.Option(DIR_TYPE, TYPE_CAT)
 	m.Copy(m.Cmd(DIR, "./").Sort(sort))
+	return m
 }
 
 const (
@@ -207,7 +208,7 @@ func init() {
 			}},
 		}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			m.Info("dir_root: %v", m.Option(DIR_ROOT))
-			_dir_list(m, kit.Select("./", m.Option(DIR_ROOT)), kit.Select("", arg, 0),
+			_dir_list(m, kit.Select("./", m.Option(DIR_ROOT)), kit.Select("./", arg, 0),
 				0, m.Option(DIR_DEEP) == ice.TRUE, kit.Select(TYPE_BOTH, m.Option(DIR_TYPE)), kit.Regexp(m.Option(DIR_REG)),
 				kit.Split(kit.Select(kit.Select("time,path,size,action", m.OptionFields()), kit.Join(kit.Slice(arg, 1)))))
 			m.SortTimeR(kit.MDB_TIME)

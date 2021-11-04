@@ -17,6 +17,12 @@ import (
 	kit "shylinux.com/x/toolkits"
 )
 
+var rewriteList = []func(w http.ResponseWriter, r *http.Request) bool{}
+
+func AddRewrite(cb func(w http.ResponseWriter, r *http.Request) bool) {
+	rewriteList = append(rewriteList, cb)
+}
+
 func _serve_main(m *ice.Message, w http.ResponseWriter, r *http.Request) bool {
 	if r.Header.Get("index.module") == "" {
 		r.Header.Set("index.module", m.Prefix())
@@ -51,15 +57,10 @@ func _serve_main(m *ice.Message, w http.ResponseWriter, r *http.Request) bool {
 		}()
 	}
 
-	// 代码管理
-	if strings.HasPrefix(r.URL.Path, "/x/") {
-		r.URL.Path = strings.Replace(r.URL.Path, "/x/", "/code/git/repos/", -1)
-		return true
-	}
-	// 调试接口
-	if strings.HasPrefix(r.URL.Path, "/debug") {
-		r.URL.Path = strings.Replace(r.URL.Path, "/debug", "/code", -1)
-		return true
+	for _, h := range rewriteList {
+		if h(w, r) {
+			return true
+		}
 	}
 
 	// 主页接口

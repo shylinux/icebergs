@@ -10,6 +10,8 @@ const (
 	NL = "\n"
 	OF = " of "
 
+	PWD = "./"
+
 	OK      = "ok"
 	TRUE    = "true"
 	FALSE   = "false"
@@ -65,6 +67,7 @@ const ( // REPOS
 	REQUIRE = "require"
 	INSTALL = "install"
 	PUBLISH = "publish"
+	RELEASE = "release"
 )
 const ( // DIR
 	SRC = "src"

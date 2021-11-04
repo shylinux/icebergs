@@ -61,30 +61,28 @@ const SPIDE = "spide"
 
 func init() {
 	Index.Merge(&ice.Context{Commands: map[string]*ice.Command{
-		SPIDE: {Name: "spide name@key auto", Help: "构架图", Meta: kit.Dict(
+		SPIDE: {Name: "spide name auto", Help: "构架图", Meta: kit.Dict(
 			ice.Display("/plugin/story/spide.js"),
-		), Action: map[string]*ice.Action{
+		), Action: ice.MergeAction(map[string]*ice.Action{
 			mdb.INPUTS: {Name: "inputs", Help: "补全", Hand: func(m *ice.Message, arg ...string) {
-				m.Cmdy(REPOS)
-			}}, ctx.COMMAND: {Name: "ctx.command"}, code.INNER: {Name: "web.code.inner"},
-		}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+				m.Cmdy(REPOS, ice.OptionFields("name,time"))
+			}}, code.INNER: {Name: "web.code.inner"},
+		}, ctx.CmdAction()), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			if len(arg) == 0 { // 仓库列表
 				m.Cmdy(REPOS)
 				return
 			}
 
 			if arg[0] == path.Base(kit.Pwd()) {
-				m.Option(nfs.DIR_ROOT, path.Join(ice.SRC))
+				m.Option(nfs.DIR_ROOT, path.Join(ice.SRC)+ice.PS)
 			} else {
 				m.Option(nfs.DIR_ROOT, path.Join(ice.USR, arg[0])+ice.PS)
 			}
 
 			if len(arg) == 1 { // 目录列表
 				m.Option(nfs.DIR_DEEP, ice.TRUE)
-				nfs.Dir(m, kit.MDB_PATH)
-
 				color := []string{cli.YELLOW, cli.BLUE, cli.CYAN, cli.RED}
-				m.Table(func(index int, value map[string]string, head []string) {
+				nfs.Dir(m, kit.MDB_PATH).Table(func(index int, value map[string]string, head []string) {
 					m.Push(kit.MDB_COLOR, color[strings.Count(value[kit.MDB_PATH], ice.PS)%len(color)])
 				})
 				return

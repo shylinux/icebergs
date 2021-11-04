@@ -302,6 +302,8 @@ func (m *Message) Spawn(arg ...interface{}) *Message {
 			json.Unmarshal(val, &msg.meta)
 		case *Context:
 			msg.target = val
+		case Option:
+			msg.Option(val.Name, val.Value)
 		}
 	}
 	return msg

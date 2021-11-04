@@ -130,13 +130,19 @@ func (m *Message) Toast(text string, arg ...interface{}) { // [title [duration [
 		m.Option(MSG_TOAST, kit.Simple(text, arg))
 	}
 }
+func (m *Message) Toast3s(text string, arg ...interface{}) {
+	m.Toast(text, kit.List(kit.Select("", arg, 0), kit.Select("3s", arg, 1))...)
+}
+func (m *Message) Toast30s(text string, arg ...interface{}) {
+	m.Toast(text, kit.List(kit.Select("", arg, 0), kit.Select("30s", arg, 1))...)
+}
 func (m *Message) GoToast(title string, cb func(toast func(string, int, int))) {
 	m.Go(func() {
 		cb(func(name string, count, total int) {
 			m.Toast(
 				kit.Format("%s %s/%s", name, strings.TrimSuffix(kit.FmtSize(int64(count)), "B"), strings.TrimSuffix(kit.FmtSize(int64(total)), "B")),
 				kit.Format("%s %d%%", title, count*100/total),
-				kit.Select("1000", "10000", count < total),
+				kit.Select("3000", "30000", count < total),
 				count*100/total,
 			)
 		})

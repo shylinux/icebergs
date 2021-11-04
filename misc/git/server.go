@@ -6,6 +6,7 @@ import (
 	"encoding/base64"
 	"fmt"
 	"io"
+	"net/http"
 	"os"
 	"path"
 	"regexp"
@@ -15,6 +16,7 @@ import (
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/aaa"
 	"shylinux.com/x/icebergs/base/cli"
+	"shylinux.com/x/icebergs/base/ctx"
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/nfs"
 	"shylinux.com/x/icebergs/base/web"
@@ -38,8 +40,10 @@ func packetWrite(m *ice.Message, cmd string, str ...string) {
 	m.W.Write([]byte(s + cmd + "0000" + strings.Join(str, "")))
 }
 
+var basicAuthRegex = regexp.MustCompile("^([^:]*):(.*)$")
+
 func _server_login(m *ice.Message) error {
-	parts := strings.SplitN(m.R.Header.Get("Authorization"), " ", 2)
+	parts := strings.SplitN(m.R.Header.Get("Authorization"), ice.SP, 2)
 	if len(parts) < 2 {
 		return fmt.Errorf("Invalid authorization header, not enought parts")
 	}
@@ -76,15 +80,15 @@ func _server_param(m *ice.Message, arg ...string) (string, string) {
 	default:
 		repos = strings.TrimSuffix(repos, service)
 	}
-	return kit.Path(ice.USR_LOCAL, REPOS, repos), strings.TrimPrefix(service, "git-")
+	return kit.Path(m.Config(nfs.PATH), REPOS, repos), strings.TrimPrefix(service, "git-")
 }
 func _server_repos(m *ice.Message, arg ...string) error {
 	repos, service := _server_param(m, arg...)
 
 	if m.Option(cli.CMD_DIR, repos); strings.HasSuffix(path.Join(arg...), "info/refs") {
 		web.RenderType(m.W, "", kit.Format("application/x-git-%s-advertisement", service))
-		msg := m.Cmd(cli.SYSTEM, GIT, service, "--stateless-rpc", "--advertise-refs", ".")
-		packetWrite(m, "# service=git-"+service+"\n", msg.Result())
+		msg := m.Cmd(cli.SYSTEM, GIT, service, "--stateless-rpc", "--advertise-refs", ice.PT)
+		packetWrite(m, "# service=git-"+service+ice.NL, msg.Result())
 		return nil
 	}
 
@@ -97,22 +101,29 @@ func _server_repos(m *ice.Message, arg ...string) error {
 	m.Option(cli.CMD_OUTPUT, m.W)
 	m.Option(cli.CMD_INPUT, reader)
 	web.RenderType(m.W, "", kit.Format("application/x-git-%s-result", service))
-	m.Cmd(cli.SYSTEM, GIT, service, "--stateless-rpc", ".")
+	m.Cmd(cli.SYSTEM, GIT, service, "--stateless-rpc", ice.PT)
 	return nil
 }
-
-var basicAuthRegex = regexp.MustCompile("^([^:]*):(.*)$")
 
 const SERVER = "server"
 
 func init() {
-	Index.Merge(&ice.Context{Configs: map[string]*ice.Config{
-		SERVER: {Name: SERVER, Help: "服务器", Value: kit.Data(kit.MDB_PATH, ice.USR_LOCAL)},
-	}, Commands: map[string]*ice.Command{
+	Index.Merge(&ice.Context{Commands: map[string]*ice.Command{
 		web.WEB_LOGIN: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			m.Render(ice.RENDER_VOID)
 		}},
-		"/repos/": {Name: "/repos/", Help: "代码库", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		"/repos/": {Name: "/repos/", Help: "代码库", Action: ice.MergeAction(map[string]*ice.Action{
+			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
+				web.AddRewrite(func(w http.ResponseWriter, r *http.Request) bool {
+					if p := r.URL.Path; strings.HasPrefix(p, "/x/") {
+						r.URL.Path = strings.Replace(r.URL.Path, "/x/", "/code/git/repos/", -1)
+						m.Info("rewrite %v -> %v", p, r.URL.Path)
+						return true
+					}
+					return false
+				})
+			}},
+		}, ctx.CmdAction()), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			if m.Option("go-get") == "1" { // 下载地址
 				p := kit.Split(kit.MergeURL2(m.Option(ice.MSG_USERWEB), "/x/"+path.Join(arg...)), "?")[0]
 				m.RenderResult(kit.Format(`<meta name="%s" content="%s">`, "go-import", kit.Format(`%s git %s`, strings.TrimPrefix(p, "https://"), p)))
@@ -124,10 +135,11 @@ func init() {
 				if err := _server_login(m); err != nil {
 					web.RenderHeader(m, "WWW-Authenticate", `Basic realm="git server"`)
 					web.RenderStatus(m, 401, err.Error())
-					return
+					return // 没有权限
 				}
 				if _, e := os.Stat(path.Join(repos)); os.IsNotExist(e) {
 					m.Cmd(cli.SYSTEM, GIT, INIT, "--bare", repos) // 创建仓库
+					m.Log_CREATE(REPOS, repos)
 				}
 			case "upload-pack": // 下载代码
 			}
@@ -143,7 +155,9 @@ func init() {
 			}},
 		}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			if m.Option(nfs.DIR_ROOT, path.Join(ice.USR_LOCAL, REPOS)); len(arg) == 0 {
-				m.Cmdy(nfs.DIR, "./")
+				m.Cmdy(nfs.DIR, "").Table(func(index int, value map[string]string, head []string) {
+					m.PushScript("git clone " + kit.MergeURL2(m.Option(ice.MSG_USERWEB), "/x/"+value[nfs.PATH]))
+				})
 				return
 			}
 			m.Cmdy("_sum", path.Join(m.Option(nfs.DIR_ROOT), arg[0]))

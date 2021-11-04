@@ -2,6 +2,7 @@ package vim
 
 import (
 	"path"
+	"unicode"
 
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/mdb"
@@ -19,6 +20,37 @@ func init() {
 			)},
 		},
 		Commands: map[string]*ice.Command{
+			"/tags": {Name: "/tags", Help: "跳转", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+				pre := m.Option("pre")
+				for i := kit.Int(m.Option("col")); i > 0; i-- {
+					if i > 0 && (pre[i] == '_' || pre[i] == '.' || unicode.IsDigit(rune(pre[i])) || unicode.IsLetter(rune(pre[i]))) {
+						continue
+					}
+					m.Debug("what %v", pre[i+1:kit.Int(m.Option("col"))])
+					pre = pre[i+1 : kit.Int(m.Option("col"))]
+					break
+				}
+
+				switch file := kit.Slice(kit.Split(pre, ".", "."), -2)[0]; file {
+				case "kit", "ice", "ctx", "chat", "html", "lang":
+					m.Echo("4\n%s\n/%s: /\n", "usr/volcanos/proto.js", m.Option("pattern"))
+				case "msg":
+					m.Echo("4\nusr/volcanos/lib/%s.js\n/%s: \\(shy\\|func\\)/\n", "misc", m.Option("pattern"))
+				case "base", "core", "misc", "page", "user":
+					m.Echo("4\nusr/volcanos/lib/%s.js\n/%s: \\(shy\\|func\\)/\n", file, m.Option("pattern"))
+				case "onengine", "ondaemon", "onappend", "onlayout", "onmotion", "onkeypop":
+					m.Echo("4\n%s\n/%s: \\(shy\\|func\\)/\n", "usr/volcanos/frame.js", m.Option("pattern"))
+				case "onimport", "onaction", "onexport":
+					m.Echo("4\n%s\n/%s: \\(shy\\|func\\)/\n", m.Option("buf"), m.Option("pattern"))
+				default:
+					switch m.Option("pattern") {
+					case "require", "request", "get", "set":
+						m.Echo("4\n%s\n/%s: \\(shy\\|func\\)/\n", "usr/volcanos/proto.js", m.Option("pattern"))
+					default:
+						m.Echo("4\n%s\n/%s: \\(shy\\|func\\)/\n", "usr/volcanos/frame.js", m.Option("pattern"))
+					}
+				}
+			}},
 			"/favor": {Name: "/favor", Help: "收藏", Action: map[string]*ice.Action{
 				mdb.SELECT: {Name: "select", Help: "主题", Hand: func(m *ice.Message, arg ...string) {
 					m.Cmd(FAVOR).Table(func(index int, value map[string]string, head []string) {

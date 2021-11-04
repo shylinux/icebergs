@@ -2,12 +2,14 @@ package git
 
 import (
 	"os"
+	"path"
 	"strings"
 	"sync"
 	"time"
 
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/cli"
+	"shylinux.com/x/icebergs/base/nfs"
 	kit "shylinux.com/x/toolkits"
 )
 
@@ -21,8 +23,10 @@ func init() {
 	}, Commands: map[string]*ice.Command{
 		TOTAL: {Name: "total name auto", Help: "统计量", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			if len(arg) > 0 { // 提交详情
-				m.Richs(REPOS, nil, arg[0], func(key string, value map[string]interface{}) {
-					m.Cmdy("_sum", kit.Value(value, kit.META_PATH), arg[1:])
+				m.Cmd(REPOS, ice.OptionFields("name,path")).Table(func(index int, value map[string]string, head []string) {
+					if value[kit.MDB_NAME] == arg[0] {
+						m.Cmdy("_sum", value[nfs.PATH], arg[1:])
+					}
 				})
 				return
 			}
@@ -31,11 +35,11 @@ func init() {
 			days, commit, adds, dels, rest := 0, 0, 0, 0, 0
 			m.Richs(REPOS, nil, kit.MDB_FOREACH, func(mu *sync.Mutex, key string, value map[string]interface{}) {
 				value = kit.GetMeta(value)
-				if m.Conf(TOTAL, kit.Keym("skip", value[kit.MDB_NAME])) == ice.TRUE {
+				if m.Config(kit.Keys("skip", value[kit.MDB_NAME])) == ice.TRUE {
 					return
 				}
 
-				msg := m.Cmd("_sum", value[kit.MDB_PATH], "total", "10000")
+				msg := m.Cmd("_sum", value[kit.MDB_PATH], kit.MDB_TOTAL, "10000")
 
 				mu.Lock()
 				defer mu.Unlock()
@@ -50,7 +54,7 @@ func init() {
 					rest += kit.Int(value["rest"])
 				})
 
-				m.Push("name", value[kit.MDB_NAME])
+				m.Push(kit.MDB_NAME, value[kit.MDB_NAME])
 				m.Copy(msg)
 			})
 
@@ -66,24 +70,21 @@ func init() {
 		}},
 		"_sum": {Name: "_sum [path] [total] [count|date] args...", Help: "统计量", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			if len(arg) > 0 {
-				if s, e := os.Stat(arg[0] + "/.git"); e == nil && s.IsDir() {
+				if s, e := os.Stat(path.Join(arg[0], ".git")); e == nil && s.IsDir() {
 					m.Option(cli.CMD_DIR, arg[0])
 					arg = arg[1:]
-				} else if s, e := os.Stat(arg[0] + "/refs"); e == nil && s.IsDir() {
+				} else if s, e := os.Stat(path.Join(arg[0], "refs")); e == nil && s.IsDir() {
 					m.Option(cli.CMD_DIR, arg[0])
 					arg = arg[1:]
 				}
 			}
 
-			total := false
-			if len(arg) > 0 && arg[0] == "total" {
+			total := false // 累积求和
+			if len(arg) > 0 && arg[0] == kit.MDB_TOTAL {
 				total, arg = true, arg[1:]
 			}
 
-			args := []string{}
-			args = append(args, "log",
-				// kit.Format("--author=%s\\|shylinux", m.Option(ice.MSG_USERNAME)),
-				"--shortstat", "--pretty=commit: %ad %n%s", "--date=iso", "--reverse")
+			args := []string{"log", "--shortstat", "--pretty=commit: %ad %n%s", "--date=iso", "--reverse"}
 			if len(arg) > 0 {
 				if strings.Contains(arg[0], "-") && !strings.Contains(arg[0], ":") {
 					arg[0] = arg[0] + " 00:00:00"
@@ -97,8 +98,8 @@ func init() {
 			var total_day time.Duration
 			count, count_add, count_del := 0, 0, 0
 			for i, v := range strings.Split(m.Cmdx(cli.SYSTEM, GIT, args), "commit: ") {
-				l := strings.Split(v, "\n")
-				hs := strings.Split(l[0], " ")
+				l := strings.Split(v, ice.NL)
+				hs := strings.Split(l[0], ice.SP)
 				if len(l) < 2 {
 					continue
 				}
@@ -106,8 +107,8 @@ func init() {
 				add, del := "0", "0"
 				if len(l) > 3 {
 					fs := strings.Split(strings.TrimSpace(l[3]), ", ")
-					if adds := strings.Split(fs[1], " "); len(fs) > 2 {
-						dels := strings.Split(fs[2], " ")
+					if adds := strings.Split(fs[1], ice.SP); len(fs) > 2 {
+						dels := strings.Split(fs[2], ice.SP)
 						add = adds[0]
 						del = dels[0]
 					} else if strings.Contains(adds[1], "insertion") {
@@ -117,7 +118,7 @@ func init() {
 					}
 				}
 
-				if total {
+				if total { // 累积求和
 					if count++; i == 1 {
 						if t, e := time.Parse("2006-01-02", hs[0]); e == nil {
 							total_day = time.Now().Sub(t)
@@ -138,7 +139,7 @@ func init() {
 				m.Push("time", hs[1])
 			}
 
-			if total {
+			if total { // 累积求和
 				m.Push("tags", m.Cmdx(cli.SYSTEM, GIT, "describe", "--tags"))
 				m.Push("days", int(total_day.Hours())/24)
 				m.Push("commit", count)
@@ -147,6 +148,5 @@ func init() {
 				m.Push("rest", count_add-count_del)
 			}
 		}},
-	},
-	})
+	}})
 }

@@ -6,6 +6,7 @@ import (
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/cli"
 	"shylinux.com/x/icebergs/base/mdb"
+	"shylinux.com/x/icebergs/core/code"
 	kit "shylinux.com/x/toolkits"
 )
 
@@ -40,6 +41,15 @@ func init() {
 						m.Cmd(mdb.INSERT, m.Prefix(INPUT), "", mdb.LIST, kit.MDB_TYPE, "cmd",
 							kit.MDB_NAME, strings.TrimSpace(strings.Join(list[1:], " ")), kit.MDB_TEXT, m.Result())
 						m.Echo("%s\n", arg[0])
+						return
+					}
+				}
+				switch kit.Ext(m.Option("buf")) {
+				case code.JS:
+					switch arg[0] {
+					case "core":
+						m.Echo(arg[0] + ".Timer()" + ice.NL)
+						m.Echo(arg[0] + ".Timer300ms()" + ice.NL)
 						return
 					}
 				}

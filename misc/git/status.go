@@ -81,6 +81,7 @@ func _status_tags(m *ice.Message) {
 				m.Cmd(cli.SYSTEM, cli.MAKE)
 			}
 		}
+		toast(ice.SUCCESS, count, total)
 	})
 }
 func _status_each(m *ice.Message, title string, cmds ...string) {
@@ -197,7 +198,7 @@ func init() {
 		STATUS: {Name: "status name auto", Help: "状态机", Action: map[string]*ice.Action{
 			PULL: {Name: "pull", Help: "下载", Hand: func(m *ice.Message, arg ...string) {
 				_status_each(m, PULL, cli.SYSTEM, GIT, PULL)
-				m.ProcessRefresh30ms()
+				m.ProcessHold()
 			}},
 			MAKE: {Name: "make", Help: "编译", Hand: func(m *ice.Message, arg ...string) {
 				web.PushStream(m)
@@ -207,7 +208,6 @@ func init() {
 			}},
 			TAGS: {Name: "tags", Help: "标签", Hand: func(m *ice.Message, arg ...string) {
 				_status_tags(m)
-				m.Toast(ice.SUCCESS)
 				m.ProcessHold()
 			}},
 			PUSH: {Name: "push", Help: "上传", Hand: func(m *ice.Message, arg ...string) {

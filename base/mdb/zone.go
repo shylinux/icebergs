@@ -162,6 +162,7 @@ func ZoneAction(fields ...string) map[string]*ice.Action {
 			m.Cmdy(MODIFY, m.PrefixKey(), "", ZONE, m.Option(_zone(m)), m.Option(kit.MDB_ID), arg)
 		}},
 		EXPORT: {Name: "export", Help: "导出", Hand: func(m *ice.Message, arg ...string) {
+			m.Option(ice.CACHE_LIMIT, "-1")
 			m.OptionFields(_zone(m), m.Config(kit.MDB_FIELD))
 			m.Cmdy(EXPORT, m.PrefixKey(), "", ZONE)
 		}},

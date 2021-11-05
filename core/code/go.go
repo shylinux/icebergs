@@ -10,7 +10,6 @@ import (
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/cli"
 	"shylinux.com/x/icebergs/base/mdb"
-	"shylinux.com/x/icebergs/base/nfs"
 	kit "shylinux.com/x/toolkits"
 )
 
@@ -65,13 +64,6 @@ func _go_grep(m *ice.Message, key string) {
 	msg := m.Spawn()
 	msg.Split(m.Cmd(cli.SYSTEM, GREP, "--exclude-dir=.git", "--exclude=.[a-z]*", "-rn", key, ice.PT).Append(cli.CMD_OUT), "file:line:text", ":", ice.NL)
 	msg.Table(func(index int, value map[string]string, head []string) { m.PushSearch(ice.CMD, GREP, value) })
-}
-
-func PlugAction(fields ...string) map[string]*ice.Action {
-	return ice.SelectAction(map[string]*ice.Action{
-		mdb.PLUGIN: {Hand: func(m *ice.Message, arg ...string) { m.Echo(m.Config(PLUG)) }},
-		mdb.RENDER: {Hand: func(m *ice.Message, arg ...string) { m.Cmdy(nfs.CAT, path.Join(arg[2], arg[1])) }},
-	}, fields...)
 }
 
 const (

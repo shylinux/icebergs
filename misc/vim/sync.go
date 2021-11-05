@@ -1,52 +1,49 @@
 package vim
 
 import (
+	"path"
+
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/aaa"
 	"shylinux.com/x/icebergs/base/cli"
 	"shylinux.com/x/icebergs/base/mdb"
+	"shylinux.com/x/icebergs/base/nfs"
+	"shylinux.com/x/icebergs/core/code"
 	kit "shylinux.com/x/toolkits"
 )
-
-const _sync_index = 1
-
-func _sync_count(m *ice.Message) string {
-	return m.Conf(SYNC, kit.Keym(kit.MDB_COUNT))
-}
 
 const SYNC = "sync"
 
 func init() {
-	Index.Merge(&ice.Context{
-		Configs: map[string]*ice.Config{
-			SYNC: {Name: SYNC, Help: "同步流", Value: kit.Data(
-				kit.MDB_FIELD, "time,id,type,name,text,pwd,username,hostname",
-			)},
-		},
-		Commands: map[string]*ice.Command{
-			"/sync": {Name: "/sync", Help: "同步", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-				switch m.Option(ARG) {
-				case "wq", "q", "qa":
-					m.Cmd("/sess", aaa.LOGOUT)
-				}
+	Index.Merge(&ice.Context{Configs: map[string]*ice.Config{
+		SYNC: {Name: SYNC, Help: "同步流", Value: kit.Data(
+			kit.MDB_FIELD, "time,id,type,name,text,pwd,buf,row,col",
+		)},
+	}, Commands: map[string]*ice.Command{
+		"/sync": {Name: "/sync", Help: "同步", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			switch m.Option(ARG) {
+			case "wq", "q", "qa":
+				m.Cmd("/sess", aaa.LOGOUT)
+			}
 
-				m.Cmd(mdb.INSERT, m.Prefix(SYNC), "", mdb.LIST, kit.MDB_TYPE, VIMRC,
-					kit.MDB_NAME, arg[0], kit.MDB_TEXT, kit.Select(m.Option(ARG), m.Option(SUB)),
-					cli.PWD, m.Option(cli.PWD), BUF, m.Option(BUF), ROW, m.Option(ROW), COL, m.Option(COL))
+			m.Cmd(SYNC, mdb.INSERT, kit.MDB_TYPE, VIMRC, kit.MDB_NAME, arg[0], kit.MDB_TEXT, kit.Select(m.Option(ARG), m.Option(SUB)),
+				m.OptionSimple(cli.PWD, BUF, ROW, COL))
+		}},
+		SYNC: {Name: "sync id auto page export import", Help: "同步流", Action: ice.MergeAction(map[string]*ice.Action{
+			code.INNER: {Name: "inner", Help: "源码", Hand: func(m *ice.Message, arg ...string) {
+				p := path.Join(m.Option(cli.PWD), m.Option(BUF))
+				m.ProcessCommand(code.INNER, []string{path.Dir(p) + ice.PS, path.Base(p), m.Option(ROW)}, arg...)
 			}},
-			SYNC: {Name: "sync id auto page", Help: "同步流", Action: map[string]*ice.Action{
-				mdb.PREV: {Name: "prev", Help: "上一页", Hand: func(m *ice.Message, arg ...string) {
-					mdb.PrevPage(m, arg[0], arg[1:]...)
-				}},
-				mdb.NEXT: {Name: "next", Help: "下一页", Hand: func(m *ice.Message, arg ...string) {
-					mdb.NextPage(m, arg[0], arg[1:]...)
-				}},
-			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-				m.OptionPage(kit.Slice(arg, _sync_index)...)
-				m.Fields(len(kit.Slice(arg, 0, 1)), m.Conf(SYNC, kit.META_FIELD))
-				m.Cmdy(mdb.SELECT, m.Prefix(SYNC), "", mdb.LIST, kit.MDB_ID, arg)
-				m.StatusTimeCountTotal(_sync_count(m))
+			mdb.INPUTS: {Name: "favor inputs", Help: "补全"},
+			FAVOR: {Name: "favor zone=some@key type name text buf row pwd", Help: "收藏", Hand: func(m *ice.Message, arg ...string) {
+				m.Cmdy(FAVOR, mdb.INSERT, m.OptionSimple(kit.MDB_ZONE, "type,name,text,pwd"),
+					nfs.FILE, m.Option(BUF), nfs.LINE, m.Option(ROW))
 			}},
-		},
-	})
+		}, mdb.ListAction()), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			m.OptionPage(kit.Slice(arg, 1)...)
+			mdb.ListSelect(m, kit.Slice(arg, 0, 1)...)
+			m.PushAction(code.INNER, FAVOR)
+			m.StatusTimeCountTotal(m.Config(kit.MDB_COUNT))
+		}},
+	}})
 }

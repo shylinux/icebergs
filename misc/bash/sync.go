@@ -11,8 +11,6 @@ import (
 	kit "shylinux.com/x/toolkits"
 )
 
-const _sync_index = 1
-
 const (
 	SHELL   = "shell"
 	HISTORY = "history"
@@ -46,7 +44,7 @@ func init() {
 				m.Cmdy(FAVOR, mdb.INSERT, m.OptionSimple(kit.MDB_ZONE, m.Conf(FAVOR, kit.META_FIELD)))
 			}},
 		}, mdb.ListAction()), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			m.OptionPage(kit.Slice(arg, _sync_index)...)
+			m.OptionPage(kit.Slice(arg, 1)...)
 			mdb.ListSelect(m, kit.Slice(arg, 0, 1)...)
 			m.PushAction(cli.SYSTEM, FAVOR)
 			m.StatusTimeCountTotal(m.Config(kit.MDB_COUNT))

@@ -200,7 +200,7 @@ func InstallAction(fields ...string) map[string]*ice.Action {
 			m.Cmdy(INSTALL, cli.BUILD, m.Config(cli.SOURCE))
 		}},
 		cli.ORDER: {Name: "order", Help: "加载", Hand: func(m *ice.Message, arg ...string) {
-			m.Cmd(INSTALL, cli.ORDER, m.Config(cli.SOURCE), "_install/bin")
+			m.Cmdy(INSTALL, cli.ORDER, m.Config(cli.SOURCE), "_install/bin")
 		}},
 	}, fields...)
 }

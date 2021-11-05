@@ -35,8 +35,8 @@ func init() {
 			}
 
 			switch m.RenderResult(); arg[0] {
-			case "/qrcode", "/sess": // 登录入口
-				return
+			case "/qrcode", "/sess":
+				return // 登录入口
 			}
 
 			if m.Warn(m.Option(SID, strings.TrimSpace(m.Option(SID))) == "", ice.ErrNotLogin, arg) {

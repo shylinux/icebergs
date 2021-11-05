@@ -17,7 +17,7 @@ var Index = &ice.Context{Name: BASH, Help: "命令行", Configs: map[string]*ice
 }, Commands: map[string]*ice.Command{
 	BASH: {Name: "bash path auto order build download", Help: "命令行", Action: ice.MergeAction(map[string]*ice.Action{
 		cli.ORDER: {Name: "order", Help: "加载", Hand: func(m *ice.Message, arg ...string) {
-			m.Cmd(code.INSTALL, cli.ORDER, m.Config(cli.SOURCE), "_install/bin")
+			m.Cmdy(code.INSTALL, cli.ORDER, m.Config(cli.SOURCE), "_install/bin")
 		}},
 	}, code.InstallAction()), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 		m.Cmdy(code.INSTALL, cli.SOURCE, m.Config(cli.SOURCE), arg)

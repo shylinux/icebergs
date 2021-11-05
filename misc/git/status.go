@@ -57,7 +57,7 @@ func _status_tags(m *ice.Message) {
 					return text
 				}
 				if v, ok := vs[kit.Slice(strings.Split(ls[0], ice.PT), -1)[0]]; ok && ls[1] != v {
-					m.Debug("upgrade to %v %v from %v", ls[0], ls[1], v)
+					m.Info("upgrade to %v %v from %v", ls[0], ls[1], v)
 					text = ice.TB + ls[0] + ice.SP + v
 					change = true
 				}
@@ -70,11 +70,10 @@ func _status_tags(m *ice.Message) {
 
 			m.Cmd(nfs.SAVE, ice.GO_SUM, "")
 			m.Cmd(nfs.SAVE, ice.GO_MOD, mod)
-			m.Option(cli.CMD_DIR, _repos_path(k))
 
-			switch k {
+			switch m.Option(cli.CMD_DIR, _repos_path(k)); k {
 			case ice.CONTEXTS:
-				defer m.Cmd(cli.SYSTEM, cli.MAKE)
+				defer m.Cmd(cli.SYSTEM, cli.MAKE, ice.Option{cli.CMD_DIR, _repos_path(k)})
 			case ice.ICEBERGS:
 				m.Cmd(cli.SYSTEM, code.GO, cli.BUILD)
 			default:

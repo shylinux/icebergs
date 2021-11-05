@@ -424,7 +424,7 @@ func (m *Message) Search(key string, cb interface{}) *Message {
 			break
 		}
 
-		for _, p := range []*Context{p, m.target, m.source} {
+		for _, p := range []*Context{m.target, p, m.source} {
 			for s := p; s != nil; s = s.context {
 				if cmd, ok := s.Commands[key]; ok {
 					cb(s.context, s, key, cmd) // 查找命令
@@ -433,7 +433,7 @@ func (m *Message) Search(key string, cb interface{}) *Message {
 			}
 		}
 	case func(p *Context, s *Context, key string, conf *Config):
-		for _, p := range []*Context{p, m.target, m.source} {
+		for _, p := range []*Context{m.target, p, m.source} {
 			for s := p; s != nil; s = s.context {
 				if cmd, ok := s.Configs[key]; ok {
 					cb(s.context, s, key, cmd) // 查找配置

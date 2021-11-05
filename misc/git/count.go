@@ -24,10 +24,13 @@ func init() {
 				m.Option(nfs.DIR_DEEP, ice.TRUE)
 				m.Option(nfs.DIR_TYPE, nfs.TYPE_CAT)
 				m.Cmdy(nfs.DIR, arg, func(file string) {
-					if !strings.Contains(file, ice.PT) {
+					if strings.Contains(file, "var/") {
 						return
 					}
 					if strings.Contains(file, "bin/") {
+						return
+					}
+					if !strings.Contains(file, ice.PT) {
 						return
 					}
 					switch kit.Ext(file) {
@@ -52,7 +55,7 @@ func init() {
 					})
 				})
 				for k := range lines {
-					m.Push("type", k)
+					m.Push(kit.MDB_TYPE, k)
 					m.Push("files", files[k])
 					m.Push("lines", lines[k])
 				}

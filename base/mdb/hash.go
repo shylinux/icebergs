@@ -36,6 +36,9 @@ func _hash_insert(m *ice.Message, prefix, chain string, arg ...string) {
 	m.Echo(m.Rich(prefix, chain, kit.Data(arg)))
 }
 func _hash_delete(m *ice.Message, prefix, chain, field, value string) {
+	if field != kit.MDB_HASH {
+		field, value = kit.MDB_HASH, kit.Select(kit.Hashs(value), m.Option(kit.MDB_HASH))
+	}
 	m.Richs(prefix, chain, value, func(key string, val map[string]interface{}) {
 		m.Log_DELETE(kit.MDB_KEY, path.Join(prefix, chain), field, value, kit.MDB_VALUE, kit.Format(val))
 		m.Conf(prefix, kit.Keys(chain, kit.MDB_HASH, key), "")

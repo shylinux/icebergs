@@ -50,7 +50,7 @@ func init() {
 			FIELDS, "id,tag,pane,tty,height,width,cmd",
 		)},
 	}, Commands: map[string]*ice.Command{
-		SESSION: {Name: "session session window pane cmd auto create script", Help: "会话管理", Action: map[string]*ice.Action{
+		SESSION: {Name: "session session window pane cmd auto", Help: "会话管理", Action: map[string]*ice.Action{
 			web.DREAM_CREATE: {Name: "dream.create type name", Help: "梦想", Hand: func(m *ice.Message, arg ...string) {
 				if kit.IndexOf(m.Cmd(m.PrefixKey()).Appendv(SESSION), m.Option(kit.MDB_NAME)) == -1 {
 					m.Cmd(m.PrefixKey(), mdb.CREATE)
@@ -143,9 +143,10 @@ func init() {
 						}
 					}
 				})
-				m.Sleep("100ms")
+				m.Sleep30ms()
 			}},
 		}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			m.Action(SCRIPT)
 			if len(arg) > 3 { // 执行命令
 				m.Cmd(CMD, _tmux_key(arg[0], arg[1], arg[2]), arg[3:])
 			}
@@ -153,6 +154,7 @@ func init() {
 				m.Echo(strings.TrimSpace(m.Cmdx(VIEW, _tmux_key(arg[0], arg[1], arg[2]))))
 				return
 			}
+			m.Action(mdb.CREATE)
 			if len(arg) > 1 { // 终端列表
 				m.Cmdy(PANE, _tmux_key(arg[0], arg[1]))
 				m.PushAction(mdb.SELECT, mdb.REMOVE)

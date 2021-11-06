@@ -3,7 +3,6 @@ package vim
 import (
 	"path"
 	"strings"
-	"unicode"
 
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/mdb"
@@ -20,37 +19,22 @@ func init() {
 		)},
 	}, Commands: map[string]*ice.Command{
 		"/tags": {Name: "/tags", Help: "跳转", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			pre := m.Option("pre")
-			n := kit.Int(m.Option(COL))
-			if n > len(pre) {
-				n = len(pre) - 1
-			}
-			for i := n; i > 0; i-- {
-				if i > 0 && i < len(pre) && (pre[i] == '_' || pre[i] == '.' || unicode.IsDigit(rune(pre[i])) || unicode.IsLetter(rune(pre[i]))) {
-					continue
-				}
-				pre = pre[i+1 : n]
-				break
-			}
-
-			switch file := kit.Slice(kit.Split(pre, ice.PT, ice.PT), -2)[0]; file {
-			case "kit", "ice", "ctx", "chat", "html", "lang":
-				m.Echo("4\n%s\n/%s: /\n", "usr/volcanos/proto.js", m.Option("pattern"))
-			case "msg":
-				m.Echo("4\nusr/volcanos/lib/%s.js\n/%s: \\(shy\\|func\\)/\n", "misc", m.Option("pattern"))
-			case "base", "core", "misc", "page", "user":
-				m.Echo("4\nusr/volcanos/lib/%s.js\n/%s: \\(shy\\|func\\)/\n", file, m.Option("pattern"))
-			case "onengine", "ondaemon", "onappend", "onlayout", "onmotion", "onkeypop":
-				m.Echo("4\n%s\n/%s: \\(shy\\|func\\)/\n", "usr/volcanos/frame.js", m.Option("pattern"))
+			switch m.Option("module") {
 			case "onimport", "onaction", "onexport":
-				m.Echo("4\n%s\n/%s: \\(shy\\|func\\)/\n", m.Option(BUF), m.Option("pattern"))
+				m.Echo("4\n%s\n/\\<%s: \\(shy\\|func\\)/\n", m.Option(BUF), m.Option("pattern"))
+			case "msg":
+				m.Echo("4\nusr/volcanos/lib/%s.js\n/\\<%s: \\(shy\\|func\\)/\n", "misc", m.Option("pattern"))
 			default:
-				switch m.Option("pattern") {
-				case "require", "request", "get", "set":
-					m.Echo("4\n%s\n/%s: \\(shy\\|func\\)/\n", "usr/volcanos/proto.js", m.Option("pattern"))
-				default:
-					m.Echo("4\n%s\n/%s: \\(shy\\|func\\)/\n", "usr/volcanos/frame.js", m.Option("pattern"))
+				if mdb.ZoneSelect(m, m.Option("module")); m.Length() > 0 {
+					switch m.Append(kit.MDB_TYPE) {
+					case "function":
+						m.Echo("4\nusr/volcanos%s\n/\\<%s: \\(shy\\|func\\)/\n", m.Append(kit.MDB_FILE), m.Option("pattern"))
+					default:
+						m.Echo("4\nusr/volcanos%s\n/\\<%s: /\n", m.Append(kit.MDB_FILE), m.Option("pattern"))
+					}
+					return
 				}
+				m.Echo("4\n%s\n/\\<%s: /\n", "usr/volcanos/proto.js", m.Option("pattern"))
 			}
 		}},
 		TAGS: {Name: "tags zone id auto", Help: "索引", Action: ice.MergeAction(map[string]*ice.Action{
@@ -75,6 +59,9 @@ func init() {
 				m.PushAction(mdb.REMOVE)
 			} else {
 				if m.IsCliUA() {
+					if m.Length() == 0 {
+						return
+					}
 					m.Sort(kit.MDB_NAME)
 					m.Echo("func\n").Table(func(index int, value map[string]string, head []string) {
 						m.Echo(arg[0] + ice.PT + value[kit.MDB_NAME] + ice.NL)

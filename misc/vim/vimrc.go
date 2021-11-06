@@ -19,8 +19,7 @@ func init() {
 				m.Cmd(mdb.RENDER, mdb.CREATE, VIM, m.Prefix(VIMRC))
 				code.LoadPlug(m, VIMRC)
 			}},
-		}, code.PlugAction()), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-		}},
+		}, code.PlugAction())},
 	}, Configs: map[string]*ice.Config{
 		VIMRC: {Name: VIMRC, Help: "收藏夹", Value: kit.Data(
 			code.PLUG, kit.Dict(

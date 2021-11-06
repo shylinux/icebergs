@@ -43,6 +43,7 @@ func init() {
 			}
 
 			// 词汇列表
+			m.Option(ice.CACHE_LIMIT, "10")
 			m.Cmd("web.code.input.wubi", "word", arg[0]).Table(func(index int, value map[string]string, head []string) {
 				m.Echo("%s\n", value[kit.MDB_TEXT])
 			})

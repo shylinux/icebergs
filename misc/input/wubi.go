@@ -18,15 +18,15 @@ func init() {
 			kit.MDB_LIMIT, "5000", kit.MDB_LEAST, "1000",
 		)},
 	}, Commands: map[string]*ice.Command{
-		WUBI: {Name: "wubi method=word,line code auto import export", Help: "五笔", Action: map[string]*ice.Action{
-			mdb.IMPORT: {Name: "import file=usr/wubi-dict/wubi86 zone=wubi86", Help: "导入", Hand: func(m *ice.Message, arg ...string) {
-				_input_load(m, m.Option(FILE), m.Option(ZONE))
-			}},
+		WUBI: {Name: "wubi method=word,line code auto", Help: "五笔", Action: map[string]*ice.Action{
 			mdb.INSERT: {Name: "insert zone=person text code weight", Help: "添加", Hand: func(m *ice.Message, arg ...string) {
 				_input_push(m, m.Option(ZONE), m.Option(TEXT), m.Option(CODE), m.Option(WEIGHT))
 			}},
 			mdb.EXPORT: {Name: "export file=usr/wubi-dict/person zone=person", Help: "导出", Hand: func(m *ice.Message, arg ...string) {
 				_input_save(m, m.Option(FILE), m.Option(ZONE))
+			}},
+			mdb.IMPORT: {Name: "import file=usr/wubi-dict/wubi86 zone=wubi86", Help: "导入", Hand: func(m *ice.Message, arg ...string) {
+				_input_load(m, m.Option(FILE), m.Option(ZONE))
 			}},
 		}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			_input_find(m, arg[0], arg[1], m.Option(ice.CACHE_LIMIT))

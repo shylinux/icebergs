@@ -58,54 +58,43 @@ const (
 const SESSION = "session"
 
 func init() {
-	psh.Index.Merge(&ice.Context{
-		Configs: map[string]*ice.Config{
-			SESSION: {Name: SESSION, Help: "会话", Value: kit.Data()},
-		},
-		Commands: map[string]*ice.Command{
-			ice.CTX_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+	psh.Index.Merge(&ice.Context{Configs: map[string]*ice.Config{
+		SESSION: {Name: SESSION, Help: "会话", Value: kit.Data(
+			kit.MDB_FIELD, "time,hash,status,count,connect",
+		)},
+	}, Commands: map[string]*ice.Command{
+		SESSION: {Name: "session hash id auto", Help: "会话", Action: ice.MergeAction(map[string]*ice.Action{
+			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
 				m.Richs(SESSION, "", kit.MDB_FOREACH, func(key string, value map[string]interface{}) {
 					kit.Value(value, kit.Keym(kit.MDB_STATUS), tcp.CLOSE)
 				})
 			}},
-			SESSION: {Name: "session hash id auto command prunes", Help: "会话", Action: map[string]*ice.Action{
-				mdb.REMOVE: {Name: "remove", Help: "删除", Hand: func(m *ice.Message, arg ...string) {
-					m.Cmdy(mdb.DELETE, SESSION, "", mdb.HASH, kit.MDB_HASH, m.Option(kit.MDB_HASH))
-				}},
-				mdb.PRUNES: {Name: "prunes", Help: "清理", Hand: func(m *ice.Message, arg ...string) {
-					m.Option(mdb.FIELDS, "time,hash,status,count,connect")
-					m.Cmdy(mdb.PRUNES, SESSION, "", mdb.HASH, kit.MDB_STATUS, tcp.ERROR)
-					m.Cmdy(mdb.PRUNES, SESSION, "", mdb.HASH, kit.MDB_STATUS, tcp.CLOSE)
-				}},
-				ctx.COMMAND: {Name: "command cmd=pwd", Help: "命令", Hand: func(m *ice.Message, arg ...string) {
-					m.Richs(SESSION, "", m.Option(kit.MDB_HASH), func(key string, value map[string]interface{}) {
-						if w, ok := kit.Value(value, kit.Keym(INPUT)).(io.Writer); ok {
-							m.Grow(SESSION, kit.Keys(kit.MDB_HASH, key), kit.Dict(kit.MDB_TYPE, CMD, kit.MDB_TEXT, m.Option(CMD)))
-							w.Write([]byte(m.Option(CMD) + ice.NL))
-						}
-					})
-					m.ProcessRefresh("300ms")
-				}},
-				mdb.REPEAT: {Name: "repeat", Help: "执行", Hand: func(m *ice.Message, arg ...string) {
-					m.Cmdy(SESSION, ctx.ACTION, ctx.COMMAND, CMD, m.Option(kit.MDB_TEXT))
-				}},
-			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-				if len(arg) == 0 {
-					m.Fields(len(arg), "time,hash,status,count,connect")
-					if m.Cmdy(mdb.SELECT, SESSION, "", mdb.HASH, kit.MDB_HASH, arg); len(arg) == 0 {
-						m.Table(func(index int, value map[string]string, head []string) {
-							m.PushButton(kit.Select("", ctx.COMMAND, value[kit.MDB_STATUS] == tcp.OPEN), mdb.REMOVE)
-						})
-					}
-					return
-				}
-
-				m.Fields(len(arg[1:]), "time,id,type,text")
-				m.Cmdy(mdb.SELECT, SESSION, kit.Keys(kit.MDB_HASH, arg[0]), mdb.LIST, kit.MDB_ID, arg[1:])
-				m.Table(func(index int, value map[string]string, head []string) {
-					m.PushButton(kit.Select("", mdb.REPEAT, value[kit.MDB_TYPE] == CMD))
-				})
+			mdb.REPEAT: {Name: "repeat", Help: "执行", Hand: func(m *ice.Message, arg ...string) {
+				m.Cmdy(SESSION, ctx.ACTION, ctx.COMMAND, CMD, m.Option(kit.MDB_TEXT))
 			}},
-		},
-	})
+			ctx.COMMAND: {Name: "command cmd=pwd", Help: "命令", Hand: func(m *ice.Message, arg ...string) {
+				m.Richs(SESSION, "", m.Option(kit.MDB_HASH), func(key string, value map[string]interface{}) {
+					if w, ok := kit.Value(value, kit.Keym(INPUT)).(io.Writer); ok {
+						m.Grow(SESSION, kit.Keys(kit.MDB_HASH, key), kit.Dict(kit.MDB_TYPE, CMD, kit.MDB_TEXT, m.Option(CMD)))
+						w.Write([]byte(m.Option(CMD) + ice.NL))
+					}
+				})
+				m.ProcessRefresh300ms()
+			}},
+		}, mdb.HashActionStatus()), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			if len(arg) == 0 {
+				m.Action(mdb.PRUNES)
+				mdb.HashSelect(m, arg...).Table(func(index int, value map[string]string, head []string) {
+					m.PushButton(kit.Select("", ctx.COMMAND, value[kit.MDB_STATUS] == tcp.OPEN), mdb.REMOVE)
+				})
+				return
+			}
+
+			m.Action(ctx.COMMAND)
+			m.Fields(len(arg[1:]), "time,id,type,text")
+			mdb.ZoneSelect(m, arg...).Table(func(index int, value map[string]string, head []string) {
+				m.PushButton(kit.Select("", mdb.REPEAT, value[kit.MDB_TYPE] == CMD))
+			})
+		}},
+	}})
 }

@@ -183,8 +183,11 @@ func (m *Message) ProcessCommand(cmd string, val []string, arg ...string) {
 	m.ProcessField(cmd, RUN)
 	m.Push(ARG, kit.Format(val))
 }
-func (m *Message) ProcessCommandOpt(arg ...string) {
-	m.Push(OPT, kit.Format(m.OptionSimple(arg...)))
+func (m *Message) ProcessCommandOpt(arg []string, args ...string) {
+	if len(arg) > 0 && arg[0] == RUN {
+		return
+	}
+	m.Push(OPT, kit.Format(m.OptionSimple(args...)))
 }
 func (m *Message) ProcessField(arg ...interface{}) {
 	m.Process(PROCESS_FIELD)

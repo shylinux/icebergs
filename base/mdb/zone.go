@@ -155,6 +155,9 @@ func ZoneAction(fields ...string) map[string]*ice.Action {
 			m.Cmdy(DELETE, m.PrefixKey(), "", HASH, m.OptionSimple(_zone(m)), arg)
 		}},
 		INSERT: {Name: "insert zone type=go name=hi text=hello", Help: "添加", Hand: func(m *ice.Message, arg ...string) {
+			if len(arg) == 0 {
+				arg = m.OptionSimple(_zone(m), m.Config(kit.MDB_FIELD))
+			}
 			m.Cmdy(INSERT, m.PrefixKey(), "", HASH, _zone(m), arg[1])
 			m.Cmdy(INSERT, m.PrefixKey(), "", ZONE, m.Option(_zone(m)), arg[2:])
 		}},
@@ -183,6 +186,7 @@ func ZoneAction(fields ...string) map[string]*ice.Action {
 }
 func ZoneSelect(m *ice.Message, arg ...string) *ice.Message {
 	m.Fields(len(arg), kit.Fields(kit.MDB_TIME, m.Config(kit.MDB_SHORT), kit.MDB_COUNT), m.Config(kit.MDB_FIELD))
+	m.Debug(m.Config(kit.MDB_FIELD))
 	m.Cmdy(SELECT, m.PrefixKey(), "", ZONE, arg)
 	m.Sort(m.Config(kit.MDB_SHORT))
 	return m

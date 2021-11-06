@@ -1,6 +1,8 @@
 package bash
 
 import (
+	"os"
+
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/aaa"
 	"shylinux.com/x/icebergs/base/cli"
@@ -39,16 +41,20 @@ func init() {
 				m.Cmdy(cli.SYSTEM, "mv", m.Option(TO), m.Option(FROM))
 				m.Cmdy(mdb.DELETE, m.PrefixKey(), "", mdb.HASH, m.OptionSimple(kit.MDB_HASH))
 			}},
-			mdb.PRUNES: {Name: "prunes", Help: "清理", Hand: func(m *ice.Message, arg ...string) {
+			mdb.PRUNES: {Name: "prunes before@date", Help: "清理", Hand: func(m *ice.Message, arg ...string) {
+				mdb.HashPrunes(m, func(value map[string]string) bool {
+					os.RemoveAll(value[TO])
+					return false
+				})
 			}},
-			nfs.DIR: {Name: "dir", Help: "目录", Hand: func(m *ice.Message, arg ...string) {
+			nfs.CAT: {Name: "cat", Help: "查看", Hand: func(m *ice.Message, arg ...string) {
 				m.Option(nfs.DIR_ROOT, m.Option(TO))
-				m.ProcessCommand(nfs.DIR, []string{}, arg...)
-				m.ProcessCommandOpt(TO)
+				m.ProcessCommand(nfs.CAT, []string{}, arg...)
+				m.ProcessCommandOpt(arg, TO)
 			}},
 		}, mdb.HashAction()), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			mdb.HashSelect(m, arg...)
-			m.PushAction(nfs.DIR, mdb.REVERT, mdb.REMOVE)
+			m.PushAction(nfs.CAT, mdb.REVERT, mdb.REMOVE)
 		}},
 	}})
 }

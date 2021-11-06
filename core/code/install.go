@@ -45,7 +45,7 @@ func _install_download(m *ice.Message) {
 		})
 
 		// 下载
-		msg := m.Cmd(web.SPIDE, ice.DEV, web.SPIDE_CACHE, web.SPIDE_GET, link)
+		msg := m.Cmd("web.spide", ice.DEV, web.SPIDE_CACHE, web.SPIDE_GET, link)
 		m.Cmd(nfs.LINK, file, msg.Append(kit.MDB_FILE))
 
 		// 解压
@@ -59,6 +59,7 @@ func _install_build(m *ice.Message, arg ...string) {
 
 	// 推流
 	web.PushStream(m)
+	defer m.ProcessHold()
 
 	// 配置
 	switch cb := m.Optionv(PREPARE).(type) {
@@ -67,6 +68,7 @@ func _install_build(m *ice.Message, arg ...string) {
 	default:
 		if msg := m.Cmd(cli.SYSTEM, "./configure", "--prefix="+pp, arg[1:]); !cli.IsSuccess(msg) {
 			m.Echo(msg.Append(cli.CMD_ERR))
+			m.Toast(ice.FAILURE, cli.BUILD)
 			return
 		}
 	}
@@ -74,17 +76,18 @@ func _install_build(m *ice.Message, arg ...string) {
 	// 编译
 	if msg := m.Cmd(cli.SYSTEM, "make", "-j8"); !cli.IsSuccess(msg) {
 		m.Echo(msg.Append(cli.CMD_ERR))
+		m.Toast(ice.FAILURE, cli.BUILD)
 		return
 	}
 
 	// 安装
 	if msg := m.Cmd(cli.SYSTEM, "make", "PREFIX="+pp, "install"); !cli.IsSuccess(msg) {
 		m.Echo(msg.Append(cli.CMD_ERR))
+		m.Toast(ice.FAILURE, cli.BUILD)
 		return
 	}
 
 	m.Toast(ice.SUCCESS, cli.BUILD)
-	m.ProcessHold()
 }
 func _install_order(m *ice.Message, arg ...string) {
 	p := kit.Path(m.Config(kit.MDB_PATH), kit.TrimExt(m.Option(kit.MDB_LINK)), m.Option(kit.MDB_PATH)+ice.NL)

@@ -145,6 +145,16 @@ func HashAction(fields ...string) map[string]*ice.Action {
 		}
 		return kit.Select(kit.MDB_HASH, m.Config(kit.MDB_SHORT))
 	}
+	prunes := &ice.Action{Name: "prunes before@date", Help: "清理", Hand: func(m *ice.Message, arg ...string) {
+		HashPrunes(m, nil)
+	}}
+	if len(fields) > 0 && fields[0] == "status" {
+		prunes = &ice.Action{Name: "prunes", Help: "清理", Hand: func(m *ice.Message, arg ...string) {
+			m.OptionFields(m.Config(kit.MDB_FIELD))
+			m.Cmdy(PRUNES, m.PrefixKey(), "", HASH, kit.MDB_STATUS, "error")
+			m.Cmdy(PRUNES, m.PrefixKey(), "", HASH, kit.MDB_STATUS, "close")
+		}}
+	}
 	return ice.SelectAction(map[string]*ice.Action{
 		INPUTS: {Name: "inputs", Help: "补全", Hand: func(m *ice.Message, arg ...string) {
 			m.Cmdy(INPUTS, m.PrefixKey(), "", HASH, arg)
@@ -165,22 +175,40 @@ func HashAction(fields ...string) map[string]*ice.Action {
 		IMPORT: {Name: "import", Help: "导入", Hand: func(m *ice.Message, arg ...string) {
 			m.Cmdy(IMPORT, m.PrefixKey(), "", HASH, arg)
 		}},
-		PRUNES: {Name: "prunes before@date", Help: "清理", Hand: func(m *ice.Message, arg ...string) {
-			list, before := []string{}, kit.Time(kit.Select(m.Time("-72h"), m.Option(kit.MDB_BEFORE)))
-			m.Richs(m.PrefixKey(), "", kit.MDB_FOREACH, func(key string, value map[string]interface{}) {
-				if value = kit.GetMeta(value); kit.Time(kit.Format(value[kit.MDB_TIME])) < before {
-					list = append(list, key)
-				}
-			})
-			m.OptionFields(m.Config(kit.MDB_FIELD))
-			for _, v := range list {
-				m.Cmdy(DELETE, m.PrefixKey(), "", HASH, kit.MDB_HASH, v)
-			}
-		}},
+		PRUNES: prunes,
 	}, fields...)
+}
+func HashActionStatus(fields ...string) map[string]*ice.Action {
+	list := HashAction(fields...)
+	list[PRUNES] = &ice.Action{Name: "prunes", Help: "清理", Hand: func(m *ice.Message, arg ...string) {
+		m.OptionFields(m.Config(kit.MDB_FIELD))
+		m.Cmdy(PRUNES, m.PrefixKey(), "", HASH, kit.MDB_STATUS, "error")
+		m.Cmdy(PRUNES, m.PrefixKey(), "", HASH, kit.MDB_STATUS, "close")
+	}}
+	return list
 }
 func HashSelect(m *ice.Message, arg ...string) *ice.Message {
 	m.Fields(len(arg), m.Config(kit.MDB_FIELD))
 	m.Cmdy(SELECT, m.PrefixKey(), "", HASH, m.Config(kit.MDB_SHORT), arg)
+	return m
+}
+func HashPrunes(m *ice.Message, cb func(map[string]string) bool) *ice.Message {
+	_key := func(m *ice.Message) string {
+		if m.Config(kit.MDB_HASH) == "uniq" {
+			return kit.MDB_HASH
+		}
+		return kit.Select(kit.MDB_HASH, m.Config(kit.MDB_SHORT))
+	}
+	before := kit.Time(kit.Select(m.Time("-72h"), m.Option(kit.MDB_BEFORE)))
+	m.Cmd(m.PrefixKey()).Table(func(index int, value map[string]string, head []string) {
+		if kit.Time(value[kit.MDB_TIME]) > before {
+			return
+		}
+		if cb != nil && cb(value) {
+			return
+		}
+		m.OptionFields(m.Config(kit.MDB_FIELD))
+		m.Cmdy(DELETE, m.PrefixKey(), "", HASH, _key(m), value[_key(m)])
+	})
 	return m
 }

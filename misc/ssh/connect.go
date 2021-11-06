@@ -35,8 +35,8 @@ func _ssh_open(m *ice.Message, arg ...string) {
 
 		// 初始命令
 		for _, item := range kit.Simple(m.Optionv(kit.MDB_LIST)) {
-			m.Sleep("500ms")
-			c.Write([]byte(item + "\n"))
+			m.Sleep300ms()
+			c.Write([]byte(item + ice.NL))
 		}
 
 		m.Go(func() { io.Copy(c, os.Stdin) })
@@ -155,71 +155,62 @@ const SSH = "ssh"
 const CONNECT = "connect"
 
 func init() {
-	psh.Index.Merge(&ice.Context{
-		Configs: map[string]*ice.Config{
-			CONNECT: {Name: CONNECT, Help: "连接", Value: kit.Data()},
-		},
-		Commands: map[string]*ice.Command{
-			ice.CTX_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+	psh.Index.Merge(&ice.Context{Configs: map[string]*ice.Config{
+		CONNECT: {Name: CONNECT, Help: "连接", Value: kit.Data(
+			kit.MDB_FIELD, "time,hash,status,username,host,port",
+		)},
+	}, Commands: map[string]*ice.Command{
+		CONNECT: {Name: "connect hash auto", Help: "连接", Action: ice.MergeAction(map[string]*ice.Action{
+			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
 				m.Richs(CONNECT, "", kit.MDB_FOREACH, func(key string, value map[string]interface{}) {
 					if value = kit.GetMeta(value); kit.Value(value, kit.MDB_STATUS) == tcp.OPEN {
 						m.Cmd(CONNECT, tcp.DIAL, aaa.USERNAME, value[aaa.USERNAME], kit.MDB_HASH, key, value)
 					}
 				})
 			}},
-			CONNECT: {Name: "connect hash auto dial prunes", Help: "连接", Action: map[string]*ice.Action{
-				tcp.OPEN: {Name: "open authfile username=shy password verfiy host=shylinux.com port=22 private=.ssh/id_rsa", Help: "终端", Hand: func(m *ice.Message, arg ...string) {
-					_ssh_open(m.OptionLoad(m.Option("authfile")), arg...)
-					m.Echo("exit %v@%v:%v\n", m.Option(aaa.USERNAME), m.Option(tcp.HOST), m.Option(tcp.PORT))
-				}},
-				tcp.DIAL: {Name: "dial username=shy host=shylinux.com port=22 private=.ssh/id_rsa", Help: "添加", Hand: func(m *ice.Message, arg ...string) {
-					m.Go(func() {
-						_ssh_conn(m, func(client *ssh.Client) {
-							h := m.Option(kit.MDB_HASH)
-							if h == "" {
-								h = m.Rich(CONNECT, "", kit.Dict(
-									aaa.USERNAME, m.Option(aaa.USERNAME),
-									tcp.HOST, m.Option(tcp.HOST), tcp.PORT, m.Option(tcp.PORT),
-									kit.MDB_STATUS, tcp.OPEN, CONNECT, client,
-								))
-							} else {
-								m.Conf(CONNECT, kit.Keys(kit.MDB_HASH, h, CONNECT), client)
-							}
-							m.Cmd(CONNECT, SESSION, kit.MDB_HASH, h)
-						}, arg...)
-					})
-					m.ProcessRefresh("300ms")
-				}},
-				mdb.REMOVE: {Name: "remove", Help: "删除", Hand: func(m *ice.Message, arg ...string) {
-					m.Cmdy(mdb.DELETE, CONNECT, "", mdb.HASH, kit.MDB_HASH, m.Option(kit.MDB_HASH))
-				}},
-				mdb.PRUNES: {Name: "prunes", Help: "清理", Hand: func(m *ice.Message, arg ...string) {
-					m.Option(mdb.FIELDS, "time,hash,status,username,host,port")
-					m.Cmdy(mdb.PRUNES, CONNECT, "", mdb.HASH, kit.MDB_STATUS, tcp.ERROR)
-					m.Cmdy(mdb.PRUNES, CONNECT, "", mdb.HASH, kit.MDB_STATUS, tcp.CLOSE)
-				}},
-
-				SESSION: {Name: "session hash", Help: "会话", Hand: func(m *ice.Message, arg ...string) {
-					var client *ssh.Client
-					m.Richs(CONNECT, "", m.Option(kit.MDB_HASH), func(key string, value map[string]interface{}) {
-						client, _ = value[CONNECT].(*ssh.Client)
-					})
-
-					h := m.Rich(SESSION, "", kit.Data(kit.MDB_STATUS, tcp.OPEN, CONNECT, m.Option(kit.MDB_HASH)))
-					if session, e := _ssh_session(m, h, client); m.Assert(e) {
-						session.Shell()
-						session.Wait()
-					}
-					m.Echo(h)
-				}},
-			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-				m.Fields(len(arg), "time,hash,status,username,host,port")
-				if m.Cmdy(mdb.SELECT, CONNECT, "", mdb.HASH, kit.MDB_HASH, arg); len(arg) == 0 {
-					m.Table(func(index int, value map[string]string, head []string) {
-						m.PushButton(kit.Select("", SESSION, value[kit.MDB_STATUS] == tcp.OPEN), mdb.REMOVE)
-					})
-				}
+			tcp.OPEN: {Name: "open authfile username=shy password verfiy host=shylinux.com port=22 private=.ssh/id_rsa", Help: "终端", Hand: func(m *ice.Message, arg ...string) {
+				_ssh_open(m.OptionLoad(m.Option("authfile")), arg...)
+				m.Echo("exit %v@%v:%v\n", m.Option(aaa.USERNAME), m.Option(tcp.HOST), m.Option(tcp.PORT))
 			}},
-		},
-	})
+			tcp.DIAL: {Name: "dial username=shy host=shylinux.com port=22 private=.ssh/id_rsa", Help: "添加", Hand: func(m *ice.Message, arg ...string) {
+				m.Go(func() {
+					_ssh_conn(m, func(client *ssh.Client) {
+						h := m.Option(kit.MDB_HASH)
+						if h == "" {
+							h = m.Rich(CONNECT, "", kit.Dict(
+								aaa.USERNAME, m.Option(aaa.USERNAME),
+								tcp.HOST, m.Option(tcp.HOST), tcp.PORT, m.Option(tcp.PORT),
+								kit.MDB_STATUS, tcp.OPEN, CONNECT, client,
+							))
+						} else {
+							m.Conf(CONNECT, kit.Keys(kit.MDB_HASH, h, CONNECT), client)
+						}
+						m.Cmd(CONNECT, SESSION, kit.MDB_HASH, h)
+					}, arg...)
+				})
+				m.ProcessRefresh3s()
+			}},
+
+			SESSION: {Name: "session hash", Help: "会话", Hand: func(m *ice.Message, arg ...string) {
+				var client *ssh.Client
+				m.Richs(CONNECT, "", m.Option(kit.MDB_HASH), func(key string, value map[string]interface{}) {
+					client, _ = value[CONNECT].(*ssh.Client)
+				})
+
+				h := m.Rich(SESSION, "", kit.Data(kit.MDB_STATUS, tcp.OPEN, CONNECT, m.Option(kit.MDB_HASH)))
+				if session, e := _ssh_session(m, h, client); m.Assert(e) {
+					session.Shell()
+					session.Wait()
+				}
+				m.Echo(h)
+			}},
+		}, mdb.HashActionStatus()), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			mdb.HashSelect(m, arg...).Table(func(index int, value map[string]string, head []string) {
+				m.PushButton(kit.Select("", SESSION, value[kit.MDB_STATUS] == tcp.OPEN), mdb.REMOVE)
+			})
+			if len(arg) == 0 {
+				m.Action(tcp.DIAL, mdb.PRUNES)
+			}
+		}},
+	}})
 }

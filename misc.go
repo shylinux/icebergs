@@ -212,6 +212,10 @@ func (c *Context) cmd(m *Message, cmd *Command, key string, arg ...string) *Mess
 	return m
 }
 func (c *Context) _cmd(m *Message, cmd *Command, key string, k string, h *Action, arg ...string) *Message {
+	if h.Hand == nil {
+		m.Cmdy(kit.Split(h.Name), arg)
+		return m
+	}
 	if k == RUN && !m.Right(arg) {
 		return m
 	}
@@ -241,11 +245,7 @@ func (c *Context) _cmd(m *Message, cmd *Command, key string, k string, h *Action
 		}
 	}
 
-	if h.Hand == nil {
-		m.Cmdy(kit.Split(h.Name), arg)
-	} else {
-		h.Hand(m, arg...)
-	}
+	h.Hand(m, arg...)
 	return m
 }
 func (c *Context) split(name string) (list []interface{}) {

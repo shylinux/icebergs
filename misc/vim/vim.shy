@@ -24,7 +24,6 @@ make -j8 && make install
 section "启动"
 spark shell `
 cd ./_install
-
 ./bin/vim
 `
 

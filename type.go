@@ -367,29 +367,20 @@ func (m *Message) Search(key string, cb interface{}) *Message {
 
 	// 查找模块
 	p := m.target.root
-	key = strings.TrimPrefix(key, "ice.")
-	if ctx, ok := Info.names[key].(*Context); ok {
-		p = ctx
-	} else if key == "ice." {
-		p, key = m.target.root, ""
-	} else if key == PT {
+	if key = strings.TrimPrefix(key, "ice."); key == "." {
 		p, key = m.target, ""
 	} else if key == ".." {
-		if m.target.context == nil {
-			return m
-		}
 		p, key = m.target.context, ""
+	} else if key == "ice." {
+		p, key = m.target.root, ""
 	} else if strings.Contains(key, PT) {
-		list := strings.Split(key, PT)
+		ls := strings.Split(key, PT)
 		for _, p = range []*Context{m.target.root, m.target, m.source} {
 			if p == nil {
 				continue
 			}
-			for _, v := range list[:len(list)-1] {
-				if s, ok := p.contexts[v]; ok {
-					p = s
-				} else {
-					p = nil
+			for _, k := range ls[:len(ls)-1] {
+				if p = p.contexts[k]; p == nil {
 					break
 				}
 			}
@@ -397,34 +388,38 @@ func (m *Message) Search(key string, cb interface{}) *Message {
 				break
 			}
 		}
-
 		if m.Warn(p == nil, ErrNotFound, key) {
 			return m
 		}
-		key = list[len(list)-1]
+		key = ls[len(ls)-1]
+	} else if ctx, ok := Info.names[key].(*Context); ok {
+		p = ctx
 	} else {
 		p = m.target
 	}
 
 	switch cb := cb.(type) {
-	case func(key string, cmd *Command): // 遍历命令
+	case func(key string, cmd *Command):
 		if key == "" {
 			for k, v := range p.Commands {
-				cb(k, v)
-			}
-		} else if cmd, ok := p.Commands[key]; ok {
-			cb(key, cmd)
-		}
-
-	case func(p *Context, s *Context, key string, cmd *Command):
-		if key == "" {
-			for key, cmd := range p.Commands {
-				cb(p.context, p, key, cmd)
+				cb(k, v) // 遍历命令
 			}
 			break
 		}
 
-		for _, p := range []*Context{m.target, p, m.source} {
+		if cmd, ok := p.Commands[key]; ok {
+			cb(key, cmd) // 查找命令
+		}
+
+	case func(p *Context, s *Context, key string, cmd *Command):
+		if key == "" {
+			for k, v := range p.Commands {
+				cb(p.context, p, k, v) // 遍历命令
+			}
+			break
+		}
+
+		for _, p := range []*Context{p, m.target, m.source} {
 			for s := p; s != nil; s = s.context {
 				if cmd, ok := s.Commands[key]; ok {
 					cb(s.context, s, key, cmd) // 查找命令
@@ -433,6 +428,13 @@ func (m *Message) Search(key string, cb interface{}) *Message {
 			}
 		}
 	case func(p *Context, s *Context, key string, conf *Config):
+		if key == "" {
+			for k, v := range p.Configs {
+				cb(p.context, p, k, v) // 遍历命令
+			}
+			break
+		}
+
 		for _, p := range []*Context{m.target, p, m.source} {
 			for s := p; s != nil; s = s.context {
 				if cmd, ok := s.Configs[key]; ok {
@@ -442,9 +444,9 @@ func (m *Message) Search(key string, cb interface{}) *Message {
 			}
 		}
 	case func(p *Context, s *Context, key string):
-		cb(p.context, p, key)
+		cb(p.context, p, key) // 查找模块
 	case func(p *Context, s *Context):
-		cb(p.context, p)
+		cb(p.context, p) // 查找模块
 	default:
 		m.Error(true, ErrNotImplement)
 	}

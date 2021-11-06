@@ -32,7 +32,7 @@ func init() {
 			cli.SYSTEM: {Name: "system", Help: "命令", Hand: func(m *ice.Message, arg ...string) {
 				m.Option(cli.CMD_DIR, m.Option(cli.PWD))
 				m.ProcessCommand(cli.SYSTEM, kit.Split(m.Option(kit.MDB_TEXT)), arg...)
-				m.ProcessCommandOpt(cli.PWD)
+				m.ProcessCommandOpt(arg, cli.PWD)
 			}},
 		}, mdb.ZoneAction()), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			if mdb.ZoneSelect(m, arg...); len(arg) == 0 {

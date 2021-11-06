@@ -55,9 +55,10 @@ func (m *Message) Sleep(d string) *Message {
 	time.Sleep(kit.Duration(d))
 	return m
 }
-func (m *Message) Sleep30ms() *Message { return m.Sleep("30ms") }
-func (m *Message) Sleep3s() *Message   { return m.Sleep("3s") }
-func (m *Message) Sleep30s() *Message  { return m.Sleep("30s") }
+func (m *Message) Sleep300ms() *Message { return m.Sleep("30ms") }
+func (m *Message) Sleep30ms() *Message  { return m.Sleep("30ms") }
+func (m *Message) Sleep3s() *Message    { return m.Sleep("3s") }
+func (m *Message) Sleep30s() *Message   { return m.Sleep("30s") }
 func (m *Message) Hold(n int) *Message {
 	for ctx := m.target; ctx != nil; ctx = ctx.context {
 		if ctx.wg != nil {

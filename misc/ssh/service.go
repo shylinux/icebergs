@@ -100,87 +100,77 @@ const (
 const SERVICE = "service"
 
 func init() {
-	psh.Index.Merge(&ice.Context{
-		Configs: map[string]*ice.Config{
-			SERVICE: {Name: SERVICE, Help: "服务", Value: kit.Data(
-				WELCOME, "\r\nwelcome to context world\r\n",
-				GOODBYE, "\r\ngoodbye of context world\r\n",
-				kit.MDB_SHORT, tcp.PORT,
-			)},
-		},
-		Commands: map[string]*ice.Command{
-			ice.CTX_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+	psh.Index.Merge(&ice.Context{Configs: map[string]*ice.Config{
+		SERVICE: {Name: SERVICE, Help: "服务", Value: kit.Data(
+			WELCOME, "\r\nwelcome to context world\r\n", GOODBYE, "\r\ngoodbye of context world\r\n",
+			kit.MDB_SHORT, tcp.PORT, kit.MDB_FIELD, "time,port,status,private,authkey,count",
+		)},
+	}, Commands: map[string]*ice.Command{
+		SERVICE: {Name: "service port id auto listen prunes", Help: "服务", Action: ice.MergeAction(map[string]*ice.Action{
+			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
 				m.Richs(SERVICE, "", kit.MDB_FOREACH, func(key string, value map[string]interface{}) {
 					if value = kit.GetMeta(value); kit.Value(value, kit.MDB_STATUS) == tcp.OPEN {
 						m.Cmd(SERVICE, tcp.LISTEN, tcp.PORT, value[tcp.PORT], value)
 					}
 				})
 			}},
-			SERVICE: {Name: "service port id auto listen prunes", Help: "服务", Action: map[string]*ice.Action{
-				tcp.LISTEN: {Name: "listen port=9030 private=.ssh/id_rsa authkey=.ssh/authorized_keys", Help: "添加", Hand: func(m *ice.Message, arg ...string) {
-					if m.Richs(SERVICE, "", m.Option(tcp.PORT), func(key string, value map[string]interface{}) {
-						kit.Value(value, kit.Keym(kit.MDB_STATUS), tcp.OPEN)
-					}) == nil {
-						m.Cmd(mdb.INSERT, SERVICE, "", mdb.HASH, tcp.PORT, m.Option(tcp.PORT),
-							PRIVATE, m.Option(PRIVATE), AUTHKEY, m.Option(AUTHKEY), kit.MDB_STATUS, tcp.OPEN, arg)
-						m.Cmd(SERVICE, mdb.IMPORT, AUTHKEY, m.Option(AUTHKEY))
-					}
-
-					m.Option(kit.Keycb(tcp.LISTEN), func(c net.Conn) { m.Go(func() { _ssh_accept(m, kit.Hashs(m.Option(tcp.PORT)), c) }) })
-					m.Go(func() {
-						m.Cmdy(tcp.SERVER, tcp.LISTEN, kit.MDB_TYPE, SSH, kit.MDB_NAME, tcp.PORT, tcp.PORT, m.Option(tcp.PORT))
-					})
-				}},
-
-				mdb.INSERT: {Name: "insert text:textarea", Help: "添加", Hand: func(m *ice.Message, arg ...string) {
-					if ls := kit.Split(m.Option(kit.MDB_TEXT)); len(ls) > 2 {
-						m.Cmdy(mdb.INSERT, SERVICE, kit.Keys(kit.MDB_HASH, kit.Hashs(m.Option(tcp.PORT))), mdb.LIST,
-							kit.MDB_TYPE, ls[0], kit.MDB_NAME, ls[len(ls)-1], kit.MDB_TEXT, strings.Join(ls[1:len(ls)-1], "+"))
-					}
-				}},
-				mdb.EXPORT: {Name: "export authkey=.ssh/authorized_keys", Help: "导出", Hand: func(m *ice.Message, arg ...string) {
-					list := []string{}
-					m.Cmd(mdb.SELECT, SERVICE, kit.Keys(kit.MDB_HASH, kit.Hashs(m.Option(tcp.PORT))), mdb.LIST).Table(func(index int, value map[string]string, head []string) {
-						list = append(list, fmt.Sprintf("%s %s %s", value[kit.MDB_TYPE], value[kit.MDB_TEXT], value[kit.MDB_NAME]))
-					})
-
-					if len(list) > 0 {
-						m.Cmdy(nfs.SAVE, path.Join(os.Getenv(cli.HOME), m.Option(AUTHKEY)), strings.Join(list, "\n")+"\n")
-					}
-				}},
-				mdb.IMPORT: {Name: "import authkey=.ssh/authorized_keys", Help: "导入", Hand: func(m *ice.Message, arg ...string) {
-					p := path.Join(os.Getenv(cli.HOME), m.Option(AUTHKEY))
-					for _, pub := range strings.Split(strings.TrimSpace(m.Cmdx(nfs.CAT, p)), "\n") {
-						m.Cmd(SERVICE, mdb.INSERT, kit.MDB_TEXT, pub)
-					}
-					m.Echo(p)
-				}},
-				mdb.PRUNES: {Name: "prunes", Help: "清理", Hand: func(m *ice.Message, arg ...string) {
-					m.Option(mdb.FIELDS, "time,port,status,private,authkey,count")
-					m.Cmdy(mdb.PRUNES, SERVICE, "", mdb.HASH, kit.MDB_STATUS, tcp.ERROR)
-					m.Cmdy(mdb.PRUNES, SERVICE, "", mdb.HASH, kit.MDB_STATUS, tcp.CLOSE)
-				}},
-				aaa.INVITE: {Name: "invite", Help: "邀请", Hand: func(m *ice.Message, arg ...string) {
-					u := kit.ParseURL(m.Option(ice.MSG_USERWEB))
-					m.Option(cli.HOSTNAME, strings.Split(u.Host, ":")[0])
-					m.ProcessInner()
-
-					if buf, err := kit.Render(`ssh -p {{.Option "port"}} {{.Option "user.name"}}@{{.Option "hostname"}}`, m); err == nil {
-						m.EchoScript(string(buf))
-					}
-				}},
-			}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-				if len(arg) == 0 { // 服务列表
-					m.Fields(len(arg), "time,port,status,private,authkey,count")
-					m.Cmdy(mdb.SELECT, SERVICE, "", mdb.HASH)
-					m.PushAction(mdb.IMPORT, mdb.INSERT, mdb.EXPORT, aaa.INVITE)
-					return
+			tcp.LISTEN: {Name: "listen port=9030 private=.ssh/id_rsa authkey=.ssh/authorized_keys", Help: "添加", Hand: func(m *ice.Message, arg ...string) {
+				if m.Richs(SERVICE, "", m.Option(tcp.PORT), func(key string, value map[string]interface{}) {
+					kit.Value(value, kit.Keym(kit.MDB_STATUS), tcp.OPEN)
+				}) == nil {
+					m.Cmd(mdb.INSERT, SERVICE, "", mdb.HASH, tcp.PORT, m.Option(tcp.PORT),
+						PRIVATE, m.Option(PRIVATE), AUTHKEY, m.Option(AUTHKEY), kit.MDB_STATUS, tcp.OPEN, arg)
+					m.Cmd(SERVICE, mdb.IMPORT, AUTHKEY, m.Option(AUTHKEY))
 				}
 
-				// 公钥列表
-				m.Fields(len(arg[1:]), "time,id,type,name,text")
-				m.Cmdy(mdb.SELECT, SERVICE, kit.Keys(kit.MDB_HASH, kit.Hashs(arg[0])), mdb.LIST, kit.MDB_ID, arg[1:])
+				m.Option(kit.Keycb(tcp.LISTEN), func(c net.Conn) { m.Go(func() { _ssh_accept(m, kit.Hashs(m.Option(tcp.PORT)), c) }) })
+				m.Go(func() {
+					m.Cmdy(tcp.SERVER, tcp.LISTEN, kit.MDB_TYPE, SSH, kit.MDB_NAME, tcp.PORT, tcp.PORT, m.Option(tcp.PORT))
+				})
 			}},
-		},
-	})
+
+			mdb.INSERT: {Name: "insert text:textarea", Help: "添加", Hand: func(m *ice.Message, arg ...string) {
+				if ls := kit.Split(m.Option(kit.MDB_TEXT)); len(ls) > 2 {
+					m.Cmdy(mdb.INSERT, SERVICE, kit.Keys(kit.MDB_HASH, kit.Hashs(m.Option(tcp.PORT))), mdb.LIST,
+						kit.MDB_TYPE, ls[0], kit.MDB_NAME, ls[len(ls)-1], kit.MDB_TEXT, strings.Join(ls[1:len(ls)-1], "+"))
+				}
+			}},
+			mdb.EXPORT: {Name: "export authkey=.ssh/authorized_keys", Help: "导出", Hand: func(m *ice.Message, arg ...string) {
+				list := []string{}
+				m.Cmd(mdb.SELECT, SERVICE, kit.Keys(kit.MDB_HASH, kit.Hashs(m.Option(tcp.PORT))), mdb.LIST).Table(func(index int, value map[string]string, head []string) {
+					list = append(list, fmt.Sprintf("%s %s %s", value[kit.MDB_TYPE], value[kit.MDB_TEXT], value[kit.MDB_NAME]))
+				})
+
+				if len(list) > 0 {
+					m.Cmdy(nfs.SAVE, path.Join(os.Getenv(cli.HOME), m.Option(AUTHKEY)), strings.Join(list, ice.NL)+ice.NL)
+				}
+			}},
+			mdb.IMPORT: {Name: "import authkey=.ssh/authorized_keys", Help: "导入", Hand: func(m *ice.Message, arg ...string) {
+				p := path.Join(os.Getenv(cli.HOME), m.Option(AUTHKEY))
+				for _, pub := range strings.Split(strings.TrimSpace(m.Cmdx(nfs.CAT, p)), ice.NL) {
+					m.Cmd(SERVICE, mdb.INSERT, kit.MDB_TEXT, pub)
+				}
+				m.Echo(p)
+			}},
+			aaa.INVITE: {Name: "invite", Help: "邀请", Hand: func(m *ice.Message, arg ...string) {
+				u := kit.ParseURL(m.Option(ice.MSG_USERWEB))
+				m.Option(cli.HOSTNAME, strings.Split(u.Host, ":")[0])
+				m.ProcessInner()
+
+				if buf, err := kit.Render(`ssh -p {{.Option "port"}} {{.Option "user.name"}}@{{.Option "hostname"}}`, m); err == nil {
+					m.EchoScript(string(buf))
+				}
+			}},
+		}, mdb.HashActionStatus()), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			if len(arg) == 0 { // 服务列表
+				mdb.HashSelect(m, arg...)
+				m.PushAction(mdb.IMPORT, mdb.INSERT, mdb.EXPORT, aaa.INVITE)
+				return
+			}
+
+			// 公钥列表
+			m.Fields(len(arg[1:]), "time,id,type,name,text")
+			mdb.ZoneSelect(m, arg...)
+		}},
+	}})
 }

@@ -17,6 +17,32 @@ import (
 	kit "shylinux.com/x/toolkits"
 )
 
+func _input_find(m *ice.Message, method, word, limit string) {
+	switch method {
+	case LINE:
+	case WORD:
+		word = "^" + word + ","
+	}
+
+	// 搜索词汇
+	res := m.Cmdx(cli.SYSTEM, "grep", "-rn", word, m.Config(kit.MDB_STORE))
+	bio := csv.NewReader(bytes.NewBufferString(strings.Replace(res, ":", ",", -1)))
+
+	for i := 0; i < kit.Int(limit); i++ {
+		if line, e := bio.Read(); e != nil {
+			break
+		} else if len(line) < 3 {
+
+		} else { // 输出词汇
+			m.Push(kit.MDB_ID, line[3])
+			m.Push(CODE, line[2])
+			m.Push(TEXT, line[4])
+			m.Push(WEIGHT, line[6])
+		}
+
+	}
+	m.SortIntR(WEIGHT)
+}
 func _input_load(m *ice.Message, file string, libs ...string) {
 	if f, e := os.Open(file); m.Assert(e) {
 		defer f.Close()
@@ -91,32 +117,6 @@ func _input_save(m *ice.Message, file string, lib ...string) {
 	}
 }
 
-func _input_find(m *ice.Message, method, word, limit string) {
-	switch method {
-	case LINE:
-	case WORD:
-		word = "^" + word + ","
-	}
-
-	// 搜索词汇
-	res := m.Cmdx(cli.SYSTEM, "grep", "-rn", word, m.Config(kit.MDB_STORE))
-	bio := csv.NewReader(bytes.NewBufferString(strings.Replace(res, ":", ",", -1)))
-
-	for i := 0; i < kit.Int(limit); i++ {
-		if line, e := bio.Read(); e != nil {
-			break
-		} else if len(line) < 3 {
-
-		} else {
-			// 输出词汇
-			m.Push(kit.MDB_ID, line[3])
-			m.Push(CODE, line[2])
-			m.Push(TEXT, line[4])
-			m.Push(WEIGHT, line[6])
-		}
-	}
-	m.SortIntR(WEIGHT)
-}
 func _input_list(m *ice.Message, lib string) {
 	if lib == "" {
 		m.Richs(m.PrefixKey(), "", kit.MDB_FOREACH, func(key string, value map[string]interface{}) {

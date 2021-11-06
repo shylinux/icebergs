@@ -19,7 +19,7 @@ func init() {
 			web.UPLOAD: {Name: "upload", Help: "上传", Hand: func(m *ice.Message, arg ...string) {
 				up := kit.Simple(m.Optionv(ice.MSG_UPLOAD))
 				if len(up) < 2 {
-					msg := m.Cmd(web.CACHE, web.UPLOAD)
+					msg := m.Cmdy(web.CACHE, web.UPLOAD)
 					up = kit.Simple(msg.Append(kit.MDB_HASH), msg.Append(kit.MDB_NAME), msg.Append(kit.MDB_SIZE))
 				}
 				m.Cmdy(mdb.INSERT, m.Prefix(FILES), "", mdb.HASH, kit.MDB_TYPE, kit.Ext(up[1]), kit.MDB_NAME, up[1], kit.MDB_SIZE, up[2], kit.MDB_DATA, up[0])

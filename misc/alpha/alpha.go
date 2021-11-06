@@ -37,14 +37,7 @@ func _alpha_load(m *ice.Message, file, name string) {
 	m.Conf(ALPHA, name, "")
 
 	// 缓存配置
-	m.Conf(ALPHA, kit.Keys(name, kit.MDB_META), kit.Dict(
-		kit.MDB_FIELD, meta[kit.MDB_FIELD],
-		kit.MDB_STORE, meta[kit.MDB_STORE],
-		kit.MDB_FSIZE, meta[kit.MDB_FSIZE],
-		kit.MDB_LIMIT, meta[kit.MDB_LIMIT],
-		kit.MDB_LEAST, meta[kit.MDB_LEAST],
-	))
-
+	m.Conf(ALPHA, kit.Keys(name, kit.MDB_META), kit.Dict(meta))
 	m.Cmd(mdb.IMPORT, ALPHA, name, kit.MDB_LIST, file)
 
 	// 保存词库
@@ -67,7 +60,7 @@ var Index = &ice.Context{Name: ALPHA, Help: "英汉词典", Configs: map[string]
 		kit.MDB_LIMIT, "50000", kit.MDB_LEAST, "1000",
 	)},
 }, Commands: map[string]*ice.Command{
-	ALPHA: {Name: "alpha method=word,line word auto import", Help: "英汉", Action: map[string]*ice.Action{
+	ALPHA: {Name: "alpha method=word,line word auto", Help: "英汉", Action: map[string]*ice.Action{
 		mdb.IMPORT: {Name: "import file=usr/word-dict/ecdict name=ecdict", Help: "加载词库", Hand: func(m *ice.Message, arg ...string) {
 			_alpha_load(m, m.Option(kit.MDB_FILE), kit.Select(path.Base(m.Option(kit.MDB_FILE)), m.Option(kit.MDB_NAME)))
 		}},

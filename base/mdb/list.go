@@ -73,7 +73,6 @@ func _list_export(m *ice.Message, prefix, chain, file string) {
 
 	count := 0
 	head := kit.Split(m.OptionFields())
-	m.Option(ice.CACHE_LIMIT, "-1")
 	m.Grows(prefix, chain, "", "", func(index int, val map[string]interface{}) {
 		if val = kit.GetMeta(val); index == 0 {
 			if len(head) == 0 || head[0] == "detail" { // 默认表头
@@ -149,7 +148,8 @@ func ListAction(fields ...string) map[string]*ice.Action {
 			m.Cmdy(MODIFY, m.PrefixKey(), "", LIST, m.OptionSimple(kit.MDB_ID), arg)
 		}},
 		EXPORT: {Name: "export", Help: "导出", Hand: func(m *ice.Message, arg ...string) {
-			m.OptionFields(m.Config(kit.META_FIELD))
+			m.Option(ice.CACHE_LIMIT, "-1")
+			m.OptionFields(m.Config(kit.MDB_FIELD))
 			m.Cmdy(EXPORT, m.PrefixKey(), "", LIST)
 			m.Conf(m.PrefixKey(), kit.MDB_LIST, "")
 			m.Config(kit.MDB_COUNT, 0)

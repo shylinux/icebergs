@@ -25,7 +25,7 @@ func init() {
 				})
 			}},
 			mdb.INSERT: {Name: "insert", Help: "添加", Hand: func(m *ice.Message, arg ...string) {
-				m.Cmd(FAVOR, mdb.INSERT, m.OptionSimple("zone,type,name,text,file,line,pwd"))
+				m.Cmd(FAVOR, mdb.INSERT)
 			}},
 		}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			m.Cmd(FAVOR, m.Option(kit.MDB_ZONE)).Table(func(index int, value map[string]string, head []string) {

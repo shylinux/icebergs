@@ -74,8 +74,12 @@ var Index = &ice.Context{Name: ALPHA, Help: "英汉词典", Configs: map[string]
 				_alpha_find(m, kit.Select(WORD, arg, 2), arg[1])
 			}
 		}},
+		mdb.REMOVE: {Name: "remove", Help: "删除", Hand: func(m *ice.Message, arg ...string) {
+			m.Cmdy(CACHE, mdb.REMOVE)
+		}},
 	}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 		if len(arg) < 2 {
+			m.Cmdy(CACHE, kit.Select("", arg, 1))
 			return
 		}
 		defer m.StatusTimeCountTotal(m.Config(kit.MDB_COUNT))
@@ -90,7 +94,6 @@ var Index = &ice.Context{Name: ALPHA, Help: "英汉词典", Configs: map[string]
 		}
 		if _alpha_find(m, arg[0], arg[1]); arg[0] == WORD && m.Length() > 0 {
 			m.Cmd(CACHE, mdb.CREATE, m.AppendSimple())
-			m.Sort(kit.MDB_KEY)
 		}
 	}},
 }}

@@ -84,7 +84,6 @@ func init() {
 					m.Echo(_totp_get(value[SECRET], kit.Int(value[NUMBER]), kit.Int64(value[PERIOD])))
 				}
 			})
-			m.PushAction(mdb.REMOVE)
 		}},
 	}})
 }

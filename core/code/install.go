@@ -35,7 +35,7 @@ func _install_download(m *ice.Message) {
 			value = kit.GetMeta(value)
 
 			p := 0
-			m.Optionv(kit.Keycb(web.DOWNLOAD), func(size int, total int) {
+			m.OptionCB(web.SPIDE, func(size int, total int) {
 				if n := size * 100 / total; p != n {
 					value[kit.MDB_STEP], value[kit.MDB_SIZE], value[kit.MDB_TOTAL] = n, size, total
 					toast(name, size, total)

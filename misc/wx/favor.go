@@ -21,7 +21,6 @@ func init() {
 			mdb.HashSelect(m, arg...).Table(func(index int, value map[string]string, head []string) {
 				m.PushQRCode(kit.MDB_SCAN, kit.MergeURL("https://open.weixin.qq.com/qr/code", aaa.USERNAME, value[kit.MDB_TEXT]))
 			})
-			m.PushAction(mdb.REMOVE)
 		}},
 	}})
 }

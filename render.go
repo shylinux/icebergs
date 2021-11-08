@@ -140,6 +140,7 @@ func (m *Message) PushDownload(key string, arg ...interface{}) { // [name] file
 }
 
 func (m *Message) PushAction(list ...interface{}) {
+	m.Set(MSG_APPEND, "action")
 	m.Table(func(index int, value map[string]string, head []string) {
 		m.PushButton(list...)
 	})

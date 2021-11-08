@@ -25,8 +25,13 @@ func _alpha_find(m *ice.Message, method, word string) {
 	}
 
 	// 搜索词汇
-	msg := m.Cmd(cli.SYSTEM, "grep", "-rh", word, m.Config(kit.MDB_STORE))
+	msg := m.Cmd(cli.SYSTEM, "grep", "-rih", word, m.Config(kit.MDB_STORE))
 	msg.CSV(msg.Result(), kit.Split(m.Config(kit.MDB_FIELD))...).Table(func(index int, value map[string]string, head []string) {
+		if m.FieldsIsDetail() {
+			m.Push(mdb.DETAIL, value, kit.Split(m.Config(kit.MDB_FIELD)))
+			m.Push(kit.MDB_TIME, m.Time())
+			return
+		}
 		m.PushSearch(ice.CMD, ALPHA, kit.MDB_TYPE, method, kit.MDB_NAME, value[WORD], kit.MDB_TEXT, value["translation"], value)
 	})
 }
@@ -79,10 +84,13 @@ var Index = &ice.Context{Name: ALPHA, Help: "英汉词典", Configs: map[string]
 				m.Copy(msg)
 				return
 			}
+			m.OptionFields(mdb.DETAIL)
+		} else {
+			m.OptionFields(m.Config(kit.MDB_FIELD))
 		}
-		m.OptionFields(m.Config(kit.MDB_FIELD))
 		if _alpha_find(m, arg[0], arg[1]); arg[0] == WORD && m.Length() > 0 {
 			m.Cmd(CACHE, mdb.CREATE, m.AppendSimple())
+			m.Sort(kit.MDB_KEY)
 		}
 	}},
 }}

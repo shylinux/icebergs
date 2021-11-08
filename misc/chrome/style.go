@@ -22,6 +22,8 @@ func init() {
 				switch arg[0] {
 				case kit.MDB_ZONE:
 					m.Cmdy(CHROME, mdb.INPUTS)
+				default:
+					m.Cmdy(mdb.INPUTS, m.PrefixKey(), "", mdb.ZONE, m.Option(m.Config(kit.MDB_SHORT)), arg)
 				}
 			}},
 			mdb.INSERT: {Name: "insert zone=golang.google.cn target=. style:textarea", Help: "添加"},

@@ -92,7 +92,8 @@ func _cache_download(m *ice.Message, r *http.Response) (file, size string) {
 				f.Write(buf[0:n])
 				s := size * 100 / total
 
-				switch cb := m.Optionv(kit.Keycb(DOWNLOAD)).(type) {
+				m.Debug("what %v", kit.FileLine(m.OptionCB(SPIDE), 3))
+				switch cb := m.OptionCB(SPIDE).(type) {
 				case func(int, int):
 					cb(size, total)
 				case []string:

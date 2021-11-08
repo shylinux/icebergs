@@ -87,6 +87,12 @@ func (m *Message) FieldsIsDetail() bool {
 	}
 	return false
 }
+func (m *Message) OptionCB(key string, cb ...interface{}) interface{} {
+	if len(cb) > 0 {
+		return m.Optionv(kit.Keycb(key), cb)
+	}
+	return m.Optionv(kit.Keycb(key))
+}
 func (m *Message) OptionUserWeb() *url.URL {
 	return kit.ParseURL(m.Option(MSG_USERWEB))
 }
@@ -101,7 +107,11 @@ func (m *Message) RenameAppend(from, to string) {
 }
 func (m *Message) AppendSimple(key ...string) (res []string) {
 	if len(key) == 0 {
-		key = append(key, m.Appendv(MSG_APPEND)...)
+		if m.FieldsIsDetail() {
+			key = append(key, m.Appendv(kit.MDB_KEY)...)
+		} else {
+			key = append(key, m.Appendv(MSG_APPEND)...)
+		}
 	}
 	for _, k := range key {
 		res = append(res, k, m.Append(k))
@@ -164,7 +174,7 @@ func (m *Message) cmd(arg ...interface{}) *Message {
 	ok := false
 	run := func(msg *Message, ctx *Context, cmd *Command, key string, arg ...string) {
 		if ok = true; cbs != nil {
-			msg.Option(kit.Keycb(list[0]), cbs)
+			msg.Option(kit.Keycb(kit.Slice(kit.Split(list[0], PT), -1)[0]), cbs)
 		}
 		for k, v := range opts {
 			msg.Option(k, v)

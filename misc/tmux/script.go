@@ -18,7 +18,6 @@ func init() {
 			mdb.CREATE: {Name: "create type=shell,tmux,vim name=hi text:textarea=pwd", Help: "添加"},
 		}, mdb.HashAction()), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			mdb.HashSelect(m, arg...)
-			m.PushAction(mdb.REMOVE)
 		}},
 	}})
 }

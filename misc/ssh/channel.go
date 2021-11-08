@@ -99,7 +99,9 @@ func init() {
 		}, mdb.HashAction()), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			if len(arg) == 0 { // 通道列表
 				m.Action(mdb.PRUNES)
-				mdb.HashSelect(m, arg...).Table(func(index int, value map[string]string, head []string) {
+				mdb.HashSelect(m, arg...)
+				m.Set(ice.MSG_APPEND, ctx.ACTION)
+				m.Table(func(index int, value map[string]string, head []string) {
 					m.PushButton(kit.Select("", ctx.COMMAND, value[kit.MDB_STATUS] == tcp.OPEN), mdb.REMOVE)
 				})
 				return

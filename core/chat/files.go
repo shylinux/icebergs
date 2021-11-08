@@ -32,7 +32,6 @@ func init() {
 					m.PushImages(kit.MDB_IMAGE, link)
 				}
 			})
-			m.PushAction(mdb.REMOVE)
 		}},
 	}})
 }

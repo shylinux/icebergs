@@ -68,7 +68,6 @@ func init() {
 			mdb.CREATE: {Name: "create username", Help: "创建"},
 		}, mdb.HashAction()), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			mdb.HashSelect(m, arg...)
-			m.PushAction(mdb.REMOVE)
 		}},
 	}})
 }

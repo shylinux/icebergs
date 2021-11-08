@@ -190,6 +190,8 @@ func HashActionStatus(fields ...string) map[string]*ice.Action {
 func HashSelect(m *ice.Message, arg ...string) *ice.Message {
 	m.Fields(len(arg), m.Config(kit.MDB_FIELD))
 	m.Cmdy(SELECT, m.PrefixKey(), "", HASH, m.Config(kit.MDB_SHORT), arg)
+	m.PushAction(REMOVE)
+	m.StatusTimeCount()
 	return m
 }
 func HashPrunes(m *ice.Message, cb func(map[string]string) bool) *ice.Message {

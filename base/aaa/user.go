@@ -132,7 +132,6 @@ func init() {
 			mdb.HashSelect(m, arg...).Table(func(index int, value map[string]string, head []string) {
 				m.Push(USERROLE, UserRole(m, value[USERNAME]))
 			})
-			m.PushAction(mdb.REMOVE)
 		}},
 	}})
 }

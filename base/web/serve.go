@@ -145,7 +145,11 @@ func _serve_handle(key string, cmd *ice.Command, msg *ice.Message, w http.Respon
 		r.ParseMultipartForm(kit.Int64(kit.Select("4096", r.Header.Get(ContentLength))))
 		if r.ParseForm(); len(r.PostForm) > 0 {
 			for k, v := range r.PostForm {
-				msg.Logs("form", k, v)
+				if len(v) > 1 {
+					msg.Logs("form", k, len(v), v)
+				} else {
+					msg.Logs("form", k, v)
+				}
 			}
 		}
 	}

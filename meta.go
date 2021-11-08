@@ -390,7 +390,7 @@ func (m *Message) Appendv(key string, arg ...interface{}) []string {
 		return m.meta[key]
 	}
 
-	if m.FieldsIsDetail() {
+	if m.FieldsIsDetail() && key != kit.MDB_KEY {
 		for i, k := range m.meta[kit.MDB_KEY] {
 			if k == key {
 				if len(arg) > 0 {

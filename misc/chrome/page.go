@@ -13,12 +13,13 @@ func init() {
 		Page: {Name: "page", Help: "网页", Value: kit.Data()},
 	}, Commands: map[string]*ice.Command{
 		"/page": {Name: "/page", Help: "网页", Action: map[string]*ice.Action{
+			FIELD: {Name: "field", Help: "工具"},
 			ctx.COMMAND: {Name: "command", Help: "命令", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmdy(STYLE, ctx.ACTION, ctx.COMMAND, arg)
 				m.Cmdy(FIELD, ctx.ACTION, ctx.COMMAND, arg)
 			}},
 			ice.RUN: {Name: "run", Help: "执行", Hand: func(m *ice.Message, arg ...string) {
-				m.Cmdy(FIELD, ice.RUN, arg)
+				m.Cmdy(FIELD, ctx.ACTION, ice.RUN, arg)
 			}},
 		}},
 	}})

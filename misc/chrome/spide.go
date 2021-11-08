@@ -14,6 +14,7 @@ func init() {
 		SPIDE: {Name: "spide wid tid cmd auto", Help: "网页爬虫", Action: map[string]*ice.Action{
 			web.DOWNLOAD: {Name: "download", Help: "下载", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmd(CACHE, mdb.CREATE, arg)
+				m.ProcessHold()
 			}},
 		}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			switch msg := m.Cmd(web.SPACE, CHROME, CHROME, arg); kit.Select(SPIDE, arg, 2) {

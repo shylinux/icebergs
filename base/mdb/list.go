@@ -169,7 +169,11 @@ func ListAction(fields ...string) map[string]*ice.Action {
 	}, fields...)
 }
 func ListSelect(m *ice.Message, arg ...string) *ice.Message {
-	m.Fields(len(arg), m.Config(kit.MDB_FIELD))
+	m.OptionPage(kit.Slice(arg, 1)...)
+	m.Fields(len(kit.Slice(arg, 0, 1)), m.Config(kit.MDB_FIELD))
 	m.Cmdy(SELECT, m.PrefixKey(), "", LIST, kit.MDB_ID, arg)
+	if !m.FieldsIsDetail() {
+		m.StatusTimeCountTotal(m.Config(kit.MDB_COUNT))
+	}
 	return m
 }

@@ -14,21 +14,12 @@ func init() {
 	}, Commands: map[string]*ice.Command{
 		"/page": {Name: "/page", Help: "网页", Action: map[string]*ice.Action{
 			ctx.COMMAND: {Name: "command", Help: "命令", Hand: func(m *ice.Message, arg ...string) {
-				if len(arg) == 0 {
-					m.Cmdy(STYLE, SYNC, m.OptionSimple("hostname"), ice.OptionFields(""))
-					m.Cmdy(FIELD, SYNC, m.OptionSimple("hostname"), ice.OptionFields(""))
-					return
-				}
-				m.Cmdy(ctx.COMMAND, arg)
-			}},
-			FIELD: {Name: "field", Help: "执行", Hand: func(m *ice.Message, arg ...string) {
-				m.Cmdy(FIELD, arg)
+				m.Cmdy(STYLE, ctx.ACTION, ctx.COMMAND, arg)
+				m.Cmdy(FIELD, ctx.ACTION, ctx.COMMAND, arg)
 			}},
 			ice.RUN: {Name: "run", Help: "执行", Hand: func(m *ice.Message, arg ...string) {
-				m.Cmdy(arg)
+				m.Cmdy(FIELD, ice.RUN, arg)
 			}},
-		}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-
 		}},
 	}})
 }

@@ -175,9 +175,9 @@ func (m *Message) cmd(arg ...interface{}) *Message {
 	}
 
 	// 查找命令
-	if cmd, ok := m.target.Commands[list[0]]; ok {
+	if cmd, ok := m.target.Commands[strings.TrimPrefix(list[0], m.target.Cap(CTX_FOLLOW)+PT)]; ok {
 		run(m.Spawn(), m.target, cmd, list[0], list[1:]...)
-	} else if cmd, ok := m.source.Commands[list[0]]; ok {
+	} else if cmd, ok := m.source.Commands[strings.TrimPrefix(list[0], m.source.Cap(CTX_FOLLOW)+PT)]; ok {
 		run(m.Spawn(m.source), m.source, cmd, list[0], list[1:]...)
 	} else {
 		m.Search(list[0], func(p *Context, s *Context, key string, cmd *Command) {

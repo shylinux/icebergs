@@ -6,10 +6,6 @@ import (
 	kit "shylinux.com/x/toolkits"
 )
 
-const _sync_index = 1
-
-func _sync_count(m *ice.Message) string { return m.Conf(SYNC, kit.Keym(kit.MDB_COUNT)) }
-
 const SYNC = "sync"
 
 func init() {
@@ -20,20 +16,11 @@ func init() {
 			m.Cmdy(SYNC, mdb.INSERT, arg)
 		}},
 		SYNC: {Name: "sync id auto page export import", Help: "同步流", Action: ice.MergeAction(map[string]*ice.Action{
-			mdb.INPUTS: {Name: "inputs", Help: "补全", Hand: func(m *ice.Message, arg ...string) {
-				switch arg[0] {
-				case kit.MDB_ZONE:
-					m.Cmdy(FAVOR, ice.OptionFields("zone,count,time"))
-				}
-			}},
-			FAVOR: {Name: "favor zone=some name", Help: "收藏", Hand: func(m *ice.Message, arg ...string) {
-				m.Cmdy(FAVOR, mdb.INSERT, m.OptionSimple("zone,type,name,text"))
+			FAVOR: {Name: "favor zone=hi name", Help: "收藏", Hand: func(m *ice.Message, arg ...string) {
+				m.Cmdy(FAVOR, mdb.INSERT)
 			}},
 		}, mdb.ListAction()), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			m.OptionPage(kit.Slice(arg, _sync_index)...)
-			m.Fields(len(kit.Slice(arg, 0, 1)), m.Conf(SYNC, kit.META_FIELD))
-			m.Cmdy(mdb.SELECT, m.PrefixKey(), "", mdb.LIST, kit.MDB_ID, arg)
-			m.StatusTimeCountTotal(_sync_count(m))
+			mdb.ListSelect(m, arg...)
 			m.PushAction(FAVOR)
 		}},
 	}})

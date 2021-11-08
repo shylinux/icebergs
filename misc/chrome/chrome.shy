@@ -1,17 +1,19 @@
 title "HTML5"
-refer "官网" `
+refer `
 官网 https://www.w3.org/
 文档 https://developer.mozilla.org/
+官网 https://www.google.com/chrome/
 源码 https://github.com/chromium/chromium/
+扩展 https://chrome.google.com/webstore/category/extensions
 `
 chapter "安装"
-field chrome web.code.chrome.chrome
+field "浏览器" web.code.chrome.chrome
 
 chapter "应用"
 field "同步流" web.code.chrome.sync
 field "收藏夹" web.code.chrome.favor
-field "工具箱" web.code.chrome.field
 field "样式表" web.code.chrome.style
+field "工具箱" web.code.chrome.field
 field "蜘蛛侠" web.code.chrome.spide
 field "缓存池" web.code.chrome.cache
 field "相册簿" web.wiki.feel

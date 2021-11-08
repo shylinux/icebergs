@@ -470,7 +470,7 @@ func (m *Message) Confi(key string, sub string) int {
 	return kit.Int(m.Conf(key, sub))
 }
 func (m *Message) Confv(arg ...interface{}) (val interface{}) {
-	m.Search(kit.Format(arg[0]), func(p *Context, s *Context, key string, conf *Config) {
+	run := func(conf *Config) {
 		if len(arg) == 1 {
 			val = conf.Value
 			return // 读配置
@@ -484,7 +484,16 @@ func (m *Message) Confv(arg ...interface{}) (val interface{}) {
 			}
 		}
 		val = kit.Value(conf.Value, arg[1]) // 读配置项
-	})
+	}
+
+	key := kit.Format(arg[0])
+	if conf, ok := m.target.Configs[strings.TrimPrefix(key, m.target.Cap(CTX_FOLLOW)+PT)]; ok {
+		run(conf)
+	} else if conf, ok := m.source.Configs[strings.TrimPrefix(key, m.source.Cap(CTX_FOLLOW)+PT)]; ok {
+		run(conf)
+	} else {
+		m.Search(key, func(p *Context, s *Context, key string, conf *Config) { run(conf) })
+	}
 	return
 }
 func (m *Message) Confm(key string, chain interface{}, cbs ...interface{}) map[string]interface{} {

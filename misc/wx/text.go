@@ -6,6 +6,12 @@ import (
 	kit "shylinux.com/x/toolkits"
 )
 
+func _wx_reply(m *ice.Message, tmpl string) {
+	if res, err := kit.Render(m.Config(kit.MDB_TEMPLATE), m); err == nil {
+		m.Set(ice.MSG_RESULT).RenderResult(string(res))
+	}
+}
+
 const TEXT = "text"
 
 func init() {
@@ -14,18 +20,16 @@ func init() {
 	}, Commands: map[string]*ice.Command{
 		TEXT: {Name: "text", Help: "文本", Action: map[string]*ice.Action{
 			MENU: {Name: "menu name", Help: "菜单", Hand: func(m *ice.Message, arg ...string) {
-				_wx_action(m.Cmdy(MENU, kit.Select("home", m.Option(kit.MDB_NAME))))
+				m.Cmdy(MENU, kit.Select("home", m.Option(kit.MDB_NAME)))
 			}},
 		}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			// 执行命令
-			if m.Cmdy(arg); len(m.Appendv(ice.MSG_APPEND)) == 0 && len(m.Result()) == 0 {
-				m.Cmdy(cli.SYSTEM, arg)
+			if m.Cmdy(arg); m.Length() == 0 && (m.Result() == "" || m.Result(1) == ice.ErrNotFound) {
+				m.Set(ice.MSG_RESULT)
+				m.Cmdy(cli.SYSTEM, arg) // 系统命令
 			}
-			if len(m.Result()) == 0 {
+			if m.Result() == "" {
 				m.Table()
 			}
-
-			// 返回结果
 			_wx_reply(m, m.CommandKey())
 		}},
 	}})

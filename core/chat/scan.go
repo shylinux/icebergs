@@ -24,6 +24,9 @@ func init() {
 			mdb.CREATE:    {Name: "create type=text name=hi text:textarea=hi", Help: "添加"},
 		}, mdb.HashAction()), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			if mdb.HashSelect(m, arg...); len(arg) > 0 {
+				if m.Append(kit.MDB_TYPE) == "image" {
+					m.PushImages("image", m.Append(kit.MDB_TEXT))
+				}
 				m.PushScript(ssh.SCRIPT, m.Append(kit.MDB_TEXT))
 				m.PushQRCode(cli.QRCODE, m.Append(kit.MDB_TEXT))
 			}

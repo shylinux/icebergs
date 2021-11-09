@@ -13,6 +13,20 @@ func (m *Message) Set(key string, arg ...string) *Message {
 	case MSG_DETAIL, MSG_RESULT:
 		delete(m.meta, key)
 	case MSG_OPTION, MSG_APPEND:
+		if m.FieldsIsDetail() {
+			if len(arg) > 0 {
+				for i := 0; i < len(m.meta[kit.MDB_KEY]); i++ {
+					if m.meta[kit.MDB_KEY][i] == arg[0] {
+						m.meta[kit.MDB_KEY][i] = ""
+						m.meta[kit.MDB_VALUE][i] = ""
+					}
+				}
+				return m
+			}
+			delete(m.meta, kit.MDB_KEY)
+			delete(m.meta, kit.MDB_VALUE)
+			return m
+		}
 		if len(arg) > 0 {
 			if delete(m.meta, arg[0]); len(arg) == 1 {
 				return m

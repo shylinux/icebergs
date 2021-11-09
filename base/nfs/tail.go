@@ -74,9 +74,7 @@ func init() {
 				}
 			})
 
-			if len(arg) == 0 {
-				m.PushAction(mdb.REMOVE)
-			} else {
+			if len(arg) > 0 {
 				m.StatusTimeCountTotal(_tail_count(m, arg[0]))
 			}
 		}},

@@ -1,27 +1,17 @@
 package wx
 
 import (
-	"crypto/sha1"
+	"bytes"
 	"encoding/xml"
-	"strings"
+	"io/ioutil"
 
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/aaa"
 	"shylinux.com/x/icebergs/base/mdb"
+	"shylinux.com/x/icebergs/core/chat"
 	kit "shylinux.com/x/toolkits"
 )
 
-func _wx_check(m *ice.Message) bool {
-	check := kit.Sort([]string{m.Conf(ACCESS, "meta.tokens"), m.Option("timestamp"), m.Option("nonce")})
-	if sig := kit.Format(sha1.Sum([]byte(strings.Join(check, "")))); m.Warn(sig != m.Option("signature"), ice.ErrNotRight, check) {
-		return false // 验证失败
-	}
-	if m.Option("echostr") != "" {
-		m.RenderResult(m.Option("echostr"))
-		return false // 绑定验证
-	}
-	return true
-}
 func _wx_parse(m *ice.Message) {
 	data := struct {
 		FromUserName string
@@ -31,9 +21,22 @@ func _wx_parse(m *ice.Message) {
 		Event        string
 		MsgType      string
 		Content      string
+
+		Location_X float64
+		Location_Y float64
+		Scale      string
+		Label      string
+
+		Title       string
+		Description string
+		Url         string
+
+		PicUrl string
 	}{}
-	xml.NewDecoder(m.R.Body).Decode(&data)
-	m.Debug("data: %#v", data)
+	buf, _ := ioutil.ReadAll(m.R.Body)
+	m.Debug("buf: %+v", string(buf))
+	xml.NewDecoder(bytes.NewBuffer(buf)).Decode(&data)
+	m.Debug("data: %+v", data)
 
 	m.Option("FromUserName", data.FromUserName)
 	m.Option("ToUserName", data.ToUserName)
@@ -43,11 +46,17 @@ func _wx_parse(m *ice.Message) {
 	m.Option("Event", data.Event)
 	m.Option("MsgType", data.MsgType)
 	m.Option("Content", data.Content)
-}
-func _wx_reply(m *ice.Message, tmpl string) {
-	if res, err := kit.Render(m.Config(kit.MDB_TEMPLATE), m); err == nil {
-		m.Set(ice.MSG_RESULT).RenderResult(string(res))
-	}
+
+	m.Option("LocationX", kit.Int(data.Location_X*100000))
+	m.Option("LocationY", kit.Int(data.Location_Y*100000))
+	m.Option("Scale", data.Scale)
+	m.Option("Label", data.Label)
+
+	m.Option("Title", data.Title)
+	m.Option("Description", data.Description)
+	m.Option("URL", data.Url)
+
+	m.Option("URL", data.PicUrl)
 }
 
 const LOGIN = "login"
@@ -57,7 +66,7 @@ func init() {
 		LOGIN: {Name: LOGIN, Help: "登录", Value: kit.Data()},
 	}, Commands: map[string]*ice.Command{
 		"/login/": {Name: "/login/", Help: "认证", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			if !_wx_check(m) {
+			if m.Cmdx(ACCESS, CHECK) == "" {
 				return // 验签失败
 			}
 
@@ -72,12 +81,22 @@ func init() {
 			case EVENT: // 事件
 				m.Cmdy(EVENT, m.Option("Event"))
 
+			case chat.LOCATION: // 打卡
+				m.Cmdy(chat.LOCATION, mdb.CREATE, kit.MDB_TYPE, "", kit.MDB_NAME, m.Option("Label"), kit.MDB_TEXT, m.Option("Label"),
+					"latitude", m.Option("LocationX"), "longitude", m.Option("LocationY"), "scale", m.Option("Scale"),
+				)
+			case kit.MDB_LINK: // 打卡
+				m.Cmdy(chat.SCAN, mdb.CREATE, kit.MDB_TYPE, kit.MDB_LINK, kit.MDB_NAME, m.Option("Title"), kit.MDB_TEXT, m.Option("URL"))
+
+			case "image": // 文本
+				m.Cmdy(chat.SCAN, mdb.CREATE, kit.MDB_TYPE, kit.MDB_IMAGE, kit.MDB_NAME, m.Option("Title"), kit.MDB_TEXT, m.Option("URL"))
+
 			case TEXT: // 文本
-				cmds := kit.Split(m.Option("Content"))
-				if !m.Right(cmds) {
-					cmds = []string{MENU, mdb.CREATE}
+				if cmds := kit.Split(m.Option("Content")); m.Right(cmds) {
+					m.Cmdy(TEXT, cmds)
+					break
 				}
-				m.Cmdy(TEXT, cmds)
+				m.Cmdy(MENU, "home")
 			}
 		}},
 	}})

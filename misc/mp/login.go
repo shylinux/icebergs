@@ -22,13 +22,12 @@ func init() {
 	Index.Merge(&ice.Context{Configs: map[string]*ice.Config{
 		LOGIN: {Name: LOGIN, Help: "认证", Value: kit.Data(
 			tcp.SERVER, "https://api.weixin.qq.com",
-			APPID, "", APPMM, "", "tokens", "",
 		)},
 	}, Commands: map[string]*ice.Command{
-		ice.CTX_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			m.Cmd(web.SPIDE, mdb.CREATE, MP, m.Conf(LOGIN, kit.Keym(tcp.SERVER)))
-		}},
 		"/login/": {Name: "/login/", Help: "认证", Action: map[string]*ice.Action{
+			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
+				m.Cmd(web.SPIDE, mdb.CREATE, MP, m.Config(tcp.SERVER))
+			}},
 			aaa.SESS: {Name: "sess code", Help: "会话", Hand: func(m *ice.Message, arg ...string) {
 				msg := m.Cmd(web.SPIDE, MP, web.SPIDE_GET, "/sns/jscode2session?grant_type=authorization_code",
 					"js_code", m.Option(kit.MDB_CODE), APPID, m.Config(APPID), "secret", m.Config(APPMM))
@@ -49,7 +48,7 @@ func init() {
 				m.Cmdy(chat.SCAN, arg)
 			}},
 		}},
-		LOGIN: {Name: "login appid auto login", Help: "认证", Action: map[string]*ice.Action{
+		LOGIN: {Name: "login appid auto create", Help: "认证", Action: map[string]*ice.Action{
 			mdb.CREATE: {Name: "create appid appmm", Help: "登录", Hand: func(m *ice.Message, arg ...string) {
 				m.Config(APPID, m.Option(APPID))
 				m.Config(APPMM, m.Option(APPMM))
@@ -57,6 +56,5 @@ func init() {
 		}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			m.Echo(m.Config(APPID))
 		}},
-	},
-	})
+	}})
 }

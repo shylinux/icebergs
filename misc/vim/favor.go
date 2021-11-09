@@ -42,7 +42,6 @@ func init() {
 		}, mdb.ZoneAction()), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			if mdb.ZoneSelect(m, arg...); len(arg) == 0 {
 				m.Action(mdb.CREATE, mdb.EXPORT, mdb.IMPORT)
-				m.PushAction(mdb.REMOVE)
 			} else {
 				m.PushAction(code.INNER)
 				m.StatusTimeCount()

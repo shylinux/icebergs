@@ -33,9 +33,7 @@ func init() {
 				})
 			}},
 		}, mdb.ZoneAction()), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			if mdb.ZoneSelect(m, arg...); len(arg) == 0 {
-				m.PushAction(mdb.REMOVE)
-			}
+			mdb.ZoneSelect(m, arg...)
 		}},
 	}})
 }

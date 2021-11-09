@@ -7,16 +7,17 @@ refer `
 qrcode `https://mp.weixin.qq.com/a/~HkylKD4DZShrgSm5GuXWLQ~~`
 
 chapter "应用"
-field scan web.chat.scan
-field files web.chat.files
-field paste web.chat.paste
-field location web.chat.location
+field "认证" web.chat.mp.login
+
+field "扫码" web.chat.scan
+field "复制" web.chat.paste
+field "文件" web.chat.files
+field "位置" web.chat.location
 
 chapter "权限"
-field access web.chat.mp.access
-field share web.share
-field sess aaa.sess
-field user aaa.user
+field "共享" web.share
+field "会话" aaa.sess
+field "用户" aaa.user
 
 chapter "项目"
 field "icebergs" web.code.git.trend args `icebergs`

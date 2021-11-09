@@ -56,7 +56,6 @@ func init() {
 			m.Option(ice.CACHE_LIMIT, "-1")
 			if mdb.ZoneSelect(m, arg...); len(arg) == 0 {
 				m.Action("listTags", mdb.CREATE, mdb.EXPORT, mdb.IMPORT)
-				m.PushAction(mdb.REMOVE)
 			} else {
 				if m.IsCliUA() {
 					if m.Length() == 0 {

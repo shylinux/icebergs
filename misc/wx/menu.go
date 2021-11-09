@@ -50,10 +50,10 @@ func init() {
 		)},
 	}, Commands: map[string]*ice.Command{
 		MENU: {Name: "menu zone id auto insert", Help: "菜单", Action: ice.MergeAction(map[string]*ice.Action{
-			mdb.INSERT: {Name: "insert zone=home title=hi refer=hello image=", Help: "添加"},
+			mdb.INSERT: {Name: "insert zone=home title=hi refer=hello image", Help: "添加"},
 		}, mdb.ZoneAction()), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			if mdb.ZoneSelect(m, arg...); len(arg) == 0 {
-				m.PushAction(mdb.REMOVE)
+			if mdb.ZoneSelect(m, arg...); len(arg) > 0 {
+				_wx_action(m)
 			}
 		}},
 	}})

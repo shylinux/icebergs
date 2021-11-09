@@ -60,7 +60,7 @@ func init() {
 
 			if _send_text(m, form, arg...) {
 				msg := _lark_post(m, appid, "/open-apis/message/v4/send/", web.SPIDE_DATA, kit.Format(form))
-				m.Push("time", m.Time())
+				m.Push(kit.MDB_TIME, m.Time())
 				m.Push("message_id", msg.Append("data.message_id"))
 			}
 		}},

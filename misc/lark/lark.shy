@@ -1,23 +1,22 @@
 title "飞书机器人"
-refer "官网" `
-官网 https://shylinux.com/chat/lark/sso
+refer `
 官网 https://www.feishu.cn/
 文档 https://open.feishu.cn/document/uQjL04CN/ucDOz4yN4MjL3gzM
-源码 https://shylinux.com/x/icebergs/blob/master/misc/lark/lark.go
 后台管理 https://www.feishu.cn/admin
 应用管理 https://open.feishu.cn/app
 `
 qrcode `https://applink.feishu.cn/client/bot/open?appId=cli_9d3b9d146a7cd103`
 
 chapter "应用"
-field "app" web.chat.lark.app
-field "group" web.chat.lark.group
-field "company" web.chat.lark.company
-field "duty" web.chat.lark.duty
+field "应用" web.chat.lark.app
+field "群组" web.chat.lark.group
+field "组织" web.chat.lark.company
+field "值班" web.chat.lark.duty
 
 chapter "权限"
-field sess aaa.sess
-field user aaa.user
+field "共享" web.share
+field "会话" aaa.sess
+field "用户" aaa.user
 
 chapter "项目"
 field "icebergs" web.code.git.trend args `icebergs`

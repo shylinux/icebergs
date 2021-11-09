@@ -5,6 +5,7 @@ import (
 
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/aaa"
+	"shylinux.com/x/icebergs/base/cli"
 	"shylinux.com/x/icebergs/base/web"
 	kit "shylinux.com/x/toolkits"
 )
@@ -24,7 +25,13 @@ func init() {
 			}
 
 			// 执行命令
-			if m.Cmdy(cmds); len(m.Resultv()) > 0 {
+			if m.Cmdy(cmds); m.Result() != "" && m.Result(1) != ice.ErrNotFound {
+				m.Cmd(SEND, m.Option(APP_ID), m.Option(OPEN_CHAT_ID), m.Result())
+				return
+			}
+			if m.Length() == 0 {
+				m.Set(ice.MSG_RESULT)
+				m.Cmdy(cli.SYSTEM, cmds)
 				m.Cmd(SEND, m.Option(APP_ID), m.Option(OPEN_CHAT_ID), m.Result())
 				return
 			}

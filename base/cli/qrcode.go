@@ -8,7 +8,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/skip2/go-qrcode"
+	"shylinux.com/x/go-qrcode"
 	ice "shylinux.com/x/icebergs"
 	kit "shylinux.com/x/toolkits"
 )

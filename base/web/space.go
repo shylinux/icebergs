@@ -6,13 +6,13 @@ import (
 	"strings"
 	"time"
 
-	"github.com/gorilla/websocket"
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/aaa"
 	"shylinux.com/x/icebergs/base/cli"
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/tcp"
 	kit "shylinux.com/x/toolkits"
+	"shylinux.com/x/websocket"
 )
 
 func _space_link(m *ice.Message, pod string, arg ...interface{}) string {

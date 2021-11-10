@@ -20,6 +20,7 @@ field "会话" aaa.sess
 field "用户" aaa.user
 
 chapter "项目"
-field "icebergs" web.code.git.trend args `icebergs`
-field "icebergs" web.code.inner args `usr/icebergs/ misc/mp/mp.go`
+field "源代码" web.code.inner args `usr/icebergs/ misc/mp/login.go`
+field "趋势图" web.code.git.trend args `icebergs`
+field "架构图" web.code.git.spide args `icebergs`
 

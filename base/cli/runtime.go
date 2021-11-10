@@ -106,12 +106,13 @@ const (
 const (
 	GOARCH  = "GOARCH"
 	GOOS    = "GOOS"
+	X386    = "386"
+	AMD64   = "amd64"
+	ARM64   = "arm64"
+	ARM     = "arm"
 	LINUX   = "linux"
 	DARWIN  = "darwin"
 	WINDOWS = "windows"
-	AMD64   = "amd64"
-	I386    = "386"
-	ARM     = "arm"
 )
 const (
 	CTX_SHY = "ctx_shy"

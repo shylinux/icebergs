@@ -41,10 +41,10 @@ func init() {
 			arch := m.Conf(cli.RUNTIME, kit.Keys(tcp.HOST, cli.GOARCH))
 			for _, k := range arg {
 				switch k {
-				case cli.LINUX, cli.DARWIN, cli.WINDOWS:
-					goos = k
-				case cli.AMD64, cli.I386, cli.ARM:
+				case cli.X386, cli.AMD64, cli.ARM64, cli.ARM:
 					arch = k
+				case cli.WINDOWS, cli.DARWIN, cli.LINUX:
+					goos = k
 				default:
 					if kit.Ext(k) == GO {
 						main = k

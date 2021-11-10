@@ -26,7 +26,6 @@ func init() {
 			}},
 			mdb.REMOVE: {Name: "remove", Help: "删除", Hand: func(m *ice.Message, arg ...string) {
 				os.Remove(strings.TrimPrefix(arg[0], "/share/local/"))
-				m.ProcessHold()
 			}},
 		}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			_wiki_list(m, m.CommandKey(), kit.Select("./", arg, 0))

@@ -26,7 +26,7 @@ chapter "企业微信"
 field "机器人" web.chat.wework.bot
 
 chapter "项目"
-field "源代码" web.code.inner args `usr/icebergs/ misc/wx/wx.go`
+field "源代码" web.code.inner args `usr/icebergs/ misc/wx/login.go`
 field "趋势图" web.code.git.trend args `icebergs`
 field "架构图" web.code.git.spide args `icebergs`
 

@@ -39,6 +39,9 @@ func (m *Message) Set(key string, arg ...string) *Message {
 			return m
 		}
 	default:
+		for _, k := range kit.Split(key) {
+			delete(m.meta, k)
+		}
 		if m.FieldsIsDetail() {
 			for i := 0; i < len(m.meta[kit.MDB_KEY]); i++ {
 				if m.meta[kit.MDB_KEY][i] == key {
@@ -56,9 +59,6 @@ func (m *Message) Set(key string, arg ...string) *Message {
 				}
 			}
 			return m
-		}
-		for _, k := range kit.Split(key) {
-			delete(m.meta, k)
 		}
 	}
 	return m.Add(key, arg...)

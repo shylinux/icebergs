@@ -39,7 +39,7 @@ func init() {
 			kit.MDB_PATH, ice.VAR_TRASH,
 		)},
 	}, Commands: map[string]*ice.Command{
-		TRASH: {Name: "trash file auto prunes", Help: "回收站", Action: ice.MergeAction(map[string]*ice.Action{
+		TRASH: {Name: "trash hash auto prunes", Help: "回收站", Action: ice.MergeAction(map[string]*ice.Action{
 			mdb.REVERT: {Name: "revert", Help: "恢复", Hand: func(m *ice.Message, arg ...string) {
 				os.Rename(m.Option(kit.MDB_FILE), m.Option(kit.MDB_FROM))
 				m.Cmd(mdb.DELETE, TRASH, "", mdb.HASH, m.OptionSimple(kit.MDB_HASH))
@@ -48,12 +48,14 @@ func init() {
 				os.Remove(m.Option(kit.MDB_FILE))
 				m.Cmd(mdb.DELETE, TRASH, "", mdb.HASH, m.OptionSimple(kit.MDB_HASH))
 			}},
-			mdb.PRUNES: {Name: "prunes", Help: "清理", Hand: func(m *ice.Message, arg ...string) {
-				m.Cmd(mdb.DELETE, TRASH, "", mdb.HASH, m.OptionSimple(kit.MDB_HASH))
+			mdb.PRUNES: {Name: "prunes before@date", Help: "清理", Hand: func(m *ice.Message, arg ...string) {
+				mdb.HashPrunes(m, func(value map[string]string) bool {
+					os.Remove(value[kit.MDB_FILE])
+					return false
+				})
 			}},
 		}, mdb.HashAction()), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			if len(arg) == 0 {
-				mdb.HashSelect(m, arg...)
+			if mdb.HashSelect(m, arg...); len(arg) == 0 || m.Length() > 0 {
 				m.PushAction(mdb.REVERT, mdb.REMOVE)
 				return
 			}

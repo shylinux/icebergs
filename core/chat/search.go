@@ -27,10 +27,10 @@ func init() {
 			if kit.Contains(arg[1], ";") {
 				arg = kit.Split(arg[1], ";", ";", ";")
 			}
+			defer m.StatusTimeCount()
 			if m.Cmdy(m.Space(m.Option(ice.POD)), mdb.SEARCH, arg); arg[1] == "" {
 				return
 			}
-			m.StatusTimeCount()
 			m.Cmd(mdb.INSERT, m.PrefixKey(), "", mdb.HASH,
 				kit.MDB_NAME, arg[1], kit.MDB_TYPE, arg[0], kit.MDB_TEXT, kit.Select("", arg, 2))
 		}},

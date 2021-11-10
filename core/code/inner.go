@@ -79,6 +79,7 @@ func init() {
 				if m.Cmdy(mdb.PLUGIN, arg); m.Result() == "" {
 					m.Echo(kit.Select("{}", m.Config(kit.Keys(PLUG, arg[0]))))
 				}
+				m.Set(ice.MSG_STATUS)
 			}},
 			mdb.ENGINE: {Name: "engine", Help: "引擎", Hand: func(m *ice.Message, arg ...string) {
 				_inner_exec(m, arg[0], arg[1], arg[2])
@@ -94,9 +95,11 @@ func init() {
 			}
 			if len(arg) < 2 {
 				nfs.Dir(m, kit.MDB_PATH)
+				m.Set(ice.MSG_STATUS)
 				return
 			}
 			_inner_list(m, kit.Ext(arg[1]), arg[1], arg[0])
+			m.Set(ice.MSG_STATUS)
 		}},
 	}, Configs: map[string]*ice.Config{
 		INNER: {Name: "inner", Help: "源代码", Value: kit.Data(

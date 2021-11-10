@@ -145,16 +145,6 @@ func HashAction(fields ...string) map[string]*ice.Action {
 		}
 		return kit.Select(kit.MDB_HASH, m.Config(kit.MDB_SHORT))
 	}
-	prunes := &ice.Action{Name: "prunes before@date", Help: "清理", Hand: func(m *ice.Message, arg ...string) {
-		HashPrunes(m, nil)
-	}}
-	if len(fields) > 0 && fields[0] == "status" {
-		prunes = &ice.Action{Name: "prunes", Help: "清理", Hand: func(m *ice.Message, arg ...string) {
-			m.OptionFields(m.Config(kit.MDB_FIELD))
-			m.Cmdy(PRUNES, m.PrefixKey(), "", HASH, kit.MDB_STATUS, "error")
-			m.Cmdy(PRUNES, m.PrefixKey(), "", HASH, kit.MDB_STATUS, "close")
-		}}
-	}
 	return ice.SelectAction(map[string]*ice.Action{
 		INPUTS: {Name: "inputs", Help: "补全", Hand: func(m *ice.Message, arg ...string) {
 			m.Cmdy(INPUTS, m.PrefixKey(), "", HASH, arg)
@@ -175,7 +165,9 @@ func HashAction(fields ...string) map[string]*ice.Action {
 		IMPORT: {Name: "import", Help: "导入", Hand: func(m *ice.Message, arg ...string) {
 			m.Cmdy(IMPORT, m.PrefixKey(), "", HASH, arg)
 		}},
-		PRUNES: prunes,
+		PRUNES: &ice.Action{Name: "prunes before@date", Help: "清理", Hand: func(m *ice.Message, arg ...string) {
+			HashPrunes(m, nil)
+		}},
 	}, fields...)
 }
 func HashActionStatus(fields ...string) map[string]*ice.Action {
@@ -202,7 +194,7 @@ func HashPrunes(m *ice.Message, cb func(map[string]string) bool) *ice.Message {
 		return kit.Select(kit.MDB_HASH, m.Config(kit.MDB_SHORT))
 	}
 	before := kit.Time(kit.Select(m.Time("-72h"), m.Option(kit.MDB_BEFORE)))
-	m.Cmd(m.PrefixKey()).Table(func(index int, value map[string]string, head []string) {
+	m.Cmd(m.CommandKey()).Table(func(index int, value map[string]string, head []string) {
 		if kit.Time(value[kit.MDB_TIME]) > before {
 			return
 		}

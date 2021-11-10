@@ -1,7 +1,11 @@
 package wiki
 
 import (
+	"os"
+	"strings"
+
 	ice "shylinux.com/x/icebergs"
+	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/web"
 	kit "shylinux.com/x/toolkits"
 )
@@ -19,6 +23,10 @@ func init() {
 		), Action: map[string]*ice.Action{
 			web.UPLOAD: {Name: "upload", Help: "上传", Hand: func(m *ice.Message, arg ...string) {
 				_wiki_upload(m, m.CommandKey(), m.Option(kit.MDB_PATH))
+			}},
+			mdb.REMOVE: {Name: "remove", Help: "删除", Hand: func(m *ice.Message, arg ...string) {
+				os.Remove(strings.TrimPrefix(arg[0], "/share/local/"))
+				m.ProcessHold()
 			}},
 		}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			_wiki_list(m, m.CommandKey(), kit.Select("./", arg, 0))

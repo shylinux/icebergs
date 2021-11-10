@@ -157,11 +157,11 @@ func init() {
 				_defs(m, kit.MDB_KEY, kit.Keys("web.code", m.Option(kit.MDB_ZONE), m.Option(kit.MDB_NAME)))
 				switch m.Option(kit.MDB_TYPE) {
 				case "Zone":
-					_defs(m, "list", "list zone id auto insert")
+					_defs(m, "list", m.Option(kit.MDB_NAME)+" zone id auto insert")
 				case "Hash":
-					_defs(m, "list", "list hash auto create")
+					_defs(m, "list", m.Option(kit.MDB_NAME)+" hash auto create")
 				case "Data":
-					_defs(m, "list", "list path auto upload")
+					_defs(m, "list", m.Option(kit.MDB_NAME)+" path auto upload")
 				}
 				m.Option("tag", kit.Format("`name:\"%s\" help:\"%s\"`", m.Option("list"), m.Option("help")))
 

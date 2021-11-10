@@ -109,7 +109,6 @@ func init() {
 				return // 没有授权
 			}
 
-			m.Debug("what %v-------", arg)
 			switch kit.Select("", arg, 1) {
 			case STORM, OCEAN, NODE:
 				m.Option(ice.MSG_RIVER, arg[0])
@@ -127,6 +126,9 @@ func init() {
 			mdb.INPUTS: {Name: "inputs", Help: "补全", Hand: func(m *ice.Message, arg ...string) {
 				switch m.Option(ctx.ACTION) {
 				case cli.START:
+					m.Cmdy(web.DREAM, ctx.ACTION, mdb.INPUTS, arg)
+					return
+				case "创建空间":
 					m.Cmdy(web.DREAM, ctx.ACTION, mdb.INPUTS, arg)
 					return
 				}

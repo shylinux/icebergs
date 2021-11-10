@@ -43,9 +43,8 @@ func init() {
 				m.ProcessInner()
 			}},
 			COMPILE: {Name: "compile", Help: "编译", Hand: func(m *ice.Message, arg ...string) {
-				m.Cmdy(COMPILE, ice.SRC_MAIN_GO)
-				m.Cmdy(nfs.LINK, ice.BIN_ICE_BIN, m.Append(nfs.PATH))
-				if cli.IsSuccess(m) {
+				if m.Cmdy(COMPILE, ice.SRC_MAIN_GO); cli.IsSuccess(m) {
+					m.Cmd(COMPILE, ice.SRC_MAIN_GO, ice.BIN_ICE_BIN)
 					m.Cmd(ice.EXIT, "1")
 				}
 				m.ProcessInner()

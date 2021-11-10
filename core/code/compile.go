@@ -36,7 +36,7 @@ func init() {
 			}
 
 			// 交叉编译
-			main := ice.SRC_MAIN_GO
+			main, file := ice.SRC_MAIN_GO, ""
 			goos := m.Conf(cli.RUNTIME, kit.Keys(tcp.HOST, cli.GOOS))
 			arch := m.Conf(cli.RUNTIME, kit.Keys(tcp.HOST, cli.GOARCH))
 			for _, k := range arg {
@@ -48,11 +48,15 @@ func init() {
 				default:
 					if kit.Ext(k) == GO {
 						main = k
+					} else {
+						file = k
 					}
 				}
 			}
-			file := path.Join(kit.Select("", m.Config(nfs.PATH), m.Option(cli.CMD_DIR) == ""),
-				kit.Keys(kit.Select(ice.ICE, kit.TrimExt(main), main != ice.SRC_MAIN_GO), goos, arch))
+			if file == "" {
+				file = path.Join(kit.Select("", m.Config(nfs.PATH), m.Option(cli.CMD_DIR) == ""),
+					kit.Keys(kit.Select(ice.ICE, kit.TrimExt(main), main != ice.SRC_MAIN_GO), goos, arch))
+			}
 
 			// 执行编译
 			_autogen_version(m.Spawn())

@@ -37,7 +37,7 @@ func init() {
 			}
 
 			p := path.Join(m.Config(kit.MDB_PATH), path.Join(arg...))
-			if mdb.HashSelect(m, kit.Ext(m.R.URL.Path)).Table(func(index int, value map[string]string, head []string) {
+			if mdb.HashSelect(m.Spawn(), kit.Ext(m.R.URL.Path)).Table(func(index int, value map[string]string, head []string) {
 				m.RenderCmd(value[kit.MDB_NAME], p)
 			}).Length() > 0 {
 				return // 插件

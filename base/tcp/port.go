@@ -56,7 +56,8 @@ func init() {
 		}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			if len(arg) == 0 {
 				m.Option(nfs.DIR_ROOT, m.Conf(cli.DAEMON, kit.META_PATH))
-				m.Cmd(nfs.DIR, "./").Table(func(index int, value map[string]string, head []string) {
+				m.Cmd(nfs.DIR, "./", "time,path,size").Table(func(index int, value map[string]string, head []string) {
+					m.Debug("what %v", value)
 					m.Push(kit.MDB_TIME, value[kit.MDB_TIME])
 					m.Push(PORT, path.Base(value[kit.MDB_PATH]))
 					m.Push(kit.MDB_SIZE, value[kit.MDB_SIZE])

@@ -9,7 +9,7 @@ import (
 )
 
 func (m *Message) CommandKey() string {
-	return strings.TrimSuffix(strings.TrimPrefix(m._key, "/"), "/")
+	return strings.TrimSuffix(strings.TrimPrefix(m._key, PS), PS)
 }
 func (m *Message) PrefixKey(arg ...string) string {
 	return kit.Keys(m.Cap(CTX_FOLLOW), m.CommandKey(), arg)

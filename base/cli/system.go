@@ -76,7 +76,7 @@ func _system_exec(m *ice.Message, cmd *exec.Cmd) {
 	m.Push(kit.MDB_CODE, int(cmd.ProcessState.ExitCode()))
 }
 func IsSuccess(m *ice.Message) bool {
-	return m.Append(kit.MDB_CODE) == "0"
+	return m.Append(kit.MDB_CODE) == "0" || m.Append(kit.MDB_CODE) == ""
 }
 
 const (

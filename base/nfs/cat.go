@@ -145,6 +145,7 @@ func init() {
 				m.Cmdy(DIR, arg)
 				return
 			}
+			m.Info("dir_root: %v", m.Option(DIR_ROOT))
 			_cat_list(m, arg[0])
 		}},
 	}})

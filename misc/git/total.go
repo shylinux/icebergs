@@ -18,7 +18,11 @@ const TOTAL = "total"
 func init() {
 	Index.Merge(&ice.Context{Configs: map[string]*ice.Config{
 		TOTAL: {Name: TOTAL, Help: "统计量", Value: kit.Data(
-			kit.MDB_SHORT, kit.MDB_NAME, "skip", kit.Dict("wubi-dict", ice.TRUE, "word-dict", ice.TRUE),
+			kit.MDB_SHORT, kit.MDB_NAME, "skip", kit.Dict(
+				"wubi-dict", ice.TRUE, "word-dict", ice.TRUE,
+				"websocket", ice.TRUE, "go-sql-mysql", ice.TRUE,
+				"echarts", ice.TRUE, "go-qrcode", ice.TRUE,
+			),
 		)},
 	}, Commands: map[string]*ice.Command{
 		TOTAL: {Name: "total name auto", Help: "统计量", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {

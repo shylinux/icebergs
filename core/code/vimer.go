@@ -37,16 +37,16 @@ func init() {
 			AUTOGEN: {Name: "create main=src/main.go@key key zone type=Zone,Hash,Data name=hi list help", Help: "模块", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmdy(AUTOGEN, mdb.CREATE, arg)
 			}},
-			BINPACK: {Name: "binpack", Help: "打包", Hand: func(m *ice.Message, arg ...string) {
-				m.Cmdy(AUTOGEN, BINPACK)
-				m.Cmd(nfs.COPY, ice.GO_MOD, path.Join(ice.SRC_RELEASE, ice.GO_MOD))
-				m.ProcessInner()
-			}},
 			COMPILE: {Name: "compile", Help: "编译", Hand: func(m *ice.Message, arg ...string) {
 				if m.Cmdy(COMPILE, ice.SRC_MAIN_GO); cli.IsSuccess(m) {
 					m.Cmd(COMPILE, ice.SRC_MAIN_GO, ice.BIN_ICE_BIN)
 					m.Cmd(ice.EXIT, "1")
 				}
+				m.ProcessInner()
+			}},
+			BINPACK: {Name: "binpack", Help: "打包", Hand: func(m *ice.Message, arg ...string) {
+				m.Cmdy(AUTOGEN, BINPACK)
+				m.Cmd(nfs.COPY, ice.GO_MOD, path.Join(ice.SRC_RELEASE, ice.GO_MOD))
 				m.ProcessInner()
 			}},
 		}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {

@@ -43,6 +43,12 @@ func init() {
 		ice.CTX_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			ice.AddRender(ice.RENDER_SCRIPT, func(m *ice.Message, cmd string, args ...interface{}) string {
 				arg := kit.Simple(args...)
+				if m.IsCliUA() {
+					if len(arg) > 1 {
+						arg = arg[1:]
+					}
+					return strings.Join(arg, ice.NL)
+				}
 				if len(arg) == 1 && arg[0] != BREAK {
 					arg = []string{SHELL, arg[0]}
 				}

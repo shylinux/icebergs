@@ -22,7 +22,7 @@ func _zone_select(m *ice.Message, prefix, chain, zone string, id string) {
 	cb := m.Optionv(kit.Keycb(SELECT))
 	m.Richs(prefix, chain, kit.Select(kit.MDB_FOREACH, zone), func(key string, val map[string]interface{}) {
 		if val = kit.GetMeta(val); zone == "" {
-			if m.Option(FIELDS) == DETAIL {
+			if m.OptionFields() == DETAIL {
 				m.Push(DETAIL, val)
 			} else {
 				m.Push(key, val, fields)

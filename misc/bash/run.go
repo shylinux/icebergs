@@ -11,38 +11,35 @@ import (
 	kit "shylinux.com/x/toolkits"
 )
 
-const RUN = "run"
+func _run_action(m *ice.Message, cmd *ice.Command, code string, arg ...string) {
+	m.Set(ice.MSG_RESULT)
+	m.Echo("#/bin/bash\n")
 
-func init() {
-	Index.Merge(&ice.Context{Commands: map[string]*ice.Command{
-		"/run/": {Name: "/run/", Help: "执行", Action: ice.MergeAction(map[string]*ice.Action{
-			ctx.COMMAND: {Name: "command", Help: "命令", Hand: func(m *ice.Message, arg ...string) {
-				m.Search(arg[0], func(_ *ice.Context, s *ice.Context, key string, cmd *ice.Command) {
-					p := strings.ReplaceAll(kit.Select("/app/cat.sh", cmd.Meta["display"]), ".js", ".sh")
-					if strings.HasPrefix(p, ice.PS+ice.REQUIRE) {
-						m.Cmdy(web.SPIDE, ice.DEV, web.SPIDE_RAW, p)
-					} else {
-						m.Cmdy(nfs.CAT, path.Join(ice.USR_INTSHELL, p))
-					}
-					m.Debug(kit.Formats(cmd.Meta))
-					if m.Result() == "" || m.Result(1) == ice.ErrNotFound {
-						m.Set(ice.MSG_RESULT)
-						m.Echo("#/bin/bash\n")
-						list := []string{}
-						args := []string{}
-						kit.Fetch(cmd.Meta["_trans"], func(k string, v string) {
-							list = append(list, k)
-							args = append(args, kit.Format(`			%s)`, k))
-							kit.Fetch(cmd.Meta[k], func(index int, value map[string]interface{}) {
-								args = append(args, kit.Format(`				read -p "read %s: " v; url="$url/%s/$v" `, value[kit.MDB_NAME], value[kit.MDB_NAME]))
-							})
-							args = append(args, kit.Format(`				;;`))
-						})
-						list = append(list, "quit")
-						m.Echo(`
+	list := []string{}
+	args := []string{}
+	kit.Fetch(cmd.Meta["_trans"], func(k string, v string) {
+		list = append(list, k)
+		args = append(args, kit.Format(`			%s)`, k))
+		kit.Fetch(cmd.Meta[k], func(index int, value map[string]interface{}) {
+			args = append(args, kit.Format(`				read -p "input %s: " v; url="$url/%s/$v" `, value[kit.MDB_NAME], value[kit.MDB_NAME]))
+		})
+		args = append(args, kit.Format(`				;;`))
+	})
+
+	m.Echo(`
+ish_sys_dev_run_source() {
+	select action in %s; do
+		local url="run/action/run/%s/action/$action"
+		case $action in
+%s
+		esac
+		ish_sys_dev_source $url
+	done
+}
+`, kit.Join(list, ice.SP), arg[0], kit.Join(args, ice.NL))
+	m.Echo(`
 ish_sys_dev_run_action() {
 	select action in %s; do
-		if [ "$action" = "quit" ]; then break; fi
 		local url="run/action/run/%s/action/$action"
 		case $action in
 %s
@@ -52,9 +49,39 @@ ish_sys_dev_run_action() {
 	done
 }
 `, kit.Join(list, ice.SP), arg[0], kit.Join(args, ice.NL))
-						m.Echo("cat $1\n")
-						m.Debug("what %v", m.Result())
+
+	m.Echo(ice.NL)
+	m.Echo(`ish_sys_dev_run_command() {
+	ish_sys_dev_run %s "$@"
+}
+`, arg[0])
+	m.Echo(ice.NL)
+
+	if code == "" {
+		m.Echo("cat $1")
+	} else {
+		m.Echo(code)
+	}
+	m.Echo(ice.NL)
+	m.Debug(m.Result())
+}
+
+const RUN = "run"
+
+func init() {
+	Index.Merge(&ice.Context{Commands: map[string]*ice.Command{
+		"/run/": {Name: "/run/", Help: "执行", Action: ice.MergeAction(map[string]*ice.Action{
+			ctx.COMMAND: {Name: "command", Help: "命令", Hand: func(m *ice.Message, arg ...string) {
+				m.Search(arg[0], func(_ *ice.Context, s *ice.Context, key string, cmd *ice.Command) {
+					if p := strings.ReplaceAll(kit.Select("/app/cat.sh", cmd.Meta["display"]), ".js", ".sh"); strings.HasPrefix(p, ice.PS+ice.REQUIRE) {
+						m.Cmdy(web.SPIDE, ice.DEV, web.SPIDE_RAW, p)
+					} else {
+						m.Cmdy(nfs.CAT, path.Join(ice.USR_INTSHELL, p))
 					}
+					if m.Result() == "" || m.Result(1) == ice.ErrNotFound {
+						m.Set(ice.MSG_RESULT)
+					}
+					_run_action(m, cmd, m.Result(), arg...)
 				})
 			}},
 			ice.RUN: {Name: "run", Help: "执行", Hand: func(m *ice.Message, arg ...string) {
@@ -65,10 +92,6 @@ ish_sys_dev_run_action() {
 					m.Table()
 				}
 			}},
-		}, ctx.CmdAction()), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			if m.Right(arg) {
-				m.Cmdy(arg)
-			}
-		}}},
-	})
+		}, ctx.CmdAction())},
+	}})
 }

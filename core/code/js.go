@@ -76,6 +76,12 @@ func init() {
 					"throw",
 					"catch",
 					"finally",
+
+					"can",
+					"sub",
+					"msg",
+					"res",
+					"target",
 				),
 				FUNCTION, kit.Simple(
 					"window",
@@ -101,10 +107,6 @@ func init() {
 					"cb",
 					"cbs",
 					"shy",
-					"can",
-					"sub",
-					"msg",
-					"res",
 					"pane",
 					"plugin",
 				),

@@ -31,7 +31,7 @@ import (
 type {{.Option "name"}} struct {
 	ice.{{.Option "type"}}
 
-	list string {{.Option "tag"}}
+	list string {{.Option "tags"}}
 }
 
 func (h {{.Option "name"}}) List(m *ice.Message, arg ...string) {
@@ -163,7 +163,7 @@ func init() {
 				case "Data":
 					_defs(m, "list", m.Option(kit.MDB_NAME)+" path auto upload")
 				}
-				m.Option("tag", kit.Format("`name:\"%s\" help:\"%s\"`", m.Option("list"), m.Option("help")))
+				m.Option("tags", kit.Format("`name:\"%s\" help:\"%s\"`", m.Option("list"), m.Option("help")))
 
 				if p := path.Join(ice.SRC, m.Option(kit.MDB_ZONE), kit.Keys(m.Option(kit.MDB_NAME), GO)); !kit.FileExists(p) {
 					_autogen_module(m, p)

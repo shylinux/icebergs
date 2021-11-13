@@ -47,6 +47,9 @@ func init() {
 			m.Option(ice.MSG_USERNAME, msg.Append(GRANT))
 			m.Option(ice.MSG_USERROLE, aaa.UserRole(m, msg.Append(GRANT)))
 			m.Option(tcp.HOSTNAME, msg.Append(tcp.HOSTNAME))
+			if arg[0] == "/run/" {
+				return
+			}
 			m.Warn(m.Option(ice.MSG_USERNAME) == "", ice.ErrNotLogin, arg)
 		}},
 		"/qrcode": {Name: "/qrcode", Help: "二维码", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {

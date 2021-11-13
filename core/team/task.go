@@ -67,6 +67,7 @@ func init() {
 				m.Cmdy(mdb.INSERT, m.Prefix(TASK), "", mdb.ZONE, m.Option(kit.MDB_ZONE),
 					BEGIN_TIME, m.Time(), CLOSE_TIME, m.Time("30m"),
 					STATUS, PREPARE, LEVEL, 3, SCORE, 3, arg)
+				m.ProcessRefresh30ms()
 			}},
 			mdb.MODIFY: {Name: "modify", Help: "编辑", Hand: func(m *ice.Message, arg ...string) {
 				_task_modify(m, arg[0], arg[1])

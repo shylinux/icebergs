@@ -23,7 +23,7 @@ const SESS = "sess"
 func init() {
 	Index.Merge(&ice.Context{Configs: map[string]*ice.Config{
 		SESS: {Name: SESS, Help: "会话流", Value: kit.Data(
-			kit.MDB_FIELD, "time,hash,status,username,hostname,pid,pwd",
+			kit.MDB_FIELD, "time,hash,status,username,hostname,pid,pwd,grant",
 		)},
 	}, Commands: map[string]*ice.Command{
 		web.WEB_LOGIN: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
@@ -44,9 +44,10 @@ func init() {
 			}
 
 			msg := m.Cmd(SESS, m.Option(SID))
-			m.Option(aaa.USERNAME, msg.Append(aaa.USERNAME))
+			m.Option(ice.MSG_USERNAME, msg.Append(GRANT))
+			m.Option(ice.MSG_USERROLE, aaa.UserRole(m, msg.Append(GRANT)))
 			m.Option(tcp.HOSTNAME, msg.Append(tcp.HOSTNAME))
-			m.Warn(m.Option(aaa.USERNAME) == "", ice.ErrNotLogin, arg)
+			m.Warn(m.Option(ice.MSG_USERNAME) == "", ice.ErrNotLogin, arg)
 		}},
 		"/qrcode": {Name: "/qrcode", Help: "二维码", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			m.Cmdy(cli.QRCODE, m.Option(kit.MDB_TEXT), m.Option(cli.FG), m.Option(cli.BG))

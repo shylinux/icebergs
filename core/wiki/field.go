@@ -4,6 +4,7 @@ import (
 	"strings"
 
 	ice "shylinux.com/x/icebergs"
+	"shylinux.com/x/icebergs/base/ctx"
 	kit "shylinux.com/x/toolkits"
 )
 
@@ -97,11 +98,9 @@ const FIELD = "field"
 
 func init() {
 	Index.Merge(&ice.Context{Commands: map[string]*ice.Command{
-		FIELD: {Name: "field [name] cmd", Help: "插件", Action: map[string]*ice.Action{
-			ice.RUN: {Name: "run", Help: "执行", Hand: func(m *ice.Message, arg ...string) {
-				m.Cmdy(arg)
-			}},
-		}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		FIELD: {Name: "field [name] cmd", Help: "插件", Action: ice.MergeAction(map[string]*ice.Action{
+			ice.RUN: {Name: "run", Help: "执行"},
+		}, ctx.CmdAction()), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			if arg = _name(m, arg); strings.Contains(arg[1], ice.NL) {
 				arg = append([]string{arg[0], "web.chat.div", "auto.cmd", "split", "opts.text", arg[1]}, arg[2:]...)
 			}

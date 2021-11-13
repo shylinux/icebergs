@@ -48,7 +48,7 @@ const (
 const C = "c"
 
 func init() {
-	Index.Merge(&ice.Context{Name: C, Help: "系统", Commands: map[string]*ice.Command{
+	Index.Register(&ice.Context{Name: C, Help: "系统", Commands: map[string]*ice.Command{
 		ice.CTX_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			for _, cmd := range []string{mdb.PLUGIN, mdb.RENDER, mdb.ENGINE, mdb.SEARCH} {
 				for _, k := range []string{H, C, CC} {
@@ -164,5 +164,5 @@ func init() {
 				),
 			), KEYWORD, kit.Dict(),
 		))},
-	}})
+	}}, nil)
 }

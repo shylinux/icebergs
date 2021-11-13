@@ -12,7 +12,7 @@ import (
 const PYTHON = "python"
 
 func init() {
-	Index.Merge(&ice.Context{
+	Index.Register(&ice.Context{
 		Configs: map[string]*ice.Config{
 			PYTHON: {Name: PYTHON, Help: "脚本命令", Value: kit.Data(
 				cli.SOURCE, "http://mirrors.sohu.com/python/3.5.2/Python-3.5.2.tar.xz",
@@ -40,5 +40,5 @@ func init() {
 				m.Cmdy(INSTALL, path.Base(m.Conf(PYTHON, kit.META_SOURCE)), arg)
 			}},
 		},
-	})
+	}, nil)
 }

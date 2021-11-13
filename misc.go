@@ -226,9 +226,6 @@ func (c *Context) _cmd(m *Message, cmd *Command, key string, k string, h *Action
 		m.Cmdy(kit.Split(h.Name), arg)
 		return m
 	}
-	if k == RUN && !m.Right(arg) {
-		return m
-	}
 
 	m.Log(LOG_CMDS, "%s.%s %s %d %v %s", c.Name, key, k, len(arg), arg, kit.FileLine(h.Hand, 3))
 	if len(h.List) > 0 && k != "search" {
@@ -325,6 +322,15 @@ func Display(file string, arg ...string) map[string]string {
 		file = path.Join("/require", kit.ModPath(2, file))
 	}
 	return map[string]string{"display": file, kit.MDB_STYLE: kit.Join(arg, " ")}
+}
+func Display0(n int, file string, arg ...string) map[string]string {
+	if file == "" {
+		file = kit.FileName(n+1) + ".js"
+	}
+	if !strings.HasPrefix(file, "/") {
+		file = path.Join("/require", kit.ModPath(n+1, file))
+	}
+	return map[string]string{"display": file, kit.MDB_STYLE: kit.Join(arg, SP)}
 }
 func MergeAction(list ...interface{}) map[string]*Action {
 	if len(list) == 0 {

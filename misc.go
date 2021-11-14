@@ -181,6 +181,7 @@ func (m *Message) cmd(arg ...interface{}) *Message {
 		}
 
 		// 执行命令
+		key = kit.Slice(strings.Split(key, PT), -1)[0]
 		m.TryCatch(msg, true, func(msg *Message) { m = ctx.cmd(msg, cmd, key, arg...) })
 	}
 

@@ -48,6 +48,10 @@ func _cat_right(m *ice.Message, name string) bool {
 	return true
 }
 func _cat_find(m *ice.Message, name string) io.ReadCloser {
+	if m.Option(CAT_CONTENT) != "" {
+		return NewReadCloser(bytes.NewBufferString(m.Option(CAT_CONTENT)))
+	}
+
 	if f, e := os.Open(path.Join(m.Option(DIR_ROOT), name)); e == nil {
 		return f
 	}
@@ -118,7 +122,8 @@ const (
 	LINE = "line"
 	SIZE = "size"
 
-	CAT_LOCAL = "cat_local"
+	CAT_LOCAL   = "cat_local"
+	CAT_CONTENT = "cat_content"
 )
 const CAT = "cat"
 

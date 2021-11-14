@@ -77,8 +77,13 @@ func init() {
 				_task_modify(m, STATUS, CANCEL)
 			}},
 			mdb.EXPORT: {Name: "export", Help: "导出", Hand: func(m *ice.Message, arg ...string) {
-				m.OptionFields(kit.MDB_ZONE, "time,id,type,name,text,level,status,score,begin_time,close_time,extra")
+				m.OptionFields(kit.MDB_ZONE, "time,id,type,name,text,level,status,score,begin_time,close_time")
 				m.Cmdy(mdb.EXPORT, m.Prefix(TASK), "", mdb.ZONE)
+				m.ProcessRefresh30ms()
+			}},
+			mdb.IMPORT: {Name: "import", Help: "导入", Hand: func(m *ice.Message, arg ...string) {
+				m.OptionFields(kit.MDB_ZONE)
+				m.Cmdy(mdb.IMPORT, m.Prefix(TASK), "", mdb.ZONE)
 				m.ProcessRefresh30ms()
 			}},
 

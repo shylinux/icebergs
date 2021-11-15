@@ -40,7 +40,7 @@ func _pack_dir(m *ice.Message, pack *os.File, dir string) {
 	m.Option(nfs.DIR_TYPE, nfs.CAT)
 	m.Option(nfs.DIR_ROOT, dir)
 
-	m.Cmd(nfs.DIR, "./").Table(func(index int, value map[string]string, head []string) {
+	m.Cmd(nfs.DIR, "./").Sort(kit.MDB_PATH).Table(func(index int, value map[string]string, head []string) {
 		if path.Base(value[kit.MDB_PATH]) == "binpack.go" {
 			return
 		}
@@ -64,7 +64,7 @@ func _pack_volcanos(m *ice.Message, pack *os.File, dir string) {
 		pack.WriteString(fmt.Sprintf("        \"/%s\": %s,\n", k, _pack_file(m, path.Join(dir, k))))
 	}
 	for _, k := range []string{"lib", "page", "panel", "plugin"} {
-		m.Cmd(nfs.DIR, k).Table(func(index int, value map[string]string, head []string) {
+		m.Cmd(nfs.DIR, k).Sort(kit.MDB_PATH).Table(func(index int, value map[string]string, head []string) {
 			pack.WriteString(fmt.Sprintf("        \"/%s\": %s,\n",
 				value[kit.MDB_PATH], _pack_file(m, path.Join(dir, value[kit.MDB_PATH]))))
 		})
@@ -74,7 +74,6 @@ func _pack_volcanos(m *ice.Message, pack *os.File, dir string) {
 func _pack_ctx(m *ice.Message, pack *os.File) {
 	_pack_dir(m, pack, ice.SRC_HELP)
 	_pack_dir(m, pack, ice.SRC)
-	_pack_write(pack)
 }
 
 const BINPACK = "binpack"

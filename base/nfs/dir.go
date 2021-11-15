@@ -30,6 +30,13 @@ func _dir_list(m *ice.Message, root string, name string, level int, deep bool, d
 		}
 		name = path.Dir(name)
 	}
+	for i := 0; i < len(fs)-1; i++ {
+		for j := i + 1; j < len(fs); j++ {
+			if fs[i].Name() > fs[j].Name() {
+				fs[i], fs[j] = fs[j], fs[i]
+			}
+		}
+	}
 
 	for _, f := range fs {
 		if f.Name() == ice.PT || f.Name() == ".." {

@@ -86,6 +86,8 @@ func init() {
 	}, Commands: map[string]*ice.Command{
 		web.WEB_LOGIN: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			switch arg[0] {
+			case "/pod/":
+				return // 免登录
 			case "/header":
 				switch kit.Select("", arg, 1) {
 				case AGENT, CHECK, aaa.LOGIN:

@@ -118,7 +118,7 @@ func Run(arg ...string) string {
 		if Pulse.Cmdy(arg); Pulse.Result() == "" {
 			Pulse.Table()
 		}
-		Pulse.Sleep("10ms")
+		Pulse.Sleep30ms()
 	}
 
 	return Pulse.Result()

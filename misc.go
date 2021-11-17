@@ -78,6 +78,10 @@ func (m *Message) Split(str string, field string, sp string, nl string) *Message
 	return m
 }
 
+func (m *Message) Display(plugin string) *Message {
+	m.Option(MSG_DISPLAY, Display0(2, plugin)["display"])
+	return m
+}
 func (m *Message) FieldsIsDetail() bool {
 	if m.OptionFields() == "detail" {
 		return true

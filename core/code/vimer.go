@@ -20,6 +20,11 @@ func init() {
 			nfs.SAVE: {Name: "save type file path", Help: "保存", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmdy(nfs.SAVE, path.Join(m.Option(kit.MDB_PATH), m.Option(kit.MDB_FILE)))
 			}},
+			ice.RUN: {Name: "run", Help: "运行", Hand: func(m *ice.Message, arg ...string) {
+				m.Cmdy(cli.SYSTEM, GO, ice.RUN, path.Join(kit.Slice(arg, 0, 2)...))
+				m.Set(ice.MSG_APPEND)
+				m.ProcessInner()
+			}},
 			mdb.ENGINE: {Name: "engine", Help: "运行", Hand: func(m *ice.Message, arg ...string) {
 				if m.Cmdy(mdb.ENGINE, arg); len(m.Resultv()) > 0 || m.Length() > 0 {
 					return

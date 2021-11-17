@@ -25,7 +25,19 @@ func init() {
 			),
 		)},
 	}, Commands: map[string]*ice.Command{
-		TOTAL: {Name: "total name auto", Help: "统计量", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		TOTAL: {Name: "total name auto pie", Help: "统计量", Action: map[string]*ice.Action{
+			"pie": {Name: "pie", Help: "饼图", Hand: func(m *ice.Message, arg ...string) {
+				m.Cmd(TOTAL).Table(func(index int, value map[string]string, head []string) {
+					if value["name"] == "total" {
+						return
+					}
+					m.Push("name", value["name"])
+					m.Push("value", value["rest"])
+				})
+				m.Display("/plugin/story/pie.js")
+				m.StatusTimeCount("name", "total", "value", "1")
+			}},
+		}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			if len(arg) > 0 { // 提交详情
 				m.Cmd(REPOS, ice.OptionFields("name,path")).Table(func(index int, value map[string]string, head []string) {
 					if value[kit.MDB_NAME] == arg[0] {

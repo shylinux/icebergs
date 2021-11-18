@@ -80,9 +80,9 @@ func (c *Context) Server() Server {
 	return c.server
 }
 
-func (c *Context) Register(s *Context, x Server, name ...string) *Context {
-	for _, n := range name {
-		Name(n, s)
+func (c *Context) Register(s *Context, x Server, n ...string) *Context {
+	for _, n := range n {
+		name(n, s)
 	}
 
 	if c.contexts == nil {

@@ -14,14 +14,14 @@ import (
 )
 
 var _trans_web = map[string]color.Color{
-	BLACK:   color.RGBA{0, 0, 0, DARK},
-	RED:     color.RGBA{DARK, 0, 0, DARK},
-	GREEN:   color.RGBA{0, DARK, 0, DARK},
-	YELLOW:  color.RGBA{DARK, DARK, 0, DARK},
-	BLUE:    color.RGBA{0, 0, DARK, DARK},
-	MAGENTA: color.RGBA{DARK, 0, DARK, DARK},
-	CYAN:    color.RGBA{0, DARK, DARK, DARK},
-	WHITE:   color.RGBA{DARK, DARK, DARK, DARK},
+	BLACK:  color.RGBA{0, 0, 0, DARK},
+	RED:    color.RGBA{DARK, 0, 0, DARK},
+	GREEN:  color.RGBA{0, DARK, 0, DARK},
+	YELLOW: color.RGBA{DARK, DARK, 0, DARK},
+	BLUE:   color.RGBA{0, 0, DARK, DARK},
+	PURPLE: color.RGBA{DARK, 0, DARK, DARK},
+	CYAN:   color.RGBA{0, DARK, DARK, DARK},
+	WHITE:  color.RGBA{DARK, DARK, DARK, DARK},
 }
 
 func _parse_color(str string) color.Color {
@@ -112,15 +112,15 @@ const (
 	LIGHT = 127
 )
 const (
-	BLACK   = "black"
-	RED     = "red"
-	GREEN   = "green"
-	YELLOW  = "yellow"
-	BLUE    = "blue"
-	MAGENTA = "magenta"
-	CYAN    = "cyan"
-	WHITE   = "white"
-	RANDOM  = "random"
+	BLACK  = "black"
+	RED    = "red"
+	GREEN  = "green"
+	YELLOW = "yellow"
+	BLUE   = "blue"
+	PURPLE = "purple"
+	CYAN   = "cyan"
+	WHITE  = "white"
+	RANDOM = "random"
 )
 const QRCODE = "qrcode"
 

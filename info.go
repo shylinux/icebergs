@@ -59,7 +59,7 @@ func Dump(w io.Writer, name string, cb func(string)) bool {
 	}
 	return false
 }
-func Name(name string, value interface{}) string {
+func name(name string, value interface{}) string {
 	if s, ok := Info.names[name]; ok {
 		last := ""
 		switch s := s.(type) {

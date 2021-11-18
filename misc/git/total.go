@@ -27,15 +27,15 @@ func init() {
 	}, Commands: map[string]*ice.Command{
 		TOTAL: {Name: "total name auto pie", Help: "统计量", Action: map[string]*ice.Action{
 			"pie": {Name: "pie", Help: "饼图", Hand: func(m *ice.Message, arg ...string) {
+				defer m.Display("/plugin/story/pie.js")
 				m.Cmd(TOTAL).Table(func(index int, value map[string]string, head []string) {
 					if value["name"] == "total" {
+						m.StatusTimeCount("name", "total", "value", "1", "total", value["rest"])
 						return
 					}
 					m.Push("name", value["name"])
 					m.Push("value", value["rest"])
 				})
-				m.Display("/plugin/story/pie.js")
-				m.StatusTimeCount("name", "total", "value", "1")
 			}},
 		}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			if len(arg) > 0 { // 提交详情

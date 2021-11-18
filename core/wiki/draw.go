@@ -12,11 +12,9 @@ const DRAW = "draw"
 
 func init() {
 	Index.Merge(&ice.Context{Configs: map[string]*ice.Config{
-		DRAW: {Name: DRAW, Help: "思维导图", Value: kit.Data(
-			kit.MDB_PATH, "", kit.MDB_REGEXP, ".*\\.svg",
-		)},
+		DRAW: {Name: DRAW, Help: "思维导图", Value: kit.Data(kit.MDB_REGEXP, ".*\\.svg")},
 	}, Commands: map[string]*ice.Command{
-		DRAW: {Name: "draw path=src/main.svg refresh:button=auto 编辑 save 项目 参数", Help: "思维导图", Meta: kit.Dict(
+		DRAW: {Name: "draw path=src/main.svg refresh:button=auto edit save project actions", Help: "思维导图", Meta: kit.Dict(
 			ice.Display("/plugin/local/wiki/draw.js"),
 		), Action: map[string]*ice.Action{
 			nfs.SAVE: {Name: "save path", Help: "保存", Hand: func(m *ice.Message, arg ...string) {

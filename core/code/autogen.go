@@ -185,7 +185,7 @@ func init() {
 			}},
 		}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			if m.Option(nfs.DIR_ROOT, ice.SRC); len(arg) == 0 || strings.HasSuffix(arg[0], ice.PS) {
-				m.Cmdy(nfs.DIR, kit.Select("./", arg, 0))
+				m.Cmdy(nfs.DIR, kit.Select(ice.PWD, arg, 0))
 			} else {
 				m.Cmdy(nfs.CAT, arg[0])
 			}

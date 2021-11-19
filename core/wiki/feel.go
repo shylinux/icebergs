@@ -28,7 +28,7 @@ func init() {
 				os.Remove(strings.TrimPrefix(arg[0], "/share/local/"))
 			}},
 		}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			_wiki_list(m, m.CommandKey(), kit.Select("./", arg, 0))
+			_wiki_list(m, m.CommandKey(), kit.Select(ice.PWD, arg, 0))
 		}},
 	}})
 }

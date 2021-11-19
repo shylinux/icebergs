@@ -320,13 +320,16 @@ func (c *Context) split(name string) (list []interface{}) {
 }
 
 func Display(file string, arg ...string) map[string]string {
+	return Display0(2, file, arg...)
+}
+func DisplayLocal(file string, arg ...string) map[string]string {
 	if file == "" {
-		file = kit.FileName(2) + ".js"
+		file = path.Join(kit.PathName(2), kit.FileName(2)+".js")
 	}
 	if !strings.HasPrefix(file, "/") {
-		file = path.Join("/require", kit.ModPath(2, file))
+		file = path.Join("/plugin/local", file)
 	}
-	return map[string]string{"display": file, kit.MDB_STYLE: kit.Join(arg, " ")}
+	return Display0(2, file, arg...)
 }
 func Display0(n int, file string, arg ...string) map[string]string {
 	if file == "" {

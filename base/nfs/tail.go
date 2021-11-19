@@ -53,7 +53,7 @@ func init() {
 			mdb.INPUTS: {Name: "inputs", Help: "补全", Hand: func(m *ice.Message, arg ...string) {
 				switch arg[0] {
 				case FILE:
-					m.Cmdy(DIR, kit.Select("./", arg, 1), PATH).RenameAppend(PATH, FILE)
+					m.Cmdy(DIR, kit.Select(ice.PWD, arg, 1), PATH).RenameAppend(PATH, FILE)
 					m.ProcessAgain()
 				case kit.MDB_NAME:
 					m.Push(arg[0], kit.Split(m.Option(FILE), ice.PS))

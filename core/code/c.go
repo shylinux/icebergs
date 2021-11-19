@@ -13,7 +13,7 @@ import (
 
 func _c_tags(m *ice.Message, key string) {
 	if _, e := os.Stat(path.Join(m.Option(cli.CMD_DIR), _TAGS)); e != nil {
-		m.Cmd(cli.SYSTEM, "ctags", "-R", "-f", _TAGS, "./")
+		m.Cmd(cli.SYSTEM, "ctags", "-R", "-f", _TAGS, ice.PWD)
 	}
 	_go_tags(m, key)
 }
@@ -71,7 +71,7 @@ func init() {
 					m.Copy(msg)
 					return
 				}
-				m.Cmdy(cli.SYSTEM, "./"+name)
+				m.Cmdy(cli.SYSTEM, ice.PWD+name)
 			}},
 			mdb.SEARCH: {Hand: func(m *ice.Message, arg ...string) {
 				if arg[0] == kit.MDB_FOREACH {

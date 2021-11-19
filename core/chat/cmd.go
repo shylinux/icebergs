@@ -17,7 +17,7 @@ const CMD = "cmd"
 func init() {
 	Index.Merge(&ice.Context{Configs: map[string]*ice.Config{
 		CMD: {Name: CMD, Help: "命令", Value: kit.Data(
-			kit.MDB_SHORT, "type", kit.MDB_PATH, "./",
+			kit.MDB_SHORT, "type", kit.MDB_PATH, ice.PWD,
 		)},
 	}, Commands: map[string]*ice.Command{
 		"/cmd/": {Name: "/cmd/", Help: "命令", Action: ice.MergeAction(map[string]*ice.Action{
@@ -65,7 +65,7 @@ func init() {
 				} else if strings.HasSuffix(m.R.URL.Path, ice.PS) {
 					m.ProcessLocation("../")
 				} else {
-					m.ProcessLocation("./")
+					m.ProcessLocation(ice.PWD)
 				}
 			}},
 		}, mdb.HashAction()), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {

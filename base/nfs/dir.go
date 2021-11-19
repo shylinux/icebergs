@@ -151,7 +151,7 @@ func _dir_list(m *ice.Message, root string, name string, level int, deep bool, d
 	return m
 }
 func _dir_search(m *ice.Message, kind, name string) {
-	msg := _dir_list(m.Spawn(), "./", "", 0, true, TYPE_BOTH, nil, kit.Split("time,type,name"))
+	msg := _dir_list(m.Spawn(), ice.PWD, "", 0, true, TYPE_BOTH, nil, kit.Split("time,type,name"))
 	msg.Table(func(index int, value map[string]string, head []string) {
 		if !strings.Contains(value[kit.MDB_NAME], name) {
 			return
@@ -167,10 +167,10 @@ func _dir_search(m *ice.Message, kind, name string) {
 
 func Dir(m *ice.Message, sort string) *ice.Message {
 	m.Option(DIR_TYPE, TYPE_DIR)
-	m.Copy(m.Cmd(DIR, "./").Sort(sort))
+	m.Copy(m.Cmd(DIR, ice.PWD).Sort(sort))
 
 	m.Option(DIR_TYPE, TYPE_CAT)
-	m.Copy(m.Cmd(DIR, "./").Sort(sort))
+	m.Copy(m.Cmd(DIR, ice.PWD).Sort(sort))
 	return m
 }
 
@@ -217,7 +217,7 @@ func init() {
 			if m.Option(DIR_ROOT) != "" {
 				m.Info("dir_root: %v", m.Option(DIR_ROOT))
 			}
-			_dir_list(m, kit.Select("./", m.Option(DIR_ROOT)), kit.Select("./", arg, 0),
+			_dir_list(m, kit.Select(ice.PWD, m.Option(DIR_ROOT)), kit.Select(ice.PWD, arg, 0),
 				0, m.Option(DIR_DEEP) == ice.TRUE, kit.Select(TYPE_BOTH, m.Option(DIR_TYPE)), kit.Regexp(m.Option(DIR_REG)),
 				kit.Split(kit.Select(kit.Select("time,path,size,action", m.OptionFields()), kit.Join(kit.Slice(arg, 1)))))
 			m.SortTimeR(kit.MDB_TIME)

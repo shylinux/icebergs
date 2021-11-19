@@ -15,7 +15,7 @@ import (
 
 func _go_tags(m *ice.Message, key string) {
 	if s, e := os.Stat(path.Join(m.Option(cli.CMD_DIR), _TAGS)); os.IsNotExist(e) || s.ModTime().Before(time.Now().Add(kit.Duration("-72h"))) {
-		m.Cmd(cli.SYSTEM, "gotags", "-R", "-f", _TAGS, "./")
+		m.Cmd(cli.SYSTEM, "gotags", "-R", "-f", _TAGS, ice.PWD)
 	}
 
 	ls := strings.Split(key, ice.PT)
@@ -40,7 +40,7 @@ func _go_tags(m *ice.Message, key string) {
 		bio := bufio.NewScanner(f)
 		for i := 1; bio.Scan(); i++ {
 			if i == line || bio.Text() == text {
-				m.PushSearch(ice.CMD, "tags", kit.MDB_FILE, strings.TrimPrefix(file, "./"), kit.MDB_LINE, kit.Format(i), kit.MDB_TEXT, bio.Text())
+				m.PushSearch(ice.CMD, "tags", kit.MDB_FILE, strings.TrimPrefix(file, ice.PWD), kit.MDB_LINE, kit.Format(i), kit.MDB_TEXT, bio.Text())
 			}
 		}
 	}
@@ -57,7 +57,7 @@ func _go_find(m *ice.Message, key string) {
 		if p == "" {
 			continue
 		}
-		m.PushSearch(ice.CMD, FIND, kit.MDB_FILE, strings.TrimPrefix(p, "./"), kit.MDB_LINE, 1, kit.MDB_TEXT, "")
+		m.PushSearch(ice.CMD, FIND, kit.MDB_FILE, strings.TrimPrefix(p, ice.PWD), kit.MDB_LINE, 1, kit.MDB_TEXT, "")
 	}
 }
 func _go_grep(m *ice.Message, key string) {
@@ -103,9 +103,9 @@ func init() {
 			mdb.ENGINE: {Hand: func(m *ice.Message, arg ...string) {
 				m.Option(cli.CMD_DIR, arg[2])
 				if strings.HasSuffix(arg[1], "test.go") {
-					m.Cmdy(cli.SYSTEM, GO, "test", "-v", "./"+arg[1])
+					m.Cmdy(cli.SYSTEM, GO, "test", "-v", ice.PWD+arg[1])
 				} else {
-					m.Cmdy(cli.SYSTEM, GO, "run", "./"+arg[1])
+					m.Cmdy(cli.SYSTEM, GO, "run", ice.PWD+arg[1])
 				}
 				m.Set(ice.MSG_APPEND)
 			}},

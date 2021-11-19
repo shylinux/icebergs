@@ -70,7 +70,7 @@ func init() {
 				m.Echo(`</div>`)
 			}},
 		}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			if !_wiki_list(m, JSON, kit.Select("./", arg, 0)) {
+			if !_wiki_list(m, JSON, kit.Select(ice.PWD, arg, 0)) {
 				m.Cmdy(nfs.CAT, arg[0])
 			}
 		}},

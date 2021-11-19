@@ -85,6 +85,10 @@ func init() {
 				if pod := msg.Append(kit.KeyExtra(ice.POD)); pod != "" {
 					m.Option(ice.POD, pod)
 				}
+				m.Debug(msg.FormatMeta())
+				m.Debug("what %v", kit.KeyExtra(ice.CTX))
+				m.Debug("what %v", msg.Append(kit.KeyExtra(ice.CTX)))
+				m.Debug("what %v", msg.Append(kit.KeyExtra(ice.CMD)))
 				args := kit.Simple(kit.Keys(msg.Append(kit.KeyExtra(ice.CTX)), msg.Append(kit.KeyExtra(ice.CMD))), arg[2:])
 				if !m.PodCmd(args) {
 					m.Cmdy(args)

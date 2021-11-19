@@ -53,7 +53,7 @@ func _publish_list(m *ice.Message, arg ...string) {
 	m.Option(nfs.DIR_DEEP, ice.TRUE)
 	m.Option(nfs.DIR_REG, kit.Select("", arg, 0))
 	m.Option(nfs.DIR_ROOT, m.Config(kit.MDB_PATH))
-	m.Cmdy(nfs.DIR, "./", kit.Select("time,size,line,path,link", arg, 1))
+	m.Cmdy(nfs.DIR, ice.PWD, kit.Select("time,size,line,path,link", arg, 1))
 }
 
 const PUBLISH = "publish"

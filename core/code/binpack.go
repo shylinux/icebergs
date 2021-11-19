@@ -40,7 +40,7 @@ func _pack_dir(m *ice.Message, pack *os.File, dir string) {
 	m.Option(nfs.DIR_TYPE, nfs.CAT)
 	m.Option(nfs.DIR_ROOT, dir)
 
-	m.Cmd(nfs.DIR, "./").Sort(kit.MDB_PATH).Table(func(index int, value map[string]string, head []string) {
+	m.Cmd(nfs.DIR, ice.PWD).Sort(kit.MDB_PATH).Table(func(index int, value map[string]string, head []string) {
 		if path.Base(value[kit.MDB_PATH]) == "binpack.go" {
 			return
 		}

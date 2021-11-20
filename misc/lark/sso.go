@@ -42,7 +42,7 @@ func init() {
 				home = kit.MergeURL(home, kit.MDB_BACK, back)
 			}
 			// 登录页面
-			m.RenderRedirect(kit.MergeURL2(m.Conf(APP, kit.Keym(LARK)), "/open-apis/authen/v1/index"),
+			m.RenderRedirect(kit.MergeURL2(m.Cmd(web.SPIDE, LARK).Append("client.url"), "/open-apis/authen/v1/index"),
 				"redirect_uri", home, APP_ID, m.Cmd(APP).Append(APPID))
 		}},
 	}})

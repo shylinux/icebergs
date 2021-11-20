@@ -146,11 +146,10 @@ func (m *Message) PushAction(list ...interface{}) {
 	})
 }
 func (m *Message) PushPodCmd(cmd string, arg ...string) {
-	if strings.Contains(m.OptionFields(), POD) {
-		m.Table(func(index int, value map[string]string, head []string) {
-			m.Push(POD, m.Option(MSG_USERPOD))
-		})
-	}
+	m.Table(func(index int, value map[string]string, head []string) {
+		m.Push(POD, m.Option(MSG_USERPOD))
+	})
+	m.Debug(m.FormatMeta())
 
 	m.Cmd("space").Table(func(index int, value map[string]string, head []string) {
 		switch value[kit.MDB_TYPE] {
@@ -162,6 +161,7 @@ func (m *Message) PushPodCmd(cmd string, arg ...string) {
 				val[POD] = kit.Keys(value[kit.MDB_NAME], val[POD])
 				m.Push("", val, head)
 			})
+			m.Debug(m.FormatMeta())
 		}
 	})
 }

@@ -213,6 +213,9 @@ func init() {
 			TRASH: {Name: "trash", Help: "删除", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmdy(TRASH, m.Option(kit.MDB_PATH))
 			}},
+			mdb.REMOVE: {Name: "remove", Help: "删除", Hand: func(m *ice.Message, arg ...string) {
+				os.Remove(m.Option(kit.MDB_PATH))
+			}},
 		}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			if m.Option(DIR_ROOT) != "" {
 				m.Info("dir_root: %v", m.Option(DIR_ROOT))

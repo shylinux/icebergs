@@ -41,7 +41,7 @@ func _plan_scope(m *ice.Message, tz int, arg ...string) (time.Time, time.Time) {
 }
 func _plan_list(m *ice.Message, begin_time, end_time time.Time) *ice.Message {
 	m.Option(ice.CACHE_LIMIT, "100")
-	m.Fields(0, "begin_time,close_time,zone,id,level,status,score,type,name,text,extra")
+	m.Fields(0, "begin_time,close_time,zone,id,level,status,score,type,name,text,pod,extra")
 	m.Option(kit.Keycb(mdb.SELECT), func(key string, fields []string, value, val map[string]interface{}) {
 		begin, _ := time.ParseInLocation(ice.MOD_TIME, kit.Format(value[BEGIN_TIME]), time.Local)
 		if begin_time.After(begin) || begin.After(end_time) {
@@ -86,9 +86,6 @@ func init() {
 					m.Option(ice.POD, pod)
 				}
 				m.Debug(msg.FormatMeta())
-				m.Debug("what %v", kit.KeyExtra(ice.CTX))
-				m.Debug("what %v", msg.Append(kit.KeyExtra(ice.CTX)))
-				m.Debug("what %v", msg.Append(kit.KeyExtra(ice.CMD)))
 				args := kit.Simple(kit.Keys(msg.Append(kit.KeyExtra(ice.CTX)), msg.Append(kit.KeyExtra(ice.CMD))), arg[2:])
 				if !m.PodCmd(args) {
 					m.Cmdy(args)

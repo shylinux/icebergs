@@ -78,8 +78,18 @@ func (m *Message) Split(str string, field string, sp string, nl string) *Message
 	return m
 }
 
-func (m *Message) Display(plugin string) *Message {
-	m.Option(MSG_DISPLAY, Display0(2, plugin)["display"])
+func (m *Message) Display(file string) *Message {
+	m.Option(MSG_DISPLAY, Display0(2, file)["display"])
+	return m
+}
+func (m *Message) DisplayLocal(file string) *Message {
+	if file == "" {
+		file = path.Join(kit.PathName(2), kit.FileName(2)+".js")
+	}
+	if !strings.HasPrefix(file, "/") {
+		file = path.Join("/plugin/local", file)
+	}
+	m.Option(MSG_DISPLAY, Display0(2, file)["display"])
 	return m
 }
 func (m *Message) FieldsIsDetail() bool {

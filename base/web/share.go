@@ -28,7 +28,7 @@ func _share_repos(m *ice.Message, repos string, arg ...string) {
 	}
 	m.RenderDownload(path.Join(prefix, repos, path.Join(arg...)))
 }
-func _share_proxy(m *ice.Message, arg ...string) {
+func _share_proxy(m *ice.Message) {
 	switch p := path.Join(ice.VAR_PROXY, m.Option(ice.POD), m.Option(kit.MDB_PATH)); m.R.Method {
 	case http.MethodGet: // 下发文件
 		m.RenderDownload(path.Join(p, m.Option(kit.MDB_NAME)))
@@ -75,7 +75,7 @@ func _share_local(m *ice.Message, arg ...string) {
 		}
 
 		// 上传文件
-		m.Cmdy(SPACE, m.Option(ice.POD), SPIDE, ice.DEV, SPIDE_RAW, kit.MergeURL2(m.Option(ice.MSG_USERWEB), "/share/proxy/"),
+		m.Cmdy(SPACE, m.Option(ice.POD), SPIDE, ice.DEV, SPIDE_RAW, kit.MergeURL2(m.Option(ice.MSG_USERWEB), "/share/proxy"),
 			SPIDE_PART, m.OptionSimple(ice.POD), kit.MDB_PATH, p, CACHE, cache.Format(ice.MOD_TIME), UPLOAD, "@"+p)
 
 		if s, e := os.Stat(pp); e == nil && !s.IsDir() {
@@ -134,7 +134,9 @@ func init() {
 			}},
 		}, mdb.HashAction()), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			if m.PodCmd(SHARE, arg) {
-				return
+				if m.Length() > 0 {
+					return
+				}
 			}
 			if mdb.HashSelect(m, arg...); len(arg) > 0 {
 				link := _share_link(m, "/share/"+arg[0])
@@ -159,8 +161,8 @@ func init() {
 		"/share/repos/": {Name: "/share/repos/", Help: "代码库", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			_share_repos(m, path.Join(arg[0], arg[1], arg[2]), arg[3:]...)
 		}},
-		"/share/proxy/": {Name: "/share/proxy/", Help: "文件流", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			_share_proxy(m, arg...)
+		"/share/proxy": {Name: "/share/proxy", Help: "文件流", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			_share_proxy(m)
 		}},
 		"/share/cache/": {Name: "/share/cache/", Help: "缓存池", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			_share_cache(m, arg...)

@@ -210,6 +210,8 @@ func _serve_login(msg *ice.Message, key string, cmds []string, w http.ResponseWr
 		if msg.Option(ice.MSG_USERNAME) == "" && msg.Option(SHARE) != "" {
 			switch share := msg.Cmd(SHARE, msg.Option(SHARE)); share.Append(kit.MDB_TYPE) {
 			case LOGIN:
+				msg.Option(ice.MSG_USERNAME, share.Append(aaa.USERNAME))
+				msg.Option(ice.MSG_USERROLE, share.Append(aaa.USERROLE))
 				// Render(msg, aaa.SessCreate(msg, share.Append(aaa.USERNAME)))
 			case FIELD:
 				msg.Option(ice.MSG_USERNAME, share.Append(aaa.USERNAME))

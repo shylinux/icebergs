@@ -92,7 +92,6 @@ func _cache_download(m *ice.Message, r *http.Response) (file, size string) {
 				f.Write(buf[0:n])
 				s := size * 100 / total
 
-				m.Debug("what %v", kit.FileLine(m.OptionCB(SPIDE), 3))
 				switch cb := m.OptionCB(SPIDE).(type) {
 				case func(int, int):
 					cb(size, total)
@@ -103,6 +102,9 @@ func _cache_download(m *ice.Message, r *http.Response) (file, size string) {
 					})
 				default:
 					if s != step && s%10 == 0 {
+						m.Debug("what %v", m.OptionCB(SPIDE))
+						m.Debug("what %v", m.OptionCB(SPIDE))
+						m.Debug("what %v", kit.FileLine(m.OptionCB(SPIDE), 3))
 						m.Log_IMPORT(kit.MDB_FILE, p, kit.MDB_STEP, s,
 							kit.MDB_SIZE, kit.FmtSize(int64(size)), kit.MDB_TOTAL, kit.FmtSize(int64(total)))
 					}

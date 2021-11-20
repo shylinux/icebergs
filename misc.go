@@ -103,7 +103,7 @@ func (m *Message) FieldsIsDetail() bool {
 }
 func (m *Message) OptionCB(key string, cb ...interface{}) interface{} {
 	if len(cb) > 0 {
-		return m.Optionv(kit.Keycb(key), cb)
+		return m.Optionv(kit.Keycb(key), cb...)
 	}
 	return m.Optionv(kit.Keycb(key))
 }

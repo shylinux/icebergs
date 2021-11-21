@@ -78,8 +78,8 @@ func (m *Message) Split(str string, field string, sp string, nl string) *Message
 	return m
 }
 
-func (m *Message) Display(file string) *Message {
-	m.Option(MSG_DISPLAY, Display0(2, file)["display"])
+func (m *Message) Display(file string, arg ...interface{}) *Message {
+	m.Option(MSG_DISPLAY, kit.MergeURL(Display0(2, file)["display"], arg...))
 	return m
 }
 func (m *Message) DisplayLocal(file string) *Message {

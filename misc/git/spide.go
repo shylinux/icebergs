@@ -87,6 +87,9 @@ func init() {
 				})
 				return
 			}
+			if !strings.HasSuffix(arg[1], arg[2]) {
+				return
+			}
 
 			// 语法解析
 			switch m.Option(cli.CMD_DIR, m.Option(nfs.DIR_ROOT)); kit.Ext(arg[1]) {

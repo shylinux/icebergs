@@ -1,6 +1,8 @@
 package ctx
 
 import (
+	"strings"
+
 	ice "shylinux.com/x/icebergs"
 	kit "shylinux.com/x/toolkits"
 )
@@ -18,7 +20,23 @@ const CONTEXT = "context"
 
 func init() {
 	Index.Merge(&ice.Context{Commands: map[string]*ice.Command{
-		CONTEXT: {Name: "context name=web.chat action=context,command,config key auto", Help: "模块", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		CONTEXT: {Name: "context name=web.chat action=context,command,config key auto spide", Help: "模块", Action: ice.MergeAction(map[string]*ice.Action{
+			"spide": {Name: "spide", Help: "架构图", Hand: func(m *ice.Message, arg ...string) {
+				if len(arg) == 0 || arg[1] == CONTEXT { // 模块列表
+					m.Cmdy(CONTEXT, kit.Select("ice", arg, 0), CONTEXT)
+					m.Display("/plugin/story/spide.js", "root", kit.Select("ice", arg, 0),
+						"field", "name", "split", ".", "prefix", SPIDE)
+					return
+				}
+				if index := kit.Keys(arg[1]); strings.HasSuffix(index, arg[2]) { // 命令列表
+					m.Cmdy(CONTEXT, index, COMMAND).Table(func(i int, value map[string]string, head []string) {
+						m.Push("file", index)
+					})
+				} else { // 命令详情
+					m.Cmdy(COMMAND, kit.Keys(index, strings.Split(arg[2], " ")[0]))
+				}
+			}},
+		}, CmdAction()), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			m.Search(kit.Select(ice.ICE, arg, 0)+ice.PT, func(p *ice.Context, s *ice.Context, key string) {
 				msg := m.Spawn(s)
 				defer m.Copy(msg)

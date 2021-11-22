@@ -133,7 +133,7 @@ func _status_list(m *ice.Message) (files, adds, dels int, last time.Time) {
 			}
 			vs := strings.SplitN(strings.TrimSpace(v), ice.SP, 2)
 			switch kit.Ext(vs[1]) {
-			case "swp", "swo", "bin":
+			case "swp", "swo", "bin", "var":
 				continue
 			}
 

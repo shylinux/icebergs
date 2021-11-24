@@ -158,6 +158,10 @@ func init() {
 			m.RenderIndex(SERVE, ice.VOLCANOS)
 		}},
 
+		"/share/toast/": {Name: "/share/toast/", Help: "推送流", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			m.Cmdy(SPACE, m.Option("pod"), m.Optionv("cmds"))
+
+		}},
 		"/share/repos/": {Name: "/share/repos/", Help: "代码库", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			_share_repos(m, path.Join(arg[0], arg[1], arg[2]), arg[3:]...)
 		}},

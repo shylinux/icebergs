@@ -18,7 +18,8 @@ func Render(m *Message, cmd string, args ...interface{}) string {
 
 	switch arg := kit.Simple(args...); cmd {
 	case RENDER_ANCHOR: // [name] link
-		return kit.Format(`<a href="%s" target="_blank">%s</a>`, kit.Select(arg[0], arg, 1), arg[0])
+		p := kit.MergeURL2(m.Option(MSG_USERWEB), kit.Select(arg[0], arg, 1))
+		return kit.Format(`<a href="%s" target="_blank">%s</a>`, p, arg[0])
 
 	case RENDER_BUTTON: // name...
 		if m._cmd == nil || m._cmd.Meta == nil {
@@ -146,10 +147,11 @@ func (m *Message) PushAction(list ...interface{}) {
 	})
 }
 func (m *Message) PushPodCmd(cmd string, arg ...string) {
-	m.Table(func(index int, value map[string]string, head []string) {
-		m.Push(POD, m.Option(MSG_USERPOD))
-	})
-	m.Debug(m.FormatMeta())
+	if m.Length() > 0 && len(m.Appendv(POD)) == 0 {
+		m.Table(func(index int, value map[string]string, head []string) {
+			m.Push(POD, m.Option(MSG_USERPOD))
+		})
+	}
 
 	m.Cmd("space").Table(func(index int, value map[string]string, head []string) {
 		switch value[kit.MDB_TYPE] {

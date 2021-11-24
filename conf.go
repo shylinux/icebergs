@@ -81,6 +81,7 @@ const ( // DIR
 	USR_ICEBERGS = "usr/icebergs"
 	USR_TOOLKITS = "usr/toolkits"
 	USR_INTSHELL = "usr/intshell"
+	USR_RELEASE  = "usr/release"
 	USR_INSTALL  = "usr/install"
 	USR_PUBLISH  = "usr/publish"
 

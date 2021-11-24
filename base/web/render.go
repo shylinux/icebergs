@@ -103,7 +103,7 @@ type Buffer struct {
 }
 
 func (b *Buffer) Write(buf []byte) (int, error) {
-	b.m.Cmd(SPACE, b.n, "grow", string(buf))
+	b.m.PushNoticeGrow(string(buf))
 	return len(buf), nil
 }
 func (b *Buffer) Close() error { return nil }

@@ -127,11 +127,20 @@ func (m *Message) Toast(text string, arg ...interface{}) { // [title [duration [
 		}
 	}
 
+	m.PushNoticeToast("", text, arg)
+}
+func (m *Message) PushNotice(arg ...interface{}) {
 	if m.Option(MSG_USERPOD) == "" {
-		m.Cmd("space", m.Option(MSG_DAEMON), "toast", "", text, arg)
+		m.Cmd("space", m.Option(MSG_DAEMON), arg)
 	} else {
-		m.Option(MSG_TOAST, kit.Simple(text, arg))
+		m.Cmd("web.spide", "dev", kit.MergeURL2(m.Option(MSG_USERWEB), "/share/toast/"), kit.Format(kit.Dict("pod", m.Option(MSG_DAEMON), "cmds", kit.Simple(arg...))))
 	}
+}
+func (m *Message) PushNoticeGrow(arg ...interface{}) {
+	m.PushNotice(kit.List("grow", arg)...)
+}
+func (m *Message) PushNoticeToast(arg ...interface{}) {
+	m.PushNotice(kit.List("toast", arg)...)
 }
 func (m *Message) Toast3s(text string, arg ...interface{}) {
 	m.Toast(text, kit.List(kit.Select("", arg, 0), kit.Select("3s", arg, 1))...)

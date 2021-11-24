@@ -90,7 +90,7 @@ func _install_build(m *ice.Message, arg ...string) {
 	m.Toast(ice.SUCCESS, cli.BUILD)
 }
 func _install_order(m *ice.Message, arg ...string) {
-	p := kit.Path(m.Config(kit.MDB_PATH), kit.TrimExt(m.Option(kit.MDB_LINK)), m.Option(kit.MDB_PATH)+ice.NL)
+	p := path.Join(m.Config(kit.MDB_PATH), kit.TrimExt(m.Option(kit.MDB_LINK)), m.Option(kit.MDB_PATH)+ice.NL)
 	if !strings.Contains(m.Cmdx(nfs.CAT, ice.ETC_PATH), p) {
 		m.Cmd(nfs.PUSH, ice.ETC_PATH, p)
 	}

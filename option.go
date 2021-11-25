@@ -90,7 +90,7 @@ func (m *Message) Upload(dir string) {
 	if p := path.Join(dir, up[1]); m.Option(MSG_USERPOD) == "" {
 		m.Cmdy("cache", "watch", up[0], p) // 本机文件
 	} else { // 下发文件
-		m.Cmdy("spide", DEV, SAVE, p, "GET", kit.MergeURL2(m.Option(MSG_USERWEB), path.Join("/share/cache", up[0])))
+		m.Cmdy("spide", DEV, SAVE, p, "GET", m.MergeURL2(path.Join("/share/cache", up[0])))
 	}
 }
 func (m *Message) Action(arg ...string) {
@@ -133,7 +133,7 @@ func (m *Message) PushNotice(arg ...interface{}) {
 	if m.Option(MSG_USERPOD) == "" {
 		m.Cmd("space", m.Option(MSG_DAEMON), arg)
 	} else {
-		m.Cmd("web.spide", "dev", kit.MergeURL2(m.Option(MSG_USERWEB), "/share/toast/"), kit.Format(kit.Dict("pod", m.Option(MSG_DAEMON), "cmds", kit.Simple(arg...))))
+		m.Cmd("web.spide", "dev", m.MergeURL2("/share/toast/"), kit.Format(kit.Dict("pod", m.Option(MSG_DAEMON), "cmds", kit.Simple(arg...))))
 	}
 }
 func (m *Message) PushNoticeGrow(arg ...interface{}) {

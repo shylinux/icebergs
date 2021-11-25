@@ -19,7 +19,7 @@ import (
 
 func _share_link(m *ice.Message, p string, arg ...interface{}) string {
 	p = kit.Select("", "/share/local/", !strings.HasPrefix(p, "/")) + p
-	return tcp.ReplaceLocalhost(m, kit.MergeURL2(m.Option(ice.MSG_USERWEB), p, arg...))
+	return tcp.ReplaceLocalhost(m, m.MergeURL2(p, arg...))
 }
 func _share_repos(m *ice.Message, repos string, arg ...string) {
 	prefix := kit.Path(m.Conf(SERVE, kit.Keym(ice.REQUIRE)))
@@ -75,7 +75,7 @@ func _share_local(m *ice.Message, arg ...string) {
 		}
 
 		// 上传文件
-		m.Cmdy(SPACE, m.Option(ice.POD), SPIDE, ice.DEV, SPIDE_RAW, kit.MergeURL2(m.Option(ice.MSG_USERWEB), "/share/proxy"),
+		m.Cmdy(SPACE, m.Option(ice.POD), SPIDE, ice.DEV, SPIDE_RAW, m.MergeURL2("/share/proxy"),
 			SPIDE_PART, m.OptionSimple(ice.POD), kit.MDB_PATH, p, CACHE, cache.Format(ice.MOD_TIME), UPLOAD, "@"+p)
 
 		if s, e := os.Stat(pp); e == nil && !s.IsDir() {

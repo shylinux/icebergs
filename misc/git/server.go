@@ -19,6 +19,7 @@ import (
 	"shylinux.com/x/icebergs/base/ctx"
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/nfs"
+	"shylinux.com/x/icebergs/base/tcp"
 	"shylinux.com/x/icebergs/base/web"
 	kit "shylinux.com/x/toolkits"
 )
@@ -43,6 +44,11 @@ func packetWrite(m *ice.Message, cmd string, str ...string) {
 var basicAuthRegex = regexp.MustCompile("^([^:]*):(.*)$")
 
 func _server_login(m *ice.Message) error {
+	if m.Conf("web.serve", "meta.localhost") != ice.FALSE {
+		if tcp.IsLocalHost(m, m.Option(ice.MSG_USERIP)) {
+			return nil
+		}
+	}
 	parts := strings.SplitN(m.R.Header.Get("Authorization"), ice.SP, 2)
 	if len(parts) < 2 {
 		return fmt.Errorf("Invalid authorization header, not enought parts")
@@ -125,7 +131,7 @@ func init() {
 			}},
 		}, ctx.CmdAction()), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			if m.Option("go-get") == "1" { // 下载地址
-				p := kit.Split(kit.MergeURL2(m.Option(ice.MSG_USERWEB), "/x/"+path.Join(arg...)), "?")[0]
+				p := kit.Split(m.MergeURL2("/x/"+path.Join(arg...)), "?")[0]
 				m.RenderResult(kit.Format(`<meta name="%s" content="%s">`, "go-import", kit.Format(`%s git %s`, strings.TrimPrefix(p, "https://"), p)))
 				return
 			}
@@ -148,16 +154,24 @@ func init() {
 				web.RenderStatus(m, 500, err.Error())
 			}
 		}},
-		SERVER: {Name: "server path auto create", Help: "服务器", Action: map[string]*ice.Action{
+		SERVER: {Name: "server path auto create import", Help: "服务器", Action: map[string]*ice.Action{
 			mdb.CREATE: {Name: "create name", Help: "添加", Hand: func(m *ice.Message, arg ...string) {
 				m.Option(cli.CMD_DIR, path.Join(ice.USR_LOCAL, REPOS))
 				m.Cmdy(cli.SYSTEM, GIT, INIT, "--bare", m.Option(kit.MDB_NAME))
 			}},
+			mdb.IMPORT: {Name: "import", Help: "导入", Hand: func(m *ice.Message, arg ...string) {
+				m.Cmdy(REPOS, ice.OptionFields("time,name,path")).Table(func(index int, value map[string]string, head []string) {
+					m.Option(cli.CMD_DIR, value[nfs.PATH])
+					m.Cmd(cli.SYSTEM, "git", "push", m.MergeURL2("/x/"+value[kit.MDB_NAME]), "master")
+					m.Cmd(cli.SYSTEM, "git", "push", "--tags", m.MergeURL2("/x/"+value[kit.MDB_NAME]), "master")
+				})
+			}},
 		}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			if m.Option(nfs.DIR_ROOT, path.Join(ice.USR_LOCAL, REPOS)); len(arg) == 0 {
-				m.Cmdy(nfs.DIR, "").Table(func(index int, value map[string]string, head []string) {
-					m.PushScript("git clone " + kit.MergeURL2(m.Option(ice.MSG_USERWEB), "/x/"+value[nfs.PATH]))
+				m.Cmdy(nfs.DIR, ice.PWD, "time,path,size").Table(func(index int, value map[string]string, head []string) {
+					m.PushScript("git clone " + m.MergeURL2("/x/"+value[nfs.PATH]))
 				})
+				m.StatusTimeCount()
 				return
 			}
 			m.Cmdy("_sum", path.Join(m.Option(nfs.DIR_ROOT), arg[0]))

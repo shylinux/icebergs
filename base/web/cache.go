@@ -184,7 +184,7 @@ func init() {
 			if m.Append(kit.MDB_FILE) == "" {
 				m.PushScript("inner", m.Append(kit.MDB_TEXT))
 			} else {
-				m.PushDownload(m.Append(kit.MDB_NAME), kit.MergeURL2(m.Option(ice.MSG_USERWEB), "/share/cache/"+arg[0]))
+				m.PushDownload(m.Append(kit.MDB_NAME), m.MergeURL2("/share/cache/"+arg[0]))
 			}
 		}},
 	}})

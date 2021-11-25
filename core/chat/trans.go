@@ -22,7 +22,7 @@ func init() {
 		TRANS: {Name: "trans from to auto", Help: "传输", Action: ice.MergeAction(map[string]*ice.Action{
 			SEND: {Name: "send", Help: "发送", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmdy(web.SPACE, m.Option(TO), web.SPIDE, ice.DEV, web.SPIDE_SAVE, kit.Select(ice.PWD, m.Option("to_path")),
-					kit.MergeURL2(m.Option(ice.MSG_USERWEB), path.Join("/share/local/", m.Option("from_path")), ice.POD, m.Option(FROM),
+					m.MergeURL2(path.Join("/share/local/", m.Option("from_path")), ice.POD, m.Option(FROM),
 						web.SHARE, m.Cmdx(web.SHARE, mdb.CREATE, kit.MDB_TYPE, web.LOGIN),
 					),
 				)

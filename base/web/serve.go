@@ -231,6 +231,16 @@ func _serve_login(msg *ice.Message, key string, cmds []string, w http.ResponseWr
 	}
 	return cmds, true
 }
+func _serve_spide(m *ice.Message, prefix string, c *ice.Context) {
+	for k := range c.Commands {
+		if strings.HasPrefix(k, "/") {
+			m.Push("path", path.Join(prefix, k)+kit.Select("", "/", strings.HasSuffix(k, "/")))
+		}
+	}
+	for k, v := range c.Contexts {
+		_serve_spide(m, path.Join(prefix, k), v)
+	}
+}
 
 const (
 	WEB_LOGIN = "_login"
@@ -265,7 +275,7 @@ func init() {
 				m.Done(value[kit.MDB_STATUS] == tcp.START)
 			})
 		}},
-		SERVE: {Name: "serve name auto start", Help: "服务器", Action: ice.MergeAction(map[string]*ice.Action{
+		SERVE: {Name: "serve name auto start spide", Help: "服务器", Action: ice.MergeAction(map[string]*ice.Action{
 			aaa.BLACK: {Name: "black", Help: "黑名单", Hand: func(m *ice.Message, arg ...string) {
 				for _, k := range arg {
 					m.Log_CREATE(aaa.BLACK, k)
@@ -289,6 +299,14 @@ func init() {
 				m.Option(kit.MDB_NAME, "")
 				for _, k := range kit.Split(m.Option(ice.DEV)) {
 					m.Cmd(SPACE, tcp.DIAL, ice.DEV, k, kit.MDB_NAME, ice.Info.NodeName)
+				}
+			}},
+			"spide": {Name: "spide", Help: "架构图", Hand: func(m *ice.Message, arg ...string) {
+				if len(arg) == 0 { // 模块列表
+					_serve_spide(m, "/", m.Target())
+					m.Display("/plugin/story/spide.js", "root", ice.ICE, "prefix", "spide")
+					m.StatusTimeCount()
+					return
 				}
 			}},
 		}, mdb.HashAction()), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {

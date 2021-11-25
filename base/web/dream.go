@@ -43,7 +43,7 @@ func _dream_show(m *ice.Message, name string) {
 		os.MkdirAll(p, ice.MOD_DIR)
 	}
 
-	m.ProcessOpen(kit.MergeURL2(m.Option(ice.MSG_USERWEB), "/chat/pod/"+name))
+	m.ProcessOpen(m.MergeURL2("/chat/pod/" + name))
 
 	// 任务模板
 	if m.Option(kit.MDB_TEMPLATE) != "" {

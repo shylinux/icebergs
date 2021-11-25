@@ -52,8 +52,7 @@ func init() {
 				m.Option(mdb.FIELDS, "time,type,name,share")
 				m.Cmdy(mdb.SELECT, RIVER, _river_key(m, NODE), mdb.HASH)
 				m.Table(func(index int, value map[string]string, head []string) {
-					m.PushAnchor(value[kit.MDB_NAME], kit.MergeURL2(m.Option(ice.MSG_USERWEB),
-						"/chat/pod/"+kit.Keys(m.Option(ice.POD), value[kit.MDB_NAME])))
+					m.PushAnchor(value[kit.MDB_NAME], m.MergeURL2("/chat/pod/"+kit.Keys(m.Option(ice.POD), value[kit.MDB_NAME])))
 				})
 				m.RenameAppend("name", "pod")
 				m.PushAction(mdb.REMOVE)

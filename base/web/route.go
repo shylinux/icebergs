@@ -69,7 +69,7 @@ func init() {
 	Index.Merge(&ice.Context{Configs: map[string]*ice.Config{
 		ROUTE: {Name: ROUTE, Help: "路由器", Value: kit.Data(kit.MDB_SHORT, kit.SSH_ROUTE)},
 	}, Commands: map[string]*ice.Command{
-		ROUTE: {Name: "route route ctx cmd auto invite share", Help: "路由器", Action: map[string]*ice.Action{
+		ROUTE: {Name: "route route ctx cmd auto invite share spide", Help: "路由器", Action: map[string]*ice.Action{
 			SHARE: {Name: "share", Help: "共享", Hand: func(m *ice.Message, arg ...string) {
 				p := kit.MergeURL(m.Option(ice.MSG_USERWEB), SHARE, m.Cmdx(SHARE, mdb.CREATE, kit.MDB_TYPE, LOGIN))
 				m.EchoAnchor(p)
@@ -114,6 +114,14 @@ func init() {
 			ctx.COMMAND: {Name: "command", Help: "命令", Hand: func(m *ice.Message, arg ...string) {
 				m.Debug(m.Option(ROUTE))
 				m.Cmdy(SPACE, m.Option(ROUTE), kit.Keys(m.Option(ice.CTX), m.Option(ice.CMD)), arg)
+			}},
+			"spide": {Name: "spide", Help: "架构图", Hand: func(m *ice.Message, arg ...string) {
+				if len(arg) == 0 { // 模块列表
+					m.Cmdy(ROUTE)
+					m.Display("/plugin/story/spide.js", "root", ice.ICE, "field", "route", "split", ice.PT, "prefix", "spide")
+					m.StatusTimeCount()
+					return
+				}
 			}},
 		}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			if len(arg) == 0 || arg[0] == "" { // 路由列表

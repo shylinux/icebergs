@@ -16,7 +16,7 @@ import (
 )
 
 func _space_link(m *ice.Message, pod string, arg ...interface{}) string {
-	return tcp.ReplaceLocalhost(m, kit.MergeURL2(m.Option(ice.MSG_USERWEB), "/chat/pod/"+pod, arg...))
+	return tcp.ReplaceLocalhost(m, m.MergeURL2("/chat/pod/"+pod, arg...))
 }
 func _space_domain(m *ice.Message) (link string) {
 	link = m.Config(kit.MDB_DOMAIN)

@@ -18,7 +18,7 @@ func init() {
 				return
 			}
 
-			home := kit.MergeURL2(m.Option(ice.MSG_USERWEB), "/chat/lark/sso")
+			home := m.MergeURL2("/chat/lark/sso")
 			if m.Option(kit.MDB_CODE) != "" { // 登录成功
 				msg := m.Cmd(web.SPIDE, LARK, "/open-apis/authen/v1/access_token", "grant_type", "authorization_code",
 					kit.MDB_CODE, m.Option(kit.MDB_CODE), "app_access_token", m.Cmdx(APP, TOKEN, m.Cmd(APP).Append(APPID)))

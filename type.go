@@ -52,7 +52,7 @@ type Context struct {
 	Configs  map[string]*Config
 	Commands map[string]*Command
 
-	contexts map[string]*Context
+	Contexts map[string]*Context
 	context  *Context
 	root     *Context
 
@@ -85,10 +85,10 @@ func (c *Context) Register(s *Context, x Server, n ...string) *Context {
 		name(n, s)
 	}
 
-	if c.contexts == nil {
-		c.contexts = map[string]*Context{}
+	if c.Contexts == nil {
+		c.Contexts = map[string]*Context{}
 	}
-	c.contexts[s.Name] = s
+	c.Contexts[s.Name] = s
 	s.root = c.root
 	s.context = c
 	s.server = x
@@ -349,13 +349,13 @@ func (m *Message) Travel(cb interface{}) *Message {
 		}
 
 		ls := []string{}
-		for k := range list[i].contexts {
+		for k := range list[i].Contexts {
 			ls = append(ls, k)
 		}
 		sort.Strings(ls)
 
 		for _, k := range ls { // 遍历递进
-			list = append(list, list[i].contexts[k])
+			list = append(list, list[i].Contexts[k])
 		}
 	}
 	return m
@@ -380,7 +380,7 @@ func (m *Message) Search(key string, cb interface{}) *Message {
 				continue
 			}
 			for _, k := range ls[:len(ls)-1] {
-				if p = p.contexts[k]; p == nil {
+				if p = p.Contexts[k]; p == nil {
 					break
 				}
 			}

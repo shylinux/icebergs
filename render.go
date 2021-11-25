@@ -12,13 +12,12 @@ func AddRender(key string, render func(*Message, string, ...interface{}) string)
 }
 func Render(m *Message, cmd string, args ...interface{}) string {
 	if render, ok := Info.render[cmd]; ok {
-		m.Debug("render: %v %v", cmd, kit.FileLine(render, 3))
 		return render(m, cmd, args...)
 	}
 
 	switch arg := kit.Simple(args...); cmd {
 	case RENDER_ANCHOR: // [name] link
-		p := kit.MergeURL2(m.Option(MSG_USERWEB), kit.Select(arg[0], arg, 1))
+		p := m.MergeURL2(kit.Select(arg[0], arg, 1))
 		return kit.Format(`<a href="%s" target="_blank">%s</a>`, p, arg[0])
 
 	case RENDER_BUTTON: // name...

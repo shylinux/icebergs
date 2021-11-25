@@ -139,6 +139,9 @@ func (m *Message) AppendTrans(cb func(value string, key string, index int) strin
 		}
 	}
 }
+func (m *Message) MergeURL2(url string, arg ...interface{}) string {
+	return kit.MergeURL2(m.Option(MSG_USERWEB), url, arg...)
+}
 
 func (m *Message) cmd(arg ...interface{}) *Message {
 	opts := map[string]interface{}{}

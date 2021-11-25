@@ -124,7 +124,7 @@ func _dir_list(m *ice.Message, root string, name string, level int, deep bool, d
 				case kit.MDB_LINK:
 					m.PushDownload(kit.MDB_LINK, kit.Select("", f.Name(), !f.IsDir()), path.Join(root, name, f.Name()))
 				case "show":
-					p := kit.MergeURL2(m.Option(ice.MSG_USERWEB), "/share/local/"+path.Join(name, f.Name()), ice.POD, m.Option(ice.MSG_USERPOD))
+					p := m.MergeURL2("/share/local/"+path.Join(name, f.Name()), ice.POD, m.Option(ice.MSG_USERPOD))
 					switch kit.Ext(f.Name()) {
 					case "jpg", "png":
 						m.PushImages(field, p)

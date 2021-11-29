@@ -257,7 +257,7 @@ func init() {
 				LOGIN, ice.TRUE, SHARE, ice.TRUE, SPACE, ice.TRUE,
 				ice.VOLCANOS, ice.TRUE, ice.PUBLISH, ice.TRUE,
 				ice.INTSHELL, ice.TRUE, ice.REQUIRE, ice.TRUE,
-				"x", ice.TRUE,
+				"help", ice.TRUE, "x", ice.TRUE,
 			), LOGHEADERS, ice.FALSE,
 
 			kit.MDB_PATH, kit.Dict("/", ice.USR_VOLCANOS),

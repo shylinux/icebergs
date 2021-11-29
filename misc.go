@@ -110,6 +110,9 @@ func (m *Message) OptionCB(key string, cb ...interface{}) interface{} {
 func (m *Message) OptionUserWeb() *url.URL {
 	return kit.ParseURL(m.Option(MSG_USERWEB))
 }
+func (m *Message) SetAppend(arg ...string) *Message {
+	return m.Set(MSG_APPEND, arg...)
+}
 func (m *Message) RenameAppend(from, to string) {
 	for i, v := range m.meta[MSG_APPEND] {
 		if v == from {

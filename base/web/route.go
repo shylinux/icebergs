@@ -112,16 +112,29 @@ func init() {
 				m.ProcessInner()
 			}},
 			ctx.COMMAND: {Name: "command", Help: "命令", Hand: func(m *ice.Message, arg ...string) {
-				m.Debug(m.Option(ROUTE))
 				m.Cmdy(SPACE, m.Option(ROUTE), kit.Keys(m.Option(ice.CTX), m.Option(ice.CMD)), arg)
 			}},
+			ice.RUN: {Name: "run", Help: "执行", Hand: func(m *ice.Message, arg ...string) {
+				m.Cmdy(SPACE, m.Option(ROUTE), arg)
+			}},
 			"spide": {Name: "spide", Help: "架构图", Hand: func(m *ice.Message, arg ...string) {
-				if len(arg) == 0 { // 模块列表
-					m.Cmdy(ROUTE)
+				if m.Option("route") == "" { // 机器列表 route
+					m.Cmdy(ROUTE).Cut("route")
 					m.Display("/plugin/story/spide.js", "root", ice.ICE, "field", "route", "split", ice.PT, "prefix", "spide")
-					m.StatusTimeCount()
 					return
 				}
+				if m.Option("context") == "" { // 模块列表 context
+					m.Cmdy(SPACE, m.Option("route"), ctx.CONTEXT, "ice", "context")
+					m.Cut("name").RenameAppend("name", "context")
+					return
+				}
+				if m.Option("name") == "" { // 命令列表 name
+					m.Cmdy(SPACE, m.Option("route"), ctx.CONTEXT, "spide", "", m.Option("context"), m.Option("context"))
+					m.Cut("name")
+					return
+				}
+				// 命令详情 index name help meta list
+				m.Cmdy(SPACE, m.Option("route"), ctx.CONTEXT, "spide", "", m.Option("context"), m.Option("name"))
 			}},
 		}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			if len(arg) == 0 || arg[0] == "" { // 路由列表

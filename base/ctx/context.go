@@ -9,7 +9,7 @@ import (
 
 func _context_list(m *ice.Message, sub *ice.Context, name string) {
 	m.Travel(func(p *ice.Context, s *ice.Context) {
-		if name != "" && !strings.HasPrefix(s.Cap(ice.CTX_FOLLOW), name+ice.PT) {
+		if name != "" && name != "ice" && !strings.HasPrefix(s.Cap(ice.CTX_FOLLOW), name+ice.PT) {
 			return
 		}
 		m.Push(kit.MDB_NAME, s.Cap(ice.CTX_FOLLOW))

@@ -77,6 +77,9 @@ func (m *Message) Add(key string, arg ...string) *Message {
 				m.meta[MSG_OPTION][i] = ""
 				delete(m.meta, arg[0])
 			}
+			if kit.IndexOf(m.meta[key], arg[0]) == -1 {
+				m.meta[arg[0]] = []string{}
+			}
 		}
 
 		if kit.IndexOf(m.meta[key], arg[0]) == -1 {
@@ -188,12 +191,6 @@ func (m *Message) Copy(msg *Message, arg ...string) *Message {
 		} else {
 			m.Set(MSG_OPTION, k)
 			m.Add(MSG_OPTION, kit.Simple(k, msg.meta[k])...)
-		}
-	}
-	for _, k := range msg.meta[MSG_APPEND] {
-		if i := kit.IndexOf(m.meta[MSG_OPTION], k); i > -1 {
-			m.meta[MSG_OPTION][i] = ""
-			delete(m.meta, k)
 		}
 	}
 	for _, k := range msg.meta[MSG_APPEND] {

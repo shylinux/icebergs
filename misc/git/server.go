@@ -162,8 +162,8 @@ func init() {
 			mdb.IMPORT: {Name: "import", Help: "导入", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmdy(REPOS, ice.OptionFields("time,name,path")).Table(func(index int, value map[string]string, head []string) {
 					m.Option(cli.CMD_DIR, value[nfs.PATH])
-					m.Cmd(cli.SYSTEM, "git", "push", m.MergeURL2("/x/"+value[kit.MDB_NAME]), "master")
-					m.Cmd(cli.SYSTEM, "git", "push", "--tags", m.MergeURL2("/x/"+value[kit.MDB_NAME]), "master")
+					m.Cmd(cli.SYSTEM, GIT, PUSH, m.MergeURL2("/x/"+value[kit.MDB_NAME]), MASTER)
+					m.Cmd(cli.SYSTEM, GIT, PUSH, "--tags", m.MergeURL2("/x/"+value[kit.MDB_NAME]), MASTER)
 				})
 			}},
 		}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {

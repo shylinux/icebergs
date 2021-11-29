@@ -117,6 +117,9 @@ func (m *Message) StatusTimeCountTotal(arg ...interface{}) {
 func (m *Message) Confirm(text string) string {
 	return m.Cmdx("space", m.Option(MSG_DAEMON), "confirm", text)
 }
+func (m *Message) ToastSuccess(arg ...interface{}) {
+	m.Toast(SUCCESS, arg...)
+}
 func (m *Message) Toast(text string, arg ...interface{}) { // [title [duration [progress]]]
 	if len(arg) > 1 {
 		switch val := arg[1].(type) {

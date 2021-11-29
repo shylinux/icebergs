@@ -94,6 +94,8 @@ const ( // DIR
 	INDEX_SH = "index.sh"
 
 	USR_LOCAL        = "usr/local"
+	USR_LOCAL_BIN    = "usr/local/bin"
+	USR_LOCAL_LIB    = "usr/local/lib"
 	USR_LOCAL_WORK   = "usr/local/work"
 	USR_LOCAL_IMAGE  = "usr/local/image"
 	USR_LOCAL_RIVER  = "usr/local/river"

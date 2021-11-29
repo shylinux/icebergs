@@ -3,6 +3,7 @@ package nfs
 import (
 	"bufio"
 	"crypto/sha1"
+	"io/fs"
 	"io/ioutil"
 	"os"
 	"path"
@@ -20,25 +21,25 @@ func _dir_list(m *ice.Message, root string, name string, level int, deep bool, d
 		return m // 没有权限
 	}
 
-	fs, e := ioutil.ReadDir(path.Join(root, name))
+	list, e := ioutil.ReadDir(path.Join(root, name))
 	if e != nil { // 单个文件
 		ls, _ := ioutil.ReadDir(path.Dir(path.Join(root, name)))
 		for _, k := range ls {
 			if k.Name() == path.Base(name) {
-				fs = append(fs, k)
+				list = append(list, k)
 			}
 		}
 		name = path.Dir(name)
 	}
-	for i := 0; i < len(fs)-1; i++ {
-		for j := i + 1; j < len(fs); j++ {
-			if fs[i].Name() > fs[j].Name() {
-				fs[i], fs[j] = fs[j], fs[i]
+	for i := 0; i < len(list)-1; i++ {
+		for j := i + 1; j < len(list); j++ {
+			if list[i].Name() > list[j].Name() {
+				list[i], list[j] = list[j], list[i]
 			}
 		}
 	}
 
-	for _, f := range fs {
+	for _, f := range list {
 		if f.Name() == ice.PT || f.Name() == ".." {
 			continue
 		}
@@ -49,6 +50,9 @@ func _dir_list(m *ice.Message, root string, name string, level int, deep bool, d
 		p := path.Join(root, name, f.Name())
 		if !(dir_type == TYPE_CAT && f.IsDir() || dir_type == TYPE_DIR && !f.IsDir()) && (dir_reg == nil || dir_reg.MatchString(f.Name())) {
 			switch cb := m.Optionv(kit.Keycb(DIR)).(type) {
+			case func(f fs.FileInfo, p string):
+				cb(f, p)
+				continue
 			case func(p string):
 				cb(p)
 				continue

@@ -9,10 +9,10 @@ import (
 
 func _context_list(m *ice.Message, sub *ice.Context, name string) {
 	m.Travel(func(p *ice.Context, s *ice.Context) {
-		if !strings.HasPrefix(s.Cap(ice.CTX_FOLLOW), name+ice.PT) {
+		if name != "" && !strings.HasPrefix(s.Cap(ice.CTX_FOLLOW), name+ice.PT) {
 			return
 		}
-		m.Push(kit.MDB_NAME, strings.TrimPrefix(s.Cap(ice.CTX_FOLLOW), name+ice.PT))
+		m.Push(kit.MDB_NAME, s.Cap(ice.CTX_FOLLOW))
 		m.Push(kit.MDB_STATUS, s.Cap(ice.CTX_STATUS))
 		m.Push(kit.MDB_STREAM, s.Cap(ice.CTX_STREAM))
 		m.Push(kit.MDB_HELP, s.Help)
@@ -23,7 +23,7 @@ const CONTEXT = "context"
 
 func init() {
 	Index.Merge(&ice.Context{Commands: map[string]*ice.Command{
-		CONTEXT: {Name: "context name=web.chat action=context,command,config key auto spide", Help: "模块", Action: ice.MergeAction(map[string]*ice.Action{
+		CONTEXT: {Name: "context name=web action=context,command,config key auto spide", Help: "模块", Action: ice.MergeAction(map[string]*ice.Action{
 			"spide": {Name: "spide", Help: "架构图", Hand: func(m *ice.Message, arg ...string) {
 				if len(arg) == 0 || arg[1] == CONTEXT { // 模块列表
 					m.Cmdy(CONTEXT, kit.Select(ice.ICE, arg, 0), CONTEXT)
@@ -31,7 +31,7 @@ func init() {
 						"field", "name", "split", ice.PT, "prefix", "spide")
 					return
 				}
-				if index := kit.Keys(arg[0], arg[1]); strings.HasSuffix(index, arg[2]) { // 命令列表
+				if index := kit.Keys(arg[1]); strings.HasSuffix(index, arg[2]) { // 命令列表
 					m.Cmdy(CONTEXT, index, COMMAND).Table(func(i int, value map[string]string, head []string) {
 						m.Push("file", arg[1])
 					})

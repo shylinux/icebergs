@@ -38,7 +38,7 @@ func _publish_file(m *ice.Message, file string, arg ...string) string {
 
 	} else if s, e := os.Stat(file); m.Assert(e) && s.IsDir() {
 		p := path.Base(file) + ".tar.gz"
-		m.Cmd(cli.SYSTEM, "tar", "-zcf", p, file)
+		m.Cmd(nfs.TAR, p, file)
 		defer func() { os.Remove(p) }()
 		file = p // 打包目录
 	}
@@ -69,7 +69,7 @@ echo "hello world"
 `,
 		)},
 	}, Commands: map[string]*ice.Command{
-		PUBLISH: {Name: "publish path auto create volcanos icebergs intshell", Help: "发布", Action: map[string]*ice.Action{
+		PUBLISH: {Name: "publish path auto create volcanos icebergs intshell export", Help: "发布", Action: map[string]*ice.Action{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
 				m.Cmd(aaa.ROLE, aaa.WHITE, aaa.VOID, m.Config(kit.MDB_PATH))
 				m.Cmd(aaa.ROLE, aaa.WHITE, aaa.VOID, m.PrefixKey())
@@ -111,7 +111,8 @@ echo "hello world"
 				}
 			}},
 			mdb.INPUTS: {Name: "inputs", Help: "补全", Hand: func(m *ice.Message, arg ...string) {
-				m.Cmdy(web.DREAM, mdb.INPUTS, arg)
+				m.Cmdy(nfs.DIR, kit.Select(ice.PWD, arg, 1))
+				m.ProcessAgain()
 			}},
 			mdb.CREATE: {Name: "create file", Help: "添加", Hand: func(m *ice.Message, arg ...string) {
 				_publish_file(m, m.Option(kit.MDB_FILE))
@@ -119,6 +120,36 @@ echo "hello world"
 			nfs.TRASH: {Name: "trash", Help: "删除", Hand: func(m *ice.Message, arg ...string) {
 				p := m.Option(cli.CMD_DIR, m.Config(kit.MDB_PATH))
 				os.Remove(path.Join(p, m.Option(kit.MDB_PATH)))
+			}},
+			mdb.EXPORT: {Name: "export", Help: "工具链", Hand: func(m *ice.Message, arg ...string) {
+				var list = []string{}
+				m.Cmd(nfs.CAT, ice.ETC_PATH, func(text string) {
+					if strings.HasPrefix(text, ice.USR_PUBLISH) {
+						return
+					}
+					if strings.HasPrefix(text, ice.BIN) {
+						return
+					}
+					if strings.HasPrefix(text, ice.PS) {
+						return
+					}
+					list = append(list, text)
+				})
+
+				web.PushStream(m)
+				defer m.ProcessHold()
+				defer m.StatusTimeCount()
+				m.Cmd(nfs.TAR, kit.Path(ice.USR_PUBLISH, "vim.tar.gz"), ".vim/plugged", kit.Dict(nfs.DIR_ROOT, os.Getenv(cli.HOME)))
+				m.Cmd(nfs.TAR, kit.Path(ice.USR_PUBLISH, "contexts.lib.tar.gz"), ice.USR_LOCAL_LIB)
+				m.Cmd(nfs.TAR, kit.Path(ice.USR_PUBLISH, "contexts.bin.tar.gz"), list)
+				m.Cmd(PUBLISH, mdb.CREATE, ice.ETC_PATH)
+
+				m.Cmd(PUBLISH, mdb.CREATE, ice.ETC_MISS_SH)
+				m.Cmd(PUBLISH, mdb.CREATE, ice.GO_MOD)
+				m.Cmd(PUBLISH, mdb.CREATE, ice.GO_SUM)
+
+				m.Cmd("web.code.git.server", mdb.IMPORT)
+				m.ToastSuccess()
 			}},
 		}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			m.Option(nfs.DIR_ROOT, m.Config(kit.MDB_PATH))

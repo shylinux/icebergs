@@ -135,12 +135,13 @@ func (m *Message) AppendSimple(key ...string) (res []string) {
 	}
 	return
 }
-func (m *Message) AppendTrans(cb func(value string, key string, index int) string) {
+func (m *Message) AppendTrans(cb func(value string, key string, index int) string) *Message {
 	for _, k := range m.meta[MSG_APPEND] {
 		for i, v := range m.meta[k] {
 			m.meta[k][i] = cb(v, k, i)
 		}
 	}
+	return m
 }
 func (m *Message) MergeURL2(url string, arg ...interface{}) string {
 	return kit.MergeURL2(m.Option(MSG_USERWEB), url, arg...)

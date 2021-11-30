@@ -27,16 +27,15 @@ func init() {
 			"spide": {Name: "spide", Help: "架构图", Hand: func(m *ice.Message, arg ...string) {
 				if len(arg) == 0 || arg[1] == CONTEXT { // 模块列表
 					m.Cmdy(CONTEXT, kit.Select(ice.ICE, arg, 0), CONTEXT)
-					m.Display("/plugin/story/spide.js", "root", kit.Select(ice.ICE, arg, 0),
-						"field", "name", "split", ice.PT, "prefix", "spide")
-					return
-				}
-				if index := kit.Keys(arg[1]); strings.HasSuffix(index, arg[2]) { // 命令列表
+					m.Display("/plugin/story/spide.js?prefix=spide", "root", kit.Select(ice.ICE, arg, 0), "split", ice.PT)
+
+				} else if index := kit.Keys(arg[1]); strings.HasSuffix(index, arg[2]) { // 命令列表
 					m.Cmdy(CONTEXT, index, COMMAND).Table(func(i int, value map[string]string, head []string) {
 						m.Push("file", arg[1])
 					})
+
 				} else { // 命令详情
-					m.Cmdy(COMMAND, kit.Keys(index, strings.Split(arg[2], " ")[0]))
+					m.Cmdy(COMMAND, kit.Keys(index, strings.Split(arg[2], ice.SP)[0]))
 				}
 			}},
 		}, CmdAction()), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {

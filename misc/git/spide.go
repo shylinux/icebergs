@@ -61,9 +61,7 @@ const SPIDE = "spide"
 
 func init() {
 	Index.Merge(&ice.Context{Commands: map[string]*ice.Command{
-		SPIDE: {Name: "spide name auto", Help: "构架图", Meta: kit.Dict(
-			ice.Display("/plugin/story/spide.js"),
-		), Action: ice.MergeAction(map[string]*ice.Action{
+		SPIDE: {Name: "spide name auto", Help: "构架图", Action: ice.MergeAction(map[string]*ice.Action{
 			mdb.INPUTS: {Name: "inputs", Help: "补全", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmdy(REPOS, ice.OptionFields("name,time"))
 			}}, code.INNER: {Name: "web.code.inner"},
@@ -78,6 +76,7 @@ func init() {
 			} else {
 				m.Option(nfs.DIR_ROOT, path.Join(ice.USR, arg[0])+ice.PS)
 			}
+			m.Display("/plugin/story/spide.js?field=path", "root", arg[0])
 
 			if len(arg) == 1 { // 目录列表
 				m.Option(nfs.DIR_DEEP, ice.TRUE)

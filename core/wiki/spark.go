@@ -9,13 +9,17 @@ import (
 )
 
 func _spark_show(m *ice.Message, name, text string, arg ...string) {
+	for i := 0; i < len(arg); i += 2 {
+		m.Option(arg[i], arg[i+1])
+	}
+
 	if name == "" {
 		_wiki_template(m, SPARK, name, text, arg...)
 		return
 	}
 
 	prompt := kit.Select(name+"> ", m.Config(kit.Keys(ssh.PROMPT, name)))
-	m.Echo(`<div class="story" data-type="spark" data-name="%s">`, name)
+	m.Echo(`<div class="story" data-type="spark" data-name="%s" style="%s">`, name, m.Option("style"))
 	defer m.Echo("</div>")
 
 	if name == "inner" {
@@ -67,7 +71,7 @@ func init() {
 				return strings.Join(list, "")
 			})
 		}},
-		SPARK: {Name: "spark [name] text", Help: "段落", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		SPARK: {Name: "spark [name] text auto field:text value:text", Help: "段落", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			if len(arg) == 0 {
 				m.Echo(`<br class="story" data-type="spark">`)
 				return

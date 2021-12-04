@@ -57,8 +57,8 @@ func _status_tags(m *ice.Message) {
 					return text
 				}
 				if v, ok := vs[kit.Slice(strings.Split(ls[0], ice.PS), -1)[0]]; ok && ls[1] != v {
-					m.Info("upgrade to %v %v from %v", ls[0], ls[1], v)
-					text = strings.Replace(text, v, ls[1], 1)
+					m.Info("upgrade %v %v to %v", ls[0], ls[1], v)
+					text = strings.ReplaceAll(text, ls[1], v)
 					change = true
 				}
 				return text

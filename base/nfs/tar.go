@@ -4,7 +4,6 @@ import (
 	"archive/tar"
 	"compress/gzip"
 	"io"
-	"io/fs"
 	"os"
 	"strings"
 
@@ -39,7 +38,7 @@ func init() {
 			for _, k := range arg[1:] {
 				m.Option(DIR_TYPE, TYPE_CAT)
 				m.Option(DIR_DEEP, ice.TRUE)
-				m.Cmdy(DIR, k, func(f fs.FileInfo, p string) {
+				m.Cmdy(DIR, k, func(f os.FileInfo, p string) {
 					total += f.Size()
 
 					header, err := tar.FileInfoHeader(f, p)

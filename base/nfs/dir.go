@@ -3,7 +3,6 @@ package nfs
 import (
 	"bufio"
 	"crypto/sha1"
-	"io/fs"
 	"io/ioutil"
 	"os"
 	"path"
@@ -50,7 +49,7 @@ func _dir_list(m *ice.Message, root string, name string, level int, deep bool, d
 		p := path.Join(root, name, f.Name())
 		if !(dir_type == TYPE_CAT && f.IsDir() || dir_type == TYPE_DIR && !f.IsDir()) && (dir_reg == nil || dir_reg.MatchString(f.Name())) {
 			switch cb := m.Optionv(kit.Keycb(DIR)).(type) {
-			case func(f fs.FileInfo, p string):
+			case func(f os.FileInfo, p string):
 				cb(f, p)
 				continue
 			case func(p string):

@@ -82,8 +82,8 @@ echo "hello world"
 				m.Cmd(PUBLISH, mdb.CREATE, kit.MDB_FILE, ice.GO_MOD)
 
 				m.Cmd(nfs.DEFS, path.Join(m.Config(kit.MDB_PATH), ice.ORDER_JS), m.Config(JS))
-				m.Cmd(nfs.DEFS, path.Join(m.Conf(web.SERVE, kit.Keym(ice.VOLCANOS)), PAGE_CACHE_JS), "")
-				m.Cmd(nfs.DEFS, path.Join(m.Conf(web.SERVE, kit.Keym(ice.VOLCANOS)), PAGE_CACHE_CSS), "")
+				m.Cmd(nfs.DEFS, path.Join(m.Conf(web.SERVE, kit.Keym(ice.VOLCANOS, nfs.PATH)), PAGE_CACHE_JS), "")
+				m.Cmd(nfs.DEFS, path.Join(m.Conf(web.SERVE, kit.Keym(ice.VOLCANOS, nfs.PATH)), PAGE_CACHE_CSS), "")
 				_publish_list(m, `.*\.(html|css|js)$`)
 			}},
 			ice.ICEBERGS: {Name: "icebergs", Help: "冰山架", Hand: func(m *ice.Message, arg ...string) {

@@ -100,6 +100,7 @@ func _serve_handle(key string, cmd *ice.Command, msg *ice.Message, w http.Respon
 	// 环境变量
 	msg.Option(ice.MSG_OUTPUT, "")
 	msg.Option(ice.MSG_SESSID, "")
+	msg.Option(ice.MSG_ARGS, kit.List())
 	for _, v := range r.Cookies() {
 		msg.Option(v.Name, v.Value)
 	}
@@ -179,8 +180,7 @@ func _serve_handle(key string, cmd *ice.Command, msg *ice.Message, w http.Respon
 	}
 
 	// 输出响应
-	_args, _ := msg.Optionv(ice.MSG_ARGS).([]interface{})
-	Render(msg, msg.Option(ice.MSG_OUTPUT), _args...)
+	Render(msg, msg.Option(ice.MSG_OUTPUT), msg.Optionv(ice.MSG_ARGS).([]interface{})...)
 }
 func _serve_login(msg *ice.Message, key string, cmds []string, w http.ResponseWriter, r *http.Request) ([]string, bool) {
 	msg.Option(ice.MSG_USERROLE, aaa.VOID)

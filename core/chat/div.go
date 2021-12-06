@@ -1,7 +1,6 @@
 package chat
 
 import (
-	"encoding/json"
 	"path"
 	"strings"
 
@@ -16,8 +15,8 @@ import (
 func _div_parse(m *ice.Message, text string) string {
 	m.Option(nfs.CAT_CONTENT, text)
 	return m.Cmdx(lex.SPLIT, "", "index", "args", func(ls []string, meta map[string]interface{}) []string {
-		if ls[0] == "_span" {
-			ls = append([]string{"", "", "style", kit.Select("span", ls, 1)}, kit.Slice(ls, 2)...)
+		if ls[0] == "div" {
+			ls = append([]string{"", "", "style", kit.Select("div", ls, 1)}, kit.Slice(ls, 2)...)
 		}
 		return ls
 	})
@@ -41,30 +40,41 @@ func init() {
 			case "js":
 				m.RenderResult(_div_template, m.Cmdx(nfs.CAT, strings.ReplaceAll(p, ".js", ".css")), m.Cmdx(nfs.CAT, p))
 			case "json":
-				var res interface{}
-				err := json.Unmarshal([]byte(m.Cmdx(nfs.CAT, p)), &res)
-				m.Assert(err)
-				m.RenderResult(_div_template2, kit.Format(res))
+				m.RenderResult(_div_template2, kit.Format(kit.UnMarshal(m.Cmdx(nfs.CAT, p))))
 			default:
 				m.RenderCmd(m.PrefixKey(), p)
 			}
 		}},
-		DIV: {Name: "div hash auto", Help: "定制", Action: ice.MergeAction(map[string]*ice.Action{
+		DIV: {Name: "div hash auto import", Help: "定制", Action: ice.MergeAction(map[string]*ice.Action{
 			lex.SPLIT: {Name: "split name=hi text", Help: "生成", Hand: func(m *ice.Message, arg ...string) {
 				h := m.Cmdx(DIV, mdb.CREATE, m.OptionSimple(kit.MDB_NAME), kit.MDB_TEXT, _div_parse(m, m.Option(kit.MDB_TEXT)))
 				m.ProcessRewrite(kit.MDB_HASH, h)
 			}},
+			mdb.INPUTS: {Name: "inputs", Help: "补全", Hand: func(m *ice.Message, arg ...string) {
+				switch arg[0] {
+				case nfs.PATH:
+					m.Cmdy(nfs.DIR, arg[1:]).ProcessAgain()
+				}
+			}},
 			mdb.CREATE: {Name: "create type=page name=hi text", Help: "创建"},
+			mdb.IMPORT: {Name: "import path=src/", Help: "导入", Hand: func(m *ice.Message, arg ...string) {
+				m.Cmd(nfs.DIR, kit.Dict(nfs.DIR_ROOT, m.Option(nfs.PATH)), func(p string) {
+					switch kit.Ext(p) {
+					case "shy":
+						m.Cmd(m.PrefixKey(), lex.SPLIT, kit.MDB_NAME, p, kit.MDB_TEXT, m.Cmdx(nfs.CAT, p))
+					}
+				})
+			}},
 		}, mdb.HashAction(), ctx.CmdAction()), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			switch kit.Ext(kit.Select("", arg, 0)) {
 			case "shy":
 				m.Fields(0)
-				m.Option(ice.MSG_DISPLAY, "/plugin/local/chat/div.js")
 				m.Push(kit.MDB_TEXT, _div_parse(m, m.Cmdx(nfs.CAT, arg[0])))
+				m.DisplayLocal("")
 			default:
 				if mdb.HashSelect(m, arg...); len(arg) > 0 {
-					m.Option(ice.MSG_DISPLAY, "/plugin/local/chat/div.js")
 					m.Action("添加", "保存", "预览")
+					m.DisplayLocal("")
 				} else {
 					m.Action(lex.SPLIT, mdb.CREATE)
 				}
@@ -100,30 +110,6 @@ var _div_template2 = `<!DOCTYPE html>
 <body>
 	<script src="/proto.js"></script>
 	<script src="/page/cache.js"></script>
-	<script>
-Volcanos({name: "chat", panels: [
-    {name: "Header", help: "标题栏", pos: chat.HEAD, state: ["time", "usernick", "avatar"]},
-    {name: "River",  help: "群聊组", pos: chat.LEFT, action: ["create", "refresh"]},
-    {name: "Action", help: "工作台", pos: chat.MAIN},
-    {name: "Search", help: "搜索框", pos: chat.AUTO},
-    {name: "Footer", help: "状态条", pos: chat.FOOT, state: ["ncmd"]},
-], main: {name: "Header", list: ["/publish/order.js"]}, plugin: [
-    "/plugin/state.js",
-    "/plugin/input.js",
-    "/plugin/table.js",
-    "/plugin/input/key.js",
-    "/plugin/input/date.js",
-    "/plugin/story/spide.js",
-    "/plugin/story/trend.js",
-    "/plugin/local/code/inner.js",
-    "/plugin/local/code/vimer.js",
-    "/plugin/local/wiki/draw/path.js",
-    "/plugin/local/wiki/draw.js",
-    "/plugin/local/wiki/word.js",
-    "/plugin/local/chat/div.js",
-    "/plugin/local/team/plan.js",
-    "/plugin/input/province.js",
-], river: JSON.parse('%s')})
-	</script>
+	<script>Volcanos({name: "chat", river: JSON.parse('%s')})</script>
 </body>
 `

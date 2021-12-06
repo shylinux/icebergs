@@ -2,8 +2,10 @@ package chat
 
 import (
 	"net/http"
+	"strings"
 
 	ice "shylinux.com/x/icebergs"
+	"shylinux.com/x/icebergs/base/ctx"
 	"shylinux.com/x/icebergs/base/lex"
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/nfs"
@@ -15,6 +17,9 @@ func _website_parse(m *ice.Message, text string) map[string]interface{} {
 	m.Option(nfs.CAT_CONTENT, text)
 	river, storm, last := kit.Dict(), kit.Dict(), kit.Dict()
 	m.Cmd(lex.SPLIT, "", kit.MDB_KEY, kit.MDB_NAME, func(deep int, ls []string, meta map[string]interface{}) []string {
+		if len(ls) == 1 {
+			ls = append(ls, ls[0])
+		}
 		data := kit.Dict()
 		for i := 2; i < len(ls); i += 2 {
 			switch ls[i] {
@@ -31,7 +36,7 @@ func _website_parse(m *ice.Message, text string) map[string]interface{} {
 		case 2:
 			last = kit.Dict(kit.MDB_NAME, ls[1], kit.MDB_LIST, kit.List(), data)
 			storm[ls[0]] = last
-		case 3:
+		default:
 			last[kit.MDB_LIST] = append(last[kit.MDB_LIST].([]interface{}),
 				kit.Dict(kit.MDB_NAME, ls[0], kit.MDB_HELP, ls[1], kit.MDB_INDEX, ls[0], data))
 		}
@@ -51,39 +56,58 @@ func init() {
 		WEBSITE: {Name: "website path auto create import", Help: "网站", Action: ice.MergeAction(map[string]*ice.Action{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
 				web.AddRewrite(func(w http.ResponseWriter, r *http.Request) bool {
-					if m.Richs(WEBSITE, nil, r.URL.Path, func(key string, value map[string]interface{}) {
+					if ok := true; m.Richs(WEBSITE, nil, r.URL.Path, func(key string, value map[string]interface{}) {
 						msg, value := m.Spawn(w, r), kit.GetMeta(value)
 						switch text := kit.Format(value[kit.MDB_TEXT]); value[kit.MDB_TYPE] {
+						case "svg":
+							msg.RenderResult(`<body style="background-color:cadetblue">%s</body>`, m.Cmdx(nfs.CAT, text))
+						case "shy":
+							if r.Method == http.MethodGet {
+								msg.RenderCmd(msg.Prefix(DIV), text)
+							} else {
+								r.URL.Path, ok = "/chat/cmd/web.chat.div", false
+								return
+							}
 						case "txt":
 							res := _website_parse(msg, kit.Format(value[kit.MDB_TEXT]))
-							// web.RenderResult(msg, kit.Format(res))
-							web.RenderResult(msg, _website_template2, kit.Format(res))
+							msg.RenderResult(_website_template2, kit.Format(res))
 						case "json":
-							web.RenderResult(msg, _website_template2, kit.Format(kit.UnMarshal(text)))
+							msg.RenderResult(_website_template2, kit.Format(kit.UnMarshal(text)))
 						case "js":
-							web.RenderResult(msg, _website_template, text)
+							msg.RenderResult(_website_template, text)
+						case "html":
+							msg.RenderResult(text)
 						default:
-							web.RenderResult(msg, text)
+							msg.RenderDownload(text)
 						}
-					}) != nil {
+						web.Render(msg, msg.Option(ice.MSG_OUTPUT), msg.Optionv(ice.MSG_ARGS).([]interface{})...)
+					}) != nil && ok {
 						return true
 					}
 					return false
 				})
 			}},
 			mdb.INPUTS: {Name: "inputs", Help: "补全", Hand: func(m *ice.Message, arg ...string) {
-				switch arg[0] {
-				case nfs.PATH:
-					m.Cmdy(nfs.DIR, arg[1:]).ProcessAgain()
+				switch m.Option(ctx.ACTION) {
+				case mdb.CREATE:
+					m.Cmdy(mdb.INPUTS, m.PrefixKey(), "", mdb.HASH, arg)
+				default:
+					switch arg[0] {
+					case nfs.PATH:
+						m.Cmdy(nfs.DIR, arg[1:]).ProcessAgain()
+					}
 				}
 			}},
-			mdb.CREATE: {Name: "create path type=html,js,json,txt name text", Help: "创建"},
+			mdb.CREATE: {Name: "create path type=txt,json,js,html name text", Help: "创建"},
 			mdb.IMPORT: {Name: "import path=src/", Help: "导入", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmd(nfs.DIR, kit.Dict(nfs.DIR_ROOT, m.Option(nfs.PATH)), func(p string) {
-					switch kit.Ext(p) {
+					switch name := strings.TrimPrefix(p, m.Option(nfs.PATH)); kit.Ext(p) {
 					case "html", "js", "json", "txt":
-						m.Cmd(m.PrefixKey(), mdb.CREATE, nfs.PATH, ice.PS+p,
-							kit.MDB_TYPE, kit.Ext(p), kit.MDB_NAME, p, kit.MDB_TEXT, m.Cmdx(nfs.CAT, p))
+						m.Cmd(m.PrefixKey(), mdb.CREATE, nfs.PATH, ice.PS+name,
+							kit.MDB_TYPE, kit.Ext(p), kit.MDB_NAME, name, kit.MDB_TEXT, m.Cmdx(nfs.CAT, p))
+					default:
+						m.Cmd(m.PrefixKey(), mdb.CREATE, nfs.PATH, ice.PS+name,
+							kit.MDB_TYPE, kit.Ext(p), kit.MDB_NAME, name, kit.MDB_TEXT, p)
 					}
 				})
 			}},
@@ -92,6 +116,7 @@ func init() {
 				m.PushAnchor(m.MergeURL2(value[nfs.PATH]))
 			})
 			if m.Sort(nfs.PATH); m.FieldsIsDetail() {
+				m.PushQRCode(kit.MDB_SCAN, m.MergeURL2(m.Append(nfs.PATH)))
 				m.EchoIFrame(m.Append(nfs.PATH))
 			}
 		}},

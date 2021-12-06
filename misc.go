@@ -84,9 +84,9 @@ func (m *Message) Display(file string, arg ...interface{}) *Message {
 }
 func (m *Message) DisplayLocal(file string) *Message {
 	if file == "" {
-		file = path.Join(kit.PathName(2), kit.FileName(2)+".js")
+		file = path.Join(kit.PathName(2), kit.Keys(kit.FileName(2), "js"))
 	}
-	if !strings.HasPrefix(file, "/") {
+	if !strings.HasPrefix(file, PS) {
 		file = path.Join("/plugin/local", file)
 	}
 	m.Option(MSG_DISPLAY, Display0(2, file)["display"])

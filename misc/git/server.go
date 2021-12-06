@@ -124,7 +124,6 @@ func init() {
 					if p := r.URL.Path; strings.HasPrefix(p, "/x/") {
 						r.URL.Path = strings.Replace(r.URL.Path, "/x/", "/code/git/repos/", -1)
 						m.Info("rewrite %v -> %v", p, r.URL.Path)
-						return true
 					}
 					return false
 				})

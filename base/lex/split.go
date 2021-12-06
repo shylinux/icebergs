@@ -8,7 +8,7 @@ import (
 	kit "shylinux.com/x/toolkits"
 )
 
-func _split_deep(m *ice.Message, text string) (deep int) {
+func _split_deep(text string) (deep int) {
 	for _, c := range text {
 		switch c {
 		case '\t':
@@ -21,9 +21,20 @@ func _split_deep(m *ice.Message, text string) (deep int) {
 	}
 	return
 }
+func _split_deep2(stack []int, text string) ([]int, int) {
+	deep := _split_deep(text)
+	for i := len(stack) - 1; i >= 0; i-- {
+		if deep <= stack[i] {
+			stack = stack[:len(stack)-1]
+		}
+	}
+	stack = append(stack, deep)
+	return stack, len(stack)
+}
 func _split_list(m *ice.Message, file string, arg ...string) {
 	const DEEP = "_deep"
 	list := kit.List(kit.Data(DEEP, -1))
+	stack, deep := []int{}, 0
 	m.Cmd(nfs.CAT, file, func(text string) {
 		// if text = kit.Split(text, "#", "#")[0]; strings.TrimSpace(text) == "" {
 		// 	return
@@ -35,7 +46,8 @@ func _split_list(m *ice.Message, file string, arg ...string) {
 			return
 		}
 
-		deep := _split_deep(m, text)
+		// deep := _split_deep(text)
+		stack, deep = _split_deep2(stack, text)
 		data := kit.Data(DEEP, deep)
 
 		ls := kit.Split(text)

@@ -25,13 +25,13 @@ func _website_parse(m *ice.Message, text string) map[string]interface{} {
 			}
 		}
 		switch deep {
-		case 0:
+		case 1:
 			storm = kit.Dict()
 			river[ls[0]] = kit.Dict(kit.MDB_NAME, ls[1], "storm", storm, data)
-		case 4:
+		case 2:
 			last = kit.Dict(kit.MDB_NAME, ls[1], kit.MDB_LIST, kit.List(), data)
 			storm[ls[0]] = last
-		case 8:
+		case 3:
 			last[kit.MDB_LIST] = append(last[kit.MDB_LIST].([]interface{}),
 				kit.Dict(kit.MDB_NAME, ls[0], kit.MDB_HELP, ls[1], kit.MDB_INDEX, ls[0], data))
 		}
@@ -56,6 +56,7 @@ func init() {
 						switch text := kit.Format(value[kit.MDB_TEXT]); value[kit.MDB_TYPE] {
 						case "txt":
 							res := _website_parse(msg, kit.Format(value[kit.MDB_TEXT]))
+							// web.RenderResult(msg, kit.Format(res))
 							web.RenderResult(msg, _website_template2, kit.Format(res))
 						case "json":
 							web.RenderResult(msg, _website_template2, kit.Format(kit.UnMarshal(text)))
@@ -76,7 +77,7 @@ func init() {
 					m.Cmdy(nfs.DIR, arg[1:]).ProcessAgain()
 				}
 			}},
-			mdb.CREATE: {Name: "create path type=html,js,json name text", Help: "创建"},
+			mdb.CREATE: {Name: "create path type=html,js,json,txt name text", Help: "创建"},
 			mdb.IMPORT: {Name: "import path=src/", Help: "导入", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmd(nfs.DIR, kit.Dict(nfs.DIR_ROOT, m.Option(nfs.PATH)), func(p string) {
 					switch kit.Ext(p) {

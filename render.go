@@ -37,6 +37,8 @@ func Render(m *Message, cmd string, args ...interface{}) string {
 	case RENDER_VIDEOS: // src [size]
 		return kit.Format(`<video src="%s" height=%s controls>`, arg[0], kit.Select("120", arg, 1))
 
+	case RENDER_IFRAME: // src [size]
+		return kit.Format(`<iframe src="%s"></iframe>`, arg[0])
 	default:
 		return arg[0]
 	}
@@ -133,6 +135,11 @@ func (m *Message) PushVideos(key, src string, arg ...string) { // key src [size]
 		m.Push(key, Render(m, RENDER_VIDEOS, src, arg))
 	}
 }
+func (m *Message) PushIFrame(key, src string, arg ...string) { // key src [size]
+	if !m.IsCliUA() {
+		m.Push(key, Render(m, RENDER_IFRAME, src, arg))
+	}
+}
 func (m *Message) PushDownload(key string, arg ...interface{}) { // [name] file
 	if !m.IsCliUA() {
 		m.Push(key, Render(m, RENDER_DOWNLOAD, arg...))
@@ -201,6 +208,9 @@ func (m *Message) EchoImages(src string, arg ...string) *Message { // src [size]
 }
 func (m *Message) EchoVideos(src string, arg ...string) *Message { // src [size]
 	return m.Echo(Render(m, RENDER_VIDEOS, src, arg))
+}
+func (m *Message) EchoIFrame(src string, arg ...string) *Message { // src [size]
+	return m.Echo(Render(m, RENDER_IFRAME, src, arg))
 }
 func (m *Message) EchoDownload(arg ...interface{}) *Message { // [name] file
 	return m.Echo(Render(m, RENDER_DOWNLOAD, arg...))

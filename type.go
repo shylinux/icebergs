@@ -296,14 +296,18 @@ func (m *Message) Spawn(arg ...interface{}) *Message {
 		W: m.W, R: m.R, O: m.O, I: m.I,
 	}
 
-	if len(arg) > 0 {
-		switch val := arg[0].(type) {
+	for _, val := range arg {
+		switch val := val.(type) {
 		case []byte:
 			json.Unmarshal(val, &msg.meta)
-		case *Context:
-			msg.target = val
 		case Option:
 			msg.Option(val.Name, val.Value)
+		case http.ResponseWriter:
+			msg.W = val
+		case *http.Request:
+			msg.R = val
+		case *Context:
+			msg.target = val
 		}
 	}
 	return msg

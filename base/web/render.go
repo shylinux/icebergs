@@ -96,6 +96,12 @@ func RenderType(w http.ResponseWriter, name, mime string) {
 	default:
 	}
 }
+func RenderResult(msg *ice.Message, arg ...interface{}) {
+	Render(msg, ice.RENDER_RESULT, arg...)
+}
+func RenderDownload(msg *ice.Message, arg ...interface{}) {
+	Render(msg, ice.RENDER_DOWNLOAD, arg...)
+}
 
 type Buffer struct {
 	m *ice.Message

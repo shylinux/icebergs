@@ -194,6 +194,7 @@ const ( // RENDER
 	RENDER_QRCODE   = "_qrcode"
 	RENDER_IMAGES   = "_images"
 	RENDER_VIDEOS   = "_videos"
+	RENDER_IFRAME   = "_iframe"
 	RENDER_TEMPLATE = "_template"
 	RENDER_REDIRECT = "_redirect"
 	RENDER_DOWNLOAD = "_download"

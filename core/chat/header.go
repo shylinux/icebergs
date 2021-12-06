@@ -149,6 +149,7 @@ func init() {
 			m.Option(TRANS, kit.Format(kit.Value(c.Commands[cmd].Meta, "_trans")))
 			m.Option(MENUS, m.Config(MENUS))
 			m.Echo(m.Config(TITLE))
+			m.Cmdy(WEBSITE)
 		}},
 		HEADER: {Name: "header", Help: "标题栏", Action: map[string]*ice.Action{
 			GRANT: {Name: "grant space", Help: "授权", Hand: func(m *ice.Message, arg ...string) {

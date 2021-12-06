@@ -88,6 +88,7 @@ var _div_template = `<!DOCTYPE html>
 	<script>%s</script>
 </body>
 `
+
 var _div_template2 = `<!DOCTYPE html>
 <head>
 	<meta charset="utf-8">

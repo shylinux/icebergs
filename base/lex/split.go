@@ -25,7 +25,13 @@ func _split_list(m *ice.Message, file string, arg ...string) {
 	const DEEP = "_deep"
 	list := kit.List(kit.Data(DEEP, -1))
 	m.Cmd(nfs.CAT, file, func(text string) {
-		if text = kit.Split(text, "#", "#")[0]; strings.TrimSpace(text) == "" {
+		// if text = kit.Split(text, "#", "#")[0]; strings.TrimSpace(text) == "" {
+		// 	return
+		// }
+		if strings.HasPrefix(strings.TrimSpace(text), "# ") {
+			return
+		}
+		if strings.TrimSpace(text) == "" {
 			return
 		}
 
@@ -36,6 +42,8 @@ func _split_list(m *ice.Message, file string, arg ...string) {
 		switch cb := m.OptionCB(SPLIT).(type) {
 		case func([]string, map[string]interface{}) []string:
 			ls = cb(ls, data)
+		case func(int, []string, map[string]interface{}) []string:
+			ls = cb(deep, ls, data)
 		}
 
 		for _, k := range arg {

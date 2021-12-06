@@ -59,22 +59,20 @@ func _serve_main(m *ice.Message, w http.ResponseWriter, r *http.Request) bool {
 
 	for _, h := range rewriteList {
 		if h(w, r) {
-			return true
+			return false
 		}
 	}
 
-	// 主页接口
-	if r.Method == SPIDE_GET && r.URL.Path == "/" {
+	if r.Method == SPIDE_GET && r.URL.Path == ice.PS {
 		msg := m.Spawn()
 		msg.W, msg.R = w, r
 		repos := kit.Select(ice.INTSHELL, ice.VOLCANOS, strings.Contains(r.Header.Get("User-Agent"), "Mozilla/5.0"))
 		Render(msg, ice.RENDER_DOWNLOAD, path.Join(m.Config(kit.Keys(repos, kit.MDB_PATH)), m.Config(kit.Keys(repos, kit.MDB_INDEX))))
-		return false
+		return false // 网站主页
 	}
 
-	// 文件接口
 	if ice.Dump(w, r.URL.Path, func(name string) { RenderType(w, name, "") }) {
-		return false
+		return false // 打包文件
 	}
 	return true
 }

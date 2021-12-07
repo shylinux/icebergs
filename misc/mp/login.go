@@ -1,6 +1,9 @@
 package mp
 
 import (
+	"encoding/base64"
+	"time"
+
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/aaa"
 	"shylinux.com/x/icebergs/base/mdb"
@@ -11,10 +14,17 @@ import (
 )
 
 const (
-	APPID  = "appid"
-	APPMM  = "appmm"
-	ACCESS = "access"
-	OPENID = "openid"
+	APPID   = "appid"
+	APPMM   = "appmm"
+	ACCESS  = "access"
+	OPENID  = "openid"
+	TOKENS  = "tokens"
+	EXPIRES = "expires"
+	QRCODE  = "qrcode"
+)
+const (
+	ERRCODE = "errcode"
+	ERRMSG  = "errmsg"
 )
 const LOGIN = "login"
 
@@ -45,13 +55,37 @@ func init() {
 				)
 			}},
 			chat.SCAN: {Name: "scan", Help: "扫码", Hand: func(m *ice.Message, arg ...string) {
+				if m.Option(chat.GRANT) != "" {
+					m.Cmdy(chat.HEADER, chat.GRANT, web.SPACE, m.Option(chat.GRANT))
+					return
+				}
 				m.Cmdy(chat.SCAN, arg)
 			}},
 		}},
-		LOGIN: {Name: "login appid auto create", Help: "认证", Action: map[string]*ice.Action{
+		LOGIN: {Name: "login appid auto qrcode tokens create", Help: "认证", Action: map[string]*ice.Action{
 			mdb.CREATE: {Name: "create appid appmm", Help: "登录", Hand: func(m *ice.Message, arg ...string) {
 				m.Config(APPID, m.Option(APPID))
 				m.Config(APPMM, m.Option(APPMM))
+			}},
+			TOKENS: {Name: "tokens", Help: "令牌", Hand: func(m *ice.Message, arg ...string) {
+				if now := time.Now().Unix(); m.Config(TOKENS) == "" || now > kit.Int64(m.Config(EXPIRES)) {
+					msg := m.Cmd(web.SPIDE, MP, web.SPIDE_GET, "/cgi-bin/token?grant_type=client_credential",
+						APPID, m.Config(APPID), "secret", m.Config(APPMM))
+					if m.Warn(msg.Append(ERRCODE) != "", msg.Append(ERRCODE), msg.Append(ERRMSG)) {
+						return
+					}
+
+					m.Config(EXPIRES, now+kit.Int64(msg.Append("expires_in")))
+					m.Config(TOKENS, msg.Append("access_token"))
+				}
+				m.Echo(m.Config(TOKENS))
+			}},
+			QRCODE: {Name: "qrcode path scene", Help: "扫码", Hand: func(m *ice.Message, arg ...string) {
+				msg := m.Cmd(web.SPIDE, MP, web.SPIDE_POST, "/wxa/getwxacodeunlimit?access_token="+m.Cmdx(LOGIN, TOKENS),
+					m.OptionSimple("path,scene"))
+				m.Debug("what %v", msg.FormatMeta())
+				m.Echo(kit.Format(`<img src="data:image/png;base64,%s" title='%s'>`, base64.StdEncoding.EncodeToString([]byte(msg.Result())), "some"))
+				m.ProcessInner()
 			}},
 		}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			m.Echo(m.Config(APPID))

@@ -264,14 +264,15 @@ func init() {
 		}},
 		"/space/": {Name: "/space/ type name share river", Help: "空间站", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			if s, e := websocket.Upgrade(m.W, m.R, nil, kit.Int(m.Config("buffer.r")), kit.Int(m.Config("buffer.w"))); m.Assert(e) {
-				name := kit.Select(s.RemoteAddr().String(), m.Option(kit.MDB_NAME))
+				text := kit.Select(s.RemoteAddr().String(), m.Option(ice.MSG_USERADDR))
+				name := kit.Select(text, m.Option(kit.MDB_NAME))
 				name = m.Option(kit.MDB_NAME, strings.Replace(name, ".", "_", -1))
 				name = m.Option(kit.MDB_NAME, strings.Replace(name, ":", "-", -1))
 				kind := kit.Select(WORKER, m.Option(kit.MDB_TYPE))
 
 				// 添加节点
 				args := append([]string{kit.MDB_TYPE, kind, kit.MDB_NAME, name}, m.OptionSimple(SHARE, RIVER)...)
-				h := m.Rich(SPACE, nil, kit.Dict(SOCKET, s, kit.MDB_TEXT, s.RemoteAddr().String(), args))
+				h := m.Rich(SPACE, nil, kit.Dict(SOCKET, s, kit.MDB_TEXT, text, args))
 				m.Log_CREATE(SPACE, name, "type", kind)
 
 				m.Go(func() {

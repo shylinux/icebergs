@@ -8,37 +8,34 @@ import (
 	kit "shylinux.com/x/toolkits"
 )
 
-func _split_deep(text string) (deep int) {
+func _split_tab(text string) (tab int) {
 	for _, c := range text {
 		switch c {
 		case '\t':
-			deep += 4
+			tab += 4
 		case ' ':
-			deep++
+			tab++
 		default:
 			return
 		}
 	}
 	return
 }
-func _split_deep2(stack []int, text string) ([]int, int) {
-	deep := _split_deep(text)
+func _split_deep(stack []int, text string) ([]int, int) {
+	tab := _split_tab(text)
 	for i := len(stack) - 1; i >= 0; i-- {
-		if deep <= stack[i] {
+		if tab <= stack[i] {
 			stack = stack[:len(stack)-1]
 		}
 	}
-	stack = append(stack, deep)
+	stack = append(stack, tab)
 	return stack, len(stack)
 }
-func _split_list(m *ice.Message, file string, arg ...string) {
+func _split_list(m *ice.Message, file string, arg ...string) map[string]interface{} {
 	const DEEP = "_deep"
-	list := kit.List(kit.Data(DEEP, -1))
 	stack, deep := []int{}, 0
+	list := kit.List(kit.Data(DEEP, -1))
 	m.Cmd(nfs.CAT, file, func(text string) {
-		// if text = kit.Split(text, "#", "#")[0]; strings.TrimSpace(text) == "" {
-		// 	return
-		// }
 		if strings.HasPrefix(strings.TrimSpace(text), "# ") {
 			return
 		}
@@ -46,11 +43,10 @@ func _split_list(m *ice.Message, file string, arg ...string) {
 			return
 		}
 
-		// deep := _split_deep(text)
-		stack, deep = _split_deep2(stack, text)
+		stack, deep = _split_deep(stack, text)
 		data := kit.Data(DEEP, deep)
 
-		ls := kit.Split(text)
+		ls := kit.Split(text, m.Option(SPLIT_SPACE), m.Option(SPLIT_BLOCK), m.Option(SPLIT_QUOTE))
 		switch cb := m.OptionCB(SPLIT).(type) {
 		case func([]string, map[string]interface{}) []string:
 			ls = cb(ls, data)
@@ -77,9 +73,17 @@ func _split_list(m *ice.Message, file string, arg ...string) {
 			list = list[:len(list)-1]
 		}
 	})
-	m.Echo(kit.Format(list[0]))
+	return list[0].(map[string]interface{})
+}
+func Split(m *ice.Message, arg ...string) map[string]interface{} {
+	return kit.Value(_split_list(m, arg[0], arg[1:]...), "list.0").(map[string]interface{})
 }
 
+const (
+	SPLIT_SPACE = "split.space"
+	SPLIT_BLOCK = "split.block"
+	SPLIT_QUOTE = "split.quote"
+)
 const SPLIT = "split"
 
 func init() {
@@ -92,7 +96,7 @@ func init() {
 				return
 			}
 
-			_split_list(m, arg[0], arg[1:]...)
+			m.Echo(kit.Format(_split_list(m, arg[0], arg[1:]...)))
 			m.ProcessDisplay("/plugin/local/wiki/json.js")
 		}},
 	}})

@@ -3,6 +3,7 @@ package wiki
 import (
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/ctx"
+	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/nfs"
 	"shylinux.com/x/icebergs/base/ssh"
 	"shylinux.com/x/icebergs/base/web"
@@ -25,19 +26,22 @@ func init() {
 	Index.Merge(&ice.Context{Configs: map[string]*ice.Config{
 		WORD: {Name: WORD, Help: "语言文字", Value: kit.Data(
 			kit.MDB_PATH, "", kit.MDB_REGEXP, ".*\\.shy", kit.MDB_ALIAS, kit.Dict(
-				NAVMENU, []interface{}{TITLE, NAVMENU},
-				PREMENU, []interface{}{TITLE, PREMENU},
-				CHAPTER, []interface{}{TITLE, CHAPTER},
-				SECTION, []interface{}{TITLE, SECTION},
-				ENDMENU, []interface{}{TITLE, ENDMENU},
-				LABEL, []interface{}{CHART, LABEL},
-				CHAIN, []interface{}{CHART, CHAIN},
+				NAVMENU, kit.List(TITLE, NAVMENU),
+				PREMENU, kit.List(TITLE, PREMENU),
+				CHAPTER, kit.List(TITLE, CHAPTER),
+				SECTION, kit.List(TITLE, SECTION),
+				ENDMENU, kit.List(TITLE, ENDMENU),
+				LABEL, kit.List(CHART, LABEL),
+				CHAIN, kit.List(CHART, CHAIN),
 			),
 		)},
 	}, Commands: map[string]*ice.Command{
-		WORD: {Name: "word path=src/main.shy auto play", Help: "语言文字", Meta: kit.Dict(
+		WORD: {Name: "word path=src/main.shy@key auto play", Help: "语言文字", Meta: kit.Dict(
 			ice.Display("/plugin/local/wiki/word.js"),
 		), Action: ice.MergeAction(map[string]*ice.Action{
+			mdb.INPUTS: {Name: "inputs", Help: "补全", Hand: func(m *ice.Message, arg ...string) {
+				m.Cmdy(nfs.DIR, "src/", kit.Dict(nfs.DIR_DEEP, ice.TRUE, nfs.DIR_REG, ".*\\.shy"), "path,time")
+			}},
 			web.STORY: {Name: "story", Help: "运行", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmdy(arg[0], ctx.ACTION, ice.RUN, arg[2:])
 			}},

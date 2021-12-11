@@ -6,4 +6,5 @@ import (
 	_ "shylinux.com/x/icebergs/core/mall"
 	_ "shylinux.com/x/icebergs/core/team"
 	_ "shylinux.com/x/icebergs/core/wiki"
+	_ "shylinux.com/x/icebergs/core/wiki/chart"
 )

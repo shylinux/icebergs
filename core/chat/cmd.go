@@ -16,19 +16,18 @@ const CMD = "cmd"
 
 func init() {
 	Index.Merge(&ice.Context{Configs: map[string]*ice.Config{
-		CMD: {Name: CMD, Help: "命令", Value: kit.Data(
-			kit.MDB_SHORT, "type", kit.MDB_PATH, ice.PWD,
-		)},
+		CMD: {Name: CMD, Help: "命令", Value: kit.Data(kit.MDB_SHORT, "type", kit.MDB_PATH, ice.PWD)},
 	}, Commands: map[string]*ice.Command{
 		"/cmd/": {Name: "/cmd/", Help: "命令", Action: ice.MergeAction(map[string]*ice.Action{
 			ice.CTX_INIT: {Name: "_init", Help: "初始化", Hand: func(m *ice.Message, arg ...string) {
-				m.Cmdy(CMD, mdb.CREATE, kit.MDB_TYPE, "go", kit.MDB_NAME, "web.code.inner")
-				m.Cmdy(CMD, mdb.CREATE, kit.MDB_TYPE, "mod", kit.MDB_NAME, "web.code.inner")
-				m.Cmdy(CMD, mdb.CREATE, kit.MDB_TYPE, "sum", kit.MDB_NAME, "web.code.inner")
 				m.Cmdy(CMD, mdb.CREATE, kit.MDB_TYPE, "shy", kit.MDB_NAME, "web.wiki.word")
 				m.Cmdy(CMD, mdb.CREATE, kit.MDB_TYPE, "svg", kit.MDB_NAME, "web.wiki.draw")
 				m.Cmdy(CMD, mdb.CREATE, kit.MDB_TYPE, "csv", kit.MDB_NAME, "web.wiki.data")
 				m.Cmdy(CMD, mdb.CREATE, kit.MDB_TYPE, "json", kit.MDB_NAME, "web.wiki.json")
+
+				for _, k := range []string{"sh", "go", "js", "mod", "sum"} {
+					m.Cmdy(CMD, mdb.CREATE, kit.MDB_TYPE, k, kit.MDB_NAME, "web.code.inner")
+				}
 			}},
 		}, ctx.CmdAction()), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			if strings.HasSuffix(m.R.URL.Path, ice.PS) {

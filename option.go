@@ -65,6 +65,9 @@ func (m *Message) OptionTemplate() string {
 		}
 	}
 	for _, key := range kit.Split("type,name,text") {
+		if key == "text" && m.Option("type") == "spark" {
+			continue
+		}
 		if m.Option(key) != "" {
 			res = append(res, kit.Format(`data-%s="%s"`, key, m.Option(key)))
 		}

@@ -121,6 +121,8 @@ const (
 	CYAN   = "cyan"
 	WHITE  = "white"
 	RANDOM = "random"
+	GLASS  = "#0000"
+	GRAY   = "gray"
 )
 const QRCODE = "qrcode"
 

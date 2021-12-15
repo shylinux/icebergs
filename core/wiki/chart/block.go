@@ -56,10 +56,7 @@ func (b *Block) Data(m *ice.Message, meta interface{}) wiki.Chart {
 	return b
 }
 func (b *Block) Draw(m *ice.Message, x, y int) wiki.Chart {
-	float := 3
-	if strings.Contains(m.Option(ice.MSG_USERUA), "iPhone") {
-		float += 0
-	}
+	float := kit.Int(kit.Select("2", "7", strings.Contains(m.Option(ice.MSG_USERUA), "iPhone")))
 	if m.Option(HIDE_BLOCK) != ice.TRUE {
 		item := wiki.NewItem([]string{`<rect height="%d" width="%d" rx="4" ry="4" x="%d" y="%d"`}, b.GetHeight(), b.GetWidth(), x+b.MarginX/2, y+b.MarginY/2)
 		item.Push(`fill="%s"`, b.BackGround).Push(`%v`, b.RectData).Echo("/>").Dump(m)

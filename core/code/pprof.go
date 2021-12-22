@@ -40,9 +40,9 @@ func init() {
 			})
 		}},
 		"/pprof/": {Name: "/pprof/", Help: "性能分析", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			m.R.URL.Path = strings.Replace(kit.Path("/code/"+cmd, arg...), "/code", "/debug", -1)
+			defer m.Render(ice.RENDER_VOID)
+			m.R.URL.Path = "/debug" + m.R.URL.Path
 			http.DefaultServeMux.ServeHTTP(m.W, m.R)
-			m.Render(ice.RENDER_VOID)
 		}},
 		PPROF: {Name: "pprof zone id auto", Help: "性能分析", Action: ice.MergeAction(map[string]*ice.Action{
 			mdb.INPUTS: {Name: "inputs", Help: "补全", Hand: func(m *ice.Message, arg ...string) {

@@ -183,6 +183,7 @@ const (
 	ADD = "add"
 	OPT = "opt"
 	PRO = "pro"
+	PIE = "pie"
 
 	TAGS    = "tags"
 	DIFF    = "diff"
@@ -259,9 +260,12 @@ func init() {
 					}
 				}
 			}},
+			PIE: {Name: "pie", Help: "饼图", Hand: func(m *ice.Message, arg ...string) {
+				m.Cmdy(TOTAL, PIE)
+			}},
 		}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			if len(arg) == 0 {
-				m.Action(PULL, MAKE, PUSH, TAGS)
+				m.Action(PULL, MAKE, PUSH, TAGS, PIE)
 
 				files, adds, dels, last := _status_list(m)
 				m.Status("files", files, "adds", adds, "dels", dels, "last", last.Format(ice.MOD_TIME))

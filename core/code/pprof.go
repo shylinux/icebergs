@@ -35,17 +35,16 @@ func init() {
 				if p := r.URL.Path; strings.HasPrefix(p, "/debug") {
 					r.URL.Path = strings.Replace(r.URL.Path, "/debug", "/code", -1)
 					m.Debug("rewrite %v -> %v", p, r.URL.Path)
-					return true
 				}
 				return false
 			})
 		}},
 		"/pprof/": {Name: "/pprof/", Help: "性能分析", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			m.R.URL.Path = strings.Replace("/code"+m.R.URL.Path, "code", "debug", 1)
+			m.R.URL.Path = strings.Replace(kit.Path("/code/"+cmd, arg...), "/code", "/debug", -1)
 			http.DefaultServeMux.ServeHTTP(m.W, m.R)
 			m.Render(ice.RENDER_VOID)
 		}},
-		PPROF: {Name: "pprof zone id auto create", Help: "性能分析", Action: ice.MergeAction(map[string]*ice.Action{
+		PPROF: {Name: "pprof zone id auto", Help: "性能分析", Action: ice.MergeAction(map[string]*ice.Action{
 			mdb.INPUTS: {Name: "inputs", Help: "补全", Hand: func(m *ice.Message, arg ...string) {
 				switch arg[0] {
 				case BINNARY:
@@ -56,20 +55,16 @@ func init() {
 					})
 				}
 			}},
-			mdb.CREATE: {Name: "create zone=some binnary service seconds=3", Help: "创建"},
-			mdb.INSERT: {Name: "insert zone type name text", Help: "插入"},
+			mdb.CREATE: {Name: "create zone=some binnary=bin/ice.bin service='http://localhost:9020/debug/pprof/profile' seconds=3", Help: "创建"},
 
 			ice.RUN: {Name: "run", Help: "执行", Hand: func(m *ice.Message, arg ...string) {
 				msg := m.Cmd(web.SPIDE, ice.DEV, web.SPIDE_CACHE, web.SPIDE_GET, m.Option(SERVICE), SECONDS, m.Option(SECONDS))
 
-				cmd := kit.Simple(m.Confv(PPROF, kit.Keym(PPROF)), "-text", m.Option(BINNARY), msg.Append(kit.MDB_FILE))
-				res := strings.Split(m.Cmdx(cli.SYSTEM, cmd), ice.NL)
-				if len(res) > 20 {
-					res = res[:20]
-				}
+				cmd := kit.Simple(m.Configv(PPROF), "-text", m.Option(BINNARY), msg.Append(nfs.FILE))
+				res := kit.Slice(strings.Split(m.Cmdx(cli.SYSTEM, cmd), ice.NL), 0, 20)
 
 				m.Cmd(mdb.INSERT, PPROF, "", mdb.ZONE, m.Option(kit.MDB_ZONE),
-					kit.MDB_TEXT, strings.Join(res, ice.NL), kit.MDB_FILE, msg.Append(kit.MDB_FILE))
+					kit.MDB_TEXT, strings.Join(res, ice.NL), nfs.FILE, msg.Append(nfs.FILE))
 				m.Echo(strings.Join(res, ice.NL))
 				m.ProcessInner()
 			}},
@@ -77,7 +72,7 @@ func init() {
 				u := kit.ParseURL(m.Option(ice.MSG_USERWEB))
 				p := u.Hostname() + ":" + m.Cmdx(tcp.PORT, aaa.RIGHT)
 
-				m.Cmd(cli.DAEMON, m.Confv(PPROF, kit.Keym(PPROF)), "-http="+p, m.Option(BINNARY), m.Option(kit.MDB_FILE))
+				m.Cmd(cli.DAEMON, m.Configv(PPROF), "-http="+p, m.Option(BINNARY), m.Option(nfs.FILE))
 				m.Echo("http://%s/ui/top", p)
 				m.ProcessInner()
 			}},
@@ -85,11 +80,12 @@ func init() {
 			m.Fields(len(arg), "time,zone,count,binnary,service,seconds", m.Config(kit.MDB_FIELD))
 			if mdb.ZoneSelect(m, arg...); len(arg) == 0 {
 				m.PushAction(ice.RUN, mdb.REMOVE)
+				m.Action(mdb.CREATE)
 				return
 			}
 
 			m.Table(func(index int, value map[string]string, head []string) {
-				m.PushDownload(kit.MDB_LINK, "pprof.pd.gz", value[kit.MDB_FILE])
+				m.PushDownload(kit.MDB_LINK, "pprof.pd.gz", value[nfs.FILE])
 				m.PushButton(web.SERVE)
 			})
 		}},

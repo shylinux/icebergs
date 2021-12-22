@@ -102,7 +102,7 @@ echo "hello world"
 				m.Option("httphost", fmt.Sprintf("%s://%s:%s", u.Scheme, strings.Split(u.Host, ":")[0], kit.Select(kit.Select("80", "443", u.Scheme == "https"), strings.Split(u.Host, ":"), 1)))
 
 				if len(arg) == 0 {
-					arg = append(arg, "misc", "core", "base", "binary", "source", "project")
+					arg = append(arg, "misc", "core", "base", "project", "binary", "source")
 				}
 				for _, k := range arg {
 					if buf, err := kit.Render(m.Config(kit.Keys(ice.CONTEXTS, k)), m); m.Assert(err) {
@@ -159,25 +159,22 @@ echo "hello world"
 }
 
 var _contexts = kit.Dict(
-	"project", `# 创建项目
-ctx_temp=$(mktemp); curl -fsSL https://shylinux.com -o $ctx_temp; source $ctx_temp project
-`,
 	"source", `# 下载源码
 ctx_temp=$(mktemp); curl -fsSL https://shylinux.com -o $ctx_temp; source $ctx_temp source
 `,
 	"binary", `# 安装应用
 ctx_temp=$(mktemp); curl -fsSL https://shylinux.com -o $ctx_temp; source $ctx_temp binary
 `,
-	"base", `# 生产环境
-export ctx_dev={{.Option "httphost"}}; ctx_temp=$(mktemp); curl -fsSL $ctx_dev -o $ctx_temp; source $ctx_temp app
+	"project", `# 创建项目
+ctx_temp=$(mktemp); curl -fsSL https://shylinux.com -o $ctx_temp; source $ctx_temp project
 `,
-	"core", `# 开发环境
+	"base", `# 开发环境
 export ctx_dev={{.Option "httphost"}}; ctx_temp=$(mktemp); curl -fsSL $ctx_dev -o $ctx_temp; source $ctx_temp dev
+`,
+	"core", `# 生产环境
+export ctx_dev={{.Option "httphost"}}; ctx_temp=$(mktemp); curl -fsSL $ctx_dev -o $ctx_temp; source $ctx_temp app
 `,
 	"misc", `# 终端环境
 export ctx_dev={{.Option "httphost"}}; ctx_temp=$(mktemp); curl -fsSL $ctx_dev -o $ctx_temp; source $ctx_temp
-`,
-	"tool", `# 群组环境
-export ctx_dev={{.Option "httphost"}} ctx_share={{.Option "share"}} ctx_river={{.Option "sess.river"}} ctx_temp=$(mktemp); curl -fsSL $ctx_dev -o $ctx_temp; source $ctx_temp app
 `,
 )

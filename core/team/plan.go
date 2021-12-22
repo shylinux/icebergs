@@ -71,27 +71,17 @@ func init() {
 		PLAN: {Name: "plan scale=week,day,week,month,year,long begin_time@date place@province auto insert export import", Help: "计划", Meta: kit.Dict(
 			ice.Display("/plugin/local/team/plan.js"),
 		), Action: ice.MergeAction(map[string]*ice.Action{
-			mdb.INPUTS: {Name: "inputs", Help: "补全", Hand: func(m *ice.Message, arg ...string) {
-				switch arg[0] {
-				case m.Conf(TASK, kit.Keym(kit.MDB_SHORT)):
-					m.Cmdy(mdb.INPUTS, m.Prefix(TASK), "", mdb.HASH, arg)
-				default:
-					m.Cmdy(mdb.INPUTS, m.Prefix(TASK), "", mdb.ZONE, m.Option(m.Conf(TASK, kit.Keym(kit.MDB_SHORT))), arg)
-				}
-			}},
 			mdb.PLUGIN: {Name: "plugin extra.ctx extra.cmd extra.arg", Help: "插件", Hand: func(m *ice.Message, arg ...string) {
 				_task_modify(m, arg[0], arg[1], arg[2:]...)
 			}},
 			ice.RUN: {Name: "run", Help: "执行", Hand: func(m *ice.Message, arg ...string) {
+				m.Option(ice.POD, m.Option("task.pod"))
+				m.Option("task.pod", "")
+				if m.PodCmd(m.PrefixKey(), ice.RUN, arg) {
+					return
+				}
 				msg := m.Cmd(TASK, arg[0], arg[1])
-				if pod := msg.Append(kit.KeyExtra(ice.POD)); pod != "" {
-					m.Option(ice.POD, pod)
-				}
-				m.Debug(msg.FormatMeta())
-				args := kit.Simple(kit.Keys(msg.Append(kit.KeyExtra(ice.CTX)), msg.Append(kit.KeyExtra(ice.CMD))), arg[2:])
-				if !m.PodCmd(args) {
-					m.Cmdy(args)
-				}
+				m.Cmdy(kit.Simple(kit.Keys(msg.Append(kit.KeyExtra(ice.CTX)), msg.Append(kit.KeyExtra(ice.CMD))), arg[2:]))
 			}},
 		}, TASK), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			begin_time, end_time := _plan_scope(m, 8, arg...)

@@ -14,15 +14,15 @@ import (
 	"shylinux.com/x/toolkits/util/bench"
 )
 
-func _bench_http(m *ice.Message, name, target string, arg ...string) {
+func _bench_http(m *ice.Message, target string, arg ...string) {
 	nconn := kit.Int64(kit.Select("10", m.Option(NCONN)))
-	nreqs := kit.Int64(kit.Select("1000", m.Option(NREQS)))
-	m.Echo("nconn: %d nreqs: %d\n", nconn, nreqs*nconn)
+	nreqs := kit.Int64(kit.Select("100", m.Option(NREQS)))
+	m.Echo("nconn: %d total: %d\n", nconn, nreqs*nconn)
 
 	list := []*http.Request{}
-	for _, v := range strings.Split(target, ice.SP) {
+	for _, v := range strings.Split(target, ice.NL) {
 		switch ls := kit.Split(v); ls[0] {
-		case http.MethodPost:
+		case http.MethodPost: // POST,url,file
 			if f, e := os.Open(ls[2]); m.Assert(e) {
 				defer f.Close()
 
@@ -35,6 +35,7 @@ func _bench_http(m *ice.Message, name, target string, arg ...string) {
 			m.Assert(err)
 			list = append(list, req)
 		}
+		m.Debug("what %v", v)
 	}
 
 	var body int64
@@ -48,7 +49,7 @@ func _bench_http(m *ice.Message, name, target string, arg ...string) {
 	m.Echo("body: %d\n", body)
 	m.ProcessInner()
 }
-func _bench_redis(m *ice.Message, name, target string, arg ...string) {
+func _bench_redis(m *ice.Message, target string, arg ...string) {
 }
 
 const (
@@ -67,17 +68,14 @@ func init() {
 			kit.MDB_SHORT, kit.MDB_ZONE, kit.MDB_FIELD, "time,id,type,name,text,nconn,nreqs",
 		)},
 	}, Commands: map[string]*ice.Command{
-		"/bench": {Name: "/bench cmd...", Help: "性能压测", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			m.Cmdy(m.Optionv("cmd"))
-		}},
 		BENCH: {Name: "bench zone id auto insert", Help: "性能压测", Action: ice.MergeAction(map[string]*ice.Action{
-			mdb.INSERT: {Name: "insert zone=some type=http,redis name=demo text nconn=3 nreqs=10", Help: "添加"},
+			mdb.INSERT: {Name: "insert zone=some type=http,redis name=demo text='http://localhost:9020' nconn=3 nreqs=10", Help: "添加"},
 			ice.RUN: {Name: "run", Help: "执行", Hand: func(m *ice.Message, arg ...string) {
 				switch m.Option(kit.MDB_TYPE) {
 				case HTTP:
-					_bench_http(m, m.Option(kit.MDB_NAME), m.Option(kit.MDB_TEXT))
+					_bench_http(m, m.Option(kit.MDB_TEXT))
 				case REDIS:
-					_bench_redis(m, m.Option(kit.MDB_NAME), m.Option(kit.MDB_TEXT))
+					_bench_redis(m, m.Option(kit.MDB_TEXT))
 				}
 			}},
 		}, mdb.ZoneAction()), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {

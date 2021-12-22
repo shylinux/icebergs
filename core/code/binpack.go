@@ -20,20 +20,18 @@ func _pack_write(o io.Writer, arg ...string) {
 	}
 	fmt.Fprintln(o)
 }
-func _pack_file(m *ice.Message, file string) string {
-	list := ""
+func _pack_file(m *ice.Message, name, file string) string {
+	text := ""
 	if f, e := os.Open(file); e == nil {
 		defer f.Close()
 
-		if b, e := ioutil.ReadAll(f); e == nil {
-			list = fmt.Sprintf("%v", b)
+		if b, e := ioutil.ReadAll(f); e == nil && len(b) > 0 {
+			if list := strings.ReplaceAll(fmt.Sprintf("%v", b), ice.SP, ice.FS); len(list) > 0 {
+				text = list[1 : len(list)-1]
+			}
 		}
 	}
-
-	if list = strings.ReplaceAll(list, ice.SP, ","); len(list) > 0 {
-		return fmt.Sprintf(`[]byte{%v}`, list[1:len(list)-1])
-	}
-	return "[]byte{}"
+	return fmt.Sprintf("        \"%s\": []byte{%s},\n", name, text)
 }
 func _pack_dir(m *ice.Message, pack *os.File, dir string) {
 	m.Option(nfs.DIR_DEEP, ice.TRUE)
@@ -49,8 +47,7 @@ func _pack_dir(m *ice.Message, pack *os.File, dir string) {
 			return
 		}
 
-		pack.WriteString(fmt.Sprintf("        \"%s\": %s,\n",
-			path.Join(dir, value[kit.MDB_PATH]), _pack_file(m, path.Join(dir, value[kit.MDB_PATH]))))
+		pack.WriteString(_pack_file(m, path.Join(dir, value[kit.MDB_PATH]), path.Join(dir, value[kit.MDB_PATH])))
 	})
 	pack.WriteString(ice.NL)
 }
@@ -61,12 +58,11 @@ func _pack_volcanos(m *ice.Message, pack *os.File, dir string) {
 	m.Option(nfs.DIR_ROOT, dir)
 
 	for _, k := range []string{ice.FAVICON, ice.PROTO_JS, ice.FRAME_JS} {
-		pack.WriteString(fmt.Sprintf("        \"/%s\": %s,\n", k, _pack_file(m, path.Join(dir, k))))
+		pack.WriteString(_pack_file(m, ice.PS+k, path.Join(dir, k)))
 	}
 	for _, k := range []string{"lib", "page", "panel", "plugin"} {
 		m.Cmd(nfs.DIR, k).Sort(kit.MDB_PATH).Table(func(index int, value map[string]string, head []string) {
-			pack.WriteString(fmt.Sprintf("        \"/%s\": %s,\n",
-				value[kit.MDB_PATH], _pack_file(m, path.Join(dir, value[kit.MDB_PATH]))))
+			pack.WriteString(_pack_file(m, ice.PS+value[kit.MDB_PATH], path.Join(dir, value[kit.MDB_PATH])))
 		})
 	}
 	pack.WriteString(ice.NL)

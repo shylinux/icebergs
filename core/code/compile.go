@@ -70,7 +70,7 @@ func init() {
 			m.Log_EXPORT(cli.SOURCE, main, cli.TARGET, file)
 			m.Cmdy(nfs.DIR, file, "time,path,size,link,action")
 			m.Cmdy(PUBLISH, mdb.CREATE, ice.BIN_ICE_SH)
-			m.Cmdy(PUBLISH, ice.CONTEXTS, ice.BASE)
+			m.Cmdy(PUBLISH, ice.CONTEXTS, ice.CORE)
 			m.StatusTimeCount()
 		}},
 	}})

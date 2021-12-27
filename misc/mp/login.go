@@ -83,7 +83,6 @@ func init() {
 			QRCODE: {Name: "qrcode path scene", Help: "扫码", Hand: func(m *ice.Message, arg ...string) {
 				msg := m.Cmd(web.SPIDE, MP, web.SPIDE_POST, "/wxa/getwxacodeunlimit?access_token="+m.Cmdx(LOGIN, TOKENS),
 					m.OptionSimple("path,scene"))
-				m.Debug("what %v", msg.FormatMeta())
 				m.Echo(kit.Format(`<img src="data:image/png;base64,%s" title='%s'>`, base64.StdEncoding.EncodeToString([]byte(msg.Result())), "some"))
 				m.ProcessInner()
 			}},

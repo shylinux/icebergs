@@ -22,12 +22,17 @@ func (m *Message) Config(key string, arg ...interface{}) string {
 		m.Conf(m.PrefixKey(), kit.Keym(key), arg[0])
 	}
 	return m.Conf(m.PrefixKey(), kit.Keym(key))
+	// return kit.Format(m.Configv(key, arg...))
 }
 func (m *Message) Configv(key string, arg ...interface{}) interface{} {
 	if len(arg) > 0 {
 		m.Confv(m.PrefixKey(), kit.Keym(key), arg[0])
 	}
 	return m.Confv(m.PrefixKey(), kit.Keym(key))
+}
+func (m *Message) Configm(key string, arg ...interface{}) map[string]interface{} {
+	v, _ := m.Configv(key, arg...).(map[string]interface{})
+	return v
 }
 func (m *Message) ConfigSimple(key ...string) (list []string) {
 	for _, k := range kit.Split(kit.Join(key)) {

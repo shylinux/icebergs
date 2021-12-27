@@ -37,7 +37,14 @@ func (m *Message) CSV(text string, head ...string) *Message {
 	}
 	return m
 }
-func (m *Message) Split(str string, field string, sp string, nl string) *Message {
+func (m *Message) SplitIndex(str string, arg ...string) *Message {
+	return m.Split(str, kit.Simple("index", arg)...)
+}
+func (m *Message) Split(str string, arg ...string) *Message {
+	m.Set(MSG_APPEND).Set(MSG_RESULT)
+	field := kit.Select("", arg, 0)
+	sp := kit.Select(SP, arg, 1)
+	nl := kit.Select(NL, arg, 2)
 	fields, indexs := kit.Split(field, sp, sp, sp), []int{}
 	for i, l := range kit.Split(str, nl, nl, nl) {
 		if strings.HasPrefix(l, "Binary") {
@@ -58,9 +65,9 @@ func (m *Message) Split(str string, field string, sp string, nl string) *Message
 		if len(indexs) > 0 { // 按位切分
 			for i, v := range indexs {
 				if i == len(indexs)-1 {
-					m.Push(kit.Select(SP, fields, i), l[v:])
+					m.Push(strings.TrimSpace(kit.Select(SP, fields, i)), strings.TrimSpace(l[v:]))
 				} else {
-					m.Push(kit.Select(SP, fields, i), l[v:indexs[i+1]])
+					m.Push(strings.TrimSpace(kit.Select(SP, fields, i)), strings.TrimSpace(l[v:indexs[i+1]]))
 				}
 			}
 			continue
@@ -112,6 +119,9 @@ func (m *Message) OptionUserWeb() *url.URL {
 }
 func (m *Message) SetAppend(arg ...string) *Message {
 	return m.Set(MSG_APPEND, arg...)
+}
+func (m *Message) SetResult(arg ...string) *Message {
+	return m.Set(MSG_RESULT, arg...)
 }
 func (m *Message) RenameAppend(from, to string) {
 	for i, v := range m.meta[MSG_APPEND] {

@@ -32,7 +32,7 @@ func init() {
 		}, PlugAction())},
 	}, Configs: map[string]*ice.Config{
 		SHY: {Name: SHY, Help: "脚本", Value: kit.Data(PLUG, kit.Dict(
-			PREFIX, kit.Dict("#", COMMENT),
+			PREFIX, kit.Dict("# ", COMMENT),
 			PREPARE, kit.Dict(
 				KEYWORD, kit.Simple(
 					"title",

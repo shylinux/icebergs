@@ -35,49 +35,50 @@ func _space_domain(m *ice.Message) (link string) {
 	return tcp.ReplaceLocalhost(m, link)
 }
 func _space_dial(m *ice.Message, dev, name string, arg ...string) {
-	m.Richs(SPIDE, nil, dev, func(key string, value map[string]interface{}) {
-		client := kit.Value(value, tcp.CLIENT).(map[string]interface{})
-		redial := m.Confm(SPACE, kit.Keym("redial"))
+	if strings.HasPrefix(dev, "http") {
+		m.Cmd(SPIDE, mdb.CREATE, ice.DEV, dev)
+		dev = ice.DEV
+	}
+
+	value := m.Richs(SPIDE, nil, dev, nil)
+	client := kit.Value(value, tcp.CLIENT).(map[string]interface{})
+
+	host := kit.Format(client[tcp.HOSTNAME])
+	proto := strings.Replace(kit.Format(client[tcp.PROTOCOL]), "http", "ws", 1)
+	uri := kit.MergeURL(proto+"://"+host+"/space/", kit.MDB_TYPE, ice.Info.NodeType, kit.MDB_NAME, name,
+		SHARE, m.Conf(cli.RUNTIME, kit.Keys("conf.ctx_share")), RIVER, m.Conf(cli.RUNTIME, kit.Keys("conf.ctx_river")), arg)
+
+	m.Go(func() {
+		u := kit.ParseURL(uri)
+		redial := m.Configm("redial")
 		frame := m.Target().Server().(*Frame)
 
-		host := kit.Format(client[tcp.HOSTNAME])
-		proto := strings.Replace(kit.Format(client[tcp.PROTOCOL]), "http", "ws", 1)
-		uri := kit.MergeURL(proto+"://"+host+"/space/", kit.MDB_TYPE, ice.Info.NodeType, kit.MDB_NAME, name,
-			SHARE, m.Conf(cli.RUNTIME, kit.Keys("conf.ctx_share")), RIVER, m.Conf(cli.RUNTIME, kit.Keys("conf.ctx_river")), arg)
-		u := kit.ParseURL(uri)
+		for i := 0; i >= 0 && i < kit.Int(redial["c"]); i++ {
+			msg := m.Spawn()
+			msg.Option(kit.Keycb(tcp.DIAL), func(s net.Conn) {
+				if s, _, e := websocket.NewClient(s, u, nil, kit.Int(redial["r"]), kit.Int(redial["w"])); !msg.Warn(e) {
+					msg.Rich(SPACE, nil, kit.Dict(SOCKET, s, kit.MDB_TYPE, MASTER, kit.MDB_NAME, dev, kit.MDB_TEXT, host))
+					msg.Log_CREATE(SPACE, dev, "retry", i, "uri", uri)
 
-		m.Go(func() {
-			for i := 0; i >= 0 && i < kit.Int(redial["c"]); i++ {
-				msg := m.Spawn()
-				msg.Option(kit.Keycb(tcp.DIAL), func(s net.Conn, e error) {
-					if msg.Warn(e) {
-						return
+					// 连接成功
+					if i = 0; _space_handle(msg, true, frame.send, s, dev) {
+						i = -2 // 连接关闭
 					}
+				}
+			})
+			ls := strings.Split(host, ":")
+			msg.Cmd(tcp.CLIENT, tcp.DIAL, kit.SimpleKV("type,name,host,port", proto, dev, ls[0], kit.Select("443", ls, 1)))
 
-					if s, _, e := websocket.NewClient(s, u, nil, kit.Int(redial["r"]), kit.Int(redial["w"])); !msg.Warn(e) {
-						msg.Rich(SPACE, nil, kit.Dict(SOCKET, s, kit.MDB_TYPE, MASTER, kit.MDB_NAME, dev, kit.MDB_TEXT, host))
-						msg.Log_CREATE(SPACE, dev, "retry", i, "uri", uri)
-
-						// 连接成功
-						if i = 0; _space_handle(msg, true, frame.send, s, dev) {
-							i = -2 // 连接关闭
-						}
-					}
-				})
-				ls := strings.Split(host, ":")
-				msg.Cmd(tcp.CLIENT, tcp.DIAL, kit.MDB_TYPE, "wss", kit.MDB_NAME, dev, tcp.HOST, ls[0], tcp.PORT, kit.Select("443", ls, 1))
-
-				// 断线重连
-				sleep := time.Duration(rand.Intn(kit.Int(redial["a"])*i+2)+kit.Int(redial["b"])) * time.Millisecond
-				msg.Cost("order", i, "sleep", sleep, "reconnect", dev)
-				time.Sleep(sleep)
-			}
-		})
+			// 断线重连
+			sleep := time.Duration(rand.Intn(kit.Int(redial["a"])*i+2)+kit.Int(redial["b"])) * time.Millisecond
+			msg.Cost("order", i, "sleep", sleep, "reconnect", dev)
+			time.Sleep(sleep)
+		}
 	})
 }
 func _space_handle(m *ice.Message, safe bool, send map[string]*ice.Message, c *websocket.Conn, name string) bool {
 	for running := true; running; {
-		if _, b, e := c.ReadMessage(); m.Warn(e, "space", name) {
+		if _, b, e := c.ReadMessage(); m.Warn(e, SPACE, name) {
 			break
 		} else {
 			socket, msg := c, m.Spawn(b)
@@ -90,7 +91,12 @@ func _space_handle(m *ice.Message, safe bool, send map[string]*ice.Message, c *w
 				if msg.Optionv(ice.MSG_HANDLE, ice.TRUE); safe {
 					msg.Go(func() { _space_exec(msg, source, target, c, name) })
 				} else {
-					msg.Push(kit.MDB_LINK, kit.MergePOD(_space_domain(msg), name))
+					url := kit.ParseURL(_space_domain(msg))
+					pod := url.Query().Get(ice.POD)
+					if strings.HasPrefix(url.Path, "/chat/pod") {
+						pod = strings.Split(url.Path, ice.PS)[3]
+					}
+					msg.Push(kit.MDB_LINK, kit.MergeURL2(url.String(), "/chat/pod/"+kit.Keys(pod, name), ice.POD, ""))
 					_space_echo(msg, []string{}, kit.Revert(source)[1:], c, name)
 				}
 
@@ -120,7 +126,7 @@ func _space_handle(m *ice.Message, safe bool, send map[string]*ice.Message, c *w
 				}
 
 			} else { // 接收响应
-				m.Sleep("30ms")
+				m.Sleep30ms()
 				res.Back(msg)
 			}
 		}
@@ -243,7 +249,7 @@ func init() {
 			m.Cmd(mdb.SEARCH, mdb.CREATE, SPACE, m.Prefix(SPACE))
 		}},
 		SPACE: {Name: "space name cmd auto", Help: "空间站", Action: ice.MergeAction(map[string]*ice.Action{
-			tcp.DIAL: {Name: "dial dev name river", Help: "连接", Hand: func(m *ice.Message, arg ...string) {
+			tcp.DIAL: {Name: "dial dev=ops name river", Help: "连接", Hand: func(m *ice.Message, arg ...string) {
 				_space_dial(m, m.Option(ice.DEV), kit.Select(ice.Info.NodeName, m.Option(kit.MDB_NAME)))
 			}},
 			mdb.SEARCH: {Name: "search type name text", Help: "搜索", Hand: func(m *ice.Message, arg ...string) {
@@ -282,11 +288,11 @@ func init() {
 					case CHROME: // 交互节点
 						m.Go(func(msg *ice.Message) {
 							switch m.Option("cmd") {
-							case "pwd":
+							case cli.PWD:
 								link := kit.MergeURL(_space_domain(msg), "grant", name)
-								msg.Sleep("100ms").Cmd(SPACE, name, "pwd", name, link, msg.Cmdx(cli.QRCODE, link))
+								msg.Sleep("100ms").Cmd(SPACE, name, cli.PWD, name, link, msg.Cmdx(cli.QRCODE, link))
 							default:
-								msg.Sleep("100ms").Cmd(SPACE, name, "pwd", name)
+								msg.Sleep("100ms").Cmd(SPACE, name, cli.PWD, name)
 							}
 						})
 					case WORKER: // 工作节点

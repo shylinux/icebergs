@@ -14,7 +14,6 @@ func _hash_fields(m *ice.Message) []string {
 }
 func _hash_inputs(m *ice.Message, prefix, chain string, field, value string) {
 	list := map[string]int{}
-	m.Debug("what %v %v", prefix, chain)
 	m.Richs(prefix, chain, kit.MDB_FOREACH, func(key string, val map[string]interface{}) {
 		if val = kit.GetMeta(val); kit.Format(val[kit.MDB_COUNT]) != "" {
 			list[kit.Format(val[field])] = kit.Int(val[kit.MDB_COUNT])
@@ -141,6 +140,9 @@ const HASH = "hash"
 func HashAction(fields ...string) map[string]*ice.Action {
 	_key := func(m *ice.Message) string {
 		if m.Config(kit.MDB_HASH) == "uniq" {
+			return kit.MDB_HASH
+		}
+		if m.Config(kit.MDB_SHORT) == "uniq" {
 			return kit.MDB_HASH
 		}
 		return kit.Select(kit.MDB_HASH, m.Config(kit.MDB_SHORT))

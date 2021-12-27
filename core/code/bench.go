@@ -35,7 +35,6 @@ func _bench_http(m *ice.Message, target string, arg ...string) {
 			m.Assert(err)
 			list = append(list, req)
 		}
-		m.Debug("what %v", v)
 	}
 
 	var body int64

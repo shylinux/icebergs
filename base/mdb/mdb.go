@@ -115,7 +115,6 @@ var Index = &ice.Context{Name: MDB, Help: "数据模块", Commands: map[string]*
 	MODIFY: {Name: "modify key sub type field value arg...", Help: "编辑", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 		switch arg[2] {
 		case ZONE: // modify key sub type zone id field value
-			m.Debug("what %v %v", arg[3], kit.KeyHash(arg[3]))
 			_list_modify(m, arg[0], _domain_chain(m, kit.Keys(arg[1], kit.KeyHash(arg[3]))), kit.MDB_ID, arg[4], arg[5:]...)
 		case HASH:
 			_hash_modify(m, arg[0], _domain_chain(m, arg[1]), arg[3], arg[4], arg[5:]...)

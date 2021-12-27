@@ -35,6 +35,7 @@ const (
 	OPS = "ops"
 	ICE = "ice"
 
+	ENV = "env"
 	RUN = "run"
 	RES = "res"
 	ERR = "err"

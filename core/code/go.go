@@ -141,7 +141,7 @@ func init() {
 		))},
 		GO: {Name: GO, Help: "后端", Value: kit.Data(PLUG, kit.Dict(
 			SPLIT, kit.Dict("space", "\t ", "operator", "{[(&.,:;!|<>)]}"),
-			PREFIX, kit.Dict("//", COMMENT, "/*", COMMENT, "* ", COMMENT),
+			PREFIX, kit.Dict("// ", COMMENT, "/*", COMMENT, "* ", COMMENT),
 			PREPARE, kit.Dict(
 				KEYWORD, kit.Simple(
 					"package", "import", "type", "struct", "interface", "const", "var", "func",

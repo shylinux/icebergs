@@ -96,7 +96,14 @@ func (m *Message) Upload(dir string) {
 		m.Cmdy("spide", DEV, SAVE, p, "GET", m.MergeURL2(path.Join("/share/cache", up[0])))
 	}
 }
-func (m *Message) Action(arg ...string) {
+func (m *Message) Action(arg ...interface{}) {
+	for i, v := range arg {
+		switch v.(type) {
+		case string:
+		default:
+			arg[i] = kit.Format(v)
+		}
+	}
 	m.Option(MSG_ACTION, kit.Format(arg))
 }
 func (m *Message) Status(arg ...interface{}) {

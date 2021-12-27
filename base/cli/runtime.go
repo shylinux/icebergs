@@ -21,7 +21,7 @@ func _runtime_init(m *ice.Message) {
 	})
 
 	// 环境变量
-	for _, k := range []string{CTX_SHY, CTX_DEV, CTX_OPS, CTX_PID, CTX_USER, CTX_SHARE, CTX_RIVER} {
+	for _, k := range []string{CTX_SHY, CTX_DEV, CTX_OPS, CTX_ARG, CTX_PID, CTX_USER, CTX_SHARE, CTX_RIVER} {
 		m.Conf(RUNTIME, kit.Keys(CONF, k), os.Getenv(k))
 	}
 
@@ -118,6 +118,7 @@ const (
 	CTX_SHY = "ctx_shy"
 	CTX_DEV = "ctx_dev"
 	CTX_OPS = "ctx_ops"
+	CTX_ARG = "ctx_arg"
 
 	CTX_PID   = "ctx_pid"
 	CTX_LOG   = "ctx_log"

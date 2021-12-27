@@ -125,6 +125,11 @@ func _serve_handle(key string, cmd *ice.Command, msg *ice.Message, w http.Respon
 		msg.Option(ice.MSG_USERADDR, msg.Option(ice.MSG_USERIP))
 	}
 
+	cookie := ice.MSG_SESSID + "_" + strings.ReplaceAll(strings.ReplaceAll(kit.ParseURLMap(msg.Option(ice.MSG_USERWEB))["host"], ".", "_"), ":", "_")
+	if sessid := msg.Option(cookie); sessid != "" {
+		msg.Option(ice.MSG_SESSID, sessid)
+	}
+
 	// 请求数据
 	switch r.Header.Get(ContentType) {
 	case ContentJSON:
@@ -286,8 +291,8 @@ func init() {
 					m.Config(kit.Keys(aaa.WHITE, k), ice.TRUE)
 				}
 			}},
-			cli.START: {Name: "start dev name=ops proto=http host port=9020", Help: "启动", Hand: func(m *ice.Message, arg ...string) {
-				if cli.NodeInfo(m, SERVER, ice.Info.HostName); m.Option(tcp.PORT) == tcp.RANDOM {
+			cli.START: {Name: "start dev name=ops proto=http host port=9020 nodename", Help: "启动", Hand: func(m *ice.Message, arg ...string) {
+				if cli.NodeInfo(m, SERVER, kit.Select(ice.Info.HostName, m.Option("nodename"))); m.Option(tcp.PORT) == tcp.RANDOM {
 					m.Option(tcp.PORT, m.Cmdx(tcp.PORT, aaa.RIGHT))
 				}
 

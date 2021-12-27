@@ -17,7 +17,10 @@ func Render(m *Message, cmd string, args ...interface{}) string {
 
 	switch arg := kit.Simple(args...); cmd {
 	case RENDER_ANCHOR: // [name] link
-		p := m.MergeURL2(kit.Select(arg[0], arg, 1))
+		p := kit.Select(arg[0], arg, 1)
+		if !strings.HasPrefix(p, "http") {
+			p = m.MergeURL2(p)
+		}
 		return kit.Format(`<a href="%s" target="_blank">%s</a>`, p, arg[0])
 
 	case RENDER_BUTTON: // name...
@@ -169,7 +172,6 @@ func (m *Message) PushPodCmd(cmd string, arg ...string) {
 				val[POD] = kit.Keys(value[kit.MDB_NAME], val[POD])
 				m.Push("", val, head)
 			})
-			m.Debug(m.FormatMeta())
 		}
 	})
 }

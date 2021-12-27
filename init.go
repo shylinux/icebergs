@@ -104,6 +104,9 @@ func Run(arg ...string) string {
 	if len(arg) == 0 {
 		arg = append(arg, HELP)
 	}
+	if os.Getenv("ctx_arg") != "" {
+		arg = append(arg, kit.Split(os.Getenv("ctx_arg"))...)
+	}
 
 	Index.root, Pulse.root = Index, Pulse
 	Pulse.Option(CACHE_LIMIT, "10")

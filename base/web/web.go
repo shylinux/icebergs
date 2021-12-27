@@ -68,6 +68,9 @@ func (web *Frame) Start(m *ice.Message, arg ...string) bool {
 		}
 	})
 
+	m.Event(SERVE_START)
+	defer m.Event(SERVE_STOP)
+
 	web.m, web.Server = m, &http.Server{Handler: web}
 	switch cb := m.Optionv(kit.Keycb(SERVE)).(type) {
 	case func(http.Handler):
@@ -93,6 +96,10 @@ func (web *Frame) Close(m *ice.Message, arg ...string) bool {
 }
 
 const WEB = "web"
+const (
+	SERVE_START = "serve.start"
+	SERVE_STOP  = "serve.stop"
+)
 
 var Index = &ice.Context{Name: WEB, Help: "网络模块"}
 

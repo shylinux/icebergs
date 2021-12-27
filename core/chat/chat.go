@@ -13,5 +13,6 @@ func init() {
 	web.Index.Register(Index, &web.Frame{},
 		HEADER, RIVER, STORM, ACTION, FOOTER,
 		SCAN, PASTE, FILES, LOCATION,
+		WEBSITE,
 	)
 }

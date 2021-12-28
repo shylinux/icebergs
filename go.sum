@@ -1,6 +1,4 @@
-shylinux.com/x/go-qrcode v0.0.1 h1:/eOGqMj1qtgs9Ymd12zTUa1gcJZs9S92kj2lb0QzKsE=
 shylinux.com/x/go-qrcode v0.0.1/go.mod h1:KAbtU+KwiiABMZ/CJ0zh9PI2AX82Uf9rRYcQ4ODm4po=
-shylinux.com/x/toolkits v0.4.2 h1:6VvlNFmNhHNw/MfK6SlT8BRzk6CWf/oXm/+Nw2Wt850=
-shylinux.com/x/toolkits v0.4.2/go.mod h1:8LbYHe7oxBIqb6s4MSOD+4d28QvPdvkyCVtwB/JW7AA=
-shylinux.com/x/websocket v0.0.1 h1:OBc21DxqsGlQ2+Pz76xqLyDNo1LV+PUUqfWi+1PZPDE=
+shylinux.com/x/toolkits v0.4.3 h1:eDCYnfsU5JCRU3qG9e3n15K+37TNCtje8/tyfRWauV4=
+shylinux.com/x/toolkits v0.4.3/go.mod h1:8LbYHe7oxBIqb6s4MSOD+4d28QvPdvkyCVtwB/JW7AA=
 shylinux.com/x/websocket v0.0.1/go.mod h1:AaSpMToOxbMULKQytzczeHPuqb708vK1vrAzCxLo/XE=

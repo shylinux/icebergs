@@ -8,6 +8,7 @@ import (
 )
 
 func _file_name(m *ice.Message, arg ...string) string {
+	return path.Join(ice.USR_LOCAL_EXPORT, m.Option(ice.MSG_DOMAIN), path.Join(arg[:2]...), arg[2])
 	return kit.Select(path.Join(ice.USR_LOCAL_EXPORT, m.Option(ice.MSG_DOMAIN), path.Join(arg[:2]...), arg[2]), arg, 3)
 }
 func _domain_chain(m *ice.Message, chain string) string {

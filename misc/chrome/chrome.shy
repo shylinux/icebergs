@@ -15,6 +15,7 @@ field "收藏夹" web.code.chrome.favor
 field "样式表" web.code.chrome.style
 field "工具箱" web.code.chrome.field
 field "蜘蛛侠" web.code.chrome.spide
+field "编辑器" web.code.chrome.change
 field "缓存池" web.code.chrome.cache
 field "相册簿" web.wiki.feel
 

@@ -11,10 +11,13 @@ const SPIDE = "spide"
 
 func init() {
 	Index.Merge(&ice.Context{Commands: map[string]*ice.Command{
-		SPIDE: {Name: "spide wid tid cmd auto", Help: "网页爬虫", Action: map[string]*ice.Action{
+		SPIDE: {Name: "spide wid tid cmd auto modify", Help: "网页爬虫", Action: map[string]*ice.Action{
 			web.DOWNLOAD: {Name: "download", Help: "下载", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmd(CACHE, mdb.CREATE, arg)
 				m.ProcessHold()
+			}},
+			mdb.MODIFY: {Name: "modify selector property:textarea", Help: "编辑", Hand: func(m *ice.Message, arg ...string) {
+				m.Cmd(web.SPACE, CHROME, CHROME, m.Option("wid"), m.Option("tid"), mdb.MODIFY, m.Option("selector"), m.Option("property"))
 			}},
 		}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			switch msg := m.Cmd(web.SPACE, CHROME, CHROME, arg); kit.Select(SPIDE, arg, 2) {

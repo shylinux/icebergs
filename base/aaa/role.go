@@ -100,6 +100,11 @@ func init() {
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
 				m.Rich(ROLE, nil, kit.Dict(mdb.NAME, VOID, WHITE, kit.Dict(), BLACK, kit.Dict()))
 				m.Rich(ROLE, nil, kit.Dict(mdb.NAME, TECH, BLACK, kit.Dict(), WHITE, kit.Dict()))
+				m.Cmd(ROLE, WHITE, VOID, ice.SRC)
+				m.Cmd(ROLE, WHITE, VOID, ice.BIN)
+				m.Cmd(ROLE, WHITE, VOID, ice.USR)
+				m.Cmd(ROLE, BLACK, VOID, ice.USR_LOCAL)
+				m.Cmd(ROLE, WHITE, VOID, ice.USR_LOCAL_GO)
 			}},
 			mdb.INSERT: {Name: "insert role=void,tech zone=white,black key=", Help: "添加", Hand: func(m *ice.Message, arg ...string) {
 				m.Richs(ROLE, nil, m.Option(ROLE), func(key string, value map[string]interface{}) {

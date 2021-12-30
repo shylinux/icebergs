@@ -29,8 +29,8 @@ func (f *Frame) Start(m *ice.Message, arg ...string) bool {
 		case <-f.e:
 			return true
 
-		case <-time.Tick(f.t):
-			// m.Cmd(TIMER, ACTION)
+		// case <-time.Tick(f.t):
+		// 	// m.Cmd(TIMER, ACTION)
 
 		case s := <-f.s:
 			m.Cmd(SIGNAL, ACTION, ACTION, SIGNAL, s)

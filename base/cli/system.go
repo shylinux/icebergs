@@ -5,10 +5,8 @@ import (
 	"io"
 	"os"
 	"os/exec"
-	"strings"
 
 	ice "shylinux.com/x/icebergs"
-	"shylinux.com/x/icebergs/base/ctx"
 	"shylinux.com/x/icebergs/base/mdb"
 	kit "shylinux.com/x/toolkits"
 )
@@ -79,21 +77,6 @@ func _system_exec(m *ice.Message, cmd *exec.Cmd) {
 }
 func IsSuccess(m *ice.Message) bool {
 	return m.Append(kit.MDB_CODE) == "0" || m.Append(kit.MDB_CODE) == ""
-}
-func Inputs(m *ice.Message, field string) bool {
-	switch strings.TrimPrefix(field, "extra.") {
-	case ice.POD:
-		m.Cmdy("route")
-	case ice.CTX:
-		m.Cmdy(ctx.CONTEXT)
-	case ice.CMD:
-		m.Cmdy(ctx.CONTEXT, kit.Select(m.Option(ice.CTX), m.Option(kit.Keys(kit.MDB_EXTRA, ice.CTX))), ctx.COMMAND)
-	case ice.ARG:
-
-	default:
-		return false
-	}
-	return true
 }
 
 const (

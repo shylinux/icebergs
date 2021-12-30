@@ -2,7 +2,6 @@ package chat
 
 import (
 	ice "shylinux.com/x/icebergs"
-	"shylinux.com/x/icebergs/base/cli"
 	"shylinux.com/x/icebergs/base/ctx"
 	"shylinux.com/x/icebergs/base/mdb"
 	kit "shylinux.com/x/toolkits"
@@ -18,7 +17,7 @@ func init() {
 	Index.Merge(&ice.Context{Commands: map[string]*ice.Command{
 		STORM: {Name: "storm hash id auto insert create", Help: "工具", Action: map[string]*ice.Action{
 			mdb.INPUTS: {Name: "inputs", Help: "补全", Hand: func(m *ice.Message, arg ...string) {
-				if cli.Inputs(m, arg[0]) {
+				if ctx.Inputs(m, arg[0]) {
 					return
 				}
 				switch arg[0] {

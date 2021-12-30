@@ -48,10 +48,11 @@ func init() {
 			}},
 			aaa.USER: {Name: "user", Help: "用户", Hand: func(m *ice.Message, arg ...string) {
 				m.Option(aaa.USERNAME, m.Option(ice.MSG_USERNAME))
-				m.Cmd(aaa.USER, mdb.MODIFY, aaa.USERZONE, MP, aaa.USERNICK, m.Option("nickName"),
+				m.Debug("what %v", m.FormatMeta())
+				m.Cmd(aaa.USER, mdb.MODIFY,
+					aaa.USERNICK, m.Option("nickName"), aaa.USERZONE, MP,
 					aaa.AVATAR, m.Option("avatarUrl"), aaa.GENDER, kit.Select("女", "男", m.Option(aaa.GENDER) == "1"),
-					aaa.COUNTRY, m.Option(aaa.COUNTRY), aaa.LANGUAGE, m.Option(aaa.LANGUAGE),
-					aaa.CITY, m.Option(aaa.CITY), aaa.PROVINCE, m.Option(aaa.PROVINCE),
+					m.OptionSimple(aaa.CITY, aaa.COUNTRY, aaa.LANGUAGE, aaa.PROVINCE),
 				)
 			}},
 			chat.SCAN: {Name: "scan", Help: "扫码", Hand: func(m *ice.Message, arg ...string) {

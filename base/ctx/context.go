@@ -9,7 +9,7 @@ import (
 
 func _context_list(m *ice.Message, sub *ice.Context, name string) {
 	m.Travel(func(p *ice.Context, s *ice.Context) {
-		if name != "" && name != "ice" && !strings.HasPrefix(s.Cap(ice.CTX_FOLLOW), name+ice.PT) {
+		if name != "" && name != ice.ICE && !strings.HasPrefix(s.Cap(ice.CTX_FOLLOW), name+ice.PT) {
 			return
 		}
 		m.Push(kit.MDB_NAME, s.Cap(ice.CTX_FOLLOW))
@@ -17,6 +17,21 @@ func _context_list(m *ice.Message, sub *ice.Context, name string) {
 		m.Push(kit.MDB_STREAM, s.Cap(ice.CTX_STREAM))
 		m.Push(kit.MDB_HELP, s.Help)
 	})
+}
+func Inputs(m *ice.Message, field string) bool {
+	switch strings.TrimPrefix(field, "extra.") {
+	case ice.POD:
+		m.Cmdy("route")
+	case ice.CTX:
+		m.Cmdy(CONTEXT)
+	case ice.CMD:
+		m.Cmdy(CONTEXT, kit.Select(m.Option(ice.CTX), m.Option(kit.Keys(kit.MDB_EXTRA, ice.CTX))), COMMAND)
+	case ice.ARG:
+
+	default:
+		return false
+	}
+	return true
 }
 
 const CONTEXT = "context"
@@ -39,13 +54,16 @@ func init() {
 				}
 			}},
 		}, CmdAction()), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			m.Search(kit.Select(ice.ICE, arg, 0)+ice.PT, func(p *ice.Context, s *ice.Context, key string) {
+			if len(arg) == 0 {
+				arg = append(arg, m.Source().Cap(ice.CTX_FOLLOW))
+			}
+			m.Search(arg[0]+ice.PT, func(p *ice.Context, s *ice.Context, key string) {
 				msg := m.Spawn(s)
 				defer m.Copy(msg)
 
 				switch kit.Select(CONTEXT, arg, 1) {
 				case CONTEXT:
-					_context_list(msg, s, kit.Select("", arg, 0))
+					_context_list(msg, s, arg[0])
 				case COMMAND:
 					msg.Cmdy(COMMAND, arg[2:])
 				case CONFIG:

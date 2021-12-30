@@ -99,5 +99,13 @@ func init() {
 				m.Cmdy(MENU, "home")
 			}
 		}},
+		LOGIN: {Name: "login", Help: "登录", Action: map[string]*ice.Action{
+			mdb.CREATE: {Name: "create appid appmm token", Help: "创建", Hand: func(m *ice.Message, arg ...string) {
+				m.Conf(ACCESS, kit.Keym(APPID), m.Option(APPID))
+				m.Conf(ACCESS, kit.Keym(APPMM), m.Option(APPMM))
+				m.Conf(ACCESS, kit.Keym(TOKEN), m.Option(TOKEN))
+			}},
+		}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		}},
 	}})
 }

@@ -24,7 +24,7 @@ func _sess_create(m *ice.Message, username string) string {
 	if username == "" {
 		return ""
 	}
-	if m.Richs(USER, nil, username, nil) == nil {
+	if !_user_exists(m, username) {
 		_user_create(m, kit.Select(TECH, VOID, m.Option(ice.MSG_USERROLE) == VOID), username, kit.Hashs())
 	}
 

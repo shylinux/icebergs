@@ -4,11 +4,13 @@ import (
 	"fmt"
 	"net/http"
 	"path"
+	"strings"
 	"time"
 
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/aaa"
 	"shylinux.com/x/icebergs/base/cli"
+	"shylinux.com/x/icebergs/base/tcp"
 	kit "shylinux.com/x/toolkits"
 )
 
@@ -33,6 +35,10 @@ func Render(msg *ice.Message, cmd string, args ...interface{}) {
 		http.Redirect(msg.W, msg.R, kit.MergeURL(arg[0], arg[1:]), 307)
 
 	case ice.RENDER_DOWNLOAD: // file [type [name]]
+		if strings.HasPrefix(arg[0], "http") {
+			http.Redirect(msg.W, msg.R, arg[0], 307)
+			break
+		}
 		msg.W.Header().Set("Content-Disposition", fmt.Sprintf("filename=%s", kit.Select(path.Base(kit.Select(arg[0], msg.Option("filename"))), arg, 2)))
 		if RenderType(msg.W, arg[0], kit.Select("", arg, 1)); !ice.Dump(msg.W, arg[0], nil) {
 			http.ServeFile(msg.W, msg.R, kit.Path(arg[0]))
@@ -74,9 +80,13 @@ func RenderStatus(msg *ice.Message, code int, text string) {
 	msg.W.WriteHeader(code)
 	msg.W.Write([]byte(text))
 }
+func CookieName(url string) string {
+	return ice.MSG_SESSID + "_" + kit.ReplaceAll(kit.ParseURLMap(url)[tcp.HOST], ".", "_", ":", "_")
+}
 func RenderCookie(msg *ice.Message, value string, arg ...string) { // name path expire
 	expire := time.Now().Add(kit.Duration(kit.Select(msg.Conf(aaa.SESS, "meta.expire"), arg, 2)))
-	http.SetCookie(msg.W, &http.Cookie{Value: value, Name: kit.Select(ice.MSG_SESSID, arg, 0), Path: kit.Select("/", arg, 1), Expires: expire})
+	http.SetCookie(msg.W, &http.Cookie{Value: value,
+		Name: kit.Select(ice.MSG_SESSID, arg, 0), Path: kit.Select("/", arg, 1), Expires: expire})
 }
 func RenderMeta(msg *ice.Message, name, content string) {
 	msg.W.Write([]byte(kit.Format(`<meta name="%s" content="%s">`, name, content)))

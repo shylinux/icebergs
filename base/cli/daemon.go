@@ -43,10 +43,10 @@ func _daemon_exec(m *ice.Message, cmd *exec.Cmd) {
 
 		switch cb := m.Optionv(kit.Keycb(DAEMON)).(type) {
 		case func(string):
-			m.Sleep("1s")
+			m.Sleep300ms()
 			cb(m.Conf(DAEMON, kit.Keys(mdb.HASH, h, kit.Keym(STATUS))))
 		case func():
-			m.Sleep("1s")
+			m.Sleep300ms()
 			cb()
 		}
 
@@ -114,7 +114,7 @@ func init() {
 			}},
 			RESTART: {Name: "restart", Help: "重启", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmd(DAEMON, STOP)
-				m.Sleep("3s")
+				m.Sleep3s()
 				m.Cmdy(DAEMON, START)
 			}},
 			STOP: {Name: "stop", Help: "停止", Hand: func(m *ice.Message, arg ...string) {

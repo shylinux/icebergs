@@ -7,6 +7,8 @@ import (
 	"strings"
 
 	ice "shylinux.com/x/icebergs"
+	"shylinux.com/x/icebergs/base/mdb"
+	"shylinux.com/x/icebergs/base/nfs"
 	kit "shylinux.com/x/toolkits"
 )
 
@@ -16,14 +18,14 @@ func _config_list(m *ice.Message) {
 			continue // 内部配置
 		}
 
-		m.Push(kit.MDB_KEY, k)
-		m.Push(kit.MDB_NAME, v.Name)
-		m.Push(kit.MDB_VALUE, kit.Format(v.Value))
+		m.Push(mdb.KEY, k)
+		m.Push(mdb.NAME, v.Name)
+		m.Push(mdb.VALUE, kit.Format(v.Value))
 	}
-	m.Sort(kit.MDB_KEY)
+	m.Sort(mdb.KEY)
 }
 func _config_save(m *ice.Message, name string, arg ...string) {
-	name = path.Join(m.Conf(CONFIG, kit.META_PATH), name)
+	name = path.Join(m.Config(nfs.PATH), name)
 	if f, p, e := kit.Create(name); m.Assert(e) {
 		defer f.Close()
 
@@ -38,14 +40,14 @@ func _config_save(m *ice.Message, name string, arg ...string) {
 		// 保存配置
 		if s, e := json.MarshalIndent(data, "", "  "); m.Assert(e) {
 			if n, e := f.Write(s); m.Assert(e) {
-				m.Log_EXPORT(CONFIG, name, kit.MDB_FILE, p, kit.MDB_SIZE, n)
+				m.Log_EXPORT(CONFIG, name, nfs.FILE, p, nfs.SIZE, n)
 			}
 		}
 		m.Echo(p)
 	}
 }
 func _config_load(m *ice.Message, name string, arg ...string) {
-	name = path.Join(m.Conf(CONFIG, kit.META_PATH), name)
+	name = path.Join(m.Config(nfs.PATH), name)
 	if f, e := os.Open(name); e == nil {
 		defer f.Close()
 
@@ -56,7 +58,7 @@ func _config_load(m *ice.Message, name string, arg ...string) {
 		// 加载配置
 		for k, v := range data {
 			msg.Search(k, func(p *ice.Context, s *ice.Context, key string) {
-				m.Log_IMPORT(CONFIG, kit.Keys(s.Name, key), kit.MDB_FILE, name)
+				m.Log_IMPORT(CONFIG, kit.Keys(s.Name, key), nfs.FILE, name)
 				s.Configs[key].Value = v
 			})
 		}
@@ -66,7 +68,7 @@ func _config_make(m *ice.Message, key string, arg ...string) {
 	msg := m.Spawn(m.Source())
 	if len(arg) > 1 {
 		if strings.HasPrefix(arg[1], "@") {
-			arg[1] = msg.Cmdx("nfs.cat", arg[1][1:])
+			arg[1] = msg.Cmdx(nfs.CAT, arg[1][1:])
 		}
 		// 修改配置
 		msg.Confv(key, arg[0], kit.Parse(nil, "", arg[1:]...))
@@ -95,7 +97,7 @@ const CONFIG = "config"
 
 func init() {
 	Index.Merge(&ice.Context{Configs: map[string]*ice.Config{
-		CONFIG: {Name: CONFIG, Help: "配置", Value: kit.Data(kit.MDB_PATH, ice.VAR_CONF)},
+		CONFIG: {Name: CONFIG, Help: "配置", Value: kit.Data(nfs.PATH, ice.VAR_CONF)},
 	}, Commands: map[string]*ice.Command{
 		CONFIG: {Name: "config key auto", Help: "配置", Action: map[string]*ice.Action{
 			SAVE: {Name: "save", Help: "保存", Hand: func(m *ice.Message, arg ...string) {

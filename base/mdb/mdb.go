@@ -32,6 +32,8 @@ const (
 	NAME = "name"
 	TEXT = "text"
 
+	VALUE = "value"
+
 	LINK = "link"
 	SCAN = "scan"
 

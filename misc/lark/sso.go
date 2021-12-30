@@ -18,23 +18,26 @@ func init() {
 				return
 			}
 
+			appid := m.Cmd(APP).Append(APPID)
 			home := m.MergeURL2("/chat/lark/sso")
 			if m.Option(kit.MDB_CODE) != "" { // 登录成功
 				msg := m.Cmd(web.SPIDE, LARK, "/open-apis/authen/v1/access_token", "grant_type", "authorization_code",
-					kit.MDB_CODE, m.Option(kit.MDB_CODE), "app_access_token", m.Cmdx(APP, TOKEN, m.Cmd(APP).Append(APPID)))
-
-				// 创建会话
-				m.Option(aaa.USERNAME, msg.Append("data.open_id"))
-				web.RenderCookie(m, aaa.SessCreate(m, m.Option(aaa.USERNAME)))
-				m.RenderRedirect(kit.Select(home, m.Option(kit.MDB_BACK)))
+					kit.MDB_CODE, m.Option(kit.MDB_CODE), "app_access_token", m.Cmdx(APP, TOKEN, appid))
 
 				// 更新用户
-				msg = m.Cmd(EMPLOYEE, m.Option(aaa.USERNAME))
-				m.Cmd(aaa.USER, mdb.MODIFY, aaa.USERZONE, LARK, aaa.USERNICK, msg.Append(kit.MDB_NAME),
+				m.Option(aaa.USERNAME, msg.Append("data.open_id"))
+				msg = m.Cmd(EMPLOYEE, appid, m.Option(aaa.USERNAME))
+				userrole := kit.Select(aaa.VOID, aaa.TECH, msg.Append("is_tenant_manager") == ice.TRUE)
+				m.Cmd(aaa.USER, mdb.CREATE, userrole, m.Option(aaa.USERNAME))
+				m.Cmd(aaa.USER, mdb.MODIFY, aaa.USERROLE, userrole,
+					aaa.USERNICK, msg.Append(kit.MDB_NAME), aaa.USERZONE, LARK,
 					aaa.AVATAR, msg.Append("avatar_url"), aaa.GENDER, kit.Select("女", "男", msg.Append(aaa.GENDER) == "1"),
-					aaa.COUNTRY, msg.Append(aaa.COUNTRY), aaa.CITY, msg.Append(aaa.CITY),
-					aaa.MOBILE, msg.Append(aaa.MOBILE),
+					msg.AppendSimple(aaa.MOBILE, aaa.EMAIL, aaa.CITY, aaa.COUNTRY),
 				)
+
+				// 创建会话
+				web.RenderCookie(m, aaa.SessCreate(m, m.Option(aaa.USERNAME)), web.CookieName(m.Option(kit.MDB_BACK)))
+				m.RenderRedirect(kit.Select(home, m.Option(kit.MDB_BACK)))
 				return
 			}
 

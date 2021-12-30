@@ -125,8 +125,7 @@ func _serve_handle(key string, cmd *ice.Command, msg *ice.Message, w http.Respon
 		msg.Option(ice.MSG_USERADDR, msg.Option(ice.MSG_USERIP))
 	}
 
-	cookie := ice.MSG_SESSID + "_" + strings.ReplaceAll(strings.ReplaceAll(kit.ParseURLMap(msg.Option(ice.MSG_USERWEB))["host"], ".", "_"), ":", "_")
-	if sessid := msg.Option(cookie); sessid != "" {
+	if sessid := msg.Option(CookieName(msg.Option(ice.MSG_USERWEB))); sessid != "" {
 		msg.Option(ice.MSG_SESSID, sessid)
 	}
 
@@ -177,6 +176,7 @@ func _serve_handle(key string, cmd *ice.Command, msg *ice.Message, w http.Respon
 		}
 	}
 
+	msg.Debug("what %v", msg.FormatMeta())
 	// 执行命令
 	if cmds, ok := _serve_login(msg, key, kit.Simple(msg.Optionv(ice.MSG_CMDS)), w, r); ok {
 		msg.Option(ice.MSG_OPTS, msg.Optionv(ice.MSG_OPTION))
@@ -191,6 +191,7 @@ func _serve_login(msg *ice.Message, key string, cmds []string, w http.ResponseWr
 	msg.Option(ice.MSG_USERROLE, aaa.VOID)
 	msg.Option(ice.MSG_USERNAME, "")
 
+	msg.Debug("what %v", msg.FormatMeta())
 	if msg.Option(ice.MSG_SESSID) != "" {
 		aaa.SessCheck(msg, msg.Option(ice.MSG_SESSID))
 		// 会话认证

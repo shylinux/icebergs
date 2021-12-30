@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	ice "shylinux.com/x/icebergs"
+	"shylinux.com/x/icebergs/base/mdb"
 	kit "shylinux.com/x/toolkits"
 )
 
@@ -17,8 +18,8 @@ func init() {
 			for i := 0; i < t.NumMethod(); i++ {
 				method := t.Method(i)
 				p := kit.FileLine(method.Func.Interface(), 4)
-				m.Push(kit.MDB_NAME, method.Name)
-				m.Push(kit.MDB_TEXT, strings.Split(p, ice.ICEBERGS+"/")[1])
+				m.Push(mdb.NAME, method.Name)
+				m.Push(mdb.TEXT, strings.Split(p, ice.ICEBERGS+"/")[1])
 			}
 		}},
 	}})

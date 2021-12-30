@@ -80,12 +80,12 @@ func RoleRight(m *ice.Message, userrole string, keys ...string) bool {
 	return _role_right(m, userrole, kit.Split(kit.Keys(keys), ice.PT)...)
 }
 
-const ( // 用户角色
+const (
 	ROOT = "root"
 	TECH = "tech"
 	VOID = "void"
 )
-const ( // 角色操作
+const (
 	BLACK = "black"
 	WHITE = "white"
 	RIGHT = "right"

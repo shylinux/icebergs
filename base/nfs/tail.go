@@ -6,7 +6,6 @@ import (
 	"strings"
 
 	ice "shylinux.com/x/icebergs"
-	"shylinux.com/x/icebergs/base/cli"
 	"shylinux.com/x/icebergs/base/mdb"
 	kit "shylinux.com/x/toolkits"
 )
@@ -25,10 +24,9 @@ func _tail_create(m *ice.Message, arg ...string) {
 			}
 		})
 
-		m.Option(cli.CMD_OUTPUT, w)
-		m.Option(cli.CMD_ERRPUT, w)
+		m.Option("cmd_output", w)
 		m.Option(mdb.CACHE_CLEAR_ON_EXIT, ice.TRUE)
-		m.Cmd(cli.DAEMON, TAIL, "-n", "0", "-f", file)
+		m.Cmd("cli.daemon", TAIL, "-n", "0", "-f", file)
 	})
 }
 func _tail_count(m *ice.Message, name string) string {

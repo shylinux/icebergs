@@ -5,7 +5,6 @@ import (
 	"path"
 
 	ice "shylinux.com/x/icebergs"
-	"shylinux.com/x/icebergs/base/cli"
 	"shylinux.com/x/icebergs/base/mdb"
 	kit "shylinux.com/x/toolkits"
 )
@@ -14,7 +13,7 @@ func _trash_create(m *ice.Message, name string) {
 	if s, e := os.Stat(name); e == nil {
 		if s.IsDir() {
 			tar := path.Base(name) + ".tar.gz"
-			m.Cmd(cli.SYSTEM, "tar", "zcf", tar, name)
+			m.Cmd(TAR, tar, name)
 			name = tar
 		}
 

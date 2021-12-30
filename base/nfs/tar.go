@@ -8,7 +8,6 @@ import (
 	"strings"
 
 	ice "shylinux.com/x/icebergs"
-	"shylinux.com/x/icebergs/base/cli"
 	kit "shylinux.com/x/toolkits"
 )
 
@@ -17,8 +16,8 @@ const TAR = "tar"
 func init() {
 	Index.Merge(&ice.Context{Commands: map[string]*ice.Command{
 		TAR: {Name: "tar file path auto", Help: "打包", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			m.Option(cli.CMD_DIR, m.Option(DIR_ROOT))
-			m.Cmdy(cli.SYSTEM, "tar", "zcvf", arg)
+			m.Option("cmd_dir", m.Option(DIR_ROOT))
+			m.Cmdy("cli.system", "tar", "zcvf", arg)
 			return
 
 			file, err := os.Create(arg[0])

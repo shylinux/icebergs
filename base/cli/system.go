@@ -5,8 +5,10 @@ import (
 	"io"
 	"os"
 	"os/exec"
+	"strings"
 
 	ice "shylinux.com/x/icebergs"
+	"shylinux.com/x/icebergs/base/ctx"
 	"shylinux.com/x/icebergs/base/mdb"
 	kit "shylinux.com/x/toolkits"
 )
@@ -72,11 +74,26 @@ func _system_exec(m *ice.Message, cmd *exec.Cmd) {
 		m.Cost(kit.MDB_CODE, cmd.ProcessState.ExitCode(), kit.MDB_ARGS, cmd.Args)
 	}
 
-	m.Push(kit.MDB_TIME, m.Time())
+	m.Push(mdb.TIME, m.Time())
 	m.Push(kit.MDB_CODE, int(cmd.ProcessState.ExitCode()))
 }
 func IsSuccess(m *ice.Message) bool {
 	return m.Append(kit.MDB_CODE) == "0" || m.Append(kit.MDB_CODE) == ""
+}
+func Inputs(m *ice.Message, field string) bool {
+	switch strings.TrimPrefix(field, "extra.") {
+	case ice.POD:
+		m.Cmdy("route")
+	case ice.CTX:
+		m.Cmdy(ctx.CONTEXT)
+	case ice.CMD:
+		m.Cmdy(ctx.CONTEXT, kit.Select(m.Option(ice.CTX), m.Option(kit.Keys(kit.MDB_EXTRA, ice.CTX))), ctx.COMMAND)
+	case ice.ARG:
+
+	default:
+		return false
+	}
+	return true
 }
 
 const (
@@ -95,14 +112,14 @@ const SYSTEM = "system"
 
 func init() {
 	Index.Merge(&ice.Context{Configs: map[string]*ice.Config{
-		SYSTEM: {Name: SYSTEM, Help: "系统命令", Value: kit.Data(kit.MDB_FIELD, "time,id,cmd")},
+		SYSTEM: {Name: SYSTEM, Help: "系统命令", Value: kit.Data(mdb.FIELD, "time,id,cmd")},
 	}, Commands: map[string]*ice.Command{
 		SYSTEM: {Name: "system cmd run:button", Help: "系统命令", Hand: func(m *ice.Message, c *ice.Context, key string, arg ...string) {
 			if len(arg) == 0 {
 				mdb.ListSelect(m, arg...)
 				return
 			}
-			m.Grow(SYSTEM, "", kit.Dict(kit.MDB_TIME, m.Time(), ice.CMD, kit.Join(arg, ice.SP)))
+			m.Grow(SYSTEM, "", kit.Dict(mdb.TIME, m.Time(), ice.CMD, kit.Join(arg, ice.SP)))
 
 			if len(arg) == 1 {
 				arg = kit.Split(arg[0])

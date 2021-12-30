@@ -11,6 +11,7 @@ import (
 
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/ctx"
+	"shylinux.com/x/icebergs/base/mdb"
 	kit "shylinux.com/x/toolkits"
 )
 
@@ -36,7 +37,7 @@ func _runtime_init(m *ice.Message) {
 	}
 	if name, e := os.Getwd(); e == nil {
 		name = path.Base(kit.Select(name, os.Getenv("PWD")))
-		ls := strings.Split(name, "/")
+		ls := strings.Split(name, ice.PS)
 		name = ls[len(ls)-1]
 		ls = strings.Split(name, "\\")
 		name = ls[len(ls)-1]
@@ -56,7 +57,7 @@ func _runtime_init(m *ice.Message) {
 	m.Conf(RUNTIME, kit.Keys(BOOT, kit.MDB_COUNT), count)
 
 	// 节点信息
-	m.Conf(RUNTIME, kit.Keys(NODE, kit.MDB_TIME), m.Time())
+	m.Conf(RUNTIME, kit.Keys(NODE, mdb.TIME), m.Time())
 	NodeInfo(m, "worker", m.Conf(RUNTIME, kit.Keys(BOOT, PATHNAME)))
 
 	runtime.GOMAXPROCS(kit.Int(kit.Select("1", m.Conf(RUNTIME, kit.Keys(HOST, "GOMAXPROCS")))))
@@ -80,13 +81,13 @@ func _runtime_hostinfo(m *ice.Message) {
 			}
 		}
 	}
-	m.Push("uptime", kit.Split(m.Cmdx(SYSTEM, "uptime"), ",")[0])
+	m.Push("uptime", kit.Split(m.Cmdx(SYSTEM, "uptime"), ice.FS)[0])
 }
 
 func NodeInfo(m *ice.Message, kind, name string) {
 	name = strings.ReplaceAll(name, ice.PT, "_")
-	m.Conf(RUNTIME, kit.Keys(NODE, kit.MDB_TYPE), kind)
-	m.Conf(RUNTIME, kit.Keys(NODE, kit.MDB_NAME), name)
+	m.Conf(RUNTIME, kit.Keys(NODE, mdb.TYPE), kind)
+	m.Conf(RUNTIME, kit.Keys(NODE, mdb.NAME), name)
 	ice.Info.NodeName = name
 	ice.Info.NodeType = kind
 }
@@ -113,6 +114,11 @@ const (
 	LINUX   = "linux"
 	DARWIN  = "darwin"
 	WINDOWS = "windows"
+)
+const (
+	USER = "USER"
+	HOME = "HOME"
+	PATH = "PATH"
 )
 const (
 	CTX_SHY = "ctx_shy"
@@ -145,10 +151,10 @@ func init() {
 	Index.Merge(&ice.Context{Configs: map[string]*ice.Config{
 		RUNTIME: {Name: RUNTIME, Help: "运行环境", Value: kit.Dict()},
 	}, Commands: map[string]*ice.Command{
-		ice.CTX_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			_runtime_init(m)
-		}},
 		RUNTIME: {Name: "runtime info=ifconfig,hostinfo,hostname,userinfo,procinfo,bootinfo,diskinfo auto", Help: "运行环境", Action: map[string]*ice.Action{
+			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
+				_runtime_init(m)
+			}},
 			IFCONFIG: {Name: "ifconfig", Help: "网卡配置", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmdy("tcp.host")
 			}},
@@ -157,17 +163,17 @@ func init() {
 			}},
 			HOSTNAME: {Name: "hostname", Help: "主机域名", Hand: func(m *ice.Message, arg ...string) {
 				if len(arg) > 0 {
-					m.Conf(RUNTIME, kit.Keys(NODE, kit.MDB_NAME), arg[0])
+					m.Conf(RUNTIME, kit.Keys(NODE, mdb.NAME), arg[0])
 					m.Conf(RUNTIME, kit.Keys(BOOT, HOSTNAME), arg[0])
 					ice.Info.HostName = arg[0]
 				}
 				m.Echo(ice.Info.HostName)
 			}},
 			USERINFO: {Name: "userinfo", Help: "用户信息", Hand: func(m *ice.Message, arg ...string) {
-				m.Split(m.Cmdx(SYSTEM, "who"), "user term time", ice.SP, ice.NL)
+				m.Split(m.Cmdx(SYSTEM, "who"), "user term time")
 			}},
 			PROCINFO: {Name: "procinfo", Help: "进程信息", Hand: func(m *ice.Message, arg ...string) {
-				m.Split(m.Cmdx(SYSTEM, "ps", "u"), "", ice.SP, ice.NL)
+				m.Split(m.Cmdx(SYSTEM, "ps", "u"))
 				m.PushAction("prockill")
 				m.StatusTimeCount()
 			}},
@@ -181,12 +187,15 @@ func init() {
 						m.Push("", value, head)
 					}
 				})
+				m.Display("/plugin/story/pie.js?field=Size")
+				m.RenameAppend("Use%", "Use")
 			}},
 		}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			if len(arg) > 0 && arg[0] == BOOTINFO {
 				arg = arg[1:]
 			}
 			m.Cmdy(ctx.CONFIG, RUNTIME, arg)
+			m.Display("/plugin/story/json.js")
 		}},
 	}})
 }

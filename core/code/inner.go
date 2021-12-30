@@ -94,7 +94,7 @@ func init() {
 				return
 			}
 			if len(arg) < 2 {
-				nfs.Dir(m, kit.MDB_PATH)
+				nfs.Dir(m, nfs.PATH)
 				m.Set(ice.MSG_STATUS)
 				return
 			}

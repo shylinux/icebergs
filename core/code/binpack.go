@@ -38,16 +38,16 @@ func _pack_dir(m *ice.Message, pack *os.File, dir string) {
 	m.Option(nfs.DIR_TYPE, nfs.CAT)
 	m.Option(nfs.DIR_ROOT, dir)
 
-	m.Cmd(nfs.DIR, ice.PWD).Sort(kit.MDB_PATH).Table(func(index int, value map[string]string, head []string) {
-		if path.Base(value[kit.MDB_PATH]) == "binpack.go" {
+	m.Cmd(nfs.DIR, ice.PWD).Sort(nfs.PATH).Table(func(index int, value map[string]string, head []string) {
+		if path.Base(value[nfs.PATH]) == "binpack.go" {
 			return
 		}
-		switch strings.Split(value[kit.MDB_PATH], ice.PS)[0] {
+		switch strings.Split(value[nfs.PATH], ice.PS)[0] {
 		case "pluged", "trash":
 			return
 		}
 
-		pack.WriteString(_pack_file(m, path.Join(dir, value[kit.MDB_PATH]), path.Join(dir, value[kit.MDB_PATH])))
+		pack.WriteString(_pack_file(m, path.Join(dir, value[nfs.PATH]), path.Join(dir, value[nfs.PATH])))
 	})
 	pack.WriteString(ice.NL)
 }
@@ -61,8 +61,8 @@ func _pack_volcanos(m *ice.Message, pack *os.File, dir string) {
 		pack.WriteString(_pack_file(m, ice.PS+k, path.Join(dir, k)))
 	}
 	for _, k := range []string{"lib", "page", "panel", "plugin"} {
-		m.Cmd(nfs.DIR, k).Sort(kit.MDB_PATH).Table(func(index int, value map[string]string, head []string) {
-			pack.WriteString(_pack_file(m, ice.PS+value[kit.MDB_PATH], path.Join(dir, value[kit.MDB_PATH])))
+		m.Cmd(nfs.DIR, k).Sort(nfs.PATH).Table(func(index int, value map[string]string, head []string) {
+			pack.WriteString(_pack_file(m, ice.PS+value[nfs.PATH], path.Join(dir, value[nfs.PATH])))
 		})
 	}
 	pack.WriteString(ice.NL)

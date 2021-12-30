@@ -48,7 +48,7 @@ func init() {
 			mdb.INPUTS: {Name: "inputs", Help: "补全", Hand: func(m *ice.Message, arg ...string) {
 				switch arg[0] {
 				case BINNARY:
-					m.Cmdy(nfs.DIR, "bin/", "path,size,time").RenameAppend(kit.MDB_PATH, BINNARY)
+					m.Cmdy(nfs.DIR, "bin/", "path,size,time").RenameAppend(nfs.PATH, BINNARY)
 				case SERVICE:
 					m.Cmd(web.SPIDE).Table(func(index int, value map[string]string, head []string) {
 						m.Push(SERVICE, kit.MergeURL2(value["client.url"], "/debug/pprof/profile"))

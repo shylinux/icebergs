@@ -18,7 +18,7 @@ func init() {
 			ice.Display("/plugin/local/code/vimer.js", INNER),
 		), Action: map[string]*ice.Action{
 			nfs.SAVE: {Name: "save type file path", Help: "保存", Hand: func(m *ice.Message, arg ...string) {
-				m.Cmdy(nfs.SAVE, path.Join(m.Option(kit.MDB_PATH), m.Option(kit.MDB_FILE)))
+				m.Cmdy(nfs.SAVE, path.Join(m.Option(nfs.PATH), m.Option(nfs.FILE)))
 			}},
 			ice.RUN: {Name: "run", Help: "运行", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmdy(cli.SYSTEM, GO, ice.RUN, path.Join(kit.Slice(arg, 0, 2)...))

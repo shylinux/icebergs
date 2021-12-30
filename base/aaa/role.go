@@ -8,29 +8,22 @@ import (
 	kit "shylinux.com/x/toolkits"
 )
 
-func _role_user(m *ice.Message, userrole string, username ...string) {
-	m.Richs(ROLE, nil, userrole, func(key string, value map[string]interface{}) {
-		for _, user := range username {
-			kit.Value(value, kit.Keys(USER, user), true)
-		}
-	})
-}
 func _role_list(m *ice.Message, userrole string) {
-	m.Richs(ROLE, nil, kit.Select(kit.MDB_FOREACH, userrole), func(key string, value map[string]interface{}) {
+	m.Richs(ROLE, nil, kit.Select(mdb.FOREACH, userrole), func(key string, value map[string]interface{}) {
 		kit.Fetch(value[WHITE], func(k string, v interface{}) {
-			m.Push(ROLE, kit.Value(value, kit.MDB_NAME))
-			m.Push(kit.MDB_ZONE, WHITE)
-			m.Push(kit.MDB_KEY, k)
+			m.Push(ROLE, kit.Value(value, mdb.NAME))
+			m.Push(mdb.ZONE, WHITE)
+			m.Push(mdb.KEY, k)
 		})
 		kit.Fetch(value[BLACK], func(k string, v interface{}) {
-			m.Push(ROLE, kit.Value(value, kit.MDB_NAME))
-			m.Push(kit.MDB_ZONE, BLACK)
-			m.Push(kit.MDB_KEY, k)
+			m.Push(ROLE, kit.Value(value, mdb.NAME))
+			m.Push(mdb.ZONE, BLACK)
+			m.Push(mdb.KEY, k)
 		})
 	})
 }
 func _role_chain(arg ...string) string {
-	return strings.ReplaceAll(kit.Keys(arg), "/", ice.PT)
+	return strings.ReplaceAll(kit.Keys(arg), ice.PS, ice.PT)
 }
 func _role_black(m *ice.Message, userrole, chain string, status bool) {
 	m.Richs(ROLE, nil, userrole, func(key string, value map[string]interface{}) {
@@ -101,44 +94,42 @@ const ROLE = "role"
 
 func init() {
 	Index.Merge(&ice.Context{Configs: map[string]*ice.Config{
-		ROLE: {Name: ROLE, Help: "角色", Value: kit.Data(kit.MDB_SHORT, kit.MDB_NAME)},
+		ROLE: {Name: ROLE, Help: "角色", Value: kit.Data(mdb.SHORT, mdb.NAME)},
 	}, Commands: map[string]*ice.Command{
-		ROLE: {Name: "role role auto create", Help: "角色", Action: map[string]*ice.Action{
-			mdb.CREATE: {Name: "create role=void,tech zone=white,black key=", Help: "添加", Hand: func(m *ice.Message, arg ...string) {
+		ROLE: {Name: "role role auto insert", Help: "角色", Action: map[string]*ice.Action{
+			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
+				m.Rich(ROLE, nil, kit.Dict(mdb.NAME, VOID, WHITE, kit.Dict(), BLACK, kit.Dict()))
+				m.Rich(ROLE, nil, kit.Dict(mdb.NAME, TECH, BLACK, kit.Dict(), WHITE, kit.Dict()))
+			}},
+			mdb.INSERT: {Name: "insert role=void,tech zone=white,black key=", Help: "添加", Hand: func(m *ice.Message, arg ...string) {
 				m.Richs(ROLE, nil, m.Option(ROLE), func(key string, value map[string]interface{}) {
-					list := value[m.Option(kit.MDB_ZONE)].(map[string]interface{})
-					m.Log_CREATE(ROLE, m.Option(ROLE), list[m.Option(kit.MDB_KEY)])
-					list[m.Option(kit.MDB_KEY)] = true
+					list := value[m.Option(mdb.ZONE)].(map[string]interface{})
+					m.Log_CREATE(ROLE, m.Option(ROLE), m.Option(mdb.KEY))
+					list[m.Option(mdb.KEY)] = true
 				})
 			}},
-			mdb.REMOVE: {Name: "remove", Help: "删除", Hand: func(m *ice.Message, arg ...string) {
+			mdb.DELETE: {Name: "delete", Help: "删除", Hand: func(m *ice.Message, arg ...string) {
 				m.Richs(ROLE, nil, m.Option(ROLE), func(key string, value map[string]interface{}) {
-					list := value[m.Option(kit.MDB_ZONE)].(map[string]interface{})
-					m.Log_REMOVE(ROLE, m.Option(ROLE), list[m.Option(kit.MDB_KEY)])
-					delete(list, m.Option(kit.MDB_KEY))
+					list := value[m.Option(mdb.ZONE)].(map[string]interface{})
+					m.Log_REMOVE(ROLE, m.Option(ROLE), m.Option(mdb.KEY))
+					delete(list, m.Option(mdb.KEY))
 				})
 			}},
 
-			BLACK: {Name: "black role chain...", Help: "黑名单", Hand: func(m *ice.Message, arg ...string) {
+			BLACK: {Name: "black role chain", Help: "黑名单", Hand: func(m *ice.Message, arg ...string) {
 				_role_black(m, arg[0], _role_chain(arg[1:]...), true)
 			}},
-			WHITE: {Name: "white role chain...", Help: "白名单", Hand: func(m *ice.Message, arg ...string) {
+			WHITE: {Name: "white role chain", Help: "白名单", Hand: func(m *ice.Message, arg ...string) {
 				_role_white(m, arg[0], _role_chain(arg[1:]...), true)
 			}},
-			RIGHT: {Name: "right role chain...", Help: "查看权限", Hand: func(m *ice.Message, arg ...string) {
+			RIGHT: {Name: "right role chain", Help: "查看权限", Hand: func(m *ice.Message, arg ...string) {
 				if _role_right(m, arg[0], kit.Split(_role_chain(arg[1:]...), ice.PT)...) {
 					m.Echo(ice.OK)
 				}
 			}},
 		}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			if len(arg) < 2 { // 角色列表
-				_role_list(m, kit.Select("", arg, 0))
-				m.PushAction(mdb.REMOVE)
-				return
-			}
-
-			// 设置角色
-			_role_user(m, arg[0], arg[1:]...)
+			_role_list(m, kit.Select("", arg, 0))
+			m.PushAction(mdb.DELETE)
 		}},
 	}})
 }

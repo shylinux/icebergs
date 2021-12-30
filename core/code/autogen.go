@@ -149,7 +149,7 @@ func init() {
 				switch arg[0] {
 				case kit.MDB_MAIN:
 					m.Cmdy(nfs.DIR, ice.SRC, "path,size,time", ice.Option{nfs.DIR_REG, `.*\.go`})
-					m.RenameAppend(kit.MDB_PATH, arg[0])
+					m.RenameAppend(nfs.PATH, arg[0])
 				}
 			}},
 			mdb.CREATE: {Name: "create main=src/main.go@key key zone type=Zone,Hash,Data name=hi list help", Help: "模块", Hand: func(m *ice.Message, arg ...string) {

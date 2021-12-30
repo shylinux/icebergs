@@ -6,6 +6,7 @@ import (
 	"shylinux.com/x/icebergs/base/cli"
 	"shylinux.com/x/icebergs/base/ctx"
 	"shylinux.com/x/icebergs/base/mdb"
+	"shylinux.com/x/icebergs/base/nfs"
 	"shylinux.com/x/icebergs/base/web"
 	"shylinux.com/x/icebergs/core/code"
 	kit "shylinux.com/x/toolkits"
@@ -170,8 +171,8 @@ func init() {
 			}},
 			aaa.INVITE: {Name: "invite", Help: "脚本", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmdy(code.PUBLISH, ice.CONTEXTS)
-				m.Cmd(code.PUBLISH, mdb.CREATE, kit.MDB_FILE, ice.BIN_ICE_SH)
-				m.Cmd(code.PUBLISH, mdb.CREATE, kit.MDB_FILE, ice.BIN_ICE_BIN)
+				m.Cmd(code.PUBLISH, mdb.CREATE, nfs.FILE, ice.BIN_ICE_SH)
+				m.Cmd(code.PUBLISH, mdb.CREATE, nfs.FILE, ice.BIN_ICE_BIN)
 			}},
 			SHARE: {Name: "share", Help: "共享", Hand: func(m *ice.Message, arg ...string) {
 				_header_share(m, arg...)

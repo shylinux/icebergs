@@ -72,9 +72,9 @@ func _dir_list(m *ice.Message, root string, name string, level int, deep bool, d
 					}
 				case "full":
 					m.Push(field, path.Join(root, name, f.Name())+kit.Select("", ice.PS, f.IsDir()))
-				case kit.MDB_PATH:
+				case PATH:
 					m.Push(field, path.Join(name, f.Name())+kit.Select("", ice.PS, f.IsDir()))
-				case kit.MDB_FILE:
+				case FILE:
 					m.Push(field, f.Name()+kit.Select("", ice.PS, f.IsDir()))
 				case kit.MDB_NAME:
 					m.Push(field, f.Name())
@@ -89,7 +89,7 @@ func _dir_list(m *ice.Message, root string, name string, level int, deep bool, d
 					} else {
 						m.Push(field, kit.FmtSize(f.Size()))
 					}
-				case kit.MDB_LINE:
+				case LINE:
 					if f.IsDir() {
 						if ls, e := ioutil.ReadDir(path.Join(root, name, f.Name())); e == nil {
 							m.Push(field, len(ls))
@@ -211,13 +211,13 @@ func init() {
 					nil, kit.Split(kit.Select("time,size,type,path", m.OptionFields())))
 			}},
 			mdb.UPLOAD: {Name: "upload", Help: "上传", Hand: func(m *ice.Message, arg ...string) {
-				m.Upload(m.Option(kit.MDB_PATH))
+				m.Upload(m.Option(PATH))
 			}},
 			TRASH: {Name: "trash", Help: "删除", Hand: func(m *ice.Message, arg ...string) {
-				m.Cmdy(TRASH, m.Option(kit.MDB_PATH))
+				m.Cmdy(TRASH, m.Option(PATH))
 			}},
 			mdb.REMOVE: {Name: "remove", Help: "删除", Hand: func(m *ice.Message, arg ...string) {
-				os.Remove(m.Option(kit.MDB_PATH))
+				os.Remove(m.Option(PATH))
 			}},
 		}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			if m.Option(DIR_ROOT) != "" {

@@ -43,8 +43,8 @@ func _spide_go(m *ice.Message, file string) {
 		}
 
 		m.Push(kit.MDB_NAME, ls[0])
-		m.Push(kit.MDB_FILE, ls[1])
-		m.Push(kit.MDB_LINE, strings.TrimSuffix(ls[2], ";\""))
+		m.Push(nfs.FILE, ls[1])
+		m.Push(nfs.LINE, strings.TrimSuffix(ls[2], ";\""))
 		m.Push(kit.MDB_TYPE, ls[3])
 		m.Push(kit.MDB_EXTRA, strings.Join(ls[4:], ice.SP))
 	})
@@ -52,8 +52,8 @@ func _spide_go(m *ice.Message, file string) {
 func _spide_c(m *ice.Message, file string) {
 	_spide_for(m.Cmdx(cli.SYSTEM, "ctags", "-f", "-", file), func(ls []string) {
 		m.Push(kit.MDB_NAME, ls[0])
-		m.Push(kit.MDB_FILE, ls[1])
-		m.Push(kit.MDB_LINE, "1")
+		m.Push(nfs.FILE, ls[1])
+		m.Push(nfs.LINE, "1")
 	})
 }
 
@@ -61,10 +61,48 @@ const SPIDE = "spide"
 
 func init() {
 	Index.Merge(&ice.Context{Commands: map[string]*ice.Command{
-		SPIDE: {Name: "spide name auto", Help: "构架图", Action: ice.MergeAction(map[string]*ice.Action{
+		SPIDE: {Name: "spide name auto depend", Help: "构架图", Action: ice.MergeAction(map[string]*ice.Action{
 			mdb.INPUTS: {Name: "inputs", Help: "补全", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmdy(REPOS, ice.OptionFields("name,time"))
 			}}, code.INNER: {Name: "web.code.inner"},
+			"depend": {Name: "depend path=icebergs/base", Help: "依赖", Hand: func(m *ice.Message, arg ...string) {
+				keys := map[string]bool{}
+				list := map[string]map[string]bool{}
+				dir := path.Join(ice.USR, m.Option(nfs.PATH)) + ice.PS
+				_spide_for(m.Cmdx(cli.SYSTEM, "gotags", "-R", dir), func(ls []string) {
+					if kit.Select("", ls, 3) != "i" {
+						return
+					}
+					if !strings.Contains(ls[0], m.Option(nfs.PATH)) {
+						return
+					}
+
+					item, ok := list[ls[0]]
+					if !ok {
+						item = map[string]bool{}
+						list[ls[0]] = item
+					}
+
+					p := strings.TrimPrefix(path.Dir(ls[1]), path.Join(ice.USR, m.Option(nfs.PATH)))
+					keys[p], item[p] = true, true
+				})
+
+				item := []string{}
+				for k := range keys {
+					item = append(item, k)
+				}
+				item = kit.Sort(item)
+
+				for k, v := range list {
+					m.Push("pkg", k)
+					m.Push("count", len(v))
+					for _, i := range item {
+						m.Push(i, kit.Select("", "ok", v[i]))
+					}
+				}
+				m.SortIntR("count")
+				m.ProcessInner()
+			}},
 		}, ctx.CmdAction()), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			if len(arg) == 0 { // 仓库列表
 				m.Cmdy(REPOS)
@@ -81,8 +119,8 @@ func init() {
 			if len(arg) == 1 { // 目录列表
 				m.Option(nfs.DIR_DEEP, ice.TRUE)
 				color := []string{cli.YELLOW, cli.BLUE, cli.CYAN, cli.RED}
-				nfs.Dir(m, kit.MDB_PATH).Table(func(index int, value map[string]string, head []string) {
-					m.Push(kit.MDB_COLOR, color[strings.Count(value[kit.MDB_PATH], ice.PS)%len(color)])
+				nfs.Dir(m, nfs.PATH).Table(func(index int, value map[string]string, head []string) {
+					m.Push(kit.MDB_COLOR, color[strings.Count(value[nfs.PATH], ice.PS)%len(color)])
 				})
 				return
 			}
@@ -97,7 +135,7 @@ func init() {
 			default:
 				_spide_c(m, arg[1])
 			}
-			m.SortInt(kit.MDB_LINE)
+			m.SortInt(nfs.LINE)
 		}},
 	}})
 }

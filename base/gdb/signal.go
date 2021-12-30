@@ -48,7 +48,7 @@ func init() {
 	Index.Merge(&ice.Context{Configs: map[string]*ice.Config{
 		SIGNAL: {Name: SIGNAL, Help: "信号器", Value: kit.Data(
 			kit.MDB_SHORT, SIGNAL, kit.MDB_FIELD, "time,signal,name,cmd",
-			kit.MDB_PATH, path.Join(ice.VAR_RUN, "ice.pid"),
+			nfs.PATH, path.Join(ice.VAR_RUN, "ice.pid"),
 		)},
 	}, Commands: map[string]*ice.Command{
 		ice.CTX_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {

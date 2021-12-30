@@ -8,6 +8,7 @@ import (
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/cli"
 	"shylinux.com/x/icebergs/base/mdb"
+	"shylinux.com/x/icebergs/base/nfs"
 	"shylinux.com/x/icebergs/core/wiki"
 	kit "shylinux.com/x/toolkits"
 )
@@ -67,7 +68,7 @@ var Index = &ice.Context{Name: ALPHA, Help: "英汉词典", Configs: map[string]
 }, Commands: map[string]*ice.Command{
 	ALPHA: {Name: "alpha method=word,line word auto", Help: "英汉", Action: map[string]*ice.Action{
 		mdb.IMPORT: {Name: "import file=usr/word-dict/ecdict name=ecdict", Help: "加载词库", Hand: func(m *ice.Message, arg ...string) {
-			_alpha_load(m, m.Option(kit.MDB_FILE), kit.Select(path.Base(m.Option(kit.MDB_FILE)), m.Option(kit.MDB_NAME)))
+			_alpha_load(m, m.Option(nfs.FILE), kit.Select(path.Base(m.Option(nfs.FILE)), m.Option(kit.MDB_NAME)))
 		}},
 		mdb.SEARCH: {Name: "search type name text", Help: "搜索", Hand: func(m *ice.Message, arg ...string) {
 			if arg[0] == ALPHA {

@@ -25,7 +25,7 @@ const WORD = "word"
 func init() {
 	Index.Merge(&ice.Context{Configs: map[string]*ice.Config{
 		WORD: {Name: WORD, Help: "语言文字", Value: kit.Data(
-			kit.MDB_PATH, "", kit.MDB_REGEXP, ".*\\.shy", kit.MDB_ALIAS, kit.Dict(
+			nfs.PATH, "", kit.MDB_REGEXP, ".*\\.shy", kit.MDB_ALIAS, kit.Dict(
 				NAVMENU, kit.List(TITLE, NAVMENU),
 				PREMENU, kit.List(TITLE, PREMENU),
 				CHAPTER, kit.List(TITLE, CHAPTER),

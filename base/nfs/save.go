@@ -16,7 +16,7 @@ func _save_file(m *ice.Message, name string, text ...string) {
 
 		for _, v := range text {
 			if n, e := f.WriteString(v); m.Assert(e) {
-				m.Log_EXPORT(kit.MDB_FILE, p, kit.MDB_SIZE, n)
+				m.Log_EXPORT(FILE, p, kit.MDB_SIZE, n)
 			}
 		}
 		m.Echo(p)
@@ -38,7 +38,7 @@ func _push_file(m *ice.Message, name string, text ...string) {
 
 		for _, k := range text {
 			if n, e := f.WriteString(k); m.Assert(e) {
-				m.Log_EXPORT(kit.MDB_FILE, p, kit.MDB_SIZE, n)
+				m.Log_EXPORT(FILE, p, kit.MDB_SIZE, n)
 			}
 		}
 		m.Echo(p)
@@ -53,8 +53,8 @@ func _copy_file(m *ice.Message, name string, from ...string) {
 				defer s.Close()
 
 				if n, e := io.Copy(f, s); !m.Warn(e, ice.ErrNotFound, name) {
-					m.Log_IMPORT(kit.MDB_FILE, v, kit.MDB_SIZE, n)
-					m.Log_EXPORT(kit.MDB_FILE, p, kit.MDB_SIZE, n)
+					m.Log_IMPORT(FILE, v, kit.MDB_SIZE, n)
+					m.Log_EXPORT(FILE, p, kit.MDB_SIZE, n)
 				}
 			}
 		}

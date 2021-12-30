@@ -8,7 +8,7 @@ import (
 
 func _user_login(m *ice.Message, name, word string) (ok bool) {
 	if m.Richs(USER, nil, name, nil) == nil {
-		_user_create(m, name, word)
+		_user_create(m, "", name, word)
 	}
 
 	m.Richs(USER, nil, name, func(key string, value map[string]interface{}) {
@@ -16,19 +16,20 @@ func _user_login(m *ice.Message, name, word string) (ok bool) {
 	})
 	return ok
 }
-func _user_create(m *ice.Message, name, word string) {
+func _user_create(m *ice.Message, role, name, word string) {
 	m.Rich(USER, nil, kit.Dict(
-		USERNAME, name, PASSWORD, word, USERNICK, name,
-		USERZONE, m.Option(ice.MSG_USERZONE),
+		USERROLE, role, USERNAME, name, PASSWORD, word,
+		USERNICK, name, USERZONE, m.Option(ice.MSG_USERZONE),
 	))
 	m.Event(USER_CREATE, USER, name)
 }
 func _user_search(m *ice.Message, name, text string) {
-	m.Richs(USER, nil, kit.MDB_FOREACH, func(key string, value map[string]interface{}) {
+	m.Richs(USER, nil, mdb.FOREACH, func(key string, value map[string]interface{}) {
 		if value = kit.GetMeta(value); name != "" && name != value[USERNAME] {
 			return
 		}
-		m.PushSearch(kit.MDB_TYPE, UserRole(m, value[USERNAME]), kit.MDB_NAME, kit.Format(value[USERNAME]), kit.MDB_TEXT, kit.Format(value[USERNICK]), value)
+		m.PushSearch(kit.SimpleKV("type,name,text",
+			kit.Format(value[USERROLE]), kit.Format(value[USERNAME]), kit.Format(value[USERNICK])), value)
 	})
 }
 
@@ -37,17 +38,15 @@ func UserRoot(m *ice.Message) {
 	m.Option(ice.MSG_USERNAME, ice.Info.UserName)
 
 	if m.Richs(USER, "", ice.Info.UserName, nil) == nil {
-		_user_create(m, ice.Info.UserName, kit.Hashs())
+		_user_create(m, ROOT, ice.Info.UserName, kit.Hashs())
 	}
 }
 func UserRole(m *ice.Message, username interface{}) (role string) {
 	if role = VOID; username == ice.Info.UserName {
 		return ROOT
 	}
-	m.Richs(ROLE, nil, TECH, func(key string, value map[string]interface{}) {
-		if kit.Value(kit.GetMeta(value), kit.Keys(USER, username)) == true {
-			role = TECH
-		}
+	m.Richs(USER, nil, kit.Format(username), func(key string, value map[string]interface{}) {
+		role = kit.Format(kit.GetMeta(value)[USERROLE])
 	})
 	return
 }
@@ -107,31 +106,23 @@ const USER = "user"
 func init() {
 	Index.Merge(&ice.Context{Configs: map[string]*ice.Config{
 		USER: {Name: USER, Help: "用户", Value: kit.Data(
-			kit.MDB_SHORT, USERNAME, kit.MDB_FIELD, "time,username,usernick,userzone",
+			mdb.SHORT, USERNAME, mdb.FIELD, "time,userrole,username,usernick,userzone",
 		)},
 	}, Commands: map[string]*ice.Command{
-		ice.CTX_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			m.Cmd(mdb.SEARCH, mdb.CREATE, USER, m.Prefix(USER))
-		}},
 		USER: {Name: "user username auto create", Help: "用户", Action: ice.MergeAction(map[string]*ice.Action{
-			mdb.CREATE: {Name: "create userrole=void,tech username password", Help: "创建", Hand: func(m *ice.Message, arg ...string) {
-				_user_create(m, m.Option(USERNAME), m.Option(PASSWORD))
-				_role_user(m, m.Option(USERROLE), m.Option(USERNAME))
-			}},
-			mdb.REMOVE: {Name: "remove username", Help: "删除", Hand: func(m *ice.Message, arg ...string) {
-				m.OptionFields(m.Config(kit.MDB_FIELD))
-				m.Cmdy(mdb.DELETE, USER, "", mdb.HASH, m.OptionSimple(m.Config(kit.MDB_SHORT)))
-				m.Event(USER_REMOVE, USER, m.Option(m.Config(kit.MDB_SHORT)))
+			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
+				m.Cmd(mdb.SEARCH, mdb.CREATE, USER, m.PrefixKey())
 			}},
 			mdb.SEARCH: {Name: "search type name text", Help: "搜索", Hand: func(m *ice.Message, arg ...string) {
 				if arg[0] == USER {
 					_user_search(m, arg[1], kit.Select("", arg, 2))
 				}
 			}},
+			mdb.CREATE: {Name: "create userrole=void,tech username password", Help: "创建", Hand: func(m *ice.Message, arg ...string) {
+				_user_create(m, m.Option(USERROLE), m.Option(USERNAME), m.Option(PASSWORD))
+			}},
 		}, mdb.HashAction()), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			mdb.HashSelect(m, arg...).Table(func(index int, value map[string]string, head []string) {
-				m.Push(USERROLE, UserRole(m, value[USERNAME]))
-			})
+			mdb.HashSelect(m, arg...)
 		}},
 	}})
 }

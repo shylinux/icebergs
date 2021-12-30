@@ -16,7 +16,7 @@ const CMD = "cmd"
 
 func init() {
 	Index.Merge(&ice.Context{Configs: map[string]*ice.Config{
-		CMD: {Name: CMD, Help: "命令", Value: kit.Data(kit.MDB_SHORT, "type", kit.MDB_PATH, ice.PWD)},
+		CMD: {Name: CMD, Help: "命令", Value: kit.Data(kit.MDB_SHORT, "type", nfs.PATH, ice.PWD)},
 	}, Commands: map[string]*ice.Command{
 		"/cmd/": {Name: "/cmd/", Help: "命令", Action: ice.MergeAction(map[string]*ice.Action{
 			ice.CTX_INIT: {Name: "_init", Help: "初始化", Hand: func(m *ice.Message, arg ...string) {
@@ -35,7 +35,7 @@ func init() {
 				return // 目录
 			}
 
-			p := path.Join(m.Config(kit.MDB_PATH), path.Join(arg...))
+			p := path.Join(m.Config(nfs.PATH), path.Join(arg...))
 			if mdb.HashSelect(m.Spawn(), kit.Ext(m.R.URL.Path)).Table(func(index int, value map[string]string, head []string) {
 				m.RenderCmd(value[kit.MDB_NAME], p)
 			}).Length() > 0 {
@@ -52,7 +52,7 @@ func init() {
 		}},
 		CMD: {Name: "cmd path auto upload up home", Help: "命令", Action: ice.MergeAction(map[string]*ice.Action{
 			web.UPLOAD: {Name: "upload", Help: "上传", Hand: func(m *ice.Message, arg ...string) {
-				m.Upload(path.Join(m.Config(kit.MDB_PATH), strings.TrimPrefix(path.Dir(m.R.URL.Path), "/cmd")))
+				m.Upload(path.Join(m.Config(nfs.PATH), strings.TrimPrefix(path.Dir(m.R.URL.Path), "/cmd")))
 			}},
 
 			"home": {Name: "home", Help: "根目录", Hand: func(m *ice.Message, arg ...string) {
@@ -72,7 +72,7 @@ func init() {
 				m.ProcessLocation(arg[0])
 				return
 			}
-			m.Option(nfs.DIR_ROOT, path.Join(m.Config(kit.MDB_PATH), strings.TrimPrefix(path.Dir(m.R.URL.Path), "/cmd")))
+			m.Option(nfs.DIR_ROOT, path.Join(m.Config(nfs.PATH), strings.TrimPrefix(path.Dir(m.R.URL.Path), "/cmd")))
 			m.Cmdy(nfs.DIR, arg)
 		}},
 	}})

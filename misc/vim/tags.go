@@ -6,6 +6,7 @@ import (
 
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/mdb"
+	"shylinux.com/x/icebergs/base/nfs"
 	"shylinux.com/x/icebergs/core/code"
 	kit "shylinux.com/x/toolkits"
 )
@@ -28,9 +29,9 @@ func init() {
 				if mdb.ZoneSelect(m, m.Option("module")); m.Length() > 0 {
 					switch m.Append(kit.MDB_TYPE) {
 					case "function":
-						m.Echo("4\nusr/volcanos%s\n/\\<%s: \\(shy\\|func\\)/\n", m.Append(kit.MDB_FILE), m.Option("pattern"))
+						m.Echo("4\nusr/volcanos%s\n/\\<%s: \\(shy\\|func\\)/\n", m.Append(nfs.FILE), m.Option("pattern"))
 					default:
-						m.Echo("4\nusr/volcanos%s\n/\\<%s: /\n", m.Append(kit.MDB_FILE), m.Option("pattern"))
+						m.Echo("4\nusr/volcanos%s\n/\\<%s: /\n", m.Append(nfs.FILE), m.Option("pattern"))
 					}
 					return
 				}
@@ -41,9 +42,9 @@ func init() {
 			mdb.INSERT: {Name: "insert zone=core type name=hi text=hello file line", Help: "添加"},
 			code.INNER: {Name: "inner", Help: "源码", Hand: func(m *ice.Message, arg ...string) {
 				m.ProcessCommand(code.INNER, []string{
-					kit.Select(ice.PWD, path.Dir(m.Option(kit.MDB_FILE))),
-					path.Base(m.Option(kit.MDB_FILE)),
-					m.Option(kit.MDB_LINE),
+					kit.Select(ice.PWD, path.Dir(m.Option(nfs.FILE))),
+					path.Base(m.Option(nfs.FILE)),
+					m.Option(nfs.LINE),
 				}, arg...)
 			}},
 			"listTags": {Name: "listTags", Help: "索引", Hand: func(m *ice.Message, arg ...string) {
@@ -64,7 +65,7 @@ func init() {
 					m.Sort(kit.MDB_NAME)
 					m.Echo("func\n").Table(func(index int, value map[string]string, head []string) {
 						m.Echo(arg[0] + ice.PT + value[kit.MDB_NAME] + ice.NL)
-						m.Echo("%s: %s: %s // %s\n", value[kit.MDB_TYPE], value[kit.MDB_NAME], strings.Split(value[kit.MDB_TEXT], ice.NL)[0], value[kit.MDB_FILE])
+						m.Echo("%s: %s: %s // %s\n", value[kit.MDB_TYPE], value[kit.MDB_NAME], strings.Split(value[kit.MDB_TEXT], ice.NL)[0], value[nfs.FILE])
 					})
 					return
 				}

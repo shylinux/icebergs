@@ -58,7 +58,7 @@ func init() {
 				m.Option(nfs.DIR_ROOT, m.Conf(cli.DAEMON, kit.META_PATH))
 				m.Cmd(nfs.DIR, ice.PWD, "time,path,size").Table(func(index int, value map[string]string, head []string) {
 					m.Push(kit.MDB_TIME, value[kit.MDB_TIME])
-					m.Push(PORT, path.Base(value[kit.MDB_PATH]))
+					m.Push(PORT, path.Base(value[nfs.PATH]))
 					m.Push(kit.MDB_SIZE, value[kit.MDB_SIZE])
 				})
 				m.SortInt(PORT)

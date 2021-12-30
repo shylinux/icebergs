@@ -24,6 +24,25 @@ const (
 	META = "meta"
 )
 const (
+	ID   = "id"
+	KEY  = "key"
+	TIME = "time"
+	// ZONE = "zone"
+	TYPE = "type"
+	NAME = "name"
+	TEXT = "text"
+
+	LINK = "link"
+	SCAN = "scan"
+
+	SHORT  = "short"
+	FIELD  = "field"
+	EXPIRE = "expire"
+
+	FOREACH = "*"
+	RANDOMS = "%"
+)
+const (
 	FIELDS = "fields"
 	DETAIL = "detail"
 	RANDOM = "random"

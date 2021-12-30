@@ -7,6 +7,7 @@ import (
 	"shylinux.com/x/icebergs/base/aaa"
 	"shylinux.com/x/icebergs/base/ctx"
 	"shylinux.com/x/icebergs/base/mdb"
+	"shylinux.com/x/icebergs/base/nfs"
 	"shylinux.com/x/icebergs/base/web"
 	kit "shylinux.com/x/toolkits"
 )
@@ -131,7 +132,7 @@ func _action_domain(m *ice.Message, cmd string, arg ...string) (domain string) {
 		case PRIVATE: // 私有群
 			domain = m.Option(ice.MSG_DOMAIN, kit.Keys("U"+m.Option(ice.MSG_USERNAME)))
 		}
-		m.Option(ice.MSG_LOCAL, path.Join(m.Config(kit.MDB_PATH), domain))
+		m.Option(ice.MSG_LOCAL, path.Join(m.Config(nfs.PATH), domain))
 	})
 	m.Log_AUTH(RIVER, river, STORM, storm, DOMAIN, domain)
 	return
@@ -154,7 +155,7 @@ func init() {
 	Index.Merge(&ice.Context{Configs: map[string]*ice.Config{
 		ACTION: {Name: ACTION, Help: "应用", Value: kit.Data(
 			MENUS, kit.List(kit.List("help", "tutor", "manual", "service", "devops", "refer")),
-			kit.MDB_PATH, ice.USR_LOCAL_RIVER,
+			nfs.PATH, ice.USR_LOCAL_RIVER,
 		)},
 	}, Commands: map[string]*ice.Command{
 		"/action": {Name: "/action river storm action arg...", Help: "工作台", Action: ice.MergeAction(map[string]*ice.Action{

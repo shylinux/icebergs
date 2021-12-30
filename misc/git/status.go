@@ -92,7 +92,7 @@ func _status_each(m *ice.Message, title string, cmds ...string) {
 		m.Cmd(REPOS, ice.OptionFields("name,path")).Table(func(index int, value map[string]string, head []string) {
 			toast(value[kit.MDB_NAME], count, total)
 
-			if msg := m.Cmd(cmds, ice.Option{cli.CMD_DIR, value[kit.MDB_PATH]}); !cli.IsSuccess(msg) {
+			if msg := m.Cmd(cmds, ice.Option{cli.CMD_DIR, value[nfs.PATH]}); !cli.IsSuccess(msg) {
 				m.Toast3s(msg.Append(cli.CMD_ERR), "error: "+value[kit.MDB_NAME])
 				list = append(list, value[kit.MDB_NAME])
 				m.Sleep3s()
@@ -123,7 +123,7 @@ func _status_stat(m *ice.Message, files, adds, dels int) (int, int, int) {
 }
 func _status_list(m *ice.Message) (files, adds, dels int, last time.Time) {
 	m.Cmd(REPOS, ice.OptionFields("name,path")).Table(func(index int, value map[string]string, head []string) {
-		m.Option(cli.CMD_DIR, value[kit.MDB_PATH])
+		m.Option(cli.CMD_DIR, value[nfs.PATH])
 		diff := m.Cmdx(cli.SYSTEM, GIT, STATUS, "-sb")
 		tags := m.Cmdx(cli.SYSTEM, GIT, "describe", "--tags")
 
@@ -139,7 +139,7 @@ func _status_list(m *ice.Message) (files, adds, dels int, last time.Time) {
 
 			m.Push(kit.MDB_NAME, value[kit.MDB_NAME])
 			m.Push(kit.MDB_TYPE, vs[0])
-			m.Push(kit.MDB_FILE, vs[1])
+			m.Push(nfs.FILE, vs[1])
 
 			list := []string{}
 			switch vs[0] {
@@ -229,7 +229,7 @@ func init() {
 				_repos_cmd(m, m.Option(kit.MDB_NAME), PUSH, "--tags")
 			}},
 			ADD: {Name: "add", Help: "添加", Hand: func(m *ice.Message, arg ...string) {
-				_repos_cmd(m, m.Option(kit.MDB_NAME), ADD, m.Option(kit.MDB_FILE))
+				_repos_cmd(m, m.Option(kit.MDB_NAME), ADD, m.Option(nfs.FILE))
 			}}, OPT: {Name: "opt", Help: "优化"}, PRO: {Name: "pro", Help: "升级"},
 			COMMIT: {Name: "commit action=opt,add,pro comment=some@key", Help: "提交", Hand: func(m *ice.Message, arg ...string) {
 				if arg[0] == ctx.ACTION {
@@ -254,8 +254,8 @@ func init() {
 					}
 
 				case COMMENT:
-					m.Push(kit.MDB_TEXT, m.Option(kit.MDB_FILE))
-					for _, v := range kit.Split(m.Option(kit.MDB_FILE), " /") {
+					m.Push(kit.MDB_TEXT, m.Option(nfs.FILE))
+					for _, v := range kit.Split(m.Option(nfs.FILE), " /") {
 						m.Push(kit.MDB_TEXT, v)
 					}
 				}

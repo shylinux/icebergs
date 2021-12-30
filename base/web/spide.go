@@ -16,6 +16,7 @@ import (
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/cli"
 	"shylinux.com/x/icebergs/base/mdb"
+	"shylinux.com/x/icebergs/base/nfs"
 	"shylinux.com/x/icebergs/base/tcp"
 	kit "shylinux.com/x/toolkits"
 )
@@ -31,7 +32,7 @@ func _spide_create(m *ice.Message, name, address string) {
 				SPIDE_COOKIE, kit.Dict(), SPIDE_HEADER, kit.Dict(), SPIDE_CLIENT, kit.Dict(
 					kit.MDB_NAME, name, SPIDE_METHOD, SPIDE_POST, "url", address,
 					tcp.PROTOCOL, uri.Scheme, tcp.HOSTNAME, uri.Host,
-					kit.MDB_PATH, dir, kit.MDB_FILE, file, "query", uri.RawQuery,
+					nfs.PATH, dir, nfs.FILE, file, "query", uri.RawQuery,
 					kit.MDB_TIMEOUT, "600s", LOGHEADERS, ice.FALSE,
 				),
 			)))
@@ -259,7 +260,7 @@ func _spide_save(m *ice.Message, cache, save, uri string, res *http.Response) {
 			defer f.Close()
 
 			if n, e := io.Copy(f, res.Body); m.Assert(e) {
-				m.Log_EXPORT(kit.MDB_SIZE, n, kit.MDB_FILE, p)
+				m.Log_EXPORT(kit.MDB_SIZE, n, nfs.FILE, p)
 				m.Echo(p)
 			}
 		}

@@ -46,7 +46,6 @@ func _header_grant(m *ice.Message, arg ...string) {
 	}
 
 	// 授权登录
-	m.Cmd(aaa.ROLE, kit.Select(aaa.TECH, aaa.VOID, m.Option(ice.MSG_USERROLE) == aaa.VOID), m.Option(ice.MSG_USERNAME))
 	m.Cmd(web.SPACE, m.Option(web.SPACE), ice.MSG_SESSID, aaa.SessCreate(m, m.Option(ice.MSG_USERNAME)))
 }
 func _header_share(m *ice.Message, arg ...string) {

@@ -55,7 +55,7 @@ func init() {
 					return
 				}
 
-				msg := m.Cmd("_sum", value[kit.MDB_PATH], kit.MDB_TOTAL, "10000")
+				msg := m.Cmd("_sum", value[nfs.PATH], kit.MDB_TOTAL, "10000")
 
 				mu.Lock()
 				defer mu.Unlock()

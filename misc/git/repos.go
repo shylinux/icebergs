@@ -24,7 +24,7 @@ func _repos_path(name string) string {
 func _repos_insert(m *ice.Message, name string, dir string) {
 	if s, e := os.Stat(m.Option(cli.CMD_DIR, path.Join(dir, ".git"))); e == nil && s.IsDir() {
 		ls := strings.SplitN(strings.Trim(m.Cmdx(cli.SYSTEM, GIT, "log", "-n1", `--pretty=format:"%ad %s"`, "--date=iso"), `"`), ice.SP, 4)
-		m.Rich(REPOS, nil, kit.Data(kit.MDB_NAME, name, kit.MDB_PATH, dir,
+		m.Rich(REPOS, nil, kit.Data(kit.MDB_NAME, name, nfs.PATH, dir,
 			COMMIT, kit.Select("", ls, 3), kit.MDB_TIME, strings.Join(ls[:2], ice.SP),
 			BRANCH, strings.TrimSpace(m.Cmdx(cli.SYSTEM, GIT, BRANCH)),
 			REMOTE, strings.TrimSpace(m.Cmdx(cli.SYSTEM, GIT, REMOTE, "-v")),
@@ -55,30 +55,30 @@ func init() {
 				m.Conf(REPOS, kit.MDB_HASH, "")
 				_repos_insert(m, path.Base(kit.Pwd()), kit.Pwd())
 				m.Cmd(nfs.DIR, ice.USR, "name,path").Table(func(index int, value map[string]string, head []string) {
-					_repos_insert(m, value[kit.MDB_NAME], value[kit.MDB_PATH])
+					_repos_insert(m, value[kit.MDB_NAME], value[nfs.PATH])
 				})
 			}},
 			mdb.CREATE: {Name: "create repos branch name path", Help: "添加", Hand: func(m *ice.Message, arg ...string) {
 				m.Option(kit.MDB_NAME, kit.Select(strings.TrimSuffix(path.Base(m.Option(REPOS)), ".git"), m.Option(kit.MDB_NAME)))
-				m.Option(kit.MDB_PATH, kit.Select(path.Join(ice.USR, m.Option(kit.MDB_NAME)), m.Option(kit.MDB_PATH)))
+				m.Option(nfs.PATH, kit.Select(path.Join(ice.USR, m.Option(kit.MDB_NAME)), m.Option(nfs.PATH)))
 				m.Option(REPOS, kit.Select(m.Config(REPOS)+ice.PS+m.Option(kit.MDB_NAME), m.Option(REPOS)))
 
-				if s, e := os.Stat(path.Join(m.Option(kit.MDB_PATH), ".git")); e == nil && s.IsDir() {
+				if s, e := os.Stat(path.Join(m.Option(nfs.PATH), ".git")); e == nil && s.IsDir() {
 					return
 				}
 
 				// 下载仓库
-				if s, e := os.Stat(m.Option(kit.MDB_PATH)); e == nil && s.IsDir() {
-					m.Option(cli.CMD_DIR, m.Option(kit.MDB_PATH))
+				if s, e := os.Stat(m.Option(nfs.PATH)); e == nil && s.IsDir() {
+					m.Option(cli.CMD_DIR, m.Option(nfs.PATH))
 					m.Cmd(cli.SYSTEM, GIT, INIT)
 					m.Cmd(cli.SYSTEM, GIT, REMOTE, ADD, ORIGIN, m.Option(REPOS))
 					m.Cmd(cli.SYSTEM, GIT, PULL, ORIGIN, MASTER)
 				} else {
 					m.Cmd(cli.SYSTEM, GIT, CLONE, "-b", kit.Select(MASTER, m.Option(BRANCH)),
-						m.Option(REPOS), m.Option(kit.MDB_PATH))
+						m.Option(REPOS), m.Option(nfs.PATH))
 				}
 
-				_repos_insert(m, m.Option(kit.MDB_NAME), m.Option(kit.MDB_PATH))
+				_repos_insert(m, m.Option(kit.MDB_NAME), m.Option(nfs.PATH))
 			}},
 		}, mdb.HashAction()), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			if len(arg) == 0 { // 仓库列表

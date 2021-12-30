@@ -27,7 +27,7 @@ const DIV = "div"
 func init() {
 	Index.Merge(&ice.Context{Configs: map[string]*ice.Config{
 		DIV: {Name: "div", Help: "定制", Value: kit.Data(
-			kit.MDB_FIELD, "time,hash,type,name,text", kit.MDB_PATH, ice.USR_PUBLISH,
+			kit.MDB_FIELD, "time,hash,type,name,text", nfs.PATH, ice.USR_PUBLISH,
 			kit.MDB_TEMPLATE, _div_template,
 		)},
 	}, Commands: map[string]*ice.Command{

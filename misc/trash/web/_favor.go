@@ -4,6 +4,7 @@ import (
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/aaa"
 	"shylinux.com/x/icebergs/base/mdb"
+	"shylinux.com/x/icebergs/base/nfs"
 	kit "shylinux.com/x/toolkits"
 
 	"encoding/csv"
@@ -213,7 +214,7 @@ func _favor_import(m *ice.Message, file string) {
 			count++
 		})
 	}
-	m.Log_IMPORT(kit.MDB_FILE, file, kit.MDB_COUNT, count)
+	m.Log_IMPORT(nfs.FILE, file, kit.MDB_COUNT, count)
 }
 func _favor_export(m *ice.Message, file string) {
 	f, p, e := kit.Create(file)
@@ -246,7 +247,7 @@ func _favor_export(m *ice.Message, file string) {
 			count++
 		})
 	})
-	m.Log_EXPORT(kit.MDB_FILE, p, kit.MDB_COUNT, count)
+	m.Log_EXPORT(nfs.FILE, p, kit.MDB_COUNT, count)
 }
 
 func FavorInsert(m *ice.Message, zone, kind string, name interface{}, text interface{}, extra ...string) {

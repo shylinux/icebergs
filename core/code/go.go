@@ -10,6 +10,7 @@ import (
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/cli"
 	"shylinux.com/x/icebergs/base/mdb"
+	"shylinux.com/x/icebergs/base/nfs"
 	kit "shylinux.com/x/toolkits"
 )
 
@@ -40,7 +41,7 @@ func _go_tags(m *ice.Message, key string) {
 		bio := bufio.NewScanner(f)
 		for i := 1; bio.Scan(); i++ {
 			if i == line || bio.Text() == text {
-				m.PushSearch(ice.CMD, "tags", kit.MDB_FILE, strings.TrimPrefix(file, ice.PWD), kit.MDB_LINE, kit.Format(i), kit.MDB_TEXT, bio.Text())
+				m.PushSearch(ice.CMD, "tags", nfs.FILE, strings.TrimPrefix(file, ice.PWD), nfs.LINE, kit.Format(i), kit.MDB_TEXT, bio.Text())
 			}
 		}
 	}
@@ -50,14 +51,14 @@ func _go_help(m *ice.Message, key string) {
 	if p == "" {
 		return
 	}
-	m.PushSearch(ice.CMD, "help", kit.MDB_FILE, key+".godoc", kit.MDB_LINE, 1, kit.MDB_TEXT, p)
+	m.PushSearch(ice.CMD, "help", nfs.FILE, key+".godoc", nfs.LINE, 1, kit.MDB_TEXT, p)
 }
 func _go_find(m *ice.Message, key string) {
 	for _, p := range strings.Split(m.Cmdx(cli.SYSTEM, FIND, ".", "-name", key), ice.NL) {
 		if p == "" {
 			continue
 		}
-		m.PushSearch(ice.CMD, FIND, kit.MDB_FILE, strings.TrimPrefix(p, ice.PWD), kit.MDB_LINE, 1, kit.MDB_TEXT, "")
+		m.PushSearch(ice.CMD, FIND, nfs.FILE, strings.TrimPrefix(p, ice.PWD), nfs.LINE, 1, kit.MDB_TEXT, "")
 	}
 }
 func _go_grep(m *ice.Message, key string) {

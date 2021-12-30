@@ -12,10 +12,10 @@ import (
 )
 
 func _volcanos(m *ice.Message, file ...string) string {
-	return path.Join(m.Conf(web.SERVE, kit.Keym(ice.VOLCANOS, kit.MDB_PATH)), path.Join(file...))
+	return path.Join(m.Conf(web.SERVE, kit.Keym(ice.VOLCANOS, nfs.PATH)), path.Join(file...))
 }
 func _publish(m *ice.Message, file ...string) string {
-	return path.Join(m.Conf(PUBLISH, kit.Keym(kit.MDB_PATH)), path.Join(file...))
+	return path.Join(m.Conf(PUBLISH, kit.Keym(nfs.PATH)), path.Join(file...))
 }
 
 const (
@@ -50,18 +50,18 @@ func init() {
 
 				for _, k := range []string{"lib", "panel", "plugin"} {
 					m.Cmd(nfs.DIR, k).Table(func(index int, value map[string]string, head []string) {
-						if kit.Ext(value[kit.MDB_PATH]) == CSS {
-							js.WriteString(`Volcanos.meta.cache["` + path.Join(ice.PS, value[kit.MDB_PATH]) + "\"] = []\n")
-							css.WriteString(m.Cmdx(nfs.CAT, value[kit.MDB_PATH]))
+						if kit.Ext(value[nfs.PATH]) == CSS {
+							js.WriteString(`Volcanos.meta.cache["` + path.Join(ice.PS, value[nfs.PATH]) + "\"] = []\n")
+							css.WriteString(m.Cmdx(nfs.CAT, value[nfs.PATH]))
 						}
 					})
 				}
 				js.WriteString(ice.NL)
 				for _, k := range []string{"lib", "panel", "plugin"} {
 					m.Cmd(nfs.DIR, k).Table(func(index int, value map[string]string, head []string) {
-						if kit.Ext(value[kit.MDB_PATH]) == JS {
-							js.WriteString(`_can_name = "` + path.Join(ice.PS, value[kit.MDB_PATH]) + "\";\n")
-							js.WriteString(m.Cmdx(nfs.CAT, value[kit.MDB_PATH]))
+						if kit.Ext(value[nfs.PATH]) == JS {
+							js.WriteString(`_can_name = "` + path.Join(ice.PS, value[nfs.PATH]) + "\";\n")
+							js.WriteString(m.Cmdx(nfs.CAT, value[nfs.PATH]))
 						}
 					})
 				}

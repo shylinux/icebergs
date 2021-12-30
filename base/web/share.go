@@ -12,6 +12,7 @@ import (
 	"shylinux.com/x/icebergs/base/aaa"
 	"shylinux.com/x/icebergs/base/cli"
 	"shylinux.com/x/icebergs/base/mdb"
+	"shylinux.com/x/icebergs/base/nfs"
 	"shylinux.com/x/icebergs/base/ssh"
 	"shylinux.com/x/icebergs/base/tcp"
 	kit "shylinux.com/x/toolkits"
@@ -24,33 +25,33 @@ func _share_link(m *ice.Message, p string, arg ...interface{}) string {
 func _share_repos(m *ice.Message, repos string, arg ...string) {
 	prefix := kit.Path(m.Conf(SERVE, kit.Keym(ice.REQUIRE)))
 	if _, e := os.Stat(path.Join(prefix, repos)); e != nil { // 克隆代码
-		m.Cmd("web.code.git.repos", mdb.CREATE, kit.SSH_REPOS, "https://"+repos, kit.MDB_PATH, path.Join(prefix, repos))
+		m.Cmd("web.code.git.repos", mdb.CREATE, kit.SSH_REPOS, "https://"+repos, nfs.PATH, path.Join(prefix, repos))
 	}
 	m.RenderDownload(path.Join(prefix, repos, path.Join(arg...)))
 }
 func _share_proxy(m *ice.Message) {
-	switch p := path.Join(ice.VAR_PROXY, m.Option(ice.POD), m.Option(kit.MDB_PATH)); m.R.Method {
+	switch p := path.Join(ice.VAR_PROXY, m.Option(ice.POD), m.Option(nfs.PATH)); m.R.Method {
 	case http.MethodGet: // 下发文件
 		m.RenderDownload(path.Join(p, m.Option(kit.MDB_NAME)))
 
 	case http.MethodPost: // 上传文件
 		m.Cmdy(CACHE, UPLOAD)
 		m.Cmdy(CACHE, WATCH, m.Option(kit.MDB_DATA), p)
-		m.RenderResult(m.Option(kit.MDB_PATH))
+		m.RenderResult(m.Option(nfs.PATH))
 	}
 }
 func _share_cache(m *ice.Message, arg ...string) {
 	if pod := m.Option(ice.POD); m.PodCmd(CACHE, arg[0]) {
-		if m.Append(kit.MDB_FILE) == "" {
+		if m.Append(nfs.FILE) == "" {
 			m.RenderResult(m.Append(kit.MDB_TEXT))
 		} else {
 			m.Option(ice.POD, pod)
-			_share_local(m, m.Append(kit.MDB_FILE))
+			_share_local(m, m.Append(nfs.FILE))
 		}
 		return
 	}
 	msg := m.Cmd(CACHE, arg[0])
-	m.RenderDownload(msg.Append(kit.MDB_FILE), msg.Append(kit.MDB_TYPE), msg.Append(kit.MDB_NAME))
+	m.RenderDownload(msg.Append(nfs.FILE), msg.Append(kit.MDB_TYPE), msg.Append(kit.MDB_NAME))
 }
 func _share_local(m *ice.Message, arg ...string) {
 	p := path.Join(arg...)
@@ -76,7 +77,7 @@ func _share_local(m *ice.Message, arg ...string) {
 
 		// 上传文件
 		m.Cmdy(SPACE, m.Option(ice.POD), SPIDE, ice.DEV, SPIDE_RAW, m.MergeURL2("/share/proxy"),
-			SPIDE_PART, m.OptionSimple(ice.POD), kit.MDB_PATH, p, CACHE, cache.Format(ice.MOD_TIME), UPLOAD, "@"+p)
+			SPIDE_PART, m.OptionSimple(ice.POD), nfs.PATH, p, CACHE, cache.Format(ice.MOD_TIME), UPLOAD, "@"+p)
 
 		if s, e := os.Stat(pp); e == nil && !s.IsDir() {
 			p = pp

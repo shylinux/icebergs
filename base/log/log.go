@@ -5,6 +5,7 @@ import (
 	"path"
 
 	ice "shylinux.com/x/icebergs"
+	"shylinux.com/x/icebergs/base/nfs"
 	kit "shylinux.com/x/toolkits"
 	log "shylinux.com/x/toolkits/logs"
 )
@@ -89,17 +90,17 @@ const (
 
 var Index = &ice.Context{Name: "log", Help: "日志模块", Configs: map[string]*ice.Config{
 	FILE: {Name: FILE, Help: "日志文件", Value: kit.Dict(
-		BENCH, kit.Dict(kit.MDB_PATH, path.Join(ice.VAR_LOG, "bench.log"), kit.MDB_LIST, []string{}),
-		WATCH, kit.Dict(kit.MDB_PATH, path.Join(ice.VAR_LOG, "watch.log"), kit.MDB_LIST, []string{
+		BENCH, kit.Dict(nfs.PATH, path.Join(ice.VAR_LOG, "bench.log"), kit.MDB_LIST, []string{}),
+		WATCH, kit.Dict(nfs.PATH, path.Join(ice.VAR_LOG, "watch.log"), kit.MDB_LIST, []string{
 			ice.LOG_CREATE, ice.LOG_REMOVE,
 			ice.LOG_INSERT, ice.LOG_DELETE,
 			ice.LOG_MODIFY, ice.LOG_SELECT,
 			ice.LOG_EXPORT, ice.LOG_IMPORT,
 		}),
-		ERROR, kit.Dict(kit.MDB_PATH, path.Join(ice.VAR_LOG, "error.log"), kit.MDB_LIST, []string{
+		ERROR, kit.Dict(nfs.PATH, path.Join(ice.VAR_LOG, "error.log"), kit.MDB_LIST, []string{
 			ice.LOG_WARN, ice.LOG_ERROR,
 		}),
-		TRACE, kit.Dict(kit.MDB_PATH, path.Join(ice.VAR_LOG, "trace.log"), kit.MDB_LIST, []string{
+		TRACE, kit.Dict(nfs.PATH, path.Join(ice.VAR_LOG, "trace.log"), kit.MDB_LIST, []string{
 			ice.LOG_DEBUG,
 		}),
 	)},
@@ -130,10 +131,10 @@ var Index = &ice.Context{Name: "log", Help: "日志模块", Configs: map[string]
 				m.Conf(SHOW, kit.Keys(k, FILE), key)
 			})
 			// 日志文件
-			if f, p, e := kit.Create(kit.Format(value[kit.MDB_PATH])); m.Assert(e) {
+			if f, p, e := kit.Create(kit.Format(value[nfs.PATH])); m.Assert(e) {
 				m.Cap(ice.CTX_STREAM, path.Base(p))
 				value[FILE] = bufio.NewWriter(f)
-				m.Log_CREATE(kit.MDB_FILE, p)
+				m.Log_CREATE(nfs.FILE, p)
 			}
 		})
 	}},

@@ -55,8 +55,8 @@ const TOTP = "totp"
 func init() {
 	Index.Merge(&ice.Context{Configs: map[string]*ice.Config{
 		TOTP: {Name: TOTP, Help: "动态令牌", Value: kit.Data(
-			kit.MDB_SHORT, kit.MDB_NAME, kit.MDB_FIELD, "time,name,secret,period,number",
-			kit.MDB_LINK, "otpauth://totp/%s?secret=%s",
+			mdb.SHORT, mdb.NAME, mdb.FIELD, "time,name,secret,period,number",
+			mdb.LINK, "otpauth://totp/%s?secret=%s",
 		)},
 	}, Commands: map[string]*ice.Command{
 		TOTP: {Name: "totp name auto create", Help: "动态令牌", Action: ice.MergeAction(map[string]*ice.Action{
@@ -65,22 +65,22 @@ func init() {
 					m.Option(SECRET, _totp_gen(kit.Int64(m.Option(PERIOD))))
 				}
 
-				m.Cmd(mdb.INSERT, TOTP, "", mdb.HASH, m.OptionSimple(kit.MDB_NAME, SECRET, PERIOD, NUMBER))
+				m.Cmd(mdb.INSERT, TOTP, "", mdb.HASH, m.OptionSimple(mdb.NAME, SECRET, PERIOD, NUMBER))
 			}},
 		}, mdb.HashAction()), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			mdb.HashSelect(m.Spawn(c), arg...).Table(func(index int, value map[string]string, head []string) {
 				if len(arg) > 0 {
 					m.OptionFields(mdb.DETAIL)
 				}
-				m.Push(kit.MDB_TIME, m.Time())
-				m.Push(kit.MDB_NAME, value[kit.MDB_NAME])
+				m.Push(mdb.TIME, m.Time())
+				m.Push(mdb.NAME, value[mdb.NAME])
 
 				period := kit.Int64(value[PERIOD])
 				m.Push("rest", period-time.Now().Unix()%period)
 				m.Push("code", _totp_get(value[SECRET], kit.Int(value[NUMBER]), period))
 
 				if len(arg) > 0 {
-					m.PushQRCode(kit.MDB_SCAN, kit.Format(m.Config(kit.MDB_LINK), value[kit.MDB_NAME], value[SECRET]))
+					m.PushQRCode(mdb.SCAN, kit.Format(m.Config(mdb.LINK), value[mdb.NAME], value[SECRET]))
 					m.Echo(_totp_get(value[SECRET], kit.Int(value[NUMBER]), kit.Int64(value[PERIOD])))
 				}
 			})

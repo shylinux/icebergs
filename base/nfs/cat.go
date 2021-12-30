@@ -104,7 +104,7 @@ func _cat_list(m *ice.Message, name string) {
 		buf := make([]byte, ice.MOD_BUFS)
 		for begin := 0; true; {
 			if n, e := f.Read(buf[begin:]); !m.Warn(e, ice.ErrNotFound, name) {
-				m.Log_IMPORT(kit.MDB_FILE, name, kit.MDB_SIZE, n)
+				m.Log_IMPORT(FILE, name, kit.MDB_SIZE, n)
 				if begin += n; begin < len(buf) {
 					buf = buf[:begin]
 					break

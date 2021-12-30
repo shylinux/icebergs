@@ -13,7 +13,7 @@ func _sess_check(m *ice.Message, sessid string) {
 			value = kit.GetMeta(value)
 
 			m.Log_AUTH(
-				USERROLE, m.Option(ice.MSG_USERROLE, UserRole(m, value[USERNAME])),
+				USERROLE, m.Option(ice.MSG_USERROLE, value[USERROLE]),
 				USERNAME, m.Option(ice.MSG_USERNAME, value[USERNAME]),
 				USERNICK, m.Option(ice.MSG_USERNICK, value[USERNICK]),
 			)
@@ -25,23 +25,23 @@ func _sess_create(m *ice.Message, username string) string {
 		return ""
 	}
 	if m.Richs(USER, nil, username, nil) == nil {
-		_user_create(m, username, kit.Hashs())
+		_user_create(m, kit.Select(TECH, VOID, m.Option(ice.MSG_USERROLE) == VOID), username, kit.Hashs())
 	}
 
 	h := m.Cmdx(mdb.INSERT, SESS, "", mdb.HASH,
 		USERROLE, UserRole(m, username), USERNAME, username,
 		IP, m.Option(ice.MSG_USERIP), UA, m.Option(ice.MSG_USERUA),
-		kit.MDB_TIME, m.Time(m.Conf(SESS, kit.Keym(kit.MDB_EXPIRE))),
+		mdb.TIME, m.Time(m.Conf(SESS, kit.Keym(mdb.EXPIRE))),
 	)
 	m.Event(SESS_CREATE, SESS, h, USERNAME, username)
 	return h
 }
 
-func SessCheck(m *ice.Message, sessid string) {
-	_sess_check(m, sessid)
-}
 func SessCreate(m *ice.Message, username string) string {
 	return m.Option(ice.MSG_SESSID, _sess_create(m, username))
+}
+func SessCheck(m *ice.Message, sessid string) {
+	_sess_check(m, sessid)
 }
 
 const (
@@ -60,8 +60,7 @@ const SESS = "sess"
 func init() {
 	Index.Merge(&ice.Context{Configs: map[string]*ice.Config{
 		SESS: {Name: SESS, Help: "会话", Value: kit.Data(
-			kit.MDB_SHORT, "uniq", kit.MDB_FIELD, "time,hash,userrole,username,ip,ua",
-			kit.MDB_EXPIRE, "720h",
+			mdb.SHORT, "uniq", mdb.FIELD, "time,hash,userrole,username,ip,ua", mdb.EXPIRE, "720h",
 		)},
 	}, Commands: map[string]*ice.Command{
 		SESS: {Name: "sess hash auto prunes", Help: "会话", Action: ice.MergeAction(map[string]*ice.Action{

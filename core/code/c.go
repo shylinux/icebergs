@@ -8,6 +8,7 @@ import (
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/cli"
 	"shylinux.com/x/icebergs/base/mdb"
+	"shylinux.com/x/icebergs/base/nfs"
 	kit "shylinux.com/x/toolkits"
 )
 
@@ -95,7 +96,7 @@ func init() {
 				}
 				for _, i := range []string{"1", "2", "3", "8"} {
 					if text := _c_help(m, i, kit.Select(kit.MDB_MAIN, arg, 1)); text != "" {
-						m.PushSearch(ice.CMD, MAN, kit.MDB_FILE, kit.Keys(arg[1], MAN+i), kit.MDB_LINE, 1, kit.MDB_TEXT, text)
+						m.PushSearch(ice.CMD, MAN, nfs.FILE, kit.Keys(arg[1], MAN+i), nfs.LINE, 1, kit.MDB_TEXT, text)
 					}
 				}
 			}},

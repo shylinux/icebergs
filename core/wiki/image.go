@@ -5,6 +5,7 @@ import (
 
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/mdb"
+	"shylinux.com/x/icebergs/base/nfs"
 	kit "shylinux.com/x/toolkits"
 )
 
@@ -34,7 +35,7 @@ func init() {
 	}, Configs: map[string]*ice.Config{
 		IMAGE: {Name: IMAGE, Help: "图片", Value: kit.Data(
 			kit.MDB_TEMPLATE, `<img {{.OptionTemplate}} title="{{.Option "text"}}" src="{{.Option "text"}}">`,
-			kit.MDB_PATH, ice.USR_LOCAL_IMAGE,
+			nfs.PATH, ice.USR_LOCAL_IMAGE,
 		)},
 	}})
 }

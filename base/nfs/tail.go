@@ -18,9 +18,9 @@ func _tail_create(m *ice.Message, arg ...string) {
 		r, w := io.Pipe()
 		m.Go(func() {
 			for bio := bufio.NewScanner(r); bio.Scan(); {
-				m.Log_IMPORT(kit.MDB_FILE, file, kit.MDB_SIZE, len(bio.Text()))
+				m.Log_IMPORT(FILE, file, kit.MDB_SIZE, len(bio.Text()))
 				m.Grow(TAIL, kit.Keys(kit.MDB_HASH, h), kit.Dict(
-					kit.MDB_FILE, file, kit.MDB_SIZE, len(bio.Text()), kit.MDB_TEXT, bio.Text(),
+					FILE, file, kit.MDB_SIZE, len(bio.Text()), kit.MDB_TEXT, bio.Text(),
 				))
 			}
 		})
@@ -46,7 +46,7 @@ func init() {
 		ice.CTX_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			m.Richs(TAIL, "", kit.MDB_FOREACH, func(key string, value map[string]interface{}) {
 				value, _ = kit.GetMeta(value), m.Option(kit.MDB_HASH, key)
-				m.Cmd(TAIL, mdb.CREATE, kit.MDB_FILE, kit.Format(value[kit.MDB_FILE]), kit.MDB_NAME, kit.Format(value[kit.MDB_NAME]))
+				m.Cmd(TAIL, mdb.CREATE, FILE, kit.Format(value[FILE]), kit.MDB_NAME, kit.Format(value[kit.MDB_NAME]))
 			})
 		}},
 		TAIL: {Name: "tail name id auto page filter:text create", Help: "日志流", Action: ice.MergeAction(map[string]*ice.Action{

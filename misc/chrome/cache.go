@@ -16,7 +16,7 @@ func init() {
 	Index.Merge(&ice.Context{Configs: map[string]*ice.Config{
 		CACHE: {Name: CACHE, Help: "爬虫缓存", Value: kit.Data(
 			kit.MDB_SHORT, kit.MDB_LINK, kit.MDB_FIELD, "time,hash,step,size,total,type,name,text,link",
-			kit.MDB_PATH, ice.USR_LOCAL_IMAGE,
+			nfs.PATH, ice.USR_LOCAL_IMAGE,
 		)},
 	}, Commands: map[string]*ice.Command{
 		CACHE: {Name: "cache hash auto prunes", Help: "爬虫缓存", Action: ice.MergeAction(map[string]*ice.Action{
@@ -31,8 +31,8 @@ func init() {
 					value[kit.MDB_TOTAL], value[kit.MDB_SIZE], value[kit.MDB_STEP] = total, size, kit.Format(size*100/total)
 				})
 
-				p := path.Join(m.Config(kit.MDB_PATH), m.Option(kit.MDB_NAME))
-				m.Cmdy(nfs.LINK, p, msg.Append(kit.MDB_FILE))
+				p := path.Join(m.Config(nfs.PATH), m.Option(kit.MDB_NAME))
+				m.Cmdy(nfs.LINK, p, msg.Append(nfs.FILE))
 				m.Toast("下载成功")
 			}},
 			mdb.PRUNES: {Name: "prunes", Help: "清理", Hand: func(m *ice.Message, arg ...string) {

@@ -45,12 +45,12 @@ func _story_index(m *ice.Message, name string, withdata bool) {
 	m.Richs(CACHE, nil, name, func(key string, value map[string]interface{}) {
 		// 查询数据
 		m.Push(DATA, key)
-		m.Push(key, value, []string{kit.MDB_TEXT, kit.MDB_FILE, kit.MDB_SIZE, kit.MDB_TIME, kit.MDB_NAME, kit.MDB_TYPE})
+		m.Push(key, value, []string{kit.MDB_TEXT, nfs.FILE, kit.MDB_SIZE, kit.MDB_TIME, kit.MDB_NAME, kit.MDB_TYPE})
 		if withdata {
-			if value[kit.MDB_FILE] == "" {
+			if value[nfs.FILE] == "" {
 				m.Echo("%s", kit.Format(value[kit.MDB_TEXT]))
 			} else {
-				m.Echo("%s", m.Cmdx(nfs.CAT, value[kit.MDB_FILE]))
+				m.Echo("%s", m.Cmdx(nfs.CAT, value[nfs.FILE]))
 			}
 		}
 	})

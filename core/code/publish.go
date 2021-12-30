@@ -24,7 +24,7 @@ func _bin_list(m *ice.Message, dir string) {
 			if s, e := os.Stat(path.Join(p, file)); e == nil {
 				m.Push(kit.MDB_TIME, s.ModTime())
 				m.Push(kit.MDB_SIZE, kit.FmtSize(s.Size()))
-				m.Push(kit.MDB_FILE, file)
+				m.Push(nfs.FILE, file)
 				m.PushDownload(kit.MDB_LINK, file, path.Join(p, file))
 			}
 		}
@@ -44,7 +44,7 @@ func _publish_file(m *ice.Message, file string, arg ...string) string {
 	}
 
 	// 发布文件
-	target := path.Join(m.Config(kit.MDB_PATH), kit.Select(path.Base(file), arg, 0))
+	target := path.Join(m.Config(nfs.PATH), kit.Select(path.Base(file), arg, 0))
 	m.Log_EXPORT(PUBLISH, target, kit.MDB_FROM, file)
 	m.Cmd(nfs.LINK, target, file)
 	return target
@@ -52,7 +52,7 @@ func _publish_file(m *ice.Message, file string, arg ...string) string {
 func _publish_list(m *ice.Message, arg ...string) {
 	m.Option(nfs.DIR_DEEP, ice.TRUE)
 	m.Option(nfs.DIR_REG, kit.Select("", arg, 0))
-	m.Option(nfs.DIR_ROOT, m.Config(kit.MDB_PATH))
+	m.Option(nfs.DIR_ROOT, m.Config(nfs.PATH))
 	m.Cmdy(nfs.DIR, ice.PWD, kit.Select("time,size,line,path,link", arg, 1))
 }
 
@@ -61,7 +61,7 @@ const PUBLISH = "publish"
 func init() {
 	Index.Merge(&ice.Context{Configs: map[string]*ice.Config{
 		PUBLISH: {Name: PUBLISH, Help: "发布", Value: kit.Data(
-			kit.MDB_PATH, ice.USR_PUBLISH, ice.CONTEXTS, _contexts,
+			nfs.PATH, ice.USR_PUBLISH, ice.CONTEXTS, _contexts,
 			SH, `#!/bin/bash
 echo "hello world"
 `,
@@ -71,30 +71,30 @@ echo "hello world"
 	}, Commands: map[string]*ice.Command{
 		PUBLISH: {Name: "publish path auto create volcanos icebergs intshell export", Help: "发布", Action: map[string]*ice.Action{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
-				m.Cmd(aaa.ROLE, aaa.WHITE, aaa.VOID, m.Config(kit.MDB_PATH))
+				m.Cmd(aaa.ROLE, aaa.WHITE, aaa.VOID, m.Config(nfs.PATH))
 				m.Cmd(aaa.ROLE, aaa.WHITE, aaa.VOID, m.PrefixKey())
 				m.Config(ice.CONTEXTS, _contexts)
 			}},
 			ice.VOLCANOS: {Name: "volcanos", Help: "火山架", Hand: func(m *ice.Message, arg ...string) {
 				defer func() { m.EchoQRCode(m.Option(ice.MSG_USERWEB)) }()
 				defer func() { m.Cmdy(PUBLISH, ice.CONTEXTS, ice.CORE) }()
-				m.Cmd(PUBLISH, mdb.CREATE, kit.MDB_FILE, ice.ETC_MISS_SH)
-				m.Cmd(PUBLISH, mdb.CREATE, kit.MDB_FILE, ice.GO_MOD)
+				m.Cmd(PUBLISH, mdb.CREATE, nfs.FILE, ice.ETC_MISS_SH)
+				m.Cmd(PUBLISH, mdb.CREATE, nfs.FILE, ice.GO_MOD)
 
-				m.Cmd(nfs.DEFS, path.Join(m.Config(kit.MDB_PATH), ice.ORDER_JS), m.Config(JS))
+				m.Cmd(nfs.DEFS, path.Join(m.Config(nfs.PATH), ice.ORDER_JS), m.Config(JS))
 				m.Cmd(nfs.DEFS, path.Join(m.Conf(web.SERVE, kit.Keym(ice.VOLCANOS, nfs.PATH)), PAGE_CACHE_JS), "")
 				m.Cmd(nfs.DEFS, path.Join(m.Conf(web.SERVE, kit.Keym(ice.VOLCANOS, nfs.PATH)), PAGE_CACHE_CSS), "")
 				_publish_list(m, `.*\.(html|css|js)$`)
 			}},
 			ice.ICEBERGS: {Name: "icebergs", Help: "冰山架", Hand: func(m *ice.Message, arg ...string) {
 				defer func() { m.Cmdy(PUBLISH, ice.CONTEXTS, ice.BASE) }()
-				m.Cmd(PUBLISH, mdb.CREATE, kit.MDB_FILE, ice.BIN_ICE_BIN)
-				m.Cmd(PUBLISH, mdb.CREATE, kit.MDB_FILE, ice.BIN_ICE_SH)
-				_bin_list(m, m.Config(kit.MDB_PATH))
+				m.Cmd(PUBLISH, mdb.CREATE, nfs.FILE, ice.BIN_ICE_BIN)
+				m.Cmd(PUBLISH, mdb.CREATE, nfs.FILE, ice.BIN_ICE_SH)
+				_bin_list(m, m.Config(nfs.PATH))
 			}},
 			ice.INTSHELL: {Name: "intshell", Help: "神农架", Hand: func(m *ice.Message, arg ...string) {
 				defer func() { m.Cmdy(PUBLISH, ice.CONTEXTS, ice.MISC) }()
-				m.Cmd(nfs.DEFS, path.Join(m.Config(kit.MDB_PATH), ice.ORDER_SH), m.Config(SH))
+				m.Cmd(nfs.DEFS, path.Join(m.Config(nfs.PATH), ice.ORDER_SH), m.Config(SH))
 				_publish_list(m, ".*\\.(sh|vim|conf)$")
 			}},
 			ice.CONTEXTS: {Name: "contexts", Help: "环境", Hand: func(m *ice.Message, arg ...string) {
@@ -115,11 +115,11 @@ echo "hello world"
 				m.ProcessAgain()
 			}},
 			mdb.CREATE: {Name: "create file", Help: "添加", Hand: func(m *ice.Message, arg ...string) {
-				_publish_file(m, m.Option(kit.MDB_FILE))
+				_publish_file(m, m.Option(nfs.FILE))
 			}},
 			nfs.TRASH: {Name: "trash", Help: "删除", Hand: func(m *ice.Message, arg ...string) {
-				p := m.Option(cli.CMD_DIR, m.Config(kit.MDB_PATH))
-				os.Remove(path.Join(p, m.Option(kit.MDB_PATH)))
+				p := m.Option(cli.CMD_DIR, m.Config(nfs.PATH))
+				os.Remove(path.Join(p, m.Option(nfs.PATH)))
 			}},
 			mdb.EXPORT: {Name: "export", Help: "工具链", Hand: func(m *ice.Message, arg ...string) {
 				var list = []string{}
@@ -152,7 +152,7 @@ echo "hello world"
 				m.ToastSuccess()
 			}},
 		}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			m.Option(nfs.DIR_ROOT, m.Config(kit.MDB_PATH))
+			m.Option(nfs.DIR_ROOT, m.Config(nfs.PATH))
 			m.Cmdy(nfs.DIR, kit.Select("", arg, 0), "time,size,path,action,link")
 		}},
 	}})

@@ -155,7 +155,9 @@ func HashAction(fields ...string) map[string]*ice.Action {
 			m.Cmdy(INSERT, m.PrefixKey(), "", HASH, arg)
 		}},
 		REMOVE: {Name: "remove", Help: "删除", Hand: func(m *ice.Message, arg ...string) {
+			m.OptionFields(m.Config(FIELD))
 			m.Cmdy(DELETE, m.PrefixKey(), "", HASH, m.OptionSimple(_key(m)), arg)
+			m.Event(kit.Keys(m.CommandKey(), REMOVE), m.CommandKey(), m.Option(m.Config(SHORT)))
 		}},
 		MODIFY: {Name: "modify", Help: "编辑", Hand: func(m *ice.Message, arg ...string) {
 			m.Cmdy(MODIFY, m.PrefixKey(), "", HASH, m.OptionSimple(_key(m)), arg)

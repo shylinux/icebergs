@@ -52,7 +52,7 @@ const JSON = "json"
 func init() {
 	Index.Merge(&ice.Context{Configs: map[string]*ice.Config{
 		JSON: {Name: JSON, Help: "数据结构", Value: kit.Data(
-			kit.MDB_PATH, ice.USR_LOCAL_EXPORT, kit.MDB_REGEXP, ".*\\.json",
+			nfs.PATH, ice.USR_LOCAL_EXPORT, kit.MDB_REGEXP, ".*\\.json",
 		)},
 	}, Commands: map[string]*ice.Command{
 		JSON: {Name: "json path auto", Help: "数据结构", Meta: kit.Dict(

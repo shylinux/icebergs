@@ -8,6 +8,7 @@ import (
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/aaa"
 	"shylinux.com/x/icebergs/base/cli"
+	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/nfs"
 	kit "shylinux.com/x/toolkits"
 )
@@ -25,7 +26,7 @@ func _port_right(m *ice.Message, arg ...string) string {
 			c.Close()
 			continue
 		}
-		p := path.Join(m.Conf(cli.DAEMON, kit.META_PATH), kit.Format(i))
+		p := path.Join(m.Conf(cli.DAEMON, kit.Keym(nfs.PATH)), kit.Format(i))
 		if _, e := os.Stat(p); e == nil {
 			continue
 		}
@@ -55,16 +56,16 @@ func init() {
 			}},
 		}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			if len(arg) == 0 {
-				m.Option(nfs.DIR_ROOT, m.Conf(cli.DAEMON, kit.META_PATH))
+				m.Option(nfs.DIR_ROOT, m.Conf(cli.DAEMON, kit.Keym(nfs.PATH)))
 				m.Cmd(nfs.DIR, ice.PWD, "time,path,size").Table(func(index int, value map[string]string, head []string) {
-					m.Push(kit.MDB_TIME, value[kit.MDB_TIME])
+					m.Push(mdb.TIME, value[mdb.TIME])
 					m.Push(PORT, path.Base(value[nfs.PATH]))
-					m.Push(kit.MDB_SIZE, value[kit.MDB_SIZE])
+					m.Push(nfs.SIZE, value[nfs.SIZE])
 				})
 				m.SortInt(PORT)
 				return
 			}
-			m.Option(nfs.DIR_ROOT, path.Join(m.Conf(cli.DAEMON, kit.META_PATH), arg[0]))
+			m.Option(nfs.DIR_ROOT, path.Join(m.Conf(cli.DAEMON, kit.Keym(nfs.PATH)), arg[0]))
 			m.Cmdy(nfs.DIR, arg[1:])
 		}},
 	}})

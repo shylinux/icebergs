@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
+	"net/http"
 	"os"
 	"path"
 	"strings"
@@ -11,6 +12,7 @@ import (
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/nfs"
+	"shylinux.com/x/icebergs/base/web"
 	kit "shylinux.com/x/toolkits"
 )
 
@@ -77,6 +79,14 @@ const BINPACK = "binpack"
 func init() {
 	Index.Merge(&ice.Context{Commands: map[string]*ice.Command{
 		BINPACK: {Name: "binpack path auto create remove export", Help: "打包", Action: map[string]*ice.Action{
+			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
+				web.AddRewrite(func(w http.ResponseWriter, r *http.Request) bool {
+					if ice.Dump(w, r.URL.Path, func(name string) { web.RenderType(w, name, "") }) {
+						return true // 打包文件
+					}
+					return false
+				})
+			}},
 			mdb.CREATE: {Name: "create", Help: "创建", Hand: func(m *ice.Message, arg ...string) {
 				if pack, p, e := kit.Create(ice.SRC_BINPACK_GO); m.Assert(e) {
 					defer pack.Close()

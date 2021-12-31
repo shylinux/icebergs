@@ -50,15 +50,17 @@ func (m *Message) Assert(expr interface{}) bool {
 	m.Result(ErrPanic, expr)
 	panic(expr)
 }
-func (m *Message) Sleep(d string) *Message {
+func (m *Message) Sleep(d string, arg ...interface{}) *Message {
 	m.Debug("sleep %s %s", d, kit.FileLine(2, 3))
-	time.Sleep(kit.Duration(d))
+	if time.Sleep(kit.Duration(d)); len(arg) > 0 {
+		m.Cmdy(arg...)
+	}
 	return m
 }
-func (m *Message) Sleep300ms() *Message { return m.Sleep("30ms") }
-func (m *Message) Sleep30ms() *Message  { return m.Sleep("30ms") }
-func (m *Message) Sleep3s() *Message    { return m.Sleep("3s") }
-func (m *Message) Sleep30s() *Message   { return m.Sleep("30s") }
+func (m *Message) Sleep300ms(arg ...interface{}) *Message { return m.Sleep("300ms", arg...) }
+func (m *Message) Sleep30ms(arg ...interface{}) *Message  { return m.Sleep("30ms", arg...) }
+func (m *Message) Sleep3s(arg ...interface{}) *Message    { return m.Sleep("3s", arg...) }
+func (m *Message) Sleep30s(arg ...interface{}) *Message   { return m.Sleep("30s", arg...) }
 func (m *Message) Hold(n int) *Message {
 	for ctx := m.target; ctx != nil; ctx = ctx.context {
 		if ctx.wg != nil {

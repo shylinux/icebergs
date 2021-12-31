@@ -117,6 +117,15 @@ func _cat_list(m *ice.Message, name string) {
 }
 
 const (
+	TEMPLATE = "template"
+	SOURCE   = "source"
+	TARGET   = "target"
+
+	MASTER = "master"
+	BRANCH = "branch"
+	REPOS  = "repos"
+)
+const (
 	PATH = "path"
 	FILE = "file"
 	LINE = "line"
@@ -130,7 +139,7 @@ const CAT = "cat"
 func init() {
 	Index.Merge(&ice.Context{Configs: map[string]*ice.Config{
 		CAT: {Name: CAT, Help: "文件", Value: kit.Data(
-			kit.SSH_SOURCE, kit.Dict(
+			SOURCE, kit.Dict(
 				"sh", ice.TRUE, "shy", ice.TRUE, "py", ice.TRUE,
 				"go", ice.TRUE, "vim", ice.TRUE, "js", ice.TRUE,
 				"json", ice.TRUE, "conf", ice.TRUE, "yml", ice.TRUE,

@@ -4,6 +4,7 @@ import (
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/cli"
 	"shylinux.com/x/icebergs/base/mdb"
+	"shylinux.com/x/icebergs/base/nfs"
 	"shylinux.com/x/icebergs/base/web"
 	kit "shylinux.com/x/toolkits"
 )
@@ -41,12 +42,12 @@ func init() {
 		}, PlugAction())},
 		NODE: {Name: "node auto download", Help: "前端", Action: map[string]*ice.Action{
 			web.DOWNLOAD: {Name: "download", Help: "下载", Hand: func(m *ice.Message, arg ...string) {
-				m.Cmdy(INSTALL, m.Config(cli.SOURCE))
+				m.Cmdy(INSTALL, m.Config(nfs.SOURCE))
 			}},
 		}},
 	}, Configs: map[string]*ice.Config{
 		NODE: {Name: NODE, Help: "前端", Value: kit.Data(
-			cli.SOURCE, "https://nodejs.org/dist/v10.13.0/node-v10.13.0-linux-x64.tar.xz",
+			nfs.SOURCE, "https://nodejs.org/dist/v10.13.0/node-v10.13.0-linux-x64.tar.xz",
 		)},
 		JS: {Name: JS, Help: "js", Value: kit.Data(PLUG, kit.Dict(
 			SPLIT, kit.Dict("space", " \t", "operator", "{[(&.,;!|<>)]}"),

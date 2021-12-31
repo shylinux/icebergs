@@ -20,7 +20,7 @@ func init() {
 				kit.MDB_TYPE, "bin", nfs.FILE, "ice.sh", nfs.PATH, ice.BIN_ICE_SH,
 				kit.MDB_TYPE, "bin", nfs.FILE, "ice.bin", nfs.PATH, ice.BIN_ICE_BIN,
 			)),
-			cli.SOURCE, kit.Dict(kit.MDB_LIST, kit.List(
+			nfs.SOURCE, kit.Dict(kit.MDB_LIST, kit.List(
 				kit.MDB_TYPE, "txt", nfs.FILE, "main.go", nfs.PATH, ice.SRC_MAIN_GO,
 				kit.MDB_TYPE, "txt", nfs.FILE, "miss.sh", nfs.PATH, ice.ETC_MISS_SH,
 				kit.MDB_TYPE, "txt", nfs.FILE, "go.mod", nfs.PATH, ice.GO_MOD,

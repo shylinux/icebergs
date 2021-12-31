@@ -5,6 +5,7 @@ import (
 
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/mdb"
+	"shylinux.com/x/icebergs/base/nfs"
 	kit "shylinux.com/x/toolkits"
 )
 
@@ -14,7 +15,7 @@ func init() {
 	Index.Merge(&ice.Context{Configs: map[string]*ice.Config{
 		WUBI: {Name: WUBI, Help: "输入法", Value: kit.Data(
 			kit.MDB_STORE, path.Join(ice.USR_LOCAL_EXPORT, INPUT, WUBI), kit.MDB_FSIZE, "200000",
-			kit.MDB_SHORT, "zone", kit.SSH_REPOS, "wubi-dict",
+			kit.MDB_SHORT, "zone", nfs.REPOS, "wubi-dict",
 			kit.MDB_LIMIT, "5000", kit.MDB_LEAST, "1000",
 		)},
 	}, Commands: map[string]*ice.Command{

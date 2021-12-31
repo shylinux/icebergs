@@ -75,7 +75,7 @@ field "{{.Option "help"}}" {{.Option "key"}}
 	m.Cmd(nfs.DEFS, dir, string(buf))
 }
 func _autogen_source(m *ice.Message, zone, name string) {
-	m.Cmd(nfs.PUSH, ice.SRC_MAIN_SHY, ice.NL, kit.SSH_SOURCE+ice.SP+path.Join(zone, kit.Keys(name, SHY)), ice.NL)
+	m.Cmd(nfs.PUSH, ice.SRC_MAIN_SHY, ice.NL, nfs.SOURCE+ice.SP+path.Join(zone, kit.Keys(name, SHY)), ice.NL)
 }
 func _autogen_mod(m *ice.Message, file string) (mod string) {
 	m.Cmd(nfs.DEFS, ice.GO_MOD, kit.Format(`module %s

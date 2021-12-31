@@ -61,7 +61,7 @@ const ALPHA = "alpha"
 
 var Index = &ice.Context{Name: ALPHA, Help: "英汉词典", Configs: map[string]*ice.Config{
 	ALPHA: {Name: ALPHA, Help: "英汉词典", Value: kit.Data(
-		kit.SSH_REPOS, "word-dict", kit.MDB_FIELD, "word,translation,definition",
+		nfs.REPOS, "word-dict", kit.MDB_FIELD, "word,translation,definition",
 		kit.MDB_STORE, path.Join(ice.USR_LOCAL_EXPORT, ALPHA), kit.MDB_FSIZE, "300000",
 		kit.MDB_LIMIT, "50000", kit.MDB_LEAST, "1000",
 	)},

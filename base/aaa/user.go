@@ -15,7 +15,13 @@ func _user_login(m *ice.Message, name, word string) (ok bool) {
 	}
 
 	m.Richs(USER, nil, name, func(key string, value map[string]interface{}) {
-		ok = word == value[PASSWORD]
+		if ok = !m.Warn(word != "" && word != value[PASSWORD], ice.ErrNotRight); ok {
+			m.Log_AUTH(
+				USERROLE, m.Option(ice.MSG_USERROLE, value[USERROLE]),
+				USERNAME, m.Option(ice.MSG_USERNAME, value[USERNAME]),
+				USERNICK, m.Option(ice.MSG_USERNICK, value[USERNICK]),
+			)
+		}
 	})
 	return ok
 }
@@ -23,19 +29,14 @@ func _user_create(m *ice.Message, role, name, word string) {
 	if word == "" {
 		word = kit.Hashs()
 	}
-	m.Rich(USER, nil, kit.Dict(
-		USERROLE, role, USERNAME, name, PASSWORD, word,
-		USERNICK, name, USERZONE, m.Option(ice.MSG_USERZONE),
-	))
+	m.Rich(USER, nil, kit.Dict(USERROLE, role, USERNAME, name, PASSWORD, word))
 	m.Event(USER_CREATE, USER, name)
 }
 func _user_search(m *ice.Message, name, text string) {
 	m.Richs(USER, nil, mdb.FOREACH, func(key string, value map[string]interface{}) {
-		if value = kit.GetMeta(value); name != "" && name != value[USERNAME] {
-			return
+		if value = kit.GetMeta(value); name == "" || name == value[USERNAME] {
+			m.PushSearch(kit.SimpleKV("", kit.Format(value[USERROLE]), kit.Format(value[USERNAME]), kit.Format(value[USERNICK])), value)
 		}
-		m.PushSearch(kit.SimpleKV("type,name,text",
-			kit.Format(value[USERROLE]), kit.Format(value[USERNAME]), kit.Format(value[USERNICK])), value)
 	})
 }
 
@@ -69,15 +70,7 @@ func UserZone(m *ice.Message, username interface{}) (zone string) {
 	return
 }
 func UserLogin(m *ice.Message, username, password string) bool {
-	if password == "" || _user_login(m, username, password) {
-		m.Log_AUTH(
-			USERROLE, m.Option(ice.MSG_USERROLE, UserRole(m, username)),
-			USERNAME, m.Option(ice.MSG_USERNAME, username),
-			USERNICK, m.Option(ice.MSG_USERNICK, UserNick(m, username)),
-		)
-		return true
-	}
-	return false
+	return _user_login(m, username, password)
 }
 
 const (
@@ -102,7 +95,6 @@ const (
 )
 const (
 	USER_CREATE = "user.create"
-	USER_REMOVE = "user.remove"
 )
 const (
 	INVITE = "invite"
@@ -125,10 +117,9 @@ func init() {
 				}
 			}},
 			mdb.CREATE: {Name: "create userrole=void,tech username password", Help: "创建", Hand: func(m *ice.Message, arg ...string) {
-				if _user_exists(m, m.Option(USERNAME)) {
-					return
+				if !_user_exists(m, m.Option(USERNAME)) {
+					_user_create(m, m.Option(USERROLE), m.Option(USERNAME), m.Option(PASSWORD))
 				}
-				_user_create(m, m.Option(USERROLE), m.Option(USERNAME), m.Option(PASSWORD))
 			}},
 		}, mdb.HashAction()), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			mdb.HashSelect(m, arg...)

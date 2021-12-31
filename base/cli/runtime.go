@@ -101,10 +101,6 @@ const (
 	NODE = "node"
 )
 const (
-	SOURCE = "source"
-	TARGET = "target"
-)
-const (
 	GOARCH  = "GOARCH"
 	GOOS    = "GOOS"
 	X386    = "386"

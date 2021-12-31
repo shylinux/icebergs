@@ -1,8 +1,6 @@
 package tcp
 
-import (
-	ice "shylinux.com/x/icebergs"
-)
+import ice "shylinux.com/x/icebergs"
 
 const TCP = "tcp"
 

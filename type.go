@@ -308,6 +308,8 @@ func (m *Message) Spawn(arg ...interface{}) *Message {
 			msg.R = val
 		case *Context:
 			msg.target = val
+		case string:
+			msg._key = val
 		}
 	}
 	return msg

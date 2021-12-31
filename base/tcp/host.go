@@ -6,6 +6,7 @@ import (
 
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/aaa"
+	"shylinux.com/x/icebergs/base/mdb"
 	kit "shylinux.com/x/toolkits"
 )
 
@@ -22,12 +23,12 @@ func _host_list(m *ice.Message, name string) {
 			if ips, e := v.Addrs(); m.Assert(e) {
 				for _, x := range ips {
 					ip := strings.Split(x.String(), ice.PS)
-					if strings.Contains(ip[0], ":") || len(ip) == 0 {
+					if strings.Contains(ip[0], ice.DF) || len(ip) == 0 {
 						continue
 					}
 
-					m.Push(kit.MDB_INDEX, v.Index)
-					m.Push(kit.MDB_NAME, v.Name)
+					m.Push(mdb.INDEX, v.Index)
+					m.Push(mdb.NAME, v.Name)
 					m.Push(aaa.IP, ip[0])
 					m.Push("mask", ip[1])
 					m.Push("hard", v.HardwareAddr.String())
@@ -37,8 +38,8 @@ func _host_list(m *ice.Message, name string) {
 	}
 
 	if len(m.Appendv(aaa.IP)) == 0 {
-		m.Push(kit.MDB_INDEX, -1)
-		m.Push(kit.MDB_NAME, LOCALHOST)
+		m.Push(mdb.INDEX, -1)
+		m.Push(mdb.NAME, LOCALHOST)
 		m.Push(aaa.IP, "127.0.0.1")
 		m.Push("mask", "255.0.0.0")
 		m.Push("hard", "")
@@ -74,23 +75,22 @@ const HOST = "host"
 func init() {
 	Index.Merge(&ice.Context{Configs: map[string]*ice.Config{
 		HOST: {Name: HOST, Help: "主机", Value: kit.Data(
-			aaa.BLACK, kit.Data(kit.MDB_SHORT, kit.MDB_TEXT),
-			aaa.WHITE, kit.Data(kit.MDB_SHORT, kit.MDB_TEXT),
+			aaa.BLACK, kit.Data(mdb.SHORT, mdb.TEXT), aaa.WHITE, kit.Data(mdb.SHORT, mdb.TEXT),
 		)},
 	}, Commands: map[string]*ice.Command{
-		ice.CTX_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			m.Cmd(HOST).Table(func(index int, value map[string]string, head []string) {
-				m.Cmd(HOST, aaa.WHITE, value[aaa.IP])
-			})
-		}},
 		HOST: {Name: "host name auto", Help: "主机", Action: map[string]*ice.Action{
+			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
+				m.Cmd(HOST).Table(func(index int, value map[string]string, head []string) {
+					m.Cmd(HOST, aaa.WHITE, value[aaa.IP])
+				})
+			}},
 			aaa.BLACK: {Name: "black", Help: "黑名单", Hand: func(m *ice.Message, arg ...string) {
 				m.Log_CREATE(aaa.BLACK, arg[0])
-				m.Rich(HOST, kit.Keym(aaa.BLACK), kit.Dict(kit.MDB_TEXT, arg[0]))
+				m.Rich(HOST, kit.Keym(aaa.BLACK), kit.Dict(mdb.TEXT, arg[0]))
 			}},
 			aaa.WHITE: {Name: "white", Help: "白名单", Hand: func(m *ice.Message, arg ...string) {
 				m.Log_CREATE(aaa.WHITE, arg[0])
-				m.Rich(HOST, kit.Keym(aaa.WHITE), kit.Dict(kit.MDB_TEXT, arg[0]))
+				m.Rich(HOST, kit.Keym(aaa.WHITE), kit.Dict(mdb.TEXT, arg[0]))
 			}},
 		}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			_host_list(m, kit.Select("", arg, 0))

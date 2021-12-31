@@ -32,10 +32,12 @@ const (
 	NAME = "name"
 	TEXT = "text"
 
+	INDEX = "index"
 	VALUE = "value"
 
 	LINK = "link"
 	SCAN = "scan"
+	HELP = "help"
 
 	SHORT  = "short"
 	FIELD  = "field"

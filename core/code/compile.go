@@ -67,7 +67,7 @@ func init() {
 			}
 
 			// 编译成功
-			m.Log_EXPORT(cli.SOURCE, main, cli.TARGET, file)
+			m.Log_EXPORT(nfs.SOURCE, main, nfs.TARGET, file)
 			m.Cmdy(nfs.DIR, file, "time,path,size,link,action")
 			m.Cmdy(PUBLISH, mdb.CREATE, ice.BIN_ICE_SH)
 			m.Cmdy(PUBLISH, ice.CONTEXTS, ice.CORE)

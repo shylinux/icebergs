@@ -149,7 +149,6 @@ const (
 	PREV = "prev"
 	DATA = "data"
 
-	INDEX   = "index"
 	HISTORY = "history"
 
 	PULL   = "pull"

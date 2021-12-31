@@ -173,7 +173,7 @@ func init() {
 			cli.START: {Name: "start link cmd", Help: "启动", Hand: func(m *ice.Message, arg ...string) {
 				_install_start(m, arg...)
 			}},
-			cli.SOURCE: {Name: "source link path", Help: "源码", Hand: func(m *ice.Message, arg ...string) {
+			nfs.SOURCE: {Name: "source link path", Help: "源码", Hand: func(m *ice.Message, arg ...string) {
 				m.Option(nfs.DIR_ROOT, path.Join(m.Config(nfs.PATH), kit.TrimExt(m.Option(kit.MDB_LINK)), "_install"))
 				defer m.StatusTime(nfs.PATH, m.Option(nfs.DIR_ROOT))
 				m.Cmdy(nfs.DIR, m.Option(nfs.PATH))
@@ -197,13 +197,13 @@ func init() {
 func InstallAction(fields ...string) map[string]*ice.Action {
 	return ice.SelectAction(map[string]*ice.Action{
 		web.DOWNLOAD: {Name: "download", Help: "下载", Hand: func(m *ice.Message, arg ...string) {
-			m.Cmdy(INSTALL, web.DOWNLOAD, m.Config(cli.SOURCE))
+			m.Cmdy(INSTALL, web.DOWNLOAD, m.Config(nfs.SOURCE))
 		}},
 		cli.BUILD: {Name: "build", Help: "构建", Hand: func(m *ice.Message, arg ...string) {
-			m.Cmdy(INSTALL, cli.BUILD, m.Config(cli.SOURCE))
+			m.Cmdy(INSTALL, cli.BUILD, m.Config(nfs.SOURCE))
 		}},
 		cli.ORDER: {Name: "order", Help: "加载", Hand: func(m *ice.Message, arg ...string) {
-			m.Cmdy(INSTALL, cli.ORDER, m.Config(cli.SOURCE), "_install/bin")
+			m.Cmdy(INSTALL, cli.ORDER, m.Config(nfs.SOURCE), "_install/bin")
 		}},
 	}, fields...)
 }

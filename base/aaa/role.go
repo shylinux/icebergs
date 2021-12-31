@@ -1,8 +1,6 @@
 package aaa
 
 import (
-	"strings"
-
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/mdb"
 	kit "shylinux.com/x/toolkits"
@@ -10,38 +8,38 @@ import (
 
 func _role_list(m *ice.Message, userrole string) {
 	m.Richs(ROLE, nil, kit.Select(mdb.FOREACH, userrole), func(key string, value map[string]interface{}) {
-		kit.Fetch(value[WHITE], func(k string, v interface{}) {
-			m.Push(ROLE, kit.Value(value, mdb.NAME))
-			m.Push(mdb.ZONE, WHITE)
-			m.Push(mdb.KEY, k)
-		})
 		kit.Fetch(value[BLACK], func(k string, v interface{}) {
 			m.Push(ROLE, kit.Value(value, mdb.NAME))
 			m.Push(mdb.ZONE, BLACK)
 			m.Push(mdb.KEY, k)
 		})
+		kit.Fetch(value[WHITE], func(k string, v interface{}) {
+			m.Push(ROLE, kit.Value(value, mdb.NAME))
+			m.Push(mdb.ZONE, WHITE)
+			m.Push(mdb.KEY, k)
+		})
 	})
 }
 func _role_chain(arg ...string) string {
-	return strings.ReplaceAll(kit.Keys(arg), ice.PS, ice.PT)
+	return kit.ReplaceAll(kit.Keys(arg), ice.PS, ice.PT)
 }
-func _role_black(m *ice.Message, userrole, chain string, status bool) {
+func _role_black(m *ice.Message, userrole, chain string) {
 	m.Richs(ROLE, nil, userrole, func(key string, value map[string]interface{}) {
 		list := value[BLACK].(map[string]interface{})
 		m.Log_CREATE(ROLE, userrole, BLACK, chain)
-		list[chain] = status
+		list[chain] = true
 	})
 }
-func _role_white(m *ice.Message, userrole, chain string, status bool) {
+func _role_white(m *ice.Message, userrole, chain string) {
 	m.Richs(ROLE, nil, userrole, func(key string, value map[string]interface{}) {
 		list := value[WHITE].(map[string]interface{})
 		m.Log_CREATE(ROLE, userrole, WHITE, chain)
-		list[chain] = status
+		list[chain] = true
 	})
 }
 func _role_right(m *ice.Message, userrole string, keys ...string) (ok bool) {
 	if userrole == ROOT {
-		return true // 超级用户
+		return true // 超级权限
 	}
 
 	m.Richs(ROLE, nil, kit.Select(VOID, userrole), func(key string, value map[string]interface{}) {
@@ -49,29 +47,29 @@ func _role_right(m *ice.Message, userrole string, keys ...string) (ok bool) {
 		list := value[BLACK].(map[string]interface{})
 		for i := 0; i < len(keys); i++ {
 			if v, o := list[kit.Join(keys[:i+1], ice.PT)]; o && v == true {
-				ok = false
+				ok = false // 在黑名单
 			}
 		}
-
 		if m.Warn(!ok, ice.ErrNotRight, keys, USERROLE, userrole) {
-			return
+			return // 没有权限
 		}
 		if userrole == TECH {
-			return // 管理用户
+			return // 管理权限
 		}
 
 		ok = false
 		list = value[WHITE].(map[string]interface{})
 		for i := 0; i < len(keys); i++ {
 			if v, o := list[kit.Join(keys[:i+1], ice.PT)]; o && v == true {
-				ok = true
+				ok = true // 在白名单
 			}
 		}
-
 		if m.Warn(!ok, ice.ErrNotRight, keys, USERROLE, userrole) {
-			return
+			return // 没有权限
 		}
-		// 普通用户
+		if userrole == VOID {
+			return // 用户权限
+		}
 	})
 	return ok
 }
@@ -98,8 +96,8 @@ func init() {
 	}, Commands: map[string]*ice.Command{
 		ROLE: {Name: "role role auto insert", Help: "角色", Action: map[string]*ice.Action{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
-				m.Rich(ROLE, nil, kit.Dict(mdb.NAME, VOID, WHITE, kit.Dict(), BLACK, kit.Dict()))
 				m.Rich(ROLE, nil, kit.Dict(mdb.NAME, TECH, BLACK, kit.Dict(), WHITE, kit.Dict()))
+				m.Rich(ROLE, nil, kit.Dict(mdb.NAME, VOID, WHITE, kit.Dict(), BLACK, kit.Dict()))
 				m.Cmd(ROLE, WHITE, VOID, ice.SRC)
 				m.Cmd(ROLE, WHITE, VOID, ice.BIN)
 				m.Cmd(ROLE, WHITE, VOID, ice.USR)
@@ -108,24 +106,24 @@ func init() {
 			}},
 			mdb.INSERT: {Name: "insert role=void,tech zone=white,black key=", Help: "添加", Hand: func(m *ice.Message, arg ...string) {
 				m.Richs(ROLE, nil, m.Option(ROLE), func(key string, value map[string]interface{}) {
+					m.Log_CREATE(ROLE, m.Option(ROLE), m.Option(mdb.ZONE), m.Option(mdb.KEY))
 					list := value[m.Option(mdb.ZONE)].(map[string]interface{})
-					m.Log_CREATE(ROLE, m.Option(ROLE), m.Option(mdb.KEY))
 					list[m.Option(mdb.KEY)] = true
 				})
 			}},
 			mdb.DELETE: {Name: "delete", Help: "删除", Hand: func(m *ice.Message, arg ...string) {
 				m.Richs(ROLE, nil, m.Option(ROLE), func(key string, value map[string]interface{}) {
+					m.Log_REMOVE(ROLE, m.Option(ROLE), m.Option(mdb.ZONE), m.Option(mdb.KEY))
 					list := value[m.Option(mdb.ZONE)].(map[string]interface{})
-					m.Log_REMOVE(ROLE, m.Option(ROLE), m.Option(mdb.KEY))
 					delete(list, m.Option(mdb.KEY))
 				})
 			}},
 
 			BLACK: {Name: "black role chain", Help: "黑名单", Hand: func(m *ice.Message, arg ...string) {
-				_role_black(m, arg[0], _role_chain(arg[1:]...), true)
+				_role_black(m, arg[0], _role_chain(arg[1:]...))
 			}},
 			WHITE: {Name: "white role chain", Help: "白名单", Hand: func(m *ice.Message, arg ...string) {
-				_role_white(m, arg[0], _role_chain(arg[1:]...), true)
+				_role_white(m, arg[0], _role_chain(arg[1:]...))
 			}},
 			RIGHT: {Name: "right role chain", Help: "查看权限", Hand: func(m *ice.Message, arg ...string) {
 				if _role_right(m, arg[0], kit.Split(_role_chain(arg[1:]...), ice.PT)...) {

@@ -25,7 +25,7 @@ func _share_link(m *ice.Message, p string, arg ...interface{}) string {
 func _share_repos(m *ice.Message, repos string, arg ...string) {
 	prefix := kit.Path(m.Conf(SERVE, kit.Keym(ice.REQUIRE)))
 	if _, e := os.Stat(path.Join(prefix, repos)); e != nil { // 克隆代码
-		m.Cmd("web.code.git.repos", mdb.CREATE, kit.SSH_REPOS, "https://"+repos, nfs.PATH, path.Join(prefix, repos))
+		m.Cmd("web.code.git.repos", mdb.CREATE, nfs.REPOS, "https://"+repos, nfs.PATH, path.Join(prefix, repos))
 	}
 	m.RenderDownload(path.Join(prefix, repos, path.Join(arg...)))
 }

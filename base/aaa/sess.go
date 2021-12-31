@@ -6,32 +6,42 @@ import (
 	kit "shylinux.com/x/toolkits"
 )
 
-func _sess_check(m *ice.Message, sessid string) {
-	m.Richs(SESS, nil, sessid, func(value map[string]interface{}) {
-		value = kit.GetMeta(value)
-		m.Richs(USER, nil, value[USERNAME], func(value map[string]interface{}) {
-			value = kit.GetMeta(value)
+func _sess_check(m *ice.Message, sessid string) bool {
+	m.Option(ice.MSG_USERROLE, VOID)
+	m.Option(ice.MSG_USERNAME, "")
+	m.Option(ice.MSG_USERNICK, "")
+	if sessid == "" {
+		return false
+	}
 
+	m.Richs(SESS, nil, sessid, func(value map[string]interface{}) {
+		if value = kit.GetMeta(value); m.Warn(kit.Time(kit.Format(value[mdb.TIME])) < kit.Time(m.Time()), ice.ErrExpire) {
+			return // 会话超时
+		}
+		if m.Richs(USER, nil, value[USERNAME], func(value map[string]interface{}) {
 			m.Log_AUTH(
 				USERROLE, m.Option(ice.MSG_USERROLE, value[USERROLE]),
 				USERNAME, m.Option(ice.MSG_USERNAME, value[USERNAME]),
 				USERNICK, m.Option(ice.MSG_USERNICK, value[USERNICK]),
 			)
-		})
+		}) == nil {
+			m.Log_AUTH(
+				USERROLE, m.Option(ice.MSG_USERROLE, value[USERROLE]),
+				USERNAME, m.Option(ice.MSG_USERNAME, value[USERNAME]),
+				USERNICK, m.Option(ice.MSG_USERNICK, value[USERNICK]),
+			)
+		}
 	})
+	return m.Option(ice.MSG_USERNAME) != ""
 }
 func _sess_create(m *ice.Message, username string) string {
 	if username == "" {
 		return ""
 	}
-	if !_user_exists(m, username) {
-		_user_create(m, kit.Select(TECH, VOID, m.Option(ice.MSG_USERROLE) == VOID), username, kit.Hashs())
-	}
 
-	h := m.Cmdx(mdb.INSERT, SESS, "", mdb.HASH,
-		USERROLE, UserRole(m, username), USERNAME, username,
+	h := m.Cmdx(mdb.INSERT, SESS, "", mdb.HASH, mdb.TIME, m.Time(m.Conf(SESS, kit.Keym(mdb.EXPIRE))),
+		USERROLE, UserRole(m, username), USERNAME, username, USERNICK, UserNick(m, username),
 		IP, m.Option(ice.MSG_USERIP), UA, m.Option(ice.MSG_USERUA),
-		mdb.TIME, m.Time(m.Conf(SESS, kit.Keym(mdb.EXPIRE))),
 	)
 	m.Event(SESS_CREATE, SESS, h, USERNAME, username)
 	return h
@@ -40,8 +50,8 @@ func _sess_create(m *ice.Message, username string) string {
 func SessCreate(m *ice.Message, username string) string {
 	return m.Option(ice.MSG_SESSID, _sess_create(m, username))
 }
-func SessCheck(m *ice.Message, sessid string) {
-	_sess_check(m, sessid)
+func SessCheck(m *ice.Message, sessid string) bool {
+	return _sess_check(m, sessid)
 }
 
 const (
@@ -49,6 +59,7 @@ const (
 	UA = "ua"
 )
 const (
+	GRANT  = "grant"
 	LOGIN  = "login"
 	LOGOUT = "logout"
 )

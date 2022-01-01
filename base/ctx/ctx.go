@@ -1,8 +1,6 @@
 package ctx
 
-import (
-	ice "shylinux.com/x/icebergs"
-)
+import ice "shylinux.com/x/icebergs"
 
 const CTX = "ctx"
 

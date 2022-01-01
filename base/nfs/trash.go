@@ -24,28 +24,30 @@ func _trash_create(m *ice.Message, name string) {
 			p := path.Join(m.Config(PATH), h[:2], h)
 			os.MkdirAll(path.Dir(p), ice.MOD_DIR)
 			os.Rename(name, p)
-			m.Cmdy(mdb.INSERT, TRASH, "", mdb.HASH, FILE, p, kit.MDB_FROM, name)
+			m.Cmdy(mdb.INSERT, TRASH, "", mdb.HASH, FILE, p, FROM, name)
 		}
 	}
 }
 
+const (
+	FROM = "from"
+)
 const TRASH = "trash"
 
 func init() {
 	Index.Merge(&ice.Context{Configs: map[string]*ice.Config{
 		TRASH: {Name: TRASH, Help: "回收站", Value: kit.Data(
-			kit.MDB_SHORT, kit.MDB_FROM, kit.MDB_FIELD, "time,hash,file,from",
-			PATH, ice.VAR_TRASH,
+			mdb.SHORT, FROM, mdb.FIELD, "time,hash,file,from", PATH, ice.VAR_TRASH,
 		)},
 	}, Commands: map[string]*ice.Command{
 		TRASH: {Name: "trash hash auto prunes", Help: "回收站", Action: ice.MergeAction(map[string]*ice.Action{
 			mdb.REVERT: {Name: "revert", Help: "恢复", Hand: func(m *ice.Message, arg ...string) {
-				os.Rename(m.Option(FILE), m.Option(kit.MDB_FROM))
-				m.Cmd(mdb.DELETE, TRASH, "", mdb.HASH, m.OptionSimple(kit.MDB_HASH))
+				os.Rename(m.Option(FILE), m.Option(FROM))
+				m.Cmd(mdb.DELETE, TRASH, "", mdb.HASH, m.OptionSimple(mdb.HASH))
 			}},
 			mdb.REMOVE: {Name: "remove", Help: "删除", Hand: func(m *ice.Message, arg ...string) {
 				os.Remove(m.Option(FILE))
-				m.Cmd(mdb.DELETE, TRASH, "", mdb.HASH, m.OptionSimple(kit.MDB_HASH))
+				m.Cmd(mdb.DELETE, TRASH, "", mdb.HASH, m.OptionSimple(mdb.HASH))
 			}},
 			mdb.PRUNES: {Name: "prunes before@date", Help: "清理", Hand: func(m *ice.Message, arg ...string) {
 				mdb.HashPrunes(m, func(value map[string]string) bool {

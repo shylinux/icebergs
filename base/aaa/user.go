@@ -35,7 +35,7 @@ func _user_create(m *ice.Message, role, name, word string) {
 func _user_search(m *ice.Message, name, text string) {
 	m.Richs(USER, nil, mdb.FOREACH, func(key string, value map[string]interface{}) {
 		if value = kit.GetMeta(value); name == "" || name == value[USERNAME] {
-			m.PushSearch(kit.SimpleKV("", kit.Format(value[USERROLE]), kit.Format(value[USERNAME]), kit.Format(value[USERNICK])), value)
+			m.PushSearch(kit.SimpleKV("", value[USERROLE], value[USERNAME], value[USERNICK]), value)
 		}
 	})
 }
@@ -110,6 +110,7 @@ func init() {
 		USER: {Name: "user username auto create", Help: "用户", Action: ice.MergeAction(map[string]*ice.Action{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
 				m.Cmd(mdb.SEARCH, mdb.CREATE, USER, m.PrefixKey())
+				UserRoot(ice.Pulse)
 			}},
 			mdb.SEARCH: {Name: "search type name text", Help: "搜索", Hand: func(m *ice.Message, arg ...string) {
 				if arg[0] == USER {

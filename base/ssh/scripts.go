@@ -136,7 +136,7 @@ func (f *Frame) scan(m *ice.Message, h, line string) *Frame {
 	f.ps2 = kit.Simple(m.Confv(PROMPT, kit.Keym(PS2)))
 	ps := f.ps1
 
-	m.Sleep("300ms")
+	m.Sleep300ms()
 	m.I, m.O = f.stdin, f.stdout
 	bio := bufio.NewScanner(f.stdin)
 	for f.prompt(m, ps...); bio.Scan() && f.stdin != nil; f.prompt(m, ps...) {
@@ -290,7 +290,7 @@ func init() {
 			for _, line := range kit.Split(arg[0], ice.NL, ice.NL) {
 				fmt.Fprintf(f.pipe, line+ice.NL)
 				f.printf(m, line+ice.NL)
-				m.Sleep("300ms")
+				m.Sleep300ms()
 			}
 			m.Echo(f.res)
 		}},

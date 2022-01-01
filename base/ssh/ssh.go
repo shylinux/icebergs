@@ -1,8 +1,6 @@
 package ssh
 
-import (
-	ice "shylinux.com/x/icebergs"
-)
+import ice "shylinux.com/x/icebergs"
 
 const SSH = "ssh"
 

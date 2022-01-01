@@ -1,8 +1,6 @@
 package cli
 
-import (
-	ice "shylinux.com/x/icebergs"
-)
+import ice "shylinux.com/x/icebergs"
 
 const CLI = "cli"
 

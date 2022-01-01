@@ -83,7 +83,7 @@ func _dream_show(m *ice.Message, name string) {
 
 	// 启动任务
 	m.Cmd(cli.DAEMON, m.Configv(ice.CMD), ice.DEV, ice.DEV, mdb.NAME, name, m.OptionSimple(RIVER))
-	defer m.Event(DREAM_CREATE, kit.SimpleKV(m.Option(mdb.TYPE), name)...)
+	defer m.Event(DREAM_CREATE, kit.SimpleKV("", m.Option(mdb.TYPE), name)...)
 	m.Sleep300ms()
 }
 

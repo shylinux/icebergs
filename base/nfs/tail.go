@@ -17,9 +17,9 @@ func _tail_create(m *ice.Message, arg ...string) {
 		r, w := io.Pipe()
 		m.Go(func() {
 			for bio := bufio.NewScanner(r); bio.Scan(); {
-				m.Log_IMPORT(FILE, file, kit.MDB_SIZE, len(bio.Text()))
-				m.Grow(TAIL, kit.Keys(kit.MDB_HASH, h), kit.Dict(
-					FILE, file, kit.MDB_SIZE, len(bio.Text()), kit.MDB_TEXT, bio.Text(),
+				m.Log_IMPORT(FILE, file, SIZE, len(bio.Text()))
+				m.Grow(TAIL, kit.Keys(mdb.HASH, h), kit.Dict(
+					FILE, file, SIZE, len(bio.Text()), mdb.TEXT, bio.Text(),
 				))
 			}
 		})
@@ -30,7 +30,7 @@ func _tail_create(m *ice.Message, arg ...string) {
 	})
 }
 func _tail_count(m *ice.Message, name string) string {
-	return m.Conf(TAIL, kit.KeyHash(name, kit.Keym(kit.MDB_COUNT)))
+	return m.Conf(TAIL, kit.KeyHash(name, kit.Keym(mdb.COUNT)))
 }
 
 const TAIL = "tail"
@@ -38,24 +38,24 @@ const TAIL = "tail"
 func init() {
 	Index.Merge(&ice.Context{Configs: map[string]*ice.Config{
 		TAIL: {Name: TAIL, Help: "日志流", Value: kit.Data(
-			kit.MDB_SHORT, kit.MDB_NAME, kit.MDB_FIELD, "time,id,file,text",
+			mdb.SHORT, mdb.NAME, mdb.FIELD, "time,id,file,text",
 		)},
 	}, Commands: map[string]*ice.Command{
-		ice.CTX_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			m.Richs(TAIL, "", kit.MDB_FOREACH, func(key string, value map[string]interface{}) {
-				value, _ = kit.GetMeta(value), m.Option(kit.MDB_HASH, key)
-				m.Cmd(TAIL, mdb.CREATE, FILE, kit.Format(value[FILE]), kit.MDB_NAME, kit.Format(value[kit.MDB_NAME]))
-			})
-		}},
 		TAIL: {Name: "tail name id auto page filter:text create", Help: "日志流", Action: ice.MergeAction(map[string]*ice.Action{
+			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
+				m.Richs(TAIL, "", mdb.FOREACH, func(key string, value map[string]interface{}) {
+					value, _ = kit.GetMeta(value), m.Option(mdb.HASH, key)
+					m.Cmd(TAIL, mdb.CREATE, kit.SimpleKV("file,name", value))
+				})
+			}},
 			mdb.INPUTS: {Name: "inputs", Help: "补全", Hand: func(m *ice.Message, arg ...string) {
 				switch arg[0] {
 				case FILE:
 					m.Cmdy(DIR, kit.Select(ice.PWD, arg, 1), PATH).RenameAppend(PATH, FILE)
 					m.ProcessAgain()
-				case kit.MDB_NAME:
+				case mdb.NAME:
 					m.Push(arg[0], kit.Split(m.Option(FILE), ice.PS))
-				case kit.MDB_LIMIT:
+				case mdb.LIMIT:
 					m.Push(arg[0], kit.List("10", "20", "30", "50"))
 				}
 			}},
@@ -63,11 +63,11 @@ func init() {
 				_tail_create(m, arg...)
 			}},
 		}, mdb.ZoneAction()), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			m.Fields(len(kit.Slice(arg, 0, 2)), "time,name,count,file", m.Config(kit.MDB_FIELD))
+			m.Fields(len(kit.Slice(arg, 0, 2)), "time,name,count,file", m.Config(mdb.FIELD))
 			m.OptionPage(kit.Slice(arg, 2)...)
 
 			mdb.ZoneSelect(m.Spawn(c), arg...).Table(func(index int, value map[string]string, head []string) {
-				if strings.Contains(value[kit.MDB_TEXT], m.Option(ice.CACHE_FILTER)) {
+				if strings.Contains(value[mdb.TEXT], m.Option(ice.CACHE_FILTER)) {
 					m.Push("", value, head)
 				}
 			})

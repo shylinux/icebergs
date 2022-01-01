@@ -188,7 +188,7 @@ func init() {
 		}},
 		CMD: {Name: "cmd", Help: "命令", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			m.Cmd(cli.SYSTEM, TMUX, "send-keys", "-t", arg[0], strings.Join(arg[1:], ice.SP), "Enter")
-			m.Sleep("100ms")
+			m.Sleep300ms()
 		}},
 	}})
 }

@@ -49,7 +49,6 @@ func _status_tags(m *ice.Message) {
 			}
 
 			change := false
-			m.Option(nfs.CAT_LOCAL, ice.TRUE)
 			m.Option(nfs.DIR_ROOT, _repos_path(k))
 			mod := m.Cmdx(nfs.CAT, ice.GO_MOD, func(text string, line int) string {
 				ls := kit.Split(strings.TrimPrefix(text, ice.REQUIRE))

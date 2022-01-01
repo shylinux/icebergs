@@ -86,6 +86,13 @@ func init() {
 					}
 					return false
 				})
+				nfs.AddRewrite(func(msg *ice.Message, name string) []byte {
+					if b, ok := ice.Info.Pack[name]; ok {
+						m.Logs("binpack", len(b), name)
+						return b
+					}
+					return nil
+				})
 			}},
 			mdb.CREATE: {Name: "create", Help: "创建", Hand: func(m *ice.Message, arg ...string) {
 				if pack, p, e := kit.Create(ice.SRC_BINPACK_GO); m.Assert(e) {

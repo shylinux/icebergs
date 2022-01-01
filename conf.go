@@ -223,6 +223,7 @@ const ( // Err
 	ErrExists       = "exists: "
 	ErrExpire       = "expire: "
 	ErrTimeout      = "timeout: "
+	ErrFailure      = "failure: "
 	ErrNotLogin     = "not login: "
 	ErrNotFound     = "not found: "
 	ErrNotRight     = "not right: "

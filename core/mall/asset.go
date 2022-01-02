@@ -30,7 +30,7 @@ func _asset_check(m *ice.Message, account string) {
 	m.Option(kit.Keycb(mdb.SELECT), func(key string, value map[string]interface{}) {
 		amount += kit.Int(kit.Value(value, AMOUNT))
 	})
-	m.Cmd(mdb.SELECT, m.Prefix(ASSET), "", mdb.ZONE, account, ice.OptionFields(m.Config(kit.MDB_FIELD)))
+	m.Cmd(mdb.SELECT, m.Prefix(ASSET), "", mdb.ZONE, account, ice.OptionFields(m.Config(mdb.FIELD)))
 
 	m.Cmdy(mdb.MODIFY, m.Prefix(ASSET), "", mdb.HASH, ACCOUNT, account, AMOUNT, amount)
 }
@@ -61,7 +61,7 @@ const ASSET = "asset"
 func init() {
 	Index.Merge(&ice.Context{Configs: map[string]*ice.Config{
 		ASSET: {Name: ASSET, Help: "资产", Value: kit.Data(
-			kit.MDB_SHORT, ACCOUNT, kit.MDB_FIELD, "time,id,type,amount,name,text",
+			mdb.SHORT, ACCOUNT, mdb.FIELD, "time,id,type,amount,name,text",
 			kit.MDB_ALIAS, kit.Dict(FROM, ACCOUNT, TO, ACCOUNT),
 		)},
 	}, Commands: map[string]*ice.Command{
@@ -70,15 +70,15 @@ func init() {
 		), Action: ice.MergeAction(map[string]*ice.Action{
 			SPEND: {Name: "spend account name amount time@date text", Help: "支出", Hand: func(m *ice.Message, arg ...string) {
 				_sub_amount(m, arg)
-				_asset_insert(m, arg[1], kit.Simple(kit.MDB_TYPE, "支出", arg[2:])...)
+				_asset_insert(m, arg[1], kit.Simple(mdb.TYPE, "支出", arg[2:])...)
 			}},
 			TRANS: {Name: "trans from to amount time@date text", Help: "转账", Hand: func(m *ice.Message, arg ...string) {
-				_asset_insert(m, arg[3], kit.Simple(kit.MDB_TYPE, "转入", kit.MDB_NAME, arg[1], arg[4:])...)
+				_asset_insert(m, arg[3], kit.Simple(mdb.TYPE, "转入", mdb.NAME, arg[1], arg[4:])...)
 				_sub_amount(m, arg)
-				_asset_insert(m, arg[1], kit.Simple(kit.MDB_TYPE, "转出", kit.MDB_NAME, arg[3], arg[4:])...)
+				_asset_insert(m, arg[1], kit.Simple(mdb.TYPE, "转出", mdb.NAME, arg[3], arg[4:])...)
 			}},
 			BONUS: {Name: "bonus account name amount time@date text", Help: "收入", Hand: func(m *ice.Message, arg ...string) {
-				_asset_insert(m, arg[1], kit.Simple(kit.MDB_TYPE, "收入", arg[2:])...)
+				_asset_insert(m, arg[1], kit.Simple(mdb.TYPE, "收入", arg[2:])...)
 			}},
 			CHECK: {Name: "check", Help: "核算", Hand: func(m *ice.Message, arg ...string) {
 				if m.Option(ACCOUNT) == "" {
@@ -92,7 +92,7 @@ func init() {
 				m.Toast("核算成功")
 			}},
 		}, mdb.ZoneAction(), ctx.CmdAction()), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			m.Fields(len(arg), "time,account,amount,count", m.Config(kit.MDB_FIELD))
+			m.Fields(len(arg), "time,account,amount,count", m.Config(mdb.FIELD))
 			amount, count := 0, 0
 			if mdb.ZoneSelect(m, arg...); len(arg) == 0 {
 				m.PushAction(CHECK)

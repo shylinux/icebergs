@@ -22,7 +22,7 @@ func init() {
 				if m.Option(ice.MSG_RIVER, m.Option(RIVER)) == "" {
 					return
 				}
-				if msg := m.Cmd(web.SHARE, m.Option(web.SHARE)); msg.Append(kit.MDB_TYPE) == RIVER {
+				if msg := m.Cmd(web.SHARE, m.Option(web.SHARE)); msg.Append(mdb.TYPE) == RIVER {
 					m.Cmdy(NODE, mdb.INSERT, arg)
 				} else {
 					msg.Debug(msg.FormatMeta())
@@ -41,10 +41,10 @@ func init() {
 				m.Cmdy(mdb.INSERT, RIVER, _river_key(m, NODE), mdb.HASH, arg)
 			}},
 			mdb.REMOVE: {Name: "remove", Help: "删除", Hand: func(m *ice.Message, arg ...string) {
-				m.Cmdy(mdb.DELETE, RIVER, _river_key(m, NODE), mdb.HASH, kit.MDB_NAME, m.Option(ice.POD))
+				m.Cmdy(mdb.DELETE, RIVER, _river_key(m, NODE), mdb.HASH, mdb.NAME, m.Option(ice.POD))
 			}},
 			aaa.INVITE: {Name: "invite", Help: "邀请", Hand: func(m *ice.Message, arg ...string) {
-				m.Option(web.SHARE, m.Cmdx(web.SHARE, mdb.CREATE, kit.MDB_TYPE, RIVER))
+				m.Option(web.SHARE, m.Cmdx(web.SHARE, mdb.CREATE, mdb.TYPE, RIVER))
 				m.Cmdy(code.PUBLISH, ice.CONTEXTS, "tool")
 			}},
 		}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
@@ -52,7 +52,7 @@ func init() {
 				m.Option(mdb.FIELDS, "time,type,name,share")
 				m.Cmdy(mdb.SELECT, RIVER, _river_key(m, NODE), mdb.HASH)
 				m.Table(func(index int, value map[string]string, head []string) {
-					m.PushAnchor(value[kit.MDB_NAME], m.MergeURL2("/chat/pod/"+kit.Keys(m.Option(ice.POD), value[kit.MDB_NAME])))
+					m.PushAnchor(value[mdb.NAME], m.MergeURL2("/chat/pod/"+kit.Keys(m.Option(ice.POD), value[mdb.NAME])))
 				})
 				m.RenameAppend("name", "pod")
 				m.PushAction(mdb.REMOVE)

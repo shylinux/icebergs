@@ -12,6 +12,10 @@ const (
 
 	PWD = "./"
 
+	JS = "js"
+	GO = "go"
+	SH = "sh"
+
 	OK      = "ok"
 	TRUE    = "true"
 	FALSE   = "false"
@@ -23,6 +27,7 @@ const (
 	LOAD = "load"
 	AUTO = "auto"
 	HELP = "help"
+	HTTP = "http"
 	SAVE = "save"
 	EXIT = "exit"
 
@@ -65,8 +70,9 @@ const ( // REPOS
 	INTSHELL = "intshell"
 	CONTEXTS = "contexts"
 
-	REQUIRE = "require"
 	INSTALL = "install"
+	REQUIRE = "require"
+	DISPLAY = "display"
 	PUBLISH = "publish"
 	RELEASE = "release"
 )
@@ -85,6 +91,9 @@ const ( // DIR
 	USR_RELEASE  = "usr/release"
 	USR_INSTALL  = "usr/install"
 	USR_PUBLISH  = "usr/publish"
+
+	PLUGIN_STORY = "/plugin/story"
+	PLUGIN_LOCAL = "/plugin/local"
 
 	FAVICON  = "favicon.ico"
 	PROTO_JS = "proto.js"

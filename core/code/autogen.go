@@ -147,32 +147,32 @@ func init() {
 		AUTOGEN: {Name: "autogen path auto create binpack script", Help: "生成", Action: map[string]*ice.Action{
 			mdb.INPUTS: {Name: "inputs", Help: "补全", Hand: func(m *ice.Message, arg ...string) {
 				switch arg[0] {
-				case kit.MDB_MAIN:
+				case MAIN:
 					m.Cmdy(nfs.DIR, ice.SRC, "path,size,time", ice.Option{nfs.DIR_REG, `.*\.go`})
 					m.RenameAppend(nfs.PATH, arg[0])
 				}
 			}},
 			mdb.CREATE: {Name: "create main=src/main.go@key key zone type=Zone,Hash,Data name=hi list help", Help: "模块", Hand: func(m *ice.Message, arg ...string) {
-				_defs(m, kit.MDB_ZONE, m.Option(kit.MDB_NAME), kit.MDB_HELP, m.Option(kit.MDB_NAME))
-				_defs(m, kit.MDB_KEY, kit.Keys("web.code", m.Option(kit.MDB_ZONE), m.Option(kit.MDB_NAME)))
-				switch m.Option(kit.MDB_TYPE) {
+				_defs(m, mdb.ZONE, m.Option(mdb.NAME), mdb.HELP, m.Option(mdb.NAME))
+				_defs(m, mdb.KEY, kit.Keys("web.code", m.Option(mdb.ZONE), m.Option(mdb.NAME)))
+				switch m.Option(mdb.TYPE) {
 				case "Zone":
-					_defs(m, "list", m.Option(kit.MDB_NAME)+" zone id auto insert")
+					_defs(m, "list", m.Option(mdb.NAME)+" zone id auto insert")
 				case "Hash":
-					_defs(m, "list", m.Option(kit.MDB_NAME)+" hash auto create")
+					_defs(m, "list", m.Option(mdb.NAME)+" hash auto create")
 				case "Data":
-					_defs(m, "list", m.Option(kit.MDB_NAME)+" path auto upload")
+					_defs(m, "list", m.Option(mdb.NAME)+" path auto upload")
 				}
 				m.Option("tags", kit.Format("`name:\"%s\" help:\"%s\"`", m.Option("list"), m.Option("help")))
 
-				if p := path.Join(ice.SRC, m.Option(kit.MDB_ZONE), kit.Keys(m.Option(kit.MDB_NAME), GO)); !kit.FileExists(p) {
+				if p := path.Join(ice.SRC, m.Option(mdb.ZONE), kit.Keys(m.Option(mdb.NAME), GO)); !kit.FileExists(p) {
 					_autogen_module(m, p)
-					_autogen_import(m, m.Option(kit.MDB_MAIN), m.Option(kit.MDB_ZONE), _autogen_mod(m, ice.GO_MOD))
+					_autogen_import(m, m.Option(MAIN), m.Option(mdb.ZONE), _autogen_mod(m, ice.GO_MOD))
 				}
 
-				if p := path.Join(ice.SRC, m.Option(kit.MDB_ZONE), kit.Keys(m.Option(kit.MDB_NAME), SHY)); !kit.FileExists(p) {
+				if p := path.Join(ice.SRC, m.Option(mdb.ZONE), kit.Keys(m.Option(mdb.NAME), SHY)); !kit.FileExists(p) {
 					_autogen_script(m, p)
-					_autogen_source(m, m.Option(kit.MDB_ZONE), m.Option(kit.MDB_NAME))
+					_autogen_source(m, m.Option(mdb.ZONE), m.Option(mdb.NAME))
 				}
 			}},
 			ssh.SCRIPT: {Name: "script", Help: "脚本：生成 etc/miss.sh", Hand: func(m *ice.Message, arg ...string) {

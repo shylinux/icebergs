@@ -26,18 +26,18 @@ func init() {
 
 			tz := int64(8)
 			msg.Table(func(index int, value map[string]string, head []string) {
-				if value[kit.MDB_STATUS] == CANCEL {
+				if value[mdb.STATUS] == CANCEL {
 					return
 				}
 
 				show := []string{}
-				for _, k := range []string{kit.MDB_NAME, kit.MDB_TEXT} {
+				for _, k := range []string{mdb.NAME, mdb.TEXT} {
 					show = append(show, kit.Format(`<div class="%v">%v</div>`, k, value[k]))
 				}
 
 				t := (kit.Time(value[BEGIN_TIME])+int64(time.Hour)*tz)/int64(time.Second)/3600/24 - (time.Now().Unix()+3600*tz)/3600/24
 				m.Echo(`<div class="item %s" title="%s">距离 %v%v%v<span class="day"> %v </span>天</div>`,
-					kit.Select("gone", "come", t > 0), value[kit.MDB_TEXT],
+					kit.Select("gone", "come", t > 0), value[mdb.TEXT],
 					strings.Split(value[BEGIN_TIME], " ")[0],
 					strings.Join(show, ""),
 					kit.Select("已经", "还有", t > 0), t,

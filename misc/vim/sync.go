@@ -17,7 +17,7 @@ const SYNC = "sync"
 func init() {
 	Index.Merge(&ice.Context{Configs: map[string]*ice.Config{
 		SYNC: {Name: SYNC, Help: "同步流", Value: kit.Data(
-			kit.MDB_FIELD, "time,id,type,name,text,pwd,buf,row,col",
+			mdb.FIELD, "time,id,type,name,text,pwd,buf,row,col",
 		)},
 	}, Commands: map[string]*ice.Command{
 		"/sync": {Name: "/sync", Help: "同步", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
@@ -26,7 +26,7 @@ func init() {
 				m.Cmd("/sess", aaa.LOGOUT)
 			}
 
-			m.Cmd(SYNC, mdb.INSERT, kit.MDB_TYPE, VIMRC, kit.MDB_NAME, arg[0], kit.MDB_TEXT, kit.Select(m.Option(ARG), m.Option(SUB)),
+			m.Cmd(SYNC, mdb.INSERT, mdb.TYPE, VIMRC, mdb.NAME, arg[0], mdb.TEXT, kit.Select(m.Option(ARG), m.Option(SUB)),
 				m.OptionSimple(cli.PWD, BUF, ROW, COL))
 		}},
 		SYNC: {Name: "sync id auto page export import", Help: "同步流", Action: ice.MergeAction(map[string]*ice.Action{
@@ -38,14 +38,14 @@ func init() {
 				m.Cmdy(FAVOR, mdb.INPUTS, arg)
 			}},
 			FAVOR: {Name: "favor zone=some@key type name text buf row pwd", Help: "收藏", Hand: func(m *ice.Message, arg ...string) {
-				m.Cmdy(FAVOR, mdb.INSERT, m.OptionSimple(kit.MDB_ZONE, "type,name,text,pwd"),
+				m.Cmdy(FAVOR, mdb.INSERT, m.OptionSimple(mdb.ZONE, "type,name,text,pwd"),
 					nfs.FILE, m.Option(BUF), nfs.LINE, m.Option(ROW))
 			}},
 		}, mdb.ListAction()), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			m.OptionPage(kit.Slice(arg, 1)...)
 			mdb.ListSelect(m, kit.Slice(arg, 0, 1)...)
 			m.PushAction(code.INNER, FAVOR)
-			m.StatusTimeCountTotal(m.Config(kit.MDB_COUNT))
+			m.StatusTimeCountTotal(m.Config(mdb.COUNT))
 		}},
 	}})
 }

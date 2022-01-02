@@ -16,7 +16,7 @@ const SALARY = "salary"
 func init() {
 	Index.Merge(&ice.Context{Configs: map[string]*ice.Config{
 		SALARY: {Name: SALARY, Help: "工资", Value: kit.Data(
-			kit.MDB_SHORT, MONTH, kit.MDB_FIELD, "month,company,amount,income,tax",
+			mdb.SHORT, MONTH, mdb.FIELD, "month,company,amount,income,tax",
 		)},
 	}, Commands: map[string]*ice.Command{
 		SALARY: {Name: "salary month auto create", Help: "工资", Action: ice.MergeAction(map[string]*ice.Action{

@@ -4,6 +4,7 @@ import (
 	"strings"
 
 	ice "shylinux.com/x/icebergs"
+	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/core/wiki"
 	kit "shylinux.com/x/toolkits"
 )
@@ -38,7 +39,7 @@ func (b *Block) Init(m *ice.Message, arg ...string) wiki.Chart {
 	return b
 }
 func (b *Block) Data(m *ice.Message, meta interface{}) wiki.Chart {
-	b.Text = kit.Select(b.Text, kit.Value(meta, kit.MDB_TEXT))
+	b.Text = kit.Select(b.Text, kit.Value(meta, mdb.TEXT))
 	kit.Fetch(meta, func(key string, value string) {
 		switch key {
 		case wiki.FG:

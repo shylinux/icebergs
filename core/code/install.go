@@ -16,7 +16,7 @@ import (
 )
 
 func _install_download(m *ice.Message) {
-	link := m.Option(kit.MDB_LINK)
+	link := m.Option(mdb.LINK)
 	name := path.Base(link)
 	file := path.Join(kit.Select(m.Config(nfs.PATH), m.Option(nfs.PATH)), name)
 
@@ -30,14 +30,14 @@ func _install_download(m *ice.Message) {
 
 	m.GoToast(web.DOWNLOAD, func(toast func(string, int, int)) {
 		// 进度
-		m.Cmd(mdb.INSERT, INSTALL, "", mdb.HASH, kit.MDB_NAME, name, kit.MDB_LINK, link)
+		m.Cmd(mdb.INSERT, INSTALL, "", mdb.HASH, mdb.NAME, name, mdb.LINK, link)
 		m.Richs(INSTALL, "", name, func(key string, value map[string]interface{}) {
 			value = kit.GetMeta(value)
 
 			p := 0
 			m.OptionCB(web.SPIDE, func(size int, total int) {
 				if n := size * 100 / total; p != n {
-					value[kit.MDB_STEP], value[kit.MDB_SIZE], value[kit.MDB_TOTAL] = n, size, total
+					value[mdb.VALUE], value[mdb.COUNT], value[mdb.TOTAL] = n, size, total
 					toast(name, size, total)
 					p = n
 				}
@@ -54,7 +54,7 @@ func _install_download(m *ice.Message) {
 	})
 }
 func _install_build(m *ice.Message, arg ...string) {
-	p := m.Option(cli.CMD_DIR, path.Join(m.Config(nfs.PATH), kit.TrimExt(m.Option(kit.MDB_LINK))))
+	p := m.Option(cli.CMD_DIR, path.Join(m.Config(nfs.PATH), kit.TrimExt(m.Option(mdb.LINK))))
 	pp := kit.Path(path.Join(p, "_install"))
 
 	// 推流
@@ -90,7 +90,7 @@ func _install_build(m *ice.Message, arg ...string) {
 	m.Toast(ice.SUCCESS, cli.BUILD)
 }
 func _install_order(m *ice.Message, arg ...string) {
-	p := path.Join(m.Config(nfs.PATH), kit.TrimExt(m.Option(kit.MDB_LINK)), m.Option(nfs.PATH)+ice.NL)
+	p := path.Join(m.Config(nfs.PATH), kit.TrimExt(m.Option(mdb.LINK)), m.Option(nfs.PATH)+ice.NL)
 	if !strings.Contains(m.Cmdx(nfs.CAT, ice.ETC_PATH), p) {
 		m.Cmd(nfs.PUSH, ice.ETC_PATH, p)
 	}
@@ -108,7 +108,7 @@ func _install_spawn(m *ice.Message, arg ...string) {
 	}
 
 	target := path.Join(m.Conf(cli.DAEMON, kit.META_PATH), m.Option(tcp.PORT))
-	source := path.Join(m.Config(nfs.PATH), kit.TrimExt(m.Option(kit.MDB_LINK)))
+	source := path.Join(m.Config(nfs.PATH), kit.TrimExt(m.Option(mdb.LINK)))
 
 	m.Cmd(nfs.DIR, path.Join(source, kit.Select("_install", m.Option("install")))).Table(func(index int, value map[string]string, head []string) {
 		m.Cmd(cli.SYSTEM, "cp", "-r", strings.TrimSuffix(value[nfs.PATH], ice.PS), target)
@@ -154,7 +154,7 @@ const INSTALL = "install"
 func init() {
 	Index.Merge(&ice.Context{Configs: map[string]*ice.Config{
 		INSTALL: {Name: INSTALL, Help: "安装", Value: kit.Data(
-			kit.MDB_SHORT, kit.MDB_NAME, nfs.PATH, ice.USR_INSTALL,
+			mdb.SHORT, mdb.NAME, nfs.PATH, ice.USR_INSTALL,
 		)},
 	}, Commands: map[string]*ice.Command{
 		INSTALL: {Name: "install name port path auto download", Help: "安装", Meta: kit.Dict(), Action: map[string]*ice.Action{
@@ -174,7 +174,7 @@ func init() {
 				_install_start(m, arg...)
 			}},
 			nfs.SOURCE: {Name: "source link path", Help: "源码", Hand: func(m *ice.Message, arg ...string) {
-				m.Option(nfs.DIR_ROOT, path.Join(m.Config(nfs.PATH), kit.TrimExt(m.Option(kit.MDB_LINK)), "_install"))
+				m.Option(nfs.DIR_ROOT, path.Join(m.Config(nfs.PATH), kit.TrimExt(m.Option(mdb.LINK)), "_install"))
 				defer m.StatusTime(nfs.PATH, m.Option(nfs.DIR_ROOT))
 				m.Cmdy(nfs.DIR, m.Option(nfs.PATH))
 			}},

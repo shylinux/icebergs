@@ -42,19 +42,19 @@ func (web *Frame) Start(m *ice.Message, arg ...string) bool {
 			}
 			frame.ServeMux = http.NewServeMux()
 
-			// 静态路由
-			msg := m.Spawn(s)
-			m.Confm(SERVE, kit.Keym(nfs.PATH), func(key string, value string) {
-				m.Log(ROUTE, "%s <- %s <- %s", s.Name, key, value)
-				frame.Handle(key, http.StripPrefix(key, http.FileServer(http.Dir(value))))
-			})
-
 			// 级联路由
+			msg := m.Spawn(s)
 			if pframe, ok := p.Server().(*Frame); ok && pframe.ServeMux != nil {
 				route := ice.PS + s.Name + ice.PS
 				msg.Log(ROUTE, "%s <= %s", p.Name, route)
 				pframe.Handle(route, http.StripPrefix(path.Dir(route), frame))
 			}
+
+			// 静态路由
+			m.Confm(SERVE, kit.Keym(nfs.PATH), func(key string, value string) {
+				m.Log(ROUTE, "%s <- %s <- %s", s.Name, key, value)
+				frame.Handle(key, http.StripPrefix(key, http.FileServer(http.Dir(value))))
+			})
 
 			// 命令路由
 			m.Travel(func(p *ice.Context, sub *ice.Context, k string, x *ice.Command) {

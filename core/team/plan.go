@@ -50,7 +50,7 @@ func _plan_list(m *ice.Message, begin_time, end_time time.Time) *ice.Message {
 		m.Push(key, value, fields, val)
 		m.PushButton(_task_action(m, value[STATUS], mdb.PLUGIN))
 	})
-	m.Cmd(mdb.SELECT, m.Prefix(TASK), "", mdb.ZONE, kit.MDB_FOREACH)
+	m.Cmd(mdb.SELECT, m.Prefix(TASK), "", mdb.ZONE, mdb.FOREACH)
 	return m
 }
 

@@ -5,6 +5,8 @@ import (
 	"strings"
 
 	ice "shylinux.com/x/icebergs"
+	"shylinux.com/x/icebergs/base/mdb"
+	"shylinux.com/x/icebergs/base/nfs"
 	kit "shylinux.com/x/toolkits"
 )
 
@@ -17,7 +19,7 @@ func _refer_show(m *ice.Message, text string, arg ...string) {
 			list = append(list, ls)
 		}
 	}
-	m.Optionv(kit.MDB_LIST, list)
+	m.Optionv(mdb.LIST, list)
 	_wiki_template(m, REFER, "", text, arg...)
 }
 
@@ -30,7 +32,7 @@ func init() {
 		}},
 	}, Configs: map[string]*ice.Config{
 		REFER: {Name: REFER, Help: "参考", Value: kit.Data(
-			kit.MDB_TEMPLATE, `<ul {{.OptionTemplate}}>{{range $index, $value := .Optionv "list"}}<li>{{index $value 0}}: <a href="{{index $value 1}}" target="_blank">{{index $value 1}}</a></li>{{end}}</ul>`,
+			nfs.TEMPLATE, `<ul {{.OptionTemplate}}>{{range $index, $value := .Optionv "list"}}<li>{{index $value 0}}: <a href="{{index $value 1}}" target="_blank">{{index $value 1}}</a></li>{{end}}</ul>`,
 		)},
 	}})
 }

@@ -156,13 +156,13 @@ func init() {
 		SERVER: {Name: "server path auto create import", Help: "服务器", Action: map[string]*ice.Action{
 			mdb.CREATE: {Name: "create name", Help: "添加", Hand: func(m *ice.Message, arg ...string) {
 				m.Option(cli.CMD_DIR, path.Join(ice.USR_LOCAL, REPOS))
-				m.Cmdy(cli.SYSTEM, GIT, INIT, "--bare", m.Option(kit.MDB_NAME))
+				m.Cmdy(cli.SYSTEM, GIT, INIT, "--bare", m.Option(mdb.NAME))
 			}},
 			mdb.IMPORT: {Name: "import", Help: "导入", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmdy(REPOS, ice.OptionFields("time,name,path")).Table(func(index int, value map[string]string, head []string) {
 					m.Option(cli.CMD_DIR, value[nfs.PATH])
-					m.Cmd(cli.SYSTEM, GIT, PUSH, m.MergeURL2("/x/"+value[kit.MDB_NAME]), MASTER)
-					m.Cmd(cli.SYSTEM, GIT, PUSH, "--tags", m.MergeURL2("/x/"+value[kit.MDB_NAME]), MASTER)
+					m.Cmd(cli.SYSTEM, GIT, PUSH, m.MergeURL2("/x/"+value[mdb.NAME]), MASTER)
+					m.Cmd(cli.SYSTEM, GIT, PUSH, "--tags", m.MergeURL2("/x/"+value[mdb.NAME]), MASTER)
 				})
 			}},
 		}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {

@@ -14,15 +14,15 @@ const ROUTINE = "routine"
 func init() {
 	Index.Merge(&ice.Context{Configs: map[string]*ice.Config{
 		ROUTINE: {Name: ROUTINE, Help: "协程池", Value: kit.Data(
-			kit.MDB_SHORT, "time,hash,status,fileline",
+			mdb.SHORT, "time,hash,status,fileline",
 		)},
 	}, Commands: map[string]*ice.Command{
 		ROUTINE: {Name: "routine hash auto prunes", Help: "协程池", Action: ice.MergeAction(map[string]*ice.Action{
 			mdb.CREATE: {Name: "create fileline status", Help: "创建"},
 			mdb.PRUNES: {Name: "prunes", Help: "清理", Hand: func(m *ice.Message, arg ...string) {
-				m.OptionFields(m.Config(kit.MDB_SHORT))
-				m.Cmdy(mdb.PRUNES, ROUTINE, "", mdb.HASH, kit.MDB_STATUS, cli.STOP)
-				m.Cmdy(mdb.PRUNES, ROUTINE, "", mdb.HASH, kit.MDB_STATUS, cli.ERROR)
+				m.OptionFields(m.Config(mdb.SHORT))
+				m.Cmdy(mdb.PRUNES, ROUTINE, "", mdb.HASH, cli.STATUS, cli.STOP)
+				m.Cmdy(mdb.PRUNES, ROUTINE, "", mdb.HASH, cli.STATUS, cli.ERROR)
 			}},
 			"inner": {Name: "inner", Help: "源码", Hand: func(m *ice.Message, arg ...string) {
 				ls := kit.Split(m.Option("fileline"), ":")

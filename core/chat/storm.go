@@ -8,7 +8,7 @@ import (
 )
 
 func _storm_key(m *ice.Message, key ...interface{}) string {
-	return _river_key(m, STORM, kit.MDB_HASH, kit.Keys(key))
+	return _river_key(m, STORM, mdb.HASH, kit.Keys(key))
 }
 
 const STORM = "storm"
@@ -21,7 +21,7 @@ func init() {
 					return
 				}
 				switch arg[0] {
-				case kit.MDB_HASH:
+				case mdb.HASH:
 					m.Cmdy(STORM, ice.OptionFields("hash,name"))
 				}
 			}},
@@ -29,34 +29,34 @@ func init() {
 				m.Cmdy(mdb.INSERT, RIVER, _river_key(m, STORM), mdb.HASH, arg)
 			}},
 			mdb.REMOVE: {Name: "remove", Help: "删除", Hand: func(m *ice.Message, arg ...string) {
-				m.Cmdy(mdb.DELETE, RIVER, _river_key(m, STORM), mdb.HASH, m.OptionSimple(kit.MDB_HASH))
+				m.Cmdy(mdb.DELETE, RIVER, _river_key(m, STORM), mdb.HASH, m.OptionSimple(mdb.HASH))
 			}},
 			mdb.INSERT: {Name: "insert hash pod ctx cmd help", Help: "添加", Hand: func(m *ice.Message, arg ...string) {
-				m.Cmdy(mdb.INSERT, RIVER, _storm_key(m, m.Option(kit.MDB_HASH)), mdb.LIST, arg[2:])
+				m.Cmdy(mdb.INSERT, RIVER, _storm_key(m, m.Option(mdb.HASH)), mdb.LIST, arg[2:])
 			}},
 			mdb.MODIFY: {Name: "modify", Help: "编辑", Hand: func(m *ice.Message, arg ...string) {
-				if m.Option(kit.MDB_ID) == "" {
-					m.Cmdy(mdb.MODIFY, RIVER, _river_key(m, STORM), mdb.HASH, m.OptionSimple(kit.MDB_HASH), arg)
+				if m.Option(mdb.ID) == "" {
+					m.Cmdy(mdb.MODIFY, RIVER, _river_key(m, STORM), mdb.HASH, m.OptionSimple(mdb.HASH), arg)
 				} else {
-					m.Cmdy(mdb.MODIFY, RIVER, _storm_key(m, m.Option(kit.MDB_HASH)), mdb.LIST, m.OptionSimple(kit.MDB_ID), arg)
+					m.Cmdy(mdb.MODIFY, RIVER, _storm_key(m, m.Option(mdb.HASH)), mdb.LIST, m.OptionSimple(mdb.ID), arg)
 				}
 			}},
 			mdb.EXPORT: {Name: "export", Help: "导出", Hand: func(m *ice.Message, arg ...string) {
-				if m.Option(kit.MDB_ID) == "" {
+				if m.Option(mdb.ID) == "" {
 					return
 				}
-				msg := m.Cmd(STORM, m.Option(kit.MDB_HASH), m.Option(kit.MDB_ID))
+				msg := m.Cmd(STORM, m.Option(mdb.HASH), m.Option(mdb.ID))
 				cmd := kit.Keys(msg.Append(ice.CTX), msg.Append(ice.CMD))
-				_action_domain(m, cmd, m.Option(kit.MDB_HASH))
+				_action_domain(m, cmd, m.Option(mdb.HASH))
 				m.Cmdy(cmd, mdb.EXPORT)
 			}},
 			mdb.IMPORT: {Name: "import", Help: "导入", Hand: func(m *ice.Message, arg ...string) {
-				if m.Option(kit.MDB_ID) == "" {
+				if m.Option(mdb.ID) == "" {
 					return
 				}
-				msg := m.Cmd(STORM, m.Option(kit.MDB_HASH), m.Option(kit.MDB_ID))
+				msg := m.Cmd(STORM, m.Option(mdb.HASH), m.Option(mdb.ID))
 				cmd := kit.Keys(msg.Append(ice.CTX), msg.Append(ice.CMD))
-				_action_domain(m, cmd, m.Option(kit.MDB_HASH))
+				_action_domain(m, cmd, m.Option(mdb.HASH))
 				m.Cmdy(cmd, mdb.IMPORT)
 			}},
 		}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
@@ -64,12 +64,12 @@ func init() {
 				m.OptionFields("time,hash,type,name,count")
 				m.Cmdy(mdb.SELECT, RIVER, _river_key(m, STORM), mdb.HASH)
 				m.PushAction(mdb.REMOVE)
-				m.Sort(kit.MDB_NAME)
+				m.Sort(mdb.NAME)
 				return
 			}
 
 			m.OptionFields("time,id,pod,ctx,cmd,arg,display,style")
-			msg := m.Cmd(mdb.SELECT, RIVER, _storm_key(m, arg[0]), mdb.LIST, kit.MDB_ID, kit.Select("", arg, 1))
+			msg := m.Cmd(mdb.SELECT, RIVER, _storm_key(m, arg[0]), mdb.LIST, mdb.ID, kit.Select("", arg, 1))
 			if msg.Length() == 0 && len(arg) > 1 { // 虚拟群组
 				msg.Push(ice.CMD, arg[1])
 			}

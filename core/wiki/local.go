@@ -21,7 +21,7 @@ func init() {
 		}},
 	}, Configs: map[string]*ice.Config{
 		LOCAL: {Name: LOCAL, Help: "文件", Value: kit.Data(
-			kit.MDB_TEMPLATE, `<code {{.OptionTemplate}}>{{range $index, $value := .Optionv "input"}}{{$value}}{{end}}</code>`,
+			nfs.TEMPLATE, `<code {{.OptionTemplate}}>{{range $index, $value := .Optionv "input"}}{{$value}}{{end}}</code>`,
 		)},
 	}})
 }

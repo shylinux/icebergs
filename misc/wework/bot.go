@@ -18,7 +18,7 @@ const BOT = "bot"
 func init() {
 	Index.Merge(&ice.Context{Configs: map[string]*ice.Config{
 		BOT: {Name: "bot", Help: "机器人", Value: kit.Data(
-			kit.MDB_SHORT, kit.MDB_NAME, kit.MDB_FIELD, "time,name,token,ekey,hook",
+			mdb.SHORT, mdb.NAME, mdb.FIELD, "time,name,token,ekey,hook",
 		)},
 	}, Commands: map[string]*ice.Command{
 		web.WEB_LOGIN: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {}},

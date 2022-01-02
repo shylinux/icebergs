@@ -23,11 +23,11 @@ func init() {
 				m.Cmdy("web.wiki.word", path.Join(arg[2], arg[1]))
 			}},
 			mdb.SEARCH: {Hand: func(m *ice.Message, arg ...string) {
-				if arg[0] == kit.MDB_FOREACH {
+				if arg[0] == mdb.FOREACH {
 					return
 				}
-				_go_find(m, kit.Select(kit.MDB_MAIN, arg, 1))
-				_go_grep(m, kit.Select(kit.MDB_MAIN, arg, 1))
+				_go_find(m, kit.Select(MAIN, arg, 1))
+				_go_grep(m, kit.Select(MAIN, arg, 1))
 			}},
 		}, PlugAction())},
 	}, Configs: map[string]*ice.Config{

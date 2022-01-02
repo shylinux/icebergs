@@ -5,6 +5,7 @@ import (
 
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/aaa"
+	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/web"
 	kit "shylinux.com/x/toolkits"
 )
@@ -60,7 +61,7 @@ func init() {
 
 			if _send_text(m, form, arg...) {
 				msg := _lark_post(m, appid, "/open-apis/message/v4/send/", web.SPIDE_DATA, kit.Format(form))
-				m.Push(kit.MDB_TIME, m.Time())
+				m.Push(mdb.TIME, m.Time())
 				m.Push("message_id", msg.Append("data.message_id"))
 			}
 		}},

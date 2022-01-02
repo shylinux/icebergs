@@ -52,7 +52,7 @@ func init() {
 	}, Commands: map[string]*ice.Command{
 		SESSION: {Name: "session session window pane cmd auto", Help: "会话管理", Action: map[string]*ice.Action{
 			web.DREAM_CREATE: {Name: "dream.create type name", Help: "梦想", Hand: func(m *ice.Message, arg ...string) {
-				if kit.IndexOf(m.Cmd(m.PrefixKey()).Appendv(SESSION), m.Option(kit.MDB_NAME)) == -1 {
+				if kit.IndexOf(m.Cmd(m.PrefixKey()).Appendv(SESSION), m.Option(mdb.NAME)) == -1 {
 					m.Cmd(m.PrefixKey(), mdb.CREATE)
 				}
 			}},
@@ -62,7 +62,7 @@ func init() {
 					return
 				}
 				switch arg[0] {
-				case kit.MDB_NAME:
+				case mdb.NAME:
 					m.Cmdy(web.DREAM).Cut("name,size,time")
 				}
 			}},
@@ -75,15 +75,15 @@ func init() {
 					m.Cmdy(cli.SYSTEM, TMUX, "split-window", "-t", _tmux_key(m.Option(SESSION), m.Option(WINDOW)))
 
 				} else if m.Option(SESSION) != "" { // 创建窗口
-					m.Cmdy(cli.SYSTEM, TMUX, "new-window", "-t", m.Option(SESSION), "-dn", m.Option(kit.MDB_NAME))
+					m.Cmdy(cli.SYSTEM, TMUX, "new-window", "-t", m.Option(SESSION), "-dn", m.Option(mdb.NAME))
 
 				} else { // 创建会话
-					m.Option(cli.CMD_DIR, path.Join(m.Conf(web.DREAM, kit.META_PATH), m.Option(kit.MDB_NAME)))
-					ls := kit.Split(m.Option(kit.MDB_NAME), "-_")
+					m.Option(cli.CMD_DIR, path.Join(m.Conf(web.DREAM, kit.META_PATH), m.Option(mdb.NAME)))
+					ls := kit.Split(m.Option(mdb.NAME), "-_")
 					name := ls[len(ls)-1]
 
-					m.Cmdy(cli.SYSTEM, TMUX, "new-session", "-ds", m.Option(kit.MDB_NAME), "-n", name)
-					name = _tmux_key(m.Option(kit.MDB_NAME), ls[len(ls)-1])
+					m.Cmdy(cli.SYSTEM, TMUX, "new-session", "-ds", m.Option(mdb.NAME), "-n", name)
+					name = _tmux_key(m.Option(mdb.NAME), ls[len(ls)-1])
 
 					m.Cmdy(cli.SYSTEM, TMUX, "split-window", "-t", kit.Keys(name, "1"), "-p", "20")
 					m.Cmdy(cli.SYSTEM, TMUX, "split-window", "-t", kit.Keys(name, "2"), "-h")
@@ -127,18 +127,18 @@ func init() {
 			}},
 
 			SCRIPT: {Name: "script name", Help: "脚本", Hand: func(m *ice.Message, arg ...string) {
-				m.Cmd(SCRIPT, m.Option(kit.MDB_NAME)).Table(func(index int, value map[string]string, head []string) {
-					switch value[kit.MDB_TYPE] {
+				m.Cmd(SCRIPT, m.Option(mdb.NAME)).Table(func(index int, value map[string]string, head []string) {
+					switch value[mdb.TYPE] {
 					case "shell":
-						for _, line := range kit.Split(value[kit.MDB_TEXT], ice.NL, ice.NL, ice.NL) {
+						for _, line := range kit.Split(value[mdb.TEXT], ice.NL, ice.NL, ice.NL) {
 							m.Cmd(CMD, _tmux_key(m.Option(SESSION), m.Option(WINDOW), m.Option(PANE)), line)
 						}
 					case "vim":
-						for _, line := range kit.Split(value[kit.MDB_TEXT], ice.NL, ice.NL, ice.NL) {
+						for _, line := range kit.Split(value[mdb.TEXT], ice.NL, ice.NL, ice.NL) {
 							m.Cmd(CMD, _tmux_key(m.Option(SESSION), m.Option(WINDOW), m.Option(PANE)), line)
 						}
 					case "tmux":
-						for _, line := range kit.Split(value[kit.MDB_TEXT], ice.NL, ice.NL, ice.NL) {
+						for _, line := range kit.Split(value[mdb.TEXT], ice.NL, ice.NL, ice.NL) {
 							m.Cmd(cli.SYSTEM, TMUX, line)
 						}
 					}

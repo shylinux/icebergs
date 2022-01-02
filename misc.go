@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"encoding/csv"
 	"net/url"
-	"path"
 	"reflect"
 	"strings"
 
@@ -85,20 +84,6 @@ func (m *Message) Split(str string, arg ...string) *Message {
 	return m
 }
 
-func (m *Message) Display(file string, arg ...interface{}) *Message {
-	m.Option(MSG_DISPLAY, kit.MergeURL(Display0(2, file)["display"], arg...))
-	return m
-}
-func (m *Message) DisplayLocal(file string) *Message {
-	if file == "" {
-		file = path.Join(kit.PathName(2), kit.Keys(kit.FileName(2), "js"))
-	}
-	if !strings.HasPrefix(file, PS) {
-		file = path.Join("/plugin/local", file)
-	}
-	m.Option(MSG_DISPLAY, Display0(2, file)["display"])
-	return m
-}
 func (m *Message) FieldsIsDetail() bool {
 	if m.OptionFields() == "detail" {
 		return true
@@ -108,6 +93,9 @@ func (m *Message) FieldsIsDetail() bool {
 	}
 	return false
 }
+
+func (m *Message) IsErr(str string) bool { return m.Result(1) == str }
+func (m *Message) IsErrNotFound() bool   { return m.Result(1) == ErrNotFound }
 func (m *Message) OptionCB(key string, cb ...interface{}) interface{} {
 	if len(cb) > 0 {
 		return m.Optionv(kit.Keycb(key), cb...)
@@ -220,7 +208,9 @@ func (m *Message) cmd(arg ...interface{}) *Message {
 	}
 
 	// 查找命令
-	if cmd, ok := m.target.Commands[strings.TrimPrefix(list[0], m.target.Cap(CTX_FOLLOW)+PT)]; ok {
+	if list[0] == "" {
+		run(m.Spawn(), m.target, m._cmd, list[0], list[1:]...)
+	} else if cmd, ok := m.target.Commands[strings.TrimPrefix(list[0], m.target.Cap(CTX_FOLLOW)+PT)]; ok {
 		run(m.Spawn(), m.target, cmd, list[0], list[1:]...)
 	} else if cmd, ok := m.source.Commands[strings.TrimPrefix(list[0], m.source.Cap(CTX_FOLLOW)+PT)]; ok {
 		run(m.Spawn(m.source), m.source, cmd, list[0], list[1:]...)
@@ -349,27 +339,6 @@ func (c *Context) split(name string) (list []interface{}) {
 	return list
 }
 
-func Display(file string, arg ...string) map[string]string {
-	return Display0(2, file, arg...)
-}
-func DisplayLocal(file string, arg ...string) map[string]string {
-	if file == "" {
-		file = path.Join(kit.PathName(2), kit.FileName(2)+".js")
-	}
-	if !strings.HasPrefix(file, "/") {
-		file = path.Join("/plugin/local", file)
-	}
-	return Display0(2, file, arg...)
-}
-func Display0(n int, file string, arg ...string) map[string]string {
-	if file == "" {
-		file = kit.FileName(n+1) + ".js"
-	}
-	if !strings.HasPrefix(file, "/") {
-		file = path.Join("/require", kit.ModPath(n+1, file))
-	}
-	return map[string]string{"display": file, kit.MDB_STYLE: kit.Join(arg, SP)}
-}
 func MergeAction(list ...interface{}) map[string]*Action {
 	if len(list) == 0 {
 		return nil

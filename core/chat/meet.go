@@ -14,7 +14,7 @@ const MISS = "miss"
 func init() {
 	Index.Register(&ice.Context{Name: MEET, Help: "遇见", Configs: map[string]*ice.Config{
 		MISS: {Name: MISS, Help: "miss", Value: kit.Data(
-			kit.MDB_SHORT, kit.MDB_NAME, kit.MDB_FIELD, "time,name,照片,性别,年龄,身高,体重,籍贯,户口,学历,学校,职业,公司,年薪,资产,家境",
+			mdb.SHORT, mdb.NAME, mdb.FIELD, "time,name,照片,性别,年龄,身高,体重,籍贯,户口,学历,学校,职业,公司,年薪,资产,家境",
 		)},
 	}, Commands: map[string]*ice.Command{
 		MISS: {Name: "miss name auto create", Help: "资料", Meta: kit.Dict("_trans", kit.Dict("name", "姓名")), Action: ice.MergeAction(map[string]*ice.Action{

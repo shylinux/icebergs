@@ -5,6 +5,8 @@ import (
 	"strings"
 
 	ice "shylinux.com/x/icebergs"
+	"shylinux.com/x/icebergs/base/mdb"
+	"shylinux.com/x/icebergs/base/nfs"
 	kit "shylinux.com/x/toolkits"
 )
 
@@ -36,7 +38,7 @@ func _title_parse(m *ice.Message, dir string, root map[string]interface{}, list 
 			ls[1] = path.Join(dir, ls[1])
 		}
 
-		meta := kit.Dict(kit.MDB_NAME, kit.Select("", ls, 0), kit.MDB_LINK, kit.Select("", ls, 1))
+		meta := kit.Dict(mdb.NAME, kit.Select("", ls, 0), mdb.LINK, kit.Select("", ls, 1))
 		for i := 2; i < len(ls); i += 2 {
 			meta[ls[i]] = ls[i+1]
 		}
@@ -67,26 +69,26 @@ func _title_show(m *ice.Message, kind, text string, arg ...string) {
 
 	case SECTION: // 分节标题
 		title[SECTION]++
-		m.Option(kit.MDB_LEVEL, "h3")
-		m.Option(kit.MDB_PREFIX, kit.Format("%d.%d ", title[CHAPTER], title[SECTION]))
+		m.Option(LEVEL, "h3")
+		m.Option(PREFIX, kit.Format("%d.%d ", title[CHAPTER], title[SECTION]))
 
 	case CHAPTER: // 章节标题
 		title[CHAPTER]++
 		title[SECTION] = 0
-		m.Option(kit.MDB_LEVEL, "h2")
-		m.Option(kit.MDB_PREFIX, kit.Format("%d ", title[CHAPTER]))
+		m.Option(LEVEL, "h2")
+		m.Option(PREFIX, kit.Format("%d ", title[CHAPTER]))
 
 	default: // 文章标题
-		m.Option(kit.MDB_LEVEL, "h1")
-		m.Option(kit.MDB_PREFIX, "")
+		m.Option(LEVEL, "h1")
+		m.Option(PREFIX, "")
 	}
 
 	// 渲染引擎
 	_wiki_template(m, TITLE, "", text, arg...)
 
 	// 添加目录
-	menu, _ := m.Optionv(kit.MDB_MENU).(map[string]interface{})
-	menu[kit.MDB_LIST] = append(menu[kit.MDB_LIST].([]interface{}), kit.Dict(m.OptionSimple("level,prefix,text")))
+	menu, _ := m.Optionv(MENU).(map[string]interface{})
+	menu[mdb.LIST] = append(menu[mdb.LIST].([]interface{}), kit.Dict(m.OptionSimple("level,prefix,text")))
 }
 
 const (
@@ -97,6 +99,12 @@ const (
 	ENDMENU = "endmenu"
 )
 
+const (
+	REGEXP = "regexp"
+	PREFIX = "prefix"
+	LEVEL  = "level"
+	MENU   = "menu"
+)
 const TITLE = "title"
 
 func init() {
@@ -119,7 +127,7 @@ func init() {
 		}},
 	}, Configs: map[string]*ice.Config{
 		TITLE: {Name: TITLE, Help: "标题", Value: kit.Data(
-			kit.MDB_TEMPLATE, `<{{.Option "level"}} {{.OptionTemplate}}>{{.Option "prefix"}} {{.Option "text"}}</{{.Option "level"}}>`,
+			nfs.TEMPLATE, `<{{.Option "level"}} {{.OptionTemplate}}>{{.Option "prefix"}} {{.Option "text"}}</{{.Option "level"}}>`,
 			PREMENU, `<ul {{.OptionTemplate}}></ul>`,
 			ENDMENU, `<ul {{.OptionTemplate}}>{{$menu := .Optionv "menu"}}
 {{range $index, $value := Value $menu "list"}}<li>{{Value $value "prefix"}} {{Value $value "text"}}</li>{{end}}

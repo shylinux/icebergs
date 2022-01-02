@@ -14,39 +14,39 @@ func _hash_fields(m *ice.Message) []string {
 }
 func _hash_inputs(m *ice.Message, prefix, chain string, field, value string) {
 	list := map[string]int{}
-	m.Richs(prefix, chain, kit.MDB_FOREACH, func(key string, val map[string]interface{}) {
-		if val = kit.GetMeta(val); kit.Format(val[kit.MDB_COUNT]) != "" {
-			list[kit.Format(val[field])] = kit.Int(val[kit.MDB_COUNT])
+	m.Richs(prefix, chain, FOREACH, func(key string, val map[string]interface{}) {
+		if val = kit.GetMeta(val); kit.Format(val[COUNT]) != "" {
+			list[kit.Format(val[field])] = kit.Int(val[COUNT])
 		} else {
 			list[kit.Format(val[field])]++
 		}
 	})
 	for k, i := range list {
 		m.Push(field, k)
-		m.Push(kit.MDB_COUNT, i)
+		m.Push(COUNT, i)
 	}
-	m.SortIntR(kit.MDB_COUNT)
+	m.SortIntR(COUNT)
 }
 func _hash_insert(m *ice.Message, prefix, chain string, arg ...string) {
 	if m.Option(ice.MSG_DOMAIN) != "" {
-		m.Conf(prefix, kit.Keys(chain, kit.Keym(kit.MDB_SHORT)), m.Conf(prefix, kit.Keym(kit.MDB_SHORT)))
+		m.Conf(prefix, kit.Keys(chain, kit.Keym(SHORT)), m.Conf(prefix, kit.Keym(SHORT)))
 	}
-	m.Log_INSERT(kit.MDB_KEY, path.Join(prefix, chain), arg[0], arg[1])
+	m.Log_INSERT(KEY, path.Join(prefix, chain), arg[0], arg[1])
 	m.Echo(m.Rich(prefix, chain, kit.Data(arg)))
 }
 func _hash_delete(m *ice.Message, prefix, chain, field, value string) {
-	if field != kit.MDB_HASH {
-		field, value = kit.MDB_HASH, kit.Select(kit.Hashs(value), m.Option(kit.MDB_HASH))
+	if field != HASH {
+		field, value = HASH, kit.Select(kit.Hashs(value), m.Option(HASH))
 	}
 	m.Richs(prefix, chain, value, func(key string, val map[string]interface{}) {
-		m.Log_DELETE(kit.MDB_KEY, path.Join(prefix, chain), field, value, kit.MDB_VALUE, kit.Format(val))
-		m.Conf(prefix, kit.Keys(chain, kit.MDB_HASH, key), "")
+		m.Log_DELETE(KEY, path.Join(prefix, chain), field, value, VALUE, kit.Format(val))
+		m.Conf(prefix, kit.Keys(chain, HASH, key), "")
 	})
 }
 func _hash_modify(m *ice.Message, prefix, chain string, field, value string, arg ...string) {
 	m.Richs(prefix, chain, value, func(key string, val map[string]interface{}) {
 		val = kit.GetMeta(val)
-		m.Log_MODIFY(kit.MDB_KEY, path.Join(prefix, chain), field, value, arg)
+		m.Log_MODIFY(KEY, path.Join(prefix, chain), field, value, arg)
 		for i := 0; i < len(arg); i += 2 {
 			if arg[i] == field {
 				continue
@@ -56,8 +56,8 @@ func _hash_modify(m *ice.Message, prefix, chain string, field, value string, arg
 	})
 }
 func _hash_select(m *ice.Message, prefix, chain, field, value string) {
-	if field == kit.MDB_HASH && value == RANDOM {
-		value = kit.MDB_RANDOMS
+	if field == HASH && value == RANDOM {
+		value = RANDOMS
 	}
 	fields := _hash_fields(m)
 	m.Richs(prefix, chain, value, func(key string, val map[string]interface{}) {
@@ -73,7 +73,7 @@ func _hash_select(m *ice.Message, prefix, chain, field, value string) {
 		}
 	})
 	if m.Option(FIELDS) != DETAIL {
-		m.SortTimeR(kit.MDB_TIME)
+		m.SortTimeR(TIME)
 	}
 }
 func _hash_export(m *ice.Message, prefix, chain, file string) {
@@ -85,8 +85,8 @@ func _hash_export(m *ice.Message, prefix, chain, file string) {
 	en.SetIndent("", "  ")
 	m.Assert(en.Encode(m.Confv(prefix, kit.Keys(chain, HASH))))
 
-	m.Log_EXPORT(kit.MDB_KEY, path.Join(prefix, chain), kit.MDB_FILE, p)
-	m.Conf(prefix, kit.Keys(chain, kit.MDB_HASH), "")
+	m.Log_EXPORT(KEY, path.Join(prefix, chain), FILE, p)
+	m.Conf(prefix, kit.Keys(chain, HASH), "")
 	m.Echo(p)
 }
 func _hash_import(m *ice.Message, prefix, chain, file string) {
@@ -98,9 +98,9 @@ func _hash_import(m *ice.Message, prefix, chain, file string) {
 	m.Assert(json.NewDecoder(f).Decode(&list))
 
 	count := 0
-	if m.Conf(prefix, kit.Keys(chain, kit.MDB_META, kit.MDB_SHORT)) == "" {
+	if m.Conf(prefix, kit.Keys(chain, META, SHORT)) == "" {
 		for k, data := range list {
-			m.Conf(prefix, kit.Keys(chain, kit.MDB_HASH, k), data)
+			m.Conf(prefix, kit.Keys(chain, HASH, k), data)
 			count++
 		}
 	} else {
@@ -110,12 +110,12 @@ func _hash_import(m *ice.Message, prefix, chain, file string) {
 		}
 	}
 
-	m.Log_IMPORT(kit.MDB_KEY, path.Join(prefix, chain), kit.MDB_COUNT, count)
+	m.Log_IMPORT(KEY, path.Join(prefix, chain), COUNT, count)
 	m.Echo("%d", count)
 }
 func _hash_prunes(m *ice.Message, prefix, chain string, arg ...string) {
 	fields := _hash_fields(m)
-	m.Richs(prefix, chain, kit.MDB_FOREACH, func(key string, val map[string]interface{}) {
+	m.Richs(prefix, chain, FOREACH, func(key string, val map[string]interface{}) {
 		switch val = kit.GetMeta(val); cb := m.Optionv(kit.Keycb(PRUNES)).(type) {
 		case func(string, map[string]interface{}) bool:
 			if !cb(key, val) {
@@ -131,7 +131,7 @@ func _hash_prunes(m *ice.Message, prefix, chain string, arg ...string) {
 		m.Push(key, val, fields)
 	})
 	m.Table(func(index int, value map[string]string, head []string) {
-		_hash_delete(m, prefix, chain, kit.MDB_HASH, value[kit.MDB_HASH])
+		_hash_delete(m, prefix, chain, HASH, value[HASH])
 	})
 }
 
@@ -139,13 +139,13 @@ const HASH = "hash"
 
 func HashAction(fields ...string) map[string]*ice.Action {
 	_key := func(m *ice.Message) string {
-		if m.Config(kit.MDB_HASH) == "uniq" {
-			return kit.MDB_HASH
+		if m.Config(HASH) == "uniq" {
+			return HASH
 		}
-		if m.Config(kit.MDB_SHORT) == "uniq" {
-			return kit.MDB_HASH
+		if m.Config(SHORT) == "uniq" {
+			return HASH
 		}
-		return kit.Select(kit.MDB_HASH, m.Config(kit.MDB_SHORT))
+		return kit.Select(HASH, m.Config(SHORT))
 	}
 	return ice.SelectAction(map[string]*ice.Action{
 		INPUTS: {Name: "inputs", Help: "补全", Hand: func(m *ice.Message, arg ...string) {
@@ -177,35 +177,35 @@ func HashAction(fields ...string) map[string]*ice.Action {
 func HashActionStatus(fields ...string) map[string]*ice.Action {
 	list := HashAction(fields...)
 	list[PRUNES] = &ice.Action{Name: "prunes", Help: "清理", Hand: func(m *ice.Message, arg ...string) {
-		m.OptionFields(m.Config(kit.MDB_FIELD))
-		m.Cmdy(PRUNES, m.PrefixKey(), "", HASH, kit.MDB_STATUS, "error")
-		m.Cmdy(PRUNES, m.PrefixKey(), "", HASH, kit.MDB_STATUS, "close")
+		m.OptionFields(m.Config(FIELD))
+		m.Cmdy(PRUNES, m.PrefixKey(), "", HASH, STATUS, "error")
+		m.Cmdy(PRUNES, m.PrefixKey(), "", HASH, STATUS, "close")
 	}}
 	return list
 }
 func HashSelect(m *ice.Message, arg ...string) *ice.Message {
-	m.Fields(len(arg), m.Config(kit.MDB_FIELD))
-	m.Cmdy(SELECT, m.PrefixKey(), "", HASH, m.Config(kit.MDB_SHORT), arg)
+	m.Fields(len(arg), m.Config(FIELD))
+	m.Cmdy(SELECT, m.PrefixKey(), "", HASH, m.Config(SHORT), arg)
 	m.PushAction(REMOVE)
 	m.StatusTimeCount()
 	return m
 }
 func HashPrunes(m *ice.Message, cb func(map[string]string) bool) *ice.Message {
 	_key := func(m *ice.Message) string {
-		if m.Config(kit.MDB_HASH) == "uniq" {
-			return kit.MDB_HASH
+		if m.Config(HASH) == "uniq" {
+			return HASH
 		}
-		return kit.Select(kit.MDB_HASH, m.Config(kit.MDB_SHORT))
+		return kit.Select(HASH, m.Config(SHORT))
 	}
 	before := kit.Time(kit.Select(m.Time("-72h"), m.Option(kit.MDB_BEFORE)))
 	m.Cmd(m.CommandKey()).Table(func(index int, value map[string]string, head []string) {
-		if kit.Time(value[kit.MDB_TIME]) > before {
+		if kit.Time(value[TIME]) > before {
 			return
 		}
 		if cb != nil && cb(value) {
 			return
 		}
-		m.OptionFields(m.Config(kit.MDB_FIELD))
+		m.OptionFields(m.Config(FIELD))
 		m.Cmdy(DELETE, m.PrefixKey(), "", HASH, _key(m), value[_key(m)])
 	})
 	return m

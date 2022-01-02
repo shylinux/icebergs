@@ -132,10 +132,10 @@ func init() {
 			}},
 		}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			for k, v := range ice.Info.Pack {
-				m.Push(kit.MDB_NAME, k)
-				m.Push(kit.MDB_SIZE, len(v))
+				m.Push(mdb.NAME, k)
+				m.Push(nfs.SIZE, len(v))
 			}
-			m.Sort(kit.MDB_NAME)
+			m.Sort(mdb.NAME)
 		}},
 	}})
 }

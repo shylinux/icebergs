@@ -109,7 +109,7 @@ func init() {
 	}, Commands: map[string]*ice.Command{
 		USER: {Name: "user username auto create", Help: "用户", Action: ice.MergeAction(map[string]*ice.Action{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
-				m.Cmd(mdb.SEARCH, mdb.CREATE, USER, m.PrefixKey())
+				m.Cmd(mdb.SEARCH, mdb.CREATE, m.CommandKey(), m.PrefixKey())
 				UserRoot(ice.Pulse)
 			}},
 			mdb.SEARCH: {Name: "search type name text", Help: "搜索", Hand: func(m *ice.Message, arg ...string) {

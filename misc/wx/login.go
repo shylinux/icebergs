@@ -9,6 +9,7 @@ import (
 	"shylinux.com/x/icebergs/base/aaa"
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/core/chat"
+	"shylinux.com/x/icebergs/core/wiki"
 	kit "shylinux.com/x/toolkits"
 )
 
@@ -82,14 +83,14 @@ func init() {
 				m.Cmdy(EVENT, m.Option("Event"))
 
 			case chat.LOCATION: // 打卡
-				m.Cmdy(chat.LOCATION, mdb.CREATE, kit.MDB_TYPE, "", kit.MDB_NAME, m.Option("Label"), kit.MDB_TEXT, m.Option("Label"),
+				m.Cmdy(chat.LOCATION, mdb.CREATE, mdb.TYPE, "", mdb.NAME, m.Option("Label"), mdb.TEXT, m.Option("Label"),
 					"latitude", m.Option("LocationX"), "longitude", m.Option("LocationY"), "scale", m.Option("Scale"),
 				)
-			case kit.MDB_LINK: // 打卡
-				m.Cmdy(chat.SCAN, mdb.CREATE, kit.MDB_TYPE, kit.MDB_LINK, kit.MDB_NAME, m.Option("Title"), kit.MDB_TEXT, m.Option("URL"))
+			case mdb.LINK: // 打卡
+				m.Cmdy(chat.SCAN, mdb.CREATE, mdb.TYPE, mdb.LINK, mdb.NAME, m.Option("Title"), mdb.TEXT, m.Option("URL"))
 
 			case "image": // 文本
-				m.Cmdy(chat.SCAN, mdb.CREATE, kit.MDB_TYPE, kit.MDB_IMAGE, kit.MDB_NAME, m.Option("Title"), kit.MDB_TEXT, m.Option("URL"))
+				m.Cmdy(chat.SCAN, mdb.CREATE, mdb.TYPE, wiki.IMAGE, mdb.NAME, m.Option("Title"), mdb.TEXT, m.Option("URL"))
 
 			case TEXT: // 文本
 				if cmds := kit.Split(m.Option("Content")); m.Right(cmds) {

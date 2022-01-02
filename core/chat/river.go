@@ -13,13 +13,13 @@ import (
 )
 
 func _river_key(m *ice.Message, key ...interface{}) string {
-	return kit.Keys(kit.MDB_HASH, m.Option(ice.MSG_RIVER), kit.Simple(key))
+	return kit.Keys(mdb.HASH, m.Option(ice.MSG_RIVER), kit.Simple(key))
 }
 func _river_list(m *ice.Message) {
 	if m.Option(web.SHARE) != "" {
-		switch msg := m.Cmd(web.SHARE, m.Option(web.SHARE)); msg.Append(kit.MDB_TYPE) {
+		switch msg := m.Cmd(web.SHARE, m.Option(web.SHARE)); msg.Append(mdb.TYPE) {
 		case web.RIVER: // 共享群组
-			m.Option(ice.MSG_TITLE, msg.Append(kit.MDB_NAME))
+			m.Option(ice.MSG_TITLE, msg.Append(mdb.NAME))
 			m.Option(ice.MSG_RIVER, msg.Append(RIVER))
 			m.Option(ice.MSG_STORM, msg.Append(STORM))
 
@@ -31,21 +31,21 @@ func _river_list(m *ice.Message) {
 			}
 
 		case web.STORM: // 共享应用
-			m.Option(ice.MSG_TITLE, msg.Append(kit.MDB_NAME))
+			m.Option(ice.MSG_TITLE, msg.Append(mdb.NAME))
 			m.Option(ice.MSG_STORM, msg.Append(STORM))
 			m.Option(ice.MSG_RIVER, "_share")
 			return
 
 		case web.FIELD: // 共享命令
-			m.Option(ice.MSG_TITLE, msg.Append(kit.MDB_NAME))
+			m.Option(ice.MSG_TITLE, msg.Append(mdb.NAME))
 			m.Option(ice.MSG_RIVER, "_share")
 			return
 		}
 	}
 
-	m.Richs(RIVER, nil, kit.MDB_FOREACH, func(key string, value map[string]interface{}) {
-		m.Richs(RIVER, kit.Keys(kit.MDB_HASH, key, OCEAN), m.Option(ice.MSG_USERNAME), func(k string, val map[string]interface{}) {
-			m.Push(key, kit.GetMeta(value), []string{kit.MDB_HASH, kit.MDB_NAME}, kit.GetMeta(val))
+	m.Richs(RIVER, nil, mdb.FOREACH, func(key string, value map[string]interface{}) {
+		m.Richs(RIVER, kit.Keys(mdb.HASH, key, OCEAN), m.Option(ice.MSG_USERNAME), func(k string, val map[string]interface{}) {
+			m.Push(key, kit.GetMeta(value), []string{mdb.HASH, mdb.NAME}, kit.GetMeta(val))
 		})
 	})
 }
@@ -55,13 +55,13 @@ const RIVER = "river"
 func init() {
 	Index.Merge(&ice.Context{Configs: map[string]*ice.Config{
 		RIVER: {Name: RIVER, Help: "群组", Value: kit.Data(
-			kit.MDB_FIELD, "time,hash,type,name,text,template",
+			mdb.FIELD, "time,hash,type,name,text,template",
 			MENUS, kit.List(RIVER, kit.List("create", "创建群组", "添加应用", "添加工具", "添加设备", "创建空间"), kit.List("share", "共享群组", "共享应用", "共享工具", "共享主机", "访问空间")),
 		)},
 	}, Commands: map[string]*ice.Command{
 		"/river": {Name: "/river", Help: "小河流", Action: map[string]*ice.Action{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
-				m.Config(kit.MDB_TEMPLATE, kit.Dict(
+				m.Config(nfs.TEMPLATE, kit.Dict(
 					"base", kit.Dict(
 						"info", kit.List(
 							"web.chat.info",
@@ -136,8 +136,8 @@ func init() {
 				}
 
 				switch arg[0] {
-				case kit.MDB_TEMPLATE:
-					m.Push(kit.MDB_TEMPLATE, ice.BASE)
+				case nfs.TEMPLATE:
+					m.Push(nfs.TEMPLATE, ice.BASE)
 				case aaa.USERROLE:
 					m.Push(aaa.USERROLE, aaa.VOID, aaa.TECH, aaa.ROOT)
 				case aaa.USERNAME:
@@ -151,16 +151,16 @@ func init() {
 				m.Option(ice.MSG_RIVER, h)
 				m.Echo(h)
 
-				m.Conf(RIVER, kit.Keys(kit.MDB_HASH, h, NODE, kit.Keym(kit.MDB_SHORT)), kit.MDB_NAME)
-				m.Conf(RIVER, kit.Keys(kit.MDB_HASH, h, OCEAN, kit.Keym(kit.MDB_SHORT)), aaa.USERNAME)
+				m.Conf(RIVER, kit.Keys(mdb.HASH, h, NODE, kit.Keym(mdb.SHORT)), mdb.NAME)
+				m.Conf(RIVER, kit.Keys(mdb.HASH, h, OCEAN, kit.Keym(mdb.SHORT)), aaa.USERNAME)
 				m.Cmd(OCEAN, mdb.INSERT, aaa.USERNAME, m.Option(ice.MSG_USERNAME))
 
-				kit.Fetch(m.Confv(RIVER, kit.Keym(kit.MDB_TEMPLATE, kit.Select("base", m.Option(kit.MDB_TEMPLATE)))), func(storm string, value interface{}) {
-					h := m.Cmdx(STORM, mdb.CREATE, kit.MDB_TYPE, PUBLIC, kit.MDB_NAME, storm, kit.MDB_TEXT, storm)
+				kit.Fetch(m.Confv(RIVER, kit.Keym(nfs.TEMPLATE, kit.Select("base", m.Option(nfs.TEMPLATE)))), func(storm string, value interface{}) {
+					h := m.Cmdx(STORM, mdb.CREATE, mdb.TYPE, PUBLIC, mdb.NAME, storm, mdb.TEXT, storm)
 
 					kit.Fetch(value, func(index int, value string) {
 						m.Search(value, func(p *ice.Context, s *ice.Context, key string, cmd *ice.Command) {
-							m.Cmd(STORM, mdb.INSERT, kit.MDB_HASH, h, ice.CTX, s.Cap(ice.CTX_FOLLOW), ice.CMD, key, kit.MDB_HELP, cmd.Help)
+							m.Cmd(STORM, mdb.INSERT, mdb.HASH, h, ice.CTX, s.Cap(ice.CTX_FOLLOW), ice.CMD, key, mdb.HELP, cmd.Help)
 						})
 					})
 				})

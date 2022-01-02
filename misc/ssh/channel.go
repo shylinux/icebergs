@@ -53,7 +53,7 @@ func _ssh_watch(m *ice.Message, meta map[string]string, h string, input io.Reade
 			case '\r', '\n':
 				cmd := strings.TrimSpace(string(buf[:i]))
 				m.Log_IMPORT(tcp.HOSTNAME, meta[tcp.HOSTNAME], aaa.USERNAME, meta[aaa.USERNAME], CMD, cmd)
-				m.Cmdy(mdb.INSERT, CHANNEL, kit.Keys(kit.MDB_HASH, h), mdb.LIST, kit.MDB_TYPE, CMD, kit.MDB_TEXT, cmd)
+				m.Cmdy(mdb.INSERT, CHANNEL, kit.Keys(mdb.HASH, h), mdb.LIST, mdb.TYPE, CMD, mdb.TEXT, cmd)
 				i = 0
 			default:
 				if i += n; i >= ice.MOD_BUFS {
@@ -69,27 +69,27 @@ const CHANNEL = "channel"
 func init() {
 	psh.Index.Merge(&ice.Context{Configs: map[string]*ice.Config{
 		CHANNEL: {Name: "channel", Help: "通道", Value: kit.Data(
-			kit.MDB_FIELD, "time,hash,status,username,hostport,tty,count",
+			mdb.FIELD, "time,hash,status,username,hostport,tty,count",
 		)},
 	}, Commands: map[string]*ice.Command{
 		CHANNEL: {Name: "channel hash id auto", Help: "通道", Action: ice.MergeAction(map[string]*ice.Action{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
-				m.Richs(CHANNEL, "", kit.MDB_FOREACH, func(key string, value map[string]interface{}) {
-					kit.Value(value, kit.Keym(kit.MDB_STATUS), tcp.CLOSE)
+				m.Richs(CHANNEL, "", mdb.FOREACH, func(key string, value map[string]interface{}) {
+					kit.Value(value, kit.Keym(mdb.STATUS), tcp.CLOSE)
 				})
 			}},
 			mdb.PRUNES: {Name: "prunes", Help: "清理", Hand: func(m *ice.Message, arg ...string) {
-				m.OptionFields(m.Config(kit.MDB_FIELD))
-				m.Cmdy(mdb.PRUNES, SERVICE, "", mdb.HASH, kit.MDB_STATUS, tcp.ERROR)
-				m.Cmdy(mdb.PRUNES, CHANNEL, "", mdb.HASH, kit.MDB_STATUS, tcp.CLOSE)
+				m.OptionFields(m.Config(mdb.FIELD))
+				m.Cmdy(mdb.PRUNES, SERVICE, "", mdb.HASH, mdb.STATUS, tcp.ERROR)
+				m.Cmdy(mdb.PRUNES, CHANNEL, "", mdb.HASH, mdb.STATUS, tcp.CLOSE)
 			}},
 			mdb.REPEAT: {Name: "repeat", Help: "执行", Hand: func(m *ice.Message, arg ...string) {
-				m.Cmdy(CHANNEL, ctx.ACTION, ctx.COMMAND, CMD, m.Option(kit.MDB_TEXT))
+				m.Cmdy(CHANNEL, ctx.ACTION, ctx.COMMAND, CMD, m.Option(mdb.TEXT))
 			}},
 			ctx.COMMAND: {Name: "command cmd=pwd", Help: "命令", Hand: func(m *ice.Message, arg ...string) {
-				m.Cmdy(mdb.INSERT, CHANNEL, kit.Keys(kit.MDB_HASH, m.Option(kit.MDB_HASH)),
-					mdb.LIST, kit.MDB_TYPE, CMD, kit.MDB_TEXT, m.Option(CMD))
-				m.Richs(CHANNEL, "", m.Option(kit.MDB_HASH), func(key string, value map[string]interface{}) {
+				m.Cmdy(mdb.INSERT, CHANNEL, kit.Keys(mdb.HASH, m.Option(mdb.HASH)),
+					mdb.LIST, mdb.TYPE, CMD, mdb.TEXT, m.Option(CMD))
+				m.Richs(CHANNEL, "", m.Option(mdb.HASH), func(key string, value map[string]interface{}) {
 					if w, ok := kit.Value(value, kit.Keym(INPUT)).(io.Writer); ok {
 						w.Write([]byte(m.Option(CMD) + ice.NL))
 					}
@@ -102,7 +102,7 @@ func init() {
 				mdb.HashSelect(m, arg...)
 				m.Set(ice.MSG_APPEND, ctx.ACTION)
 				m.Table(func(index int, value map[string]string, head []string) {
-					m.PushButton(kit.Select("", ctx.COMMAND, value[kit.MDB_STATUS] == tcp.OPEN), mdb.REMOVE)
+					m.PushButton(kit.Select("", ctx.COMMAND, value[mdb.STATUS] == tcp.OPEN), mdb.REMOVE)
 				})
 				return
 			}

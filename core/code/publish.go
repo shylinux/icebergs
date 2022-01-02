@@ -22,14 +22,14 @@ func _bin_list(m *ice.Message, dir string) {
 	for _, ls := range strings.Split(strings.TrimSpace(m.Cmd(cli.SYSTEM, "bash", "-c", "ls |xargs file |grep executable").Append(cli.CMD_OUT)), ice.NL) {
 		if file := strings.TrimSpace(strings.Split(ls, ":")[0]); file != "" {
 			if s, e := os.Stat(path.Join(p, file)); e == nil {
-				m.Push(kit.MDB_TIME, s.ModTime())
-				m.Push(kit.MDB_SIZE, kit.FmtSize(s.Size()))
+				m.Push(mdb.TIME, s.ModTime())
+				m.Push(nfs.SIZE, kit.FmtSize(s.Size()))
 				m.Push(nfs.FILE, file)
-				m.PushDownload(kit.MDB_LINK, file, path.Join(p, file))
+				m.PushDownload(mdb.LINK, file, path.Join(p, file))
 			}
 		}
 	}
-	m.SortTimeR(kit.MDB_TIME)
+	m.SortTimeR(mdb.TIME)
 }
 
 func _publish_file(m *ice.Message, file string, arg ...string) string {

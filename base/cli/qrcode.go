@@ -112,6 +112,7 @@ const (
 	LIGHT = 127
 )
 const (
+	COLOR  = "color"
 	BLACK  = "black"
 	RED    = "red"
 	GREEN  = "green"

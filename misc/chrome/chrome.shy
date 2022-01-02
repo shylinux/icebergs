@@ -1,26 +1,29 @@
 title "HTML5"
 refer `
-官网 https://www.w3.org/
+标准 https://www.w3.org/
 文档 https://developer.mozilla.org/
 官网 https://www.google.com/chrome/
 源码 https://github.com/chromium/chromium/
 扩展 https://chrome.google.com/webstore/category/extensions
 `
+
 chapter "安装"
 field "浏览器" web.code.chrome.chrome
+field "操作流" web.code.chrome.operate
+field "编辑器" web.code.chrome.change
 
 chapter "应用"
 field "同步流" web.code.chrome.sync
 field "收藏夹" web.code.chrome.favor
+
+field "定制化" web.code.chrome.page
 field "样式表" web.code.chrome.style
 field "工具箱" web.code.chrome.field
+field "播放器" web.code.chrome.video
+
 field "蜘蛛侠" web.code.chrome.spide
-field "编辑器" web.code.chrome.change
 field "缓存池" web.code.chrome.cache
 field "相册簿" web.wiki.feel
 
-section "命令行"
-refer `
-终端 terminal://
-博客 https://www.cnblogs.com/lymvv/p/8431238.html
-`
+chapter "源码"
+field "源代码" web.code.inner args `usr/icebergs/misc/chrome/ chrome.go`

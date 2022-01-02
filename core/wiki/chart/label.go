@@ -4,6 +4,7 @@ import (
 	"strings"
 
 	ice "shylinux.com/x/icebergs"
+	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/core/wiki"
 	kit "shylinux.com/x/toolkits"
 )
@@ -26,7 +27,7 @@ func (l *Label) Init(m *ice.Message, arg ...string) wiki.Chart {
 		for i, v := range ls {
 			switch data := kit.Parse(nil, "", kit.Split(v)...).(type) {
 			case map[string]interface{}:
-				v = kit.Select("", data[kit.MDB_TEXT])
+				v = kit.Select("", data[mdb.TEXT])
 			}
 			if w := l.GetWidth(v); w > l.max[i] {
 				l.max[i] = w
@@ -52,7 +53,7 @@ func (l *Label) Draw(m *ice.Message, x, y int) wiki.Chart {
 			item = &Block{FontSize: l.FontSize, Padding: l.Padding, MarginX: l.MarginX, MarginY: l.MarginY}
 			switch data := kit.Parse(nil, "", kit.Split(text)...).(type) {
 			case map[string]interface{}:
-				item.Init(m, kit.Select(text, data[kit.MDB_TEXT])).Data(m, data)
+				item.Init(m, kit.Select(text, data[mdb.TEXT])).Data(m, data)
 			default:
 				item.Init(m, text)
 			}

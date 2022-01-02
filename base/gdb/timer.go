@@ -11,19 +11,19 @@ import (
 
 func _timer_action(m *ice.Message, arg ...string) {
 	now := time.Now().UnixNano()
-	m.OptionFields(m.Config(kit.MDB_FIELD))
+	m.OptionFields(m.Config(mdb.FIELD))
 
-	m.Richs(TIMER, "", kit.MDB_FOREACH, func(key string, value map[string]interface{}) {
-		if value = kit.GetMeta(value); value[kit.MDB_STATUS] == cli.STOP {
+	m.Richs(TIMER, "", mdb.FOREACH, func(key string, value map[string]interface{}) {
+		if value = kit.GetMeta(value); value[cli.STATUS] == cli.STOP {
 			return
 		}
 
 		order := kit.Int(value[ORDER])
 		if n := kit.Time(kit.Format(value[NEXT])); now > n && order > 0 {
-			m.Logs(TIMER, kit.MDB_KEY, key, ORDER, order)
+			m.Logs(TIMER, mdb.KEY, key, ORDER, order)
 
 			msg := m.Cmd(value[ice.CMD])
-			m.Grow(TIMER, kit.Keys(kit.MDB_HASH, key), kit.Dict(ice.RES, msg.Result()))
+			m.Grow(TIMER, kit.Keys(mdb.HASH, key), kit.Dict(ice.RES, msg.Result()))
 			if value[ORDER] = kit.Format(order - 1); order > 1 {
 				value[NEXT] = msg.Time(value[INTERVAL])
 			}
@@ -43,7 +43,7 @@ const TIMER = "timer"
 func init() {
 	Index.Merge(&ice.Context{Configs: map[string]*ice.Config{
 		TIMER: {Name: TIMER, Help: "定时器", Value: kit.Data(
-			kit.MDB_FIELD, "time,hash,delay,interval,order,next,cmd", TICK, "1s",
+			mdb.FIELD, "time,hash,delay,interval,order,next,cmd", TICK, "1s",
 		)},
 	}, Commands: map[string]*ice.Command{
 		TIMER: {Name: "timer hash id auto create action prunes", Help: "定时器", Action: ice.MergeAction(map[string]*ice.Action{
@@ -51,14 +51,14 @@ func init() {
 				m.Cmdy(mdb.INSERT, TIMER, "", mdb.HASH, DELAY, "10ms", INTERVAL, "10m", ORDER, 1, NEXT, m.Time(m.Option(DELAY)), arg)
 			}},
 			mdb.PRUNES: {Name: "prunes", Help: "清理", Hand: func(m *ice.Message, arg ...string) {
-				m.OptionFields(m.Config(kit.MDB_FIELD))
+				m.OptionFields(m.Config(mdb.FIELD))
 				m.Cmdy(mdb.PRUNES, TIMER, "", mdb.HASH, ORDER, 0)
 			}},
 			ACTION: {Name: "action", Help: "执行", Hand: func(m *ice.Message, arg ...string) {
 				_timer_action(m, arg...)
 			}},
 		}, mdb.ZoneAction()), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			m.Fields(len(arg), m.Config(kit.MDB_FIELD), "time,id,res")
+			m.Fields(len(arg), m.Config(mdb.FIELD), "time,id,res")
 			mdb.ZoneSelect(m, arg...)
 		}},
 	}})

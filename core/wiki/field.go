@@ -5,6 +5,8 @@ import (
 
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/ctx"
+	"shylinux.com/x/icebergs/base/mdb"
+	"shylinux.com/x/icebergs/base/nfs"
 	kit "shylinux.com/x/toolkits"
 )
 
@@ -39,8 +41,8 @@ func _field_show(m *ice.Message, name, text string, arg ...string) {
 	})
 
 	name = strings.ReplaceAll(name, ice.SP, "_")
-	meta[kit.MDB_NAME] = name
-	meta[kit.MDB_INDEX] = text
+	meta[mdb.NAME] = name
+	meta[mdb.INDEX] = text
 
 	// 扩展参数
 	for i := 0; i < len(arg)-1; i += 2 {
@@ -67,7 +69,7 @@ func _field_show(m *ice.Message, name, text string, arg ...string) {
 
 			count := 0
 			kit.Fetch(meta[INPUTS], func(index int, value map[string]interface{}) {
-				if value[kit.MDB_TYPE] != kit.MDB_BUTTON {
+				if value[mdb.TYPE] != kit.MDB_BUTTON {
 					count++
 				}
 			})
@@ -76,14 +78,14 @@ func _field_show(m *ice.Message, name, text string, arg ...string) {
 				list := meta[INPUTS].([]interface{})
 				for i := count; i < len(args); i++ {
 					list = append(list, kit.Dict(
-						kit.MDB_TYPE, "text", kit.MDB_NAME, "args", kit.MDB_VALUE, args[i],
+						mdb.TYPE, "text", mdb.NAME, "args", mdb.VALUE, args[i],
 					))
 				}
 				meta[INPUTS] = list
 			}
 		}
 	}
-	m.Option(kit.MDB_META, meta)
+	m.Option(mdb.META, meta)
 
 	// 渲染引擎
 	_wiki_template(m, FIELD, name, text)
@@ -108,7 +110,7 @@ func init() {
 		}},
 	}, Configs: map[string]*ice.Config{
 		FIELD: {Name: FIELD, Help: "插件", Value: kit.Data(
-			kit.MDB_TEMPLATE, `<fieldset {{.OptionTemplate}}" data-meta='{{.Optionv "meta"|Format}}'>
+			nfs.TEMPLATE, `<fieldset {{.OptionTemplate}}" data-meta='{{.Optionv "meta"|Format}}'>
 <legend>{{.Option "name"}}</legend>
 <form class="option"></form>
 <div class="action"></div>

@@ -130,7 +130,7 @@ func (c *Context) Merge(s *Context) *Context {
 		}
 
 		for k, a := range cmd.Action {
-			if p, ok := c.Commands[k]; ok {
+			if p, ok := c.Commands[k]; ok && s != c {
 				switch last, next := p.Hand, a.Hand; k {
 				case CTX_INIT:
 					p.Hand = func(m *Message, c *Context, _key string, arg ...string) {
@@ -153,7 +153,7 @@ func (c *Context) Merge(s *Context) *Context {
 			if len(help) == 1 || help[1] == "" {
 				help = strings.SplitN(help[0], ":", 2)
 			}
-			if kit.Value(cmd.Meta, kit.Keys("_trans", k), help[0]); len(help) > 1 {
+			if kit.Value(cmd.Meta, kit.Keys("_trans", strings.TrimPrefix(k, "_")), help[0]); len(help) > 1 {
 				kit.Value(cmd.Meta, kit.Keys(kit.MDB_TITLE, k), help[1])
 			}
 			if a.Hand == nil {

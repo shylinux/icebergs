@@ -4,6 +4,7 @@ import (
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/cli"
 	"shylinux.com/x/icebergs/base/lex"
+	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/nfs"
 	"shylinux.com/x/icebergs/core/wiki"
 	kit "shylinux.com/x/toolkits"
@@ -22,7 +23,7 @@ func (c *Chain) Init(m *ice.Message, arg ...string) wiki.Chart {
 	m.Option(nfs.CAT_CONTENT, arg[0])
 	m.Option(lex.SPLIT_SPACE, "\t \n")
 	m.Option(lex.SPLIT_BLOCK, "\t \n")
-	c.data = lex.Split(m, "", kit.MDB_TEXT)
+	c.data = lex.Split(m, "", mdb.TEXT)
 
 	// 计算尺寸
 	c.Height = c.size(m, c.data) * c.GetHeights()
@@ -39,8 +40,8 @@ func (c *Chain) Draw(m *ice.Message, x, y int) wiki.Chart {
 }
 func (c *Chain) size(m *ice.Message, root map[string]interface{}) (height int) {
 	meta := kit.GetMeta(root)
-	if list, ok := root[kit.MDB_LIST].([]interface{}); ok && len(list) > 0 {
-		kit.Fetch(root[kit.MDB_LIST], func(index int, value map[string]interface{}) {
+	if list, ok := root[mdb.LIST].([]interface{}); ok && len(list) > 0 {
+		kit.Fetch(root[mdb.LIST], func(index int, value map[string]interface{}) {
 			height += c.size(m, value)
 		})
 	} else {
@@ -69,7 +70,7 @@ func (c *Chain) draw(m *ice.Message, root map[string]interface{}, x, y int, p *B
 		MarginY:  p.MarginY,
 	}
 	item.x, item.y = x, y+(kit.Int(meta[wiki.HEIGHT])-1)*c.GetHeights()/2
-	item.Init(m, kit.Format(meta[kit.MDB_TEXT])).Data(m, meta)
+	item.Init(m, kit.Format(meta[mdb.TEXT])).Data(m, meta)
 	item.Draw(m, item.x, item.y)
 
 	// 画面尺寸
@@ -90,7 +91,7 @@ func (c *Chain) draw(m *ice.Message, root map[string]interface{}, x, y int, p *B
 
 	// 递归节点
 	h, x := 0, x+item.GetWidths()
-	if kit.Fetch(root[kit.MDB_LIST], func(index int, value map[string]interface{}) {
+	if kit.Fetch(root[mdb.LIST], func(index int, value map[string]interface{}) {
 		h += c.draw(m, value, x, y+h, item)
 	}); h == 0 {
 		return item.GetHeights()

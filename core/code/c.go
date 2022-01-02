@@ -75,15 +75,15 @@ func init() {
 				m.Cmdy(cli.SYSTEM, ice.PWD+name)
 			}},
 			mdb.SEARCH: {Hand: func(m *ice.Message, arg ...string) {
-				if arg[0] == kit.MDB_FOREACH {
+				if arg[0] == mdb.FOREACH {
 					return
 				}
 				m.Option(cli.CMD_DIR, kit.Select(ice.SRC, arg, 2))
 				m.Cmdy(mdb.SEARCH, MAN2, arg[1:])
 				m.Cmdy(mdb.SEARCH, MAN3, arg[1:])
-				_c_tags(m, kit.Select(kit.MDB_MAIN, arg, 1))
-				_go_find(m, kit.Select(kit.MDB_MAIN, arg, 1))
-				_go_grep(m, kit.Select(kit.MDB_MAIN, arg, 1))
+				_c_tags(m, kit.Select(MAIN, arg, 1))
+				_go_find(m, kit.Select(MAIN, arg, 1))
+				_go_grep(m, kit.Select(MAIN, arg, 1))
 			}},
 		}, PlugAction())},
 		MAN: {Name: MAN, Help: "手册", Action: ice.MergeAction(map[string]*ice.Action{
@@ -91,12 +91,12 @@ func init() {
 				m.Echo(_c_help(m, strings.TrimPrefix(arg[0], MAN), strings.TrimSuffix(arg[1], ice.PT+arg[0])))
 			}},
 			mdb.SEARCH: {Hand: func(m *ice.Message, arg ...string) {
-				if arg[0] == kit.MDB_FOREACH {
+				if arg[0] == mdb.FOREACH {
 					return
 				}
 				for _, i := range []string{"1", "2", "3", "8"} {
-					if text := _c_help(m, i, kit.Select(kit.MDB_MAIN, arg, 1)); text != "" {
-						m.PushSearch(ice.CMD, MAN, nfs.FILE, kit.Keys(arg[1], MAN+i), nfs.LINE, 1, kit.MDB_TEXT, text)
+					if text := _c_help(m, i, kit.Select(MAIN, arg, 1)); text != "" {
+						m.PushSearch(ice.CMD, MAN, nfs.FILE, kit.Keys(arg[1], MAN+i), nfs.LINE, 1, mdb.TEXT, text)
 					}
 				}
 			}},

@@ -15,20 +15,20 @@ func _list_fields(m *ice.Message) []string {
 func _list_inputs(m *ice.Message, prefix, chain string, field, value string) {
 	list := map[string]int{}
 	m.Grows(prefix, chain, "", "", func(index int, val map[string]interface{}) {
-		if val = kit.GetMeta(val); kit.Format(val[kit.MDB_COUNT]) != "" {
-			list[kit.Format(val[field])] = kit.Int(val[kit.MDB_COUNT])
+		if val = kit.GetMeta(val); kit.Format(val[COUNT]) != "" {
+			list[kit.Format(val[field])] = kit.Int(val[COUNT])
 		} else {
 			list[kit.Format(val[field])]++
 		}
 	})
 	for k, i := range list {
 		m.Push(field, k)
-		m.Push(kit.MDB_COUNT, i)
+		m.Push(COUNT, i)
 	}
-	m.SortIntR(kit.MDB_COUNT)
+	m.SortIntR(COUNT)
 }
 func _list_insert(m *ice.Message, prefix, chain string, arg ...string) {
-	m.Log_INSERT(kit.MDB_KEY, path.Join(prefix, chain), arg[0], arg[1])
+	m.Log_INSERT(KEY, path.Join(prefix, chain), arg[0], arg[1])
 	m.Echo("%d", m.Grow(prefix, chain, kit.Dict(arg)))
 }
 func _list_delete(m *ice.Message, prefix, chain, field, value string) {
@@ -36,7 +36,7 @@ func _list_delete(m *ice.Message, prefix, chain, field, value string) {
 func _list_modify(m *ice.Message, prefix, chain string, field, value string, arg ...string) {
 	m.Grows(prefix, chain, field, value, func(index int, val map[string]interface{}) {
 		val = kit.GetMeta(val)
-		m.Log_MODIFY(kit.MDB_KEY, path.Join(prefix, chain), field, value, arg)
+		m.Log_MODIFY(KEY, path.Join(prefix, chain), field, value, arg)
 		for i := 0; i < len(arg); i += 2 {
 			if arg[i] == field {
 				continue
@@ -92,9 +92,9 @@ func _list_export(m *ice.Message, prefix, chain, file string) {
 		count++
 	})
 
-	m.Log_EXPORT(kit.MDB_KEY, path.Join(prefix, chain), kit.MDB_FILE, p, kit.MDB_COUNT, count)
-	m.Conf(prefix, kit.Keys(chain, kit.Keym(kit.MDB_COUNT)), 0)
-	m.Conf(prefix, kit.Keys(chain, kit.MDB_LIST), "")
+	m.Log_EXPORT(KEY, path.Join(prefix, chain), FILE, p, COUNT, count)
+	m.Conf(prefix, kit.Keys(chain, kit.Keym(COUNT)), 0)
+	m.Conf(prefix, kit.Keys(chain, LIST), "")
 	m.Echo(p)
 }
 func _list_import(m *ice.Message, prefix, chain, file string) {
@@ -114,7 +114,7 @@ func _list_import(m *ice.Message, prefix, chain, file string) {
 
 		data := kit.Dict()
 		for i, k := range head {
-			if k == kit.MDB_EXTRA {
+			if k == EXTRA {
 				kit.Value(data, k, kit.UnMarshal(line[i]))
 			} else {
 				kit.Value(data, k, line[i])
@@ -125,7 +125,7 @@ func _list_import(m *ice.Message, prefix, chain, file string) {
 		count++
 	}
 
-	m.Log_IMPORT(kit.MDB_KEY, kit.Keys(prefix, chain), kit.MDB_COUNT, count)
+	m.Log_IMPORT(KEY, kit.Keys(prefix, chain), COUNT, count)
 	m.Echo("%d", count)
 }
 func _list_prunes(m *ice.Message, prefix, chain string, arg ...string) {
@@ -142,17 +142,17 @@ func ListAction(fields ...string) map[string]*ice.Action {
 			m.Cmdy(INSERT, m.PrefixKey(), "", LIST, arg)
 		}},
 		DELETE: {Name: "delete", Help: "删除", Hand: func(m *ice.Message, arg ...string) {
-			m.Cmdy(DELETE, m.PrefixKey(), "", LIST, m.OptionSimple(kit.MDB_ID), arg)
+			m.Cmdy(DELETE, m.PrefixKey(), "", LIST, m.OptionSimple(ID), arg)
 		}},
 		MODIFY: {Name: "modify", Help: "编辑", Hand: func(m *ice.Message, arg ...string) {
-			m.Cmdy(MODIFY, m.PrefixKey(), "", LIST, m.OptionSimple(kit.MDB_ID), arg)
+			m.Cmdy(MODIFY, m.PrefixKey(), "", LIST, m.OptionSimple(ID), arg)
 		}},
 		EXPORT: {Name: "export", Help: "导出", Hand: func(m *ice.Message, arg ...string) {
 			m.Option(ice.CACHE_LIMIT, "-1")
-			m.OptionFields(m.Config(kit.MDB_FIELD))
+			m.OptionFields(m.Config(FIELD))
 			m.Cmdy(EXPORT, m.PrefixKey(), "", LIST)
-			m.Conf(m.PrefixKey(), kit.MDB_LIST, "")
-			m.Config(kit.MDB_COUNT, 0)
+			m.Conf(m.PrefixKey(), LIST, "")
+			m.Config(COUNT, 0)
 		}},
 		IMPORT: {Name: "import", Help: "导入", Hand: func(m *ice.Message, arg ...string) {
 			m.Cmdy(IMPORT, m.PrefixKey(), "", LIST, arg)
@@ -161,19 +161,19 @@ func ListAction(fields ...string) map[string]*ice.Action {
 			m.Cmdy(PRUNES, m.PrefixKey(), "", LIST, arg)
 		}},
 		PREV: {Name: "prev", Help: "上一页", Hand: func(m *ice.Message, arg ...string) {
-			PrevPage(m, m.Config(kit.MDB_COUNT), kit.Slice(arg, 1)...)
+			PrevPage(m, m.Config(COUNT), kit.Slice(arg, 1)...)
 		}},
 		NEXT: {Name: "next", Help: "下一页", Hand: func(m *ice.Message, arg ...string) {
-			NextPage(m, m.Config(kit.MDB_COUNT), kit.Slice(arg, 1)...)
+			NextPage(m, m.Config(COUNT), kit.Slice(arg, 1)...)
 		}},
 	}, fields...)
 }
 func ListSelect(m *ice.Message, arg ...string) *ice.Message {
 	m.OptionPage(kit.Slice(arg, 1)...)
-	m.Fields(len(kit.Slice(arg, 0, 1)), m.Config(kit.MDB_FIELD))
-	m.Cmdy(SELECT, m.PrefixKey(), "", LIST, kit.MDB_ID, arg)
+	m.Fields(len(kit.Slice(arg, 0, 1)), m.Config(FIELD))
+	m.Cmdy(SELECT, m.PrefixKey(), "", LIST, ID, arg)
 	if !m.FieldsIsDetail() {
-		m.StatusTimeCountTotal(m.Config(kit.MDB_COUNT))
+		m.StatusTimeCountTotal(m.Config(COUNT))
 	}
 	return m
 }

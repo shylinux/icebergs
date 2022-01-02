@@ -24,8 +24,8 @@ func _repos_path(name string) string {
 func _repos_insert(m *ice.Message, name string, dir string) {
 	if s, e := os.Stat(m.Option(cli.CMD_DIR, path.Join(dir, ".git"))); e == nil && s.IsDir() {
 		ls := strings.SplitN(strings.Trim(m.Cmdx(cli.SYSTEM, GIT, "log", "-n1", `--pretty=format:"%ad %s"`, "--date=iso"), `"`), ice.SP, 4)
-		m.Rich(REPOS, nil, kit.Data(kit.MDB_NAME, name, nfs.PATH, dir,
-			COMMIT, kit.Select("", ls, 3), kit.MDB_TIME, strings.Join(ls[:2], ice.SP),
+		m.Rich(REPOS, nil, kit.Data(mdb.NAME, name, nfs.PATH, dir,
+			COMMIT, kit.Select("", ls, 3), mdb.TIME, strings.Join(ls[:2], ice.SP),
 			BRANCH, strings.TrimSpace(m.Cmdx(cli.SYSTEM, GIT, BRANCH)),
 			REMOTE, strings.TrimSpace(m.Cmdx(cli.SYSTEM, GIT, REMOTE, "-v")),
 		))
@@ -46,22 +46,22 @@ const REPOS = "repos"
 func init() {
 	Index.Merge(&ice.Context{Configs: map[string]*ice.Config{
 		REPOS: {Name: REPOS, Help: "代码库", Value: kit.Data(
-			kit.MDB_SHORT, kit.MDB_NAME, kit.MDB_FIELD, "time,name,branch,commit,remote",
+			mdb.SHORT, mdb.NAME, mdb.FIELD, "time,name,branch,commit,remote",
 			REPOS, "https://shylinux.com/x", nfs.PATH, ice.USR_LOCAL,
 		)},
 	}, Commands: map[string]*ice.Command{
 		REPOS: {Name: "repos name path auto create", Help: "代码库", Action: ice.MergeAction(map[string]*ice.Action{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
-				m.Conf(REPOS, kit.MDB_HASH, "")
+				m.Conf(REPOS, mdb.HASH, "")
 				_repos_insert(m, path.Base(kit.Pwd()), kit.Pwd())
 				m.Cmd(nfs.DIR, ice.USR, "name,path").Table(func(index int, value map[string]string, head []string) {
-					_repos_insert(m, value[kit.MDB_NAME], value[nfs.PATH])
+					_repos_insert(m, value[mdb.NAME], value[nfs.PATH])
 				})
 			}},
 			mdb.CREATE: {Name: "create repos branch name path", Help: "添加", Hand: func(m *ice.Message, arg ...string) {
-				m.Option(kit.MDB_NAME, kit.Select(strings.TrimSuffix(path.Base(m.Option(REPOS)), ".git"), m.Option(kit.MDB_NAME)))
-				m.Option(nfs.PATH, kit.Select(path.Join(ice.USR, m.Option(kit.MDB_NAME)), m.Option(nfs.PATH)))
-				m.Option(REPOS, kit.Select(m.Config(REPOS)+ice.PS+m.Option(kit.MDB_NAME), m.Option(REPOS)))
+				m.Option(mdb.NAME, kit.Select(strings.TrimSuffix(path.Base(m.Option(REPOS)), ".git"), m.Option(mdb.NAME)))
+				m.Option(nfs.PATH, kit.Select(path.Join(ice.USR, m.Option(mdb.NAME)), m.Option(nfs.PATH)))
+				m.Option(REPOS, kit.Select(m.Config(REPOS)+ice.PS+m.Option(mdb.NAME), m.Option(REPOS)))
 
 				if s, e := os.Stat(path.Join(m.Option(nfs.PATH), ".git")); e == nil && s.IsDir() {
 					return
@@ -78,12 +78,12 @@ func init() {
 						m.Option(REPOS), m.Option(nfs.PATH))
 				}
 
-				_repos_insert(m, m.Option(kit.MDB_NAME), m.Option(nfs.PATH))
+				_repos_insert(m, m.Option(mdb.NAME), m.Option(nfs.PATH))
 			}},
 		}, mdb.HashAction()), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			if len(arg) == 0 { // 仓库列表
 				mdb.HashSelect(m, arg...)
-				m.Sort(kit.MDB_NAME)
+				m.Sort(mdb.NAME)
 				return
 			}
 

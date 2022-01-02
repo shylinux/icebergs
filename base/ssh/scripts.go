@@ -11,7 +11,6 @@ import (
 	"time"
 
 	ice "shylinux.com/x/icebergs"
-	"shylinux.com/x/icebergs/base/aaa"
 	"shylinux.com/x/icebergs/base/cli"
 	"shylinux.com/x/icebergs/base/ctx"
 	"shylinux.com/x/icebergs/base/mdb"
@@ -64,9 +63,9 @@ func (f *Frame) prompt(m *ice.Message, list ...string) *Frame {
 	fmt.Fprintf(f.stdout, "\r")
 	for _, v := range list {
 		switch v {
-		case kit.MDB_COUNT:
+		case mdb.COUNT:
 			fmt.Fprintf(f.stdout, "%d", f.count)
-		case kit.MDB_TIME:
+		case mdb.TIME:
 			fmt.Fprintf(f.stdout, time.Now().Format("15:04:05"))
 		case TARGET:
 			fmt.Fprintf(f.stdout, f.target.Name)
@@ -76,12 +75,8 @@ func (f *Frame) prompt(m *ice.Message, list ...string) *Frame {
 	}
 	return f
 }
-func (f *Frame) printf(m *ice.Message, res string, arg ...interface{}) *Frame {
-	if len(arg) > 0 {
-		fmt.Fprintf(f.stdout, res, arg...)
-	} else {
-		fmt.Fprint(f.stdout, res)
-	}
+func (f *Frame) printf(m *ice.Message, str string, arg ...interface{}) *Frame {
+	fmt.Fprint(f.stdout, kit.Format(str, arg...))
 	return f
 }
 func (f *Frame) change(m *ice.Message, ls []string) []string {
@@ -104,30 +99,28 @@ func (f *Frame) change(m *ice.Message, ls []string) []string {
 	return ls
 }
 func (f *Frame) alias(m *ice.Message, ls []string) []string {
-	if alias, ok := m.Optionv(ice.MSG_ALIAS).(map[string]interface{}); ok {
-		if len(ls) > 0 {
-			if a := kit.Simple(alias[ls[0]]); len(a) > 0 {
-				ls = append(append([]string{}, a...), ls[1:]...)
-			}
-		}
+	if len(ls) == 0 {
+		return ls
+	}
+	if alias := kit.Simple(kit.Value(m.Optionv(ice.MSG_ALIAS), ls[0])); len(alias) > 0 {
+		ls = append(alias, ls[1:]...)
 	}
 	return ls
 }
 func (f *Frame) parse(m *ice.Message, line string) string {
 	for _, one := range kit.Split(line, ";", ";", ";") {
 		msg := m.Spawn(f.target)
-
 		ls := f.change(msg, f.alias(msg, kit.Split(strings.TrimSpace(one))))
 		if len(ls) == 0 {
 			continue
 		}
 
-		if msg.Cmdy(ls[0], ls[1:]); msg.Result(1) == ice.ErrNotFound {
-			msg.Set(ice.MSG_RESULT).Cmdy(cli.SYSTEM, ls)
+		msg.Render("", kit.List())
+		if msg.Cmdy(ls[0], ls[1:]); m.IsErrNotFound() {
+			msg.SetResult().Cmdy(cli.SYSTEM, ls)
 		}
 
-		_args, _ := msg.Optionv(ice.MSG_ARGS).([]interface{})
-		f.res = Render(msg, msg.Option(ice.MSG_OUTPUT), _args...)
+		f.res = Render(msg, msg.Option(ice.MSG_OUTPUT), msg.Optionv(ice.MSG_ARGS).([]interface{})...)
 	}
 	return ""
 }
@@ -144,7 +137,7 @@ func (f *Frame) scan(m *ice.Message, h, line string) *Frame {
 			continue // 空行
 		}
 
-		m.Cmdx(mdb.INSERT, SOURCE, kit.Keys(kit.MDB_HASH, h), mdb.LIST, kit.MDB_TEXT, bio.Text())
+		m.Cmdx(mdb.INSERT, SOURCE, kit.Keys(mdb.HASH, h), mdb.LIST, mdb.TEXT, bio.Text())
 		f.count++
 
 		if len(bio.Text()) == 0 {
@@ -198,13 +191,12 @@ func (f *Frame) Start(m *ice.Message, arg ...string) bool {
 		f.stdin, f.stdout = r, os.Stdout
 		f.pipe = w
 
-		aaa.UserRoot(m)
 		m.Option(ice.MSG_OPTS, ice.MSG_USERNAME)
 
-		m.Conf(SOURCE, kit.Keys(kit.MDB_HASH, STDIO, kit.Keym(kit.MDB_NAME)), STDIO)
-		m.Conf(SOURCE, kit.Keys(kit.MDB_HASH, STDIO, kit.Keym(kit.MDB_TIME)), m.Time())
+		m.Conf(SOURCE, kit.Keys(mdb.HASH, STDIO, kit.Keym(mdb.NAME)), STDIO)
+		m.Conf(SOURCE, kit.Keys(mdb.HASH, STDIO, kit.Keym(mdb.TIME)), m.Time())
 
-		f.count = kit.Int(m.Conf(SOURCE, kit.Keys(kit.MDB_HASH, STDIO, kit.Keym(kit.MDB_COUNT)))) + 1
+		f.count = kit.Int(m.Conf(SOURCE, kit.Keys(mdb.HASH, STDIO, kit.Keym(mdb.COUNT)))) + 1
 		f.scan(m, STDIO, "")
 
 	default: // 脚本文件
@@ -224,7 +216,7 @@ func (f *Frame) Start(m *ice.Message, arg ...string) bool {
 		}
 
 		f.count = 1
-		f.scan(m, m.Cmdx(mdb.INSERT, SOURCE, "", mdb.HASH, kit.MDB_NAME, f.source), "")
+		f.scan(m, m.Cmdx(mdb.INSERT, SOURCE, "", mdb.HASH, mdb.NAME, f.source), "")
 	}
 	return true
 }
@@ -256,13 +248,14 @@ func init() {
 	Index.Merge(&ice.Context{Configs: map[string]*ice.Config{
 		SOURCE: {Name: SOURCE, Help: "加载脚本", Value: kit.Data()},
 		PROMPT: {Name: PROMPT, Help: "命令提示", Value: kit.Data(
-			PS1, []interface{}{"\033[33;44m", kit.MDB_COUNT, "[", kit.MDB_TIME, "]", "\033[5m", TARGET, "\033[0m", "\033[44m", ">", "\033[0m ", "\033[?25h", "\033[32m"},
-			PS2, []interface{}{kit.MDB_COUNT, " ", TARGET, "> "},
+			PS1, []interface{}{"\033[33;44m", mdb.COUNT, "[", mdb.TIME, "]", "\033[5m", TARGET, "\033[0m", "\033[44m", ">", "\033[0m ", "\033[?25h", "\033[32m"},
+			PS2, []interface{}{mdb.COUNT, " ", TARGET, "> "},
 		)},
 	}, Commands: map[string]*ice.Command{
+		ice.CTX_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {}},
 		SOURCE: {Name: "source file", Help: "脚本解析", Action: ice.MergeAction(map[string]*ice.Action{
 			mdb.REPEAT: {Name: "repeat", Help: "执行", Hand: func(m *ice.Message, arg ...string) {
-				m.Cmdy(SCREEN, m.Option(kit.MDB_TEXT))
+				m.Cmdy(SCREEN, m.Option(mdb.TEXT))
 				m.ProcessInner()
 			}},
 		}, mdb.ZoneAction()), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {

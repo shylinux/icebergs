@@ -1,26 +1,27 @@
 package chrome
 
 import (
-	ice "shylinux.com/x/icebergs"
-	"shylinux.com/x/icebergs/base/ctx"
-	kit "shylinux.com/x/toolkits"
+	"shylinux.com/x/ice"
+	"shylinux.com/x/icebergs/base/mdb"
 )
 
-const Page = "page"
+type page struct {
+	operate
+	style
+	field
 
-func init() {
-	Index.Merge(&ice.Context{Configs: map[string]*ice.Config{
-		Page: {Name: "page", Help: "网页", Value: kit.Data()},
-	}, Commands: map[string]*ice.Command{
-		"/page": {Name: "/page", Help: "网页", Action: map[string]*ice.Action{
-			FIELD: {Name: "field", Help: "工具"},
-			ctx.COMMAND: {Name: "command", Help: "命令", Hand: func(m *ice.Message, arg ...string) {
-				m.Cmdy(STYLE, ctx.ACTION, ctx.COMMAND, arg)
-				m.Cmdy(FIELD, ctx.ACTION, ctx.COMMAND, arg)
-			}},
-			ice.RUN: {Name: "run", Help: "执行", Hand: func(m *ice.Message, arg ...string) {
-				m.Cmdy(FIELD, ctx.ACTION, ice.RUN, arg)
-			}},
-		}},
-	}})
+	list string `name:"list zone auto" help:"网页" http:"/page"`
 }
+
+func (p page) Command(m *ice.Message, arg ...string) {
+	m.Cmdy(p.style.Command, arg)
+	m.Cmdy(p.field.Command, arg)
+}
+func (p page) Run(m *ice.Message, arg ...string) {
+	m.Cmdy(p.field.Run, arg)
+}
+func (p page) List(m *ice.Message, arg ...string) {
+	p.operate.Inputs(m, mdb.ZONE)
+}
+
+func init() { ice.CodeCtxCmd(page{}) }

@@ -16,14 +16,14 @@ import (
 func _website_parse(m *ice.Message, text string) map[string]interface{} {
 	m.Option(nfs.CAT_CONTENT, text)
 	river, storm, last := kit.Dict(), kit.Dict(), kit.Dict()
-	m.Cmd(lex.SPLIT, "", kit.MDB_KEY, kit.MDB_NAME, func(deep int, ls []string, meta map[string]interface{}) []string {
+	m.Cmd(lex.SPLIT, "", mdb.KEY, mdb.NAME, func(deep int, ls []string, meta map[string]interface{}) []string {
 		if len(ls) == 1 {
 			ls = append(ls, ls[0])
 		}
 		data := kit.Dict()
 		for i := 2; i < len(ls); i += 2 {
 			switch ls[i] {
-			case kit.MDB_ARGS:
+			case ctx.ARGS:
 				data[ls[i]] = kit.UnMarshal(ls[i+1])
 			default:
 				data[ls[i]] = ls[i+1]
@@ -32,13 +32,13 @@ func _website_parse(m *ice.Message, text string) map[string]interface{} {
 		switch deep {
 		case 1:
 			storm = kit.Dict()
-			river[ls[0]] = kit.Dict(kit.MDB_NAME, ls[1], "storm", storm, data)
+			river[ls[0]] = kit.Dict(mdb.NAME, ls[1], "storm", storm, data)
 		case 2:
-			last = kit.Dict(kit.MDB_NAME, ls[1], kit.MDB_LIST, kit.List(), data)
+			last = kit.Dict(mdb.NAME, ls[1], mdb.LIST, kit.List(), data)
 			storm[ls[0]] = last
 		default:
-			last[kit.MDB_LIST] = append(last[kit.MDB_LIST].([]interface{}),
-				kit.Dict(kit.MDB_NAME, ls[0], kit.MDB_HELP, ls[1], kit.MDB_INDEX, ls[0], data))
+			last[mdb.LIST] = append(last[mdb.LIST].([]interface{}),
+				kit.Dict(mdb.NAME, ls[0], mdb.HELP, ls[1], mdb.INDEX, ls[0], data))
 		}
 		return ls
 	})
@@ -50,7 +50,7 @@ const WEBSITE = "website"
 func init() {
 	Index.Merge(&ice.Context{Configs: map[string]*ice.Config{
 		WEBSITE: {Name: "website", Help: "网站", Value: kit.Data(
-			kit.MDB_SHORT, nfs.PATH, kit.MDB_FIELD, "time,path,type,name,text",
+			mdb.SHORT, nfs.PATH, mdb.FIELD, "time,path,type,name,text",
 		)},
 	}, Commands: map[string]*ice.Command{
 		WEBSITE: {Name: "website path auto create import", Help: "网站", Action: ice.MergeAction(map[string]*ice.Action{
@@ -58,7 +58,7 @@ func init() {
 				web.AddRewrite(func(w http.ResponseWriter, r *http.Request) bool {
 					if ok := true; m.Richs(WEBSITE, nil, r.URL.Path, func(key string, value map[string]interface{}) {
 						msg, value := m.Spawn(w, r), kit.GetMeta(value)
-						switch text := kit.Format(value[kit.MDB_TEXT]); value[kit.MDB_TYPE] {
+						switch text := kit.Format(value[mdb.TEXT]); value[mdb.TYPE] {
 						case "svg":
 							msg.RenderResult(`<body style="background-color:cadetblue">%s</body>`, m.Cmdx(nfs.CAT, text))
 						case "shy":
@@ -69,7 +69,7 @@ func init() {
 								return
 							}
 						case "txt":
-							res := _website_parse(msg, kit.Format(value[kit.MDB_TEXT]))
+							res := _website_parse(msg, kit.Format(value[mdb.TEXT]))
 							msg.RenderResult(_website_template2, kit.Format(res))
 						case "json":
 							msg.RenderResult(_website_template2, kit.Format(kit.UnMarshal(text)))
@@ -104,10 +104,10 @@ func init() {
 					switch name := strings.TrimPrefix(p, m.Option(nfs.PATH)); kit.Ext(p) {
 					case "html", "js", "json", "txt":
 						m.Cmd(m.PrefixKey(), mdb.CREATE, nfs.PATH, ice.PS+name,
-							kit.MDB_TYPE, kit.Ext(p), kit.MDB_NAME, name, kit.MDB_TEXT, m.Cmdx(nfs.CAT, p))
+							mdb.TYPE, kit.Ext(p), mdb.NAME, name, mdb.TEXT, m.Cmdx(nfs.CAT, p))
 					default:
 						m.Cmd(m.PrefixKey(), mdb.CREATE, nfs.PATH, ice.PS+name,
-							kit.MDB_TYPE, kit.Ext(p), kit.MDB_NAME, name, kit.MDB_TEXT, p)
+							mdb.TYPE, kit.Ext(p), mdb.NAME, name, mdb.TEXT, p)
 					}
 				})
 			}},
@@ -116,7 +116,7 @@ func init() {
 				m.PushAnchor(m.MergeURL2(value[nfs.PATH]))
 			})
 			if m.Sort(nfs.PATH); m.FieldsIsDetail() {
-				m.PushQRCode(kit.MDB_SCAN, m.MergeURL2(m.Append(nfs.PATH)))
+				m.PushQRCode(mdb.SCAN, m.MergeURL2(m.Append(nfs.PATH)))
 				m.EchoIFrame(m.Append(nfs.PATH))
 			}
 		}},

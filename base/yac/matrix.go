@@ -310,18 +310,18 @@ func (mat *Matrix) show(m *ice.Message) {
 }
 
 func _yac_load(m *ice.Message) {
-	m.Richs(m.Prefix(MATRIX), "", kit.MDB_FOREACH, func(key string, value map[string]interface{}) {
+	m.Richs(m.Prefix(MATRIX), "", mdb.FOREACH, func(key string, value map[string]interface{}) {
 		value = kit.GetMeta(value)
 
 		mat := NewMatrix(m, kit.Int(kit.Select("32", value[NLANG])), kit.Int(kit.Select("32", value[NCELL])))
-		m.Grows(m.Prefix(MATRIX), kit.Keys(kit.MDB_HASH, key), "", "", func(index int, value map[string]interface{}) {
+		m.Grows(m.Prefix(MATRIX), kit.Keys(mdb.HASH, key), "", "", func(index int, value map[string]interface{}) {
 			page := mat.index(m, NPAGE, kit.Format(value[NPAGE]))
 			hash := mat.index(m, NHASH, kit.Format(value[NHASH]))
 			if mat.mat[page] == nil {
 				mat.mat[page] = make([]*State, mat.ncell)
 			}
 
-			mat.train(m, page, hash, kit.Simple(value[kit.MDB_TEXT]), 1)
+			mat.train(m, page, hash, kit.Simple(value[mdb.TEXT]), 1)
 		})
 		value[MATRIX] = mat
 	})
@@ -345,7 +345,7 @@ const MATRIX = "matrix"
 
 func init() {
 	Index.Merge(&ice.Context{Configs: map[string]*ice.Config{
-		MATRIX: {Name: MATRIX, Help: "魔方矩阵", Value: kit.Data(kit.MDB_SHORT, kit.MDB_NAME)},
+		MATRIX: {Name: MATRIX, Help: "魔方矩阵", Value: kit.Data(mdb.SHORT, mdb.NAME)},
 	}, Commands: map[string]*ice.Command{
 		ice.CTX_INIT: {Hand: func(m *ice.Message, c *ice.Context, key string, arg ...string) {
 			_yac_load(m)
@@ -354,7 +354,7 @@ func init() {
 			mdb.CREATE: {Name: "create name=shy nlang=32 ncell=32", Help: "创建", Hand: func(m *ice.Message, arg ...string) {
 				mat := NewMatrix(m, kit.Int(kit.Select("32", m.Option(NLANG))), kit.Int(kit.Select("32", m.Option(NCELL))))
 				h := m.Rich(m.Prefix(MATRIX), "", kit.Data(
-					kit.MDB_TIME, m.Time(), kit.MDB_NAME, m.Option(kit.MDB_NAME),
+					mdb.TIME, m.Time(), mdb.NAME, m.Option(mdb.NAME),
 					MATRIX, mat, NLANG, mat.nlang, NCELL, mat.ncell,
 				))
 				switch cb := m.Optionv(kit.Keycb(MATRIX)).(type) {
@@ -364,7 +364,7 @@ func init() {
 				m.Echo(h)
 			}},
 			mdb.INSERT: {Name: "insert name=shy npage=num nhash=num text=123", Help: "添加", Hand: func(m *ice.Message, arg ...string) {
-				m.Richs(m.Prefix(MATRIX), "", m.Option(kit.MDB_NAME), func(key string, value map[string]interface{}) {
+				m.Richs(m.Prefix(MATRIX), "", m.Option(mdb.NAME), func(key string, value map[string]interface{}) {
 					value = kit.GetMeta(value)
 
 					mat, _ := value[MATRIX].(*Matrix)
@@ -375,11 +375,11 @@ func init() {
 						mat.mat[page] = make([]*State, mat.ncell)
 					}
 
-					m.Option(kit.MDB_TEXT, strings.ReplaceAll(m.Option(kit.MDB_TEXT), "\\", "\\\\"))
-					text := kit.Split(m.Option(kit.MDB_TEXT), " ", " ", " ")
+					m.Option(mdb.TEXT, strings.ReplaceAll(m.Option(mdb.TEXT), "\\", "\\\\"))
+					text := kit.Split(m.Option(mdb.TEXT), " ", " ", " ")
 					mat.train(m, page, hash, text, 1)
-					m.Grow(m.Prefix(MATRIX), kit.Keys(kit.MDB_HASH, key), kit.Dict(
-						kit.MDB_TIME, m.Time(), NPAGE, m.Option(NPAGE), NHASH, m.Option(NHASH), kit.MDB_TEXT, text,
+					m.Grow(m.Prefix(MATRIX), kit.Keys(mdb.HASH, key), kit.Dict(
+						mdb.TIME, m.Time(), NPAGE, m.Option(NPAGE), NHASH, m.Option(NHASH), mdb.TEXT, text,
 					))
 
 					value[NPAGE] = len(mat.page)
@@ -387,14 +387,14 @@ func init() {
 				})
 			}},
 			mdb.REMOVE: {Name: "create", Help: "删除", Hand: func(m *ice.Message, arg ...string) {
-				m.Cmdy(mdb.DELETE, m.Prefix(MATRIX), "", mdb.HASH, kit.MDB_NAME, m.Option(kit.MDB_NAME))
+				m.Cmdy(mdb.DELETE, m.Prefix(MATRIX), "", mdb.HASH, mdb.NAME, m.Option(mdb.NAME))
 			}},
 			PARSE: {Name: "parse name npage text=123", Help: "解析", Hand: func(m *ice.Message, arg ...string) {
-				m.Richs(m.Prefix(MATRIX), "", m.Option(kit.MDB_NAME), func(key string, value map[string]interface{}) {
+				m.Richs(m.Prefix(MATRIX), "", m.Option(mdb.NAME), func(key string, value map[string]interface{}) {
 					value = kit.GetMeta(value)
 					mat, _ := value[MATRIX].(*Matrix)
 
-					for stream := lex.NewStream(bytes.NewBufferString(m.Option(kit.MDB_TEXT))); stream.Scan(); {
+					for stream := lex.NewStream(bytes.NewBufferString(m.Option(mdb.TEXT))); stream.Scan(); {
 						hash, _ := mat.Parse(m, func(m *ice.Message, nhash string, hash int, word []string, begin int, stream *lex.Stream) (int, []string) {
 							switch cb := m.Optionv(kit.Keycb(MATRIX)).(type) {
 							case func(string, int, []string, int, *lex.Stream) (int, []string):
@@ -411,7 +411,7 @@ func init() {
 				m.ProcessInner()
 			}},
 			"show": {Name: "show", Help: "矩阵", Hand: func(m *ice.Message, arg ...string) {
-				m.Richs(m.Prefix(MATRIX), "", kit.Select(m.Option(kit.MDB_NAME), arg, 0), func(key string, value map[string]interface{}) {
+				m.Richs(m.Prefix(MATRIX), "", kit.Select(m.Option(mdb.NAME), arg, 0), func(key string, value map[string]interface{}) {
 					value = kit.GetMeta(value)
 					value[MATRIX].(*Matrix).show(m)
 				})
@@ -428,7 +428,7 @@ func init() {
 
 			if m.Action(mdb.INSERT, "show"); len(arg) == 1 { // 词法列表
 				m.Fields(len(arg[1:]), "time,npage,nhash,text")
-				m.Cmdy(mdb.SELECT, m.Prefix(MATRIX), kit.Keys(kit.MDB_HASH, kit.Hashs(arg[0])), mdb.LIST)
+				m.Cmdy(mdb.SELECT, m.Prefix(MATRIX), kit.Keys(mdb.HASH, kit.Hashs(arg[0])), mdb.LIST)
 				m.PushAction(PARSE)
 				return
 			}

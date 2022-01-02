@@ -9,12 +9,12 @@ import (
 
 func init() {
 	Index.Merge(&ice.Context{Configs: map[string]*ice.Config{
-		"search": {Name: "search", Help: "搜索", Value: kit.Data(kit.MDB_SHORT, kit.MDB_NAME)},
+		"search": {Name: "search", Help: "搜索", Value: kit.Data(mdb.SHORT, mdb.NAME)},
 	}, Commands: map[string]*ice.Command{
 		"/search": {Name: "/search", Help: "搜索引擎", Action: ice.MergeAction(map[string]*ice.Action{
 			mdb.SEARCH: {Name: "search type name text", Help: "搜索", Hand: func(m *ice.Message, arg ...string) {
-				m.Richs("/search", "", kit.MDB_FOREACH, func(key string, value map[string]interface{}) {
-					if value = kit.GetMeta(value); arg[1] != "" && !kit.Contains(value[kit.MDB_NAME], arg[1]) {
+				m.Richs("/search", "", mdb.FOREACH, func(key string, value map[string]interface{}) {
+					if value = kit.GetMeta(value); arg[1] != "" && !kit.Contains(value[mdb.NAME], arg[1]) {
 						return
 					}
 					m.PushSearch(ice.CMD, "/search", value)
@@ -32,7 +32,7 @@ func init() {
 				return
 			}
 			m.Cmd(mdb.INSERT, m.PrefixKey(), "", mdb.HASH,
-				kit.MDB_NAME, arg[1], kit.MDB_TYPE, arg[0], kit.MDB_TEXT, kit.Select("", arg, 2))
+				mdb.NAME, arg[1], mdb.TYPE, arg[0], mdb.TEXT, kit.Select("", arg, 2))
 		}},
 	}})
 }

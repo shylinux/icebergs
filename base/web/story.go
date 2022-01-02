@@ -12,10 +12,10 @@ import (
 
 func _story_list(m *ice.Message, name string, key string) {
 	if name == "" {
-		m.Richs(STORY, HEAD, kit.MDB_FOREACH, func(key string, value map[string]interface{}) {
-			m.Push(key, value, []string{kit.MDB_TIME, kit.MDB_COUNT, STORY})
+		m.Richs(STORY, HEAD, mdb.FOREACH, func(key string, value map[string]interface{}) {
+			m.Push(key, value, []string{mdb.TIME, mdb.COUNT, STORY})
 		})
-		m.SortTimeR(kit.MDB_TIME)
+		m.SortTimeR(mdb.TIME)
 		return
 	}
 	if key == "" {
@@ -45,10 +45,10 @@ func _story_index(m *ice.Message, name string, withdata bool) {
 	m.Richs(CACHE, nil, name, func(key string, value map[string]interface{}) {
 		// 查询数据
 		m.Push(DATA, key)
-		m.Push(key, value, []string{kit.MDB_TEXT, nfs.FILE, kit.MDB_SIZE, kit.MDB_TIME, kit.MDB_NAME, kit.MDB_TYPE})
+		m.Push(key, value, []string{mdb.TEXT, nfs.FILE, nfs.SIZE, mdb.TIME, mdb.NAME, mdb.TYPE})
 		if withdata {
 			if value[nfs.FILE] == "" {
-				m.Echo("%s", kit.Format(value[kit.MDB_TEXT]))
+				m.Echo("%s", kit.Format(value[mdb.TEXT]))
 			} else {
 				m.Echo("%s", m.Cmdx(nfs.CAT, value[nfs.FILE]))
 			}
@@ -61,18 +61,18 @@ func _story_history(m *ice.Message, name string) {
 	for i := 0; i < kit.Int(kit.Select("30", m.Option(ice.CACHE_LIMIT))) && list != ""; i++ {
 		m.Richs(STORY, nil, list, func(key string, value map[string]interface{}) {
 			// 直连节点
-			m.Push(key, value, []string{kit.MDB_TIME, kit.MDB_KEY, kit.MDB_COUNT, SCENE, STORY})
+			m.Push(key, value, []string{mdb.TIME, mdb.KEY, mdb.COUNT, SCENE, STORY})
 			m.Richs(CACHE, nil, value[DATA], func(key string, value map[string]interface{}) {
-				m.Push(DRAMA, value[kit.MDB_TEXT])
+				m.Push(DRAMA, value[mdb.TEXT])
 				m.Push(DATA, key)
 			})
 
 			kit.Fetch(value[LIST], func(key string, val string) {
 				m.Richs(STORY, nil, val, func(key string, value map[string]interface{}) {
 					// 复合节点
-					m.Push(key, value, []string{kit.MDB_TIME, kit.MDB_KEY, kit.MDB_COUNT, SCENE, STORY})
+					m.Push(key, value, []string{mdb.TIME, mdb.KEY, mdb.COUNT, SCENE, STORY})
 					m.Richs(CACHE, nil, value[DATA], func(key string, value map[string]interface{}) {
-						m.Push(DRAMA, value[kit.MDB_TEXT])
+						m.Push(DRAMA, value[mdb.TEXT])
 						m.Push(DATA, key)
 					})
 				})
@@ -87,19 +87,19 @@ func _story_write(m *ice.Message, scene, name, text string, arg ...string) {
 	if len(arg) < 1 || text == "" || m.Richs(CACHE, nil, text, func(key string, value map[string]interface{}) { text = key }) == nil {
 		// 添加缓存
 		m.Cmdy(CACHE, CATCH, scene, name, text, arg)
-		scene, name, text = m.Append(kit.MDB_TYPE), m.Append(kit.MDB_NAME), m.Append(DATA)
+		scene, name, text = m.Append(mdb.TYPE), m.Append(mdb.NAME), m.Append(DATA)
 	}
 
 	// 查询索引
 	head, prev, value, count := "", "", kit.Dict(), 0
 	m.Richs(STORY, HEAD, name, func(key string, val map[string]interface{}) {
-		head, prev, value, count = key, kit.Format(val[LIST]), val, kit.Int(val[kit.MDB_COUNT])
-		m.Logs("info", HEAD, head, PREV, prev, kit.MDB_COUNT, count)
+		head, prev, value, count = key, kit.Format(val[LIST]), val, kit.Int(val[mdb.COUNT])
+		m.Logs("info", HEAD, head, PREV, prev, mdb.COUNT, count)
 	})
 
 	if last := m.Richs(STORY, nil, prev, nil); prev != "" && last != nil && last[DATA] == text {
 		// 重复提交
-		m.Push(prev, last, []string{kit.MDB_TIME, kit.MDB_COUNT, kit.MDB_KEY})
+		m.Push(prev, last, []string{mdb.TIME, mdb.COUNT, mdb.KEY})
 		m.Logs("info", "file", "exists")
 		m.Echo(prev)
 		return
@@ -107,28 +107,28 @@ func _story_write(m *ice.Message, scene, name, text string, arg ...string) {
 
 	// 添加节点
 	list := m.Rich(STORY, nil, kit.Dict(
-		SCENE, scene, STORY, name, kit.MDB_COUNT, count+1, DATA, text, PREV, prev,
+		SCENE, scene, STORY, name, mdb.COUNT, count+1, DATA, text, PREV, prev,
 	))
-	m.Log_CREATE(STORY, list, kit.MDB_TYPE, scene, kit.MDB_NAME, name)
-	m.Push(kit.MDB_COUNT, count+1)
-	m.Push(kit.MDB_KEY, list)
+	m.Log_CREATE(STORY, list, mdb.TYPE, scene, mdb.NAME, name)
+	m.Push(mdb.COUNT, count+1)
+	m.Push(mdb.KEY, list)
 
 	if head == "" {
 		// 添加索引
-		m.Rich(STORY, HEAD, kit.Dict(SCENE, scene, STORY, name, kit.MDB_COUNT, count+1, LIST, list))
+		m.Rich(STORY, HEAD, kit.Dict(SCENE, scene, STORY, name, mdb.COUNT, count+1, LIST, list))
 	} else {
 		// 更新索引
-		value[kit.MDB_COUNT] = count + 1
-		value[kit.MDB_TIME] = m.Time()
+		value[mdb.COUNT] = count + 1
+		value[mdb.TIME] = m.Time()
 		value[LIST] = list
 	}
 	m.Echo(list)
 }
 func _story_catch(m *ice.Message, scene, name string, arg ...string) {
 	if last := m.Richs(STORY, HEAD, name, nil); last != nil {
-		if t, e := time.ParseInLocation(ice.MOD_TIME, kit.Format(last[kit.MDB_TIME]), time.Local); e == nil {
+		if t, e := time.ParseInLocation(ice.MOD_TIME, kit.Format(last[mdb.TIME]), time.Local); e == nil {
 			if s, e := os.Stat(name); e == nil && s.ModTime().Before(t) {
-				m.Push(name, last, []string{kit.MDB_TIME, kit.MDB_COUNT, kit.MDB_KEY})
+				m.Push(name, last, []string{mdb.TIME, mdb.COUNT, mdb.KEY})
 				m.Logs("info", "file", "exists")
 				m.Echo("%s", last[LIST])
 				// 重复提交
@@ -165,8 +165,8 @@ func init() {
 	Index.Merge(&ice.Context{
 		Configs: map[string]*ice.Config{
 			STORY: {Name: "story", Help: "故事会", Value: kit.Dict(
-				kit.MDB_META, kit.Dict(kit.MDB_SHORT, DATA),
-				HEAD, kit.Data(kit.MDB_SHORT, STORY),
+				mdb.META, kit.Dict(mdb.SHORT, DATA),
+				HEAD, kit.Data(mdb.SHORT, STORY),
 			)},
 		},
 		Commands: map[string]*ice.Command{

@@ -11,7 +11,7 @@ const CACHE = "cache"
 func init() {
 	Index.Merge(&ice.Context{Configs: map[string]*ice.Config{
 		CACHE: {Name: "cache", Help: "缓存", Value: kit.Data(
-			kit.MDB_SHORT, "word", kit.MDB_FIELD, "time,word,translation,definition",
+			mdb.SHORT, "word", mdb.FIELD, "time,word,translation,definition",
 		)},
 	}, Commands: map[string]*ice.Command{
 		CACHE: {Name: "cache word auto", Help: "缓存", Action: ice.MergeAction(map[string]*ice.Action{

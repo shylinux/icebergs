@@ -53,8 +53,8 @@ func _runtime_init(m *ice.Message) {
 	ice.Info.UserName = m.Conf(RUNTIME, kit.Keys(BOOT, USERNAME))
 
 	// 启动次数
-	count := kit.Int(m.Conf(RUNTIME, kit.Keys(BOOT, kit.MDB_COUNT))) + 1
-	m.Conf(RUNTIME, kit.Keys(BOOT, kit.MDB_COUNT), count)
+	count := kit.Int(m.Conf(RUNTIME, kit.Keys(BOOT, mdb.COUNT))) + 1
+	m.Conf(RUNTIME, kit.Keys(BOOT, mdb.COUNT), count)
 
 	// 节点信息
 	m.Conf(RUNTIME, kit.Keys(NODE, mdb.TIME), m.Time())

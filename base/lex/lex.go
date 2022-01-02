@@ -1,8 +1,6 @@
 package lex
 
-import (
-	ice "shylinux.com/x/icebergs"
-)
+import ice "shylinux.com/x/icebergs"
 
 const LEX = "lex"
 

@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	ice "shylinux.com/x/icebergs"
+	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/nfs"
 	"shylinux.com/x/icebergs/base/web"
 	kit "shylinux.com/x/toolkits"
@@ -17,12 +18,12 @@ func _name(m *ice.Message, arg []string) []string {
 	return arg
 }
 func _option(m *ice.Message, kind, name, text string, arg ...string) {
-	m.Option(kit.MDB_TYPE, kind)
-	m.Option(kit.MDB_NAME, name)
-	m.Option(kit.MDB_TEXT, text)
+	m.Option(mdb.TYPE, kind)
+	m.Option(mdb.NAME, name)
+	m.Option(mdb.TEXT, text)
 
 	extra := kit.Dict()
-	m.Optionv(kit.MDB_EXTRA, extra)
+	m.Optionv(mdb.EXTRA, extra)
 	for i := 0; i < len(arg); i += 2 {
 		extra[arg[i]] = kit.Format(kit.Parse(nil, "", kit.Split(arg[i+1])...))
 	}
@@ -65,7 +66,7 @@ func _wiki_upload(m *ice.Message, cmd string, dir string) {
 }
 func _wiki_template(m *ice.Message, cmd string, name, text string, arg ...string) {
 	_option(m, cmd, name, strings.TrimSpace(text), arg...)
-	m.RenderTemplate(m.Conf(cmd, kit.Keym(kit.MDB_TEMPLATE)))
+	m.RenderTemplate(m.Conf(cmd, kit.Keym(nfs.TEMPLATE)))
 }
 
 const WIKI = "wiki"

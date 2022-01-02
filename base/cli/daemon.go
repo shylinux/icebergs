@@ -5,6 +5,7 @@ import (
 	"os/exec"
 
 	ice "shylinux.com/x/icebergs"
+	"shylinux.com/x/icebergs/base/ctx"
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/nfs"
 	kit "shylinux.com/x/toolkits"
@@ -37,7 +38,7 @@ func _daemon_exec(m *ice.Message, cmd *exec.Cmd) {
 				m.Cmd(mdb.MODIFY, DAEMON, "", mdb.HASH, mdb.HASH, h, STATUS, ERROR, ERROR, e)
 			}
 		} else {
-			m.Cost(kit.MDB_CODE, cmd.ProcessState.ExitCode(), kit.MDB_ARGS, cmd.Args)
+			m.Cost(kit.MDB_CODE, cmd.ProcessState.ExitCode(), ctx.ARGS, cmd.Args)
 			m.Cmd(mdb.MODIFY, DAEMON, "", mdb.HASH, mdb.HASH, h, STATUS, STOP)
 		}
 
@@ -77,6 +78,7 @@ const (
 	BENCH = "bench"
 	PPROF = "pprof"
 
+	TIMEOUT = "timeout"
 	STATUS  = "status"
 	ERROR   = "error"
 	START   = "start"

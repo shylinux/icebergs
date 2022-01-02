@@ -16,22 +16,22 @@ const FAVOR = "favor"
 func init() {
 	Index.Merge(&ice.Context{Configs: map[string]*ice.Config{
 		FAVOR: {Name: FAVOR, Help: "收藏夹", Value: kit.Data(
-			kit.MDB_SHORT, kit.MDB_ZONE, kit.MDB_FIELD, "time,id,type,name,text,file,line,pwd",
+			mdb.SHORT, mdb.ZONE, mdb.FIELD, "time,id,type,name,text,file,line,pwd",
 		)},
 	}, Commands: map[string]*ice.Command{
 		"/favor": {Name: "/favor", Help: "收藏", Action: map[string]*ice.Action{
 			mdb.SELECT: {Name: "select", Help: "主题", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmd(FAVOR).Table(func(index int, value map[string]string, head []string) {
-					m.Echo(value[kit.MDB_ZONE]).Echo(ice.NL)
+					m.Echo(value[mdb.ZONE]).Echo(ice.NL)
 				})
 			}},
 			mdb.INSERT: {Name: "insert", Help: "添加", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmd(FAVOR, mdb.INSERT)
 			}},
 		}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			m.Cmd(FAVOR, m.Option(kit.MDB_ZONE)).Table(func(index int, value map[string]string, head []string) {
-				m.Echo("%v\n", m.Option(kit.MDB_ZONE)).Echo("%v:%v:%v:(%v): %v\n",
-					value[nfs.FILE], value[nfs.LINE], "1", value[kit.MDB_NAME], value[kit.MDB_TEXT])
+			m.Cmd(FAVOR, m.Option(mdb.ZONE)).Table(func(index int, value map[string]string, head []string) {
+				m.Echo("%v\n", m.Option(mdb.ZONE)).Echo("%v:%v:%v:(%v): %v\n",
+					value[nfs.FILE], value[nfs.LINE], "1", value[mdb.NAME], value[mdb.TEXT])
 			})
 		}},
 		FAVOR: {Name: "favor zone id auto", Help: "收藏夹", Action: ice.MergeAction(map[string]*ice.Action{

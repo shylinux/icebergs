@@ -4,6 +4,7 @@ import (
 	"strings"
 
 	ice "shylinux.com/x/icebergs"
+	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/nfs"
 	"shylinux.com/x/icebergs/core/code"
 	kit "shylinux.com/x/toolkits"
@@ -38,7 +39,7 @@ func init() {
 						return
 					}
 
-					files[kit.MDB_TOTAL]++
+					files[mdb.TOTAL]++
 					files[kit.Ext(file)]++
 					m.Cmdy(nfs.CAT, file, func(text string, line int) {
 						if kit.Ext(file) == code.GO {
@@ -50,12 +51,12 @@ func init() {
 							}
 						}
 
-						lines[kit.MDB_TOTAL]++
+						lines[mdb.TOTAL]++
 						lines[kit.Ext(file)]++
 					})
 				})
 				for k := range lines {
-					m.Push(kit.MDB_TYPE, k)
+					m.Push(mdb.TYPE, k)
 					m.Push("files", files[k])
 					m.Push("lines", lines[k])
 				}

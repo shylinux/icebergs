@@ -42,16 +42,16 @@ func _spide_go(m *ice.Message, file string) {
 			ls[0] = ls[3] + ":" + ls[0]
 		}
 
-		m.Push(kit.MDB_NAME, ls[0])
+		m.Push(mdb.NAME, ls[0])
 		m.Push(nfs.FILE, ls[1])
 		m.Push(nfs.LINE, strings.TrimSuffix(ls[2], ";\""))
-		m.Push(kit.MDB_TYPE, ls[3])
-		m.Push(kit.MDB_EXTRA, strings.Join(ls[4:], ice.SP))
+		m.Push(mdb.TYPE, ls[3])
+		m.Push(mdb.EXTRA, strings.Join(ls[4:], ice.SP))
 	})
 }
 func _spide_c(m *ice.Message, file string) {
 	_spide_for(m.Cmdx(cli.SYSTEM, "ctags", "-f", "-", file), func(ls []string) {
-		m.Push(kit.MDB_NAME, ls[0])
+		m.Push(mdb.NAME, ls[0])
 		m.Push(nfs.FILE, ls[1])
 		m.Push(nfs.LINE, "1")
 	})
@@ -120,7 +120,7 @@ func init() {
 				m.Option(nfs.DIR_DEEP, ice.TRUE)
 				color := []string{cli.YELLOW, cli.BLUE, cli.CYAN, cli.RED}
 				nfs.Dir(m, nfs.PATH).Table(func(index int, value map[string]string, head []string) {
-					m.Push(kit.MDB_COLOR, color[strings.Count(value[nfs.PATH], ice.PS)%len(color)])
+					m.Push(cli.COLOR, color[strings.Count(value[nfs.PATH], ice.PS)%len(color)])
 				})
 				return
 			}

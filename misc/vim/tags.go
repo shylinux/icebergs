@@ -16,7 +16,7 @@ const TAGS = "tags"
 func init() {
 	Index.Merge(&ice.Context{Configs: map[string]*ice.Config{
 		TAGS: {Name: TAGS, Help: "索引", Value: kit.Data(
-			kit.MDB_SHORT, kit.MDB_ZONE, kit.MDB_FIELD, "time,id,type,name,text,file,line",
+			mdb.SHORT, mdb.ZONE, mdb.FIELD, "time,id,type,name,text,file,line",
 		)},
 	}, Commands: map[string]*ice.Command{
 		"/tags": {Name: "/tags", Help: "跳转", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
@@ -27,7 +27,7 @@ func init() {
 				m.Echo("4\nusr/volcanos/lib/%s.js\n/\\<%s: \\(shy\\|func\\)/\n", "misc", m.Option("pattern"))
 			default:
 				if mdb.ZoneSelect(m, m.Option("module")); m.Length() > 0 {
-					switch m.Append(kit.MDB_TYPE) {
+					switch m.Append(mdb.TYPE) {
 					case "function":
 						m.Echo("4\nusr/volcanos%s\n/\\<%s: \\(shy\\|func\\)/\n", m.Append(nfs.FILE), m.Option("pattern"))
 					default:
@@ -49,7 +49,7 @@ func init() {
 			}},
 			"listTags": {Name: "listTags", Help: "索引", Hand: func(m *ice.Message, arg ...string) {
 				kit.Fetch(kit.UnMarshal(m.Option("content")), func(index int, value map[string]interface{}) {
-					m.Cmd(TAGS, mdb.INSERT, kit.MDB_ZONE, value[kit.MDB_ZONE], kit.Simple(value))
+					m.Cmd(TAGS, mdb.INSERT, mdb.ZONE, value[mdb.ZONE], kit.Simple(value))
 				})
 				m.ProcessRefresh30ms()
 			}},
@@ -62,10 +62,10 @@ func init() {
 					if m.Length() == 0 {
 						return
 					}
-					m.Sort(kit.MDB_NAME)
+					m.Sort(mdb.NAME)
 					m.Echo("func\n").Table(func(index int, value map[string]string, head []string) {
-						m.Echo(arg[0] + ice.PT + value[kit.MDB_NAME] + ice.NL)
-						m.Echo("%s: %s: %s // %s\n", value[kit.MDB_TYPE], value[kit.MDB_NAME], strings.Split(value[kit.MDB_TEXT], ice.NL)[0], value[nfs.FILE])
+						m.Echo(arg[0] + ice.PT + value[mdb.NAME] + ice.NL)
+						m.Echo("%s: %s: %s // %s\n", value[mdb.TYPE], value[mdb.NAME], strings.Split(value[mdb.TEXT], ice.NL)[0], value[nfs.FILE])
 					})
 					return
 				}

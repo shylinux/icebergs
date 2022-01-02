@@ -22,7 +22,7 @@ const APP = "app"
 func init() {
 	Index.Merge(&ice.Context{Configs: map[string]*ice.Config{
 		APP: {Name: APP, Help: "应用", Value: kit.Data(
-			kit.MDB_SHORT, APPID, kit.MDB_FIELD, "time,appid,duty,token,expire",
+			mdb.SHORT, APPID, mdb.FIELD, "time,appid,duty,token,expire",
 			tcp.SERVER, "https://open.feishu.cn/",
 		)},
 	}, Commands: map[string]*ice.Command{

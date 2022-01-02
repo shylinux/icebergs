@@ -14,6 +14,7 @@ func _image_show(m *ice.Message, text string, arg ...string) {
 }
 
 const (
+	IMG  = "img"
 	PNG  = "png"
 	JPG  = "jpg"
 	JPEG = "jpeg"
@@ -34,7 +35,7 @@ func init() {
 		}},
 	}, Configs: map[string]*ice.Config{
 		IMAGE: {Name: IMAGE, Help: "图片", Value: kit.Data(
-			kit.MDB_TEMPLATE, `<img {{.OptionTemplate}} title="{{.Option "text"}}" src="{{.Option "text"}}">`,
+			nfs.TEMPLATE, `<img {{.OptionTemplate}} title="{{.Option "text"}}" src="{{.Option "text"}}">`,
 			nfs.PATH, ice.USR_LOCAL_IMAGE,
 		)},
 	}})

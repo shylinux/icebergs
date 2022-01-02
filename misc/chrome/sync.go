@@ -1,27 +1,37 @@
 package chrome
 
 import (
-	ice "shylinux.com/x/icebergs"
+	"shylinux.com/x/ice"
 	"shylinux.com/x/icebergs/base/mdb"
-	kit "shylinux.com/x/toolkits"
 )
 
-const SYNC = "sync"
+type sync struct {
+	ice.Lists
+	favor `name:"favor zone=some type name link" help:"收藏"`
 
-func init() {
-	Index.Merge(&ice.Context{Configs: map[string]*ice.Config{
-		SYNC: {Name: SYNC, Help: "同步流", Value: kit.Data(kit.MDB_FIELD, "time,id,type,name,text")},
-	}, Commands: map[string]*ice.Command{
-		"/sync": {Name: "/sync", Help: "同步", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			m.Cmdy(SYNC, mdb.INSERT, arg)
-		}},
-		SYNC: {Name: "sync id auto page export import", Help: "同步流", Action: ice.MergeAction(map[string]*ice.Action{
-			FAVOR: {Name: "favor zone=hi name", Help: "收藏", Hand: func(m *ice.Message, arg ...string) {
-				m.Cmdy(FAVOR, mdb.INSERT)
-			}},
-		}, mdb.ListAction()), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			mdb.ListSelect(m, arg...)
-			m.PushAction(FAVOR)
-		}},
-	}})
+	field  string `data:"time,id,type,name,link"`
+	insert string `name:"insert type name link" help:"添加" http:"/sync"`
+	list   string `name:"list id auto" help:"同步流"`
 }
+
+func (s sync) Inputs(m *ice.Message, arg ...string) {
+	switch arg[0] {
+	case mdb.ZONE:
+		m.Cmdy(s.favor.Inputs, arg)
+	default:
+		m.Cmdy(s.Lists.Inputs, arg)
+	}
+}
+func (s sync) Insert(m *ice.Message, arg ...string) {
+	s.Lists.Insert(m, arg...)
+}
+func (s sync) Favor(m *ice.Message, arg ...string) {
+	m.Cmdy(s.favor.Insert, m.OptionSimple("zone,type,name,link"))
+	m.ToastSuccess()
+}
+func (s sync) List(m *ice.Message, arg ...string) {
+	s.Lists.List(m, arg...)
+	m.PushAction(s.Favor)
+}
+
+func init() { ice.CodeCtxCmd(sync{}) }

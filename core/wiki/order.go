@@ -4,11 +4,13 @@ import (
 	"strings"
 
 	ice "shylinux.com/x/icebergs"
+	"shylinux.com/x/icebergs/base/mdb"
+	"shylinux.com/x/icebergs/base/nfs"
 	kit "shylinux.com/x/toolkits"
 )
 
 func _order_show(m *ice.Message, text string, arg ...string) {
-	m.Optionv(kit.MDB_LIST, kit.Split(strings.TrimSpace(text), ice.NL))
+	m.Optionv(mdb.LIST, kit.Split(strings.TrimSpace(text), ice.NL))
 	_wiki_template(m, ORDER, "", text, arg...)
 }
 
@@ -21,7 +23,7 @@ func init() {
 		}},
 	}, Configs: map[string]*ice.Config{
 		ORDER: {Name: ORDER, Help: "列表", Value: kit.Data(
-			kit.MDB_TEMPLATE, `<ul {{.OptionTemplate}}>{{range $index, $value := .Optionv "list"}}<li>{{$value}}</li>{{end}}</ul>`,
+			nfs.TEMPLATE, `<ul {{.OptionTemplate}}>{{range $index, $value := .Optionv "list"}}<li>{{$value}}</li>{{end}}</ul>`,
 		)},
 	}})
 }

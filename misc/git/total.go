@@ -9,6 +9,7 @@ import (
 
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/cli"
+	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/nfs"
 	kit "shylinux.com/x/toolkits"
 )
@@ -18,7 +19,7 @@ const TOTAL = "total"
 func init() {
 	Index.Merge(&ice.Context{Configs: map[string]*ice.Config{
 		TOTAL: {Name: TOTAL, Help: "统计量", Value: kit.Data(
-			kit.MDB_SHORT, kit.MDB_NAME, "skip", kit.Dict(
+			mdb.SHORT, mdb.NAME, "skip", kit.Dict(
 				"wubi-dict", ice.TRUE, "word-dict", ice.TRUE,
 				"websocket", ice.TRUE, "go-sql-mysql", ice.TRUE,
 				"echarts", ice.TRUE, "go-qrcode", ice.TRUE,
@@ -40,7 +41,7 @@ func init() {
 		}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			if len(arg) > 0 { // 提交详情
 				m.Cmd(REPOS, ice.OptionFields("name,path")).Table(func(index int, value map[string]string, head []string) {
-					if value[kit.MDB_NAME] == arg[0] {
+					if value[mdb.NAME] == arg[0] {
 						m.Cmdy("_sum", value[nfs.PATH], arg[1:])
 					}
 				})
@@ -49,13 +50,13 @@ func init() {
 
 			// 提交统计
 			days, commit, adds, dels, rest := 0, 0, 0, 0, 0
-			m.Richs(REPOS, nil, kit.MDB_FOREACH, func(mu *sync.Mutex, key string, value map[string]interface{}) {
+			m.Richs(REPOS, nil, mdb.FOREACH, func(mu *sync.Mutex, key string, value map[string]interface{}) {
 				value = kit.GetMeta(value)
-				if m.Config(kit.Keys("skip", value[kit.MDB_NAME])) == ice.TRUE {
+				if m.Config(kit.Keys("skip", value[mdb.NAME])) == ice.TRUE {
 					return
 				}
 
-				msg := m.Cmd("_sum", value[nfs.PATH], kit.MDB_TOTAL, "10000")
+				msg := m.Cmd("_sum", value[nfs.PATH], mdb.TOTAL, "10000")
 
 				mu.Lock()
 				defer mu.Unlock()
@@ -70,7 +71,7 @@ func init() {
 					rest += kit.Int(value["rest"])
 				})
 
-				m.Push(kit.MDB_NAME, value[kit.MDB_NAME])
+				m.Push(mdb.NAME, value[mdb.NAME])
 				m.Copy(msg)
 			})
 
@@ -96,7 +97,7 @@ func init() {
 			}
 
 			total := false // 累积求和
-			if len(arg) > 0 && arg[0] == kit.MDB_TOTAL {
+			if len(arg) > 0 && arg[0] == mdb.TOTAL {
 				total, arg = true, arg[1:]
 			}
 

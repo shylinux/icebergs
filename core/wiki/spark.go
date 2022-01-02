@@ -4,6 +4,7 @@ import (
 	"strings"
 
 	ice "shylinux.com/x/icebergs"
+	"shylinux.com/x/icebergs/base/nfs"
 	"shylinux.com/x/icebergs/base/ssh"
 	kit "shylinux.com/x/toolkits"
 )
@@ -82,7 +83,7 @@ func init() {
 		}},
 	}, Configs: map[string]*ice.Config{
 		SPARK: {Name: SPARK, Help: "段落", Value: kit.Data(
-			kit.MDB_TEMPLATE, `<p {{.OptionTemplate}}>{{.Option "text"}}</p>`,
+			nfs.TEMPLATE, `<p {{.OptionTemplate}}>{{.Option "text"}}</p>`,
 			ssh.PROMPT, kit.Dict(SHELL, "$ "),
 		)},
 	}})

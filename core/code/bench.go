@@ -64,17 +64,17 @@ const BENCH = "bench"
 func init() {
 	Index.Merge(&ice.Context{Configs: map[string]*ice.Config{
 		BENCH: {Name: BENCH, Help: "性能压测", Value: kit.Data(
-			kit.MDB_SHORT, kit.MDB_ZONE, kit.MDB_FIELD, "time,id,type,name,text,nconn,nreqs",
+			mdb.SHORT, mdb.ZONE, mdb.FIELD, "time,id,type,name,text,nconn,nreqs",
 		)},
 	}, Commands: map[string]*ice.Command{
 		BENCH: {Name: "bench zone id auto insert", Help: "性能压测", Action: ice.MergeAction(map[string]*ice.Action{
 			mdb.INSERT: {Name: "insert zone=some type=http,redis name=demo text='http://localhost:9020' nconn=3 nreqs=10", Help: "添加"},
 			ice.RUN: {Name: "run", Help: "执行", Hand: func(m *ice.Message, arg ...string) {
-				switch m.Option(kit.MDB_TYPE) {
+				switch m.Option(mdb.TYPE) {
 				case HTTP:
-					_bench_http(m, m.Option(kit.MDB_TEXT))
+					_bench_http(m, m.Option(mdb.TEXT))
 				case REDIS:
-					_bench_redis(m, m.Option(kit.MDB_TEXT))
+					_bench_redis(m, m.Option(mdb.TEXT))
 				}
 			}},
 		}, mdb.ZoneAction()), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {

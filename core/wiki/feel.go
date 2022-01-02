@@ -16,7 +16,7 @@ const FEEL = "feel"
 func init() {
 	Index.Merge(&ice.Context{Configs: map[string]*ice.Config{
 		FEEL: {Name: FEEL, Help: "影音媒体", Value: kit.Data(
-			nfs.PATH, ice.USR_LOCAL_IMAGE, kit.MDB_REGEXP, ".*.(png|PNG|jpg|JPG|jpeg|mp4|m4v|MOV)",
+			nfs.PATH, ice.USR_LOCAL_IMAGE, REGEXP, ".*.(png|PNG|jpg|JPG|jpeg|mp4|m4v|MOV)",
 		)},
 	}, Commands: map[string]*ice.Command{
 		FEEL: {Name: "feel path auto upload 上一页 下一页 actions", Help: "影音媒体", Meta: kit.Dict(

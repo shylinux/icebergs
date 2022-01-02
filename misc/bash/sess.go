@@ -23,7 +23,7 @@ const SESS = "sess"
 func init() {
 	Index.Merge(&ice.Context{Configs: map[string]*ice.Config{
 		SESS: {Name: SESS, Help: "会话流", Value: kit.Data(
-			kit.MDB_FIELD, "time,hash,status,username,hostname,pid,pwd,grant",
+			mdb.FIELD, "time,hash,status,username,hostname,pid,pwd,grant",
 		)},
 	}, Commands: map[string]*ice.Command{
 		web.WEB_LOGIN: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
@@ -53,24 +53,24 @@ func init() {
 			m.Warn(m.Option(ice.MSG_USERNAME) == "", ice.ErrNotLogin, arg)
 		}},
 		"/qrcode": {Name: "/qrcode", Help: "二维码", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			m.Cmdy(cli.QRCODE, m.Option(kit.MDB_TEXT), m.Option(cli.FG), m.Option(cli.BG))
+			m.Cmdy(cli.QRCODE, m.Option(mdb.TEXT), m.Option(cli.FG), m.Option(cli.BG))
 		}},
 		"/sess": {Name: "/sess", Help: "会话", Action: map[string]*ice.Action{
 			aaa.LOGOUT: {Name: "logout", Help: "退出", Hand: func(m *ice.Message, arg ...string) {
-				m.Cmdy(SESS, mdb.MODIFY, kit.MDB_STATUS, aaa.LOGOUT, ice.Option{kit.MDB_HASH, m.Option(SID)})
+				m.Cmdy(SESS, mdb.MODIFY, mdb.STATUS, aaa.LOGOUT, ice.Option{mdb.HASH, m.Option(SID)})
 			}},
 		}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			if m.Option(SID) == "" { // 终端登录
-				m.Option(SID, m.Cmdx(SESS, mdb.CREATE, kit.MDB_STATUS, aaa.LOGIN, m.OptionSimple(aaa.USERNAME, tcp.HOSTNAME, cli.PID, cli.PWD)))
+				m.Option(SID, m.Cmdx(SESS, mdb.CREATE, mdb.STATUS, aaa.LOGIN, m.OptionSimple(aaa.USERNAME, tcp.HOSTNAME, cli.PID, cli.PWD)))
 			} else { // 更新状态
-				m.Cmdy(SESS, mdb.MODIFY, kit.MDB_STATUS, aaa.LOGIN, ice.Option{kit.MDB_HASH, m.Option(SID)})
+				m.Cmdy(SESS, mdb.MODIFY, mdb.STATUS, aaa.LOGIN, ice.Option{mdb.HASH, m.Option(SID)})
 			}
 			m.Echo(m.Option(SID))
 		}},
 		SESS: {Name: "sess hash auto prunes", Help: "会话流", Action: ice.MergeAction(map[string]*ice.Action{
 			mdb.PRUNES: {Name: "prunes", Help: "清理", Hand: func(m *ice.Message, arg ...string) {
-				m.OptionFields(m.Config(kit.MDB_FIELD))
-				m.Cmdy(mdb.PRUNES, m.PrefixKey(), "", mdb.HASH, kit.MDB_STATUS, aaa.LOGOUT)
+				m.OptionFields(m.Config(mdb.FIELD))
+				m.Cmdy(mdb.PRUNES, m.PrefixKey(), "", mdb.HASH, mdb.STATUS, aaa.LOGOUT)
 			}},
 		}, mdb.HashAction()), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			mdb.HashSelect(m, arg...)

@@ -5,6 +5,7 @@ import (
 
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/cli"
+	"shylinux.com/x/icebergs/base/nfs"
 	kit "shylinux.com/x/toolkits"
 )
 
@@ -165,7 +166,7 @@ func init() {
 		}},
 	}, Configs: map[string]*ice.Config{
 		CHART: {Name: CHART, Help: "图表", Value: kit.Data(
-			kit.MDB_TEMPLATE, `<svg {{.OptionTemplate}}
+			nfs.TEMPLATE, `<svg {{.OptionTemplate}}
 vertion="1.1" xmlns="http://www.w3.org/2000/svg" height="{{.Option "height"}}" width="{{.Option "width"}}"
 stroke-width="{{.Option "stroke-width"}}" stroke="{{.Option "stroke"}}" fill="{{.Option "fill"}}"
 font-size="{{.Option "font-size"}}" font-family="{{.Option "font-family"}}" text-anchor="middle" dominant-baseline="middle">`,

@@ -11,7 +11,7 @@ const SCRIPT = "script"
 func init() {
 	Index.Merge(&ice.Context{Configs: map[string]*ice.Config{
 		SCRIPT: {Name: SCRIPT, Help: "脚本", Value: kit.Data(
-			kit.MDB_SHORT, kit.MDB_NAME, kit.MDB_FIELD, "time,type,name,text",
+			mdb.SHORT, mdb.NAME, mdb.FIELD, "time,type,name,text",
 		)},
 	}, Commands: map[string]*ice.Command{
 		SCRIPT: {Name: "script name auto create export import", Help: "脚本", Action: ice.MergeAction(map[string]*ice.Action{

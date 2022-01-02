@@ -4,6 +4,7 @@ import (
 	"strings"
 
 	ice "shylinux.com/x/icebergs"
+	"shylinux.com/x/icebergs/base/nfs"
 	kit "shylinux.com/x/toolkits"
 )
 
@@ -70,7 +71,7 @@ func init() {
 		}},
 	}, Configs: map[string]*ice.Config{
 		TABLE: {Name: TABLE, Help: "表格", Value: kit.Data(
-			kit.MDB_TEMPLATE, `<table {{.OptionTemplate}}>
+			nfs.TEMPLATE, `<table {{.OptionTemplate}}>
 <tr>{{range $i, $v := .Optionv "head"}}<th>{{$v}}</th>{{end}}</tr>
 {{range $index, $value := .Optionv "list"}}
 <tr>{{range $i, $v := $value}}<td>{{$v}}</td>{{end}}</tr>

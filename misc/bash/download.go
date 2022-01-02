@@ -2,6 +2,7 @@ package bash
 
 import (
 	ice "shylinux.com/x/icebergs"
+	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/nfs"
 	"shylinux.com/x/icebergs/base/web"
 	"shylinux.com/x/icebergs/core/chat"
@@ -17,12 +18,12 @@ func init() {
 			}
 
 			// 下载文件
-			m.Cmdy(web.CACHE, m.Cmd(chat.FILES, arg[0]).Append(kit.MDB_DATA))
-			m.Render(kit.Select(ice.RENDER_DOWNLOAD, ice.RENDER_RESULT, m.Append(nfs.FILE) == ""), m.Append(kit.MDB_TEXT))
+			m.Cmdy(web.CACHE, m.Cmd(chat.FILES, arg[0]).Append(mdb.DATA))
+			m.Render(kit.Select(ice.RENDER_DOWNLOAD, ice.RENDER_RESULT, m.Append(nfs.FILE) == ""), m.Append(mdb.TEXT))
 		}},
 		"/upload": {Name: "/upload", Help: "上传", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			msg := m.Cmd(chat.FILES, web.UPLOAD) // 上传文件
-			for _, k := range []string{kit.MDB_DATA, kit.MDB_TIME, kit.MDB_TYPE, kit.MDB_NAME, kit.MDB_SIZE} {
+			for _, k := range []string{mdb.DATA, mdb.TIME, mdb.TYPE, mdb.NAME, nfs.SIZE} {
 				m.Echo("%s: %s\n", k, msg.Append(k))
 			}
 		}},

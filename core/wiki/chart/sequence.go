@@ -4,6 +4,7 @@ import (
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/cli"
 	"shylinux.com/x/icebergs/base/lex"
+	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/nfs"
 	"shylinux.com/x/icebergs/core/wiki"
 	kit "shylinux.com/x/toolkits"
@@ -20,7 +21,7 @@ func (s *Sequence) push(m *ice.Message, list string, arg ...interface{}) map[str
 	node, node_list := kit.Dict(arg...), kit.Int(list)
 	s.List[node_list] = append(s.List[node_list], node)
 	_max := kit.Max(len(s.List[node_list])-1, s.pos[node_list])
-	node[kit.MDB_ORDER], s.pos[node_list] = _max, _max+1
+	node[ORDER], s.pos[node_list] = _max, _max+1
 	return node
 }
 func (s *Sequence) Init(m *ice.Message, arg ...string) wiki.Chart {
@@ -44,12 +45,12 @@ func (s *Sequence) Init(m *ice.Message, arg ...string) wiki.Chart {
 				to_node = s.push(m, ls[i+1])
 				list[ls[i+1]] = to_node
 
-				_max := kit.Max(kit.Int(from_node[kit.MDB_ORDER]), kit.Int(to_node[kit.MDB_ORDER]))
+				_max := kit.Max(kit.Int(from_node[ORDER]), kit.Int(to_node[ORDER]))
 				s.pos[kit.Int(ls[i-1])], s.pos[kit.Int(ls[i+1])] = _max+1, _max+1
-				from_node[kit.MDB_ORDER], to_node[kit.MDB_ORDER] = _max, _max
-				from_node[kit.MDB_TEXT], from_node[kit.MDB_NEXT] = ls[i], ls[i+1]
+				from_node[ORDER], to_node[ORDER] = _max, _max
+				from_node[mdb.TEXT], from_node[mdb.NEXT] = ls[i], ls[i+1]
 			} else {
-				from_node[kit.MDB_ECHO], from_node[kit.MDB_PREV] = ls[i], ls[i+1]
+				from_node[ECHO], from_node[PREV] = ls[i], ls[i+1]
 			}
 			from_node = to_node
 		}
@@ -89,29 +90,29 @@ func (s *Sequence) Draw(m *ice.Message, x, y int) wiki.Chart {
 
 	for i, x := range line_pos {
 		for _, v := range s.List[i] {
-			pos := kit.Int(v[kit.MDB_ORDER])
+			pos := kit.Int(v[ORDER])
 			g.EchoRect(RECT, rect_height, rect_width, x-rect_width/2, y+pos*(rect_height+s.MarginY)+s.MarginY, "2", "2")
 
 			yy := y + pos*(rect_height+s.MarginY) + s.MarginY + rect_height/4
-			if kit.Format(v[kit.MDB_NEXT]) != "" {
-				xx := line_pos[kit.Int(v[kit.MDB_NEXT])]
+			if kit.Format(v[mdb.NEXT]) != "" {
+				xx := line_pos[kit.Int(v[mdb.NEXT])]
 				if x < xx {
 					g.EchoArrowLine(NEXT, x+rect_width/2, yy, xx-rect_width/2-arrow_width, yy)
 				} else {
 					g.EchoArrowLine(NEXT, x-rect_width/2, yy, xx+rect_width/2+arrow_width, yy)
 				}
-				g.EchoText(TEXT, (x+xx)/2, yy, kit.Format(v[kit.MDB_TEXT]))
+				g.EchoText(TEXT, (x+xx)/2, yy, kit.Format(v[mdb.TEXT]))
 			}
 
 			yy += rect_height / 2
-			if kit.Format(v[kit.MDB_PREV]) != "" {
-				xx := line_pos[kit.Int(v[kit.MDB_PREV])]
+			if kit.Format(v[PREV]) != "" {
+				xx := line_pos[kit.Int(v[PREV])]
 				if x < xx {
 					g.EchoArrowLine(PREV, x+rect_width/2, yy, xx-rect_width/2-arrow_width, yy)
 				} else {
 					g.EchoArrowLine(PREV, x-rect_width/2, yy, xx+rect_width/2+arrow_width, yy)
 				}
-				g.EchoText(ECHO, (x+xx)/2, yy, kit.Format(v[kit.MDB_ECHO]))
+				g.EchoText(ECHO, (x+xx)/2, yy, kit.Format(v[ECHO]))
 			}
 		}
 	}
@@ -122,6 +123,9 @@ func (s *Sequence) Draw(m *ice.Message, x, y int) wiki.Chart {
 	return s
 }
 
+const (
+	ORDER = "order"
+)
 const (
 	ARROW = "arrow"
 

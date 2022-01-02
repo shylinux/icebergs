@@ -41,7 +41,7 @@ func _go_tags(m *ice.Message, key string) {
 		bio := bufio.NewScanner(f)
 		for i := 1; bio.Scan(); i++ {
 			if i == line || bio.Text() == text {
-				m.PushSearch(ice.CMD, "tags", nfs.FILE, strings.TrimPrefix(file, ice.PWD), nfs.LINE, kit.Format(i), kit.MDB_TEXT, bio.Text())
+				m.PushSearch(ice.CMD, "tags", nfs.FILE, strings.TrimPrefix(file, ice.PWD), nfs.LINE, kit.Format(i), mdb.TEXT, bio.Text())
 			}
 		}
 	}
@@ -51,14 +51,14 @@ func _go_help(m *ice.Message, key string) {
 	if p == "" {
 		return
 	}
-	m.PushSearch(ice.CMD, "help", nfs.FILE, key+".godoc", nfs.LINE, 1, kit.MDB_TEXT, p)
+	m.PushSearch(ice.CMD, "help", nfs.FILE, key+".godoc", nfs.LINE, 1, mdb.TEXT, p)
 }
 func _go_find(m *ice.Message, key string) {
 	for _, p := range strings.Split(m.Cmdx(cli.SYSTEM, FIND, ".", "-name", key), ice.NL) {
 		if p == "" {
 			continue
 		}
-		m.PushSearch(ice.CMD, FIND, nfs.FILE, strings.TrimPrefix(p, ice.PWD), nfs.LINE, 1, kit.MDB_TEXT, "")
+		m.PushSearch(ice.CMD, FIND, nfs.FILE, strings.TrimPrefix(p, ice.PWD), nfs.LINE, 1, mdb.TEXT, "")
 	}
 }
 func _go_grep(m *ice.Message, key string) {
@@ -71,6 +71,7 @@ const (
 	_TAGS = ".tags"
 	FIND  = "find"
 	GREP  = "grep"
+	MAIN  = "main"
 )
 const GO = "go"
 const MOD = "mod"
@@ -111,13 +112,13 @@ func init() {
 				m.Set(ice.MSG_APPEND)
 			}},
 			mdb.SEARCH: {Hand: func(m *ice.Message, arg ...string) {
-				if arg[0] == kit.MDB_FOREACH {
+				if arg[0] == mdb.FOREACH {
 					return
 				}
-				_go_tags(m, kit.Select(kit.MDB_MAIN, arg, 1))
-				_go_help(m, kit.Select(kit.MDB_MAIN, arg, 1))
-				_go_find(m, kit.Select(kit.MDB_MAIN, arg, 1))
-				_go_grep(m, kit.Select(kit.MDB_MAIN, arg, 1))
+				_go_tags(m, kit.Select(MAIN, arg, 1))
+				_go_help(m, kit.Select(MAIN, arg, 1))
+				_go_find(m, kit.Select(MAIN, arg, 1))
+				_go_grep(m, kit.Select(MAIN, arg, 1))
 			}},
 		}, PlugAction())},
 	}, Configs: map[string]*ice.Config{

@@ -98,19 +98,19 @@ func init() {
 	Index.Merge(&ice.Context{Commands: map[string]*ice.Command{
 		SCRIPT: {Name: "script name npage text auto create", Help: "脚本解析", Action: map[string]*ice.Action{
 			mdb.CREATE: {Name: "create name=shy text=etc/yac.txt", Help: "创建", Hand: func(m *ice.Message, arg ...string) {
-				m.Cmd(MATRIX, mdb.CREATE, m.Option(kit.MDB_NAME))
-				if buf, err := ioutil.ReadFile(m.Option(kit.MDB_TEXT)); err == nil {
-					m.Option(kit.MDB_TEXT, string(buf))
+				m.Cmd(MATRIX, mdb.CREATE, m.Option(mdb.NAME))
+				if buf, err := ioutil.ReadFile(m.Option(mdb.TEXT)); err == nil {
+					m.Option(mdb.TEXT, string(buf))
 				}
 
-				m.Option(kit.MDB_TEXT, strings.ReplaceAll(m.Option(kit.MDB_TEXT), "\\", "\\\\"))
-				for _, line := range kit.Split(m.Option(kit.MDB_TEXT), "\n", "\n", "\n") {
+				m.Option(mdb.TEXT, strings.ReplaceAll(m.Option(mdb.TEXT), "\\", "\\\\"))
+				for _, line := range kit.Split(m.Option(mdb.TEXT), "\n", "\n", "\n") {
 					if strings.HasPrefix(strings.TrimSpace(line), "#") {
 						continue
 					}
 					line = strings.ReplaceAll(line, "\\", "\\\\")
 					if list := kit.Split(line, " ", " ", " "); len(list) > 2 {
-						m.Cmdx(MATRIX, mdb.INSERT, m.Option(kit.MDB_NAME), list[0], list[1], strings.Join(list[2:], " "))
+						m.Cmdx(MATRIX, mdb.INSERT, m.Option(mdb.NAME), list[0], list[1], strings.Join(list[2:], " "))
 					}
 				}
 			}},

@@ -13,7 +13,7 @@ import (
 func _word_show(m *ice.Message, name string, arg ...string) {
 	m.Set(ice.MSG_RESULT)
 	m.Option(TITLE, map[string]int{})
-	m.Option(kit.MDB_MENU, kit.Dict(kit.MDB_LIST, []interface{}{}))
+	m.Option(MENU, kit.Dict(mdb.LIST, []interface{}{}))
 
 	m.Option(ice.MSG_ALIAS, m.Confv(WORD, kit.Keym(kit.MDB_ALIAS)))
 	m.Option(nfs.DIR_ROOT, _wiki_path(m, WORD))
@@ -25,7 +25,7 @@ const WORD = "word"
 func init() {
 	Index.Merge(&ice.Context{Configs: map[string]*ice.Config{
 		WORD: {Name: WORD, Help: "语言文字", Value: kit.Data(
-			nfs.PATH, "", kit.MDB_REGEXP, ".*\\.shy", kit.MDB_ALIAS, kit.Dict(
+			nfs.PATH, "", REGEXP, ".*\\.shy", kit.MDB_ALIAS, kit.Dict(
 				NAVMENU, kit.List(TITLE, NAVMENU),
 				PREMENU, kit.List(TITLE, PREMENU),
 				CHAPTER, kit.List(TITLE, CHAPTER),
@@ -47,7 +47,7 @@ func init() {
 			}},
 			"play": {Name: "play", Help: "演示"},
 		}, ctx.CmdAction()), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			m.Option(nfs.DIR_REG, m.Config(kit.MDB_REGEXP))
+			m.Option(nfs.DIR_REG, m.Config(REGEXP))
 			if m.Option(nfs.DIR_DEEP, ice.TRUE); !_wiki_list(m, cmd, arg...) {
 				_word_show(m, arg[0])
 			}

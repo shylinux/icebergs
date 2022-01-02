@@ -17,7 +17,7 @@ const CASE = "case"
 func init() {
 	Index.Merge(&ice.Context{Configs: map[string]*ice.Config{
 		CASE: {Name: CASE, Help: "用例", Value: kit.Data(
-			kit.MDB_SHORT, kit.MDB_ZONE, kit.MDB_FIELD, "time,id,name,cmd,api,arg,res",
+			mdb.SHORT, mdb.ZONE, mdb.FIELD, "time,id,name,cmd,api,arg,res",
 		)},
 	}, Commands: map[string]*ice.Command{
 		CASE: {Name: "case dev zone id auto", Help: "用例", Action: ice.MergeAction(map[string]*ice.Action{
@@ -30,8 +30,8 @@ func init() {
 				if m.ProcessInner(); len(arg) > 0 {
 					success := 0
 					m.Cmd(m.PrefixKey(), arg[0]).Table(func(index int, value map[string]string, head []string) {
-						m.Push(kit.MDB_TIME, m.Time())
-						m.Push(kit.MDB_ID, value[kit.MDB_ID])
+						m.Push(mdb.TIME, m.Time())
+						m.Push(mdb.ID, value[mdb.ID])
 						if err := m.Cmdx(m.PrefixKey(), cli.CHECK, value); err == ice.OK {
 							m.Push(ice.ERR, cli.Color(m, cli.GREEN, err))
 							success++

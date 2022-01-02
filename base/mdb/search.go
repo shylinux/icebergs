@@ -10,7 +10,7 @@ const SEARCH = "search"
 func init() {
 	Index.Merge(&ice.Context{Configs: map[string]*ice.Config{
 		SEARCH: {Name: "search", Help: "搜索", Value: kit.Data(
-			kit.MDB_SHORT, kit.MDB_TYPE, kit.MDB_FIELD, "time,type,name,text",
+			SHORT, TYPE, FIELD, "time,type,name,text",
 		)},
 	}, Commands: map[string]*ice.Command{
 		SEARCH: {Name: "search type word text auto", Help: "搜索", Action: map[string]*ice.Action{
@@ -22,12 +22,12 @@ func init() {
 			if len(arg) > 1 {
 				msg.Optionv(kit.Keycb(SELECT), func(fields []string, value map[string]interface{}) {
 					m.OptionFields(kit.Select("ctx,cmd,type,name,text", kit.Select(m.OptionFields(), arg, 2)))
-					m.Cmdy(kit.Keys(value[kit.MDB_TEXT], value[kit.MDB_NAME]), m.CommandKey(), arg[0], arg[1], kit.Select("", arg, 2))
+					m.Cmdy(kit.Keys(value[TEXT], value[NAME]), m.CommandKey(), arg[0], arg[1], kit.Select("", arg, 2))
 				})
 			}
 			if HashSelect(msg, arg...); len(arg) == 0 {
 				m.Copy(msg)
-				m.Sort(kit.MDB_TYPE)
+				m.Sort(TYPE)
 			} else if len(arg) == 1 {
 				m.Copy(msg)
 			}

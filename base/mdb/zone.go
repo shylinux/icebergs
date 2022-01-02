@@ -15,12 +15,12 @@ func _zone_fields(m *ice.Message) []string {
 }
 func _zone_select(m *ice.Message, prefix, chain, zone string, id string) {
 	if zone == RANDOM {
-		zone = kit.MDB_RANDOMS
+		zone = RANDOMS
 	}
 
 	fields := _zone_fields(m)
 	cb := m.Optionv(kit.Keycb(SELECT))
-	m.Richs(prefix, chain, kit.Select(kit.MDB_FOREACH, zone), func(key string, val map[string]interface{}) {
+	m.Richs(prefix, chain, kit.Select(FOREACH, zone), func(key string, val map[string]interface{}) {
 		if val = kit.GetMeta(val); zone == "" {
 			if m.OptionFields() == DETAIL {
 				m.Push(DETAIL, val)
@@ -30,7 +30,7 @@ func _zone_select(m *ice.Message, prefix, chain, zone string, id string) {
 			return
 		}
 
-		m.Grows(prefix, kit.Keys(chain, kit.MDB_HASH, key), kit.MDB_ID, id, func(index int, value map[string]interface{}) {
+		m.Grows(prefix, kit.Keys(chain, HASH, key), ID, id, func(index int, value map[string]interface{}) {
 			switch value = kit.GetMeta(value); cb := cb.(type) {
 			case func(string, []string, map[string]interface{}, map[string]interface{}):
 				cb(key, fields, value, val)
@@ -57,14 +57,14 @@ func _zone_export(m *ice.Message, prefix, chain, file string) {
 	defer w.Flush()
 
 	fields := _zone_fields(m)
-	fields = append(fields, kit.MDB_EXTRA)
+	fields = append(fields, EXTRA)
 	w.Write(fields)
 
 	count := 0
-	m.Richs(prefix, chain, kit.MDB_FOREACH, func(key string, val map[string]interface{}) {
+	m.Richs(prefix, chain, FOREACH, func(key string, val map[string]interface{}) {
 		val = kit.GetMeta(val)
 
-		m.Grows(prefix, kit.Keys(chain, kit.MDB_HASH, key), "", "", func(index int, value map[string]interface{}) {
+		m.Grows(prefix, kit.Keys(chain, HASH, key), "", "", func(index int, value map[string]interface{}) {
 			value = kit.GetMeta(value)
 
 			list := []string{}
@@ -76,8 +76,8 @@ func _zone_export(m *ice.Message, prefix, chain, file string) {
 		})
 	})
 
-	m.Log_EXPORT(kit.MDB_KEY, path.Join(prefix, chain), kit.MDB_FILE, p, kit.MDB_COUNT, count)
-	m.Conf(prefix, kit.Keys(chain, kit.MDB_HASH), "")
+	m.Log_EXPORT(KEY, path.Join(prefix, chain), FILE, p, COUNT, count)
+	m.Conf(prefix, kit.Keys(chain, HASH), "")
 	m.Echo(p)
 }
 func _zone_import(m *ice.Message, prefix, chain, file string) {
@@ -104,9 +104,9 @@ func _zone_import(m *ice.Message, prefix, chain, file string) {
 			switch k {
 			case zkey:
 				zone = line[i]
-			case kit.MDB_ID:
+			case ID:
 				continue
-			case kit.MDB_EXTRA:
+			case EXTRA:
 				kit.Value(data, k, kit.UnMarshal(line[i]))
 			default:
 				kit.Value(data, k, line[i])
@@ -116,18 +116,18 @@ func _zone_import(m *ice.Message, prefix, chain, file string) {
 			list[zone] = m.Rich(prefix, chain, kit.Data(zkey, zone))
 		}
 
-		m.Grow(prefix, kit.Keys(chain, kit.MDB_HASH, list[zone]), data)
+		m.Grow(prefix, kit.Keys(chain, HASH, list[zone]), data)
 		count++
 	}
 
-	m.Log_IMPORT(kit.MDB_KEY, path.Join(prefix, chain), kit.MDB_COUNT, count)
+	m.Log_IMPORT(KEY, path.Join(prefix, chain), COUNT, count)
 	m.Echo("%d", count)
 }
 
 const ZONE = "zone"
 
 func ZoneAction(fields ...string) map[string]*ice.Action {
-	_zone := func(m *ice.Message) string { return kit.Select(kit.MDB_ZONE, m.Config(kit.MDB_SHORT)) }
+	_zone := func(m *ice.Message) string { return kit.Select(ZONE, m.Config(SHORT)) }
 
 	return ice.SelectAction(map[string]*ice.Action{
 		INPUTS: {Name: "inputs", Help: "补全", Hand: func(m *ice.Message, arg ...string) {
@@ -139,7 +139,7 @@ func ZoneAction(fields ...string) map[string]*ice.Action {
 			case ice.CTX:
 				m.Cmdy("context")
 			case ice.CMD:
-				m.Cmdy("context", kit.Select(m.Option(ice.CTX), m.Option(kit.Keys(kit.MDB_EXTRA, ice.CTX))), "command")
+				m.Cmdy("context", kit.Select(m.Option(ice.CTX), m.Option(kit.Keys(EXTRA, ice.CTX))), "command")
 			case ice.ARG:
 
 			case _zone(m):
@@ -156,17 +156,17 @@ func ZoneAction(fields ...string) map[string]*ice.Action {
 		}},
 		INSERT: {Name: "insert zone type=go name=hi text=hello", Help: "添加", Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) == 0 {
-				arg = m.OptionSimple(_zone(m), m.Config(kit.MDB_FIELD))
+				arg = m.OptionSimple(_zone(m), m.Config(FIELD))
 			}
 			m.Cmdy(INSERT, m.PrefixKey(), "", HASH, _zone(m), arg[1])
 			m.Cmdy(INSERT, m.PrefixKey(), "", ZONE, m.Option(_zone(m)), arg[2:])
 		}},
 		MODIFY: {Name: "modify", Help: "编辑", Hand: func(m *ice.Message, arg ...string) {
-			m.Cmdy(MODIFY, m.PrefixKey(), "", ZONE, m.Option(_zone(m)), m.Option(kit.MDB_ID), arg)
+			m.Cmdy(MODIFY, m.PrefixKey(), "", ZONE, m.Option(_zone(m)), m.Option(ID), arg)
 		}},
 		EXPORT: {Name: "export", Help: "导出", Hand: func(m *ice.Message, arg ...string) {
 			m.Option(ice.CACHE_LIMIT, "-1")
-			m.OptionFields(_zone(m), m.Config(kit.MDB_FIELD))
+			m.OptionFields(_zone(m), m.Config(FIELD))
 			m.Cmdy(EXPORT, m.PrefixKey(), "", ZONE)
 		}},
 		IMPORT: {Name: "import", Help: "导入", Hand: func(m *ice.Message, arg ...string) {
@@ -174,7 +174,7 @@ func ZoneAction(fields ...string) map[string]*ice.Action {
 			m.Cmdy(IMPORT, m.PrefixKey(), "", ZONE)
 		}},
 		PLUGIN: {Name: "plugin extra.pod extra.ctx extra.cmd extra.arg", Help: "插件", Hand: func(m *ice.Message, arg ...string) {
-			m.Cmdy(MODIFY, m.PrefixKey(), "", ZONE, m.Option(_zone(m)), m.Option(kit.MDB_ID), arg)
+			m.Cmdy(MODIFY, m.PrefixKey(), "", ZONE, m.Option(_zone(m)), m.Option(ID), arg)
 		}},
 		PREV: {Name: "prev", Help: "上一页", Hand: func(m *ice.Message, arg ...string) {
 			PrevPage(m, arg[0], arg[1:]...)
@@ -185,9 +185,9 @@ func ZoneAction(fields ...string) map[string]*ice.Action {
 	}, fields...)
 }
 func ZoneSelect(m *ice.Message, arg ...string) *ice.Message {
-	m.Fields(len(arg), kit.Fields(kit.MDB_TIME, m.Config(kit.MDB_SHORT), kit.MDB_COUNT), m.Config(kit.MDB_FIELD))
+	m.Fields(len(arg), kit.Fields(TIME, m.Config(SHORT), COUNT), m.Config(FIELD))
 	if m.Cmdy(SELECT, m.PrefixKey(), "", ZONE, arg); kit.Select("", arg, 0) == "" {
-		m.Sort(m.Config(kit.MDB_SHORT))
+		m.Sort(m.Config(SHORT))
 		m.PushAction(REMOVE)
 	}
 	return m

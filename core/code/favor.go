@@ -11,7 +11,7 @@ const FAVOR = "favor"
 func init() {
 	Index.Merge(&ice.Context{Configs: map[string]*ice.Config{
 		FAVOR: {Name: FAVOR, Help: "收藏夹", Value: kit.Data(
-			kit.MDB_SHORT, kit.MDB_ZONE, kit.MDB_FIELD, "time,id,type,name,text,path,file,line",
+			mdb.SHORT, mdb.ZONE, mdb.FIELD, "time,id,type,name,text,path,file,line",
 		)},
 	}, Commands: map[string]*ice.Command{
 		FAVOR: {Name: "favor zone id auto insert", Help: "收藏夹", Action: ice.MergeAction(map[string]*ice.Action{

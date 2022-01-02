@@ -4,6 +4,7 @@ import (
 	"strings"
 
 	ice "shylinux.com/x/icebergs"
+	"shylinux.com/x/icebergs/base/mdb"
 	kit "shylinux.com/x/toolkits"
 )
 
@@ -12,10 +13,10 @@ func _context_list(m *ice.Message, sub *ice.Context, name string) {
 		if name != "" && name != ice.ICE && !strings.HasPrefix(s.Cap(ice.CTX_FOLLOW), name+ice.PT) {
 			return
 		}
-		m.Push(kit.MDB_NAME, s.Cap(ice.CTX_FOLLOW))
-		m.Push(kit.MDB_STATUS, s.Cap(ice.CTX_STATUS))
-		m.Push(kit.MDB_STREAM, s.Cap(ice.CTX_STREAM))
-		m.Push(kit.MDB_HELP, s.Help)
+		m.Push(mdb.NAME, s.Cap(ice.CTX_FOLLOW))
+		m.Push(mdb.STATUS, s.Cap(ice.CTX_STATUS))
+		m.Push(mdb.STREAM, s.Cap(ice.CTX_STREAM))
+		m.Push(mdb.HELP, s.Help)
 	})
 }
 func Inputs(m *ice.Message, field string) bool {
@@ -25,7 +26,7 @@ func Inputs(m *ice.Message, field string) bool {
 	case ice.CTX:
 		m.Cmdy(CONTEXT)
 	case ice.CMD:
-		m.Cmdy(CONTEXT, kit.Select(m.Option(ice.CTX), m.Option(kit.Keys(kit.MDB_EXTRA, ice.CTX))), COMMAND)
+		m.Cmdy(CONTEXT, kit.Select(m.Option(ice.CTX), m.Option(kit.Keys(mdb.EXTRA, ice.CTX))), COMMAND)
 	case ice.ARG:
 
 	default:

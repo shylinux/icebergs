@@ -29,23 +29,23 @@ func _cache_save(m *ice.Message, kind, name, text string, arg ...string) { // fi
 	file := kit.Select("", arg, 0)
 	text = kit.Select(file, text)
 	h := m.Cmdx(mdb.INSERT, CACHE, "", mdb.HASH,
-		kit.MDB_TYPE, kind, kit.MDB_NAME, name, kit.MDB_TEXT, text,
-		nfs.FILE, file, kit.MDB_SIZE, size)
+		mdb.TYPE, kind, mdb.NAME, name, mdb.TEXT, text,
+		nfs.FILE, file, nfs.SIZE, size)
 
 	// 返回结果
-	m.Push(kit.MDB_TIME, m.Time())
-	m.Push(kit.MDB_TYPE, kind)
-	m.Push(kit.MDB_NAME, name)
-	m.Push(kit.MDB_TEXT, text)
-	m.Push(kit.MDB_SIZE, size)
+	m.Push(mdb.TIME, m.Time())
+	m.Push(mdb.TYPE, kind)
+	m.Push(mdb.NAME, name)
+	m.Push(mdb.TEXT, text)
+	m.Push(nfs.SIZE, size)
 	m.Push(nfs.FILE, file)
-	m.Push(kit.MDB_HASH, h)
+	m.Push(mdb.HASH, h)
 	m.Push(DATA, h)
 }
 func _cache_watch(m *ice.Message, key, file string) {
 	mdb.HashSelect(m.Spawn(), key).Table(func(index int, value map[string]string, head []string) {
 		if value[nfs.FILE] == "" {
-			m.Cmdy(nfs.SAVE, file, value[kit.MDB_TEXT])
+			m.Cmdy(nfs.SAVE, file, value[mdb.TEXT])
 		} else {
 			m.Cmdy(nfs.LINK, file, value[nfs.FILE])
 		}
@@ -72,7 +72,7 @@ func _cache_upload(m *ice.Message, r *http.Request) (kind, name, file, size stri
 			// 导入数据
 			buf.Seek(0, os.SEEK_SET)
 			if n, e := io.Copy(f, buf); m.Assert(e) {
-				m.Log_IMPORT(nfs.FILE, p, kit.MDB_SIZE, kit.FmtSize(int64(n)))
+				m.Log_IMPORT(nfs.FILE, p, nfs.SIZE, kit.FmtSize(int64(n)))
 				return h.Header.Get(ContentType), h.Filename, p, kit.Format(n)
 			}
 		}
@@ -93,17 +93,19 @@ func _cache_download(m *ice.Message, r *http.Response) (file, size string) {
 				s := size * 100 / total
 
 				switch cb := m.OptionCB(SPIDE).(type) {
+				case func(int, int, int):
+					cb(size, total, s)
 				case func(int, int):
 					cb(size, total)
 				case []string:
 					m.Richs(cb[0], cb[1], cb[2], func(key string, value map[string]interface{}) {
 						value = kit.GetMeta(value)
-						value[kit.MDB_STEP], value[kit.MDB_SIZE], value[kit.MDB_TOTAL] = kit.Format(s), size, total
+						value[mdb.VALUE], value[mdb.COUNT], value[mdb.TOTAL] = kit.Format(s), size, total
 					})
 				default:
 					if s != step && s%10 == 0 {
-						m.Log_IMPORT(nfs.FILE, p, kit.MDB_STEP, s,
-							kit.MDB_SIZE, kit.FmtSize(int64(size)), kit.MDB_TOTAL, kit.FmtSize(int64(total)))
+						m.Log_IMPORT(nfs.FILE, p, mdb.VALUE, s,
+							mdb.COUNT, kit.FmtSize(int64(size)), mdb.TOTAL, kit.FmtSize(int64(total)))
 					}
 				}
 				step = s
@@ -117,7 +119,7 @@ func _cache_download(m *ice.Message, r *http.Response) (file, size string) {
 		if f, e := os.Open(p); m.Assert(e) {
 			defer f.Close()
 
-			m.Log_IMPORT(nfs.FILE, p, kit.MDB_SIZE, kit.FmtSize(int64(size)))
+			m.Log_IMPORT(nfs.FILE, p, nfs.SIZE, kit.FmtSize(int64(size)))
 			c := _cache_name(m, kit.Hashs(f))
 			m.Cmd(nfs.LINK, c, p)
 			return c, kit.Format(size)
@@ -138,15 +140,15 @@ const CACHE = "cache"
 func init() {
 	Index.Merge(&ice.Context{Configs: map[string]*ice.Config{
 		CACHE: {Name: CACHE, Help: "缓存池", Value: kit.Data(
-			kit.MDB_SHORT, kit.MDB_TEXT, kit.MDB_FIELD, "time,hash,size,type,name,text",
+			mdb.SHORT, mdb.TEXT, mdb.FIELD, "time,hash,size,type,name,text",
 			kit.MDB_STORE, ice.VAR_DATA, nfs.PATH, ice.VAR_FILE, kit.MDB_FSIZE, "200000",
-			kit.MDB_LIMIT, "50", kit.MDB_LEAST, "30",
+			mdb.LIMIT, "50", kit.MDB_LEAST, "30",
 		)},
 	}, Commands: map[string]*ice.Command{
 		"/cache/": {Name: "/cache/", Help: "缓存池", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			m.Richs(CACHE, nil, arg[0], func(key string, value map[string]interface{}) {
 				if kit.Format(value[nfs.FILE]) == "" {
-					m.RenderResult(value[kit.MDB_TEXT])
+					m.RenderResult(value[mdb.TEXT])
 				} else {
 					m.RenderDownload(value[nfs.FILE])
 				}
@@ -179,9 +181,9 @@ func init() {
 			}
 
 			if m.Append(nfs.FILE) == "" {
-				m.PushScript("inner", m.Append(kit.MDB_TEXT))
+				m.PushScript("inner", m.Append(mdb.TEXT))
 			} else {
-				m.PushDownload(m.Append(kit.MDB_NAME), m.MergeURL2("/share/cache/"+arg[0]))
+				m.PushDownload(m.Append(mdb.NAME), m.MergeURL2("/share/cache/"+arg[0]))
 			}
 		}},
 	}})

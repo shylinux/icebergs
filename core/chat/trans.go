@@ -23,7 +23,7 @@ func init() {
 			SEND: {Name: "send", Help: "发送", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmdy(web.SPACE, m.Option(TO), web.SPIDE, ice.DEV, web.SPIDE_SAVE, kit.Select(ice.PWD, m.Option("to_path")),
 					m.MergeURL2(path.Join("/share/local/", m.Option("from_path")), ice.POD, m.Option(FROM),
-						web.SHARE, m.Cmdx(web.SHARE, mdb.CREATE, kit.MDB_TYPE, web.LOGIN),
+						web.SHARE, m.Cmdx(web.SHARE, mdb.CREATE, mdb.TYPE, web.LOGIN),
 					),
 				)
 				m.Toast(ice.SUCCESS, SEND)

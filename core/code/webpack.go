@@ -71,7 +71,7 @@ func init() {
 					js.WriteString(m.Cmdx(nfs.CAT, k))
 				}
 
-				if f, _, e := kit.Create(_publish(m, WEBPACK, kit.Keys(m.Option(kit.MDB_NAME), JS))); m.Assert(e) {
+				if f, _, e := kit.Create(_publish(m, WEBPACK, kit.Keys(m.Option(mdb.NAME), JS))); m.Assert(e) {
 					defer f.Close()
 
 					f.WriteString(ice.NL)
@@ -81,7 +81,7 @@ func init() {
 				}
 
 				m.Option(nfs.DIR_ROOT, "")
-				if f, p, e := kit.Create(_publish(m, WEBPACK, kit.Keys(m.Option(kit.MDB_NAME), HTML))); m.Assert(e) {
+				if f, p, e := kit.Create(_publish(m, WEBPACK, kit.Keys(m.Option(mdb.NAME), HTML))); m.Assert(e) {
 					defer f.Close()
 
 					f.WriteString(fmt.Sprintf(_pack,
@@ -89,7 +89,7 @@ func init() {
 						m.Cmdx(nfs.CAT, _volcanos(m, PAGE_INDEX_CSS)),
 
 						m.Cmdx(nfs.CAT, _volcanos(m, ice.PROTO_JS)),
-						m.Cmdx(nfs.CAT, _publish(m, path.Join(WEBPACK, kit.Keys(m.Option(kit.MDB_NAME), JS)))),
+						m.Cmdx(nfs.CAT, _publish(m, path.Join(WEBPACK, kit.Keys(m.Option(mdb.NAME), JS)))),
 
 						m.Cmdx(nfs.CAT, _volcanos(m, PAGE_CACHE_JS)),
 						m.Cmdx(nfs.CAT, _volcanos(m, PAGE_INDEX_JS)),

@@ -37,33 +37,37 @@ func _split_list(m *ice.Message, file string, arg ...string) map[string]interfac
 	list := kit.List(kit.Data(DEEP, -1))
 	m.Cmd(nfs.CAT, file, func(text string) {
 		if strings.HasPrefix(strings.TrimSpace(text), "# ") {
-			return
+			return // 注释
 		}
 		if strings.TrimSpace(text) == "" {
-			return
+			return // 空行
 		}
 
 		stack, deep = _split_deep(stack, text)
 		data := kit.Data(DEEP, deep)
 
+		// 回调函数
 		ls := kit.Split(text, m.Option(SPLIT_SPACE), m.Option(SPLIT_BLOCK), m.Option(SPLIT_QUOTE))
 		switch cb := m.OptionCB(SPLIT).(type) {
-		case func([]string, map[string]interface{}) []string:
-			ls = cb(ls, data)
 		case func(int, []string, map[string]interface{}) []string:
 			ls = cb(deep, ls, data)
+		case func([]string, map[string]interface{}) []string:
+			ls = cb(ls, data)
 		}
 
+		// 参数字段
 		for _, k := range arg {
 			if kit.Value(data, kit.Keym(k), kit.Select("", ls, 0)); len(ls) > 0 {
 				ls = ls[1:]
 			}
 		}
 
+		// 属性字段
 		for i := 0; i < len(ls)-1; i += 2 {
 			kit.Value(data, kit.Keym(ls[i]), ls[i+1])
 		}
 
+		// 查找节点
 		for i := len(list) - 1; i >= 0; i-- {
 			if deep > kit.Int(kit.Value(list[i], kit.Keym(DEEP))) {
 				kit.Value(list[i], "list.-2", data)
@@ -96,8 +100,8 @@ func init() {
 				return
 			}
 
-			m.Echo(kit.Format(_split_list(m, arg[0], arg[1:]...)))
-			m.ProcessDisplay("/plugin/local/wiki/json.js")
+			m.Echo(kit.Format(_split_list(m, arg[0], kit.Split(kit.Join(arg[1:]))...)))
+			m.DisplayStory("json.js")
 		}},
 	}})
 }

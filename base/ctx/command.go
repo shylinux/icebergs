@@ -15,21 +15,21 @@ func _command_list(m *ice.Message, name string) {
 				continue // 内部命令
 			}
 
-			m.Push(kit.MDB_KEY, k)
-			m.Push(kit.MDB_NAME, v.Name)
-			m.Push(kit.MDB_HELP, v.Help)
+			m.Push(mdb.KEY, k)
+			m.Push(mdb.NAME, v.Name)
+			m.Push(mdb.HELP, v.Help)
 		}
-		m.Sort(kit.MDB_KEY)
+		m.Sort(mdb.KEY)
 		return
 	}
 
 	// 命令详情
 	m.Spawn(m.Source()).Search(name, func(p *ice.Context, s *ice.Context, key string, cmd *ice.Command) {
-		m.Push(kit.MDB_INDEX, kit.Keys(s.Cap(ice.CTX_FOLLOW), key))
-		m.Push(kit.MDB_NAME, kit.Format(cmd.Name))
-		m.Push(kit.MDB_HELP, kit.Format(cmd.Help))
-		m.Push(kit.MDB_META, kit.Format(cmd.Meta))
-		m.Push(kit.MDB_LIST, kit.Format(cmd.List))
+		m.Push(mdb.INDEX, kit.Keys(s.Cap(ice.CTX_FOLLOW), key))
+		m.Push(mdb.NAME, kit.Format(cmd.Name))
+		m.Push(mdb.HELP, kit.Format(cmd.Help))
+		m.Push(mdb.META, kit.Format(cmd.Meta))
+		m.Push(mdb.LIST, kit.Format(cmd.List))
 	})
 }
 func _command_search(m *ice.Message, kind, name, text string) {
@@ -65,6 +65,8 @@ func CmdAction(fields ...string) map[string]*ice.Action {
 
 const (
 	ACTION = "action"
+	INDEX  = "index"
+	ARGS   = "args"
 )
 const COMMAND = "command"
 
@@ -72,7 +74,7 @@ func init() {
 	Index.Merge(&ice.Context{Commands: map[string]*ice.Command{
 		COMMAND: {Name: "command key auto", Help: "命令", Action: map[string]*ice.Action{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
-				m.Cmd(mdb.SEARCH, mdb.CREATE, COMMAND, m.PrefixKey())
+				m.Cmd(mdb.SEARCH, mdb.CREATE, m.CommandKey(), m.PrefixKey())
 			}},
 			mdb.SEARCH: {Name: "search type name text", Help: "搜索", Hand: func(m *ice.Message, arg ...string) {
 				if arg[0] == COMMAND || arg[1] != "" {

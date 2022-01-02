@@ -10,7 +10,7 @@ const PLUGIN = "plugin"
 func init() {
 	Index.Merge(&ice.Context{Configs: map[string]*ice.Config{
 		PLUGIN: {Name: "plugin", Help: "插件", Value: kit.Data(
-			kit.MDB_SHORT, kit.MDB_TYPE, kit.MDB_FIELD, "time,type,name,text",
+			SHORT, TYPE, FIELD, "time,type,name,text",
 		)},
 	}, Commands: map[string]*ice.Command{
 		PLUGIN: {Name: "plugin type name text auto", Help: "插件", Action: map[string]*ice.Action{
@@ -20,12 +20,12 @@ func init() {
 		}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			if len(arg) > 1 {
 				m.Optionv(kit.Keycb(SELECT), func(fields []string, value map[string]interface{}) {
-					m.Cmdy(kit.Keys(value[kit.MDB_TEXT], value[kit.MDB_NAME]),
+					m.Cmdy(kit.Keys(value[TEXT], value[NAME]),
 						m.CommandKey(), arg[0], arg[1], kit.Select("", arg, 2), kit.Slice(arg, 3))
 				})
 			}
 			if HashSelect(m, arg...); len(arg) == 0 {
-				m.Sort(kit.MDB_TYPE)
+				m.Sort(TYPE)
 			}
 		}},
 	}})

@@ -2,6 +2,7 @@ package wiki
 
 import (
 	ice "shylinux.com/x/icebergs"
+	"shylinux.com/x/icebergs/base/nfs"
 	kit "shylinux.com/x/toolkits"
 )
 
@@ -14,7 +15,7 @@ func init() {
 		}},
 	}, Configs: map[string]*ice.Config{
 		BRIEF: {Name: BRIEF, Help: "摘要", Value: kit.Data(
-			kit.MDB_TEMPLATE, `<p {{.OptionTemplate}}>{{.Option "text"}}</p>`,
+			nfs.TEMPLATE, `<p {{.OptionTemplate}}>{{.Option "text"}}</p>`,
 		)},
 	}})
 }

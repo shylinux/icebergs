@@ -217,3 +217,58 @@ func (m *Message) EchoIFrame(src string, arg ...string) *Message { // src [size]
 func (m *Message) EchoDownload(arg ...interface{}) *Message { // [name] file
 	return m.Echo(Render(m, RENDER_DOWNLOAD, arg...))
 }
+
+func (m *Message) DisplayBase(file string, arg ...interface{}) *Message {
+	m.Option(MSG_DISPLAY, kit.MergeURL(DisplayBase(file)[DISPLAY], arg...))
+	return m
+}
+func (m *Message) DisplayLocal(file string, arg ...interface{}) *Message {
+	if file == "" {
+		file = path.Join(kit.PathName(2), kit.Keys(kit.FileName(2), JS))
+	}
+	if !strings.HasPrefix(file, HTTP) && !strings.HasPrefix(file, PS) {
+		file = path.Join(PLUGIN_LOCAL, file)
+	}
+	return m.DisplayBase(file, arg...)
+}
+func (m *Message) DisplayStory(file string, arg ...interface{}) *Message {
+	if !strings.HasPrefix(file, HTTP) && !strings.HasPrefix(file, PS) {
+		file = path.Join(PLUGIN_STORY, file)
+	}
+	return m.DisplayBase(file, arg...)
+}
+func (m *Message) Display(file string, arg ...interface{}) *Message {
+	m.Option(MSG_DISPLAY, kit.MergeURL(DisplayRequire(2, file)[DISPLAY], arg...))
+	return m
+}
+
+func DisplayBase(file string, arg ...string) map[string]string {
+	return map[string]string{DISPLAY: file, kit.MDB_STYLE: kit.Join(arg, SP)}
+}
+func DisplayLocal(file string, arg ...string) map[string]string {
+	if file == "" {
+		file = path.Join(kit.PathName(2), kit.Keys(kit.FileName(2), JS))
+	}
+	if !strings.HasPrefix(file, HTTP) && !strings.HasPrefix(file, PS) {
+		file = path.Join(PLUGIN_LOCAL, file)
+	}
+	return DisplayBase(file, arg...)
+}
+func DisplayStory(file string, arg ...string) map[string]string {
+	if !strings.HasPrefix(file, HTTP) && !strings.HasPrefix(file, PS) {
+		file = path.Join(PLUGIN_STORY, file)
+	}
+	return DisplayBase(file, arg...)
+}
+func DisplayRequire(n int, file string, arg ...string) map[string]string {
+	if file == "" {
+		file = kit.Keys(kit.FileName(n+1), JS)
+	}
+	if !strings.HasPrefix(file, HTTP) && !strings.HasPrefix(file, PS) {
+		file = path.Join(PS, REQUIRE, kit.ModPath(n+1, file))
+	}
+	return DisplayBase(file, arg...)
+}
+func Display(file string, arg ...string) map[string]string {
+	return DisplayRequire(2, file, arg...)
+}

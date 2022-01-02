@@ -34,7 +34,7 @@ func _input_find(m *ice.Message, method, word, limit string) {
 		} else if len(line) < 3 {
 
 		} else { // 输出词汇
-			m.Push(kit.MDB_ID, line[3])
+			m.Push(mdb.ID, line[3])
 			m.Push(CODE, line[2])
 			m.Push(TEXT, line[4])
 			m.Push(WEIGHT, line[6])
@@ -50,11 +50,11 @@ func _input_load(m *ice.Message, file string, libs ...string) {
 		// 清空数据
 		lib := kit.Select(path.Base(file), libs, 0)
 		m.Assert(os.RemoveAll(path.Join(m.Config(kit.MDB_STORE), lib)))
-		m.Cmd(mdb.DELETE, m.PrefixKey(), "", mdb.HASH, kit.MDB_ZONE, lib)
-		prefix := kit.Keys(kit.MDB_HASH, m.Rich(m.PrefixKey(), "", kit.Data(
+		m.Cmd(mdb.DELETE, m.PrefixKey(), "", mdb.HASH, mdb.ZONE, lib)
+		prefix := kit.Keys(mdb.HASH, m.Rich(m.PrefixKey(), "", kit.Data(
 			kit.MDB_STORE, path.Join(m.Config(kit.MDB_STORE), lib),
-			m.ConfigSimple(kit.MDB_FSIZE, kit.MDB_LIMIT, kit.MDB_LEAST),
-			kit.MDB_ZONE, lib, kit.MDB_COUNT, 0,
+			m.ConfigSimple(kit.MDB_FSIZE, mdb.LIMIT, kit.MDB_LEAST),
+			mdb.ZONE, lib, mdb.COUNT, 0,
 		)))
 
 		// 加载词库
@@ -70,10 +70,10 @@ func _input_load(m *ice.Message, file string, libs ...string) {
 		}
 
 		// 保存词库
-		m.Conf(m.PrefixKey(), kit.Keys(prefix, kit.Keym(kit.MDB_LIMIT)), 0)
+		m.Conf(m.PrefixKey(), kit.Keys(prefix, kit.Keym(mdb.LIMIT)), 0)
 		m.Conf(m.PrefixKey(), kit.Keys(prefix, kit.Keym(kit.MDB_LEAST)), 0)
 		n := m.Grow(m.PrefixKey(), prefix, kit.Dict(TEXT, "成功", CODE, "z", WEIGHT, "0"))
-		m.Log_IMPORT(m.PrefixKey(), lib, kit.MDB_COUNT, n)
+		m.Log_IMPORT(m.PrefixKey(), lib, mdb.COUNT, n)
 		m.Echo("%s: %d", lib, n)
 	}
 }
@@ -82,15 +82,15 @@ func _input_push(m *ice.Message, lib, text, code, weight string) {
 		m.Rich(m.PrefixKey(), "", kit.Data(
 			kit.MDB_STORE, path.Join(m.Config(kit.MDB_STORE), lib),
 			kit.MDB_FSIZE, m.Config(kit.MDB_FSIZE),
-			kit.MDB_LIMIT, m.Config(kit.MDB_LIMIT),
+			mdb.LIMIT, m.Config(mdb.LIMIT),
 			kit.MDB_LEAST, m.Config(kit.MDB_LEAST),
-			kit.MDB_ZONE, lib,
+			mdb.ZONE, lib,
 		))
 	}
 
 	m.Richs(m.PrefixKey(), "", lib, func(key string, value map[string]interface{}) {
-		prefix := kit.Keys(kit.MDB_HASH, key)
-		m.Conf(m.PrefixKey(), kit.Keys(prefix, kit.Keym(kit.MDB_LIMIT)), 0)
+		prefix := kit.Keys(mdb.HASH, key)
+		m.Conf(m.PrefixKey(), kit.Keys(prefix, kit.Keym(mdb.LIMIT)), 0)
 		m.Conf(m.PrefixKey(), kit.Keys(prefix, kit.Keym(kit.MDB_LEAST)), 0)
 		n := m.Grow(m.PrefixKey(), prefix, kit.Dict(TEXT, text, CODE, code, WEIGHT, weight))
 		m.Log_IMPORT(CODE, code, TEXT, text)
@@ -104,7 +104,7 @@ func _input_save(m *ice.Message, file string, lib ...string) {
 		m.Option(ice.CACHE_LIMIT, -2)
 		for _, lib := range lib {
 			m.Richs(m.PrefixKey(), "", lib, func(key string, value map[string]interface{}) {
-				m.Grows(m.PrefixKey(), kit.Keys(kit.MDB_HASH, key), "", "", func(index int, value map[string]interface{}) {
+				m.Grows(m.PrefixKey(), kit.Keys(mdb.HASH, key), "", "", func(index int, value map[string]interface{}) {
 					if value[CODE] != "z" {
 						fmt.Fprintf(f, "%s %s %s\n", value[TEXT], value[CODE], value[WEIGHT])
 						n++
@@ -112,14 +112,14 @@ func _input_save(m *ice.Message, file string, lib ...string) {
 				})
 			})
 		}
-		m.Log_EXPORT(FILE, p, kit.MDB_COUNT, n)
+		m.Log_EXPORT(FILE, p, mdb.COUNT, n)
 		m.Echo("%s: %d", p, n)
 	}
 }
 
 func _input_list(m *ice.Message, lib string) {
 	if lib == "" {
-		m.Richs(m.PrefixKey(), "", kit.MDB_FOREACH, func(key string, value map[string]interface{}) {
+		m.Richs(m.PrefixKey(), "", mdb.FOREACH, func(key string, value map[string]interface{}) {
 			m.Push("", kit.GetMeta(value), kit.Split("time,zone,count,store"))
 		})
 		return

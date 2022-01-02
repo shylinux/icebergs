@@ -13,7 +13,7 @@ const SCAN = "scan"
 func init() {
 	Index.Merge(&ice.Context{Configs: map[string]*ice.Config{
 		SCAN: {Name: SCAN, Help: "扫码", Value: kit.Data(
-			kit.MDB_SHORT, kit.MDB_TEXT, kit.MDB_FIELD, "time,hash,type,name,text",
+			mdb.SHORT, mdb.TEXT, mdb.FIELD, "time,hash,type,name,text",
 		)},
 	}, Commands: map[string]*ice.Command{
 		SCAN: {Name: "scan hash auto scanQRCode scanQRCode0", Help: "扫码", Meta: kit.Dict(
@@ -24,11 +24,11 @@ func init() {
 			mdb.CREATE:    {Name: "create type=text name=hi text:textarea=hi", Help: "添加"},
 		}, mdb.HashAction()), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			if mdb.HashSelect(m, arg...); len(arg) > 0 {
-				if m.Append(kit.MDB_TYPE) == "image" {
-					m.PushImages("image", m.Append(kit.MDB_TEXT))
+				if m.Append(mdb.TYPE) == "image" {
+					m.PushImages("image", m.Append(mdb.TEXT))
 				}
-				m.PushScript(ssh.SCRIPT, m.Append(kit.MDB_TEXT))
-				m.PushQRCode(cli.QRCODE, m.Append(kit.MDB_TEXT))
+				m.PushScript(ssh.SCRIPT, m.Append(mdb.TEXT))
+				m.PushQRCode(cli.QRCODE, m.Append(mdb.TEXT))
 			}
 		}},
 	}})

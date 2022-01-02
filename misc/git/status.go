@@ -28,11 +28,11 @@ func _status_tag(m *ice.Message, tags string) string {
 func _status_tags(m *ice.Message) {
 	vs := map[string]string{}
 	m.Cmd(STATUS).Table(func(index int, value map[string]string, head []string) {
-		if value[kit.MDB_TYPE] == "##" {
-			if value[kit.MDB_NAME] == ice.RELEASE {
-				value[kit.MDB_NAME] = ice.ICE
+		if value[mdb.TYPE] == "##" {
+			if value[mdb.NAME] == ice.RELEASE {
+				value[mdb.NAME] = ice.ICE
 			}
-			vs[value[kit.MDB_NAME]] = strings.Split(value[TAGS], "-")[0]
+			vs[value[mdb.NAME]] = strings.Split(value[TAGS], "-")[0]
 		}
 	})
 
@@ -84,16 +84,16 @@ func _status_tags(m *ice.Message) {
 }
 func _status_each(m *ice.Message, title string, cmds ...string) {
 	m.GoToast(title, func(toast func(string, int, int)) {
-		count, total := 0, len(m.Confm(REPOS, kit.MDB_HASH))
+		count, total := 0, len(m.Confm(REPOS, mdb.HASH))
 		toast(cli.BEGIN, count, total)
 
 		list := []string{}
 		m.Cmd(REPOS, ice.OptionFields("name,path")).Table(func(index int, value map[string]string, head []string) {
-			toast(value[kit.MDB_NAME], count, total)
+			toast(value[mdb.NAME], count, total)
 
 			if msg := m.Cmd(cmds, ice.Option{cli.CMD_DIR, value[nfs.PATH]}); !cli.IsSuccess(msg) {
-				m.Toast3s(msg.Append(cli.CMD_ERR), "error: "+value[kit.MDB_NAME])
-				list = append(list, value[kit.MDB_NAME])
+				m.Toast3s(msg.Append(cli.CMD_ERR), "error: "+value[mdb.NAME])
+				list = append(list, value[mdb.NAME])
 				m.Sleep3s()
 			}
 			count++
@@ -136,8 +136,8 @@ func _status_list(m *ice.Message) (files, adds, dels int, last time.Time) {
 				continue
 			}
 
-			m.Push(kit.MDB_NAME, value[kit.MDB_NAME])
-			m.Push(kit.MDB_TYPE, vs[0])
+			m.Push(mdb.NAME, value[mdb.NAME])
+			m.Push(mdb.TYPE, vs[0])
 			m.Push(nfs.FILE, vs[1])
 
 			list := []string{}
@@ -210,39 +210,39 @@ func init() {
 				m.ProcessHold()
 			}},
 			PUSH: {Name: "push", Help: "上传", Hand: func(m *ice.Message, arg ...string) {
-				if m.Option(kit.MDB_NAME) == "" {
+				if m.Option(mdb.NAME) == "" {
 					_status_each(m, PUSH, cli.SYSTEM, GIT, PUSH)
 					m.ProcessHold()
 					return
 				}
 
-				_repos_cmd(m, m.Option(kit.MDB_NAME), PUSH)
-				_repos_cmd(m, m.Option(kit.MDB_NAME), PUSH, "--tags")
+				_repos_cmd(m, m.Option(mdb.NAME), PUSH)
+				_repos_cmd(m, m.Option(mdb.NAME), PUSH, "--tags")
 			}},
 
 			TAG: {Name: "tag version@key", Help: "标签", Hand: func(m *ice.Message, arg ...string) {
 				if m.Option(VERSION) == "" {
 					m.Option(VERSION, _status_tag(m, m.Option(TAGS)))
 				}
-				_repos_cmd(m, m.Option(kit.MDB_NAME), TAG, m.Option(VERSION))
-				_repos_cmd(m, m.Option(kit.MDB_NAME), PUSH, "--tags")
+				_repos_cmd(m, m.Option(mdb.NAME), TAG, m.Option(VERSION))
+				_repos_cmd(m, m.Option(mdb.NAME), PUSH, "--tags")
 			}},
 			ADD: {Name: "add", Help: "添加", Hand: func(m *ice.Message, arg ...string) {
-				_repos_cmd(m, m.Option(kit.MDB_NAME), ADD, m.Option(nfs.FILE))
+				_repos_cmd(m, m.Option(mdb.NAME), ADD, m.Option(nfs.FILE))
 			}}, OPT: {Name: "opt", Help: "优化"}, PRO: {Name: "pro", Help: "升级"},
 			COMMIT: {Name: "commit action=opt,add,pro comment=some@key", Help: "提交", Hand: func(m *ice.Message, arg ...string) {
 				if arg[0] == ctx.ACTION {
-					m.Option(kit.MDB_TEXT, arg[1]+ice.SP+arg[3])
+					m.Option(mdb.TEXT, arg[1]+ice.SP+arg[3])
 				} else {
-					m.Option(kit.MDB_TEXT, kit.Select("opt some", strings.Join(arg, ice.SP)))
+					m.Option(mdb.TEXT, kit.Select("opt some", strings.Join(arg, ice.SP)))
 				}
 
-				_repos_cmd(m, m.Option(kit.MDB_NAME), COMMIT, "-am", m.Option(kit.MDB_TEXT))
+				_repos_cmd(m, m.Option(mdb.NAME), COMMIT, "-am", m.Option(mdb.TEXT))
 				m.ProcessBack()
 			}},
 			mdb.INPUTS: {Name: "inputs", Help: "补全", Hand: func(m *ice.Message, arg ...string) {
 				switch arg[0] {
-				case kit.MDB_NAME:
+				case mdb.NAME:
 					m.Cmdy(REPOS, ice.OptionFields("name,time"))
 
 				case TAGS, VERSION:
@@ -253,9 +253,9 @@ func init() {
 					}
 
 				case COMMENT:
-					m.Push(kit.MDB_TEXT, m.Option(nfs.FILE))
+					m.Push(mdb.TEXT, m.Option(nfs.FILE))
 					for _, v := range kit.Split(m.Option(nfs.FILE), " /") {
-						m.Push(kit.MDB_TEXT, v)
+						m.Push(mdb.TEXT, v)
 					}
 				}
 			}},

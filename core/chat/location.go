@@ -34,7 +34,7 @@ const LOCATION = "location"
 func init() {
 	Index.Merge(&ice.Context{Configs: map[string]*ice.Config{
 		LOCATION: {Name: LOCATION, Help: "地理位置", Value: kit.Data(
-			kit.MDB_SHORT, kit.MDB_TEXT, kit.MDB_FIELD, "time,hash,type,name,text,longitude,latitude",
+			mdb.SHORT, mdb.TEXT, mdb.FIELD, "time,hash,type,name,text,longitude,latitude",
 		)},
 	}, Commands: map[string]*ice.Command{
 		LOCATION: {Name: "location hash auto getLocation", Help: "地理位置", Action: ice.MergeAction(map[string]*ice.Action{

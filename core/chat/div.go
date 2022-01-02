@@ -27,8 +27,8 @@ const DIV = "div"
 func init() {
 	Index.Merge(&ice.Context{Configs: map[string]*ice.Config{
 		DIV: {Name: "div", Help: "定制", Value: kit.Data(
-			kit.MDB_FIELD, "time,hash,type,name,text", nfs.PATH, ice.USR_PUBLISH,
-			kit.MDB_TEMPLATE, _div_template,
+			mdb.FIELD, "time,hash,type,name,text", nfs.PATH, ice.USR_PUBLISH,
+			nfs.TEMPLATE, _div_template,
 		)},
 	}, Commands: map[string]*ice.Command{
 		"/div/": {Name: "/div/", Help: "定制", Action: ice.MergeAction(ctx.CmdAction()), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
@@ -47,8 +47,8 @@ func init() {
 		}},
 		DIV: {Name: "div hash auto import", Help: "定制", Action: ice.MergeAction(map[string]*ice.Action{
 			lex.SPLIT: {Name: "split name=hi text", Help: "生成", Hand: func(m *ice.Message, arg ...string) {
-				h := m.Cmdx(DIV, mdb.CREATE, m.OptionSimple(kit.MDB_NAME), kit.MDB_TEXT, _div_parse(m, m.Option(kit.MDB_TEXT)))
-				m.ProcessRewrite(kit.MDB_HASH, h)
+				h := m.Cmdx(DIV, mdb.CREATE, m.OptionSimple(mdb.NAME), mdb.TEXT, _div_parse(m, m.Option(mdb.TEXT)))
+				m.ProcessRewrite(mdb.HASH, h)
 			}},
 			mdb.INPUTS: {Name: "inputs", Help: "补全", Hand: func(m *ice.Message, arg ...string) {
 				switch arg[0] {
@@ -61,7 +61,7 @@ func init() {
 				m.Cmd(nfs.DIR, kit.Dict(nfs.DIR_ROOT, m.Option(nfs.PATH)), func(p string) {
 					switch kit.Ext(p) {
 					case "shy":
-						m.Cmd(m.PrefixKey(), lex.SPLIT, kit.MDB_NAME, p, kit.MDB_TEXT, m.Cmdx(nfs.CAT, p))
+						m.Cmd(m.PrefixKey(), lex.SPLIT, mdb.NAME, p, mdb.TEXT, m.Cmdx(nfs.CAT, p))
 					}
 				})
 			}},
@@ -69,7 +69,7 @@ func init() {
 			switch kit.Ext(kit.Select("", arg, 0)) {
 			case "shy":
 				m.Fields(0)
-				m.Push(kit.MDB_TEXT, _div_parse(m, m.Cmdx(nfs.CAT, arg[0])))
+				m.Push(mdb.TEXT, _div_parse(m, m.Cmdx(nfs.CAT, arg[0])))
 				m.DisplayLocal("")
 			default:
 				if mdb.HashSelect(m, arg...); len(arg) > 0 {

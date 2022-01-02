@@ -2,6 +2,8 @@ package lark
 
 import (
 	ice "shylinux.com/x/icebergs"
+	"shylinux.com/x/icebergs/base/mdb"
+	"shylinux.com/x/icebergs/base/nfs"
 	kit "shylinux.com/x/toolkits"
 )
 
@@ -19,7 +21,7 @@ func init() {
 		EVENT: {Name: "event", Help: "事件", Action: map[string]*ice.Action{
 			P2P_CHAT_CREATE: {Name: "", Help: "", Hand: func(m *ice.Message, arg ...string) {
 				if m.Option(OPEN_CHAT_ID) != "" {
-					m.Cmdy(SEND, m.Option(APP_ID), m.Option(OPEN_CHAT_ID), m.Conf(APP, kit.Keym(kit.MDB_TEMPLATE, m.Option(kit.MDB_TYPE))))
+					m.Cmdy(SEND, m.Option(APP_ID), m.Option(OPEN_CHAT_ID), m.Conf(APP, kit.Keym(nfs.TEMPLATE, m.Option(mdb.TYPE))))
 				}
 			}},
 			MESSAGE_READ: {Name: "", Help: "", Hand: func(m *ice.Message, arg ...string) {
@@ -28,7 +30,7 @@ func init() {
 			}},
 			ADD_BOT: {Name: "", Help: "", Hand: func(m *ice.Message, arg ...string) {
 				if m.Option(OPEN_CHAT_ID) != "" {
-					m.Cmdy(SEND, m.Option(APP_ID), m.Option(OPEN_CHAT_ID), m.Conf(APP, kit.Keym(kit.MDB_TEMPLATE, m.Option(kit.MDB_TYPE))))
+					m.Cmdy(SEND, m.Option(APP_ID), m.Option(OPEN_CHAT_ID), m.Conf(APP, kit.Keym(nfs.TEMPLATE, m.Option(mdb.TYPE))))
 				}
 			}},
 		}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {

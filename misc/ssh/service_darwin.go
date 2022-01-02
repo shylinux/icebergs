@@ -43,11 +43,11 @@ func _ssh_handle(m *ice.Message, meta map[string]string, c net.Conn, channel ssh
 	}
 	defer tty.Close()
 
-	h := m.Rich(CHANNEL, "", kit.Data(kit.MDB_STATUS, tcp.OPEN, TTY, tty.Name(), INPUT, pty, OUTPUT, tty, meta))
+	h := m.Rich(CHANNEL, "", kit.Data(mdb.STATUS, tcp.OPEN, TTY, tty.Name(), INPUT, pty, OUTPUT, tty, meta))
 	meta[CHANNEL] = h
 
 	for request := range requests {
-		m.Logs(REQUEST, tcp.HOSTPORT, c.RemoteAddr(), kit.MDB_TYPE, request.Type)
+		m.Logs(REQUEST, tcp.HOSTPORT, c.RemoteAddr(), mdb.TYPE, request.Type)
 
 		switch request.Type {
 		case "pty-req":
@@ -75,7 +75,7 @@ func _ssh_handle(m *ice.Message, meta map[string]string, c net.Conn, channel ssh
 			m.Go(func() { io.Copy(channel, pty) })
 
 			_ssh_exec(m, shell, nil, list, tty, tty, func() {
-				defer m.Cmd(mdb.MODIFY, CHANNEL, "", mdb.HASH, kit.MDB_HASH, h, kit.MDB_STATUS, tcp.CLOSE)
+				defer m.Cmd(mdb.MODIFY, CHANNEL, "", mdb.HASH, mdb.HASH, h, mdb.STATUS, tcp.CLOSE)
 				_ssh_close(m, c, channel)
 			})
 		}

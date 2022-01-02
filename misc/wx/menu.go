@@ -22,7 +22,7 @@ func _wx_action(m *ice.Message) {
 	m.Table(func(index int, value map[string]string, head []string) { count++ })
 	m.Echo(`<ArticleCount>%d</ArticleCount>`, count)
 
-	share := m.Cmdx(web.SHARE, mdb.CREATE, kit.MDB_TYPE, web.LOGIN)
+	share := m.Cmdx(web.SHARE, mdb.CREATE, mdb.TYPE, web.LOGIN)
 
 	m.Echo(`<Articles>`)
 	m.Table(func(index int, value map[string]string, head []string) {
@@ -46,7 +46,7 @@ const MENU = "menu"
 func init() {
 	Index.Merge(&ice.Context{Configs: map[string]*ice.Config{
 		MENU: {Name: MENU, Help: "菜单", Value: kit.Data(
-			kit.MDB_SHORT, kit.MDB_ZONE, kit.MDB_FIELD, "time,id,title,refer,image",
+			mdb.SHORT, mdb.ZONE, mdb.FIELD, "time,id,title,refer,image",
 		)},
 	}, Commands: map[string]*ice.Command{
 		MENU: {Name: "menu zone id auto insert", Help: "菜单", Action: ice.MergeAction(map[string]*ice.Action{

@@ -22,7 +22,7 @@ func _header_agent(m *ice.Message, arg ...string) {
 }
 func _header_check(m *ice.Message, arg ...string) {
 	if m.Option(web.SHARE) != "" {
-		switch msg := m.Cmd(web.SHARE, m.Option(web.SHARE)); msg.Append(kit.MDB_TYPE) {
+		switch msg := m.Cmd(web.SHARE, m.Option(web.SHARE)); msg.Append(mdb.TYPE) {
 		case web.LOGIN:
 			if m.Option(ice.MSG_USERNAME) != msg.Append(aaa.USERNAME) {
 				web.RenderCookie(m, aaa.SessCreate(m, m.Option(ice.MSG_USERNAME, msg.Append(aaa.USERNAME))))
@@ -49,15 +49,15 @@ func _header_grant(m *ice.Message, arg ...string) {
 	m.Cmd(web.SPACE, m.Option(web.SPACE), ice.MSG_SESSID, aaa.SessCreate(m, m.Option(ice.MSG_USERNAME)))
 }
 func _header_share(m *ice.Message, arg ...string) {
-	if m.Option(kit.MDB_LINK) == "" {
-		m.Cmdy(web.SHARE, mdb.CREATE, kit.MDB_TYPE, web.LOGIN, arg)
+	if m.Option(mdb.LINK) == "" {
+		m.Cmdy(web.SHARE, mdb.CREATE, mdb.TYPE, web.LOGIN, arg)
 	} else {
-		m.Option(kit.MDB_LINK, tcp.ReplaceLocalhost(m, m.Option(kit.MDB_LINK)))
+		m.Option(mdb.LINK, tcp.ReplaceLocalhost(m, m.Option(mdb.LINK)))
 	}
 
-	m.Option(kit.MDB_LINK, kit.MergeURL(m.Option(kit.MDB_LINK), RIVER, "", STORM, ""))
-	m.PushQRCode(kit.MDB_TEXT, m.Option(kit.MDB_LINK))
-	m.Push(kit.MDB_NAME, m.Option(kit.MDB_LINK))
+	m.Option(mdb.LINK, kit.MergeURL(m.Option(mdb.LINK), RIVER, "", STORM, ""))
+	m.PushQRCode(mdb.TEXT, m.Option(mdb.LINK))
+	m.Push(mdb.NAME, m.Option(mdb.LINK))
 }
 func _header_users(m *ice.Message, key string, arg ...string) {
 	m.Option(aaa.USERNAME, m.Option(ice.MSG_USERNAME))
@@ -132,7 +132,7 @@ func init() {
 
 			code.WEBPACK: {Name: "webpack", Help: "打包页面", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmd(nfs.COPY, ice.GO_MOD, path.Join(ice.SRC_RELEASE, ice.GO_MOD))
-				m.Cmdy(code.WEBPACK, mdb.CREATE, m.OptionSimple(kit.MDB_NAME))
+				m.Cmdy(code.WEBPACK, mdb.CREATE, m.OptionSimple(mdb.NAME))
 			}},
 			code.DEVPACK: {Name: "devpack", Help: "开发模式", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmd(nfs.COPY, ice.GO_MOD, path.Join(ice.SRC_DEBUG, ice.GO_MOD))

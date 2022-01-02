@@ -236,7 +236,7 @@ func init() {
 	}, Commands: map[string]*ice.Command{
 		SPACE: {Name: "space name cmd auto invite", Help: "空间站", Action: ice.MergeAction(map[string]*ice.Action{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
-				m.Cmd(mdb.SEARCH, mdb.CREATE, SPACE, m.PrefixKey())
+				m.Cmd(mdb.SEARCH, mdb.CREATE, m.CommandKey(), m.PrefixKey())
 				m.Conf(SPACE, mdb.HASH, "")
 			}},
 			mdb.SEARCH: {Name: "search type name text", Help: "搜索", Hand: func(m *ice.Message, arg ...string) {

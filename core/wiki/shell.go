@@ -3,6 +3,7 @@ package wiki
 import (
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/cli"
+	"shylinux.com/x/icebergs/base/nfs"
 	kit "shylinux.com/x/toolkits"
 )
 
@@ -25,7 +26,7 @@ func init() {
 		}},
 	}, Configs: map[string]*ice.Config{
 		SHELL: {Name: SHELL, Help: "命令", Value: kit.Data(
-			kit.MDB_TEMPLATE, `<code {{.OptionTemplate}}>$ {{.Option "input"}} # {{.Option "name"}}
+			nfs.TEMPLATE, `<code {{.OptionTemplate}}>$ {{.Option "input"}} # {{.Option "name"}}
 {{.Option "output"}}</code>`,
 		)},
 	}})

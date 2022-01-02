@@ -3,6 +3,7 @@ package lark
 import (
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/aaa"
+	"shylinux.com/x/icebergs/base/mdb"
 	kit "shylinux.com/x/toolkits"
 )
 
@@ -13,12 +14,12 @@ func _company_list(m *ice.Message, appid string) {
 		_, data := _lark_get(m, appid, "/open-apis/contact/v1/department/detail/batch_get", "department_ids", ship_id)
 		kit.Fetch(kit.Value(data, "data.department_infos"), func(index int, value map[string]interface{}) {
 			m.Push(SHIP_ID, ship_id)
-			m.Push(kit.MDB_NAME, value[kit.MDB_NAME])
-			m.Push(kit.MDB_COUNT, value["member_count"])
+			m.Push(mdb.NAME, value[mdb.NAME])
+			m.Push(mdb.COUNT, value["member_count"])
 			m.Push(CHAT_ID, value[CHAT_ID])
 		})
 	})
-	m.Sort(kit.MDB_NAME)
+	m.Sort(mdb.NAME)
 }
 func _company_members(m *ice.Message, appid string, ship_id string) {
 	_, data := _lark_get(m, appid, "/open-apis/contact/v1/department/user/list",
@@ -28,11 +29,11 @@ func _company_members(m *ice.Message, appid string, ship_id string) {
 		msg := m.Cmd(EMPLOYEE, appid, value[OPEN_ID])
 		m.PushImages(aaa.AVATAR, msg.Append("avatar_72"))
 		m.Push(aaa.GENDER, kit.Select("女", "男", msg.Append(aaa.GENDER) == "1"))
-		m.Push(kit.MDB_NAME, msg.Append(kit.MDB_NAME))
-		m.Push(kit.MDB_TEXT, msg.Append("description"))
+		m.Push(mdb.NAME, msg.Append(mdb.NAME))
+		m.Push(mdb.TEXT, msg.Append("description"))
 		m.Push(OPEN_ID, msg.Append(OPEN_ID))
 	})
-	m.Sort(kit.MDB_NAME)
+	m.Sort(mdb.NAME)
 }
 
 const COMPANY = "company"

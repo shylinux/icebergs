@@ -11,7 +11,7 @@ const DRAW = "draw"
 
 func init() {
 	Index.Merge(&ice.Context{Configs: map[string]*ice.Config{
-		DRAW: {Name: DRAW, Help: "思维导图", Value: kit.Data(kit.MDB_REGEXP, ".*\\.svg")},
+		DRAW: {Name: DRAW, Help: "思维导图", Value: kit.Data(REGEXP, ".*\\.svg")},
 	}, Commands: map[string]*ice.Command{
 		DRAW: {Name: "draw path=src/main.svg pid refresh:button=auto edit save actions", Help: "思维导图", Meta: kit.Dict(
 			ice.DisplayLocal(""),

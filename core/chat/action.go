@@ -15,7 +15,7 @@ import (
 func _action_right(m *ice.Message, river string, storm string) (ok bool) {
 	if ok = true; m.Option(ice.MSG_USERROLE) == aaa.VOID {
 		m.Richs(RIVER, "", river, func(key string, value map[string]interface{}) {
-			if ok = m.Richs(RIVER, kit.Keys(kit.MDB_HASH, key, OCEAN), m.Option(ice.MSG_USERNAME), nil) != nil; ok {
+			if ok = m.Richs(RIVER, kit.Keys(mdb.HASH, key, OCEAN), m.Option(ice.MSG_USERNAME), nil) != nil; ok {
 				m.Log_AUTH(RIVER, river, STORM, storm)
 			}
 		})
@@ -23,7 +23,7 @@ func _action_right(m *ice.Message, river string, storm string) (ok bool) {
 	return ok
 }
 func _action_key(m *ice.Message, arg ...string) string {
-	return kit.Keys(kit.MDB_HASH, kit.Select(m.Option(RIVER), arg, 0), STORM, kit.MDB_HASH, kit.Select(m.Option(STORM), arg, 1))
+	return kit.Keys(mdb.HASH, kit.Select(m.Option(RIVER), arg, 0), STORM, mdb.HASH, kit.Select(m.Option(STORM), arg, 1))
 }
 func _action_list(m *ice.Message, river, storm string) {
 	m.Cmdy(STORM, storm, ice.Option{ice.MSG_RIVER, river}).Table(func(index int, value map[string]string, head []string) {
@@ -35,7 +35,7 @@ func _action_exec(m *ice.Message, river, storm, index string, arg ...string) {
 	m.Option(ice.MSG_STORM, storm)
 
 	cmds := []string{index}
-	if m.Grows(RIVER, _action_key(m, river, storm), kit.MDB_ID, index, func(index int, value map[string]interface{}) {
+	if m.Grows(RIVER, _action_key(m, river, storm), mdb.ID, index, func(index int, value map[string]interface{}) {
 		if cmds = kit.Simple(kit.Keys(value[ice.CTX], value[ice.CMD])); kit.Format(value[ice.POD]) != "" {
 			m.Option(ice.POD, value[ice.POD]) // 远程节点
 		}
@@ -52,9 +52,9 @@ func _action_exec(m *ice.Message, river, storm, index string, arg ...string) {
 	}
 }
 func _action_share(m *ice.Message, arg ...string) {
-	switch msg := m.Cmd(web.SHARE, arg[0]); msg.Append(kit.MDB_TYPE) {
+	switch msg := m.Cmd(web.SHARE, arg[0]); msg.Append(mdb.TYPE) {
 	case web.STORM:
-		if m.Warn(kit.Time() > kit.Time(msg.Append(kit.MDB_TIME)), ice.ErrExpire, arg) {
+		if m.Warn(kit.Time() > kit.Time(msg.Append(mdb.TIME)), ice.ErrExpire, arg) {
 			break // 分享超时
 		}
 		if len(arg) == 1 {
@@ -77,13 +77,13 @@ func _action_share(m *ice.Message, arg ...string) {
 		_action_exec(m, msg.Append(web.RIVER), msg.Append(web.STORM), arg[1], arg[2:]...)
 
 	case web.FIELD:
-		if m.Warn(kit.Time() > kit.Time(msg.Append(kit.MDB_TIME)), ice.ErrExpire, arg) {
+		if m.Warn(kit.Time() > kit.Time(msg.Append(mdb.TIME)), ice.ErrExpire, arg) {
 			break // 分享超时
 		}
-		if arg[0] = msg.Append(kit.MDB_NAME); len(arg) == 1 {
+		if arg[0] = msg.Append(mdb.NAME); len(arg) == 1 {
 			m.Push("title", msg.Append(kit.MDB_TITLE))
-			m.Push("index", msg.Append(kit.MDB_NAME))
-			m.Push("args", msg.Append(kit.MDB_TEXT))
+			m.Push("index", msg.Append(mdb.NAME))
+			m.Push("args", msg.Append(mdb.TEXT))
 			break // 命令列表
 		}
 
@@ -115,12 +115,12 @@ func _action_domain(m *ice.Message, cmd string, arg ...string) (domain string) {
 	river := kit.Select(m.Option(ice.MSG_RIVER), arg, 0)
 	storm := kit.Select(m.Option(ice.MSG_STORM), arg, 1)
 	m.Richs(RIVER, "", river, func(key string, value map[string]interface{}) {
-		switch kit.Value(kit.GetMeta(value), kit.MDB_TYPE) {
+		switch kit.Value(kit.GetMeta(value), mdb.TYPE) {
 		case PUBLIC: // 公有群
 			return
 		case PROTECTED: // 共有群
-			m.Richs(RIVER, kit.Keys(kit.MDB_HASH, river, STORM), storm, func(key string, value map[string]interface{}) {
-				switch r := "R" + river; kit.Value(kit.GetMeta(value), kit.MDB_TYPE) {
+			m.Richs(RIVER, kit.Keys(mdb.HASH, river, STORM), storm, func(key string, value map[string]interface{}) {
+				switch r := "R" + river; kit.Value(kit.GetMeta(value), mdb.TYPE) {
 				case PUBLIC: // 公有组
 					domain = m.Option(ice.MSG_DOMAIN, kit.Keys(r))
 				case PROTECTED: // 共有组
@@ -139,7 +139,7 @@ func _action_domain(m *ice.Message, cmd string, arg ...string) (domain string) {
 }
 func _action_upload(m *ice.Message) {
 	msg := m.Cmd(web.CACHE, web.UPLOAD)
-	m.Option(ice.MSG_UPLOAD, msg.Append(kit.MDB_HASH), msg.Append(kit.MDB_NAME), msg.Append(kit.MDB_SIZE))
+	m.Option(ice.MSG_UPLOAD, msg.Append(mdb.HASH), msg.Append(mdb.NAME), msg.Append(nfs.SIZE))
 }
 
 const (
@@ -179,7 +179,7 @@ func init() {
 				}
 			}},
 			mdb.MODIFY: {Name: "modify", Help: "编辑", Hand: func(m *ice.Message, arg ...string) {
-				m.Cmdy(mdb.MODIFY, RIVER, _action_key(m), mdb.LIST, m.OptionSimple(kit.MDB_ID), arg)
+				m.Cmdy(mdb.MODIFY, RIVER, _action_key(m), mdb.LIST, m.OptionSimple(mdb.ID), arg)
 			}},
 			SHARE: {Name: "share", Help: "共享", Hand: func(m *ice.Message, arg ...string) {
 				_header_share(m, arg...)

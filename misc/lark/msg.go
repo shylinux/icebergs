@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	ice "shylinux.com/x/icebergs"
+	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/web"
 	"shylinux.com/x/icebergs/core/wiki"
 	kit "shylinux.com/x/toolkits"
@@ -74,7 +75,7 @@ func init() {
 				m.RenderResult(kit.Format(kit.Dict("challenge", m.Option("msg.challenge"))))
 
 			case "event_callback": // 事件回调
-				m.Cmd(EVENT, m.Option(kit.MDB_TYPE))
+				m.Cmd(EVENT, m.Option(mdb.TYPE))
 
 			default: // 未知消息
 				m.Cmd(DUTY, m.Option("msg.type"), kit.Formats(data))
@@ -94,7 +95,7 @@ func init() {
 			}},
 		}, Hand: func(m *ice.Message, c *ice.Context, key string, arg ...string) {
 			if m.Option(OPEN_CHAT_ID) == "" {
-				m.Cmdy(DUTY, m.Option(kit.MDB_TYPE), kit.Formats(m.Optionv(ice.MSG_USERDATA)))
+				m.Cmdy(DUTY, m.Option(mdb.TYPE), kit.Formats(m.Optionv(ice.MSG_USERDATA)))
 			} else {
 				m.Cmdy(TALK, strings.TrimSpace(m.Option("text_without_at_bot")))
 			}

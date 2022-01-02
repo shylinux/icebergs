@@ -5,6 +5,7 @@ import (
 	"path"
 
 	ice "shylinux.com/x/icebergs"
+	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/nfs"
 	kit "shylinux.com/x/toolkits"
 	log "shylinux.com/x/toolkits/logs"
@@ -90,28 +91,28 @@ const (
 
 var Index = &ice.Context{Name: "log", Help: "日志模块", Configs: map[string]*ice.Config{
 	FILE: {Name: FILE, Help: "日志文件", Value: kit.Dict(
-		BENCH, kit.Dict(nfs.PATH, path.Join(ice.VAR_LOG, "bench.log"), kit.MDB_LIST, []string{}),
-		WATCH, kit.Dict(nfs.PATH, path.Join(ice.VAR_LOG, "watch.log"), kit.MDB_LIST, []string{
+		BENCH, kit.Dict(nfs.PATH, path.Join(ice.VAR_LOG, "bench.log"), mdb.LIST, []string{}),
+		WATCH, kit.Dict(nfs.PATH, path.Join(ice.VAR_LOG, "watch.log"), mdb.LIST, []string{
 			ice.LOG_CREATE, ice.LOG_REMOVE,
 			ice.LOG_INSERT, ice.LOG_DELETE,
 			ice.LOG_MODIFY, ice.LOG_SELECT,
 			ice.LOG_EXPORT, ice.LOG_IMPORT,
 		}),
-		ERROR, kit.Dict(nfs.PATH, path.Join(ice.VAR_LOG, "error.log"), kit.MDB_LIST, []string{
+		ERROR, kit.Dict(nfs.PATH, path.Join(ice.VAR_LOG, "error.log"), mdb.LIST, []string{
 			ice.LOG_WARN, ice.LOG_ERROR,
 		}),
-		TRACE, kit.Dict(nfs.PATH, path.Join(ice.VAR_LOG, "trace.log"), kit.MDB_LIST, []string{
+		TRACE, kit.Dict(nfs.PATH, path.Join(ice.VAR_LOG, "trace.log"), mdb.LIST, []string{
 			ice.LOG_DEBUG,
 		}),
 	)},
 	VIEW: {Name: VIEW, Help: "日志格式", Value: kit.Dict(
-		GREEN, kit.Dict(PREFIX, "\033[32m", SUFFIX, "\033[0m", kit.MDB_LIST, []string{
+		GREEN, kit.Dict(PREFIX, "\033[32m", SUFFIX, "\033[0m", mdb.LIST, []string{
 			ice.LOG_START, ice.LOG_SERVE, ice.LOG_CMDS,
 		}),
-		YELLOW, kit.Dict(PREFIX, "\033[33m", SUFFIX, "\033[0m", kit.MDB_LIST, []string{
+		YELLOW, kit.Dict(PREFIX, "\033[33m", SUFFIX, "\033[0m", mdb.LIST, []string{
 			ice.LOG_AUTH, ice.LOG_COST,
 		}),
-		RED, kit.Dict(PREFIX, "\033[31m", SUFFIX, "\033[0m", kit.MDB_LIST, []string{
+		RED, kit.Dict(PREFIX, "\033[31m", SUFFIX, "\033[0m", mdb.LIST, []string{
 			ice.LOG_CLOSE, ice.LOG_WARN,
 		}),
 	)},
@@ -122,12 +123,12 @@ var Index = &ice.Context{Name: "log", Help: "日志模块", Configs: map[string]
 			return // 禁用日志
 		}
 		m.Confm(VIEW, nil, func(key string, value map[string]interface{}) {
-			kit.Fetch(value[kit.MDB_LIST], func(index int, k string) {
+			kit.Fetch(value[mdb.LIST], func(index int, k string) {
 				m.Conf(SHOW, kit.Keys(k, VIEW), key)
 			})
 		})
 		m.Confm(FILE, nil, func(key string, value map[string]interface{}) {
-			kit.Fetch(value[kit.MDB_LIST], func(index int, k string) {
+			kit.Fetch(value[mdb.LIST], func(index int, k string) {
 				m.Conf(SHOW, kit.Keys(k, FILE), key)
 			})
 			// 日志文件

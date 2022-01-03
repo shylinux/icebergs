@@ -30,21 +30,16 @@ func init() {
 			PPROF, kit.List(GO, "tool", PPROF),
 		)},
 	}, Commands: map[string]*ice.Command{
-		ice.CTX_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			web.AddRewrite(func(w http.ResponseWriter, r *http.Request) bool {
-				if p := r.URL.Path; strings.HasPrefix(p, "/debug") {
-					r.URL.Path = strings.Replace(r.URL.Path, "/debug", "/code", -1)
-					m.Debug("rewrite %v -> %v", p, r.URL.Path)
-				}
-				return false
-			})
-		}},
-		"/pprof/": {Name: "/pprof/", Help: "性能分析", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			defer m.Render(ice.RENDER_VOID)
-			m.R.URL.Path = "/debug" + m.R.URL.Path
-			http.DefaultServeMux.ServeHTTP(m.W, m.R)
-		}},
 		PPROF: {Name: "pprof zone id auto", Help: "性能分析", Action: ice.MergeAction(map[string]*ice.Action{
+			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
+				web.AddRewrite(func(w http.ResponseWriter, r *http.Request) bool {
+					if p := r.URL.Path; strings.HasPrefix(p, "/debug") {
+						r.URL.Path = strings.Replace(r.URL.Path, "/debug", "/code", -1)
+						m.Debug("rewrite %v -> %v", p, r.URL.Path)
+					}
+					return false
+				})
+			}},
 			mdb.INPUTS: {Name: "inputs", Help: "补全", Hand: func(m *ice.Message, arg ...string) {
 				switch arg[0] {
 				case BINNARY:
@@ -88,6 +83,11 @@ func init() {
 				m.PushDownload(mdb.LINK, "pprof.pd.gz", value[nfs.FILE])
 				m.PushButton(web.SERVE)
 			})
+		}},
+		"/pprof/": {Name: "/pprof/", Help: "性能分析", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			defer m.Render(ice.RENDER_VOID)
+			m.R.URL.Path = "/debug" + m.R.URL.Path
+			http.DefaultServeMux.ServeHTTP(m.W, m.R)
 		}},
 	}})
 }

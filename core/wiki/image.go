@@ -23,10 +23,10 @@ const IMAGE = "image"
 
 func init() {
 	Index.Merge(&ice.Context{Commands: map[string]*ice.Command{
-		ice.CTX_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			m.Cmd(mdb.RENDER, mdb.CREATE, PNG, m.Prefix(IMAGE))
-		}},
 		IMAGE: {Name: "image url", Help: "图片", Action: map[string]*ice.Action{
+			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
+				m.Cmd(mdb.RENDER, mdb.CREATE, PNG, m.PrefixKey())
+			}},
 			mdb.RENDER: {Name: "render", Help: "渲染", Hand: func(m *ice.Message, arg ...string) {
 				_image_show(m, path.Join(arg[2], arg[1]))
 			}},

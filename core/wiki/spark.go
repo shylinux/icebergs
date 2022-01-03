@@ -45,34 +45,35 @@ const SPARK = "spark"
 
 func init() {
 	Index.Merge(&ice.Context{Commands: map[string]*ice.Command{
-		ice.CTX_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			ice.AddRender(ice.RENDER_SCRIPT, func(m *ice.Message, cmd string, args ...interface{}) string {
-				arg := kit.Simple(args...)
-				if m.IsCliUA() {
-					if len(arg) > 1 {
-						arg = arg[1:]
+		SPARK: {Name: "spark [name] text auto field:text value:text", Help: "段落", Action: map[string]*ice.Action{
+			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
+				ice.AddRender(ice.RENDER_SCRIPT, func(m *ice.Message, cmd string, args ...interface{}) string {
+					arg := kit.Simple(args...)
+					if m.IsCliUA() {
+						if len(arg) > 1 {
+							arg = arg[1:]
+						}
+						return strings.Join(arg, ice.NL)
 					}
-					return strings.Join(arg, ice.NL)
-				}
-				if len(arg) == 1 && arg[0] != BREAK {
-					arg = []string{SHELL, arg[0]}
-				}
-				list := []string{kit.Format(`<div class="story" data-type="spark" data-name="%s">`, arg[0])}
-				for _, l := range strings.Split(strings.Join(arg[1:], ice.NL), ice.NL) {
-					switch list = append(list, "<div>"); arg[0] {
-					case SHELL:
-						list = append(list, "<label>", "$ ", "</label>")
-					default:
-						list = append(list, "<label>", "&gt; ", "</label>")
+					if len(arg) == 1 && arg[0] != BREAK {
+						arg = []string{SHELL, arg[0]}
 					}
-					list = append(list, "<span>", l, "</span>")
+					list := []string{kit.Format(`<div class="story" data-type="spark" data-name="%s">`, arg[0])}
+					for _, l := range strings.Split(strings.Join(arg[1:], ice.NL), ice.NL) {
+						switch list = append(list, "<div>"); arg[0] {
+						case SHELL:
+							list = append(list, "<label>", "$ ", "</label>")
+						default:
+							list = append(list, "<label>", "&gt; ", "</label>")
+						}
+						list = append(list, "<span>", l, "</span>")
+						list = append(list, "</div>")
+					}
 					list = append(list, "</div>")
-				}
-				list = append(list, "</div>")
-				return strings.Join(list, "")
-			})
-		}},
-		SPARK: {Name: "spark [name] text auto field:text value:text", Help: "段落", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+					return strings.Join(list, "")
+				})
+			}},
+		}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			if len(arg) == 0 {
 				m.Echo(`<br class="story" data-type="spark">`)
 				return

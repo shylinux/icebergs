@@ -13,9 +13,7 @@ const ROUTINE = "routine"
 
 func init() {
 	Index.Merge(&ice.Context{Configs: map[string]*ice.Config{
-		ROUTINE: {Name: ROUTINE, Help: "协程池", Value: kit.Data(
-			mdb.SHORT, "time,hash,status,fileline",
-		)},
+		ROUTINE: {Name: ROUTINE, Help: "协程池", Value: kit.Data(mdb.SHORT, "time,hash,status,fileline")},
 	}, Commands: map[string]*ice.Command{
 		ROUTINE: {Name: "routine hash auto prunes", Help: "协程池", Action: ice.MergeAction(map[string]*ice.Action{
 			mdb.CREATE: {Name: "create fileline status", Help: "创建"},

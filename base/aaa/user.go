@@ -26,6 +26,9 @@ func _user_login(m *ice.Message, name, word string) (ok bool) {
 	return ok
 }
 func _user_create(m *ice.Message, role, name, word string) {
+	if name == "" {
+		return
+	}
 	if word == "" {
 		word = kit.Hashs()
 	}
@@ -52,15 +55,19 @@ func UserRole(m *ice.Message, username interface{}) (role string) {
 	if role = VOID; username == ice.Info.UserName {
 		return ROOT
 	}
-	m.Richs(USER, nil, kit.Format(username), func(key string, value map[string]interface{}) {
+	if m.Richs(USER, nil, kit.Format(username), func(key string, value map[string]interface{}) {
 		role = kit.Format(kit.GetMeta(value)[USERROLE])
-	})
+	}) == nil && kit.Format(username) == m.Option(ice.MSG_USERNAME) {
+		return m.Option(ice.MSG_USERROLE)
+	}
 	return
 }
 func UserNick(m *ice.Message, username interface{}) (nick string) {
-	m.Richs(USER, nil, kit.Format(username), func(key string, value map[string]interface{}) {
+	if m.Richs(USER, nil, kit.Format(username), func(key string, value map[string]interface{}) {
 		nick = kit.Format(kit.GetMeta(value)[USERNICK])
-	})
+	}) == nil && kit.Format(username) == m.Option(ice.MSG_USERNAME) {
+		return m.Option(ice.MSG_USERNICK)
+	}
 	return
 }
 func UserZone(m *ice.Message, username interface{}) (zone string) {

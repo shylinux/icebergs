@@ -81,7 +81,7 @@ func init() {
 	Index.Merge(&ice.Context{Configs: map[string]*ice.Config{
 		HEADER: {Name: HEADER, Help: "标题栏", Value: kit.Data(
 			TITLE, "shylinux.com/x/contexts", MENUS, kit.List("header", kit.List("setting", "black", "white", "print", "webpack", "devpack")),
-			aaa.LOGIN, kit.List("登录", "扫码"),
+			aaa.LOGIN, kit.List("登录", "扫码", "授权"),
 		)},
 	}, Commands: map[string]*ice.Command{
 		web.WEB_LOGIN: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
@@ -143,8 +143,9 @@ func init() {
 				m.Cmdy(code.WEBPACK, mdb.REMOVE)
 			}},
 		}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			m.Option(aaa.USERNICK, m.Option(ice.MSG_USERNICK))
 			msg := m.Cmd(aaa.USER, m.Option(ice.MSG_USERNAME))
-			for _, k := range []string{aaa.USERNICK, aaa.LANGUAGE, aaa.BACKGROUND, aaa.AVATAR} {
+			for _, k := range []string{aaa.LANGUAGE, aaa.BACKGROUND, aaa.AVATAR} {
 				m.Option(k, msg.Append(k))
 			}
 

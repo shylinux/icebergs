@@ -47,21 +47,20 @@ const SIGNAL = "signal"
 func init() {
 	Index.Merge(&ice.Context{Configs: map[string]*ice.Config{
 		SIGNAL: {Name: SIGNAL, Help: "信号器", Value: kit.Data(
-			mdb.SHORT, SIGNAL, mdb.FIELD, "time,signal,name,cmd",
-			nfs.PATH, path.Join(ice.VAR_RUN, "ice.pid"),
+			mdb.SHORT, SIGNAL, mdb.FIELD, "time,signal,name,cmd", nfs.PATH, path.Join(ice.VAR_RUN, "ice.pid"),
 		)},
 	}, Commands: map[string]*ice.Command{
-		ice.CTX_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			if log.LogDisable {
-				return // 禁用日志
-			}
-			m.Cmd(nfs.SAVE, kit.Select(m.Conf(SIGNAL, kit.META_PATH), m.Conf(cli.RUNTIME, kit.Keys(cli.CONF, cli.CTX_PID))),
-				m.Conf(cli.RUNTIME, kit.Keys(cli.HOST, cli.PID)))
-
-			m.Cmd(SIGNAL, LISTEN, SIGNAL, "3", mdb.NAME, "退出", ice.CMD, "exit 0")
-			m.Cmd(SIGNAL, LISTEN, SIGNAL, "2", mdb.NAME, "重启", ice.CMD, "exit 1")
-		}},
 		SIGNAL: {Name: "signal signal auto listen", Help: "信号器", Action: ice.MergeAction(map[string]*ice.Action{
+			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
+				if log.LogDisable {
+					return // 禁用日志
+				}
+				m.Cmd(nfs.SAVE, kit.Select(m.Config(nfs.PATH), m.Conf(cli.RUNTIME, kit.Keys(cli.CONF, cli.CTX_PID))),
+					m.Conf(cli.RUNTIME, kit.Keys(cli.HOST, cli.PID)))
+
+				m.Cmd(SIGNAL, LISTEN, SIGNAL, "3", mdb.NAME, "退出", ice.CMD, "exit 0")
+				m.Cmd(SIGNAL, LISTEN, SIGNAL, "2", mdb.NAME, "重启", ice.CMD, "exit 1")
+			}},
 			LISTEN: {Name: "listen signal name cmd", Help: "监听", Hand: func(m *ice.Message, arg ...string) {
 				_signal_listen(m, kit.Int(m.Option(SIGNAL)), arg...)
 			}},

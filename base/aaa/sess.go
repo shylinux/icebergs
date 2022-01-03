@@ -71,7 +71,7 @@ const SESS = "sess"
 func init() {
 	Index.Merge(&ice.Context{Configs: map[string]*ice.Config{
 		SESS: {Name: SESS, Help: "会话", Value: kit.Data(
-			mdb.SHORT, "uniq", mdb.FIELD, "time,hash,userrole,username,ip,ua", mdb.EXPIRE, "720h",
+			mdb.SHORT, "uniq", mdb.FIELD, "time,hash,userrole,username,usernick,ip,ua", mdb.EXPIRE, "720h",
 		)},
 	}, Commands: map[string]*ice.Command{
 		SESS: {Name: "sess hash auto prunes", Help: "会话", Action: ice.MergeAction(map[string]*ice.Action{

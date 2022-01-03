@@ -20,9 +20,7 @@ const EVENT = "event"
 
 func init() {
 	Index.Merge(&ice.Context{Configs: map[string]*ice.Config{
-		EVENT: {Name: EVENT, Help: "事件流", Value: kit.Data(
-			mdb.SHORT, EVENT, mdb.FIELD, "time,id,cmd",
-		)},
+		EVENT: {Name: EVENT, Help: "事件流", Value: kit.Data(mdb.SHORT, EVENT, mdb.FIELD, "time,id,cmd")},
 	}, Commands: map[string]*ice.Command{
 		EVENT: {Name: "event event id auto listen", Help: "事件流", Action: ice.MergeAction(map[string]*ice.Action{
 			LISTEN: {Name: "listen event cmd", Help: "监听", Hand: func(m *ice.Message, arg ...string) {

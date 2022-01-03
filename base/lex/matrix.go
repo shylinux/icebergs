@@ -388,10 +388,10 @@ func init() {
 	Index.Merge(&ice.Context{Configs: map[string]*ice.Config{
 		MATRIX: {Name: MATRIX, Help: "魔方矩阵", Value: kit.Data()},
 	}, Commands: map[string]*ice.Command{
-		ice.CTX_INIT: {Hand: func(m *ice.Message, c *ice.Context, key string, arg ...string) {
-			// _lex_load(m.Load())
-		}},
 		MATRIX: {Name: "matrix hash npage text auto", Help: "魔方矩阵", Action: map[string]*ice.Action{
+			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
+				// _lex_load(m.Load())
+			}},
 			mdb.CREATE: {Name: "create nlang=32 ncell=128", Help: "创建", Hand: func(m *ice.Message, arg ...string) {
 				mat := NewMatrix(m, kit.Int(kit.Select("32", m.Option(NLANG))), kit.Int(kit.Select("128", m.Option(NCELL))))
 				h := m.Rich(m.Prefix(MATRIX), "", kit.Data(mdb.TIME, m.Time(), MATRIX, mat, NLANG, mat.nlang, NCELL, mat.ncell))

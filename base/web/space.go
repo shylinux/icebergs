@@ -286,6 +286,11 @@ func init() {
 							case cli.PWD:
 								link := kit.MergeURL(_space_domain(msg), aaa.GRANT, name)
 								msg.Sleep300ms(SPACE, name, cli.PWD, name, link, msg.Cmdx(cli.QRCODE, link))
+							case "sso":
+								link := _space_domain(msg)
+								ls := strings.Split(kit.ParseURL(link).Path, ice.PS)
+								link = kit.MergeURL2(_space_domain(msg), "/chat/sso", "space", kit.Select("", ls, 3), "back", m.Option(ice.MSG_USERWEB))
+								msg.Sleep300ms(SPACE, name, cli.PWD, name, link, msg.Cmdx(cli.QRCODE, link))
 							default:
 								msg.Sleep300ms(SPACE, name, cli.PWD, name)
 							}

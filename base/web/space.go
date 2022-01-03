@@ -193,7 +193,7 @@ func _space_search(m *ice.Message, kind, name, text string, arg ...string) {
 		case CHROME:
 
 		case MASTER:
-			m.PushSearch(mdb.TEXT, m.Cmd(SPIDE, value[mdb.NAME]).Append("client.url"), value)
+			m.PushSearch(mdb.TEXT, m.Cmd(SPIDE, value[mdb.NAME], ice.OptionFields("")).Append("client.url"), value)
 		default:
 			m.PushSearch(mdb.TEXT, _space_link(m, kit.Keys(m.Option(ice.MSG_USERPOD), value[mdb.NAME])), value)
 		}
@@ -201,8 +201,8 @@ func _space_search(m *ice.Message, kind, name, text string, arg ...string) {
 	if name != "" {
 		return
 	}
-	m.Cmd(SERVE).Table(func(index int, val map[string]string, head []string) {
-		m.Cmd(tcp.HOST).Table(func(index int, value map[string]string, head []string) {
+	m.Cmd(SERVE, ice.OptionFields("")).Table(func(index int, val map[string]string, head []string) {
+		m.Cmd(tcp.HOST, ice.OptionFields("")).Table(func(index int, value map[string]string, head []string) {
 			m.PushSearch(kit.SimpleKV("", MYSELF, value[mdb.NAME], kit.Format("http://%s:%s", value[aaa.IP], val[tcp.PORT])))
 		})
 	})

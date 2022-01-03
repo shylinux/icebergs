@@ -135,7 +135,7 @@ func _serve_handle(key string, cmd *ice.Command, msg *ice.Message, w http.Respon
 	}
 
 	// 请求地址
-	msg.Option(ice.MSG_USERWEB, kit.Select(msg.Config(DOMAIN), kit.Select(r.Header.Get("X-Host"), r.Header.Get("Referer"))))
+	msg.Option(ice.MSG_USERWEB, kit.Select(msg.Config(DOMAIN), kit.Select(r.Header.Get("Referer"), r.Header.Get("X-Host"))))
 	msg.Option(ice.MSG_USERADDR, kit.Select(r.RemoteAddr, r.Header.Get(ice.MSG_USERADDR)))
 	msg.Option(ice.MSG_USERIP, r.Header.Get(ice.MSG_USERIP))
 	msg.Option(ice.MSG_USERUA, r.Header.Get("User-Agent"))
@@ -145,6 +145,7 @@ func _serve_handle(key string, cmd *ice.Command, msg *ice.Message, w http.Respon
 	if sessid := msg.Option(CookieName(msg.Option(ice.MSG_USERWEB))); sessid != "" {
 		msg.Option(ice.MSG_SESSID, sessid)
 	}
+	msg.Debug("what %v", msg.FormatMeta())
 
 	// 参数转换
 	for k, v := range r.Form {

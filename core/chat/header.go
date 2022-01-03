@@ -86,10 +86,8 @@ func init() {
 	}, Commands: map[string]*ice.Command{
 		web.WEB_LOGIN: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			switch arg[0] {
-			case "/sso/":
-				if m.Option(ice.MSG_USERNAME) != "" {
-					return
-				}
+			case "/sso":
+				return
 			case "/pod/":
 				return // 免登录
 			case "/header":
@@ -154,9 +152,7 @@ func init() {
 				if m.Cmd(GRANT, m.Option(ice.POD), 1).Length() > 0 {
 					_header_grant(m, web.SPACE, m.Option(GRANT))
 				}
-				m.Debug("what %v", m.FormatMeta())
 				m.Option(GRANT, ice.TRUE)
-				m.Debug("what %v", m.FormatMeta())
 			}
 
 			m.Option(TRANS, kit.Format(kit.Value(c.Commands[cmd].Meta, "_trans")))

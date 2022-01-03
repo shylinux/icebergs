@@ -98,7 +98,7 @@ func _install_order(m *ice.Message, arg ...string) {
 }
 func _install_spawn(m *ice.Message, arg ...string) {
 	if kit.Int(m.Option(tcp.PORT)) >= 10000 {
-		p := path.Join(m.Conf(cli.DAEMON, kit.META_PATH), m.Option(tcp.PORT))
+		p := path.Join(m.Conf(cli.DAEMON, kit.Keym(nfs.PATH)), m.Option(tcp.PORT))
 		if _, e := os.Stat(p); e == nil {
 			m.Echo(p)
 			return
@@ -107,7 +107,7 @@ func _install_spawn(m *ice.Message, arg ...string) {
 		m.Option(tcp.PORT, m.Cmdx(tcp.PORT, aaa.RIGHT))
 	}
 
-	target := path.Join(m.Conf(cli.DAEMON, kit.META_PATH), m.Option(tcp.PORT))
+	target := path.Join(m.Conf(cli.DAEMON, kit.Keym(nfs.PATH)), m.Option(tcp.PORT))
 	source := path.Join(m.Config(nfs.PATH), kit.TrimExt(m.Option(mdb.LINK)))
 
 	m.Cmd(nfs.DIR, path.Join(source, kit.Select("_install", m.Option("install")))).Table(func(index int, value map[string]string, head []string) {
@@ -187,7 +187,7 @@ func init() {
 				_install_service(m, arg...)
 
 			default: // 目录列表
-				m.Option(nfs.DIR_ROOT, path.Join(m.Conf(cli.DAEMON, kit.META_PATH), arg[1]))
+				m.Option(nfs.DIR_ROOT, path.Join(m.Conf(cli.DAEMON, kit.Keym(nfs.PATH)), arg[1]))
 				m.Cmdy(nfs.CAT, kit.Select(ice.PWD, arg, 2))
 			}
 		}},

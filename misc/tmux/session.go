@@ -8,6 +8,7 @@ import (
 	"shylinux.com/x/icebergs/base/cli"
 	"shylinux.com/x/icebergs/base/ctx"
 	"shylinux.com/x/icebergs/base/mdb"
+	"shylinux.com/x/icebergs/base/nfs"
 	"shylinux.com/x/icebergs/base/web"
 	kit "shylinux.com/x/toolkits"
 )
@@ -78,7 +79,7 @@ func init() {
 					m.Cmdy(cli.SYSTEM, TMUX, "new-window", "-t", m.Option(SESSION), "-dn", m.Option(mdb.NAME))
 
 				} else { // 创建会话
-					m.Option(cli.CMD_DIR, path.Join(m.Conf(web.DREAM, kit.META_PATH), m.Option(mdb.NAME)))
+					m.Option(cli.CMD_DIR, path.Join(m.Conf(web.DREAM, kit.Keym(nfs.PATH)), m.Option(mdb.NAME)))
 					ls := kit.Split(m.Option(mdb.NAME), "-_")
 					name := ls[len(ls)-1]
 

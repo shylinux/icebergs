@@ -9,9 +9,7 @@ const SEARCH = "search"
 
 func init() {
 	Index.Merge(&ice.Context{Configs: map[string]*ice.Config{
-		SEARCH: {Name: "search", Help: "搜索", Value: kit.Data(
-			SHORT, TYPE, FIELD, "time,type,name,text",
-		)},
+		SEARCH: {Name: "search", Help: "搜索", Value: kit.Data(SHORT, TYPE, FIELD, "time,type,name,text")},
 	}, Commands: map[string]*ice.Command{
 		SEARCH: {Name: "search type word text auto", Help: "搜索", Action: map[string]*ice.Action{
 			CREATE: {Name: "create type name text", Help: "创建", Hand: func(m *ice.Message, arg ...string) {
@@ -26,8 +24,7 @@ func init() {
 				})
 			}
 			if HashSelect(msg, arg...); len(arg) == 0 {
-				m.Copy(msg)
-				m.Sort(TYPE)
+				m.Copy(msg).Sort(TYPE)
 			} else if len(arg) == 1 {
 				m.Copy(msg)
 			}

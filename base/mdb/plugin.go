@@ -9,9 +9,7 @@ const PLUGIN = "plugin"
 
 func init() {
 	Index.Merge(&ice.Context{Configs: map[string]*ice.Config{
-		PLUGIN: {Name: "plugin", Help: "插件", Value: kit.Data(
-			SHORT, TYPE, FIELD, "time,type,name,text",
-		)},
+		PLUGIN: {Name: "plugin", Help: "插件", Value: kit.Data(SHORT, TYPE, FIELD, "time,type,name,text")},
 	}, Commands: map[string]*ice.Command{
 		PLUGIN: {Name: "plugin type name text auto", Help: "插件", Action: map[string]*ice.Action{
 			CREATE: {Name: "create type name text", Help: "创建", Hand: func(m *ice.Message, arg ...string) {

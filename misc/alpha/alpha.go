@@ -26,7 +26,7 @@ func _alpha_find(m *ice.Message, method, word string) {
 	}
 
 	// 搜索词汇
-	msg := m.Cmd(cli.SYSTEM, "grep", "-rih", word, m.Config(kit.MDB_STORE))
+	msg := m.Cmd(cli.SYSTEM, "grep", "-rih", word, m.Config(mdb.STORE))
 	msg.CSV(msg.Result(), kit.Split(m.Config(mdb.FIELD))...).Table(func(index int, value map[string]string, head []string) {
 		if m.FieldsIsDetail() {
 			m.Push(mdb.DETAIL, value, kit.Split(m.Config(mdb.FIELD)))
@@ -39,7 +39,7 @@ func _alpha_find(m *ice.Message, method, word string) {
 func _alpha_load(m *ice.Message, file, name string) {
 	// 清空数据
 	meta := m.Confm(ALPHA, mdb.META)
-	m.Assert(os.RemoveAll(path.Join(kit.Format(meta[kit.MDB_STORE]), name)))
+	m.Assert(os.RemoveAll(path.Join(kit.Format(meta[mdb.STORE]), name)))
 	m.Conf(ALPHA, name, "")
 
 	// 缓存配置
@@ -48,7 +48,7 @@ func _alpha_load(m *ice.Message, file, name string) {
 
 	// 保存词库
 	m.Conf(ALPHA, kit.Keys(name, kit.Keym(mdb.LIMIT)), 0)
-	m.Conf(ALPHA, kit.Keys(name, kit.Keym(kit.MDB_LEAST)), 0)
+	m.Conf(ALPHA, kit.Keys(name, kit.Keym(mdb.LEAST)), 0)
 	m.Echo("%s: %d", name, m.Grow(ALPHA, name, kit.Dict(WORD, ice.SP)))
 }
 
@@ -62,8 +62,8 @@ const ALPHA = "alpha"
 var Index = &ice.Context{Name: ALPHA, Help: "英汉词典", Configs: map[string]*ice.Config{
 	ALPHA: {Name: ALPHA, Help: "英汉词典", Value: kit.Data(
 		nfs.REPOS, "word-dict", mdb.FIELD, "word,translation,definition",
-		kit.MDB_STORE, path.Join(ice.USR_LOCAL_EXPORT, ALPHA), kit.MDB_FSIZE, "300000",
-		mdb.LIMIT, "50000", kit.MDB_LEAST, "1000",
+		mdb.STORE, path.Join(ice.USR_LOCAL_EXPORT, ALPHA), mdb.FSIZE, "300000",
+		mdb.LIMIT, "50000", mdb.LEAST, "1000",
 	)},
 }, Commands: map[string]*ice.Command{
 	ALPHA: {Name: "alpha method=word,line word auto", Help: "英汉", Action: map[string]*ice.Action{

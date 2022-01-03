@@ -9,9 +9,7 @@ const ENGINE = "engine"
 
 func init() {
 	Index.Merge(&ice.Context{Configs: map[string]*ice.Config{
-		ENGINE: {Name: ENGINE, Help: "引擎", Value: kit.Data(
-			SHORT, TYPE, FIELD, "time,type,name,text",
-		)},
+		ENGINE: {Name: ENGINE, Help: "引擎", Value: kit.Data(SHORT, TYPE, FIELD, "time,type,name,text")},
 	}, Commands: map[string]*ice.Command{
 		ENGINE: {Name: "engine type name text auto", Help: "引擎", Action: ice.MergeAction(map[string]*ice.Action{
 			CREATE: {Name: "create type name text", Help: "创建", Hand: func(m *ice.Message, arg ...string) {

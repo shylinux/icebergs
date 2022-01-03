@@ -168,7 +168,7 @@ func HashAction(args ...interface{}) map[string]*ice.Action {
 			m.Cmdy(MODIFY, m.PrefixKey(), "", HASH, m.OptionSimple(_key(m)), arg)
 		}},
 		EXPORT: {Name: "export", Help: "导出", Hand: func(m *ice.Message, arg ...string) {
-			m.OptionFields(m.Config(kit.META_FIELD))
+			m.OptionFields(m.Config(FIELD))
 			m.Cmdy(EXPORT, m.PrefixKey(), "", HASH, arg)
 		}},
 		IMPORT: {Name: "import", Help: "导入", Hand: func(m *ice.Message, arg ...string) {
@@ -205,9 +205,9 @@ func HashPrunes(m *ice.Message, cb func(map[string]string) bool) *ice.Message {
 		}
 		return kit.Select(HASH, m.Config(SHORT))
 	}
-	before := kit.Time(kit.Select(m.Time("-72h"), m.Option(kit.MDB_BEFORE)))
+	expire := kit.Time(kit.Select(m.Time("-72h"), m.Option(EXPIRE)))
 	m.Cmd(m.CommandKey()).Table(func(index int, value map[string]string, head []string) {
-		if kit.Time(value[TIME]) > before {
+		if kit.Time(value[TIME]) > expire {
 			return
 		}
 		if cb != nil && cb(value) {

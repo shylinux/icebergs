@@ -9,9 +9,7 @@ const RENDER = "render"
 
 func init() {
 	Index.Merge(&ice.Context{Configs: map[string]*ice.Config{
-		RENDER: {Name: "render", Help: "渲染", Value: kit.Data(
-			SHORT, TYPE, FIELD, "time,type,name,text",
-		)},
+		RENDER: {Name: "render", Help: "渲染", Value: kit.Data(SHORT, TYPE, FIELD, "time,type,name,text")},
 	}, Commands: map[string]*ice.Command{
 		RENDER: {Name: "render type name text auto", Help: "渲染", Action: map[string]*ice.Action{
 			CREATE: {Name: "create type name text", Help: "创建", Hand: func(m *ice.Message, arg ...string) {

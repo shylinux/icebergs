@@ -30,7 +30,7 @@ func init() {
 			m.Table(func(index int, value map[string]string, head []string) {
 				link := "/share/cache/" + value[mdb.DATA]
 				if m.PushDownload(mdb.LINK, value[mdb.NAME], link); len(arg) > 0 && kit.ExtIsImage(value[mdb.NAME]) {
-					m.PushImages(kit.MDB_IMAGE, link)
+					m.PushImages("image", link)
 				}
 			})
 		}},

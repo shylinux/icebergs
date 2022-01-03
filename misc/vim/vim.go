@@ -13,8 +13,8 @@ import (
 )
 
 func _vim_pkg(m *ice.Message, url string) string {
-	p := path.Join(m.Conf(code.INSTALL, kit.META_PATH), path.Base(url))
-	return kit.Path(m.Conf(code.INSTALL, kit.META_PATH), strings.Split(m.Cmdx(cli.SYSTEM, "sh", "-c", kit.Format("tar tf %s| head -n1", p)), "/")[0])
+	p := path.Join(m.Conf(code.INSTALL, kit.Keym(nfs.PATH)), path.Base(url))
+	return kit.Path(m.Conf(code.INSTALL, kit.Keym(nfs.PATH)), strings.Split(m.Cmdx(cli.SYSTEM, "sh", "-c", kit.Format("tar tf %s| head -n1", p)), "/")[0])
 }
 
 const VIM = "vim"

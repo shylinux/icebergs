@@ -45,7 +45,7 @@ func _publish_file(m *ice.Message, file string, arg ...string) string {
 
 	// 发布文件
 	target := path.Join(m.Config(nfs.PATH), kit.Select(path.Base(file), arg, 0))
-	m.Log_EXPORT(PUBLISH, target, kit.MDB_FROM, file)
+	m.Log_EXPORT(PUBLISH, target, "from", file)
 	m.Cmd(nfs.LINK, target, file)
 	return target
 }

@@ -110,7 +110,7 @@ func init() {
 		}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			m.Option(nfs.DIR_DEEP, true)
 			m.Option(nfs.DIR_TYPE, nfs.CAT)
-			m.Option(nfs.DIR_ROOT, m.Conf(PUBLISH, kit.META_PATH))
+			m.Option(nfs.DIR_ROOT, m.Conf(PUBLISH, kit.Keym(nfs.PATH)))
 
 			m.Cmdy(nfs.DIR, WEBPACK, "time,size,path,action,link")
 		}},

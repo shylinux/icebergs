@@ -24,32 +24,36 @@ const (
 	META = "meta"
 )
 const (
-	ID   = "id"
-	KEY  = "key"
-	TIME = "time"
-	// ZONE = "zone"
-	TYPE = "type"
-	NAME = "name"
-	TEXT = "text"
+	ID   = kit.MDB_ID
+	KEY  = kit.MDB_KEY
+	TIME = kit.MDB_TIME
+	// ZONE = kit.MDB_ZONE
+	TYPE = kit.MDB_TYPE
+	NAME = kit.MDB_NAME
+	TEXT = kit.MDB_TEXT
 
-	LINK = "link"
-	SCAN = "scan"
-	SHOW = "show"
-	HELP = "help"
-	FILE = "file"
-	DATA = "data"
+	LINK = kit.MDB_LINK
+	SCAN = kit.MDB_SCAN
+	SHOW = kit.MDB_SHOW
+	HELP = kit.MDB_HELP
+	DATA = kit.MDB_DATA
+	FILE = kit.MDB_FILE
 
-	SHORT  = "short"
-	FIELD  = "field"
-	TOTAL  = "total"
-	COUNT  = "count"
-	LIMIT  = "limit"
-	INDEX  = "index"
-	VALUE  = "value"
-	EXTRA  = "extra"
-	EXPIRE = "expire"
-	STATUS = "status"
-	STREAM = "stream"
+	SHORT = kit.MDB_SHORT
+	FIELD = kit.MDB_FIELD
+	TOTAL = kit.MDB_TOTAL
+	COUNT = kit.MDB_COUNT
+	LIMIT = kit.MDB_LIMIT
+	LEAST = kit.MDB_LEAST
+	STORE = kit.MDB_STORE
+	FSIZE = kit.MDB_FSIZE
+
+	INDEX  = kit.MDB_INDEX
+	VALUE  = kit.MDB_VALUE
+	EXTRA  = kit.MDB_EXTRA
+	EXPIRE = kit.MDB_EXPIRE
+	STATUS = kit.MDB_STATUS
+	STREAM = kit.MDB_STREAM
 
 	FOREACH = "*"
 	RANDOMS = "%"

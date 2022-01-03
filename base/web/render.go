@@ -85,13 +85,8 @@ func CookieName(url string) string {
 }
 func RenderCookie(msg *ice.Message, value string, arg ...string) { // name path expire
 	expire := time.Now().Add(kit.Duration(kit.Select(msg.Conf(aaa.SESS, "meta.expire"), arg, 2)))
-	msg.Debug("what %v %v", value, arg)
 	http.SetCookie(msg.W, &http.Cookie{Value: value,
 		Name: kit.Select(ice.MSG_SESSID, arg, 0), Path: kit.Select("/", arg, 1), Expires: expire})
-}
-func RenderMeta(msg *ice.Message, name, content string) {
-	msg.W.Write([]byte(kit.Format(`<meta name="%s" content="%s">`, name, content)))
-	msg.W.Write([]byte(ice.NL))
 }
 func RenderType(w http.ResponseWriter, name, mime string) {
 	if mime != "" {

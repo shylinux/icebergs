@@ -19,7 +19,7 @@ import (
 )
 
 func _share_link(m *ice.Message, p string, arg ...interface{}) string {
-	p = kit.Select("", "/share/local/", !strings.HasPrefix(p, "/")) + p
+	p = kit.Select("", "/share/local/", !strings.HasPrefix(p, ice.PS)) + p
 	return tcp.ReplaceLocalhost(m, m.MergeURL2(p, arg...))
 }
 func _share_repos(m *ice.Message, repos string, arg ...string) {
@@ -36,7 +36,7 @@ func _share_proxy(m *ice.Message) {
 
 	case http.MethodPost: // 上传文件
 		m.Cmdy(CACHE, UPLOAD)
-		m.Cmdy(CACHE, WATCH, m.Option(kit.MDB_DATA), p)
+		m.Cmdy(CACHE, WATCH, m.Option(mdb.DATA), p)
 		m.RenderResult(m.Option(nfs.PATH))
 	}
 }
@@ -55,7 +55,7 @@ func _share_cache(m *ice.Message, arg ...string) {
 }
 func _share_local(m *ice.Message, arg ...string) {
 	p := path.Join(arg...)
-	switch ls := strings.Split(p, "/"); ls[0] {
+	switch ls := strings.Split(p, ice.PS); ls[0] {
 	case ice.ETC, ice.VAR: // 私有文件
 		if m.Option(ice.MSG_USERROLE) == aaa.VOID {
 			m.Render(STATUS, http.StatusUnauthorized, ice.ErrNotRight)
@@ -134,10 +134,8 @@ func init() {
 				m.ProcessInner()
 			}},
 		}, mdb.HashAction()), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			if m.PodCmd(SHARE, arg) {
-				if m.Length() > 0 {
-					return
-				}
+			if m.PodCmd(SHARE, arg) && m.Length() > 0 {
+				return
 			}
 			if mdb.HashSelect(m, arg...); len(arg) > 0 {
 				link := _share_link(m, "/share/"+arg[0])
@@ -160,8 +158,7 @@ func init() {
 		}},
 
 		"/share/toast/": {Name: "/share/toast/", Help: "推送流", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			m.Cmdy(SPACE, m.Option("pod"), m.Optionv("cmds"))
-
+			m.Cmdy(SPACE, m.Option(ice.POD), m.Optionv("cmds"))
 		}},
 		"/share/repos/": {Name: "/share/repos/", Help: "代码库", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			_share_repos(m, path.Join(arg[0], arg[1], arg[2]), arg[3:]...)

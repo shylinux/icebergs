@@ -28,9 +28,7 @@ func _cache_save(m *ice.Message, kind, name, text string, arg ...string) { // fi
 	size := kit.Int(kit.Select(kit.Format(len(text)), arg, 1))
 	file := kit.Select("", arg, 0)
 	text = kit.Select(file, text)
-	h := m.Cmdx(mdb.INSERT, CACHE, "", mdb.HASH,
-		mdb.TYPE, kind, mdb.NAME, name, mdb.TEXT, text,
-		nfs.FILE, file, nfs.SIZE, size)
+	h := m.Cmdx(mdb.INSERT, CACHE, "", mdb.HASH, kit.SimpleKV("", kind, name, text), nfs.FILE, file, nfs.SIZE, size)
 
 	// 返回结果
 	m.Push(mdb.TIME, m.Time())
@@ -40,7 +38,7 @@ func _cache_save(m *ice.Message, kind, name, text string, arg ...string) { // fi
 	m.Push(nfs.SIZE, size)
 	m.Push(nfs.FILE, file)
 	m.Push(mdb.HASH, h)
-	m.Push(DATA, h)
+	m.Push(mdb.DATA, h)
 }
 func _cache_watch(m *ice.Message, key, file string) {
 	mdb.HashSelect(m.Spawn(), key).Table(func(index int, value map[string]string, head []string) {
@@ -100,12 +98,11 @@ func _cache_download(m *ice.Message, r *http.Response) (file, size string) {
 				case []string:
 					m.Richs(cb[0], cb[1], cb[2], func(key string, value map[string]interface{}) {
 						value = kit.GetMeta(value)
-						value[mdb.VALUE], value[mdb.COUNT], value[mdb.TOTAL] = kit.Format(s), size, total
+						value[mdb.COUNT], value[mdb.TOTAL], value[mdb.VALUE] = size, total, kit.Format(s)
 					})
 				default:
 					if s != step && s%10 == 0 {
-						m.Log_IMPORT(nfs.FILE, p, mdb.VALUE, s,
-							mdb.COUNT, kit.FmtSize(int64(size)), mdb.TOTAL, kit.FmtSize(int64(total)))
+						m.Log_IMPORT(nfs.FILE, p, mdb.VALUE, s, mdb.COUNT, kit.FmtSize(int64(size)), mdb.TOTAL, kit.FmtSize(int64(total)))
 					}
 				}
 				step = s
@@ -141,8 +138,8 @@ func init() {
 	Index.Merge(&ice.Context{Configs: map[string]*ice.Config{
 		CACHE: {Name: CACHE, Help: "缓存池", Value: kit.Data(
 			mdb.SHORT, mdb.TEXT, mdb.FIELD, "time,hash,size,type,name,text",
-			kit.MDB_STORE, ice.VAR_DATA, nfs.PATH, ice.VAR_FILE, kit.MDB_FSIZE, "200000",
-			mdb.LIMIT, "50", kit.MDB_LEAST, "30",
+			mdb.STORE, ice.VAR_DATA, nfs.PATH, ice.VAR_FILE, mdb.FSIZE, "200000",
+			mdb.LIMIT, "50", mdb.LEAST, "30",
 		)},
 	}, Commands: map[string]*ice.Command{
 		"/cache/": {Name: "/cache/", Help: "缓存池", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {

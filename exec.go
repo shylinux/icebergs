@@ -18,9 +18,9 @@ func (m *Message) TryCatch(msg *Message, silent bool, hand ...func(msg *Message)
 		default:
 			fileline := kit.FileLine(4, 5)
 			m.Log(LOG_WARN, "catch: %s %s", e, fileline)
-			m.Log(kit.MDB_CHAIN, msg.FormatChain())
+			m.Log("chain", msg.FormatChain())
 			m.Log(LOG_WARN, "catch: %s %s", e, fileline)
-			m.Log(kit.MDB_STACK, msg.FormatStack())
+			m.Log("stack", msg.FormatStack())
 			m.Log(LOG_WARN, "catch: %s %s", e, fileline)
 			if len(hand) > 1 {
 				m.TryCatch(msg, silent, hand[1:]...)

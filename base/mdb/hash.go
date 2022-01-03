@@ -137,7 +137,7 @@ func _hash_prunes(m *ice.Message, prefix, chain string, arg ...string) {
 
 const HASH = "hash"
 
-func HashAction(fields ...string) map[string]*ice.Action {
+func HashAction(args ...interface{}) map[string]*ice.Action {
 	_key := func(m *ice.Message) string {
 		if m.Config(HASH) == "uniq" {
 			return HASH
@@ -148,6 +148,11 @@ func HashAction(fields ...string) map[string]*ice.Action {
 		return kit.Select(HASH, m.Config(SHORT))
 	}
 	return ice.SelectAction(map[string]*ice.Action{
+		ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
+			if cs := m.Target().Configs; cs[m.CommandKey()] == nil {
+				cs[m.CommandKey()] = &ice.Config{Value: kit.Data(args...)}
+			}
+		}},
 		INPUTS: {Name: "inputs", Help: "补全", Hand: func(m *ice.Message, arg ...string) {
 			m.Cmdy(INPUTS, m.PrefixKey(), "", HASH, arg)
 		}},
@@ -172,10 +177,13 @@ func HashAction(fields ...string) map[string]*ice.Action {
 		PRUNES: &ice.Action{Name: "prunes before@date", Help: "清理", Hand: func(m *ice.Message, arg ...string) {
 			HashPrunes(m, nil)
 		}},
-	}, fields...)
+		SELECT: &ice.Action{Name: "select hash auto", Help: "列表", Hand: func(m *ice.Message, arg ...string) {
+			HashSelect(m, arg...)
+		}},
+	})
 }
-func HashActionStatus(fields ...string) map[string]*ice.Action {
-	list := HashAction(fields...)
+func HashActionStatus(args ...interface{}) map[string]*ice.Action {
+	list := HashAction(args...)
 	list[PRUNES] = &ice.Action{Name: "prunes", Help: "清理", Hand: func(m *ice.Message, arg ...string) {
 		m.OptionFields(m.Config(FIELD))
 		m.Cmdy(PRUNES, m.PrefixKey(), "", HASH, STATUS, "error")

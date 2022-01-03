@@ -46,7 +46,7 @@ const (
 	ERR = "err"
 
 	POD = "pod"
-	CTX = "ctx"
+	// CTX = "ctx"
 	CMD = "cmd"
 	ARG = "arg"
 	OPT = "opt"
@@ -281,4 +281,23 @@ const ( // CTX
 
 	CTX_INIT = "_init"
 	CTX_EXIT = "_exit"
+)
+
+const (
+	CTX = "ctx"
+	CLI = "cli"
+	WEB = "web"
+	AAA = "aaa"
+	LEX = "lex"
+	YAC = "yac"
+	GDB = "gdb"
+	LOG = "log"
+	TCP = "tcp"
+	NFS = "nfs"
+	SSH = "ssh"
+	MDB = "mdb"
+)
+const (
+	COMMAND = "command"
+	ACTION  = "action"
 )

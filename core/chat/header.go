@@ -41,6 +41,8 @@ func _header_check(m *ice.Message, arg ...string) {
 	}
 }
 func _header_grant(m *ice.Message, arg ...string) {
+	m.Cmd(GRANT, mdb.INSERT, kit.SimpleKV("space,grant,userrole,username",
+		m.Option(ice.POD), m.Option(web.SPACE), m.Option(ice.MSG_USERROLE), m.Option(ice.MSG_USERNAME)))
 	if m.PodCmd(m.PrefixKey(), ctx.ACTION, GRANT, arg) {
 		return // 下发命令
 	}
@@ -71,7 +73,6 @@ const (
 	TRANS = "trans"
 	AGENT = "agent"
 	CHECK = "check"
-	GRANT = "grant"
 	SHARE = "share"
 )
 const HEADER = "header"
@@ -143,6 +144,15 @@ func init() {
 			msg := m.Cmd(aaa.USER, m.Option(ice.MSG_USERNAME))
 			for _, k := range []string{aaa.USERNICK, aaa.LANGUAGE, aaa.BACKGROUND, aaa.AVATAR} {
 				m.Option(k, msg.Append(k))
+			}
+
+			if m.Option(GRANT) != "" {
+				if m.Cmd(GRANT, m.Option(ice.POD), 1).Length() > 0 {
+					_header_grant(m, web.SPACE, m.Option(GRANT))
+				}
+				m.Debug("what %v", m.FormatMeta())
+				m.Option(GRANT, ice.TRUE)
+				m.Debug("what %v", m.FormatMeta())
 			}
 
 			m.Option(TRANS, kit.Format(kit.Value(c.Commands[cmd].Meta, "_trans")))

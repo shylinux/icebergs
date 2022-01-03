@@ -126,10 +126,15 @@ func _zone_import(m *ice.Message, prefix, chain, file string) {
 
 const ZONE = "zone"
 
-func ZoneAction(fields ...string) map[string]*ice.Action {
+func ZoneAction(args ...interface{}) map[string]*ice.Action {
 	_zone := func(m *ice.Message) string { return kit.Select(ZONE, m.Config(SHORT)) }
 
 	return ice.SelectAction(map[string]*ice.Action{
+		ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
+			if cs := m.Target().Configs; cs[m.CommandKey()] == nil {
+				cs[m.CommandKey()] = &ice.Config{Value: kit.Data(args...)}
+			}
+		}},
 		INPUTS: {Name: "inputs", Help: "补全", Hand: func(m *ice.Message, arg ...string) {
 			arg[0] = strings.TrimPrefix(arg[0], "extra.")
 			arg[0] = kit.Select(arg[0], m.Config(kit.Keys(kit.MDB_ALIAS, arg[0])))
@@ -164,6 +169,9 @@ func ZoneAction(fields ...string) map[string]*ice.Action {
 		MODIFY: {Name: "modify", Help: "编辑", Hand: func(m *ice.Message, arg ...string) {
 			m.Cmdy(MODIFY, m.PrefixKey(), "", ZONE, m.Option(_zone(m)), m.Option(ID), arg)
 		}},
+		PLUGIN: {Name: "plugin extra.pod extra.ctx extra.cmd extra.arg", Help: "插件", Hand: func(m *ice.Message, arg ...string) {
+			m.Cmdy(MODIFY, m.PrefixKey(), "", ZONE, m.Option(_zone(m)), m.Option(ID), arg)
+		}},
 		EXPORT: {Name: "export", Help: "导出", Hand: func(m *ice.Message, arg ...string) {
 			m.Option(ice.CACHE_LIMIT, "-1")
 			m.OptionFields(_zone(m), m.Config(FIELD))
@@ -173,16 +181,16 @@ func ZoneAction(fields ...string) map[string]*ice.Action {
 			m.OptionFields(_zone(m))
 			m.Cmdy(IMPORT, m.PrefixKey(), "", ZONE)
 		}},
-		PLUGIN: {Name: "plugin extra.pod extra.ctx extra.cmd extra.arg", Help: "插件", Hand: func(m *ice.Message, arg ...string) {
-			m.Cmdy(MODIFY, m.PrefixKey(), "", ZONE, m.Option(_zone(m)), m.Option(ID), arg)
-		}},
 		PREV: {Name: "prev", Help: "上一页", Hand: func(m *ice.Message, arg ...string) {
 			PrevPage(m, arg[0], arg[1:]...)
 		}},
 		NEXT: {Name: "next", Help: "下一页", Hand: func(m *ice.Message, arg ...string) {
 			NextPageLimit(m, arg[0], arg[1:]...)
 		}},
-	}, fields...)
+		SELECT: &ice.Action{Name: "select hash auto", Help: "列表", Hand: func(m *ice.Message, arg ...string) {
+			ZoneSelect(m, arg...)
+		}},
+	})
 }
 func ZoneSelect(m *ice.Message, arg ...string) *ice.Message {
 	m.Fields(len(arg), kit.Fields(TIME, m.Config(SHORT), COUNT), m.Config(FIELD))

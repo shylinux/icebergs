@@ -111,7 +111,7 @@ func (m *Message) SetAppend(arg ...string) *Message {
 func (m *Message) SetResult(arg ...string) *Message {
 	return m.Set(MSG_RESULT, arg...)
 }
-func (m *Message) RenameAppend(from, to string) {
+func (m *Message) RenameAppend(from, to string) *Message {
 	for i, v := range m.meta[MSG_APPEND] {
 		if v == from {
 			m.meta[MSG_APPEND][i] = to
@@ -119,6 +119,7 @@ func (m *Message) RenameAppend(from, to string) {
 			delete(m.meta, from)
 		}
 	}
+	return m
 }
 func (m *Message) AppendSimple(key ...string) (res []string) {
 	if len(key) == 0 {
@@ -229,21 +230,25 @@ func (c *Context) cmd(m *Message, cmd *Command, key string, arg ...string) *Mess
 	}
 
 	m.meta[MSG_DETAIL] = kit.Simple(key, arg)
-	if m.Hand = true; len(arg) > 1 && arg[0] == "action" && cmd.Action != nil {
+	if m.Hand = true; len(arg) > 1 && arg[0] == ACTION && cmd.Action != nil {
 		if h, ok := cmd.Action[arg[1]]; ok {
 			return c._cmd(m, cmd, key, arg[1], h, arg[2:]...)
 		}
 	}
-	if len(arg) > 0 && arg[0] != "command" && cmd.Action != nil {
+	if len(arg) > 0 && arg[0] != COMMAND && cmd.Action != nil {
 		if h, ok := cmd.Action[arg[0]]; ok {
 			return c._cmd(m, cmd, key, arg[0], h, arg[1:]...)
 		}
 	}
 
 	m.Log(LOG_CMDS, "%s.%s %d %v %s", c.Name, key, len(arg), arg,
-		kit.Select(kit.FileLine(cmd.Hand, 3), kit.FileLine(9, 3), m.target.Name == "mdb"))
+		kit.Select(kit.FileLine(cmd.Hand, 3), kit.FileLine(9, 3), m.target.Name == MDB))
 
-	cmd.Hand(m, c, key, arg...)
+	if cmd.Hand != nil {
+		cmd.Hand(m, c, key, arg...)
+	} else if cmd.Action != nil && cmd.Action["select"] != nil {
+		cmd.Action["select"].Hand(m, arg...)
+	}
 	return m
 }
 func (c *Context) _cmd(m *Message, cmd *Command, key string, k string, h *Action, arg ...string) *Message {

@@ -169,6 +169,7 @@ func init() {
 				})
 			}},
 			tcp.OPEN: {Name: "open authfile username=shy password verfiy host=shylinux.com port=22 private=.ssh/id_rsa", Help: "终端", Hand: func(m *ice.Message, arg ...string) {
+				aaa.UserRoot(m)
 				_ssh_open(m.OptionLoad(m.Option("authfile")), arg...)
 				m.Echo("exit %v@%v:%v\n", m.Option(aaa.USERNAME), m.Option(tcp.HOST), m.Option(tcp.PORT))
 			}},

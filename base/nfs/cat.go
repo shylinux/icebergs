@@ -68,7 +68,7 @@ func _cat_find(m *ice.Message, name string) io.ReadCloser {
 	return nil
 }
 func _cat_list(m *ice.Message, name string) {
-	if !_cat_right(m, name) {
+	if m.Warn(!_cat_right(m, name), ice.ErrNotRight) {
 		return // 没有权限
 	}
 

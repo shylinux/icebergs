@@ -3,9 +3,8 @@ package app
 import (
 	"github.com/webview/webview"
 	"shylinux.com/x/ice"
+	kit "shylinux.com/x/toolkits"
 )
-
-var ww *webview.WebView
 
 type app struct {
 	title string `name:"title text" help:"标题"`
@@ -13,19 +12,22 @@ type app struct {
 }
 
 func (app app) Title(m *ice.Message, arg ...string) {
-	(*w).SetTitle("contexts")
+	(*ww).SetTitle("contexts")
 }
 
 func (app app) List(m *ice.Message, arg ...string) {
 }
 func init() { ice.Cmd("web.chat.app", app{}) }
-func Run() {
+
+var ww *webview.WebView
+
+func Run(arg ...string) {
 	w := webview.New(true)
 	defer w.Destroy()
 	ww = &w
 
-	w.SetTitle("contexts")
 	w.SetSize(800, 600, webview.HintNone)
-	w.Navigate("http://localhost:9020")
+	w.SetTitle(kit.Select("contexts", arg, 0))
+	w.Navigate(kit.Select("http://localhost:9020", arg, 1))
 	w.Run()
 }

@@ -1,9 +1,9 @@
 package app
 
 import (
-	"github.com/webview/webview"
 	"shylinux.com/x/ice"
 	kit "shylinux.com/x/toolkits"
+	"shylinux.com/x/webview"
 )
 
 type app struct {

@@ -9,6 +9,7 @@ import (
 	kit "shylinux.com/x/toolkits"
 )
 
+const TS = "ts"
 const JS = "js"
 const CSS = "css"
 const HTML = "html"
@@ -23,6 +24,7 @@ func init() {
 				m.Cmd(cmd, mdb.CREATE, JSON, m.Prefix(JS))
 				m.Cmd(cmd, mdb.CREATE, VUE, m.Prefix(JS))
 				m.Cmd(cmd, mdb.CREATE, JS, m.Prefix(JS))
+				m.Cmd(cmd, mdb.CREATE, TS, m.Prefix(JS))
 			}
 			LoadPlug(m, JS)
 		}},

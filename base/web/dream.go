@@ -15,8 +15,8 @@ import (
 	kit "shylinux.com/x/toolkits"
 )
 
-func _dream_list(m *ice.Message) {
-	m.Cmdy(nfs.DIR, m.Config(nfs.PATH), "time,size,name").Table(func(index int, value map[string]string, head []string) {
+func _dream_list(m *ice.Message) *ice.Message {
+	return m.Cmdy(nfs.DIR, m.Config(nfs.PATH), "time,size,name").Table(func(index int, value map[string]string, head []string) {
 		if m.Richs(SPACE, nil, value[mdb.NAME], func(key string, value map[string]interface{}) {
 			m.Push(mdb.TYPE, value[mdb.TYPE])
 			m.Push(cli.STATUS, cli.START)
@@ -102,6 +102,9 @@ func init() {
 			}},
 			cli.STOP: {Name: "stop", Help: "停止", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmdy(SPACE, m.Option(mdb.NAME), "exit", "0")
+			}},
+			mdb.INPUTS: {Name: "inputs", Help: "补全", Hand: func(m *ice.Message, arg ...string) {
+				_dream_list(m).Cut("name,status,time")
 			}},
 		}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			if len(arg) == 0 {

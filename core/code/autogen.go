@@ -40,7 +40,7 @@ func (h {{.Option "name"}}) List(m *ice.Message, arg ...string) {
 
 func init() { ice.Cmd("{{.Option "key"}}", {{.Option "name"}}{}) }
 `, m)
-	m.Cmd(nfs.SAVE, dir, string(buf))
+	m.Cmd(nfs.DEFS, dir, string(buf))
 }
 func _autogen_import(m *ice.Message, main string, ctx string, mod string) (list []string) {
 	m.Cmd(nfs.DEFS, main, `package main

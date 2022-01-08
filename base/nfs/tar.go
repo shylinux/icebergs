@@ -17,6 +17,7 @@ func init() {
 	Index.Merge(&ice.Context{Commands: map[string]*ice.Command{
 		TAR: {Name: "tar file path auto", Help: "打包", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			m.Option("cmd_dir", m.Option(DIR_ROOT))
+			m.Debug("cmd_dir: %v", m.Option("cmd_dir"))
 			m.Cmdy("cli.system", "tar", "zcvf", arg)
 			return
 

@@ -116,7 +116,7 @@ func (f *Frame) parse(m *ice.Message, line string) string {
 		}
 
 		msg.Render("", kit.List())
-		if msg.Cmdy(ls[0], ls[1:]); m.IsErrNotFound() {
+		if msg.Cmdy(ls[0], ls[1:]); msg.IsErrNotFound() {
 			msg.SetResult().Cmdy(cli.SYSTEM, ls)
 		}
 

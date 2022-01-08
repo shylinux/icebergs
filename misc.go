@@ -251,14 +251,14 @@ func (c *Context) cmd(m *Message, cmd *Command, key string, arg ...string) *Mess
 	}
 	return m
 }
-func (c *Context) _cmd(m *Message, cmd *Command, key string, k string, h *Action, arg ...string) *Message {
+func (c *Context) _cmd(m *Message, cmd *Command, key string, sub string, h *Action, arg ...string) *Message {
 	if h.Hand == nil {
 		m.Cmdy(kit.Split(h.Name), arg)
 		return m
 	}
 
-	m.Log(LOG_CMDS, "%s.%s %s %d %v %s", c.Name, key, k, len(arg), arg, kit.FileLine(h.Hand, 3))
-	if len(h.List) > 0 && k != "search" {
+	m.Log(LOG_CMDS, "%s.%s %s %d %v %s", c.Name, key, sub, len(arg), arg, kit.FileLine(h.Hand, 3))
+	if m._sub = sub; len(h.List) > 0 && sub != "search" {
 		order := false
 		for i, v := range h.List {
 			name := kit.Format(kit.Value(v, kit.MDB_NAME))

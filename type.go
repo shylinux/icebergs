@@ -251,6 +251,7 @@ type Message struct {
 	target *Context
 	_cmd   *Command
 	_key   string
+	_sub   string
 
 	cb func(*Message) *Message
 	W  http.ResponseWriter

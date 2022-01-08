@@ -8,6 +8,9 @@ import (
 	"shylinux.com/x/toolkits/miss"
 )
 
+func (m *Message) ActionKey() string {
+	return strings.TrimSuffix(strings.TrimPrefix(m._sub, PS), PS)
+}
 func (m *Message) CommandKey() string {
 	return strings.TrimSuffix(strings.TrimPrefix(m._key, PS), PS)
 }

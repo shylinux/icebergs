@@ -60,7 +60,9 @@ func _hash_select(m *ice.Message, prefix, chain, field, value string) {
 		value = RANDOMS
 	}
 	fields := _hash_fields(m)
+	m.Debug("what %v", 123)
 	m.Richs(prefix, chain, value, func(key string, val map[string]interface{}) {
+		m.Debug("what %v", 123)
 		switch val = kit.GetMeta(val); cb := m.Optionv(kit.Keycb(SELECT)).(type) {
 		case func(fields []string, value map[string]interface{}):
 			cb(fields, val)

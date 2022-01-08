@@ -98,18 +98,14 @@ var Pulse = &Message{
 }
 
 func Run(arg ...string) string {
-	if len(arg) == 0 {
-		arg = os.Args[1:]
-	}
-	if len(arg) == 0 {
-		arg = append(arg, HELP)
-	}
 	if os.Getenv("ctx_arg") != "" {
 		arg = append(arg, kit.Split(os.Getenv("ctx_arg"))...)
 	}
+	if arg = append(arg, os.Args[1:]...); len(arg) == 0 {
+		arg = append(arg, HELP)
+	}
 
 	Index.root, Pulse.root = Index, Pulse
-
 	switch Index.Merge(Index).Begin(Pulse.Spawn(), arg...); kit.Select("", arg, 0) {
 	case "serve", "space":
 		if log.LogDisable = false; Index.Start(Pulse, arg...) {

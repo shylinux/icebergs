@@ -2,12 +2,16 @@ package mdb
 
 import (
 	"path"
+	"strings"
 
 	ice "shylinux.com/x/icebergs"
 	kit "shylinux.com/x/toolkits"
 )
 
 func _file_name(m *ice.Message, arg ...string) string {
+	if len(arg) > 3 && strings.Contains(arg[3], ice.PS) {
+		return arg[3]
+	}
 	return path.Join(ice.USR_LOCAL_EXPORT, m.Option(ice.MSG_DOMAIN), path.Join(arg[:2]...), arg[2])
 	return kit.Select(path.Join(ice.USR_LOCAL_EXPORT, m.Option(ice.MSG_DOMAIN), path.Join(arg[:2]...), arg[2]), arg, 3)
 }
@@ -208,6 +212,7 @@ var Index = &ice.Context{Name: MDB, Help: "数据模块", Commands: map[string]*
 		case HASH:
 			_hash_import(m, arg[0], _domain_chain(m, arg[1]), file)
 		case LIST:
+			m.Debug("what %v /// %v", arg, file)
 			_list_import(m, arg[0], _domain_chain(m, arg[1]), file)
 		}
 	}},

@@ -87,9 +87,21 @@ func init() {
 					return false
 				})
 				nfs.AddRewrite(func(msg *ice.Message, name string) []byte {
+					if strings.HasPrefix(name, ice.SRC) {
+						if _, e := os.Stat(name); e == nil {
+							if f, e := os.Open(name); e == nil {
+								defer f.Close()
+								if b, e := ioutil.ReadAll(f); e == nil {
+									m.Logs("local", len(b), name)
+									return b // 本地文件
+								}
+							}
+						}
+					}
+
 					if b, ok := ice.Info.Pack[name]; ok {
 						m.Logs("binpack", len(b), name)
-						return b
+						return b // 打包文件
 					}
 					return nil
 				})

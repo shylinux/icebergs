@@ -127,7 +127,7 @@ func init() {
 				})
 			}},
 		}, mdb.HashAction()), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			mdb.HashSelect(m, arg...).Table(func(index int, value map[string]string, head []string) {
+			mdb.HashSelect(m, arg...).Set(ctx.ACTION).Table(func(index int, value map[string]string, head []string) {
 				switch value[STATUS] {
 				case START:
 					m.PushButton(RESTART, STOP)

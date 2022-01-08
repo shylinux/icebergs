@@ -24,7 +24,8 @@ func _website_parse(m *ice.Message, text string) map[string]interface{} {
 		for i := 2; i < len(ls); i += 2 {
 			switch ls[i] {
 			case ctx.ARGS:
-				data[ls[i]] = kit.UnMarshal(ls[i+1])
+				data[ls[i]] = kit.Split(ls[i+1])
+				// data[ls[i]] = kit.UnMarshal(ls[i+1])
 			default:
 				data[ls[i]] = ls[i+1]
 			}

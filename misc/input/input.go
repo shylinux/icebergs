@@ -9,46 +9,36 @@ import (
 	"path"
 	"strings"
 
-	ice "shylinux.com/x/icebergs"
+	"shylinux.com/x/ice"
 	"shylinux.com/x/icebergs/base/cli"
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/nfs"
-	"shylinux.com/x/icebergs/core/code"
 	kit "shylinux.com/x/toolkits"
 )
 
-func _input_find(m *ice.Message, method, word, limit string) {
-	switch method {
-	case LINE:
-	case WORD:
-		word = "^" + word + ","
-	}
+const (
+	TEXT   = "text"
+	CODE   = "code"
+	WEIGHT = "weight"
+)
+const (
+	WORD = "word"
+	LINE = "line"
+)
 
-	// 搜索词汇
-	res := m.Cmdx(cli.SYSTEM, "grep", "-rn", word, m.Config(mdb.STORE))
-	bio := csv.NewReader(bytes.NewBufferString(strings.Replace(res, ":", ",", -1)))
-
-	for i := 0; i < kit.Int(limit); i++ {
-		if line, e := bio.Read(); e != nil {
-			break
-		} else if len(line) < 3 {
-
-		} else { // 输出词汇
-			m.Push(mdb.ID, line[3])
-			m.Push(CODE, line[2])
-			m.Push(TEXT, line[4])
-			m.Push(WEIGHT, line[6])
-		}
-
-	}
-	m.SortIntR(WEIGHT)
+type input struct {
+	insert string `name:"insert zone=person text code weight" help:"添加"`
+	load   string `name:"load file=usr/wubi-dict/wubi86 zone=wubi86" help:"加载"`
+	save   string `name:"save file=usr/wubi-dict/person zone=person" help:"保存"`
+	list   string `name:"list method code auto" help:"输入法"`
 }
-func _input_load(m *ice.Message, file string, libs ...string) {
-	if f, e := os.Open(file); m.Assert(e) {
+
+func (i input) Load(m *ice.Message, arg ...string) {
+	if f, e := os.Open(m.Option(nfs.FILE)); m.Assert(e) {
 		defer f.Close()
 
 		// 清空数据
-		lib := kit.Select(path.Base(file), libs, 0)
+		lib := kit.Select(path.Base(m.Option(nfs.FILE)), m.Option(mdb.ZONE))
 		m.Assert(os.RemoveAll(path.Join(m.Config(mdb.STORE), lib)))
 		m.Cmd(mdb.DELETE, m.PrefixKey(), "", mdb.HASH, mdb.ZONE, lib)
 		prefix := kit.Keys(mdb.HASH, m.Rich(m.PrefixKey(), "", kit.Data(
@@ -59,7 +49,7 @@ func _input_load(m *ice.Message, file string, libs ...string) {
 
 		// 加载词库
 		for bio := bufio.NewScanner(f); bio.Scan(); {
-			if strings.HasPrefix(bio.Text(), "#") {
+			if strings.HasPrefix(bio.Text(), "# ") {
 				continue
 			}
 			line := kit.Split(bio.Text())
@@ -77,32 +67,12 @@ func _input_load(m *ice.Message, file string, libs ...string) {
 		m.Echo("%s: %d", lib, n)
 	}
 }
-func _input_push(m *ice.Message, lib, text, code, weight string) {
-	if m.Richs(m.PrefixKey(), "", lib, nil) == nil {
-		m.Rich(m.PrefixKey(), "", kit.Data(
-			mdb.STORE, path.Join(m.Config(mdb.STORE), lib),
-			mdb.FSIZE, m.Config(mdb.FSIZE),
-			mdb.LIMIT, m.Config(mdb.LIMIT),
-			mdb.LEAST, m.Config(mdb.LEAST),
-			mdb.ZONE, lib,
-		))
-	}
-
-	m.Richs(m.PrefixKey(), "", lib, func(key string, value map[string]interface{}) {
-		prefix := kit.Keys(mdb.HASH, key)
-		m.Conf(m.PrefixKey(), kit.Keys(prefix, kit.Keym(mdb.LIMIT)), 0)
-		m.Conf(m.PrefixKey(), kit.Keys(prefix, kit.Keym(mdb.LEAST)), 0)
-		n := m.Grow(m.PrefixKey(), prefix, kit.Dict(TEXT, text, CODE, code, WEIGHT, weight))
-		m.Log_IMPORT(CODE, code, TEXT, text)
-		m.Echo("%s: %d", lib, n)
-	})
-}
-func _input_save(m *ice.Message, file string, lib ...string) {
-	if f, p, e := kit.Create(file); m.Assert(e) {
+func (i input) Save(m *ice.Message, arg ...string) {
+	if f, p, e := kit.Create(m.Option(nfs.FILE)); m.Assert(e) {
 		defer f.Close()
 		n := 0
 		m.Option(ice.CACHE_LIMIT, -2)
-		for _, lib := range lib {
+		for _, lib := range kit.Split(m.Option(mdb.ZONE)) {
 			m.Richs(m.PrefixKey(), "", lib, func(key string, value map[string]interface{}) {
 				m.Grows(m.PrefixKey(), kit.Keys(mdb.HASH, key), "", "", func(index int, value map[string]interface{}) {
 					if value[CODE] != "z" {
@@ -112,39 +82,36 @@ func _input_save(m *ice.Message, file string, lib ...string) {
 				})
 			})
 		}
-		m.Log_EXPORT(FILE, p, mdb.COUNT, n)
+		m.Log_EXPORT(nfs.FILE, p, mdb.COUNT, n)
 		m.Echo("%s: %d", p, n)
 	}
 }
-
-func _input_list(m *ice.Message, lib string) {
-	if lib == "" {
-		m.Richs(m.PrefixKey(), "", mdb.FOREACH, func(key string, value map[string]interface{}) {
-			m.Push("", kit.GetMeta(value), kit.Split("time,zone,count,store"))
-		})
+func (i input) List(m *ice.Message, arg ...string) {
+	if len(arg) < 2 || arg[1] == "" {
 		return
 	}
+	switch arg[0] {
+	case LINE:
+	case WORD:
+		arg[1] = "^" + arg[1] + ice.FS
+	}
 
-	m.Option(nfs.DIR_DEEP, true)
-	m.Option(nfs.DIR_TYPE, nfs.CAT)
-	m.Richs(m.PrefixKey(), "", lib, func(key string, value map[string]interface{}) {
-		m.Cmdy(nfs.DIR, kit.Value(value, kit.Keym(mdb.STORE)), "time size line path")
-	})
+	// 搜索词汇
+	res := m.Cmdx(cli.SYSTEM, "grep", "-rn", arg[1], m.Config(mdb.STORE))
+	bio := csv.NewReader(bytes.NewBufferString(strings.Replace(res, ":", ",", -1)))
+
+	for i := 0; i < kit.Int(10); i++ {
+		if line, e := bio.Read(); e != nil {
+			break
+		} else if len(line) < 3 {
+
+		} else { // 输出词汇
+			m.Push(mdb.ID, line[3])
+			m.Push(CODE, line[2])
+			m.Push(TEXT, line[4])
+			m.Push(WEIGHT, line[6])
+		}
+	}
+	m.SortIntR(WEIGHT)
+	m.StatusTimeCount()
 }
-
-const (
-	ZONE   = "zone"
-	FILE   = "file"
-	CODE   = "code"
-	TEXT   = "text"
-	WEIGHT = "weight"
-)
-const (
-	WORD = "word"
-	LINE = "line"
-)
-const INPUT = "input"
-
-var Index = &ice.Context{Name: INPUT, Help: "输入法"}
-
-func init() { code.Index.Register(Index, nil) }

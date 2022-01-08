@@ -12,9 +12,9 @@ const (
 
 	PWD = "./"
 
-	JS = "js"
-	GO = "go"
 	SH = "sh"
+	GO = "go"
+	JS = "js"
 
 	OK      = "ok"
 	TRUE    = "true"

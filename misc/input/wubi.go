@@ -1,37 +1,22 @@
 package input
 
 import (
-	"path"
-
-	ice "shylinux.com/x/icebergs"
-	"shylinux.com/x/icebergs/base/mdb"
-	"shylinux.com/x/icebergs/base/nfs"
-	kit "shylinux.com/x/toolkits"
+	"shylinux.com/x/ice"
 )
 
-const WUBI = "wubi"
+type wubi struct {
+	input
 
-func init() {
-	Index.Merge(&ice.Context{Configs: map[string]*ice.Config{
-		WUBI: {Name: WUBI, Help: "输入法", Value: kit.Data(
-			mdb.STORE, path.Join(ice.USR_LOCAL_EXPORT, INPUT, WUBI), mdb.FSIZE, "200000",
-			mdb.SHORT, "zone", nfs.REPOS, "wubi-dict",
-			mdb.LIMIT, "5000", mdb.LEAST, "1000",
-		)},
-	}, Commands: map[string]*ice.Command{
-		WUBI: {Name: "wubi method=word,line code auto", Help: "五笔", Action: map[string]*ice.Action{
-			mdb.INSERT: {Name: "insert zone=person text code weight", Help: "添加", Hand: func(m *ice.Message, arg ...string) {
-				_input_push(m, m.Option(ZONE), m.Option(TEXT), m.Option(CODE), m.Option(WEIGHT))
-			}},
-			mdb.EXPORT: {Name: "export file=usr/wubi-dict/person zone=person", Help: "导出", Hand: func(m *ice.Message, arg ...string) {
-				_input_save(m, m.Option(FILE), m.Option(ZONE))
-			}},
-			mdb.IMPORT: {Name: "import file=usr/wubi-dict/wubi86 zone=wubi86", Help: "导入", Hand: func(m *ice.Message, arg ...string) {
-				_input_load(m, m.Option(FILE), m.Option(ZONE))
-			}},
-		}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			_input_find(m, arg[0], arg[1], m.Option(ice.CACHE_LIMIT))
-			m.StatusTime()
-		}},
-	}})
+	short string `data:"zone"`
+	store string `data:"usr/local/export/input/wubi"`
+	fsize string `data:"300000"`
+	limit string `data:"50000"`
+	least string `data:"1000"`
+
+	insert string `name:"insert zone=person text code weight" help:"添加"`
+	load   string `name:"load file=usr/wubi-dict/wubi86 zone=wubi86" help:"加载"`
+	save   string `name:"save file=usr/wubi-dict/person zone=person" help:"保存"`
+	list   string `name:"list method=word,line code auto" help:"五笔"`
 }
+
+func init() { ice.Cmd("web.code.input.wubi", wubi{}) }

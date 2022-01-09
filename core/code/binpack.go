@@ -100,7 +100,7 @@ func init() {
 					}
 
 					if b, ok := ice.Info.Pack[name]; ok {
-						m.Logs("binpack", len(b), name)
+						m.Logs(BINPACK, len(b), name)
 						return b // 打包文件
 					}
 					return nil

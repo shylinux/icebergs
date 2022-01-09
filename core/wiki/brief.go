@@ -14,8 +14,6 @@ func init() {
 			_wiki_template(m, cmd, "", arg[0], arg[1:]...)
 		}},
 	}, Configs: map[string]*ice.Config{
-		BRIEF: {Name: BRIEF, Help: "摘要", Value: kit.Data(
-			nfs.TEMPLATE, `<p {{.OptionTemplate}}>{{.Option "text"}}</p>`,
-		)},
+		BRIEF: {Name: BRIEF, Help: "摘要", Value: kit.Data(nfs.TEMPLATE, `<p {{.OptionTemplate}}>{{.Option "text"}}</p>`)},
 	}})
 }

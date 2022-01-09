@@ -319,6 +319,7 @@ const (
 	SPIDE_HEADER = "header"
 	SPIDE_COOKIE = "cookie"
 
+	FORM     = "form"
 	ADDRESS  = "address"
 	REQUEST  = "request"
 	RESPONSE = "response"

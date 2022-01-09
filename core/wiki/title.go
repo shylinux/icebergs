@@ -2,59 +2,29 @@ package wiki
 
 import (
 	"path"
-	"strings"
 
 	ice "shylinux.com/x/icebergs"
+	"shylinux.com/x/icebergs/base/lex"
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/nfs"
 	kit "shylinux.com/x/toolkits"
 )
 
-func _title_deep(str string) int {
-	for i, c := range str {
-		if c != ' ' {
-			return i
-		}
-	}
-	return 0
-}
-func _title_parse(m *ice.Message, dir string, root map[string]interface{}, list []string) int {
-	var last map[string]interface{}
-	deep := _title_deep(list[0])
-	for i := 0; i < len(list); i++ {
-		if d := _title_deep(list[i]); d < deep {
-			return i
-		} else if d > deep {
-			i += _title_parse(m, dir, last, list[i:]) - 1
-			continue
-		}
-
-		ls := kit.Split(list[i])
-		switch len(ls) {
-		case 0:
-			continue
-		case 1:
-		default:
+func _title_parse(m *ice.Message, dir string, text string) string {
+	return m.Cmdx(lex.SPLIT, "", "name,link", kit.Dict(nfs.CAT_CONTENT, text), func(ls []string, data map[string]interface{}) []string {
+		if len(ls) > 1 {
 			ls[1] = path.Join(dir, ls[1])
 		}
-
-		meta := kit.Dict(mdb.NAME, kit.Select("", ls, 0), mdb.LINK, kit.Select("", ls, 1))
-		for i := 2; i < len(ls); i += 2 {
-			meta[ls[i]] = ls[i+1]
-		}
-		last = kit.Data(meta)
-		kit.Value(root, "list.-2", last)
-	}
-	return len(list)
+		return ls
+	})
 }
 
 func _title_show(m *ice.Message, kind, text string, arg ...string) {
 	switch title, _ := m.Optionv(TITLE).(map[string]int); kind {
 	case NAVMENU: // 导航目录
 		_option(m, kind, "", text, arg...)
-		data := kit.Data()
-		_title_parse(m, path.Dir(m.Option(ice.MSG_SCRIPT)), data, strings.Split(text, ice.NL))
-		m.RenderTemplate(kit.Format("<div {{.OptionTemplate}} data-data='%s'></div>", kit.Format(data)))
+		data := _title_parse(m, path.Dir(m.Option(ice.MSG_SCRIPT)), text)
+		m.RenderTemplate(kit.Format("<div {{.OptionTemplate}} data-data='%s'></div>", data))
 		return
 
 	case PREMENU: // 前置目录
@@ -100,7 +70,6 @@ const (
 )
 
 const (
-	REGEXP = "regexp"
 	PREFIX = "prefix"
 	LEVEL  = "level"
 	MENU   = "menu"
@@ -111,8 +80,7 @@ func init() {
 	Index.Merge(&ice.Context{Commands: map[string]*ice.Command{
 		TITLE: {Name: "title [navmenu|premenu|chapter|section|endmenu] text", Help: "标题", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			if len(arg) == 0 {
-				ns := kit.Split(ice.Info.NodeName, "-")
-				arg = append(arg, ns[len(ns)-1])
+				arg = append(arg, kit.Slice(kit.Split(ice.Info.NodeName, "-"), -1)[0])
 			}
 			switch arg[0] {
 			case NAVMENU:

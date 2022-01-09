@@ -123,3 +123,7 @@ func (b *Buffer) Close() error { return nil }
 func PushStream(m *ice.Message) {
 	m.Option(cli.CMD_OUTPUT, &Buffer{m: m, n: m.Option(ice.MSG_DAEMON)})
 }
+
+func Format(tag string, arg ...interface{}) string {
+	return kit.Format("<%s>%s</%s>", tag, strings.Join(kit.Simple(arg), ""))
+}

@@ -153,9 +153,7 @@ const INSTALL = "install"
 
 func init() {
 	Index.Merge(&ice.Context{Configs: map[string]*ice.Config{
-		INSTALL: {Name: INSTALL, Help: "安装", Value: kit.Data(
-			mdb.SHORT, mdb.NAME, nfs.PATH, ice.USR_INSTALL,
-		)},
+		INSTALL: {Name: INSTALL, Help: "安装", Value: kit.Data(mdb.SHORT, mdb.NAME, nfs.PATH, ice.USR_INSTALL)},
 	}, Commands: map[string]*ice.Command{
 		INSTALL: {Name: "install name port path auto download", Help: "安装", Meta: kit.Dict(), Action: map[string]*ice.Action{
 			web.DOWNLOAD: {Name: "download link path", Help: "下载", Hand: func(m *ice.Message, arg ...string) {

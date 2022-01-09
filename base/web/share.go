@@ -76,7 +76,7 @@ func _share_local(m *ice.Message, arg ...string) {
 		}
 
 		// 上传文件
-		m.Cmdy(SPACE, m.Option(ice.POD), SPIDE, ice.DEV, SPIDE_RAW, m.MergeURL2("/share/proxy"),
+		m.Cmdy(SPACE, m.Option(ice.POD), SPIDE, ice.DEV, SPIDE_RAW, m.MergeURL2(SHARE_PROXY),
 			SPIDE_PART, m.OptionSimple(ice.POD), nfs.PATH, p, CACHE, cache.Format(ice.MOD_TIME), UPLOAD, "@"+p)
 
 		if s, e := os.Stat(pp); e == nil && !s.IsDir() {
@@ -97,6 +97,15 @@ const (
 	RIVER = "river"
 	STORM = "storm"
 	FIELD = "field"
+
+	SHARE_TOAST = "/share/toast/"
+	SHARE_CACHE = "/share/cache/"
+	SHARE_REPOS = "/share/repos/"
+	SHARE_PROXY = "/share/proxy/"
+	SHARE_LOCAL = "/share/local/"
+
+	SHARE_LOCAL_AVATAR     = "/share/local/avatar"
+	SHARE_LOCAL_BACKGROUND = "/share/local/background"
 )
 const SHARE = "share"
 
@@ -157,26 +166,26 @@ func init() {
 			m.RenderIndex(SERVE, ice.VOLCANOS)
 		}},
 
-		"/share/toast/": {Name: "/share/toast/", Help: "推送流", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		SHARE_TOAST: {Name: "/share/toast/", Help: "推送流", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			m.Cmdy(SPACE, m.Option(ice.POD), m.Optionv("cmds"))
 		}},
-		"/share/repos/": {Name: "/share/repos/", Help: "代码库", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			_share_repos(m, path.Join(arg[0], arg[1], arg[2]), arg[3:]...)
-		}},
-		"/share/proxy": {Name: "/share/proxy", Help: "文件流", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			_share_proxy(m)
-		}},
-		"/share/cache/": {Name: "/share/cache/", Help: "缓存池", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		SHARE_CACHE: {Name: "/share/cache/", Help: "缓存池", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			_share_cache(m, arg...)
 		}},
-		"/share/local/": {Name: "/share/local/", Help: "文件夹", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		SHARE_REPOS: {Name: "/share/repos/", Help: "代码库", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			_share_repos(m, path.Join(arg[0], arg[1], arg[2]), arg[3:]...)
+		}},
+		SHARE_PROXY: {Name: "/share/proxy/", Help: "文件流", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			_share_proxy(m)
+		}},
+		SHARE_LOCAL: {Name: "/share/local/", Help: "文件夹", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			_share_local(m, arg...)
 		}},
-		"/share/local/avatar": {Name: "avatar", Help: "头像", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			m.RenderDownload(strings.TrimPrefix(m.Cmd(aaa.USER, m.Option(ice.MSG_USERNAME)).Append(aaa.AVATAR), "/share/local/"))
+		SHARE_LOCAL_AVATAR: {Name: "avatar", Help: "头像", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			m.RenderDownload(strings.TrimPrefix(m.Cmd(aaa.USER, m.Option(ice.MSG_USERNAME)).Append(aaa.AVATAR), SHARE_LOCAL))
 		}},
-		"/share/local/background": {Name: "background", Help: "壁纸", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			m.RenderDownload(strings.TrimPrefix(m.Cmd(aaa.USER, m.Option(ice.MSG_USERNAME)).Append(aaa.BACKGROUND), "/share/local/"))
+		SHARE_LOCAL_BACKGROUND: {Name: "background", Help: "壁纸", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			m.RenderDownload(strings.TrimPrefix(m.Cmd(aaa.USER, m.Option(ice.MSG_USERNAME)).Append(aaa.BACKGROUND), SHARE_LOCAL))
 		}},
 	}})
 }

@@ -152,16 +152,20 @@ func init() {
 					m.RenameAppend(nfs.PATH, arg[0])
 				}
 			}},
-			mdb.CREATE: {Name: "create main=src/main.go@key key zone type=Zone,Hash,Data name=hi list help", Help: "模块", Hand: func(m *ice.Message, arg ...string) {
+			mdb.CREATE: {Name: "create main=src/main.go@key zone name=hi help type=Hash,Zone,Lists,Data,Code list key", Help: "模块", Hand: func(m *ice.Message, arg ...string) {
 				_defs(m, mdb.ZONE, m.Option(mdb.NAME), mdb.HELP, m.Option(mdb.NAME))
 				_defs(m, mdb.KEY, kit.Keys("web.code", m.Option(mdb.ZONE), m.Option(mdb.NAME)))
 				switch m.Option(mdb.TYPE) {
-				case "Zone":
-					_defs(m, "list", m.Option(mdb.NAME)+" zone id auto insert")
 				case "Hash":
 					_defs(m, "list", m.Option(mdb.NAME)+" hash auto create")
+				case "Zone":
+					_defs(m, "list", m.Option(mdb.NAME)+" zone id auto insert")
+				case "Lists":
+					_defs(m, "list", m.Option(mdb.NAME)+" id auto insert")
 				case "Data":
-					_defs(m, "list", m.Option(mdb.NAME)+" path auto upload")
+					_defs(m, "list", m.Option(mdb.NAME)+" path auto")
+				case "Code":
+					_defs(m, "list", m.Option(mdb.NAME)+" port path auto start order build download")
 				}
 				m.Option("tags", kit.Format("`name:\"%s\" help:\"%s\"`", m.Option("list"), m.Option("help")))
 

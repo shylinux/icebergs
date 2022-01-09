@@ -6,6 +6,7 @@ import (
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/nfs"
 	"shylinux.com/x/icebergs/base/ssh"
+	"shylinux.com/x/icebergs/base/web"
 	kit "shylinux.com/x/toolkits"
 )
 
@@ -29,10 +30,7 @@ func _spark_show(m *ice.Message, name, text string, arg ...string) {
 	}
 
 	for _, l := range strings.Split(text, ice.NL) {
-		m.Echo("<div>")
-		m.Echo("<label>").Echo(prompt).Echo("</label>")
-		m.Echo("<span>").Echo(l).Echo("</span>")
-		m.Echo("</div>")
+		m.Echo(web.Format("div", web.Format("label", prompt), web.Format("span", l)))
 	}
 }
 
@@ -60,13 +58,14 @@ func init() {
 					}
 					list := []string{kit.Format(`<div class="story" data-type="spark" data-name="%s">`, arg[0])}
 					for _, l := range strings.Split(strings.Join(arg[1:], ice.NL), ice.NL) {
-						switch list = append(list, "<div>"); arg[0] {
+						list = append(list, "<div>")
+						switch arg[0] {
 						case SHELL:
-							list = append(list, "<label>", "$ ", "</label>")
+							list = append(list, web.Format("label", "$ "))
 						default:
-							list = append(list, "<label>", "&gt; ", "</label>")
+							list = append(list, web.Format("label", "&gt; "))
 						}
-						list = append(list, "<span>", l, "</span>")
+						list = append(list, web.Format("span", l))
 						list = append(list, "</div>")
 					}
 					list = append(list, "</div>")

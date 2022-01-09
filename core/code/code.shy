@@ -1,48 +1,28 @@
 chapter "源码"
 
-field "前端" web.code.webpack
-field "后端" web.code.binpack
-field "生成" web.code.autogen
-field "编译" web.code.compile
-field "升级" web.code.upgrade
-field "发布" web.code.publish
-field "安装" web.code.install
-
-field "编辑" web.code.vimer
-field "查看" web.code.inner
-field "收藏" web.code.favor
-field "测试" web.code.bench
-field "优化" web.code.pprof
-
-field "系统" web.code.c
-field "命令" web.code.sh
-field "脚本" web.code.shy
-field "后端" web.code.go
-field "前端" web.code.js
-
-code.go
-code.shy
-
-autogen.go
 webpack.go
 binpack.go
+autogen.go
 compile.go
 publish.go
 upgrade.go
 install.go
 
-vimer.go
 inner.go
+vimer.go
 favor.go
 bench.go
 pprof.go
 
 c.go
+js.go
+go.go
 sh.go
 shy.go
-go.go
-js.go
 
 python.go
 python.shy
 case.go
+code.go
+code.shy
+

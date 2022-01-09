@@ -62,7 +62,7 @@ func init() {
 				m.Echo(kit.Formats(kit.UnMarshal(m.Cmdx(web.SPIDE, m.Option(ice.DEV), web.SPIDE_RAW,
 					m.Option(ice.CMD), m.Option(cli.API), web.SPIDE_DATA, m.Option(ice.ARG)))))
 				m.Info(`curl "` + m.Option(cli.API) + `" -H "Content-Type: application/json"` + ` -d '` + m.Option(ice.ARG) + `'`)
-				m.ProcessDisplay("/plugin/local/wiki/json.js")
+				m.ProcessDisplay("/plugin/story/json.js")
 			}},
 		}, mdb.ZoneAction()), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			if len(arg) == 0 {

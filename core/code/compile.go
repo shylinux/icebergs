@@ -24,7 +24,7 @@ func init() {
 			), GO, kit.List(GO, cli.BUILD),
 		)},
 	}, Commands: map[string]*ice.Command{
-		COMPILE: {Name: "compile arch=amd64,386,arm os=linux,darwin,windows src=src/main.go@key run:button", Help: "编译", Action: map[string]*ice.Action{
+		COMPILE: {Name: "compile arch=amd64,386,arm,arm64 os=linux,darwin,windows src=src/main.go@key run:button", Help: "编译", Action: map[string]*ice.Action{
 			mdb.INPUTS: {Name: "inputs", Help: "补全", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmdy(nfs.DIR, ice.SRC, "path,size,time", ice.Option{nfs.DIR_REG, `.*\.go$`})
 				m.Sort(nfs.PATH)

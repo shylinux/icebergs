@@ -15,7 +15,7 @@ const VIMER = "vimer"
 func init() {
 	Index.Merge(&ice.Context{Commands: map[string]*ice.Command{
 		VIMER: {Name: "vimer path=src/ file=main.go line=1 refresh:button=auto save", Help: "编辑器", Meta: kit.Dict(
-			ice.Display("/plugin/local/code/vimer.js", INNER),
+			ice.DisplayLocal("", INNER),
 		), Action: map[string]*ice.Action{
 			nfs.SAVE: {Name: "save type file path", Help: "保存", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmdy(nfs.SAVE, path.Join(m.Option(nfs.PATH), m.Option(nfs.FILE)))

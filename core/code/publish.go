@@ -62,7 +62,7 @@ func init() {
 	Index.Merge(&ice.Context{Configs: map[string]*ice.Config{
 		PUBLISH: {Name: PUBLISH, Help: "发布", Value: kit.Data(
 			nfs.PATH, ice.USR_PUBLISH, ice.CONTEXTS, _contexts,
-			SH, `#!/bin/bash
+			SH, `#! /bin/sh
 echo "hello world"
 `,
 			JS, `Volcanos("onengine", {})

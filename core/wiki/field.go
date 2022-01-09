@@ -15,7 +15,7 @@ func Parse(m *ice.Message, meta string, key string, arg ...string) *ice.Message 
 	for _, line := range kit.Split(strings.Join(arg, ice.SP), ice.NL) {
 		ls := kit.Split(line)
 		for i := 0; i < len(ls); i++ {
-			if strings.HasPrefix(ls[i], "#") {
+			if strings.HasPrefix(ls[i], "# ") {
 				ls = ls[:i]
 				break
 			}
@@ -41,8 +41,7 @@ func _field_show(m *ice.Message, name, text string, arg ...string) {
 	})
 
 	name = strings.ReplaceAll(name, ice.SP, "_")
-	meta[mdb.NAME] = name
-	meta[mdb.INDEX] = text
+	meta[mdb.NAME], meta[mdb.INDEX] = name, text
 
 	// 扩展参数
 	for i := 0; i < len(arg)-1; i += 2 {
@@ -77,9 +76,7 @@ func _field_show(m *ice.Message, name, text string, arg ...string) {
 			if len(args) > count {
 				list := meta[INPUTS].([]interface{})
 				for i := count; i < len(args); i++ {
-					list = append(list, kit.Dict(
-						mdb.TYPE, "text", mdb.NAME, "args", mdb.VALUE, args[i],
-					))
+					list = append(list, kit.Dict(mdb.TYPE, "text", mdb.NAME, ARGS, mdb.VALUE, args[i]))
 				}
 				meta[INPUTS] = list
 			}

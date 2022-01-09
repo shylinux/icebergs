@@ -33,8 +33,8 @@ func _wiki_path(m *ice.Message, cmd string, arg ...string) string {
 	return path.Join(m.Option(ice.MSG_LOCAL), m.Conf(cmd, kit.Keym(nfs.PATH)), path.Join(arg...))
 }
 func _wiki_link(m *ice.Message, cmd string, text string) string {
-	if !strings.HasPrefix(text, "http") && !strings.HasPrefix(text, ice.PS) {
-		text = path.Join("/share/local", _wiki_path(m, cmd, text))
+	if !strings.HasPrefix(text, ice.HTTP) && !strings.HasPrefix(text, ice.PS) {
+		text = path.Join(web.SHARE_LOCAL, _wiki_path(m, cmd, text))
 	}
 	return text
 }

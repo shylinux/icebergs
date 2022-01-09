@@ -10,6 +10,9 @@ import (
 
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/mdb"
+	"shylinux.com/x/icebergs/base/nfs"
+	"shylinux.com/x/icebergs/base/tcp"
+	"shylinux.com/x/icebergs/base/web"
 	kit "shylinux.com/x/toolkits"
 )
 
@@ -22,17 +25,17 @@ func init() {
 				return
 			}
 
-			if arg[1] = strings.TrimSpace(arg[1]); arg[0] == "auto" {
+			if arg[1] = strings.TrimSpace(arg[1]); arg[0] == ice.AUTO {
 				if strings.HasPrefix(arg[1], "{") || strings.HasPrefix(arg[1], "[") {
-					arg[0] = "json"
-				} else if strings.HasPrefix(arg[1], "http") {
-					arg[0] = "http"
+					arg[0] = nfs.JSON
+				} else if strings.HasPrefix(arg[1], ice.HTTP) {
+					arg[0] = ice.HTTP
 				} else if strings.Contains(arg[1], "=") {
-					arg[0] = "form"
+					arg[0] = web.FORM
 				} else if _, e := strconv.ParseInt(arg[1], 10, 64); e == nil {
-					arg[0] = "time"
+					arg[0] = mdb.TIME
 				} else {
-					arg[0] = "list"
+					arg[0] = mdb.LIST
 				}
 			}
 
@@ -43,14 +46,14 @@ func init() {
 					m.Echo(hex.EncodeToString(buf))
 				}
 
-			case "json":
+			case nfs.JSON:
 				m.Echo(kit.Formats(kit.UnMarshal(arg[1])))
 
-			case "http":
+			case ice.HTTP:
 				u, _ := url.Parse(arg[1])
-				m.Push("proto", u.Scheme)
-				m.Push("host", u.Host)
-				m.Push("path", u.Path)
+				m.Push(tcp.PROTO, u.Scheme)
+				m.Push(tcp.HOST, u.Host)
+				m.Push(nfs.PATH, u.Path)
 				for k, v := range u.Query() {
 					for _, v := range v {
 						m.Push(k, v)
@@ -58,7 +61,7 @@ func init() {
 				}
 				m.EchoQRCode(arg[1])
 
-			case "form":
+			case web.FORM:
 				for _, v := range kit.Split(arg[1], "&", "&", "&") {
 					ls := kit.Split(v, "=", "=", "=")
 					key, _ := url.QueryUnescape(ls[0])
@@ -66,12 +69,12 @@ func init() {
 					m.Push(key, value)
 				}
 
-			case "time":
+			case mdb.TIME:
 				if i, e := strconv.ParseInt(arg[1], 10, 64); e == nil {
 					m.Echo(time.Unix(i, 0).Format(ice.MOD_TIME))
 				}
 
-			case "list":
+			case mdb.LIST:
 				for i, v := range kit.Split(arg[1]) {
 					m.Push(kit.Format(i), v)
 				}

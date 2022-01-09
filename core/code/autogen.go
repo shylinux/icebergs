@@ -144,7 +144,7 @@ const AUTOGEN = "autogen"
 
 func init() {
 	Index.Merge(&ice.Context{Commands: map[string]*ice.Command{
-		AUTOGEN: {Name: "autogen path auto create binpack script", Help: "生成", Action: map[string]*ice.Action{
+		AUTOGEN: {Name: "autogen path auto create binpack script relay", Help: "生成", Action: map[string]*ice.Action{
 			mdb.INPUTS: {Name: "inputs", Help: "补全", Hand: func(m *ice.Message, arg ...string) {
 				switch arg[0] {
 				case MAIN:
@@ -186,6 +186,11 @@ func init() {
 				_autogen_version(m)
 				m.Cmd(BINPACK, mdb.CREATE)
 				m.Cmd(cli.SYSTEM, "sh", "-c", `cat src/binpack.go|sed 's/package main/package ice/g' > usr/release/binpack.go`)
+			}},
+			"relay": {Name: "relay alias username host port list", Help: "跳板", Hand: func(m *ice.Message, arg ...string) {
+				m.Cmd(nfs.SAVE, path.Join(os.Getenv(cli.HOME), ".ssh/"+m.Option(mdb.ALIAS)+".json"),
+					kit.Formats(kit.Dict(m.OptionSimple("username,host,port,list"))))
+				m.Cmd(nfs.LINK, path.Join(ice.USR_PUBLISH, m.Option(mdb.ALIAS)), "relay")
 			}},
 		}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			if m.Option(nfs.DIR_ROOT, ice.SRC); len(arg) == 0 || strings.HasSuffix(arg[0], ice.PS) {

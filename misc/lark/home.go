@@ -19,7 +19,7 @@ func init() {
 			}
 			name += "的" + kit.Select("应用列表", arg, 2)
 
-			text, link, list := kit.Select("", arg, 3), kit.MergeURL2(m.Conf(web.SHARE, kit.Keym(kit.MDB_DOMAIN)), "/chat/lark/sso"), []string{}
+			text, link, list := kit.Select("", arg, 3), kit.MergeURL2(m.Conf(web.SHARE, kit.Keym("domain")), "/chat/lark/sso"), []string{}
 			if len(arg) == 0 {
 				m.Cmd("web.chat./river").Table(func(index int, val map[string]string, head []string) {
 					m.Cmd("web.chat./river", val[mdb.HASH], chat.STORM).Table(func(index int, value map[string]string, head []string) {

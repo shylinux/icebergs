@@ -137,7 +137,7 @@ func ZoneAction(args ...interface{}) map[string]*ice.Action {
 		}},
 		INPUTS: {Name: "inputs", Help: "补全", Hand: func(m *ice.Message, arg ...string) {
 			arg[0] = strings.TrimPrefix(arg[0], "extra.")
-			arg[0] = kit.Select(arg[0], m.Config(kit.Keys(kit.MDB_ALIAS, arg[0])))
+			arg[0] = kit.Select(arg[0], m.Config(kit.Keys(ALIAS, arg[0])))
 			switch arg[0] {
 			case ice.POD:
 				m.Cmdy("route")

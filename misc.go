@@ -88,7 +88,7 @@ func (m *Message) FieldsIsDetail() bool {
 	if m.OptionFields() == "detail" {
 		return true
 	}
-	if len(m.meta[MSG_APPEND]) == 2 && m.meta[MSG_APPEND][0] == kit.MDB_KEY && m.meta[MSG_APPEND][1] == kit.MDB_VALUE {
+	if len(m.meta[MSG_APPEND]) == 2 && m.meta[MSG_APPEND][0] == KEY && m.meta[MSG_APPEND][1] == VALUE {
 		return true
 	}
 	return false
@@ -105,11 +105,11 @@ func (m *Message) OptionCB(key string, cb ...interface{}) interface{} {
 func (m *Message) OptionUserWeb() *url.URL {
 	return kit.ParseURL(m.Option(MSG_USERWEB))
 }
-func (m *Message) SetAppend(arg ...string) *Message {
-	return m.Set(MSG_APPEND, arg...)
-}
 func (m *Message) SetResult(arg ...string) *Message {
 	return m.Set(MSG_RESULT, arg...)
+}
+func (m *Message) SetAppend(arg ...string) *Message {
+	return m.Set(MSG_APPEND, arg...)
 }
 func (m *Message) RenameAppend(from, to string) *Message {
 	for i, v := range m.meta[MSG_APPEND] {
@@ -124,7 +124,7 @@ func (m *Message) RenameAppend(from, to string) *Message {
 func (m *Message) AppendSimple(key ...string) (res []string) {
 	if len(key) == 0 {
 		if m.FieldsIsDetail() {
-			key = append(key, m.Appendv(kit.MDB_KEY)...)
+			key = append(key, m.Appendv(KEY)...)
 		} else {
 			key = append(key, m.Appendv(MSG_APPEND)...)
 		}
@@ -261,8 +261,8 @@ func (c *Context) _cmd(m *Message, cmd *Command, key string, sub string, h *Acti
 	if m._sub = sub; len(h.List) > 0 && sub != "search" {
 		order := false
 		for i, v := range h.List {
-			name := kit.Format(kit.Value(v, kit.MDB_NAME))
-			value := kit.Format(kit.Value(v, kit.MDB_VALUE))
+			name := kit.Format(kit.Value(v, NAME))
+			value := kit.Format(kit.Value(v, VALUE))
 
 			if i == 0 && len(arg) > 0 && arg[0] != name {
 				order = true
@@ -298,23 +298,23 @@ func (c *Context) split(name string) (list []interface{}) {
 	for i := 1; i < len(ls); i++ {
 		switch ls[i] {
 		case "run":
-			item = kit.Dict(kit.MDB_TYPE, BUTTON, kit.MDB_NAME, "run")
+			item = kit.Dict(TYPE, BUTTON, NAME, "run")
 			list = append(list, item)
 		case "text":
-			item = kit.Dict(kit.MDB_TYPE, TEXTAREA, kit.MDB_NAME, "text")
+			item = kit.Dict(TYPE, TEXTAREA, NAME, "text")
 			list = append(list, item)
 		case "auto":
-			list = append(list, kit.List(kit.MDB_TYPE, BUTTON, kit.MDB_NAME, "list", kit.MDB_ACTION, AUTO)...)
-			list = append(list, kit.List(kit.MDB_TYPE, BUTTON, kit.MDB_NAME, "back")...)
+			list = append(list, kit.List(TYPE, BUTTON, NAME, "list", ACTION, AUTO)...)
+			list = append(list, kit.List(TYPE, BUTTON, NAME, "back")...)
 			button = true
 		case "page":
-			list = append(list, kit.List(kit.MDB_TYPE, TEXT, kit.MDB_NAME, "limit")...)
-			list = append(list, kit.List(kit.MDB_TYPE, TEXT, kit.MDB_NAME, "offend")...)
-			list = append(list, kit.List(kit.MDB_TYPE, BUTTON, kit.MDB_NAME, "prev")...)
-			list = append(list, kit.List(kit.MDB_TYPE, BUTTON, kit.MDB_NAME, "next")...)
+			list = append(list, kit.List(TYPE, TEXT, NAME, "limit")...)
+			list = append(list, kit.List(TYPE, TEXT, NAME, "offend")...)
+			list = append(list, kit.List(TYPE, BUTTON, NAME, "prev")...)
+			list = append(list, kit.List(TYPE, BUTTON, NAME, "next")...)
 
 		case ":":
-			if item[kit.MDB_TYPE] = kit.Select("", ls, i+1); item[kit.MDB_TYPE] == BUTTON {
+			if item[TYPE] = kit.Select("", ls, i+1); item[TYPE] == BUTTON {
 				button = true
 			}
 			i++
@@ -326,18 +326,18 @@ func (c *Context) split(name string) (list []interface{}) {
 				} else {
 					item["values"] = vs
 				}
-				item[kit.MDB_VALUE] = vs[0]
-				item[kit.MDB_TYPE] = SELECT
+				item[VALUE] = vs[0]
+				item[TYPE] = SELECT
 			} else {
-				item[kit.MDB_VALUE] = value
+				item[VALUE] = value
 			}
 			i++
 		case "@":
-			item[kit.MDB_ACTION] = kit.Select("", ls, i+1)
+			item[ACTION] = kit.Select("", ls, i+1)
 			i++
 
 		default:
-			item = kit.Dict(kit.MDB_TYPE, kit.Select(TEXT, BUTTON, button), kit.MDB_NAME, ls[i])
+			item = kit.Dict(TYPE, kit.Select(TEXT, BUTTON, button), NAME, ls[i])
 			list = append(list, item)
 		}
 	}

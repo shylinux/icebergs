@@ -107,7 +107,7 @@ func Run(arg ...string) string {
 
 	Index.root, Pulse.root = Index, Pulse
 	switch Index.Merge(Index).Begin(Pulse.Spawn(), arg...); kit.Select("", arg, 0) {
-	case "serve", "space":
+	case SERVE, SPACE:
 		if log.LogDisable = false; Index.Start(Pulse, arg...) {
 			Pulse.TryCatch(Pulse, true, func(Pulse *Message) { Index.wg.Wait() })
 			os.Exit(kit.Int(Pulse.Option(EXIT)))

@@ -18,7 +18,7 @@ func Render(m *Message, cmd string, args ...interface{}) string {
 	switch arg := kit.Simple(args...); cmd {
 	case RENDER_ANCHOR: // [name] link
 		p := kit.Select(arg[0], arg, 1)
-		if !strings.HasPrefix(p, "http") {
+		if !strings.HasPrefix(p, HTTP) {
 			p = m.MergeURL2(p)
 		}
 		return kit.Format(`<a href="%s" target="_blank">%s</a>`, p, arg[0])
@@ -76,15 +76,15 @@ func (m *Message) RenderDownload(args ...interface{}) *Message {
 	return m.Render(RENDER_DOWNLOAD, args...)
 }
 func (m *Message) RenderIndex(serve, repos string, file ...string) *Message {
-	return m.RenderDownload(path.Join(m.Conf(serve, kit.Keym(repos, kit.MDB_PATH)), kit.Select(m.Conf(serve, kit.Keym(repos, kit.MDB_INDEX)), path.Join(file...))))
+	return m.RenderDownload(path.Join(m.Conf(serve, kit.Keym(repos, "path")), kit.Select(m.Conf(serve, kit.Keym(repos, INDEX)), path.Join(file...))))
 }
 func (m *Message) RenderCmd(index string, args ...interface{}) {
 	list := index
 	if index != "" {
-		msg := m.Cmd("command", index)
+		msg := m.Cmd(COMMAND, index)
 		list = kit.Format(kit.List(kit.Dict(
-			kit.MDB_INDEX, index, kit.MDB_ARGS, kit.Simple(args),
-			msg.AppendSimple(kit.MDB_NAME, kit.MDB_HELP),
+			INDEX, index, ARGS, kit.Simple(args),
+			msg.AppendSimple(NAME, "help"),
 			"feature", kit.UnMarshal(msg.Append("meta")),
 			"inputs", kit.UnMarshal(msg.Append("list")),
 		)))
@@ -110,17 +110,17 @@ func (m *Message) IsCliUA() bool {
 }
 func (m *Message) PushAnchor(arg ...interface{}) { // [name] link
 	if !m.IsCliUA() {
-		m.Push(kit.MDB_LINK, Render(m, RENDER_ANCHOR, arg...))
+		m.Push("link", Render(m, RENDER_ANCHOR, arg...))
 	}
 }
 func (m *Message) PushButton(arg ...interface{}) { // name...
 	if !m.IsCliUA() {
-		m.Push(kit.MDB_ACTION, Render(m, RENDER_BUTTON, arg...))
+		m.Push(ACTION, Render(m, RENDER_BUTTON, arg...))
 	}
 }
 func (m *Message) PushScript(arg ...string) { // [type] text...
 	if !m.IsCliUA() {
-		m.Push(kit.MDB_SCRIPT, Render(m, RENDER_SCRIPT, arg))
+		m.Push("script", Render(m, RENDER_SCRIPT, arg))
 	}
 }
 func (m *Message) PushQRCode(key string, src string, arg ...string) { // key src [size]
@@ -150,7 +150,7 @@ func (m *Message) PushDownload(key string, arg ...interface{}) { // [name] file
 }
 
 func (m *Message) PushAction(list ...interface{}) {
-	m.Set(MSG_APPEND, "action")
+	m.Set(MSG_APPEND, ACTION)
 	m.Table(func(index int, value map[string]string, head []string) {
 		m.PushButton(list...)
 	})
@@ -162,14 +162,14 @@ func (m *Message) PushPodCmd(cmd string, arg ...string) {
 		})
 	}
 
-	m.Cmd("space").Table(func(index int, value map[string]string, head []string) {
-		switch value[kit.MDB_TYPE] {
+	m.Cmd(SPACE).Table(func(index int, value map[string]string, head []string) {
+		switch value[TYPE] {
 		case "server", "worker":
-			if value[kit.MDB_NAME] == Info.HostName {
+			if value[NAME] == Info.HostName {
 				break
 			}
-			m.Cmd("space", value[kit.MDB_NAME], m.Prefix(cmd), arg).Table(func(index int, val map[string]string, head []string) {
-				val[POD] = kit.Keys(value[kit.MDB_NAME], val[POD])
+			m.Cmd(SPACE, value[NAME], m.Prefix(cmd), arg).Table(func(index int, val map[string]string, head []string) {
+				val[POD] = kit.Keys(value[NAME], val[POD])
 				m.Push("", val, head)
 			})
 		}
@@ -185,7 +185,7 @@ func (m *Message) PushSearch(args ...interface{}) {
 			m.Push(k, kit.Select(m.Prefix(), data[k]))
 		case CMD:
 			m.Push(k, kit.Select(m.CommandKey(), data[k]))
-		case kit.MDB_TIME:
+		case TIME:
 			m.Push(k, kit.Select(m.Time(), data[k]))
 		default:
 			m.Push(k, kit.Select("", data[k]))
@@ -243,7 +243,7 @@ func (m *Message) Display(file string, arg ...interface{}) *Message {
 }
 
 func DisplayBase(file string, arg ...string) map[string]string {
-	return map[string]string{DISPLAY: file, kit.MDB_STYLE: kit.Join(arg, SP)}
+	return map[string]string{DISPLAY: file, STYLE: kit.Join(arg, SP)}
 }
 func DisplayLocal(file string, arg ...string) map[string]string {
 	if file == "" {

@@ -38,7 +38,7 @@ func _daemon_exec(m *ice.Message, cmd *exec.Cmd) {
 				m.Cmd(mdb.MODIFY, DAEMON, "", mdb.HASH, mdb.HASH, h, STATUS, ERROR, ERROR, e)
 			}
 		} else {
-			m.Cost(kit.MDB_CODE, cmd.ProcessState.ExitCode(), ctx.ARGS, cmd.Args)
+			m.Cost(CODE, cmd.ProcessState.ExitCode(), ctx.ARGS, cmd.Args)
 			m.Cmd(mdb.MODIFY, DAEMON, "", mdb.HASH, mdb.HASH, h, STATUS, STOP)
 		}
 
@@ -85,6 +85,8 @@ const (
 	RESTART = "restart"
 	RELOAD  = "reload"
 	STOP    = "stop"
+	CODE    = "code"
+	BACK    = "back"
 
 	OPEN  = "open"
 	CLOSE = "close"

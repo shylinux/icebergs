@@ -8,13 +8,6 @@ const (
 	PT = "."
 	FS = ","
 	NL = "\n"
-	OF = " of "
-
-	PWD = "./"
-
-	SH = "sh"
-	GO = "go"
-	JS = "js"
 
 	OK      = "ok"
 	TRUE    = "true"
@@ -22,6 +15,7 @@ const (
 	SUCCESS = "success"
 	FAILURE = "failure"
 	PROCESS = "process"
+	OF      = " of "
 
 	INIT = "init"
 	LOAD = "load"
@@ -71,10 +65,10 @@ const ( // REPOS
 	CONTEXTS = "contexts"
 
 	INSTALL = "install"
+	RELEASE = "release"
+	PUBLISH = "publish"
 	REQUIRE = "require"
 	DISPLAY = "display"
-	PUBLISH = "publish"
-	RELEASE = "release"
 )
 const ( // DIR
 	SRC = "src"
@@ -83,15 +77,25 @@ const ( // DIR
 	VAR = "var"
 	USR = "usr"
 
+	PWD  = "./"
+	HTML = "html"
+	CSS  = "css"
+	JS   = "js"
+	GO   = "go"
+	SH   = "sh"
+	CSV  = "csv"
+	JSON = "json"
+
 	USR_VOLCANOS = "usr/volcanos"
 	USR_LEARNING = "usr/learning"
 	USR_ICEBERGS = "usr/icebergs"
 	USR_TOOLKITS = "usr/toolkits"
 	USR_INTSHELL = "usr/intshell"
-	USR_RELEASE  = "usr/release"
 	USR_INSTALL  = "usr/install"
+	USR_RELEASE  = "usr/release"
 	USR_PUBLISH  = "usr/publish"
 
+	PLUGIN_INPUT = "/plugin/input"
 	PLUGIN_STORY = "/plugin/story"
 	PLUGIN_LOCAL = "/plugin/local"
 
@@ -134,6 +138,7 @@ const ( // DIR
 	SRC_RELEASE    = "src/release"
 	SRC_MAIN_GO    = "src/main.go"
 	SRC_MAIN_SHY   = "src/main.shy"
+	SRC_MAIN_SVG   = "src/main.svg"
 	SRC_VERSION_GO = "src/version.go"
 	SRC_BINPACK_GO = "src/binpack.go"
 	MAKEFILE       = "Makefile"
@@ -145,6 +150,12 @@ const ( // MSG
 	MSG_OPTION = "option"
 	MSG_APPEND = "append"
 	MSG_RESULT = "result"
+
+	MSG_CMDS   = "cmds"
+	MSG_FIELDS = "fields"
+	MSG_SESSID = "sessid"
+	MSG_DOMAIN = "domain"
+	MSG_OPTS   = "_option"
 
 	MSG_ALIAS  = "_alias"
 	MSG_SCRIPT = "_script"
@@ -161,12 +172,6 @@ const ( // MSG
 
 	MSG_DISPLAY = "_display"
 	MSG_PROCESS = "_process"
-
-	MSG_CMDS   = "cmds"
-	MSG_FIELDS = "fields"
-	MSG_SESSID = "sessid"
-	MSG_DOMAIN = "domain"
-	MSG_OPTS   = "_option"
 
 	MSG_USERIP   = "user.ip"
 	MSG_USERUA   = "user.ua"
@@ -212,8 +217,8 @@ const ( // RENDER
 )
 const ( // PROCESS
 	PROCESS_LOCATION = "_location"
-	PROCESS_REWRITE  = "_rewrite"
 	PROCESS_REFRESH  = "_refresh"
+	PROCESS_REWRITE  = "_rewrite"
 	PROCESS_DISPLAY  = "_display"
 	PROCESS_FIELD    = "_field"
 	PROCESS_INNER    = "_inner"
@@ -298,6 +303,25 @@ const (
 	MDB = "mdb"
 )
 const (
+	CONFIG  = "config"
 	COMMAND = "command"
 	ACTION  = "action"
+	STYLE   = "style"
+	INDEX   = "index"
+	ARGS    = "args"
+)
+const (
+	SERVE = "serve"
+	SPACE = "space"
+	SPIDE = "spide"
+	CACHE = "cache"
+)
+const (
+	KEY   = "key"
+	VALUE = "value"
+	HASH  = "hash"
+	TIME  = "time"
+	TYPE  = "type"
+	NAME  = "name"
+	TEXT  = "text"
 )

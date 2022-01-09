@@ -125,6 +125,16 @@ const (
 	REPOS  = "repos"
 )
 const (
+	HTML = "html"
+	CSS  = "css"
+	JS   = "js"
+	GO   = "go"
+	SH   = "sh"
+	CSV  = "csv"
+	JSON = "json"
+)
+
+const (
 	PATH = "path"
 	FILE = "file"
 	LINE = "line"
@@ -136,10 +146,9 @@ func init() {
 	Index.Merge(&ice.Context{Configs: map[string]*ice.Config{
 		CAT: {Name: CAT, Help: "文件", Value: kit.Data(
 			SOURCE, kit.Dict(
-				"sh", ice.TRUE, "go", ice.TRUE, "js", ice.TRUE,
-				"shy", ice.TRUE, "json", ice.TRUE, "csv", ice.TRUE,
+				HTML, ice.TRUE, CSS, ice.TRUE, JS, ice.TRUE, GO, ice.TRUE, SH, ice.TRUE, CSV, ice.TRUE, JSON, ice.TRUE,
+				"md", ice.TRUE, "shy", ice.TRUE, "makefile", ice.TRUE, "license", ice.TRUE,
 				"conf", ice.TRUE, "yaml", ice.TRUE, "yml", ice.TRUE,
-				"makefile", ice.TRUE, "license", ice.TRUE, "md", ice.TRUE,
 			),
 		)},
 	}, Commands: map[string]*ice.Command{

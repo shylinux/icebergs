@@ -25,7 +25,7 @@ func init() {
 			if arg[0] = strings.TrimSpace(arg[0]); strings.HasPrefix(arg[0], "ice ") {
 				switch list := kit.Split(arg[0]); list[1] {
 				case "add": // ice add 想你 shwq [person [9999]]
-					m.Cmd("web.code.input.wubi", mdb.INSERT, mdb.TEXT, list[2], kit.MDB_CODE, list[3],
+					m.Cmd("web.code.input.wubi", mdb.INSERT, mdb.TEXT, list[2], cli.CODE, list[3],
 						mdb.ZONE, kit.Select("person", list, 4), mdb.VALUE, kit.Select("999999", list, 5),
 					)
 					arg[0] = list[3]

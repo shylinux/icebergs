@@ -70,14 +70,14 @@ func _system_exec(m *ice.Message, cmd *exec.Cmd) {
 
 	// 执行命令
 	if e := cmd.Run(); !m.Warn(e, ice.ErrNotFound, cmd.Args) {
-		m.Cost(kit.MDB_CODE, cmd.ProcessState.ExitCode(), ctx.ARGS, cmd.Args)
+		m.Cost(CODE, cmd.ProcessState.ExitCode(), ctx.ARGS, cmd.Args)
 	}
 
 	m.Push(mdb.TIME, m.Time())
-	m.Push(kit.MDB_CODE, int(cmd.ProcessState.ExitCode()))
+	m.Push(CODE, int(cmd.ProcessState.ExitCode()))
 }
 func IsSuccess(m *ice.Message) bool {
-	return m.Append(kit.MDB_CODE) == "0" || m.Append(kit.MDB_CODE) == ""
+	return m.Append(CODE) == "0" || m.Append(CODE) == ""
 }
 
 const (

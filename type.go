@@ -154,7 +154,7 @@ func (c *Context) Merge(s *Context) *Context {
 				help = strings.SplitN(help[0], ":", 2)
 			}
 			if kit.Value(cmd.Meta, kit.Keys("_trans", strings.TrimPrefix(k, "_")), help[0]); len(help) > 1 {
-				kit.Value(cmd.Meta, kit.Keys(kit.MDB_TITLE, k), help[1])
+				kit.Value(cmd.Meta, kit.Keys("title", k), help[1])
 			}
 			if a.Hand == nil {
 				continue // alias cmd
@@ -374,7 +374,7 @@ func (m *Message) Search(key string, cb interface{}) *Message {
 
 	// 查找模块
 	p := m.target.root
-	if key = strings.TrimPrefix(key, "ice."); key == "." {
+	if key = strings.TrimPrefix(key, "ice."); key == PT {
 		p, key = m.target, ""
 	} else if key == ".." {
 		p, key = m.target.context, ""
@@ -460,17 +460,17 @@ func (m *Message) Search(key string, cb interface{}) *Message {
 	return m
 }
 
-func (m *Message) Cmdy(arg ...interface{}) *Message {
-	return m.Copy(m.cmd(arg...))
-}
-func (m *Message) Cmdx(arg ...interface{}) string {
-	return kit.Select("", m.cmd(arg...).meta[MSG_RESULT], 0)
+func (m *Message) Cmd(arg ...interface{}) *Message {
+	return m.cmd(arg...)
 }
 func (m *Message) Cmds(arg ...interface{}) *Message {
 	return m.Go(func() { m.cmd(arg...) })
 }
-func (m *Message) Cmd(arg ...interface{}) *Message {
-	return m.cmd(arg...)
+func (m *Message) Cmdx(arg ...interface{}) string {
+	return kit.Select("", m.cmd(arg...).meta[MSG_RESULT], 0)
+}
+func (m *Message) Cmdy(arg ...interface{}) *Message {
+	return m.Copy(m.cmd(arg...))
 }
 
 func (m *Message) Confi(key string, sub string) int {

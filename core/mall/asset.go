@@ -62,7 +62,7 @@ func init() {
 	Index.Merge(&ice.Context{Configs: map[string]*ice.Config{
 		ASSET: {Name: ASSET, Help: "资产", Value: kit.Data(
 			mdb.SHORT, ACCOUNT, mdb.FIELD, "time,id,type,amount,name,text",
-			kit.MDB_ALIAS, kit.Dict(FROM, ACCOUNT, TO, ACCOUNT),
+			mdb.ALIAS, kit.Dict(FROM, ACCOUNT, TO, ACCOUNT),
 		)},
 	}, Commands: map[string]*ice.Command{
 		ASSET: {Name: "asset account id auto spend trans bonus", Help: "资产", Meta: kit.Dict(

@@ -17,7 +17,7 @@ func init() {
 			ice.DisplayLocal(""),
 		), Action: ice.MergeAction(map[string]*ice.Action{
 			nfs.SAVE: {Name: "save", Help: "保存", Hand: func(m *ice.Message, arg ...string) {
-				_wiki_save(m, DRAW, arg[0], m.Option(kit.MDB_CONTENT))
+				_wiki_save(m, DRAW, arg[0], m.Option("content"))
 			}},
 		}, ctx.CmdAction()), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			if !_wiki_list(m, DRAW, kit.Select(ice.PWD, arg, 0)) {

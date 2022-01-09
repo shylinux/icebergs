@@ -87,7 +87,7 @@ func (m *Message) Done(ok bool) bool {
 func (m *Message) Call(sync bool, cb func(*Message) *Message) *Message {
 	wait := make(chan bool, 2)
 
-	p := kit.Select("10s", m.Option(kit.MDB_TIMEOUT))
+	p := kit.Select("10s", m.Option("timeout"))
 	t := time.AfterFunc(kit.Duration(p), func() {
 		m.Warn(true, ErrTimeout, m.Detailv())
 		m.Back(nil)
@@ -136,11 +136,11 @@ func (m *Message) Watch(key string, arg ...string) *Message {
 	if len(arg) == 0 {
 		arg = append(arg, m.Prefix(AUTO))
 	}
-	m.Cmd("event", "action", "listen", "event", key, CMD, kit.Join(arg, SP))
+	m.Cmd("event", ACTION, "listen", "event", key, CMD, kit.Join(arg, SP))
 	return m
 }
 func (m *Message) Event(key string, arg ...string) *Message {
-	m.Cmd("event", "action", "action", "event", key, arg)
+	m.Cmd("event", ACTION, "action", "event", key, arg)
 	return m
 }
 func (m *Message) Right(arg ...interface{}) bool {
@@ -152,15 +152,15 @@ func (m *Message) Space(arg interface{}) []string {
 	if arg == nil || arg == "" || kit.Format(arg) == m.Conf("runtime", "node.name") {
 		return nil
 	}
-	return []string{"space", kit.Format(arg)}
+	return []string{SPACE, kit.Format(arg)}
 }
 func (m *Message) PodCmd(arg ...interface{}) bool {
 	if pod := m.Option(POD); pod != "" {
 		if m.Option(POD, ""); m.Option(MSG_UPLOAD) != "" {
-			msg := m.Cmd("cache", "upload")
-			m.Option(MSG_UPLOAD, msg.Append(kit.MDB_HASH), msg.Append(kit.MDB_NAME), msg.Append(kit.MDB_SIZE))
+			msg := m.Cmd(CACHE, "upload")
+			m.Option(MSG_UPLOAD, msg.Append(HASH), msg.Append(NAME), msg.Append("size"))
 		}
-		m.Cmdy(append(kit.List("space", pod), arg...))
+		m.Cmdy(append(kit.List(SPACE, pod), arg...))
 		return true
 	}
 	return false

@@ -15,16 +15,16 @@ func (m *Message) Set(key string, arg ...string) *Message {
 	case MSG_OPTION, MSG_APPEND:
 		if m.FieldsIsDetail() {
 			if len(arg) > 0 {
-				for i := 0; i < len(m.meta[kit.MDB_KEY]); i++ {
-					if m.meta[kit.MDB_KEY][i] == arg[0] {
-						m.meta[kit.MDB_KEY][i] = ""
-						m.meta[kit.MDB_VALUE][i] = ""
+				for i := 0; i < len(m.meta[KEY]); i++ {
+					if m.meta[KEY][i] == arg[0] {
+						m.meta[KEY][i] = ""
+						m.meta[VALUE][i] = ""
 					}
 				}
 				return m
 			}
-			delete(m.meta, kit.MDB_KEY)
-			delete(m.meta, kit.MDB_VALUE)
+			delete(m.meta, KEY)
+			delete(m.meta, VALUE)
 			return m
 		}
 		if len(arg) > 0 {
@@ -43,18 +43,18 @@ func (m *Message) Set(key string, arg ...string) *Message {
 			delete(m.meta, k)
 		}
 		if m.FieldsIsDetail() {
-			for i := 0; i < len(m.meta[kit.MDB_KEY]); i++ {
-				if m.meta[kit.MDB_KEY][i] == key {
+			for i := 0; i < len(m.meta[KEY]); i++ {
+				if m.meta[KEY][i] == key {
 					if len(arg) > 0 {
-						m.meta[kit.MDB_VALUE][i] = arg[0]
+						m.meta[VALUE][i] = arg[0]
 						return m
 					}
-					for ; i < len(m.meta[kit.MDB_KEY])-1; i++ {
-						m.meta[kit.MDB_KEY][i] = m.meta[kit.MDB_KEY][i+1]
-						m.meta[kit.MDB_VALUE][i] = m.meta[kit.MDB_VALUE][i+1]
+					for ; i < len(m.meta[KEY])-1; i++ {
+						m.meta[KEY][i] = m.meta[KEY][i+1]
+						m.meta[VALUE][i] = m.meta[VALUE][i+1]
 					}
-					m.meta[kit.MDB_KEY] = kit.Slice(m.meta[kit.MDB_KEY], 0, -1)
-					m.meta[kit.MDB_VALUE] = kit.Slice(m.meta[kit.MDB_VALUE], 0, -1)
+					m.meta[KEY] = kit.Slice(m.meta[KEY], 0, -1)
+					m.meta[VALUE] = kit.Slice(m.meta[VALUE], 0, -1)
 					break
 				}
 			}
@@ -115,7 +115,7 @@ func (m *Message) Push(key string, value interface{}, arg ...interface{}) *Messa
 			// 查找数据
 			var v interface{}
 			switch k {
-			case kit.MDB_KEY, kit.MDB_HASH:
+			case KEY, HASH:
 				if key != "" && key != "detail" {
 					v = key
 					break
@@ -134,8 +134,8 @@ func (m *Message) Push(key string, value interface{}, arg ...interface{}) *Messa
 			// 追加数据
 			switch v := kit.Format(v); key {
 			case "detail":
-				m.Add(MSG_APPEND, kit.MDB_KEY, k)
-				m.Add(MSG_APPEND, kit.MDB_VALUE, v)
+				m.Add(MSG_APPEND, KEY, k)
+				m.Add(MSG_APPEND, VALUE, v)
 			default:
 				m.Add(MSG_APPEND, k, v)
 			}
@@ -158,9 +158,9 @@ func (m *Message) Push(key string, value interface{}, arg ...interface{}) *Messa
 
 	default:
 		if m.FieldsIsDetail() {
-			if key != kit.MDB_KEY || key != kit.MDB_VALUE {
-				m.Add(MSG_APPEND, kit.MDB_KEY, key)
-				m.Add(MSG_APPEND, kit.MDB_VALUE, kit.Format(value))
+			if key != KEY || key != VALUE {
+				m.Add(MSG_APPEND, KEY, key)
+				m.Add(MSG_APPEND, VALUE, kit.Format(value))
 				break
 			}
 		}
@@ -200,7 +200,7 @@ func (m *Message) Copy(msg *Message, arg ...string) *Message {
 	return m
 }
 func (m *Message) Sort(key string, arg ...string) *Message {
-	if m.FieldsIsDetail() && key != kit.MDB_KEY {
+	if m.FieldsIsDetail() && key != KEY {
 		return m
 	}
 	// 排序方法
@@ -276,10 +276,10 @@ func (m *Message) Table(cbs ...func(index int, value map[string]string, head []s
 				return m
 			}
 			line := map[string]string{}
-			for i, k := range m.meta[kit.MDB_KEY] {
-				line[k] = kit.Select("", m.meta[kit.MDB_VALUE], i)
+			for i, k := range m.meta[KEY] {
+				line[k] = kit.Select("", m.meta[VALUE], i)
 			}
-			cbs[0](0, line, m.meta[kit.MDB_KEY])
+			cbs[0](0, line, m.meta[KEY])
 			return m
 		}
 
@@ -401,18 +401,18 @@ func (m *Message) Appendv(key string, arg ...interface{}) []string {
 		return m.meta[key]
 	}
 
-	if m.FieldsIsDetail() && key != kit.MDB_KEY {
-		for i, k := range m.meta[kit.MDB_KEY] {
+	if m.FieldsIsDetail() && key != KEY {
+		for i, k := range m.meta[KEY] {
 			if k == key {
 				if len(arg) > 0 {
-					m.meta[kit.MDB_VALUE][i] = kit.Format(arg[0])
+					m.meta[VALUE][i] = kit.Format(arg[0])
 				}
-				return []string{kit.Select("", m.meta[kit.MDB_VALUE], i)}
+				return []string{kit.Select("", m.meta[VALUE], i)}
 			}
 		}
 		if len(arg) > 0 {
-			m.Add(MSG_APPEND, kit.MDB_KEY, key)
-			m.Add(MSG_APPEND, kit.MDB_VALUE, kit.Format(arg[0]))
+			m.Add(MSG_APPEND, KEY, key)
+			m.Add(MSG_APPEND, VALUE, kit.Format(arg[0]))
 			return []string{kit.Format(arg[0])}
 		}
 		return nil

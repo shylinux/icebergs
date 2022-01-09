@@ -15,7 +15,7 @@ type Option struct {
 	Value interface{}
 }
 
-func OptionHash(arg string) Option      { return Option{kit.MDB_HASH, arg} }
+func OptionHash(arg string) Option      { return Option{HASH, arg} }
 func OptionFields(arg ...string) Option { return Option{MSG_FIELDS, kit.Join(arg)} }
 
 func (m *Message) OptionFields(arg ...string) string {
@@ -59,20 +59,20 @@ func (m *Message) OptionSimple(key ...string) (res []string) {
 }
 func (m *Message) OptionTemplate() string {
 	res := []string{`class="story"`}
-	for _, key := range kit.Split(kit.MDB_STYLE) {
+	for _, key := range kit.Split(STYLE) {
 		if m.Option(key) != "" {
 			res = append(res, kit.Format(`s="%s"`, key, m.Option(key)))
 		}
 	}
 	for _, key := range kit.Split("type,name,text") {
-		if key == "text" && m.Option("type") == "spark" {
+		if key == TEXT && m.Option(TYPE) == "spark" {
 			continue
 		}
 		if m.Option(key) != "" {
 			res = append(res, kit.Format(`data-%s="%s"`, key, m.Option(key)))
 		}
 	}
-	kit.Fetch(m.Optionv(kit.MDB_EXTRA), func(key string, value string) {
+	kit.Fetch(m.Optionv("extra"), func(key string, value string) {
 		if value != "" {
 			res = append(res, kit.Format(`data-%s="%s"`, key, value))
 		}
@@ -86,14 +86,14 @@ func (m *Message) Fields(length int, fields ...string) string {
 func (m *Message) Upload(dir string) {
 	up := kit.Simple(m.Optionv(MSG_UPLOAD))
 	if len(up) < 2 {
-		msg := m.Cmd("cache", "upload")
-		up = kit.Simple(msg.Append(kit.MDB_HASH), msg.Append(kit.MDB_NAME), msg.Append(kit.MDB_SIZE))
+		msg := m.Cmd(CACHE, "upload")
+		up = kit.Simple(msg.Append(HASH), msg.Append(NAME), msg.Append("size"))
 	}
 
 	if p := path.Join(dir, up[1]); m.Option(MSG_USERPOD) == "" {
-		m.Cmdy("cache", "watch", up[0], p) // 本机文件
+		m.Cmdy(CACHE, "watch", up[0], p) // 本机文件
 	} else { // 下发文件
-		m.Cmdy("spide", DEV, SAVE, p, "GET", m.MergeURL2(path.Join("/share/cache", up[0])))
+		m.Cmdy(SPIDE, DEV, SAVE, p, "GET", m.MergeURL2(path.Join("/share/cache", up[0])))
 	}
 }
 func (m *Message) Action(arg ...interface{}) {
@@ -110,22 +110,22 @@ func (m *Message) Status(arg ...interface{}) {
 	list := kit.List()
 	args := kit.Simple(arg)
 	for i := 0; i < len(args)-1; i += 2 {
-		list = append(list, kit.Dict(kit.MDB_NAME, args[i], kit.MDB_VALUE, args[i+1]))
+		list = append(list, kit.Dict(NAME, args[i], VALUE, args[i+1]))
 	}
 	m.Option(MSG_STATUS, kit.Format(list))
 }
 func (m *Message) StatusTime(arg ...interface{}) {
-	m.Status(kit.MDB_TIME, m.Time(), arg, kit.MDB_COST, m.FormatCost())
+	m.Status(TIME, m.Time(), arg, kit.MDB_COST, m.FormatCost())
 }
 func (m *Message) StatusTimeCount(arg ...interface{}) {
-	m.Status(kit.MDB_TIME, m.Time(), kit.MDB_COUNT, kit.Split(m.FormatSize())[0], arg, kit.MDB_COST, m.FormatCost())
+	m.Status(TIME, m.Time(), kit.MDB_COUNT, kit.Split(m.FormatSize())[0], arg, kit.MDB_COST, m.FormatCost())
 }
 func (m *Message) StatusTimeCountTotal(arg ...interface{}) {
-	m.Status(kit.MDB_TIME, m.Time(), kit.MDB_COUNT, kit.Split(m.FormatSize())[0], kit.MDB_TOTAL, arg, kit.MDB_COST, m.FormatCost())
+	m.Status(TIME, m.Time(), kit.MDB_COUNT, kit.Split(m.FormatSize())[0], kit.MDB_TOTAL, arg, kit.MDB_COST, m.FormatCost())
 }
 
 func (m *Message) Confirm(text string) string {
-	return m.Cmdx("space", m.Option(MSG_DAEMON), "confirm", text)
+	return m.Cmdx(SPACE, m.Option(MSG_DAEMON), "confirm", text)
 }
 func (m *Message) ToastSuccess(arg ...interface{}) {
 	m.Toast(SUCCESS, arg...)
@@ -144,9 +144,9 @@ func (m *Message) Toast(text string, arg ...interface{}) { // [title [duration [
 }
 func (m *Message) PushNotice(arg ...interface{}) {
 	if m.Option(MSG_USERPOD) == "" {
-		m.Cmd("space", m.Option(MSG_DAEMON), arg)
+		m.Cmd(SPACE, m.Option(MSG_DAEMON), arg)
 	} else {
-		m.Cmd("web.spide", "dev", m.MergeURL2("/share/toast/"), kit.Format(kit.Dict("pod", m.Option(MSG_DAEMON), "cmds", kit.Simple(arg...))))
+		m.Cmd(SPIDE, DEV, m.MergeURL2("/share/toast/"), kit.Format(kit.Dict(POD, m.Option(MSG_DAEMON), "cmds", kit.Simple(arg...))))
 	}
 }
 func (m *Message) PushNoticeGrow(arg ...interface{}) {
@@ -204,7 +204,7 @@ func (m *Message) ProcessCommand(cmd string, val []string, arg ...string) {
 		return
 	}
 
-	m.Cmdy("command", cmd)
+	m.Cmdy(COMMAND, cmd)
 	m.ProcessField(cmd, RUN)
 	m.Push(ARG, kit.Format(val))
 }

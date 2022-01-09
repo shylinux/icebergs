@@ -81,9 +81,9 @@ func _action_share(m *ice.Message, arg ...string) {
 			break // 分享超时
 		}
 		if arg[0] = msg.Append(mdb.NAME); len(arg) == 1 {
-			m.Push("title", msg.Append(kit.MDB_TITLE))
-			m.Push("index", msg.Append(mdb.NAME))
-			m.Push("args", msg.Append(mdb.TEXT))
+			m.Push("title", msg.Append("title"))
+			m.Push(ctx.INDEX, msg.Append(mdb.NAME))
+			m.Push(ctx.ARGS, msg.Append(mdb.TEXT))
 			break // 命令列表
 		}
 

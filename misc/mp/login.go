@@ -6,6 +6,7 @@ import (
 
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/aaa"
+	"shylinux.com/x/icebergs/base/cli"
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/tcp"
 	"shylinux.com/x/icebergs/base/web"
@@ -40,7 +41,7 @@ func init() {
 			}},
 			aaa.SESS: {Name: "sess code", Help: "会话", Hand: func(m *ice.Message, arg ...string) {
 				msg := m.Cmd(web.SPIDE, MP, web.SPIDE_GET, "/sns/jscode2session?grant_type=authorization_code",
-					"js_code", m.Option(kit.MDB_CODE), APPID, m.Config(APPID), "secret", m.Config(APPMM))
+					"js_code", m.Option(cli.CODE), APPID, m.Config(APPID), "secret", m.Config(APPMM))
 
 				// 用户登录
 				m.Option(ice.MSG_USERZONE, MP)

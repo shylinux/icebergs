@@ -3,6 +3,7 @@ package lark
 import (
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/aaa"
+	"shylinux.com/x/icebergs/base/cli"
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/web"
 	kit "shylinux.com/x/toolkits"
@@ -20,9 +21,9 @@ func init() {
 
 			appid := m.Cmd(APP).Append(APPID)
 			home := m.MergeURL2("/chat/lark/sso")
-			if m.Option(kit.MDB_CODE) != "" { // 登录成功
+			if m.Option(cli.CODE) != "" { // 登录成功
 				msg := m.Cmd(web.SPIDE, LARK, "/open-apis/authen/v1/access_token", "grant_type", "authorization_code",
-					kit.MDB_CODE, m.Option(kit.MDB_CODE), "app_access_token", m.Cmdx(APP, TOKEN, appid))
+					cli.CODE, m.Option(cli.CODE), "app_access_token", m.Cmdx(APP, TOKEN, appid))
 
 				// 更新用户
 				m.Option(aaa.USERNAME, msg.Append("data.open_id"))
@@ -36,13 +37,13 @@ func init() {
 				)
 
 				// 创建会话
-				web.RenderCookie(m, aaa.SessCreate(m, m.Option(aaa.USERNAME)), web.CookieName(m.Option(kit.MDB_BACK)))
-				m.RenderRedirect(kit.Select(home, m.Option(kit.MDB_BACK)))
+				web.RenderCookie(m, aaa.SessCreate(m, m.Option(aaa.USERNAME)), web.CookieName(m.Option(cli.BACK)))
+				m.RenderRedirect(kit.Select(home, m.Option(cli.BACK)))
 				return
 			}
 
 			if back := m.R.Header.Get("Referer"); back != "" {
-				home = kit.MergeURL(home, kit.MDB_BACK, back)
+				home = kit.MergeURL(home, cli.BACK, back)
 			}
 			// 登录页面
 			m.RenderRedirect(kit.MergeURL2(m.Cmd(web.SPIDE, LARK).Append("client.url"), "/open-apis/authen/v1/index"),

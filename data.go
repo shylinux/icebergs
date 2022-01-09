@@ -25,7 +25,6 @@ func (m *Message) Config(key string, arg ...interface{}) string {
 		m.Conf(m.PrefixKey(), kit.Keym(key), arg[0])
 	}
 	return m.Conf(m.PrefixKey(), kit.Keym(key))
-	// return kit.Format(m.Configv(key, arg...))
 }
 func (m *Message) Configv(key string, arg ...interface{}) interface{} {
 	if len(arg) > 0 {
@@ -52,7 +51,7 @@ func (m *Message) Save(arg ...string) *Message {
 	for i, k := range arg {
 		arg[i] = m.Prefix(k)
 	}
-	return m.Cmd("config", SAVE, m.Prefix("json"), arg)
+	return m.Cmd(CONFIG, SAVE, m.Prefix(JSON), arg)
 }
 func (m *Message) Load(arg ...string) *Message {
 	if len(arg) == 0 {
@@ -63,7 +62,7 @@ func (m *Message) Load(arg ...string) *Message {
 	for i, k := range arg {
 		arg[i] = m.Prefix(k)
 	}
-	return m.Cmd("config", LOAD, m.Prefix("json"), arg)
+	return m.Cmd(CONFIG, LOAD, m.Prefix(JSON), arg)
 }
 
 func (m *Message) Richs(prefix string, chain interface{}, raw interface{}, cb interface{}) (res map[string]interface{}) {
@@ -113,7 +112,7 @@ func (m *Message) Grows(prefix string, chain interface{}, match string, value st
 
 	limit := kit.Int(m.Option(CACHE_LIMIT))
 	if begin := kit.Int(m.Option(CACHE_BEGIN)); begin != 0 && limit > 0 {
-		count := kit.Int(m.Option(CACHE_COUNT, kit.Int(kit.Value(cache, kit.Keym(kit.MDB_COUNT)))))
+		count := kit.Int(m.Option(CACHE_COUNT, kit.Int(kit.Value(cache, kit.Keym("count")))))
 		if begin > 0 {
 			m.Option(CACHE_OFFEND, count-begin-limit)
 		} else {

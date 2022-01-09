@@ -61,7 +61,7 @@ func _field_show(m *ice.Message, name, text string, arg ...string) {
 		}
 
 		switch arg[i] {
-		case kit.MDB_CONTENT:
+		case "content":
 			meta[arg[i]] = arg[i+1]
 
 		case ARGS:
@@ -69,7 +69,7 @@ func _field_show(m *ice.Message, name, text string, arg ...string) {
 
 			count := 0
 			kit.Fetch(meta[INPUTS], func(index int, value map[string]interface{}) {
-				if value[mdb.TYPE] != kit.MDB_BUTTON {
+				if value[mdb.TYPE] != "button" {
 					count++
 				}
 			})

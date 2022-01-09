@@ -15,7 +15,7 @@ func _word_show(m *ice.Message, name string, arg ...string) {
 	m.Option(TITLE, map[string]int{})
 	m.Option(MENU, kit.Dict(mdb.LIST, []interface{}{}))
 
-	m.Option(ice.MSG_ALIAS, m.Confv(WORD, kit.Keym(kit.MDB_ALIAS)))
+	m.Option(ice.MSG_ALIAS, m.Confv(WORD, kit.Keym(mdb.ALIAS)))
 	m.Option(nfs.DIR_ROOT, _wiki_path(m, WORD))
 	m.Cmdy(ssh.SOURCE, name)
 }
@@ -25,7 +25,7 @@ const WORD = "word"
 func init() {
 	Index.Merge(&ice.Context{Configs: map[string]*ice.Config{
 		WORD: {Name: WORD, Help: "语言文字", Value: kit.Data(
-			nfs.PATH, "", REGEXP, ".*\\.shy", kit.MDB_ALIAS, kit.Dict(
+			nfs.PATH, "", REGEXP, ".*\\.shy", mdb.ALIAS, kit.Dict(
 				NAVMENU, kit.List(TITLE, NAVMENU),
 				PREMENU, kit.List(TITLE, PREMENU),
 				CHAPTER, kit.List(TITLE, CHAPTER),

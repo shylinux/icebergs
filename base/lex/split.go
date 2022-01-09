@@ -47,7 +47,7 @@ func _split_list(m *ice.Message, file string, arg ...string) map[string]interfac
 		data := kit.Data(DEEP, deep)
 
 		// 回调函数
-		ls := kit.Split(text, m.Option(SPLIT_SPACE), m.Option(SPLIT_BLOCK), m.Option(SPLIT_QUOTE))
+		ls := kit.Split(text, m.Option(SPLIT_SPACE), m.Option(SPLIT_BLOCK), m.Option(SPLIT_QUOTE), m.Option(SPLIT_TRANS))
 		switch cb := m.OptionCB(SPLIT).(type) {
 		case func(int, []string, map[string]interface{}) []string:
 			ls = cb(deep, ls, data)
@@ -87,6 +87,7 @@ const (
 	SPLIT_SPACE = "split.space"
 	SPLIT_BLOCK = "split.block"
 	SPLIT_QUOTE = "split.quote"
+	SPLIT_TRANS = "split.trans"
 )
 const SPLIT = "split"
 

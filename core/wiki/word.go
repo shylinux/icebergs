@@ -35,7 +35,7 @@ func init() {
 			),
 		)},
 	}, Commands: map[string]*ice.Command{
-		WORD: {Name: "word path=src/main.shy@key auto show", Help: "语言文字", Meta: kit.Dict(
+		WORD: {Name: "word path=src/main.shy@key auto play", Help: "语言文字", Meta: kit.Dict(
 			ice.DisplayLocal(""),
 		), Action: ice.MergeAction(map[string]*ice.Action{
 			mdb.INPUTS: {Name: "inputs", Help: "补全", Hand: func(m *ice.Message, arg ...string) {
@@ -44,7 +44,7 @@ func init() {
 			web.STORY: {Name: "story", Help: "运行", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmdy(arg[0], ctx.ACTION, ice.RUN, arg[2:])
 			}},
-			ice.SHOW: {Name: "show", Help: "演示"},
+			ice.PLAY: {Name: "play", Help: "演示"},
 		}, ctx.CmdAction()), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			m.Option(nfs.DIR_REG, m.Config(lex.REGEXP))
 			if m.Option(nfs.DIR_DEEP, ice.TRUE); !_wiki_list(m, cmd, arg...) {

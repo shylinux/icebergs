@@ -125,5 +125,5 @@ func PushStream(m *ice.Message) {
 }
 
 func Format(tag string, arg ...interface{}) string {
-	return kit.Format("<%s>%s</%s>", tag, strings.Join(kit.Simple(arg), ""))
+	return kit.Format("<%s>%s</%s>", tag, strings.Join(kit.Simple(arg), ""), tag)
 }

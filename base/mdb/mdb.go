@@ -81,6 +81,7 @@ const (
 
 	UPLOAD = "upload"
 	REVERT = "revert"
+	REPEAT = "repeat"
 
 	NEXT = "next"
 	PREV = "prev"

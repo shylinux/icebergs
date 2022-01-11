@@ -11,7 +11,7 @@ import (
 )
 
 func _zone_fields(m *ice.Message) []string {
-	return kit.Split(kit.Select("zone,id,time,type,name,text", kit.Join(kit.Simple(m.Optionv(FIELDS)))))
+	return kit.Split(kit.Select("zone,id,time,type,name,text", m.OptionFields()))
 }
 func _zone_select(m *ice.Message, prefix, chain, zone string, id string) {
 	if zone == RANDOM {
@@ -19,7 +19,7 @@ func _zone_select(m *ice.Message, prefix, chain, zone string, id string) {
 	}
 
 	fields := _zone_fields(m)
-	cb := m.Optionv(kit.Keycb(SELECT))
+	cb := m.OptionCB(SELECT)
 	m.Richs(prefix, chain, kit.Select(FOREACH, zone), func(key string, val map[string]interface{}) {
 		if val = kit.GetMeta(val); zone == "" {
 			if m.OptionFields() == DETAIL {
@@ -38,8 +38,16 @@ func _zone_select(m *ice.Message, prefix, chain, zone string, id string) {
 				cb(key, value, val)
 			case func(string, map[string]interface{}):
 				cb(key, value)
+			case func(map[string]interface{}):
+				cb(value)
+			case func(map[string]string):
+				res := map[string]string{}
+				for k, v := range value {
+					res[k] = kit.Format(v)
+				}
+				cb(res)
 			default:
-				if m.Option(FIELDS) == DETAIL {
+				if m.FieldsIsDetail() {
 					m.Push(DETAIL, value)
 				} else {
 					m.Push(key, value, fields, val)
@@ -90,7 +98,7 @@ func _zone_import(m *ice.Message, prefix, chain, file string) {
 	count := 0
 
 	list := map[string]string{}
-	zkey := kit.Select(head[0], m.Option(FIELDS))
+	zkey := kit.Select(head[0], m.OptionFields())
 
 	for {
 		line, e := r.Read()
@@ -187,7 +195,7 @@ func ZoneAction(args ...interface{}) map[string]*ice.Action {
 		NEXT: {Name: "next", Help: "下一页", Hand: func(m *ice.Message, arg ...string) {
 			NextPageLimit(m, arg[0], arg[1:]...)
 		}},
-		SELECT: &ice.Action{Name: "select hash auto", Help: "列表", Hand: func(m *ice.Message, arg ...string) {
+		SELECT: {Name: "select", Help: "列表", Hand: func(m *ice.Message, arg ...string) {
 			ZoneSelect(m, arg...)
 		}},
 	})
@@ -199,4 +207,13 @@ func ZoneSelect(m *ice.Message, arg ...string) *ice.Message {
 		m.PushAction(REMOVE)
 	}
 	return m
+}
+func ZoneSelectAll(m *ice.Message, arg ...string) *ice.Message {
+	m.Option(ice.CACHE_LIMIT, "-1")
+	return ZoneSelect(m, arg...)
+}
+func ZoneSelectCB(m *ice.Message, zone string, cb interface{}) *ice.Message {
+	m.OptionCB(SELECT, cb)
+	m.Option(ice.CACHE_LIMIT, "-1")
+	return ZoneSelect(m, zone)
 }

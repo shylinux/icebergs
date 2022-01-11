@@ -27,7 +27,7 @@ func _sub_amount(m *ice.Message, arg []string) {
 
 func _asset_check(m *ice.Message, account string) {
 	amount := 0
-	m.Option(kit.Keycb(mdb.SELECT), func(key string, value map[string]interface{}) {
+	m.OptionCB(mdb.SELECT, func(key string, value map[string]interface{}) {
 		amount += kit.Int(kit.Value(value, AMOUNT))
 	})
 	m.Cmd(mdb.SELECT, m.Prefix(ASSET), "", mdb.ZONE, account, ice.OptionFields(m.Config(mdb.FIELD)))
@@ -37,8 +37,8 @@ func _asset_check(m *ice.Message, account string) {
 func _asset_insert(m *ice.Message, account string, arg ...string) {
 	m.Cmdy(mdb.INSERT, m.Prefix(ASSET), "", mdb.HASH, ACCOUNT, account)
 	m.Cmdy(mdb.INSERT, m.Prefix(ASSET), "", mdb.ZONE, account, arg)
-
-	amount := kit.Int(m.Cmd(mdb.SELECT, m.Prefix(ASSET), "", mdb.HASH, ACCOUNT, account, ice.Option{mdb.FIELDS, "time,account,amount,count"}).Append(AMOUNT))
+	m.OptionFields("time,account,amount,count")
+	amount := kit.Int(m.Cmd(mdb.SELECT, m.Prefix(ASSET), "", mdb.HASH, ACCOUNT, account).Append(AMOUNT))
 	amount += kit.Int(_sub_value(m, AMOUNT, arg...))
 	m.Cmdy(mdb.MODIFY, m.Prefix(ASSET), "", mdb.HASH, ACCOUNT, account, AMOUNT, amount)
 }

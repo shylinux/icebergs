@@ -24,8 +24,8 @@ const (
 	PAGE_INDEX_CSS   = "page/index.css"
 	PAGE_CACHE_JS    = "page/cache.js"
 	PAGE_INDEX_JS    = "page/index.js"
-	PAGE_CMD_CSS     = "page/cmd.css"
-	PAGE_CMD_JS      = "page/cmd.js"
+	PAGE_CAN_CSS     = "page/can.css"
+	PAGE_CAN_JS      = "page/can.js"
 )
 
 const DEVPACK = "devpack"
@@ -97,15 +97,15 @@ func init() {
 					m.Echo(p)
 				}
 
-				m.Cmd(nfs.COPY, _volcanos(m, PAGE_CMD_CSS), _volcanos(m, PAGE_INDEX_CSS), _volcanos(m, PAGE_CACHE_CSS))
-				m.Cmd(nfs.COPY, _volcanos(m, PAGE_CMD_JS), _volcanos(m, ice.PROTO_JS), _volcanos(m, PAGE_CACHE_JS))
+				m.Cmd(nfs.COPY, _volcanos(m, PAGE_CAN_CSS), _volcanos(m, PAGE_INDEX_CSS), _volcanos(m, PAGE_CACHE_CSS))
+				m.Cmd(nfs.COPY, _volcanos(m, PAGE_CAN_JS), _volcanos(m, ice.PROTO_JS), _volcanos(m, PAGE_CACHE_JS))
 			}},
 			mdb.REMOVE: {Name: "remove", Help: "删除", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmd(nfs.SAVE, _volcanos(m, PAGE_CACHE_JS))
 				m.Cmd(nfs.SAVE, _volcanos(m, PAGE_CACHE_CSS))
 
-				m.Cmd(nfs.COPY, _volcanos(m, PAGE_CMD_CSS), _volcanos(m, PAGE_INDEX_CSS), _volcanos(m, PAGE_CACHE_CSS))
-				m.Cmd(nfs.COPY, _volcanos(m, PAGE_CMD_JS), _volcanos(m, ice.PROTO_JS), _volcanos(m, PAGE_CACHE_JS))
+				m.Cmd(nfs.COPY, _volcanos(m, PAGE_CAN_CSS), _volcanos(m, PAGE_INDEX_CSS), _volcanos(m, PAGE_CACHE_CSS))
+				m.Cmd(nfs.COPY, _volcanos(m, PAGE_CAN_JS), _volcanos(m, ice.PROTO_JS), _volcanos(m, PAGE_CACHE_JS))
 			}},
 		}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			m.Option(nfs.DIR_DEEP, true)

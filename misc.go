@@ -16,7 +16,10 @@ func (m *Message) Length() (max int) {
 			max = l
 		}
 	}
-	return max
+	if max > 0 {
+		return max
+	}
+	return len(m.Resultv())
 }
 func (m *Message) CSV(text string, head ...string) *Message {
 	bio := bytes.NewBufferString(text)
@@ -94,8 +97,10 @@ func (m *Message) FieldsIsDetail() bool {
 	return false
 }
 
-func (m *Message) IsErr(str string) bool { return m.Result(1) == str }
-func (m *Message) IsErrNotFound() bool   { return m.Result(1) == ErrNotFound }
+func (m *Message) IsErr(arg ...string) bool {
+	return len(arg) > 0 && m.Result(1) == arg[0] || m.Result(0) == ErrWarn
+}
+func (m *Message) IsErrNotFound() bool { return m.Result(1) == ErrNotFound }
 func (m *Message) OptionCB(key string, cb ...interface{}) interface{} {
 	if len(cb) > 0 {
 		return m.Optionv(kit.Keycb(key), cb...)
@@ -197,7 +202,7 @@ func (m *Message) cmd(arg ...interface{}) *Message {
 	ok := false
 	run := func(msg *Message, ctx *Context, cmd *Command, key string, arg ...string) {
 		if ok = true; cbs != nil {
-			msg.Option(kit.Keycb(kit.Slice(kit.Split(list[0], PT), -1)[0]), cbs)
+			msg.OptionCB(kit.Slice(kit.Split(list[0], PT), -1)[0], cbs)
 		}
 		for k, v := range opts {
 			msg.Option(k, v)

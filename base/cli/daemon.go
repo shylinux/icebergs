@@ -42,7 +42,7 @@ func _daemon_exec(m *ice.Message, cmd *exec.Cmd) {
 			m.Cmd(mdb.MODIFY, DAEMON, "", mdb.HASH, mdb.HASH, h, STATUS, STOP)
 		}
 
-		switch cb := m.Optionv(kit.Keycb(DAEMON)).(type) {
+		switch cb := m.OptionCB(DAEMON).(type) {
 		case func(string):
 			m.Sleep300ms()
 			cb(m.Conf(DAEMON, kit.Keys(mdb.HASH, h, kit.Keym(STATUS))))
@@ -82,11 +82,15 @@ const (
 	STATUS  = "status"
 	ERROR   = "error"
 	START   = "start"
+	CLEAR   = "clear"
 	RESTART = "restart"
 	RELOAD  = "reload"
 	STOP    = "stop"
-	CODE    = "code"
-	BACK    = "back"
+
+	CODE = "code"
+	COST = "cost"
+	BACK = "back"
+	FROM = "from"
 
 	OPEN  = "open"
 	CLOSE = "close"

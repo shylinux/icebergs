@@ -355,7 +355,7 @@ func init() {
 					mdb.TIME, m.Time(), mdb.NAME, m.Option(mdb.NAME),
 					MATRIX, mat, NLANG, mat.nlang, NCELL, mat.ncell,
 				))
-				switch cb := m.Optionv(kit.Keycb(MATRIX)).(type) {
+				switch cb := m.OptionCB(MATRIX).(type) {
 				case func(string, *Matrix):
 					cb(h, mat)
 				}
@@ -394,7 +394,7 @@ func init() {
 
 					for stream := lex.NewStream(bytes.NewBufferString(m.Option(mdb.TEXT))); stream.Scan(); {
 						hash, _ := mat.Parse(m, func(m *ice.Message, nhash string, hash int, word []string, begin int, stream *lex.Stream) (int, []string) {
-							switch cb := m.Optionv(kit.Keycb(MATRIX)).(type) {
+							switch cb := m.OptionCB(MATRIX).(type) {
 							case func(string, int, []string, int, *lex.Stream) (int, []string):
 								return cb(nhash, hash, word, begin, stream)
 							}

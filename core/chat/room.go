@@ -29,7 +29,7 @@ func init() {
 			}},
 			mdb.INSERT: {Name: "insert zone type=hi name=hello text=world", Help: "发送", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmdy(mdb.INSERT, m.Prefix(ROOM), "", mdb.ZONE, m.Option(mdb.ZONE), arg[2:])
-				m.Cmdy(mdb.SELECT, m.Prefix(ROOM), kit.KeyHash(m.Option(mdb.ZONE)), mdb.HASH, ice.Option{mdb.FIELDS, "time,space"}).Table(func(index int, value map[string]string, head []string) {
+				m.Cmdy(mdb.SELECT, m.Prefix(ROOM), kit.KeyHash(m.Option(mdb.ZONE)), mdb.HASH, ice.Option{"fields", "time,space"}).Table(func(index int, value map[string]string, head []string) {
 					m.Cmdy(web.SPACE, value[web.SPACE], "toast", m.Option("text"), m.Option("name"))
 				})
 			}},

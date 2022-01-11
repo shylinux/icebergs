@@ -64,10 +64,8 @@ const (
 	RANDOMS = "%"
 )
 const (
-	FIELDS = "fields"
 	DETAIL = "detail"
 	RANDOM = "random"
-	REPEAT = "repeat"
 
 	CREATE = "create"
 	REMOVE = "remove"
@@ -80,11 +78,13 @@ const (
 	PRUNES = "prunes"
 	EXPORT = "export"
 	IMPORT = "import"
+
 	UPLOAD = "upload"
 	REVERT = "revert"
 
 	NEXT = "next"
 	PREV = "prev"
+	PAGE = "page"
 )
 const (
 	CACHE_CLEAR_ON_EXIT = "cache.clear.on.exit"

@@ -50,7 +50,7 @@ func _dir_list(m *ice.Message, root string, name string, level int, deep bool, d
 
 		p := path.Join(root, name, f.Name())
 		if !(dir_type == TYPE_CAT && f.IsDir() || dir_type == TYPE_DIR && !f.IsDir()) && (dir_reg == nil || dir_reg.MatchString(f.Name())) {
-			switch cb := m.Optionv(kit.Keycb(DIR)).(type) {
+			switch cb := m.OptionCB(DIR).(type) {
 			case func(f os.FileInfo, p string):
 				cb(f, p)
 				continue

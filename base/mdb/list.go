@@ -51,7 +51,7 @@ func _list_select(m *ice.Message, prefix, chain, field, value string) {
 	}
 	fields := _list_fields(m)
 	m.Grows(prefix, chain, kit.Select(m.Option(ice.CACHE_FIELD), field), kit.Select(m.Option(ice.CACHE_VALUE), value), func(index int, val map[string]interface{}) {
-		switch val = kit.GetMeta(val); cb := m.Optionv(kit.Keycb(SELECT)).(type) {
+		switch val = kit.GetMeta(val); cb := m.OptionCB(SELECT).(type) {
 		case func(fields []string, value map[string]interface{}):
 			cb(fields, val)
 		default:
@@ -165,6 +165,9 @@ func ListAction(fields ...string) map[string]*ice.Action {
 		}},
 		NEXT: {Name: "next", Help: "下一页", Hand: func(m *ice.Message, arg ...string) {
 			NextPage(m, m.Config(COUNT), kit.Slice(arg, 1)...)
+		}},
+		SELECT: {Name: "select", Help: "列表", Hand: func(m *ice.Message, arg ...string) {
+			ListSelect(m, arg...)
 		}},
 	}, fields...)
 }

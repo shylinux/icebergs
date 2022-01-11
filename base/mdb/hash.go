@@ -60,10 +60,8 @@ func _hash_select(m *ice.Message, prefix, chain, field, value string) {
 		value = RANDOMS
 	}
 	fields := _hash_fields(m)
-	m.Debug("what %v", 123)
 	m.Richs(prefix, chain, value, func(key string, val map[string]interface{}) {
-		m.Debug("what %v", 123)
-		switch val = kit.GetMeta(val); cb := m.Optionv(kit.Keycb(SELECT)).(type) {
+		switch val = kit.GetMeta(val); cb := m.OptionCB(SELECT).(type) {
 		case func(fields []string, value map[string]interface{}):
 			cb(fields, val)
 		default:
@@ -74,7 +72,7 @@ func _hash_select(m *ice.Message, prefix, chain, field, value string) {
 			}
 		}
 	})
-	if m.Option(FIELDS) != DETAIL {
+	if !m.FieldsIsDetail() {
 		m.SortTimeR(TIME)
 	}
 }
@@ -118,7 +116,7 @@ func _hash_import(m *ice.Message, prefix, chain, file string) {
 func _hash_prunes(m *ice.Message, prefix, chain string, arg ...string) {
 	fields := _hash_fields(m)
 	m.Richs(prefix, chain, FOREACH, func(key string, val map[string]interface{}) {
-		switch val = kit.GetMeta(val); cb := m.Optionv(kit.Keycb(PRUNES)).(type) {
+		switch val = kit.GetMeta(val); cb := m.OptionCB(PRUNES).(type) {
 		case func(string, map[string]interface{}) bool:
 			if !cb(key, val) {
 				return

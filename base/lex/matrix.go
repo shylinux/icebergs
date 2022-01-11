@@ -395,7 +395,7 @@ func init() {
 			mdb.CREATE: {Name: "create nlang=32 ncell=128", Help: "创建", Hand: func(m *ice.Message, arg ...string) {
 				mat := NewMatrix(m, kit.Int(kit.Select("32", m.Option(NLANG))), kit.Int(kit.Select("128", m.Option(NCELL))))
 				h := m.Rich(m.Prefix(MATRIX), "", kit.Data(mdb.TIME, m.Time(), MATRIX, mat, NLANG, mat.nlang, NCELL, mat.ncell))
-				switch cb := m.Optionv(kit.Keycb(MATRIX)).(type) {
+				switch cb := m.OptionCB(MATRIX).(type) {
 				case func(string, *Matrix):
 					cb(h, mat)
 				}

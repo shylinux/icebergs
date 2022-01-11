@@ -42,7 +42,7 @@ func _client_dial(m *ice.Message, arg ...string) {
 		defer c.Close()
 	}
 
-	switch cb := m.Optionv(kit.Keycb(CLIENT)).(type) {
+	switch cb := m.OptionCB(CLIENT).(type) {
 	case func(net.Conn, error):
 		cb(c, e)
 	case func(net.Conn):

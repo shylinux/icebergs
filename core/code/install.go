@@ -136,7 +136,7 @@ func _install_service(m *ice.Message, arg ...string) {
 	m.Fields(len(arg[1:]), "time,port,status,pid,cmd,dir")
 	m.Cmd(mdb.SELECT, cli.DAEMON, "", mdb.HASH).Table(func(index int, value map[string]string, head []string) {
 		if strings.Contains(value[ice.CMD], "bin/"+arg[0]) {
-			m.Push("", value, kit.Split(m.Option(mdb.FIELDS)))
+			m.Push("", value, kit.Split(m.OptionFields()))
 		}
 	})
 

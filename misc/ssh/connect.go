@@ -138,7 +138,7 @@ func _ssh_conn(m *ice.Message, cb func(*ssh.Client), arg ...string) {
 		return m.Option(aaa.PASSWORD), nil
 	}))
 
-	m.Option(kit.Keycb(tcp.CLIENT), func(c net.Conn) {
+	m.OptionCB(tcp.CLIENT, func(c net.Conn) {
 		conn, chans, reqs, err := ssh.NewClientConn(c, m.Option(tcp.HOST)+":"+m.Option(tcp.PORT), &ssh.ClientConfig{
 			User: m.Option(aaa.USERNAME), Auth: methods, BannerCallback: func(message string) error { return nil },
 			HostKeyCallback: func(hostname string, remote net.Addr, key ssh.PublicKey) error { return nil },

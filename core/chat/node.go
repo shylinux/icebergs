@@ -49,7 +49,7 @@ func init() {
 			}},
 		}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			if len(arg) == 0 {
-				m.Option(mdb.FIELDS, "time,type,name,share")
+				m.OptionFields("time,type,name,share")
 				m.Cmdy(mdb.SELECT, RIVER, _river_key(m, NODE), mdb.HASH)
 				m.Table(func(index int, value map[string]string, head []string) {
 					m.PushAnchor(value[mdb.NAME], m.MergeURL2("/chat/pod/"+kit.Keys(m.Option(ice.POD), value[mdb.NAME])))

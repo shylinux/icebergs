@@ -123,7 +123,7 @@ func init() {
 					m.Cmd(SERVICE, mdb.IMPORT, AUTHKEY, m.Option(AUTHKEY))
 				}
 
-				m.Option(kit.Keycb(tcp.SERVER), func(c net.Conn) { m.Go(func() { _ssh_accept(m, kit.Hashs(m.Option(tcp.PORT)), c) }) })
+				m.OptionCB(tcp.SERVER, func(c net.Conn) { m.Go(func() { _ssh_accept(m, kit.Hashs(m.Option(tcp.PORT)), c) }) })
 				m.Go(func() {
 					m.Cmdy(tcp.SERVER, tcp.LISTEN, mdb.TYPE, SSH, mdb.NAME, tcp.PORT, tcp.PORT, m.Option(tcp.PORT))
 				})

@@ -36,7 +36,7 @@ func _server_listen(m *ice.Message, arg ...string) {
 		defer l.Close()
 	}
 
-	switch cb := m.Optionv(kit.Keycb(SERVER)).(type) {
+	switch cb := m.OptionCB(SERVER).(type) {
 	case func(net.Listener, error):
 		cb(l, e)
 	case func(net.Listener):

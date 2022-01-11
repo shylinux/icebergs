@@ -93,11 +93,11 @@ func (m *Message) RenderCmd(index string, args ...interface{}) {
 <head>
     <meta name="viewport" content="width=device-width,initial-scale=0.8,user-scalable=no">
     <meta charset="utf-8">
-    <link rel="stylesheet" type="text/css" href="/page/cmd.css">
+    <link rel="stylesheet" type="text/css" href="/page/can.css">
 </head>
 <body>
-	<script src="/page/cmd.js"></script>
-	<script>cmd(%s)</script>
+	<script src="/page/can.js"></script>
+	<script>can(%s)</script>
 </body>
 `, list))
 }
@@ -149,11 +149,12 @@ func (m *Message) PushDownload(key string, arg ...interface{}) { // [name] file
 	}
 }
 
-func (m *Message) PushAction(list ...interface{}) {
+func (m *Message) PushAction(list ...interface{}) *Message {
 	m.Set(MSG_APPEND, ACTION)
 	m.Table(func(index int, value map[string]string, head []string) {
 		m.PushButton(list...)
 	})
+	return m
 }
 func (m *Message) PushPodCmd(cmd string, arg ...string) {
 	if m.Length() > 0 && len(m.Appendv(POD)) == 0 {

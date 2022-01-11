@@ -254,7 +254,7 @@ func init() {
 	}, Commands: map[string]*ice.Command{
 		ice.CTX_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {}},
 		SOURCE: {Name: "source file", Help: "脚本解析", Action: ice.MergeAction(map[string]*ice.Action{
-			mdb.REPEAT: {Name: "repeat", Help: "执行", Hand: func(m *ice.Message, arg ...string) {
+			"repeat": {Name: "repeat", Help: "执行", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmdy(SCREEN, m.Option(mdb.TEXT))
 				m.ProcessInner()
 			}},

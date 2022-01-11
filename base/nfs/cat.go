@@ -78,7 +78,7 @@ func _cat_list(m *ice.Message, name string) {
 	}
 	defer f.Close()
 
-	switch cb := m.Optionv(kit.Keycb(CAT)).(type) {
+	switch cb := m.OptionCB(CAT).(type) {
 	case func(string, int) string:
 		list := []string{}
 		for bio, i := bufio.NewScanner(f), 0; bio.Scan(); i++ {
@@ -114,8 +114,7 @@ func _cat_list(m *ice.Message, name string) {
 
 const (
 	CAT_CONTENT = "cat_content"
-
-	TEMPLATE = "template"
+	TEMPLATE    = "template"
 
 	SOURCE = "source"
 	TARGET = "target"
@@ -123,6 +122,8 @@ const (
 	MASTER = "master"
 	BRANCH = "branch"
 	REPOS  = "repos"
+
+	LOAD = "load"
 )
 const (
 	HTML = "html"

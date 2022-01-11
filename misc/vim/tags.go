@@ -14,64 +14,68 @@ import (
 const TAGS = "tags"
 
 func init() {
+	const (
+		MODULE  = "module"
+		PATTERN = "pattern"
+
+		ONIMPORT = "onimport"
+		ONACTION = "onaction"
+		ONEXPORT = "onexport"
+
+		defs_pattern = "4\n%s\n/\\<%s: /\n"
+		func_pattern = "4\n%s\n/\\<%s: \\(shy\\|func\\)/\n"
+		libs_pattern = "4\nusr/volcanos/lib/%s.js\n/\\<%s: \\(shy\\|func\\)/\n"
+	)
 	Index.Merge(&ice.Context{Configs: map[string]*ice.Config{
 		TAGS: {Name: TAGS, Help: "索引", Value: kit.Data(
-			mdb.SHORT, mdb.ZONE, mdb.FIELD, "time,id,type,name,text,file,line",
+			mdb.SHORT, mdb.ZONE, mdb.FIELD, "time,id,type,name,text,path,file,line",
 		)},
 	}, Commands: map[string]*ice.Command{
 		"/tags": {Name: "/tags", Help: "跳转", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			switch m.Option("module") {
-			case "onimport", "onaction", "onexport":
-				m.Echo("4\n%s\n/\\<%s: \\(shy\\|func\\)/\n", m.Option(BUF), m.Option("pattern"))
-			case "msg":
-				m.Echo("4\nusr/volcanos/lib/%s.js\n/\\<%s: \\(shy\\|func\\)/\n", "misc", m.Option("pattern"))
+			switch m.Option(MODULE) {
+			case ONIMPORT, ONACTION, ONEXPORT:
+				m.Echo(func_pattern, m.Option(BUF), m.Option(PATTERN))
+			case "msg", "res":
+				m.Echo(libs_pattern, ice.MISC, m.Option(PATTERN))
 			default:
-				if mdb.ZoneSelect(m, m.Option("module")); m.Length() > 0 {
-					switch m.Append(mdb.TYPE) {
-					case "function":
-						m.Echo("4\nusr/volcanos%s\n/\\<%s: \\(shy\\|func\\)/\n", m.Append(nfs.FILE), m.Option("pattern"))
-					default:
-						m.Echo("4\nusr/volcanos%s\n/\\<%s: /\n", m.Append(nfs.FILE), m.Option("pattern"))
+				if mdb.ZoneSelectCB(m, m.Option(MODULE), func(value map[string]string) {
+					if value[mdb.NAME] == m.Option(PATTERN) {
+						m.Echo(kit.Select(defs_pattern, func_pattern, value[mdb.TYPE] == "function"),
+							path.Join(value[nfs.PATH], value[nfs.FILE]), m.Option(PATTERN))
 					}
-					return
+				}); m.Length() == 0 {
+					m.Echo(defs_pattern, "usr/volcanos/proto.js", m.Option(PATTERN))
 				}
-				m.Echo("4\n%s\n/\\<%s: /\n", "usr/volcanos/proto.js", m.Option("pattern"))
 			}
 		}},
 		TAGS: {Name: "tags zone id auto", Help: "索引", Action: ice.MergeAction(map[string]*ice.Action{
-			mdb.INSERT: {Name: "insert zone=core type name=hi text=hello file line", Help: "添加"},
-			code.INNER: {Name: "inner", Help: "源码", Hand: func(m *ice.Message, arg ...string) {
-				m.ProcessCommand(code.INNER, []string{
-					kit.Select(ice.PWD, path.Dir(m.Option(nfs.FILE))),
-					path.Base(m.Option(nfs.FILE)),
-					m.Option(nfs.LINE),
-				}, arg...)
-			}},
 			"listTags": {Name: "listTags", Help: "索引", Hand: func(m *ice.Message, arg ...string) {
-				kit.Fetch(kit.UnMarshal(m.Option("content")), func(index int, value map[string]interface{}) {
+				kit.Fetch(kit.UnMarshal(m.Option(mdb.TEXT)), func(index int, value map[string]interface{}) {
 					m.Cmd(TAGS, mdb.INSERT, mdb.ZONE, value[mdb.ZONE], kit.Simple(value))
 				})
-				m.ProcessRefresh30ms()
+				m.ProcessRefresh300ms()
 			}},
-		}, mdb.ZoneAction()), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			m.Option(ice.CACHE_LIMIT, "-1")
-			if mdb.ZoneSelect(m, arg...); len(arg) == 0 {
-				m.Action("listTags", mdb.CREATE, mdb.EXPORT, mdb.IMPORT)
-			} else {
-				if m.IsCliUA() {
-					if m.Length() == 0 {
+			mdb.INSERT: {Name: "insert zone=core type name=hi text=hello path file line", Help: "添加"},
+			code.INNER: {Name: "inner", Help: "源码", Hand: func(m *ice.Message, arg ...string) {
+				m.ProcessCommand(code.INNER, m.OptionSplit("path,file,line"), arg...)
+			}},
+			INPUT: {Name: "input name text", Help: "补全", Hand: func(m *ice.Message, arg ...string) {
+				mdb.ZoneSelectCB(m, kit.Slice(kit.Split(m.Option(mdb.TEXT), ice.PT), -1)[0], func(value map[string]string) {
+					if !strings.Contains(value[mdb.NAME], m.Option(mdb.NAME)) {
 						return
 					}
-					m.Sort(mdb.NAME)
-					m.Echo("func\n").Table(func(index int, value map[string]string, head []string) {
-						m.Echo(arg[0] + ice.PT + value[mdb.NAME] + ice.NL)
-						m.Echo("%s: %s: %s // %s\n", value[mdb.TYPE], value[mdb.NAME], strings.Split(value[mdb.TEXT], ice.NL)[0], value[nfs.FILE])
-					})
-					return
-				}
-				m.Action(mdb.INSERT)
-				m.PushAction(code.INNER)
-				m.StatusTimeCount()
+					if m.Length() == 0 {
+						m.Echo("func" + ice.NL)
+					}
+					m.Echo(value[mdb.NAME] + ice.NL)
+					m.Echo("%s: %s"+ice.NL, value[mdb.NAME], strings.Split(value[mdb.TEXT], ice.NL)[0])
+				})
+			}},
+		}, mdb.ZoneAction()), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			if mdb.ZoneSelectAll(m, arg...); len(arg) == 0 {
+				m.Action("listTags", mdb.CREATE, mdb.EXPORT, mdb.IMPORT)
+			} else {
+				m.Action(mdb.INSERT).PushAction(code.INNER).StatusTimeCount()
 			}
 		}},
 	}})

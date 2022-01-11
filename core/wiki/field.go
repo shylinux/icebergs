@@ -42,6 +42,7 @@ func _field_show(m *ice.Message, name, text string, arg ...string) {
 
 	name = strings.ReplaceAll(name, ice.SP, "_")
 	meta[mdb.NAME], meta[mdb.INDEX] = name, text
+	msg := m.Spawn()
 
 	// 扩展参数
 	for i := 0; i < len(arg)-1; i += 2 {
@@ -62,6 +63,20 @@ func _field_show(m *ice.Message, name, text string, arg ...string) {
 		switch arg[i] {
 		case "content":
 			meta[arg[i]] = arg[i+1]
+
+		case SPARK:
+			msg.Echo(strings.TrimSpace(arg[i+1]))
+			meta["msg"] = msg.FormatMeta()
+
+		case TABLE:
+			ls := kit.Split(arg[i+1], ice.NL, ice.NL, ice.NL)
+			head := kit.Split(ls[0])
+			for _, l := range ls[1:] {
+				for i, v := range kit.Split(l) {
+					msg.Push(head[i], v)
+				}
+			}
+			meta["msg"] = msg.FormatMeta()
 
 		case ARGS:
 			args := kit.Simple(m.Optionv(arg[i]))

@@ -75,7 +75,7 @@ func (web *Frame) Start(m *ice.Message, arg ...string) bool {
 	defer m.Event(SERVE_STOP)
 
 	web.Message, web.Server = m, &http.Server{Handler: web}
-	switch cb := m.Optionv(kit.Keycb(SERVE)).(type) {
+	switch cb := m.OptionCB(SERVE).(type) {
 	case func(http.Handler):
 		cb(web) // 启动框架
 	default:

@@ -1,7 +1,13 @@
 package input
 
 import (
+	"strings"
+
 	"shylinux.com/x/ice"
+	"shylinux.com/x/icebergs/base/cli"
+	"shylinux.com/x/icebergs/base/ctx"
+	"shylinux.com/x/icebergs/base/mdb"
+	kit "shylinux.com/x/toolkits"
 )
 
 type wubi struct {
@@ -19,4 +25,22 @@ type wubi struct {
 	list   string `name:"list method=word,line code auto" help:"五笔"`
 }
 
-func init() { ice.Cmd("web.code.input.wubi", wubi{}) }
+func (w wubi) Input(m *ice.Message, arg ...string) {
+	if arg[0] = strings.TrimSpace(arg[0]); strings.HasPrefix(arg[0], "ice") {
+		switch list := kit.Split(arg[0]); list[1] {
+		case "add": // ice add 想你 shwq [person [9999]]
+			m.Cmd(w, ctx.ACTION, mdb.INSERT, mdb.TEXT, list[2], cli.CODE, list[3],
+				mdb.ZONE, kit.Select("person", list, 4), mdb.VALUE, kit.Select("999999", list, 5),
+			)
+			m.Echo(list[3] + ice.NL)
+		}
+		return
+	}
+
+	m.Option(ice.CACHE_LIMIT, "10")
+	m.Cmd(w, "word", arg[0]).Table(func(index int, value map[string]string, head []string) {
+		m.Echo(value[mdb.TEXT] + ice.NL)
+	})
+}
+
+func init() { ice.CodeCtxCmd(wubi{}) }

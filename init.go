@@ -98,10 +98,10 @@ var Pulse = &Message{
 }
 
 func Run(arg ...string) string {
-	if os.Getenv("ctx_arg") != "" {
+	if arg = append(arg, os.Args[1:]...); os.Getenv("ctx_arg") != "" {
 		arg = append(arg, kit.Split(os.Getenv("ctx_arg"))...)
 	}
-	if arg = append(arg, os.Args[1:]...); len(arg) == 0 {
+	if len(arg) == 0 {
 		arg = append(arg, HELP)
 	}
 

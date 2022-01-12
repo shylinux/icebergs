@@ -213,7 +213,7 @@ func (m *Message) ProcessCommandOpt(arg []string, args ...string) {
 	if len(arg) > 0 && arg[0] == RUN {
 		return
 	}
-	m.Push(OPT, kit.Format(m.OptionSimple(args...)))
+	m.Push("opt", kit.Format(m.OptionSimple(args...)))
 }
 func (m *Message) ProcessField(arg ...interface{}) {
 	m.Process(PROCESS_FIELD)

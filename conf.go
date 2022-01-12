@@ -38,14 +38,13 @@ const (
 
 	ENV = "env"
 	RUN = "run"
-	RES = "res"
 	ERR = "err"
 
 	POD = "pod"
-	// CTX = "ctx"
+	CTX = "ctx"
 	CMD = "cmd"
 	ARG = "arg"
-	OPT = "opt"
+	RES = "res"
 )
 const ( // MOD
 	MOD_DIR  = 0750
@@ -291,7 +290,7 @@ const ( // CTX
 )
 
 const (
-	CTX = "ctx"
+	// CTX = "ctx"
 	CLI = "cli"
 	WEB = "web"
 	AAA = "aaa"

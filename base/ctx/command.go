@@ -67,6 +67,7 @@ const (
 	ACTION = "action"
 	INDEX  = "index"
 	ARGS   = "args"
+	STYLE  = "style"
 )
 const COMMAND = "command"
 

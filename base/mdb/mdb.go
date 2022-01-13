@@ -214,7 +214,6 @@ var Index = &ice.Context{Name: MDB, Help: "数据模块", Commands: map[string]*
 		case HASH:
 			_hash_import(m, arg[0], _domain_chain(m, arg[1]), file)
 		case LIST:
-			m.Debug("what %v /// %v", arg, file)
 			_list_import(m, arg[0], _domain_chain(m, arg[1]), file)
 		}
 	}},

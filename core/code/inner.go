@@ -81,6 +81,11 @@ func init() {
 				}
 				m.Set(ice.MSG_STATUS)
 			}},
+			mdb.SEARCH: {Name: "search", Help: "搜索", Hand: func(m *ice.Message, arg ...string) {
+				m.Option(cli.CMD_DIR, kit.Path(arg[2]))
+				m.Option(nfs.DIR_ROOT, arg[2])
+				m.Cmdy(mdb.SEARCH, arg[0], arg[1], arg[2])
+			}},
 			mdb.ENGINE: {Name: "engine", Help: "引擎", Hand: func(m *ice.Message, arg ...string) {
 				_inner_exec(m, arg[0], arg[1], arg[2])
 			}},

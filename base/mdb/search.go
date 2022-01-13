@@ -19,7 +19,7 @@ func init() {
 			msg := m.Spawn(c)
 			if len(arg) > 1 {
 				msg.OptionCB(SELECT, func(fields []string, value map[string]interface{}) {
-					m.OptionFields(kit.Select("ctx,cmd,type,name,text", kit.Select(m.OptionFields(), arg, 2)))
+					m.OptionFields(kit.Select("ctx,cmd,type,name,text", kit.Select(m.OptionFields())))
 					m.Cmdy(kit.Keys(value[TEXT], value[NAME]), m.CommandKey(), arg[0], arg[1], kit.Select("", arg, 2))
 				})
 			}

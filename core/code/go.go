@@ -117,8 +117,8 @@ func init() {
 				}
 				_go_tags(m, kit.Select(MAIN, arg, 1))
 				_go_help(m, kit.Select(MAIN, arg, 1))
-				_go_find(m, kit.Select(MAIN, arg, 1))
-				_go_grep(m, kit.Select(MAIN, arg, 1))
+				// _go_find(m, kit.Select(MAIN, arg, 1))
+				// _go_grep(m, kit.Select(MAIN, arg, 1))
 			}},
 		}, PlugAction())},
 	}, Configs: map[string]*ice.Config{

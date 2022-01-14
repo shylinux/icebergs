@@ -12,13 +12,13 @@ const SHY = "shy"
 
 func init() {
 	Index.Register(&ice.Context{Name: SHY, Help: "脚本", Commands: map[string]*ice.Command{
+		ice.CTX_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			for _, cmd := range []string{mdb.PLUGIN, mdb.RENDER, mdb.ENGINE, mdb.SEARCH} {
+				m.Cmd(cmd, mdb.CREATE, SHY, m.Prefix(SHY))
+			}
+			LoadPlug(m, SHY)
+		}},
 		SHY: {Name: SHY, Help: "脚本", Action: ice.MergeAction(map[string]*ice.Action{
-			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
-				for _, cmd := range []string{mdb.PLUGIN, mdb.RENDER, mdb.ENGINE, mdb.SEARCH} {
-					m.Cmd(cmd, mdb.CREATE, SHY, m.Prefix(SHY))
-				}
-				LoadPlug(m, SHY)
-			}},
 			mdb.ENGINE: {Hand: func(m *ice.Message, arg ...string) {
 				m.Cmdy("web.wiki.word", path.Join(arg[2], arg[1]))
 			}},

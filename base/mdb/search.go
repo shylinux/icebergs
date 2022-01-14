@@ -28,6 +28,7 @@ func init() {
 			} else if len(arg) == 1 {
 				m.Copy(msg)
 			}
+			m.StatusTimeCount()
 		}},
 	}})
 }

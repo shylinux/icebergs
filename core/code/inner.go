@@ -103,6 +103,7 @@ func init() {
 				m.Set(ice.MSG_STATUS)
 				return
 			}
+			arg[1] = kit.Split(arg[1])[0]
 			_inner_list(m, kit.Ext(arg[1]), arg[1], arg[0])
 			m.Set(ice.MSG_STATUS)
 		}},

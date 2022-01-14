@@ -206,6 +206,7 @@ func ZoneSelect(m *ice.Message, arg ...string) *ice.Message {
 		m.Sort(m.Config(SHORT))
 		m.PushAction(REMOVE)
 	}
+	m.StatusTimeCount()
 	return m
 }
 func ZoneSelectAll(m *ice.Message, arg ...string) *ice.Message {

@@ -44,6 +44,7 @@ func _command_search(m *ice.Message, kind, name, text string) {
 		m.PushSearch(ice.CTX, kit.PathName(1), ice.CMD, kit.FileName(1),
 			kit.SimpleKV("", s.Cap(ice.CTX_FOLLOW), cmd.Name, cmd.Help),
 			CONTEXT, s.Cap(ice.CTX_FOLLOW), COMMAND, key,
+			INDEX, kit.Keys(s.Cap(ice.CTX_FOLLOW), key),
 		)
 	})
 }
@@ -78,9 +79,11 @@ func init() {
 				m.Cmd(mdb.SEARCH, mdb.CREATE, m.CommandKey(), m.PrefixKey())
 			}},
 			mdb.SEARCH: {Name: "search type name text", Help: "搜索", Hand: func(m *ice.Message, arg ...string) {
-				if arg[0] == COMMAND || arg[1] != "" {
-					_command_search(m, arg[0], arg[1], arg[2])
+				if arg[0] == COMMAND {
+					_command_search(m, arg[0], kit.Select("", arg, 1), kit.Select("", arg, 2))
 				}
+			}},
+			INDEX: {Name: "index", Help: "索引", Hand: func(m *ice.Message, arg ...string) {
 			}},
 		}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			if len(arg) == 0 {

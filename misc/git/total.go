@@ -40,6 +40,7 @@ func init() {
 			}},
 		}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			if len(arg) > 0 { // 提交详情
+				arg[0] = kit.Replace(arg[0], "src", "contexts")
 				m.Cmd(REPOS, ice.OptionFields("name,path")).Table(func(index int, value map[string]string, head []string) {
 					if value[mdb.NAME] == arg[0] {
 						m.Cmdy("_sum", value[nfs.PATH], arg[1:])

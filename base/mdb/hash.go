@@ -194,7 +194,7 @@ func HashActionStatus(args ...interface{}) map[string]*ice.Action {
 func HashSelect(m *ice.Message, arg ...string) *ice.Message {
 	m.Fields(len(arg), m.Config(FIELD))
 	m.Cmdy(SELECT, m.PrefixKey(), "", HASH, m.Config(SHORT), arg)
-	m.PushAction(REMOVE)
+	m.PushAction(m.Config("action"), REMOVE)
 	m.StatusTimeCount()
 	return m
 }

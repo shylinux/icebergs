@@ -23,7 +23,7 @@ func init() {
 				m.Cmdy(REPOS)
 				return
 			}
-
+			arg[0] = kit.Replace(arg[0], "src", "contexts")
 			m.Cmdy(TOTAL, arg)
 		}},
 	}})

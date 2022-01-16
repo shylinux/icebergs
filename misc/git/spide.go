@@ -109,6 +109,7 @@ func init() {
 				return
 			}
 
+			arg[0] = kit.Replace(arg[0], "src", "contexts")
 			if arg[0] == path.Base(kit.Pwd()) {
 				m.Option(nfs.DIR_ROOT, path.Join(ice.SRC)+ice.PS)
 			} else {

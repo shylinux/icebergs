@@ -155,6 +155,10 @@ func ZoneAction(args ...interface{}) map[string]*ice.Action {
 				m.Cmdy("context", kit.Select(m.Option(ice.CTX), m.Option(kit.Keys(EXTRA, ice.CTX))), "command")
 			case ice.ARG:
 
+			case "index":
+				m.OptionFields(arg[0])
+				m.Cmdy("command", SEARCH, "command", kit.Select("", arg, 1))
+
 			case _zone(m):
 				m.Cmdy(INPUTS, m.PrefixKey(), "", HASH, arg)
 			default:

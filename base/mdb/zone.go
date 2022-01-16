@@ -155,6 +155,12 @@ func ZoneAction(args ...interface{}) map[string]*ice.Action {
 				m.Cmdy("context", kit.Select(m.Option(ice.CTX), m.Option(kit.Keys(EXTRA, ice.CTX))), "command")
 			case ice.ARG:
 
+			case "path":
+				m.Cmdy("nfs.dir", arg[1:]).Cut("path,size,time").ProcessAgain()
+			case "file":
+				m.Option("dir_root", m.Option("path"))
+				m.Cmdy("nfs.dir", arg[1:]).Cut("path,size,time").ProcessAgain()
+
 			case "index":
 				m.OptionFields(arg[0])
 				m.Cmdy("command", SEARCH, "command", kit.Select("", arg, 1))

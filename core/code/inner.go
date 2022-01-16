@@ -72,7 +72,7 @@ const INNER = "inner"
 
 func init() {
 	Index.Merge(&ice.Context{Commands: map[string]*ice.Command{
-		INNER: {Name: "inner path=src/ file=main.go line=1 auto", Help: "源代码", Meta: kit.Dict(
+		INNER: {Name: "inner path=src/@key file=main.go line=1 auto", Help: "源代码", Meta: kit.Dict(
 			ice.DisplayLocal(""),
 		), Action: ice.MergeAction(map[string]*ice.Action{
 			mdb.PLUGIN: {Name: "plugin", Help: "插件", Hand: func(m *ice.Message, arg ...string) {

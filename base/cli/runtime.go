@@ -184,7 +184,8 @@ func init() {
 					}
 				})
 				m.Display("/plugin/story/pie.js?field=Size")
-				m.RenameAppend("Use%", "Use")
+				m.RenameAppend("%iused", "piused")
+				m.RenameAppend("Use%", "Usep")
 			}},
 		}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			if len(arg) > 0 && arg[0] == BOOTINFO {

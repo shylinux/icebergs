@@ -89,8 +89,22 @@ func init() {
 			mdb.ENGINE: {Name: "engine", Help: "引擎", Hand: func(m *ice.Message, arg ...string) {
 				_inner_exec(m, arg[0], arg[1], arg[2])
 			}},
-			mdb.INPUTS: {Name: "favor inputs", Help: "补全"},
-			FAVOR:      {Name: "favor", Help: "收藏"},
+			mdb.INPUTS: {Name: "inputs", Help: "补全", Hand: func(m *ice.Message, arg ...string) {
+				switch arg[0] {
+				case nfs.PATH:
+					m.Cmdy(nfs.DIR, arg[1:], "path,size,time").ProcessAgain()
+				case nfs.FILE:
+					m.Option(nfs.DIR_ROOT, m.Option(nfs.PATH))
+					m.Cmdy(nfs.DIR, ice.PWD, "path,size,time").ProcessAgain()
+				case "url":
+					m.Option(nfs.DIR_DEEP, ice.TRUE)
+					m.Option(nfs.DIR_ROOT, "usr/volcanos/plugin/local/code/")
+					m.Cmdy(nfs.DIR, ice.PWD, "path,size,time").ProcessAgain()
+				default:
+					m.Cmdy(FAVOR, mdb.INPUTS, arg)
+				}
+			}},
+			FAVOR: {Name: "favor", Help: "收藏"},
 		}, ctx.CmdAction()), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			if !strings.HasSuffix(arg[0], ice.PS) {
 				arg[1] = kit.Slice(strings.Split(arg[0], ice.PS), -1)[0]
@@ -103,7 +117,7 @@ func init() {
 				m.Set(ice.MSG_STATUS)
 				return
 			}
-			m.Option("plug", "inner/search.js?a=1,inner/favor.js,inner/sess.js")
+			m.Option("plug", "inner/search.js?a=1,inner/favor.js")
 			arg[1] = kit.Split(arg[1])[0]
 			_inner_list(m, kit.Ext(arg[1]), arg[1], arg[0])
 			m.Set(ice.MSG_STATUS)

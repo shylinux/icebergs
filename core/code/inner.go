@@ -85,9 +85,44 @@ func init() {
 				m.Option(cli.CMD_DIR, kit.Path(arg[2]))
 				m.Option(nfs.DIR_ROOT, arg[2])
 				m.Cmdy(mdb.SEARCH, arg[0], arg[1], arg[2])
+				m.Cmd(FAVOR, arg[1], ice.OptionFields("")).Table(func(index int, value map[string]string, head []string) {
+					p := path.Join(value[nfs.PATH], value[nfs.FILE])
+					if strings.HasPrefix(p, m.Option(nfs.PATH)) {
+						m.Push(nfs.FILE, strings.TrimPrefix(p, m.Option(nfs.PATH)))
+						m.Push(nfs.LINE, value[nfs.LINE])
+						m.Push(mdb.TEXT, value[mdb.TEXT])
+					}
+				})
+				if m.StatusTimeCount("index", 0); m.Length() == 0 {
+					m.Cmdy(INNER, nfs.GREP, arg[1])
+				}
 			}},
 			mdb.ENGINE: {Name: "engine", Help: "引擎", Hand: func(m *ice.Message, arg ...string) {
 				_inner_exec(m, arg[0], arg[1], arg[2])
+			}},
+			nfs.TAGS: {Name: "tags", Help: "索引", Hand: func(m *ice.Message, arg ...string) {
+			}},
+			nfs.GREP: {Name: "grep", Help: "搜索", Hand: func(m *ice.Message, arg ...string) {
+				m.Cmdy(nfs.GREP, m.Option(nfs.PATH), arg[0])
+				m.StatusTimeCount("index", 0)
+			}},
+			cli.MAKE: {Name: "make", Help: "构建", Hand: func(m *ice.Message, arg ...string) {
+				msg := m.Cmd(cli.SYSTEM, cli.MAKE, arg)
+				list := strings.Split(msg.Append(cli.CMD_ERR), ice.NL)
+				for _, line := range list {
+					if strings.Contains(line, ice.DF) {
+						if ls := strings.SplitN(line, ice.DF, 4); len(ls) > 3 {
+							m.Push(nfs.FILE, strings.TrimPrefix(ls[0], m.Option(nfs.PATH)))
+							m.Push(nfs.LINE, ls[1])
+							m.Push(mdb.TEXT, ls[3])
+						}
+					}
+				}
+				if m.Length() == 0 {
+					m.Echo(msg.Append(cli.CMD_OUT))
+					m.Echo(msg.Append(cli.CMD_ERR))
+				}
+				m.StatusTime()
 			}},
 			mdb.INPUTS: {Name: "inputs", Help: "补全", Hand: func(m *ice.Message, arg ...string) {
 				switch arg[0] {
@@ -117,7 +152,7 @@ func init() {
 				m.Set(ice.MSG_STATUS)
 				return
 			}
-			m.Option("plug", "inner/search.js?a=1,inner/favor.js")
+			m.Option("exts", "inner/search.js?a=1,inner/favor.js")
 			arg[1] = kit.Split(arg[1])[0]
 			_inner_list(m, kit.Ext(arg[1]), arg[1], arg[0])
 			m.Set(ice.MSG_STATUS)

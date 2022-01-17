@@ -48,7 +48,7 @@ func _go_tags(m *ice.Message, key string) {
 }
 func _go_help(m *ice.Message, key string) {
 	p := m.Cmd(cli.SYSTEM, GO, "doc", key).Append(cli.CMD_OUT)
-	if p == "" {
+	if strings.TrimSpace(p) == "" {
 		return
 	}
 	m.PushSearch(ice.CMD, "help", nfs.FILE, key+".godoc", nfs.LINE, 1, mdb.TEXT, p)

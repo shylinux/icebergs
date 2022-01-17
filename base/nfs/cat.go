@@ -123,10 +123,9 @@ const (
 	BRANCH = "branch"
 	REPOS  = "repos"
 
-	// SAVE = "save"
 	LOAD = "load"
 	FIND = "find"
-	GREP = "grep"
+	TAGS = "tags"
 )
 const (
 	HTML = "html"

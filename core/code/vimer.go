@@ -20,25 +20,6 @@ func init() {
 			nfs.SAVE: {Name: "save type file path", Help: "保存", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmdy(nfs.SAVE, path.Join(m.Option(nfs.PATH), m.Option(nfs.FILE)))
 			}},
-			ice.RUN: {Name: "run", Help: "运行", Hand: func(m *ice.Message, arg ...string) {
-				m.Cmdy(cli.SYSTEM, GO, ice.RUN, path.Join(kit.Slice(arg, 0, 2)...))
-				m.Set(ice.MSG_APPEND)
-				m.ProcessInner()
-			}},
-			mdb.ENGINE: {Name: "engine", Help: "运行", Hand: func(m *ice.Message, arg ...string) {
-				if m.Cmdy(mdb.ENGINE, arg); len(m.Resultv()) > 0 || m.Length() > 0 {
-					return
-				}
-
-				if arg = kit.Split(kit.Join(arg, ice.SP)); m.Right(arg) {
-					if m.Cmdy(arg); len(m.Resultv()) == 0 && m.Length() == 0 {
-						m.Cmdy(cli.SYSTEM, arg)
-					}
-				}
-			}},
-			mdb.INPUTS: {Name: "inputs", Help: "补全", Hand: func(m *ice.Message, arg ...string) {
-				m.Cmdy(AUTOGEN, mdb.INPUTS, arg)
-			}},
 			AUTOGEN: {Name: "create main=src/main.go zone name=hi help type=Zone,Hash,Lists,Data,Code list key", Help: "模块", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmdy(AUTOGEN, mdb.CREATE, arg)
 			}},
@@ -56,8 +37,6 @@ func init() {
 				m.Cmd(nfs.COPY, path.Join(ice.USR_RELEASE, "conf.go"), path.Join(ice.USR_ICEBERGS, "conf.go"))
 				m.ProcessInner()
 			}},
-		}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			m.Cmdy(INNER, arg)
-		}},
+		}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) { m.Cmdy(INNER, arg) }},
 	}})
 }

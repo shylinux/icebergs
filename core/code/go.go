@@ -91,6 +91,8 @@ func init() {
 				m.Cmd(mdb.RENDER, mdb.CREATE, k, m.Prefix(k))
 			}
 			LoadPlug(m, GO)
+			LoadPlug(m, MOD)
+			LoadPlug(m, PROTO)
 		}},
 		GODOC: {Name: GODOC, Help: "文档", Action: ice.MergeAction(map[string]*ice.Action{
 			mdb.RENDER: {Hand: func(m *ice.Message, arg ...string) {
@@ -137,7 +139,7 @@ func init() {
 			PREFIX, kit.Dict("//", COMMENT),
 			PREPARE, kit.Dict(
 				KEYWORD, kit.Simple(
-					"module", "require", "replace", "=>",
+					"go", "module", "require", "replace", "=>",
 				),
 			), KEYWORD, kit.Dict(),
 		))},
@@ -149,13 +151,14 @@ func init() {
 					"package", "import", "type", "struct", "interface", "const", "var", "func",
 					"if", "else", "for", "range", "break", "continue",
 					"switch", "case", "default", "fallthrough",
-					"go", "select", "defer", "return",
+					"go", "select", "defer", "return", "panic", "recover",
 				),
 				DATATYPE, kit.Simple(
 					"int", "int32", "int64", "float64",
 					"string", "byte", "bool", "error", "chan", "map",
 				),
 				FUNCTION, kit.Simple(
+					"init", "main", "print",
 					"new", "make", "len", "cap", "copy", "append", "delete", "msg", "m",
 				),
 				CONSTANT, kit.Simple(

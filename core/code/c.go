@@ -13,8 +13,8 @@ import (
 )
 
 func _c_tags(m *ice.Message, key string) {
-	if _, e := os.Stat(path.Join(m.Option(cli.CMD_DIR), _TAGS)); e != nil {
-		m.Cmd(cli.SYSTEM, "ctags", "-R", "-f", _TAGS, ice.PWD)
+	if _, e := os.Stat(path.Join(m.Option(cli.CMD_DIR), TAGS)); e != nil {
+		m.Cmd(cli.SYSTEM, "ctags", "-R", "-f", TAGS, ice.PWD)
 	}
 	_go_tags(m, key)
 }
@@ -82,8 +82,8 @@ func init() {
 				m.Cmdy(mdb.SEARCH, MAN2, arg[1:])
 				m.Cmdy(mdb.SEARCH, MAN3, arg[1:])
 				_c_tags(m, kit.Select(MAIN, arg, 1))
-				_go_find(m, kit.Select(MAIN, arg, 1))
-				_go_grep(m, kit.Select(MAIN, arg, 1))
+				_go_find(m, kit.Select(MAIN, arg, 1), arg[2])
+				_go_grep(m, kit.Select(MAIN, arg, 1), arg[2])
 			}},
 		}, PlugAction())},
 		MAN: {Name: MAN, Help: "手册", Action: ice.MergeAction(map[string]*ice.Action{

@@ -30,8 +30,8 @@ func init() {
 				m.Option(cli.CMD_DIR, kit.Select(ice.SRC, arg, 2))
 				m.Cmdy(mdb.SEARCH, MAN1, arg[1:])
 				m.Cmdy(mdb.SEARCH, MAN8, arg[1:])
-				_go_find(m, kit.Select(MAIN, arg, 1))
-				_go_grep(m, kit.Select(MAIN, arg, 1))
+				_go_find(m, kit.Select(MAIN, arg, 1), arg[2])
+				_go_grep(m, kit.Select(MAIN, arg, 1), arg[2])
 			}},
 			MAN: {Hand: func(m *ice.Message, arg ...string) {
 				m.Echo(_c_help(m, arg[0], arg[1]))

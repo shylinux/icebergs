@@ -18,14 +18,15 @@ const (
 	OF      = " of "
 
 	INIT = "init"
+	EXIT = "exit"
+	SAVE = "save"
 	LOAD = "load"
-	AUTO = "auto"
 	SHOW = "show"
+	EXEC = "exec"
+	AUTO = "auto"
 	PLAY = "play"
 	HELP = "help"
 	HTTP = "http"
-	SAVE = "save"
-	EXIT = "exit"
 
 	BASE = "base"
 	CORE = "core"

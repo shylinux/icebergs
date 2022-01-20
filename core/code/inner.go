@@ -13,46 +13,52 @@ import (
 	kit "shylinux.com/x/toolkits"
 )
 
+func _inner_list(m *ice.Message, ext, file, dir string, arg ...string) {
+	if !m.Right(dir, file) {
+		return // 没有权限
+	}
+	if m.Conf(nfs.CAT, kit.Keym(ssh.SOURCE, ext)) == ice.TRUE {
+		m.Cmdy(nfs.CAT, path.Join(dir, file))
+	} else {
+		_inner_show(m, ext, file, dir, arg...)
+	}
+}
 func _inner_exec(m *ice.Message, ext, file, dir string, arg ...string) {
 	if !m.Right(dir, file) {
 		return // 没有权限
 	}
-	defer m.StatusTime()
 	if m.Cmdy(mdb.ENGINE, ext, file, dir, arg); m.Result() != "" {
 		return // 执行成功
 	}
-	if ls := kit.Simple(m.Confv(INNER, kit.Keym(EXEC, ext))); len(ls) > 0 {
+	if ls := kit.Simple(m.Configv(kit.Keys(EXEC, ext))); len(ls) > 0 {
 		m.Cmdy(cli.SYSTEM, ls, file, ice.Option{cli.CMD_DIR, dir})
-		m.Set(ice.MSG_APPEND)
 	}
 }
-func _inner_list(m *ice.Message, ext, file, dir string, arg ...string) {
+func _inner_show(m *ice.Message, ext, file, dir string, arg ...string) {
 	if !m.Right(dir, file) {
 		return // 没有权限
 	}
 	if m.Cmdy(mdb.RENDER, ext, file, dir, arg); m.Result() != "" {
 		return // 解析成功
 	}
-	if m.Config(kit.Keys(ssh.SOURCE, ext)) == ice.TRUE {
-		m.Cmdy(nfs.CAT, path.Join(dir, file))
-	}
 }
 
-func LoadPlug(m *ice.Message, language string) {
-	m.Confm(language, kit.Keym(PLUG, PREPARE), func(key string, value interface{}) {
-		for _, v := range kit.Simple(value) {
-			m.Conf(language, kit.Keym(PLUG, KEYWORD, v), key)
-		}
-	})
+func LoadPlug(m *ice.Message, language ...string) {
+	for _, language := range language {
+		m.Conf(nfs.CAT, kit.Keym(nfs.SOURCE, language), ice.TRUE)
+		m.Confm(language, kit.Keym(PLUG, PREPARE), func(key string, value interface{}) {
+			for _, v := range kit.Simple(value) {
+				m.Conf(language, kit.Keym(PLUG, KEYWORD, v), key)
+			}
+		})
+	}
 }
 
 func PlugAction(fields ...string) map[string]*ice.Action {
 	return ice.SelectAction(map[string]*ice.Action{
-		mdb.PLUGIN: {Hand: func(m *ice.Message, arg ...string) {
-			m.Debug("what %v", m.Config(PLUG))
-			m.Echo(m.Config(PLUG))
-		}},
+		mdb.PLUGIN: {Hand: func(m *ice.Message, arg ...string) { m.Echo(m.Config(PLUG)) }},
 		mdb.RENDER: {Hand: func(m *ice.Message, arg ...string) { m.Cmdy(nfs.CAT, path.Join(arg[2], arg[1])) }},
+		mdb.ENGINE: {Hand: func(m *ice.Message, arg ...string) { m.Cmdy(nfs.CAT, path.Join(arg[2], arg[1])) }},
 	}, fields...)
 }
 
@@ -71,18 +77,13 @@ const (
 const (
 	PLUG = "plug"
 	EXEC = "exec"
+	SHOW = "show"
 )
 const INNER = "inner"
 
 func init() {
 	Index.Merge(&ice.Context{Commands: map[string]*ice.Command{
 		INNER: {Name: "inner path=src/@key file=main.go line=1 auto", Help: "源代码", Meta: kit.Dict(ice.DisplayLocal("")), Action: ice.MergeAction(map[string]*ice.Action{
-			mdb.PLUGIN: {Name: "plugin", Help: "插件", Hand: func(m *ice.Message, arg ...string) {
-				if m.Cmdy(mdb.PLUGIN, arg); m.Result() == "" {
-					m.Echo(kit.Select("{}", m.Config(kit.Keys(PLUG, arg[0]))))
-				}
-				m.Set(ice.MSG_STATUS)
-			}},
 			mdb.SEARCH: {Name: "search", Help: "搜索", Hand: func(m *ice.Message, arg ...string) {
 				m.Option(nfs.DIR_ROOT, arg[2])
 				m.Option(cli.CMD_DIR, kit.Path(arg[2]))
@@ -98,8 +99,17 @@ func init() {
 					m.Cmdy(INNER, nfs.GREP, arg[1])
 				}
 			}},
+			mdb.PLUGIN: {Name: "plugin", Help: "插件", Hand: func(m *ice.Message, arg ...string) {
+				if m.Cmdy(mdb.PLUGIN, arg); m.Result() == "" {
+					m.Echo(kit.Select("{}", m.Config(kit.Keys(PLUG, arg[0]))))
+				}
+				m.Set(ice.MSG_STATUS)
+			}},
 			mdb.ENGINE: {Name: "engine", Help: "引擎", Hand: func(m *ice.Message, arg ...string) {
 				_inner_exec(m, arg[0], arg[1], arg[2])
+			}},
+			mdb.RENDER: {Name: "render", Help: "渲染", Hand: func(m *ice.Message, arg ...string) {
+				_inner_show(m, arg[0], arg[1], arg[2])
 			}},
 			nfs.TAGS: {Name: "tags", Help: "索引", Hand: func(m *ice.Message, arg ...string) {
 			}},
@@ -109,8 +119,7 @@ func init() {
 			}},
 			cli.MAKE: {Name: "make", Help: "构建", Hand: func(m *ice.Message, arg ...string) {
 				msg := m.Cmd(cli.SYSTEM, cli.MAKE, arg)
-				list := strings.Split(msg.Append(cli.CMD_ERR), ice.NL)
-				for _, line := range list {
+				for _, line := range strings.Split(msg.Append(cli.CMD_ERR), ice.NL) {
 					if strings.Contains(line, ice.DF) {
 						if ls := strings.SplitN(line, ice.DF, 4); len(ls) > 3 {
 							m.Push(nfs.FILE, strings.TrimPrefix(ls[0], m.Option(nfs.PATH)))
@@ -151,27 +160,13 @@ func init() {
 				return
 			}
 			m.Option("exts", "inner/search.js?a=1,inner/favor.js")
-			arg[1] = kit.Split(arg[1])[0]
-			_inner_list(m, kit.Ext(arg[1]), arg[1], arg[0])
-			if m.IsErrNotFound() {
-				m.SetResult()
-				m.Echo("")
+			if _inner_list(m, kit.Ext(arg[1]), arg[1], arg[0]); m.IsErrNotFound() {
+				m.SetResult("")
 			}
 			m.Set(ice.MSG_STATUS)
 		}},
 	}, Configs: map[string]*ice.Config{
 		INNER: {Name: "inner", Help: "源代码", Value: kit.Data(
-			ssh.SOURCE, kit.Dict(
-				"s", ice.TRUE, "S", ice.TRUE,
-				"shy", ice.TRUE, "py", ice.TRUE,
-				"csv", ice.TRUE, "json", ice.TRUE,
-				"css", ice.TRUE, "html", ice.TRUE,
-				"txt", ice.TRUE, "url", ice.TRUE,
-				"log", ice.TRUE, "err", ice.TRUE,
-
-				"md", ice.TRUE, "license", ice.TRUE, "makefile", ice.TRUE, "sql", ice.TRUE,
-				"ini", ice.TRUE, "conf", ice.TRUE, "toml", ice.TRUE, "yaml", ice.TRUE, "yml", ice.TRUE,
-			),
 			EXEC, kit.Dict(
 				"py", []string{"python"},
 				"js", []string{"node"},

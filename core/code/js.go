@@ -38,8 +38,8 @@ func init() {
 				if arg[0] == mdb.FOREACH {
 					return
 				}
-				_go_find(m, kit.Select(MAIN, arg, 1))
-				_go_grep(m, kit.Select(MAIN, arg, 1))
+				_go_find(m, kit.Select(MAIN, arg, 1), arg[2])
+				_go_grep(m, kit.Select(MAIN, arg, 1), arg[2])
 			}},
 		}, PlugAction())},
 		NODE: {Name: "node auto download", Help: "前端", Action: map[string]*ice.Action{

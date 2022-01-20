@@ -15,14 +15,14 @@ import (
 )
 
 func _go_tags(m *ice.Message, key string) {
-	if s, e := os.Stat(path.Join(m.Option(cli.CMD_DIR), _TAGS)); os.IsNotExist(e) || s.ModTime().Before(time.Now().Add(kit.Duration("-72h"))) {
-		m.Cmd(cli.SYSTEM, "gotags", "-R", "-f", _TAGS, ice.PWD)
+	if s, e := os.Stat(path.Join(m.Option(cli.CMD_DIR), TAGS)); os.IsNotExist(e) || s.ModTime().Before(time.Now().Add(kit.Duration("-72h"))) {
+		m.Cmd(cli.SYSTEM, "gotags", "-R", "-f", TAGS, ice.PWD)
 	}
 
 	ls := strings.Split(key, ice.PT)
 	key = ls[len(ls)-1]
 
-	for _, l := range strings.Split(m.Cmdx(cli.SYSTEM, GREP, "^"+key+"\\>", _TAGS), ice.NL) {
+	for _, l := range strings.Split(m.Cmdx(cli.SYSTEM, nfs.GREP, "^"+key+"\\>", TAGS), ice.NL) {
 		ls := strings.SplitN(l, ice.TB, 2)
 		if len(ls) < 2 {
 			continue
@@ -41,37 +41,30 @@ func _go_tags(m *ice.Message, key string) {
 		bio := bufio.NewScanner(f)
 		for i := 1; bio.Scan(); i++ {
 			if i == line || bio.Text() == text {
-				m.PushSearch(ice.CMD, "tags", nfs.FILE, strings.TrimPrefix(file, ice.PWD), nfs.LINE, kit.Format(i), mdb.TEXT, bio.Text())
+				m.PushSearch(nfs.FILE, strings.TrimPrefix(file, ice.PWD), nfs.LINE, kit.Format(i), mdb.TEXT, bio.Text())
 			}
 		}
 	}
 }
 func _go_help(m *ice.Message, key string) {
-	p := m.Cmd(cli.SYSTEM, GO, "doc", key).Append(cli.CMD_OUT)
-	if strings.TrimSpace(p) == "" {
-		return
-	}
-	m.PushSearch(ice.CMD, "help", nfs.FILE, key+".godoc", nfs.LINE, 1, mdb.TEXT, p)
-}
-func _go_find(m *ice.Message, key string) {
-	for _, p := range strings.Split(m.Cmdx(cli.SYSTEM, FIND, ".", "-name", key), ice.NL) {
-		if p == "" {
-			continue
-		}
-		m.PushSearch(ice.CMD, FIND, nfs.FILE, strings.TrimPrefix(p, ice.PWD), nfs.LINE, 1, mdb.TEXT, "")
+	if p := m.Cmd(cli.SYSTEM, GO, "doc", key).Append(cli.CMD_OUT); strings.TrimSpace(p) != "" {
+		m.PushSearch(nfs.FILE, key+".godoc", nfs.LINE, 1, mdb.TEXT, p)
 	}
 }
-func _go_grep(m *ice.Message, key string) {
-	msg := m.Spawn()
-	msg.Split(m.Cmd(cli.SYSTEM, GREP, "--exclude-dir=.git", "--exclude=.[a-z]*", "-rn", key, ice.PT).Append(cli.CMD_OUT), "file:line:text", ":", ice.NL)
-	msg.Table(func(index int, value map[string]string, head []string) { m.PushSearch(ice.CMD, GREP, value) })
+func _go_find(m *ice.Message, key string, dir string) {
+	m.Cmd(nfs.FIND, dir, key).Table(func(index int, value map[string]string, head []string) {
+		m.PushSearch(nfs.LINE, 1, value)
+	})
+}
+func _go_grep(m *ice.Message, key string, dir string) {
+	m.Cmd(nfs.GREP, dir, key).Table(func(index int, value map[string]string, head []string) {
+		m.PushSearch(value)
+	})
 }
 
 const (
-	_TAGS = ".tags"
-	FIND  = "find"
-	GREP  = "grep"
-	MAIN  = "main"
+	TAGS = ".tags"
+	MAIN = "main"
 )
 const GO = "go"
 const MOD = "mod"
@@ -86,13 +79,11 @@ func init() {
 			m.Cmd(mdb.SEARCH, mdb.CREATE, GO, m.Prefix(GO))
 			m.Cmd(mdb.ENGINE, mdb.CREATE, GO, m.Prefix(GO))
 
-			for _, k := range []string{GODOC, PROTO, SUM, MOD, GO} {
+			LoadPlug(m, GO, MOD, SUM, PROTO)
+			for _, k := range []string{GO, MOD, SUM, PROTO, GODOC} {
 				m.Cmd(mdb.PLUGIN, mdb.CREATE, k, m.Prefix(k))
 				m.Cmd(mdb.RENDER, mdb.CREATE, k, m.Prefix(k))
 			}
-			LoadPlug(m, GO)
-			LoadPlug(m, MOD)
-			LoadPlug(m, PROTO)
 		}},
 		GODOC: {Name: GODOC, Help: "文档", Action: ice.MergeAction(map[string]*ice.Action{
 			mdb.RENDER: {Hand: func(m *ice.Message, arg ...string) {
@@ -100,53 +91,42 @@ func init() {
 				m.Echo(m.Cmdx(cli.SYSTEM, GO, "doc", strings.TrimSuffix(arg[1], ice.PT+arg[0])))
 			}},
 		}, PlugAction())},
-		PROTO: {Name: PROTO, Help: "协议", Action: ice.MergeAction(map[string]*ice.Action{}, PlugAction())},
-		SUM:   {Name: SUM, Help: "版本", Action: ice.MergeAction(map[string]*ice.Action{}, PlugAction())},
-		MOD:   {Name: MOD, Help: "模块", Action: ice.MergeAction(map[string]*ice.Action{}, PlugAction())},
+		PROTO: {Name: PROTO, Help: "协议", Action: PlugAction()},
+		SUM:   {Name: SUM, Help: "版本", Action: PlugAction()},
+		MOD:   {Name: MOD, Help: "模块", Action: PlugAction()},
 		GO: {Name: GO, Help: "后端", Action: ice.MergeAction(map[string]*ice.Action{
-			mdb.ENGINE: {Hand: func(m *ice.Message, arg ...string) {
-				m.Option(cli.CMD_DIR, arg[2])
-				if strings.HasSuffix(arg[1], "test.go") {
-					m.Cmdy(cli.SYSTEM, GO, "test", "-v", ice.PWD+arg[1])
-				} else {
-					m.Cmdy(cli.SYSTEM, GO, "run", ice.PWD+arg[1])
-				}
-				m.Set(ice.MSG_APPEND)
-			}},
 			mdb.SEARCH: {Hand: func(m *ice.Message, arg ...string) {
 				if arg[0] == mdb.FOREACH {
 					return
 				}
 				_go_tags(m, kit.Select(MAIN, arg, 1))
 				_go_help(m, kit.Select(MAIN, arg, 1))
-				// _go_find(m, kit.Select(MAIN, arg, 1))
-				// _go_grep(m, kit.Select(MAIN, arg, 1))
+				// _go_find(m, kit.Select(MAIN, arg, 1), arg[2])
+				// _go_grep(m, kit.Select(MAIN, arg, 1), arg[2])
+			}},
+			mdb.ENGINE: {Hand: func(m *ice.Message, arg ...string) {
+				if m.Option(cli.CMD_DIR, arg[2]); strings.HasSuffix(arg[1], "_test.go") {
+					m.Cmdy(cli.SYSTEM, GO, "test", "-v", ice.PWD+arg[1])
+				} else {
+					m.Cmdy(cli.SYSTEM, GO, "run", ice.PWD+arg[1])
+				}
 			}},
 		}, PlugAction())},
 	}, Configs: map[string]*ice.Config{
 		PROTO: {Name: PROTO, Help: "协议", Value: kit.Data(PLUG, kit.Dict(
-			PREFIX, kit.Dict("//", COMMENT),
-			PREPARE, kit.Dict(
-				KEYWORD, kit.Simple(
-					"syntax", "option", "package", "import", "service", "message",
-				),
-				DATATYPE, kit.Simple(
-					"string", "int64", "int32",
-				),
+			PREFIX, kit.Dict("//", COMMENT), PREPARE, kit.Dict(
+				KEYWORD, kit.Simple("syntax", "option", "package", "import", "service", "message"),
+				DATATYPE, kit.Simple("string", "int64", "int32"),
 			), KEYWORD, kit.Dict(),
 		))},
 		MOD: {Name: MOD, Help: "模块", Value: kit.Data(PLUG, kit.Dict(
-			PREFIX, kit.Dict("//", COMMENT),
-			PREPARE, kit.Dict(
-				KEYWORD, kit.Simple(
-					"go", "module", "require", "replace", "=>",
-				),
+			PREFIX, kit.Dict("//", COMMENT), PREPARE, kit.Dict(
+				KEYWORD, kit.Simple("go", "module", "require", "replace", "=>"),
 			), KEYWORD, kit.Dict(),
 		))},
 		GO: {Name: GO, Help: "后端", Value: kit.Data(PLUG, kit.Dict(
 			SPLIT, kit.Dict("space", "\t ", "operator", "{[(&.,:;!|<>)]}"),
-			PREFIX, kit.Dict("// ", COMMENT, "/*", COMMENT, "* ", COMMENT),
-			PREPARE, kit.Dict(
+			PREFIX, kit.Dict("// ", COMMENT, "/*", COMMENT, "* ", COMMENT), PREPARE, kit.Dict(
 				KEYWORD, kit.Simple(
 					"package", "import", "type", "struct", "interface", "const", "var", "func",
 					"if", "else", "for", "range", "break", "continue",

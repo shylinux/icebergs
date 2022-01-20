@@ -124,7 +124,6 @@ const (
 	REPOS  = "repos"
 
 	LOAD = "load"
-	FIND = "find"
 	TAGS = "tags"
 )
 const (

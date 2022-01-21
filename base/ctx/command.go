@@ -9,6 +9,10 @@ import (
 )
 
 func _command_list(m *ice.Message, name string) {
+	if strings.HasPrefix(name, "can.") {
+		m.Push(mdb.INDEX, name)
+		return
+	}
 	if name == "" { // 命令列表
 		for k, v := range m.Source().Commands {
 			if k[0] == '/' || k[0] == '_' {

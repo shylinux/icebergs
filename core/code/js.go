@@ -1,6 +1,8 @@
 package code
 
 import (
+	"path"
+
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/cli"
 	"shylinux.com/x/icebergs/base/mdb"
@@ -20,7 +22,7 @@ const VUE = "vue"
 func init() {
 	Index.Register(&ice.Context{Name: JS, Help: "前端", Commands: map[string]*ice.Command{
 		ice.CTX_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			for _, cmd := range []string{mdb.PLUGIN, mdb.RENDER, mdb.ENGINE, mdb.SEARCH} {
+			for _, cmd := range []string{mdb.SEARCH, mdb.ENGINE, mdb.RENDER, mdb.PLUGIN} {
 				m.Cmd(cmd, mdb.CREATE, JSON, m.Prefix(JS))
 				m.Cmd(cmd, mdb.CREATE, VUE, m.Prefix(JS))
 				m.Cmd(cmd, mdb.CREATE, JS, m.Prefix(JS))
@@ -28,18 +30,26 @@ func init() {
 			}
 			LoadPlug(m, JS)
 		}},
-		JS: {Name: JS, Help: "前端", Action: ice.MergeAction(map[string]*ice.Action{
-			mdb.ENGINE: {Hand: func(m *ice.Message, arg ...string) {
-				m.Option(cli.CMD_DIR, arg[2])
-				m.Cmdy(cli.SYSTEM, NODE, arg[1])
-				m.Set(ice.MSG_APPEND)
-			}},
+		JS: {Name: "js", Help: "前端", Action: ice.MergeAction(map[string]*ice.Action{
 			mdb.SEARCH: {Hand: func(m *ice.Message, arg ...string) {
 				if arg[0] == mdb.FOREACH {
 					return
 				}
 				_go_find(m, kit.Select(MAIN, arg, 1), arg[2])
 				_go_grep(m, kit.Select(MAIN, arg, 1), arg[2])
+			}},
+			mdb.ENGINE: {Hand: func(m *ice.Message, arg ...string) {
+				m.Cmdy(cli.SYSTEM, NODE, arg[1], kit.Dict(cli.CMD_DIR, arg[2])).SetAppend()
+			}},
+			mdb.RENDER: {Hand: func(m *ice.Message, arg ...string) {
+				if key, ok := ice.Info.File[kit.Replace(path.Join(arg[2], arg[1]), ".js", ".go")]; ok && key != "" {
+					m.Display(path.Join(web.SHARE_LOCAL, path.Join(arg[2], arg[1])))
+					m.ProcessCommand(key, kit.Simple())
+				} else {
+					m.Display(path.Join(web.SHARE_LOCAL, path.Join(arg[2], arg[1])))
+					m.ProcessCommand("can.code.inner.plugin", kit.Simple())
+					// m.ProcessCommand("web.wiki.word", kit.Simple(strings.ReplaceAll(path.Join(arg[2], arg[1]), ".go", ".shy")))
+				}
 			}},
 		}, PlugAction())},
 		NODE: {Name: "node auto download", Help: "前端", Action: map[string]*ice.Action{
@@ -53,40 +63,16 @@ func init() {
 		)},
 		JS: {Name: JS, Help: "js", Value: kit.Data(PLUG, kit.Dict(
 			SPLIT, kit.Dict("space", " \t", "operator", "{[(&.,;!|<>)]}"),
-			PREFIX, kit.Dict("//", COMMENT, "/*", COMMENT, "*", COMMENT),
-			PREPARE, kit.Dict(
+			PREFIX, kit.Dict("//", COMMENT, "/*", COMMENT, "*", COMMENT), PREPARE, kit.Dict(
 				KEYWORD, kit.Simple(
-					"import",
-					"from",
-					"export",
+					"import", "from", "export",
 
-					"var",
-					"new",
-					"delete",
-					"typeof",
-					"const",
-					"function",
+					"var", "new", "delete", "typeof", "const", "function",
 
-					"if",
-					"else",
-					"for",
-					"while",
-					"break",
-					"continue",
-					"switch",
-					"case",
-					"default",
-					"return",
-					"try",
-					"throw",
-					"catch",
-					"finally",
+					"if", "else", "for", "while", "break", "continue", "switch", "case", "default",
+					"return", "try", "throw", "catch", "finally",
 
-					"can",
-					"sub",
-					"msg",
-					"res",
-					"target",
+					"can", "sub", "msg", "res", "target",
 				),
 				FUNCTION, kit.Simple(
 					"window",

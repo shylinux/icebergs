@@ -61,6 +61,72 @@ func _go_grep(m *ice.Message, key string, dir string) {
 		m.PushSearch(value)
 	})
 }
+func _go_exec(m *ice.Message, arg ...string) {
+	if key, ok := ice.Info.File[path.Join(arg[2], arg[1])]; ok && key != "" {
+		m.Cmdy(cli.SYSTEM, GO, ice.RUN, ice.SRC_MAIN_GO, key)
+	} else if m.Option(cli.CMD_DIR, arg[2]); strings.HasSuffix(arg[1], "_test.go") {
+		m.Cmdy(cli.SYSTEM, GO, "test", "-v", ice.PWD+arg[1])
+	} else {
+		m.Cmdy(cli.SYSTEM, GO, ice.RUN, ice.PWD+arg[1])
+	}
+	m.SetAppend()
+}
+func _go_show(m *ice.Message, arg ...string) {
+	if key, ok := ice.Info.File[path.Join(arg[2], arg[1])]; ok && key != "" {
+		m.ProcessCommand(key, kit.Simple())
+	} else {
+		m.ProcessCommand("web.wiki.word", kit.Simple(strings.ReplaceAll(path.Join(arg[2], arg[1]), ".go", ".shy")))
+	}
+}
+func _mod_show(m *ice.Message, file string) {
+	const (
+		MODULE  = "module"
+		REQUIRE = "require"
+		REPLACE = "replace"
+		VERSION = "version"
+	)
+
+	block := ""
+	require := map[string]string{}
+	replace := map[string]string{}
+	m.Cmd(nfs.CAT, file, func(line string) {
+		ls := kit.Split(line)
+		switch {
+		case strings.HasPrefix(line, MODULE):
+			require[ls[1]] = ""
+			replace[ls[1]] = ice.PWD
+			return
+		case strings.HasPrefix(line, REQUIRE+" ("):
+			block = REQUIRE
+			return
+		case strings.HasPrefix(line, REPLACE+" ("):
+			block = REPLACE
+			return
+		case strings.HasPrefix(line, ")"):
+			block = ""
+			return
+		case strings.HasPrefix(line, REQUIRE):
+			require[ls[1]] = ls[2]
+		case strings.HasPrefix(line, REPLACE):
+			replace[ls[1]] = ls[3]
+		}
+		if block == "" || len(ls) < 2 {
+			return
+		}
+		switch block {
+		case REQUIRE:
+			require[ls[0]] = ls[1]
+		case REPLACE:
+			replace[ls[0]] = ls[2]
+		}
+	})
+	for k, v := range require {
+		m.Push(REQUIRE, k)
+		m.Push(VERSION, v)
+		m.Push(REPLACE, kit.Select("", replace[k]))
+	}
+	m.Sort(REPLACE)
+}
 
 const (
 	TAGS = ".tags"
@@ -81,36 +147,31 @@ func init() {
 
 			LoadPlug(m, GO, MOD, SUM, PROTO)
 			for _, k := range []string{GO, MOD, SUM, PROTO, GODOC} {
-				m.Cmd(mdb.PLUGIN, mdb.CREATE, k, m.Prefix(k))
 				m.Cmd(mdb.RENDER, mdb.CREATE, k, m.Prefix(k))
+				m.Cmd(mdb.PLUGIN, mdb.CREATE, k, m.Prefix(k))
 			}
 		}},
-		GODOC: {Name: GODOC, Help: "文档", Action: ice.MergeAction(map[string]*ice.Action{
+		GODOC: {Name: "godoc", Help: "文档", Action: ice.MergeAction(map[string]*ice.Action{
 			mdb.RENDER: {Hand: func(m *ice.Message, arg ...string) {
-				m.Option(cli.CMD_DIR, arg[2])
-				m.Echo(m.Cmdx(cli.SYSTEM, GO, "doc", strings.TrimSuffix(arg[1], ice.PT+arg[0])))
+				m.Cmdy(cli.SYSTEM, GO, "doc", strings.TrimSuffix(arg[1], ice.PT+arg[0]), kit.Dict(cli.CMD_DIR, arg[2])).SetAppend()
 			}},
 		}, PlugAction())},
-		PROTO: {Name: PROTO, Help: "协议", Action: PlugAction()},
-		SUM:   {Name: SUM, Help: "版本", Action: PlugAction()},
-		MOD:   {Name: MOD, Help: "模块", Action: PlugAction()},
-		GO: {Name: GO, Help: "后端", Action: ice.MergeAction(map[string]*ice.Action{
+		PROTO: {Name: "proto", Help: "协议", Action: PlugAction()},
+		SUM:   {Name: "sum", Help: "版本", Action: PlugAction()},
+		MOD: {Name: "mod", Help: "模块", Action: ice.MergeAction(map[string]*ice.Action{
+			mdb.RENDER: {Hand: func(m *ice.Message, arg ...string) { _mod_show(m, path.Join(arg[2], arg[1])) }},
+		}, PlugAction())},
+		GO: {Name: "go", Help: "后端", Action: ice.MergeAction(map[string]*ice.Action{
 			mdb.SEARCH: {Hand: func(m *ice.Message, arg ...string) {
-				if arg[0] == mdb.FOREACH {
-					return
-				}
-				_go_tags(m, kit.Select(MAIN, arg, 1))
-				_go_help(m, kit.Select(MAIN, arg, 1))
-				// _go_find(m, kit.Select(MAIN, arg, 1), arg[2])
-				// _go_grep(m, kit.Select(MAIN, arg, 1), arg[2])
-			}},
-			mdb.ENGINE: {Hand: func(m *ice.Message, arg ...string) {
-				if m.Option(cli.CMD_DIR, arg[2]); strings.HasSuffix(arg[1], "_test.go") {
-					m.Cmdy(cli.SYSTEM, GO, "test", "-v", ice.PWD+arg[1])
-				} else {
-					m.Cmdy(cli.SYSTEM, GO, "run", ice.PWD+arg[1])
+				if arg[0] == GO {
+					_go_tags(m, kit.Select(MAIN, arg, 1))
+					_go_help(m, kit.Select(MAIN, arg, 1))
+					// _go_find(m, kit.Select(MAIN, arg, 1), arg[2])
+					// _go_grep(m, kit.Select(MAIN, arg, 1), arg[2])
 				}
 			}},
+			mdb.ENGINE: {Hand: func(m *ice.Message, arg ...string) { _go_exec(m, arg...) }},
+			mdb.RENDER: {Hand: func(m *ice.Message, arg ...string) { _go_show(m, arg...) }},
 		}, PlugAction())},
 	}, Configs: map[string]*ice.Config{
 		PROTO: {Name: PROTO, Help: "协议", Value: kit.Data(PLUG, kit.Dict(

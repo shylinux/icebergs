@@ -61,7 +61,8 @@ func init() {
 			// 执行编译
 			_autogen_version(m.Spawn())
 			m.Optionv(cli.CMD_ENV, kit.Simple(m.Configv(cli.ENV), cli.GOOS, goos, cli.GOARCH, arch))
-			if msg := m.Cmd(cli.SYSTEM, m.Configv(GO), "-o", file, main, ice.SRC_VERSION_GO, ice.SRC_BINPACK_GO); !cli.IsSuccess(msg) {
+			// if msg := m.Cmd(cli.SYSTEM, m.Configv(GO), "-o", file, main, ice.SRC_VERSION_GO, ice.SRC_BINPACK_GO); !cli.IsSuccess(msg) {
+			if msg := m.Cmd(cli.SYSTEM, m.Configv(GO), "-v", "-o", file, main, ice.SRC_VERSION_GO); !cli.IsSuccess(msg) {
 				m.Copy(msg)
 				return
 			}

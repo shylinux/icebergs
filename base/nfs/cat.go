@@ -151,6 +151,7 @@ func init() {
 				HTML, ice.TRUE, CSS, ice.TRUE, JS, ice.TRUE, GO, ice.TRUE, SH, ice.TRUE, CSV, ice.TRUE, JSON, ice.TRUE,
 				"md", ice.TRUE, "shy", ice.TRUE, "makefile", ice.TRUE, "license", ice.TRUE,
 				"conf", ice.TRUE, "yaml", ice.TRUE, "yml", ice.TRUE,
+				"py", ice.TRUE,
 			),
 		)},
 	}, Commands: map[string]*ice.Command{

@@ -42,6 +42,22 @@ func _inner_show(m *ice.Message, ext, file, dir string, arg ...string) {
 		return // 解析成功
 	}
 }
+func _inner_make(m *ice.Message, msg *ice.Message) {
+	for _, line := range strings.Split(msg.Append(cli.CMD_ERR), ice.NL) {
+		if strings.Contains(line, ice.DF) {
+			if ls := strings.SplitN(line, ice.DF, 4); len(ls) > 3 {
+				m.Push(nfs.FILE, strings.TrimPrefix(ls[0], m.Option(nfs.PATH)))
+				m.Push(nfs.LINE, ls[1])
+				m.Push(mdb.TEXT, ls[3])
+			}
+		}
+	}
+	if m.Length() == 0 {
+		m.Echo(msg.Append(cli.CMD_OUT))
+		m.Echo(msg.Append(cli.CMD_ERR))
+	}
+	m.StatusTime()
+}
 
 func LoadPlug(m *ice.Message, language ...string) {
 	for _, language := range language {
@@ -56,9 +72,9 @@ func LoadPlug(m *ice.Message, language ...string) {
 
 func PlugAction(fields ...string) map[string]*ice.Action {
 	return ice.SelectAction(map[string]*ice.Action{
-		mdb.PLUGIN: {Hand: func(m *ice.Message, arg ...string) { m.Echo(m.Config(PLUG)) }},
-		mdb.RENDER: {Hand: func(m *ice.Message, arg ...string) { m.Cmdy(nfs.CAT, path.Join(arg[2], arg[1])) }},
 		mdb.ENGINE: {Hand: func(m *ice.Message, arg ...string) { m.Cmdy(nfs.CAT, path.Join(arg[2], arg[1])) }},
+		mdb.RENDER: {Hand: func(m *ice.Message, arg ...string) { m.Cmdy(nfs.CAT, path.Join(arg[2], arg[1])) }},
+		mdb.PLUGIN: {Hand: func(m *ice.Message, arg ...string) { m.Echo(m.Config(PLUG)) }},
 	}, fields...)
 }
 
@@ -118,21 +134,7 @@ func init() {
 				m.StatusTimeCount(mdb.INDEX, 0)
 			}},
 			cli.MAKE: {Name: "make", Help: "构建", Hand: func(m *ice.Message, arg ...string) {
-				msg := m.Cmd(cli.SYSTEM, cli.MAKE, arg)
-				for _, line := range strings.Split(msg.Append(cli.CMD_ERR), ice.NL) {
-					if strings.Contains(line, ice.DF) {
-						if ls := strings.SplitN(line, ice.DF, 4); len(ls) > 3 {
-							m.Push(nfs.FILE, strings.TrimPrefix(ls[0], m.Option(nfs.PATH)))
-							m.Push(nfs.LINE, ls[1])
-							m.Push(mdb.TEXT, ls[3])
-						}
-					}
-				}
-				if m.Length() == 0 {
-					m.Echo(msg.Append(cli.CMD_OUT))
-					m.Echo(msg.Append(cli.CMD_ERR))
-				}
-				m.StatusTime()
+				_inner_make(m, m.Cmd(cli.SYSTEM, cli.MAKE, arg))
 			}},
 			mdb.INPUTS: {Name: "inputs", Help: "补全", Hand: func(m *ice.Message, arg ...string) {
 				switch arg[0] {

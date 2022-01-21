@@ -51,29 +51,19 @@ const C = "c"
 func init() {
 	Index.Register(&ice.Context{Name: C, Help: "系统", Commands: map[string]*ice.Command{
 		ice.CTX_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			for _, cmd := range []string{mdb.PLUGIN, mdb.RENDER, mdb.ENGINE, mdb.SEARCH} {
+			for _, cmd := range []string{mdb.SEARCH, mdb.ENGINE, mdb.RENDER, mdb.PLUGIN} {
 				for _, k := range []string{H, C, CC} {
 					m.Cmd(cmd, mdb.CREATE, k, m.Prefix(C))
 				}
 			}
-			for _, cmd := range []string{mdb.PLUGIN, mdb.RENDER, mdb.SEARCH} {
+			for _, cmd := range []string{mdb.SEARCH, mdb.RENDER, mdb.PLUGIN} {
 				for _, k := range []string{MAN1, MAN2, MAN3, MAN8} {
 					m.Cmd(cmd, mdb.CREATE, k, m.Prefix(MAN))
 				}
 			}
-			LoadPlug(m, C)
-			LoadPlug(m, MAN)
+			LoadPlug(m, C, MAN)
 		}},
 		C: {Name: C, Help: "系统", Action: ice.MergeAction(map[string]*ice.Action{
-			mdb.ENGINE: {Hand: func(m *ice.Message, arg ...string) {
-				m.Option(cli.CMD_DIR, arg[2])
-				name := strings.TrimSuffix(arg[1], path.Ext(arg[1])) + ".bin"
-				if msg := m.Cmd(cli.SYSTEM, "gcc", arg[1], "-o", name); !cli.IsSuccess(msg) {
-					m.Copy(msg)
-					return
-				}
-				m.Cmdy(cli.SYSTEM, ice.PWD+name)
-			}},
 			mdb.SEARCH: {Hand: func(m *ice.Message, arg ...string) {
 				if arg[0] == mdb.FOREACH {
 					return
@@ -85,11 +75,17 @@ func init() {
 				_go_find(m, kit.Select(MAIN, arg, 1), arg[2])
 				_go_grep(m, kit.Select(MAIN, arg, 1), arg[2])
 			}},
+			mdb.ENGINE: {Hand: func(m *ice.Message, arg ...string) {
+				m.Option(cli.CMD_DIR, arg[2])
+				name := strings.TrimSuffix(arg[1], path.Ext(arg[1])) + ".bin"
+				if msg := m.Cmd(cli.SYSTEM, "gcc", arg[1], "-o", name); !cli.IsSuccess(msg) {
+					m.Copy(msg)
+					return
+				}
+				m.Echo(m.Cmd(cli.SYSTEM, ice.PWD+name).Append(cli.CMD_OUT))
+			}},
 		}, PlugAction())},
 		MAN: {Name: MAN, Help: "手册", Action: ice.MergeAction(map[string]*ice.Action{
-			mdb.RENDER: {Hand: func(m *ice.Message, arg ...string) {
-				m.Echo(_c_help(m, strings.TrimPrefix(arg[0], MAN), strings.TrimSuffix(arg[1], ice.PT+arg[0])))
-			}},
 			mdb.SEARCH: {Hand: func(m *ice.Message, arg ...string) {
 				if arg[0] == mdb.FOREACH {
 					return
@@ -100,12 +96,14 @@ func init() {
 					}
 				}
 			}},
+			mdb.RENDER: {Hand: func(m *ice.Message, arg ...string) {
+				m.Echo(_c_help(m, strings.TrimPrefix(arg[0], MAN), strings.TrimSuffix(arg[1], ice.PT+arg[0])))
+			}},
 		}, PlugAction())},
 	}, Configs: map[string]*ice.Config{
 		C: {Name: C, Help: "系统", Value: kit.Data(PLUG, kit.Dict(
 			SPLIT, kit.Dict("space", " ", "operator", "{[(.,:;!|<>)]}"),
-			PREFIX, kit.Dict("//", COMMENT, "/*", COMMENT, "*", COMMENT),
-			PREPARE, kit.Dict(
+			PREFIX, kit.Dict("//", COMMENT, "/*", COMMENT, "*", COMMENT), PREPARE, kit.Dict(
 				KEYWORD, kit.Simple(
 					"#include",
 					"#define",

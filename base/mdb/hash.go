@@ -64,6 +64,8 @@ func _hash_select(m *ice.Message, prefix, chain, field, value string) {
 		switch val = kit.GetMeta(val); cb := m.OptionCB(SELECT).(type) {
 		case func(fields []string, value map[string]interface{}):
 			cb(fields, val)
+		case func(value map[string]interface{}):
+			cb(val)
 		default:
 			if m.OptionFields() == DETAIL {
 				m.Push(DETAIL, val)

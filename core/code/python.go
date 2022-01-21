@@ -3,6 +3,7 @@ package code
 import (
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/cli"
+	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/nfs"
 	kit "shylinux.com/x/toolkits"
 )
@@ -16,6 +17,9 @@ func init() {
 			PYTHON, "python", "pip", "pip",
 		)},
 	}, Commands: map[string]*ice.Command{
+		ice.CTX_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			m.Cmd(mdb.ENGINE, mdb.CREATE, mdb.TYPE, "py", mdb.NAME, m.Prefix(PYTHON))
+		}},
 		PYTHON: {Name: "python path auto order build download", Help: "脚本命令", Action: ice.MergeAction(map[string]*ice.Action{
 			ice.RUN: {Name: "run", Help: "运行", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmdy(cli.SYSTEM, m.Config(PYTHON), arg)

@@ -22,11 +22,16 @@ func init() {
 				m.Cmdy(AUTOGEN, mdb.CREATE, arg)
 			}},
 			COMPILE: {Name: "compile", Help: "编译", Hand: func(m *ice.Message, arg ...string) {
-				if m.Cmdy(COMPILE, ice.SRC_MAIN_GO); cli.IsSuccess(m) {
-					m.Cmd(COMPILE, ice.SRC_MAIN_GO, ice.BIN_ICE_BIN)
-					m.Cmd(ice.EXIT, "1")
+				defer m.ProcessInner()
+				if msg := m.Cmd(COMPILE, ice.SRC_MAIN_GO); !cli.IsSuccess(msg) {
+					_inner_make(m, msg)
+					return
 				}
-				m.ProcessInner()
+				if msg := m.Cmd(COMPILE, ice.SRC_MAIN_GO, ice.BIN_ICE_BIN); !cli.IsSuccess(msg) {
+					_inner_make(m, msg)
+					return
+				}
+				m.Go(func() { m.Sleep("1s", ice.EXIT, "1") })
 			}},
 			BINPACK: {Name: "binpack", Help: "打包", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmdy(AUTOGEN, BINPACK)

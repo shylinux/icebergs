@@ -113,7 +113,9 @@ func Run(arg ...string) string {
 			os.Exit(kit.Int(Pulse.Option(EXIT)))
 		}
 	default:
-		if Pulse.Cmdy(arg); Pulse.Result() == "" {
+		Pulse.Cmd(INIT)
+		defer Pulse.Cmd(EXIT)
+		if Pulse.Cmdy(arg); strings.TrimSpace(Pulse.Result()) == "" {
 			Pulse.Table()
 		}
 		Pulse.Sleep30ms()

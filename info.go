@@ -33,6 +33,7 @@ var Info = struct {
 	names  map[string]interface{}
 	render map[string]func(*Message, string, ...interface{}) string
 	Log    func(m *Message, p, l, s string)
+	File   map[string]string
 }{
 	Help: `
 ^_^      欢迎使用冰山框架       ^_^
@@ -45,6 +46,7 @@ source: https://shylinux.com/x/icebergs
 	Pack:   map[string][]byte{},
 	names:  map[string]interface{}{},
 	render: map[string]func(*Message, string, ...interface{}) string{},
+	File:   map[string]string{},
 }
 
 func Dump(w io.Writer, name string, cb func(string)) bool {

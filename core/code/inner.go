@@ -151,6 +151,7 @@ func init() {
 			}},
 			FAVOR: {Name: "favor", Help: "收藏"},
 		}, ctx.CmdAction()), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			arg[0] = strings.Split(arg[0], ice.FS)[0]
 			if !strings.HasSuffix(arg[0], ice.PS) {
 				arg[1] = kit.Slice(strings.Split(arg[0], ice.PS), -1)[0]
 				arg[0] = strings.TrimSuffix(arg[0], arg[1])
@@ -161,7 +162,8 @@ func init() {
 				nfs.Dir(m, nfs.PATH)
 				return
 			}
-			m.Option("exts", "inner/search.js?a=1,inner/favor.js")
+			arg[1] = strings.Split(arg[1], ice.FS)[0]
+			m.Option("exts", "inner/search.js?a=1,inner/favor.js,inner/template.js")
 			if _inner_list(m, kit.Ext(arg[1]), arg[1], arg[0]); m.IsErrNotFound() {
 				m.SetResult("")
 			}

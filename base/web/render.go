@@ -86,7 +86,7 @@ func CookieName(url string) string {
 func RenderCookie(msg *ice.Message, value string, arg ...string) { // name path expire
 	expire := time.Now().Add(kit.Duration(kit.Select(msg.Conf(aaa.SESS, "meta.expire"), arg, 2)))
 	http.SetCookie(msg.W, &http.Cookie{Value: value,
-		Name: kit.Select(ice.MSG_SESSID, arg, 0), Path: kit.Select("/", arg, 1), Expires: expire})
+		Name: kit.Select(CookieName(msg.Option(ice.MSG_USERWEB)), arg, 0), Path: kit.Select(ice.PS, arg, 1), Expires: expire})
 }
 func RenderType(w http.ResponseWriter, name, mime string) {
 	if mime != "" {

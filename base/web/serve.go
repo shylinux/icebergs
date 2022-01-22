@@ -284,10 +284,11 @@ func init() {
 					m.Config(kit.Keys(aaa.WHITE, k), ice.TRUE)
 				}
 			}},
-			cli.START: {Name: "start dev name=ops proto=http host port=9020 nodename", Help: "启动", Hand: func(m *ice.Message, arg ...string) {
+			cli.START: {Name: "start dev name=ops proto=http host port=9020 nodename password username userrole", Help: "启动", Hand: func(m *ice.Message, arg ...string) {
 				if cli.NodeInfo(m, SERVER, kit.Select(ice.Info.HostName, m.Option("nodename"))); m.Option(tcp.PORT) == tcp.RANDOM {
 					m.Option(tcp.PORT, m.Cmdx(tcp.PORT, aaa.RIGHT))
 				}
+				aaa.UserRoot(m, m.Option(aaa.PASSWORD), m.Option(aaa.USERNAME), m.Option(aaa.USERROLE))
 
 				m.Target().Start(m, m.OptionSimple(mdb.NAME, tcp.HOST, tcp.PORT)...)
 				m.Sleep300ms()

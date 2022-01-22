@@ -43,12 +43,14 @@ func _user_search(m *ice.Message, name, text string) {
 	})
 }
 
-func UserRoot(m *ice.Message) {
-	m.Option(ice.MSG_USERROLE, ROOT)
-	m.Option(ice.MSG_USERNAME, ice.Info.UserName)
+func UserRoot(m *ice.Message, arg ...string) { // password username userrole
+	userrole := kit.Select(ice.Info.UserName, arg, 2)
+	username := kit.Select(ice.Info.UserName, arg, 1)
+	m.Option(ice.MSG_USERROLE, userrole)
+	m.Option(ice.MSG_USERNAME, username)
 
-	if !_user_exists(m, ice.Info.UserName) {
-		_user_create(m, ROOT, ice.Info.UserName, "")
+	if !_user_exists(m, username) {
+		_user_create(m, userrole, username, kit.Select("", arg, 0))
 	}
 }
 func UserRole(m *ice.Message, username interface{}) (role string) {

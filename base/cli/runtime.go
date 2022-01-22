@@ -55,6 +55,7 @@ func _runtime_init(m *ice.Message) {
 	// 启动次数
 	count := kit.Int(m.Conf(RUNTIME, kit.Keys(BOOT, mdb.COUNT))) + 1
 	m.Conf(RUNTIME, kit.Keys(BOOT, mdb.COUNT), count)
+	m.Conf(RUNTIME, kit.Keys(BOOT, ice.BIN), m.Cmdx(SYSTEM, "which", os.Args[0]))
 
 	// 节点信息
 	m.Conf(RUNTIME, kit.Keys(NODE, mdb.TIME), m.Time())

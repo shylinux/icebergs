@@ -22,11 +22,6 @@ func init() {
 				m.Cmdy(AUTOGEN, mdb.CREATE, arg)
 			}},
 			COMPILE: {Name: "compile", Help: "编译", Hand: func(m *ice.Message, arg ...string) {
-				defer m.ProcessInner()
-				if msg := m.Cmd(COMPILE, ice.SRC_MAIN_GO); !cli.IsSuccess(msg) {
-					_inner_make(m, msg)
-					return
-				}
 				if msg := m.Cmd(COMPILE, ice.SRC_MAIN_GO, ice.BIN_ICE_BIN); !cli.IsSuccess(msg) {
 					_inner_make(m, msg)
 					return

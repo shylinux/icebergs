@@ -5,6 +5,7 @@ import (
 	"io"
 	"os"
 	"os/exec"
+	"strings"
 
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/ctx"
@@ -63,7 +64,7 @@ func _system_exec(m *ice.Message, cmd *exec.Cmd) {
 		defer func() {
 			m.Push(CMD_OUT, out.String())
 			m.Push(CMD_ERR, err.String())
-			m.Echo(kit.Select(out.String(), err.String()))
+			m.Echo(strings.TrimSpace(kit.Select(out.String(), err.String())))
 		}()
 		cmd.Stdout, cmd.Stderr = out, err
 	}

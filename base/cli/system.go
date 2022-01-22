@@ -5,6 +5,7 @@ import (
 	"io"
 	"os"
 	"os/exec"
+	"path"
 	"strings"
 
 	ice "shylinux.com/x/icebergs"
@@ -28,6 +29,15 @@ func _system_cmd(m *ice.Message, arg ...string) *exec.Cmd {
 	env := kit.Simple(m.Optionv(CMD_ENV))
 	for i := 0; i < len(env)-1; i += 2 {
 		cmd.Env = append(cmd.Env, kit.Format("%s=%s", env[i], env[i+1]))
+		if env[i] == PATH {
+			for _, p := range strings.Split(env[i+1], ice.DF) {
+				if _, err := os.Stat(path.Join(p, arg[0])); err == nil {
+					cmd.Path = path.Join(p, arg[0])
+					m.Debug("what %v", cmd.Path)
+					break
+				}
+			}
+		}
 	}
 	if len(cmd.Env) > 0 {
 		m.Log_EXPORT(CMD_ENV, cmd.Env)

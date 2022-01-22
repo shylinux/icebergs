@@ -16,22 +16,23 @@ import (
 )
 
 func _runtime_init(m *ice.Message) {
-	// 版本信息
+	// 版本信息 make
 	kit.Fetch(kit.UnMarshal(kit.Format(ice.Info.Make)), func(key string, value interface{}) {
 		m.Conf(RUNTIME, kit.Keys(MAKE, strings.ToLower(key)), value)
 	})
 
-	// 环境变量
+	// 环境变量 conf
 	for _, k := range []string{CTX_SHY, CTX_DEV, CTX_OPS, CTX_ARG, CTX_PID, CTX_USER, CTX_SHARE, CTX_RIVER} {
 		m.Conf(RUNTIME, kit.Keys(CONF, k), os.Getenv(k))
 	}
 
-	// 主机信息
+	// 主机信息 host
 	m.Conf(RUNTIME, kit.Keys(HOST, GOARCH), runtime.GOARCH)
 	m.Conf(RUNTIME, kit.Keys(HOST, GOOS), runtime.GOOS)
 	m.Conf(RUNTIME, kit.Keys(HOST, "pid"), os.Getpid())
+	m.Conf(RUNTIME, kit.Keys(HOST, HOME), os.Getenv(HOME))
 
-	// 启动信息
+	// 启动信息 boot
 	if name, e := os.Hostname(); e == nil {
 		m.Conf(RUNTIME, kit.Keys(BOOT, HOSTNAME), kit.Select(name, os.Getenv("HOSTNAME")))
 	}
@@ -52,16 +53,18 @@ func _runtime_init(m *ice.Message) {
 	ice.Info.PathName = m.Conf(RUNTIME, kit.Keys(BOOT, PATHNAME))
 	ice.Info.UserName = m.Conf(RUNTIME, kit.Keys(BOOT, USERNAME))
 
-	// 启动次数
+	// 启动次数 boot
 	count := kit.Int(m.Conf(RUNTIME, kit.Keys(BOOT, mdb.COUNT))) + 1
 	m.Conf(RUNTIME, kit.Keys(BOOT, mdb.COUNT), count)
 	m.Conf(RUNTIME, kit.Keys(BOOT, ice.BIN), m.Cmdx(SYSTEM, "which", os.Args[0]))
 
-	// 节点信息
+	// 节点信息 node
 	m.Conf(RUNTIME, kit.Keys(NODE, mdb.TIME), m.Time())
 	NodeInfo(m, "worker", m.Conf(RUNTIME, kit.Keys(BOOT, PATHNAME)))
 
 	runtime.GOMAXPROCS(kit.Int(kit.Select("1", m.Conf(RUNTIME, kit.Keys(HOST, "GOMAXPROCS")))))
+	m.Debug("what home %v", os.Getenv(HOME))
+	m.Debug("what path %v", os.Getenv(PATH))
 }
 func _runtime_hostinfo(m *ice.Message) {
 	if f, e := os.Open("/proc/cpuinfo"); e == nil {

@@ -49,7 +49,6 @@ func init() {
 			}},
 			aaa.USER: {Name: "user", Help: "用户", Hand: func(m *ice.Message, arg ...string) {
 				m.Option(aaa.USERNAME, m.Option(ice.MSG_USERNAME))
-				m.Debug("what %v", m.FormatMeta())
 				m.Cmd(aaa.USER, mdb.MODIFY,
 					aaa.USERNICK, m.Option("nickName"), aaa.USERZONE, MP,
 					aaa.AVATAR, m.Option("avatarUrl"), aaa.GENDER, kit.Select("女", "男", m.Option(aaa.GENDER) == "1"),

@@ -69,20 +69,20 @@ func _dream_show(m *ice.Message, name string) {
 			return // 已经启动
 		}
 	}
-	if m.Richs(SPACE, nil, name, nil) != nil {
+	if m.Cmd(SPACE, name).Length() > 0 {
 		return // 已经启动
 	}
 
 	m.Optionv(cli.CMD_DIR, p)
 	m.Optionv(cli.CMD_ENV, kit.Simple(
-		cli.CTX_DEV, "http://:"+m.Cmd(SERVE).Append(tcp.PORT),
+		cli.CTX_DEV, "http://:"+m.Cmd(SERVE, ice.OptionFields("")).Append(tcp.PORT),
 		cli.PATH, kit.Path(path.Join(p, ice.BIN))+":"+kit.Path(ice.BIN)+":"+os.Getenv(cli.PATH),
-		cli.USER, ice.Info.UserName, m.Configv(cli.ENV),
+		cli.USER, ice.Info.UserName, cli.HOME, os.Getenv(cli.HOME), m.Configv(cli.ENV),
 	))
 	m.Optionv(cli.CMD_OUTPUT, path.Join(p, m.Config(kit.Keys(cli.ENV, cli.CTX_LOG))))
 
 	// 启动任务
-	m.Cmd(cli.DAEMON, m.Configv(ice.CMD), ice.DEV, ice.DEV, mdb.NAME, name, m.OptionSimple(RIVER))
+	m.Cmd(cli.DAEMON, "ice.bin", SPACE, tcp.DIAL, ice.DEV, ice.DEV, mdb.NAME, name, m.OptionSimple(RIVER))
 	defer m.Event(DREAM_CREATE, kit.SimpleKV("", m.Option(mdb.TYPE), name)...)
 	m.Sleep3s()
 }
@@ -100,7 +100,12 @@ func init() {
 			cli.START: {Name: "start name repos river", Help: "启动", Hand: func(m *ice.Message, arg ...string) {
 				_dream_show(m, m.Option(mdb.NAME, kit.Select(path.Base(m.Option(nfs.REPOS)), m.Option(mdb.NAME))))
 			}},
+			DREAM_STOP: {Name: "dream.stop type name", Help: "停止", Hand: func(m *ice.Message, arg ...string) {
+				m.Cmdy(SPACE, mdb.REMOVE, m.OptionSimple(mdb.NAME))
+				m.Cmd(DREAM, cli.START, m.OptionSimple(mdb.NAME))
+			}},
 			cli.STOP: {Name: "stop", Help: "停止", Hand: func(m *ice.Message, arg ...string) {
+				m.Cmdy(SPACE, mdb.REMOVE, m.OptionSimple(mdb.NAME))
 				m.Cmdy(SPACE, m.Option(mdb.NAME), "exit", "0")
 			}},
 			mdb.INPUTS: {Name: "inputs", Help: "补全", Hand: func(m *ice.Message, arg ...string) {
@@ -117,7 +122,6 @@ func init() {
 		}},
 	}, Configs: map[string]*ice.Config{
 		DREAM: {Name: DREAM, Help: "梦想家", Value: kit.Data(nfs.PATH, ice.USR_LOCAL_WORK,
-			ice.CMD, kit.List("ice.bin", SPACE, tcp.DIAL),
 			cli.ENV, kit.Dict(cli.CTX_LOG, ice.BIN_BOOT_LOG),
 			"miss", `#!/bin/bash
 if [ "$ISH_CONF_PRE" = "" ]; then

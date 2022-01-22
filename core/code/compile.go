@@ -19,8 +19,7 @@ func init() {
 		COMPILE: {Name: COMPILE, Help: "编译", Value: kit.Data(
 			nfs.PATH, ice.USR_PUBLISH, cli.ENV, kit.Dict(
 				"GOPRIVATE", "shylinux.com,github.com", "GOPROXY", "https://goproxy.cn,direct",
-				cli.HOME, os.Getenv(cli.HOME), cli.PATH, os.Getenv(cli.PATH),
-				"GOCACHE", os.Getenv("GOCACHE"), "CGO_ENABLED", "0",
+				"CGO_ENABLED", "0",
 			), GO, kit.List(GO, cli.BUILD),
 		)},
 	}, Commands: map[string]*ice.Command{
@@ -58,11 +57,13 @@ func init() {
 					kit.Keys(kit.Select(ice.ICE, kit.TrimExt(main), main != ice.SRC_MAIN_GO), goos, arch))
 			}
 
+			m.Debug("what home %v", os.Getenv(cli.HOME))
+			m.Debug("what path %v", os.Getenv(cli.PATH))
+
 			// 执行编译
 			_autogen_version(m.Spawn())
-			m.Optionv(cli.CMD_ENV, kit.Simple(m.Configv(cli.ENV), cli.GOOS, goos, cli.GOARCH, arch))
-			// if msg := m.Cmd(cli.SYSTEM, m.Configv(GO), "-o", file, main, ice.SRC_VERSION_GO, ice.SRC_BINPACK_GO); !cli.IsSuccess(msg) {
-			if msg := m.Cmd(cli.SYSTEM, m.Configv(GO), "-v", "-o", file, main, ice.SRC_VERSION_GO); !cli.IsSuccess(msg) {
+			m.Optionv(cli.CMD_ENV, kit.Simple(m.Configv(cli.ENV), cli.HOME, os.Getenv(cli.HOME), cli.PATH, os.Getenv(cli.PATH), cli.GOOS, goos, cli.GOARCH, arch))
+			if msg := m.Cmd(cli.SYSTEM, "go", "build", "-o", file, main, ice.SRC_VERSION_GO, ice.SRC_BINPACK_GO); !cli.IsSuccess(msg) {
 				m.Copy(msg)
 				return
 			}
@@ -70,8 +71,8 @@ func init() {
 			// 编译成功
 			m.Log_EXPORT(nfs.SOURCE, main, nfs.TARGET, file)
 			m.Cmdy(nfs.DIR, file, "time,path,size,link,action")
-			m.Cmdy(PUBLISH, mdb.CREATE, ice.BIN_ICE_SH)
-			m.Cmdy(PUBLISH, ice.CONTEXTS, ice.CORE)
+			m.Cmd(PUBLISH, mdb.CREATE, ice.BIN_ICE_SH)
+			m.Cmd(PUBLISH, ice.CONTEXTS, ice.CORE)
 			m.StatusTimeCount()
 		}},
 	}})

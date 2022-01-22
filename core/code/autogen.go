@@ -179,7 +179,6 @@ func init() {
 					_autogen_source(m, m.Option(mdb.ZONE), m.Option(mdb.NAME))
 				}
 				m.Option(nfs.FILE, path.Join(m.Option(mdb.ZONE), kit.Keys(m.Option(mdb.NAME), GO)))
-				m.Debug("what %v", m.FormatMeta())
 			}},
 			ssh.SCRIPT: {Name: "script", Help: "脚本：生成 etc/miss.sh", Hand: func(m *ice.Message, arg ...string) {
 				_autogen_miss(m)

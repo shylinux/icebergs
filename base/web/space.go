@@ -275,8 +275,9 @@ func init() {
 				args := append([]string{mdb.TYPE, kind, mdb.NAME, name}, m.OptionSimple(SHARE, RIVER)...)
 
 				m.Go(func() {
-					h := m.Rich(SPACE, nil, kit.Dict(SOCKET, s, mdb.TEXT, text, args))
-					defer m.Confv(SPACE, kit.Keys(mdb.HASH, h), "")
+					m.Rich(SPACE, nil, kit.Dict(SOCKET, s, mdb.TEXT, text, args))
+					// h := m.Rich(SPACE, nil, kit.Dict(SOCKET, s, mdb.TEXT, text, args))
+					// defer m.Confv(SPACE, kit.Keys(mdb.HASH, h), "")
 					m.Log_CREATE(SPACE, name, mdb.TYPE, kind)
 
 					switch kind {
@@ -298,6 +299,7 @@ func init() {
 					case WORKER: // 工作节点
 						m.Event(DREAM_START, args...)
 						defer m.Event(DREAM_STOP, args...)
+						defer m.Cmd(DREAM, DREAM_STOP, args)
 					default: // 服务节点
 						m.Event(SPACE_START, args...)
 						defer m.Event(SPACE_STOP, args...)

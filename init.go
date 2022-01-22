@@ -2,6 +2,7 @@ package ice
 
 import (
 	"os"
+	"path"
 	"strings"
 	"sync"
 	"time"
@@ -97,22 +98,29 @@ var Pulse = &Message{
 	source: Index, target: Index, Hand: true,
 }
 
+func init() { Index.root, Pulse.root = Index, Pulse }
+
 func Run(arg ...string) string {
-	if arg = append(arg, os.Args[1:]...); os.Getenv("ctx_arg") != "" {
-		arg = append(arg, kit.Split(os.Getenv("ctx_arg"))...)
-	}
-	if len(arg) == 0 {
-		arg = append(arg, HELP)
+	if len(arg) == 0 { // 进程参数
+		if arg = append(arg, os.Args[1:]...); os.Getenv("ctx_arg") != "" {
+			arg = append(arg, kit.Split(os.Getenv("ctx_arg"))...)
+		}
 	}
 
-	Index.root, Pulse.root = Index, Pulse
 	switch Index.Merge(Index).Begin(Pulse.Spawn(), arg...); kit.Select("", arg, 0) {
-	case SERVE, SPACE:
+	case SERVE, SPACE: // 启动服务
 		if log.LogDisable = false; Index.Start(Pulse, arg...) {
 			Pulse.TryCatch(Pulse, true, func(Pulse *Message) { Index.wg.Wait() })
 			os.Exit(kit.Int(Pulse.Option(EXIT)))
 		}
-	default:
+	default: // 执行命令
+		if _, ok := Info.names[path.Base(os.Args[0])]; ok {
+			arg = kit.Simple(path.Base(os.Args[0]), arg)
+		}
+		if len(arg) == 0 {
+			arg = append(arg, HELP)
+		}
+
 		Pulse.Cmd(INIT)
 		defer Pulse.Cmd(EXIT)
 		if Pulse.Cmdy(arg); strings.TrimSpace(Pulse.Result()) == "" {

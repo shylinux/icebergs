@@ -57,9 +57,6 @@ func init() {
 					kit.Keys(kit.Select(ice.ICE, kit.TrimExt(main), main != ice.SRC_MAIN_GO), goos, arch))
 			}
 
-			m.Debug("what home %v", os.Getenv(cli.HOME))
-			m.Debug("what path %v", os.Getenv(cli.PATH))
-
 			// 执行编译
 			_autogen_version(m.Spawn())
 			m.Optionv(cli.CMD_ENV, kit.Simple(m.Configv(cli.ENV), cli.HOME, os.Getenv(cli.HOME), cli.PATH, os.Getenv(cli.PATH), cli.GOOS, goos, cli.GOARCH, arch))

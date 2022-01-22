@@ -85,7 +85,7 @@ func (c *Context) Register(s *Context, x Server, n ...string) *Context {
 		name(n, s)
 	}
 
-	if c.Contexts == nil {
+	if s.Merge(s); c.Contexts == nil {
 		c.Contexts = map[string]*Context{}
 	}
 	c.Contexts[s.Name] = s
@@ -130,9 +130,11 @@ func (c *Context) Merge(s *Context) *Context {
 		}
 
 		for k, a := range cmd.Action {
-			if p, ok := c.Commands[k]; ok && s != c {
+			// if p, ok := c.Commands[k]; ok && s != c {
+			if p, ok := c.Commands[k]; ok {
 				switch last, next := p.Hand, a.Hand; k {
 				case CTX_INIT:
+					fmt.Printf("what %v %v last: %v next: %v\n", s.Name, c.Name, kit.FileLine(last, 3), kit.FileLine(next, 3))
 					p.Hand = func(m *Message, c *Context, _key string, arg ...string) {
 						last(m, c, _key, arg...)
 						m._key, m._cmd = key, cmd
@@ -166,6 +168,8 @@ func (c *Context) Merge(s *Context) *Context {
 				cmd.Meta[k] = a.List
 			}
 		}
+		delete(cmd.Action, CTX_INIT)
+		delete(cmd.Action, CTX_EXIT)
 	}
 
 	if c.Configs == nil {

@@ -50,20 +50,15 @@ const C = "c"
 
 func init() {
 	Index.Register(&ice.Context{Name: C, Help: "系统", Commands: map[string]*ice.Command{
-		ice.CTX_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			for _, cmd := range []string{mdb.SEARCH, mdb.ENGINE, mdb.RENDER, mdb.PLUGIN} {
-				for _, k := range []string{H, C, CC} {
-					m.Cmd(cmd, mdb.CREATE, k, m.Prefix(C))
-				}
-			}
-			for _, cmd := range []string{mdb.SEARCH, mdb.RENDER, mdb.PLUGIN} {
-				for _, k := range []string{MAN1, MAN2, MAN3, MAN8} {
-					m.Cmd(cmd, mdb.CREATE, k, m.Prefix(MAN))
-				}
-			}
-			LoadPlug(m, C, MAN)
-		}},
 		C: {Name: C, Help: "系统", Action: ice.MergeAction(map[string]*ice.Action{
+			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
+				for _, cmd := range []string{mdb.SEARCH, mdb.ENGINE, mdb.RENDER, mdb.PLUGIN} {
+					for _, k := range []string{H, C, CC} {
+						m.Cmd(cmd, mdb.CREATE, k, m.PrefixKey())
+					}
+				}
+				LoadPlug(m, C)
+			}},
 			mdb.SEARCH: {Hand: func(m *ice.Message, arg ...string) {
 				if arg[0] == mdb.FOREACH {
 					return
@@ -86,6 +81,14 @@ func init() {
 			}},
 		}, PlugAction())},
 		MAN: {Name: MAN, Help: "手册", Action: ice.MergeAction(map[string]*ice.Action{
+			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
+				for _, cmd := range []string{mdb.SEARCH, mdb.RENDER, mdb.PLUGIN} {
+					for _, k := range []string{MAN1, MAN2, MAN3, MAN8} {
+						m.Cmd(cmd, mdb.CREATE, k, m.PrefixKey())
+					}
+				}
+				LoadPlug(m, MAN)
+			}},
 			mdb.SEARCH: {Hand: func(m *ice.Message, arg ...string) {
 				if arg[0] == mdb.FOREACH {
 					return

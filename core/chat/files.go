@@ -23,7 +23,7 @@ func init() {
 					msg := m.Cmdy(web.CACHE, web.UPLOAD)
 					up = kit.Simple(msg.Append(mdb.HASH), msg.Append(mdb.NAME), msg.Append(nfs.SIZE))
 				}
-				m.Cmdy(mdb.INSERT, m.Prefix(FILES), "", mdb.HASH, mdb.TYPE, kit.Ext(up[1]), mdb.NAME, up[1], nfs.SIZE, up[2], mdb.DATA, up[0])
+				m.Cmdy(mdb.INSERT, m.PrefixKey(), "", mdb.HASH, mdb.TYPE, kit.Ext(up[1]), mdb.NAME, up[1], nfs.SIZE, up[2], mdb.DATA, up[0])
 			}},
 		}, mdb.HashAction()), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			mdb.HashSelect(m, arg...)

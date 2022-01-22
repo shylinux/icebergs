@@ -21,16 +21,16 @@ const VUE = "vue"
 
 func init() {
 	Index.Register(&ice.Context{Name: JS, Help: "前端", Commands: map[string]*ice.Command{
-		ice.CTX_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			for _, cmd := range []string{mdb.SEARCH, mdb.ENGINE, mdb.RENDER, mdb.PLUGIN} {
-				m.Cmd(cmd, mdb.CREATE, JSON, m.Prefix(JS))
-				m.Cmd(cmd, mdb.CREATE, VUE, m.Prefix(JS))
-				m.Cmd(cmd, mdb.CREATE, JS, m.Prefix(JS))
-				m.Cmd(cmd, mdb.CREATE, TS, m.Prefix(JS))
-			}
-			LoadPlug(m, JS)
-		}},
 		JS: {Name: "js", Help: "前端", Action: ice.MergeAction(map[string]*ice.Action{
+			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
+				for _, cmd := range []string{mdb.SEARCH, mdb.ENGINE, mdb.RENDER, mdb.PLUGIN} {
+					m.Cmd(cmd, mdb.CREATE, JSON, m.PrefixKey())
+					m.Cmd(cmd, mdb.CREATE, VUE, m.PrefixKey())
+					m.Cmd(cmd, mdb.CREATE, JS, m.PrefixKey())
+					m.Cmd(cmd, mdb.CREATE, TS, m.PrefixKey())
+				}
+				LoadPlug(m, JS)
+			}},
 			mdb.SEARCH: {Hand: func(m *ice.Message, arg ...string) {
 				if arg[0] == mdb.FOREACH {
 					return

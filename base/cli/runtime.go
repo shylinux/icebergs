@@ -63,8 +63,6 @@ func _runtime_init(m *ice.Message) {
 	NodeInfo(m, "worker", m.Conf(RUNTIME, kit.Keys(BOOT, PATHNAME)))
 
 	runtime.GOMAXPROCS(kit.Int(kit.Select("1", m.Conf(RUNTIME, kit.Keys(HOST, "GOMAXPROCS")))))
-	m.Debug("what home %v", os.Getenv(HOME))
-	m.Debug("what path %v", os.Getenv(PATH))
 }
 func _runtime_hostinfo(m *ice.Message) {
 	if f, e := os.Open("/proc/cpuinfo"); e == nil {

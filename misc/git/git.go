@@ -23,7 +23,8 @@ var Index = &ice.Context{Name: GIT, Help: "代码库", Configs: map[string]*ice.
 		}},
 	}, code.InstallAction()), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 		m.Cmdy(code.INSTALL, nfs.SOURCE, m.Config(nfs.SOURCE), arg)
+		m.Echo("hello world %v", arg)
 	}},
 }}
 
-func init() { code.Index.Register(Index, &web.Frame{}, REPOS) }
+func init() { code.Index.Register(Index, &web.Frame{}, REPOS, GIT) }

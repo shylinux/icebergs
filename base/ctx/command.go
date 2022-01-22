@@ -83,9 +83,7 @@ func init() {
 				m.Cmd(mdb.SEARCH, mdb.CREATE, m.CommandKey(), m.PrefixKey())
 			}},
 			mdb.SEARCH: {Name: "search type name text", Help: "搜索", Hand: func(m *ice.Message, arg ...string) {
-				if arg[0] == COMMAND {
-					_command_search(m, arg[0], kit.Select("", arg, 1), kit.Select("", arg, 2))
-				}
+				_command_search(m, arg[0], kit.Select("", arg, 1), kit.Select("", arg, 2))
 			}},
 			INDEX: {Name: "index", Help: "索引", Hand: func(m *ice.Message, arg ...string) {
 			}},

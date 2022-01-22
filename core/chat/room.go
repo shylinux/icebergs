@@ -25,11 +25,11 @@ func init() {
 	}, Commands: map[string]*ice.Command{
 		ROOM: {Name: "room zone id auto", Help: "room", Action: ice.MergeAction(map[string]*ice.Action{
 			mdb.CREATE: {Name: "create zone", Help: "创建", Hand: func(m *ice.Message, arg ...string) {
-				m.Cmdy(mdb.INSERT, m.Prefix(ROOM), "", mdb.HASH, m.OptionSimple(mdb.ZONE))
+				m.Cmdy(mdb.INSERT, m.PrefixKey(), "", mdb.HASH, m.OptionSimple(mdb.ZONE))
 			}},
 			mdb.INSERT: {Name: "insert zone type=hi name=hello text=world", Help: "发送", Hand: func(m *ice.Message, arg ...string) {
-				m.Cmdy(mdb.INSERT, m.Prefix(ROOM), "", mdb.ZONE, m.Option(mdb.ZONE), arg[2:])
-				m.Cmdy(mdb.SELECT, m.Prefix(ROOM), kit.KeyHash(m.Option(mdb.ZONE)), mdb.HASH, ice.Option{"fields", "time,space"}).Table(func(index int, value map[string]string, head []string) {
+				m.Cmdy(mdb.INSERT, m.PrefixKey(), "", mdb.ZONE, m.Option(mdb.ZONE), arg[2:])
+				m.Cmdy(mdb.SELECT, m.PrefixKey(), kit.KeyHash(m.Option(mdb.ZONE)), mdb.HASH, ice.Option{"fields", "time,space"}).Table(func(index int, value map[string]string, head []string) {
 					m.Cmdy(web.SPACE, value[web.SPACE], "toast", m.Option("text"), m.Option("name"))
 				})
 			}},

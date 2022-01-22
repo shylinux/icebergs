@@ -13,10 +13,10 @@ func init() {
 	Index.Merge(&ice.Context{Commands: map[string]*ice.Command{
 		VIMRC: {Name: "vimrc", Help: "收藏夹", Action: ice.MergeAction(map[string]*ice.Action{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
-				m.Cmd(mdb.PLUGIN, mdb.CREATE, VIMRC, m.Prefix(VIMRC))
-				m.Cmd(mdb.RENDER, mdb.CREATE, VIMRC, m.Prefix(VIMRC))
-				m.Cmd(mdb.PLUGIN, mdb.CREATE, VIM, m.Prefix(VIMRC))
-				m.Cmd(mdb.RENDER, mdb.CREATE, VIM, m.Prefix(VIMRC))
+				m.Cmd(mdb.PLUGIN, mdb.CREATE, VIMRC, m.PrefixKey())
+				m.Cmd(mdb.RENDER, mdb.CREATE, VIMRC, m.PrefixKey())
+				m.Cmd(mdb.PLUGIN, mdb.CREATE, VIM, m.PrefixKey())
+				m.Cmd(mdb.RENDER, mdb.CREATE, VIM, m.PrefixKey())
 				code.LoadPlug(m, VIMRC)
 			}},
 		}, code.PlugAction())},
@@ -24,8 +24,7 @@ func init() {
 		VIMRC: {Name: VIMRC, Help: "收藏夹", Value: kit.Data(
 			code.PLUG, kit.Dict(
 				code.SPLIT, kit.Dict("space", " \t", "operator", "{[(&.,;!|<>)]}"),
-				code.PREFIX, kit.Dict("\"", "comment"),
-				code.PREPARE, kit.Dict(
+				code.PREFIX, kit.Dict("\"", "comment"), code.PREPARE, kit.Dict(
 					code.KEYWORD, kit.Simple(
 						"source", "finish",
 						"set", "let", "end",

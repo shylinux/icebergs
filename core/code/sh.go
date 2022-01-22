@@ -11,13 +11,13 @@ const SH = "sh"
 
 func init() {
 	Index.Register(&ice.Context{Name: SH, Help: "命令", Commands: map[string]*ice.Command{
-		ice.CTX_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			for _, cmd := range []string{mdb.SEARCH, mdb.ENGINE, mdb.RENDER, mdb.PLUGIN} {
-				m.Cmd(cmd, mdb.CREATE, SH, m.Prefix(SH))
-			}
-			LoadPlug(m, SH)
-		}},
 		SH: {Name: SH, Help: "命令", Action: ice.MergeAction(map[string]*ice.Action{
+			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
+				for _, cmd := range []string{mdb.SEARCH, mdb.ENGINE, mdb.RENDER, mdb.PLUGIN} {
+					m.Cmd(cmd, mdb.CREATE, SH, m.PrefixKey())
+				}
+				LoadPlug(m, SH)
+			}},
 			mdb.SEARCH: {Hand: func(m *ice.Message, arg ...string) {
 				if arg[0] == mdb.FOREACH {
 					return

@@ -44,7 +44,7 @@ func _user_search(m *ice.Message, name, text string) {
 }
 
 func UserRoot(m *ice.Message, arg ...string) { // password username userrole
-	userrole := kit.Select(ice.Info.UserName, arg, 2)
+	userrole := kit.Select(ROOT, arg, 2)
 	username := kit.Select(ice.Info.UserName, arg, 1)
 	m.Option(ice.MSG_USERROLE, userrole)
 	m.Option(ice.MSG_USERNAME, username)

@@ -30,17 +30,17 @@ func _asset_check(m *ice.Message, account string) {
 	m.OptionCB(mdb.SELECT, func(key string, value map[string]interface{}) {
 		amount += kit.Int(kit.Value(value, AMOUNT))
 	})
-	m.Cmd(mdb.SELECT, m.Prefix(ASSET), "", mdb.ZONE, account, ice.OptionFields(m.Config(mdb.FIELD)))
+	m.Cmd(mdb.SELECT, m.PrefixKey(), "", mdb.ZONE, account, ice.OptionFields(m.Config(mdb.FIELD)))
 
-	m.Cmdy(mdb.MODIFY, m.Prefix(ASSET), "", mdb.HASH, ACCOUNT, account, AMOUNT, amount)
+	m.Cmdy(mdb.MODIFY, m.PrefixKey(), "", mdb.HASH, ACCOUNT, account, AMOUNT, amount)
 }
 func _asset_insert(m *ice.Message, account string, arg ...string) {
-	m.Cmdy(mdb.INSERT, m.Prefix(ASSET), "", mdb.HASH, ACCOUNT, account)
-	m.Cmdy(mdb.INSERT, m.Prefix(ASSET), "", mdb.ZONE, account, arg)
+	m.Cmdy(mdb.INSERT, m.PrefixKey(), "", mdb.HASH, ACCOUNT, account)
+	m.Cmdy(mdb.INSERT, m.PrefixKey(), "", mdb.ZONE, account, arg)
 	m.OptionFields("time,account,amount,count")
-	amount := kit.Int(m.Cmd(mdb.SELECT, m.Prefix(ASSET), "", mdb.HASH, ACCOUNT, account).Append(AMOUNT))
+	amount := kit.Int(m.Cmd(mdb.SELECT, m.PrefixKey(), "", mdb.HASH, ACCOUNT, account).Append(AMOUNT))
 	amount += kit.Int(_sub_value(m, AMOUNT, arg...))
-	m.Cmdy(mdb.MODIFY, m.Prefix(ASSET), "", mdb.HASH, ACCOUNT, account, AMOUNT, amount)
+	m.Cmdy(mdb.MODIFY, m.PrefixKey(), "", mdb.HASH, ACCOUNT, account, AMOUNT, amount)
 }
 
 const (

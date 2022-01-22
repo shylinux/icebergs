@@ -241,7 +241,7 @@ func init() {
 				LOGIN, ice.TRUE, SHARE, ice.TRUE, SPACE, ice.TRUE,
 				ice.VOLCANOS, ice.TRUE, ice.PUBLISH, ice.TRUE,
 				ice.INTSHELL, ice.TRUE, ice.REQUIRE, ice.TRUE,
-				ice.HELP, ice.TRUE,
+				"cmd", ice.TRUE, ice.HELP, ice.TRUE,
 			), LOGHEADERS, ice.FALSE,
 
 			DOMAIN, "", nfs.PATH, kit.Dict(ice.PS, ice.USR_VOLCANOS),

@@ -3,6 +3,7 @@ package cli
 import (
 	"bytes"
 	"io"
+	"io/ioutil"
 	"os"
 	"os/exec"
 	"path"
@@ -33,12 +34,23 @@ func _system_cmd(m *ice.Message, arg ...string) *exec.Cmd {
 			for _, p := range strings.Split(env[i+1], ice.DF) {
 				if _, err := os.Stat(path.Join(p, arg[0])); err == nil {
 					cmd.Path = path.Join(p, arg[0])
-					m.Debug("what %v", cmd.Path)
 					break
 				}
 			}
 		}
 	}
+
+	// 定制目录
+	if buf, err := ioutil.ReadFile(ice.ETC_PATH); err == nil && len(buf) > 0 {
+		for _, p := range strings.Split(string(buf), ice.NL) {
+			if _, e := os.Stat(path.Join(p, arg[0])); e == nil {
+				cmd.Path = kit.Path(path.Join(p, arg[0]))
+				break
+			}
+		}
+	}
+	m.Debug("cmd: %v", cmd.Path)
+
 	if len(cmd.Env) > 0 {
 		m.Log_EXPORT(CMD_ENV, cmd.Env)
 	}

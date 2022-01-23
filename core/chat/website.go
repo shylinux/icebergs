@@ -2,6 +2,7 @@ package chat
 
 import (
 	"net/http"
+	"path"
 	"strings"
 
 	ice "shylinux.com/x/icebergs"
@@ -45,48 +46,64 @@ func _website_parse(m *ice.Message, text string) map[string]interface{} {
 	})
 	return river
 }
+func _website_render(m *ice.Message, w http.ResponseWriter, r *http.Request, kind, text string) bool {
+	msg := m.Spawn(w, r)
+	switch kind {
+	case "svg":
+		msg.RenderResult(`<body style="background-color:cadetblue">%s</body>`, msg.Cmdx(nfs.CAT, text))
+	case "shy":
+		if r.Method == http.MethodGet {
+			msg.RenderCmd(msg.Prefix(DIV), text)
+		} else {
+			r.URL.Path = "/chat/cmd/web.chat.div"
+			return false
+		}
+	case "txt":
+		res := _website_parse(msg, text)
+		msg.RenderResult(_website_template2, kit.Format(res))
+	case "json":
+		msg.RenderResult(_website_template2, kit.Format(kit.UnMarshal(text)))
+	case "js":
+		msg.RenderResult(_website_template, text)
+	case "html":
+		msg.RenderResult(text)
+	default:
+		msg.RenderDownload(text)
+	}
+	web.Render(msg, msg.Option(ice.MSG_OUTPUT), msg.Optionv(ice.MSG_ARGS).([]interface{})...)
+	return true
+}
 
 const WEBSITE = "website"
 
 func init() {
 	Index.Merge(&ice.Context{Configs: map[string]*ice.Config{
-		WEBSITE: {Name: "website", Help: "网站", Value: kit.Data(
-			mdb.SHORT, nfs.PATH, mdb.FIELD, "time,path,type,name,text",
-		)},
+		WEBSITE: {Name: "website", Help: "网站", Value: kit.Data(mdb.SHORT, nfs.PATH, mdb.FIELD, "time,path,type,name,text")},
 	}, Commands: map[string]*ice.Command{
 		WEBSITE: {Name: "website path auto create import", Help: "网站", Action: ice.MergeAction(map[string]*ice.Action{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
+				m.Cmd(mdb.RENDER, mdb.CREATE, "txt", m.PrefixKey())
+				m.Cmd(mdb.ENGINE, mdb.CREATE, "txt", m.PrefixKey())
+
 				web.AddRewrite(func(w http.ResponseWriter, r *http.Request) bool {
 					if ok := true; m.Richs(WEBSITE, nil, r.URL.Path, func(key string, value map[string]interface{}) {
-						msg, value := m.Spawn(w, r), kit.GetMeta(value)
-						switch text := kit.Format(value[mdb.TEXT]); value[mdb.TYPE] {
-						case "svg":
-							msg.RenderResult(`<body style="background-color:cadetblue">%s</body>`, m.Cmdx(nfs.CAT, text))
-						case "shy":
-							if r.Method == http.MethodGet {
-								msg.RenderCmd(msg.Prefix(DIV), text)
-							} else {
-								r.URL.Path, ok = "/chat/cmd/web.chat.div", false
-								return
-							}
-						case "txt":
-							res := _website_parse(msg, kit.Format(value[mdb.TEXT]))
-							msg.RenderResult(_website_template2, kit.Format(res))
-						case "json":
-							msg.RenderResult(_website_template2, kit.Format(kit.UnMarshal(text)))
-						case "js":
-							msg.RenderResult(_website_template, text)
-						case "html":
-							msg.RenderResult(text)
-						default:
-							msg.RenderDownload(text)
-						}
-						web.Render(msg, msg.Option(ice.MSG_OUTPUT), msg.Optionv(ice.MSG_ARGS).([]interface{})...)
+						value = kit.GetMeta(value)
+						ok = _website_render(m, w, r, kit.Format(value[mdb.TYPE]), kit.Format(value[mdb.TEXT]))
 					}) != nil && ok {
+						return true
+					}
+					if strings.HasPrefix(r.URL.Path, "/chat/website/") {
+						_website_render(m, w, r, kit.Ext(r.URL.Path), m.Cmdx(nfs.CAT, strings.Replace(r.URL.Path, "/chat/website/", "src/website/", 1)))
 						return true
 					}
 					return false
 				})
+			}},
+			mdb.RENDER: {Hand: func(m *ice.Message, arg ...string) {
+				m.EchoIFrame(path.Join("/chat/website/", strings.TrimPrefix(path.Join(arg[2], arg[1]), "src/website/")))
+			}},
+			mdb.ENGINE: {Hand: func(m *ice.Message, arg ...string) {
+				m.Echo(kit.MergeURL2(m.Option(ice.MSG_USERWEB), path.Join("/chat/website/", strings.TrimPrefix(path.Join(arg[2], arg[1]), "src/website/"))))
 			}},
 			mdb.INPUTS: {Name: "inputs", Help: "补全", Hand: func(m *ice.Message, arg ...string) {
 				switch m.Option(ctx.ACTION) {
@@ -100,7 +117,7 @@ func init() {
 				}
 			}},
 			mdb.CREATE: {Name: "create path type=txt,json,js,html name text", Help: "创建"},
-			mdb.IMPORT: {Name: "import path=src/", Help: "导入", Hand: func(m *ice.Message, arg ...string) {
+			mdb.IMPORT: {Name: "import path=src/website/", Help: "导入", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmd(nfs.DIR, kit.Dict(nfs.DIR_ROOT, m.Option(nfs.PATH)), func(p string) {
 					switch name := strings.TrimPrefix(p, m.Option(nfs.PATH)); kit.Ext(p) {
 					case "html", "js", "json", "txt":
@@ -116,7 +133,13 @@ func init() {
 			mdb.HashSelect(m, arg...).Table(func(index int, value map[string]string, head []string) {
 				m.PushAnchor(m.MergeURL2(value[nfs.PATH]))
 			})
-			if m.Sort(nfs.PATH); m.FieldsIsDetail() {
+			if m.Length() == 0 {
+				m.Push(mdb.TEXT, m.Cmdx(nfs.CAT, path.Join("src/website", path.Join(arg...))))
+				m.Push(nfs.PATH, path.Join("/chat/website/", path.Join(arg...)))
+			} else {
+				m.Sort(nfs.PATH)
+			}
+			if m.FieldsIsDetail() {
 				m.PushQRCode(mdb.SCAN, m.MergeURL2(m.Append(nfs.PATH)))
 				m.EchoIFrame(m.Append(nfs.PATH))
 			}

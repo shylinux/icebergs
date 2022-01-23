@@ -132,6 +132,7 @@ func (c *Context) Merge(s *Context) *Context {
 		for k, a := range cmd.Action {
 			// if p, ok := c.Commands[k]; ok && s != c {
 			if p, ok := c.Commands[k]; ok {
+				key := key
 				switch last, next := p.Hand, a.Hand; k {
 				case CTX_INIT:
 					p.Hand = func(m *Message, c *Context, _key string, arg ...string) {

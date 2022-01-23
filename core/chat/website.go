@@ -133,7 +133,7 @@ func init() {
 			mdb.HashSelect(m, arg...).Table(func(index int, value map[string]string, head []string) {
 				m.PushAnchor(m.MergeURL2(value[nfs.PATH]))
 			})
-			if m.Length() == 0 {
+			if m.Length() == 0 && len(arg) > 0 {
 				m.Push(mdb.TEXT, m.Cmdx(nfs.CAT, path.Join("src/website", path.Join(arg...))))
 				m.Push(nfs.PATH, path.Join("/chat/website/", path.Join(arg...)))
 			} else {

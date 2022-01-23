@@ -89,7 +89,7 @@ func init() {
 			switch arg[0] {
 			case "/sso":
 				return
-			case "/pod/":
+			case "/pod/", "/cmd/":
 				return // 免登录
 			case "/header":
 				switch kit.Select("", arg, 1) {

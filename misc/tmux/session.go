@@ -53,7 +53,7 @@ func init() {
 	}, Commands: map[string]*ice.Command{
 		SESSION: {Name: "session session window pane cmd auto", Help: "会话管理", Action: map[string]*ice.Action{
 			web.DREAM_CREATE: {Name: "dream.create type name", Help: "梦想", Hand: func(m *ice.Message, arg ...string) {
-				if kit.IndexOf(m.Cmd(m.PrefixKey()).Appendv(SESSION), m.Option(mdb.NAME)) == -1 {
+				if m.Cmd(m.PrefixKey(), m.Option(mdb.NAME)).Length() > 0 {
 					m.Cmd(m.PrefixKey(), mdb.CREATE)
 				}
 			}},
@@ -90,7 +90,8 @@ func init() {
 					m.Cmdy(cli.SYSTEM, TMUX, "split-window", "-t", kit.Keys(name, "2"), "-h")
 
 					m.Cmd(cli.SYSTEM, TMUX, "send-keys", "-t", kit.Keys(name, "3"), "ish_miss_log", "Enter")
-					m.Cmd(cli.SYSTEM, TMUX, "send-keys", "-t", kit.Keys(name, "2"), "ish_miss_space", "Enter")
+					// m.Cmd(cli.SYSTEM, TMUX, "send-keys", "-t", kit.Keys(name, "2"), "ish_miss_space", "Enter")
+					m.Cmd(cli.SYSTEM, TMUX, "send-keys", "-t", kit.Keys(name, "2"), "ish_miss_space")
 					m.Cmd(cli.SYSTEM, TMUX, "send-keys", "-t", kit.Keys(name, "1"), "vi etc/miss.sh", "Enter")
 
 					m.Cmdy(cli.SYSTEM, TMUX, "link-window", "-s", name, "-t", "miss:")

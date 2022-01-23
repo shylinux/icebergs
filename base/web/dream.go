@@ -26,6 +26,7 @@ func _dream_list(m *ice.Message) *ice.Message {
 			m.Push(cli.STATUS, cli.STOP)
 			m.PushButton(cli.START)
 		}
+		m.Push(mdb.LINK, kit.MergePOD(m.Option(ice.MSG_USERWEB), value[mdb.NAME]))
 	})
 }
 func _dream_show(m *ice.Message, name string) {
@@ -82,7 +83,7 @@ func _dream_show(m *ice.Message, name string) {
 	m.Optionv(cli.CMD_OUTPUT, path.Join(p, m.Config(kit.Keys(cli.ENV, cli.CTX_LOG))))
 
 	// 启动任务
-	m.Cmd(cli.DAEMON, "ice.bin", SPACE, tcp.DIAL, ice.DEV, ice.DEV, mdb.NAME, name, m.OptionSimple(RIVER))
+	m.Cmd(cli.DAEMON, "ice.bin", SPACE, tcp.DIAL, ice.DEV, ice.OPS, mdb.NAME, name, m.OptionSimple(RIVER))
 	defer m.Event(DREAM_CREATE, kit.SimpleKV("", m.Option(mdb.TYPE), name)...)
 	m.Sleep3s()
 }
@@ -101,12 +102,14 @@ func init() {
 				_dream_show(m, m.Option(mdb.NAME, kit.Select(path.Base(m.Option(nfs.REPOS)), m.Option(mdb.NAME))))
 			}},
 			DREAM_STOP: {Name: "dream.stop type name", Help: "停止", Hand: func(m *ice.Message, arg ...string) {
-				m.Cmdy(SPACE, mdb.REMOVE, m.OptionSimple(mdb.NAME))
-				m.Cmd(DREAM, cli.START, m.OptionSimple(mdb.NAME))
+				if m.Cmd(DREAM, m.Option(mdb.NAME)).Length() > 0 {
+					m.Cmdy(SPACE, mdb.REMOVE, m.OptionSimple(mdb.NAME))
+					m.Cmd(DREAM, cli.START, m.OptionSimple(mdb.NAME))
+				}
 			}},
 			cli.STOP: {Name: "stop", Help: "停止", Hand: func(m *ice.Message, arg ...string) {
-				m.Cmdy(SPACE, mdb.REMOVE, m.OptionSimple(mdb.NAME))
 				m.Cmdy(SPACE, m.Option(mdb.NAME), "exit", "0")
+				m.Cmdy(SPACE, mdb.REMOVE, m.OptionSimple(mdb.NAME))
 			}},
 			mdb.INPUTS: {Name: "inputs", Help: "补全", Hand: func(m *ice.Message, arg ...string) {
 				_dream_list(m).Cut("name,status,time")

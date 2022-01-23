@@ -72,6 +72,48 @@ func _go_exec(m *ice.Message, arg ...string) {
 	m.SetAppend()
 }
 func _go_show(m *ice.Message, arg ...string) {
+	if arg[1] == "main.go" {
+		const (
+			PACKAGE = "package"
+			IMPORT  = "import"
+		)
+		block := ""
+		index := 0
+		push := func(repos string) {
+			index++
+			m.Push("index", index)
+			m.Push("repos", repos)
+		}
+		m.Cmd(nfs.CAT, path.Join(arg[2], arg[1]), func(line string) {
+			ls := kit.Split(line)
+			switch {
+			case strings.HasPrefix(line, IMPORT+" ("):
+				block = IMPORT
+				return
+			case strings.HasPrefix(line, ")"):
+				block = ""
+				return
+			case strings.HasPrefix(line, IMPORT):
+				if len(ls) == 2 {
+					push(ls[1])
+				} else if len(ls) == 3 {
+					push(ls[2])
+				}
+				return
+			}
+			switch block {
+			case IMPORT:
+				if len(ls) == 0 {
+					push("")
+				} else if len(ls) == 1 {
+					push(ls[0])
+				} else if len(ls) == 2 {
+					push(ls[1])
+				}
+			}
+		})
+		return
+	}
 	if key, ok := ice.Info.File[path.Join(arg[2], arg[1])]; ok && key != "" {
 		m.ProcessCommand(key, kit.Simple())
 	} else {

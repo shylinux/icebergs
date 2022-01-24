@@ -2,6 +2,7 @@ package chat
 
 import (
 	"net/http"
+	"os"
 	"path"
 	"strings"
 
@@ -130,8 +131,21 @@ func init() {
 				})
 			}},
 		}, mdb.HashAction()), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			mdb.HashSelect(m, arg...).Table(func(index int, value map[string]string, head []string) {
-				m.PushAnchor(m.MergeURL2(value[nfs.PATH]))
+			if mdb.HashSelect(m, arg...); len(arg) == 0 {
+				dir := "src/website/"
+				m.Cmd(nfs.DIR, dir, func(f os.FileInfo, p string) {
+					m.Push("", kit.Dict(
+						mdb.TIME, f.ModTime().Format(ice.MOD_TIME),
+						nfs.PATH, ice.PS+strings.TrimPrefix(p, dir),
+						mdb.TYPE, kit.Ext(p),
+						mdb.NAME, path.Base(p),
+						mdb.TEXT, m.Cmdx(nfs.CAT, p),
+					), kit.Split(m.Config(mdb.FIELD)))
+					m.PushButton("")
+				})
+			}
+			m.Table(func(index int, value map[string]string, head []string) {
+				m.PushAnchor(strings.Split(m.MergeURL2(value[nfs.PATH]), "?")[0])
 			})
 			if m.Length() == 0 && len(arg) > 0 {
 				m.Push(mdb.TEXT, m.Cmdx(nfs.CAT, path.Join("src/website", path.Join(arg...))))

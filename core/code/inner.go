@@ -163,8 +163,10 @@ func init() {
 				return
 			}
 			arg[1] = strings.Split(arg[1], ice.FS)[0]
+			if m.Option(ice.POD) == "" {
+				m.Option("plug", "web.chat.website,web.dream")
+			}
 			m.Option("exts", "inner/search.js?a=1,inner/favor.js,inner/template.js")
-			m.Option("plug", "web.chat.website,web.dream")
 			if _inner_list(m, kit.Ext(arg[1]), arg[1], arg[0]); m.IsErrNotFound() {
 				m.SetResult("")
 			}

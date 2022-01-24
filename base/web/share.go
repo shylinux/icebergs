@@ -104,8 +104,8 @@ const (
 	SHARE_PROXY = "/share/proxy/"
 	SHARE_LOCAL = "/share/local/"
 
-	SHARE_LOCAL_AVATAR     = "/share/local/avatar"
-	SHARE_LOCAL_BACKGROUND = "/share/local/background"
+	SHARE_LOCAL_AVATAR     = "/share/local/avatar/"
+	SHARE_LOCAL_BACKGROUND = "/share/local/background/"
 )
 const SHARE = "share"
 
@@ -182,6 +182,8 @@ func init() {
 			_share_local(m, arg...)
 		}},
 		SHARE_LOCAL_AVATAR: {Name: "avatar", Help: "头像", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			// RenderType(m.W, "", "image/svg+xml")
+			// m.RenderResult(`<svg font-size="32" text-anchor="middle" dominant-baseline="middle" width="80" height="60" xmlns="http://www.w3.org/2000/svg"><text x="40" y="30" stroke="red">hello</text></svg>`)
 			m.RenderDownload(strings.TrimPrefix(m.Cmd(aaa.USER, m.Option(ice.MSG_USERNAME)).Append(aaa.AVATAR), SHARE_LOCAL))
 		}},
 		SHARE_LOCAL_BACKGROUND: {Name: "background", Help: "壁纸", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {

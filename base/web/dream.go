@@ -26,7 +26,7 @@ func _dream_list(m *ice.Message) *ice.Message {
 			m.Push(cli.STATUS, cli.STOP)
 			m.PushButton(cli.START)
 		}
-		m.Push(mdb.LINK, kit.MergePOD(m.Option(ice.MSG_USERWEB), value[mdb.NAME]))
+		m.Push(mdb.LINK, strings.Split(kit.MergePOD(m.Option(ice.MSG_USERWEB), value[mdb.NAME]), "?")[0])
 	})
 }
 func _dream_show(m *ice.Message, name string) {
@@ -102,14 +102,16 @@ func init() {
 				_dream_show(m, m.Option(mdb.NAME, kit.Select(path.Base(m.Option(nfs.REPOS)), m.Option(mdb.NAME))))
 			}},
 			DREAM_STOP: {Name: "dream.stop type name", Help: "停止", Hand: func(m *ice.Message, arg ...string) {
-				if m.Cmd(DREAM, m.Option(mdb.NAME)).Length() > 0 {
+				if m.Cmd(SPACE, m.Option(mdb.NAME)).Append(mdb.STATUS) == cli.STOP {
 					m.Cmdy(SPACE, mdb.REMOVE, m.OptionSimple(mdb.NAME))
-					m.Cmd(DREAM, cli.START, m.OptionSimple(mdb.NAME))
+					return
 				}
+				m.Cmdy(SPACE, mdb.REMOVE, m.OptionSimple(mdb.NAME))
+				m.Sleep("1s", DREAM, cli.START, m.OptionSimple(mdb.NAME))
 			}},
 			cli.STOP: {Name: "stop", Help: "停止", Hand: func(m *ice.Message, arg ...string) {
+				m.Cmdy(SPACE, mdb.MODIFY, m.OptionSimple(mdb.NAME), mdb.STATUS, cli.STOP)
 				m.Cmdy(SPACE, m.Option(mdb.NAME), "exit", "0")
-				m.Cmdy(SPACE, mdb.REMOVE, m.OptionSimple(mdb.NAME))
 			}},
 			mdb.INPUTS: {Name: "inputs", Help: "补全", Hand: func(m *ice.Message, arg ...string) {
 				_dream_list(m).Cut("name,status,time")

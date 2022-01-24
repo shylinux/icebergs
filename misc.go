@@ -293,6 +293,7 @@ func (c *Context) _cmd(m *Message, cmd *Command, key string, sub string, h *Acti
 func (c *Context) split(name string) (list []interface{}) {
 	const (
 		TEXT     = "text"
+		ARGS     = "args"
 		TEXTAREA = "textarea"
 		SELECT   = "select"
 		BUTTON   = "button"
@@ -305,8 +306,8 @@ func (c *Context) split(name string) (list []interface{}) {
 		case "run":
 			item = kit.Dict(TYPE, BUTTON, NAME, "run")
 			list = append(list, item)
-		case "text":
-			item = kit.Dict(TYPE, TEXTAREA, NAME, "text")
+		case "text", "args":
+			item = kit.Dict(TYPE, TEXTAREA, NAME, ls[i])
 			list = append(list, item)
 		case "auto":
 			list = append(list, kit.List(TYPE, BUTTON, NAME, "list", ACTION, AUTO)...)

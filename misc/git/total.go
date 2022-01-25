@@ -19,7 +19,7 @@ const TOTAL = "total"
 func init() {
 	Index.Merge(&ice.Context{Configs: map[string]*ice.Config{
 		TOTAL: {Name: TOTAL, Help: "统计量", Value: kit.Data(
-			mdb.SHORT, mdb.NAME, "skip", kit.Dict(
+			"skip", kit.Dict(
 				"wubi-dict", ice.TRUE, "word-dict", ice.TRUE,
 				"websocket", ice.TRUE, "go-sql-mysql", ice.TRUE,
 				"echarts", ice.TRUE, "go-qrcode", ice.TRUE,
@@ -30,11 +30,11 @@ func init() {
 			PIE: {Name: "pie", Help: "饼图", Hand: func(m *ice.Message, arg ...string) {
 				defer m.Display("/plugin/story/pie.js")
 				m.Cmd(TOTAL).Table(func(index int, value map[string]string, head []string) {
-					if value["name"] == "total" {
-						m.StatusTimeCount("name", "total", "value", "1", "total", value["rest"])
+					if value[REPOS] == "total" {
+						m.StatusTimeCount(REPOS, "total", "value", "1", "total", value["rest"])
 						return
 					}
-					m.Push("name", value["name"])
+					m.Push(REPOS, value[REPOS])
 					m.Push("value", value["rest"])
 				})
 			}},
@@ -42,7 +42,7 @@ func init() {
 			if len(arg) > 0 { // 提交详情
 				arg[0] = kit.Replace(arg[0], "src", "contexts")
 				m.Cmd(REPOS, ice.OptionFields("name,path")).Table(func(index int, value map[string]string, head []string) {
-					if value[mdb.NAME] == arg[0] {
+					if value[REPOS] == arg[0] {
 						m.Cmdy("_sum", value[nfs.PATH], arg[1:])
 					}
 				})
@@ -72,11 +72,11 @@ func init() {
 					rest += kit.Int(value["rest"])
 				})
 
-				m.Push(mdb.NAME, value[mdb.NAME])
+				m.Push(REPOS, value[mdb.NAME])
 				m.Copy(msg)
 			})
 
-			m.Push("name", "total")
+			m.Push(REPOS, "total")
 			m.Push("tags", "v3.0.0")
 			m.Push("days", days)
 			m.Push("commit", commit)

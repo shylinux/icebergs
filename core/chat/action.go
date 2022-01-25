@@ -154,10 +154,7 @@ const ACTION = "action"
 
 func init() {
 	Index.Merge(&ice.Context{Configs: map[string]*ice.Config{
-		ACTION: {Name: ACTION, Help: "应用", Value: kit.Data(
-			MENUS, kit.List(kit.List("help", "tutor", "manual", "service", "devops", "refer")),
-			nfs.PATH, ice.USR_LOCAL_RIVER,
-		)},
+		ACTION: {Name: ACTION, Help: "应用", Value: kit.Data(nfs.PATH, ice.USR_LOCAL_RIVER)},
 	}, Commands: map[string]*ice.Command{
 		"/action": {Name: "/action river storm action arg...", Help: "工作台", Action: ice.MergeAction(map[string]*ice.Action{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {

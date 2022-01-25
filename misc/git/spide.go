@@ -61,10 +61,8 @@ const SPIDE = "spide"
 
 func init() {
 	Index.Merge(&ice.Context{Commands: map[string]*ice.Command{
-		SPIDE: {Name: "spide name auto depend", Help: "构架图", Action: ice.MergeAction(map[string]*ice.Action{
-			mdb.INPUTS: {Name: "inputs", Help: "补全", Hand: func(m *ice.Message, arg ...string) {
-				m.Cmdy(REPOS, ice.OptionFields("name,time"))
-			}}, code.INNER: {Name: "web.code.inner"},
+		SPIDE: {Name: "spide repos auto depend", Help: "构架图", Action: ice.MergeAction(map[string]*ice.Action{
+			code.INNER: {Name: "web.code.inner"},
 			"depend": {Name: "depend path=icebergs/base", Help: "依赖", Hand: func(m *ice.Message, arg ...string) {
 				keys := map[string]bool{}
 				list := map[string]map[string]bool{}
@@ -109,8 +107,7 @@ func init() {
 				return
 			}
 
-			arg[0] = kit.Replace(arg[0], "src", "contexts")
-			if arg[0] == path.Base(kit.Pwd()) {
+			if arg[0] = kit.Replace(arg[0], "src", "contexts"); arg[0] == path.Base(kit.Pwd()) {
 				m.Option(nfs.DIR_ROOT, path.Join(ice.SRC)+ice.PS)
 			} else {
 				m.Option(nfs.DIR_ROOT, path.Join(ice.USR, arg[0])+ice.PS)

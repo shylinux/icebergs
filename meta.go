@@ -171,6 +171,9 @@ func (m *Message) Push(key string, value interface{}, arg ...interface{}) *Messa
 	return m
 }
 func (m *Message) Echo(str string, arg ...interface{}) *Message {
+	if str == "" {
+		return m
+	}
 	m.meta[MSG_RESULT] = append(m.meta[MSG_RESULT], kit.Format(str, arg...))
 	return m
 }

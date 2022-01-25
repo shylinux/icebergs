@@ -35,12 +35,16 @@ func _split_list(m *ice.Message, file string, arg ...string) map[string]interfac
 	const DEEP = "_deep"
 	stack, deep := []int{}, 0
 	list := kit.List(kit.Data(DEEP, -1))
+	line := ""
 	m.Cmd(nfs.CAT, file, func(text string) {
 		if strings.HasPrefix(strings.TrimSpace(text), "# ") {
 			return // 注释
 		}
 		if strings.TrimSpace(text) == "" {
 			return // 空行
+		}
+		if line += text; strings.Count(text, "`")%2 == 1 {
+			return // 多行
 		}
 
 		stack, deep = _split_deep(stack, text)
@@ -76,6 +80,7 @@ func _split_list(m *ice.Message, file string, arg ...string) map[string]interfac
 			}
 			list = list[:len(list)-1]
 		}
+		line = ""
 	})
 	return list[0].(map[string]interface{})
 }

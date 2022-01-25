@@ -17,7 +17,12 @@ import (
 
 func _website_parse(m *ice.Message, text string) map[string]interface{} {
 	m.Option(nfs.CAT_CONTENT, text)
-	river, storm, last := kit.Dict(), kit.Dict(), kit.Dict()
+	river, storm, last := kit.Dict(
+		"Header", kit.Dict("menus", kit.List(), "style", kit.Dict("display", "none")),
+		"River", kit.Dict("menus", kit.List(), "action", kit.List()),
+		"Action", kit.Dict("menus", kit.List(), "action", kit.List()),
+		"Footer", kit.Dict("style", kit.Dict("display", "none")),
+	), kit.Dict(), kit.Dict()
 	m.Cmd(lex.SPLIT, "", mdb.KEY, mdb.NAME, func(deep int, ls []string, meta map[string]interface{}) []string {
 		if len(ls) == 1 {
 			ls = append(ls, ls[0])
@@ -27,7 +32,8 @@ func _website_parse(m *ice.Message, text string) map[string]interface{} {
 			switch ls[i] {
 			case ctx.ARGS:
 				data[ls[i]] = kit.Split(ls[i+1])
-				// data[ls[i]] = kit.UnMarshal(ls[i+1])
+			case "title", "menus", "action", "style":
+				data[ls[i]] = kit.UnMarshal(ls[i+1])
 			default:
 				data[ls[i]] = ls[i+1]
 			}
@@ -35,7 +41,7 @@ func _website_parse(m *ice.Message, text string) map[string]interface{} {
 		switch deep {
 		case 1:
 			storm = kit.Dict()
-			river[ls[0]] = kit.Dict(mdb.NAME, ls[1], "storm", storm, data)
+			river[ls[0]] = kit.Dict(mdb.NAME, ls[1], STORM, storm, data)
 		case 2:
 			last = kit.Dict(mdb.NAME, ls[1], mdb.LIST, kit.List(), data)
 			storm[ls[0]] = last
@@ -60,7 +66,10 @@ func _website_render(m *ice.Message, w http.ResponseWriter, r *http.Request, kin
 			return false
 		}
 	case "txt":
+		m.Debug("what %v", text)
 		res := _website_parse(msg, text)
+		m.Debug("what %v", res)
+		m.Debug("what %v", kit.Format(res))
 		msg.RenderResult(_website_template2, kit.Format(res))
 	case "json":
 		msg.RenderResult(_website_template2, kit.Format(kit.UnMarshal(text)))
@@ -78,6 +87,10 @@ func _website_render(m *ice.Message, w http.ResponseWriter, r *http.Request, kin
 const WEBSITE = "website"
 
 func init() {
+	const (
+		SRC_WEBSITE  = "src/website/"
+		CHAT_WEBSITE = "/chat/website/"
+	)
 	Index.Merge(&ice.Context{Configs: map[string]*ice.Config{
 		WEBSITE: {Name: "website", Help: "网站", Value: kit.Data(mdb.SHORT, nfs.PATH, mdb.FIELD, "time,path,type,name,text")},
 	}, Commands: map[string]*ice.Command{
@@ -93,18 +106,18 @@ func init() {
 					}) != nil && ok {
 						return true
 					}
-					if strings.HasPrefix(r.URL.Path, "/chat/website/") {
-						_website_render(m, w, r, kit.Ext(r.URL.Path), m.Cmdx(nfs.CAT, strings.Replace(r.URL.Path, "/chat/website/", "src/website/", 1)))
+					if strings.HasPrefix(r.URL.Path, CHAT_WEBSITE) {
+						_website_render(m, w, r, kit.Ext(r.URL.Path), m.Cmdx(nfs.CAT, strings.Replace(r.URL.Path, CHAT_WEBSITE, SRC_WEBSITE, 1)))
 						return true
 					}
 					return false
 				})
 			}},
 			mdb.RENDER: {Hand: func(m *ice.Message, arg ...string) {
-				m.EchoIFrame(path.Join("/chat/website/", strings.TrimPrefix(path.Join(arg[2], arg[1]), "src/website/")))
+				m.EchoIFrame(path.Join(CHAT_WEBSITE, strings.TrimPrefix(path.Join(arg[2], arg[1]), SRC_WEBSITE)))
 			}},
 			mdb.ENGINE: {Hand: func(m *ice.Message, arg ...string) {
-				m.Echo(kit.MergeURL2(m.Option(ice.MSG_USERWEB), path.Join("/chat/website/", strings.TrimPrefix(path.Join(arg[2], arg[1]), "src/website/"))))
+				m.Echo(strings.Split(kit.MergeURL2(m.Option(ice.MSG_USERWEB), path.Join(CHAT_WEBSITE, strings.TrimPrefix(path.Join(arg[2], arg[1]), SRC_WEBSITE))), "?")[0])
 			}},
 			mdb.INPUTS: {Name: "inputs", Help: "补全", Hand: func(m *ice.Message, arg ...string) {
 				switch m.Option(ctx.ACTION) {
@@ -132,7 +145,7 @@ func init() {
 			}},
 		}, mdb.HashAction()), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			if mdb.HashSelect(m, arg...); len(arg) == 0 {
-				dir := "src/website/"
+				dir := SRC_WEBSITE
 				m.Cmd(nfs.DIR, dir, func(f os.FileInfo, p string) {
 					m.Push("", kit.Dict(
 						mdb.TIME, f.ModTime().Format(ice.MOD_TIME),
@@ -148,8 +161,8 @@ func init() {
 				m.PushAnchor(strings.Split(m.MergeURL2(value[nfs.PATH]), "?")[0])
 			})
 			if m.Length() == 0 && len(arg) > 0 {
-				m.Push(mdb.TEXT, m.Cmdx(nfs.CAT, path.Join("src/website", path.Join(arg...))))
-				m.Push(nfs.PATH, path.Join("/chat/website/", path.Join(arg...)))
+				m.Push(mdb.TEXT, m.Cmdx(nfs.CAT, path.Join(SRC_WEBSITE, path.Join(arg...))))
+				m.Push(nfs.PATH, path.Join(CHAT_WEBSITE, path.Join(arg...)))
 			} else {
 				m.Sort(nfs.PATH)
 			}

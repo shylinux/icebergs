@@ -54,10 +54,7 @@ const RIVER = "river"
 
 func init() {
 	Index.Merge(&ice.Context{Configs: map[string]*ice.Config{
-		RIVER: {Name: RIVER, Help: "群组", Value: kit.Data(
-			mdb.FIELD, "time,hash,type,name,text,template",
-			MENUS, kit.List(RIVER, kit.List("create", "创建群组", "添加应用", "添加工具", "添加设备", "创建空间"), kit.List("share", "共享群组", "共享应用", "共享工具", "共享主机", "访问空间")),
-		)},
+		RIVER: {Name: RIVER, Help: "群组", Value: kit.Data(mdb.FIELD, "time,hash,type,name,text,template")},
 	}, Commands: map[string]*ice.Command{
 		"/river": {Name: "/river", Help: "小河流", Action: map[string]*ice.Action{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {

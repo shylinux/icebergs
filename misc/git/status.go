@@ -29,10 +29,10 @@ func _status_tags(m *ice.Message) {
 	vs := map[string]string{}
 	m.Cmd(STATUS).Table(func(index int, value map[string]string, head []string) {
 		if value[mdb.TYPE] == "##" {
-			if value[mdb.NAME] == ice.RELEASE {
-				value[mdb.NAME] = ice.ICE
+			if value[REPOS] == ice.RELEASE {
+				value[REPOS] = ice.ICE
 			}
-			vs[value[mdb.NAME]] = strings.Split(value[TAGS], "-")[0]
+			vs[value[REPOS]] = strings.Split(value[TAGS], "-")[0]
 		}
 	})
 
@@ -89,11 +89,11 @@ func _status_each(m *ice.Message, title string, cmds ...string) {
 
 		list := []string{}
 		m.Cmd(REPOS, ice.OptionFields("name,path")).Table(func(index int, value map[string]string, head []string) {
-			toast(value[mdb.NAME], count, total)
+			toast(value[REPOS], count, total)
 
 			if msg := m.Cmd(cmds, ice.Option{cli.CMD_DIR, value[nfs.PATH]}); !cli.IsSuccess(msg) {
-				m.Toast3s(msg.Append(cli.CMD_ERR), "error: "+value[mdb.NAME])
-				list = append(list, value[mdb.NAME])
+				m.Toast3s(msg.Append(cli.CMD_ERR), "error: "+value[REPOS])
+				list = append(list, value[REPOS])
 				m.Sleep3s()
 			}
 			count++
@@ -136,7 +136,7 @@ func _status_list(m *ice.Message) (files, adds, dels int, last time.Time) {
 				continue
 			}
 
-			m.Push(mdb.NAME, value[mdb.NAME])
+			m.Push(REPOS, value[REPOS])
 			m.Push(mdb.TYPE, vs[0])
 			m.Push(nfs.FILE, vs[1])
 
@@ -194,7 +194,7 @@ const STATUS = "status"
 
 func init() {
 	Index.Merge(&ice.Context{Commands: map[string]*ice.Command{
-		STATUS: {Name: "status name auto", Help: "状态机", Action: map[string]*ice.Action{
+		STATUS: {Name: "status repos auto", Help: "状态机", Action: map[string]*ice.Action{
 			PULL: {Name: "pull", Help: "下载", Hand: func(m *ice.Message, arg ...string) {
 				_status_each(m, PULL, cli.SYSTEM, GIT, PULL)
 				m.ProcessHold()
@@ -210,25 +210,25 @@ func init() {
 				m.ProcessHold()
 			}},
 			PUSH: {Name: "push", Help: "上传", Hand: func(m *ice.Message, arg ...string) {
-				if m.Option(mdb.NAME) == "" {
+				if m.Option(REPOS) == "" {
 					_status_each(m, PUSH, cli.SYSTEM, GIT, PUSH)
 					m.ProcessHold()
 					return
 				}
 
-				_repos_cmd(m, m.Option(mdb.NAME), PUSH)
-				_repos_cmd(m, m.Option(mdb.NAME), PUSH, "--tags")
+				_repos_cmd(m, m.Option(REPOS), PUSH)
+				_repos_cmd(m, m.Option(REPOS), PUSH, "--tags")
 			}},
 
 			TAG: {Name: "tag version@key", Help: "标签", Hand: func(m *ice.Message, arg ...string) {
 				if m.Option(VERSION) == "" {
 					m.Option(VERSION, _status_tag(m, m.Option(TAGS)))
 				}
-				_repos_cmd(m, m.Option(mdb.NAME), TAG, m.Option(VERSION))
-				_repos_cmd(m, m.Option(mdb.NAME), PUSH, "--tags")
+				_repos_cmd(m, m.Option(REPOS), TAG, m.Option(VERSION))
+				_repos_cmd(m, m.Option(REPOS), PUSH, "--tags")
 			}},
 			ADD: {Name: "add", Help: "添加", Hand: func(m *ice.Message, arg ...string) {
-				_repos_cmd(m, m.Option(mdb.NAME), ADD, m.Option(nfs.FILE))
+				_repos_cmd(m, m.Option(REPOS), ADD, m.Option(nfs.FILE))
 			}}, OPT: {Name: "opt", Help: "优化"}, PRO: {Name: "pro", Help: "升级"},
 			COMMIT: {Name: "commit action=opt,add,pro comment=some@key", Help: "提交", Hand: func(m *ice.Message, arg ...string) {
 				if arg[0] == ctx.ACTION {
@@ -237,7 +237,7 @@ func init() {
 					m.Option(mdb.TEXT, kit.Select("opt some", strings.Join(arg, ice.SP)))
 				}
 
-				_repos_cmd(m, m.Option(mdb.NAME), COMMIT, "-am", m.Option(mdb.TEXT))
+				_repos_cmd(m, m.Option(REPOS), COMMIT, "-am", m.Option(mdb.TEXT))
 				m.ProcessBack()
 			}},
 			mdb.INPUTS: {Name: "inputs", Help: "补全", Hand: func(m *ice.Message, arg ...string) {

@@ -130,6 +130,7 @@ func init() {
 			switch m.Option(cli.CMD_DIR, m.Option(nfs.DIR_ROOT)); kit.Ext(arg[1]) {
 			case code.GO:
 				_spide_go(m, arg[1])
+			case code.JS:
 			default:
 				_spide_c(m, arg[1])
 			}

@@ -63,8 +63,8 @@ func init() {
 	}, Commands: map[string]*ice.Command{
 		TASK: {Name: "task zone id auto insert export import", Help: "任务", Action: ice.MergeAction(map[string]*ice.Action{
 			mdb.INSERT: {Name: "insert zone type=once,step,week name text begin_time@date close_time@date", Help: "添加", Hand: func(m *ice.Message, arg ...string) {
-				m.Cmdy(mdb.INSERT, m.PrefixKey(), "", mdb.HASH, m.OptionSimple(mdb.ZONE))
-				m.Cmdy(mdb.INSERT, m.PrefixKey(), "", mdb.ZONE, m.Option(mdb.ZONE),
+				m.Cmdy(mdb.INSERT, m.Prefix(TASK), "", mdb.HASH, m.OptionSimple(mdb.ZONE))
+				m.Cmdy(mdb.INSERT, m.Prefix(TASK), "", mdb.ZONE, m.Option(mdb.ZONE),
 					BEGIN_TIME, m.Time(), CLOSE_TIME, m.Time("30m"),
 					STATUS, PREPARE, LEVEL, 3, SCORE, 3, arg)
 				m.ProcessRefresh30ms()

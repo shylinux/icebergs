@@ -17,16 +17,17 @@ import (
 
 func _dream_list(m *ice.Message) *ice.Message {
 	return m.Cmdy(nfs.DIR, m.Config(nfs.PATH), "time,size,name").Table(func(index int, value map[string]string, head []string) {
-		if m.Richs(SPACE, nil, value[mdb.NAME], func(key string, value map[string]interface{}) {
-			m.Push(mdb.TYPE, value[mdb.TYPE])
+		if m.Richs(SPACE, nil, value[mdb.NAME], func(key string, val map[string]interface{}) {
+			m.Push(mdb.TYPE, val[mdb.TYPE])
 			m.Push(cli.STATUS, cli.START)
 			m.PushButton(cli.STOP)
+			m.PushAnchor(strings.Split(kit.MergePOD(m.Option(ice.MSG_USERWEB), value[mdb.NAME]), "?")[0])
 		}) == nil {
 			m.Push(mdb.TYPE, WORKER)
 			m.Push(cli.STATUS, cli.STOP)
 			m.PushButton(cli.START)
+			m.PushAnchor("")
 		}
-		m.Push(mdb.LINK, strings.Split(kit.MergePOD(m.Option(ice.MSG_USERWEB), value[mdb.NAME]), "?")[0])
 	})
 }
 func _dream_show(m *ice.Message, name string) {

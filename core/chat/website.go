@@ -144,7 +144,11 @@ func init() {
 				})
 			}},
 		}, mdb.HashAction()), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			if mdb.HashSelect(m, arg...); len(arg) == 0 {
+			mdb.HashSelect(m, arg...).Table(func(index int, value map[string]string, head []string) {
+				m.PushAnchor(strings.Split(m.MergeURL2(value[nfs.PATH]), "?")[0])
+			})
+
+			if len(arg) == 0 {
 				dir := SRC_WEBSITE
 				m.Cmd(nfs.DIR, dir, func(f os.FileInfo, p string) {
 					m.Push("", kit.Dict(
@@ -155,11 +159,10 @@ func init() {
 						mdb.TEXT, m.Cmdx(nfs.CAT, p),
 					), kit.Split(m.Config(mdb.FIELD)))
 					m.PushButton("")
+					m.PushAnchor(strings.Split(m.MergeURL2(path.Join(CHAT_WEBSITE, p)), "?")[0])
 				})
 			}
-			m.Table(func(index int, value map[string]string, head []string) {
-				m.PushAnchor(strings.Split(m.MergeURL2(value[nfs.PATH]), "?")[0])
-			})
+
 			if m.Length() == 0 && len(arg) > 0 {
 				m.Push(mdb.TEXT, m.Cmdx(nfs.CAT, path.Join(SRC_WEBSITE, path.Join(arg...))))
 				m.Push(nfs.PATH, path.Join(CHAT_WEBSITE, path.Join(arg...)))

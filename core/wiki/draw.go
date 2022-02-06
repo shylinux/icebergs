@@ -30,7 +30,7 @@ func init() {
 				_wiki_save(m, DRAW, arg[0], m.Option("content"))
 			}},
 		}, ctx.CmdAction()), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			if !_wiki_list(m, DRAW, kit.Select(ice.PWD, arg, 0)) {
+			if !_wiki_list(m, DRAW, kit.Select(nfs.PWD, arg, 0)) {
 				_wiki_show(m, DRAW, arg[0])
 			}
 		}},

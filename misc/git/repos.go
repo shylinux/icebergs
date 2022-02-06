@@ -19,7 +19,7 @@ func _repos_path(name string) string {
 	if strings.Contains(name, ":\\") {
 		return name
 	}
-	return kit.Select(path.Join(ice.USR, name)+ice.PS, ice.PWD, name == path.Base(kit.Pwd()))
+	return kit.Select(path.Join(ice.USR, name)+ice.PS, nfs.PWD, name == path.Base(kit.Pwd()))
 }
 func _repos_insert(m *ice.Message, name string, dir string) {
 	if s, e := os.Stat(m.Option(cli.CMD_DIR, path.Join(dir, ".git"))); e == nil && s.IsDir() {

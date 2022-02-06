@@ -79,7 +79,6 @@ const ( // DIR
 	VAR = "var"
 	USR = "usr"
 
-	PWD  = "./"
 	HTML = "html"
 	CSS  = "css"
 	JS   = "js"

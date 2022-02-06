@@ -15,12 +15,19 @@ import (
 	kit "shylinux.com/x/toolkits"
 )
 
+func _website_url(m *ice.Message, file string) string {
+	p := path.Join(WEBSITE, file)
+	if m.Option(ice.MSG_USERPOD) != "" {
+		p = path.Join(ice.POD, m.Option(ice.MSG_USERPOD), WEBSITE, file)
+	}
+	return strings.Split(kit.MergeURL2(m.Option(ice.MSG_USERWEB), path.Join("/chat", p)), "?")[0]
+}
 func _website_parse(m *ice.Message, text string) map[string]interface{} {
 	m.Option(nfs.CAT_CONTENT, text)
 	river, storm, last := kit.Dict(
 		"Header", kit.Dict("menus", kit.List(), "style", kit.Dict("display", "none")),
 		"River", kit.Dict("menus", kit.List(), "action", kit.List()),
-		"Action", kit.Dict("menus", kit.List(), "action", kit.List()),
+		"Action", kit.Dict("menus", kit.List(), "action", kit.List(), "legend_event", "onclick"),
 		"Footer", kit.Dict("style", kit.Dict("display", "none")),
 	), kit.Dict(), kit.Dict()
 	m.Cmd(lex.SPLIT, "", mdb.KEY, mdb.NAME, func(deep int, ls []string, meta map[string]interface{}) []string {
@@ -56,26 +63,23 @@ func _website_parse(m *ice.Message, text string) map[string]interface{} {
 func _website_render(m *ice.Message, w http.ResponseWriter, r *http.Request, kind, text string) bool {
 	msg := m.Spawn(w, r)
 	switch kind {
-	case "svg":
+	case nfs.SVG:
 		msg.RenderResult(`<body style="background-color:cadetblue">%s</body>`, msg.Cmdx(nfs.CAT, text))
-	case "shy":
+	case nfs.SHY:
 		if r.Method == http.MethodGet {
 			msg.RenderCmd(msg.Prefix(DIV), text)
 		} else {
 			r.URL.Path = "/chat/cmd/web.chat.div"
 			return false
 		}
-	case "txt":
-		m.Debug("what %v", text)
+	case nfs.TXT:
 		res := _website_parse(msg, text)
-		m.Debug("what %v", res)
-		m.Debug("what %v", kit.Format(res))
 		msg.RenderResult(_website_template2, kit.Format(res))
-	case "json":
+	case nfs.JSON:
 		msg.RenderResult(_website_template2, kit.Format(kit.UnMarshal(text)))
-	case "js":
+	case nfs.JS:
 		msg.RenderResult(_website_template, text)
-	case "html":
+	case nfs.HTML:
 		msg.RenderResult(text)
 	default:
 		msg.RenderDownload(text)
@@ -113,11 +117,15 @@ func init() {
 					return false
 				})
 			}},
+			"show": {Hand: func(m *ice.Message, arg ...string) {
+				res := _website_parse(m, m.Cmdx(nfs.CAT, path.Join(SRC_WEBSITE, arg[0])))
+				m.Echo(_website_template2, kit.Format(res))
+			}},
 			mdb.RENDER: {Hand: func(m *ice.Message, arg ...string) {
-				m.EchoIFrame(path.Join(CHAT_WEBSITE, strings.TrimPrefix(path.Join(arg[2], arg[1]), SRC_WEBSITE)))
+				m.EchoIFrame(_website_url(m, strings.TrimPrefix(path.Join(arg[2], arg[1]), SRC_WEBSITE)))
 			}},
 			mdb.ENGINE: {Hand: func(m *ice.Message, arg ...string) {
-				m.Echo(strings.Split(kit.MergeURL2(m.Option(ice.MSG_USERWEB), path.Join(CHAT_WEBSITE, strings.TrimPrefix(path.Join(arg[2], arg[1]), SRC_WEBSITE))), "?")[0])
+				m.Echo(_website_url(m, strings.TrimPrefix(path.Join(arg[2], arg[1]), SRC_WEBSITE)))
 			}},
 			mdb.INPUTS: {Name: "inputs", Help: "补全", Hand: func(m *ice.Message, arg ...string) {
 				switch m.Option(ctx.ACTION) {
@@ -134,7 +142,7 @@ func init() {
 			mdb.IMPORT: {Name: "import path=src/website/", Help: "导入", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmd(nfs.DIR, kit.Dict(nfs.DIR_ROOT, m.Option(nfs.PATH)), func(p string) {
 					switch name := strings.TrimPrefix(p, m.Option(nfs.PATH)); kit.Ext(p) {
-					case "html", "js", "json", "txt":
+					case nfs.HTML, nfs.JS, nfs.JSON, nfs.TXT:
 						m.Cmd(m.PrefixKey(), mdb.CREATE, nfs.PATH, ice.PS+name,
 							mdb.TYPE, kit.Ext(p), mdb.NAME, name, mdb.TEXT, m.Cmdx(nfs.CAT, p))
 					default:
@@ -145,30 +153,25 @@ func init() {
 			}},
 		}, mdb.HashAction()), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			mdb.HashSelect(m, arg...).Table(func(index int, value map[string]string, head []string) {
-				m.PushAnchor(strings.Split(m.MergeURL2(value[nfs.PATH]), "?")[0])
+				m.PushAnchor(m.MergeLink(value[nfs.PATH]))
 			})
-
 			if len(arg) == 0 {
-				dir := SRC_WEBSITE
-				m.Cmd(nfs.DIR, dir, func(f os.FileInfo, p string) {
+				m.Cmd(nfs.DIR, SRC_WEBSITE, func(f os.FileInfo, p string) {
 					m.Push("", kit.Dict(
 						mdb.TIME, f.ModTime().Format(ice.MOD_TIME),
-						nfs.PATH, ice.PS+strings.TrimPrefix(p, dir),
-						mdb.TYPE, kit.Ext(p),
-						mdb.NAME, path.Base(p),
-						mdb.TEXT, m.Cmdx(nfs.CAT, p),
-					), kit.Split(m.Config(mdb.FIELD)))
-					m.PushButton("")
-					m.PushAnchor(strings.Split(m.MergeURL2(path.Join(CHAT_WEBSITE, p)), "?")[0])
-				})
+						nfs.PATH, ice.PS+strings.TrimPrefix(p, SRC_WEBSITE),
+						mdb.TYPE, kit.Ext(p), mdb.NAME, path.Base(p), mdb.TEXT, m.Cmdx(nfs.CAT, p),
+					), kit.Split(m.Config(mdb.FIELD))).PushButton("")
+					m.PushAnchor(m.MergeLink(path.Join(CHAT_WEBSITE, p)))
+				}).Sort(nfs.PATH)
 			}
 
 			if m.Length() == 0 && len(arg) > 0 {
 				m.Push(mdb.TEXT, m.Cmdx(nfs.CAT, path.Join(SRC_WEBSITE, path.Join(arg...))))
 				m.Push(nfs.PATH, path.Join(CHAT_WEBSITE, path.Join(arg...)))
-			} else {
-				m.Sort(nfs.PATH)
+				m.PushAnchor(m.MergeLink(m.Append(nfs.PATH)))
 			}
+
 			if m.FieldsIsDetail() {
 				m.PushQRCode(mdb.SCAN, m.MergeURL2(m.Append(nfs.PATH)))
 				m.EchoIFrame(m.Append(nfs.PATH))

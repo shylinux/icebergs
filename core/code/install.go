@@ -186,7 +186,7 @@ func init() {
 
 			default: // 目录列表
 				m.Option(nfs.DIR_ROOT, path.Join(m.Conf(cli.DAEMON, kit.Keym(nfs.PATH)), arg[1]))
-				m.Cmdy(nfs.CAT, kit.Select(ice.PWD, arg, 2))
+				m.Cmdy(nfs.CAT, kit.Select(nfs.PWD, arg, 2))
 			}
 		}},
 	}})

@@ -16,7 +16,7 @@ import (
 
 func _go_tags(m *ice.Message, key string) {
 	if s, e := os.Stat(path.Join(m.Option(cli.CMD_DIR), TAGS)); os.IsNotExist(e) || s.ModTime().Before(time.Now().Add(kit.Duration("-72h"))) {
-		m.Cmd(cli.SYSTEM, "gotags", "-R", "-f", TAGS, ice.PWD)
+		m.Cmd(cli.SYSTEM, "gotags", "-R", "-f", TAGS, nfs.PWD)
 	}
 
 	ls := strings.Split(key, ice.PT)
@@ -41,7 +41,7 @@ func _go_tags(m *ice.Message, key string) {
 		bio := bufio.NewScanner(f)
 		for i := 1; bio.Scan(); i++ {
 			if i == line || bio.Text() == text {
-				m.PushSearch(nfs.FILE, strings.TrimPrefix(file, ice.PWD), nfs.LINE, kit.Format(i), mdb.TEXT, bio.Text())
+				m.PushSearch(nfs.FILE, strings.TrimPrefix(file, nfs.PWD), nfs.LINE, kit.Format(i), mdb.TEXT, bio.Text())
 			}
 		}
 	}
@@ -65,9 +65,9 @@ func _go_exec(m *ice.Message, arg ...string) {
 	if key, ok := ice.Info.File[path.Join(arg[2], arg[1])]; ok && key != "" {
 		m.Cmdy(cli.SYSTEM, GO, ice.RUN, ice.SRC_MAIN_GO, key)
 	} else if m.Option(cli.CMD_DIR, arg[2]); strings.HasSuffix(arg[1], "_test.go") {
-		m.Cmdy(cli.SYSTEM, GO, "test", "-v", ice.PWD+arg[1])
+		m.Cmdy(cli.SYSTEM, GO, "test", "-v", nfs.PWD+arg[1])
 	} else {
-		m.Cmdy(cli.SYSTEM, GO, ice.RUN, ice.PWD+arg[1])
+		m.Cmdy(cli.SYSTEM, GO, ice.RUN, nfs.PWD+arg[1])
 	}
 	m.SetAppend()
 }
@@ -136,7 +136,7 @@ func _mod_show(m *ice.Message, file string) {
 		switch {
 		case strings.HasPrefix(line, MODULE):
 			require[ls[1]] = ""
-			replace[ls[1]] = ice.PWD
+			replace[ls[1]] = nfs.PWD
 			return
 		case strings.HasPrefix(line, REQUIRE+" ("):
 			block = REQUIRE

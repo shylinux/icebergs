@@ -14,7 +14,7 @@ import (
 
 func _c_tags(m *ice.Message, key string) {
 	if _, e := os.Stat(path.Join(m.Option(cli.CMD_DIR), TAGS)); e != nil {
-		m.Cmd(cli.SYSTEM, "ctags", "-R", "-f", TAGS, ice.PWD)
+		m.Cmd(cli.SYSTEM, "ctags", "-R", "-f", TAGS, nfs.PWD)
 	}
 	_go_tags(m, key)
 }
@@ -77,7 +77,7 @@ func init() {
 					m.Copy(msg)
 					return
 				}
-				m.Echo(m.Cmd(cli.SYSTEM, ice.PWD+name).Append(cli.CMD_OUT))
+				m.Echo(m.Cmd(cli.SYSTEM, nfs.PWD+name).Append(cli.CMD_OUT))
 			}},
 		}, PlugAction())},
 		MAN: {Name: MAN, Help: "手册", Action: ice.MergeAction(map[string]*ice.Action{

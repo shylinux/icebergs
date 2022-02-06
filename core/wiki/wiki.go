@@ -43,12 +43,12 @@ func _wiki_list(m *ice.Message, cmd string, arg ...string) bool {
 	if len(arg) == 0 || strings.HasSuffix(arg[0], ice.PS) {
 		if m.Option(nfs.DIR_DEEP) != ice.TRUE { // 目录列表
 			m.Option(nfs.DIR_TYPE, nfs.DIR)
-			m.Cmdy(nfs.DIR, kit.Select(ice.PWD, arg, 0))
+			m.Cmdy(nfs.DIR, kit.Select(nfs.PWD, arg, 0))
 		}
 
 		// 文件列表
 		m.Option(nfs.DIR_TYPE, nfs.CAT)
-		m.Cmdy(nfs.DIR, kit.Select(ice.PWD, arg, 0))
+		m.Cmdy(nfs.DIR, kit.Select(nfs.PWD, arg, 0))
 		return true
 	}
 	return false

@@ -118,16 +118,19 @@ func init() {
 				m.Cmd(aaa.SESS, mdb.REMOVE, ice.OptionHash(m.Option(ice.MSG_SESSID)))
 			}},
 			aaa.USERNICK: {Name: "usernick", Help: "用户昵称", Hand: func(m *ice.Message, arg ...string) {
-				_header_users(m, aaa.USERNICK, arg...)
+				_header_users(m, m.ActionKey(), arg...)
+			}},
+			aaa.PASSWORD: {Name: "password", Help: "修改密码", Hand: func(m *ice.Message, arg ...string) {
+				_header_users(m, m.ActionKey(), arg...)
 			}},
 			aaa.LANGUAGE: {Name: "language", Help: "语言地区", Hand: func(m *ice.Message, arg ...string) {
-				_header_users(m, aaa.LANGUAGE, arg...)
+				_header_users(m, m.ActionKey(), arg...)
 			}},
 			aaa.BACKGROUND: {Name: "background", Help: "用户壁纸", Hand: func(m *ice.Message, arg ...string) {
-				_header_users(m, aaa.BACKGROUND, arg...)
+				_header_users(m, m.ActionKey(), arg...)
 			}},
 			aaa.AVATAR: {Name: "avatar", Help: "用户头像", Hand: func(m *ice.Message, arg ...string) {
-				_header_users(m, aaa.AVATAR, arg...)
+				_header_users(m, m.ActionKey(), arg...)
 			}},
 
 			code.WEBPACK: {Name: "webpack", Help: "打包页面", Hand: func(m *ice.Message, arg ...string) {

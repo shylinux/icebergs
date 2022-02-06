@@ -18,7 +18,7 @@ func init() {
 				_wiki_save(m, m.CommandKey(), arg[0], arg[1])
 			}},
 		}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			if !_wiki_list(m, m.CommandKey(), kit.Select(ice.PWD, arg, 0)) {
+			if !_wiki_list(m, m.CommandKey(), kit.Select(nfs.PWD, arg, 0)) {
 				m.CSV(m.Cmd(nfs.CAT, arg[0]).Result())
 			}
 		}},

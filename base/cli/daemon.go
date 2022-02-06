@@ -91,6 +91,7 @@ const (
 	COST = "cost"
 	BACK = "back"
 	FROM = "from"
+	MAIN = "main"
 
 	OPEN  = "open"
 	CLOSE = "close"

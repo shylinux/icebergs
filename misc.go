@@ -147,6 +147,9 @@ func (m *Message) AppendTrans(cb func(value string, key string, index int) strin
 	}
 	return m
 }
+func (m *Message) MergeLink(url string, arg ...interface{}) string {
+	return strings.Split(kit.MergeURL2(m.Option(MSG_USERWEB), url, arg...), "?")[0]
+}
 func (m *Message) MergeURL2(url string, arg ...interface{}) string {
 	return kit.MergeURL2(m.Option(MSG_USERWEB), url, arg...)
 }

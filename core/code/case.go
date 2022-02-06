@@ -86,14 +86,14 @@ func init() {
 			"run": {Name: "run", Help: "运行", Hand: func(m *ice.Message, arg ...string) {
 				// cli.Follow(m, "run", func() {
 				m.Option(cli.CMD_DIR, kit.Select(path.Dir(arg[0]), arg[0], strings.HasSuffix(arg[0], "/")))
-				m.Cmdy(cli.SYSTEM, "go", "test", ice.PWD, "-v", "-run="+arg[1])
+				m.Cmdy(cli.SYSTEM, "go", "test", nfs.PWD, "-v", "-run="+arg[1])
 				// })
 			}},
 			"case": {Name: "case", Help: "用例", Hand: func(m *ice.Message, arg ...string) {
 				msg := m.Spawn()
 				if strings.HasSuffix(arg[0], "/") {
 					msg.Option(cli.CMD_DIR, arg[0])
-					msg.Split(msg.Cmdx(cli.SYSTEM, "grep", "-r", "func Test.*(", ice.PWD), "file:line", ":", "\n")
+					msg.Split(msg.Cmdx(cli.SYSTEM, "grep", "-r", "func Test.*(", nfs.PWD), "file:line", ":", "\n")
 					msg.Table(func(index int, value map[string]string, head []string) {
 						if strings.HasPrefix(strings.TrimSpace(value["line"]), "//") {
 							return
@@ -111,7 +111,7 @@ func init() {
 			}},
 		}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			if len(arg) == 0 || arg[0] == "" {
-				m.Cmdy(nfs.DIR, ice.PWD)
+				m.Cmdy(nfs.DIR, nfs.PWD)
 				return
 			}
 			if len(arg) == 1 {
@@ -127,7 +127,7 @@ func init() {
 			}
 
 			m.Option(cli.CMD_DIR, kit.Select(path.Dir(arg[0]), arg[0], strings.HasSuffix(arg[0], "/")))
-			m.Cmdy(cli.SYSTEM, "go", "test", ice.PWD, "-v", "-run="+arg[1])
+			m.Cmdy(cli.SYSTEM, "go", "test", nfs.PWD, "-v", "-run="+arg[1])
 		}},
 	}})
 }

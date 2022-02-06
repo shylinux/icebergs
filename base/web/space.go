@@ -207,6 +207,47 @@ func _space_search(m *ice.Message, kind, name, text string, arg ...string) {
 		})
 	})
 }
+func _space_fork(m *ice.Message) {
+	if s, e := websocket.Upgrade(m.W, m.R, nil, kit.Int(m.Config("buffer.r")), kit.Int(m.Config("buffer.w"))); m.Assert(e) {
+		text := kit.Select(s.RemoteAddr().String(), m.Option(ice.MSG_USERADDR))
+		name := m.Option(mdb.NAME, kit.ReplaceAll(kit.Select(text, m.Option(mdb.NAME)), ".", "_", ":", "_"))
+		kind := kit.Select(WORKER, m.Option(mdb.TYPE))
+		args := append([]string{mdb.TYPE, kind, mdb.NAME, name}, m.OptionSimple(SHARE, RIVER)...)
+
+		m.Go(func() {
+			h := m.Rich(SPACE, nil, kit.Dict(SOCKET, s, mdb.TEXT, text, args))
+			m.Log_CREATE(SPACE, name, mdb.TYPE, kind)
+
+			switch kind {
+			case CHROME: // 交互节点
+				defer m.Confv(SPACE, kit.Keys(mdb.HASH, h), "")
+				m.Go(func(msg *ice.Message) {
+					switch m.Option(ice.CMD) {
+					case cli.PWD:
+						link := kit.MergeURL(_space_domain(msg), aaa.GRANT, name)
+						msg.Sleep300ms(SPACE, name, cli.PWD, name, link, msg.Cmdx(cli.QRCODE, link))
+					case "sso":
+						link := _space_domain(msg)
+						ls := strings.Split(kit.ParseURL(link).Path, ice.PS)
+						link = kit.MergeURL2(_space_domain(msg), "/chat/sso", "space", kit.Select("", ls, 3), "back", m.Option(ice.MSG_USERWEB))
+						msg.Sleep300ms(SPACE, name, cli.PWD, name, link, msg.Cmdx(cli.QRCODE, link))
+					default:
+						msg.Sleep300ms(SPACE, name, cli.PWD, name)
+					}
+				})
+			case WORKER: // 工作节点
+				m.Event(DREAM_START, args...)
+				defer m.Event(DREAM_STOP, args...)
+				defer m.Cmd(DREAM, DREAM_STOP, args)
+			default: // 服务节点
+				m.Event(SPACE_START, args...)
+				defer m.Event(SPACE_STOP, args...)
+			}
+
+			_space_handle(m, false, m.Target().Server().(*Frame).send, s, name)
+		})
+	}
+}
 
 const (
 	CHROME = "chrome"
@@ -268,46 +309,7 @@ func init() {
 			_space_send(m, arg[0], arg[1:]...)
 		}},
 		"/space/": {Name: "/space/ type name share river", Help: "空间站", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			if s, e := websocket.Upgrade(m.W, m.R, nil, kit.Int(m.Config("buffer.r")), kit.Int(m.Config("buffer.w"))); m.Assert(e) {
-				text := kit.Select(s.RemoteAddr().String(), m.Option(ice.MSG_USERADDR))
-				name := m.Option(mdb.NAME, kit.ReplaceAll(kit.Select(text, m.Option(mdb.NAME)), ".", "_", ":", "_"))
-				kind := kit.Select(WORKER, m.Option(mdb.TYPE))
-				args := append([]string{mdb.TYPE, kind, mdb.NAME, name}, m.OptionSimple(SHARE, RIVER)...)
-
-				m.Go(func() {
-					m.Rich(SPACE, nil, kit.Dict(SOCKET, s, mdb.TEXT, text, args))
-					// h := m.Rich(SPACE, nil, kit.Dict(SOCKET, s, mdb.TEXT, text, args))
-					// defer m.Confv(SPACE, kit.Keys(mdb.HASH, h), "")
-					m.Log_CREATE(SPACE, name, mdb.TYPE, kind)
-
-					switch kind {
-					case CHROME: // 交互节点
-						m.Go(func(msg *ice.Message) {
-							switch m.Option(ice.CMD) {
-							case cli.PWD:
-								link := kit.MergeURL(_space_domain(msg), aaa.GRANT, name)
-								msg.Sleep300ms(SPACE, name, cli.PWD, name, link, msg.Cmdx(cli.QRCODE, link))
-							case "sso":
-								link := _space_domain(msg)
-								ls := strings.Split(kit.ParseURL(link).Path, ice.PS)
-								link = kit.MergeURL2(_space_domain(msg), "/chat/sso", "space", kit.Select("", ls, 3), "back", m.Option(ice.MSG_USERWEB))
-								msg.Sleep300ms(SPACE, name, cli.PWD, name, link, msg.Cmdx(cli.QRCODE, link))
-							default:
-								msg.Sleep300ms(SPACE, name, cli.PWD, name)
-							}
-						})
-					case WORKER: // 工作节点
-						m.Event(DREAM_START, args...)
-						defer m.Event(DREAM_STOP, args...)
-						defer m.Cmd(DREAM, DREAM_STOP, args)
-					default: // 服务节点
-						m.Event(SPACE_START, args...)
-						defer m.Event(SPACE_STOP, args...)
-					}
-
-					_space_handle(m, false, c.Server().(*Frame).send, s, name)
-				})
-			}
+			_space_fork(m)
 		}},
 	}})
 }

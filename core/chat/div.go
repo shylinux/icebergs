@@ -33,13 +33,13 @@ func init() {
 	}, Commands: map[string]*ice.Command{
 		"/div/": {Name: "/div/", Help: "定制", Action: ice.MergeAction(ctx.CmdAction()), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			switch p := path.Join(arg...); kit.Ext(kit.Select("", p)) {
-			case "html":
+			case nfs.HTML:
 				m.RenderDownload(p)
-			case "css":
+			case nfs.CSS:
 				m.RenderResult(_div_template, m.Cmdx(nfs.CAT, p), m.Cmdx(nfs.CAT, strings.ReplaceAll(p, ".css", ".js")))
-			case "js":
+			case nfs.JS:
 				m.RenderResult(_div_template, m.Cmdx(nfs.CAT, strings.ReplaceAll(p, ".js", ".css")), m.Cmdx(nfs.CAT, p))
-			case "json":
+			case nfs.JSON:
 				m.RenderResult(_div_template2, kit.Format(kit.UnMarshal(m.Cmdx(nfs.CAT, p))))
 			default:
 				m.RenderCmd(m.PrefixKey(), p)

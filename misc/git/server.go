@@ -167,7 +167,7 @@ func init() {
 			}},
 		}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			if m.Option(nfs.DIR_ROOT, path.Join(ice.USR_LOCAL, REPOS)); len(arg) == 0 {
-				m.Cmdy(nfs.DIR, ice.PWD, "time,path,size").Table(func(index int, value map[string]string, head []string) {
+				m.Cmdy(nfs.DIR, nfs.PWD, "time,path,size").Table(func(index int, value map[string]string, head []string) {
 					m.PushScript("git clone " + m.MergeURL2("/x/"+value[nfs.PATH]))
 				})
 				m.StatusTimeCount()

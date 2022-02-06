@@ -127,13 +127,18 @@ const (
 	TAGS = "tags"
 )
 const (
-	HTML = "html"
-	CSS  = "css"
-	JS   = "js"
-	GO   = "go"
-	SH   = "sh"
-	CSV  = "csv"
-	JSON = "json"
+	HTML = ice.HTML
+	CSS  = ice.CSS
+	JS   = ice.JS
+	GO   = ice.GO
+	SH   = ice.SH
+	CSV  = ice.CSV
+	JSON = ice.JSON
+	TXT  = "txt"
+	SHY  = "shy"
+	SVG  = "svg"
+
+	PWD = "./"
 )
 
 const (

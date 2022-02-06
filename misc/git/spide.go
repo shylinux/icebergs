@@ -50,7 +50,7 @@ func _spide_go(m *ice.Message, file string) {
 	})
 }
 func _spide_c(m *ice.Message, file string) {
-	_spide_for(m.Cmdx(cli.SYSTEM, "ctags", "-f", "-", file), func(ls []string) {
+	_spide_for(m.Cmdx(cli.SYSTEM, "ctags", "-f", file), func(ls []string) {
 		m.Push(mdb.NAME, ls[0])
 		m.Push(nfs.FILE, ls[1])
 		m.Push(nfs.LINE, "1")

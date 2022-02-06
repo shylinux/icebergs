@@ -75,6 +75,9 @@ func _dream_show(m *ice.Message, name string) {
 		return // 已经启动
 	}
 
+	m.ToastProcess()
+	defer m.ToastSuccess()
+
 	m.Optionv(cli.CMD_DIR, p)
 	m.Optionv(cli.CMD_ENV, kit.Simple(
 		cli.CTX_DEV, "http://:"+m.Cmd(SERVE, ice.OptionFields("")).Append(tcp.PORT),

@@ -27,6 +27,11 @@ func init() {
 				m.RenderIndex(web.SERVE, ice.VOLCANOS)
 				return // 节点首页
 			}
+			if arg[1] == WEBSITE {
+				m.Cmdy(web.SPACE, arg[0], WEBSITE, ctx.ACTION, "show", path.Join(arg[2:]...))
+				m.RenderResult()
+				return
+			}
 			// 节点命令
 			m.Cmdy("/cmd/", path.Join(arg[2:]...))
 		}},

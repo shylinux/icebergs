@@ -137,14 +137,29 @@ func init() {
 				_inner_make(m, m.Cmd(cli.SYSTEM, cli.MAKE, arg))
 			}},
 			mdb.INPUTS: {Name: "inputs", Help: "补全", Hand: func(m *ice.Message, arg ...string) {
+				if m.Option(ctx.ACTION) == "website" {
+					switch arg[0] {
+					case nfs.FILE:
+						m.Cmdy(nfs.DIR, nfs.PWD, "path,size,time", kit.Dict(nfs.DIR_ROOT, "src/website/")).ProcessAgain()
+					}
+					return
+				}
+
 				switch arg[0] {
+				case cli.MAIN:
+					m.Option(nfs.DIR_REG, "*.go")
+					m.Cmdy(nfs.DIR, "src/", "path,size,time").ProcessAgain()
 				case nfs.PATH:
 					m.Cmdy(nfs.DIR, arg[1:], "path,size,time").ProcessAgain()
 				case nfs.FILE:
-					m.Cmdy(nfs.DIR, ice.PWD, "path,size,time", kit.Dict(nfs.DIR_ROOT, m.Option(nfs.PATH))).ProcessAgain()
+					p := kit.Select(nfs.PWD, arg, 1)
+					if !strings.HasSuffix(p, ice.FS) {
+						p = path.Dir(p)
+					}
+					m.Cmdy(nfs.DIR, p+ice.PS, "path,size,time", kit.Dict(nfs.DIR_ROOT, m.Option(nfs.PATH))).ProcessAgain()
 				case "url":
 					m.Option(nfs.DIR_ROOT, "usr/volcanos/plugin/local/code/")
-					m.Cmdy(nfs.DIR, ice.PWD, "path,size,time", kit.Dict(nfs.DIR_DEEP, ice.TRUE)).ProcessAgain()
+					m.Cmdy(nfs.DIR, nfs.PWD, "path,size,time", kit.Dict(nfs.DIR_DEEP, ice.TRUE)).ProcessAgain()
 				default:
 					m.Cmdy(FAVOR, mdb.INPUTS, arg)
 				}
@@ -194,7 +209,7 @@ func init() {
 					PREFIX, kit.Dict("#", COMMENT),
 					KEYWORD, kit.Dict("print", KEYWORD),
 				),
-				"html", kit.Dict(
+				nfs.HTML, kit.Dict(
 					SPLIT, kit.Dict(
 						"space", " ",
 						"operator", "<>",
@@ -204,7 +219,7 @@ func init() {
 						"body", KEYWORD,
 					),
 				),
-				"css", kit.Dict(
+				nfs.CSS, kit.Dict(
 					SUFFIX, kit.Dict("{", COMMENT),
 				),
 				"yaml", kit.Dict(

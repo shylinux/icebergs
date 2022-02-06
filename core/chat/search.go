@@ -1,6 +1,8 @@
 package chat
 
 import (
+	"strings"
+
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/ctx"
 	"shylinux.com/x/icebergs/base/mdb"
@@ -28,6 +30,7 @@ func init() {
 				arg = kit.Split(arg[1], ";", ";", ";")
 			}
 			defer m.StatusTimeCount()
+			arg[1] = strings.TrimSpace(arg[1])
 			if m.Cmdy(m.Space(m.Option(ice.POD)), mdb.SEARCH, arg); arg[1] == "" {
 				return
 			}

@@ -12,6 +12,7 @@ import (
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/ctx"
 	"shylinux.com/x/icebergs/base/mdb"
+	"shylinux.com/x/icebergs/base/nfs"
 	kit "shylinux.com/x/toolkits"
 )
 
@@ -31,6 +32,16 @@ func _runtime_init(m *ice.Message) {
 	m.Conf(RUNTIME, kit.Keys(HOST, GOOS), runtime.GOOS)
 	m.Conf(RUNTIME, kit.Keys(HOST, "pid"), os.Getpid())
 	m.Conf(RUNTIME, kit.Keys(HOST, HOME), os.Getenv(HOME))
+	osid := ""
+	m.Cmd(nfs.CAT, "/etc/os-release", func(text string) {
+		if ls := kit.Split(text, "="); len(ls) > 1 {
+			switch ls[0] {
+			case "ID", "ID_LIKE":
+				osid = strings.TrimSpace(osid + ice.SP + ls[1])
+			}
+		}
+	})
+	m.Conf(RUNTIME, kit.Keys(HOST, OSID), osid)
 
 	// 启动信息 boot
 	if name, e := os.Hostname(); e == nil {
@@ -112,6 +123,11 @@ const (
 	LINUX   = "linux"
 	DARWIN  = "darwin"
 	WINDOWS = "windows"
+
+	OSID   = "OSID"
+	CENTOS = "centos"
+	UBUNTU = "ubuntu"
+	ALPINE = "alpine"
 )
 const (
 	USER = "USER"

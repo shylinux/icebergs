@@ -155,7 +155,7 @@ func init() {
 	Index.Merge(&ice.Context{Configs: map[string]*ice.Config{
 		INSTALL: {Name: INSTALL, Help: "安装", Value: kit.Data(mdb.SHORT, mdb.NAME, nfs.PATH, ice.USR_INSTALL)},
 	}, Commands: map[string]*ice.Command{
-		INSTALL: {Name: "install name port path auto download", Help: "安装", Meta: kit.Dict(), Action: map[string]*ice.Action{
+		INSTALL: {Name: "install name port path auto download compile", Help: "安装", Meta: kit.Dict(), Action: map[string]*ice.Action{
 			web.DOWNLOAD: {Name: "download link path", Help: "下载", Hand: func(m *ice.Message, arg ...string) {
 				_install_download(m)
 			}},
@@ -175,6 +175,21 @@ func init() {
 				m.Option(nfs.DIR_ROOT, path.Join(m.Config(nfs.PATH), kit.TrimExt(m.Option(mdb.LINK)), "_install"))
 				defer m.StatusTime(nfs.PATH, m.Option(nfs.DIR_ROOT))
 				m.Cmdy(nfs.DIR, m.Option(nfs.PATH))
+			}},
+			COMPILE: {Name: "compile", Help: "编译", Hand: func(m *ice.Message, arg ...string) {
+				web.PushStream(m)
+				defer m.ProcessHold()
+				defer m.ToastSuccess()
+
+				osid := m.Cmdx(cli.RUNTIME, "host.OSID")
+				switch {
+				case strings.Contains(osid, cli.CENTOS):
+					m.Cmd(cli.SYSTEM, "yum", "install", "-y", "git", "golang")
+				case strings.Contains(osid, cli.UBUNTU):
+					m.Cmd(cli.SYSTEM, "apt", "install", "-y", "git", "golang")
+				case strings.Contains(osid, cli.ALPINE):
+					m.Cmd(cli.SYSTEM, "apk", "add", "git", "go")
+				}
 			}},
 		}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			switch len(arg) {

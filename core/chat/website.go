@@ -100,8 +100,8 @@ func init() {
 	}, Commands: map[string]*ice.Command{
 		WEBSITE: {Name: "website path auto create import", Help: "网站", Action: ice.MergeAction(map[string]*ice.Action{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
-				m.Cmd(mdb.RENDER, mdb.CREATE, "txt", m.PrefixKey())
-				m.Cmd(mdb.ENGINE, mdb.CREATE, "txt", m.PrefixKey())
+				m.Cmd(mdb.RENDER, mdb.CREATE, nfs.TXT, m.PrefixKey())
+				m.Cmd(mdb.ENGINE, mdb.CREATE, nfs.TXT, m.PrefixKey())
 
 				web.AddRewrite(func(w http.ResponseWriter, r *http.Request) bool {
 					if ok := true; m.Richs(WEBSITE, nil, r.URL.Path, func(key string, value map[string]interface{}) {
@@ -162,7 +162,7 @@ func init() {
 						nfs.PATH, ice.PS+strings.TrimPrefix(p, SRC_WEBSITE),
 						mdb.TYPE, kit.Ext(p), mdb.NAME, path.Base(p), mdb.TEXT, m.Cmdx(nfs.CAT, p),
 					), kit.Split(m.Config(mdb.FIELD))).PushButton("")
-					m.PushAnchor(m.MergeLink(path.Join(CHAT_WEBSITE, p)))
+					m.PushAnchor(m.MergeLink(path.Join(CHAT_WEBSITE, strings.TrimPrefix(p, SRC_WEBSITE))))
 				}).Sort(nfs.PATH)
 			}
 

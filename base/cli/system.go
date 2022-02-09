@@ -11,6 +11,7 @@ import (
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/ctx"
 	"shylinux.com/x/icebergs/base/mdb"
+	"shylinux.com/x/icebergs/base/nfs"
 	kit "shylinux.com/x/toolkits"
 )
 
@@ -30,12 +31,12 @@ func _system_cmd(m *ice.Message, arg ...string) *exec.Cmd {
 	for i := 0; i < len(env)-1; i += 2 {
 		cmd.Env = append(cmd.Env, kit.Format("%s=%s", env[i], env[i+1]))
 		if env[i] == PATH {
-			for _, p := range strings.Split(env[i+1], ice.DF) {
-				if _, err := os.Stat(path.Join(p, arg[0])); err == nil {
-					cmd.Path = path.Join(p, arg[0])
-					m.Debug("what %v", cmd.Path)
-					break
-				}
+			// if strings.Contains(m.Cmdx(RUNTIME, "host.OSID"), ALPINE) {
+			// 	continue
+			// }
+			if file := _system_find(m, arg[0], strings.Split(env[i+1], ice.DF)...); file != "" {
+				cmd.Path = file
+				break
 			}
 		}
 	}
@@ -68,6 +69,17 @@ func _system_out(m *ice.Message, out string) io.Writer {
 		return f
 	}
 	return nil
+}
+func _system_find(m *ice.Message, bin string, dir ...string) string {
+	if len(dir) == 0 {
+		dir = append(dir, strings.Split(os.Getenv(PATH), ice.DF)...)
+	}
+	for _, p := range dir {
+		if _, err := os.Stat(path.Join(p, bin)); err == nil {
+			return path.Join(p, bin)
+		}
+	}
+	return ""
 }
 func _system_exec(m *ice.Message, cmd *exec.Cmd) {
 	// 输入流
@@ -122,7 +134,11 @@ func init() {
 	Index.Merge(&ice.Context{Configs: map[string]*ice.Config{
 		SYSTEM: {Name: SYSTEM, Help: "系统命令", Value: kit.Data(mdb.FIELD, "time,id,cmd")},
 	}, Commands: map[string]*ice.Command{
-		SYSTEM: {Name: "system cmd run:button", Help: "系统命令", Hand: func(m *ice.Message, c *ice.Context, key string, arg ...string) {
+		SYSTEM: {Name: "system cmd run:button", Help: "系统命令", Action: map[string]*ice.Action{
+			nfs.FIND: {Name: "find", Help: "查找", Hand: func(m *ice.Message, arg ...string) {
+				m.Echo(_system_find(m, arg[0], arg[1:]...))
+			}},
+		}, Hand: func(m *ice.Message, c *ice.Context, key string, arg ...string) {
 			if len(arg) == 0 {
 				mdb.ListSelect(m, arg...)
 				return

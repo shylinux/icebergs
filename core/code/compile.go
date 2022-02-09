@@ -33,6 +33,9 @@ func init() {
 				m.Cmdy(nfs.DIR, m.Config(nfs.PATH))
 				return
 			}
+			if m.Cmdx(cli.SYSTEM, nfs.FIND, "go") == "" {
+				m.Cmd(INSTALL, COMPILE)
+			}
 
 			// 交叉编译
 			main, file := ice.SRC_MAIN_GO, ""

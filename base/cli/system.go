@@ -33,6 +33,7 @@ func _system_cmd(m *ice.Message, arg ...string) *exec.Cmd {
 		cmd.Env = append(cmd.Env, kit.Format("%s=%s", env[i], env[i+1]))
 		if env[i] == PATH {
 			if file := _system_find(m, arg[0], strings.Split(env[i+1], ice.DF)...); file != "" {
+				m.Debug("cmd: %v", file)
 				cmd.Path = file
 				break
 			}
@@ -42,6 +43,7 @@ func _system_cmd(m *ice.Message, arg ...string) *exec.Cmd {
 	// // 定制目录
 	if buf, err := ioutil.ReadFile(ice.ETC_PATH); err == nil && len(buf) > 0 {
 		if file := _system_find(m, arg[0], strings.Split(string(buf), ice.NL)...); file != "" {
+			// m.Debug("cmd: %v", file)
 			// cmd.Path = file
 			// break
 		}

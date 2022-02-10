@@ -184,12 +184,10 @@ func _serve_login(msg *ice.Message, key string, cmds []string, w http.ResponseWr
 
 	if msg.Option(ice.MSG_USERNAME) == "" && msg.Option(SHARE) != "" {
 		switch share := msg.Cmd(SHARE, msg.Option(SHARE)); share.Append(mdb.TYPE) {
-		case LOGIN: // 共享认证
-			msg.Option(ice.MSG_USERROLE, share.Append(aaa.USERROLE))
-			msg.Option(ice.MSG_USERNAME, share.Append(aaa.USERNAME))
-		case FIELD: // 共享认证
+		case STORM, FIELD: // 共享认证
 			msg.Option(ice.MSG_USERNAME, share.Append(aaa.USERNAME))
 			msg.Option(ice.MSG_USERROLE, share.Append(aaa.USERROLE))
+			msg.Option(ice.MSG_USERNICK, share.Append(aaa.USERNICK))
 		}
 	}
 

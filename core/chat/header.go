@@ -21,20 +21,6 @@ func _header_agent(m *ice.Message, arg ...string) {
 	}
 }
 func _header_check(m *ice.Message, arg ...string) {
-	if m.Option(web.SHARE) != "" {
-		switch msg := m.Cmd(web.SHARE, m.Option(web.SHARE)); msg.Append(mdb.TYPE) {
-		case web.LOGIN:
-			if m.Option(ice.MSG_USERNAME) != msg.Append(aaa.USERNAME) {
-				web.RenderCookie(m, aaa.SessCreate(m, m.Option(ice.MSG_USERNAME, msg.Append(aaa.USERNAME))))
-				m.Option(ice.MSG_USERNICK, aaa.UserNick(m, msg.Append(aaa.USERNAME)))
-			}
-		case web.STORM:
-			m.Option(ice.MSG_USERNAME, msg.Append(aaa.USERNAME))
-		case web.FIELD:
-			m.Option(ice.MSG_USERNAME, msg.Append(aaa.USERNAME))
-		}
-	}
-
 	if m.Option(ice.MSG_USERNAME) == "" {
 		m.Option(web.LOGIN, m.Config(web.LOGIN))
 		m.Option(web.SSO, m.Conf(web.SERVE, kit.Keym(web.SSO)))
@@ -143,9 +129,8 @@ func init() {
 				m.Cmdy(code.WEBPACK, mdb.REMOVE)
 			}},
 		}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			m.Option(aaa.USERNICK, m.Option(ice.MSG_USERNICK))
 			msg := m.Cmd(aaa.USER, m.Option(ice.MSG_USERNAME))
-			for _, k := range []string{aaa.LANGUAGE, aaa.BACKGROUND, aaa.AVATAR} {
+			for _, k := range []string{aaa.LANGUAGE, aaa.BACKGROUND, aaa.AVATAR, aaa.USERNICK} {
 				m.Option(k, msg.Append(k))
 			}
 

@@ -3,6 +3,7 @@ package cli
 import (
 	"bytes"
 	"io"
+	"io/ioutil"
 	"os"
 	"os/exec"
 	"path"
@@ -31,9 +32,6 @@ func _system_cmd(m *ice.Message, arg ...string) *exec.Cmd {
 	for i := 0; i < len(env)-1; i += 2 {
 		cmd.Env = append(cmd.Env, kit.Format("%s=%s", env[i], env[i+1]))
 		if env[i] == PATH {
-			// if strings.Contains(m.Cmdx(RUNTIME, "host.OSID"), ALPINE) {
-			// 	continue
-			// }
 			if file := _system_find(m, arg[0], strings.Split(env[i+1], ice.DF)...); file != "" {
 				cmd.Path = file
 				break
@@ -42,15 +40,12 @@ func _system_cmd(m *ice.Message, arg ...string) *exec.Cmd {
 	}
 
 	// // 定制目录
-	// if buf, err := ioutil.ReadFile(ice.ETC_PATH); err == nil && len(buf) > 0 {
-	// 	for _, p := range strings.Split(string(buf), ice.NL) {
-	// 		if _, e := os.Stat(path.Join(p, arg[0])); e == nil {
-	// 			cmd.Path = kit.Path(path.Join(p, arg[0]))
-	// 			m.Debug("what %v", cmd.Path)
-	// 			break
-	// 		}
-	// 	}
-	// }
+	if buf, err := ioutil.ReadFile(ice.ETC_PATH); err == nil && len(buf) > 0 {
+		if file := _system_find(m, arg[0], strings.Split(string(buf), ice.NL)...); file != "" {
+			// cmd.Path = file
+			// break
+		}
+	}
 	m.Debug("cmd: %v", cmd.Path)
 
 	if len(cmd.Env) > 0 {

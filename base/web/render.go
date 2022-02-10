@@ -32,7 +32,7 @@ func Render(msg *ice.Message, cmd string, args ...interface{}) {
 		RenderCookie(msg, arg[0], arg[1:]...)
 
 	case ice.RENDER_REDIRECT: // url [arg...]
-		http.Redirect(msg.W, msg.R, kit.MergeURL(arg[0], arg[1:]), http.StatusSeeOther)
+		RenderRedirect(msg, arg...)
 
 	case ice.RENDER_DOWNLOAD: // file [type [name]]
 		if strings.HasPrefix(arg[0], "http") {
@@ -87,6 +87,9 @@ func RenderCookie(msg *ice.Message, value string, arg ...string) { // name path 
 	expire := time.Now().Add(kit.Duration(kit.Select(msg.Conf(aaa.SESS, "meta.expire"), arg, 2)))
 	http.SetCookie(msg.W, &http.Cookie{Value: value,
 		Name: kit.Select(CookieName(msg.Option(ice.MSG_USERWEB)), arg, 0), Path: kit.Select(ice.PS, arg, 1), Expires: expire})
+}
+func RenderRedirect(msg *ice.Message, arg ...string) {
+	http.Redirect(msg.W, msg.R, kit.MergeURL(arg[0], arg[1:]), http.StatusMovedPermanently)
 }
 func RenderType(w http.ResponseWriter, name, mime string) {
 	if mime != "" {

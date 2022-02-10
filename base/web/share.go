@@ -162,8 +162,19 @@ func init() {
 			if msg := m.Cmd(SHARE, m.Option(SHARE)); kit.Int(msg.Append(mdb.TIME)) < kit.Int(msg.FormatTime()) {
 				m.RenderResult("共享超时")
 				return
+			} else {
+				switch msg.Append(mdb.TYPE) {
+				case LOGIN:
+					if sessid := aaa.SessCreate(m, msg.Append(aaa.USERNAME)); m.Option(ice.MSG_USERWEB) == "" {
+						m.RenderRedirect(ice.PS, ice.MSG_SESSID, sessid)
+					} else {
+						RenderCookie(m, sessid)
+						RenderRedirect(m, ice.PS)
+					}
+				default:
+					m.RenderIndex(SERVE, ice.VOLCANOS)
+				}
 			}
-			m.RenderIndex(SERVE, ice.VOLCANOS)
 		}},
 
 		SHARE_TOAST: {Name: "/share/toast/", Help: "推送流", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {

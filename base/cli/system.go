@@ -35,7 +35,7 @@ func _system_cmd(m *ice.Message, arg ...string) *exec.Cmd {
 			if file := _system_find(m, arg[0], strings.Split(env[i+1], ice.DF)...); file != "" {
 				m.Debug("cmd: %v", file)
 				cmd.Path = file
-				break
+				continue
 			}
 		}
 	}
@@ -45,7 +45,6 @@ func _system_cmd(m *ice.Message, arg ...string) *exec.Cmd {
 		if file := _system_find(m, arg[0], strings.Split(string(buf), ice.NL)...); file != "" {
 			// m.Debug("cmd: %v", file)
 			// cmd.Path = file
-			// break
 		}
 	}
 	m.Debug("cmd: %v", cmd.Path)

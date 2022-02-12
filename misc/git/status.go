@@ -189,6 +189,7 @@ const (
 	COMMIT  = "commit"
 	COMMENT = "comment"
 	VERSION = "version"
+	STASH   = "stash"
 )
 const STATUS = "status"
 
@@ -226,6 +227,10 @@ func init() {
 				}
 				_repos_cmd(m, m.Option(REPOS), TAG, m.Option(VERSION))
 				_repos_cmd(m, m.Option(REPOS), PUSH, "--tags")
+			}},
+			STASH: {Name: "stash", Help: "缓存", Hand: func(m *ice.Message, arg ...string) {
+				_status_each(m, STASH, cli.SYSTEM, GIT, STASH)
+				m.ProcessHold()
 			}},
 			ADD: {Name: "add", Help: "添加", Hand: func(m *ice.Message, arg ...string) {
 				_repos_cmd(m, m.Option(REPOS), ADD, m.Option(nfs.FILE))

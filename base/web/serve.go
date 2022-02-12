@@ -180,7 +180,6 @@ func _serve_login(msg *ice.Message, key string, cmds []string, w http.ResponseWr
 
 	if msg.Option(ice.MSG_USERNAME) == "" && msg.Config(tcp.LOCALHOST) == ice.TRUE && tcp.IsLocalHost(msg, msg.Option(ice.MSG_USERIP)) {
 		aaa.UserRoot(msg) // 主机认证
-		msg.Debug("what %v", msg.FormatMeta())
 	}
 
 	if msg.Option(ice.MSG_USERNAME) == "" && msg.Option(SHARE) != "" {

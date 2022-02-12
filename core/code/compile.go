@@ -63,8 +63,6 @@ func init() {
 			// 执行编译
 			_autogen_version(m.Spawn())
 			m.Optionv(cli.CMD_ENV, kit.Simple(m.Configv(cli.ENV), cli.HOME, os.Getenv(cli.HOME), cli.PATH, os.Getenv(cli.PATH), cli.GOOS, goos, cli.GOARCH, arch))
-			m.Debug("what %v", os.Getenv(cli.PATH))
-			m.Debug("what %v", m.FormatMeta())
 			if msg := m.Cmd(cli.SYSTEM, "go", "build", "-o", file, main, ice.SRC_VERSION_GO, ice.SRC_BINPACK_GO); !cli.IsSuccess(msg) {
 				m.Copy(msg)
 				return
@@ -73,8 +71,12 @@ func init() {
 			// 编译成功
 			m.Log_EXPORT(nfs.SOURCE, main, nfs.TARGET, file)
 			m.Cmdy(nfs.DIR, file, "time,path,size,link,action")
+			name := path.Base(m.Append(nfs.PATH))
+			m.EchoScript(kit.Format("# 下载启动\ncurl -fOL %s && chmod u+x %s\n./%s forever serve dev %s\ntail -f var/log/bench.log",
+				m.MergeURL2(kit.Format("/publish/%s", name)), name, name, m.MergeURL2(ice.PS)))
 			m.Cmd(PUBLISH, mdb.CREATE, ice.BIN_ICE_SH)
-			m.Cmd(PUBLISH, ice.CONTEXTS, ice.CORE)
+			m.Cmdy(PUBLISH, ice.CONTEXTS, ice.CORE)
+			m.Cmdy(PUBLISH, ice.CONTEXTS, "binary")
 			m.StatusTimeCount()
 		}},
 	}})

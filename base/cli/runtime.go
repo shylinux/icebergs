@@ -37,7 +37,7 @@ func _runtime_init(m *ice.Message) {
 		if ls := kit.Split(text, "="); len(ls) > 1 {
 			switch ls[0] {
 			case "ID", "ID_LIKE":
-				osid = strings.TrimSpace(osid + ice.SP + ls[1])
+				osid = strings.TrimSpace(ls[1] + ice.SP + osid)
 			}
 		}
 	})

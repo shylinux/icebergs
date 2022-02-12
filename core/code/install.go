@@ -179,17 +179,15 @@ func init() {
 			COMPILE: {Name: "compile", Help: "编译", Hand: func(m *ice.Message, arg ...string) {
 				web.PushStream(m)
 				defer m.ProcessHold()
-				defer m.ToastSuccess()
 
 				osid := m.Cmdx(cli.RUNTIME, "host.OSID")
 				switch {
-				case strings.Contains(osid, cli.CENTOS):
-					m.Cmd(cli.SYSTEM, "yum", "install", "-y", "git", "golang")
-				case strings.Contains(osid, cli.UBUNTU):
-					m.Cmd(cli.SYSTEM, "apt", "install", "-y", "git", "golang")
 				case strings.Contains(osid, cli.ALPINE):
 					m.Cmd(cli.SYSTEM, "apk", "add", "git", "go")
+				default:
+					m.Toast("please install git and go")
 				}
+				m.ToastSuccess()
 			}},
 		}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			switch len(arg) {

@@ -123,11 +123,6 @@ func init() {
 				m.Cmd(nfs.COPY, ice.GO_MOD, path.Join(ice.SRC_RELEASE, ice.GO_MOD))
 				m.Cmdy(code.WEBPACK, mdb.CREATE, m.OptionSimple(mdb.NAME))
 			}},
-			code.DEVPACK: {Name: "devpack", Help: "开发模式", Hand: func(m *ice.Message, arg ...string) {
-				m.Cmd(nfs.COPY, ice.GO_MOD, path.Join(ice.SRC_DEBUG, ice.GO_MOD))
-				m.Cmd(nfs.COPY, ice.GO_SUM, path.Join(ice.SRC_DEBUG, ice.GO_SUM))
-				m.Cmdy(code.WEBPACK, mdb.REMOVE)
-			}},
 		}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			msg := m.Cmd(aaa.USER, m.Option(ice.MSG_USERNAME))
 			for _, k := range []string{aaa.LANGUAGE, aaa.BACKGROUND, aaa.AVATAR, aaa.USERNICK} {

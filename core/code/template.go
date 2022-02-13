@@ -58,7 +58,6 @@ func init() { ice.Cmd("{{.Option "key"}}", {{.Option "name"}}{}) }
 				m.Option("tags", "`"+m.Option("tags")+"`")
 				if buf, err := kit.Render(m.Option(mdb.TEXT), m); !m.Warn(err) {
 					m.Cmd(nfs.DEFS, path.Join(m.Option(nfs.PATH), m.Option(nfs.FILE)), string(buf))
-					m.Debug("what %v", m.FormatMeta())
 					switch kit.Ext(m.Option(nfs.FILE)) {
 					case GO:
 						if m.Option(MAIN) != "" && m.Option(mdb.ZONE) != "" {

@@ -30,7 +30,11 @@ func _user_create(m *ice.Message, role, name, word string) {
 		return
 	}
 	if word == "" {
-		word = kit.Hashs()
+		if m.Richs(USER, nil, name, func(key string, value map[string]interface{}) {
+			word = kit.Format(value[PASSWORD])
+		}) == nil {
+			word = kit.Hashs()
+		}
 	}
 	m.Rich(USER, nil, kit.Dict(USERROLE, role, USERNAME, name, PASSWORD, word))
 	m.Event(USER_CREATE, USER, name)
@@ -44,11 +48,11 @@ func _user_search(m *ice.Message, name, text string) {
 }
 
 func UserRoot(m *ice.Message, arg ...string) { // password username userrole
-	userrole := kit.Select(ROOT, arg, 2)
-	username := kit.Select(kit.Select("root", ice.Info.UserName), arg, 1)
-	m.Option(ice.MSG_USERROLE, userrole)
-	m.Option(ice.MSG_USERNAME, username)
-	_user_create(m, userrole, username, kit.Select("", arg, 0))
+	userrole := m.Option(ice.MSG_USERROLE, kit.Select(ROOT, arg, 2))
+	username := m.Option(ice.MSG_USERNAME, kit.Select(kit.Select(ROOT, ice.Info.UserName), arg, 1))
+	if len(arg) > 0 {
+		_user_create(m, userrole, username, kit.Select("", arg, 0))
+	}
 }
 func UserRole(m *ice.Message, username interface{}) (role string) {
 	if role = VOID; username == ice.Info.UserName {

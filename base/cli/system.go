@@ -30,12 +30,10 @@ func _system_cmd(m *ice.Message, arg ...string) *exec.Cmd {
 	// 环境变量
 	env := kit.Simple(m.Optionv(CMD_ENV))
 	for i := 0; i < len(env)-1; i += 2 {
-		cmd.Env = append(cmd.Env, kit.Format("%s=%s", env[i], env[i+1]))
-		if env[i] == PATH {
+		if cmd.Env = append(cmd.Env, kit.Format("%s=%s", env[i], env[i+1])); env[i] == PATH {
 			if file := _system_find(m, arg[0], strings.Split(env[i+1], ice.DF)...); file != "" {
 				m.Debug("cmd: %v", file)
 				cmd.Path = file
-				continue
 			}
 		}
 	}

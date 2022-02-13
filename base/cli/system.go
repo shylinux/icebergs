@@ -101,7 +101,7 @@ func _system_exec(m *ice.Message, cmd *exec.Cmd) {
 	}
 
 	// 执行命令
-	if e := cmd.Run(); !m.Warn(e, ice.ErrNotFound, cmd.Args) {
+	if e := cmd.Run(); !m.Warn(e, ice.ErrNotFound, kit.Format(cmd.Args)) {
 		m.Cost(CODE, cmd.ProcessState.ExitCode(), ctx.ARGS, cmd.Args)
 	}
 

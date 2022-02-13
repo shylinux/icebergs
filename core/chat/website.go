@@ -121,6 +121,8 @@ func init() {
 				res := _website_parse(m, m.Cmdx(nfs.CAT, path.Join(SRC_WEBSITE, arg[0])))
 				m.Echo(_website_template2, kit.Format(res))
 			}},
+			"inner": {Hand: func(m *ice.Message, arg ...string) {
+			}},
 			mdb.RENDER: {Hand: func(m *ice.Message, arg ...string) {
 				m.EchoIFrame(_website_url(m, strings.TrimPrefix(path.Join(arg[2], arg[1]), SRC_WEBSITE)))
 			}},

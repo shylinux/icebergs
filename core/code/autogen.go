@@ -155,7 +155,7 @@ func init() {
 			mdb.CREATE: {Name: "create main=src/main.go@key zone name=hi help type=Hash,Zone,Lists,Data,Code list key", Help: "模块", Hand: func(m *ice.Message, arg ...string) {
 				_defs(m, mdb.ZONE, m.Option(mdb.NAME), mdb.HELP, m.Option(mdb.NAME))
 				_defs(m, mdb.KEY, kit.Keys("web.code", m.Option(mdb.ZONE), m.Option(mdb.NAME)))
-				switch m.Option(mdb.TYPE) {
+				switch kit.Select("Zone", m.Option(mdb.TYPE)) {
 				case "Hash":
 					_defs(m, "list", m.Option(mdb.NAME)+" hash auto create")
 				case "Zone":

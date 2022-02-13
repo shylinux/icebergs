@@ -35,6 +35,7 @@ func _dream_show(m *ice.Message, name string) {
 		name = m.Time("20060102-") + kit.ReplaceAll(name, "-", "_")
 	}
 	defer m.ProcessOpen(m.MergePOD(m.Option(mdb.NAME, name)))
+	defer m.Echo(m.MergePOD(m.Option(mdb.NAME, name)))
 
 	// 任务目录
 	p := path.Join(m.Config(nfs.PATH), name)

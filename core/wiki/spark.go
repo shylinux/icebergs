@@ -24,7 +24,8 @@ func _spark_show(m *ice.Message, name, text string, arg ...string) {
 	m.Echo(`<div class="story" data-type="spark" data-name="%s" style="%s">`, name, m.Option("style"))
 	defer m.Echo("</div>")
 
-	if name == "inner" {
+	switch name {
+	case "inner", "field":
 		m.Echo(text)
 		return
 	}

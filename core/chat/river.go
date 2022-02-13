@@ -171,11 +171,7 @@ func init() {
 				m.Cmd(code.PUBLISH, mdb.CREATE, nfs.FILE, ice.BIN_ICE_SH)
 				m.Cmd(code.PUBLISH, mdb.CREATE, nfs.FILE, ice.BIN_ICE_BIN)
 			}},
-			SHARE: {Name: "share", Help: "共享", Hand: func(m *ice.Message, arg ...string) {
-				_header_share(m, arg...)
-			}},
-		}, mdb.HashAction()), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			mdb.HashSelect(m, arg...)
-		}},
+			SHARE: {Name: "share", Help: "共享", Hand: func(m *ice.Message, arg ...string) { _header_share(m, arg...) }},
+		}, mdb.HashAction())},
 	}})
 }

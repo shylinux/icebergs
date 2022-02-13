@@ -89,8 +89,14 @@ func (m *Message) Warn(err interface{}, arg ...interface{}) bool {
 	case nil:
 		return false
 	}
-	m.meta[MSG_RESULT] = kit.Simple(ErrWarn, kit.Simple(arg...))
 	m.log(LOG_WARN, m.join(kit.Simple(arg...)))
+
+	if len(arg) == 0 {
+		arg = append(arg, "", "")
+	} else if len(arg) == 1 {
+		arg = append(arg, "")
+	}
+	m.meta[MSG_RESULT] = kit.Simple(ErrWarn, arg[0], arg[1], SP, m.join(kit.Simple(arg[2:]...)))
 	return true
 }
 func (m *Message) Error(err bool, str string, arg ...interface{}) bool {

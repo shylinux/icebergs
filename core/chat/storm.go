@@ -59,6 +59,7 @@ func init() {
 				_action_domain(m, cmd, m.Option(mdb.HASH))
 				m.Cmdy(cmd, mdb.IMPORT)
 			}},
+			SHARE: {Name: "share", Help: "共享", Hand: func(m *ice.Message, arg ...string) { _header_share(m, arg...) }},
 		}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			if len(arg) == 0 { // 应用列表
 				m.OptionFields("time,hash,type,name,count")

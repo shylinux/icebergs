@@ -35,7 +35,7 @@ func _field_show(m *ice.Message, name, text string, arg ...string) {
 	// 命令参数
 	meta, cmds := kit.Dict(), kit.Split(text)
 	m.Search(cmds[0], func(p *ice.Context, s *ice.Context, key string, cmd *ice.Command) {
-		if meta[FEATURE], meta[INPUTS] = cmd.Meta, cmd.List; name == "" {
+		if meta[FEATURE], meta[INPUTS] = kit.Dict(cmd.Meta), cmd.List; name == "" {
 			name = cmd.Help
 		}
 	})
@@ -67,6 +67,7 @@ func _field_show(m *ice.Message, name, text string, arg ...string) {
 		case SPARK:
 			msg.Echo(strings.TrimSpace(arg[i+1]))
 			meta["msg"] = msg.FormatMeta()
+			kit.Value(meta, kit.Keys(FEATURE, "mode"), "simple")
 
 		case TABLE:
 			ls := kit.Split(arg[i+1], ice.NL, ice.NL, ice.NL)
@@ -77,6 +78,7 @@ func _field_show(m *ice.Message, name, text string, arg ...string) {
 				}
 			}
 			meta["msg"] = msg.FormatMeta()
+			kit.Value(meta, kit.Keys(FEATURE, "mode"), "simple")
 
 		case ARGS:
 			args := kit.Simple(m.Optionv(arg[i]))
@@ -95,6 +97,9 @@ func _field_show(m *ice.Message, name, text string, arg ...string) {
 				}
 				meta[INPUTS] = list
 			}
+		default:
+			msg.Option(arg[i], arg[i+1])
+			kit.Value(meta, kit.Keys(FEATURE, arg[i]), arg[i+1])
 		}
 	}
 	m.Option(mdb.META, meta)

@@ -72,6 +72,8 @@ func init() {
 			m.Log_EXPORT(nfs.SOURCE, main, nfs.TARGET, file)
 			m.Cmdy(nfs.DIR, file, "time,path,size,link,action")
 			name := path.Base(m.Append(nfs.PATH))
+			m.EchoScript(kit.Format("# 下载启动\nwget %s && chmod u+x %s\n./%s forever serve dev %s\ntail -f var/log/bench.log",
+				m.MergeURL2(kit.Format("/publish/%s", name)), name, name, m.MergeURL2(ice.PS)))
 			m.EchoScript(kit.Format("# 下载启动\ncurl -fOL %s && chmod u+x %s\n./%s forever serve dev %s\ntail -f var/log/bench.log",
 				m.MergeURL2(kit.Format("/publish/%s", name)), name, name, m.MergeURL2(ice.PS)))
 			m.Cmd(PUBLISH, mdb.CREATE, ice.BIN_ICE_SH)

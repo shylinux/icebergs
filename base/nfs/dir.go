@@ -20,7 +20,7 @@ func _dir_list(m *ice.Message, root string, name string, level int, deep bool, d
 		return m // 没有权限
 	}
 
-	if len(ice.Info.Pack) > 0 && name != ice.USR {
+	if len(ice.Info.Pack) > 0 && m.Option(DIR_PACK) == ice.TRUE {
 		for k, b := range ice.Info.Pack {
 			p := strings.TrimPrefix(k, root)
 			if !strings.HasPrefix(p, name) {
@@ -31,7 +31,7 @@ func _dir_list(m *ice.Message, root string, name string, level int, deep bool, d
 				}
 			}
 
-			m.Debug("cat binpack %s", p)
+			m.Debug("dir binpack %s", p)
 			for _, field := range fields {
 				switch field {
 				case PATH:
@@ -209,6 +209,7 @@ const (
 	TYPE_BOTH = "both"
 )
 const (
+	DIR_PACK = "dir_pack"
 	DIR_ROOT = "dir_root"
 	DIR_TYPE = "dir_type"
 	DIR_DEEP = "dir_deep"

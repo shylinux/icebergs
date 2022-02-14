@@ -46,6 +46,7 @@ func init() {
 
 				m.Option(nfs.DIR_ROOT, dir)
 				m.Option(nfs.DIR_DEEP, true)
+				m.Option(nfs.DIR_PACK, true)
 				m.Option(nfs.DIR_TYPE, nfs.CAT)
 
 				for _, k := range []string{"lib", "panel", "plugin"} {

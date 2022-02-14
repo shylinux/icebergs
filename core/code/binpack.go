@@ -103,6 +103,21 @@ func init() {
 						m.Logs(BINPACK, len(b), name)
 						return b // 打包文件
 					}
+					if b, ok := ice.Info.Pack[strings.TrimPrefix(name, ice.USR_VOLCANOS)]; ok && len(b) > 0 {
+						m.Debug("cat binpack %s", name)
+						m.Logs(BINPACK, len(b), name)
+						return b // 打包文件
+					}
+					if b, ok := ice.Info.Pack[path.Join(m.Option(nfs.DIR_ROOT), name)]; ok && len(b) > 0 {
+						m.Debug("cat binpack %s", name)
+						m.Logs(BINPACK, len(b), name)
+						return b // 打包文件
+					}
+					if b, ok := ice.Info.Pack[path.Join(ice.PS, name)]; ok && len(b) > 0 {
+						m.Debug("cat binpack %s", name)
+						m.Logs(BINPACK, len(b), name)
+						return b // 打包文件
+					}
 					return nil
 				})
 			}},

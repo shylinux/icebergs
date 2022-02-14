@@ -20,6 +20,32 @@ func _dir_list(m *ice.Message, root string, name string, level int, deep bool, d
 		return m // 没有权限
 	}
 
+	if len(ice.Info.Pack) > 0 && name != ice.USR {
+		for k, b := range ice.Info.Pack {
+			p := strings.TrimPrefix(k, root)
+			if !strings.HasPrefix(p, name) {
+				if p = strings.TrimPrefix(k, root+ice.PS); !strings.HasPrefix(p, name) {
+					if p = strings.TrimPrefix(k, ice.PS); !strings.HasPrefix(p, name) {
+						continue
+					}
+				}
+			}
+
+			m.Debug("cat binpack %s", p)
+			for _, field := range fields {
+				switch field {
+				case PATH:
+					m.Push(field, p)
+				case SIZE:
+					m.Push(field, len(b))
+				default:
+					m.Push(field, "")
+				}
+			}
+		}
+		return m
+	}
+
 	list, e := ioutil.ReadDir(path.Join(root, name))
 	if e != nil { // 单个文件
 		ls, _ := ioutil.ReadDir(path.Dir(path.Join(root, name)))

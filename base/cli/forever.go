@@ -26,6 +26,8 @@ func init() {
 					}
 				}
 				println(kit.Format("%s run %s", kit.Now(), kit.Join(arg, ice.SP)))
+				m.Option(CMD_OUTPUT, os.Stdout)
+				m.Option(CMD_ERRPUT, os.Stderr)
 				switch msg := m.Cmd(SYSTEM, arg); msg.Append(CODE) {
 				case "0":
 					println(kit.Format("%s exit", kit.Now()))

@@ -39,6 +39,7 @@ func init() {
 				m.Cmd(nfs.COPY, ice.GO_MOD, path.Join(ice.SRC_DEBUG, ice.GO_MOD))
 				m.Cmd(nfs.COPY, ice.GO_SUM, path.Join(ice.SRC_DEBUG, ice.GO_SUM))
 				m.Cmdy(WEBPACK, mdb.REMOVE)
+				m.ToastSuccess()
 				m.ProcessHold()
 			}},
 		}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) { m.Cmdy(INNER, arg) }},

@@ -36,6 +36,7 @@ func init() {
 			if m.Cmdx(cli.SYSTEM, nfs.FIND, "go") == "" {
 				m.Cmd(INSTALL, COMPILE)
 			}
+			m.Cmd(cli.SYSTEM, "go", "get", "shylinux.com/x/ice")
 
 			// 交叉编译
 			main, file := ice.SRC_MAIN_GO, ""

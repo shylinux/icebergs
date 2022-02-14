@@ -88,7 +88,8 @@ func _dream_show(m *ice.Message, name string) {
 	m.Optionv(cli.CMD_OUTPUT, path.Join(p, m.Config(kit.Keys(cli.ENV, cli.CTX_LOG))))
 
 	// 启动任务
-	m.Cmd(cli.DAEMON, kit.Path(os.Args[0]), SPACE, tcp.DIAL, ice.DEV, ice.OPS, mdb.NAME, name, m.OptionSimple(RIVER))
+	bin := cli.SystemFind(m, "ice.bin", kit.Path(path.Join(p, ice.BIN)), "./bin")
+	m.Cmd(cli.DAEMON, kit.Select(kit.Path(os.Args[0]), bin), SPACE, tcp.DIAL, ice.DEV, ice.OPS, mdb.NAME, name, m.OptionSimple(RIVER))
 	defer m.Event(DREAM_CREATE, kit.SimpleKV("", m.Option(mdb.TYPE), name)...)
 	m.Sleep3s()
 }

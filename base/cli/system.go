@@ -109,6 +109,9 @@ func _system_exec(m *ice.Message, cmd *exec.Cmd) {
 func IsSuccess(m *ice.Message) bool {
 	return m.Append(CODE) == "0" || m.Append(CODE) == ""
 }
+func SystemFind(m *ice.Message, bin string, dir ...string) string {
+	return _system_find(m, bin, dir...)
+}
 
 const (
 	CMD_DIR = "cmd_dir"

@@ -184,7 +184,6 @@ func init() {
 				switch {
 				case strings.Contains(osid, cli.ALPINE):
 					m.Cmd(cli.SYSTEM, "apk", "add", "git", "go")
-					m.Cmd(cli.SYSTEM, "go", "get", "shylinux.com/x/ice")
 				case strings.Contains(osid, cli.CENTOS):
 					m.Cmdy(INSTALL, web.DOWNLOAD, "https://golang.google.cn/dl/go1.15.5.linux-amd64.tar.gz", ice.USR_LOCAL)
 

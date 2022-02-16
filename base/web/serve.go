@@ -254,6 +254,7 @@ func init() {
 	}, Commands: map[string]*ice.Command{
 		SERVE: {Name: "serve name auto start spide", Help: "服务器", Action: ice.MergeAction(map[string]*ice.Action{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
+				cli.NodeInfo(m, WORKER, ice.Info.PathName)
 				AddRewrite(func(w http.ResponseWriter, r *http.Request) bool {
 					if r.Method == SPIDE_GET && r.URL.Path == ice.PS {
 						msg := m.Spawn(SERVE, w, r)
@@ -282,6 +283,8 @@ func init() {
 				}
 			}},
 			cli.START: {Name: "start dev name=ops proto=http host port=9020 nodename password username userrole", Help: "启动", Hand: func(m *ice.Message, arg ...string) {
+				ice.Info.Address = kit.Select(kit.Format("%s://%s:%s", m.Option(tcp.PROTO),
+					kit.Select(m.Cmd(tcp.HOST).Append(aaa.IP), m.Option(tcp.HOST)), m.Option(tcp.PORT)), ice.Info.Address)
 				if cli.NodeInfo(m, SERVER, kit.Select(ice.Info.HostName, m.Option("nodename"))); m.Option(tcp.PORT) == tcp.RANDOM {
 					m.Option(tcp.PORT, m.Cmdx(tcp.PORT, aaa.RIGHT))
 				}

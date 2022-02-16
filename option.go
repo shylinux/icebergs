@@ -128,7 +128,7 @@ func (m *Message) StatusTimeCountTotal(arg ...interface{}) {
 func (m *Message) Confirm(text string) string {
 	return m.Cmdx(SPACE, m.Option(MSG_DAEMON), "confirm", text)
 }
-func (m *Message) ToastProcess(arg ...interface{}) {
+func (m *Message) ToastProcess(arg ...interface{}) func() {
 	if len(arg) == 0 {
 		arg = kit.List("", "-1")
 	}
@@ -136,6 +136,7 @@ func (m *Message) ToastProcess(arg ...interface{}) {
 		arg = append(arg, "-1")
 	}
 	m.Toast(PROCESS, arg...)
+	return func() { m.Toast(SUCCESS, arg...) }
 }
 func (m *Message) ToastSuccess(arg ...interface{}) {
 	m.Toast(SUCCESS, arg...)

@@ -47,7 +47,7 @@ func _parse_color(str string) color.Color {
 	}
 	return _trans_web[str]
 }
-func _trans_cli(str string) string {
+func _parse_cli_color(str string) string {
 	res := 0
 	r, g, b, _ := _parse_color(str).RGBA()
 	if r > LIGHT {
@@ -63,8 +63,8 @@ func _trans_cli(str string) string {
 }
 func _qrcode_cli(m *ice.Message, text string) {
 	qr, _ := qrcode.New(text, qrcode.Medium)
-	fg := _trans_cli(m.Option(FG))
-	bg := _trans_cli(m.Option(BG))
+	fg := _parse_cli_color(m.Option(FG))
+	bg := _parse_cli_color(m.Option(BG))
 
 	data := qr.Bitmap()
 	for i, row := range data {
@@ -95,7 +95,7 @@ func _qrcode_web(m *ice.Message, text string) {
 func Color(m *ice.Message, c string, str interface{}) string {
 	wrap, color := `<span style="color:%s">%v</span>`, c
 	if m.IsCliUA() {
-		wrap, color = "\033[3%sm%v\033[0m", _trans_cli(c)
+		wrap, color = "\033[3%sm%v\033[0m", _parse_cli_color(c)
 	}
 	return fmt.Sprintf(wrap, color, str)
 }
@@ -128,9 +128,7 @@ const (
 const QRCODE = "qrcode"
 
 func init() {
-	Index.Merge(&ice.Context{Configs: map[string]*ice.Config{
-		QRCODE: {Name: QRCODE, Help: "二维码", Value: kit.Data()},
-	}, Commands: map[string]*ice.Command{
+	Index.Merge(&ice.Context{Commands: map[string]*ice.Command{
 		QRCODE: {Name: "qrcode text fg bg size auto", Help: "二维码", Action: map[string]*ice.Action{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
 				ice.AddRender(ice.RENDER_QRCODE, func(m *ice.Message, cmd string, args ...interface{}) string {

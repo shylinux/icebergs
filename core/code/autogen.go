@@ -1,7 +1,6 @@
 package code
 
 import (
-	"os"
 	"path"
 	"strings"
 
@@ -22,7 +21,7 @@ func _defs(m *ice.Message, args ...string) {
 	}
 }
 func _autogen_module(m *ice.Message, dir string) {
-	buf, _ := kit.Render(`package {{.Option "zone"}}
+	m.Cmd(nfs.DEFS, dir, `package {{.Option "zone"}}
 
 import (
 	"shylinux.com/x/ice"
@@ -39,8 +38,7 @@ func (h {{.Option "name"}}) List(m *ice.Message, arg ...string) {
 }
 
 func init() { ice.Cmd("{{.Option "key"}}", {{.Option "name"}}{}) }
-`, m)
-	m.Cmd(nfs.DEFS, dir, string(buf))
+`)
 }
 func _autogen_import(m *ice.Message, main string, ctx string, mod string) (list []string) {
 	m.Cmd(nfs.DEFS, main, `package main
@@ -59,7 +57,7 @@ func main() { print(ice.Run()) }
 			list = append(list, kit.Format(`	_ "%s/src/%s"`, mod, ctx), "")
 			done = true
 		} else if strings.HasPrefix(line, "import") {
-			list = append(list, "", kit.Format(`import _ "%s/src/%s"`, mod, ctx), "")
+			list = append(list, kit.Format(`import _ "%s/src/%s"`, mod, ctx))
 			done = true
 		}
 	})
@@ -68,11 +66,10 @@ func main() { print(ice.Run()) }
 	return
 }
 func _autogen_script(m *ice.Message, dir string) {
-	buf, _ := kit.Render(`chapter "{{.Option "name"}}"
+	m.Cmd(nfs.DEFS, dir, `chapter "{{.Option "name"}}"
 
 field "{{.Option "help"}}" {{.Option "key"}}
-`, m)
-	m.Cmd(nfs.DEFS, dir, string(buf))
+`)
 }
 func _autogen_source(m *ice.Message, zone, name string) {
 	m.Cmd(nfs.PUSH, ice.SRC_MAIN_SHY, ice.NL, nfs.SOURCE+ice.SP+path.Join(zone, kit.Keys(name, SHY)), ice.NL)
@@ -92,11 +89,26 @@ go 1.11
 	return
 }
 
+func _autogen_git(m *ice.Message, arg ...string) map[string]interface{} {
+	return kit.Dict("Time", m.Time(), arg,
+		"Hash", strings.TrimSpace(m.Cmdx(cli.SYSTEM, "git", "log", "-n1", `--pretty=%H`)),
+		"Remote", strings.TrimSpace(m.Cmdx(cli.SYSTEM, "git", "config", "remote.origin.url")),
+		"Branch", strings.TrimSpace(m.Cmdx(cli.SYSTEM, "git", "rev-parse", "--abbrev-ref", "HEAD")),
+		"Version", strings.TrimSpace(m.Cmdx(cli.SYSTEM, "git", "describe", "--tags")),
+	)
+}
+func _autogen_gits(m *ice.Message, arg ...string) string {
+	res := []string{}
+	kit.Fetch(_autogen_git(m, arg...), func(k string, v interface{}) {
+		res = append(res, kit.Format(`		%s: "%s",`, k, v))
+	})
+	return kit.Join(res, ice.NL)
+}
 func _autogen_version(m *ice.Message) {
-	if _, e := os.Stat(".git"); os.IsNotExist(e) {
+	if !kit.FileExists(".git") {
 		m.Cmdy(cli.SYSTEM, "git", "init")
 	}
-	if _, e := os.Stat("go.mod"); os.IsNotExist(e) {
+	if !kit.FileExists("go.mod") {
 		m.Cmdy(cli.SYSTEM, "go", "mod", "init", path.Base(kit.Path("")))
 	}
 
@@ -106,30 +118,20 @@ func _autogen_version(m *ice.Message) {
 	m.Cmd(nfs.SAVE, ice.SRC_VERSION_GO, kit.Format(`package main
 
 import (
-	"shylinux.com/x/icebergs"
+	ice "shylinux.com/x/icebergs"
 )
 
 func init() {
-	ice.Info.Make.Time = "%s"
-	ice.Info.Make.Hash = "%s"
-	ice.Info.Make.Remote = "%s"
-	ice.Info.Make.Branch = "%s"
-	ice.Info.Make.Version = "%s"
-	ice.Info.Make.HostName = "%s"
-	ice.Info.Make.UserName = "%s"
+	ice.Info.Make = ice.MakeInfo{
+%s
+	}
 }
-`,
-		m.Time(),
-		strings.TrimSpace(m.Cmdx(cli.SYSTEM, "git", "log", "-n1", `--pretty=%H`)),
-		strings.TrimSpace(m.Cmdx(cli.SYSTEM, "git", "config", "remote.origin.url")),
-		strings.TrimSpace(m.Cmdx(cli.SYSTEM, "git", "rev-parse", "--abbrev-ref", "HEAD")),
-		strings.TrimSpace(m.Cmdx(cli.SYSTEM, "git", "describe", "--tags")),
-		ice.Info.HostName, ice.Info.UserName,
-	))
+`, _autogen_gits(m, "HostName", ice.Info.HostName, "UserName", ice.Info.UserName)))
 
-	m.Cmdy(nfs.DIR, ice.SRC_BINPACK_GO)
-	m.Cmdy(nfs.DIR, ice.SRC_VERSION_GO)
 	m.Cmdy(nfs.DIR, ice.SRC_MAIN_GO)
+	m.Cmdy(nfs.DIR, ice.SRC_VERSION_GO)
+	m.Cmdy(nfs.DIR, ice.SRC_BINPACK_GO)
+	m.Cmdy(nfs.DIR, "usr/release/binpack.go")
 }
 func _autogen_miss(m *ice.Message) {
 	m.Cmd(nfs.DEFS, ice.ETC_MISS_SH, m.Conf(web.DREAM, kit.Keym("miss")))
@@ -148,8 +150,7 @@ func init() {
 			mdb.INPUTS: {Name: "inputs", Help: "补全", Hand: func(m *ice.Message, arg ...string) {
 				switch arg[0] {
 				case MAIN:
-					m.Cmdy(nfs.DIR, ice.SRC, "path,size,time", ice.Option{nfs.DIR_REG, `.*\.go`})
-					m.RenameAppend(nfs.PATH, arg[0])
+					m.Cmdy(nfs.DIR, ice.SRC, "path,size,time", kit.Dict(nfs.DIR_REG, `.*\.go`)).RenameAppend(nfs.PATH, arg[0])
 				}
 			}},
 			mdb.CREATE: {Name: "create main=src/main.go@key zone name=hi help type=Hash,Zone,Lists,Data,Code list key", Help: "模块", Hand: func(m *ice.Message, arg ...string) {
@@ -157,23 +158,22 @@ func init() {
 				_defs(m, mdb.KEY, kit.Keys("web.code", m.Option(mdb.ZONE), m.Option(mdb.NAME)))
 				switch kit.Select("Zone", m.Option(mdb.TYPE)) {
 				case "Hash":
-					_defs(m, "list", m.Option(mdb.NAME)+" hash auto create")
+					_defs(m, mdb.LIST, m.Option(mdb.NAME)+" hash auto create")
 				case "Zone":
-					_defs(m, "list", m.Option(mdb.NAME)+" zone id auto insert")
+					_defs(m, mdb.LIST, m.Option(mdb.NAME)+" zone id auto insert")
 				case "Lists":
-					_defs(m, "list", m.Option(mdb.NAME)+" id auto insert")
+					_defs(m, mdb.LIST, m.Option(mdb.NAME)+" id auto insert")
 				case "Data":
-					_defs(m, "list", m.Option(mdb.NAME)+" path auto")
+					_defs(m, mdb.LIST, m.Option(mdb.NAME)+" path auto")
 				case "Code":
-					_defs(m, "list", m.Option(mdb.NAME)+" port path auto start order build download")
+					_defs(m, mdb.LIST, m.Option(mdb.NAME)+" port path auto start order build download")
 				}
-				m.Option("tags", kit.Format("`name:\"%s\" help:\"%s\"`", m.Option("list"), m.Option("help")))
+				m.Option("tags", kit.Format("`name:\"%s\" help:\"%s\"`", m.Option(mdb.LIST), m.Option(mdb.HELP)))
 
 				if p := path.Join(ice.SRC, m.Option(mdb.ZONE), kit.Keys(m.Option(mdb.NAME), GO)); !kit.FileExists(p) {
 					_autogen_module(m, p)
 					_autogen_import(m, m.Option(MAIN), m.Option(mdb.ZONE), _autogen_mod(m, ice.GO_MOD))
 				}
-
 				if p := path.Join(ice.SRC, m.Option(mdb.ZONE), kit.Keys(m.Option(mdb.NAME), SHY)); !kit.FileExists(p) {
 					_autogen_script(m, p)
 					_autogen_source(m, m.Option(mdb.ZONE), m.Option(mdb.NAME))
@@ -187,9 +187,10 @@ func init() {
 				_autogen_version(m)
 				m.Cmd(BINPACK, mdb.CREATE)
 				m.Cmd(cli.SYSTEM, "sh", "-c", `cat src/binpack.go|sed 's/package main/package ice/g' > usr/release/binpack.go`)
+				m.Cmd(nfs.COPY, path.Join(ice.USR_RELEASE, "conf.go"), path.Join(ice.USR_ICEBERGS, "conf.go"))
 			}},
 			"relay": {Name: "relay alias username host port list", Help: "跳板", Hand: func(m *ice.Message, arg ...string) {
-				m.Cmd(nfs.SAVE, path.Join(os.Getenv(cli.HOME), ".ssh/"+m.Option(mdb.ALIAS)+".json"),
+				m.Cmd(nfs.SAVE, path.Join(kit.Env(cli.HOME), ".ssh/"+m.Option(mdb.ALIAS)+".json"),
 					kit.Formats(kit.Dict(m.OptionSimple("username,host,port,list"))))
 				m.Cmd(nfs.LINK, path.Join(ice.USR_PUBLISH, m.Option(mdb.ALIAS)), "relay")
 			}},

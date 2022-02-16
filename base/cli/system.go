@@ -3,7 +3,6 @@ package cli
 import (
 	"bytes"
 	"io"
-	"io/ioutil"
 	"os"
 	"os/exec"
 	"path"
@@ -21,8 +20,7 @@ func _system_cmd(m *ice.Message, arg ...string) *exec.Cmd {
 
 	// 运行目录
 	if cmd.Dir = m.Option(CMD_DIR); len(cmd.Dir) > 0 {
-		m.Log_EXPORT(CMD_DIR, cmd.Dir)
-		if _, e := os.Stat(cmd.Dir); e != nil && os.IsNotExist(e) {
+		if m.Log_EXPORT(CMD_DIR, cmd.Dir); !kit.FileExists(cmd.Dir) {
 			os.MkdirAll(cmd.Dir, ice.MOD_DIR)
 		}
 	}
@@ -38,11 +36,11 @@ func _system_cmd(m *ice.Message, arg ...string) *exec.Cmd {
 		}
 	}
 
-	// // 定制目录
-	if buf, err := ioutil.ReadFile(ice.ETC_PATH); err == nil && len(buf) > 0 {
-		if file := _system_find(m, arg[0], strings.Split(string(buf), ice.NL)...); file != "" {
-			// m.Debug("cmd: %v", file)
-			// cmd.Path = file
+	// 定制目录
+	if text := kit.ReadFile(ice.ETC_PATH); len(text) > 0 {
+		if file := _system_find(m, arg[0], strings.Split(text, ice.NL)...); file != "" {
+			m.Debug("cmd: %v", file)
+			cmd.Path = file
 		}
 	}
 	m.Debug("cmd: %v", cmd.Path)
@@ -65,12 +63,18 @@ func _system_out(m *ice.Message, out string) io.Writer {
 	return nil
 }
 func _system_find(m *ice.Message, bin string, dir ...string) string {
+	if strings.HasPrefix(bin, ice.PS) {
+		return bin
+	}
+	if strings.HasPrefix(bin, nfs.PWD) {
+		return kit.Path(bin)
+	}
 	if len(dir) == 0 {
-		dir = append(dir, strings.Split(os.Getenv(PATH), ice.DF)...)
+		dir = append(dir, strings.Split(kit.Env(PATH), ice.DF)...)
 	}
 	for _, p := range dir {
 		if _, err := os.Stat(path.Join(p, bin)); err == nil {
-			return path.Join(p, bin)
+			return kit.Path(path.Join(p, bin))
 		}
 	}
 	return ""
@@ -99,7 +103,7 @@ func _system_exec(m *ice.Message, cmd *exec.Cmd) {
 	}
 
 	// 执行命令
-	if e := cmd.Run(); !m.Warn(e, ice.ErrNotFound, kit.Format(cmd.Args)) {
+	if e := cmd.Run(); !m.Warn(e, ice.ErrNotFound, cmd.Args) {
 		m.Cost(CODE, cmd.ProcessState.ExitCode(), ctx.ARGS, cmd.Args)
 	}
 
@@ -131,7 +135,7 @@ func init() {
 	Index.Merge(&ice.Context{Configs: map[string]*ice.Config{
 		SYSTEM: {Name: SYSTEM, Help: "系统命令", Value: kit.Data(mdb.FIELD, "time,id,cmd")},
 	}, Commands: map[string]*ice.Command{
-		SYSTEM: {Name: "system cmd run:button", Help: "系统命令", Action: map[string]*ice.Action{
+		SYSTEM: {Name: "system cmd run", Help: "系统命令", Action: map[string]*ice.Action{
 			nfs.FIND: {Name: "find", Help: "查找", Hand: func(m *ice.Message, arg ...string) {
 				m.Echo(_system_find(m, arg[0], arg[1:]...))
 			}},

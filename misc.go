@@ -154,7 +154,7 @@ func (m *Message) MergeURL2(url string, arg ...interface{}) string {
 	return kit.MergeURL2(m.Option(MSG_USERWEB), url, arg...)
 }
 func (m *Message) MergePOD(name string, arg ...interface{}) string {
-	return kit.MergePOD(kit.Select("http://localhost:9020", m.Option(MSG_USERWEB)), name, arg...)
+	return kit.MergePOD(kit.Select(Info.Address, m.Option(MSG_USERWEB)), name, arg...)
 }
 
 func (m *Message) cmd(arg ...interface{}) *Message {
@@ -309,6 +309,7 @@ func (c *Context) split(name string) (list []interface{}) {
 		case "run":
 			item = kit.Dict(TYPE, BUTTON, NAME, "run")
 			list = append(list, item)
+			button = true
 		case "text", "args":
 			item = kit.Dict(TYPE, TEXTAREA, NAME, ls[i])
 			list = append(list, item)

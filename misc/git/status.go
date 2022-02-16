@@ -107,14 +107,14 @@ func _status_each(m *ice.Message, title string, cmds ...string) {
 	})
 }
 func _status_stat(m *ice.Message, files, adds, dels int) (int, int, int) {
-	for _, v := range kit.Split(m.Cmdx(cli.SYSTEM, GIT, DIFF, "--shortstat"), ice.FS, ice.FS) {
+	for _, v := range kit.Split(m.Cmdx(cli.SYSTEM, GIT, DIFF, "--shortstat"), ice.FS) {
 		n := kit.Int(kit.Split(strings.TrimSpace(v))[0])
 		switch {
 		case strings.Contains(v, "file"):
 			files += n
 		case strings.Contains(v, "insert"):
 			adds += n
-		case strings.Contains(v, "delete"):
+		case strings.Contains(v, "delet"):
 			dels += n
 		}
 	}
@@ -196,55 +196,6 @@ const STATUS = "status"
 func init() {
 	Index.Merge(&ice.Context{Commands: map[string]*ice.Command{
 		STATUS: {Name: "status repos auto", Help: "状态机", Action: map[string]*ice.Action{
-			PULL: {Name: "pull", Help: "下载", Hand: func(m *ice.Message, arg ...string) {
-				_status_each(m, PULL, cli.SYSTEM, GIT, PULL)
-				m.ProcessHold()
-			}},
-			MAKE: {Name: "make", Help: "编译", Hand: func(m *ice.Message, arg ...string) {
-				web.PushStream(m)
-				m.Cmdy(cli.SYSTEM, MAKE)
-				m.Toast(ice.SUCCESS)
-				m.ProcessHold()
-			}},
-			TAGS: {Name: "tags", Help: "标签", Hand: func(m *ice.Message, arg ...string) {
-				_status_tags(m)
-				m.ProcessHold()
-			}},
-			PUSH: {Name: "push", Help: "上传", Hand: func(m *ice.Message, arg ...string) {
-				if m.Option(REPOS) == "" {
-					_status_each(m, PUSH, cli.SYSTEM, GIT, PUSH)
-					m.ProcessHold()
-					return
-				}
-
-				_repos_cmd(m, m.Option(REPOS), PUSH)
-				_repos_cmd(m, m.Option(REPOS), PUSH, "--tags")
-			}},
-
-			TAG: {Name: "tag version@key", Help: "标签", Hand: func(m *ice.Message, arg ...string) {
-				if m.Option(VERSION) == "" {
-					m.Option(VERSION, _status_tag(m, m.Option(TAGS)))
-				}
-				_repos_cmd(m, m.Option(REPOS), TAG, m.Option(VERSION))
-				_repos_cmd(m, m.Option(REPOS), PUSH, "--tags")
-			}},
-			STASH: {Name: "stash", Help: "缓存", Hand: func(m *ice.Message, arg ...string) {
-				_status_each(m, STASH, cli.SYSTEM, GIT, STASH)
-				m.ProcessHold()
-			}},
-			ADD: {Name: "add", Help: "添加", Hand: func(m *ice.Message, arg ...string) {
-				_repos_cmd(m, m.Option(REPOS), ADD, m.Option(nfs.FILE))
-			}}, OPT: {Name: "opt", Help: "优化"}, PRO: {Name: "pro", Help: "升级"},
-			COMMIT: {Name: "commit action=opt,add,pro comment=some@key", Help: "提交", Hand: func(m *ice.Message, arg ...string) {
-				if arg[0] == ctx.ACTION {
-					m.Option(mdb.TEXT, arg[1]+ice.SP+arg[3])
-				} else {
-					m.Option(mdb.TEXT, kit.Select("opt some", strings.Join(arg, ice.SP)))
-				}
-
-				_repos_cmd(m, m.Option(REPOS), COMMIT, "-am", m.Option(mdb.TEXT))
-				m.ProcessBack()
-			}},
 			mdb.INPUTS: {Name: "inputs", Help: "补全", Hand: func(m *ice.Message, arg ...string) {
 				switch arg[0] {
 				case mdb.NAME:
@@ -264,12 +215,61 @@ func init() {
 					}
 				}
 			}},
+			PULL: {Name: "pull", Help: "下载", Hand: func(m *ice.Message, arg ...string) {
+				_status_each(m, PULL, cli.SYSTEM, GIT, PULL)
+				m.ProcessHold()
+			}},
+			MAKE: {Name: "make", Help: "编译", Hand: func(m *ice.Message, arg ...string) {
+				web.PushStream(m)
+				m.Cmdy(cli.SYSTEM, MAKE)
+				m.ToastSuccess()
+				m.ProcessHold()
+			}},
+			PUSH: {Name: "push", Help: "上传", Hand: func(m *ice.Message, arg ...string) {
+				if m.Option(REPOS) == "" {
+					_status_each(m, PUSH, cli.SYSTEM, GIT, PUSH)
+					m.ProcessHold()
+					return
+				}
+
+				_repos_cmd(m, m.Option(REPOS), PUSH)
+				_repos_cmd(m, m.Option(REPOS), PUSH, "--tags")
+			}},
+			TAGS: {Name: "tags", Help: "标签", Hand: func(m *ice.Message, arg ...string) {
+				_status_tags(m)
+				m.ProcessHold()
+			}},
+			STASH: {Name: "stash", Help: "缓存", Hand: func(m *ice.Message, arg ...string) {
+				_status_each(m, STASH, cli.SYSTEM, GIT, STASH)
+				m.ProcessHold()
+			}},
 			PIE: {Name: "pie", Help: "饼图", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmdy(TOTAL, PIE)
 			}},
+
+			ADD: {Name: "add", Help: "添加", Hand: func(m *ice.Message, arg ...string) {
+				_repos_cmd(m, m.Option(REPOS), ADD, m.Option(nfs.FILE))
+			}}, OPT: {Name: "opt", Help: "优化"}, PRO: {Name: "pro", Help: "升级"},
+			COMMIT: {Name: "commit action=opt,add,pro comment=some@key", Help: "提交", Hand: func(m *ice.Message, arg ...string) {
+				if arg[0] == ctx.ACTION {
+					m.Option(mdb.TEXT, arg[1]+ice.SP+arg[3])
+				} else {
+					m.Option(mdb.TEXT, kit.Select("opt some", strings.Join(arg, ice.SP)))
+				}
+
+				_repos_cmd(m, m.Option(REPOS), COMMIT, "-am", m.Option(mdb.TEXT))
+				m.ProcessBack()
+			}},
+			TAG: {Name: "tag version@key", Help: "标签", Hand: func(m *ice.Message, arg ...string) {
+				if m.Option(VERSION) == "" {
+					m.Option(VERSION, _status_tag(m, m.Option(TAGS)))
+				}
+				_repos_cmd(m, m.Option(REPOS), TAG, m.Option(VERSION))
+				_repos_cmd(m, m.Option(REPOS), PUSH, "--tags")
+			}},
 		}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			if len(arg) == 0 {
-				m.Action(PULL, MAKE, PUSH, TAGS, PIE)
+				m.Action(PULL, MAKE, PUSH, TAGS, STASH, PIE)
 
 				files, adds, dels, last := _status_list(m)
 				m.Status("files", files, "adds", adds, "dels", dels, "last", last.Format(ice.MOD_TIME))

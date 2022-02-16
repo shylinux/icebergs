@@ -35,6 +35,7 @@ func _bin_list(m *ice.Message, dir string) {
 func _publish_file(m *ice.Message, file string, arg ...string) string {
 	if strings.HasSuffix(file, "ice.bin") { // 打包应用
 		arg = kit.Simple(kit.Keys(ice.ICE, runtime.GOOS, runtime.GOARCH))
+		file = kit.Path(os.Args[0])
 
 	} else if s, e := os.Stat(file); m.Assert(e) && s.IsDir() {
 		p := path.Base(file) + ".tar.gz"
@@ -99,7 +100,8 @@ echo "hello world"
 			}},
 			ice.CONTEXTS: {Name: "contexts", Help: "环境", Hand: func(m *ice.Message, arg ...string) {
 				u := kit.ParseURL(tcp.ReplaceLocalhost(m, m.Option(ice.MSG_USERWEB)))
-				m.Option("httphost", fmt.Sprintf("%s://%s:%s", u.Scheme, strings.Split(u.Host, ":")[0], kit.Select(kit.Select("80", "443", u.Scheme == "https"), strings.Split(u.Host, ":"), 1)))
+				m.Option("httphost", fmt.Sprintf("%s://%s:%s", u.Scheme, strings.Split(u.Host, ice.DF)[0],
+					kit.Select(kit.Select("80", "443", u.Scheme == "https"), strings.Split(u.Host, ice.DF), 1)))
 
 				if len(arg) == 0 {
 					arg = append(arg, "core", "binary")
@@ -139,7 +141,7 @@ echo "hello world"
 				web.PushStream(m)
 				defer m.ProcessHold()
 				defer m.StatusTimeCount()
-				m.Cmd(nfs.TAR, kit.Path(ice.USR_PUBLISH, "vim.tar.gz"), ".vim/plugged", kit.Dict(nfs.DIR_ROOT, os.Getenv(cli.HOME)))
+				m.Cmd(nfs.TAR, kit.Path(ice.USR_PUBLISH, "vim.tar.gz"), ".vim/plugged", kit.Dict(nfs.DIR_ROOT, kit.Env(cli.HOME)))
 				m.Cmd(nfs.TAR, kit.Path(ice.USR_PUBLISH, "contexts.lib.tar.gz"), ice.USR_LOCAL_LIB)
 				m.Cmd(nfs.TAR, kit.Path(ice.USR_PUBLISH, "contexts.bin.tar.gz"), list)
 				m.Cmd(PUBLISH, mdb.CREATE, ice.ETC_PATH)
@@ -159,11 +161,13 @@ echo "hello world"
 }
 
 var _contexts = kit.Dict(
-	"binary", `# 官方启动
-ctx_temp=$(mktemp); curl -fsSL https://shylinux.com -o $ctx_temp; source $ctx_temp binary
+	"core", `# 定制版
+export ctx_dev={{.Option "httphost"}}; ctx_temp=$(mktemp); curl -o $ctx_temp -fsSL $ctx_dev; source $ctx_temp app
+export ctx_dev={{.Option "httphost"}}; ctx_temp=$(mktemp); wget -O $ctx_temp $ctx_dev; source $ctx_temp app
 `,
-	"core", `# 脚本启动
-export ctx_dev={{.Option "httphost"}}; ctx_temp=$(mktemp); curl -fsSL $ctx_dev -o $ctx_temp; source $ctx_temp app
+	"binary", `# 官方版
+ctx_temp=$(mktemp); curl -o $ctx_temp -fsSL https://shylinux.com; source $ctx_temp binary
+ctx_temp=$(mktemp); wget -O $ctx_temp https://shylinux.com; source $ctx_temp binary
 `,
 
 	"source", `# 下载源码

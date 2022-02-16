@@ -48,8 +48,8 @@ func _user_search(m *ice.Message, name, text string) {
 }
 
 func UserRoot(m *ice.Message, arg ...string) { // password username userrole
+	username := m.Option(ice.MSG_USERNAME, kit.Select(ice.Info.UserName, arg, 1))
 	userrole := m.Option(ice.MSG_USERROLE, kit.Select(ROOT, arg, 2))
-	username := m.Option(ice.MSG_USERNAME, kit.Select(kit.Select(ROOT, ice.Info.UserName), arg, 1))
 	if len(arg) > 0 {
 		_user_create(m, userrole, username, kit.Select("", arg, 0))
 	}

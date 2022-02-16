@@ -176,25 +176,6 @@ func init() {
 				defer m.StatusTime(nfs.PATH, m.Option(nfs.DIR_ROOT))
 				m.Cmdy(nfs.DIR, m.Option(nfs.PATH))
 			}},
-			COMPILE: {Name: "compile", Help: "编译", Hand: func(m *ice.Message, arg ...string) {
-				web.PushStream(m)
-				defer m.ProcessHold()
-
-				osid := m.Cmdx(cli.RUNTIME, "host.OSID")
-				switch {
-				case strings.Contains(osid, cli.ALPINE):
-					m.Cmd(cli.SYSTEM, "apk", "add", "git", "go")
-				case strings.Contains(osid, cli.CENTOS):
-					m.Cmdy(INSTALL, web.DOWNLOAD, "https://golang.google.cn/dl/go1.15.5.linux-amd64.tar.gz", ice.USR_LOCAL)
-
-				case strings.Contains(osid, cli.UBUNTU):
-					m.Cmdy(INSTALL, web.DOWNLOAD, "https://golang.google.cn/dl/go1.15.5.linux-amd64.tar.gz", ice.USR_LOCAL)
-				default:
-					m.Toast("please install git and go")
-					return
-				}
-				m.ToastSuccess()
-			}},
 		}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			switch len(arg) {
 			case 0: // 源码列表

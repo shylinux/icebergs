@@ -28,7 +28,7 @@ func init() {
 			)),
 		))},
 	}, Commands: map[string]*ice.Command{
-		UPGRADE: {Name: "upgrade item=system,source run:button", Help: "升级", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		UPGRADE: {Name: "upgrade item=system,source run", Help: "升级", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			m.Grows(cmd, kit.Keys(mdb.HASH, kit.Select(cli.SYSTEM, arg, 0)), "", "", func(index int, value map[string]interface{}) {
 				if value[nfs.PATH] == ice.BIN_ICE_BIN { // 程序文件
 					value[nfs.FILE] = kit.Keys(ice.ICE, runtime.GOOS, runtime.GOARCH)

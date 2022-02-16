@@ -1,7 +1,6 @@
 package cli
 
 import (
-	"io"
 	"os/exec"
 
 	ice "shylinux.com/x/icebergs"
@@ -42,23 +41,15 @@ func _daemon_exec(m *ice.Message, cmd *exec.Cmd) {
 			m.Cmd(mdb.MODIFY, DAEMON, "", mdb.HASH, mdb.HASH, h, STATUS, STOP)
 		}
 
-		switch cb := m.OptionCB(DAEMON).(type) {
+		switch m.Sleep300ms(); cb := m.OptionCB(DAEMON).(type) {
 		case func(string):
-			m.Sleep300ms()
 			cb(m.Conf(DAEMON, kit.Keys(mdb.HASH, h, kit.Keym(STATUS))))
 		case func():
-			m.Sleep300ms()
 			cb()
 		}
 
-		if w, ok := m.Optionv(CMD_INPUT).(io.Closer); ok {
-			w.Close()
-		}
-		if w, ok := m.Optionv(CMD_OUTPUT).(io.Closer); ok {
-			w.Close()
-		}
-		if w, ok := m.Optionv(CMD_ERRPUT).(io.Closer); ok {
-			w.Close()
+		for _, p := range kit.Simple(CMD_INPUT, CMD_OUTPUT, CMD_ERRPUT) {
+			kit.Close(m.Optionv(p))
 		}
 	})
 }
@@ -77,12 +68,12 @@ const (
 	CHECK = "check"
 	BENCH = "bench"
 	PPROF = "pprof"
+	CLEAR = "clear"
 
 	TIMEOUT = "timeout"
 	STATUS  = "status"
 	ERROR   = "error"
 	START   = "start"
-	CLEAR   = "clear"
 	RESTART = "restart"
 	RELOAD  = "reload"
 	STOP    = "stop"
@@ -130,7 +121,7 @@ func init() {
 				m.OptionFields(m.Config(mdb.FIELD))
 				m.Cmd(mdb.SELECT, DAEMON, "", mdb.HASH, m.OptionSimple(mdb.HASH)).Table(func(index int, value map[string]string, head []string) {
 					m.Cmd(mdb.MODIFY, DAEMON, "", mdb.HASH, m.OptionSimple(mdb.HASH), STATUS, STOP)
-					m.Cmdy(SYSTEM, "kill", "-9", value[PID])
+					m.Cmdy(SYSTEM, "kill", value[PID])
 				})
 			}},
 		}, mdb.HashAction()), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {

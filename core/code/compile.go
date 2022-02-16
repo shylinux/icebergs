@@ -1,42 +1,52 @@
 package code
 
 import (
-	"os"
 	"path"
+	"strings"
 
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/cli"
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/nfs"
 	"shylinux.com/x/icebergs/base/tcp"
+	"shylinux.com/x/icebergs/base/web"
 	kit "shylinux.com/x/toolkits"
 )
 
 const COMPILE = "compile"
 
 func init() {
+	const GIT = "git"
 	Index.Merge(&ice.Context{Configs: map[string]*ice.Config{
-		COMPILE: {Name: COMPILE, Help: "编译", Value: kit.Data(
-			nfs.PATH, ice.USR_PUBLISH, cli.ENV, kit.Dict(
-				"GOPRIVATE", "shylinux.com,github.com", "GOPROXY", "https://goproxy.cn,direct",
-				"CGO_ENABLED", "0",
-			), GO, kit.List(GO, cli.BUILD),
+		COMPILE: {Name: COMPILE, Help: "编译", Value: kit.Data(nfs.PATH, ice.USR_PUBLISH,
+			cli.ENV, kit.Dict("GOPROXY", "https://goproxy.cn,direct", "GOPRIVATE", "shylinux.com,github.com", "CGO_ENABLED", "0"),
 		)},
 	}, Commands: map[string]*ice.Command{
-		COMPILE: {Name: "compile arch=amd64,386,arm,arm64 os=linux,darwin,windows src=src/main.go@key run:button", Help: "编译", Action: map[string]*ice.Action{
+		COMPILE: {Name: "compile arch=amd64,386,arm,arm64 os=linux,darwin,windows src=src/main.go@key run binpack install", Help: "编译", Action: map[string]*ice.Action{
 			mdb.INPUTS: {Name: "inputs", Help: "补全", Hand: func(m *ice.Message, arg ...string) {
-				m.Cmdy(nfs.DIR, ice.SRC, "path,size,time", ice.Option{nfs.DIR_REG, `.*\.go$`})
-				m.Sort(nfs.PATH)
+				m.Cmdy(nfs.DIR, ice.SRC, "path,size,time", kit.Dict(nfs.DIR_REG, `.*\.go$`)).Sort(nfs.PATH)
+			}},
+			BINPACK: {Name: "binpack", Help: "打包", Hand: func(m *ice.Message, arg ...string) {
+				m.Cmdy(AUTOGEN, BINPACK)
+			}},
+			INSTALL: {Name: "compile", Help: "安装", Hand: func(m *ice.Message, arg ...string) {
+				if strings.Contains(m.Cmdx(cli.RUNTIME, kit.Keys(tcp.HOST, cli.OSID)), cli.ALPINE) {
+					web.PushStream(m)
+					m.Cmd(cli.SYSTEM, "apk", "add", GIT, GO)
+					return
+				}
+				if m.Cmdx(cli.SYSTEM, nfs.FIND, GIT) == "" {
+					m.Toast("please install git")
+					m.Echo(ice.FALSE)
+					return
+				}
+				m.Cmd(INSTALL, web.DOWNLOAD, "https://golang.google.cn/dl/go1.15.5.linux-amd64.tar.gz", ice.USR_LOCAL)
 			}},
 		}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			if len(arg) == 0 {
-				m.Cmdy(nfs.DIR, m.Config(nfs.PATH))
+			if m.Cmdx(cli.SYSTEM, nfs.FIND, GO) == "" && m.Cmdx(COMPILE, INSTALL) == ice.FALSE {
 				return
 			}
-			if m.Cmdx(cli.SYSTEM, nfs.FIND, "go") == "" {
-				m.Cmd(INSTALL, COMPILE)
-			}
-			m.Cmd(cli.SYSTEM, "go", "get", "shylinux.com/x/ice")
+			m.Cmd(cli.SYSTEM, GO, "get", "shylinux.com/x/ice")
 
 			// 交叉编译
 			main, file := ice.SRC_MAIN_GO, ""
@@ -57,29 +67,21 @@ func init() {
 				}
 			}
 			if file == "" {
-				file = path.Join(kit.Select("", m.Config(nfs.PATH), m.Option(cli.CMD_DIR) == ""),
-					kit.Keys(kit.Select(ice.ICE, kit.TrimExt(main), main != ice.SRC_MAIN_GO), goos, arch))
+				file = path.Join(m.Config(nfs.PATH), kit.Keys(kit.Select(ice.ICE, kit.TrimExt(main), main != ice.SRC_MAIN_GO), goos, arch))
 			}
 
 			// 执行编译
 			_autogen_version(m.Spawn())
-			m.Optionv(cli.CMD_ENV, kit.Simple(m.Configv(cli.ENV), cli.HOME, os.Getenv(cli.HOME), cli.PATH, os.Getenv(cli.PATH), cli.GOOS, goos, cli.GOARCH, arch))
-			if msg := m.Cmd(cli.SYSTEM, "go", "build", "-o", file, main, ice.SRC_VERSION_GO, ice.SRC_BINPACK_GO); !cli.IsSuccess(msg) {
+			m.Optionv(cli.CMD_ENV, kit.Simple(m.Configv(cli.ENV), cli.HOME, kit.Env(cli.HOME), cli.PATH, kit.Env(cli.PATH), cli.GOOS, goos, cli.GOARCH, arch))
+			if msg := m.Cmd(cli.SYSTEM, GO, cli.BUILD, "-o", file, main, ice.SRC_VERSION_GO, ice.SRC_BINPACK_GO); !cli.IsSuccess(msg) {
 				m.Copy(msg)
 				return
 			}
 
 			// 编译成功
 			m.Log_EXPORT(nfs.SOURCE, main, nfs.TARGET, file)
-			m.Cmdy(nfs.DIR, file, "time,path,size,link,action")
-			name := path.Base(m.Append(nfs.PATH))
-			m.EchoScript(kit.Format("# 下载启动\nwget %s && chmod u+x %s\n./%s forever serve dev %s\ntail -f var/log/bench.log",
-				m.MergeURL2(kit.Format("/publish/%s", name)), name, name, m.MergeURL2(ice.PS)))
-			m.EchoScript(kit.Format("# 下载启动\ncurl -fOL %s && chmod u+x %s\n./%s forever serve dev %s\ntail -f var/log/bench.log",
-				m.MergeURL2(kit.Format("/publish/%s", name)), name, name, m.MergeURL2(ice.PS)))
-			m.Cmd(PUBLISH, mdb.CREATE, ice.BIN_ICE_SH)
-			m.Cmdy(PUBLISH, ice.CONTEXTS, ice.CORE)
-			m.Cmdy(PUBLISH, ice.CONTEXTS, "binary")
+			m.Cmdy(PUBLISH, ice.CONTEXTS, "core", "binary")
+			m.Cmdy(nfs.DIR, file, "time,path,size,link")
 			m.StatusTimeCount()
 		}},
 	}})

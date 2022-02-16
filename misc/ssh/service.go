@@ -6,7 +6,6 @@ import (
 	"errors"
 	"fmt"
 	"net"
-	"os"
 	"path"
 	"strings"
 
@@ -65,7 +64,7 @@ func _ssh_config(m *ice.Message, h string) *ssh.ServerConfig {
 		},
 	}
 
-	if key, err := ssh.ParsePrivateKey([]byte(m.Cmdx(nfs.CAT, path.Join(os.Getenv(cli.HOME), m.Option(PRIVATE))))); m.Assert(err) {
+	if key, err := ssh.ParsePrivateKey([]byte(m.Cmdx(nfs.CAT, path.Join(kit.Env(cli.HOME), m.Option(PRIVATE))))); m.Assert(err) {
 		config.AddHostKey(key)
 	}
 	return config
@@ -142,11 +141,11 @@ func init() {
 				})
 
 				if len(list) > 0 {
-					m.Cmdy(nfs.SAVE, path.Join(os.Getenv(cli.HOME), m.Option(AUTHKEY)), strings.Join(list, ice.NL)+ice.NL)
+					m.Cmdy(nfs.SAVE, path.Join(kit.Env(cli.HOME), m.Option(AUTHKEY)), strings.Join(list, ice.NL)+ice.NL)
 				}
 			}},
 			mdb.IMPORT: {Name: "import authkey=.ssh/authorized_keys", Help: "导入", Hand: func(m *ice.Message, arg ...string) {
-				p := path.Join(os.Getenv(cli.HOME), m.Option(AUTHKEY))
+				p := path.Join(kit.Env(cli.HOME), m.Option(AUTHKEY))
 				for _, pub := range strings.Split(strings.TrimSpace(m.Cmdx(nfs.CAT, p)), ice.NL) {
 					m.Cmd(SERVICE, mdb.INSERT, mdb.TEXT, pub)
 				}

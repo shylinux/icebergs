@@ -110,6 +110,7 @@ const ( // DIR
 
 	USR_LOCAL        = "usr/local"
 	USR_LOCAL_GO     = "usr/local/go"
+	USR_LOCAL_GO_BIN = "usr/local/go/bin"
 	USR_LOCAL_BIN    = "usr/local/bin"
 	USR_LOCAL_LIB    = "usr/local/lib"
 	USR_LOCAL_WORK   = "usr/local/work"
@@ -143,6 +144,7 @@ const ( // DIR
 	SRC_VERSION_GO = "src/version.go"
 	SRC_BINPACK_GO = "src/binpack.go"
 	MAKEFILE       = "Makefile"
+	ICE_BIN        = "ice.bin"
 	GO_MOD         = "go.mod"
 	GO_SUM         = "go.sum"
 )

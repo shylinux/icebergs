@@ -102,8 +102,8 @@ func init() { Index.root, Pulse.root = Index, Pulse }
 
 func Run(arg ...string) string {
 	if len(arg) == 0 { // 进程参数
-		if arg = append(arg, os.Args[1:]...); os.Getenv("ctx_arg") != "" {
-			arg = append(arg, kit.Split(os.Getenv("ctx_arg"))...)
+		if arg = append(arg, os.Args[1:]...); kit.Env("ctx_arg") != "" {
+			arg = append(arg, kit.Split(kit.Env("ctx_arg"))...)
 		}
 	}
 

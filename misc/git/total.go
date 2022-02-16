@@ -124,15 +124,13 @@ func init() {
 
 				add, del := "0", "0"
 				if len(l) > 3 {
-					fs := strings.Split(strings.TrimSpace(l[3]), ", ")
-					if adds := strings.Split(fs[1], ice.SP); len(fs) > 2 {
-						dels := strings.Split(fs[2], ice.SP)
-						add = adds[0]
-						del = dels[0]
-					} else if strings.Contains(adds[1], "insertion") {
-						add = adds[0]
-					} else {
-						del = adds[0]
+					for _, v := range kit.Split(strings.TrimSpace(l[3]), ice.FS) {
+						switch {
+						case strings.Contains(v, "insert"):
+							add = kit.Split(v)[0]
+						case strings.Contains(v, "delet"):
+							del = kit.Split(v)[0]
+						}
 					}
 				}
 

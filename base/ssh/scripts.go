@@ -122,6 +122,7 @@ func (f *Frame) parse(m *ice.Message, line string) string {
 
 		f.res = Render(msg, msg.Option(ice.MSG_OUTPUT), msg.Optionv(ice.MSG_ARGS).([]interface{})...)
 	}
+	m.Sleep("10ms")
 	return ""
 }
 func (f *Frame) scan(m *ice.Message, h, line string) *Frame {
@@ -129,7 +130,7 @@ func (f *Frame) scan(m *ice.Message, h, line string) *Frame {
 	f.ps2 = kit.Simple(m.Confv(PROMPT, kit.Keym(PS2)))
 	ps := f.ps1
 
-	m.Sleep300ms()
+	m.Sleep("100ms")
 	m.I, m.O = f.stdin, f.stdout
 	bio := bufio.NewScanner(f.stdin)
 	for f.prompt(m, ps...); bio.Scan() && f.stdin != nil; f.prompt(m, ps...) {
@@ -264,21 +265,21 @@ func init() {
 				return // 脚本解析
 			}
 		}},
-		TARGET: {Name: "target name run:button", Help: "当前模块", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		TARGET: {Name: "target name run", Help: "当前模块", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			f := c.Server().(*Frame)
 			m.Search(arg[0]+ice.PT, func(p *ice.Context, s *ice.Context, key string) { f.target = s })
 			f.prompt(m)
 		}},
-		PROMPT: {Name: "prompt arg run:button", Help: "命令提示", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		PROMPT: {Name: "prompt arg run", Help: "命令提示", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			f := m.Optionv(FRAME).(*Frame)
 			f.ps1 = arg
 			f.prompt(m)
 		}},
-		PRINTF: {Name: "printf run:button text", Help: "输出显示", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		PRINTF: {Name: "printf run text", Help: "输出显示", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			f := m.Optionv(FRAME).(*Frame)
 			f.printf(m, arg[0])
 		}},
-		SCREEN: {Name: "screen run:button text", Help: "输出命令", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		SCREEN: {Name: "screen run text", Help: "输出命令", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			f := m.Optionv(FRAME).(*Frame)
 			for _, line := range kit.Split(arg[0], ice.NL, ice.NL) {
 				fmt.Fprintf(f.pipe, line+ice.NL)

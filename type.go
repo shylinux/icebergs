@@ -471,7 +471,8 @@ func (m *Message) Cmds(arg ...interface{}) *Message {
 	return m.Go(func() { m.cmd(arg...) })
 }
 func (m *Message) Cmdx(arg ...interface{}) string {
-	return kit.Select("", m.cmd(arg...).meta[MSG_RESULT], 0)
+	res := kit.Select("", m.cmd(arg...).meta[MSG_RESULT], 0)
+	return kit.Select("", res, res != ErrWarn)
 }
 func (m *Message) Cmdy(arg ...interface{}) *Message {
 	return m.Copy(m.cmd(arg...))

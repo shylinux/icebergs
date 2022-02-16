@@ -73,7 +73,7 @@ func _cat_list(m *ice.Message, name string) {
 	}
 
 	f := _cat_find(m, name)
-	if m.Warn(f == nil, ice.ErrNotFound) {
+	if m.Warn(f == nil, ice.ErrNotFound, name) {
 		return // 没有文件
 	}
 	defer f.Close()
@@ -117,6 +117,7 @@ const (
 	TEMPLATE    = "template"
 
 	SOURCE = "source"
+	BINARY = "binary"
 	TARGET = "target"
 
 	MASTER = "master"

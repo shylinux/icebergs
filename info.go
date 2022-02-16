@@ -7,33 +7,37 @@ import (
 	kit "shylinux.com/x/toolkits"
 )
 
+type MakeInfo struct {
+	Time     string
+	Hash     string
+	Remote   string
+	Branch   string
+	Version  string
+	HostName string
+	UserName string
+}
+
 var Info = struct {
 	HostName string
 	PathName string
 	UserName string
 	PassWord string
 
+	Address  string
 	NodeType string
 	NodeName string
 	CtxShare string
 	CtxRiver string
 
-	Make struct {
-		Time     string
-		Hash     string
-		Remote   string
-		Branch   string
-		Version  string
-		HostName string
-		UserName string
-	}
+	Make MakeInfo
 
-	Help   string
-	Pack   map[string][]byte
-	names  map[string]interface{}
+	Help string
+	Pack map[string][]byte
+	File map[string]string
+	Log  func(m *Message, p, l, s string)
+
 	render map[string]func(*Message, string, ...interface{}) string
-	Log    func(m *Message, p, l, s string)
-	File   map[string]string
+	names  map[string]interface{}
 }{
 	Help: `
 ^_^      欢迎使用冰山框架       ^_^
@@ -43,10 +47,11 @@ report: shylinuxc@gmail.com
 server: https://shylinux.com
 source: https://shylinux.com/x/icebergs
 `,
-	Pack:   map[string][]byte{},
-	names:  map[string]interface{}{},
+	Pack: map[string][]byte{},
+	File: map[string]string{},
+
 	render: map[string]func(*Message, string, ...interface{}) string{},
-	File:   map[string]string{},
+	names:  map[string]interface{}{},
 }
 
 func Dump(w io.Writer, name string, cb func(string)) bool {

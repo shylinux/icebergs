@@ -12,6 +12,10 @@ import (
 
 func _defs_file(m *ice.Message, name string, text ...string) {
 	if _, e := os.Stat(path.Join(m.Option(DIR_ROOT), name)); os.IsNotExist(e) {
+		for i, v := range text {
+			b, _ := kit.Render(v, m)
+			text[i] = string(b)
+		}
 		_save_file(m, name, text...)
 	}
 }

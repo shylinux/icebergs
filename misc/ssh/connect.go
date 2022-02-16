@@ -44,7 +44,7 @@ func _ssh_open(m *ice.Message, arg ...string) {
 	}, arg...)
 }
 func _ssh_dial(m *ice.Message, cb func(net.Conn), arg ...string) {
-	p := path.Join(os.Getenv(cli.HOME), ".ssh/", fmt.Sprintf("%s@%s:%s", m.Option(aaa.USERNAME), m.Option(tcp.HOST), m.Option(tcp.PORT)))
+	p := path.Join(kit.Env(cli.HOME), ".ssh/", fmt.Sprintf("%s@%s:%s", m.Option(aaa.USERNAME), m.Option(tcp.HOST), m.Option(tcp.PORT)))
 	if _, e := os.Stat(p); e == nil {
 		if c, e := net.Dial("unix", p); e == nil {
 			cb(c) // 会话连接
@@ -84,7 +84,7 @@ func _ssh_dial(m *ice.Message, cb func(net.Conn), arg ...string) {
 							session.Stdout = c
 							session.Stderr = c
 
-							session.RequestPty(os.Getenv("TERM"), h, w, ssh.TerminalModes{
+							session.RequestPty(kit.Env("TERM"), h, w, ssh.TerminalModes{
 								ssh.ECHO:          1,
 								ssh.TTY_OP_ISPEED: 14400,
 								ssh.TTY_OP_OSPEED: 14400,
@@ -131,7 +131,7 @@ func _ssh_conn(m *ice.Message, cb func(*ssh.Client), arg ...string) {
 		return
 	}))
 	methods = append(methods, ssh.PublicKeysCallback(func() ([]ssh.Signer, error) {
-		key, err := ssh.ParsePrivateKey([]byte(m.Cmdx(nfs.CAT, path.Join(os.Getenv(cli.HOME), m.Option(PRIVATE)))))
+		key, err := ssh.ParsePrivateKey([]byte(m.Cmdx(nfs.CAT, path.Join(kit.Env(cli.HOME), m.Option(PRIVATE)))))
 		return []ssh.Signer{key}, err
 	}))
 	methods = append(methods, ssh.PasswordCallback(func() (string, error) {

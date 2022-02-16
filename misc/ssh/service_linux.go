@@ -4,7 +4,6 @@ import (
 	"encoding/binary"
 	"io"
 	"net"
-	"os"
 	"syscall"
 	"unsafe"
 
@@ -34,8 +33,8 @@ func _ssh_handle(m *ice.Message, meta map[string]string, c net.Conn, channel ssh
 	m.Logs(CHANNEL, tcp.HOSTPORT, c.RemoteAddr(), "->", c.LocalAddr())
 	defer m.Logs("dischan", tcp.HOSTPORT, c.RemoteAddr(), "->", c.LocalAddr())
 
-	shell := kit.Select("bash", os.Getenv("SHELL"))
-	list := []string{cli.PATH + "=" + os.Getenv(cli.PATH)}
+	shell := kit.Select("bash", kit.Env("SHELL"))
+	list := []string{cli.PATH + "=" + kit.Env(cli.PATH)}
 
 	pty, tty, err := pty.Open()
 	if m.Warn(err) {

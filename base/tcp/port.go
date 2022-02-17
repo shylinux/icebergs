@@ -30,7 +30,7 @@ func _port_right(m *ice.Message, arg ...string) string {
 		if _, e := os.Stat(p); e == nil {
 			continue
 		}
-		os.MkdirAll(p, ice.MOD_DIR)
+		nfs.MkdirAll(m, p)
 
 		m.Log_SELECT(PORT, i)
 		return m.Config(CURRENT, i)
@@ -57,10 +57,15 @@ func init() {
 		}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			if len(arg) == 0 {
 				m.Option(nfs.DIR_ROOT, m.Conf(cli.DAEMON, kit.Keym(nfs.PATH)))
-				m.Cmd(nfs.DIR, nfs.PWD, "time,path,size").Table(func(index int, value map[string]string, head []string) {
+				m.Cmd(nfs.DIR, nfs.PWD, nfs.DIR_CLI_FIELDS).Table(func(index int, value map[string]string, head []string) {
+					bin := m.Cmd(nfs.DIR, path.Join(value[nfs.PATH], ice.BIN), nfs.DIR_CLI_FIELDS).Append(nfs.PATH)
+					if bin == "" {
+						bin = m.Cmd(nfs.DIR, path.Join(value[nfs.PATH], "sbin"), nfs.DIR_CLI_FIELDS).Append(nfs.PATH)
+					}
 					m.Push(mdb.TIME, value[mdb.TIME])
 					m.Push(PORT, path.Base(value[nfs.PATH]))
 					m.Push(nfs.SIZE, value[nfs.SIZE])
+					m.Push(ice.BIN, bin)
 				})
 				m.SortInt(PORT)
 				return

@@ -16,13 +16,13 @@ import (
 	kit "shylinux.com/x/toolkits"
 )
 
-func _pack_write(o io.Writer, arg ...string) {
+func _binpack_write(o io.Writer, arg ...string) {
 	for _, v := range arg {
 		fmt.Fprint(o, v)
 	}
 	fmt.Fprintln(o)
 }
-func _pack_file(m *ice.Message, name, file string) string {
+func _binpack_file(m *ice.Message, name, file string) string {
 	text := ""
 	if f, e := os.Open(file); e == nil {
 		defer f.Close()
@@ -35,10 +35,10 @@ func _pack_file(m *ice.Message, name, file string) string {
 	}
 	return fmt.Sprintf("        \"%s\": []byte{%s},\n", name, text)
 }
-func _pack_dir(m *ice.Message, pack *os.File, dir string) {
-	m.Option(nfs.DIR_DEEP, ice.TRUE)
-	m.Option(nfs.DIR_TYPE, nfs.CAT)
+func _binpack_dir(m *ice.Message, pack *os.File, dir string) {
 	m.Option(nfs.DIR_ROOT, dir)
+	m.Option(nfs.DIR_DEEP, true)
+	m.Option(nfs.DIR_TYPE, nfs.CAT)
 
 	m.Cmd(nfs.DIR, nfs.PWD).Sort(nfs.PATH).Table(func(index int, value map[string]string, head []string) {
 		if path.Base(value[nfs.PATH]) == "binpack.go" {
@@ -49,29 +49,29 @@ func _pack_dir(m *ice.Message, pack *os.File, dir string) {
 			return
 		}
 
-		pack.WriteString(_pack_file(m, path.Join(dir, value[nfs.PATH]), path.Join(dir, value[nfs.PATH])))
+		pack.WriteString(_binpack_file(m, path.Join(dir, value[nfs.PATH]), path.Join(dir, value[nfs.PATH])))
 	})
 	pack.WriteString(ice.NL)
 }
 
-func _pack_volcanos(m *ice.Message, pack *os.File, dir string) {
-	m.Option(nfs.DIR_DEEP, ice.TRUE)
-	m.Option(nfs.DIR_TYPE, nfs.CAT)
+func _binpack_can(m *ice.Message, pack *os.File, dir string) {
 	m.Option(nfs.DIR_ROOT, dir)
+	m.Option(nfs.DIR_DEEP, true)
+	m.Option(nfs.DIR_TYPE, nfs.CAT)
 
 	for _, k := range []string{ice.FAVICON, ice.PROTO_JS, ice.FRAME_JS} {
-		pack.WriteString(_pack_file(m, ice.PS+k, path.Join(dir, k)))
+		pack.WriteString(_binpack_file(m, ice.PS+k, path.Join(dir, k)))
 	}
-	for _, k := range []string{"lib", "page", "panel", "plugin"} {
+	for _, k := range []string{LIB, PAGE, PANEL, PLUGIN} {
 		m.Cmd(nfs.DIR, k).Sort(nfs.PATH).Table(func(index int, value map[string]string, head []string) {
-			pack.WriteString(_pack_file(m, ice.PS+value[nfs.PATH], path.Join(dir, value[nfs.PATH])))
+			pack.WriteString(_binpack_file(m, ice.PS+value[nfs.PATH], path.Join(dir, value[nfs.PATH])))
 		})
 	}
 	pack.WriteString(ice.NL)
 }
-func _pack_ctx(m *ice.Message, pack *os.File) {
-	_pack_dir(m, pack, ice.SRC_HELP)
-	_pack_dir(m, pack, ice.SRC)
+func _binpack_ctx(m *ice.Message, pack *os.File) {
+	_binpack_dir(m, pack, ice.SRC_HELP)
+	_binpack_dir(m, pack, ice.SRC)
 }
 
 const BINPACK = "binpack"
@@ -81,40 +81,34 @@ func init() {
 		BINPACK: {Name: "binpack path auto create remove export", Help: "打包", Action: map[string]*ice.Action{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
 				web.AddRewrite(func(w http.ResponseWriter, r *http.Request) bool {
+					if len(ice.Info.Pack) == 0 {
+						return false
+					}
 					if ice.Dump(w, r.URL.Path, func(name string) { web.RenderType(w, name, "") }) {
 						return true // 打包文件
 					}
 					return false
 				})
 				nfs.AddRewrite(func(msg *ice.Message, name string) []byte {
-					if strings.HasPrefix(name, ice.SRC) {
-						if _, e := os.Stat(name); e == nil {
-							if f, e := os.Open(name); e == nil {
-								defer f.Close()
-								if b, e := ioutil.ReadAll(f); e == nil {
-									m.Logs("local", len(b), name)
-									return b // 本地文件
-								}
-							}
-						}
+					if len(ice.Info.Pack) == 0 {
+						return nil
 					}
-
+					if strings.HasPrefix(name, ice.SRC) && kit.FileExists(name) {
+						return nil
+					}
 					if b, ok := ice.Info.Pack[name]; ok {
 						m.Logs(BINPACK, len(b), name)
 						return b // 打包文件
 					}
 					if b, ok := ice.Info.Pack[strings.TrimPrefix(name, ice.USR_VOLCANOS)]; ok && len(b) > 0 {
-						m.Debug("cat binpack %s", name)
 						m.Logs(BINPACK, len(b), name)
 						return b // 打包文件
 					}
 					if b, ok := ice.Info.Pack[path.Join(m.Option(nfs.DIR_ROOT), name)]; ok && len(b) > 0 {
-						m.Debug("cat binpack %s", name)
 						m.Logs(BINPACK, len(b), name)
 						return b // 打包文件
 					}
 					if b, ok := ice.Info.Pack[path.Join(ice.PS, name)]; ok && len(b) > 0 {
-						m.Debug("cat binpack %s", name)
 						m.Logs(BINPACK, len(b), name)
 						return b // 打包文件
 					}
@@ -122,27 +116,27 @@ func init() {
 				})
 			}},
 			mdb.CREATE: {Name: "create", Help: "创建", Hand: func(m *ice.Message, arg ...string) {
-				if pack, p, e := kit.Create(ice.SRC_BINPACK_GO); m.Assert(e) {
-					defer pack.Close()
+				if f, p, e := kit.Create(ice.SRC_BINPACK_GO); m.Assert(e) {
+					defer f.Close()
 					defer m.Echo(p)
 
-					_pack_write(pack, `package main`)
-					_pack_write(pack)
-					_pack_write(pack, `import (`)
-					_pack_write(pack, `	ice "shylinux.com/x/icebergs"`)
-					_pack_write(pack, `)`)
-					_pack_write(pack)
+					_binpack_write(f, `package main`)
+					_binpack_write(f)
+					_binpack_write(f, `import (`)
+					_binpack_write(f, `	ice "shylinux.com/x/icebergs"`)
+					_binpack_write(f, `)`)
+					_binpack_write(f)
 
-					_pack_write(pack, `func init() {`)
-					_pack_write(pack, `	ice.Info.Pack = map[string][]byte{`)
+					_binpack_write(f, `func init() {`)
+					_binpack_write(f, `	ice.Info.Pack = map[string][]byte{`)
 
-					_pack_volcanos(m, pack, ice.USR_VOLCANOS)
-					_pack_dir(m, pack, ice.USR_LEARNING)
-					_pack_dir(m, pack, ice.USR_INTSHELL)
-					_pack_ctx(m, pack)
+					_binpack_dir(m, f, ice.USR_LEARNING)
+					_binpack_can(m, f, ice.USR_VOLCANOS)
+					_binpack_dir(m, f, ice.USR_INTSHELL)
+					_binpack_ctx(m, f)
 
-					_pack_write(pack, `	}`)
-					_pack_write(pack, `}`)
+					_binpack_write(f, `	}`)
+					_binpack_write(f, `}`)
 				}
 			}},
 			mdb.REMOVE: {Name: "remove", Help: "删除", Hand: func(m *ice.Message, arg ...string) {
@@ -153,14 +147,14 @@ func init() {
 					if strings.HasPrefix(key, ice.PS) {
 						key = ice.USR_VOLCANOS + key
 					}
-					m.Warn(os.MkdirAll(path.Dir(key), ice.MOD_DIR), "mkdir", key)
+					m.Log_EXPORT(nfs.FILE, key, nfs.SIZE, len(value))
+					m.Warn(nfs.MkdirAll(m, path.Dir(key)), "mkdir", key)
 					m.Warn(ioutil.WriteFile(key, value, ice.MOD_FILE), "write", key)
 				}
 			}},
 		}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			for k, v := range ice.Info.Pack {
-				m.Push(mdb.NAME, k)
-				m.Push(nfs.SIZE, len(v))
+				m.Push(mdb.NAME, k).Push(nfs.SIZE, len(v))
 			}
 			m.Sort(mdb.NAME)
 		}},

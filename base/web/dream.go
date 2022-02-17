@@ -41,7 +41,7 @@ func _dream_show(m *ice.Message, name string) {
 	if m.Option(nfs.REPOS) != "" { // 下载源码
 		m.Cmd("web.code.git.repos", mdb.CREATE, m.OptionSimple(nfs.REPOS), nfs.PATH, p)
 	} else { // 创建目录
-		os.MkdirAll(p, ice.MOD_DIR)
+		nfs.MkdirAll(m, p)
 	}
 
 	// 任务模板
@@ -118,6 +118,7 @@ func init() {
 		}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			if len(arg) == 0 {
 				_dream_list(m)
+				m.Sort("status,type,name")
 				return
 			}
 

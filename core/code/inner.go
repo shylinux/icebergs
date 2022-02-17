@@ -140,7 +140,7 @@ func init() {
 				if m.Option(ctx.ACTION) == "website" {
 					switch arg[0] {
 					case nfs.FILE:
-						m.Cmdy(nfs.DIR, nfs.PWD, "path,size,time", kit.Dict(nfs.DIR_ROOT, "src/website/")).ProcessAgain()
+						m.Cmdy(nfs.DIR, nfs.PWD, nfs.DIR_CLI_FIELDS, kit.Dict(nfs.DIR_ROOT, "src/website/")).ProcessAgain()
 					}
 					return
 				}
@@ -148,18 +148,18 @@ func init() {
 				switch arg[0] {
 				case cli.MAIN:
 					m.Option(nfs.DIR_REG, "*.go")
-					m.Cmdy(nfs.DIR, "src/", "path,size,time").ProcessAgain()
+					m.Cmdy(nfs.DIR, "src/", nfs.DIR_CLI_FIELDS).ProcessAgain()
 				case nfs.PATH:
-					m.Cmdy(nfs.DIR, arg[1:], "path,size,time").ProcessAgain()
+					m.Cmdy(nfs.DIR, arg[1:], nfs.DIR_CLI_FIELDS).ProcessAgain()
 				case nfs.FILE:
 					p := kit.Select(nfs.PWD, arg, 1)
 					if !strings.HasSuffix(p, ice.FS) {
 						p = path.Dir(p)
 					}
-					m.Cmdy(nfs.DIR, p+ice.PS, "path,size,time", kit.Dict(nfs.DIR_ROOT, m.Option(nfs.PATH))).ProcessAgain()
+					m.Cmdy(nfs.DIR, p+ice.PS, nfs.DIR_CLI_FIELDS, kit.Dict(nfs.DIR_ROOT, m.Option(nfs.PATH))).ProcessAgain()
 				case "url":
 					m.Option(nfs.DIR_ROOT, "usr/volcanos/plugin/local/code/")
-					m.Cmdy(nfs.DIR, nfs.PWD, "path,size,time", kit.Dict(nfs.DIR_DEEP, ice.TRUE)).ProcessAgain()
+					m.Cmdy(nfs.DIR, nfs.PWD, nfs.DIR_CLI_FIELDS, kit.Dict(nfs.DIR_DEEP, ice.TRUE)).ProcessAgain()
 				default:
 					m.Cmdy(FAVOR, mdb.INPUTS, arg)
 				}

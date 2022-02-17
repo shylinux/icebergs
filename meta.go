@@ -203,6 +203,9 @@ func (m *Message) Copy(msg *Message, arg ...string) *Message {
 	return m
 }
 func (m *Message) Sort(key string, arg ...string) *Message {
+	ls := kit.Split(key)
+	key = ls[0]
+
 	if m.FieldsIsDetail() && key != KEY {
 		return m
 	}
@@ -234,6 +237,22 @@ func (m *Message) Sort(key string, arg ...string) *Message {
 			number[index] = -int64(kit.Time(line[key]))
 		}
 	})
+	compare := func(i, j int, op string) bool {
+		for k := range ls[1:] {
+			if table[i][ls[k]] == table[j][ls[k]] {
+				continue
+			}
+
+			if op == ">" && table[i][ls[k]] > table[j][ls[k]] {
+				return true
+			}
+			if op == "<" && table[i][ls[k]] < table[j][ls[k]] {
+				return true
+			}
+			return false
+		}
+		return false
+	}
 
 	// 排序数据
 	for i := 0; i < len(table)-1; i++ {
@@ -243,13 +262,19 @@ func (m *Message) Sort(key string, arg ...string) *Message {
 			case "", "str":
 				if table[i][key] > table[j][key] {
 					result = true
+				} else if table[i][key] == table[j][key] && compare(i, j, ">") {
+					result = true
 				}
 			case "str_r":
 				if table[i][key] < table[j][key] {
 					result = true
+				} else if table[i][key] == table[j][key] && compare(i, j, "<") {
+					result = true
 				}
 			default:
 				if number[i] > number[j] {
+					result = true
+				} else if table[i][key] == table[j][key] && compare(i, j, ">") {
 					result = true
 				}
 			}

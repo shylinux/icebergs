@@ -1,7 +1,6 @@
 package code
 
 import (
-	"os"
 	"path"
 	"strings"
 
@@ -17,20 +16,19 @@ import (
 
 func _install_download(m *ice.Message) {
 	link := m.Option(mdb.LINK)
-	name := path.Base(link)
+	name := path.Base(strings.Split(link, "?")[0])
 	file := path.Join(kit.Select(m.Config(nfs.PATH), m.Option(nfs.PATH)), name)
 
 	defer m.Cmdy(nfs.DIR, file)
-	if _, e := os.Stat(file); e == nil {
+	if kit.FileExists(file) {
 		return // 文件存在
 	}
 
 	// 创建文件
 	m.Cmd(nfs.SAVE, file, "")
-
 	m.GoToast(web.DOWNLOAD, func(toast func(string, int, int)) {
 		// 进度
-		m.Cmd(mdb.INSERT, INSTALL, "", mdb.HASH, mdb.NAME, name, mdb.LINK, link)
+		m.Cmd(mdb.INSERT, INSTALL, "", mdb.HASH, mdb.NAME, name, nfs.PATH, file, mdb.LINK, link)
 		m.Richs(INSTALL, "", name, func(key string, value map[string]interface{}) {
 			value = kit.GetMeta(value)
 
@@ -50,7 +48,8 @@ func _install_download(m *ice.Message) {
 
 		// 解压
 		m.Option(cli.CMD_DIR, path.Dir(file))
-		m.Cmd(cli.SYSTEM, "tar", "xvf", name)
+		m.Cmd(nfs.TAR, mdb.EXPORT, name)
+		m.ToastSuccess()
 	})
 }
 func _install_build(m *ice.Message, arg ...string) {
@@ -98,8 +97,7 @@ func _install_order(m *ice.Message, arg ...string) {
 }
 func _install_spawn(m *ice.Message, arg ...string) {
 	if kit.Int(m.Option(tcp.PORT)) >= 10000 {
-		p := path.Join(m.Conf(cli.DAEMON, kit.Keym(nfs.PATH)), m.Option(tcp.PORT))
-		if _, e := os.Stat(p); e == nil {
+		if p := path.Join(m.Conf(cli.DAEMON, kit.Keym(nfs.PATH)), m.Option(tcp.PORT)); kit.FileExists(p) {
 			m.Echo(p)
 			return
 		}
@@ -109,9 +107,10 @@ func _install_spawn(m *ice.Message, arg ...string) {
 
 	target := path.Join(m.Conf(cli.DAEMON, kit.Keym(nfs.PATH)), m.Option(tcp.PORT))
 	source := path.Join(m.Config(nfs.PATH), kit.TrimExt(m.Option(mdb.LINK)))
+	nfs.MkdirAll(m, target)
 
 	m.Cmd(nfs.DIR, path.Join(source, kit.Select("_install", m.Option("install")))).Table(func(index int, value map[string]string, head []string) {
-		m.Cmd(cli.SYSTEM, "cp", "-r", strings.TrimSuffix(value[nfs.PATH], ice.PS), target)
+		m.Cmd(cli.SYSTEM, "cp", "-r", strings.TrimSuffix(value[nfs.PATH], ice.PS), target+ice.PS)
 	})
 	m.Echo(target)
 }
@@ -125,10 +124,6 @@ func _install_start(m *ice.Message, arg ...string) {
 	}
 
 	m.Cmdy(cli.DAEMON, arg[1:], args)
-}
-func _install_package(m *ice.Message, arg ...string) {
-	m.Fields(len(arg), "time,name,path")
-	m.Cmdy(mdb.SELECT, INSTALL, "", mdb.HASH)
 }
 func _install_service(m *ice.Message, arg ...string) {
 	arg = kit.Split(path.Base(arg[0]), "-.")[:1]
@@ -153,9 +148,11 @@ const INSTALL = "install"
 
 func init() {
 	Index.Merge(&ice.Context{Configs: map[string]*ice.Config{
-		INSTALL: {Name: INSTALL, Help: "安装", Value: kit.Data(mdb.SHORT, mdb.NAME, nfs.PATH, ice.USR_INSTALL)},
+		INSTALL: {Name: INSTALL, Help: "安装", Value: kit.Data(
+			mdb.SHORT, mdb.NAME, mdb.FIELD, "time,name,path,link", nfs.PATH, ice.USR_INSTALL,
+		)},
 	}, Commands: map[string]*ice.Command{
-		INSTALL: {Name: "install name port path auto download compile", Help: "安装", Meta: kit.Dict(), Action: map[string]*ice.Action{
+		INSTALL: {Name: "install name port path auto download", Help: "安装", Meta: kit.Dict(), Action: ice.MergeAction(map[string]*ice.Action{
 			web.DOWNLOAD: {Name: "download link path", Help: "下载", Hand: func(m *ice.Message, arg ...string) {
 				_install_download(m)
 			}},
@@ -176,10 +173,10 @@ func init() {
 				defer m.StatusTime(nfs.PATH, m.Option(nfs.DIR_ROOT))
 				m.Cmdy(nfs.DIR, m.Option(nfs.PATH))
 			}},
-		}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		}, mdb.HashAction()), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			switch len(arg) {
 			case 0: // 源码列表
-				_install_package(m, arg...)
+				mdb.HashSelect(m, arg...)
 
 			case 1: // 服务列表
 				_install_service(m, arg...)
@@ -202,6 +199,9 @@ func InstallAction(fields ...string) map[string]*ice.Action {
 		}},
 		cli.ORDER: {Name: "order", Help: "加载", Hand: func(m *ice.Message, arg ...string) {
 			m.Cmdy(INSTALL, cli.ORDER, m.Config(nfs.SOURCE), "_install/bin")
+		}},
+		nfs.TRASH: {Name: "trash", Help: "删除", Hand: func(m *ice.Message, arg ...string) {
+			m.Cmd(nfs.TRASH, m.Option(nfs.PATH))
 		}},
 	}, fields...)
 }

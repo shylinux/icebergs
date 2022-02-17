@@ -13,6 +13,9 @@ import (
 	kit "shylinux.com/x/toolkits"
 )
 
+const (
+	RELAY = "relay"
+)
 const COMPILE = "compile"
 
 func init() {
@@ -22,17 +25,15 @@ func init() {
 			cli.ENV, kit.Dict("GOPROXY", "https://goproxy.cn,direct", "GOPRIVATE", "shylinux.com,github.com", "CGO_ENABLED", "0"),
 		)},
 	}, Commands: map[string]*ice.Command{
-		COMPILE: {Name: "compile arch=amd64,386,arm,arm64 os=linux,darwin,windows src=src/main.go@key run binpack install", Help: "编译", Action: map[string]*ice.Action{
+		COMPILE: {Name: "compile arch=amd64,386,arm,arm64 os=linux,darwin,windows src=src/main.go@key run binpack relay install", Help: "编译", Action: map[string]*ice.Action{
 			mdb.INPUTS: {Name: "inputs", Help: "补全", Hand: func(m *ice.Message, arg ...string) {
-				m.Cmdy(nfs.DIR, ice.SRC, "path,size,time", kit.Dict(nfs.DIR_REG, `.*\.go$`)).Sort(nfs.PATH)
-			}},
-			BINPACK: {Name: "binpack", Help: "打包", Hand: func(m *ice.Message, arg ...string) {
-				m.Cmdy(AUTOGEN, BINPACK)
+				m.Cmdy(nfs.DIR, ice.SRC, nfs.DIR_CLI_FIELDS, kit.Dict(nfs.DIR_REG, `.*\.go$`)).Sort(nfs.PATH)
 			}},
 			INSTALL: {Name: "compile", Help: "安装", Hand: func(m *ice.Message, arg ...string) {
 				if strings.Contains(m.Cmdx(cli.RUNTIME, kit.Keys(tcp.HOST, cli.OSID)), cli.ALPINE) {
 					web.PushStream(m)
 					m.Cmd(cli.SYSTEM, "apk", "add", GIT, GO)
+					m.Cmd(cli.SYSTEM, GO, "get", "shylinux.com/x/ice")
 					return
 				}
 				if m.Cmdx(cli.SYSTEM, nfs.FIND, GIT) == "" {
@@ -41,6 +42,12 @@ func init() {
 					return
 				}
 				m.Cmd(INSTALL, web.DOWNLOAD, "https://golang.google.cn/dl/go1.15.5.linux-amd64.tar.gz", ice.USR_LOCAL)
+			}},
+			BINPACK: {Name: "binpack", Help: "打包", Hand: func(m *ice.Message, arg ...string) {
+				m.Cmdy(AUTOGEN, BINPACK)
+			}},
+			RELAY: {Name: "relay", Help: "跳板", Hand: func(m *ice.Message, arg ...string) {
+				m.Cmd(COMPILE, ice.SRC_RELAY_GO, path.Join(ice.USR_PUBLISH, RELAY))
 			}},
 		}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			if m.Cmdx(cli.SYSTEM, nfs.FIND, GO) == "" && m.Cmdx(COMPILE, INSTALL) == ice.FALSE {
@@ -80,8 +87,8 @@ func init() {
 
 			// 编译成功
 			m.Log_EXPORT(nfs.SOURCE, main, nfs.TARGET, file)
-			m.Cmdy(PUBLISH, ice.CONTEXTS, "core", "binary")
-			m.Cmdy(nfs.DIR, file, "time,path,size,link")
+			m.Cmdy(nfs.DIR, file, nfs.DIR_WEB_FIELDS)
+			m.Cmdy(PUBLISH, ice.CONTEXTS)
 			m.StatusTimeCount()
 		}},
 	}})

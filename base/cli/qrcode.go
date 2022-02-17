@@ -141,7 +141,7 @@ func init() {
 			m.Option(FG, kit.Select(BLUE, arg, 1))
 
 			if m.IsCliUA() {
-				_qrcode_cli(m, kit.Select(m.Conf("share", kit.Keym("domain")), arg, 0))
+				_qrcode_cli(m, kit.Select(ice.Info.Domain, arg, 0))
 			} else {
 				_qrcode_web(m, kit.Select(m.Option(ice.MSG_USERWEB), arg, 0))
 			}

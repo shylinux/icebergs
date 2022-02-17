@@ -21,7 +21,7 @@ func _system_cmd(m *ice.Message, arg ...string) *exec.Cmd {
 	// 运行目录
 	if cmd.Dir = m.Option(CMD_DIR); len(cmd.Dir) > 0 {
 		if m.Log_EXPORT(CMD_DIR, cmd.Dir); !kit.FileExists(cmd.Dir) {
-			os.MkdirAll(cmd.Dir, ice.MOD_DIR)
+			nfs.MkdirAll(m, cmd.Dir)
 		}
 	}
 
@@ -67,7 +67,7 @@ func _system_find(m *ice.Message, bin string, dir ...string) string {
 		return bin
 	}
 	if strings.HasPrefix(bin, nfs.PWD) {
-		return kit.Path(bin)
+		return kit.Path(m.Option(CMD_DIR), bin)
 	}
 	if len(dir) == 0 {
 		dir = append(dir, strings.Split(kit.Env(PATH), ice.DF)...)
@@ -107,8 +107,7 @@ func _system_exec(m *ice.Message, cmd *exec.Cmd) {
 		m.Cost(CODE, cmd.ProcessState.ExitCode(), ctx.ARGS, cmd.Args)
 	}
 
-	m.Push(mdb.TIME, m.Time())
-	m.Push(CODE, int(cmd.ProcessState.ExitCode()))
+	m.Push(mdb.TIME, m.Time()).Push(CODE, int(cmd.ProcessState.ExitCode()))
 }
 func IsSuccess(m *ice.Message) bool {
 	return m.Append(CODE) == "0" || m.Append(CODE) == ""

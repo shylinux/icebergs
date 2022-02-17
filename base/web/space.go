@@ -301,7 +301,7 @@ func init() {
 					m.Table(func(index int, value map[string]string, head []string) {
 						m.PushAnchor(value[mdb.NAME], _space_link(m, kit.Keys(m.Option(ice.MSG_USERPOD), value[mdb.NAME])))
 					})
-					m.SortStrR(mdb.NAME)
+					m.Sort("type,name,text")
 				}
 				return
 			}

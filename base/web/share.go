@@ -93,6 +93,7 @@ func _share_local(m *ice.Message, arg ...string) {
 }
 
 const (
+	TOPIC = "topic"
 	LOGIN = "login"
 	RIVER = "river"
 	STORM = "storm"

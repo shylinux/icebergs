@@ -83,6 +83,7 @@ const (
 	BACK = "back"
 	FROM = "from"
 	MAIN = "main"
+	KILL = "kill"
 
 	OPEN  = "open"
 	CLOSE = "close"
@@ -113,15 +114,13 @@ func init() {
 				m.Cmdy(DAEMON, kit.Split(m.Option(ice.CMD)))
 			}},
 			RESTART: {Name: "restart", Help: "重启", Hand: func(m *ice.Message, arg ...string) {
-				m.Cmd(DAEMON, STOP)
-				m.Sleep3s()
-				m.Cmdy(DAEMON, START)
+				m.Cmdy(DAEMON, STOP).Sleep3s().Cmdy(DAEMON, START)
 			}},
 			STOP: {Name: "stop", Help: "停止", Hand: func(m *ice.Message, arg ...string) {
 				m.OptionFields(m.Config(mdb.FIELD))
 				m.Cmd(mdb.SELECT, DAEMON, "", mdb.HASH, m.OptionSimple(mdb.HASH)).Table(func(index int, value map[string]string, head []string) {
 					m.Cmd(mdb.MODIFY, DAEMON, "", mdb.HASH, m.OptionSimple(mdb.HASH), STATUS, STOP)
-					m.Cmdy(SYSTEM, "kill", value[PID])
+					m.Cmdy(SYSTEM, KILL, value[PID])
 				})
 			}},
 		}, mdb.HashAction()), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {

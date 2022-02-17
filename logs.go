@@ -59,7 +59,7 @@ func (m *Message) join(arg ...interface{}) string {
 		if i == len(args)-1 {
 			list = append(list, args[i])
 		} else {
-			list = append(list, args[i]+kit.Select("", ":", !strings.HasSuffix(strings.TrimSpace(args[i]), ":")), kit.Format(args[i+1]))
+			list = append(list, strings.TrimSpace(args[i])+kit.Select("", DF, !strings.HasSuffix(strings.TrimSpace(args[i]), DF)), kit.Format(args[i+1]))
 		}
 	}
 	return kit.Join(list, SP)

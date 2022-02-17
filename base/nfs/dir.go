@@ -201,6 +201,10 @@ func Dir(m *ice.Message, sort string) *ice.Message {
 	m.Copy(m.Cmd(DIR, PWD).Sort(sort))
 	return m
 }
+func MkdirAll(m *ice.Message, p string) error {
+	m.Log_EXPORT("mkdir", "dir", p)
+	return os.MkdirAll(p, ice.MOD_DIR)
+}
 
 const (
 	TYPE_ALL  = "all"
@@ -214,6 +218,10 @@ const (
 	DIR_TYPE = "dir_type"
 	DIR_DEEP = "dir_deep"
 	DIR_REG  = "dir_reg"
+
+	DIR_DEF_FIELDS = "time,path,size,action"
+	DIR_WEB_FIELDS = "time,size,path,action,link"
+	DIR_CLI_FIELDS = "path,size,time"
 )
 const DIR = "dir"
 
@@ -251,8 +259,9 @@ func init() {
 			}
 			_dir_list(m, kit.Select(PWD, m.Option(DIR_ROOT)), kit.Select(PWD, arg, 0),
 				0, m.Option(DIR_DEEP) == ice.TRUE, kit.Select(TYPE_BOTH, m.Option(DIR_TYPE)), kit.Regexp(m.Option(DIR_REG)),
-				kit.Split(kit.Select(kit.Select("time,path,size,action", m.OptionFields()), kit.Join(kit.Slice(arg, 1)))))
+				kit.Split(kit.Select(kit.Select(DIR_DEF_FIELDS, m.OptionFields()), kit.Join(kit.Slice(arg, 1)))))
 			m.SortTimeR(mdb.TIME)
+			m.StatusTimeCount()
 		}},
 	}})
 }

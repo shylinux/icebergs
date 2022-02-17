@@ -23,7 +23,7 @@ var Info = struct {
 	UserName string
 	PassWord string
 
-	Address  string
+	Domain   string
 	NodeType string
 	NodeName string
 	CtxShare string

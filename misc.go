@@ -116,12 +116,14 @@ func (m *Message) SetResult(arg ...string) *Message {
 func (m *Message) SetAppend(arg ...string) *Message {
 	return m.Set(MSG_APPEND, arg...)
 }
-func (m *Message) RenameAppend(from, to string) *Message {
-	for i, v := range m.meta[MSG_APPEND] {
-		if v == from {
-			m.meta[MSG_APPEND][i] = to
-			m.meta[to] = m.meta[from]
-			delete(m.meta, from)
+func (m *Message) RenameAppend(arg ...string) *Message { // [from to]...
+	for i := 0; i < len(arg)-1; i += 2 {
+		for j, v := range m.meta[MSG_APPEND] {
+			if v == arg[i] {
+				m.meta[MSG_APPEND][j] = arg[i+1]
+				m.meta[arg[i+1]] = m.meta[arg[i]]
+				delete(m.meta, arg[i])
+			}
 		}
 	}
 	return m
@@ -154,7 +156,7 @@ func (m *Message) MergeURL2(url string, arg ...interface{}) string {
 	return kit.MergeURL2(m.Option(MSG_USERWEB), url, arg...)
 }
 func (m *Message) MergePOD(name string, arg ...interface{}) string {
-	return kit.MergePOD(kit.Select(Info.Address, m.Option(MSG_USERWEB)), name, arg...)
+	return kit.MergePOD(kit.Select(Info.Domain, m.Option(MSG_USERWEB)), name, arg...)
 }
 
 func (m *Message) cmd(arg ...interface{}) *Message {

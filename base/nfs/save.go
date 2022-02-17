@@ -34,7 +34,7 @@ func _save_file(m *ice.Message, name string, text ...string) {
 func _push_file(m *ice.Message, name string, text ...string) {
 	p := path.Join(m.Option(DIR_ROOT), name)
 	if strings.Contains(p, ice.PS) {
-		os.MkdirAll(path.Dir(p), ice.MOD_DIR)
+		MkdirAll(m, path.Dir(p))
 	}
 
 	if f, e := os.OpenFile(p, os.O_WRONLY|os.O_APPEND|os.O_CREATE, ice.MOD_FILE); m.Assert(e) {
@@ -70,7 +70,7 @@ func _link_file(m *ice.Message, name string, from string) {
 		return
 	}
 	os.Remove(name)
-	os.MkdirAll(path.Dir(name), ice.MOD_DIR)
+	MkdirAll(m, path.Dir(name))
 	if e := os.Link(from, name); e != nil {
 		m.Warn(os.Symlink(from, name), ice.ErrFailure, from)
 	}

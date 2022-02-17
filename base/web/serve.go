@@ -270,6 +270,9 @@ func init() {
 					m.Done(value[cli.STATUS] == tcp.START)
 				})
 			}},
+			DOMAIN: {Name: "domain", Help: "域名", Hand: func(m *ice.Message, arg ...string) {
+				ice.Info.Domain = m.Conf(SHARE, kit.Keym(DOMAIN, m.Config(DOMAIN, arg[0])))
+			}},
 			aaa.BLACK: {Name: "black", Help: "黑名单", Hand: func(m *ice.Message, arg ...string) {
 				for _, k := range arg {
 					m.Log_CREATE(aaa.BLACK, k)
@@ -283,8 +286,8 @@ func init() {
 				}
 			}},
 			cli.START: {Name: "start dev name=ops proto=http host port=9020 nodename password username userrole", Help: "启动", Hand: func(m *ice.Message, arg ...string) {
-				ice.Info.Address = kit.Select(kit.Format("%s://%s:%s", m.Option(tcp.PROTO),
-					kit.Select(m.Cmd(tcp.HOST).Append(aaa.IP), m.Option(tcp.HOST)), m.Option(tcp.PORT)), ice.Info.Address)
+				ice.Info.Domain = kit.Select(kit.Format("%s://%s:%s", m.Option(tcp.PROTO),
+					kit.Select(m.Cmd(tcp.HOST).Append(aaa.IP), m.Option(tcp.HOST)), m.Option(tcp.PORT)), ice.Info.Domain)
 				if cli.NodeInfo(m, SERVER, kit.Select(ice.Info.HostName, m.Option("nodename"))); m.Option(tcp.PORT) == tcp.RANDOM {
 					m.Option(tcp.PORT, m.Cmdx(tcp.PORT, aaa.RIGHT))
 				}

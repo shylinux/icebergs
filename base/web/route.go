@@ -59,8 +59,6 @@ func _route_list(m *ice.Message) {
 	m.Push(ROUTE, ice.Info.NodeName)
 	m.PushAnchor(tcp.LOCALHOST, kit.Format("%s://%s:%s", u.Scheme, tcp.LOCALHOST, u.Port()))
 	m.PushButton(tcp.START)
-
-	m.Sort(ROUTE)
 }
 
 const ROUTE = "route"
@@ -104,6 +102,7 @@ func init() {
 			if len(arg) == 0 || arg[0] == "" { // 路由列表
 				if _route_travel(m, kit.Select("", arg, 0)); m.W != nil {
 					_route_list(m)
+					m.Sort("type,route")
 				}
 
 			} else if len(arg) == 1 || arg[1] == "" { // 模块列表

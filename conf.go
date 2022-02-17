@@ -143,6 +143,7 @@ const ( // DIR
 	SRC_MAIN_SVG   = "src/main.svg"
 	SRC_VERSION_GO = "src/version.go"
 	SRC_BINPACK_GO = "src/binpack.go"
+	SRC_RELAY_GO   = "src/relay.go"
 	MAKEFILE       = "Makefile"
 	ICE_BIN        = "ice.bin"
 	GO_MOD         = "go.mod"

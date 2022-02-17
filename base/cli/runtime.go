@@ -21,11 +21,6 @@ func _runtime_init(m *ice.Message) {
 		m.Conf(RUNTIME, kit.Keys(MAKE, strings.ToLower(key)), value)
 	})
 
-	// 环境变量 conf
-	for _, k := range []string{CTX_SHY, CTX_DEV, CTX_OPS, CTX_ARG, CTX_PID, CTX_USER, CTX_SHARE, CTX_RIVER} {
-		m.Conf(RUNTIME, kit.Keys(CONF, k), kit.Env(k))
-	}
-
 	// 主机信息 host
 	m.Conf(RUNTIME, kit.Keys(HOST, GOARCH), runtime.GOARCH)
 	m.Conf(RUNTIME, kit.Keys(HOST, GOOS), runtime.GOOS)
@@ -66,6 +61,11 @@ func _runtime_init(m *ice.Message) {
 	// 启动次数 boot
 	m.Conf(RUNTIME, kit.Keys(BOOT, mdb.COUNT), kit.Int(m.Conf(RUNTIME, kit.Keys(BOOT, mdb.COUNT)))+1)
 	m.Conf(RUNTIME, kit.Keys(BOOT, ice.BIN), _system_find(m, os.Args[0]))
+
+	// 环境变量 conf
+	for _, k := range []string{CTX_SHY, CTX_DEV, CTX_OPS, CTX_ARG, CTX_PID, CTX_USER, CTX_SHARE, CTX_RIVER} {
+		m.Conf(RUNTIME, kit.Keys(CONF, k), kit.Env(k))
+	}
 }
 func _runtime_hostinfo(m *ice.Message) {
 	m.Push("nCPU", strings.Count(m.Cmdx(nfs.CAT, "/proc/cpuinfo"), "processor"))
@@ -83,9 +83,8 @@ func _runtime_diskinfo(m *ice.Message) {
 			m.Push("", value, head)
 		}
 	})
-	m.Display("/plugin/story/pie.js?field=Size")
-	m.RenameAppend("%iused", "piused")
-	m.RenameAppend("Use%", "Usep")
+	m.RenameAppend("%iused", "piused", "Use%", "Usep")
+	m.DisplayStory("pie.js?field=Size")
 }
 
 func NodeInfo(m *ice.Message, kind, name string) {
@@ -97,17 +96,17 @@ func NodeInfo(m *ice.Message, kind, name string) {
 const (
 	MAKE = "make"
 	TEST = "test"
-	CONF = "conf"
 	HOST = "host"
 	BOOT = "boot"
+	CONF = "conf"
 	NODE = "node"
 )
 const (
 	GOARCH = "GOARCH"
-	X386   = "386"
 	AMD64  = "amd64"
-	ARM64  = "arm64"
+	X386   = "386"
 	ARM    = "arm"
+	ARM64  = "arm64"
 
 	GOOS    = "GOOS"
 	LINUX   = "linux"
@@ -188,7 +187,7 @@ func init() {
 				m.StatusTimeCount()
 			}},
 			PROCKILL: {Name: "prockill", Help: "结束进程", Hand: func(m *ice.Message, arg ...string) {
-				m.Cmdy(SYSTEM, "kill", m.Option("PID"))
+				m.Cmdy(SYSTEM, KILL, m.Option("PID"))
 				m.ProcessRefresh30ms()
 			}},
 			DISKINFO: {Name: "diskinfo", Help: "磁盘信息", Hand: func(m *ice.Message, arg ...string) {

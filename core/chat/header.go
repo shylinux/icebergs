@@ -5,6 +5,7 @@ import (
 
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/aaa"
+	"shylinux.com/x/icebergs/base/cli"
 	"shylinux.com/x/icebergs/base/ctx"
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/tcp"
@@ -119,7 +120,7 @@ func init() {
 			}},
 
 			code.WEBPACK: {Name: "webpack", Help: "打包页面", Hand: func(m *ice.Message, arg ...string) {
-				m.Cmdy(code.WEBPACK, mdb.CREATE, m.OptionSimple(mdb.NAME))
+				m.Cmdy(code.WEBPACK, cli.BUILD, m.OptionSimple(mdb.NAME))
 			}},
 		}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			msg := m.Cmd(aaa.USER, m.Option(ice.MSG_USERNAME))

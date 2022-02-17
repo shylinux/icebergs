@@ -160,14 +160,15 @@ func init() {
 			}},
 			mdb.IMPORT: {Name: "import", Help: "导入", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmdy(REPOS, ice.OptionFields("time,name,path")).Table(func(index int, value map[string]string, head []string) {
+					remote := strings.Split(m.MergeURL2("/x/"+value[REPOS]), "?")[0]
 					m.Option(cli.CMD_DIR, value[nfs.PATH])
-					m.Cmd(cli.SYSTEM, GIT, PUSH, m.MergeURL2("/x/"+value[mdb.NAME]), MASTER)
-					m.Cmd(cli.SYSTEM, GIT, PUSH, "--tags", m.MergeURL2("/x/"+value[mdb.NAME]), MASTER)
+					m.Cmd(cli.SYSTEM, GIT, PUSH, remote, MASTER)
+					m.Cmd(cli.SYSTEM, GIT, PUSH, "--tags", remote, MASTER)
 				})
 			}},
 		}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			if m.Option(nfs.DIR_ROOT, path.Join(ice.USR_LOCAL, REPOS)); len(arg) == 0 {
-				m.Cmdy(nfs.DIR, nfs.PWD, "time,path,size").Table(func(index int, value map[string]string, head []string) {
+				m.Cmdy(nfs.DIR, nfs.PWD).Table(func(index int, value map[string]string, head []string) {
 					m.PushScript("git clone " + m.MergeURL2("/x/"+value[nfs.PATH]))
 				})
 				m.StatusTimeCount()

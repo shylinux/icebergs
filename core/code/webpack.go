@@ -20,6 +20,7 @@ func _publish(m *ice.Message, file ...string) string {
 	return path.Join(ice.USR_PUBLISH, path.Join(file...))
 }
 func _webpack_can(m *ice.Message) {
+	m.Option(nfs.DIR_ROOT, "")
 	m.Cmd(nfs.COPY, _volcanos(m, PAGE_CAN_CSS), _volcanos(m, PAGE_INDEX_CSS), _volcanos(m, PAGE_CACHE_CSS))
 	m.Cmd(nfs.COPY, _volcanos(m, PAGE_CAN_JS), _volcanos(m, ice.PROTO_JS), _volcanos(m, PAGE_CACHE_JS))
 	m.Cmdy(nfs.DIR, _volcanos(m, PAGE))

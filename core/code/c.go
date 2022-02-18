@@ -66,9 +66,9 @@ func init() {
 				m.Option(cli.CMD_DIR, kit.Select(ice.SRC, arg, 2))
 				m.Cmdy(mdb.SEARCH, MAN2, arg[1:])
 				m.Cmdy(mdb.SEARCH, MAN3, arg[1:])
-				_c_tags(m, kit.Select(MAIN, arg, 1))
-				_go_find(m, kit.Select(MAIN, arg, 1), arg[2])
-				_go_grep(m, kit.Select(MAIN, arg, 1), arg[2])
+				_c_tags(m, kit.Select(cli.MAIN, arg, 1))
+				_go_find(m, kit.Select(cli.MAIN, arg, 1), arg[2])
+				_go_grep(m, kit.Select(cli.MAIN, arg, 1), arg[2])
 			}},
 			mdb.ENGINE: {Hand: func(m *ice.Message, arg ...string) {
 				m.Option(cli.CMD_DIR, arg[2])
@@ -94,7 +94,7 @@ func init() {
 					return
 				}
 				for _, i := range []string{"1", "2", "3", "8"} {
-					if text := _c_help(m, i, kit.Select(MAIN, arg, 1)); text != "" {
+					if text := _c_help(m, i, kit.Select(cli.MAIN, arg, 1)); text != "" {
 						m.PushSearch(ice.CMD, MAN, nfs.FILE, kit.Keys(arg[1], MAN+i), nfs.LINE, 1, mdb.TEXT, text)
 					}
 				}

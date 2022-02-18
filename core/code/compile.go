@@ -13,13 +13,36 @@ import (
 	kit "shylinux.com/x/toolkits"
 )
 
+func _compile_target(m *ice.Message, arg ...string) (string, string, string, string) {
+	arch := m.Conf(cli.RUNTIME, kit.Keys(tcp.HOST, cli.GOARCH))
+	goos := m.Conf(cli.RUNTIME, kit.Keys(tcp.HOST, cli.GOOS))
+	main, file := ice.SRC_MAIN_GO, ""
+	for _, k := range arg {
+		switch k {
+		case cli.X386, cli.AMD64, cli.ARM64, cli.ARM:
+			arch = k
+		case cli.WINDOWS, cli.DARWIN, cli.LINUX:
+			goos = k
+		default:
+			if kit.Ext(k) == GO {
+				main = k
+			} else {
+				file = k
+			}
+		}
+	}
+	if file == "" {
+		file = path.Join(m.Config(nfs.PATH), kit.Keys(kit.Select(ice.ICE, kit.TrimExt(main), main != ice.SRC_MAIN_GO), goos, arch))
+	}
+	return main, file, goos, arch
+}
+
 const (
 	RELAY = "relay"
 )
 const COMPILE = "compile"
 
 func init() {
-	const GIT = "git"
 	Index.Merge(&ice.Context{Configs: map[string]*ice.Config{
 		COMPILE: {Name: COMPILE, Help: "编译", Value: kit.Data(nfs.PATH, ice.USR_PUBLISH,
 			cli.ENV, kit.Dict("GOPROXY", "https://goproxy.cn,direct", "GOPRIVATE", "shylinux.com,github.com", "CGO_ENABLED", "0"),
@@ -53,32 +76,13 @@ func init() {
 			if m.Cmdx(cli.SYSTEM, nfs.FIND, GO) == "" && m.Cmdx(COMPILE, INSTALL) == ice.FALSE {
 				return
 			}
+
+			// 下载依赖
+			_autogen_version(m.Spawn())
 			m.Cmd(cli.SYSTEM, GO, "get", "shylinux.com/x/ice")
 
-			// 交叉编译
-			main, file := ice.SRC_MAIN_GO, ""
-			goos := m.Conf(cli.RUNTIME, kit.Keys(tcp.HOST, cli.GOOS))
-			arch := m.Conf(cli.RUNTIME, kit.Keys(tcp.HOST, cli.GOARCH))
-			for _, k := range arg {
-				switch k {
-				case cli.X386, cli.AMD64, cli.ARM64, cli.ARM:
-					arch = k
-				case cli.WINDOWS, cli.DARWIN, cli.LINUX:
-					goos = k
-				default:
-					if kit.Ext(k) == GO {
-						main = k
-					} else {
-						file = k
-					}
-				}
-			}
-			if file == "" {
-				file = path.Join(m.Config(nfs.PATH), kit.Keys(kit.Select(ice.ICE, kit.TrimExt(main), main != ice.SRC_MAIN_GO), goos, arch))
-			}
-
 			// 执行编译
-			_autogen_version(m.Spawn())
+			main, file, goos, arch := _compile_target(m, arg...)
 			m.Optionv(cli.CMD_ENV, kit.Simple(m.Configv(cli.ENV), cli.HOME, kit.Env(cli.HOME), cli.PATH, kit.Env(cli.PATH), cli.GOOS, goos, cli.GOARCH, arch))
 			if msg := m.Cmd(cli.SYSTEM, GO, cli.BUILD, "-o", file, main, ice.SRC_VERSION_GO, ice.SRC_BINPACK_GO); !cli.IsSuccess(msg) {
 				m.Copy(msg)

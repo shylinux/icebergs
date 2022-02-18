@@ -72,7 +72,9 @@ func _link_file(m *ice.Message, name string, from string) {
 	os.Remove(name)
 	MkdirAll(m, path.Dir(name))
 	if e := os.Link(from, name); e != nil {
+		m.Debug("what %v", e)
 		m.Warn(os.Symlink(from, name), ice.ErrFailure, from)
+		m.Debug("what %v", e)
 	}
 	m.Echo(name)
 }

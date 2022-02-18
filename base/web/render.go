@@ -118,7 +118,11 @@ type Buffer struct {
 }
 
 func (b *Buffer) Write(buf []byte) (int, error) {
-	b.m.PushNoticeGrow(string(buf))
+	if b.m.IsCliUA() {
+		print(string(buf))
+	} else {
+		b.m.PushNoticeGrow(string(buf))
+	}
 	return len(buf), nil
 }
 func (b *Buffer) Close() error { return nil }

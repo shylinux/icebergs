@@ -4,6 +4,7 @@ import (
 	"path"
 
 	ice "shylinux.com/x/icebergs"
+	"shylinux.com/x/icebergs/base/cli"
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/nfs"
 	kit "shylinux.com/x/toolkits"
@@ -60,8 +61,8 @@ func init() { ice.Cmd("{{.Option "key"}}", {{.Option "name"}}{}) }
 					m.Cmd(nfs.DEFS, path.Join(m.Option(nfs.PATH), m.Option(nfs.FILE)), string(buf))
 					switch kit.Ext(m.Option(nfs.FILE)) {
 					case GO:
-						if m.Option(MAIN) != "" && m.Option(mdb.ZONE) != "" {
-							_autogen_import(m, path.Join(m.Option(nfs.PATH), m.Option(MAIN)), m.Option(mdb.ZONE), _autogen_mod(m, ice.GO_MOD))
+						if m.Option(cli.MAIN) != "" && m.Option(mdb.ZONE) != "" {
+							_autogen_import(m, path.Join(m.Option(nfs.PATH), m.Option(cli.MAIN)), m.Option(mdb.ZONE), _autogen_mod(m, ice.GO_MOD))
 						}
 					}
 				}

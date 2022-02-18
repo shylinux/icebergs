@@ -18,10 +18,18 @@ func init() {
 	Index.Merge(&ice.Context{Commands: map[string]*ice.Command{
 		TAR: {Name: "tar file path auto", Help: "打包", Action: map[string]*ice.Action{
 			mdb.IMPORT: {Name: "import", Help: "导入", Hand: func(m *ice.Message, arg ...string) {
-				m.Cmdy("cli.system", "tar", "zcvf", arg)
+				if len(arg) == 1 {
+					arg = append(arg, arg[0])
+				}
+				if !strings.HasSuffix(arg[0], ".tar.gz") {
+					arg[0] += ".tar.gz"
+				}
+				m.Cmd("cli.system", "tar", "zcvf", arg)
+				m.Echo(arg[0])
 			}},
 			mdb.EXPORT: {Name: "export", Help: "导出", Hand: func(m *ice.Message, arg ...string) {
-				m.Cmdy("cli.system", "tar", "xvf", arg)
+				m.Cmd("cli.system", "tar", "xvf", arg)
+				m.Echo(arg[0])
 			}},
 		}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			m.Option("cmd_dir", m.Option(DIR_ROOT))

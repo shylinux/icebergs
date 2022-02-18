@@ -172,7 +172,6 @@ func _mod_show(m *ice.Message, file string) {
 
 const (
 	TAGS = ".tags"
-	MAIN = "main"
 )
 const GO = "go"
 const MOD = "mod"
@@ -206,10 +205,10 @@ func init() {
 		GO: {Name: "go", Help: "后端", Action: ice.MergeAction(map[string]*ice.Action{
 			mdb.SEARCH: {Hand: func(m *ice.Message, arg ...string) {
 				if arg[0] == GO {
-					_go_tags(m, kit.Select(MAIN, arg, 1))
-					_go_help(m, kit.Select(MAIN, arg, 1))
-					// _go_find(m, kit.Select(MAIN, arg, 1), arg[2])
-					// _go_grep(m, kit.Select(MAIN, arg, 1), arg[2])
+					_go_tags(m, kit.Select(cli.MAIN, arg, 1))
+					_go_help(m, kit.Select(cli.MAIN, arg, 1))
+					// _go_find(m, kit.Select(cli.MAIN, arg, 1), arg[2])
+					// _go_grep(m, kit.Select(cli.MAIN, arg, 1), arg[2])
 				}
 			}},
 			mdb.ENGINE: {Hand: func(m *ice.Message, arg ...string) { _go_exec(m, arg...) }},

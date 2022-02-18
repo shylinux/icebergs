@@ -14,6 +14,7 @@ const (
 	FALSE   = "false"
 	SUCCESS = "success"
 	FAILURE = "failure"
+	RESTART = "restart"
 	PROCESS = "process"
 	OF      = " of "
 

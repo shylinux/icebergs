@@ -27,32 +27,27 @@ func _install_download(m *ice.Message) {
 	// 创建文件
 	m.Cmd(nfs.SAVE, file, "")
 	m.GoToast(web.DOWNLOAD, func(toast func(string, int, int)) {
-		// 进度
 		m.Cmd(mdb.INSERT, INSTALL, "", mdb.HASH, mdb.NAME, name, nfs.PATH, file, mdb.LINK, link)
-		m.Richs(INSTALL, "", name, func(key string, value map[string]interface{}) {
-			value = kit.GetMeta(value)
+		defer m.ToastSuccess()
 
-			p := 0
-			m.OptionCB(web.SPIDE, func(size int, total int) {
-				if n := size * 100 / total; p != n {
-					value[mdb.VALUE], value[mdb.COUNT], value[mdb.TOTAL] = n, size, total
-					toast(name, size, total)
-					p = n
+		// 下载进度
+		m.Richs(INSTALL, "", name, func(key string, value map[string]interface{}) {
+			prev, value := 0, kit.GetMeta(value)
+			m.OptionCB(web.SPIDE, func(count int, total int, step int) {
+				if step >= prev {
+					value[mdb.COUNT], value[mdb.TOTAL], value[mdb.VALUE] = count, total, step
+					toast(name, count, total)
+					prev = step
 				}
 			})
 		})
 
-		// 下载
-		msg := m.Cmd("web.spide", ice.DEV, web.SPIDE_CACHE, web.SPIDE_GET, link)
-		m.Cmd(nfs.LINK, file, msg.Append(nfs.FILE))
-
-		// 解压
-		m.Option(cli.CMD_DIR, path.Dir(file))
-		m.Cmd(nfs.TAR, mdb.EXPORT, name)
-		m.ToastSuccess()
+		// 下载解压
+		m.Cmd("web.spide", ice.DEV, web.SPIDE_SAVE, file, web.SPIDE_GET, link)
+		m.Cmd(nfs.TAR, mdb.EXPORT, name, kit.Dict(cli.CMD_DIR, path.Dir(file)))
 	})
 }
-func _install_build(m *ice.Message, arg ...string) {
+func _install_build(m *ice.Message, arg ...string) string {
 	p := m.Option(cli.CMD_DIR, path.Join(m.Config(nfs.PATH), kit.TrimExt(m.Option(mdb.LINK))))
 	pp := kit.Path(path.Join(p, "_install"))
 
@@ -66,27 +61,20 @@ func _install_build(m *ice.Message, arg ...string) {
 		cb(p)
 	default:
 		if msg := m.Cmd(cli.SYSTEM, "./configure", "--prefix="+pp, arg[1:]); !cli.IsSuccess(msg) {
-			m.Echo(msg.Append(cli.CMD_ERR))
-			m.Toast(ice.FAILURE, cli.BUILD)
-			return
+			return msg.Append(cli.CMD_ERR)
 		}
 	}
 
 	// 编译
-	if msg := m.Cmd(cli.SYSTEM, "make", "-j8"); !cli.IsSuccess(msg) {
-		m.Echo(msg.Append(cli.CMD_ERR))
-		m.Toast(ice.FAILURE, cli.BUILD)
-		return
+	if msg := m.Cmd(cli.SYSTEM, cli.MAKE, "-j8"); !cli.IsSuccess(msg) {
+		return msg.Append(cli.CMD_ERR)
 	}
 
 	// 安装
-	if msg := m.Cmd(cli.SYSTEM, "make", "PREFIX="+pp, "install"); !cli.IsSuccess(msg) {
-		m.Echo(msg.Append(cli.CMD_ERR))
-		m.Toast(ice.FAILURE, cli.BUILD)
-		return
+	if msg := m.Cmd(cli.SYSTEM, cli.MAKE, "PREFIX="+pp, INSTALL); !cli.IsSuccess(msg) {
+		return msg.Append(cli.CMD_ERR)
 	}
-
-	m.Toast(ice.SUCCESS, cli.BUILD)
+	return ""
 }
 func _install_order(m *ice.Message, arg ...string) {
 	p := path.Join(m.Config(nfs.PATH), kit.TrimExt(m.Option(mdb.LINK)), m.Option(nfs.PATH)+ice.NL)
@@ -108,11 +96,11 @@ func _install_spawn(m *ice.Message, arg ...string) {
 	target := path.Join(m.Conf(cli.DAEMON, kit.Keym(nfs.PATH)), m.Option(tcp.PORT))
 	source := path.Join(m.Config(nfs.PATH), kit.TrimExt(m.Option(mdb.LINK)))
 	nfs.MkdirAll(m, target)
+	defer m.Echo(target)
 
-	m.Cmd(nfs.DIR, path.Join(source, kit.Select("_install", m.Option("install")))).Table(func(index int, value map[string]string, head []string) {
+	m.Cmd(nfs.DIR, path.Join(source, kit.Select("_install", m.Option(INSTALL)))).Tables(func(value map[string]string) {
 		m.Cmd(cli.SYSTEM, "cp", "-r", strings.TrimSuffix(value[nfs.PATH], ice.PS), target+ice.PS)
 	})
-	m.Echo(target)
 }
 func _install_start(m *ice.Message, arg ...string) {
 	p := m.Option(cli.CMD_DIR, m.Cmdx(INSTALL, cli.SPAWN))
@@ -127,18 +115,13 @@ func _install_start(m *ice.Message, arg ...string) {
 }
 func _install_service(m *ice.Message, arg ...string) {
 	arg = kit.Split(path.Base(arg[0]), "-.")[:1]
-
 	m.Fields(len(arg[1:]), "time,port,status,pid,cmd,dir")
-	m.Cmd(mdb.SELECT, cli.DAEMON, "", mdb.HASH).Table(func(index int, value map[string]string, head []string) {
-		if strings.Contains(value[ice.CMD], "bin/"+arg[0]) {
+	m.Cmd(mdb.SELECT, cli.DAEMON, "", mdb.HASH).Tables(func(value map[string]string) {
+		if strings.Contains(value[ice.CMD], path.Join(ice.BIN, arg[0])) {
 			m.Push("", value, kit.Split(m.OptionFields()))
 		}
 	})
-
-	m.Appendv(tcp.PORT, []string{})
-	m.Table(func(index int, value map[string]string, head []string) {
-		m.Push(tcp.PORT, path.Base(value[nfs.DIR]))
-	})
+	m.Set(tcp.PORT).Tables(func(value map[string]string) { m.Push(tcp.PORT, path.Base(value[nfs.DIR])) })
 }
 
 const (
@@ -157,7 +140,12 @@ func init() {
 				_install_download(m)
 			}},
 			cli.BUILD: {Name: "build link", Help: "构建", Hand: func(m *ice.Message, arg ...string) {
-				_install_build(m, arg...)
+				if err := _install_build(m, arg...); err != "" {
+					m.ToastFailure(cli.BUILD)
+					m.Echo(err)
+				} else {
+					m.ToastSuccess(cli.BUILD)
+				}
 			}},
 			cli.ORDER: {Name: "order link path", Help: "加载", Hand: func(m *ice.Message, arg ...string) {
 				_install_order(m, arg...)
@@ -189,8 +177,8 @@ func init() {
 	}})
 }
 
-func InstallAction(fields ...string) map[string]*ice.Action {
-	return ice.SelectAction(map[string]*ice.Action{
+func InstallAction(args ...interface{}) map[string]*ice.Action {
+	return ice.SelectAction(map[string]*ice.Action{ice.CTX_INIT: mdb.AutoConfig(args...),
 		web.DOWNLOAD: {Name: "download", Help: "下载", Hand: func(m *ice.Message, arg ...string) {
 			m.Cmdy(INSTALL, web.DOWNLOAD, m.Config(nfs.SOURCE))
 		}},
@@ -203,5 +191,5 @@ func InstallAction(fields ...string) map[string]*ice.Action {
 		nfs.TRASH: {Name: "trash", Help: "删除", Hand: func(m *ice.Message, arg ...string) {
 			m.Cmd(nfs.TRASH, m.Option(nfs.PATH))
 		}},
-	}, fields...)
+	})
 }

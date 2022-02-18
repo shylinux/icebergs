@@ -35,8 +35,8 @@ func init() {
 				if arg[0] == mdb.FOREACH {
 					return
 				}
-				_go_find(m, kit.Select(MAIN, arg, 1), arg[2])
-				_go_grep(m, kit.Select(MAIN, arg, 1), arg[2])
+				_go_find(m, kit.Select(cli.MAIN, arg, 1), arg[2])
+				_go_grep(m, kit.Select(cli.MAIN, arg, 1), arg[2])
 			}},
 			mdb.ENGINE: {Hand: func(m *ice.Message, arg ...string) {
 				m.Cmdy(cli.SYSTEM, NODE, arg[1], kit.Dict(cli.CMD_DIR, arg[2])).SetAppend()

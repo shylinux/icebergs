@@ -23,10 +23,8 @@ func _publish_file(m *ice.Message, file string, arg ...string) string {
 		file = cli.SystemFind(m, os.Args[0])
 
 	} else if s, e := os.Stat(file); m.Assert(e) && s.IsDir() {
-		p := path.Base(file) + ".tar.gz"
-		m.Cmd(nfs.TAR, mdb.IMPORT, p, file)
-		defer func() { os.Remove(p) }()
-		file = p // 打包目录
+		file = m.Cmdx(nfs.TAR, mdb.IMPORT, path.Base(file), file)
+		defer func() { os.Remove(file) }()
 	}
 
 	// 发布文件
@@ -50,12 +48,16 @@ func _publish_bin_list(m *ice.Message, dir string) {
 				m.Push(nfs.SIZE, kit.FmtSize(s.Size()))
 				m.Push(nfs.FILE, file)
 				m.PushDownload(mdb.LINK, file, path.Join(p, file))
+
 			}
 		}
 	}
 	m.SortTimeR(mdb.TIME)
 }
 
+const (
+	GIT = "git"
+)
 const PUBLISH = "publish"
 
 func init() {
@@ -80,7 +82,7 @@ func init() {
 			}},
 			ice.INTSHELL: {Name: "intshell", Help: "神农架", Hand: func(m *ice.Message, arg ...string) {
 				defer func() { m.Cmdy(PUBLISH, ice.CONTEXTS) }()
-				_publish_list(m, ".*\\.(sh|vim|conf)$")
+				_publish_list(m, `.*\.(sh|vim|conf)$`)
 			}},
 			ice.CONTEXTS: {Name: "contexts", Help: "环境", Hand: func(m *ice.Message, arg ...string) {
 				u := kit.ParseURL(tcp.ReplaceLocalhost(m, m.Option(ice.MSG_USERWEB)))
@@ -97,18 +99,16 @@ func init() {
 				}
 			}},
 			mdb.INPUTS: {Name: "inputs", Help: "补全", Hand: func(m *ice.Message, arg ...string) {
-				m.Cmdy(nfs.DIR, kit.Select(nfs.PWD, arg, 1))
-				m.ProcessAgain()
+				m.Cmdy(nfs.DIR, kit.Select(nfs.PWD, arg, 1)).ProcessAgain()
 			}},
 			mdb.CREATE: {Name: "create file", Help: "添加", Hand: func(m *ice.Message, arg ...string) {
 				_publish_file(m, m.Option(nfs.FILE))
 			}},
 			nfs.TRASH: {Name: "trash", Help: "删除", Hand: func(m *ice.Message, arg ...string) {
-				p := m.Option(cli.CMD_DIR, m.Config(nfs.PATH))
-				os.Remove(path.Join(p, m.Option(nfs.PATH)))
+				os.Remove(path.Join(m.Config(nfs.PATH), m.Option(nfs.PATH)))
 			}},
 			mdb.EXPORT: {Name: "export", Help: "工具链", Hand: func(m *ice.Message, arg ...string) {
-				var list = []string{ice.USR_LOCAL_LIB}
+				var list = []string{ice.ETC_PATH}
 				m.Cmd(nfs.CAT, ice.ETC_PATH, func(text string) {
 					if strings.HasPrefix(text, ice.USR_PUBLISH) {
 						return
@@ -124,19 +124,12 @@ func init() {
 
 				web.PushStream(m)
 				defer m.ProcessHold()
+				defer m.ToastSuccess()
 				defer m.StatusTimeCount()
-				m.Cmd(nfs.TAR, kit.Path(ice.USR_PUBLISH, "vim.tar.gz"), ".vim/plugged", kit.Dict(nfs.DIR_ROOT, kit.Env(cli.HOME)))
 				m.Cmd(nfs.TAR, kit.Path(ice.USR_PUBLISH, "contexts.bin.tar.gz"), list)
-				m.Cmd(PUBLISH, mdb.CREATE, ice.ETC_PATH)
-
-				m.Cmd(PUBLISH, mdb.CREATE, ice.MAKEFILE)
-				m.Cmd(PUBLISH, mdb.CREATE, ice.ETC_MISS_SH)
-				m.Cmd(PUBLISH, mdb.CREATE, ice.SRC_MAIN_GO)
-				m.Cmd(PUBLISH, mdb.CREATE, ice.GO_MOD)
-				m.Cmd(PUBLISH, mdb.CREATE, ice.GO_SUM)
-
+				m.Cmd(nfs.TAR, kit.Path(ice.USR_PUBLISH, "contexts.src.tar.gz"), ice.MAKEFILE, ice.ETC_MISS_SH, ice.SRC_MAIN_GO, ice.GO_MOD, ice.GO_SUM)
+				m.Cmd(nfs.TAR, kit.Path(ice.USR_PUBLISH, "contexts.home.tar.gz"), ".vim/plugged", kit.Dict(nfs.DIR_ROOT, kit.Env(cli.HOME)))
 				m.Cmd("web.code.git.server", mdb.IMPORT)
-				m.ToastSuccess()
 			}},
 		}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			m.Option(nfs.DIR_ROOT, m.Config(nfs.PATH))

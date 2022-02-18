@@ -139,6 +139,14 @@ func _hash_prunes(m *ice.Message, prefix, chain string, arg ...string) {
 
 const HASH = "hash"
 
+func AutoConfig(args ...interface{}) *ice.Action {
+	return &ice.Action{Hand: func(m *ice.Message, arg ...string) {
+		if cs := m.Target().Configs; cs[m.CommandKey()] == nil {
+			cs[m.CommandKey()] = &ice.Config{Value: kit.Data(args...)}
+		}
+	}}
+
+}
 func HashAction(args ...interface{}) map[string]*ice.Action {
 	_key := func(m *ice.Message) string {
 		if m.Config(HASH) == "uniq" {
@@ -149,12 +157,7 @@ func HashAction(args ...interface{}) map[string]*ice.Action {
 		}
 		return kit.Select(HASH, m.Config(SHORT))
 	}
-	return ice.SelectAction(map[string]*ice.Action{
-		ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
-			if cs := m.Target().Configs; cs[m.CommandKey()] == nil {
-				cs[m.CommandKey()] = &ice.Config{Value: kit.Data(args...)}
-			}
-		}},
+	return ice.SelectAction(map[string]*ice.Action{ice.CTX_INIT: AutoConfig(args...),
 		INPUTS: {Name: "inputs", Help: "补全", Hand: func(m *ice.Message, arg ...string) {
 			m.Cmdy(INPUTS, m.PrefixKey(), "", HASH, arg)
 		}},

@@ -297,6 +297,13 @@ func (m *Message) Sort(key string, arg ...string) *Message {
 	}
 	return m
 }
+func (m *Message) Tables(cbs ...func(value map[string]string)) *Message {
+	return m.Table(func(index int, value map[string]string, head []string) {
+		for _, cb := range cbs {
+			cb(value)
+		}
+	})
+}
 func (m *Message) Table(cbs ...func(index int, value map[string]string, head []string)) *Message {
 	if len(cbs) > 0 && cbs[0] != nil {
 		if m.FieldsIsDetail() {

@@ -10,19 +10,17 @@ import (
 )
 
 func _trash_create(m *ice.Message, name string) {
-	if s, e := os.Stat(name); e == nil {
+	if s, e := os.Stat(name); m.Assert(e) {
 		if s.IsDir() {
-			tar := path.Base(name) + ".tar.gz"
-			m.Cmd(TAR, tar, name)
-			name = tar
+			name = m.Cmdx(TAR, mdb.IMPORT, name)
 		}
 
 		if f, e := os.Open(name); m.Assert(e) {
 			defer f.Close()
 
-			h := kit.Hashs(f)
-			p := path.Join(m.Config(PATH), h[:2], h)
+			p := path.Join(m.Config(PATH), kit.HashsPath(f))
 			MkdirAll(m, path.Dir(p))
+			os.Remove(p)
 			os.Rename(name, p)
 			m.Cmdy(mdb.INSERT, TRASH, "", mdb.HASH, FILE, p, FROM, name)
 		}
@@ -56,7 +54,7 @@ func init() {
 				})
 			}},
 		}, mdb.HashAction()), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			if mdb.HashSelect(m, arg...); len(arg) == 0 || m.Length() > 0 {
+			if mdb.HashSelect(m, arg...); len(arg) == 0 || !kit.FileExists(arg[0]) {
 				m.PushAction(mdb.REVERT, mdb.REMOVE)
 				return
 			}

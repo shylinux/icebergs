@@ -4,6 +4,7 @@ import (
 	"path"
 
 	ice "shylinux.com/x/icebergs"
+	"shylinux.com/x/icebergs/base/cli"
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/nfs"
 	kit "shylinux.com/x/toolkits"
@@ -22,8 +23,8 @@ func init() {
 			}},
 			mdb.SEARCH: {Hand: func(m *ice.Message, arg ...string) {
 				if arg[0] == SHY {
-					_go_find(m, kit.Select(MAIN, arg, 1), arg[2])
-					_go_grep(m, kit.Select(MAIN, arg, 1), arg[2])
+					_go_find(m, kit.Select(cli.MAIN, arg, 1), arg[2])
+					_go_grep(m, kit.Select(cli.MAIN, arg, 1), arg[2])
 				}
 			}},
 			mdb.ENGINE: {Hand: func(m *ice.Message, arg ...string) {

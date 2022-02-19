@@ -15,11 +15,7 @@ import (
 const CASE = "case"
 
 func init() {
-	Index.Merge(&ice.Context{Configs: map[string]*ice.Config{
-		CASE: {Name: CASE, Help: "用例", Value: kit.Data(
-			mdb.SHORT, mdb.ZONE, mdb.FIELD, "time,id,name,cmd,api,arg,res",
-		)},
-	}, Commands: map[string]*ice.Command{
+	Index.Merge(&ice.Context{Commands: map[string]*ice.Command{
 		CASE: {Name: "case dev zone id auto", Help: "用例", Action: ice.MergeAction(map[string]*ice.Action{
 			mdb.CREATE: {Name: "create name address", Help: "创建", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmdy(web.SPIDE, mdb.CREATE, arg)
@@ -29,7 +25,7 @@ func init() {
 			cli.CHECK: {Name: "check", Help: "检查", Hand: func(m *ice.Message, arg ...string) {
 				if m.ProcessInner(); len(arg) > 0 {
 					success := 0
-					m.Cmd(m.PrefixKey(), arg[0]).Table(func(index int, value map[string]string, head []string) {
+					m.Cmd(m.PrefixKey(), arg[0]).Tables(func(value map[string]string) {
 						m.Push(mdb.TIME, m.Time())
 						m.Push(mdb.ID, value[mdb.ID])
 						if err := m.Cmdx(m.PrefixKey(), cli.CHECK, value); err == ice.OK {
@@ -64,15 +60,13 @@ func init() {
 				m.Info(`curl "` + m.Option(cli.API) + `" -H "Content-Type: application/json"` + ` -d '` + m.Option(ice.ARG) + `'`)
 				m.ProcessDisplay("/plugin/story/json.js")
 			}},
-		}, mdb.ZoneAction()), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		}, mdb.ZoneAction(mdb.SHORT, mdb.ZONE, mdb.FIELD, "time,id,name,cmd,api,arg,res")), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			if len(arg) == 0 {
-				m.Cmdy(web.SPIDE)
-				m.Action(mdb.CREATE)
-				m.RenameAppend("client.name", "dev")
-				m.RenameAppend("client.url", "address")
+				m.Cmdy(web.SPIDE).RenameAppend("client.name", "dev", "client.url", "address").Action(mdb.CREATE)
 				return
 			}
 
+			defer m.StatusTimeCount()
 			if mdb.ZoneSelect(m, arg[1:]...); len(arg) == 1 {
 				m.Action(mdb.INSERT, mdb.EXPORT, mdb.IMPORT)
 				m.PushAction(mdb.INSERT, cli.CHECK, mdb.REMOVE)
@@ -80,7 +74,6 @@ func init() {
 				m.Action(mdb.INSERT, cli.CHECK)
 				m.PushAction(ice.RUN, cli.CHECK)
 			}
-			m.StatusTimeCount()
 		}},
 		"test": {Name: "test path func auto run case", Help: "测试用例", Action: map[string]*ice.Action{
 			"run": {Name: "run", Help: "运行", Hand: func(m *ice.Message, arg ...string) {
@@ -94,7 +87,7 @@ func init() {
 				if strings.HasSuffix(arg[0], "/") {
 					msg.Option(cli.CMD_DIR, arg[0])
 					msg.Split(msg.Cmdx(cli.SYSTEM, "grep", "-r", "func Test.*(", nfs.PWD), "file:line", ":", "\n")
-					msg.Table(func(index int, value map[string]string, head []string) {
+					msg.Tables(func(value map[string]string) {
 						if strings.HasPrefix(strings.TrimSpace(value["line"]), "//") {
 							return
 						}

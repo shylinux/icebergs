@@ -85,7 +85,7 @@ field "{{.Option "help"}}" {{.Option "key"}}
 `)
 }
 func _autogen_source(m *ice.Message, main, file string) {
-	m.Cmd(nfs.PUSH, strings.ReplaceAll(main, ice.PT+GO, ice.PT+SHY), ice.NL, strings.TrimPrefix(file, ice.SRC+ice.PS), ice.NL)
+	m.Cmd(nfs.PUSH, strings.ReplaceAll(main, ice.PT+GO, ice.PT+SHY), ice.NL, "source "+strings.TrimPrefix(file, ice.SRC+ice.PS))
 }
 func _autogen_mod(m *ice.Message, file string) (mod string) {
 	m.Cmd(nfs.DEFS, ice.GO_MOD, kit.Format(`module %s
@@ -138,7 +138,7 @@ func init() {
 %s
 	}
 }
-`, _autogen_gits(m, "HostName", ice.Info.HostName, "UserName", ice.Info.UserName)))
+`, _autogen_gits(m, "Module", _autogen_mod(m, ice.GO_MOD), "HostName", ice.Info.HostName, "UserName", ice.Info.UserName)))
 
 	m.Cmdy(nfs.DIR, ice.SRC_MAIN_GO)
 	m.Cmdy(nfs.DIR, ice.SRC_VERSION_GO)

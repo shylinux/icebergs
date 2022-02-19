@@ -9,17 +9,14 @@ import (
 const FAVOR = "favor"
 
 func init() {
-	Index.Merge(&ice.Context{Configs: map[string]*ice.Config{
-		FAVOR: {Name: FAVOR, Help: "收藏夹", Value: kit.Data(mdb.SHORT, mdb.ZONE, mdb.FIELD, "time,id,type,name,text,path,file,line")},
-	}, Commands: map[string]*ice.Command{
+	Index.Merge(&ice.Context{Commands: map[string]*ice.Command{
 		FAVOR: {Name: "favor zone id auto insert", Help: "收藏夹", Action: ice.MergeAction(map[string]*ice.Action{
 			mdb.INSERT: {Name: "insert zone=数据结构 type=go name=hi text=hello path file line", Help: "添加"},
 			INNER: {Name: "inner", Help: "源码", Hand: func(m *ice.Message, arg ...string) {
 				m.ProcessCommand(INNER, m.OptionSplit("path,file,line"), arg...)
 			}},
-		}, mdb.ZoneAction()), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			mdb.ZoneSelect(m, arg...)
-			m.PushAction(kit.Select(mdb.REMOVE, INNER, len(arg) > 0))
+		}, mdb.ZoneAction(mdb.SHORT, mdb.ZONE, mdb.FIELD, "time,id,type,name,text,path,file,line")), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			mdb.ZoneSelect(m, arg...).PushAction(kit.Select(mdb.REMOVE, INNER, len(arg) > 0))
 		}},
 	}})
 }

@@ -59,17 +59,6 @@ func init() {
 				}
 				LoadPlug(m, C)
 			}},
-			mdb.SEARCH: {Hand: func(m *ice.Message, arg ...string) {
-				if arg[0] == mdb.FOREACH {
-					return
-				}
-				m.Option(cli.CMD_DIR, kit.Select(ice.SRC, arg, 2))
-				m.Cmdy(mdb.SEARCH, MAN2, arg[1:])
-				m.Cmdy(mdb.SEARCH, MAN3, arg[1:])
-				_c_tags(m, kit.Select(cli.MAIN, arg, 1))
-				_go_find(m, kit.Select(cli.MAIN, arg, 1), arg[2])
-				_go_grep(m, kit.Select(cli.MAIN, arg, 1), arg[2])
-			}},
 			mdb.ENGINE: {Hand: func(m *ice.Message, arg ...string) {
 				m.Option(cli.CMD_DIR, arg[2])
 				name := strings.TrimSuffix(arg[1], path.Ext(arg[1])) + ".bin"
@@ -78,6 +67,17 @@ func init() {
 					return
 				}
 				m.Echo(m.Cmd(cli.SYSTEM, nfs.PWD+name).Append(cli.CMD_OUT))
+			}},
+			mdb.SEARCH: {Hand: func(m *ice.Message, arg ...string) {
+				if arg[0] == mdb.FOREACH {
+					return
+				}
+				m.Option(cli.CMD_DIR, kit.Select(ice.SRC, arg, 2))
+				m.Cmdy(mdb.SEARCH, MAN2, arg[1:])
+				m.Cmdy(mdb.SEARCH, MAN3, arg[1:])
+				_c_tags(m, kit.Select(cli.MAIN, arg, 1))
+				// _go_find(m, kit.Select(cli.MAIN, arg, 1), arg[2])
+				// _go_grep(m, kit.Select(cli.MAIN, arg, 1), arg[2])
 			}},
 		}, PlugAction())},
 		MAN: {Name: MAN, Help: "手册", Action: ice.MergeAction(map[string]*ice.Action{
@@ -89,6 +89,9 @@ func init() {
 				}
 				LoadPlug(m, MAN)
 			}},
+			mdb.RENDER: {Hand: func(m *ice.Message, arg ...string) {
+				m.Echo(_c_help(m, strings.TrimPrefix(arg[0], MAN), strings.TrimSuffix(arg[1], ice.PT+arg[0])))
+			}},
 			mdb.SEARCH: {Hand: func(m *ice.Message, arg ...string) {
 				if arg[0] == mdb.FOREACH {
 					return
@@ -99,19 +102,18 @@ func init() {
 					}
 				}
 			}},
-			mdb.RENDER: {Hand: func(m *ice.Message, arg ...string) {
-				m.Echo(_c_help(m, strings.TrimPrefix(arg[0], MAN), strings.TrimSuffix(arg[1], ice.PT+arg[0])))
-			}},
 		}, PlugAction())},
 	}, Configs: map[string]*ice.Config{
 		C: {Name: C, Help: "系统", Value: kit.Data(PLUG, kit.Dict(
 			SPLIT, kit.Dict("space", " ", "operator", "{[(.,:;!|<>)]}"),
-			PREFIX, kit.Dict("//", COMMENT, "/*", COMMENT, "*", COMMENT), PREPARE, kit.Dict(
+			PREFIX, kit.Dict("//", COMMENT, "/* ", COMMENT, "* ", COMMENT), PREPARE, kit.Dict(
 				KEYWORD, kit.Simple(
 					"#include",
 					"#define",
 					"#ifndef",
 					"#ifdef",
+					"#if",
+					"#elif",
 					"#else",
 					"#endif",
 

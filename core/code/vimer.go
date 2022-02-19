@@ -24,22 +24,25 @@ func init() {
 			COMPILE: {Name: "compile", Help: "编译", Hand: func(m *ice.Message, arg ...string) {
 				if msg := m.Cmd(COMPILE, ice.SRC_MAIN_GO, ice.BIN_ICE_BIN); !cli.IsSuccess(msg) {
 					_inner_make(m, msg)
-					return
+				} else {
+					m.Cmd(UPGRADE, cli.RESTART)
 				}
-				m.Go(func() { m.Sleep("1s", ice.EXIT, "1") })
 			}},
-			BINPACK: {Name: "binpack", Help: "打包", Hand: func(m *ice.Message, arg ...string) {
-				m.Cmdy(AUTOGEN, BINPACK)
+			BINPACK: {Name: "binpack", Help: "打包模式", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmd(nfs.COPY, ice.GO_MOD, path.Join(ice.SRC_RELEASE, ice.GO_MOD))
 				m.Cmd(nfs.COPY, ice.GO_SUM, path.Join(ice.SRC_RELEASE, ice.GO_SUM))
+				m.Cmdy(nfs.CAT, ice.GO_MOD)
+				m.Cmdy(AUTOGEN, BINPACK)
+				m.ToastSuccess()
 				m.ProcessInner()
 			}},
 			DEVPACK: {Name: "devpack", Help: "开发模式", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmd(nfs.COPY, ice.GO_MOD, path.Join(ice.SRC_DEBUG, ice.GO_MOD))
 				m.Cmd(nfs.COPY, ice.GO_SUM, path.Join(ice.SRC_DEBUG, ice.GO_SUM))
+				m.Cmdy(nfs.CAT, ice.GO_MOD)
 				m.Cmdy(WEBPACK, mdb.REMOVE)
 				m.ToastSuccess()
-				m.ProcessHold()
+				m.ProcessInner()
 			}},
 		}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) { m.Cmdy(INNER, arg) }},
 	}})

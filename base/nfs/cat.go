@@ -95,6 +95,10 @@ func _cat_list(m *ice.Message, name string) {
 		for bio := bufio.NewScanner(f); bio.Scan(); {
 			cb(bio.Text())
 		}
+	case func([]string, string):
+		for bio := bufio.NewScanner(f); bio.Scan(); {
+			cb(kit.Split(bio.Text()), bio.Text())
+		}
 
 	default:
 		buf := make([]byte, ice.MOD_BUFS)

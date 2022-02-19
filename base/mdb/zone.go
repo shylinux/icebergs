@@ -137,12 +137,7 @@ const ZONE = "zone"
 func ZoneAction(args ...interface{}) map[string]*ice.Action {
 	_zone := func(m *ice.Message) string { return kit.Select(ZONE, m.Config(SHORT)) }
 
-	return ice.SelectAction(map[string]*ice.Action{
-		ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
-			if cs := m.Target().Configs; cs[m.CommandKey()] == nil {
-				cs[m.CommandKey()] = &ice.Config{Value: kit.Data(args...)}
-			}
-		}},
+	return ice.SelectAction(map[string]*ice.Action{ice.CTX_INIT: AutoConfig(args...),
 		INPUTS: {Name: "inputs", Help: "补全", Hand: func(m *ice.Message, arg ...string) {
 			arg[0] = strings.TrimPrefix(arg[0], "extra.")
 			arg[0] = kit.Select(arg[0], m.Config(kit.Keys(ALIAS, arg[0])))

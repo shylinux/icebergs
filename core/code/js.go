@@ -2,6 +2,7 @@ package code
 
 import (
 	"path"
+	"strings"
 
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/cli"
@@ -31,25 +32,29 @@ func init() {
 				}
 				LoadPlug(m, JS)
 			}},
+			mdb.RENDER: {Hand: func(m *ice.Message, arg ...string) {
+				key := ice.GetFileKey(kit.Replace(path.Join(arg[2], arg[1]), ".js", ".go"))
+				if key == "" {
+					for p, k := range ice.Info.File {
+						if strings.HasPrefix(p, path.Dir(path.Join(arg[2], arg[1]))) {
+							key = k
+						}
+					}
+				}
+				m.Display(path.Join("/require", ice.Info.Make.Module, path.Join(arg[2], arg[1])))
+				m.ProcessCommand(kit.Select("can.code.inner.plugin", key), kit.Simple())
+			}},
+			mdb.ENGINE: {Hand: func(m *ice.Message, arg ...string) {
+				m.Cmdy(cli.SYSTEM, NODE, "-e", kit.Format(`global.plugin = "%s", require("%s")`,
+					kit.Path(arg[2], arg[1]), kit.Path("usr/volcanos/proto.js"))).SetAppend()
+				m.Echo(ice.NL)
+			}},
 			mdb.SEARCH: {Hand: func(m *ice.Message, arg ...string) {
 				if arg[0] == mdb.FOREACH {
 					return
 				}
 				_go_find(m, kit.Select(cli.MAIN, arg, 1), arg[2])
 				_go_grep(m, kit.Select(cli.MAIN, arg, 1), arg[2])
-			}},
-			mdb.ENGINE: {Hand: func(m *ice.Message, arg ...string) {
-				m.Cmdy(cli.SYSTEM, NODE, arg[1], kit.Dict(cli.CMD_DIR, arg[2])).SetAppend()
-			}},
-			mdb.RENDER: {Hand: func(m *ice.Message, arg ...string) {
-				if key, ok := ice.Info.File[kit.Replace(path.Join(arg[2], arg[1]), ".js", ".go")]; ok && key != "" {
-					m.Display(path.Join(web.SHARE_LOCAL, path.Join(arg[2], arg[1])))
-					m.ProcessCommand(key, kit.Simple())
-				} else {
-					m.Display(path.Join(web.SHARE_LOCAL, path.Join(arg[2], arg[1])))
-					m.ProcessCommand("can.code.inner.plugin", kit.Simple())
-					// m.ProcessCommand("web.wiki.word", kit.Simple(strings.ReplaceAll(path.Join(arg[2], arg[1]), ".go", ".shy")))
-				}
 			}},
 		}, PlugAction())},
 		NODE: {Name: "node auto download", Help: "前端", Action: map[string]*ice.Action{
@@ -62,24 +67,28 @@ func init() {
 			nfs.SOURCE, "https://nodejs.org/dist/v10.13.0/node-v10.13.0-linux-x64.tar.xz",
 		)},
 		JS: {Name: JS, Help: "js", Value: kit.Data(PLUG, kit.Dict(
+			mdb.RENDER, kit.Dict(),
 			SPLIT, kit.Dict("space", " \t", "operator", "{[(&.,;!|<>)]}"),
 			PREFIX, kit.Dict("//", COMMENT, "/*", COMMENT, "*", COMMENT), PREPARE, kit.Dict(
 				KEYWORD, kit.Simple(
 					"import", "from", "export",
-
 					"var", "new", "delete", "typeof", "const", "function",
-
 					"if", "else", "for", "while", "break", "continue", "switch", "case", "default",
 					"return", "try", "throw", "catch", "finally",
-
 					"can", "sub", "msg", "res", "target",
-				),
-				FUNCTION, kit.Simple(
+
 					"window",
 					"console",
 					"document",
-					"arguments",
 					"event",
+				),
+				CONSTANT, kit.Simple(
+					"true", "false",
+					"undefined", "null",
+					"-1", "0", "1", "2", "10",
+				),
+				FUNCTION, kit.Simple(
+					"arguments",
 					"Date",
 					"JSON",
 
@@ -100,11 +109,6 @@ func init() {
 					"shy",
 					"pane",
 					"plugin",
-				),
-				CONSTANT, kit.Simple(
-					"true", "false",
-					"undefined", "null",
-					"-1", "0", "1", "2", "10",
 				),
 			), KEYWORD, kit.Dict(),
 		))},

@@ -8,21 +8,20 @@ publish.go
 upgrade.go
 install.go
 
+favor.go
 inner.go
 vimer.go
-favor.go
 bench.go
 pprof.go
+case.go
 
 c.go
-js.go
-go.go
 sh.go
+go.go
+js.go
 shy.go
 
-python.go
-python.shy
-case.go
 code.go
 code.shy
-
+sess.go
+template.go

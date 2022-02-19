@@ -23,23 +23,22 @@ func _inner_list(m *ice.Message, ext, file, dir string, arg ...string) {
 		_inner_show(m, ext, file, dir, arg...)
 	}
 }
-func _inner_exec(m *ice.Message, ext, file, dir string, arg ...string) {
-	if !m.Right(dir, file) {
-		return // 没有权限
-	}
-	if m.Cmdy(mdb.ENGINE, ext, file, dir, arg); m.Result() != "" {
-		return // 执行成功
-	}
-	if ls := kit.Simple(m.Configv(kit.Keys(EXEC, ext))); len(ls) > 0 {
-		m.Cmdy(cli.SYSTEM, ls, file, ice.Option{cli.CMD_DIR, dir})
-	}
-}
 func _inner_show(m *ice.Message, ext, file, dir string, arg ...string) {
 	if !m.Right(dir, file) {
 		return // 没有权限
 	}
-	if m.Cmdy(mdb.RENDER, ext, file, dir, arg); m.Result() != "" {
-		return // 解析成功
+	m.Cmdy(mdb.RENDER, ext, file, dir, arg)
+}
+func _inner_exec(m *ice.Message, ext, file, dir string, arg ...string) {
+	if !m.Right(dir, file) {
+		return // 没有权限
+	}
+	defer m.StatusTime()
+	if m.Cmdy(mdb.ENGINE, ext, file, dir, arg); m.Result() != "" {
+		return // 执行成功
+	}
+	if ls := kit.Simple(m.Configv(kit.Keys(EXEC, ext))); len(ls) > 0 {
+		m.Cmdy(cli.SYSTEM, ls, file, kit.Dict(cli.CMD_DIR, dir)).SetAppend()
 	}
 }
 func _inner_make(m *ice.Message, msg *ice.Message) {
@@ -69,21 +68,20 @@ func LoadPlug(m *ice.Message, language ...string) {
 		})
 	}
 }
-
 func PlugAction(fields ...string) map[string]*ice.Action {
 	return ice.SelectAction(map[string]*ice.Action{
-		mdb.ENGINE: {Hand: func(m *ice.Message, arg ...string) { m.Cmdy(nfs.CAT, path.Join(arg[2], arg[1])) }},
-		mdb.RENDER: {Hand: func(m *ice.Message, arg ...string) { m.Cmdy(nfs.CAT, path.Join(arg[2], arg[1])) }},
 		mdb.PLUGIN: {Hand: func(m *ice.Message, arg ...string) { m.Echo(m.Config(PLUG)) }},
+		mdb.RENDER: {Hand: func(m *ice.Message, arg ...string) { m.Cmdy(nfs.CAT, path.Join(arg[2], arg[1])) }},
+		mdb.ENGINE: {Hand: func(m *ice.Message, arg ...string) { m.Cmdy(nfs.CAT, path.Join(arg[2], arg[1])) }},
 	}, fields...)
 }
 
 const (
 	COMMENT  = "comment"
 	KEYWORD  = "keyword"
+	CONSTANT = "constant"
 	DATATYPE = "datatype"
 	FUNCTION = "function"
-	CONSTANT = "constant"
 )
 const (
 	SPLIT  = "split"
@@ -92,19 +90,31 @@ const (
 )
 const (
 	PLUG = "plug"
-	EXEC = "exec"
 	SHOW = "show"
+	EXEC = "exec"
 )
 const INNER = "inner"
 
 func init() {
 	Index.Merge(&ice.Context{Commands: map[string]*ice.Command{
 		INNER: {Name: "inner path=src/@key file=main.go line=1 auto", Help: "源代码", Meta: kit.Dict(ice.DisplayLocal("")), Action: ice.MergeAction(map[string]*ice.Action{
+			mdb.PLUGIN: {Name: "plugin", Help: "插件", Hand: func(m *ice.Message, arg ...string) {
+				if m.Cmdy(mdb.PLUGIN, arg); m.Result() == "" {
+					m.Echo(kit.Select("{}", m.Config(kit.Keys(PLUG, arg[0]))))
+				}
+				m.Set(ice.MSG_STATUS)
+			}},
+			mdb.RENDER: {Name: "render", Help: "渲染", Hand: func(m *ice.Message, arg ...string) {
+				_inner_show(m, arg[0], arg[1], arg[2])
+			}},
+			mdb.ENGINE: {Name: "engine", Help: "引擎", Hand: func(m *ice.Message, arg ...string) {
+				_inner_exec(m, arg[0], arg[1], arg[2])
+			}},
 			mdb.SEARCH: {Name: "search", Help: "搜索", Hand: func(m *ice.Message, arg ...string) {
 				m.Option(nfs.DIR_ROOT, arg[2])
 				m.Option(cli.CMD_DIR, kit.Path(arg[2]))
 				m.Cmdy(mdb.SEARCH, arg[0], arg[1], arg[2])
-				m.Cmd(FAVOR, arg[1], ice.OptionFields("")).Table(func(index int, value map[string]string, head []string) {
+				m.Cmd(FAVOR, arg[1], ice.OptionFields("")).Tables(func(value map[string]string) {
 					if p := path.Join(value[nfs.PATH], value[nfs.FILE]); strings.HasPrefix(p, m.Option(nfs.PATH)) {
 						m.Push(nfs.FILE, strings.TrimPrefix(p, m.Option(nfs.PATH)))
 						m.Push(nfs.LINE, value[nfs.LINE])
@@ -114,27 +124,6 @@ func init() {
 				if m.StatusTimeCount(mdb.INDEX, 0); m.Length() == 0 {
 					m.Cmdy(INNER, nfs.GREP, arg[1])
 				}
-			}},
-			mdb.PLUGIN: {Name: "plugin", Help: "插件", Hand: func(m *ice.Message, arg ...string) {
-				if m.Cmdy(mdb.PLUGIN, arg); m.Result() == "" {
-					m.Echo(kit.Select("{}", m.Config(kit.Keys(PLUG, arg[0]))))
-				}
-				m.Set(ice.MSG_STATUS)
-			}},
-			mdb.ENGINE: {Name: "engine", Help: "引擎", Hand: func(m *ice.Message, arg ...string) {
-				_inner_exec(m, arg[0], arg[1], arg[2])
-			}},
-			mdb.RENDER: {Name: "render", Help: "渲染", Hand: func(m *ice.Message, arg ...string) {
-				_inner_show(m, arg[0], arg[1], arg[2])
-			}},
-			nfs.TAGS: {Name: "tags", Help: "索引", Hand: func(m *ice.Message, arg ...string) {
-			}},
-			nfs.GREP: {Name: "grep", Help: "搜索", Hand: func(m *ice.Message, arg ...string) {
-				m.Cmdy(nfs.GREP, m.Option(nfs.PATH), arg[0])
-				m.StatusTimeCount(mdb.INDEX, 0)
-			}},
-			cli.MAKE: {Name: "make", Help: "构建", Hand: func(m *ice.Message, arg ...string) {
-				_inner_make(m, m.Cmd(cli.SYSTEM, cli.MAKE, arg))
 			}},
 			mdb.INPUTS: {Name: "inputs", Help: "补全", Hand: func(m *ice.Message, arg ...string) {
 				if m.Option(ctx.ACTION) == "website" {
@@ -147,16 +136,13 @@ func init() {
 
 				switch arg[0] {
 				case cli.MAIN:
-					m.Option(nfs.DIR_REG, "*.go")
-					m.Cmdy(nfs.DIR, "src/", nfs.DIR_CLI_FIELDS).ProcessAgain()
+					m.Cmdy(nfs.DIR, ice.SRC, nfs.DIR_CLI_FIELDS, kit.Dict(nfs.DIR_REG, `.*\.go`)).ProcessAgain()
 				case nfs.PATH:
 					m.Cmdy(nfs.DIR, arg[1:], nfs.DIR_CLI_FIELDS).ProcessAgain()
 				case nfs.FILE:
 					p := kit.Select(nfs.PWD, arg, 1)
-					if !strings.HasSuffix(p, ice.FS) {
-						p = path.Dir(p)
-					}
-					m.Cmdy(nfs.DIR, p+ice.PS, nfs.DIR_CLI_FIELDS, kit.Dict(nfs.DIR_ROOT, m.Option(nfs.PATH))).ProcessAgain()
+					m.Option(nfs.DIR_ROOT, m.Option(nfs.PATH))
+					m.Cmdy(nfs.DIR, kit.Select(path.Dir(p), p, strings.HasSuffix(p, ice.FS))+ice.PS, nfs.DIR_CLI_FIELDS).ProcessAgain()
 				case "url":
 					m.Option(nfs.DIR_ROOT, "usr/volcanos/plugin/local/code/")
 					m.Cmdy(nfs.DIR, nfs.PWD, nfs.DIR_CLI_FIELDS, kit.Dict(nfs.DIR_DEEP, ice.TRUE)).ProcessAgain()
@@ -164,10 +150,18 @@ func init() {
 					m.Cmdy(FAVOR, mdb.INPUTS, arg)
 				}
 			}},
+
+			nfs.TAGS: {Name: "tags", Help: "索引", Hand: func(m *ice.Message, arg ...string) {}},
+			nfs.GREP: {Name: "grep", Help: "搜索", Hand: func(m *ice.Message, arg ...string) {
+				m.Cmdy(nfs.GREP, m.Option(nfs.PATH), arg[0])
+				m.StatusTimeCount(mdb.INDEX, 0)
+			}},
+			cli.MAKE: {Name: "make", Help: "构建", Hand: func(m *ice.Message, arg ...string) {
+				_inner_make(m, m.Cmd(cli.SYSTEM, cli.MAKE, arg))
+			}},
 			FAVOR: {Name: "favor", Help: "收藏"},
 		}, ctx.CmdAction()), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			arg[0] = strings.Split(arg[0], ice.FS)[0]
-			if !strings.HasSuffix(arg[0], ice.PS) {
+			if arg[0] = strings.Split(arg[0], ice.FS)[0]; !strings.HasSuffix(arg[0], ice.PS) {
 				arg[1] = kit.Slice(strings.Split(arg[0], ice.PS), -1)[0]
 				arg[0] = strings.TrimSuffix(arg[0], arg[1])
 				m.ProcessRewrite(nfs.PATH, arg[0], nfs.FILE, arg[1])
@@ -177,11 +171,20 @@ func init() {
 				nfs.Dir(m, nfs.PATH)
 				return
 			}
-			arg[1] = strings.Split(arg[1], ice.FS)[0]
-			if m.Option(ice.POD) == "" {
-				m.Option("plug", "web.chat.website,web.dream")
+
+			list := kit.Simple()
+			for k, v := range ice.Info.File {
+				if strings.HasPrefix(k, path.Dir(path.Join(m.Option(nfs.PATH), m.Option(nfs.FILE)))) {
+					list = append(list, v)
+				}
 			}
+			m.Option("keys", list)
+			m.Option("module", ice.Info.Make.Module)
+
+			m.Option("plug", "web.chat.website,web.dream")
 			m.Option("exts", "inner/search.js?a=1,inner/favor.js,inner/template.js")
+
+			arg[1] = strings.Split(arg[1], ice.FS)[0]
 			if _inner_list(m, kit.Ext(arg[1]), arg[1], arg[0]); m.IsErrNotFound() {
 				m.SetResult("")
 			}
@@ -189,56 +192,18 @@ func init() {
 		}},
 	}, Configs: map[string]*ice.Config{
 		INNER: {Name: "inner", Help: "源代码", Value: kit.Data(
-			EXEC, kit.Dict(
-				"py", []string{"python"},
-				"js", []string{"node"},
-			),
+			EXEC, kit.Dict("js", []string{"node"}, "py", []string{"python"}),
 			PLUG, kit.Dict(
-				"s", kit.Dict(
-					PREFIX, kit.Dict("//", COMMENT),
-					KEYWORD, kit.Dict(
-						"TEXT", KEYWORD,
-						"RET", KEYWORD,
-					),
-				),
-				"S", kit.Dict(
-					PREFIX, kit.Dict("//", COMMENT),
-					KEYWORD, kit.Dict(),
-				),
-				"py", kit.Dict(
-					PREFIX, kit.Dict("#", COMMENT),
-					KEYWORD, kit.Dict("print", KEYWORD),
-				),
-				nfs.HTML, kit.Dict(
-					SPLIT, kit.Dict(
-						"space", " ",
-						"operator", "<>",
-					),
-					KEYWORD, kit.Dict(
-						"head", KEYWORD,
-						"body", KEYWORD,
-					),
-				),
-				nfs.CSS, kit.Dict(
-					SUFFIX, kit.Dict("{", COMMENT),
-				),
-				"yaml", kit.Dict(
-					PREFIX, kit.Dict("#", COMMENT),
-				),
-				"yml", kit.Dict(
-					PREFIX, kit.Dict("#", COMMENT),
-				),
+				"S", kit.Dict(PREFIX, kit.Dict("//", COMMENT)),
+				"s", kit.Dict(PREFIX, kit.Dict("//", COMMENT), KEYWORD, kit.Dict("TEXT", KEYWORD, "RET", KEYWORD)),
+				"py", kit.Dict(PREFIX, kit.Dict("#", COMMENT), KEYWORD, kit.Dict("print", KEYWORD)),
+				nfs.HTML, kit.Dict(SPLIT, kit.Dict("space", " ", "operator", "<>"), KEYWORD, kit.Dict("head", KEYWORD, "body", KEYWORD)),
+				nfs.CSS, kit.Dict(SUFFIX, kit.Dict("{", COMMENT)),
+				"yaml", kit.Dict(PREFIX, kit.Dict("#", COMMENT)),
+				"yml", kit.Dict(PREFIX, kit.Dict("#", COMMENT)),
 
-				"md", kit.Dict(),
-				"makefile", kit.Dict(
-					PREFIX, kit.Dict("#", COMMENT),
-					SUFFIX, kit.Dict(":", COMMENT),
-					KEYWORD, kit.Dict(
-						"ifeq", KEYWORD,
-						"ifneq", KEYWORD,
-						"else", KEYWORD,
-						"endif", KEYWORD,
-					),
+				"makefile", kit.Dict(PREFIX, kit.Dict("#", COMMENT), SUFFIX, kit.Dict(":", COMMENT),
+					KEYWORD, kit.Dict("ifeq", KEYWORD, "ifneq", KEYWORD, "else", KEYWORD, "endif", KEYWORD),
 				),
 			),
 		)},

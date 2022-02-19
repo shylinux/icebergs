@@ -18,6 +18,12 @@ func init() {
 				}
 				LoadPlug(m, SH)
 			}},
+			mdb.ENGINE: {Hand: func(m *ice.Message, arg ...string) {
+				m.Cmdy(cli.SYSTEM, SH, "-c", `#! /bin/sh
+
+source `+arg[1]+`
+`, kit.Dict(cli.CMD_DIR, arg[2])).SetAppend()
+			}},
 			mdb.SEARCH: {Hand: func(m *ice.Message, arg ...string) {
 				if arg[0] == mdb.FOREACH {
 					return
@@ -28,15 +34,13 @@ func init() {
 				_go_find(m, kit.Select(cli.MAIN, arg, 1), arg[2])
 				_go_grep(m, kit.Select(cli.MAIN, arg, 1), arg[2])
 			}},
-			mdb.ENGINE: {Hand: func(m *ice.Message, arg ...string) {
-				m.Cmdy(cli.SYSTEM, SH, arg[1], kit.Dict(cli.CMD_DIR, arg[2])).SetAppend()
-			}},
 			MAN: {Hand: func(m *ice.Message, arg ...string) {
 				m.Echo(_c_help(m, arg[0], arg[1]))
 			}},
 		}, PlugAction())},
 	}, Configs: map[string]*ice.Config{
 		SH: {Name: SH, Help: "命令", Value: kit.Data(PLUG, kit.Dict(
+			mdb.ENGINE, kit.Dict(),
 			SPLIT, kit.Dict("space", " ", "operator", "{[(.,;!|<>)]}"),
 			PREFIX, kit.Dict("#", COMMENT),
 			SUFFIX, kit.Dict("{", COMMENT),

@@ -81,6 +81,8 @@ var Index = &Context{Name: "ice", Help: "冰山模块", Configs: map[string]*Con
 	}},
 	CTX_EXIT: {Hand: func(m *Message, c *Context, cmd string, arg ...string) {
 		defer m.Cost(CTX_EXIT)
+		m.Option("cmd_dir", "")
+		m.Option("dir_root", "")
 		m.root.Travel(func(p *Context, c *Context) {
 			if cmd, ok := c.Commands[CTX_EXIT]; ok && p != nil {
 				m.TryCatch(m.Spawn(c), true, func(msg *Message) {

@@ -52,17 +52,13 @@ func _go_help(m *ice.Message, key string) {
 	}
 }
 func _go_find(m *ice.Message, key string, dir string) {
-	m.Cmd(nfs.FIND, dir, key).Table(func(index int, value map[string]string, head []string) {
-		m.PushSearch(nfs.LINE, 1, value)
-	})
+	m.Cmd(nfs.FIND, dir, key).Tables(func(value map[string]string) { m.PushSearch(nfs.LINE, 1, value) })
 }
 func _go_grep(m *ice.Message, key string, dir string) {
-	m.Cmd(nfs.GREP, dir, key).Table(func(index int, value map[string]string, head []string) {
-		m.PushSearch(value)
-	})
+	m.Cmd(nfs.GREP, dir, key).Tables(func(value map[string]string) { m.PushSearch(value) })
 }
 func _go_exec(m *ice.Message, arg ...string) {
-	if key, ok := ice.Info.File[path.Join(arg[2], arg[1])]; ok && key != "" {
+	if key := ice.GetFileKey(path.Join(arg[2], arg[1])); key != "" {
 		m.Cmdy(cli.SYSTEM, GO, ice.RUN, ice.SRC_MAIN_GO, key)
 	} else if m.Option(cli.CMD_DIR, arg[2]); strings.HasSuffix(arg[1], "_test.go") {
 		m.Cmdy(cli.SYSTEM, GO, "test", "-v", nfs.PWD+arg[1])
@@ -77,47 +73,43 @@ func _go_show(m *ice.Message, arg ...string) {
 			PACKAGE = "package"
 			IMPORT  = "import"
 		)
-		block := ""
 		index := 0
 		push := func(repos string) {
 			index++
 			m.Push("index", index)
 			m.Push("repos", repos)
 		}
-		m.Cmd(nfs.CAT, path.Join(arg[2], arg[1]), func(line string) {
-			ls := kit.Split(line)
+		block := ""
+		m.Cmd(nfs.CAT, path.Join(arg[2], arg[1]), func(ls []string, line string) {
 			switch {
 			case strings.HasPrefix(line, IMPORT+" ("):
 				block = IMPORT
-				return
 			case strings.HasPrefix(line, ")"):
 				block = ""
-				return
 			case strings.HasPrefix(line, IMPORT):
 				if len(ls) == 2 {
 					push(ls[1])
 				} else if len(ls) == 3 {
 					push(ls[2])
 				}
-				return
-			}
-			switch block {
-			case IMPORT:
-				if len(ls) == 0 {
-					push("")
-				} else if len(ls) == 1 {
-					push(ls[0])
-				} else if len(ls) == 2 {
-					push(ls[1])
+			default:
+				if block == IMPORT {
+					if len(ls) == 0 {
+						push("")
+					} else if len(ls) == 1 {
+						push(ls[0])
+					} else if len(ls) == 2 {
+						push(ls[1])
+					}
 				}
 			}
 		})
-		return
-	}
-	if key, ok := ice.Info.File[path.Join(arg[2], arg[1])]; ok && key != "" {
-		m.ProcessCommand(key, kit.Simple())
 	} else {
-		m.ProcessCommand("web.wiki.word", kit.Simple(strings.ReplaceAll(path.Join(arg[2], arg[1]), ".go", ".shy")))
+		if key := ice.GetFileKey(path.Join(arg[2], arg[1])); key != "" {
+			m.ProcessCommand(key, kit.Simple())
+		} else {
+			m.ProcessCommand("web.wiki.word", kit.Simple(strings.ReplaceAll(path.Join(arg[2], arg[1]), ".go", ".shy")))
+		}
 	}
 }
 func _mod_show(m *ice.Message, file string) {
@@ -131,35 +123,30 @@ func _mod_show(m *ice.Message, file string) {
 	block := ""
 	require := map[string]string{}
 	replace := map[string]string{}
-	m.Cmd(nfs.CAT, file, func(line string) {
-		ls := kit.Split(line)
+	m.Cmd(nfs.CAT, file, func(ls []string, line string) {
 		switch {
 		case strings.HasPrefix(line, MODULE):
 			require[ls[1]] = ""
 			replace[ls[1]] = nfs.PWD
-			return
 		case strings.HasPrefix(line, REQUIRE+" ("):
 			block = REQUIRE
-			return
 		case strings.HasPrefix(line, REPLACE+" ("):
 			block = REPLACE
-			return
 		case strings.HasPrefix(line, ")"):
 			block = ""
-			return
 		case strings.HasPrefix(line, REQUIRE):
 			require[ls[1]] = ls[2]
 		case strings.HasPrefix(line, REPLACE):
 			replace[ls[1]] = ls[3]
-		}
-		if block == "" || len(ls) < 2 {
-			return
-		}
-		switch block {
-		case REQUIRE:
-			require[ls[0]] = ls[1]
-		case REPLACE:
-			replace[ls[0]] = ls[2]
+		default:
+			if len(ls) > 1 {
+				switch block {
+				case REQUIRE:
+					require[ls[0]] = ls[1]
+				case REPLACE:
+					replace[ls[0]] = ls[2]
+				}
+			}
 		}
 	})
 	for k, v := range require {
@@ -235,6 +222,9 @@ func init() {
 					"switch", "case", "default", "fallthrough",
 					"go", "select", "defer", "return", "panic", "recover",
 				),
+				CONSTANT, kit.Simple(
+					"false", "true", "nil", "-1", "0", "1", "2",
+				),
 				DATATYPE, kit.Simple(
 					"int", "int32", "int64", "float64",
 					"string", "byte", "bool", "error", "chan", "map",
@@ -242,9 +232,6 @@ func init() {
 				FUNCTION, kit.Simple(
 					"init", "main", "print",
 					"new", "make", "len", "cap", "copy", "append", "delete", "msg", "m",
-				),
-				CONSTANT, kit.Simple(
-					"false", "true", "nil", "-1", "0", "1", "2",
 				),
 			), KEYWORD, kit.Dict(),
 		))},

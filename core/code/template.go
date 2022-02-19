@@ -10,25 +10,50 @@ import (
 	kit "shylinux.com/x/toolkits"
 )
 
+const TEMPLATE = "template"
+
 func init() {
-	const TEMPLATE = "template"
 	Index.Merge(&ice.Context{Commands: map[string]*ice.Command{
 		TEMPLATE: {Name: "template name auto create", Help: "模板", Action: ice.MergeAction(map[string]*ice.Action{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
-				m.Cmd(TEMPLATE, mdb.CREATE, kit.SimpleKV("", "txt", "网站索引", `
+				for _, _template := range _template_list {
+					m.Cmd(TEMPLATE, mdb.CREATE, kit.SimpleKV(kit.Format(_template[0]), _template[1:]...))
+				}
+			}},
+			mdb.CREATE: {Name: "create type name text args", Help: "创建"},
+			nfs.DEFS: {Name: "defs file=hi/hi.go", Help: "生成", Hand: func(m *ice.Message, arg ...string) {
+				m.Option("tags", "`"+m.Option("tags")+"`")
+				if buf, err := kit.Render(m.Option(mdb.TEXT), m); !m.Warn(err) {
+					switch m.Cmd(nfs.DEFS, path.Join(m.Option(nfs.PATH), m.Option(nfs.FILE)), string(buf)); kit.Ext(m.Option(nfs.FILE)) {
+					case GO:
+						if m.Option(cli.MAIN) != "" && m.Option(mdb.ZONE) != "" {
+							_autogen_import(m, path.Join(m.Option(nfs.PATH), m.Option(cli.MAIN)), m.Option(mdb.ZONE), _autogen_mod(m, ice.GO_MOD))
+						}
+					}
+				}
+			}},
+		}, mdb.HashAction(mdb.SHORT, mdb.NAME, mdb.FIELD, "time,type,name,text,args")), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			mdb.HashSelect(m, arg...).Sort(mdb.NAME).Cut("time,action,type,name,text,args")
+			m.PushAction(nfs.DEFS, mdb.REMOVE)
+		}}},
+	})
+}
+
+var _template_list = [][]interface{}{
+	[]interface{}{"", "txt", "网站索引", `
 hi
 	hi
 		cli.qrcode
 		cli.system
 		cli.runtime
 
-`))
-				m.Cmd(TEMPLATE, mdb.CREATE, kit.SimpleKV("", "js", "前端模块", `Volcanos("onimport", {help: "导入数据", list: [], _init: function(can, msg, cb, target) {
+`},
+	[]interface{}{"", "js", "前端模块", `Volcanos("onimport", {help: "导入数据", list: [], _init: function(can, msg, cb, target) {
 	can.onmotion.clear(can)
 	can.onappend.table(can, msg)
 	can.onappend.board(can, msg)
-}})`))
-				m.Cmd(TEMPLATE, mdb.CREATE, kit.SimpleKV("", "go", "后端模块", `package {{.Option "zone"}}
+}})`},
+	[]interface{}{"", "go", "后端模块", `package {{.Option "zone"}}
 
 import (
 	"shylinux.com/x/ice"
@@ -45,33 +70,12 @@ func (h {{.Option "name"}}) List(m *ice.Message, arg ...string) {
 }
 
 func init() { ice.Cmd("{{.Option "key"}}", {{.Option "name"}}{}) }
-`), "args", `[
+`, "args", `[
 	{"name": "zone", "value": "hi"},
 	{"name": "name", "value": "hi"},
 	{"name": "key", "value": "web.code.hi.hi"},
 	{"name": "type", "values": "Hash,Zone,List"},
 	{"name": "tags", "value": "name:\"list hash id auto insert\" help:\"数据\""},
 	{"name": "main", "value": "main.go"}
-]`)
-			}},
-			mdb.CREATE: {Name: "create type name text args", Help: "创建"},
-			nfs.DEFS: {Name: "defs file=hi/hi.go", Help: "生成", Hand: func(m *ice.Message, arg ...string) {
-				m.Option("tags", "`"+m.Option("tags")+"`")
-				if buf, err := kit.Render(m.Option(mdb.TEXT), m); !m.Warn(err) {
-					m.Cmd(nfs.DEFS, path.Join(m.Option(nfs.PATH), m.Option(nfs.FILE)), string(buf))
-					switch kit.Ext(m.Option(nfs.FILE)) {
-					case GO:
-						if m.Option(cli.MAIN) != "" && m.Option(mdb.ZONE) != "" {
-							_autogen_import(m, path.Join(m.Option(nfs.PATH), m.Option(cli.MAIN)), m.Option(mdb.ZONE), _autogen_mod(m, ice.GO_MOD))
-						}
-					}
-				}
-			}},
-		}, mdb.HashAction(mdb.SHORT, "name", mdb.FIELD, "time,type,name,text,args")), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			mdb.HashSelect(m, arg...)
-			m.PushAction(nfs.DEFS, mdb.REMOVE)
-			m.Sort("name")
-			m.Cut("time,action,type,name,text,args")
-		}}},
-	})
+]`},
 }

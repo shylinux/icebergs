@@ -267,6 +267,12 @@ func init() {
 				_repos_cmd(m, m.Option(REPOS), TAG, m.Option(VERSION))
 				_repos_cmd(m, m.Option(REPOS), PUSH, "--tags")
 			}},
+			code.BINPACK: {Name: "binpack", Help: "打包模式", Hand: func(m *ice.Message, arg ...string) {
+				m.Cmdy(code.VIMER, code.BINPACK)
+			}},
+			code.DEVPACK: {Name: "devpack", Help: "开发模式", Hand: func(m *ice.Message, arg ...string) {
+				m.Cmdy(code.VIMER, code.DEVPACK)
+			}},
 		}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			if len(arg) == 0 {
 				m.Action(PULL, MAKE, PUSH, TAGS, STASH, PIE)

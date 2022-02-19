@@ -24,7 +24,9 @@ func _header_check(m *ice.Message, arg ...string) {
 		m.Option(web.LOGIN, m.Config(web.LOGIN))
 		m.Option(web.SSO, m.Conf(web.SERVE, kit.Keym(web.SSO)))
 	}
-	m.Option("login.dev", m.Cmd(web.SPACE, ice.DEV).Append(mdb.TEXT))
+	if m.Option("login.dev", m.Cmd(web.SPACE, ice.DEV).Append(mdb.TEXT)) == "" {
+		m.Option("login.dev", m.Cmd(web.SPACE, ice.SHY).Append(mdb.TEXT))
+	}
 }
 func _header_grant(m *ice.Message, arg ...string) {
 	m.Cmd(GRANT, mdb.INSERT, kit.SimpleKV("space,grant,userrole,username",

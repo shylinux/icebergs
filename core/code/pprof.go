@@ -26,8 +26,7 @@ const PPROF = "pprof"
 func init() {
 	Index.Merge(&ice.Context{Configs: map[string]*ice.Config{
 		PPROF: {Name: PPROF, Help: "性能分析", Value: kit.Data(
-			mdb.SHORT, mdb.ZONE, mdb.FIELD, "time,id,text,file",
-			PPROF, kit.List(GO, "tool", PPROF),
+			mdb.SHORT, mdb.ZONE, mdb.FIELD, "time,id,text,file", PPROF, kit.List(GO, "tool", PPROF),
 		)},
 	}, Commands: map[string]*ice.Command{
 		PPROF: {Name: "pprof zone id auto", Help: "性能分析", Action: ice.MergeAction(map[string]*ice.Action{
@@ -43,9 +42,9 @@ func init() {
 			mdb.INPUTS: {Name: "inputs", Help: "补全", Hand: func(m *ice.Message, arg ...string) {
 				switch arg[0] {
 				case BINNARY:
-					m.Cmdy(nfs.DIR, "bin/", nfs.DIR_CLI_FIELDS).RenameAppend(nfs.PATH, BINNARY)
+					m.Cmdy(nfs.DIR, ice.BIN, nfs.DIR_CLI_FIELDS).RenameAppend(nfs.PATH, BINNARY)
 				case SERVICE:
-					m.Cmd(web.SPIDE).Table(func(index int, value map[string]string, head []string) {
+					m.Cmd(web.SPIDE).Tables(func(value map[string]string) {
 						m.Push(SERVICE, kit.MergeURL2(value["client.url"], "/debug/pprof/profile"))
 					})
 				}
@@ -54,22 +53,17 @@ func init() {
 
 			ice.RUN: {Name: "run", Help: "执行", Hand: func(m *ice.Message, arg ...string) {
 				msg := m.Cmd(web.SPIDE, ice.DEV, web.SPIDE_CACHE, web.SPIDE_GET, m.Option(SERVICE), SECONDS, m.Option(SECONDS))
-
 				cmd := kit.Simple(m.Configv(PPROF), "-text", m.Option(BINNARY), msg.Append(nfs.FILE))
-				res := kit.Slice(strings.Split(m.Cmdx(cli.SYSTEM, cmd), ice.NL), 0, 20)
-
-				m.Cmd(mdb.INSERT, PPROF, "", mdb.ZONE, m.Option(mdb.ZONE),
-					mdb.TEXT, strings.Join(res, ice.NL), nfs.FILE, msg.Append(nfs.FILE))
-				m.Echo(strings.Join(res, ice.NL))
-				m.ProcessInner()
+				m.Option(mdb.TEXT, strings.Join(kit.Slice(strings.Split(m.Cmdx(cli.SYSTEM, cmd), ice.NL), 0, 20), ice.NL))
+				m.Option(nfs.FILE, msg.Append(nfs.FILE))
+				m.Cmd(mdb.INSERT, PPROF, "", m.OptionSimple("zone,text,file"))
+				m.Echo(m.Option(mdb.TEXT)).ProcessInner()
 			}},
 			web.SERVE: {Name: "serve", Help: "展示", Hand: func(m *ice.Message, arg ...string) {
 				u := kit.ParseURL(m.Option(ice.MSG_USERWEB))
 				p := u.Hostname() + ":" + m.Cmdx(tcp.PORT, aaa.RIGHT)
-
 				m.Cmd(cli.DAEMON, m.Configv(PPROF), "-http="+p, m.Option(BINNARY), m.Option(nfs.FILE))
-				m.Echo("http://%s/ui/top", p)
-				m.ProcessInner()
+				m.Echo("http://%s/ui/top", p).ProcessInner()
 			}},
 		}, mdb.ZoneAction()), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			m.Fields(len(arg), "time,zone,count,binnary,service,seconds", m.Config(mdb.FIELD))
@@ -79,7 +73,7 @@ func init() {
 				return
 			}
 
-			m.Table(func(index int, value map[string]string, head []string) {
+			m.Tables(func(value map[string]string) {
 				m.PushDownload(mdb.LINK, "pprof.pd.gz", value[nfs.FILE])
 				m.PushButton(web.SERVE)
 			})

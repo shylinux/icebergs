@@ -26,27 +26,26 @@ func _bench_http(m *ice.Message, target string, arg ...string) {
 			if f, e := os.Open(ls[2]); m.Assert(e) {
 				defer f.Close()
 
-				req, err := http.NewRequest(http.MethodPost, ls[1], f)
-				m.Assert(err)
-				list = append(list, req)
+				if req, err := http.NewRequest(http.MethodPost, ls[1], f); m.Assert(err) {
+					list = append(list, req)
+				}
 			}
 		default:
-			req, err := http.NewRequest(http.MethodGet, v, nil)
-			m.Assert(err)
-			list = append(list, req)
+			if req, err := http.NewRequest(http.MethodGet, v, nil); m.Assert(err) {
+				list = append(list, req)
+			}
 		}
 	}
 
 	var body int64
-	s, e := bench.HTTP(nconn, nreqs, list, func(req *http.Request, res *http.Response) {
+	if s, e := bench.HTTP(nconn, nreqs, list, func(req *http.Request, res *http.Response) {
 		n, _ := io.Copy(ioutil.Discard, res.Body)
 		atomic.AddInt64(&body, n)
-	})
-	m.Assert(e)
-
-	m.Echo(s.Show())
-	m.Echo("body: %d\n", body)
-	m.ProcessInner()
+	}); m.Assert(e) {
+		m.Echo("body: %s\n", kit.FmtSize(body))
+		m.Echo(s.Show())
+		m.ProcessInner()
+	}
 }
 func _bench_redis(m *ice.Message, target string, arg ...string) {
 }
@@ -62,11 +61,7 @@ const (
 const BENCH = "bench"
 
 func init() {
-	Index.Merge(&ice.Context{Configs: map[string]*ice.Config{
-		BENCH: {Name: BENCH, Help: "性能压测", Value: kit.Data(
-			mdb.SHORT, mdb.ZONE, mdb.FIELD, "time,id,type,name,text,nconn,nreqs",
-		)},
-	}, Commands: map[string]*ice.Command{
+	Index.Merge(&ice.Context{Commands: map[string]*ice.Command{
 		BENCH: {Name: "bench zone id auto insert", Help: "性能压测", Action: ice.MergeAction(map[string]*ice.Action{
 			mdb.INSERT: {Name: "insert zone=some type=http,redis name=demo text='http://localhost:9020' nconn=3 nreqs=10", Help: "添加"},
 			ice.RUN: {Name: "run", Help: "执行", Hand: func(m *ice.Message, arg ...string) {
@@ -77,9 +72,8 @@ func init() {
 					_bench_redis(m, m.Option(mdb.TEXT))
 				}
 			}},
-		}, mdb.ZoneAction()), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			mdb.ZoneSelect(m, arg...)
-			m.PushAction(kit.Select(mdb.REMOVE, ice.RUN, len(arg) > 0))
+		}, mdb.ZoneAction(mdb.SHORT, mdb.ZONE, mdb.FIELD, "time,id,type,name,text,nconn,nreqs")), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			mdb.ZoneSelect(m, arg...).PushAction(kit.Select(mdb.REMOVE, ice.RUN, len(arg) > 0))
 		}},
 	}})
 }

@@ -10,6 +10,7 @@ import (
 type MakeInfo struct {
 	Time     string
 	Hash     string
+	Module   string
 	Remote   string
 	Branch   string
 	Version  string
@@ -54,6 +55,12 @@ source: https://shylinux.com/x/icebergs
 	names:  map[string]interface{}{},
 }
 
+func AddFileKey(dir, key string) {
+	Info.File[strings.TrimPrefix(dir, kit.Path("")+PS)] = key
+}
+func GetFileKey(dir string) string {
+	return Info.File[strings.TrimPrefix(dir, kit.Path("")+PS)]
+}
 func Dump(w io.Writer, name string, cb func(string)) bool {
 	for _, key := range []string{name, strings.TrimPrefix(name, USR_VOLCANOS)} {
 		if b, ok := Info.Pack[key]; ok {

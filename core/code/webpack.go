@@ -43,11 +43,19 @@ func _webpack_cache(m *ice.Message, dir string, write bool) {
 		return
 	}
 
-	m.Option(nfs.DIR_ROOT, dir)
+	m.Option(nfs.DIR_ROOT, "")
 	m.Option(nfs.DIR_DEEP, true)
 	m.Option(nfs.DIR_PACK, true)
 	m.Option(nfs.DIR_TYPE, nfs.CAT)
 
+	m.Cmd(nfs.DIR, ice.SRC).Tables(func(value map[string]string) {
+		if kit.Ext(value[nfs.PATH]) == JS {
+			fmt.Fprintln(js, `_can_name = "`+path.Join("/require", ice.Info.Make.Module, value[nfs.PATH])+`"`)
+			fmt.Fprintln(js, m.Cmdx(nfs.CAT, value[nfs.PATH]))
+		}
+	})
+
+	m.Option(nfs.DIR_ROOT, dir)
 	for _, k := range []string{LIB, PANEL, PLUGIN} {
 		m.Cmd(nfs.DIR, k).Tables(func(value map[string]string) {
 			if kit.Ext(value[nfs.PATH]) == CSS {
@@ -69,6 +77,7 @@ func _webpack_cache(m *ice.Message, dir string, write bool) {
 		fmt.Fprintln(js, `_can_name = "`+path.Join(ice.PS, k)+`"`)
 		fmt.Fprintln(js, m.Cmdx(nfs.CAT, k))
 	}
+
 }
 func _webpack_build(m *ice.Message, file string) {
 	if f, _, e := kit.Create(kit.Keys(file, JS)); m.Assert(e) {

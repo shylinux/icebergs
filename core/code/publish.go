@@ -90,7 +90,7 @@ func init() {
 					kit.Select(kit.Select("80", "443", u.Scheme == "https"), strings.Split(u.Host, ice.DF), 1)))
 
 				if len(arg) == 0 {
-					arg = append(arg, ice.CORE, ice.BASE)
+					arg = append(arg, ice.MISC, ice.CORE, ice.BASE)
 				}
 				for _, k := range arg {
 					if buf, err := kit.Render(m.Config(kit.Keys(ice.CONTEXTS, k)), m); m.Assert(err) {
@@ -139,12 +139,10 @@ func init() {
 }
 
 var _contexts = kit.Dict(
-	"misc", `# 终端环境
+	"misc", `# 完整版
 export ctx_dev={{.Option "httphost"}}; ctx_temp=$(mktemp); curl -fsSL $ctx_dev -o $ctx_temp; source $ctx_temp dev
-export ctx_dev={{.Option "httphost"}}; ctx_temp=$(mktemp); wget -O $ctx_temp $ctx_dev; source $ctx_temp dev
 `,
-	"core", `# 定制版
-export ctx_dev={{.Option "httphost"}}; ctx_temp=$(mktemp); curl -o $ctx_temp -fsSL $ctx_dev; source $ctx_temp app
+	"core", `# 标准版
 export ctx_dev={{.Option "httphost"}}; ctx_temp=$(mktemp); wget -O $ctx_temp $ctx_dev; source $ctx_temp app
 `,
 	"base", `# 官方版

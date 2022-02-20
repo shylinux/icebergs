@@ -9,7 +9,6 @@ import (
 	"shylinux.com/x/icebergs/base/ctx"
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/nfs"
-	"shylinux.com/x/icebergs/base/web"
 	"shylinux.com/x/icebergs/core/code"
 	kit "shylinux.com/x/toolkits"
 )
@@ -25,7 +24,7 @@ func _status_tag(m *ice.Message, tags string) string {
 	}
 	return "v0.0.1"
 }
-func _status_tags(m *ice.Message) {
+func _status_tags(m *ice.Message, repos string) {
 	vs := map[string]string{}
 	m.Cmd(STATUS).Table(func(index int, value map[string]string, head []string) {
 		if value[mdb.TYPE] == "##" {
@@ -41,6 +40,9 @@ func _status_tags(m *ice.Message) {
 		toast(cli.BEGIN, count, total)
 
 		for k := range vs {
+			if k != repos && repos != "" {
+				continue
+			}
 			count++
 			toast(k, count, total)
 
@@ -79,7 +81,8 @@ func _status_tags(m *ice.Message) {
 				m.Cmd(cli.SYSTEM, cli.MAKE)
 			}
 		}
-		toast(ice.SUCCESS, count, total)
+		toast(ice.SUCCESS, count, count)
+		m.PushRefresh()
 	})
 }
 func _status_each(m *ice.Message, title string, cmds ...string) {
@@ -220,7 +223,7 @@ func init() {
 				m.ProcessHold()
 			}},
 			MAKE: {Name: "make", Help: "编译", Hand: func(m *ice.Message, arg ...string) {
-				web.PushStream(m)
+				cli.PushStream(m)
 				m.Cmdy(cli.SYSTEM, MAKE)
 				m.ToastSuccess()
 				m.ProcessHold()
@@ -236,7 +239,7 @@ func init() {
 				_repos_cmd(m, m.Option(REPOS), PUSH, "--tags")
 			}},
 			TAGS: {Name: "tags", Help: "标签", Hand: func(m *ice.Message, arg ...string) {
-				_status_tags(m)
+				_status_tags(m, kit.Select("", arg, 0))
 				m.ProcessHold()
 			}},
 			STASH: {Name: "stash", Help: "缓存", Hand: func(m *ice.Message, arg ...string) {
@@ -285,7 +288,7 @@ func init() {
 
 			m.Option(cli.CMD_DIR, _repos_path(arg[0]))
 			m.Echo(m.Cmdx(cli.SYSTEM, GIT, DIFF))
-			m.Action(COMMIT)
+			m.Action(COMMIT, TAGS)
 
 			files, adds, dels := _status_stat(m, 0, 0, 0)
 			m.Status("files", files, "adds", adds, "dels", dels)

@@ -192,7 +192,7 @@ func init() {
 		}},
 	}, Configs: map[string]*ice.Config{
 		INNER: {Name: "inner", Help: "源代码", Value: kit.Data(
-			EXEC, kit.Dict("js", []string{"node"}, "py", []string{"python"}),
+			EXEC, kit.Dict("py", []string{"python"}),
 			PLUG, kit.Dict(
 				"S", kit.Dict(PREFIX, kit.Dict("//", COMMENT)),
 				"s", kit.Dict(PREFIX, kit.Dict("//", COMMENT), KEYWORD, kit.Dict("TEXT", KEYWORD, "RET", KEYWORD)),

@@ -13,7 +13,6 @@ import (
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/nfs"
 	"shylinux.com/x/icebergs/base/tcp"
-	"shylinux.com/x/icebergs/base/web"
 	kit "shylinux.com/x/toolkits"
 )
 
@@ -122,7 +121,7 @@ func init() {
 					list = append(list, text)
 				})
 
-				web.PushStream(m)
+				cli.PushStream(m)
 				defer m.ProcessHold()
 				defer m.ToastSuccess()
 				defer m.StatusTimeCount()

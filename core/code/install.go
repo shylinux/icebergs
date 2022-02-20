@@ -52,7 +52,7 @@ func _install_build(m *ice.Message, arg ...string) string {
 	pp := kit.Path(path.Join(p, "_install"))
 
 	// 推流
-	web.PushStream(m)
+	cli.PushStream(m)
 	defer m.ProcessHold()
 
 	// 配置
@@ -177,6 +177,19 @@ func init() {
 	}})
 }
 
+func InstallSoftware(m *ice.Message, bin string, list interface{}) (ok bool) {
+	if cli.SystemFind(m, bin) != "" {
+		return true
+	}
+	kit.Fetch(list, func(index int, value map[string]interface{}) {
+		if strings.Contains(m.Cmdx(cli.RUNTIME, kit.Keys(tcp.HOST, cli.OSID)), kit.Format(value[cli.OSID])) {
+			cli.PushStream(m)
+			m.Cmd(cli.SYSTEM, value[ice.CMD])
+			ok = true
+		}
+	})
+	return ok
+}
 func InstallAction(args ...interface{}) map[string]*ice.Action {
 	return ice.SelectAction(map[string]*ice.Action{ice.CTX_INIT: mdb.AutoConfig(args...),
 		web.DOWNLOAD: {Name: "download", Help: "下载", Hand: func(m *ice.Message, arg ...string) {

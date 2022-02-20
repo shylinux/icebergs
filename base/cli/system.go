@@ -152,3 +152,21 @@ func init() {
 		}},
 	}})
 }
+
+type buffer struct {
+	m *ice.Message
+	n string
+}
+
+func (b *buffer) Write(buf []byte) (int, error) {
+	if b.m.IsCliUA() {
+		print(string(buf))
+	} else {
+		b.m.PushNoticeGrow(string(buf))
+	}
+	return len(buf), nil
+}
+func (b *buffer) Close() error { return nil }
+func PushStream(m *ice.Message) {
+	m.Option(CMD_OUTPUT, &buffer{m: m, n: m.Option(ice.MSG_DAEMON)})
+}

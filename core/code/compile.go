@@ -54,7 +54,7 @@ func init() {
 			}},
 			INSTALL: {Name: "compile", Help: "安装", Hand: func(m *ice.Message, arg ...string) {
 				if strings.Contains(m.Cmdx(cli.RUNTIME, kit.Keys(tcp.HOST, cli.OSID)), cli.ALPINE) {
-					web.PushStream(m)
+					cli.PushStream(m)
 					m.Cmd(cli.SYSTEM, "apk", "add", GIT, GO)
 					m.Cmd(cli.SYSTEM, GO, "get", "shylinux.com/x/ice")
 					return
@@ -80,6 +80,8 @@ func init() {
 			// 下载依赖
 			_autogen_version(m.Spawn())
 			m.Cmd(cli.SYSTEM, GO, "get", "shylinux.com/x/ice")
+
+			cli.PushStream(m)
 
 			// 执行编译
 			main, file, goos, arch := _compile_target(m, arg...)

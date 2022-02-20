@@ -166,6 +166,9 @@ func (m *Message) PushNoticeGrow(arg ...interface{}) {
 func (m *Message) PushNoticeToast(arg ...interface{}) {
 	m.PushNotice(kit.List("toast", arg)...)
 }
+func (m *Message) PushRefresh(arg ...interface{}) {
+	m.PushNotice(kit.List("refresh")...)
+}
 func (m *Message) Toast3s(text string, arg ...interface{}) {
 	m.Toast(text, kit.List(kit.Select("", arg, 0), kit.Select("3s", arg, 1))...)
 }

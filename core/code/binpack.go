@@ -54,7 +54,7 @@ func _binpack_can(m *ice.Message, f *os.File, dir string) {
 	for _, k := range []string{ice.FAVICON, ice.PROTO_JS, ice.FRAME_JS} {
 		fmt.Fprintln(f, _binpack_file(m, path.Join(dir, k), ice.PS+k))
 	}
-	for _, k := range []string{LIB, PAGE, PANEL, PLUGIN} {
+	for _, k := range []string{LIB, PAGE, PANEL, PLUGIN, "publish/client/nodejs/"} {
 		m.Cmd(nfs.DIR, k).Sort(nfs.PATH).Tables(func(value map[string]string) {
 			fmt.Fprintln(f, _binpack_file(m, path.Join(dir, value[nfs.PATH]), ice.PS+value[nfs.PATH]))
 		})
@@ -72,6 +72,9 @@ func init() {
 	Index.Merge(&ice.Context{Commands: map[string]*ice.Command{
 		BINPACK: {Name: "binpack path auto create remove export", Help: "打包", Action: map[string]*ice.Action{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
+				if kit.FileExists(path.Join(ice.USR_VOLCANOS, ice.PROTO_JS)) {
+					m.Cmd(BINPACK, mdb.REMOVE)
+				}
 				web.AddRewrite(func(w http.ResponseWriter, r *http.Request) bool {
 					if len(ice.Info.Pack) == 0 {
 						return false

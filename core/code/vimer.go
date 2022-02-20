@@ -28,6 +28,9 @@ func init() {
 					m.Cmd(UPGRADE, cli.RESTART)
 				}
 			}},
+			"unpack": {Name: "unpack", Help: "导出文件", Hand: func(m *ice.Message, arg ...string) {
+				m.Cmdy(BINPACK, mdb.EXPORT)
+			}},
 			BINPACK: {Name: "binpack", Help: "打包模式", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmd(nfs.COPY, ice.GO_MOD, path.Join(ice.SRC_RELEASE, ice.GO_MOD))
 				m.Cmd(nfs.COPY, ice.GO_SUM, path.Join(ice.SRC_RELEASE, ice.GO_SUM))

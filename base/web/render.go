@@ -9,7 +9,6 @@ import (
 
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/aaa"
-	"shylinux.com/x/icebergs/base/cli"
 	"shylinux.com/x/icebergs/base/tcp"
 	kit "shylinux.com/x/toolkits"
 )
@@ -110,25 +109,6 @@ func RenderResult(msg *ice.Message, arg ...interface{}) {
 }
 func RenderDownload(msg *ice.Message, arg ...interface{}) {
 	Render(msg, ice.RENDER_DOWNLOAD, arg...)
-}
-
-type Buffer struct {
-	m *ice.Message
-	n string
-}
-
-func (b *Buffer) Write(buf []byte) (int, error) {
-	if b.m.IsCliUA() {
-		print(string(buf))
-	} else {
-		b.m.PushNoticeGrow(string(buf))
-	}
-	return len(buf), nil
-}
-func (b *Buffer) Close() error { return nil }
-
-func PushStream(m *ice.Message) {
-	m.Option(cli.CMD_OUTPUT, &Buffer{m: m, n: m.Option(ice.MSG_DAEMON)})
 }
 
 func Format(tag string, arg ...interface{}) string {

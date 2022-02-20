@@ -12,6 +12,22 @@ import (
 	kit "shylinux.com/x/toolkits"
 )
 
+func _js_main_script(m *ice.Message, arg ...string) (res []string) {
+	if res = append(res, kit.Format(`global.plugin = "%s"`, kit.Path(arg[2], arg[1]))); len(ice.Info.Pack) == 0 {
+		res = append(res, kit.Format(`require("%s")`, kit.Path("usr/volcanos/proto.js")))
+	} else {
+		for _, file := range []string{"proto.js", "frame.js", "lib/base.js", "lib/core.js", "lib/misc.js", "lib/page.js", "publish/client/nodejs/proto.js"} {
+			res = append(res, `_can_name = "./`+file+`"`)
+			res = append(res, string(ice.Info.Pack[ice.PS+file]))
+		}
+	}
+	if b, ok := ice.Info.Pack[path.Join(arg[2], arg[1])]; ok && !kit.FileExists(kit.Path(arg[2], arg[1])) {
+		res = append(res, `_can_name = "`+kit.Path(arg[2], arg[1])+`"`)
+		res = append(res, string(b))
+	}
+	return
+}
+
 const TS = "ts"
 const JS = "js"
 const CSS = "css"
@@ -45,8 +61,10 @@ func init() {
 				m.ProcessCommand(kit.Select("can.code.inner.plugin", key), kit.Simple())
 			}},
 			mdb.ENGINE: {Hand: func(m *ice.Message, arg ...string) {
-				m.Cmdy(cli.SYSTEM, NODE, "-e", kit.Format(`global.plugin = "%s", require("%s")`,
-					kit.Path(arg[2], arg[1]), kit.Path("usr/volcanos/proto.js"))).SetAppend()
+				if !InstallSoftware(m.Spawn(), NODE, m.Configv(INSTALL)) {
+					return
+				}
+				m.Cmdy(cli.SYSTEM, NODE, "-e", kit.Join(_js_main_script(m, arg...), ice.NL)).SetAppend()
 				m.Echo(ice.NL)
 			}},
 			mdb.SEARCH: {Hand: func(m *ice.Message, arg ...string) {
@@ -66,7 +84,9 @@ func init() {
 		NODE: {Name: NODE, Help: "前端", Value: kit.Data(
 			nfs.SOURCE, "https://nodejs.org/dist/v10.13.0/node-v10.13.0-linux-x64.tar.xz",
 		)},
-		JS: {Name: JS, Help: "js", Value: kit.Data(PLUG, kit.Dict(
+		JS: {Name: JS, Help: "js", Value: kit.Data(INSTALL, kit.List(kit.Dict(
+			cli.OSID, cli.ALPINE, ice.CMD, kit.List("apk", "add", "nodejs"),
+		)), PLUG, kit.Dict(
 			mdb.RENDER, kit.Dict(),
 			SPLIT, kit.Dict("space", " \t", "operator", "{[(&.,;!|<>)]}"),
 			PREFIX, kit.Dict("//", COMMENT, "/*", COMMENT, "*", COMMENT), PREPARE, kit.Dict(

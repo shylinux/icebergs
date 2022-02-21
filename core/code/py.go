@@ -20,10 +20,10 @@ func init() {
 				m.Cmd(mdb.ENGINE, mdb.CREATE, PY, m.PrefixKey())
 			}},
 			mdb.ENGINE: {Hand: func(m *ice.Message, arg ...string) {
-				if !InstallSoftware(m.Spawn(), "python", m.Configv(INSTALL)) {
+				if !InstallSoftware(m.Spawn(), "python2", m.Configv(INSTALL)) {
 					return
 				}
-				m.Cmdy(cli.SYSTEM, "python", kit.Path(arg[2], arg[1]))
+				m.Cmdy(cli.SYSTEM, "python2", kit.Path(arg[2], arg[1]))
 				m.Echo(ice.NL)
 			}},
 		}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {

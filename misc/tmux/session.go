@@ -53,7 +53,7 @@ func init() {
 	}, Commands: map[string]*ice.Command{
 		SESSION: {Name: "session session window pane cmd auto", Help: "会话管理", Action: map[string]*ice.Action{
 			web.DREAM_CREATE: {Name: "dream.create type name", Help: "梦想", Hand: func(m *ice.Message, arg ...string) {
-				if m.Cmd(m.PrefixKey(), m.Option(mdb.NAME)).Length() > 0 {
+				if m.Cmd(m.PrefixKey(), m.Option(mdb.NAME)).Length() == 0 {
 					m.Cmd(m.PrefixKey(), mdb.CREATE)
 				}
 			}},

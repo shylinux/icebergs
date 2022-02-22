@@ -146,10 +146,14 @@ func init() {
 				}
 			}},
 		}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			for k, v := range ice.Info.Pack {
-				m.Push(mdb.NAME, k).Push(nfs.SIZE, len(v))
+			if len(arg) == 0 {
+				for k, v := range ice.Info.Pack {
+					m.Push(nfs.PATH, k).Push(nfs.SIZE, len(v))
+				}
+				m.Sort(nfs.PATH)
+				return
 			}
-			m.Sort(mdb.NAME)
+			m.Echo(string(ice.Info.Pack[arg[0]]))
 		}},
 	}})
 }

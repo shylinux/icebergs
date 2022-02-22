@@ -70,7 +70,7 @@ func _dream_show(m *ice.Message, name string) {
 		return // 已经启动
 	}
 
-	defer m.ToastProcess()
+	defer m.ToastProcess()()
 
 	m.Optionv(cli.CMD_DIR, p)
 	m.Optionv(cli.CMD_ENV, kit.Simple(
@@ -83,8 +83,11 @@ func _dream_show(m *ice.Message, name string) {
 	// 启动任务
 	bin := kit.Select(os.Args[0], cli.SystemFind(m, ice.ICE_BIN, kit.Path(path.Join(p, ice.BIN)), kit.Path(ice.BIN)))
 	m.Cmd(cli.DAEMON, bin, SPACE, tcp.DIAL, ice.DEV, ice.OPS, m.OptionSimple(mdb.NAME, RIVER))
-	defer m.Event(DREAM_CREATE, kit.SimpleKV("", m.Option(mdb.TYPE), name)...)
+
 	m.Sleep3s()
+	m.Option(cli.CMD_ENV, "")
+	m.Option(cli.CMD_OUTPUT, "")
+	m.Event(DREAM_CREATE, kit.SimpleKV("", m.Option(mdb.TYPE), name)...)
 }
 
 const (

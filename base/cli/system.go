@@ -43,6 +43,8 @@ func _system_cmd(m *ice.Message, arg ...string) *exec.Cmd {
 			cmd.Path = file
 		}
 	}
+	if _system_find(m, cmd.Path) == "" {
+	}
 	m.Debug("cmd: %v", cmd.Path)
 
 	if len(cmd.Env) > 0 {

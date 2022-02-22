@@ -1,11 +1,22 @@
 package code
 
 import (
+	"path"
+
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/cli"
 	"shylinux.com/x/icebergs/base/mdb"
 	kit "shylinux.com/x/toolkits"
 )
+
+func _sh_main_script(m *ice.Message, arg ...string) (res []string) {
+	if kit.FileExists(kit.Path(arg[2], arg[1])) {
+		res = append(res, kit.Format("source %s", kit.Path(arg[2], arg[1])))
+	} else if b, ok := ice.Info.Pack[path.Join(arg[2], arg[1])]; ok && len(b) > 0 {
+		res = append(res, string(b))
+	}
+	return
+}
 
 const SH = "sh"
 
@@ -19,10 +30,8 @@ func init() {
 				LoadPlug(m, SH)
 			}},
 			mdb.ENGINE: {Hand: func(m *ice.Message, arg ...string) {
-				m.Cmdy(cli.SYSTEM, SH, "-c", `#! /bin/sh
+				m.Cmdy(cli.SYSTEM, SH, "-c", kit.Join(_sh_main_script(m, arg...), ice.NL)).SetAppend()
 
-source `+arg[1]+`
-`, kit.Dict(cli.CMD_DIR, arg[2])).SetAppend()
 			}},
 			mdb.SEARCH: {Hand: func(m *ice.Message, arg ...string) {
 				if arg[0] == mdb.FOREACH {

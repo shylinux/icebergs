@@ -20,15 +20,17 @@ func (m *Message) log(level string, str string, arg ...interface{}) *Message {
 
 	// 日志颜色
 	prefix, suffix := "", ""
-	switch level {
-	case LOG_CREATE, LOG_INSERT, LOG_MODIFY, LOG_EXPORT, LOG_IMPORT:
-		prefix, suffix = "\033[36;44m", "\033[0m"
-	case LOG_CMDS, LOG_START, LOG_SERVE:
-		prefix, suffix = "\033[32m", "\033[0m"
-	case LOG_WARN, LOG_ERROR, LOG_CLOSE:
-		prefix, suffix = "\033[31m", "\033[0m"
-	case LOG_AUTH, LOG_COST:
-		prefix, suffix = "\033[33m", "\033[0m"
+	if Info.Colors {
+		switch level {
+		case LOG_CREATE, LOG_INSERT, LOG_MODIFY, LOG_EXPORT, LOG_IMPORT:
+			prefix, suffix = "\033[36;44m", "\033[0m"
+		case LOG_CMDS, LOG_START, LOG_SERVE:
+			prefix, suffix = "\033[32m", "\033[0m"
+		case LOG_WARN, LOG_ERROR, LOG_CLOSE:
+			prefix, suffix = "\033[31m", "\033[0m"
+		case LOG_AUTH, LOG_COST:
+			prefix, suffix = "\033[33m", "\033[0m"
+		}
 	}
 
 	// 文件行号

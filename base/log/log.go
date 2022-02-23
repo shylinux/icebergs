@@ -47,14 +47,18 @@ func (f *Frame) Start(m *ice.Message, arg ...string) bool {
 
 			bio.WriteString(l.p)
 			bio.WriteString(ice.SP)
-			if p, ok := view[PREFIX].(string); ok {
-				bio.WriteString(p)
+			if ice.Info.Colors == true {
+				if p, ok := view[PREFIX].(string); ok {
+					bio.WriteString(p)
+				}
 			}
 			bio.WriteString(l.l)
 			bio.WriteString(ice.SP)
 			bio.WriteString(l.s)
-			if p, ok := view[SUFFIX].(string); ok {
-				bio.WriteString(p)
+			if ice.Info.Colors == true {
+				if p, ok := view[SUFFIX].(string); ok {
+					bio.WriteString(p)
+				}
 			}
 			bio.WriteString(ice.NL)
 			bio.Flush()

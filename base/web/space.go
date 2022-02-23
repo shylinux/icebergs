@@ -19,8 +19,7 @@ func _space_link(m *ice.Message, pod string, arg ...interface{}) string {
 	return tcp.ReplaceLocalhost(m, kit.MergePOD(m.Option(ice.MSG_USERWEB), pod, arg...))
 }
 func _space_domain(m *ice.Message) (link string) {
-	link = m.Config(DOMAIN)
-	if link == "" {
+	if link = m.Config(DOMAIN); link == "" {
 		link = m.Cmd(SPACE, ice.DEV, cli.PWD).Append(mdb.LINK)
 	}
 	if link == "" {
@@ -28,6 +27,13 @@ func _space_domain(m *ice.Message) (link string) {
 	}
 	if link == "" {
 		link = m.Option(ice.MSG_USERWEB)
+	}
+	if link == "" && m.R != nil && m.R.Host != "" && !tcp.IsLocalHost(m, m.R.Host) {
+		if m.R.TLS == nil {
+			link = kit.Format("http://%s", m.R.Host)
+		} else {
+			link = kit.Format("https://%s", m.R.Host)
+		}
 	}
 	if link == "" {
 		link = kit.Format("http://localhost:%s", m.Cmd(SERVE).Append(tcp.PORT))
@@ -224,12 +230,14 @@ func _space_fork(m *ice.Message) {
 				m.Go(func(msg *ice.Message) {
 					switch m.Option(ice.CMD) {
 					case cli.PWD:
-						link := kit.MergeURL(_space_domain(msg), aaa.GRANT, name)
+						link := kit.MergeURL(_space_domain(m), aaa.GRANT, name)
 						msg.Sleep300ms(SPACE, name, cli.PWD, name, link, msg.Cmdx(cli.QRCODE, link))
 					case "sso":
-						link := _space_domain(msg)
+						link := _space_domain(m)
+						m.Debug("what %v", link)
 						ls := strings.Split(kit.ParseURL(link).Path, ice.PS)
-						link = kit.MergeURL2(_space_domain(msg), "/chat/sso", "space", kit.Select("", ls, 3), "back", m.Option(ice.MSG_USERWEB))
+						link = kit.MergeURL2(_space_domain(m), "/chat/sso", "space", kit.Select("", ls, 3), "back", m.Option(ice.MSG_USERWEB))
+						m.Debug("what %v", link)
 						msg.Sleep300ms(SPACE, name, cli.PWD, name, link, msg.Cmdx(cli.QRCODE, link))
 					default:
 						msg.Sleep300ms(SPACE, name, cli.PWD, name)

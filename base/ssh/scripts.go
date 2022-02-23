@@ -70,7 +70,9 @@ func (f *Frame) prompt(m *ice.Message, list ...string) *Frame {
 		case TARGET:
 			fmt.Fprintf(f.stdout, f.target.Name)
 		default:
-			fmt.Fprintf(f.stdout, v)
+			if ice.Info.Colors || v[0] != '\033' {
+				fmt.Fprintf(f.stdout, v)
+			}
 		}
 	}
 	return f
@@ -165,7 +167,9 @@ func (f *Frame) scan(m *ice.Message, h, line string) *Frame {
 		// 	continue // 注释
 		// }
 		if ps = f.ps1; f.stdout == os.Stdout {
-			f.printf(m, "\033[0m") // 清空格式
+			if ice.Info.Colors {
+				f.printf(m, "\033[0m") // 清空格式
+			}
 		}
 		line = f.parse(m, line)
 	}

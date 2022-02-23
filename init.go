@@ -111,6 +111,12 @@ func Run(arg ...string) string {
 
 	switch Index.Merge(Index).Begin(Pulse.Spawn(), arg...); kit.Select("", arg, 0) {
 	case SERVE, SPACE: // 启动服务
+		switch path.Base(os.Getenv("SHELL")) {
+		case "", ".":
+			Info.Colors = false
+		default:
+			Info.Colors = true
+		}
 		if log.LogDisable = false; Index.Start(Pulse, arg...) {
 			Pulse.TryCatch(Pulse, true, func(Pulse *Message) { Index.wg.Wait() })
 			os.Exit(kit.Int(Pulse.Option(EXIT)))

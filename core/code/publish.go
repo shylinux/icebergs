@@ -13,6 +13,7 @@ import (
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/nfs"
 	"shylinux.com/x/icebergs/base/tcp"
+	"shylinux.com/x/icebergs/base/web"
 	kit "shylinux.com/x/toolkits"
 )
 
@@ -68,7 +69,12 @@ func init() {
 				m.Cmd(aaa.ROLE, aaa.WHITE, aaa.VOID, m.Config(nfs.PATH))
 				m.Cmd(aaa.ROLE, aaa.WHITE, aaa.VOID, m.PrefixKey())
 				m.Config(ice.CONTEXTS, _contexts)
+				m.Watch(web.SERVE_START, m.PrefixKey())
 			}},
+			web.SERVE_START: {Name: "serve.start", Help: "服务启动", Hand: func(m *ice.Message, arg ...string) {
+				_publish_file(m, ice.ICE_BIN)
+			}},
+
 			ice.VOLCANOS: {Name: "volcanos", Help: "火山架", Hand: func(m *ice.Message, arg ...string) {
 				defer func() { m.EchoQRCode(m.Option(ice.MSG_USERWEB)) }()
 				defer func() { m.Cmdy(PUBLISH, ice.CONTEXTS) }()

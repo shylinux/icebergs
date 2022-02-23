@@ -53,6 +53,8 @@ func _system_cmd(m *ice.Message, arg ...string) *exec.Cmd {
 	return cmd
 }
 func _system_out(m *ice.Message, out string) io.Writer {
+	defer func() { m.Warn(recover(), "output", out) }()
+
 	if w, ok := m.Optionv(out).(io.Writer); ok {
 		return w
 	} else if m.Option(out) == "" {
@@ -65,6 +67,9 @@ func _system_out(m *ice.Message, out string) io.Writer {
 	return nil
 }
 func _system_find(m *ice.Message, bin string, dir ...string) string {
+	if strings.Contains(bin, ice.DF) {
+		return bin
+	}
 	if strings.HasPrefix(bin, ice.PS) {
 		return bin
 	}

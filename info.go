@@ -24,6 +24,7 @@ var Info = struct {
 	UserName string
 	PassWord string
 
+	Colors   bool
 	Domain   string
 	NodeType string
 	NodeName string

@@ -119,9 +119,10 @@ const (
 	UBUNTU = "ubuntu"
 )
 const (
-	USER = "USER"
-	HOME = "HOME"
-	PATH = "PATH"
+	SHELL = "SHELL"
+	USER  = "USER"
+	HOME  = "HOME"
+	PATH  = "PATH"
 )
 const (
 	CTX_SHY = "ctx_shy"
@@ -156,7 +157,7 @@ func init() {
 	Index.Merge(&ice.Context{Configs: map[string]*ice.Config{
 		RUNTIME: {Name: RUNTIME, Help: "运行环境", Value: kit.Dict()},
 	}, Commands: map[string]*ice.Command{
-		RUNTIME: {Name: "runtime info=ifconfig,hostinfo,hostname,userinfo,procinfo,bootinfo,diskinfo auto", Help: "运行环境", Action: map[string]*ice.Action{
+		RUNTIME: {Name: "runtime info=ifconfig,hostinfo,hostname,userinfo,procinfo,bootinfo,diskinfo,env auto", Help: "运行环境", Action: map[string]*ice.Action{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
 				_runtime_init(m)
 				m.Cmd(RUNTIME, MAXPROCS, "1")
@@ -192,6 +193,13 @@ func init() {
 			}},
 			DISKINFO: {Name: "diskinfo", Help: "磁盘信息", Hand: func(m *ice.Message, arg ...string) {
 				_runtime_diskinfo(m)
+			}},
+			"env": {Name: "env", Help: "环境变量", Hand: func(m *ice.Message, arg ...string) {
+				for _, v := range os.Environ() {
+					ls := strings.SplitN(v, "=", 2)
+					m.Push(mdb.NAME, ls[0])
+					m.Push(mdb.VALUE, ls[1])
+				}
 			}},
 		}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			if len(arg) > 0 && arg[0] == BOOTINFO {

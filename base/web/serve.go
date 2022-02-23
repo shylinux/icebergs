@@ -21,6 +21,24 @@ var rewriteList = []interface{}{}
 
 func AddRewrite(cb interface{}) { rewriteList = append(rewriteList, cb) }
 
+func _serve_domain(m *ice.Message) string {
+	if p := m.Config(DOMAIN); p != "" {
+		return p
+	}
+	if p := m.R.Header.Get("X-Host"); p != "" {
+		return p
+	}
+	if m.R.Method == "POST" {
+		if p := m.R.Header.Get("Referer"); p != "" {
+			return p
+		}
+	}
+	if m.R.TLS == nil {
+		return kit.Format("http://%s", m.R.Host)
+	} else {
+		return kit.Format("https://%s", m.R.Host)
+	}
+}
 func _serve_main(m *ice.Message, w http.ResponseWriter, r *http.Request) bool {
 	if r.Header.Get("Index-Module") == "" {
 		r.Header.Set("Index-Module", m.Prefix())
@@ -135,11 +153,12 @@ func _serve_handle(key string, cmd *ice.Command, msg *ice.Message, w http.Respon
 	}
 
 	// 请求地址
-	msg.Option(ice.MSG_USERWEB, kit.Select(msg.Config(DOMAIN), kit.Select(r.Header.Get("Referer"), r.Header.Get("X-Host"))))
+	msg.R, msg.W = r, w
+	msg.Option(ice.MSG_USERWEB, _serve_domain(msg))
 	msg.Option(ice.MSG_USERADDR, kit.Select(r.RemoteAddr, r.Header.Get(ice.MSG_USERADDR)))
 	msg.Option(ice.MSG_USERIP, r.Header.Get(ice.MSG_USERIP))
 	msg.Option(ice.MSG_USERUA, r.Header.Get("User-Agent"))
-	msg.R, msg.W = r, w
+	msg.Debug("what %v", msg.FormatMeta())
 
 	// 会话别名
 	if sessid := msg.Option(CookieName(msg.Option(ice.MSG_USERWEB))); sessid != "" {

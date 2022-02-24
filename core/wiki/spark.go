@@ -73,6 +73,45 @@ func init() {
 					return strings.Join(list, "")
 				})
 			}},
+			"md": {Name: "md file", Help: "md", Hand: func(m *ice.Message, arg ...string) {
+				block, code := "", []string{}
+				text := func() {
+					if len(code) > 0 {
+						m.Cmdy(SPARK, kit.Join(code, ice.NL))
+						code = []string{}
+					}
+				}
+				m.Cmd(nfs.CAT, m.Option(nfs.FILE), func(line string) {
+					for _, ls := range [][]string{
+						[]string{"# ", TITLE}, []string{"## ", TITLE, CHAPTER}, []string{"### ", TITLE, SECTION},
+					} {
+						if strings.HasPrefix(line, ls[0]) {
+							text()
+							m.Cmdy(ls[1:], strings.TrimPrefix(line, ls[0]))
+							return
+						}
+					}
+
+					if strings.HasPrefix(line, "```") {
+						if block == "" {
+							text()
+							block = "```"
+						} else {
+							m.Cmdy(SPARK, SHELL, kit.Join(code, ice.NL))
+							block, code = "", []string{}
+						}
+						return
+					}
+
+					switch block {
+					case "":
+						code = append(code, line)
+					default:
+						code = append(code, line)
+					}
+				})
+				text()
+			}},
 		}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			if len(arg) == 0 {
 				m.Echo(`<br class="story" data-type="spark">`)

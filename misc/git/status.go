@@ -147,7 +147,7 @@ func _status_list(m *ice.Message) (files, adds, dels int, last time.Time) {
 			switch vs[0] {
 			case "##":
 				m.Push(TAGS, strings.TrimSpace(tags))
-				if tags == ice.ErrWarn {
+				if tags == ice.ErrWarn || tags == "" {
 					list = append(list, TAG)
 				}
 

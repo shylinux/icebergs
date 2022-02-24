@@ -42,7 +42,7 @@ func (m *Message) CSV(text string, head ...string) *Message {
 func (m *Message) SplitIndex(str string, arg ...string) *Message {
 	return m.Split(str, kit.Simple("index", arg)...)
 }
-func (m *Message) Split(str string, arg ...string) *Message {
+func (m *Message) Split(str string, arg ...string) *Message { // field sp nl
 	m.Set(MSG_APPEND).Set(MSG_RESULT)
 	field := kit.Select("", arg, 0)
 	sp := kit.Select(SP, arg, 1)

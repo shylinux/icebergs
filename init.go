@@ -123,7 +123,7 @@ func Run(arg ...string) string {
 		}
 	default: // 执行命令
 		if _, ok := Info.names[path.Base(os.Args[0])]; ok {
-			arg = kit.Simple(path.Base(os.Args[0]), arg)
+			// arg = kit.Simple(path.Base(os.Args[0]), arg)
 		}
 		if len(arg) == 0 {
 			arg = append(arg, HELP)

@@ -348,6 +348,11 @@ func init() {
 					return
 				}
 			}
+			if strings.HasPrefix(arg[0], "ice.") && m.Option(ice.POD) != "" {
+				aaa.UserRoot(m)
+				_share_local(m, "bin/ice.bin")
+				return
+			}
 			_share_local(m, m.Conf(SERVE, kit.Keym(ice.PUBLISH)), path.Join(arg...))
 		}},
 		"/help/": {Name: "/help/", Help: "帮助", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {

@@ -223,6 +223,9 @@ func (m *Message) EchoDownload(arg ...interface{}) *Message { // [name] file
 }
 
 func (m *Message) DisplayBase(file string, arg ...interface{}) *Message {
+	if !strings.Contains(file, PT) {
+		file += ".js"
+	}
 	m.Option(MSG_DISPLAY, kit.MergeURL(DisplayBase(file)[DISPLAY], arg...))
 	return m
 }

@@ -1,6 +1,7 @@
 package wiki
 
 import (
+	"path"
 	"strings"
 
 	ice "shylinux.com/x/icebergs"
@@ -10,7 +11,7 @@ import (
 	kit "shylinux.com/x/toolkits"
 )
 
-func Parse(m *ice.Message, meta string, key string, arg ...string) *ice.Message {
+func Parse(m *ice.Message, meta string, key string, arg ...string) (data interface{}) {
 	list := []string{}
 	for _, line := range kit.Split(strings.Join(arg, ice.SP), ice.NL) {
 		ls := kit.Split(line)
@@ -23,13 +24,13 @@ func Parse(m *ice.Message, meta string, key string, arg ...string) *ice.Message 
 		list = append(list, ls...)
 	}
 
-	switch data := kit.Parse(nil, "", list...); meta {
+	switch data = kit.Parse(nil, "", list...); meta {
 	case ice.MSG_OPTION:
 		m.Option(key, data)
 	case ice.MSG_APPEND:
 		m.Append(key, data)
 	}
-	return m
+	return data
 }
 func _field_show(m *ice.Message, name, text string, arg ...string) {
 	// 命令参数
@@ -47,17 +48,13 @@ func _field_show(m *ice.Message, name, text string, arg ...string) {
 	// 扩展参数
 	for i := 0; i < len(arg)-1; i += 2 {
 		if strings.HasPrefix(arg[i], "opts.") {
-			m.Option(arg[i], strings.TrimSpace(arg[i+1]))
-			kit.Value(meta, arg[i], m.Option(arg[i]))
+			kit.Value(meta, arg[i], m.Optionv(arg[i], strings.TrimSpace(arg[i+1])))
 		} else if strings.HasPrefix(arg[i], "args.") {
-			m.Option(arg[i], strings.TrimSpace(arg[i+1]))
-			kit.Value(meta, arg[i], m.Option(arg[i]))
+			kit.Value(meta, arg[i], m.Optionv(arg[i], strings.TrimSpace(arg[i+1])))
 		} else if strings.HasPrefix(arg[i], ARGS) {
-			m.Option(arg[i], kit.Split(strings.TrimSuffix(strings.TrimPrefix(arg[i+1], "["), "]")))
-			kit.Value(meta, arg[i], m.Optionv(arg[i]))
+			kit.Value(meta, arg[i], m.Optionv(arg[i], kit.Split(strings.TrimSuffix(strings.TrimPrefix(arg[i+1], "["), "]"))))
 		} else {
-			Parse(m, ice.MSG_OPTION, arg[i], arg[i+1])
-			kit.Value(meta, arg[i], m.Optionv(arg[i]))
+			kit.Value(meta, arg[i], Parse(m, ice.MSG_OPTION, arg[i], arg[i+1]))
 		}
 
 		switch arg[i] {
@@ -65,9 +62,17 @@ func _field_show(m *ice.Message, name, text string, arg ...string) {
 			meta[arg[i]] = arg[i+1]
 
 		case SPARK:
-			msg.Echo(strings.TrimSpace(arg[i+1]))
-			meta["msg"] = msg.FormatMeta()
+			if arg[i+1][0] == '@' && kit.FileExists(arg[i+1][1:]) {
+				msg.Cmdy(nfs.CAT, arg[i+1][1:])
+			} else {
+				msg.Echo(strings.TrimSpace(arg[i+1]))
+			}
+
 			kit.Value(meta, kit.Keys(FEATURE, "mode"), "simple")
+			if meta["msg"] = msg.FormatMeta(); text == "web.code.inner" {
+				meta["plug"] = kit.UnMarshal(m.Cmdx(mdb.PLUGIN, kit.Ext(name)))
+				kit.Value(meta, ARGS, kit.List(path.Dir(name)+ice.PS, path.Base(name)))
+			}
 
 		case TABLE:
 			ls := kit.Split(arg[i+1], ice.NL, ice.NL, ice.NL)
@@ -98,8 +103,7 @@ func _field_show(m *ice.Message, name, text string, arg ...string) {
 				meta[INPUTS] = list
 			}
 		default:
-			msg.Option(arg[i], arg[i+1])
-			kit.Value(meta, kit.Keys(FEATURE, arg[i]), arg[i+1])
+			kit.Value(meta, kit.Keys(FEATURE, arg[i]), msg.Optionv(arg[i], arg[i+1]))
 		}
 	}
 	m.Option(mdb.META, meta)

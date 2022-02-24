@@ -76,6 +76,7 @@ func _dream_show(m *ice.Message, name string) {
 	m.Optionv(cli.CMD_ENV, kit.Simple(
 		cli.CTX_OPS, "http://:"+m.Cmd(SERVE, ice.OptionFields("")).Append(tcp.PORT),
 		cli.PATH, cli.BinPath(kit.Path(p, ice.BIN)), cli.HOME, kit.Env(cli.HOME),
+		cli.SHELL, kit.Env(cli.SHELL), cli.TERM, kit.Env(cli.TERM),
 		cli.USER, ice.Info.UserName, m.Configv(cli.ENV),
 	))
 	m.Optionv(cli.CMD_OUTPUT, path.Join(p, ice.BIN_BOOT_LOG))

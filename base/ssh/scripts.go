@@ -110,7 +110,8 @@ func (f *Frame) alias(m *ice.Message, ls []string) []string {
 	return ls
 }
 func (f *Frame) parse(m *ice.Message, line string) string {
-	for _, one := range kit.Split(line, ";", ";", ";") {
+	// for _, one := range kit.Split(line, ";", ";", ";") {
+	for _, one := range kit.Simple(line) {
 		msg := m.Spawn(f.target)
 		ls := f.change(msg, f.alias(msg, kit.Split(strings.TrimSpace(one))))
 		if len(ls) == 0 {

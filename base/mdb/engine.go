@@ -13,6 +13,8 @@ func init() {
 	}, Commands: map[string]*ice.Command{
 		ENGINE: {Name: "engine type name text auto", Help: "引擎", Action: ice.MergeAction(map[string]*ice.Action{
 			CREATE: {Name: "create type name text", Help: "创建", Hand: func(m *ice.Message, arg ...string) {
+				m.Option(NAME, kit.Select(m.Option(TYPE), m.Option(NAME)))
+				m.Option(TYPE, kit.Ext(m.Option(TYPE)))
 				m.Cmdy(INSERT, m.PrefixKey(), "", HASH, m.OptionSimple("type,name,text"))
 			}},
 		}, HashAction()), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {

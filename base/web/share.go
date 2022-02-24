@@ -80,7 +80,7 @@ func _share_local(m *ice.Message, arg ...string) {
 		}
 
 		// 上传文件
-		m.Cmdy(SPACE, m.Option(ice.POD), SPIDE, ice.DEV, SPIDE_RAW, m.MergeURL2(SHARE_PROXY, nfs.PATH, ""),
+		m.Cmd(SPACE, m.Option(ice.POD), SPIDE, ice.DEV, SPIDE_RAW, m.MergeURL2(SHARE_PROXY, nfs.PATH, ""),
 			SPIDE_PART, m.OptionSimple(ice.POD), nfs.PATH, p, CACHE, cache.Format(ice.MOD_TIME), UPLOAD, "@"+p)
 
 		if s, e := os.Stat(pp); e == nil && !s.IsDir() {
@@ -88,7 +88,7 @@ func _share_local(m *ice.Message, arg ...string) {
 		}
 	}
 	if strings.HasSuffix(p, path.Join(ice.USR_PUBLISH, ice.ORDER_JS)) {
-		if _, e := os.Stat(p); os.IsNotExist(e) {
+		if !kit.FileExists(p) {
 			m.RenderResult("")
 			return
 		}

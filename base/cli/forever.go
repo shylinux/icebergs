@@ -21,7 +21,7 @@ func init() {
 		FOREVER: {Name: "forever", Help: "启动", Action: map[string]*ice.Action{
 			SERVE: {Name: "serve", Help: "服务", Hand: func(m *ice.Message, arg ...string) {
 				env := []string{PATH, BinPath(), HOME, kit.Select(kit.Path(""), os.Getenv(HOME))}
-				for _, k := range []string{SHELL, CTX_SHY, CTX_DEV, CTX_OPS, CTX_ARG, CTX_PID, CTX_USER, CTX_SHARE, CTX_RIVER} {
+				for _, k := range []string{TERM, SHELL, CTX_SHY, CTX_DEV, CTX_OPS, CTX_ARG, CTX_PID, CTX_USER, CTX_SHARE, CTX_RIVER} {
 					if kit.Env(k) != "" {
 						env = append(env, k, kit.Env(k))
 					}

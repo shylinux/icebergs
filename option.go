@@ -136,13 +136,10 @@ func (m *Message) ToastProcess(arg ...interface{}) func() {
 		arg = append(arg, "-1")
 	}
 	m.Toast(PROCESS, arg...)
-	return func() {
-		m.Debug("what ----- %v", 123)
-		m.Toast(SUCCESS, arg...)
-	}
+	return func() { m.Toast(SUCCESS) }
 }
 func (m *Message) ToastRestart(arg ...interface{}) { m.Toast(RESTART, arg...) }
-func (m *Message) ToastFailure(arg ...interface{}) { m.Toast(SUCCESS, arg...) }
+func (m *Message) ToastFailure(arg ...interface{}) { m.Toast(FAILURE, arg...) }
 func (m *Message) ToastSuccess(arg ...interface{}) { m.Toast(SUCCESS, arg...) }
 func (m *Message) Toast(text string, arg ...interface{}) { // [title [duration [progress]]]
 	if len(arg) > 1 {

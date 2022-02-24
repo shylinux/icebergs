@@ -120,6 +120,7 @@ const (
 )
 const (
 	SHELL = "SHELL"
+	TERM  = "TERM"
 	USER  = "USER"
 	HOME  = "HOME"
 	PATH  = "PATH"

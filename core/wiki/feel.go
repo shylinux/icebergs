@@ -2,7 +2,7 @@ package wiki
 
 import (
 	"os"
-	"strings"
+	"path"
 
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/lex"
@@ -23,7 +23,9 @@ func init() {
 				_wiki_upload(m, m.CommandKey(), m.Option(nfs.PATH))
 			}},
 			mdb.REMOVE: {Name: "remove", Help: "删除", Hand: func(m *ice.Message, arg ...string) {
-				os.Remove(strings.TrimPrefix(arg[0], web.SHARE_LOCAL))
+				p := path.Join(m.Config(nfs.PATH), path.Join(arg...))
+				m.Debug("remove %v", p)
+				os.Remove(p)
 			}},
 		}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			_wiki_list(m, m.CommandKey(), kit.Select(nfs.PWD, arg, 0))

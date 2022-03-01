@@ -128,6 +128,7 @@ func init() {
 					_binpack_dir(m, f, ice.USR_LEARNING)
 					_binpack_can(m, f, ice.USR_VOLCANOS)
 					_binpack_dir(m, f, ice.USR_INTSHELL)
+					_binpack_dir(m, f, ice.USR_ICEBERGS)
 					_binpack_ctx(m, f)
 
 					fmt.Fprintln(f, `	}`)

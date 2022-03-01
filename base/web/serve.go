@@ -158,7 +158,6 @@ func _serve_handle(key string, cmd *ice.Command, msg *ice.Message, w http.Respon
 	msg.Option(ice.MSG_USERADDR, kit.Select(r.RemoteAddr, r.Header.Get(ice.MSG_USERADDR)))
 	msg.Option(ice.MSG_USERIP, r.Header.Get(ice.MSG_USERIP))
 	msg.Option(ice.MSG_USERUA, r.Header.Get("User-Agent"))
-	msg.Debug("what %v", msg.FormatMeta())
 
 	// 会话别名
 	if sessid := msg.Option(CookieName(msg.Option(ice.MSG_USERWEB))); sessid != "" {

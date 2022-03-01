@@ -22,7 +22,10 @@ func _website_url(m *ice.Message, file string) string {
 	}
 	return strings.Split(kit.MergeURL2(m.Option(ice.MSG_USERWEB), path.Join("/chat", p)), "?")[0]
 }
-func _website_parse(m *ice.Message, text string) map[string]interface{} {
+func _website_parse(m *ice.Message, text string) (map[string]interface{}, bool) {
+	if text == "" {
+		return nil, false
+	}
 	m.Option(nfs.CAT_CONTENT, text)
 	river, storm, last := kit.Dict(
 		"Header", kit.Dict("menus", kit.List(), "style", kit.Dict("display", "none")),
@@ -58,7 +61,7 @@ func _website_parse(m *ice.Message, text string) map[string]interface{} {
 		}
 		return ls
 	})
-	return river
+	return river, true
 }
 func _website_render(m *ice.Message, w http.ResponseWriter, r *http.Request, kind, text string) bool {
 	msg := m.Spawn(w, r)
@@ -73,7 +76,7 @@ func _website_render(m *ice.Message, w http.ResponseWriter, r *http.Request, kin
 			return false
 		}
 	case nfs.TXT:
-		res := _website_parse(msg, text)
+		res, _ := _website_parse(msg, text)
 		msg.RenderResult(_website_template2, kit.Format(res))
 	case nfs.JSON:
 		msg.RenderResult(_website_template2, kit.Format(kit.UnMarshal(text)))
@@ -118,11 +121,11 @@ func init() {
 				})
 			}},
 			"show": {Hand: func(m *ice.Message, arg ...string) {
-				res := _website_parse(m, m.Cmdx(nfs.CAT, path.Join(SRC_WEBSITE, arg[0])))
-				m.Echo(_website_template2, kit.Format(res))
+				if res, ok := _website_parse(m, m.Cmdx(nfs.CAT, path.Join(SRC_WEBSITE, arg[0]))); ok {
+					m.Echo(_website_template2, kit.Format(res))
+				}
 			}},
-			"inner": {Hand: func(m *ice.Message, arg ...string) {
-			}},
+			"inner": {Hand: func(m *ice.Message, arg ...string) {}},
 			mdb.RENDER: {Hand: func(m *ice.Message, arg ...string) {
 				m.EchoIFrame(_website_url(m, strings.TrimPrefix(path.Join(arg[2], arg[1]), SRC_WEBSITE)))
 			}},

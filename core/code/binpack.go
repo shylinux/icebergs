@@ -76,7 +76,7 @@ func init() {
 					m.Cmd(BINPACK, mdb.REMOVE)
 				}
 				if kit.FileExists("src/website/index.txt") {
-					if s := m.Cmdx("web.chat.website", "show", "index.txt", "Header.style.display", "block"); s != "" {
+					if s := m.Cmdx("web.chat.website", "show", "index.txt", "Header", "", "River", "", "Action", "", "Footer", ""); s != "" {
 						ice.Info.Pack["/page/index.html"] = []byte(s)
 					}
 				}

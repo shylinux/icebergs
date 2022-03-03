@@ -31,7 +31,6 @@ func init() {
 			}},
 			mdb.ENGINE: {Hand: func(m *ice.Message, arg ...string) {
 				m.Cmdy(cli.SYSTEM, SH, "-c", kit.Join(_sh_main_script(m, arg...), ice.NL)).SetAppend()
-
 			}},
 			mdb.SEARCH: {Hand: func(m *ice.Message, arg ...string) {
 				if arg[0] == mdb.FOREACH {

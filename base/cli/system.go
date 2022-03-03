@@ -155,6 +155,10 @@ func init() {
 			if len(arg) == 1 {
 				arg = kit.Split(arg[0])
 			}
+			if strings.HasSuffix(arg[0], ".sh") {
+				arg = []string{"sh", path.Join("src", arg[0])}
+			}
+			m.Debug("arg %v", arg)
 			_system_exec(m, _system_cmd(m, arg...))
 		}},
 	}})

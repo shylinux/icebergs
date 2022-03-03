@@ -2,6 +2,7 @@ package code
 
 import (
 	"path"
+	"strings"
 
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/cli"
@@ -22,6 +23,12 @@ func init() {
 				m.Cmdy(AUTOGEN, mdb.CREATE, arg)
 			}},
 			"script": {Name: "script file=hi/hi.js text=", Help: "脚本", Hand: func(m *ice.Message, arg ...string) {
+				m.Option(mdb.TEXT, strings.TrimSpace(m.Option(mdb.TEXT)))
+				m.Cmdy(TEMPLATE, nfs.DEFS)
+			}},
+			"website": {Name: "script file=hi.txt text=", Help: "网页", Hand: func(m *ice.Message, arg ...string) {
+				m.Option(nfs.FILE, path.Join("website", m.Option(nfs.FILE)))
+				m.Option(mdb.TEXT, strings.TrimSpace(m.Option(mdb.TEXT)))
 				m.Cmdy(TEMPLATE, nfs.DEFS)
 			}},
 			COMPILE: {Name: "compile", Help: "编译", Hand: func(m *ice.Message, arg ...string) {

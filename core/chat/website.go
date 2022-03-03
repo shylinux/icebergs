@@ -55,10 +55,22 @@ func _website_parse(m *ice.Message, text string, args ...string) (map[string]int
 			ls[0] = kit.Select("can.code.inner.plugin", key)
 			data[ctx.DISPLAY] = display
 		case nfs.GO:
-			ls[0] = ice.GetFileKey(display)
+			key := ice.GetFileKey(display)
+			if key == "" {
+				for k, v := range ice.Info.File {
+					if strings.HasSuffix(k, ls[0]) {
+						key = v
+					}
+				}
+			}
+			ls[0] = key
 		case nfs.SH:
-			ls[0] = ice.GetFileKey(display)
-			data[ctx.DISPLAY] = display
+			key := ice.GetFileKey(display)
+			if key == "" {
+				key = "cli.system"
+			}
+			data[ctx.ARGS] = kit.List(ls[0])
+			ls[0] = key
 		}
 
 		if ls[0] == "" {

@@ -32,8 +32,6 @@ func init() {
 					m.Cmdy(cli.SYSTEM, PYTHON2, kit.Path(arg[2], arg[1]))
 				} else if b, ok := ice.Info.Pack[path.Join(arg[2], arg[1])]; ok && len(b) > 0 {
 					m.Cmdy(cli.SYSTEM, PYTHON2, "-c", string(b))
-				} else {
-					m.Debug("what %v %v", b, ok)
 				}
 				m.Echo(ice.NL)
 			}},

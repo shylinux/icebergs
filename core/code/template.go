@@ -14,14 +14,14 @@ const TEMPLATE = "template"
 
 func init() {
 	Index.Merge(&ice.Context{Commands: map[string]*ice.Command{
-		TEMPLATE: {Name: "template name auto create", Help: "模板", Action: ice.MergeAction(map[string]*ice.Action{
+		TEMPLATE: {Name: "template name auto", Help: "模板", Action: ice.MergeAction(map[string]*ice.Action{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
 				for _, _template := range _template_list {
 					m.Cmd(TEMPLATE, mdb.CREATE, kit.SimpleKV(kit.Format(_template[0]), _template[1:]...))
 				}
 			}},
 			mdb.CREATE: {Name: "create type name text args", Help: "创建"},
-			nfs.DEFS: {Name: "defs file=hi/hi.go", Help: "生成", Hand: func(m *ice.Message, arg ...string) {
+			nfs.DEFS: {Name: "defs file=hi/hi.js", Help: "生成", Hand: func(m *ice.Message, arg ...string) {
 				m.Option("tags", "`"+m.Option("tags")+"`")
 				if buf, err := kit.Render(m.Option(mdb.TEXT), m); !m.Warn(err) {
 					switch m.Cmd(nfs.DEFS, path.Join(m.Option(nfs.PATH), m.Option(nfs.FILE)), string(buf)); kit.Ext(m.Option(nfs.FILE)) {
@@ -33,7 +33,10 @@ func init() {
 				}
 			}},
 		}, mdb.HashAction(mdb.SHORT, mdb.NAME, mdb.FIELD, "time,type,name,text,args")), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			mdb.HashSelect(m, arg...).Sort(mdb.NAME).Cut("time,action,type,name,text,args")
+			if mdb.HashSelect(m, arg...).Sort(mdb.NAME); len(arg) == 0 {
+				m.Cut("time,action,type,name,text,args")
+				m.Action(mdb.CREATE)
+			}
 			m.PushAction(nfs.DEFS, mdb.REMOVE)
 		}}},
 	})

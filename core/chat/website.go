@@ -22,7 +22,7 @@ func _website_url(m *ice.Message, file string) string {
 	}
 	return strings.Split(kit.MergeURL2(m.Option(ice.MSG_USERWEB), path.Join("/chat", p)), "?")[0]
 }
-func _website_parse(m *ice.Message, text string) (map[string]interface{}, bool) {
+func _website_parse(m *ice.Message, text string, args ...string) (map[string]interface{}, bool) {
 	if text == "" {
 		return nil, false
 	}
@@ -32,16 +32,52 @@ func _website_parse(m *ice.Message, text string) (map[string]interface{}, bool) 
 		"River", kit.Dict("menus", kit.List(), "action", kit.List()),
 		"Action", kit.Dict("menus", kit.List(), "action", kit.List(), "legend_event", "onclick"),
 		"Footer", kit.Dict("style", kit.Dict("display", "none")),
+		args,
 	), kit.Dict(), kit.Dict()
 	m.Cmd(lex.SPLIT, "", mdb.KEY, mdb.NAME, func(deep int, ls []string, meta map[string]interface{}) []string {
-		if len(ls) == 1 {
-			ls = append(ls, ls[0])
-		}
 		data := kit.Dict()
+		switch display := ice.DisplayRequire(1, ls[0])[ctx.DISPLAY]; kit.Ext(ls[0]) {
+		case nfs.JS:
+			key := ice.GetFileKey(display)
+			if key == "" {
+				if ls := strings.Split(display, ice.PS); len(ls) > 4 {
+					ls[3] = ice.USR
+					key = ice.GetFileKey(path.Join(ls[3:]...))
+				}
+			}
+			if key == "" {
+				for p, k := range ice.Info.File {
+					if strings.HasPrefix(p, path.Dir(display)) {
+						key = k
+					}
+				}
+			}
+			ls[0] = kit.Select("can.code.inner.plugin", key)
+			data[ctx.DISPLAY] = display
+		case nfs.GO:
+			ls[0] = ice.GetFileKey(display)
+		case nfs.SH:
+			ls[0] = ice.GetFileKey(display)
+			data[ctx.DISPLAY] = display
+		}
+
+		if ls[0] == "" {
+			return ls
+		} else if len(ls) == 1 && deep == 3 {
+			ls = append(ls, m.Cmd(ctx.COMMAND, ls[0]).Append(mdb.HELP))
+		} else if len(ls) == 1 {
+			ls = append(ls, ls[0])
+		} else if ls[1] == "" {
+			ls[1] = ls[0]
+		}
+
 		for i := 2; i < len(ls); i += 2 {
 			switch ls[i] {
 			case ctx.ARGS:
 				data[ls[i]] = kit.Split(ls[i+1])
+			case ctx.DISPLAY:
+				data[ls[i]] = ice.DisplayRequire(1, ls[i+1])[ctx.DISPLAY]
+
 			case "title", "menus", "action", "style":
 				data[ls[i]] = kit.UnMarshal(ls[i+1])
 			default:
@@ -121,7 +157,7 @@ func init() {
 				})
 			}},
 			"show": {Hand: func(m *ice.Message, arg ...string) {
-				if res, ok := _website_parse(m, m.Cmdx(nfs.CAT, path.Join(SRC_WEBSITE, arg[0]))); ok {
+				if res, ok := _website_parse(m, m.Cmdx(nfs.CAT, path.Join(SRC_WEBSITE, arg[0])), arg[1:]...); ok {
 					m.Echo(_website_template2, kit.Format(res))
 				}
 			}},

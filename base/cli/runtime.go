@@ -158,7 +158,7 @@ func init() {
 	Index.Merge(&ice.Context{Configs: map[string]*ice.Config{
 		RUNTIME: {Name: RUNTIME, Help: "运行环境", Value: kit.Dict()},
 	}, Commands: map[string]*ice.Command{
-		RUNTIME: {Name: "runtime info=ifconfig,hostinfo,hostname,userinfo,procinfo,bootinfo,diskinfo,env auto", Help: "运行环境", Action: map[string]*ice.Action{
+		RUNTIME: {Name: "runtime info=ifconfig,hostinfo,hostname,userinfo,procinfo,bootinfo,diskinfo,env,file,route auto", Help: "运行环境", Action: map[string]*ice.Action{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
 				_runtime_init(m)
 				m.Cmd(RUNTIME, MAXPROCS, "1")
@@ -201,6 +201,20 @@ func init() {
 					m.Push(mdb.NAME, ls[0])
 					m.Push(mdb.VALUE, ls[1])
 				}
+			}},
+			"file": {Name: "file", Help: "模块文件", Hand: func(m *ice.Message, arg ...string) {
+				for k, v := range ice.Info.File {
+					m.Push(nfs.FILE, k)
+					m.Push(mdb.NAME, v)
+				}
+				m.Sort(nfs.FILE)
+			}},
+			"route": {Name: "route", Help: "接口命令", Hand: func(m *ice.Message, arg ...string) {
+				for k, v := range ice.Info.Route {
+					m.Push(nfs.PATH, k)
+					m.Push(nfs.FILE, v)
+				}
+				m.Sort(nfs.PATH)
 			}},
 		}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			if len(arg) > 0 && arg[0] == BOOTINFO {

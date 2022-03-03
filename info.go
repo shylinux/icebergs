@@ -2,6 +2,7 @@ package ice
 
 import (
 	"io"
+	"path"
 	"strings"
 
 	kit "shylinux.com/x/toolkits"
@@ -33,10 +34,11 @@ var Info = struct {
 
 	Make MakeInfo
 
-	Help string
-	Pack map[string][]byte
-	File map[string]string
-	Log  func(m *Message, p, l, s string)
+	Help  string
+	Pack  map[string][]byte
+	File  map[string]string
+	Route map[string]string
+	Log   func(m *Message, p, l, s string)
 
 	render map[string]func(*Message, string, ...interface{}) string
 	names  map[string]interface{}
@@ -49,18 +51,35 @@ report: shylinuxc@gmail.com
 server: https://shylinux.com
 source: https://shylinux.com/x/icebergs
 `,
-	Pack: map[string][]byte{},
-	File: map[string]string{},
+	Pack:  map[string][]byte{},
+	File:  map[string]string{},
+	Route: map[string]string{},
 
 	render: map[string]func(*Message, string, ...interface{}) string{},
 	names:  map[string]interface{}{},
 }
 
+func fileKey(dir string) string {
+	dir = strings.Split(dir, DF)[0]
+	dir = strings.ReplaceAll(dir, ".js", ".go")
+	dir = strings.ReplaceAll(dir, ".sh", ".go")
+	if strings.Contains(dir, "go/pkg/mod") {
+		return path.Join("/require", strings.Split(dir, "go/pkg/mod")[1])
+	}
+	dir = strings.TrimPrefix(dir, kit.Path("")+PS)
+	if strings.HasPrefix(dir, SRC) {
+		return path.Join("/require", dir)
+	}
+	if strings.HasPrefix(dir, USR) {
+		return path.Join("/require", dir)
+	}
+	return dir
+}
 func AddFileKey(dir, key string) {
-	Info.File[strings.TrimPrefix(dir, kit.Path("")+PS)] = key
+	Info.File[fileKey(dir)] = key
 }
 func GetFileKey(dir string) string {
-	return Info.File[strings.TrimPrefix(dir, kit.Path("")+PS)]
+	return Info.File[fileKey(dir)]
 }
 func Dump(w io.Writer, name string, cb func(string)) bool {
 	for _, key := range []string{name, strings.TrimPrefix(name, USR_VOLCANOS)} {

@@ -35,6 +35,7 @@ func (web *Frame) Begin(m *ice.Message, arg ...string) ice.Server {
 	return web
 }
 func (web *Frame) Start(m *ice.Message, arg ...string) bool {
+	list := map[*ice.Context]string{}
 	m.Travel(func(p *ice.Context, s *ice.Context) {
 		if frame, ok := s.Server().(*Frame); ok {
 			if frame.ServeMux != nil {
@@ -48,6 +49,7 @@ func (web *Frame) Start(m *ice.Message, arg ...string) bool {
 				route := ice.PS + s.Name + ice.PS
 				msg.Log(ROUTE, "%s <= %s", p.Name, route)
 				pframe.Handle(route, http.StripPrefix(path.Dir(route), frame))
+				list[s] = path.Join(list[p], route)
 			}
 
 			// 静态路由
@@ -62,6 +64,8 @@ func (web *Frame) Start(m *ice.Message, arg ...string) bool {
 					return
 				}
 				msg.Log(ROUTE, "%s <- %s", s.Name, k)
+				m.Debug("what %v", path.Join(list[s], k))
+				ice.Info.Route[path.Join(list[s], k)] = kit.FileLine(x.Hand, 3)
 				frame.HandleFunc(k, func(frame http.ResponseWriter, r *http.Request) {
 					m.TryCatch(msg.Spawn(), true, func(msg *ice.Message) {
 						_serve_handle(k, x, msg, frame, r)

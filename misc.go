@@ -369,6 +369,13 @@ func MergeAction(list ...interface{}) map[string]*Action {
 					base[k] = v
 				} else if h.Hand == nil {
 					h.Hand = v.Hand
+				} else if k == CTX_INIT {
+					last := base[k].Hand
+					prev := v.Hand
+					base[k].Hand = func(m *Message, arg ...string) {
+						prev(m, arg...)
+						last(m, arg...)
+					}
 				}
 			}
 		case string:

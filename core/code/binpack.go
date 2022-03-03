@@ -75,6 +75,11 @@ func init() {
 				if kit.FileExists(path.Join(ice.USR_VOLCANOS, ice.PROTO_JS)) {
 					m.Cmd(BINPACK, mdb.REMOVE)
 				}
+				if kit.FileExists("src/website/index.txt") {
+					if s := m.Cmdx("web.chat.website", "show", "index.txt", "Header.style.display", "block"); s != "" {
+						ice.Info.Pack["/page/index.html"] = []byte(s)
+					}
+				}
 				web.AddRewrite(func(w http.ResponseWriter, r *http.Request) bool {
 					if len(ice.Info.Pack) == 0 {
 						return false

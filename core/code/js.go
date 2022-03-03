@@ -57,7 +57,7 @@ func init() {
 						}
 					}
 				}
-				m.Display(path.Join("/require", ice.Info.Make.Module, path.Join(arg[2], arg[1])))
+				m.Display(path.Join("/require", path.Join(arg[2], arg[1])))
 				m.ProcessCommand(kit.Select("can.code.inner.plugin", key), kit.Simple())
 			}},
 			mdb.ENGINE: {Hand: func(m *ice.Message, arg ...string) {

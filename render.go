@@ -272,7 +272,11 @@ func DisplayRequire(n int, file string, arg ...string) map[string]string {
 		file = kit.Keys(kit.FileName(n+1), JS)
 	}
 	if !strings.HasPrefix(file, HTTP) && !strings.HasPrefix(file, PS) {
-		file = path.Join(PS, REQUIRE, kit.ModPath(n+1, file))
+		if kit.FileExists("src/" + file) {
+			file = path.Join(PS, REQUIRE, "src/", file)
+		} else {
+			file = path.Join(PS, REQUIRE, kit.ModPath(n+1, file))
+		}
 	}
 	return DisplayBase(file, arg...)
 }

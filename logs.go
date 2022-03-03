@@ -172,7 +172,7 @@ func (m *Message) FormatsMeta() string {
 }
 func (m *Message) FormatStack() string {
 	pc := make([]uintptr, 100)
-	frames := runtime.CallersFrames(pc[:runtime.Callers(5, pc)])
+	frames := runtime.CallersFrames(pc[:runtime.Callers(2, pc)])
 
 	meta := []string{}
 	for {

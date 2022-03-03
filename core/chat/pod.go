@@ -5,6 +5,7 @@ import (
 
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/ctx"
+	"shylinux.com/x/icebergs/base/nfs"
 	"shylinux.com/x/icebergs/base/web"
 	kit "shylinux.com/x/toolkits"
 )
@@ -24,7 +25,11 @@ func init() {
 				return // 节点列表
 			}
 			if len(arg) == 1 {
-				m.RenderIndex(web.SERVE, ice.VOLCANOS)
+				if s := m.Cmdx(web.SPACE, arg[0], nfs.CAT, "/page/index.html"); s != "" {
+					m.RenderResult(s)
+				} else {
+					m.RenderIndex(web.SERVE, ice.VOLCANOS)
+				}
 				return // 节点首页
 			}
 			if arg[1] == WEBSITE {

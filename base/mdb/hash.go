@@ -143,9 +143,9 @@ func AutoConfig(args ...interface{}) *ice.Action {
 	return &ice.Action{Hand: func(m *ice.Message, arg ...string) {
 		if cs := m.Target().Configs; cs[m.CommandKey()] == nil {
 			cs[m.CommandKey()] = &ice.Config{Value: kit.Data(args...)}
+			m.Load(m.CommandKey())
 		}
 	}}
-
 }
 func HashAction(args ...interface{}) map[string]*ice.Action {
 	_key := func(m *ice.Message) string {

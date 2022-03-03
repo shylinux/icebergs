@@ -337,6 +337,16 @@ func init() {
 		"/volcanos/": {Name: "/volcanos/", Help: "浏览器", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			m.RenderIndex(SERVE, ice.VOLCANOS, arg...)
 		}},
+		"/require/src/": {Name: "/require/src/", Help: "代码库", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			if p := path.Join(ice.SRC, path.Join(arg...)); m.Option(ice.POD) != "" {
+				m.RenderResult(m.Cmdx(SPACE, m.Option(ice.POD), nfs.CAT, p))
+			} else {
+				m.RenderDownload(p)
+			}
+		}},
+		"/require/usr/": {Name: "/require/usr/", Help: "代码库", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			m.RenderDownload(path.Join(ice.USR, path.Join(arg...)))
+		}},
 		"/require/": {Name: "/require/", Help: "代码库", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			_share_repos(m, path.Join(arg[0], arg[1], arg[2]), arg[3:]...)
 		}},

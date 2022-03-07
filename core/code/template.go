@@ -29,6 +29,8 @@ func init() {
 						if m.Option(cli.MAIN) != "" && m.Option(mdb.ZONE) != "" {
 							_autogen_import(m, path.Join(m.Option(nfs.PATH), m.Option(cli.MAIN)), m.Option(mdb.ZONE), _autogen_mod(m, ice.GO_MOD))
 						}
+					default:
+						m.Cmdy(nfs.DEFS, path.Join(m.Option(nfs.PATH), m.Option(nfs.FILE)), m.Option(mdb.TEXT))
 					}
 				}
 			}},

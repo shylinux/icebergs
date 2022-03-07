@@ -86,51 +86,42 @@ func init() {
 		)},
 		JS: {Name: JS, Help: "js", Value: kit.Data(INSTALL, kit.List(kit.Dict(
 			cli.OSID, cli.ALPINE, ice.CMD, kit.List("apk", "add", "nodejs"),
-		)), PLUG, kit.Dict(
-			mdb.RENDER, kit.Dict(),
-			SPLIT, kit.Dict("space", " \t", "operator", "{[(&.,;!|<>)]}"),
-			PREFIX, kit.Dict("//", COMMENT, "/*", COMMENT, "*", COMMENT), PREPARE, kit.Dict(
-				KEYWORD, kit.Simple(
-					"import", "from", "export",
-					"var", "new", "delete", "typeof", "const", "function",
-					"if", "else", "for", "while", "break", "continue", "switch", "case", "default",
-					"return", "try", "throw", "catch", "finally",
-					"can", "sub", "msg", "res", "target",
+		)), PLUG, kit.Dict(PREFIX, kit.Dict("// ", COMMENT, "/* ", COMMENT, "* ", COMMENT), PREPARE, kit.Dict(
+			KEYWORD, kit.Simple(
+				"import", "from", "export",
 
-					"window",
-					"console",
-					"document",
-					"event",
-				),
-				CONSTANT, kit.Simple(
-					"true", "false",
-					"undefined", "null",
-					"-1", "0", "1", "2", "10",
-				),
-				FUNCTION, kit.Simple(
-					"arguments",
-					"Date",
-					"JSON",
+				"var", "new", "instanceof", "typeof", "let", "const",
+				"delete",
 
-					"__proto__",
-					"setTimeout",
-					"createElement",
-					"appendChild",
-					"removeChild",
-					"parentNode",
-					"childNodes",
+				"if", "else", "for", "in", "do", "while", "break", "continue", "switch", "case", "default",
+				"try", "throw", "catch", "finally",
+				"return",
 
-					"Volcanos",
-					"request",
-					"require",
+				"can", "sub", "msg", "res",
 
-					"cb",
-					"cbs",
-					"shy",
-					"pane",
-					"plugin",
-				),
-			), KEYWORD, kit.Dict(),
+				"event", "target", "debugger", "alert",
+				"window", "screen", "console", "navigator",
+				"location", "history",
+				"document",
+			),
+			CONSTANT, kit.Simple(
+				"true", "false",
+				"-1", "0", "1", "2", "10",
+				"undefined", "null", "NaN",
+			),
+			FUNCTION, kit.Simple(
+				"function", "arguments", "this",
+				"shy", "Volcanos", "cb", "cbs",
+
+				"parseInt", "parseFloat",
+				"Number", "String", "Boolean",
+				"Object", "Array",
+				"RegExp", "XMLHttpRequest",
+				"Promise",
+				"Math", "Date", "JSON",
+				"setTimeout",
+			),
+		), KEYWORD, kit.Dict(),
 		))},
 	}}, nil)
 }

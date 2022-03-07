@@ -11,13 +11,22 @@ field "源码" web.code.inner args `usr/install/vim-vim-12be734/ src/main.c 110`
 
 section "构建"
 spark shell `
-yum install -y wget make gcc
-yum install -y ncurses-devel.x86_64 bzip2.x86_64
-
 wget http://mirrors.tencent.com/macports/distfiles/vim/vim-8.2.2681.tar.gz
 tar xvf vim-8.2.2681.tar.gz && cd vim-vim-12be734
 
+yum install -y wget make gcc
+yum install -y ncurses-devel.x86_64 bzip2.x86_64
+
 ./configure --prefix=$PWD/_install --enable-multibyte=yes
+make -j8 && make install
+`
+
+spark shell `
+yum install python python-devel python36u python36u-devel
+yum install tcl-devel perl perl-devel perl-ExtUtils-ParseXS perl-ExtUtils-XSpp perl-ExtUtils-CBuilder perl-ExtUtils-Embed cscope gtk3-devel libSM-devel libXt-devel libXpm-devel libappstream-glib libacl-devel gpm-devel
+yum install ncurses-devel
+
+./configure --prefix=$PWD/_install --enable-multibyte  --with-features=huge --enable-rubyinterp=yes --enable-pythoninterp=yes --enable-python3interp=yes --with-python-config-dir=/usr/lib64/python2.7/config --enable-python3interp=yes --with-python3-config-dir=/usr/lib64/python3.6/config-3.6m-x86_64-linux-gnu --with-tlib=ncurses --enable-perlinterp=yes --enable-luainterp=yes --enable-terminal --enable-cscope 
 make -j8 && make install
 `
 

@@ -110,6 +110,8 @@ func _cat_list(m *ice.Message, name string) {
 					break
 				}
 				buf = append(buf, make([]byte, ice.MOD_BUFS)...)
+			} else {
+				break
 			}
 		}
 		m.Echo(string(buf))

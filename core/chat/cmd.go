@@ -72,6 +72,11 @@ func init() {
 				m.ProcessLocation(arg[0])
 				return
 			}
+			switch kit.Ext(path.Join(arg...)) {
+			case "html":
+				m.RenderResult(m.Cmdx(nfs.CAT, path.Join(ice.SRC, path.Join(arg...))))
+				return
+			}
 			m.Option(nfs.DIR_ROOT, path.Join(m.Config(nfs.PATH), strings.TrimPrefix(path.Dir(m.R.URL.Path), "/cmd")))
 			m.Cmdy(nfs.DIR, arg)
 		}},

@@ -28,13 +28,11 @@ func _js_main_script(m *ice.Message, arg ...string) (res []string) {
 	return
 }
 
-const TS = "ts"
 const JS = "js"
 const CSS = "css"
 const HTML = "html"
 const JSON = "json"
 const NODE = "node"
-const VUE = "vue"
 
 func init() {
 	Index.Register(&ice.Context{Name: JS, Help: "前端", Commands: map[string]*ice.Command{
@@ -42,9 +40,7 @@ func init() {
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
 				for _, cmd := range []string{mdb.SEARCH, mdb.ENGINE, mdb.RENDER, mdb.PLUGIN} {
 					m.Cmd(cmd, mdb.CREATE, JSON, m.PrefixKey())
-					m.Cmd(cmd, mdb.CREATE, VUE, m.PrefixKey())
 					m.Cmd(cmd, mdb.CREATE, JS, m.PrefixKey())
-					m.Cmd(cmd, mdb.CREATE, TS, m.PrefixKey())
 				}
 				LoadPlug(m, JS)
 			}},

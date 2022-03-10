@@ -102,7 +102,7 @@ go 1.11
 }
 
 func _autogen_git(m *ice.Message, arg ...string) map[string]interface{} {
-	return kit.Dict("Time", m.Time(), arg,
+	return kit.Dict("Path", kit.Path(""), "Time", m.Time(), arg,
 		"Hash", strings.TrimSpace(m.Cmdx(cli.SYSTEM, "git", "log", "-n1", `--pretty=%H`)),
 		"Remote", strings.TrimSpace(m.Cmdx(cli.SYSTEM, "git", "config", "remote.origin.url")),
 		"Branch", strings.TrimSpace(m.Cmdx(cli.SYSTEM, "git", "rev-parse", "--abbrev-ref", "HEAD")),

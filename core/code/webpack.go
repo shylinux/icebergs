@@ -48,12 +48,12 @@ func _webpack_cache(m *ice.Message, dir string, write bool) {
 	m.Option(nfs.DIR_PACK, true)
 	m.Option(nfs.DIR_TYPE, nfs.CAT)
 
-	m.Cmd(nfs.DIR, ice.SRC).Tables(func(value map[string]string) {
-		if kit.Ext(value[nfs.PATH]) == JS {
-			fmt.Fprintln(js, `_can_name = "`+path.Join("/require", ice.Info.Make.Module, value[nfs.PATH])+`"`)
-			fmt.Fprintln(js, m.Cmdx(nfs.CAT, value[nfs.PATH]))
-		}
-	})
+	// m.Cmd(nfs.DIR, ice.SRC).Tables(func(value map[string]string) {
+	// 	if kit.Ext(value[nfs.PATH]) == JS {
+	// 		fmt.Fprintln(js, `_can_name = "`+path.Join("/require", ice.Info.Make.Module, value[nfs.PATH])+`"`)
+	// 		fmt.Fprintln(js, m.Cmdx(nfs.CAT, value[nfs.PATH]))
+	// 	}
+	// })
 
 	m.Option(nfs.DIR_ROOT, dir)
 	for _, k := range []string{LIB, PANEL, PLUGIN} {

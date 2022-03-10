@@ -27,7 +27,7 @@ func init() {
 			if HashSelect(m, arg...); len(arg) == 0 {
 				m.Sort(TYPE)
 			} else if len(arg) == 1 {
-				m.DisplayStory("json.js")
+				m.DisplayStoryJSON()
 				m.Echo(kit.Formats(m.Confv(m.Append(NAME), "meta.plug")))
 			}
 		}},

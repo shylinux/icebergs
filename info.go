@@ -9,6 +9,7 @@ import (
 )
 
 type MakeInfo struct {
+	Path     string
 	Time     string
 	Hash     string
 	Module   string
@@ -63,10 +64,16 @@ func fileKey(dir string) string {
 	dir = strings.Split(dir, DF)[0]
 	dir = strings.ReplaceAll(dir, ".js", ".go")
 	dir = strings.ReplaceAll(dir, ".sh", ".go")
+
 	if strings.Contains(dir, "go/pkg/mod") {
 		return path.Join("/require", strings.Split(dir, "go/pkg/mod")[1])
 	}
-	dir = strings.TrimPrefix(dir, kit.Path("")+PS)
+	if Info.Make.Path != "" && strings.HasPrefix(dir, Info.Make.Path+PS) {
+		dir = strings.TrimPrefix(dir, Info.Make.Path+PS)
+	}
+	if strings.HasPrefix(dir, kit.Path("")+PS) {
+		dir = strings.TrimPrefix(dir, kit.Path("")+PS)
+	}
 	if strings.HasPrefix(dir, SRC) {
 		return path.Join("/require", dir)
 	}

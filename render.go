@@ -244,6 +244,9 @@ func (m *Message) DisplayStory(file string, arg ...interface{}) *Message {
 	}
 	return m.DisplayBase(file, arg...)
 }
+func (m *Message) DisplayStoryJSON(arg ...interface{}) *Message {
+	return m.DisplayStory("json", arg...)
+}
 func (m *Message) Display(file string, arg ...interface{}) *Message {
 	m.Option(MSG_DISPLAY, kit.MergeURL(DisplayRequire(2, file)[DISPLAY], arg...))
 	return m

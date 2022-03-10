@@ -218,7 +218,7 @@ func init() {
 					}
 				}
 			}},
-			CLONE: {Name: "clone repos='https://shylinux.com/x/volcanos' path=usr/volcanos", Help: "克隆", Hand: func(m *ice.Message, arg ...string) {
+			CLONE: {Name: "clone repos='https://shylinux.com/x/volcanos' path=", Help: "克隆", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmdy(REPOS, mdb.CREATE)
 			}},
 			PULL: {Name: "pull", Help: "下载", Hand: func(m *ice.Message, arg ...string) {

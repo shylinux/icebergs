@@ -103,6 +103,17 @@ var Pulse = &Message{
 func init() { Index.root, Pulse.root = Index, Pulse }
 
 func Run(arg ...string) string {
+	list := []string{}
+	for k := range Info.File {
+		if strings.HasPrefix(k, Info.Make.Path+PS) {
+			list = append(list, k)
+		}
+	}
+	for _, k := range list {
+		Info.File["/require/"+strings.TrimPrefix(k, Info.Make.Path+PS)] = Info.File[k]
+		delete(Info.File, k)
+	}
+
 	if len(arg) == 0 { // 进程参数
 		if arg = append(arg, os.Args[1:]...); kit.Env("ctx_arg") != "" {
 			arg = append(arg, kit.Split(kit.Env("ctx_arg"))...)

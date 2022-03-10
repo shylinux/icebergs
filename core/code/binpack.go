@@ -37,10 +37,6 @@ func _binpack_dir(m *ice.Message, f *os.File, dir string) {
 		if path.Base(value[nfs.PATH]) == "binpack.go" {
 			return
 		}
-		switch strings.Split(value[nfs.PATH], ice.PS)[0] {
-		case "pluged", "trash":
-			return
-		}
 		fmt.Fprintln(f, _binpack_file(m, path.Join(dir, value[nfs.PATH])))
 	})
 	fmt.Fprintln(f)
@@ -130,10 +126,10 @@ func init() {
 					fmt.Fprintln(f, `func init() {`)
 					fmt.Fprintln(f, `	ice.Info.Pack = map[string][]byte{`)
 
-					_binpack_dir(m, f, ice.USR_LEARNING)
+					// _binpack_dir(m, f, ice.USR_LEARNING)
 					_binpack_can(m, f, ice.USR_VOLCANOS)
 					_binpack_dir(m, f, ice.USR_INTSHELL)
-					_binpack_dir(m, f, ice.USR_ICEBERGS)
+					// _binpack_dir(m, f, ice.USR_ICEBERGS)
 					_binpack_ctx(m, f)
 
 					fmt.Fprintln(f, `	}`)

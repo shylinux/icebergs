@@ -174,6 +174,10 @@ func _dir_list(m *ice.Message, root string, name string, level int, deep bool, d
 			}
 		}
 
+		switch f.Name() {
+		case "node_modules", "pluged", "target", "trash":
+			continue
+		}
 		if f.IsDir() && deep {
 			_dir_list(m, root, path.Join(name, f.Name()), level+1, deep, dir_type, dir_reg, fields)
 		}

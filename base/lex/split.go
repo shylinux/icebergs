@@ -107,7 +107,7 @@ func init() {
 			}
 
 			m.Echo(kit.Format(_split_list(m, arg[0], kit.Split(kit.Join(arg[1:]))...)))
-			m.DisplayStory("json.js")
+			m.DisplayStoryJSON()
 		}},
 	}})
 }

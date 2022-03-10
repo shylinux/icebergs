@@ -221,7 +221,7 @@ func init() {
 				arg = arg[1:]
 			}
 			m.Cmdy(ctx.CONFIG, RUNTIME, arg)
-			m.DisplayStory("json.js")
+			m.DisplayStoryJSON()
 		}},
 	}})
 }

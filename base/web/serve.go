@@ -175,6 +175,8 @@ func _serve_handle(key string, cmd *ice.Command, msg *ice.Message, w http.Respon
 			RenderCookie(msg, v[0])
 		}
 	}
+	msg.Debug("what %v", msg.Option(ice.MSG_USERWEB))
+	msg.Debug("what %v", msg.Option(ice.MSG_SESSID))
 
 	if msg.Option(ice.MSG_USERPOD, msg.Option(ice.POD)); msg.Optionv(ice.MSG_CMDS) == nil {
 		if p := strings.TrimPrefix(r.URL.Path, key); p != "" { // 地址命令

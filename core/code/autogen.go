@@ -9,6 +9,7 @@ import (
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/nfs"
 	"shylinux.com/x/icebergs/base/ssh"
+	"shylinux.com/x/icebergs/base/tcp"
 	"shylinux.com/x/icebergs/base/web"
 	kit "shylinux.com/x/toolkits"
 )
@@ -88,10 +89,18 @@ func _autogen_source(m *ice.Message, main, file string) {
 	m.Cmd(nfs.PUSH, strings.ReplaceAll(main, ice.PT+GO, ice.PT+SHY), ice.NL, "source "+strings.TrimPrefix(file, ice.SRC+ice.PS))
 }
 func _autogen_mod(m *ice.Message, file string) (mod string) {
+	host := kit.ParseURLMap(m.Option(ice.MSG_USERWEB))[tcp.HOSTNAME]
+	if host == "" {
+		host = path.Base(kit.Path(""))
+	} else {
+		host = path.Join(host, "x", path.Base(kit.Path("")))
+	}
+	m.Debug("what %v", host)
+
 	m.Cmd(nfs.DEFS, ice.GO_MOD, kit.Format(`module %s
 
 go 1.11
-`, path.Base(kit.Path(""))))
+`, host))
 
 	m.Cmd(nfs.CAT, file, func(line string) {
 		if strings.HasPrefix(line, "module") {

@@ -38,6 +38,7 @@ func _status_tags(m *ice.Message, repos string) {
 	m.GoToast(TAGS, func(toast func(string, int, int)) {
 		count, total := 0, len(vs)
 		toast(cli.BEGIN, count, total)
+		defer m.PushRefresh()
 
 		for k := range vs {
 			if k != repos && repos != "" {
@@ -82,7 +83,6 @@ func _status_tags(m *ice.Message, repos string) {
 			}
 		}
 		toast(ice.SUCCESS, count, count)
-		m.PushRefresh()
 	})
 }
 func _status_each(m *ice.Message, title string, cmds ...string) {
@@ -274,6 +274,7 @@ func init() {
 				}
 				_repos_cmd(m, m.Option(REPOS), TAG, m.Option(VERSION))
 				_repos_cmd(m, m.Option(REPOS), PUSH, "--tags")
+				m.ProcessRefresh3ms()
 			}},
 			code.BINPACK: {Name: "binpack", Help: "打包模式", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmdy(code.VIMER, code.BINPACK)

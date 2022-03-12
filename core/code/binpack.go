@@ -2,6 +2,7 @@ package code
 
 import (
 	"fmt"
+	"io"
 	"io/ioutil"
 	"net/http"
 	"os"
@@ -68,6 +69,25 @@ func init() {
 	Index.Merge(&ice.Context{Commands: map[string]*ice.Command{
 		BINPACK: {Name: "binpack path auto create remove export", Help: "打包", Action: map[string]*ice.Action{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
+				ice.Dump = func(w io.Writer, name string, cb func(string)) bool {
+					for _, key := range []string{name, strings.TrimPrefix(name, ice.USR_VOLCANOS)} {
+						if key == "/page/index.html" && kit.FileExists("src/website/index.txt") {
+							if s := m.Cmdx("web.chat.website", "show", "index.txt", "Header", "", "River", "", "Action", "", "Footer", ""); s != "" {
+								fmt.Fprint(w, s)
+								return true
+							}
+						}
+
+						if b, ok := ice.Info.Pack[key]; ok {
+							if cb != nil {
+								cb(name)
+							}
+							w.Write(b)
+							return true
+						}
+					}
+					return false
+				}
 				if kit.FileExists(path.Join(ice.USR_VOLCANOS, ice.PROTO_JS)) {
 					m.Cmd(BINPACK, mdb.REMOVE)
 				}
@@ -76,6 +96,7 @@ func init() {
 						ice.Info.Pack["/page/index.html"] = []byte(s)
 					}
 				}
+
 				web.AddRewrite(func(w http.ResponseWriter, r *http.Request) bool {
 					if len(ice.Info.Pack) == 0 {
 						return false

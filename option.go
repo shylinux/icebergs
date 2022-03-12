@@ -204,6 +204,7 @@ func (m *Message) ProcessRefresh(delay string) {
 	}
 	m.Process(PROCESS_REFRESH)
 }
+func (m *Message) ProcessRefresh3ms()   { m.ProcessRefresh("3ms") }
 func (m *Message) ProcessRefresh30ms()  { m.ProcessRefresh("30ms") }
 func (m *Message) ProcessRefresh300ms() { m.ProcessRefresh("300ms") }
 func (m *Message) ProcessRefresh3s()    { m.ProcessRefresh("3s") }

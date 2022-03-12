@@ -146,6 +146,7 @@ var Index = &ice.Context{Name: MDB, Help: "数据模块", Commands: map[string]*
 		case LIST:
 			_list_insert(m, arg[0], _domain_chain(m, arg[1]), arg[3:]...)
 		}
+		m.ProcessRefresh3ms()
 	}},
 	DELETE: {Name: "delete key sub type field value", Help: "删除", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 		switch arg[2] {
@@ -156,6 +157,7 @@ var Index = &ice.Context{Name: MDB, Help: "数据模块", Commands: map[string]*
 		case LIST:
 			_list_delete(m, arg[0], _domain_chain(m, arg[1]), arg[3], arg[4])
 		}
+		m.ProcessRefresh3ms()
 	}},
 	MODIFY: {Name: "modify key sub type field value arg...", Help: "编辑", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 		switch arg[2] {

@@ -88,18 +88,9 @@ func AddFileKey(dir, key string) {
 func GetFileKey(dir string) string {
 	return Info.File[fileKey(dir)]
 }
-func Dump(w io.Writer, name string, cb func(string)) bool {
-	for _, key := range []string{name, strings.TrimPrefix(name, USR_VOLCANOS)} {
-		if b, ok := Info.Pack[key]; ok {
-			if cb != nil {
-				cb(name)
-			}
-			w.Write(b)
-			return true
-		}
-	}
-	return false
-}
+
+var Dump = func(w io.Writer, name string, cb func(string)) bool { return false }
+
 func name(name string, value interface{}) string {
 	if s, ok := Info.names[name]; ok {
 		last := ""

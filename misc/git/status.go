@@ -107,6 +107,7 @@ func _status_each(m *ice.Message, title string, cmds ...string) {
 		} else {
 			toast(ice.SUCCESS, count, total)
 		}
+		m.PushRefresh()
 	})
 }
 func _status_stat(m *ice.Message, files, adds, dels int) (int, int, int) {
@@ -240,6 +241,7 @@ func init() {
 
 				_repos_cmd(m, m.Option(REPOS), PUSH)
 				_repos_cmd(m, m.Option(REPOS), PUSH, "--tags")
+				m.ProcessRefresh3ms()
 			}},
 			TAGS: {Name: "tags", Help: "标签", Hand: func(m *ice.Message, arg ...string) {
 				_status_tags(m, kit.Select("", arg, 0))

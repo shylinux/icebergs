@@ -148,5 +148,8 @@ func Run(arg ...string) string {
 		Pulse.Sleep30ms()
 	}
 
+	if !strings.HasSuffix(Pulse.Result(), NL) {
+		Pulse.Echo(NL)
+	}
 	return Pulse.Result()
 }

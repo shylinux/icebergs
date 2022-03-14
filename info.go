@@ -60,7 +60,7 @@ source: https://shylinux.com/x/icebergs
 	names:  map[string]interface{}{},
 }
 
-func fileKey(dir string) string {
+func FileKey(dir string) string {
 	dir = strings.Split(dir, DF)[0]
 	dir = strings.ReplaceAll(dir, ".js", ".go")
 	dir = strings.ReplaceAll(dir, ".sh", ".go")
@@ -83,10 +83,10 @@ func fileKey(dir string) string {
 	return dir
 }
 func AddFileKey(dir, key string) {
-	Info.File[fileKey(dir)] = key
+	Info.File[FileKey(dir)] = key
 }
 func GetFileKey(dir string) string {
-	return Info.File[fileKey(dir)]
+	return Info.File[FileKey(dir)]
 }
 
 var Dump = func(w io.Writer, name string, cb func(string)) bool { return false }

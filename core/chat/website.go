@@ -36,7 +36,9 @@ func _website_parse(m *ice.Message, text string, args ...string) (map[string]int
 	), kit.Dict(), kit.Dict()
 	prefix := ""
 
+	m.Debug("what %v", prefix)
 	m.Cmd(lex.SPLIT, "", mdb.KEY, mdb.NAME, func(deep int, ls []string, meta map[string]interface{}) []string {
+		m.Debug("what %v", ls)
 		data := kit.Dict()
 		switch display := ice.DisplayRequire(1, ls[0])[ctx.DISPLAY]; kit.Ext(ls[0]) {
 		case nfs.JS:

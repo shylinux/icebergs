@@ -25,7 +25,9 @@ func init() {
 				return // 节点列表
 			}
 			if len(arg) == 1 {
-				if s := m.Cmdx(web.SPACE, arg[0], nfs.CAT, "/page/index.html"); s != "" {
+				if s := m.Cmdx(web.SPACE, arg[0], "web.chat.website", "show", "index.iml", "Header", "", "River", "", "Action", "", "Footer", ""); s != "" {
+					m.RenderResult(s)
+				} else if s := m.Cmdx(web.SPACE, arg[0], nfs.CAT, "/page/index.html"); s != "" {
 					m.RenderResult(s)
 				} else {
 					m.RenderIndex(web.SERVE, ice.VOLCANOS)

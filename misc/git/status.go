@@ -152,7 +152,7 @@ func _status_list(m *ice.Message) (files, adds, dels int, last time.Time) {
 					list = append(list, TAG)
 				}
 
-				if strings.Contains(vs[1], "ahead") {
+				if strings.Contains(vs[1], "ahead") || !strings.Contains(vs[1], "...") {
 					list = append(list, PUSH)
 				} else if strings.Contains(tags, "-") {
 					list = append(list, TAG)
@@ -239,7 +239,12 @@ func init() {
 					return
 				}
 
-				_repos_cmd(m, m.Option(REPOS), PUSH)
+				if strings.TrimSpace(m.Cmdx(cli.SYSTEM, GIT, "rev-parse", "--abbrev-ref", "--symbolic-full-name", "@{u}", ice.Option{cli.CMD_DIR, _repos_path(m.Option(REPOS))})) == "" {
+					_repos_cmd(m, m.Option(REPOS), PUSH, "--set-upstream", "origin", "master")
+				} else {
+					_repos_cmd(m, m.Option(REPOS), PUSH)
+				}
+
 				_repos_cmd(m, m.Option(REPOS), PUSH, "--tags")
 				m.ProcessRefresh3ms()
 			}},

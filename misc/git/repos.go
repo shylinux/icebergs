@@ -68,6 +68,7 @@ func init() {
 					m.Option(BRANCH, ls[1])
 				}
 
+				_repos_insert(m, m.Option(mdb.NAME), m.Option(nfs.PATH))
 				if s, e := os.Stat(path.Join(m.Option(nfs.PATH), ".git")); e == nil && s.IsDir() {
 					return
 				}
@@ -79,11 +80,10 @@ func init() {
 					m.Cmd(cli.SYSTEM, GIT, REMOTE, ADD, ORIGIN, m.Option(REPOS))
 					m.Cmd(cli.SYSTEM, GIT, PULL, ORIGIN, MASTER)
 				} else {
+					m.Option(cli.CMD_DIR, "")
 					m.Cmd(cli.SYSTEM, GIT, CLONE, "-b", kit.Select(MASTER, m.Option(BRANCH)),
 						m.Option(REPOS), m.Option(nfs.PATH))
 				}
-
-				_repos_insert(m, m.Option(mdb.NAME), m.Option(nfs.PATH))
 			}},
 		}, mdb.HashAction()), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			if len(arg) == 0 { // 仓库列表

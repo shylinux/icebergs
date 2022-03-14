@@ -95,9 +95,8 @@ func _autogen_mod(m *ice.Message, file string) (mod string) {
 	} else {
 		host = path.Join(host, "x", path.Base(kit.Path("")))
 	}
-	m.Debug("what %v", host)
 
-	m.Cmd(nfs.DEFS, ice.GO_MOD, kit.Format(`module %s
+	m.Cmd(nfs.DEFS, file, kit.Format(`module %s
 
 go 1.11
 `, host))
@@ -126,11 +125,10 @@ func _autogen_gits(m *ice.Message, arg ...string) string {
 	return kit.Join(res, ice.NL)
 }
 func _autogen_version(m *ice.Message) {
-	if !kit.FileExists(".git") {
+	if mod := _autogen_mod(m, ice.GO_MOD); !kit.FileExists(".git") {
 		m.Cmdy(cli.SYSTEM, GIT, ice.INIT)
-	}
-	if !kit.FileExists("go.mod") {
-		m.Cmdy(cli.SYSTEM, GO, "mod", ice.INIT, path.Base(kit.Path("")))
+		m.Cmdy(cli.SYSTEM, GIT, "remote", "add", "origin", "https://"+mod)
+		m.Cmd("web.code.git.repos", mdb.CREATE, "repos", "https://"+mod, "name", path.Base(mod), "path", "./")
 	}
 
 	m.Cmd(nfs.DEFS, ice.SRC_BINPACK_GO, kit.Format(`package main
@@ -179,6 +177,7 @@ func init() {
 					_autogen_source(m, m.Option(cli.MAIN), p)
 				}
 				m.Option(nfs.FILE, path.Join(m.Option(mdb.ZONE), kit.Keys(m.Option(mdb.NAME), GO)))
+				_autogen_version(m.Spawn())
 			}},
 			ssh.SCRIPT: {Name: "script", Help: "脚本：生成 etc/miss.sh", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmd(nfs.DEFS, ice.ETC_MISS_SH, m.Conf(web.DREAM, kit.Keym("miss")))

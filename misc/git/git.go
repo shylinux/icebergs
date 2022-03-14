@@ -20,6 +20,7 @@ var Index = &ice.Context{Name: GIT, Help: "代码库", Configs: map[string]*ice.
 		code.INSTALL: {Name: "install", Help: "安装", Hand: func(m *ice.Message, arg ...string) {
 			cli.PushStream(m)
 			defer m.ProcessInner()
+
 			m.Cmdy(cli.SYSTEM, "yum", "install", "-y", "git")
 		}},
 		cli.ORDER: {Name: "order", Help: "加载", Hand: func(m *ice.Message, arg ...string) {

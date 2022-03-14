@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"os"
 	"path"
 	"regexp"
 	"strconv"
@@ -122,13 +121,28 @@ func init() {
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
 				web.AddRewrite(func(w http.ResponseWriter, r *http.Request) bool {
 					if p := r.URL.Path; strings.HasPrefix(p, "/x/") {
-						r.URL.Path = strings.Replace(r.URL.Path, "/x/", "/code/git/repos/", -1)
+						if ls := strings.Split(p, ice.PS); m.Cmd(web.DREAM, ls[2]).Length() > 0 {
+							if m.IsCliUA() {
+								r.URL.RawQuery += kit.Select("", "&", len(r.URL.RawQuery) > 1) + "pod=" + ls[2]
+								r.URL.Path = "/share/local/bin/ice.bin"
+							} else {
+								r.URL.Path = strings.Replace(r.URL.Path, "/x/", "/chat/pod/", 1)
+							}
+						} else {
+							r.URL.Path = strings.Replace(r.URL.Path, "/x/", "/code/git/repos/", 1)
+						}
+
 						m.Info("rewrite %v -> %v", p, r.URL.Path)
 					}
 					return false
 				})
 			}},
 		}, ctx.CmdAction()), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			if !m.IsCliUA() {
+				p := kit.Split(m.MergeURL2("/x/"+path.Join(arg...)), "?")[0]
+				m.RenderResult("git clone %v", p)
+				return
+			}
 			if m.Option("go-get") == "1" { // 下载地址
 				p := kit.Split(m.MergeURL2("/x/"+path.Join(arg...)), "?")[0]
 				m.RenderResult(kit.Format(`<meta name="%s" content="%s">`, "go-import", kit.Format(`%s git %s`, strings.TrimPrefix(p, "https://"), p)))
@@ -142,11 +156,14 @@ func init() {
 					web.RenderStatus(m, 401, err.Error())
 					return // 没有权限
 				}
-				if _, e := os.Stat(path.Join(repos)); os.IsNotExist(e) {
+				if !kit.FileExists(path.Join(repos)) {
 					m.Cmd(cli.SYSTEM, GIT, INIT, "--bare", repos) // 创建仓库
 					m.Log_CREATE(REPOS, repos)
 				}
 			case "upload-pack": // 下载代码
+				if !kit.FileExists(path.Join(repos)) {
+
+				}
 			}
 
 			if err := _server_repos(m, arg...); err != nil {

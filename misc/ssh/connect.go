@@ -45,7 +45,7 @@ func _ssh_open(m *ice.Message, arg ...string) {
 }
 func _ssh_dial(m *ice.Message, cb func(net.Conn), arg ...string) {
 	p := path.Join(kit.Env(cli.HOME), ".ssh/", fmt.Sprintf("%s@%s:%s", m.Option(aaa.USERNAME), m.Option(tcp.HOST), m.Option(tcp.PORT)))
-	if _, e := os.Stat(p); e == nil {
+	if kit.FileExists(p) {
 		if c, e := net.Dial("unix", p); e == nil {
 			cb(c) // 会话连接
 			return

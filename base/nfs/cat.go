@@ -141,6 +141,8 @@ const (
 	SH   = ice.SH
 	CSV  = ice.CSV
 	JSON = ice.JSON
+	YML  = "yml"
+	IML  = "iml"
 	TXT  = "txt"
 	SHY  = "shy"
 	SVG  = "svg"
@@ -162,8 +164,8 @@ func init() {
 			SOURCE, kit.Dict(
 				HTML, ice.TRUE, CSS, ice.TRUE, JS, ice.TRUE, GO, ice.TRUE, SH, ice.TRUE, CSV, ice.TRUE, JSON, ice.TRUE,
 				"md", ice.TRUE, "shy", ice.TRUE, "makefile", ice.TRUE, "license", ice.TRUE,
-				"conf", ice.TRUE, "yaml", ice.TRUE, "yml", ice.TRUE,
-				"py", ice.TRUE, "txt", ice.TRUE,
+				"conf", ice.TRUE, YML, ice.TRUE, IML, ice.TRUE, "txt", ice.TRUE,
+				"py", ice.TRUE,
 			),
 		)},
 	}, Commands: map[string]*ice.Command{

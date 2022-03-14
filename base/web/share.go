@@ -28,7 +28,7 @@ func _share_repos(m *ice.Message, repos string, arg ...string) {
 		return
 	}
 	prefix := kit.Path(m.Conf(SERVE, kit.Keym(ice.REQUIRE)))
-	if _, e := os.Stat(path.Join(prefix, repos)); e != nil { // 克隆代码
+	if !kit.FileExists(path.Join(prefix, repos)) { // 克隆代码
 		m.Cmd("web.code.git.repos", mdb.CREATE, nfs.REPOS, "https://"+repos, nfs.PATH, path.Join(prefix, repos))
 	}
 	m.RenderDownload(path.Join(prefix, repos, path.Join(arg...)))

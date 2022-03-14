@@ -26,14 +26,16 @@ func _website_parse(m *ice.Message, text string, args ...string) (map[string]int
 	if text == "" {
 		return nil, false
 	}
+
 	m.Option(nfs.CAT_CONTENT, text)
 	river, storm, last := kit.Dict(
 		"Header", kit.Dict("menus", kit.List(), "style", kit.Dict("display", "none")),
 		"River", kit.Dict("menus", kit.List(), "action", kit.List()),
 		"Action", kit.Dict("menus", kit.List(), "action", kit.List(), "legend_event", "onclick"),
-		"Footer", kit.Dict("style", kit.Dict("display", "none")),
-		args,
+		"Footer", kit.Dict("style", kit.Dict("display", "none")), args,
 	), kit.Dict(), kit.Dict()
+	prefix := ""
+
 	m.Cmd(lex.SPLIT, "", mdb.KEY, mdb.NAME, func(deep int, ls []string, meta map[string]interface{}) []string {
 		data := kit.Dict()
 		switch display := ice.DisplayRequire(1, ls[0])[ctx.DISPLAY]; kit.Ext(ls[0]) {
@@ -71,11 +73,27 @@ func _website_parse(m *ice.Message, text string, args ...string) (map[string]int
 			}
 			data[ctx.ARGS] = kit.List(ls[0])
 			ls[0] = key
+		case nfs.SHY:
+			data[ctx.ARGS] = kit.List(ls[0])
+			data[mdb.NAME] = kit.TrimExt(ls[0], ".shy")
+			if data[mdb.NAME] == "main" {
+				data[mdb.NAME] = strings.TrimSuffix(strings.Split(ls[0], ice.PS)[1], "-story")
+			}
+			ls[0] = "web.wiki.word"
+		case "~":
+			prefix = ls[1]
+			ls = ls[1:]
+			fallthrough
+		case "-":
+			for _, v := range ls[1:] {
+				last[mdb.LIST] = append(last[mdb.LIST].([]interface{}), kit.Dict(mdb.INDEX, kit.Keys(prefix, v), "order", len(last)))
+			}
+			return ls
 		}
 
 		if ls[0] == "" {
 			return ls
-		} else if len(ls) == 1 && deep == 3 {
+		} else if len(ls) == 1 && deep > 2 {
 			ls = append(ls, m.Cmd(ctx.COMMAND, ls[0]).Append(mdb.HELP))
 		} else if len(ls) == 1 {
 			ls = append(ls, ls[0])
@@ -96,16 +114,18 @@ func _website_parse(m *ice.Message, text string, args ...string) (map[string]int
 				data[ls[i]] = ls[i+1]
 			}
 		}
+
 		switch deep {
 		case 1:
 			storm = kit.Dict()
-			river[ls[0]] = kit.Dict(mdb.NAME, ls[1], STORM, storm, data)
+			river[ls[0]] = kit.Dict(mdb.NAME, ls[1], STORM, storm, data, "order", len(river))
 		case 2:
-			last = kit.Dict(mdb.NAME, ls[1], mdb.LIST, kit.List(), data)
+			last = kit.Dict(mdb.NAME, ls[1], mdb.LIST, kit.List(), data, "order", len(storm))
 			storm[ls[0]] = last
+			prefix = ""
 		default:
 			last[mdb.LIST] = append(last[mdb.LIST].([]interface{}),
-				kit.Dict(mdb.NAME, ls[0], mdb.HELP, ls[1], mdb.INDEX, ls[0], data))
+				kit.Dict(mdb.NAME, kit.Select(ls[0], data[mdb.NAME]), mdb.HELP, ls[1], mdb.INDEX, ls[0], "order", len(last), data))
 		}
 		return ls
 	})
@@ -123,7 +143,7 @@ func _website_render(m *ice.Message, w http.ResponseWriter, r *http.Request, kin
 			r.URL.Path = "/chat/cmd/web.chat.div"
 			return false
 		}
-	case nfs.TXT:
+	case nfs.IML, nfs.TXT:
 		res, _ := _website_parse(msg, text)
 		msg.RenderResult(_website_template2, kit.Format(res))
 	case nfs.JSON:
@@ -151,6 +171,8 @@ func init() {
 	}, Commands: map[string]*ice.Command{
 		WEBSITE: {Name: "website path auto create import", Help: "网站", Action: ice.MergeAction(map[string]*ice.Action{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
+				m.Cmd(mdb.RENDER, mdb.CREATE, nfs.IML, m.PrefixKey())
+				m.Cmd(mdb.ENGINE, mdb.CREATE, nfs.IML, m.PrefixKey())
 				m.Cmd(mdb.RENDER, mdb.CREATE, nfs.TXT, m.PrefixKey())
 				m.Cmd(mdb.ENGINE, mdb.CREATE, nfs.TXT, m.PrefixKey())
 
@@ -191,11 +213,11 @@ func init() {
 					}
 				}
 			}},
-			mdb.CREATE: {Name: "create path type=txt,json,js,html name text", Help: "创建"},
+			mdb.CREATE: {Name: "create path type=iml,json,js,html name text", Help: "创建"},
 			mdb.IMPORT: {Name: "import path=src/website/", Help: "导入", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmd(nfs.DIR, kit.Dict(nfs.DIR_ROOT, m.Option(nfs.PATH)), func(p string) {
 					switch name := strings.TrimPrefix(p, m.Option(nfs.PATH)); kit.Ext(p) {
-					case nfs.HTML, nfs.JS, nfs.JSON, nfs.TXT:
+					case nfs.HTML, nfs.JS, nfs.JSON, nfs.IML, nfs.TXT:
 						m.Cmd(m.PrefixKey(), mdb.CREATE, nfs.PATH, ice.PS+name,
 							mdb.TYPE, kit.Ext(p), mdb.NAME, name, mdb.TEXT, m.Cmdx(nfs.CAT, p))
 					default:

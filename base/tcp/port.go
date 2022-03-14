@@ -2,7 +2,6 @@ package tcp
 
 import (
 	"net"
-	"os"
 	"path"
 
 	ice "shylinux.com/x/icebergs"
@@ -27,7 +26,7 @@ func _port_right(m *ice.Message, arg ...string) string {
 			continue
 		}
 		p := path.Join(m.Conf(cli.DAEMON, kit.Keym(nfs.PATH)), kit.Format(i))
-		if _, e := os.Stat(p); e == nil {
+		if kit.FileExists(p) {
 			continue
 		}
 		nfs.MkdirAll(m, p)

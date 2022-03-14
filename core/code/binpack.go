@@ -71,8 +71,8 @@ func init() {
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
 				ice.Dump = func(w io.Writer, name string, cb func(string)) bool {
 					for _, key := range []string{name, strings.TrimPrefix(name, ice.USR_VOLCANOS)} {
-						if key == "/page/index.html" && kit.FileExists("src/website/index.txt") {
-							if s := m.Cmdx("web.chat.website", "show", "index.txt", "Header", "", "River", "", "Action", "", "Footer", ""); s != "" {
+						if key == "/page/index.html" && kit.FileExists("src/website/index.iml") {
+							if s := m.Cmdx("web.chat.website", "show", "index.iml", "Header", "", "River", "", "Action", "", "Footer", ""); s != "" {
 								fmt.Fprint(w, s)
 								return true
 							}
@@ -91,8 +91,8 @@ func init() {
 				if kit.FileExists(path.Join(ice.USR_VOLCANOS, ice.PROTO_JS)) {
 					m.Cmd(BINPACK, mdb.REMOVE)
 				}
-				if kit.FileExists("src/website/index.txt") {
-					if s := m.Cmdx("web.chat.website", "show", "index.txt", "Header", "", "River", "", "Action", "", "Footer", ""); s != "" {
+				if kit.FileExists("src/website/index.iml") {
+					if s := m.Cmdx("web.chat.website", "show", "index.iml", "Header", "", "River", "", "Action", "", "Footer", ""); s != "" {
 						ice.Info.Pack["/page/index.html"] = []byte(s)
 					}
 				}

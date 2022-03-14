@@ -3,7 +3,6 @@ package cli
 import (
 	"bytes"
 	"io"
-	"os"
 	"os/exec"
 	"path"
 	"strings"
@@ -80,7 +79,7 @@ func _system_find(m *ice.Message, bin string, dir ...string) string {
 		dir = append(dir, strings.Split(kit.Env(PATH), ice.DF)...)
 	}
 	for _, p := range dir {
-		if _, err := os.Stat(path.Join(p, bin)); err == nil {
+		if kit.FileExists(path.Join(p, bin)) {
 			return kit.Path(path.Join(p, bin))
 		}
 	}

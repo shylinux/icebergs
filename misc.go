@@ -16,10 +16,7 @@ func (m *Message) Length() (max int) {
 			max = l
 		}
 	}
-	if max > 0 {
-		return max
-	}
-	return len(m.Resultv())
+	return max
 }
 func (m *Message) CSV(text string, head ...string) *Message {
 	bio := bytes.NewBufferString(text)

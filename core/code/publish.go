@@ -48,7 +48,6 @@ func _publish_bin_list(m *ice.Message, dir string) {
 				m.Push(nfs.SIZE, kit.FmtSize(s.Size()))
 				m.Push(nfs.FILE, file)
 				m.PushDownload(mdb.LINK, file, path.Join(p, file))
-
 			}
 		}
 	}

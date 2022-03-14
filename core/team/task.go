@@ -78,12 +78,12 @@ func init() {
 			}},
 			mdb.EXPORT: {Name: "export", Help: "导出", Hand: func(m *ice.Message, arg ...string) {
 				m.OptionFields(mdb.ZONE, "time,id,type,name,text,level,status,score,begin_time,close_time")
-				m.Cmdy(mdb.EXPORT, m.PrefixKey(), "", mdb.ZONE)
+				m.Cmdy(mdb.EXPORT, m.Prefix(TASK), "", mdb.ZONE)
 				m.ProcessRefresh30ms()
 			}},
 			mdb.IMPORT: {Name: "import", Help: "导入", Hand: func(m *ice.Message, arg ...string) {
 				m.OptionFields(mdb.ZONE)
-				m.Cmdy(mdb.IMPORT, m.PrefixKey(), "", mdb.ZONE)
+				m.Cmdy(mdb.IMPORT, m.Prefix(TASK), "", mdb.ZONE)
 				m.ProcessRefresh30ms()
 			}},
 

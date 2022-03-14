@@ -26,7 +26,7 @@ func init() {
 				m.Option(mdb.TEXT, strings.TrimSpace(m.Option(mdb.TEXT)))
 				m.Cmdy(TEMPLATE, nfs.DEFS)
 			}},
-			"website": {Name: "script file=hi.txt text=", Help: "网页", Hand: func(m *ice.Message, arg ...string) {
+			"website": {Name: "script file=hi.iml text=", Help: "网页", Hand: func(m *ice.Message, arg ...string) {
 				m.Option(nfs.FILE, path.Join("website", m.Option(nfs.FILE)))
 				m.Option(mdb.TEXT, strings.TrimSpace(m.Option(mdb.TEXT)))
 				m.Cmdy(TEMPLATE, nfs.DEFS)

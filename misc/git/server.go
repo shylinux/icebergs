@@ -85,7 +85,7 @@ func _server_param(m *ice.Message, arg ...string) (string, string) {
 	default:
 		repos = strings.TrimSuffix(repos, service)
 	}
-	return kit.Path(m.Config(nfs.PATH), REPOS, repos), strings.TrimPrefix(service, "git-")
+	return kit.Path(m.Config(nfs.PATH), REPOS, strings.TrimSuffix(repos, ".git/")), strings.TrimPrefix(service, "git-")
 }
 func _server_repos(m *ice.Message, arg ...string) error {
 	repos, service := _server_param(m, arg...)

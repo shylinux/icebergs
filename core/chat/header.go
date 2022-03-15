@@ -20,10 +20,12 @@ func _header_agent(m *ice.Message, arg ...string) {
 	}
 }
 func _header_check(m *ice.Message, arg ...string) {
-	if m.Option(ice.MSG_USERNAME) == "" {
-		m.Option(web.LOGIN, m.Config(web.LOGIN))
-		m.Option(web.SSO, m.Conf(web.SERVE, kit.Keym(web.SSO)))
+	if m.Option(ice.MSG_USERNAME) != "" {
+		return
 	}
+
+	m.Option(web.LOGIN, m.Config(web.LOGIN))
+	m.Option(web.SSO, m.Conf(web.SERVE, kit.Keym(web.SSO)))
 	if m.Option("login.dev", m.Cmd(web.SPACE, ice.DEV).Append(mdb.TEXT)) == "" {
 		m.Option("login.dev", m.Cmd(web.SPACE, ice.SHY).Append(mdb.TEXT))
 	}

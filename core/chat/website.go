@@ -36,9 +36,7 @@ func _website_parse(m *ice.Message, text string, args ...string) (map[string]int
 	), kit.Dict(), kit.Dict()
 	prefix := ""
 
-	m.Debug("what %v", prefix)
 	m.Cmd(lex.SPLIT, "", mdb.KEY, mdb.NAME, func(deep int, ls []string, meta map[string]interface{}) []string {
-		m.Debug("what %v", ls)
 		data := kit.Dict()
 		switch display := ice.DisplayRequire(1, ls[0])[ctx.DISPLAY]; kit.Ext(ls[0]) {
 		case nfs.JS:
@@ -259,6 +257,7 @@ func init() {
 
 var _website_template = `<!DOCTYPE html>
 <head>
+	<meta name="viewport" content="width=device-width,initial-scale=0.8,maximum-scale=0.8,user-scalable=0">
 	<meta charset="utf-8">
 	<title>volcanos</title>
 	<link rel="shortcut icon" type="image/ico" href="/favicon.ico">
@@ -274,6 +273,7 @@ var _website_template = `<!DOCTYPE html>
 
 var _website_template2 = `<!DOCTYPE html>
 <head>
+	<meta name="viewport" content="width=device-width,initial-scale=0.8,maximum-scale=0.8,user-scalable=0">
 	<meta charset="utf-8">
 	<title>volcanos</title>
 	<link rel="shortcut icon" type="image/ico" href="/favicon.ico">

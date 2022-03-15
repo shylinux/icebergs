@@ -275,7 +275,15 @@ func init() {
 				cli.NodeInfo(m, WORKER, ice.Info.PathName)
 				AddRewrite(func(w http.ResponseWriter, r *http.Request) bool {
 					if r.Method == SPIDE_GET && r.URL.Path == ice.PS {
+
 						msg := m.Spawn(SERVE, w, r)
+						if share := r.URL.Query().Get("share"); share != "" {
+							switch msg := msg.Cmd(SHARE, share); msg.Append(mdb.TYPE) {
+							case "login":
+								RenderCookie(msg, aaa.SessCreate(msg, msg.Append(aaa.USERNAME)))
+							}
+						}
+
 						repos := kit.Select(ice.INTSHELL, ice.VOLCANOS, strings.Contains(r.Header.Get("User-Agent"), "Mozilla/5.0"))
 						Render(msg, ice.RENDER_DOWNLOAD, path.Join(msg.Config(kit.Keys(repos, nfs.PATH)), msg.Config(kit.Keys(repos, INDEX))))
 						return true // 网站主页

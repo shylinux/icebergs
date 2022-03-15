@@ -48,9 +48,9 @@ func _field_show(m *ice.Message, name, text string, arg ...string) {
 	// 扩展参数
 	for i := 0; i < len(arg)-1; i += 2 {
 		if strings.HasPrefix(arg[i], "opts.") {
-			kit.Value(meta, arg[i], m.Optionv(arg[i], strings.TrimSpace(arg[i+1])))
+			kit.Value(meta, arg[i], m.Option(arg[i], strings.TrimSpace(arg[i+1])))
 		} else if strings.HasPrefix(arg[i], "args.") {
-			kit.Value(meta, arg[i], m.Optionv(arg[i], strings.TrimSpace(arg[i+1])))
+			kit.Value(meta, arg[i], m.Option(arg[i], strings.TrimSpace(arg[i+1])))
 		} else if strings.HasPrefix(arg[i], ARGS) {
 			kit.Value(meta, arg[i], m.Optionv(arg[i], kit.Split(strings.TrimSuffix(strings.TrimPrefix(arg[i+1], "["), "]"))))
 		} else {

@@ -248,6 +248,7 @@ func _space_fork(m *ice.Message) {
 			default: // 服务节点
 				m.Event(SPACE_START, args...)
 				defer m.Event(SPACE_STOP, args...)
+				defer m.Cmd(mdb.DELETE, m.PrefixKey(), "", mdb.HASH, mdb.NAME, name)
 			}
 
 			_space_handle(m, false, m.Target().Server().(*Frame).send, s, name)

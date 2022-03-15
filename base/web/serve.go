@@ -196,6 +196,10 @@ func _serve_handle(key string, cmd *ice.Command, msg *ice.Message, w http.Respon
 func _serve_login(msg *ice.Message, key string, cmds []string, w http.ResponseWriter, r *http.Request) ([]string, bool) {
 	aaa.SessCheck(msg, msg.Option(ice.MSG_SESSID)) // 会话认证
 
+	if msg.Config("staffname") != "" {
+		aaa.UserLogin(msg, r.Header.Get(msg.Config("staffname")), "")
+	}
+
 	if msg.Option(ice.MSG_USERNAME) == "" && msg.Config(tcp.LOCALHOST) == ice.TRUE && tcp.IsLocalHost(msg, msg.Option(ice.MSG_USERIP)) {
 		aaa.UserRoot(msg) // 主机认证
 	}
@@ -311,11 +315,14 @@ func init() {
 					m.Config(kit.Keys(aaa.WHITE, k), ice.TRUE)
 				}
 			}},
-			cli.START: {Name: "start dev name=ops proto=http host port=9020 nodename password username userrole", Help: "启动", Hand: func(m *ice.Message, arg ...string) {
+			cli.START: {Name: "start dev name=ops proto=http host port=9020 nodename password username userrole staffname", Help: "启动", Hand: func(m *ice.Message, arg ...string) {
 				ice.Info.Domain = kit.Select(kit.Format("%s://%s:%s", m.Option(tcp.PROTO),
 					kit.Select(m.Cmd(tcp.HOST).Append(aaa.IP), m.Option(tcp.HOST)), m.Option(tcp.PORT)), ice.Info.Domain)
 				if cli.NodeInfo(m, SERVER, kit.Select(ice.Info.HostName, m.Option("nodename"))); m.Option(tcp.PORT) == tcp.RANDOM {
 					m.Option(tcp.PORT, m.Cmdx(tcp.PORT, aaa.RIGHT))
+				}
+				if m.Option("staffname") != "" {
+					m.Config("staffname", m.Option("staffname"))
 				}
 				aaa.UserRoot(m, m.Option(aaa.PASSWORD), m.Option(aaa.USERNAME), m.Option(aaa.USERROLE))
 

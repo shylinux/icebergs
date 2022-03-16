@@ -137,11 +137,13 @@ func (f *Frame) scan(m *ice.Message, h, line string) *Frame {
 	m.I, m.O = f.stdin, f.stdout
 	bio := bufio.NewScanner(f.stdin)
 	for f.prompt(m, ps...); bio.Scan() && f.stdin != nil; f.prompt(m, ps...) {
-		if h == STDIO && len(bio.Text()) == 0 {
-			continue // 空行
+		if h == STDIO {
+			if len(bio.Text()) == 0 {
+				continue // 空行
+			}
+			m.Cmdx(mdb.INSERT, SOURCE, kit.Keys(mdb.HASH, h), mdb.LIST, mdb.TEXT, bio.Text())
 		}
 
-		m.Cmdx(mdb.INSERT, SOURCE, kit.Keys(mdb.HASH, h), mdb.LIST, mdb.TEXT, bio.Text())
 		f.count++
 
 		if len(bio.Text()) == 0 {

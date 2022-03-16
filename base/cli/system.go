@@ -149,7 +149,7 @@ func init() {
 				mdb.ListSelect(m, arg...)
 				return
 			}
-			m.Grow(SYSTEM, "", kit.Dict(mdb.TIME, m.Time(), ice.CMD, kit.Join(arg, ice.SP)))
+			// m.Grow(SYSTEM, "", kit.Dict(mdb.TIME, m.Time(), ice.CMD, kit.Join(arg, ice.SP)))
 
 			if len(arg) == 1 {
 				arg = kit.Split(arg[0])

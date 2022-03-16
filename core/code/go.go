@@ -163,7 +163,6 @@ const (
 const GO = "go"
 const MOD = "mod"
 const SUM = "sum"
-const PROTO = "proto"
 const GODOC = "godoc"
 
 func init() {
@@ -173,8 +172,8 @@ func init() {
 			m.Cmd(mdb.SEARCH, mdb.CREATE, GO, m.Prefix(GO))
 			m.Cmd(mdb.ENGINE, mdb.CREATE, GO, m.Prefix(GO))
 
-			LoadPlug(m, GO, MOD, SUM, PROTO)
-			for _, k := range []string{GO, MOD, SUM, PROTO, GODOC} {
+			LoadPlug(m, GO, MOD, SUM)
+			for _, k := range []string{GO, MOD, SUM, GODOC} {
 				m.Cmd(mdb.RENDER, mdb.CREATE, k, m.Prefix(k))
 				m.Cmd(mdb.PLUGIN, mdb.CREATE, k, m.Prefix(k))
 			}
@@ -184,8 +183,7 @@ func init() {
 				m.Cmdy(cli.SYSTEM, GO, "doc", strings.TrimSuffix(arg[1], ice.PT+arg[0]), kit.Dict(cli.CMD_DIR, arg[2])).SetAppend()
 			}},
 		}, PlugAction())},
-		PROTO: {Name: "proto", Help: "协议", Action: PlugAction()},
-		SUM:   {Name: "sum", Help: "版本", Action: PlugAction()},
+		SUM: {Name: "sum", Help: "版本", Action: PlugAction()},
 		MOD: {Name: "mod", Help: "模块", Action: ice.MergeAction(map[string]*ice.Action{
 			mdb.RENDER: {Hand: func(m *ice.Message, arg ...string) { _mod_show(m, path.Join(arg[2], arg[1])) }},
 		}, PlugAction())},
@@ -202,12 +200,6 @@ func init() {
 			mdb.RENDER: {Hand: func(m *ice.Message, arg ...string) { _go_show(m, arg...) }},
 		}, PlugAction())},
 	}, Configs: map[string]*ice.Config{
-		PROTO: {Name: PROTO, Help: "协议", Value: kit.Data(PLUG, kit.Dict(
-			PREFIX, kit.Dict("//", COMMENT), PREPARE, kit.Dict(
-				KEYWORD, kit.Simple("syntax", "option", "package", "import", "service", "message"),
-				DATATYPE, kit.Simple("string", "int64", "int32"),
-			), KEYWORD, kit.Dict(),
-		))},
 		MOD: {Name: MOD, Help: "模块", Value: kit.Data(PLUG, kit.Dict(
 			PREFIX, kit.Dict("//", COMMENT), PREPARE, kit.Dict(
 				KEYWORD, kit.Simple("go", "module", "require", "replace", "=>"),

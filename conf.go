@@ -145,10 +145,11 @@ const ( // DIR
 	SRC_VERSION_GO = "src/version.go"
 	SRC_BINPACK_GO = "src/binpack.go"
 	SRC_RELAY_GO   = "src/relay.go"
+	README_MD      = "README.md"
 	MAKEFILE       = "Makefile"
 	ICE_BIN        = "ice.bin"
-	GO_MOD         = "go.mod"
 	GO_SUM         = "go.sum"
+	GO_MOD         = "go.mod"
 )
 const ( // MSG
 	MSG_DETAIL = "detail"

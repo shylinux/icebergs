@@ -38,6 +38,9 @@ func _binpack_dir(m *ice.Message, f *os.File, dir string) {
 		if path.Base(value[nfs.PATH]) == "binpack.go" {
 			return
 		}
+		if strings.HasPrefix(value[nfs.PATH], "website/") {
+			return
+		}
 		fmt.Fprintln(f, _binpack_file(m, path.Join(dir, value[nfs.PATH])))
 	})
 	fmt.Fprintln(f)
@@ -69,65 +72,48 @@ func init() {
 	Index.Merge(&ice.Context{Commands: map[string]*ice.Command{
 		BINPACK: {Name: "binpack path auto create remove export", Help: "打包", Action: map[string]*ice.Action{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
-				ice.Dump = func(w io.Writer, name string, cb func(string)) bool {
-					for _, key := range []string{name, strings.TrimPrefix(name, ice.USR_VOLCANOS)} {
-						if key == "/page/index.html" && (kit.FileExists("src/website/index.iml") || len(ice.Info.Pack["src/website/index.iml"]) > 0) {
-							if s := m.Cmdx("web.chat.website", "show", "index.iml", "Header", "", "River", "", "Action", "", "Footer", ""); s != "" {
-								fmt.Fprint(w, s)
-								return true
-							}
-						}
-
-						if b, ok := ice.Info.Pack[key]; ok {
-							if cb != nil {
-								cb(name)
-							}
-							w.Write(b)
-							return true
-						}
-					}
-					return false
-				}
 				if kit.FileExists(path.Join(ice.USR_VOLCANOS, ice.PROTO_JS)) {
 					m.Cmd(BINPACK, mdb.REMOVE)
-				}
-				if kit.FileExists("src/website/index.iml") || len(ice.Info.Pack["src/website/index.iml"]) > 0 {
-					if s := m.Cmdx("web.chat.website", "show", "index.iml", "Header", "", "River", "", "Action", "", "Footer", ""); s != "" {
-						ice.Info.Pack["/page/index.html"] = []byte(s)
-					}
-				}
-
-				web.AddRewrite(func(w http.ResponseWriter, r *http.Request) bool {
-					if len(ice.Info.Pack) == 0 {
+				} else {
+					ice.Dump = func(w io.Writer, name string, cb func(string)) bool {
+						for _, key := range []string{name, strings.TrimPrefix(name, ice.USR_VOLCANOS)} {
+							if b, ok := ice.Info.Pack[key]; ok {
+								if cb != nil {
+									cb(name)
+								}
+								w.Write(b)
+								return true // 打包文件
+							}
+						}
 						return false
 					}
-					if ice.Dump(w, r.URL.Path, func(name string) { web.RenderType(w, name, "") }) {
-						return true // 打包文件
-					}
-					return false
-				})
+					web.AddRewrite(func(w http.ResponseWriter, r *http.Request) bool {
+						if ice.Dump(w, r.URL.Path, func(name string) { web.RenderType(w, name, "") }) {
+							return true // 打包文件
+						}
+						return false
+					})
+				}
+
 				nfs.AddRewrite(func(msg *ice.Message, name string) []byte {
-					if len(ice.Info.Pack) == 0 {
-						return nil
-					}
 					if strings.HasPrefix(name, ice.SRC) && kit.FileExists(name) {
 						return nil
 					}
 					if b, ok := ice.Info.Pack[name]; ok {
 						m.Logs(BINPACK, len(b), name)
-						return b // 打包文件
-					}
-					if b, ok := ice.Info.Pack[path.Join(ice.PS, name)]; ok && len(b) > 0 {
-						m.Logs(BINPACK, len(b), name)
-						return b // 打包文件
+						return b
 					}
 					if b, ok := ice.Info.Pack[path.Join(m.Option(nfs.DIR_ROOT), name)]; ok && len(b) > 0 {
 						m.Logs(BINPACK, len(b), name)
-						return b // 打包文件
+						return b
 					}
 					if b, ok := ice.Info.Pack[strings.TrimPrefix(name, ice.USR_VOLCANOS)]; ok && len(b) > 0 {
 						m.Logs(BINPACK, len(b), name)
-						return b // 打包文件
+						return b
+					}
+					if b, ok := ice.Info.Pack[path.Join(ice.PS, name)]; ok && len(b) > 0 {
+						m.Logs(BINPACK, len(b), name)
+						return b
 					}
 					return nil
 				})

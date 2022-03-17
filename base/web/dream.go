@@ -46,11 +46,14 @@ func _dream_show(m *ice.Message, name string) {
 
 	// 任务模板
 	if m.Option(nfs.TEMPLATE) != "" {
-		for _, file := range []string{ice.ETC_MISS_SH, ice.SRC_MAIN_SHY, ice.SRC_MAIN_GO, ice.GO_MOD, ice.MAKEFILE} {
+		for _, file := range []string{
+			ice.ETC_MISS_SH, ice.SRC_MAIN_SHY, ice.SRC_MAIN_GO,
+			ice.GO_MOD, ice.MAKEFILE, ice.README_MD,
+		} {
 			if kit.FileExists(path.Join(p, file)) {
 				continue
 			}
-			switch m.Cmdy(nfs.COPY, path.Join(p, file), path.Join(m.Option(nfs.TEMPLATE), file)); file {
+			switch m.Cmdy(nfs.COPY, path.Join(p, file), path.Join(m.Config(nfs.PATH), m.Option(nfs.TEMPLATE), file)); file {
 			case ice.GO_MOD:
 				kit.Rewrite(path.Join(p, file), func(line string) string {
 					return kit.Select(line, "module "+name, strings.HasPrefix(line, "module"))
@@ -102,7 +105,11 @@ func init() {
 	Index.Merge(&ice.Context{Commands: map[string]*ice.Command{
 		DREAM: {Name: "dream name path auto start", Help: "梦想家", Action: map[string]*ice.Action{
 			mdb.INPUTS: {Name: "inputs", Help: "补全", Hand: func(m *ice.Message, arg ...string) {
-				_dream_list(m).Cut("name,status,time")
+				switch arg[0] {
+				case "repos":
+				default:
+					_dream_list(m).Cut("name,status,time")
+				}
 			}},
 			cli.START: {Name: "start name repos river", Help: "启动", Hand: func(m *ice.Message, arg ...string) {
 				_dream_show(m, m.Option(mdb.NAME, kit.Select(path.Base(m.Option(nfs.REPOS)), m.Option(mdb.NAME))))
@@ -142,15 +149,12 @@ ish_miss_prepare_compile
 ish_miss_prepare_develop
 ish_miss_prepare_install
 
-# ish_miss_prepare wubi-dict
-# ish_miss_prepare word-dict
-
-# ish_miss_prepare linux-story
+# ish_miss_prepare redis-story
 # ish_miss_prepare mysql-story
 # ish_miss_prepare release
 
-ish_miss_prepare_contexts
 ish_miss_prepare_intshell
+ish_miss_prepare_contexts
 # ish_miss_prepare_icebergs
 # ish_miss_prepare_toolkits
 # ish_miss_prepare_volcanos

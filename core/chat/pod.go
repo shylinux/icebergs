@@ -5,7 +5,6 @@ import (
 
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/ctx"
-	"shylinux.com/x/icebergs/base/nfs"
 	"shylinux.com/x/icebergs/base/web"
 	kit "shylinux.com/x/toolkits"
 )
@@ -26,8 +25,6 @@ func init() {
 			}
 			if len(arg) == 1 {
 				if s := m.Cmdx(web.SPACE, arg[0], "web.chat.website", "show", "index.iml", "Header", "", "River", "", "Action", "", "Footer", ""); s != "" {
-					m.RenderResult(s)
-				} else if s := m.Cmdx(web.SPACE, arg[0], nfs.CAT, "/page/index.html"); s != "" {
 					m.RenderResult(s)
 				} else {
 					m.RenderIndex(web.SERVE, ice.VOLCANOS)

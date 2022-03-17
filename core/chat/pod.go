@@ -24,6 +24,12 @@ func init() {
 				return // 节点列表
 			}
 			if len(arg) == 1 {
+				if m.IsCliUA() {
+					m.Option(ice.MSG_USERNAME, "root")
+					m.Option(ice.MSG_USERROLE, "tech")
+					m.Cmdy(web.SHARE_LOCAL, "bin/ice.bin")
+					return
+				}
 				if s := m.Cmdx(web.SPACE, arg[0], "web.chat.website", "show", "index.iml", "Header", "", "River", "", "Action", "", "Footer", ""); s != "" {
 					m.RenderResult(s)
 				} else {

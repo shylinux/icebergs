@@ -191,7 +191,6 @@ func init() {
 				})
 			}},
 			"show": {Hand: func(m *ice.Message, arg ...string) {
-				m.Debug(m.FormatStack())
 				if res, ok := _website_parse(m, m.Cmdx(nfs.CAT, path.Join(SRC_WEBSITE, arg[0])), arg[1:]...); ok {
 					m.Echo(_website_template2, kit.Format(res))
 				}

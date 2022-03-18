@@ -45,6 +45,9 @@ func _spide_list(m *ice.Message, arg ...string) {
 		// 缓存方式
 		cache, save := "", ""
 		switch arg[1] {
+		case "url":
+			m.Echo("%v", kit.Value(value, "client.url"))
+			return
 		case SPIDE_RAW:
 			cache, arg = arg[1], arg[1:]
 		case SPIDE_MSG:

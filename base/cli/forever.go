@@ -34,6 +34,11 @@ func init() {
 				if p := kit.Env(CTX_LOG); p != "" {
 					m.Optionv(CMD_ERRPUT, p)
 				}
+
+				if p := m.Cmdx(nfs.CAT, m.Conf("gdb.signal", kit.Keym(nfs.PATH))); p != "" {
+					m.Cmd(SYSTEM, "kill", "-n", 3, p)
+				}
+
 				m.Cmdy(FOREVER, kit.Select(os.Args[0], nfs.PWD+ice.BIN_ICE_BIN, kit.FileExists(ice.BIN_ICE_BIN)),
 					SERVE, START, ice.DEV, "", aaa.USERNAME, aaa.ROOT, aaa.PASSWORD, aaa.ROOT, arg)
 			}},

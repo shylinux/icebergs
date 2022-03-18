@@ -143,14 +143,14 @@ func init() {
 }
 
 var _contexts = kit.Dict(
-	"misc", `# 完整版
+	ice.MISC, `# 完整版
 export ctx_dev={{.Option "httphost"}}; ctx_temp=$(mktemp); curl -fsSL $ctx_dev -o $ctx_temp; source $ctx_temp dev
 `,
-	"core", `# 标准版
+	ice.CORE, `# 标准版
 export ctx_dev={{.Option "httphost"}}; ctx_temp=$(mktemp); wget -O $ctx_temp $ctx_dev; source $ctx_temp app
 `,
-	"base", `# 官方版
-ctx_temp=$(mktemp); curl -o $ctx_temp -fsSL https://shylinux.com; source $ctx_temp binary
-ctx_temp=$(mktemp); wget -O $ctx_temp https://shylinux.com; source $ctx_temp binary
+	ice.BASE, `# 官方版
+ctx_temp=$(mktemp); curl -o $ctx_temp -fsSL {{.Cmdx "spide" "shy" "url"}}; source $ctx_temp binary
+ctx_temp=$(mktemp); wget -O $ctx_temp {{.Cmdx "spide" "shy" "url"}}; source $ctx_temp binary
 `,
 )

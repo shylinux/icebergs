@@ -19,31 +19,28 @@ func init() {
 			ice.CTX_INIT: {Name: "_init", Help: "初始化", Hand: func(m *ice.Message, arg ...string) {
 			}},
 		}, ctx.CmdAction()), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			if kit.Select("", arg, 0) == "" {
-				m.RenderCmd(web.ROUTE)
-				return // 节点列表
+			if m.IsCliUA() {
+				m.Option(ice.MSG_USERNAME, "root")
+				m.Option(ice.MSG_USERROLE, "root")
+				m.Option(ice.POD, kit.Select("", arg, 0))
+				m.Cmdy(web.SHARE_LOCAL, "bin/ice.bin")
+				return // 下载文件
 			}
-			if len(arg) == 1 {
-				if m.IsCliUA() {
-					m.Option(ice.MSG_USERNAME, "root")
-					m.Option(ice.MSG_USERROLE, "tech")
-					m.Cmdy(web.SHARE_LOCAL, "bin/ice.bin")
-					return
-				}
-				if s := m.Cmdx(web.SPACE, arg[0], "web.chat.website", "show", "index.iml", "Header", "", "River", "", "Action", "", "Footer", ""); s != "" {
-					m.RenderResult(s)
-				} else {
+
+			if len(arg) == 0 || kit.Select("", arg, 0) == "" { // 节点列表
+				m.RenderCmd(web.ROUTE)
+
+			} else if len(arg) == 1 { // 节点首页
+				if m.RenderWebsite(arg[0], "index.iml", "Header", "", "River", "", "Action", "", "Footer", ""); m.Result() == "" {
 					m.RenderIndex(web.SERVE, ice.VOLCANOS)
 				}
-				return // 节点首页
+
+			} else if arg[1] == WEBSITE { // 节点网页
+				m.RenderWebsite(arg[0], path.Join(arg[2:]...))
+
+			} else { // 节点命令
+				m.Cmdy("/cmd/", path.Join(arg[2:]...))
 			}
-			if arg[1] == WEBSITE {
-				m.Cmdy(web.SPACE, arg[0], WEBSITE, ctx.ACTION, "show", path.Join(arg[2:]...))
-				m.RenderResult()
-				return
-			}
-			// 节点命令
-			m.Cmdy("/cmd/", path.Join(arg[2:]...))
 		}},
 	}})
 }

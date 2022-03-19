@@ -426,6 +426,9 @@ func (m *Message) Option(key string, arg ...interface{}) string {
 	return kit.Select("", kit.Simple(m.Optionv(key, arg...)), 0)
 }
 func (m *Message) Append(key string, arg ...interface{}) string {
+	if key == "" {
+		return m.Append(m.Appendv(MSG_APPEND)[0])
+	}
 	return kit.Select("", m.Appendv(key, arg...), 0)
 }
 func (m *Message) Appendv(key string, arg ...interface{}) []string {

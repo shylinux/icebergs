@@ -113,8 +113,17 @@ func (m *Message) SetResult(arg ...string) *Message {
 func (m *Message) SetAppend(arg ...string) *Message {
 	return m.Set(MSG_APPEND, arg...)
 }
+func (m *Message) ToLowerAppend(arg ...string) *Message {
+	for _, k := range m.meta[MSG_APPEND] {
+		m.RenameAppend(k, strings.ToLower(k))
+	}
+	return m
+}
 func (m *Message) RenameAppend(arg ...string) *Message { // [from to]...
 	for i := 0; i < len(arg)-1; i += 2 {
+		if arg[i] == arg[i+1] {
+			continue
+		}
 		for j, v := range m.meta[MSG_APPEND] {
 			if v == arg[i] {
 				m.meta[MSG_APPEND][j] = arg[i+1]

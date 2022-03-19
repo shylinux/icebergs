@@ -373,7 +373,11 @@ func init() {
 		"/publish/": {Name: "/publish/", Help: "定制化", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			if arg[0] == ice.ORDER_JS {
 				if p := path.Join(ice.USR_PUBLISH, ice.ORDER_JS); m.PodCmd(nfs.CAT, p) {
-					m.RenderResult()
+					if m.IsErr() {
+						m.RenderResult("")
+					} else {
+						m.RenderResult()
+					}
 					return
 				}
 			}

@@ -32,16 +32,20 @@ func _daemon_exec(m *ice.Message, cmd *exec.Cmd) {
 			m.OptionSimple(CMD_OUTPUT, CMD_ERRPUT, mdb.CACHE_CLEAR_ON_EXIT),
 		)
 
-		if e := cmd.Wait(); m.Warn(e, ice.ErrNotStart, cmd.Args) {
+		if e := cmd.Wait(); !m.Warn(e, ice.ErrNotStart, cmd.Args) && cmd.ProcessState.ExitCode() == 0 {
+			m.Cost(CODE, cmd.ProcessState.ExitCode(), ctx.ARGS, cmd.Args)
+			m.Cmd(mdb.MODIFY, DAEMON, "", mdb.HASH, mdb.HASH, h, STATUS, STOP)
+		} else {
 			if m.Conf(DAEMON, kit.Keys(mdb.HASH, h, kit.Keym(STATUS))) == START {
 				m.Cmd(mdb.MODIFY, DAEMON, "", mdb.HASH, mdb.HASH, h, STATUS, ERROR, ERROR, e)
 			}
-		} else {
-			m.Cost(CODE, cmd.ProcessState.ExitCode(), ctx.ARGS, cmd.Args)
-			m.Cmd(mdb.MODIFY, DAEMON, "", mdb.HASH, mdb.HASH, h, STATUS, STOP)
 		}
 
 		switch m.Sleep300ms(); cb := m.OptionCB(DAEMON).(type) {
+		case func(string) bool:
+			if !cb(m.Conf(DAEMON, kit.Keys(mdb.HASH, h, kit.Keym(STATUS)))) {
+				m.Cmdy(DAEMON, cmd.Path, cmd.Args)
+			}
 		case func(string):
 			cb(m.Conf(DAEMON, kit.Keys(mdb.HASH, h, kit.Keym(STATUS))))
 		case func():

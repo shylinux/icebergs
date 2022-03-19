@@ -140,6 +140,9 @@ func init() {
 			if len(arg) == 0 || m.Length() > 0 {
 				return
 			}
+			if len(arg) == 1 {
+				arg = kit.Split(arg[0])
+			}
 			_daemon_exec(m, _system_cmd(m, arg...))
 		}},
 	}})

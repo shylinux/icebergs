@@ -107,7 +107,11 @@ func PrevPage(m *ice.Message, total string, arg ...string) {
 		m.ProcessHold()
 		return
 	}
-	m.ProcessRewrite("offend", offends)
+	if offends == 0 {
+		m.ProcessRewrite("offend", "")
+	} else {
+		m.ProcessRewrite("offend", offends)
+	}
 
 }
 func NextPage(m *ice.Message, total string, arg ...string) {
@@ -118,7 +122,11 @@ func NextPage(m *ice.Message, total string, arg ...string) {
 		m.ProcessHold()
 		return
 	}
-	m.ProcessRewrite("offend", offends)
+	if offends == 0 {
+		m.ProcessRewrite("offend", "")
+	} else {
+		m.ProcessRewrite("offend", offends)
+	}
 }
 func NextPageLimit(m *ice.Message, total string, arg ...string) {
 	if kit.Int(kit.Select("0", arg, 1)) < 0 {

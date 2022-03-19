@@ -29,6 +29,8 @@ func _repos_insert(m *ice.Message, name string, dir string) {
 			BRANCH, strings.TrimSpace(m.Cmdx(cli.SYSTEM, GIT, BRANCH)),
 			REMOTE, strings.TrimSpace(m.Cmdx(cli.SYSTEM, GIT, REMOTE, "-v")),
 		))
+	} else {
+		m.Debug("what %v %v", s, e)
 	}
 }
 

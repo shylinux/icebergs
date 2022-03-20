@@ -15,6 +15,34 @@ import (
 )
 
 func _system_cmd(m *ice.Message, arg ...string) *exec.Cmd {
+	// 定制目录
+	if text := kit.ReadFile(ice.ETC_PATH); len(text) > 0 {
+		if file := _system_find(m, arg[0], strings.Split(text, ice.NL)...); file != "" {
+			m.Debug("cmd: %v", file)
+			arg[0] = file
+		}
+	}
+	// 环境变量
+	env := kit.Simple(m.Optionv(CMD_ENV))
+	for i := 0; i < len(env)-1; i += 2 {
+		if env[i] == PATH {
+			if file := _system_find(m, arg[0], strings.Split(env[i+1], ice.DF)...); file != "" {
+				m.Debug("cmd: %v", file)
+				arg[0] = file
+			}
+		}
+	}
+	// 自动安装
+	if _system_find(m, arg[0]) == "" {
+		if cmds := m.Cmd(MIRROR, arg[0]).Append("cmd"); cmds != "" {
+			m.Cmd(kit.Split(cmds))
+			if file := _system_find(m, arg[0]); file != "" {
+				m.Debug("cmd: %v", file)
+				arg[0] = file
+			}
+		}
+	}
+
 	cmd := exec.Command(arg[0], arg[1:]...)
 
 	// 运行目录
@@ -23,29 +51,10 @@ func _system_cmd(m *ice.Message, arg ...string) *exec.Cmd {
 			nfs.MkdirAll(m, cmd.Dir)
 		}
 	}
-
 	// 环境变量
-	env := kit.Simple(m.Optionv(CMD_ENV))
 	for i := 0; i < len(env)-1; i += 2 {
-		if cmd.Env = append(cmd.Env, kit.Format("%s=%s", env[i], env[i+1])); env[i] == PATH {
-			if file := _system_find(m, arg[0], strings.Split(env[i+1], ice.DF)...); file != "" {
-				m.Debug("cmd: %v", file)
-				cmd.Path = file
-			}
-		}
+		cmd.Env = append(cmd.Env, kit.Format("%s=%s", env[i], env[i+1]))
 	}
-
-	// 定制目录
-	if text := kit.ReadFile(ice.ETC_PATH); len(text) > 0 {
-		if file := _system_find(m, arg[0], strings.Split(text, ice.NL)...); file != "" {
-			m.Debug("cmd: %v", file)
-			cmd.Path = file
-		}
-	}
-	if _system_find(m, cmd.Path) == "" {
-	}
-	m.Debug("cmd: %v", cmd.Path)
-
 	if len(cmd.Env) > 0 {
 		m.Log_EXPORT(CMD_ENV, cmd.Env)
 	}
@@ -157,7 +166,6 @@ func init() {
 			if strings.HasSuffix(arg[0], ".sh") {
 				arg = []string{"sh", path.Join("src", arg[0])}
 			}
-			m.Debug("arg %v", arg)
 			_system_exec(m, _system_cmd(m, arg...))
 		}},
 	}})

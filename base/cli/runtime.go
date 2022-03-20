@@ -112,11 +112,6 @@ const (
 	LINUX   = "linux"
 	DARWIN  = "darwin"
 	WINDOWS = "windows"
-
-	OSID   = "OSID"
-	ALPINE = "alpine"
-	CENTOS = "centos"
-	UBUNTU = "ubuntu"
 )
 const (
 	SHELL = "SHELL"

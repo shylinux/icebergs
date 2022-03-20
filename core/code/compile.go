@@ -2,14 +2,12 @@ package code
 
 import (
 	"path"
-	"strings"
 
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/cli"
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/nfs"
 	"shylinux.com/x/icebergs/base/tcp"
-	"shylinux.com/x/icebergs/base/web"
 	kit "shylinux.com/x/toolkits"
 )
 
@@ -53,10 +51,9 @@ func init() {
 				m.Cmdy(nfs.DIR, ice.SRC, nfs.DIR_CLI_FIELDS, kit.Dict(nfs.DIR_REG, `.*\.go$`)).Sort(nfs.PATH)
 			}},
 			INSTALL: {Name: "compile", Help: "安装", Hand: func(m *ice.Message, arg ...string) {
-				if strings.Contains(m.Cmdx(cli.RUNTIME, kit.Keys(tcp.HOST, cli.OSID)), cli.ALPINE) {
+				if cli.IsAlpine(m) {
 					cli.PushStream(m)
 					m.Cmd(cli.SYSTEM, "apk", "add", GIT, GO)
-					m.Cmd(cli.SYSTEM, GO, "get", "shylinux.com/x/ice")
 					return
 				}
 				if m.Cmdx(cli.SYSTEM, nfs.FIND, GIT) == "" {
@@ -64,7 +61,6 @@ func init() {
 					m.Echo(ice.FALSE)
 					return
 				}
-				m.Cmd(INSTALL, web.DOWNLOAD, "https://golang.google.cn/dl/go1.15.5.linux-amd64.tar.gz", ice.USR_LOCAL)
 			}},
 			BINPACK: {Name: "binpack", Help: "打包", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmdy(AUTOGEN, BINPACK)
@@ -73,10 +69,6 @@ func init() {
 				m.Cmd(COMPILE, ice.SRC_RELAY_GO, path.Join(ice.USR_PUBLISH, RELAY))
 			}},
 		}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			if m.Cmdx(cli.SYSTEM, nfs.FIND, GO) == "" && m.Cmdx(COMPILE, INSTALL) == ice.FALSE {
-				return
-			}
-
 			// 下载依赖
 			_autogen_version(m.Spawn())
 			m.Cmd(cli.SYSTEM, GO, "get", "shylinux.com/x/ice")

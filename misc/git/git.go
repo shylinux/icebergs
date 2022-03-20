@@ -33,4 +33,4 @@ var Index = &ice.Context{Name: GIT, Help: "代码库", Configs: map[string]*ice.
 	}},
 }}
 
-func init() { code.Index.Register(Index, &web.Frame{}, REPOS, GIT) }
+func init() { code.Index.Register(Index, &web.Frame{}, REPOS) }

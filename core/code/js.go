@@ -57,9 +57,6 @@ func init() {
 				m.ProcessCommand(kit.Select("can.code.inner.plugin", key), kit.Simple())
 			}},
 			mdb.ENGINE: {Hand: func(m *ice.Message, arg ...string) {
-				if !InstallSoftware(m.Spawn(), NODE, m.Configv(INSTALL)) {
-					return
-				}
 				m.Cmdy(cli.SYSTEM, NODE, "-e", kit.Join(_js_main_script(m, arg...), ice.NL)).SetAppend()
 				m.Echo(ice.NL)
 			}},

@@ -59,6 +59,7 @@ func init() {
 				m.Cmd(nfs.DIR, ice.USR, "name,path").Table(func(index int, value map[string]string, head []string) {
 					_repos_insert(m, value[mdb.NAME], value[nfs.PATH])
 				})
+				cli.IsAlpine(m, "git", "apk add git")
 			}},
 			mdb.CREATE: {Name: "create repos branch name path", Help: "添加", Hand: func(m *ice.Message, arg ...string) {
 				m.Option(mdb.NAME, kit.Select(strings.TrimSuffix(path.Base(m.Option(REPOS)), ".git"), m.Option(mdb.NAME)))

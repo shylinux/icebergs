@@ -24,7 +24,7 @@ func init() {
 				return
 			}
 			arg[0] = kit.Replace(arg[0], "src", "contexts")
-			m.Cmdy(TOTAL, arg)
+			m.Cmdy(TOTAL, kit.Slice(arg, 0, 2))
 		}},
 	}})
 }

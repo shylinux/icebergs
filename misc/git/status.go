@@ -273,6 +273,20 @@ func init() {
 				_repos_cmd(m, m.Option(REPOS), COMMIT, "-am", m.Option(mdb.TEXT))
 				m.ProcessBack()
 			}},
+			"branch_switch": {Name: "branch_switch", Help: "切换", Hand: func(m *ice.Message, arg ...string) {
+				_repos_cmd(m.Spawn(), m.Option(REPOS), "checkout", m.Option(BRANCH))
+			}},
+			BRANCH: {Name: "branch", Help: "分支", Hand: func(m *ice.Message, arg ...string) {
+				for _, line := range kit.Split(_repos_cmd(m.Spawn(), arg[0], BRANCH).Result(), ice.NL, ice.NL) {
+					if strings.HasPrefix(line, "*") {
+						m.Push(BRANCH, strings.TrimPrefix(line, "* "))
+						m.PushButton("")
+					} else {
+						m.Push(BRANCH, strings.TrimSpace(line))
+						m.PushButton("branch_switch")
+					}
+				}
+			}},
 			TAG: {Name: "tag version@key", Help: "标签", Hand: func(m *ice.Message, arg ...string) {
 				if m.Option(VERSION) == "" {
 					m.Option(VERSION, _status_tag(m, m.Option(TAGS)))
@@ -299,7 +313,7 @@ func init() {
 
 			m.Option(cli.CMD_DIR, _repos_path(arg[0]))
 			m.Echo(m.Cmdx(cli.SYSTEM, GIT, DIFF))
-			m.Action(COMMIT, TAGS)
+			m.Action(COMMIT, BRANCH, TAGS)
 
 			files, adds, dels := _status_stat(m, 0, 0, 0)
 			m.Status("files", files, "adds", adds, "dels", dels)

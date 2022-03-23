@@ -12,8 +12,9 @@ import (
 	kit "shylinux.com/x/toolkits"
 )
 
-func _repos_cmd(m *ice.Message, name string, arg ...string) {
+func _repos_cmd(m *ice.Message, name string, arg ...string) *ice.Message {
 	m.Cmdy(cli.SYSTEM, GIT, arg, ice.Option{cli.CMD_DIR, _repos_path(name)})
+	return m
 }
 func _repos_path(name string) string {
 	if strings.Contains(name, ":\\") {

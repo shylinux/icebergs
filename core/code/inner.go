@@ -137,6 +137,10 @@ func init() {
 				switch arg[0] {
 				case cli.MAIN:
 					m.Cmdy(nfs.DIR, ice.SRC, nfs.DIR_CLI_FIELDS, kit.Dict(nfs.DIR_REG, `.*\.go`)).ProcessAgain()
+				case mdb.ZONE:
+					m.Option(nfs.DIR_ROOT, ice.SRC)
+					m.Option(nfs.DIR_TYPE, nfs.DIR)
+					m.Cmdy(nfs.DIR, nfs.PWD, mdb.NAME).RenameAppend(mdb.NAME, mdb.ZONE)
 				case nfs.PATH:
 					m.Cmdy(nfs.DIR, arg[1:], nfs.DIR_CLI_FIELDS).ProcessAgain()
 				case nfs.FILE:

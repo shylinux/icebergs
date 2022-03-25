@@ -261,7 +261,7 @@ func init() {
 			}},
 
 			ADD: {Name: "add", Help: "添加", Hand: func(m *ice.Message, arg ...string) {
-				_repos_cmd(m, m.Option(REPOS), ADD, m.Option(nfs.FILE))
+				_repos_cmd(m, m.Option(REPOS), ADD, m.Option(nfs.FILE)).SetAppend()
 			}}, OPT: {Name: "opt", Help: "优化"}, PRO: {Name: "pro", Help: "升级"},
 			COMMIT: {Name: "commit action=opt,add,pro comment=some@key", Help: "提交", Hand: func(m *ice.Message, arg ...string) {
 				if arg[0] == ctx.ACTION {

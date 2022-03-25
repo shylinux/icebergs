@@ -94,6 +94,9 @@ func (m *Message) FieldsIsDetail() bool {
 	return false
 }
 
+func (m *Message) PushDetail(value interface{}, arg ...interface{}) *Message {
+	return m.Push("detail", value, arg...)
+}
 func (m *Message) IsErr(arg ...string) bool {
 	return len(arg) > 0 && m.Result(1) == arg[0] || m.Result(0) == ErrWarn
 }

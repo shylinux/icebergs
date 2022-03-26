@@ -344,7 +344,8 @@ func init() {
 				conf := m.Confm(cli.RUNTIME, "conf")
 				m.Cmd(SPIDE, mdb.CREATE, ice.OPS, kit.Select("http://:9020", conf["ctx_ops"]))
 				m.Cmd(SPIDE, mdb.CREATE, ice.DEV, kit.Select("http://contexts.woa.com:80", conf["ctx_dev"]))
-				m.Cmd(SPIDE, mdb.CREATE, ice.SHY, kit.Select("https://contexts.com.cn:443", conf["ctx_shy"]))
+				// m.Cmd(SPIDE, mdb.CREATE, ice.SHY, kit.Select("https://contexts.com.cn:443", conf["ctx_shy"]))
+				m.Cmd(SPIDE, mdb.CREATE, ice.SHY, kit.Select("https://shylinux.com:443", conf["ctx_shy"]))
 			}},
 			mdb.CREATE: {Name: "create name address", Help: "添加", Hand: func(m *ice.Message, arg ...string) {
 				_spide_create(m, m.Option(mdb.NAME), m.Option(ADDRESS))

@@ -66,7 +66,7 @@ const PLAN = "plan"
 
 func init() {
 	Index.Merge(&ice.Context{Commands: map[string]*ice.Command{
-		PLAN: {Name: "plan scale=week,day,week,month,year,long begin_time@date place@province auto insert export import", Help: "计划", Meta: kit.Dict(
+		PLAN: {Name: "plan scale=week,day,week,month,year,long begin_time@date auto", Help: "计划", Meta: kit.Dict(
 			ice.Display("/plugin/local/team/plan.js"),
 		), Action: ice.MergeAction(map[string]*ice.Action{
 			mdb.INPUTS: {Name: "inputs", Help: "补全", Hand: func(m *ice.Message, arg ...string) {

@@ -151,6 +151,13 @@ func (m *Message) AppendSimple(key ...string) (res []string) {
 	return
 }
 func (m *Message) AppendTrans(cb func(value string, key string, index int) string) *Message {
+	if m.FieldsIsDetail() {
+		for i, v := range m.meta[VALUE] {
+			k := m.meta[KEY][i]
+			m.meta[VALUE][i] = cb(v, k, 0)
+		}
+		return m
+	}
 	for _, k := range m.meta[MSG_APPEND] {
 		for i, v := range m.meta[k] {
 			m.meta[k][i] = cb(v, k, i)

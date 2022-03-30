@@ -81,7 +81,7 @@ func (m *Message) OptionTemplate() string {
 }
 
 func (m *Message) Fields(length int, fields ...string) string {
-	return m.Option(MSG_FIELDS, kit.Select(kit.Select("detail", fields, length), m.Option(MSG_FIELDS)))
+	return m.Option(MSG_FIELDS, kit.Select(kit.Select(CACHE_DETAIL, fields, length), m.Option(MSG_FIELDS)))
 }
 func (m *Message) Upload(dir string) {
 	up := kit.Simple(m.Optionv(MSG_UPLOAD))

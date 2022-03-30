@@ -85,7 +85,7 @@ func (m *Message) Split(str string, arg ...string) *Message { // field sp nl
 }
 
 func (m *Message) FieldsIsDetail() bool {
-	if m.OptionFields() == "detail" {
+	if m.OptionFields() == CACHE_DETAIL {
 		return true
 	}
 	if len(m.meta[MSG_APPEND]) == 2 && m.meta[MSG_APPEND][0] == KEY && m.meta[MSG_APPEND][1] == VALUE {
@@ -95,7 +95,7 @@ func (m *Message) FieldsIsDetail() bool {
 }
 
 func (m *Message) PushDetail(value interface{}, arg ...interface{}) *Message {
-	return m.Push("detail", value, arg...)
+	return m.Push(CACHE_DETAIL, value, arg...)
 }
 func (m *Message) IsErr(arg ...string) bool {
 	return len(arg) > 0 && m.Result(1) == arg[0] || m.Result(0) == ErrWarn

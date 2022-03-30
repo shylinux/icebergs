@@ -75,7 +75,7 @@ func _list_export(m *ice.Message, prefix, chain, file string) {
 	head := kit.Split(m.OptionFields())
 	m.Grows(prefix, chain, "", "", func(index int, val map[string]interface{}) {
 		if val = kit.GetMeta(val); index == 0 {
-			if len(head) == 0 || head[0] == "detail" { // 默认表头
+			if len(head) == 0 || head[0] == ice.CACHE_DETAIL { // 默认表头
 				for k := range val {
 					head = append(head, k)
 				}

@@ -125,7 +125,10 @@ func init() {
 			ice.RUN: {Name: "run", Help: "执行"},
 		}, ctx.CmdAction()), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			if arg = _name(m, arg); strings.Contains(arg[1], ice.NL) {
-				arg = append([]string{arg[0], "web.chat.div", "auto.cmd", "split", "opts.text", arg[1]}, arg[2:]...)
+				arg = kit.Simple(arg[0], "web.chat.div", "auto.cmd", "split", "opts.text", arg[1], arg[2:])
+			}
+			if arg[1] == "args" {
+				arg = kit.Simple("", arg)
 			}
 			_field_show(m, arg[0], arg[1], arg[2:]...)
 		}},

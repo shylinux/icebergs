@@ -205,6 +205,7 @@ const ( // MSG
 	CACHE_FILTER = "cache.filter"
 	CACHE_VALUE  = "cache.value"
 	CACHE_FIELD  = "cache.field"
+	CACHE_DETAIL = "detail"
 )
 const ( // RENDER
 	RENDER_RAW      = "_raw"

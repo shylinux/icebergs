@@ -116,7 +116,7 @@ func (m *Message) Push(key string, value interface{}, arg ...interface{}) *Messa
 			var v interface{}
 			switch k {
 			case KEY, HASH:
-				if key != "" && key != "detail" {
+				if key != "" && key != CACHE_DETAIL {
 					v = key
 					break
 				}
@@ -133,7 +133,7 @@ func (m *Message) Push(key string, value interface{}, arg ...interface{}) *Messa
 
 			// 追加数据
 			switch v := kit.Format(v); key {
-			case "detail":
+			case CACHE_DETAIL:
 				m.Add(MSG_APPEND, KEY, k)
 				m.Add(MSG_APPEND, VALUE, v)
 			default:

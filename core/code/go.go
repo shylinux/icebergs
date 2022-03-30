@@ -112,6 +112,14 @@ func _go_show(m *ice.Message, arg ...string) {
 		}
 	}
 }
+func _sum_show(m *ice.Message, file string) {
+	m.Cmd(nfs.CAT, file, func(ls []string, line string) {
+		m.Push("repos", ls[0])
+		m.Push("version", ls[1])
+		m.Push("hash", ls[2])
+	})
+	m.StatusTimeCount()
+}
 func _mod_show(m *ice.Message, file string) {
 	const (
 		MODULE  = "module"
@@ -126,7 +134,7 @@ func _mod_show(m *ice.Message, file string) {
 	m.Cmd(nfs.CAT, file, func(ls []string, line string) {
 		switch {
 		case strings.HasPrefix(line, MODULE):
-			require[ls[1]] = ""
+			require[ls[1]] = m.Cmdx(cli.SYSTEM, GIT, "describe", "--tags")
 			replace[ls[1]] = nfs.PWD
 		case strings.HasPrefix(line, REQUIRE+" ("):
 			block = REQUIRE
@@ -155,6 +163,7 @@ func _mod_show(m *ice.Message, file string) {
 		m.Push(REPLACE, kit.Select("", replace[k]))
 	}
 	m.Sort(REPLACE)
+	m.StatusTimeCount()
 }
 
 const (
@@ -183,7 +192,9 @@ func init() {
 				m.Cmdy(cli.SYSTEM, GO, "doc", strings.TrimSuffix(arg[1], ice.PT+arg[0]), kit.Dict(cli.CMD_DIR, arg[2])).SetAppend()
 			}},
 		}, PlugAction())},
-		SUM: {Name: "sum", Help: "版本", Action: PlugAction()},
+		SUM: {Name: "sum", Help: "版本", Action: ice.MergeAction(map[string]*ice.Action{
+			mdb.RENDER: {Hand: func(m *ice.Message, arg ...string) { _sum_show(m, path.Join(arg[2], arg[1])) }},
+		}, PlugAction())},
 		MOD: {Name: "mod", Help: "模块", Action: ice.MergeAction(map[string]*ice.Action{
 			mdb.RENDER: {Hand: func(m *ice.Message, arg ...string) { _mod_show(m, path.Join(arg[2], arg[1])) }},
 		}, PlugAction())},

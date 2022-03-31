@@ -350,6 +350,9 @@ func init() {
 			mdb.CREATE: {Name: "create name address", Help: "添加", Hand: func(m *ice.Message, arg ...string) {
 				_spide_create(m, m.Option(mdb.NAME), m.Option(ADDRESS))
 			}},
+			"merge": {Name: "merge name path", Help: "添加", Hand: func(m *ice.Message, arg ...string) {
+				m.Echo(kit.MergeURL(m.Cmd(SPIDE, arg[0]).Append("client.url")+arg[1], arg[2:]))
+			}},
 		}, mdb.HashAction()), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			if len(arg) < 2 || arg[0] == "" || (len(arg) > 3 && arg[3] == "") {
 				mdb.HashSelect(m, kit.Slice(arg, 0, 1)...)

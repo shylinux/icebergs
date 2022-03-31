@@ -138,6 +138,8 @@ func init() {
 					_binpack_dir(m, f, ice.USR_INTSHELL)
 					// _binpack_dir(m, f, ice.USR_ICEBERGS)
 					_binpack_ctx(m, f)
+					fmt.Fprintln(f, _binpack_file(m, ice.ETC_INIT_SHY))
+					fmt.Fprintln(f, _binpack_file(m, ice.ETC_EXIT_SHY))
 
 					fmt.Fprintln(f, `	}`)
 					fmt.Fprintln(f, `}`)

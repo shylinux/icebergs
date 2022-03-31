@@ -306,7 +306,12 @@ func init() {
 			if len(arg) < 2 { // 节点列表
 				if mdb.HashSelect(m, arg...); len(arg) == 0 {
 					m.Table(func(index int, value map[string]string, head []string) {
-						m.PushAnchor(value[mdb.NAME], _space_link(m, kit.Keys(m.Option(ice.MSG_USERPOD), value[mdb.NAME])))
+						switch value[mdb.TYPE] {
+						case MASTER:
+							m.PushAnchor(value[mdb.NAME], "http://"+value[mdb.TEXT])
+						default:
+							m.PushAnchor(value[mdb.NAME], _space_link(m, kit.Keys(m.Option(ice.MSG_USERPOD), value[mdb.NAME])))
+						}
 					})
 					m.Sort("type,name,text")
 				}

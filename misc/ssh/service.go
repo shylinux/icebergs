@@ -92,7 +92,6 @@ func _ssh_accept(m *ice.Message, h string, c net.Conn) {
 const (
 	WELCOME = "welcome"
 	GOODBYE = "goodbye"
-	PRIVATE = "private"
 	AUTHKEY = "authkey"
 	REQUEST = "request"
 )

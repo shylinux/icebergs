@@ -8,6 +8,7 @@ import (
 
 	"golang.org/x/crypto/ssh"
 	ice "shylinux.com/x/icebergs"
+	"shylinux.com/x/icebergs/base/aaa"
 	"shylinux.com/x/icebergs/base/mdb"
 	kit "shylinux.com/x/toolkits"
 )
@@ -19,7 +20,7 @@ const (
 const RSA = "rsa"
 
 func init() {
-	Index.Merge(&ice.Context{Configs: map[string]*ice.Config{
+	aaa.Index.Merge(&ice.Context{Configs: map[string]*ice.Config{
 		RSA: {Name: RSA, Help: "角色", Value: kit.Data(mdb.SHORT, mdb.HASH, mdb.FIELD, "time,hash,public,private")},
 	}, Commands: map[string]*ice.Command{
 		RSA: {Name: "rsa hash auto create import", Help: "公钥", Action: ice.MergeAction(map[string]*ice.Action{

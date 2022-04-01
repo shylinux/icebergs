@@ -51,8 +51,8 @@ type {{.Option "name"}} struct {
 	list string {{.Option "text"}}
 }
 
-func (h {{.Option "name"}}) List(m *ice.Message, arg ...string) {
-	h.{{.Option "type"}}.List(m, arg...)
+func (s {{.Option "name"}}) List(m *ice.Message, arg ...string) {
+	s.{{.Option "type"}}.List(m, arg...)
 }
 
 func init() { ice.Cmd("{{.Option "key"}}", {{.Option "name"}}{}) }

@@ -102,7 +102,7 @@ func init() {
 	Index.Merge(&ice.Context{Configs: map[string]*ice.Config{
 		CONFIG: {Name: CONFIG, Help: "配置", Value: kit.Data(nfs.PATH, ice.VAR_CONF)},
 	}, Commands: map[string]*ice.Command{
-		CONFIG: {Name: "config key auto clear", Help: "配置", Action: map[string]*ice.Action{
+		CONFIG: {Name: "config key auto reset", Help: "配置", Action: map[string]*ice.Action{
 			SAVE: {Name: "save", Help: "保存", Hand: func(m *ice.Message, arg ...string) {
 				_config_save(m, arg[0], arg[1:]...)
 			}},
@@ -122,9 +122,9 @@ func init() {
 				}
 				m.Confv(arg[0], arg[1], kit.List(list...))
 			}},
-			"clear": {Name: "clear conf key", Help: "清空", Hand: func(m *ice.Message, arg ...string) {
-				m.Conf(m.Option("conf"), m.Option("key"), "")
-				m.Cmd(ice.EXIT, 1)
+			"reset": {Name: "reset key sub", Help: "重置", Hand: func(m *ice.Message, arg ...string) {
+				m.Conf(m.Option("key"), m.Option("sub"), "")
+				m.Go(func() { m.Cmd(ice.EXIT, 1) })
 			}},
 		}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			if len(arg) == 0 {

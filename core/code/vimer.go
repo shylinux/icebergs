@@ -6,8 +6,10 @@ import (
 
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/cli"
+	"shylinux.com/x/icebergs/base/ctx"
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/nfs"
+	"shylinux.com/x/icebergs/base/web"
 	kit "shylinux.com/x/toolkits"
 )
 
@@ -22,6 +24,9 @@ func init() {
 			AUTOGEN: {Name: "create main=src/main.go zone name=hi help type=Zone,Hash,Lists,Data,Code list key", Help: "模块", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmdy(AUTOGEN, mdb.CREATE, arg)
 			}},
+			web.DREAM: {Name: "dream name repos", Help: "空间", Hand: func(m *ice.Message, arg ...string) {
+				m.Cmdy(web.DREAM, cli.START, arg)
+			}},
 			"script": {Name: "script file=hi/hi.js text=", Help: "脚本", Hand: func(m *ice.Message, arg ...string) {
 				m.Option(mdb.TEXT, strings.TrimSpace(m.Option(mdb.TEXT)))
 				m.Cmdy(TEMPLATE, nfs.DEFS)
@@ -31,6 +36,13 @@ func init() {
 				m.Option(mdb.TEXT, strings.TrimSpace(m.Option(mdb.TEXT)))
 				m.Cmdy(TEMPLATE, nfs.DEFS)
 			}},
+			mdb.INPUTS: {Name: "inputs", Help: "补全", Hand: func(m *ice.Message, arg ...string) {
+				switch m.Option(ctx.ACTION) {
+				case web.DREAM:
+					m.Cmdy(web.DREAM, mdb.INPUTS, arg)
+				}
+			}},
+
 			COMPILE: {Name: "compile", Help: "编译", Hand: func(m *ice.Message, arg ...string) {
 				if msg := m.Cmd(COMPILE, ice.SRC_MAIN_GO, ice.BIN_ICE_BIN); !cli.IsSuccess(msg) {
 					_inner_make(m, msg)

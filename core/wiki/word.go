@@ -33,11 +33,38 @@ func init() {
 				LABEL, kit.List(CHART, LABEL),
 				CHAIN, kit.List(CHART, CHAIN),
 			),
+			mdb.SHORT, "type,name,text",
+			mdb.FIELD, "time,hash,type,name,text",
 		)},
 	}, Commands: map[string]*ice.Command{
-		WORD: {Name: "word path=src/main.shy@key auto play", Help: "语言文字", Meta: kit.Dict(
-			ice.DisplayLocal(""),
-		), Action: ice.MergeAction(map[string]*ice.Action{
+		WORD: {Name: "word path=src/main.shy@key auto play", Help: "语言文字", Meta: kit.Dict(ice.DisplayLocal("")), Action: ice.MergeAction(map[string]*ice.Action{
+			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
+				m.Cmd(mdb.SEARCH, mdb.CREATE, m.CommandKey(), m.PrefixKey())
+			}},
+			mdb.SEARCH: {Name: "search", Help: "搜索", Hand: func(m *ice.Message, arg ...string) {
+				m.Cmd(mdb.SELECT, m.PrefixKey(), "", mdb.HASH).Table(func(index int, value map[string]string, head []string) {
+					if arg[1] == "" {
+						if value[mdb.TYPE] == SPARK {
+							value[mdb.TEXT] = ice.Render(m, ice.RENDER_SCRIPT, value[mdb.TEXT])
+						}
+						m.PushSearch(value)
+					}
+				})
+			}},
+			mdb.CREATE: {Name: "create", Help: "创建", Hand: func(m *ice.Message, arg ...string) {
+				m.Cmd(mdb.INSERT, m.PrefixKey(), "", mdb.HASH, arg)
+			}},
+			"recent": {Name: "recent", Help: "最近", Hand: func(m *ice.Message, arg ...string) {
+				m.OptionFields(m.Config(mdb.FIELD))
+				m.Cmd(mdb.SELECT, m.PrefixKey(), "", mdb.HASH).Table(func(index int, value map[string]string, head []string) {
+					if value[mdb.TYPE] == "spark" {
+						value[mdb.TEXT] = ice.Render(m, ice.RENDER_SCRIPT, value[mdb.TEXT])
+					}
+					m.Push("", value, head)
+				})
+				m.PushAction(mdb.REMOVE)
+			}},
+
 			mdb.INPUTS: {Name: "inputs", Help: "补全", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmdy(nfs.DIR, "src/", kit.Dict(nfs.DIR_DEEP, ice.TRUE, nfs.DIR_REG, ".*\\.shy"), nfs.DIR_CLI_FIELDS)
 				m.Cmdy(nfs.DIR, "src/help/", kit.Dict(nfs.DIR_DEEP, ice.TRUE, nfs.DIR_REG, ".*\\.shy"), nfs.DIR_CLI_FIELDS)
@@ -46,7 +73,7 @@ func init() {
 				m.Cmdy(arg[0], ctx.ACTION, ice.RUN, arg[2:])
 			}},
 			ice.PLAY: {Name: "play", Help: "演示"},
-		}, ctx.CmdAction()), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		}, ctx.CmdAction(), mdb.HashAction()), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			m.Option(nfs.DIR_REG, m.Config(lex.REGEXP))
 			if m.Option(nfs.DIR_DEEP, ice.TRUE); !_wiki_list(m, cmd, arg...) {
 				_word_show(m, arg[0])

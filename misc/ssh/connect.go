@@ -156,61 +156,59 @@ const CONNECT = "connect"
 
 func init() {
 	psh.Index.Merge(&ice.Context{Configs: map[string]*ice.Config{
-		CONNECT: {Name: CONNECT, Help: "连接", Value: kit.Data(
-			mdb.FIELD, "time,hash,status,username,host,port",
-		)},
+		CONNECT: {Name: CONNECT, Help: "连接", Value: kit.Data(mdb.SHORT, "name", mdb.FIELD, "time,name,status,username,host,port")},
 	}, Commands: map[string]*ice.Command{
-		CONNECT: {Name: "connect hash auto", Help: "连接", Action: ice.MergeAction(map[string]*ice.Action{
-			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
-				m.Richs(CONNECT, "", mdb.FOREACH, func(key string, value map[string]interface{}) {
-					if value = kit.GetMeta(value); kit.Value(value, mdb.STATUS) == tcp.OPEN {
-						m.Cmd(CONNECT, tcp.DIAL, aaa.USERNAME, value[aaa.USERNAME], mdb.HASH, key, value)
-					}
-				})
-			}},
+		CONNECT: {Name: "connect name auto", Help: "连接", Action: ice.MergeAction(map[string]*ice.Action{
 			tcp.OPEN: {Name: "open authfile username=shy password verfiy host=shylinux.com port=22 private=.ssh/id_rsa", Help: "终端", Hand: func(m *ice.Message, arg ...string) {
 				aaa.UserRoot(m)
 				_ssh_open(m.OptionLoad(m.Option("authfile")), arg...)
 				m.Echo("exit %v@%v:%v\n", m.Option(aaa.USERNAME), m.Option(tcp.HOST), m.Option(tcp.PORT))
 			}},
-			tcp.DIAL: {Name: "dial username=shy host=shylinux.com port=22 private=.ssh/id_rsa", Help: "添加", Hand: func(m *ice.Message, arg ...string) {
+			tcp.DIAL: {Name: "dial name=shylinux username=shy host=shylinux.com port=22 private=.ssh/id_rsa", Help: "添加", Hand: func(m *ice.Message, arg ...string) {
 				m.Go(func() {
 					_ssh_conn(m, func(client *ssh.Client) {
-						h := m.Option(mdb.HASH)
-						if h == "" {
-							h = m.Rich(CONNECT, "", kit.Dict(
-								aaa.USERNAME, m.Option(aaa.USERNAME),
-								tcp.HOST, m.Option(tcp.HOST), tcp.PORT, m.Option(tcp.PORT),
-								mdb.STATUS, tcp.OPEN, CONNECT, client,
-							))
-						} else {
-							m.Conf(CONNECT, kit.Keys(mdb.HASH, h, CONNECT), client)
-						}
-						m.Cmd(CONNECT, SESSION, mdb.HASH, h)
+						m.Rich(CONNECT, "", kit.Dict(
+							mdb.NAME, m.Option(mdb.NAME),
+							aaa.USERNAME, m.Option(aaa.USERNAME),
+							tcp.HOST, m.Option(tcp.HOST), tcp.PORT, m.Option(tcp.PORT),
+							mdb.STATUS, tcp.OPEN, CONNECT, client,
+						))
+						m.Cmd(CONNECT, SESSION, mdb.NAME, m.Option(mdb.NAME))
 					}, arg...)
 				})
 				m.ProcessRefresh3s()
 			}},
-
-			SESSION: {Name: "session hash", Help: "会话", Hand: func(m *ice.Message, arg ...string) {
+			SESSION: {Name: "session name", Help: "会话", Hand: func(m *ice.Message, arg ...string) {
 				var client *ssh.Client
-				m.Richs(CONNECT, "", m.Option(mdb.HASH), func(key string, value map[string]interface{}) {
+				m.Richs(CONNECT, "", m.Option(mdb.NAME), func(key string, value map[string]interface{}) {
 					client, _ = value[CONNECT].(*ssh.Client)
 				})
 
-				h := m.Rich(SESSION, "", kit.Data(mdb.STATUS, tcp.OPEN, CONNECT, m.Option(mdb.HASH)))
+				h := m.Rich(SESSION, "", kit.Data(mdb.NAME, m.Option(mdb.NAME), mdb.STATUS, tcp.OPEN, CONNECT, m.Option(mdb.NAME)))
 				if session, e := _ssh_session(m, h, client); m.Assert(e) {
 					session.Shell()
 					session.Wait()
 				}
 				m.Echo(h)
 			}},
+			"command": {Name: "command cmd=pwd", Help: "命令", Hand: func(m *ice.Message, arg ...string) {
+				m.Richs(CONNECT, "", m.Option(mdb.NAME), func(key string, value map[string]interface{}) {
+					if client, ok := value[CONNECT].(*ssh.Client); ok {
+						if session, e := client.NewSession(); m.Assert(e) {
+							defer session.Close()
+							if b, e := session.CombinedOutput(m.Option("cmd")); m.Assert(e) {
+								m.Echo(string(b))
+							}
+						}
+					}
+				})
+			}},
 		}, mdb.HashActionStatus()), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			mdb.HashSelect(m, arg...).Table(func(index int, value map[string]string, head []string) {
-				m.PushButton(kit.Select("", SESSION, value[mdb.STATUS] == tcp.OPEN), mdb.REMOVE)
+				m.PushButton(kit.Select("", "command,session", value[mdb.STATUS] == tcp.OPEN), mdb.REMOVE)
 			})
 			if len(arg) == 0 {
-				m.Action(tcp.DIAL, mdb.PRUNES)
+				m.Action(tcp.DIAL)
 			}
 		}},
 	}})

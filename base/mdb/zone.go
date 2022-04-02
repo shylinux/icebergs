@@ -200,12 +200,18 @@ func ZoneAction(args ...interface{}) map[string]*ice.Action {
 	})
 }
 func ZoneSelect(m *ice.Message, arg ...string) *ice.Message {
+	arg = kit.Slice(arg, 0, 2)
 	m.Fields(len(arg), kit.Fields(TIME, m.Config(SHORT), COUNT), m.Config(FIELD))
 	if m.Cmdy(SELECT, m.PrefixKey(), "", ZONE, arg); kit.Select("", arg, 0) == "" {
 		m.Sort(m.Config(SHORT))
 		m.PushAction(REMOVE)
 	}
-	m.StatusTimeCount()
+	if len(arg) == 0 {
+		m.StatusTimeCount()
+	}
+	if len(arg) == 1 {
+		m.StatusTimeCountTotal(m.Conf(m.PrefixKey(), kit.Keys(HASH, kit.Hashs(arg[0]), kit.Keym("count"))))
+	}
 	return m
 }
 func ZoneSelectAll(m *ice.Message, arg ...string) *ice.Message {

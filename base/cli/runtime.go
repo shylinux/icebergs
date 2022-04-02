@@ -2,13 +2,11 @@ package cli
 
 import (
 	"os"
-	"os/user"
 	"path"
 	"runtime"
 	"strings"
 
 	ice "shylinux.com/x/icebergs"
-	"shylinux.com/x/icebergs/base/aaa"
 	"shylinux.com/x/icebergs/base/ctx"
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/nfs"
@@ -47,13 +45,8 @@ func _runtime_init(m *ice.Message) {
 		name = kit.Slice(strings.Split(name, "\\"), -1)[0]
 		m.Conf(RUNTIME, kit.Keys(BOOT, PATHNAME), name)
 	}
-	if m.Conf(RUNTIME, kit.Keys(BOOT, USERNAME), kit.Select(kit.Env(USER), kit.Env(CTX_USER))) == "" {
-		if user, e := user.Current(); e == nil && user.Name != "" {
-			m.Conf(RUNTIME, kit.Keys(BOOT, USERNAME), kit.Select(user.Name, kit.Env(CTX_USER)))
-		} else {
-			m.Conf(RUNTIME, kit.Keys(BOOT, USERNAME), aaa.ROOT)
-		}
-	}
+
+	m.Conf(RUNTIME, kit.Keys(BOOT, USERNAME), kit.Select(kit.UserName(), kit.Env(CTX_USER)))
 	ice.Info.HostName = m.Conf(RUNTIME, kit.Keys(BOOT, HOSTNAME))
 	ice.Info.PathName = m.Conf(RUNTIME, kit.Keys(BOOT, PATHNAME))
 	ice.Info.UserName = m.Conf(RUNTIME, kit.Keys(BOOT, USERNAME))

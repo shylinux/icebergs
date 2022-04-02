@@ -318,7 +318,8 @@ func (m *Message) Table(cbs ...func(index int, value map[string]string, head []s
 			return m
 		}
 
-		for i := 0; i < m.Length(); i++ {
+		n := m.Length()
+		for i := 0; i < n; i++ {
 			line := map[string]string{}
 			for _, k := range m.meta[MSG_APPEND] {
 				line[k] = kit.Select("", m.meta[k], i)

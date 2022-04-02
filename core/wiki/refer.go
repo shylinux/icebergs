@@ -32,7 +32,7 @@ func init() {
 		}},
 	}, Configs: map[string]*ice.Config{
 		REFER: {Name: REFER, Help: "参考", Value: kit.Data(
-			nfs.TEMPLATE, `<ul {{.OptionTemplate}}>{{range $index, $value := .Optionv "list"}}<li>{{index $value 0}}: <a href="{{index $value 1}}" target="_blank">{{index $value 1}}</a></li>{{end}}</ul>`,
+			nfs.TEMPLATE, `<ul {{.OptionTemplate}}>{{range $index, $value := .Optionv "list"}}<li>{{index $value 0}}: <a href="{{index $value 1}}" data-name="{{index $value 0}}" target="_blank">{{index $value 1}}</a></li>{{end}}</ul>`,
 		)},
 	}})
 }

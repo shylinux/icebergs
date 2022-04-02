@@ -119,6 +119,18 @@ func (m *Message) PushAnchor(arg ...interface{}) { // [name] link
 	}
 }
 func (m *Message) PushButton(arg ...interface{}) { // name...
+	if m.FieldsIsDetail() {
+		for i, k := range m.meta["key"] {
+			if k == "action" {
+				m.meta["value"][i] = Render(m, RENDER_BUTTON, arg...)
+				return
+			}
+		}
+	}
+	if len(m.meta["action"]) >= m.Length() {
+		m.meta["action"] = []string{}
+	}
+
 	if !m.IsCliUA() {
 		m.Push(ACTION, Render(m, RENDER_BUTTON, arg...))
 	}

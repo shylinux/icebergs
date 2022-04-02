@@ -59,21 +59,14 @@ const SESSION = "session"
 
 func init() {
 	psh.Index.Merge(&ice.Context{Configs: map[string]*ice.Config{
-		SESSION: {Name: SESSION, Help: "会话", Value: kit.Data(
-			mdb.FIELD, "time,hash,status,count,connect",
-		)},
+		SESSION: {Name: SESSION, Help: "会话", Value: kit.Data(mdb.SHORT, "name", mdb.FIELD, "time,name,status,count,connect")},
 	}, Commands: map[string]*ice.Command{
-		SESSION: {Name: "session hash id auto", Help: "会话", Action: ice.MergeAction(map[string]*ice.Action{
-			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
-				m.Richs(SESSION, "", mdb.FOREACH, func(key string, value map[string]interface{}) {
-					kit.Value(value, kit.Keym(mdb.STATUS), tcp.CLOSE)
-				})
-			}},
+		SESSION: {Name: "session name id auto", Help: "会话", Action: ice.MergeAction(map[string]*ice.Action{
 			mdb.REPEAT: {Name: "repeat", Help: "执行", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmdy(SESSION, ctx.ACTION, ctx.COMMAND, CMD, m.Option(mdb.TEXT))
 			}},
 			ctx.COMMAND: {Name: "command cmd=pwd", Help: "命令", Hand: func(m *ice.Message, arg ...string) {
-				m.Richs(SESSION, "", m.Option(mdb.HASH), func(key string, value map[string]interface{}) {
+				m.Richs(SESSION, "", m.Option(mdb.NAME), func(key string, value map[string]interface{}) {
 					if w, ok := kit.Value(value, kit.Keym(INPUT)).(io.Writer); ok {
 						m.Grow(SESSION, kit.Keys(mdb.HASH, key), kit.Dict(mdb.TYPE, CMD, mdb.TEXT, m.Option(CMD)))
 						w.Write([]byte(m.Option(CMD) + ice.NL))
@@ -81,20 +74,18 @@ func init() {
 				})
 				m.ProcessRefresh300ms()
 			}},
-		}, mdb.HashActionStatus()), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		}, mdb.ZoneAction()), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			if len(arg) == 0 {
-				m.Action(mdb.PRUNES)
-				mdb.HashSelect(m, arg...)
-				m.Set(ice.MSG_APPEND, ctx.ACTION)
-				m.Table(func(index int, value map[string]string, head []string) {
+				mdb.HashSelect(m, arg...).Table(func(index int, value map[string]string, head []string) {
 					m.PushButton(kit.Select("", ctx.COMMAND, value[mdb.STATUS] == tcp.OPEN), mdb.REMOVE)
 				})
 				return
 			}
 
-			m.Action(ctx.COMMAND)
-			m.Fields(len(arg[1:]), "time,id,type,text")
-			mdb.ZoneSelect(m, arg...).Table(func(index int, value map[string]string, head []string) {
+			m.Action(ctx.COMMAND, mdb.PAGE)
+			m.OptionPage(kit.Slice(arg, 2)...)
+			m.Fields(len(kit.Slice(arg, 1, 2)), "time,id,type,text")
+			mdb.ZoneSelect(m, kit.Slice(arg, 0, 2)...).Table(func(index int, value map[string]string, head []string) {
 				m.PushButton(kit.Select("", mdb.REPEAT, value[mdb.TYPE] == CMD))
 			})
 		}},

@@ -38,6 +38,9 @@ func _binpack_dir(m *ice.Message, f *os.File, dir string) {
 		if path.Base(value[nfs.PATH]) == "binpack.go" {
 			return
 		}
+		if strings.HasPrefix(value[nfs.PATH], "var/") {
+			return
+		}
 		if strings.HasPrefix(value[nfs.PATH], "website/") {
 			return
 		}

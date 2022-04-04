@@ -156,7 +156,9 @@ func init() {
 					}
 				})
 				m.Sort("status,type,name")
-				m.Display("/plugin/table.js", "style", "card")
+				if !strings.Contains(m.Option(ice.MSG_USERUA), "Mobile") {
+					m.Display("/plugin/table.js", "style", "card")
+				}
 				return
 			}
 

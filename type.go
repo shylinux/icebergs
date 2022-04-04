@@ -315,6 +315,14 @@ func (m *Message) Spawn(arg ...interface{}) *Message {
 			msg.target = val
 		case string:
 			msg._key = val
+		case map[string]string:
+			for k, v := range val {
+				msg.Option(k, v)
+			}
+		case map[string]interface{}:
+			for k, v := range val {
+				msg.Option(k, v)
+			}
 		}
 	}
 	return msg

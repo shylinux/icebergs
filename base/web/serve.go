@@ -308,6 +308,9 @@ func init() {
 			DOMAIN: {Name: "domain", Help: "域名", Hand: func(m *ice.Message, arg ...string) {
 				ice.Info.Domain = m.Conf(SHARE, kit.Keym(DOMAIN, m.Config(DOMAIN, arg[0])))
 			}},
+			"list_broad": {Name: "list_broad", Help: "服务发现", Hand: func(m *ice.Message, arg ...string) {
+				m.Go(func() { _serve_udp(m, m.Cmd(tcp.HOST).Append("ip"), m.Option(tcp.PORT)) })
+			}},
 			aaa.BLACK: {Name: "black", Help: "黑名单", Hand: func(m *ice.Message, arg ...string) {
 				for _, k := range arg {
 					m.Log_CREATE(aaa.BLACK, k)
@@ -330,6 +333,7 @@ func init() {
 					m.Config("staffname", m.Option("staffname"))
 				}
 				aaa.UserRoot(m, m.Option(aaa.PASSWORD), m.Option(aaa.USERNAME), m.Option(aaa.USERROLE))
+				m.Go(func() { m.Cmd(BROAD, SERVE) })
 
 				m.Target().Start(m, m.OptionSimple(mdb.NAME, tcp.HOST, tcp.PORT)...)
 				m.Sleep300ms()

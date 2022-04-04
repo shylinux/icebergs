@@ -37,6 +37,15 @@ func _website_parse(m *ice.Message, text string, args ...string) (map[string]int
 	prefix := ""
 
 	m.Cmd(lex.SPLIT, "", mdb.KEY, mdb.NAME, func(deep int, ls []string, meta map[string]interface{}) []string {
+		if deep == 1 {
+			switch ls[0] {
+			case "header":
+				for i := 1; i < len(ls); i += 2 {
+					kit.Value(river, kit.Keys("Header", ls[i]), ls[i+1])
+				}
+				return ls
+			}
+		}
 		data := kit.Dict()
 		switch display := ice.DisplayRequire(1, ls[0])[ctx.DISPLAY]; kit.Ext(ls[0]) {
 		case nfs.JS:

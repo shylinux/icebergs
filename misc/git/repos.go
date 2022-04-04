@@ -91,14 +91,10 @@ func init() {
 			}},
 		}, mdb.HashAction()), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			if len(arg) == 0 { // 仓库列表
-				mdb.HashSelect(m, arg...)
-				m.Sort(mdb.NAME)
-				m.RenameAppend(mdb.NAME, "repos")
+				mdb.HashSelect(m, arg...).Sort(mdb.NAME).RenameAppend(mdb.NAME, REPOS)
 				return
 			}
-
-			m.Option(nfs.DIR_ROOT, _repos_path(arg[0]))
-			m.Cmdy(nfs.DIR, kit.Select("", arg, 1), "time,line,path")
+			m.Cmdy(nfs.DIR, kit.Select("", arg, 1), "time,line,path", kit.Dict(nfs.DIR_ROOT, _repos_path(arg[0])))
 		}},
 	}})
 }

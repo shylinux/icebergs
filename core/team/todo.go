@@ -21,10 +21,8 @@ func init() {
 				m.Cmd(mdb.DELETE, m.PrefixKey(), "", mdb.HASH, m.OptionSimple(mdb.HASH))
 			}},
 		}, mdb.HashAction(mdb.FIELD, "time,hash,zone,name,text")), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			m.Fields(len(arg), m.Config(mdb.FIELD))
-			m.Cmdy(mdb.SELECT, m.PrefixKey(), "", mdb.HASH, mdb.HASH, arg)
-			m.PushAction(cli.START, mdb.REMOVE)
-			m.StatusTimeCount()
+			m.Display("/plugin/table.js", "style", "card")
+			mdb.HashSelect(m, arg...).PushAction(cli.START, mdb.REMOVE)
 		}},
 	}})
 }

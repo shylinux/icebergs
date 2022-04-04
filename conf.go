@@ -22,9 +22,13 @@ const (
 	EXIT = "exit"
 	SAVE = "save"
 	LOAD = "load"
-	SHOW = "show"
-	EXEC = "exec"
+
 	AUTO = "auto"
+	LIST = "list"
+	BACK = "back"
+	EXEC = "exec"
+
+	SHOW = "show"
 	PLAY = "play"
 	HELP = "help"
 	HTTP = "http"

@@ -19,7 +19,7 @@ func _dream_list(m *ice.Message) *ice.Message {
 		if m.Richs(SPACE, nil, value[mdb.NAME], func(key string, val map[string]interface{}) {
 			m.Push(mdb.TYPE, val[mdb.TYPE])
 			m.Push(cli.STATUS, cli.START)
-			m.PushButton(cli.STOP)
+			m.PushButton("edit", "open", cli.STOP)
 			m.PushAnchor(strings.Split(m.MergePOD(value[mdb.NAME]), "?")[0])
 		}) == nil {
 			m.Push(mdb.TYPE, WORKER)
@@ -114,6 +114,12 @@ func init() {
 			cli.START: {Name: "start name repos river", Help: "启动", Hand: func(m *ice.Message, arg ...string) {
 				_dream_show(m, m.Option(mdb.NAME, kit.Select(path.Base(m.Option(nfs.REPOS)), m.Option(mdb.NAME))))
 			}},
+			"open": {Name: "open", Help: "打开", Hand: func(m *ice.Message, arg ...string) {
+				m.ProcessOpen(m.MergePOD(m.Option(mdb.NAME), "", ""))
+			}},
+			"edit": {Name: "edit", Help: "编辑", Hand: func(m *ice.Message, arg ...string) {
+				m.ProcessOpen(m.MergePOD(m.Option(mdb.NAME)+"/cmd/web.code.vimer", "", ""))
+			}},
 			cli.STOP: {Name: "stop", Help: "停止", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmdy(SPACE, mdb.MODIFY, m.OptionSimple(mdb.NAME), mdb.STATUS, cli.STOP)
 				m.Cmdy(SPACE, m.Option(mdb.NAME), ice.EXIT)
@@ -129,7 +135,28 @@ func init() {
 		}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			if len(arg) == 0 {
 				_dream_list(m)
+				m.SetAppend("text")
+				m.Table(func(index int, value map[string]string, head []string) {
+					if value["status"] == "start" {
+						ls := kit.Split(m.Cmdx(SPACE, value["name"], cli.SYSTEM, "git", "diff", "--shortstat"), ",", ",")
+						text := []string{}
+						for _, line := range ls {
+							list := kit.Split(line)
+							if strings.Contains(line, "file") {
+								text = append(text, list[0]+" file")
+							} else if strings.Contains(line, "ins") {
+								text = append(text, list[0]+" +++")
+							} else if strings.Contains(line, "dele") {
+								text = append(text, list[0]+" ---")
+							}
+						}
+						m.Push("text", strings.Join(text, ", "))
+					} else {
+						m.Push("text", "")
+					}
+				})
 				m.Sort("status,type,name")
+				m.Display("/plugin/table.js", "style", "card")
 				return
 			}
 

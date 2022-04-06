@@ -36,6 +36,8 @@ func _website_parse(m *ice.Message, text string, args ...string) (map[string]int
 	), kit.Dict(), kit.Dict()
 	prefix := ""
 
+	nriver := 0
+	nstorm := 0
 	m.Cmd(lex.SPLIT, "", mdb.KEY, mdb.NAME, func(deep int, ls []string, meta map[string]interface{}) []string {
 		if deep == 1 {
 			switch ls[0] {
@@ -126,9 +128,18 @@ func _website_parse(m *ice.Message, text string, args ...string) (map[string]int
 
 		switch deep {
 		case 1:
+			nriver++
+			nstorm = 0
 			storm = kit.Dict()
+			if ls[0] == "auto" {
+				ls[0] = kit.Format(nriver)
+			}
 			river[ls[0]] = kit.Dict(mdb.NAME, ls[1], STORM, storm, data, "order", len(river))
 		case 2:
+			nstorm++
+			if ls[0] == "auto" {
+				ls[0] = kit.Format(nstorm)
+			}
 			last = kit.Dict(mdb.NAME, ls[1], mdb.LIST, kit.List(), data, "order", len(storm))
 			storm[ls[0]] = last
 			prefix = ""

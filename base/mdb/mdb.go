@@ -208,6 +208,9 @@ var Index = &ice.Context{Name: MDB, Help: "数据模块", Commands: map[string]*
 		}
 	}},
 	EXPORT: {Name: "export key sub type file", Help: "导出", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		if m.Option(ice.CACHE_LIMIT) == "" {
+			m.Option(ice.CACHE_LIMIT, "-1")
+		}
 		switch file := _file_name(m, arg...); arg[2] {
 		case ZONE:
 			_zone_export(m, arg[0], _domain_chain(m, arg[1]), file)

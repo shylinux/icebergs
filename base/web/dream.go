@@ -20,7 +20,7 @@ func _dream_list(m *ice.Message) *ice.Message {
 			m.Push(mdb.TYPE, val[mdb.TYPE])
 			m.Push(cli.STATUS, cli.START)
 			m.PushButton("edit", "open", cli.STOP)
-			m.PushAnchor(strings.Split(m.MergePOD(value[mdb.NAME]), "?")[0])
+			m.PushAnchor(strings.Split(m.MergePod(value[mdb.NAME]), "?")[0])
 		}) == nil {
 			m.Push(mdb.TYPE, WORKER)
 			m.Push(cli.STATUS, cli.STOP)
@@ -33,8 +33,8 @@ func _dream_show(m *ice.Message, name string) {
 	if !strings.Contains(name, "-") || !strings.HasPrefix(name, "20") {
 		name = m.Time("20060102-") + kit.ReplaceAll(name, "-", "_")
 	}
-	defer m.ProcessOpen(m.MergePOD(m.Option(mdb.NAME, name)))
-	defer m.Echo(m.MergePOD(m.Option(mdb.NAME, name)))
+	defer m.ProcessOpen(m.MergePod(m.Option(mdb.NAME, name)))
+	defer m.Echo(m.MergePod(m.Option(mdb.NAME, name)))
 
 	// 任务目录
 	p := path.Join(m.Config(nfs.PATH), name)
@@ -115,10 +115,10 @@ func init() {
 				_dream_show(m, m.Option(mdb.NAME, kit.Select(path.Base(m.Option(nfs.REPOS)), m.Option(mdb.NAME))))
 			}},
 			"open": {Name: "open", Help: "打开", Hand: func(m *ice.Message, arg ...string) {
-				m.ProcessOpen(m.MergePOD(m.Option(mdb.NAME), "", ""))
+				m.ProcessOpen(m.MergePod(m.Option(mdb.NAME), "", ""))
 			}},
 			"edit": {Name: "edit", Help: "编辑", Hand: func(m *ice.Message, arg ...string) {
-				m.ProcessOpen(m.MergePOD(m.Option(mdb.NAME)+"/cmd/web.code.vimer", "", ""))
+				m.ProcessOpen(m.MergePod(m.Option(mdb.NAME)+"/cmd/web.code.vimer", "", ""))
 			}},
 			cli.STOP: {Name: "stop", Help: "停止", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmdy(SPACE, mdb.MODIFY, m.OptionSimple(mdb.NAME), mdb.STATUS, cli.STOP)

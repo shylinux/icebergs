@@ -179,8 +179,8 @@ func _website_render(m *ice.Message, w http.ResponseWriter, r *http.Request, kin
 	return true
 }
 func _website_search(m *ice.Message, kind, name, text string, arg ...string) {
-	m.Cmd(m.PrefixKey()).Table(func(index int, value map[string]string, head []string) {
-		m.PushSearch(value, mdb.TEXT, m.MergeURL2(path.Join("/chat/website", value[nfs.PATH])))
+	m.Cmd(m.PrefixKey(), ice.OptionFields("")).Table(func(index int, value map[string]string, head []string) {
+		m.PushSearch(value, mdb.TEXT, m.MergeWebsite(value[nfs.PATH]))
 	})
 }
 
@@ -216,13 +216,21 @@ func init() {
 				})
 			}},
 			"show": {Hand: func(m *ice.Message, arg ...string) {
+				if text := m.Cmd(m.PrefixKey(), ice.PS+arg[0]).Append(mdb.TEXT); text != "" {
+					if res, ok := _website_parse(m, text, arg[1:]...); ok {
+						m.Echo(_website_template2, kit.Format(res))
+						return
+					}
+				}
 				if res, ok := _website_parse(m, m.Cmdx(nfs.CAT, path.Join(SRC_WEBSITE, arg[0])), arg[1:]...); ok {
 					m.Echo(_website_template2, kit.Format(res))
 				}
 			}},
 			"inner": {Hand: func(m *ice.Message, arg ...string) {}},
 			mdb.SEARCH: {Hand: func(m *ice.Message, arg ...string) {
-				_website_search(m, arg[0], arg[1], kit.Select("", arg, 2))
+				if arg[0] == mdb.FOREACH && arg[1] == "" {
+					_website_search(m, arg[0], arg[1], kit.Select("", arg, 2))
+				}
 			}},
 			mdb.RENDER: {Hand: func(m *ice.Message, arg ...string) {
 				m.EchoIFrame(_website_url(m, strings.TrimPrefix(path.Join(arg[2], arg[1]), SRC_WEBSITE)))
@@ -256,7 +264,7 @@ func init() {
 			}},
 		}, mdb.HashAction()), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			mdb.HashSelect(m, arg...).Table(func(index int, value map[string]string, head []string) {
-				m.PushAnchor(m.MergeLink(value[nfs.PATH]))
+				m.PushAnchor(m.MergeWebsite(value[nfs.PATH]))
 			})
 			if len(arg) == 0 {
 				m.Cmd(nfs.DIR, SRC_WEBSITE, func(f os.FileInfo, p string) {

@@ -71,6 +71,7 @@ func FileKey(dir string) string {
 	if Info.Make.Path != "" && strings.HasPrefix(dir, Info.Make.Path+PS) {
 		dir = strings.TrimPrefix(dir, Info.Make.Path+PS)
 	}
+	// println("what ", dir, kit.Path(""), Info.Make.Path)
 	if strings.HasPrefix(dir, kit.Path("")+PS) {
 		dir = strings.TrimPrefix(dir, kit.Path("")+PS)
 	}

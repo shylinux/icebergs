@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/csv"
 	"net/url"
+	"path"
 	"reflect"
 	"strings"
 
@@ -171,8 +172,23 @@ func (m *Message) MergeLink(url string, arg ...interface{}) string {
 func (m *Message) MergeURL2(url string, arg ...interface{}) string {
 	return kit.MergeURL2(m.Option(MSG_USERWEB), url, arg...)
 }
-func (m *Message) MergePOD(name string, arg ...interface{}) string {
+func (m *Message) MergePod(name string, arg ...interface{}) string {
 	return kit.MergePOD(kit.Select(Info.Domain, m.Option(MSG_USERWEB)), name, arg...)
+}
+func (m *Message) MergeCmd(name string, arg ...interface{}) string {
+	if name == "" {
+		name = m.PrefixKey()
+	}
+	if m.Option(MSG_USERPOD) == "" {
+		return kit.MergeURL2(kit.Select(Info.Domain, m.Option(MSG_USERWEB)), path.Join("/chat/cmd", name))
+	}
+	return kit.MergeURL2(kit.Select(Info.Domain, m.Option(MSG_USERWEB)), path.Join("cmd", name), arg...)
+}
+func (m *Message) MergeWebsite(name string, arg ...interface{}) string {
+	if m.Option(MSG_USERPOD) == "" {
+		return kit.MergeURL2(kit.Select(Info.Domain, m.Option(MSG_USERWEB)), path.Join("/chat/website", name))
+	}
+	return kit.MergeURL2(kit.Select(Info.Domain, m.Option(MSG_USERWEB)), path.Join("website", name), arg...)
 }
 
 func (m *Message) cmd(arg ...interface{}) *Message {

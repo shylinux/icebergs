@@ -235,7 +235,6 @@ func init() {
 	}, Commands: map[string]*ice.Command{
 		DIR: {Name: "dir path field... auto upload", Help: "目录", Action: map[string]*ice.Action{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
-				m.Cmd(mdb.SEARCH, mdb.CREATE, m.CommandKey(), m.PrefixKey())
 				m.Cmd(mdb.RENDER, mdb.CREATE, m.CommandKey(), m.PrefixKey())
 			}},
 			mdb.SEARCH: {Name: "search type name", Help: "搜索", Hand: func(m *ice.Message, arg ...string) {

@@ -56,6 +56,12 @@ func _serve_udp(m *ice.Message, host, port string) {
 		}
 	}
 }
+func _broad_search(m *ice.Message, kind, name, text string, arg ...string) {
+	m.Richs(BROAD, nil, mdb.FOREACH, func(key string, value map[string]interface{}) {
+		value = kit.GetMeta(value)
+		m.PushSearch(mdb.TYPE, "friend", mdb.TEXT, kit.Format("http://%s:%s", value[tcp.HOST], value[tcp.PORT]), value)
+	})
+}
 
 const BROAD = "broad"
 
@@ -70,7 +76,6 @@ func init() {
 					kit.Format("http://%s:%s", m.Option(tcp.HOST), m.Option(tcp.PORT)))
 				m.Cmd(SPACE, tcp.DIAL, m.OptionSimple(ice.DEV))
 			}},
-			ice.CTX_EXIT: {Hand: func(m *ice.Message, arg ...string) { m.Conf(BROAD, "", "") }},
 		}, mdb.HashAction(
 			mdb.SHORT, "host,port", mdb.FIELD, "time,hash,host,port",
 		)), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {

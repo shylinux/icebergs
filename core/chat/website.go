@@ -178,6 +178,11 @@ func _website_render(m *ice.Message, w http.ResponseWriter, r *http.Request, kin
 	web.Render(msg, msg.Option(ice.MSG_OUTPUT), msg.Optionv(ice.MSG_ARGS).([]interface{})...)
 	return true
 }
+func _website_search(m *ice.Message, kind, name, text string, arg ...string) {
+	m.Cmd(m.PrefixKey()).Table(func(index int, value map[string]string, head []string) {
+		m.PushSearch(value, mdb.TEXT, m.MergeURL2(path.Join("/chat/website", value[nfs.PATH])))
+	})
+}
 
 const WEBSITE = "website"
 
@@ -216,6 +221,9 @@ func init() {
 				}
 			}},
 			"inner": {Hand: func(m *ice.Message, arg ...string) {}},
+			mdb.SEARCH: {Hand: func(m *ice.Message, arg ...string) {
+				_website_search(m, arg[0], arg[1], kit.Select("", arg, 2))
+			}},
 			mdb.RENDER: {Hand: func(m *ice.Message, arg ...string) {
 				m.EchoIFrame(_website_url(m, strings.TrimPrefix(path.Join(arg[2], arg[1]), SRC_WEBSITE)))
 			}},

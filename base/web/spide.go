@@ -334,18 +334,15 @@ const SPIDE = "spide"
 
 func init() {
 	Index.Merge(&ice.Context{Configs: map[string]*ice.Config{
-		SPIDE: {Name: SPIDE, Help: "蜘蛛侠", Value: kit.Data(
-			mdb.SHORT, CLIENT_NAME, mdb.FIELD, "time,client.name,client.url",
-			LOGHEADERS, ice.FALSE,
-		)},
+		SPIDE: {Name: SPIDE, Help: "蜘蛛侠", Value: kit.Data(mdb.SHORT, CLIENT_NAME, mdb.FIELD, "time,client.name,client.url", LOGHEADERS, ice.FALSE)},
 	}, Commands: map[string]*ice.Command{
 		SPIDE: {Name: "spide client.name action=raw,msg,save,cache method=GET,PUT,POST,DELETE url format=form,part,json,data,file arg run create", Help: "蜘蛛侠", Action: ice.MergeAction(map[string]*ice.Action{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
 				conf := m.Confm(cli.RUNTIME, "conf")
-				m.Cmd(SPIDE, mdb.CREATE, ice.OPS, kit.Select("http://:9020", conf["ctx_ops"]))
+				m.Cmd(SPIDE, mdb.CREATE, ice.OPS, kit.Select("http://127.0.0.1:9020", conf["ctx_ops"]))
 				m.Cmd(SPIDE, mdb.CREATE, ice.DEV, kit.Select("http://contexts.woa.com:80", conf["ctx_dev"]))
-				// m.Cmd(SPIDE, mdb.CREATE, ice.SHY, kit.Select("https://contexts.com.cn:443", conf["ctx_shy"]))
 				m.Cmd(SPIDE, mdb.CREATE, ice.SHY, kit.Select("https://shylinux.com:443", conf["ctx_shy"]))
+				// m.Cmd(SPIDE, mdb.CREATE, ice.SHY, kit.Select("https://contexts.com.cn:443", conf["ctx_shy"]))
 			}},
 			mdb.CREATE: {Name: "create name address", Help: "添加", Hand: func(m *ice.Message, arg ...string) {
 				_spide_create(m, m.Option(mdb.NAME), m.Option(ADDRESS))

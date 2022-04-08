@@ -36,6 +36,9 @@ func init() {
 				m.Option(mdb.TEXT, strings.TrimSpace(m.Option(mdb.TEXT)))
 				m.Cmdy(TEMPLATE, nfs.DEFS)
 			}},
+			mdb.SEARCH: {Name: "search type name text", Help: "搜索", Hand: func(m *ice.Message, arg ...string) {
+				m.PushSearch(mdb.TYPE, "go", mdb.NAME, "src/main.go", mdb.TEXT, m.MergeURL2("/chat/cmd/web.code.vimer"))
+			}},
 			mdb.INPUTS: {Name: "inputs", Help: "补全", Hand: func(m *ice.Message, arg ...string) {
 				switch m.Option(ctx.ACTION) {
 				case web.DREAM:

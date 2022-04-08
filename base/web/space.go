@@ -258,6 +258,7 @@ func _space_fork(m *ice.Message) {
 
 const (
 	CHROME = "chrome"
+	FRIEND = "friend"
 	MASTER = "master"
 	MYSELF = "myself"
 	SERVER = "server"
@@ -284,11 +285,11 @@ func init() {
 	}, Commands: map[string]*ice.Command{
 		SPACE: {Name: "space name cmd auto invite", Help: "空间站", Action: ice.MergeAction(map[string]*ice.Action{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
-				m.Cmd(mdb.SEARCH, mdb.CREATE, m.CommandKey(), m.PrefixKey())
 				m.Conf(SPACE, mdb.HASH, "")
 			}},
 			mdb.SEARCH: {Name: "search type name text", Help: "搜索", Hand: func(m *ice.Message, arg ...string) {
 				_space_search(m, arg[0], arg[1], kit.Select("", arg, 2))
+				_broad_search(m, arg[0], arg[1], kit.Select("", arg, 2))
 			}},
 			aaa.INVITE: {Name: "invite", Help: "添加", Hand: func(m *ice.Message, arg ...string) {
 				for _, k := range []string{ice.MISC, ice.CORE, ice.BASE} {

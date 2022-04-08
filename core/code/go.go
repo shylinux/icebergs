@@ -178,7 +178,6 @@ func init() {
 	Index.Register(&ice.Context{Name: GO, Help: "后端", Commands: map[string]*ice.Command{
 		ice.CTX_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			m.Cmd(mdb.SEARCH, mdb.CREATE, GODOC, m.Prefix(GO))
-			m.Cmd(mdb.SEARCH, mdb.CREATE, GO, m.Prefix(GO))
 			m.Cmd(mdb.ENGINE, mdb.CREATE, GO, m.Prefix(GO))
 
 			LoadPlug(m, GO, MOD, SUM)

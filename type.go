@@ -14,6 +14,9 @@ import (
 	kit "shylinux.com/x/toolkits"
 )
 
+type CommandHandler func(m *Message, c *Context, key string, arg ...string)
+type ActionHandler func(m *Message, arg ...string)
+
 type Cache struct {
 	Name  string
 	Help  string
@@ -35,7 +38,7 @@ type Command struct {
 	Help   string
 	Action map[string]*Action
 	Meta   map[string]interface{}
-	Hand   func(m *Message, c *Context, key string, arg ...string)
+	Hand   CommandHandler
 	List   []interface{}
 }
 type Server interface {
@@ -95,6 +98,7 @@ func (c *Context) Register(s *Context, x Server, n ...string) *Context {
 	s.Merge(s)
 	return s
 }
+
 func (c *Context) Merge(s *Context) *Context {
 	if c.Commands == nil {
 		c.Commands = map[string]*Command{}
@@ -129,25 +133,46 @@ func (c *Context) Merge(s *Context) *Context {
 			cmd.List = c.split(cmd.Name)
 		}
 
+		merge := func(pre *Command, before bool, key string, cmd *Command, cb ...CommandHandler) {
+			last := pre.Hand
+			pre.Hand = func(m *Message, c *Context, _key string, arg ...string) {
+				if before {
+					last(m, c, _key, arg...)
+				}
+				m._key, m._cmd = key, cmd
+				for _, cb := range cb {
+					if cb != nil {
+						cb(m, c, key, arg...)
+					}
+				}
+				m._key, m._cmd = _key, pre
+				if !before {
+					last(m, c, _key, arg...)
+				}
+			}
+		}
+
 		for k, a := range cmd.Action {
-			// if p, ok := c.Commands[k]; ok && s != c {
 			if p, ok := c.Commands[k]; ok {
-				key := key
-				switch last, next := p.Hand, a.Hand; k {
+				switch hand := a.Hand; k {
 				case CTX_INIT:
-					p.Hand = func(m *Message, c *Context, _key string, arg ...string) {
-						last(m, c, _key, arg...)
-						m._key, m._cmd = key, cmd
-						next(m, arg...)
-						m._key, m._cmd = _key, p
-					}
+					merge(p, true, key, cmd, func(m *Message, c *Context, _key string, arg ...string) {
+						hand(m, arg...)
+					})
 				case CTX_EXIT:
-					p.Hand = func(m *Message, c *Context, _key string, arg ...string) {
-						m._key, m._cmd = key, cmd
-						next(m, arg...)
-						m._key, m._cmd = _key, p
-						last(m, c, _key, arg...)
-					}
+					merge(p, false, key, cmd, func(m *Message, c *Context, _key string, arg ...string) {
+						hand(m, arg...)
+					})
+				}
+			}
+			if s != c {
+				switch k {
+				case "search":
+					merge(c.Commands[CTX_INIT], true, key, cmd, func(m *Message, c *Context, _key string, arg ...string) {
+						if m.CommandKey() != "search" {
+							m.Cmd("search", "create", m.CommandKey(), m.PrefixKey())
+						}
+					})
 				}
 			}
 

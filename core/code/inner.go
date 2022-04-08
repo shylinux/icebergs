@@ -111,6 +111,7 @@ func init() {
 				_inner_exec(m, arg[0], arg[1], arg[2])
 			}},
 			mdb.SEARCH: {Name: "search", Help: "搜索", Hand: func(m *ice.Message, arg ...string) {
+				return
 				m.Option(nfs.DIR_ROOT, arg[2])
 				m.Option(cli.CMD_DIR, kit.Path(arg[2]))
 				m.Cmdy(mdb.SEARCH, arg[0], arg[1], arg[2])

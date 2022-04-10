@@ -119,19 +119,20 @@ func init() {
 		}},
 		"/repos/": {Name: "/repos/", Help: "代码库", Action: ice.MergeAction(map[string]*ice.Action{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
-				web.AddRewrite(func(w http.ResponseWriter, r *http.Request) bool {
-					if p := r.URL.Path; strings.HasPrefix(p, "/x/") {
-						if ls := strings.Split(p, ice.PS); m.Cmd(web.DREAM, ls[2]).Length() > 0 {
-							if m.IsCliUA() {
-								r.URL.RawQuery += kit.Select("", "&", len(r.URL.RawQuery) > 1) + "pod=" + ls[2]
-								r.URL.Path = "/share/local/bin/ice.bin"
-							} else {
-								r.URL.Path = strings.Replace(r.URL.Path, "/x/", "/chat/pod/", 1)
+				web.AddRewrite(func(p string, w http.ResponseWriter, r *http.Request) bool {
+					if strings.HasPrefix(p, "/chat/pod/") {
+						if strings.HasPrefix(r.Header.Get("User-Agent"), "git") || strings.HasPrefix(r.Header.Get("User-Agent"), "Go") {
+							r.URL.Path = strings.Replace(r.URL.Path, "/chat/pod/", "/code/git/repos/", 1)
+							m.Info("rewrite %v -> %v", p, r.URL.Path)
+						} else if strings.HasPrefix(r.Header.Get("User-Agent"), "curl") || strings.HasPrefix(r.Header.Get("User-Agent"), "Wget") {
+							if ls := strings.Split(p, ice.PS); m.Cmd(web.DREAM, ls[3]).Length() > 0 {
+								r.URL.RawQuery += kit.Select("", "&", len(r.URL.RawQuery) > 1) + "pod=" + ls[3]
 							}
-						} else {
-							r.URL.Path = strings.Replace(r.URL.Path, "/x/", "/code/git/repos/", 1)
+							r.URL.Path = "/share/local/bin/ice.bin"
+							m.Info("rewrite %v -> %v", p, r.URL.Path)
 						}
-
+					} else if strings.HasPrefix(p, "/x/") {
+						r.URL.Path = strings.Replace(r.URL.Path, "/x/", "/code/git/repos/", 1)
 						m.Info("rewrite %v -> %v", p, r.URL.Path)
 					}
 					return false

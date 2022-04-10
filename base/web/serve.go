@@ -84,6 +84,10 @@ func _serve_main(m *ice.Message, w http.ResponseWriter, r *http.Request) bool {
 		case func(w http.ResponseWriter, r *http.Request) func():
 			defer h(w, r)
 
+		case func(p string, w http.ResponseWriter, r *http.Request) bool:
+			if h(r.URL.Path, w, r) {
+				return false
+			}
 		case func(w http.ResponseWriter, r *http.Request) bool:
 			if h(w, r) {
 				return false

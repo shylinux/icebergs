@@ -26,14 +26,14 @@ func _role_chain(arg ...string) string {
 func _role_black(m *ice.Message, userrole, chain string) {
 	m.Richs(ROLE, nil, userrole, func(key string, value map[string]interface{}) {
 		list := value[BLACK].(map[string]interface{})
-		m.Log_CREATE(ROLE, userrole, BLACK, chain)
+		m.Log_INSERT(ROLE, userrole, BLACK, chain)
 		list[chain] = true
 	})
 }
 func _role_white(m *ice.Message, userrole, chain string) {
 	m.Richs(ROLE, nil, userrole, func(key string, value map[string]interface{}) {
 		list := value[WHITE].(map[string]interface{})
-		m.Log_CREATE(ROLE, userrole, WHITE, chain)
+		m.Log_INSERT(ROLE, userrole, WHITE, chain)
 		list[chain] = true
 	})
 }
@@ -106,14 +106,14 @@ func init() {
 			}},
 			mdb.INSERT: {Name: "insert role=void,tech zone=white,black key=", Help: "添加", Hand: func(m *ice.Message, arg ...string) {
 				m.Richs(ROLE, nil, m.Option(ROLE), func(key string, value map[string]interface{}) {
-					m.Log_CREATE(ROLE, m.Option(ROLE), m.Option(mdb.ZONE), m.Option(mdb.KEY))
+					m.Log_INSERT(ROLE, m.Option(ROLE), m.Option(mdb.ZONE), m.Option(mdb.KEY))
 					list := value[m.Option(mdb.ZONE)].(map[string]interface{})
 					list[m.Option(mdb.KEY)] = true
 				})
 			}},
 			mdb.DELETE: {Name: "delete", Help: "删除", Hand: func(m *ice.Message, arg ...string) {
 				m.Richs(ROLE, nil, m.Option(ROLE), func(key string, value map[string]interface{}) {
-					m.Log_REMOVE(ROLE, m.Option(ROLE), m.Option(mdb.ZONE), m.Option(mdb.KEY))
+					m.Log_DELETE(ROLE, m.Option(ROLE), m.Option(mdb.ZONE), m.Option(mdb.KEY))
 					list := value[m.Option(mdb.ZONE)].(map[string]interface{})
 					delete(list, m.Option(mdb.KEY))
 				})

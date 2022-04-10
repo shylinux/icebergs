@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"sort"
 	"strings"
 	"sync"
 	"sync/atomic"
@@ -14,8 +13,8 @@ import (
 	kit "shylinux.com/x/toolkits"
 )
 
-type CommandHandler func(m *Message, c *Context, key string, arg ...string)
 type ActionHandler func(m *Message, arg ...string)
+type CommandHandler func(m *Message, c *Context, key string, arg ...string)
 
 type Cache struct {
 	Name  string
@@ -30,7 +29,7 @@ type Config struct {
 type Action struct {
 	Name string
 	Help string
-	Hand func(m *Message, arg ...string)
+	Hand ActionHandler
 	List []interface{}
 }
 type Command struct {
@@ -58,10 +57,10 @@ type Context struct {
 	Contexts map[string]*Context
 	context  *Context
 	root     *Context
+	server   Server
 
-	begin  *Message
-	start  *Message
-	server Server
+	begin *Message
+	start *Message
 
 	wg *sync.WaitGroup
 	id int32
@@ -77,7 +76,7 @@ func (c *Context) Cap(key string, arg ...interface{}) string {
 	return c.Caches[key].Value
 }
 func (c *Context) Cmd(m *Message, key string, arg ...string) *Message {
-	return c.cmd(m, m.target.Commands[key], key, arg...)
+	return c.cmd(m, c.Commands[key], key, arg...)
 }
 func (c *Context) Server() Server {
 	return c.server
@@ -85,7 +84,15 @@ func (c *Context) Server() Server {
 
 func (c *Context) Register(s *Context, x Server, n ...string) *Context {
 	for _, n := range n {
-		name(n, s)
+		if s, ok := Info.names[n]; ok {
+			last := ""
+			switch s := s.(type) {
+			case *Context:
+				last = s.Name
+			}
+			panic(kit.Format("%s %s %v", ErrExists, n, last))
+		}
+		Info.names[n] = s
 	}
 
 	if s.Merge(s); c.Contexts == nil {
@@ -95,10 +102,8 @@ func (c *Context) Register(s *Context, x Server, n ...string) *Context {
 	s.root = c.root
 	s.context = c
 	s.server = x
-	s.Merge(s)
 	return s
 }
-
 func (c *Context) Merge(s *Context) *Context {
 	if c.Commands == nil {
 		c.Commands = map[string]*Command{}
@@ -110,65 +115,55 @@ func (c *Context) Merge(s *Context) *Context {
 		c.Commands[CTX_EXIT] = &Command{Hand: func(m *Message, c *Context, cmd string, arg ...string) { m.Save() }}
 	}
 
+	merge := func(pre *Command, before bool, key string, cmd *Command, cb ...CommandHandler) {
+		last := pre.Hand
+		pre.Hand = func(m *Message, c *Context, _key string, arg ...string) {
+			if before {
+				last(m, c, _key, arg...)
+			}
+			m._key, m._cmd = key, cmd
+			for _, cb := range cb {
+				if cb != nil {
+					cb(m, c, key, arg...)
+				}
+			}
+			m._key, m._cmd = _key, pre
+			if !before {
+				last(m, c, _key, arg...)
+			}
+		}
+	}
 	for key, cmd := range s.Commands {
 		if p, ok := c.Commands[key]; ok && s != c {
-			switch last, next := p.Hand, cmd.Hand; key {
+			switch hand := cmd.Hand; key {
 			case CTX_INIT:
-				cmd.Hand = func(m *Message, c *Context, key string, arg ...string) {
-					last(m, c, key, arg...)
-					next(m, c, key, arg...)
-				}
+				merge(p, true, key, cmd, hand)
 			case CTX_EXIT:
-				cmd.Hand = func(m *Message, c *Context, key string, arg ...string) {
-					next(m, c, key, arg...)
-					last(m, c, key, arg...)
-				}
+				merge(p, false, key, cmd, hand)
 			}
 		}
 
-		if cmd.Meta == nil {
-			cmd.Meta = kit.Dict()
-		}
 		if c.Commands[key] = cmd; cmd.List == nil {
 			cmd.List = c.split(cmd.Name)
 		}
-
-		merge := func(pre *Command, before bool, key string, cmd *Command, cb ...CommandHandler) {
-			last := pre.Hand
-			pre.Hand = func(m *Message, c *Context, _key string, arg ...string) {
-				if before {
-					last(m, c, _key, arg...)
-				}
-				m._key, m._cmd = key, cmd
-				for _, cb := range cb {
-					if cb != nil {
-						cb(m, c, key, arg...)
-					}
-				}
-				m._key, m._cmd = _key, pre
-				if !before {
-					last(m, c, _key, arg...)
-				}
-			}
+		if cmd.Meta == nil {
+			cmd.Meta = kit.Dict()
 		}
 
 		for k, a := range cmd.Action {
 			if p, ok := c.Commands[k]; ok {
-				switch hand := a.Hand; k {
+				switch h := a.Hand; k {
 				case CTX_INIT:
-					merge(p, true, key, cmd, func(m *Message, c *Context, _key string, arg ...string) {
-						hand(m, arg...)
-					})
+					merge(p, true, key, cmd, func(m *Message, c *Context, key string, arg ...string) { h(m, arg...) })
 				case CTX_EXIT:
-					merge(p, false, key, cmd, func(m *Message, c *Context, _key string, arg ...string) {
-						hand(m, arg...)
-					})
+					merge(p, false, key, cmd, func(m *Message, c *Context, key string, arg ...string) { h(m, arg...) })
 				}
 			}
+
 			if s != c {
 				switch k {
 				case "search":
-					merge(c.Commands[CTX_INIT], true, key, cmd, func(m *Message, c *Context, _key string, arg ...string) {
+					merge(c.Commands[CTX_INIT], true, key, cmd, func(m *Message, c *Context, key string, arg ...string) {
 						if m.CommandKey() != "search" {
 							m.Cmd("search", "create", m.CommandKey(), m.PrefixKey())
 						}
@@ -211,11 +206,10 @@ func (c *Context) Merge(s *Context) *Context {
 	}
 	return c
 }
-
 func (c *Context) Spawn(m *Message, name string, help string, arg ...string) *Context {
 	s := &Context{Name: name, Help: help}
-	if m.target.server != nil {
-		c.Register(s, m.target.server.Spawn(m, s, arg...))
+	if c.server != nil {
+		c.Register(s, c.server.Spawn(m, s, arg...))
 	} else {
 		c.Register(s, nil)
 	}
@@ -332,6 +326,14 @@ func (m *Message) Spawn(arg ...interface{}) *Message {
 			json.Unmarshal(val, &msg.meta)
 		case Option:
 			msg.Option(val.Name, val.Value)
+		case map[string]interface{}:
+			for k, v := range val {
+				msg.Option(k, v)
+			}
+		case map[string]string:
+			for k, v := range val {
+				msg.Option(k, v)
+			}
 		case http.ResponseWriter:
 			msg.W = val
 		case *http.Request:
@@ -340,14 +342,6 @@ func (m *Message) Spawn(arg ...interface{}) *Message {
 			msg.target = val
 		case string:
 			msg._key = val
-		case map[string]string:
-			for k, v := range val {
-				msg.Option(k, v)
-			}
-		case map[string]interface{}:
-			for k, v := range val {
-				msg.Option(k, v)
-			}
 		}
 	}
 	return msg
@@ -364,41 +358,23 @@ func (m *Message) Travel(cb interface{}) *Message {
 			cb(list[i].context, list[i])
 
 		case func(*Context, *Context, string, *Command):
-			ls := []string{}
-			for k := range list[i].Commands {
-				ls = append(ls, k)
-			}
-			sort.Strings(ls)
-
 			target := m.target
-			for _, k := range ls { // 命令列表
+			for _, k := range kit.SortedKey(list[i].Commands) { // 命令列表
 				m.target = list[i]
 				cb(list[i].context, list[i], k, list[i].Commands[k])
 			}
 			m.target = target
 
 		case func(*Context, *Context, string, *Config):
-			ls := []string{}
-			for k := range list[i].Configs {
-				ls = append(ls, k)
-			}
-			sort.Strings(ls)
-
 			target := m.target
-			for _, k := range ls { // 配置列表
+			for _, k := range kit.SortedKey(list[i].Configs) { // 配置列表
 				m.target = list[i]
 				cb(list[i].context, list[i], k, list[i].Configs[k])
 			}
 			m.target = target
 		}
 
-		ls := []string{}
-		for k := range list[i].Contexts {
-			ls = append(ls, k)
-		}
-		sort.Strings(ls)
-
-		for _, k := range ls { // 遍历递进
+		for _, k := range kit.SortedKey(list[i].Contexts) { // 遍历递进
 			list = append(list, list[i].Contexts[k])
 		}
 	}
@@ -510,11 +486,10 @@ func (m *Message) Cmdx(arg ...interface{}) string {
 func (m *Message) Cmdy(arg ...interface{}) *Message {
 	return m.Copy(m.cmd(arg...))
 }
-
 func (m *Message) Confi(key string, sub string) int {
 	return kit.Int(m.Conf(key, sub))
 }
-func (m *Message) Confv(arg ...interface{}) (val interface{}) {
+func (m *Message) Confv(arg ...interface{}) (val interface{}) { // key sub val
 	run := func(conf *Config) {
 		if len(arg) == 1 {
 			val = conf.Value
@@ -541,15 +516,15 @@ func (m *Message) Confv(arg ...interface{}) (val interface{}) {
 	}
 	return
 }
-func (m *Message) Confm(key string, chain interface{}, cbs ...interface{}) map[string]interface{} {
-	val := m.Confv(key, chain)
+func (m *Message) Confm(key string, sub interface{}, cbs ...interface{}) map[string]interface{} {
+	val := m.Confv(key, sub)
 	if len(cbs) > 0 {
 		kit.Fetch(val, cbs[0])
 	}
 	value, _ := val.(map[string]interface{})
 	return value
 }
-func (m *Message) Conf(arg ...interface{}) string {
+func (m *Message) Conf(arg ...interface{}) string { // key sub val
 	return kit.Format(m.Confv(arg...))
 }
 func (m *Message) Capi(key string, val ...interface{}) int {

@@ -70,9 +70,9 @@ func CmdAction(fields ...string) map[string]*ice.Action {
 
 const (
 	ACTION  = "action"
+	STYLE   = "style"
 	INDEX   = "index"
 	ARGS    = "args"
-	STYLE   = "style"
 	DISPLAY = "display"
 )
 const COMMAND = "command"

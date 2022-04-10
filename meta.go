@@ -1,7 +1,6 @@
 package ice
 
 import (
-	"sort"
 	"strconv"
 	"strings"
 
@@ -17,8 +16,17 @@ func (m *Message) Set(key string, arg ...string) *Message {
 			if len(arg) > 0 {
 				for i := 0; i < len(m.meta[KEY]); i++ {
 					if m.meta[KEY][i] == arg[0] {
-						m.meta[KEY][i] = ""
-						m.meta[VALUE][i] = ""
+						if len(arg) > 1 {
+							m.meta[VALUE][i] = arg[1]
+							break
+						}
+						for ; i < len(m.meta[KEY])-1; i++ {
+							m.meta[KEY][i] = m.meta[KEY][i+1]
+							m.meta[VALUE][i] = m.meta[VALUE][i+1]
+						}
+						m.meta[KEY] = kit.Slice(m.meta[KEY], 0, -1)
+						m.meta[VALUE] = kit.Slice(m.meta[VALUE], 0, -1)
+						break
 					}
 				}
 				return m
@@ -47,7 +55,7 @@ func (m *Message) Set(key string, arg ...string) *Message {
 				if m.meta[KEY][i] == key {
 					if len(arg) > 0 {
 						m.meta[VALUE][i] = arg[0]
-						return m
+						break
 					}
 					for ; i < len(m.meta[KEY])-1; i++ {
 						m.meta[KEY][i] = m.meta[KEY][i+1]
@@ -100,10 +108,7 @@ func (m *Message) Push(key string, value interface{}, arg ...interface{}) *Messa
 		if len(arg) > 0 {
 			head = kit.Simple(arg[0])
 		} else { // 键值排序
-			for k := range kit.KeyValue(map[string]interface{}{}, "", value) {
-				head = append(head, k)
-			}
-			sort.Strings(head)
+			head = kit.SortedKey(kit.KeyValue(map[string]interface{}{}, "", value))
 		}
 
 		var val map[string]interface{}
@@ -146,10 +151,7 @@ func (m *Message) Push(key string, value interface{}, arg ...interface{}) *Messa
 		if len(arg) > 0 {
 			head = kit.Simple(arg[0])
 		} else { // 键值排序
-			for k := range value {
-				head = append(head, k)
-			}
-			sort.Strings(head)
+			head = kit.SortedKey(value)
 		}
 
 		for _, k := range head {
@@ -202,100 +204,13 @@ func (m *Message) Copy(msg *Message, arg ...string) *Message {
 	m.meta[MSG_RESULT] = append(m.meta[MSG_RESULT], msg.meta[MSG_RESULT]...)
 	return m
 }
-func (m *Message) Sort(key string, arg ...string) *Message {
-	ls := kit.Split(key)
-	key = ls[0]
-
-	if m.FieldsIsDetail() && key != KEY {
-		return m
-	}
-	// 排序方法
-	cmp := "str"
-	if len(arg) > 0 && arg[0] != "" {
-		cmp = arg[0]
-	} else {
-		cmp = "int"
-		for _, v := range m.meta[key] {
-			if _, e := strconv.Atoi(v); e != nil {
-				cmp = "str"
-			}
-		}
-	}
-
-	// 排序因子
-	number := map[int]int64{}
-	table := []map[string]string{}
-	m.Table(func(index int, line map[string]string, head []string) {
-		switch table = append(table, line); cmp {
-		case "int":
-			number[index] = kit.Int64(line[key])
-		case "int_r":
-			number[index] = -kit.Int64(line[key])
-		case "time":
-			number[index] = int64(kit.Time(line[key]))
-		case "time_r":
-			number[index] = -int64(kit.Time(line[key]))
-		}
-	})
-	compare := func(i, j int, op string) bool {
-		for k := range ls[1:] {
-			if table[i][ls[k]] == table[j][ls[k]] {
-				continue
-			}
-
-			if op == ">" && table[i][ls[k]] > table[j][ls[k]] {
-				return true
-			}
-			if op == "<" && table[i][ls[k]] < table[j][ls[k]] {
-				return true
-			}
-			return false
-		}
-		return false
-	}
-
-	// 排序数据
-	for i := 0; i < len(table)-1; i++ {
-		for j := i + 1; j < len(table); j++ {
-			result := false
-			switch cmp {
-			case "", "str":
-				if table[i][key] > table[j][key] {
-					result = true
-				} else if table[i][key] == table[j][key] && compare(i, j, ">") {
-					result = true
-				}
-			case "str_r":
-				if table[i][key] < table[j][key] {
-					result = true
-				} else if table[i][key] == table[j][key] && compare(i, j, "<") {
-					result = true
-				}
-			default:
-				if number[i] > number[j] {
-					result = true
-				} else if table[i][key] == table[j][key] && compare(i, j, ">") {
-					result = true
-				}
-			}
-
-			if result {
-				table[i], table[j] = table[j], table[i]
-				number[i], number[j] = number[j], number[i]
-			}
-		}
-	}
-
-	// 输出数据
+func (m *Message) Length() (max int) {
 	for _, k := range m.meta[MSG_APPEND] {
-		delete(m.meta, k)
-	}
-	for _, v := range table {
-		for _, k := range m.meta[MSG_APPEND] {
-			m.Add(MSG_APPEND, k, v[k])
+		if l := len(m.meta[k]); l > max {
+			max = l
 		}
 	}
-	return m
+	return max
 }
 func (m *Message) Tables(cbs ...func(value map[string]string)) *Message {
 	return m.Table(func(index int, value map[string]string, head []string) {
@@ -388,6 +303,106 @@ func (m *Message) Table(cbs ...func(index int, value map[string]string, head []s
 	}
 	return m
 }
+func (m *Message) Sort(key string, arg ...string) *Message {
+	ls := kit.Split(key)
+	if key = ls[0]; m.FieldsIsDetail() && key != KEY {
+		return m
+	}
+
+	// 排序方法
+	cmp := "str"
+	if len(arg) > 0 && arg[0] != "" {
+		cmp = arg[0]
+	} else {
+		cmp = "int"
+		for _, v := range m.meta[key] {
+			if _, e := strconv.Atoi(v); e != nil {
+				cmp = "str"
+			}
+		}
+	}
+
+	// 排序因子
+	number := map[int]int64{}
+	table := []map[string]string{}
+	m.Table(func(index int, line map[string]string, head []string) {
+		switch table = append(table, line); cmp {
+		case "int":
+			number[index] = kit.Int64(line[key])
+		case "int_r":
+			number[index] = -kit.Int64(line[key])
+		case "time":
+			number[index] = int64(kit.Time(line[key]))
+		case "time_r":
+			number[index] = -int64(kit.Time(line[key]))
+		}
+	})
+	compare := func(i, j int, op string) bool {
+		for k := range ls[1:] {
+			if table[i][ls[k]] == table[j][ls[k]] {
+				continue
+			}
+
+			if op == ">" && table[i][ls[k]] > table[j][ls[k]] {
+				return true
+			}
+			if op == "<" && table[i][ls[k]] < table[j][ls[k]] {
+				return true
+			}
+			return false
+		}
+		return false
+	}
+
+	// 排序数据
+	for i := 0; i < len(table)-1; i++ {
+		for j := i + 1; j < len(table); j++ {
+			result := false
+			switch cmp {
+			case "", "str":
+				if table[i][key] > table[j][key] {
+					result = true
+				} else if table[i][key] == table[j][key] && compare(i, j, ">") {
+					result = true
+				}
+			case "str_r":
+				if table[i][key] < table[j][key] {
+					result = true
+				} else if table[i][key] == table[j][key] && compare(i, j, "<") {
+					result = true
+				}
+			default:
+				if number[i] > number[j] {
+					result = true
+				} else if table[i][key] == table[j][key] && compare(i, j, ">") {
+					result = true
+				}
+			}
+
+			if result {
+				table[i], table[j] = table[j], table[i]
+				number[i], number[j] = number[j], number[i]
+			}
+		}
+	}
+
+	// 输出数据
+	for _, k := range m.meta[MSG_APPEND] {
+		delete(m.meta, k)
+	}
+	for _, v := range table {
+		for _, k := range m.meta[MSG_APPEND] {
+			m.Add(MSG_APPEND, k, v[k])
+		}
+	}
+	return m
+}
+func (m *Message) SortInt(key string)   { m.Sort(key, "int") }
+func (m *Message) SortIntR(key string)  { m.Sort(key, "int_r") }
+func (m *Message) SortStr(key string)   { m.Sort(key, "str") }
+func (m *Message) SortStrR(key string)  { m.Sort(key, "str_r") }
+func (m *Message) SortTime(key string)  { m.Sort(key, "time") }
+func (m *Message) SortTimeR(key string) { m.Sort(key, "time_r") }
 
 func (m *Message) Detail(arg ...interface{}) string {
 	return kit.Select("", m.meta[MSG_DETAIL], 0)
@@ -477,10 +492,3 @@ func (m *Message) Result(arg ...interface{}) string {
 	}
 	return strings.Join(m.Resultv(arg...), "")
 }
-
-func (m *Message) SortInt(key string)   { m.Sort(key, "int") }
-func (m *Message) SortIntR(key string)  { m.Sort(key, "int_r") }
-func (m *Message) SortStr(key string)   { m.Sort(key, "str") }
-func (m *Message) SortStrR(key string)  { m.Sort(key, "str_r") }
-func (m *Message) SortTime(key string)  { m.Sort(key, "time") }
-func (m *Message) SortTimeR(key string) { m.Sort(key, "time_r") }

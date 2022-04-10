@@ -72,15 +72,20 @@ const (
 	CHECK = "check"
 	BENCH = "bench"
 	PPROF = "pprof"
-	CLEAR = "clear"
 
 	TIMEOUT = "timeout"
 	STATUS  = "status"
 	ERROR   = "error"
-	START   = "start"
-	RESTART = "restart"
+	CLEAR   = "clear"
 	RELOAD  = "reload"
-	STOP    = "stop"
+	RESTART = "restart"
+
+	START = "start"
+	STOP  = "stop"
+	OPEN  = "open"
+	CLOSE = "close"
+	BEGIN = "begin"
+	END   = "end"
 
 	CODE = "code"
 	COST = "cost"
@@ -88,11 +93,6 @@ const (
 	FROM = "from"
 	MAIN = "main"
 	KILL = "kill"
-
-	OPEN  = "open"
-	CLOSE = "close"
-	BEGIN = "begin"
-	END   = "end"
 )
 
 const DAEMON = "daemon"

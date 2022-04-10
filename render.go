@@ -29,8 +29,8 @@ func Render(m *Message, cmd string, args ...interface{}) string {
 		}
 		list := []string{}
 		for _, k := range kit.Split(kit.Join(arg)) {
-			list = append(list, kit.Format(`<input type="button" name="%s" value="%s">`,
-				k, kit.Select(k, kit.Value(m._cmd.Meta, kit.Keys("_trans", k)), m.Option(MSG_LANGUAGE) != "en")))
+			list = append(list, kit.Format(`<input type="button" name="%s" value="%s">`, k,
+				kit.Select(k, kit.Value(m._cmd.Meta, kit.Keys("_trans", k)), m.Option(MSG_LANGUAGE) != "en")))
 		}
 		return kit.Join(list, SP)
 
@@ -77,8 +77,7 @@ func (m *Message) RenderDownload(args ...interface{}) *Message {
 }
 func (m *Message) RenderWebsite(pod string, dir string, arg ...string) *Message {
 	m.Cmdy("space", pod, "website", "action", "show", dir, arg)
-	m.RenderResult()
-	return m
+	return m.RenderResult()
 }
 func (m *Message) RenderIndex(serve, repos string, file ...string) *Message {
 	return m.RenderDownload(path.Join(m.Conf(serve, kit.Keym(repos, "path")), kit.Select(m.Conf(serve, kit.Keym(repos, INDEX)), path.Join(file...))))
@@ -89,20 +88,20 @@ func (m *Message) RenderCmd(index string, args ...interface{}) {
 		msg := m.Cmd(COMMAND, index)
 		list = kit.Format(kit.List(kit.Dict(
 			INDEX, index, ARGS, kit.Simple(args),
-			msg.AppendSimple(NAME, "help"),
-			"feature", kit.UnMarshal(msg.Append("meta")),
-			"inputs", kit.UnMarshal(msg.Append("list")),
+			msg.AppendSimple(NAME, HELP),
+			FEATURE, kit.UnMarshal(msg.Append(META)),
+			INPUTS, kit.UnMarshal(msg.Append(LIST)),
 		)))
 	}
 	m.RenderResult(kit.Format(`<!DOCTYPE html>
 <head>
-    <meta name="viewport" content="width=device-width,initial-scale=0.8,user-scalable=no">
     <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=0.8,user-scalable=no">
     <link rel="stylesheet" type="text/css" href="/page/can.css">
-</head>
-<body>
 	<script src="/page/can.js"></script>
 	<script>can(%s)</script>
+</head>
+<body>
 </body>
 `, list))
 }
@@ -115,29 +114,27 @@ func (m *Message) IsCliUA() bool {
 }
 func (m *Message) PushAnchor(arg ...interface{}) { // [name] link
 	if !m.IsCliUA() {
-		m.Push("link", Render(m, RENDER_ANCHOR, arg...))
+		m.Push(LINK, Render(m, RENDER_ANCHOR, arg...))
 	}
 }
 func (m *Message) PushButton(arg ...interface{}) { // name...
-	if m.FieldsIsDetail() {
-		for i, k := range m.meta["key"] {
-			if k == "action" {
-				m.meta["value"][i] = Render(m, RENDER_BUTTON, arg...)
-				return
-			}
-		}
-	}
-	if len(m.meta["action"]) >= m.Length() {
-		m.meta["action"] = []string{}
-	}
-
 	if !m.IsCliUA() {
+		if m.FieldsIsDetail() {
+			for i, k := range m.meta[KEY] {
+				if k == ACTION {
+					m.meta[VALUE][i] = Render(m, RENDER_BUTTON, arg...)
+					return
+				}
+			}
+		} else if len(m.meta[ACTION]) >= m.Length() {
+			m.meta[ACTION] = []string{}
+		}
 		m.Push(ACTION, Render(m, RENDER_BUTTON, arg...))
 	}
 }
 func (m *Message) PushScript(arg ...string) { // [type] text...
 	if !m.IsCliUA() {
-		m.Push("script", Render(m, RENDER_SCRIPT, arg))
+		m.Push(SCRIPT, Render(m, RENDER_SCRIPT, arg))
 	}
 }
 func (m *Message) PushQRCode(key string, src string, arg ...string) { // key src [size]
@@ -170,11 +167,26 @@ func (m *Message) PushAction(list ...interface{}) *Message {
 	if len(m.meta[MSG_APPEND]) == 0 {
 		return m
 	}
-	m.Set(MSG_APPEND, ACTION)
-	m.Table(func(index int, value map[string]string, head []string) {
+	return m.Set(MSG_APPEND, ACTION).Table(func(index int, value map[string]string, head []string) {
 		m.PushButton(list...)
 	})
-	return m
+}
+func (m *Message) PushSearch(args ...interface{}) {
+	data := kit.Dict(args...)
+	for _, k := range kit.Split(m.OptionFields()) {
+		switch k {
+		case POD:
+			m.Push(k, kit.Select("", data[k]))
+		case CTX:
+			m.Push(k, kit.Select(m.Prefix(), data[k]))
+		case CMD:
+			m.Push(k, kit.Select(m.CommandKey(), data[k]))
+		case TIME:
+			m.Push(k, kit.Select(m.Time(), data[k]))
+		default:
+			m.Push(k, kit.Select("", data[k]))
+		}
+	}
 }
 func (m *Message) PushPodCmd(cmd string, arg ...string) {
 	if m.Length() > 0 && len(m.Appendv(POD)) == 0 {
@@ -195,23 +207,6 @@ func (m *Message) PushPodCmd(cmd string, arg ...string) {
 			})
 		}
 	})
-}
-func (m *Message) PushSearch(args ...interface{}) {
-	data := kit.Dict(args...)
-	for _, k := range kit.Split(m.OptionFields()) {
-		switch k {
-		case POD:
-			m.Push(k, kit.Select("", data[k]))
-		case CTX:
-			m.Push(k, kit.Select(m.Prefix(), data[k]))
-		case CMD:
-			m.Push(k, kit.Select(m.CommandKey(), data[k]))
-		case TIME:
-			m.Push(k, kit.Select(m.Time(), data[k]))
-		default:
-			m.Push(k, kit.Select("", data[k]))
-		}
-	}
 }
 
 func (m *Message) EchoAnchor(arg ...interface{}) *Message { // [name] link
@@ -246,6 +241,12 @@ func (m *Message) DisplayBase(file string, arg ...interface{}) *Message {
 	m.Option(MSG_DISPLAY, kit.MergeURL(DisplayBase(file)[DISPLAY], arg...))
 	return m
 }
+func (m *Message) DisplayStory(file string, arg ...interface{}) *Message {
+	if !strings.HasPrefix(file, HTTP) && !strings.HasPrefix(file, PS) {
+		file = path.Join(PLUGIN_STORY, file)
+	}
+	return m.DisplayBase(file, arg...)
+}
 func (m *Message) DisplayLocal(file string, arg ...interface{}) *Message {
 	if file == "" {
 		file = path.Join(kit.PathName(2), kit.Keys(kit.FileName(2), JS))
@@ -255,22 +256,22 @@ func (m *Message) DisplayLocal(file string, arg ...interface{}) *Message {
 	}
 	return m.DisplayBase(file, arg...)
 }
-func (m *Message) DisplayStory(file string, arg ...interface{}) *Message {
-	if !strings.HasPrefix(file, HTTP) && !strings.HasPrefix(file, PS) {
-		file = path.Join(PLUGIN_STORY, file)
-	}
-	return m.DisplayBase(file, arg...)
-}
-func (m *Message) DisplayStoryJSON(arg ...interface{}) *Message {
-	return m.DisplayStory("json", arg...)
-}
 func (m *Message) Display(file string, arg ...interface{}) *Message {
 	m.Option(MSG_DISPLAY, kit.MergeURL(DisplayRequire(2, file)[DISPLAY], arg...))
 	return m
 }
+func (m *Message) DisplayStoryJSON(arg ...interface{}) *Message {
+	return m.DisplayStory("json", arg...)
+}
 
 func DisplayBase(file string, arg ...string) map[string]string {
 	return map[string]string{DISPLAY: file, STYLE: kit.Join(arg, SP)}
+}
+func DisplayStory(file string, arg ...string) map[string]string {
+	if !strings.HasPrefix(file, HTTP) && !strings.HasPrefix(file, PS) {
+		file = path.Join(PLUGIN_STORY, file)
+	}
+	return DisplayBase(file, arg...)
 }
 func DisplayLocal(file string, arg ...string) map[string]string {
 	if file == "" {
@@ -278,12 +279,6 @@ func DisplayLocal(file string, arg ...string) map[string]string {
 	}
 	if !strings.HasPrefix(file, HTTP) && !strings.HasPrefix(file, PS) {
 		file = path.Join(PLUGIN_LOCAL, file)
-	}
-	return DisplayBase(file, arg...)
-}
-func DisplayStory(file string, arg ...string) map[string]string {
-	if !strings.HasPrefix(file, HTTP) && !strings.HasPrefix(file, PS) {
-		file = path.Join(PLUGIN_STORY, file)
 	}
 	return DisplayBase(file, arg...)
 }

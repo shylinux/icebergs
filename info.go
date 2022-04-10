@@ -21,6 +21,8 @@ type MakeInfo struct {
 }
 
 var Info = struct {
+	Make MakeInfo
+
 	HostName string
 	PathName string
 	UserName string
@@ -33,12 +35,11 @@ var Info = struct {
 	CtxShare string
 	CtxRiver string
 
-	Make MakeInfo
-
 	Help  string
-	Pack  map[string][]byte
-	File  map[string]string
-	Route map[string]string
+	Route map[string]string // 路由命令
+	File  map[string]string // 文件命令
+	Pack  map[string][]byte // 打包文件
+	Dump  func(w io.Writer, name string, cb func(string)) bool
 	Log   func(m *Message, p, l, s string)
 
 	render map[string]func(*Message, string, ...interface{}) string
@@ -52,15 +53,17 @@ report: shylinuxc@gmail.com
 server: https://shylinux.com
 source: https://shylinux.com/x/icebergs
 `,
-	Pack:  map[string][]byte{},
-	File:  map[string]string{},
 	Route: map[string]string{},
+	File:  map[string]string{},
+	Pack:  map[string][]byte{},
+	Dump:  func(w io.Writer, name string, cb func(string)) bool { return false },
+	Log:   func(m *Message, p, l, s string) {},
 
 	render: map[string]func(*Message, string, ...interface{}) string{},
 	names:  map[string]interface{}{},
 }
 
-func FileKey(dir string) string {
+func FileCmd(dir string) string {
 	dir = strings.Split(dir, DF)[0]
 	dir = strings.ReplaceAll(dir, ".js", ".go")
 	dir = strings.ReplaceAll(dir, ".sh", ".go")
@@ -71,7 +74,6 @@ func FileKey(dir string) string {
 	if Info.Make.Path != "" && strings.HasPrefix(dir, Info.Make.Path+PS) {
 		dir = strings.TrimPrefix(dir, Info.Make.Path+PS)
 	}
-	// println("what ", dir, kit.Path(""), Info.Make.Path)
 	if strings.HasPrefix(dir, kit.Path("")+PS) {
 		dir = strings.TrimPrefix(dir, kit.Path("")+PS)
 	}
@@ -83,25 +85,5 @@ func FileKey(dir string) string {
 	}
 	return dir
 }
-func AddFileKey(dir, key string) {
-	Info.File[FileKey(dir)] = key
-}
-func GetFileKey(dir string) string {
-	return Info.File[FileKey(dir)]
-}
-
-var Dump = func(w io.Writer, name string, cb func(string)) bool { return false }
-
-func name(name string, value interface{}) string {
-	if s, ok := Info.names[name]; ok {
-		last := ""
-		switch s := s.(type) {
-		case *Context:
-			last = s.Name
-		}
-		panic(kit.Format("%s %s %v", ErrExists, name, last))
-	}
-
-	Info.names[name] = value
-	return name
-}
+func AddFileCmd(dir, key string)   { Info.File[FileCmd(dir)] = key }
+func GetFileCmd(dir string) string { return Info.File[FileCmd(dir)] }

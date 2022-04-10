@@ -15,9 +15,6 @@ import (
 	"shylinux.com/x/websocket"
 )
 
-func _space_link(m *ice.Message, pod string, arg ...interface{}) string {
-	return tcp.ReplaceLocalhost(m, kit.MergePOD(m.Option(ice.MSG_USERWEB), pod, arg...))
-}
 func _space_domain(m *ice.Message) (link string) {
 	if link = m.Config(DOMAIN); link == "" {
 		link = m.Cmd(SPACE, ice.DEV, cli.PWD).Append(mdb.LINK)
@@ -201,7 +198,7 @@ func _space_search(m *ice.Message, kind, name, text string, arg ...string) {
 		case MASTER:
 			m.PushSearch(mdb.TEXT, m.Cmd(SPIDE, value[mdb.NAME], ice.OptionFields("")).Append("client.url"), value)
 		default:
-			m.PushSearch(mdb.TEXT, _space_link(m, kit.Keys(m.Option(ice.MSG_USERPOD), value[mdb.NAME])), value)
+			m.PushSearch(mdb.TEXT, m.MergePod(kit.Format(value[mdb.NAME])), value)
 		}
 	})
 	if name != "" {
@@ -309,9 +306,9 @@ func init() {
 					m.Table(func(index int, value map[string]string, head []string) {
 						switch value[mdb.TYPE] {
 						case MASTER:
-							m.PushAnchor(value[mdb.NAME], "http://"+value[mdb.TEXT])
+							m.PushAnchor(value[mdb.NAME], m.Cmd(SPIDE, value[mdb.NAME], ice.OptionFields("")).Append("client.url"))
 						default:
-							m.PushAnchor(value[mdb.NAME], _space_link(m, kit.Keys(m.Option(ice.MSG_USERPOD), value[mdb.NAME])))
+							m.PushAnchor(value[mdb.NAME], m.MergePod(value[mdb.NAME]))
 						}
 					})
 					m.Sort("type,name,text")

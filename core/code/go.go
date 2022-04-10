@@ -58,7 +58,7 @@ func _go_grep(m *ice.Message, key string, dir string) {
 	m.Cmd(nfs.GREP, dir, key).Tables(func(value map[string]string) { m.PushSearch(value) })
 }
 func _go_exec(m *ice.Message, arg ...string) {
-	if key := ice.GetFileKey(path.Join(arg[2], arg[1])); key != "" {
+	if key := ice.GetFileCmd(path.Join(arg[2], arg[1])); key != "" {
 		m.Cmdy(cli.SYSTEM, GO, ice.RUN, ice.SRC_MAIN_GO, key)
 	} else if m.Option(cli.CMD_DIR, arg[2]); strings.HasSuffix(arg[1], "_test.go") {
 		m.Cmdy(cli.SYSTEM, GO, "test", "-v", nfs.PWD+arg[1])
@@ -105,7 +105,7 @@ func _go_show(m *ice.Message, arg ...string) {
 			}
 		})
 	} else {
-		if key := ice.GetFileKey(path.Join(arg[2], arg[1])); key != "" {
+		if key := ice.GetFileCmd(path.Join(arg[2], arg[1])); key != "" {
 			m.ProcessCommand(key, kit.Simple())
 		} else {
 			m.ProcessCommand("web.wiki.word", kit.Simple(strings.ReplaceAll(path.Join(arg[2], arg[1]), ".go", ".shy")))

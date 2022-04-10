@@ -64,7 +64,7 @@ func (web *Frame) Start(m *ice.Message, arg ...string) bool {
 					return
 				}
 				msg.Log(ROUTE, "%s <- %s", s.Name, k)
-				ice.Info.Route[path.Join(list[s], k)] = ice.FileKey(kit.FileLine(x.Hand, 300))
+				ice.Info.Route[path.Join(list[s], k)] = ice.FileCmd(kit.FileLine(x.Hand, 300))
 				frame.HandleFunc(k, func(frame http.ResponseWriter, r *http.Request) {
 					m.TryCatch(msg.Spawn(), true, func(msg *ice.Message) {
 						_serve_handle(k, x, msg, frame, r)

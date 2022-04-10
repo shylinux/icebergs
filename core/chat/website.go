@@ -51,11 +51,11 @@ func _website_parse(m *ice.Message, text string, args ...string) (map[string]int
 		data := kit.Dict()
 		switch display := ice.DisplayRequire(1, ls[0])[ctx.DISPLAY]; kit.Ext(ls[0]) {
 		case nfs.JS:
-			key := ice.GetFileKey(display)
+			key := ice.GetFileCmd(display)
 			if key == "" {
 				if ls := strings.Split(display, ice.PS); len(ls) > 4 {
 					ls[3] = ice.USR
-					key = ice.GetFileKey(path.Join(ls[3:]...))
+					key = ice.GetFileCmd(path.Join(ls[3:]...))
 				}
 			}
 			if key == "" {
@@ -68,7 +68,7 @@ func _website_parse(m *ice.Message, text string, args ...string) (map[string]int
 			ls[0] = kit.Select("can.code.inner.plugin", key)
 			data[ctx.DISPLAY] = display
 		case nfs.GO:
-			key := ice.GetFileKey(display)
+			key := ice.GetFileCmd(display)
 			if key == "" {
 				for k, v := range ice.Info.File {
 					if strings.HasSuffix(k, ls[0]) {
@@ -78,7 +78,7 @@ func _website_parse(m *ice.Message, text string, args ...string) (map[string]int
 			}
 			ls[0] = key
 		case nfs.SH:
-			key := ice.GetFileKey(display)
+			key := ice.GetFileCmd(display)
 			if key == "" {
 				key = "cli.system"
 			}

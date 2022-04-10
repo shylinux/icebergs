@@ -14,8 +14,8 @@ const (
 	FALSE   = "false"
 	SUCCESS = "success"
 	FAILURE = "failure"
-	RESTART = "restart"
 	PROCESS = "process"
+	RESTART = "restart"
 	OF      = " of "
 
 	INIT = "init"
@@ -201,15 +201,6 @@ const ( // MSG
 	MSG_STORM = "sess.storm"
 	MSG_TOAST = "sess.toast"
 	MSG_LOCAL = "sess.local"
-
-	CACHE_LIMIT  = "cache.limit"
-	CACHE_BEGIN  = "cache.begin"
-	CACHE_COUNT  = "cache.count"
-	CACHE_OFFEND = "cache.offend"
-	CACHE_FILTER = "cache.filter"
-	CACHE_VALUE  = "cache.value"
-	CACHE_FIELD  = "cache.field"
-	CACHE_DETAIL = "detail"
 )
 const ( // RENDER
 	RENDER_RAW      = "_raw"
@@ -242,19 +233,30 @@ const ( // PROCESS
 
 	FIELD_PREFIX = "_prefix"
 )
-const ( // Err
-	ErrWarn         = "warn: "
-	ErrPanic        = "panic: "
-	ErrExists       = "exists: "
-	ErrExpire       = "expire: "
-	ErrTimeout      = "timeout: "
-	ErrFailure      = "failure: "
-	ErrNotLogin     = "not login: "
-	ErrNotFound     = "not found: "
-	ErrNotRight     = "not right: "
-	ErrNotStart     = "not start: "
-	ErrNotImplement = "not implement: "
+const ( // CACHE
+	CACHE_LIMIT  = "cache.limit"
+	CACHE_BEGIN  = "cache.begin"
+	CACHE_COUNT  = "cache.count"
+	CACHE_OFFEND = "cache.offend"
+	CACHE_FILTER = "cache.filter"
+	CACHE_VALUE  = "cache.value"
+	CACHE_FIELD  = "cache.field"
+	CACHE_DETAIL = "detail"
 )
+const ( // CTX
+	CTX_FOLLOW = "follow"
+	CTX_STATUS = "status"
+	CTX_STREAM = "stream"
+
+	CTX_BEGIN = "begin"
+	CTX_START = "start"
+	CTX_SERVE = "serve"
+	CTX_CLOSE = "close"
+
+	CTX_INIT = "_init"
+	CTX_EXIT = "_exit"
+)
+
 const ( // LOG
 	// 通用
 	LOG_INFO  = "info"
@@ -285,18 +287,18 @@ const ( // LOG
 	LOG_EXPORT = "export"
 	LOG_IMPORT = "import"
 )
-const ( // CTX
-	CTX_FOLLOW = "follow"
-	CTX_STATUS = "status"
-	CTX_STREAM = "stream"
-
-	CTX_BEGIN = "begin"
-	CTX_START = "start"
-	CTX_SERVE = "serve"
-	CTX_CLOSE = "close"
-
-	CTX_INIT = "_init"
-	CTX_EXIT = "_exit"
+const ( // Err
+	ErrWarn         = "warn: "
+	ErrPanic        = "panic: "
+	ErrExists       = "exists: "
+	ErrExpire       = "expire: "
+	ErrTimeout      = "timeout: "
+	ErrFailure      = "failure: "
+	ErrNotLogin     = "not login: "
+	ErrNotFound     = "not found: "
+	ErrNotRight     = "not right: "
+	ErrNotStart     = "not start: "
+	ErrNotImplement = "not implement: "
 )
 
 const (
@@ -313,26 +315,32 @@ const (
 	SSH = "ssh"
 	MDB = "mdb"
 )
-const (
-	CONFIG  = "config"
+const ( // ctx
 	COMMAND = "command"
 	ACTION  = "action"
+	CONFIG  = "config"
 	STYLE   = "style"
 	INDEX   = "index"
 	ARGS    = "args"
+	INPUTS  = "inputs"
+	FEATURE = "feature"
 )
-const (
+const ( // web
 	SERVE = "serve"
 	SPACE = "space"
 	SPIDE = "spide"
 	CACHE = "cache"
 )
-const (
-	KEY   = "key"
-	VALUE = "value"
-	HASH  = "hash"
-	TIME  = "time"
-	TYPE  = "type"
-	NAME  = "name"
-	TEXT  = "text"
+const ( // mdb
+	KEY    = "key"
+	VALUE  = "value"
+	SCRIPT = "script"
+	LINK   = "link"
+
+	META = "meta"
+	HASH = "hash"
+	TIME = "time"
+	TYPE = "type"
+	NAME = "name"
+	TEXT = "text"
 )

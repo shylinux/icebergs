@@ -45,7 +45,7 @@ func init() {
 				LoadPlug(m, JS)
 			}},
 			mdb.RENDER: {Hand: func(m *ice.Message, arg ...string) {
-				key := ice.GetFileKey(kit.Replace(path.Join(arg[2], arg[1]), ".js", ".go"))
+				key := ice.GetFileCmd(kit.Replace(path.Join(arg[2], arg[1]), ".js", ".go"))
 				if key == "" {
 					for p, k := range ice.Info.File {
 						if strings.HasPrefix(p, path.Dir(path.Join(arg[2], arg[1]))) {

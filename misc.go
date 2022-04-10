@@ -3,22 +3,12 @@ package ice
 import (
 	"bytes"
 	"encoding/csv"
-	"net/url"
-	"path"
 	"reflect"
 	"strings"
 
 	kit "shylinux.com/x/toolkits"
 )
 
-func (m *Message) Length() (max int) {
-	for _, k := range m.meta[MSG_APPEND] {
-		if l := len(m.meta[k]); l > max {
-			max = l
-		}
-	}
-	return max
-}
 func (m *Message) CSV(text string, head ...string) *Message {
 	bio := bytes.NewBufferString(text)
 	r := csv.NewReader(bio)
@@ -36,9 +26,6 @@ func (m *Message) CSV(text string, head ...string) *Message {
 		}
 	}
 	return m
-}
-func (m *Message) SplitIndex(str string, arg ...string) *Message {
-	return m.Split(str, kit.Simple("index", arg)...)
 }
 func (m *Message) Split(str string, arg ...string) *Message { // field sp nl
 	m.Set(MSG_APPEND).Set(MSG_RESULT)
@@ -84,38 +71,18 @@ func (m *Message) Split(str string, arg ...string) *Message { // field sp nl
 	}
 	return m
 }
-
-func (m *Message) FieldsIsDetail() bool {
-	if m.OptionFields() == CACHE_DETAIL {
-		return true
-	}
-	if len(m.meta[MSG_APPEND]) == 2 && m.meta[MSG_APPEND][0] == KEY && m.meta[MSG_APPEND][1] == VALUE {
-		return true
-	}
-	return false
+func (m *Message) SplitIndex(str string, arg ...string) *Message {
+	return m.Split(str, kit.Simple("index", arg)...)
 }
-
 func (m *Message) PushDetail(value interface{}, arg ...interface{}) *Message {
 	return m.Push(CACHE_DETAIL, value, arg...)
 }
-func (m *Message) IsErr(arg ...string) bool {
-	return len(arg) > 0 && m.Result(1) == arg[0] || m.Result(0) == ErrWarn
-}
-func (m *Message) IsErrNotFound() bool { return m.Result(1) == ErrNotFound }
+
 func (m *Message) OptionCB(key string, cb ...interface{}) interface{} {
 	if len(cb) > 0 {
 		return m.Optionv(kit.Keycb(key), cb...)
 	}
 	return m.Optionv(kit.Keycb(key))
-}
-func (m *Message) OptionUserWeb() *url.URL {
-	return kit.ParseURL(m.Option(MSG_USERWEB))
-}
-func (m *Message) SetResult(arg ...string) *Message {
-	return m.Set(MSG_RESULT, arg...)
-}
-func (m *Message) SetAppend(arg ...string) *Message {
-	return m.Set(MSG_APPEND, arg...)
 }
 func (m *Message) ToLowerAppend(arg ...string) *Message {
 	for _, k := range m.meta[MSG_APPEND] {
@@ -166,30 +133,17 @@ func (m *Message) AppendTrans(cb func(value string, key string, index int) strin
 	}
 	return m
 }
-func (m *Message) MergeLink(url string, arg ...interface{}) string {
-	return strings.Split(kit.MergeURL2(m.Option(MSG_USERWEB), url, arg...), "?")[0]
+func (m *Message) SetAppend(arg ...string) *Message {
+	return m.Set(MSG_APPEND, arg...)
 }
-func (m *Message) MergeURL2(url string, arg ...interface{}) string {
-	return kit.MergeURL2(m.Option(MSG_USERWEB), url, arg...)
+func (m *Message) SetResult(arg ...string) *Message {
+	return m.Set(MSG_RESULT, arg...)
 }
-func (m *Message) MergePod(name string, arg ...interface{}) string {
-	return kit.MergePOD(kit.Select(Info.Domain, m.Option(MSG_USERWEB)), name, arg...)
+
+func (m *Message) IsErr(arg ...string) bool {
+	return len(arg) > 0 && m.Result(1) == arg[0] || m.Result(0) == ErrWarn
 }
-func (m *Message) MergeCmd(name string, arg ...interface{}) string {
-	if name == "" {
-		name = m.PrefixKey()
-	}
-	if m.Option(MSG_USERPOD) == "" {
-		return kit.MergeURL2(kit.Select(Info.Domain, m.Option(MSG_USERWEB)), path.Join("/chat/cmd", name))
-	}
-	return kit.MergeURL2(kit.Select(Info.Domain, m.Option(MSG_USERWEB)), path.Join("cmd", name), arg...)
-}
-func (m *Message) MergeWebsite(name string, arg ...interface{}) string {
-	if m.Option(MSG_USERPOD) == "" {
-		return kit.MergeURL2(kit.Select(Info.Domain, m.Option(MSG_USERWEB)), path.Join("/chat/website", name))
-	}
-	return kit.MergeURL2(kit.Select(Info.Domain, m.Option(MSG_USERWEB)), path.Join("website", name), arg...)
-}
+func (m *Message) IsErrNotFound() bool { return m.Result(1) == ErrNotFound }
 
 func (m *Message) cmd(arg ...interface{}) *Message {
 	opts := map[string]interface{}{}
@@ -199,9 +153,10 @@ func (m *Message) cmd(arg ...interface{}) *Message {
 	// 解析参数
 	for _, v := range arg {
 		switch val := v.(type) {
-		case func(int, map[string]string, []string):
-			defer func() { m.Table(val) }()
-
+		case Option:
+			opts[val.Name] = val.Value
+		case *Option:
+			opts[val.Name] = val.Value
 		case map[string]interface{}:
 			for k, v := range val {
 				opts[k] = v
@@ -210,14 +165,11 @@ func (m *Message) cmd(arg ...interface{}) *Message {
 			for k, v := range val {
 				opts[k] = v
 			}
-
-		case *Option:
-			opts[val.Name] = val.Value
-		case Option:
-			opts[val.Name] = val.Value
-
 		case string:
 			args = append(args, v)
+
+		case func(int, map[string]string, []string):
+			defer func() { m.Table(val) }()
 		default:
 			if reflect.Func == reflect.TypeOf(val).Kind() {
 				cbs = val

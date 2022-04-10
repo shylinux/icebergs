@@ -2,7 +2,6 @@ package ice
 
 import (
 	"os"
-	"path"
 	"strings"
 	"sync"
 	"time"
@@ -133,9 +132,6 @@ func Run(arg ...string) string {
 			os.Exit(kit.Int(Pulse.Option(EXIT)))
 		}
 	default: // 执行命令
-		if _, ok := Info.names[path.Base(os.Args[0])]; ok {
-			// arg = kit.Simple(path.Base(os.Args[0]), arg)
-		}
 		if len(arg) == 0 {
 			arg = append(arg, HELP)
 		}

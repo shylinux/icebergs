@@ -78,7 +78,7 @@ func init() {
 				if kit.FileExists(path.Join(ice.USR_VOLCANOS, ice.PROTO_JS)) {
 					m.Cmd(BINPACK, mdb.REMOVE)
 				} else {
-					ice.Dump = func(w io.Writer, name string, cb func(string)) bool {
+					ice.Info.Dump = func(w io.Writer, name string, cb func(string)) bool {
 						for _, key := range []string{name, strings.TrimPrefix(name, ice.USR_VOLCANOS)} {
 							if b, ok := ice.Info.Pack[key]; ok {
 								if cb != nil {
@@ -91,7 +91,7 @@ func init() {
 						return false
 					}
 					web.AddRewrite(func(w http.ResponseWriter, r *http.Request) bool {
-						if ice.Dump(w, r.URL.Path, func(name string) { web.RenderType(w, name, "") }) {
+						if ice.Info.Dump(w, r.URL.Path, func(name string) { web.RenderType(w, name, "") }) {
 							return true // 打包文件
 						}
 						return false
@@ -134,18 +134,25 @@ func init() {
 					fmt.Fprintln(f)
 
 					fmt.Fprintln(f, `func init() {`)
-					fmt.Fprintln(f, `	ice.Info.Pack = map[string][]byte{`)
+					defer fmt.Fprintln(f, `}`)
 
-					// _binpack_dir(m, f, ice.USR_LEARNING)
-					_binpack_can(m, f, ice.USR_VOLCANOS)
-					_binpack_dir(m, f, ice.USR_INTSHELL)
-					// _binpack_dir(m, f, ice.USR_ICEBERGS)
+					if kit.FileExists(ice.USR_VOLCANOS) && kit.FileExists(ice.USR_INTSHELL) {
+						fmt.Fprintln(f, `	ice.Info.Pack = map[string][]byte{`)
+						_binpack_can(m, f, ice.USR_VOLCANOS)
+						_binpack_dir(m, f, ice.USR_INTSHELL)
+						fmt.Fprintln(f, `	}`)
+					}
+
+					fmt.Fprintln(f, `	pack := map[string][]byte{`)
 					_binpack_ctx(m, f)
 					fmt.Fprintln(f, _binpack_file(m, ice.ETC_INIT_SHY))
 					fmt.Fprintln(f, _binpack_file(m, ice.ETC_EXIT_SHY))
-
 					fmt.Fprintln(f, `	}`)
-					fmt.Fprintln(f, `}`)
+					fmt.Fprintln(f, `
+	for k, v := range pack {
+		ice.Info.Pack[k] = v
+	}
+`)
 				}
 			}},
 			mdb.REMOVE: {Name: "remove", Help: "删除", Hand: func(m *ice.Message, arg ...string) {

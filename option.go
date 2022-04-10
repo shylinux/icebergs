@@ -2,6 +2,7 @@ package ice
 
 import (
 	"encoding/json"
+	"net/url"
 	"os"
 	"path"
 	"strings"
@@ -82,6 +83,15 @@ func (m *Message) OptionTemplate() string {
 	return kit.Join(res, SP)
 }
 
+func (m *Message) FieldsIsDetail() bool {
+	if len(m.meta[MSG_APPEND]) == 2 && m.meta[MSG_APPEND][0] == KEY && m.meta[MSG_APPEND][1] == VALUE {
+		return true
+	}
+	if m.OptionFields() == CACHE_DETAIL {
+		return true
+	}
+	return false
+}
 func (m *Message) Fields(length int, fields ...string) string {
 	return m.Option(MSG_FIELDS, kit.Select(kit.Select(CACHE_DETAIL, fields, length), m.Option(MSG_FIELDS)))
 }
@@ -127,9 +137,6 @@ func (m *Message) StatusTimeCountTotal(arg ...interface{}) {
 	m.Status(TIME, m.Time(), kit.MDB_COUNT, kit.Split(m.FormatSize())[0], kit.MDB_TOTAL, arg, kit.MDB_COST, m.FormatCost())
 }
 
-func (m *Message) Confirm(text string) string {
-	return m.Cmdx(SPACE, m.Option(MSG_DAEMON), "confirm", text)
-}
 func (m *Message) ToastProcess(arg ...interface{}) func() {
 	if len(arg) == 0 {
 		arg = kit.List("", "-1")
@@ -240,3 +247,31 @@ func (m *Message) ProcessAgain()          { m.Process(PROCESS_AGAIN) }
 func (m *Message) ProcessOpen(url string) { m.Process(PROCESS_OPEN, url) }
 func (m *Message) ProcessHold()           { m.Process(PROCESS_HOLD) }
 func (m *Message) ProcessBack()           { m.Process(PROCESS_BACK) }
+
+func (m *Message) OptionUserWeb() *url.URL {
+	return kit.ParseURL(m.Option(MSG_USERWEB))
+}
+func (m *Message) MergeLink(url string, arg ...interface{}) string {
+	return strings.Split(m.MergeURL2(url, arg...), "?")[0]
+}
+func (m *Message) MergeURL2(url string, arg ...interface{}) string {
+	return kit.MergeURL2(m.Option(MSG_USERWEB), url, arg...)
+}
+func (m *Message) MergePod(pod string, arg ...interface{}) string {
+	return kit.MergePOD(kit.Select(Info.Domain, m.Option(MSG_USERWEB)), pod, arg...)
+}
+func (m *Message) MergeCmd(cmd string, arg ...interface{}) string {
+	if cmd == "" {
+		cmd = m.PrefixKey()
+	}
+	if m.Option(MSG_USERPOD) == "" {
+		return kit.MergeURL2(kit.Select(Info.Domain, m.Option(MSG_USERWEB)), path.Join("/chat/cmd", cmd))
+	}
+	return kit.MergeURL2(kit.Select(Info.Domain, m.Option(MSG_USERWEB)), path.Join("cmd", cmd), arg...)
+}
+func (m *Message) MergeWebsite(web string, arg ...interface{}) string {
+	if m.Option(MSG_USERPOD) == "" {
+		return kit.MergeURL2(kit.Select(Info.Domain, m.Option(MSG_USERWEB)), path.Join("/chat/website", web))
+	}
+	return kit.MergeURL2(kit.Select(Info.Domain, m.Option(MSG_USERWEB)), path.Join("website", web), arg...)
+}

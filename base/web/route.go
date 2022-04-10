@@ -33,7 +33,7 @@ func _route_travel(m *ice.Message, route string) {
 }
 func _route_list(m *ice.Message) {
 	m.Table(func(index int, value map[string]string, field []string) {
-		m.PushAnchor(value[ROUTE], _space_link(m, kit.Keys(m.Option(ice.MSG_USERPOD), value[ROUTE])))
+		m.PushAnchor(value[ROUTE], m.MergePod(value[ROUTE]))
 
 		switch value[mdb.TYPE] {
 		case SERVER:

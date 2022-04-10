@@ -44,8 +44,8 @@ func (m *Message) log(level string, str string, arg ...interface{}) *Message {
 	// 长度截断
 	switch level {
 	case LOG_INFO, LOG_SEND, LOG_RECV:
-		if len(str) > 1024 {
-			str = str[:1024]
+		if len(str) > 2048 {
+			str = str[:2048]
 		}
 	}
 

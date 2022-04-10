@@ -133,6 +133,7 @@ func (c *Context) Merge(s *Context) *Context {
 			}
 		}
 	}
+
 	for key, cmd := range s.Commands {
 		if p, ok := c.Commands[key]; ok && s != c {
 			switch hand := cmd.Hand; key {

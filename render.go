@@ -98,10 +98,10 @@ func (m *Message) RenderCmd(index string, args ...interface{}) {
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width,initial-scale=0.8,user-scalable=no">
     <link rel="stylesheet" type="text/css" href="/page/can.css">
-	<script src="/page/can.js"></script>
-	<script>can(%s)</script>
 </head>
 <body>
+	<script src="/page/can.js"></script>
+	<script>can(%s)</script>
 </body>
 `, list))
 }

@@ -38,6 +38,9 @@ func _binpack_dir(m *ice.Message, f *os.File, dir string) {
 		if path.Base(value[nfs.PATH]) == "binpack.go" {
 			return
 		}
+		if path.Base(value[nfs.PATH]) == "go.sum" {
+			return
+		}
 		if strings.HasPrefix(value[nfs.PATH], "var/") {
 			return
 		}
@@ -136,7 +139,7 @@ func init() {
 					fmt.Fprintln(f, `func init() {`)
 					defer fmt.Fprintln(f, `}`)
 
-					if kit.FileExists(ice.USR_VOLCANOS) && kit.FileExists(ice.USR_INTSHELL) {
+					if kit.FileExists(ice.USR_VOLCANOS) && kit.FileExists(ice.USR_INTSHELL) && m.Option(ice.MSG_USERPOD) == "" {
 						fmt.Fprintln(f, `	ice.Info.Pack = map[string][]byte{`)
 						_binpack_can(m, f, ice.USR_VOLCANOS)
 						_binpack_dir(m, f, ice.USR_INTSHELL)

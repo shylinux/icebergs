@@ -2,6 +2,7 @@ package web
 
 import (
 	"net"
+	"strings"
 
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/mdb"
@@ -58,7 +59,9 @@ func _serve_udp(m *ice.Message, host, port string) {
 }
 func _broad_search(m *ice.Message, kind, name, text string, arg ...string) {
 	m.Richs(BROAD, nil, mdb.FOREACH, func(key string, value map[string]interface{}) {
-		value = kit.GetMeta(value)
+		if value = kit.GetMeta(value); !strings.Contains(kit.Format(value[tcp.HOST]), name) {
+			return
+		}
 		m.PushSearch(mdb.TYPE, "friend", mdb.TEXT, kit.Format("http://%s:%s", value[tcp.HOST], value[tcp.PORT]), value)
 	})
 }

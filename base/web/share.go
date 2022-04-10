@@ -75,13 +75,15 @@ func _share_local(m *ice.Message, arg ...string) {
 	if m.Option(ice.POD) != "" { // 远程文件
 		pp := path.Join(ice.VAR_PROXY, m.Option(ice.POD), p)
 		cache := time.Now().Add(-time.Hour * 240000)
+		var size int64
 		if s, e := os.Stat(pp); e == nil {
 			cache = s.ModTime()
+			size = s.Size()
 		}
 
 		// 上传文件
 		m.Cmd(SPACE, m.Option(ice.POD), SPIDE, ice.DEV, SPIDE_RAW, m.MergeURL2(SHARE_PROXY, nfs.PATH, ""),
-			SPIDE_PART, m.OptionSimple(ice.POD), nfs.PATH, p, CACHE, cache.Format(ice.MOD_TIME), UPLOAD, "@"+p)
+			SPIDE_PART, m.OptionSimple(ice.POD), nfs.PATH, p, nfs.SIZE, size, CACHE, cache.Format(ice.MOD_TIME), UPLOAD, "@"+p)
 
 		if s, e := os.Stat(pp); e == nil && !s.IsDir() {
 			p = pp

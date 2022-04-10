@@ -183,7 +183,11 @@ func _spide_part(m *ice.Message, arg ...string) (io.Reader, string) {
 	defer mp.Close()
 
 	cache := time.Now().Add(-time.Hour * 240000)
+	var size int64
 	for i := 1; i < len(arg)-1; i += 2 {
+		if arg[i] == nfs.SIZE {
+			size = kit.Int64(arg[i+1])
+		}
 		if arg[i] == SPIDE_CACHE {
 			if t, e := time.ParseInLocation(ice.MOD_TIME, arg[i+1], time.Local); e == nil {
 				cache = t
@@ -191,9 +195,9 @@ func _spide_part(m *ice.Message, arg ...string) (io.Reader, string) {
 		}
 		if strings.HasPrefix(arg[i+1], "@") {
 			if s, e := os.Stat(arg[i+1][1:]); e == nil {
-				m.Debug("local: %s cache: %s", s.ModTime(), cache)
-				if s.ModTime().Before(cache) {
-					break
+				m.Debug("local: %s size: %d size: %d cache: %s", s.ModTime(), s.Size(), size, cache)
+				if s.Size() == size && s.ModTime().Before(cache) {
+					// break
 				}
 			}
 			if f, e := os.Open(arg[i+1][1:]); m.Assert(e) {
@@ -341,8 +345,8 @@ func init() {
 				conf := m.Confm(cli.RUNTIME, "conf")
 				m.Cmd(SPIDE, mdb.CREATE, ice.OPS, kit.Select("http://127.0.0.1:9020", conf["ctx_ops"]))
 				m.Cmd(SPIDE, mdb.CREATE, ice.DEV, kit.Select("http://contexts.woa.com:80", conf["ctx_dev"]))
-				m.Cmd(SPIDE, mdb.CREATE, ice.SHY, kit.Select("https://shylinux.com:443", conf["ctx_shy"]))
-				// m.Cmd(SPIDE, mdb.CREATE, ice.SHY, kit.Select("https://contexts.com.cn:443", conf["ctx_shy"]))
+				m.Cmd(SPIDE, mdb.CREATE, ice.SHY, kit.Select("https://contexts.com.cn:443", conf["ctx_shy"]))
+				// m.Cmd(SPIDE, mdb.CREATE, ice.SHY, kit.Select("https://shylinux.com:443", conf["ctx_shy"]))
 			}},
 			mdb.CREATE: {Name: "create name address", Help: "添加", Hand: func(m *ice.Message, arg ...string) {
 				_spide_create(m, m.Option(mdb.NAME), m.Option(ADDRESS))

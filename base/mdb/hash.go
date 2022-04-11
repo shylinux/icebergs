@@ -93,7 +93,9 @@ func _hash_export(m *ice.Message, prefix, chain, file string) {
 }
 func _hash_import(m *ice.Message, prefix, chain, file string) {
 	f, e := os.Open(kit.Keys(file, JSON))
-	m.Assert(e)
+	if m.Warn(e) {
+		return
+	}
 	defer f.Close()
 
 	list := map[string]interface{}{}

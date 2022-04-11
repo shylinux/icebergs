@@ -90,7 +90,9 @@ func _zone_export(m *ice.Message, prefix, chain, file string) {
 }
 func _zone_import(m *ice.Message, prefix, chain, file string) {
 	f, e := os.Open(kit.Keys(file, CSV))
-	m.Assert(e)
+	if m.Warn(e) {
+		return
+	}
 	defer f.Close()
 
 	r := csv.NewReader(f)

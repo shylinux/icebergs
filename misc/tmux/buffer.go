@@ -75,6 +75,16 @@ func init() {
 				}
 				m.Cmdy(TEXT)
 			}},
+			mdb.SEARCH: {Name: "search type name text", Help: "搜索", Hand: func(m *ice.Message, arg ...string) {
+				if arg[0] == mdb.FOREACH && arg[1] == "" {
+					text := m.Cmdx(cli.SYSTEM, TMUX, "show-buffer")
+					if strings.HasPrefix(text, "http") {
+						m.PushSearch(mdb.TEXT, text)
+					} else {
+						m.PushSearch(mdb.TEXT, ice.Render(m, ice.RENDER_SCRIPT, text))
+					}
+				}
+			}},
 		}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			text := m.Cmdx(cli.SYSTEM, TMUX, "show-buffer")
 			m.EchoQRCode(text)

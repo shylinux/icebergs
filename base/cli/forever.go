@@ -36,7 +36,7 @@ func init() {
 				}
 
 				if p := m.Cmdx(nfs.CAT, m.Conf("gdb.signal", kit.Keym(nfs.PATH))); p != "" {
-					m.Cmd(SYSTEM, "kill", "-n", 3, p)
+					m.Cmd(SYSTEM, "kill", "-s", "QUIT", p)
 				}
 
 				m.Cmdy(FOREVER, kit.Select(os.Args[0], nfs.PWD+ice.BIN_ICE_BIN, kit.FileExists(ice.BIN_ICE_BIN)),

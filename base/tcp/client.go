@@ -46,8 +46,9 @@ func _client_dial(m *ice.Message, arg ...string) {
 	case func(net.Conn, error):
 		cb(c, e)
 	case func(net.Conn):
-		m.Assert(e)
-		cb(c)
+		if !m.Warn(e) {
+			cb(c)
+		}
 	case func(net.Conn, []byte, error):
 		b := make([]byte, ice.MOD_BUFS)
 		for {

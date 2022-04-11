@@ -293,7 +293,7 @@ func init() {
 
 						repos := kit.Select(ice.INTSHELL, ice.VOLCANOS, strings.Contains(r.Header.Get("User-Agent"), "Mozilla/5.0"))
 						if repos == ice.VOLCANOS {
-							if s := m.Cmdx("web.chat.website", "show", "index.iml", "Header", "", "River", "", "Action", "", "Footer", ""); s != "" {
+							if s := msg.Cmdx("web.chat.website", "show", "index.iml", "Header", "", "River", "", "Action", "", "Footer", ""); s != "" {
 								Render(msg, ice.RENDER_RESULT, s)
 								return true
 							}

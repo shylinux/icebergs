@@ -17,6 +17,9 @@ import (
 
 func _space_domain(m *ice.Message) (link string) {
 	if link = m.Config(DOMAIN); link == "" {
+		link = m.Cmd(SPACE, ice.OPS, cli.PWD).Append(mdb.LINK)
+	}
+	if link == "" {
 		link = m.Cmd(SPACE, ice.DEV, cli.PWD).Append(mdb.LINK)
 	}
 	if link == "" {
@@ -283,6 +286,9 @@ func init() {
 		SPACE: {Name: "space name cmd auto invite", Help: "空间站", Action: ice.MergeAction(map[string]*ice.Action{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
 				m.Conf(SPACE, mdb.HASH, "")
+			}},
+			"domain": {Name: "domain", Help: "域名", Hand: func(m *ice.Message, arg ...string) {
+				m.Echo(_space_domain(m))
 			}},
 			mdb.SEARCH: {Name: "search type name text", Help: "搜索", Hand: func(m *ice.Message, arg ...string) {
 				_space_search(m, arg[0], arg[1], kit.Select("", arg, 2))

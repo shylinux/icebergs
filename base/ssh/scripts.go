@@ -133,7 +133,13 @@ func (f *Frame) scan(m *ice.Message, h, line string) *Frame {
 	f.ps2 = kit.Simple(m.Confv(PROMPT, kit.Keym(PS2)))
 	ps := f.ps1
 
-	m.Sleep("100ms")
+	if h == STDIO {
+		m.Sleep("800ms")
+		pwd := ice.Render(m, ice.RENDER_QRCODE, m.Cmdx("space", "domain"))
+		m.Sleep("100ms")
+		f.printf(m, pwd+ice.NL)
+	}
+
 	m.I, m.O = f.stdin, f.stdout
 	bio := bufio.NewScanner(f.stdin)
 	for f.prompt(m, ps...); bio.Scan() && f.stdin != nil; f.prompt(m, ps...) {

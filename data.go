@@ -42,6 +42,11 @@ func (m *Message) ConfigSimple(key ...string) (list []string) {
 	}
 	return
 }
+func (m *Message) ConfigOption(key ...string) {
+	for _, k := range kit.Split(kit.Join(key, FS)) {
+		m.Config(k, kit.Select(m.Config(k), m.Option(k)))
+	}
+}
 func (m *Message) Save(arg ...string) *Message {
 	if len(arg) == 0 {
 		for k := range m.target.Configs {

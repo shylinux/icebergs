@@ -24,9 +24,7 @@ func init() {
 	}, Commands: map[string]*ice.Command{
 		OAUTH: {Name: "oauth hash auto", Help: "授权", Action: ice.MergeAction(map[string]*ice.Action{
 			"config": {Name: "config client_id client_secret redirect_uri", Help: "配置", Hand: func(m *ice.Message, arg ...string) {
-				m.Config(CLIENT_ID, m.Option(CLIENT_ID))
-				m.Config(CLIENT_SECRET, m.Option(CLIENT_SECRET))
-				m.Config(REDIRECT_URI, m.Option(REDIRECT_URI))
+				m.ConfigOption(CLIENT_ID, CLIENT_SECRET, REDIRECT_URI)
 			}},
 			"user": {Name: "user", Help: "用户", Hand: func(m *ice.Message, arg ...string) {
 				m.Option(web.SPIDE_HEADER, "Accept", web.ContentJSON, "Authorization", "token "+m.Option(ACCESS_TOKEN))
@@ -40,7 +38,7 @@ func init() {
 			}},
 		}, mdb.HashAction()), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			if mdb.HashSelect(m, arg...).PushAction("user", ACCESS_TOKEN, mdb.REMOVE); len(arg) == 0 {
-				m.EchoAnchor(kit.MergeURL2(LOGIN_OAUTH, "authorize", m.ConfigSimple(REDIRECT_URI, CLIENT_ID)))
+				m.Echo(kit.MergeURL2(LOGIN_OAUTH, "authorize", m.ConfigSimple(REDIRECT_URI, CLIENT_ID)))
 			}
 		}},
 		"/oauth": {Name: "/oauth", Help: "授权", Action: ice.MergeAction(map[string]*ice.Action{}, ctx.CmdAction()), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {

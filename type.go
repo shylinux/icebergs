@@ -456,7 +456,7 @@ func (m *Message) Search(key string, cb interface{}) *Message {
 			break
 		}
 
-		for _, p := range []*Context{m.target, p, m.source} {
+		for _, p := range []*Context{p, m.target, m.source} {
 			for s := p; s != nil; s = s.context {
 				if cmd, ok := s.Configs[key]; ok {
 					cb(s.context, s, key, cmd) // 查找配置
@@ -508,9 +508,9 @@ func (m *Message) Confv(arg ...interface{}) (val interface{}) { // key sub val
 	}
 
 	key := kit.Format(arg[0])
-	if conf, ok := m.target.Configs[strings.TrimPrefix(key, m.target.Cap(CTX_FOLLOW)+PT)]; ok {
+	if conf, ok := m.target.Configs[key]; ok {
 		run(conf)
-	} else if conf, ok := m.source.Configs[strings.TrimPrefix(key, m.source.Cap(CTX_FOLLOW)+PT)]; ok {
+	} else if conf, ok := m.source.Configs[key]; ok {
 		run(conf)
 	} else {
 		m.Search(key, func(p *Context, s *Context, key string, conf *Config) { run(conf) })

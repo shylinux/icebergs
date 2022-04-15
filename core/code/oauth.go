@@ -2,9 +2,11 @@ package code
 
 import (
 	ice "shylinux.com/x/icebergs"
+	"shylinux.com/x/icebergs/base/aaa"
 	"shylinux.com/x/icebergs/base/ctx"
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/web"
+	"shylinux.com/x/icebergs/misc/ssh"
 	kit "shylinux.com/x/toolkits"
 )
 
@@ -31,14 +33,33 @@ func init() {
 				data := kit.UnMarshal(m.Cmdx(web.SPIDE_GET, "https://api.github.com/user"))
 				m.Cmdy(mdb.MODIFY, m.PrefixKey(), "", mdb.HASH, m.OptionSimple(mdb.HASH), kit.Simple(data))
 			}},
-			ACCESS_TOKEN: {Name: "access_token", Help: "访问", Hand: func(m *ice.Message, arg ...string) {
+			mdb.CREATE: {Name: "create code", Help: "创建", Hand: func(m *ice.Message, arg ...string) {
+				m.Cmdy(mdb.INSERT, m.PrefixKey(), "", mdb.HASH, m.OptionSimple(CODE))
+			}},
+			mdb.INPUTS: {Name: "inputs", Help: "补全", Hand: func(m *ice.Message, arg ...string) {
+				if arg[0] == mdb.HASH {
+					m.Cmdy(aaa.RSA).Cut("hash,title,public")
+					return
+				}
+				m.Cmdy(mdb.INPUTS, m.PrefixKey(), "", mdb.HASH, arg)
+			}},
+			ACCESS_TOKEN: {Name: "access_token", Help: "令牌", Hand: func(m *ice.Message, arg ...string) {
 				m.Option(web.SPIDE_HEADER, "Accept", web.ContentJSON)
 				data := kit.UnMarshal(m.Cmdx(web.SPIDE_POST, kit.MergeURL2(LOGIN_OAUTH, ACCESS_TOKEN), m.ConfigSimple(CLIENT_ID, CLIENT_SECRET), m.OptionSimple(CODE)))
 				m.Cmdy(mdb.MODIFY, m.PrefixKey(), "", mdb.HASH, m.OptionSimple(mdb.HASH), kit.Simple(data))
 			}},
+			"public": {Name: "public hash", Help: "公钥", Hand: func(m *ice.Message, arg ...string) {
+				m.Option(web.SPIDE_HEADER, "Accept", web.ContentJSON, "Authorization", "token "+m.Option(ACCESS_TOKEN))
+				msg := m.Cmd("aaa.rsa", m.Option(mdb.HASH))
+				res := kit.UnMarshal(m.Cmdx(web.SPIDE_POST, kit.MergeURL2("https://api.github.com", "/user/keys"), web.SPIDE_JSON,
+					"key", msg.Append(ssh.PUBLIC), msg.AppendSimple("title")))
+				m.Push("", res)
+				m.Echo("https://github.com/settings/keys")
+			}},
 		}, mdb.HashAction()), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			if mdb.HashSelect(m, arg...).PushAction("user", ACCESS_TOKEN, mdb.REMOVE); len(arg) == 0 {
-				m.Echo(kit.MergeURL2(LOGIN_OAUTH, "authorize", m.ConfigSimple(REDIRECT_URI, CLIENT_ID)))
+			if mdb.HashSelect(m, arg...).PushAction("user", "public", ACCESS_TOKEN, mdb.REMOVE); len(arg) == 0 {
+				m.Action(mdb.CREATE)
+				m.Echo(kit.MergeURL2(LOGIN_OAUTH, "authorize", m.ConfigSimple(REDIRECT_URI, CLIENT_ID), "scope", "read:user read:public_key write:public_key repo"))
 			}
 		}},
 		"/oauth": {Name: "/oauth", Help: "授权", Action: ice.MergeAction(map[string]*ice.Action{}, ctx.CmdAction()), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {

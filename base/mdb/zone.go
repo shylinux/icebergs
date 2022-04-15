@@ -4,6 +4,7 @@ import (
 	"encoding/csv"
 	"os"
 	"path"
+	"sort"
 	"strings"
 
 	ice "shylinux.com/x/icebergs"
@@ -68,21 +69,29 @@ func _zone_export(m *ice.Message, prefix, chain, file string) {
 	fields = append(fields, EXTRA)
 	w.Write(fields)
 
-	count := 0
+	keys := []string{}
 	m.Richs(prefix, chain, FOREACH, func(key string, val map[string]interface{}) {
-		val = kit.GetMeta(val)
-
-		m.Grows(prefix, kit.Keys(chain, HASH, key), "", "", func(index int, value map[string]interface{}) {
-			value = kit.GetMeta(value)
-
-			list := []string{}
-			for _, k := range fields {
-				list = append(list, kit.Select(kit.Format(kit.Value(val, k)), kit.Format(kit.Value(value, k))))
-			}
-			w.Write(list)
-			count++
-		})
+		keys = append(keys, key)
 	})
+	sort.Strings(keys)
+
+	count := 0
+	for _, key := range keys {
+		m.Richs(prefix, chain, key, func(key string, val map[string]interface{}) {
+			val = kit.GetMeta(val)
+
+			m.Grows(prefix, kit.Keys(chain, HASH, key), "", "", func(index int, value map[string]interface{}) {
+				value = kit.GetMeta(value)
+
+				list := []string{}
+				for _, k := range fields {
+					list = append(list, kit.Select(kit.Format(kit.Value(val, k)), kit.Format(kit.Value(value, k))))
+				}
+				w.Write(list)
+				count++
+			})
+		})
+	}
 
 	m.Log_EXPORT(KEY, path.Join(prefix, chain), FILE, p, COUNT, count)
 	m.Conf(prefix, kit.Keys(chain, HASH), "")

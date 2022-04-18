@@ -6,7 +6,6 @@ import (
 	"shylinux.com/x/icebergs/base/ctx"
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/web"
-	"shylinux.com/x/icebergs/misc/ssh"
 	kit "shylinux.com/x/toolkits"
 )
 
@@ -52,7 +51,7 @@ func init() {
 				m.Option(web.SPIDE_HEADER, "Accept", web.ContentJSON, "Authorization", "token "+m.Option(ACCESS_TOKEN))
 				msg := m.Cmd("aaa.rsa", m.Option(mdb.HASH))
 				res := kit.UnMarshal(m.Cmdx(web.SPIDE_POST, kit.MergeURL2("https://api.github.com", "/user/keys"), web.SPIDE_JSON,
-					"key", msg.Append(ssh.PUBLIC), msg.AppendSimple("title")))
+					"key", msg.Append("public"), msg.AppendSimple("title")))
 				m.Push("", res)
 				m.Echo("https://github.com/settings/keys")
 			}},

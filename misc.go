@@ -77,6 +77,9 @@ func (m *Message) SplitIndex(str string, arg ...string) *Message {
 func (m *Message) PushDetail(value interface{}, arg ...interface{}) *Message {
 	return m.Push(CACHE_DETAIL, value, arg...)
 }
+func (m *Message) PushRecord(value interface{}, arg ...string) *Message {
+	return m.Push("", value, kit.Split(kit.Join(arg)))
+}
 
 func (m *Message) OptionCB(key string, cb ...interface{}) interface{} {
 	if len(cb) > 0 {

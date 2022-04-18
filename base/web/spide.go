@@ -218,6 +218,7 @@ func _spide_head(m *ice.Message, req *http.Request, head map[string]string, valu
 	m.Info("%s %s", req.Method, req.URL)
 	kit.Fetch(value[SPIDE_HEADER], func(key string, value string) {
 		req.Header.Set(key, value)
+		m.Logs(key, value)
 	})
 	kit.Fetch(value[SPIDE_COOKIE], func(key string, value string) {
 		req.AddCookie(&http.Cookie{Name: key, Value: value})
@@ -312,6 +313,7 @@ const (
 
 	SPIDE_RES = "content_data"
 
+	Authorization = "Authorization"
 	ContentType   = "Content-Type"
 	ContentLength = "Content-Length"
 
@@ -332,7 +334,10 @@ const (
 	RESPONSE = "response"
 
 	CLIENT_NAME = "client.name"
+	CLIENT_URL  = "client.url"
 	LOGHEADERS  = "logheaders"
+
+	MERGE = "merge"
 )
 const SPIDE = "spide"
 
@@ -351,8 +356,8 @@ func init() {
 			mdb.CREATE: {Name: "create name address", Help: "添加", Hand: func(m *ice.Message, arg ...string) {
 				_spide_create(m, m.Option(mdb.NAME), m.Option(ADDRESS))
 			}},
-			"merge": {Name: "merge name path", Help: "添加", Hand: func(m *ice.Message, arg ...string) {
-				m.Echo(kit.MergeURL(m.Cmd(SPIDE, arg[0], ice.OptionFields("")).Append("client.url")+arg[1], arg[2:]))
+			MERGE: {Name: "merge name path", Help: "添加", Hand: func(m *ice.Message, arg ...string) {
+				m.Echo(kit.MergeURL2(m.Cmd(SPIDE, arg[0], ice.OptionFields("")).Append(CLIENT_URL), arg[1], arg[2:]))
 			}},
 		}, mdb.HashAction()), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			if len(arg) < 2 || arg[0] == "" || (len(arg) > 3 && arg[3] == "") {

@@ -83,9 +83,10 @@ const (
 	REVERT = "revert"
 	REPEAT = "repeat"
 
-	NEXT = "next"
-	PREV = "prev"
-	PAGE = "page"
+	NEXT   = "next"
+	PREV   = "prev"
+	PAGE   = "page"
+	OFFEND = "offend"
 )
 const (
 	CACHE_CLEAR_ON_EXIT = "cache.clear.on.exit"
@@ -102,7 +103,7 @@ func PrevPageLimit(m *ice.Message, total string, arg ...string) {
 func PrevPage(m *ice.Message, total string, arg ...string) {
 	limit, offend := kit.Select("10", arg, 0), kit.Select("0", arg, 1)
 	offends := kit.Int(offend) - kit.Int(limit)
-	if offends <= -kit.Int(total) || offends >= kit.Int(total) {
+	if total != "0" && (offends <= -kit.Int(total) || offends >= kit.Int(total)) {
 		m.Toast("已经是最前一页啦!")
 		m.ProcessHold()
 		return
@@ -117,7 +118,7 @@ func PrevPage(m *ice.Message, total string, arg ...string) {
 func NextPage(m *ice.Message, total string, arg ...string) {
 	limit, offend := kit.Select("10", arg, 0), kit.Select("0", arg, 1)
 	offends := kit.Int(offend) + kit.Int(limit)
-	if offends <= -kit.Int(total) || offends >= kit.Int(total) {
+	if total != "0" && (offends <= -kit.Int(total) || offends >= kit.Int(total)) {
 		m.Toast("已经是最后一页啦!")
 		m.ProcessHold()
 		return

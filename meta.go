@@ -33,6 +33,7 @@ func (m *Message) Set(key string, arg ...string) *Message {
 			}
 			delete(m.meta, KEY)
 			delete(m.meta, VALUE)
+			delete(m.meta, MSG_APPEND)
 			return m
 		}
 		if len(arg) > 0 {
@@ -107,7 +108,8 @@ func (m *Message) Push(key string, value interface{}, arg ...interface{}) *Messa
 		head := kit.Simple()
 		if len(arg) > 0 {
 			head = kit.Simple(arg[0])
-		} else { // 键值排序
+		}
+		if len(head) == 0 { // 键值排序
 			head = kit.SortedKey(kit.KeyValue(map[string]interface{}{}, "", value))
 		}
 

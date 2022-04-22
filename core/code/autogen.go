@@ -115,6 +115,7 @@ func _autogen_git(m *ice.Message, arg ...string) map[string]interface{} {
 		"Remote", strings.TrimSpace(m.Cmdx(cli.SYSTEM, "git", "config", "remote.origin.url")),
 		"Branch", strings.TrimSpace(m.Cmdx(cli.SYSTEM, "git", "rev-parse", "--abbrev-ref", "HEAD")),
 		"Version", strings.TrimSpace(m.Cmdx(cli.SYSTEM, "git", "describe", "--tags")),
+		"Domain", m.Option(ice.MSG_USERWEB),
 	)
 }
 func _autogen_gits(m *ice.Message, arg ...string) string {
@@ -199,6 +200,7 @@ func init() {
 					m.Cmdy(nfs.DIR, "usr/release/binpack.go")
 					m.Cmdy(nfs.DIR, "usr/release/conf.go")
 				}
+				m.Cmdy(nfs.CAT, "src/version.go")
 			}},
 			RELAY: {Name: "relay alias username host port list", Help: "跳板", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmd(COMPILE, RELAY)

@@ -92,7 +92,7 @@ func _space_handle(m *ice.Message, safe bool, send map[string]*ice.Message, c *w
 			msg.Log("recv", "%v->%v %s %v", source, target, msg.Detailv(), msg.FormatMeta())
 
 			if len(target) == 0 {
-				msg.Log_AUTH(aaa.USERROLE, msg.Option(ice.MSG_USERROLE), aaa.USERNAME, msg.Option(ice.MSG_USERNAME))
+				msg.Log_AUTH(aaa.USERROLE, kit.Select(msg.Option(ice.MSG_USERROLE), m.Cmd(aaa.USER, msg.Option(ice.MSG_USERNAME)).Append(aaa.USERROLE)), aaa.USERNAME, msg.Option(ice.MSG_USERNAME))
 				if msg.Optionv(ice.MSG_HANDLE, ice.TRUE); safe { // 下行命令
 					msg.Go(func() { _space_exec(msg, source, target, c, name) })
 				} else { // 上行请求

@@ -64,11 +64,11 @@ func init() {
 				m.Option(mdb.NAME, kit.Select(strings.TrimSuffix(path.Base(m.Option(REPOS)), ".git"), m.Option(mdb.NAME)))
 				m.Option(nfs.PATH, kit.Select(path.Join(ice.USR, m.Option(mdb.NAME)), m.Option(nfs.PATH)))
 				m.Option(REPOS, kit.Select(m.Config(REPOS)+ice.PS+m.Option(mdb.NAME), m.Option(REPOS)))
-				if strings.Contains(m.Option(REPOS), "@") {
-					ls := strings.Split(m.Option(REPOS), "@")
-					m.Option(REPOS, ls[0])
-					m.Option(BRANCH, ls[1])
-				}
+				// if strings.Contains(m.Option(REPOS), "@") {
+				// 	ls := strings.Split(m.Option(REPOS), "@")
+				// 	m.Option(REPOS, ls[0])
+				// 	m.Option(BRANCH, ls[1])
+				// }
 
 				_repos_insert(m, m.Option(mdb.NAME), m.Option(nfs.PATH))
 				if s, e := os.Stat(path.Join(m.Option(nfs.PATH), ".git")); e == nil && s.IsDir() {

@@ -15,6 +15,7 @@ type MakeInfo struct {
 	Module   string
 	Remote   string
 	Branch   string
+	Domain   string
 	Version  string
 	HostName string
 	UserName string

@@ -204,6 +204,13 @@ func init() {
 				}
 				m.Sort(nfs.PATH)
 			}},
+			"make.domain": {Name: "make.domain", Help: "接口命令", Hand: func(m *ice.Message, arg ...string) {
+				if os.Getenv("ctx_dev") == "" || os.Getenv("ctx_pod") == "" {
+					m.Echo(m.Conf(RUNTIME, "make.domain"))
+				} else {
+					m.Echo(kit.MergePOD(os.Getenv("ctx_dev"), os.Getenv("ctx_pod")))
+				}
+			}},
 		}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			if len(arg) > 0 && arg[0] == BOOTINFO {
 				arg = arg[1:]

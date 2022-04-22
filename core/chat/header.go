@@ -8,6 +8,8 @@ import (
 	"shylinux.com/x/icebergs/base/cli"
 	"shylinux.com/x/icebergs/base/ctx"
 	"shylinux.com/x/icebergs/base/mdb"
+	"shylinux.com/x/icebergs/base/nfs"
+	"shylinux.com/x/icebergs/base/ssh"
 	"shylinux.com/x/icebergs/base/tcp"
 	"shylinux.com/x/icebergs/base/web"
 	"shylinux.com/x/icebergs/core/code"
@@ -123,6 +125,15 @@ func init() {
 				_header_users(m, m.ActionKey(), arg...)
 			}},
 
+			"local": {Name: "local", Help: "配置", Hand: func(m *ice.Message, arg ...string) {
+				pod := strings.Split(m.Cmdx(web.SPACE, m.Option(ice.MSG_USERPOD), cli.RUNTIME, "make.domain"), "/chat/pod/")[1]
+				m.Cmd(web.SPACE, m.Option(ice.MSG_USERPOD), nfs.SAVE, "etc/local.shy", m.Cmdx(web.SPACE, pod, nfs.CAT, "etc/local.shy"))
+				m.Cmd(web.SPACE, m.Option(ice.MSG_USERPOD), ssh.SOURCE, "etc/local.shy")
+			}},
+			aaa.INVITE: {Name: "invite", Help: "脚本", Hand: func(m *ice.Message, arg ...string) {
+				m.Cmdy(code.PUBLISH, ice.CONTEXTS, ice.CORE)
+				m.Cmd(code.PUBLISH, mdb.CREATE, nfs.FILE, ice.BIN_ICE_BIN)
+			}},
 			code.WEBPACK: {Name: "webpack", Help: "打包页面", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmdy(code.WEBPACK, cli.BUILD, m.OptionSimple(mdb.NAME))
 			}},

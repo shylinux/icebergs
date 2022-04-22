@@ -123,6 +123,7 @@ func init() {
 			cli.STOP: {Name: "stop", Help: "停止", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmdy(SPACE, mdb.MODIFY, m.OptionSimple(mdb.NAME), mdb.STATUS, cli.STOP)
 				m.Cmdy(SPACE, m.Option(mdb.NAME), ice.EXIT)
+				m.ProcessRefresh("100ms")
 			}},
 			DREAM_STOP: {Name: "dream.stop type name", Help: "停止", Hand: func(m *ice.Message, arg ...string) {
 				if m.Cmd(SPACE, m.Option(mdb.NAME)).Append(mdb.STATUS) == cli.STOP {

@@ -201,7 +201,7 @@ func _serve_login(msg *ice.Message, key string, cmds []string, w http.ResponseWr
 	aaa.SessCheck(msg, msg.Option(ice.MSG_SESSID)) // 会话认证
 
 	if msg.Config("staffname") != "" {
-		aaa.UserLogin(msg, r.Header.Get(msg.Config("staffname")), "")
+		aaa.UserLogin(msg, r.Header.Get("Staffname"), "")
 	}
 
 	if msg.Option(ice.MSG_USERNAME) == "" && msg.Config(tcp.LOCALHOST) == ice.TRUE && tcp.IsLocalHost(msg, msg.Option(ice.MSG_USERIP)) {
@@ -335,6 +335,7 @@ func init() {
 				}
 				if m.Option("staffname") != "" {
 					m.Config("staffname", m.Option("staffname"))
+					m.Option(aaa.USERNAME, m.Option("staffname"))
 				}
 				aaa.UserRoot(m, m.Option(aaa.PASSWORD), m.Option(aaa.USERNAME), m.Option(aaa.USERROLE))
 				m.Go(func() { m.Cmd(BROAD, SERVE) })

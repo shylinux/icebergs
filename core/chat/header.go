@@ -125,17 +125,10 @@ func init() {
 				_header_users(m, m.ActionKey(), arg...)
 			}},
 
-			"config": {Name: "config", Help: "配置", Hand: func(m *ice.Message, arg ...string) {
+			ctx.CONFIG: {Name: "config", Help: "配置", Hand: func(m *ice.Message, arg ...string) {
 				pod := strings.Split(m.Cmdx(web.SPACE, m.Option(ice.MSG_USERPOD), cli.RUNTIME, "make.domain"), "/chat/pod/")[1]
-				m.Cmd(web.SPACE, m.Option(ice.MSG_USERPOD), nfs.SAVE, "etc/local.shy", m.Cmdx(web.SPACE, pod, nfs.CAT, "etc/local.shy"))
-				m.Cmd(web.SPACE, m.Option(ice.MSG_USERPOD), ssh.SOURCE, "etc/local.shy")
-			}},
-			"source": {Name: "source", Help: "源码", Hand: func(m *ice.Message, arg ...string) {
-				m.Cmd(web.SPACE, m.Option(ice.MSG_USERPOD), cli.SYSTEM, "git", "push", "-u", m.MergeURL2("/x/")+m.Option(ice.MSG_USERPOD))
-			}},
-			aaa.INVITE: {Name: "invite", Help: "脚本", Hand: func(m *ice.Message, arg ...string) {
-				m.Cmdy(code.PUBLISH, ice.CONTEXTS, ice.CORE, ice.MISC)
-				m.Cmd(code.PUBLISH, mdb.CREATE, nfs.FILE, ice.BIN_ICE_BIN)
+				m.Cmd(web.SPACE, m.Option(ice.MSG_USERPOD), nfs.SAVE, ice.ETC_LOCAL_SHY, m.Cmdx(web.SPACE, pod, nfs.CAT, ice.ETC_LOCAL_SHY))
+				m.Cmd(web.SPACE, m.Option(ice.MSG_USERPOD), ssh.SOURCE, ice.ETC_LOCAL_SHY)
 			}},
 			code.WEBPACK: {Name: "webpack", Help: "打包页面", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmdy(code.WEBPACK, cli.BUILD, m.OptionSimple(mdb.NAME))

@@ -276,6 +276,10 @@ func init() {
 			"branch_switch": {Name: "branch_switch", Help: "切换", Hand: func(m *ice.Message, arg ...string) {
 				_repos_cmd(m.Spawn(), m.Option(REPOS), "checkout", m.Option(BRANCH))
 			}},
+			"release": {Name: "release", Help: "发布", Hand: func(m *ice.Message, arg ...string) {
+				m.Cmdy(cli.SYSTEM, "git", "push", "-u", m.MergeURL2("/x/")+m.Option(ice.MSG_USERPOD))
+				m.Cmdy(code.PUBLISH, ice.CONTEXTS, ice.MISC, ice.CORE)
+			}},
 			BRANCH: {Name: "branch", Help: "分支", Hand: func(m *ice.Message, arg ...string) {
 				for _, line := range kit.Split(_repos_cmd(m.Spawn(), arg[0], BRANCH).Result(), ice.NL, ice.NL) {
 					if strings.HasPrefix(line, "*") {
@@ -303,7 +307,7 @@ func init() {
 			}},
 		}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			if len(arg) == 0 {
-				m.Action(PULL, MAKE, PUSH, TAGS, STASH, PIE)
+				m.Action(PULL, MAKE, PUSH, TAGS, STASH, PIE, "release")
 
 				files, adds, dels, last := _status_list(m)
 				m.Status("files", files, "adds", adds, "dels", dels, "last", last.Format(ice.MOD_TIME))

@@ -170,7 +170,7 @@ func init() {
 		DREAM: {Name: DREAM, Help: "梦想家", Value: kit.Data(nfs.PATH, ice.USR_LOCAL_WORK,
 			"miss", `#! /bin/sh
 if [ "$ISH_CONF_PRE" = "" ]; then
-	[ -f $PWD/.ish/plug.sh ] || [ -f $HOME/.ish/plug.sh ] || git clone ${ISH_CONF_HUB_PROXY:="https://"}shylinux.com/x/intshell $PWD/.ish
+	[ -f $PWD/.ish/plug.sh ] || [ -f $HOME/.ish/plug.sh ] || git clone https://shylinux.com/x/intshell $PWD/.ish
 	source $PWD/.ish/plug.sh || source $HOME/.ish/plug.sh
 fi
 
@@ -183,14 +183,14 @@ ish_miss_prepare_install
 # ish_miss_prepare mysql-story
 # ish_miss_prepare release
 
-ish_miss_prepare_intshell
-ish_miss_prepare_contexts
+# ish_miss_prepare_contexts
+# ish_miss_prepare_intshell
 # ish_miss_prepare_icebergs
 # ish_miss_prepare_toolkits
 # ish_miss_prepare_volcanos
 # ish_miss_prepare_learning
 
-make
+ish_miss_make; if [ -n "$*" ]; then ./bin/ice.bin forever serve "$@"; fi
 `,
 		)},
 	}})

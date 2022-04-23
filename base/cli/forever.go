@@ -17,8 +17,14 @@ const FOREVER = "forever"
 
 func init() {
 	const SERVE = "serve"
+	const RESTART = "restart"
 	Index.Merge(&ice.Context{Commands: map[string]*ice.Command{
 		FOREVER: {Name: "forever", Help: "启动", Action: map[string]*ice.Action{
+			RESTART: {Name: "restart", Help: "重启", Hand: func(m *ice.Message, arg ...string) {
+				if p := m.Cmdx(nfs.CAT, m.Conf("gdb.signal", kit.Keym(nfs.PATH))); p != "" {
+					m.Cmd(SYSTEM, "kill", "-s", "INT", p)
+				}
+			}},
 			SERVE: {Name: "serve", Help: "服务", Hand: func(m *ice.Message, arg ...string) {
 				env := []string{PATH, BinPath(), HOME, kit.Select(kit.Path(""), os.Getenv(HOME))}
 				for _, k := range []string{TERM, SHELL, CTX_SHY, CTX_DEV, CTX_OPS, CTX_ARG, CTX_PID, CTX_USER, CTX_SHARE, CTX_RIVER} {

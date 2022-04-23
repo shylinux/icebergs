@@ -87,8 +87,12 @@ func init() {
 			}},
 		}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			text := m.Cmdx(cli.SYSTEM, TMUX, "show-buffer")
-			m.EchoQRCode(text)
-			m.EchoScript(text)
+			if m.EchoQRCode(text); strings.HasPrefix(text, ice.HTTP) {
+				m.Echo(ice.NL)
+				m.EchoAnchor(text)
+			} else {
+				m.EchoScript(text)
+			}
 		}},
 	}})
 }

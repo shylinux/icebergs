@@ -125,10 +125,10 @@ func init() {
 				_header_users(m, m.ActionKey(), arg...)
 			}},
 
-			ctx.CONFIG: {Name: "config", Help: "配置", Hand: func(m *ice.Message, arg ...string) {
+			ctx.CONFIG: {Name: "config file", Help: "配置", Hand: func(m *ice.Message, arg ...string) {
 				pod := strings.Split(m.Cmdx(web.SPACE, m.Option(ice.MSG_USERPOD), cli.RUNTIME, "make.domain"), "/chat/pod/")[1]
-				m.Cmd(web.SPACE, m.Option(ice.MSG_USERPOD), nfs.SAVE, ice.ETC_LOCAL_SHY, m.Cmdx(web.SPACE, pod, nfs.CAT, ice.ETC_LOCAL_SHY))
-				m.Cmd(web.SPACE, m.Option(ice.MSG_USERPOD), ssh.SOURCE, ice.ETC_LOCAL_SHY)
+				m.Cmd(web.SPACE, m.Option(ice.MSG_USERPOD), nfs.SAVE, m.Option(nfs.FILE), m.Cmdx(web.SPACE, pod, nfs.CAT, m.Option(nfs.FILE)))
+				m.Cmd(web.SPACE, m.Option(ice.MSG_USERPOD), ssh.SOURCE, m.Option(nfs.FILE))
 			}},
 			code.WEBPACK: {Name: "webpack", Help: "打包页面", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmdy(code.WEBPACK, cli.BUILD, m.OptionSimple(mdb.NAME))

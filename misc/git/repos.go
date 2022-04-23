@@ -80,7 +80,7 @@ func init() {
 					m.Option(cli.CMD_DIR, m.Option(nfs.PATH))
 					m.Cmd(cli.SYSTEM, GIT, INIT)
 					m.Cmd(cli.SYSTEM, GIT, REMOTE, ADD, ORIGIN, m.Option(REPOS))
-					m.Cmd(cli.SYSTEM, GIT, PULL, ORIGIN, MASTER)
+					m.Cmd(cli.SYSTEM, GIT, PULL, ORIGIN, kit.Select(MASTER, m.Option(BRANCH)))
 				} else {
 					m.Option(cli.CMD_DIR, "")
 					m.Cmd(cli.SYSTEM, GIT, CLONE, "-b", kit.Select(MASTER, m.Option(BRANCH)),

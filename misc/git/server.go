@@ -128,7 +128,7 @@ func init() {
 							if ls := strings.Split(p, ice.PS); m.Cmd(web.DREAM, ls[3]).Length() > 0 {
 								r.URL.RawQuery += kit.Select("", "&", len(r.URL.RawQuery) > 1) + "pod=" + ls[3]
 							}
-							r.URL.Path = "/share/local/bin/ice.bin"
+							r.URL.Path = "/publish/ice.bin"
 							m.Info("rewrite %v -> %v", p, r.URL.Path)
 						}
 					} else if strings.HasPrefix(p, "/x/") {
@@ -162,8 +162,13 @@ func init() {
 					m.Log_CREATE(REPOS, repos)
 				}
 			case "upload-pack": // 下载代码
+				aaa.UserRoot(m)
+				if kit.Select("", arg, 1) == "info" && m.Cmd(web.DREAM, arg[0]).Length() > 0 {
+					m.Cmd(web.SPACE, arg[0], "web.code.git.status", "submit", m.MergeURL2("/x/")+arg[0])
+				}
 				if !kit.FileExists(path.Join(repos)) {
-
+					web.RenderStatus(m, 404, kit.Format("not found: %s", arg[0]))
+					return
 				}
 			}
 

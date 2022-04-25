@@ -14,6 +14,7 @@ import (
 	"time"
 
 	ice "shylinux.com/x/icebergs"
+	"shylinux.com/x/icebergs/base/aaa"
 	"shylinux.com/x/icebergs/base/cli"
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/nfs"
@@ -350,14 +351,17 @@ func init() {
 				conf := m.Confm(cli.RUNTIME, "conf")
 				m.Cmd(SPIDE, mdb.CREATE, ice.OPS, kit.Select("http://127.0.0.1:9020", conf["ctx_ops"]))
 				m.Cmd(SPIDE, mdb.CREATE, ice.DEV, kit.Select("http://contexts.woa.com:80", conf["ctx_dev"]))
-				m.Cmd(SPIDE, mdb.CREATE, ice.SHY, kit.Select("https://contexts.com.cn:443", conf["ctx_shy"]))
-				// m.Cmd(SPIDE, mdb.CREATE, ice.SHY, kit.Select("https://shylinux.com:443", conf["ctx_shy"]))
+				m.Cmd(SPIDE, mdb.CREATE, ice.SHY, kit.Select("https://shylinux.com:443", conf["ctx_shy"]))
+				m.Cmd(aaa.ROLE, aaa.WHITE, aaa.VOID, SPIDE, "submit")
 			}},
 			mdb.CREATE: {Name: "create name address", Help: "添加", Hand: func(m *ice.Message, arg ...string) {
 				_spide_create(m, m.Option(mdb.NAME), m.Option(ADDRESS))
 			}},
-			MERGE: {Name: "merge name path", Help: "添加", Hand: func(m *ice.Message, arg ...string) {
+			MERGE: {Name: "merge name path", Help: "拼接", Hand: func(m *ice.Message, arg ...string) {
 				m.Echo(kit.MergeURL2(m.Cmd(SPIDE, arg[0], ice.OptionFields("")).Append(CLIENT_URL), arg[1], arg[2:]))
+			}},
+			"submit": {Name: "submit dev pod path size cache", Help: "发布", Hand: func(m *ice.Message, arg ...string) {
+				m.Cmdy(SPIDE, ice.DEV, SPIDE_RAW, m.Option("dev"), SPIDE_PART, "pod", m.Option("pod"), nfs.PATH, "bin/ice.bin", UPLOAD, "@"+"bin/ice.bin")
 			}},
 		}, mdb.HashAction()), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			if len(arg) < 2 || arg[0] == "" || (len(arg) > 3 && arg[3] == "") {

@@ -81,13 +81,14 @@ func _share_local(m *ice.Message, arg ...string) {
 			size = s.Size()
 		}
 
-		if p == "bin/ice.bin" {
-			aaa.UserRoot(m)
-		}
-
 		// 上传文件
-		m.Cmd(SPACE, m.Option(ice.POD), SPIDE, ice.DEV, SPIDE_RAW, m.MergeURL2(SHARE_PROXY, nfs.PATH, ""),
-			SPIDE_PART, m.OptionSimple(ice.POD), nfs.PATH, p, nfs.SIZE, size, CACHE, cache.Format(ice.MOD_TIME), UPLOAD, "@"+p)
+		if p == "bin/ice.bin" {
+			aaa.UserRoot(m).Cmd(SPACE, m.Option(ice.POD), SPIDE, "submit", m.MergeURL2(SHARE_PROXY, nfs.PATH, ""), m.Option(ice.POD), p, size, cache.Format(ice.MOD_TIME))
+		} else {
+			m.Cmd(SPACE, m.Option(ice.POD), SPIDE, ice.DEV, SPIDE_RAW, m.MergeURL2(SHARE_PROXY, nfs.PATH, ""),
+				SPIDE_PART, m.OptionSimple(ice.POD), nfs.PATH, p, nfs.SIZE, size, CACHE, cache.Format(ice.MOD_TIME), UPLOAD, "@"+p)
+
+		}
 
 		if s, e := os.Stat(pp); e == nil && !s.IsDir() {
 			p = pp

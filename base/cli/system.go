@@ -3,7 +3,6 @@ package cli
 import (
 	"bytes"
 	"io"
-	"os"
 	"os/exec"
 	"path"
 	"strings"
@@ -59,7 +58,6 @@ func _system_cmd(m *ice.Message, arg ...string) *exec.Cmd {
 	if len(cmd.Env) > 0 {
 		m.Log_EXPORT(CMD_ENV, cmd.Env)
 	}
-	m.Debug("wht%v", os.Getenv(PATH))
 	return cmd
 }
 func _system_out(m *ice.Message, out string) io.Writer {

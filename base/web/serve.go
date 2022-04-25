@@ -391,8 +391,8 @@ func init() {
 				}
 			}
 			if strings.HasPrefix(arg[0], "ice.") && m.Option(ice.POD) != "" {
-				aaa.UserRoot(m)
-				_share_local(m, "bin/ice.bin")
+				_share_local(aaa.UserRoot(m), ice.BIN_ICE_BIN)
+				// _share_local(aaa.UserRoot(m), arg[0])
 				return
 			}
 			_share_local(m, m.Conf(SERVE, kit.Keym(ice.PUBLISH)), path.Join(arg...))

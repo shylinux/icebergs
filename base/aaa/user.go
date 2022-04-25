@@ -47,12 +47,13 @@ func _user_search(m *ice.Message, name, text string) {
 	})
 }
 
-func UserRoot(m *ice.Message, arg ...string) { // password username userrole
+func UserRoot(m *ice.Message, arg ...string) *ice.Message { // password username userrole
 	username := m.Option(ice.MSG_USERNAME, kit.Select(ice.Info.UserName, arg, 1))
 	userrole := m.Option(ice.MSG_USERROLE, kit.Select(ROOT, arg, 2))
 	if len(arg) > 0 {
 		_user_create(m, userrole, username, kit.Select("", arg, 0))
 	}
+	return m
 }
 func UserRole(m *ice.Message, username interface{}) (role string) {
 	if role = VOID; username == ice.Info.UserName {

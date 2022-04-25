@@ -59,16 +59,20 @@ func init() {
 				m.Cmdy(BINPACK, mdb.EXPORT)
 			}},
 			BINPACK: {Name: "binpack", Help: "打包模式", Hand: func(m *ice.Message, arg ...string) {
-				m.Cmd(nfs.LINK, ice.GO_MOD, path.Join(ice.SRC_RELEASE, ice.GO_MOD))
-				m.Cmd(nfs.LINK, ice.GO_SUM, path.Join(ice.SRC_RELEASE, ice.GO_SUM))
+				if kit.FileExists(ice.SRC_RELEASE) {
+					m.Cmd(nfs.LINK, ice.GO_MOD, path.Join(ice.SRC_RELEASE, ice.GO_MOD))
+					m.Cmd(nfs.LINK, ice.GO_SUM, path.Join(ice.SRC_RELEASE, ice.GO_SUM))
+				}
 				m.Cmdy(nfs.CAT, ice.GO_MOD)
 				m.Cmdy(AUTOGEN, BINPACK)
 				m.ToastSuccess()
 				m.ProcessInner()
 			}},
 			DEVPACK: {Name: "devpack", Help: "开发模式", Hand: func(m *ice.Message, arg ...string) {
-				m.Cmd(nfs.LINK, ice.GO_MOD, path.Join(ice.SRC_DEBUG, ice.GO_MOD))
-				m.Cmd(nfs.LINK, ice.GO_SUM, path.Join(ice.SRC_DEBUG, ice.GO_SUM))
+				if kit.FileExists(ice.SRC_DEBUG) {
+					m.Cmd(nfs.LINK, ice.GO_MOD, path.Join(ice.SRC_DEBUG, ice.GO_MOD))
+					m.Cmd(nfs.LINK, ice.GO_SUM, path.Join(ice.SRC_DEBUG, ice.GO_SUM))
+				}
 				m.Cmdy(nfs.CAT, ice.GO_MOD)
 				m.Cmdy(WEBPACK, mdb.REMOVE)
 				m.ToastSuccess()

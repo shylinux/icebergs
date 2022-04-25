@@ -46,7 +46,7 @@ func _runtime_init(m *ice.Message) {
 		m.Conf(RUNTIME, kit.Keys(BOOT, PATHNAME), name)
 	}
 
-	m.Conf(RUNTIME, kit.Keys(BOOT, USERNAME), kit.Select(kit.UserName(), kit.Env(CTX_USER)))
+	m.Conf(RUNTIME, kit.Keys(BOOT, USERNAME), kit.Select(kit.UserName(), kit.Select(kit.Env("WORKSPACE_GIT_USERNAME"), kit.Env(CTX_USER))))
 	ice.Info.HostName = m.Conf(RUNTIME, kit.Keys(BOOT, HOSTNAME))
 	ice.Info.PathName = m.Conf(RUNTIME, kit.Keys(BOOT, PATHNAME))
 	ice.Info.UserName = m.Conf(RUNTIME, kit.Keys(BOOT, USERNAME))

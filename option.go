@@ -26,12 +26,18 @@ func (m *Message) OptionFields(arg ...string) string {
 	return kit.Join(kit.Simple(m.Optionv(MSG_FIELDS)))
 }
 func (m *Message) OptionPage(arg ...string) int {
+	page, _ := m.OptionPages(arg...)
+	return page
+}
+func (m *Message) OptionPages(arg ...string) (page int, size int) {
 	m.Option(CACHE_LIMIT, kit.Select("", arg, 0))
 	m.Option(CACHE_OFFEND, kit.Select("", arg, 1))
 	m.Option(CACHE_FILTER, kit.Select("", arg, 2))
 	m.Option("limit", kit.Select(m.Option("limit"), arg, 0))
 	m.Option("offend", kit.Select(m.Option("offend"), arg, 1))
-	return kit.Int(m.Option("offend"))/kit.Int(kit.Select("10", m.Option("limit"))) + 1
+	size = kit.Int(kit.Select("10", m.Option("limit")))
+	page = kit.Int(m.Option("offend"))/size + 1
+	return
 }
 func (m *Message) OptionLoad(file string) *Message {
 	if f, e := os.Open(file); e == nil {

@@ -24,16 +24,19 @@ func init() {
 		web.WEB_LOGIN: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {}},
 		"/bot/": {Name: "/bot/", Help: "机器人", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			msg := m.Cmd(BOT, arg[0])
+
 			check := kit.Sort([]string{msg.Append("token"), m.Option("nonce"), m.Option("timestamp"), m.Option("echostr")})
 			sig := kit.Format(sha1.Sum([]byte(strings.Join(check, ""))))
-			if m.Warn(sig != m.Option("msg_signature"), ice.ErrNotRight, arg) {
+			if m.Warn(sig != m.Option("msg_signature"), ice.ErrNotRight, check, sig) {
 				// return
 			}
 
-			aeskey, err := base64.RawURLEncoding.DecodeString(msg.Append("ekey"))
+			aeskey, err := base64.StdEncoding.DecodeString(msg.Append("ekey"))
+			m.Debug("what %v %v", msg.Append("ekey"), aeskey)
 			m.Assert(err)
 
-			en_msg, err := base64.RawURLEncoding.DecodeString(m.Option("echostr"))
+			en_msg, err := base64.StdEncoding.DecodeString(m.Option("echostr"))
+			m.Debug("what %v", en_msg)
 			m.Assert(err)
 
 			block, err := aes.NewCipher(aeskey)
@@ -41,6 +44,8 @@ func init() {
 
 			mode := cipher.NewCBCDecrypter(block, aeskey[:aes.BlockSize])
 			mode.CryptBlocks(en_msg, en_msg)
+			m.Debug("what %v", en_msg)
+			m.RenderResult(en_msg)
 		}},
 		BOT: {Name: "bot name chat text:textarea auto create", Help: "机器人", Action: ice.MergeAction(map[string]*ice.Action{
 			mdb.CREATE: {Name: "create name token ekey hook", Help: "创建", Hand: func(m *ice.Message, arg ...string) {

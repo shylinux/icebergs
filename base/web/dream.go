@@ -111,7 +111,7 @@ func init() {
 					_dream_list(m).Cut("name,status,time")
 				}
 			}},
-			cli.START: {Name: "start name repos river", Help: "启动", Hand: func(m *ice.Message, arg ...string) {
+			cli.START: {Name: "start name=hi repos river", Help: "启动", Hand: func(m *ice.Message, arg ...string) {
 				_dream_show(m, m.Option(mdb.NAME, kit.Select(path.Base(m.Option(nfs.REPOS)), m.Option(mdb.NAME))))
 			}},
 			"open": {Name: "open", Help: "打开", Hand: func(m *ice.Message, arg ...string) {

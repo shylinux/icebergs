@@ -24,7 +24,7 @@ func init() {
 			AUTOGEN: {Name: "create main=src/main.go zone name=hi help type=Zone,Hash,Lists,Data,Code list key", Help: "模块", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmdy(AUTOGEN, mdb.CREATE, arg)
 			}},
-			web.DREAM: {Name: "dream name repos", Help: "空间", Hand: func(m *ice.Message, arg ...string) {
+			web.DREAM: {Name: "dream name=hi repos", Help: "空间", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmdy(web.DREAM, cli.START, arg)
 			}},
 			"script": {Name: "script file=hi/hi.js text=", Help: "脚本", Hand: func(m *ice.Message, arg ...string) {

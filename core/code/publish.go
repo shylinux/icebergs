@@ -148,11 +148,11 @@ func init() {
 }
 
 var _contexts = kit.Dict(
-	ice.MISC, `# 源码下载
-git clone {{.Option "httphost"}}/x/{{.Option "user.pod"}}; cd {{.Option "user.pod"}} && source etc/miss.sh port 9020
-`,
-	ice.CORE, `# 命令下载
+	ice.MISC, `# 命令下载
 export ctx_dev={{.Option "httphost"}} ctx_pod={{.Option "user.pod"}}; ctx_temp=$(mktemp); wget -O $ctx_temp $ctx_dev; source $ctx_temp app
+`,
+	ice.CORE, `# 源码下载
+git clone {{.Option "httphost"}}/x/{{.Option "user.pod"}}; cd {{.Option "user.pod"}} && source etc/miss.sh port 9020
 `,
 	ice.BASE, `# 官方下载
 ctx_temp=$(mktemp); curl -o $ctx_temp -fsSL {{.Cmdx "spide" "shy" "url"}}; source $ctx_temp binary

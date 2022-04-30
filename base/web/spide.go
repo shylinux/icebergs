@@ -317,6 +317,7 @@ const (
 	Authorization = "Authorization"
 	ContentType   = "Content-Type"
 	ContentLength = "Content-Length"
+	UserAgent     = "User-Agent"
 
 	ContentFORM = "application/x-www-form-urlencoded"
 	ContentJSON = "application/json"

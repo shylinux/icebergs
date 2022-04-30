@@ -303,6 +303,7 @@ func init() {
 					}
 					return false
 				})
+				m.Cmd(aaa.ROLE, aaa.WHITE, aaa.VOID, nfs.CAT, "usr/publish/order.js")
 			}},
 			ice.CTX_EXIT: {Hand: func(m *ice.Message, arg ...string) {
 				m.Cmd(SERVE).Table(func(index int, value map[string]string, head []string) {

@@ -42,8 +42,10 @@ func init() {
 				return // 插件
 			}
 
-			if m.PodCmd(ctx.COMMAND, arg[0]) && m.Length() > 0 {
-				m.RenderCmd(arg[0], arg[1:]) // 远程命令
+			if m.PodCmd(ctx.COMMAND, arg[0]) {
+				if !m.IsErr() {
+					m.RenderCmd(arg[0], arg[1:]) // 远程命令
+				}
 			} else if m.Cmdy(ctx.COMMAND, arg[0]); m.Length() > 0 {
 				m.RenderCmd(arg[0], arg[1:]) // 本地命令
 			} else {

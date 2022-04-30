@@ -39,7 +39,7 @@ func _action_exec(m *ice.Message, river, storm, index string, arg ...string) {
 		if cmds = kit.Simple(kit.Keys(value[ice.CTX], value[ice.CMD])); kit.Format(value[ice.POD]) != "" {
 			m.Option(ice.POD, value[ice.POD]) // 远程节点
 		}
-	}) == nil && !m.Right(cmds) {
+	}) == nil && m.Option(ice.MSG_USERPOD) == "" && !m.Right(cmds) {
 		return // 没有授权
 	}
 
@@ -189,7 +189,7 @@ func init() {
 			if m.Warn(m.Option(ice.MSG_USERNAME) == "", ice.ErrNotLogin, arg) {
 				return // 没有登录
 			}
-			if m.Warn(!_action_right(m, arg[0], arg[1]), ice.ErrNotRight, arg) {
+			if m.Option(ice.MSG_USERPOD) == "" && m.Warn(!_action_right(m, arg[0], arg[1]), ice.ErrNotRight, arg) {
 				return // 没有授权
 			}
 

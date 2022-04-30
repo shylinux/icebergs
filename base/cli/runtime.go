@@ -118,12 +118,15 @@ const (
 	CTX_DEV = "ctx_dev"
 	CTX_OPS = "ctx_ops"
 	CTX_ARG = "ctx_arg"
+	CTX_POD = "ctx_pod"
 
 	CTX_PID   = "ctx_pid"
 	CTX_LOG   = "ctx_log"
 	CTX_USER  = "ctx_user"
 	CTX_SHARE = "ctx_share"
 	CTX_RIVER = "ctx_river"
+
+	MAKE_DOMAIN = "make.domain"
 )
 const (
 	HOSTNAME = "hostname"
@@ -204,11 +207,11 @@ func init() {
 				}
 				m.Sort(nfs.PATH)
 			}},
-			"make.domain": {Name: "make.domain", Help: "接口命令", Hand: func(m *ice.Message, arg ...string) {
-				if os.Getenv("ctx_dev") == "" || os.Getenv("ctx_pod") == "" {
-					m.Echo(m.Conf(RUNTIME, "make.domain"))
+			MAKE_DOMAIN: {Name: "make.domain", Help: "编译主机", Hand: func(m *ice.Message, arg ...string) {
+				if os.Getenv(CTX_DEV) == "" || os.Getenv(CTX_POD) == "" {
+					m.Echo(m.Conf(RUNTIME, MAKE_DOMAIN))
 				} else {
-					m.Echo(kit.MergePOD(os.Getenv("ctx_dev"), os.Getenv("ctx_pod")))
+					m.Echo(kit.MergePOD(os.Getenv(CTX_DEV), os.Getenv(CTX_POD)))
 				}
 			}},
 		}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {

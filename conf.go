@@ -220,6 +220,8 @@ const ( // RENDER
 )
 const ( // PROCESS
 	PROCESS_LOCATION = "_location"
+	PROCESS_REPLACE  = "_replace"
+	PROCESS_HISTORY  = "_history"
 	PROCESS_REFRESH  = "_refresh"
 	PROCESS_REWRITE  = "_rewrite"
 	PROCESS_DISPLAY  = "_display"

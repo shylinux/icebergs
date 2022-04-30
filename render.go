@@ -87,13 +87,11 @@ func (m *Message) RenderCmd(index string, args ...interface{}) {
 	if index != "" {
 		msg := m.Cmd(COMMAND, index)
 		list = kit.Format(kit.List(kit.Dict(
-			INDEX, index, ARGS, kit.Simple(args),
-			msg.AppendSimple(NAME, HELP),
-			FEATURE, kit.UnMarshal(msg.Append(META)),
-			INPUTS, kit.UnMarshal(msg.Append(LIST)),
+			INDEX, index, ARGS, kit.Simple(args), msg.AppendSimple(NAME, HELP),
+			INPUTS, kit.UnMarshal(msg.Append(LIST)), FEATURE, kit.UnMarshal(msg.Append(META)),
 		)))
 	}
-	m.RenderResult(kit.Format(`<!DOCTYPE html>
+	m.Echo(kit.Format(`<!DOCTYPE html>
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width,initial-scale=0.8,user-scalable=no">
@@ -103,7 +101,7 @@ func (m *Message) RenderCmd(index string, args ...interface{}) {
 	<script src="/page/can.js"></script>
 	<script>can(%s)</script>
 </body>
-`, list))
+`, list)).RenderResult()
 }
 
 func (m *Message) IsCliUA() bool {

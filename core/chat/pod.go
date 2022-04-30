@@ -2,6 +2,7 @@ package chat
 
 import (
 	"path"
+	"strings"
 
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/aaa"
@@ -20,7 +21,7 @@ func init() {
 			ice.CTX_INIT: {Name: "_init", Help: "初始化", Hand: func(m *ice.Message, arg ...string) {
 			}},
 		}, ctx.CmdAction()), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			if m.IsCliUA() {
+			if strings.HasPrefix(m.R.Header.Get("User-Agent"), "curl") || strings.HasPrefix(m.R.Header.Get("User-Agent"), "Wget") {
 				m.Option(ice.MSG_USERNAME, "root")
 				m.Option(ice.MSG_USERROLE, "root")
 				m.Option(ice.POD, kit.Select("", arg, 0))
@@ -40,8 +41,10 @@ func init() {
 			} else if arg[1] == WEBSITE { // 节点网页
 				m.RenderWebsite(arg[0], path.Join(arg[2:]...))
 
-			} else { // 节点命令
+			} else if arg[1] == "cmd" { // 节点命令
 				m.Cmdy("/cmd/", path.Join(arg[2:]...))
+			} else {
+				m.Cmdy(web.SPACE, m.Option(ice.MSG_USERPOD), "web.chat."+ice.PS+path.Join(arg[1:]...))
 			}
 		}},
 	}})

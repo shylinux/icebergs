@@ -80,7 +80,7 @@ func _cache_upload(m *ice.Message, r *http.Request) (kind, name, file, size stri
 func _cache_download(m *ice.Message, r *http.Response) (file, size string) {
 	defer r.Body.Close()
 
-	if f, p, e := kit.Create(path.Join(ice.VAR_TMP, kit.Hashs("uniq"))); m.Assert(e) {
+	if f, p, e := kit.Create(path.Join(ice.VAR_TMP, kit.Hashs(mdb.UNIQ))); m.Assert(e) {
 		step, total := 0, kit.Int(kit.Select("1", r.Header.Get(ContentLength)))
 		size, buf := 0, make([]byte, ice.MOD_BUFS)
 

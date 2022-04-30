@@ -40,6 +40,9 @@ func _field_show(m *ice.Message, name, text string, arg ...string) {
 			name = cmd.Help
 		}
 	})
+	if !m.Spawn().Right(cmds[0]) {
+		return
+	}
 
 	name = strings.ReplaceAll(name, ice.SP, "_")
 	meta[mdb.NAME], meta[mdb.INDEX] = name, text

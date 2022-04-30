@@ -4,6 +4,7 @@ import (
 	"strings"
 
 	ice "shylinux.com/x/icebergs"
+	"shylinux.com/x/icebergs/base/aaa"
 	"shylinux.com/x/icebergs/base/mdb"
 	kit "shylinux.com/x/toolkits"
 )
@@ -80,6 +81,10 @@ const COMMAND = "command"
 func init() {
 	Index.Merge(&ice.Context{Commands: map[string]*ice.Command{
 		COMMAND: {Name: "command key auto", Help: "命令", Action: map[string]*ice.Action{
+			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
+				m.Cmd(aaa.ROLE, aaa.WHITE, aaa.VOID, m.Prefix(COMMAND))
+				m.Cmd(aaa.ROLE, aaa.WHITE, aaa.VOID, COMMAND)
+			}},
 			mdb.SEARCH: {Name: "search type name text", Help: "搜索", Hand: func(m *ice.Message, arg ...string) {
 				if arg[0] == m.CommandKey() || len(arg) > 1 && arg[1] != "" {
 					_command_search(m, arg[0], kit.Select("", arg, 1), kit.Select("", arg, 2))

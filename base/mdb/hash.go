@@ -151,10 +151,10 @@ func AutoConfig(args ...interface{}) *ice.Action {
 }
 func HashAction(args ...interface{}) map[string]*ice.Action {
 	_key := func(m *ice.Message) string {
-		if m.Config(HASH) == "uniq" {
+		if m.Config(HASH) == UNIQ {
 			return HASH
 		}
-		if m.Config(SHORT) == "uniq" {
+		if m.Config(SHORT) == UNIQ {
 			return HASH
 		}
 		return kit.Select(HASH, m.Config(SHORT))
@@ -198,6 +198,9 @@ func HashActionStatus(args ...interface{}) map[string]*ice.Action {
 	}}
 	return list
 }
+func HashCreate(m *ice.Message, arg ...interface{}) *ice.Message {
+	return m.Cmd(INSERT, m.PrefixKey(), "", HASH, kit.Simple(arg...))
+}
 func HashSelect(m *ice.Message, arg ...string) *ice.Message {
 	m.Fields(len(arg), m.Config(FIELD))
 	m.Cmdy(SELECT, m.PrefixKey(), "", HASH, m.Config(SHORT), arg)
@@ -207,7 +210,7 @@ func HashSelect(m *ice.Message, arg ...string) *ice.Message {
 }
 func HashPrunes(m *ice.Message, cb func(map[string]string) bool) *ice.Message {
 	_key := func(m *ice.Message) string {
-		if m.Config(HASH) == "uniq" {
+		if m.Config(HASH) == UNIQ {
 			return HASH
 		}
 		return kit.Select(HASH, m.Config(SHORT))

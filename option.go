@@ -217,6 +217,12 @@ func (m *Message) Process(action string, arg ...interface{}) {
 func (m *Message) ProcessLocation(arg ...interface{}) {
 	m.Process(PROCESS_LOCATION, arg...)
 }
+func (m *Message) ProcessReplace(arg ...interface{}) {
+	m.Process(PROCESS_REPLACE, arg...)
+}
+func (m *Message) ProcessHistory(arg ...interface{}) {
+	m.Process(PROCESS_HISTORY, arg...)
+}
 func (m *Message) ProcessRewrite(arg ...interface{}) {
 	m.Process(PROCESS_REWRITE, arg...)
 }
@@ -264,11 +270,14 @@ func (m *Message) ProcessBack()           { m.Process(PROCESS_BACK) }
 func (m *Message) OptionUserWeb() *url.URL {
 	return kit.ParseURL(m.Option(MSG_USERWEB))
 }
+func (m *Message) MergeURL2(url string, arg ...interface{}) string {
+	return kit.MergeURL2(m.Option(MSG_USERWEB), url, arg...)
+}
 func (m *Message) MergeLink(url string, arg ...interface{}) string {
 	return strings.Split(m.MergeURL2(url, arg...), "?")[0]
 }
-func (m *Message) MergeURL2(url string, arg ...interface{}) string {
-	return kit.MergeURL2(m.Option(MSG_USERWEB), url, arg...)
+func (m *Message) MergePodURL(url string, arg ...interface{}) string {
+	return kit.MergeURL(m.MergeLink(path.Join("/chat/pod/", m.Option(MSG_USERPOD), url)), arg...)
 }
 func (m *Message) MergePod(pod string, arg ...interface{}) string {
 	return kit.MergePOD(kit.Select(Info.Domain, m.Option(MSG_USERWEB)), pod, arg...)

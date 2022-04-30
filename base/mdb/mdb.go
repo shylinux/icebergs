@@ -62,6 +62,8 @@ const (
 
 	FOREACH = "*"
 	RANDOMS = "%"
+
+	UNIQ = kit.MDB_UNIQ
 )
 const (
 	DETAIL = "detail"

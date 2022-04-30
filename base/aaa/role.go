@@ -21,7 +21,7 @@ func _role_list(m *ice.Message, userrole string) {
 	})
 }
 func _role_chain(arg ...string) string {
-	return kit.ReplaceAll(kit.Keys(arg), ice.PS, ice.PT)
+	return kit.ReplaceAll(kit.ReplaceAll(kit.Keys(arg), ice.PS, ice.PT), "..", ".")
 }
 func _role_black(m *ice.Message, userrole, chain string) {
 	m.Richs(ROLE, nil, userrole, func(key string, value map[string]interface{}) {

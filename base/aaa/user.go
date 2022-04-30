@@ -52,6 +52,7 @@ func UserRoot(m *ice.Message, arg ...string) *ice.Message { // password username
 	userrole := m.Option(ice.MSG_USERROLE, kit.Select(ROOT, arg, 2))
 	if len(arg) > 0 {
 		_user_create(m, userrole, username, kit.Select("", arg, 0))
+		ice.Info.UserName = username
 	}
 	return m
 }

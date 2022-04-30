@@ -8,8 +8,6 @@ import (
 	"shylinux.com/x/icebergs/base/cli"
 	"shylinux.com/x/icebergs/base/ctx"
 	"shylinux.com/x/icebergs/base/mdb"
-	"shylinux.com/x/icebergs/base/nfs"
-	"shylinux.com/x/icebergs/base/ssh"
 	"shylinux.com/x/icebergs/base/tcp"
 	"shylinux.com/x/icebergs/base/web"
 	"shylinux.com/x/icebergs/core/code"
@@ -125,10 +123,8 @@ func init() {
 				_header_users(m, m.ActionKey(), arg...)
 			}},
 
-			ctx.CONFIG: {Name: "config file", Help: "配置", Hand: func(m *ice.Message, arg ...string) {
-				pod := strings.Split(m.Cmdx(web.SPACE, m.Option(ice.MSG_USERPOD), cli.RUNTIME, "make.domain"), "/chat/pod/")[1]
-				m.Cmd(web.SPACE, m.Option(ice.MSG_USERPOD), nfs.SAVE, m.Option(nfs.FILE), m.Cmdx(web.SPACE, pod, nfs.CAT, m.Option(nfs.FILE)))
-				m.Cmd(web.SPACE, m.Option(ice.MSG_USERPOD), ssh.SOURCE, m.Option(nfs.FILE))
+			ctx.CONFIG: {Name: "config scope", Help: "配置", Hand: func(m *ice.Message, arg ...string) {
+				m.Cmdy(web.SPACE, m.Option(ice.MSG_USERPOD), m.Prefix(OAUTH), CHECK, arg)
 			}},
 			code.WEBPACK: {Name: "webpack", Help: "打包页面", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmdy(code.WEBPACK, cli.BUILD, m.OptionSimple(mdb.NAME))

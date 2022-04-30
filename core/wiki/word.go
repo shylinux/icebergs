@@ -2,6 +2,7 @@ package wiki
 
 import (
 	ice "shylinux.com/x/icebergs"
+	"shylinux.com/x/icebergs/base/aaa"
 	"shylinux.com/x/icebergs/base/ctx"
 	"shylinux.com/x/icebergs/base/lex"
 	"shylinux.com/x/icebergs/base/mdb"
@@ -38,6 +39,9 @@ func init() {
 		)},
 	}, Commands: map[string]*ice.Command{
 		WORD: {Name: "word path=src/main.shy@key auto play", Help: "语言文字", Meta: kit.Dict(ice.DisplayLocal("")), Action: ice.MergeAction(map[string]*ice.Action{
+			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
+				m.Cmd(aaa.ROLE, aaa.WHITE, aaa.VOID, m.PrefixKey("src/main.shy"))
+			}},
 			mdb.SEARCH: {Name: "search", Help: "搜索", Hand: func(m *ice.Message, arg ...string) {
 				if arg[0] == mdb.FOREACH && arg[1] == "" {
 					m.PushSearch(mdb.TYPE, "shy", mdb.NAME, "src/main.shy", mdb.TEXT, m.MergeCmd(""))

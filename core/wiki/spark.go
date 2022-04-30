@@ -117,6 +117,11 @@ func init() {
 				m.Echo(`<br class="story" data-type="spark">`)
 				return
 			}
+			switch kit.Ext(arg[0]) {
+			case "md":
+				m.Cmdy(SPARK, "md", arg)
+				return
+			}
 
 			arg = _name(m, arg)
 			_spark_show(m, arg[0], strings.TrimSpace(arg[1]), arg[2:]...)

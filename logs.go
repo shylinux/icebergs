@@ -112,6 +112,9 @@ func (m *Message) Error(err bool, str string, arg ...interface{}) bool {
 	return false
 }
 func (m *Message) Debug(str string, arg ...interface{}) {
+	if str == "" {
+		str = m.FormatMeta()
+	}
 	m.log(LOG_DEBUG, str, arg...)
 }
 

@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	ice "shylinux.com/x/icebergs"
+	"shylinux.com/x/icebergs/base/cli"
 	"shylinux.com/x/icebergs/base/ctx"
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/nfs"
@@ -25,7 +26,7 @@ func init() {
 				m.Cmdy(CMD, mdb.CREATE, mdb.TYPE, "csv", mdb.NAME, "web.wiki.data")
 				m.Cmdy(CMD, mdb.CREATE, mdb.TYPE, "json", mdb.NAME, "web.wiki.json")
 
-				for _, k := range []string{"sh", "go", "js", "mod", "sum"} {
+				for _, k := range []string{"mod", "sum"} {
 					m.Cmdy(CMD, mdb.CREATE, mdb.TYPE, k, mdb.NAME, "web.code.inner")
 				}
 			}},
@@ -35,11 +36,41 @@ func init() {
 				return // 目录
 			}
 
+			if mdb.HashSelect(m.Spawn(), path.Join(arg...)).Table(func(index int, value map[string]string, head []string) {
+				m.RenderCmd(value[mdb.NAME])
+			}).Length() > 0 {
+				return // 命令
+			}
+
 			p := path.Join(m.Config(nfs.PATH), path.Join(arg...))
 			if mdb.HashSelect(m.Spawn(), kit.Ext(m.R.URL.Path)).Table(func(index int, value map[string]string, head []string) {
 				m.RenderCmd(value[mdb.NAME], p)
 			}).Length() > 0 {
 				return // 插件
+			}
+
+			switch p := path.Join(arg...); kit.Ext(p) {
+			case nfs.JS:
+				if cmd := ice.GetFileCmd(p); cmd != "" {
+					m.Display(ice.FileURI(p))
+					m.RenderCmd(cmd)
+				}
+				return
+			case nfs.GO:
+				if cmd := ice.GetFileCmd(p); cmd != "" {
+					m.RenderCmd(cmd)
+				}
+				return
+			case nfs.SH:
+				if cmd := ice.GetFileCmd(p); cmd != "" {
+					msg := m.Cmd(cmd, ice.OptionFields(""))
+					if msg.Length() > 0 {
+						msg.Table()
+					}
+					m.Cmdy(cli.SYSTEM, "sh", p, msg.Result())
+					m.RenderResult()
+				}
+				return
 			}
 
 			if m.PodCmd(ctx.COMMAND, arg[0]) {
@@ -74,7 +105,7 @@ func init() {
 				m.ProcessLocation(arg[0])
 				return
 			}
-			switch kit.Ext(path.Join(arg...)) {
+			switch p := path.Join(arg...); kit.Ext(p) {
 			case "html":
 				m.RenderResult(m.Cmdx(nfs.CAT, path.Join(ice.SRC, path.Join(arg...))))
 				return

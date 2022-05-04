@@ -139,13 +139,14 @@ const (
 	JS   = ice.JS
 	GO   = ice.GO
 	SH   = ice.SH
+	SHY  = ice.SHY
 	CSV  = ice.CSV
 	JSON = ice.JSON
-	YML  = "yml"
-	IML  = "iml"
-	TXT  = "txt"
-	SHY  = "shy"
-	SVG  = "svg"
+
+	YML = "yml"
+	IML = "iml"
+	TXT = "txt"
+	SVG = "svg"
 
 	PWD = "./"
 )

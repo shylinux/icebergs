@@ -64,11 +64,7 @@ source: https://shylinux.com/x/icebergs
 	names:  map[string]interface{}{},
 }
 
-func FileCmd(dir string) string {
-	dir = strings.Split(dir, DF)[0]
-	dir = strings.ReplaceAll(dir, ".js", ".go")
-	dir = strings.ReplaceAll(dir, ".sh", ".go")
-
+func FileURI(dir string) string {
 	if strings.Contains(dir, "go/pkg/mod") {
 		return path.Join("/require", strings.Split(dir, "go/pkg/mod")[1])
 	}
@@ -86,5 +82,39 @@ func FileCmd(dir string) string {
 	}
 	return dir
 }
-func AddFileCmd(dir, key string)   { Info.File[FileCmd(dir)] = key }
-func GetFileCmd(dir string) string { return Info.File[FileCmd(dir)] }
+func FileCmd(dir string) string {
+	dir = strings.Split(dir, DF)[0]
+	dir = strings.ReplaceAll(dir, ".js", ".go")
+	dir = strings.ReplaceAll(dir, ".sh", ".go")
+	return FileURI(dir)
+}
+func AddFileCmd(dir, key string) {
+	Info.File[FileCmd(dir)] = key
+}
+func GetFileCmd(dir string) string {
+	if strings.HasPrefix(dir, "require/") {
+		dir = "/" + dir
+	}
+	for _, dir := range []string{dir, "/require/"+Info.Make.Module+"/"+dir}{
+		if cmd, ok := Info.File[FileCmd(dir)]; ok {
+			return cmd
+		}
+		p := path.Dir(dir)
+		if cmd, ok := Info.File[FileCmd(path.Join(p, path.Base(p)+".go"))]; ok {
+			return cmd
+		}
+		for k, v := range Info.File {
+			if strings.HasPrefix(k, p) {
+				return v
+			}
+		}
+	}
+	return ""
+}
+func FileRequire(n int) string {
+	p := kit.Split(kit.FileLine(n, 100), DF)[0]
+	if strings.Contains(p, "go/pkg/mod") {
+		return path.Join("/require", strings.Split(p, "go/pkg/mod")[1])
+	}
+	return path.Join("/require/" + kit.ModPath(n), path.Base(p))
+}

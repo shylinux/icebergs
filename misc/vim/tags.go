@@ -60,6 +60,9 @@ func init() {
 				m.ProcessCommand(code.INNER, m.OptionSplit("path,file,line"), arg...)
 			}},
 			INPUT: {Name: "input name text", Help: "补全", Hand: func(m *ice.Message, arg ...string) {
+				if m.Option(mdb.TEXT) == "" {
+					return
+				}
 				mdb.ZoneSelectCB(m, kit.Slice(kit.Split(m.Option(mdb.TEXT), ice.PT), -1)[0], func(value map[string]string) {
 					if !strings.Contains(value[mdb.NAME], m.Option(mdb.NAME)) {
 						return

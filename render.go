@@ -89,6 +89,7 @@ func (m *Message) RenderCmd(index string, args ...interface{}) {
 		list = kit.Format(kit.List(kit.Dict(
 			INDEX, index, ARGS, kit.Simple(args), msg.AppendSimple(NAME, HELP),
 			INPUTS, kit.UnMarshal(msg.Append(LIST)), FEATURE, kit.UnMarshal(msg.Append(META)),
+			"display", m.Option(MSG_DISPLAY),
 		)))
 	}
 	m.Echo(kit.Format(`<!DOCTYPE html>
@@ -285,11 +286,7 @@ func DisplayRequire(n int, file string, arg ...string) map[string]string {
 		file = kit.Keys(kit.FileName(n+1), JS)
 	}
 	if !strings.HasPrefix(file, HTTP) && !strings.HasPrefix(file, PS) {
-		if kit.FileExists("src/" + file) {
-			file = path.Join(PS, REQUIRE, "src/", file)
-		} else {
-			file = path.Join(PS, REQUIRE, kit.ModPath(n+1, file))
-		}
+		file = path.Join(PS, path.Join(path.Dir(FileRequire(n+2)), file))
 	}
 	return DisplayBase(file, arg...)
 }

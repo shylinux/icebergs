@@ -199,6 +199,7 @@ func init() {
 					m.Push(mdb.NAME, v)
 				}
 				m.Sort(nfs.FILE)
+				m.StatusTimeCount()
 			}},
 			"route": {Name: "route", Help: "接口命令", Hand: func(m *ice.Message, arg ...string) {
 				for k, v := range ice.Info.Route {

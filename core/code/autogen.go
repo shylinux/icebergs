@@ -86,7 +86,10 @@ field "{{.Option "help"}}" {{.Option "key"}}
 `)
 }
 func _autogen_source(m *ice.Message, main, file string) {
-	m.Cmd(nfs.PUSH, strings.ReplaceAll(main, ice.PT+GO, ice.PT+SHY), ice.NL, "source "+strings.TrimPrefix(file, ice.SRC+ice.PS))
+	main = strings.ReplaceAll(main, ice.PT+GO, ice.PT+SHY)
+	m.Cmd(nfs.DEFS, main, `chapter "{{.Option "name"}}"
+`)
+	m.Cmd(nfs.PUSH, main, ice.NL, "source "+strings.TrimPrefix(file, ice.SRC+ice.PS))
 }
 func _autogen_mod(m *ice.Message, file string) (mod string) {
 	host := kit.ParseURLMap(m.Option(ice.MSG_USERWEB))[tcp.HOSTNAME]
@@ -99,6 +102,9 @@ func _autogen_mod(m *ice.Message, file string) (mod string) {
 	m.Cmd(nfs.DEFS, file, kit.Format(`module %s
 
 go 1.11
+`, host))
+	m.Cmd(nfs.DEFS, ice.GO_SUM, kit.Format(`
+
 `, host))
 
 	m.Cmd(nfs.CAT, file, func(line string) {

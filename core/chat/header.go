@@ -126,6 +126,11 @@ func init() {
 			ctx.CONFIG: {Name: "config scope", Help: "配置", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmdy(web.SPACE, m.Option(ice.MSG_USERPOD), m.Prefix(OAUTH), CHECK, arg)
 			}},
+			code.PUBLISH: {Name: "publish", Help: "发布", Hand: func(m *ice.Message, arg ...string) {
+				if !m.PodCmd(code.PUBLISH, ice.CONTEXTS) {
+					m.Cmdy(code.PUBLISH, ice.CONTEXTS)
+				}
+			}},
 			code.WEBPACK: {Name: "webpack", Help: "打包页面", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmdy(code.WEBPACK, cli.BUILD, m.OptionSimple(mdb.NAME))
 			}},

@@ -48,7 +48,6 @@ func init() {
 		}, PlugAction())},
 	}, Configs: map[string]*ice.Config{
 		SH: {Name: SH, Help: "命令", Value: kit.Data(PLUG, kit.Dict(
-			mdb.ENGINE, kit.Dict(),
 			SPLIT, kit.Dict("space", " ", "operator", "{[(.,;!|<>)]}"),
 			PREFIX, kit.Dict("#", COMMENT),
 			SUFFIX, kit.Dict("{", COMMENT),

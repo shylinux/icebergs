@@ -74,8 +74,8 @@ func (m *Message) Split(str string, arg ...string) *Message { // field sp nl
 func (m *Message) SplitIndex(str string, arg ...string) *Message {
 	return m.Split(str, kit.Simple("index", arg)...)
 }
-func (m *Message) PushDetail(value interface{}, arg ...interface{}) *Message {
-	return m.Push(CACHE_DETAIL, value, arg...)
+func (m *Message) PushDetail(value interface{}, arg ...string) *Message {
+	return m.Push(CACHE_DETAIL, value, kit.Split(kit.Join(arg)))
 }
 func (m *Message) PushRecord(value interface{}, arg ...string) *Message {
 	return m.Push("", value, kit.Split(kit.Join(arg)))

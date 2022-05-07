@@ -184,13 +184,13 @@ func _website_search(m *ice.Message, kind, name, text string, arg ...string) {
 	})
 }
 
+const (
+	SRC_WEBSITE  = "src/website/"
+	CHAT_WEBSITE = "/chat/website/"
+)
 const WEBSITE = "website"
 
 func init() {
-	const (
-		SRC_WEBSITE  = "src/website/"
-		CHAT_WEBSITE = "/chat/website/"
-	)
 	Index.Merge(&ice.Context{Configs: map[string]*ice.Config{
 		WEBSITE: {Name: "website", Help: "网站", Value: kit.Data(mdb.SHORT, nfs.PATH, mdb.FIELD, "time,path,type,name,text")},
 	}, Commands: map[string]*ice.Command{

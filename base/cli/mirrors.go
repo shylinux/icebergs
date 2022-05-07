@@ -46,6 +46,7 @@ func init() {
 					IsAlpine(m, "node", "system apk add nodejs")
 					IsAlpine(m, "java", "system apk add openjdk8")
 					IsAlpine(m, "javac", "system apk add openjdk8")
+					IsAlpine(m, "mvn", "system apk add openjdk8 maven")
 					IsAlpine(m, "python", "system apk add python2")
 					IsAlpine(m, "python2", "system apk add python2")
 					IsAlpine(m, "python3", "system apk add python3")

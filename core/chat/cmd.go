@@ -50,6 +50,8 @@ func init() {
 			}
 
 			switch p := path.Join(arg...); kit.Ext(p) {
+			case nfs.CSS:
+
 			case nfs.JS:
 				if cmd := ice.GetFileCmd(p); cmd != "" {
 					m.Display(ice.FileURI(p))
@@ -70,6 +72,9 @@ func init() {
 					m.Cmdy(cli.SYSTEM, "sh", p, msg.Result())
 					m.RenderResult()
 				}
+				return
+			case "iml":
+				m.RenderRedirect(path.Join(CHAT_WEBSITE, strings.TrimPrefix(p, SRC_WEBSITE)))
 				return
 			}
 

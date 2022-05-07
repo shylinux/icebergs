@@ -95,6 +95,9 @@ func init() {
 					return false
 				})
 				nfs.AddRewrite(func(msg *ice.Message, name string) []byte {
+					if kit.FileExists(name) {
+						return nil
+					}
 					if strings.HasPrefix(name, ice.SRC) && kit.FileExists(name) {
 						return nil
 					}
@@ -138,8 +141,13 @@ func init() {
 					}
 					_binpack_ctx(m, f)
 
+					fmt.Fprintln(f, _binpack_file(m, ice.GO_MOD))
+					fmt.Fprintln(f, _binpack_file(m, ice.GO_SUM))
+					fmt.Fprintln(f, _binpack_file(m, ice.MAKEFILE))
+					fmt.Fprintln(f, _binpack_file(m, ice.ETC_MISS_SH))
 					fmt.Fprintln(f, _binpack_file(m, ice.ETC_INIT_SHY))
 					fmt.Fprintln(f, _binpack_file(m, ice.ETC_EXIT_SHY))
+					fmt.Fprintln(f, _binpack_file(m, ice.README_MD))
 					fmt.Fprintln(f)
 
 					m.Cmd(mdb.SELECT, m.PrefixKey(), "", mdb.HASH, ice.OptionFields(nfs.PATH)).Tables(func(value map[string]string) {

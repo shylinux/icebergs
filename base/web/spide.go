@@ -94,7 +94,7 @@ func _spide_list(m *ice.Message, arg ...string) {
 			return
 		}
 
-		if m.Config(LOGHEADERS) == ice.TRUE {
+		if true || m.Config(LOGHEADERS) == ice.TRUE {
 			for k, v := range res.Header {
 				m.Debug("%v: %v", k, v)
 			}
@@ -112,6 +112,8 @@ func _spide_list(m *ice.Message, arg ...string) {
 
 		// 错误信息
 		if m.Warn(res.StatusCode != http.StatusOK, ice.ErrNotFound, uri, "status", res.Status) {
+			b, _ := ioutil.ReadAll(res.Body)
+			m.Debug("whhat %v", string(b))
 			switch m.Set(ice.MSG_RESULT); res.StatusCode {
 			case http.StatusNotFound:
 				m.Warn(true, ice.ErrNotFound, uri)
@@ -225,7 +227,13 @@ func _spide_head(m *ice.Message, req *http.Request, head map[string]string, valu
 		req.AddCookie(&http.Cookie{Name: key, Value: value})
 		m.Logs(key, value)
 	})
-	list := kit.Simple(m.Optionv(SPIDE_HEADER))
+	list := kit.Simple(m.Optionv(SPIDE_COOKIE))
+	for i := 0; i < len(list)-1; i += 2 {
+		req.AddCookie(&http.Cookie{Name: list[i], Value: list[i+1]})
+		m.Logs(list[i], list[i+1])
+	}
+
+	list = kit.Simple(m.Optionv(SPIDE_HEADER))
 	for i := 0; i < len(list)-1; i += 2 {
 		req.Header.Set(list[i], list[i+1])
 		m.Logs(list[i], list[i+1])

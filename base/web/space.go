@@ -92,6 +92,10 @@ func _space_handle(m *ice.Message, safe bool, send map[string]*ice.Message, c *w
 			msg.Log("recv", "%v->%v %s %v", source, target, msg.Detailv(), msg.FormatMeta())
 
 			if len(target) == 0 {
+				if msg.Option(ice.MSG_HANDLE) == ice.TRUE {
+					msg.Debug("what %v %v", msg.FormatMeta(), msg.FormatStack())
+					continue
+				}
 				if msg.Optionv(ice.MSG_HANDLE, ice.TRUE); safe { // 下行命令
 					msg.Option(ice.MSG_USERROLE, kit.Select(msg.Option(ice.MSG_USERROLE), msg.Cmd(aaa.USER, msg.Option(ice.MSG_USERNAME)).Append(aaa.USERROLE)))
 					if msg.Option(ice.MSG_USERROLE) == aaa.VOID && ice.Info.UserName == "demo" {
@@ -220,7 +224,7 @@ func _space_search(m *ice.Message, kind, name, text string, arg ...string) {
 func _space_fork(m *ice.Message) {
 	if s, e := websocket.Upgrade(m.W, m.R, nil, kit.Int(m.Config("buffer.r")), kit.Int(m.Config("buffer.w"))); m.Assert(e) {
 		text := kit.Select(s.RemoteAddr().String(), m.Option(ice.MSG_USERADDR))
-		name := m.Option(mdb.NAME, kit.ReplaceAll(kit.Select(text, m.Option(mdb.NAME)), ".", "_", ":", "_"))
+		name := strings.ToLower(m.Option(mdb.NAME, kit.ReplaceAll(kit.Select(text, m.Option(mdb.NAME)), ".", "_", ":", "_")))
 		kind := kit.Select(WORKER, m.Option(mdb.TYPE))
 		args := append([]string{mdb.TYPE, kind, mdb.NAME, name}, m.OptionSimple(SHARE, RIVER)...)
 
@@ -326,7 +330,7 @@ func init() {
 				return
 			}
 			// 下发命令
-			_space_send(m, arg[0], arg[1:]...)
+			_space_send(m, strings.ToLower(arg[0]), arg[1:]...)
 		}},
 		"/space/": {Name: "/space/ type name share river", Help: "空间站", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			_space_fork(m)

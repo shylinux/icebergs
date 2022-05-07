@@ -98,6 +98,9 @@ func init() {
 				m.Option("httphost", fmt.Sprintf("%s://%s:%s", u.Scheme, strings.Split(u.Host, ice.DF)[0],
 					kit.Select(kit.Select("80", "443", u.Scheme == "https"), strings.Split(u.Host, ice.DF), 1)))
 
+				m.Option("remote", kit.Select(ice.Info.Make.Remote, strings.TrimSpace(m.Cmdx(cli.SYSTEM, "git", "config", "remote.origin.url"))))
+				m.Option("pathname", strings.TrimSuffix(path.Base(m.Option("remote")), ".git"))
+
 				if len(arg) == 0 {
 					arg = append(arg, ice.MISC, ice.CORE, ice.BASE)
 				}
@@ -152,7 +155,7 @@ var _contexts = kit.Dict(
 export ctx_dev={{.Option "httphost"}} ctx_pod={{.Option "user.pod"}}; ctx_temp=$(mktemp); wget -O $ctx_temp $ctx_dev; source $ctx_temp app
 `,
 	ice.CORE, `# 源码下载
-git clone {{.Option "httphost"}}/x/{{.Option "user.pod"}}; cd {{.Option "user.pod"}} && source etc/miss.sh port 9020
+git clone {{.Option "remote"}}; cd {{.Option "pathname"}} && source etc/miss.sh port 9020
 `,
 	ice.BASE, `# 官方下载
 ctx_temp=$(mktemp); curl -o $ctx_temp -fsSL {{.Cmdx "spide" "shy" "url"}}; source $ctx_temp binary

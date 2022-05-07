@@ -4,6 +4,7 @@ import (
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/aaa"
 	"shylinux.com/x/icebergs/base/cli"
+	"shylinux.com/x/icebergs/base/ctx"
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/nfs"
 	"shylinux.com/x/icebergs/base/ssh"
@@ -37,7 +38,8 @@ func init() {
 				m.Cmd(aaa.ROLE, aaa.WHITE, aaa.VOID, m.Prefix(OAUTH_OFFER))
 			}},
 			CHECK: {Name: "check scope", Help: "检查", Hand: func(m *ice.Message, arg ...string) {
-				m.Echo(kit.MergeURL(m.Cmdx(cli.RUNTIME, cli.MAKE_DOMAIN)+OAUTH_APPLY, m.OptionSimple(SCOPE), REDIRECT_URI, m.MergePodURL(OAUTH_REPLY)))
+				m.Echo(kit.MergeURL(m.Cmdx(cli.RUNTIME, cli.MAKE_DOMAIN)+OAUTH_APPLY, m.OptionSimple(SCOPE), REDIRECT_URI,
+					kit.Select(m.MergePodURL(OAUTH_REPLY), m.MergeLink("/chat/"+OAUTH_REPLY), m.Option(ice.MSG_USERPOD) == "")))
 			}},
 			APPLY: {Name: "apply redirect_uri", Help: "申请", Hand: func(m *ice.Message, arg ...string) {
 				if m.Right(m.Option(SCOPE)) {
@@ -50,11 +52,11 @@ func init() {
 				m.Cmd(ssh.SOURCE, ice.ETC_LOCAL_SHY, kit.Dict(nfs.CAT_CONTENT, m.Cmdx(web.SPIDE, ice.DEV, web.SPIDE_GET, m.Option(OFFER))))
 				m.ProcessHistory()
 			}},
-		}, mdb.HashAction(mdb.SHORT, mdb.UNIQ, EXPIRES, "720h"))},
+		}, mdb.HashAction(mdb.SHORT, mdb.UNIQ, EXPIRES, "720h"), ctx.CmdAction())},
 		OAUTH_APPLY: {Name: "/oauth/apply", Help: "授权申请", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			m.RenderCmd(m.Prefix(OAUTH), APPLY)
 		}},
-		OAUTH_REPLY: {Name: "/oauth/reply", Help: "授权通过", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		OAUTH_REPLY: {Name: "/oauth/reply", Help: "授权通过", Action: ctx.CmdAction(), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			m.RenderCmd(m.Prefix(OAUTH), REPLY)
 		}},
 		OAUTH_OFFER: {Name: "/oauth/offer", Help: "授权资源", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {

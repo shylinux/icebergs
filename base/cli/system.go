@@ -34,7 +34,7 @@ func _system_cmd(m *ice.Message, arg ...string) *exec.Cmd {
 	}
 	// 自动安装
 	if _system_find(m, arg[0]) == "" {
-		if cmds := m.Cmd(MIRROR, arg[0]).Append("cmd"); cmds != "" {
+		if cmds := m.Cmd(MIRRORS, arg[0]).Append("cmd"); cmds != "" {
 			m.Cmd(kit.Split(cmds))
 			if file := _system_find(m, arg[0]); file != "" {
 				m.Debug("cmd: %v", file)

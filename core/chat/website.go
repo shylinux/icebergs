@@ -163,7 +163,10 @@ func _website_render(m *ice.Message, w http.ResponseWriter, r *http.Request, kin
 			r.URL.Path = "/chat/cmd/web.chat.div"
 			return false
 		}
-	case nfs.IML, nfs.TXT:
+	case nfs.TXT:
+		msg.RenderCmd("can.parse", text)
+
+	case nfs.IML:
 		res, _ := _website_parse(msg, text)
 		msg.RenderResult(_website_template2, kit.Format(res))
 	case nfs.JSON:
@@ -194,6 +197,7 @@ func init() {
 	Index.Merge(&ice.Context{Configs: map[string]*ice.Config{
 		WEBSITE: {Name: "website", Help: "网站", Value: kit.Data(mdb.SHORT, nfs.PATH, mdb.FIELD, "time,path,type,name,text")},
 	}, Commands: map[string]*ice.Command{
+		"/website/": {Name: "/website/", Help: "网站", Action: ice.MergeAction(map[string]*ice.Action{}, ctx.CmdAction())},
 		WEBSITE: {Name: "website path auto create import", Help: "网站", Action: ice.MergeAction(map[string]*ice.Action{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
 				m.Cmd(mdb.RENDER, mdb.CREATE, nfs.IML, m.PrefixKey())
@@ -209,8 +213,10 @@ func init() {
 						return true
 					}
 					if strings.HasPrefix(r.URL.Path, CHAT_WEBSITE) {
-						_website_render(m, w, r, kit.Ext(r.URL.Path), m.Cmdx(nfs.CAT, strings.Replace(r.URL.Path, CHAT_WEBSITE, SRC_WEBSITE, 1)))
-						return true
+						if r.Method == http.MethodGet {
+							_website_render(m, w, r, kit.Ext(r.URL.Path), m.Cmdx(nfs.CAT, strings.Replace(r.URL.Path, CHAT_WEBSITE, SRC_WEBSITE, 1)))
+							return true
+						}
 					}
 					return false
 				})

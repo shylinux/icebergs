@@ -13,6 +13,67 @@ import (
 	kit "shylinux.com/x/toolkits"
 )
 
+func _cmd_file(m *ice.Message, arg ...string) bool {
+	if mdb.HashSelect(m.Spawn(), path.Join(arg...)).Table(func(index int, value map[string]string, head []string) {
+		m.RenderCmd(value[mdb.NAME])
+	}).Length() > 0 {
+		return true
+	}
+
+	p := path.Join(m.Config(nfs.PATH), path.Join(arg...))
+	if mdb.HashSelect(m.Spawn(), kit.Ext(p)).Table(func(index int, value map[string]string, head []string) {
+		m.RenderCmd(value[mdb.NAME], p)
+	}).Length() > 0 {
+		return true
+	}
+
+	switch p := path.Join(arg...); kit.Ext(p) {
+	case nfs.HTML:
+		m.RenderResult(m.Cmdx(nfs.CAT, p))
+
+	case nfs.CSS:
+
+	case nfs.JS:
+		m.Display(ice.FileURI(p))
+		if cmd := ice.GetFileCmd(p); cmd != "" {
+			m.RenderCmd(cmd)
+		} else {
+			m.RenderCmd("can.info")
+		}
+
+	case nfs.GO:
+		if cmd := ice.GetFileCmd(p); cmd != "" {
+			m.RenderCmd(cmd)
+		}
+
+	case nfs.SH:
+		if cmd := ice.GetFileCmd(p); cmd != "" {
+			msg := m.Cmd(cmd, ice.OptionFields(""))
+			if msg.Length() > 0 {
+				msg.Table()
+			}
+			m.Cmdy(cli.SYSTEM, "sh", p, msg.Result())
+			m.RenderResult()
+		}
+
+	case "txt":
+		m.RenderCmd("can.parse", m.Cmdx(nfs.CAT, p))
+
+	case "iml":
+		if m.Option(ice.MSG_USERPOD) == "" {
+			m.RenderRedirect(path.Join(CHAT_WEBSITE, strings.TrimPrefix(p, SRC_WEBSITE)))
+			m.Option(ice.MSG_ARGS, m.Option(ice.MSG_ARGS))
+		} else {
+			m.RenderRedirect(path.Join("/chat/pod", m.Option(ice.MSG_USERPOD), "website", strings.TrimPrefix(p, SRC_WEBSITE)))
+			m.Option(ice.MSG_ARGS, m.Option(ice.MSG_ARGS))
+		}
+
+	default:
+		return false
+	}
+	return true
+}
+
 const CMD = "cmd"
 
 func init() {
@@ -35,46 +96,7 @@ func init() {
 				m.RenderCmd(CMD)
 				return // 目录
 			}
-
-			if mdb.HashSelect(m.Spawn(), path.Join(arg...)).Table(func(index int, value map[string]string, head []string) {
-				m.RenderCmd(value[mdb.NAME])
-			}).Length() > 0 {
-				return // 命令
-			}
-
-			p := path.Join(m.Config(nfs.PATH), path.Join(arg...))
-			if mdb.HashSelect(m.Spawn(), kit.Ext(m.R.URL.Path)).Table(func(index int, value map[string]string, head []string) {
-				m.RenderCmd(value[mdb.NAME], p)
-			}).Length() > 0 {
-				return // 插件
-			}
-
-			switch p := path.Join(arg...); kit.Ext(p) {
-			case nfs.CSS:
-
-			case nfs.JS:
-				if cmd := ice.GetFileCmd(p); cmd != "" {
-					m.Display(ice.FileURI(p))
-					m.RenderCmd(cmd)
-				}
-				return
-			case nfs.GO:
-				if cmd := ice.GetFileCmd(p); cmd != "" {
-					m.RenderCmd(cmd)
-				}
-				return
-			case nfs.SH:
-				if cmd := ice.GetFileCmd(p); cmd != "" {
-					msg := m.Cmd(cmd, ice.OptionFields(""))
-					if msg.Length() > 0 {
-						msg.Table()
-					}
-					m.Cmdy(cli.SYSTEM, "sh", p, msg.Result())
-					m.RenderResult()
-				}
-				return
-			case "iml":
-				m.RenderRedirect(path.Join(CHAT_WEBSITE, strings.TrimPrefix(p, SRC_WEBSITE)))
+			if _cmd_file(m, arg...) {
 				return
 			}
 
@@ -85,7 +107,7 @@ func init() {
 			} else if m.Cmdy(ctx.COMMAND, arg[0]); m.Length() > 0 {
 				m.RenderCmd(arg[0], arg[1:]) // 本地命令
 			} else {
-				m.RenderDownload(p) // 文件
+				m.RenderDownload(path.Join(m.Config(nfs.PATH), path.Join(arg...))) // 文件
 			}
 		}},
 		CMD: {Name: "cmd path auto upload up home", Help: "命令", Action: ice.MergeAction(map[string]*ice.Action{
@@ -106,13 +128,16 @@ func init() {
 				}
 			}},
 		}, mdb.HashAction()), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			if len(arg) > 0 {
-				m.ProcessLocation(arg[0])
+			if msg := m.Cmd(ctx.COMMAND, arg[0]); msg.Length() > 0 {
+				m.RenderCmd(arg[0])
 				return
 			}
-			switch p := path.Join(arg...); kit.Ext(p) {
-			case "html":
-				m.RenderResult(m.Cmdx(nfs.CAT, path.Join(ice.SRC, path.Join(arg...))))
+			if _cmd_file(m, arg...) {
+				return
+			}
+
+			if len(arg) > 0 {
+				m.ProcessLocation(arg[0])
 				return
 			}
 			m.Option(nfs.DIR_ROOT, path.Join(m.Config(nfs.PATH), strings.TrimPrefix(path.Dir(m.R.URL.Path), "/cmd")))

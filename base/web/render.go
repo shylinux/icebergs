@@ -88,6 +88,7 @@ func RenderCookie(msg *ice.Message, value string, arg ...string) { // name path 
 		Name: kit.Select(CookieName(msg.Option(ice.MSG_USERWEB)), arg, 0), Path: kit.Select(ice.PS, arg, 1), Expires: expire})
 }
 func RenderRedirect(msg *ice.Message, arg ...string) {
+	// http.Redirect(msg.W, msg.R, kit.MergeURL(arg[0], arg[1:]), http.StatusTemporaryRedirect)
 	http.Redirect(msg.W, msg.R, kit.MergeURL(arg[0], arg[1:]), http.StatusMovedPermanently)
 }
 func RenderType(w http.ResponseWriter, name, mime string) {

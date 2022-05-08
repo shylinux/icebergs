@@ -42,7 +42,7 @@ func init() {
 				m.RenderWebsite(arg[0], path.Join(arg[2:]...))
 
 			} else if arg[1] == "cmd" { // 节点命令
-				m.Cmdy("/cmd/", path.Join(arg[2:]...))
+				m.Cmdy(web.SPACE, arg[0], m.Prefix(CMD), path.Join(arg[2:]...))
 			} else {
 				m.Cmdy(web.SPACE, m.Option(ice.MSG_USERPOD), "web.chat."+ice.PS+path.Join(arg[1:]...))
 			}

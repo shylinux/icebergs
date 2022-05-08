@@ -187,7 +187,6 @@ func _serve_handle(key string, cmd *ice.Command, msg *ice.Message, w http.Respon
 	}
 
 	msg.Option(ice.MSG_OUTPUT, "")
-	msg.Option(ice.MSG_ARGS, kit.List())
 	if cmds, ok := _serve_login(msg, key, kit.Simple(msg.Optionv(ice.MSG_CMDS)), w, r); ok {
 		msg.Option(ice.MSG_OPTS, msg.Optionv(ice.MSG_OPTION))
 		msg.Target().Cmd(msg, key, cmds...) // 执行命令
@@ -195,7 +194,17 @@ func _serve_handle(key string, cmd *ice.Command, msg *ice.Message, w http.Respon
 	}
 
 	// 输出响应
-	Render(msg, msg.Option(ice.MSG_OUTPUT), msg.Optionv(ice.MSG_ARGS).([]interface{})...)
+	switch args := msg.Optionv(ice.MSG_ARGS).(type) {
+	case []interface{}:
+		msg.Debug("what %v", args)
+		Render(msg, msg.Option(ice.MSG_OUTPUT), args...)
+	case []string:
+		msg.Debug("what %v", args)
+		Render(msg, msg.Option(ice.MSG_OUTPUT), args)
+	default:
+		msg.Debug("what %v", args)
+		Render(msg, msg.Option(ice.MSG_OUTPUT), kit.List())
+	}
 }
 func _serve_login(msg *ice.Message, key string, cmds []string, w http.ResponseWriter, r *http.Request) ([]string, bool) {
 	aaa.SessCheck(msg, msg.Option(ice.MSG_SESSID)) // 会话认证

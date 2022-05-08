@@ -31,6 +31,32 @@ func init() {
 				m.Option(mdb.TEXT, strings.TrimSpace(m.Option(mdb.TEXT)))
 				m.Cmdy(TEMPLATE, nfs.DEFS)
 			}},
+			"complete": {Name: "complete", Help: "补全", Hand: func(m *ice.Message, arg ...string) {
+				switch m.Option("key") {
+				case "ice", "*ice":
+					m.Push("name", "Message")
+					m.Push("name", "Context")
+				default:
+					if strings.HasSuffix(m.Option("pre"), " index ") {
+						m.OptionFields("index")
+						m.Cmdy(ctx.COMMAND, mdb.SEARCH, ctx.COMMAND, "", "")
+					} else if strings.HasSuffix(m.Option("pre"), " action ") {
+						m.Push("name", "auto")
+					} else if strings.HasSuffix(m.Option("pre"), " type ") {
+						m.Push("name", "menu")
+					} else if strings.HasSuffix(m.Option("pre"), " ") {
+						m.Push("name", "index")
+						m.Push("name", "action")
+						m.Push("name", "args")
+						m.Push("name", "type")
+					} else if m.Option("pre") == "" {
+						m.Push("name", "left")
+						m.Push("name", "head")
+						m.Push("name", "main")
+						m.Push("name", "foot")
+					}
+				}
+			}},
 			"website": {Name: "script file=hi.iml text=", Help: "网页", Hand: func(m *ice.Message, arg ...string) {
 				m.Option(nfs.FILE, path.Join("website", m.Option(nfs.FILE)))
 				m.Option(mdb.TEXT, strings.TrimSpace(m.Option(mdb.TEXT)))

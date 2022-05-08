@@ -11,7 +11,7 @@ import (
 func IsAlpine(m *ice.Message, arg ...string) bool {
 	if strings.Contains(m.Conf(RUNTIME, "host.OSID"), ALPINE) {
 		if len(arg) > 0 {
-			m.Cmd(MIRROR, mdb.CREATE, "cli", arg[0], "cmd", arg[1])
+			m.Cmd(MIRRORS, mdb.CREATE, "cli", arg[0], "cmd", arg[1])
 		}
 		return true
 	}
@@ -25,11 +25,11 @@ const (
 	UBUNTU = "ubuntu"
 )
 
-const MIRROR = "mirror"
+const MIRRORS = "mirrors"
 
 func init() {
 	Index.Merge(&ice.Context{Commands: map[string]*ice.Command{
-		MIRROR: {Name: "mirror cli auto", Help: "软件镜像", Action: ice.MergeAction(map[string]*ice.Action{
+		MIRRORS: {Name: "mirrors cli auto", Help: "软件镜像", Action: ice.MergeAction(map[string]*ice.Action{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
 				m.Go(func() {
 					m.Sleep("1s")
@@ -40,16 +40,16 @@ func init() {
 					IsAlpine(m, "tmux", "system apk add tmux")
 
 					if IsAlpine(m, "git", "system apk add git"); !IsAlpine(m, "go", "system apk add git go") {
-						m.Cmd(MIRROR, mdb.CREATE, kit.SimpleKV("cli,cmd", "go", "install download https://golang.google.cn/dl/go1.15.5.linux-amd64.tar.gz usr/local"))
+						m.Cmd(MIRRORS, mdb.CREATE, kit.SimpleKV("cli,cmd", "go", "install download https://golang.google.cn/dl/go1.15.5.linux-amd64.tar.gz usr/local"))
 					}
 
 					IsAlpine(m, "node", "system apk add nodejs")
-					IsAlpine(m, "java", "system apk add openjdk8")
-					IsAlpine(m, "javac", "system apk add openjdk8")
-					IsAlpine(m, "mvn", "system apk add openjdk8 maven")
 					IsAlpine(m, "python", "system apk add python2")
 					IsAlpine(m, "python2", "system apk add python2")
 					IsAlpine(m, "python3", "system apk add python3")
+					IsAlpine(m, "mvn", "system apk add openjdk8 maven")
+					IsAlpine(m, "javac", "system apk add openjdk8")
+					IsAlpine(m, "java", "system apk add openjdk8")
 				})
 			}},
 			mdb.CREATE: {Name: "create cli cmd", Help: "创建"},

@@ -143,6 +143,7 @@ const (
 	CSV  = ice.CSV
 	JSON = ice.JSON
 
+	PY  = "py"
 	TXT = "txt"
 	IML = "iml"
 	XML = "xml"

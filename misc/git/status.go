@@ -316,7 +316,7 @@ func init() {
 
 			m.Option(cli.CMD_DIR, _repos_path(arg[0]))
 			m.Echo(m.Cmdx(cli.SYSTEM, GIT, DIFF))
-			m.Action(COMMIT, BRANCH, TAGS)
+			m.Action(COMMIT, TAGS, BRANCH)
 
 			files, adds, dels := _status_stat(m, 0, 0, 0)
 			m.Status("files", files, "adds", adds, "dels", dels)

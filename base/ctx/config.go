@@ -34,9 +34,6 @@ func _config_save(m *ice.Message, name string, arg ...string) {
 		for _, k := range arg {
 			if v := msg.Confv(k); v != "" {
 				data[k] = v
-				if k == "web.code.trpc.oauth" {
-					m.Debug("wha5 %v %v", k, v)
-				}
 			}
 		}
 
@@ -45,9 +42,6 @@ func _config_save(m *ice.Message, name string, arg ...string) {
 			if n, e := f.Write(s); m.Assert(e) {
 				m.Log_EXPORT(CONFIG, name, nfs.FILE, p, nfs.SIZE, n)
 			}
-		}
-		if name == "var/conf/web.code.trpc.json" {
-			m.Debug("wha5 %v %v %v", name, p, data)
 		}
 		m.Echo(p)
 	}

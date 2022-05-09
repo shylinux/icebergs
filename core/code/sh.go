@@ -29,6 +29,9 @@ func init() {
 				}
 				LoadPlug(m, SH)
 			}},
+			mdb.RENDER: {Hand: func(m *ice.Message, arg ...string) {
+				m.Cmdy(cli.SYSTEM, SH, "-c", kit.Join(_sh_main_script(m, arg...), ice.NL)).SetAppend()
+			}},
 			mdb.ENGINE: {Hand: func(m *ice.Message, arg ...string) {
 				m.Cmdy(cli.SYSTEM, SH, "-c", kit.Join(_sh_main_script(m, arg...), ice.NL)).SetAppend()
 			}},

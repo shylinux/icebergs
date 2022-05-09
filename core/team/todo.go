@@ -10,7 +10,7 @@ const TODO = "todo"
 
 func init() {
 	Index.Merge(&ice.Context{Commands: map[string]*ice.Command{
-		TODO: {Name: "todo hash auto create", Help: "待办", Action: ice.MergeAction(map[string]*ice.Action{
+		TODO: {Name: "todo hash auto create export import", Help: "待办", Action: ice.MergeAction(map[string]*ice.Action{
 			mdb.INPUTS: {Name: "inputs", Help: "补全", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmdy(mdb.INPUTS, m.PrefixKey(), "", mdb.HASH, arg)
 				m.Cmdy(TASK, mdb.INPUTS, arg)
@@ -23,6 +23,7 @@ func init() {
 		}, mdb.HashAction(mdb.FIELD, "time,hash,zone,name,text")), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			m.Display("/plugin/table.js", "style", "card")
 			mdb.HashSelect(m, arg...).PushAction(cli.START, mdb.REMOVE)
+			m.PushPodCmd(cmd, arg...)
 		}},
 	}})
 }

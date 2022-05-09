@@ -148,7 +148,7 @@ func _serve_handle(key string, cmd *ice.Command, msg *ice.Message, w http.Respon
 		if r.ParseForm(); len(r.PostForm) > 0 {
 			for k, v := range r.PostForm {
 				if len(v) > 1 {
-					msg.Logs("form", k, len(v), v)
+					msg.Logs("form", k, len(v), kit.Format(v))
 				} else {
 					msg.Logs("form", k, v)
 				}
@@ -196,13 +196,10 @@ func _serve_handle(key string, cmd *ice.Command, msg *ice.Message, w http.Respon
 	// 输出响应
 	switch args := msg.Optionv(ice.MSG_ARGS).(type) {
 	case []interface{}:
-		msg.Debug("what %v", args)
 		Render(msg, msg.Option(ice.MSG_OUTPUT), args...)
 	case []string:
-		msg.Debug("what %v", args)
 		Render(msg, msg.Option(ice.MSG_OUTPUT), args)
 	default:
-		msg.Debug("what %v", args)
 		Render(msg, msg.Option(ice.MSG_OUTPUT), kit.List())
 	}
 }

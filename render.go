@@ -194,7 +194,7 @@ func (m *Message) PushPodCmd(cmd string, arg ...string) {
 		})
 	}
 
-	m.Cmd(SPACE).Table(func(index int, value map[string]string, head []string) {
+	m.Cmd(SPACE, OptionFields("type,name")).Table(func(index int, value map[string]string, head []string) {
 		switch value[TYPE] {
 		case "server", "worker":
 			if value[NAME] == Info.HostName {

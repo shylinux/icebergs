@@ -222,6 +222,10 @@ func init() {
 				})
 			}},
 			"show": {Hand: func(m *ice.Message, arg ...string) {
+				if kit.Ext(arg[0]) == nfs.ZML {
+					m.RenderCmd("can.parse", m.Cmdx(nfs.CAT, path.Join(SRC_WEBSITE, arg[0])))
+					return
+				}
 				if text := m.Cmd(m.PrefixKey(), ice.PS+arg[0]).Append(mdb.TEXT); text != "" {
 					if res, ok := _website_parse(m, text, arg[1:]...); ok {
 						m.Echo(_website_template2, kit.Format(res))

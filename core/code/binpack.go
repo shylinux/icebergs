@@ -141,17 +141,25 @@ func init() {
 					}
 					_binpack_ctx(m, f)
 
-					fmt.Fprintln(f, _binpack_file(m, ice.GO_MOD))
-					fmt.Fprintln(f, _binpack_file(m, ice.GO_SUM))
-					fmt.Fprintln(f, _binpack_file(m, ice.MAKEFILE))
 					fmt.Fprintln(f, _binpack_file(m, ice.ETC_MISS_SH))
 					fmt.Fprintln(f, _binpack_file(m, ice.ETC_INIT_SHY))
 					fmt.Fprintln(f, _binpack_file(m, ice.ETC_EXIT_SHY))
+					fmt.Fprintln(f)
+
+					fmt.Fprintln(f, _binpack_file(m, ice.GO_MOD))
+					fmt.Fprintln(f, _binpack_file(m, ice.GO_SUM))
+					fmt.Fprintln(f, _binpack_file(m, ice.MAKEFILE))
 					fmt.Fprintln(f, _binpack_file(m, ice.README_MD))
 					fmt.Fprintln(f)
 
 					m.Cmd(mdb.SELECT, m.PrefixKey(), "", mdb.HASH, ice.OptionFields(nfs.PATH)).Tables(func(value map[string]string) {
-						_binpack_dir(m, f, value[nfs.PATH])
+						if s, e := os.Stat(value[nfs.PATH]); e == nil {
+							if s.IsDir() {
+								_binpack_dir(m, f, value[nfs.PATH])
+							} else {
+								fmt.Fprintln(f, _binpack_file(m, value[nfs.PATH]))
+							}
+						}
 					})
 				}
 			}},

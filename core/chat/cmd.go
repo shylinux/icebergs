@@ -128,11 +128,11 @@ func init() {
 				}
 			}},
 		}, mdb.HashAction()), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			if msg := m.Cmd(ctx.COMMAND, arg[0]); msg.Length() > 0 {
-				m.RenderCmd(arg[0])
+			if _cmd_file(m, arg...) {
 				return
 			}
-			if _cmd_file(m, arg...) {
+			if msg := m.Cmd(ctx.COMMAND, arg[0]); msg.Length() > 0 {
+				m.RenderCmd(arg[0])
 				return
 			}
 

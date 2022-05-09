@@ -74,6 +74,7 @@ var Index = &Context{Name: "ice", Help: "冰山模块", Configs: map[string]*Con
 	EXIT: {Name: "exit", Help: "结束", Hand: func(m *Message, c *Context, cmd string, arg ...string) {
 		m.root.Option(EXIT, kit.Select("0", arg, 0))
 		defer c.Close(m.root.Spawn(), arg...)
+		defer m.Sleep("1s")
 
 		m.Cmd("source", ETC_EXIT_SHY)
 		m.root.Cmd(CTX_EXIT)

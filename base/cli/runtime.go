@@ -192,6 +192,7 @@ func init() {
 					m.Push(mdb.NAME, ls[0])
 					m.Push(mdb.VALUE, ls[1])
 				}
+				m.StatusTimeCount()
 			}},
 			"file": {Name: "file", Help: "模块文件", Hand: func(m *ice.Message, arg ...string) {
 				for k, v := range ice.Info.File {
@@ -207,6 +208,7 @@ func init() {
 					m.Push(nfs.FILE, v)
 				}
 				m.Sort(nfs.PATH)
+				m.StatusTimeCount()
 			}},
 			MAKE_DOMAIN: {Name: "make.domain", Help: "编译主机", Hand: func(m *ice.Message, arg ...string) {
 				if os.Getenv(CTX_DEV) == "" || os.Getenv(CTX_POD) == "" {

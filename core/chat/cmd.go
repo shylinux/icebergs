@@ -56,10 +56,10 @@ func _cmd_file(m *ice.Message, arg ...string) bool {
 			m.RenderResult()
 		}
 
-	case "txt":
+	case nfs.ZML:
 		m.RenderCmd("can.parse", m.Cmdx(nfs.CAT, p))
 
-	case "iml":
+	case nfs.IML:
 		if m.Option(ice.MSG_USERPOD) == "" {
 			m.RenderRedirect(path.Join(CHAT_WEBSITE, strings.TrimPrefix(p, SRC_WEBSITE)))
 			m.Option(ice.MSG_ARGS, m.Option(ice.MSG_ARGS))

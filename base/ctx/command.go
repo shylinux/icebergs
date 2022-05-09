@@ -6,10 +6,18 @@ import (
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/aaa"
 	"shylinux.com/x/icebergs/base/mdb"
+	"shylinux.com/x/icebergs/base/nfs"
 	kit "shylinux.com/x/toolkits"
 )
 
 func _command_list(m *ice.Message, name string) {
+	switch kit.Ext(name) {
+	case nfs.JS:
+		m.Push("display", ice.FileURI(name))
+		name = ice.GetFileCmd(name)
+	case nfs.GO:
+		name = ice.GetFileCmd(name)
+	}
 	if strings.HasPrefix(name, "can.") {
 		m.Push(mdb.INDEX, name)
 		return
@@ -89,8 +97,6 @@ func init() {
 				if arg[0] == m.CommandKey() || len(arg) > 1 && arg[1] != "" {
 					_command_search(m, arg[0], kit.Select("", arg, 1), kit.Select("", arg, 2))
 				}
-			}},
-			INDEX: {Name: "index", Help: "索引", Hand: func(m *ice.Message, arg ...string) {
 			}},
 		}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			if len(arg) == 0 {

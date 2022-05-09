@@ -163,7 +163,7 @@ func _website_render(m *ice.Message, w http.ResponseWriter, r *http.Request, kin
 			r.URL.Path = "/chat/cmd/web.chat.div"
 			return false
 		}
-	case nfs.TXT:
+	case nfs.ZML:
 		msg.RenderCmd("can.parse", text)
 
 	case nfs.IML:

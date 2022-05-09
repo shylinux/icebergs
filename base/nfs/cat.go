@@ -143,9 +143,11 @@ const (
 	CSV  = ice.CSV
 	JSON = ice.JSON
 
-	YML = "yml"
-	IML = "iml"
 	TXT = "txt"
+	IML = "iml"
+	XML = "xml"
+	YML = "yml"
+	ZML = "zml"
 	SVG = "svg"
 
 	PWD = "./"
@@ -165,7 +167,7 @@ func init() {
 			SOURCE, kit.Dict(
 				HTML, ice.TRUE, CSS, ice.TRUE, JS, ice.TRUE, GO, ice.TRUE, SH, ice.TRUE, CSV, ice.TRUE, JSON, ice.TRUE,
 				"md", ice.TRUE, "shy", ice.TRUE, "makefile", ice.TRUE, "license", ice.TRUE,
-				"conf", ice.TRUE, YML, ice.TRUE, IML, ice.TRUE, "txt", ice.TRUE,
+				"conf", ice.TRUE, YML, ice.TRUE, ZML, ice.TRUE, IML, ice.TRUE, "txt", ice.TRUE,
 				"py", ice.TRUE,
 			),
 		)},

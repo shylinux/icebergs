@@ -38,7 +38,7 @@ func init() {
 			mdb.FIELD, "time,hash,type,name,text",
 		)},
 	}, Commands: map[string]*ice.Command{
-		WORD: {Name: "word path=src/main.shy@key auto play", Help: "语言文字", Meta: kit.Dict(ice.DisplayLocal("")), Action: ice.MergeAction(map[string]*ice.Action{
+		WORD: {Name: "word path=src/main.shy@key list play", Help: "语言文字", Meta: kit.Dict(ice.DisplayLocal("")), Action: ice.MergeAction(map[string]*ice.Action{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
 				m.Cmd(aaa.ROLE, aaa.WHITE, aaa.VOID, m.PrefixKey("src/main.shy"))
 			}},

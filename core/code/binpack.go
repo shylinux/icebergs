@@ -33,7 +33,7 @@ func _binpack_dir(m *ice.Message, f *os.File, dir string) {
 
 	m.Cmd(nfs.DIR, nfs.PWD).Sort(nfs.PATH).Tables(func(value map[string]string) {
 		switch path.Base(value[nfs.PATH]) {
-		case "go.sum", "binpack.go":
+		case "go.mod", "go.sum", "binpack.go", "version.go":
 			return
 		}
 		switch strings.Split(value[nfs.PATH], ice.PS)[0] {
@@ -146,8 +146,6 @@ func init() {
 					fmt.Fprintln(f, _binpack_file(m, ice.ETC_EXIT_SHY))
 					fmt.Fprintln(f)
 
-					fmt.Fprintln(f, _binpack_file(m, ice.GO_MOD))
-					fmt.Fprintln(f, _binpack_file(m, ice.GO_SUM))
 					fmt.Fprintln(f, _binpack_file(m, ice.MAKEFILE))
 					fmt.Fprintln(f, _binpack_file(m, ice.README_MD))
 					fmt.Fprintln(f)

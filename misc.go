@@ -299,9 +299,9 @@ func (c *Context) split(name string) (list []interface{}) {
 			item = kit.Dict(TYPE, BUTTON, NAME, "run")
 			list = append(list, item)
 			button = true
-		case "text", "args":
-			item = kit.Dict(TYPE, TEXTAREA, NAME, ls[i])
-			list = append(list, item)
+		case "list":
+			list = append(list, kit.List(TYPE, BUTTON, NAME, "list", ACTION, AUTO)...)
+			button = true
 		case "auto":
 			list = append(list, kit.List(TYPE, BUTTON, NAME, "list", ACTION, AUTO)...)
 			list = append(list, kit.List(TYPE, BUTTON, NAME, "back")...)
@@ -311,6 +311,9 @@ func (c *Context) split(name string) (list []interface{}) {
 			list = append(list, kit.List(TYPE, TEXT, NAME, "offend")...)
 			list = append(list, kit.List(TYPE, BUTTON, NAME, "prev")...)
 			list = append(list, kit.List(TYPE, BUTTON, NAME, "next")...)
+		case "text", "args":
+			item = kit.Dict(TYPE, TEXTAREA, NAME, ls[i])
+			list = append(list, item)
 
 		case ":":
 			if item[TYPE] = kit.Select("", ls, i+1); item[TYPE] == BUTTON {

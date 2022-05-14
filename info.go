@@ -80,6 +80,9 @@ func FileURI(dir string) string {
 	if strings.HasPrefix(dir, USR) {
 		return path.Join("/require", dir)
 	}
+	if kit.FileExists(path.Join("src", dir)) {
+		return path.Join("/require/src/", dir)
+	}
 	return dir
 }
 func FileCmd(dir string) string {
@@ -95,7 +98,7 @@ func GetFileCmd(dir string) string {
 	if strings.HasPrefix(dir, "require/") {
 		dir = "/" + dir
 	}
-	for _, dir := range []string{dir, "/require/"+Info.Make.Module+"/"+dir}{
+	for _, dir := range []string{dir, "/require/" + Info.Make.Module + "/" + dir, "/require/" + Info.Make.Module + "/src/" + dir} {
 		if cmd, ok := Info.File[FileCmd(dir)]; ok {
 			return cmd
 		}
@@ -116,5 +119,5 @@ func FileRequire(n int) string {
 	if strings.Contains(p, "go/pkg/mod") {
 		return path.Join("/require", strings.Split(p, "go/pkg/mod")[1])
 	}
-	return path.Join("/require/" + kit.ModPath(n), path.Base(p))
+	return path.Join("/require/"+kit.ModPath(n), path.Base(p))
 }

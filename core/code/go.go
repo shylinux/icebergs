@@ -193,9 +193,11 @@ func init() {
 		}, PlugAction())},
 		SUM: {Name: "sum", Help: "版本", Action: ice.MergeAction(map[string]*ice.Action{
 			mdb.RENDER: {Hand: func(m *ice.Message, arg ...string) { _sum_show(m, path.Join(arg[2], arg[1])) }},
+			mdb.ENGINE: {Hand: func(m *ice.Message, arg ...string) { _sum_show(m, path.Join(arg[2], arg[1])) }},
 		}, PlugAction())},
 		MOD: {Name: "mod", Help: "模块", Action: ice.MergeAction(map[string]*ice.Action{
 			mdb.RENDER: {Hand: func(m *ice.Message, arg ...string) { _mod_show(m, path.Join(arg[2], arg[1])) }},
+			mdb.ENGINE: {Hand: func(m *ice.Message, arg ...string) { _mod_show(m, path.Join(arg[2], arg[1])) }},
 		}, PlugAction())},
 		GO: {Name: "go", Help: "后端", Action: ice.MergeAction(map[string]*ice.Action{
 			mdb.SEARCH: {Hand: func(m *ice.Message, arg ...string) {

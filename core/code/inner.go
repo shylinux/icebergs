@@ -68,12 +68,12 @@ func LoadPlug(m *ice.Message, language ...string) {
 		})
 	}
 }
-func PlugAction(fields ...string) map[string]*ice.Action {
-	return ice.SelectAction(map[string]*ice.Action{
+func PlugAction() map[string]*ice.Action {
+	return map[string]*ice.Action{
 		mdb.PLUGIN: {Hand: func(m *ice.Message, arg ...string) { m.Echo(m.Config(PLUG)) }},
 		mdb.RENDER: {Hand: func(m *ice.Message, arg ...string) { m.Cmdy(nfs.CAT, path.Join(arg[2], arg[1])) }},
 		mdb.ENGINE: {Hand: func(m *ice.Message, arg ...string) { m.Cmdy(nfs.CAT, path.Join(arg[2], arg[1])) }},
-	}, fields...)
+	}
 }
 
 const (
@@ -84,9 +84,11 @@ const (
 	FUNCTION = "function"
 )
 const (
-	SPLIT  = "split"
-	PREFIX = "prefix"
-	SUFFIX = "suffix"
+	SPLIT   = "split"
+	PREFIX  = "prefix"
+	SUFFIX  = "suffix"
+	SPACE   = "space"
+	OPERATE = "operate"
 )
 const (
 	PLUG = "plug"

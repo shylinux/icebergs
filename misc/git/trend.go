@@ -13,7 +13,7 @@ const TREND = "trend"
 func init() {
 	Index.Merge(&ice.Context{Commands: map[string]*ice.Command{
 		TREND: {Name: "trend repos@key begin_time@date auto", Help: "趋势图", Meta: kit.Dict(
-			ice.Display("/plugin/story/trend.js"),
+			ice.DisplayStory("trend.js"),
 		), Action: ice.MergeAction(map[string]*ice.Action{
 			mdb.INPUTS: {Name: "inputs", Help: "补全", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmdy(REPOS, ice.OptionFields("name,time"))

@@ -6,6 +6,7 @@ import (
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/cli"
 	"shylinux.com/x/icebergs/base/mdb"
+	"shylinux.com/x/icebergs/base/nfs"
 	kit "shylinux.com/x/toolkits"
 )
 
@@ -15,27 +16,25 @@ func _sh_main_script(m *ice.Message, arg ...string) (res []string) {
 	} else if b, ok := ice.Info.Pack[path.Join(arg[2], arg[1])]; ok && len(b) > 0 {
 		res = append(res, string(b))
 	}
+	m.Cmdy(cli.SYSTEM, SH, "-c", kit.Join(res, ice.NL))
+	if m.StatusTime(); cli.IsSuccess(m) {
+		m.SetAppend()
+	}
 	return
 }
 
-const SH = "sh"
+const SH = nfs.SH
 
 func init() {
-	Index.Register(&ice.Context{Name: SH, Help: "命令", Commands: map[string]*ice.Command{
-		SH: {Name: SH, Help: "命令", Action: ice.MergeAction(map[string]*ice.Action{
-			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
+	Index.Merge(&ice.Context{Name: SH, Help: "命令", Commands: map[string]*ice.Command{
+		SH: {Name: "sh path auto", Help: "命令", Action: ice.MergeAction(map[string]*ice.Action{
+			ice.CTX_INIT: {Name: "_init", Help: "初始化", Hand: func(m *ice.Message, arg ...string) {
 				for _, cmd := range []string{mdb.SEARCH, mdb.ENGINE, mdb.RENDER, mdb.PLUGIN} {
-					m.Cmd(cmd, mdb.CREATE, SH, m.PrefixKey())
+					m.Cmd(cmd, mdb.CREATE, m.CommandKey(), m.PrefixKey())
 				}
-				LoadPlug(m, SH)
+				LoadPlug(m, m.CommandKey())
 			}},
-			mdb.RENDER: {Hand: func(m *ice.Message, arg ...string) {
-				m.Cmdy(cli.SYSTEM, SH, "-c", kit.Join(_sh_main_script(m, arg...), ice.NL)).SetAppend()
-			}},
-			mdb.ENGINE: {Hand: func(m *ice.Message, arg ...string) {
-				m.Cmdy(cli.SYSTEM, SH, "-c", kit.Join(_sh_main_script(m, arg...), ice.NL)).SetAppend()
-			}},
-			mdb.SEARCH: {Hand: func(m *ice.Message, arg ...string) {
+			mdb.SEARCH: {Name: "search", Help: "搜索", Hand: func(m *ice.Message, arg ...string) {
 				if arg[0] == mdb.FOREACH {
 					return
 				}
@@ -45,37 +44,37 @@ func init() {
 				_go_find(m, kit.Select(cli.MAIN, arg, 1), arg[2])
 				_go_grep(m, kit.Select(cli.MAIN, arg, 1), arg[2])
 			}},
-			MAN: {Hand: func(m *ice.Message, arg ...string) {
-				m.Echo(_c_help(m, arg[0], arg[1]))
+			mdb.ENGINE: {Name: "engine", Help: "引擎", Hand: func(m *ice.Message, arg ...string) {
+				_sh_main_script(m, arg...)
 			}},
-		}, PlugAction())},
+			mdb.RENDER: {Name: "render", Help: "渲染", Hand: func(m *ice.Message, arg ...string) {
+				_sh_main_script(m, arg...)
+			}},
+		}, PlugAction()), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			if len(arg) > 0 && kit.Ext(arg[0]) == SH {
+				_sh_main_script(m, SH, arg[0], ice.SRC)
+				return
+			}
+			m.Option(nfs.DIR_DEEP, ice.TRUE)
+			m.Option(nfs.DIR_ROOT, ice.SRC)
+			m.Option(nfs.DIR_REG, ".*.(sh)$")
+			m.Cmdy(nfs.DIR, arg)
+		}},
 	}, Configs: map[string]*ice.Config{
 		SH: {Name: SH, Help: "命令", Value: kit.Data(PLUG, kit.Dict(
-			SPLIT, kit.Dict("space", " ", "operator", "{[(.,;!|<>)]}"),
-			PREFIX, kit.Dict("#", COMMENT),
-			SUFFIX, kit.Dict("{", COMMENT),
+			SPLIT, kit.Dict(SPACE, " ", OPERATE, "{[(.,;!|<>)]}"),
+			PREFIX, kit.Dict("#!", COMMENT, "# ", COMMENT), SUFFIX, kit.Dict(" {", COMMENT),
 			PREPARE, kit.Dict(
 				KEYWORD, kit.Simple(
-					"export",
-					"source",
-					"require",
+					"require", "source", "return", "local", "export", "env",
 
-					"if",
-					"then",
-					"else",
-					"fi",
-					"for",
-					"while",
-					"do",
-					"done",
-					"esac",
-					"case",
-					"in",
-					"return",
+					"if", "then", "else", "fi",
+					"for", "while", "do", "done",
+					"esac", "case", "in",
 
 					"shift",
-					"local",
 					"echo",
+					"read",
 					"eval",
 					"kill",
 					"let",
@@ -83,18 +82,15 @@ func init() {
 				),
 				FUNCTION, kit.Simple(
 					"xargs",
-					"date",
-					"find",
-					"grep",
-					"sed",
-					"awk",
+					"date", "uptime", "uname", "whoami",
+					"find", "grep", "sed", "awk",
 					"pwd",
-					"ps",
 					"ls",
+					"ps",
 					"rm",
 					"go",
 				),
 			), KEYWORD, kit.Dict(),
 		))},
-	}}, nil)
+	}})
 }

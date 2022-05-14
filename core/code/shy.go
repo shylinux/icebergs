@@ -14,7 +14,7 @@ const SHY = "shy"
 
 func init() {
 	Index.Register(&ice.Context{Name: SHY, Help: "脚本", Commands: map[string]*ice.Command{
-		SHY: {Name: SHY, Help: "脚本", Action: ice.MergeAction(map[string]*ice.Action{
+		SHY: {Name: "shy path auto", Help: "脚本", Action: ice.MergeAction(map[string]*ice.Action{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
 				for _, cmd := range []string{mdb.SEARCH, mdb.ENGINE, mdb.RENDER, mdb.PLUGIN} {
 					m.Cmd(cmd, mdb.CREATE, SHY, m.PrefixKey())
@@ -33,7 +33,13 @@ func init() {
 					_go_grep(m, kit.Select(cli.MAIN, arg, 1), arg[2])
 				}
 			}},
-		}, PlugAction())},
+		}, PlugAction()), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			if len(arg) > 0 && kit.Ext(arg[0]) == m.CommandKey() {
+				m.Cmdy("web.wiki.word", path.Join(ice.SRC, arg[0]))
+				return
+			}
+			m.Cmdy("web.wiki.word", arg)
+		}},
 	}, Configs: map[string]*ice.Config{
 		SHY: {Name: SHY, Help: "脚本", Value: kit.Data(PLUG, kit.Dict(
 			mdb.RENDER, kit.Dict(),
@@ -42,7 +48,7 @@ func init() {
 					"source", "return",
 					"title", "premenu", "chapter", "section",
 					"refer", "spark", "field",
-					"chart", "label", "chain",
+					"chart", "label", "chain", "sequence",
 					"image",
 				),
 			), KEYWORD, kit.Dict(),

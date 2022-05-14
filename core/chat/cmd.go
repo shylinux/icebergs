@@ -5,7 +5,6 @@ import (
 	"strings"
 
 	ice "shylinux.com/x/icebergs"
-	"shylinux.com/x/icebergs/base/cli"
 	"shylinux.com/x/icebergs/base/ctx"
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/nfs"
@@ -14,50 +13,29 @@ import (
 )
 
 func _cmd_file(m *ice.Message, arg ...string) bool {
-	if mdb.HashSelect(m.Spawn(), path.Join(arg...)).Table(func(index int, value map[string]string, head []string) {
-		m.RenderCmd(value[mdb.NAME])
-	}).Length() > 0 {
-		return true
-	}
-
-	p := path.Join(m.Config(nfs.PATH), path.Join(arg...))
-	if mdb.HashSelect(m.Spawn(), kit.Ext(p)).Table(func(index int, value map[string]string, head []string) {
-		m.RenderCmd(value[mdb.NAME], p)
-	}).Length() > 0 {
-		return true
-	}
-
+	// if mdb.HashSelect(m.Spawn(), path.Join(arg...)).Table(func(index int, value map[string]string, head []string) {
+	// 	m.RenderCmd(value[mdb.NAME])
+	// }).Length() > 0 {
+	// 	return true
+	// }
+	//
+	// p := path.Join(m.Config(nfs.PATH), path.Join(arg...))
+	// if mdb.HashSelect(m.Spawn(), kit.Ext(p)).Table(func(index int, value map[string]string, head []string) {
+	// 	m.RenderCmd(value[mdb.NAME], p)
+	// }).Length() > 0 {
+	// 	return true
+	// }
+	//
 	switch p := path.Join(arg...); kit.Ext(p) {
-	case nfs.HTML:
-		m.RenderResult(m.Cmdx(nfs.CAT, p))
-
-	case nfs.CSS:
-
 	case nfs.JS:
 		m.Display(ice.FileURI(p))
-		if cmd := ice.GetFileCmd(p); cmd != "" {
-			m.RenderCmd(cmd)
-		} else {
-			m.RenderCmd("can.info")
-		}
+		m.RenderCmd(kit.Select(ctx.CAN_PLUGIN, ice.GetFileCmd(p)))
 
 	case nfs.GO:
-		if cmd := ice.GetFileCmd(p); cmd != "" {
-			m.RenderCmd(cmd)
-		}
+		m.RenderCmd(ice.GetFileCmd(p))
 
-	case nfs.SH:
-		if cmd := ice.GetFileCmd(p); cmd != "" {
-			msg := m.Cmd(cmd, ice.OptionFields(""))
-			if msg.Length() > 0 {
-				msg.Table()
-			}
-			m.Cmdy(cli.SYSTEM, "sh", p, msg.Result())
-			m.RenderResult()
-		}
-
-	case nfs.ZML:
-		m.RenderCmd("can.parse", m.Cmdx(nfs.CAT, p))
+	case nfs.SHY:
+		m.RenderCmd("web.wiki.word", p)
 
 	case nfs.IML:
 		if m.Option(ice.MSG_USERPOD) == "" {
@@ -68,7 +46,15 @@ func _cmd_file(m *ice.Message, arg ...string) bool {
 			m.Option(ice.MSG_ARGS, m.Option(ice.MSG_ARGS))
 		}
 
+	case nfs.ZML:
+		m.RenderCmd("can.parse", m.Cmdx(nfs.CAT, p))
+
 	default:
+		p = strings.TrimPrefix(p, ice.SRC+ice.PS)
+		if msg := m.Cmd(mdb.RENDER, kit.Ext(p)); msg.Length() > 0 && kit.FileExists(path.Join(ice.SRC, p)) {
+			m.Cmdy(mdb.RENDER, kit.Ext(p), p, ice.SRC+ice.PS).RenderResult()
+			break
+		}
 		return false
 	}
 	return true

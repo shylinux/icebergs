@@ -58,11 +58,13 @@ func (b *Block) Data(m *ice.Message, meta interface{}) wiki.Chart {
 }
 func (b *Block) Draw(m *ice.Message, x, y int) wiki.Chart {
 	float := kit.Int(kit.Select("2", "7", strings.Contains(m.Option(ice.MSG_USERUA), "iPhone")))
-	if m.Option(HIDE_BLOCK) != ice.TRUE {
+	if m.Option(SHOW_BLOCK) == ice.TRUE {
 		item := wiki.NewItem([]string{`<rect height="%d" width="%d" rx="4" ry="4" x="%d" y="%d"`}, b.GetHeight(), b.GetWidth(), x+b.MarginX/2, y+b.MarginY/2)
 		item.Push(`fill="%s"`, b.BackGround).Push(`%v`, b.RectData).Echo("/>").Dump(m)
 	}
 	item := wiki.NewItem([]string{`<text x="%d" y="%d"`}, x+b.GetWidths()/2, y+b.GetHeights()/2+float)
+	item.Push(`fill="%s"`, kit.Select(m.Option(wiki.STROKE), b.FontColor))
+	item.Push(`stroke-width="%d"`, 1)
 	item.Push(`stroke="%s"`, b.FontColor).Push(`fill="%s"`, b.FontColor).Push("%v", b.TextData).Push(`>%v</text>`, b.Text).Dump(m)
 	return b
 }

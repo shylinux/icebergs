@@ -1,6 +1,8 @@
 package wiki
 
 import (
+	"path"
+
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/aaa"
 	"shylinux.com/x/icebergs/base/ctx"
@@ -33,12 +35,13 @@ func init() {
 				ENDMENU, kit.List(TITLE, ENDMENU),
 				LABEL, kit.List(CHART, LABEL),
 				CHAIN, kit.List(CHART, CHAIN),
+				SEQUENCE, kit.List(CHART, SEQUENCE),
 			),
 			mdb.SHORT, "type,name,text",
 			mdb.FIELD, "time,hash,type,name,text",
 		)},
 	}, Commands: map[string]*ice.Command{
-		WORD: {Name: "word path=src/main.shy@key list play", Help: "语言文字", Meta: kit.Dict(ice.DisplayLocal("")), Action: ice.MergeAction(map[string]*ice.Action{
+		WORD: {Name: "word path=src/main.shy@key list play", Help: "语言文字", Action: ice.MergeAction(map[string]*ice.Action{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
 				m.Cmd(aaa.ROLE, aaa.WHITE, aaa.VOID, m.PrefixKey("src/main.shy"))
 			}},
@@ -80,6 +83,10 @@ func init() {
 		}, ctx.CmdAction(), mdb.HashAction()), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			m.Option(nfs.DIR_REG, m.Config(lex.REGEXP))
 			if m.Option(nfs.DIR_DEEP, ice.TRUE); !_wiki_list(m, cmd, arg...) {
+				if !kit.FileExists(arg[0]) && kit.FileExists(path.Join("src", arg[0])) {
+					arg[0] = path.Join("src/", arg[0])
+				}
+				m.DisplayLocal("")
 				_word_show(m, arg[0])
 			}
 		}},

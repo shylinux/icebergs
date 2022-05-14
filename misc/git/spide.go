@@ -112,7 +112,7 @@ func init() {
 			} else {
 				m.Option(nfs.DIR_ROOT, path.Join(ice.USR, arg[0])+ice.PS)
 			}
-			m.Display("/plugin/story/spide.js?field=path", "root", arg[0])
+			m.DisplayStory("spide.js?field=path", "root", arg[0])
 
 			if len(arg) == 1 { // 目录列表
 				m.Option(nfs.DIR_DEEP, ice.TRUE)

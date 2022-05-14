@@ -49,48 +49,14 @@ func _website_parse(m *ice.Message, text string, args ...string) (map[string]int
 			}
 		}
 		data := kit.Dict()
-		switch display := ice.DisplayRequire(1, ls[0])[ctx.DISPLAY]; kit.Ext(ls[0]) {
+		switch kit.Ext(ls[0]) {
 		case nfs.JS:
-			key := ice.GetFileCmd(display)
-			if key == "" {
-				if ls := strings.Split(display, ice.PS); len(ls) > 4 {
-					ls[3] = ice.USR
-					key = ice.GetFileCmd(path.Join(ls[3:]...))
-				}
-			}
-			if key == "" {
-				for p, k := range ice.Info.File {
-					if strings.HasPrefix(p, path.Dir(display)) {
-						key = k
-					}
-				}
-			}
-			ls[0] = kit.Select("can.code.inner.plugin", key)
-			data[ctx.DISPLAY] = display
+			data[ctx.DISPLAY] = ice.FileURI(ls[0])
+			ls[0] = kit.Select(ctx.CAN_PLUGIN, ice.GetFileCmd(ls[0]))
+
 		case nfs.GO:
-			key := ice.GetFileCmd(display)
-			if key == "" {
-				for k, v := range ice.Info.File {
-					if strings.HasSuffix(k, ls[0]) {
-						key = v
-					}
-				}
-			}
-			ls[0] = key
-		case nfs.SH:
-			key := ice.GetFileCmd(display)
-			if key == "" {
-				key = "cli.system"
-			}
-			data[ctx.ARGS] = kit.List(ls[0])
-			ls[0] = key
-		case nfs.SHY:
-			data[ctx.ARGS] = kit.List(ls[0])
-			data[mdb.NAME] = kit.TrimExt(ls[0], ".shy")
-			if data[mdb.NAME] == "main" {
-				data[mdb.NAME] = strings.TrimSuffix(strings.Split(ls[0], ice.PS)[1], "-story")
-			}
-			ls[0] = "web.wiki.word"
+			ls[0] = ice.GetFileCmd(ls[0])
+
 		case "~":
 			prefix = ls[1]
 			ls = ls[1:]
@@ -100,6 +66,10 @@ func _website_parse(m *ice.Message, text string, args ...string) (map[string]int
 				last[mdb.LIST] = append(last[mdb.LIST].([]interface{}), kit.Dict(mdb.INDEX, kit.Keys(prefix, v), "order", len(last)))
 			}
 			return ls
+		default:
+			if msg := m.Cmd(mdb.RENDER, kit.Ext(ls[0])); msg.Length() > 0 {
+				ls[0], data[ctx.ARGS] = kit.Keys(msg.Append(mdb.TEXT), msg.Append(mdb.NAME)), kit.List(ls[0])
+			}
 		}
 
 		if ls[0] == "" {

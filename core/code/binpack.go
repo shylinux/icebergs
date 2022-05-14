@@ -77,6 +77,9 @@ func init() {
 				}
 
 				ice.Info.Dump = func(w io.Writer, name string, cb func(string)) bool {
+					if strings.HasPrefix(name, ice.SRC) && kit.FileExists(name) {
+						return false
+					}
 					for _, key := range []string{name, strings.TrimPrefix(name, ice.USR_VOLCANOS)} {
 						if b, ok := ice.Info.Pack[key]; ok {
 							if cb != nil {

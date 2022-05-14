@@ -13,6 +13,73 @@ import (
 	kit "shylinux.com/x/toolkits"
 )
 
+func _vimer_inputs(m *ice.Message, arg ...string) {
+	switch m.Option(ctx.ACTION) {
+	case web.DREAM:
+		m.Cmdy(web.DREAM, mdb.INPUTS, arg)
+
+	case "script":
+		switch arg[0] {
+		case nfs.FILE:
+			file, ext := m.Option(nfs.FILE), kit.Ext(m.Option(nfs.FILE))
+			for _, t := range []string{nfs.SH, nfs.SHY, nfs.PY, nfs.JS} {
+				m.Push(nfs.FILE, strings.ReplaceAll(file, ice.PT+ext, ice.PT+t))
+			}
+		case mdb.TEXT:
+			switch kit.Ext(m.Option(nfs.FILE)) {
+			case nfs.SH:
+				m.Push(mdb.TEXT, `echo "hello world"`)
+			case nfs.SHY:
+				m.Push(mdb.TEXT, `chapter "hi"`)
+			case nfs.PY:
+				m.Push(mdb.TEXT, `print "hello world"`)
+			case nfs.JS:
+				m.Push(mdb.TEXT, `Volcanos("onimport", {help: "导入数据", list:[], _init: function(can, msg, cb, target) {
+	msg.Echo("hello world")
+	can.onappend.table(can, msg)
+	can.onappend.board(can, msg)
+}})`)
+			}
+		}
+	case "website":
+		switch arg[0] {
+		case nfs.FILE:
+			m.Push(nfs.FILE, "hi.zml")
+			m.Push(nfs.FILE, "hi.iml")
+		case mdb.TEXT:
+			switch kit.Ext(m.Option(nfs.FILE)) {
+			case nfs.ZML:
+				m.Push(mdb.TEXT, `
+left
+	username
+	系统
+		命令 index cli.system
+		共享 index cli.qrcode
+	代码
+		趋势 index web.code.git.trend args icebergs action auto 
+		状态 index web.code.git.status args icebergs
+main
+`)
+			case nfs.IML:
+				m.Push(mdb.TEXT, `
+系统
+	命令
+		cli.system
+	环境
+		cli.runtime
+开发
+	模块
+		hi/hi.go
+	脚本
+		hi/hi.sh
+		hi/hi.js
+`)
+			}
+		}
+	default:
+	}
+}
+
 const VIMER = "vimer"
 
 func init() {
@@ -21,7 +88,7 @@ func init() {
 			nfs.SAVE: {Name: "save type file path", Help: "保存", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmdy(nfs.SAVE, path.Join(m.Option(nfs.PATH), m.Option(nfs.FILE)))
 			}},
-			AUTOGEN: {Name: "create main=src/main.go zone name=hi help type=Zone,Hash,Lists,Data,Code key", Help: "模块", Hand: func(m *ice.Message, arg ...string) {
+			AUTOGEN: {Name: "create main=src/main.go zone name=hi help=示例 type=Zone,Hash,Lists,Data,Code key", Help: "模块", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmdy(AUTOGEN, mdb.CREATE, arg)
 			}},
 			COMPILE: {Name: "compile", Help: "编译", Hand: func(m *ice.Message, arg ...string) {
@@ -53,79 +120,48 @@ func init() {
 				}
 			}},
 			mdb.INPUTS: {Name: "inputs", Help: "补全", Hand: func(m *ice.Message, arg ...string) {
-				switch m.Option(ctx.ACTION) {
-				case web.DREAM:
-					m.Cmdy(web.DREAM, mdb.INPUTS, arg)
-				case "script":
-					switch arg[0] {
-					case nfs.FILE:
-						file, ext := m.Option(nfs.FILE), kit.Ext(m.Option(nfs.FILE))
-						for _, t := range []string{nfs.SH, nfs.SHY, nfs.PY, nfs.JS} {
-							m.Push(nfs.FILE, strings.ReplaceAll(file, ice.PT+ext, ice.PT+t))
-						}
-					case mdb.TEXT:
-						m.Push(mdb.TEXT, `echo "hello world"`)
-						m.Push(mdb.TEXT, `chapter "hi"`)
-						m.Push(mdb.TEXT, `print "hello world"`)
-						m.Push(mdb.TEXT, `Volcanos("onimport", {help: "导入数据", list:[], _init: function(can, msg, cb, target) {
-	msg.Echo("hello world")
-	can.onappend.table(can, msg)
-	can.onappend.board(can, msg)
-}})`)
-					}
-				case "website":
-					switch arg[0] {
-					case nfs.FILE:
-						m.Push(nfs.FILE, "hi.zml")
-						m.Push(nfs.FILE, "hi.iml")
-					case mdb.TEXT:
-						m.Push(mdb.TEXT, `
-hi
-	he
-		cli.runtime
-		cli.system
-		hi/hi.sh
-		hi/hi.go
-		hi/hi.js
-`)
-						m.Push(mdb.TEXT, `
-left
-	username
-	系统
-		命令 index cli.system
-		共享 index cli.qrcode
-	代码
-		趋势 index web.code.git.trend args icebergs action auto 
-		状态 index web.code.git.status args icebergs
-main
-`)
-					}
-				default:
-				}
+				_vimer_inputs(m, arg...)
 			}},
 			"complete": {Name: "complete", Help: "补全", Hand: func(m *ice.Message, arg ...string) {
-				switch m.Option("key") {
-				case "ice", "*ice":
-					m.Push("name", "Message")
-					m.Push("name", "Context")
-				default:
-					if strings.HasSuffix(m.Option("pre"), " index ") {
-						m.OptionFields("index")
+				left := kit.Slice(kit.Split(m.Option("pre")), -1)[0]
+				switch kit.Ext(m.Option(nfs.FILE)) {
+				case nfs.GO:
+					switch m.Option("key") {
+					case "ice", "*ice":
+						m.Push(mdb.NAME, "Message")
+						m.Push(mdb.NAME, "Context")
+					}
+				case nfs.SHY:
+					switch left {
+					case cli.FG, cli.BG:
+						m.Push(mdb.NAME, cli.RED)
+						m.Push(mdb.NAME, cli.BLUE)
+						m.Push(mdb.NAME, cli.GREEN)
+					}
+
+				case nfs.ZML:
+					switch left {
+					case ctx.INDEX:
+						m.OptionFields(ctx.INDEX)
 						m.Cmdy(ctx.COMMAND, mdb.SEARCH, ctx.COMMAND, "", "")
-					} else if strings.HasSuffix(m.Option("pre"), " action ") {
-						m.Push("name", "auto")
-					} else if strings.HasSuffix(m.Option("pre"), " type ") {
-						m.Push("name", "menu")
-					} else if strings.HasSuffix(m.Option("pre"), " ") {
-						m.Push("name", "index")
-						m.Push("name", "action")
-						m.Push("name", "args")
-						m.Push("name", "type")
-					} else if m.Option("pre") == "" {
-						m.Push("name", "left")
-						m.Push("name", "head")
-						m.Push("name", "main")
-						m.Push("name", "foot")
+					case ctx.ACTION:
+						m.Push(mdb.NAME, "auto")
+						m.Push(mdb.NAME, "push")
+						m.Push(mdb.NAME, "open")
+					case mdb.TYPE:
+						m.Push(mdb.NAME, "menu")
+					default:
+						if strings.HasSuffix(m.Option("pre"), " ") {
+							m.Push(mdb.NAME, "index")
+							m.Push(mdb.NAME, "action")
+							m.Push(mdb.NAME, "args")
+							m.Push(mdb.NAME, "type")
+						} else if m.Option("pre") == "" {
+							m.Push(mdb.NAME, "left")
+							m.Push(mdb.NAME, "head")
+							m.Push(mdb.NAME, "main")
+							m.Push(mdb.NAME, "foot")
+						}
 					}
 				}
 			}},

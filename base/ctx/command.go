@@ -1,6 +1,7 @@
 package ctx
 
 import (
+	"path"
 	"strings"
 
 	ice "shylinux.com/x/icebergs"
@@ -13,10 +14,17 @@ import (
 func _command_list(m *ice.Message, name string) {
 	switch kit.Ext(name) {
 	case nfs.JS:
-		m.Push("display", ice.FileURI(name))
-		name = ice.GetFileCmd(name)
+		m.Push(DISPLAY, ice.FileURI(name))
+		name = kit.Select(CAN_PLUGIN, ice.GetFileCmd(name))
+
 	case nfs.GO:
 		name = ice.GetFileCmd(name)
+
+	default:
+		if file, msg := name, m.Cmd(mdb.RENDER, kit.Ext(name)); msg.Length() > 0 && kit.FileExists(path.Join(ice.SRC, name)) {
+			m.Push(ARGS, kit.Format(kit.List(file)))
+			name = kit.Keys(msg.Append(mdb.TEXT), msg.Append(mdb.NAME))
+		}
 	}
 	if strings.HasPrefix(name, "can.") {
 		m.Push(mdb.INDEX, name)
@@ -78,11 +86,13 @@ func CmdAction(fields ...string) map[string]*ice.Action {
 }
 
 const (
-	ACTION  = "action"
-	STYLE   = "style"
 	INDEX   = "index"
 	ARGS    = "args"
+	STYLE   = "style"
 	DISPLAY = "display"
+	ACTION  = "action"
+
+	CAN_PLUGIN = "can.plugin"
 )
 const COMMAND = "command"
 

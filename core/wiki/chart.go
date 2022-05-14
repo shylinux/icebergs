@@ -54,24 +54,16 @@ func NewGroup(m *ice.Message, arg ...string) *Group {
 }
 func AddGroupOption(m *ice.Message, group string, arg ...string) {
 	for i := 0; i < len(arg)-1; i += 2 {
-		m.Option(group+"-"+arg[i], arg[i+1])
+		m.Option(kit.Keys(group, arg[i]), arg[i+1])
 	}
 }
 func (g *Group) Option(group string, key string, arg ...interface{}) string {
-	return g.Get(group).Option(group+"-"+key, arg...)
+	return g.Get(group).Option(kit.Keys(group, key), arg...)
 }
 func (g *Group) Get(group string) *ice.Message { return g.list[group] }
 
-func (g *Group) DefsArrow(group string, height, width int, arg ...string) *ice.Message { // name
-	return g.Echo(group, `<defs>
-<marker id="%s" markerHeight="%d" markerWidth="%d" refX="0" refY="%d" orient="auto"><polygon points="0 0, %d %d, 0 %d"/></marker>
-</defs>`, kit.Select("arrowhead", arg, 0), height, width, height/2, width, height/2, height)
-}
 func (g *Group) Echo(group string, str string, arg ...interface{}) *ice.Message {
 	return g.Get(group).Echo(str, arg...)
-}
-func (g *Group) EchoText(group string, x, y int, text string) *ice.Message {
-	return g.Echo(group, "<text x=%d y=%d>%s</text>", x, y, text)
 }
 func (g *Group) EchoRect(group string, height, width, x, y int, arg ...string) *ice.Message { // rx ry
 	return g.Echo(group, `<rect height=%d width=%d rx=%s ry=%s x=%d y=%d />`, height, width, kit.Select("4", arg, 0), kit.Select("4", arg, 1), x, y)
@@ -79,13 +71,36 @@ func (g *Group) EchoRect(group string, height, width, x, y int, arg ...string) *
 func (g *Group) EchoLine(group string, x1, y1, x2, y2 int) *ice.Message {
 	return g.Echo(group, "<line x1=%d y1=%d x2=%d y2=%d></line>", x1, y1, x2, y2)
 }
+func (g *Group) EchoText(group string, x, y int, text string, arg ...string) *ice.Message {
+	if text == "" {
+		return g.Get(group)
+	}
+	return g.Echo(group, "<text x=%d y=%d>%s</text>", x, y, text)
+}
+func (g *Group) EchoTexts(group string, x, y int, text string, arg ...string) *ice.Message {
+	m := g.Get(group)
+	float := kit.Int(kit.Select("2", "7", kit.Contains(m.Option(ice.MSG_USERUA), "iPhone")))
+	return g.EchoText(group, x, y+float, text, arg...)
+}
+func (g *Group) DefsArrow(group string, height, width int, arg ...string) *ice.Message { // name
+	return g.Echo(group, `<defs>
+<marker id="%s" markerHeight="%d" markerWidth="%d" refX="0" refY="%d" stroke-dasharray="none" orient="auto"><polygon points="0 0, %d %d, 0 %d"/></marker>
+</defs>`, kit.Select("arrowhead", arg, 0), height, width, height/2, width, height/2, height)
+}
 func (g *Group) EchoArrowLine(group string, x1, y1, x2, y2 int, arg ...string) *ice.Message { // marker-end
 	return g.Echo(group, "<line x1=%d y1=%d x2=%d y2=%d marker-end='url(#%s)'></line>", x1, y1, x2, y2, kit.Select("arrowhead", arg, 0))
 }
 func (g *Group) Dump(m *ice.Message, group string, arg ...string) *Group {
 	item := NewItem([]string{"<g name=%s"}, group)
-	for _, k := range kit.Simple(STROKE_DASHARRAY, STROKE_WIDTH, STROKE, FILL, FONT_SIZE, arg) {
-		item.Push(kit.Format(`%s="%%v"`, k), m.Option(group+"-"+k))
+	for _, k := range kit.Simple(STROKE_DASHARRAY, STROKE_WIDTH, STROKE, FILL, FONT_SIZE, FONT_FAMILY, arg) {
+		v := m.Option(kit.Keys(group, k))
+		switch k {
+		case STROKE:
+			v = kit.Select(m.Option(kit.Keys(group, k)), m.Option(kit.Keys(group, FG)))
+		case FILL:
+			v = kit.Select(m.Option(kit.Keys(group, k)), m.Option(kit.Keys(group, BG)))
+		}
+		item.Push(kit.Format(`%s="%%v"`, k), v)
 	}
 	item.Echo(">").Dump(m).Copy(g.Get(group)).Echo("</g>")
 	return g
@@ -102,9 +117,7 @@ type Chart interface {
 
 var chart_list = map[string]func(m *ice.Message) Chart{}
 
-func AddChart(name string, hand func(m *ice.Message) Chart) {
-	chart_list[name] = hand
-}
+func AddChart(name string, hand func(m *ice.Message) Chart) { chart_list[name] = hand }
 
 func _chart_show(m *ice.Message, kind, text string, arg ...string) {
 	// 默认参数
@@ -152,8 +165,9 @@ const (
 	WIDTH   = "width"
 )
 const (
-	LABEL = "label"
-	CHAIN = "chain"
+	LABEL    = "label"
+	CHAIN    = "chain"
+	SEQUENCE = "sequence"
 )
 const CHART = "chart"
 
@@ -166,8 +180,8 @@ func init() {
 		}},
 	}, Configs: map[string]*ice.Config{
 		CHART: {Name: CHART, Help: "图表", Value: kit.Data(
-			nfs.TEMPLATE, `<svg {{.OptionTemplate}}
-vertion="1.1" xmlns="http://www.w3.org/2000/svg" height="{{.Option "height"}}" width="{{.Option "width"}}"
+			nfs.TEMPLATE, `<svg xmlns="http://www.w3.org/2000/svg" vertion="1.1"
+{{.OptionTemplate}} height="{{.Option "height"}}" width="{{.Option "width"}}"
 stroke-width="{{.Option "stroke-width"}}" stroke="{{.Option "stroke"}}" fill="{{.Option "fill"}}"
 font-size="{{.Option "font-size"}}" font-family="{{.Option "font-family"}}" text-anchor="middle" dominant-baseline="middle">`,
 		)},

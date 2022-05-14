@@ -1,10 +1,10 @@
 package chart
 
 import (
-	"strings"
-
 	ice "shylinux.com/x/icebergs"
+	"shylinux.com/x/icebergs/base/lex"
 	"shylinux.com/x/icebergs/base/mdb"
+	"shylinux.com/x/icebergs/base/nfs"
 	"shylinux.com/x/icebergs/core/wiki"
 	kit "shylinux.com/x/toolkits"
 )
@@ -20,8 +20,8 @@ func (l *Label) Init(m *ice.Message, arg ...string) wiki.Chart {
 
 	// 解析数据
 	l.max = map[int]int{}
-	for _, v := range strings.Split(arg[0], ice.NL) {
-		ls := kit.Split(v, ice.SP, ice.SP)
+	m.Option(lex.SPLIT_BLOCK, ice.SP)
+	m.Cmd(lex.SPLIT, "", kit.Dict(nfs.CAT_CONTENT, arg[0]), func(ls []string, data map[string]interface{}) []string {
 		l.data = append(l.data, ls)
 
 		for i, v := range ls {
@@ -33,7 +33,8 @@ func (l *Label) Init(m *ice.Message, arg ...string) wiki.Chart {
 				l.max[i] = w
 			}
 		}
-	}
+		return ls
+	})
 
 	// 计算尺寸
 	l.Height = len(l.data) * l.GetHeights()
@@ -43,6 +44,10 @@ func (l *Label) Init(m *ice.Message, arg ...string) wiki.Chart {
 	return l
 }
 func (l *Label) Draw(m *ice.Message, x, y int) wiki.Chart {
+	gs := wiki.NewGroup(m, RECT, TEXT)
+	wiki.AddGroupOption(m, TEXT, wiki.FILL, m.Option(wiki.STROKE))
+	defer func() { gs.Dump(m, RECT).Dump(m, TEXT) }()
+
 	var item *Block
 	top := y
 	for _, line := range l.data {
@@ -58,16 +63,20 @@ func (l *Label) Draw(m *ice.Message, x, y int) wiki.Chart {
 				item.Init(m, text)
 			}
 
-			// 输出
+			// 尺寸
 			switch m.Option(COMPACT) {
 			case "max":
 				item.Width = l.Width/len(line) - l.MarginX
 			case ice.TRUE:
-
 			default:
 				item.Width = l.max[i]
 			}
-			item.Draw(m, left, top)
+
+			// 输出
+			if m.Option(SHOW_BLOCK) == ice.TRUE {
+				gs.EchoRect(RECT, item.GetHeight(), item.GetWidth(), left+item.MarginX/2, top+item.MarginY/2)
+			}
+			gs.EchoTexts(TEXT, left+item.GetWidths()/2, top+item.GetHeights()/2, item.Text)
 
 			left += item.GetWidths()
 		}
@@ -77,12 +86,17 @@ func (l *Label) Draw(m *ice.Message, x, y int) wiki.Chart {
 }
 
 const (
-	COMPACT = "compact"
+	SHOW_BLOCK = "show-block"
+	COMPACT    = "compact"
 )
 const LABEL = "label"
 
 func init() {
 	wiki.AddChart(LABEL, func(m *ice.Message) wiki.Chart {
+		m.Option(SHOW_BLOCK, ice.TRUE)
+		wiki.AddGroupOption(m, TEXT, wiki.FILL, m.Option(wiki.STROKE))
+		wiki.AddGroupOption(m, TEXT, wiki.STROKE_WIDTH, "1")
+		wiki.AddGroupOption(m, TEXT, wiki.FONT_FAMILY, m.Option(wiki.FONT_FAMILY))
 		return &Label{}
 	})
 }

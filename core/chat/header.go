@@ -139,6 +139,9 @@ func init() {
 			for _, k := range []string{aaa.LANGUAGE, aaa.BACKGROUND, aaa.AVATAR, aaa.USERNICK} {
 				m.Option(k, msg.Append(k))
 			}
+			if m.Option(aaa.AVATAR) == "" && m.R.Header.Get("Staffname") != "" {
+				m.Option(aaa.AVATAR, kit.Format("https://dayu.oa.com/avatars/%s/profile.jpg", m.R.Header.Get("Staffname")))
+			}
 
 			if m.Option(GRANT) != "" {
 				if m.Cmd(GRANT, m.Option(ice.POD), 1).Length() > 0 {

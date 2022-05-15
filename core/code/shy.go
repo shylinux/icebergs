@@ -13,7 +13,7 @@ import (
 const SHY = "shy"
 
 func init() {
-	Index.Register(&ice.Context{Name: SHY, Help: "脚本", Commands: map[string]*ice.Command{
+	Index.Merge(&ice.Context{Name: SHY, Help: "脚本", Commands: map[string]*ice.Command{
 		SHY: {Name: "shy path auto", Help: "脚本", Action: ice.MergeAction(map[string]*ice.Action{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
 				for _, cmd := range []string{mdb.SEARCH, mdb.ENGINE, mdb.RENDER, mdb.PLUGIN} {
@@ -53,5 +53,5 @@ func init() {
 				),
 			), KEYWORD, kit.Dict(),
 		))},
-	}}, nil)
+	}})
 }

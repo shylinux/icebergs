@@ -21,6 +21,9 @@ func init() {
 				m.Cmd(m.PrefixKey(), mdb.INSERT, kit.SimpleKV("", "tags", arg[0], m.Result()))
 				return // 代码补全
 			}
+			if arg[0] == ice.PT {
+				return
+			}
 			if m.Cmdy("web.code.input.wubi", ctx.ACTION, INPUT, arg[0]); m.Length() > 0 {
 				m.Cmd(m.PrefixKey(), mdb.INSERT, kit.SimpleKV("", "wubi", arg[0], m.Result()))
 				return // 五笔输入

@@ -121,8 +121,10 @@ func _cat_list(m *ice.Message, name string) {
 const (
 	CAT_CONTENT = "cat_content"
 	TEMPLATE    = "template"
+	WEBSITE     = "website"
 
 	SOURCE = "source"
+	SCRIPT = "script"
 	BINARY = "binary"
 	TARGET = "target"
 

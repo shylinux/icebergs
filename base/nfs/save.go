@@ -67,15 +67,19 @@ func _copy_file(m *ice.Message, name string, from ...string) {
 	}
 }
 func _link_file(m *ice.Message, name string, from string) {
-	if from == "" {
+	if from == "" || m.Warn(!kit.FileExists(from), ice.ErrNotFound, from) {
 		return
 	}
 	os.Remove(name)
 	MkdirAll(m, path.Dir(name))
 	if e := os.Link(from, name); e != nil {
-		m.Warn(os.Symlink(from, name), ice.ErrFailure, from)
+		if m.Warn(os.Symlink(from, name), ice.ErrFailure, from) {
+			return
+		}
 	}
+	m.Log_EXPORT(name, "from", from)
 	m.Echo(name)
+
 }
 
 const (

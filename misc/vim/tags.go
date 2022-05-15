@@ -63,8 +63,16 @@ func init() {
 				if m.Option(mdb.TEXT) == "" {
 					return
 				}
-				mdb.ZoneSelectCB(m, kit.Slice(kit.Split(m.Option(mdb.TEXT), ice.PT), -1)[0], func(value map[string]string) {
-					if !strings.Contains(value[mdb.NAME], m.Option(mdb.NAME)) {
+				name, list := "", kit.Select("", kit.Slice(kit.Split(m.Option(mdb.TEXT), "\t \n."), -1), 0)
+				switch name {
+				case "can":
+					mdb.ZoneSelectCB(m, "", func(value map[string]string) {
+						m.Echo(value[mdb.NAME] + ice.NL)
+					})
+					return
+				}
+				mdb.ZoneSelectCB(m, name, func(value map[string]string) {
+					if !strings.Contains(value[mdb.NAME], m.Option(mdb.NAME)) && m.Option(mdb.NAME) != "." {
 						return
 					}
 					if m.Length() == 0 {

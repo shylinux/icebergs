@@ -11,6 +11,15 @@ import (
 )
 
 func _sh_main_script(m *ice.Message, arg ...string) (res []string) {
+	if cmd := ice.GetFileCmd(path.Join(arg[2], arg[1])); cmd != "" {
+		res = append(res, kit.Format(`#! /bin/sh
+export ctx_dev=%s; ctx_temp=$(mktemp); curl -fsSL $ctx_dev -o $ctx_temp; source $ctx_temp %s &>/dev/null
+_list() {
+	ish_sys_dev_run_command "$@"
+}
+`, "http://localhost:9020", cmd))
+	}
+
 	if kit.FileExists(kit.Path(arg[2], arg[1])) {
 		res = append(res, kit.Format("source %s", kit.Path(arg[2], arg[1])))
 	} else if b, ok := ice.Info.Pack[path.Join(arg[2], arg[1])]; ok && len(b) > 0 {
@@ -55,8 +64,8 @@ func init() {
 				_sh_main_script(m, SH, arg[0], ice.SRC)
 				return
 			}
-			m.Option(nfs.DIR_DEEP, ice.TRUE)
 			m.Option(nfs.DIR_ROOT, ice.SRC)
+			m.Option(nfs.DIR_DEEP, ice.TRUE)
 			m.Option(nfs.DIR_REG, ".*.(sh)$")
 			m.Cmdy(nfs.DIR, arg)
 		}},
@@ -81,7 +90,7 @@ func init() {
 					"cd",
 				),
 				FUNCTION, kit.Simple(
-					"xargs",
+					"xargs", "_list",
 					"date", "uptime", "uname", "whoami",
 					"find", "grep", "sed", "awk",
 					"pwd",

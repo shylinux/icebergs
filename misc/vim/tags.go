@@ -63,7 +63,7 @@ func init() {
 				if m.Option(mdb.TEXT) == "" {
 					return
 				}
-				name, list := "", kit.Select("", kit.Slice(kit.Split(m.Option(mdb.TEXT), "\t \n."), -1), 0)
+				name := kit.Select("", kit.Slice(kit.Split(m.Option(mdb.TEXT), "\t \n."), -1), 0)
 				switch name {
 				case "can":
 					mdb.ZoneSelectCB(m, "", func(value map[string]string) {

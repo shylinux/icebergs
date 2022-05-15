@@ -3,6 +3,7 @@ package code
 import (
 	"path"
 	"strings"
+	"sync"
 
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/cli"
@@ -13,9 +14,27 @@ import (
 	kit "shylinux.com/x/toolkits"
 )
 
-var _cache_msg *ice.Message
-var _cache_ice *ice.Message
-var _cache_bin *ice.Message
+var _cache_mods = map[string]*ice.Message{}
+var _cache_lock = sync.Mutex{}
+
+func _vimer_doc(m *ice.Message, mod string, pkg string) *ice.Message {
+	_cache_lock.Lock()
+	defer _cache_lock.Unlock()
+
+	key := kit.Keys(mod, pkg)
+	if msg, ok := _cache_mods[key]; ok && kit.Time(msg.Time("24h")) > kit.Time(m.Time()) {
+		return msg
+	}
+
+	if mod != "" {
+		m.Cmd(cli.SYSTEM, "go", "get", mod)
+	}
+	if msg := _vimer_go_complete(m.Spawn(), key); msg.Length() > 0 {
+		_cache_mods[key] = msg
+		return msg
+	}
+	return nil
+}
 
 func _vimer_defs(m *ice.Message, ext string) string {
 	defs := kit.Dict(
@@ -138,24 +157,17 @@ func _vimer_complete(m *ice.Message, arg ...string) {
 		if m.Option(mdb.NAME) == ice.PT {
 			switch m.Option(mdb.TYPE) {
 			case "msg", "m":
-				if _cache_msg != nil {
-					m.Copy(_cache_msg)
-					break
-				}
-				_cache_msg = m
-				_vimer_go_complete(m, "shylinux.com/x/icebergs.Message")
-				_vimer_go_complete(m, "shylinux.com/x/ice.Message")
+				m.Copy(_vimer_doc(m, "shylinux.com/x/ice", "Message"))
+				m.Copy(_vimer_doc(m, "shylinux.com/x/icebergs", "Message"))
 
 			case "ice", "*ice":
-				if _cache_ice != nil {
-					m.Copy(_cache_ice)
-					break
-				}
-				_cache_ice = m
-				_vimer_go_complete(m, "shylinux.com/x/ice")
+				m.Copy(_vimer_doc(m, "shylinux.com/x/ice", ""))
+
+			case "kit":
+				m.Copy(_vimer_doc(m, "shylinux.com/x/toolkits", ""))
 
 			default:
-				_vimer_go_complete(m, m.Option(mdb.TYPE))
+				m.Copy(_vimer_doc(m, "", m.Option(mdb.TYPE)))
 			}
 
 		} else {
@@ -207,7 +219,7 @@ func _vimer_complete(m *ice.Message, arg ...string) {
 		}
 	}
 }
-func _vimer_go_complete(m *ice.Message, name string, arg ...string) {
+func _vimer_go_complete(m *ice.Message, name string, arg ...string) *ice.Message {
 	kit.Fetch(kit.Split(m.Cmdx(cli.SYSTEM, GO, "doc", name), ice.NL, ice.NL, ice.NL), func(index int, value string) {
 		if ls := kit.Split(value); len(ls) > 1 {
 			switch ls[0] {
@@ -221,6 +233,7 @@ func _vimer_go_complete(m *ice.Message, name string, arg ...string) {
 			}
 		}
 	})
+	return m
 }
 
 const VIMER = "vimer"

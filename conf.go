@@ -152,6 +152,7 @@ const ( // DIR
 	SRC_RELAY_GO   = "src/relay.go"
 	README_MD      = "README.md"
 	MAKEFILE       = "Makefile"
+	LICENSE        = "LICENSE"
 	ICE_BIN        = "ice.bin"
 	GO_SUM         = "go.sum"
 	GO_MOD         = "go.mod"

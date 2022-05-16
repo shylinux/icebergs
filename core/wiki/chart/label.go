@@ -74,9 +74,19 @@ func (l *Label) Draw(m *ice.Message, x, y int) wiki.Chart {
 
 			// 输出
 			if m.Option(SHOW_BLOCK) == ice.TRUE {
-				gs.EchoRect(RECT, item.GetHeight(), item.GetWidth(), left+item.MarginX/2, top+item.MarginY/2)
+				args := []string{"4", "4"}
+				if mod := kit.Int(m.Option("order.mod")); mod != 0 && i%mod == 0 {
+					args = append(args, "fill", m.Option("order.bg"))
+				}
+				gs.EchoRect(RECT, item.GetHeight(), item.GetWidth(), left+item.MarginX/2, top+item.MarginY/2, args...)
 			}
-			gs.EchoTexts(TEXT, left+item.GetWidths()/2, top+item.GetHeights()/2, item.Text)
+
+			args := []string{}
+			if mod := kit.Int(m.Option("order.mod")); mod != 0 && i%mod == 0 {
+				args = append(args, "stroke", m.Option("order.fg"))
+				args = append(args, "fill", m.Option("order.fg"))
+			}
+			gs.EchoTexts(TEXT, left+item.GetWidths()/2, top+item.GetHeights()/2, item.Text, args...)
 
 			left += item.GetWidths()
 		}

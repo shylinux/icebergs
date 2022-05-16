@@ -43,7 +43,7 @@ func _dir_list(m *ice.Message, root string, name string, level int, deep bool, d
 				}
 			}
 		}
-		return m
+		return m // 打包文件
 	}
 
 	list, e := ioutil.ReadDir(path.Join(root, name))
@@ -75,7 +75,8 @@ func _dir_list(m *ice.Message, root string, name string, level int, deep bool, d
 		}
 
 		p := path.Join(root, name, f.Name())
-		if !(dir_type == TYPE_CAT && f.IsDir() || dir_type == TYPE_DIR && !f.IsDir()) && (dir_reg == nil || dir_reg.MatchString(f.Name())) {
+		isDir := f.IsDir() || kit.IsDir(p)
+		if !(dir_type == TYPE_CAT && isDir || dir_type == TYPE_DIR && !isDir) && (dir_reg == nil || dir_reg.MatchString(f.Name())) {
 			switch cb := m.OptionCB(DIR).(type) {
 			case func(f os.FileInfo, p string):
 				cb(f, p)
@@ -90,7 +91,7 @@ func _dir_list(m *ice.Message, root string, name string, level int, deep bool, d
 				case mdb.TIME:
 					m.Push(field, f.ModTime().Format(ice.MOD_TIME))
 				case mdb.TYPE:
-					m.Push(field, kit.Select(CAT, DIR, f.IsDir()))
+					m.Push(field, kit.Select(CAT, DIR, isDir))
 
 				case "tree":
 					if level == 0 {
@@ -99,16 +100,16 @@ func _dir_list(m *ice.Message, root string, name string, level int, deep bool, d
 						m.Push(field, strings.Repeat("| ", level-1)+"|-"+f.Name())
 					}
 				case "full":
-					m.Push(field, path.Join(root, name, f.Name())+kit.Select("", ice.PS, f.IsDir()))
+					m.Push(field, path.Join(root, name, f.Name())+kit.Select("", ice.PS, isDir))
 				case PATH:
-					m.Push(field, path.Join(name, f.Name())+kit.Select("", ice.PS, f.IsDir()))
+					m.Push(field, path.Join(name, f.Name())+kit.Select("", ice.PS, isDir))
 				case FILE:
-					m.Push(field, f.Name()+kit.Select("", ice.PS, f.IsDir()))
+					m.Push(field, f.Name()+kit.Select("", ice.PS, isDir))
 				case mdb.NAME:
 					m.Push(field, f.Name())
 
 				case SIZE:
-					if f.IsDir() {
+					if isDir {
 						if ls, e := ioutil.ReadDir(path.Join(root, name, f.Name())); e == nil {
 							m.Push(field, len(ls))
 						} else {
@@ -118,7 +119,7 @@ func _dir_list(m *ice.Message, root string, name string, level int, deep bool, d
 						m.Push(field, kit.FmtSize(f.Size()))
 					}
 				case LINE:
-					if f.IsDir() {
+					if isDir {
 						if ls, e := ioutil.ReadDir(path.Join(root, name, f.Name())); e == nil {
 							m.Push(field, len(ls))
 						} else {
@@ -136,7 +137,7 @@ func _dir_list(m *ice.Message, root string, name string, level int, deep bool, d
 					}
 				case mdb.HASH, "hashs":
 					var h [20]byte
-					if f.IsDir() {
+					if isDir {
 						if d, e := ioutil.ReadDir(p); m.Assert(e) {
 							meta := []string{}
 							for _, v := range d {
@@ -153,7 +154,7 @@ func _dir_list(m *ice.Message, root string, name string, level int, deep bool, d
 
 					m.Push(mdb.HASH, kit.Select(kit.Format(h[:6]), kit.Format(h[:]), field == mdb.HASH))
 				case mdb.LINK:
-					m.PushDownload(mdb.LINK, kit.Select("", f.Name(), !f.IsDir()), path.Join(root, name, f.Name()))
+					m.PushDownload(mdb.LINK, kit.Select("", f.Name(), !isDir), path.Join(root, name, f.Name()))
 				case mdb.SHOW:
 					switch p := m.MergeURL2("/share/local/"+path.Join(name, f.Name()), ice.POD, m.Option(ice.MSG_USERPOD)); kit.Ext(f.Name()) {
 					case "png", "jpg":
@@ -167,7 +168,7 @@ func _dir_list(m *ice.Message, root string, name string, level int, deep bool, d
 					if m.IsCliUA() || m.Option(ice.MSG_USERROLE) == aaa.VOID {
 						break
 					}
-					m.PushButton(kit.Select("", TRASH, !f.IsDir()))
+					m.PushButton(kit.Select("", TRASH, !isDir))
 				default:
 					m.Push(field, "")
 				}
@@ -178,7 +179,8 @@ func _dir_list(m *ice.Message, root string, name string, level int, deep bool, d
 		case "node_modules", "pluged", "target", "trash":
 			continue
 		}
-		if f.IsDir() && deep {
+
+		if deep && isDir {
 			_dir_list(m, root, path.Join(name, f.Name()), level+1, deep, dir_type, dir_reg, fields)
 		}
 	}

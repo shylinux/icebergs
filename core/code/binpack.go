@@ -61,7 +61,6 @@ func _binpack_can(m *ice.Message, f *os.File, dir string) {
 	fmt.Fprintln(f)
 }
 func _binpack_ctx(m *ice.Message, f *os.File) {
-	_binpack_dir(m, f, ice.SRC_HELP)
 	_binpack_dir(m, f, ice.SRC)
 }
 
@@ -149,6 +148,7 @@ func init() {
 					fmt.Fprintln(f, _binpack_file(m, ice.ETC_EXIT_SHY))
 					fmt.Fprintln(f)
 
+					fmt.Fprintln(f, _binpack_file(m, ice.LICENSE))
 					fmt.Fprintln(f, _binpack_file(m, ice.MAKEFILE))
 					fmt.Fprintln(f, _binpack_file(m, ice.README_MD))
 					fmt.Fprintln(f)

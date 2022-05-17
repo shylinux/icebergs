@@ -43,6 +43,13 @@ func init() {
 				os.Rename(m.Option(FILE), m.Option(FROM))
 				m.Cmd(mdb.DELETE, TRASH, "", mdb.HASH, m.OptionSimple(mdb.HASH))
 			}},
+			mdb.CREATE: {Name: "create path", Help: "删除", Hand: func(m *ice.Message, arg ...string) {
+				p := path.Join(m.Config(PATH), path.Base(m.Option(PATH)))
+				os.RemoveAll(p)
+				if os.MkdirAll(path.Dir(p), ice.MOD_DIR); !m.Warn(os.Rename(m.Option(PATH), p)) {
+					m.Echo(p)
+				}
+			}},
 			mdb.REMOVE: {Name: "remove", Help: "删除", Hand: func(m *ice.Message, arg ...string) {
 				os.Remove(m.Option(FILE))
 				m.Cmd(mdb.DELETE, TRASH, "", mdb.HASH, m.OptionSimple(mdb.HASH))

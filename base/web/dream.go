@@ -24,7 +24,7 @@ func _dream_list(m *ice.Message) *ice.Message {
 		}) == nil {
 			m.Push(mdb.TYPE, WORKER)
 			m.Push(cli.STATUS, cli.STOP)
-			m.PushButton(cli.START)
+			m.PushButton(cli.START, nfs.TRASH)
 			m.PushAnchor("")
 		}
 	})
@@ -132,6 +132,10 @@ func init() {
 					m.Cmdy(SPACE, mdb.REMOVE, m.OptionSimple(mdb.NAME))
 					m.Sleep("1s", DREAM, cli.START, m.OptionSimple(mdb.NAME))
 				}
+			}},
+			nfs.TRASH: {Name: "trash", Help: "删除", Hand: func(m *ice.Message, arg ...string) {
+				m.Cmd(nfs.TRASH, mdb.CREATE, path.Join(m.Config(nfs.PATH), m.Option(mdb.NAME)))
+				m.ProcessRefresh30ms()
 			}},
 		}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			if len(arg) == 0 {

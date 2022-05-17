@@ -90,6 +90,19 @@ func RenderCookie(msg *ice.Message, value string, arg ...string) { // name path 
 func RenderRedirect(msg *ice.Message, arg ...string) {
 	http.Redirect(msg.W, msg.R, kit.MergeURL(arg[0], arg[1:]), http.StatusTemporaryRedirect)
 }
+func RenderRefresh(msg *ice.Message, arg ...string) { // url text delay
+	msg.Render(ice.RENDER_VOID)
+	Render(msg, ice.RENDER_RESULT, kit.Format(`
+<html>
+<head>
+	<meta http-equiv="refresh" content="%s; url='%s'">
+</head>
+<body>
+	%s
+</body>
+</html>
+`, kit.Select("3", arg, 2), kit.Select(msg.Option(ice.MSG_USERWEB), arg, 0), kit.Select("loading...", arg, 1)))
+}
 func RenderType(w http.ResponseWriter, name, mime string) {
 	if mime != "" {
 		w.Header().Set(ContentType, mime)

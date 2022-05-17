@@ -6,7 +6,9 @@ import (
 
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/aaa"
+	"shylinux.com/x/icebergs/base/cli"
 	"shylinux.com/x/icebergs/base/ctx"
+	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/web"
 	kit "shylinux.com/x/toolkits"
 )
@@ -33,6 +35,9 @@ func init() {
 				m.RenderCmd(web.ROUTE)
 
 			} else if len(arg) == 1 { // 节点首页
+				if m.Cmd(web.SPACE, arg[0]).Length() == 0 {
+					m.Cmd(web.DREAM, cli.START, mdb.NAME, arg[0])
+				}
 				aaa.UserRoot(m)
 				if m.RenderWebsite(arg[0], "index.iml", "Header", "", "River", "", "Action", "", "Footer", ""); m.Result() == "" {
 					m.RenderIndex(web.SERVE, ice.VOLCANOS)

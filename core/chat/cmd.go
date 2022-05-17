@@ -13,19 +13,6 @@ import (
 )
 
 func _cmd_file(m *ice.Message, arg ...string) bool {
-	// if mdb.HashSelect(m.Spawn(), path.Join(arg...)).Table(func(index int, value map[string]string, head []string) {
-	// 	m.RenderCmd(value[mdb.NAME])
-	// }).Length() > 0 {
-	// 	return true
-	// }
-	//
-	// p := path.Join(m.Config(nfs.PATH), path.Join(arg...))
-	// if mdb.HashSelect(m.Spawn(), kit.Ext(p)).Table(func(index int, value map[string]string, head []string) {
-	// 	m.RenderCmd(value[mdb.NAME], p)
-	// }).Length() > 0 {
-	// 	return true
-	// }
-	//
 	switch p := path.Join(arg...); kit.Ext(p) {
 	case nfs.JS:
 		m.Display(ice.FileURI(p))
@@ -50,10 +37,11 @@ func _cmd_file(m *ice.Message, arg ...string) bool {
 		m.RenderCmd("can.parse", m.Cmdx(nfs.CAT, p))
 
 	default:
-		p = strings.TrimPrefix(p, ice.SRC+ice.PS)
-		if msg := m.Cmd(mdb.RENDER, kit.Ext(p)); msg.Length() > 0 && kit.FileExists(path.Join(ice.SRC, p)) {
-			m.Cmdy(mdb.RENDER, kit.Ext(p), p, ice.SRC+ice.PS).RenderResult()
-			break
+		if p = strings.TrimPrefix(p, ice.SRC+ice.PS); kit.FileExists(path.Join(ice.SRC, p)) {
+			if msg := m.Cmd(mdb.RENDER, kit.Ext(p)); msg.Length() > 0 {
+				m.Cmdy(mdb.RENDER, kit.Ext(p), p, ice.SRC+ice.PS).RenderResult()
+				break
+			}
 		}
 		return false
 	}

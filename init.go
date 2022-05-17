@@ -37,7 +37,7 @@ func (f *Frame) Start(m *Message, arg ...string) bool {
 	for _, k := range kit.Split("log,gdb,ssh") {
 		m.Start(k)
 	}
-	m.Cmdy(arg)
+	m.Cmd(arg)
 	return true
 }
 func (f *Frame) Close(m *Message, arg ...string) bool {
@@ -119,6 +119,7 @@ func Run(arg ...string) string {
 		}
 	}
 
+	Pulse.meta[MSG_DETAIL] = arg
 	switch Index.Merge(Index).Begin(Pulse.Spawn(), arg...); kit.Select("", arg, 0) {
 	case SERVE, SPACE: // 启动服务
 		switch strings.Split(os.Getenv("TERM"), "-")[0] {
@@ -137,7 +138,6 @@ func Run(arg ...string) string {
 		}
 
 		Pulse.Cmd(INIT)
-		// defer Pulse.Cmd(EXIT)
 		if Pulse.Cmdy(arg); strings.TrimSpace(Pulse.Result()) == "" {
 			Pulse.Table()
 		}

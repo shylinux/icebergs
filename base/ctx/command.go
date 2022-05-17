@@ -12,18 +12,20 @@ import (
 )
 
 func _command_list(m *ice.Message, name string) {
-	switch kit.Ext(name) {
-	case nfs.JS:
-		m.Push(DISPLAY, ice.FileURI(name))
-		name = kit.Select(CAN_PLUGIN, ice.GetFileCmd(name))
+	if kit.FileExists(path.Join(ice.SRC, name)) {
+		switch kit.Ext(name) {
+		case nfs.JS:
+			m.Push(DISPLAY, ice.FileURI(name))
+			name = kit.Select(CAN_PLUGIN, ice.GetFileCmd(name))
 
-	case nfs.GO:
-		name = ice.GetFileCmd(name)
+		case nfs.GO:
+			name = ice.GetFileCmd(name)
 
-	default:
-		if file, msg := name, m.Cmd(mdb.RENDER, kit.Ext(name)); msg.Length() > 0 && kit.FileExists(path.Join(ice.SRC, name)) {
-			m.Push(ARGS, kit.Format(kit.List(file)))
-			name = kit.Keys(msg.Append(mdb.TEXT), msg.Append(mdb.NAME))
+		default:
+			if file, msg := name, m.Cmd(mdb.RENDER, kit.Ext(name)); msg.Length() > 0 {
+				m.Push(ARGS, kit.Format(kit.List(file)))
+				name = kit.Keys(msg.Append(mdb.TEXT), msg.Append(mdb.NAME))
+			}
 		}
 	}
 	if strings.HasPrefix(name, "can.") {

@@ -1,6 +1,7 @@
 package git
 
 import (
+	"path"
 	"strings"
 	"time"
 
@@ -298,11 +299,14 @@ func init() {
 				_repos_cmd(m, m.Option(REPOS), PUSH, "--tags")
 				m.ProcessRefresh3ms()
 			}},
-			code.BINPACK: {Name: "binpack", Help: "打包模式", Hand: func(m *ice.Message, arg ...string) {
-				m.Cmdy(code.VIMER, code.BINPACK)
-			}},
 			code.DEVPACK: {Name: "devpack", Help: "开发模式", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmdy(code.VIMER, code.DEVPACK)
+			}},
+			code.BINPACK: {Name: "binpack", Help: "发布模式", Hand: func(m *ice.Message, arg ...string) {
+				m.Cmd(nfs.LINK, ice.GO_SUM, path.Join(ice.SRC_RELEASE, ice.GO_SUM))
+				m.Cmd(nfs.LINK, ice.GO_MOD, path.Join(ice.SRC_RELEASE, ice.GO_MOD))
+				m.Cmdy(nfs.CAT, ice.GO_MOD)
+				m.Cmdy(code.VIMER, code.BINPACK)
 			}},
 		}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			if len(arg) == 0 {

@@ -2,18 +2,39 @@ package code
 
 import (
 	"path"
+	"strings"
 
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/cli"
+	"shylinux.com/x/icebergs/base/ctx"
 	"shylinux.com/x/icebergs/base/mdb"
-	"shylinux.com/x/icebergs/base/nfs"
 	kit "shylinux.com/x/toolkits"
 )
+
+func _shy_exec(m *ice.Message, arg ...string) {
+	switch left := kit.Select("", kit.Slice(kit.Split(m.Option(mdb.TEXT), "\t \n`"), -1), 0); strings.TrimSpace(left) {
+	case cli.FG, cli.BG:
+		m.Push(mdb.NAME, cli.RED)
+		m.Push(mdb.NAME, cli.BLUE)
+		m.Push(mdb.NAME, cli.GREEN)
+
+	default:
+		switch kit.Select("", kit.Split(m.Option(mdb.TEXT)), 0) {
+		case "field":
+			m.Cmdy(ctx.COMMAND, mdb.SEARCH, ctx.COMMAND, "", "", ice.OptionFields("index,name,text"))
+			_vimer_list(m, ice.SRC, ctx.INDEX)
+
+		case "chain":
+			m.Push(mdb.NAME, cli.FG)
+			m.Push(mdb.NAME, cli.BG)
+		}
+	}
+}
 
 const SHY = "shy"
 
 func init() {
-	Index.Merge(&ice.Context{Name: SHY, Help: "脚本", Commands: map[string]*ice.Command{
+	Index.Register(&ice.Context{Name: SHY, Help: "脚本", Commands: map[string]*ice.Command{
 		SHY: {Name: "shy path auto", Help: "脚本", Action: ice.MergeAction(map[string]*ice.Action{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
 				for _, cmd := range []string{mdb.SEARCH, mdb.ENGINE, mdb.RENDER, mdb.PLUGIN} {
@@ -25,7 +46,7 @@ func init() {
 				m.ProcessCommand("web.wiki.word", kit.Simple(path.Join(arg[2], arg[1])))
 			}},
 			mdb.ENGINE: {Hand: func(m *ice.Message, arg ...string) {
-				m.Cmdy(nfs.SOURCE, path.Join(arg[2], arg[1]), kit.Dict(ice.MSG_ALIAS, m.Confv("web.wiki.word", kit.Keym(mdb.ALIAS))))
+				_shy_exec(m, arg...)
 			}},
 			mdb.SEARCH: {Hand: func(m *ice.Message, arg ...string) {
 				if arg[0] == SHY {
@@ -53,5 +74,5 @@ func init() {
 				),
 			), KEYWORD, kit.Dict(),
 		))},
-	}})
+	}}, nil)
 }

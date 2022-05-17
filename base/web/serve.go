@@ -58,7 +58,7 @@ func _serve_main(m *ice.Message, w http.ResponseWriter, r *http.Request) bool {
 	} else {
 		r.Header.Set(ice.MSG_USERIP, strings.Split(r.RemoteAddr, ":")[0])
 	}
-	m.Info("").Info("%s %s %s", r.Header.Get(ice.MSG_USERIP), r.Method, r.URL)
+	m.Info("%s %s %s", r.Header.Get(ice.MSG_USERIP), r.Method, r.URL)
 
 	// 参数日志
 	if m.Config(LOGHEADERS) == ice.TRUE {
@@ -111,19 +111,10 @@ func _serve_params(msg *ice.Message, path string) {
 			msg.Logs("refer", ls[2], ls[3])
 			msg.Option(ls[2], ls[3])
 		}
-	case ice.POD:
-		msg.Logs("refer", ls[1], ls[2])
-		msg.Option(ls[1], ls[2])
 	}
 }
 func _serve_handle(key string, cmd *ice.Command, msg *ice.Message, w http.ResponseWriter, r *http.Request) {
-	// 会话变量
-	msg.Option(ice.MSG_SESSID, "")
-	for _, v := range r.Cookies() {
-		msg.Option(v.Name, v.Value)
-	}
-
-	// 请求参数
+	// 地址参数
 	if u, e := url.Parse(r.Header.Get("Referer")); e == nil {
 		_serve_params(msg, u.Path)
 		for k, v := range u.Query() {
@@ -133,9 +124,10 @@ func _serve_handle(key string, cmd *ice.Command, msg *ice.Message, w http.Respon
 	}
 	_serve_params(msg, r.URL.Path)
 
-	// 请求数据
+	// 请求参数
 	switch r.Header.Get(ContentType) {
 	case ContentJSON:
+		defer r.Body.Close()
 		var data interface{}
 		if e := json.NewDecoder(r.Body).Decode(&data); !msg.Warn(e, ice.ErrNotFound, data) {
 			msg.Log_IMPORT(mdb.VALUE, kit.Format(data))
@@ -148,7 +140,7 @@ func _serve_handle(key string, cmd *ice.Command, msg *ice.Message, w http.Respon
 		if r.ParseForm(); len(r.PostForm) > 0 {
 			for k, v := range r.PostForm {
 				if len(v) > 1 {
-					msg.Logs("form", k, len(v), kit.Format(v))
+					msg.Logs("form", k, len(v), kit.Join(v, ice.SP))
 				} else {
 					msg.Logs("form", k, v)
 				}
@@ -156,19 +148,8 @@ func _serve_handle(key string, cmd *ice.Command, msg *ice.Message, w http.Respon
 		}
 	}
 
-	// 请求地址
+	// 请求参数
 	msg.R, msg.W = r, w
-	msg.Option(ice.MSG_USERWEB, _serve_domain(msg))
-	msg.Option(ice.MSG_USERADDR, kit.Select(r.RemoteAddr, r.Header.Get(ice.MSG_USERADDR)))
-	msg.Option(ice.MSG_USERIP, r.Header.Get(ice.MSG_USERIP))
-	msg.Option(ice.MSG_USERUA, r.Header.Get("User-Agent"))
-
-	// 会话别名
-	if sessid := msg.Option(CookieName(msg.Option(ice.MSG_USERWEB))); sessid != "" {
-		msg.Option(ice.MSG_SESSID, sessid)
-	}
-
-	// 参数转换
 	for k, v := range r.Form {
 		if msg.IsCliUA() {
 			for i, p := range v {
@@ -176,31 +157,55 @@ func _serve_handle(key string, cmd *ice.Command, msg *ice.Message, w http.Respon
 			}
 		}
 		if msg.Optionv(k, v); k == ice.MSG_SESSID {
+			msg.Option(ice.MSG_SESSID, v[0])
 			RenderCookie(msg, v[0])
 		}
 	}
+	for k, v := range r.PostForm {
+		msg.Optionv(k, v)
+	}
 
-	if msg.Option(ice.MSG_USERPOD, msg.Option(ice.POD)); msg.Optionv(ice.MSG_CMDS) == nil {
-		if p := strings.TrimPrefix(r.URL.Path, key); p != "" { // 地址命令
+	// 会话参数
+	for _, v := range r.Cookies() {
+		msg.Option(v.Name, v.Value)
+	}
+
+	// 用户参数
+	msg.Option(ice.MSG_USERWEB, _serve_domain(msg))
+	msg.Option(ice.MSG_USERADDR, kit.Select(r.RemoteAddr, r.Header.Get(ice.MSG_USERADDR)))
+	msg.Option(ice.MSG_USERIP, r.Header.Get(ice.MSG_USERIP))
+	msg.Option(ice.MSG_USERUA, r.Header.Get("User-Agent"))
+	if msg.Option(ice.POD) != "" {
+		msg.Option(ice.MSG_USERPOD, msg.Option(ice.POD))
+	}
+
+	// 会话参数
+	if sessid := msg.Option(CookieName(msg.Option(ice.MSG_USERWEB))); msg.Option(ice.MSG_SESSID) == "" {
+		msg.Option(ice.MSG_SESSID, sessid)
+	}
+
+	// 解析命令
+	if msg.Optionv(ice.MSG_CMDS) == nil {
+		if p := strings.TrimPrefix(r.URL.Path, key); p != "" {
 			msg.Optionv(ice.MSG_CMDS, strings.Split(p, ice.PS))
 		}
 	}
 
-	msg.Option(ice.MSG_OUTPUT, "")
+	// 执行命令
 	if cmds, ok := _serve_login(msg, key, kit.Simple(msg.Optionv(ice.MSG_CMDS)), w, r); ok {
-		msg.Option(ice.MSG_OPTS, msg.Optionv(ice.MSG_OPTION))
-		msg.Target().Cmd(msg, key, cmds...) // 执行命令
-		msg.Cost(kit.Format("%s %v %v", r.URL.Path, cmds, msg.FormatSize()))
+		defer func() { msg.Cost(kit.Format("%s %v %v", r.URL.Path, cmds, msg.FormatSize())) }()
+		msg.Option(ice.MSG_OPTS, kit.Filter(kit.Simple(msg.Optionv(ice.MSG_OPTION)), func(k string) bool {
+			return !strings.HasPrefix(k, ice.MSG_SESSID)
+		}))
+		msg.Target().Cmd(msg, key, cmds...)
 	}
 
 	// 输出响应
 	switch args := msg.Optionv(ice.MSG_ARGS).(type) {
 	case []interface{}:
 		Render(msg, msg.Option(ice.MSG_OUTPUT), args...)
-	case []string:
-		Render(msg, msg.Option(ice.MSG_OUTPUT), args)
 	default:
-		Render(msg, msg.Option(ice.MSG_OUTPUT), kit.List())
+		Render(msg, msg.Option(ice.MSG_OUTPUT), args)
 	}
 }
 func _serve_login(msg *ice.Message, key string, cmds []string, w http.ResponseWriter, r *http.Request) ([]string, bool) {
@@ -211,7 +216,7 @@ func _serve_login(msg *ice.Message, key string, cmds []string, w http.ResponseWr
 	}
 
 	if msg.Option(ice.MSG_USERNAME) == "" && msg.Config(tcp.LOCALHOST) == ice.TRUE && tcp.IsLocalHost(msg, msg.Option(ice.MSG_USERIP)) {
-		aaa.UserRoot(msg) // 主机认证
+		aaa.UserRoot(msg) // 本机认证
 	}
 
 	if msg.Option(ice.MSG_USERNAME) == "" && msg.Option(SHARE) != "" {
@@ -299,7 +304,7 @@ func init() {
 
 						repos := kit.Select(ice.INTSHELL, ice.VOLCANOS, strings.Contains(r.Header.Get("User-Agent"), "Mozilla/5.0"))
 						if repos == ice.VOLCANOS {
-							if s := msg.Cmdx("web.chat.website", "show", "index.iml", "Header", "", "River", "", "Action", "", "Footer", ""); s != "" {
+							if s := msg.Cmdx("web.chat.website", "show", "index.iml", "Header", "", "River", ""); s != "" {
 								Render(msg, ice.RENDER_RESULT, s)
 								return true
 							}
@@ -334,23 +339,20 @@ func init() {
 					m.Config(kit.Keys(aaa.WHITE, k), ice.TRUE)
 				}
 			}},
-			cli.START: {Name: "start dev name=ops proto=http host port=9020 nodename password username userrole staffname", Help: "启动", Hand: func(m *ice.Message, arg ...string) {
-				ice.Info.Domain = kit.Select(kit.Format("%s://%s:%s", m.Option(tcp.PROTO),
-					kit.Select(m.Cmd(tcp.HOST).Append(aaa.IP), m.Option(tcp.HOST)), m.Option(tcp.PORT)), ice.Info.Domain)
+			cli.START: {Name: "start dev proto=http host port=9020 nodename password username userrole staffname", Help: "启动", Hand: func(m *ice.Message, arg ...string) {
+				ice.Info.Domain = kit.Select(kit.Format("%s://%s:%s", m.Option(tcp.PROTO), kit.Select(m.Cmd(tcp.HOST).Append(aaa.IP), m.Option(tcp.HOST)), m.Option(tcp.PORT)), ice.Info.Domain)
 				if cli.NodeInfo(m, SERVER, kit.Select(ice.Info.HostName, m.Option("nodename"))); m.Option(tcp.PORT) == tcp.RANDOM {
 					m.Option(tcp.PORT, m.Cmdx(tcp.PORT, aaa.RIGHT))
 				}
 				if m.Option("staffname") != "" {
-					m.Config("staffname", m.Option("staffname"))
-					m.Option(aaa.USERNAME, m.Option("staffname"))
+					m.Config("staffname", m.Option(aaa.USERNAME, m.Option("staffname")))
 				}
 				aaa.UserRoot(m, m.Option(aaa.PASSWORD), m.Option(aaa.USERNAME), m.Option(aaa.USERROLE))
-				m.Go(func() { m.Cmd(BROAD, SERVE) })
 
-				m.Target().Start(m, m.OptionSimple(mdb.NAME, tcp.HOST, tcp.PORT)...)
+				m.Go(func() { m.Cmd(BROAD, SERVE) })
+				m.Target().Start(m, m.OptionSimple(tcp.HOST, tcp.PORT)...)
 				m.Sleep300ms()
 
-				m.Option(mdb.NAME, "")
 				for _, k := range kit.Split(m.Option(ice.DEV)) {
 					m.Cmd(SPACE, tcp.DIAL, ice.DEV, k, mdb.NAME, ice.Info.NodeName)
 				}

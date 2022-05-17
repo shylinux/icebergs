@@ -32,10 +32,24 @@ _list() {
 	return
 }
 
+func _sh_exec(m *ice.Message, arg ...string) {
+	if m.Option(mdb.TEXT) == "" {
+		// if _cache_bin != nil {
+		// 	m.Copy(_cache_bin)
+		// 	break
+		// }
+		// _cache_bin = m
+
+		// m.Push(mdb.NAME, "_list")
+		// _vimer_list(m, "/bin")
+		// _vimer_list(m, "/sbin")
+	}
+}
+
 const SH = nfs.SH
 
 func init() {
-	Index.Merge(&ice.Context{Name: SH, Help: "命令", Commands: map[string]*ice.Command{
+	Index.Register(&ice.Context{Name: SH, Help: "命令", Commands: map[string]*ice.Command{
 		SH: {Name: "sh path auto", Help: "命令", Action: ice.MergeAction(map[string]*ice.Action{
 			ice.CTX_INIT: {Name: "_init", Help: "初始化", Hand: func(m *ice.Message, arg ...string) {
 				for _, cmd := range []string{mdb.SEARCH, mdb.ENGINE, mdb.RENDER, mdb.PLUGIN} {
@@ -54,7 +68,7 @@ func init() {
 				_go_grep(m, kit.Select(cli.MAIN, arg, 1), arg[2])
 			}},
 			mdb.ENGINE: {Name: "engine", Help: "引擎", Hand: func(m *ice.Message, arg ...string) {
-				_sh_main_script(m, arg...)
+				_sh_exec(m, arg...)
 			}},
 			mdb.RENDER: {Name: "render", Help: "渲染", Hand: func(m *ice.Message, arg ...string) {
 				_sh_main_script(m, arg...)
@@ -101,5 +115,5 @@ func init() {
 				),
 			), KEYWORD, kit.Dict(),
 		))},
-	}})
+	}}, nil)
 }

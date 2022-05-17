@@ -62,6 +62,7 @@ const (
 	GRANT  = "grant"
 	LOGIN  = "login"
 	LOGOUT = "logout"
+	EXPIRE = "expire"
 )
 const (
 	SESS_CREATE = "sess.create"

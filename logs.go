@@ -44,8 +44,8 @@ func (m *Message) log(level string, str string, arg ...interface{}) *Message {
 	// 长度截断
 	switch level {
 	case LOG_INFO, LOG_SEND, LOG_RECV:
-		if len(str) > 2048 {
-			str = str[:2048]
+		if len(str) > 4096 {
+			str = str[:4096]
 		}
 	}
 
@@ -104,7 +104,7 @@ func (m *Message) Warn(err interface{}, arg ...interface{}) bool {
 func (m *Message) Error(err bool, str string, arg ...interface{}) bool {
 	if err {
 		m.Echo(ErrWarn).Echo(str, arg...)
-		m.log(LOG_ERROR, m.FormatStack())
+		m.log(LOG_ERROR, m.FormatStack(1, 100))
 		m.log(LOG_ERROR, str, arg...)
 		m.log(LOG_ERROR, m.FormatChain())
 		return true
@@ -173,20 +173,26 @@ func (m *Message) FormatMeta() string {
 func (m *Message) FormatsMeta() string {
 	return kit.Formats(m.meta)
 }
-func (m *Message) FormatStack() string {
-	pc := make([]uintptr, 100)
-	frames := runtime.CallersFrames(pc[:runtime.Callers(2, pc)])
+func (m *Message) FormatStack(s, n int) string {
+	pc := make([]uintptr, n+10)
+	frames := runtime.CallersFrames(pc[:runtime.Callers(s+1, pc)])
 
-	meta := []string{}
+	list := []string{}
 	for {
 		frame, more := frames.Next()
 		file := kit.Slice(kit.Split(frame.File, PS, PS), -1)[0]
 		name := kit.Slice(kit.Split(frame.Function, PS, PS), -1)[0]
-		if meta = append(meta, kit.Format("%s:%d\t%s", file, frame.Line, name)); !more {
+		if !strings.HasPrefix(name, "runtime.") && !strings.HasPrefix(name, "http.") && !strings.HasPrefix(name, "icebergs.") && !strings.HasPrefix(name, "web.(*Frame)") {
+			list = append(list, kit.Format("%s:%d\t%s", file, frame.Line, name))
+		}
+		if len(list) >= n {
+			break
+		}
+		if !more {
 			break
 		}
 	}
-	return kit.Join(meta, NL)
+	return kit.Join(list, NL)
 }
 func (m *Message) FormatChain() string {
 	ms := []*Message{}

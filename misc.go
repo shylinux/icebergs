@@ -266,10 +266,8 @@ func (c *Context) _cmd(m *Message, cmd *Command, key string, sub string, h *Acti
 			}
 			if order {
 				m.Option(name, kit.Select(value, arg, i))
-			} else {
-				if m.Option(name) == "" {
-					m.Option(name, value)
-				}
+			} else if m.Option(name) == "" && value != "" {
+				m.Option(name, value)
 			}
 		}
 		if !order {

@@ -83,7 +83,7 @@ func (web *Frame) Start(m *ice.Message, arg ...string) bool {
 		cb(web) // 启动框架
 	default:
 		m.Cmd(tcp.SERVER, tcp.LISTEN, mdb.TYPE, WEB, m.OptionSimple(mdb.NAME, tcp.HOST, tcp.PORT), func(l net.Listener) {
-			m.Cmdy(mdb.INSERT, SERVE, "", mdb.HASH, arg, m.OptionSimple(tcp.PROTO, ice.DEV), cli.STATUS, tcp.START)
+			m.Cmdy(mdb.INSERT, SERVE, "", mdb.HASH, mdb.NAME, WEB, arg, m.OptionSimple(tcp.PROTO, ice.DEV), cli.STATUS, tcp.START)
 			defer m.Cmd(mdb.MODIFY, SERVE, "", mdb.HASH, m.OptionSimple(mdb.NAME), cli.STATUS, tcp.STOP)
 			m.Warn(web.Server.Serve(l)) // 启动服务
 		})

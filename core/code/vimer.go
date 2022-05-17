@@ -3,7 +3,6 @@ package code
 import (
 	"path"
 	"strings"
-	"sync"
 
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/cli"
@@ -13,28 +12,6 @@ import (
 	"shylinux.com/x/icebergs/base/web"
 	kit "shylinux.com/x/toolkits"
 )
-
-var _cache_mods = map[string]*ice.Message{}
-var _cache_lock = sync.Mutex{}
-
-func _vimer_doc(m *ice.Message, mod string, pkg string) *ice.Message {
-	_cache_lock.Lock()
-	defer _cache_lock.Unlock()
-
-	key := kit.Keys(mod, pkg)
-	if msg, ok := _cache_mods[key]; ok && kit.Time(msg.Time("24h")) > kit.Time(m.Time()) {
-		return msg
-	}
-
-	if mod != "" {
-		m.Cmd(cli.SYSTEM, "go", "get", mod)
-	}
-	if msg := _vimer_go_complete(m.Spawn(), key); msg.Length() > 0 {
-		_cache_mods[key] = msg
-		return msg
-	}
-	return nil
-}
 
 func _vimer_defs(m *ice.Message, ext string) string {
 	defs := kit.Dict(
@@ -114,82 +91,9 @@ func _vimer_inputs(m *ice.Message, arg ...string) {
 		m.Cmdy(web.DREAM, mdb.INPUTS, arg)
 	}
 }
+
 func _vimer_complete(m *ice.Message, arg ...string) {
-	const (
-		PRE = "pre"
-		END = "end"
-	)
-
-	switch left := kit.Select("", kit.Slice(kit.Split(m.Option(PRE), "\t \n`"), -1), 0); kit.Ext(m.Option(nfs.FILE)) {
-	case nfs.SH:
-		if m.Option(PRE) == "" {
-			// if _cache_bin != nil {
-			// 	m.Copy(_cache_bin)
-			// 	break
-			// }
-			// _cache_bin = m
-
-			// m.Push(mdb.NAME, "_list")
-			// _vimer_list(m, "/bin")
-			// _vimer_list(m, "/sbin")
-		}
-
-	case nfs.SHY:
-		switch strings.TrimSpace(left) {
-		case cli.FG, cli.BG:
-			m.Push(mdb.NAME, cli.RED)
-			m.Push(mdb.NAME, cli.BLUE)
-			m.Push(mdb.NAME, cli.GREEN)
-
-		default:
-			switch kit.Select("", kit.Split(m.Option(PRE)), 0) {
-			case "field":
-				m.Cmdy(ctx.COMMAND, mdb.SEARCH, ctx.COMMAND, "", "", ice.OptionFields("index,name,text"))
-				_vimer_list(m, ice.SRC, ctx.INDEX)
-
-			case "chain":
-				m.Push(mdb.NAME, cli.FG)
-				m.Push(mdb.NAME, cli.BG)
-			}
-		}
-
-	case nfs.GO:
-		if m.Option(mdb.NAME) == ice.PT {
-			switch m.Option(mdb.TYPE) {
-			case "msg", "m":
-				m.Copy(_vimer_doc(m, "shylinux.com/x/ice", "Message"))
-				m.Copy(_vimer_doc(m, "shylinux.com/x/icebergs", "Message"))
-
-			case "ice", "*ice":
-				m.Copy(_vimer_doc(m, "shylinux.com/x/ice", ""))
-
-			case "kit":
-				m.Copy(_vimer_doc(m, "shylinux.com/x/toolkits", ""))
-
-			default:
-				m.Copy(_vimer_doc(m, "", m.Option(mdb.TYPE)))
-			}
-
-		} else {
-			m.Push(mdb.NAME, "msg")
-			m.Push(mdb.NAME, "ice")
-		}
-
-	case nfs.JS:
-		if m.Option(mdb.NAME) == ice.PT {
-			switch m.Option(mdb.TYPE) {
-			case "msg":
-				m.Cmdy("web.code.vim.tags", "msg").Cut("name,text")
-			case "can":
-				m.Cmdy("web.code.vim.tags").Cut(mdb.ZONE)
-			default:
-				m.Cmdy("web.code.vim.tags", strings.TrimPrefix(m.Option(mdb.TYPE), "can.")).Cut("name,text")
-			}
-		} else {
-			m.Push(mdb.NAME, "msg")
-			m.Push(mdb.NAME, "can")
-		}
-
+	switch left := kit.Select("", kit.Slice(kit.Split(m.Option(mdb.TEXT), "\t \n`"), -1), 0); kit.Ext(m.Option(nfs.FILE)) {
 	case nfs.ZML:
 		switch left {
 		case mdb.TYPE:
@@ -205,18 +109,20 @@ func _vimer_complete(m *ice.Message, arg ...string) {
 			m.Push(mdb.NAME, "open")
 
 		default:
-			if strings.HasSuffix(m.Option(PRE), " ") {
+			if strings.HasSuffix(m.Option(mdb.TEXT), " ") {
 				m.Push(mdb.NAME, "index")
 				m.Push(mdb.NAME, "action")
 				m.Push(mdb.NAME, "args")
 				m.Push(mdb.NAME, "type")
-			} else if m.Option(PRE) == "" {
+			} else if m.Option(mdb.TEXT) == "" {
 				m.Push(mdb.NAME, "head")
 				m.Push(mdb.NAME, "left")
 				m.Push(mdb.NAME, "main")
 				m.Push(mdb.NAME, "foot")
 			}
 		}
+	default:
+		m.Cmdy(mdb.ENGINE, kit.Ext(m.Option(nfs.FILE)), m.Option(nfs.FILE), m.Option(nfs.PATH))
 	}
 }
 func _vimer_go_complete(m *ice.Message, name string, arg ...string) *ice.Message {
@@ -298,9 +204,7 @@ func init() {
 				m.ToastSuccess()
 			}},
 			BINPACK: {Name: "binpack", Help: "打包模式", Hand: func(m *ice.Message, arg ...string) {
-				m.Cmd(nfs.LINK, ice.GO_SUM, path.Join(ice.SRC_RELEASE, ice.GO_SUM))
-				m.Cmd(nfs.LINK, ice.GO_MOD, path.Join(ice.SRC_RELEASE, ice.GO_MOD))
-				m.Cmdy(nfs.CAT, ice.GO_MOD)
+				m.Cmdy(WEBPACK, mdb.CREATE)
 				m.Cmdy(AUTOGEN, BINPACK)
 				m.ProcessInner()
 				m.ToastSuccess()

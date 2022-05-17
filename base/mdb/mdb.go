@@ -143,11 +143,8 @@ func NextPageLimit(m *ice.Message, total string, arg ...string) {
 const MDB = "mdb"
 
 var Index = &ice.Context{Name: MDB, Help: "数据模块", Commands: map[string]*ice.Command{
-	ice.CTX_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-		ice.Pulse.Option(ice.CACHE_LIMIT, "10")
-	}},
-	ice.CTX_EXIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-	}},
+	ice.CTX_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {}},
+	ice.CTX_EXIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {}},
 	INSERT: {Name: "insert key sub type arg...", Help: "添加", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 		switch arg[2] {
 		case ZONE: // insert key sub type zone arg...

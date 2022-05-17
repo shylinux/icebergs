@@ -120,9 +120,6 @@ func init() {
 		)},
 	}, Commands: map[string]*ice.Command{
 		USER: {Name: "user username auto create", Help: "用户", Action: ice.MergeAction(map[string]*ice.Action{
-			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
-				UserRoot(ice.Pulse)
-			}},
 			mdb.SEARCH: {Name: "search type name text", Help: "搜索", Hand: func(m *ice.Message, arg ...string) {
 				if arg[0] == USER {
 					_user_search(m, arg[1], kit.Select("", arg, 2))

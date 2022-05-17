@@ -28,6 +28,22 @@ func _js_main_script(m *ice.Message, arg ...string) (res []string) {
 	return
 }
 
+func _js_exec(m *ice.Message, arg ...string) {
+	if m.Option(mdb.NAME) == ice.PT {
+		switch m.Option(mdb.TYPE) {
+		case "msg":
+			m.Cmdy("web.code.vim.tags", "msg").Cut("name,text")
+		case "can":
+			m.Cmdy("web.code.vim.tags").Cut(mdb.ZONE)
+		default:
+			m.Cmdy("web.code.vim.tags", strings.TrimPrefix(m.Option(mdb.TYPE), "can.")).Cut("name,text")
+		}
+	} else {
+		m.Push(mdb.NAME, "msg")
+		m.Push(mdb.NAME, "can")
+	}
+}
+
 const JS = "js"
 const CSS = "css"
 const HTML = "html"
@@ -57,8 +73,7 @@ func init() {
 				m.ProcessCommand(kit.Select("can.code.inner.plugin", key), kit.Simple())
 			}},
 			mdb.ENGINE: {Hand: func(m *ice.Message, arg ...string) {
-				m.Cmdy(cli.SYSTEM, NODE, "-e", kit.Join(_js_main_script(m, arg...), ice.NL)).SetAppend()
-				m.Echo(ice.NL)
+				_js_exec(m, arg...)
 			}},
 			mdb.SEARCH: {Hand: func(m *ice.Message, arg ...string) {
 				if arg[0] == mdb.FOREACH {

@@ -5,6 +5,7 @@ import (
 	"os"
 	"path"
 	"strings"
+	"sync"
 	"time"
 
 	ice "shylinux.com/x/icebergs"
@@ -57,15 +58,62 @@ func _go_find(m *ice.Message, key string, dir string) {
 func _go_grep(m *ice.Message, key string, dir string) {
 	m.Cmd(nfs.GREP, dir, key).Tables(func(value map[string]string) { m.PushSearch(value) })
 }
-func _go_exec(m *ice.Message, arg ...string) {
-	if key := ice.GetFileCmd(path.Join(arg[2], arg[1])); key != "" {
-		m.Cmdy(cli.SYSTEM, GO, ice.RUN, ice.SRC_MAIN_GO, key)
-	} else if m.Option(cli.CMD_DIR, arg[2]); strings.HasSuffix(arg[1], "_test.go") {
-		m.Cmdy(cli.SYSTEM, GO, "test", "-v", nfs.PWD+arg[1])
-	} else {
-		m.Cmdy(cli.SYSTEM, GO, ice.RUN, nfs.PWD+arg[1])
+
+var _cache_mods = map[string]*ice.Message{}
+var _cache_lock = sync.Mutex{}
+
+func _go_doc(m *ice.Message, mod string, pkg string) *ice.Message {
+	_cache_lock.Lock()
+	defer _cache_lock.Unlock()
+
+	key := kit.Keys(mod, pkg)
+	if msg, ok := _cache_mods[key]; ok && kit.Time(msg.Time("24h")) > kit.Time(m.Time()) {
+		return msg
 	}
-	m.SetAppend()
+
+	if mod != "" {
+		m.Cmd(cli.SYSTEM, "go", "get", mod)
+	}
+	if msg := _vimer_go_complete(m.Spawn(), key); msg.Length() > 0 {
+		_cache_mods[key] = msg
+		return msg
+	}
+	return nil
+}
+
+func _go_exec(m *ice.Message, arg ...string) {
+	if m.Option(mdb.TEXT) == "" {
+		if m.Option(nfs.LINE) == "1" {
+			m.Push(mdb.NAME, "package")
+		} else {
+			m.Push(mdb.NAME, "import")
+			m.Push(mdb.NAME, "const")
+			m.Push(mdb.NAME, "type")
+			m.Push(mdb.NAME, "func")
+		}
+		return
+	}
+
+	if m.Option(mdb.NAME) == ice.PT {
+		switch m.Option(mdb.TYPE) {
+		case "msg", "m":
+			m.Copy(_go_doc(m, "shylinux.com/x/ice", "Message"))
+			m.Copy(_go_doc(m, "shylinux.com/x/icebergs", "Message"))
+
+		case "ice", "*ice":
+			m.Copy(_go_doc(m, "shylinux.com/x/ice", ""))
+
+		case "kit":
+			m.Copy(_go_doc(m, "shylinux.com/x/toolkits", ""))
+
+		default:
+			m.Copy(_go_doc(m, "", m.Option(mdb.TYPE)))
+		}
+
+	} else {
+		m.Push(mdb.NAME, "msg")
+		m.Push(mdb.NAME, "ice")
+	}
 }
 func _go_show(m *ice.Message, arg ...string) {
 	if arg[1] == "main.go" {

@@ -83,13 +83,12 @@ func CookieName(url string) string {
 	return ice.MSG_SESSID + "_" + kit.ReplaceAll(kit.ParseURLMap(url)[tcp.HOST], ".", "_", ":", "_")
 }
 func RenderCookie(msg *ice.Message, value string, arg ...string) { // name path expire
-	expire := time.Now().Add(kit.Duration(kit.Select(msg.Conf(aaa.SESS, "meta.expire"), arg, 2)))
+	expire := time.Now().Add(kit.Duration(kit.Select(msg.Conf(aaa.SESS, kit.Keym(aaa.EXPIRE)), arg, 2)))
 	http.SetCookie(msg.W, &http.Cookie{Value: value,
 		Name: kit.Select(CookieName(msg.Option(ice.MSG_USERWEB)), arg, 0), Path: kit.Select(ice.PS, arg, 1), Expires: expire})
 }
 func RenderRedirect(msg *ice.Message, arg ...string) {
-	// http.Redirect(msg.W, msg.R, kit.MergeURL(arg[0], arg[1:]), http.StatusTemporaryRedirect)
-	http.Redirect(msg.W, msg.R, kit.MergeURL(arg[0], arg[1:]), http.StatusMovedPermanently)
+	http.Redirect(msg.W, msg.R, kit.MergeURL(arg[0], arg[1:]), http.StatusTemporaryRedirect)
 }
 func RenderType(w http.ResponseWriter, name, mime string) {
 	if mime != "" {

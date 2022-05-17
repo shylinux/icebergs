@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	ice "shylinux.com/x/icebergs"
+	"shylinux.com/x/icebergs/base/aaa"
 	"shylinux.com/x/icebergs/base/ctx"
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/nfs"
@@ -50,6 +51,7 @@ func _runtime_init(m *ice.Message) {
 	ice.Info.HostName = m.Conf(RUNTIME, kit.Keys(BOOT, HOSTNAME))
 	ice.Info.PathName = m.Conf(RUNTIME, kit.Keys(BOOT, PATHNAME))
 	ice.Info.UserName = m.Conf(RUNTIME, kit.Keys(BOOT, USERNAME))
+	aaa.UserRoot(ice.Pulse)
 
 	// 启动次数 boot
 	m.Conf(RUNTIME, kit.Keys(BOOT, mdb.COUNT), kit.Int(m.Conf(RUNTIME, kit.Keys(BOOT, mdb.COUNT)))+1)
@@ -151,8 +153,8 @@ func init() {
 	}, Commands: map[string]*ice.Command{
 		RUNTIME: {Name: "runtime info=ifconfig,hostinfo,hostname,userinfo,procinfo,bootinfo,diskinfo,env,file,route auto", Help: "运行环境", Action: map[string]*ice.Action{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
-				_runtime_init(m)
 				m.Cmd(RUNTIME, MAXPROCS, "1")
+				_runtime_init(m)
 			}},
 			MAXPROCS: {Name: "maxprocs", Help: "最大并发", Hand: func(m *ice.Message, arg ...string) {
 				if len(arg) > 0 {

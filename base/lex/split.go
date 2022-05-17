@@ -57,6 +57,8 @@ func _split_list(m *ice.Message, file string, arg ...string) map[string]interfac
 			ls = cb(deep, ls, data)
 		case func([]string, map[string]interface{}) []string:
 			ls = cb(ls, data)
+		case func([]string):
+			cb(ls)
 		}
 
 		// 参数字段

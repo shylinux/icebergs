@@ -16,11 +16,11 @@ func (m *Message) TryCatch(msg *Message, silent bool, hand ...func(msg *Message)
 		case io.EOF:
 		case nil:
 		default:
-			fileline := kit.FileLine(4, 5)
+			fileline := m.FormatStack(2, 1)
 			m.Log(LOG_WARN, "catch: %s %s", e, fileline)
 			m.Log("chain", msg.FormatChain())
 			m.Log(LOG_WARN, "catch: %s %s", e, fileline)
-			m.Log("stack", msg.FormatStack())
+			m.Log("stack", msg.FormatStack(2, 100))
 			m.Log(LOG_WARN, "catch: %s %s", e, fileline)
 			m.Echo("%v", e)
 			if len(hand) > 1 {

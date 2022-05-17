@@ -31,8 +31,7 @@ func _website_parse(m *ice.Message, text string, args ...string) (map[string]int
 	river, storm, last := kit.Dict(
 		"Header", kit.Dict("menus", kit.List(), "style", kit.Dict("display", "none")),
 		"River", kit.Dict("menus", kit.List(), "action", kit.List()),
-		"Action", kit.Dict("menus", kit.List(), "action", kit.List(), "legend_event", "onclick"),
-		"Footer", kit.Dict("style", kit.Dict("display", "none")), args,
+		args,
 	), kit.Dict(), kit.Dict()
 	prefix := ""
 
@@ -69,10 +68,6 @@ func _website_parse(m *ice.Message, text string, args ...string) (map[string]int
 				last[mdb.LIST] = append(last[mdb.LIST].([]interface{}), kit.Dict(mdb.INDEX, kit.Keys(prefix, v), "order", len(last)))
 			}
 			return ls
-		default:
-			if msg := m.Cmd(mdb.RENDER, kit.Ext(ls[0])); msg.Length() > 0 {
-				ls[0], data[ctx.ARGS] = kit.Keys(msg.Append(mdb.TEXT), msg.Append(mdb.NAME)), kit.List(ls[0])
-			}
 		}
 
 		if ls[0] == "" {
@@ -179,6 +174,9 @@ func init() {
 				m.Cmd(mdb.ENGINE, mdb.CREATE, nfs.TXT, m.PrefixKey())
 
 				web.AddRewrite(func(w http.ResponseWriter, r *http.Request) bool {
+					if r.Method != http.MethodGet {
+						return false
+					}
 					if ok := true; m.Richs(WEBSITE, nil, r.URL.Path, func(key string, value map[string]interface{}) {
 						value = kit.GetMeta(value)
 						ok = _website_render(m, w, r, kit.Format(value[mdb.TYPE]), kit.Format(value[mdb.TEXT]))
@@ -186,27 +184,28 @@ func init() {
 						return true
 					}
 					if strings.HasPrefix(r.URL.Path, CHAT_WEBSITE) {
-						if r.Method == http.MethodGet {
-							_website_render(m, w, r, kit.Ext(r.URL.Path), m.Cmdx(nfs.CAT, strings.Replace(r.URL.Path, CHAT_WEBSITE, SRC_WEBSITE, 1)))
-							return true
-						}
+						_website_render(m, w, r, kit.Ext(r.URL.Path), m.Cmdx(nfs.CAT, strings.Replace(r.URL.Path, CHAT_WEBSITE, SRC_WEBSITE, 1)))
+						return true
 					}
 					return false
 				})
 			}},
 			"show": {Hand: func(m *ice.Message, arg ...string) {
-				if kit.Ext(arg[0]) == nfs.ZML {
+				switch kit.Ext(arg[0]) {
+				case nfs.ZML:
 					m.RenderCmd("can.parse", m.Cmdx(nfs.CAT, path.Join(SRC_WEBSITE, arg[0])))
-					return
-				}
-				if text := m.Cmd(m.PrefixKey(), ice.PS+arg[0]).Append(mdb.TEXT); text != "" {
-					if res, ok := _website_parse(m, text, arg[1:]...); ok {
+
+				case nfs.IML:
+					if res, ok := _website_parse(m, m.Cmdx(nfs.CAT, path.Join(SRC_WEBSITE, arg[0])), arg[1:]...); ok {
 						m.Echo(_website_template2, kit.Format(res))
-						return
 					}
-				}
-				if res, ok := _website_parse(m, m.Cmdx(nfs.CAT, path.Join(SRC_WEBSITE, arg[0])), arg[1:]...); ok {
-					m.Echo(_website_template2, kit.Format(res))
+
+				default:
+					if text := m.Cmd(m.PrefixKey(), ice.PS+arg[0]).Append(mdb.TEXT); text != "" {
+						if res, ok := _website_parse(m, text, arg[1:]...); ok {
+							m.Echo(_website_template2, kit.Format(res))
+						}
+					}
 				}
 			}},
 			"inner": {Hand: func(m *ice.Message, arg ...string) {}},

@@ -199,7 +199,6 @@ func init() {
 			}},
 			BINPACK: {Name: "binpack", Help: "打包：生成 src/binpack.go", Hand: func(m *ice.Message, arg ...string) {
 				_autogen_version(m)
-				m.Cmdy(WEBPACK, mdb.CREATE)
 				if m.Cmd(BINPACK, mdb.CREATE); kit.FileExists(ice.USR_RELEASE) && m.Option(ice.MSG_USERPOD) == "" {
 					m.Cmd(nfs.COPY, path.Join(ice.USR_RELEASE, "conf.go"), path.Join(ice.USR_ICEBERGS, "conf.go"))
 					m.Cmd(cli.SYSTEM, "sh", "-c", `cat src/binpack.go|sed 's/package main/package ice/g' > usr/release/binpack.go`)

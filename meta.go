@@ -182,7 +182,7 @@ func (m *Message) Echo(str string, arg ...interface{}) *Message {
 	return m
 }
 func (m *Message) Copy(msg *Message, arg ...string) *Message {
-	if m == nil || m == msg {
+	if m == nil || msg == nil || m == msg {
 		return m
 	}
 	if len(arg) > 0 {

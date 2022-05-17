@@ -93,7 +93,7 @@ func _space_handle(m *ice.Message, safe bool, send map[string]*ice.Message, c *w
 
 			if len(target) == 0 {
 				if msg.Option(ice.MSG_HANDLE) == ice.TRUE {
-					msg.Debug("what %v %v", msg.FormatMeta(), msg.FormatStack())
+					msg.Debug("what %v %v", msg.FormatMeta(), msg.FormatStack(1, 100))
 					continue
 				}
 				if msg.Optionv(ice.MSG_HANDLE, ice.TRUE); safe { // 下行命令

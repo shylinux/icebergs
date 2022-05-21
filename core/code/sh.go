@@ -13,11 +13,20 @@ import (
 func _sh_main_script(m *ice.Message, arg ...string) (res []string) {
 	if cmd := ice.GetFileCmd(path.Join(arg[2], arg[1])); cmd != "" {
 		res = append(res, kit.Format(`#! /bin/sh
-export ctx_dev=%s; ctx_temp=$(mktemp); curl -fsSL $ctx_dev -o $ctx_temp; source $ctx_temp %s &>/dev/null
+export ctx_dev=%s; ctx_pod=%s ctx_temp=$(mktemp); curl -fsSL $ctx_dev -o $ctx_temp; source $ctx_temp &>/dev/null
+_done=""
 _list() {
-	ish_sys_dev_run_command "$@"
+	if [ "$_done" = "" ]; then
+		ish_sys_dev_run %s "$@"
+	else
+		ish_sys_dev_run_command "$@"
+	fi
+	_done=done
 }
-`, "http://localhost:9020", cmd))
+_action() {
+	_list action "$@"
+}
+`, "http://localhost:9020", m.Option(ice.MSG_USERPOD), cmd))
 	}
 
 	if kit.FileExists(kit.Path(arg[2], arg[1])) {

@@ -56,8 +56,14 @@ func _website_parse(m *ice.Message, text string, args ...string) (map[string]int
 		case nfs.GO:
 			ls[0] = ice.GetFileCmd(ls[0])
 
+		case nfs.SH:
+			ls[0], data[ctx.ARGS] = "web.code.sh.sh", ls[0]
+
 		case nfs.SHY:
 			ls[0], data[ctx.ARGS] = "web.wiki.word", ls[0]
+
+		case nfs.PY:
+			ls[0], data[ctx.ARGS] = "web.code.sh.py", ls[0]
 
 		case "~":
 			prefix = ls[1]

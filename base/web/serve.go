@@ -105,6 +105,9 @@ func _serve_params(msg *ice.Message, path string) {
 			msg.Logs("refer", ls[1], ls[2])
 			msg.Option(ls[1], ls[2])
 		}
+	case ice.POD:
+		msg.Logs("refer", ls[1], ls[2])
+		msg.Option(ls[1], ls[2])
 	case "chat":
 		switch kit.Select("", ls, 2) {
 		case ice.POD:

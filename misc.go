@@ -280,7 +280,7 @@ func (c *Context) _cmd(m *Message, cmd *Command, key string, sub string, h *Acti
 	h.Hand(m, arg...)
 	return m
 }
-func (c *Context) split(name string) (list []interface{}) {
+func SplitCmd(name string) (list []interface{}) {
 	const (
 		TEXT     = "text"
 		ARGS     = "args"
@@ -342,6 +342,29 @@ func (c *Context) split(name string) (list []interface{}) {
 		}
 	}
 	return list
+}
+func (m *Message) Design(action interface{}, help string, input ...interface{}) {
+	list := kit.List()
+	for _, input := range input {
+		switch input := input.(type) {
+		case string:
+			list = append(list, SplitCmd("action "+input)...)
+		case map[string]interface{}:
+			if kit.Format(input[TYPE]) != "" && kit.Format(input[NAME]) != "" {
+				list = append(list, input)
+				continue
+			}
+			kit.Fetch(kit.KeyValue(nil, "", input), func(k string, v interface{}) {
+				list = append(list, kit.Dict(NAME, k, TYPE, "text", VALUE, v))
+			})
+		}
+	}
+	k := kit.Format(action)
+	if a, ok := m._cmd.Action[k]; ok {
+		a.List = list
+		m._cmd.Meta[k] = list
+		kit.Value(m._cmd.Meta, kit.Keys("_trans", k), help)
+	}
 }
 
 func MergeAction(list ...interface{}) map[string]*Action {

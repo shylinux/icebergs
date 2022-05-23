@@ -52,7 +52,7 @@ func (m *Message) Assert(expr interface{}) bool {
 	panic(expr)
 }
 func (m *Message) Sleep(d string, arg ...interface{}) *Message {
-	m.Debug("sleep %s %s", d, kit.FileLine(2, 3))
+	// m.Debug("sleep %s %s", d, kit.FileLine(2, 3))
 	if time.Sleep(kit.Duration(d)); len(arg) > 0 {
 		m.Cmdy(arg...)
 	}

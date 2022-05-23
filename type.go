@@ -145,7 +145,7 @@ func (c *Context) Merge(s *Context) *Context {
 		}
 
 		if c.Commands[key] = cmd; cmd.List == nil {
-			cmd.List = c.split(cmd.Name)
+			cmd.List = SplitCmd(cmd.Name)
 		}
 		if cmd.Meta == nil {
 			cmd.Meta = kit.Dict()
@@ -183,7 +183,7 @@ func (c *Context) Merge(s *Context) *Context {
 				continue // alias cmd
 			}
 			if a.List == nil {
-				a.List = c.split(a.Name)
+				a.List = SplitCmd(a.Name)
 			}
 			if len(a.List) > 0 {
 				cmd.Meta[k] = a.List

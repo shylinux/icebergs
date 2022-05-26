@@ -20,6 +20,11 @@ func (m *Message) PrefixKey(arg ...string) string {
 func (m *Message) Prefix(arg ...string) string {
 	return kit.Keys(m.Cap(CTX_FOLLOW), arg)
 }
+func (m *Message) ConfigSet(keys string, arg ...string) {
+	for i, k := range kit.Split(keys) {
+		m.Config(k, kit.Select("", arg, i))
+	}
+}
 func (m *Message) Config(key string, arg ...interface{}) string {
 	if len(arg) > 0 {
 		m.Conf(m.PrefixKey(), kit.Keym(key), arg[0])

@@ -163,7 +163,7 @@ func init() {
 			if len(arg) == 1 {
 				arg = kit.Split(arg[0])
 			}
-			if kit.Ext(arg[0]) == nfs.SH && arg[0] != nfs.SH {
+			if kit.Ext(arg[0]) == nfs.SH && arg[0] != nfs.SH && kit.FileExists(path.Join(ice.SRC, arg[0])) {
 				arg = []string{nfs.SH, path.Join(ice.SRC, arg[0])}
 			}
 			_system_exec(m, _system_cmd(m, arg...))

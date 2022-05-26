@@ -123,6 +123,9 @@ func _install_service(m *ice.Message, arg ...string) {
 	})
 	m.Set(tcp.PORT).Tables(func(value map[string]string) { m.Push(tcp.PORT, path.Base(value[nfs.DIR])) })
 }
+func _install_stop(m *ice.Message, arg ...string) {
+	m.Cmd(cli.SYSTEM, "kill", m.Option("pid"))
+}
 
 const (
 	PREPARE = "prepare"
@@ -155,6 +158,9 @@ func init() {
 			}},
 			cli.START: {Name: "start link cmd", Help: "启动", Hand: func(m *ice.Message, arg ...string) {
 				_install_start(m, arg...)
+			}},
+			cli.STOP: {Name: "stop", Help: "停止", Hand: func(m *ice.Message, arg ...string) {
+				_install_stop(m, arg...)
 			}},
 			nfs.SOURCE: {Name: "source link path", Help: "源码", Hand: func(m *ice.Message, arg ...string) {
 				m.Option(nfs.DIR_ROOT, path.Join(m.Config(nfs.PATH), kit.TrimExt(m.Option(mdb.LINK)), "_install"))

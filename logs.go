@@ -182,9 +182,17 @@ func (m *Message) FormatStack(s, n int) string {
 		frame, more := frames.Next()
 		file := kit.Slice(kit.Split(frame.File, PS, PS), -1)[0]
 		name := kit.Slice(kit.Split(frame.Function, PS, PS), -1)[0]
-		if !strings.HasPrefix(name, "runtime.") && !strings.HasPrefix(name, "http.") && !strings.HasPrefix(name, "icebergs.") && !strings.HasPrefix(name, "web.(*Frame)") {
-			list = append(list, kit.Format("%s:%d\t%s", file, frame.Line, name))
+
+		switch ls := kit.Split(name, PT, PT); kit.Select("", ls, 0) {
+		case "reflect", "runtime", "http", "task", "icebergs":
+		default:
+			switch kit.Select("", ls, 1) {
+			case "(*Frame)":
+			default:
+				list = append(list, kit.Format("%s:%d\t%s", file, frame.Line, name))
+			}
 		}
+
 		if len(list) >= n {
 			break
 		}

@@ -56,6 +56,7 @@ func _daemon_exec(m *ice.Message, cmd *exec.Cmd) {
 			kit.Close(m.Optionv(p))
 		}
 	})
+	m.Sleep("100ms")
 }
 
 const (

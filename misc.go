@@ -285,6 +285,7 @@ func SplitCmd(name string) (list []interface{}) {
 		TEXT     = "text"
 		ARGS     = "args"
 		TEXTAREA = "textarea"
+		PASSWORD = "password"
 		SELECT   = "select"
 		BUTTON   = "button"
 	)
@@ -311,6 +312,10 @@ func SplitCmd(name string) (list []interface{}) {
 			list = append(list, kit.List(TYPE, BUTTON, NAME, "next")...)
 		case "text", "args":
 			item = kit.Dict(TYPE, TEXTAREA, NAME, ls[i])
+			list = append(list, item)
+
+		case "password":
+			item = kit.Dict(TYPE, PASSWORD, NAME, ls[i])
 			list = append(list, item)
 
 		case ":":

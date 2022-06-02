@@ -98,7 +98,10 @@ func _install_spawn(m *ice.Message, arg ...string) {
 	nfs.MkdirAll(m, target)
 	defer m.Echo(target)
 
-	m.Cmd(nfs.DIR, path.Join(source, kit.Select("_install", m.Option(INSTALL)))).Tables(func(value map[string]string) {
+	if m.Option(INSTALL) == "" && kit.FileExists(kit.Path(source, "_install")) {
+		m.Option(INSTALL, "_install")
+	}
+	m.Cmd(nfs.DIR, path.Join(source, m.Option(INSTALL))).Tables(func(value map[string]string) {
 		m.Cmd(cli.SYSTEM, "cp", "-r", strings.TrimSuffix(value[nfs.PATH], ice.PS), target+ice.PS)
 	})
 }
@@ -124,7 +127,12 @@ func _install_service(m *ice.Message, arg ...string) {
 	m.Set(tcp.PORT).Tables(func(value map[string]string) { m.Push(tcp.PORT, path.Base(value[nfs.DIR])) })
 }
 func _install_stop(m *ice.Message, arg ...string) {
-	m.Cmd(cli.SYSTEM, "kill", m.Option("pid"))
+	m.Cmd(cli.DAEMON).Tables(func(value map[string]string) {
+		if value[cli.PID] == m.Option(cli.PID) {
+			m.Cmd(cli.DAEMON, cli.STOP, kit.Dict(mdb.HASH, value[mdb.HASH]))
+		}
+	})
+	m.Cmd(cli.SYSTEM, cli.KILL, m.Option(cli.PID))
 }
 
 const (
@@ -141,6 +149,11 @@ func init() {
 		INSTALL: {Name: "install name port path auto download", Help: "安装", Meta: kit.Dict(), Action: ice.MergeAction(map[string]*ice.Action{
 			web.DOWNLOAD: {Name: "download link path", Help: "下载", Hand: func(m *ice.Message, arg ...string) {
 				_install_download(m)
+			}},
+			nfs.SOURCE: {Name: "source link path", Help: "源码", Hand: func(m *ice.Message, arg ...string) {
+				m.Option(nfs.DIR_ROOT, path.Join(m.Config(nfs.PATH), kit.TrimExt(m.Option(mdb.LINK)), "_install"))
+				defer m.StatusTime(nfs.PATH, m.Option(nfs.DIR_ROOT))
+				m.Cmdy(nfs.DIR, m.Option(nfs.PATH))
 			}},
 			cli.BUILD: {Name: "build link", Help: "构建", Hand: func(m *ice.Message, arg ...string) {
 				if err := _install_build(m, arg...); err != "" {
@@ -161,11 +174,6 @@ func init() {
 			}},
 			cli.STOP: {Name: "stop", Help: "停止", Hand: func(m *ice.Message, arg ...string) {
 				_install_stop(m, arg...)
-			}},
-			nfs.SOURCE: {Name: "source link path", Help: "源码", Hand: func(m *ice.Message, arg ...string) {
-				m.Option(nfs.DIR_ROOT, path.Join(m.Config(nfs.PATH), kit.TrimExt(m.Option(mdb.LINK)), "_install"))
-				defer m.StatusTime(nfs.PATH, m.Option(nfs.DIR_ROOT))
-				m.Cmdy(nfs.DIR, m.Option(nfs.PATH))
 			}},
 		}, mdb.HashAction()), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			switch len(arg) {

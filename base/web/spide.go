@@ -94,7 +94,7 @@ func _spide_list(m *ice.Message, arg ...string) {
 			return
 		}
 
-		if true || m.Config(LOGHEADERS) == ice.TRUE {
+		if m.Config(LOGHEADERS) == ice.TRUE {
 			for k, v := range res.Header {
 				m.Debug("%v: %v", k, v)
 			}

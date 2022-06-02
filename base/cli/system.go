@@ -82,7 +82,8 @@ func _system_find(m *ice.Message, bin string, dir ...string) string {
 		return bin
 	}
 	if strings.HasPrefix(bin, nfs.PWD) {
-		return kit.Path(m.Option(CMD_DIR), bin)
+		// return kit.Path(m.Option(CMD_DIR), bin)
+		return bin
 	}
 	if len(dir) == 0 {
 		dir = append(dir, strings.Split(kit.Env(PATH), ice.DF)...)

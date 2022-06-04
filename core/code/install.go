@@ -14,10 +14,13 @@ import (
 	kit "shylinux.com/x/toolkits"
 )
 
+func _install_path(m *ice.Message, link string) string {
+	return path.Join(ice.USR_INSTALL, kit.TrimExt(kit.Select(m.Option(mdb.LINK), link)))
+}
 func _install_download(m *ice.Message) {
 	link := m.Option(mdb.LINK)
 	name := path.Base(strings.Split(link, "?")[0])
-	file := path.Join(kit.Select(m.Config(nfs.PATH), m.Option(nfs.PATH)), name)
+	file := path.Join(kit.Select(ice.USR_INSTALL, m.Option(nfs.PATH)), name)
 
 	defer m.Cmdy(nfs.DIR, file)
 	if kit.FileExists(file) {
@@ -32,13 +35,10 @@ func _install_download(m *ice.Message) {
 
 		// 下载进度
 		m.Richs(INSTALL, "", name, func(key string, value map[string]interface{}) {
-			prev, value := 0, kit.GetMeta(value)
+			value = kit.GetMeta(value)
 			m.OptionCB(web.SPIDE, func(count int, total int, step int) {
-				if step >= prev {
-					value[mdb.COUNT], value[mdb.TOTAL], value[mdb.VALUE] = count, total, step
-					toast(name, count, total)
-					prev = step
-				}
+				value[mdb.COUNT], value[mdb.TOTAL], value[mdb.VALUE] = count, total, step
+				toast(name, count, total)
 			})
 		})
 
@@ -48,7 +48,7 @@ func _install_download(m *ice.Message) {
 	})
 }
 func _install_build(m *ice.Message, arg ...string) string {
-	p := m.Option(cli.CMD_DIR, path.Join(m.Config(nfs.PATH), kit.TrimExt(m.Option(mdb.LINK))))
+	p := m.Option(cli.CMD_DIR, _install_path(m, ""))
 	pp := kit.Path(path.Join(p, "_install"))
 
 	// 推流
@@ -77,7 +77,7 @@ func _install_build(m *ice.Message, arg ...string) string {
 	return ""
 }
 func _install_order(m *ice.Message, arg ...string) {
-	p := path.Join(m.Config(nfs.PATH), kit.TrimExt(m.Option(mdb.LINK)), m.Option(nfs.PATH)+ice.NL)
+	p := path.Join(_install_path(m, ""), m.Option(nfs.PATH)+ice.NL)
 	if !strings.Contains(m.Cmdx(nfs.CAT, ice.ETC_PATH), p) {
 		m.Cmd(nfs.PUSH, ice.ETC_PATH, p)
 	}
@@ -85,7 +85,7 @@ func _install_order(m *ice.Message, arg ...string) {
 }
 func _install_spawn(m *ice.Message, arg ...string) {
 	if kit.Int(m.Option(tcp.PORT)) >= 10000 {
-		if p := path.Join(m.Conf(cli.DAEMON, kit.Keym(nfs.PATH)), m.Option(tcp.PORT)); kit.FileExists(p) {
+		if p := path.Join(ice.USR_LOCAL_DAEMON, m.Option(tcp.PORT)); kit.FileExists(p) {
 			m.Echo(p)
 			return
 		}
@@ -93,8 +93,8 @@ func _install_spawn(m *ice.Message, arg ...string) {
 		m.Option(tcp.PORT, m.Cmdx(tcp.PORT, aaa.RIGHT))
 	}
 
-	target := path.Join(m.Conf(cli.DAEMON, kit.Keym(nfs.PATH)), m.Option(tcp.PORT))
-	source := path.Join(m.Config(nfs.PATH), kit.TrimExt(m.Option(mdb.LINK)))
+	target := path.Join(ice.USR_LOCAL_DAEMON, m.Option(tcp.PORT))
+	source := _install_path(m, "")
 	nfs.MkdirAll(m, target)
 	defer m.Echo(target)
 
@@ -114,7 +114,17 @@ func _install_start(m *ice.Message, arg ...string) {
 		args = append(args, cb(p)...)
 	}
 
-	m.Cmdy(cli.DAEMON, arg[1:], args)
+	if m.Cmdy(cli.DAEMON, arg[1:], args); cli.IsSuccess(m) {
+		m.SetAppend()
+	}
+}
+func _install_stop(m *ice.Message, arg ...string) {
+	m.Cmd(cli.DAEMON).Tables(func(value map[string]string) {
+		if value[cli.PID] == m.Option(cli.PID) {
+			m.Cmd(cli.DAEMON, cli.STOP, kit.Dict(mdb.HASH, value[mdb.HASH]))
+		}
+	})
+	m.Cmd(cli.SYSTEM, cli.KILL, m.Option(cli.PID))
 }
 func _install_service(m *ice.Message, arg ...string) {
 	arg = kit.Split(path.Base(arg[0]), "-.")[:1]
@@ -125,14 +135,7 @@ func _install_service(m *ice.Message, arg ...string) {
 		}
 	})
 	m.Set(tcp.PORT).Tables(func(value map[string]string) { m.Push(tcp.PORT, path.Base(value[nfs.DIR])) })
-}
-func _install_stop(m *ice.Message, arg ...string) {
-	m.Cmd(cli.DAEMON).Tables(func(value map[string]string) {
-		if value[cli.PID] == m.Option(cli.PID) {
-			m.Cmd(cli.DAEMON, cli.STOP, kit.Dict(mdb.HASH, value[mdb.HASH]))
-		}
-	})
-	m.Cmd(cli.SYSTEM, cli.KILL, m.Option(cli.PID))
+	m.StatusTimeCount()
 }
 
 const (
@@ -151,7 +154,9 @@ func init() {
 				_install_download(m)
 			}},
 			nfs.SOURCE: {Name: "source link path", Help: "源码", Hand: func(m *ice.Message, arg ...string) {
-				m.Option(nfs.DIR_ROOT, path.Join(m.Config(nfs.PATH), kit.TrimExt(m.Option(mdb.LINK)), "_install"))
+				if m.Option(nfs.DIR_ROOT, path.Join(_install_path(m, ""), "_install")); !kit.FileExists(m.Option(nfs.DIR_ROOT)) {
+					m.Option(nfs.DIR_ROOT, path.Join(_install_path(m, "")))
+				}
 				defer m.StatusTime(nfs.PATH, m.Option(nfs.DIR_ROOT))
 				m.Cmdy(nfs.DIR, m.Option(nfs.PATH))
 			}},
@@ -184,26 +189,13 @@ func init() {
 				_install_service(m, arg...)
 
 			default: // 目录列表
-				m.Option(nfs.DIR_ROOT, path.Join(m.Conf(cli.DAEMON, kit.Keym(nfs.PATH)), arg[1]))
+				m.Option(nfs.DIR_ROOT, path.Join(ice.USR_LOCAL_DAEMON, arg[1]))
 				m.Cmdy(nfs.CAT, kit.Select(nfs.PWD, arg, 2))
 			}
 		}},
 	}})
 }
 
-func InstallSoftware(m *ice.Message, bin string, list interface{}) (ok bool) {
-	if cli.SystemFind(m, bin) != "" {
-		return true
-	}
-	kit.Fetch(list, func(index int, value map[string]interface{}) {
-		if strings.Contains(m.Cmdx(cli.RUNTIME, kit.Keys(tcp.HOST, cli.OSID)), kit.Format(value[cli.OSID])) {
-			cli.PushStream(m)
-			m.Cmd(cli.SYSTEM, value[ice.CMD])
-			ok = true
-		}
-	})
-	return ok
-}
 func InstallAction(args ...interface{}) map[string]*ice.Action {
 	return ice.SelectAction(map[string]*ice.Action{ice.CTX_INIT: mdb.AutoConfig(args...),
 		web.DOWNLOAD: {Name: "download", Help: "下载", Hand: func(m *ice.Message, arg ...string) {
@@ -219,4 +211,17 @@ func InstallAction(args ...interface{}) map[string]*ice.Action {
 			m.Cmd(nfs.TRASH, m.Option(nfs.PATH))
 		}},
 	})
+}
+func InstallSoftware(m *ice.Message, bin string, list interface{}) (ok bool) {
+	if cli.SystemFind(m, bin) != "" {
+		return true
+	}
+	kit.Fetch(list, func(index int, value map[string]interface{}) {
+		if strings.Contains(m.Cmdx(cli.RUNTIME, kit.Keys(tcp.HOST, cli.OSID)), kit.Format(value[cli.OSID])) {
+			cli.PushStream(m)
+			m.Cmd(cli.SYSTEM, value[ice.CMD])
+			ok = true
+		}
+	})
+	return ok
 }

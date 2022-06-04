@@ -2,7 +2,6 @@ package chrome
 
 import (
 	"shylinux.com/x/ice"
-	"shylinux.com/x/icebergs/base/nfs"
 )
 
 type chrome struct {
@@ -13,7 +12,7 @@ type chrome struct {
 }
 
 func (c chrome) List(m *ice.Message, arg ...string) {
-	c.Code.Source(m, m.Config(nfs.SOURCE), arg...)
+	c.Code.Source(m, "", arg...)
 }
 
 func init() { ice.CodeCtxCmd(chrome{}) }

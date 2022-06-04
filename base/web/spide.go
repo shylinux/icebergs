@@ -142,6 +142,7 @@ func _spide_body(m *ice.Message, method string, arg ...string) (io.Reader, map[s
 				data = append(data, url.QueryEscape(arg[i])+"="+url.QueryEscape(arg[i+1]))
 			}
 			body = bytes.NewBufferString(strings.Join(data, "&"))
+			m.Debug("what %v", strings.Join(data, "&"))
 			head[ContentType] = ContentFORM
 
 		case SPIDE_PART:

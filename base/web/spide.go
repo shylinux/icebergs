@@ -112,8 +112,7 @@ func _spide_list(m *ice.Message, arg ...string) {
 
 		// 错误信息
 		if m.Warn(res.StatusCode != http.StatusOK, ice.ErrNotFound, uri, "status", res.Status) {
-			b, _ := ioutil.ReadAll(res.Body)
-			m.Debug("whhat %v", string(b))
+			// b, _ := ioutil.ReadAll(res.Body)
 			switch m.Set(ice.MSG_RESULT); res.StatusCode {
 			case http.StatusNotFound:
 				m.Warn(true, ice.ErrNotFound, uri)
@@ -142,7 +141,6 @@ func _spide_body(m *ice.Message, method string, arg ...string) (io.Reader, map[s
 				data = append(data, url.QueryEscape(arg[i])+"="+url.QueryEscape(arg[i+1]))
 			}
 			body = bytes.NewBufferString(strings.Join(data, "&"))
-			m.Debug("what %v", strings.Join(data, "&"))
 			head[ContentType] = ContentFORM
 
 		case SPIDE_PART:

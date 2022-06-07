@@ -295,7 +295,7 @@ func init() {
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
 				m.Conf(SPACE, mdb.HASH, "")
 			}},
-			"domain": {Name: "domain", Help: "域名", Hand: func(m *ice.Message, arg ...string) {
+			DOMAIN: {Name: "domain", Help: "域名", Hand: func(m *ice.Message, arg ...string) {
 				m.Echo(_space_domain(m))
 			}},
 			mdb.SEARCH: {Name: "search type name text", Help: "搜索", Hand: func(m *ice.Message, arg ...string) {

@@ -299,7 +299,6 @@ func init() {
 					if r.Method == SPIDE_GET {
 						switch r.URL.Path {
 						case ice.PS:
-							m.Debug("what %v", 123)
 							msg := m.Spawn(SERVE, w, r)
 							if share := r.URL.Query().Get("share"); share != "" {
 								switch msg := msg.Cmd(SHARE, share); msg.Append(mdb.TYPE) {
@@ -308,16 +307,13 @@ func init() {
 								}
 							}
 
-							m.Debug("what %v", 123)
 							repos := kit.Select(ice.INTSHELL, ice.VOLCANOS, strings.Contains(r.Header.Get("User-Agent"), "Mozilla/5.0"))
 							if repos == ice.VOLCANOS {
 								if s := msg.Cmdx("web.chat.website", "show", "index.iml", "Header", "", "River", ""); s != "" {
-									m.Debug("what %v", 123)
 									Render(msg, ice.RENDER_RESULT, s)
 									return true
 								}
 							}
-							m.Debug("what %v", 123)
 							Render(msg, ice.RENDER_DOWNLOAD, path.Join(msg.Config(kit.Keys(repos, nfs.PATH)), msg.Config(kit.Keys(repos, INDEX))))
 							return true // 网站主页
 
@@ -338,7 +334,7 @@ func init() {
 				ice.Info.Domain = m.Conf(SHARE, kit.Keym(DOMAIN, m.Config(DOMAIN, arg[0])))
 			}},
 			"list_broad": {Name: "list_broad", Help: "服务发现", Hand: func(m *ice.Message, arg ...string) {
-				m.Go(func() { _serve_udp(m, m.Cmd(tcp.HOST).Append("ip"), m.Option(tcp.PORT)) })
+				m.Go(func() { _serve_udp(m, m.Cmd(tcp.HOST).Append(aaa.IP), m.Option(tcp.PORT)) })
 			}},
 			aaa.BLACK: {Name: "black", Help: "黑名单", Hand: func(m *ice.Message, arg ...string) {
 				for _, k := range arg {

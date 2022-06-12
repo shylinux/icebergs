@@ -66,6 +66,7 @@ func _space_dial(m *ice.Message, dev, name string, arg ...string) {
 				if s, _, e := websocket.NewClient(s, u, nil, kit.Int(redial["r"]), kit.Int(redial["w"])); !msg.Warn(e) {
 					msg.Rich(SPACE, nil, kit.Dict(SOCKET, s, kit.SimpleKV("", MASTER, dev, host)))
 					msg.Log_CREATE(SPACE, dev, "retry", i, "uri", uri)
+					defer msg.Conf(SPACE, kit.KeyHash(name), "")
 
 					// 连接成功
 					if i = 0; _space_handle(msg, true, frame.send, s, dev) {
@@ -153,7 +154,11 @@ func _space_exec(msg *ice.Message, source, target []string, c *websocket.Conn, n
 func _space_echo(msg *ice.Message, source, target []string, c *websocket.Conn, name string) {
 	msg.Optionv(ice.MSG_SOURCE, source)
 	msg.Optionv(ice.MSG_TARGET, target)
-	msg.Assert(c.WriteMessage(1, []byte(msg.FormatMeta())))
+	if e := c.WriteMessage(1, []byte(msg.FormatMeta())); msg.Warn(e) {
+		msg.Cmd(mdb.DELETE, msg.PrefixKey(), "", mdb.HASH, mdb.NAME, name)
+		c.Close()
+		return
+	}
 
 	target = append([]string{name}, target...)
 	msg.Log("send", "%v->%v %v %v", source, target, msg.Detailv(), msg.FormatMeta())

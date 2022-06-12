@@ -47,12 +47,12 @@ func _serve_main(m *ice.Message, w http.ResponseWriter, r *http.Request) bool {
 	}
 
 	// 用户地址
-	if ip := r.Header.Get("X-Forwarded-For"); ip != "" {
-		r.Header.Set(ice.MSG_USERIP, ip)
-	} else if ip := r.Header.Get("X-Real-Ip"); ip != "" {
+	if ip := r.Header.Get("X-Real-Ip"); ip != "" {
 		if r.Header.Set(ice.MSG_USERIP, ip); r.Header.Get("X-Real-Port") != "" {
 			r.Header.Set(ice.MSG_USERADDR, ip+":"+r.Header.Get("X-Real-Port"))
 		}
+	} else if ip := r.Header.Get("X-Forwarded-For"); ip != "" {
+		r.Header.Set(ice.MSG_USERIP, kit.Split(ip)[0])
 	} else if strings.HasPrefix(r.RemoteAddr, "[") {
 		r.Header.Set(ice.MSG_USERIP, strings.Split(r.RemoteAddr, "]")[0][1:])
 	} else {
@@ -299,6 +299,7 @@ func init() {
 					if r.Method == SPIDE_GET {
 						switch r.URL.Path {
 						case ice.PS:
+							m.Debug("what %v", 123)
 							msg := m.Spawn(SERVE, w, r)
 							if share := r.URL.Query().Get("share"); share != "" {
 								switch msg := msg.Cmd(SHARE, share); msg.Append(mdb.TYPE) {
@@ -307,13 +308,16 @@ func init() {
 								}
 							}
 
+							m.Debug("what %v", 123)
 							repos := kit.Select(ice.INTSHELL, ice.VOLCANOS, strings.Contains(r.Header.Get("User-Agent"), "Mozilla/5.0"))
 							if repos == ice.VOLCANOS {
 								if s := msg.Cmdx("web.chat.website", "show", "index.iml", "Header", "", "River", ""); s != "" {
+									m.Debug("what %v", 123)
 									Render(msg, ice.RENDER_RESULT, s)
 									return true
 								}
 							}
+							m.Debug("what %v", 123)
 							Render(msg, ice.RENDER_DOWNLOAD, path.Join(msg.Config(kit.Keys(repos, nfs.PATH)), msg.Config(kit.Keys(repos, INDEX))))
 							return true // 网站主页
 

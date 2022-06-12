@@ -41,12 +41,15 @@ func init() {
 					m.Optionv(CMD_ERRPUT, p)
 				}
 
-				if p := m.Cmdx(nfs.CAT, m.Conf("gdb.signal", kit.Keym(nfs.PATH))); p != "" {
-					m.Cmd(SYSTEM, "kill", "-s", "QUIT", p)
-				}
-
+				m.Cmd(FOREVER, STOP)
 				m.Cmdy(FOREVER, kit.Select(os.Args[0], nfs.PWD+ice.BIN_ICE_BIN, kit.FileExists(ice.BIN_ICE_BIN)),
 					SERVE, START, ice.DEV, "", aaa.USERNAME, aaa.ROOT, aaa.PASSWORD, aaa.ROOT, arg)
+			}},
+			STOP: {Name: "stop", Help: "停止", Hand: func(m *ice.Message, arg ...string) {
+				if p := m.Cmdx(nfs.CAT, m.Conf("gdb.signal", kit.Keym(nfs.PATH))); p != "" {
+					m.Cmd(SYSTEM, "kill", "-s", "QUIT", p)
+					m.Echo(p)
+				}
 			}},
 		}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			for {

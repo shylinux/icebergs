@@ -7,10 +7,10 @@ import (
 	kit "shylinux.com/x/toolkits"
 )
 
-func AddRender(key string, render func(*Message, string, ...interface{}) string) {
+func AddRender(key string, render func(*Message, string, ...Any) string) {
 	Info.render[key] = render
 }
-func Render(m *Message, cmd string, args ...interface{}) string {
+func Render(m *Message, cmd string, args ...Any) string {
 	if render, ok := Info.render[cmd]; ok {
 		return render(m, cmd, args...)
 	}
@@ -48,7 +48,7 @@ func Render(m *Message, cmd string, args ...interface{}) string {
 	return ""
 }
 
-func (m *Message) Render(cmd string, args ...interface{}) *Message {
+func (m *Message) Render(cmd string, args ...Any) *Message {
 	m.Optionv(MSG_OUTPUT, cmd)
 	m.Optionv(MSG_ARGS, args)
 
@@ -63,16 +63,16 @@ func (m *Message) Render(cmd string, args ...interface{}) *Message {
 	}
 	return m
 }
-func (m *Message) RenderResult(args ...interface{}) *Message {
+func (m *Message) RenderResult(args ...Any) *Message {
 	return m.Render(RENDER_RESULT, args...)
 }
-func (m *Message) RenderTemplate(args ...interface{}) *Message {
+func (m *Message) RenderTemplate(args ...Any) *Message {
 	return m.Render(RENDER_TEMPLATE, args...)
 }
-func (m *Message) RenderRedirect(args ...interface{}) *Message {
+func (m *Message) RenderRedirect(args ...Any) *Message {
 	return m.Render(RENDER_REDIRECT, args...)
 }
-func (m *Message) RenderDownload(args ...interface{}) *Message {
+func (m *Message) RenderDownload(args ...Any) *Message {
 	return m.Render(RENDER_DOWNLOAD, args...)
 }
 func (m *Message) RenderWebsite(pod string, dir string, arg ...string) *Message {
@@ -81,7 +81,7 @@ func (m *Message) RenderWebsite(pod string, dir string, arg ...string) *Message 
 func (m *Message) RenderIndex(serve, repos string, file ...string) *Message {
 	return m.RenderDownload(path.Join(m.Conf(serve, kit.Keym(repos, "path")), kit.Select(m.Conf(serve, kit.Keym(repos, INDEX)), path.Join(file...))))
 }
-func (m *Message) RenderCmd(index string, args ...interface{}) {
+func (m *Message) RenderCmd(index string, args ...Any) {
 	list := index
 	if index != "" {
 		msg := m.Cmd(COMMAND, index)
@@ -110,12 +110,12 @@ func (m *Message) IsCliUA() bool {
 	}
 	return false
 }
-func (m *Message) PushAnchor(arg ...interface{}) { // [name] link
+func (m *Message) PushAnchor(arg ...Any) { // [name] link
 	if !m.IsCliUA() {
 		m.Push(LINK, Render(m, RENDER_ANCHOR, arg...))
 	}
 }
-func (m *Message) PushButton(arg ...interface{}) { // name...
+func (m *Message) PushButton(arg ...Any) { // name...
 	if !m.IsCliUA() {
 		if m.FieldsIsDetail() {
 			for i, k := range m.meta[KEY] {
@@ -155,13 +155,13 @@ func (m *Message) PushIFrame(key, src string, arg ...string) { // key src [size]
 		m.Push(key, Render(m, RENDER_IFRAME, src, arg))
 	}
 }
-func (m *Message) PushDownload(key string, arg ...interface{}) { // [name] file
+func (m *Message) PushDownload(key string, arg ...Any) { // [name] file
 	if !m.IsCliUA() {
 		m.Push(key, Render(m, RENDER_DOWNLOAD, arg...))
 	}
 }
 
-func (m *Message) PushAction(list ...interface{}) *Message {
+func (m *Message) PushAction(list ...Any) *Message {
 	if len(m.meta[MSG_APPEND]) == 0 {
 		return m
 	}
@@ -169,7 +169,7 @@ func (m *Message) PushAction(list ...interface{}) *Message {
 		m.PushButton(list...)
 	})
 }
-func (m *Message) PushSearch(args ...interface{}) {
+func (m *Message) PushSearch(args ...Any) {
 	data := kit.Dict(args...)
 	for _, k := range kit.Split(m.OptionFields()) {
 		switch k {
@@ -207,10 +207,10 @@ func (m *Message) PushPodCmd(cmd string, arg ...string) {
 	})
 }
 
-func (m *Message) EchoAnchor(arg ...interface{}) *Message { // [name] link
+func (m *Message) EchoAnchor(arg ...Any) *Message { // [name] link
 	return m.Echo(Render(m, RENDER_ANCHOR, arg...))
 }
-func (m *Message) EchoButton(arg ...interface{}) *Message { // name...
+func (m *Message) EchoButton(arg ...Any) *Message { // name...
 	return m.Echo(Render(m, RENDER_BUTTON, arg...))
 }
 func (m *Message) EchoScript(arg ...string) *Message { // [type] text...
@@ -228,24 +228,24 @@ func (m *Message) EchoVideos(src string, arg ...string) *Message { // src [size]
 func (m *Message) EchoIFrame(src string, arg ...string) *Message { // src [size]
 	return m.Echo(Render(m, RENDER_IFRAME, src, arg))
 }
-func (m *Message) EchoDownload(arg ...interface{}) *Message { // [name] file
+func (m *Message) EchoDownload(arg ...Any) *Message { // [name] file
 	return m.Echo(Render(m, RENDER_DOWNLOAD, arg...))
 }
 
-func (m *Message) DisplayBase(file string, arg ...interface{}) *Message {
+func (m *Message) DisplayBase(file string, arg ...Any) *Message {
 	if !strings.Contains(file, PT) {
 		file += ".js"
 	}
 	m.Option(MSG_DISPLAY, kit.MergeURL(DisplayBase(file)[DISPLAY], arg...))
 	return m
 }
-func (m *Message) DisplayStory(file string, arg ...interface{}) *Message {
+func (m *Message) DisplayStory(file string, arg ...Any) *Message {
 	if !strings.HasPrefix(file, HTTP) && !strings.HasPrefix(file, PS) {
 		file = path.Join(PLUGIN_STORY, file)
 	}
 	return m.DisplayBase(file, arg...)
 }
-func (m *Message) DisplayLocal(file string, arg ...interface{}) *Message {
+func (m *Message) DisplayLocal(file string, arg ...Any) *Message {
 	if file == "" {
 		file = path.Join(kit.PathName(2), kit.Keys(kit.FileName(2), JS))
 	}
@@ -254,11 +254,11 @@ func (m *Message) DisplayLocal(file string, arg ...interface{}) *Message {
 	}
 	return m.DisplayBase(file, arg...)
 }
-func (m *Message) Display(file string, arg ...interface{}) *Message {
+func (m *Message) Display(file string, arg ...Any) *Message {
 	m.Option(MSG_DISPLAY, kit.MergeURL(DisplayRequire(2, file)[DISPLAY], arg...))
 	return m
 }
-func (m *Message) DisplayStoryJSON(arg ...interface{}) *Message {
+func (m *Message) DisplayStoryJSON(arg ...Any) *Message {
 	return m.DisplayStory("json", arg...)
 }
 

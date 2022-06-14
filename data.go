@@ -25,20 +25,20 @@ func (m *Message) ConfigSet(keys string, arg ...string) {
 		m.Config(k, kit.Select("", arg, i))
 	}
 }
-func (m *Message) Config(key string, arg ...interface{}) string {
+func (m *Message) Config(key string, arg ...Any) string {
 	if len(arg) > 0 {
 		m.Conf(m.PrefixKey(), kit.Keym(key), arg[0])
 	}
 	return m.Conf(m.PrefixKey(), kit.Keym(key))
 }
-func (m *Message) Configv(key string, arg ...interface{}) interface{} {
+func (m *Message) Configv(key string, arg ...Any) Any {
 	if len(arg) > 0 {
 		m.Confv(m.PrefixKey(), kit.Keym(key), arg[0])
 	}
 	return m.Confv(m.PrefixKey(), kit.Keym(key))
 }
-func (m *Message) Configm(key string, arg ...interface{}) map[string]interface{} {
-	v, _ := m.Configv(key, arg...).(map[string]interface{})
+func (m *Message) Configm(key string, arg ...Any) Map {
+	v, _ := m.Configv(key, arg...).(Map)
 	return v
 }
 func (m *Message) ConfigSimple(key ...string) (list []string) {
@@ -75,17 +75,17 @@ func (m *Message) Load(arg ...string) *Message {
 	return m.Cmd(CONFIG, LOAD, m.Prefix(JSON), arg)
 }
 
-func (m *Message) Richs(prefix string, chain interface{}, raw interface{}, cb interface{}) (res map[string]interface{}) {
+func (m *Message) Richs(prefix string, chain Any, raw Any, cb Any) (res Map) {
 	cache := m.Confm(prefix, chain)
 	if cache == nil {
 		return nil
 	}
 
 	switch cb := cb.(type) {
-	case func(*sync.Mutex, string, map[string]interface{}):
+	case func(*sync.Mutex, string, Map):
 		wg, mu := &sync.WaitGroup{}, &sync.Mutex{}
 		defer wg.Wait()
-		res = miss.Richs(kit.Keys(prefix, chain), cache, raw, func(key string, value map[string]interface{}) {
+		res = miss.Richs(kit.Keys(prefix, chain), cache, raw, func(key string, value Map) {
 			wg.Add(1)
 			m.Go(func() {
 				defer wg.Done()
@@ -98,7 +98,7 @@ func (m *Message) Richs(prefix string, chain interface{}, raw interface{}, cb in
 	return res
 
 }
-func (m *Message) Rich(prefix string, chain interface{}, data interface{}) string {
+func (m *Message) Rich(prefix string, chain Any, data Any) string {
 	cache := m.Confm(prefix, chain)
 	if cache == nil {
 		cache = kit.Data()
@@ -106,7 +106,7 @@ func (m *Message) Rich(prefix string, chain interface{}, data interface{}) strin
 	}
 	return miss.Rich(kit.Keys(prefix, chain), cache, data)
 }
-func (m *Message) Grow(prefix string, chain interface{}, data interface{}) int {
+func (m *Message) Grow(prefix string, chain Any, data Any) int {
 	cache := m.Confm(prefix, chain)
 	if cache == nil {
 		cache = kit.Data()
@@ -114,7 +114,7 @@ func (m *Message) Grow(prefix string, chain interface{}, data interface{}) int {
 	}
 	return miss.Grow(kit.Keys(prefix, chain), cache, data)
 }
-func (m *Message) Grows(prefix string, chain interface{}, match string, value string, cb interface{}) map[string]interface{} {
+func (m *Message) Grows(prefix string, chain Any, match string, value string, cb Any) Map {
 	cache := m.Confm(prefix, chain)
 	if cache == nil {
 		return nil

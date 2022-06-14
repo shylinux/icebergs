@@ -43,8 +43,8 @@ var Info = struct {
 	Dump  func(w io.Writer, name string, cb func(string)) bool
 	Log   func(m *Message, p, l, s string)
 
-	render map[string]func(*Message, string, ...interface{}) string
-	names  map[string]interface{}
+	render map[string]func(*Message, string, ...Any) string
+	names  Map
 }{
 	Help: `
 ^_^      欢迎使用冰山框架       ^_^
@@ -60,8 +60,8 @@ source: https://shylinux.com/x/icebergs
 	Dump:  func(w io.Writer, name string, cb func(string)) bool { return false },
 	Log:   func(m *Message, p, l, s string) {},
 
-	render: map[string]func(*Message, string, ...interface{}) string{},
-	names:  map[string]interface{}{},
+	render: map[string]func(*Message, string, ...Any) string{},
+	names:  Map{},
 }
 
 func FileURI(dir string) string {

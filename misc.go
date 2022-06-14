@@ -74,14 +74,14 @@ func (m *Message) Split(str string, arg ...string) *Message { // field sp nl
 func (m *Message) SplitIndex(str string, arg ...string) *Message {
 	return m.Split(str, kit.Simple("index", arg)...)
 }
-func (m *Message) PushDetail(value interface{}, arg ...string) *Message {
+func (m *Message) PushDetail(value Any, arg ...string) *Message {
 	return m.Push(CACHE_DETAIL, value, kit.Split(kit.Join(arg)))
 }
-func (m *Message) PushRecord(value interface{}, arg ...string) *Message {
+func (m *Message) PushRecord(value Any, arg ...string) *Message {
 	return m.Push("", value, kit.Split(kit.Join(arg)))
 }
 
-func (m *Message) OptionCB(key string, cb ...interface{}) interface{} {
+func (m *Message) OptionCB(key string, cb ...Any) Any {
 	if len(cb) > 0 {
 		return m.Optionv(kit.Keycb(key), cb...)
 	}
@@ -148,10 +148,10 @@ func (m *Message) IsErr(arg ...string) bool {
 }
 func (m *Message) IsErrNotFound() bool { return m.Result(1) == ErrNotFound }
 
-func (m *Message) cmd(arg ...interface{}) *Message {
-	opts := map[string]interface{}{}
-	args := []interface{}{}
-	var cbs interface{}
+func (m *Message) cmd(arg ...Any) *Message {
+	opts := Map{}
+	args := []Any{}
+	var cbs Any
 
 	// 解析参数
 	for _, v := range arg {
@@ -160,7 +160,7 @@ func (m *Message) cmd(arg ...interface{}) *Message {
 			opts[val.Name] = val.Value
 		case *Option:
 			opts[val.Name] = val.Value
-		case map[string]interface{}:
+		case Map:
 			for k, v := range val {
 				opts[k] = v
 			}
@@ -280,7 +280,7 @@ func (c *Context) _cmd(m *Message, cmd *Command, key string, sub string, h *Acti
 	h.Hand(m, arg...)
 	return m
 }
-func SplitCmd(name string) (list []interface{}) {
+func SplitCmd(name string) (list []Any) {
 	const (
 		TEXT     = "text"
 		ARGS     = "args"
@@ -348,18 +348,18 @@ func SplitCmd(name string) (list []interface{}) {
 	}
 	return list
 }
-func (m *Message) Design(action interface{}, help string, input ...interface{}) {
+func (m *Message) Design(action Any, help string, input ...Any) {
 	list := kit.List()
 	for _, input := range input {
 		switch input := input.(type) {
 		case string:
 			list = append(list, SplitCmd("action "+input)...)
-		case map[string]interface{}:
+		case Map:
 			if kit.Format(input[TYPE]) != "" && kit.Format(input[NAME]) != "" {
 				list = append(list, input)
 				continue
 			}
-			kit.Fetch(kit.KeyValue(nil, "", input), func(k string, v interface{}) {
+			kit.Fetch(kit.KeyValue(nil, "", input), func(k string, v Any) {
 				list = append(list, kit.Dict(NAME, k, TYPE, "text", VALUE, v))
 			})
 		}
@@ -372,7 +372,7 @@ func (m *Message) Design(action interface{}, help string, input ...interface{}) 
 	}
 }
 
-func MergeAction(list ...interface{}) map[string]*Action {
+func MergeAction(list ...Any) map[string]*Action {
 	if len(list) == 0 {
 		return nil
 	}

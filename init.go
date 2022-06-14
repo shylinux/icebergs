@@ -94,7 +94,7 @@ var Index = &Context{Name: "ice", Help: "冰山模块", Configs: map[string]*Con
 var Pulse = &Message{
 	time: time.Now(), code: 0,
 	meta: map[string][]string{},
-	data: map[string]interface{}{},
+	data: Map{},
 
 	source: Index, target: Index, Hand: true,
 }

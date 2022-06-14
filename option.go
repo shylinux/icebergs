@@ -13,7 +13,7 @@ import (
 
 type Option struct {
 	Name  string
-	Value interface{}
+	Value Any
 }
 
 func OptionHash(arg string) Option      { return Option{HASH, arg} }
@@ -43,10 +43,10 @@ func (m *Message) OptionLoad(file string) *Message {
 	if f, e := os.Open(file); e == nil {
 		defer f.Close()
 
-		var data interface{}
+		var data Any
 		m.Assert(json.NewDecoder(f).Decode(&data))
 
-		kit.Fetch(data, func(key string, value interface{}) {
+		kit.Fetch(data, func(key string, value Any) {
 			m.Option(key, kit.Simple(value))
 		})
 	}
@@ -121,7 +121,7 @@ func (m *Message) Upload(dir string) {
 		m.Cmdy(SPIDE, DEV, SAVE, p, "GET", m.MergeURL2(path.Join("/share/cache", up[0])))
 	}
 }
-func (m *Message) Action(arg ...interface{}) *Message {
+func (m *Message) Action(arg ...Any) *Message {
 	for i, v := range arg {
 		switch v.(type) {
 		case string:
@@ -132,7 +132,7 @@ func (m *Message) Action(arg ...interface{}) *Message {
 	m.Option(MSG_ACTION, kit.Format(arg))
 	return m
 }
-func (m *Message) Status(arg ...interface{}) {
+func (m *Message) Status(arg ...Any) {
 	list := kit.List()
 	args := kit.Simple(arg)
 	for i := 0; i < len(args)-1; i += 2 {
@@ -140,17 +140,17 @@ func (m *Message) Status(arg ...interface{}) {
 	}
 	m.Option(MSG_STATUS, kit.Format(list))
 }
-func (m *Message) StatusTime(arg ...interface{}) {
+func (m *Message) StatusTime(arg ...Any) {
 	m.Status(TIME, m.Time(), arg, kit.MDB_COST, m.FormatCost())
 }
-func (m *Message) StatusTimeCount(arg ...interface{}) {
+func (m *Message) StatusTimeCount(arg ...Any) {
 	m.Status(TIME, m.Time(), kit.MDB_COUNT, kit.Split(m.FormatSize())[0], arg, kit.MDB_COST, m.FormatCost())
 }
-func (m *Message) StatusTimeCountTotal(arg ...interface{}) {
+func (m *Message) StatusTimeCountTotal(arg ...Any) {
 	m.Status(TIME, m.Time(), kit.MDB_COUNT, kit.Split(m.FormatSize())[0], kit.MDB_TOTAL, arg, kit.MDB_COST, m.FormatCost())
 }
 
-func (m *Message) ToastProcess(arg ...interface{}) func() {
+func (m *Message) ToastProcess(arg ...Any) func() {
 	if len(arg) == 0 {
 		arg = kit.List("", "-1")
 	}
@@ -160,10 +160,10 @@ func (m *Message) ToastProcess(arg ...interface{}) func() {
 	m.Toast(PROCESS, arg...)
 	return func() { m.Toast(SUCCESS) }
 }
-func (m *Message) ToastRestart(arg ...interface{}) { m.Toast(RESTART, arg...) }
-func (m *Message) ToastFailure(arg ...interface{}) { m.Toast(FAILURE, arg...) }
-func (m *Message) ToastSuccess(arg ...interface{}) { m.Toast(SUCCESS, arg...) }
-func (m *Message) Toast(text string, arg ...interface{}) { // [title [duration [progress]]]
+func (m *Message) ToastRestart(arg ...Any) { m.Toast(RESTART, arg...) }
+func (m *Message) ToastFailure(arg ...Any) { m.Toast(FAILURE, arg...) }
+func (m *Message) ToastSuccess(arg ...Any) { m.Toast(SUCCESS, arg...) }
+func (m *Message) Toast(text string, arg ...Any) { // [title [duration [progress]]]
 	if len(arg) > 1 {
 		switch val := arg[1].(type) {
 		case string:
@@ -175,26 +175,26 @@ func (m *Message) Toast(text string, arg ...interface{}) { // [title [duration [
 
 	m.PushNoticeToast("", text, arg)
 }
-func (m *Message) PushNotice(arg ...interface{}) {
+func (m *Message) PushNotice(arg ...Any) {
 	if m.Option(MSG_USERPOD) == "" {
 		m.Cmd(SPACE, m.Option(MSG_DAEMON), arg)
 	} else {
 		m.Cmd("web.spide", OPS, m.MergeURL2("/share/toast/"), kit.Format(kit.Dict(POD, m.Option(MSG_DAEMON), "cmds", kit.Simple(arg...))))
 	}
 }
-func (m *Message) PushNoticeGrow(arg ...interface{}) {
+func (m *Message) PushNoticeGrow(arg ...Any) {
 	m.PushNotice(kit.List("grow", arg)...)
 }
-func (m *Message) PushNoticeToast(arg ...interface{}) {
+func (m *Message) PushNoticeToast(arg ...Any) {
 	m.PushNotice(kit.List("toast", arg)...)
 }
-func (m *Message) PushRefresh(arg ...interface{}) {
+func (m *Message) PushRefresh(arg ...Any) {
 	m.PushNotice(kit.List("refresh")...)
 }
-func (m *Message) Toast3s(text string, arg ...interface{}) {
+func (m *Message) Toast3s(text string, arg ...Any) {
 	m.Toast(text, kit.List(kit.Select("", arg, 0), kit.Select("3s", arg, 1))...)
 }
-func (m *Message) Toast30s(text string, arg ...interface{}) {
+func (m *Message) Toast30s(text string, arg ...Any) {
 	m.Toast(text, kit.List(kit.Select("", arg, 0), kit.Select("30s", arg, 1))...)
 }
 func (m *Message) GoToast(title string, cb func(toast func(string, int, int))) {
@@ -210,20 +210,20 @@ func (m *Message) GoToast(title string, cb func(toast func(string, int, int))) {
 	})
 }
 
-func (m *Message) Process(action string, arg ...interface{}) {
+func (m *Message) Process(action string, arg ...Any) {
 	m.Option(MSG_PROCESS, action)
 	m.Option("_arg", arg...)
 }
-func (m *Message) ProcessLocation(arg ...interface{}) {
+func (m *Message) ProcessLocation(arg ...Any) {
 	m.Process(PROCESS_LOCATION, arg...)
 }
-func (m *Message) ProcessReplace(arg ...interface{}) {
+func (m *Message) ProcessReplace(arg ...Any) {
 	m.Process(PROCESS_REPLACE, arg...)
 }
-func (m *Message) ProcessHistory(arg ...interface{}) {
+func (m *Message) ProcessHistory(arg ...Any) {
 	m.Process(PROCESS_HISTORY, arg...)
 }
-func (m *Message) ProcessRewrite(arg ...interface{}) {
+func (m *Message) ProcessRewrite(arg ...Any) {
 	m.Process(PROCESS_REWRITE, arg...)
 }
 func (m *Message) ProcessRefresh(delay string) {
@@ -236,7 +236,7 @@ func (m *Message) ProcessRefresh3ms()   { m.ProcessRefresh("3ms") }
 func (m *Message) ProcessRefresh30ms()  { m.ProcessRefresh("30ms") }
 func (m *Message) ProcessRefresh300ms() { m.ProcessRefresh("300ms") }
 func (m *Message) ProcessRefresh3s()    { m.ProcessRefresh("3s") }
-func (m *Message) ProcessDisplay(arg ...interface{}) {
+func (m *Message) ProcessDisplay(arg ...Any) {
 	m.Process(PROCESS_DISPLAY)
 	m.Option(MSG_DISPLAY, arg...)
 }
@@ -257,7 +257,7 @@ func (m *Message) ProcessCommandOpt(arg []string, args ...string) {
 	}
 	m.Push("opt", kit.Format(m.OptionSimple(args...)))
 }
-func (m *Message) ProcessField(arg ...interface{}) {
+func (m *Message) ProcessField(arg ...Any) {
 	m.Process(PROCESS_FIELD)
 	m.Option(FIELD_PREFIX, arg...)
 }
@@ -270,19 +270,19 @@ func (m *Message) ProcessBack()           { m.Process(PROCESS_BACK) }
 func (m *Message) OptionUserWeb() *url.URL {
 	return kit.ParseURL(m.Option(MSG_USERWEB))
 }
-func (m *Message) MergeURL2(url string, arg ...interface{}) string {
+func (m *Message) MergeURL2(url string, arg ...Any) string {
 	return kit.MergeURL2(m.Option(MSG_USERWEB), url, arg...)
 }
-func (m *Message) MergeLink(url string, arg ...interface{}) string {
+func (m *Message) MergeLink(url string, arg ...Any) string {
 	return strings.Split(m.MergeURL2(url, arg...), "?")[0]
 }
-func (m *Message) MergePodURL(url string, arg ...interface{}) string {
+func (m *Message) MergePodURL(url string, arg ...Any) string {
 	return kit.MergeURL(m.MergeLink(path.Join("/chat/pod/", m.Option(MSG_USERPOD), url)), arg...)
 }
-func (m *Message) MergePod(pod string, arg ...interface{}) string {
+func (m *Message) MergePod(pod string, arg ...Any) string {
 	return kit.MergePOD(kit.Select(Info.Domain, m.Option(MSG_USERWEB)), pod, arg...)
 }
-func (m *Message) MergeCmd(cmd string, arg ...interface{}) string {
+func (m *Message) MergeCmd(cmd string, arg ...Any) string {
 	if cmd == "" {
 		cmd = m.PrefixKey()
 	}
@@ -291,7 +291,7 @@ func (m *Message) MergeCmd(cmd string, arg ...interface{}) string {
 	}
 	return kit.MergeURL2(kit.Select(Info.Domain, m.Option(MSG_USERWEB)), path.Join("cmd", cmd), arg...)
 }
-func (m *Message) MergeWebsite(web string, arg ...interface{}) string {
+func (m *Message) MergeWebsite(web string, arg ...Any) string {
 	if m.Option(MSG_USERPOD) == "" {
 		return kit.MergeURL2(kit.Select(Info.Domain, m.Option(MSG_USERWEB)), path.Join("/chat/website", web))
 	}

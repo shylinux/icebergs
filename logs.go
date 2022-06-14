@@ -10,7 +10,7 @@ import (
 	log "shylinux.com/x/toolkits/logs"
 )
 
-func (m *Message) log(level string, str string, arg ...interface{}) *Message {
+func (m *Message) log(level string, str string, arg ...Any) *Message {
 	if log.LogDisable {
 		return m // 禁用日志
 	}
@@ -54,7 +54,7 @@ func (m *Message) log(level string, str string, arg ...interface{}) *Message {
 		kit.Format("%4s->%-4s", m.source.Name, m.target.Name), prefix, level, str, suffix))
 	return m
 }
-func (m *Message) join(arg ...interface{}) string {
+func (m *Message) join(arg ...Any) string {
 	args := kit.Simple(arg...)
 	list := []string{}
 	for i := 0; i < len(args); i += 2 {
@@ -67,17 +67,17 @@ func (m *Message) join(arg ...interface{}) string {
 	return kit.Join(list, SP)
 }
 
-func (m *Message) Log(level string, str string, arg ...interface{}) *Message {
+func (m *Message) Log(level string, str string, arg ...Any) *Message {
 	return m.log(level, str, arg...)
 }
-func (m *Message) Info(str string, arg ...interface{}) *Message {
+func (m *Message) Info(str string, arg ...Any) *Message {
 	return m.log(LOG_INFO, str, arg...)
 }
-func (m *Message) Cost(arg ...interface{}) *Message {
+func (m *Message) Cost(arg ...Any) *Message {
 	list := []string{m.FormatCost(), m.join(arg...)}
 	return m.log(LOG_COST, kit.Join(list, SP))
 }
-func (m *Message) Warn(err interface{}, arg ...interface{}) bool {
+func (m *Message) Warn(err Any, arg ...Any) bool {
 	switch err := err.(type) {
 	case error:
 		if err == io.EOF {
@@ -101,7 +101,7 @@ func (m *Message) Warn(err interface{}, arg ...interface{}) bool {
 	m.meta[MSG_RESULT] = kit.Simple(ErrWarn, arg[0], arg[1], SP, m.join(kit.Simple(arg[2:]...)))
 	return true
 }
-func (m *Message) Error(err bool, str string, arg ...interface{}) bool {
+func (m *Message) Error(err bool, str string, arg ...Any) bool {
 	if err {
 		m.Echo(ErrWarn).Echo(str, arg...)
 		m.log(LOG_ERROR, m.FormatStack(1, 100))
@@ -111,44 +111,44 @@ func (m *Message) Error(err bool, str string, arg ...interface{}) bool {
 	}
 	return false
 }
-func (m *Message) Debug(str string, arg ...interface{}) {
+func (m *Message) Debug(str string, arg ...Any) {
 	if str == "" {
 		str = m.FormatMeta()
 	}
 	m.log(LOG_DEBUG, str, arg...)
 }
 
-func (m *Message) Logs(level string, arg ...interface{}) *Message {
+func (m *Message) Logs(level string, arg ...Any) *Message {
 	return m.log(level, m.join(arg...))
 }
-func (m *Message) Log_AUTH(arg ...interface{}) *Message {
+func (m *Message) Log_AUTH(arg ...Any) *Message {
 	return m.log(LOG_AUTH, m.join(arg...))
 }
-func (m *Message) Log_SEND(arg ...interface{}) *Message {
+func (m *Message) Log_SEND(arg ...Any) *Message {
 	return m.log(LOG_AUTH, m.join(arg...))
 }
-func (m *Message) Log_CREATE(arg ...interface{}) *Message {
+func (m *Message) Log_CREATE(arg ...Any) *Message {
 	return m.log(LOG_CREATE, m.join(arg...))
 }
-func (m *Message) Log_REMOVE(arg ...interface{}) *Message {
+func (m *Message) Log_REMOVE(arg ...Any) *Message {
 	return m.log(LOG_REMOVE, m.join(arg...))
 }
-func (m *Message) Log_INSERT(arg ...interface{}) *Message {
+func (m *Message) Log_INSERT(arg ...Any) *Message {
 	return m.log(LOG_INSERT, m.join(arg...))
 }
-func (m *Message) Log_DELETE(arg ...interface{}) *Message {
+func (m *Message) Log_DELETE(arg ...Any) *Message {
 	return m.log(LOG_DELETE, m.join(arg...))
 }
-func (m *Message) Log_MODIFY(arg ...interface{}) *Message {
+func (m *Message) Log_MODIFY(arg ...Any) *Message {
 	return m.log(LOG_MODIFY, m.join(arg...))
 }
-func (m *Message) Log_SELECT(arg ...interface{}) *Message {
+func (m *Message) Log_SELECT(arg ...Any) *Message {
 	return m.log(LOG_SELECT, m.join(arg...))
 }
-func (m *Message) Log_EXPORT(arg ...interface{}) *Message {
+func (m *Message) Log_EXPORT(arg ...Any) *Message {
 	return m.log(LOG_EXPORT, m.join(arg...))
 }
-func (m *Message) Log_IMPORT(arg ...interface{}) *Message {
+func (m *Message) Log_IMPORT(arg ...Any) *Message {
 	return m.log(LOG_IMPORT, m.join(arg...))
 }
 

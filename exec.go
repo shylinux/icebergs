@@ -36,7 +36,7 @@ func (m *Message) TryCatch(msg *Message, silent bool, hand ...func(msg *Message)
 	}
 	return m
 }
-func (m *Message) Assert(expr interface{}) bool {
+func (m *Message) Assert(expr Any) bool {
 	switch expr := expr.(type) {
 	case nil:
 		return true
@@ -51,17 +51,17 @@ func (m *Message) Assert(expr interface{}) bool {
 	m.Result(ErrPanic, expr)
 	panic(expr)
 }
-func (m *Message) Sleep(d string, arg ...interface{}) *Message {
+func (m *Message) Sleep(d string, arg ...Any) *Message {
 	// m.Debug("sleep %s %s", d, kit.FileLine(2, 3))
 	if time.Sleep(kit.Duration(d)); len(arg) > 0 {
 		m.Cmdy(arg...)
 	}
 	return m
 }
-func (m *Message) Sleep300ms(arg ...interface{}) *Message { return m.Sleep("300ms", arg...) }
-func (m *Message) Sleep30ms(arg ...interface{}) *Message  { return m.Sleep("30ms", arg...) }
-func (m *Message) Sleep3s(arg ...interface{}) *Message    { return m.Sleep("3s", arg...) }
-func (m *Message) Sleep30s(arg ...interface{}) *Message   { return m.Sleep("30s", arg...) }
+func (m *Message) Sleep300ms(arg ...Any) *Message { return m.Sleep("300ms", arg...) }
+func (m *Message) Sleep30ms(arg ...Any) *Message  { return m.Sleep("30ms", arg...) }
+func (m *Message) Sleep3s(arg ...Any) *Message    { return m.Sleep("3s", arg...) }
+func (m *Message) Sleep30s(arg ...Any) *Message   { return m.Sleep("30s", arg...) }
 func (m *Message) Hold(n int) *Message {
 	for ctx := m.target; ctx != nil; ctx = ctx.context {
 		if ctx.wg != nil {
@@ -118,7 +118,7 @@ func (m *Message) Back(res *Message) *Message {
 	}
 	return m
 }
-func (m *Message) Go(cb interface{}) *Message {
+func (m *Message) Go(cb Any) *Message {
 	task.Put(kit.FileLine(cb, 3), func(task *task.Task) error {
 		m.TryCatch(m, true, func(m *Message) {
 			switch cb := cb.(type) {
@@ -144,18 +144,18 @@ func (m *Message) Event(key string, arg ...string) *Message {
 	m.Cmd("event", ACTION, "action", "event", key, arg)
 	return m
 }
-func (m *Message) Right(arg ...interface{}) bool {
+func (m *Message) Right(arg ...Any) bool {
 	key := strings.ReplaceAll(kit.Keys(arg...), PS, PT)
 	return m.Option(MSG_USERROLE) == "root" || !m.Warn(m.Cmdx("role", "right", m.Option(MSG_USERROLE), key) != OK,
 		ErrNotRight, kit.Join(kit.Simple(arg), PT), "userrole", m.Option(MSG_USERROLE), "fileline", kit.FileLine(2, 3))
 }
-func (m *Message) Space(arg interface{}) []string {
+func (m *Message) Space(arg Any) []string {
 	if arg == nil || arg == "" || kit.Format(arg) == m.Conf("runtime", "node.name") {
 		return nil
 	}
 	return []string{SPACE, kit.Format(arg)}
 }
-func (m *Message) PodCmd(arg ...interface{}) bool {
+func (m *Message) PodCmd(arg ...Any) bool {
 	if pod := m.Option(POD); pod != "" {
 		if m.Option(POD, ""); m.Option(MSG_UPLOAD) != "" {
 			msg := m.Cmd(CACHE, "upload")

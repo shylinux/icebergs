@@ -13,6 +13,8 @@ import (
 	kit "shylinux.com/x/toolkits"
 )
 
+type Any = interface{}
+type Map = map[string]interface{}
 type ActionHandler func(m *Message, arg ...string)
 type CommandHandler func(m *Message, c *Context, key string, arg ...string)
 
@@ -24,21 +26,21 @@ type Cache struct {
 type Config struct {
 	Name  string
 	Help  string
-	Value interface{}
+	Value Any
 }
 type Action struct {
 	Name string
 	Help string
 	Hand ActionHandler
-	List []interface{}
+	List []Any
 }
 type Command struct {
 	Name   string
 	Help   string
 	Action map[string]*Action
-	Meta   map[string]interface{}
+	Meta   Map
 	Hand   CommandHandler
-	List   []interface{}
+	List   []Any
 }
 type Server interface {
 	Spawn(m *Message, c *Context, arg ...string) Server
@@ -69,7 +71,7 @@ type Context struct {
 func (c *Context) ID() int32 {
 	return atomic.AddInt32(&c.id, 1)
 }
-func (c *Context) Cap(key string, arg ...interface{}) string {
+func (c *Context) Cap(key string, arg ...Any) string {
 	if len(arg) > 0 {
 		c.Caches[key].Value = kit.Format(arg[0])
 	}
@@ -266,7 +268,7 @@ type Message struct {
 	Hand bool
 
 	meta map[string][]string
-	data map[string]interface{}
+	data Map
 
 	message *Message
 	root    *Message
@@ -284,7 +286,7 @@ type Message struct {
 	I  io.Reader
 }
 
-func (m *Message) Time(args ...interface{}) string { // [duration] [format [args...]]
+func (m *Message) Time(args ...Any) string { // [duration] [format [args...]]
 	t := m.time
 	if len(args) > 0 {
 		switch arg := args[0].(type) {
@@ -311,10 +313,10 @@ func (m *Message) Target() *Context {
 func (m *Message) Source() *Context {
 	return m.source
 }
-func (m *Message) Spawn(arg ...interface{}) *Message {
+func (m *Message) Spawn(arg ...Any) *Message {
 	msg := &Message{
 		time: time.Now(), code: int(m.target.root.ID()),
-		meta: map[string][]string{}, data: map[string]interface{}{},
+		meta: map[string][]string{}, data: Map{},
 
 		message: m, root: m.root,
 		source: m.target, target: m.target, _cmd: m._cmd, _key: m._key,
@@ -327,7 +329,7 @@ func (m *Message) Spawn(arg ...interface{}) *Message {
 			json.Unmarshal(val, &msg.meta)
 		case Option:
 			msg.Option(val.Name, val.Value)
-		case map[string]interface{}:
+		case Map:
 			for k, v := range val {
 				msg.Option(k, v)
 			}
@@ -351,7 +353,7 @@ func (m *Message) Start(key string, arg ...string) *Message {
 	m.Search(key+PT, func(p *Context, s *Context) { s.Start(m.Spawn(s), arg...) })
 	return m
 }
-func (m *Message) Travel(cb interface{}) *Message {
+func (m *Message) Travel(cb Any) *Message {
 	list := []*Context{m.root.target}
 	for i := 0; i < len(list); i++ {
 		switch cb := cb.(type) {
@@ -381,7 +383,7 @@ func (m *Message) Travel(cb interface{}) *Message {
 	}
 	return m
 }
-func (m *Message) Search(key string, cb interface{}) *Message {
+func (m *Message) Search(key string, cb Any) *Message {
 	if key == "" {
 		return m
 	}
@@ -474,23 +476,23 @@ func (m *Message) Search(key string, cb interface{}) *Message {
 	return m
 }
 
-func (m *Message) Cmd(arg ...interface{}) *Message {
+func (m *Message) Cmd(arg ...Any) *Message {
 	return m.cmd(arg...)
 }
-func (m *Message) Cmds(arg ...interface{}) *Message {
+func (m *Message) Cmds(arg ...Any) *Message {
 	return m.Go(func() { m.cmd(arg...) })
 }
-func (m *Message) Cmdx(arg ...interface{}) string {
+func (m *Message) Cmdx(arg ...Any) string {
 	res := kit.Select("", m.cmd(arg...).meta[MSG_RESULT], 0)
 	return kit.Select("", res, res != ErrWarn)
 }
-func (m *Message) Cmdy(arg ...interface{}) *Message {
+func (m *Message) Cmdy(arg ...Any) *Message {
 	return m.Copy(m.cmd(arg...))
 }
 func (m *Message) Confi(key string, sub string) int {
 	return kit.Int(m.Conf(key, sub))
 }
-func (m *Message) Confv(arg ...interface{}) (val interface{}) { // key sub val
+func (m *Message) Confv(arg ...Any) (val Any) { // key sub val
 	run := func(conf *Config) {
 		if len(arg) == 1 {
 			val = conf.Value
@@ -517,24 +519,24 @@ func (m *Message) Confv(arg ...interface{}) (val interface{}) { // key sub val
 	}
 	return
 }
-func (m *Message) Confm(key string, sub interface{}, cbs ...interface{}) map[string]interface{} {
+func (m *Message) Confm(key string, sub Any, cbs ...Any) Map {
 	val := m.Confv(key, sub)
 	if len(cbs) > 0 {
 		kit.Fetch(val, cbs[0])
 	}
-	value, _ := val.(map[string]interface{})
+	value, _ := val.(Map)
 	return value
 }
-func (m *Message) Conf(arg ...interface{}) string { // key sub val
+func (m *Message) Conf(arg ...Any) string { // key sub val
 	return kit.Format(m.Confv(arg...))
 }
-func (m *Message) Capi(key string, val ...interface{}) int {
+func (m *Message) Capi(key string, val ...Any) int {
 	if len(val) > 0 {
 		m.Cap(key, kit.Int(m.Cap(key))+kit.Int(val[0]))
 	}
 	return kit.Int(m.Cap(key))
 }
-func (m *Message) Capv(arg ...interface{}) interface{} {
+func (m *Message) Capv(arg ...Any) Any {
 	key := ""
 	switch val := arg[0].(type) {
 	case string:
@@ -553,6 +555,6 @@ func (m *Message) Capv(arg ...interface{}) interface{} {
 	}
 	return nil
 }
-func (m *Message) Cap(arg ...interface{}) string {
+func (m *Message) Cap(arg ...Any) string {
 	return kit.Format(m.Capv(arg...))
 }

@@ -102,25 +102,25 @@ func (m *Message) Cut(fields ...string) *Message {
 	m.meta[MSG_APPEND] = kit.Split(kit.Join(fields))
 	return m
 }
-func (m *Message) Push(key string, value interface{}, arg ...interface{}) *Message {
+func (m *Message) Push(key string, value Any, arg ...Any) *Message {
 	switch value := value.(type) {
-	case map[string]interface{}:
+	case Map:
 		head := kit.Simple()
 		if len(arg) > 0 {
 			head = kit.Simple(arg[0])
 		}
 		if len(head) == 0 { // 键值排序
-			head = kit.SortedKey(kit.KeyValue(map[string]interface{}{}, "", value))
+			head = kit.SortedKey(kit.KeyValue(Map{}, "", value))
 		}
 
-		var val map[string]interface{}
+		var val Map
 		if len(arg) > 1 {
-			val, _ = arg[1].(map[string]interface{})
+			val, _ = arg[1].(Map)
 		}
 
 		for _, k := range head {
 			// 查找数据
-			var v interface{}
+			var v Any
 			switch k {
 			case KEY, HASH:
 				if key != "" && key != CACHE_DETAIL {
@@ -174,7 +174,7 @@ func (m *Message) Push(key string, value interface{}, arg ...interface{}) *Messa
 	}
 	return m
 }
-func (m *Message) Echo(str string, arg ...interface{}) *Message {
+func (m *Message) Echo(str string, arg ...Any) *Message {
 	if str == "" {
 		return m
 	}
@@ -406,13 +406,13 @@ func (m *Message) SortStrR(key string)  { m.Sort(key, "str_r") }
 func (m *Message) SortTime(key string)  { m.Sort(key, "time") }
 func (m *Message) SortTimeR(key string) { m.Sort(key, "time_r") }
 
-func (m *Message) Detail(arg ...interface{}) string {
+func (m *Message) Detail(arg ...Any) string {
 	return kit.Select("", m.meta[MSG_DETAIL], 0)
 }
-func (m *Message) Detailv(arg ...interface{}) []string {
+func (m *Message) Detailv(arg ...Any) []string {
 	return m.meta[MSG_DETAIL]
 }
-func (m *Message) Optionv(key string, arg ...interface{}) interface{} {
+func (m *Message) Optionv(key string, arg ...Any) Any {
 	if len(arg) > 0 {
 		if kit.IndexOf(m.meta[MSG_OPTION], key) == -1 { // 写数据
 			m.meta[MSG_OPTION] = append(m.meta[MSG_OPTION], key)
@@ -440,16 +440,16 @@ func (m *Message) Optionv(key string, arg ...interface{}) interface{} {
 	}
 	return nil
 }
-func (m *Message) Option(key string, arg ...interface{}) string {
+func (m *Message) Option(key string, arg ...Any) string {
 	return kit.Select("", kit.Simple(m.Optionv(key, arg...)), 0)
 }
-func (m *Message) Append(key string, arg ...interface{}) string {
+func (m *Message) Append(key string, arg ...Any) string {
 	if key == "" {
 		return m.Append(m.Appendv(MSG_APPEND)[0])
 	}
 	return kit.Select("", m.Appendv(key, arg...), 0)
 }
-func (m *Message) Appendv(key string, arg ...interface{}) []string {
+func (m *Message) Appendv(key string, arg ...Any) []string {
 	if key == MSG_APPEND {
 		if len(arg) > 0 {
 			m.meta[MSG_APPEND] = kit.Simple(arg)
@@ -479,13 +479,13 @@ func (m *Message) Appendv(key string, arg ...interface{}) []string {
 	}
 	return m.meta[key]
 }
-func (m *Message) Resultv(arg ...interface{}) []string {
+func (m *Message) Resultv(arg ...Any) []string {
 	if len(arg) > 0 {
 		m.meta[MSG_RESULT] = kit.Simple(arg...)
 	}
 	return m.meta[MSG_RESULT]
 }
-func (m *Message) Result(arg ...interface{}) string {
+func (m *Message) Result(arg ...Any) string {
 	if len(arg) > 0 {
 		switch v := arg[0].(type) {
 		case int:

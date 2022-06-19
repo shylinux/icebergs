@@ -109,7 +109,8 @@ func (m *Message) RenderCmd(index string, args ...Any) {
 			INPUTS, kit.UnMarshal(msg.Append(LIST)), FEATURE, kit.UnMarshal(msg.Append(META)),
 		)))
 	}
-	m.RenderResult(kit.Format(Info.cans, list))
+	m.Echo(kit.Format(Info.cans, list))
+	m.RenderResult()
 }
 
 func (m *Message) IsCliUA() bool {

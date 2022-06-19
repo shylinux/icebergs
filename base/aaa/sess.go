@@ -15,7 +15,7 @@ func _sess_check(m *ice.Message, sessid string) bool {
 	}
 
 	m.Richs(SESS, nil, sessid, func(value ice.Map) {
-		if value = kit.GetMeta(value); m.Warn(kit.Time(kit.Format(value[mdb.TIME])) < kit.Time(m.Time()), ice.ErrExpire) {
+		if value = kit.GetMeta(value); m.Warn(kit.Time(kit.Format(value[mdb.TIME])) < kit.Time(m.Time()), ice.ErrNotValid) {
 			return // 会话超时
 		}
 		if m.Richs(USER, nil, value[USERNAME], func(value ice.Map) {

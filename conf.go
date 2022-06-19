@@ -295,12 +295,12 @@ const ( // LOG
 	LOG_IMPORT = "import"
 )
 const ( // Err
-	ErrWarn   = "warn: "
-	ErrExpire = "expire: "
+	ErrWarn = "warn: "
 
 	ErrNotLogin     = "not login: "
 	ErrNotRight     = "not right: "
 	ErrNotFound     = "not found: "
+	ErrNotValid     = "not valid: "
 	ErrNotStart     = "not start: "
 	ErrNotImplement = "not implement: "
 )

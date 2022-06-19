@@ -25,7 +25,7 @@ type spring struct {
 }
 
 func (s spring) Order(m *ice.Message) {
-	s.Code.Order(m, s.PathOther(m, s.Link(m, "")), ice.BIN)
+	s.Code.Order(m, "", ice.BIN)
 }
 func (s spring) Create(m *ice.Message, arg ...string) {
 	s.Hash.Create(m, arg...)

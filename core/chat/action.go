@@ -54,7 +54,7 @@ func _action_exec(m *ice.Message, river, storm, index string, arg ...string) {
 func _action_share(m *ice.Message, arg ...string) {
 	switch msg := m.Cmd(web.SHARE, arg[0]); msg.Append(mdb.TYPE) {
 	case web.STORM:
-		if m.Warn(kit.Time() > kit.Time(msg.Append(mdb.TIME)), ice.ErrExpire, arg) {
+		if m.Warn(kit.Time() > kit.Time(msg.Append(mdb.TIME)), ice.ErrNotValid, arg) {
 			break // 分享超时
 		}
 		if len(arg) == 1 {
@@ -77,7 +77,7 @@ func _action_share(m *ice.Message, arg ...string) {
 		_action_exec(m, msg.Append(web.RIVER), msg.Append(web.STORM), arg[1], arg[2:]...)
 
 	case web.FIELD:
-		if m.Warn(kit.Time() > kit.Time(msg.Append(mdb.TIME)), ice.ErrExpire, arg) {
+		if m.Warn(kit.Time() > kit.Time(msg.Append(mdb.TIME)), ice.ErrNotValid, arg) {
 			break // 分享超时
 		}
 		if arg[0] = msg.Append(mdb.NAME); len(arg) == 1 {

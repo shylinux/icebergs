@@ -22,10 +22,10 @@ type server struct {
 }
 
 func (s server) Order(m *ice.Message) {
-	s.Code.Order(m, s.PathOther(m, s.Link(m, "")), ice.BIN)
+	s.Code.Order(m, "", ice.BIN)
 }
 func (s server) List(m *ice.Message, arg ...string) {
-	s.Code.Source(m, s.PathOther(m, s.Link(m, "")), arg...)
+	s.Code.Source(m, "", arg...)
 }
 func (s server) RunScript(m *ice.Message) {
 	if s.Code.System(m, nfs.PWD, JAVAC, "-d", ice.BIN, m.Option(nfs.PATH)); cli.IsSuccess(m.Message) {

@@ -9,9 +9,9 @@ type maven struct {
 }
 
 func (s maven) Order(m *ice.Message) {
-	s.Code.Order(m, s.PathOther(m, s.Link(m, "")), ice.BIN)
+	s.Code.Order(m, "", ice.BIN)
 }
 func (s maven) List(m *ice.Message, arg ...string) {
-	s.Code.Source(m, s.PathOther(m, s.Link(m, "")), arg...)
+	s.Code.Source(m, "", arg...)
 }
 func init() { ice.CodeCtxCmd(maven{}) }

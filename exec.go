@@ -89,7 +89,7 @@ func (m *Message) Call(sync bool, cb func(*Message) *Message) *Message {
 
 	p := kit.Select("10s", m.Option("timeout"))
 	t := time.AfterFunc(kit.Duration(p), func() {
-		m.Warn(true, ErrExpire, m.Detailv())
+		m.Warn(true, ErrNotValid, m.Detailv())
 		m.Back(nil)
 		wait <- false
 	})

@@ -24,10 +24,15 @@ const (
 	JSON = "json"
 )
 const (
-	DICT = "dict"
-	META = "meta"
+	DICT = kit.MDB_DICT
+	META = kit.MDB_META
+	UNIQ = kit.MDB_UNIQ
+
+	FOREACH = kit.MDB_FOREACH
+	RANDOMS = kit.MDB_RANDOMS
 )
 const (
+	// 数据
 	ID   = kit.MDB_ID
 	KEY  = kit.MDB_KEY
 	TIME = kit.MDB_TIME
@@ -36,6 +41,7 @@ const (
 	NAME = kit.MDB_NAME
 	TEXT = kit.MDB_TEXT
 
+	// 文件
 	LINK = kit.MDB_LINK
 	SCAN = kit.MDB_SCAN
 	SHOW = kit.MDB_SHOW
@@ -43,6 +49,7 @@ const (
 	DATA = kit.MDB_DATA
 	FILE = kit.MDB_FILE
 
+	// 存储
 	SHORT = kit.MDB_SHORT
 	FIELD = kit.MDB_FIELD
 	TOTAL = kit.MDB_TOTAL
@@ -52,6 +59,7 @@ const (
 	STORE = kit.MDB_STORE
 	FSIZE = kit.MDB_FSIZE
 
+	// 索引
 	INDEX  = kit.MDB_INDEX
 	VALUE  = kit.MDB_VALUE
 	EXTRA  = kit.MDB_EXTRA
@@ -59,11 +67,6 @@ const (
 	EXPIRE = kit.MDB_EXPIRE
 	STATUS = kit.MDB_STATUS
 	STREAM = kit.MDB_STREAM
-
-	FOREACH = "*"
-	RANDOMS = "%"
-
-	UNIQ = kit.MDB_UNIQ
 )
 const (
 	DETAIL = "detail"

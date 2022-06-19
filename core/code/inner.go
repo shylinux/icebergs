@@ -61,7 +61,7 @@ func _inner_make(m *ice.Message, msg *ice.Message) {
 func LoadPlug(m *ice.Message, language ...string) {
 	for _, language := range language {
 		m.Conf(nfs.CAT, kit.Keym(nfs.SOURCE, kit.Ext(language)), ice.TRUE)
-		m.Confm(language, kit.Keym(PLUG, PREPARE), func(key string, value ice.Any) {
+		m.Confm(language, kit.Keym(PLUG, PREPARE), func(key string, value interface{}) {
 			for _, v := range kit.Simple(value) {
 				m.Conf(language, kit.Keym(PLUG, KEYWORD, v), key)
 			}

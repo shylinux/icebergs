@@ -25,16 +25,6 @@ func _runtime_init(m *ice.Message) {
 	m.Conf(RUNTIME, kit.Keys(HOST, GOOS), runtime.GOOS)
 	m.Conf(RUNTIME, kit.Keys(HOST, PID), os.Getpid())
 	m.Conf(RUNTIME, kit.Keys(HOST, HOME), kit.Env(HOME))
-	osid := ""
-	m.Cmd(nfs.CAT, "/etc/os-release", func(text string) {
-		if ls := kit.Split(text, "="); len(ls) > 1 {
-			switch ls[0] {
-			case "ID", "ID_LIKE":
-				osid = strings.TrimSpace(ls[1] + ice.SP + osid)
-			}
-		}
-	})
-	m.Conf(RUNTIME, kit.Keys(HOST, OSID), osid)
 
 	// 启动信息 boot
 	if name, e := os.Hostname(); e == nil {
@@ -61,6 +51,17 @@ func _runtime_init(m *ice.Message) {
 	for _, k := range []string{CTX_SHY, CTX_DEV, CTX_OPS, CTX_ARG, CTX_PID, CTX_USER, CTX_SHARE, CTX_RIVER} {
 		m.Conf(RUNTIME, kit.Keys(CONF, k), kit.Env(k))
 	}
+
+	osid := ""
+	m.Cmd(nfs.CAT, "/etc/os-release", func(text string) {
+		if ls := kit.Split(text, "="); len(ls) > 1 {
+			switch ls[0] {
+			case "ID", "ID_LIKE":
+				osid = strings.TrimSpace(ls[1] + ice.SP + osid)
+			}
+		}
+	})
+	m.Conf(RUNTIME, kit.Keys(HOST, OSID), osid)
 }
 func _runtime_hostinfo(m *ice.Message) {
 	m.Push("nCPU", strings.Count(m.Cmdx(nfs.CAT, "/proc/cpuinfo"), "processor"))

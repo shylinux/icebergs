@@ -19,7 +19,11 @@ func _install_path(m *ice.Message, link string) string {
 	if p := path.Join(ice.USR_INSTALL, kit.TrimExt(link)); kit.FileExists(p) {
 		return p
 	}
-	return path.Join(ice.USR_INSTALL, strings.Split(m.Cmdx(cli.SYSTEM, "sh", "-c", kit.Format("tar tf %s| head -n1", path.Join(ice.USR_INSTALL, path.Base(link)))), ice.PS)[0])
+	if p := path.Join(ice.USR_INSTALL, path.Base(link)); kit.FileExists(p) {
+		return path.Join(ice.USR_INSTALL, strings.Split(m.Cmdx(cli.SYSTEM, "sh", "-c", kit.Format("tar tf %s| head -n1", p), ice.Option{cli.CMD_OUTPUT, ""}), ice.PS)[0])
+	}
+	m.Error(true, ice.ErrNotFound)
+	return ""
 }
 func _install_download(m *ice.Message) {
 	link := m.Option(mdb.LINK)
@@ -81,11 +85,7 @@ func _install_build(m *ice.Message, arg ...string) string {
 	return ""
 }
 func _install_order(m *ice.Message, arg ...string) {
-	p := path.Join(_install_path(m, ""), m.Option(nfs.PATH)+ice.NL)
-	if !strings.Contains(m.Cmdx(nfs.CAT, ice.ETC_PATH), p) {
-		m.Cmd(nfs.PUSH, ice.ETC_PATH, p)
-	}
-	m.Cmdy(nfs.CAT, ice.ETC_PATH)
+	m.Cmdy(cli.SYSTEM, nfs.PUSH, path.Join(_install_path(m, ""), m.Option(nfs.PATH)+ice.NL))
 }
 func _install_spawn(m *ice.Message, arg ...string) {
 	if kit.Int(m.Option(tcp.PORT)) >= 10000 {

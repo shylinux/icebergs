@@ -1,4 +1,4 @@
-package chat
+package oauth
 
 import (
 	"strings"
@@ -167,3 +167,5 @@ var Index = &ice.Context{Name: OAUTH, Help: "认证授权", Commands: map[string
 }}
 
 func init() { chat.Index.Register(Index, &web.Frame{}) }
+
+func Prefix(arg ...string) string { return kit.Keys("web.chat.oauth", arg) }

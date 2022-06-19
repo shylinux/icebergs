@@ -154,6 +154,14 @@ func init() {
 			nfs.FIND: {Name: "find", Help: "查找", Hand: func(m *ice.Message, arg ...string) {
 				m.Echo(_system_find(m, arg[0], arg[1:]...))
 			}},
+			nfs.PUSH: {Name: "push", Help: "查找", Hand: func(m *ice.Message, arg ...string) {
+				for _, p := range arg {
+					if !strings.Contains(m.Cmdx(nfs.CAT, ice.ETC_PATH), p) {
+						m.Cmd(nfs.PUSH, ice.ETC_PATH, strings.TrimSpace(p)+ice.NL)
+					}
+				}
+				m.Cmdy(nfs.CAT, ice.ETC_PATH)
+			}},
 		}, Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) == 0 {
 				mdb.ListSelect(m, arg...)

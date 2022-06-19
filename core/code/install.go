@@ -15,7 +15,11 @@ import (
 )
 
 func _install_path(m *ice.Message, link string) string {
-	return path.Join(ice.USR_INSTALL, kit.TrimExt(kit.Select(m.Option(mdb.LINK), link)))
+	link = kit.Select(m.Option(mdb.LINK), link)
+	if p := path.Join(ice.USR_INSTALL, kit.TrimExt(link)); kit.FileExists(p) {
+		return p
+	}
+	return path.Join(ice.USR_INSTALL, strings.Split(m.Cmdx(cli.SYSTEM, "sh", "-c", kit.Format("tar tf %s| head -n1", path.Join(ice.USR_INSTALL, path.Base(link)))), ice.PS)[0])
 }
 func _install_download(m *ice.Message) {
 	link := m.Option(mdb.LINK)
@@ -34,7 +38,7 @@ func _install_download(m *ice.Message) {
 		defer m.ToastSuccess()
 
 		// 下载进度
-		m.Richs(INSTALL, "", name, func(key string, value map[string]interface{}) {
+		m.Richs(INSTALL, "", name, func(key string, value ice.Map) {
 			value = kit.GetMeta(value)
 			m.OptionCB(web.SPIDE, func(count int, total int, step int) {
 				value[mdb.COUNT], value[mdb.TOTAL], value[mdb.VALUE] = count, total, step
@@ -112,6 +116,8 @@ func _install_start(m *ice.Message, arg ...string) {
 	switch cb := m.Optionv(PREPARE).(type) {
 	case func(string) []string:
 		args = append(args, cb(p)...)
+	case func(string):
+		cb(p)
 	}
 
 	if m.Cmdy(cli.DAEMON, arg[1:], args); cli.IsSuccess(m) {
@@ -196,7 +202,7 @@ func init() {
 	}})
 }
 
-func InstallAction(args ...interface{}) map[string]*ice.Action {
+func InstallAction(args ...ice.Any) map[string]*ice.Action {
 	return ice.SelectAction(map[string]*ice.Action{ice.CTX_INIT: mdb.AutoConfig(args...),
 		web.DOWNLOAD: {Name: "download", Help: "下载", Hand: func(m *ice.Message, arg ...string) {
 			m.Cmdy(INSTALL, web.DOWNLOAD, m.Config(nfs.SOURCE))
@@ -212,11 +218,11 @@ func InstallAction(args ...interface{}) map[string]*ice.Action {
 		}},
 	})
 }
-func InstallSoftware(m *ice.Message, bin string, list interface{}) (ok bool) {
+func InstallSoftware(m *ice.Message, bin string, list ice.Any) (ok bool) {
 	if cli.SystemFind(m, bin) != "" {
 		return true
 	}
-	kit.Fetch(list, func(index int, value map[string]interface{}) {
+	kit.Fetch(list, func(index int, value ice.Map) {
 		if strings.Contains(m.Cmdx(cli.RUNTIME, kit.Keys(tcp.HOST, cli.OSID)), kit.Format(value[cli.OSID])) {
 			cli.PushStream(m)
 			m.Cmd(cli.SYSTEM, value[ice.CMD])

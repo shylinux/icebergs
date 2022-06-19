@@ -132,7 +132,6 @@ const ( // DIR
 	VAR_FILE      = "var/file"
 	VAR_PROXY     = "var/proxy"
 	VAR_TRASH     = "var/trash"
-	BIN_ICE_SH    = "bin/ice.sh"
 	BIN_ICE_BIN   = "bin/ice.bin"
 	BIN_BOOT_LOG  = "bin/boot.log"
 	ETC_INIT_SHY  = "etc/init.shy"
@@ -207,6 +206,8 @@ const ( // MSG
 const ( // RENDER
 	RENDER_RAW      = "_raw"
 	RENDER_VOID     = "_void"
+	RENDER_JSON     = "_json"
+	RENDER_STATUS   = "_status"
 	RENDER_RESULT   = "_result"
 	RENDER_ANCHOR   = "_anchor"
 	RENDER_BUTTON   = "_button"
@@ -347,4 +348,19 @@ const ( // mdb
 	TYPE = "type"
 	NAME = "name"
 	TEXT = "text"
+)
+const ( // ssh
+	SOURCE = "source"
+)
+const ( // gdb
+	EVENT    = "event"
+	LISTEN   = "listen"
+	HAPPEN   = "happen"
+	FILELINE = "fileline"
+)
+const ( // aaa
+	ROLE     = "role"
+	RIGHT    = "right"
+	USERROLE = "userrole"
+	ROOT     = "root"
 )

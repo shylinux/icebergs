@@ -1,6 +1,7 @@
 package ice
 
 import (
+	"net/http"
 	"path"
 	"strings"
 
@@ -63,6 +64,28 @@ func (m *Message) Render(cmd string, args ...Any) *Message {
 	}
 	return m
 }
+func (m *Message) RenderVoid(args ...Any) *Message {
+	return m.Render(RENDER_VOID, args...)
+}
+func (m *Message) RenderJson(args ...Any) *Message {
+	return m.Render(RENDER_JSON, kit.Format(kit.Dict(args...)))
+}
+func (m *Message) RenderStatus(status int) *Message {
+	return m.Render(RENDER_STATUS, status)
+}
+func (m *Message) RenderStatusBadRequest() *Message {
+	return m.Render(RENDER_STATUS, http.StatusBadRequest)
+}
+func (m *Message) RenderStatusUnauthorized() *Message {
+	return m.Render(RENDER_STATUS, http.StatusUnauthorized)
+}
+func (m *Message) RenderStatusNotFound() *Message {
+	return m.Render(RENDER_STATUS, http.StatusNotFound)
+}
+func (m *Message) RenderStatusForbidden() *Message {
+	return m.Render(RENDER_STATUS, http.StatusForbidden)
+}
+
 func (m *Message) RenderResult(args ...Any) *Message {
 	return m.Render(RENDER_RESULT, args...)
 }

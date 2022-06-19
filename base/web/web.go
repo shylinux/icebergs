@@ -94,6 +94,8 @@ func (web *Frame) Close(m *ice.Message, arg ...string) bool {
 	return m.Done(true)
 }
 
+func P(arg ...string) string { return path.Join(ice.PS, path.Join(arg...)) }
+
 const (
 	SERVE_START = "serve.start"
 	SERVE_STOP  = "serve.stop"

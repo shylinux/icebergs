@@ -14,7 +14,7 @@ import (
 
 func _action_right(m *ice.Message, river string, storm string) (ok bool) {
 	if ok = true; m.Option(ice.MSG_USERROLE) == aaa.VOID {
-		m.Richs(RIVER, "", river, func(key string, value map[string]interface{}) {
+		m.Richs(RIVER, "", river, func(key string, value ice.Map) {
 			if ok = m.Richs(RIVER, kit.Keys(mdb.HASH, key, OCEAN), m.Option(ice.MSG_USERNAME), nil) != nil; ok {
 				m.Log_AUTH(RIVER, river, STORM, storm)
 			}
@@ -35,7 +35,7 @@ func _action_exec(m *ice.Message, river, storm, index string, arg ...string) {
 	m.Option(ice.MSG_STORM, storm)
 
 	cmds := []string{index}
-	if m.Grows(RIVER, _action_key(m, river, storm), mdb.ID, index, func(index int, value map[string]interface{}) {
+	if m.Grows(RIVER, _action_key(m, river, storm), mdb.ID, index, func(index int, value ice.Map) {
 		if cmds = kit.Simple(kit.Keys(value[ice.CTX], value[ice.CMD])); kit.Format(value[ice.POD]) != "" {
 			m.Option(ice.POD, value[ice.POD]) // 远程节点
 		}
@@ -115,12 +115,12 @@ func _action_domain(m *ice.Message, cmd string, arg ...string) (domain string) {
 
 	river := kit.Select(m.Option(ice.MSG_RIVER), arg, 0)
 	storm := kit.Select(m.Option(ice.MSG_STORM), arg, 1)
-	m.Richs(RIVER, "", river, func(key string, value map[string]interface{}) {
+	m.Richs(RIVER, "", river, func(key string, value ice.Map) {
 		switch kit.Value(kit.GetMeta(value), mdb.TYPE) {
 		case PUBLIC: // 公有群
 			return
 		case PROTECTED: // 共有群
-			m.Richs(RIVER, kit.Keys(mdb.HASH, river, STORM), storm, func(key string, value map[string]interface{}) {
+			m.Richs(RIVER, kit.Keys(mdb.HASH, river, STORM), storm, func(key string, value ice.Map) {
 				switch r := "R" + river; kit.Value(kit.GetMeta(value), mdb.TYPE) {
 				case PUBLIC: // 公有组
 					domain = m.Option(ice.MSG_DOMAIN, kit.Keys(r))

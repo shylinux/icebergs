@@ -43,7 +43,7 @@ func init() {
 
 				m.Option(ice.CACHE_LIMIT, "-1")
 				m.Cmdy(mdb.IMPORT, m.PrefixKey(), "", mdb.LIST)
-				m.Grows(m.PrefixKey(), "", "", "", func(index int, value map[string]interface{}) {
+				m.Grows(m.PrefixKey(), "", "", "", func(index int, value ice.Map) {
 					m.Cmd(cli.SYSTEM, TMUX, "set-buffer", "-b", value[mdb.NAME], value[mdb.TEXT])
 				})
 			}},

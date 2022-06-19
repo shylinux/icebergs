@@ -47,7 +47,7 @@ func _space_dial(m *ice.Message, dev, name string, arg ...string) {
 	}
 
 	value := m.Richs(SPIDE, nil, dev, nil)
-	client := kit.Value(value, tcp.CLIENT).(map[string]interface{})
+	client := kit.Value(value, tcp.CLIENT).(ice.Map)
 
 	host := kit.Format(client[tcp.HOSTNAME])
 	proto := strings.Replace(kit.Format(client[tcp.PROTOCOL]), "http", "ws", 1)
@@ -109,7 +109,7 @@ func _space_handle(m *ice.Message, safe bool, send map[string]*ice.Message, c *w
 					_space_echo(msg, []string{}, kit.Revert(source)[1:], c, name)
 				}
 
-			} else if msg.Richs(SPACE, nil, target[0], func(key string, value map[string]interface{}) {
+			} else if msg.Richs(SPACE, nil, target[0], func(key string, value ice.Map) {
 				if s, ok := value[SOCKET].(*websocket.Conn); ok {
 					socket, source, target = s, source, target[1:]
 					_space_echo(msg, source, target, socket, kit.Select("", target))
@@ -170,7 +170,7 @@ func _space_send(m *ice.Message, space string, arg ...string) {
 	}
 
 	target := kit.Split(space, ice.PT, ice.PT)
-	m.Warn(m.Richs(SPACE, nil, target[0], func(key string, value map[string]interface{}) {
+	m.Warn(m.Richs(SPACE, nil, target[0], func(key string, value ice.Map) {
 		if socket, ok := value[SOCKET].(*websocket.Conn); !m.Warn(!ok, ice.ErrNotFound, SOCKET) {
 
 			// 复制选项
@@ -203,7 +203,7 @@ func _space_send(m *ice.Message, space string, arg ...string) {
 	}) == nil, ice.ErrNotFound, space)
 }
 func _space_search(m *ice.Message, kind, name, text string, arg ...string) {
-	m.Richs(SPACE, nil, mdb.FOREACH, func(key string, value map[string]interface{}) {
+	m.Richs(SPACE, nil, mdb.FOREACH, func(key string, value ice.Map) {
 		if value = kit.GetMeta(value); !strings.Contains(kit.Format(value[mdb.NAME]), name) {
 			return
 		}

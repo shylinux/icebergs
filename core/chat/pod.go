@@ -49,7 +49,9 @@ func init() {
 			} else if arg[1] == "cmd" { // 节点命令
 				m.Cmdy(web.SPACE, arg[0], m.Prefix(CMD), path.Join(arg[2:]...))
 			} else {
-				m.Cmdy(web.SPACE, m.Option(ice.MSG_USERPOD), "web.chat."+ice.PS+path.Join(arg[1:]...))
+				m.Debug("what %v", path.Join(arg[1:]...))
+				m.Cmdy(web.SPACE, m.Option(ice.MSG_USERPOD), "web.chat."+strings.TrimPrefix(path.Join(arg[1:]...), "chat/"))
+				// m.Cmdy(web.SPACE, m.Option(ice.MSG_USERPOD), "web.chat."+ice.PS+path.Join(arg[1:]...))
 			}
 		}},
 	}})

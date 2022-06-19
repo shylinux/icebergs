@@ -21,12 +21,12 @@ func (l *Label) Init(m *ice.Message, arg ...string) wiki.Chart {
 	// 解析数据
 	l.max = map[int]int{}
 	m.Option(lex.SPLIT_BLOCK, ice.SP)
-	m.Cmd(lex.SPLIT, "", kit.Dict(nfs.CAT_CONTENT, arg[0]), func(ls []string, data map[string]interface{}) []string {
+	m.Cmd(lex.SPLIT, "", kit.Dict(nfs.CAT_CONTENT, arg[0]), func(ls []string, data ice.Map) []string {
 		l.data = append(l.data, ls)
 
 		for i, v := range ls {
 			switch data := kit.Parse(nil, "", kit.Split(v)...).(type) {
-			case map[string]interface{}:
+			case ice.Map:
 				v = kit.Select("", data[mdb.TEXT])
 			}
 			if w := l.GetWidth(v); w > l.max[i] {
@@ -57,7 +57,7 @@ func (l *Label) Draw(m *ice.Message, x, y int) wiki.Chart {
 			// 数据
 			item = &Block{FontSize: l.FontSize, Padding: l.Padding, MarginX: l.MarginX, MarginY: l.MarginY}
 			switch data := kit.Parse(nil, "", kit.Split(text)...).(type) {
-			case map[string]interface{}:
+			case ice.Map:
 				item.Init(m, kit.Select(text, data[mdb.TEXT])).Data(m, data)
 			default:
 				item.Init(m, text)

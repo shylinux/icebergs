@@ -168,7 +168,7 @@ func _dir_list(m *ice.Message, root string, name string, level int, deep bool, d
 					if m.IsCliUA() || m.Option(ice.MSG_USERROLE) == aaa.VOID {
 						break
 					}
-					m.PushButton(kit.Select("", TRASH, !isDir))
+					m.PushButton(TRASH)
 				default:
 					m.Push(field, "")
 				}

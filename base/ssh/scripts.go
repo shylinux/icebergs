@@ -18,7 +18,7 @@ import (
 	kit "shylinux.com/x/toolkits"
 )
 
-func Render(msg *ice.Message, cmd string, args ...interface{}) (res string) {
+func Render(msg *ice.Message, cmd string, args ...ice.Any) (res string) {
 	switch arg := kit.Simple(args...); cmd {
 	case ice.RENDER_VOID:
 		return res
@@ -77,7 +77,7 @@ func (f *Frame) prompt(m *ice.Message, list ...string) *Frame {
 	}
 	return f
 }
-func (f *Frame) printf(m *ice.Message, str string, arg ...interface{}) *Frame {
+func (f *Frame) printf(m *ice.Message, str string, arg ...ice.Any) *Frame {
 	fmt.Fprint(f.stdout, kit.Format(str, arg...))
 	return f
 }
@@ -123,7 +123,7 @@ func (f *Frame) parse(m *ice.Message, line string) string {
 			msg.SetResult().Cmdy(cli.SYSTEM, ls)
 		}
 
-		f.res = Render(msg, msg.Option(ice.MSG_OUTPUT), msg.Optionv(ice.MSG_ARGS).([]interface{})...)
+		f.res = Render(msg, msg.Option(ice.MSG_OUTPUT), msg.Optionv(ice.MSG_ARGS).([]ice.Any)...)
 	}
 	m.Sleep("10ms")
 	return ""
@@ -262,8 +262,8 @@ func init() {
 	Index.Merge(&ice.Context{Configs: map[string]*ice.Config{
 		SOURCE: {Name: SOURCE, Help: "加载脚本", Value: kit.Data()},
 		PROMPT: {Name: PROMPT, Help: "命令提示", Value: kit.Data(
-			PS1, []interface{}{"\033[33;44m", mdb.COUNT, "[", mdb.TIME, "]", "\033[5m", TARGET, "\033[0m", "\033[44m", ">", "\033[0m ", "\033[?25h", "\033[32m"},
-			PS2, []interface{}{mdb.COUNT, " ", TARGET, "> "},
+			PS1, []ice.Any{"\033[33;44m", mdb.COUNT, "[", mdb.TIME, "]", "\033[5m", TARGET, "\033[0m", "\033[44m", ">", "\033[0m ", "\033[?25h", "\033[32m"},
+			PS2, []ice.Any{mdb.COUNT, " ", TARGET, "> "},
 		)},
 	}, Commands: map[string]*ice.Command{
 		ice.CTX_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {}},

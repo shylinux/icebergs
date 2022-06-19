@@ -22,7 +22,7 @@ func _website_url(m *ice.Message, file string) string {
 	}
 	return strings.Split(kit.MergeURL2(m.Option(ice.MSG_USERWEB), path.Join("/chat", p)), "?")[0]
 }
-func _website_parse(m *ice.Message, text string, args ...string) (map[string]interface{}, bool) {
+func _website_parse(m *ice.Message, text string, args ...string) (ice.Map, bool) {
 	if text == "" {
 		return nil, false
 	}
@@ -37,7 +37,7 @@ func _website_parse(m *ice.Message, text string, args ...string) (map[string]int
 
 	nriver := 0
 	nstorm := 0
-	m.Cmd(lex.SPLIT, "", mdb.KEY, mdb.NAME, func(deep int, ls []string, meta map[string]interface{}) []string {
+	m.Cmd(lex.SPLIT, "", mdb.KEY, mdb.NAME, func(deep int, ls []string, meta ice.Map) []string {
 		if deep == 1 {
 			switch ls[0] {
 			case "header":
@@ -71,7 +71,7 @@ func _website_parse(m *ice.Message, text string, args ...string) (map[string]int
 			fallthrough
 		case "-":
 			for _, v := range ls[1:] {
-				last[mdb.LIST] = append(last[mdb.LIST].([]interface{}), kit.Dict(mdb.INDEX, kit.Keys(prefix, v), "order", len(last)))
+				last[mdb.LIST] = append(last[mdb.LIST].([]ice.Any), kit.Dict(mdb.INDEX, kit.Keys(prefix, v), "order", len(last)))
 			}
 			return ls
 		}
@@ -118,7 +118,7 @@ func _website_parse(m *ice.Message, text string, args ...string) (map[string]int
 			storm[ls[0]] = last
 			prefix = ""
 		default:
-			last[mdb.LIST] = append(last[mdb.LIST].([]interface{}),
+			last[mdb.LIST] = append(last[mdb.LIST].([]ice.Any),
 				kit.Dict(mdb.NAME, kit.Select(ls[0], data[mdb.NAME]), mdb.HELP, ls[1], mdb.INDEX, ls[0], "order", len(last), data))
 		}
 		return ls
@@ -152,7 +152,7 @@ func _website_render(m *ice.Message, w http.ResponseWriter, r *http.Request, kin
 	default:
 		msg.RenderDownload(text)
 	}
-	web.Render(msg, msg.Option(ice.MSG_OUTPUT), msg.Optionv(ice.MSG_ARGS).([]interface{})...)
+	web.Render(msg, msg.Option(ice.MSG_OUTPUT), msg.Optionv(ice.MSG_ARGS).([]ice.Any)...)
 	return true
 }
 func _website_search(m *ice.Message, kind, name, text string, arg ...string) {
@@ -183,7 +183,7 @@ func init() {
 					if r.Method != http.MethodGet {
 						return false
 					}
-					if ok := true; m.Richs(WEBSITE, nil, r.URL.Path, func(key string, value map[string]interface{}) {
+					if ok := true; m.Richs(WEBSITE, nil, r.URL.Path, func(key string, value ice.Map) {
 						value = kit.GetMeta(value)
 						ok = _website_render(m, w, r, kit.Format(value[mdb.TYPE]), kit.Format(value[mdb.TEXT]))
 					}) != nil && ok {

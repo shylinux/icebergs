@@ -12,12 +12,12 @@ import (
 	kit "shylinux.com/x/toolkits"
 )
 
-func _lark_get(m *ice.Message, appid string, arg ...interface{}) (*ice.Message, interface{}) {
+func _lark_get(m *ice.Message, appid string, arg ...ice.Any) (*ice.Message, ice.Any) {
 	m.Option(web.SPIDE_HEADER, "Authorization", "Bearer "+m.Cmdx(APP, TOKEN, appid), web.ContentType, web.ContentJSON)
 	msg := m.Cmd(web.SPIDE, LARK, http.MethodGet, arg)
 	return msg, msg.Optionv(web.SPIDE_RES)
 }
-func _lark_post(m *ice.Message, appid string, arg ...interface{}) *ice.Message {
+func _lark_post(m *ice.Message, appid string, arg ...ice.Any) *ice.Message {
 	m.Option(web.SPIDE_HEADER, "Authorization", "Bearer "+m.Cmdx(APP, TOKEN, appid), web.ContentType, web.ContentJSON)
 	return m.Cmd(web.SPIDE, LARK, arg)
 }
@@ -28,10 +28,10 @@ func _lark_parse(m *ice.Message) {
 		m.Optionv(ice.MSG_USERDATA, data)
 
 		switch d := data.(type) {
-		case map[string]interface{}:
+		case ice.Map:
 			for k, v := range d {
 				switch d := v.(type) {
-				case map[string]interface{}:
+				case ice.Map:
 					for k, v := range d {
 						m.Add(ice.MSG_OPTION, k, kit.Format(v))
 					}

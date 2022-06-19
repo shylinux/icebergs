@@ -10,7 +10,7 @@ import (
 	kit "shylinux.com/x/toolkits"
 )
 
-func _send_text(m *ice.Message, form map[string]interface{}, arg ...string) bool {
+func _send_text(m *ice.Message, form ice.Map, arg ...string) bool {
 	switch len(arg) {
 	case 0:
 	case 1:
@@ -23,20 +23,20 @@ func _send_text(m *ice.Message, form map[string]interface{}, arg ...string) bool
 		if len(arg) == 2 && strings.TrimSpace(arg[1]) == "" {
 			return false
 		}
-		content := []interface{}{}
-		line := []interface{}{}
+		content := []ice.Any{}
+		line := []ice.Any{}
 		for _, v := range arg[1:] {
 			if v == "\n" {
-				content, line = append(content, line), []interface{}{}
+				content, line = append(content, line), []ice.Any{}
 				continue
 			}
-			line = append(line, map[string]interface{}{"tag": "text", "text": v + " "})
+			line = append(line, ice.Map{"tag": "text", "text": v + " "})
 		}
 		content = append(content, line)
 
 		kit.Value(form, "msg_type", "post")
-		kit.Value(form, "content.post", map[string]interface{}{
-			"zh_cn": map[string]interface{}{"title": arg[0], CONTENT: content},
+		kit.Value(form, "content.post", ice.Map{
+			"zh_cn": ice.Map{"title": arg[0], CONTENT: content},
 		})
 	}
 	return true

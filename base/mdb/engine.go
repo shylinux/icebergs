@@ -19,7 +19,7 @@ func init() {
 			}},
 		}, HashAction()), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			if len(arg) > 1 {
-				m.Cmdy(SELECT, m.PrefixKey(), "", HASH, m.Config(SHORT), arg, func(value map[string]interface{}) {
+				m.Cmdy(SELECT, m.PrefixKey(), "", HASH, m.Config(SHORT), arg, func(value ice.Map) {
 					m.Cmdy(kit.Keys(value[TEXT], value[NAME]), m.CommandKey(), arg[0], arg[1], kit.Select("", arg, 2), kit.Slice(arg, 3))
 				})
 				return

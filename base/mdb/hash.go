@@ -14,7 +14,7 @@ func _hash_fields(m *ice.Message) []string {
 }
 func _hash_inputs(m *ice.Message, prefix, chain string, field, value string) {
 	list := map[string]int{}
-	m.Richs(prefix, chain, FOREACH, func(key string, val map[string]interface{}) {
+	m.Richs(prefix, chain, FOREACH, func(key string, val ice.Map) {
 		if val = kit.GetMeta(val); kit.Format(val[COUNT]) != "" {
 			list[kit.Format(val[field])] = kit.Int(val[COUNT])
 		} else {
@@ -32,19 +32,23 @@ func _hash_insert(m *ice.Message, prefix, chain string, arg ...string) {
 		m.Conf(prefix, kit.Keys(chain, kit.Keym(SHORT)), m.Conf(prefix, kit.Keym(SHORT)))
 	}
 	m.Log_INSERT(KEY, path.Join(prefix, chain), arg[0], arg[1])
+	if expire := m.Conf(prefix, kit.Keys(chain, kit.Keym(EXPIRE))); expire != "" {
+		arg = kit.Simple(TIME, m.Time(expire), arg)
+	}
+
 	m.Echo(m.Rich(prefix, chain, kit.Data(arg)))
 }
 func _hash_delete(m *ice.Message, prefix, chain, field, value string) {
 	if field != HASH {
 		field, value = HASH, kit.Select(kit.Hashs(value), m.Option(HASH))
 	}
-	m.Richs(prefix, chain, value, func(key string, val map[string]interface{}) {
+	m.Richs(prefix, chain, value, func(key string, val ice.Map) {
 		m.Log_DELETE(KEY, path.Join(prefix, chain), field, value, VALUE, kit.Format(val))
 		m.Conf(prefix, kit.Keys(chain, HASH, key), "")
 	})
 }
 func _hash_modify(m *ice.Message, prefix, chain string, field, value string, arg ...string) {
-	m.Richs(prefix, chain, value, func(key string, val map[string]interface{}) {
+	m.Richs(prefix, chain, value, func(key string, val ice.Map) {
 		val = kit.GetMeta(val)
 		m.Log_MODIFY(KEY, path.Join(prefix, chain), field, value, arg)
 		for i := 0; i < len(arg); i += 2 {
@@ -60,11 +64,11 @@ func _hash_select(m *ice.Message, prefix, chain, field, value string) {
 		value = RANDOMS
 	}
 	fields := _hash_fields(m)
-	m.Richs(prefix, chain, value, func(key string, val map[string]interface{}) {
+	m.Richs(prefix, chain, value, func(key string, val ice.Map) {
 		switch val = kit.GetMeta(val); cb := m.OptionCB(SELECT).(type) {
-		case func(fields []string, value map[string]interface{}):
+		case func(fields []string, value ice.Map):
 			cb(fields, val)
-		case func(value map[string]interface{}):
+		case func(value ice.Map):
 			cb(val)
 		default:
 			if m.OptionFields() == DETAIL {
@@ -98,7 +102,7 @@ func _hash_import(m *ice.Message, prefix, chain, file string) {
 	}
 	defer f.Close()
 
-	list := map[string]interface{}{}
+	list := ice.Map{}
 	m.Assert(json.NewDecoder(f).Decode(&list))
 
 	count := 0
@@ -119,9 +123,9 @@ func _hash_import(m *ice.Message, prefix, chain, file string) {
 }
 func _hash_prunes(m *ice.Message, prefix, chain string, arg ...string) {
 	fields := _hash_fields(m)
-	m.Richs(prefix, chain, FOREACH, func(key string, val map[string]interface{}) {
+	m.Richs(prefix, chain, FOREACH, func(key string, val ice.Map) {
 		switch val = kit.GetMeta(val); cb := m.OptionCB(PRUNES).(type) {
-		case func(string, map[string]interface{}) bool:
+		case func(string, ice.Map) bool:
 			if !cb(key, val) {
 				return
 			}
@@ -141,15 +145,28 @@ func _hash_prunes(m *ice.Message, prefix, chain string, arg ...string) {
 
 const HASH = "hash"
 
-func AutoConfig(args ...interface{}) *ice.Action {
+func AutoConfig(args ...ice.Any) *ice.Action {
 	return &ice.Action{Hand: func(m *ice.Message, arg ...string) {
 		if cs := m.Target().Configs; cs[m.CommandKey()] == nil {
 			cs[m.CommandKey()] = &ice.Config{Value: kit.Data(args...)}
 			m.Load(m.CommandKey())
 		}
+		if cs := m.Target().Commands; cs[m.CommandKey()].Meta[CREATE] != nil {
+			return
+		}
+
+		inputs := []ice.Any{}
+		kit.Fetch(kit.Split(m.Config(FIELD)), func(i int, k string) {
+			switch k {
+			case TIME, HASH:
+				return
+			}
+			inputs = append(inputs, k)
+		})
+		m.Design(CREATE, "创建", inputs...)
 	}}
 }
-func HashAction(args ...interface{}) map[string]*ice.Action {
+func HashAction(args ...ice.Any) map[string]*ice.Action {
 	_key := func(m *ice.Message) string {
 		if m.Config(HASH) == UNIQ {
 			return HASH
@@ -163,7 +180,7 @@ func HashAction(args ...interface{}) map[string]*ice.Action {
 		INPUTS: {Name: "inputs", Help: "补全", Hand: func(m *ice.Message, arg ...string) {
 			m.Cmdy(INPUTS, m.PrefixKey(), "", HASH, arg)
 		}},
-		CREATE: {Name: "create type name text", Help: "创建", Hand: func(m *ice.Message, arg ...string) {
+		CREATE: {Name: "create", Help: "创建", Hand: func(m *ice.Message, arg ...string) {
 			m.Cmdy(INSERT, m.PrefixKey(), "", HASH, arg)
 		}},
 		REMOVE: {Name: "remove", Help: "删除", Hand: func(m *ice.Message, arg ...string) {
@@ -189,7 +206,7 @@ func HashAction(args ...interface{}) map[string]*ice.Action {
 		}},
 	})
 }
-func HashActionStatus(args ...interface{}) map[string]*ice.Action {
+func HashActionStatus(args ...ice.Any) map[string]*ice.Action {
 	list := HashAction(args...)
 	list[PRUNES] = &ice.Action{Name: "prunes", Help: "清理", Hand: func(m *ice.Message, arg ...string) {
 		m.OptionFields(m.Config(FIELD))
@@ -198,7 +215,7 @@ func HashActionStatus(args ...interface{}) map[string]*ice.Action {
 	}}
 	return list
 }
-func HashCreate(m *ice.Message, arg ...interface{}) *ice.Message {
+func HashCreate(m *ice.Message, arg ...ice.Any) *ice.Message {
 	return m.Cmd(INSERT, m.PrefixKey(), "", HASH, kit.Simple(arg...))
 }
 func HashSelect(m *ice.Message, arg ...string) *ice.Message {

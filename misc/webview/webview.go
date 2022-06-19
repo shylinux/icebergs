@@ -61,13 +61,13 @@ func (w WebView) navigate(url string) {
 	w.WebView.Navigate(url)
 }
 
-func Run(cb func(*WebView) interface{}) {
+func Run(cb func(*WebView) ice.Any) {
 	w := webview.New(true)
 	defer w.Destroy()
 	defer w.Run()
 
 	view := &WebView{Source: "src/webview.txt", WebView: w}
-	kit.Reflect(cb(view), func(name string, value interface{}) { w.WebView.Bind(name, value) })
+	kit.Reflect(cb(view), func(name string, value ice.Any) { w.WebView.Bind(name, value) })
 
 	if !view.Menu() {
 		view.navigate("http://localhost:9020")

@@ -11,7 +11,7 @@ import (
 )
 
 func _title_parse(m *ice.Message, dir string, text string) string {
-	return m.Cmdx(lex.SPLIT, "", "name,link", kit.Dict(nfs.CAT_CONTENT, text), func(ls []string, data map[string]interface{}) []string {
+	return m.Cmdx(lex.SPLIT, "", "name,link", kit.Dict(nfs.CAT_CONTENT, text), func(ls []string, data ice.Map) []string {
 		if len(ls) > 1 {
 			ls[1] = path.Join(dir, ls[1])
 		}
@@ -57,8 +57,8 @@ func _title_show(m *ice.Message, kind, text string, arg ...string) {
 	_wiki_template(m, TITLE, "", text, arg...)
 
 	// 添加目录
-	menu, _ := m.Optionv(MENU).(map[string]interface{})
-	menu[mdb.LIST] = append(menu[mdb.LIST].([]interface{}), kit.Dict(m.OptionSimple("level,prefix,text")))
+	menu, _ := m.Optionv(MENU).(ice.Map)
+	menu[mdb.LIST] = append(menu[mdb.LIST].([]ice.Any), kit.Dict(m.OptionSimple("level,prefix,text")))
 }
 
 const (

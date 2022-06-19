@@ -12,7 +12,7 @@ import (
 )
 
 func _route_travel(m *ice.Message, route string) {
-	m.Richs(SPACE, nil, mdb.FOREACH, func(key string, val map[string]interface{}) {
+	m.Richs(SPACE, nil, mdb.FOREACH, func(key string, val ice.Map) {
 		switch val[mdb.TYPE] {
 		case SERVER: // 远程查询
 			if val[mdb.NAME] == ice.Info.NodeName {

@@ -31,7 +31,7 @@ func _split_deep(stack []int, text string) ([]int, int) {
 	stack = append(stack, tab)
 	return stack, len(stack)
 }
-func _split_list(m *ice.Message, file string, arg ...string) map[string]interface{} {
+func _split_list(m *ice.Message, file string, arg ...string) ice.Map {
 	const DEEP = "_deep"
 	stack, deep := []int{}, 0
 	list := kit.List(kit.Data(DEEP, -1))
@@ -53,9 +53,9 @@ func _split_list(m *ice.Message, file string, arg ...string) map[string]interfac
 		// 回调函数
 		ls := kit.Split(text, m.Option(SPLIT_SPACE), m.Option(SPLIT_BLOCK), m.Option(SPLIT_QUOTE), m.Option(SPLIT_TRANS))
 		switch cb := m.OptionCB(SPLIT).(type) {
-		case func(int, []string, map[string]interface{}) []string:
+		case func(int, []string, ice.Map) []string:
 			ls = cb(deep, ls, data)
-		case func([]string, map[string]interface{}) []string:
+		case func([]string, ice.Map) []string:
 			ls = cb(ls, data)
 		case func([]string):
 			cb(ls)
@@ -84,10 +84,10 @@ func _split_list(m *ice.Message, file string, arg ...string) map[string]interfac
 		}
 		line = ""
 	})
-	return list[0].(map[string]interface{})
+	return list[0].(ice.Map)
 }
-func Split(m *ice.Message, arg ...string) map[string]interface{} {
-	return kit.Value(_split_list(m, arg[0], arg[1:]...), "list.0").(map[string]interface{})
+func Split(m *ice.Message, arg ...string) ice.Map {
+	return kit.Value(_split_list(m, arg[0], arg[1:]...), "list.0").(ice.Map)
 }
 
 const (

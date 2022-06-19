@@ -47,7 +47,7 @@ func init() {
 			_lark_post(m, m.Option(APP_ID), "/open-apis/message/v4/send/", web.SPIDE_DATA, kit.Formats(
 				kit.Dict("msg_type", "interactive", "chat_id", m.Option(OPEN_CHAT_ID), "card", kit.Dict(
 					"header", kit.Dict("title", kit.Dict("tag", "lark_md", "content", strings.Join(cmds, " "))),
-					"elements", []interface{}{kit.Dict("tag", "div", "fields", []interface{}{
+					"elements", []ice.Any{kit.Dict("tag", "div", "fields", []ice.Any{
 						kit.Dict("is_short", true, "text", kit.Dict(
 							"tag", "lark_md", "content", strings.Join(val, "\n"),
 						)),

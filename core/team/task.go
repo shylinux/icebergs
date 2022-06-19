@@ -7,7 +7,7 @@ import (
 	kit "shylinux.com/x/toolkits"
 )
 
-func _task_action(m *ice.Message, status interface{}, action ...string) string {
+func _task_action(m *ice.Message, status ice.Any, action ...string) string {
 	switch status {
 	case PREPARE:
 		action = append(action, BEGIN)

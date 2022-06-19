@@ -14,11 +14,14 @@ func (m *Message) ActionKey() string {
 func (m *Message) CommandKey() string {
 	return strings.TrimSuffix(strings.TrimPrefix(m._key, PS), PS)
 }
+func (m *Message) RoutePath(arg ...string) string {
+	return m.Target().RoutePath(arg...)
+}
 func (m *Message) PrefixKey(arg ...string) string {
-	return kit.Keys(m.Cap(CTX_FOLLOW), m.CommandKey(), arg)
+	return kit.Keys(m.Prefix(m.CommandKey()), arg)
 }
 func (m *Message) Prefix(arg ...string) string {
-	return kit.Keys(m.Cap(CTX_FOLLOW), arg)
+	return m.Target().PrefixKey(arg...)
 }
 func (m *Message) ConfigSet(keys string, arg ...string) {
 	for i, k := range kit.Split(keys) {

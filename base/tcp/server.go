@@ -92,7 +92,7 @@ func init() {
 	}, Commands: map[string]*ice.Command{
 		SERVER: {Name: "server hash auto prunes", Help: "服务器", Action: ice.MergeAction(map[string]*ice.Action{
 			ice.CTX_EXIT: {Hand: func(m *ice.Message, arg ...string) {
-				m.Richs(SERVER, "", mdb.FOREACH, func(key string, value map[string]interface{}) {
+				m.Richs(SERVER, "", mdb.FOREACH, func(key string, value ice.Map) {
 					kit.Value(value, kit.Keym(STATUS), CLOSE)
 				})
 				m.Cmdy(SERVER, mdb.PRUNES)

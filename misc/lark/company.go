@@ -12,7 +12,7 @@ func _company_list(m *ice.Message, appid string) {
 
 	kit.Fetch(kit.Value(data, "data.authed_departments"), func(index int, ship_id string) {
 		_, data := _lark_get(m, appid, "/open-apis/contact/v1/department/detail/batch_get", "department_ids", ship_id)
-		kit.Fetch(kit.Value(data, "data.department_infos"), func(index int, value map[string]interface{}) {
+		kit.Fetch(kit.Value(data, "data.department_infos"), func(index int, value ice.Map) {
 			m.Push(SHIP_ID, ship_id)
 			m.Push(mdb.NAME, value[mdb.NAME])
 			m.Push(mdb.COUNT, value["member_count"])
@@ -25,7 +25,7 @@ func _company_members(m *ice.Message, appid string, ship_id string) {
 	_, data := _lark_get(m, appid, "/open-apis/contact/v1/department/user/list",
 		"department_id", ship_id, "page_size", "100", "fetch_child", ice.TRUE)
 
-	kit.Fetch(kit.Value(data, "data.user_list"), func(index int, value map[string]interface{}) {
+	kit.Fetch(kit.Value(data, "data.user_list"), func(index int, value ice.Map) {
 		msg := m.Cmd(EMPLOYEE, appid, value[OPEN_ID])
 		m.PushImages(aaa.AVATAR, msg.Append("avatar_72"))
 		m.Push(aaa.GENDER, kit.Select("女", "男", msg.Append(aaa.GENDER) == "1"))

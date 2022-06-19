@@ -58,7 +58,7 @@ func _serve_udp(m *ice.Message, host, port string) {
 	}
 }
 func _broad_search(m *ice.Message, kind, name, text string, arg ...string) {
-	m.Richs(BROAD, nil, mdb.FOREACH, func(key string, value map[string]interface{}) {
+	m.Richs(BROAD, nil, mdb.FOREACH, func(key string, value ice.Map) {
 		if value = kit.GetMeta(value); !strings.Contains(kit.Format(value[tcp.HOST]), name) {
 			return
 		}

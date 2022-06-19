@@ -38,7 +38,7 @@ func (b *Block) Init(m *ice.Message, arg ...string) wiki.Chart {
 	}
 	return b
 }
-func (b *Block) Data(m *ice.Message, meta interface{}) wiki.Chart {
+func (b *Block) Data(m *ice.Message, meta ice.Any) wiki.Chart {
 	b.Text = kit.Select(b.Text, kit.Value(meta, mdb.TEXT))
 	kit.Fetch(meta, func(key string, value string) {
 		switch key {

@@ -16,7 +16,7 @@ import (
 
 func _dream_list(m *ice.Message) *ice.Message {
 	return m.Cmdy(nfs.DIR, m.Config(nfs.PATH), "time,size,name").Table(func(index int, value map[string]string, head []string) {
-		if m.Richs(SPACE, nil, value[mdb.NAME], func(key string, val map[string]interface{}) {
+		if m.Richs(SPACE, nil, value[mdb.NAME], func(key string, val ice.Map) {
 			m.Push(mdb.TYPE, val[mdb.TYPE])
 			m.Push(cli.STATUS, cli.START)
 			m.PushButton("vimer", cli.OPEN, cli.STOP)

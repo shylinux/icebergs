@@ -73,8 +73,8 @@ func (i input) Save(m *ice.Message, arg ...string) {
 		n := 0
 		m.Option(ice.CACHE_LIMIT, -2)
 		for _, lib := range kit.Split(m.Option(mdb.ZONE)) {
-			m.Richs(m.PrefixKey(), "", lib, func(key string, value map[string]interface{}) {
-				m.Grows(m.PrefixKey(), kit.Keys(mdb.HASH, key), "", "", func(index int, value map[string]interface{}) {
+			m.Richs(m.PrefixKey(), "", lib, func(key string, value ice.Map) {
+				m.Grows(m.PrefixKey(), kit.Keys(mdb.HASH, key), "", "", func(index int, value ice.Map) {
 					if value[CODE] != "z" {
 						fmt.Fprintf(f, "%s %s %s\n", value[TEXT], value[CODE], value[WEIGHT])
 						n++

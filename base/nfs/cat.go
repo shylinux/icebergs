@@ -31,9 +31,9 @@ func NewReadCloser(r io.Reader) *ReadCloser {
 	return &ReadCloser{r: r}
 }
 
-var rewriteList = []interface{}{}
+var rewriteList = []ice.Any{}
 
-func AddRewrite(cb interface{}) { rewriteList = append(rewriteList, cb) }
+func AddRewrite(cb ice.Any) { rewriteList = append(rewriteList, cb) }
 
 func _cat_right(m *ice.Message, name string) bool {
 	return aaa.RoleRight(m, m.Option(ice.MSG_USERROLE), strings.Split(name, ice.PS)...)

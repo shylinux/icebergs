@@ -14,7 +14,7 @@ func _list_fields(m *ice.Message) []string {
 }
 func _list_inputs(m *ice.Message, prefix, chain string, field, value string) {
 	list := map[string]int{}
-	m.Grows(prefix, chain, "", "", func(index int, val map[string]interface{}) {
+	m.Grows(prefix, chain, "", "", func(index int, val ice.Map) {
 		if val = kit.GetMeta(val); kit.Format(val[COUNT]) != "" {
 			list[kit.Format(val[field])] = kit.Int(val[COUNT])
 		} else {
@@ -34,7 +34,7 @@ func _list_insert(m *ice.Message, prefix, chain string, arg ...string) {
 func _list_delete(m *ice.Message, prefix, chain, field, value string) {
 }
 func _list_modify(m *ice.Message, prefix, chain string, field, value string, arg ...string) {
-	m.Grows(prefix, chain, field, value, func(index int, val map[string]interface{}) {
+	m.Grows(prefix, chain, field, value, func(index int, val ice.Map) {
 		val = kit.GetMeta(val)
 		m.Log_MODIFY(KEY, path.Join(prefix, chain), field, value, arg)
 		for i := 0; i < len(arg); i += 2 {
@@ -50,9 +50,9 @@ func _list_select(m *ice.Message, prefix, chain, field, value string) {
 		field = ""
 	}
 	fields := _list_fields(m)
-	m.Grows(prefix, chain, kit.Select(m.Option(ice.CACHE_FIELD), field), kit.Select(m.Option(ice.CACHE_VALUE), value), func(index int, val map[string]interface{}) {
+	m.Grows(prefix, chain, kit.Select(m.Option(ice.CACHE_FIELD), field), kit.Select(m.Option(ice.CACHE_VALUE), value), func(index int, val ice.Map) {
 		switch val = kit.GetMeta(val); cb := m.OptionCB(SELECT).(type) {
-		case func(fields []string, value map[string]interface{}):
+		case func(fields []string, value ice.Map):
 			cb(fields, val)
 		default:
 			if m.OptionFields() == DETAIL {
@@ -73,7 +73,7 @@ func _list_export(m *ice.Message, prefix, chain, file string) {
 
 	count := 0
 	head := kit.Split(m.OptionFields())
-	m.Grows(prefix, chain, "", "", func(index int, val map[string]interface{}) {
+	m.Grows(prefix, chain, "", "", func(index int, val ice.Map) {
 		if val = kit.GetMeta(val); index == 0 {
 			if len(head) == 0 || head[0] == ice.CACHE_DETAIL { // 默认表头
 				for k := range val {

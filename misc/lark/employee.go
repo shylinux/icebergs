@@ -11,7 +11,7 @@ import (
 func _employee_info(m *ice.Message, appid string, arg ...string) {
 	for _, id := range arg {
 		_, data := _lark_get(m, appid, "/open-apis/contact/v1/user/batch_get", "open_ids", id)
-		kit.Fetch(kit.Value(data, "data.user_infos"), func(index int, value map[string]interface{}) {
+		kit.Fetch(kit.Value(data, "data.user_infos"), func(index int, value ice.Map) {
 			m.Push(mdb.DETAIL, value)
 		})
 	}

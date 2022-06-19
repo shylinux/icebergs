@@ -18,7 +18,7 @@ import (
 	kit "shylinux.com/x/toolkits"
 )
 
-func _share_link(m *ice.Message, p string, arg ...interface{}) string {
+func _share_link(m *ice.Message, p string, arg ...ice.Any) string {
 	p = kit.Select("", "/share/local/", !strings.HasPrefix(p, ice.PS)) + p
 	return tcp.ReplaceLocalhost(m, m.MergeURL2(p, arg...))
 }
@@ -129,7 +129,7 @@ func init() {
 	}, Commands: map[string]*ice.Command{
 		SHARE: {Name: "share hash auto prunes", Help: "共享链", Action: ice.MergeAction(map[string]*ice.Action{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
-				ice.AddRender(ice.RENDER_DOWNLOAD, func(msg *ice.Message, cmd string, args ...interface{}) string {
+				ice.AddRender(ice.RENDER_DOWNLOAD, func(msg *ice.Message, cmd string, args ...ice.Any) string {
 					list := []string{}
 					if msg.Option(ice.MSG_USERPOD) != "" {
 						list = append(list, ice.POD, msg.Option(ice.MSG_USERPOD))

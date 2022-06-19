@@ -20,14 +20,14 @@ func init() {
 				form[CHAT_ID], arg = arg[0], arg[1:]
 			}
 
-			elements := []interface{}{}
+			elements := []ice.Any{}
 			elements = append(elements, kit.Dict(
 				"tag", "div", "text", kit.Dict(
 					"tag", "plain_text", CONTENT, kit.Select(" ", arg[1]),
 				),
 			))
 
-			actions := []interface{}{}
+			actions := []ice.Any{}
 			for i := 2; i < len(arg); i++ {
 				button := kit.Dict(
 					"tag", "button", "type", "default", "text", kit.Dict(
@@ -47,7 +47,7 @@ func init() {
 				case "url":
 					button[arg[i+1]], i = arg[i+2], i+2
 				default:
-					button["value"], i = map[string]interface{}{
+					button["value"], i = ice.Map{
 						ice.MSG_RIVER: m.Option(ice.MSG_RIVER),
 						ice.MSG_STORM: m.Option(ice.MSG_STORM),
 						APP_ID:        m.Option(APP_ID),

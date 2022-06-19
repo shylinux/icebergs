@@ -74,7 +74,7 @@ func init() {
 	}, Commands: map[string]*ice.Command{
 		CHANNEL: {Name: "channel hash id auto", Help: "通道", Action: ice.MergeAction(map[string]*ice.Action{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
-				m.Richs(CHANNEL, "", mdb.FOREACH, func(key string, value map[string]interface{}) {
+				m.Richs(CHANNEL, "", mdb.FOREACH, func(key string, value ice.Map) {
 					kit.Value(value, kit.Keym(mdb.STATUS), tcp.CLOSE)
 				})
 			}},
@@ -89,7 +89,7 @@ func init() {
 			ctx.COMMAND: {Name: "command cmd=pwd", Help: "命令", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmdy(mdb.INSERT, CHANNEL, kit.Keys(mdb.HASH, m.Option(mdb.HASH)),
 					mdb.LIST, mdb.TYPE, CMD, mdb.TEXT, m.Option(CMD))
-				m.Richs(CHANNEL, "", m.Option(mdb.HASH), func(key string, value map[string]interface{}) {
+				m.Richs(CHANNEL, "", m.Option(mdb.HASH), func(key string, value ice.Map) {
 					if w, ok := kit.Value(value, kit.Keym(INPUT)).(io.Writer); ok {
 						w.Write([]byte(m.Option(CMD) + ice.NL))
 					}

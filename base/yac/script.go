@@ -64,7 +64,7 @@ func (s *stack) let(key, value string) string {
 	}
 	return ""
 }
-func (s *stack) echo(arg ...interface{}) {
+func (s *stack) echo(arg ...ice.Any) {
 	s.res = append(s.res, kit.Simple(arg...)...)
 }
 

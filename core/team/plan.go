@@ -42,7 +42,7 @@ func _plan_scope(m *ice.Message, tz int, arg ...string) (time.Time, time.Time) {
 func _plan_list(m *ice.Message, begin_time, end_time time.Time) *ice.Message {
 	m.Option(ice.CACHE_LIMIT, "100")
 	m.Fields(0, "begin_time,close_time,zone,id,level,status,score,type,name,text,pod,extra")
-	m.OptionCB(mdb.SELECT, func(key string, fields []string, value, val map[string]interface{}) {
+	m.OptionCB(mdb.SELECT, func(key string, fields []string, value, val ice.Map) {
 		begin, _ := time.ParseInLocation(ice.MOD_TIME, kit.Format(value[BEGIN_TIME]), time.Local)
 		if begin_time.After(begin) || begin.After(end_time) {
 			return

@@ -30,7 +30,7 @@ func _config_save(m *ice.Message, name string, arg ...string) {
 		defer f.Close()
 
 		msg := m.Spawn(m.Source())
-		data := map[string]interface{}{}
+		data := ice.Map{}
 		for _, k := range arg {
 			if v := msg.Confv(k); v != "" {
 				data[k] = v
@@ -52,7 +52,7 @@ func _config_load(m *ice.Message, name string, arg ...string) {
 		defer f.Close()
 
 		msg := m.Spawn(m.Source())
-		data := map[string]interface{}{}
+		data := ice.Map{}
 		json.NewDecoder(f).Decode(&data)
 
 		// 加载配置
@@ -116,7 +116,7 @@ func init() {
 				_config_grow(m, arg[0], arg[1], arg[2:]...)
 			}},
 			"list": {Name: "list", Help: "列表", Hand: func(m *ice.Message, arg ...string) {
-				list := []interface{}{}
+				list := []ice.Any{}
 				for _, v := range arg[2:] {
 					list = append(list, v)
 				}

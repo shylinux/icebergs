@@ -44,8 +44,8 @@ func init() {
 	})
 }
 
-var _template_list = [][]interface{}{
-	[]interface{}{"", "txt", "网站索引", `
+var _template_list = [][]ice.Any{
+	[]ice.Any{"", "txt", "网站索引", `
 hi
 	hi
 		cli.qrcode
@@ -53,12 +53,12 @@ hi
 		cli.runtime
 
 `},
-	[]interface{}{"", "js", "前端模块", `Volcanos("onimport", {help: "导入数据", list: [], _init: function(can, msg, cb, target) {
+	[]ice.Any{"", "js", "前端模块", `Volcanos("onimport", {help: "导入数据", list: [], _init: function(can, msg, cb, target) {
 	can.onmotion.clear(can)
 	can.onappend.table(can, msg)
 	can.onappend.board(can, msg)
 }})`},
-	[]interface{}{"", "go", "后端模块", `package {{.Option "zone"}}
+	[]ice.Any{"", "go", "后端模块", `package {{.Option "zone"}}
 
 import (
 	"shylinux.com/x/ice"

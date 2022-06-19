@@ -16,7 +16,7 @@ import (
 
 func _runtime_init(m *ice.Message) {
 	// 版本信息 make
-	kit.Fetch(kit.UnMarshal(kit.Format(ice.Info.Make)), func(key string, value interface{}) {
+	kit.Fetch(kit.UnMarshal(kit.Format(ice.Info.Make)), func(key string, value ice.Any) {
 		m.Conf(RUNTIME, kit.Keys(MAKE, strings.ToLower(key)), value)
 	})
 

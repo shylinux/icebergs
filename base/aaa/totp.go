@@ -59,7 +59,7 @@ func init() {
 		)},
 	}, Commands: map[string]*ice.Command{
 		TOTP: {Name: "totp name auto create", Help: "令牌", Action: ice.MergeAction(map[string]*ice.Action{
-			mdb.CREATE: {Name: "create name secret period=30 number=6", Help: "添加", Hand: func(m *ice.Message, arg ...string) {
+			mdb.CREATE: {Name: "create name=hi secret period=30 number=6", Help: "添加", Hand: func(m *ice.Message, arg ...string) {
 				if m.Option(SECRET) == "" { // 创建密钥
 					m.Option(SECRET, _totp_gen(kit.Int64(m.Option(PERIOD))))
 				}

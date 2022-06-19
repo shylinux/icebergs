@@ -21,7 +21,7 @@ func _run_action(m *ice.Message, cmd *ice.Command, code string, arg ...string) {
 	kit.Fetch(cmd.Meta["_trans"], func(k string, v string) {
 		list = append(list, k)
 		args = append(args, kit.Format(`			%s)`, k))
-		kit.Fetch(cmd.Meta[k], func(index int, value map[string]interface{}) {
+		kit.Fetch(cmd.Meta[k], func(index int, value ice.Map) {
 			args = append(args, kit.Format(`				read -p "input %s: " v; url="$url/%s/$v" `, value[mdb.NAME], value[mdb.NAME]))
 		})
 		args = append(args, kit.Format(`				;;`))

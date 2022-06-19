@@ -11,18 +11,17 @@ import (
 
 func _trash_create(m *ice.Message, name string) {
 	if s, e := os.Stat(name); m.Assert(e) {
-		if s.IsDir() {
-			name = m.Cmdx(TAR, mdb.IMPORT, name)
+		p := path.Join(ice.VAR_TRASH, path.Base(name))
+		if !s.IsDir() {
+			if f, e := os.Open(name); m.Assert(e) {
+				defer f.Close()
+				p = path.Join(ice.VAR_TRASH, kit.HashsPath(f))
+			}
 		}
 
-		if f, e := os.Open(name); m.Assert(e) {
-			defer f.Close()
-
-			p := path.Join(m.Config(PATH), kit.HashsPath(f))
-			MkdirAll(m, path.Dir(p))
-			os.Remove(p)
-			os.Rename(name, p)
-			m.Cmdy(mdb.INSERT, TRASH, "", mdb.HASH, FILE, p, FROM, name)
+		MkdirAll(m, path.Dir(p))
+		if os.RemoveAll(p); !m.Warn(os.Rename(name, p)) {
+			m.Cmd(mdb.INSERT, TRASH, "", mdb.HASH, FILE, p, FROM, name)
 		}
 	}
 }

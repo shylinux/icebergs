@@ -9,7 +9,7 @@ import (
 
 func _group_list(m *ice.Message, appid string) {
 	_, data := _lark_get(m, appid, "/open-apis/chat/v4/list")
-	kit.Fetch(kit.Value(data, "data.groups"), func(index int, value map[string]interface{}) {
+	kit.Fetch(kit.Value(data, "data.groups"), func(index int, value ice.Map) {
 		m.Push(CHAT_ID, value[CHAT_ID])
 		m.PushImages(aaa.AVATAR, kit.Format(value[aaa.AVATAR]), "72")
 		m.Push(mdb.NAME, value[mdb.NAME])
@@ -20,7 +20,7 @@ func _group_list(m *ice.Message, appid string) {
 }
 func _group_members(m *ice.Message, appid string, chat_id string) {
 	_, data := _lark_get(m, appid, "/open-apis/chat/v4/info", "chat_id", chat_id)
-	kit.Fetch(kit.Value(data, "data.members"), func(index int, value map[string]interface{}) {
+	kit.Fetch(kit.Value(data, "data.members"), func(index int, value ice.Map) {
 		msg := m.Cmd(EMPLOYEE, appid, value[OPEN_ID])
 		m.PushImages(aaa.AVATAR, msg.Append("avatar_72"))
 		m.Push(aaa.GENDER, kit.Select("女", "男", msg.Append(aaa.GENDER) == "1"))

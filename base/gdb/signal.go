@@ -39,8 +39,8 @@ func SignalNotify(m *ice.Message, sig int, cb func()) {
 }
 
 const (
-	LISTEN = "listen"
-	ACTION = "action"
+	LISTEN = ice.LISTEN
+	HAPPEN = ice.HAPPEN
 )
 const SIGNAL = "signal"
 
@@ -64,12 +64,12 @@ func init() {
 			LISTEN: {Name: "listen signal name cmd", Help: "监听", Hand: func(m *ice.Message, arg ...string) {
 				_signal_listen(m, kit.Int(m.Option(SIGNAL)), arg...)
 			}},
-			ACTION: {Name: "action signal", Help: "触发", Hand: func(m *ice.Message, arg ...string) {
+			HAPPEN: {Name: "happen signal", Help: "触发", Hand: func(m *ice.Message, arg ...string) {
 				_signal_action(m, m.Option(SIGNAL))
 			}},
 		}, mdb.HashAction()), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			mdb.HashSelect(m, arg...).Sort(SIGNAL)
-			m.PushAction(ACTION, mdb.REMOVE)
+			m.PushAction(HAPPEN, mdb.REMOVE)
 		}},
 	}})
 }

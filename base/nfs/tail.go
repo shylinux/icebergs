@@ -43,7 +43,7 @@ func init() {
 	}, Commands: map[string]*ice.Command{
 		TAIL: {Name: "tail name id auto page filter:text create", Help: "日志流", Action: ice.MergeAction(map[string]*ice.Action{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
-				m.Richs(TAIL, "", mdb.FOREACH, func(key string, value map[string]interface{}) {
+				m.Richs(TAIL, "", mdb.FOREACH, func(key string, value ice.Map) {
 					value, _ = kit.GetMeta(value), m.Option(mdb.HASH, key)
 					m.Cmd(TAIL, mdb.CREATE, kit.SimpleKV("file,name", value))
 				})

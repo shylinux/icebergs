@@ -11,7 +11,7 @@ import (
 	kit "shylinux.com/x/toolkits"
 )
 
-func Parse(m *ice.Message, meta string, key string, arg ...string) (data interface{}) {
+func Parse(m *ice.Message, meta string, key string, arg ...string) (data ice.Any) {
 	list := []string{}
 	for _, line := range kit.Split(strings.Join(arg, ice.SP), ice.NL) {
 		ls := kit.Split(line)
@@ -92,14 +92,14 @@ func _field_show(m *ice.Message, name, text string, arg ...string) {
 			args := kit.Simple(m.Optionv(arg[i]))
 
 			count := 0
-			kit.Fetch(meta[INPUTS], func(index int, value map[string]interface{}) {
+			kit.Fetch(meta[INPUTS], func(index int, value ice.Map) {
 				if value[mdb.TYPE] != "button" {
 					count++
 				}
 			})
 
 			if len(args) > count {
-				list := meta[INPUTS].([]interface{})
+				list := meta[INPUTS].([]ice.Any)
 				for i := count; i < len(args); i++ {
 					list = append(list, kit.Dict(mdb.TYPE, "text", mdb.NAME, ARGS, mdb.VALUE, args[i]))
 				}

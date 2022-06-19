@@ -40,11 +40,11 @@ var Info = struct {
 	Route map[string]string // 路由命令
 	File  map[string]string // 文件命令
 	Pack  map[string][]byte // 打包文件
-	Dump  func(w io.Writer, name string, cb func(string)) bool
-	Log   func(m *Message, p, l, s string)
+	names Map
 
 	render map[string]func(*Message, string, ...Any) string
-	names  Map
+	Dump   func(w io.Writer, name string, cb func(string)) bool
+	Log    func(m *Message, p, l, s string)
 }{
 	Help: `
 ^_^      欢迎使用冰山框架       ^_^
@@ -57,11 +57,11 @@ source: https://shylinux.com/x/icebergs
 	Route: map[string]string{},
 	File:  map[string]string{},
 	Pack:  map[string][]byte{},
-	Dump:  func(w io.Writer, name string, cb func(string)) bool { return false },
-	Log:   func(m *Message, p, l, s string) {},
+	names: Map{},
 
 	render: map[string]func(*Message, string, ...Any) string{},
-	names:  Map{},
+	Dump:   func(w io.Writer, name string, cb func(string)) bool { return false },
+	Log:    func(m *Message, p, l, s string) {},
 }
 
 func FileURI(dir string) string {

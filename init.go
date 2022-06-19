@@ -53,8 +53,8 @@ func (f *Frame) Close(m *Message, arg ...string) bool {
 	return true
 }
 
-var Index = &Context{Name: "ice", Help: "冰山模块", Configs: map[string]*Config{
-	HELP: {Value: kit.Data("index", Info.Help)},
+var Index = &Context{Name: ICE, Help: "冰山模块", Configs: map[string]*Config{
+	HELP: {Value: kit.Data(INDEX, Info.Help)},
 }, Commands: map[string]*Command{
 	CTX_INIT: {Hand: func(m *Message, c *Context, cmd string, arg ...string) {
 		defer m.Cost(CTX_INIT)
@@ -66,16 +66,16 @@ var Index = &Context{Name: "ice", Help: "冰山模块", Configs: map[string]*Con
 	}},
 	INIT: {Name: "init", Help: "启动", Hand: func(m *Message, c *Context, cmd string, arg ...string) {
 		m.root.Cmd(CTX_INIT)
-		m.Cmd("source", ETC_INIT_SHY)
+		m.Cmd(SOURCE, ETC_INIT_SHY)
 	}},
 	HELP: {Name: "help", Help: "帮助", Hand: func(m *Message, c *Context, cmd string, arg ...string) {
-		m.Echo(m.Config("index"))
+		m.Echo(m.Config(INDEX))
 	}},
 	EXIT: {Name: "exit", Help: "结束", Hand: func(m *Message, c *Context, cmd string, arg ...string) {
 		m.root.Option(EXIT, kit.Select("0", arg, 0))
 		defer c.Close(m.root.Spawn(), arg...)
 
-		m.Cmd("source", ETC_EXIT_SHY)
+		m.Cmd(SOURCE, ETC_EXIT_SHY)
 		m.root.Cmd(CTX_EXIT)
 	}},
 	CTX_EXIT: {Hand: func(m *Message, c *Context, cmd string, arg ...string) {
@@ -91,11 +91,8 @@ var Index = &Context{Name: "ice", Help: "冰山模块", Configs: map[string]*Con
 		})
 	}},
 }, server: &Frame{}, wg: &sync.WaitGroup{}}
-var Pulse = &Message{
-	time: time.Now(), code: 0,
-	meta: map[string][]string{},
-	data: Map{},
-
+var Pulse = &Message{time: time.Now(), code: 0,
+	meta: map[string][]string{}, data: Map{},
 	source: Index, target: Index, Hand: true,
 }
 

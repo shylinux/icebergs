@@ -14,7 +14,7 @@ import (
 )
 
 type Any = interface{}
-type Map = map[string]interface{}
+type Map = map[string]Any
 type ActionHandler func(m *Message, arg ...string)
 type CommandHandler func(m *Message, c *Context, key string, arg ...string)
 

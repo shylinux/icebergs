@@ -3,6 +3,7 @@ package ice
 import (
 	"bytes"
 	"encoding/csv"
+	"path"
 	"reflect"
 	"strings"
 
@@ -40,8 +41,8 @@ func (m *Message) Split(str string, arg ...string) *Message { // field sp nl
 		if strings.TrimSpace(l) == "" {
 			continue
 		}
-		if i == 0 && (field == "" || field == "index") { // 表头行
-			if fields = kit.Split(l, sp, sp); field == "index" {
+		if i == 0 && (field == "" || field == INDEX) { // 表头行
+			if fields = kit.Split(l, sp, sp); field == INDEX {
 				for _, v := range fields {
 					indexs = append(indexs, strings.Index(l, v))
 				}
@@ -72,7 +73,7 @@ func (m *Message) Split(str string, arg ...string) *Message { // field sp nl
 	return m
 }
 func (m *Message) SplitIndex(str string, arg ...string) *Message {
-	return m.Split(str, kit.Simple("index", arg)...)
+	return m.Split(str, kit.Simple(INDEX, arg)...)
 }
 func (m *Message) PushDetail(value Any, arg ...string) *Message {
 	return m.Push(CACHE_DETAIL, value, kit.Split(kit.Join(arg)))
@@ -220,6 +221,12 @@ func (m *Message) cmd(arg ...Any) *Message {
 
 	m.Warn(!ok, ErrNotFound, kit.Format(list))
 	return m
+}
+func (c *Context) PrefixKey(arg ...string) string {
+	return kit.Keys(c.Cap(CTX_FOLLOW), arg)
+}
+func (c *Context) RoutePath(arg ...string) string {
+	return path.Join(strings.TrimPrefix(strings.ReplaceAll(c.Cap(CTX_FOLLOW), PT, PS), "web"), path.Join(arg...))
 }
 func (c *Context) cmd(m *Message, cmd *Command, key string, arg ...string) *Message {
 	if m._key, m._cmd = key, cmd; cmd == nil {

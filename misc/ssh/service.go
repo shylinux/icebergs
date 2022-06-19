@@ -106,14 +106,14 @@ func init() {
 	}, Commands: map[string]*ice.Command{
 		SERVICE: {Name: "service port id auto listen prunes", Help: "服务", Action: ice.MergeAction(map[string]*ice.Action{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
-				m.Richs(SERVICE, "", mdb.FOREACH, func(key string, value map[string]interface{}) {
+				m.Richs(SERVICE, "", mdb.FOREACH, func(key string, value ice.Map) {
 					if value = kit.GetMeta(value); kit.Value(value, mdb.STATUS) == tcp.OPEN {
 						m.Cmd(SERVICE, tcp.LISTEN, tcp.PORT, value[tcp.PORT], value)
 					}
 				})
 			}},
 			tcp.LISTEN: {Name: "listen port=9030 private=.ssh/id_rsa authkey=.ssh/authorized_keys", Help: "添加", Hand: func(m *ice.Message, arg ...string) {
-				if m.Richs(SERVICE, "", m.Option(tcp.PORT), func(key string, value map[string]interface{}) {
+				if m.Richs(SERVICE, "", m.Option(tcp.PORT), func(key string, value ice.Map) {
 					kit.Value(value, kit.Keym(mdb.STATUS), tcp.OPEN)
 				}) == nil {
 					m.Cmd(mdb.INSERT, SERVICE, "", mdb.HASH, tcp.PORT, m.Option(tcp.PORT),

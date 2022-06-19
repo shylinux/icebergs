@@ -9,6 +9,14 @@ import (
 	kit "shylinux.com/x/toolkits"
 )
 
+func _forever_kill(m *ice.Message, s string) {
+	if p := m.Cmdx(nfs.CAT, m.Conf("gdb.signal", kit.Keym(nfs.PATH))); p != "" {
+		if s != "" {
+			m.Cmd(SYSTEM, "kill", "-s", s, p)
+		}
+		m.Echo(p)
+	}
+}
 func BinPath(arg ...string) string {
 	return kit.Join(kit.Simple(arg, kit.Path(ice.BIN), kit.Path(ice.USR_LOCAL_BIN), kit.Path(ice.USR_LOCAL_GO_BIN), kit.Env(PATH)), ice.DF)
 }
@@ -19,11 +27,9 @@ func init() {
 	const SERVE = "serve"
 	const RESTART = "restart"
 	Index.Merge(&ice.Context{Commands: map[string]*ice.Command{
-		FOREVER: {Name: "forever", Help: "启动", Action: map[string]*ice.Action{
+		FOREVER: {Name: "forever auto", Help: "启动", Action: map[string]*ice.Action{
 			RESTART: {Name: "restart", Help: "重启", Hand: func(m *ice.Message, arg ...string) {
-				if p := m.Cmdx(nfs.CAT, m.Conf("gdb.signal", kit.Keym(nfs.PATH))); p != "" {
-					m.Cmd(SYSTEM, "kill", "-s", "INT", p)
-				}
+				_forever_kill(m, "INT")
 			}},
 			SERVE: {Name: "serve", Help: "服务", Hand: func(m *ice.Message, arg ...string) {
 				env := []string{PATH, BinPath(), HOME, kit.Select(kit.Path(""), os.Getenv(HOME))}
@@ -46,12 +52,14 @@ func init() {
 					SERVE, START, ice.DEV, "", aaa.USERNAME, aaa.ROOT, aaa.PASSWORD, aaa.ROOT, arg)
 			}},
 			STOP: {Name: "stop", Help: "停止", Hand: func(m *ice.Message, arg ...string) {
-				if p := m.Cmdx(nfs.CAT, m.Conf("gdb.signal", kit.Keym(nfs.PATH))); p != "" {
-					m.Cmd(SYSTEM, "kill", "-s", "QUIT", p)
-					m.Echo(p)
-				}
+				_forever_kill(m, "QUIT")
 			}},
 		}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+			if len(arg) == 0 {
+				_forever_kill(m, "")
+				return
+			}
+
 			for {
 				println(kit.Format("%s run %s", kit.Now(), kit.Join(arg, ice.SP)))
 				if m.Sleep("1s"); IsSuccess(m.Cmd(SYSTEM, arg)) {

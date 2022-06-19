@@ -18,20 +18,14 @@ const (
 	COOKIE = "cookie"
 )
 
-func Render(msg *ice.Message, cmd string, args ...interface{}) {
+func Render(msg *ice.Message, cmd string, args ...ice.Any) {
 	if cmd != "" {
 		defer func() { msg.Log_EXPORT(cmd, args) }()
 	}
 
 	switch arg := kit.Simple(args...); cmd {
-	case STATUS: // [code [text]]
-		RenderStatus(msg, kit.Int(kit.Select("200", arg, 0)), kit.Select("", arg, 1))
-
 	case COOKIE: // value [name [path [expire]]]
 		RenderCookie(msg, arg[0], arg[1:]...)
-
-	case ice.RENDER_REDIRECT: // url [arg...]
-		RenderRedirect(msg, arg...)
 
 	case ice.RENDER_DOWNLOAD: // file [type [name]]
 		if strings.HasPrefix(arg[0], "http") {
@@ -43,6 +37,9 @@ func Render(msg *ice.Message, cmd string, args ...interface{}) {
 			http.ServeFile(msg.W, msg.R, kit.Path(arg[0]))
 		}
 
+	case ice.RENDER_REDIRECT: // url [arg...]
+		RenderRedirect(msg, arg...)
+
 	case ice.RENDER_RESULT:
 		if len(arg) > 0 { // [str [arg...]]
 			msg.W.Write([]byte(kit.Format(arg[0], args[1:]...)))
@@ -50,6 +47,13 @@ func Render(msg *ice.Message, cmd string, args ...interface{}) {
 			args = append(args, "length:", len(msg.Result()))
 			msg.W.Write([]byte(msg.Result()))
 		}
+
+	case STATUS, ice.RENDER_STATUS: // [code [text]]
+		RenderStatus(msg, kit.Int(kit.Select("200", arg, 0)), kit.Select("", arg, 1))
+
+	case ice.RENDER_JSON:
+		msg.W.Header().Set("Content-Type", "application/json")
+		msg.W.Write([]byte(arg[0]))
 
 	case ice.RENDER_VOID:
 		// no output
@@ -117,13 +121,13 @@ func RenderType(w http.ResponseWriter, name, mime string) {
 	default:
 	}
 }
-func RenderResult(msg *ice.Message, arg ...interface{}) {
+func RenderResult(msg *ice.Message, arg ...ice.Any) {
 	Render(msg, ice.RENDER_RESULT, arg...)
 }
-func RenderDownload(msg *ice.Message, arg ...interface{}) {
+func RenderDownload(msg *ice.Message, arg ...ice.Any) {
 	Render(msg, ice.RENDER_DOWNLOAD, arg...)
 }
 
-func Format(tag string, arg ...interface{}) string {
+func Format(tag string, arg ...ice.Any) string {
 	return kit.Format("<%s>%s</%s>", tag, strings.Join(kit.Simple(arg), ""), tag)
 }

@@ -12,13 +12,13 @@ import (
 
 type Sequence struct {
 	head []string
-	list [][]map[string]interface{}
+	list [][]ice.Map
 	pos  []int
 	max  int
 	Block
 }
 
-func (s *Sequence) push(m *ice.Message, list string, arg ...interface{}) map[string]interface{} {
+func (s *Sequence) push(m *ice.Message, list string, arg ...ice.Any) ice.Map {
 	node, node_list := kit.Dict(arg...), kit.Int(list)
 	s.list[node_list] = append(s.list[node_list], node)
 	// _max := kit.Max(len(s.list[node_list])-1, s.pos[node_list])
@@ -31,17 +31,17 @@ func (s *Sequence) Init(m *ice.Message, arg ...string) wiki.Chart {
 
 	// 解析数据
 	m.Option(lex.SPLIT_BLOCK, ice.SP)
-	m.Cmd(lex.SPLIT, "", kit.Dict(nfs.CAT_CONTENT, arg[0]), func(ls []string, data map[string]interface{}) []string {
+	m.Cmd(lex.SPLIT, "", kit.Dict(nfs.CAT_CONTENT, arg[0]), func(ls []string, data ice.Map) []string {
 		if len(s.head) == 0 { // 添加标题
 			s.head, s.pos = ls, make([]int, len(ls))
 			for i := 0; i < len(ls); i++ {
-				s.list = append(s.list, []map[string]interface{}{})
+				s.list = append(s.list, []ice.Map{})
 			}
 			return ls
 		}
 
 		from_node := s.push(m, ls[0])
-		list := map[string]map[string]interface{}{ls[0]: from_node}
+		list := map[string]ice.Map{ls[0]: from_node}
 		for step, i := 0, 1; i < len(ls)-1; i += 2 {
 			to_node := list[ls[i+1]]
 			if to_node == nil {

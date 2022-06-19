@@ -33,7 +33,7 @@ func (f *Frame) Start(m *ice.Message, arg ...string) bool {
 		// 	// m.Cmd(TIMER, ACTION)
 
 		case s := <-f.s:
-			m.Cmd(SIGNAL, ACTION, ACTION, SIGNAL, s)
+			m.Cmd(SIGNAL, HAPPEN, SIGNAL, s)
 		}
 	}
 	return true

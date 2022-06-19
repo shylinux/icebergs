@@ -83,7 +83,7 @@ func (m *Message) Warn(err Any, arg ...Any) bool {
 		if err == io.EOF {
 			return false
 		}
-		arg = append(arg, "err", err)
+		arg = append(arg, ERR, err)
 	case bool:
 		if !err {
 			return false

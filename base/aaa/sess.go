@@ -14,11 +14,11 @@ func _sess_check(m *ice.Message, sessid string) bool {
 		return false
 	}
 
-	m.Richs(SESS, nil, sessid, func(value map[string]interface{}) {
+	m.Richs(SESS, nil, sessid, func(value ice.Map) {
 		if value = kit.GetMeta(value); m.Warn(kit.Time(kit.Format(value[mdb.TIME])) < kit.Time(m.Time()), ice.ErrExpire) {
 			return // 会话超时
 		}
-		if m.Richs(USER, nil, value[USERNAME], func(value map[string]interface{}) {
+		if m.Richs(USER, nil, value[USERNAME], func(value ice.Map) {
 			m.Log_AUTH(
 				USERROLE, m.Option(ice.MSG_USERROLE, value[USERROLE]),
 				USERNAME, m.Option(ice.MSG_USERNAME, value[USERNAME]),

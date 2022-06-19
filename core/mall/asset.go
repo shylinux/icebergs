@@ -27,7 +27,7 @@ func _sub_amount(m *ice.Message, arg []string) {
 
 func _asset_check(m *ice.Message, account string) {
 	amount := 0
-	m.OptionCB(mdb.SELECT, func(key string, value map[string]interface{}) {
+	m.OptionCB(mdb.SELECT, func(key string, value ice.Map) {
 		amount += kit.Int(kit.Value(value, AMOUNT))
 	})
 	m.Cmd(mdb.SELECT, m.PrefixKey(), "", mdb.ZONE, account, ice.OptionFields(m.Config(mdb.FIELD)))

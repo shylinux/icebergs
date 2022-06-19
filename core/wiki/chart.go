@@ -11,17 +11,17 @@ import (
 
 type Item struct {
 	list []string
-	args []interface{}
+	args []ice.Any
 }
 
-func NewItem(list []string, args ...interface{}) *Item {
+func NewItem(list []string, args ...ice.Any) *Item {
 	return &Item{list, args}
 }
-func (item *Item) Echo(str string, arg ...interface{}) *Item {
+func (item *Item) Echo(str string, arg ...ice.Any) *Item {
 	item.list = append(item.list, kit.Format(str, arg...))
 	return item
 }
-func (item *Item) Push(str string, arg interface{}) *Item {
+func (item *Item) Push(str string, arg ice.Any) *Item {
 	switch arg := arg.(type) {
 	case string:
 		if arg == "" {
@@ -57,7 +57,7 @@ func AddGroupOption(m *ice.Message, group string, arg ...string) {
 		m.Option(kit.Keys(group, arg[i]), arg[i+1])
 	}
 }
-func (g *Group) Option(group string, key string, arg ...interface{}) string {
+func (g *Group) Option(group string, key string, arg ...ice.Any) string {
 	return g.Get(group).Option(kit.Keys(group, key), arg...)
 }
 func (g *Group) Get(group string) *ice.Message { return g.list[group] }
@@ -72,7 +72,7 @@ func (g *Group) Join(arg ...string) string {
 	}
 	return kit.Join(args, ice.SP)
 }
-func (g *Group) Echo(group string, str string, arg ...interface{}) *ice.Message {
+func (g *Group) Echo(group string, str string, arg ...ice.Any) *ice.Message {
 	return g.Get(group).Echo(str, arg...)
 }
 func (g *Group) EchoRect(group string, height, width, x, y int, arg ...string) *ice.Message { // rx ry
@@ -118,7 +118,7 @@ func (g *Group) Dump(m *ice.Message, group string, arg ...string) *Group {
 
 type Chart interface {
 	Init(*ice.Message, ...string) Chart
-	Data(*ice.Message, interface{}) Chart
+	Data(*ice.Message, ice.Any) Chart
 	Draw(*ice.Message, int, int) Chart
 
 	GetHeight(...string) int

@@ -13,7 +13,7 @@ func _timer_action(m *ice.Message, arg ...string) {
 	now := time.Now().UnixNano()
 	m.OptionFields(m.Config(mdb.FIELD))
 
-	m.Richs(TIMER, "", mdb.FOREACH, func(key string, value map[string]interface{}) {
+	m.Richs(TIMER, "", mdb.FOREACH, func(key string, value ice.Map) {
 		if value = kit.GetMeta(value); value[cli.STATUS] == cli.STOP {
 			return
 		}
@@ -54,7 +54,7 @@ func init() {
 				m.OptionFields(m.Config(mdb.FIELD))
 				m.Cmdy(mdb.PRUNES, TIMER, "", mdb.HASH, ORDER, 0)
 			}},
-			ACTION: {Name: "action", Help: "执行", Hand: func(m *ice.Message, arg ...string) {
+			HAPPEN: {Name: "happen", Help: "执行", Hand: func(m *ice.Message, arg ...string) {
 				_timer_action(m, arg...)
 			}},
 		}, mdb.ZoneAction()), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {

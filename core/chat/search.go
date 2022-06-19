@@ -15,7 +15,7 @@ func init() {
 	}, Commands: map[string]*ice.Command{
 		"/search": {Name: "/search", Help: "搜索引擎", Action: ice.MergeAction(map[string]*ice.Action{
 			mdb.SEARCH: {Name: "search type name text", Help: "搜索", Hand: func(m *ice.Message, arg ...string) {
-				m.Richs("/search", "", mdb.FOREACH, func(key string, value map[string]interface{}) {
+				m.Richs("/search", "", mdb.FOREACH, func(key string, value ice.Map) {
 					if value = kit.GetMeta(value); arg[1] != "" && !kit.Contains(value[mdb.NAME], arg[1]) {
 						return
 					}

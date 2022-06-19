@@ -96,7 +96,7 @@ func _cache_download(m *ice.Message, r *http.Response) (file, size string) {
 				case func(int, int):
 					cb(size, total)
 				case []string:
-					m.Richs(cb[0], cb[1], cb[2], func(key string, value map[string]interface{}) {
+					m.Richs(cb[0], cb[1], cb[2], func(key string, value ice.Map) {
 						value = kit.GetMeta(value)
 						value[mdb.COUNT], value[mdb.TOTAL], value[mdb.VALUE] = size, total, kit.Format(s)
 					})
@@ -143,7 +143,7 @@ func init() {
 		)},
 	}, Commands: map[string]*ice.Command{
 		"/cache/": {Name: "/cache/", Help: "缓存池", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			m.Richs(CACHE, nil, arg[0], func(key string, value map[string]interface{}) {
+			m.Richs(CACHE, nil, arg[0], func(key string, value ice.Map) {
 				if kit.Format(value[nfs.FILE]) == "" {
 					m.RenderResult(value[mdb.TEXT])
 				} else {

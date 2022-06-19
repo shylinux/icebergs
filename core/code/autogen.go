@@ -115,7 +115,7 @@ go 1.11
 	return
 }
 
-func _autogen_git(m *ice.Message, arg ...string) map[string]interface{} {
+func _autogen_git(m *ice.Message, arg ...string) ice.Map {
 	return kit.Dict("Path", kit.Path(""), "Time", m.Time(), arg,
 		"Hash", strings.TrimSpace(m.Cmdx(cli.SYSTEM, "git", "log", "-n1", `--pretty=%H`)),
 		"Remote", strings.TrimSpace(m.Cmdx(cli.SYSTEM, "git", "config", "remote.origin.url")),
@@ -126,7 +126,7 @@ func _autogen_git(m *ice.Message, arg ...string) map[string]interface{} {
 }
 func _autogen_gits(m *ice.Message, arg ...string) string {
 	res := []string{}
-	kit.Fetch(_autogen_git(m, arg...), func(k string, v interface{}) {
+	kit.Fetch(_autogen_git(m, arg...), func(k string, v ice.Any) {
 		res = append(res, kit.Format(`		%s: "%s",`, k, v))
 	})
 	return kit.Join(res, ice.NL)

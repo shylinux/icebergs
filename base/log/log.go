@@ -126,12 +126,12 @@ var Index = &ice.Context{Name: "log", Help: "日志模块", Configs: map[string]
 		if log.LogDisable {
 			return // 禁用日志
 		}
-		m.Confm(VIEW, nil, func(key string, value map[string]interface{}) {
+		m.Confm(VIEW, nil, func(key string, value ice.Map) {
 			kit.Fetch(value[mdb.LIST], func(index int, k string) {
 				m.Conf(SHOW, kit.Keys(k, VIEW), key)
 			})
 		})
-		m.Confm(FILE, nil, func(key string, value map[string]interface{}) {
+		m.Confm(FILE, nil, func(key string, value ice.Map) {
 			kit.Fetch(value[mdb.LIST], func(index int, k string) {
 				m.Conf(SHOW, kit.Keys(k, FILE), key)
 			})

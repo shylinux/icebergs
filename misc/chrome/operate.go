@@ -13,7 +13,7 @@ type operate struct {
 	list   string `name:"list wid tid url auto" help:"操作"`
 }
 
-func (o operate) send(m *ice.Message, arg ...interface{}) *ice.Message {
+func (o operate) send(m *ice.Message, arg ...ice.Any) *ice.Message {
 	return m.Cmdy(web.SPACE, "chrome", "chrome", arg)
 }
 

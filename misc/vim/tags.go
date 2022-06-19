@@ -50,7 +50,7 @@ func init() {
 		}},
 		TAGS: {Name: "tags zone id auto", Help: "索引", Action: ice.MergeAction(map[string]*ice.Action{
 			"listTags": {Name: "listTags", Help: "索引", Hand: func(m *ice.Message, arg ...string) {
-				kit.Fetch(kit.UnMarshal(m.Option(mdb.TEXT)), func(index int, value map[string]interface{}) {
+				kit.Fetch(kit.UnMarshal(m.Option(mdb.TEXT)), func(index int, value ice.Map) {
 					m.Cmd(TAGS, mdb.INSERT, mdb.ZONE, value[mdb.ZONE], kit.Simple(value))
 				})
 				m.ProcessRefresh300ms()

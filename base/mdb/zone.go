@@ -21,7 +21,7 @@ func _zone_select(m *ice.Message, prefix, chain, zone string, id string) {
 
 	fields := _zone_fields(m)
 	cb := m.OptionCB(SELECT)
-	m.Richs(prefix, chain, kit.Select(FOREACH, zone), func(key string, val map[string]interface{}) {
+	m.Richs(prefix, chain, kit.Select(FOREACH, zone), func(key string, val ice.Map) {
 		if val = kit.GetMeta(val); zone == "" {
 			if m.OptionFields() == DETAIL {
 				m.Push(DETAIL, val)
@@ -31,15 +31,15 @@ func _zone_select(m *ice.Message, prefix, chain, zone string, id string) {
 			return
 		}
 
-		m.Grows(prefix, kit.Keys(chain, HASH, key), ID, id, func(index int, value map[string]interface{}) {
+		m.Grows(prefix, kit.Keys(chain, HASH, key), ID, id, func(index int, value ice.Map) {
 			switch value = kit.GetMeta(value); cb := cb.(type) {
-			case func(string, []string, map[string]interface{}, map[string]interface{}):
+			case func(string, []string, ice.Map, ice.Map):
 				cb(key, fields, value, val)
-			case func(string, map[string]interface{}, map[string]interface{}):
+			case func(string, ice.Map, ice.Map):
 				cb(key, value, val)
-			case func(string, map[string]interface{}):
+			case func(string, ice.Map):
 				cb(key, value)
-			case func(map[string]interface{}):
+			case func(ice.Map):
 				cb(value)
 			case func(map[string]string):
 				res := map[string]string{}
@@ -70,17 +70,17 @@ func _zone_export(m *ice.Message, prefix, chain, file string) {
 	w.Write(fields)
 
 	keys := []string{}
-	m.Richs(prefix, chain, FOREACH, func(key string, val map[string]interface{}) {
+	m.Richs(prefix, chain, FOREACH, func(key string, val ice.Map) {
 		keys = append(keys, key)
 	})
 	sort.Strings(keys)
 
 	count := 0
 	for _, key := range keys {
-		m.Richs(prefix, chain, key, func(key string, val map[string]interface{}) {
+		m.Richs(prefix, chain, key, func(key string, val ice.Map) {
 			val = kit.GetMeta(val)
 
-			m.Grows(prefix, kit.Keys(chain, HASH, key), "", "", func(index int, value map[string]interface{}) {
+			m.Grows(prefix, kit.Keys(chain, HASH, key), "", "", func(index int, value ice.Map) {
 				value = kit.GetMeta(value)
 
 				list := []string{}
@@ -145,7 +145,7 @@ func _zone_import(m *ice.Message, prefix, chain, file string) {
 
 const ZONE = "zone"
 
-func ZoneAction(args ...interface{}) map[string]*ice.Action {
+func ZoneAction(args ...ice.Any) map[string]*ice.Action {
 	_zone := func(m *ice.Message) string { return kit.Select(ZONE, m.Config(SHORT)) }
 
 	return ice.SelectAction(map[string]*ice.Action{ice.CTX_INIT: AutoConfig(args...),
@@ -229,7 +229,7 @@ func ZoneSelectAll(m *ice.Message, arg ...string) *ice.Message {
 	m.Option(ice.CACHE_LIMIT, "-1")
 	return ZoneSelect(m, arg...)
 }
-func ZoneSelectCB(m *ice.Message, zone string, cb interface{}) *ice.Message {
+func ZoneSelectCB(m *ice.Message, zone string, cb ice.Any) *ice.Message {
 	m.OptionCB(SELECT, cb)
 	m.Option(ice.CACHE_LIMIT, "-1")
 	return ZoneSelect(m, zone)

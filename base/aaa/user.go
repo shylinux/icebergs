@@ -14,7 +14,7 @@ func _user_login(m *ice.Message, name, word string) (ok bool) {
 		_user_create(m, VOID, name, word)
 	}
 
-	m.Richs(USER, nil, name, func(key string, value map[string]interface{}) {
+	m.Richs(USER, nil, name, func(key string, value ice.Map) {
 		if ok = !m.Warn(word != "" && word != value[PASSWORD], ice.ErrNotRight); ok {
 			m.Log_AUTH(
 				USERROLE, m.Option(ice.MSG_USERROLE, value[USERROLE]),
@@ -30,7 +30,7 @@ func _user_create(m *ice.Message, role, name, word string) {
 		return
 	}
 	if word == "" {
-		if m.Richs(USER, nil, name, func(key string, value map[string]interface{}) {
+		if m.Richs(USER, nil, name, func(key string, value ice.Map) {
 			word = kit.Format(value[PASSWORD])
 		}) == nil {
 			word = kit.Hashs()
@@ -40,7 +40,7 @@ func _user_create(m *ice.Message, role, name, word string) {
 	m.Event(USER_CREATE, USER, name)
 }
 func _user_search(m *ice.Message, name, text string) {
-	m.Richs(USER, nil, mdb.FOREACH, func(key string, value map[string]interface{}) {
+	m.Richs(USER, nil, mdb.FOREACH, func(key string, value ice.Map) {
 		if value = kit.GetMeta(value); name == "" || name == value[USERNAME] {
 			m.PushSearch(kit.SimpleKV("", value[USERROLE], value[USERNAME], value[USERNICK]), value)
 		}
@@ -56,27 +56,27 @@ func UserRoot(m *ice.Message, arg ...string) *ice.Message { // password username
 	}
 	return m
 }
-func UserRole(m *ice.Message, username interface{}) (role string) {
+func UserRole(m *ice.Message, username ice.Any) (role string) {
 	if role = VOID; username == ice.Info.UserName {
 		return ROOT
 	}
-	if m.Richs(USER, nil, kit.Format(username), func(key string, value map[string]interface{}) {
+	if m.Richs(USER, nil, kit.Format(username), func(key string, value ice.Map) {
 		role = kit.Format(kit.GetMeta(value)[USERROLE])
 	}) == nil && kit.Format(username) == m.Option(ice.MSG_USERNAME) {
 		return m.Option(ice.MSG_USERROLE)
 	}
 	return
 }
-func UserNick(m *ice.Message, username interface{}) (nick string) {
-	if m.Richs(USER, nil, kit.Format(username), func(key string, value map[string]interface{}) {
+func UserNick(m *ice.Message, username ice.Any) (nick string) {
+	if m.Richs(USER, nil, kit.Format(username), func(key string, value ice.Map) {
 		nick = kit.Format(kit.GetMeta(value)[USERNICK])
 	}) == nil && kit.Format(username) == m.Option(ice.MSG_USERNAME) {
 		return m.Option(ice.MSG_USERNICK)
 	}
 	return
 }
-func UserZone(m *ice.Message, username interface{}) (zone string) {
-	m.Richs(USER, nil, kit.Format(username), func(key string, value map[string]interface{}) {
+func UserZone(m *ice.Message, username ice.Any) (zone string) {
+	m.Richs(USER, nil, kit.Format(username), func(key string, value ice.Map) {
 		zone = kit.Format(kit.GetMeta(value)[USERZONE])
 	})
 	return

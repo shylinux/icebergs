@@ -52,7 +52,6 @@ func (m *Message) Assert(expr Any) bool {
 	panic(expr)
 }
 func (m *Message) Sleep(d string, arg ...Any) *Message {
-	// m.Debug("sleep %s %s", d, kit.FileLine(2, 3))
 	if time.Sleep(kit.Duration(d)); len(arg) > 0 {
 		m.Cmdy(arg...)
 	}
@@ -137,20 +136,20 @@ func (m *Message) Watch(key string, arg ...string) *Message {
 	if len(arg) == 0 {
 		arg = append(arg, m.Prefix(AUTO))
 	}
-	m.Cmd("event", ACTION, "listen", "event", key, CMD, kit.Join(arg, SP))
+	m.Cmd(EVENT, ACTION, LISTEN, EVENT, key, CMD, kit.Join(arg, SP))
 	return m
 }
 func (m *Message) Event(key string, arg ...string) *Message {
-	m.Cmd("event", ACTION, "action", "event", key, arg)
+	m.Cmd(EVENT, ACTION, HAPPEN, EVENT, key, arg)
 	return m
 }
 func (m *Message) Right(arg ...Any) bool {
 	key := strings.ReplaceAll(kit.Keys(arg...), PS, PT)
-	return m.Option(MSG_USERROLE) == "root" || !m.Warn(m.Cmdx("role", "right", m.Option(MSG_USERROLE), key) != OK,
-		ErrNotRight, kit.Join(kit.Simple(arg), PT), "userrole", m.Option(MSG_USERROLE), "fileline", kit.FileLine(2, 3))
+	return m.Option(MSG_USERROLE) == ROOT || !m.Warn(m.Cmdx(ROLE, RIGHT, m.Option(MSG_USERROLE), key) != OK,
+		ErrNotRight, kit.Join(kit.Simple(arg), PT), USERROLE, m.Option(MSG_USERROLE), FILELINE, kit.FileLine(2, 3))
 }
 func (m *Message) Space(arg Any) []string {
-	if arg == nil || arg == "" || kit.Format(arg) == m.Conf("runtime", "node.name") {
+	if arg == nil || arg == "" || kit.Format(arg) == Info.NodeName {
 		return nil
 	}
 	return []string{SPACE, kit.Format(arg)}

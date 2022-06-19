@@ -12,7 +12,7 @@ import (
 
 func _story_list(m *ice.Message, name string, key string) {
 	if name == "" {
-		m.Richs(STORY, HEAD, mdb.FOREACH, func(key string, value map[string]interface{}) {
+		m.Richs(STORY, HEAD, mdb.FOREACH, func(key string, value ice.Map) {
 			m.Push(key, value, []string{mdb.TIME, mdb.COUNT, STORY})
 		})
 		m.SortTimeR(mdb.TIME)
@@ -23,26 +23,26 @@ func _story_list(m *ice.Message, name string, key string) {
 		return
 	}
 
-	m.Richs(STORY, nil, key, func(key string, value map[string]interface{}) {
+	m.Richs(STORY, nil, key, func(key string, value ice.Map) {
 		m.Push(mdb.DETAIL, value)
 	})
 
 }
 func _story_index(m *ice.Message, name string, withdata bool) {
-	m.Richs(STORY, HEAD, name, func(key string, value map[string]interface{}) {
+	m.Richs(STORY, HEAD, name, func(key string, value ice.Map) {
 		// 查询索引
 		m.Push(HEAD, key)
 		name = kit.Format(value[LIST])
 	})
 
-	m.Richs(STORY, nil, name, func(key string, value map[string]interface{}) {
+	m.Richs(STORY, nil, name, func(key string, value ice.Map) {
 		// 查询节点
 		m.Push(LIST, key)
 		m.Push(key, value, []string{SCENE, STORY})
 		name = kit.Format(value[DATA])
 	})
 
-	m.Richs(CACHE, nil, name, func(key string, value map[string]interface{}) {
+	m.Richs(CACHE, nil, name, func(key string, value ice.Map) {
 		// 查询数据
 		m.Push(DATA, key)
 		m.Push(key, value, []string{mdb.TEXT, nfs.FILE, nfs.SIZE, mdb.TIME, mdb.NAME, mdb.TYPE})
@@ -59,19 +59,19 @@ func _story_history(m *ice.Message, name string) {
 	// 历史记录
 	list := m.Cmd(STORY, INDEX, name).Append(LIST)
 	for i := 0; i < kit.Int(kit.Select("30", m.Option(ice.CACHE_LIMIT))) && list != ""; i++ {
-		m.Richs(STORY, nil, list, func(key string, value map[string]interface{}) {
+		m.Richs(STORY, nil, list, func(key string, value ice.Map) {
 			// 直连节点
 			m.Push(key, value, []string{mdb.TIME, mdb.KEY, mdb.COUNT, SCENE, STORY})
-			m.Richs(CACHE, nil, value[DATA], func(key string, value map[string]interface{}) {
+			m.Richs(CACHE, nil, value[DATA], func(key string, value ice.Map) {
 				m.Push(DRAMA, value[mdb.TEXT])
 				m.Push(DATA, key)
 			})
 
 			kit.Fetch(value[LIST], func(key string, val string) {
-				m.Richs(STORY, nil, val, func(key string, value map[string]interface{}) {
+				m.Richs(STORY, nil, val, func(key string, value ice.Map) {
 					// 复合节点
 					m.Push(key, value, []string{mdb.TIME, mdb.KEY, mdb.COUNT, SCENE, STORY})
-					m.Richs(CACHE, nil, value[DATA], func(key string, value map[string]interface{}) {
+					m.Richs(CACHE, nil, value[DATA], func(key string, value ice.Map) {
 						m.Push(DRAMA, value[mdb.TEXT])
 						m.Push(DATA, key)
 					})
@@ -84,7 +84,7 @@ func _story_history(m *ice.Message, name string) {
 	}
 }
 func _story_write(m *ice.Message, scene, name, text string, arg ...string) {
-	if len(arg) < 1 || text == "" || m.Richs(CACHE, nil, text, func(key string, value map[string]interface{}) { text = key }) == nil {
+	if len(arg) < 1 || text == "" || m.Richs(CACHE, nil, text, func(key string, value ice.Map) { text = key }) == nil {
 		// 添加缓存
 		m.Cmdy(CACHE, CATCH, scene, name, text, arg)
 		scene, name, text = m.Append(mdb.TYPE), m.Append(mdb.NAME), m.Append(DATA)
@@ -92,7 +92,7 @@ func _story_write(m *ice.Message, scene, name, text string, arg ...string) {
 
 	// 查询索引
 	head, prev, value, count := "", "", kit.Dict(), 0
-	m.Richs(STORY, HEAD, name, func(key string, val map[string]interface{}) {
+	m.Richs(STORY, HEAD, name, func(key string, val ice.Map) {
 		head, prev, value, count = key, kit.Format(val[LIST]), val, kit.Int(val[mdb.COUNT])
 		m.Logs("info", HEAD, head, PREV, prev, mdb.COUNT, count)
 	})
@@ -192,7 +192,7 @@ func init() {
 			case PULL:
 				list := m.Cmd(STORY, INDEX, m.Option("begin")).Append("list")
 				for i := 0; i < 10 && list != "" && list != m.Option("end"); i++ {
-					if m.Richs(STORY, nil, list, func(key string, value map[string]interface{}) {
+					if m.Richs(STORY, nil, list, func(key string, value ice.Map) {
 						// 节点信息
 						m.Push("list", key)
 						m.Push("node", kit.Format(value))
@@ -212,7 +212,7 @@ func init() {
 					m.Conf(CACHE, kit.Keys("hash", m.Option("data")), kit.UnMarshal(m.Option("save")))
 				}
 
-				node := kit.UnMarshal(m.Option("node")).(map[string]interface{})
+				node := kit.UnMarshal(m.Option("node")).(ice.Map)
 				if m.Richs(STORY, nil, m.Option("list"), nil) == nil {
 					// 导入节点
 					m.Log(ice.LOG_IMPORT, "%v: %v", m.Option("list"), m.Option("node"))
@@ -252,13 +252,13 @@ func _story_pull(m *ice.Message, arg ...string) {
 	// 起止节点
 	prev, begin, end := "", arg[3], ""
 	repos := kit.Keys("remote", arg[2], arg[3])
-	m.Richs(STORY, "head", arg[1], func(key string, val map[string]interface{}) {
+	m.Richs(STORY, "head", arg[1], func(key string, val ice.Map) {
 		end = kit.Format(kit.Value(val, kit.Keys(repos, "pull", "list")))
 		prev = kit.Format(val["list"])
 	})
 
 	pull := end
-	var first map[string]interface{}
+	var first ice.Map
 	for begin != "" && begin != end {
 		if m.Cmd(SPIDE, arg[2], "msg", "/story/pull", "begin", begin, "end", end).Table(func(index int, value map[string]string, head []string) {
 			if m.Richs(CACHE, nil, value["data"], nil) == nil {
@@ -272,7 +272,7 @@ func _story_pull(m *ice.Message, arg ...string) {
 				}
 			}
 
-			node := kit.UnMarshal(value["node"]).(map[string]interface{})
+			node := kit.UnMarshal(value["node"]).(ice.Map)
 			if m.Richs(STORY, nil, value["list"], nil) == nil {
 				// 导入节点
 				m.Log(ice.LOG_IMPORT, "%v: %v", value["list"], value["node"])
@@ -290,7 +290,7 @@ func _story_pull(m *ice.Message, arg ...string) {
 				}
 
 				pull, first = kit.Format(value["list"]), node
-				m.Richs(STORY, "head", arg[1], func(key string, val map[string]interface{}) {
+				m.Richs(STORY, "head", arg[1], func(key string, val ice.Map) {
 					prev = kit.Format(val["list"])
 					if kit.Int(node["count"]) > kit.Int(kit.Value(val, kit.Keys(repos, "pull", "count"))) {
 						// 更新分支
@@ -305,7 +305,7 @@ func _story_pull(m *ice.Message, arg ...string) {
 			if prev == kit.Format(node["prev"]) || prev == kit.Format(node["push"]) {
 				// 快速合并
 				m.Log(ice.LOG_IMPORT, "%v: %v", pull, arg[2])
-				m.Richs(STORY, "head", arg[1], func(key string, val map[string]interface{}) {
+				m.Richs(STORY, "head", arg[1], func(key string, val ice.Map) {
 					val["count"] = first["count"]
 					val["time"] = first["time"]
 					val["list"] = pull
@@ -327,7 +327,7 @@ func _story_push(m *ice.Message, arg ...string) {
 	repos := kit.Keys("remote", arg[2], arg[3])
 	// 查询索引
 	prev, pull, some, list := "", "", "", ""
-	m.Richs(STORY, "head", arg[1], func(key string, val map[string]interface{}) {
+	m.Richs(STORY, "head", arg[1], func(key string, val ice.Map) {
 		prev = kit.Format(val["list"])
 		pull = kit.Format(kit.Value(val, kit.Keys(repos, "pull", "list")))
 		for some = pull; prev != some && some != ""; {
@@ -362,14 +362,14 @@ func _story_push(m *ice.Message, arg ...string) {
 		// 查询节点
 		nodes := []string{}
 		for list = prev; list != some; {
-			m.Richs(STORY, nil, list, func(key string, value map[string]interface{}) {
+			m.Richs(STORY, nil, list, func(key string, value ice.Map) {
 				nodes, list = append(nodes, list), kit.Format(value["prev"])
 			})
 		}
 
 		for _, v := range kit.Revert(nodes) {
-			m.Richs(STORY, nil, v, func(list string, node map[string]interface{}) {
-				m.Richs(CACHE, nil, node["data"], func(data string, save map[string]interface{}) {
+			m.Richs(STORY, nil, v, func(list string, node ice.Map) {
+				m.Richs(CACHE, nil, node["data"], func(data string, save ice.Map) {
 					if kit.Format(save["file"]) != "" {
 						// 推送缓存
 						m.Cmd(SPIDE, arg[2], "/story/upload",
@@ -394,8 +394,8 @@ func _story_push(m *ice.Message, arg ...string) {
 }
 func _story_commit(m *ice.Message, arg ...string) {
 	// 查询索引
-	head, prev, value, count := "", "", map[string]interface{}{}, 0
-	m.Richs(STORY, "head", arg[1], func(key string, val map[string]interface{}) {
+	head, prev, value, count := "", "", ice.Map{}, 0
+	m.Richs(STORY, "head", arg[1], func(key string, val ice.Map) {
 		head, prev, value, count = key, kit.Format(val["list"]), val, kit.Int(val["count"])
 		m.Log("info", "head: %v prev: %v count: %v", head, prev, count)
 	})

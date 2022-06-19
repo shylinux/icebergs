@@ -14,7 +14,7 @@ import (
 
 func _div_parse(m *ice.Message, text string) string {
 	m.Option(nfs.CAT_CONTENT, text)
-	return m.Cmdx(lex.SPLIT, "", "index", "args", func(ls []string, meta map[string]interface{}) []string {
+	return m.Cmdx(lex.SPLIT, "", "index", "args", func(ls []string, meta ice.Map) []string {
 		if ls[0] == "div" {
 			ls = append([]string{"", "", "style", kit.Select("div", ls, 1)}, kit.Slice(ls, 2)...)
 		}

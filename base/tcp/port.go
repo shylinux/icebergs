@@ -53,20 +53,34 @@ func init() {
 			aaa.RIGHT: {Name: "right", Help: "分配", Hand: func(m *ice.Message, arg ...string) {
 				m.Echo(_port_right(m, arg...))
 			}},
+			nfs.TRASH: {Name: "trash", Help: "删除", Hand: func(m *ice.Message, arg ...string) {
+				if m.Option(PORT) != "" {
+					m.Cmd(nfs.TRASH, path.Join(ice.USR_LOCAL_DAEMON, m.Option(PORT)))
+				}
+			}},
 		}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			if len(arg) == 0 {
-				m.Option(nfs.DIR_ROOT, m.Conf(cli.DAEMON, kit.Keym(nfs.PATH)))
-				m.Cmd(nfs.DIR, nfs.PWD, nfs.DIR_CLI_FIELDS).Table(func(index int, value map[string]string, head []string) {
+				current := kit.Int(m.Config(BEGIN))
+				m.Option(nfs.DIR_ROOT, ice.USR_LOCAL_DAEMON)
+				m.Cmd(nfs.DIR, nfs.PWD, nfs.DIR_CLI_FIELDS).Tables(func(value map[string]string) {
 					bin := m.Cmd(nfs.DIR, path.Join(value[nfs.PATH], ice.BIN), nfs.DIR_CLI_FIELDS).Append(nfs.PATH)
 					if bin == "" {
 						bin = m.Cmd(nfs.DIR, path.Join(value[nfs.PATH], "sbin"), nfs.DIR_CLI_FIELDS).Append(nfs.PATH)
 					}
+					port := kit.Int(path.Base(value[nfs.PATH]))
+					if port > current {
+						current = port
+					}
+
 					m.Push(mdb.TIME, value[mdb.TIME])
-					m.Push(PORT, path.Base(value[nfs.PATH]))
+					m.Push(PORT, port)
 					m.Push(nfs.SIZE, value[nfs.SIZE])
 					m.Push(ice.BIN, bin)
 				})
 				m.SortInt(PORT)
+				m.PushAction(nfs.TRASH)
+				m.Config(CURRENT, current)
+				m.StatusTimeCount(m.ConfigSimple(BEGIN, CURRENT, END))
 				return
 			}
 			m.Option(nfs.DIR_ROOT, path.Join(m.Conf(cli.DAEMON, kit.Keym(nfs.PATH)), arg[0]))

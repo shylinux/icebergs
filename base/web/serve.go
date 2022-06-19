@@ -17,9 +17,9 @@ import (
 	kit "shylinux.com/x/toolkits"
 )
 
-var rewriteList = []interface{}{}
+var rewriteList = []ice.Any{}
 
-func AddRewrite(cb interface{}) { rewriteList = append(rewriteList, cb) }
+func AddRewrite(cb ice.Any) { rewriteList = append(rewriteList, cb) }
 
 func _serve_domain(m *ice.Message) string {
 	if p := m.Config(DOMAIN); p != "" {
@@ -131,12 +131,12 @@ func _serve_handle(key string, cmd *ice.Command, msg *ice.Message, w http.Respon
 	switch r.Header.Get(ContentType) {
 	case ContentJSON:
 		defer r.Body.Close()
-		var data interface{}
+		var data ice.Any
 		if e := json.NewDecoder(r.Body).Decode(&data); !msg.Warn(e, ice.ErrNotFound, data) {
 			msg.Log_IMPORT(mdb.VALUE, kit.Format(data))
 			msg.Optionv(ice.MSG_USERDATA, data)
 		}
-		kit.Fetch(data, func(key string, value interface{}) { msg.Optionv(key, value) })
+		kit.Fetch(data, func(key string, value ice.Any) { msg.Optionv(key, value) })
 
 	default:
 		r.ParseMultipartForm(kit.Int64(kit.Select("4096", r.Header.Get(ContentLength))))
@@ -205,7 +205,7 @@ func _serve_handle(key string, cmd *ice.Command, msg *ice.Message, w http.Respon
 
 	// 输出响应
 	switch args := msg.Optionv(ice.MSG_ARGS).(type) {
-	case []interface{}:
+	case []ice.Any:
 		Render(msg, msg.Option(ice.MSG_OUTPUT), args...)
 	default:
 		Render(msg, msg.Option(ice.MSG_OUTPUT), args)

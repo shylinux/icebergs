@@ -51,7 +51,7 @@ func init() {
 
 			// 提交统计
 			days, commit, adds, dels, rest := 0, 0, 0, 0, 0
-			m.Richs(REPOS, nil, mdb.FOREACH, func(mu *sync.Mutex, key string, value map[string]interface{}) {
+			m.Richs(REPOS, nil, mdb.FOREACH, func(mu *sync.Mutex, key string, value ice.Map) {
 				value = kit.GetMeta(value)
 				if m.Config(kit.Keys("skip", value[mdb.NAME])) == ice.TRUE {
 					return

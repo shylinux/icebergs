@@ -11,7 +11,7 @@ import (
 )
 
 type Chain struct {
-	data map[string]interface{}
+	data ice.Map
 	gs   *wiki.Group
 	Block
 }
@@ -22,7 +22,7 @@ func (c *Chain) Init(m *ice.Message, arg ...string) wiki.Chart {
 	m.Option(nfs.CAT_CONTENT, arg[0])
 	m.Option(lex.SPLIT_BLOCK, ice.SP)
 	max, stack := 0, kit.List(kit.Dict("_deep", -1, "width", "0"))
-	m.OptionCB(lex.SPLIT, func(deep int, ls []string, data map[string]interface{}) []string {
+	m.OptionCB(lex.SPLIT, func(deep int, ls []string, data ice.Map) []string {
 		for deep <= kit.Int(kit.Value(stack[len(stack)-1], "_deep")) {
 			stack = stack[:len(stack)-1]
 		}
@@ -49,17 +49,17 @@ func (c *Chain) Draw(m *ice.Message, x, y int) wiki.Chart {
 	return c
 }
 
-func (c *Chain) size(m *ice.Message, root map[string]interface{}) (height int) {
+func (c *Chain) size(m *ice.Message, root ice.Map) (height int) {
 	meta := kit.GetMeta(root)
-	if list, ok := root[mdb.LIST].([]interface{}); ok && len(list) > 0 {
-		kit.Fetch(root[mdb.LIST], func(index int, value map[string]interface{}) { height += c.size(m, value) })
+	if list, ok := root[mdb.LIST].([]ice.Any); ok && len(list) > 0 {
+		kit.Fetch(root[mdb.LIST], func(index int, value ice.Map) { height += c.size(m, value) })
 	} else {
 		height = 1
 	}
 	meta[wiki.HEIGHT] = height
 	return height
 }
-func (c *Chain) draw(m *ice.Message, root map[string]interface{}, x, y int, p *Block) int {
+func (c *Chain) draw(m *ice.Message, root ice.Map, x, y int, p *Block) int {
 	meta := kit.GetMeta(root)
 
 	item := &Block{FontSize: p.FontSize, Padding: p.Padding, MarginX: p.MarginX, MarginY: p.MarginY}
@@ -88,7 +88,7 @@ func (c *Chain) draw(m *ice.Message, root map[string]interface{}, x, y int, p *B
 
 	// 递归
 	h, x := 0, x+item.GetWidths()
-	if kit.Fetch(root[mdb.LIST], func(index int, value map[string]interface{}) {
+	if kit.Fetch(root[mdb.LIST], func(index int, value ice.Map) {
 		h += c.draw(m, value, x, y+h, item)
 	}); h == 0 {
 		return item.GetHeights()

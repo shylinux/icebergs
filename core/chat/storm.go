@@ -7,7 +7,7 @@ import (
 	kit "shylinux.com/x/toolkits"
 )
 
-func _storm_key(m *ice.Message, key ...interface{}) string {
+func _storm_key(m *ice.Message, key ...ice.Any) string {
 	return _river_key(m, STORM, mdb.HASH, kit.Keys(key))
 }
 

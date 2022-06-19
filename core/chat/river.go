@@ -12,7 +12,7 @@ import (
 	kit "shylinux.com/x/toolkits"
 )
 
-func _river_key(m *ice.Message, key ...interface{}) string {
+func _river_key(m *ice.Message, key ...ice.Any) string {
 	return kit.Keys(mdb.HASH, m.Option(ice.MSG_RIVER), kit.Simple(key))
 }
 func _river_list(m *ice.Message) {
@@ -43,8 +43,8 @@ func _river_list(m *ice.Message) {
 		}
 	}
 
-	m.Richs(RIVER, nil, mdb.FOREACH, func(key string, value map[string]interface{}) {
-		m.Richs(RIVER, kit.Keys(mdb.HASH, key, OCEAN), m.Option(ice.MSG_USERNAME), func(k string, val map[string]interface{}) {
+	m.Richs(RIVER, nil, mdb.FOREACH, func(key string, value ice.Map) {
+		m.Richs(RIVER, kit.Keys(mdb.HASH, key, OCEAN), m.Option(ice.MSG_USERNAME), func(k string, val ice.Map) {
 			m.Push(key, kit.GetMeta(value), []string{mdb.HASH, mdb.NAME}, kit.GetMeta(val))
 		})
 	})
@@ -152,7 +152,7 @@ func init() {
 				m.Conf(RIVER, kit.Keys(mdb.HASH, h, OCEAN, kit.Keym(mdb.SHORT)), aaa.USERNAME)
 				m.Cmd(OCEAN, mdb.INSERT, aaa.USERNAME, m.Option(ice.MSG_USERNAME))
 
-				kit.Fetch(m.Confv(RIVER, kit.Keym(nfs.TEMPLATE, kit.Select("base", m.Option(nfs.TEMPLATE)))), func(storm string, value interface{}) {
+				kit.Fetch(m.Confv(RIVER, kit.Keym(nfs.TEMPLATE, kit.Select("base", m.Option(nfs.TEMPLATE)))), func(storm string, value ice.Any) {
 					h := m.Cmdx(STORM, mdb.CREATE, mdb.TYPE, PUBLIC, mdb.NAME, storm, mdb.TEXT, storm)
 
 					kit.Fetch(value, func(index int, value string) {

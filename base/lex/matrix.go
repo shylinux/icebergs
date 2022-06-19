@@ -359,11 +359,11 @@ func (mat *Matrix) show(m *ice.Message) {
 	m.Status(NLANG, mat.nlang, NCELL, mat.ncell, NPAGE, len(mat.page), NHASH, len(mat.hash))
 }
 func _lex_load(m *ice.Message) {
-	m.Richs(m.PrefixKey(), "", mdb.FOREACH, func(key string, value map[string]interface{}) {
+	m.Richs(m.PrefixKey(), "", mdb.FOREACH, func(key string, value ice.Map) {
 		value = kit.GetMeta(value)
 
 		mat := NewMatrix(m, kit.Int(kit.Select("32", value[NLANG])), kit.Int(kit.Select("256", value[NCELL])))
-		m.Grows(m.PrefixKey(), kit.Keys(mdb.HASH, key), "", "", func(index int, value map[string]interface{}) {
+		m.Grows(m.PrefixKey(), kit.Keys(mdb.HASH, key), "", "", func(index int, value ice.Map) {
 			mat.Train(m, kit.Format(value[NPAGE]), kit.Format(value[NHASH]), kit.Format(value[mdb.TEXT]))
 		})
 		value[MATRIX] = mat
@@ -402,7 +402,7 @@ func init() {
 				m.Echo(h)
 			}},
 			mdb.INSERT: {Name: "insert hash npage=num nhash=num text=123", Help: "添加", Hand: func(m *ice.Message, arg ...string) {
-				m.Richs(m.PrefixKey(), "", m.Option(mdb.HASH), func(key string, value map[string]interface{}) {
+				m.Richs(m.PrefixKey(), "", m.Option(mdb.HASH), func(key string, value ice.Map) {
 					value = kit.GetMeta(value)
 
 					mat, _ := value[MATRIX].(*Matrix)
@@ -419,7 +419,7 @@ func init() {
 				m.Cmdy(mdb.DELETE, m.PrefixKey(), "", mdb.HASH, mdb.HASH, m.Option(mdb.HASH))
 			}},
 			PARSE: {Name: "parse hash npage text=123", Help: "解析", Hand: func(m *ice.Message, arg ...string) {
-				m.Richs(m.PrefixKey(), "", m.Option(mdb.HASH), func(key string, value map[string]interface{}) {
+				m.Richs(m.PrefixKey(), "", m.Option(mdb.HASH), func(key string, value ice.Map) {
 					value = kit.GetMeta(value)
 					mat, _ := value[MATRIX].(*Matrix)
 
@@ -432,7 +432,7 @@ func init() {
 				m.ProcessInner()
 			}},
 			"show": {Name: "show", Help: "矩阵", Hand: func(m *ice.Message, arg ...string) {
-				m.Richs(m.PrefixKey(), "", kit.Select(m.Option(mdb.HASH), arg, 0), func(key string, value map[string]interface{}) {
+				m.Richs(m.PrefixKey(), "", kit.Select(m.Option(mdb.HASH), arg, 0), func(key string, value ice.Map) {
 					value = kit.GetMeta(value)
 					value[MATRIX].(*Matrix).show(m)
 				})
@@ -453,7 +453,7 @@ func init() {
 				return
 			}
 
-			m.Richs(m.PrefixKey(), "", arg[0], func(key string, value map[string]interface{}) {
+			m.Richs(m.PrefixKey(), "", arg[0], func(key string, value ice.Map) {
 				value = kit.GetMeta(value)
 				mat, _ := value[MATRIX].(*Matrix)
 

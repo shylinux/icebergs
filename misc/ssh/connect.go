@@ -180,7 +180,7 @@ func init() {
 			}},
 			SESSION: {Name: "session name", Help: "会话", Hand: func(m *ice.Message, arg ...string) {
 				var client *ssh.Client
-				m.Richs(CONNECT, "", m.Option(mdb.NAME), func(key string, value map[string]interface{}) {
+				m.Richs(CONNECT, "", m.Option(mdb.NAME), func(key string, value ice.Map) {
 					client, _ = value[CONNECT].(*ssh.Client)
 				})
 
@@ -192,7 +192,7 @@ func init() {
 				m.Echo(h)
 			}},
 			"command": {Name: "command cmd=pwd", Help: "命令", Hand: func(m *ice.Message, arg ...string) {
-				m.Richs(CONNECT, "", m.Option(mdb.NAME), func(key string, value map[string]interface{}) {
+				m.Richs(CONNECT, "", m.Option(mdb.NAME), func(key string, value ice.Map) {
 					if client, ok := value[CONNECT].(*ssh.Client); ok {
 						if session, e := client.NewSession(); m.Assert(e) {
 							defer session.Close()

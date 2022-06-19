@@ -36,7 +36,7 @@ func _ssh_session(m *ice.Message, h string, client *ssh.Client) (*ssh.Session, e
 		}
 	})
 
-	m.Richs(SESSION, "", h, func(key string, value map[string]interface{}) {
+	m.Richs(SESSION, "", h, func(key string, value ice.Map) {
 		kit.Value(value, kit.Keym(OUTPUT), out, kit.Keym(INPUT), in)
 	})
 
@@ -66,7 +66,7 @@ func init() {
 				m.Cmdy(SESSION, ctx.ACTION, ctx.COMMAND, CMD, m.Option(mdb.TEXT))
 			}},
 			ctx.COMMAND: {Name: "command cmd=pwd", Help: "命令", Hand: func(m *ice.Message, arg ...string) {
-				m.Richs(SESSION, "", m.Option(mdb.NAME), func(key string, value map[string]interface{}) {
+				m.Richs(SESSION, "", m.Option(mdb.NAME), func(key string, value ice.Map) {
 					if w, ok := kit.Value(value, kit.Keym(INPUT)).(io.Writer); ok {
 						m.Grow(SESSION, kit.Keys(mdb.HASH, key), kit.Dict(mdb.TYPE, CMD, mdb.TEXT, m.Option(CMD)))
 						w.Write([]byte(m.Option(CMD) + ice.NL))

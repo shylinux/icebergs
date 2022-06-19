@@ -42,7 +42,7 @@ password: %s
 }
 func (s server) List(m *ice.Message, arg ...string) *ice.Message {
 	if s.Code.List(m, "", arg...); len(arg) == 0 {
-		s.PushLink(m).Tables(func(value map[string]string) {
+		m.Tables(func(value map[string]string) {
 			switch value[cli.STATUS] {
 			case cli.START:
 				m.PushButton(s.Open, s.Stop)

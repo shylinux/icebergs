@@ -45,7 +45,7 @@ func init() {
 	}, Commands: map[string]*ice.Command{
 		CONFIGS: {Name: "configs name auto create import", Help: "配置键", Action: map[string]*ice.Action{
 			mdb.IMPORT: {Name: "import", Help: "初始化", Hand: func(m *ice.Message, arg ...string) {
-				kit.Fetch(m.Configv(ice.INIT), func(conf string, value interface{}) {
+				kit.Fetch(m.Configv(ice.INIT), func(conf string, value ice.Any) {
 					kit.Fetch(value, func(key string, value string) { _configs_set(m, kit.Keys(conf, key), value) })
 				})
 			}},

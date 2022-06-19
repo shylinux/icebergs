@@ -92,16 +92,16 @@ func _qrcode_web(m *ice.Message, text string) {
 	}
 }
 
-func Color(m *ice.Message, c string, str interface{}) string {
+func Color(m *ice.Message, c string, str ice.Any) string {
 	wrap, color := `<span style="color:%s">%v</span>`, c
 	if m.IsCliUA() {
 		wrap, color = "\033[3%sm%v\033[0m", _parse_cli_color(c)
 	}
 	return fmt.Sprintf(wrap, color, str)
 }
-func ColorRed(m *ice.Message, str interface{}) string    { return Color(m, RED, str) }
-func ColorGreen(m *ice.Message, str interface{}) string  { return Color(m, GREEN, str) }
-func ColorYellow(m *ice.Message, str interface{}) string { return Color(m, YELLOW, str) }
+func ColorRed(m *ice.Message, str ice.Any) string    { return Color(m, RED, str) }
+func ColorGreen(m *ice.Message, str ice.Any) string  { return Color(m, GREEN, str) }
+func ColorYellow(m *ice.Message, str ice.Any) string { return Color(m, YELLOW, str) }
 
 const (
 	FG   = "fg"
@@ -131,7 +131,7 @@ func init() {
 	Index.Merge(&ice.Context{Commands: map[string]*ice.Command{
 		QRCODE: {Name: "qrcode text fg bg size auto", Help: "二维码", Action: map[string]*ice.Action{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
-				ice.AddRender(ice.RENDER_QRCODE, func(m *ice.Message, cmd string, args ...interface{}) string {
+				ice.AddRender(ice.RENDER_QRCODE, func(m *ice.Message, cmd string, args ...ice.Any) string {
 					return m.Cmd(QRCODE, kit.Simple(args...)).Result()
 				})
 			}},

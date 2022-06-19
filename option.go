@@ -217,8 +217,8 @@ func (m *Message) Process(action string, arg ...Any) {
 func (m *Message) ProcessLocation(arg ...Any) {
 	m.Process(PROCESS_LOCATION, arg...)
 }
-func (m *Message) ProcessReplace(arg ...Any) {
-	m.Process(PROCESS_REPLACE, arg...)
+func (m *Message) ProcessReplace(url string, arg ...Any) {
+	m.Process(PROCESS_REPLACE, kit.MergeURL(url, arg...))
 }
 func (m *Message) ProcessHistory(arg ...Any) {
 	m.Process(PROCESS_HISTORY, arg...)
@@ -277,6 +277,11 @@ func (m *Message) MergeLink(url string, arg ...Any) string {
 	return strings.Split(m.MergeURL2(url, arg...), "?")[0]
 }
 func (m *Message) MergePodURL(url string, arg ...Any) string {
+	if m.Option(MSG_USERPOD) == "" {
+		url = strings.TrimPrefix(url, "web.")
+		return kit.MergeURL(m.MergeLink(url), arg...)
+	}
+	url = strings.TrimPrefix(url, "web.chat.")
 	return kit.MergeURL(m.MergeLink(path.Join("/chat/pod/", m.Option(MSG_USERPOD), url)), arg...)
 }
 func (m *Message) MergePod(pod string, arg ...Any) string {

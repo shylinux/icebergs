@@ -24,7 +24,7 @@ import (
 
 func _spide_create(m *ice.Message, name, address string) {
 	if uri, e := url.Parse(address); e == nil && address != "" {
-		if m.Richs(SPIDE, nil, name, func(key string, value map[string]interface{}) {
+		if m.Richs(SPIDE, nil, name, func(key string, value ice.Map) {
 			kit.Value(value, "client.hostname", uri.Host)
 			kit.Value(value, "client.url", address)
 		}) == nil {
@@ -42,7 +42,7 @@ func _spide_create(m *ice.Message, name, address string) {
 	}
 }
 func _spide_list(m *ice.Message, arg ...string) {
-	m.Richs(SPIDE, nil, arg[0], func(key string, value map[string]interface{}) {
+	m.Richs(SPIDE, nil, arg[0], func(key string, value ice.Map) {
 		// 缓存方式
 		cache, save := "", ""
 		switch arg[1] {
@@ -60,7 +60,7 @@ func _spide_list(m *ice.Message, arg ...string) {
 		}
 
 		// 请求方法
-		client := value[SPIDE_CLIENT].(map[string]interface{})
+		client := value[SPIDE_CLIENT].(ice.Map)
 		method := kit.Select(SPIDE_POST, client[SPIDE_METHOD])
 		switch arg = arg[1:]; arg[0] {
 		case SPIDE_GET:
@@ -163,7 +163,7 @@ func _spide_body(m *ice.Message, method string, arg ...string) (io.Reader, map[s
 			arg = arg[1:]
 			fallthrough
 		default:
-			data := map[string]interface{}{}
+			data := ice.Map{}
 			for i := 0; i < len(arg)-1; i += 2 {
 				kit.Value(data, arg[i], arg[i+1])
 			}
@@ -216,7 +216,7 @@ func _spide_part(m *ice.Message, arg ...string) (io.Reader, string) {
 	}
 	return buf, mp.FormDataContentType()
 }
-func _spide_head(m *ice.Message, req *http.Request, head map[string]string, value map[string]interface{}) {
+func _spide_head(m *ice.Message, req *http.Request, head map[string]string, value ice.Map) {
 	m.Info("%s %s", req.Method, req.URL)
 	kit.Fetch(value[SPIDE_HEADER], func(key string, value string) {
 		req.Header.Set(key, value)
@@ -289,14 +289,14 @@ func _spide_save(m *ice.Message, cache, save, uri string, res *http.Response) {
 	default:
 		b, _ := ioutil.ReadAll(res.Body)
 
-		var data interface{}
+		var data ice.Any
 		if e := json.Unmarshal(b, &data); e != nil {
 			m.Echo(string(b))
 			break
 		}
 
 		m.Optionv(SPIDE_RES, data)
-		data = kit.KeyValue(map[string]interface{}{}, "", data)
+		data = kit.KeyValue(ice.Map{}, "", data)
 		m.Push("", data)
 	}
 }
@@ -321,6 +321,7 @@ const (
 
 	SPIDE_RES = "content_data"
 
+	Bearer        = "Bearer"
 	Authorization = "Authorization"
 	ContentType   = "Content-Type"
 	ContentLength = "Content-Length"

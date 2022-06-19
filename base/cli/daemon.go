@@ -127,6 +127,9 @@ func init() {
 					m.Cmd(mdb.MODIFY, DAEMON, "", mdb.HASH, m.OptionSimple(mdb.HASH), STATUS, STOP)
 					m.Cmdy(SYSTEM, KILL, value[PID])
 				})
+				if IsSuccess(m) {
+					m.SetAppend()
+				}
 			}},
 		}, mdb.HashAction()), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			mdb.HashSelect(m, arg...).Set(ctx.ACTION).Table(func(index int, value map[string]string, head []string) {

@@ -26,12 +26,12 @@ func init() {
 			LISTEN: {Name: "listen event cmd", Help: "监听", Hand: func(m *ice.Message, arg ...string) {
 				_event_listen(m, m.Option(EVENT), m.Option(ice.CMD))
 			}},
-			ACTION: {Name: "action event arg", Help: "触发", Hand: func(m *ice.Message, arg ...string) {
+			HAPPEN: {Name: "happen event arg", Help: "触发", Hand: func(m *ice.Message, arg ...string) {
 				_event_action(m, m.Option(EVENT), arg[2:]...)
 			}},
 		}, mdb.ZoneAction()), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
 			if mdb.ZoneSelect(m, arg...); len(arg) == 0 {
-				m.PushAction(ACTION, mdb.REMOVE)
+				m.PushAction(HAPPEN, mdb.REMOVE)
 			}
 		}},
 	}})

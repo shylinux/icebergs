@@ -310,11 +310,11 @@ func (mat *Matrix) show(m *ice.Message) {
 }
 
 func _yac_load(m *ice.Message) {
-	m.Richs(m.PrefixKey(), "", mdb.FOREACH, func(key string, value map[string]interface{}) {
+	m.Richs(m.PrefixKey(), "", mdb.FOREACH, func(key string, value ice.Map) {
 		value = kit.GetMeta(value)
 
 		mat := NewMatrix(m, kit.Int(kit.Select("32", value[NLANG])), kit.Int(kit.Select("32", value[NCELL])))
-		m.Grows(m.PrefixKey(), kit.Keys(mdb.HASH, key), "", "", func(index int, value map[string]interface{}) {
+		m.Grows(m.PrefixKey(), kit.Keys(mdb.HASH, key), "", "", func(index int, value ice.Map) {
 			page := mat.index(m, NPAGE, kit.Format(value[NPAGE]))
 			hash := mat.index(m, NHASH, kit.Format(value[NHASH]))
 			if mat.mat[page] == nil {
@@ -362,7 +362,7 @@ func init() {
 				m.Echo(h)
 			}},
 			mdb.INSERT: {Name: "insert name=shy npage=num nhash=num text=123", Help: "添加", Hand: func(m *ice.Message, arg ...string) {
-				m.Richs(m.PrefixKey(), "", m.Option(mdb.NAME), func(key string, value map[string]interface{}) {
+				m.Richs(m.PrefixKey(), "", m.Option(mdb.NAME), func(key string, value ice.Map) {
 					value = kit.GetMeta(value)
 
 					mat, _ := value[MATRIX].(*Matrix)
@@ -388,7 +388,7 @@ func init() {
 				m.Cmdy(mdb.DELETE, m.PrefixKey(), "", mdb.HASH, mdb.NAME, m.Option(mdb.NAME))
 			}},
 			PARSE: {Name: "parse name npage text=123", Help: "解析", Hand: func(m *ice.Message, arg ...string) {
-				m.Richs(m.PrefixKey(), "", m.Option(mdb.NAME), func(key string, value map[string]interface{}) {
+				m.Richs(m.PrefixKey(), "", m.Option(mdb.NAME), func(key string, value ice.Map) {
 					value = kit.GetMeta(value)
 					mat, _ := value[MATRIX].(*Matrix)
 
@@ -409,7 +409,7 @@ func init() {
 				m.ProcessInner()
 			}},
 			"show": {Name: "show", Help: "矩阵", Hand: func(m *ice.Message, arg ...string) {
-				m.Richs(m.PrefixKey(), "", kit.Select(m.Option(mdb.NAME), arg, 0), func(key string, value map[string]interface{}) {
+				m.Richs(m.PrefixKey(), "", kit.Select(m.Option(mdb.NAME), arg, 0), func(key string, value ice.Map) {
 					value = kit.GetMeta(value)
 					value[MATRIX].(*Matrix).show(m)
 				})
@@ -432,7 +432,7 @@ func init() {
 			}
 
 			// 词法矩阵
-			m.Richs(m.PrefixKey(), "", arg[0], func(key string, value map[string]interface{}) {
+			m.Richs(m.PrefixKey(), "", arg[0], func(key string, value ice.Map) {
 				value = kit.GetMeta(value)
 				value[MATRIX].(*Matrix).show(m)
 			})

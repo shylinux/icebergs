@@ -12,7 +12,7 @@ const HOME = "home"
 
 func init() {
 	Index.Merge(&ice.Context{Commands: map[string]*ice.Command{
-		HOME: {Name: "home river storm title content", Help: "首页", Hand: func(m *ice.Message, c *ice.Context, key string, arg ...string) {
+		HOME: {Name: "home river storm title content", Help: "首页", Hand: func(m *ice.Message, arg ...string) {
 			name := kit.Select(m.Option(ice.MSG_USERNAME), m.Option(ice.MSG_USERNICK))
 			if len(name) > 10 {
 				name = name[:10]

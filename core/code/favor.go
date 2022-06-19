@@ -15,7 +15,7 @@ func init() {
 			INNER: {Name: "inner", Help: "源码", Hand: func(m *ice.Message, arg ...string) {
 				m.ProcessCommand(INNER, m.OptionSplit("path,file,line"), arg...)
 			}},
-		}, mdb.ZoneAction(mdb.SHORT, mdb.ZONE, mdb.FIELD, "time,id,type,name,text,path,file,line")), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		}, mdb.ZoneAction(mdb.SHORT, mdb.ZONE, mdb.FIELD, "time,id,type,name,text,path,file,line")), Hand: func(m *ice.Message, arg ...string) {
 			mdb.ZoneSelect(m, arg...).PushAction(kit.Select(mdb.REMOVE, INNER, len(arg) > 0))
 		}},
 	}})

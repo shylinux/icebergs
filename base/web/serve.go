@@ -92,6 +92,8 @@ func _serve_main(m *ice.Message, w http.ResponseWriter, r *http.Request) bool {
 			if h(w, r) {
 				return false
 			}
+		default:
+			m.Error(true, ice.ErrNotImplement)
 		}
 	}
 	return true
@@ -374,30 +376,30 @@ func init() {
 					return
 				}
 			}},
-		}, mdb.HashAction()), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		}, mdb.HashAction()), Hand: func(m *ice.Message, arg ...string) {
 			mdb.HashSelect(m, arg...)
 		}},
 
-		"/intshell/": {Name: "/intshell/", Help: "命令行", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		"/intshell/": {Name: "/intshell/", Help: "命令行", Hand: func(m *ice.Message, arg ...string) {
 			m.RenderIndex(SERVE, ice.INTSHELL, arg...)
 		}},
-		"/volcanos/": {Name: "/volcanos/", Help: "浏览器", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		"/volcanos/": {Name: "/volcanos/", Help: "浏览器", Hand: func(m *ice.Message, arg ...string) {
 			m.RenderIndex(SERVE, ice.VOLCANOS, arg...)
 		}},
-		"/require/src/": {Name: "/require/src/", Help: "代码库", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		"/require/src/": {Name: "/require/src/", Help: "代码库", Hand: func(m *ice.Message, arg ...string) {
 			if p := path.Join(ice.SRC, path.Join(arg...)); m.Option(ice.POD) != "" {
 				m.RenderResult(m.Cmdx(SPACE, m.Option(ice.POD), nfs.CAT, p))
 			} else {
 				m.RenderDownload(p)
 			}
 		}},
-		"/require/usr/": {Name: "/require/usr/", Help: "代码库", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		"/require/usr/": {Name: "/require/usr/", Help: "代码库", Hand: func(m *ice.Message, arg ...string) {
 			m.RenderDownload(path.Join(ice.USR, path.Join(arg...)))
 		}},
-		"/require/": {Name: "/require/", Help: "代码库", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		"/require/": {Name: "/require/", Help: "代码库", Hand: func(m *ice.Message, arg ...string) {
 			_share_repos(m, path.Join(arg[0], arg[1], arg[2]), arg[3:]...)
 		}},
-		"/publish/": {Name: "/publish/", Help: "定制化", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		"/publish/": {Name: "/publish/", Help: "定制化", Hand: func(m *ice.Message, arg ...string) {
 			if arg[0] == ice.ORDER_JS {
 				if p := path.Join(ice.USR_PUBLISH, ice.ORDER_JS); m.PodCmd(nfs.CAT, p) {
 					if m.IsErr() {
@@ -415,7 +417,7 @@ func init() {
 			}
 			_share_local(m, m.Conf(SERVE, kit.Keym(ice.PUBLISH)), path.Join(arg...))
 		}},
-		"/help/": {Name: "/help/", Help: "帮助", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		"/help/": {Name: "/help/", Help: "帮助", Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) == 0 {
 				arg = append(arg, "tutor.shy")
 			}

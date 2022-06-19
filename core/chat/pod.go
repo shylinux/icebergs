@@ -22,7 +22,7 @@ func init() {
 		"/pod/": {Name: "/pod/", Help: "节点", Action: ice.MergeAction(map[string]*ice.Action{
 			ice.CTX_INIT: {Name: "_init", Help: "初始化", Hand: func(m *ice.Message, arg ...string) {
 			}},
-		}, ctx.CmdAction()), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		}, ctx.CmdAction()), Hand: func(m *ice.Message, arg ...string) {
 			if strings.HasPrefix(m.R.Header.Get("User-Agent"), "curl") || strings.HasPrefix(m.R.Header.Get("User-Agent"), "Wget") {
 				m.Option(ice.MSG_USERNAME, "root")
 				m.Option(ice.MSG_USERROLE, "root")

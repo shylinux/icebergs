@@ -87,7 +87,7 @@ func init() {
 				m.Echo(kit.Format(`<img src="data:image/png;base64,%s" title='%s'>`, base64.StdEncoding.EncodeToString([]byte(msg.Result())), "some"))
 				m.ProcessInner()
 			}},
-		}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		}, Hand: func(m *ice.Message, arg ...string) {
 			m.Echo(m.Config(APPID))
 		}},
 	}})

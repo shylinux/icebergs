@@ -102,7 +102,7 @@ func init() {
 			CHECK: {Name: "check", Help: "检验", Hand: func(m *ice.Message, arg ...string) {
 				_wx_check(m)
 			}},
-		}, mdb.HashAction()), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		}, mdb.HashAction()), Hand: func(m *ice.Message, arg ...string) {
 			m.Echo(m.Config(APPID))
 		}},
 	}})

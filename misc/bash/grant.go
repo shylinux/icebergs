@@ -19,7 +19,7 @@ func init() {
 			"remove": {Name: "remove", Help: "删除", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmd(SESS, mdb.REMOVE, mdb.HASH, m.Option(mdb.HASH))
 			}},
-		}, mdb.HashAction()), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		}, mdb.HashAction()), Hand: func(m *ice.Message, arg ...string) {
 			if m.Cmdy(SESS, arg); len(arg) > 0 && m.Append("grant") == "" {
 				m.Process("_confirm", "授权设备")
 			}

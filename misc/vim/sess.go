@@ -29,7 +29,7 @@ func init() {
 			mdb.FIELD, "time,hash,status,username,hostname,pid,pwd",
 		)},
 	}, Commands: map[string]*ice.Command{
-		web.WEB_LOGIN: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		web.WEB_LOGIN: {Hand: func(m *ice.Message, arg ...string) {
 			if f, _, e := m.R.FormFile(SUB); e == nil {
 				defer f.Close()
 				if b, e := ioutil.ReadAll(f); e == nil {
@@ -55,7 +55,7 @@ func init() {
 			aaa.LOGOUT: {Name: "logout", Help: "退出", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmdy(SESS, mdb.MODIFY, mdb.STATUS, aaa.LOGOUT, ice.Option{mdb.HASH, m.Option(SID)})
 			}},
-		}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		}, Hand: func(m *ice.Message, arg ...string) {
 			if m.Option(SID) == "" { // 终端登录
 				m.Option(SID, m.Cmdx(SESS, mdb.CREATE, mdb.STATUS, aaa.LOGIN, m.OptionSimple(aaa.USERNAME, tcp.HOSTNAME, cli.PID, cli.PWD)))
 			} else {
@@ -68,7 +68,7 @@ func init() {
 				m.OptionFields(m.Config(mdb.FIELD))
 				m.Cmdy(mdb.PRUNES, m.PrefixKey(), "", mdb.HASH, mdb.STATUS, aaa.LOGOUT)
 			}},
-		}, mdb.HashAction()), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		}, mdb.HashAction()), Hand: func(m *ice.Message, arg ...string) {
 			mdb.HashSelect(m, arg...)
 		}},
 	}})

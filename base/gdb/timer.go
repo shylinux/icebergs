@@ -57,7 +57,7 @@ func init() {
 			HAPPEN: {Name: "happen", Help: "执行", Hand: func(m *ice.Message, arg ...string) {
 				_timer_action(m, arg...)
 			}},
-		}, mdb.ZoneAction()), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		}, mdb.ZoneAction()), Hand: func(m *ice.Message, arg ...string) {
 			m.Fields(len(arg), m.Config(mdb.FIELD), "time,id,res")
 			mdb.ZoneSelect(m, arg...)
 		}},

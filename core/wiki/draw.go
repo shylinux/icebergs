@@ -29,7 +29,7 @@ func init() {
 			nfs.SAVE: {Name: "save", Help: "保存", Hand: func(m *ice.Message, arg ...string) {
 				_wiki_save(m, DRAW, arg[0], m.Option("content"))
 			}},
-		}, ctx.CmdAction()), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		}, ctx.CmdAction()), Hand: func(m *ice.Message, arg ...string) {
 			if !_wiki_list(m, DRAW, kit.Select(nfs.PWD, arg, 0)) {
 				_wiki_show(m, DRAW, arg[0])
 			}

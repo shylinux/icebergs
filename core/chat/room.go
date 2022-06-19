@@ -43,7 +43,7 @@ func init() {
 				m.Cmdy(mdb.DELETE, m.Prefix(ROOM), kit.KeyHash(m.Option(mdb.ZONE)), mdb.HASH, m.OptionSimple(web.SPACE))
 				m.Cmdy(mdb.DELETE, m.Prefix(JOIN), kit.KeyHash(m.Option(web.SPACE)), mdb.HASH, m.OptionSimple(mdb.ZONE))
 			}},
-		}, mdb.ZoneAction()), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		}, mdb.ZoneAction()), Hand: func(m *ice.Message, arg ...string) {
 			if mdb.ZoneSelect(m, arg...); len(arg) == 0 {
 				m.Action(mdb.CREATE)
 				m.PushAction(mdb.INSERT, JOIN)
@@ -72,7 +72,7 @@ func init() {
 			mdb.DELETE: {Name: "delete zone socket", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmdy(mdb.DELETE, m.Prefix(JOIN), kit.KeyHash(m.Option(mdb.ZONE)), mdb.HASH, m.OptionSimple(web.SOCKET))
 			}},
-		}, mdb.HashAction()), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		}, mdb.HashAction()), Hand: func(m *ice.Message, arg ...string) {
 			m.Fields(len(arg), "time,space", "time,zone")
 			if len(arg) == 0 {
 				m.Cmdy(mdb.SELECT, m.Prefix(JOIN), "", mdb.HASH)

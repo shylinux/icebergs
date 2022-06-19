@@ -195,7 +195,7 @@ func init() {
 					stream.P = frame.pos
 				}
 			}},
-		}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		}, Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) < 2 {
 				m.Cmdy(MATRIX, arg)
 				return
@@ -206,7 +206,7 @@ func init() {
 			m.Option("stack", stack)
 			m.Cmdy(MATRIX, PARSE, arg[0], arg[1], arg[2], func(nhash string, hash int, word []string, begin int, stream *lex.Stream) (int, []string) {
 				m.Option("stream", stream)
-				if _, ok := c.Commands[SCRIPT].Action[nhash]; ok && stack.can_run(nhash) {
+				if _, ok := m.Target().Commands[SCRIPT].Action[nhash]; ok && stack.can_run(nhash) {
 					msg := m.Cmd(SCRIPT, nhash, word, ice.Option{"begin", begin})
 					return hash, msg.Resultv()
 				}

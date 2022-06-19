@@ -68,7 +68,7 @@ func init() {
 			RELAY: {Name: "relay", Help: "跳板", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmd(COMPILE, ice.SRC_RELAY_GO, path.Join(ice.USR_PUBLISH, RELAY))
 			}},
-		}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		}, Hand: func(m *ice.Message, arg ...string) {
 			// 下载依赖
 			_autogen_version(m.Spawn())
 			m.Cmd(cli.SYSTEM, GO, "get", "shylinux.com/x/ice")

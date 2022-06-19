@@ -137,7 +137,7 @@ func init() {
 				m.Cmd(nfs.TRASH, mdb.CREATE, path.Join(m.Config(nfs.PATH), m.Option(mdb.NAME)))
 				m.ProcessRefresh30ms()
 			}},
-		}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		}, Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) == 0 {
 				_dream_list(m)
 				m.SetAppend("text")

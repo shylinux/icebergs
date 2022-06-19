@@ -25,7 +25,7 @@ func init() {
 				}
 				m.Cmdy(mdb.INSERT, m.PrefixKey(), "", mdb.HASH, mdb.TYPE, kit.Ext(up[1]), mdb.NAME, up[1], nfs.SIZE, up[2], mdb.DATA, up[0])
 			}},
-		}, mdb.HashAction()), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		}, mdb.HashAction()), Hand: func(m *ice.Message, arg ...string) {
 			mdb.HashSelect(m, arg...)
 			m.Table(func(index int, value map[string]string, head []string) {
 				link := web.SHARE_CACHE + value[mdb.DATA]

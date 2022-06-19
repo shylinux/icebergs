@@ -151,7 +151,7 @@ func AutoConfig(args ...ice.Any) *ice.Action {
 			cs[m.CommandKey()] = &ice.Config{Value: kit.Data(args...)}
 			m.Load(m.CommandKey())
 		}
-		if cs := m.Target().Commands; cs[m.CommandKey()].Meta[CREATE] != nil {
+		if cs := m.Target().Commands; cs[m.CommandKey()] == nil || cs[m.CommandKey()].Meta[CREATE] != nil {
 			return
 		}
 
@@ -176,7 +176,7 @@ func HashAction(args ...ice.Any) map[string]*ice.Action {
 		}
 		return kit.Select(HASH, m.Config(SHORT))
 	}
-	return ice.SelectAction(map[string]*ice.Action{ice.CTX_INIT: AutoConfig(args...),
+	return map[string]*ice.Action{ice.CTX_INIT: AutoConfig(args...),
 		INPUTS: {Name: "inputs", Help: "补全", Hand: func(m *ice.Message, arg ...string) {
 			m.Cmdy(INPUTS, m.PrefixKey(), "", HASH, arg)
 		}},
@@ -204,7 +204,7 @@ func HashAction(args ...ice.Any) map[string]*ice.Action {
 		SELECT: &ice.Action{Name: "select hash auto", Help: "列表", Hand: func(m *ice.Message, arg ...string) {
 			HashSelect(m, arg...)
 		}},
-	})
+	}
 }
 func HashActionStatus(args ...ice.Any) map[string]*ice.Action {
 	list := HashAction(args...)

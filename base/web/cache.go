@@ -142,7 +142,7 @@ func init() {
 			mdb.LIMIT, "50", mdb.LEAST, "30",
 		)},
 	}, Commands: map[string]*ice.Command{
-		"/cache/": {Name: "/cache/", Help: "缓存池", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		"/cache/": {Name: "/cache/", Help: "缓存池", Hand: func(m *ice.Message, arg ...string) {
 			m.Richs(CACHE, nil, arg[0], func(key string, value ice.Map) {
 				if kit.Format(value[nfs.FILE]) == "" {
 					m.RenderResult(value[mdb.TEXT])
@@ -172,7 +172,7 @@ func init() {
 					_cache_save(m, arg[0], arg[1], "", file, size)
 				}
 			}},
-		}, mdb.HashAction()), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		}, mdb.HashAction()), Hand: func(m *ice.Message, arg ...string) {
 			if mdb.HashSelect(m, arg...); len(arg) == 0 {
 				return
 			}

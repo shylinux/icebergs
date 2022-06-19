@@ -118,6 +118,8 @@ func _install_start(m *ice.Message, arg ...string) {
 		args = append(args, cb(p)...)
 	case func(string):
 		cb(p)
+	default:
+		m.Error(true, ice.ErrNotImplement)
 	}
 
 	if m.Cmdy(cli.DAEMON, arg[1:], args); cli.IsSuccess(m) {
@@ -186,7 +188,7 @@ func init() {
 			cli.STOP: {Name: "stop", Help: "停止", Hand: func(m *ice.Message, arg ...string) {
 				_install_stop(m, arg...)
 			}},
-		}, mdb.HashAction()), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		}, mdb.HashAction()), Hand: func(m *ice.Message, arg ...string) {
 			switch len(arg) {
 			case 0: // 源码列表
 				mdb.HashSelect(m, arg...)
@@ -203,7 +205,7 @@ func init() {
 }
 
 func InstallAction(args ...ice.Any) map[string]*ice.Action {
-	return ice.SelectAction(map[string]*ice.Action{ice.CTX_INIT: mdb.AutoConfig(args...),
+	return map[string]*ice.Action{ice.CTX_INIT: mdb.AutoConfig(args...),
 		web.DOWNLOAD: {Name: "download", Help: "下载", Hand: func(m *ice.Message, arg ...string) {
 			m.Cmdy(INSTALL, web.DOWNLOAD, m.Config(nfs.SOURCE))
 		}},
@@ -216,7 +218,7 @@ func InstallAction(args ...ice.Any) map[string]*ice.Action {
 		nfs.TRASH: {Name: "trash", Help: "删除", Hand: func(m *ice.Message, arg ...string) {
 			m.Cmd(nfs.TRASH, m.Option(nfs.PATH))
 		}},
-	})
+	}
 }
 func InstallSoftware(m *ice.Message, bin string, list ice.Any) (ok bool) {
 	if cli.SystemFind(m, bin) != "" {

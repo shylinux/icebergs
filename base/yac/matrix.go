@@ -358,6 +358,8 @@ func init() {
 				switch cb := m.OptionCB(MATRIX).(type) {
 				case func(string, *Matrix):
 					cb(h, mat)
+				default:
+					m.Error(true, ice.ErrNotImplement)
 				}
 				m.Echo(h)
 			}},
@@ -397,6 +399,8 @@ func init() {
 							switch cb := m.OptionCB(MATRIX).(type) {
 							case func(string, int, []string, int, *lex.Stream) (int, []string):
 								return cb(nhash, hash, word, begin, stream)
+							default:
+								m.Error(true, ice.ErrNotImplement)
 							}
 							return hash, word
 						}, mat.index(m, NPAGE, m.Option(NPAGE)), stream, 1)
@@ -415,7 +419,7 @@ func init() {
 				})
 				m.ProcessInner()
 			}},
-		}, Hand: func(m *ice.Message, c *ice.Context, key string, arg ...string) {
+		}, Hand: func(m *ice.Message, arg ...string) {
 			m.Option(ice.CACHE_LIMIT, -1)
 			if m.Action(mdb.CREATE); len(arg) == 0 { // 矩阵列表
 				m.Fields(len(arg), "time,name,npage,nhash")

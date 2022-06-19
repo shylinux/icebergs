@@ -80,9 +80,9 @@ func init() {
 				m.Cmdy(arg[0], ctx.ACTION, ice.RUN, arg[2:])
 			}},
 			ice.PLAY: {Name: "play", Help: "演示"},
-		}, ctx.CmdAction(), mdb.HashAction()), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		}, ctx.CmdAction(), mdb.HashAction()), Hand: func(m *ice.Message, arg ...string) {
 			m.Option(nfs.DIR_REG, m.Config(lex.REGEXP))
-			if m.Option(nfs.DIR_DEEP, ice.TRUE); !_wiki_list(m, cmd, arg...) {
+			if m.Option(nfs.DIR_DEEP, ice.TRUE); !_wiki_list(m, m.CommandKey(), arg...) {
 				if !kit.FileExists(arg[0]) && kit.FileExists(path.Join("src", arg[0])) {
 					arg[0] = path.Join("src/", arg[0])
 				}

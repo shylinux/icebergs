@@ -10,7 +10,7 @@ import (
 
 func init() {
 	Index.Merge(&ice.Context{Commands: map[string]*ice.Command{
-		"/input": {Name: "/input", Help: "补全", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		"/input": {Name: "/input", Help: "补全", Hand: func(m *ice.Message, arg ...string) {
 			list := kit.Split(m.Option("line"), m.Option("break"))
 			word := list[kit.Int(m.Option("index"))]
 			switch arg[0] {

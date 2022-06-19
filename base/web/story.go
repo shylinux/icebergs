@@ -184,10 +184,10 @@ func init() {
 			HISTORY: {Name: "history name", Help: "历史", Hand: func(m *ice.Message, arg ...string) {
 				_story_history(m, arg[0])
 			}},
-		}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		}, Hand: func(m *ice.Message, arg ...string) {
 			_story_list(m, kit.Select("", arg, 0), kit.Select("", arg, 1))
 		}},
-		"/story/": {Name: "/story/", Help: "故事会", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		"/story/": {Name: "/story/", Help: "故事会", Hand: func(m *ice.Message, arg ...string) {
 			switch arg[0] {
 			case PULL:
 				list := m.Cmd(STORY, INDEX, m.Option("begin")).Append("list")

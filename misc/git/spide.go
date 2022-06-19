@@ -101,7 +101,7 @@ func init() {
 				m.SortIntR("count")
 				m.ProcessInner()
 			}},
-		}, ctx.CmdAction()), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		}, ctx.CmdAction()), Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) == 0 { // 仓库列表
 				m.Cmdy(REPOS)
 				return

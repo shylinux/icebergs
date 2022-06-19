@@ -167,7 +167,7 @@ func init() {
 				_inner_make(m, m.Cmd(cli.SYSTEM, cli.MAKE, arg))
 			}},
 			FAVOR: {Name: "favor", Help: "收藏"},
-		}, ctx.CmdAction()), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		}, ctx.CmdAction()), Hand: func(m *ice.Message, arg ...string) {
 			if arg[0] = strings.Split(arg[0], ice.FS)[0]; !strings.HasSuffix(arg[0], ice.PS) {
 				arg[1] = kit.Slice(strings.Split(arg[0], ice.PS), -1)[0]
 				arg[0] = strings.TrimSuffix(arg[0], arg[1])

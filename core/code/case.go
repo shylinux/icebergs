@@ -60,7 +60,7 @@ func init() {
 				m.Info(`curl "` + m.Option(cli.API) + `" -H "Content-Type: application/json"` + ` -d '` + m.Option(ice.ARG) + `'`)
 				m.ProcessDisplay("/plugin/story/json.js")
 			}},
-		}, mdb.ZoneAction(mdb.SHORT, mdb.ZONE, mdb.FIELD, "time,id,name,cmd,api,arg,res")), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		}, mdb.ZoneAction(mdb.SHORT, mdb.ZONE, mdb.FIELD, "time,id,name,cmd,api,arg,res")), Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) == 0 {
 				m.Cmdy(web.SPIDE).RenameAppend("client.name", "dev", "client.url", "address").Action(mdb.CREATE)
 				return
@@ -102,7 +102,7 @@ func init() {
 					}
 				}
 			}},
-		}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		}, Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) == 0 || arg[0] == "" {
 				m.Cmdy(nfs.DIR, nfs.PWD)
 				return

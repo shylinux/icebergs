@@ -32,7 +32,7 @@ const EMPLOYEE = "employee"
 
 func init() {
 	Index.Merge(&ice.Context{Commands: map[string]*ice.Command{
-		EMPLOYEE: {Name: "employee appid open_id|mobile|email auto", Help: "员工", Hand: func(m *ice.Message, c *ice.Context, key string, arg ...string) {
+		EMPLOYEE: {Name: "employee appid open_id|mobile|email auto", Help: "员工", Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) < 2 {
 				return
 			}

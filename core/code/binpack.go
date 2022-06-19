@@ -178,7 +178,7 @@ func init() {
 					m.Log_EXPORT(nfs.FILE, kit.WriteFile(key, value), nfs.SIZE, len(value))
 				}
 			}},
-		}, mdb.HashAction(mdb.SHORT, nfs.PATH)), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		}, mdb.HashAction(mdb.SHORT, nfs.PATH)), Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) == 0 {
 				for k, v := range ice.Info.Pack {
 					m.Push(nfs.PATH, k).Push(nfs.SIZE, len(v))

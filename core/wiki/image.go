@@ -30,7 +30,7 @@ func init() {
 			mdb.RENDER: {Name: "render", Help: "渲染", Hand: func(m *ice.Message, arg ...string) {
 				_image_show(m, path.Join(arg[2], arg[1]))
 			}},
-		}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		}, Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) == 0 {
 				return
 			}

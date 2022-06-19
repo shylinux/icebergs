@@ -73,7 +73,7 @@ func _link_file(m *ice.Message, name string, from string) {
 	os.Remove(name)
 	MkdirAll(m, path.Dir(name))
 	if e := os.Link(from, name); e != nil {
-		if m.Warn(os.Symlink(from, name), ice.ErrFailure, from) {
+		if m.Warn(os.Symlink(from, name), ice.ErrWarn, from) {
 			return
 		}
 	}
@@ -93,22 +93,22 @@ const LINK = "link"
 
 func init() {
 	Index.Merge(&ice.Context{Commands: map[string]*ice.Command{
-		DEFS: {Name: "defs file text...", Help: "默认", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		DEFS: {Name: "defs file text...", Help: "默认", Hand: func(m *ice.Message, arg ...string) {
 			_defs_file(m, arg[0], arg[1:]...)
 		}},
-		SAVE: {Name: "save file text...", Help: "保存", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		SAVE: {Name: "save file text...", Help: "保存", Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) == 1 {
 				arg = append(arg, m.Option(CONTENT))
 			}
 			_save_file(m, arg[0], arg[1:]...)
 		}},
-		PUSH: {Name: "push file text...", Help: "追加", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		PUSH: {Name: "push file text...", Help: "追加", Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) == 1 {
 				arg = append(arg, m.Option(CONTENT))
 			}
 			_push_file(m, arg[0], arg[1:]...)
 		}},
-		COPY: {Name: "copy file from...", Help: "复制", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		COPY: {Name: "copy file from...", Help: "复制", Hand: func(m *ice.Message, arg ...string) {
 			for _, file := range arg[1:] {
 				if kit.FileExists(file) {
 					_copy_file(m, arg[0], arg[1:]...)
@@ -116,7 +116,7 @@ func init() {
 				}
 			}
 		}},
-		LINK: {Name: "link file from", Help: "链接", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		LINK: {Name: "link file from", Help: "链接", Hand: func(m *ice.Message, arg ...string) {
 			_link_file(m, arg[0], arg[1])
 		}},
 	}})

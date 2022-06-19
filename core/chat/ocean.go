@@ -21,7 +21,7 @@ func init() {
 			mdb.DELETE: {Name: "delete", Help: "删除", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmdy(mdb.DELETE, RIVER, _river_key(m, OCEAN), mdb.HASH, m.OptionSimple(aaa.USERNAME))
 			}},
-		}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		}, Hand: func(m *ice.Message, arg ...string) {
 			m.Fields(len(arg), "time,username")
 			m.Cmdy(mdb.SELECT, RIVER, _river_key(m, OCEAN), mdb.HASH, aaa.USERNAME, arg)
 			m.Table(func(index int, value map[string]string, head []string) {

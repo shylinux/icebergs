@@ -100,7 +100,7 @@ func init() {
 			LISTEN: {Name: "LISTEN type name port=9030 host=", Help: "监听", Hand: func(m *ice.Message, arg ...string) {
 				_server_listen(m, arg...)
 			}},
-		}, mdb.HashActionStatus()), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		}, mdb.HashActionStatus()), Hand: func(m *ice.Message, arg ...string) {
 			mdb.HashSelect(m, arg...).Table(func(index int, value map[string]string, head []string) {
 				m.PushButton(kit.Select("", mdb.REMOVE, value[STATUS] == CLOSE))
 			})

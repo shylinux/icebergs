@@ -135,7 +135,7 @@ func init() {
 					return m.Cmd(QRCODE, kit.Simple(args...)).Result()
 				})
 			}},
-		}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		}, Hand: func(m *ice.Message, arg ...string) {
 			m.Option(SIZE, kit.Select("240", arg, 3))
 			m.Option(BG, kit.Select(WHITE, arg, 2))
 			m.Option(FG, kit.Select(BLUE, arg, 1))

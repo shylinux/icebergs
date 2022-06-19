@@ -147,7 +147,7 @@ func init() {
 				})
 				m.Sleep30ms()
 			}},
-		}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		}, Hand: func(m *ice.Message, arg ...string) {
 			m.Action(SCRIPT)
 			if len(arg) > 3 { // 执行命令
 				m.Cmd(CMD, _tmux_key(arg[0], arg[1], arg[2]), arg[3:])
@@ -179,16 +179,16 @@ func init() {
 				}
 			})
 		}},
-		WINDOW: {Name: "windows", Help: "窗口", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		WINDOW: {Name: "windows", Help: "窗口", Hand: func(m *ice.Message, arg ...string) {
 			m.Split(m.Cmdx(cli.SYSTEM, TMUX, "list-windows", "-t", kit.Select("", arg, 0), "-F", m.Config(FORMAT)), m.Config(FIELDS), ice.FS, ice.NL)
 		}},
-		PANE: {Name: "panes", Help: "终端", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		PANE: {Name: "panes", Help: "终端", Hand: func(m *ice.Message, arg ...string) {
 			m.Split(m.Cmdx(cli.SYSTEM, TMUX, "list-panes", "-t", kit.Select("", arg, 0), "-F", m.Config(FORMAT)), m.Config(FIELDS), ice.FS, ice.NL)
 		}},
-		VIEW: {Name: "view", Help: "内容", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		VIEW: {Name: "view", Help: "内容", Hand: func(m *ice.Message, arg ...string) {
 			m.Cmdy(cli.SYSTEM, TMUX, "capture-pane", "-pt", kit.Select("", arg, 0)).Set(ice.MSG_APPEND)
 		}},
-		CMD: {Name: "cmd", Help: "命令", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		CMD: {Name: "cmd", Help: "命令", Hand: func(m *ice.Message, arg ...string) {
 			m.Cmd(cli.SYSTEM, TMUX, "send-keys", "-t", arg[0], strings.Join(arg[1:], ice.SP), "Enter")
 			m.Sleep300ms()
 		}},

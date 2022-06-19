@@ -183,7 +183,7 @@ const CHART = "chart"
 
 func init() {
 	Index.Merge(&ice.Context{Commands: map[string]*ice.Command{
-		CHART: {Name: "chart type=label,chain,sequence auto text", Help: "图表", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		CHART: {Name: "chart type=label,chain,sequence auto text", Help: "图表", Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) > 1 {
 				_chart_show(m, arg[0], strings.TrimSpace(arg[1]), arg[2:]...)
 			}

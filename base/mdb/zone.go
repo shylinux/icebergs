@@ -148,7 +148,7 @@ const ZONE = "zone"
 func ZoneAction(args ...ice.Any) map[string]*ice.Action {
 	_zone := func(m *ice.Message) string { return kit.Select(ZONE, m.Config(SHORT)) }
 
-	return ice.SelectAction(map[string]*ice.Action{ice.CTX_INIT: AutoConfig(args...),
+	return map[string]*ice.Action{ice.CTX_INIT: AutoConfig(args...),
 		INPUTS: {Name: "inputs", Help: "补全", Hand: func(m *ice.Message, arg ...string) {
 			arg[0] = strings.TrimPrefix(arg[0], "extra.")
 			arg[0] = kit.Select(arg[0], m.Config(kit.Keys(ALIAS, arg[0])))
@@ -208,7 +208,7 @@ func ZoneAction(args ...ice.Any) map[string]*ice.Action {
 		SELECT: {Name: "select", Help: "列表", Hand: func(m *ice.Message, arg ...string) {
 			ZoneSelect(m, arg...)
 		}},
-	})
+	}
 }
 func ZoneSelect(m *ice.Message, arg ...string) *ice.Message {
 	arg = kit.Slice(arg, 0, 2)

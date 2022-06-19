@@ -91,7 +91,7 @@ func _website_parse(m *ice.Message, text string, args ...string) (ice.Map, bool)
 			case ctx.ARGS:
 				data[ls[i]] = kit.Split(ls[i+1])
 			case ctx.DISPLAY:
-				data[ls[i]] = ice.DisplayRequire(1, ls[i+1])[ctx.DISPLAY]
+				data[ls[i]] = ice.Display(ls[i+1])[ctx.DISPLAY]
 
 			case "title", "menus", "action", "style":
 				data[ls[i]] = kit.UnMarshal(ls[i+1])
@@ -250,7 +250,7 @@ func init() {
 					}
 				})
 			}},
-		}, mdb.HashAction()), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		}, mdb.HashAction()), Hand: func(m *ice.Message, arg ...string) {
 			mdb.HashSelect(m, arg...).Table(func(index int, value map[string]string, head []string) {
 				m.PushAnchor(m.MergeWebsite(value[nfs.PATH]))
 			})

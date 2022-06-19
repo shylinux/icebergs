@@ -34,7 +34,7 @@ func init() {
 					}
 				}
 			}},
-		}, mdb.HashAction(mdb.SHORT, mdb.NAME, mdb.FIELD, "time,type,name,text,args")), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		}, mdb.HashAction(mdb.SHORT, mdb.NAME, mdb.FIELD, "time,type,name,text,args")), Hand: func(m *ice.Message, arg ...string) {
 			if mdb.HashSelect(m, arg...).Sort(mdb.NAME); len(arg) == 0 {
 				m.Cut("time,action,type,name,text,args")
 				m.Action(mdb.CREATE)

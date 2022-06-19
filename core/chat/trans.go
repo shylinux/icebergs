@@ -39,7 +39,7 @@ func init() {
 					m.PushAction(SEND, nfs.TRASH)
 				}
 			}},
-		}, ctx.CmdAction()), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		}, ctx.CmdAction()), Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) == 0 {
 				m.Cmdy(web.ROUTE).RenameAppend(web.ROUTE, FROM)
 				return

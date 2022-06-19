@@ -60,10 +60,10 @@ const MSG = "msg"
 
 func init() {
 	Index.Merge(&ice.Context{Commands: map[string]*ice.Command{
-		web.WEB_LOGIN: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		web.WEB_LOGIN: {Hand: func(m *ice.Message, arg ...string) {
 			m.Option(ice.MSG_USERZONE, LARK)
 		}},
-		"/msg": {Name: "/msg", Help: "聊天消息", Hand: func(m *ice.Message, c *ice.Context, key string, arg ...string) {
+		"/msg": {Name: "/msg", Help: "聊天消息", Hand: func(m *ice.Message, arg ...string) {
 			data := m.Optionv(ice.MSG_USERDATA)
 			if kit.Value(data, "action") != nil { // 卡片回调
 				m.Cmd(MSG, "card")
@@ -93,7 +93,7 @@ func init() {
 				m.Cmd(SEND, m.Option(APP_ID), CHAT_ID, m.Option(OPEN_CHAT_ID),
 					m.Option(wiki.TITLE)+" "+m.Option(ice.CMD), m.Result())
 			}},
-		}, Hand: func(m *ice.Message, c *ice.Context, key string, arg ...string) {
+		}, Hand: func(m *ice.Message, arg ...string) {
 			if m.Option(OPEN_CHAT_ID) == "" {
 				m.Cmdy(DUTY, m.Option(mdb.TYPE), kit.Formats(m.Optionv(ice.MSG_USERDATA)))
 			} else {

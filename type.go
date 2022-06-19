@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"path"
 	"strings"
 	"sync"
 	"sync/atomic"
@@ -15,8 +16,7 @@ import (
 
 type Any = interface{}
 type Map = map[string]Any
-type ActionHandler func(m *Message, arg ...string)
-type CommandHandler func(m *Message, c *Context, key string, arg ...string)
+type CommandHandler func(m *Message, arg ...string)
 
 type Cache struct {
 	Name  string
@@ -31,16 +31,16 @@ type Config struct {
 type Action struct {
 	Name string
 	Help string
-	Hand ActionHandler
+	Hand CommandHandler
 	List []Any
 }
 type Command struct {
 	Name   string
 	Help   string
 	Action map[string]*Action
-	Meta   Map
 	Hand   CommandHandler
 	List   []Any
+	Meta   Map
 }
 type Server interface {
 	Spawn(m *Message, c *Context, arg ...string) Server
@@ -78,12 +78,18 @@ func (c *Context) Cap(key string, arg ...Any) string {
 	return c.Caches[key].Value
 }
 func (c *Context) Cmd(m *Message, key string, arg ...string) *Message {
-	return c.cmd(m, c.Commands[key], key, arg...)
+	return c._command(m, c.Commands[key], key, arg...)
 }
 func (c *Context) Server() Server {
 	return c.server
 }
 
+func (c *Context) RoutePath(arg ...string) string {
+	return path.Join(strings.TrimPrefix(strings.ReplaceAll(c.Cap(CTX_FOLLOW), PT, PS), "web"), path.Join(arg...))
+}
+func (c *Context) PrefixKey(arg ...string) string {
+	return kit.Keys(c.Cap(CTX_FOLLOW), arg)
+}
 func (c *Context) Register(s *Context, x Server, n ...string) *Context {
 	for _, n := range n {
 		if s, ok := Info.names[n]; ok {
@@ -92,7 +98,7 @@ func (c *Context) Register(s *Context, x Server, n ...string) *Context {
 			case *Context:
 				last = s.Name
 			}
-			panic(kit.Format("%s %s %v", ErrExists, n, last))
+			panic(kit.Format("%s %s %v", ErrWarn, n, last))
 		}
 		Info.names[n] = s
 	}
@@ -111,27 +117,29 @@ func (c *Context) Merge(s *Context) *Context {
 		c.Commands = map[string]*Command{}
 	}
 	if c.Commands[CTX_INIT] == nil {
-		c.Commands[CTX_INIT] = &Command{Hand: func(m *Message, c *Context, cmd string, arg ...string) { m.Load() }}
+		c.Commands[CTX_INIT] = &Command{Hand: func(m *Message, arg ...string) { m.Load() }}
 	}
 	if c.Commands[CTX_EXIT] == nil {
-		c.Commands[CTX_EXIT] = &Command{Hand: func(m *Message, c *Context, cmd string, arg ...string) { m.Save() }}
+		c.Commands[CTX_EXIT] = &Command{Hand: func(m *Message, arg ...string) { m.Save() }}
 	}
 
 	merge := func(pre *Command, before bool, key string, cmd *Command, cb ...CommandHandler) {
 		last := pre.Hand
-		pre.Hand = func(m *Message, c *Context, _key string, arg ...string) {
+		pre.Hand = func(m *Message, arg ...string) {
 			if before {
-				last(m, c, _key, arg...)
+				last(m, arg...)
 			}
+
+			_key, _cmd := m._key, m._cmd
 			m._key, m._cmd = key, cmd
 			for _, cb := range cb {
 				if cb != nil {
-					cb(m, c, key, arg...)
+					cb(m, arg...)
 				}
 			}
-			m._key, m._cmd = _key, pre
+			m._key, m._cmd = _key, _cmd
 			if !before {
-				last(m, c, _key, arg...)
+				last(m, arg...)
 			}
 		}
 	}
@@ -157,16 +165,16 @@ func (c *Context) Merge(s *Context) *Context {
 			if p, ok := c.Commands[k]; ok {
 				switch h := a.Hand; k {
 				case CTX_INIT:
-					merge(p, true, key, cmd, func(m *Message, c *Context, key string, arg ...string) { h(m, arg...) })
+					merge(p, true, key, cmd, func(m *Message, arg ...string) { h(m, arg...) })
 				case CTX_EXIT:
-					merge(p, false, key, cmd, func(m *Message, c *Context, key string, arg ...string) { h(m, arg...) })
+					merge(p, false, key, cmd, func(m *Message, arg ...string) { h(m, arg...) })
 				}
 			}
 
 			if s != c {
 				switch k {
 				case "search":
-					merge(c.Commands[CTX_INIT], true, key, cmd, func(m *Message, c *Context, key string, arg ...string) {
+					merge(c.Commands[CTX_INIT], true, key, cmd, func(m *Message, arg ...string) {
 						if m.CommandKey() != "search" {
 							m.Cmd("search", "create", m.CommandKey(), m.PrefixKey())
 						}
@@ -235,16 +243,16 @@ func (c *Context) Begin(m *Message, arg ...string) *Context {
 	return c
 }
 func (c *Context) Start(m *Message, arg ...string) bool {
-	wait := make(chan bool)
+	wait := make(chan bool, 1)
 	defer func() { <-wait }()
 
 	m.Hold(1)
 	m.Go(func() {
 		defer m.Done(true)
 
-		wait <- true
-		c.Cap(CTX_STATUS, CTX_START)
 		m.Log(LOG_START, c.Cap(CTX_FOLLOW))
+		c.Cap(CTX_STATUS, CTX_START)
+		wait <- true
 
 		if c.start = m; c.server != nil {
 			c.server.Start(m, arg...)
@@ -253,8 +261,8 @@ func (c *Context) Start(m *Message, arg ...string) bool {
 	return true
 }
 func (c *Context) Close(m *Message, arg ...string) bool {
-	c.Cap(CTX_STATUS, CTX_CLOSE)
 	m.Log(LOG_CLOSE, c.Cap(CTX_FOLLOW))
+	c.Cap(CTX_STATUS, CTX_CLOSE)
 
 	if c.server != nil {
 		return c.server.Close(m, arg...)
@@ -319,7 +327,7 @@ func (m *Message) Spawn(arg ...Any) *Message {
 		meta: map[string][]string{}, data: Map{},
 
 		message: m, root: m.root,
-		source: m.target, target: m.target, _cmd: m._cmd, _key: m._key,
+		source: m.target, target: m.target, _cmd: m._cmd, _key: m._key, _sub: m._sub,
 		W: m.W, R: m.R, O: m.O, I: m.I,
 	}
 
@@ -375,6 +383,8 @@ func (m *Message) Travel(cb Any) *Message {
 				cb(list[i].context, list[i], k, list[i].Configs[k])
 			}
 			m.target = target
+		default:
+			m.Error(true, ErrNotImplement)
 		}
 
 		for _, k := range kit.SortedKey(list[i].Contexts) { // 遍历递进
@@ -477,17 +487,17 @@ func (m *Message) Search(key string, cb Any) *Message {
 }
 
 func (m *Message) Cmd(arg ...Any) *Message {
-	return m.cmd(arg...)
+	return m._command(arg...)
 }
 func (m *Message) Cmds(arg ...Any) *Message {
-	return m.Go(func() { m.cmd(arg...) })
+	return m.Go(func() { m._command(arg...) })
 }
 func (m *Message) Cmdx(arg ...Any) string {
-	res := kit.Select("", m.cmd(arg...).meta[MSG_RESULT], 0)
+	res := kit.Select("", m._command(arg...).meta[MSG_RESULT], 0)
 	return kit.Select("", res, res != ErrWarn)
 }
 func (m *Message) Cmdy(arg ...Any) *Message {
-	return m.Copy(m.cmd(arg...))
+	return m.Copy(m._command(arg...))
 }
 func (m *Message) Confi(key string, sub string) int {
 	return kit.Int(m.Conf(key, sub))

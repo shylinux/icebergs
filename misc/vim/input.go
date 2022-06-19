@@ -16,7 +16,7 @@ func init() {
 	Index.Merge(&ice.Context{Configs: map[string]*ice.Config{
 		INPUT: {Name: INPUT, Help: "输入法", Value: kit.Data(mdb.FIELD, "time,id,type,name,text")},
 	}, Commands: map[string]*ice.Command{
-		"/input": {Name: "/input", Help: "输入法", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		"/input": {Name: "/input", Help: "输入法", Hand: func(m *ice.Message, arg ...string) {
 			if m.Cmdy(TAGS, ctx.ACTION, INPUT, arg[0], m.Option("pre")); m.Length() > 0 {
 				m.Cmd(m.PrefixKey(), mdb.INSERT, kit.SimpleKV("", "tags", arg[0], m.Result()))
 				return // 代码补全

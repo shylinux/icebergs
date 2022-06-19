@@ -28,7 +28,7 @@ func init() {
 			mdb.INSERT: {Name: "insert", Help: "添加", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmd(FAVOR, mdb.INSERT)
 			}},
-		}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		}, Hand: func(m *ice.Message, arg ...string) {
 			m.Cmd(FAVOR, m.Option(mdb.ZONE)).Table(func(index int, value map[string]string, head []string) {
 				m.Echo("%v\n", m.Option(mdb.ZONE)).Echo("%v:%v:%v:(%v): %v\n",
 					value[nfs.FILE], value[nfs.LINE], "1", value[mdb.NAME], value[mdb.TEXT])
@@ -40,7 +40,7 @@ func init() {
 				p := path.Join(m.Option(cli.PWD), m.Option(nfs.FILE))
 				m.ProcessCommand(code.INNER, []string{path.Dir(p) + ice.PS, path.Base(p), m.Option(nfs.LINE)}, arg...)
 			}},
-		}, mdb.ZoneAction()), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		}, mdb.ZoneAction()), Hand: func(m *ice.Message, arg ...string) {
 			if mdb.ZoneSelect(m, arg...); len(arg) == 0 {
 				m.Action(mdb.CREATE, mdb.EXPORT, mdb.IMPORT)
 			} else {

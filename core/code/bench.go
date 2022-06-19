@@ -72,7 +72,7 @@ func init() {
 					_bench_redis(m, m.Option(mdb.TEXT))
 				}
 			}},
-		}, mdb.ZoneAction(mdb.SHORT, mdb.ZONE, mdb.FIELD, "time,id,type,name,text,nconn,nreqs")), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		}, mdb.ZoneAction(mdb.SHORT, mdb.ZONE, mdb.FIELD, "time,id,type,name,text,nconn,nreqs")), Hand: func(m *ice.Message, arg ...string) {
 			mdb.ZoneSelect(m, arg...).PushAction(kit.Select(mdb.REMOVE, ice.RUN, len(arg) > 0))
 		}},
 	}})

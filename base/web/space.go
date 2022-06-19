@@ -319,7 +319,7 @@ func init() {
 			tcp.DIAL: {Name: "dial dev=ops name", Help: "连接", Hand: func(m *ice.Message, arg ...string) {
 				_space_dial(m, m.Option(ice.DEV), kit.Select(ice.Info.NodeName, m.Option(mdb.NAME)))
 			}},
-		}, mdb.HashAction()), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		}, mdb.HashAction()), Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) < 2 { // 节点列表
 				if mdb.HashSelect(m, arg...); len(arg) == 0 {
 					m.Table(func(index int, value map[string]string, head []string) {
@@ -337,7 +337,7 @@ func init() {
 			// 下发命令
 			_space_send(m, strings.ToLower(arg[0]), arg[1:]...)
 		}},
-		"/space/": {Name: "/space/ type name share river", Help: "空间站", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		"/space/": {Name: "/space/ type name share river", Help: "空间站", Hand: func(m *ice.Message, arg ...string) {
 			_space_fork(m)
 		}},
 	}})

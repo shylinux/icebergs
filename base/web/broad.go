@@ -81,7 +81,7 @@ func init() {
 			}},
 		}, mdb.HashAction(
 			mdb.SHORT, "host,port", mdb.FIELD, "time,hash,host,port",
-		)), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		)), Hand: func(m *ice.Message, arg ...string) {
 			mdb.HashSelect(m, arg...)
 			m.PushAction(SPACE, mdb.REMOVE)
 		}},

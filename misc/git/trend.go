@@ -18,7 +18,7 @@ func init() {
 			mdb.INPUTS: {Name: "inputs", Help: "补全", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmdy(REPOS, ice.OptionFields("name,time"))
 			}}, code.INNER: {Name: "web.code.inner"},
-		}, ctx.CmdAction()), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		}, ctx.CmdAction()), Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) == 0 { // 仓库列表
 				m.Cmdy(REPOS)
 				return

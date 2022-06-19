@@ -22,7 +22,7 @@ func init() {
 			"scanQRCode0": {Name: "scan create", Help: "本机扫码"},
 			"scanQRCode":  {Name: "scan create", Help: "扫码"},
 			mdb.CREATE:    {Name: "create type=text name=hi text:textarea=hi", Help: "添加"},
-		}, mdb.HashAction()), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		}, mdb.HashAction()), Hand: func(m *ice.Message, arg ...string) {
 			if mdb.HashSelect(m, arg...); len(arg) > 0 {
 				if m.Append(mdb.TYPE) == "image" {
 					m.PushImages("image", m.Append(mdb.TEXT))

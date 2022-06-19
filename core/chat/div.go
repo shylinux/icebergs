@@ -31,7 +31,7 @@ func init() {
 			nfs.TEMPLATE, _div_template,
 		)},
 	}, Commands: map[string]*ice.Command{
-		"/div/": {Name: "/div/", Help: "定制", Action: ice.MergeAction(ctx.CmdAction()), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		"/div/": {Name: "/div/", Help: "定制", Action: ice.MergeAction(ctx.CmdAction()), Hand: func(m *ice.Message, arg ...string) {
 			switch p := path.Join(arg...); kit.Ext(kit.Select("", p)) {
 			case nfs.HTML:
 				m.RenderDownload(p)
@@ -65,7 +65,7 @@ func init() {
 					}
 				})
 			}},
-		}, mdb.HashAction(), ctx.CmdAction()), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		}, mdb.HashAction(), ctx.CmdAction()), Hand: func(m *ice.Message, arg ...string) {
 			switch kit.Ext(kit.Select("", arg, 0)) {
 			case "shy":
 				m.Fields(0)

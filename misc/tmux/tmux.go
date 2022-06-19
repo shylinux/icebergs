@@ -23,7 +23,7 @@ var Index = &ice.Context{Name: TMUX, Help: "工作台", Configs: map[string]*ice
 			})
 			m.Cmdy(code.INSTALL, cli.START, m.Config(nfs.SOURCE), "bin/tmux")
 		}},
-	}, code.InstallAction()), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+	}, code.InstallAction()), Hand: func(m *ice.Message, arg ...string) {
 		m.Cmdy(code.INSTALL, nfs.SOURCE, m.Config(nfs.SOURCE), arg)
 	}},
 }}

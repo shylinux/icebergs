@@ -63,7 +63,7 @@ func init() {
 				m.SortIntR("lines")
 				m.StatusTime()
 			}},
-		}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		}, Hand: func(m *ice.Message, arg ...string) {
 			m.Cmdy(nfs.DIR, arg)
 		}},
 	}})

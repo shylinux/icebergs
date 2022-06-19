@@ -15,7 +15,7 @@ const LOCAL = "local"
 
 func init() {
 	Index.Merge(&ice.Context{Commands: map[string]*ice.Command{
-		LOCAL: {Name: "local [name] file", Help: "文件", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		LOCAL: {Name: "local [name] file", Help: "文件", Hand: func(m *ice.Message, arg ...string) {
 			arg = _name(m, arg)
 			_local_show(m, arg[0], kit.Select(arg[0], arg[1]), arg[2:]...)
 		}},

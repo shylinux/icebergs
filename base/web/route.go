@@ -98,7 +98,7 @@ func init() {
 					m.Cmdy(SPACE, m.Option(ROUTE), ctx.CONTEXT, SPIDE, "", m.Option(ctx.CONTEXT), m.Option(mdb.NAME))
 				}
 			}},
-		}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		}, Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) == 0 || arg[0] == "" { // 路由列表
 				if _route_travel(m, kit.Select("", arg, 0)); m.W != nil {
 					_route_list(m)

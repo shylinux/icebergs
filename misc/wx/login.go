@@ -66,7 +66,7 @@ func init() {
 	Index.Merge(&ice.Context{Configs: map[string]*ice.Config{
 		LOGIN: {Name: LOGIN, Help: "登录", Value: kit.Data()},
 	}, Commands: map[string]*ice.Command{
-		"/login/": {Name: "/login/", Help: "认证", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		"/login/": {Name: "/login/", Help: "认证", Hand: func(m *ice.Message, arg ...string) {
 			if m.Cmdx(ACCESS, CHECK) == "" {
 				return // 验签失败
 			}
@@ -106,7 +106,7 @@ func init() {
 				m.Conf(ACCESS, kit.Keym(APPMM), m.Option(APPMM))
 				m.Conf(ACCESS, kit.Keym(TOKEN), m.Option(TOKEN))
 			}},
-		}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		}, Hand: func(m *ice.Message, arg ...string) {
 		}},
 	}})
 }

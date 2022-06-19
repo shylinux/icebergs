@@ -11,7 +11,7 @@ const FORM = "form"
 
 func init() {
 	Index.Merge(&ice.Context{Commands: map[string]*ice.Command{
-		FORM: {Name: "form [chat_id|open_id|user_id|email] target title text [confirm|value|url arg...]...", Help: "消息", Hand: func(m *ice.Message, c *ice.Context, key string, arg ...string) {
+		FORM: {Name: "form [chat_id|open_id|user_id|email] target title text [confirm|value|url arg...]...", Help: "消息", Hand: func(m *ice.Message, arg ...string) {
 			var form = kit.Dict()
 			switch arg[0] {
 			case CHAT_ID, OPEN_ID, USER_ID, aaa.EMAIL:

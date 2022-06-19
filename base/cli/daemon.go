@@ -50,6 +50,8 @@ func _daemon_exec(m *ice.Message, cmd *exec.Cmd) {
 			cb(m.Conf(DAEMON, kit.Keys(mdb.HASH, h, kit.Keym(STATUS))))
 		case func():
 			cb()
+		default:
+			m.Error(true, ice.ErrNotImplement)
 		}
 
 		for _, p := range kit.Simple(CMD_INPUT, CMD_OUTPUT, CMD_ERRPUT) {
@@ -131,7 +133,7 @@ func init() {
 					m.SetAppend()
 				}
 			}},
-		}, mdb.HashAction()), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		}, mdb.HashAction()), Hand: func(m *ice.Message, arg ...string) {
 			mdb.HashSelect(m, arg...).Set(ctx.ACTION).Table(func(index int, value map[string]string, head []string) {
 				switch value[STATUS] {
 				case START:

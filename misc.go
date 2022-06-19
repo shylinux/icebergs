@@ -3,7 +3,6 @@ package ice
 import (
 	"bytes"
 	"encoding/csv"
-	"path"
 	"reflect"
 	"strings"
 
@@ -82,12 +81,6 @@ func (m *Message) PushRecord(value Any, arg ...string) *Message {
 	return m.Push("", value, kit.Split(kit.Join(arg)))
 }
 
-func (m *Message) OptionCB(key string, cb ...Any) Any {
-	if len(cb) > 0 {
-		return m.Optionv(kit.Keycb(key), cb...)
-	}
-	return m.Optionv(kit.Keycb(key))
-}
 func (m *Message) ToLowerAppend(arg ...string) *Message {
 	for _, k := range m.meta[MSG_APPEND] {
 		m.RenameAppend(k, strings.ToLower(k))
@@ -144,14 +137,32 @@ func (m *Message) SetResult(arg ...string) *Message {
 	return m.Set(MSG_RESULT, arg...)
 }
 
-func (m *Message) IsErr(arg ...string) bool {
-	return len(arg) > 0 && m.Result(1) == arg[0] || m.Result(0) == ErrWarn
+func (m *Message) Design(action Any, help string, input ...Any) {
+	list := kit.List()
+	for _, input := range input {
+		switch input := input.(type) {
+		case string:
+			list = append(list, SplitCmd("action "+input)...)
+		case Map:
+			if kit.Format(input[TYPE]) != "" && kit.Format(input[NAME]) != "" {
+				list = append(list, input)
+				continue
+			}
+			kit.Fetch(kit.KeyValue(nil, "", input), func(k string, v Any) {
+				list = append(list, kit.Dict(NAME, k, TYPE, "text", VALUE, v))
+			})
+		default:
+			m.Error(true, ErrNotImplement)
+		}
+	}
+	k := kit.Format(action)
+	if a, ok := m._cmd.Action[k]; ok {
+		m._cmd.Meta[k], a.List = list, list
+		kit.Value(m._cmd.Meta, kit.Keys("_trans", k), help)
+	}
 }
-func (m *Message) IsErrNotFound() bool { return m.Result(1) == ErrNotFound }
-
-func (m *Message) cmd(arg ...Any) *Message {
-	opts := Map{}
-	args := []Any{}
+func (m *Message) _command(arg ...Any) *Message {
+	args, opts := []Any{}, Map{}
 	var cbs Any
 
 	// 解析参数
@@ -175,7 +186,7 @@ func (m *Message) cmd(arg ...Any) *Message {
 		case func(int, map[string]string, []string):
 			defer func() { m.Table(val) }()
 		default:
-			if reflect.Func == reflect.TypeOf(val).Kind() {
+			if reflect.TypeOf(val).Kind() == reflect.Func {
 				cbs = val
 			} else {
 				args = append(args, v)
@@ -203,7 +214,7 @@ func (m *Message) cmd(arg ...Any) *Message {
 
 		// 执行命令
 		key = kit.Slice(strings.Split(key, PT), -1)[0]
-		m.TryCatch(msg, true, func(msg *Message) { m = ctx.cmd(msg, cmd, key, arg...) })
+		m.TryCatch(msg, true, func(msg *Message) { m = ctx._command(msg, cmd, key, arg...) })
 	}
 
 	// 查找命令
@@ -222,26 +233,20 @@ func (m *Message) cmd(arg ...Any) *Message {
 	m.Warn(!ok, ErrNotFound, kit.Format(list))
 	return m
 }
-func (c *Context) PrefixKey(arg ...string) string {
-	return kit.Keys(c.Cap(CTX_FOLLOW), arg)
-}
-func (c *Context) RoutePath(arg ...string) string {
-	return path.Join(strings.TrimPrefix(strings.ReplaceAll(c.Cap(CTX_FOLLOW), PT, PS), "web"), path.Join(arg...))
-}
-func (c *Context) cmd(m *Message, cmd *Command, key string, arg ...string) *Message {
+func (c *Context) _command(m *Message, cmd *Command, key string, arg ...string) *Message {
 	if m._key, m._cmd = key, cmd; cmd == nil {
 		return m
 	}
-
-	m.meta[MSG_DETAIL] = kit.Simple(key, arg)
-	if m.Hand = true; len(arg) > 1 && arg[0] == ACTION && cmd.Action != nil {
-		if h, ok := cmd.Action[arg[1]]; ok {
-			return c._cmd(m, cmd, key, arg[1], h, arg[2:]...)
+	if m.Hand, m.meta[MSG_DETAIL] = true, kit.Simple(key, arg); cmd.Action != nil {
+		if len(arg) > 1 && arg[0] == ACTION {
+			if h, ok := cmd.Action[arg[1]]; ok {
+				return c._action(m, cmd, key, arg[1], h, arg[2:]...)
+			}
 		}
-	}
-	if len(arg) > 0 && arg[0] != COMMAND && cmd.Action != nil {
-		if h, ok := cmd.Action[arg[0]]; ok {
-			return c._cmd(m, cmd, key, arg[0], h, arg[1:]...)
+		if len(arg) > 0 && arg[0] != COMMAND {
+			if h, ok := cmd.Action[arg[0]]; ok {
+				return c._action(m, cmd, key, arg[0], h, arg[1:]...)
+			}
 		}
 	}
 
@@ -249,19 +254,18 @@ func (c *Context) cmd(m *Message, cmd *Command, key string, arg ...string) *Mess
 		kit.Select(kit.FileLine(cmd.Hand, 3), kit.FileLine(9, 3), m.target.Name == MDB))
 
 	if cmd.Hand != nil {
-		cmd.Hand(m, c, key, arg...)
+		cmd.Hand(m, arg...)
 	} else if cmd.Action != nil && cmd.Action["select"] != nil {
 		cmd.Action["select"].Hand(m, arg...)
 	}
 	return m
 }
-func (c *Context) _cmd(m *Message, cmd *Command, key string, sub string, h *Action, arg ...string) *Message {
+func (c *Context) _action(m *Message, cmd *Command, key string, sub string, h *Action, arg ...string) *Message {
 	if h.Hand == nil {
 		m.Cmdy(kit.Split(h.Name), arg)
 		return m
 	}
 
-	m.Log(LOG_CMDS, "%s.%s %s %d %v %s", c.Name, key, sub, len(arg), arg, kit.FileLine(h.Hand, 3))
 	if m._sub = sub; len(h.List) > 0 && sub != "search" {
 		order := false
 		for i, v := range h.List {
@@ -284,54 +288,62 @@ func (c *Context) _cmd(m *Message, cmd *Command, key string, sub string, h *Acti
 		}
 	}
 
+	m.Log(LOG_CMDS, "%s.%s %s %d %v %s", c.Name, key, sub, len(arg), arg, kit.FileLine(h.Hand, 3))
 	h.Hand(m, arg...)
 	return m
 }
+
 func SplitCmd(name string) (list []Any) {
 	const (
 		TEXT     = "text"
-		ARGS     = "args"
 		TEXTAREA = "textarea"
 		PASSWORD = "password"
 		SELECT   = "select"
 		BUTTON   = "button"
+	)
+	const (
+		RUN  = "run"
+		LIST = "list"
+		BACK = "back"
+		AUTO = "auto"
+		PAGE = "page"
+		ARGS = "args"
 	)
 
 	item, button := kit.Dict(), false
 	ls := kit.Split(name, SP, ":=@")
 	for i := 1; i < len(ls); i++ {
 		switch ls[i] {
-		case "run":
-			item = kit.Dict(TYPE, BUTTON, NAME, "run")
-			list = append(list, item)
+		case RUN:
+			list = append(list, kit.Dict(TYPE, BUTTON, NAME, RUN))
 			button = true
-		case "list":
-			list = append(list, kit.List(TYPE, BUTTON, NAME, "list", ACTION, AUTO)...)
+		case LIST:
+			list = append(list, kit.Dict(TYPE, BUTTON, NAME, LIST, ACTION, AUTO))
 			button = true
-		case "auto":
-			list = append(list, kit.List(TYPE, BUTTON, NAME, "list", ACTION, AUTO)...)
-			list = append(list, kit.List(TYPE, BUTTON, NAME, "back")...)
+		case AUTO:
+			list = append(list, kit.Dict(TYPE, BUTTON, NAME, LIST, ACTION, AUTO))
+			list = append(list, kit.Dict(TYPE, BUTTON, NAME, BACK))
 			button = true
-		case "page":
-			list = append(list, kit.List(TYPE, TEXT, NAME, "limit")...)
-			list = append(list, kit.List(TYPE, TEXT, NAME, "offend")...)
-			list = append(list, kit.List(TYPE, BUTTON, NAME, "prev")...)
-			list = append(list, kit.List(TYPE, BUTTON, NAME, "next")...)
-		case "text", "args":
+		case PAGE:
+			list = append(list, kit.Dict(TYPE, TEXT, NAME, "limit"))
+			list = append(list, kit.Dict(TYPE, TEXT, NAME, "offend"))
+			list = append(list, kit.Dict(TYPE, BUTTON, NAME, "prev"))
+			list = append(list, kit.Dict(TYPE, BUTTON, NAME, "next"))
+		case ARGS, TEXT, TEXTAREA:
 			item = kit.Dict(TYPE, TEXTAREA, NAME, ls[i])
 			list = append(list, item)
 
-		case "password":
+		case PASSWORD:
 			item = kit.Dict(TYPE, PASSWORD, NAME, ls[i])
 			list = append(list, item)
 
-		case ":":
+		case DF:
 			if item[TYPE] = kit.Select("", ls, i+1); item[TYPE] == BUTTON {
 				button = true
 			}
 			i++
-		case "=":
-			if value := kit.Select("", ls, i+1); strings.Contains(value, ",") {
+		case EQ:
+			if value := kit.Select("", ls, i+1); strings.Contains(value, FS) {
 				vs := kit.Split(value)
 				if strings.Count(value, vs[0]) > 1 {
 					item["values"] = vs[1:]
@@ -344,7 +356,7 @@ func SplitCmd(name string) (list []Any) {
 				item[VALUE] = value
 			}
 			i++
-		case "@":
+		case AT:
 			item[ACTION] = kit.Select("", ls, i+1)
 			i++
 
@@ -355,39 +367,15 @@ func SplitCmd(name string) (list []Any) {
 	}
 	return list
 }
-func (m *Message) Design(action Any, help string, input ...Any) {
-	list := kit.List()
-	for _, input := range input {
-		switch input := input.(type) {
-		case string:
-			list = append(list, SplitCmd("action "+input)...)
-		case Map:
-			if kit.Format(input[TYPE]) != "" && kit.Format(input[NAME]) != "" {
-				list = append(list, input)
-				continue
-			}
-			kit.Fetch(kit.KeyValue(nil, "", input), func(k string, v Any) {
-				list = append(list, kit.Dict(NAME, k, TYPE, "text", VALUE, v))
-			})
-		}
-	}
-	k := kit.Format(action)
-	if a, ok := m._cmd.Action[k]; ok {
-		a.List = list
-		m._cmd.Meta[k] = list
-		kit.Value(m._cmd.Meta, kit.Keys("_trans", k), help)
-	}
-}
-
 func MergeAction(list ...Any) map[string]*Action {
 	if len(list) == 0 {
 		return nil
 	}
 	base := list[0].(map[string]*Action)
-	for _, item := range list[1:] {
-		switch item := item.(type) {
+	for _, from := range list[1:] {
+		switch from := from.(type) {
 		case map[string]*Action:
-			for k, v := range item {
+			for k, v := range from {
 				if h, ok := base[k]; !ok {
 					base[k] = v
 				} else if h.Hand == nil {
@@ -403,23 +391,14 @@ func MergeAction(list ...Any) map[string]*Action {
 			}
 		case string:
 			base[CTX_INIT] = &Action{Hand: func(m *Message, arg ...string) {
-				m.Search(item, func(p *Context, s *Context, key string, cmd *Command) {
+				m.Search(from, func(p *Context, s *Context, key string, cmd *Command) {
 					MergeAction(base, cmd.Action)
 					m.target.Merge(m.target)
 				})
 			}}
+		default:
+			Pulse.Error(true, ErrNotImplement)
 		}
 	}
 	return base
-}
-func SelectAction(list map[string]*Action, fields ...string) map[string]*Action {
-	if len(fields) == 0 {
-		return list
-	}
-
-	res := map[string]*Action{}
-	for _, field := range fields {
-		res[field] = list[field]
-	}
-	return res
 }

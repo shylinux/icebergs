@@ -66,7 +66,7 @@ func init() {
 			ice.RUN: {Name: "run", Help: "执行", Hand: func(m *ice.Message, arg ...string) {
 				_table_run(m, arg...)
 			}},
-		}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		}, Hand: func(m *ice.Message, arg ...string) {
 			_table_show(m, arg[0], arg[1:]...)
 		}},
 	}, Configs: map[string]*ice.Config{

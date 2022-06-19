@@ -27,7 +27,7 @@ func init() {
 			mdb.RENDER: {Name: "render", Help: "渲染", Hand: func(m *ice.Message, arg ...string) {
 				_video_show(m, path.Join(arg[2], arg[1]))
 			}},
-		}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		}, Hand: func(m *ice.Message, arg ...string) {
 			_video_show(m, arg[0], arg[1:]...)
 		}},
 	}, Configs: map[string]*ice.Config{

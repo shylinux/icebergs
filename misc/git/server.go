@@ -114,7 +114,7 @@ const SERVER = "server"
 
 func init() {
 	Index.Merge(&ice.Context{Commands: map[string]*ice.Command{
-		web.WEB_LOGIN: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		web.WEB_LOGIN: {Hand: func(m *ice.Message, arg ...string) {
 			m.Render(ice.RENDER_VOID)
 		}},
 		"/repos/": {Name: "/repos/", Help: "代码库", Action: ice.MergeAction(map[string]*ice.Action{
@@ -138,7 +138,7 @@ func init() {
 					return false
 				})
 			}},
-		}, ctx.CmdAction()), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		}, ctx.CmdAction()), Hand: func(m *ice.Message, arg ...string) {
 			if !m.IsCliUA() {
 				p := kit.Split(m.MergeURL2("/x/"+path.Join(arg...)), "?")[0]
 				m.RenderResult("git clone %v", p)
@@ -189,7 +189,7 @@ func init() {
 					m.Cmd(cli.SYSTEM, GIT, PUSH, "--tags", remote, MASTER)
 				})
 			}},
-		}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		}, Hand: func(m *ice.Message, arg ...string) {
 			if m.Option(nfs.DIR_ROOT, path.Join(ice.USR_LOCAL, REPOS)); len(arg) == 0 {
 				m.Cmdy(nfs.DIR, nfs.PWD).Table(func(index int, value map[string]string, head []string) {
 					m.PushScript("git clone " + m.MergeLink("/x/"+strings.TrimSuffix(value[nfs.PATH], ice.PS)))

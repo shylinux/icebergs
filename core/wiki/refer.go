@@ -27,7 +27,7 @@ const REFER = "refer"
 
 func init() {
 	Index.Merge(&ice.Context{Commands: map[string]*ice.Command{
-		REFER: {Name: "refer `[[name] url\n]...`", Help: "参考", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		REFER: {Name: "refer `[[name] url\n]...`", Help: "参考", Hand: func(m *ice.Message, arg ...string) {
 			_refer_show(m, arg[0], arg[1:]...)
 		}},
 	}, Configs: map[string]*ice.Config{

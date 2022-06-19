@@ -143,7 +143,7 @@ func init() {
 				m.Cmd(nfs.TAR, kit.Path(ice.USR_PUBLISH, "contexts.home.tar.gz"), ".vim/plugged", kit.Dict(nfs.DIR_ROOT, kit.Env(cli.HOME)))
 				m.Cmd("web.code.git.server", mdb.IMPORT)
 			}},
-		}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		}, Hand: func(m *ice.Message, arg ...string) {
 			m.Option(nfs.DIR_ROOT, m.Config(nfs.PATH))
 			m.Cmdy(nfs.DIR, kit.Select("", arg, 0), nfs.DIR_WEB_FIELDS)
 		}},

@@ -16,7 +16,7 @@ func init() {
 	}, Commands: map[string]*ice.Command{
 		SCRIPT: {Name: "script name auto create export import", Help: "脚本", Action: ice.MergeAction(map[string]*ice.Action{
 			mdb.CREATE: {Name: "create type=shell,tmux,vim name=hi text:textarea=pwd", Help: "添加"},
-		}, mdb.HashAction()), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		}, mdb.HashAction()), Hand: func(m *ice.Message, arg ...string) {
 			mdb.HashSelect(m, arg...)
 		}},
 	}})

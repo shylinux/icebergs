@@ -13,7 +13,7 @@ const SSO = "sso"
 
 func init() {
 	Index.Merge(&ice.Context{Commands: map[string]*ice.Command{
-		"/sso": {Name: "/sso", Help: "网页", Hand: func(m *ice.Message, c *ice.Context, key string, arg ...string) {
+		"/sso": {Name: "/sso", Help: "网页", Hand: func(m *ice.Message, arg ...string) {
 			if m.Option(ice.MSG_USERNAME) != "" { // 默认主页
 				m.RenderIndex(web.SERVE, ice.VOLCANOS)
 				return

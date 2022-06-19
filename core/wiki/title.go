@@ -78,7 +78,7 @@ const TITLE = "title"
 
 func init() {
 	Index.Merge(&ice.Context{Commands: map[string]*ice.Command{
-		TITLE: {Name: "title [navmenu|premenu|chapter|section|endmenu] text", Help: "标题", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		TITLE: {Name: "title [navmenu|premenu|chapter|section|endmenu] text", Help: "标题", Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) == 0 {
 				arg = append(arg, kit.Slice(kit.Split(ice.Info.NodeName, "-"), -1)[0])
 			}

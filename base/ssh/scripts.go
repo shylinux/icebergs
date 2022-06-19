@@ -266,33 +266,33 @@ func init() {
 			PS2, []ice.Any{mdb.COUNT, " ", TARGET, "> "},
 		)},
 	}, Commands: map[string]*ice.Command{
-		ice.CTX_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {}},
+		ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {}},
 		SOURCE: {Name: "source file", Help: "脚本解析", Action: ice.MergeAction(map[string]*ice.Action{
 			"repeat": {Name: "repeat", Help: "执行", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmdy(SCREEN, m.Option(mdb.TEXT))
 				m.ProcessInner()
 			}},
-		}, mdb.ZoneAction()), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		}, mdb.ZoneAction()), Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) > 0 && kit.Ext(arg[0]) == ice.SHY {
 				(&Frame{}).Start(m, arg...)
 				return // 脚本解析
 			}
 		}},
-		TARGET: {Name: "target name run", Help: "当前模块", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			f := c.Server().(*Frame)
+		TARGET: {Name: "target name run", Help: "当前模块", Hand: func(m *ice.Message, arg ...string) {
+			f := m.Target().Server().(*Frame)
 			m.Search(arg[0]+ice.PT, func(p *ice.Context, s *ice.Context, key string) { f.target = s })
 			f.prompt(m)
 		}},
-		PROMPT: {Name: "prompt arg run", Help: "命令提示", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		PROMPT: {Name: "prompt arg run", Help: "命令提示", Hand: func(m *ice.Message, arg ...string) {
 			f := m.Optionv(FRAME).(*Frame)
 			f.ps1 = arg
 			f.prompt(m)
 		}},
-		PRINTF: {Name: "printf run text", Help: "输出显示", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		PRINTF: {Name: "printf run text", Help: "输出显示", Hand: func(m *ice.Message, arg ...string) {
 			f := m.Optionv(FRAME).(*Frame)
 			f.printf(m, arg[0])
 		}},
-		SCREEN: {Name: "screen run text", Help: "输出命令", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		SCREEN: {Name: "screen run text", Help: "输出命令", Hand: func(m *ice.Message, arg ...string) {
 			f := m.Optionv(FRAME).(*Frame)
 			for _, line := range kit.Split(arg[0], ice.NL, ice.NL) {
 				fmt.Fprintf(f.pipe, line+ice.NL)
@@ -301,7 +301,7 @@ func init() {
 			}
 			m.Echo(f.res)
 		}},
-		RETURN: {Name: "return", Help: "结束脚本", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		RETURN: {Name: "return", Help: "结束脚本", Hand: func(m *ice.Message, arg ...string) {
 			f := m.Optionv(FRAME).(*Frame)
 			f.Close(m, arg...)
 		}},

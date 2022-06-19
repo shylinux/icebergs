@@ -33,7 +33,7 @@ func init() {
 					m.Cmdy(SEND, m.Option(APP_ID), m.Option(OPEN_CHAT_ID), m.Conf(APP, kit.Keym(nfs.TEMPLATE, m.Option(mdb.TYPE))))
 				}
 			}},
-		}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		}, Hand: func(m *ice.Message, arg ...string) {
 			m.Cmdy(MSG, m.Option(MSG_TYPE))
 		}},
 	}})

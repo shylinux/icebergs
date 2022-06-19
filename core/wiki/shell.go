@@ -20,7 +20,7 @@ const SHELL = "shell"
 
 func init() {
 	Index.Merge(&ice.Context{Commands: map[string]*ice.Command{
-		SHELL: {Name: "shell [name] cmd", Help: "命令", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		SHELL: {Name: "shell [name] cmd", Help: "命令", Hand: func(m *ice.Message, arg ...string) {
 			arg = _name(m, arg)
 			_shell_show(m, arg[0], kit.Select(arg[0], arg[1]), arg[2:]...)
 		}},

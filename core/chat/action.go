@@ -185,7 +185,7 @@ func init() {
 			"_share": {Name: "_share", Help: "共享", Hand: func(m *ice.Message, arg ...string) {
 				_action_share(m, arg...)
 			}},
-		}, ctx.CmdAction()), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		}, ctx.CmdAction()), Hand: func(m *ice.Message, arg ...string) {
 			if m.Warn(m.Option(ice.MSG_USERNAME) == "", ice.ErrNotLogin, arg) {
 				return // 没有登录
 			}

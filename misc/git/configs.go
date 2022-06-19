@@ -63,7 +63,7 @@ func init() {
 					_configs_set(m, m.Option(mdb.NAME), arg[1])
 				}
 			}},
-		}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		}, Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) == 0 {
 				_configs_list(m)
 				return

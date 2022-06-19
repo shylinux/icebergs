@@ -46,10 +46,10 @@ func (f *Frame) Close(m *ice.Message, arg ...string) bool {
 const GDB = "gdb"
 
 var Index = &ice.Context{Name: GDB, Help: "事件模块", Commands: map[string]*ice.Command{
-	ice.CTX_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+	ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
 		m.Load(TIMER)
 	}},
-	ice.CTX_EXIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+	ice.CTX_EXIT: {Hand: func(m *ice.Message, arg ...string) {
 		m.Save(TIMER)
 	}},
 }}

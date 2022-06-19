@@ -46,7 +46,7 @@ func init() {
 				}
 				m.Echo(msg.Append(TOKEN))
 			}},
-		}, mdb.HashAction()), Hand: func(m *ice.Message, c *ice.Context, key string, arg ...string) {
+		}, mdb.HashAction()), Hand: func(m *ice.Message, arg ...string) {
 			mdb.HashSelect(m, arg...)
 		}},
 	}})

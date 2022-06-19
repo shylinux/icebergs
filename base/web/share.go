@@ -154,7 +154,7 @@ func init() {
 				m.EchoQRCode(msg.Option(mdb.LINK))
 				m.ProcessInner()
 			}},
-		}, mdb.HashAction()), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		}, mdb.HashAction()), Hand: func(m *ice.Message, arg ...string) {
 			if m.PodCmd(SHARE, arg) && m.Length() > 0 {
 				return
 			}
@@ -169,7 +169,7 @@ func init() {
 			m.PushAction(mdb.REMOVE)
 			m.StatusTimeCount()
 		}},
-		"/share/": {Name: "/share/", Help: "共享链", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		"/share/": {Name: "/share/", Help: "共享链", Hand: func(m *ice.Message, arg ...string) {
 			m.Option(SHARE, kit.Select(m.Option(SHARE), arg, 0))
 			if msg := m.Cmd(SHARE, m.Option(SHARE)); kit.Int(msg.Append(mdb.TIME)) < kit.Int(msg.FormatTime()) {
 				m.RenderResult("共享超时")
@@ -189,27 +189,27 @@ func init() {
 			}
 		}},
 
-		SHARE_TOAST: {Name: "/share/toast/", Help: "推送流", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		SHARE_TOAST: {Name: "/share/toast/", Help: "推送流", Hand: func(m *ice.Message, arg ...string) {
 			m.Cmdy(SPACE, m.Option(ice.POD), m.Optionv("cmds"))
 		}},
-		SHARE_CACHE: {Name: "/share/cache/", Help: "缓存池", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		SHARE_CACHE: {Name: "/share/cache/", Help: "缓存池", Hand: func(m *ice.Message, arg ...string) {
 			_share_cache(m, arg...)
 		}},
-		SHARE_REPOS: {Name: "/share/repos/", Help: "代码库", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		SHARE_REPOS: {Name: "/share/repos/", Help: "代码库", Hand: func(m *ice.Message, arg ...string) {
 			_share_repos(m, path.Join(arg[0], arg[1], arg[2]), arg[3:]...)
 		}},
-		SHARE_PROXY: {Name: "/share/proxy/", Help: "文件流", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		SHARE_PROXY: {Name: "/share/proxy/", Help: "文件流", Hand: func(m *ice.Message, arg ...string) {
 			_share_proxy(m)
 		}},
-		SHARE_LOCAL: {Name: "/share/local/", Help: "文件夹", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		SHARE_LOCAL: {Name: "/share/local/", Help: "文件夹", Hand: func(m *ice.Message, arg ...string) {
 			_share_local(m, arg...)
 		}},
-		SHARE_LOCAL_AVATAR: {Name: "avatar", Help: "头像", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		SHARE_LOCAL_AVATAR: {Name: "avatar", Help: "头像", Hand: func(m *ice.Message, arg ...string) {
 			// RenderType(m.W, "", "image/svg+xml")
 			// m.RenderResult(`<svg font-size="32" text-anchor="middle" dominant-baseline="middle" width="80" height="60" xmlns="http://www.w3.org/2000/svg"><text x="40" y="30" stroke="red">hello</text></svg>`)
 			m.RenderDownload(strings.TrimPrefix(m.Cmd(aaa.USER, m.Option(ice.MSG_USERNAME)).Append(aaa.AVATAR), SHARE_LOCAL))
 		}},
-		SHARE_LOCAL_BACKGROUND: {Name: "background", Help: "壁纸", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		SHARE_LOCAL_BACKGROUND: {Name: "background", Help: "壁纸", Hand: func(m *ice.Message, arg ...string) {
 			m.RenderDownload(strings.TrimPrefix(m.Cmd(aaa.USER, m.Option(ice.MSG_USERNAME)).Append(aaa.BACKGROUND), SHARE_LOCAL))
 		}},
 	}})

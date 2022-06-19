@@ -372,7 +372,7 @@ func init() {
 			"submit": {Name: "submit dev pod path size cache", Help: "发布", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmdy(SPIDE, ice.DEV, SPIDE_RAW, m.Option("dev"), SPIDE_PART, "pod", m.Option("pod"), nfs.PATH, "bin/ice.bin", UPLOAD, "@"+"bin/ice.bin")
 			}},
-		}, mdb.HashAction()), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		}, mdb.HashAction()), Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) < 2 || arg[0] == "" || (len(arg) > 3 && arg[3] == "") {
 				mdb.HashSelect(m, kit.Slice(arg, 0, 1)...)
 				m.Sort("client.name")
@@ -385,14 +385,14 @@ func init() {
 			mdb.REMOVE: {Name: "remove", Help: "删除", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmdy(mdb.DELETE, SPIDE, "", mdb.HASH, m.OptionSimple(CLIENT_NAME))
 			}},
-		}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		}, Hand: func(m *ice.Message, arg ...string) {
 			m.Echo(kit.Formats(kit.UnMarshal(m.Cmdx(SPIDE, ice.DEV, SPIDE_RAW, SPIDE_GET, arg[0], arg[1:]))))
 		}},
 		SPIDE_POST: {Name: "POST url key value run", Help: "蜘蛛侠", Action: map[string]*ice.Action{
 			mdb.REMOVE: {Name: "remove", Help: "删除", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmdy(mdb.DELETE, SPIDE, "", mdb.HASH, m.OptionSimple(CLIENT_NAME))
 			}},
-		}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		}, Hand: func(m *ice.Message, arg ...string) {
 			m.Echo(kit.Formats(kit.UnMarshal(m.Cmdx(SPIDE, ice.DEV, SPIDE_RAW, SPIDE_POST, arg[0], arg[1:]))))
 		}},
 	}})

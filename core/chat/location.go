@@ -41,7 +41,7 @@ func init() {
 			OPENLOCATION: {Name: "location", Help: "地图"},
 			GETLOCATION:  {Name: "location create", Help: "打卡"},
 			mdb.CREATE:   {Name: "create type=text name text latitude longitude", Help: "添加"},
-		}, mdb.HashAction()), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		}, mdb.HashAction()), Hand: func(m *ice.Message, arg ...string) {
 			mdb.HashSelect(m, arg...)
 			m.PushAction(OPENLOCATION, mdb.REMOVE)
 		}},

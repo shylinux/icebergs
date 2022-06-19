@@ -230,3 +230,8 @@ func (m *Message) FormatChain() string {
 	}
 	return kit.Join(meta, NL)
 }
+
+func (m *Message) IsErr(arg ...string) bool {
+	return len(arg) > 0 && m.Result(1) == arg[0] || m.Result(0) == ErrWarn
+}
+func (m *Message) IsErrNotFound() bool { return m.Result(1) == ErrNotFound }

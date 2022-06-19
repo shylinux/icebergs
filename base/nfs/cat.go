@@ -58,6 +58,8 @@ func _cat_find(m *ice.Message, name string) io.ReadCloser {
 			if s := h(m, name); s != "" {
 				return NewReadCloser(bytes.NewBufferString(s))
 			}
+		default:
+			m.Error(true, ice.ErrNotImplement)
 		}
 	}
 
@@ -182,7 +184,7 @@ func init() {
 			mdb.RENDER: {Name: "render type name text", Help: "渲染", Hand: func(m *ice.Message, arg ...string) {
 				_cat_list(m, path.Join(arg[2], arg[1]))
 			}},
-		}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		}, Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) == 0 || strings.HasSuffix(arg[0], ice.PS) {
 				m.Cmdy(DIR, arg)
 				return

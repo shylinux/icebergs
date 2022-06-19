@@ -56,45 +56,48 @@ func (f *Frame) Close(m *Message, arg ...string) bool {
 var Index = &Context{Name: ICE, Help: "冰山模块", Configs: map[string]*Config{
 	HELP: {Value: kit.Data(INDEX, Info.Help)},
 }, Commands: map[string]*Command{
-	CTX_INIT: {Hand: func(m *Message, c *Context, cmd string, arg ...string) {
+	CTX_INIT: {Hand: func(m *Message, arg ...string) {
 		defer m.Cost(CTX_INIT)
 		m.root.Travel(func(p *Context, c *Context) {
 			if cmd, ok := c.Commands[CTX_INIT]; ok && p != nil {
-				c.cmd(m.Spawn(c), cmd, CTX_INIT, arg...)
+				c._command(m.Spawn(c), cmd, CTX_INIT, arg...)
 			}
 		})
 	}},
-	INIT: {Name: "init", Help: "启动", Hand: func(m *Message, c *Context, cmd string, arg ...string) {
+	INIT: {Name: "init", Help: "启动", Hand: func(m *Message, arg ...string) {
 		m.root.Cmd(CTX_INIT)
 		m.Cmd(SOURCE, ETC_INIT_SHY)
 	}},
-	HELP: {Name: "help", Help: "帮助", Hand: func(m *Message, c *Context, cmd string, arg ...string) {
+	HELP: {Name: "help", Help: "帮助", Hand: func(m *Message, arg ...string) {
 		m.Echo(m.Config(INDEX))
 	}},
-	EXIT: {Name: "exit", Help: "结束", Hand: func(m *Message, c *Context, cmd string, arg ...string) {
+	EXIT: {Name: "exit", Help: "结束", Hand: func(m *Message, arg ...string) {
 		m.root.Option(EXIT, kit.Select("0", arg, 0))
-		defer c.Close(m.root.Spawn(), arg...)
+		defer m.Target().Close(m.root.Spawn(), arg...)
 
 		m.Cmd(SOURCE, ETC_EXIT_SHY)
 		m.root.Cmd(CTX_EXIT)
 	}},
-	CTX_EXIT: {Hand: func(m *Message, c *Context, cmd string, arg ...string) {
+	CTX_EXIT: {Hand: func(m *Message, arg ...string) {
 		defer m.Cost(CTX_EXIT)
 		m.Option("cmd_dir", "")
 		m.Option("dir_root", "")
 		m.root.Travel(func(p *Context, c *Context) {
 			if cmd, ok := c.Commands[CTX_EXIT]; ok && p != nil {
 				m.TryCatch(m.Spawn(c), true, func(msg *Message) {
-					c.cmd(msg, cmd, CTX_EXIT, arg...)
+					c._command(msg, cmd, CTX_EXIT, arg...)
 				})
 			}
 		})
+		_exit <- kit.Int(m.Option(EXIT))
 	}},
 }, server: &Frame{}, wg: &sync.WaitGroup{}}
 var Pulse = &Message{time: time.Now(), code: 0,
 	meta: map[string][]string{}, data: Map{},
 	source: Index, target: Index, Hand: true,
 }
+
+var _exit = make(chan int, 1)
 
 func init() { Index.root, Pulse.root = Index, Pulse }
 
@@ -127,7 +130,7 @@ func Run(arg ...string) string {
 		}
 		if log.LogDisable = false; Index.Start(Pulse, arg...) {
 			Pulse.TryCatch(Pulse, true, func(Pulse *Message) { Index.wg.Wait() })
-			os.Exit(kit.Int(Pulse.Option(EXIT)))
+			os.Exit(<-_exit)
 		}
 	default: // 执行命令
 		if len(arg) == 0 {

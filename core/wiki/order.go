@@ -18,7 +18,7 @@ const ORDER = "order"
 
 func init() {
 	Index.Merge(&ice.Context{Commands: map[string]*ice.Command{
-		ORDER: {Name: "order `[item\n]...`", Help: "列表", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		ORDER: {Name: "order `[item\n]...`", Help: "列表", Hand: func(m *ice.Message, arg ...string) {
 			_order_show(m, arg[0], arg[1:]...)
 		}},
 	}, Configs: map[string]*ice.Config{

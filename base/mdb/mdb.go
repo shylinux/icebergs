@@ -143,9 +143,9 @@ func NextPageLimit(m *ice.Message, total string, arg ...string) {
 const MDB = "mdb"
 
 var Index = &ice.Context{Name: MDB, Help: "数据模块", Commands: map[string]*ice.Command{
-	ice.CTX_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {}},
-	ice.CTX_EXIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {}},
-	INSERT: {Name: "insert key sub type arg...", Help: "添加", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+	ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {}},
+	ice.CTX_EXIT: {Hand: func(m *ice.Message, arg ...string) {}},
+	INSERT: {Name: "insert key sub type arg...", Help: "添加", Hand: func(m *ice.Message, arg ...string) {
 		switch arg[2] {
 		case ZONE: // insert key sub type zone arg...
 			_list_insert(m, arg[0], _domain_chain(m, kit.Keys(arg[1], kit.KeyHash(arg[3]))), arg[4:]...)
@@ -156,7 +156,7 @@ var Index = &ice.Context{Name: MDB, Help: "数据模块", Commands: map[string]*
 		}
 		m.ProcessRefresh3ms()
 	}},
-	DELETE: {Name: "delete key sub type field value", Help: "删除", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+	DELETE: {Name: "delete key sub type field value", Help: "删除", Hand: func(m *ice.Message, arg ...string) {
 		switch arg[2] {
 		case ZONE: // delete key sub type zone field value
 			_list_delete(m, arg[0], _domain_chain(m, kit.Keys(arg[1], kit.KeyHash(arg[3]))), arg[4], arg[5])
@@ -167,7 +167,7 @@ var Index = &ice.Context{Name: MDB, Help: "数据模块", Commands: map[string]*
 		}
 		m.ProcessRefresh3ms()
 	}},
-	MODIFY: {Name: "modify key sub type field value arg...", Help: "编辑", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+	MODIFY: {Name: "modify key sub type field value arg...", Help: "编辑", Hand: func(m *ice.Message, arg ...string) {
 		switch arg[2] {
 		case ZONE: // modify key sub type zone id field value
 			_list_modify(m, arg[0], _domain_chain(m, kit.Keys(arg[1], kit.KeyHash(arg[3]))), ID, arg[4], arg[5:]...)
@@ -177,7 +177,7 @@ var Index = &ice.Context{Name: MDB, Help: "数据模块", Commands: map[string]*
 			_list_modify(m, arg[0], _domain_chain(m, arg[1]), arg[3], arg[4], arg[5:]...)
 		}
 	}},
-	SELECT: {Name: "select key sub type field value", Help: "查询", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+	SELECT: {Name: "select key sub type field value", Help: "查询", Hand: func(m *ice.Message, arg ...string) {
 		switch arg[2] {
 		case ZONE:
 			_zone_select(m, arg[0], _domain_chain(m, arg[1]), kit.Select("", arg, 3), kit.Select("", arg, 4))
@@ -187,7 +187,7 @@ var Index = &ice.Context{Name: MDB, Help: "数据模块", Commands: map[string]*
 			_list_select(m, arg[0], _domain_chain(m, arg[1]), kit.Select("", arg, 3), kit.Select("", arg, 4))
 		}
 	}},
-	INPUTS: {Name: "inputs key sub type field value", Help: "补全", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+	INPUTS: {Name: "inputs key sub type field value", Help: "补全", Hand: func(m *ice.Message, arg ...string) {
 		switch arg[2] {
 		case ZONE: // inputs key sub type zone field value
 			_list_inputs(m, arg[0], _domain_chain(m, kit.Keys(arg[1], kit.KeyHash(arg[3]))), kit.Select(NAME, arg, 4), kit.Select("", arg, 5))
@@ -197,7 +197,7 @@ var Index = &ice.Context{Name: MDB, Help: "数据模块", Commands: map[string]*
 			_list_inputs(m, arg[0], _domain_chain(m, arg[1]), kit.Select(NAME, arg, 3), kit.Select("", arg, 4))
 		}
 	}},
-	PRUNES: {Name: "prunes key sub type [field value]...", Help: "清理", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+	PRUNES: {Name: "prunes key sub type [field value]...", Help: "清理", Hand: func(m *ice.Message, arg ...string) {
 		switch arg[2] {
 		case ZONE: // prunes key sub type zone field value
 			_list_prunes(m, arg[0], _domain_chain(m, kit.Keys(arg[1], kit.KeyHash(arg[3]))), arg[4:]...)
@@ -207,7 +207,7 @@ var Index = &ice.Context{Name: MDB, Help: "数据模块", Commands: map[string]*
 			_list_prunes(m, arg[0], _domain_chain(m, arg[1]), arg[3:]...)
 		}
 	}},
-	EXPORT: {Name: "export key sub type file", Help: "导出", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+	EXPORT: {Name: "export key sub type file", Help: "导出", Hand: func(m *ice.Message, arg ...string) {
 		if m.Option(ice.CACHE_LIMIT) == "" {
 			m.Option(ice.CACHE_LIMIT, "-1")
 		}
@@ -220,7 +220,7 @@ var Index = &ice.Context{Name: MDB, Help: "数据模块", Commands: map[string]*
 			_list_export(m, arg[0], _domain_chain(m, arg[1]), file)
 		}
 	}},
-	IMPORT: {Name: "import key sub type file", Help: "导入", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+	IMPORT: {Name: "import key sub type file", Help: "导入", Hand: func(m *ice.Message, arg ...string) {
 		switch file := _file_name(m, arg...); arg[2] {
 		case ZONE:
 			_zone_import(m, arg[0], _domain_chain(m, arg[1]), file)

@@ -92,7 +92,7 @@ func init() {
 				m.Log_CREATE(aaa.WHITE, arg[0])
 				m.Rich(HOST, kit.Keym(aaa.WHITE), kit.Dict(mdb.TEXT, arg[0]))
 			}},
-		}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		}, Hand: func(m *ice.Message, arg ...string) {
 			_host_list(m, kit.Select("", arg, 0))
 		}},
 	}})

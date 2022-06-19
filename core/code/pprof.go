@@ -65,7 +65,7 @@ func init() {
 				m.Cmd(cli.DAEMON, m.Configv(PPROF), "-http="+p, m.Option(BINNARY), m.Option(nfs.FILE))
 				m.Echo("http://%s/ui/top", p).ProcessInner()
 			}},
-		}, mdb.ZoneAction()), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		}, mdb.ZoneAction()), Hand: func(m *ice.Message, arg ...string) {
 			m.Fields(len(arg), "time,zone,count,binnary,service,seconds", m.Config(mdb.FIELD))
 			if mdb.ZoneSelect(m, arg...); len(arg) == 0 {
 				m.PushAction(ice.RUN, mdb.REMOVE)
@@ -78,7 +78,7 @@ func init() {
 				m.PushButton(web.SERVE)
 			})
 		}},
-		"/pprof/": {Name: "/pprof/", Help: "性能分析", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		"/pprof/": {Name: "/pprof/", Help: "性能分析", Hand: func(m *ice.Message, arg ...string) {
 			defer m.Render(ice.RENDER_VOID)
 			m.R.URL.Path = "/debug" + m.R.URL.Path
 			http.DefaultServeMux.ServeHTTP(m.W, m.R)

@@ -159,7 +159,7 @@ func init() {
 					m.EchoScript(string(buf))
 				}
 			}},
-		}, mdb.HashActionStatus()), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		}, mdb.HashActionStatus()), Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) == 0 { // 服务列表
 				mdb.HashSelect(m, arg...)
 				m.PushAction(mdb.IMPORT, mdb.INSERT, mdb.EXPORT, aaa.INVITE)

@@ -55,13 +55,13 @@ func init() {
 				m.Push("", res)
 				m.Echo("https://github.com/settings/keys")
 			}},
-		}, mdb.HashAction()), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		}, mdb.HashAction()), Hand: func(m *ice.Message, arg ...string) {
 			if mdb.HashSelect(m, arg...).PushAction("user", "public", ACCESS_TOKEN, mdb.REMOVE); len(arg) == 0 {
 				m.Action(mdb.CREATE)
 				m.Echo(kit.MergeURL2(LOGIN_OAUTH, "authorize", m.ConfigSimple(REDIRECT_URI, CLIENT_ID), "scope", "read:user read:public_key write:public_key repo"))
 			}
 		}},
-		"/oauth": {Name: "/oauth", Help: "授权", Action: ice.MergeAction(map[string]*ice.Action{}, ctx.CmdAction()), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		"/oauth": {Name: "/oauth", Help: "授权", Action: ice.MergeAction(map[string]*ice.Action{}, ctx.CmdAction()), Hand: func(m *ice.Message, arg ...string) {
 			if m.Option(CODE) != "" {
 				m.RenderCmd(m.PrefixKey(), m.Cmdx(mdb.INSERT, m.PrefixKey(), "", mdb.HASH, m.OptionSimple(CODE)))
 			}

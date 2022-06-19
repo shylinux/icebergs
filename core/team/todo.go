@@ -20,10 +20,10 @@ func init() {
 				m.Cmd(TASK, mdb.INSERT, m.OptionSimple("zone,type,name,text"), BEGIN_TIME, m.Time())
 				m.Cmd(mdb.DELETE, m.PrefixKey(), "", mdb.HASH, m.OptionSimple(mdb.HASH))
 			}},
-		}, mdb.HashAction(mdb.FIELD, "time,hash,zone,name,text")), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		}, mdb.HashAction(mdb.FIELD, "time,hash,zone,name,text")), Hand: func(m *ice.Message, arg ...string) {
 			m.Display("/plugin/table.js", "style", "card")
 			mdb.HashSelect(m, arg...).PushAction(cli.START, mdb.REMOVE)
-			m.PushPodCmd(cmd, arg...)
+			m.PushPodCmd(m.CommandKey(), arg...)
 		}},
 	}})
 }

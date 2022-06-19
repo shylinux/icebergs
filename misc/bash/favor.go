@@ -24,7 +24,7 @@ func init() {
 					}
 				})
 			}},
-		}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		}, Hand: func(m *ice.Message, arg ...string) {
 			m.Cmdy(FAVOR).Table()
 		}},
 		FAVOR: {Name: "favor zone id auto", Help: "收藏夹", Action: ice.MergeAction(map[string]*ice.Action{
@@ -34,7 +34,7 @@ func init() {
 				m.ProcessCommand(cli.SYSTEM, kit.Split(m.Option(mdb.TEXT)), arg...)
 				m.ProcessCommandOpt(arg, cli.PWD)
 			}},
-		}, mdb.ZoneAction()), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		}, mdb.ZoneAction()), Hand: func(m *ice.Message, arg ...string) {
 			if mdb.ZoneSelect(m, arg...); len(arg) == 0 {
 				m.Action(mdb.CREATE, mdb.EXPORT, mdb.IMPORT)
 			} else {

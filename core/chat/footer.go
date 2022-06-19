@@ -24,7 +24,7 @@ func init() {
 					m.Set(ice.MSG_RESULT).Cmdy(cli.SYSTEM, arg)
 				}
 			}},
-		}, ctx.CmdAction()), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		}, ctx.CmdAction()), Hand: func(m *ice.Message, arg ...string) {
 			m.Confm(FOOTER, LEGAL, func(index int, value string) { m.Echo(value) })
 		}},
 	}})

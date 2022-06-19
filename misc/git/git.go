@@ -27,7 +27,7 @@ var Index = &ice.Context{Name: GIT, Help: "代码库", Configs: map[string]*ice.
 			m.Cmd(code.INSTALL, cli.ORDER, m.Config(nfs.SOURCE), "_install/bin")
 			m.Cmdy(code.INSTALL, cli.ORDER, m.Config(nfs.SOURCE), "_install/libexec/git-core")
 		}},
-	}, code.InstallAction()), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+	}, code.InstallAction()), Hand: func(m *ice.Message, arg ...string) {
 		m.Cmdy(code.INSTALL, nfs.SOURCE, m.Config(nfs.SOURCE), arg)
 		m.Echo("hello world %v", arg)
 	}},

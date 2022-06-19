@@ -24,7 +24,7 @@ func init() {
 			MENU: {Name: "menu name", Help: "菜单", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmdy(MENU, kit.Select("home", m.Option(mdb.NAME)))
 			}},
-		}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		}, Hand: func(m *ice.Message, arg ...string) {
 			if m.Cmdy(arg); m.Length() == 0 && (m.Result() == "" || m.Result(1) == ice.ErrNotFound) {
 				m.Set(ice.MSG_RESULT)
 				m.Cmdy(cli.SYSTEM, arg) // 系统命令

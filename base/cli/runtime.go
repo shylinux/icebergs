@@ -219,7 +219,7 @@ func init() {
 					m.Echo(kit.MergePOD(os.Getenv(CTX_DEV), os.Getenv(CTX_POD)))
 				}
 			}},
-		}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		}, Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) > 0 && arg[0] == BOOTINFO {
 				arg = arg[1:]
 			}

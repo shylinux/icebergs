@@ -126,7 +126,7 @@ func init() {
 	Index.Merge(&ice.Context{Commands: map[string]*ice.Command{
 		FIELD: {Name: "field [name] cmd", Help: "插件", Action: ice.MergeAction(map[string]*ice.Action{
 			ice.RUN: {Name: "run", Help: "执行"},
-		}, ctx.CmdAction()), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		}, ctx.CmdAction()), Hand: func(m *ice.Message, arg ...string) {
 			if arg = _name(m, arg); strings.Contains(arg[1], ice.NL) {
 				arg = kit.Simple(arg[0], "web.chat.div", "auto.cmd", "split", "opts.text", arg[1], arg[2:])
 			}

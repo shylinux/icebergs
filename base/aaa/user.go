@@ -130,7 +130,7 @@ func init() {
 					_user_create(m, m.Option(USERROLE), m.Option(USERNAME), m.Option(PASSWORD))
 				}
 			}},
-		}, mdb.HashAction()), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		}, mdb.HashAction()), Hand: func(m *ice.Message, arg ...string) {
 			mdb.HashSelect(m, arg...)
 		}},
 	}})

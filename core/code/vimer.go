@@ -209,6 +209,6 @@ func init() {
 				m.ProcessInner()
 				m.ToastSuccess()
 			}},
-		}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) { m.Cmdy(INNER, arg) }},
+		}, Hand: func(m *ice.Message, arg ...string) { m.Cmdy(INNER, arg) }},
 	}})
 }

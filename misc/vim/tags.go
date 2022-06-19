@@ -31,7 +31,7 @@ func init() {
 			mdb.SHORT, mdb.ZONE, mdb.FIELD, "time,id,type,name,text,path,file,line",
 		)},
 	}, Commands: map[string]*ice.Command{
-		"/tags": {Name: "/tags", Help: "跳转", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		"/tags": {Name: "/tags", Help: "跳转", Hand: func(m *ice.Message, arg ...string) {
 			switch m.Option(MODULE) {
 			case ONIMPORT, ONACTION, ONEXPORT:
 				m.Echo(func_pattern, m.Option(BUF), m.Option(PATTERN))
@@ -82,7 +82,7 @@ func init() {
 					m.Echo("%s: %s"+ice.NL, value[mdb.NAME], strings.Split(value[mdb.TEXT], ice.NL)[0])
 				})
 			}},
-		}, mdb.ZoneAction()), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		}, mdb.ZoneAction()), Hand: func(m *ice.Message, arg ...string) {
 			if mdb.ZoneSelectAll(m, arg...); len(arg) == 0 {
 				m.Action("listTags", mdb.CREATE, mdb.EXPORT, mdb.IMPORT)
 			} else {

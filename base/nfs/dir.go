@@ -84,6 +84,9 @@ func _dir_list(m *ice.Message, root string, name string, level int, deep bool, d
 			case func(p string):
 				cb(p)
 				continue
+			case nil:
+			default:
+				m.Error(true, ice.ErrNotImplement)
 			}
 
 			for _, field := range fields {
@@ -258,7 +261,7 @@ func init() {
 			TRASH: {Name: "trash", Help: "删除", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmdy(TRASH, m.Option(PATH))
 			}},
-		}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		}, Hand: func(m *ice.Message, arg ...string) {
 			if m.Option(DIR_ROOT) != "" {
 				m.Info("dir_root: %v", m.Option(DIR_ROOT))
 			}

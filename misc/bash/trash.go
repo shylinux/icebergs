@@ -52,7 +52,7 @@ func init() {
 				m.ProcessCommand(nfs.CAT, []string{}, arg...)
 				m.ProcessCommandOpt(arg, TO)
 			}},
-		}, mdb.HashAction()), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		}, mdb.HashAction()), Hand: func(m *ice.Message, arg ...string) {
 			mdb.HashSelect(m, arg...)
 			m.PushAction(nfs.CAT, mdb.REVERT, mdb.REMOVE)
 		}},

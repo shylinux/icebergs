@@ -62,11 +62,11 @@ func init() {
 			mdb.CREATE: {Name: "create file name", Help: "创建", Hand: func(m *ice.Message, arg ...string) {
 				_tail_create(m, arg...)
 			}},
-		}, mdb.ZoneAction()), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		}, mdb.ZoneAction()), Hand: func(m *ice.Message, arg ...string) {
 			m.Fields(len(kit.Slice(arg, 0, 2)), "time,name,count,file", m.Config(mdb.FIELD))
 			m.OptionPage(kit.Slice(arg, 2)...)
 
-			mdb.ZoneSelect(m.Spawn(c), arg...).Table(func(index int, value map[string]string, head []string) {
+			mdb.ZoneSelect(m.Spawn(), arg...).Table(func(index int, value map[string]string, head []string) {
 				if strings.Contains(value[mdb.TEXT], m.Option(ice.CACHE_FILTER)) {
 					m.Push("", value, head)
 				}

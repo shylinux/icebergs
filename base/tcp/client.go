@@ -92,7 +92,7 @@ func init() {
 			DIAL: {Name: "dial type name port=9010 host=", Help: "连接", Hand: func(m *ice.Message, arg ...string) {
 				_client_dial(m, arg...)
 			}},
-		}, mdb.HashActionStatus()), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		}, mdb.HashActionStatus()), Hand: func(m *ice.Message, arg ...string) {
 			mdb.HashSelect(m, arg...).Table(func(index int, value map[string]string, head []string) {
 				m.PushButton(kit.Select("", mdb.REMOVE, value[STATUS] == OPEN))
 			})

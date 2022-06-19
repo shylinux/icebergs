@@ -48,7 +48,7 @@ func (m *Message) Assert(expr Any) bool {
 	default:
 		expr = errors.New(kit.Format("error: %v", expr))
 	}
-	m.Result(ErrPanic, expr)
+	m.Result(ErrWarn, expr)
 	panic(expr)
 }
 func (m *Message) Sleep(d string, arg ...Any) *Message {
@@ -89,7 +89,7 @@ func (m *Message) Call(sync bool, cb func(*Message) *Message) *Message {
 
 	p := kit.Select("10s", m.Option("timeout"))
 	t := time.AfterFunc(kit.Duration(p), func() {
-		m.Warn(true, ErrTimeout, m.Detailv())
+		m.Warn(true, ErrExpire, m.Detailv())
 		m.Back(nil)
 		wait <- false
 	})
@@ -125,6 +125,8 @@ func (m *Message) Go(cb Any) *Message {
 				cb(m.Spawn())
 			case func():
 				cb()
+			default:
+				m.Error(true, ErrNotImplement)
 			}
 		})
 		return nil

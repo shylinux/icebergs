@@ -58,7 +58,7 @@ func init() {
 					m.Cmd(nfs.TRASH, path.Join(ice.USR_LOCAL_DAEMON, m.Option(PORT)))
 				}
 			}},
-		}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		}, Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) == 0 {
 				current := kit.Int(m.Config(BEGIN))
 				m.Option(nfs.DIR_ROOT, ice.USR_LOCAL_DAEMON)

@@ -14,7 +14,7 @@ const TALK = "talk"
 
 func init() {
 	Index.Merge(&ice.Context{Commands: map[string]*ice.Command{
-		TALK: {Name: "talk text", Help: "聊天", Hand: func(m *ice.Message, c *ice.Context, key string, arg ...string) {
+		TALK: {Name: "talk text", Help: "聊天", Hand: func(m *ice.Message, arg ...string) {
 			cmds := kit.Split(strings.Join(arg, " "))
 			if aaa.UserLogin(m, m.Option(OPEN_ID), ""); !m.Right(cmds) {
 				if aaa.UserLogin(m, m.Option(OPEN_CHAT_ID), ""); !m.Right(cmds) {

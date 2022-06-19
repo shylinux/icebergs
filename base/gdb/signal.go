@@ -67,7 +67,7 @@ func init() {
 			HAPPEN: {Name: "happen signal", Help: "触发", Hand: func(m *ice.Message, arg ...string) {
 				_signal_action(m, m.Option(SIGNAL))
 			}},
-		}, mdb.HashAction()), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		}, mdb.HashAction()), Hand: func(m *ice.Message, arg ...string) {
 			mdb.HashSelect(m, arg...).Sort(SIGNAL)
 			m.PushAction(HAPPEN, mdb.REMOVE)
 		}},

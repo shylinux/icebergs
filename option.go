@@ -16,18 +16,19 @@ type Option struct {
 	Value Any
 }
 
-func OptionHash(arg string) Option      { return Option{HASH, arg} }
 func OptionFields(arg ...string) Option { return Option{MSG_FIELDS, kit.Join(arg)} }
 
+func (m *Message) OptionCB(key string, cb ...Any) Any {
+	if len(cb) > 0 {
+		return m.Optionv(kit.Keycb(key), cb...)
+	}
+	return m.Optionv(kit.Keycb(key))
+}
 func (m *Message) OptionFields(arg ...string) string {
 	if len(arg) > 0 {
 		m.Option(MSG_FIELDS, kit.Join(arg))
 	}
 	return kit.Join(kit.Simple(m.Optionv(MSG_FIELDS)))
-}
-func (m *Message) OptionPage(arg ...string) int {
-	page, _ := m.OptionPages(arg...)
-	return page
 }
 func (m *Message) OptionPages(arg ...string) (page int, size int) {
 	m.Option(CACHE_LIMIT, kit.Select("", arg, 0))
@@ -38,6 +39,10 @@ func (m *Message) OptionPages(arg ...string) (page int, size int) {
 	size = kit.Int(kit.Select("10", m.Option("limit")))
 	page = kit.Int(m.Option("offend"))/size + 1
 	return
+}
+func (m *Message) OptionPage(arg ...string) int {
+	page, _ := m.OptionPages(arg...)
+	return page
 }
 func (m *Message) OptionLoad(file string) *Message {
 	if f, e := os.Open(file); e == nil {
@@ -52,17 +57,17 @@ func (m *Message) OptionLoad(file string) *Message {
 	}
 	return m
 }
-func (m *Message) OptionSplit(key ...string) (res []string) {
-	for _, k := range kit.Split(kit.Join(key)) {
-		res = append(res, m.Option(k))
-	}
-	return res
-}
 func (m *Message) OptionDefault(key, value string) string {
 	if m.Option(key) == "" {
 		m.Option(key, value)
 	}
 	return m.Option(key)
+}
+func (m *Message) OptionSplit(key ...string) (res []string) {
+	for _, k := range kit.Split(kit.Join(key)) {
+		res = append(res, m.Option(k))
+	}
+	return res
 }
 func (m *Message) OptionSimple(key ...string) (res []string) {
 	for _, k := range kit.Split(kit.Join(key)) {
@@ -275,14 +280,6 @@ func (m *Message) MergeURL2(url string, arg ...Any) string {
 }
 func (m *Message) MergeLink(url string, arg ...Any) string {
 	return strings.Split(m.MergeURL2(url, arg...), "?")[0]
-}
-func (m *Message) MergePodURL(url string, arg ...Any) string {
-	if m.Option(MSG_USERPOD) == "" {
-		url = strings.TrimPrefix(url, "web.")
-		return kit.MergeURL(m.MergeLink(url), arg...)
-	}
-	url = strings.TrimPrefix(url, "web.chat.")
-	return kit.MergeURL(m.MergeLink(path.Join("/chat/pod/", m.Option(MSG_USERPOD), url)), arg...)
 }
 func (m *Message) MergePod(pod string, arg ...Any) string {
 	return kit.MergePOD(kit.Select(Info.Domain, m.Option(MSG_USERWEB)), pod, arg...)

@@ -82,7 +82,7 @@ func init() {
 			mdb.RENDER: {Name: "render", Help: "渲染", Hand: func(m *ice.Message, arg ...string) {
 				_sh_main_script(m, arg...)
 			}},
-		}, PlugAction()), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		}, PlugAction()), Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) > 0 && kit.Ext(arg[0]) == SH {
 				_sh_main_script(m, SH, arg[0], ice.SRC)
 				return

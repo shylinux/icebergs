@@ -54,7 +54,7 @@ func init() {
 					_go_grep(m, kit.Select(cli.MAIN, arg, 1), arg[2])
 				}
 			}},
-		}, PlugAction()), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		}, PlugAction()), Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) > 0 && kit.Ext(arg[0]) == m.CommandKey() {
 				m.Cmdy("web.wiki.word", path.Join(ice.SRC, arg[0]))
 				return

@@ -87,7 +87,7 @@ func init() {
 						m.Option(REPOS), m.Option(nfs.PATH))
 				}
 			}},
-		}, mdb.HashAction()), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		}, mdb.HashAction()), Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) == 0 { // 仓库列表
 				mdb.HashSelect(m, arg...).Sort(mdb.NAME).RenameAppend(mdb.NAME, REPOS)
 				return

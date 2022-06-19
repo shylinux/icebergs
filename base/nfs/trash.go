@@ -59,7 +59,7 @@ func init() {
 					return false
 				})
 			}},
-		}, mdb.HashAction()), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		}, mdb.HashAction()), Hand: func(m *ice.Message, arg ...string) {
 			if mdb.HashSelect(m, arg...); len(arg) == 0 || !kit.FileExists(arg[0]) {
 				m.PushAction(mdb.REVERT, mdb.REMOVE)
 				return

@@ -35,7 +35,7 @@ const GROUP = "group"
 
 func init() {
 	Index.Merge(&ice.Context{Commands: map[string]*ice.Command{
-		GROUP: {Name: "group appid chat_id open_id text auto", Help: "群组", Hand: func(m *ice.Message, c *ice.Context, key string, arg ...string) {
+		GROUP: {Name: "group appid chat_id open_id text auto", Help: "群组", Hand: func(m *ice.Message, arg ...string) {
 			switch len(arg) {
 			case 0: // 应用列表
 				m.Cmdy(APP)

@@ -96,7 +96,7 @@ func init() {
 				})
 				m.ProcessRefresh300ms()
 			}},
-		}, mdb.HashAction()), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		}, mdb.HashAction()), Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) == 0 { // 通道列表
 				m.Action(mdb.PRUNES)
 				mdb.HashSelect(m, arg...)

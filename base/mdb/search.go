@@ -17,7 +17,7 @@ func init() {
 				m.Option(TYPE, kit.Ext(m.Option(TYPE)))
 				m.Cmdy(INSERT, m.PrefixKey(), "", HASH, m.OptionSimple("type,name,text"))
 			}},
-		}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		}, Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) > 1 {
 				m.Cmdy(SELECT, m.PrefixKey(), "", HASH, m.Config(SHORT), kit.Slice(arg, 0, 1), func(value ice.Map) {
 					m.OptionFields(kit.Select("ctx,cmd,type,name,text", kit.Select(m.OptionFields())))

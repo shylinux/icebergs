@@ -27,8 +27,8 @@ func init() {
 			cli.RESTART: {Name: "restart", Help: "重启", Hand: func(m *ice.Message, arg ...string) {
 				m.Sleep("1s").Go(func() { m.Cmd(ice.EXIT, 1) })
 			}},
-		}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			m.Grows(cmd, kit.Keys(mdb.HASH, kit.Select(cli.SYSTEM, arg, 0)), "", "", func(index int, value ice.Map) {
+		}, Hand: func(m *ice.Message, arg ...string) {
+			m.Grows(m.CommandKey(), kit.Keys(mdb.HASH, kit.Select(cli.SYSTEM, arg, 0)), "", "", func(index int, value ice.Map) {
 				if value[nfs.FILE] == ice.ICE_BIN { // 程序文件
 					value[nfs.FILE] = kit.Keys(ice.ICE, runtime.GOOS, runtime.GOARCH)
 					defer m.Cmd(cli.SYSTEM, "mv", value[nfs.FILE], ice.BIN_ICE_BIN)

@@ -72,8 +72,8 @@ func _command_search(m *ice.Message, kind, name, text string) {
 	})
 }
 
-func CmdAction(fields ...string) map[string]*ice.Action {
-	return ice.SelectAction(map[string]*ice.Action{
+func CmdAction(args ...ice.Any) map[string]*ice.Action {
+	return map[string]*ice.Action{ice.CTX_INIT: mdb.AutoConfig(args...),
 		COMMAND: {Name: "command", Help: "命令", Hand: func(m *ice.Message, arg ...string) {
 			if !m.PodCmd(COMMAND, arg) {
 				m.Cmdy(COMMAND, arg)
@@ -84,7 +84,7 @@ func CmdAction(fields ...string) map[string]*ice.Action {
 				m.Cmdy(arg)
 			}
 		}},
-	}, fields...)
+	}
 }
 
 const (
@@ -110,7 +110,7 @@ func init() {
 					_command_search(m, arg[0], kit.Select("", arg, 1), kit.Select("", arg, 2))
 				}
 			}},
-		}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		}, Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) == 0 {
 				arg = append(arg, "")
 			}

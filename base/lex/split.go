@@ -59,6 +59,8 @@ func _split_list(m *ice.Message, file string, arg ...string) ice.Map {
 			ls = cb(ls, data)
 		case func([]string):
 			cb(ls)
+		default:
+			m.Error(true, ice.ErrNotImplement)
 		}
 
 		// 参数字段
@@ -102,7 +104,7 @@ func init() {
 	Index.Merge(&ice.Context{Configs: map[string]*ice.Config{
 		SPLIT: {Name: "split", Help: "解析", Value: kit.Data()},
 	}, Commands: map[string]*ice.Command{
-		SPLIT: {Name: "split path key auto", Help: "解析", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		SPLIT: {Name: "split path key auto", Help: "解析", Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) == 0 || strings.HasSuffix(arg[0], ice.PS) {
 				m.Cmdy(nfs.DIR, arg)
 				return

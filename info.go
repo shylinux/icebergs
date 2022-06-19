@@ -37,6 +37,7 @@ var Info = struct {
 	CtxRiver string
 
 	Help  string
+	cans  string
 	Route map[string]string // 路由命令
 	File  map[string]string // 文件命令
 	Pack  map[string][]byte // 打包文件
@@ -53,6 +54,17 @@ var Info = struct {
 report: shylinuxc@gmail.com
 server: https://shylinux.com
 source: https://shylinux.com/x/icebergs
+`,
+	cans: `<!DOCTYPE html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=0.8,user-scalable=no">
+    <link rel="stylesheet" type="text/css" href="/page/can.css">
+</head>
+<body>
+	<script src="/page/can.js"></script>
+	<script>can(%s)</script>
+</body>
 `,
 	Route: map[string]string{},
 	File:  map[string]string{},

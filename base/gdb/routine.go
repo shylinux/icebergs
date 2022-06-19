@@ -26,7 +26,7 @@ func init() {
 				ls := kit.Split(m.Option("fileline"), ":")
 				m.ProcessCommand("inner", []string{path.Dir(ls[0]), path.Base(ls[0]), ls[1]}, arg...)
 			}},
-		}, mdb.HashAction()), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		}, mdb.HashAction()), Hand: func(m *ice.Message, arg ...string) {
 			mdb.HashSelect(m, arg...)
 			m.PushAction("inner", mdb.REMOVE)
 		}},

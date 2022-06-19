@@ -32,7 +32,7 @@ var Index = &ice.Context{Name: VIM, Help: "编辑器", Configs: map[string]*ice.
 		cli.ORDER: {Name: "order", Help: "加载", Hand: func(m *ice.Message, arg ...string) {
 			m.Cmdy(code.INSTALL, cli.ORDER, _vim_pkg(m, m.Config(nfs.SOURCE)), "_install/bin")
 		}},
-	}, code.InstallAction()), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+	}, code.InstallAction()), Hand: func(m *ice.Message, arg ...string) {
 		m.Cmdy(code.INSTALL, nfs.SOURCE, _vim_pkg(m, m.Config(nfs.SOURCE)), arg)
 	}},
 }}

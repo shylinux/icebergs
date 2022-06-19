@@ -93,7 +93,7 @@ func init() {
 			END: {Name: "end", Help: "完成", Hand: func(m *ice.Message, arg ...string) {
 				_task_modify(m, STATUS, FINISH)
 			}},
-		}, mdb.ZoneAction(), ctx.CmdAction()), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		}, mdb.ZoneAction(), ctx.CmdAction()), Hand: func(m *ice.Message, arg ...string) {
 			if mdb.ZoneSelect(m, arg...); len(arg) > 0 {
 				status := map[string]int{}
 				m.Table(func(index int, value map[string]string, head []string) {

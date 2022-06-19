@@ -20,7 +20,7 @@ func init() {
 			mdb.FIELD, "time,id,type,name,text,pwd,buf,row,col",
 		)},
 	}, Commands: map[string]*ice.Command{
-		"/sync": {Name: "/sync", Help: "同步", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		"/sync": {Name: "/sync", Help: "同步", Hand: func(m *ice.Message, arg ...string) {
 			switch m.Option(ARG) {
 			case "wq", "q", "qa":
 				m.Cmd("/sess", aaa.LOGOUT)
@@ -41,7 +41,7 @@ func init() {
 				m.Cmdy(FAVOR, mdb.INSERT, m.OptionSimple(mdb.ZONE, "type,name,text,pwd"),
 					nfs.FILE, m.Option(BUF), nfs.LINE, m.Option(ROW))
 			}},
-		}, mdb.ListAction()), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		}, mdb.ListAction()), Hand: func(m *ice.Message, arg ...string) {
 			m.OptionPage(kit.Slice(arg, 1)...)
 			mdb.ListSelect(m, kit.Slice(arg, 0, 1)...)
 			m.PushAction(code.INNER, FAVOR)

@@ -41,7 +41,7 @@ func init() {
 			FAVOR: {Name: "favor zone=some@key type name text pwd", Help: "收藏", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmdy(FAVOR, mdb.INSERT)
 			}},
-		}, mdb.ListAction()), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		}, mdb.ListAction()), Hand: func(m *ice.Message, arg ...string) {
 			m.OptionPage(kit.Slice(arg, 1)...)
 			mdb.ListSelect(m, kit.Slice(arg, 0, 1)...)
 			m.PushAction(cli.SYSTEM, FAVOR)

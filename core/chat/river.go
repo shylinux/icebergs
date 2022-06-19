@@ -89,7 +89,7 @@ func init() {
 					),
 				))
 			}},
-		}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		}, Hand: func(m *ice.Message, arg ...string) {
 			if m.Warn(m.Option(ice.MSG_USERNAME) == "", ice.ErrNotLogin, RIVER) {
 				m.Render(web.STATUS, 401)
 				return // 没有登录

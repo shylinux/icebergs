@@ -38,7 +38,7 @@ func init() {
 					m.Push("value", value["rest"])
 				})
 			}},
-		}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		}, Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) > 0 { // 提交详情
 				arg[0] = kit.Replace(arg[0], "src", "contexts")
 				m.Cmd(REPOS, ice.OptionFields("name,path")).Table(func(index int, value map[string]string, head []string) {
@@ -86,7 +86,7 @@ func init() {
 			m.SortIntR("rest")
 			m.StatusTimeCount()
 		}},
-		"_sum": {Name: "_sum [path] [total] [count|date] args...", Help: "统计量", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		"_sum": {Name: "_sum [path] [total] [count|date] args...", Help: "统计量", Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) > 0 {
 				if s, e := os.Stat(path.Join(arg[0], ".git")); e == nil && s.IsDir() {
 					m.Option(cli.CMD_DIR, arg[0])

@@ -21,8 +21,8 @@ func init() {
 			mdb.SHORT, mdb.NAME, mdb.FIELD, "time,name,token,ekey,hook",
 		)},
 	}, Commands: map[string]*ice.Command{
-		web.WEB_LOGIN: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {}},
-		"/bot/": {Name: "/bot/", Help: "机器人", Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		web.WEB_LOGIN: {Hand: func(m *ice.Message, arg ...string) {}},
+		"/bot/": {Name: "/bot/", Help: "机器人", Hand: func(m *ice.Message, arg ...string) {
 			msg := m.Cmd(BOT, arg[0])
 
 			check := kit.Sort([]string{msg.Append("token"), m.Option("nonce"), m.Option("timestamp"), m.Option("echostr")})
@@ -52,7 +52,7 @@ func init() {
 				m.Cmd(web.SPIDE, mdb.CREATE, m.Option("name"), m.Option("hook"))
 				m.Cmdy(mdb.INSERT, m.PrefixKey(), "", mdb.HASH, arg)
 			}},
-		}, mdb.HashAction()), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		}, mdb.HashAction()), Hand: func(m *ice.Message, arg ...string) {
 			if mdb.HashSelect(m, arg...); len(arg) > 2 {
 				m.Cmdy(web.SPIDE, arg[0], "", kit.Format(kit.Dict(
 					"chatid", arg[1], "msgtype", "text", "text.content", arg[2],

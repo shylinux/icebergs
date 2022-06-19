@@ -19,7 +19,7 @@ func init() {
 	}, Commands: map[string]*ice.Command{
 		"monkey": {Name: "monkey total=888 count=9 run", Help: "猴子开箱子", Meta: kit.Dict("_trans", kit.Dict("name", "姓名")), Action: ice.MergeAction(map[string]*ice.Action{
 			mdb.CREATE: {Name: "create name 照片 性别 年龄 身高 体重 籍贯 户口 学历 学校 职业 公司 年薪 资产 家境", Help: "添加"},
-		}, mdb.HashAction()), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		}, mdb.HashAction()), Hand: func(m *ice.Message, arg ...string) {
 			total := kit.Int(arg[0])
 			count := kit.Int(arg[1])
 			for i := 1; i <= total; i++ {
@@ -40,7 +40,7 @@ func init() {
 		}},
 		MISS: {Name: "miss name auto create", Help: "资料", Meta: kit.Dict("_trans", kit.Dict("name", "姓名")), Action: ice.MergeAction(map[string]*ice.Action{
 			mdb.CREATE: {Name: "create name 照片 性别 年龄 身高 体重 籍贯 户口 学历 学校 职业 公司 年薪 资产 家境", Help: "添加"},
-		}, mdb.HashAction()), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		}, mdb.HashAction()), Hand: func(m *ice.Message, arg ...string) {
 			msg := m.Spawn()
 			mdb.HashSelect(msg, arg...).Table(func(index int, value map[string]string, head []string) {
 				value["照片"] = ice.Render(m, ice.RENDER_IMAGES, value["照片"], kit.Select("100", "400", msg.FieldsIsDetail()))

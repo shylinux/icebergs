@@ -54,7 +54,7 @@ func init() {
 					m.Cmdy(COMMAND, kit.Keys(index, strings.Split(arg[2], ice.SP)[0]))
 				}
 			}},
-		}, CmdAction()), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		}, CmdAction()), Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) == 0 {
 				arg = append(arg, m.Source().Cap(ice.CTX_FOLLOW))
 			}

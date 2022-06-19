@@ -29,7 +29,7 @@ func init() {
 			HAPPEN: {Name: "happen event arg", Help: "触发", Hand: func(m *ice.Message, arg ...string) {
 				_event_action(m, m.Option(EVENT), arg[2:]...)
 			}},
-		}, mdb.ZoneAction()), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		}, mdb.ZoneAction()), Hand: func(m *ice.Message, arg ...string) {
 			if mdb.ZoneSelect(m, arg...); len(arg) == 0 {
 				m.PushAction(HAPPEN, mdb.REMOVE)
 			}

@@ -4,6 +4,8 @@ const (
 	TB = "\t"
 	SP = " "
 	DF = ":"
+	EQ = "="
+	AT = "@"
 	PS = "/"
 	PT = "."
 	FS = ","
@@ -293,20 +295,17 @@ const ( // LOG
 	LOG_IMPORT = "import"
 )
 const ( // Err
-	ErrWarn         = "warn: "
-	ErrPanic        = "panic: "
-	ErrExists       = "exists: "
-	ErrExpire       = "expire: "
-	ErrTimeout      = "timeout: "
-	ErrFailure      = "failure: "
+	ErrWarn   = "warn: "
+	ErrExpire = "expire: "
+
 	ErrNotLogin     = "not login: "
-	ErrNotFound     = "not found: "
 	ErrNotRight     = "not right: "
+	ErrNotFound     = "not found: "
 	ErrNotStart     = "not start: "
 	ErrNotImplement = "not implement: "
 )
 
-const (
+const ( // ice
 	// CTX = "ctx"
 	CLI = "cli"
 	WEB = "web"
@@ -335,6 +334,14 @@ const ( // web
 	SPACE = "space"
 	SPIDE = "spide"
 	CACHE = "cache"
+
+	WEBSITE = "website"
+)
+const ( // aaa
+	ROLE     = "role"
+	RIGHT    = "right"
+	USERROLE = "userrole"
+	ROOT     = "root"
 )
 const ( // mdb
 	KEY    = "key"
@@ -357,10 +364,4 @@ const ( // gdb
 	LISTEN   = "listen"
 	HAPPEN   = "happen"
 	FILELINE = "fileline"
-)
-const ( // aaa
-	ROLE     = "role"
-	RIGHT    = "right"
-	USERROLE = "userrole"
-	ROOT     = "root"
 )

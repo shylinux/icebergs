@@ -71,7 +71,7 @@ func init() {
 	Index.Merge(&ice.Context{Configs: map[string]*ice.Config{
 		HEADER: {Name: HEADER, Help: "标题栏", Value: kit.Data(aaa.LOGIN, kit.List("登录", "扫码"))},
 	}, Commands: map[string]*ice.Command{
-		web.WEB_LOGIN: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		web.WEB_LOGIN: {Hand: func(m *ice.Message, arg ...string) {
 			switch arg[0] {
 			case "/sso":
 				return
@@ -105,7 +105,7 @@ func init() {
 				}
 			}},
 			aaa.LOGOUT: {Name: "logout", Help: "退出登录", Hand: func(m *ice.Message, arg ...string) {
-				m.Cmd(aaa.SESS, mdb.REMOVE, ice.OptionHash(m.Option(ice.MSG_SESSID)))
+				m.Cmd(aaa.SESS, mdb.REMOVE, kit.Dict(mdb.HASH, m.Option(ice.MSG_SESSID)))
 			}},
 			aaa.USERNICK: {Name: "usernick", Help: "用户昵称", Hand: func(m *ice.Message, arg ...string) {
 				_header_users(m, m.ActionKey(), arg...)
@@ -134,7 +134,7 @@ func init() {
 			code.WEBPACK: {Name: "webpack", Help: "打包页面", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmdy(code.WEBPACK, cli.BUILD, m.OptionSimple(mdb.NAME))
 			}},
-		}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		}, Hand: func(m *ice.Message, arg ...string) {
 			msg := m.Cmd(aaa.USER, m.Option(ice.MSG_USERNAME))
 			for _, k := range []string{aaa.LANGUAGE, aaa.BACKGROUND, aaa.AVATAR, aaa.USERNICK} {
 				m.Option(k, msg.Append(k))
@@ -150,7 +150,7 @@ func init() {
 				m.Option(GRANT, ice.TRUE)
 			}
 
-			m.Option(TRANS, kit.Format(kit.Value(c.Commands[cmd].Meta, "_trans")))
+			m.Option(TRANS, kit.Format(kit.Value(m.Target().Commands[m.CommandKey()].Meta, "_trans")))
 			m.Option(MENUS, m.Config(MENUS))
 			m.Echo(m.Config(TITLE))
 			// m.Cmdy(WEBSITE)
@@ -159,7 +159,7 @@ func init() {
 			GRANT: {Name: "grant space", Help: "授权", Hand: func(m *ice.Message, arg ...string) {
 				_header_grant(m, arg...)
 			}},
-		}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		}, Hand: func(m *ice.Message, arg ...string) {
 
 		}},
 	}})

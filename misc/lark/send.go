@@ -49,7 +49,7 @@ const SEND = "send"
 
 func init() {
 	Index.Merge(&ice.Context{Commands: map[string]*ice.Command{
-		SEND: {Name: "send appid [chat_id|open_id|user_id|email] target [title] text", Help: "消息", Hand: func(m *ice.Message, c *ice.Context, key string, arg ...string) {
+		SEND: {Name: "send appid [chat_id|open_id|user_id|email] target [title] text", Help: "消息", Hand: func(m *ice.Message, arg ...string) {
 			form := kit.Dict(CONTENT, kit.Dict())
 			appid, arg := arg[0], arg[1:]
 			switch arg[0] {

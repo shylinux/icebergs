@@ -90,11 +90,11 @@ func init() {
 				msg := m.Cmd(TASK, arg[0], arg[1])
 				m.Cmdy(kit.Simple(kit.Keys(msg.Append(kit.KeyExtra(ice.CTX)), msg.Append(kit.KeyExtra(ice.CMD))), arg[2:]))
 			}},
-		}, TASK), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		}, TASK), Hand: func(m *ice.Message, arg ...string) {
 			arg = kit.Slice(arg, 0, 2)
 			begin_time, end_time := _plan_scope(m, 8, arg...)
 			_plan_list(m, begin_time, end_time)
-			m.PushPodCmd(cmd, arg...)
+			m.PushPodCmd(m.CommandKey(), arg...)
 		}},
 	}})
 }

@@ -91,7 +91,7 @@ func init() {
 				}
 				m.Toast("核算成功")
 			}},
-		}, mdb.ZoneAction(), ctx.CmdAction()), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		}, mdb.ZoneAction(), ctx.CmdAction()), Hand: func(m *ice.Message, arg ...string) {
 			m.Fields(len(arg), "time,account,amount,count", m.Config(mdb.FIELD))
 			amount, count := 0, 0
 			if mdb.ZoneSelect(m, arg...); len(arg) == 0 {

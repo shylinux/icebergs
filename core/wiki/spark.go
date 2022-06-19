@@ -112,7 +112,7 @@ func init() {
 				})
 				text()
 			}},
-		}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		}, Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) == 0 {
 				m.Echo(`<br class="story" data-type="spark">`)
 				return

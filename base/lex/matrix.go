@@ -398,6 +398,8 @@ func init() {
 				switch cb := m.OptionCB(MATRIX).(type) {
 				case func(string, *Matrix):
 					cb(h, mat)
+				default:
+					m.Error(true, ice.ErrNotImplement)
 				}
 				m.Echo(h)
 			}},
@@ -438,7 +440,7 @@ func init() {
 				})
 				m.ProcessInner()
 			}},
-		}, Hand: func(m *ice.Message, c *ice.Context, key string, arg ...string) {
+		}, Hand: func(m *ice.Message, arg ...string) {
 			if m.Action(mdb.CREATE); len(arg) == 0 { // 矩阵列表
 				m.Fields(len(arg), "time,hash,npage,nhash")
 				m.Cmdy(mdb.SELECT, m.PrefixKey(), "", mdb.HASH)

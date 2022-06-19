@@ -25,7 +25,7 @@ func init() {
 			mdb.RENDER: {Name: "render", Help: "渲染", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmdy(m.Space(m.Option(ice.POD)), mdb.RENDER, arg[1:])
 			}},
-		}, ctx.CmdAction()), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		}, ctx.CmdAction()), Hand: func(m *ice.Message, arg ...string) {
 			if kit.Contains(arg[1], ";") {
 				arg = kit.Split(arg[1], ";", ";", ";")
 			}

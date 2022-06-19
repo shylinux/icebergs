@@ -130,7 +130,7 @@ func init() {
 					m.Echo(ice.OK)
 				}
 			}},
-		}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		}, Hand: func(m *ice.Message, arg ...string) {
 			_role_list(m, kit.Select("", arg, 0))
 			m.PushAction(mdb.DELETE)
 		}},

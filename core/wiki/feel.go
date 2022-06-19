@@ -27,7 +27,7 @@ func init() {
 				m.Debug("remove %v", p)
 				os.Remove(p)
 			}},
-		}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		}, Hand: func(m *ice.Message, arg ...string) {
 			_wiki_list(m, m.CommandKey(), kit.Select(nfs.PWD, arg, 0))
 		}},
 	}})

@@ -21,7 +21,7 @@ func init() {
 				m.Cmdy(PASTE, mdb.CREATE, arg)
 			}},
 			mdb.CREATE: {Name: "create type=text name=hi text:textarea=hi", Help: "添加"},
-		}, mdb.HashAction()), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		}, mdb.HashAction()), Hand: func(m *ice.Message, arg ...string) {
 			if mdb.HashSelect(m, arg...); len(arg) > 0 {
 				m.PushScript(ssh.SCRIPT, m.Append(mdb.TEXT))
 				m.PushQRCode(cli.QRCODE, m.Append(mdb.TEXT))

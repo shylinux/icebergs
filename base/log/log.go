@@ -122,7 +122,7 @@ var Index = &ice.Context{Name: "log", Help: "日志模块", Configs: map[string]
 	)},
 	SHOW: {Name: SHOW, Help: "日志分流", Value: kit.Dict()},
 }, Commands: map[string]*ice.Command{
-	ice.CTX_INIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+	ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
 		if log.LogDisable {
 			return // 禁用日志
 		}
@@ -143,7 +143,7 @@ var Index = &ice.Context{Name: "log", Help: "日志模块", Configs: map[string]
 			}
 		})
 	}},
-	ice.CTX_EXIT: {Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {}},
+	ice.CTX_EXIT: {Hand: func(m *ice.Message, arg ...string) {}},
 }}
 
 func init() { ice.Index.Register(Index, &Frame{}) }

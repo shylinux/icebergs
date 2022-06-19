@@ -154,7 +154,7 @@ func init() {
 			nfs.FIND: {Name: "find", Help: "查找", Hand: func(m *ice.Message, arg ...string) {
 				m.Echo(_system_find(m, arg[0], arg[1:]...))
 			}},
-		}, Hand: func(m *ice.Message, c *ice.Context, key string, arg ...string) {
+		}, Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) == 0 {
 				mdb.ListSelect(m, arg...)
 				return

@@ -17,7 +17,7 @@ func init() {
 			nfs.SAVE: {Name: "save path text", Help: "保存", Hand: func(m *ice.Message, arg ...string) {
 				_wiki_save(m, m.CommandKey(), arg[0], arg[1])
 			}},
-		}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		}, Hand: func(m *ice.Message, arg ...string) {
 			if !_wiki_list(m, m.CommandKey(), kit.Select(nfs.PWD, arg, 0)) {
 				m.CSV(m.Cmd(nfs.CAT, arg[0]).Result())
 			}

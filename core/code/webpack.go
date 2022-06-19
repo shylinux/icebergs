@@ -151,7 +151,7 @@ func init() {
 				_webpack_cache(m.Spawn(), _volcanos(m), true)
 				_webpack_build(m, _publish(m, WEBPACK, m.Option(mdb.NAME)))
 			}},
-		}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		}, Hand: func(m *ice.Message, arg ...string) {
 			m.Option(nfs.DIR_DEEP, true)
 			m.Option(nfs.DIR_TYPE, nfs.CAT)
 			m.OptionFields(nfs.DIR_WEB_FIELDS)

@@ -77,7 +77,7 @@ func init() {
 	}, Commands: map[string]*ice.Command{
 		SESS: {Name: "sess hash auto prunes", Help: "会话", Action: ice.MergeAction(map[string]*ice.Action{
 			mdb.CREATE: {Name: "create username", Help: "创建"},
-		}, mdb.HashAction()), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		}, mdb.HashAction()), Hand: func(m *ice.Message, arg ...string) {
 			mdb.HashSelect(m, arg...)
 		}},
 	}})

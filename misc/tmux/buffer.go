@@ -47,7 +47,7 @@ func init() {
 					m.Cmd(cli.SYSTEM, TMUX, "set-buffer", "-b", value[mdb.NAME], value[mdb.TEXT])
 				})
 			}},
-		}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		}, Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) > 1 && arg[1] != "" { // 设置缓存
 				m.Cmd(cli.SYSTEM, TMUX, "set-buffer", "-b", arg[0], arg[1])
 			}
@@ -85,7 +85,7 @@ func init() {
 					}
 				}
 			}},
-		}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		}, Hand: func(m *ice.Message, arg ...string) {
 			text := m.Cmdx(cli.SYSTEM, TMUX, "show-buffer")
 			if m.EchoQRCode(text); strings.HasPrefix(text, ice.HTTP) {
 				m.Echo(ice.NL)

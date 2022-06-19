@@ -47,7 +47,7 @@ func init() {
 				m.Option(web.SHARE, m.Cmdx(web.SHARE, mdb.CREATE, mdb.TYPE, RIVER))
 				m.Cmdy(code.PUBLISH, ice.CONTEXTS, "tool")
 			}},
-		}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		}, Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) == 0 {
 				m.OptionFields("time,type,name,share")
 				m.Cmdy(mdb.SELECT, RIVER, _river_key(m, NODE), mdb.HASH)

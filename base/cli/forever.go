@@ -54,7 +54,7 @@ func init() {
 			STOP: {Name: "stop", Help: "停止", Hand: func(m *ice.Message, arg ...string) {
 				_forever_kill(m, "QUIT")
 			}},
-		}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		}, Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) == 0 {
 				_forever_kill(m, "")
 				return

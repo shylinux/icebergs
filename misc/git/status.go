@@ -308,7 +308,7 @@ func init() {
 				m.Cmdy(nfs.CAT, ice.GO_MOD)
 				m.Cmdy(code.VIMER, code.BINPACK)
 			}},
-		}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		}, Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) == 0 {
 				m.Action(PULL, MAKE, PUSH, TAGS, STASH, PIE, "publish")
 

@@ -213,7 +213,7 @@ func init() {
 				m.Cmd(nfs.SAVE, path.Join(kit.Env(cli.HOME), ".ssh/"+m.Option(mdb.ALIAS)+".json"),
 					kit.Formats(kit.Dict(m.OptionSimple("username,host,port,list"))))
 			}},
-		}, Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		}, Hand: func(m *ice.Message, arg ...string) {
 			m.Cmdy(nfs.CAT, arg[0], kit.Dict(nfs.DIR_ROOT, ice.SRC))
 		}},
 	}})

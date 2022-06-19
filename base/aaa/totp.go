@@ -66,8 +66,8 @@ func init() {
 
 				m.Cmd(mdb.INSERT, TOTP, "", mdb.HASH, m.OptionSimple(mdb.NAME, SECRET, PERIOD, NUMBER))
 			}},
-		}, mdb.HashAction()), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
-			mdb.HashSelect(m.Spawn(c), arg...).Table(func(index int, value map[string]string, head []string) {
+		}, mdb.HashAction()), Hand: func(m *ice.Message, arg ...string) {
+			mdb.HashSelect(m.Spawn(), arg...).Tables(func(value map[string]string) {
 				if len(arg) > 0 {
 					m.OptionFields(mdb.DETAIL)
 				}

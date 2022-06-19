@@ -65,7 +65,7 @@ func init() {
 					m.Cmdy(CMD, mdb.CREATE, mdb.TYPE, k, mdb.NAME, "web.code.inner")
 				}
 			}},
-		}, ctx.CmdAction()), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		}, ctx.CmdAction()), Hand: func(m *ice.Message, arg ...string) {
 			if strings.HasSuffix(m.R.URL.Path, ice.PS) {
 				m.RenderCmd(CMD)
 				return // 目录
@@ -101,7 +101,7 @@ func init() {
 					m.ProcessLocation(nfs.PWD)
 				}
 			}},
-		}, mdb.HashAction()), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		}, mdb.HashAction()), Hand: func(m *ice.Message, arg ...string) {
 			if _cmd_file(m, arg...) {
 				return
 			}

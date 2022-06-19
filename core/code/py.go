@@ -38,7 +38,7 @@ func init() {
 			mdb.RENDER: {Hand: func(m *ice.Message, arg ...string) {
 				_py_main_script(m, arg...)
 			}},
-		}, PlugAction()), Hand: func(m *ice.Message, c *ice.Context, cmd string, arg ...string) {
+		}, PlugAction()), Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) > 0 && kit.Ext(arg[0]) == PY {
 				_py_main_script(m, PY, arg[0], ice.SRC)
 				return

@@ -34,7 +34,7 @@ func (f *Frame) Start(m *Message, arg ...string) bool {
 	m.Cap(CTX_STREAM, strings.Split(m.Time(), SP)[1])
 	m.Cmdy(INIT, arg)
 
-	for _, k := range kit.Split("log,gdb,ssh") {
+	for _, k := range kit.Split(Getenv("ctx_daemon")) {
 		m.Start(k)
 	}
 	m.Cmd(arg)

@@ -48,7 +48,7 @@ func _runtime_init(m *ice.Message) {
 	m.Conf(RUNTIME, kit.Keys(BOOT, ice.BIN), _system_find(m, os.Args[0]))
 
 	// 环境变量 conf
-	for _, k := range []string{CTX_SHY, CTX_DEV, CTX_OPS, CTX_ARG, CTX_PID, CTX_USER, CTX_SHARE, CTX_RIVER} {
+	for _, k := range []string{CTX_SHY, CTX_DEV, CTX_OPS, CTX_ARG, CTX_PID, CTX_USER, CTX_SHARE, CTX_RIVER, CTX_DAEMON} {
 		m.Conf(RUNTIME, kit.Keys(CONF, k), kit.Env(k))
 	}
 
@@ -120,14 +120,15 @@ const (
 	CTX_SHY = "ctx_shy"
 	CTX_DEV = "ctx_dev"
 	CTX_OPS = "ctx_ops"
-	CTX_ARG = "ctx_arg"
 	CTX_POD = "ctx_pod"
+	CTX_ARG = "ctx_arg"
 
-	CTX_PID   = "ctx_pid"
-	CTX_LOG   = "ctx_log"
-	CTX_USER  = "ctx_user"
-	CTX_SHARE = "ctx_share"
-	CTX_RIVER = "ctx_river"
+	CTX_PID    = "ctx_pid"
+	CTX_LOG    = "ctx_log"
+	CTX_USER   = "ctx_user"
+	CTX_SHARE  = "ctx_share"
+	CTX_RIVER  = "ctx_river"
+	CTX_DAEMON = "ctx_daemon"
 
 	MAKE_DOMAIN = "make.domain"
 )

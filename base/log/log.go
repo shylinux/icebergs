@@ -3,6 +3,7 @@ package log
 import (
 	"bufio"
 	"path"
+	"strings"
 
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/mdb"
@@ -125,6 +126,9 @@ var Index = &ice.Context{Name: "log", Help: "日志模块", Configs: map[string]
 	ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
 		if log.LogDisable {
 			return // 禁用日志
+		}
+		if !strings.Contains(ice.Getenv("ctx_daemon"), "log") {
+			return // 没有日志
 		}
 		m.Confm(VIEW, nil, func(key string, value ice.Map) {
 			kit.Fetch(value[mdb.LIST], func(index int, k string) {

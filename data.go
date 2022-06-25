@@ -56,6 +56,9 @@ func (m *Message) ConfigOption(key ...string) {
 	}
 }
 func (m *Message) Save(arg ...string) *Message {
+	if !strings.Contains(Getenv("ctx_daemon"), "ctx") {
+		return m
+	}
 	if len(arg) == 0 {
 		for k := range m.target.Configs {
 			arg = append(arg, k)
@@ -67,6 +70,9 @@ func (m *Message) Save(arg ...string) *Message {
 	return m.Cmd(CONFIG, SAVE, m.Prefix(JSON), arg)
 }
 func (m *Message) Load(arg ...string) *Message {
+	if !strings.Contains(Getenv("ctx_daemon"), "ctx") {
+		return m
+	}
 	if len(arg) == 0 {
 		for k := range m.target.Configs {
 			arg = append(arg, k)

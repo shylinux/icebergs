@@ -35,7 +35,7 @@ func init() {
 				m.RenderCmd(web.ROUTE)
 
 			} else if len(arg) == 1 { // 节点首页
-				if m.Cmd(web.SPACE, arg[0]).Length() == 0 {
+				if m.Cmd(web.SPACE, arg[0]).Length() == 0 && !strings.Contains(arg[0], ice.PT) {
 					m.Cmd(web.DREAM, cli.START, mdb.NAME, arg[0])
 				}
 				aaa.UserRoot(m)
@@ -49,7 +49,6 @@ func init() {
 			} else if arg[1] == "cmd" { // 节点命令
 				m.Cmdy(web.SPACE, arg[0], m.Prefix(CMD), path.Join(arg[2:]...))
 			} else {
-				m.Debug("what %v", path.Join(arg[1:]...))
 				m.Cmdy(web.SPACE, m.Option(ice.MSG_USERPOD), "web.chat."+strings.TrimPrefix(path.Join(arg[1:]...), "chat/"))
 				// m.Cmdy(web.SPACE, m.Option(ice.MSG_USERPOD), "web.chat."+ice.PS+path.Join(arg[1:]...))
 			}

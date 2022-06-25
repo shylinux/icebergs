@@ -2,6 +2,7 @@ package ice
 
 import (
 	"io"
+	"os"
 	"path"
 	"strings"
 
@@ -132,4 +133,11 @@ func FileRequire(n int) string {
 		return path.Join("/require", strings.Split(p, "go/pkg/mod")[1])
 	}
 	return path.Join("/require/"+kit.ModPath(n), path.Base(p))
+}
+func Getenv(key string) string {
+	switch key {
+	case "ctx_daemon":
+		return kit.Select("ctx,log,gdb,ssh", os.Getenv(key))
+	}
+	return os.Getenv(key)
 }

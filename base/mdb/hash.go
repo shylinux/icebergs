@@ -218,6 +218,9 @@ func HashActionStatus(args ...ice.Any) map[string]*ice.Action {
 func HashCreate(m *ice.Message, arg ...ice.Any) *ice.Message {
 	return m.Cmd(INSERT, m.PrefixKey(), "", HASH, kit.Simple(arg...))
 }
+func HashRemove(m *ice.Message, arg ...ice.Any) *ice.Message {
+	return m.Cmd(DELETE, m.PrefixKey(), "", HASH, kit.Simple(arg...))
+}
 func HashSelect(m *ice.Message, arg ...string) *ice.Message {
 	m.Fields(len(arg), m.Config(FIELD))
 	m.Cmdy(SELECT, m.PrefixKey(), "", HASH, m.Config(SHORT), arg)

@@ -300,8 +300,10 @@ func init() {
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
 				m.Conf(SPACE, mdb.HASH, "")
 			}},
-			DOMAIN: {Name: "domain", Help: "域名", Hand: func(m *ice.Message, arg ...string) {
-				m.Echo(_space_domain(m))
+			mdb.REMOVE: {Name: "remove", Help: "删除", Hand: func(m *ice.Message, arg ...string) {
+				m.Cmd(SPACE, mdb.MODIFY, m.OptionSimple(mdb.NAME), mdb.STATUS, cli.STOP)
+				m.Cmd(SPACE, m.Option(mdb.NAME), ice.EXIT)
+				mdb.HashRemove(m, m.OptionSimple(mdb.NAME))
 			}},
 			mdb.SEARCH: {Name: "search type name text", Help: "搜索", Hand: func(m *ice.Message, arg ...string) {
 				_space_search(m, arg[0], arg[1], kit.Select("", arg, 2))
@@ -318,6 +320,9 @@ func init() {
 			}},
 			tcp.DIAL: {Name: "dial dev=ops name", Help: "连接", Hand: func(m *ice.Message, arg ...string) {
 				_space_dial(m, m.Option(ice.DEV), kit.Select(ice.Info.NodeName, m.Option(mdb.NAME)))
+			}},
+			DOMAIN: {Name: "domain", Help: "域名", Hand: func(m *ice.Message, arg ...string) {
+				m.Echo(_space_domain(m))
 			}},
 		}, mdb.HashAction()), Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) < 2 { // 节点列表

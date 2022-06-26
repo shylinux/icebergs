@@ -100,9 +100,10 @@ const (
 const (
 	GOARCH = "GOARCH"
 	AMD64  = "amd64"
-	X386   = "386"
+	X86    = "386"
 	ARM    = "arm"
 	ARM64  = "arm64"
+	MIPSLE = "mipsle"
 
 	GOOS    = "GOOS"
 	LINUX   = "linux"

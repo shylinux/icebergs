@@ -17,7 +17,7 @@ func _compile_target(m *ice.Message, arg ...string) (string, string, string, str
 	main, file := ice.SRC_MAIN_GO, ""
 	for _, k := range arg {
 		switch k {
-		case cli.X386, cli.AMD64, cli.ARM64, cli.ARM:
+		case cli.AMD64, cli.X86, cli.ARM, cli.ARM64, cli.MIPSLE:
 			arch = k
 		case cli.WINDOWS, cli.DARWIN, cli.LINUX:
 			goos = k
@@ -46,7 +46,7 @@ func init() {
 			cli.ENV, kit.Dict("GOPROXY", "https://goproxy.cn,direct", "GOPRIVATE", "shylinux.com,github.com", "CGO_ENABLED", "0"),
 		)},
 	}, Commands: map[string]*ice.Command{
-		COMPILE: {Name: "compile arch=amd64,386,arm,arm64 os=linux,darwin,windows src=src/main.go@key run binpack relay install", Help: "编译", Action: map[string]*ice.Action{
+		COMPILE: {Name: "compile arch=amd64,386,arm,arm64,mipsle os=linux,darwin,windows src=src/main.go@key run binpack relay install", Help: "编译", Action: map[string]*ice.Action{
 			mdb.INPUTS: {Name: "inputs", Help: "补全", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmdy(nfs.DIR, ice.SRC, nfs.DIR_CLI_FIELDS, kit.Dict(nfs.DIR_REG, `.*\.go$`)).Sort(nfs.PATH)
 			}},

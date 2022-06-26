@@ -234,7 +234,7 @@ func _space_fork(m *ice.Message) {
 		args := append([]string{mdb.TYPE, kind, mdb.NAME, name}, m.OptionSimple(SHARE, RIVER)...)
 
 		m.Go(func() {
-			h := m.Rich(SPACE, nil, kit.Dict(SOCKET, s, mdb.TEXT, text, args))
+			h := m.Rich(SPACE, nil, kit.Dict(SOCKET, s, mdb.TEXT, kit.Select(text, m.Option(mdb.TEXT)), args))
 			m.Log_CREATE(SPACE, name, mdb.TYPE, kind)
 
 			switch kind {

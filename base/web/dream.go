@@ -127,9 +127,9 @@ func init() {
 			}},
 			DREAM_STOP: {Name: "dream.stop type name", Help: "停止", Hand: func(m *ice.Message, arg ...string) {
 				if m.Cmd(SPACE, m.Option(mdb.NAME)).Append(mdb.STATUS) == cli.STOP {
-					m.Cmdy(SPACE, mdb.REMOVE, m.OptionSimple(mdb.NAME))
+					m.Cmd(mdb.DELETE, m.Prefix(SPACE), "", mdb.HASH, m.OptionSimple(mdb.NAME))
 				} else {
-					m.Cmdy(SPACE, mdb.REMOVE, m.OptionSimple(mdb.NAME))
+					m.Cmd(mdb.DELETE, m.Prefix(SPACE), "", mdb.HASH, m.OptionSimple(mdb.NAME))
 					m.Sleep("1s", DREAM, cli.START, m.OptionSimple(mdb.NAME))
 				}
 			}},

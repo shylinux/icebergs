@@ -326,6 +326,7 @@ const (
 	ContentType   = "Content-Type"
 	ContentLength = "Content-Length"
 	UserAgent     = "User-Agent"
+	Accept        = "Accept"
 
 	ContentFORM = "application/x-www-form-urlencoded"
 	ContentJSON = "application/json"
@@ -394,6 +395,13 @@ func init() {
 			}},
 		}, Hand: func(m *ice.Message, arg ...string) {
 			m.Echo(kit.Formats(kit.UnMarshal(m.Cmdx(SPIDE, ice.DEV, SPIDE_RAW, SPIDE_POST, arg[0], arg[1:]))))
+		}},
+		SPIDE_DELETE: {Name: "DELETE url key value run", Help: "蜘蛛侠", Action: map[string]*ice.Action{
+			mdb.REMOVE: {Name: "remove", Help: "删除", Hand: func(m *ice.Message, arg ...string) {
+				m.Cmdy(mdb.DELETE, SPIDE, "", mdb.HASH, m.OptionSimple(CLIENT_NAME))
+			}},
+		}, Hand: func(m *ice.Message, arg ...string) {
+			m.Echo(kit.Formats(kit.UnMarshal(m.Cmdx(SPIDE, ice.DEV, SPIDE_RAW, SPIDE_DELETE, arg[0], arg[1:]))))
 		}},
 	}})
 }

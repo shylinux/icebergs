@@ -75,6 +75,10 @@ func (m *Message) SplitIndex(str string, arg ...string) *Message {
 	return m.Split(str, kit.Simple(INDEX, arg)...)
 }
 func (m *Message) PushDetail(value Any, arg ...string) *Message {
+	switch v := value.(type) {
+	case string:
+		value = kit.UnMarshal(v)
+	}
 	return m.Push(CACHE_DETAIL, value, kit.Split(kit.Join(arg)))
 }
 func (m *Message) PushRecord(value Any, arg ...string) *Message {
@@ -131,6 +135,9 @@ func (m *Message) AppendTrans(cb func(value string, key string, index int) strin
 	return m
 }
 func (m *Message) SetAppend(arg ...string) *Message {
+	if len(arg) == 0 {
+		m.OptionFields("")
+	}
 	return m.Set(MSG_APPEND, arg...)
 }
 func (m *Message) SetResult(arg ...string) *Message {

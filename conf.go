@@ -125,6 +125,7 @@ const ( // DIR
 	USR_LOCAL_RIVER  = "usr/local/river"
 	USR_LOCAL_DAEMON = "usr/local/daemon"
 	USR_LOCAL_EXPORT = "usr/local/export"
+	USR_LOCAL_REPOS  = "usr/local/repos"
 
 	VAR_RUN       = "var/run"
 	VAR_TMP       = "var/tmp"

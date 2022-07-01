@@ -98,13 +98,27 @@ func init() {
 				m.Option("httphost", fmt.Sprintf("%s://%s:%s", u.Scheme, strings.Split(u.Host, ice.DF)[0],
 					kit.Select(kit.Select("80", "443", u.Scheme == "https"), strings.Split(u.Host, ice.DF), 1)))
 
-				m.Option("remote", kit.Select(ice.Info.Make.Remote, strings.TrimSpace(m.Cmdx(cli.SYSTEM, "git", "config", "remote.origin.url"))))
-				m.Option("pathname", strings.TrimSuffix(path.Base(m.Option("remote")), ".git"))
-
 				if len(arg) == 0 {
 					arg = append(arg, ice.MISC, ice.CORE, ice.BASE)
 				}
 				for _, k := range arg {
+					switch k {
+					case ice.MISC:
+						if bin := path.Join(ice.USR_PUBLISH, kit.Keys("ice", runtime.GOOS, runtime.GOARCH)); !kit.FileExists(bin) {
+							m.Cmd(nfs.LINK, bin, m.Cmdx(cli.RUNTIME, "boot.bin"))
+						}
+
+					case ice.CORE:
+						if !kit.FileExists(".git") {
+							repos := m.MergeURL2("/x/" + m.Option(ice.MSG_USERPOD))
+							m.Cmd(cli.SYSTEM, "git", "init")
+							m.Cmd(cli.SYSTEM, "git", "remote", "add", "origin", repos)
+							m.Cmd("web.code.git.repos", mdb.CREATE, repos, "master", "", nfs.PWD)
+						}
+						m.Option("remote", kit.Select(ice.Info.Make.Remote, strings.TrimSpace(m.Cmdx(cli.SYSTEM, "git", "config", "remote.origin.url"))))
+						m.Option("pathname", strings.TrimSuffix(path.Base(m.Option("remote")), ".git"))
+					case ice.BASE:
+					}
 					if buf, err := kit.Render(m.Config(kit.Keys(ice.CONTEXTS, k)), m); m.Assert(err) {
 						m.EchoScript(strings.TrimSpace(string(buf)))
 					}
@@ -151,14 +165,15 @@ func init() {
 }
 
 var _contexts = kit.Dict(
-	ice.MISC, `# 命令下载
-export ctx_dev={{.Option "httphost"}} ctx_pod={{.Option "user.pod"}}; ctx_temp=$(mktemp); wget -O $ctx_temp $ctx_dev; source $ctx_temp app
+	ice.MISC, `# 下载命令
+export ctx_dev={{.Option "httphost"}} ctx_pod={{.Option "user.pod"}}; ctx_temp=$(mktemp); curl -o $ctx_temp -fsSL $ctx_dev; source $ctx_temp app
+export ctx_dev={{.Option "httphost"}} ctx_pod={{.Option "user.pod"}}; ctx_temp=$(mktemp); wget -O $ctx_temp -q $ctx_dev; source $ctx_temp app
 `,
-	ice.CORE, `# 源码下载
+	ice.CORE, `# 克隆源码
 git clone {{.Option "remote"}}; cd {{.Option "pathname"}} && source etc/miss.sh port 9020
 `,
-	ice.BASE, `# 官方下载
+	ice.BASE, `# 下载工具
 ctx_temp=$(mktemp); curl -o $ctx_temp -fsSL {{.Cmdx "spide" "shy" "url"}}; source $ctx_temp binary
-ctx_temp=$(mktemp); wget -O $ctx_temp {{.Cmdx "spide" "shy" "url"}}; source $ctx_temp binary
+ctx_temp=$(mktemp); wget -O $ctx_temp -q {{.Cmdx "spide" "shy" "url"}}; source $ctx_temp binary
 `,
 )

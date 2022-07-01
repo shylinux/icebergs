@@ -188,8 +188,8 @@ func init() {
 			m.Option("keys", list)
 			m.Option("module", ice.Info.Make.Module)
 
-			m.Option("plug", "web.chat.website,web.dream")
-			m.Option("exts", "inner/search.js?a=1,inner/favor.js,inner/template.js")
+			// m.Option("plug", "web.chat.website,web.dream")
+			// m.Option("exts", "inner/search.js?a=1,inner/favor.js,inner/template.js")
 
 			arg[1] = strings.Split(arg[1], ice.FS)[0]
 			if _inner_list(m, kit.Ext(arg[1]), arg[1], arg[0]); m.IsErrNotFound() {

@@ -11,6 +11,7 @@ import (
 	"shylinux.com/x/icebergs/base/aaa"
 	"shylinux.com/x/icebergs/base/cli"
 	"shylinux.com/x/icebergs/base/ctx"
+	"shylinux.com/x/icebergs/base/lex"
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/nfs"
 	"shylinux.com/x/icebergs/base/tcp"
@@ -302,22 +303,15 @@ func init() {
 						switch r.URL.Path {
 						case ice.PS:
 							msg := m.Spawn(SERVE, w, r)
-							if share := r.URL.Query().Get("share"); share != "" {
-								switch msg := msg.Cmd(SHARE, share); msg.Append(mdb.TYPE) {
-								case "login":
-									RenderCookie(msg, aaa.SessCreate(msg, msg.Append(aaa.USERNAME)))
-								}
-							}
-
 							repos := kit.Select(ice.INTSHELL, ice.VOLCANOS, strings.Contains(r.Header.Get("User-Agent"), "Mozilla/5.0"))
 							if repos == ice.VOLCANOS {
-								if s := msg.Cmdx("web.chat.website", "show", "index.iml", "Header", "", "River", ""); s != "" {
+								if s := msg.Cmdx("web.chat.website", lex.PARSE, "index.iml", "Header", "", "River", ""); s != "" {
 									Render(msg, ice.RENDER_RESULT, s)
-									return true
+									return true // 定制主页
 								}
 							}
 							Render(msg, ice.RENDER_DOWNLOAD, path.Join(msg.Config(kit.Keys(repos, nfs.PATH)), msg.Config(kit.Keys(repos, INDEX))))
-							return true // 网站主页
+							return true // 默认主页
 
 						case "/help/":
 							r.URL.Path = "/help/tutor.shy"
@@ -325,7 +319,6 @@ func init() {
 					}
 					return false
 				})
-				m.Cmd(aaa.ROLE, aaa.WHITE, aaa.VOID, nfs.CAT, "usr/publish/order.js")
 			}},
 			ice.CTX_EXIT: {Hand: func(m *ice.Message, arg ...string) {
 				m.Cmd(SERVE).Table(func(index int, value map[string]string, head []string) {
@@ -400,19 +393,9 @@ func init() {
 			_share_repos(m, path.Join(arg[0], arg[1], arg[2]), arg[3:]...)
 		}},
 		"/publish/": {Name: "/publish/", Help: "定制化", Hand: func(m *ice.Message, arg ...string) {
-			if arg[0] == ice.ORDER_JS {
-				if p := path.Join(ice.USR_PUBLISH, ice.ORDER_JS); m.PodCmd(nfs.CAT, p) {
-					if m.IsErr() {
-						m.RenderResult("")
-					} else {
-						m.RenderResult()
-					}
-					return
-				}
-			}
 			if strings.HasPrefix(arg[0], "ice.") && m.Option(ice.POD) != "" {
-				_share_local(aaa.UserRoot(m), ice.BIN_ICE_BIN)
-				// _share_local(aaa.UserRoot(m), arg[0])
+				_share_local(aaa.UserRoot(m), path.Join(ice.USR_PUBLISH, arg[0]))
+				// _share_local(aaa.UserRoot(m), ice.BIN_ICE_BIN)
 				return
 			}
 			_share_local(m, m.Conf(SERVE, kit.Keym(ice.PUBLISH)), path.Join(arg...))

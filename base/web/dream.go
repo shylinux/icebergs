@@ -104,6 +104,9 @@ const DREAM = "dream"
 func init() {
 	Index.Merge(&ice.Context{Commands: map[string]*ice.Command{
 		DREAM: {Name: "dream name path auto start", Help: "梦想家", Action: map[string]*ice.Action{
+			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
+				m.Config("miss", _dream_miss)
+			}},
 			mdb.INPUTS: {Name: "inputs", Help: "补全", Hand: func(m *ice.Message, arg ...string) {
 				switch arg[0] {
 				case "repos":
@@ -171,11 +174,14 @@ func init() {
 			m.Cmdy(nfs.CAT, arg[1:])
 		}},
 	}, Configs: map[string]*ice.Config{
-		DREAM: {Name: DREAM, Help: "梦想家", Value: kit.Data(nfs.PATH, ice.USR_LOCAL_WORK,
-			"miss", `#! /bin/sh
-if [ "$ISH_CONF_PRE" = "" ]; then
-	[ -f $PWD/.ish/plug.sh ] || [ -f $HOME/.ish/plug.sh ] || git clone https://shylinux.com/x/intshell $PWD/.ish
-	source $PWD/.ish/plug.sh || source $HOME/.ish/plug.sh
+		DREAM: {Name: DREAM, Help: "梦想家", Value: kit.Data(nfs.PATH, ice.USR_LOCAL_WORK, "miss", _dream_miss)},
+	}})
+}
+
+var _dream_miss = `#! /bin/sh
+
+require &>/dev/null || if [ -f $PWD/.ish/plug.sh ]; then source $PWD/.ish/plug.sh; elif [ -f $HOME/.ish/plug.sh ]; then source $HOME/.ish/plug.sh; else
+	ctx_temp=$(mktemp); if curl -h &>/dev/null; then curl -o $ctx_temp -fsSL https://shylinux.com; else wget -O $ctx_temp -q http://shylinux.com; fi; source $ctx_temp intshell
 fi
 
 require miss.sh
@@ -183,19 +189,5 @@ ish_miss_prepare_compile
 ish_miss_prepare_develop
 ish_miss_prepare_install
 
-# ish_miss_prepare redis-story
-# ish_miss_prepare mysql-story
-# ish_miss_prepare release
-
-# ish_miss_prepare_contexts
-# ish_miss_prepare_intshell
-# ish_miss_prepare_icebergs
-# ish_miss_prepare_toolkits
-# ish_miss_prepare_volcanos
-# ish_miss_prepare_learning
-
 ish_miss_make; if [ -n "$*" ]; then ./bin/ice.bin forever serve "$@"; fi
-`,
-		)},
-	}})
-}
+`

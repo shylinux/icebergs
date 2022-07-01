@@ -95,7 +95,7 @@ func (m *Message) RenderDownload(args ...Any) *Message {
 	return m.Render(RENDER_DOWNLOAD, args...)
 }
 func (m *Message) RenderWebsite(pod string, dir string, arg ...string) *Message {
-	m.Echo(m.Cmdx(m.Space(pod), WEBSITE, SHOW, dir, arg))
+	m.Echo(m.Cmdx(m.Space(pod), WEBSITE, "parse", dir, arg))
 	return m.RenderResult()
 }
 func (m *Message) RenderIndex(serve, repos string, file ...string) *Message {

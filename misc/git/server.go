@@ -177,7 +177,7 @@ func init() {
 			}
 		}},
 		SERVER: {Name: "server path auto create import", Help: "服务器", Action: map[string]*ice.Action{
-			mdb.CREATE: {Name: "create name", Help: "添加", Hand: func(m *ice.Message, arg ...string) {
+			mdb.CREATE: {Name: "create name", Help: "创建", Hand: func(m *ice.Message, arg ...string) {
 				m.Option(cli.CMD_DIR, path.Join(ice.USR_LOCAL, REPOS))
 				m.Cmdy(cli.SYSTEM, GIT, INIT, "--bare", m.Option(mdb.NAME))
 			}},
@@ -189,11 +189,16 @@ func init() {
 					m.Cmd(cli.SYSTEM, GIT, PUSH, "--tags", remote, MASTER)
 				})
 			}},
+			nfs.TRASH: {Name: "trash", Help: "删除", Hand: func(m *ice.Message, arg ...string) {
+				m.Assert(m.Option(nfs.PATH) != "")
+				m.Cmd(nfs.TRASH, path.Join(ice.USR_LOCAL_REPOS, m.Option(nfs.PATH)))
+			}},
 		}, Hand: func(m *ice.Message, arg ...string) {
-			if m.Option(nfs.DIR_ROOT, path.Join(ice.USR_LOCAL, REPOS)); len(arg) == 0 {
+			if m.Option(nfs.DIR_ROOT, ice.USR_LOCAL_REPOS); len(arg) == 0 {
 				m.Cmdy(nfs.DIR, nfs.PWD).Table(func(index int, value map[string]string, head []string) {
 					m.PushScript("git clone " + m.MergeLink("/x/"+strings.TrimSuffix(value[nfs.PATH], ice.PS)))
 				})
+				m.Cut("time,path,size,script,action")
 				m.StatusTimeCount()
 				return
 			}

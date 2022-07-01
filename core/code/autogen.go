@@ -61,18 +61,23 @@ func init() { ice.Cmd("{{.Option "key"}}", {{.Option "name"}}{}) }
 func _autogen_import(m *ice.Message, main string, ctx string, mod string) {
 	m.Cmd(nfs.DEFS, main, `package main
 
-import "shylinux.com/x/ice"
+import (
+	"shylinux.com/x/ice"
+)
 
-func main() { println(ice.Run()) }
+func main() { print(ice.Run()) }
 `)
 
-	done, list := false, []string{}
+	begin, done, list := false, false, []string{}
 	m.Cmd(nfs.CAT, main, func(line string, index int) {
+		if begin && !done && strings.HasPrefix(line, ")") {
+			done, list = true, append(list, "", kit.Format(`	_ "%s/src/%s"`, mod, ctx))
+		}
 		if list = append(list, line); done {
 			return
 		}
 		if strings.HasPrefix(line, "import (") {
-			done, list = true, append(list, kit.Format(`	_ "%s/src/%s"`, mod, ctx), "")
+			begin = true
 		} else if strings.HasPrefix(line, "import") {
 			done, list = true, append(list, kit.Format(`import _ "%s/src/%s"`, mod, ctx))
 		}
@@ -87,7 +92,7 @@ field "{{.Option "help"}}" {{.Option "key"}}
 }
 func _autogen_source(m *ice.Message, main, file string) {
 	main = strings.ReplaceAll(main, ice.PT+GO, ice.PT+SHY)
-	m.Cmd(nfs.DEFS, main, `chapter "{{.Option "name"}}"
+	m.Cmd(nfs.DEFS, main, `title "{{.Option "name"}}"
 `)
 	m.Cmd(nfs.PUSH, main, ice.NL, "source "+strings.TrimPrefix(file, ice.SRC+ice.PS))
 }
@@ -102,9 +107,6 @@ func _autogen_mod(m *ice.Message, file string) (mod string) {
 	m.Cmd(nfs.DEFS, file, kit.Format(`module %s
 
 go 1.11
-`, host))
-	m.Cmd(nfs.DEFS, ice.GO_SUM, kit.Format(`
-
 `, host))
 
 	m.Cmd(nfs.CAT, file, func(line string) {

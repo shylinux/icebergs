@@ -27,31 +27,37 @@ func _website_parse(m *ice.Message, text string, args ...string) (ice.Map, bool)
 		return nil, false
 	}
 
-	m.Option(nfs.CAT_CONTENT, text)
-	river, storm, last := kit.Dict(
-		"Header", kit.Dict("menus", kit.List(), "style", kit.Dict("display", "none")),
-		"River", kit.Dict("menus", kit.List(), "action", kit.List()),
-		args,
-	), kit.Dict(), kit.Dict()
-	prefix := ""
+	const (
+		HEADER = "Header"
+		RIVER  = "River"
 
-	nriver := 0
-	nstorm := 0
+		ORDER = "order"
+		TITLE = "title"
+		MENUS = "menus"
+	)
+
+	river, storm, last := kit.Dict(
+		HEADER, kit.Dict(MENUS, kit.List(), ctx.STYLE, kit.Dict(ctx.DISPLAY, "none")),
+		RIVER, kit.Dict(MENUS, kit.List(), ctx.ACTION, kit.List()), args,
+	), kit.Dict(), kit.Dict()
+	nriver, nstorm, prefix := 0, 0, ""
+
+	m.Option(nfs.CAT_CONTENT, text)
 	m.Cmd(lex.SPLIT, "", mdb.KEY, mdb.NAME, func(deep int, ls []string, meta ice.Map) []string {
 		if deep == 1 {
 			switch ls[0] {
-			case "header":
+			case HEADER, RIVER:
 				for i := 1; i < len(ls); i += 2 {
-					kit.Value(river, kit.Keys("Header", ls[i]), ls[i+1])
+					kit.Value(river, kit.Keys(ls[0], ls[i]), ls[i+1])
 				}
 				return ls
 			}
 		}
+
 		data := kit.Dict()
 		switch kit.Ext(ls[0]) {
 		case nfs.JS:
-			data[ctx.DISPLAY] = ice.FileURI(ls[0])
-			ls[0] = kit.Select(ctx.CAN_PLUGIN, ice.GetFileCmd(ls[0]))
+			ls[0], data[ctx.DISPLAY] = kit.Select(ctx.CAN_PLUGIN, ice.GetFileCmd(ls[0])), ice.FileURI(ls[0])
 
 		case nfs.GO:
 			ls[0] = ice.GetFileCmd(ls[0])
@@ -66,12 +72,11 @@ func _website_parse(m *ice.Message, text string, args ...string) (ice.Map, bool)
 			ls[0], data[ctx.ARGS] = "web.code.sh.py", ls[0]
 
 		case "~":
-			prefix = ls[1]
-			ls = ls[1:]
+			prefix, ls = ls[1], ls[1:]
 			fallthrough
 		case "-":
 			for _, v := range ls[1:] {
-				last[mdb.LIST] = append(last[mdb.LIST].([]ice.Any), kit.Dict(mdb.INDEX, kit.Keys(prefix, v), "order", len(last)))
+				last[mdb.LIST] = append(last[mdb.LIST].([]ice.Any), kit.Dict(mdb.INDEX, kit.Keys(prefix, v)))
 			}
 			return ls
 		}
@@ -92,8 +97,7 @@ func _website_parse(m *ice.Message, text string, args ...string) (ice.Map, bool)
 				data[ls[i]] = kit.Split(ls[i+1])
 			case ctx.DISPLAY:
 				data[ls[i]] = ice.Display(ls[i+1])[ctx.DISPLAY]
-
-			case "title", "menus", "action", "style":
+			case ctx.STYLE, ctx.ACTION, TITLE, MENUS:
 				data[ls[i]] = kit.UnMarshal(ls[i+1])
 			default:
 				data[ls[i]] = ls[i+1]
@@ -102,24 +106,20 @@ func _website_parse(m *ice.Message, text string, args ...string) (ice.Map, bool)
 
 		switch deep {
 		case 1:
-			nriver++
-			nstorm = 0
-			storm = kit.Dict()
-			if ls[0] == "auto" {
+			if nriver++; ls[0] == ice.AUTO {
 				ls[0] = kit.Format(nriver)
 			}
-			river[ls[0]] = kit.Dict(mdb.NAME, ls[1], STORM, storm, data, "order", len(river))
+			nstorm, storm = 0, kit.Dict()
+			river[ls[0]] = kit.Dict(mdb.NAME, ls[1], STORM, storm, data, ORDER, len(river))
 		case 2:
-			nstorm++
-			if ls[0] == "auto" {
+			if nstorm++; ls[0] == ice.AUTO {
 				ls[0] = kit.Format(nstorm)
 			}
-			last = kit.Dict(mdb.NAME, ls[1], mdb.LIST, kit.List(), data, "order", len(storm))
+			last = kit.Dict(mdb.NAME, ls[1], mdb.LIST, kit.List(), data, ORDER, len(storm))
 			storm[ls[0]] = last
 			prefix = ""
 		default:
-			last[mdb.LIST] = append(last[mdb.LIST].([]ice.Any),
-				kit.Dict(mdb.NAME, kit.Select(ls[0], data[mdb.NAME]), mdb.HELP, ls[1], mdb.INDEX, ls[0], "order", len(last), data))
+			last[mdb.LIST] = append(last[mdb.LIST].([]ice.Any), kit.Dict(mdb.NAME, kit.Select(ls[0], data[mdb.NAME]), mdb.HELP, ls[1], mdb.INDEX, ls[0], data))
 		}
 		return ls
 	})
@@ -196,15 +196,15 @@ func init() {
 					return false
 				})
 			}},
-			"show": {Hand: func(m *ice.Message, arg ...string) {
+			lex.PARSE: {Hand: func(m *ice.Message, arg ...string) {
 				switch kit.Ext(arg[0]) {
-				case nfs.ZML:
-					m.RenderCmd("can.parse", m.Cmdx(nfs.CAT, path.Join(SRC_WEBSITE, arg[0])))
-
 				case nfs.IML:
 					if res, ok := _website_parse(m, m.Cmdx(nfs.CAT, path.Join(SRC_WEBSITE, arg[0])), arg[1:]...); ok {
 						m.Echo(_website_template2, kit.Format(res))
 					}
+
+				case nfs.ZML:
+					m.RenderCmd("can.parse", m.Cmdx(nfs.CAT, path.Join(SRC_WEBSITE, arg[0])))
 
 				default:
 					if text := m.Cmd(m.PrefixKey(), ice.PS+arg[0]).Append(mdb.TEXT); text != "" {
@@ -214,7 +214,6 @@ func init() {
 					}
 				}
 			}},
-			"inner": {Hand: func(m *ice.Message, arg ...string) {}},
 			mdb.SEARCH: {Hand: func(m *ice.Message, arg ...string) {
 				if arg[0] == mdb.FOREACH && arg[1] == "" {
 					_website_search(m, arg[0], arg[1], kit.Select("", arg, 2))

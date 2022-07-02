@@ -493,12 +493,21 @@ func init() {
 				m.ProcessOpen("https://baidu.com")
 			}},
 		}, Hand: func(m *ice.Message, arg ...string) {
-			m.Action("location", "replace", "history", "confirms", "rewrite", "refresh", "display", "field", "inner", "hold", "back", "rich", "grow", "open")
+			m.Action(
+				"location", "replace", "history",
+				"confirms", "refresh", "rewrite", "display", "field", "inner",
+				"hold", "back", "rich", "grow", "open",
+				"openLocation", "getLocation", "getClipboardData",
+			)
 			m.Push("hi", "hello")
 			m.Push("he", "world")
 			m.Push("value", "good")
 			m.Echo("hello world")
 			m.StatusTimeCount()
+			m.EchoButton("clear")
+			m.PushButton("close")
+			m.EchoButton("upload")
+			m.EchoButton("actions")
 			return
 			if m.Action(mdb.CREATE); len(arg) == 0 { // 矩阵列表
 				m.Fields(len(arg), "time,hash,npage,nhash")

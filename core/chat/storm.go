@@ -15,7 +15,7 @@ const STORM = "storm"
 
 func init() {
 	Index.Merge(&ice.Context{Commands: map[string]*ice.Command{
-		STORM: {Name: "storm hash id auto insert create", Help: "工具", Action: map[string]*ice.Action{
+		STORM: {Name: "storm hash id auto insert create", Help: "应用", Action: map[string]*ice.Action{
 			mdb.INPUTS: {Name: "inputs", Help: "补全", Hand: func(m *ice.Message, arg ...string) {
 				if ctx.Inputs(m, arg[0]) {
 					return
@@ -63,9 +63,8 @@ func init() {
 		}, Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) == 0 { // 应用列表
 				m.OptionFields("time,hash,type,name,count")
-				m.Cmdy(mdb.SELECT, RIVER, _river_key(m, STORM), mdb.HASH)
+				m.Cmdy(mdb.SELECT, RIVER, _river_key(m, STORM), mdb.HASH).Sort(mdb.NAME)
 				m.PushAction(mdb.REMOVE)
-				m.Sort(mdb.NAME)
 				return
 			}
 
@@ -76,8 +75,7 @@ func init() {
 			}
 
 			if len(arg) > 2 && arg[2] == ice.RUN { // 执行命令
-				m.Cmdy(m.Space(kit.Select(m.Option(ice.POD), msg.Append(ice.POD))),
-					kit.Keys(msg.Append(ice.CTX), msg.Append(ice.CMD)), arg[3:])
+				m.Cmdy(m.Space(kit.Select(m.Option(ice.POD), msg.Append(ice.POD))), kit.Keys(msg.Append(ice.CTX), msg.Append(ice.CMD)), arg[3:])
 				return
 			}
 

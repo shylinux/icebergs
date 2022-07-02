@@ -53,82 +53,13 @@ func _river_list(m *ice.Message) {
 const RIVER = "river"
 
 func init() {
-	Index.Merge(&ice.Context{Configs: map[string]*ice.Config{
-		RIVER: {Name: RIVER, Help: "群组", Value: kit.Data(mdb.FIELD, "time,hash,type,name,text,template")},
-	}, Commands: map[string]*ice.Command{
-		"/river": {Name: "/river", Help: "小河流", Action: map[string]*ice.Action{
-			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
-				m.Config(nfs.TEMPLATE, kit.Dict(
-					"base", kit.Dict(
-						"info", kit.List(
-							"web.chat.info",
-							"web.chat.ocean",
-							"web.chat.storm",
-							"web.chat.node",
-						),
-						"scan", kit.List(
-							"web.chat.scan",
-							"web.chat.paste",
-							"web.chat.files",
-							"web.chat.location",
-							"web.chat.meet.miss",
-							"web.wiki.feel",
-						),
-						"task", kit.List(
-							"web.team.task",
-							"web.team.plan",
-							"web.mall.asset",
-							"web.mall.salary",
-							"web.wiki.word",
-						),
-						"draw", kit.List(
-							"web.wiki.draw",
-							"web.wiki.data",
-							"web.wiki.word",
-						),
-					),
-				))
-			}},
-		}, Hand: func(m *ice.Message, arg ...string) {
-			if m.Warn(m.Option(ice.MSG_USERNAME) == "", ice.ErrNotLogin, RIVER) {
-				m.Render(web.STATUS, 401)
-				return // 没有登录
-			}
-			if len(arg) == 0 {
-				m.Option(MENUS, m.Config(MENUS))
-				_river_list(m)
-				return // 群组列表
-			}
-			if len(arg) == 2 && arg[1] == STORM {
-				m.Option(ice.MSG_RIVER, arg[0])
-				m.Cmdy(arg[1], arg[2:])
-				return // 应用列表
-			}
-			if !m.Right(RIVER, arg) {
-				return // 没有授权
-			}
-
-			switch kit.Select("", arg, 1) {
-			case STORM, OCEAN, NODE:
-				m.Option(ice.MSG_RIVER, arg[0])
-				m.Cmdy(arg[1], arg[2:])
-
-			case ctx.ACTION, aaa.INVITE:
-				m.Option(ice.MSG_RIVER, arg[0])
-				m.Cmdy(RIVER, arg[1:])
-
-			default:
-				m.Cmdy(RIVER, arg)
-			}
-		}},
+	Index.Merge(&ice.Context{Commands: map[string]*ice.Command{
 		RIVER: {Name: "river hash auto create", Help: "群组", Action: ice.MergeAction(map[string]*ice.Action{
+			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) { m.Config(nfs.TEMPLATE, _river_template) }},
 			mdb.INPUTS: {Name: "inputs", Help: "补全", Hand: func(m *ice.Message, arg ...string) {
 				switch m.Option(ctx.ACTION) {
-				case cli.START:
-					m.Cmdy(web.DREAM, ctx.ACTION, mdb.INPUTS, arg)
-					return
-				case "创建空间":
-					m.Cmdy(web.DREAM, ctx.ACTION, mdb.INPUTS, arg)
+				case cli.START, "创建空间":
+					m.Cmdy(web.DREAM, mdb.INPUTS, arg)
 					return
 				}
 
@@ -162,15 +93,77 @@ func init() {
 					})
 				})
 			}},
-
-			cli.START: {Name: "start name=hi repos template", Help: "启动", Hand: func(m *ice.Message, arg ...string) {
+			cli.START: {Name: "start name=hi repos template", Help: "创建空间", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmdy(m.Space(m.Option(ice.POD)), web.DREAM, cli.START, arg)
 			}},
-			aaa.INVITE: {Name: "invite", Help: "脚本", Hand: func(m *ice.Message, arg ...string) {
-				m.Cmdy(code.PUBLISH, ice.CONTEXTS)
+			aaa.INVITE: {Name: "invite", Help: "添加设备", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmd(code.PUBLISH, mdb.CREATE, nfs.FILE, ice.BIN_ICE_BIN)
+				m.Cmdy(code.PUBLISH, ice.CONTEXTS)
 			}},
-			SHARE: {Name: "share", Help: "共享", Hand: func(m *ice.Message, arg ...string) { _header_share(m, arg...) }},
-		}, mdb.HashAction())},
+		}, mdb.HashAction(mdb.FIELD, "time,hash,type,name,text,template"))},
+		web.P(RIVER): {Name: "/river", Help: "群组", Hand: func(m *ice.Message, arg ...string) {
+			if m.Warn(m.Option(ice.MSG_USERNAME) == "", ice.ErrNotLogin, RIVER) {
+				m.RenderStatusUnauthorized()
+				return // 没有登录
+			}
+			if len(arg) == 0 {
+				m.Option(MENUS, m.Config(MENUS))
+				_river_list(m)
+				return // 群组列表
+			}
+			if len(arg) == 2 && arg[1] == STORM {
+				m.Option(ice.MSG_RIVER, arg[0])
+				m.Cmdy(arg[1], arg[2:])
+				return // 应用列表
+			}
+			if !m.Right(RIVER, arg) {
+				m.RenderStatusForbidden()
+				return // 没有授权
+			}
+
+			switch kit.Select("", arg, 1) {
+			case STORM, OCEAN, NODE:
+				m.Option(ice.MSG_RIVER, arg[0])
+				m.Cmdy(arg[1], arg[2:])
+
+			case ctx.ACTION, aaa.INVITE:
+				m.Option(ice.MSG_RIVER, arg[0])
+				m.Cmdy(RIVER, arg[1:])
+
+			default:
+				m.Cmdy(RIVER, arg)
+			}
+		}},
 	}})
 }
+
+var _river_template = kit.Dict(
+	"base", kit.Dict(
+		"info", kit.List(
+			"web.chat.info",
+			"web.chat.ocean",
+			"web.chat.storm",
+			"web.chat.node",
+		),
+		"scan", kit.List(
+			"web.chat.scan",
+			"web.chat.paste",
+			"web.chat.files",
+			"web.chat.location",
+			"web.chat.meet.miss",
+			"web.wiki.feel",
+		),
+		"task", kit.List(
+			"web.team.task",
+			"web.team.plan",
+			"web.mall.asset",
+			"web.mall.salary",
+			"web.wiki.word",
+		),
+		"draw", kit.List(
+			"web.wiki.draw",
+			"web.wiki.data",
+			"web.wiki.word",
+		),
+	),
+)

@@ -306,6 +306,6 @@ var _website_template2 = `<!DOCTYPE html>
 <body>
 	<script src="/proto.js"></script>
 	<script src="/page/cache.js"></script>
-	<script>Volcanos({name: "chat", river: JSON.parse('%s')})</script>
+	<script>Volcanos({river: JSON.parse('%s')})</script>
 </body>
 `

@@ -227,6 +227,7 @@ const ( // PROCESS
 	PROCESS_LOCATION = "_location"
 	PROCESS_REPLACE  = "_replace"
 	PROCESS_HISTORY  = "_history"
+	PROCESS_CONFIRM  = "_confirm"
 	PROCESS_REFRESH  = "_refresh"
 	PROCESS_REWRITE  = "_rewrite"
 	PROCESS_DISPLAY  = "_display"
@@ -234,10 +235,12 @@ const ( // PROCESS
 	PROCESS_INNER    = "_inner"
 	PROCESS_AGAIN    = "_again"
 
-	PROCESS_OPEN = "_open"
 	PROCESS_HOLD = "_hold"
 	PROCESS_BACK = "_back"
+	PROCESS_RICH = "_rich"
 	PROCESS_GROW = "_grow"
+	PROCESS_OPEN = "_open"
+	PROCESS_ARG  = "_arg"
 
 	FIELD_PREFIX = "_prefix"
 )

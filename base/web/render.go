@@ -62,7 +62,7 @@ func Render(msg *ice.Message, cmd string, args ...ice.Any) {
 		fallthrough
 	default:
 		for _, k := range []string{
-			"_option", "_handle", "_output", "",
+			"_", "_option", "_handle", "_output", "",
 			"cmds", "fields", "sessid", "domain",
 			"river", "storm",
 		} {

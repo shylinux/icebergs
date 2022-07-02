@@ -73,11 +73,11 @@ func _webpack_cache(m *ice.Message, dir string, write bool) {
 			}
 		})
 	}
-	for _, k := range []string{PUBLISH_ORDER_JS, ice.FRAME_JS} {
+	for _, k := range []string{ice.FRAME_JS} {
 		fmt.Fprintln(js, `_can_name = "`+path.Join(ice.PS, k)+`"`)
 		fmt.Fprintln(js, m.Cmdx(nfs.CAT, k))
 	}
-
+	fmt.Fprintln(js, `_can_name = ""`)
 }
 func _webpack_build(m *ice.Message, file string) {
 	if f, _, e := kit.Create(kit.Keys(file, JS)); m.Assert(e) {

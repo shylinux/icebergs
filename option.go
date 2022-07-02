@@ -217,7 +217,7 @@ func (m *Message) GoToast(title string, cb func(toast func(string, int, int))) {
 
 func (m *Message) Process(action string, arg ...Any) {
 	m.Option(MSG_PROCESS, action)
-	m.Option("_arg", arg...)
+	m.Option(PROCESS_ARG, arg...)
 }
 func (m *Message) ProcessLocation(arg ...Any) {
 	m.Process(PROCESS_LOCATION, arg...)
@@ -228,8 +228,8 @@ func (m *Message) ProcessReplace(url string, arg ...Any) {
 func (m *Message) ProcessHistory(arg ...Any) {
 	m.Process(PROCESS_HISTORY, arg...)
 }
-func (m *Message) ProcessRewrite(arg ...Any) {
-	m.Process(PROCESS_REWRITE, arg...)
+func (m *Message) ProcessConfirm(arg ...Any) {
+	m.Process(PROCESS_CONFIRM, arg...)
 }
 func (m *Message) ProcessRefresh(delay string) {
 	if d, e := time.ParseDuration(delay); e == nil {
@@ -241,6 +241,9 @@ func (m *Message) ProcessRefresh3ms()   { m.ProcessRefresh("3ms") }
 func (m *Message) ProcessRefresh30ms()  { m.ProcessRefresh("30ms") }
 func (m *Message) ProcessRefresh300ms() { m.ProcessRefresh("300ms") }
 func (m *Message) ProcessRefresh3s()    { m.ProcessRefresh("3s") }
+func (m *Message) ProcessRewrite(arg ...Any) {
+	m.Process(PROCESS_REWRITE, arg...)
+}
 func (m *Message) ProcessDisplay(arg ...Any) {
 	m.Process(PROCESS_DISPLAY)
 	m.Option(MSG_DISPLAY, arg...)
@@ -268,9 +271,11 @@ func (m *Message) ProcessField(arg ...Any) {
 }
 func (m *Message) ProcessInner()          { m.Process(PROCESS_INNER) }
 func (m *Message) ProcessAgain()          { m.Process(PROCESS_AGAIN) }
-func (m *Message) ProcessOpen(url string) { m.Process(PROCESS_OPEN, url) }
 func (m *Message) ProcessHold()           { m.Process(PROCESS_HOLD) }
 func (m *Message) ProcessBack()           { m.Process(PROCESS_BACK) }
+func (m *Message) ProcessRich(arg ...Any) { m.Process(PROCESS_RICH, arg...) }
+func (m *Message) ProcessGrow(arg ...Any) { m.Process(PROCESS_GROW, arg...) }
+func (m *Message) ProcessOpen(url string) { m.Process(PROCESS_OPEN, url) }
 
 func (m *Message) OptionUserWeb() *url.URL {
 	return kit.ParseURL(m.Option(MSG_USERWEB))

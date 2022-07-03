@@ -51,52 +51,45 @@ func _action_exec(m *ice.Message, river, storm, index string, arg ...string) {
 		m.Cmdy(cmds, arg) // 执行命令
 	}
 }
+func _action_auth(m, msg *ice.Message) bool {
+	if m.Warn(kit.Time() > kit.Time(msg.Append(mdb.TIME)), ice.ErrNotValid) {
+		return false
+	}
+	m.Log_AUTH(
+		aaa.USERROLE, m.Option(ice.MSG_USERROLE, msg.Append(aaa.USERROLE)),
+		aaa.USERNAME, m.Option(ice.MSG_USERNAME, msg.Append(aaa.USERNAME)),
+		aaa.USERNICK, m.Option(ice.MSG_USERNICK, msg.Append(aaa.USERNICK)),
+		RIVER, m.Option(ice.MSG_RIVER, msg.Append(RIVER)),
+		STORM, m.Option(ice.MSG_STORM, msg.Append(STORM)),
+	)
+	return _action_right(m, msg.Append(web.RIVER), msg.Append(web.STORM))
+}
 func _action_share(m *ice.Message, arg ...string) {
 	switch msg := m.Cmd(web.SHARE, arg[0]); msg.Append(mdb.TYPE) {
 	case web.STORM:
-		if m.Warn(kit.Time() > kit.Time(msg.Append(mdb.TIME)), ice.ErrNotValid, arg) {
-			break // 分享超时
+		if !_action_auth(m, msg) {
+			break // 没有授权
 		}
+
 		if len(arg) == 1 {
 			_action_list(m, msg.Append(web.RIVER), msg.Append(web.STORM))
 			break // 命令列表
-		}
-
-		m.Log_AUTH(
-			aaa.USERROLE, m.Option(ice.MSG_USERROLE, msg.Append(aaa.USERROLE)),
-			aaa.USERNAME, m.Option(ice.MSG_USERNAME, msg.Append(aaa.USERNAME)),
-			aaa.USERNICK, m.Option(ice.MSG_USERNICK, msg.Append(aaa.USERNICK)),
-			RIVER, m.Option(ice.MSG_RIVER, msg.Append(RIVER)),
-			STORM, m.Option(ice.MSG_STORM, msg.Append(STORM)),
-		)
-		if !_action_right(m, msg.Append(web.RIVER), msg.Append(web.STORM)) {
-			break // 没有授权
 		}
 
 		// 执行命令
 		_action_exec(m, msg.Append(web.RIVER), msg.Append(web.STORM), arg[1], arg[2:]...)
 
 	case web.FIELD:
-		if m.Warn(kit.Time() > kit.Time(msg.Append(mdb.TIME)), ice.ErrNotValid, arg) {
-			break // 分享超时
+		if !_action_auth(m, msg) {
+			break // 没有授权
 		}
+
 		if arg[0] = msg.Append(mdb.NAME); len(arg) == 1 {
 			m.Push(TITLE, msg.Append(TITLE))
 			m.Push(TOPIC, msg.Append(TOPIC))
 			m.Push(ctx.INDEX, msg.Append(mdb.NAME))
 			m.Push(ctx.ARGS, msg.Append(mdb.TEXT))
 			break // 命令列表
-		}
-
-		m.Log_AUTH(
-			aaa.USERROLE, m.Option(ice.MSG_USERROLE, msg.Append(aaa.USERROLE)),
-			aaa.USERNAME, m.Option(ice.MSG_USERNAME, msg.Append(aaa.USERNAME)),
-			aaa.USERNICK, m.Option(ice.MSG_USERNICK, msg.Append(aaa.USERNICK)),
-			RIVER, m.Option(ice.MSG_RIVER, msg.Append(RIVER)),
-			STORM, m.Option(ice.MSG_STORM, msg.Append(STORM)),
-		)
-		if !_action_right(m, msg.Append(web.RIVER), msg.Append(web.STORM)) {
-			break // 没有授权
 		}
 
 		if _action_domain(m, arg[1]); m.Option(ice.MSG_UPLOAD) != "" {
@@ -153,10 +146,8 @@ const (
 const ACTION = "action"
 
 func init() {
-	Index.Merge(&ice.Context{Configs: map[string]*ice.Config{
-		ACTION: {Name: ACTION, Help: "应用", Value: kit.Data(nfs.PATH, ice.USR_LOCAL_RIVER)},
-	}, Commands: map[string]*ice.Command{
-		"/action": {Name: "/action river storm action arg...", Help: "工作台", Action: ice.MergeAction(map[string]*ice.Action{
+	Index.Merge(&ice.Context{Commands: map[string]*ice.Command{
+		web.P(ACTION): {Name: "/action river storm action arg...", Help: "工作台", Action: ice.MergeAction(map[string]*ice.Action{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
 				for _, cmd := range []string{
 					"web.chat.meet.miss",
@@ -185,7 +176,7 @@ func init() {
 			"_share": {Name: "_share", Help: "共享", Hand: func(m *ice.Message, arg ...string) {
 				_action_share(m, arg...)
 			}},
-		}, ctx.CmdAction()), Hand: func(m *ice.Message, arg ...string) {
+		}, ctx.CmdAction(nfs.PATH, ice.USR_LOCAL_RIVER)), Hand: func(m *ice.Message, arg ...string) {
 			if m.Warn(m.Option(ice.MSG_USERNAME) == "", ice.ErrNotLogin, arg) {
 				return // 没有登录
 			}

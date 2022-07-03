@@ -1,41 +1,18 @@
 package chat
 
 import (
-	"strings"
-
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/ctx"
 	"shylinux.com/x/icebergs/base/mdb"
-	kit "shylinux.com/x/toolkits"
+	"shylinux.com/x/icebergs/base/web"
 )
 
+const SEARCH = "search"
+
 func init() {
-	Index.Merge(&ice.Context{Configs: map[string]*ice.Config{
-		"search": {Name: "search", Help: "搜索", Value: kit.Data(mdb.SHORT, mdb.NAME)},
-	}, Commands: map[string]*ice.Command{
-		"/search": {Name: "/search", Help: "搜索引擎", Action: ice.MergeAction(map[string]*ice.Action{
-			mdb.SEARCH: {Name: "search type name text", Help: "搜索", Hand: func(m *ice.Message, arg ...string) {
-				m.Richs("/search", "", mdb.FOREACH, func(key string, value ice.Map) {
-					if value = kit.GetMeta(value); arg[1] != "" && !kit.Contains(value[mdb.NAME], arg[1]) {
-						return
-					}
-					m.PushSearch(ice.CMD, "/search", value)
-				})
-			}},
-			mdb.RENDER: {Name: "render", Help: "渲染", Hand: func(m *ice.Message, arg ...string) {
-				m.Cmdy(m.Space(m.Option(ice.POD)), mdb.RENDER, arg[1:])
-			}},
-		}, ctx.CmdAction()), Hand: func(m *ice.Message, arg ...string) {
-			if kit.Contains(arg[1], ";") {
-				arg = kit.Split(arg[1], ";", ";", ";")
-			}
-			defer m.StatusTimeCount()
-			arg[1] = strings.TrimSpace(arg[1])
-			if m.Cmdy(m.Space(m.Option(ice.POD)), mdb.SEARCH, arg); arg[1] == "" {
-				return
-			}
-			m.Cmd(mdb.INSERT, m.PrefixKey(), "", mdb.HASH,
-				mdb.NAME, arg[1], mdb.TYPE, arg[0], mdb.TEXT, kit.Select("", arg, 2))
+	Index.Merge(&ice.Context{Commands: map[string]*ice.Command{
+		web.P(SEARCH): {Name: "/search", Help: "搜索引擎", Action: ctx.CmdAction(mdb.SHORT, mdb.NAME), Hand: func(m *ice.Message, arg ...string) {
+			m.Cmdy(m.Space(m.Option(ice.POD)), mdb.SEARCH, arg).StatusTimeCount()
 		}},
 	}})
 }

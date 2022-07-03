@@ -85,7 +85,7 @@ func init() {
 			}
 			m.Warn(m.Option(ice.MSG_USERNAME) == "", ice.ErrNotLogin, arg)
 		}},
-		"/header": {Name: "/header", Help: "标题栏", Action: map[string]*ice.Action{
+		web.P(HEADER): {Name: "/header", Help: "标题栏", Action: map[string]*ice.Action{
 			AGENT: {Name: "agent", Help: "宿主应用", Hand: func(m *ice.Message, arg ...string) {
 				_header_agent(m, arg...)
 			}},
@@ -159,8 +159,6 @@ func init() {
 			GRANT: {Name: "grant space", Help: "授权", Hand: func(m *ice.Message, arg ...string) {
 				_header_grant(m, arg...)
 			}},
-		}, Hand: func(m *ice.Message, arg ...string) {
-
-		}},
+		}, Hand: func(m *ice.Message, arg ...string) {}},
 	}})
 }

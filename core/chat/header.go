@@ -80,8 +80,8 @@ func init() {
 				return // 免登录
 			case "/header":
 				switch kit.Select("", arg, 1) {
-				case AGENT, CHECK, aaa.LOGIN:
-					return // 非登录态
+				case "":
+					return // 免登录
 				}
 			}
 			m.Warn(m.Option(ice.MSG_USERNAME) == "", ice.ErrNotLogin, arg)

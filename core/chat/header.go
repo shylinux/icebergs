@@ -19,9 +19,9 @@ func _header_agent(m *ice.Message, arg ...string) {
 		m.Cmdy("web.chat.wx.access", "config")
 	}
 }
-func _header_check(m *ice.Message, arg ...string) {
+func _header_check(m *ice.Message, arg ...string) bool {
 	if m.Option(ice.MSG_USERNAME) != "" {
-		return
+		return true
 	}
 
 	m.Option(web.LOGIN, m.Config(web.LOGIN))
@@ -29,6 +29,7 @@ func _header_check(m *ice.Message, arg ...string) {
 	if m.Option("login.dev", m.Cmd(web.SPACE, ice.DEV).Append(mdb.TEXT)) == "" {
 		m.Option("login.dev", m.Cmd(web.SPACE, ice.SHY).Append(mdb.TEXT))
 	}
+	return false
 }
 func _header_grant(m *ice.Message, arg ...string) {
 	m.Cmd(GRANT, mdb.INSERT, kit.SimpleKV("space,grant,userrole,username",
@@ -123,7 +124,7 @@ func init() {
 				_header_users(m, m.ActionKey(), arg...)
 			}},
 
-			ctx.CONFIG: {Name: "config scope", Help: "配置", Hand: func(m *ice.Message, arg ...string) {
+			ctx.CONFIG: {Name: "config scope", Help: "拉取配置", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmdy(web.SPACE, m.Option(ice.MSG_USERPOD), m.Prefix("oauth.oauth"), CHECK, arg)
 			}},
 			code.PUBLISH: {Name: "publish", Help: "发布", Hand: func(m *ice.Message, arg ...string) {
@@ -135,6 +136,11 @@ func init() {
 				m.Cmdy(code.WEBPACK, cli.BUILD, m.OptionSimple(mdb.NAME))
 			}},
 		}, Hand: func(m *ice.Message, arg ...string) {
+			if !_header_check(m, arg...) {
+				return
+			}
+			_header_agent(m, arg...)
+
 			msg := m.Cmd(aaa.USER, m.Option(ice.MSG_USERNAME))
 			for _, k := range []string{aaa.LANGUAGE, aaa.BACKGROUND, aaa.AVATAR, aaa.USERNICK} {
 				m.Option(k, msg.Append(k))
@@ -150,7 +156,7 @@ func init() {
 				m.Option(GRANT, ice.TRUE)
 			}
 
-			m.Option(TRANS, kit.Format(kit.Value(m.Target().Commands[m.CommandKey()].Meta, "_trans")))
+			m.Option(TRANS, kit.Format(kit.Value(m.Target().Commands[web.P(m.CommandKey())].Meta, "_trans")))
 			m.Option(MENUS, m.Config(MENUS))
 			m.Echo(m.Config(TITLE))
 			// m.Cmdy(WEBSITE)

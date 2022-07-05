@@ -32,8 +32,8 @@ func init() {
 		}},
 	}, Configs: map[string]*ice.Config{
 		VIDEO: {Name: "video", Help: "视频", Value: kit.Data(
-			nfs.TEMPLATE, `<video {{.OptionTemplate}} title="{{.Option "text"}}" src="{{.Option "text"}}" controls></video>`,
 			nfs.PATH, ice.USR_LOCAL_IMAGE,
+			nfs.TEMPLATE, `<video {{.OptionTemplate}} title="{{.Option "text"}}" src="{{.Option "text"}}" controls></video>`,
 		)},
 	}})
 }

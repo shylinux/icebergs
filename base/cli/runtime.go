@@ -74,7 +74,7 @@ func _runtime_hostinfo(m *ice.Message) {
 	m.Push("uptime", kit.Split(m.Cmdx(SYSTEM, "uptime"), ice.FS)[0])
 }
 func _runtime_diskinfo(m *ice.Message) {
-	m.Spawn().Split(m.Cmdx(SYSTEM, "df", "-h"), "", ice.SP, ice.NL).Table(func(index int, value map[string]string, head []string) {
+	m.Spawn().Split(kit.Replace(m.Cmdx(SYSTEM, "df", "-h"), "Mounted on", "Mountedon"), "", ice.SP, ice.NL).Table(func(index int, value map[string]string, head []string) {
 		if strings.HasPrefix(value["Filesystem"], "/dev") {
 			m.Push("", value, head)
 		}

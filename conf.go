@@ -91,6 +91,7 @@ const ( // DIR
 	JS   = "js"
 	GO   = "go"
 	SH   = "sh"
+	SVG  = "svg"
 	CSV  = "csv"
 	JSON = "json"
 

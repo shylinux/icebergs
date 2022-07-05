@@ -86,12 +86,12 @@ func UserLogin(m *ice.Message, username, password string) bool {
 }
 
 const (
-	BACKGROUND = "background"
-
 	AVATAR = "avatar"
 	GENDER = "gender"
 	MOBILE = "mobile"
 	EMAIL  = "email"
+
+	BACKGROUND = "background"
 
 	CITY     = "city"
 	COUNTRY  = "country"

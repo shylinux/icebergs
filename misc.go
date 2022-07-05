@@ -320,7 +320,6 @@ func SplitCmd(name string) (list []Any) {
 	item, button := kit.Dict(), false
 	ls := kit.Split(name, SP, ":=@")
 	for i := 1; i < len(ls); i++ {
-		Pulse.Debug("what %v %v", ls[i], kit.Formats(item))
 		switch ls[i] {
 		case RUN:
 			list = append(list, kit.Dict(TYPE, BUTTON, NAME, RUN))

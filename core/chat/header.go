@@ -31,16 +31,6 @@ func _header_check(m *ice.Message, arg ...string) bool {
 	}
 	return false
 }
-func _header_grant(m *ice.Message, arg ...string) {
-	m.Cmd(GRANT, mdb.INSERT, kit.SimpleKV("space,grant,userrole,username",
-		m.Option(ice.POD), m.Option(web.SPACE), m.Option(ice.MSG_USERROLE), m.Option(ice.MSG_USERNAME)))
-	if m.PodCmd(m.PrefixKey(), ctx.ACTION, GRANT, arg) {
-		return // 下发命令
-	}
-
-	// 授权登录
-	m.Cmd(web.SPACE, m.Option(web.SPACE), ice.MSG_SESSID, aaa.SessCreate(m, m.Option(ice.MSG_USERNAME)))
-}
 func _header_share(m *ice.Message, arg ...string) {
 	if m.Option(mdb.LINK) == "" {
 		m.Cmdy(web.SHARE, mdb.CREATE, mdb.TYPE, web.LOGIN, arg)
@@ -74,15 +64,14 @@ func init() {
 	}, Commands: map[string]*ice.Command{
 		web.WEB_LOGIN: {Hand: func(m *ice.Message, arg ...string) {
 			switch arg[0] {
-			case "/sso":
-				return
-			case "/pod/", "/cmd/":
-				return // 免登录
 			case "/header":
-				switch kit.Select("", arg, 1) {
-				case "":
+				if kit.Select("", arg, 1) == "" {
 					return // 免登录
 				}
+			case "/pod/", "/cmd/":
+				return // 免登录
+			case "/sso":
+				return // 免登录
 			}
 			m.Warn(m.Option(ice.MSG_USERNAME) == "", ice.ErrNotLogin, arg)
 		}},
@@ -93,13 +82,9 @@ func init() {
 			CHECK: {Name: "check", Help: "登录检查", Hand: func(m *ice.Message, arg ...string) {
 				_header_check(m, arg...)
 			}},
-			GRANT: {Name: "grant space", Help: "授权", Hand: func(m *ice.Message, arg ...string) {
-				_header_grant(m, arg...)
-			}},
 			SHARE: {Name: "share type", Help: "共享", Hand: func(m *ice.Message, arg ...string) {
 				_header_share(m, arg...)
 			}},
-
 			aaa.LOGIN: {Name: "login", Help: "密码登录", Hand: func(m *ice.Message, arg ...string) {
 				if aaa.UserLogin(m, arg[0], arg[1]) {
 					web.RenderCookie(m, aaa.SessCreate(m, arg[0]))
@@ -108,29 +93,23 @@ func init() {
 			aaa.LOGOUT: {Name: "logout", Help: "退出登录", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmd(aaa.SESS, mdb.REMOVE, kit.Dict(mdb.HASH, m.Option(ice.MSG_SESSID)))
 			}},
-			aaa.USERNICK: {Name: "usernick", Help: "用户昵称", Hand: func(m *ice.Message, arg ...string) {
-				_header_users(m, m.ActionKey(), arg...)
-			}},
 			aaa.PASSWORD: {Name: "password", Help: "修改密码", Hand: func(m *ice.Message, arg ...string) {
 				_header_users(m, m.ActionKey(), arg...)
 			}},
-			aaa.LANGUAGE: {Name: "language", Help: "语言地区", Hand: func(m *ice.Message, arg ...string) {
-				_header_users(m, m.ActionKey(), arg...)
-			}},
-			aaa.BACKGROUND: {Name: "background", Help: "用户壁纸", Hand: func(m *ice.Message, arg ...string) {
+			aaa.USERNICK: {Name: "usernick", Help: "用户昵称", Hand: func(m *ice.Message, arg ...string) {
 				_header_users(m, m.ActionKey(), arg...)
 			}},
 			aaa.AVATAR: {Name: "avatar", Help: "用户头像", Hand: func(m *ice.Message, arg ...string) {
 				_header_users(m, m.ActionKey(), arg...)
 			}},
-
+			aaa.BACKGROUND: {Name: "background", Help: "用户壁纸", Hand: func(m *ice.Message, arg ...string) {
+				_header_users(m, m.ActionKey(), arg...)
+			}},
+			aaa.LANGUAGE: {Name: "language", Help: "语言地区", Hand: func(m *ice.Message, arg ...string) {
+				_header_users(m, m.ActionKey(), arg...)
+			}},
 			ctx.CONFIG: {Name: "config scope", Help: "拉取配置", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmdy(web.SPACE, m.Option(ice.MSG_USERPOD), m.Prefix("oauth.oauth"), CHECK, arg)
-			}},
-			code.PUBLISH: {Name: "publish", Help: "发布", Hand: func(m *ice.Message, arg ...string) {
-				if !m.PodCmd(code.PUBLISH, ice.CONTEXTS) {
-					m.Cmdy(code.PUBLISH, ice.CONTEXTS)
-				}
 			}},
 			code.WEBPACK: {Name: "webpack", Help: "打包页面", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmdy(code.WEBPACK, cli.BUILD, m.OptionSimple(mdb.NAME))
@@ -142,18 +121,14 @@ func init() {
 			_header_agent(m, arg...)
 
 			msg := m.Cmd(aaa.USER, m.Option(ice.MSG_USERNAME))
-			for _, k := range []string{aaa.LANGUAGE, aaa.BACKGROUND, aaa.AVATAR, aaa.USERNICK} {
+			for _, k := range []string{aaa.USERNICK, aaa.LANGUAGE} {
 				m.Option(k, msg.Append(k))
+			}
+			for _, k := range []string{aaa.AVATAR, aaa.BACKGROUND} {
+				m.Option(k, kit.Select(web.SHARE_LOCAL+k, kit.Select("void", msg.Append(k)), m.Right(msg.Append(k))))
 			}
 			if m.Option(aaa.AVATAR) == "" && m.R.Header.Get("Staffname") != "" {
 				m.Option(aaa.AVATAR, kit.Format("https://dayu.oa.com/avatars/%s/profile.jpg", m.R.Header.Get("Staffname")))
-			}
-
-			if m.Option(GRANT) != "" {
-				if m.Cmd(GRANT, m.Option(ice.POD), 1).Length() > 0 {
-					_header_grant(m, web.SPACE, m.Option(GRANT))
-				}
-				m.Option(GRANT, ice.TRUE)
 			}
 
 			m.Option(TRANS, kit.Format(kit.Value(m.Target().Commands[web.P(m.CommandKey())].Meta, "_trans")))
@@ -161,10 +136,5 @@ func init() {
 			m.Echo(m.Config(TITLE))
 			// m.Cmdy(WEBSITE)
 		}},
-		HEADER: {Name: "header", Help: "标题栏", Action: map[string]*ice.Action{
-			GRANT: {Name: "grant space", Help: "授权", Hand: func(m *ice.Message, arg ...string) {
-				_header_grant(m, arg...)
-			}},
-		}, Hand: func(m *ice.Message, arg ...string) {}},
 	}})
 }

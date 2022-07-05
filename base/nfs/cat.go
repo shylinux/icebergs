@@ -144,6 +144,7 @@ const (
 	GO   = ice.GO
 	SH   = ice.SH
 	SHY  = ice.SHY
+	SVG  = ice.SVG
 	CSV  = ice.CSV
 	JSON = ice.JSON
 
@@ -153,7 +154,6 @@ const (
 	XML = "xml"
 	YML = "yml"
 	ZML = "zml"
-	SVG = "svg"
 
 	PWD = "./"
 )

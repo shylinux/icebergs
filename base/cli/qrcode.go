@@ -10,6 +10,7 @@ import (
 
 	"shylinux.com/x/go-qrcode"
 	ice "shylinux.com/x/icebergs"
+	"shylinux.com/x/icebergs/base/mdb"
 	kit "shylinux.com/x/toolkits"
 )
 
@@ -129,11 +130,23 @@ const QRCODE = "qrcode"
 
 func init() {
 	Index.Merge(&ice.Context{Commands: map[string]*ice.Command{
-		QRCODE: {Name: "qrcode text fg bg size auto", Help: "二维码", Action: map[string]*ice.Action{
+		QRCODE: {Name: "qrcode text@key fg@key bg@key size auto", Help: "二维码", Action: map[string]*ice.Action{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
 				ice.AddRender(ice.RENDER_QRCODE, func(m *ice.Message, cmd string, args ...ice.Any) string {
 					return m.Cmd(QRCODE, kit.Simple(args...)).Result()
 				})
+			}},
+			mdb.INPUTS: {Hand: func(m *ice.Message, arg ...string) {
+				switch arg[0] {
+				case "text":
+					m.Push("text", "hi")
+					m.Push("text", "hello")
+					m.Push("text", "world")
+				case "fg", "bg":
+					m.Push("color", "red")
+					m.Push("color", "green")
+					m.Push("color", "blue")
+				}
 			}},
 		}, Hand: func(m *ice.Message, arg ...string) {
 			m.Option(SIZE, kit.Select("240", arg, 3))

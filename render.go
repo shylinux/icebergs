@@ -114,6 +114,9 @@ func (m *Message) RenderCmd(index string, args ...Any) {
 	m.RenderResult()
 }
 
+func (m *Message) IsMobileUA() bool {
+	return strings.Contains(m.Option(MSG_USERUA), "Mobile")
+}
 func (m *Message) IsCliUA() bool {
 	if m.Option(MSG_USERUA) == "" || !strings.HasPrefix(m.Option(MSG_USERUA), "Mozilla/5.0") {
 		return true

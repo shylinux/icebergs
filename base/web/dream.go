@@ -141,31 +141,28 @@ func init() {
 				m.ProcessRefresh30ms()
 			}},
 		}, Hand: func(m *ice.Message, arg ...string) {
-			if len(arg) == 0 {
-				_dream_list(m)
-				m.SetAppend("text")
+			if start := 0; len(arg) == 0 {
+				_dream_list(m).SetAppend(mdb.TEXT)
 				m.Table(func(index int, value map[string]string, head []string) {
-					if value["status"] == "start" {
-						ls := kit.Split(m.Cmdx(SPACE, value["name"], cli.SYSTEM, "git", "diff", "--shortstat"), ",", ",")
-						text := []string{}
-						for _, line := range ls {
-							list := kit.Split(line)
-							if strings.Contains(line, "file") {
-								text = append(text, list[0]+" file")
-							} else if strings.Contains(line, "ins") {
-								text = append(text, list[0]+" +++")
-							} else if strings.Contains(line, "dele") {
-								text = append(text, list[0]+" ---")
-							}
-						}
-						m.Push("text", strings.Join(text, ", "))
-					} else {
-						m.Push("text", "")
+					if value[cli.STATUS] != cli.START {
+						m.Push(mdb.TEXT, "")
+						return
 					}
-				})
-				m.Sort("status,type,name")
-				if !strings.Contains(m.Option(ice.MSG_USERUA), "Mobile") {
-					m.Display("/plugin/table.js", "style", "card")
+					start++
+					text := []string{}
+					for _, line := range kit.Split(m.Cmdx(SPACE, value[mdb.NAME], cli.SYSTEM, "git", "diff", "--shortstat"), ice.FS, ice.FS) {
+						if list := kit.Split(line); strings.Contains(line, "file") {
+							text = append(text, list[0]+" file")
+						} else if strings.Contains(line, "ins") {
+							text = append(text, list[0]+" +++")
+						} else if strings.Contains(line, "dele") {
+							text = append(text, list[0]+" ---")
+						}
+					}
+					m.Push(mdb.TEXT, strings.Join(text, ", "))
+				}).Sort("status,type,name").StatusTimeCount(cli.START, start)
+				if !m.IsMobileUA() {
+					m.Display("/plugin/table.js?style=card")
 				}
 				return
 			}

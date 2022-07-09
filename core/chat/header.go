@@ -23,7 +23,7 @@ func _header_check(m *ice.Message, arg ...string) bool {
 	if m.Option(web.SHARE) != "" {
 		m.Cmd(web.SHARE, m.Option(web.SHARE), ice.OptionFields("")).Tables(func(value ice.Maps) {
 			switch value[mdb.TYPE] {
-			case "field", "storm":
+			case web.FIELD, web.STORM:
 				m.Option(ice.MSG_USERNAME, value[aaa.USERNAME])
 				m.Option(ice.MSG_USERROLE, value[aaa.USERROLE])
 			}

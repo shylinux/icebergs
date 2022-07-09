@@ -131,7 +131,7 @@ func init() {
 				_publish_file(m, m.Option(nfs.FILE))
 			}},
 			nfs.TRASH: {Name: "trash", Help: "删除", Hand: func(m *ice.Message, arg ...string) {
-				os.Remove(path.Join(m.Config(nfs.PATH), m.Option(nfs.PATH)))
+				m.Cmdy(nfs.TRASH, path.Join(m.Config(nfs.PATH), m.Option(nfs.PATH)))
 			}},
 			mdb.EXPORT: {Name: "export", Help: "工具链", Hand: func(m *ice.Message, arg ...string) {
 				var list = []string{ice.ETC_PATH}

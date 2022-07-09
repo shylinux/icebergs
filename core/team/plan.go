@@ -71,7 +71,6 @@ func init() {
 		), Actions: ice.MergeAction(ice.Actions{
 			mdb.INPUTS: {Name: "inputs", Help: "补全", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmdy(TODO, mdb.INPUTS, arg)
-				m.Cmdy(TASK, mdb.INPUTS, arg)
 			}},
 			mdb.PLUGIN: {Name: "plugin extra.ctx extra.cmd extra.arg", Help: "插件", Hand: func(m *ice.Message, arg ...string) {
 				_task_modify(m, arg[0], arg[1], arg[2:]...)

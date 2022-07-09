@@ -11,14 +11,14 @@ import (
 const SCAN = "scan"
 
 func init() {
-	Index.Merge(&ice.Context{Configs: map[string]*ice.Config{
+	Index.Merge(&ice.Context{Configs: ice.Configs{
 		SCAN: {Name: SCAN, Help: "扫码", Value: kit.Data(
 			mdb.SHORT, mdb.TEXT, mdb.FIELD, "time,hash,type,name,text",
 		)},
-	}, Commands: map[string]*ice.Command{
+	}, Commands: ice.Commands{
 		SCAN: {Name: "scan hash auto scanQRCode scanQRCode0", Help: "扫码", Meta: kit.Dict(
 			ice.Display("scan.js"),
-		), Action: ice.MergeAction(map[string]*ice.Action{
+		), Actions: ice.MergeAction(ice.Actions{
 			"scanQRCode0": {Name: "scan create", Help: "本机扫码"},
 			"scanQRCode":  {Name: "scan create", Help: "扫码"},
 			mdb.CREATE:    {Name: "create type=text name=hi text:textarea=hi", Help: "添加"},

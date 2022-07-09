@@ -21,7 +21,7 @@ func _signal_listen(m *ice.Message, s int, arg ...string) {
 	}
 }
 func _signal_action(m *ice.Message, arg ...string) {
-	mdb.HashSelect(m.Spawn(), arg...).Table(func(index int, value map[string]string, head []string) {
+	mdb.HashSelect(m.Spawn(), arg...).Table(func(index int, value ice.Maps, head []string) {
 		m.Cmdy(kit.Split(value[ice.CMD]))
 	})
 }
@@ -45,12 +45,12 @@ const (
 const SIGNAL = "signal"
 
 func init() {
-	Index.Merge(&ice.Context{Configs: map[string]*ice.Config{
+	Index.Merge(&ice.Context{Configs: ice.Configs{
 		SIGNAL: {Name: SIGNAL, Help: "信号器", Value: kit.Data(
 			mdb.SHORT, SIGNAL, mdb.FIELD, "time,signal,name,cmd", nfs.PATH, path.Join(ice.VAR_RUN, "ice.pid"),
 		)},
-	}, Commands: map[string]*ice.Command{
-		SIGNAL: {Name: "signal signal auto listen", Help: "信号器", Action: ice.MergeAction(map[string]*ice.Action{
+	}, Commands: ice.Commands{
+		SIGNAL: {Name: "signal signal auto listen", Help: "信号器", Actions: ice.MergeAction(ice.Actions{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
 				if log.LogDisable {
 					return // 禁用日志

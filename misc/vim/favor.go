@@ -14,14 +14,14 @@ import (
 const FAVOR = "favor"
 
 func init() {
-	Index.Merge(&ice.Context{Configs: map[string]*ice.Config{
+	Index.Merge(&ice.Context{Configs: ice.Configs{
 		FAVOR: {Name: FAVOR, Help: "收藏夹", Value: kit.Data(
 			mdb.SHORT, mdb.ZONE, mdb.FIELD, "time,id,type,name,text,file,line,pwd",
 		)},
-	}, Commands: map[string]*ice.Command{
-		"/favor": {Name: "/favor", Help: "收藏", Action: map[string]*ice.Action{
+	}, Commands: ice.Commands{
+		"/favor": {Name: "/favor", Help: "收藏", Actions: ice.Actions{
 			mdb.SELECT: {Name: "select", Help: "主题", Hand: func(m *ice.Message, arg ...string) {
-				m.Cmd(FAVOR).Table(func(index int, value map[string]string, head []string) {
+				m.Cmd(FAVOR).Table(func(index int, value ice.Maps, head []string) {
 					m.Echo(value[mdb.ZONE]).Echo(ice.NL)
 				})
 			}},
@@ -29,12 +29,12 @@ func init() {
 				m.Cmd(FAVOR, mdb.INSERT)
 			}},
 		}, Hand: func(m *ice.Message, arg ...string) {
-			m.Cmd(FAVOR, m.Option(mdb.ZONE)).Table(func(index int, value map[string]string, head []string) {
+			m.Cmd(FAVOR, m.Option(mdb.ZONE)).Table(func(index int, value ice.Maps, head []string) {
 				m.Echo("%v\n", m.Option(mdb.ZONE)).Echo("%v:%v:%v:(%v): %v\n",
 					value[nfs.FILE], value[nfs.LINE], "1", value[mdb.NAME], value[mdb.TEXT])
 			})
 		}},
-		FAVOR: {Name: "favor zone id auto", Help: "收藏夹", Action: ice.MergeAction(map[string]*ice.Action{
+		FAVOR: {Name: "favor zone id auto", Help: "收藏夹", Actions: ice.MergeAction(ice.Actions{
 			mdb.INSERT: {Name: "insert zone=数据结构 type name=hi text=hello file line", Help: "添加"},
 			code.INNER: {Name: "inner", Help: "源码", Hand: func(m *ice.Message, arg ...string) {
 				p := path.Join(m.Option(cli.PWD), m.Option(nfs.FILE))

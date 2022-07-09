@@ -56,12 +56,12 @@ const (
 const ACCESS = "access"
 
 func init() {
-	Index.Merge(&ice.Context{Configs: map[string]*ice.Config{
+	Index.Merge(&ice.Context{Configs: ice.Configs{
 		ACCESS: {Name: ACCESS, Help: "认证", Value: kit.Data(
 			tcp.SERVER, "https://api.weixin.qq.com", ssh.SCRIPT, "/plugin/local/chat/wx.js",
 		)},
-	}, Commands: map[string]*ice.Command{
-		ACCESS: {Name: "access appid auto config ticket tokens login", Help: "认证", Action: ice.MergeAction(map[string]*ice.Action{
+	}, Commands: ice.Commands{
+		ACCESS: {Name: "access appid auto config ticket tokens login", Help: "认证", Actions: ice.MergeAction(ice.Actions{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
 				m.Cmd(web.SPIDE, mdb.CREATE, WX, m.Config(tcp.SERVER))
 			}},

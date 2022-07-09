@@ -58,8 +58,8 @@ func _sh_exec(m *ice.Message, arg ...string) {
 const SH = nfs.SH
 
 func init() {
-	Index.Register(&ice.Context{Name: SH, Help: "命令", Commands: map[string]*ice.Command{
-		SH: {Name: "sh path auto", Help: "命令", Action: ice.MergeAction(map[string]*ice.Action{
+	Index.Register(&ice.Context{Name: SH, Help: "命令", Commands: ice.Commands{
+		SH: {Name: "sh path auto", Help: "命令", Actions: ice.MergeAction(ice.Actions{
 			ice.CTX_INIT: {Name: "_init", Help: "初始化", Hand: func(m *ice.Message, arg ...string) {
 				for _, cmd := range []string{mdb.SEARCH, mdb.ENGINE, mdb.RENDER, mdb.PLUGIN} {
 					m.Cmd(cmd, mdb.CREATE, m.CommandKey(), m.PrefixKey())
@@ -92,7 +92,7 @@ func init() {
 			m.Option(nfs.DIR_REG, ".*.(sh)$")
 			m.Cmdy(nfs.DIR, arg)
 		}},
-	}, Configs: map[string]*ice.Config{
+	}, Configs: ice.Configs{
 		SH: {Name: SH, Help: "命令", Value: kit.Data(PLUG, kit.Dict(
 			SPLIT, kit.Dict(SPACE, " ", OPERATE, "{[(.,;!|<>)]}"),
 			PREFIX, kit.Dict("#!", COMMENT, "# ", COMMENT), SUFFIX, kit.Dict(" {", COMMENT),

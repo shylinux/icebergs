@@ -26,11 +26,11 @@ func init() {
 		func_pattern = "4\n%s\n/\\<%s: \\(shy\\|func\\)/\n"
 		libs_pattern = "4\nusr/volcanos/lib/%s.js\n/\\<%s: \\(shy\\|func\\)/\n"
 	)
-	Index.Merge(&ice.Context{Configs: map[string]*ice.Config{
+	Index.Merge(&ice.Context{Configs: ice.Configs{
 		TAGS: {Name: TAGS, Help: "索引", Value: kit.Data(
 			mdb.SHORT, mdb.ZONE, mdb.FIELD, "time,id,type,name,text,path,file,line",
 		)},
-	}, Commands: map[string]*ice.Command{
+	}, Commands: ice.Commands{
 		"/tags": {Name: "/tags", Help: "跳转", Hand: func(m *ice.Message, arg ...string) {
 			switch m.Option(MODULE) {
 			case ONIMPORT, ONACTION, ONEXPORT:
@@ -38,7 +38,7 @@ func init() {
 			case "msg", "res":
 				m.Echo(libs_pattern, ice.MISC, m.Option(PATTERN))
 			default:
-				if mdb.ZoneSelectCB(m, m.Option(MODULE), func(value map[string]string) {
+				if mdb.ZoneSelectCB(m, m.Option(MODULE), func(value ice.Maps) {
 					if value[mdb.NAME] == m.Option(PATTERN) {
 						m.Echo(kit.Select(defs_pattern, func_pattern, value[mdb.TYPE] == "function"),
 							path.Join(value[nfs.PATH], value[nfs.FILE]), m.Option(PATTERN))
@@ -48,7 +48,7 @@ func init() {
 				}
 			}
 		}},
-		TAGS: {Name: "tags zone id auto", Help: "索引", Action: ice.MergeAction(map[string]*ice.Action{
+		TAGS: {Name: "tags zone id auto", Help: "索引", Actions: ice.MergeAction(ice.Actions{
 			"listTags": {Name: "listTags", Help: "索引", Hand: func(m *ice.Message, arg ...string) {
 				kit.Fetch(kit.UnMarshal(m.Option(mdb.TEXT)), func(index int, value ice.Map) {
 					m.Cmd(TAGS, mdb.INSERT, mdb.ZONE, value[mdb.ZONE], kit.Simple(value))
@@ -66,12 +66,12 @@ func init() {
 				name := kit.Select("", kit.Slice(kit.Split(m.Option(mdb.TEXT), "\t \n."), -1), 0)
 				switch name {
 				case "can":
-					mdb.ZoneSelectCB(m, "", func(value map[string]string) {
+					mdb.ZoneSelectCB(m, "", func(value ice.Maps) {
 						m.Echo(value[mdb.NAME] + ice.NL)
 					})
 					return
 				}
-				mdb.ZoneSelectCB(m, name, func(value map[string]string) {
+				mdb.ZoneSelectCB(m, name, func(value ice.Maps) {
 					if !strings.Contains(value[mdb.NAME], m.Option(mdb.NAME)) && m.Option(mdb.NAME) != "." {
 						return
 					}

@@ -31,7 +31,7 @@ func _binpack_dir(m *ice.Message, f *os.File, dir string) {
 	m.Option(nfs.DIR_DEEP, true)
 	m.Option(nfs.DIR_TYPE, nfs.CAT)
 
-	m.Cmd(nfs.DIR, nfs.PWD).Sort(nfs.PATH).Tables(func(value map[string]string) {
+	m.Cmd(nfs.DIR, nfs.PWD).Sort(nfs.PATH).Tables(func(value ice.Maps) {
 		switch path.Base(value[nfs.PATH]) {
 		case "go.mod", "go.sum", "binpack.go", "version.go":
 			return
@@ -54,7 +54,7 @@ func _binpack_can(m *ice.Message, f *os.File, dir string) {
 		fmt.Fprintln(f, _binpack_file(m, path.Join(dir, k), ice.PS+k))
 	}
 	for _, k := range []string{LIB, PAGE, PANEL, PLUGIN, "publish/client/nodejs/"} {
-		m.Cmd(nfs.DIR, k).Sort(nfs.PATH).Tables(func(value map[string]string) {
+		m.Cmd(nfs.DIR, k).Sort(nfs.PATH).Tables(func(value ice.Maps) {
 			fmt.Fprintln(f, _binpack_file(m, path.Join(dir, value[nfs.PATH]), ice.PS+value[nfs.PATH]))
 		})
 	}
@@ -67,8 +67,8 @@ func _binpack_ctx(m *ice.Message, f *os.File) {
 const BINPACK = "binpack"
 
 func init() {
-	Index.Merge(&ice.Context{Commands: map[string]*ice.Command{
-		BINPACK: {Name: "binpack path auto create remove export", Help: "打包", Action: ice.MergeAction(map[string]*ice.Action{
+	Index.Merge(&ice.Context{Commands: ice.Commands{
+		BINPACK: {Name: "binpack path auto create remove export", Help: "打包", Actions: ice.MergeAction(ice.Actions{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
 				if kit.FileExists(path.Join(ice.USR_VOLCANOS, ice.PROTO_JS)) {
 					m.Cmd(BINPACK, mdb.REMOVE)
@@ -134,7 +134,7 @@ func init() {
 	}
 `)
 
-					fmt.Fprintln(f, `	pack := map[string]string{`)
+					fmt.Fprintln(f, `	pack := ice.Maps{`)
 					defer fmt.Fprintln(f, `	}`)
 
 					if kit.FileExists(ice.USR_VOLCANOS) && kit.FileExists(ice.USR_INTSHELL) && m.Option(ice.MSG_USERPOD) == "" {
@@ -153,7 +153,7 @@ func init() {
 					fmt.Fprintln(f, _binpack_file(m, ice.README_MD))
 					fmt.Fprintln(f)
 
-					m.Cmd(mdb.SELECT, m.PrefixKey(), "", mdb.HASH, ice.OptionFields(nfs.PATH)).Tables(func(value map[string]string) {
+					m.Cmd(mdb.SELECT, m.PrefixKey(), "", mdb.HASH, ice.OptionFields(nfs.PATH)).Tables(func(value ice.Maps) {
 						if s, e := os.Stat(value[nfs.PATH]); e == nil {
 							if s.IsDir() {
 								_binpack_dir(m, f, value[nfs.PATH])

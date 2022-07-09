@@ -45,7 +45,7 @@ func (f *Frame) Close(m *ice.Message, arg ...string) bool {
 
 const GDB = "gdb"
 
-var Index = &ice.Context{Name: GDB, Help: "事件模块", Commands: map[string]*ice.Command{
+var Index = &ice.Context{Name: GDB, Help: "事件模块", Commands: ice.Commands{
 	ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
 		m.Load(TIMER)
 	}},

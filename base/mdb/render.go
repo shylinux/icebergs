@@ -8,10 +8,10 @@ import (
 const RENDER = "render"
 
 func init() {
-	Index.Merge(&ice.Context{Configs: map[string]*ice.Config{
+	Index.Merge(&ice.Context{Configs: ice.Configs{
 		RENDER: {Name: RENDER, Help: "渲染", Value: kit.Data(SHORT, TYPE, FIELD, "time,type,name,text")},
-	}, Commands: map[string]*ice.Command{
-		RENDER: {Name: "render type name text auto", Help: "渲染", Action: map[string]*ice.Action{
+	}, Commands: ice.Commands{
+		RENDER: {Name: "render type name text auto", Help: "渲染", Actions: ice.Actions{
 			CREATE: {Name: "create type name text", Help: "创建", Hand: func(m *ice.Message, arg ...string) {
 				m.Option(NAME, kit.Select(m.Option(TYPE), m.Option(NAME)))
 				m.Option(TYPE, kit.Ext(m.Option(TYPE)))

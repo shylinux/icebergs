@@ -19,13 +19,13 @@ func _wx_action(m *ice.Message) {
 `, m.Option("ToUserName"), m.Option("FromUserName"), m.Option("CreateTime"), "news")
 
 	count := 0
-	m.Table(func(index int, value map[string]string, head []string) { count++ })
+	m.Table(func(index int, value ice.Maps, head []string) { count++ })
 	m.Echo(`<ArticleCount>%d</ArticleCount>`, count)
 
 	share := m.Cmdx(web.SHARE, mdb.CREATE, mdb.TYPE, web.LOGIN)
 
 	m.Echo(`<Articles>`)
-	m.Table(func(index int, value map[string]string, head []string) {
+	m.Table(func(index int, value ice.Maps, head []string) {
 		m.Echo(`<item>
 <Title><![CDATA[%s]]></Title>
 <Description><![CDATA[%s]]></Description>
@@ -44,12 +44,12 @@ func _wx_action(m *ice.Message) {
 const MENU = "menu"
 
 func init() {
-	Index.Merge(&ice.Context{Configs: map[string]*ice.Config{
+	Index.Merge(&ice.Context{Configs: ice.Configs{
 		MENU: {Name: MENU, Help: "菜单", Value: kit.Data(
 			mdb.SHORT, mdb.ZONE, mdb.FIELD, "time,id,title,refer,image",
 		)},
-	}, Commands: map[string]*ice.Command{
-		MENU: {Name: "menu zone id auto insert", Help: "菜单", Action: ice.MergeAction(map[string]*ice.Action{
+	}, Commands: ice.Commands{
+		MENU: {Name: "menu zone id auto insert", Help: "菜单", Actions: ice.MergeAction(ice.Actions{
 			mdb.INSERT: {Name: "insert zone=home title=hi refer=hello image", Help: "添加"},
 		}, mdb.ZoneAction()), Hand: func(m *ice.Message, arg ...string) {
 			if mdb.ZoneSelect(m, arg...); len(arg) > 0 {

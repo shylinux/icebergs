@@ -11,12 +11,12 @@ import (
 
 const GIT = "git"
 
-var Index = &ice.Context{Name: GIT, Help: "代码库", Configs: map[string]*ice.Config{
+var Index = &ice.Context{Name: GIT, Help: "代码库", Configs: ice.Configs{
 	GIT: {Name: GIT, Help: "代码库", Value: kit.Data(
 		nfs.SOURCE, "http://mirrors.tencent.com/macports/distfiles/git-cinnabar/git-2.31.1.tar.gz",
 	)},
-}, Commands: map[string]*ice.Command{
-	GIT: {Name: "git path auto install order build download", Help: "代码库", Action: ice.MergeAction(map[string]*ice.Action{
+}, Commands: ice.Commands{
+	GIT: {Name: "git path auto install order build download", Help: "代码库", Actions: ice.MergeAction(ice.Actions{
 		code.INSTALL: {Name: "install", Help: "安装", Hand: func(m *ice.Message, arg ...string) {
 			cli.PushStream(m)
 			defer m.ProcessInner()

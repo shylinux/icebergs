@@ -45,17 +45,17 @@ const (
 const REPOS = "repos"
 
 func init() {
-	Index.Merge(&ice.Context{Configs: map[string]*ice.Config{
+	Index.Merge(&ice.Context{Configs: ice.Configs{
 		REPOS: {Name: REPOS, Help: "代码库", Value: kit.Data(
 			mdb.SHORT, mdb.NAME, mdb.FIELD, "time,name,branch,commit,remote",
 			REPOS, "https://shylinux.com/x", nfs.PATH, ice.USR_LOCAL,
 		)},
-	}, Commands: map[string]*ice.Command{
-		REPOS: {Name: "repos repos path auto create", Help: "代码库", Action: ice.MergeAction(map[string]*ice.Action{
+	}, Commands: ice.Commands{
+		REPOS: {Name: "repos repos path auto create", Help: "代码库", Actions: ice.MergeAction(ice.Actions{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
 				m.Conf(REPOS, mdb.HASH, "")
 				_repos_insert(m, path.Base(kit.Pwd()), kit.Pwd())
-				m.Cmd(nfs.DIR, ice.USR, "name,path").Table(func(index int, value map[string]string, head []string) {
+				m.Cmd(nfs.DIR, ice.USR, "name,path").Table(func(index int, value ice.Maps, head []string) {
 					_repos_insert(m, value[mdb.NAME], value[nfs.PATH])
 				})
 				cli.IsAlpine(m, "git", "apk add git")

@@ -65,10 +65,10 @@ const (
 const PLAN = "plan"
 
 func init() {
-	Index.Merge(&ice.Context{Commands: map[string]*ice.Command{
+	Index.Merge(&ice.Context{Commands: ice.Commands{
 		PLAN: {Name: "plan scale=week,day,week,month,year,long begin_time@date list", Help: "计划", Meta: kit.Dict(
 			ice.Display("/plugin/local/team/plan.js"),
-		), Action: ice.MergeAction(map[string]*ice.Action{
+		), Actions: ice.MergeAction(ice.Actions{
 			mdb.INPUTS: {Name: "inputs", Help: "补全", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmdy(TODO, mdb.INPUTS, arg)
 				m.Cmdy(TASK, mdb.INPUTS, arg)

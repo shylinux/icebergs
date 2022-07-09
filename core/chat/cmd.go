@@ -51,10 +51,10 @@ func _cmd_file(m *ice.Message, arg ...string) bool {
 const CMD = "cmd"
 
 func init() {
-	Index.Merge(&ice.Context{Configs: map[string]*ice.Config{
+	Index.Merge(&ice.Context{Configs: ice.Configs{
 		CMD: {Name: CMD, Help: "命令", Value: kit.Data(mdb.SHORT, "type", nfs.PATH, nfs.PWD)},
-	}, Commands: map[string]*ice.Command{
-		"/cmd/": {Name: "/cmd/", Help: "命令", Action: ice.MergeAction(map[string]*ice.Action{
+	}, Commands: ice.Commands{
+		"/cmd/": {Name: "/cmd/", Help: "命令", Actions: ice.MergeAction(ice.Actions{
 			ice.CTX_INIT: {Name: "_init", Help: "初始化", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmdy(CMD, mdb.CREATE, mdb.TYPE, "shy", mdb.NAME, "web.wiki.word")
 				m.Cmdy(CMD, mdb.CREATE, mdb.TYPE, "svg", mdb.NAME, "web.wiki.draw")
@@ -84,7 +84,7 @@ func init() {
 				m.RenderDownload(path.Join(m.Config(nfs.PATH), path.Join(arg...))) // 文件
 			}
 		}},
-		CMD: {Name: "cmd path auto upload up home", Help: "命令", Action: ice.MergeAction(map[string]*ice.Action{
+		CMD: {Name: "cmd path auto upload up home", Help: "命令", Actions: ice.MergeAction(ice.Actions{
 			web.UPLOAD: {Name: "upload", Help: "上传", Hand: func(m *ice.Message, arg ...string) {
 				m.Upload(path.Join(m.Config(nfs.PATH), strings.TrimPrefix(path.Dir(m.R.URL.Path), "/cmd")))
 			}},

@@ -60,8 +60,8 @@ func _spide_c(m *ice.Message, file string) {
 const SPIDE = "spide"
 
 func init() {
-	Index.Merge(&ice.Context{Commands: map[string]*ice.Command{
-		SPIDE: {Name: "spide repos auto", Help: "构架图", Action: ice.MergeAction(map[string]*ice.Action{
+	Index.Merge(&ice.Context{Commands: ice.Commands{
+		SPIDE: {Name: "spide repos auto", Help: "构架图", Actions: ice.MergeAction(ice.Actions{
 			code.INNER: {Name: "web.code.inner"},
 			"depend": {Name: "depend path=icebergs/base", Help: "依赖", Hand: func(m *ice.Message, arg ...string) {
 				keys := map[string]bool{}
@@ -117,7 +117,7 @@ func init() {
 			if len(arg) == 1 { // 目录列表
 				m.Option(nfs.DIR_DEEP, ice.TRUE)
 				color := []string{cli.YELLOW, cli.BLUE, cli.CYAN, cli.RED}
-				nfs.Dir(m, nfs.PATH).Table(func(index int, value map[string]string, head []string) {
+				nfs.Dir(m, nfs.PATH).Table(func(index int, value ice.Maps, head []string) {
 					m.Push(cli.COLOR, color[strings.Count(value[nfs.PATH], ice.PS)%len(color)])
 				})
 				return

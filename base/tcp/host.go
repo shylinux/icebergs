@@ -73,14 +73,14 @@ const (
 const HOST = "host"
 
 func init() {
-	Index.Merge(&ice.Context{Configs: map[string]*ice.Config{
+	Index.Merge(&ice.Context{Configs: ice.Configs{
 		HOST: {Name: HOST, Help: "主机", Value: kit.Data(
 			aaa.BLACK, kit.Data(mdb.SHORT, mdb.TEXT), aaa.WHITE, kit.Data(mdb.SHORT, mdb.TEXT),
 		)},
-	}, Commands: map[string]*ice.Command{
-		HOST: {Name: "host name auto", Help: "主机", Action: map[string]*ice.Action{
+	}, Commands: ice.Commands{
+		HOST: {Name: "host name auto", Help: "主机", Actions: ice.Actions{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
-				m.Cmd(HOST).Table(func(index int, value map[string]string, head []string) {
+				m.Cmd(HOST).Table(func(index int, value ice.Maps, head []string) {
 					m.Cmd(HOST, aaa.WHITE, value[aaa.IP])
 				})
 			}},

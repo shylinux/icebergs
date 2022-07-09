@@ -9,8 +9,8 @@ import (
 const TODO = "todo"
 
 func init() {
-	Index.Merge(&ice.Context{Commands: map[string]*ice.Command{
-		TODO: {Name: "todo hash list create export import", Help: "待办", Action: ice.MergeAction(map[string]*ice.Action{
+	Index.Merge(&ice.Context{Commands: ice.Commands{
+		TODO: {Name: "todo hash list create export import", Help: "待办", Actions: ice.MergeAction(ice.Actions{
 			mdb.INPUTS: {Name: "inputs", Help: "补全", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmdy(mdb.INPUTS, m.PrefixKey(), "", mdb.HASH, arg)
 				m.Cmdy(TASK, mdb.INPUTS, arg)

@@ -91,10 +91,10 @@ const (
 const ROLE = "role"
 
 func init() {
-	Index.Merge(&ice.Context{Configs: map[string]*ice.Config{
+	Index.Merge(&ice.Context{Configs: ice.Configs{
 		ROLE: {Name: ROLE, Help: "角色", Value: kit.Data(mdb.SHORT, mdb.NAME)},
-	}, Commands: map[string]*ice.Command{
-		ROLE: {Name: "role role auto insert", Help: "角色", Action: map[string]*ice.Action{
+	}, Commands: ice.Commands{
+		ROLE: {Name: "role role auto insert", Help: "角色", Actions: ice.Actions{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
 				m.Rich(ROLE, nil, kit.Dict(mdb.NAME, TECH, BLACK, kit.Dict(), WHITE, kit.Dict()))
 				m.Rich(ROLE, nil, kit.Dict(mdb.NAME, VOID, WHITE, kit.Dict(), BLACK, kit.Dict()))

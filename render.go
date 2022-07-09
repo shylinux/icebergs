@@ -177,7 +177,7 @@ func (m *Message) PushAction(list ...Any) *Message {
 	if len(m.meta[MSG_APPEND]) == 0 {
 		return m
 	}
-	return m.Set(MSG_APPEND, ACTION).Tables(func(value map[string]string) { m.PushButton(list...) })
+	return m.Set(MSG_APPEND, ACTION).Tables(func(value Maps) { m.PushButton(list...) })
 }
 func (m *Message) PushSearch(args ...Any) {
 	data := kit.Dict(args...)
@@ -198,16 +198,16 @@ func (m *Message) PushSearch(args ...Any) {
 }
 func (m *Message) PushPodCmd(cmd string, arg ...string) {
 	if m.Length() > 0 && len(m.Appendv(POD)) == 0 {
-		m.Tables(func(value map[string]string) { m.Push(POD, m.Option(MSG_USERPOD)) })
+		m.Tables(func(value Maps) { m.Push(POD, m.Option(MSG_USERPOD)) })
 	}
 
-	m.Cmd(SPACE, OptionFields("type,name")).Tables(func(value map[string]string) {
+	m.Cmd(SPACE, OptionFields("type,name")).Tables(func(value Maps) {
 		switch value[TYPE] {
 		case "server", "worker":
 			if value[NAME] == Info.HostName {
 				break
 			}
-			m.Cmd(SPACE, value[NAME], m.Prefix(cmd), arg).Table(func(index int, val map[string]string, head []string) {
+			m.Cmd(SPACE, value[NAME], m.Prefix(cmd), arg).Table(func(index int, val Maps, head []string) {
 				val[POD] = kit.Keys(value[NAME], val[POD])
 				m.Push("", val, head)
 			})
@@ -270,16 +270,16 @@ func (m *Message) DisplayStoryJSON(arg ...Any) *Message { // /plugin/story/json.
 	return m.DisplayStory("json", arg...)
 }
 
-func DisplayBase(file string, arg ...string) map[string]string {
-	return map[string]string{DISPLAY: file, STYLE: kit.Join(arg, SP)}
+func DisplayBase(file string, arg ...string) Maps {
+	return Maps{DISPLAY: file, STYLE: kit.Join(arg, SP)}
 }
-func DisplayStory(file string, arg ...string) map[string]string { // /plugin/story/file
+func DisplayStory(file string, arg ...string) Maps { // /plugin/story/file
 	if !strings.HasPrefix(file, HTTP) && !strings.HasPrefix(file, PS) {
 		file = path.Join(PLUGIN_STORY, file)
 	}
 	return DisplayBase(file, arg...)
 }
-func DisplayLocal(file string, arg ...string) map[string]string { // /plugin/local/file
+func DisplayLocal(file string, arg ...string) Maps { // /plugin/local/file
 	if file == "" {
 		file = path.Join(kit.PathName(2), kit.Keys(kit.FileName(2), JS))
 	}
@@ -288,10 +288,10 @@ func DisplayLocal(file string, arg ...string) map[string]string { // /plugin/loc
 	}
 	return DisplayBase(file, arg...)
 }
-func Display(file string, arg ...string) map[string]string { // repos local file
+func Display(file string, arg ...string) Maps { // repos local file
 	return displayRequire(2, file, arg...)
 }
-func displayRequire(n int, file string, arg ...string) map[string]string {
+func displayRequire(n int, file string, arg ...string) Maps {
 	if file == "" {
 		file = kit.Keys(kit.FileName(n+1), JS)
 	}

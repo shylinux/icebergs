@@ -51,8 +51,8 @@ const JSON = "json"
 const NODE = "node"
 
 func init() {
-	Index.Register(&ice.Context{Name: JS, Help: "前端", Commands: map[string]*ice.Command{
-		JS: {Name: "js", Help: "前端", Action: ice.MergeAction(map[string]*ice.Action{
+	Index.Register(&ice.Context{Name: JS, Help: "前端", Commands: ice.Commands{
+		JS: {Name: "js", Help: "前端", Actions: ice.MergeAction(ice.Actions{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
 				for _, cmd := range []string{mdb.SEARCH, mdb.ENGINE, mdb.RENDER, mdb.PLUGIN} {
 					m.Cmd(cmd, mdb.CREATE, JSON, m.PrefixKey())
@@ -83,12 +83,12 @@ func init() {
 				_go_grep(m, kit.Select(cli.MAIN, arg, 1), arg[2])
 			}},
 		}, PlugAction())},
-		NODE: {Name: "node auto download", Help: "前端", Action: map[string]*ice.Action{
+		NODE: {Name: "node auto download", Help: "前端", Actions: ice.Actions{
 			web.DOWNLOAD: {Name: "download", Help: "下载", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmdy(INSTALL, m.Config(nfs.SOURCE))
 			}},
 		}},
-	}, Configs: map[string]*ice.Config{
+	}, Configs: ice.Configs{
 		NODE: {Name: NODE, Help: "前端", Value: kit.Data(
 			nfs.SOURCE, "https://nodejs.org/dist/v10.13.0/node-v10.13.0-linux-x64.tar.xz",
 		)},

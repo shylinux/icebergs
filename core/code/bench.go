@@ -61,8 +61,8 @@ const (
 const BENCH = "bench"
 
 func init() {
-	Index.Merge(&ice.Context{Commands: map[string]*ice.Command{
-		BENCH: {Name: "bench zone id auto insert", Help: "性能压测", Action: ice.MergeAction(map[string]*ice.Action{
+	Index.Merge(&ice.Context{Commands: ice.Commands{
+		BENCH: {Name: "bench zone id auto insert", Help: "性能压测", Actions: ice.MergeAction(ice.Actions{
 			mdb.INSERT: {Name: "insert zone=some type=http,redis name=demo text='http://localhost:9020' nconn=3 nreqs=10", Help: "添加"},
 			ice.RUN: {Name: "run", Help: "执行", Hand: func(m *ice.Message, arg ...string) {
 				switch m.Option(mdb.TYPE) {

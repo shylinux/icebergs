@@ -15,8 +15,13 @@ import (
 )
 
 type Any = interface{}
+type List = []Any
 type Map = map[string]Any
+type Maps = map[string]string
 type CommandHandler func(m *Message, arg ...string)
+type Commands = map[string]*Command
+type Actions = map[string]*Action
+type Configs = map[string]*Config
 
 type Cache struct {
 	Name  string
@@ -35,12 +40,12 @@ type Action struct {
 	List []Any
 }
 type Command struct {
-	Name   string
-	Help   string
-	Action map[string]*Action
-	Hand   CommandHandler
-	List   []Any
-	Meta   Map
+	Name    string
+	Help    string
+	Actions map[string]*Action
+	Hand    CommandHandler
+	List    []Any
+	Meta    Map
 }
 type Server interface {
 	Spawn(m *Message, c *Context, arg ...string) Server
@@ -161,7 +166,7 @@ func (c *Context) Merge(s *Context) *Context {
 			cmd.Meta = kit.Dict()
 		}
 
-		for k, a := range cmd.Action {
+		for k, a := range cmd.Actions {
 			if p, ok := c.Commands[k]; ok {
 				switch h := a.Hand; k {
 				case CTX_INIT:
@@ -199,8 +204,8 @@ func (c *Context) Merge(s *Context) *Context {
 				cmd.Meta[k] = a.List
 			}
 		}
-		delete(cmd.Action, CTX_INIT)
-		delete(cmd.Action, CTX_EXIT)
+		delete(cmd.Actions, CTX_INIT)
+		delete(cmd.Actions, CTX_EXIT)
 	}
 
 	if c.Configs == nil {
@@ -341,7 +346,7 @@ func (m *Message) Spawn(arg ...Any) *Message {
 			for k, v := range val {
 				msg.Option(k, v)
 			}
-		case map[string]string:
+		case Maps:
 			for k, v := range val {
 				msg.Option(k, v)
 			}

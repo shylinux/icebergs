@@ -16,10 +16,10 @@ const (
 )
 
 func init() {
-	Index.Merge(&ice.Context{Configs: map[string]*ice.Config{
+	Index.Merge(&ice.Context{Configs: ice.Configs{
 		BUFFER: {Name: BUFFER, Help: "缓存", Value: kit.Data()},
-	}, Commands: map[string]*ice.Command{
-		BUFFER: {Name: "buffer name value auto export import", Help: "缓存", Action: map[string]*ice.Action{
+	}, Commands: ice.Commands{
+		BUFFER: {Name: "buffer name value auto export import", Help: "缓存", Actions: ice.Actions{
 			mdb.MODIFY: {Name: "modify", Help: "编辑", Hand: func(m *ice.Message, arg ...string) {
 				switch arg[0] {
 				case mdb.TEXT:
@@ -30,7 +30,7 @@ func init() {
 				m.Config(mdb.LIST, "")
 				m.Config(mdb.COUNT, "0")
 
-				m.Cmd(BUFFER).Table(func(index int, value map[string]string, head []string) {
+				m.Cmd(BUFFER).Table(func(index int, value ice.Maps, head []string) {
 					m.Grow(m.PrefixKey(), "", kit.Dict(
 						mdb.NAME, value[head[0]], mdb.TEXT, m.Cmdx(cli.SYSTEM, TMUX, "show-buffer", "-b", value[head[0]]),
 					))
@@ -68,7 +68,7 @@ func init() {
 				}
 			}
 		}},
-		TEXT: {Name: "text auto save text:textarea", Help: "文本", Action: map[string]*ice.Action{
+		TEXT: {Name: "text auto save text:textarea", Help: "文本", Actions: ice.Actions{
 			nfs.SAVE: {Name: "save", Help: "保存", Hand: func(m *ice.Message, arg ...string) {
 				if len(arg) > 0 && arg[0] != "" {
 					m.Cmd(cli.SYSTEM, TMUX, "set-buffer", arg[0])

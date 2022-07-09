@@ -59,7 +59,7 @@ const (
 const MSG = "msg"
 
 func init() {
-	Index.Merge(&ice.Context{Commands: map[string]*ice.Command{
+	Index.Merge(&ice.Context{Commands: ice.Commands{
 		web.WEB_LOGIN: {Hand: func(m *ice.Message, arg ...string) {
 			m.Option(ice.MSG_USERZONE, LARK)
 		}},
@@ -81,7 +81,7 @@ func init() {
 				m.Cmd(DUTY, m.Option("msg.type"), kit.Formats(data))
 			}
 		}},
-		MSG: {Name: "msg", Help: "聊天消息", Action: map[string]*ice.Action{
+		MSG: {Name: "msg", Help: "聊天消息", Actions: ice.Actions{
 			"location": {Name: "", Help: "", Hand: func(m *ice.Message, arg ...string) {
 			}},
 			"image": {Name: "", Help: "", Hand: func(m *ice.Message, arg ...string) {

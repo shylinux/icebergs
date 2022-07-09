@@ -71,7 +71,7 @@ func (a alpha) List(m *ice.Message, arg ...string) {
 
 	// 搜索词汇
 	msg := m.Cmd(cli.SYSTEM, "grep", "-rih", arg[1], m.Config(mdb.STORE))
-	msg.CSV(msg.Result(), kit.Split(m.Config(mdb.FIELD))...).Table(func(index int, value map[string]string, head []string) {
+	msg.CSV(msg.Result(), kit.Split(m.Config(mdb.FIELD))...).Table(func(index int, value ice.Maps, head []string) {
 		if m.FieldsIsDetail() {
 			m.Push(mdb.DETAIL, value, kit.Split(m.Config(mdb.FIELD)))
 			m.Push(mdb.TIME, m.Time())

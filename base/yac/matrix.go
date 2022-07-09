@@ -344,10 +344,10 @@ const (
 const MATRIX = "matrix"
 
 func init() {
-	Index.Merge(&ice.Context{Configs: map[string]*ice.Config{
+	Index.Merge(&ice.Context{Configs: ice.Configs{
 		MATRIX: {Name: MATRIX, Help: "魔方矩阵", Value: kit.Data(mdb.SHORT, mdb.NAME)},
-	}, Commands: map[string]*ice.Command{
-		MATRIX: {Name: "matrix name npage text auto", Help: "魔方矩阵", Action: map[string]*ice.Action{
+	}, Commands: ice.Commands{
+		MATRIX: {Name: "matrix name npage text auto", Help: "魔方矩阵", Actions: ice.Actions{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) { _yac_load(m) }},
 			mdb.CREATE: {Name: "create name=shy nlang=32 ncell=32", Help: "创建", Hand: func(m *ice.Message, arg ...string) {
 				mat := NewMatrix(m, kit.Int(kit.Select("32", m.Option(NLANG))), kit.Int(kit.Select("32", m.Option(NCELL))))

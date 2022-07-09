@@ -127,8 +127,8 @@ func _spide_list(m *ice.Message, arg ...string) {
 		_spide_save(m, cache, save, uri, res)
 	})
 }
-func _spide_body(m *ice.Message, method string, arg ...string) (io.Reader, map[string]string, []string) {
-	head := map[string]string{}
+func _spide_body(m *ice.Message, method string, arg ...string) (io.Reader, ice.Maps, []string) {
+	head := ice.Maps{}
 	body, ok := m.Optionv(SPIDE_BODY).(io.Reader)
 	if !ok && len(arg) > 0 && method != SPIDE_GET {
 		if len(arg) == 1 {
@@ -216,7 +216,7 @@ func _spide_part(m *ice.Message, arg ...string) (io.Reader, string) {
 	}
 	return buf, mp.FormDataContentType()
 }
-func _spide_head(m *ice.Message, req *http.Request, head map[string]string, value ice.Map) {
+func _spide_head(m *ice.Message, req *http.Request, head ice.Maps, value ice.Map) {
 	m.Info("%s %s", req.Method, req.URL)
 	kit.Fetch(value[SPIDE_HEADER], func(key string, value string) {
 		req.Header.Set(key, value)
@@ -331,6 +331,7 @@ const (
 	ContentFORM = "application/x-www-form-urlencoded"
 	ContentJSON = "application/json"
 	ContentHTML = "text/html"
+	ContentCSS  = "text/css"
 	ContentPNG  = "image/png"
 )
 const (
@@ -353,10 +354,10 @@ const (
 const SPIDE = "spide"
 
 func init() {
-	Index.Merge(&ice.Context{Configs: map[string]*ice.Config{
+	Index.Merge(&ice.Context{Configs: ice.Configs{
 		SPIDE: {Name: SPIDE, Help: "蜘蛛侠", Value: kit.Data(mdb.SHORT, CLIENT_NAME, mdb.FIELD, "time,client.name,client.url", LOGHEADERS, ice.FALSE)},
-	}, Commands: map[string]*ice.Command{
-		SPIDE: {Name: "spide client.name action=raw,msg,save,cache method=GET,PUT,POST,DELETE url format=form,part,json,data,file arg run create", Help: "蜘蛛侠", Action: ice.MergeAction(map[string]*ice.Action{
+	}, Commands: ice.Commands{
+		SPIDE: {Name: "spide client.name action=raw,msg,save,cache method=GET,PUT,POST,DELETE url format=form,part,json,data,file arg run create", Help: "蜘蛛侠", Actions: ice.MergeAction(ice.Actions{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
 				conf := m.Confm(cli.RUNTIME, "conf")
 				m.Cmd(SPIDE, mdb.CREATE, ice.OPS, kit.Select("http://127.0.0.1:9020", conf["ctx_ops"]))
@@ -382,21 +383,21 @@ func init() {
 			_spide_list(m, arg...)
 		}},
 
-		SPIDE_GET: {Name: "GET url key value run", Help: "蜘蛛侠", Action: map[string]*ice.Action{
+		SPIDE_GET: {Name: "GET url key value run", Help: "蜘蛛侠", Actions: ice.Actions{
 			mdb.REMOVE: {Name: "remove", Help: "删除", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmdy(mdb.DELETE, SPIDE, "", mdb.HASH, m.OptionSimple(CLIENT_NAME))
 			}},
 		}, Hand: func(m *ice.Message, arg ...string) {
 			m.Echo(kit.Formats(kit.UnMarshal(m.Cmdx(SPIDE, ice.DEV, SPIDE_RAW, SPIDE_GET, arg[0], arg[1:]))))
 		}},
-		SPIDE_POST: {Name: "POST url key value run", Help: "蜘蛛侠", Action: map[string]*ice.Action{
+		SPIDE_POST: {Name: "POST url key value run", Help: "蜘蛛侠", Actions: ice.Actions{
 			mdb.REMOVE: {Name: "remove", Help: "删除", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmdy(mdb.DELETE, SPIDE, "", mdb.HASH, m.OptionSimple(CLIENT_NAME))
 			}},
 		}, Hand: func(m *ice.Message, arg ...string) {
 			m.Echo(kit.Formats(kit.UnMarshal(m.Cmdx(SPIDE, ice.DEV, SPIDE_RAW, SPIDE_POST, arg[0], arg[1:]))))
 		}},
-		SPIDE_DELETE: {Name: "DELETE url key value run", Help: "蜘蛛侠", Action: map[string]*ice.Action{
+		SPIDE_DELETE: {Name: "DELETE url key value run", Help: "蜘蛛侠", Actions: ice.Actions{
 			mdb.REMOVE: {Name: "remove", Help: "删除", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmdy(mdb.DELETE, SPIDE, "", mdb.HASH, m.OptionSimple(CLIENT_NAME))
 			}},

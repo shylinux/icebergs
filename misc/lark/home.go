@@ -11,7 +11,7 @@ import (
 const HOME = "home"
 
 func init() {
-	Index.Merge(&ice.Context{Commands: map[string]*ice.Command{
+	Index.Merge(&ice.Context{Commands: ice.Commands{
 		HOME: {Name: "home river storm title content", Help: "首页", Hand: func(m *ice.Message, arg ...string) {
 			name := kit.Select(m.Option(ice.MSG_USERNAME), m.Option(ice.MSG_USERNICK))
 			if len(name) > 10 {
@@ -21,8 +21,8 @@ func init() {
 
 			text, link, list := kit.Select("", arg, 3), kit.MergeURL2(m.Conf(web.SHARE, kit.Keym("domain")), "/chat/lark/sso"), []string{}
 			if len(arg) == 0 {
-				m.Cmd("web.chat./river").Table(func(index int, val map[string]string, head []string) {
-					m.Cmd("web.chat./river", val[mdb.HASH], chat.STORM).Table(func(index int, value map[string]string, head []string) {
+				m.Cmd("web.chat./river").Table(func(index int, val ice.Maps, head []string) {
+					m.Cmd("web.chat./river", val[mdb.HASH], chat.STORM).Table(func(index int, value ice.Maps, head []string) {
 						list = append(list, kit.Keys(val[mdb.NAME], value[mdb.NAME]),
 							ice.CMD, kit.Format([]string{HOME, val[mdb.HASH], value[mdb.HASH], val[mdb.NAME] + "." + value[mdb.NAME]}))
 					})
@@ -31,7 +31,7 @@ func init() {
 				m.Option(ice.MSG_RIVER, arg[0])
 				m.Option(ice.MSG_STORM, arg[1])
 				link = kit.MergeURL(link, chat.RIVER, arg[0], chat.STORM, arg[1])
-				m.Cmd("web.chat./river", arg[0], chat.STORM, arg[1]).Table(func(index int, value map[string]string, head []string) {
+				m.Cmd("web.chat./river", arg[0], chat.STORM, arg[1]).Table(func(index int, value ice.Maps, head []string) {
 					list = append(list, value[ice.CMD], ice.CMD, kit.Keys(value[ice.CTX], value[ice.CMD]))
 				})
 			}

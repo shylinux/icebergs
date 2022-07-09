@@ -72,14 +72,17 @@ func _command_search(m *ice.Message, kind, name, text string) {
 	})
 }
 
-func CmdAction(args ...ice.Any) map[string]*ice.Action {
-	return map[string]*ice.Action{ice.CTX_INIT: mdb.AutoConfig(args...),
+func CmdAction(args ...ice.Any) ice.Actions {
+	return ice.Actions{ice.CTX_INIT: mdb.AutoConfig(args...),
 		COMMAND: {Name: "command", Help: "命令", Hand: func(m *ice.Message, arg ...string) {
 			if !m.PodCmd(COMMAND, arg) {
 				m.Cmdy(COMMAND, arg)
 			}
 		}},
 		ice.RUN: {Name: "run", Help: "执行", Hand: func(m *ice.Message, arg ...string) {
+			if len(arg) > 3 && arg[1] == "action" && arg[2] == "config" && arg[3] == "reset" {
+				m.Cmd("config", "reset", arg[0])
+			}
 			if m.Right(arg) && !m.PodCmd(arg) {
 				m.Cmdy(arg)
 			}
@@ -99,8 +102,8 @@ const (
 const COMMAND = "command"
 
 func init() {
-	Index.Merge(&ice.Context{Commands: map[string]*ice.Command{
-		COMMAND: {Name: "command key auto", Help: "命令", Action: map[string]*ice.Action{
+	Index.Merge(&ice.Context{Commands: ice.Commands{
+		COMMAND: {Name: "command key auto", Help: "命令", Actions: ice.Actions{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
 				m.Cmd(aaa.ROLE, aaa.WHITE, aaa.VOID, m.Prefix(COMMAND))
 				m.Cmd(aaa.ROLE, aaa.WHITE, aaa.VOID, COMMAND)

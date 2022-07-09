@@ -37,7 +37,7 @@ const (
 )
 
 func init() {
-	Index.Merge(&ice.Context{Configs: map[string]*ice.Config{
+	Index.Merge(&ice.Context{Configs: ice.Configs{
 		SESSION: {Name: SESSION, Help: "会话", Value: kit.Data(
 			FORMAT, "#{session_id},#{session_attached},#{session_name},#{session_windows},#{session_height},#{session_width}",
 			FIELDS, "id,tag,session,windows,height,width",
@@ -50,8 +50,8 @@ func init() {
 			FORMAT, "#{pane_id},#{pane_active},#{pane_index},#{pane_tty},#{pane_height},#{pane_width},#{pane_current_command}",
 			FIELDS, "id,tag,pane,tty,height,width,cmd",
 		)},
-	}, Commands: map[string]*ice.Command{
-		SESSION: {Name: "session session window pane cmd auto", Help: "会话管理", Action: map[string]*ice.Action{
+	}, Commands: ice.Commands{
+		SESSION: {Name: "session session window pane cmd auto", Help: "会话管理", Actions: ice.Actions{
 			web.DREAM_CREATE: {Name: "dream.create type name", Help: "梦想", Hand: func(m *ice.Message, arg ...string) {
 				if m.Cmd(m.PrefixKey(), m.Option(mdb.NAME)).Length() == 0 {
 					m.Cmd(m.PrefixKey(), mdb.CREATE)
@@ -129,7 +129,7 @@ func init() {
 			}},
 
 			SCRIPT: {Name: "script name", Help: "脚本", Hand: func(m *ice.Message, arg ...string) {
-				m.Cmd(SCRIPT, m.Option(mdb.NAME)).Table(func(index int, value map[string]string, head []string) {
+				m.Cmd(SCRIPT, m.Option(mdb.NAME)).Table(func(index int, value ice.Maps, head []string) {
 					switch value[mdb.TYPE] {
 					case "shell":
 						for _, line := range kit.Split(value[mdb.TEXT], ice.NL, ice.NL, ice.NL) {
@@ -170,7 +170,7 @@ func init() {
 
 			// 会话列表
 			m.Split(m.Cmdx(cli.SYSTEM, TMUX, "list-session", "-F", m.Config(FORMAT)), m.Config(FIELDS), ice.FS, ice.NL)
-			m.Table(func(index int, value map[string]string, head []string) {
+			m.Table(func(index int, value ice.Maps, head []string) {
 				switch value["tag"] {
 				case "1":
 					m.PushButton("")

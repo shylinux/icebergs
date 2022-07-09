@@ -48,7 +48,7 @@ func _webpack_cache(m *ice.Message, dir string, write bool) {
 	m.Option(nfs.DIR_PACK, true)
 	m.Option(nfs.DIR_TYPE, nfs.CAT)
 
-	// m.Cmd(nfs.DIR, ice.SRC).Tables(func(value map[string]string) {
+	// m.Cmd(nfs.DIR, ice.SRC).Tables(func(value ice.Maps) {
 	// 	if kit.Ext(value[nfs.PATH]) == JS {
 	// 		fmt.Fprintln(js, `_can_name = "`+path.Join("/require", ice.Info.Make.Module, value[nfs.PATH])+`"`)
 	// 		fmt.Fprintln(js, m.Cmdx(nfs.CAT, value[nfs.PATH]))
@@ -57,7 +57,7 @@ func _webpack_cache(m *ice.Message, dir string, write bool) {
 
 	m.Option(nfs.DIR_ROOT, dir)
 	for _, k := range []string{LIB, PANEL, PLUGIN} {
-		m.Cmd(nfs.DIR, k).Tables(func(value map[string]string) {
+		m.Cmd(nfs.DIR, k).Tables(func(value ice.Maps) {
 			if kit.Ext(value[nfs.PATH]) == CSS {
 				fmt.Fprintln(css, m.Cmdx(nfs.CAT, value[nfs.PATH]))
 				fmt.Fprintln(js, `Volcanos.meta.cache["`+path.Join(ice.PS, value[nfs.PATH])+`"] = []`)
@@ -66,7 +66,7 @@ func _webpack_cache(m *ice.Message, dir string, write bool) {
 	}
 	fmt.Fprintln(js)
 	for _, k := range []string{LIB, PANEL, PLUGIN} {
-		m.Cmd(nfs.DIR, k).Tables(func(value map[string]string) {
+		m.Cmd(nfs.DIR, k).Tables(func(value ice.Maps) {
 			if kit.Ext(value[nfs.PATH]) == JS {
 				fmt.Fprintln(js, `_can_name = "`+path.Join(ice.PS, value[nfs.PATH])+`"`)
 				fmt.Fprintln(js, m.Cmdx(nfs.CAT, value[nfs.PATH]))
@@ -134,8 +134,8 @@ const DEVPACK = "devpack"
 const WEBPACK = "webpack"
 
 func init() {
-	Index.Merge(&ice.Context{Commands: map[string]*ice.Command{
-		WEBPACK: {Name: "webpack path auto create remove", Help: "打包", Action: map[string]*ice.Action{
+	Index.Merge(&ice.Context{Commands: ice.Commands{
+		WEBPACK: {Name: "webpack path auto create remove", Help: "打包", Actions: ice.Actions{
 			mdb.CREATE: {Name: "create", Help: "创建", Hand: func(m *ice.Message, arg ...string) {
 				_webpack_cache(m.Spawn(), _volcanos(m), true)
 			}},

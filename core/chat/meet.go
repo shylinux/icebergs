@@ -12,12 +12,12 @@ const (
 const MISS = "miss"
 
 func init() {
-	Index.Register(&ice.Context{Name: MEET, Help: "遇见", Configs: map[string]*ice.Config{
+	Index.Register(&ice.Context{Name: MEET, Help: "遇见", Configs: ice.Configs{
 		MISS: {Name: MISS, Help: "miss", Value: kit.Data(
 			mdb.SHORT, mdb.NAME, mdb.FIELD, "time,name,照片,性别,年龄,身高,体重,籍贯,户口,学历,学校,职业,公司,年薪,资产,家境",
 		)},
-	}, Commands: map[string]*ice.Command{
-		"monkey": {Name: "monkey total=888 count=9 run", Help: "猴子开箱子", Meta: kit.Dict("_trans", kit.Dict("name", "姓名")), Action: ice.MergeAction(map[string]*ice.Action{
+	}, Commands: ice.Commands{
+		"monkey": {Name: "monkey total=888 count=9 run", Help: "猴子开箱子", Meta: kit.Dict("_trans", kit.Dict("name", "姓名")), Actions: ice.MergeAction(ice.Actions{
 			mdb.CREATE: {Name: "create name 照片 性别 年龄 身高 体重 籍贯 户口 学历 学校 职业 公司 年薪 资产 家境", Help: "添加"},
 		}, mdb.HashAction()), Hand: func(m *ice.Message, arg ...string) {
 			total := kit.Int(arg[0])
@@ -38,11 +38,11 @@ func init() {
 			}
 			m.StatusTimeCount()
 		}},
-		MISS: {Name: "miss name auto create", Help: "资料", Meta: kit.Dict("_trans", kit.Dict("name", "姓名")), Action: ice.MergeAction(map[string]*ice.Action{
+		MISS: {Name: "miss name auto create", Help: "资料", Meta: kit.Dict("_trans", kit.Dict("name", "姓名")), Actions: ice.MergeAction(ice.Actions{
 			mdb.CREATE: {Name: "create name 照片 性别 年龄 身高 体重 籍贯 户口 学历 学校 职业 公司 年薪 资产 家境", Help: "添加"},
 		}, mdb.HashAction()), Hand: func(m *ice.Message, arg ...string) {
 			msg := m.Spawn()
-			mdb.HashSelect(msg, arg...).Table(func(index int, value map[string]string, head []string) {
+			mdb.HashSelect(msg, arg...).Table(func(index int, value ice.Maps, head []string) {
 				value["照片"] = ice.Render(m, ice.RENDER_IMAGES, value["照片"], kit.Select("100", "400", msg.FieldsIsDetail()))
 				m.Push(m.OptionFields(), value, kit.Split(msg.OptionFields()))
 			})

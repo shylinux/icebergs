@@ -114,12 +114,12 @@ const (
 const USER = "user"
 
 func init() {
-	Index.Merge(&ice.Context{Configs: map[string]*ice.Config{
+	Index.Merge(&ice.Context{Configs: ice.Configs{
 		USER: {Name: USER, Help: "用户", Value: kit.Data(
 			mdb.SHORT, USERNAME, mdb.FIELD, "time,userrole,username,usernick,userzone",
 		)},
-	}, Commands: map[string]*ice.Command{
-		USER: {Name: "user username auto create", Help: "用户", Action: ice.MergeAction(map[string]*ice.Action{
+	}, Commands: ice.Commands{
+		USER: {Name: "user username auto create", Help: "用户", Actions: ice.MergeAction(ice.Actions{
 			mdb.SEARCH: {Name: "search type name text", Help: "搜索", Hand: func(m *ice.Message, arg ...string) {
 				if arg[0] == USER {
 					_user_search(m, arg[1], kit.Select("", arg, 2))

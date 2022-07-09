@@ -17,7 +17,7 @@ import (
 const TOTAL = "total"
 
 func init() {
-	Index.Merge(&ice.Context{Configs: map[string]*ice.Config{
+	Index.Merge(&ice.Context{Configs: ice.Configs{
 		TOTAL: {Name: TOTAL, Help: "统计量", Value: kit.Data(
 			"skip", kit.Dict(
 				"wubi-dict", ice.TRUE, "word-dict", ice.TRUE,
@@ -25,11 +25,11 @@ func init() {
 				"echarts", ice.TRUE, "go-qrcode", ice.TRUE,
 			),
 		)},
-	}, Commands: map[string]*ice.Command{
-		TOTAL: {Name: "total repos auto pie", Help: "统计量", Action: map[string]*ice.Action{
+	}, Commands: ice.Commands{
+		TOTAL: {Name: "total repos auto pie", Help: "统计量", Actions: ice.Actions{
 			PIE: {Name: "pie", Help: "饼图", Hand: func(m *ice.Message, arg ...string) {
 				defer m.Display("/plugin/story/pie.js")
-				m.Cmd(TOTAL).Table(func(index int, value map[string]string, head []string) {
+				m.Cmd(TOTAL).Table(func(index int, value ice.Maps, head []string) {
 					if value[REPOS] == "total" {
 						m.StatusTimeCount(REPOS, "total", "value", "1", "total", value["rest"])
 						return
@@ -41,7 +41,7 @@ func init() {
 		}, Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) > 0 { // 提交详情
 				arg[0] = kit.Replace(arg[0], "src", "contexts")
-				m.Cmd(REPOS, ice.OptionFields("name,path")).Table(func(index int, value map[string]string, head []string) {
+				m.Cmd(REPOS, ice.OptionFields("name,path")).Table(func(index int, value ice.Maps, head []string) {
 					if value[REPOS] == arg[0] {
 						m.Cmdy("_sum", value[nfs.PATH], arg[1:])
 					}
@@ -62,7 +62,7 @@ func init() {
 				mu.Lock()
 				defer mu.Unlock()
 
-				msg.Table(func(index int, value map[string]string, head []string) {
+				msg.Table(func(index int, value ice.Maps, head []string) {
 					if kit.Int(value["days"]) > days {
 						days = kit.Int(value["days"])
 					}

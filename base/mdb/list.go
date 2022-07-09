@@ -133,8 +133,8 @@ func _list_prunes(m *ice.Message, prefix, chain string, arg ...string) {
 
 const LIST = "list"
 
-func ListAction(args ...ice.Any) map[string]*ice.Action {
-	return map[string]*ice.Action{ice.CTX_INIT: AutoConfig(args...),
+func ListAction(args ...ice.Any) ice.Actions {
+	return ice.Actions{ice.CTX_INIT: AutoConfig(args...),
 		INPUTS: {Name: "inputs", Help: "补全", Hand: func(m *ice.Message, arg ...string) {
 			m.Cmdy(INPUTS, m.PrefixKey(), "", LIST, arg)
 		}},

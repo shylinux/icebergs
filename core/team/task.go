@@ -56,12 +56,12 @@ const (
 const TASK = "task"
 
 func init() {
-	Index.Merge(&ice.Context{Configs: map[string]*ice.Config{
+	Index.Merge(&ice.Context{Configs: ice.Configs{
 		TASK: {Name: TASK, Help: "任务", Value: kit.Data(
 			mdb.SHORT, mdb.ZONE, mdb.FIELD, "begin_time,id,status,level,score,type,name,text",
 		)},
-	}, Commands: map[string]*ice.Command{
-		TASK: {Name: "task zone id auto insert export import", Help: "任务", Action: ice.MergeAction(map[string]*ice.Action{
+	}, Commands: ice.Commands{
+		TASK: {Name: "task zone id auto insert export import", Help: "任务", Actions: ice.MergeAction(ice.Actions{
 			mdb.INSERT: {Name: "insert zone type=once,step,week name text begin_time@date close_time@date", Help: "添加", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmdy(mdb.INSERT, m.Prefix(TASK), "", mdb.HASH, m.OptionSimple(mdb.ZONE))
 				m.Cmdy(mdb.INSERT, m.Prefix(TASK), "", mdb.ZONE, m.Option(mdb.ZONE),
@@ -96,7 +96,7 @@ func init() {
 		}, mdb.ZoneAction(), ctx.CmdAction()), Hand: func(m *ice.Message, arg ...string) {
 			if mdb.ZoneSelect(m, arg...); len(arg) > 0 {
 				status := map[string]int{}
-				m.Table(func(index int, value map[string]string, head []string) {
+				m.Table(func(index int, value ice.Maps, head []string) {
 					m.PushButton(_task_action(m, value[STATUS]))
 					status[value[mdb.STATUS]]++
 				})

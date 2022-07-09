@@ -41,12 +41,12 @@ const (
 const TIMER = "timer"
 
 func init() {
-	Index.Merge(&ice.Context{Configs: map[string]*ice.Config{
+	Index.Merge(&ice.Context{Configs: ice.Configs{
 		TIMER: {Name: TIMER, Help: "定时器", Value: kit.Data(
 			mdb.FIELD, "time,hash,delay,interval,order,next,cmd", TICK, "1s",
 		)},
-	}, Commands: map[string]*ice.Command{
-		TIMER: {Name: "timer hash id auto create action prunes", Help: "定时器", Action: ice.MergeAction(map[string]*ice.Action{
+	}, Commands: ice.Commands{
+		TIMER: {Name: "timer hash id auto create action prunes", Help: "定时器", Actions: ice.MergeAction(ice.Actions{
 			mdb.CREATE: {Name: "create delay=10ms interval=10s order=3 cmd=runtime", Help: "添加", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmdy(mdb.INSERT, TIMER, "", mdb.HASH, DELAY, "10ms", INTERVAL, "10m", ORDER, 1, NEXT, m.Time(m.Option(DELAY)), arg)
 			}},

@@ -25,13 +25,13 @@ func _div_parse(m *ice.Message, text string) string {
 const DIV = "div"
 
 func init() {
-	Index.Merge(&ice.Context{Configs: map[string]*ice.Config{
+	Index.Merge(&ice.Context{Configs: ice.Configs{
 		DIV: {Name: "div", Help: "定制", Value: kit.Data(
 			mdb.FIELD, "time,hash,type,name,text", nfs.PATH, ice.USR_PUBLISH,
 			nfs.TEMPLATE, _div_template,
 		)},
-	}, Commands: map[string]*ice.Command{
-		"/div/": {Name: "/div/", Help: "定制", Action: ice.MergeAction(ctx.CmdAction()), Hand: func(m *ice.Message, arg ...string) {
+	}, Commands: ice.Commands{
+		"/div/": {Name: "/div/", Help: "定制", Actions: ice.MergeAction(ctx.CmdAction()), Hand: func(m *ice.Message, arg ...string) {
 			switch p := path.Join(arg...); kit.Ext(kit.Select("", p)) {
 			case nfs.HTML:
 				m.RenderDownload(p)
@@ -45,7 +45,7 @@ func init() {
 				m.RenderCmd(m.PrefixKey(), p)
 			}
 		}},
-		DIV: {Name: "div hash auto import", Help: "定制", Action: ice.MergeAction(map[string]*ice.Action{
+		DIV: {Name: "div hash auto import", Help: "定制", Actions: ice.MergeAction(ice.Actions{
 			lex.SPLIT: {Name: "split name=hi text", Help: "生成", Hand: func(m *ice.Message, arg ...string) {
 				h := m.Cmdx(DIV, mdb.CREATE, m.OptionSimple(mdb.NAME), mdb.TEXT, _div_parse(m, m.Option(mdb.TEXT)))
 				m.ProcessRewrite(mdb.HASH, h)

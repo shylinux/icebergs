@@ -12,10 +12,10 @@ import (
 const ROUTINE = "routine"
 
 func init() {
-	Index.Merge(&ice.Context{Configs: map[string]*ice.Config{
+	Index.Merge(&ice.Context{Configs: ice.Configs{
 		ROUTINE: {Name: ROUTINE, Help: "协程池", Value: kit.Data(mdb.SHORT, "time,hash,status,fileline")},
-	}, Commands: map[string]*ice.Command{
-		ROUTINE: {Name: "routine hash auto prunes", Help: "协程池", Action: ice.MergeAction(map[string]*ice.Action{
+	}, Commands: ice.Commands{
+		ROUTINE: {Name: "routine hash auto prunes", Help: "协程池", Actions: ice.MergeAction(ice.Actions{
 			mdb.CREATE: {Name: "create fileline status", Help: "创建"},
 			mdb.PRUNES: {Name: "prunes", Help: "清理", Hand: func(m *ice.Message, arg ...string) {
 				m.OptionFields(m.Config(mdb.SHORT))

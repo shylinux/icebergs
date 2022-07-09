@@ -12,7 +12,7 @@ func _table_run(m *ice.Message, arg ...string) {
 	msg := m.Cmd(arg)
 
 	list := [][]string{}
-	msg.Table(func(index int, value map[string]string, head []string) {
+	msg.Table(func(index int, value ice.Maps, head []string) {
 		if index == 0 {
 			m.Optionv("head", head)
 		}
@@ -61,15 +61,15 @@ func _table_show(m *ice.Message, text string, arg ...string) {
 const TABLE = "table"
 
 func init() {
-	Index.Merge(&ice.Context{Commands: map[string]*ice.Command{
-		TABLE: {Name: "table `[item item\n]...`", Help: "表格", Action: map[string]*ice.Action{
+	Index.Merge(&ice.Context{Commands: ice.Commands{
+		TABLE: {Name: "table `[item item\n]...`", Help: "表格", Actions: ice.Actions{
 			ice.RUN: {Name: "run", Help: "执行", Hand: func(m *ice.Message, arg ...string) {
 				_table_run(m, arg...)
 			}},
 		}, Hand: func(m *ice.Message, arg ...string) {
 			_table_show(m, arg[0], arg[1:]...)
 		}},
-	}, Configs: map[string]*ice.Config{
+	}, Configs: ice.Configs{
 		TABLE: {Name: TABLE, Help: "表格", Value: kit.Data(
 			nfs.TEMPLATE, `<table {{.OptionTemplate}}>
 <tr>{{range $i, $v := .Optionv "head"}}<th>{{$v}}</th>{{end}}</tr>

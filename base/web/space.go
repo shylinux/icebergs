@@ -220,8 +220,8 @@ func _space_search(m *ice.Message, kind, name, text string, arg ...string) {
 	if name != "" {
 		return
 	}
-	m.Cmd(SERVE, ice.OptionFields("")).Table(func(index int, val map[string]string, head []string) {
-		m.Cmd(tcp.HOST, ice.OptionFields("")).Table(func(index int, value map[string]string, head []string) {
+	m.Cmd(SERVE, ice.OptionFields("")).Table(func(index int, val ice.Maps, head []string) {
+		m.Cmd(tcp.HOST, ice.OptionFields("")).Table(func(index int, value ice.Maps, head []string) {
 			m.PushSearch(kit.SimpleKV("", MYSELF, value[mdb.NAME], kit.Format("http://%s:%s", value[aaa.IP], val[tcp.PORT])))
 		})
 	})
@@ -289,14 +289,14 @@ const (
 const SPACE = "space"
 
 func init() {
-	Index.Merge(&ice.Context{Configs: map[string]*ice.Config{
+	Index.Merge(&ice.Context{Configs: ice.Configs{
 		SPACE: {Name: SPACE, Help: "空间站", Value: kit.Data(
 			mdb.SHORT, mdb.NAME, mdb.FIELD, "time,type,name,text",
 			BUFFER, kit.Dict("r", ice.MOD_BUFS, "w", ice.MOD_BUFS),
 			REDIAL, kit.Dict("a", 3000, "b", 1000, "c", 1000), TIMEOUT, kit.Dict("c", "180s"),
 		)},
-	}, Commands: map[string]*ice.Command{
-		SPACE: {Name: "space name cmd auto invite", Help: "空间站", Action: ice.MergeAction(map[string]*ice.Action{
+	}, Commands: ice.Commands{
+		SPACE: {Name: "space name cmd auto invite", Help: "空间站", Actions: ice.MergeAction(ice.Actions{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
 				m.Conf(SPACE, mdb.HASH, "")
 			}},
@@ -327,7 +327,7 @@ func init() {
 		}, mdb.HashAction()), Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) < 2 { // 节点列表
 				if mdb.HashSelect(m, arg...); len(arg) == 0 {
-					m.Table(func(index int, value map[string]string, head []string) {
+					m.Table(func(index int, value ice.Maps, head []string) {
 						switch value[mdb.TYPE] {
 						case MASTER:
 							m.PushAnchor(value[mdb.NAME], m.Cmd(SPIDE, value[mdb.NAME], ice.OptionFields("")).Append("client.url"))

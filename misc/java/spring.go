@@ -45,7 +45,7 @@ func (s spring) List(m *ice.Message, arg ...string) {
 		s.Hash.List(m, arg...).PushAction(s.Start, s.Build)
 
 	} else { // 服务列表
-		m.Cmd(cli.DAEMON).Table(func(index int, value map[string]string, head []string) {
+		m.Cmd(cli.DAEMON).Table(func(index int, value ice.Maps, head []string) {
 			if strings.Contains(value[ice.CMD], "target/"+arg[0]+"-0.0.1-SNAPSHOT.jar") {
 				m.PushRecord(value, head...)
 			}

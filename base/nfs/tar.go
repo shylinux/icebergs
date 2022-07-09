@@ -15,8 +15,8 @@ import (
 const TAR = "tar"
 
 func init() {
-	Index.Merge(&ice.Context{Commands: map[string]*ice.Command{
-		TAR: {Name: "tar file path auto", Help: "打包", Action: map[string]*ice.Action{
+	Index.Merge(&ice.Context{Commands: ice.Commands{
+		TAR: {Name: "tar file path auto", Help: "打包", Actions: ice.Actions{
 			mdb.IMPORT: {Name: "import", Help: "导入", Hand: func(m *ice.Message, arg ...string) {
 				if len(arg) == 1 {
 					arg = append(arg, arg[0])

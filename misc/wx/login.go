@@ -63,9 +63,9 @@ func _wx_parse(m *ice.Message) {
 const LOGIN = "login"
 
 func init() {
-	Index.Merge(&ice.Context{Configs: map[string]*ice.Config{
+	Index.Merge(&ice.Context{Configs: ice.Configs{
 		LOGIN: {Name: LOGIN, Help: "登录", Value: kit.Data()},
-	}, Commands: map[string]*ice.Command{
+	}, Commands: ice.Commands{
 		"/login/": {Name: "/login/", Help: "认证", Hand: func(m *ice.Message, arg ...string) {
 			if m.Cmdx(ACCESS, CHECK) == "" {
 				return // 验签失败
@@ -100,7 +100,7 @@ func init() {
 				m.Cmdy(MENU, "home")
 			}
 		}},
-		LOGIN: {Name: "login", Help: "登录", Action: map[string]*ice.Action{
+		LOGIN: {Name: "login", Help: "登录", Actions: ice.Actions{
 			mdb.CREATE: {Name: "create appid appmm token", Help: "创建", Hand: func(m *ice.Message, arg ...string) {
 				m.Conf(ACCESS, kit.Keym(APPID), m.Option(APPID))
 				m.Conf(ACCESS, kit.Keym(APPMM), m.Option(APPMM))

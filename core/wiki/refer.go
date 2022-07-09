@@ -26,11 +26,11 @@ func _refer_show(m *ice.Message, text string, arg ...string) {
 const REFER = "refer"
 
 func init() {
-	Index.Merge(&ice.Context{Commands: map[string]*ice.Command{
+	Index.Merge(&ice.Context{Commands: ice.Commands{
 		REFER: {Name: "refer `[[name] url\n]...`", Help: "参考", Hand: func(m *ice.Message, arg ...string) {
 			_refer_show(m, arg[0], arg[1:]...)
 		}},
-	}, Configs: map[string]*ice.Config{
+	}, Configs: ice.Configs{
 		REFER: {Name: REFER, Help: "参考", Value: kit.Data(
 			nfs.TEMPLATE, `<ul {{.OptionTemplate}}>{{range $index, $value := .Optionv "list"}}<li>{{index $value 0}}: <a href="{{index $value 1}}" data-name="{{index $value 0}}" target="_blank">{{index $value 1}}</a></li>{{end}}</ul>`,
 		)},

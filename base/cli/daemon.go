@@ -101,12 +101,12 @@ const (
 const DAEMON = "daemon"
 
 func init() {
-	Index.Merge(&ice.Context{Configs: map[string]*ice.Config{
+	Index.Merge(&ice.Context{Configs: ice.Configs{
 		DAEMON: {Name: DAEMON, Help: "守护进程", Value: kit.Data(
 			nfs.PATH, ice.USR_LOCAL_DAEMON, mdb.FIELD, "time,hash,status,pid,cmd,dir,env",
 		)},
-	}, Commands: map[string]*ice.Command{
-		DAEMON: {Name: "daemon hash auto start prunes", Help: "守护进程", Action: ice.MergeAction(map[string]*ice.Action{
+	}, Commands: ice.Commands{
+		DAEMON: {Name: "daemon hash auto start prunes", Help: "守护进程", Actions: ice.MergeAction(ice.Actions{
 			ice.CTX_EXIT: {Hand: func(m *ice.Message, arg ...string) {
 				m.Cmd(mdb.PRUNES, DAEMON, "", mdb.HASH, mdb.CACHE_CLEAR_ON_EXIT, ice.TRUE)
 			}},
@@ -125,7 +125,7 @@ func init() {
 			}},
 			STOP: {Name: "stop", Help: "停止", Hand: func(m *ice.Message, arg ...string) {
 				m.OptionFields(m.Config(mdb.FIELD))
-				m.Cmd(mdb.SELECT, DAEMON, "", mdb.HASH, m.OptionSimple(mdb.HASH)).Table(func(index int, value map[string]string, head []string) {
+				m.Cmd(mdb.SELECT, DAEMON, "", mdb.HASH, m.OptionSimple(mdb.HASH)).Table(func(index int, value ice.Maps, head []string) {
 					m.Cmd(mdb.MODIFY, DAEMON, "", mdb.HASH, m.OptionSimple(mdb.HASH), STATUS, STOP)
 					m.Cmdy(SYSTEM, KILL, value[PID])
 				})
@@ -134,7 +134,7 @@ func init() {
 				}
 			}},
 		}, mdb.HashAction()), Hand: func(m *ice.Message, arg ...string) {
-			mdb.HashSelect(m, arg...).Set(ctx.ACTION).Table(func(index int, value map[string]string, head []string) {
+			mdb.HashSelect(m, arg...).Set(ctx.ACTION).Table(func(index int, value ice.Maps, head []string) {
 				switch value[STATUS] {
 				case START:
 					m.PushButton(RESTART, STOP)

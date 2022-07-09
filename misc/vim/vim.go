@@ -19,12 +19,12 @@ func _vim_pkg(m *ice.Message, url string) string {
 
 const VIM = "vim"
 
-var Index = &ice.Context{Name: VIM, Help: "编辑器", Configs: map[string]*ice.Config{
+var Index = &ice.Context{Name: VIM, Help: "编辑器", Configs: ice.Configs{
 	VIM: {Name: VIM, Help: "编辑器", Value: kit.Data(
 		nfs.SOURCE, "http://mirrors.tencent.com/macports/distfiles/vim/vim-8.2.2681.tar.gz",
 	)},
-}, Commands: map[string]*ice.Command{
-	VIM: {Name: "vim path auto order build download", Help: "编辑器", Action: ice.MergeAction(map[string]*ice.Action{
+}, Commands: ice.Commands{
+	VIM: {Name: "vim path auto order build download", Help: "编辑器", Actions: ice.MergeAction(ice.Actions{
 		cli.BUILD: {Name: "build", Help: "构建", Hand: func(m *ice.Message, arg ...string) {
 			m.Cmdy(code.INSTALL, cli.BUILD, _vim_pkg(m, m.Config(nfs.SOURCE)), "--enable-multibyte=yes",
 				"--enable-pythoninterp=yes", "--enable-luainterp=yes", "--enable-cscope=yes")

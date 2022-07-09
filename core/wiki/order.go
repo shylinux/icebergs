@@ -17,11 +17,11 @@ func _order_show(m *ice.Message, text string, arg ...string) {
 const ORDER = "order"
 
 func init() {
-	Index.Merge(&ice.Context{Commands: map[string]*ice.Command{
+	Index.Merge(&ice.Context{Commands: ice.Commands{
 		ORDER: {Name: "order `[item\n]...`", Help: "列表", Hand: func(m *ice.Message, arg ...string) {
 			_order_show(m, arg[0], arg[1:]...)
 		}},
-	}, Configs: map[string]*ice.Config{
+	}, Configs: ice.Configs{
 		ORDER: {Name: ORDER, Help: "列表", Value: kit.Data(
 			nfs.TEMPLATE, `<ul {{.OptionTemplate}}>{{range $index, $value := .Optionv "list"}}<li>{{$value}}</li>{{end}}</ul>`,
 		)},

@@ -19,12 +19,12 @@ const (
 const SHELL = "shell"
 
 func init() {
-	Index.Merge(&ice.Context{Commands: map[string]*ice.Command{
+	Index.Merge(&ice.Context{Commands: ice.Commands{
 		SHELL: {Name: "shell [name] cmd", Help: "命令", Hand: func(m *ice.Message, arg ...string) {
 			arg = _name(m, arg)
 			_shell_show(m, arg[0], kit.Select(arg[0], arg[1]), arg[2:]...)
 		}},
-	}, Configs: map[string]*ice.Config{
+	}, Configs: ice.Configs{
 		SHELL: {Name: SHELL, Help: "命令", Value: kit.Data(
 			nfs.TEMPLATE, `<code {{.OptionTemplate}}>$ {{.Option "input"}} # {{.Option "name"}}
 {{.Option "output"}}</code>`,

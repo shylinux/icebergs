@@ -46,7 +46,7 @@ func _serve_udp(m *ice.Message, host, port string) {
 			}
 
 			if remote, err := net.ResolveUDPAddr("udp4", kit.Format("%s:%s", msg.Option(tcp.HOST), msg.Option(tcp.PORT))); err == nil {
-				m.Cmd(BROAD).Table(func(index int, value map[string]string, head []string) {
+				m.Cmd(BROAD).Table(func(index int, value ice.Maps, head []string) {
 					m.Debug("broad %v to %v", kit.Format(value), kit.Format(remote))
 					s.WriteToUDP([]byte(m.Spawn(value).FormatMeta()), remote)
 				})
@@ -69,8 +69,8 @@ func _broad_search(m *ice.Message, kind, name, text string, arg ...string) {
 const BROAD = "broad"
 
 func init() {
-	Index.Merge(&ice.Context{Commands: map[string]*ice.Command{
-		BROAD: {Name: "broad hash auto", Help: "广播", Action: ice.MergeAction(map[string]*ice.Action{
+	Index.Merge(&ice.Context{Commands: ice.Commands{
+		BROAD: {Name: "broad hash auto", Help: "广播", Actions: ice.MergeAction(ice.Actions{
 			SERVE: {Name: "broad port=9020", Help: "搜索", Hand: func(m *ice.Message, arg ...string) {
 				_serve_udp(m, m.Cmd(tcp.HOST).Append("ip"), m.Option(tcp.PORT))
 			}},

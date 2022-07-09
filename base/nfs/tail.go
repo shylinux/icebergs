@@ -36,12 +36,12 @@ func _tail_count(m *ice.Message, name string) string {
 const TAIL = "tail"
 
 func init() {
-	Index.Merge(&ice.Context{Configs: map[string]*ice.Config{
+	Index.Merge(&ice.Context{Configs: ice.Configs{
 		TAIL: {Name: TAIL, Help: "日志流", Value: kit.Data(
 			mdb.SHORT, mdb.NAME, mdb.FIELD, "time,id,file,text",
 		)},
-	}, Commands: map[string]*ice.Command{
-		TAIL: {Name: "tail name id auto page filter:text create", Help: "日志流", Action: ice.MergeAction(map[string]*ice.Action{
+	}, Commands: ice.Commands{
+		TAIL: {Name: "tail name id auto page filter:text create", Help: "日志流", Actions: ice.MergeAction(ice.Actions{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
 				m.Richs(TAIL, "", mdb.FOREACH, func(key string, value ice.Map) {
 					value, _ = kit.GetMeta(value), m.Option(mdb.HASH, key)
@@ -66,7 +66,7 @@ func init() {
 			m.Fields(len(kit.Slice(arg, 0, 2)), "time,name,count,file", m.Config(mdb.FIELD))
 			m.OptionPage(kit.Slice(arg, 2)...)
 
-			mdb.ZoneSelect(m.Spawn(), arg...).Table(func(index int, value map[string]string, head []string) {
+			mdb.ZoneSelect(m.Spawn(), arg...).Table(func(index int, value ice.Maps, head []string) {
 				if strings.Contains(value[mdb.TEXT], m.Option(ice.CACHE_FILTER)) {
 					m.Push("", value, head)
 				}

@@ -122,12 +122,12 @@ const (
 const SHARE = "share"
 
 func init() {
-	Index.Merge(&ice.Context{Configs: map[string]*ice.Config{
+	Index.Merge(&ice.Context{Configs: ice.Configs{
 		SHARE: {Name: SHARE, Help: "共享链", Value: kit.Data(
 			mdb.EXPIRE, "72h", mdb.FIELD, "time,hash,userrole,username,river,storm,type,name,text",
 		)},
-	}, Commands: map[string]*ice.Command{
-		SHARE: {Name: "share hash auto prunes", Help: "共享链", Action: ice.MergeAction(map[string]*ice.Action{
+	}, Commands: ice.Commands{
+		SHARE: {Name: "share hash auto prunes", Help: "共享链", Actions: ice.MergeAction(ice.Actions{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
 				ice.AddRender(ice.RENDER_DOWNLOAD, func(msg *ice.Message, cmd string, args ...ice.Any) string {
 					list := []string{}

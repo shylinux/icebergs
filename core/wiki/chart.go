@@ -182,13 +182,13 @@ const (
 const CHART = "chart"
 
 func init() {
-	Index.Merge(&ice.Context{Commands: map[string]*ice.Command{
+	Index.Merge(&ice.Context{Commands: ice.Commands{
 		CHART: {Name: "chart type=label,chain,sequence auto text", Help: "图表", Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) > 1 {
 				_chart_show(m, arg[0], strings.TrimSpace(arg[1]), arg[2:]...)
 			}
 		}},
-	}, Configs: map[string]*ice.Config{
+	}, Configs: ice.Configs{
 		CHART: {Name: CHART, Help: "图表", Value: kit.Data(
 			nfs.TEMPLATE, `<svg xmlns="http://www.w3.org/2000/svg" vertion="1.1"
 {{.OptionTemplate}} height="{{.Option "height"}}" width="{{.Option "width"}}"

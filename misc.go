@@ -163,7 +163,7 @@ func (m *Message) Design(action Any, help string, input ...Any) {
 		}
 	}
 	k := kit.Format(action)
-	if a, ok := m._cmd.Action[k]; ok {
+	if a, ok := m._cmd.Actions[k]; ok {
 		m._cmd.Meta[k], a.List = list, list
 		kit.Value(m._cmd.Meta, kit.Keys("_trans", k), help)
 	}
@@ -183,14 +183,14 @@ func (m *Message) _command(arg ...Any) *Message {
 			for k, v := range val {
 				opts[k] = v
 			}
-		case map[string]string:
+		case Maps:
 			for k, v := range val {
 				opts[k] = v
 			}
 		case string:
 			args = append(args, v)
 
-		case func(int, map[string]string, []string):
+		case func(int, Maps, []string):
 			defer func() { m.Table(val) }()
 		default:
 			if reflect.TypeOf(val).Kind() == reflect.Func {
@@ -244,14 +244,14 @@ func (c *Context) _command(m *Message, cmd *Command, key string, arg ...string) 
 	if m._key, m._cmd = key, cmd; cmd == nil {
 		return m
 	}
-	if m.Hand, m.meta[MSG_DETAIL] = true, kit.Simple(key, arg); cmd.Action != nil {
+	if m.Hand, m.meta[MSG_DETAIL] = true, kit.Simple(key, arg); cmd.Actions != nil {
 		if len(arg) > 1 && arg[0] == ACTION {
-			if h, ok := cmd.Action[arg[1]]; ok {
+			if h, ok := cmd.Actions[arg[1]]; ok {
 				return c._action(m, cmd, key, arg[1], h, arg[2:]...)
 			}
 		}
 		if len(arg) > 0 && arg[0] != COMMAND {
-			if h, ok := cmd.Action[arg[0]]; ok {
+			if h, ok := cmd.Actions[arg[0]]; ok {
 				return c._action(m, cmd, key, arg[0], h, arg[1:]...)
 			}
 		}
@@ -262,8 +262,8 @@ func (c *Context) _command(m *Message, cmd *Command, key string, arg ...string) 
 
 	if cmd.Hand != nil {
 		cmd.Hand(m, arg...)
-	} else if cmd.Action != nil && cmd.Action["select"] != nil {
-		cmd.Action["select"].Hand(m, arg...)
+	} else if cmd.Actions != nil && cmd.Actions["select"] != nil {
+		cmd.Actions["select"].Hand(m, arg...)
 	}
 	return m
 }
@@ -399,7 +399,7 @@ func MergeAction(list ...Any) map[string]*Action {
 		case string:
 			base[CTX_INIT] = &Action{Hand: func(m *Message, arg ...string) {
 				m.Search(from, func(p *Context, s *Context, key string, cmd *Command) {
-					MergeAction(base, cmd.Action)
+					MergeAction(base, cmd.Actions)
 					m.target.Merge(m.target)
 				})
 			}}

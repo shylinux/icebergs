@@ -11,12 +11,12 @@ import (
 const PASTE = "paste"
 
 func init() {
-	Index.Merge(&ice.Context{Configs: map[string]*ice.Config{
+	Index.Merge(&ice.Context{Configs: ice.Configs{
 		PASTE: {Name: PASTE, Help: "粘贴", Value: kit.Data(
 			mdb.SHORT, mdb.TEXT, mdb.FIELD, "time,hash,type,name,text",
 		)},
-	}, Commands: map[string]*ice.Command{
-		PASTE: {Name: "paste hash auto getClipboardData", Help: "粘贴", Action: ice.MergeAction(map[string]*ice.Action{
+	}, Commands: ice.Commands{
+		PASTE: {Name: "paste hash auto getClipboardData", Help: "粘贴", Actions: ice.MergeAction(ice.Actions{
 			"getClipboardData": {Name: "getClipboardData", Help: "粘贴", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmdy(PASTE, mdb.CREATE, arg)
 			}},

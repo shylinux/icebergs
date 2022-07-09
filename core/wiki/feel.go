@@ -13,10 +13,10 @@ import (
 const FEEL = "feel"
 
 func init() {
-	Index.Merge(&ice.Context{Configs: map[string]*ice.Config{
+	Index.Merge(&ice.Context{Configs: ice.Configs{
 		FEEL: {Name: FEEL, Help: "影音媒体", Value: kit.Data(nfs.PATH, ice.USR_LOCAL_IMAGE, lex.REGEXP, ".*.(png|PNG|jpg|JPG|jpeg|mp4|m4v|MOV)")},
-	}, Commands: map[string]*ice.Command{
-		FEEL: {Name: "feel path auto upload prev next actions", Help: "影音媒体", Meta: kit.Dict(ice.DisplayLocal("")), Action: map[string]*ice.Action{
+	}, Commands: ice.Commands{
+		FEEL: {Name: "feel path auto upload prev next actions", Help: "影音媒体", Meta: kit.Dict(ice.DisplayLocal("")), Actions: ice.Actions{
 			web.UPLOAD: {Name: "upload", Help: "上传", Hand: func(m *ice.Message, arg ...string) {
 				_wiki_upload(m, m.CommandKey(), m.Option(nfs.PATH))
 			}},

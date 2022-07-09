@@ -32,12 +32,12 @@ const (
 const TRASH = "trash"
 
 func init() {
-	Index.Merge(&ice.Context{Configs: map[string]*ice.Config{
+	Index.Merge(&ice.Context{Configs: ice.Configs{
 		TRASH: {Name: TRASH, Help: "回收站", Value: kit.Data(
 			mdb.SHORT, FROM, mdb.FIELD, "time,hash,file,from", PATH, ice.VAR_TRASH,
 		)},
-	}, Commands: map[string]*ice.Command{
-		TRASH: {Name: "trash hash auto prunes", Help: "回收站", Action: ice.MergeAction(map[string]*ice.Action{
+	}, Commands: ice.Commands{
+		TRASH: {Name: "trash hash auto prunes", Help: "回收站", Actions: ice.MergeAction(ice.Actions{
 			mdb.REVERT: {Name: "revert", Help: "恢复", Hand: func(m *ice.Message, arg ...string) {
 				os.Rename(m.Option(FILE), m.Option(FROM))
 				m.Cmd(mdb.DELETE, TRASH, "", mdb.HASH, m.OptionSimple(mdb.HASH))
@@ -54,7 +54,7 @@ func init() {
 				m.Cmd(mdb.DELETE, TRASH, "", mdb.HASH, m.OptionSimple(mdb.HASH))
 			}},
 			mdb.PRUNES: {Name: "prunes before@date", Help: "清理", Hand: func(m *ice.Message, arg ...string) {
-				mdb.HashPrunes(m, func(value map[string]string) bool {
+				mdb.HashPrunes(m, func(value ice.Maps) bool {
 					os.Remove(value[FILE])
 					return false
 				})

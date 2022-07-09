@@ -20,6 +20,12 @@ func _header_agent(m *ice.Message, arg ...string) {
 	}
 }
 func _header_check(m *ice.Message, arg ...string) bool {
+	if m.Option(web.SHARE) != "" {
+		m.Cmd(web.SHARE, m.Option(web.SHARE), ice.OptionFields("")).Tables(func(value ice.Maps) {
+			m.Option(ice.MSG_USERNAME, value["username"])
+			m.Option(ice.MSG_USERROLE, value["userrole"])
+		})
+	}
 	if m.Option(ice.MSG_USERNAME) != "" {
 		return true
 	}
@@ -49,7 +55,6 @@ func _header_users(m *ice.Message, key string, arg ...string) {
 
 const (
 	TITLE = "title"
-	TOPIC = "topic"
 	MENUS = "menus"
 	TRANS = "trans"
 	AGENT = "agent"
@@ -59,9 +64,9 @@ const (
 const HEADER = "header"
 
 func init() {
-	Index.Merge(&ice.Context{Configs: map[string]*ice.Config{
+	Index.Merge(&ice.Context{Configs: ice.Configs{
 		HEADER: {Name: HEADER, Help: "标题栏", Value: kit.Data(aaa.LOGIN, kit.List("登录", "扫码"))},
-	}, Commands: map[string]*ice.Command{
+	}, Commands: ice.Commands{
 		web.WEB_LOGIN: {Hand: func(m *ice.Message, arg ...string) {
 			switch arg[0] {
 			case "/header":
@@ -75,7 +80,7 @@ func init() {
 			}
 			m.Warn(m.Option(ice.MSG_USERNAME) == "", ice.ErrNotLogin, arg)
 		}},
-		web.P(HEADER): {Name: "/header", Help: "标题栏", Action: map[string]*ice.Action{
+		web.P(HEADER): {Name: "/header", Help: "标题栏", Actions: ice.Actions{
 			AGENT: {Name: "agent", Help: "宿主应用", Hand: func(m *ice.Message, arg ...string) {
 				_header_agent(m, arg...)
 			}},

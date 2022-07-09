@@ -10,7 +10,7 @@ import (
 const FORM = "form"
 
 func init() {
-	Index.Merge(&ice.Context{Commands: map[string]*ice.Command{
+	Index.Merge(&ice.Context{Commands: ice.Commands{
 		FORM: {Name: "form [chat_id|open_id|user_id|email] target title text [confirm|value|url arg...]...", Help: "消息", Hand: func(m *ice.Message, arg ...string) {
 			var form = kit.Dict()
 			switch arg[0] {

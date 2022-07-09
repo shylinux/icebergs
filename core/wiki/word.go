@@ -25,7 +25,7 @@ func _word_show(m *ice.Message, name string, arg ...string) {
 const WORD = "word"
 
 func init() {
-	Index.Merge(&ice.Context{Configs: map[string]*ice.Config{
+	Index.Merge(&ice.Context{Configs: ice.Configs{
 		WORD: {Name: WORD, Help: "语言文字", Value: kit.Data(
 			nfs.PATH, "", lex.REGEXP, ".*\\.shy", mdb.ALIAS, kit.Dict(
 				NAVMENU, kit.List(TITLE, NAVMENU),
@@ -40,8 +40,8 @@ func init() {
 			mdb.SHORT, "type,name,text",
 			mdb.FIELD, "time,hash,type,name,text",
 		)},
-	}, Commands: map[string]*ice.Command{
-		WORD: {Name: "word path=src/main.shy@key list play", Help: "语言文字", Action: ice.MergeAction(map[string]*ice.Action{
+	}, Commands: ice.Commands{
+		WORD: {Name: "word path=src/main.shy@key list play", Help: "语言文字", Actions: ice.MergeAction(ice.Actions{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
 				m.Cmd(aaa.ROLE, aaa.WHITE, aaa.VOID, m.PrefixKey("src/main.shy"))
 			}},
@@ -49,7 +49,7 @@ func init() {
 				if arg[0] == mdb.FOREACH && arg[1] == "" {
 					m.PushSearch(mdb.TYPE, "shy", mdb.NAME, "src/main.shy", mdb.TEXT, m.MergeCmd(""))
 				}
-				m.Cmd(mdb.SELECT, m.PrefixKey(), "", mdb.HASH).Table(func(index int, value map[string]string, head []string) {
+				m.Cmd(mdb.SELECT, m.PrefixKey(), "", mdb.HASH).Table(func(index int, value ice.Maps, head []string) {
 					if arg[1] == "" {
 						if value[mdb.TYPE] == SPARK {
 							value[mdb.TEXT] = ice.Render(m, ice.RENDER_SCRIPT, value[mdb.TEXT])
@@ -63,7 +63,7 @@ func init() {
 			}},
 			"recent": {Name: "recent", Help: "最近", Hand: func(m *ice.Message, arg ...string) {
 				m.OptionFields(m.Config(mdb.FIELD))
-				m.Cmd(mdb.SELECT, m.PrefixKey(), "", mdb.HASH).Table(func(index int, value map[string]string, head []string) {
+				m.Cmd(mdb.SELECT, m.PrefixKey(), "", mdb.HASH).Table(func(index int, value ice.Maps, head []string) {
 					if value[mdb.TYPE] == "spark" {
 						value[mdb.TEXT] = ice.Render(m, ice.RENDER_SCRIPT, value[mdb.TEXT])
 					}

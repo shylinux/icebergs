@@ -103,12 +103,19 @@ func (m *Message) Cut(fields ...string) *Message {
 	return m
 }
 func (m *Message) Push(key string, value Any, arg ...Any) *Message {
+	head := kit.Simple()
+	if len(head) == 0 && len(arg) > 0 {
+		head = kit.Simple(arg[0])
+	}
+	if len(head) == 0 {
+		head = kit.Simple(m.meta[MSG_APPEND])
+	}
+	if len(head) == 0 && !m.FieldsIsDetail() {
+		head = kit.Split(m.OptionFields())
+	}
+
 	switch value := value.(type) {
 	case Map:
-		head := kit.Simple()
-		if len(arg) > 0 {
-			head = kit.Simple(arg[0])
-		}
 		if len(head) == 0 { // 键值排序
 			head = kit.SortedKey(kit.KeyValue(Map{}, "", value))
 		}
@@ -148,11 +155,8 @@ func (m *Message) Push(key string, value Any, arg ...Any) *Message {
 			}
 		}
 
-	case map[string]string:
-		head := kit.Simple()
-		if len(arg) > 0 {
-			head = kit.Simple(arg[0])
-		} else { // 键值排序
+	case Maps:
+		if len(head) == 0 { // 键值排序
 			head = kit.SortedKey(value)
 		}
 
@@ -214,20 +218,20 @@ func (m *Message) Length() (max int) {
 	}
 	return max
 }
-func (m *Message) Tables(cbs ...func(value map[string]string)) *Message {
-	return m.Table(func(index int, value map[string]string, head []string) {
+func (m *Message) Tables(cbs ...func(value Maps)) *Message {
+	return m.Table(func(index int, value Maps, head []string) {
 		for _, cb := range cbs {
 			cb(value)
 		}
 	})
 }
-func (m *Message) Table(cbs ...func(index int, value map[string]string, head []string)) *Message {
+func (m *Message) Table(cbs ...func(index int, value Maps, head []string)) *Message {
 	if len(cbs) > 0 && cbs[0] != nil {
 		if m.FieldsIsDetail() {
 			if m.Length() == 0 {
 				return m
 			}
-			line := map[string]string{}
+			line := Maps{}
 			for i, k := range m.meta[KEY] {
 				line[k] = kit.Select("", m.meta[VALUE], i)
 			}
@@ -237,7 +241,7 @@ func (m *Message) Table(cbs ...func(index int, value map[string]string, head []s
 
 		n := m.Length()
 		for i := 0; i < n; i++ {
-			line := map[string]string{}
+			line := Maps{}
 			for _, k := range m.meta[MSG_APPEND] {
 				line[k] = kit.Select("", m.meta[k], i)
 			}
@@ -265,7 +269,7 @@ func (m *Message) Table(cbs ...func(index int, value map[string]string, head []s
 	rows := kit.Select(NL, m.Option("table.row_sep"))
 	cols := kit.Select(SP, m.Option("table.col_sep"))
 	compact := m.Option("table.compact") == TRUE
-	cb := func(value map[string]string, field []string, index int) bool {
+	cb := func(value Maps, field []string, index int) bool {
 		for i, v := range field {
 			if k := m.meta[MSG_APPEND][i]; compact {
 				v = value[k]
@@ -280,7 +284,7 @@ func (m *Message) Table(cbs ...func(index int, value map[string]string, head []s
 	}
 
 	// 输出表头
-	row, wor := map[string]string{}, []string{}
+	row, wor := Maps{}, []string{}
 	for _, k := range m.meta[MSG_APPEND] {
 		row[k], wor = k, append(wor, k+strings.Repeat(space, width[k]-kit.Width(k, len(space))))
 	}
@@ -290,7 +294,7 @@ func (m *Message) Table(cbs ...func(index int, value map[string]string, head []s
 
 	// 输出数据
 	for i := 0; i < depth; i++ {
-		row, wor := map[string]string{}, []string{}
+		row, wor := Maps{}, []string{}
 		for _, k := range m.meta[MSG_APPEND] {
 			data := ""
 			if i < len(m.meta[k]) {
@@ -326,8 +330,8 @@ func (m *Message) Sort(key string, arg ...string) *Message {
 
 	// 排序因子
 	number := map[int]int64{}
-	table := []map[string]string{}
-	m.Table(func(index int, line map[string]string, head []string) {
+	table := []Maps{}
+	m.Table(func(index int, line Maps, head []string) {
 		switch table = append(table, line); cmp {
 		case "int":
 			number[index] = kit.Int64(line[key])

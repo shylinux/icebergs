@@ -39,7 +39,7 @@ func _company_members(m *ice.Message, appid string, ship_id string) {
 const COMPANY = "company"
 
 func init() {
-	Index.Merge(&ice.Context{Commands: map[string]*ice.Command{
+	Index.Merge(&ice.Context{Commands: ice.Commands{
 		COMPANY: {Name: "company appid ship_id open_id text auto", Help: "组织", Hand: func(m *ice.Message, arg ...string) {
 			switch len(arg) {
 			case 0: // 应用列表

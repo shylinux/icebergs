@@ -167,7 +167,7 @@ const (
 const CAT = "cat"
 
 func init() {
-	Index.Merge(&ice.Context{Configs: map[string]*ice.Config{
+	Index.Merge(&ice.Context{Configs: ice.Configs{
 		CAT: {Name: CAT, Help: "文件", Value: kit.Data(
 			SOURCE, kit.Dict(
 				HTML, ice.TRUE, CSS, ice.TRUE, JS, ice.TRUE, GO, ice.TRUE, SH, ice.TRUE, CSV, ice.TRUE, JSON, ice.TRUE,
@@ -176,8 +176,8 @@ func init() {
 				"py", ice.TRUE,
 			),
 		)},
-	}, Commands: map[string]*ice.Command{
-		CAT: {Name: "cat path auto", Help: "文件", Action: map[string]*ice.Action{
+	}, Commands: ice.Commands{
+		CAT: {Name: "cat path auto", Help: "文件", Actions: ice.Actions{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
 				m.Cmd(mdb.RENDER, mdb.CREATE, m.CommandKey(), m.PrefixKey())
 			}},

@@ -68,8 +68,8 @@ func LoadPlug(m *ice.Message, language ...string) {
 		})
 	}
 }
-func PlugAction() map[string]*ice.Action {
-	return map[string]*ice.Action{
+func PlugAction() ice.Actions {
+	return ice.Actions{
 		mdb.PLUGIN: {Hand: func(m *ice.Message, arg ...string) { m.Echo(m.Config(PLUG)) }},
 		mdb.RENDER: {Hand: func(m *ice.Message, arg ...string) { m.Cmdy(nfs.CAT, path.Join(arg[2], arg[1])) }},
 		mdb.ENGINE: {Hand: func(m *ice.Message, arg ...string) { m.Cmdy(nfs.CAT, path.Join(arg[2], arg[1])) }},
@@ -98,8 +98,8 @@ const (
 const INNER = "inner"
 
 func init() {
-	Index.Merge(&ice.Context{Commands: map[string]*ice.Command{
-		INNER: {Name: "inner path=src/@key file=main.go line=1 auto", Help: "源代码", Meta: kit.Dict(ice.DisplayLocal("")), Action: ice.MergeAction(map[string]*ice.Action{
+	Index.Merge(&ice.Context{Commands: ice.Commands{
+		INNER: {Name: "inner path=src/@key file=main.go line=1 auto", Help: "源代码", Meta: kit.Dict(ice.DisplayLocal("")), Actions: ice.MergeAction(ice.Actions{
 			mdb.PLUGIN: {Name: "plugin", Help: "插件", Hand: func(m *ice.Message, arg ...string) {
 				if m.Cmdy(mdb.PLUGIN, arg); m.Result() == "" {
 					m.Echo(kit.Select("{}", m.Config(kit.Keys(PLUG, arg[0]))))
@@ -117,7 +117,7 @@ func init() {
 				m.Option(nfs.DIR_ROOT, arg[2])
 				m.Option(cli.CMD_DIR, kit.Path(arg[2]))
 				m.Cmdy(mdb.SEARCH, arg[0], arg[1], arg[2])
-				m.Cmd(FAVOR, arg[1], ice.OptionFields("")).Tables(func(value map[string]string) {
+				m.Cmd(FAVOR, arg[1], ice.OptionFields("")).Tables(func(value ice.Maps) {
 					if p := path.Join(value[nfs.PATH], value[nfs.FILE]); strings.HasPrefix(p, m.Option(nfs.PATH)) {
 						m.Push(nfs.FILE, strings.TrimPrefix(p, m.Option(nfs.PATH)))
 						m.Push(nfs.LINE, value[nfs.LINE])
@@ -197,7 +197,7 @@ func init() {
 			}
 			m.Set(ice.MSG_STATUS)
 		}},
-	}, Configs: map[string]*ice.Config{
+	}, Configs: ice.Configs{
 		INNER: {Name: "inner", Help: "源代码", Value: kit.Data(
 			EXEC, kit.Dict("py", []string{"python"}),
 			PLUG, kit.Dict(

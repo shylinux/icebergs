@@ -41,7 +41,7 @@ func _cache_save(m *ice.Message, kind, name, text string, arg ...string) { // fi
 	m.Push(mdb.DATA, h)
 }
 func _cache_watch(m *ice.Message, key, file string) {
-	mdb.HashSelect(m.Spawn(), key).Table(func(index int, value map[string]string, head []string) {
+	mdb.HashSelect(m.Spawn(), key).Table(func(index int, value ice.Maps, head []string) {
 		if value[nfs.FILE] == "" {
 			m.Cmdy(nfs.SAVE, file, value[mdb.TEXT])
 		} else {
@@ -135,13 +135,13 @@ const (
 const CACHE = "cache"
 
 func init() {
-	Index.Merge(&ice.Context{Configs: map[string]*ice.Config{
+	Index.Merge(&ice.Context{Configs: ice.Configs{
 		CACHE: {Name: CACHE, Help: "缓存池", Value: kit.Data(
 			mdb.SHORT, mdb.TEXT, mdb.FIELD, "time,hash,size,type,name,text",
 			mdb.STORE, ice.VAR_DATA, nfs.PATH, ice.VAR_FILE, mdb.FSIZE, "200000",
 			mdb.LIMIT, "50", mdb.LEAST, "30",
 		)},
-	}, Commands: map[string]*ice.Command{
+	}, Commands: ice.Commands{
 		"/cache/": {Name: "/cache/", Help: "缓存池", Hand: func(m *ice.Message, arg ...string) {
 			m.Richs(CACHE, nil, arg[0], func(key string, value ice.Map) {
 				if kit.Format(value[nfs.FILE]) == "" {
@@ -151,7 +151,7 @@ func init() {
 				}
 			})
 		}},
-		CACHE: {Name: "cache hash auto", Help: "缓存池", Action: ice.MergeAction(map[string]*ice.Action{
+		CACHE: {Name: "cache hash auto", Help: "缓存池", Actions: ice.MergeAction(ice.Actions{
 			WATCH: {Name: "watch key file", Help: "释放", Hand: func(m *ice.Message, arg ...string) {
 				_cache_watch(m, arg[0], arg[1])
 			}},

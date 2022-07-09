@@ -14,10 +14,10 @@ import (
 const DRAW = "draw"
 
 func init() {
-	Index.Merge(&ice.Context{Configs: map[string]*ice.Config{
+	Index.Merge(&ice.Context{Configs: ice.Configs{
 		DRAW: {Name: DRAW, Help: "思维导图", Value: kit.Data(lex.REGEXP, ".*\\.svg")},
-	}, Commands: map[string]*ice.Command{
-		DRAW: {Name: "draw path=src/main.svg pid refresh:button=auto save edit actions", Help: "思维导图", Meta: kit.Dict(ice.DisplayLocal("")), Action: ice.MergeAction(map[string]*ice.Action{
+	}, Commands: ice.Commands{
+		DRAW: {Name: "draw path=src/main.svg pid refresh:button=auto save edit actions", Help: "思维导图", Meta: kit.Dict(ice.DisplayLocal("")), Actions: ice.MergeAction(ice.Actions{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
 				m.Cmd(mdb.RENDER, mdb.CREATE, mdb.TYPE, nfs.SVG, mdb.NAME, m.PrefixKey())
 			}},

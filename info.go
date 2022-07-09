@@ -39,8 +39,8 @@ var Info = struct {
 
 	Help  string
 	cans  string
-	Route map[string]string // 路由命令
-	File  map[string]string // 文件命令
+	Route Maps              // 路由命令
+	File  Maps              // 文件命令
 	Pack  map[string][]byte // 打包文件
 	names Map
 
@@ -67,8 +67,8 @@ source: https://shylinux.com/x/icebergs
 	<script>can(%s)</script>
 </body>
 `,
-	Route: map[string]string{},
-	File:  map[string]string{},
+	Route: Maps{},
+	File:  Maps{},
 	Pack:  map[string][]byte{},
 	names: Map{},
 

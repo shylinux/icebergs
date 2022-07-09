@@ -43,8 +43,8 @@ const (
 const SPARK = "spark"
 
 func init() {
-	Index.Merge(&ice.Context{Commands: map[string]*ice.Command{
-		SPARK: {Name: "spark [name] text auto field:text value:text", Help: "段落", Action: map[string]*ice.Action{
+	Index.Merge(&ice.Context{Commands: ice.Commands{
+		SPARK: {Name: "spark [name] text auto field:text value:text", Help: "段落", Actions: ice.Actions{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
 				ice.AddRender(ice.RENDER_SCRIPT, func(m *ice.Message, cmd string, args ...ice.Any) string {
 					arg := kit.Simple(args...)
@@ -126,7 +126,7 @@ func init() {
 			arg = _name(m, arg)
 			_spark_show(m, arg[0], strings.TrimSpace(arg[1]), arg[2:]...)
 		}},
-	}, Configs: map[string]*ice.Config{
+	}, Configs: ice.Configs{
 		SPARK: {Name: SPARK, Help: "段落", Value: kit.Data(
 			nfs.TEMPLATE, `<p {{.OptionTemplate}}>{{.Option "text"}}</p>`,
 			ssh.PROMPT, kit.Dict(SHELL, "$ "),

@@ -22,10 +22,10 @@ func init() {
 		LOGIN_OAUTH   = "https://github.com/login/oauth/"
 		API_GITHUB    = "https://api.github.com/"
 	)
-	Index.Merge(&ice.Context{Configs: map[string]*ice.Config{
+	Index.Merge(&ice.Context{Configs: ice.Configs{
 		OAUTH: {Name: OAUTH, Help: "授权", Value: kit.Data(mdb.FIELD, "time,hash,code,access_token,scope,token_type")},
-	}, Commands: map[string]*ice.Command{
-		OAUTH: {Name: "oauth hash auto", Help: "授权", Action: ice.MergeAction(map[string]*ice.Action{
+	}, Commands: ice.Commands{
+		OAUTH: {Name: "oauth hash auto", Help: "授权", Actions: ice.MergeAction(ice.Actions{
 			ctx.CONFIG: {Name: "config client_id client_secret redirect_uri", Help: "配置", Hand: func(m *ice.Message, arg ...string) {
 				m.ConfigOption(CLIENT_ID, CLIENT_SECRET, REDIRECT_URI)
 			}},
@@ -77,7 +77,7 @@ func init() {
 				m.Debug("what %v", m.FormatMeta())
 			}
 		}},
-		"/oauth": {Name: "/oauth", Help: "授权", Action: ice.MergeAction(map[string]*ice.Action{}, ctx.CmdAction()), Hand: func(m *ice.Message, arg ...string) {
+		"/oauth": {Name: "/oauth", Help: "授权", Actions: ice.MergeAction(ice.Actions{}, ctx.CmdAction()), Hand: func(m *ice.Message, arg ...string) {
 			if m.Option(CODE) != "" {
 				m.RenderCmd(m.PrefixKey(), m.Cmdx(m.PrefixKey(), mdb.CREATE, m.OptionSimple(CODE)))
 			}

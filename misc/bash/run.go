@@ -70,8 +70,8 @@ ish_sys_dev_run_action() {
 const RUN = "run"
 
 func init() {
-	Index.Merge(&ice.Context{Commands: map[string]*ice.Command{
-		"/run/": {Name: "/run/", Help: "执行", Action: ice.MergeAction(map[string]*ice.Action{
+	Index.Merge(&ice.Context{Commands: ice.Commands{
+		"/run/": {Name: "/run/", Help: "执行", Actions: ice.MergeAction(ice.Actions{
 			ctx.COMMAND: {Name: "command", Help: "命令", Hand: func(m *ice.Message, arg ...string) {
 				m.Search(arg[0], func(_ *ice.Context, s *ice.Context, key string, cmd *ice.Command) {
 					if p := strings.ReplaceAll(kit.Select("/app/cat.sh", cmd.Meta["display"]), ".js", ".sh"); strings.HasPrefix(p, ice.PS+ice.REQUIRE) {

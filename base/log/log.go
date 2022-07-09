@@ -94,7 +94,7 @@ const (
 	SHOW = "show"
 )
 
-var Index = &ice.Context{Name: "log", Help: "日志模块", Configs: map[string]*ice.Config{
+var Index = &ice.Context{Name: "log", Help: "日志模块", Configs: ice.Configs{
 	FILE: {Name: FILE, Help: "日志文件", Value: kit.Dict(
 		BENCH, kit.Dict(nfs.PATH, path.Join(ice.VAR_LOG, "bench.log"), mdb.LIST, []string{}),
 		WATCH, kit.Dict(nfs.PATH, path.Join(ice.VAR_LOG, "watch.log"), mdb.LIST, []string{
@@ -122,7 +122,7 @@ var Index = &ice.Context{Name: "log", Help: "日志模块", Configs: map[string]
 		}),
 	)},
 	SHOW: {Name: SHOW, Help: "日志分流", Value: kit.Dict()},
-}, Commands: map[string]*ice.Command{
+}, Commands: ice.Commands{
 	ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
 		if log.LogDisable {
 			return // 禁用日志

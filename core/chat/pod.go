@@ -16,10 +16,10 @@ import (
 const POD = "pod"
 
 func init() {
-	Index.Merge(&ice.Context{Configs: map[string]*ice.Config{
+	Index.Merge(&ice.Context{Configs: ice.Configs{
 		POD: {Name: POD, Help: "节点", Value: kit.Data()},
-	}, Commands: map[string]*ice.Command{
-		"/pod/": {Name: "/pod/", Help: "节点", Action: ice.MergeAction(map[string]*ice.Action{
+	}, Commands: ice.Commands{
+		"/pod/": {Name: "/pod/", Help: "节点", Actions: ice.MergeAction(ice.Actions{
 			ice.CTX_INIT: {Name: "_init", Help: "初始化", Hand: func(m *ice.Message, arg ...string) {
 			}},
 		}, ctx.CmdAction()), Hand: func(m *ice.Message, arg ...string) {

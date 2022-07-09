@@ -138,7 +138,7 @@ func _hash_prunes(m *ice.Message, prefix, chain string, arg ...string) {
 		}
 		m.Push(key, val, fields)
 	})
-	m.Table(func(index int, value map[string]string, head []string) {
+	m.Table(func(index int, value ice.Maps, head []string) {
 		_hash_delete(m, prefix, chain, HASH, value[HASH])
 	})
 }
@@ -151,22 +151,36 @@ func AutoConfig(args ...ice.Any) *ice.Action {
 			cs[m.CommandKey()] = &ice.Config{Value: kit.Data(args...)}
 			m.Load(m.CommandKey())
 		}
-		if cs := m.Target().Commands; cs[m.CommandKey()] == nil || cs[m.CommandKey()].Meta[CREATE] != nil {
-			return
-		}
 
 		inputs := []ice.Any{}
 		kit.Fetch(kit.Split(m.Config(FIELD)), func(i int, k string) {
 			switch k {
-			case TIME, HASH:
+			case TIME, HASH, ID:
 				return
 			}
 			inputs = append(inputs, k)
 		})
-		m.Design(CREATE, "创建", inputs...)
+
+		cs := m.Target().Commands
+		if cs[m.CommandKey()] == nil {
+			return
+		}
+
+		m.Debug("what %v %v", m.CommandKey(), cs[m.CommandKey()].Actions[INSERT])
+		if cs[m.CommandKey()].Actions[INSERT] != nil {
+			if cs[m.CommandKey()].Meta[INSERT] == nil {
+				m.Design(INSERT, "添加", append([]ice.Any{ZONE}, inputs...)...)
+			}
+			m.Debug("what %v %v", m.CommandKey(), cs[m.CommandKey()].Actions[INSERT])
+		} else if cs[m.CommandKey()].Actions[CREATE] != nil {
+			if cs[m.CommandKey()].Meta[CREATE] == nil {
+				m.Design(CREATE, "创建", inputs...)
+			}
+			m.Debug("what %v %v", m.CommandKey(), cs[m.CommandKey()].Actions[INSERT])
+		}
 	}}
 }
-func HashAction(args ...ice.Any) map[string]*ice.Action {
+func HashAction(args ...ice.Any) ice.Actions {
 	_key := func(m *ice.Message) string {
 		if m.Config(HASH) == UNIQ {
 			return HASH
@@ -176,7 +190,7 @@ func HashAction(args ...ice.Any) map[string]*ice.Action {
 		}
 		return kit.Select(HASH, m.Config(SHORT))
 	}
-	return map[string]*ice.Action{ice.CTX_INIT: AutoConfig(args...),
+	return ice.Actions{ice.CTX_INIT: AutoConfig(args...),
 		INPUTS: {Name: "inputs", Help: "补全", Hand: func(m *ice.Message, arg ...string) {
 			m.Cmdy(INPUTS, m.PrefixKey(), "", HASH, arg)
 		}},
@@ -206,7 +220,7 @@ func HashAction(args ...ice.Any) map[string]*ice.Action {
 		}},
 	}
 }
-func HashActionStatus(args ...ice.Any) map[string]*ice.Action {
+func HashActionStatus(args ...ice.Any) ice.Actions {
 	list := HashAction(args...)
 	list[PRUNES] = &ice.Action{Name: "prunes", Help: "清理", Hand: func(m *ice.Message, arg ...string) {
 		m.OptionFields(m.Config(FIELD))
@@ -228,7 +242,7 @@ func HashSelect(m *ice.Message, arg ...string) *ice.Message {
 	m.StatusTimeCount()
 	return m
 }
-func HashPrunes(m *ice.Message, cb func(map[string]string) bool) *ice.Message {
+func HashPrunes(m *ice.Message, cb func(ice.Maps) bool) *ice.Message {
 	_key := func(m *ice.Message) string {
 		if m.Config(HASH) == UNIQ {
 			return HASH
@@ -236,7 +250,7 @@ func HashPrunes(m *ice.Message, cb func(map[string]string) bool) *ice.Message {
 		return kit.Select(HASH, m.Config(SHORT))
 	}
 	expire := kit.Time(kit.Select(m.Time("-72h"), m.Option(EXPIRE)))
-	m.Cmd(m.CommandKey()).Table(func(index int, value map[string]string, head []string) {
+	m.Cmd(m.CommandKey()).Table(func(index int, value ice.Maps, head []string) {
 		if kit.Time(value[TIME]) > expire {
 			return
 		}

@@ -13,7 +13,7 @@ import (
 const TALK = "talk"
 
 func init() {
-	Index.Merge(&ice.Context{Commands: map[string]*ice.Command{
+	Index.Merge(&ice.Context{Commands: ice.Commands{
 		TALK: {Name: "talk text", Help: "聊天", Hand: func(m *ice.Message, arg ...string) {
 			cmds := kit.Split(strings.Join(arg, " "))
 			if aaa.UserLogin(m, m.Option(OPEN_ID), ""); !m.Right(cmds) {
@@ -37,7 +37,7 @@ func init() {
 			}
 
 			val := []string{}
-			m.Table(func(index int, value map[string]string, head []string) {
+			m.Table(func(index int, value ice.Maps, head []string) {
 				for _, key := range head {
 					val = append(val, kit.Format("%s:\t%s", key, value[key]))
 				}

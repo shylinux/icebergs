@@ -58,10 +58,10 @@ const (
 const SESSION = "session"
 
 func init() {
-	psh.Index.Merge(&ice.Context{Configs: map[string]*ice.Config{
+	psh.Index.Merge(&ice.Context{Configs: ice.Configs{
 		SESSION: {Name: SESSION, Help: "会话", Value: kit.Data(mdb.SHORT, "name", mdb.FIELD, "time,name,status,count,connect")},
-	}, Commands: map[string]*ice.Command{
-		SESSION: {Name: "session name id auto", Help: "会话", Action: ice.MergeAction(map[string]*ice.Action{
+	}, Commands: ice.Commands{
+		SESSION: {Name: "session name id auto", Help: "会话", Actions: ice.MergeAction(ice.Actions{
 			mdb.REPEAT: {Name: "repeat", Help: "执行", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmdy(SESSION, ctx.ACTION, ctx.COMMAND, CMD, m.Option(mdb.TEXT))
 			}},
@@ -76,7 +76,7 @@ func init() {
 			}},
 		}, mdb.ZoneAction()), Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) == 0 {
-				mdb.HashSelect(m, arg...).Table(func(index int, value map[string]string, head []string) {
+				mdb.HashSelect(m, arg...).Table(func(index int, value ice.Maps, head []string) {
 					m.PushButton(kit.Select("", ctx.COMMAND, value[mdb.STATUS] == tcp.OPEN), mdb.REMOVE)
 				})
 				return
@@ -85,7 +85,7 @@ func init() {
 			m.Action(ctx.COMMAND, mdb.PAGE)
 			m.OptionPage(kit.Slice(arg, 2)...)
 			m.Fields(len(kit.Slice(arg, 1, 2)), "time,id,type,text")
-			mdb.ZoneSelect(m, kit.Slice(arg, 0, 2)...).Table(func(index int, value map[string]string, head []string) {
+			mdb.ZoneSelect(m, kit.Slice(arg, 0, 2)...).Table(func(index int, value ice.Maps, head []string) {
 				m.PushButton(kit.Select("", mdb.REPEAT, value[mdb.TYPE] == CMD))
 			})
 		}},

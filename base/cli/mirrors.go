@@ -28,8 +28,8 @@ const (
 const MIRRORS = "mirrors"
 
 func init() {
-	Index.Merge(&ice.Context{Commands: map[string]*ice.Command{
-		MIRRORS: {Name: "mirrors cli auto", Help: "软件镜像", Action: ice.MergeAction(map[string]*ice.Action{
+	Index.Merge(&ice.Context{Commands: ice.Commands{
+		MIRRORS: {Name: "mirrors cli auto", Help: "软件镜像", Actions: ice.MergeAction(ice.Actions{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
 				m.Go(func() {
 					m.Sleep("1s")

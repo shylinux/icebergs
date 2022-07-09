@@ -30,12 +30,12 @@ const (
 const LOGIN = "login"
 
 func init() {
-	Index.Merge(&ice.Context{Configs: map[string]*ice.Config{
+	Index.Merge(&ice.Context{Configs: ice.Configs{
 		LOGIN: {Name: LOGIN, Help: "认证", Value: kit.Data(
 			tcp.SERVER, "https://api.weixin.qq.com",
 		)},
-	}, Commands: map[string]*ice.Command{
-		"/login/": {Name: "/login/", Help: "认证", Action: map[string]*ice.Action{
+	}, Commands: ice.Commands{
+		"/login/": {Name: "/login/", Help: "认证", Actions: ice.Actions{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
 				m.Cmd(web.SPIDE, mdb.CREATE, MP, m.Config(tcp.SERVER))
 			}},
@@ -63,7 +63,7 @@ func init() {
 				m.Cmdy(chat.SCAN, arg)
 			}},
 		}},
-		LOGIN: {Name: "login appid auto qrcode tokens create", Help: "认证", Action: map[string]*ice.Action{
+		LOGIN: {Name: "login appid auto qrcode tokens create", Help: "认证", Actions: ice.Actions{
 			mdb.CREATE: {Name: "create appid appmm", Help: "登录", Hand: func(m *ice.Message, arg ...string) {
 				m.Config(APPID, m.Option(APPID))
 				m.Config(APPMM, m.Option(APPMM))

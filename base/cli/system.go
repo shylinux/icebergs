@@ -147,10 +147,10 @@ const (
 const SYSTEM = "system"
 
 func init() {
-	Index.Merge(&ice.Context{Configs: map[string]*ice.Config{
+	Index.Merge(&ice.Context{Configs: ice.Configs{
 		SYSTEM: {Name: SYSTEM, Help: "系统命令", Value: kit.Data(mdb.FIELD, "time,id,cmd")},
-	}, Commands: map[string]*ice.Command{
-		SYSTEM: {Name: "system cmd run", Help: "系统命令", Action: map[string]*ice.Action{
+	}, Commands: ice.Commands{
+		SYSTEM: {Name: "system cmd run", Help: "系统命令", Actions: ice.Actions{
 			nfs.FIND: {Name: "find", Help: "查找", Hand: func(m *ice.Message, arg ...string) {
 				m.Echo(_system_find(m, arg[0], arg[1:]...))
 			}},

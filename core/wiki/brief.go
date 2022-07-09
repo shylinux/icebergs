@@ -9,11 +9,11 @@ import (
 const BRIEF = "brief"
 
 func init() {
-	Index.Merge(&ice.Context{Commands: map[string]*ice.Command{
+	Index.Merge(&ice.Context{Commands: ice.Commands{
 		BRIEF: {Name: "brief text", Help: "摘要", Hand: func(m *ice.Message, arg ...string) {
 			_wiki_template(m, m.CommandKey(), "", arg[0], arg[1:]...)
 		}},
-	}, Configs: map[string]*ice.Config{
+	}, Configs: ice.Configs{
 		BRIEF: {Name: BRIEF, Help: "摘要", Value: kit.Data(nfs.TEMPLATE, `<p {{.OptionTemplate}}>{{.Option "text"}}</p>`)},
 	}})
 }

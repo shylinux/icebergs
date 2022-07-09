@@ -8,10 +8,10 @@ import (
 const EVENT = "event"
 
 func init() {
-	Index.Merge(&ice.Context{Configs: map[string]*ice.Config{
+	Index.Merge(&ice.Context{Configs: ice.Configs{
 		EVENT: {Name: EVENT, Help: "事件", Value: kit.Data()},
-	}, Commands: map[string]*ice.Command{
-		EVENT: {Name: "event", Help: "事件", Action: map[string]*ice.Action{
+	}, Commands: ice.Commands{
+		EVENT: {Name: "event", Help: "事件", Actions: ice.Actions{
 			"subscribe": {Name: "subscribe", Help: "订阅", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmdy(MENU, "home")
 			}},

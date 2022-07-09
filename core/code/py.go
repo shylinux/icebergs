@@ -26,8 +26,8 @@ func _py_main_script(m *ice.Message, arg ...string) {
 const PY = nfs.PY
 
 func init() {
-	Index.Merge(&ice.Context{Commands: map[string]*ice.Command{
-		PY: {Name: "py path auto", Help: "脚本", Action: ice.MergeAction(map[string]*ice.Action{
+	Index.Merge(&ice.Context{Commands: ice.Commands{
+		PY: {Name: "py path auto", Help: "脚本", Actions: ice.MergeAction(ice.Actions{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
 				m.Cmd(mdb.ENGINE, mdb.CREATE, PY, m.PrefixKey())
 				m.Cmd(mdb.RENDER, mdb.CREATE, PY, m.PrefixKey())
@@ -48,7 +48,7 @@ func init() {
 			m.Option(nfs.DIR_REG, ".*.(py)$")
 			m.Cmdy(nfs.DIR, arg)
 		}},
-	}, Configs: map[string]*ice.Config{
+	}, Configs: ice.Configs{
 		PY: {Name: PY, Help: "脚本", Value: kit.Data(PLUG, kit.Dict(
 			SPLIT, kit.Dict(SPACE, " ", OPERATE, "{[(.,;!|<>)]}"),
 			PREFIX, kit.Dict("#!", COMMENT, "# ", COMMENT), SUFFIX, kit.Dict(" {", COMMENT),

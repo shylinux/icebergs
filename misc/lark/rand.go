@@ -11,7 +11,7 @@ import (
 const RAND = "rand"
 
 func init() {
-	Index.Merge(&ice.Context{Commands: map[string]*ice.Command{
+	Index.Merge(&ice.Context{Commands: ice.Commands{
 		RAND: {Name: "rand", Help: "随机", Hand: func(m *ice.Message, arg ...string) {
 			msg := m.Cmd(GROUP, m.Option(APP_ID), EMPLOYEE, m.Option(OPEN_CHAT_ID))
 			list := msg.Appendv(mdb.NAME)

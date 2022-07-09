@@ -55,8 +55,8 @@ const (
 )
 const OAUTH = "oauth"
 
-var Index = &ice.Context{Name: OAUTH, Help: "认证授权", Commands: map[string]*ice.Command{
-	OAUTH: {Name: "oauth hash auto prunes", Help: "权限", Action: ice.MergeAction(map[string]*ice.Action{
+var Index = &ice.Context{Name: OAUTH, Help: "认证授权", Commands: ice.Commands{
+	OAUTH: {Name: "oauth hash auto prunes", Help: "权限", Actions: ice.MergeAction(ice.Actions{
 		CHECK: {Name: "check scope domain", Help: "检查", Hand: func(m *ice.Message, arg ...string) {
 			m.Echo(_merge_url(m, kit.Select(ice.Info.Make.Domain, m.Option(web.DOMAIN)), APPLY, m.OptionSimple(SCOPE), REDIRECT_URI, _merge_url(m, "", REPLY)))
 		}},
@@ -77,11 +77,11 @@ var Index = &ice.Context{Name: OAUTH, Help: "认证授权", Commands: map[string
 		}},
 	})},
 
-	APPLY: {Name: "apply hash auto create prunes", Help: "申请", Action: mdb.HashAction(mdb.EXPIRE, "72h", mdb.FIELD, "time,hash,username,scope,redirect_uri")},
-	REPLY: {Name: "reply hash auto create prunes", Help: "授权", Action: mdb.HashAction(mdb.EXPIRE, "720h", mdb.SHORT, mdb.UNIQ, mdb.FIELD, "time,hash,username,scope,offer")},
-	OFFER: {Name: "offer hash auto create prunes", Help: "访问", Action: mdb.HashAction(mdb.EXPIRE, "720h", mdb.SHORT, mdb.UNIQ, mdb.FIELD, "time,hash,username,scope,redirect_uri")},
+	APPLY: {Name: "apply hash auto create prunes", Help: "申请", Actions: mdb.HashAction(mdb.EXPIRE, "72h", mdb.FIELD, "time,hash,username,scope,redirect_uri")},
+	REPLY: {Name: "reply hash auto create prunes", Help: "授权", Actions: mdb.HashAction(mdb.EXPIRE, "720h", mdb.SHORT, mdb.UNIQ, mdb.FIELD, "time,hash,username,scope,offer")},
+	OFFER: {Name: "offer hash auto create prunes", Help: "访问", Actions: mdb.HashAction(mdb.EXPIRE, "720h", mdb.SHORT, mdb.UNIQ, mdb.FIELD, "time,hash,username,scope,redirect_uri")},
 
-	web.P(APPLY): {Name: "/apply scope redirect_uri", Help: "申请", Action: ctx.CmdAction(), Hand: func(m *ice.Message, arg ...string) {
+	web.P(APPLY): {Name: "/apply scope redirect_uri", Help: "申请", Actions: ctx.CmdAction(), Hand: func(m *ice.Message, arg ...string) {
 		if m.Option(REDIRECT_URI) == "" {
 			m.RenderStatusBadRequest() // 参数错误
 
@@ -89,7 +89,7 @@ var Index = &ice.Context{Name: OAUTH, Help: "认证授权", Commands: map[string
 			m.RenderCmd(m.Prefix(OAUTH), APPLY)
 		}
 	}},
-	web.P(REPLY): {Name: "/reply scope offer", Help: "授权", Action: ctx.CmdAction(), Hand: func(m *ice.Message, arg ...string) {
+	web.P(REPLY): {Name: "/reply scope offer", Help: "授权", Actions: ctx.CmdAction(), Hand: func(m *ice.Message, arg ...string) {
 		if m.Option(OFFER) == "" {
 			m.RenderStatusBadRequest() // 参数错误
 
@@ -109,9 +109,9 @@ var Index = &ice.Context{Name: OAUTH, Help: "认证授权", Commands: map[string
 		}
 	}},
 
-	AUTHORIZE: {Name: "authorize hash auto create prunes", Help: "认证", Action: mdb.HashAction(mdb.SHORT, mdb.UNIQ, mdb.FIELD, "time,hash,redirect_uri")},
-	TOKEN:     {Name: "token hash auto create prunes", Help: "授权", Action: mdb.HashAction(mdb.EXPIRE, "72h", mdb.FIELD, "time,hash,used,state,scope,redirect_uri")},
-	ACCESS:    {Name: "access hash auto create prunes", Help: "访问", Action: mdb.HashAction(mdb.EXPIRE, "720h", mdb.SHORT, mdb.UNIQ, mdb.FIELD, "time,hash,username,scope,redirect_uri")},
+	AUTHORIZE: {Name: "authorize hash auto create prunes", Help: "认证", Actions: mdb.HashAction(mdb.SHORT, mdb.UNIQ, mdb.FIELD, "time,hash,redirect_uri")},
+	TOKEN:     {Name: "token hash auto create prunes", Help: "授权", Actions: mdb.HashAction(mdb.EXPIRE, "72h", mdb.FIELD, "time,hash,used,state,scope,redirect_uri")},
+	ACCESS:    {Name: "access hash auto create prunes", Help: "访问", Actions: mdb.HashAction(mdb.EXPIRE, "720h", mdb.SHORT, mdb.UNIQ, mdb.FIELD, "time,hash,username,scope,redirect_uri")},
 
 	web.P(AUTHORIZE): {Name: "/authorize state scope client_id redirect_uri", Help: "认证", Hand: func(m *ice.Message, arg ...string) {
 		if m.Option(CLIENT_ID) == "" || m.Option(REDIRECT_URI) == "" {

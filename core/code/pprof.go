@@ -24,12 +24,12 @@ const (
 const PPROF = "pprof"
 
 func init() {
-	Index.Merge(&ice.Context{Configs: map[string]*ice.Config{
+	Index.Merge(&ice.Context{Configs: ice.Configs{
 		PPROF: {Name: PPROF, Help: "性能分析", Value: kit.Data(
 			mdb.SHORT, mdb.ZONE, mdb.FIELD, "time,id,text,file", PPROF, kit.List(GO, "tool", PPROF),
 		)},
-	}, Commands: map[string]*ice.Command{
-		PPROF: {Name: "pprof zone id auto", Help: "性能分析", Action: ice.MergeAction(map[string]*ice.Action{
+	}, Commands: ice.Commands{
+		PPROF: {Name: "pprof zone id auto", Help: "性能分析", Actions: ice.MergeAction(ice.Actions{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
 				web.AddRewrite(func(w http.ResponseWriter, r *http.Request) bool {
 					if p := r.URL.Path; strings.HasPrefix(p, "/debug") {
@@ -44,7 +44,7 @@ func init() {
 				case BINNARY:
 					m.Cmdy(nfs.DIR, ice.BIN, nfs.DIR_CLI_FIELDS).RenameAppend(nfs.PATH, BINNARY)
 				case SERVICE:
-					m.Cmd(web.SPIDE).Tables(func(value map[string]string) {
+					m.Cmd(web.SPIDE).Tables(func(value ice.Maps) {
 						m.Push(SERVICE, kit.MergeURL2(value["client.url"], "/debug/pprof/profile"))
 					})
 				}
@@ -73,7 +73,7 @@ func init() {
 				return
 			}
 
-			m.Tables(func(value map[string]string) {
+			m.Tables(func(value ice.Maps) {
 				m.PushDownload(mdb.LINK, "pprof.pd.gz", value[nfs.FILE])
 				m.PushButton(web.SERVE)
 			})

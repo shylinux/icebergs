@@ -259,15 +259,15 @@ const (
 )
 
 func init() {
-	Index.Merge(&ice.Context{Configs: map[string]*ice.Config{
+	Index.Merge(&ice.Context{Configs: ice.Configs{
 		SOURCE: {Name: SOURCE, Help: "加载脚本", Value: kit.Data()},
 		PROMPT: {Name: PROMPT, Help: "命令提示", Value: kit.Data(
 			PS1, []ice.Any{"\033[33;44m", mdb.COUNT, "[", mdb.TIME, "]", "\033[5m", TARGET, "\033[0m", "\033[44m", ">", "\033[0m ", "\033[?25h", "\033[32m"},
 			PS2, []ice.Any{mdb.COUNT, " ", TARGET, "> "},
 		)},
-	}, Commands: map[string]*ice.Command{
+	}, Commands: ice.Commands{
 		ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {}},
-		SOURCE: {Name: "source file", Help: "脚本解析", Action: ice.MergeAction(map[string]*ice.Action{
+		SOURCE: {Name: "source file", Help: "脚本解析", Actions: ice.MergeAction(ice.Actions{
 			"repeat": {Name: "repeat", Help: "执行", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmdy(SCREEN, m.Option(mdb.TEXT))
 				m.ProcessInner()

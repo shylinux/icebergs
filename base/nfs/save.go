@@ -92,7 +92,7 @@ const COPY = "copy"
 const LINK = "link"
 
 func init() {
-	Index.Merge(&ice.Context{Commands: map[string]*ice.Command{
+	Index.Merge(&ice.Context{Commands: ice.Commands{
 		DEFS: {Name: "defs file text...", Help: "默认", Hand: func(m *ice.Message, arg ...string) {
 			_defs_file(m, arg[0], arg[1:]...)
 		}},

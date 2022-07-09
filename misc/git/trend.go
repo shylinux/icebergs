@@ -11,10 +11,10 @@ import (
 const TREND = "trend"
 
 func init() {
-	Index.Merge(&ice.Context{Commands: map[string]*ice.Command{
+	Index.Merge(&ice.Context{Commands: ice.Commands{
 		TREND: {Name: "trend repos@key begin_time@date auto", Help: "趋势图", Meta: kit.Dict(
 			ice.DisplayStory("trend.js"),
-		), Action: ice.MergeAction(map[string]*ice.Action{
+		), Actions: ice.MergeAction(ice.Actions{
 			mdb.INPUTS: {Name: "inputs", Help: "补全", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmdy(REPOS, ice.OptionFields("name,time"))
 			}}, code.INNER: {Name: "web.code.inner"},

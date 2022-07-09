@@ -36,7 +36,7 @@ func _ssh_close(m *ice.Message, c net.Conn, channel ssh.Channel) {
 	defer channel.Close()
 	channel.Write([]byte(m.Conf(SERVICE, kit.Keym(GOODBYE))))
 }
-func _ssh_watch(m *ice.Message, meta map[string]string, h string, input io.Reader, output io.Writer) {
+func _ssh_watch(m *ice.Message, meta ice.Maps, h string, input io.Reader, output io.Writer) {
 	r, w := io.Pipe()
 	bio := io.TeeReader(input, w)
 	m.Go(func() { io.Copy(output, r) })
@@ -67,12 +67,12 @@ func _ssh_watch(m *ice.Message, meta map[string]string, h string, input io.Reade
 const CHANNEL = "channel"
 
 func init() {
-	psh.Index.Merge(&ice.Context{Configs: map[string]*ice.Config{
+	psh.Index.Merge(&ice.Context{Configs: ice.Configs{
 		CHANNEL: {Name: "channel", Help: "通道", Value: kit.Data(
 			mdb.FIELD, "time,hash,status,username,hostport,tty,count",
 		)},
-	}, Commands: map[string]*ice.Command{
-		CHANNEL: {Name: "channel hash id auto", Help: "通道", Action: ice.MergeAction(map[string]*ice.Action{
+	}, Commands: ice.Commands{
+		CHANNEL: {Name: "channel hash id auto", Help: "通道", Actions: ice.MergeAction(ice.Actions{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
 				m.Richs(CHANNEL, "", mdb.FOREACH, func(key string, value ice.Map) {
 					kit.Value(value, kit.Keym(mdb.STATUS), tcp.CLOSE)
@@ -101,7 +101,7 @@ func init() {
 				m.Action(mdb.PRUNES)
 				mdb.HashSelect(m, arg...)
 				m.Set(ice.MSG_APPEND, ctx.ACTION)
-				m.Table(func(index int, value map[string]string, head []string) {
+				m.Table(func(index int, value ice.Maps, head []string) {
 					m.PushButton(kit.Select("", ctx.COMMAND, value[mdb.STATUS] == tcp.OPEN), mdb.REMOVE)
 				})
 				return

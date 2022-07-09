@@ -129,8 +129,8 @@ const (
 const QRCODE = "qrcode"
 
 func init() {
-	Index.Merge(&ice.Context{Commands: map[string]*ice.Command{
-		QRCODE: {Name: "qrcode text@key fg@key bg@key size auto", Help: "二维码", Action: map[string]*ice.Action{
+	Index.Merge(&ice.Context{Commands: ice.Commands{
+		QRCODE: {Name: "qrcode text@key fg@key bg@key size auto", Help: "二维码", Actions: ice.Actions{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
 				ice.AddRender(ice.RENDER_QRCODE, func(m *ice.Message, cmd string, args ...ice.Any) string {
 					return m.Cmd(QRCODE, kit.Simple(args...)).Result()

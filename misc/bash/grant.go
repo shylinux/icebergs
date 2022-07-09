@@ -8,8 +8,8 @@ import (
 const GRANT = "grant"
 
 func init() {
-	Index.Merge(&ice.Context{Commands: map[string]*ice.Command{
-		"grant": {Name: "grant hash auto", Help: "授权", Action: ice.MergeAction(map[string]*ice.Action{
+	Index.Merge(&ice.Context{Commands: ice.Commands{
+		"grant": {Name: "grant hash auto", Help: "授权", Actions: ice.MergeAction(ice.Actions{
 			"confirm": {Name: "confirm", Help: "同意", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmd(SESS, mdb.MODIFY, GRANT, m.Option(ice.MSG_USERNAME), ice.Option{mdb.HASH, m.Option("hash")})
 			}},
@@ -23,7 +23,7 @@ func init() {
 			if m.Cmdy(SESS, arg); len(arg) > 0 && m.Append("grant") == "" {
 				m.Process("_confirm", "授权设备")
 			}
-			m.Table(func(index int, value map[string]string, head []string) {
+			m.Table(func(index int, value ice.Maps, head []string) {
 				if value["grant"] == "" {
 					m.PushButton("confirm", mdb.REMOVE)
 				} else {

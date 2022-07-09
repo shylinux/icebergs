@@ -385,10 +385,10 @@ const (
 const MATRIX = "matrix"
 
 func init() {
-	Index.Merge(&ice.Context{Configs: map[string]*ice.Config{
+	Index.Merge(&ice.Context{Configs: ice.Configs{
 		MATRIX: {Name: MATRIX, Help: "魔方矩阵", Value: kit.Data()},
-	}, Commands: map[string]*ice.Command{
-		MATRIX: {Name: "matrix hash npage text auto", Help: "魔方矩阵", Action: map[string]*ice.Action{
+	}, Commands: ice.Commands{
+		MATRIX: {Name: "matrix hash npage text auto", Help: "魔方矩阵", Actions: ice.Actions{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
 				// _lex_load(m.Load())
 			}},

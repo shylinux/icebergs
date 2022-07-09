@@ -60,10 +60,10 @@ const (
 const PUBLISH = "publish"
 
 func init() {
-	Index.Merge(&ice.Context{Configs: map[string]*ice.Config{
+	Index.Merge(&ice.Context{Configs: ice.Configs{
 		PUBLISH: {Name: PUBLISH, Help: "发布", Value: kit.Data(nfs.PATH, ice.USR_PUBLISH, ice.CONTEXTS, _contexts)},
-	}, Commands: map[string]*ice.Command{
-		PUBLISH: {Name: "publish path auto create volcanos icebergs intshell export", Help: "发布", Action: map[string]*ice.Action{
+	}, Commands: ice.Commands{
+		PUBLISH: {Name: "publish path auto create volcanos icebergs intshell export", Help: "发布", Actions: ice.Actions{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
 				m.Cmd(aaa.ROLE, aaa.WHITE, aaa.VOID, m.Config(nfs.PATH))
 				m.Cmd(aaa.ROLE, aaa.WHITE, aaa.VOID, m.PrefixKey())

@@ -19,17 +19,17 @@ const (
 const TRASH = "trash"
 
 func init() {
-	Index.Merge(&ice.Context{Configs: map[string]*ice.Config{
+	Index.Merge(&ice.Context{Configs: ice.Configs{
 		TRASH: {Name: TRASH, Help: "回收站", Value: kit.Data(
 			mdb.FIELD, "time,hash,username,hostname,size,from,to",
 		)},
-	}, Commands: map[string]*ice.Command{
-		"/trash": {Name: "/trash", Help: "回收", Action: map[string]*ice.Action{
+	}, Commands: ice.Commands{
+		"/trash": {Name: "/trash", Help: "回收", Actions: ice.Actions{
 			mdb.INSERT: {Name: "insert from to", Help: "添加", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmdy(TRASH, mdb.INSERT, arg)
 			}},
 		}},
-		TRASH: {Name: "TRASH hash path auto prunes", Help: "回收站", Action: ice.MergeAction(map[string]*ice.Action{
+		TRASH: {Name: "TRASH hash path auto prunes", Help: "回收站", Actions: ice.MergeAction(ice.Actions{
 			mdb.INSERT: {Name: "insert from to", Help: "添加", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmdy(mdb.INSERT, m.PrefixKey(), "", mdb.HASH, m.OptionSimple(aaa.USERNAME, tcp.HOSTNAME, nfs.SIZE, FROM, TO))
 			}},
@@ -42,7 +42,7 @@ func init() {
 				m.Cmdy(mdb.DELETE, m.PrefixKey(), "", mdb.HASH, m.OptionSimple(mdb.HASH))
 			}},
 			mdb.PRUNES: {Name: "prunes before@date", Help: "清理", Hand: func(m *ice.Message, arg ...string) {
-				mdb.HashPrunes(m, func(value map[string]string) bool {
+				mdb.HashPrunes(m, func(value ice.Maps) bool {
 					os.RemoveAll(value[TO])
 					return false
 				})

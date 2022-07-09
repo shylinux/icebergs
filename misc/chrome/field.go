@@ -23,7 +23,7 @@ func (f field) Inputs(m *ice.Message, arg ...string) {
 }
 func (f field) Command(m *ice.Message, arg ...string) {
 	m.OptionFields("")
-	f.Zone.List(m.Spawn(), kit.Simple(m.Option(tcp.HOST), arg)...).Table(func(index int, value map[string]string, head []string) {
+	f.Zone.List(m.Spawn(), kit.Simple(m.Option(tcp.HOST), arg)...).Table(func(index int, value ice.Maps, head []string) {
 		if len(arg) == 0 { // 命令列表
 			m.Option(ice.MSG_OPTS, head)
 			for k, v := range value {
@@ -36,7 +36,7 @@ func (f field) Command(m *ice.Message, arg ...string) {
 	})
 }
 func (f field) Run(m *ice.Message, arg ...string) {
-	f.Zone.List(m.Spawn(), m.Option(tcp.HOST), arg[0]).Table(func(index int, value map[string]string, head []string) {
+	f.Zone.List(m.Spawn(), m.Option(tcp.HOST), arg[0]).Table(func(index int, value ice.Maps, head []string) {
 		m.Cmdy(value[mdb.INDEX], arg[1:])
 	})
 }

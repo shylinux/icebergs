@@ -70,12 +70,12 @@ const (
 const SESS = "sess"
 
 func init() {
-	Index.Merge(&ice.Context{Configs: map[string]*ice.Config{
+	Index.Merge(&ice.Context{Configs: ice.Configs{
 		SESS: {Name: SESS, Help: "会话", Value: kit.Data(
 			mdb.SHORT, "uniq", mdb.FIELD, "time,hash,userrole,username,usernick,ip,ua", mdb.EXPIRE, "720h",
 		)},
-	}, Commands: map[string]*ice.Command{
-		SESS: {Name: "sess hash auto prunes", Help: "会话", Action: ice.MergeAction(map[string]*ice.Action{
+	}, Commands: ice.Commands{
+		SESS: {Name: "sess hash auto prunes", Help: "会话", Actions: ice.MergeAction(ice.Actions{
 			mdb.CREATE: {Name: "create username", Help: "创建"},
 		}, mdb.HashAction()), Hand: func(m *ice.Message, arg ...string) {
 			mdb.HashSelect(m, arg...)

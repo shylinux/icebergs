@@ -155,10 +155,10 @@ const SSH = "ssh"
 const CONNECT = "connect"
 
 func init() {
-	psh.Index.Merge(&ice.Context{Configs: map[string]*ice.Config{
+	psh.Index.Merge(&ice.Context{Configs: ice.Configs{
 		CONNECT: {Name: CONNECT, Help: "连接", Value: kit.Data(mdb.SHORT, "name", mdb.FIELD, "time,name,status,username,host,port")},
-	}, Commands: map[string]*ice.Command{
-		CONNECT: {Name: "connect name auto", Help: "连接", Action: ice.MergeAction(map[string]*ice.Action{
+	}, Commands: ice.Commands{
+		CONNECT: {Name: "connect name auto", Help: "连接", Actions: ice.MergeAction(ice.Actions{
 			tcp.OPEN: {Name: "open authfile username=shy password verfiy host=shylinux.com port=22 private=.ssh/id_rsa", Help: "终端", Hand: func(m *ice.Message, arg ...string) {
 				aaa.UserRoot(m)
 				_ssh_open(m.OptionLoad(m.Option("authfile")), arg...)
@@ -204,7 +204,7 @@ func init() {
 				})
 			}},
 		}, mdb.HashActionStatus()), Hand: func(m *ice.Message, arg ...string) {
-			mdb.HashSelect(m, arg...).Table(func(index int, value map[string]string, head []string) {
+			mdb.HashSelect(m, arg...).Table(func(index int, value ice.Maps, head []string) {
 				m.PushButton(kit.Select("", "command,session", value[mdb.STATUS] == tcp.OPEN), mdb.REMOVE)
 			})
 			if len(arg) == 0 {

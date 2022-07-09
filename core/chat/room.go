@@ -15,21 +15,21 @@ func init() {
 		JOIN = "join"
 		QUIT = "quit"
 	)
-	Index.Merge(&ice.Context{Configs: map[string]*ice.Config{
+	Index.Merge(&ice.Context{Configs: ice.Configs{
 		ROOM: {Name: "room", Help: "room", Value: kit.Data(
 			mdb.SHORT, "zone", mdb.FIELD, "time,id,type,name,text",
 		)},
 		JOIN: {Name: "join", Help: "join", Value: kit.Data(
 			mdb.SHORT, "space", mdb.FIELD, "time,hash,username,socket",
 		)},
-	}, Commands: map[string]*ice.Command{
-		ROOM: {Name: "room zone id auto", Help: "room", Action: ice.MergeAction(map[string]*ice.Action{
+	}, Commands: ice.Commands{
+		ROOM: {Name: "room zone id auto", Help: "room", Actions: ice.MergeAction(ice.Actions{
 			mdb.CREATE: {Name: "create zone", Help: "创建", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmdy(mdb.INSERT, m.PrefixKey(), "", mdb.HASH, m.OptionSimple(mdb.ZONE))
 			}},
 			mdb.INSERT: {Name: "insert zone type=hi name=hello text=world", Help: "发送", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmdy(mdb.INSERT, m.PrefixKey(), "", mdb.ZONE, m.Option(mdb.ZONE), arg[2:])
-				m.Cmdy(mdb.SELECT, m.PrefixKey(), kit.KeyHash(m.Option(mdb.ZONE)), mdb.HASH, ice.Option{"fields", "time,space"}).Table(func(index int, value map[string]string, head []string) {
+				m.Cmdy(mdb.SELECT, m.PrefixKey(), kit.KeyHash(m.Option(mdb.ZONE)), mdb.HASH, ice.Option{"fields", "time,space"}).Table(func(index int, value ice.Maps, head []string) {
 					m.Cmdy(web.SPACE, value[web.SPACE], "toast", m.Option("text"), m.Option("name"))
 				})
 			}},
@@ -51,7 +51,7 @@ func init() {
 				m.Action(mdb.INSERT, JOIN)
 			}
 		}},
-		JOIN: {Name: "join space zone auto", Help: "join", Action: ice.MergeAction(map[string]*ice.Action{
+		JOIN: {Name: "join space zone auto", Help: "join", Actions: ice.MergeAction(ice.Actions{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
 				// m.Watch(web.SPACE_START, m.PrefixKey())
 			}},

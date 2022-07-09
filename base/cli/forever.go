@@ -26,8 +26,8 @@ const FOREVER = "forever"
 func init() {
 	const SERVE = "serve"
 	const RESTART = "restart"
-	Index.Merge(&ice.Context{Commands: map[string]*ice.Command{
-		FOREVER: {Name: "forever auto", Help: "启动", Action: map[string]*ice.Action{
+	Index.Merge(&ice.Context{Commands: ice.Commands{
+		FOREVER: {Name: "forever auto", Help: "启动", Actions: ice.Actions{
 			RESTART: {Name: "restart", Help: "重启", Hand: func(m *ice.Message, arg ...string) {
 				_forever_kill(m, "INT")
 			}},

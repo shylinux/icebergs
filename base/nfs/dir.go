@@ -86,7 +86,7 @@ func _dir_list(m *ice.Message, root string, name string, level int, deep bool, d
 				continue
 			case nil:
 			default:
-				m.Error(true, ice.ErrNotImplement)
+				m.Error(true, "what: %v: %v", ice.ErrNotImplement, cb)
 			}
 
 			for _, field := range fields {
@@ -191,7 +191,7 @@ func _dir_list(m *ice.Message, root string, name string, level int, deep bool, d
 }
 func _dir_search(m *ice.Message, kind, name string) {
 	msg := _dir_list(m.Spawn(), PWD, "", 0, true, TYPE_BOTH, nil, kit.Split("time,type,name"))
-	msg.Table(func(index int, value map[string]string, head []string) {
+	msg.Table(func(index int, value ice.Maps, head []string) {
 		if !strings.Contains(value[mdb.NAME], name) {
 			return
 		}
@@ -235,10 +235,10 @@ const (
 const DIR = "dir"
 
 func init() {
-	Index.Merge(&ice.Context{Configs: map[string]*ice.Config{
+	Index.Merge(&ice.Context{Configs: ice.Configs{
 		DIR: {Name: DIR, Help: "目录", Value: kit.Data()},
-	}, Commands: map[string]*ice.Command{
-		DIR: {Name: "dir path field... auto upload", Help: "目录", Action: map[string]*ice.Action{
+	}, Commands: ice.Commands{
+		DIR: {Name: "dir path field... auto upload", Help: "目录", Actions: ice.Actions{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
 				m.Cmd(mdb.RENDER, mdb.CREATE, m.CommandKey(), m.PrefixKey())
 			}},

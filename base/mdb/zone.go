@@ -41,8 +41,8 @@ func _zone_select(m *ice.Message, prefix, chain, zone string, id string) {
 				cb(key, value)
 			case func(ice.Map):
 				cb(value)
-			case func(map[string]string):
-				res := map[string]string{}
+			case func(ice.Maps):
+				res := ice.Maps{}
 				for k, v := range value {
 					res[k] = kit.Format(v)
 				}
@@ -108,7 +108,7 @@ func _zone_import(m *ice.Message, prefix, chain, file string) {
 	head, _ := r.Read()
 	count := 0
 
-	list := map[string]string{}
+	list := ice.Maps{}
 	zkey := kit.Select(head[0], m.OptionFields())
 
 	for {
@@ -145,10 +145,10 @@ func _zone_import(m *ice.Message, prefix, chain, file string) {
 
 const ZONE = "zone"
 
-func ZoneAction(args ...ice.Any) map[string]*ice.Action {
+func ZoneAction(args ...ice.Any) ice.Actions {
 	_zone := func(m *ice.Message) string { return kit.Select(ZONE, m.Config(SHORT)) }
 
-	return map[string]*ice.Action{ice.CTX_INIT: AutoConfig(args...),
+	return ice.Actions{ice.CTX_INIT: AutoConfig(args...),
 		INPUTS: {Name: "inputs", Help: "补全", Hand: func(m *ice.Message, arg ...string) {
 			arg[0] = strings.TrimPrefix(arg[0], "extra.")
 			arg[0] = kit.Select(arg[0], m.Config(kit.Keys(ALIAS, arg[0])))
@@ -177,7 +177,7 @@ func ZoneAction(args ...ice.Any) map[string]*ice.Action {
 		REMOVE: {Name: "remove", Help: "删除", Hand: func(m *ice.Message, arg ...string) {
 			m.Cmdy(DELETE, m.PrefixKey(), "", HASH, m.OptionSimple(_zone(m)), arg)
 		}},
-		INSERT: {Name: "insert zone type=go name=hi text=hello", Help: "添加", Hand: func(m *ice.Message, arg ...string) {
+		INSERT: {Name: "insert", Help: "添加", Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) == 0 {
 				arg = m.OptionSimple(_zone(m), m.Config(FIELD))
 			}

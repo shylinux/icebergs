@@ -18,8 +18,8 @@ const (
 )
 
 func init() {
-	Index.Merge(&ice.Context{Commands: map[string]*ice.Command{
-		TRANS: {Name: "trans from to auto", Help: "传输", Action: ice.MergeAction(map[string]*ice.Action{
+	Index.Merge(&ice.Context{Commands: ice.Commands{
+		TRANS: {Name: "trans from to auto", Help: "传输", Actions: ice.MergeAction(ice.Actions{
 			SEND: {Name: "send", Help: "发送", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmdy(web.SPACE, m.Option(TO), web.SPIDE, ice.DEV, web.SPIDE_SAVE, kit.Select(nfs.PWD, m.Option("to_path")),
 					m.MergeURL2(path.Join(web.SHARE_LOCAL, m.Option("from_path")), ice.POD, m.Option(FROM),

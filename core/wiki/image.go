@@ -22,8 +22,8 @@ const (
 const IMAGE = "image"
 
 func init() {
-	Index.Merge(&ice.Context{Commands: map[string]*ice.Command{
-		IMAGE: {Name: "image url height auto", Help: "图片", Action: map[string]*ice.Action{
+	Index.Merge(&ice.Context{Commands: ice.Commands{
+		IMAGE: {Name: "image url height auto", Help: "图片", Actions: ice.Actions{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
 				m.Cmd(mdb.RENDER, mdb.CREATE, PNG, m.PrefixKey())
 			}},
@@ -37,7 +37,7 @@ func init() {
 			m.Option("height", kit.Select("", arg, 1))
 			_image_show(m, arg[0])
 		}},
-	}, Configs: map[string]*ice.Config{
+	}, Configs: ice.Configs{
 		IMAGE: {Name: IMAGE, Help: "图片", Value: kit.Data(
 			nfs.TEMPLATE, `<img {{.OptionTemplate}} title="{{.Option "text"}}" src="{{.Option "text"}}" height="{{.Option "height"}}">`,
 			nfs.PATH, ice.USR_LOCAL_IMAGE,

@@ -77,7 +77,7 @@ const (
 const TITLE = "title"
 
 func init() {
-	Index.Merge(&ice.Context{Commands: map[string]*ice.Command{
+	Index.Merge(&ice.Context{Commands: ice.Commands{
 		TITLE: {Name: "title [navmenu|premenu|chapter|section|endmenu] text", Help: "标题", Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) == 0 {
 				arg = append(arg, kit.Slice(kit.Split(ice.Info.NodeName, "-"), -1)[0])
@@ -93,7 +93,7 @@ func init() {
 				_title_show(m, "", arg[0], arg[1:]...)
 			}
 		}},
-	}, Configs: map[string]*ice.Config{
+	}, Configs: ice.Configs{
 		TITLE: {Name: TITLE, Help: "标题", Value: kit.Data(
 			nfs.TEMPLATE, `<{{.Option "level"}} {{.OptionTemplate}}>{{.Option "prefix"}} {{.Option "text"}}</{{.Option "level"}}>`,
 			PREMENU, `<ul {{.OptionTemplate}}></ul>`,

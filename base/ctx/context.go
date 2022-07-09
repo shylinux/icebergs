@@ -38,15 +38,15 @@ func Inputs(m *ice.Message, field string) bool {
 const CONTEXT = "context"
 
 func init() {
-	Index.Merge(&ice.Context{Commands: map[string]*ice.Command{
-		CONTEXT: {Name: "context name=web action=context,command,config key auto spide", Help: "模块", Action: ice.MergeAction(map[string]*ice.Action{
+	Index.Merge(&ice.Context{Commands: ice.Commands{
+		CONTEXT: {Name: "context name=web action=context,command,config key auto spide", Help: "模块", Actions: ice.MergeAction(ice.Actions{
 			"spide": {Name: "spide", Help: "架构图", Hand: func(m *ice.Message, arg ...string) {
 				if len(arg) == 0 || arg[1] == CONTEXT { // 模块列表
 					m.Cmdy(CONTEXT, kit.Select(ice.ICE, arg, 0), CONTEXT)
 					m.Display("/plugin/story/spide.js?prefix=spide", "root", kit.Select(ice.ICE, arg, 0), "split", ice.PT)
 
 				} else if index := kit.Keys(arg[1]); strings.HasSuffix(index, arg[2]) { // 命令列表
-					m.Cmdy(CONTEXT, index, COMMAND).Table(func(i int, value map[string]string, head []string) {
+					m.Cmdy(CONTEXT, index, COMMAND).Table(func(i int, value ice.Maps, head []string) {
 						m.Push("file", arg[1])
 					})
 

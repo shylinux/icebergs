@@ -156,7 +156,7 @@ func _website_render(m *ice.Message, w http.ResponseWriter, r *http.Request, kin
 	return true
 }
 func _website_search(m *ice.Message, kind, name, text string, arg ...string) {
-	m.Cmd(m.PrefixKey(), ice.OptionFields("")).Table(func(index int, value map[string]string, head []string) {
+	m.Cmd(m.PrefixKey(), ice.OptionFields("")).Table(func(index int, value ice.Maps, head []string) {
 		m.PushSearch(value, mdb.TEXT, m.MergeWebsite(value[nfs.PATH]))
 	})
 }
@@ -168,11 +168,11 @@ const (
 const WEBSITE = "website"
 
 func init() {
-	Index.Merge(&ice.Context{Configs: map[string]*ice.Config{
+	Index.Merge(&ice.Context{Configs: ice.Configs{
 		WEBSITE: {Name: "website", Help: "网站", Value: kit.Data(mdb.SHORT, nfs.PATH, mdb.FIELD, "time,path,type,name,text")},
-	}, Commands: map[string]*ice.Command{
-		"/website/": {Name: "/website/", Help: "网站", Action: ice.MergeAction(map[string]*ice.Action{}, ctx.CmdAction())},
-		WEBSITE: {Name: "website path auto create import", Help: "网站", Action: ice.MergeAction(map[string]*ice.Action{
+	}, Commands: ice.Commands{
+		"/website/": {Name: "/website/", Help: "网站", Actions: ice.MergeAction(ice.Actions{}, ctx.CmdAction())},
+		WEBSITE: {Name: "website path auto create import", Help: "网站", Actions: ice.MergeAction(ice.Actions{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
 				m.Cmd(mdb.RENDER, mdb.CREATE, nfs.IML, m.PrefixKey())
 				m.Cmd(mdb.ENGINE, mdb.CREATE, nfs.IML, m.PrefixKey())
@@ -250,7 +250,7 @@ func init() {
 				})
 			}},
 		}, mdb.HashAction()), Hand: func(m *ice.Message, arg ...string) {
-			mdb.HashSelect(m, arg...).Table(func(index int, value map[string]string, head []string) {
+			mdb.HashSelect(m, arg...).Table(func(index int, value ice.Maps, head []string) {
 				m.PushAnchor(m.MergeWebsite(value[nfs.PATH]))
 			})
 			if len(arg) == 0 {

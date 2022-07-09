@@ -113,11 +113,11 @@ func _server_repos(m *ice.Message, arg ...string) error {
 const SERVER = "server"
 
 func init() {
-	Index.Merge(&ice.Context{Commands: map[string]*ice.Command{
+	Index.Merge(&ice.Context{Commands: ice.Commands{
 		web.WEB_LOGIN: {Hand: func(m *ice.Message, arg ...string) {
 			m.Render(ice.RENDER_VOID)
 		}},
-		"/repos/": {Name: "/repos/", Help: "代码库", Action: ice.MergeAction(map[string]*ice.Action{
+		"/repos/": {Name: "/repos/", Help: "代码库", Actions: ice.MergeAction(ice.Actions{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
 				web.AddRewrite(func(p string, w http.ResponseWriter, r *http.Request) bool {
 					if strings.HasPrefix(p, "/chat/pod/") {
@@ -176,13 +176,13 @@ func init() {
 				web.RenderStatus(m, 500, err.Error())
 			}
 		}},
-		SERVER: {Name: "server path auto create import", Help: "服务器", Action: map[string]*ice.Action{
+		SERVER: {Name: "server path auto create import", Help: "服务器", Actions: ice.Actions{
 			mdb.CREATE: {Name: "create name", Help: "创建", Hand: func(m *ice.Message, arg ...string) {
 				m.Option(cli.CMD_DIR, path.Join(ice.USR_LOCAL, REPOS))
 				m.Cmdy(cli.SYSTEM, GIT, INIT, "--bare", m.Option(mdb.NAME))
 			}},
 			mdb.IMPORT: {Name: "import", Help: "导入", Hand: func(m *ice.Message, arg ...string) {
-				m.Cmdy(REPOS, ice.OptionFields("time,name,path")).Table(func(index int, value map[string]string, head []string) {
+				m.Cmdy(REPOS, ice.OptionFields("time,name,path")).Table(func(index int, value ice.Maps, head []string) {
 					remote := strings.Split(m.MergeURL2("/x/"+value[REPOS]), "?")[0]
 					m.Option(cli.CMD_DIR, value[nfs.PATH])
 					m.Cmd(cli.SYSTEM, GIT, PUSH, remote, MASTER)
@@ -195,7 +195,7 @@ func init() {
 			}},
 		}, Hand: func(m *ice.Message, arg ...string) {
 			if m.Option(nfs.DIR_ROOT, ice.USR_LOCAL_REPOS); len(arg) == 0 {
-				m.Cmdy(nfs.DIR, nfs.PWD).Table(func(index int, value map[string]string, head []string) {
+				m.Cmdy(nfs.DIR, nfs.PWD).Table(func(index int, value ice.Maps, head []string) {
 					m.PushScript("git clone " + m.MergeLink("/x/"+strings.TrimSuffix(value[nfs.PATH], ice.PS)))
 				})
 				m.Cut("time,path,size,script,action")

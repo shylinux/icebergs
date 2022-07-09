@@ -17,8 +17,8 @@ const (
 const EVENT = "event"
 
 func init() {
-	Index.Merge(&ice.Context{Commands: map[string]*ice.Command{
-		EVENT: {Name: "event", Help: "事件", Action: map[string]*ice.Action{
+	Index.Merge(&ice.Context{Commands: ice.Commands{
+		EVENT: {Name: "event", Help: "事件", Actions: ice.Actions{
 			P2P_CHAT_CREATE: {Name: "", Help: "", Hand: func(m *ice.Message, arg ...string) {
 				if m.Option(OPEN_CHAT_ID) != "" {
 					m.Cmdy(SEND, m.Option(APP_ID), m.Option(OPEN_CHAT_ID), m.Conf(APP, kit.Keym(nfs.TEMPLATE, m.Option(mdb.TYPE))))

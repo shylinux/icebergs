@@ -8,10 +8,10 @@ import (
 const PLUGIN = "plugin"
 
 func init() {
-	Index.Merge(&ice.Context{Configs: map[string]*ice.Config{
+	Index.Merge(&ice.Context{Configs: ice.Configs{
 		PLUGIN: {Name: PLUGIN, Help: "插件", Value: kit.Data(SHORT, TYPE, FIELD, "time,type,name,text")},
-	}, Commands: map[string]*ice.Command{
-		PLUGIN: {Name: "plugin type name text auto", Help: "插件", Action: map[string]*ice.Action{
+	}, Commands: ice.Commands{
+		PLUGIN: {Name: "plugin type name text auto", Help: "插件", Actions: ice.Actions{
 			CREATE: {Name: "create type name text", Help: "创建", Hand: func(m *ice.Message, arg ...string) {
 				m.Option(NAME, kit.Select(m.Option(TYPE), m.Option(NAME)))
 				m.Option(TYPE, kit.Ext(m.Option(TYPE)))

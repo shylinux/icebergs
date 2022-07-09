@@ -14,10 +14,10 @@ const (
 const FOOTER = "footer"
 
 func init() {
-	Index.Merge(&ice.Context{Configs: map[string]*ice.Config{
+	Index.Merge(&ice.Context{Configs: ice.Configs{
 		FOOTER: {Name: FOOTER, Help: "状态栏", Value: kit.Dict(LEGAL, kit.List(`<a href="mailto:shylinuxc@gmail.com">shylinuxc@gmail.com</a>`))},
-	}, Commands: map[string]*ice.Command{
-		web.P(FOOTER): {Name: "/footer", Help: "状态栏", Action: ice.MergeAction(map[string]*ice.Action{
+	}, Commands: ice.Commands{
+		web.P(FOOTER): {Name: "/footer", Help: "状态栏", Actions: ice.MergeAction(ice.Actions{
 			ice.RUN: {Name: "run", Help: "执行", Hand: func(m *ice.Message, arg ...string) {
 				if m.Cmdy(arg); m.Result(1) == ice.ErrNotFound {
 					m.Set(ice.MSG_RESULT).Cmdy(cli.SYSTEM, arg)

@@ -10,8 +10,8 @@ import (
 const OCEAN = "ocean"
 
 func init() {
-	Index.Merge(&ice.Context{Commands: map[string]*ice.Command{
-		OCEAN: {Name: "ocean username auto insert invite", Help: "用户", Action: map[string]*ice.Action{
+	Index.Merge(&ice.Context{Commands: ice.Commands{
+		OCEAN: {Name: "ocean username auto insert invite", Help: "用户", Actions: ice.Actions{
 			mdb.INPUTS: {Name: "inputs", Help: "补全", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmdy(aaa.USER, ice.OptionFields(aaa.USERNAME, aaa.USERNICK, aaa.USERZONE))
 			}},
@@ -24,7 +24,7 @@ func init() {
 		}, Hand: func(m *ice.Message, arg ...string) {
 			m.Fields(len(arg), "time,username")
 			m.Cmdy(mdb.SELECT, RIVER, _river_key(m, OCEAN), mdb.HASH, aaa.USERNAME, arg)
-			m.Table(func(index int, value map[string]string, head []string) {
+			m.Table(func(index int, value ice.Maps, head []string) {
 				msg := m.Cmd(aaa.USER, value[aaa.USERNAME])
 				m.Push(aaa.USERNICK, msg.Append(aaa.USERNICK))
 				m.PushImages(aaa.AVATAR, msg.Append(aaa.AVATAR), kit.Select("60", "240", m.FieldsIsDetail()))

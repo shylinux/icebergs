@@ -14,12 +14,12 @@ func _local_show(m *ice.Message, name, text string, arg ...string) {
 const LOCAL = "local"
 
 func init() {
-	Index.Merge(&ice.Context{Commands: map[string]*ice.Command{
+	Index.Merge(&ice.Context{Commands: ice.Commands{
 		LOCAL: {Name: "local [name] file", Help: "文件", Hand: func(m *ice.Message, arg ...string) {
 			arg = _name(m, arg)
 			_local_show(m, arg[0], kit.Select(arg[0], arg[1]), arg[2:]...)
 		}},
-	}, Configs: map[string]*ice.Config{
+	}, Configs: ice.Configs{
 		LOCAL: {Name: LOCAL, Help: "文件", Value: kit.Data(
 			nfs.TEMPLATE, `<code {{.OptionTemplate}}>{{range $index, $value := .Optionv "input"}}{{$value}}{{end}}</code>`,
 		)},

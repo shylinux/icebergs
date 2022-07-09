@@ -26,8 +26,8 @@ func _status_tag(m *ice.Message, tags string) string {
 	return "v0.0.1"
 }
 func _status_tags(m *ice.Message, repos string) {
-	vs := map[string]string{}
-	m.Cmd(STATUS).Table(func(index int, value map[string]string, head []string) {
+	vs := ice.Maps{}
+	m.Cmd(STATUS).Table(func(index int, value ice.Maps, head []string) {
 		if value[mdb.TYPE] == "##" {
 			if value[REPOS] == ice.RELEASE {
 				value[REPOS] = ice.ICE
@@ -92,7 +92,7 @@ func _status_each(m *ice.Message, title string, cmds ...string) {
 		toast(cli.BEGIN, count, total)
 
 		list := []string{}
-		m.Cmd(REPOS, ice.OptionFields("name,path")).Table(func(index int, value map[string]string, head []string) {
+		m.Cmd(REPOS, ice.OptionFields("name,path")).Table(func(index int, value ice.Maps, head []string) {
 			toast(value[REPOS], count, total)
 
 			if msg := m.Cmd(cmds, ice.Option{cli.CMD_DIR, value[nfs.PATH]}); !cli.IsSuccess(msg) {
@@ -126,7 +126,7 @@ func _status_stat(m *ice.Message, files, adds, dels int) (int, int, int) {
 	return files, adds, dels
 }
 func _status_list(m *ice.Message) (files, adds, dels int, last time.Time) {
-	m.Cmd(REPOS, ice.OptionFields("name,path")).Table(func(index int, value map[string]string, head []string) {
+	m.Cmd(REPOS, ice.OptionFields("name,path")).Table(func(index int, value ice.Maps, head []string) {
 		m.Option(cli.CMD_DIR, value[nfs.PATH])
 		diff := m.Cmdx(cli.SYSTEM, GIT, STATUS, "-sb")
 		tags := m.Cmdx(cli.SYSTEM, GIT, "describe", "--tags")
@@ -199,8 +199,8 @@ const (
 const STATUS = "status"
 
 func init() {
-	Index.Merge(&ice.Context{Commands: map[string]*ice.Command{
-		STATUS: {Name: "status repos auto", Help: "状态机", Action: map[string]*ice.Action{
+	Index.Merge(&ice.Context{Commands: ice.Commands{
+		STATUS: {Name: "status repos auto", Help: "状态机", Actions: ice.Actions{
 			mdb.INPUTS: {Name: "inputs", Help: "补全", Hand: func(m *ice.Message, arg ...string) {
 				switch arg[0] {
 				case mdb.NAME, REPOS:

@@ -13,9 +13,9 @@ import (
 const INPUT = "input"
 
 func init() {
-	Index.Merge(&ice.Context{Configs: map[string]*ice.Config{
+	Index.Merge(&ice.Context{Configs: ice.Configs{
 		INPUT: {Name: INPUT, Help: "输入法", Value: kit.Data(mdb.FIELD, "time,id,type,name,text")},
-	}, Commands: map[string]*ice.Command{
+	}, Commands: ice.Commands{
 		"/input": {Name: "/input", Help: "输入法", Hand: func(m *ice.Message, arg ...string) {
 			if m.Cmdy(TAGS, ctx.ACTION, INPUT, arg[0], m.Option("pre")); m.Length() > 0 {
 				m.Cmd(m.PrefixKey(), mdb.INSERT, kit.SimpleKV("", "tags", arg[0], m.Result()))
@@ -40,6 +40,6 @@ func init() {
 				return // 本地命令
 			}
 		}},
-		INPUT: {Name: "input id auto export import", Help: "输入法", Action: mdb.ListAction()},
+		INPUT: {Name: "input id auto export import", Help: "输入法", Actions: mdb.ListAction()},
 	}})
 }

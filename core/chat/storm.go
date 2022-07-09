@@ -14,8 +14,8 @@ func _storm_key(m *ice.Message, key ...ice.Any) string {
 const STORM = "storm"
 
 func init() {
-	Index.Merge(&ice.Context{Commands: map[string]*ice.Command{
-		STORM: {Name: "storm hash id auto insert create", Help: "应用", Action: map[string]*ice.Action{
+	Index.Merge(&ice.Context{Commands: ice.Commands{
+		STORM: {Name: "storm hash id auto insert create", Help: "应用", Actions: ice.Actions{
 			mdb.INPUTS: {Name: "inputs", Help: "补全", Hand: func(m *ice.Message, arg ...string) {
 				if ctx.Inputs(m, arg[0]) {
 					return
@@ -81,7 +81,7 @@ func init() {
 
 			if m.Copy(msg); len(arg) > 1 { // 命令插件
 				m.ProcessField(arg[0], arg[1], ice.RUN)
-				m.Table(func(index int, value map[string]string, head []string) {
+				m.Table(func(index int, value ice.Maps, head []string) {
 					m.Cmdy(m.Space(value[ice.POD]), ctx.CONTEXT, value[ice.CTX], ctx.COMMAND, value[ice.CMD])
 				})
 			} else {

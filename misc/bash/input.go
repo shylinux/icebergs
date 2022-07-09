@@ -9,13 +9,13 @@ import (
 )
 
 func init() {
-	Index.Merge(&ice.Context{Commands: map[string]*ice.Command{
+	Index.Merge(&ice.Context{Commands: ice.Commands{
 		"/input": {Name: "/input", Help: "补全", Hand: func(m *ice.Message, arg ...string) {
 			list := kit.Split(m.Option("line"), m.Option("break"))
 			word := list[kit.Int(m.Option("index"))]
 			switch arg[0] {
 			case "shy":
-				m.Cmd("web.code.input.find", word).Table(func(index int, value map[string]string, head []string) {
+				m.Cmd("web.code.input.find", word).Table(func(index int, value ice.Maps, head []string) {
 					m.Echo(value["text"]).Echo(" ")
 				})
 

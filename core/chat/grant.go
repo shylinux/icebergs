@@ -10,8 +10,8 @@ import (
 const GRANT = "grant"
 
 func init() {
-	Index.Merge(&ice.Context{Commands: map[string]*ice.Command{
-		GRANT: {Name: "grant space id auto insert", Help: "授权", Action: ice.MergeAction(map[string]*ice.Action{
+	Index.Merge(&ice.Context{Commands: ice.Commands{
+		GRANT: {Name: "grant space id auto insert", Help: "授权", Actions: ice.MergeAction(ice.Actions{
 			mdb.INPUTS: {Name: "inputs", Help: "补全", Hand: func(m *ice.Message, arg ...string) {
 				switch arg[0] {
 				case web.SPACE:

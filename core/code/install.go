@@ -105,7 +105,7 @@ func _install_spawn(m *ice.Message, arg ...string) {
 	if m.Option(INSTALL) == "" && kit.FileExists(kit.Path(source, "_install")) {
 		m.Option(INSTALL, "_install")
 	}
-	m.Cmd(nfs.DIR, path.Join(source, m.Option(INSTALL))).Tables(func(value map[string]string) {
+	m.Cmd(nfs.DIR, path.Join(source, m.Option(INSTALL))).Tables(func(value ice.Maps) {
 		m.Cmd(cli.SYSTEM, "cp", "-r", strings.TrimSuffix(value[nfs.PATH], ice.PS), target+ice.PS)
 	})
 }
@@ -127,7 +127,7 @@ func _install_start(m *ice.Message, arg ...string) {
 	}
 }
 func _install_stop(m *ice.Message, arg ...string) {
-	m.Cmd(cli.DAEMON).Tables(func(value map[string]string) {
+	m.Cmd(cli.DAEMON).Tables(func(value ice.Maps) {
 		if value[cli.PID] == m.Option(cli.PID) {
 			m.Cmd(cli.DAEMON, cli.STOP, kit.Dict(mdb.HASH, value[mdb.HASH]))
 		}
@@ -137,12 +137,12 @@ func _install_stop(m *ice.Message, arg ...string) {
 func _install_service(m *ice.Message, arg ...string) {
 	arg = kit.Split(path.Base(arg[0]), "-.")[:1]
 	m.Fields(len(arg[1:]), "time,port,status,pid,cmd,dir")
-	m.Cmd(mdb.SELECT, cli.DAEMON, "", mdb.HASH).Tables(func(value map[string]string) {
+	m.Cmd(mdb.SELECT, cli.DAEMON, "", mdb.HASH).Tables(func(value ice.Maps) {
 		if strings.Contains(value[ice.CMD], path.Join(ice.BIN, arg[0])) {
 			m.Push("", value, kit.Split(m.OptionFields()))
 		}
 	})
-	m.Set(tcp.PORT).Tables(func(value map[string]string) { m.Push(tcp.PORT, path.Base(value[nfs.DIR])) })
+	m.Set(tcp.PORT).Tables(func(value ice.Maps) { m.Push(tcp.PORT, path.Base(value[nfs.DIR])) })
 	m.StatusTimeCount()
 }
 
@@ -152,12 +152,12 @@ const (
 const INSTALL = "install"
 
 func init() {
-	Index.Merge(&ice.Context{Configs: map[string]*ice.Config{
+	Index.Merge(&ice.Context{Configs: ice.Configs{
 		INSTALL: {Name: INSTALL, Help: "安装", Value: kit.Data(
 			mdb.SHORT, mdb.NAME, mdb.FIELD, "time,name,path,link", nfs.PATH, ice.USR_INSTALL,
 		)},
-	}, Commands: map[string]*ice.Command{
-		INSTALL: {Name: "install name port path auto download", Help: "安装", Meta: kit.Dict(), Action: ice.MergeAction(map[string]*ice.Action{
+	}, Commands: ice.Commands{
+		INSTALL: {Name: "install name port path auto download", Help: "安装", Meta: kit.Dict(), Actions: ice.MergeAction(ice.Actions{
 			web.DOWNLOAD: {Name: "download link path", Help: "下载", Hand: func(m *ice.Message, arg ...string) {
 				_install_download(m)
 			}},
@@ -204,8 +204,8 @@ func init() {
 	}})
 }
 
-func InstallAction(args ...ice.Any) map[string]*ice.Action {
-	return map[string]*ice.Action{ice.CTX_INIT: mdb.AutoConfig(args...),
+func InstallAction(args ...ice.Any) ice.Actions {
+	return ice.Actions{ice.CTX_INIT: mdb.AutoConfig(args...),
 		web.DOWNLOAD: {Name: "download", Help: "下载", Hand: func(m *ice.Message, arg ...string) {
 			m.Cmdy(INSTALL, web.DOWNLOAD, m.Config(nfs.SOURCE))
 		}},

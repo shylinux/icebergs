@@ -46,10 +46,10 @@ const (
 const PORT = "port"
 
 func init() {
-	Index.Merge(&ice.Context{Configs: map[string]*ice.Config{
+	Index.Merge(&ice.Context{Configs: ice.Configs{
 		PORT: {Name: PORT, Help: "端口", Value: kit.Data(BEGIN, 10000, CURRENT, 10000, END, 20000)},
-	}, Commands: map[string]*ice.Command{
-		PORT: {Name: "port port path auto", Help: "端口", Action: map[string]*ice.Action{
+	}, Commands: ice.Commands{
+		PORT: {Name: "port port path auto", Help: "端口", Actions: ice.Actions{
 			aaa.RIGHT: {Name: "right", Help: "分配", Hand: func(m *ice.Message, arg ...string) {
 				m.Echo(_port_right(m, arg...))
 			}},
@@ -62,7 +62,7 @@ func init() {
 			if len(arg) == 0 {
 				current := kit.Int(m.Config(BEGIN))
 				m.Option(nfs.DIR_ROOT, ice.USR_LOCAL_DAEMON)
-				m.Cmd(nfs.DIR, nfs.PWD, nfs.DIR_CLI_FIELDS).Tables(func(value map[string]string) {
+				m.Cmd(nfs.DIR, nfs.PWD, nfs.DIR_CLI_FIELDS).Tables(func(value ice.Maps) {
 					bin := m.Cmd(nfs.DIR, path.Join(value[nfs.PATH], ice.BIN), nfs.DIR_CLI_FIELDS).Append(nfs.PATH)
 					if bin == "" {
 						bin = m.Cmd(nfs.DIR, path.Join(value[nfs.PATH], "sbin"), nfs.DIR_CLI_FIELDS).Append(nfs.PATH)

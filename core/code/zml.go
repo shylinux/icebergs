@@ -27,8 +27,8 @@ func _website_url(m *ice.Message, file string) string {
 const ZML = nfs.ZML
 
 func init() {
-	Index.Register(&ice.Context{Name: ZML, Help: "网页", Commands: map[string]*ice.Command{
-		ZML: {Name: "zml", Help: "网页", Action: ice.MergeAction(map[string]*ice.Action{
+	Index.Register(&ice.Context{Name: ZML, Help: "网页", Commands: ice.Commands{
+		ZML: {Name: "zml", Help: "网页", Actions: ice.MergeAction(ice.Actions{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
 				m.Cmd(mdb.PLUGIN, mdb.CREATE, nfs.ZML, m.PrefixKey())
 				m.Cmd(mdb.RENDER, mdb.CREATE, nfs.ZML, m.PrefixKey())
@@ -38,7 +38,7 @@ func init() {
 				m.EchoIFrame(_website_url(m, strings.TrimPrefix(path.Join(arg[2], arg[1]), SRC_WEBSITE)))
 			}},
 		}, PlugAction())},
-	}, Configs: map[string]*ice.Config{
+	}, Configs: ice.Configs{
 		ZML: {Name: ZML, Help: "网页", Value: kit.Data(PLUG, kit.Dict(PREFIX, kit.Dict("# ", COMMENT), PREPARE, kit.Dict(
 			KEYWORD, kit.Simple(
 				"head", "left", "main", "foot",

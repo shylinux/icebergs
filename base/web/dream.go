@@ -15,7 +15,7 @@ import (
 )
 
 func _dream_list(m *ice.Message) *ice.Message {
-	return m.Cmdy(nfs.DIR, m.Config(nfs.PATH), "time,size,name").Table(func(index int, value map[string]string, head []string) {
+	return m.Cmdy(nfs.DIR, m.Config(nfs.PATH), "time,size,name").Table(func(index int, value ice.Maps, head []string) {
 		if m.Richs(SPACE, nil, value[mdb.NAME], func(key string, val ice.Map) {
 			m.Push(mdb.TYPE, val[mdb.TYPE])
 			m.Push(cli.STATUS, cli.START)
@@ -102,8 +102,8 @@ const (
 const DREAM = "dream"
 
 func init() {
-	Index.Merge(&ice.Context{Commands: map[string]*ice.Command{
-		DREAM: {Name: "dream name path auto start", Help: "梦想家", Action: map[string]*ice.Action{
+	Index.Merge(&ice.Context{Commands: ice.Commands{
+		DREAM: {Name: "dream name path auto start", Help: "梦想家", Actions: ice.Actions{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
 				m.Config("miss", _dream_miss)
 			}},
@@ -143,7 +143,7 @@ func init() {
 		}, Hand: func(m *ice.Message, arg ...string) {
 			if start := 0; len(arg) == 0 {
 				_dream_list(m).SetAppend(mdb.TEXT)
-				m.Table(func(index int, value map[string]string, head []string) {
+				m.Table(func(index int, value ice.Maps, head []string) {
 					if value[cli.STATUS] != cli.START {
 						m.Push(mdb.TEXT, "")
 						return
@@ -170,7 +170,7 @@ func init() {
 			m.Option(nfs.DIR_ROOT, path.Join(m.Config(nfs.PATH), arg[0]))
 			m.Cmdy(nfs.CAT, arg[1:])
 		}},
-	}, Configs: map[string]*ice.Config{
+	}, Configs: ice.Configs{
 		DREAM: {Name: DREAM, Help: "梦想家", Value: kit.Data(nfs.PATH, ice.USR_LOCAL_WORK, "miss", _dream_miss)},
 	}})
 }

@@ -13,8 +13,8 @@ import (
 const TEMPLATE = "template"
 
 func init() {
-	Index.Merge(&ice.Context{Commands: map[string]*ice.Command{
-		TEMPLATE: {Name: "template name auto", Help: "模板", Action: ice.MergeAction(map[string]*ice.Action{
+	Index.Merge(&ice.Context{Commands: ice.Commands{
+		TEMPLATE: {Name: "template name auto", Help: "模板", Actions: ice.MergeAction(ice.Actions{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
 				for _, _template := range _template_list {
 					m.Cmd(TEMPLATE, mdb.CREATE, kit.SimpleKV(kit.Format(_template[0]), _template[1:]...))

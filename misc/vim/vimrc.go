@@ -10,8 +10,8 @@ import (
 const VIMRC = "vimrc"
 
 func init() {
-	Index.Merge(&ice.Context{Commands: map[string]*ice.Command{
-		VIMRC: {Name: "vimrc", Help: "收藏夹", Action: ice.MergeAction(map[string]*ice.Action{
+	Index.Merge(&ice.Context{Commands: ice.Commands{
+		VIMRC: {Name: "vimrc", Help: "收藏夹", Actions: ice.MergeAction(ice.Actions{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
 				m.Cmd(mdb.PLUGIN, mdb.CREATE, VIMRC, m.PrefixKey())
 				m.Cmd(mdb.RENDER, mdb.CREATE, VIMRC, m.PrefixKey())
@@ -20,7 +20,7 @@ func init() {
 				code.LoadPlug(m, VIMRC)
 			}},
 		}, code.PlugAction())},
-	}, Configs: map[string]*ice.Config{
+	}, Configs: ice.Configs{
 		VIMRC: {Name: VIMRC, Help: "收藏夹", Value: kit.Data(
 			code.PLUG, kit.Dict(
 				code.SPLIT, kit.Dict("space", " \t", "operator", "{[(&.,;!|<>)]}"),

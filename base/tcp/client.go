@@ -77,12 +77,12 @@ const (
 const CLIENT = "client"
 
 func init() {
-	Index.Merge(&ice.Context{Configs: map[string]*ice.Config{
+	Index.Merge(&ice.Context{Configs: ice.Configs{
 		CLIENT: {Name: CLIENT, Help: "客户端", Value: kit.Data(
 			mdb.FIELD, "time,hash,status,type,name,host,port,error,nread,nwrite",
 		)},
-	}, Commands: map[string]*ice.Command{
-		CLIENT: {Name: "client hash auto prunes", Help: "客户端", Action: ice.MergeAction(map[string]*ice.Action{
+	}, Commands: ice.Commands{
+		CLIENT: {Name: "client hash auto prunes", Help: "客户端", Actions: ice.MergeAction(ice.Actions{
 			ice.CTX_EXIT: {Hand: func(m *ice.Message, arg ...string) {
 				m.Richs(CLIENT, "", mdb.FOREACH, func(key string, value ice.Map) {
 					kit.Value(value, kit.Keym(STATUS), CLOSE)
@@ -93,7 +93,7 @@ func init() {
 				_client_dial(m, arg...)
 			}},
 		}, mdb.HashActionStatus()), Hand: func(m *ice.Message, arg ...string) {
-			mdb.HashSelect(m, arg...).Table(func(index int, value map[string]string, head []string) {
+			mdb.HashSelect(m, arg...).Table(func(index int, value ice.Maps, head []string) {
 				m.PushButton(kit.Select("", mdb.REMOVE, value[STATUS] == OPEN))
 			})
 		}},

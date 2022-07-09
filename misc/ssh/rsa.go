@@ -22,10 +22,10 @@ const (
 const RSA = "rsa"
 
 func init() {
-	aaa.Index.Merge(&ice.Context{Configs: map[string]*ice.Config{
+	aaa.Index.Merge(&ice.Context{Configs: ice.Configs{
 		RSA: {Name: RSA, Help: "角色", Value: kit.Data(mdb.SHORT, mdb.HASH, mdb.FIELD, "time,hash,title,public,private")},
-	}, Commands: map[string]*ice.Command{
-		RSA: {Name: "rsa hash auto", Help: "公钥", Action: ice.MergeAction(map[string]*ice.Action{
+	}, Commands: ice.Commands{
+		RSA: {Name: "rsa hash auto", Help: "公钥", Actions: ice.MergeAction(ice.Actions{
 			mdb.IMPORT: {Name: "import key=.ssh/id_rsa pub=.ssh/id_rsa.pub", Help: "导入", Hand: func(m *ice.Message, arg ...string) {
 				m.Conf(m.PrefixKey(), kit.Keys(mdb.HASH, path.Base(m.Option("key"))), kit.Data(mdb.TIME, m.Time(),
 					"title", kit.Format("%s@%s", ice.Info.UserName, ice.Info.HostName),
@@ -34,7 +34,7 @@ func init() {
 				))
 			}},
 			mdb.EXPORT: {Name: "export key=.ssh/id_rsa pub=.ssh/id_rsa.pub", Help: "导出", Hand: func(m *ice.Message, arg ...string) {
-				m.Cmd(m.PrefixKey(), m.Option(mdb.HASH)).Table(func(index int, value map[string]string, head []string) {
+				m.Cmd(m.PrefixKey(), m.Option(mdb.HASH)).Table(func(index int, value ice.Maps, head []string) {
 					m.Cmdx(nfs.SAVE, kit.HomePath(m.Option("key")), value[PRIVATE])
 					m.Cmdx(nfs.SAVE, kit.HomePath(m.Option("pub")), value[PUBLIC])
 				})

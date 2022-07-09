@@ -17,10 +17,10 @@ func _wx_reply(m *ice.Message, tmpl string) {
 const TEXT = "text"
 
 func init() {
-	Index.Merge(&ice.Context{Configs: map[string]*ice.Config{
+	Index.Merge(&ice.Context{Configs: ice.Configs{
 		TEXT: {Name: TEXT, Help: "文本", Value: kit.Data(nfs.TEMPLATE, text)},
-	}, Commands: map[string]*ice.Command{
-		TEXT: {Name: "text", Help: "文本", Action: map[string]*ice.Action{
+	}, Commands: ice.Commands{
+		TEXT: {Name: "text", Help: "文本", Actions: ice.Actions{
 			MENU: {Name: "menu name", Help: "菜单", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmdy(MENU, kit.Select("home", m.Option(mdb.NAME)))
 			}},

@@ -16,14 +16,14 @@ import (
 const UPGRADE = "upgrade"
 
 func init() {
-	Index.Merge(&ice.Context{Configs: map[string]*ice.Config{
+	Index.Merge(&ice.Context{Configs: ice.Configs{
 		UPGRADE: {Name: UPGRADE, Help: "升级", Value: kit.Dict(mdb.HASH, kit.Dict(
 			nfs.TARGET, kit.Dict(mdb.LIST, kit.List(mdb.TYPE, "bin", nfs.FILE, "ice.bin")),
 			nfs.SOURCE, kit.Dict(mdb.LIST, kit.List(mdb.TYPE, "tar", nfs.FILE, "contexts.src.tar.gz")),
 			nfs.BINARY, kit.Dict(mdb.LIST, kit.List(mdb.TYPE, "tar", nfs.FILE, "contexts.bin.tar.gz")),
 		))},
-	}, Commands: map[string]*ice.Command{
-		UPGRADE: {Name: "upgrade item=target,source,binary run restart", Help: "升级", Action: map[string]*ice.Action{
+	}, Commands: ice.Commands{
+		UPGRADE: {Name: "upgrade item=target,source,binary run restart", Help: "升级", Actions: ice.Actions{
 			cli.RESTART: {Name: "restart", Help: "重启", Hand: func(m *ice.Message, arg ...string) {
 				m.Sleep("1s").Go(func() { m.Cmd(ice.EXIT, 1) })
 			}},

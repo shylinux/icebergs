@@ -162,13 +162,13 @@ const (
 const STORY = "story"
 
 func init() {
-	Index.Merge(&ice.Context{Configs: map[string]*ice.Config{
+	Index.Merge(&ice.Context{Configs: ice.Configs{
 		STORY: {Name: "story", Help: "故事会", Value: kit.Dict(
 			mdb.META, kit.Dict(mdb.SHORT, DATA),
 			HEAD, kit.Data(mdb.SHORT, STORY),
 		)},
-	}, Commands: map[string]*ice.Command{
-		STORY: {Name: "story story auto", Help: "故事会", Action: map[string]*ice.Action{
+	}, Commands: ice.Commands{
+		STORY: {Name: "story story auto", Help: "故事会", Actions: ice.Actions{
 			WRITE: {Name: "write type name text arg...", Help: "添加", Hand: func(m *ice.Message, arg ...string) {
 				_story_write(m, arg[0], arg[1], arg[2], arg[3:]...)
 			}},
@@ -260,7 +260,7 @@ func _story_pull(m *ice.Message, arg ...string) {
 	pull := end
 	var first ice.Map
 	for begin != "" && begin != end {
-		if m.Cmd(SPIDE, arg[2], "msg", "/story/pull", "begin", begin, "end", end).Table(func(index int, value map[string]string, head []string) {
+		if m.Cmd(SPIDE, arg[2], "msg", "/story/pull", "begin", begin, "end", end).Table(func(index int, value ice.Maps, head []string) {
 			if m.Richs(CACHE, nil, value["data"], nil) == nil {
 				m.Log(ice.LOG_IMPORT, "%v: %v", value["data"], value["save"])
 				if node := kit.UnMarshal(value["save"]); kit.Format(kit.Value(node, "file")) != "" {
@@ -404,7 +404,7 @@ func _story_commit(m *ice.Message, arg ...string) {
 	arg[2] = m.Cmdx(STORY, "add", "submit", arg[2], "hostname,username")
 
 	// 节点信息
-	menu := map[string]string{}
+	menu := ice.Maps{}
 	for i := 3; i < len(arg); i++ {
 		menu[arg[i]] = m.Cmdx(STORY, INDEX, arg[i])
 	}

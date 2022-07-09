@@ -85,12 +85,12 @@ const (
 const SERVER = "server"
 
 func init() {
-	Index.Merge(&ice.Context{Configs: map[string]*ice.Config{
+	Index.Merge(&ice.Context{Configs: ice.Configs{
 		SERVER: {Name: SERVER, Help: "服务器", Value: kit.Data(
 			mdb.FIELD, "time,hash,status,type,name,host,port,error,nconn",
 		)},
-	}, Commands: map[string]*ice.Command{
-		SERVER: {Name: "server hash auto prunes", Help: "服务器", Action: ice.MergeAction(map[string]*ice.Action{
+	}, Commands: ice.Commands{
+		SERVER: {Name: "server hash auto prunes", Help: "服务器", Actions: ice.MergeAction(ice.Actions{
 			ice.CTX_EXIT: {Hand: func(m *ice.Message, arg ...string) {
 				m.Richs(SERVER, "", mdb.FOREACH, func(key string, value ice.Map) {
 					kit.Value(value, kit.Keym(STATUS), CLOSE)
@@ -101,7 +101,7 @@ func init() {
 				_server_listen(m, arg...)
 			}},
 		}, mdb.HashActionStatus()), Hand: func(m *ice.Message, arg ...string) {
-			mdb.HashSelect(m, arg...).Table(func(index int, value map[string]string, head []string) {
+			mdb.HashSelect(m, arg...).Table(func(index int, value ice.Maps, head []string) {
 				m.PushButton(kit.Select("", mdb.REMOVE, value[STATUS] == CLOSE))
 			})
 		}},

@@ -99,10 +99,10 @@ const (
 const CONFIG = "config"
 
 func init() {
-	Index.Merge(&ice.Context{Configs: map[string]*ice.Config{
+	Index.Merge(&ice.Context{Configs: ice.Configs{
 		CONFIG: {Name: CONFIG, Help: "配置", Value: kit.Data(nfs.PATH, ice.VAR_CONF)},
-	}, Commands: map[string]*ice.Command{
-		CONFIG: {Name: "config key auto reset", Help: "配置", Action: map[string]*ice.Action{
+	}, Commands: ice.Commands{
+		CONFIG: {Name: "config key auto reset", Help: "配置", Actions: ice.Actions{
 			SAVE: {Name: "save", Help: "保存", Hand: func(m *ice.Message, arg ...string) {
 				_config_save(m, arg[0], arg[1:]...)
 			}},

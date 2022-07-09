@@ -275,7 +275,7 @@ const (
 const SERVE = "serve"
 
 func init() {
-	Index.Merge(&ice.Context{Configs: map[string]*ice.Config{
+	Index.Merge(&ice.Context{Configs: ice.Configs{
 		SERVE: {Name: SERVE, Help: "服务器", Value: kit.Data(
 			mdb.SHORT, mdb.NAME, mdb.FIELD, "time,status,name,port,dev",
 			tcp.LOCALHOST, ice.TRUE, aaa.BLACK, kit.Dict(), aaa.WHITE, kit.Dict(
@@ -294,8 +294,8 @@ func init() {
 				nfs.REPOS, "https://shylinux.com/x/intshell", nfs.BRANCH, nfs.MASTER,
 			), ice.REQUIRE, ".ish/pluged",
 		)},
-	}, Commands: map[string]*ice.Command{
-		SERVE: {Name: "serve name auto start spide", Help: "服务器", Action: ice.MergeAction(map[string]*ice.Action{
+	}, Commands: ice.Commands{
+		SERVE: {Name: "serve name auto start spide", Help: "服务器", Actions: ice.MergeAction(ice.Actions{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
 				cli.NodeInfo(m, WORKER, ice.Info.PathName)
 				AddRewrite(func(w http.ResponseWriter, r *http.Request) bool {
@@ -321,7 +321,7 @@ func init() {
 				})
 			}},
 			ice.CTX_EXIT: {Hand: func(m *ice.Message, arg ...string) {
-				m.Cmd(SERVE).Table(func(index int, value map[string]string, head []string) {
+				m.Cmd(SERVE).Table(func(index int, value ice.Maps, head []string) {
 					m.Done(value[cli.STATUS] == tcp.START)
 				})
 			}},

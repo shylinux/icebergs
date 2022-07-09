@@ -164,8 +164,8 @@ func init() {
 const AUTOGEN = "autogen"
 
 func init() {
-	Index.Merge(&ice.Context{Commands: map[string]*ice.Command{
-		AUTOGEN: {Name: "autogen path auto create binpack script relay", Help: "生成", Action: map[string]*ice.Action{
+	Index.Merge(&ice.Context{Commands: ice.Commands{
+		AUTOGEN: {Name: "autogen path auto create binpack script relay", Help: "生成", Actions: ice.Actions{
 			mdb.INPUTS: {Name: "inputs", Help: "补全", Hand: func(m *ice.Message, arg ...string) {
 				switch arg[0] {
 				case cli.MAIN:

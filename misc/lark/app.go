@@ -20,13 +20,13 @@ const (
 const APP = "app"
 
 func init() {
-	Index.Merge(&ice.Context{Configs: map[string]*ice.Config{
+	Index.Merge(&ice.Context{Configs: ice.Configs{
 		APP: {Name: APP, Help: "应用", Value: kit.Data(
 			mdb.SHORT, APPID, mdb.FIELD, "time,appid,duty,token,expire",
 			tcp.SERVER, "https://open.feishu.cn/",
 		)},
-	}, Commands: map[string]*ice.Command{
-		APP: {Name: "app appid auto token login", Help: "应用", Action: ice.MergeAction(map[string]*ice.Action{
+	}, Commands: ice.Commands{
+		APP: {Name: "app appid auto token login", Help: "应用", Actions: ice.MergeAction(ice.Actions{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
 				m.Cmd(web.SPIDE, mdb.CREATE, LARK, m.Config(tcp.SERVER))
 			}},

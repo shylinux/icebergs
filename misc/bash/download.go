@@ -10,7 +10,7 @@ import (
 )
 
 func init() {
-	Index.Merge(&ice.Context{Commands: map[string]*ice.Command{
+	Index.Merge(&ice.Context{Commands: ice.Commands{
 		"/download": {Name: "/download", Help: "下载", Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) == 0 || arg[0] == "" {
 				m.Cmdy(chat.FILES).Table()

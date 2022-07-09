@@ -101,9 +101,9 @@ const (
 const SPLIT = "split"
 
 func init() {
-	Index.Merge(&ice.Context{Configs: map[string]*ice.Config{
+	Index.Merge(&ice.Context{Configs: ice.Configs{
 		SPLIT: {Name: "split", Help: "解析", Value: kit.Data()},
-	}, Commands: map[string]*ice.Command{
+	}, Commands: ice.Commands{
 		SPLIT: {Name: "split path key auto", Help: "解析", Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) == 0 || strings.HasSuffix(arg[0], ice.PS) {
 				m.Cmdy(nfs.DIR, arg)

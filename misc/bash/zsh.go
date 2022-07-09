@@ -11,12 +11,12 @@ import (
 const ZSH = "zsh"
 
 func init() {
-	Index.Merge(&ice.Context{Configs: map[string]*ice.Config{
+	Index.Merge(&ice.Context{Configs: ice.Configs{
 		ZSH: {Name: ZSH, Help: "命令行", Value: kit.Data(
 			nfs.SOURCE, "https://nchc.dl.sourceforge.net/project/zsh/zsh/5.8/zsh-5.8.tar.xz",
 		)},
-	}, Commands: map[string]*ice.Command{
-		ZSH: {Name: "zsh path auto order build download", Help: "命令行", Action: ice.MergeAction(map[string]*ice.Action{
+	}, Commands: ice.Commands{
+		ZSH: {Name: "zsh path auto order build download", Help: "命令行", Actions: ice.MergeAction(ice.Actions{
 			cli.ORDER: {Name: "order", Help: "加载", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmdy(code.INSTALL, cli.ORDER, m.Config(nfs.SOURCE), "_install/bin")
 			}},

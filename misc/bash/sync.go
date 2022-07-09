@@ -14,12 +14,12 @@ import (
 const SYNC = "sync"
 
 func init() {
-	Index.Merge(&ice.Context{Configs: map[string]*ice.Config{
+	Index.Merge(&ice.Context{Configs: ice.Configs{
 		SYNC: {Name: SYNC, Help: "同步流", Value: kit.Data(
 			mdb.FIELD, "time,id,type,name,text,pwd,username,hostname",
 		)},
-	}, Commands: map[string]*ice.Command{
-		"/sync": {Name: "/sync", Help: "同步", Action: map[string]*ice.Action{
+	}, Commands: ice.Commands{
+		"/sync": {Name: "/sync", Help: "同步", Actions: ice.Actions{
 			"history": {Name: "history", Help: "历史", Hand: func(m *ice.Message, arg ...string) {
 				ls := strings.SplitN(strings.TrimSpace(m.Option(ARG)), ice.SP, 4)
 				if text := strings.TrimSpace(strings.Join(ls[3:], ice.SP)); text != "" {
@@ -29,7 +29,7 @@ func init() {
 				}
 			}},
 		}},
-		SYNC: {Name: "sync id auto page export import", Help: "同步流", Action: ice.MergeAction(map[string]*ice.Action{
+		SYNC: {Name: "sync id auto page export import", Help: "同步流", Actions: ice.MergeAction(ice.Actions{
 			cli.SYSTEM: {Name: "system", Help: "命令", Hand: func(m *ice.Message, arg ...string) {
 				m.Option(cli.CMD_DIR, m.Option(cli.PWD))
 				m.ProcessCommand(cli.SYSTEM, kit.Split(m.Option(mdb.TEXT)), arg...)

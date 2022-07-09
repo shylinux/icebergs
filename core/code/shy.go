@@ -34,8 +34,8 @@ func _shy_exec(m *ice.Message, arg ...string) {
 const SHY = "shy"
 
 func init() {
-	Index.Register(&ice.Context{Name: SHY, Help: "脚本", Commands: map[string]*ice.Command{
-		SHY: {Name: "shy path auto", Help: "脚本", Action: ice.MergeAction(map[string]*ice.Action{
+	Index.Register(&ice.Context{Name: SHY, Help: "脚本", Commands: ice.Commands{
+		SHY: {Name: "shy path auto", Help: "脚本", Actions: ice.MergeAction(ice.Actions{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
 				for _, cmd := range []string{mdb.SEARCH, mdb.ENGINE, mdb.RENDER, mdb.PLUGIN} {
 					m.Cmd(cmd, mdb.CREATE, SHY, m.PrefixKey())
@@ -61,7 +61,7 @@ func init() {
 			}
 			m.Cmdy("web.wiki.word", arg)
 		}},
-	}, Configs: map[string]*ice.Config{
+	}, Configs: ice.Configs{
 		SHY: {Name: SHY, Help: "脚本", Value: kit.Data(PLUG, kit.Dict(
 			mdb.RENDER, kit.Dict(),
 			PREFIX, kit.Dict("# ", COMMENT), PREPARE, kit.Dict(

@@ -20,8 +20,8 @@ import (
 	kit "shylinux.com/x/toolkits"
 )
 
-func _ssh_meta(conn ssh.ConnMetadata) map[string]string {
-	return map[string]string{aaa.USERNAME: conn.User(), tcp.HOSTPORT: conn.RemoteAddr().String()}
+func _ssh_meta(conn ssh.ConnMetadata) ice.Maps {
+	return ice.Maps{aaa.USERNAME: conn.User(), tcp.HOSTPORT: conn.RemoteAddr().String()}
 }
 func _ssh_config(m *ice.Message, h string) *ssh.ServerConfig {
 	config := &ssh.ServerConfig{
@@ -31,7 +31,7 @@ func _ssh_config(m *ice.Message, h string) *ssh.ServerConfig {
 				m.Log_AUTH(tcp.HOSTPORT, conn.RemoteAddr(), aaa.USERNAME, conn.User())
 				err = nil // 本机用户
 			} else {
-				m.Cmd(mdb.SELECT, SERVICE, kit.Keys(mdb.HASH, h), mdb.LIST).Table(func(index int, value map[string]string, head []string) {
+				m.Cmd(mdb.SELECT, SERVICE, kit.Keys(mdb.HASH, h), mdb.LIST).Table(func(index int, value ice.Maps, head []string) {
 					if !strings.HasPrefix(value[mdb.NAME], conn.User()+"@") {
 						return
 					}
@@ -98,13 +98,13 @@ const (
 const SERVICE = "service"
 
 func init() {
-	psh.Index.Merge(&ice.Context{Configs: map[string]*ice.Config{
+	psh.Index.Merge(&ice.Context{Configs: ice.Configs{
 		SERVICE: {Name: SERVICE, Help: "服务", Value: kit.Data(
 			WELCOME, "\r\nwelcome to context world\r\n", GOODBYE, "\r\ngoodbye of context world\r\n",
 			mdb.SHORT, tcp.PORT, mdb.FIELD, "time,port,status,private,authkey,count",
 		)},
-	}, Commands: map[string]*ice.Command{
-		SERVICE: {Name: "service port id auto listen prunes", Help: "服务", Action: ice.MergeAction(map[string]*ice.Action{
+	}, Commands: ice.Commands{
+		SERVICE: {Name: "service port id auto listen prunes", Help: "服务", Actions: ice.MergeAction(ice.Actions{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
 				m.Richs(SERVICE, "", mdb.FOREACH, func(key string, value ice.Map) {
 					if value = kit.GetMeta(value); kit.Value(value, mdb.STATUS) == tcp.OPEN {
@@ -135,7 +135,7 @@ func init() {
 			}},
 			mdb.EXPORT: {Name: "export authkey=.ssh/authorized_keys", Help: "导出", Hand: func(m *ice.Message, arg ...string) {
 				list := []string{}
-				m.Cmd(mdb.SELECT, SERVICE, kit.Keys(mdb.HASH, kit.Hashs(m.Option(tcp.PORT))), mdb.LIST).Table(func(index int, value map[string]string, head []string) {
+				m.Cmd(mdb.SELECT, SERVICE, kit.Keys(mdb.HASH, kit.Hashs(m.Option(tcp.PORT))), mdb.LIST).Table(func(index int, value ice.Maps, head []string) {
 					list = append(list, fmt.Sprintf("%s %s %s", value[mdb.TYPE], value[mdb.TEXT], value[mdb.NAME]))
 				})
 

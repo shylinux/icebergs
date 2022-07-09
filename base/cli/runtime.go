@@ -74,7 +74,7 @@ func _runtime_hostinfo(m *ice.Message) {
 	m.Push("uptime", kit.Split(m.Cmdx(SYSTEM, "uptime"), ice.FS)[0])
 }
 func _runtime_diskinfo(m *ice.Message) {
-	m.Spawn().Split(kit.Replace(m.Cmdx(SYSTEM, "df", "-h"), "Mounted on", "Mountedon"), "", ice.SP, ice.NL).Table(func(index int, value map[string]string, head []string) {
+	m.Spawn().Split(kit.Replace(m.Cmdx(SYSTEM, "df", "-h"), "Mounted on", "Mountedon"), "", ice.SP, ice.NL).Table(func(index int, value ice.Maps, head []string) {
 		if strings.HasPrefix(value["Filesystem"], "/dev") {
 			m.Push("", value, head)
 		}
@@ -151,10 +151,10 @@ const (
 const RUNTIME = "runtime"
 
 func init() {
-	Index.Merge(&ice.Context{Configs: map[string]*ice.Config{
+	Index.Merge(&ice.Context{Configs: ice.Configs{
 		RUNTIME: {Name: RUNTIME, Help: "运行环境", Value: kit.Dict()},
-	}, Commands: map[string]*ice.Command{
-		RUNTIME: {Name: "runtime info=ifconfig,hostinfo,hostname,userinfo,procinfo,bootinfo,diskinfo,env,file,route auto", Help: "运行环境", Action: map[string]*ice.Action{
+	}, Commands: ice.Commands{
+		RUNTIME: {Name: "runtime info=ifconfig,hostinfo,hostname,userinfo,procinfo,bootinfo,diskinfo,env,file,route auto", Help: "运行环境", Actions: ice.Actions{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
 				m.Cmd(RUNTIME, MAXPROCS, "1")
 				_runtime_init(m)

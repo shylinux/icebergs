@@ -24,11 +24,11 @@ const (
 const SESS = "sess"
 
 func init() {
-	Index.Merge(&ice.Context{Configs: map[string]*ice.Config{
+	Index.Merge(&ice.Context{Configs: ice.Configs{
 		SESS: {Name: SESS, Help: "会话流", Value: kit.Data(
 			mdb.FIELD, "time,hash,status,username,hostname,pid,pwd",
 		)},
-	}, Commands: map[string]*ice.Command{
+	}, Commands: ice.Commands{
 		web.WEB_LOGIN: {Hand: func(m *ice.Message, arg ...string) {
 			if f, _, e := m.R.FormFile(SUB); e == nil {
 				defer f.Close()
@@ -51,7 +51,7 @@ func init() {
 			m.Option(tcp.HOSTNAME, msg.Append(tcp.HOSTNAME))
 			m.Warn(m.Option(aaa.USERNAME) == "", ice.ErrNotLogin, arg[0])
 		}},
-		"/sess": {Name: "/sess", Help: "会话", Action: map[string]*ice.Action{
+		"/sess": {Name: "/sess", Help: "会话", Actions: ice.Actions{
 			aaa.LOGOUT: {Name: "logout", Help: "退出", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmdy(SESS, mdb.MODIFY, mdb.STATUS, aaa.LOGOUT, ice.Option{mdb.HASH, m.Option(SID)})
 			}},
@@ -63,7 +63,7 @@ func init() {
 			}
 			m.Echo(m.Option(SID))
 		}},
-		SESS: {Name: "sess hash auto prunes", Help: "会话流", Action: ice.MergeAction(map[string]*ice.Action{
+		SESS: {Name: "sess hash auto prunes", Help: "会话流", Actions: ice.MergeAction(ice.Actions{
 			mdb.PRUNES: {Name: "prunes", Help: "清理", Hand: func(m *ice.Message, arg ...string) {
 				m.OptionFields(m.Config(mdb.FIELD))
 				m.Cmdy(mdb.PRUNES, m.PrefixKey(), "", mdb.HASH, mdb.STATUS, aaa.LOGOUT)

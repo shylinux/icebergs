@@ -53,12 +53,12 @@ const (
 const TOTP = "totp"
 
 func init() {
-	Index.Merge(&ice.Context{Configs: map[string]*ice.Config{
+	Index.Merge(&ice.Context{Configs: ice.Configs{
 		TOTP: {Name: TOTP, Help: "令牌", Value: kit.Data(
 			mdb.SHORT, mdb.NAME, mdb.FIELD, "time,name,secret,period,number", mdb.LINK, "otpauth://totp/%s?secret=%s",
 		)},
-	}, Commands: map[string]*ice.Command{
-		TOTP: {Name: "totp name auto create", Help: "令牌", Action: ice.MergeAction(map[string]*ice.Action{
+	}, Commands: ice.Commands{
+		TOTP: {Name: "totp name auto create", Help: "令牌", Actions: ice.MergeAction(ice.Actions{
 			mdb.CREATE: {Name: "create name=hi secret period=30 number=6", Help: "添加", Hand: func(m *ice.Message, arg ...string) {
 				if m.Option(SECRET) == "" { // 创建密钥
 					m.Option(SECRET, _totp_gen(kit.Int64(m.Option(PERIOD))))
@@ -67,7 +67,7 @@ func init() {
 				m.Cmd(mdb.INSERT, TOTP, "", mdb.HASH, m.OptionSimple(mdb.NAME, SECRET, PERIOD, NUMBER))
 			}},
 		}, mdb.HashAction()), Hand: func(m *ice.Message, arg ...string) {
-			mdb.HashSelect(m.Spawn(), arg...).Tables(func(value map[string]string) {
+			mdb.HashSelect(m.Spawn(), arg...).Tables(func(value ice.Maps) {
 				if len(arg) > 0 {
 					m.OptionFields(mdb.DETAIL)
 				}

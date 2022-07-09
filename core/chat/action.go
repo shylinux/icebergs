@@ -26,7 +26,7 @@ func _action_key(m *ice.Message, arg ...string) string {
 	return kit.Keys(mdb.HASH, kit.Select(m.Option(RIVER), arg, 0), STORM, mdb.HASH, kit.Select(m.Option(STORM), arg, 1))
 }
 func _action_list(m *ice.Message, river, storm string) {
-	m.Cmdy(STORM, storm, ice.Option{ice.MSG_RIVER, river}).Table(func(index int, value map[string]string, head []string) {
+	m.Cmdy(STORM, storm, ice.Option{ice.MSG_RIVER, river}).Table(func(index int, value ice.Maps, head []string) {
 		m.Cmdy(m.Space(kit.Select(m.Option(ice.POD), value[ice.POD])), ctx.COMMAND, kit.Keys(value[ice.CTX], value[ice.CMD]))
 	})
 }
@@ -146,8 +146,8 @@ const (
 const ACTION = "action"
 
 func init() {
-	Index.Merge(&ice.Context{Commands: map[string]*ice.Command{
-		web.P(ACTION): {Name: "/action river storm action arg...", Help: "工作台", Action: ice.MergeAction(map[string]*ice.Action{
+	Index.Merge(&ice.Context{Commands: ice.Commands{
+		web.P(ACTION): {Name: "/action river storm action arg...", Help: "工作台", Actions: ice.MergeAction(ice.Actions{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
 				for _, cmd := range []string{
 					"web.chat.meet.miss",

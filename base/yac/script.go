@@ -16,7 +16,7 @@ type frame struct {
 	pos  int
 	key  string
 	skip bool
-	data map[string]string
+	data ice.Maps
 }
 type stack struct {
 	fs  []*frame
@@ -24,7 +24,7 @@ type stack struct {
 }
 
 func (s *stack) push(f *frame) *stack {
-	f.data = map[string]string{}
+	f.data = ice.Maps{}
 	s.fs = append(s.fs, f)
 	return s
 }
@@ -95,8 +95,8 @@ func _exp_true(m *ice.Message, arg string) bool {
 const SCRIPT = "script"
 
 func init() {
-	Index.Merge(&ice.Context{Commands: map[string]*ice.Command{
-		SCRIPT: {Name: "script name npage text auto create", Help: "脚本解析", Action: map[string]*ice.Action{
+	Index.Merge(&ice.Context{Commands: ice.Commands{
+		SCRIPT: {Name: "script name npage text auto create", Help: "脚本解析", Actions: ice.Actions{
 			mdb.CREATE: {Name: "create name=shy text=etc/yac.txt", Help: "创建", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmd(MATRIX, mdb.CREATE, m.Option(mdb.NAME))
 				if buf, err := ioutil.ReadFile(m.Option(mdb.TEXT)); err == nil {
@@ -206,7 +206,7 @@ func init() {
 			m.Option("stack", stack)
 			m.Cmdy(MATRIX, PARSE, arg[0], arg[1], arg[2], func(nhash string, hash int, word []string, begin int, stream *lex.Stream) (int, []string) {
 				m.Option("stream", stream)
-				if _, ok := m.Target().Commands[SCRIPT].Action[nhash]; ok && stack.can_run(nhash) {
+				if _, ok := m.Target().Commands[SCRIPT].Actions[nhash]; ok && stack.can_run(nhash) {
 					msg := m.Cmd(SCRIPT, nhash, word, ice.Option{"begin", begin})
 					return hash, msg.Resultv()
 				}

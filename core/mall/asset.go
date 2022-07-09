@@ -59,15 +59,15 @@ const (
 const ASSET = "asset"
 
 func init() {
-	Index.Merge(&ice.Context{Configs: map[string]*ice.Config{
+	Index.Merge(&ice.Context{Configs: ice.Configs{
 		ASSET: {Name: ASSET, Help: "资产", Value: kit.Data(
 			mdb.SHORT, ACCOUNT, mdb.FIELD, "time,id,type,amount,name,text",
 			mdb.ALIAS, kit.Dict(FROM, ACCOUNT, TO, ACCOUNT),
 		)},
-	}, Commands: map[string]*ice.Command{
+	}, Commands: ice.Commands{
 		ASSET: {Name: "asset account id auto spend trans bonus", Help: "资产", Meta: kit.Dict(
 			"_trans", kit.Dict(ACCOUNT, "账户", AMOUNT, "金额", FROM, "转出", TO, "转入", "time", "时间", "name", "商家", "text", "备注"),
-		), Action: ice.MergeAction(map[string]*ice.Action{
+		), Actions: ice.MergeAction(ice.Actions{
 			SPEND: {Name: "spend account name amount time@date text", Help: "支出", Hand: func(m *ice.Message, arg ...string) {
 				_sub_amount(m, arg)
 				_asset_insert(m, arg[1], kit.Simple(mdb.TYPE, "支出", arg[2:])...)
@@ -82,7 +82,7 @@ func init() {
 			}},
 			CHECK: {Name: "check", Help: "核算", Hand: func(m *ice.Message, arg ...string) {
 				if m.Option(ACCOUNT) == "" {
-					m.Cmd(ASSET).Table(func(index int, value map[string]string, head []string) {
+					m.Cmd(ASSET).Table(func(index int, value ice.Maps, head []string) {
 						_asset_check(m, value[ACCOUNT])
 					})
 					m.ProcessRefresh30ms()
@@ -98,7 +98,7 @@ func init() {
 				m.PushAction(CHECK)
 				m.SortIntR(AMOUNT)
 
-				m.Table(func(index int, value map[string]string, head []string) {
+				m.Table(func(index int, value ice.Maps, head []string) {
 					amount += kit.Int(value[AMOUNT])
 					count += kit.Int(value[COUNT])
 				})
@@ -106,7 +106,7 @@ func init() {
 			} else {
 				m.PushAction(mdb.PLUGIN)
 
-				m.Table(func(index int, value map[string]string, head []string) {
+				m.Table(func(index int, value ice.Maps, head []string) {
 					amount += kit.Int(value[AMOUNT])
 					count++
 				})

@@ -123,8 +123,8 @@ const (
 const FIELD = "field"
 
 func init() {
-	Index.Merge(&ice.Context{Commands: map[string]*ice.Command{
-		FIELD: {Name: "field [name] cmd", Help: "插件", Action: ice.MergeAction(map[string]*ice.Action{
+	Index.Merge(&ice.Context{Commands: ice.Commands{
+		FIELD: {Name: "field [name] cmd", Help: "插件", Actions: ice.MergeAction(ice.Actions{
 			ice.RUN: {Name: "run", Help: "执行"},
 		}, ctx.CmdAction()), Hand: func(m *ice.Message, arg ...string) {
 			if arg = _name(m, arg); strings.Contains(arg[1], ice.NL) {
@@ -135,7 +135,7 @@ func init() {
 			}
 			_field_show(m, arg[0], arg[1], arg[2:]...)
 		}},
-	}, Configs: map[string]*ice.Config{
+	}, Configs: ice.Configs{
 		FIELD: {Name: FIELD, Help: "插件", Value: kit.Data(
 			nfs.TEMPLATE, `<fieldset {{.OptionTemplate}}" data-meta='{{.Optionv "meta"|Format}}'>
 <legend>{{.Option "name"}}</legend>

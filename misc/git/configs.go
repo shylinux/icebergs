@@ -25,7 +25,7 @@ func _configs_list(m *ice.Message) {
 	}
 	m.Sort(mdb.NAME)
 
-	mdb.HashSelect(m.Spawn(ice.OptionFields("name,value"))).Table(func(index int, value map[string]string, head []string) {
+	mdb.HashSelect(m.Spawn(ice.OptionFields("name,value"))).Table(func(index int, value ice.Maps, head []string) {
 		m.Push("", value, head).PushButton(mdb.CREATE)
 	})
 }
@@ -33,7 +33,7 @@ func _configs_list(m *ice.Message) {
 const CONFIGS = "configs"
 
 func init() {
-	Index.Merge(&ice.Context{Configs: map[string]*ice.Config{
+	Index.Merge(&ice.Context{Configs: ice.Configs{
 		CONFIGS: {Name: CONFIGS, Help: "配置键", Value: kit.Data(
 			mdb.SHORT, mdb.NAME, ice.INIT, kit.Dict(
 				"alias", kit.Dict("s", "status", "b", "branch", "l", "log --oneline --decorate"),
@@ -42,8 +42,8 @@ func init() {
 				"push", kit.Dict("default", "simple"),
 				"color", kit.Dict("ui", "always"),
 			))},
-	}, Commands: map[string]*ice.Command{
-		CONFIGS: {Name: "configs name auto create import", Help: "配置键", Action: map[string]*ice.Action{
+	}, Commands: ice.Commands{
+		CONFIGS: {Name: "configs name auto create import", Help: "配置键", Actions: ice.Actions{
 			mdb.IMPORT: {Name: "import", Help: "初始化", Hand: func(m *ice.Message, arg ...string) {
 				kit.Fetch(m.Configv(ice.INIT), func(conf string, value ice.Any) {
 					kit.Fetch(value, func(key string, value string) { _configs_set(m, kit.Keys(conf, key), value) })

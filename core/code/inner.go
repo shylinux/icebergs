@@ -190,6 +190,11 @@ func init() {
 
 			// m.Option("plug", "web.chat.website,web.dream")
 			// m.Option("exts", "inner/search.js?a=1,inner/favor.js,inner/template.js")
+			// m.Option("tabs", "src/main.go,src/main.shy")
+			//
+			m.Option("plug", m.Config("show.plug"))
+			m.Option("exts", m.Config("show.exts"))
+			m.Option("tabs", m.Config("show.tabs"))
 
 			arg[1] = strings.Split(arg[1], ice.FS)[0]
 			if _inner_list(m, kit.Ext(arg[1]), arg[1], arg[0]); m.IsErrNotFound() {

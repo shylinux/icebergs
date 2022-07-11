@@ -149,7 +149,8 @@ func init() {
 				case nfs.FILE:
 					p := kit.Select(nfs.PWD, arg, 1)
 					m.Option(nfs.DIR_ROOT, m.Option(nfs.PATH))
-					m.Cmdy(nfs.DIR, kit.Select(path.Dir(p), p, strings.HasSuffix(p, ice.FS))+ice.PS, nfs.DIR_CLI_FIELDS).ProcessAgain()
+					m.Cmdy(nfs.DIR, kit.Select(path.Dir(p), p, strings.HasSuffix(p, ice.FS))+ice.PS, nfs.DIR_CLI_FIELDS)
+					m.ProcessAgain()
 				case "url":
 					m.Option(nfs.DIR_ROOT, "usr/volcanos/plugin/local/code/")
 					m.Cmdy(nfs.DIR, nfs.PWD, nfs.DIR_CLI_FIELDS, kit.Dict(nfs.DIR_DEEP, ice.TRUE)).ProcessAgain()

@@ -45,7 +45,15 @@ func _runtime_init(m *ice.Message) {
 
 	// 启动次数 boot
 	m.Conf(RUNTIME, kit.Keys(BOOT, mdb.COUNT), kit.Int(m.Conf(RUNTIME, kit.Keys(BOOT, mdb.COUNT)))+1)
-	m.Conf(RUNTIME, kit.Keys(BOOT, ice.BIN), _system_find(m, os.Args[0]))
+	bin := _system_find(m, os.Args[0])
+	m.Conf(RUNTIME, kit.Keys(BOOT, ice.BIN), bin)
+	if s, e := os.Stat(bin); e == nil {
+		m.Conf(RUNTIME, kit.Keys(BOOT, "size"), kit.FmtSize(s.Size()))
+		if f, e := os.Open(bin); e == nil {
+			defer f.Close()
+			m.Conf(RUNTIME, kit.Keys(BOOT, "hash"), kit.Hashs(f))
+		}
+	}
 
 	// 环境变量 conf
 	for _, k := range []string{CTX_SHY, CTX_DEV, CTX_OPS, CTX_ARG, CTX_PID, CTX_USER, CTX_SHARE, CTX_RIVER, CTX_DAEMON} {

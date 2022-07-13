@@ -82,6 +82,10 @@ func _go_doc(m *ice.Message, mod string, pkg string) *ice.Message {
 }
 
 func _go_exec(m *ice.Message, arg ...string) {
+	if m.Option("some") == "run" {
+		m.Cmdy(cli.SYSTEM, "./bin/ice.bin", ice.GetFileCmd(path.Join(arg[2], arg[1])))
+		return
+	}
 	if m.Option(mdb.TEXT) == "" {
 		if m.Option(nfs.LINE) == "1" {
 			m.Push(mdb.NAME, "package")

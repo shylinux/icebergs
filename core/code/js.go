@@ -15,6 +15,7 @@ import (
 func _js_main_script(m *ice.Message, arg ...string) (res []string) {
 	if res = append(res, kit.Format(`global.plugin = "%s"`, kit.Path(arg[2], arg[1]))); len(ice.Info.Pack) == 0 {
 		res = append(res, kit.Format(`require("%s")`, kit.Path("usr/volcanos/proto.js")))
+		res = append(res, kit.Format(`require("%s")`, kit.Path("usr/volcanos/publish/client/nodejs/proto.js")))
 	} else {
 		for _, file := range []string{"proto.js", "frame.js", "lib/base.js", "lib/core.js", "lib/misc.js", "lib/page.js", "publish/client/nodejs/proto.js"} {
 			res = append(res, `_can_name = "./`+file+`"`)
@@ -29,6 +30,14 @@ func _js_main_script(m *ice.Message, arg ...string) (res []string) {
 }
 
 func _js_exec(m *ice.Message, arg ...string) {
+	if m.Option("some") == "run" {
+		args := kit.Simple("node", "-e", kit.Join(_js_main_script(m, arg...), ice.NL))
+		m.Cmdy(cli.SYSTEM, args)
+		m.StatusTime("args", kit.Join([]string{"./bin/ice.bin", "web.code.js.js", "exec", path.Join(arg[2], arg[1])}, " "))
+		m.Debug(m.FormatsMeta())
+		return
+	}
+
 	if m.Option(mdb.NAME) == ice.PT {
 		switch m.Option(mdb.TYPE) {
 		case "msg":
@@ -70,11 +79,16 @@ func init() {
 					}
 				}
 				m.Display(path.Join("/require", path.Join(arg[2], arg[1])))
-				m.ProcessCommand(kit.Select("can.code.inner.plugin", key), kit.Simple())
+				m.ProcessCommand(kit.Select("can.code.inner._plugin", key), kit.Simple())
 			}},
 			mdb.ENGINE: {Hand: func(m *ice.Message, arg ...string) {
 				_js_exec(m, arg...)
 			}},
+			"exec": {Hand: func(m *ice.Message, arg ...string) {
+				m.Option("some", "run")
+				_js_exec(m, "", arg[0], "")
+			}},
+
 			mdb.SEARCH: {Hand: func(m *ice.Message, arg ...string) {
 				if arg[0] == mdb.FOREACH {
 					return

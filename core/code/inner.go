@@ -33,7 +33,7 @@ func _inner_exec(m *ice.Message, ext, file, dir string, arg ...string) {
 	if !m.Right(dir, file) {
 		return // 没有权限
 	}
-	defer m.StatusTime()
+	// defer m.StatusTime()
 	if m.Cmdy(mdb.ENGINE, ext, file, dir, arg); m.Result() != "" {
 		return // 执行成功
 	}

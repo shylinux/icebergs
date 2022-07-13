@@ -83,7 +83,10 @@ func _go_doc(m *ice.Message, mod string, pkg string) *ice.Message {
 
 func _go_exec(m *ice.Message, arg ...string) {
 	if m.Option("some") == "run" {
-		m.Cmdy(cli.SYSTEM, "./bin/ice.bin", ice.GetFileCmd(path.Join(arg[2], arg[1])))
+		args := []string{"./bin/ice.bin", ice.GetFileCmd(path.Join(arg[2], arg[1]))}
+		m.Cmdy(cli.SYSTEM, args)
+		m.StatusTime("args", kit.Join(args, " "))
+		m.Debug(m.FormatsMeta())
 		return
 	}
 	if m.Option(mdb.TEXT) == "" {

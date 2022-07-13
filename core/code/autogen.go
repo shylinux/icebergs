@@ -169,21 +169,22 @@ func init() {
 			mdb.INPUTS: {Name: "inputs", Help: "补全", Hand: func(m *ice.Message, arg ...string) {
 				switch arg[0] {
 				case cli.MAIN:
-					m.Cmdy(nfs.DIR, ice.SRC, nfs.DIR_CLI_FIELDS, kit.Dict(nfs.DIR_REG, `.*\.go`)).RenameAppend(nfs.PATH, arg[0])
+					m.Option(nfs.DIR_ROOT, ice.SRC)
+					m.Cmdy(nfs.DIR, nfs.PWD, nfs.DIR_CLI_FIELDS, kit.Dict(nfs.DIR_REG, `.*\.go`)).RenameAppend(nfs.PATH, arg[0])
 				}
 			}},
-			mdb.CREATE: {Name: "create main=src/main.go@key zone name=hi help type=Hash,Zone,Lists,Data,Code key", Help: "模块", Hand: func(m *ice.Message, arg ...string) {
+			mdb.CREATE: {Name: "create name=hi help type=Hash,Zone,Lists,Data,Code main=main.go@key zone key", Help: "模块", Hand: func(m *ice.Message, arg ...string) {
 				_defs(m, mdb.ZONE, m.Option(mdb.NAME), mdb.HELP, m.Option(mdb.NAME))
 				_defs(m, mdb.KEY, kit.Keys("web.code", m.Option(mdb.ZONE), m.Option(mdb.NAME)))
 				m.Option(mdb.TEXT, kit.Format("`name:\"%s\" help:\"%s\"`", _defs_list(m), m.Option(mdb.HELP)))
 
 				if p := path.Join(ice.SRC, m.Option(mdb.ZONE), kit.Keys(m.Option(mdb.NAME), GO)); !kit.FileExists(p) {
 					_autogen_module(m, p)
-					_autogen_import(m, m.Option(cli.MAIN), m.Option(mdb.ZONE), _autogen_mod(m, ice.GO_MOD))
+					_autogen_import(m, path.Join(ice.SRC, m.Option(cli.MAIN)), m.Option(mdb.ZONE), _autogen_mod(m, ice.GO_MOD))
 				}
 				if p := path.Join(ice.SRC, m.Option(mdb.ZONE), kit.Keys(m.Option(mdb.NAME), SHY)); !kit.FileExists(p) {
 					_autogen_script(m, p)
-					_autogen_source(m, m.Option(cli.MAIN), p)
+					_autogen_source(m, path.Join(ice.SRC, m.Option(cli.MAIN)), p)
 				}
 				m.Option(nfs.FILE, path.Join(m.Option(mdb.ZONE), kit.Keys(m.Option(mdb.NAME), GO)))
 				_autogen_version(m.Spawn())

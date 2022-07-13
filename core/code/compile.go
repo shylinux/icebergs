@@ -73,15 +73,15 @@ func init() {
 			_autogen_version(m.Spawn())
 			m.Cmd(cli.SYSTEM, GO, "get", "shylinux.com/x/ice")
 
-			cli.PushStream(m)
-
 			// 执行编译
+			cli.PushStream(m)
 			main, file, goos, arch := _compile_target(m, arg...)
 			m.Optionv(cli.CMD_ENV, kit.Simple(m.Configv(cli.ENV), cli.HOME, kit.Env(cli.HOME), cli.PATH, kit.Env(cli.PATH), cli.GOOS, goos, cli.GOARCH, arch))
 			if msg := m.Cmd(cli.SYSTEM, GO, cli.BUILD, "-o", file, main, ice.SRC_VERSION_GO, ice.SRC_BINPACK_GO); !cli.IsSuccess(msg) {
 				m.Copy(msg)
 				return
 			}
+			m.Option(cli.CMD_OUTPUT, "")
 
 			// 编译成功
 			m.Log_EXPORT(nfs.SOURCE, main, nfs.TARGET, file)

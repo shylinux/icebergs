@@ -79,18 +79,28 @@ func _vimer_inputs(m *ice.Message, arg ...string) {
 				m.Push(nfs.FILE, strings.ReplaceAll(file, ice.PT+ext, ice.PT+t))
 			}
 		}
-
 	case nfs.WEBSITE:
 		switch arg[0] {
 		case nfs.FILE:
 			m.Push(nfs.FILE, "hi.zml")
 			m.Push(nfs.FILE, "hi.iml")
 		}
-
 	case web.DREAM:
 		m.Cmdy(web.DREAM, mdb.INPUTS, arg)
 	case AUTOGEN:
 		m.Cmdy(AUTOGEN, mdb.INPUTS, arg)
+	default:
+		switch arg[0] {
+		case ctx.INDEX:
+			m.OptionFields(ctx.INDEX)
+			m.Cmdy(ctx.COMMAND, mdb.SEARCH, ctx.COMMAND, kit.Select("", arg, 1), "")
+		case nfs.FILE:
+			p := kit.Select(nfs.PWD, arg, 1)
+			m.Option(nfs.DIR_ROOT, m.Option(nfs.PATH))
+			m.Option(nfs.DIR_DEEP, strings.HasPrefix(m.Option(nfs.PATH), ice.SRC))
+			m.Cmdy(nfs.DIR, kit.Select(path.Dir(p), p, strings.HasSuffix(p, ice.FS))+ice.PS, nfs.DIR_CLI_FIELDS)
+			m.ProcessAgain()
+		}
 	}
 }
 

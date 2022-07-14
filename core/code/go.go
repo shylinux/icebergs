@@ -291,7 +291,8 @@ func init() {
 					"rune", "string", "byte", "uintptr",
 					"bool", "error", "chan", "map",
 				),
-				FUNCTION, kit.Simple("msg", "m",
+				FUNCTION, kit.Simple(
+					"msg", "m",
 					"init", "main", "print", "println", "panic", "recover",
 					"new", "make", "len", "cap", "copy", "append", "delete", "close",
 					"complex", "real", "imag",

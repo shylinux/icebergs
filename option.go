@@ -294,13 +294,13 @@ func (m *Message) MergeCmd(cmd string, arg ...Any) string {
 		cmd = m.PrefixKey()
 	}
 	if m.Option(MSG_USERPOD) == "" {
-		return kit.MergeURL2(kit.Select(Info.Domain, m.Option(MSG_USERWEB)), path.Join("/chat/cmd", cmd))
+		return kit.MergeURL2(kit.Select(Info.Domain, m.Option(MSG_USERWEB)), path.Join("/chat", "cmd", cmd))
 	}
-	return kit.MergeURL2(kit.Select(Info.Domain, m.Option(MSG_USERWEB)), path.Join("cmd", cmd), arg...)
+	return kit.MergeURL2(kit.Select(Info.Domain, m.Option(MSG_USERWEB)), path.Join("/chat", "pod", m.Option(MSG_USERPOD), "cmd", cmd), arg...)
 }
 func (m *Message) MergeWebsite(web string, arg ...Any) string {
 	if m.Option(MSG_USERPOD) == "" {
-		return kit.MergeURL2(kit.Select(Info.Domain, m.Option(MSG_USERWEB)), path.Join("/chat/website", web))
+		return kit.MergeURL2(kit.Select(Info.Domain, m.Option(MSG_USERWEB)), path.Join("/chat", "website", web))
 	}
-	return kit.MergeURL2(kit.Select(Info.Domain, m.Option(MSG_USERWEB)), path.Join("website", web), arg...)
+	return kit.MergeURL2(kit.Select(Info.Domain, m.Option(MSG_USERWEB)), path.Join("/chat", "pod", m.Option(MSG_USERPOD), "website", web), arg...)
 }

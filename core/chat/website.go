@@ -241,7 +241,7 @@ func init() {
 				})
 			}},
 		}, mdb.HashAction(mdb.SHORT, nfs.PATH, mdb.FIELD, "time,path,type,name,text")), Hand: func(m *ice.Message, arg ...string) {
-			mdb.HashSelect(m, arg...).Table(func(index int, value ice.Maps, head []string) { m.PushAnchor(m.MergeWebsite(value[nfs.PATH])) })
+			mdb.HashSelect(m, arg...).Tables(func(value ice.Maps) { m.PushAnchor(m.MergeWebsite(value[nfs.PATH])) })
 
 			if len(arg) == 0 { // 文件列表
 				m.Cmd(nfs.DIR, SRC_WEBSITE, func(f os.FileInfo, p string) {
@@ -259,7 +259,7 @@ func init() {
 				m.PushAnchor(m.MergeLink(m.Append(nfs.PATH)))
 			}
 
-			if m.FieldsIsDetail() { // 文件预览
+			if len(arg) > 0 { // 文件预览
 				m.PushQRCode(mdb.SCAN, m.MergeURL2(m.Append(nfs.PATH)))
 				m.EchoIFrame(m.Append(nfs.PATH))
 			}

@@ -18,7 +18,7 @@ func _js_main_script(m *ice.Message, arg ...string) (res []string) {
 		res = append(res, kit.Format(`require("%s")`, kit.Path("usr/volcanos/publish/client/nodejs/proto.js")))
 	} else {
 		for _, file := range []string{"proto.js", "frame.js", "lib/base.js", "lib/core.js", "lib/misc.js", "lib/page.js", "publish/client/nodejs/proto.js"} {
-			res = append(res, `_can_name = "./`+file+`"`)
+			res = append(res, `_can_name = "`+kit.Path(ice.USR_VOLCANOS, file)+`"`)
 			res = append(res, string(ice.Info.Pack[ice.PS+file]))
 		}
 	}

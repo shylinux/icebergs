@@ -119,10 +119,10 @@ go 1.11
 
 func _autogen_git(m *ice.Message, arg ...string) ice.Map {
 	return kit.Dict("Path", kit.Path(""), "Time", m.Time(), arg,
-		"Hash", strings.TrimSpace(m.Cmdx(cli.SYSTEM, "git", "log", "-n1", `--pretty=%H`)),
-		"Remote", strings.TrimSpace(m.Cmdx(cli.SYSTEM, "git", "config", "remote.origin.url")),
-		"Branch", strings.TrimSpace(m.Cmdx(cli.SYSTEM, "git", "rev-parse", "--abbrev-ref", "HEAD")),
-		"Version", strings.TrimSpace(m.Cmdx(cli.SYSTEM, "git", "describe", "--tags")),
+		"Hash", strings.TrimSpace(m.Cmdx(cli.SYSTEM, GIT, "log", "-n1", `--pretty=%H`)),
+		"Remote", strings.TrimSpace(m.Cmdx(cli.SYSTEM, GIT, "config", "remote.origin.url")),
+		"Branch", strings.TrimSpace(m.Cmdx(cli.SYSTEM, GIT, "rev-parse", "--abbrev-ref", "HEAD")),
+		"Version", strings.TrimSpace(m.Cmdx(cli.SYSTEM, GIT, "describe", "--tags")),
 		"Domain", m.Option(ice.MSG_USERWEB),
 	)
 }
@@ -136,8 +136,17 @@ func _autogen_gits(m *ice.Message, arg ...string) string {
 func _autogen_version(m *ice.Message) {
 	if mod := _autogen_mod(m, ice.GO_MOD); !kit.FileExists(".git") {
 		m.Cmdy(cli.SYSTEM, GIT, ice.INIT)
-		m.Cmdy(cli.SYSTEM, GIT, "remote", "add", "origin", "https://"+mod)
-		m.Cmd("web.code.git.repos", mdb.CREATE, "repos", "https://"+mod, "name", path.Base(mod), "path", "./")
+		m.Cmd(cli.SYSTEM, GIT, "remote", "add", "origin", "https://"+mod)
+		m.Cmd("web.code.git.repos", mdb.CREATE, "repos", "https://"+mod, mdb.NAME, path.Base(mod), nfs.PATH, nfs.PWD)
+		m.Cmd(cli.SYSTEM, GIT, "add", ice.GO_MOD, ice.SRC, ice.ETC_MISS_SH)
+		m.Cmd(nfs.DEFS, ".gitignore", kit.Format(`src/binpack.go
+src/version.go
+etc/
+bin/
+var/
+usr/
+.*
+`))
 	}
 
 	m.Cmd(nfs.DEFS, ice.SRC_BINPACK_GO, kit.Format(`package main

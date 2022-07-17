@@ -31,7 +31,7 @@ Volcanos("onimport", {help: "导入数据", _init: function(can, msg) {
 }})
 `,
 		nfs.ZML, `
-left
+{
 	username
 	系统
 		命令 index cli.system
@@ -45,7 +45,7 @@ left
 		数据 index hi/hi.py
 		后端 index hi/hi.go
 		前端 index hi/hi.js
-main
+}
 `,
 		nfs.IML, `
 系统

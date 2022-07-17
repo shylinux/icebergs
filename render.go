@@ -247,6 +247,12 @@ func (m *Message) DisplayBase(file string, arg ...Any) *Message {
 	m.Option(MSG_DISPLAY, kit.MergeURL(DisplayBase(file)[DISPLAY], arg...))
 	return m
 }
+func (m *Message) DisplayTable(arg ...Any) *Message { // /plugin/story/file
+	return m.Display(kit.MergeURL("/plugin/table.js", arg...))
+}
+func (m *Message) DisplayTableCard(arg ...Any) *Message { // /plugin/story/file
+	return m.Display(kit.MergeURL("/plugin/table.js", "style", "card"))
+}
 func (m *Message) DisplayStory(file string, arg ...Any) *Message { // /plugin/story/file
 	if !strings.HasPrefix(file, HTTP) && !strings.HasPrefix(file, PS) {
 		file = path.Join(PLUGIN_STORY, file)

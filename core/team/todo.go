@@ -9,7 +9,7 @@ import (
 const TODO = "todo"
 
 func init() {
-	Index.Merge(&ice.Context{Commands: ice.Commands{
+	Index.MergeCommands(ice.Commands{
 		TODO: {Name: "todo hash list create export import", Help: "待办", Actions: ice.MergeAction(ice.Actions{
 			mdb.INPUTS: {Name: "inputs", Help: "补全", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmdy(mdb.INPUTS, m.PrefixKey(), "", mdb.HASH, arg)
@@ -25,5 +25,5 @@ func init() {
 			mdb.HashSelect(m, arg...).PushAction(cli.START, mdb.REMOVE)
 			m.PushPodCmd(m.CommandKey(), arg...)
 		}},
-	}})
+	})
 }

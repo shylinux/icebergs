@@ -39,7 +39,7 @@ func init() {
 					m.Cmd(web.DREAM, cli.START, mdb.NAME, arg[0])
 				}
 				aaa.UserRoot(m)
-				if m.RenderWebsite(arg[0], "index.iml", "Header", "", "River", "", "Action", "", "Footer", ""); m.Result() == "" {
+				if m.RenderWebsite(arg[0], "index.iml", "Header", "", "River", "", "Footer", ""); m.Result() == "" {
 					m.RenderIndex(web.SERVE, ice.VOLCANOS)
 				}
 

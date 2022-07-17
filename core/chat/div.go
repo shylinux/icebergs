@@ -13,10 +13,9 @@ import (
 )
 
 func _div_parse(m *ice.Message, text string) string {
-	m.Option(nfs.CAT_CONTENT, text)
-	return m.Cmdx(lex.SPLIT, "", "index", "args", func(ls []string, meta ice.Map) []string {
-		if ls[0] == "div" {
-			ls = append([]string{"", "", "style", kit.Select("div", ls, 1)}, kit.Slice(ls, 2)...)
+	return m.Cmdx(lex.SPLIT, "", ctx.INDEX, ctx.ARGS, kit.Dict(nfs.CAT_CONTENT, text), func(deep int, ls []string) []string {
+		if ls[0] == DIV {
+			ls = append([]string{"", "", ctx.STYLE, kit.Select(DIV, ls, 1)}, kit.Slice(ls, 2)...)
 		}
 		return ls
 	})
@@ -47,34 +46,39 @@ func init() {
 		}},
 		DIV: {Name: "div hash auto import", Help: "定制", Actions: ice.MergeAction(ice.Actions{
 			lex.SPLIT: {Name: "split name=hi text", Help: "生成", Hand: func(m *ice.Message, arg ...string) {
-				h := m.Cmdx(DIV, mdb.CREATE, m.OptionSimple(mdb.NAME), mdb.TEXT, _div_parse(m, m.Option(mdb.TEXT)))
-				m.ProcessRewrite(mdb.HASH, h)
+				m.ProcessRewrite(mdb.HASH, m.Cmdx(DIV, mdb.CREATE, m.OptionSimple(mdb.NAME), mdb.TEXT, _div_parse(m, m.Option(mdb.TEXT))))
 			}},
 			mdb.INPUTS: {Name: "inputs", Help: "补全", Hand: func(m *ice.Message, arg ...string) {
 				switch arg[0] {
 				case nfs.PATH:
 					m.Cmdy(nfs.DIR, arg[1:]).ProcessAgain()
+				case ctx.INDEX:
+					m.OptionFields(mdb.INDEX)
+					m.Cmdy(ctx.COMMAND, mdb.SEARCH, ctx.COMMAND, "", "")
+				case ctx.STYLE:
+					m.Push(arg[0], "div")
+					m.Push(arg[0], "span")
+					m.Push(arg[0], "output")
 				}
 			}},
 			mdb.CREATE: {Name: "create type=page name=hi text", Help: "创建"},
 			mdb.IMPORT: {Name: "import path=src/", Help: "导入", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmd(nfs.DIR, kit.Dict(nfs.DIR_ROOT, m.Option(nfs.PATH)), func(p string) {
 					switch kit.Ext(p) {
-					case "shy":
+					case nfs.SHY:
 						m.Cmd(m.PrefixKey(), lex.SPLIT, mdb.NAME, p, mdb.TEXT, m.Cmdx(nfs.CAT, p))
 					}
 				})
 			}},
 		}, mdb.HashAction(), ctx.CmdAction()), Hand: func(m *ice.Message, arg ...string) {
 			switch kit.Ext(kit.Select("", arg, 0)) {
-			case "shy":
+			case nfs.SHY:
 				m.Fields(0)
-				m.Push(mdb.TEXT, _div_parse(m, m.Cmdx(nfs.CAT, arg[0])))
-				m.DisplayLocal("")
+				m.Push(mdb.TEXT, _div_parse(m, m.Cmdx(nfs.CAT, arg[0]))).DisplayLocal("")
 			default:
 				if mdb.HashSelect(m, arg...); len(arg) > 0 {
-					m.Action("添加", "保存", "预览")
-					m.DisplayLocal("")
+					m.Action("添加", "保存").DisplayLocal("")
+					m.StatusTime(mdb.LINK, m.MergeLink("/chat/div/"+arg[0]))
 				} else {
 					m.Action(lex.SPLIT, mdb.CREATE)
 				}

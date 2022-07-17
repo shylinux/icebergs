@@ -305,7 +305,7 @@ func init() {
 							msg := m.Spawn(SERVE, w, r)
 							repos := kit.Select(ice.INTSHELL, ice.VOLCANOS, strings.Contains(r.Header.Get("User-Agent"), "Mozilla/5.0"))
 							if repos == ice.VOLCANOS {
-								if s := msg.Cmdx("web.chat.website", lex.PARSE, "index.iml", "Header", "", "River", ""); s != "" {
+								if s := msg.Cmdx("web.chat.website", lex.PARSE, "index.iml", "Header", "", "River", "", "Footer", ""); s != "" {
 									Render(msg, ice.RENDER_RESULT, s)
 									return true // 定制主页
 								}

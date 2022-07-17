@@ -82,6 +82,9 @@ func init() {
 			ice.PLAY: {Name: "play", Help: "演示"},
 		}, ctx.CmdAction(), mdb.HashAction()), Hand: func(m *ice.Message, arg ...string) {
 			m.Option(nfs.DIR_REG, m.Config(lex.REGEXP))
+			if len(arg) == 0 {
+				arg = append(arg, "src/")
+			}
 			if m.Option(nfs.DIR_DEEP, ice.TRUE); !_wiki_list(m, m.CommandKey(), arg...) {
 				if !kit.FileExists(arg[0]) && kit.FileExists(path.Join("src", arg[0])) {
 					arg[0] = path.Join("src/", arg[0])

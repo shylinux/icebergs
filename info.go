@@ -111,7 +111,7 @@ func GetFileCmd(dir string) string {
 	if strings.HasPrefix(dir, "require/") {
 		dir = "/" + dir
 	}
-	for _, dir := range []string{dir, "/require/" + Info.Make.Module + "/" + dir, "/require/" + Info.Make.Module + "/src/" + dir} {
+	for _, dir := range []string{dir, path.Join("/require/", Info.Make.Module, dir), path.Join("/require/", Info.Make.Module, SRC, dir)} {
 		if cmd, ok := Info.File[FileCmd(dir)]; ok {
 			return cmd
 		}

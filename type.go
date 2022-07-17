@@ -117,6 +117,9 @@ func (c *Context) Register(s *Context, x Server, n ...string) *Context {
 	s.server = x
 	return s
 }
+func (c *Context) MergeCommands(Commands Commands) *Context {
+	return c.Merge(&Context{Commands: Commands})
+}
 func (c *Context) Merge(s *Context) *Context {
 	if c.Commands == nil {
 		c.Commands = map[string]*Command{}

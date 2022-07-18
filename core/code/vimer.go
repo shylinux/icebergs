@@ -82,8 +82,9 @@ func _vimer_inputs(m *ice.Message, arg ...string) {
 	case nfs.WEBSITE:
 		switch arg[0] {
 		case nfs.FILE:
-			m.Push(nfs.FILE, "hi.zml")
-			m.Push(nfs.FILE, "hi.iml")
+			name := kit.TrimExt(kit.Select("hi.zml", arg, 1), "")
+			m.Push(nfs.FILE, name+".zml")
+			m.Push(nfs.FILE, name+".iml")
 		}
 	case web.DREAM:
 		m.Cmdy(web.DREAM, mdb.INPUTS, arg)

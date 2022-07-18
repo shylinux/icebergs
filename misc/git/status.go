@@ -218,7 +218,15 @@ func init() {
 					for _, v := range kit.Split(m.Option(nfs.FILE), " /") {
 						m.Push(mdb.TEXT, v)
 					}
+				case "email":
+					m.Push(arg[0], m.Cmdx(cli.SYSTEM, GIT, "config", "user.email"))
+				case "username":
+					m.Push(arg[0], kit.Select(m.Option(ice.MSG_USERNAME), m.Cmdx(cli.SYSTEM, GIT, "config", "user.name")))
 				}
+			}},
+			"user": {Name: "user email username", Help: "用户", Hand: func(m *ice.Message, arg ...string) {
+				m.Cmd(cli.SYSTEM, GIT, "config", "--global", "user.email", m.Option("email"))
+				m.Cmd(cli.SYSTEM, GIT, "config", "--global", "user.name", m.Option("username"))
 			}},
 			CLONE: {Name: "clone repos='https://shylinux.com/x/volcanos' path=", Help: "克隆", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmdy(REPOS, mdb.CREATE)
@@ -310,7 +318,7 @@ func init() {
 			}},
 		}, Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) == 0 {
-				m.Action(PULL, MAKE, PUSH, TAGS, STASH, PIE, "publish")
+				m.Action(PULL, MAKE, PUSH, TAGS, STASH, PIE, "publish", "user")
 
 				files, adds, dels, last := _status_list(m)
 				m.Status("files", files, "adds", adds, "dels", dels, "last", last.Format(ice.MOD_TIME))

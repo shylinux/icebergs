@@ -118,11 +118,11 @@ func _website_parse(m *ice.Message, text string, args ...string) (ice.Map, bool)
 	})
 	return river, true
 }
-func _website_render(m *ice.Message, w http.ResponseWriter, r *http.Request, kind, text string) bool {
+func _website_render(m *ice.Message, w http.ResponseWriter, r *http.Request, kind, text, name string) bool {
 	msg := m.Spawn(w, r)
 	switch kind {
 	case nfs.ZML:
-		msg.RenderCmd("can.parse", text)
+		msg.RenderCmd("can.parse", text, name)
 	case nfs.IML:
 		res, _ := _website_parse(msg, text)
 		msg.RenderResult(_website_template2, kit.Format(res))
@@ -174,12 +174,12 @@ func init() {
 					}
 					if ok := true; m.Richs(WEBSITE, nil, r.URL.Path, func(key string, value ice.Map) {
 						value = kit.GetMeta(value)
-						ok = _website_render(m, w, r, kit.Format(value[mdb.TYPE]), kit.Format(value[mdb.TEXT]))
+						ok = _website_render(m, w, r, kit.Format(value[mdb.TYPE]), kit.Format(value[mdb.TEXT]), path.Base(r.URL.Path))
 					}) != nil && ok {
 						return true
 					}
 					if strings.HasPrefix(r.URL.Path, CHAT_WEBSITE) {
-						_website_render(m, w, r, kit.Ext(r.URL.Path), m.Cmdx(nfs.CAT, strings.Replace(r.URL.Path, CHAT_WEBSITE, SRC_WEBSITE, 1)))
+						_website_render(m, w, r, kit.Ext(r.URL.Path), m.Cmdx(nfs.CAT, strings.Replace(r.URL.Path, CHAT_WEBSITE, SRC_WEBSITE, 1)), path.Base(r.URL.Path))
 						return true
 					}
 					return false
@@ -242,7 +242,6 @@ func init() {
 			}},
 		}, mdb.HashAction(mdb.SHORT, nfs.PATH, mdb.FIELD, "time,path,type,name,text")), Hand: func(m *ice.Message, arg ...string) {
 			mdb.HashSelect(m, arg...).Tables(func(value ice.Maps) { m.PushAnchor(m.MergeWebsite(value[nfs.PATH])) })
-
 			if len(arg) == 0 { // 文件列表
 				m.Cmd(nfs.DIR, SRC_WEBSITE, func(f os.FileInfo, p string) {
 					m.Push("", kit.Dict(

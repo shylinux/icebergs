@@ -226,7 +226,7 @@ func init() {
 					kit.Formats(kit.Dict(m.OptionSimple("username,host,port,list"))))
 			}},
 		}, Hand: func(m *ice.Message, arg ...string) {
-			m.Cmdy(nfs.CAT, arg[0], kit.Dict(nfs.DIR_ROOT, ice.SRC))
+			m.Cmdy(nfs.CAT, kit.Select("version.go", arg, 0), kit.Dict(nfs.DIR_ROOT, ice.SRC))
 		}},
 	}})
 }

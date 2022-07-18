@@ -299,6 +299,7 @@ func init() {
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
 				cli.NodeInfo(m, WORKER, ice.Info.PathName)
 				AddRewrite(func(w http.ResponseWriter, r *http.Request) bool {
+					w.Header().Add("Access-Control-Allow-Origin", "*")
 					if r.Method == SPIDE_GET {
 						switch r.URL.Path {
 						case ice.PS:

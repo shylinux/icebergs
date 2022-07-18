@@ -55,7 +55,7 @@ func init() {
 				m.Cmdy(mdb.INPUTS, m.PrefixKey(), "", mdb.ZONE, arg)
 			}},
 			"choose": {Name: "choose", Help: "切换", Hand: func(m *ice.Message, arg ...string) {
-				m.ProcessLocation(m.MergeURL2("", "topic", kit.TrimExt(m.Option(mdb.ZONE), ".css")))
+				m.ProcessLocation(m.MergeURL2("", "topic", kit.TrimExt(m.Option(mdb.ZONE), nfs.CSS)))
 			}},
 			"create": {Name: "create topic=demo hover=gray float=lightgray color=black background=white", Help: "创建", Hand: func(m *ice.Message, arg ...string) {
 				buf, err := kit.Render(`
@@ -141,7 +141,7 @@ body.{{.Option "topic"}} fieldset.panel.Header>div.output div:hover { background
 				m.RenderDownload(p)
 				return
 			}
-			m.Cmdy(m.CommandKey(), kit.TrimExt(kit.Select("black", arg, 0), ".css"))
+			m.Cmdy(m.CommandKey(), kit.TrimExt(kit.Select("black", arg, 0), nfs.CSS))
 			m.W.Header()[web.ContentType] = kit.Simple(web.ContentCSS)
 			m.RenderResult()
 		}},

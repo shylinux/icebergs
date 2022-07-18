@@ -63,7 +63,7 @@ func init() {
 	Index.Merge(&ice.Context{Configs: ice.Configs{
 		PUBLISH: {Name: PUBLISH, Help: "发布", Value: kit.Data(nfs.PATH, ice.USR_PUBLISH, ice.CONTEXTS, _contexts)},
 	}, Commands: ice.Commands{
-		PUBLISH: {Name: "publish path auto create volcanos icebergs intshell export", Help: "发布", Actions: ice.Actions{
+		PUBLISH: {Name: "publish path auto create volcanos icebergs intshell", Help: "发布", Actions: ice.Actions{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
 				m.Cmd(aaa.ROLE, aaa.WHITE, aaa.VOID, m.Config(nfs.PATH))
 				m.Cmd(aaa.ROLE, aaa.WHITE, aaa.VOID, m.PrefixKey())

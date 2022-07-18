@@ -5,6 +5,7 @@ import (
 
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/mdb"
+	"shylinux.com/x/icebergs/base/web"
 	kit "shylinux.com/x/toolkits"
 )
 
@@ -42,6 +43,8 @@ func init() {
 			GETLOCATION:  {Name: "location create", Help: "打卡"},
 			mdb.CREATE:   {Name: "create type=text name text latitude longitude", Help: "添加"},
 		}, mdb.HashAction()), Hand: func(m *ice.Message, arg ...string) {
+			m.Debug("what %v", m.Cmdx(web.SPIDE_GET, "https://apis.map.qq.com/ws/location/v1/ip?ip=111.206.145.41&key="+m.Config("token")))
+			m.Display("/plugin/local/chat/location.js", "token", m.Config("token"))
 			mdb.HashSelect(m, arg...)
 			m.PushAction(OPENLOCATION, mdb.REMOVE)
 		}},

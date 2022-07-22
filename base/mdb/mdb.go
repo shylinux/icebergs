@@ -191,6 +191,11 @@ var Index = &ice.Context{Name: MDB, Help: "数据模块", Commands: ice.Commands
 		}
 	}},
 	INPUTS: {Name: "inputs key sub type field value", Help: "补全", Hand: func(m *ice.Message, arg ...string) {
+		switch arg[3] {
+		case "index":
+			m.OptionFields(arg[3])
+			m.Cmdy("command", "search", "command")
+		}
 		switch arg[2] {
 		case ZONE: // inputs key sub type zone field value
 			_list_inputs(m, arg[0], _domain_chain(m, kit.Keys(arg[1], kit.KeyHash(arg[3]))), kit.Select(NAME, arg, 4), kit.Select("", arg, 5))

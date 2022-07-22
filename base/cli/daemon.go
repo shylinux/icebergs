@@ -1,6 +1,7 @@
 package cli
 
 import (
+	"io"
 	"os/exec"
 
 	ice "shylinux.com/x/icebergs"
@@ -11,6 +12,9 @@ import (
 )
 
 func _daemon_exec(m *ice.Message, cmd *exec.Cmd) {
+	if r, ok := m.Optionv(CMD_INPUT).(io.Reader); ok {
+		cmd.Stdin = r
+	}
 	if w := _system_out(m, CMD_OUTPUT); w != nil {
 		cmd.Stdout = w
 		cmd.Stderr = w

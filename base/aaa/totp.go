@@ -49,6 +49,8 @@ const (
 	SECRET = "secret"
 	PERIOD = "period"
 	NUMBER = "number"
+
+	TOKEN = "token"
 )
 const TOTP = "totp"
 

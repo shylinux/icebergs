@@ -80,8 +80,9 @@ func CmdAction(args ...ice.Any) ice.Actions {
 			}
 		}},
 		ice.RUN: {Name: "run", Help: "执行", Hand: func(m *ice.Message, arg ...string) {
-			if len(arg) > 3 && arg[1] == "action" && arg[2] == "config" && arg[3] == "reset" {
-				m.Cmd("config", "reset", arg[0])
+			if len(arg) > 3 && arg[1] == ACTION && arg[2] == CONFIG && arg[3] == "reset" {
+				m.Cmd(CONFIG, "reset", arg[0])
+				return
 			}
 			if m.Right(arg) && !m.PodCmd(arg) {
 				m.Cmdy(arg)

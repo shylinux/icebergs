@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"os"
 	"path"
+	"strings"
 
 	ice "shylinux.com/x/icebergs"
 	kit "shylinux.com/x/toolkits"
@@ -147,7 +148,7 @@ const HASH = "hash"
 
 func AutoConfig(args ...ice.Any) *ice.Action {
 	return &ice.Action{Hand: func(m *ice.Message, arg ...string) {
-		if cs := m.Target().Configs; cs[m.CommandKey()] == nil {
+		if cs := m.Target().Configs; cs[m.CommandKey()] == nil && len(args) > 0 {
 			cs[m.CommandKey()] = &ice.Config{Value: kit.Data(args...)}
 			m.Load(m.CommandKey())
 		}
@@ -166,17 +167,14 @@ func AutoConfig(args ...ice.Any) *ice.Action {
 			return
 		}
 
-		m.Debug("what %v %v", m.CommandKey(), cs[m.CommandKey()].Actions[INSERT])
 		if cs[m.CommandKey()].Actions[INSERT] != nil {
 			if cs[m.CommandKey()].Meta[INSERT] == nil {
 				m.Design(INSERT, "添加", append([]ice.Any{ZONE}, inputs...)...)
 			}
-			m.Debug("what %v %v", m.CommandKey(), cs[m.CommandKey()].Actions[INSERT])
 		} else if cs[m.CommandKey()].Actions[CREATE] != nil {
 			if cs[m.CommandKey()].Meta[CREATE] == nil {
 				m.Design(CREATE, "创建", inputs...)
 			}
-			m.Debug("what %v %v", m.CommandKey(), cs[m.CommandKey()].Actions[INSERT])
 		}
 	}}
 }
@@ -203,6 +201,12 @@ func HashAction(args ...ice.Any) ice.Actions {
 			m.Event(kit.Keys(m.CommandKey(), REMOVE), m.CommandKey(), m.Option(m.Config(SHORT)))
 		}},
 		MODIFY: {Name: "modify", Help: "编辑", Hand: func(m *ice.Message, arg ...string) {
+			field := m.Config(FIELD)
+			for i := 0; i < len(arg); i += 2 {
+				if !strings.Contains(field, arg[i]) {
+					arg[i] = kit.Keys("extra", arg[i])
+				}
+			}
 			m.Cmdy(MODIFY, m.PrefixKey(), "", HASH, m.OptionSimple(_key(m)), arg)
 		}},
 		EXPORT: {Name: "export", Help: "导出", Hand: func(m *ice.Message, arg ...string) {

@@ -7,7 +7,7 @@ import (
 	"syscall"
 	"unsafe"
 
-	"github.com/kr/pty"
+	"github.com/creack/pty"
 	"golang.org/x/crypto/ssh"
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/cli"

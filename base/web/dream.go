@@ -19,7 +19,7 @@ func _dream_list(m *ice.Message) *ice.Message {
 		if m.Richs(SPACE, nil, value[mdb.NAME], func(key string, val ice.Map) {
 			m.Push(mdb.TYPE, val[mdb.TYPE])
 			m.Push(cli.STATUS, cli.START)
-			m.PushButton("vimer", cli.OPEN, cli.STOP)
+			m.PushButton("vimer", "xterm", cli.OPEN, cli.STOP)
 			m.PushAnchor(strings.Split(m.MergePod(value[mdb.NAME]), "?")[0])
 		}) == nil {
 			m.Push(mdb.TYPE, WORKER)
@@ -122,6 +122,9 @@ func init() {
 			}},
 			"vimer": {Name: "vimer", Help: "编辑", Hand: func(m *ice.Message, arg ...string) {
 				m.ProcessOpen(m.MergePod(m.Option(mdb.NAME)+"/cmd/web.code.vimer", "", ""))
+			}},
+			"xterm": {Name: "xterm", Help: "命令", Hand: func(m *ice.Message, arg ...string) {
+				m.ProcessOpen(m.MergePod(m.Option(mdb.NAME)+"/cmd/web.code.xterm", "", ""))
 			}},
 			cli.STOP: {Name: "stop", Help: "停止", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmd(SPACE, mdb.MODIFY, m.OptionSimple(mdb.NAME), mdb.STATUS, cli.STOP)

@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/url"
+	"os"
 	"path"
 	"strings"
 
@@ -389,6 +390,13 @@ func init() {
 		}},
 		"/require/usr/": {Name: "/require/usr/", Help: "代码库", Hand: func(m *ice.Message, arg ...string) {
 			m.RenderDownload(path.Join(ice.USR, path.Join(arg...)))
+		}},
+		"/require/node_modules/": {Name: "/require/node_modules/", Help: "依赖库", Hand: func(m *ice.Message, arg ...string) {
+			p := path.Join(ice.USR_VOLCANOS, "node_modules", path.Join(arg...))
+			if _, e := os.Stat(p); e != nil {
+				m.Cmd(cli.SYSTEM, "npm", "install", arg[0], kit.Dict(cli.CMD_DIR, ice.USR_VOLCANOS))
+			}
+			m.RenderDownload(p)
 		}},
 		"/require/": {Name: "/require/", Help: "代码库", Hand: func(m *ice.Message, arg ...string) {
 			_share_repos(m, path.Join(arg[0], arg[1], arg[2]), arg[3:]...)

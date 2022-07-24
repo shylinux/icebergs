@@ -190,6 +190,7 @@ func init() {
 		}},
 
 		SHARE_TOAST: {Name: "/share/toast/", Help: "推送流", Hand: func(m *ice.Message, arg ...string) {
+			m.Optionv(ice.MSG_OPTS, kit.Simple("hash"))
 			m.Cmdy(SPACE, m.Option(ice.POD), m.Optionv("cmds"))
 		}},
 		SHARE_CACHE: {Name: "/share/cache/", Help: "缓存池", Hand: func(m *ice.Message, arg ...string) {

@@ -184,7 +184,7 @@ func (m *Message) PushNotice(arg ...Any) {
 	if m.Option(MSG_USERPOD) == "" {
 		m.Cmd(SPACE, m.Option(MSG_DAEMON), arg)
 	} else {
-		m.Cmd("web.spide", OPS, m.MergeURL2("/share/toast/"), kit.Format(kit.Dict(POD, m.Option(MSG_DAEMON), "cmds", kit.Simple(arg...))))
+		m.Cmd("web.spide", OPS, m.MergeURL2("/share/toast/"), kit.Format(kit.Dict("hash", m.Option("hash"), POD, m.Option(MSG_DAEMON), "cmds", kit.Simple(arg...))))
 	}
 }
 func (m *Message) PushNoticeGrow(arg ...Any) {

@@ -214,7 +214,9 @@ func ZoneSelect(m *ice.Message, arg ...string) *ice.Message {
 	arg = kit.Slice(arg, 0, 2)
 	m.Fields(len(arg), kit.Fields(TIME, m.Config(SHORT), COUNT), m.Config(FIELD))
 	if m.Cmdy(SELECT, m.PrefixKey(), "", ZONE, arg); kit.Select("", arg, 0) == "" {
-		m.Sort(m.Config(SHORT))
+		if m.Config(SHORT) != "" {
+			m.Sort(m.Config(SHORT))
+		}
 		m.PushAction(REMOVE)
 	}
 	if len(arg) == 0 {

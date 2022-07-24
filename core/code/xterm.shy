@@ -1,0 +1,7 @@
+section "xterm.js"
+refer `
+官网 https://xtermjs.org/
+源码 https://github.com/xtermjs/xterm.js
+文档 https://xtermjs.org/docs/api/terminal/classes/terminal/
+接口 https://github.com/xtermjs/xterm.js/blob/4.14.1/typings/xterm.d.ts#L619
+`

@@ -393,7 +393,9 @@ func init() {
 		}},
 		"/require/node_modules/": {Name: "/require/node_modules/", Help: "依赖库", Hand: func(m *ice.Message, arg ...string) {
 			p := path.Join(ice.USR_VOLCANOS, "node_modules", path.Join(arg...))
-			if _, e := os.Stat(p); e != nil {
+			if b, ok := ice.Info.Pack[p]; ok && len(b) > 0 {
+
+			} else if _, e := os.Stat(p); e != nil {
 				m.Cmd(cli.SYSTEM, "npm", "install", arg[0], kit.Dict(cli.CMD_DIR, ice.USR_VOLCANOS))
 			}
 			m.RenderDownload(p)

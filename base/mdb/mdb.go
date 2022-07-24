@@ -211,6 +211,9 @@ var Index = &ice.Context{Name: MDB, Help: "数据模块", Commands: ice.Commands
 			_list_prunes(m, arg[0], _domain_chain(m, kit.Keys(arg[1], kit.KeyHash(arg[3]))), arg[4:]...)
 		case HASH:
 			_hash_prunes(m, arg[0], _domain_chain(m, arg[1]), arg[3:]...)
+			m.Tables(func(value ice.Maps) {
+				_hash_delete(m, arg[0], _domain_chain(m, arg[1]), HASH, value[HASH])
+			})
 		case LIST:
 			_list_prunes(m, arg[0], _domain_chain(m, arg[1]), arg[3:]...)
 		}

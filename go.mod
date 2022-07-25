@@ -5,6 +5,6 @@ go 1.11
 require (
 	shylinux.com/x/creackpty v0.0.1
 	shylinux.com/x/go-qrcode v0.0.1
-	shylinux.com/x/toolkits v0.6.2
+	shylinux.com/x/toolkits v0.6.3
 	shylinux.com/x/websocket v0.0.1
 )

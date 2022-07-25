@@ -29,7 +29,7 @@ func init() {
 		TOTAL: {Name: "total repos auto pie", Help: "统计量", Actions: ice.Actions{
 			PIE: {Name: "pie", Help: "饼图", Hand: func(m *ice.Message, arg ...string) {
 				defer m.Display("/plugin/story/pie.js")
-				m.Cmd(TOTAL).Table(func(index int, value ice.Maps, head []string) {
+				m.Cmd(TOTAL).Tables(func(value ice.Maps) {
 					if value[REPOS] == "total" {
 						m.StatusTimeCount(REPOS, "total", "value", "1", "total", value["rest"])
 						return
@@ -41,7 +41,7 @@ func init() {
 		}, Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) > 0 { // 提交详情
 				arg[0] = kit.Replace(arg[0], "src", "contexts")
-				m.Cmd(REPOS, ice.OptionFields("name,path")).Table(func(index int, value ice.Maps, head []string) {
+				m.Cmd(REPOS, ice.OptionFields("name,path")).Tables(func(value ice.Maps) {
 					if value[REPOS] == arg[0] {
 						m.Cmdy("_sum", value[nfs.PATH], arg[1:])
 					}
@@ -62,7 +62,7 @@ func init() {
 				mu.Lock()
 				defer mu.Unlock()
 
-				msg.Table(func(index int, value ice.Maps, head []string) {
+				msg.Tables(func(value ice.Maps) {
 					if kit.Int(value["days"]) > days {
 						days = kit.Int(value["days"])
 					}

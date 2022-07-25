@@ -31,7 +31,7 @@ func _ssh_config(m *ice.Message, h string) *ssh.ServerConfig {
 				m.Log_AUTH(tcp.HOSTPORT, conn.RemoteAddr(), aaa.USERNAME, conn.User())
 				err = nil // 本机用户
 			} else {
-				m.Cmd(mdb.SELECT, SERVICE, kit.Keys(mdb.HASH, h), mdb.LIST).Table(func(index int, value ice.Maps, head []string) {
+				m.Cmd(mdb.SELECT, SERVICE, kit.Keys(mdb.HASH, h), mdb.LIST).Tables(func(value ice.Maps) {
 					if !strings.HasPrefix(value[mdb.NAME], conn.User()+"@") {
 						return
 					}
@@ -135,7 +135,7 @@ func init() {
 			}},
 			mdb.EXPORT: {Name: "export authkey=.ssh/authorized_keys", Help: "导出", Hand: func(m *ice.Message, arg ...string) {
 				list := []string{}
-				m.Cmd(mdb.SELECT, SERVICE, kit.Keys(mdb.HASH, kit.Hashs(m.Option(tcp.PORT))), mdb.LIST).Table(func(index int, value ice.Maps, head []string) {
+				m.Cmd(mdb.SELECT, SERVICE, kit.Keys(mdb.HASH, kit.Hashs(m.Option(tcp.PORT))), mdb.LIST).Tables(func(value ice.Maps) {
 					list = append(list, fmt.Sprintf("%s %s %s", value[mdb.TYPE], value[mdb.TEXT], value[mdb.NAME]))
 				})
 

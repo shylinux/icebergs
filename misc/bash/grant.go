@@ -23,7 +23,7 @@ func init() {
 			if m.Cmdy(SESS, arg); len(arg) > 0 && m.Append("grant") == "" {
 				m.Process("_confirm", "授权设备")
 			}
-			m.Table(func(index int, value ice.Maps, head []string) {
+			m.Tables(func(value ice.Maps) {
 				if value["grant"] == "" {
 					m.PushButton("confirm", mdb.REMOVE)
 				} else {

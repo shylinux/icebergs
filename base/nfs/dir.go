@@ -191,7 +191,7 @@ func _dir_list(m *ice.Message, root string, name string, level int, deep bool, d
 }
 func _dir_search(m *ice.Message, kind, name string) {
 	msg := _dir_list(m.Spawn(), PWD, "", 0, true, TYPE_BOTH, nil, kit.Split("time,type,name"))
-	msg.Table(func(index int, value ice.Maps, head []string) {
+	msg.Tables(func(value ice.Maps) {
 		if !strings.Contains(value[mdb.NAME], name) {
 			return
 		}

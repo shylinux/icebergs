@@ -81,7 +81,7 @@ func init() {
 
 			if m.Copy(msg); len(arg) > 1 { // 命令插件
 				m.ProcessField(arg[0], arg[1], ice.RUN)
-				m.Table(func(index int, value ice.Maps, head []string) {
+				m.Tables(func(value ice.Maps) {
 					m.Cmdy(m.Space(value[ice.POD]), ctx.CONTEXT, value[ice.CTX], ctx.COMMAND, value[ice.CMD])
 				})
 			} else {

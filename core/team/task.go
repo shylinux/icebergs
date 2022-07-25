@@ -96,7 +96,7 @@ func init() {
 		}, mdb.ZoneAction(), ctx.CmdAction()), Hand: func(m *ice.Message, arg ...string) {
 			if mdb.ZoneSelect(m, arg...); len(arg) > 0 {
 				status := map[string]int{}
-				m.Table(func(index int, value ice.Maps, head []string) {
+				m.Tables(func(value ice.Maps) {
 					m.PushButton(_task_action(m, value[STATUS]))
 					status[value[mdb.STATUS]]++
 				})

@@ -11,7 +11,7 @@ func _event_listen(m *ice.Message, event string, cmd string) {
 	m.Cmdy(mdb.INSERT, EVENT, "", mdb.ZONE, event, ice.CMD, cmd)
 }
 func _event_action(m *ice.Message, event string, arg ...string) {
-	mdb.ZoneSelect(m, event).Table(func(index int, value ice.Maps, head []string) {
+	mdb.ZoneSelect(m, event).Tables(func(value ice.Maps) {
 		m.Cmd(kit.Split(value[ice.CMD]), event, arg).Cost(EVENT, event, ice.ARG, arg)
 	})
 }

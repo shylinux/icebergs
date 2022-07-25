@@ -38,7 +38,7 @@ func (w wubi) Input(m *ice.Message, arg ...string) {
 	}
 
 	m.Option(ice.CACHE_LIMIT, "10")
-	m.Cmd(w, "word", arg[0]).Table(func(index int, value ice.Maps, head []string) {
+	m.Cmd(w, "word", arg[0]).Tables(func(value ice.Maps) {
 		m.Echo(value[mdb.TEXT] + ice.NL)
 	})
 }

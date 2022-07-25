@@ -21,7 +21,7 @@ func init() {
 	}, Commands: ice.Commands{
 		"/favor": {Name: "/favor", Help: "收藏", Actions: ice.Actions{
 			mdb.SELECT: {Name: "select", Help: "主题", Hand: func(m *ice.Message, arg ...string) {
-				m.Cmd(FAVOR).Table(func(index int, value ice.Maps, head []string) {
+				m.Cmd(FAVOR).Tables(func(value ice.Maps) {
 					m.Echo(value[mdb.ZONE]).Echo(ice.NL)
 				})
 			}},
@@ -29,7 +29,7 @@ func init() {
 				m.Cmd(FAVOR, mdb.INSERT)
 			}},
 		}, Hand: func(m *ice.Message, arg ...string) {
-			m.Cmd(FAVOR, m.Option(mdb.ZONE)).Table(func(index int, value ice.Maps, head []string) {
+			m.Cmd(FAVOR, m.Option(mdb.ZONE)).Tables(func(value ice.Maps) {
 				m.Echo("%v\n", m.Option(mdb.ZONE)).Echo("%v:%v:%v:(%v): %v\n",
 					value[nfs.FILE], value[nfs.LINE], "1", value[mdb.NAME], value[mdb.TEXT])
 			})

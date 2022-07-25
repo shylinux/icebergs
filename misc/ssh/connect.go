@@ -204,7 +204,7 @@ func init() {
 				})
 			}},
 		}, mdb.HashActionStatus()), Hand: func(m *ice.Message, arg ...string) {
-			mdb.HashSelect(m, arg...).Table(func(index int, value ice.Maps, head []string) {
+			mdb.HashSelect(m, arg...).Tables(func(value ice.Maps) {
 				m.PushButton(kit.Select("", "command,session", value[mdb.STATUS] == tcp.OPEN), mdb.REMOVE)
 			})
 			if len(arg) == 0 {

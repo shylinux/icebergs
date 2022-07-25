@@ -55,7 +55,7 @@ func init() {
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
 				m.Conf(REPOS, mdb.HASH, "")
 				_repos_insert(m, path.Base(kit.Pwd()), kit.Pwd())
-				m.Cmd(nfs.DIR, ice.USR, "name,path").Table(func(index int, value ice.Maps, head []string) {
+				m.Cmd(nfs.DIR, ice.USR, "name,path").Tables(func(value ice.Maps) {
 					_repos_insert(m, value[mdb.NAME], value[nfs.PATH])
 				})
 				cli.IsAlpine(m, "git", "apk add git")

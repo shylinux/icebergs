@@ -19,7 +19,7 @@ func (s style) Inputs(m *ice.Message, arg ...string) {
 	s.operate.Inputs(m, arg...)
 }
 func (s style) Command(m *ice.Message, arg ...string) {
-	s.Zone.List(m, m.Option(tcp.HOST)).Table(func(index int, value ice.Maps, head []string) {
+	s.Zone.List(m, m.Option(tcp.HOST)).Tables(func(value ice.Maps) {
 		s.send(m, "1", m.Option(TID), m.CommandKey(), value[SELECTOR], value[PROPERTY])
 	})
 }

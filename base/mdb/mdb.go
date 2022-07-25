@@ -72,14 +72,13 @@ const (
 	DETAIL = "detail"
 	RANDOM = "random"
 
+	INPUTS = "inputs"
 	CREATE = "create"
 	REMOVE = "remove"
 	INSERT = "insert"
 	DELETE = "delete"
 	MODIFY = "modify"
 	SELECT = "select"
-
-	INPUTS = "inputs"
 	PRUNES = "prunes"
 	EXPORT = "export"
 	IMPORT = "import"
@@ -148,6 +147,21 @@ const MDB = "mdb"
 var Index = &ice.Context{Name: MDB, Help: "数据模块", Commands: ice.Commands{
 	ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {}},
 	ice.CTX_EXIT: {Hand: func(m *ice.Message, arg ...string) {}},
+	INPUTS: {Name: "inputs key sub type field value", Help: "补全", Hand: func(m *ice.Message, arg ...string) {
+		switch arg[3] {
+		case "index":
+			m.OptionFields(arg[3])
+			m.Cmdy("command", "search", "command", "", "")
+		}
+		switch arg[2] {
+		case ZONE: // inputs key sub type zone field value
+			_list_inputs(m, arg[0], _domain_chain(m, kit.Keys(arg[1], kit.KeyHash(arg[3]))), kit.Select(NAME, arg, 4), kit.Select("", arg, 5))
+		case HASH:
+			_hash_inputs(m, arg[0], _domain_chain(m, arg[1]), kit.Select(NAME, arg, 3), kit.Select("", arg, 4))
+		case LIST:
+			_list_inputs(m, arg[0], _domain_chain(m, arg[1]), kit.Select(NAME, arg, 3), kit.Select("", arg, 4))
+		}
+	}},
 	INSERT: {Name: "insert key sub type arg...", Help: "添加", Hand: func(m *ice.Message, arg ...string) {
 		switch arg[2] {
 		case ZONE: // insert key sub type zone arg...
@@ -188,21 +202,6 @@ var Index = &ice.Context{Name: MDB, Help: "数据模块", Commands: ice.Commands
 			_hash_select(m, arg[0], _domain_chain(m, arg[1]), kit.Select("", arg, 3), kit.Select(FOREACH, arg, 4))
 		case LIST:
 			_list_select(m, arg[0], _domain_chain(m, arg[1]), kit.Select("", arg, 3), kit.Select("", arg, 4))
-		}
-	}},
-	INPUTS: {Name: "inputs key sub type field value", Help: "补全", Hand: func(m *ice.Message, arg ...string) {
-		switch arg[3] {
-		case "index":
-			m.OptionFields(arg[3])
-			m.Cmdy("command", "search", "command")
-		}
-		switch arg[2] {
-		case ZONE: // inputs key sub type zone field value
-			_list_inputs(m, arg[0], _domain_chain(m, kit.Keys(arg[1], kit.KeyHash(arg[3]))), kit.Select(NAME, arg, 4), kit.Select("", arg, 5))
-		case HASH:
-			_hash_inputs(m, arg[0], _domain_chain(m, arg[1]), kit.Select(NAME, arg, 3), kit.Select("", arg, 4))
-		case LIST:
-			_list_inputs(m, arg[0], _domain_chain(m, arg[1]), kit.Select(NAME, arg, 3), kit.Select("", arg, 4))
 		}
 	}},
 	PRUNES: {Name: "prunes key sub type [field value]...", Help: "清理", Hand: func(m *ice.Message, arg ...string) {

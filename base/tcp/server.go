@@ -101,7 +101,7 @@ func init() {
 				_server_listen(m, arg...)
 			}},
 		}, mdb.HashActionStatus()), Hand: func(m *ice.Message, arg ...string) {
-			mdb.HashSelect(m, arg...).Table(func(index int, value ice.Maps, head []string) {
+			mdb.HashSelect(m, arg...).Tables(func(value ice.Maps) {
 				m.PushButton(kit.Select("", mdb.REMOVE, value[STATUS] == CLOSE))
 			})
 		}},

@@ -24,7 +24,7 @@ func init() {
 		}, mdb.HashAction()), Hand: func(m *ice.Message, arg ...string) {
 			mdb.HashSelect(m, arg...)
 			amount, income, tax := 0, 0, 0
-			m.Table(func(index int, value ice.Maps, head []string) {
+			m.Tables(func(value ice.Maps) {
 				amount += kit.Int(value[AMOUNT])
 				income += kit.Int(value[INCOME])
 				tax += kit.Int(value[TAX])

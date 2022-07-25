@@ -129,7 +129,7 @@ func init() {
 			}},
 
 			SCRIPT: {Name: "script name", Help: "脚本", Hand: func(m *ice.Message, arg ...string) {
-				m.Cmd(SCRIPT, m.Option(mdb.NAME)).Table(func(index int, value ice.Maps, head []string) {
+				m.Cmd(SCRIPT, m.Option(mdb.NAME)).Tables(func(value ice.Maps) {
 					switch value[mdb.TYPE] {
 					case "shell":
 						for _, line := range kit.Split(value[mdb.TEXT], ice.NL, ice.NL, ice.NL) {
@@ -170,7 +170,7 @@ func init() {
 
 			// 会话列表
 			m.Split(m.Cmdx(cli.SYSTEM, TMUX, "list-session", "-F", m.Config(FORMAT)), m.Config(FIELDS), ice.FS, ice.NL)
-			m.Table(func(index int, value ice.Maps, head []string) {
+			m.Tables(func(value ice.Maps) {
 				switch value["tag"] {
 				case "1":
 					m.PushButton("")

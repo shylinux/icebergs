@@ -82,7 +82,6 @@ func _system_find(m *ice.Message, bin string, dir ...string) string {
 		return bin
 	}
 	if strings.HasPrefix(bin, nfs.PWD) {
-		// return kit.Path(m.Option(CMD_DIR), bin)
 		return bin
 	}
 	if len(dir) == 0 {
@@ -131,6 +130,10 @@ func IsSuccess(m *ice.Message) bool {
 	return m.Append(CODE) == "0" || m.Append(CODE) == ""
 }
 func SystemFind(m *ice.Message, bin string, dir ...string) string {
+	if text := kit.ReadFile(ice.ETC_PATH); len(text) > 0 {
+		dir = append(dir, strings.Split(text, ice.NL)...)
+	}
+	dir = append(dir, strings.Split(kit.Env(PATH), ice.DF)...)
 	return _system_find(m, bin, dir...)
 }
 

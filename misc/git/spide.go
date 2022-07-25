@@ -117,7 +117,7 @@ func init() {
 			if len(arg) == 1 { // 目录列表
 				m.Option(nfs.DIR_DEEP, ice.TRUE)
 				color := []string{cli.YELLOW, cli.BLUE, cli.CYAN, cli.RED}
-				nfs.Dir(m, nfs.PATH).Table(func(index int, value ice.Maps, head []string) {
+				nfs.Dir(m, nfs.PATH).Tables(func(value ice.Maps) {
 					m.Push(cli.COLOR, color[strings.Count(value[nfs.PATH], ice.PS)%len(color)])
 				})
 				return

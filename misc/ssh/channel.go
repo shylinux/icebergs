@@ -101,7 +101,7 @@ func init() {
 				m.Action(mdb.PRUNES)
 				mdb.HashSelect(m, arg...)
 				m.Set(ice.MSG_APPEND, ctx.ACTION)
-				m.Table(func(index int, value ice.Maps, head []string) {
+				m.Tables(func(value ice.Maps) {
 					m.PushButton(kit.Select("", ctx.COMMAND, value[mdb.STATUS] == tcp.OPEN), mdb.REMOVE)
 				})
 				return

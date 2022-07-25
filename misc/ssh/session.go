@@ -76,7 +76,7 @@ func init() {
 			}},
 		}, mdb.ZoneAction()), Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) == 0 {
-				mdb.HashSelect(m, arg...).Table(func(index int, value ice.Maps, head []string) {
+				mdb.HashSelect(m, arg...).Tables(func(value ice.Maps) {
 					m.PushButton(kit.Select("", ctx.COMMAND, value[mdb.STATUS] == tcp.OPEN), mdb.REMOVE)
 				})
 				return
@@ -85,7 +85,7 @@ func init() {
 			m.Action(ctx.COMMAND, mdb.PAGE)
 			m.OptionPage(kit.Slice(arg, 2)...)
 			m.Fields(len(kit.Slice(arg, 1, 2)), "time,id,type,text")
-			mdb.ZoneSelect(m, kit.Slice(arg, 0, 2)...).Table(func(index int, value ice.Maps, head []string) {
+			mdb.ZoneSelect(m, kit.Slice(arg, 0, 2)...).Tables(func(value ice.Maps) {
 				m.PushButton(kit.Select("", mdb.REPEAT, value[mdb.TYPE] == CMD))
 			})
 		}},

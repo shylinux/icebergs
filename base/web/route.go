@@ -19,7 +19,7 @@ func _route_travel(m *ice.Message, route string) {
 				return // 避免循环
 			}
 
-			m.Cmd(SPACE, val[mdb.NAME], ROUTE).Table(func(index int, value ice.Maps, head []string) {
+			m.Cmd(SPACE, val[mdb.NAME], ROUTE).Tables(func(value ice.Maps) {
 				m.Push(mdb.TYPE, value[mdb.TYPE])
 				m.Push(ROUTE, kit.Keys(val[mdb.NAME], value[ROUTE]))
 			})
@@ -32,7 +32,7 @@ func _route_travel(m *ice.Message, route string) {
 	})
 }
 func _route_list(m *ice.Message) {
-	m.Table(func(index int, value ice.Maps, field []string) {
+	m.Tables(func(value ice.Maps) {
 		m.PushAnchor(value[ROUTE], m.MergePod(value[ROUTE]))
 
 		switch value[mdb.TYPE] {
@@ -47,7 +47,7 @@ func _route_list(m *ice.Message) {
 
 	// 网卡信息
 	u := kit.ParseURL(m.Option(ice.MSG_USERWEB))
-	m.Cmd(tcp.HOST).Table(func(index int, value ice.Maps, head []string) {
+	m.Cmd(tcp.HOST).Tables(func(value ice.Maps) {
 		m.Push(mdb.TYPE, MYSELF)
 		m.Push(ROUTE, ice.Info.NodeName)
 		m.PushAnchor(value[aaa.IP], kit.Format("%s://%s:%s", u.Scheme, value[aaa.IP], u.Port()))
@@ -106,13 +106,13 @@ func init() {
 				}
 
 			} else if len(arg) == 1 || arg[1] == "" { // 模块列表
-				m.Cmd(SPACE, arg[0], ctx.CONTEXT, ice.ICE).Table(func(index int, value ice.Maps, head []string) {
+				m.Cmd(SPACE, arg[0], ctx.CONTEXT, ice.ICE).Tables(func(value ice.Maps) {
 					m.Push(ice.CTX, kit.Keys(value["ups"], value[mdb.NAME]))
 					m.Push("", value, kit.List(ice.CTX_STATUS, ice.CTX_STREAM, mdb.HELP))
 				})
 
 			} else if len(arg) == 2 || arg[2] == "" { // 命令列表
-				m.Cmd(SPACE, arg[0], ctx.CONTEXT, arg[1], ctx.COMMAND).Table(func(index int, value ice.Maps, head []string) {
+				m.Cmd(SPACE, arg[0], ctx.CONTEXT, arg[1], ctx.COMMAND).Tables(func(value ice.Maps) {
 					m.Push(ice.CMD, value[mdb.KEY])
 					m.Push("", value, kit.List(mdb.NAME, mdb.HELP))
 				})

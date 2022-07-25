@@ -42,7 +42,7 @@ func init() {
 			mdb.CREATE: {Name: "create name 照片 性别 年龄 身高 体重 籍贯 户口 学历 学校 职业 公司 年薪 资产 家境", Help: "添加"},
 		}, mdb.HashAction()), Hand: func(m *ice.Message, arg ...string) {
 			msg := m.Spawn()
-			mdb.HashSelect(msg, arg...).Table(func(index int, value ice.Maps, head []string) {
+			mdb.HashSelect(msg, arg...).Tables(func(value ice.Maps) {
 				value["照片"] = ice.Render(m, ice.RENDER_IMAGES, value["照片"], kit.Select("100", "400", msg.FieldsIsDetail()))
 				m.Push(m.OptionFields(), value, kit.Split(msg.OptionFields()))
 			})

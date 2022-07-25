@@ -46,7 +46,7 @@ func _serve_udp(m *ice.Message, host, port string) {
 			}
 
 			if remote, err := net.ResolveUDPAddr("udp4", kit.Format("%s:%s", msg.Option(tcp.HOST), msg.Option(tcp.PORT))); err == nil {
-				m.Cmd(BROAD).Table(func(index int, value ice.Maps, head []string) {
+				m.Cmd(BROAD).Tables(func(value ice.Maps) {
 					m.Debug("broad %v to %v", kit.Format(value), kit.Format(remote))
 					s.WriteToUDP([]byte(m.Spawn(value).FormatMeta()), remote)
 				})

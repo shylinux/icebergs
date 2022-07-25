@@ -26,7 +26,7 @@ func _action_key(m *ice.Message, arg ...string) string {
 	return kit.Keys(mdb.HASH, kit.Select(m.Option(RIVER), arg, 0), STORM, mdb.HASH, kit.Select(m.Option(STORM), arg, 1))
 }
 func _action_list(m *ice.Message, river, storm string) {
-	m.Cmdy(STORM, storm, ice.Option{ice.MSG_RIVER, river}).Table(func(index int, value ice.Maps, head []string) {
+	m.Cmdy(STORM, storm, ice.Option{ice.MSG_RIVER, river}).Tables(func(value ice.Maps) {
 		m.Cmdy(m.Space(kit.Select(m.Option(ice.POD), value[ice.POD])), ctx.COMMAND, kit.Keys(value[ice.CTX], value[ice.CMD]))
 	})
 }

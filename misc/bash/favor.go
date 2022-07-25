@@ -18,7 +18,7 @@ func init() {
 		"/favor": {Name: "/favor", Help: "收藏", Actions: ice.Actions{
 			mdb.EXPORT: {Name: "export zone name", Help: "导出", Hand: func(m *ice.Message, arg ...string) {
 				m.Echo("#!/bin/sh\n\n")
-				m.Cmdy(FAVOR, m.Option(mdb.ZONE)).Table(func(index int, value ice.Maps, head []string) {
+				m.Cmdy(FAVOR, m.Option(mdb.ZONE)).Tables(func(value ice.Maps) {
 					if m.Option(mdb.NAME) == "" || m.Option(mdb.NAME) == value[mdb.NAME] {
 						m.Echo("# %v\n%v\n\n", value[mdb.NAME], value[mdb.TEXT])
 					}

@@ -309,23 +309,27 @@ func SplitCmd(name string) (list []Any) {
 		BUTTON   = "button"
 	)
 	const (
-		RUN  = "run"
-		LIST = "list"
-		BACK = "back"
-		AUTO = "auto"
-		PAGE = "page"
-		ARGS = "args"
+		REFRESH = "refresh"
+		RUN     = "run"
+		LIST    = "list"
+		BACK    = "back"
+		AUTO    = "auto"
+		PAGE    = "page"
+		ARGS    = "args"
 	)
 
 	item, button := kit.Dict(), false
 	ls := kit.Split(name, SP, ":=@")
 	for i := 1; i < len(ls); i++ {
 		switch ls[i] {
+		case REFRESH:
+			list = append(list, kit.Dict(TYPE, BUTTON, NAME, ls[i], ACTION, AUTO))
+			button = true
 		case RUN:
-			list = append(list, kit.Dict(TYPE, BUTTON, NAME, RUN))
+			list = append(list, kit.Dict(TYPE, BUTTON, NAME, ls[i]))
 			button = true
 		case LIST:
-			list = append(list, kit.Dict(TYPE, BUTTON, NAME, LIST, ACTION, AUTO))
+			list = append(list, kit.Dict(TYPE, BUTTON, NAME, ls[i], ACTION, AUTO))
 			button = true
 		case AUTO:
 			list = append(list, kit.Dict(TYPE, BUTTON, NAME, LIST, ACTION, AUTO))

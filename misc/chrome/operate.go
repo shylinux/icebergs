@@ -20,8 +20,8 @@ func (o operate) send(m *ice.Message, arg ...ice.Any) *ice.Message {
 func (o operate) Inputs(m *ice.Message, arg ...string) {
 	switch arg[0] {
 	case mdb.ZONE:
-		o.send(m.Spawn()).Table(func(index int, value ice.Maps, head []string) {
-			o.send(m.Spawn(), value[WID]).Table(func(index int, value ice.Maps, head []string) {
+		o.send(m.Spawn()).Tables(func(value ice.Maps) {
+			o.send(m.Spawn(), value[WID]).Tables(func(value ice.Maps) {
 				m.Push(mdb.ZONE, kit.ParseURL(value[URL]).Host)
 			})
 		}).Sort(mdb.ZONE)
@@ -32,7 +32,7 @@ func (o operate) Spide(m *ice.Message, arg ...string) {
 		o.send(m, arg)
 		return
 	}
-	o.send(m, arg[:2], "spide").Table(func(index int, value ice.Maps, head []string) {
+	o.send(m, arg[:2], "spide").Tables(func(value ice.Maps) {
 		switch value[mdb.TYPE] {
 		case wiki.VIDEO:
 			m.PushVideos(mdb.SHOW, value[mdb.LINK])

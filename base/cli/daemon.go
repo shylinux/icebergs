@@ -129,7 +129,7 @@ func init() {
 			}},
 			STOP: {Name: "stop", Help: "停止", Hand: func(m *ice.Message, arg ...string) {
 				m.OptionFields(m.Config(mdb.FIELD))
-				m.Cmd(mdb.SELECT, DAEMON, "", mdb.HASH, m.OptionSimple(mdb.HASH)).Table(func(index int, value ice.Maps, head []string) {
+				m.Cmd(mdb.SELECT, DAEMON, "", mdb.HASH, m.OptionSimple(mdb.HASH)).Tables(func(value ice.Maps) {
 					m.Cmd(mdb.MODIFY, DAEMON, "", mdb.HASH, m.OptionSimple(mdb.HASH), STATUS, STOP)
 					m.Cmdy(SYSTEM, KILL, value[PID])
 				})
@@ -138,7 +138,7 @@ func init() {
 				}
 			}},
 		}, mdb.HashAction()), Hand: func(m *ice.Message, arg ...string) {
-			mdb.HashSelect(m, arg...).Set(ctx.ACTION).Table(func(index int, value ice.Maps, head []string) {
+			mdb.HashSelect(m, arg...).Set(ctx.ACTION).Tables(func(value ice.Maps) {
 				switch value[STATUS] {
 				case START:
 					m.PushButton(RESTART, STOP)

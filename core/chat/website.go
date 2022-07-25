@@ -148,7 +148,7 @@ func _website_render(m *ice.Message, w http.ResponseWriter, r *http.Request, kin
 	return true
 }
 func _website_search(m *ice.Message, kind, name, text string, arg ...string) {
-	m.Cmd(m.PrefixKey(), ice.OptionFields("")).Table(func(index int, value ice.Maps, head []string) {
+	m.Cmd(m.PrefixKey(), ice.OptionFields("")).Tables(func(value ice.Maps) {
 		m.PushSearch(value, mdb.TEXT, m.MergeWebsite(value[nfs.PATH]))
 	})
 }

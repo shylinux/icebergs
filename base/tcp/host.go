@@ -80,7 +80,7 @@ func init() {
 	}, Commands: ice.Commands{
 		HOST: {Name: "host name auto", Help: "主机", Actions: ice.Actions{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
-				m.Cmd(HOST).Table(func(index int, value ice.Maps, head []string) {
+				m.Cmd(HOST).Tables(func(value ice.Maps) {
 					m.Cmd(HOST, aaa.WHITE, value[aaa.IP])
 				})
 			}},

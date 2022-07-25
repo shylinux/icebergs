@@ -25,7 +25,7 @@ func init() {
 			msg.SortTime(BEGIN_TIME)
 
 			tz := int64(8)
-			msg.Table(func(index int, value ice.Maps, head []string) {
+			msg.Tables(func(value ice.Maps) {
 				if value[mdb.STATUS] == CANCEL {
 					return
 				}

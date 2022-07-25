@@ -46,7 +46,7 @@ func init() {
 					m.Display("/plugin/story/spide.js?prefix=spide", "root", kit.Select(ice.ICE, arg, 0), "split", ice.PT)
 
 				} else if index := kit.Keys(arg[1]); strings.HasSuffix(index, arg[2]) { // 命令列表
-					m.Cmdy(CONTEXT, index, COMMAND).Table(func(i int, value ice.Maps, head []string) {
+					m.Cmdy(CONTEXT, index, COMMAND).Tables(func(value ice.Maps) {
 						m.Push("file", arg[1])
 					})
 

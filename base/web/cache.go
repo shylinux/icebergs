@@ -41,7 +41,7 @@ func _cache_save(m *ice.Message, kind, name, text string, arg ...string) { // fi
 	m.Push(mdb.DATA, h)
 }
 func _cache_watch(m *ice.Message, key, file string) {
-	mdb.HashSelect(m.Spawn(), key).Table(func(index int, value ice.Maps, head []string) {
+	mdb.HashSelect(m.Spawn(), key).Tables(func(value ice.Maps) {
 		if value[nfs.FILE] == "" {
 			m.Cmdy(nfs.SAVE, file, value[mdb.TEXT])
 		} else {

@@ -24,7 +24,7 @@ func init() {
 		}, Hand: func(m *ice.Message, arg ...string) {
 			m.Fields(len(arg), "time,username")
 			m.Cmdy(mdb.SELECT, RIVER, _river_key(m, OCEAN), mdb.HASH, aaa.USERNAME, arg)
-			m.Table(func(index int, value ice.Maps, head []string) {
+			m.Tables(func(value ice.Maps) {
 				msg := m.Cmd(aaa.USER, value[aaa.USERNAME])
 				m.Push(aaa.USERNICK, msg.Append(aaa.USERNICK))
 				m.PushImages(aaa.AVATAR, msg.Append(aaa.AVATAR), kit.Select("60", "240", m.FieldsIsDetail()))

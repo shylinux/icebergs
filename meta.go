@@ -331,16 +331,16 @@ func (m *Message) Sort(key string, arg ...string) *Message {
 	// 排序因子
 	number := map[int]int64{}
 	table := []Maps{}
-	m.Table(func(index int, line Maps, head []string) {
-		switch table = append(table, line); cmp {
+	m.Table(func(index int, value Maps, head []string) {
+		switch table = append(table, value); cmp {
 		case "int":
-			number[index] = kit.Int64(line[key])
+			number[index] = kit.Int64(value[key])
 		case "int_r":
-			number[index] = -kit.Int64(line[key])
+			number[index] = -kit.Int64(value[key])
 		case "time":
-			number[index] = int64(kit.Time(line[key]))
+			number[index] = int64(kit.Time(value[key]))
 		case "time_r":
-			number[index] = -int64(kit.Time(line[key]))
+			number[index] = -int64(kit.Time(value[key]))
 		}
 	})
 	compare := func(i, j int, op string) bool {

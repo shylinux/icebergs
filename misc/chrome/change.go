@@ -29,7 +29,7 @@ func (c change) List(m *ice.Message, arg ...string) {
 		c.send(m, kit.Slice(arg, 0, 2))
 		return
 	}
-	c.send(m.Spawn(), kit.Slice(arg, 0, 2), m.CommandKey(), kit.Slice(arg, 2)).Table(func(index int, value ice.Maps, head []string) {
+	c.send(m.Spawn(), kit.Slice(arg, 0, 2), m.CommandKey(), kit.Slice(arg, 2)).Tables(func(value ice.Maps) {
 		m.Push(mdb.TEXT, kit.ReplaceAll(value[mdb.TEXT], "<", "&lt;", ">", "&gt;"))
 	})
 	if len(arg) > 3 {

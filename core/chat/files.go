@@ -27,7 +27,7 @@ func init() {
 			}},
 		}, mdb.HashAction()), Hand: func(m *ice.Message, arg ...string) {
 			mdb.HashSelect(m, arg...)
-			m.Table(func(index int, value ice.Maps, head []string) {
+			m.Tables(func(value ice.Maps) {
 				link := web.SHARE_CACHE + value[mdb.DATA]
 				if m.PushDownload(mdb.LINK, value[mdb.NAME], link); len(arg) > 0 && kit.ExtIsImage(value[mdb.NAME]) {
 					m.PushImages("image", link)

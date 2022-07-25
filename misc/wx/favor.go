@@ -19,7 +19,7 @@ func init() {
 		FAVOR: {Name: "favor text:text auto create", Help: "收藏", Actions: ice.MergeAction(ice.Actions{
 			mdb.CREATE: {Name: "create type name text", Help: "添加"},
 		}, mdb.HashAction()), Hand: func(m *ice.Message, arg ...string) {
-			mdb.HashSelect(m, arg...).Table(func(index int, value ice.Maps, head []string) {
+			mdb.HashSelect(m, arg...).Tables(func(value ice.Maps) {
 				m.PushQRCode(mdb.SCAN, kit.MergeURL(m.Config(mdb.LINK), aaa.USERNAME, value[mdb.TEXT]))
 			})
 		}},

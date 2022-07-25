@@ -220,8 +220,8 @@ func _space_search(m *ice.Message, kind, name, text string, arg ...string) {
 	if name != "" {
 		return
 	}
-	m.Cmd(SERVE, ice.OptionFields("")).Table(func(index int, val ice.Maps, head []string) {
-		m.Cmd(tcp.HOST, ice.OptionFields("")).Table(func(index int, value ice.Maps, head []string) {
+	m.Cmd(SERVE, ice.OptionFields("")).Tables(func(val ice.Maps) {
+		m.Cmd(tcp.HOST, ice.OptionFields("")).Tables(func(value ice.Maps) {
 			m.PushSearch(kit.SimpleKV("", MYSELF, value[mdb.NAME], kit.Format("http://%s:%s", value[aaa.IP], val[tcp.PORT])))
 		})
 	})
@@ -327,7 +327,7 @@ func init() {
 		}, mdb.HashAction()), Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) < 2 { // 节点列表
 				if mdb.HashSelect(m, arg...); len(arg) == 0 {
-					m.Table(func(index int, value ice.Maps, head []string) {
+					m.Tables(func(value ice.Maps) {
 						switch value[mdb.TYPE] {
 						case MASTER:
 							m.PushAnchor(value[mdb.NAME], m.Cmd(SPIDE, value[mdb.NAME], ice.OptionFields("")).Append("client.url"))

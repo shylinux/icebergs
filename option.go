@@ -181,10 +181,15 @@ func (m *Message) Toast(text string, arg ...Any) { // [title [duration [progress
 	m.PushNoticeToast("", text, arg)
 }
 func (m *Message) PushNotice(arg ...Any) {
+	m.Optionv(MSG_OPTS, m.meta[MSG_OPTION])
 	if m.Option(MSG_USERPOD) == "" {
 		m.Cmd(SPACE, m.Option(MSG_DAEMON), arg)
 	} else {
-		m.Cmd("web.spide", OPS, m.MergeURL2("/share/toast/"), kit.Format(kit.Dict("hash", m.Option("hash"), POD, m.Option(MSG_DAEMON), "cmds", kit.Simple(arg...))))
+		opts := kit.Dict(POD, m.Option(MSG_DAEMON), "cmds", kit.Simple(arg...))
+		for _, k := range m.meta[MSG_OPTS] {
+			opts[k] = m.Option(k)
+		}
+		m.Cmd("web.spide", OPS, m.MergeURL2("/share/toast/"), kit.Format(opts))
 	}
 }
 func (m *Message) PushNoticeGrow(arg ...Any) {

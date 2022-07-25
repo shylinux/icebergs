@@ -82,7 +82,7 @@ func init() {
 			}},
 			CHECK: {Name: "check", Help: "核算", Hand: func(m *ice.Message, arg ...string) {
 				if m.Option(ACCOUNT) == "" {
-					m.Cmd(ASSET).Table(func(index int, value ice.Maps, head []string) {
+					m.Cmd(ASSET).Tables(func(value ice.Maps) {
 						_asset_check(m, value[ACCOUNT])
 					})
 					m.ProcessRefresh30ms()
@@ -98,7 +98,7 @@ func init() {
 				m.PushAction(CHECK)
 				m.SortIntR(AMOUNT)
 
-				m.Table(func(index int, value ice.Maps, head []string) {
+				m.Tables(func(value ice.Maps) {
 					amount += kit.Int(value[AMOUNT])
 					count += kit.Int(value[COUNT])
 				})
@@ -106,7 +106,7 @@ func init() {
 			} else {
 				m.PushAction(mdb.PLUGIN)
 
-				m.Table(func(index int, value ice.Maps, head []string) {
+				m.Tables(func(value ice.Maps) {
 					amount += kit.Int(value[AMOUNT])
 					count++
 				})

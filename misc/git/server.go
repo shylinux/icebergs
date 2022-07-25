@@ -182,7 +182,7 @@ func init() {
 				m.Cmdy(cli.SYSTEM, GIT, INIT, "--bare", m.Option(mdb.NAME))
 			}},
 			mdb.IMPORT: {Name: "import", Help: "导入", Hand: func(m *ice.Message, arg ...string) {
-				m.Cmdy(REPOS, ice.OptionFields("time,name,path")).Table(func(index int, value ice.Maps, head []string) {
+				m.Cmdy(REPOS, ice.OptionFields("time,name,path")).Tables(func(value ice.Maps) {
 					remote := strings.Split(m.MergeURL2("/x/"+value[REPOS]), "?")[0]
 					m.Option(cli.CMD_DIR, value[nfs.PATH])
 					m.Cmd(cli.SYSTEM, GIT, PUSH, remote, MASTER)
@@ -195,7 +195,7 @@ func init() {
 			}},
 		}, Hand: func(m *ice.Message, arg ...string) {
 			if m.Option(nfs.DIR_ROOT, ice.USR_LOCAL_REPOS); len(arg) == 0 {
-				m.Cmdy(nfs.DIR, nfs.PWD).Table(func(index int, value ice.Maps, head []string) {
+				m.Cmdy(nfs.DIR, nfs.PWD).Tables(func(value ice.Maps) {
 					m.PushScript("git clone " + m.MergeLink("/x/"+strings.TrimSuffix(value[nfs.PATH], ice.PS)))
 				})
 				m.Cut("time,path,size,script,action")

@@ -15,7 +15,7 @@ import (
 )
 
 func _dream_list(m *ice.Message) *ice.Message {
-	return m.Cmdy(nfs.DIR, m.Config(nfs.PATH), "time,size,name").Table(func(index int, value ice.Maps, head []string) {
+	return m.Cmdy(nfs.DIR, m.Config(nfs.PATH), "time,size,name").Tables(func(value ice.Maps) {
 		if m.Richs(SPACE, nil, value[mdb.NAME], func(key string, val ice.Map) {
 			m.Push(mdb.TYPE, val[mdb.TYPE])
 			m.Push(cli.STATUS, cli.START)
@@ -146,7 +146,7 @@ func init() {
 		}, Hand: func(m *ice.Message, arg ...string) {
 			if start := 0; len(arg) == 0 {
 				_dream_list(m).SetAppend(mdb.TEXT)
-				m.Table(func(index int, value ice.Maps, head []string) {
+				m.Tables(func(value ice.Maps) {
 					if value[cli.STATUS] != cli.START {
 						m.Push(mdb.TEXT, "")
 						return

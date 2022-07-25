@@ -27,7 +27,7 @@ func _status_tag(m *ice.Message, tags string) string {
 }
 func _status_tags(m *ice.Message, repos string) {
 	vs := ice.Maps{}
-	m.Cmd(STATUS).Table(func(index int, value ice.Maps, head []string) {
+	m.Cmd(STATUS).Tables(func(value ice.Maps) {
 		if value[mdb.TYPE] == "##" {
 			if value[REPOS] == ice.RELEASE {
 				value[REPOS] = ice.ICE
@@ -92,7 +92,7 @@ func _status_each(m *ice.Message, title string, cmds ...string) {
 		toast(cli.BEGIN, count, total)
 
 		list := []string{}
-		m.Cmd(REPOS, ice.OptionFields("name,path")).Table(func(index int, value ice.Maps, head []string) {
+		m.Cmd(REPOS, ice.OptionFields("name,path")).Tables(func(value ice.Maps) {
 			toast(value[REPOS], count, total)
 
 			if msg := m.Cmd(cmds, ice.Option{cli.CMD_DIR, value[nfs.PATH]}); !cli.IsSuccess(msg) {
@@ -126,7 +126,7 @@ func _status_stat(m *ice.Message, files, adds, dels int) (int, int, int) {
 	return files, adds, dels
 }
 func _status_list(m *ice.Message) (files, adds, dels int, last time.Time) {
-	m.Cmd(REPOS, ice.OptionFields("name,path")).Table(func(index int, value ice.Maps, head []string) {
+	m.Cmd(REPOS, ice.OptionFields("name,path")).Tables(func(value ice.Maps) {
 		m.Option(cli.CMD_DIR, value[nfs.PATH])
 		diff := m.Cmdx(cli.SYSTEM, GIT, STATUS, "-sb")
 		tags := m.Cmdx(cli.SYSTEM, GIT, "describe", "--tags")

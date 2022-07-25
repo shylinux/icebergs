@@ -323,7 +323,7 @@ func init() {
 				})
 			}},
 			ice.CTX_EXIT: {Hand: func(m *ice.Message, arg ...string) {
-				m.Cmd(SERVE).Table(func(index int, value ice.Maps, head []string) {
+				m.Cmd(SERVE).Tables(func(value ice.Maps) {
 					m.Done(value[cli.STATUS] == tcp.START)
 				})
 			}},

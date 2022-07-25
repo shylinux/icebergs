@@ -79,7 +79,7 @@ func init() {
 				if kit.Select("", arg, 1) == aaa.LOGIN {
 					return // 免登录
 				}
-			case "/pod/", "/cmd/":
+			case "/pod/", "/cmd/", "/topic/":
 				return // 免登录
 			case "/sso":
 				return // 免登录

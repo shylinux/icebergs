@@ -37,6 +37,7 @@ func _webpack_cache(m *ice.Message, dir string, write bool) {
 	js, _, e := kit.Create(path.Join(dir, PAGE_CACHE_JS))
 	m.Assert(e)
 	defer js.Close()
+	defer fmt.Fprintln(js, `_can_name = ""`)
 
 	defer _webpack_can(m)
 	if !write {
@@ -59,6 +60,7 @@ func _webpack_cache(m *ice.Message, dir string, write bool) {
 	for _, k := range []string{LIB, PANEL, PLUGIN} {
 		m.Cmd(nfs.DIR, k).Tables(func(value ice.Maps) {
 			if kit.Ext(value[nfs.PATH]) == CSS {
+				fmt.Fprintln(css, kit.Format("/* %s */", path.Join(ice.PS, value[nfs.PATH])))
 				fmt.Fprintln(css, m.Cmdx(nfs.CAT, value[nfs.PATH]))
 				fmt.Fprintln(js, `Volcanos.meta.cache["`+path.Join(ice.PS, value[nfs.PATH])+`"] = []`)
 			}
@@ -77,7 +79,26 @@ func _webpack_cache(m *ice.Message, dir string, write bool) {
 		fmt.Fprintln(js, `_can_name = "`+path.Join(ice.PS, k)+`"`)
 		fmt.Fprintln(js, m.Cmdx(nfs.CAT, k))
 	}
-	fmt.Fprintln(js, `_can_name = ""`)
+
+	m.Cmd(mdb.SELECT, m.PrefixKey(), "", mdb.HASH, ice.OptionFields(nfs.PATH)).Tables(func(value ice.Maps) {
+		defer fmt.Fprintln(js)
+
+		p := value[nfs.PATH]
+		switch kit.Ext(p) {
+		case nfs.CSS:
+			fmt.Fprintln(css, kit.Format("/* %s */", path.Join("/require/node_modules/", p)))
+			fmt.Fprintln(css, m.Cmdx(nfs.CAT, path.Join("node_modules", p)))
+			fmt.Fprintln(js, `Volcanos.meta.cache["`+path.Join("/require/node_modules/", p)+`"] = []`)
+			return
+		case nfs.JS:
+		default:
+			p = p + "/lib/" + p + ".js"
+		}
+
+		fmt.Fprintln(js, `_can_name = "`+path.Join("/require/node_modules/", p)+`"`)
+		fmt.Fprintln(js, m.Cmdx(nfs.CAT, path.Join("node_modules", p)))
+		fmt.Fprintln(js, `Volcanos.meta.cache["`+path.Join("/require/node_modules/", p)+`"] = []`)
+	})
 }
 func _webpack_build(m *ice.Message, file string) {
 	if f, _, e := kit.Create(kit.Keys(file, JS)); m.Assert(e) {
@@ -134,10 +155,13 @@ const DEVPACK = "devpack"
 const WEBPACK = "webpack"
 
 func init() {
-	Index.Merge(&ice.Context{Commands: ice.Commands{
-		WEBPACK: {Name: "webpack path auto create remove", Help: "打包", Actions: ice.Actions{
+	Index.MergeCommands(ice.Commands{
+		WEBPACK: {Name: "webpack path auto create remove", Help: "打包", Actions: ice.MergeAction(ice.Actions{
 			mdb.CREATE: {Name: "create", Help: "创建", Hand: func(m *ice.Message, arg ...string) {
 				_webpack_cache(m.Spawn(), _volcanos(m), true)
+			}},
+			mdb.INSERT: {Name: "insert", Help: "添加", Hand: func(m *ice.Message, arg ...string) {
+				m.Cmd(mdb.INSERT, m.PrefixKey(), "", mdb.HASH, nfs.PATH, arg[0])
 			}},
 			mdb.REMOVE: {Name: "remove", Help: "删除", Hand: func(m *ice.Message, arg ...string) {
 				_webpack_cache(m.Spawn(), _volcanos(m), false)
@@ -151,12 +175,12 @@ func init() {
 				_webpack_cache(m.Spawn(), _volcanos(m), true)
 				_webpack_build(m, _publish(m, WEBPACK, m.Option(mdb.NAME)))
 			}},
-		}, Hand: func(m *ice.Message, arg ...string) {
+		}, mdb.HashAction(mdb.SHORT, nfs.PATH)), Hand: func(m *ice.Message, arg ...string) {
 			m.Option(nfs.DIR_DEEP, true)
 			m.Option(nfs.DIR_TYPE, nfs.CAT)
 			m.OptionFields(nfs.DIR_WEB_FIELDS)
 			m.Cmdy(nfs.DIR, _volcanos(m, PAGE))
 			m.Cmdy(nfs.DIR, _publish(m, WEBPACK))
 		}},
-	}})
+	})
 }

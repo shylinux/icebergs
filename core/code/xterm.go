@@ -23,9 +23,11 @@ func _xterm_socket(m *ice.Message, h, t string) {
 }
 func _xterm_get(m *ice.Message, h string, must bool) (f *os.File) {
 	f, _ = mdb.HashCache(m, h, func() ice.Any {
+		m.Debug("what %v", must)
 		if !must {
 			return nil
 		}
+
 		cmd := exec.Command(cli.SystemFind(m, kit.Select("sh", m.Option(mdb.TYPE))))
 		cmd.Env = append(os.Environ(), "TERM=xterm")
 		m.Option(mdb.HASH, h)
@@ -47,6 +49,7 @@ func _xterm_get(m *ice.Message, h string, must bool) (f *os.File) {
 		})
 		return tty
 	}).(*os.File)
+	m.Debug("what %v", f)
 	return
 }
 
@@ -107,8 +110,7 @@ func init() {
 				}
 			}},
 		}, mdb.HashAction(mdb.FIELD, "time,hash,type,name,text,extra"), ctx.CmdAction()), Hand: func(m *ice.Message, arg ...string) {
-			mdb.HashSelect(m, kit.Slice(arg, 0, 1)...)
-			m.DisplayLocal("")
+			mdb.HashSelect(m, kit.Slice(arg, 0, 1)...).DisplayLocal("")
 		}},
 	})
 }

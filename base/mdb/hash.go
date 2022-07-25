@@ -282,11 +282,14 @@ func HashImport(m *ice.Message, arg ...ice.Any) *ice.Message {
 func HashCache(m *ice.Message, h string, add func() ice.Any) ice.Any {
 	defer m.Lock()()
 
-	if add != nil && m.Confv(m.PrefixKey(), kit.Keys(HASH, h, "_cache")) == nil {
-		m.Debug("add cache %s:%s", m.PrefixKey(), kit.Keys(HASH, h, "_cache"))
-		m.Confv(m.PrefixKey(), kit.Keys(HASH, h, "_cache"), add()) // 添加
+	p := m.Confv(m.PrefixKey(), kit.Keys(HASH, h, "_cache"))
+	if pp, ok := p.(ice.Map); ok && len(pp) == 0 {
+		p = nil
 	}
 
-	m.Debug("get cache %s:%s", m.PrefixKey(), kit.Keys(HASH, h, "_cache"))
-	return m.Confv(m.PrefixKey(), kit.Keys(HASH, h, "_cache")) // 读取
+	if add != nil && p == nil {
+		p = add()
+		m.Confv(m.PrefixKey(), kit.Keys(HASH, h, "_cache"), p) // 添加
+	}
+	return p
 }

@@ -58,7 +58,7 @@ func _webpack_cache(m *ice.Message, dir string, write bool) {
 
 	m.Option(nfs.DIR_ROOT, dir)
 	for _, k := range []string{LIB, PANEL, PLUGIN} {
-		m.Cmd(nfs.DIR, k).Tables(func(value ice.Maps) {
+		m.Cmd(nfs.DIR, k).Sort(nfs.PATH).Tables(func(value ice.Maps) {
 			if kit.Ext(value[nfs.PATH]) == CSS {
 				fmt.Fprintln(css, kit.Format("/* %s */", path.Join(ice.PS, value[nfs.PATH])))
 				fmt.Fprintln(css, m.Cmdx(nfs.CAT, value[nfs.PATH]))
@@ -68,7 +68,7 @@ func _webpack_cache(m *ice.Message, dir string, write bool) {
 	}
 	fmt.Fprintln(js)
 	for _, k := range []string{LIB, PANEL, PLUGIN} {
-		m.Cmd(nfs.DIR, k).Tables(func(value ice.Maps) {
+		m.Cmd(nfs.DIR, k).Sort(nfs.PATH).Tables(func(value ice.Maps) {
 			if kit.Ext(value[nfs.PATH]) == JS {
 				fmt.Fprintln(js, `_can_name = "`+path.Join(ice.PS, value[nfs.PATH])+`"`)
 				fmt.Fprintln(js, m.Cmdx(nfs.CAT, value[nfs.PATH]))
@@ -80,7 +80,7 @@ func _webpack_cache(m *ice.Message, dir string, write bool) {
 		fmt.Fprintln(js, m.Cmdx(nfs.CAT, k))
 	}
 
-	m.Cmd(mdb.SELECT, m.PrefixKey(), "", mdb.HASH, ice.OptionFields(nfs.PATH)).Tables(func(value ice.Maps) {
+	m.Cmd(mdb.SELECT, m.PrefixKey(), "", mdb.HASH, ice.OptionFields(nfs.PATH)).Sort(nfs.PATH).Tables(func(value ice.Maps) {
 		defer fmt.Fprintln(js)
 
 		p := value[nfs.PATH]

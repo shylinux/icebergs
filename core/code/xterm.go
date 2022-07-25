@@ -6,7 +6,6 @@ import (
 	"os/exec"
 	"path"
 	"strings"
-	"sync"
 	"time"
 
 	pty "shylinux.com/x/creackpty"
@@ -17,28 +16,28 @@ import (
 	kit "shylinux.com/x/toolkits"
 )
 
-const XTERM = "xterm"
-
-func init() {
-	cache := sync.Map{}
-	add := func(m *ice.Message, key string) string {
+func _xterm_socket(m *ice.Message, h, t string) {
+	defer m.RLock()()
+	m.Option(ice.MSG_DAEMON, m.Conf("", kit.Keys(mdb.HASH, h, mdb.META, mdb.TEXT)))
+	m.Option(mdb.TEXT, t)
+}
+func _xterm_get(m *ice.Message, h string, must bool) (f *os.File) {
+	f, _ = mdb.HashCache(m, h, func() ice.Any {
+		if !must {
+			return nil
+		}
 		cmd := exec.Command(cli.SystemFind(m, kit.Select("sh", m.Option(mdb.TYPE))))
 		cmd.Env = append(os.Environ(), "TERM=xterm")
+		m.Option(mdb.HASH, h)
 
 		tty, err := pty.Start(cmd)
 		m.Assert(err)
-		cache.Store(key, tty)
 
 		m.Go(func() {
-			defer m.Cmd(m.PrefixKey(), mdb.PRUNES)
-			defer cache.Delete(key)
-
 			buf := make([]byte, ice.MOD_BUFS)
 			for {
 				if n, e := tty.Read(buf); !m.Warn(e) {
-					m.Option(mdb.HASH, key)
-					m.Option(mdb.TEXT, base64.StdEncoding.EncodeToString(buf[:n]))
-					m.Option(ice.MSG_DAEMON, m.Conf(m.PrefixKey(), kit.Keys(mdb.HASH, key, mdb.META, mdb.TEXT)))
+					_xterm_socket(m, h, base64.StdEncoding.EncodeToString(buf[:n]))
 					m.PushNoticeGrow("data")
 				} else {
 					break
@@ -46,23 +45,14 @@ func init() {
 			}
 			m.PushNoticeGrow("exit")
 		})
-		return key
-	}
-	get := func(m *ice.Message, key string) *os.File {
-		if w, ok := cache.Load(key); ok {
-			if w, ok := w.(*os.File); ok {
-				return w
-			}
-		}
-		add(m, key)
-		if w, ok := cache.Load(key); ok {
-			if w, ok := w.(*os.File); ok {
-				return w
-			}
-		}
-		return nil
-	}
+		return tty
+	}).(*os.File)
+	return
+}
 
+const XTERM = "xterm"
+
+func init() {
 	Index.MergeCommands(ice.Commands{
 		XTERM: {Name: "xterm hash refresh", Help: "终端", Actions: ice.MergeAction(ice.Actions{
 			mdb.INPUTS: {Name: "inputs", Help: "补全", Hand: func(m *ice.Message, arg ...string) {
@@ -77,16 +67,12 @@ func init() {
 				}
 			}},
 			mdb.CREATE: {Name: "create type name", Help: "创建", Hand: func(m *ice.Message, arg ...string) {
-				if m.Option(mdb.TEXT, m.Option(ice.MSG_DAEMON)) != "" {
-					m.Echo(add(m, mdb.HashCreate(m, arg, m.OptionSimple(mdb.TEXT)).Result()))
-				}
+				mdb.HashCreate(m, arg, mdb.TEXT, m.Option(ice.MSG_DAEMON))
+				_xterm_get(m, m.Result(), true)
 			}},
 			mdb.REMOVE: {Name: "remove", Help: "删除", Hand: func(m *ice.Message, arg ...string) {
-				if w, ok := cache.Load(m.Option(mdb.HASH)); ok {
-					if w, ok := w.(*os.File); ok {
-						w.Close()
-					}
-					cache.Delete(m.Option(mdb.HASH))
+				if f := _xterm_get(m, m.Option(mdb.HASH), false); f != nil {
+					f.Close()
 				}
 				mdb.HashRemove(m, m.OptionSimple(mdb.HASH))
 			}},
@@ -95,25 +81,29 @@ func init() {
 			}},
 			mdb.PRUNES: {Name: "prunes", Help: "清理", Hand: func(m *ice.Message, arg ...string) {
 				mdb.HashSelect(m).Tables(func(value ice.Maps) {
-					if _, ok := cache.Load(value[mdb.HASH]); !ok || kit.Time(m.Time())-kit.Time(value[mdb.TIME]) > int64(time.Hour) {
-						m.Cmd(m.PrefixKey(), mdb.REMOVE, kit.Dict(value))
+					if f := _xterm_get(m, value[mdb.HASH], false); f != nil {
+						if kit.Time(m.Time())-kit.Time(value[mdb.TIME]) < int64(time.Hour) {
+							return // 有效终端
+						}
+						f.Close()
 					}
+					m.Cmd("", mdb.REMOVE, kit.Dict(value))
 				})
 			}},
 			"resize": {Name: "resize", Help: "大小", Hand: func(m *ice.Message, arg ...string) {
-				pty.Setsize(get(m, m.Option(mdb.HASH)), &pty.Winsize{Rows: uint16(kit.Int(m.Option("rows"))), Cols: uint16(kit.Int(m.Option("cols")))})
+				pty.Setsize(_xterm_get(m, m.Option(mdb.HASH), true), &pty.Winsize{Rows: uint16(kit.Int(m.Option("rows"))), Cols: uint16(kit.Int(m.Option("cols")))})
 			}},
 			"rename": {Name: "rename", Help: "重命名", Hand: func(m *ice.Message, arg ...string) {
 				mdb.HashModify(m, m.OptionSimple(mdb.HASH), arg)
 			}},
 			"select": {Name: "select", Help: "连接", Hand: func(m *ice.Message, arg ...string) {
 				mdb.HashModify(m, m.OptionSimple(mdb.HASH), mdb.TEXT, m.Option(ice.MSG_DAEMON))
-				m.Cmd(m.PrefixKey(), "input", arg)
+				m.Cmd("", "input", arg)
 			}},
 			"input": {Name: "input", Help: "输入", Hand: func(m *ice.Message, arg ...string) {
 				mdb.HashModify(m, m.OptionSimple(mdb.HASH), mdb.TIME, m.Time())
 				if b, e := base64.StdEncoding.DecodeString(strings.Join(arg, "")); m.Assert(e) {
-					get(m, m.Option(mdb.HASH)).Write(b)
+					_xterm_get(m, m.Option(mdb.HASH), true).Write(b)
 				}
 			}},
 		}, mdb.HashAction(mdb.FIELD, "time,hash,type,name,text,extra"), ctx.CmdAction()), Hand: func(m *ice.Message, arg ...string) {

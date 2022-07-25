@@ -209,6 +209,9 @@ func (m *Message) _command(arg ...Any) *Message {
 	if len(list) == 0 {
 		return m
 	}
+	if list[0] == "" {
+		list[0] = m.PrefixKey()
+	}
 
 	ok := false
 	run := func(msg *Message, ctx *Context, cmd *Command, key string, arg ...string) {

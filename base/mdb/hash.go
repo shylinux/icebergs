@@ -224,7 +224,7 @@ func HashCreate(m *ice.Message, arg ...ice.Any) *ice.Message {
 			args[i] = kit.Keys("extra", args[i])
 		}
 	}
-	return m.Cmd(INSERT, m.PrefixKey(), "", HASH, args)
+	return m.Cmdy(INSERT, m.PrefixKey(), "", HASH, args)
 }
 func HashRemove(m *ice.Message, arg ...ice.Any) *ice.Message {
 	m.OptionFields(m.Config(FIELD))
@@ -277,4 +277,16 @@ func HashExport(m *ice.Message, arg ...ice.Any) *ice.Message {
 }
 func HashImport(m *ice.Message, arg ...ice.Any) *ice.Message {
 	return m.Cmd(IMPORT, m.PrefixKey(), "", HASH, kit.Simple(arg...))
+}
+
+func HashCache(m *ice.Message, h string, add func() ice.Any) ice.Any {
+	defer m.Lock()()
+
+	if add != nil && m.Confv(m.PrefixKey(), kit.Keys(HASH, h, "_cache")) == nil {
+		m.Debug("add cache %s:%s", m.PrefixKey(), kit.Keys(HASH, h, "_cache"))
+		m.Confv(m.PrefixKey(), kit.Keys(HASH, h, "_cache"), add()) // 添加
+	}
+
+	m.Debug("get cache %s:%s", m.PrefixKey(), kit.Keys(HASH, h, "_cache"))
+	return m.Confv(m.PrefixKey(), kit.Keys(HASH, h, "_cache")) // 读取
 }

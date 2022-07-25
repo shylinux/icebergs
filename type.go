@@ -528,6 +528,9 @@ func (m *Message) Confv(arg ...Any) (val Any) { // key sub val
 	}
 
 	key := kit.Format(arg[0])
+	if key == "" {
+		key = m.PrefixKey()
+	}
 	if conf, ok := m.target.Configs[key]; ok {
 		run(conf)
 	} else if conf, ok := m.source.Configs[key]; ok {

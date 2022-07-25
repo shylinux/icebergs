@@ -9,7 +9,10 @@ import (
 var lock = map[string]*sync.RWMutex{}
 var _lock = sync.Mutex{}
 
-func _get_lock(key string) (*sync.RWMutex, string) {
+func (m *Message) _lock(key string) (*sync.RWMutex, string) {
+	if key == "" {
+		key = m.PrefixKey()
+	}
 	_lock.Lock()
 	defer _lock.Unlock()
 
@@ -21,7 +24,7 @@ func _get_lock(key string) (*sync.RWMutex, string) {
 	return l, key
 }
 func (m *Message) Lock(arg ...Any) func() {
-	l, key := _get_lock(kit.Keys(arg...))
+	l, key := m._lock(kit.Keys(arg...))
 	m.Debug("before lock %v", key)
 	l.Lock()
 	m.Debug("success lock %v", key)
@@ -31,7 +34,7 @@ func (m *Message) Lock(arg ...Any) func() {
 	}
 }
 func (m *Message) RLock(arg ...Any) func() {
-	l, key := _get_lock(kit.Keys(arg...))
+	l, key := m._lock(kit.Keys(arg...))
 	m.Debug("before rlock %v", key)
 	l.RLock()
 	m.Debug("success rlock %v", key)

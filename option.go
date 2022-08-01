@@ -145,11 +145,13 @@ func (m *Message) Status(arg ...Any) {
 	}
 	m.Option(MSG_STATUS, kit.Format(list))
 }
-func (m *Message) StatusTime(arg ...Any) {
+func (m *Message) StatusTime(arg ...Any) *Message {
 	m.Status(TIME, m.Time(), arg, kit.MDB_COST, m.FormatCost())
+	return m
 }
-func (m *Message) StatusTimeCount(arg ...Any) {
+func (m *Message) StatusTimeCount(arg ...Any) *Message {
 	m.Status(TIME, m.Time(), kit.MDB_COUNT, kit.Split(m.FormatSize())[0], arg, kit.MDB_COST, m.FormatCost())
+	return m
 }
 func (m *Message) StatusTimeCountTotal(arg ...Any) {
 	m.Status(TIME, m.Time(), kit.MDB_COUNT, kit.Split(m.FormatSize())[0], kit.MDB_TOTAL, arg, kit.MDB_COST, m.FormatCost())

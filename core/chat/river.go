@@ -53,7 +53,7 @@ func _river_list(m *ice.Message) {
 const RIVER = "river"
 
 func init() {
-	Index.Merge(&ice.Context{Commands: ice.Commands{
+	Index.MergeCommands(ice.Commands{
 		RIVER: {Name: "river hash auto create", Help: "群组", Actions: ice.MergeAction(ice.Actions{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) { m.Config(nfs.TEMPLATE, _river_template) }},
 			mdb.INPUTS: {Name: "inputs", Help: "补全", Hand: func(m *ice.Message, arg ...string) {
@@ -134,7 +134,7 @@ func init() {
 				m.Cmdy(RIVER, arg)
 			}
 		}},
-	}})
+	})
 }
 
 var _river_template = kit.Dict(

@@ -12,7 +12,7 @@ import (
 )
 
 func _route_travel(m *ice.Message, route string) {
-	m.Richs(SPACE, nil, mdb.FOREACH, func(key string, val ice.Map) {
+	m.Cmd(SPACE).Tables(func(val ice.Maps) {
 		switch val[mdb.TYPE] {
 		case SERVER: // 远程查询
 			if val[mdb.NAME] == ice.Info.NodeName {
@@ -31,13 +31,12 @@ func _route_travel(m *ice.Message, route string) {
 		}
 	})
 }
-func _route_list(m *ice.Message) {
+func _route_list(m *ice.Message) *ice.Message {
 	m.Tables(func(value ice.Maps) {
 		m.PushAnchor(value[ROUTE], m.MergePod(value[ROUTE]))
-
 		switch value[mdb.TYPE] {
 		case SERVER:
-			m.PushButton(tcp.START)
+			m.PushButton(tcp.START, aaa.INVITE)
 		case WORKER:
 			fallthrough
 		default:
@@ -59,22 +58,19 @@ func _route_list(m *ice.Message) {
 	m.Push(ROUTE, ice.Info.NodeName)
 	m.PushAnchor(tcp.LOCALHOST, kit.Format("%s://%s:%s", u.Scheme, tcp.LOCALHOST, u.Port()))
 	m.PushButton(tcp.START)
+	return m
 }
 
 const ROUTE = "route"
 
 func init() {
-	Index.Merge(&ice.Context{Configs: ice.Configs{
-		ROUTE: {Name: ROUTE, Help: "路由器", Value: kit.Data(mdb.SHORT, ROUTE)},
-	}, Commands: ice.Commands{
+	Index.MergeCommands(ice.Commands{
 		ROUTE: {Name: "route route ctx cmd auto invite spide", Help: "路由器", Actions: ice.Actions{
 			aaa.INVITE: {Name: "invite", Help: "添加", Hand: func(m *ice.Message, arg ...string) {
-				m.Cmdy(SPACE, m.Option(ROUTE), SPACE, aaa.INVITE, arg)
-				m.ProcessInner()
+				m.Cmdy(SPACE, m.Option(ROUTE), SPACE, aaa.INVITE, arg).ProcessInner()
 			}},
 			cli.START: {Name: "start name repos template", Help: "启动", Hand: func(m *ice.Message, arg ...string) {
-				m.Cmdy(SPACE, m.Option(ROUTE), DREAM, tcp.START, arg)
-				m.ProcessInner()
+				m.Cmdy(SPACE, m.Option(ROUTE), DREAM, tcp.START, arg).ProcessInner()
 			}},
 			ctx.COMMAND: {Name: "command", Help: "命令", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmdy(SPACE, m.Option(ROUTE), kit.Keys(m.Option(ice.CTX), m.Option(ice.CMD)), arg)
@@ -85,7 +81,7 @@ func init() {
 			SPIDE: {Name: "spide", Help: "架构图", Hand: func(m *ice.Message, arg ...string) {
 				if m.Option(ROUTE) == "" { // 路由列表 route
 					m.Cmdy(ROUTE).Cut(ROUTE)
-					m.Display("/plugin/story/spide.js?prefix=spide", lex.SPLIT, ice.PT)
+					m.DisplayStorySpide("prefix", "spide", lex.SPLIT, ice.PT)
 
 				} else if m.Option(ctx.CONTEXT) == "" { // 模块列表 context
 					m.Cmdy(SPACE, m.Option(ROUTE), ctx.CONTEXT, ice.ICE, ctx.CONTEXT).Cut(mdb.NAME).RenameAppend(mdb.NAME, ctx.CONTEXT)
@@ -101,8 +97,7 @@ func init() {
 		}, Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) == 0 || arg[0] == "" { // 路由列表
 				if _route_travel(m, kit.Select("", arg, 0)); m.W != nil {
-					_route_list(m)
-					m.Sort("type,route")
+					_route_list(m).Sort("type,route")
 				}
 
 			} else if len(arg) == 1 || arg[1] == "" { // 模块列表
@@ -122,5 +117,5 @@ func init() {
 				m.ProcessField(ctx.ACTION, ctx.COMMAND)
 			}
 		}},
-	}})
+	})
 }

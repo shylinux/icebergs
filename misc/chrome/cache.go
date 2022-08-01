@@ -24,8 +24,8 @@ func (c cache) Create(m *ice.Message, arg ...string) *ice.Message {
 	if c.Hash.List(m, m.Option(mdb.LINK)); m.Length() > 0 {
 		return m // 已经下载
 	}
-
-	m.Option(mdb.HASH, c.Hash.Create(m.Spawn(), m.OptionSimple("show,type,name,link")...).Result())
+	// h = c.Hash.Create(m.Spawn(), m.OptionSimple("show,type,name,link")...).Result()
+	// m.Option(mdb.HASH, h)
 	msg := m.Cmd("web.spide", ice.DEV, web.SPIDE_CACHE, web.SPIDE_GET, m.Option(mdb.LINK), func(count, total, value int) {
 		c.Hash.Modify(m, kit.Simple(mdb.COUNT, count, mdb.TOTAL, total, mdb.VALUE, kit.Format(value))...)
 	})

@@ -12,16 +12,15 @@ import (
 const SSO = "sso"
 
 func init() {
-	Index.Merge(&ice.Context{Commands: ice.Commands{
+	Index.MergeCommands(ice.Commands{
 		"/sso": {Name: "/sso", Help: "登录", Hand: func(m *ice.Message, arg ...string) {
 			if m.Option(ice.MSG_USERNAME) == "" {
 				m.RenderIndex(web.SERVE, ice.VOLCANOS)
 				return
 			}
 			sessid := m.Cmdx(web.SPACE, m.Option(web.SPACE), aaa.SESS, mdb.CREATE,
-				mdb.TIME, m.Time("720h"),
-				aaa.USERROLE, m.Option(ice.MSG_USERROLE),
 				aaa.USERNAME, m.Option(ice.MSG_USERNAME),
+				aaa.USERROLE, m.Option(ice.MSG_USERROLE),
 				aaa.USERNICK, m.Option(ice.MSG_USERNICK),
 			)
 			m.RenderRedirect(kit.MergeURL(m.Option(cli.BACK), ice.MSG_SESSID, sessid))
@@ -31,5 +30,5 @@ func init() {
 			// web.RenderCookie(m, sessid, web.CookieName(m.Option("back")))
 			// m.RenderRedirect(kit.MergeURL(m.Option("back")))
 		}},
-	}})
+	})
 }

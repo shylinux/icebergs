@@ -12,43 +12,38 @@ import (
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/nfs"
 	kit "shylinux.com/x/toolkits"
+	"shylinux.com/x/toolkits/file"
 )
 
 func _system_cmd(m *ice.Message, arg ...string) *exec.Cmd {
-	// 定制目录
 	if text := kit.ReadFile(ice.ETC_PATH); len(text) > 0 {
 		if file := _system_find(m, arg[0], strings.Split(text, ice.NL)...); file != "" {
-			m.Debug("cmd: %v", file)
-			arg[0] = file
+			m.Log_SELECT("etc path cmd", file)
+			arg[0] = file // 配置目录
 		}
 	}
-	// 环境变量
 	env := kit.Simple(m.Optionv(CMD_ENV))
 	for i := 0; i < len(env)-1; i += 2 {
 		if env[i] == PATH {
 			if file := _system_find(m, arg[0], strings.Split(env[i+1], ice.DF)...); file != "" {
-				m.Debug("cmd: %v", file)
-				arg[0] = file
+				m.Log_SELECT("env path cmd", file)
+				arg[0] = file // 环境变量
 			}
 		}
 	}
-	// 自动安装
 	if _system_find(m, arg[0]) == "" {
-		if cmds := m.Cmd(MIRRORS, arg[0]).Append("cmd"); cmds != "" {
-			m.Cmd(kit.Split(cmds))
-			if file := _system_find(m, arg[0]); file != "" {
-				m.Debug("cmd: %v", file)
-				arg[0] = file
-			}
+		m.Cmd(MIRRORS, CMD, arg[0])
+		if file := _system_find(m, arg[0]); file != "" {
+			m.Log_SELECT("mirrors cmd", file)
+			arg[0] = file // 软件镜像
 		}
 	}
-
 	cmd := exec.Command(arg[0], arg[1:]...)
 
 	// 运行目录
 	if cmd.Dir = m.Option(CMD_DIR); len(cmd.Dir) > 0 {
 		if m.Log_EXPORT(CMD_DIR, cmd.Dir); !kit.FileExists(cmd.Dir) {
-			nfs.MkdirAll(m, cmd.Dir)
+			file.MkdirAll(cmd.Dir, ice.MOD_DIR)
 		}
 	}
 	// 环境变量
@@ -61,13 +56,11 @@ func _system_cmd(m *ice.Message, arg ...string) *exec.Cmd {
 	return cmd
 }
 func _system_out(m *ice.Message, out string) io.Writer {
-	defer func() { m.Warn(recover(), "output", out) }()
-
 	if w, ok := m.Optionv(out).(io.Writer); ok {
 		return w
 	} else if m.Option(out) == "" {
 		return nil
-	} else if f, p, e := kit.Create(m.Option(out)); m.Assert(e) {
+	} else if f, p, e := file.CreateFile(m.Option(out)); m.Assert(e) {
 		m.Log_EXPORT(out, p)
 		m.Optionv(out, f)
 		return f
@@ -95,20 +88,18 @@ func _system_find(m *ice.Message, bin string, dir ...string) string {
 	return ""
 }
 func _system_exec(m *ice.Message, cmd *exec.Cmd) {
-	// 输入流
 	if r, ok := m.Optionv(CMD_INPUT).(io.Reader); ok {
-		cmd.Stdin = r
+		cmd.Stdin = r // 输入流
 	}
-
-	// 输出流
 	if w := _system_out(m, CMD_OUTPUT); w != nil {
-		cmd.Stdout, cmd.Stderr = w, w
+		cmd.Stdout, cmd.Stderr = w, w // 输出流
 		if w := _system_out(m, CMD_ERRPUT); w != nil {
 			cmd.Stderr = w
 		}
 	} else {
 		out := bytes.NewBuffer(make([]byte, 0, ice.MOD_BUFS))
 		err := bytes.NewBuffer(make([]byte, 0, ice.MOD_BUFS))
+		cmd.Stdout, cmd.Stderr = out, err
 		defer func() {
 			m.Push(CMD_OUT, out.String())
 			m.Push(CMD_ERR, err.String())
@@ -116,7 +107,6 @@ func _system_exec(m *ice.Message, cmd *exec.Cmd) {
 				m.SetAppend()
 			}
 		}()
-		cmd.Stdout, cmd.Stderr = out, err
 	}
 
 	// 执行命令
@@ -125,16 +115,6 @@ func _system_exec(m *ice.Message, cmd *exec.Cmd) {
 	}
 
 	m.Push(mdb.TIME, m.Time()).Push(CODE, int(cmd.ProcessState.ExitCode()))
-}
-func IsSuccess(m *ice.Message) bool {
-	return m.Append(CODE) == "0" || m.Append(CODE) == ""
-}
-func SystemFind(m *ice.Message, bin string, dir ...string) string {
-	if text := kit.ReadFile(ice.ETC_PATH); len(text) > 0 {
-		dir = append(dir, strings.Split(text, ice.NL)...)
-	}
-	dir = append(dir, strings.Split(kit.Env(PATH), ice.DF)...)
-	return _system_find(m, bin, dir...)
 }
 
 const (
@@ -145,16 +125,14 @@ const (
 	CMD_OUTPUT = "cmd_output"
 	CMD_ERRPUT = "cmd_errput"
 
-	CMD_OUT = "cmd_out"
 	CMD_ERR = "cmd_err"
+	CMD_OUT = "cmd_out"
 )
 
 const SYSTEM = "system"
 
 func init() {
-	Index.Merge(&ice.Context{Configs: ice.Configs{
-		SYSTEM: {Name: SYSTEM, Help: "系统命令", Value: kit.Data(mdb.FIELD, "time,id,cmd")},
-	}, Commands: ice.Commands{
+	Index.MergeCommands(ice.Commands{
 		SYSTEM: {Name: "system cmd run", Help: "系统命令", Actions: ice.Actions{
 			nfs.FIND: {Name: "find", Help: "查找", Hand: func(m *ice.Message, arg ...string) {
 				m.Echo(_system_find(m, arg[0], arg[1:]...))
@@ -168,37 +146,28 @@ func init() {
 				m.Cmdy(nfs.CAT, ice.ETC_PATH)
 			}},
 		}, Hand: func(m *ice.Message, arg ...string) {
-			if len(arg) == 0 {
-				mdb.ListSelect(m, arg...)
-				return
-			}
-			// m.Grow(SYSTEM, "", kit.Dict(mdb.TIME, m.Time(), ice.CMD, kit.Join(arg, ice.SP)))
-
 			if len(arg) == 1 {
 				arg = kit.Split(arg[0])
 			}
-			if kit.Ext(arg[0]) == nfs.SH && arg[0] != nfs.SH && kit.FileExists(path.Join(ice.SRC, arg[0])) {
-				arg = []string{nfs.SH, path.Join(ice.SRC, arg[0])}
-			}
 			_system_exec(m, _system_cmd(m, arg...))
 		}},
-	}})
+	})
 }
 
-type buffer struct {
-	m *ice.Message
-	n string
-}
-
-func (b *buffer) Write(buf []byte) (int, error) {
-	if b.m.IsCliUA() {
-		print(string(buf))
-	} else {
-		b.m.PushNoticeGrow(string(buf))
-	}
-	return len(buf), nil
-}
-func (b *buffer) Close() error { return nil }
 func PushStream(m *ice.Message) {
-	m.Option(CMD_OUTPUT, &buffer{m: m, n: m.Option(ice.MSG_DAEMON)})
+	m.Option(CMD_OUTPUT, file.NewWriteCloser(func(buf []byte) (int, error) {
+		m.PushNoticeGrow(string(buf))
+		return len(buf), nil
+	}, func() error { m.PushNoticeToast("done"); return nil }))
+}
+
+func IsSuccess(m *ice.Message) bool {
+	return m.Append(CODE) == "0" || m.Append(CODE) == ""
+}
+func SystemFind(m *ice.Message, bin string, dir ...string) string {
+	if text := kit.ReadFile(ice.ETC_PATH); len(text) > 0 {
+		dir = append(dir, strings.Split(text, ice.NL)...)
+	}
+	dir = append(dir, strings.Split(kit.Env(PATH), ice.DF)...)
+	return _system_find(m, bin, dir...)
 }

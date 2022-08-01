@@ -8,7 +8,7 @@ import (
 )
 
 func init() {
-	Index.Merge(&ice.Context{Commands: ice.Commands{
+	Index.MergeCommands(ice.Commands{
 		"/configs": {Name: "/configs", Help: "配置", Hand: func(m *ice.Message, arg ...string) {
 			m.Cmd("web.code.git.configs").Tables(func(value ice.Maps) {
 				if strings.HasPrefix(value[mdb.NAME], "url") {
@@ -17,5 +17,5 @@ func init() {
 				}
 			})
 		}},
-	}})
+	})
 }

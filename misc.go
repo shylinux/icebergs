@@ -7,6 +7,8 @@ import (
 	"strings"
 
 	kit "shylinux.com/x/toolkits"
+	"shylinux.com/x/toolkits/file"
+	"shylinux.com/x/toolkits/logs"
 )
 
 func (m *Message) CSV(text string, head ...string) *Message {
@@ -106,6 +108,14 @@ func (m *Message) RenameAppend(arg ...string) *Message { // [from to]...
 	}
 	return m
 }
+func (m *Message) OptionFiles(f ...file.File) file.File {
+	if len(f) > 1 {
+		m.Optionv(MSG_FILES, file.NewMultiFile(f...))
+	} else if len(f) > 0 {
+		m.Optionv(MSG_FILES, f[0])
+	}
+	return m.Optionv(MSG_FILES).(file.File)
+}
 func (m *Message) AppendSimple(key ...string) (res []string) {
 	if len(key) == 0 {
 		if m.FieldsIsDetail() {
@@ -159,7 +169,7 @@ func (m *Message) Design(action Any, help string, input ...Any) {
 				list = append(list, kit.Dict(NAME, k, TYPE, "text", VALUE, v))
 			})
 		default:
-			m.Error(true, ErrNotImplement)
+			m.ErrorNotImplement(input)
 		}
 	}
 	k := kit.Format(action)
@@ -173,8 +183,13 @@ func (m *Message) _command(arg ...Any) *Message {
 	var cbs Any
 
 	// 解析参数
+	_source := logs.FileLine(3, 3)
 	for _, v := range arg {
 		switch val := v.(type) {
+		case logs.Meta:
+			if val.Key == "fileline" {
+				_source = val.Value
+			}
 		case Option:
 			opts[val.Name] = val.Value
 		case *Option:
@@ -223,6 +238,7 @@ func (m *Message) _command(arg ...Any) *Message {
 		}
 
 		// 执行命令
+		msg._source = _source
 		key = kit.Slice(strings.Split(key, PT), -1)[0]
 		m.TryCatch(msg, true, func(msg *Message) { m = ctx._command(msg, cmd, key, arg...) })
 	}
@@ -260,8 +276,9 @@ func (c *Context) _command(m *Message, cmd *Command, key string, arg ...string) 
 		}
 	}
 
-	m.Log(LOG_CMDS, "%s.%s %d %v %s", c.Name, key, len(arg), arg,
-		kit.Select(kit.FileLine(cmd.Hand, 3), kit.FileLine(9, 3), m.target.Name == MDB))
+	m._target = kit.FileLine(cmd.Hand, 3)
+	m.Log(LOG_CMDS, "%s.%s %d %v", c.Name, key, len(arg), arg,
+		logs.FileLineMeta(kit.Select(m._target, m._source, m.target.Name == MDB)))
 
 	if cmd.Hand != nil {
 		cmd.Hand(m, arg...)
@@ -298,7 +315,9 @@ func (c *Context) _action(m *Message, cmd *Command, key string, sub string, h *A
 		}
 	}
 
-	m.Log(LOG_CMDS, "%s.%s %s %d %v %s", c.Name, key, sub, len(arg), arg, kit.FileLine(h.Hand, 3))
+	m._target = kit.FileLine(cmd.Hand, 3)
+	m.Log(LOG_CMDS, "%s.%s %s %d %v", c.Name, key, sub, len(arg), arg,
+		logs.FileLineMeta(kit.Select(m._target, m._source, m.target.Name == MDB)))
 	h.Hand(m, arg...)
 	return m
 }
@@ -411,7 +430,7 @@ func MergeAction(list ...Any) map[string]*Action {
 				})
 			}}
 		default:
-			Pulse.Error(true, ErrNotImplement)
+			Pulse.ErrorNotImplement(from)
 		}
 	}
 	return base

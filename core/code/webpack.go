@@ -46,7 +46,6 @@ func _webpack_cache(m *ice.Message, dir string, write bool) {
 
 	m.Option(nfs.DIR_ROOT, "")
 	m.Option(nfs.DIR_DEEP, true)
-	m.Option(nfs.DIR_PACK, true)
 	m.Option(nfs.DIR_TYPE, nfs.CAT)
 
 	// m.Cmd(nfs.DIR, ice.SRC).Tables(func(value ice.Maps) {

@@ -65,7 +65,7 @@ const (
 const PLAN = "plan"
 
 func init() {
-	Index.Merge(&ice.Context{Commands: ice.Commands{
+	Index.MergeCommands(ice.Commands{
 		PLAN: {Name: "plan scale=week,day,week,month,year,long begin_time@date list", Help: "计划", Meta: kit.Dict(
 			ice.Display("/plugin/local/team/plan.js"),
 		), Actions: ice.MergeAction(ice.Actions{
@@ -95,5 +95,5 @@ func init() {
 			_plan_list(m, begin_time, end_time)
 			m.PushPodCmd(m.CommandKey(), arg...)
 		}},
-	}})
+	})
 }

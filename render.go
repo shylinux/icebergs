@@ -275,6 +275,9 @@ func (m *Message) Display(file string, arg ...Any) *Message { // repos local fil
 func (m *Message) DisplayStoryJSON(arg ...Any) *Message { // /plugin/story/json.js
 	return m.DisplayStory("json", arg...)
 }
+func (m *Message) DisplayStorySpide(arg ...Any) *Message { // /plugin/story/json.js
+	return m.DisplayStory("spide", arg...).StatusTimeCount()
+}
 
 func DisplayBase(file string, arg ...string) Maps {
 	return Maps{DISPLAY: file, STYLE: kit.Join(arg, SP)}

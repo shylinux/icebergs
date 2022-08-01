@@ -13,7 +13,7 @@ import (
 const TEMPLATE = "template"
 
 func init() {
-	Index.Merge(&ice.Context{Commands: ice.Commands{
+	Index.MergeCommands(ice.Commands{
 		TEMPLATE: {Name: "template name auto", Help: "模板", Actions: ice.MergeAction(ice.Actions{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
 				for _, _template := range _template_list {
@@ -40,7 +40,7 @@ func init() {
 				m.Action(mdb.CREATE)
 			}
 			m.PushAction(nfs.DEFS, mdb.REMOVE)
-		}}},
+		}},
 	})
 }
 

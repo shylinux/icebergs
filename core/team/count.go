@@ -12,7 +12,7 @@ import (
 const COUNT = "count"
 
 func init() {
-	Index.Merge(&ice.Context{Commands: ice.Commands{
+	Index.MergeCommands(ice.Commands{
 		COUNT: {Name: "count begin_time@date end_time@date auto insert", Help: "倒计时", Meta: kit.Dict(
 			ice.Display(""),
 		), Actions: ice.MergeAction(ice.Actions{
@@ -44,5 +44,5 @@ func init() {
 				)
 			})
 		}},
-	}})
+	})
 }

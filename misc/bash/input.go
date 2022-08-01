@@ -9,7 +9,7 @@ import (
 )
 
 func init() {
-	Index.Merge(&ice.Context{Commands: ice.Commands{
+	Index.MergeCommands(ice.Commands{
 		"/input": {Name: "/input", Help: "补全", Hand: func(m *ice.Message, arg ...string) {
 			list := kit.Split(m.Option("line"), m.Option("break"))
 			word := list[kit.Int(m.Option("index"))]
@@ -97,5 +97,5 @@ func init() {
 			}
 			m.Info("trans: %v", m.Result())
 		}},
-	}})
+	})
 }

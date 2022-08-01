@@ -59,7 +59,7 @@ const (
 const MSG = "msg"
 
 func init() {
-	Index.Merge(&ice.Context{Commands: ice.Commands{
+	Index.MergeCommands(ice.Commands{
 		web.WEB_LOGIN: {Hand: func(m *ice.Message, arg ...string) {
 			m.Option(ice.MSG_USERZONE, LARK)
 		}},
@@ -100,5 +100,5 @@ func init() {
 				m.Cmdy(TALK, strings.TrimSpace(m.Option("text_without_at_bot")))
 			}
 		}},
-	}})
+	})
 }

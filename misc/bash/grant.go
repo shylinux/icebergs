@@ -8,7 +8,7 @@ import (
 const GRANT = "grant"
 
 func init() {
-	Index.Merge(&ice.Context{Commands: ice.Commands{
+	Index.MergeCommands(ice.Commands{
 		"grant": {Name: "grant hash auto", Help: "授权", Actions: ice.MergeAction(ice.Actions{
 			"confirm": {Name: "confirm", Help: "同意", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmd(SESS, mdb.MODIFY, GRANT, m.Option(ice.MSG_USERNAME), ice.Option{mdb.HASH, m.Option("hash")})
@@ -31,5 +31,5 @@ func init() {
 				}
 			})
 		}},
-	}})
+	})
 }

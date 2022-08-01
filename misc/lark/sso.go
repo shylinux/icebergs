@@ -12,7 +12,7 @@ import (
 const SSO = "sso"
 
 func init() {
-	Index.Merge(&ice.Context{Commands: ice.Commands{
+	Index.MergeCommands(ice.Commands{
 		"/sso": {Name: "/sso", Help: "网页", Hand: func(m *ice.Message, arg ...string) {
 			if m.Option(ice.MSG_USERNAME) != "" { // 默认主页
 				m.RenderIndex(web.SERVE, ice.VOLCANOS)
@@ -48,5 +48,5 @@ func init() {
 			// web.RenderCookie(m, aaa.SessCreate(m, m.Option(aaa.USERNAME)), web.CookieName(m.Option(cli.BACK)))
 			m.RenderRedirect(kit.MergeURL(kit.Select(home, m.Option(cli.BACK)), "sessid", aaa.SessCreate(m, m.Option(aaa.USERNAME))))
 		}},
-	}})
+	})
 }

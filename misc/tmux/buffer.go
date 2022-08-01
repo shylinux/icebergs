@@ -16,9 +16,7 @@ const (
 )
 
 func init() {
-	Index.Merge(&ice.Context{Configs: ice.Configs{
-		BUFFER: {Name: BUFFER, Help: "缓存", Value: kit.Data()},
-	}, Commands: ice.Commands{
+	Index.MergeCommands(ice.Commands{
 		BUFFER: {Name: "buffer name value auto export import", Help: "缓存", Actions: ice.Actions{
 			mdb.MODIFY: {Name: "modify", Help: "编辑", Hand: func(m *ice.Message, arg ...string) {
 				switch arg[0] {
@@ -94,5 +92,5 @@ func init() {
 				m.EchoScript(text)
 			}
 		}},
-	}})
+	})
 }

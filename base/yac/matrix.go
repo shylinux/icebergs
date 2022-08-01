@@ -359,7 +359,7 @@ func init() {
 				case func(string, *Matrix):
 					cb(h, mat)
 				default:
-					m.Error(true, ice.ErrNotImplement)
+					m.ErrorNotImplement(cb)
 				}
 				m.Echo(h)
 			}},
@@ -400,7 +400,7 @@ func init() {
 							case func(string, int, []string, int, *lex.Stream) (int, []string):
 								return cb(nhash, hash, word, begin, stream)
 							default:
-								m.Error(true, ice.ErrNotImplement)
+								m.ErrorNotImplement(cb)
 							}
 							return hash, word
 						}, mat.index(m, NPAGE, m.Option(NPAGE)), stream, 1)

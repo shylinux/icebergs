@@ -2,7 +2,6 @@ package chat
 
 import (
 	ice "shylinux.com/x/icebergs"
-	"shylinux.com/x/icebergs/base/aaa"
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/web"
 	kit "shylinux.com/x/toolkits"
@@ -63,15 +62,15 @@ func init() {
 				m.Cmdy(mdb.INSERT, m.Prefix(ROOM), "", mdb.HASH, m.OptionSimple(mdb.ZONE))
 				m.Cmdy(mdb.INSERT, m.Prefix(JOIN), "", mdb.HASH, m.OptionSimple(mdb.ZONE))
 			}},
-			mdb.INSERT: {Name: "insert zone username daemon", Hand: func(m *ice.Message, arg ...string) {
-				m.Conf(m.Prefix(JOIN), kit.Keys(kit.KeyHash(m.Option(mdb.ZONE)), kit.Keym(mdb.SHORT)), web.SOCKET)
-				m.Cmdy(mdb.INSERT, m.Prefix(JOIN), kit.KeyHash(m.Option(mdb.ZONE)), mdb.HASH,
-					aaa.USERNAME, m.Option(ice.MSG_USERNAME), web.SOCKET, m.Option(ice.MSG_DAEMON),
-				)
-			}},
-			mdb.DELETE: {Name: "delete zone socket", Hand: func(m *ice.Message, arg ...string) {
-				m.Cmdy(mdb.DELETE, m.Prefix(JOIN), kit.KeyHash(m.Option(mdb.ZONE)), mdb.HASH, m.OptionSimple(web.SOCKET))
-			}},
+			// mdb.INSERT: {Name: "insert zone username daemon", Hand: func(m *ice.Message, arg ...string) {
+			// 	m.Conf(m.Prefix(JOIN), kit.Keys(kit.KeyHash(m.Option(mdb.ZONE)), kit.Keym(mdb.SHORT)), web.SOCKET)
+			// 	m.Cmdy(mdb.INSERT, m.Prefix(JOIN), kit.KeyHash(m.Option(mdb.ZONE)), mdb.HASH,
+			// 		aaa.USERNAME, m.Option(ice.MSG_USERNAME), web.SOCKET, m.Option(ice.MSG_DAEMON),
+			// 	)
+			// }},
+			// mdb.DELETE: {Name: "delete zone socket", Hand: func(m *ice.Message, arg ...string) {
+			// 	m.Cmdy(mdb.DELETE, m.Prefix(JOIN), kit.KeyHash(m.Option(mdb.ZONE)), mdb.HASH, m.OptionSimple(web.SOCKET))
+			// }},
 		}, mdb.HashAction()), Hand: func(m *ice.Message, arg ...string) {
 			m.Fields(len(arg), "time,space", "time,zone")
 			if len(arg) == 0 {

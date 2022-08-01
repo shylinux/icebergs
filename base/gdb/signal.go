@@ -1,28 +1,86 @@
 package gdb
 
 import (
+	"fmt"
 	"os"
 	"os/signal"
-	"path"
 	"syscall"
 
 	ice "shylinux.com/x/icebergs"
-	"shylinux.com/x/icebergs/base/cli"
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/nfs"
 	kit "shylinux.com/x/toolkits"
-	log "shylinux.com/x/toolkits/logs"
+	"shylinux.com/x/toolkits/logs"
 )
 
 func _signal_listen(m *ice.Message, s int, arg ...string) {
 	if f, ok := m.Target().Server().(*Frame); ok {
-		m.Cmdy(mdb.INSERT, SIGNAL, "", mdb.HASH, arg)
 		signal.Notify(f.s, syscall.Signal(s))
+		mdb.HashCreate(m, SIGNAL, s, arg)
 	}
 }
 func _signal_action(m *ice.Message, arg ...string) {
 	mdb.HashSelect(m.Spawn(), arg...).Tables(func(value ice.Maps) {
 		m.Cmdy(kit.Split(value[ice.CMD]))
+	})
+}
+func _signal_process(m *ice.Message, p string, s os.Signal) {
+	if p == "" {
+		p = m.Cmdx(nfs.CAT, ice.Info.PidPath)
+	}
+	if p == "" {
+		p = kit.Format(os.Getpid())
+	}
+	if p, e := os.FindProcess(kit.Int(p)); e == nil {
+		p.Signal(s)
+	}
+}
+
+const (
+	PID = "pid"
+)
+const (
+	LISTEN = ice.LISTEN
+	HAPPEN = ice.HAPPEN
+
+	START   = ice.START
+	RESTART = ice.RESTART
+	STOP    = ice.STOP
+	ERROR   = ice.ERROR
+	KILL    = "kill"
+)
+const SIGNAL = "signal"
+
+func init() {
+	Index.MergeCommands(ice.Commands{
+		SIGNAL: {Name: "signal signal auto listen", Help: "信号器", Actions: ice.MergeAction(ice.Actions{
+			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
+				_signal_listen(m, 2, mdb.NAME, "重启", ice.CMD, "exit 1")
+				_signal_listen(m, 3, mdb.NAME, "退出", ice.CMD, "exit 0")
+				if f, p, e := logs.CreateFile(ice.Info.PidPath); !m.Warn(e) {
+					defer f.Close()
+					fmt.Fprint(f, os.Getpid())
+					m.Log_CREATE(nfs.FILE, p)
+				}
+			}},
+			LISTEN: {Name: "listen signal name cmd", Help: "监听", Hand: func(m *ice.Message, arg ...string) {
+				_signal_listen(m, kit.Int(m.Option(SIGNAL)), arg...)
+			}},
+			HAPPEN: {Name: "happen signal", Help: "触发", Hand: func(m *ice.Message, arg ...string) {
+				_signal_action(m, m.Option(SIGNAL))
+			}},
+			RESTART: {Name: "restart pid", Help: "触发", Hand: func(m *ice.Message, arg ...string) {
+				_signal_process(m, m.Option(PID), syscall.SIGINT)
+			}},
+			STOP: {Name: "stop pid", Help: "触发", Hand: func(m *ice.Message, arg ...string) {
+				_signal_process(m, m.Option(PID), syscall.SIGQUIT)
+			}},
+			KILL: {Name: "kill pid signal", Help: "触发", Hand: func(m *ice.Message, arg ...string) {
+				_signal_process(m, m.Option(PID), syscall.Signal(kit.Int(kit.Select("9", m.Option(SIGNAL)))))
+			}},
+		}, mdb.HashAction(mdb.SHORT, SIGNAL, mdb.FIELD, "time,signal,name,cmd", mdb.ACTION, HAPPEN)), Hand: func(m *ice.Message, arg ...string) {
+			mdb.HashSelect(m, arg...).Sort(SIGNAL)
+		}},
 	})
 }
 
@@ -36,40 +94,4 @@ func SignalNotify(m *ice.Message, sig int, cb func()) {
 			}
 		}
 	})
-}
-
-const (
-	LISTEN = ice.LISTEN
-	HAPPEN = ice.HAPPEN
-)
-const SIGNAL = "signal"
-
-func init() {
-	Index.Merge(&ice.Context{Configs: ice.Configs{
-		SIGNAL: {Name: SIGNAL, Help: "信号器", Value: kit.Data(
-			mdb.SHORT, SIGNAL, mdb.FIELD, "time,signal,name,cmd", nfs.PATH, path.Join(ice.VAR_RUN, "ice.pid"),
-		)},
-	}, Commands: ice.Commands{
-		SIGNAL: {Name: "signal signal auto listen", Help: "信号器", Actions: ice.MergeAction(ice.Actions{
-			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
-				if log.LogDisable {
-					return // 禁用日志
-				}
-				m.Cmd(nfs.SAVE, kit.Select(m.Config(nfs.PATH), m.Conf(cli.RUNTIME, kit.Keys(cli.CONF, cli.CTX_PID))),
-					m.Conf(cli.RUNTIME, kit.Keys(cli.HOST, cli.PID)))
-
-				m.Cmd(SIGNAL, LISTEN, SIGNAL, "3", mdb.NAME, "退出", ice.CMD, "exit 0")
-				m.Cmd(SIGNAL, LISTEN, SIGNAL, "2", mdb.NAME, "重启", ice.CMD, "exit 1")
-			}},
-			LISTEN: {Name: "listen signal name cmd", Help: "监听", Hand: func(m *ice.Message, arg ...string) {
-				_signal_listen(m, kit.Int(m.Option(SIGNAL)), arg...)
-			}},
-			HAPPEN: {Name: "happen signal", Help: "触发", Hand: func(m *ice.Message, arg ...string) {
-				_signal_action(m, m.Option(SIGNAL))
-			}},
-		}, mdb.HashAction()), Hand: func(m *ice.Message, arg ...string) {
-			mdb.HashSelect(m, arg...).Sort(SIGNAL)
-			m.PushAction(HAPPEN, mdb.REMOVE)
-		}},
-	}})
 }

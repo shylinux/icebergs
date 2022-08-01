@@ -8,7 +8,7 @@ import (
 const INFO = "info"
 
 func init() {
-	Index.Merge(&ice.Context{Commands: ice.Commands{
+	Index.MergeCommands(ice.Commands{
 		INFO: {Name: "info auto", Help: "信息", Actions: ice.Actions{
 			mdb.MODIFY: {Name: "modify", Help: "编辑", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmdy(mdb.MODIFY, RIVER, "", mdb.HASH, mdb.HASH, m.Option(ice.MSG_RIVER), arg)
@@ -17,5 +17,5 @@ func init() {
 			m.OptionFields(mdb.DETAIL)
 			m.Cmdy(mdb.SELECT, RIVER, "", mdb.HASH, mdb.HASH, m.Option(ice.MSG_RIVER))
 		}},
-	}})
+	})
 }

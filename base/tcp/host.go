@@ -59,13 +59,6 @@ func _islocalhost(m *ice.Message, ip string) (ok bool) {
 	}
 	return false
 }
-func IsLocalHost(m *ice.Message, ip string) bool { return _islocalhost(m, ip) }
-func ReplaceLocalhost(m *ice.Message, url string) string {
-	if strings.Contains(url, "://"+LOCALHOST) {
-		url = strings.Replace(url, "://"+LOCALHOST, "://"+m.Cmd(HOST).Append(aaa.IP), 1)
-	}
-	return url
-}
 
 const (
 	LOCALHOST = "localhost"
@@ -73,16 +66,10 @@ const (
 const HOST = "host"
 
 func init() {
-	Index.Merge(&ice.Context{Configs: ice.Configs{
-		HOST: {Name: HOST, Help: "主机", Value: kit.Data(
-			aaa.BLACK, kit.Data(mdb.SHORT, mdb.TEXT), aaa.WHITE, kit.Data(mdb.SHORT, mdb.TEXT),
-		)},
-	}, Commands: ice.Commands{
-		HOST: {Name: "host name auto", Help: "主机", Actions: ice.Actions{
+	Index.MergeCommands(ice.Commands{
+		HOST: {Name: "host name auto", Help: "主机", Actions: ice.MergeAction(ice.Actions{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
-				m.Cmd(HOST).Tables(func(value ice.Maps) {
-					m.Cmd(HOST, aaa.WHITE, value[aaa.IP])
-				})
+				m.Cmd(HOST).Tables(func(value ice.Maps) { m.Cmd(HOST, aaa.WHITE, value[aaa.IP]) })
 			}},
 			aaa.BLACK: {Name: "black", Help: "黑名单", Hand: func(m *ice.Message, arg ...string) {
 				m.Log_CREATE(aaa.BLACK, arg[0])
@@ -92,8 +79,16 @@ func init() {
 				m.Log_CREATE(aaa.WHITE, arg[0])
 				m.Rich(HOST, kit.Keym(aaa.WHITE), kit.Dict(mdb.TEXT, arg[0]))
 			}},
-		}, Hand: func(m *ice.Message, arg ...string) {
+		}, mdb.HashAction(aaa.BLACK, kit.Data(mdb.SHORT, mdb.TEXT), aaa.WHITE, kit.Data(mdb.SHORT, mdb.TEXT))), Hand: func(m *ice.Message, arg ...string) {
 			_host_list(m, kit.Select("", arg, 0))
 		}},
-	}})
+	})
+}
+
+func IsLocalHost(m *ice.Message, ip string) bool { return _islocalhost(m, ip) }
+func ReplaceLocalhost(m *ice.Message, url string) string {
+	if strings.Contains(url, "://"+LOCALHOST) {
+		url = strings.Replace(url, "://"+LOCALHOST, "://"+m.Cmd(HOST).Append(aaa.IP), 1)
+	}
+	return url
 }

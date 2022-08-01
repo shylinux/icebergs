@@ -2,63 +2,62 @@ package mdb
 
 import (
 	"encoding/csv"
-	"os"
 	"path"
-	"sort"
-	"strings"
 
 	ice "shylinux.com/x/icebergs"
 	kit "shylinux.com/x/toolkits"
+	"shylinux.com/x/toolkits/logs"
+	"shylinux.com/x/toolkits/miss"
 )
 
 func _zone_fields(m *ice.Message) []string {
-	return kit.Split(kit.Select("zone,id,time,type,name,text", m.OptionFields()))
+	return kit.Split(kit.Select(ZONE_FIELD, m.OptionFields()))
+}
+func _zone_inputs(m *ice.Message, prefix, chain, zone string, field, value string) {
+	if field == m.Conf(prefix, kit.Keys(chain, kit.Keym(SHORT))) {
+		_hash_inputs(m, prefix, chain, field, value)
+		return
+	}
+	h := _hash_select_fields(m, prefix, chain, zone, HASH)
+	defer m.RLock(prefix, chain)()
+	_list_inputs(m, prefix, _domain_chain(m, kit.Keys(chain, HASH, h)), field, value)
+}
+func _zone_insert(m *ice.Message, prefix, chain, zone string, arg ...string) {
+	h := _hash_select_fields(m, prefix, chain, zone, HASH)
+	if h == "" {
+		h = _hash_insert(m, prefix, chain, m.Conf(prefix, kit.Keys(chain, kit.Keym(SHORT))), zone)
+	}
+	m.Assert(h != "")
+	defer m.Lock(prefix, chain)()
+	_list_insert(m, prefix, _domain_chain(m, kit.Keys(chain, HASH, h)), arg...)
+}
+func _zone_modify(m *ice.Message, prefix, chain, zone, id string, arg ...string) {
+	h := _hash_select_fields(m, prefix, chain, zone, HASH)
+	m.Assert(h != "")
+	defer m.RLock(prefix, chain)()
+	_list_modify(m, prefix, _domain_chain(m, kit.Keys(chain, HASH, h)), ID, id, arg...)
 }
 func _zone_select(m *ice.Message, prefix, chain, zone string, id string) {
+	if zone == "" {
+		_hash_select(m, prefix, chain, HASH, FOREACH)
+		return
+	}
 	if zone == RANDOM {
 		zone = RANDOMS
 	}
 
 	fields := _zone_fields(m)
-	cb := m.OptionCB(SELECT)
-	m.Richs(prefix, chain, kit.Select(FOREACH, zone), func(key string, val ice.Map) {
-		if val = kit.GetMeta(val); zone == "" {
-			if m.OptionFields() == DETAIL {
-				m.Push(DETAIL, val)
-			} else {
-				m.Push(key, val, fields)
-			}
-			return
-		}
-
-		m.Grows(prefix, kit.Keys(chain, HASH, key), ID, id, func(index int, value ice.Map) {
-			switch value = kit.GetMeta(value); cb := cb.(type) {
-			case func(string, []string, ice.Map, ice.Map):
-				cb(key, fields, value, val)
-			case func(string, ice.Map, ice.Map):
-				cb(key, value, val)
-			case func(string, ice.Map):
-				cb(key, value)
-			case func(ice.Map):
-				cb(value)
-			case func(ice.Maps):
-				res := ice.Maps{}
-				for k, v := range value {
-					res[k] = kit.Format(v)
-				}
-				cb(res)
-			default:
-				if m.FieldsIsDetail() {
-					m.Push(DETAIL, value)
-				} else {
-					m.Push(key, value, fields, val)
-				}
-			}
+	defer m.RLock(prefix, chain)()
+	m.Richs(prefix, chain, kit.Select(FOREACH, zone), func(key string, val Map) {
+		chain := kit.Keys(chain, HASH, key)
+		defer m.RLock(prefix, chain)()
+		m.Grows(prefix, chain, ID, id, func(value ice.Map) {
+			_mdb_select(m, key, value, fields, val)
 		})
 	})
 }
 func _zone_export(m *ice.Message, prefix, chain, file string) {
-	f, p, e := kit.Create(kit.Keys(file, CSV))
+	f, p, e := miss.CreateFile(kit.Keys(file, CSV))
 	m.Assert(e)
 	defer f.Close()
 
@@ -66,21 +65,24 @@ func _zone_export(m *ice.Message, prefix, chain, file string) {
 	defer w.Flush()
 
 	fields := _zone_fields(m)
-	fields = append(fields, EXTRA)
+	if kit.IndexOf(fields, EXTRA) == -1 {
+		fields = append(fields, EXTRA)
+	}
 	w.Write(fields)
 
 	keys := []string{}
-	m.Richs(prefix, chain, FOREACH, func(key string, val ice.Map) {
-		keys = append(keys, key)
-	})
-	sort.Strings(keys)
+	m.Richs(prefix, chain, FOREACH, func(key string, val ice.Map) { keys = append(keys, key) })
+	kit.Sort(keys)
 
 	count := 0
+	defer m.Lock(prefix, chain)()
 	for _, key := range keys {
 		m.Richs(prefix, chain, key, func(key string, val ice.Map) {
 			val = kit.GetMeta(val)
 
-			m.Grows(prefix, kit.Keys(chain, HASH, key), "", "", func(index int, value ice.Map) {
+			chain := kit.Keys(chain, HASH, key)
+			defer m.RLock(prefix, chain)()
+			m.Grows(prefix, chain, "", "", func(value ice.Map) {
 				value = kit.GetMeta(value)
 
 				list := []string{}
@@ -98,10 +100,8 @@ func _zone_export(m *ice.Message, prefix, chain, file string) {
 	m.Echo(p)
 }
 func _zone_import(m *ice.Message, prefix, chain, file string) {
-	f, e := os.Open(kit.Keys(file, CSV))
-	if m.Warn(e) {
-		return
-	}
+	f, e := miss.OpenFile(kit.Keys(file, CSV))
+	m.Assert(e)
 	defer f.Close()
 
 	r := csv.NewReader(f)
@@ -111,6 +111,7 @@ func _zone_import(m *ice.Message, prefix, chain, file string) {
 	list := ice.Maps{}
 	zkey := kit.Select(head[0], m.OptionFields())
 
+	defer m.Lock(prefix, chain)()
 	for {
 		line, e := r.Read()
 		if e != nil {
@@ -135,7 +136,11 @@ func _zone_import(m *ice.Message, prefix, chain, file string) {
 			list[zone] = m.Rich(prefix, chain, kit.Data(zkey, zone))
 		}
 
-		m.Grow(prefix, kit.Keys(chain, HASH, list[zone]), data)
+		func() {
+			chain := kit.Keys(chain, HASH, list[zone])
+			defer m.Lock(prefix, chain)()
+			m.Grow(prefix, chain, data)
+		}()
 		count++
 	}
 
@@ -143,61 +148,36 @@ func _zone_import(m *ice.Message, prefix, chain, file string) {
 	m.Echo("%d", count)
 }
 
+const (
+	ZONE_FIELD = "zone,id,time,type,name,text"
+)
 const ZONE = "zone"
 
 func ZoneAction(args ...ice.Any) ice.Actions {
-	_zone := func(m *ice.Message) string { return kit.Select(ZONE, m.Config(SHORT)) }
-
 	return ice.Actions{ice.CTX_INIT: AutoConfig(args...),
 		INPUTS: {Name: "inputs", Help: "补全", Hand: func(m *ice.Message, arg ...string) {
-			arg[0] = strings.TrimPrefix(arg[0], "extra.")
-			arg[0] = kit.Select(arg[0], m.Config(kit.Keys(ALIAS, arg[0])))
-			switch arg[0] {
-			case ice.POD:
-				m.Cmdy("route")
-			case ice.CTX:
-				m.Cmdy("context")
-			case ice.CMD:
-				m.Cmdy("context", kit.Select(m.Option(ice.CTX), m.Option(kit.Keys(EXTRA, ice.CTX))), "command")
-			case ice.ARG:
-
-			case "index":
-				m.OptionFields(arg[0])
-				m.Cmdy("command", SEARCH, "command", kit.Select("", arg, 1))
-
-			case _zone(m):
-				m.Cmdy(INPUTS, m.PrefixKey(), "", HASH, arg)
-			default:
-				m.Cmdy(INPUTS, m.PrefixKey(), "", ZONE, m.Option(_zone(m)), arg)
-			}
+			ZoneInputs(m, arg)
 		}},
 		CREATE: {Name: "create zone", Help: "创建", Hand: func(m *ice.Message, arg ...string) {
-			m.Cmdy(INSERT, m.PrefixKey(), "", HASH, arg)
+			ZoneCreate(m, arg)
 		}},
 		REMOVE: {Name: "remove", Help: "删除", Hand: func(m *ice.Message, arg ...string) {
-			m.Cmdy(DELETE, m.PrefixKey(), "", HASH, m.OptionSimple(_zone(m)), arg)
+			ZoneRemove(m, arg)
 		}},
 		INSERT: {Name: "insert", Help: "添加", Hand: func(m *ice.Message, arg ...string) {
-			if len(arg) == 0 {
-				arg = m.OptionSimple(_zone(m), m.Config(FIELD))
-			}
-			m.Cmdy(INSERT, m.PrefixKey(), "", HASH, _zone(m), arg[1])
-			m.Cmdy(INSERT, m.PrefixKey(), "", ZONE, m.Option(_zone(m)), arg[2:])
+			ZoneInsert(m, arg)
 		}},
 		MODIFY: {Name: "modify", Help: "编辑", Hand: func(m *ice.Message, arg ...string) {
-			m.Cmdy(MODIFY, m.PrefixKey(), "", ZONE, m.Option(_zone(m)), m.Option(ID), arg)
+			ZoneModify(m, arg)
 		}},
-		PLUGIN: {Name: "plugin extra.pod extra.ctx extra.cmd extra.arg", Help: "插件", Hand: func(m *ice.Message, arg ...string) {
-			m.Cmdy(MODIFY, m.PrefixKey(), "", ZONE, m.Option(_zone(m)), m.Option(ID), arg)
+		SELECT: {Name: "select", Help: "列表", Hand: func(m *ice.Message, arg ...string) {
+			ZoneSelect(m, arg...)
 		}},
 		EXPORT: {Name: "export", Help: "导出", Hand: func(m *ice.Message, arg ...string) {
-			m.Option(ice.CACHE_LIMIT, "-1")
-			m.OptionFields(_zone(m), m.Config(FIELD))
-			m.Cmdy(EXPORT, m.PrefixKey(), "", ZONE)
+			ZoneExport(m, arg)
 		}},
 		IMPORT: {Name: "import", Help: "导入", Hand: func(m *ice.Message, arg ...string) {
-			m.OptionFields(_zone(m))
-			m.Cmdy(IMPORT, m.PrefixKey(), "", ZONE)
+			ZoneImport(m, arg)
 		}},
 		PREV: {Name: "prev", Help: "上一页", Hand: func(m *ice.Message, arg ...string) {
 			PrevPage(m, arg[0], arg[1:]...)
@@ -205,27 +185,55 @@ func ZoneAction(args ...ice.Any) ice.Actions {
 		NEXT: {Name: "next", Help: "下一页", Hand: func(m *ice.Message, arg ...string) {
 			NextPageLimit(m, arg[0], arg[1:]...)
 		}},
-		SELECT: {Name: "select", Help: "列表", Hand: func(m *ice.Message, arg ...string) {
-			ZoneSelect(m, arg...)
-		}},
 	}
+}
+func ZoneShort(m *ice.Message) string {
+	return kit.Select(ZONE, m.Config(SHORT), m.Config(SHORT) != UNIQ)
+}
+func ZoneField(m *ice.Message) string { return kit.Select(ZONE_FIELD, m.Config(FIELD)) }
+func ZoneArgs(m *ice.Message, arg ...Any) []string {
+	return _mdb_args(m, ZoneField(m), arg...)
+}
+
+func ZoneInputs(m *ice.Message, arg ...Any) {
+	m.Cmdy(INPUTS, m.PrefixKey(), "", ZONE, ZoneArgs(m, arg...))
+}
+func ZoneCreate(m *ice.Message, arg ...Any) {
+	m.Cmdy(INSERT, m.PrefixKey(), "", HASH, arg)
+}
+func ZoneRemove(m *ice.Message, arg ...Any) {
+	m.Cmdy(DELETE, m.PrefixKey(), "", HASH, m.OptionSimple(ZoneShort(m)), arg)
+}
+func ZoneInsert(m *ice.Message, arg ...Any) {
+	args := kit.Simple(arg...)
+	m.Cmdy(INSERT, m.PrefixKey(), "", ZONE, args[1], ZoneArgs(m, args[2:]))
+}
+func ZoneModify(m *ice.Message, arg ...Any) {
+	m.Cmdy(MODIFY, m.PrefixKey(), "", ZONE, m.Option(ZoneShort(m)), m.Option(ID), ZoneArgs(m, arg...))
 }
 func ZoneSelect(m *ice.Message, arg ...string) *ice.Message {
 	arg = kit.Slice(arg, 0, 2)
 	m.Fields(len(arg), kit.Fields(TIME, m.Config(SHORT), COUNT), m.Config(FIELD))
-	if m.Cmdy(SELECT, m.PrefixKey(), "", ZONE, arg); kit.Select("", arg, 0) == "" {
+	if m.Cmdy(SELECT, m.PrefixKey(), "", ZONE, arg, logs.FileLineMeta(logs.FileLine(-1, 3))); len(arg) == 0 {
 		if m.Config(SHORT) != "" {
 			m.Sort(m.Config(SHORT))
 		}
-		m.PushAction(REMOVE)
-	}
-	if len(arg) == 0 {
+		m.PushAction(m.Config(ACTION), REMOVE)
 		m.StatusTimeCount()
-	}
-	if len(arg) == 1 {
-		m.StatusTimeCountTotal(m.Conf(m.PrefixKey(), kit.Keys(HASH, kit.Hashs(arg[0]), kit.Keym("count"))))
+	} else if len(arg) == 1 {
+		m.StatusTimeCountTotal(m.Conf("", kit.Keys(HASH, HashSelectFields(m, arg[0], HASH), kit.Keym(COUNT))))
 	}
 	return m
+}
+func ZoneExport(m *ice.Message, arg ...Any) {
+	m.Cmdy(EXPORT, m.PrefixKey(), "", ZONE, arg)
+}
+func ZoneImport(m *ice.Message, arg ...Any) {
+	m.Cmdy(IMPORT, m.PrefixKey(), "", ZONE, arg)
+}
+func ZoneSelectPage(m *ice.Message, arg ...string) *ice.Message {
+	m.OptionPages(kit.Slice(arg, 2)...)
+	return ZoneSelect(m, arg...)
 }
 func ZoneSelectAll(m *ice.Message, arg ...string) *ice.Message {
 	m.Option(ice.CACHE_LIMIT, "-1")

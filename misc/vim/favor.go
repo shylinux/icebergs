@@ -8,17 +8,12 @@ import (
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/nfs"
 	"shylinux.com/x/icebergs/core/code"
-	kit "shylinux.com/x/toolkits"
 )
 
 const FAVOR = "favor"
 
 func init() {
-	Index.Merge(&ice.Context{Configs: ice.Configs{
-		FAVOR: {Name: FAVOR, Help: "收藏夹", Value: kit.Data(
-			mdb.SHORT, mdb.ZONE, mdb.FIELD, "time,id,type,name,text,file,line,pwd",
-		)},
-	}, Commands: ice.Commands{
+	Index.MergeCommands(ice.Commands{
 		"/favor": {Name: "/favor", Help: "收藏", Actions: ice.Actions{
 			mdb.SELECT: {Name: "select", Help: "主题", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmd(FAVOR).Tables(func(value ice.Maps) {
@@ -40,7 +35,9 @@ func init() {
 				p := path.Join(m.Option(cli.PWD), m.Option(nfs.FILE))
 				m.ProcessCommand(code.INNER, []string{path.Dir(p) + ice.PS, path.Base(p), m.Option(nfs.LINE)}, arg...)
 			}},
-		}, mdb.ZoneAction()), Hand: func(m *ice.Message, arg ...string) {
+		}, mdb.ZoneAction(
+			mdb.SHORT, mdb.ZONE, mdb.FIELD, "time,id,type,name,text,file,line,pwd",
+		)), Hand: func(m *ice.Message, arg ...string) {
 			if mdb.ZoneSelect(m, arg...); len(arg) == 0 {
 				m.Action(mdb.CREATE, mdb.EXPORT, mdb.IMPORT)
 			} else {
@@ -48,5 +45,5 @@ func init() {
 				m.StatusTimeCount()
 			}
 		}},
-	}})
+	})
 }

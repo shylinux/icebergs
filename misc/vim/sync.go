@@ -15,11 +15,7 @@ import (
 const SYNC = "sync"
 
 func init() {
-	Index.Merge(&ice.Context{Configs: ice.Configs{
-		SYNC: {Name: SYNC, Help: "同步流", Value: kit.Data(
-			mdb.FIELD, "time,id,type,name,text,pwd,buf,row,col",
-		)},
-	}, Commands: ice.Commands{
+	Index.MergeCommands(ice.Commands{
 		"/sync": {Name: "/sync", Help: "同步", Hand: func(m *ice.Message, arg ...string) {
 			switch m.Option(ARG) {
 			case "wq", "q", "qa":
@@ -41,11 +37,11 @@ func init() {
 				m.Cmdy(FAVOR, mdb.INSERT, m.OptionSimple(mdb.ZONE, "type,name,text,pwd"),
 					nfs.FILE, m.Option(BUF), nfs.LINE, m.Option(ROW))
 			}},
-		}, mdb.ListAction()), Hand: func(m *ice.Message, arg ...string) {
+		}, mdb.ListAction(mdb.FIELD, "time,id,type,name,text,pwd,buf,row,col")), Hand: func(m *ice.Message, arg ...string) {
 			m.OptionPage(kit.Slice(arg, 1)...)
 			mdb.ListSelect(m, kit.Slice(arg, 0, 1)...)
 			m.PushAction(code.INNER, FAVOR)
 			m.StatusTimeCountTotal(m.Config(mdb.COUNT))
 		}},
-	}})
+	})
 }

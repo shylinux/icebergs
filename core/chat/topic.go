@@ -22,7 +22,7 @@ func init() {
 			mdb.TYPE: "text", mdb.NAME: "height", mdb.VALUE: "31",
 		},
 	}
-	Index.Merge(&ice.Context{Commands: ice.Commands{
+	Index.MergeCommands(ice.Commands{
 		TOPIC: {Name: "topic zone id auto create insert", Help: "主题", Actions: ice.MergeAction(ice.Actions{
 			mdb.INPUTS: {Name: "inputs", Help: "补全", Hand: func(m *ice.Message, arg ...string) {
 				switch arg[0] {
@@ -145,5 +145,5 @@ body.{{.Option "topic"}} fieldset.panel.Header>div.output div:hover { background
 			m.W.Header()[web.ContentType] = kit.Simple(web.ContentCSS)
 			m.RenderResult()
 		}},
-	}})
+	})
 }

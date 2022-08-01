@@ -4,6 +4,7 @@ import (
 	"strings"
 
 	ice "shylinux.com/x/icebergs"
+	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/nfs"
 	kit "shylinux.com/x/toolkits"
 )
@@ -34,17 +35,16 @@ func _split_deep(stack []int, text string) ([]int, int) {
 func _split_list(m *ice.Message, file string, arg ...string) ice.Map {
 	const DEEP = "_deep"
 	stack, deep := []int{}, 0
-	list := kit.List(kit.Data(DEEP, -1))
-	line := ""
+	list, line := kit.List(kit.Data(DEEP, -1)), ""
 	m.Cmd(nfs.CAT, file, func(text string) {
-		if strings.HasPrefix(strings.TrimSpace(text), "# ") {
-			return // 注释
-		}
 		if strings.TrimSpace(text) == "" {
 			return // 空行
 		}
 		if line += text; strings.Count(text, "`")%2 == 1 {
 			return // 多行
+		}
+		if strings.HasPrefix(strings.TrimSpace(text), "# ") {
+			return // 注释
 		}
 
 		stack, deep = _split_deep(stack, text)
@@ -61,8 +61,9 @@ func _split_list(m *ice.Message, file string, arg ...string) ice.Map {
 			ls = cb(ls, data)
 		case func([]string):
 			cb(ls)
+		case nil:
 		default:
-			m.Error(true, ice.ErrNotImplement)
+			m.ErrorNotImplement(cb)
 		}
 
 		// 参数字段
@@ -80,7 +81,7 @@ func _split_list(m *ice.Message, file string, arg ...string) ice.Map {
 		// 查找节点
 		for i := len(list) - 1; i >= 0; i-- {
 			if deep > kit.Int(kit.Value(list[i], kit.Keym(DEEP))) {
-				kit.Value(list[i], "list.-2", data)
+				kit.Value(list[i], kit.Keys(mdb.LIST, "-2"), data)
 				list = append(list, data)
 				break
 			}
@@ -89,9 +90,6 @@ func _split_list(m *ice.Message, file string, arg ...string) ice.Map {
 		line = ""
 	})
 	return list[0].(ice.Map)
-}
-func Split(m *ice.Message, arg ...string) ice.Map {
-	return kit.Value(_split_list(m, arg[0], arg[1:]...), "list.0").(ice.Map)
 }
 
 const (
@@ -103,17 +101,17 @@ const (
 const SPLIT = "split"
 
 func init() {
-	Index.Merge(&ice.Context{Configs: ice.Configs{
-		SPLIT: {Name: "split", Help: "解析", Value: kit.Data()},
-	}, Commands: ice.Commands{
-		SPLIT: {Name: "split path key auto", Help: "解析", Hand: func(m *ice.Message, arg ...string) {
+	Index.MergeCommands(ice.Commands{
+		SPLIT: {Name: "split path key auto", Help: "分词", Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) == 0 || strings.HasSuffix(arg[0], ice.PS) {
 				m.Cmdy(nfs.DIR, arg)
 				return
 			}
-
-			m.Echo(kit.Format(_split_list(m, arg[0], kit.Split(kit.Join(arg[1:]))...)))
-			m.DisplayStoryJSON()
+			m.Echo(kit.Format(_split_list(m, arg[0], kit.Split(kit.Join(arg[1:]))...))).DisplayStoryJSON()
 		}},
-	}})
+	})
+}
+
+func Split(m *ice.Message, arg ...string) ice.Map {
+	return kit.Value(_split_list(m, arg[0], arg[1:]...), kit.Keys(mdb.LIST, "0")).(ice.Map)
 }

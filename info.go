@@ -1,7 +1,6 @@
 package ice
 
 import (
-	"io"
 	"os"
 	"path"
 	"strings"
@@ -36,6 +35,7 @@ var Info = struct {
 	NodeName string
 	CtxShare string
 	CtxRiver string
+	PidPath  string
 
 	Help  string
 	cans  string
@@ -45,7 +45,6 @@ var Info = struct {
 	names Map
 
 	render map[string]func(*Message, string, ...Any) string
-	Dump   func(w io.Writer, name string, cb func(string)) bool
 	Log    func(m *Message, p, l, s string)
 }{
 	Help: `
@@ -73,7 +72,6 @@ source: https://shylinux.com/x/icebergs
 	names: Map{},
 
 	render: map[string]func(*Message, string, ...Any) string{},
-	Dump:   func(w io.Writer, name string, cb func(string)) bool { return false },
 	Log:    func(m *Message, p, l, s string) {},
 }
 

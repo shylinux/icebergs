@@ -1,39 +1,29 @@
 package aaa
 
 import (
+	"path"
+	"strings"
+
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/mdb"
 	kit "shylinux.com/x/toolkits"
 )
 
-func _role_list(m *ice.Message, userrole string) {
-	m.Richs(ROLE, nil, kit.Select(mdb.FOREACH, userrole), func(key string, value ice.Map) {
-		kit.Fetch(value[BLACK], func(k string, v ice.Any) {
-			m.Push(ROLE, kit.Value(value, mdb.NAME))
-			m.Push(mdb.ZONE, BLACK)
-			m.Push(mdb.KEY, k)
-		})
-		kit.Fetch(value[WHITE], func(k string, v ice.Any) {
-			m.Push(ROLE, kit.Value(value, mdb.NAME))
-			m.Push(mdb.ZONE, WHITE)
-			m.Push(mdb.KEY, k)
-		})
-	})
-}
 func _role_chain(arg ...string) string {
-	return kit.ReplaceAll(kit.ReplaceAll(kit.Keys(arg), ice.PS, ice.PT), "..", ".")
+	key := path.Join(strings.ReplaceAll(kit.Keys(arg), ice.PT, ice.PS))
+	return strings.TrimPrefix(strings.TrimSuffix(strings.ReplaceAll(key, ice.PS, ice.PT), ice.PT), ice.PT)
 }
 func _role_black(m *ice.Message, userrole, chain string) {
-	m.Richs(ROLE, nil, userrole, func(key string, value ice.Map) {
-		list := value[BLACK].(ice.Map)
+	mdb.HashSelectUpdate(m, userrole, func(value ice.Map) {
 		m.Log_INSERT(ROLE, userrole, BLACK, chain)
+		list := value[BLACK].(ice.Map)
 		list[chain] = true
 	})
 }
 func _role_white(m *ice.Message, userrole, chain string) {
-	m.Richs(ROLE, nil, userrole, func(key string, value ice.Map) {
-		list := value[WHITE].(ice.Map)
+	mdb.HashSelectUpdate(m, userrole, func(value ice.Map) {
 		m.Log_INSERT(ROLE, userrole, WHITE, chain)
+		list := value[WHITE].(ice.Map)
 		list[chain] = true
 	})
 }
@@ -42,7 +32,7 @@ func _role_right(m *ice.Message, userrole string, keys ...string) (ok bool) {
 		return true // 超级权限
 	}
 
-	m.Richs(ROLE, nil, kit.Select(VOID, userrole), func(key string, value ice.Map) {
+	mdb.HashSelectDetail(m, kit.Select(VOID, userrole), func(value ice.Map) {
 		ok = true
 		list := value[BLACK].(ice.Map)
 		for i := 0; i < len(keys); i++ {
@@ -73,9 +63,20 @@ func _role_right(m *ice.Message, userrole string, keys ...string) (ok bool) {
 	})
 	return ok
 }
-
-func RoleRight(m *ice.Message, userrole string, keys ...string) bool {
-	return _role_right(m, userrole, kit.Split(kit.Keys(keys), ice.PT)...)
+func _role_list(m *ice.Message, userrole string) *ice.Message {
+	mdb.HashSelectDetail(m, kit.Select(VOID, userrole), func(value ice.Map) {
+		kit.Fetch(value[BLACK], func(k string, v ice.Any) {
+			m.Push(ROLE, kit.Value(value, mdb.NAME))
+			m.Push(mdb.ZONE, BLACK)
+			m.Push(mdb.KEY, k)
+		})
+		kit.Fetch(value[WHITE], func(k string, v ice.Any) {
+			m.Push(ROLE, kit.Value(value, mdb.NAME))
+			m.Push(mdb.ZONE, WHITE)
+			m.Push(mdb.KEY, k)
+		})
+	})
+	return m
 }
 
 const (
@@ -91,10 +92,8 @@ const (
 const ROLE = "role"
 
 func init() {
-	Index.Merge(&ice.Context{Configs: ice.Configs{
-		ROLE: {Name: ROLE, Help: "角色", Value: kit.Data(mdb.SHORT, mdb.NAME)},
-	}, Commands: ice.Commands{
-		ROLE: {Name: "role role auto insert", Help: "角色", Actions: ice.Actions{
+	Index.MergeCommands(ice.Commands{
+		ROLE: {Name: "role role auto insert", Help: "角色", Actions: ice.MergeAction(ice.Actions{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
 				m.Rich(ROLE, nil, kit.Dict(mdb.NAME, TECH, BLACK, kit.Dict(), WHITE, kit.Dict()))
 				m.Rich(ROLE, nil, kit.Dict(mdb.NAME, VOID, WHITE, kit.Dict(), BLACK, kit.Dict()))
@@ -105,17 +104,17 @@ func init() {
 				m.Cmd(ROLE, WHITE, VOID, ice.USR_LOCAL_GO)
 			}},
 			mdb.INSERT: {Name: "insert role=void,tech zone=white,black key=", Help: "添加", Hand: func(m *ice.Message, arg ...string) {
-				m.Richs(ROLE, nil, m.Option(ROLE), func(key string, value ice.Map) {
+				mdb.HashSelectUpdate(m, m.Option(ROLE), func(key string, value ice.Map) {
 					m.Log_INSERT(ROLE, m.Option(ROLE), m.Option(mdb.ZONE), m.Option(mdb.KEY))
 					list := value[m.Option(mdb.ZONE)].(ice.Map)
-					list[m.Option(mdb.KEY)] = true
+					list[_role_chain(m.Option(mdb.KEY))] = true
 				})
 			}},
 			mdb.DELETE: {Name: "delete", Help: "删除", Hand: func(m *ice.Message, arg ...string) {
-				m.Richs(ROLE, nil, m.Option(ROLE), func(key string, value ice.Map) {
+				mdb.HashSelectUpdate(m, m.Option(ROLE), func(key string, value ice.Map) {
 					m.Log_DELETE(ROLE, m.Option(ROLE), m.Option(mdb.ZONE), m.Option(mdb.KEY))
 					list := value[m.Option(mdb.ZONE)].(ice.Map)
-					delete(list, m.Option(mdb.KEY))
+					delete(list, _role_chain(m.Option(mdb.KEY)))
 				})
 			}},
 
@@ -130,9 +129,12 @@ func init() {
 					m.Echo(ice.OK)
 				}
 			}},
-		}, Hand: func(m *ice.Message, arg ...string) {
-			_role_list(m, kit.Select("", arg, 0))
-			m.PushAction(mdb.DELETE)
+		}, mdb.HashAction(mdb.SHORT, mdb.NAME)), Hand: func(m *ice.Message, arg ...string) {
+			_role_list(m, kit.Select("", arg, 0)).PushAction(mdb.DELETE)
 		}},
-	}})
+	})
+}
+
+func RoleRight(m *ice.Message, userrole string, arg ...string) bool {
+	return m.Cmdx(ROLE, RIGHT, userrole, arg) == ice.OK
 }

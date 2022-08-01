@@ -63,9 +63,7 @@ func _wx_parse(m *ice.Message) {
 const LOGIN = "login"
 
 func init() {
-	Index.Merge(&ice.Context{Configs: ice.Configs{
-		LOGIN: {Name: LOGIN, Help: "登录", Value: kit.Data()},
-	}, Commands: ice.Commands{
+	Index.MergeCommands(ice.Commands{
 		"/login/": {Name: "/login/", Help: "认证", Hand: func(m *ice.Message, arg ...string) {
 			if m.Cmdx(ACCESS, CHECK) == "" {
 				return // 验签失败
@@ -108,5 +106,5 @@ func init() {
 			}},
 		}, Hand: func(m *ice.Message, arg ...string) {
 		}},
-	}})
+	})
 }

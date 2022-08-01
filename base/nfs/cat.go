@@ -4,78 +4,41 @@ import (
 	"bufio"
 	"bytes"
 	"io"
-	"os"
 	"path"
 	"strings"
 
 	ice "shylinux.com/x/icebergs"
-	"shylinux.com/x/icebergs/base/aaa"
-	"shylinux.com/x/icebergs/base/mdb"
 	kit "shylinux.com/x/toolkits"
 )
 
-type ReadCloser struct {
-	r io.Reader
-}
-
-func (r *ReadCloser) Read(buf []byte) (int, error) {
-	return r.r.Read(buf)
-}
-func (r *ReadCloser) Close() error {
-	if c, ok := r.r.(io.Closer); ok {
-		return c.Close()
-	}
-	return nil
-}
-func NewReadCloser(r io.Reader) *ReadCloser {
-	return &ReadCloser{r: r}
-}
-
-var rewriteList = []ice.Any{}
-
-func AddRewrite(cb ice.Any) { rewriteList = append(rewriteList, cb) }
-
-func _cat_right(m *ice.Message, name string) bool {
-	return aaa.RoleRight(m, m.Option(ice.MSG_USERROLE), strings.Split(name, ice.PS)...)
-}
-func _cat_find(m *ice.Message, name string) io.ReadCloser {
+func _cat_find(m *ice.Message, name string) (io.ReadCloser, error) {
 	if m.Option(CAT_CONTENT) != "" {
-		return NewReadCloser(bytes.NewBufferString(m.Option(CAT_CONTENT)))
+		return NewReadCloser(bytes.NewBufferString(m.Option(CAT_CONTENT))), nil
 	}
-
-	// 模块回调
-	for _, h := range rewriteList {
-		switch h := h.(type) {
-		case func(m *ice.Message, name string) io.ReadCloser:
-			if r := h(m, name); r != nil {
-				return r
-			}
-		case func(m *ice.Message, name string) []byte:
-			if b := h(m, name); b != nil {
-				return NewReadCloser(bytes.NewBuffer(b))
-			}
-		case func(m *ice.Message, name string) string:
-			if s := h(m, name); s != "" {
-				return NewReadCloser(bytes.NewBufferString(s))
-			}
-		default:
-			m.Error(true, ice.ErrNotImplement)
+	return OpenFile(m, path.Join(m.Option(DIR_ROOT), name))
+}
+func _cat_size(m *ice.Message, p string) (nline int) {
+	if f, e := OpenFile(m, p); m.Warn(e) {
+		defer f.Close()
+		for bio := bufio.NewScanner(f); bio.Scan(); nline++ {
+			bio.Text()
 		}
 	}
-
-	// 本地文件
-	if f, e := os.Open(path.Join(m.Option(DIR_ROOT), name)); e == nil {
-		return f
+	return nline
+}
+func _cat_hash(m *ice.Message, p string) string {
+	if f, e := OpenFile(m, p); !m.Warn(e) {
+		defer f.Close()
+		return kit.Hashs(f)
 	}
-	return nil
+	return ""
 }
 func _cat_list(m *ice.Message, name string) {
-	if m.Warn(!_cat_right(m, name), ice.ErrNotRight) {
+	if !m.Right(m, name) {
 		return // 没有权限
 	}
-
-	f := _cat_find(m, name)
-	if m.Warn(f == nil, ice.ErrNotFound, name) {
+	f, e := _cat_find(m, name)
+	if m.Warn(e, ice.ErrNotFound, name) {
 		return // 没有文件
 	}
 	defer f.Close()
@@ -97,15 +60,15 @@ func _cat_list(m *ice.Message, name string) {
 		for bio := bufio.NewScanner(f); bio.Scan(); {
 			cb(bio.Text())
 		}
+
 	case func([]string, string):
 		for bio := bufio.NewScanner(f); bio.Scan(); {
 			cb(kit.Split(bio.Text()), bio.Text())
 		}
-
-	default:
-		buf := make([]byte, ice.MOD_BUFS)
-		for begin := 0; true; {
-			if n, e := f.Read(buf[begin:]); !m.Warn(e, ice.ErrNotFound, name) {
+	case nil:
+		buf, begin := make([]byte, ice.MOD_BUFS), 0
+		for {
+			if n, e := f.Read(buf[begin:]); !m.Warn(e, ice.ErrNotValid, name) {
 				m.Log_IMPORT(FILE, name, SIZE, n)
 				if begin += n; begin < len(buf) {
 					buf = buf[:begin]
@@ -117,6 +80,8 @@ func _cat_list(m *ice.Message, name string) {
 			}
 		}
 		m.Echo(string(buf))
+	default:
+		m.ErrorNotImplement(cb)
 	}
 }
 
@@ -125,6 +90,7 @@ const (
 	TEMPLATE    = "template"
 	WEBSITE     = "website"
 
+	STDIO  = "stdio"
 	SOURCE = "source"
 	SCRIPT = "script"
 	BINARY = "binary"
@@ -155,15 +121,15 @@ const (
 	YML = "yml"
 	ZML = "zml"
 
+	PNG = "png"
+	JPG = "jpg"
+	MP4 = "mp4"
+
 	PWD = "./"
+	PS  = ice.PS
+	PT  = ice.PT
 )
 
-const (
-	PATH = "path"
-	FILE = "file"
-	LINE = "line"
-	SIZE = "size"
-)
 const CAT = "cat"
 
 func init() {
@@ -177,20 +143,13 @@ func init() {
 			),
 		)},
 	}, Commands: ice.Commands{
-		CAT: {Name: "cat path auto", Help: "文件", Actions: ice.Actions{
-			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
-				m.Cmd(mdb.RENDER, mdb.CREATE, m.CommandKey(), m.PrefixKey())
-			}},
-			mdb.RENDER: {Name: "render type name text", Help: "渲染", Hand: func(m *ice.Message, arg ...string) {
-				_cat_list(m, path.Join(arg[2], arg[1]))
-			}},
-		}, Hand: func(m *ice.Message, arg ...string) {
+		CAT: {Name: "cat path auto", Help: "文件", Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) == 0 || strings.HasSuffix(arg[0], ice.PS) {
 				m.Cmdy(DIR, arg)
 				return
 			}
 			if m.Option(DIR_ROOT) != "" {
-				m.Info("dir_root: %v", m.Option(DIR_ROOT))
+				m.Log_SELECT(DIR_ROOT, m.Option(DIR_ROOT))
 			}
 			_cat_list(m, arg[0])
 		}},

@@ -2,6 +2,7 @@ package log
 
 import (
 	"bufio"
+	"os"
 	"path"
 	"strings"
 
@@ -9,7 +10,7 @@ import (
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/nfs"
 	kit "shylinux.com/x/toolkits"
-	log "shylinux.com/x/toolkits/logs"
+	"shylinux.com/x/toolkits/logs"
 )
 
 type Log struct {
@@ -25,6 +26,13 @@ func (f *Frame) Spawn(m *ice.Message, c *ice.Context, arg ...string) ice.Server 
 	return &Frame{}
 }
 func (f *Frame) Begin(m *ice.Message, arg ...string) ice.Server {
+	switch strings.Split(os.Getenv("TERM"), "-")[0] {
+	case "xterm", "screen":
+		ice.Info.Colors = true
+	default:
+		ice.Info.Colors = false
+	}
+
 	f.p = make(chan *Log, ice.MOD_BUFS)
 	ice.Info.Log = func(msg *ice.Message, p, l, s string) {
 		f.p <- &Log{m: msg, p: p, l: l, s: s}
@@ -36,7 +44,7 @@ func (f *Frame) Start(m *ice.Message, arg ...string) bool {
 		select {
 		case l, ok := <-f.p:
 			if !ok {
-				break
+				return true
 			}
 
 			file := kit.Select(BENCH, m.Conf(SHOW, kit.Keys(l.l, FILE)))
@@ -124,9 +132,6 @@ var Index = &ice.Context{Name: "log", Help: "日志模块", Configs: ice.Configs
 	SHOW: {Name: SHOW, Help: "日志分流", Value: kit.Dict()},
 }, Commands: ice.Commands{
 	ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
-		if log.LogDisable {
-			return // 禁用日志
-		}
 		if !strings.Contains(ice.Getenv("ctx_daemon"), "log") {
 			return // 没有日志
 		}
@@ -140,7 +145,7 @@ var Index = &ice.Context{Name: "log", Help: "日志模块", Configs: ice.Configs
 				m.Conf(SHOW, kit.Keys(k, FILE), key)
 			})
 			// 日志文件
-			if f, p, e := kit.Create(kit.Format(value[nfs.PATH])); m.Assert(e) {
+			if f, p, e := logs.CreateFile(kit.Format(value[nfs.PATH])); m.Assert(e) {
 				m.Cap(ice.CTX_STREAM, path.Base(p))
 				value[FILE] = bufio.NewWriter(f)
 				m.Log_CREATE(nfs.FILE, p)

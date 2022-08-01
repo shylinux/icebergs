@@ -14,11 +14,7 @@ import (
 const SYNC = "sync"
 
 func init() {
-	Index.Merge(&ice.Context{Configs: ice.Configs{
-		SYNC: {Name: SYNC, Help: "同步流", Value: kit.Data(
-			mdb.FIELD, "time,id,type,name,text,pwd,username,hostname",
-		)},
-	}, Commands: ice.Commands{
+	Index.MergeCommands(ice.Commands{
 		"/sync": {Name: "/sync", Help: "同步", Actions: ice.Actions{
 			"history": {Name: "history", Help: "历史", Hand: func(m *ice.Message, arg ...string) {
 				ls := strings.SplitN(strings.TrimSpace(m.Option(ARG)), ice.SP, 4)
@@ -41,11 +37,11 @@ func init() {
 			FAVOR: {Name: "favor zone=some@key type name text pwd", Help: "收藏", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmdy(FAVOR, mdb.INSERT)
 			}},
-		}, mdb.ListAction()), Hand: func(m *ice.Message, arg ...string) {
+		}, mdb.ListAction(mdb.FIELD, "time,id,type,name,text,pwd,username,hostname")), Hand: func(m *ice.Message, arg ...string) {
 			m.OptionPage(kit.Slice(arg, 1)...)
 			mdb.ListSelect(m, kit.Slice(arg, 0, 1)...)
 			m.PushAction(cli.SYSTEM, FAVOR)
 			m.StatusTimeCountTotal(m.Config(mdb.COUNT))
 		}},
-	}})
+	})
 }

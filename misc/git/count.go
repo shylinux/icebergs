@@ -13,7 +13,7 @@ import (
 const COUNT = "count"
 
 func init() {
-	Index.Merge(&ice.Context{Commands: ice.Commands{
+	Index.MergeCommands(ice.Commands{
 		COUNT: {Name: "count path auto count", Help: "代码行", Actions: ice.Actions{
 			COUNT: {Name: "count", Help: "计数", Hand: func(m *ice.Message, arg ...string) {
 				if len(arg) == 0 || arg[0] == "usr/" {
@@ -66,5 +66,5 @@ func init() {
 		}, Hand: func(m *ice.Message, arg ...string) {
 			m.Cmdy(nfs.DIR, arg)
 		}},
-	}})
+	})
 }

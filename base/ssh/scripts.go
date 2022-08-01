@@ -13,21 +13,21 @@ import (
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/cli"
 	"shylinux.com/x/icebergs/base/ctx"
+	"shylinux.com/x/icebergs/base/gdb"
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/nfs"
 	kit "shylinux.com/x/toolkits"
 )
 
-func Render(msg *ice.Message, cmd string, args ...ice.Any) (res string) {
-	switch arg := kit.Simple(args...); cmd {
+func Render(msg *ice.Message, cmd string, arg ...ice.Any) (res string) {
+	switch args := kit.Simple(arg...); cmd {
 	case ice.RENDER_VOID:
 		return res
 	case ice.RENDER_RESULT:
-		if len(arg) > 0 {
-			msg.Resultv(arg)
+		if len(args) > 0 {
+			msg.Resultv(args)
 		}
 		res = msg.Result()
-
 	default:
 		if res = msg.Result(); res == "" {
 			res = msg.Table().Result()
@@ -110,22 +110,18 @@ func (f *Frame) alias(m *ice.Message, ls []string) []string {
 	return ls
 }
 func (f *Frame) parse(m *ice.Message, line string) string {
-	// for _, one := range kit.Split(line, ";", ";", ";") {
-	for _, one := range kit.Simple(line) {
-		msg := m.Spawn(f.target)
-		ls := f.change(msg, f.alias(msg, kit.Split(strings.TrimSpace(one))))
-		if len(ls) == 0 {
-			continue
-		}
-
-		msg.Render("", kit.List())
-		if msg.Cmdy(ls[0], ls[1:]); msg.IsErrNotFound() {
-			msg.SetResult().Cmdy(cli.SYSTEM, ls)
-		}
-
-		f.res = Render(msg, msg.Option(ice.MSG_OUTPUT), msg.Optionv(ice.MSG_ARGS).([]ice.Any)...)
+	msg := m.Spawn(f.target)
+	ls := f.change(msg, f.alias(msg, kit.Split(strings.TrimSpace(line))))
+	if len(ls) == 0 {
+		return ""
 	}
-	m.Sleep("10ms")
+
+	msg.Render("", kit.List())
+	if msg.Cmdy(ls); msg.IsErrNotFound() {
+		msg.SetResult().Cmdy(cli.SYSTEM, ls)
+	}
+
+	f.res = Render(msg, msg.Option(ice.MSG_OUTPUT), msg.Optionv(ice.MSG_ARGS).([]ice.Any)...)
 	return ""
 }
 func (f *Frame) scan(m *ice.Message, h, line string) *Frame {
@@ -142,22 +138,14 @@ func (f *Frame) scan(m *ice.Message, h, line string) *Frame {
 
 	m.I, m.O = f.stdin, f.stdout
 	bio := bufio.NewScanner(f.stdin)
-	for f.prompt(m, ps...); bio.Scan() && f.stdin != nil; f.prompt(m, ps...) {
-		if h == STDIO {
-			if len(bio.Text()) == 0 {
-				continue // 空行
-			}
-			m.Cmdx(mdb.INSERT, SOURCE, kit.Keys(mdb.HASH, h), mdb.LIST, mdb.TEXT, bio.Text())
+	for f.prompt(m, ps...); f.stdin != nil && bio.Scan(); f.prompt(m, ps...) {
+		if len(bio.Text()) == 0 && h == STDIO {
+			continue // 空行
 		}
 
 		f.count++
+		mdb.ZoneInsert(m.Spawn(), mdb.HASH, h, mdb.TEXT, bio.Text())
 
-		if len(bio.Text()) == 0 {
-			if strings.Count(line, "`")%2 == 1 {
-				line += ice.NL
-			}
-			continue // 空行
-		}
 		if strings.HasSuffix(bio.Text(), "\\") {
 			line += bio.Text()[:len(bio.Text())-1]
 			ps = f.ps2
@@ -170,11 +158,8 @@ func (f *Frame) scan(m *ice.Message, h, line string) *Frame {
 		}
 		if strings.HasPrefix(strings.TrimSpace(line), "#") {
 			line = ""
-			continue
+			continue // 注释
 		}
-		// if line = strings.Split(line, " # ")[0]; len(line) == 0 {
-		// 	continue // 注释
-		// }
 		if ps = f.ps1; f.stdout == os.Stdout {
 			if ice.Info.Colors {
 				f.printf(m, "\033[0m") // 清空格式
@@ -195,27 +180,28 @@ func (f *Frame) Start(m *ice.Message, arg ...string) bool {
 	m.Optionv(FRAME, f)
 	switch f.source = kit.Select(STDIO, arg, 0); f.source {
 	case STDIO: // 终端交互
-		m.Cap(ice.CTX_STREAM, f.source)
-		if f.target == nil {
+		if m.Cap(ice.CTX_STREAM, f.source); f.target == nil {
 			f.target = m.Target()
 		}
 
 		r, w, _ := os.Pipe()
-		m.Go(func() { io.Copy(w, os.Stdin) })
-		f.stdin, f.stdout = r, os.Stdout
-		f.pipe = w
+		go func() { io.Copy(w, os.Stdin) }()
+		f.pipe, f.stdin, f.stdout = w, r, os.Stdout
 
 		m.Option(ice.MSG_OPTS, ice.MSG_USERNAME)
-
 		m.Conf(SOURCE, kit.Keys(mdb.HASH, STDIO, kit.Keym(mdb.NAME)), STDIO)
 		m.Conf(SOURCE, kit.Keys(mdb.HASH, STDIO, kit.Keym(mdb.TIME)), m.Time())
-
 		f.count = kit.Int(m.Conf(SOURCE, kit.Keys(mdb.HASH, STDIO, kit.Keym(mdb.COUNT)))) + 1
 		f.scan(m, STDIO, "")
 
 	default: // 脚本文件
-		if strings.Contains(m.Option(ice.MSG_SCRIPT), ice.PS) {
-			f.source = path.Join(path.Dir(m.Option(ice.MSG_SCRIPT)), f.source)
+		if m.Option(ice.MSG_SCRIPT) != "" {
+			ls := kit.Split(m.Option(ice.MSG_SCRIPT), ice.PS)
+			for i := len(ls) - 1; i > 0; i-- {
+				if p := path.Join(path.Join(ls[:i]...), f.source); nfs.ExistsFile(m, p) {
+					f.source = p
+				}
+			}
 		}
 		m.Option(ice.MSG_SCRIPT, f.source)
 		f.target = m.Source()
@@ -224,13 +210,12 @@ func (f *Frame) Start(m *ice.Message, arg ...string) bool {
 			return true // 查找失败
 		} else {
 			buf := bytes.NewBuffer(make([]byte, 0, ice.MOD_BUFS))
+			f.stdin, f.stdout = bytes.NewBufferString(msg.Result()), buf
 			defer func() { m.Echo(buf.String()) }()
-
-			f.stdin, f.stdout = bytes.NewBuffer([]byte(msg.Result())), buf
 		}
 
 		f.count = 1
-		f.scan(m, m.Cmdx(mdb.INSERT, SOURCE, "", mdb.HASH, mdb.NAME, f.source), "")
+		f.scan(m, mdb.HashCreate(m.Spawn(), mdb.NAME, f.source).Result(), "")
 	}
 	return true
 }
@@ -266,16 +251,14 @@ func init() {
 			PS2, []ice.Any{mdb.COUNT, " ", TARGET, "> "},
 		)},
 	}, Commands: ice.Commands{
-		ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {}},
 		SOURCE: {Name: "source file", Help: "脚本解析", Actions: ice.MergeAction(ice.Actions{
-			"repeat": {Name: "repeat", Help: "执行", Hand: func(m *ice.Message, arg ...string) {
+			gdb.RESTART: {Name: "restart", Help: "执行", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmdy(SCREEN, m.Option(mdb.TEXT))
 				m.ProcessInner()
 			}},
 		}, mdb.ZoneAction()), Hand: func(m *ice.Message, arg ...string) {
-			if len(arg) > 0 && kit.Ext(arg[0]) == ice.SHY {
-				(&Frame{}).Start(m, arg...)
-				return // 脚本解析
+			if f, ok := m.Target().Server().(*Frame); ok {
+				f.Spawn(m, m.Target()).Start(m, arg...)
 			}
 		}},
 		TARGET: {Name: "target name run", Help: "当前模块", Hand: func(m *ice.Message, arg ...string) {
@@ -284,26 +267,30 @@ func init() {
 			f.prompt(m)
 		}},
 		PROMPT: {Name: "prompt arg run", Help: "命令提示", Hand: func(m *ice.Message, arg ...string) {
-			f := m.Optionv(FRAME).(*Frame)
-			f.ps1 = arg
-			f.prompt(m)
+			if f, ok := m.Optionv(FRAME).(*Frame); ok {
+				f.ps1 = arg
+				f.prompt(m)
+			}
 		}},
 		PRINTF: {Name: "printf run text", Help: "输出显示", Hand: func(m *ice.Message, arg ...string) {
-			f := m.Optionv(FRAME).(*Frame)
-			f.printf(m, arg[0])
+			if f, ok := m.Optionv(FRAME).(*Frame); ok {
+				f.printf(m, arg[0])
+			}
 		}},
 		SCREEN: {Name: "screen run text", Help: "输出命令", Hand: func(m *ice.Message, arg ...string) {
-			f := m.Optionv(FRAME).(*Frame)
-			for _, line := range kit.Split(arg[0], ice.NL, ice.NL) {
-				fmt.Fprintf(f.pipe, line+ice.NL)
-				f.printf(m, line+ice.NL)
-				m.Sleep300ms()
+			if f, ok := m.Optionv(FRAME).(*Frame); ok {
+				for _, line := range kit.Split(arg[0], ice.NL, ice.NL) {
+					fmt.Fprintf(f.pipe, line+ice.NL)
+					f.printf(m, line+ice.NL)
+					m.Sleep300ms()
+				}
+				m.Echo(f.res)
 			}
-			m.Echo(f.res)
 		}},
 		RETURN: {Name: "return", Help: "结束脚本", Hand: func(m *ice.Message, arg ...string) {
-			f := m.Optionv(FRAME).(*Frame)
-			f.Close(m, arg...)
+			if f, ok := m.Optionv(FRAME).(*Frame); ok {
+				f.Close(m, arg...)
+			}
 		}},
 	}})
 }

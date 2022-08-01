@@ -26,11 +26,7 @@ func init() {
 		func_pattern = "4\n%s\n/\\<%s: \\(shy\\|func\\)/\n"
 		libs_pattern = "4\nusr/volcanos/lib/%s.js\n/\\<%s: \\(shy\\|func\\)/\n"
 	)
-	Index.Merge(&ice.Context{Configs: ice.Configs{
-		TAGS: {Name: TAGS, Help: "索引", Value: kit.Data(
-			mdb.SHORT, mdb.ZONE, mdb.FIELD, "time,id,type,name,text,path,file,line",
-		)},
-	}, Commands: ice.Commands{
+	Index.MergeCommands(ice.Commands{
 		"/tags": {Name: "/tags", Help: "跳转", Hand: func(m *ice.Message, arg ...string) {
 			switch m.Option(MODULE) {
 			case ONIMPORT, ONACTION, ONEXPORT:
@@ -82,12 +78,12 @@ func init() {
 					m.Echo("%s: %s"+ice.NL, value[mdb.NAME], strings.Split(value[mdb.TEXT], ice.NL)[0])
 				})
 			}},
-		}, mdb.ZoneAction()), Hand: func(m *ice.Message, arg ...string) {
+		}, mdb.ZoneAction(mdb.SHORT, mdb.ZONE, mdb.FIELD, "time,id,type,name,text,path,file,line")), Hand: func(m *ice.Message, arg ...string) {
 			if mdb.ZoneSelectAll(m, arg...); len(arg) == 0 {
 				m.Action("listTags", mdb.CREATE, mdb.EXPORT, mdb.IMPORT)
 			} else {
 				m.Action(mdb.INSERT).PushAction(code.INNER).StatusTimeCount()
 			}
 		}},
-	}})
+	})
 }

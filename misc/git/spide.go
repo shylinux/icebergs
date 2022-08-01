@@ -60,7 +60,7 @@ func _spide_c(m *ice.Message, file string) {
 const SPIDE = "spide"
 
 func init() {
-	Index.Merge(&ice.Context{Commands: ice.Commands{
+	Index.MergeCommands(ice.Commands{
 		SPIDE: {Name: "spide repos auto", Help: "构架图", Actions: ice.MergeAction(ice.Actions{
 			code.INNER: {Name: "web.code.inner"},
 			"depend": {Name: "depend path=icebergs/base", Help: "依赖", Hand: func(m *ice.Message, arg ...string) {
@@ -136,5 +136,5 @@ func init() {
 			}
 			m.SortInt(nfs.LINE)
 		}},
-	}})
+	})
 }

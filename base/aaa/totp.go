@@ -43,8 +43,6 @@ func _totp_get(key string, num int, per int64) string {
 	return kit.Format(kit.Format("%%0%dd", num), res%int64(math.Pow10(num)))
 }
 
-func TOTP_GET(key string, num int, per int64) string { return _totp_get(key, num, per) }
-
 const (
 	SECRET = "secret"
 	PERIOD = "period"
@@ -55,20 +53,15 @@ const (
 const TOTP = "totp"
 
 func init() {
-	Index.Merge(&ice.Context{Configs: ice.Configs{
-		TOTP: {Name: TOTP, Help: "令牌", Value: kit.Data(
-			mdb.SHORT, mdb.NAME, mdb.FIELD, "time,name,secret,period,number", mdb.LINK, "otpauth://totp/%s?secret=%s",
-		)},
-	}, Commands: ice.Commands{
+	Index.MergeCommands(ice.Commands{
 		TOTP: {Name: "totp name auto create", Help: "令牌", Actions: ice.MergeAction(ice.Actions{
 			mdb.CREATE: {Name: "create name=hi secret period=30 number=6", Help: "添加", Hand: func(m *ice.Message, arg ...string) {
 				if m.Option(SECRET) == "" { // 创建密钥
 					m.Option(SECRET, _totp_gen(kit.Int64(m.Option(PERIOD))))
 				}
-
-				m.Cmd(mdb.INSERT, TOTP, "", mdb.HASH, m.OptionSimple(mdb.NAME, SECRET, PERIOD, NUMBER))
+				mdb.HashCreate(m, m.OptionSimple(mdb.NAME, SECRET, PERIOD, NUMBER))
 			}},
-		}, mdb.HashAction()), Hand: func(m *ice.Message, arg ...string) {
+		}, mdb.HashAction(mdb.SHORT, mdb.NAME, mdb.FIELD, "time,name,secret,period,number", mdb.LINK, "otpauth://totp/%s?secret=%s")), Hand: func(m *ice.Message, arg ...string) {
 			mdb.HashSelect(m.Spawn(), arg...).Tables(func(value ice.Maps) {
 				if len(arg) > 0 {
 					m.OptionFields(mdb.DETAIL)
@@ -86,5 +79,7 @@ func init() {
 				}
 			})
 		}},
-	}})
+	})
 }
+
+func TOTP_GET(key string, num int, per int64) string { return _totp_get(key, num, per) }

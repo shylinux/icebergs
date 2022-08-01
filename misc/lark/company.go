@@ -39,7 +39,7 @@ func _company_members(m *ice.Message, appid string, ship_id string) {
 const COMPANY = "company"
 
 func init() {
-	Index.Merge(&ice.Context{Commands: ice.Commands{
+	Index.MergeCommands(ice.Commands{
 		COMPANY: {Name: "company appid ship_id open_id text auto", Help: "组织", Hand: func(m *ice.Message, arg ...string) {
 			switch len(arg) {
 			case 0: // 应用列表
@@ -58,5 +58,5 @@ func init() {
 				m.Cmdy(SEND, arg[0], OPEN_ID, arg[2], arg[3:])
 			}
 		}},
-	}})
+	})
 }

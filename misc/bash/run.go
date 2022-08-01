@@ -70,7 +70,7 @@ ish_sys_dev_run_action() {
 const RUN = "run"
 
 func init() {
-	Index.Merge(&ice.Context{Commands: ice.Commands{
+	Index.MergeCommands(ice.Commands{
 		"/run/": {Name: "/run/", Help: "执行", Actions: ice.MergeAction(ice.Actions{
 			ctx.COMMAND: {Name: "command", Help: "命令", Hand: func(m *ice.Message, arg ...string) {
 				m.Search(arg[0], func(_ *ice.Context, s *ice.Context, key string, cmd *ice.Command) {
@@ -94,5 +94,5 @@ func init() {
 				}
 			}},
 		}, ctx.CmdAction())},
-	}})
+	})
 }

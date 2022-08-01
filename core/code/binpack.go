@@ -3,9 +3,7 @@ package code
 import (
 	"encoding/base64"
 	"fmt"
-	"io"
 	"io/ioutil"
-	"net/http"
 	"os"
 	"path"
 	"strings"
@@ -13,7 +11,6 @@ import (
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/nfs"
-	"shylinux.com/x/icebergs/base/web"
 	kit "shylinux.com/x/toolkits"
 )
 
@@ -51,11 +48,13 @@ func _binpack_can(m *ice.Message, f *os.File, dir string) {
 	m.Option(nfs.DIR_TYPE, nfs.CAT)
 
 	for _, k := range []string{ice.FAVICON, ice.PROTO_JS, ice.FRAME_JS} {
-		fmt.Fprintln(f, _binpack_file(m, path.Join(dir, k), ice.PS+k))
+		// fmt.Fprintln(f, _binpack_file(m, path.Join(dir, k), ice.PS+k))
+		fmt.Fprintln(f, _binpack_file(m, path.Join(dir, k), path.Join(ice.USR_VOLCANOS, k)))
 	}
 	for _, k := range []string{LIB, PAGE, PANEL, PLUGIN, "publish/client/nodejs/"} {
 		m.Cmd(nfs.DIR, k).Sort(nfs.PATH).Tables(func(value ice.Maps) {
-			fmt.Fprintln(f, _binpack_file(m, path.Join(dir, value[nfs.PATH]), ice.PS+value[nfs.PATH]))
+			// fmt.Fprintln(f, _binpack_file(m, path.Join(dir, value[nfs.PATH]), ice.PS+value[nfs.PATH]))
+			fmt.Fprintln(f, _binpack_file(m, path.Join(dir, value[nfs.PATH]), path.Join(ice.USR_VOLCANOS, value[nfs.PATH])))
 		})
 	}
 	fmt.Fprintln(f)
@@ -67,50 +66,13 @@ func _binpack_ctx(m *ice.Message, f *os.File) {
 const BINPACK = "binpack"
 
 func init() {
-	Index.Merge(&ice.Context{Commands: ice.Commands{
+	Index.MergeCommands(ice.Commands{
 		BINPACK: {Name: "binpack path auto create remove export", Help: "打包", Actions: ice.MergeAction(ice.Actions{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
 				if kit.FileExists(path.Join(ice.USR_VOLCANOS, ice.PROTO_JS)) {
 					m.Cmd(BINPACK, mdb.REMOVE)
 					return
 				}
-
-				ice.Info.Dump = func(w io.Writer, name string, cb func(string)) bool {
-					if strings.HasPrefix(name, ice.SRC) && kit.FileExists(name) {
-						return false
-					}
-					for _, key := range []string{name, strings.TrimPrefix(name, ice.USR_VOLCANOS)} {
-						if b, ok := ice.Info.Pack[key]; ok {
-							if cb != nil {
-								cb(name)
-							}
-							w.Write(b)
-							return true // 读取数据
-						}
-					}
-					return false
-				}
-				web.AddRewrite(func(w http.ResponseWriter, r *http.Request) bool {
-					if ice.Info.Dump(w, r.URL.Path, func(name string) { web.RenderType(w, name, "") }) {
-						return true // 输出数据
-					}
-					return false
-				})
-				nfs.AddRewrite(func(msg *ice.Message, name string) []byte {
-					if kit.FileExists(name) {
-						return nil
-					}
-					if strings.HasPrefix(name, ice.SRC) && kit.FileExists(name) {
-						return nil
-					}
-					for _, key := range []string{name, path.Join(m.Option(nfs.DIR_ROOT), name), path.Join(ice.PS, name), strings.TrimPrefix(name, ice.USR_VOLCANOS)} {
-						if b, ok := ice.Info.Pack[key]; ok && len(b) > 0 {
-							m.Logs(BINPACK, len(b), key)
-							return b // 读取数据
-						}
-					}
-					return nil
-				})
 			}},
 			mdb.CREATE: {Name: "create", Help: "创建", Hand: func(m *ice.Message, arg ...string) {
 				if f, p, e := kit.Create(ice.SRC_BINPACK_GO); m.Assert(e) {
@@ -122,6 +84,7 @@ func init() {
 import (
 	"encoding/base64"
 	ice "shylinux.com/x/icebergs"
+	"shylinux.com/x/icebergs/base/nfs"
 )
 
 func init() {
@@ -130,7 +93,9 @@ func init() {
 
 					defer fmt.Fprintln(f, `
 	for k, v := range pack {
-		ice.Info.Pack[k], _ = base64.StdEncoding.DecodeString(v)
+		if b, e := base64.StdEncoding.DecodeString(v); e == nil {
+			nfs.PackFile.WriteFile(k, b)
+		}
 	}
 `)
 
@@ -188,5 +153,5 @@ func init() {
 			}
 			m.Echo(string(ice.Info.Pack[arg[0]]))
 		}},
-	}})
+	})
 }

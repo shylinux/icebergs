@@ -385,9 +385,7 @@ const (
 const MATRIX = "matrix"
 
 func init() {
-	Index.Merge(&ice.Context{Configs: ice.Configs{
-		MATRIX: {Name: MATRIX, Help: "魔方矩阵", Value: kit.Data()},
-	}, Commands: ice.Commands{
+	Index.MergeCommands(ice.Commands{
 		MATRIX: {Name: "matrix hash npage text auto", Help: "魔方矩阵", Actions: ice.Actions{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
 				// _lex_load(m.Load())
@@ -399,7 +397,7 @@ func init() {
 				case func(string, *Matrix):
 					cb(h, mat)
 				default:
-					m.Error(true, ice.ErrNotImplement)
+					m.ErrorNotImplement(cb)
 				}
 				m.Echo(h)
 			}},
@@ -538,5 +536,5 @@ func init() {
 				m.Push("word", string(word))
 			})
 		}},
-	}})
+	})
 }

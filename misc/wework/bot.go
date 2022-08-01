@@ -16,11 +16,7 @@ import (
 const BOT = "bot"
 
 func init() {
-	Index.Merge(&ice.Context{Configs: ice.Configs{
-		BOT: {Name: "bot", Help: "机器人", Value: kit.Data(
-			mdb.SHORT, mdb.NAME, mdb.FIELD, "time,name,token,ekey,hook",
-		)},
-	}, Commands: ice.Commands{
+	Index.MergeCommands(ice.Commands{
 		web.WEB_LOGIN: {Hand: func(m *ice.Message, arg ...string) {}},
 		"/bot/": {Name: "/bot/", Help: "机器人", Hand: func(m *ice.Message, arg ...string) {
 			msg := m.Cmd(BOT, arg[0])
@@ -52,7 +48,7 @@ func init() {
 				m.Cmd(web.SPIDE, mdb.CREATE, m.Option("name"), m.Option("hook"))
 				m.Cmdy(mdb.INSERT, m.PrefixKey(), "", mdb.HASH, arg)
 			}},
-		}, mdb.HashAction()), Hand: func(m *ice.Message, arg ...string) {
+		}, mdb.HashAction(mdb.SHORT, mdb.NAME, mdb.FIELD, "time,name,token,ekey,hook")), Hand: func(m *ice.Message, arg ...string) {
 			if mdb.HashSelect(m, arg...); len(arg) > 2 {
 				m.Cmdy(web.SPIDE, arg[0], "", kit.Format(kit.Dict(
 					"chatid", arg[1], "msgtype", "text", "text.content", arg[2],
@@ -61,5 +57,5 @@ func init() {
 				m.PushAction(mdb.REMOVE)
 			}
 		}},
-	}})
+	})
 }

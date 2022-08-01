@@ -58,9 +58,7 @@ const (
 const SESSION = "session"
 
 func init() {
-	psh.Index.Merge(&ice.Context{Configs: ice.Configs{
-		SESSION: {Name: SESSION, Help: "会话", Value: kit.Data(mdb.SHORT, "name", mdb.FIELD, "time,name,status,count,connect")},
-	}, Commands: ice.Commands{
+	psh.Index.MergeCommands(ice.Commands{
 		SESSION: {Name: "session name id auto", Help: "会话", Actions: ice.MergeAction(ice.Actions{
 			mdb.REPEAT: {Name: "repeat", Help: "执行", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmdy(SESSION, ctx.ACTION, ctx.COMMAND, CMD, m.Option(mdb.TEXT))
@@ -74,7 +72,7 @@ func init() {
 				})
 				m.ProcessRefresh300ms()
 			}},
-		}, mdb.ZoneAction()), Hand: func(m *ice.Message, arg ...string) {
+		}, mdb.ZoneAction(mdb.SHORT, "name", mdb.FIELD, "time,name,status,count,connect")), Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) == 0 {
 				mdb.HashSelect(m, arg...).Tables(func(value ice.Maps) {
 					m.PushButton(kit.Select("", ctx.COMMAND, value[mdb.STATUS] == tcp.OPEN), mdb.REMOVE)
@@ -89,5 +87,5 @@ func init() {
 				m.PushButton(kit.Select("", mdb.REPEAT, value[mdb.TYPE] == CMD))
 			})
 		}},
-	}})
+	})
 }

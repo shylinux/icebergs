@@ -37,12 +37,12 @@ func _bench_http(m *ice.Message, target string, arg ...string) {
 		}
 	}
 
-	var body int64
+	var ndata int64
 	if s, e := bench.HTTP(nconn, nreqs, list, func(req *http.Request, res *http.Response) {
 		n, _ := io.Copy(ioutil.Discard, res.Body)
-		atomic.AddInt64(&body, n)
+		atomic.AddInt64(&ndata, n)
 	}); m.Assert(e) {
-		m.Echo("body: %s\n", kit.FmtSize(body))
+		m.Echo("ndata: %s\n", kit.FmtSize(ndata))
 		m.Echo(s.Show())
 		m.ProcessInner()
 	}
@@ -61,7 +61,7 @@ const (
 const BENCH = "bench"
 
 func init() {
-	Index.Merge(&ice.Context{Commands: ice.Commands{
+	Index.MergeCommands(ice.Commands{
 		BENCH: {Name: "bench zone id auto insert", Help: "性能压测", Actions: ice.MergeAction(ice.Actions{
 			mdb.INSERT: {Name: "insert zone=some type=http,redis name=demo text='http://localhost:9020' nconn=3 nreqs=10", Help: "添加"},
 			ice.RUN: {Name: "run", Help: "执行", Hand: func(m *ice.Message, arg ...string) {
@@ -75,5 +75,5 @@ func init() {
 		}, mdb.ZoneAction(mdb.SHORT, mdb.ZONE, mdb.FIELD, "time,id,type,name,text,nconn,nreqs")), Hand: func(m *ice.Message, arg ...string) {
 			mdb.ZoneSelect(m, arg...).PushAction(kit.Select(mdb.REMOVE, ice.RUN, len(arg) > 0))
 		}},
-	}})
+	})
 }

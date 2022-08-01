@@ -15,7 +15,7 @@ import (
 const TAR = "tar"
 
 func init() {
-	Index.Merge(&ice.Context{Commands: ice.Commands{
+	Index.MergeCommands(ice.Commands{
 		TAR: {Name: "tar file path auto", Help: "打包", Actions: ice.Actions{
 			mdb.IMPORT: {Name: "import", Help: "导入", Hand: func(m *ice.Message, arg ...string) {
 				if len(arg) == 1 {
@@ -63,18 +63,18 @@ func init() {
 					}
 
 					header.Name = strings.TrimPrefix(p, dir_root+ice.PS)
-					if err = t.WriteHeader(header); m.Warn(err != nil, "err: %v", err) {
+					if err = t.WriteHeader(header); m.Warn(err) {
 						return
 					}
 
 					file, err := os.Open(p)
-					if m.Warn(err != nil, "err: %v", err) {
+					if m.Warn(err) {
 						return
 					}
 					defer file.Close()
 
 					m.PushNoticeGrow(kit.Format("%v %v %v\n", header.Name, kit.FmtSize(f.Size()), kit.FmtSize(total)))
-					if _, err = io.Copy(t, file); m.Warn(err != nil, "err: %v", err) {
+					if _, err = io.Copy(t, file); m.Warn(err) {
 						return
 					}
 
@@ -84,5 +84,5 @@ func init() {
 			}
 			m.StatusTimeCountTotal(kit.FmtSize(total))
 		}},
-	}})
+	})
 }

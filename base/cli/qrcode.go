@@ -31,6 +31,7 @@ func _parse_color(str string) color.Color {
 		for k := range _trans_web {
 			list = append(list, k)
 		}
+		kit.Sort(list)
 		str = list[rand.Intn(len(list))]
 	}
 	if strings.HasPrefix(str, "#") {
@@ -93,24 +94,12 @@ func _qrcode_web(m *ice.Message, text string) {
 	}
 }
 
-func Color(m *ice.Message, c string, str ice.Any) string {
-	wrap, color := `<span style="color:%s">%v</span>`, c
-	if m.IsCliUA() {
-		wrap, color = "\033[3%sm%v\033[0m", _parse_cli_color(c)
-	}
-	return fmt.Sprintf(wrap, color, str)
-}
-func ColorRed(m *ice.Message, str ice.Any) string    { return Color(m, RED, str) }
-func ColorGreen(m *ice.Message, str ice.Any) string  { return Color(m, GREEN, str) }
-func ColorYellow(m *ice.Message, str ice.Any) string { return Color(m, YELLOW, str) }
-
 const (
-	FG   = "fg"
-	BG   = "bg"
-	SIZE = "size"
-
+	FG    = "fg"
+	BG    = "bg"
 	DARK  = 255
 	LIGHT = 127
+	SIZE  = "size"
 )
 const (
 	COLOR  = "color"
@@ -129,7 +118,7 @@ const (
 const QRCODE = "qrcode"
 
 func init() {
-	Index.Merge(&ice.Context{Commands: ice.Commands{
+	Index.MergeCommands(ice.Commands{
 		QRCODE: {Name: "qrcode text@key fg@key bg@key size auto", Help: "二维码", Actions: ice.Actions{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
 				ice.AddRender(ice.RENDER_QRCODE, func(m *ice.Message, cmd string, args ...ice.Any) string {
@@ -138,26 +127,32 @@ func init() {
 			}},
 			mdb.INPUTS: {Hand: func(m *ice.Message, arg ...string) {
 				switch arg[0] {
-				case "text":
-					m.Push("text", "hi")
-					m.Push("text", "hello")
-					m.Push("text", "world")
-				case "fg", "bg":
-					m.Push("color", "red")
-					m.Push("color", "green")
-					m.Push("color", "blue")
+				case mdb.TEXT:
+					m.Push(arg[0], "hi", "hello", "world")
+				case FG, BG:
+					m.Push(arg[0], RED, GREEN, BLUE)
 				}
 			}},
 		}, Hand: func(m *ice.Message, arg ...string) {
 			m.Option(SIZE, kit.Select("240", arg, 3))
 			m.Option(BG, kit.Select(WHITE, arg, 2))
 			m.Option(FG, kit.Select(BLUE, arg, 1))
-
 			if m.IsCliUA() {
-				_qrcode_cli(m, kit.Select(ice.Info.Domain, arg, 0))
+				_qrcode_cli(m, kit.Select(kit.Select(ice.Info.Make.Domain, ice.Info.Domain), arg, 0))
 			} else {
 				_qrcode_web(m, kit.Select(m.Option(ice.MSG_USERWEB), arg, 0))
 			}
 		}},
-	}})
+	})
 }
+
+func Color(m *ice.Message, c string, str ice.Any) string {
+	wrap, color := `<span style="color:%s">%v</span>`, c
+	if m.IsCliUA() {
+		wrap, color = "\033[3%sm%v\033[0m", _parse_cli_color(c)
+	}
+	return fmt.Sprintf(wrap, color, str)
+}
+func ColorRed(m *ice.Message, str ice.Any) string    { return Color(m, RED, str) }
+func ColorGreen(m *ice.Message, str ice.Any) string  { return Color(m, GREEN, str) }
+func ColorYellow(m *ice.Message, str ice.Any) string { return Color(m, YELLOW, str) }

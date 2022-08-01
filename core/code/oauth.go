@@ -22,9 +22,7 @@ func init() {
 		LOGIN_OAUTH   = "https://github.com/login/oauth/"
 		API_GITHUB    = "https://api.github.com/"
 	)
-	Index.Merge(&ice.Context{Configs: ice.Configs{
-		OAUTH: {Name: OAUTH, Help: "授权", Value: kit.Data(mdb.FIELD, "time,hash,code,access_token,scope,token_type")},
-	}, Commands: ice.Commands{
+	Index.MergeCommands(ice.Commands{
 		OAUTH: {Name: "oauth hash auto", Help: "授权", Actions: ice.MergeAction(ice.Actions{
 			ctx.CONFIG: {Name: "config client_id client_secret redirect_uri", Help: "配置", Hand: func(m *ice.Message, arg ...string) {
 				m.ConfigOption(CLIENT_ID, CLIENT_SECRET, REDIRECT_URI)
@@ -60,7 +58,7 @@ func init() {
 				m.Option(web.SPIDE_HEADER, web.Accept, web.ContentJSON, web.Authorization, "token "+m.Append(ACCESS_TOKEN))
 				m.Cmd(web.SPIDE_DELETE, API_GITHUB+"user/keys/"+m.Option(mdb.ID))
 			}},
-		}, mdb.HashAction()), Hand: func(m *ice.Message, arg ...string) {
+		}, mdb.HashAction(mdb.FIELD, "time,hash,code,access_token,scope,token_type")), Hand: func(m *ice.Message, arg ...string) {
 			if mdb.HashSelect(m, arg...).PushAction("user", "public", ACCESS_TOKEN, mdb.REMOVE); len(arg) == 0 {
 				m.Action(mdb.CREATE)
 				m.Echo(kit.MergeURL2(LOGIN_OAUTH, "authorize", m.ConfigSimple(REDIRECT_URI, CLIENT_ID), SCOPE, "read:user read:public_key write:public_key repo"))
@@ -82,5 +80,5 @@ func init() {
 				m.RenderCmd(m.PrefixKey(), m.Cmdx(m.PrefixKey(), mdb.CREATE, m.OptionSimple(CODE)))
 			}
 		}},
-	}})
+	})
 }

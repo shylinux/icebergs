@@ -13,7 +13,7 @@ import (
 const TALK = "talk"
 
 func init() {
-	Index.Merge(&ice.Context{Commands: ice.Commands{
+	Index.MergeCommands(ice.Commands{
 		TALK: {Name: "talk text", Help: "聊天", Hand: func(m *ice.Message, arg ...string) {
 			cmds := kit.Split(strings.Join(arg, " "))
 			if aaa.UserLogin(m, m.Option(OPEN_ID), ""); !m.Right(cmds) {
@@ -55,5 +55,5 @@ func init() {
 				)),
 			))
 		}},
-	}})
+	})
 }

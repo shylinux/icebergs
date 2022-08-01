@@ -2,6 +2,7 @@ package web
 
 import (
 	"encoding/json"
+	"io"
 	"net/http"
 	"net/url"
 	"os"
@@ -17,12 +18,48 @@ import (
 	"shylinux.com/x/icebergs/base/nfs"
 	"shylinux.com/x/icebergs/base/tcp"
 	kit "shylinux.com/x/toolkits"
+	"shylinux.com/x/toolkits/logs"
 )
 
 var rewriteList = []ice.Any{}
 
 func AddRewrite(cb ice.Any) { rewriteList = append(rewriteList, cb) }
 
+func _serve_rewrite(m *ice.Message) {
+	AddRewrite(func(w http.ResponseWriter, r *http.Request) bool {
+		msg, repos := m.Spawn(SERVE, w, r), kit.Select(ice.INTSHELL, ice.VOLCANOS, strings.Contains(r.Header.Get("User-Agent"), "Mozilla/5.0"))
+		if r.Method == SPIDE_GET {
+			switch r.URL.Path {
+			case ice.PS:
+				if repos == ice.VOLCANOS {
+					if s := msg.Cmdx("web.chat.website", lex.PARSE, ice.INDEX_IML, "Header", "", "River", "", "Footer", ""); s != "" {
+						Render(msg, ice.RENDER_RESULT, s)
+						return true // 定制主页
+					}
+				}
+				Render(msg, ice.RENDER_DOWNLOAD, path.Join(msg.Config(kit.Keys(repos, nfs.PATH)), msg.Config(kit.Keys(repos, INDEX))))
+				return true // 默认主页
+
+			case PP(ice.HELP):
+				r.URL.Path = P(ice.HELP, ice.TUTOR_SHY)
+			}
+			p := path.Join(ice.USR, repos, r.URL.Path)
+			m.Debug("what %v", p)
+			if _, e := nfs.DiskFile.StatFile(p); e == nil {
+				m.Debug("what %v", p)
+				http.ServeFile(w, r, kit.Path(p))
+				return true
+			} else if f, e := nfs.PackFile.OpenFile(p); e == nil {
+				defer f.Close()
+				m.Debug("what %v", p)
+				RenderType(w, p, "")
+				io.Copy(w, f)
+				return true
+			}
+		}
+		return false
+	})
+}
 func _serve_domain(m *ice.Message) string {
 	if p := m.Config(DOMAIN); p != "" {
 		return p
@@ -41,6 +78,36 @@ func _serve_domain(m *ice.Message) string {
 		return kit.Format("https://%s", m.R.Host)
 	}
 }
+func _serve_spide(m *ice.Message, prefix string, c *ice.Context) {
+	for k := range c.Commands {
+		if strings.HasPrefix(k, ice.PS) {
+			m.Push(nfs.PATH, path.Join(prefix, k)+kit.Select("", ice.PS, strings.HasSuffix(k, ice.PS)))
+		}
+	}
+	for k, v := range c.Contexts {
+		_serve_spide(m, path.Join(prefix, k), v)
+	}
+}
+func _serve_start(m *ice.Message) {
+	ice.Info.Domain = kit.Select(kit.Format("%s://%s:%s", m.Option(tcp.PROTO), kit.Select(m.Cmd(tcp.HOST).Append(aaa.IP), m.Option(tcp.HOST)), m.Option(tcp.PORT)), ice.Info.Domain)
+	if cli.NodeInfo(m, SERVER, kit.Select(ice.Info.HostName, m.Option("nodename"))); m.Option(tcp.PORT) == tcp.RANDOM {
+		m.Option(tcp.PORT, m.Cmdx(tcp.PORT, aaa.RIGHT))
+	}
+
+	if m.Option("staffname") != "" {
+		m.Config("staffname", m.Option(aaa.USERNAME, m.Option("staffname")))
+	}
+	aaa.UserRoot(m, m.Option(aaa.PASSWORD), m.Option(aaa.USERNAME), m.Option(aaa.USERROLE))
+
+	m.Target().Start(m, m.OptionSimple(tcp.HOST, tcp.PORT)...)
+	m.Go(func() { m.Cmd(BROAD, SERVE) })
+	m.Sleep300ms()
+
+	for _, k := range kit.Split(m.Option(ice.DEV)) {
+		m.Cmd(SPACE, tcp.DIAL, ice.DEV, k, mdb.NAME, ice.Info.NodeName)
+	}
+}
+
 func _serve_main(m *ice.Message, w http.ResponseWriter, r *http.Request) bool {
 	if r.Header.Get("Index-Module") == "" {
 		r.Header.Set("Index-Module", m.Prefix())
@@ -60,19 +127,20 @@ func _serve_main(m *ice.Message, w http.ResponseWriter, r *http.Request) bool {
 	} else {
 		r.Header.Set(ice.MSG_USERIP, strings.Split(r.RemoteAddr, ":")[0])
 	}
-	m.Info("%s %s %s", r.Header.Get(ice.MSG_USERIP), r.Method, r.URL)
+	meta := logs.FileLineMeta("")
+	m.Info("%s %s %s", r.Header.Get(ice.MSG_USERIP), r.Method, r.URL, meta)
 
 	// 参数日志
 	if m.Config(LOGHEADERS) == ice.TRUE {
 		for k, v := range r.Header {
-			m.Info("%s: %v", k, kit.Format(v))
+			m.Info("%s: %v", k, kit.Format(v), meta)
 		}
-		m.Info("")
+		m.Info("", meta)
 
 		defer func() {
-			m.Info("")
+			m.Info("", meta)
 			for k, v := range w.Header() {
-				m.Info("%s: %v", k, kit.Format(v))
+				m.Info("%s: %v", k, kit.Format(v), meta)
 			}
 		}()
 	}
@@ -80,7 +148,7 @@ func _serve_main(m *ice.Message, w http.ResponseWriter, r *http.Request) bool {
 	// 模块回调
 	for _, h := range rewriteList {
 		if m.Config(LOGHEADERS) == ice.TRUE {
-			m.Info("%s: %v", r.URL.Path, kit.FileLine(h, 3))
+			m.Info("%s: %v", r.URL.Path, kit.FileLine(h, 3), meta)
 		}
 		switch h := h.(type) {
 		case func(w http.ResponseWriter, r *http.Request) func():
@@ -95,7 +163,7 @@ func _serve_main(m *ice.Message, w http.ResponseWriter, r *http.Request) bool {
 				return false
 			}
 		default:
-			m.Error(true, ice.ErrNotImplement)
+			m.ErrorNotImplement(h)
 		}
 	}
 	return true
@@ -131,7 +199,7 @@ func _serve_handle(key string, cmd *ice.Command, msg *ice.Message, w http.Respon
 	}
 	_serve_params(msg, r.URL.Path)
 
-	// 请求参数
+	// 解析参数
 	switch r.Header.Get(ContentType) {
 	case ContentJSON:
 		defer r.Body.Close()
@@ -145,11 +213,12 @@ func _serve_handle(key string, cmd *ice.Command, msg *ice.Message, w http.Respon
 	default:
 		r.ParseMultipartForm(kit.Int64(kit.Select("4096", r.Header.Get(ContentLength))))
 		if r.ParseForm(); len(r.PostForm) > 0 {
+			meta := logs.FileLineMeta("")
 			for k, v := range r.PostForm {
 				if len(v) > 1 {
-					msg.Logs("form", k, len(v), kit.Join(v, ice.SP))
+					msg.Logs("form", k, len(v), kit.Join(v, ice.SP), meta)
 				} else {
-					msg.Logs("form", k, v)
+					msg.Logs("form", k, v, meta)
 				}
 			}
 		}
@@ -163,16 +232,11 @@ func _serve_handle(key string, cmd *ice.Command, msg *ice.Message, w http.Respon
 				v[i], _ = url.QueryUnescape(p)
 			}
 		}
-		if msg.Optionv(k, v); k == ice.MSG_SESSID {
-			msg.Option(ice.MSG_SESSID, v[0])
-			RenderCookie(msg, v[0])
-		}
+		msg.Optionv(k, v)
 	}
 	for k, v := range r.PostForm {
 		msg.Optionv(k, v)
 	}
-
-	// 会话参数
 	for _, v := range r.Cookies() {
 		msg.Option(v.Name, v.Value)
 	}
@@ -181,7 +245,7 @@ func _serve_handle(key string, cmd *ice.Command, msg *ice.Message, w http.Respon
 	msg.Option(ice.MSG_USERWEB, _serve_domain(msg))
 	msg.Option(ice.MSG_USERADDR, kit.Select(r.RemoteAddr, r.Header.Get(ice.MSG_USERADDR)))
 	msg.Option(ice.MSG_USERIP, r.Header.Get(ice.MSG_USERIP))
-	msg.Option(ice.MSG_USERUA, r.Header.Get("User-Agent"))
+	msg.Option(ice.MSG_USERUA, r.Header.Get(UserAgent))
 	if msg.Option(ice.POD) != "" {
 		msg.Option(ice.MSG_USERPOD, msg.Option(ice.POD))
 	}
@@ -240,10 +304,8 @@ func _serve_login(msg *ice.Message, key string, cmds []string, w http.ResponseWr
 		return cmds, msg.Result(0) != ice.ErrWarn && msg.Result(0) != ice.FALSE
 	}
 
-	if ls := strings.Split(r.URL.Path, ice.PS); msg.Config(kit.Keys(aaa.BLACK, ls[1])) == ice.TRUE {
-		return cmds, false // 黑名单
-	} else if msg.Config(kit.Keys(aaa.WHITE, ls[1])) == ice.TRUE {
-		return cmds, true // 白名单
+	if msg.Right(key, cmds) {
+		return cmds, true
 	}
 
 	if msg.Warn(msg.Option(ice.MSG_USERNAME) == "", ice.ErrNotLogin, r.URL.Path) {
@@ -254,16 +316,6 @@ func _serve_login(msg *ice.Message, key string, cmds []string, w http.ResponseWr
 		return cmds, false // 未授权
 	}
 	return cmds, true
-}
-func _serve_spide(m *ice.Message, prefix string, c *ice.Context) {
-	for k := range c.Commands {
-		if strings.HasPrefix(k, ice.PS) {
-			m.Push(nfs.PATH, path.Join(prefix, k)+kit.Select("", ice.PS, strings.HasSuffix(k, ice.PS)))
-		}
-	}
-	for k, v := range c.Contexts {
-		_serve_spide(m, path.Join(prefix, k), v)
-	}
 }
 
 const (
@@ -279,120 +331,58 @@ func init() {
 	Index.Merge(&ice.Context{Configs: ice.Configs{
 		SERVE: {Name: SERVE, Help: "服务器", Value: kit.Data(
 			mdb.SHORT, mdb.NAME, mdb.FIELD, "time,status,name,port,dev",
-			tcp.LOCALHOST, ice.TRUE, aaa.BLACK, kit.Dict(), aaa.WHITE, kit.Dict(
-				LOGIN, ice.TRUE, SHARE, ice.TRUE, SPACE, ice.TRUE,
-				ice.VOLCANOS, ice.TRUE, ice.PUBLISH, ice.TRUE,
-				ice.INTSHELL, ice.TRUE, ice.REQUIRE, ice.TRUE,
-				"cmd", ice.TRUE, ice.HELP, ice.TRUE,
-			), LOGHEADERS, ice.FALSE,
-
-			DOMAIN, "", nfs.PATH, kit.Dict(ice.PS, ice.USR_VOLCANOS),
+			DOMAIN, "", tcp.LOCALHOST, ice.TRUE, LOGHEADERS, ice.FALSE,
+			nfs.PATH, kit.Dict(ice.PS, ice.USR_VOLCANOS),
 			ice.VOLCANOS, kit.Dict(nfs.PATH, ice.USR_VOLCANOS, INDEX, "page/index.html",
 				nfs.REPOS, "https://shylinux.com/x/volcanos", nfs.BRANCH, nfs.MASTER,
-			), ice.PUBLISH, ice.USR_PUBLISH,
-
+			),
 			ice.INTSHELL, kit.Dict(nfs.PATH, ice.USR_INTSHELL, INDEX, ice.INDEX_SH,
 				nfs.REPOS, "https://shylinux.com/x/intshell", nfs.BRANCH, nfs.MASTER,
-			), ice.REQUIRE, ".ish/pluged",
+			),
 		)},
 	}, Commands: ice.Commands{
 		SERVE: {Name: "serve name auto start spide", Help: "服务器", Actions: ice.MergeAction(ice.Actions{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
 				cli.NodeInfo(m, WORKER, ice.Info.PathName)
-				AddRewrite(func(w http.ResponseWriter, r *http.Request) bool {
-					w.Header().Add("Access-Control-Allow-Origin", "*")
-					if r.Method == SPIDE_GET {
-						switch r.URL.Path {
-						case ice.PS:
-							msg := m.Spawn(SERVE, w, r)
-							repos := kit.Select(ice.INTSHELL, ice.VOLCANOS, strings.Contains(r.Header.Get("User-Agent"), "Mozilla/5.0"))
-							if repos == ice.VOLCANOS {
-								if s := msg.Cmdx("web.chat.website", lex.PARSE, "index.iml", "Header", "", "River", "", "Footer", ""); s != "" {
-									Render(msg, ice.RENDER_RESULT, s)
-									return true // 定制主页
-								}
-							}
-							Render(msg, ice.RENDER_DOWNLOAD, path.Join(msg.Config(kit.Keys(repos, nfs.PATH)), msg.Config(kit.Keys(repos, INDEX))))
-							return true // 默认主页
-
-						case "/help/":
-							r.URL.Path = "/help/tutor.shy"
-						}
-					}
-					return false
-				})
-			}},
-			ice.CTX_EXIT: {Hand: func(m *ice.Message, arg ...string) {
-				m.Cmd(SERVE).Tables(func(value ice.Maps) {
-					m.Done(value[cli.STATUS] == tcp.START)
-				})
+				for _, p := range []string{LOGIN, SHARE, SPACE, ice.VOLCANOS, ice.INTSHELL, ice.PUBLISH, ice.REQUIRE, ice.HELP, ice.CMD} {
+					m.Cmd(aaa.ROLE, aaa.WHITE, aaa.VOID, p)
+				}
+				_serve_rewrite(m)
 			}},
 			DOMAIN: {Name: "domain", Help: "域名", Hand: func(m *ice.Message, arg ...string) {
 				ice.Info.Domain = m.Conf(SHARE, kit.Keym(DOMAIN, m.Config(DOMAIN, arg[0])))
 			}},
-			"list_broad": {Name: "list_broad", Help: "服务发现", Hand: func(m *ice.Message, arg ...string) {
-				m.Go(func() { _serve_udp(m, m.Cmd(tcp.HOST).Append(aaa.IP), m.Option(tcp.PORT)) })
-			}},
-			aaa.BLACK: {Name: "black", Help: "黑名单", Hand: func(m *ice.Message, arg ...string) {
-				for _, k := range arg {
-					m.Log_CREATE(aaa.BLACK, k)
-					m.Config(kit.Keys(aaa.BLACK, k), ice.TRUE)
-				}
-			}},
-			aaa.WHITE: {Name: "white", Help: "白名单", Hand: func(m *ice.Message, arg ...string) {
-				for _, k := range arg {
-					m.Log_CREATE(aaa.WHITE, k)
-					m.Config(kit.Keys(aaa.WHITE, k), ice.TRUE)
-				}
-			}},
 			cli.START: {Name: "start dev proto=http host port=9020 nodename password username userrole staffname", Help: "启动", Hand: func(m *ice.Message, arg ...string) {
-				ice.Info.Domain = kit.Select(kit.Format("%s://%s:%s", m.Option(tcp.PROTO), kit.Select(m.Cmd(tcp.HOST).Append(aaa.IP), m.Option(tcp.HOST)), m.Option(tcp.PORT)), ice.Info.Domain)
-				if cli.NodeInfo(m, SERVER, kit.Select(ice.Info.HostName, m.Option("nodename"))); m.Option(tcp.PORT) == tcp.RANDOM {
-					m.Option(tcp.PORT, m.Cmdx(tcp.PORT, aaa.RIGHT))
-				}
-				if m.Option("staffname") != "" {
-					m.Config("staffname", m.Option(aaa.USERNAME, m.Option("staffname")))
-				}
-				aaa.UserRoot(m, m.Option(aaa.PASSWORD), m.Option(aaa.USERNAME), m.Option(aaa.USERROLE))
-
-				m.Go(func() { m.Cmd(BROAD, SERVE) })
-				m.Target().Start(m, m.OptionSimple(tcp.HOST, tcp.PORT)...)
-				m.Sleep300ms()
-
-				for _, k := range kit.Split(m.Option(ice.DEV)) {
-					m.Cmd(SPACE, tcp.DIAL, ice.DEV, k, mdb.NAME, ice.Info.NodeName)
-				}
+				_serve_start(m)
 			}},
-			"spide": {Name: "spide", Help: "架构图", Hand: func(m *ice.Message, arg ...string) {
+			SPIDE: {Name: "spide", Help: "架构图", Hand: func(m *ice.Message, arg ...string) {
 				if len(arg) == 0 { // 模块列表
-					m.Display("/plugin/story/spide.js", "root", ice.ICE, "prefix", "spide")
 					_serve_spide(m, ice.PS, m.Target())
-					m.StatusTimeCount()
-					return
+					m.DisplayStorySpide(lex.PREFIX, m.ActionKey(), nfs.ROOT, m.MergeLink(ice.PS))
 				}
 			}},
-		}, mdb.HashAction()), Hand: func(m *ice.Message, arg ...string) {
-			mdb.HashSelect(m, arg...)
-		}},
+		}, mdb.HashAction())},
 
-		"/intshell/": {Name: "/intshell/", Help: "命令行", Hand: func(m *ice.Message, arg ...string) {
+		PP(ice.INTSHELL): {Name: "/intshell/", Help: "命令行", Hand: func(m *ice.Message, arg ...string) {
 			m.RenderIndex(SERVE, ice.INTSHELL, arg...)
 		}},
-		"/volcanos/": {Name: "/volcanos/", Help: "浏览器", Hand: func(m *ice.Message, arg ...string) {
+		PP(ice.VOLCANOS): {Name: "/volcanos/", Help: "浏览器", Hand: func(m *ice.Message, arg ...string) {
 			m.RenderIndex(SERVE, ice.VOLCANOS, arg...)
 		}},
-		"/require/src/": {Name: "/require/src/", Help: "代码库", Hand: func(m *ice.Message, arg ...string) {
-			if p := path.Join(ice.SRC, path.Join(arg...)); m.Option(ice.POD) != "" {
-				m.RenderResult(m.Cmdx(SPACE, m.Option(ice.POD), nfs.CAT, p))
-			} else {
-				m.RenderDownload(p)
-			}
+		PP(ice.PUBLISH): {Name: "/publish/", Help: "定制化", Hand: func(m *ice.Message, arg ...string) {
+			_share_local(aaa.UserRoot(m), ice.USR_PUBLISH, path.Join(arg...))
 		}},
-		"/require/usr/": {Name: "/require/usr/", Help: "代码库", Hand: func(m *ice.Message, arg ...string) {
-			m.RenderDownload(path.Join(ice.USR, path.Join(arg...)))
+		PP(ice.REQUIRE): {Name: "/require/shylinux.com/x/volcanos/proto.js", Help: "代码库", Hand: func(m *ice.Message, arg ...string) {
+			_share_repos(m, path.Join(arg[0], arg[1], arg[2]), arg[3:]...)
 		}},
-		"/require/node_modules/": {Name: "/require/node_modules/", Help: "依赖库", Hand: func(m *ice.Message, arg ...string) {
-			p := path.Join(ice.USR_VOLCANOS, "node_modules", path.Join(arg...))
+		PP(ice.REQUIRE, ice.SRC): {Name: "/require/src/", Help: "源代码", Hand: func(m *ice.Message, arg ...string) {
+			_share_local(aaa.UserRoot(m), ice.SRC, path.Join(arg...))
+		}},
+		PP(ice.REQUIRE, ice.USR): {Name: "/require/usr/", Help: "代码库", Hand: func(m *ice.Message, arg ...string) {
+			_share_local(aaa.UserRoot(m), ice.USR, path.Join(arg...))
+		}},
+		PP(ice.REQUIRE, ice.NODE_MODULES): {Name: "/require/node_modules/", Help: "依赖库", Hand: func(m *ice.Message, arg ...string) {
+			p := path.Join(ice.USR_VOLCANOS, ice.NODE_MODULES, path.Join(arg...))
 			if b, ok := ice.Info.Pack[p]; ok && len(b) > 0 {
 
 			} else if _, e := os.Stat(p); e != nil {
@@ -400,18 +390,7 @@ func init() {
 			}
 			m.RenderDownload(p)
 		}},
-		"/require/": {Name: "/require/", Help: "代码库", Hand: func(m *ice.Message, arg ...string) {
-			_share_repos(m, path.Join(arg[0], arg[1], arg[2]), arg[3:]...)
-		}},
-		"/publish/": {Name: "/publish/", Help: "定制化", Hand: func(m *ice.Message, arg ...string) {
-			if strings.HasPrefix(arg[0], "ice.") && m.Option(ice.POD) != "" {
-				_share_local(aaa.UserRoot(m), path.Join(ice.USR_PUBLISH, arg[0]))
-				// _share_local(aaa.UserRoot(m), ice.BIN_ICE_BIN)
-				return
-			}
-			_share_local(m, m.Conf(SERVE, kit.Keym(ice.PUBLISH)), path.Join(arg...))
-		}},
-		"/help/": {Name: "/help/", Help: "帮助", Hand: func(m *ice.Message, arg ...string) {
+		PP(ice.HELP): {Name: "/help/", Help: "帮助", Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) == 0 {
 				arg = append(arg, "tutor.shy")
 			}

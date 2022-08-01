@@ -10,7 +10,7 @@ import (
 const FORM = "form"
 
 func init() {
-	Index.Merge(&ice.Context{Commands: ice.Commands{
+	Index.MergeCommands(ice.Commands{
 		FORM: {Name: "form [chat_id|open_id|user_id|email] target title text [confirm|value|url arg...]...", Help: "消息", Hand: func(m *ice.Message, arg ...string) {
 			var form = kit.Dict()
 			switch arg[0] {
@@ -75,5 +75,5 @@ func init() {
 			msg := _lark_post(m, m.Option(APP_ID), "/open-apis/message/v4/send/", web.SPIDE_DATA, kit.Formats(form))
 			m.Debug("%v", msg.Optionv(web.SPIDE_RES))
 		}},
-	}})
+	})
 }

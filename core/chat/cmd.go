@@ -51,9 +51,40 @@ func _cmd_file(m *ice.Message, arg ...string) bool {
 const CMD = "cmd"
 
 func init() {
-	Index.Merge(&ice.Context{Configs: ice.Configs{
-		CMD: {Name: CMD, Help: "命令", Value: kit.Data(mdb.SHORT, "type", nfs.PATH, nfs.PWD)},
-	}, Commands: ice.Commands{
+	Index.MergeCommands(ice.Commands{
+		CMD: {Name: "cmd path auto upload up home", Help: "命令", Actions: ice.MergeAction(ice.Actions{
+			web.UPLOAD: {Name: "upload", Help: "上传", Hand: func(m *ice.Message, arg ...string) {
+				m.Upload(path.Join(m.Config(nfs.PATH), strings.TrimPrefix(path.Dir(m.R.URL.Path), "/cmd")))
+			}},
+
+			"home": {Name: "home", Help: "根目录", Hand: func(m *ice.Message, arg ...string) {
+				m.ProcessLocation("/chat/cmd/")
+			}},
+			"up": {Name: "up", Help: "上一级", Hand: func(m *ice.Message, arg ...string) {
+				if strings.TrimPrefix(m.R.URL.Path, "/cmd") == ice.PS {
+					m.Cmdy(CMD)
+				} else if strings.HasSuffix(m.R.URL.Path, ice.PS) {
+					m.ProcessLocation("../")
+				} else {
+					m.ProcessLocation(nfs.PWD)
+				}
+			}},
+		}, mdb.HashAction(mdb.SHORT, "type", nfs.PATH, nfs.PWD)), Hand: func(m *ice.Message, arg ...string) {
+			if _cmd_file(m, arg...) {
+				return
+			}
+			if msg := m.Cmd(ctx.COMMAND, arg[0]); msg.Length() > 0 {
+				m.RenderCmd(arg[0])
+				return
+			}
+
+			if len(arg) > 0 {
+				m.ProcessLocation(arg[0])
+				return
+			}
+			m.Option(nfs.DIR_ROOT, path.Join(m.Config(nfs.PATH), strings.TrimPrefix(path.Dir(m.R.URL.Path), "/cmd")))
+			m.Cmdy(nfs.DIR, arg)
+		}},
 		"/cmd/": {Name: "/cmd/", Help: "命令", Actions: ice.MergeAction(ice.Actions{
 			ice.CTX_INIT: {Name: "_init", Help: "初始化", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmdy(CMD, mdb.CREATE, mdb.TYPE, "shy", mdb.NAME, "web.wiki.word")
@@ -84,38 +115,5 @@ func init() {
 				m.RenderDownload(path.Join(m.Config(nfs.PATH), path.Join(arg...))) // 文件
 			}
 		}},
-		CMD: {Name: "cmd path auto upload up home", Help: "命令", Actions: ice.MergeAction(ice.Actions{
-			web.UPLOAD: {Name: "upload", Help: "上传", Hand: func(m *ice.Message, arg ...string) {
-				m.Upload(path.Join(m.Config(nfs.PATH), strings.TrimPrefix(path.Dir(m.R.URL.Path), "/cmd")))
-			}},
-
-			"home": {Name: "home", Help: "根目录", Hand: func(m *ice.Message, arg ...string) {
-				m.ProcessLocation("/chat/cmd/")
-			}},
-			"up": {Name: "up", Help: "上一级", Hand: func(m *ice.Message, arg ...string) {
-				if strings.TrimPrefix(m.R.URL.Path, "/cmd") == ice.PS {
-					m.Cmdy(CMD)
-				} else if strings.HasSuffix(m.R.URL.Path, ice.PS) {
-					m.ProcessLocation("../")
-				} else {
-					m.ProcessLocation(nfs.PWD)
-				}
-			}},
-		}, mdb.HashAction()), Hand: func(m *ice.Message, arg ...string) {
-			if _cmd_file(m, arg...) {
-				return
-			}
-			if msg := m.Cmd(ctx.COMMAND, arg[0]); msg.Length() > 0 {
-				m.RenderCmd(arg[0])
-				return
-			}
-
-			if len(arg) > 0 {
-				m.ProcessLocation(arg[0])
-				return
-			}
-			m.Option(nfs.DIR_ROOT, path.Join(m.Config(nfs.PATH), strings.TrimPrefix(path.Dir(m.R.URL.Path), "/cmd")))
-			m.Cmdy(nfs.DIR, arg)
-		}},
-	}})
+	})
 }

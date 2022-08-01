@@ -12,7 +12,7 @@ import (
 const NODE = "node"
 
 func init() {
-	Index.Merge(&ice.Context{Commands: ice.Commands{
+	Index.MergeCommands(ice.Commands{
 		NODE: {Name: "node pod ctx cmd auto insert invite", Help: "设备", Actions: ice.Actions{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
 				m.Watch(web.DREAM_START, m.PrefixKey())
@@ -60,5 +60,5 @@ func init() {
 			}
 			m.Cmdy(web.ROUTE, arg)
 		}},
-	}})
+	})
 }

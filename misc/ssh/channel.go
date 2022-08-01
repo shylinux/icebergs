@@ -67,11 +67,7 @@ func _ssh_watch(m *ice.Message, meta ice.Maps, h string, input io.Reader, output
 const CHANNEL = "channel"
 
 func init() {
-	psh.Index.Merge(&ice.Context{Configs: ice.Configs{
-		CHANNEL: {Name: "channel", Help: "通道", Value: kit.Data(
-			mdb.FIELD, "time,hash,status,username,hostport,tty,count",
-		)},
-	}, Commands: ice.Commands{
+	psh.Index.MergeCommands(ice.Commands{
 		CHANNEL: {Name: "channel hash id auto", Help: "通道", Actions: ice.MergeAction(ice.Actions{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
 				m.Richs(CHANNEL, "", mdb.FOREACH, func(key string, value ice.Map) {
@@ -96,7 +92,7 @@ func init() {
 				})
 				m.ProcessRefresh300ms()
 			}},
-		}, mdb.HashAction()), Hand: func(m *ice.Message, arg ...string) {
+		}, mdb.HashAction(mdb.FIELD, "time,hash,status,username,hostport,tty,count")), Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) == 0 { // 通道列表
 				m.Action(mdb.PRUNES)
 				mdb.HashSelect(m, arg...)
@@ -113,5 +109,5 @@ func init() {
 			mdb.ZoneSelect(m, arg...)
 			m.PushAction(mdb.REPEAT)
 		}},
-	}})
+	})
 }

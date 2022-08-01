@@ -7,11 +7,11 @@ import (
 	"net/http"
 	"path"
 	"strings"
-	"sync"
 	"sync/atomic"
 	"time"
 
 	kit "shylinux.com/x/toolkits"
+	"shylinux.com/x/toolkits/logs"
 )
 
 type Any = interface{}
@@ -69,7 +69,6 @@ type Context struct {
 	begin *Message
 	start *Message
 
-	wg *sync.WaitGroup
 	id int32
 }
 
@@ -243,7 +242,7 @@ func (c *Context) Begin(m *Message, arg ...string) *Context {
 	c.Caches[CTX_FOLLOW] = &Cache{Name: CTX_FOLLOW, Value: follow}
 	c.Caches[CTX_STATUS] = &Cache{Name: CTX_STATUS, Value: CTX_BEGIN}
 	c.Caches[CTX_STREAM] = &Cache{Name: CTX_STREAM, Value: ""}
-	m.Log(LOG_BEGIN, c.Cap(CTX_FOLLOW))
+	// m.Log(LOG_BEGIN, c.Cap(CTX_FOLLOW))
 
 	if c.begin = m; c.server != nil {
 		c.server.Begin(m, arg...)
@@ -254,9 +253,11 @@ func (c *Context) Start(m *Message, arg ...string) bool {
 	wait := make(chan bool, 1)
 	defer func() { <-wait }()
 
-	m.Hold(1)
+	_source := m.target.Name
+	if c.server != nil {
+		_source = logs.FileLine(c.server.Start, 3)
+	}
 	m.Go(func() {
-		defer m.Done(true)
 
 		m.Log(LOG_START, c.Cap(CTX_FOLLOW))
 		c.Cap(CTX_STATUS, CTX_START)
@@ -265,7 +266,7 @@ func (c *Context) Start(m *Message, arg ...string) bool {
 		if c.start = m; c.server != nil {
 			c.server.Start(m, arg...)
 		}
-	})
+	}, _source)
 	return true
 }
 func (c *Context) Close(m *Message, arg ...string) bool {
@@ -289,11 +290,13 @@ type Message struct {
 	message *Message
 	root    *Message
 
-	source *Context
-	target *Context
-	_cmd   *Command
-	_key   string
-	_sub   string
+	_source string
+	_target string
+	source  *Context
+	target  *Context
+	_cmd    *Command
+	_key    string
+	_sub    string
 
 	cb func(*Message) *Message
 	W  http.ResponseWriter
@@ -334,6 +337,7 @@ func (m *Message) Spawn(arg ...Any) *Message {
 		time: time.Now(), code: int(m.target.root.ID()),
 		meta: map[string][]string{}, data: Map{},
 
+		_source: m._source,
 		message: m, root: m.root,
 		source: m.target, target: m.target, _cmd: m._cmd, _key: m._key, _sub: m._sub,
 		W: m.W, R: m.R, O: m.O, I: m.I,
@@ -392,7 +396,7 @@ func (m *Message) Travel(cb Any) *Message {
 			}
 			m.target = target
 		default:
-			m.Error(true, ErrNotImplement)
+			m.ErrorNotImplement(cb)
 		}
 
 		for _, k := range kit.SortedKey(list[i].Contexts) { // 遍历递进
@@ -429,7 +433,8 @@ func (m *Message) Search(key string, cb Any) *Message {
 				break
 			}
 		}
-		if m.Warn(p == nil, ErrNotFound, key) {
+		// if m.Warn(p == nil, ErrNotFound, key) {
+		if p == nil {
 			return m
 		}
 		key = ls[len(ls)-1]
@@ -489,11 +494,22 @@ func (m *Message) Search(key string, cb Any) *Message {
 	case func(p *Context, s *Context):
 		cb(p.context, p) // 查找模块
 	default:
-		m.Error(true, ErrNotImplement)
+		m.ErrorNotImplement(cb)
 	}
 	return m
 }
 
+func (m *Message) CmdAppend(arg ...string) string {
+	field := kit.Slice(arg, -1)[0]
+	return m._command(kit.Slice(arg, 0, -1), OptionFields(field)).Append(field)
+}
+func (m *Message) CmdMap(arg ...string) map[string]map[string]string {
+	field, list := kit.Slice(arg, -1)[0], map[string]map[string]string{}
+	m._command(kit.Slice(arg, 0, -1)).Tables(func(value Maps) {
+		list[value[field]] = value
+	})
+	return list
+}
 func (m *Message) Cmd(arg ...Any) *Message {
 	return m._command(arg...)
 }

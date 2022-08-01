@@ -10,16 +10,17 @@ import (
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/nfs"
 	kit "shylinux.com/x/toolkits"
+	"shylinux.com/x/toolkits/miss"
 )
 
 func _cache_name(m *ice.Message, h string) string {
-	return path.Join(m.Config(nfs.PATH), h[:2], h)
+	return path.Join(ice.VAR_FILE, h[:2], h)
 }
 func _cache_save(m *ice.Message, kind, name, text string, arg ...string) { // file size
 	if name == "" {
 		return
 	}
-	if len(text) > 512 || kind == "go" { // 存入文件
+	if len(text) > 512 || kind == nfs.GO { // 存入文件
 		p := m.Cmdx(nfs.SAVE, _cache_name(m, kit.Hashs(text)), text)
 		text, arg = p, kit.Simple(p, len(text))
 	}
@@ -28,7 +29,7 @@ func _cache_save(m *ice.Message, kind, name, text string, arg ...string) { // fi
 	size := kit.Int(kit.Select(kit.Format(len(text)), arg, 1))
 	file := kit.Select("", arg, 0)
 	text = kit.Select(file, text)
-	h := m.Cmdx(mdb.INSERT, CACHE, "", mdb.HASH, kit.SimpleKV("", kind, name, text), nfs.FILE, file, nfs.SIZE, size)
+	h := mdb.HashCreate(m, kit.SimpleKV("", kind, name, text), nfs.FILE, file, nfs.SIZE, size).Result()
 
 	// 返回结果
 	m.Push(mdb.TIME, m.Time())
@@ -50,26 +51,26 @@ func _cache_watch(m *ice.Message, key, file string) {
 	})
 }
 func _cache_catch(m *ice.Message, name string) (file, size string) {
-	if f, e := os.Open(name); m.Assert(e) {
+	if f, e := nfs.OpenFile(m, name); m.Assert(e) {
 		defer f.Close()
 
-		if s, e := f.Stat(); m.Assert(e) {
+		if s, e := nfs.StatFile(m, name); m.Assert(e) {
 			return m.Cmdx(nfs.LINK, _cache_name(m, kit.Hashs(f)), name), kit.Format(s.Size())
 		}
 	}
 	return "", "0"
 }
 func _cache_upload(m *ice.Message, r *http.Request) (kind, name, file, size string) {
-	if buf, h, e := r.FormFile(UPLOAD); e == nil {
-		defer buf.Close()
+	if b, h, e := r.FormFile(UPLOAD); e == nil {
+		defer b.Close()
 
 		// 创建文件
-		if f, p, e := kit.Create(_cache_name(m, kit.Hashs(buf))); m.Assert(e) {
+		if f, p, e := miss.CreateFile(_cache_name(m, kit.Hashs(b))); m.Assert(e) {
 			defer f.Close()
 
 			// 导入数据
-			buf.Seek(0, os.SEEK_SET)
-			if n, e := io.Copy(f, buf); m.Assert(e) {
+			b.Seek(0, os.SEEK_SET)
+			if n, e := io.Copy(f, b); m.Assert(e) {
 				m.Log_IMPORT(nfs.FILE, p, nfs.SIZE, kit.FmtSize(int64(n)))
 				return h.Header.Get(ContentType), h.Filename, p, kit.Format(n)
 			}
@@ -80,12 +81,14 @@ func _cache_upload(m *ice.Message, r *http.Request) (kind, name, file, size stri
 func _cache_download(m *ice.Message, r *http.Response) (file, size string) {
 	defer r.Body.Close()
 
-	if f, p, e := kit.Create(path.Join(ice.VAR_TMP, kit.Hashs(mdb.UNIQ))); m.Assert(e) {
-		step, total := 0, kit.Int(kit.Select("1", r.Header.Get(ContentLength)))
+	if f, p, e := miss.CreateFile(path.Join(ice.VAR_TMP, kit.Hashs(mdb.UNIQ))); m.Assert(e) {
+		defer f.Close()
+
+		step, total := 0, kit.Int(kit.Select("100", r.Header.Get(ContentLength)))
 		size, buf := 0, make([]byte, ice.MOD_BUFS)
 
 		for {
-			if n, _ := r.Body.Read(buf); n > 0 {
+			if n, e := r.Body.Read(buf); n > 0 && e == nil {
 				size += n
 				f.Write(buf[0:n])
 				s := size * 100 / total
@@ -95,31 +98,16 @@ func _cache_download(m *ice.Message, r *http.Response) (file, size string) {
 					cb(size, total, s)
 				case func(int, int):
 					cb(size, total)
-				case []string:
-					m.Richs(cb[0], cb[1], cb[2], func(key string, value ice.Map) {
-						value = kit.GetMeta(value)
-						value[mdb.COUNT], value[mdb.TOTAL], value[mdb.VALUE] = size, total, kit.Format(s)
-					})
 				default:
 					if s != step && s%10 == 0 {
 						m.Log_IMPORT(nfs.FILE, p, mdb.VALUE, s, mdb.COUNT, kit.FmtSize(int64(size)), mdb.TOTAL, kit.FmtSize(int64(total)))
 					}
 				}
+
 				step = s
 				continue
 			}
-
-			f.Close()
-			break
-		}
-
-		if f, e := os.Open(p); m.Assert(e) {
-			defer f.Close()
-
-			m.Log_IMPORT(nfs.FILE, p, nfs.SIZE, kit.FmtSize(int64(size)))
-			c := _cache_name(m, kit.Hashs(f))
-			m.Cmd(nfs.LINK, c, p)
-			return c, kit.Format(size)
+			return p, kit.Format(size)
 		}
 	}
 	return "", "0"
@@ -135,22 +123,7 @@ const (
 const CACHE = "cache"
 
 func init() {
-	Index.Merge(&ice.Context{Configs: ice.Configs{
-		CACHE: {Name: CACHE, Help: "缓存池", Value: kit.Data(
-			mdb.SHORT, mdb.TEXT, mdb.FIELD, "time,hash,size,type,name,text",
-			mdb.STORE, ice.VAR_DATA, nfs.PATH, ice.VAR_FILE, mdb.FSIZE, "200000",
-			mdb.LIMIT, "50", mdb.LEAST, "30",
-		)},
-	}, Commands: ice.Commands{
-		"/cache/": {Name: "/cache/", Help: "缓存池", Hand: func(m *ice.Message, arg ...string) {
-			m.Richs(CACHE, nil, arg[0], func(key string, value ice.Map) {
-				if kit.Format(value[nfs.FILE]) == "" {
-					m.RenderResult(value[mdb.TEXT])
-				} else {
-					m.RenderDownload(value[nfs.FILE])
-				}
-			})
-		}},
+	Index.MergeCommands(ice.Commands{
 		CACHE: {Name: "cache hash auto", Help: "缓存池", Actions: ice.MergeAction(ice.Actions{
 			WATCH: {Name: "watch key file", Help: "释放", Hand: func(m *ice.Message, arg ...string) {
 				_cache_watch(m, arg[0], arg[1])
@@ -169,19 +142,28 @@ func init() {
 			DOWNLOAD: {Name: "download type name", Help: "下载", Hand: func(m *ice.Message, arg ...string) {
 				if r, ok := m.Optionv(RESPONSE).(*http.Response); ok {
 					file, size := _cache_download(m, r)
+					file, size = _cache_catch(m, file)
 					_cache_save(m, arg[0], arg[1], "", file, size)
 				}
 			}},
-		}, mdb.HashAction()), Hand: func(m *ice.Message, arg ...string) {
+		}, mdb.HashAction(mdb.SHORT, mdb.TEXT, mdb.FIELD, "time,hash,size,type,name,text,file")), Hand: func(m *ice.Message, arg ...string) {
 			if mdb.HashSelect(m, arg...); len(arg) == 0 {
 				return
 			}
-
 			if m.Append(nfs.FILE) == "" {
 				m.PushScript("inner", m.Append(mdb.TEXT))
 			} else {
-				m.PushDownload(m.Append(mdb.NAME), m.MergeURL2("/share/cache/"+arg[0]))
+				m.PushDownload(m.Append(mdb.NAME), m.MergeURL2(SHARE_CACHE+arg[0]))
 			}
 		}},
-	}})
+		PP(CACHE): {Name: "/cache/", Help: "缓存池", Hand: func(m *ice.Message, arg ...string) {
+			mdb.HashSelectDetail(m, arg[0], func(value ice.Map) {
+				if kit.Format(value[nfs.FILE]) == "" {
+					m.RenderResult(value[mdb.TEXT])
+				} else {
+					m.RenderDownload(value[nfs.FILE])
+				}
+			})
+		}},
+	})
 }

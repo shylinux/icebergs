@@ -42,6 +42,9 @@ func init() {
 				m.Echo(get(m, "place/v1/explore", m.OptionSimple("boundary,page_index")))
 			}},
 			"search": {Name: "search", Help: "搜索", Hand: func(m *ice.Message, arg ...string) {
+				if arg[0] == "*" {
+					return
+				}
 				m.Echo(get(m, "place/v1/search", m.OptionSimple("keyword,boundary,page_index")))
 			}},
 			"direction": {Name: "direction", Help: "导航", Hand: func(m *ice.Message, arg ...string) {

@@ -426,5 +426,4 @@ func _story_commit(m *ice.Message, arg ...string) {
 		value["list"] = list
 	}
 	m.Echo(list)
-
 }

@@ -146,7 +146,7 @@ const (
 const ACTION = "action"
 
 func init() {
-	Index.Merge(&ice.Context{Commands: ice.Commands{
+	Index.MergeCommands(ice.Commands{
 		web.P(ACTION): {Name: "/action river storm action arg...", Help: "工作台", Actions: ice.MergeAction(ice.Actions{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
 				for _, cmd := range []string{
@@ -193,5 +193,5 @@ func init() {
 			// 执行命令
 			_action_exec(m, arg[0], arg[1], arg[2], arg[3:]...)
 		}},
-	}})
+	})
 }

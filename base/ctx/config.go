@@ -2,7 +2,6 @@ package ctx
 
 import (
 	"encoding/json"
-	"os"
 	"path"
 	"strings"
 
@@ -10,23 +9,12 @@ import (
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/nfs"
 	kit "shylinux.com/x/toolkits"
+	"shylinux.com/x/toolkits/miss"
 )
 
-func _config_list(m *ice.Message) {
-	for k, v := range m.Source().Configs {
-		if k[0] == '/' || k[0] == '_' {
-			continue // 内部配置
-		}
-
-		m.Push(mdb.KEY, k)
-		m.Push(mdb.NAME, v.Name)
-		m.Push(mdb.VALUE, kit.Format(v.Value))
-	}
-	m.Sort(mdb.KEY)
-}
 func _config_save(m *ice.Message, name string, arg ...string) {
-	name = path.Join(m.Config(nfs.PATH), name)
-	if f, p, e := kit.Create(name); m.Assert(e) {
+	name = path.Join(ice.VAR_CONF, name)
+	if f, p, e := miss.CreateFile(name); m.Assert(e) {
 		defer f.Close()
 
 		msg := m.Spawn(m.Source())
@@ -39,16 +27,16 @@ func _config_save(m *ice.Message, name string, arg ...string) {
 
 		// 保存配置
 		if s, e := json.MarshalIndent(data, "", "  "); m.Assert(e) {
-			if n, e := f.Write(s); m.Assert(e) {
-				m.Log_EXPORT(CONFIG, name, nfs.FILE, p, nfs.SIZE, n)
+			if _, e := f.Write(s); m.Assert(e) {
+				// m.Log_EXPORT(CONFIG, name, nfs.FILE, p, nfs.SIZE, n)
 			}
 		}
 		m.Echo(p)
 	}
 }
 func _config_load(m *ice.Message, name string, arg ...string) {
-	name = path.Join(m.Config(nfs.PATH), name)
-	if f, e := os.Open(name); e == nil {
+	name = path.Join(ice.VAR_CONF, name)
+	if f, e := miss.OpenFile(name); e == nil {
 		defer f.Close()
 
 		msg := m.Spawn(m.Source())
@@ -58,7 +46,7 @@ func _config_load(m *ice.Message, name string, arg ...string) {
 		// 加载配置
 		for k, v := range data {
 			msg.Search(k, func(p *ice.Context, s *ice.Context, key string) {
-				m.Log_IMPORT(CONFIG, kit.Keys(s.Name, key), nfs.FILE, name)
+				// m.Log_IMPORT(CONFIG, kit.Keys(s.Name, key), nfs.FILE, name)
 				if s.Configs[key] == nil {
 					s.Configs[key] = &ice.Config{}
 				}
@@ -83,11 +71,17 @@ func _config_make(m *ice.Message, key string, arg ...string) {
 		m.Echo(kit.Formats(msg.Confv(key)))
 	}
 }
-func _config_rich(m *ice.Message, key string, sub string, arg ...string) {
-	m.Rich(key, sub, kit.Data(arg))
-}
-func _config_grow(m *ice.Message, key string, sub string, arg ...string) {
-	m.Grow(key, sub, kit.Dict(arg))
+func _config_list(m *ice.Message) {
+	for k, v := range m.Source().Configs {
+		if k[0] == '/' || k[0] == '_' {
+			continue // 内部配置
+		}
+
+		m.Push(mdb.KEY, k)
+		m.Push(mdb.NAME, v.Name)
+		m.Push(mdb.VALUE, kit.Format(v.Value))
+	}
+	m.Sort(mdb.KEY)
 }
 
 const (
@@ -99,9 +93,7 @@ const (
 const CONFIG = "config"
 
 func init() {
-	Index.Merge(&ice.Context{Configs: ice.Configs{
-		CONFIG: {Name: CONFIG, Help: "配置", Value: kit.Data(nfs.PATH, ice.VAR_CONF)},
-	}, Commands: ice.Commands{
+	Index.MergeCommands(ice.Commands{
 		CONFIG: {Name: "config key auto reset", Help: "配置", Actions: ice.Actions{
 			SAVE: {Name: "save", Help: "保存", Hand: func(m *ice.Message, arg ...string) {
 				_config_save(m, arg[0], arg[1:]...)
@@ -110,10 +102,10 @@ func init() {
 				_config_load(m, arg[0], arg[1:]...)
 			}},
 			RICH: {Name: "rich", Help: "富有", Hand: func(m *ice.Message, arg ...string) {
-				_config_rich(m, arg[0], arg[1], arg[2:]...)
+				m.Cmdy(mdb.INSERT, arg[0], arg[1], mdb.HASH, arg[2:])
 			}},
 			GROW: {Name: "grow", Help: "成长", Hand: func(m *ice.Message, arg ...string) {
-				_config_grow(m, arg[0], arg[1], arg[2:]...)
+				m.Cmdy(mdb.INSERT, arg[0], arg[1], mdb.LIST, arg[2:])
 			}},
 			"list": {Name: "list", Help: "列表", Hand: func(m *ice.Message, arg ...string) {
 				list := []ice.Any{}
@@ -134,5 +126,5 @@ func init() {
 			_config_make(m, arg[0], arg[1:]...)
 			m.DisplayStoryJSON()
 		}},
-	}})
+	})
 }

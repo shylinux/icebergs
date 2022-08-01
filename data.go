@@ -1,6 +1,7 @@
 package ice
 
 import (
+	"path"
 	"strings"
 	"sync"
 
@@ -94,7 +95,7 @@ func (m *Message) Richs(prefix string, chain Any, raw Any, cb Any) (res Map) {
 	case func(*sync.Mutex, string, Map):
 		wg, mu := &sync.WaitGroup{}, &sync.Mutex{}
 		defer wg.Wait()
-		res = miss.Richs(kit.Keys(prefix, chain), cache, raw, func(key string, value Map) {
+		res = miss.Richs(path.Join(prefix, kit.Keys(chain)), cache, raw, func(key string, value Map) {
 			wg.Add(1)
 			m.Go(func() {
 				defer wg.Done()
@@ -102,7 +103,7 @@ func (m *Message) Richs(prefix string, chain Any, raw Any, cb Any) (res Map) {
 			})
 		})
 	default:
-		res = miss.Richs(kit.Keys(prefix, chain), cache, raw, cb)
+		res = miss.Richs(path.Join(prefix, kit.Keys(chain)), cache, raw, cb)
 	}
 	return res
 
@@ -113,7 +114,7 @@ func (m *Message) Rich(prefix string, chain Any, data Any) string {
 		cache = kit.Data()
 		m.Confv(prefix, chain, cache)
 	}
-	return miss.Rich(kit.Keys(prefix, chain), cache, data)
+	return miss.Rich(path.Join(prefix, kit.Keys(chain)), cache, data)
 }
 func (m *Message) Grow(prefix string, chain Any, data Any) int {
 	cache := m.Confm(prefix, chain)
@@ -121,7 +122,7 @@ func (m *Message) Grow(prefix string, chain Any, data Any) int {
 		cache = kit.Data()
 		m.Confv(prefix, chain, cache)
 	}
-	return miss.Grow(kit.Keys(prefix, chain), cache, data)
+	return miss.Grow(path.Join(prefix, kit.Keys(chain)), cache, data)
 }
 func (m *Message) Grows(prefix string, chain Any, match string, value string, cb Any) Map {
 	cache := m.Confm(prefix, chain)
@@ -139,7 +140,7 @@ func (m *Message) Grows(prefix string, chain Any, match string, value string, cb
 		}
 	}
 
-	return miss.Grows(kit.Keys(prefix, chain), cache,
+	return miss.Grows(path.Join(prefix, kit.Keys(chain)), cache,
 		kit.Int(kit.Select("0", strings.TrimPrefix(m.Option(CACHE_OFFEND), "-"))),
 		kit.Int(kit.Select("10", m.Option(CACHE_LIMIT))),
 		match, value, cb)

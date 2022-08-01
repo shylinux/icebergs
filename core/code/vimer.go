@@ -158,82 +158,78 @@ func _vimer_go_complete(m *ice.Message, name string, arg ...string) *ice.Message
 const VIMER = "vimer"
 
 func init() {
-	Index.Merge(&ice.Context{
-		Configs: ice.Configs{
-			VIMER: {Name: VIMER, Help: "编辑器", Value: kit.Data()},
-		},
-		Commands: ice.Commands{
-			VIMER: {Name: "vimer path=src/ file=main.go line=1 list", Help: "编辑器", Meta: kit.Dict(ice.DisplayLocal("", INNER)), Actions: ice.Actions{
-				nfs.SAVE: {Name: "save type file path", Help: "保存", Hand: func(m *ice.Message, arg ...string) {
-					m.Option(nfs.CONTENT, kit.Select(_vimer_defs(m, kit.Ext(m.Option(nfs.FILE))), m.Option(nfs.CONTENT)))
-					m.Cmdy(nfs.SAVE, path.Join(m.Option(nfs.PATH), m.Option(nfs.FILE)))
-				}},
-				nfs.TRASH: {Name: "trash path", Help: "删除", Hand: func(m *ice.Message, arg ...string) {
-					m.Cmdy(nfs.TRASH, arg[0])
-				}},
-				AUTOGEN: {Name: "create name=hi help=示例 type=Zone,Hash,Lists,Data,Code main=main.go zone key", Help: "模块", Hand: func(m *ice.Message, arg ...string) {
-					m.Cmdy(AUTOGEN, mdb.CREATE, arg)
-				}},
-				COMPILE: {Name: "compile", Help: "编译", Hand: func(m *ice.Message, arg ...string) {
-					if msg := m.Cmd(COMPILE, ice.SRC_MAIN_GO, ice.BIN_ICE_BIN); cli.IsSuccess(msg) {
-						m.Cmd(UPGRADE, cli.RESTART)
-					} else {
-						_inner_make(m, msg)
-					}
-				}},
-				nfs.SCRIPT: {Name: "script file=hi/hi.js", Help: "脚本", Hand: func(m *ice.Message, arg ...string) {
-					m.Option(mdb.TEXT, strings.TrimSpace(kit.Select(_vimer_defs(m, kit.Ext(m.Option(nfs.FILE))), m.Option(mdb.TEXT))))
-					m.Cmdy(TEMPLATE, nfs.DEFS)
-				}},
-				nfs.WEBSITE: {Name: "website file=hi.zml", Help: "网页", Hand: func(m *ice.Message, arg ...string) {
-					m.Option(mdb.TEXT, strings.TrimSpace(kit.Select(_vimer_defs(m, kit.Ext(m.Option(nfs.FILE))), m.Option(mdb.TEXT))))
-					m.Option(nfs.FILE, path.Join(nfs.WEBSITE, m.Option(nfs.FILE)))
-					m.Cmdy(TEMPLATE, nfs.DEFS)
-				}},
-				web.DREAM: {Name: "dream name=hi repos", Help: "空间", Hand: func(m *ice.Message, arg ...string) {
-					m.Cmdy(web.DREAM, cli.START, arg)
-				}},
-				PUBLISH: {Name: "publish", Help: "发布", Hand: func(m *ice.Message, arg ...string) {
-					m.Cmdy(PUBLISH, ice.CONTEXTS)
-				}},
-
-				mdb.SEARCH: {Name: "search type name text", Help: "搜索", Hand: func(m *ice.Message, arg ...string) {
-					if arg[0] == mdb.FOREACH && arg[1] == "" {
-						m.PushSearch(mdb.TYPE, "go", mdb.NAME, "src/main.go", mdb.TEXT, m.MergeCmd(""))
-					}
-				}},
-				mdb.INPUTS: {Name: "inputs", Help: "补全", Hand: func(m *ice.Message, arg ...string) {
-					_vimer_inputs(m, arg...)
-				}},
-				"complete": {Name: "complete", Help: "补全", Hand: func(m *ice.Message, arg ...string) {
-					_vimer_complete(m, arg...)
-				}},
-				"listTags": {Name: "listTags", Help: "索引", Hand: func(m *ice.Message, arg ...string) {
-					m.Cmdy("web.code.vim.tags", "listTags", arg)
-				}},
-
-				"unpack": {Name: "unpack", Help: "导出文件", Hand: func(m *ice.Message, arg ...string) {
-					m.Cmdy(BINPACK, mdb.EXPORT)
-				}},
-				DEVPACK: {Name: "devpack", Help: "开发模式", Hand: func(m *ice.Message, arg ...string) {
-					m.Cmd(nfs.LINK, ice.GO_SUM, path.Join(ice.SRC_DEBUG, ice.GO_SUM))
-					m.Cmd(nfs.LINK, ice.GO_MOD, path.Join(ice.SRC_DEBUG, ice.GO_MOD))
-					m.Cmdy(nfs.CAT, ice.GO_MOD)
-					m.Cmdy(WEBPACK, mdb.REMOVE)
-					m.ProcessInner()
-					m.ToastSuccess()
-				}},
-				BINPACK: {Name: "binpack", Help: "打包模式", Hand: func(m *ice.Message, arg ...string) {
-					m.Cmdy(WEBPACK, mdb.CREATE)
-					m.Cmdy(AUTOGEN, BINPACK)
-					m.ProcessInner()
-					m.ToastSuccess()
-				}},
-			}, Hand: func(m *ice.Message, arg ...string) {
-				m.Cmdy(INNER, arg)
-				m.Option("plug", m.Config("show.plug"))
-				m.Option("exts", m.Config("show.exts"))
-				m.Option("tabs", m.Config("show.tabs"))
+	Index.MergeCommands(ice.Commands{
+		VIMER: {Name: "vimer path=src/ file=main.go line=1 list", Help: "编辑器", Meta: kit.Dict(ice.DisplayLocal("", INNER)), Actions: ice.Actions{
+			nfs.SAVE: {Name: "save type file path", Help: "保存", Hand: func(m *ice.Message, arg ...string) {
+				m.Option(nfs.CONTENT, kit.Select(_vimer_defs(m, kit.Ext(m.Option(nfs.FILE))), m.Option(nfs.CONTENT)))
+				m.Cmdy(nfs.SAVE, path.Join(m.Option(nfs.PATH), m.Option(nfs.FILE)))
 			}},
-		}})
+			nfs.TRASH: {Name: "trash path", Help: "删除", Hand: func(m *ice.Message, arg ...string) {
+				m.Cmdy(nfs.TRASH, arg[0])
+			}},
+			AUTOGEN: {Name: "create name=hi help=示例 type=Zone,Hash,Data,Code main=main.go zone key", Help: "模块", Hand: func(m *ice.Message, arg ...string) {
+				m.Cmdy(AUTOGEN, mdb.CREATE, arg)
+			}},
+			COMPILE: {Name: "compile", Help: "编译", Hand: func(m *ice.Message, arg ...string) {
+				if msg := m.Cmd(COMPILE, ice.SRC_MAIN_GO, ice.BIN_ICE_BIN); cli.IsSuccess(msg) {
+					m.Cmd(UPGRADE, cli.RESTART)
+				} else {
+					_inner_make(m, msg)
+				}
+			}},
+			nfs.SCRIPT: {Name: "script file=hi/hi.js", Help: "脚本", Hand: func(m *ice.Message, arg ...string) {
+				m.Option(mdb.TEXT, strings.TrimSpace(kit.Select(_vimer_defs(m, kit.Ext(m.Option(nfs.FILE))), m.Option(mdb.TEXT))))
+				m.Cmdy(TEMPLATE, nfs.DEFS)
+			}},
+			nfs.WEBSITE: {Name: "website file=hi.zml", Help: "网页", Hand: func(m *ice.Message, arg ...string) {
+				m.Option(mdb.TEXT, strings.TrimSpace(kit.Select(_vimer_defs(m, kit.Ext(m.Option(nfs.FILE))), m.Option(mdb.TEXT))))
+				m.Option(nfs.FILE, path.Join(nfs.WEBSITE, m.Option(nfs.FILE)))
+				m.Cmdy(TEMPLATE, nfs.DEFS)
+			}},
+			web.DREAM: {Name: "dream name=hi repos", Help: "空间", Hand: func(m *ice.Message, arg ...string) {
+				m.Cmdy(web.DREAM, cli.START, arg)
+			}},
+			PUBLISH: {Name: "publish", Help: "发布", Hand: func(m *ice.Message, arg ...string) {
+				m.Cmdy(PUBLISH, ice.CONTEXTS)
+			}},
+
+			mdb.SEARCH: {Name: "search type name text", Help: "搜索", Hand: func(m *ice.Message, arg ...string) {
+				if arg[0] == mdb.FOREACH && arg[1] == "" {
+					m.PushSearch(mdb.TYPE, "go", mdb.NAME, "src/main.go", mdb.TEXT, m.MergeCmd(""))
+				}
+			}},
+			mdb.INPUTS: {Name: "inputs", Help: "补全", Hand: func(m *ice.Message, arg ...string) {
+				_vimer_inputs(m, arg...)
+			}},
+			"complete": {Name: "complete", Help: "补全", Hand: func(m *ice.Message, arg ...string) {
+				_vimer_complete(m, arg...)
+			}},
+			"listTags": {Name: "listTags", Help: "索引", Hand: func(m *ice.Message, arg ...string) {
+				m.Cmdy("web.code.vim.tags", "listTags", arg)
+			}},
+
+			"unpack": {Name: "unpack", Help: "导出文件", Hand: func(m *ice.Message, arg ...string) {
+				m.Cmdy(BINPACK, mdb.EXPORT)
+			}},
+			DEVPACK: {Name: "devpack", Help: "开发模式", Hand: func(m *ice.Message, arg ...string) {
+				m.Cmd(nfs.LINK, ice.GO_SUM, path.Join(ice.SRC_DEBUG, ice.GO_SUM))
+				m.Cmd(nfs.LINK, ice.GO_MOD, path.Join(ice.SRC_DEBUG, ice.GO_MOD))
+				m.Cmdy(nfs.CAT, ice.GO_MOD)
+				m.Cmdy(WEBPACK, mdb.REMOVE)
+				m.ProcessInner()
+				m.ToastSuccess()
+			}},
+			BINPACK: {Name: "binpack", Help: "打包模式", Hand: func(m *ice.Message, arg ...string) {
+				m.Cmdy(WEBPACK, mdb.CREATE)
+				m.Cmdy(AUTOGEN, BINPACK)
+				m.ProcessInner()
+				m.ToastSuccess()
+			}},
+		}, Hand: func(m *ice.Message, arg ...string) {
+			m.Cmdy(INNER, arg)
+			m.Option("plug", m.Config("show.plug"))
+			m.Option("exts", m.Config("show.exts"))
+			m.Option("tabs", m.Config("show.tabs"))
+		}},
+	})
 }

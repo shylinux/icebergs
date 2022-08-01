@@ -10,7 +10,7 @@ import (
 const GRANT = "grant"
 
 func init() {
-	Index.Merge(&ice.Context{Commands: ice.Commands{
+	Index.MergeCommands(ice.Commands{
 		GRANT: {Name: "grant space id auto insert", Help: "授权", Actions: ice.MergeAction(ice.Actions{
 			mdb.INPUTS: {Name: "inputs", Help: "补全", Hand: func(m *ice.Message, arg ...string) {
 				switch arg[0] {
@@ -26,5 +26,5 @@ func init() {
 			}},
 			mdb.INSERT: {Name: "insert space grant userrole username", Help: "添加"},
 		}, mdb.ZoneAction(mdb.SHORT, web.SPACE, mdb.FIELD, "time,grant,userrole,username"))},
-	}})
+	})
 }

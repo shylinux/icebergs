@@ -173,7 +173,7 @@ func init() {
 const AUTOGEN = "autogen"
 
 func init() {
-	Index.Merge(&ice.Context{Commands: ice.Commands{
+	Index.MergeCommands(ice.Commands{
 		AUTOGEN: {Name: "autogen path auto create binpack script relay", Help: "生成", Actions: ice.Actions{
 			mdb.INPUTS: {Name: "inputs", Help: "补全", Hand: func(m *ice.Message, arg ...string) {
 				switch arg[0] {
@@ -187,6 +187,7 @@ func init() {
 				_defs(m, mdb.KEY, kit.Keys("web.code", m.Option(mdb.ZONE), m.Option(mdb.NAME)))
 				m.Option(mdb.TEXT, kit.Format("`name:\"%s\" help:\"%s\"`", _defs_list(m), m.Option(mdb.HELP)))
 
+				m.OptionFiles(nfs.DiskFile)
 				if p := path.Join(ice.SRC, m.Option(mdb.ZONE), kit.Keys(m.Option(mdb.NAME), GO)); !kit.FileExists(p) {
 					_autogen_module(m, p)
 					_autogen_import(m, path.Join(ice.SRC, m.Option(cli.MAIN)), m.Option(mdb.ZONE), _autogen_mod(m, ice.GO_MOD))
@@ -228,5 +229,5 @@ func init() {
 		}, Hand: func(m *ice.Message, arg ...string) {
 			m.Cmdy(nfs.CAT, kit.Select("version.go", arg, 0), kit.Dict(nfs.DIR_ROOT, ice.SRC))
 		}},
-	}})
+	})
 }

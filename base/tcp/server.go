@@ -19,7 +19,7 @@ type Listener struct {
 func (l Listener) Accept() (net.Conn, error) {
 	c, e := l.Listener.Accept()
 	l.s.nc += 1
-	return &Conn{m: l.m, h: "", s: &Stat{}, Conn: c}, e
+	return &Conn{m: l.m, s: &Stat{}, Conn: c}, e
 }
 func (l Listener) Close() error {
 	l.m.Cmd(mdb.MODIFY, SERVER, "", mdb.HASH, mdb.HASH, l.h, STATUS, CLOSE)
@@ -28,10 +28,8 @@ func (l Listener) Close() error {
 
 func _server_listen(m *ice.Message, arg ...string) {
 	l, e := net.Listen(TCP, m.Option(HOST)+":"+m.Option(PORT))
-	h := m.Cmdx(mdb.INSERT, SERVER, "", mdb.HASH, arg,
-		STATUS, kit.Select(ERROR, OPEN, e == nil), ERROR, kit.Format(e))
-
-	l = &Listener{m: m, h: h, s: &Stat{}, Listener: l}
+	l = &Listener{m: m, h: m.Cmdx(mdb.INSERT, SERVER, "", mdb.HASH,
+		arg, STATUS, kit.Select(ERROR, OPEN, e == nil), ERROR, kit.Format(e), kit.Dict(mdb.TARGET, l)), s: &Stat{}, Listener: l}
 	if e == nil {
 		defer l.Close()
 	}
@@ -85,25 +83,28 @@ const (
 const SERVER = "server"
 
 func init() {
-	Index.Merge(&ice.Context{Configs: ice.Configs{
-		SERVER: {Name: SERVER, Help: "服务器", Value: kit.Data(
-			mdb.FIELD, "time,hash,status,type,name,host,port,error,nconn",
-		)},
-	}, Commands: ice.Commands{
+	Index.MergeCommands(ice.Commands{
 		SERVER: {Name: "server hash auto prunes", Help: "服务器", Actions: ice.MergeAction(ice.Actions{
+			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
+				m.Conf("", mdb.HASH, "")
+			}},
 			ice.CTX_EXIT: {Hand: func(m *ice.Message, arg ...string) {
-				m.Richs(SERVER, "", mdb.FOREACH, func(key string, value ice.Map) {
-					kit.Value(value, kit.Keym(STATUS), CLOSE)
+				mdb.HashSelectValue(m, func(target ice.Any) {
+					if l, ok := target.(net.Listener); ok {
+						l.Close()
+					}
+					if l, ok := target.(*Listener); ok {
+						l.Close()
+					}
 				})
-				m.Cmdy(SERVER, mdb.PRUNES)
 			}},
 			LISTEN: {Name: "LISTEN type name port=9030 host=", Help: "监听", Hand: func(m *ice.Message, arg ...string) {
 				_server_listen(m, arg...)
 			}},
-		}, mdb.HashActionStatus()), Hand: func(m *ice.Message, arg ...string) {
+		}, mdb.HashActionStatus(mdb.FIELD, "time,hash,status,type,name,host,port,error,nconn")), Hand: func(m *ice.Message, arg ...string) {
 			mdb.HashSelect(m, arg...).Tables(func(value ice.Maps) {
 				m.PushButton(kit.Select("", mdb.REMOVE, value[STATUS] == CLOSE))
 			})
 		}},
-	}})
+	})
 }

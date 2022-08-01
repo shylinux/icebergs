@@ -10,7 +10,6 @@ import (
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/nfs"
 	"shylinux.com/x/icebergs/base/ssh"
-	"shylinux.com/x/icebergs/base/web"
 	kit "shylinux.com/x/toolkits"
 )
 
@@ -76,7 +75,7 @@ func init() {
 				m.Cmdy(nfs.DIR, "src/", kit.Dict(nfs.DIR_DEEP, ice.TRUE, nfs.DIR_REG, ".*\\.shy"), nfs.DIR_CLI_FIELDS)
 				m.Cmdy(nfs.DIR, "src/help/", kit.Dict(nfs.DIR_DEEP, ice.TRUE, nfs.DIR_REG, ".*\\.shy"), nfs.DIR_CLI_FIELDS)
 			}},
-			web.STORY: {Name: "story", Help: "运行", Hand: func(m *ice.Message, arg ...string) {
+			"story": {Name: "story", Help: "运行", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmdy(arg[0], ctx.ACTION, ice.RUN, arg[2:])
 			}},
 			ice.PLAY: {Name: "play", Help: "演示"},

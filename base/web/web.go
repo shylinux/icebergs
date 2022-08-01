@@ -11,6 +11,8 @@ import (
 	"shylinux.com/x/icebergs/base/nfs"
 	"shylinux.com/x/icebergs/base/tcp"
 	kit "shylinux.com/x/toolkits"
+	"shylinux.com/x/toolkits/logs"
+	"shylinux.com/x/toolkits/task"
 )
 
 type Frame struct {
@@ -20,21 +22,37 @@ type Frame struct {
 	*http.ServeMux
 
 	send map[string]*ice.Message
+	lock task.Lock
 }
 
-func (web *Frame) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	if _serve_main(web.Message, w, r) {
-		web.ServeMux.ServeHTTP(w, r)
+func (frame *Frame) getSend(key string) (*ice.Message, bool) {
+	defer frame.lock.RLock()()
+	msg, ok := frame.send[key]
+	return msg, ok
+}
+func (frame *Frame) addSend(key string, msg *ice.Message) string {
+	defer frame.lock.Lock()()
+	frame.send[key] = msg
+	return key
+}
+func (frame *Frame) delSend(key string) {
+	defer frame.lock.Lock()()
+	delete(frame.send, key)
+}
+
+func (frame *Frame) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	if _serve_main(frame.Message, w, r) {
+		frame.ServeMux.ServeHTTP(w, r)
 	}
 }
-func (web *Frame) Spawn(m *ice.Message, c *ice.Context, arg ...string) ice.Server {
+func (frame *Frame) Spawn(m *ice.Message, c *ice.Context, arg ...string) ice.Server {
 	return &Frame{}
 }
-func (web *Frame) Begin(m *ice.Message, arg ...string) ice.Server {
-	web.send = map[string]*ice.Message{}
-	return web
+func (frame *Frame) Begin(m *ice.Message, arg ...string) ice.Server {
+	frame.send = map[string]*ice.Message{}
+	return frame
 }
-func (web *Frame) Start(m *ice.Message, arg ...string) bool {
+func (frame *Frame) Start(m *ice.Message, arg ...string) bool {
 	list := map[*ice.Context]string{}
 	m.Travel(func(p *ice.Context, s *ice.Context) {
 		if frame, ok := s.Server().(*Frame); ok {
@@ -42,19 +60,20 @@ func (web *Frame) Start(m *ice.Message, arg ...string) bool {
 				return
 			}
 			frame.ServeMux = http.NewServeMux()
+			meta := logs.FileLineMeta("")
 
 			// 级联路由
 			msg := m.Spawn(s)
 			if pframe, ok := p.Server().(*Frame); ok && pframe.ServeMux != nil {
 				route := ice.PS + s.Name + ice.PS
-				msg.Log(ROUTE, "%s <= %s", p.Name, route)
+				msg.Log(ROUTE, "%s <= %s", p.Name, route, meta)
 				pframe.Handle(route, http.StripPrefix(path.Dir(route), frame))
 				list[s] = path.Join(list[p], route)
 			}
 
 			// 静态路由
 			m.Confm(SERVE, kit.Keym(nfs.PATH), func(key string, value string) {
-				m.Log(ROUTE, "%s <- %s <- %s", s.Name, key, value)
+				m.Log(ROUTE, "%s <- %s <- %s", s.Name, key, value, meta)
 				frame.Handle(key, http.StripPrefix(key, http.FileServer(http.Dir(value))))
 			})
 
@@ -63,7 +82,7 @@ func (web *Frame) Start(m *ice.Message, arg ...string) bool {
 				if s != sub || k[0] != '/' {
 					return
 				}
-				msg.Log(ROUTE, "%s <- %s", s.Name, k)
+				msg.Log(ROUTE, "%s <- %s", s.Name, k, meta)
 				ice.Info.Route[path.Join(list[s], k)] = ice.FileCmd(kit.FileLine(x.Hand, 300))
 				frame.HandleFunc(k, func(frame http.ResponseWriter, r *http.Request) {
 					m.TryCatch(msg.Spawn(), true, func(msg *ice.Message) {
@@ -77,24 +96,25 @@ func (web *Frame) Start(m *ice.Message, arg ...string) bool {
 	m.Event(SERVE_START)
 	defer m.Event(SERVE_STOP)
 
-	web.Message, web.Server = m, &http.Server{Handler: web}
+	frame.Message, frame.Server = m, &http.Server{Handler: frame}
 	switch cb := m.OptionCB(SERVE).(type) {
 	case func(http.Handler):
-		cb(web) // 启动框架
+		cb(frame) // 启动框架
 	default:
 		m.Cmd(tcp.SERVER, tcp.LISTEN, mdb.TYPE, WEB, m.OptionSimple(mdb.NAME, tcp.HOST, tcp.PORT), func(l net.Listener) {
-			m.Cmdy(mdb.INSERT, SERVE, "", mdb.HASH, mdb.NAME, WEB, arg, m.OptionSimple(tcp.PROTO, ice.DEV), cli.STATUS, tcp.START)
+			m.Cmd(mdb.INSERT, SERVE, "", mdb.HASH, mdb.NAME, WEB, arg, m.OptionSimple(tcp.PROTO, ice.DEV), cli.STATUS, tcp.START, kit.Dict(mdb.TARGET, l))
 			defer m.Cmd(mdb.MODIFY, SERVE, "", mdb.HASH, m.OptionSimple(mdb.NAME), cli.STATUS, tcp.STOP)
-			m.Warn(web.Server.Serve(l)) // 启动服务
+			m.Warn(frame.Server.Serve(l)) // 启动服务
 		})
 	}
 	return true
 }
-func (web *Frame) Close(m *ice.Message, arg ...string) bool {
-	return m.Done(true)
+func (frame *Frame) Close(m *ice.Message, arg ...string) bool {
+	return true
 }
 
-func P(arg ...string) string { return path.Join(ice.PS, path.Join(arg...)) }
+func P(arg ...string) string  { return path.Join(ice.PS, path.Join(arg...)) }
+func PP(arg ...string) string { return path.Join(ice.PS, path.Join(arg...)) + ice.PS }
 
 const (
 	SERVE_START = "serve.start"
@@ -106,8 +126,7 @@ var Index = &ice.Context{Name: WEB, Help: "网络模块"}
 
 func init() {
 	ice.Index.Register(Index, &Frame{},
-		SERVE, SPACE, DREAM, ROUTE,
-		SHARE, SPIDE, CACHE, STORY,
-		BROAD,
+		BROAD, SERVE, SPACE, DREAM,
+		SHARE, CACHE, SPIDE, ROUTE,
 	)
 }

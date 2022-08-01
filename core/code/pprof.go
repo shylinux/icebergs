@@ -24,11 +24,7 @@ const (
 const PPROF = "pprof"
 
 func init() {
-	Index.Merge(&ice.Context{Configs: ice.Configs{
-		PPROF: {Name: PPROF, Help: "性能分析", Value: kit.Data(
-			mdb.SHORT, mdb.ZONE, mdb.FIELD, "time,id,text,file", PPROF, kit.List(GO, "tool", PPROF),
-		)},
-	}, Commands: ice.Commands{
+	Index.MergeCommands(ice.Commands{
 		PPROF: {Name: "pprof zone id auto", Help: "性能分析", Actions: ice.MergeAction(ice.Actions{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
 				web.AddRewrite(func(w http.ResponseWriter, r *http.Request) bool {
@@ -65,9 +61,10 @@ func init() {
 				m.Cmd(cli.DAEMON, m.Configv(PPROF), "-http="+p, m.Option(BINNARY), m.Option(nfs.FILE))
 				m.Echo("http://%s/ui/top", p).ProcessInner()
 			}},
-		}, mdb.ZoneAction()), Hand: func(m *ice.Message, arg ...string) {
+		}, mdb.ZoneAction(mdb.SHORT, mdb.ZONE, mdb.FIELD, "time,id,text,file", PPROF, kit.List(GO, "tool", PPROF))), Hand: func(m *ice.Message, arg ...string) {
 			m.Fields(len(arg), "time,zone,count,binnary,service,seconds", m.Config(mdb.FIELD))
 			if mdb.ZoneSelect(m, arg...); len(arg) == 0 {
+				m.EchoAnchor(m.MergeLink("/code/pprof/"))
 				m.PushAction(ice.RUN, mdb.REMOVE)
 				m.Action(mdb.CREATE)
 				return
@@ -83,5 +80,5 @@ func init() {
 			m.R.URL.Path = "/debug" + m.R.URL.Path
 			http.DefaultServeMux.ServeHTTP(m.W, m.R)
 		}},
-	}})
+	})
 }

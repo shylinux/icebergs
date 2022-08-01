@@ -136,12 +136,23 @@ func (m *Message) Push(key string, value Any, arg ...Any) *Message {
 				}
 				fallthrough
 			default:
-				if v = value[k]; v == nil {
-					if v = kit.Value(value, k); v == nil {
-						if v = val[k]; v == nil {
-							v = kit.Value(val, k)
-						}
-					}
+				if v = value[k]; v != nil {
+					break
+				}
+				if v = kit.Value(value, k); v != nil {
+					break
+				}
+				if v = kit.Value(value, kit.Keys("extra", k)); v != nil {
+					break
+				}
+				if v = val[k]; v != nil {
+					break
+				}
+				if v = kit.Value(val, k); v != nil {
+					break
+				}
+				if v = kit.Value(val, kit.Keys("extra", k)); v != nil {
+					break
 				}
 			}
 
@@ -165,14 +176,14 @@ func (m *Message) Push(key string, value Any, arg ...Any) *Message {
 		}
 
 	default:
-		if m.FieldsIsDetail() {
-			if key != KEY || key != VALUE {
-				m.Add(MSG_APPEND, KEY, key)
-				m.Add(MSG_APPEND, VALUE, kit.Format(value))
-				break
+		for _, v := range kit.Simple(value, arg) {
+			if m.FieldsIsDetail() {
+				if key != KEY || key != VALUE {
+					m.Add(MSG_APPEND, KEY, key)
+					m.Add(MSG_APPEND, VALUE, kit.Format(value))
+					continue
+				}
 			}
-		}
-		for _, v := range kit.Simple(value) {
 			m.Add(MSG_APPEND, key, v)
 		}
 	}
@@ -344,11 +355,13 @@ func (m *Message) Sort(key string, arg ...string) *Message {
 		}
 	})
 	compare := func(i, j int, op string) bool {
-		for k := range ls[1:] {
+		for k := range ls {
+			if k == 0 {
+				continue
+			}
 			if table[i][ls[k]] == table[j][ls[k]] {
 				continue
 			}
-
 			if op == ">" && table[i][ls[k]] > table[j][ls[k]] {
 				return true
 			}
@@ -363,29 +376,29 @@ func (m *Message) Sort(key string, arg ...string) *Message {
 	// 排序数据
 	for i := 0; i < len(table)-1; i++ {
 		for j := i + 1; j < len(table); j++ {
-			result := false
+			swap := false
 			switch cmp {
 			case "", "str":
 				if table[i][key] > table[j][key] {
-					result = true
+					swap = true
 				} else if table[i][key] == table[j][key] && compare(i, j, ">") {
-					result = true
+					swap = true
 				}
 			case "str_r":
 				if table[i][key] < table[j][key] {
-					result = true
+					swap = true
 				} else if table[i][key] == table[j][key] && compare(i, j, "<") {
-					result = true
+					swap = true
 				}
 			default:
 				if number[i] > number[j] {
-					result = true
+					swap = true
 				} else if table[i][key] == table[j][key] && compare(i, j, ">") {
-					result = true
+					swap = true
 				}
 			}
 
-			if result {
+			if swap {
 				table[i], table[j] = table[j], table[i]
 				number[i], number[j] = number[j], number[i]
 			}

@@ -3,6 +3,7 @@ package ice
 import (
 	"errors"
 	"io"
+	"path"
 	"strings"
 	"time"
 
@@ -61,29 +62,6 @@ func (m *Message) Sleep300ms(arg ...Any) *Message { return m.Sleep("300ms", arg.
 func (m *Message) Sleep30ms(arg ...Any) *Message  { return m.Sleep("30ms", arg...) }
 func (m *Message) Sleep3s(arg ...Any) *Message    { return m.Sleep("3s", arg...) }
 func (m *Message) Sleep30s(arg ...Any) *Message   { return m.Sleep("30s", arg...) }
-func (m *Message) Hold(n int) *Message {
-	for ctx := m.target; ctx != nil; ctx = ctx.context {
-		if ctx.wg != nil {
-			ctx.wg.Add(n)
-			break
-		}
-	}
-	return m
-}
-func (m *Message) Done(ok bool) bool {
-	if !ok {
-		return false
-	}
-	defer func() { recover() }()
-
-	for ctx := m.target; ctx != nil; ctx = ctx.context {
-		if ctx.wg != nil {
-			ctx.wg.Done()
-			break
-		}
-	}
-	return ok
-}
 func (m *Message) Call(sync bool, cb func(*Message) *Message) *Message {
 	wait := make(chan bool, 2)
 
@@ -117,8 +95,9 @@ func (m *Message) Back(res *Message) *Message {
 	}
 	return m
 }
-func (m *Message) Go(cb Any) *Message {
-	task.Put(kit.FileLine(cb, 3), func(task *task.Task) error {
+
+func (m *Message) Go(cb Any, arg ...string) *Message {
+	task.Put(kit.Select(kit.FileLine(cb, 3), arg, 0), func(task *task.Task) error {
 		m.TryCatch(m, true, func(m *Message) {
 			switch cb := cb.(type) {
 			case func(*Message):
@@ -126,7 +105,7 @@ func (m *Message) Go(cb Any) *Message {
 			case func():
 				cb()
 			default:
-				m.Error(true, ErrNotImplement)
+				m.ErrorNotImplement(cb)
 			}
 		})
 		return nil
@@ -146,7 +125,8 @@ func (m *Message) Event(key string, arg ...string) *Message {
 	return m
 }
 func (m *Message) Right(arg ...Any) bool {
-	key := strings.ReplaceAll(kit.Keys(arg...), PS, PT)
+	key := path.Join(strings.ReplaceAll(kit.Keys(arg...), PT, PS))
+	key = strings.TrimPrefix(strings.TrimSuffix(strings.ReplaceAll(key, PS, PT), PT), PT)
 	return m.Option(MSG_USERROLE) == ROOT || !m.Warn(m.Cmdx(ROLE, RIGHT, m.Option(MSG_USERROLE), key) != OK,
 		ErrNotRight, kit.Join(kit.Simple(arg), PT), USERROLE, m.Option(MSG_USERROLE), FILELINE, kit.FileLine(2, 3))
 }

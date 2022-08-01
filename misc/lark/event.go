@@ -17,7 +17,7 @@ const (
 const EVENT = "event"
 
 func init() {
-	Index.Merge(&ice.Context{Commands: ice.Commands{
+	Index.MergeCommands(ice.Commands{
 		EVENT: {Name: "event", Help: "事件", Actions: ice.Actions{
 			P2P_CHAT_CREATE: {Name: "", Help: "", Hand: func(m *ice.Message, arg ...string) {
 				if m.Option(OPEN_CHAT_ID) != "" {
@@ -36,5 +36,5 @@ func init() {
 		}, Hand: func(m *ice.Message, arg ...string) {
 			m.Cmdy(MSG, m.Option(MSG_TYPE))
 		}},
-	}})
+	})
 }

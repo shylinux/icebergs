@@ -22,9 +22,7 @@ const (
 const RSA = "rsa"
 
 func init() {
-	aaa.Index.Merge(&ice.Context{Configs: ice.Configs{
-		RSA: {Name: RSA, Help: "角色", Value: kit.Data(mdb.SHORT, mdb.HASH, mdb.FIELD, "time,hash,title,public,private")},
-	}, Commands: ice.Commands{
+	aaa.Index.MergeCommands(ice.Commands{
 		RSA: {Name: "rsa hash auto", Help: "公钥", Actions: ice.MergeAction(ice.Actions{
 			mdb.IMPORT: {Name: "import key=.ssh/id_rsa pub=.ssh/id_rsa.pub", Help: "导入", Hand: func(m *ice.Message, arg ...string) {
 				m.Conf(m.PrefixKey(), kit.Keys(mdb.HASH, path.Base(m.Option("key"))), kit.Data(mdb.TIME, m.Time(),
@@ -48,10 +46,10 @@ func init() {
 					}
 				}
 			}},
-		}, mdb.HashAction()), Hand: func(m *ice.Message, arg ...string) {
+		}, mdb.HashAction(mdb.SHORT, mdb.HASH, mdb.FIELD, "time,hash,title,public,private")), Hand: func(m *ice.Message, arg ...string) {
 			if mdb.HashSelect(m, arg...).PushAction(mdb.EXPORT, mdb.REMOVE); len(arg) == 0 {
 				m.Action(mdb.CREATE, mdb.IMPORT)
 			}
 		}},
-	}})
+	})
 }

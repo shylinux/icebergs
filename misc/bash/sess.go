@@ -10,7 +10,6 @@ import (
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/tcp"
 	"shylinux.com/x/icebergs/base/web"
-	kit "shylinux.com/x/toolkits"
 )
 
 const (
@@ -21,11 +20,7 @@ const (
 const SESS = "sess"
 
 func init() {
-	Index.Merge(&ice.Context{Configs: ice.Configs{
-		SESS: {Name: SESS, Help: "会话流", Value: kit.Data(
-			mdb.FIELD, "time,hash,status,username,hostname,pid,pwd,grant",
-		)},
-	}, Commands: ice.Commands{
+	Index.MergeCommands(ice.Commands{
 		web.WEB_LOGIN: {Hand: func(m *ice.Message, arg ...string) {
 			if f, _, e := m.R.FormFile(SUB); e == nil {
 				defer f.Close()
@@ -72,8 +67,8 @@ func init() {
 				m.OptionFields(m.Config(mdb.FIELD))
 				m.Cmdy(mdb.PRUNES, m.PrefixKey(), "", mdb.HASH, mdb.STATUS, aaa.LOGOUT)
 			}},
-		}, mdb.HashAction()), Hand: func(m *ice.Message, arg ...string) {
+		}, mdb.HashAction(mdb.FIELD, "time,hash,status,username,hostname,pid,pwd,grant")), Hand: func(m *ice.Message, arg ...string) {
 			mdb.HashSelect(m, arg...)
 		}},
-	}})
+	})
 }

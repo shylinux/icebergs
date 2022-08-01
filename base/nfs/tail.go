@@ -36,11 +36,7 @@ func _tail_count(m *ice.Message, name string) string {
 const TAIL = "tail"
 
 func init() {
-	Index.Merge(&ice.Context{Configs: ice.Configs{
-		TAIL: {Name: TAIL, Help: "日志流", Value: kit.Data(
-			mdb.SHORT, mdb.NAME, mdb.FIELD, "time,id,file,text",
-		)},
-	}, Commands: ice.Commands{
+	Index.MergeCommands(ice.Commands{
 		TAIL: {Name: "tail name id auto page filter:text create", Help: "日志流", Actions: ice.MergeAction(ice.Actions{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
 				m.Richs(TAIL, "", mdb.FOREACH, func(key string, value ice.Map) {
@@ -62,7 +58,7 @@ func init() {
 			mdb.CREATE: {Name: "create file name", Help: "创建", Hand: func(m *ice.Message, arg ...string) {
 				_tail_create(m, arg...)
 			}},
-		}, mdb.ZoneAction()), Hand: func(m *ice.Message, arg ...string) {
+		}, mdb.ZoneAction(mdb.SHORT, mdb.NAME, mdb.FIELD, "time,id,file,text")), Hand: func(m *ice.Message, arg ...string) {
 			m.Fields(len(kit.Slice(arg, 0, 2)), "time,name,count,file", m.Config(mdb.FIELD))
 			m.OptionPage(kit.Slice(arg, 2)...)
 
@@ -76,5 +72,5 @@ func init() {
 				m.StatusTimeCountTotal(_tail_count(m, arg[0]))
 			}
 		}},
-	}})
+	})
 }

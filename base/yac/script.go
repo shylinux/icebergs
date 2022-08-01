@@ -95,7 +95,7 @@ func _exp_true(m *ice.Message, arg string) bool {
 const SCRIPT = "script"
 
 func init() {
-	Index.Merge(&ice.Context{Commands: ice.Commands{
+	Index.MergeCommands(ice.Commands{
 		SCRIPT: {Name: "script name npage text auto create", Help: "脚本解析", Actions: ice.Actions{
 			mdb.CREATE: {Name: "create name=shy text=etc/yac.txt", Help: "创建", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmd(MATRIX, mdb.CREATE, m.Option(mdb.NAME))
@@ -214,5 +214,5 @@ func init() {
 			})
 			m.Resultv(stack.res)
 		}},
-	}})
+	})
 }

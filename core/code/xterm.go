@@ -22,8 +22,7 @@ func _xterm_socket(m *ice.Message, h, t string) {
 	m.Option(mdb.TEXT, t)
 }
 func _xterm_get(m *ice.Message, h string, must bool) (f *os.File) {
-	f, _ = mdb.HashCache(m, h, func() ice.Any {
-		m.Debug("what %v", must)
+	f, _ = mdb.HashTarget(m, h, func() ice.Any {
 		if !must {
 			return nil
 		}
@@ -49,7 +48,6 @@ func _xterm_get(m *ice.Message, h string, must bool) (f *os.File) {
 		})
 		return tty
 	}).(*os.File)
-	m.Debug("what %v", f)
 	return
 }
 

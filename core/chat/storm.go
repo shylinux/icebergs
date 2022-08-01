@@ -14,7 +14,7 @@ func _storm_key(m *ice.Message, key ...ice.Any) string {
 const STORM = "storm"
 
 func init() {
-	Index.Merge(&ice.Context{Commands: ice.Commands{
+	Index.MergeCommands(ice.Commands{
 		STORM: {Name: "storm hash id auto insert create", Help: "应用", Actions: ice.Actions{
 			mdb.INPUTS: {Name: "inputs", Help: "补全", Hand: func(m *ice.Message, arg ...string) {
 				if ctx.Inputs(m, arg[0]) {
@@ -88,5 +88,5 @@ func init() {
 				m.PushAction(mdb.EXPORT, mdb.IMPORT)
 			}
 		}},
-	}})
+	})
 }

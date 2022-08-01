@@ -41,109 +41,117 @@ func _space_domain(m *ice.Message) (link string) {
 	return tcp.ReplaceLocalhost(m, link)
 }
 func _space_dial(m *ice.Message, dev, name string, arg ...string) {
-	if strings.HasPrefix(dev, "http") {
+	if strings.HasPrefix(dev, ice.HTTP) {
 		m.Cmd(SPIDE, mdb.CREATE, ice.DEV, dev)
 		dev = ice.DEV
 	}
 
-	value := m.Richs(SPIDE, nil, dev, nil)
-	client := kit.Value(value, tcp.CLIENT).(ice.Map)
-
-	host := kit.Format(client[tcp.HOSTNAME])
-	proto := strings.Replace(kit.Format(client[tcp.PROTOCOL]), "http", "ws", 1)
-	uri := kit.MergeURL(proto+"://"+host+"/space/", mdb.TYPE, ice.Info.NodeType, mdb.NAME, name,
-		SHARE, m.Conf(cli.RUNTIME, kit.Keys("conf.ctx_share")), RIVER, m.Conf(cli.RUNTIME, kit.Keys("conf.ctx_river")), arg)
+	msg := m.Cmd(SPIDE, dev)
+	host := msg.Append(kit.Keys(tcp.CLIENT, tcp.HOSTNAME))
+	proto := strings.Replace(msg.Append(kit.Keys(tcp.CLIENT, tcp.PROTOCOL)), ice.HTTP, "ws", 1)
+	uri := kit.MergeURL(proto+"://"+host+PP(SPACE), mdb.TYPE, ice.Info.NodeType, mdb.NAME, name, SHARE, ice.Info.CtxShare, RIVER, ice.Info.CtxRiver, arg)
+	u := kit.ParseURL(uri)
 
 	m.Go(func() {
-		u := kit.ParseURL(uri)
-		redial := m.Configm(REDIAL)
 		frame := m.Target().Server().(*Frame)
 
-		for i := 0; i >= 0 && i < kit.Int(redial["c"]); i++ {
-			msg := m.Spawn()
-			ls := strings.Split(host, ":")
-			msg.Cmd(tcp.CLIENT, tcp.DIAL, kit.SimpleKV("type,name,host,port", proto, dev, ls[0], kit.Select("443", ls, 1)), func(s net.Conn) {
-				if s, _, e := websocket.NewClient(s, u, nil, kit.Int(redial["r"]), kit.Int(redial["w"])); !msg.Warn(e) {
-					msg.Rich(SPACE, nil, kit.Dict(SOCKET, s, kit.SimpleKV("", MASTER, dev, host)))
-					msg.Log_CREATE(SPACE, dev, "retry", i, "uri", uri)
-					defer msg.Conf(SPACE, kit.KeyHash(name), "")
+		ls := strings.Split(host, ":")
+		args := kit.SimpleKV("type,name,host,port", proto, dev, ls[0], kit.Select("443", ls, 1))
 
-					// 连接成功
-					if i = 0; _space_handle(msg, true, frame.send, s, dev) {
-						i = -2 // 连接关闭
+		redial := m.Configm(REDIAL)
+		a, b, c := kit.Int(redial["a"]), kit.Int(redial["b"]), kit.Int(redial["c"])
+		for i := 0; i >= 0 && i < c; i++ {
+			msg := m.Spawn()
+			msg.Cmd(tcp.CLIENT, tcp.DIAL, args, func(s net.Conn) {
+				if s, _, e := websocket.NewClient(s, u, nil, kit.Int(redial["r"]), kit.Int(redial["w"])); !msg.Warn(e) {
+					msg.Option(mdb.TARGET, s)
+					msg.Log_CREATE(SPACE, dev, "retry", i, "uri", uri)
+					mdb.HashCreate(msg, kit.SimpleKV("", MASTER, dev, host))
+					defer mdb.HashRemove(msg, mdb.NAME, name)
+
+					if i = 0; _space_handle(msg, true, frame, s, dev) {
+						i = -2 // 关闭连接
 					}
 				}
 			})
 
 			// 断线重连
-			sleep := time.Duration(rand.Intn(kit.Int(redial["a"])*i+2)+kit.Int(redial["b"])) * time.Millisecond
+			sleep := time.Duration(rand.Intn(a*(i+1))+b) * time.Millisecond
 			msg.Cost("order", i, "sleep", sleep, "reconnect", dev)
-			time.Sleep(sleep)
+			if time.Sleep(sleep); mdb.HashSelect(msg).Length() == 0 {
+				break
+			}
 		}
 	})
 }
-func _space_handle(m *ice.Message, safe bool, send map[string]*ice.Message, c *websocket.Conn, name string) bool {
-	for running := true; running; {
-		if _, b, e := c.ReadMessage(); m.Warn(e, SPACE, name) {
+func _space_handle(m *ice.Message, safe bool, frame *Frame, c *websocket.Conn, name string) bool {
+	for {
+		_, b, e := c.ReadMessage()
+		if m.Warn(e, SPACE, name) {
 			break
-		} else {
-			socket, msg := c, m.Spawn(b)
-			target := kit.Simple(msg.Optionv(ice.MSG_TARGET))
-			source := kit.Simple(msg.Optionv(ice.MSG_SOURCE), name)
-			msg.Log("recv", "%v->%v %s %v", source, target, msg.Detailv(), msg.FormatMeta())
+		}
 
-			if len(target) == 0 {
-				if msg.Option(ice.MSG_HANDLE) == ice.TRUE {
-					msg.Debug("what %v %v", msg.FormatMeta(), msg.FormatStack(1, 100))
-					continue
-				}
-				if msg.Optionv(ice.MSG_HANDLE, ice.TRUE); safe { // 下行命令
-					msg.Option(ice.MSG_USERROLE, kit.Select(msg.Option(ice.MSG_USERROLE), msg.Cmd(aaa.USER, msg.Option(ice.MSG_USERNAME)).Append(aaa.USERROLE)))
-					if msg.Option(ice.MSG_USERROLE) == aaa.VOID && ice.Info.UserName == "demo" {
-						msg.Option(ice.MSG_USERROLE, aaa.TECH)
-					}
-					msg.Log_AUTH(aaa.USERROLE, msg.Option(ice.MSG_USERROLE), aaa.USERNAME, msg.Option(ice.MSG_USERNAME))
-					msg.Go(func() { _space_exec(msg, source, target, c, name) })
-				} else { // 上行请求
-					msg.Push(mdb.LINK, kit.MergePOD(_space_domain(msg), name))
-					_space_echo(msg, []string{}, kit.Revert(source)[1:], c, name)
-				}
+		socket, msg := c, m.Spawn(b)
+		target := kit.Simple(msg.Optionv(ice.MSG_TARGET))
+		source := kit.Simple(msg.Optionv(ice.MSG_SOURCE), name)
+		msg.Log("recv", "%v->%v %s %v", source, target, msg.Detailv(), msg.FormatMeta())
 
-			} else if msg.Richs(SPACE, nil, target[0], func(key string, value ice.Map) {
-				if s, ok := value[SOCKET].(*websocket.Conn); ok {
-					socket, source, target = s, source, target[1:]
-					_space_echo(msg, source, target, socket, kit.Select("", target))
-					return // 转发报文
-				}
-
-				if msg.Warn(msg.Option(ice.MSG_HANDLE) == ice.TRUE, ice.ErrNotFound, "already handled") {
-					// 回复失败
-
-				} else { // 下发失败
-					msg.Warn(true, ice.ErrNotFound, target)
-					source, target = []string{}, kit.Revert(source)[1:]
-				}
-			}) != nil { // 转发成功
-
-			} else if res, ok := send[msg.Option(ice.MSG_TARGET)]; len(target) != 1 || !ok {
-				if msg.Warn(msg.Option(ice.MSG_HANDLE) == ice.TRUE, ice.ErrNotFound, target) {
-					// 回复失败
-
-				} else { // 下发失败
-					msg.Warn(true, ice.ErrNotFound, target)
-					source, target = []string{}, kit.Revert(source)[1:]
-				}
-
-			} else { // 接收响应
-				m.Sleep30ms()
-				res.Back(msg)
+		if len(target) == 0 { // 执行命令
+			if msg.Option(ice.MSG_HANDLE) == ice.TRUE { // 异常请求
+				msg.Debug("what %v %v", msg.FormatMeta(), msg.FormatStack(1, 100))
+				continue
 			}
+			if msg.Optionv(ice.MSG_HANDLE, ice.TRUE); safe { // 下行命令
+				msg.Option(ice.MSG_USERROLE, kit.Select(msg.Option(ice.MSG_USERROLE), msg.Cmd(aaa.USER, msg.Option(ice.MSG_USERNAME)).Append(aaa.USERROLE)))
+				if msg.Option(ice.MSG_USERROLE) == aaa.VOID && ice.Info.UserName == "demo" {
+					msg.Option(ice.MSG_USERROLE, aaa.TECH)
+				}
+				msg.Log_AUTH(aaa.USERROLE, msg.Option(ice.MSG_USERROLE), aaa.USERNAME, msg.Option(ice.MSG_USERNAME))
+				msg.Go(func() { _space_exec(msg, source, target, c, name) })
+				continue
+			}
+			// 上行请求
+			msg.Push(mdb.LINK, kit.MergePOD(_space_domain(msg), name))
+			_space_echo(msg, []string{}, kit.Revert(source)[1:], c, name)
+			continue
+		}
+
+		if mdb.HashSelectDetail(msg, target[0], func(value ice.Map) { // 转发命令
+			if s, ok := value[mdb.TARGET].(*websocket.Conn); ok {
+				socket, source, target = s, source, target[1:]
+				_space_echo(msg, source, target, socket, kit.Select("", target))
+				return // 转发报文
+			}
+
+			if msg.Warn(msg.Option(ice.MSG_HANDLE) == ice.TRUE, ice.ErrNotValid, "already handled") {
+				// 回复失败
+
+			} else { // 下发失败
+				msg.Warn(true, ice.ErrNotFound, target)
+				source, target = []string{}, kit.Revert(source)[1:]
+			}
+		}) {
+			continue
+		}
+
+		if res, ok := frame.getSend(msg.Option(ice.MSG_TARGET)); len(target) != 1 || !ok {
+			if msg.Warn(msg.Option(ice.MSG_HANDLE) == ice.TRUE, ice.ErrNotValid, target) {
+				// 回复失败
+
+			} else { // 下发失败
+				msg.Warn(true, ice.ErrNotFound, target)
+				source, target = []string{}, kit.Revert(source)[1:]
+			}
+			continue
+		} else { // 接收响应
+			m.Sleep30ms()
+			res.Back(msg)
 		}
 	}
 	return false
 }
 func _space_exec(msg *ice.Message, source, target []string, c *websocket.Conn, name string) {
-	if msg.Right(msg.Detailv()) {
+	if msg.Right(msg.Detailv()) { // 执行命令
 		msg = msg.Cmd()
 	}
 
@@ -154,12 +162,11 @@ func _space_exec(msg *ice.Message, source, target []string, c *websocket.Conn, n
 func _space_echo(msg *ice.Message, source, target []string, c *websocket.Conn, name string) {
 	msg.Optionv(ice.MSG_SOURCE, source)
 	msg.Optionv(ice.MSG_TARGET, target)
-	if e := c.WriteMessage(1, []byte(msg.FormatMeta())); msg.Warn(e) {
-		msg.Cmd(mdb.DELETE, msg.PrefixKey(), "", mdb.HASH, mdb.NAME, name)
+	if e := c.WriteMessage(1, []byte(msg.FormatMeta())); msg.Warn(e) { // 回复失败
+		mdb.HashRemove(msg, mdb.NAME, name)
 		c.Close()
 		return
 	}
-
 	target = append([]string{name}, target...)
 	msg.Log("send", "%v->%v %v %v", source, target, msg.Detailv(), msg.FormatMeta())
 }
@@ -169,77 +176,54 @@ func _space_send(m *ice.Message, space string, arg ...string) {
 		return
 	}
 
-	target := kit.Split(space, ice.PT, ice.PT)
-	m.Warn(m.Richs(SPACE, nil, target[0], func(key string, value ice.Map) {
-		if socket, ok := value[SOCKET].(*websocket.Conn); !m.Warn(!ok, ice.ErrNotFound, SOCKET) {
-
-			// 复制选项
-			for _, k := range kit.Simple(m.Optionv(ice.MSG_OPTS)) {
-				switch k {
-				case ice.MSG_DETAIL, ice.MSG_CMDS, ice.MSG_SESSID:
-				default:
-					m.Optionv(k, m.Optionv(k))
-				}
-			}
-			m.Optionv(ice.MSG_OPTS, m.Optionv(ice.MSG_OPTS))
-			m.Optionv(ice.MSG_OPTION, m.Optionv(ice.MSG_OPTS))
-
-			// 构造路由
-			frame := m.Target().Server().(*Frame)
-			id := kit.Format(m.Target().ID())
-			frame.send[id] = m
-
-			// 下发命令
-			_space_echo(m.Set(ice.MSG_DETAIL, arg...), []string{id}, target[1:], socket, target[0])
-
-			m.Option(TIMEOUT, m.Config(kit.Keys(TIMEOUT, "c")))
-			m.Call(m.Option("_async") == "", func(res *ice.Message) *ice.Message { // 返回结果
-				if delete(frame.send, id); res != nil && m != nil {
-					return m.Cost(kit.Format("[%v]->%v %v %v", id, target, arg, m.Copy(res).FormatSize()))
-				}
-				return nil
-			})
-		}
-	}) == nil, ice.ErrNotFound, space)
-}
-func _space_search(m *ice.Message, kind, name, text string, arg ...string) {
-	m.Richs(SPACE, nil, mdb.FOREACH, func(key string, value ice.Map) {
-		if value = kit.GetMeta(value); !strings.Contains(kit.Format(value[mdb.NAME]), name) {
-			return
-		}
-
-		switch value[mdb.TYPE] {
-		case CHROME:
-
-		case MASTER:
-			m.PushSearch(mdb.TEXT, m.Cmd(SPIDE, value[mdb.NAME], ice.OptionFields("")).Append("client.url"), value)
+	// 生成参数
+	for _, k := range kit.Simple(m.Optionv(ice.MSG_OPTS)) {
+		switch k {
+		case ice.MSG_DETAIL, ice.MSG_CMDS, ice.MSG_SESSID:
 		default:
-			m.PushSearch(mdb.TEXT, m.MergePod(kit.Format(value[mdb.NAME])), value)
+			m.Optionv(k, m.Optionv(k))
 		}
-	})
-	if name != "" {
+	}
+	m.Optionv(ice.MSG_OPTS, m.Optionv(ice.MSG_OPTS))
+	m.Optionv(ice.MSG_OPTION, m.Optionv(ice.MSG_OPTS))
+	m.Set(ice.MSG_DETAIL, arg...)
+
+	// 发送命令
+	frame := m.Target().Server().(*Frame)
+	target, id := kit.Split(space, ice.PT, ice.PT), ""
+	if m.Warn(!mdb.HashSelectDetail(m, target[0], func(value ice.Map) {
+		if socket, ok := value[mdb.TARGET].(*websocket.Conn); !m.Warn(!ok, ice.ErrNotFound, mdb.TARGET) {
+			id = frame.addSend(kit.Format(m.Target().ID()), m)
+			_space_echo(m, []string{id}, target[1:], socket, target[0])
+		}
+	}), ice.ErrNotFound, space) {
 		return
 	}
-	m.Cmd(SERVE, ice.OptionFields("")).Tables(func(val ice.Maps) {
-		m.Cmd(tcp.HOST, ice.OptionFields("")).Tables(func(value ice.Maps) {
-			m.PushSearch(kit.SimpleKV("", MYSELF, value[mdb.NAME], kit.Format("http://%s:%s", value[aaa.IP], val[tcp.PORT])))
-		})
+
+	// 返回结果
+	m.Option(TIMEOUT, m.Config(kit.Keys(TIMEOUT, "c")))
+	m.Call(m.Option("_async") == "", func(res *ice.Message) *ice.Message {
+		if frame.delSend(id); res != nil && m != nil {
+			return m.Cost(kit.Format("[%v]->%v %v %v", id, target, arg, m.Copy(res).FormatSize()))
+		}
+		return nil
 	})
 }
 func _space_fork(m *ice.Message) {
-	if s, e := websocket.Upgrade(m.W, m.R, nil, kit.Int(m.Config("buffer.r")), kit.Int(m.Config("buffer.w"))); m.Assert(e) {
+	buffer := m.Configm(BUFFER)
+	if s, e := websocket.Upgrade(m.W, m.R, nil, kit.Int(buffer["r"]), kit.Int(buffer["w"])); m.Assert(e) {
 		text := kit.Select(s.RemoteAddr().String(), m.Option(ice.MSG_USERADDR))
 		name := strings.ToLower(m.Option(mdb.NAME, kit.ReplaceAll(kit.Select(text, m.Option(mdb.NAME)), ".", "_", ":", "_")))
 		kind := kit.Select(WORKER, m.Option(mdb.TYPE))
 		args := append([]string{mdb.TYPE, kind, mdb.NAME, name}, m.OptionSimple(SHARE, RIVER)...)
 
 		m.Go(func() {
-			h := m.Rich(SPACE, nil, kit.Dict(SOCKET, s, mdb.TEXT, kit.Select(text, m.Option(mdb.TEXT)), args))
-			m.Log_CREATE(SPACE, name, mdb.TYPE, kind)
+			m.Optionv(mdb.TARGET, s)
+			mdb.HashCreate(m, mdb.TEXT, kit.Select(text, m.Option(mdb.TEXT)), args)
 
 			switch kind {
 			case CHROME: // 交互节点
-				defer m.Confv(SPACE, kit.Keys(mdb.HASH, h), "")
+				defer mdb.HashRemove(m, mdb.NAME, name)
 				m.Go(func(msg *ice.Message) {
 					switch m.Option(ice.CMD) {
 					case cli.PWD:
@@ -261,12 +245,35 @@ func _space_fork(m *ice.Message) {
 			default: // 服务节点
 				m.Event(SPACE_START, args...)
 				defer m.Event(SPACE_STOP, args...)
-				defer m.Cmd(mdb.DELETE, m.PrefixKey(), "", mdb.HASH, mdb.NAME, name)
+				defer mdb.HashRemove(m, mdb.NAME, name)
 			}
-
-			_space_handle(m, false, m.Target().Server().(*Frame).send, s, name)
+			_space_handle(m, false, m.Target().Server().(*Frame), s, name)
 		})
 	}
+}
+func _space_search(m *ice.Message, kind, name, text string, arg ...string) {
+	m.Cmd(SPACE, ice.OptionFields("")).Tables(func(value ice.Maps) {
+		if !strings.Contains(value[mdb.NAME], name) {
+			return
+		}
+
+		switch value[mdb.TYPE] {
+		case CHROME:
+
+		case MASTER:
+			m.PushSearch(mdb.TEXT, m.Cmd(SPIDE, value[mdb.NAME], ice.OptionFields("")).Append("client.url"), value)
+		default:
+			m.PushSearch(mdb.TEXT, m.MergePod(value[mdb.NAME]), value)
+		}
+	})
+	if name != "" {
+		return
+	}
+	m.Cmd(SERVE, ice.OptionFields("")).Tables(func(val ice.Maps) {
+		m.Cmd(tcp.HOST, ice.OptionFields("")).Tables(func(value ice.Maps) {
+			m.PushSearch(kit.SimpleKV("", MYSELF, value[mdb.NAME], kit.Format("http://%s:%s", value[aaa.IP], val[tcp.PORT])))
+		})
+	})
 }
 
 const (
@@ -278,13 +285,12 @@ const (
 	WORKER = "worker"
 )
 const (
-	SPACE_START = "space.start"
-	SPACE_STOP  = "space.stop"
-
-	SOCKET  = "socket"
 	BUFFER  = "buffer"
 	REDIAL  = "redial"
 	TIMEOUT = "timeout"
+
+	SPACE_START = "space.start"
+	SPACE_STOP  = "space.stop"
 )
 const SPACE = "space"
 
@@ -298,16 +304,23 @@ func init() {
 	}, Commands: ice.Commands{
 		SPACE: {Name: "space name cmd auto invite", Help: "空间站", Actions: ice.MergeAction(ice.Actions{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
-				m.Conf(SPACE, mdb.HASH, "")
+				m.Conf("", mdb.HASH, "")
+			}},
+			ice.CTX_EXIT: {Hand: func(m *ice.Message, arg ...string) {
+				mdb.HashSelectValue(m, func(target ice.Any) {
+					if c, ok := target.(*websocket.Conn); ok {
+						c.Close()
+					}
+				})
+				m.Conf("", mdb.HASH, "")
 			}},
 			mdb.REMOVE: {Name: "remove", Help: "删除", Hand: func(m *ice.Message, arg ...string) {
-				m.Cmd(SPACE, mdb.MODIFY, m.OptionSimple(mdb.NAME), mdb.STATUS, cli.STOP)
+				mdb.HashModify(m, m.OptionSimple(mdb.NAME), mdb.STATUS, cli.STOP)
+				defer mdb.HashRemove(m, m.OptionSimple(mdb.NAME))
 				m.Cmd(SPACE, m.Option(mdb.NAME), ice.EXIT)
-				mdb.HashRemove(m, m.OptionSimple(mdb.NAME))
 			}},
 			mdb.SEARCH: {Name: "search type name text", Help: "搜索", Hand: func(m *ice.Message, arg ...string) {
 				_space_search(m, arg[0], arg[1], kit.Select("", arg, 2))
-				_broad_search(m, arg[0], arg[1], kit.Select("", arg, 2))
 			}},
 			aaa.INVITE: {Name: "invite", Help: "添加", Hand: func(m *ice.Message, arg ...string) {
 				for _, k := range []string{ice.MISC, ice.CORE, ice.BASE} {
@@ -342,7 +355,7 @@ func init() {
 			// 下发命令
 			_space_send(m, strings.ToLower(arg[0]), arg[1:]...)
 		}},
-		"/space/": {Name: "/space/ type name share river", Help: "空间站", Hand: func(m *ice.Message, arg ...string) {
+		PP(SPACE): {Name: "/space/ type name share river", Help: "空间站", Hand: func(m *ice.Message, arg ...string) {
 			_space_fork(m)
 		}},
 	}})

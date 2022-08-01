@@ -10,11 +10,7 @@ import (
 const FAVOR = "favor"
 
 func init() {
-	Index.Merge(&ice.Context{Configs: ice.Configs{
-		FAVOR: {Name: FAVOR, Help: "收藏夹", Value: kit.Data(
-			mdb.SHORT, mdb.ZONE, mdb.FIELD, "time,id,type,name,text,pwd,username,hostname",
-		)},
-	}, Commands: ice.Commands{
+	Index.MergeCommands(ice.Commands{
 		"/favor": {Name: "/favor", Help: "收藏", Actions: ice.Actions{
 			mdb.EXPORT: {Name: "export zone name", Help: "导出", Hand: func(m *ice.Message, arg ...string) {
 				m.Echo("#!/bin/sh\n\n")
@@ -34,7 +30,7 @@ func init() {
 				m.ProcessCommand(cli.SYSTEM, kit.Split(m.Option(mdb.TEXT)), arg...)
 				m.ProcessCommandOpt(arg, cli.PWD)
 			}},
-		}, mdb.ZoneAction()), Hand: func(m *ice.Message, arg ...string) {
+		}, mdb.ZoneAction(mdb.SHORT, mdb.ZONE, mdb.FIELD, "time,id,type,name,text,pwd,username,hostname")), Hand: func(m *ice.Message, arg ...string) {
 			if mdb.ZoneSelect(m, arg...); len(arg) == 0 {
 				m.Action(mdb.CREATE, mdb.EXPORT, mdb.IMPORT)
 			} else {
@@ -42,5 +38,5 @@ func init() {
 				m.StatusTimeCount()
 			}
 		}},
-	}})
+	})
 }

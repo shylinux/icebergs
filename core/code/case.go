@@ -15,7 +15,7 @@ import (
 const CASE = "case"
 
 func init() {
-	Index.Merge(&ice.Context{Commands: ice.Commands{
+	Index.MergeCommands(ice.Commands{
 		CASE: {Name: "case dev zone id auto", Help: "用例", Actions: ice.MergeAction(ice.Actions{
 			mdb.CREATE: {Name: "create name address", Help: "创建", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmdy(web.SPIDE, mdb.CREATE, arg)
@@ -122,5 +122,5 @@ func init() {
 			m.Option(cli.CMD_DIR, kit.Select(path.Dir(arg[0]), arg[0], strings.HasSuffix(arg[0], "/")))
 			m.Cmdy(cli.SYSTEM, "go", "test", nfs.PWD, "-v", "-run="+arg[1])
 		}},
-	}})
+	})
 }

@@ -36,7 +36,6 @@ func (c *Conn) Close() error {
 
 func _client_dial(m *ice.Message, arg ...string) {
 	c, e := net.Dial(TCP, m.Option(HOST)+ice.DF+m.Option(PORT))
-
 	c = &Conn{m: m, s: &Stat{}, Conn: c}
 	if e == nil {
 		defer c.Close()
@@ -57,8 +56,10 @@ func _client_dial(m *ice.Message, arg ...string) {
 				break
 			}
 		}
-	default:
+	case nil:
 		c.Write([]byte("hello world\n"))
+	default:
+		m.ErrorNotImplement(cb)
 	}
 }
 
@@ -77,25 +78,18 @@ const (
 const CLIENT = "client"
 
 func init() {
-	Index.Merge(&ice.Context{Configs: ice.Configs{
-		CLIENT: {Name: CLIENT, Help: "客户端", Value: kit.Data(
-			mdb.FIELD, "time,hash,status,type,name,host,port,error,nread,nwrite",
-		)},
-	}, Commands: ice.Commands{
+	Index.MergeCommands(ice.Commands{
 		CLIENT: {Name: "client hash auto prunes", Help: "客户端", Actions: ice.MergeAction(ice.Actions{
 			ice.CTX_EXIT: {Hand: func(m *ice.Message, arg ...string) {
-				m.Richs(CLIENT, "", mdb.FOREACH, func(key string, value ice.Map) {
-					kit.Value(value, kit.Keym(STATUS), CLOSE)
-				})
-				m.Cmdy(SERVER, mdb.PRUNES)
+				m.Conf(m.PrefixKey(), "", "")
 			}},
 			DIAL: {Name: "dial type name port=9010 host=", Help: "连接", Hand: func(m *ice.Message, arg ...string) {
 				_client_dial(m, arg...)
 			}},
-		}, mdb.HashActionStatus()), Hand: func(m *ice.Message, arg ...string) {
+		}, mdb.HashActionStatus(mdb.FIELD, "time,hash,status,type,name,host,port,error,nread,nwrite")), Hand: func(m *ice.Message, arg ...string) {
 			mdb.HashSelect(m, arg...).Tables(func(value ice.Maps) {
 				m.PushButton(kit.Select("", mdb.REMOVE, value[STATUS] == OPEN))
 			})
 		}},
-	}})
+	})
 }

@@ -56,11 +56,7 @@ const (
 const ACCESS = "access"
 
 func init() {
-	Index.Merge(&ice.Context{Configs: ice.Configs{
-		ACCESS: {Name: ACCESS, Help: "认证", Value: kit.Data(
-			tcp.SERVER, "https://api.weixin.qq.com", ssh.SCRIPT, "/plugin/local/chat/wx.js",
-		)},
-	}, Commands: ice.Commands{
+	Index.MergeCommands(ice.Commands{
 		ACCESS: {Name: "access appid auto config ticket tokens login", Help: "认证", Actions: ice.MergeAction(ice.Actions{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
 				m.Cmd(web.SPIDE, mdb.CREATE, WX, m.Config(tcp.SERVER))
@@ -102,8 +98,8 @@ func init() {
 			CHECK: {Name: "check", Help: "检验", Hand: func(m *ice.Message, arg ...string) {
 				_wx_check(m)
 			}},
-		}, mdb.HashAction()), Hand: func(m *ice.Message, arg ...string) {
+		}, mdb.HashAction(tcp.SERVER, "https://api.weixin.qq.com", ssh.SCRIPT, "/plugin/local/chat/wx.js")), Hand: func(m *ice.Message, arg ...string) {
 			m.Echo(m.Config(APPID))
 		}},
-	}})
+	})
 }

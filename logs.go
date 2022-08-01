@@ -7,15 +7,13 @@ import (
 	"time"
 
 	kit "shylinux.com/x/toolkits"
-	log "shylinux.com/x/toolkits/logs"
+	"shylinux.com/x/toolkits/logs"
 )
 
 func (m *Message) log(level string, str string, arg ...Any) *Message {
-	if log.LogDisable {
-		return m // 禁用日志
-	}
-	if str = strings.TrimSpace(kit.Format(str, arg...)); Info.Log != nil {
-		Info.Log(m, m.FormatPrefix(), level, str) // 日志分流
+	_source := logs.FileLineMeta(logs.FileLine(3, 3))
+	if Info.Log != nil {
+		Info.Log(m, m.FormatPrefix(), level, logs.Format(str, append(arg, _source)...)) // 日志分流
 	}
 
 	// 日志颜色
@@ -33,14 +31,6 @@ func (m *Message) log(level string, str string, arg ...Any) *Message {
 		}
 	}
 
-	// 文件行号
-	switch level {
-	case LOG_INFO, LOG_CMDS, "refer", "form":
-	case LOG_BEGIN:
-	default:
-		suffix += SP + kit.FileLine(3, 3)
-	}
-
 	// 长度截断
 	switch level {
 	case LOG_INFO, LOG_SEND, LOG_RECV:
@@ -50,21 +40,31 @@ func (m *Message) log(level string, str string, arg ...Any) *Message {
 	}
 
 	// 输出日志
-	log.Info(kit.Format("%02d %9s %s%s %s%s", m.code,
-		kit.Format("%4s->%-4s", m.source.Name, m.target.Name), prefix, level, str, suffix))
+	logs.Infof(str, append(arg, logs.PrefixMeta(kit.Format("%02d %4s->%-4s %s%s ", m.code, m.source.Name, m.target.Name, prefix, level)), logs.SuffixMeta(suffix), _source)...)
 	return m
 }
-func (m *Message) join(arg ...Any) string {
-	args := kit.Simple(arg...)
-	list := []string{}
-	for i := 0; i < len(args); i += 2 {
-		if i == len(args)-1 {
-			list = append(list, args[i])
+func (m *Message) join(arg ...Any) (string, []Any) {
+	list, meta := []string{}, []Any{}
+	for i := 0; i < len(arg); i += 2 {
+		switch v := arg[i].(type) {
+		case logs.Meta:
+			i--
+			meta = append(meta, v)
+			continue
+		}
+		if key := strings.TrimSpace(kit.Format(arg[i])); i == len(arg)-1 {
+			list = append(list, key)
 		} else {
-			list = append(list, strings.TrimSpace(args[i])+kit.Select("", DF, !strings.HasSuffix(strings.TrimSpace(args[i]), DF)), kit.Format(args[i+1]))
+			switch v := arg[i+1].(type) {
+			case logs.Meta:
+				list = append(list, key)
+				meta = append(meta, v)
+				continue
+			}
+			list = append(list, key+kit.Select("", DF, !strings.HasSuffix(key, DF)), kit.Format(kit.Select("", kit.Simple(arg[i+1]), 0)))
 		}
 	}
-	return kit.Join(list, SP)
+	return kit.Join(list, SP), meta
 }
 
 func (m *Message) Log(level string, str string, arg ...Any) *Message {
@@ -72,10 +72,6 @@ func (m *Message) Log(level string, str string, arg ...Any) *Message {
 }
 func (m *Message) Info(str string, arg ...Any) *Message {
 	return m.log(LOG_INFO, str, arg...)
-}
-func (m *Message) Cost(arg ...Any) *Message {
-	list := []string{m.FormatCost(), m.join(arg...)}
-	return m.log(LOG_COST, kit.Join(list, SP))
 }
 func (m *Message) Warn(err Any, arg ...Any) bool {
 	switch err := err.(type) {
@@ -91,21 +87,30 @@ func (m *Message) Warn(err Any, arg ...Any) bool {
 	case nil:
 		return false
 	}
-	m.log(LOG_WARN, m.join(kit.Simple(arg...)))
 
+	str, meta := m.join(arg...)
+	m.log(LOG_WARN, str, meta...)
+	m.error(arg...)
+	return true
+}
+func (m *Message) error(arg ...Any) {
 	if len(arg) == 0 {
 		arg = append(arg, "", "")
 	} else if len(arg) == 1 {
 		arg = append(arg, "")
 	}
-	m.meta[MSG_RESULT] = kit.Simple(ErrWarn, arg[0], arg[1], SP, m.join(kit.Simple(arg[2:]...)))
-	return true
+	str, meta := m.join(arg[2:]...)
+	m.meta[MSG_RESULT] = kit.Simple(ErrWarn, arg[0], arg[1], str, meta)
 }
-func (m *Message) Error(err bool, str string, arg ...Any) bool {
+func (m *Message) ErrorNotImplement(arg ...Any) {
+	m.Error(true, append(kit.List(ErrNotImplement), arg...)...)
+}
+func (m *Message) Error(err bool, arg ...Any) bool {
 	if err {
-		m.Echo(ErrWarn).Echo(str, arg...)
+		m.error(arg...)
 		m.log(LOG_ERROR, m.FormatStack(1, 100))
-		m.log(LOG_ERROR, str, arg...)
+		str, meta := m.join(arg...)
+		m.log(LOG_ERROR, str, meta)
 		m.log(LOG_ERROR, m.FormatChain())
 		return true
 	}
@@ -117,43 +122,62 @@ func (m *Message) Debug(str string, arg ...Any) {
 	}
 	m.log(LOG_DEBUG, str, arg...)
 }
+func (m *Message) Cost(arg ...Any) *Message {
+	str, meta := m.join(arg...)
+	if len(arg) == 0 {
+		str = kit.Join(m.meta[MSG_DETAIL], SP)
+	}
+	list := []string{m.FormatCost(), str}
+	return m.log(LOG_COST, kit.Join(list, SP), meta...)
+}
 
 func (m *Message) Logs(level string, arg ...Any) *Message {
-	return m.log(level, m.join(arg...))
+	str, meta := m.join(arg...)
+	return m.log(level, str, meta...)
 }
 func (m *Message) Log_AUTH(arg ...Any) *Message {
-	return m.log(LOG_AUTH, m.join(arg...))
+	str, meta := m.join(arg...)
+	return m.log(LOG_AUTH, str, meta...)
 }
 func (m *Message) Log_SEND(arg ...Any) *Message {
-	return m.log(LOG_AUTH, m.join(arg...))
+	str, meta := m.join(arg...)
+	return m.log(LOG_AUTH, str, meta...)
 }
 func (m *Message) Log_CREATE(arg ...Any) *Message {
-	return m.log(LOG_CREATE, m.join(arg...))
+	str, meta := m.join(arg...)
+	return m.log(LOG_CREATE, str, meta...)
 }
 func (m *Message) Log_REMOVE(arg ...Any) *Message {
-	return m.log(LOG_REMOVE, m.join(arg...))
+	str, meta := m.join(arg...)
+	return m.log(LOG_REMOVE, str, meta...)
 }
 func (m *Message) Log_INSERT(arg ...Any) *Message {
-	return m.log(LOG_INSERT, m.join(arg...))
+	str, meta := m.join(arg...)
+	return m.log(LOG_INSERT, str, meta...)
 }
 func (m *Message) Log_DELETE(arg ...Any) *Message {
-	return m.log(LOG_DELETE, m.join(arg...))
+	str, meta := m.join(arg...)
+	return m.log(LOG_DELETE, str, meta...)
 }
 func (m *Message) Log_MODIFY(arg ...Any) *Message {
-	return m.log(LOG_MODIFY, m.join(arg...))
+	str, meta := m.join(arg...)
+	return m.log(LOG_MODIFY, str, meta...)
 }
 func (m *Message) Log_SELECT(arg ...Any) *Message {
-	return m.log(LOG_SELECT, m.join(arg...))
+	str, meta := m.join(arg...)
+	return m.log(LOG_SELECT, str, meta...)
 }
 func (m *Message) Log_EXPORT(arg ...Any) *Message {
-	return m.log(LOG_EXPORT, m.join(arg...))
+	str, meta := m.join(arg...)
+	return m.log(LOG_EXPORT, str, meta...)
 }
 func (m *Message) Log_IMPORT(arg ...Any) *Message {
-	return m.log(LOG_IMPORT, m.join(arg...))
+	str, meta := m.join(arg...)
+	return m.log(LOG_IMPORT, str, meta...)
 }
 
 func (m *Message) FormatPrefix() string {
-	return kit.Format("%s %d %s->%s", m.Time(), m.code, m.source.Name, m.target.Name)
+	return kit.Format("%s %d %s->%s", logs.FmtTime(logs.Now()), m.code, m.source.Name, m.target.Name)
 }
 func (m *Message) FormatTime() string {
 	return m.Time()
@@ -187,7 +211,7 @@ func (m *Message) FormatStack(s, n int) string {
 		case "reflect", "runtime", "http", "task", "icebergs":
 		default:
 			switch kit.Select("", ls, 1) {
-			case "(*Frame)":
+			// case "(*Frame)":
 			default:
 				list = append(list, kit.Format("%s:%d\t%s", file, frame.Line, name))
 			}

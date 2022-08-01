@@ -7,11 +7,13 @@ import (
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/aaa"
 	"shylinux.com/x/icebergs/base/cli"
+	"shylinux.com/x/icebergs/base/gdb"
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/nfs"
 	"shylinux.com/x/icebergs/base/tcp"
 	"shylinux.com/x/icebergs/base/web"
 	kit "shylinux.com/x/toolkits"
+	"shylinux.com/x/toolkits/file"
 )
 
 func _install_path(m *ice.Message, link string) string {
@@ -22,7 +24,7 @@ func _install_path(m *ice.Message, link string) string {
 	if p := path.Join(ice.USR_INSTALL, path.Base(link)); kit.FileExists(p) {
 		return path.Join(ice.USR_INSTALL, strings.Split(m.Cmdx(cli.SYSTEM, "sh", "-c", kit.Format("tar tf %s| head -n1", p), ice.Option{cli.CMD_OUTPUT, ""}), ice.PS)[0])
 	}
-	m.Error(true, ice.ErrNotFound)
+	m.ErrorNotImplement(link)
 	return ""
 }
 func _install_download(m *ice.Message) {
@@ -99,7 +101,7 @@ func _install_spawn(m *ice.Message, arg ...string) {
 
 	target := path.Join(ice.USR_LOCAL_DAEMON, m.Option(tcp.PORT))
 	source := _install_path(m, "")
-	nfs.MkdirAll(m, target)
+	file.MkdirAll(target, ice.MOD_DIR)
 	defer m.Echo(target)
 
 	if m.Option(INSTALL) == "" && kit.FileExists(kit.Path(source, "_install")) {
@@ -119,7 +121,7 @@ func _install_start(m *ice.Message, arg ...string) {
 	case func(string):
 		cb(p)
 	default:
-		m.Error(true, ice.ErrNotImplement)
+		m.ErrorNotImplement(cb)
 	}
 
 	if m.Cmdy(cli.DAEMON, arg[1:], args); cli.IsSuccess(m) {
@@ -132,7 +134,7 @@ func _install_stop(m *ice.Message, arg ...string) {
 			m.Cmd(cli.DAEMON, cli.STOP, kit.Dict(mdb.HASH, value[mdb.HASH]))
 		}
 	})
-	m.Cmd(cli.SYSTEM, cli.KILL, m.Option(cli.PID))
+	m.Cmd(gdb.SIGNAL, gdb.KILL, m.Option(cli.PID))
 }
 func _install_service(m *ice.Message, arg ...string) {
 	arg = kit.Split(path.Base(arg[0]), "-.")[:1]
@@ -152,11 +154,7 @@ const (
 const INSTALL = "install"
 
 func init() {
-	Index.Merge(&ice.Context{Configs: ice.Configs{
-		INSTALL: {Name: INSTALL, Help: "安装", Value: kit.Data(
-			mdb.SHORT, mdb.NAME, mdb.FIELD, "time,name,path,link", nfs.PATH, ice.USR_INSTALL,
-		)},
-	}, Commands: ice.Commands{
+	Index.MergeCommands(ice.Commands{
 		INSTALL: {Name: "install name port path auto download", Help: "安装", Meta: kit.Dict(), Actions: ice.MergeAction(ice.Actions{
 			web.DOWNLOAD: {Name: "download link path", Help: "下载", Hand: func(m *ice.Message, arg ...string) {
 				_install_download(m)
@@ -188,7 +186,7 @@ func init() {
 			cli.STOP: {Name: "stop", Help: "停止", Hand: func(m *ice.Message, arg ...string) {
 				_install_stop(m, arg...)
 			}},
-		}, mdb.HashAction()), Hand: func(m *ice.Message, arg ...string) {
+		}, mdb.HashAction(mdb.SHORT, mdb.NAME, mdb.FIELD, "time,name,path,link", nfs.PATH, ice.USR_INSTALL)), Hand: func(m *ice.Message, arg ...string) {
 			switch len(arg) {
 			case 0: // 源码列表
 				mdb.HashSelect(m, arg...)
@@ -201,7 +199,7 @@ func init() {
 				m.Cmdy(nfs.CAT, kit.Select(nfs.PWD, arg, 2))
 			}
 		}},
-	}})
+	})
 }
 
 func InstallAction(args ...ice.Any) ice.Actions {

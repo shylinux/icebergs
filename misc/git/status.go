@@ -199,7 +199,7 @@ const (
 const STATUS = "status"
 
 func init() {
-	Index.Merge(&ice.Context{Commands: ice.Commands{
+	Index.MergeCommands(ice.Commands{
 		STATUS: {Name: "status repos auto", Help: "状态机", Actions: ice.Actions{
 			mdb.INPUTS: {Name: "inputs", Help: "补全", Hand: func(m *ice.Message, arg ...string) {
 				switch arg[0] {
@@ -334,5 +334,5 @@ func init() {
 			m.Status("files", files, "adds", adds, "dels", dels)
 			m.Toast3s(kit.Format("files: %d, adds: %d, dels: %d", files, adds, dels), arg[0])
 		}},
-	}})
+	})
 }

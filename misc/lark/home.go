@@ -11,7 +11,7 @@ import (
 const HOME = "home"
 
 func init() {
-	Index.Merge(&ice.Context{Commands: ice.Commands{
+	Index.MergeCommands(ice.Commands{
 		HOME: {Name: "home river storm title content", Help: "首页", Hand: func(m *ice.Message, arg ...string) {
 			name := kit.Select(m.Option(ice.MSG_USERNAME), m.Option(ice.MSG_USERNICK))
 			if len(name) > 10 {
@@ -37,5 +37,5 @@ func init() {
 			}
 			m.Cmd(FORM, CHAT_ID, m.Option(OPEN_CHAT_ID), name, text, "打开网页", "url", link, list)
 		}},
-	}})
+	})
 }

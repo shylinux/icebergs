@@ -17,7 +17,6 @@ const (
 	SUCCESS = "success"
 	FAILURE = "failure"
 	PROCESS = "process"
-	RESTART = "restart"
 	OF      = " of "
 
 	INIT = "init"
@@ -107,14 +106,18 @@ const ( // DIR
 	PLUGIN_INPUT = "/plugin/input"
 	PLUGIN_STORY = "/plugin/story"
 	PLUGIN_LOCAL = "/plugin/local"
+	NODE_MODULES = "node_modules"
+	ISH_PLUGED   = ".ish/pluged"
 
-	FAVICON  = "favicon.ico"
-	PROTO_JS = "proto.js"
-	FRAME_JS = "frame.js"
-	INDEX_JS = "index.js"
-	ORDER_JS = "order.js"
-	ORDER_SH = "order.sh"
-	INDEX_SH = "index.sh"
+	FAVICON   = "favicon.ico"
+	PROTO_JS  = "proto.js"
+	FRAME_JS  = "frame.js"
+	INDEX_JS  = "index.js"
+	ORDER_JS  = "order.js"
+	ORDER_SH  = "order.sh"
+	INDEX_SH  = "index.sh"
+	INDEX_IML = "index.iml"
+	TUTOR_SHY = "tutor.shy"
 
 	USR_LOCAL        = "usr/local"
 	USR_LOCAL_GO     = "usr/local/go"
@@ -159,6 +162,8 @@ const ( // DIR
 	ICE_BIN        = "ice.bin"
 	GO_SUM         = "go.sum"
 	GO_MOD         = "go.mod"
+
+	CTX_DAEMON = "ctx_daemon"
 )
 const ( // MSG
 	MSG_DETAIL = "detail"
@@ -206,23 +211,26 @@ const ( // MSG
 	MSG_STORM = "sess.storm"
 	MSG_TOAST = "sess.toast"
 	MSG_LOCAL = "sess.local"
+
+	MSG_FILES = "file.system"
 )
 const ( // RENDER
-	RENDER_RAW      = "_raw"
-	RENDER_VOID     = "_void"
-	RENDER_JSON     = "_json"
 	RENDER_STATUS   = "_status"
-	RENDER_RESULT   = "_result"
-	RENDER_ANCHOR   = "_anchor"
-	RENDER_BUTTON   = "_button"
-	RENDER_SCRIPT   = "_script"
-	RENDER_QRCODE   = "_qrcode"
-	RENDER_IMAGES   = "_images"
-	RENDER_VIDEOS   = "_videos"
-	RENDER_IFRAME   = "_iframe"
-	RENDER_TEMPLATE = "_template"
 	RENDER_REDIRECT = "_redirect"
 	RENDER_DOWNLOAD = "_download"
+	RENDER_TEMPLATE = "_template"
+	RENDER_RESULT   = "_result"
+	RENDER_JSON     = "_json"
+	RENDER_VOID     = "_void"
+	RENDER_RAW      = "_raw"
+
+	RENDER_ANCHOR = "_anchor"
+	RENDER_BUTTON = "_button"
+	RENDER_SCRIPT = "_script"
+	RENDER_QRCODE = "_qrcode"
+	RENDER_IMAGES = "_images"
+	RENDER_VIDEOS = "_videos"
+	RENDER_IFRAME = "_iframe"
 )
 const ( // PROCESS
 	PROCESS_LOCATION = "_location"
@@ -369,4 +377,13 @@ const ( // gdb
 	LISTEN   = "listen"
 	HAPPEN   = "happen"
 	FILELINE = "fileline"
+
+	RESTART = "restart"
+	ERROR   = "error"
+	OPEN    = "open"
+	CLOSE   = "close"
+	START   = "start"
+	STOP    = "stop"
+	BEGIN   = "begin"
+	END     = "end"
 )

@@ -12,7 +12,7 @@ import (
 )
 
 func _command_list(m *ice.Message, name string) {
-	if kit.FileExists(path.Join(ice.SRC, name)) {
+	if nfs.ExistsFile(m, path.Join(ice.SRC, name)) {
 		switch kit.Ext(name) {
 		case nfs.JS:
 			m.Push(DISPLAY, ice.FileURI(name))
@@ -22,8 +22,8 @@ func _command_list(m *ice.Message, name string) {
 			name = ice.GetFileCmd(name)
 
 		default:
-			if file, msg := name, m.Cmd(mdb.RENDER, kit.Ext(name)); msg.Length() > 0 {
-				m.Push(ARGS, kit.Format(kit.List(file)))
+			if msg := m.Cmd(mdb.RENDER, kit.Ext(name)); msg.Length() > 0 {
+				m.Push(ARGS, kit.Format(kit.List(name)))
 				name = kit.Keys(msg.Append(mdb.TEXT), msg.Append(mdb.NAME))
 			}
 		}
@@ -68,7 +68,42 @@ func _command_search(m *ice.Message, kind, name, text string) {
 			kit.SimpleKV("", s.Cap(ice.CTX_FOLLOW), cmd.Name, cmd.Help),
 			CONTEXT, s.Cap(ice.CTX_FOLLOW), COMMAND, key,
 			INDEX, kit.Keys(s.Cap(ice.CTX_FOLLOW), key),
+			mdb.HELP, cmd.Help,
 		)
+	})
+}
+
+const (
+	INDEX   = "index"
+	ARGS    = "args"
+	STYLE   = "style"
+	DISPLAY = "display"
+	ACTION  = "action"
+
+	CAN_PLUGIN = "can.plugin"
+)
+const COMMAND = "command"
+
+func init() {
+	Index.MergeCommands(ice.Commands{
+		COMMAND: {Name: "command key auto", Help: "命令", Actions: ice.Actions{
+			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
+				m.Cmd(aaa.ROLE, aaa.WHITE, aaa.VOID, m.Prefix(COMMAND))
+				m.Cmd(aaa.ROLE, aaa.WHITE, aaa.VOID, COMMAND)
+			}},
+			mdb.SEARCH: {Name: "search type name text", Help: "搜索", Hand: func(m *ice.Message, arg ...string) {
+				if arg[0] == m.CommandKey() || len(arg) > 1 && arg[1] != "" {
+					_command_search(m, arg[0], kit.Select("", arg, 1), kit.Select("", arg, 2))
+				}
+			}},
+		}, Hand: func(m *ice.Message, arg ...string) {
+			if len(arg) == 0 {
+				arg = append(arg, "")
+			}
+			for _, key := range arg {
+				_command_list(m, key)
+			}
+		}},
 	})
 }
 
@@ -89,38 +124,4 @@ func CmdAction(args ...ice.Any) ice.Actions {
 			}
 		}},
 	}
-}
-
-const (
-	INDEX   = "index"
-	ARGS    = "args"
-	STYLE   = "style"
-	DISPLAY = "display"
-	ACTION  = "action"
-
-	CAN_PLUGIN = "can.plugin"
-)
-const COMMAND = "command"
-
-func init() {
-	Index.Merge(&ice.Context{Commands: ice.Commands{
-		COMMAND: {Name: "command key auto", Help: "命令", Actions: ice.Actions{
-			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
-				m.Cmd(aaa.ROLE, aaa.WHITE, aaa.VOID, m.Prefix(COMMAND))
-				m.Cmd(aaa.ROLE, aaa.WHITE, aaa.VOID, COMMAND)
-			}},
-			mdb.SEARCH: {Name: "search type name text", Help: "搜索", Hand: func(m *ice.Message, arg ...string) {
-				if arg[0] == m.CommandKey() || len(arg) > 1 && arg[1] != "" {
-					_command_search(m, arg[0], kit.Select("", arg, 1), kit.Select("", arg, 2))
-				}
-			}},
-		}, Hand: func(m *ice.Message, arg ...string) {
-			if len(arg) == 0 {
-				arg = append(arg, "")
-			}
-			for _, key := range arg {
-				_command_list(m, key)
-			}
-		}},
-	}})
 }

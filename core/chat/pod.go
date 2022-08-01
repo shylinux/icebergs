@@ -16,13 +16,8 @@ import (
 const POD = "pod"
 
 func init() {
-	Index.Merge(&ice.Context{Configs: ice.Configs{
-		POD: {Name: POD, Help: "节点", Value: kit.Data()},
-	}, Commands: ice.Commands{
-		"/pod/": {Name: "/pod/", Help: "节点", Actions: ice.MergeAction(ice.Actions{
-			ice.CTX_INIT: {Name: "_init", Help: "初始化", Hand: func(m *ice.Message, arg ...string) {
-			}},
-		}, ctx.CmdAction()), Hand: func(m *ice.Message, arg ...string) {
+	Index.MergeCommands(ice.Commands{
+		"/pod/": {Name: "/pod/", Help: "节点", Actions: ctx.CmdAction(), Hand: func(m *ice.Message, arg ...string) {
 			if strings.HasPrefix(m.R.Header.Get("User-Agent"), "curl") || strings.HasPrefix(m.R.Header.Get("User-Agent"), "Wget") {
 				m.Option(ice.MSG_USERNAME, "root")
 				m.Option(ice.MSG_USERROLE, "root")
@@ -53,5 +48,5 @@ func init() {
 				// m.Cmdy(web.SPACE, m.Option(ice.MSG_USERPOD), "web.chat."+ice.PS+path.Join(arg[1:]...))
 			}
 		}},
-	}})
+	})
 }

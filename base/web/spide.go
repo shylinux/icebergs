@@ -23,109 +23,100 @@ import (
 )
 
 func _spide_create(m *ice.Message, name, address string) {
-	if uri, e := url.Parse(address); e == nil && address != "" {
-		if m.Richs(SPIDE, nil, name, func(key string, value ice.Map) {
-			kit.Value(value, "client.hostname", uri.Host)
-			kit.Value(value, "client.url", address)
-		}) == nil {
-			dir, file := path.Split(uri.EscapedPath())
-			m.Echo(m.Rich(SPIDE, nil, kit.Dict(
-				SPIDE_COOKIE, kit.Dict(), SPIDE_HEADER, kit.Dict(), SPIDE_CLIENT, kit.Dict(
-					mdb.NAME, name, SPIDE_METHOD, SPIDE_POST, "url", address,
-					tcp.PROTOCOL, uri.Scheme, tcp.HOSTNAME, uri.Host,
-					nfs.PATH, dir, nfs.FILE, file, "query", uri.RawQuery,
-					cli.TIMEOUT, "600s", LOGHEADERS, ice.FALSE,
-				),
-			)))
-		}
+	if uri, e := url.Parse(address); !m.Warn(e != nil || address == "") {
+		dir, file := path.Split(uri.EscapedPath())
+		mdb.HashCreate(m, CLIENT_NAME, name)
+		mdb.HashSelectUpdate(m, name, func(value ice.Map) {
+			value[SPIDE_COOKIE] = kit.Dict()
+			value[SPIDE_HEADER] = kit.Dict()
+			value[SPIDE_CLIENT] = kit.Dict(
+				mdb.NAME, name, SPIDE_METHOD, SPIDE_POST, "url", address,
+				tcp.PROTOCOL, uri.Scheme, tcp.HOSTNAME, uri.Host,
+				nfs.PATH, dir, nfs.FILE, file, "query", uri.RawQuery,
+				cli.TIMEOUT, "600s", LOGHEADERS, ice.FALSE,
+			)
+		})
 		m.Log_CREATE(SPIDE, name, ADDRESS, address)
 	}
 }
 func _spide_list(m *ice.Message, arg ...string) {
-	m.Richs(SPIDE, nil, arg[0], func(key string, value ice.Map) {
-		// 缓存方式
-		cache, save := "", ""
-		switch arg[1] {
-		case "url":
-			m.Echo("%v", kit.Value(value, "client.url"))
-			return
-		case SPIDE_RAW:
-			cache, arg = arg[1], arg[1:]
-		case SPIDE_MSG:
-			cache, arg = arg[1], arg[1:]
-		case SPIDE_SAVE:
-			cache, save, arg = arg[1], arg[2], arg[2:]
-		case SPIDE_CACHE:
-			cache, arg = arg[1], arg[1:]
-		}
+	// 缓存方法
+	cache, save := "", ""
+	switch arg[1] {
+	case SPIDE_RAW:
+		cache, arg = arg[1], arg[1:]
+	case SPIDE_MSG:
+		cache, arg = arg[1], arg[1:]
+	case SPIDE_SAVE:
+		cache, save, arg = arg[1], arg[2], arg[2:]
+	case SPIDE_CACHE:
+		cache, arg = arg[1], arg[1:]
+	}
 
-		// 请求方法
-		client := value[SPIDE_CLIENT].(ice.Map)
-		method := kit.Select(SPIDE_POST, client[SPIDE_METHOD])
-		switch arg = arg[1:]; arg[0] {
-		case SPIDE_GET:
-			method, arg = SPIDE_GET, arg[1:]
-		case SPIDE_PUT:
-			method, arg = SPIDE_PUT, arg[1:]
-		case SPIDE_POST:
-			method, arg = SPIDE_POST, arg[1:]
-		case SPIDE_DELETE:
-			method, arg = SPIDE_DELETE, arg[1:]
-		}
+	// 请求方法
+	msg := mdb.HashSelect(m.Spawn(), arg[0])
+	method := kit.Select(SPIDE_POST, msg.Append(CLIENT_METHOD))
+	switch arg = arg[1:]; arg[0] {
+	case SPIDE_GET:
+		method, arg = SPIDE_GET, arg[1:]
+	case SPIDE_PUT:
+		method, arg = SPIDE_PUT, arg[1:]
+	case SPIDE_POST:
+		method, arg = SPIDE_POST, arg[1:]
+	case SPIDE_DELETE:
+		method, arg = SPIDE_DELETE, arg[1:]
+	}
 
-		// 请求地址
-		uri, arg := arg[0], arg[1:]
+	// 构造请求
+	uri, arg := arg[0], arg[1:]
+	body, head, arg := _spide_body(m, method, arg...)
+	req, e := http.NewRequest(method, kit.MergeURL2(msg.Append(CLIENT_URL), uri, arg), body)
+	if m.Warn(e, ice.ErrNotValid, uri) {
+		return
+	}
 
-		// 请求参数
-		body, head, arg := _spide_body(m, method, arg...)
-
-		// 构造请求
-		req, e := http.NewRequest(method, kit.MergeURL2(kit.Format(client["url"]), uri, arg), body)
-		if m.Warn(e, ice.ErrNotFound, uri) {
-			return
-		}
-
-		// 请求配置
+	// 请求变量
+	mdb.HashSelectDetail(m, msg.Append(CLIENT_NAME), func(value ice.Map) {
 		_spide_head(m, req, head, value)
+	})
 
-		// 发送请求
-		res, e := _spide_send(m, req, kit.Format(client[cli.TIMEOUT]))
-		if m.Warn(e, ice.ErrNotFound, uri) {
-			return
+	// 发送请求
+	res, e := _spide_send(m, req, kit.Format(msg.Append("client.timeout")))
+	if m.Warn(e, ice.ErrNotFound, uri) {
+		return
+	}
+	defer res.Body.Close()
+
+	// 请求日志
+	if m.Config(LOGHEADERS) == ice.TRUE {
+		for k, v := range res.Header {
+			m.Debug("%v: %v", k, v)
 		}
+	}
+	m.Cost(cli.STATUS, res.Status, nfs.SIZE, res.Header.Get(ContentLength), mdb.TYPE, res.Header.Get(ContentType))
 
-		if m.Config(LOGHEADERS) == ice.TRUE {
-			for k, v := range res.Header {
-				m.Debug("%v: %v", k, v)
-			}
-		}
-
-		// 检查结果
-		defer res.Body.Close()
-		m.Cost(cli.STATUS, res.Status, nfs.SIZE, res.Header.Get(ContentLength), mdb.TYPE, res.Header.Get(ContentType))
-
-		// 缓存配置
+	// 响应变量
+	mdb.HashSelectUpdate(m, msg.Append(CLIENT_NAME), func(value ice.Map) {
 		for _, v := range res.Cookies() {
 			kit.Value(value, kit.Keys(SPIDE_COOKIE, v.Name), v.Value)
 			m.Log_IMPORT(v.Name, v.Value)
 		}
-
-		// 错误信息
-		if m.Warn(res.StatusCode != http.StatusOK, ice.ErrNotFound, uri, "status", res.Status) {
-			// b, _ := ioutil.ReadAll(res.Body)
-			switch m.Set(ice.MSG_RESULT); res.StatusCode {
-			case http.StatusNotFound:
-				m.Warn(true, ice.ErrNotFound, uri)
-				return
-			case http.StatusUnauthorized:
-				m.Warn(true, ice.ErrNotRight, uri)
-				return
-			}
-		}
-
-		// 解析结果
-		_spide_save(m, cache, save, uri, res)
 	})
+
+	// 处理异常
+	if m.Warn(res.StatusCode != http.StatusOK, ice.ErrNotFound, uri, cli.STATUS, res.Status) {
+		switch m.Set(ice.MSG_RESULT); res.StatusCode {
+		case http.StatusNotFound:
+			m.Warn(true, ice.ErrNotFound, uri)
+			return
+		case http.StatusUnauthorized:
+			m.Warn(true, ice.ErrNotRight, uri)
+			return
+		}
+	}
+
+	// 解析结果
+	_spide_save(m, cache, save, uri, res)
 }
 func _spide_body(m *ice.Message, method string, arg ...string) (io.Reader, ice.Maps, []string) {
 	head := ice.Maps{}
@@ -284,7 +275,7 @@ func _spide_save(m *ice.Message, cache, save, uri string, res *http.Response) {
 	case SPIDE_CACHE:
 		m.Optionv(RESPONSE, res)
 		m.Cmdy(CACHE, DOWNLOAD, res.Header.Get(ContentType), uri)
-		m.Echo(m.Append(DATA))
+		m.Echo(m.Append(mdb.DATA))
 
 	default:
 		b, _ := ioutil.ReadAll(res.Body)
@@ -302,25 +293,30 @@ func _spide_save(m *ice.Message, cache, save, uri string, res *http.Response) {
 }
 
 const (
+	// 缓存方法
 	SPIDE_RAW   = "raw"
 	SPIDE_MSG   = "msg"
 	SPIDE_SAVE  = "save"
 	SPIDE_CACHE = "cache"
 
+	// 请求方法
 	SPIDE_GET    = "GET"
 	SPIDE_PUT    = "PUT"
 	SPIDE_POST   = "POST"
 	SPIDE_DELETE = "DELETE"
 
+	// 请求参数
 	SPIDE_BODY = "body"
 	SPIDE_FORM = "form"
 	SPIDE_PART = "part"
+	SPIDE_JSON = "json"
 	SPIDE_DATA = "data"
 	SPIDE_FILE = "file"
-	SPIDE_JSON = "json"
 
+	// 响应数据
 	SPIDE_RES = "content_data"
 
+	// 请求头
 	Bearer        = "Bearer"
 	Authorization = "Authorization"
 	ContentType   = "Content-Type"
@@ -328,6 +324,7 @@ const (
 	UserAgent     = "User-Agent"
 	Accept        = "Accept"
 
+	// 数据格式
 	ContentFORM = "application/x-www-form-urlencoded"
 	ContentJSON = "application/json"
 	ContentHTML = "text/html"
@@ -340,30 +337,30 @@ const (
 	SPIDE_HEADER = "header"
 	SPIDE_COOKIE = "cookie"
 
+	CLIENT_NAME   = "client.name"
+	CLIENT_METHOD = "client.method"
+	CLIENT_URL    = "client.url"
+	LOGHEADERS    = "logheaders"
+
 	FORM     = "form"
 	ADDRESS  = "address"
 	REQUEST  = "request"
 	RESPONSE = "response"
 
-	CLIENT_NAME = "client.name"
-	CLIENT_URL  = "client.url"
-	LOGHEADERS  = "logheaders"
-
-	MERGE = "merge"
+	MERGE  = "merge"
+	SUBMIT = "submit"
 )
 const SPIDE = "spide"
 
 func init() {
-	Index.Merge(&ice.Context{Configs: ice.Configs{
-		SPIDE: {Name: SPIDE, Help: "蜘蛛侠", Value: kit.Data(mdb.SHORT, CLIENT_NAME, mdb.FIELD, "time,client.name,client.url", LOGHEADERS, ice.FALSE)},
-	}, Commands: ice.Commands{
+	Index.MergeCommands(ice.Commands{
 		SPIDE: {Name: "spide client.name action=raw,msg,save,cache method=GET,PUT,POST,DELETE url format=form,part,json,data,file arg run create", Help: "蜘蛛侠", Actions: ice.MergeAction(ice.Actions{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
-				conf := m.Confm(cli.RUNTIME, "conf")
-				m.Cmd(SPIDE, mdb.CREATE, ice.OPS, kit.Select("http://127.0.0.1:9020", conf["ctx_ops"]))
-				m.Cmd(SPIDE, mdb.CREATE, ice.DEV, kit.Select("http://contexts.woa.com:80", conf["ctx_dev"]))
-				m.Cmd(SPIDE, mdb.CREATE, ice.SHY, kit.Select("https://shylinux.com:443", conf["ctx_shy"]))
-				m.Cmd(aaa.ROLE, aaa.WHITE, aaa.VOID, SPIDE, "submit")
+				conf := m.Confm(cli.RUNTIME, cli.CONF)
+				m.Cmd(SPIDE, mdb.CREATE, ice.OPS, kit.Select("http://127.0.0.1:9020", conf[cli.CTX_OPS]))
+				m.Cmd(SPIDE, mdb.CREATE, ice.DEV, kit.Select("http://contexts.woa.com:80", conf[cli.CTX_DEV]))
+				m.Cmd(SPIDE, mdb.CREATE, ice.SHY, kit.Select("https://shylinux.com:443", conf[cli.CTX_SHY]))
+				m.Cmd(aaa.ROLE, aaa.WHITE, aaa.VOID, SPIDE, SUBMIT)
 			}},
 			mdb.CREATE: {Name: "create name address", Help: "添加", Hand: func(m *ice.Message, arg ...string) {
 				_spide_create(m, m.Option(mdb.NAME), m.Option(ADDRESS))
@@ -371,38 +368,24 @@ func init() {
 			MERGE: {Name: "merge name path", Help: "拼接", Hand: func(m *ice.Message, arg ...string) {
 				m.Echo(kit.MergeURL2(m.Cmd(SPIDE, arg[0], ice.OptionFields("")).Append(CLIENT_URL), arg[1], arg[2:]))
 			}},
-			"submit": {Name: "submit dev pod path size cache", Help: "发布", Hand: func(m *ice.Message, arg ...string) {
-				m.Cmdy(SPIDE, ice.DEV, SPIDE_RAW, m.Option("dev"), SPIDE_PART, "pod", m.Option("pod"), nfs.PATH, "bin/ice.bin", UPLOAD, "@"+"bin/ice.bin")
+			SUBMIT: {Name: "submit dev pod path size cache", Help: "发布", Hand: func(m *ice.Message, arg ...string) {
+				m.Cmdy(SPIDE, ice.DEV, SPIDE_RAW, m.Option(ice.DEV), SPIDE_PART, m.OptionSimple(ice.POD), nfs.PATH, ice.BIN_ICE_BIN, UPLOAD, "@"+ice.BIN_ICE_BIN)
 			}},
-		}, mdb.HashAction()), Hand: func(m *ice.Message, arg ...string) {
+		}, mdb.HashAction(mdb.SHORT, CLIENT_NAME, mdb.FIELD, "time,client.name,client.url", LOGHEADERS, ice.FALSE)), Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) < 2 || arg[0] == "" || (len(arg) > 3 && arg[3] == "") {
-				mdb.HashSelect(m, kit.Slice(arg, 0, 1)...)
-				m.Sort("client.name")
-				return
+				mdb.HashSelect(m, kit.Slice(arg, 0, 1)...).Sort(CLIENT_NAME)
+			} else {
+				_spide_list(m, arg...)
 			}
-			_spide_list(m, arg...)
 		}},
-
-		SPIDE_GET: {Name: "GET url key value run", Help: "蜘蛛侠", Actions: ice.Actions{
-			mdb.REMOVE: {Name: "remove", Help: "删除", Hand: func(m *ice.Message, arg ...string) {
-				m.Cmdy(mdb.DELETE, SPIDE, "", mdb.HASH, m.OptionSimple(CLIENT_NAME))
-			}},
-		}, Hand: func(m *ice.Message, arg ...string) {
+		SPIDE_GET: {Name: "GET url key value run", Help: "蜘蛛侠", Hand: func(m *ice.Message, arg ...string) {
 			m.Echo(kit.Formats(kit.UnMarshal(m.Cmdx(SPIDE, ice.DEV, SPIDE_RAW, SPIDE_GET, arg[0], arg[1:]))))
 		}},
-		SPIDE_POST: {Name: "POST url key value run", Help: "蜘蛛侠", Actions: ice.Actions{
-			mdb.REMOVE: {Name: "remove", Help: "删除", Hand: func(m *ice.Message, arg ...string) {
-				m.Cmdy(mdb.DELETE, SPIDE, "", mdb.HASH, m.OptionSimple(CLIENT_NAME))
-			}},
-		}, Hand: func(m *ice.Message, arg ...string) {
+		SPIDE_POST: {Name: "POST url key value run", Help: "蜘蛛侠", Hand: func(m *ice.Message, arg ...string) {
 			m.Echo(kit.Formats(kit.UnMarshal(m.Cmdx(SPIDE, ice.DEV, SPIDE_RAW, SPIDE_POST, arg[0], arg[1:]))))
 		}},
-		SPIDE_DELETE: {Name: "DELETE url key value run", Help: "蜘蛛侠", Actions: ice.Actions{
-			mdb.REMOVE: {Name: "remove", Help: "删除", Hand: func(m *ice.Message, arg ...string) {
-				m.Cmdy(mdb.DELETE, SPIDE, "", mdb.HASH, m.OptionSimple(CLIENT_NAME))
-			}},
-		}, Hand: func(m *ice.Message, arg ...string) {
+		SPIDE_DELETE: {Name: "DELETE url key value run", Help: "蜘蛛侠", Hand: func(m *ice.Message, arg ...string) {
 			m.Echo(kit.Formats(kit.UnMarshal(m.Cmdx(SPIDE, ice.DEV, SPIDE_RAW, SPIDE_DELETE, arg[0], arg[1:]))))
 		}},
-	}})
+	})
 }

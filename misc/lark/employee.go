@@ -31,7 +31,7 @@ func _employee_openid(m *ice.Message, appid string, arg ...string) {
 const EMPLOYEE = "employee"
 
 func init() {
-	Index.Merge(&ice.Context{Commands: ice.Commands{
+	Index.MergeCommands(ice.Commands{
 		EMPLOYEE: {Name: "employee appid open_id|mobile|email auto", Help: "员工", Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) < 2 {
 				return
@@ -42,5 +42,5 @@ func init() {
 				_employee_openid(m, arg[0], arg[1:]...)
 			}
 		}},
-	}})
+	})
 }

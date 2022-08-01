@@ -4,94 +4,51 @@ import (
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/mdb"
 	kit "shylinux.com/x/toolkits"
+	"shylinux.com/x/toolkits/logs"
 )
 
-func _user_exists(m *ice.Message, name string) bool {
-	return m.Richs(USER, nil, name, nil) != nil
-}
-func _user_login(m *ice.Message, name, word string) (ok bool) {
-	if !_user_exists(m, name) {
+func _user_login(m *ice.Message, name, word string) {
+	if m.Warn(name == "", ice.ErrNotValid, name) {
+		return
+	}
+	if !mdb.HashSelectDetail(m, name, nil) {
 		_user_create(m, VOID, name, word)
 	}
 
-	m.Richs(USER, nil, name, func(key string, value ice.Map) {
-		if ok = !m.Warn(word != "" && word != value[PASSWORD], ice.ErrNotRight); ok {
-			m.Log_AUTH(
-				USERROLE, m.Option(ice.MSG_USERROLE, value[USERROLE]),
-				USERNAME, m.Option(ice.MSG_USERNAME, value[USERNAME]),
-				USERNICK, m.Option(ice.MSG_USERNICK, value[USERNICK]),
-			)
+	_source := logs.FileLineMeta(logs.FileLine(-1, 3))
+	mdb.HashSelectDetail(m, name, func(value ice.Map) {
+		if m.Warn(word != "" && word != kit.Format(kit.Value(value, kit.Keys(mdb.EXTRA, PASSWORD))), ice.ErrNotRight) {
+			return
 		}
+		m.Log_AUTH(
+			USERROLE, m.Option(ice.MSG_USERROLE, value[USERROLE]),
+			USERNAME, m.Option(ice.MSG_USERNAME, value[USERNAME]),
+			USERNICK, m.Option(ice.MSG_USERNICK, value[USERNICK]),
+			_source,
+		)
 	})
-	return ok
 }
-func _user_create(m *ice.Message, role, name, word string) {
-	if name == "" {
+func _user_create(m *ice.Message, name, word string, arg ...string) {
+	if m.Warn(name == "", ice.ErrNotValid, name) {
 		return
 	}
 	if word == "" {
-		if m.Richs(USER, nil, name, func(key string, value ice.Map) {
-			word = kit.Format(value[PASSWORD])
-		}) == nil {
-			word = kit.Hashs()
-		}
+		word = m.CmdAppend(USER, name, PASSWORD)
 	}
-	m.Rich(USER, nil, kit.Dict(USERROLE, role, USERNAME, name, PASSWORD, word))
+	if word == "" {
+		word = kit.Hashs()
+	}
+	mdb.HashCreate(m, USERNAME, name, PASSWORD, word, arg)
 	m.Event(USER_CREATE, USER, name)
-}
-func _user_search(m *ice.Message, name, text string) {
-	m.Richs(USER, nil, mdb.FOREACH, func(key string, value ice.Map) {
-		if value = kit.GetMeta(value); name == "" || name == value[USERNAME] {
-			m.PushSearch(kit.SimpleKV("", value[USERROLE], value[USERNAME], value[USERNICK]), value)
-		}
-	})
-}
-
-func UserRoot(m *ice.Message, arg ...string) *ice.Message { // password username userrole
-	username := m.Option(ice.MSG_USERNAME, kit.Select(ice.Info.UserName, arg, 1))
-	userrole := m.Option(ice.MSG_USERROLE, kit.Select(ROOT, arg, 2))
-	if len(arg) > 0 {
-		_user_create(m, userrole, username, kit.Select("", arg, 0))
-		ice.Info.UserName = username
-	}
-	return m
-}
-func UserRole(m *ice.Message, username ice.Any) (role string) {
-	if role = VOID; username == ice.Info.UserName {
-		return ROOT
-	}
-	if m.Richs(USER, nil, kit.Format(username), func(key string, value ice.Map) {
-		role = kit.Format(kit.GetMeta(value)[USERROLE])
-	}) == nil && kit.Format(username) == m.Option(ice.MSG_USERNAME) {
-		return m.Option(ice.MSG_USERROLE)
-	}
-	return
-}
-func UserNick(m *ice.Message, username ice.Any) (nick string) {
-	if m.Richs(USER, nil, kit.Format(username), func(key string, value ice.Map) {
-		nick = kit.Format(kit.GetMeta(value)[USERNICK])
-	}) == nil && kit.Format(username) == m.Option(ice.MSG_USERNAME) {
-		return m.Option(ice.MSG_USERNICK)
-	}
-	return
-}
-func UserZone(m *ice.Message, username ice.Any) (zone string) {
-	m.Richs(USER, nil, kit.Format(username), func(key string, value ice.Map) {
-		zone = kit.Format(kit.GetMeta(value)[USERZONE])
-	})
-	return
-}
-func UserLogin(m *ice.Message, username, password string) bool {
-	return _user_login(m, username, password)
 }
 
 const (
+	BACKGROUND = "background"
+
 	AVATAR = "avatar"
 	GENDER = "gender"
 	MOBILE = "mobile"
 	EMAIL  = "email"
-
-	BACKGROUND = "background"
 
 	CITY     = "city"
 	COUNTRY  = "country"
@@ -114,24 +71,50 @@ const (
 const USER = "user"
 
 func init() {
-	Index.Merge(&ice.Context{Configs: ice.Configs{
-		USER: {Name: USER, Help: "用户", Value: kit.Data(
-			mdb.SHORT, USERNAME, mdb.FIELD, "time,userrole,username,usernick,userzone",
-		)},
-	}, Commands: ice.Commands{
+	Index.MergeCommands(ice.Commands{
 		USER: {Name: "user username auto create", Help: "用户", Actions: ice.MergeAction(ice.Actions{
 			mdb.SEARCH: {Name: "search type name text", Help: "搜索", Hand: func(m *ice.Message, arg ...string) {
-				if arg[0] == USER {
-					_user_search(m, arg[1], kit.Select("", arg, 2))
-				}
+				mdb.HashSelectSearch(m, arg)
 			}},
-			mdb.CREATE: {Name: "create userrole=void,tech username password", Help: "创建", Hand: func(m *ice.Message, arg ...string) {
-				if !_user_exists(m, m.Option(USERNAME)) {
-					_user_create(m, m.Option(USERROLE), m.Option(USERNAME), m.Option(PASSWORD))
-				}
+			mdb.CREATE: {Name: "create username password userrole=void,tech", Help: "创建", Hand: func(m *ice.Message, arg ...string) {
+				_user_create(m, m.Option(USERNAME), m.Option(PASSWORD), m.OptionSimple(USERROLE)...)
 			}},
-		}, mdb.HashAction()), Hand: func(m *ice.Message, arg ...string) {
-			mdb.HashSelect(m, arg...)
-		}},
-	}})
+			LOGIN: {Name: "login username password", Help: "登录", Hand: func(m *ice.Message, arg ...string) {
+				_user_login(m, m.Option(USERNAME), m.Option(PASSWORD))
+			}},
+		}, mdb.HashAction(mdb.SHORT, USERNAME, mdb.FIELD, "time,userrole,username,usernick,userzone"))},
+	})
+}
+
+func UserRoot(m *ice.Message, arg ...string) *ice.Message { // password username userrole
+	username := m.Option(ice.MSG_USERNAME, kit.Select(ice.Info.UserName, arg, 1))
+	userrole := m.Option(ice.MSG_USERROLE, kit.Select(ROOT, arg, 2))
+	if len(arg) > 0 {
+		m.Cmd(USER, mdb.CREATE, username, kit.Select("", arg, 0), userrole)
+		ice.Info.UserName = username
+	}
+	return m
+}
+func UserRole(m *ice.Message, username ice.Any) (role string) {
+	if role = VOID; username == ice.Info.UserName {
+		return ROOT
+	}
+	return UserInfo(m, username, USERROLE, ice.MSG_USERROLE)
+}
+func UserNick(m *ice.Message, username ice.Any) (nick string) {
+	return UserInfo(m, username, USERNICK, ice.MSG_USERNICK)
+}
+func UserZone(m *ice.Message, username ice.Any) (zone string) {
+	return UserInfo(m, username, USERZONE, ice.MSG_USERZONE)
+}
+func UserInfo(m *ice.Message, name ice.Any, key, meta string) (value string) {
+	if m.Cmd(USER, name).Tables(func(val ice.Maps) {
+		value = val[key]
+	}).Length() == 0 && kit.Format(name) == m.Option(ice.MSG_USERNAME) {
+		return m.Option(meta)
+	}
+	return
+}
+func UserLogin(m *ice.Message, username, password string) bool {
+	return m.Cmdy(USER, LOGIN, username, password).Option(ice.MSG_USERNAME) != ""
 }

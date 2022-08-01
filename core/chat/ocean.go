@@ -10,7 +10,7 @@ import (
 const OCEAN = "ocean"
 
 func init() {
-	Index.Merge(&ice.Context{Commands: ice.Commands{
+	Index.MergeCommands(ice.Commands{
 		OCEAN: {Name: "ocean username auto insert invite", Help: "用户", Actions: ice.Actions{
 			mdb.INPUTS: {Name: "inputs", Help: "补全", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmdy(aaa.USER, ice.OptionFields(aaa.USERNAME, aaa.USERNICK, aaa.USERZONE))
@@ -31,5 +31,5 @@ func init() {
 			})
 			m.PushAction(mdb.DELETE)
 		}},
-	}})
+	})
 }

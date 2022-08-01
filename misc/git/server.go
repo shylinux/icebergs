@@ -113,7 +113,7 @@ func _server_repos(m *ice.Message, arg ...string) error {
 const SERVER = "server"
 
 func init() {
-	Index.Merge(&ice.Context{Commands: ice.Commands{
+	Index.MergeCommands(ice.Commands{
 		web.WEB_LOGIN: {Hand: func(m *ice.Message, arg ...string) {
 			m.Render(ice.RENDER_VOID)
 		}},
@@ -204,5 +204,5 @@ func init() {
 			}
 			m.Cmdy("_sum", path.Join(m.Option(nfs.DIR_ROOT), arg[0]))
 		}},
-	}})
+	})
 }

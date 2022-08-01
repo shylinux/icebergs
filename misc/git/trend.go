@@ -11,7 +11,7 @@ import (
 const TREND = "trend"
 
 func init() {
-	Index.Merge(&ice.Context{Commands: ice.Commands{
+	Index.MergeCommands(ice.Commands{
 		TREND: {Name: "trend repos@key begin_time@date auto", Help: "趋势图", Meta: kit.Dict(
 			ice.DisplayStory("trend.js"),
 		), Actions: ice.MergeAction(ice.Actions{
@@ -26,5 +26,5 @@ func init() {
 			arg[0] = kit.Replace(arg[0], "src", "contexts")
 			m.Cmdy(TOTAL, kit.Slice(arg, 0, 2))
 		}},
-	}})
+	})
 }

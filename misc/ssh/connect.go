@@ -155,9 +155,7 @@ const SSH = "ssh"
 const CONNECT = "connect"
 
 func init() {
-	psh.Index.Merge(&ice.Context{Configs: ice.Configs{
-		CONNECT: {Name: CONNECT, Help: "连接", Value: kit.Data(mdb.SHORT, "name", mdb.FIELD, "time,name,status,username,host,port")},
-	}, Commands: ice.Commands{
+	psh.Index.MergeCommands(ice.Commands{
 		CONNECT: {Name: "connect name auto", Help: "连接", Actions: ice.MergeAction(ice.Actions{
 			tcp.OPEN: {Name: "open authfile username=shy password verfiy host=shylinux.com port=22 private=.ssh/id_rsa", Help: "终端", Hand: func(m *ice.Message, arg ...string) {
 				aaa.UserRoot(m)
@@ -203,7 +201,7 @@ func init() {
 					}
 				})
 			}},
-		}, mdb.HashActionStatus()), Hand: func(m *ice.Message, arg ...string) {
+		}, mdb.HashActionStatus(mdb.SHORT, "name", mdb.FIELD, "time,name,status,username,host,port")), Hand: func(m *ice.Message, arg ...string) {
 			mdb.HashSelect(m, arg...).Tables(func(value ice.Maps) {
 				m.PushButton(kit.Select("", "command,session", value[mdb.STATUS] == tcp.OPEN), mdb.REMOVE)
 			})
@@ -211,5 +209,5 @@ func init() {
 				m.Action(tcp.DIAL)
 			}
 		}},
-	}})
+	})
 }

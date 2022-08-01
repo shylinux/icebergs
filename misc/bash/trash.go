@@ -9,7 +9,6 @@ import (
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/nfs"
 	"shylinux.com/x/icebergs/base/tcp"
-	kit "shylinux.com/x/toolkits"
 )
 
 const (
@@ -19,11 +18,7 @@ const (
 const TRASH = "trash"
 
 func init() {
-	Index.Merge(&ice.Context{Configs: ice.Configs{
-		TRASH: {Name: TRASH, Help: "回收站", Value: kit.Data(
-			mdb.FIELD, "time,hash,username,hostname,size,from,to",
-		)},
-	}, Commands: ice.Commands{
+	Index.MergeCommands(ice.Commands{
 		"/trash": {Name: "/trash", Help: "回收", Actions: ice.Actions{
 			mdb.INSERT: {Name: "insert from to", Help: "添加", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmdy(TRASH, mdb.INSERT, arg)
@@ -52,9 +47,9 @@ func init() {
 				m.ProcessCommand(nfs.CAT, []string{}, arg...)
 				m.ProcessCommandOpt(arg, TO)
 			}},
-		}, mdb.HashAction()), Hand: func(m *ice.Message, arg ...string) {
+		}, mdb.HashAction(mdb.FIELD, "time,hash,username,hostname,size,from,to")), Hand: func(m *ice.Message, arg ...string) {
 			mdb.HashSelect(m, arg...)
 			m.PushAction(nfs.CAT, mdb.REVERT, mdb.REMOVE)
 		}},
-	}})
+	})
 }

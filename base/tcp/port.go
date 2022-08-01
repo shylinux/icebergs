@@ -6,7 +6,6 @@ import (
 
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/aaa"
-	"shylinux.com/x/icebergs/base/cli"
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/nfs"
 	kit "shylinux.com/x/toolkits"
@@ -25,12 +24,12 @@ func _port_right(m *ice.Message, arg ...string) string {
 			c.Close()
 			continue
 		}
-		p := path.Join(m.Conf(cli.DAEMON, kit.Keym(nfs.PATH)), kit.Format(i))
-		if kit.FileExists(p) {
+		p := path.Join(ice.USR_LOCAL_DAEMON, kit.Format(i))
+		if nfs.ExistsFile(m, p) {
 			continue
 		}
-		nfs.MkdirAll(m, p)
 
+		nfs.MkdirAll(m, p)
 		m.Log_SELECT(PORT, i)
 		return m.Config(CURRENT, i)
 	}
@@ -46,10 +45,8 @@ const (
 const PORT = "port"
 
 func init() {
-	Index.Merge(&ice.Context{Configs: ice.Configs{
-		PORT: {Name: PORT, Help: "端口", Value: kit.Data(BEGIN, 10000, CURRENT, 10000, END, 20000)},
-	}, Commands: ice.Commands{
-		PORT: {Name: "port port path auto", Help: "端口", Actions: ice.Actions{
+	Index.MergeCommands(ice.Commands{
+		PORT: {Name: "port port path auto", Help: "端口", Actions: ice.MergeAction(ice.Actions{
 			aaa.RIGHT: {Name: "right", Help: "分配", Hand: func(m *ice.Message, arg ...string) {
 				m.Echo(_port_right(m, arg...))
 			}},
@@ -58,33 +55,33 @@ func init() {
 					m.Cmd(nfs.TRASH, path.Join(ice.USR_LOCAL_DAEMON, m.Option(PORT)))
 				}
 			}},
-		}, Hand: func(m *ice.Message, arg ...string) {
-			if len(arg) == 0 {
-				current := kit.Int(m.Config(BEGIN))
-				m.Option(nfs.DIR_ROOT, ice.USR_LOCAL_DAEMON)
-				m.Cmd(nfs.DIR, nfs.PWD, nfs.DIR_CLI_FIELDS).Tables(func(value ice.Maps) {
-					bin := m.Cmd(nfs.DIR, path.Join(value[nfs.PATH], ice.BIN), nfs.DIR_CLI_FIELDS).Append(nfs.PATH)
-					if bin == "" {
-						bin = m.Cmd(nfs.DIR, path.Join(value[nfs.PATH], "sbin"), nfs.DIR_CLI_FIELDS).Append(nfs.PATH)
-					}
-					port := kit.Int(path.Base(value[nfs.PATH]))
-					if port > current {
-						current = port
-					}
-
-					m.Push(mdb.TIME, value[mdb.TIME])
-					m.Push(PORT, port)
-					m.Push(nfs.SIZE, value[nfs.SIZE])
-					m.Push(ice.BIN, bin)
-				})
-				m.SortInt(PORT)
-				m.PushAction(nfs.TRASH)
-				m.Config(CURRENT, current)
-				m.StatusTimeCount(m.ConfigSimple(BEGIN, CURRENT, END))
+		}, mdb.HashAction(BEGIN, 10000, CURRENT, 10000, END, 20000)), Hand: func(m *ice.Message, arg ...string) {
+			if len(arg) > 0 {
+				m.Cmdy(nfs.DIR, arg[1:], kit.Dict(nfs.DIR_ROOT, path.Join(ice.USR_LOCAL_DAEMON, arg[0])))
 				return
 			}
-			m.Option(nfs.DIR_ROOT, path.Join(m.Conf(cli.DAEMON, kit.Keym(nfs.PATH)), arg[0]))
-			m.Cmdy(nfs.DIR, arg[1:])
+
+			current := kit.Int(m.Config(BEGIN))
+			m.Option(nfs.DIR_ROOT, ice.USR_LOCAL_DAEMON)
+			m.Cmd(nfs.DIR, nfs.PWD, nfs.DIR_CLI_FIELDS).Tables(func(value ice.Maps) {
+				bin := m.Cmd(nfs.DIR, path.Join(value[nfs.PATH], ice.BIN), nfs.DIR_CLI_FIELDS).Append(nfs.PATH)
+				if bin == "" {
+					bin = m.Cmd(nfs.DIR, path.Join(value[nfs.PATH], "sbin"), nfs.DIR_CLI_FIELDS).Append(nfs.PATH)
+				}
+				port := kit.Int(path.Base(value[nfs.PATH]))
+				if port > current {
+					current = port
+				}
+
+				m.Push(mdb.TIME, value[mdb.TIME])
+				m.Push(PORT, port)
+				m.Push(nfs.SIZE, value[nfs.SIZE])
+				m.Push(ice.BIN, bin)
+			})
+			m.SortInt(PORT)
+			m.PushAction(nfs.TRASH)
+			m.Config(CURRENT, current)
+			m.StatusTimeCount(m.ConfigSimple(BEGIN, CURRENT, END))
 		}},
-	}})
+	})
 }

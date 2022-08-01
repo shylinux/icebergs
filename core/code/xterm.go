@@ -35,6 +35,7 @@ func _xterm_get(m *ice.Message, h string, must bool) (f *os.File) {
 		m.Assert(err)
 
 		m.Go(func() {
+			mdb.HashSelectUpdate(m, h, func(value ice.Map) { value["_cmd"] = cmd })
 			buf := make([]byte, ice.MOD_BUFS)
 			for {
 				if n, e := tty.Read(buf); !m.Warn(e) {
@@ -56,6 +57,13 @@ const XTERM = "xterm"
 func init() {
 	Index.MergeCommands(ice.Commands{
 		XTERM: {Name: "xterm hash refresh", Help: "终端", Actions: ice.MergeAction(ice.Actions{
+			ice.CTX_EXIT: {Hand: func(m *ice.Message, arg ...string) {
+				mdb.HashSelectValue(m, func(value ice.Map) {
+					if cmd, ok := value["_cmd"].(*exec.Cmd); ok {
+						cmd.Process.Kill()
+					}
+				})
+			}},
 			mdb.INPUTS: {Name: "inputs", Help: "补全", Hand: func(m *ice.Message, arg ...string) {
 				switch mdb.HashInputs(m, arg); arg[0] {
 				case mdb.TYPE:
@@ -95,14 +103,14 @@ func init() {
 				pty.Setsize(_xterm_get(m, m.Option(mdb.HASH), true), &pty.Winsize{Rows: uint16(kit.Int(m.Option("rows"))), Cols: uint16(kit.Int(m.Option("cols")))})
 			}},
 			"rename": {Name: "rename", Help: "重命名", Hand: func(m *ice.Message, arg ...string) {
-				mdb.HashModify(m, m.OptionSimple(mdb.HASH), arg)
+				mdb.HashModify(m, arg)
 			}},
 			"select": {Name: "select", Help: "连接", Hand: func(m *ice.Message, arg ...string) {
-				mdb.HashModify(m, m.OptionSimple(mdb.HASH), mdb.TEXT, m.Option(ice.MSG_DAEMON))
+				mdb.HashModify(m, mdb.TEXT, m.Option(ice.MSG_DAEMON))
 				m.Cmd("", "input", arg)
 			}},
 			"input": {Name: "input", Help: "输入", Hand: func(m *ice.Message, arg ...string) {
-				mdb.HashModify(m, m.OptionSimple(mdb.HASH), mdb.TIME, m.Time())
+				mdb.HashModify(m, mdb.TIME, m.Time())
 				if b, e := base64.StdEncoding.DecodeString(strings.Join(arg, "")); m.Assert(e) {
 					_xterm_get(m, m.Option(mdb.HASH), true).Write(b)
 				}

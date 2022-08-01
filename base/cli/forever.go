@@ -54,7 +54,7 @@ func init() {
 
 			for {
 				logs.Println("run %s", kit.Join(arg, ice.SP))
-				if m.Sleep("1s"); IsSuccess(m.Cmd(SYSTEM, arg)) {
+				if m.Sleep("100ms"); IsSuccess(m.Cmd(SYSTEM, arg)) {
 					logs.Println("exit")
 					break
 				}

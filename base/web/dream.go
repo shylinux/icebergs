@@ -48,8 +48,9 @@ func _dream_show(m *ice.Message, name string) {
 	if !strings.Contains(name, "-") || !strings.HasPrefix(name, "20") {
 		name = m.Time("20060102-") + kit.ReplaceAll(name, "-", "_")
 	}
-	// defer m.ProcessOpen(m.MergePod(m.Option(mdb.NAME, name)))
+	defer m.ProcessOpen(m.MergePod(m.Option(mdb.NAME, name)))
 	defer m.Echo(m.MergePod(m.Option(mdb.NAME, name)))
+	defer m.PushRefresh()
 
 	p := path.Join(ice.USR_LOCAL_WORK, name)
 	if pid := m.Cmdx(nfs.CAT, path.Join(p, ice.Info.PidPath)); pid != "" && kit.FileExists("/proc/"+pid) {
@@ -146,7 +147,7 @@ func init() {
 					m.Cmd(mdb.DELETE, m.Prefix(SPACE), "", mdb.HASH, m.OptionSimple(mdb.NAME))
 				} else {
 					m.Cmd(mdb.DELETE, m.Prefix(SPACE), "", mdb.HASH, m.OptionSimple(mdb.NAME))
-					m.Sleep("1s", DREAM, cli.START, m.OptionSimple(mdb.NAME))
+					m.Sleep("3s", DREAM, cli.START, m.OptionSimple(mdb.NAME))
 				}
 			}},
 			nfs.TRASH: {Name: "trash", Help: "删除", Hand: func(m *ice.Message, arg ...string) {

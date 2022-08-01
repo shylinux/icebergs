@@ -40,7 +40,7 @@ func _hash_inputs(m *ice.Message, prefix, chain string, field, value string) {
 func _hash_insert(m *ice.Message, prefix, chain string, arg ...string) string {
 	defer m.Lock(prefix, chain)()
 
-	if value := m.Confm(prefix, kit.Keys(HASH, arg[1])); value != nil {
+	if value := m.Confm(prefix, kit.Keys(HASH, arg[1])); value != nil && arg[1] != "" {
 		value = kit.GetMeta(value)
 		for i := 2; i < len(arg)-1; i += 2 {
 			kit.Value(value, arg[i], arg[i+1])
@@ -231,19 +231,19 @@ func HashImport(m *ice.Message, arg ...Any) *ice.Message {
 	return m.Cmdy(IMPORT, m.PrefixKey(), "", HASH, arg)
 }
 
-func HashTarget(m *ice.Message, h string, add func() Any) Any {
-	defer m.Lock()()
-
-	p := m.Confv(m.PrefixKey(), kit.Keys(HASH, h, TARGET))
-	if pp, ok := p.(Map); ok && len(pp) == 0 {
-		p = nil
-	}
-
-	if p == nil && add != nil {
-		p = add()
-		m.Confv(m.PrefixKey(), kit.Keys(HASH, h, TARGET), p)
-	}
-	return p
+func HashTarget(m *ice.Message, h string, add func() Any) (p Any) {
+	m.Assert(h != "")
+	HashSelectUpdate(m, h, func(value ice.Map) {
+		p = value[TARGET]
+		if pp, ok := p.(Map); ok && len(pp) == 0 {
+			p = nil
+		}
+		if p == nil && add != nil {
+			p = add()
+			value[TARGET] = p
+		}
+	})
+	return
 }
 func HashPrunesValue(m *ice.Message, field, value string) {
 	m.OptionFields(m.Config(FIELD))

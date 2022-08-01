@@ -100,6 +100,7 @@ func Run(arg ...string) string {
 		if Index.Start(Pulse, arg...) {
 			conf.Wait()
 			os.Exit(kit.Int(Pulse.Option(EXIT)))
+			println()
 		}
 	default: // 执行命令
 		if logs.Disable(true); len(arg) == 0 {

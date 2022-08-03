@@ -2,9 +2,7 @@ package log
 
 import (
 	"bufio"
-	"os"
 	"path"
-	"strings"
 
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/mdb"
@@ -26,13 +24,6 @@ func (f *Frame) Spawn(m *ice.Message, c *ice.Context, arg ...string) ice.Server 
 	return &Frame{}
 }
 func (f *Frame) Begin(m *ice.Message, arg ...string) ice.Server {
-	switch strings.Split(os.Getenv("TERM"), "-")[0] {
-	case "xterm", "screen":
-		ice.Info.Colors = true
-	default:
-		ice.Info.Colors = false
-	}
-
 	f.p = make(chan *Log, ice.MOD_BUFS)
 	ice.Info.Log = func(msg *ice.Message, p, l, s string) {
 		f.p <- &Log{m: msg, p: p, l: l, s: s}
@@ -106,10 +97,10 @@ var Index = &ice.Context{Name: "log", Help: "日志模块", Configs: ice.Configs
 	FILE: {Name: FILE, Help: "日志文件", Value: kit.Dict(
 		BENCH, kit.Dict(nfs.PATH, path.Join(ice.VAR_LOG, "bench.log"), mdb.LIST, []string{}),
 		WATCH, kit.Dict(nfs.PATH, path.Join(ice.VAR_LOG, "watch.log"), mdb.LIST, []string{
-			ice.LOG_CREATE, ice.LOG_REMOVE,
-			ice.LOG_INSERT, ice.LOG_DELETE,
-			ice.LOG_MODIFY, ice.LOG_SELECT,
-			ice.LOG_EXPORT, ice.LOG_IMPORT,
+			mdb.CREATE, mdb.REMOVE,
+			mdb.INSERT, mdb.DELETE,
+			mdb.MODIFY, mdb.SELECT,
+			mdb.EXPORT, mdb.IMPORT,
 		}),
 		ERROR, kit.Dict(nfs.PATH, path.Join(ice.VAR_LOG, "error.log"), mdb.LIST, []string{
 			ice.LOG_WARN, ice.LOG_ERROR,
@@ -120,21 +111,18 @@ var Index = &ice.Context{Name: "log", Help: "日志模块", Configs: ice.Configs
 	)},
 	VIEW: {Name: VIEW, Help: "日志格式", Value: kit.Dict(
 		GREEN, kit.Dict(PREFIX, "\033[32m", SUFFIX, "\033[0m", mdb.LIST, []string{
-			ice.LOG_START, ice.LOG_SERVE, ice.LOG_CMDS,
+			ice.CTX_START, ice.LOG_CMDS,
 		}),
 		YELLOW, kit.Dict(PREFIX, "\033[33m", SUFFIX, "\033[0m", mdb.LIST, []string{
 			ice.LOG_AUTH, ice.LOG_COST,
 		}),
 		RED, kit.Dict(PREFIX, "\033[31m", SUFFIX, "\033[0m", mdb.LIST, []string{
-			ice.LOG_CLOSE, ice.LOG_WARN,
+			ice.CTX_CLOSE, ice.LOG_WARN,
 		}),
 	)},
 	SHOW: {Name: SHOW, Help: "日志分流", Value: kit.Dict()},
 }, Commands: ice.Commands{
 	ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
-		if !strings.Contains(ice.Getenv("ctx_daemon"), "log") {
-			return // 没有日志
-		}
 		m.Confm(VIEW, nil, func(key string, value ice.Map) {
 			kit.Fetch(value[mdb.LIST], func(index int, k string) {
 				m.Conf(SHOW, kit.Keys(k, VIEW), key)
@@ -148,7 +136,7 @@ var Index = &ice.Context{Name: "log", Help: "日志模块", Configs: ice.Configs
 			if f, p, e := logs.CreateFile(kit.Format(value[nfs.PATH])); m.Assert(e) {
 				m.Cap(ice.CTX_STREAM, path.Base(p))
 				value[FILE] = bufio.NewWriter(f)
-				m.Log_CREATE(nfs.FILE, p)
+				m.Logs(mdb.CREATE, nfs.FILE, p)
 			}
 		})
 	}},

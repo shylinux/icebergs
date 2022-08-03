@@ -8,7 +8,6 @@ import (
 
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/mdb"
-	"shylinux.com/x/icebergs/base/nfs"
 	kit "shylinux.com/x/toolkits"
 	"shylinux.com/x/toolkits/logs"
 )
@@ -26,7 +25,7 @@ func _signal_action(m *ice.Message, arg ...string) {
 }
 func _signal_process(m *ice.Message, p string, s os.Signal) {
 	if p == "" {
-		p = m.Cmdx(nfs.CAT, ice.Info.PidPath)
+		p = logs.ReadFile(ice.Info.PidPath)
 	}
 	if p == "" {
 		p = kit.Format(os.Getpid())
@@ -40,13 +39,13 @@ const (
 	PID = "pid"
 )
 const (
-	LISTEN = ice.LISTEN
-	HAPPEN = ice.HAPPEN
+	LISTEN = "listen"
+	HAPPEN = "happen"
 
-	START   = ice.START
-	RESTART = ice.RESTART
-	STOP    = ice.STOP
-	ERROR   = ice.ERROR
+	START   = "start"
+	RESTART = "restart"
+	STOP    = "stop"
+	ERROR   = "error"
 	KILL    = "kill"
 )
 const SIGNAL = "signal"
@@ -60,7 +59,7 @@ func init() {
 				if f, p, e := logs.CreateFile(ice.Info.PidPath); !m.Warn(e) {
 					defer f.Close()
 					fmt.Fprint(f, os.Getpid())
-					m.Log_CREATE(nfs.FILE, p)
+					m.Logs(mdb.CREATE, PID, p)
 				}
 			}},
 			LISTEN: {Name: "listen signal name cmd", Help: "监听", Hand: func(m *ice.Message, arg ...string) {

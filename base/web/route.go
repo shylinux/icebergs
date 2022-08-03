@@ -23,7 +23,6 @@ func _route_travel(m *ice.Message, route string) {
 				m.Push(mdb.TYPE, value[mdb.TYPE])
 				m.Push(ROUTE, kit.Keys(val[mdb.NAME], value[ROUTE]))
 			})
-
 			fallthrough
 		case WORKER: // 本机查询
 			m.Push(mdb.TYPE, val[mdb.TYPE])
@@ -33,8 +32,7 @@ func _route_travel(m *ice.Message, route string) {
 }
 func _route_list(m *ice.Message) *ice.Message {
 	m.Tables(func(value ice.Maps) {
-		m.PushAnchor(value[ROUTE], m.MergePod(value[ROUTE]))
-		switch value[mdb.TYPE] {
+		switch m.PushAnchor(value[ROUTE], MergePod(m, value[ROUTE])); value[mdb.TYPE] {
 		case SERVER:
 			m.PushButton(tcp.START, aaa.INVITE)
 		case WORKER:
@@ -45,7 +43,7 @@ func _route_list(m *ice.Message) *ice.Message {
 	})
 
 	// 网卡信息
-	u := kit.ParseURL(m.Option(ice.MSG_USERWEB))
+	u := OptionUserWeb(m)
 	m.Cmd(tcp.HOST).Tables(func(value ice.Maps) {
 		m.Push(mdb.TYPE, MYSELF)
 		m.Push(ROUTE, ice.Info.NodeName)
@@ -80,8 +78,8 @@ func init() {
 			}},
 			SPIDE: {Name: "spide", Help: "架构图", Hand: func(m *ice.Message, arg ...string) {
 				if m.Option(ROUTE) == "" { // 路由列表 route
+					ctx.DisplayStorySpide(m, lex.PREFIX, SPIDE, lex.SPLIT, ice.PT)
 					m.Cmdy(ROUTE).Cut(ROUTE)
-					m.DisplayStorySpide("prefix", "spide", lex.SPLIT, ice.PT)
 
 				} else if m.Option(ctx.CONTEXT) == "" { // 模块列表 context
 					m.Cmdy(SPACE, m.Option(ROUTE), ctx.CONTEXT, ice.ICE, ctx.CONTEXT).Cut(mdb.NAME).RenameAppend(mdb.NAME, ctx.CONTEXT)

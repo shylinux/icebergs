@@ -1,8 +1,6 @@
 package gdb
 
 import (
-	"path"
-
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/mdb"
 	kit "shylinux.com/x/toolkits"
@@ -16,7 +14,7 @@ func init() {
 		ROUTINE: {Name: "routine hash auto prunes", Help: "协程池", Actions: ice.MergeAction(ice.Actions{
 			mdb.CREATE: {Name: "create name", Help: "创建", Hand: func(m *ice.Message, arg ...string) {
 				m.Go(func() {
-					cb := m.OptionCB(ROUTINE)
+					cb := m.OptionCB("")
 					h := mdb.HashCreate(m, m.OptionSimple(mdb.NAME), mdb.STATUS, START, ice.CMD, logs.FileLine(cb, 100)).Result()
 					defer func() {
 						if e := recover(); e == nil {
@@ -37,10 +35,6 @@ func init() {
 					}
 				})
 			}},
-			"inner": {Name: "inner", Help: "源码", Hand: func(m *ice.Message, arg ...string) {
-				ls := kit.Split(m.Option(ice.CMD), ":")
-				m.ProcessCommand("inner", []string{path.Dir(ls[0]), path.Base(ls[0]), ls[1]}, arg...)
-			}},
-		}, mdb.HashActionStatus(mdb.FIELD, "time,hash,name,status,cmd", mdb.ACTION, "inner"))},
+		}, mdb.HashStatusAction(mdb.FIELD, "time,hash,name,status,cmd"))},
 	})
 }

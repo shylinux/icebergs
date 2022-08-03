@@ -39,12 +39,12 @@ func _install_download(m *ice.Message) {
 
 	// 创建文件
 	m.Cmd(nfs.SAVE, file, "")
-	m.GoToast(web.DOWNLOAD, func(toast func(string, int, int)) {
+	web.GoToast(m, web.DOWNLOAD, func(toast func(string, int, int)) {
 		m.Cmd(mdb.INSERT, INSTALL, "", mdb.HASH, mdb.NAME, name, nfs.PATH, file, mdb.LINK, link)
-		defer m.ToastSuccess()
+		defer web.ToastSuccess(m)
 
 		// 下载进度
-		m.Richs(INSTALL, "", name, func(key string, value ice.Map) {
+		mdb.Richs(m, INSTALL, "", name, func(key string, value ice.Map) {
 			value = kit.GetMeta(value)
 			m.OptionCB(web.SPIDE, func(count int, total int, step int) {
 				value[mdb.COUNT], value[mdb.TOTAL], value[mdb.VALUE] = count, total, step
@@ -62,7 +62,7 @@ func _install_build(m *ice.Message, arg ...string) string {
 	pp := kit.Path(path.Join(p, "_install"))
 
 	// 推流
-	cli.PushStream(m)
+	web.PushStream(m)
 	defer m.ProcessHold()
 
 	// 配置
@@ -168,10 +168,10 @@ func init() {
 			}},
 			cli.BUILD: {Name: "build link", Help: "构建", Hand: func(m *ice.Message, arg ...string) {
 				if err := _install_build(m, arg...); err != "" {
-					m.ToastFailure(cli.BUILD)
+					web.ToastFailure(m, cli.BUILD)
 					m.Echo(err)
 				} else {
-					m.ToastSuccess(cli.BUILD)
+					web.ToastSuccess(m, cli.BUILD)
 				}
 			}},
 			cli.ORDER: {Name: "order link path", Help: "加载", Hand: func(m *ice.Message, arg ...string) {
@@ -224,7 +224,7 @@ func InstallSoftware(m *ice.Message, bin string, list ice.Any) (ok bool) {
 	}
 	kit.Fetch(list, func(index int, value ice.Map) {
 		if strings.Contains(m.Cmdx(cli.RUNTIME, kit.Keys(tcp.HOST, cli.OSID)), kit.Format(value[cli.OSID])) {
-			cli.PushStream(m)
+			web.PushStream(m)
 			m.Cmd(cli.SYSTEM, value[ice.CMD])
 			ok = true
 		}

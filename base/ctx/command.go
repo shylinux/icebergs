@@ -15,11 +15,11 @@ func _command_list(m *ice.Message, name string) {
 	if nfs.ExistsFile(m, path.Join(ice.SRC, name)) {
 		switch kit.Ext(name) {
 		case nfs.JS:
-			m.Push(DISPLAY, ice.FileURI(name))
-			name = kit.Select(CAN_PLUGIN, ice.GetFileCmd(name))
+			m.Push(DISPLAY, FileURI(name))
+			name = kit.Select(CAN_PLUGIN, GetFileCmd(name))
 
 		case nfs.GO:
-			name = ice.GetFileCmd(name)
+			name = GetFileCmd(name)
 
 		default:
 			if msg := m.Cmd(mdb.RENDER, kit.Ext(name)); msg.Length() > 0 {
@@ -110,7 +110,7 @@ func init() {
 func CmdAction(args ...ice.Any) ice.Actions {
 	return ice.Actions{ice.CTX_INIT: mdb.AutoConfig(args...),
 		COMMAND: {Name: "command", Help: "命令", Hand: func(m *ice.Message, arg ...string) {
-			if !m.PodCmd(COMMAND, arg) {
+			if !PodCmd(m, COMMAND, arg) {
 				m.Cmdy(COMMAND, arg)
 			}
 		}},
@@ -119,9 +119,71 @@ func CmdAction(args ...ice.Any) ice.Actions {
 				m.Cmd(CONFIG, "reset", arg[0])
 				return
 			}
-			if m.Right(arg) && !m.PodCmd(arg) {
+			if aaa.Right(m, arg) && !PodCmd(m, arg) {
 				m.Cmdy(arg)
 			}
 		}},
 	}
+}
+func PodCmd(m *ice.Message, arg ...ice.Any) bool {
+	if pod := m.Option(ice.POD); pod != "" {
+		if m.Option(ice.POD, ""); m.Option(ice.MSG_UPLOAD) != "" {
+			msg := m.Cmd("cache", "upload")
+			m.Option(ice.MSG_UPLOAD, msg.Append(mdb.HASH), msg.Append(mdb.NAME), msg.Append(nfs.SIZE))
+		}
+		m.Cmdy(append(kit.List("space", pod), arg...))
+		return true
+	}
+	return false
+}
+
+func FileURI(dir string) string {
+	if strings.Contains(dir, "go/pkg/mod") {
+		return path.Join("/require", strings.Split(dir, "go/pkg/mod")[1])
+	}
+	if ice.Info.Make.Path != "" && strings.HasPrefix(dir, ice.Info.Make.Path+ice.PS) {
+		dir = strings.TrimPrefix(dir, ice.Info.Make.Path+ice.PS)
+	}
+	if strings.HasPrefix(dir, kit.Path("")+ice.PS) {
+		dir = strings.TrimPrefix(dir, kit.Path("")+ice.PS)
+	}
+	if strings.HasPrefix(dir, ice.USR) {
+		return path.Join("/require", dir)
+	}
+	if strings.HasPrefix(dir, ice.SRC) {
+		return path.Join("/require", dir)
+	}
+	if kit.FileExists(path.Join(ice.SRC, dir)) {
+		return path.Join("/require/src/", dir)
+	}
+	return dir
+}
+func FileCmd(dir string) string {
+	dir = strings.Split(dir, ice.DF)[0]
+	dir = strings.ReplaceAll(dir, ".js", ".go")
+	dir = strings.ReplaceAll(dir, ".sh", ".go")
+	return FileURI(dir)
+}
+func AddFileCmd(dir, key string) {
+	ice.Info.File[FileCmd(dir)] = key
+}
+func GetFileCmd(dir string) string {
+	if strings.HasPrefix(dir, "require/") {
+		dir = "/" + dir
+	}
+	for _, dir := range []string{dir, path.Join("/require/", ice.Info.Make.Module, dir), path.Join("/require/", ice.Info.Make.Module, ice.SRC, dir)} {
+		if cmd, ok := ice.Info.File[FileCmd(dir)]; ok {
+			return cmd
+		}
+		p := path.Dir(dir)
+		if cmd, ok := ice.Info.File[FileCmd(path.Join(p, path.Base(p)+".go"))]; ok {
+			return cmd
+		}
+		for k, v := range ice.Info.File {
+			if strings.HasPrefix(k, p) {
+				return v
+			}
+		}
+	}
+	return ""
 }

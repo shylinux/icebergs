@@ -78,6 +78,14 @@ func _runtime_init(m *ice.Message) {
 		}
 	})
 	m.Conf(RUNTIME, kit.Keys(HOST, OSID), osid)
+
+	switch strings.Split(os.Getenv(TERM), "-")[0] {
+	case "xterm", "screen":
+		ice.Info.Colors = true
+	default:
+		ice.Info.Colors = false
+	}
+
 }
 func _runtime_hostinfo(m *ice.Message) {
 	m.Push("nCPU", strings.Count(m.Cmdx(nfs.CAT, "/proc/cpuinfo"), "processor"))
@@ -96,7 +104,7 @@ func _runtime_diskinfo(m *ice.Message) {
 		}
 	})
 	m.RenameAppend("%iused", "piused", "Use%", "Usep")
-	m.DisplayStory("pie.js?field=Size")
+	ctx.DisplayStory(m, "pie.js?field=Size")
 }
 
 func NodeInfo(m *ice.Message, kind, name string) {
@@ -250,7 +258,8 @@ func init() {
 			if len(arg) > 0 && arg[0] == BOOTINFO {
 				arg = arg[1:]
 			}
-			m.Cmdy(ctx.CONFIG, RUNTIME, arg).DisplayStoryJSON()
+			m.Cmdy(ctx.CONFIG, RUNTIME, arg)
+			ctx.DisplayStoryJSON(m)
 		}},
 	})
 }

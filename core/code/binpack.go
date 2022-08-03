@@ -132,26 +132,7 @@ func init() {
 			mdb.INSERT: {Name: "insert", Help: "添加", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmd(mdb.INSERT, m.PrefixKey(), "", mdb.HASH, nfs.PATH, arg[0])
 			}},
-			mdb.REMOVE: {Name: "remove", Help: "删除", Hand: func(m *ice.Message, arg ...string) {
-				ice.Info.Pack = map[string][]byte{}
-			}},
-			mdb.EXPORT: {Name: "export", Help: "导出", Hand: func(m *ice.Message, arg ...string) {
-				for key, value := range ice.Info.Pack {
-					if strings.HasPrefix(key, ice.PS) {
-						key = ice.USR_VOLCANOS + key
-					}
-					m.Log_EXPORT(nfs.FILE, kit.WriteFile(key, value), nfs.SIZE, len(value))
-				}
-			}},
 		}, mdb.HashAction(mdb.SHORT, nfs.PATH)), Hand: func(m *ice.Message, arg ...string) {
-			if len(arg) == 0 {
-				for k, v := range ice.Info.Pack {
-					m.Push(nfs.PATH, k).Push(nfs.SIZE, len(v))
-				}
-				m.Sort(nfs.PATH)
-				return
-			}
-			m.Echo(string(ice.Info.Pack[arg[0]]))
 		}},
 	})
 }

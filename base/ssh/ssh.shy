@@ -1,8 +1,8 @@
 chapter "ssh"
 
-field "脚本" ssh.source
-field "模块" ssh.target
-field "提示" ssh.prompt
-field "输出" ssh.printf
-field "屏显" ssh.screen
+field "脚本" source
+field "模块" target
+field "提示" prompt
+field "输出" printf
+field "屏显" screen
 

@@ -1,11 +1,13 @@
 package code
 
 import (
+	"os"
 	"path"
 	"strings"
 
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/cli"
+	"shylinux.com/x/icebergs/base/ctx"
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/nfs"
 	"shylinux.com/x/icebergs/base/web"
@@ -13,18 +15,23 @@ import (
 )
 
 func _js_main_script(m *ice.Message, arg ...string) (res []string) {
-	if res = append(res, kit.Format(`global.plugin = "%s"`, kit.Path(arg[2], arg[1]))); len(ice.Info.Pack) == 0 {
+	res = append(res, kit.Format(`global.plugin = "%s"`, kit.Path(arg[2], arg[1])))
+	if _, e := nfs.DiskFile.StatFile("usr/volcanos/proto.js"); e == nil {
 		res = append(res, kit.Format(`require("%s")`, kit.Path("usr/volcanos/proto.js")))
 		res = append(res, kit.Format(`require("%s")`, kit.Path("usr/volcanos/publish/client/nodejs/proto.js")))
 	} else {
 		for _, file := range []string{"proto.js", "frame.js", "lib/base.js", "lib/core.js", "lib/misc.js", "lib/page.js", "publish/client/nodejs/proto.js"} {
 			res = append(res, `_can_name = "`+kit.Path(ice.USR_VOLCANOS, file)+`"`)
-			res = append(res, string(ice.Info.Pack[ice.PS+file]))
+			if b, e := nfs.ReadFile(m, path.Join(ice.USR_VOLCANOS, file)); e == nil {
+				res = append(res, string(b))
+			}
 		}
 	}
-	if b, ok := ice.Info.Pack[path.Join(arg[2], arg[1])]; ok && !kit.FileExists(kit.Path(arg[2], arg[1])) {
+	if _, e := nfs.DiskFile.StatFile(path.Join(arg[2], arg[1])); os.IsNotExist(e) {
 		res = append(res, `_can_name = "`+kit.Path(arg[2], arg[1])+`"`)
-		res = append(res, string(b))
+		if b, e := nfs.ReadFile(m, path.Join(arg[2], arg[1])); e == nil {
+			res = append(res, string(b))
+		}
 	}
 	return
 }
@@ -70,7 +77,7 @@ func init() {
 				LoadPlug(m, JS)
 			}},
 			mdb.RENDER: {Hand: func(m *ice.Message, arg ...string) {
-				key := ice.GetFileCmd(kit.Replace(path.Join(arg[2], arg[1]), ".js", ".go"))
+				key := ctx.GetFileCmd(kit.Replace(path.Join(arg[2], arg[1]), ".js", ".go"))
 				if key == "" {
 					for p, k := range ice.Info.File {
 						if strings.HasPrefix(p, path.Dir(path.Join(arg[2], arg[1]))) {
@@ -79,7 +86,7 @@ func init() {
 					}
 				}
 				m.Display(path.Join("/require", path.Join(arg[2], arg[1])))
-				m.ProcessCommand(kit.Select("can.code.inner._plugin", key), kit.Simple())
+				ctx.ProcessCommand(m, kit.Select("can.code.inner._plugin", key), kit.Simple())
 			}},
 			mdb.ENGINE: {Hand: func(m *ice.Message, arg ...string) {
 				_js_exec(m, arg...)

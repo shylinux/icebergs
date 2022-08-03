@@ -15,14 +15,14 @@ import (
 func _cmd_file(m *ice.Message, arg ...string) bool {
 	switch p := path.Join(arg...); kit.Ext(p) {
 	case nfs.JS:
-		m.Display(ice.FileURI(p))
-		m.RenderCmd(kit.Select(ctx.CAN_PLUGIN, ice.GetFileCmd(p)))
+		m.Display(ctx.FileURI(p))
+		web.RenderCmd(m, kit.Select(ctx.CAN_PLUGIN, ctx.GetFileCmd(p)))
 
 	case nfs.GO:
-		m.RenderCmd(ice.GetFileCmd(p))
+		web.RenderCmd(m, ctx.GetFileCmd(p))
 
 	case nfs.SHY:
-		m.RenderCmd("web.wiki.word", p)
+		web.RenderCmd(m, "web.wiki.word", p)
 
 	case nfs.IML:
 		if m.Option(ice.MSG_USERPOD) == "" {
@@ -34,7 +34,7 @@ func _cmd_file(m *ice.Message, arg ...string) bool {
 		}
 
 	case nfs.ZML:
-		m.RenderCmd("can.parse", m.Cmdx(nfs.CAT, p))
+		web.RenderCmd(m, "can.parse", m.Cmdx(nfs.CAT, p))
 
 	default:
 		if p = strings.TrimPrefix(p, ice.SRC+ice.PS); kit.FileExists(path.Join(ice.SRC, p)) {
@@ -54,7 +54,7 @@ func init() {
 	Index.MergeCommands(ice.Commands{
 		CMD: {Name: "cmd path auto upload up home", Help: "命令", Actions: ice.MergeAction(ice.Actions{
 			web.UPLOAD: {Name: "upload", Help: "上传", Hand: func(m *ice.Message, arg ...string) {
-				m.Upload(path.Join(m.Config(nfs.PATH), strings.TrimPrefix(path.Dir(m.R.URL.Path), "/cmd")))
+				m.Cmdy(web.CACHE, web.UPLOAD_WATCH, path.Join(m.Config(nfs.PATH), strings.TrimPrefix(path.Dir(m.R.URL.Path), "/cmd")))
 			}},
 
 			"home": {Name: "home", Help: "根目录", Hand: func(m *ice.Message, arg ...string) {
@@ -74,7 +74,7 @@ func init() {
 				return
 			}
 			if msg := m.Cmd(ctx.COMMAND, arg[0]); msg.Length() > 0 {
-				m.RenderCmd(arg[0])
+				web.RenderCmd(m, arg[0])
 				return
 			}
 
@@ -98,19 +98,19 @@ func init() {
 			}},
 		}, ctx.CmdAction()), Hand: func(m *ice.Message, arg ...string) {
 			if strings.HasSuffix(m.R.URL.Path, ice.PS) {
-				m.RenderCmd(CMD)
+				web.RenderCmd(m, CMD)
 				return // 目录
 			}
 			if _cmd_file(m, arg...) {
 				return
 			}
 
-			if m.PodCmd(ctx.COMMAND, arg[0]) {
+			if ctx.PodCmd(m, ctx.COMMAND, arg[0]) {
 				if !m.IsErr() {
-					m.RenderCmd(arg[0], arg[1:]) // 远程命令
+					web.RenderCmd(m, arg[0], arg[1:]) // 远程命令
 				}
 			} else if m.Cmdy(ctx.COMMAND, arg[0]); m.Length() > 0 {
-				m.RenderCmd(arg[0], arg[1:]) // 本地命令
+				web.RenderCmd(m, arg[0], arg[1:]) // 本地命令
 			} else {
 				m.RenderDownload(path.Join(m.Config(nfs.PATH), path.Join(arg...))) // 文件
 			}

@@ -22,3 +22,12 @@ func init() {
 		}, mdb.ZoneAction(mdb.SHORT, EVENT, mdb.FIELD, "time,id,cmd"))},
 	})
 }
+func Watch(m *ice.Message, key string, arg ...string) *ice.Message {
+	if len(arg) == 0 {
+		arg = append(arg, m.Prefix(ice.AUTO))
+	}
+	return m.Cmd(EVENT, LISTEN, EVENT, key, ice.CMD, kit.Join(arg, ice.SP))
+}
+func Event(m *ice.Message, key string, arg ...string) *ice.Message {
+	return m.Cmd(EVENT, HAPPEN, EVENT, key, arg)
+}

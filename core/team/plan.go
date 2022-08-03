@@ -4,7 +4,9 @@ import (
 	"time"
 
 	ice "shylinux.com/x/icebergs"
+	"shylinux.com/x/icebergs/base/ctx"
 	"shylinux.com/x/icebergs/base/mdb"
+	"shylinux.com/x/icebergs/base/web"
 	kit "shylinux.com/x/toolkits"
 )
 
@@ -40,7 +42,7 @@ func _plan_scope(m *ice.Message, tz int, arg ...string) (time.Time, time.Time) {
 	return begin_time, end_time
 }
 func _plan_list(m *ice.Message, begin_time, end_time time.Time) *ice.Message {
-	m.Option(ice.CACHE_LIMIT, "100")
+	m.Option(mdb.CACHE_LIMIT, "100")
 	m.Fields(0, "begin_time,close_time,zone,id,level,status,score,type,name,text,pod,extra")
 	m.OptionCB(mdb.SELECT, func(key string, fields []string, value, val ice.Map) {
 		begin, _ := time.ParseInLocation(ice.MOD_TIME, kit.Format(value[BEGIN_TIME]), time.Local)
@@ -77,13 +79,13 @@ func init() {
 			}},
 			mdb.SEARCH: {Name: "search", Help: "搜索", Hand: func(m *ice.Message, arg ...string) {
 				if arg[0] == mdb.FOREACH && arg[1] == "" {
-					m.PushSearch(mdb.TYPE, "plan", mdb.NAME, "", mdb.TEXT, m.MergeCmd(""))
+					m.PushSearch(mdb.TYPE, "plan", mdb.NAME, "", mdb.TEXT, web.MergeCmd(m, ""))
 				}
 			}},
 			ice.RUN: {Name: "run", Help: "执行", Hand: func(m *ice.Message, arg ...string) {
 				m.Option(ice.POD, m.Option("task.pod"))
 				m.Option("task.pod", "")
-				if m.PodCmd(m.PrefixKey(), ice.RUN, arg) {
+				if ctx.PodCmd(m, m.PrefixKey(), ice.RUN, arg) {
 					return
 				}
 				msg := m.Cmd(TASK, arg[0], arg[1])
@@ -93,7 +95,7 @@ func init() {
 			arg = kit.Slice(arg, 0, 2)
 			begin_time, end_time := _plan_scope(m, 8, arg...)
 			_plan_list(m, begin_time, end_time)
-			m.PushPodCmd(m.CommandKey(), arg...)
+			web.PushPodCmd(m, m.CommandKey(), arg...)
 		}},
 	})
 }

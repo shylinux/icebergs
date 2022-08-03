@@ -10,6 +10,7 @@ import (
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/aaa"
 	"shylinux.com/x/icebergs/base/cli"
+	"shylinux.com/x/icebergs/base/ctx"
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/nfs"
 	"shylinux.com/x/icebergs/base/ssh"
@@ -35,10 +36,10 @@ func _share_render(m *ice.Message, arg ...string) {
 }
 func _share_link(m *ice.Message, p string, arg ...ice.Any) string {
 	p = kit.Select("", SHARE_LOCAL, !strings.HasPrefix(p, ice.PS)) + p
-	return tcp.ReplaceLocalhost(m, m.MergeURL2(p, arg...))
+	return tcp.ReplaceLocalhost(m, MergeURL2(m, p, arg...))
 }
 func _share_cache(m *ice.Message, arg ...string) {
-	if pod := m.Option(ice.POD); m.PodCmd(CACHE, arg[0]) {
+	if pod := m.Option(ice.POD); ctx.PodCmd(m, CACHE, arg[0]) {
 		if m.Append(nfs.FILE) == "" {
 			m.RenderResult(m.Append(mdb.TEXT))
 		} else {
@@ -59,7 +60,7 @@ func _share_local(m *ice.Message, arg ...string) {
 			return // 没有权限
 		}
 	default:
-		if !m.Right(ls) {
+		if !aaa.Right(m, ls) {
 			m.Render(STATUS, http.StatusUnauthorized, ice.ErrNotRight)
 			return // 没有权限
 		}
@@ -78,9 +79,9 @@ func _share_local(m *ice.Message, arg ...string) {
 
 	// 上传文件
 	if p == "bin/ice.bin" {
-		aaa.UserRoot(m).Cmd(SPACE, m.Option(ice.POD), SPIDE, "submit", m.MergeURL2(SHARE_PROXY, nfs.PATH, ""), m.Option(ice.POD), p, size, cache.Format(ice.MOD_TIME))
+		aaa.UserRoot(m).Cmd(SPACE, m.Option(ice.POD), SPIDE, "submit", MergeURL2(m, SHARE_PROXY, nfs.PATH, ""), m.Option(ice.POD), p, size, cache.Format(ice.MOD_TIME))
 	} else {
-		m.Cmd(SPACE, m.Option(ice.POD), SPIDE, ice.DEV, SPIDE_RAW, m.MergeURL2(SHARE_PROXY, nfs.PATH, ""),
+		m.Cmd(SPACE, m.Option(ice.POD), SPIDE, ice.DEV, SPIDE_RAW, MergeURL2(m, SHARE_PROXY, nfs.PATH, ""),
 			SPIDE_PART, m.OptionSimple(ice.POD), nfs.PATH, p, nfs.SIZE, size, CACHE, cache.Format(ice.MOD_TIME), UPLOAD, "@"+p)
 	}
 	if s, e := file.StatFile(pp); e == nil && !s.IsDir() {
@@ -101,11 +102,11 @@ func _share_proxy(m *ice.Message) {
 	}
 }
 func _share_repos(m *ice.Message, repos string, arg ...string) {
-	if repos == ice.Info.Make.Module && kit.FileExists(path.Join(arg...)) {
+	if repos == ice.Info.Make.Module && nfs.ExistsFile(m, path.Join(arg...)) {
 		m.RenderDownload(path.Join(arg...))
 		return
 	}
-	if !kit.FileExists(path.Join(ice.ISH_PLUGED, repos)) { // 克隆代码
+	if !nfs.ExistsFile(m, path.Join(ice.ISH_PLUGED, repos)) { // 克隆代码
 		m.Cmd("web.code.git.repos", mdb.CREATE, nfs.REPOS, "https://"+repos, nfs.PATH, path.Join(ice.ISH_PLUGED, repos))
 	}
 	m.RenderDownload(path.Join(ice.ISH_PLUGED, repos, path.Join(arg...)))
@@ -132,14 +133,11 @@ const SHARE = "share"
 func init() {
 	Index.MergeCommands(ice.Commands{
 		SHARE: {Name: "share hash auto prunes", Help: "共享链", Actions: ice.MergeAction(ice.Actions{
-			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
-				_share_render(m)
-			}},
+			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) { _share_render(m) }},
 			mdb.CREATE: {Name: "create type name text", Help: "创建", Hand: func(m *ice.Message, arg ...string) {
-				m.Cmdy(mdb.INSERT, m.PrefixKey(), "", mdb.HASH, mdb.TIME, m.Time(m.Config(mdb.EXPIRE)),
-					aaa.USERROLE, m.Option(ice.MSG_USERROLE), aaa.USERNAME, m.Option(ice.MSG_USERNAME), aaa.USERNICK, m.Option(ice.MSG_USERNICK),
+				mdb.HashCreate(m, aaa.USERROLE, m.Option(ice.MSG_USERROLE), aaa.USERNAME, m.Option(ice.MSG_USERNAME), aaa.USERNICK, m.Option(ice.MSG_USERNICK),
 					RIVER, m.Option(ice.MSG_RIVER), STORM, m.Option(ice.MSG_STORM), arg)
-				m.Option(mdb.LINK, _share_link(m, "/share/"+m.Result()))
+				m.Option(mdb.LINK, _share_link(m, PP(SHARE)+m.Result()))
 			}},
 			LOGIN: {Name: "login userrole=void,tech username", Help: "登录", Hand: func(m *ice.Message, arg ...string) {
 				msg := m.Cmd(SHARE, mdb.CREATE, mdb.TYPE, LOGIN, m.OptionSimple(aaa.USERROLE, aaa.USERNAME))
@@ -147,7 +145,7 @@ func init() {
 				m.ProcessInner()
 			}},
 		}, mdb.HashAction(mdb.FIELD, "time,hash,userrole,username,river,storm,type,name,text", mdb.EXPIRE, "72h")), Hand: func(m *ice.Message, arg ...string) {
-			if m.PodCmd(SHARE, arg) && m.Length() > 0 {
+			if ctx.PodCmd(m, SHARE, arg) && m.Length() > 0 {
 				return
 			}
 			if mdb.HashSelect(m, arg...); len(arg) > 0 {
@@ -161,16 +159,15 @@ func init() {
 		}},
 		PP(SHARE): {Name: "/share/", Help: "共享链", Hand: func(m *ice.Message, arg ...string) {
 			msg := m.Cmd(SHARE, m.Option(SHARE, kit.Select(m.Option(SHARE), arg, 0)))
-			if kit.Int(msg.Append(mdb.TIME)) < kit.Int(msg.FormatTime()) {
+			if kit.Int(msg.Append(mdb.TIME)) < kit.Int(msg.Time()) {
 				m.RenderResult("共享超时")
 				return
 			}
 			switch msg.Append(mdb.TYPE) {
 			case LOGIN:
-				sessid := aaa.SessCreate(m, msg.Append(aaa.USERNAME))
-				m.RenderRedirect(ice.PS, ice.MSG_SESSID, sessid)
+				m.RenderRedirect(ice.PS, ice.MSG_SESSID, aaa.SessCreate(m, msg.Append(aaa.USERNAME)))
 			default:
-				m.RenderIndex(SERVE, ice.VOLCANOS)
+				RenderIndex(m, SERVE, ice.VOLCANOS)
 			}
 		}},
 

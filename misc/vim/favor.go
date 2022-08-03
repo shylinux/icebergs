@@ -5,6 +5,7 @@ import (
 
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/cli"
+	"shylinux.com/x/icebergs/base/ctx"
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/nfs"
 	"shylinux.com/x/icebergs/core/code"
@@ -33,7 +34,7 @@ func init() {
 			mdb.INSERT: {Name: "insert zone=数据结构 type name=hi text=hello file line", Help: "添加"},
 			code.INNER: {Name: "inner", Help: "源码", Hand: func(m *ice.Message, arg ...string) {
 				p := path.Join(m.Option(cli.PWD), m.Option(nfs.FILE))
-				m.ProcessCommand(code.INNER, []string{path.Dir(p) + ice.PS, path.Base(p), m.Option(nfs.LINE)}, arg...)
+				ctx.ProcessCommand(m, code.INNER, []string{path.Dir(p) + ice.PS, path.Base(p), m.Option(nfs.LINE)}, arg...)
 			}},
 		}, mdb.ZoneAction(
 			mdb.SHORT, mdb.ZONE, mdb.FIELD, "time,id,type,name,text,file,line,pwd",

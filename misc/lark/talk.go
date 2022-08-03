@@ -16,8 +16,8 @@ func init() {
 	Index.MergeCommands(ice.Commands{
 		TALK: {Name: "talk text", Help: "聊天", Hand: func(m *ice.Message, arg ...string) {
 			cmds := kit.Split(strings.Join(arg, " "))
-			if aaa.UserLogin(m, m.Option(OPEN_ID), ""); !m.Right(cmds) {
-				if aaa.UserLogin(m, m.Option(OPEN_CHAT_ID), ""); !m.Right(cmds) {
+			if aaa.UserLogin(m, m.Option(OPEN_ID), ""); !aaa.Right(m, cmds) {
+				if aaa.UserLogin(m, m.Option(OPEN_CHAT_ID), ""); !aaa.Right(m, cmds) {
 					m.Cmd(DUTY, m.Option(OPEN_CHAT_ID), m.Option("text_without_at_bot"))
 					m.Cmd(HOME)
 					return // 没有权限

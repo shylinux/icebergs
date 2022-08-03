@@ -41,7 +41,7 @@ func (i input) Load(m *ice.Message, arg ...string) {
 		lib := kit.Select(path.Base(m.Option(nfs.FILE)), m.Option(mdb.ZONE))
 		m.Assert(os.RemoveAll(path.Join(m.Config(mdb.STORE), lib)))
 		m.Cmd(mdb.DELETE, m.PrefixKey(), "", mdb.HASH, mdb.ZONE, lib)
-		prefix := kit.Keys(mdb.HASH, m.Rich(m.PrefixKey(), "", kit.Data(
+		prefix := kit.Keys(mdb.HASH, mdb.Rich(m.Message, m.PrefixKey(), "", kit.Data(
 			mdb.STORE, path.Join(m.Config(mdb.STORE), lib),
 			m.ConfigSimple(mdb.FSIZE, mdb.LIMIT, mdb.LEAST),
 			mdb.ZONE, lib, mdb.COUNT, 0,
@@ -56,14 +56,14 @@ func (i input) Load(m *ice.Message, arg ...string) {
 			if len(line) < 2 || (len(line) > 2 && line[2] == "0") {
 				continue
 			}
-			m.Grow(m.PrefixKey(), prefix, kit.Dict(TEXT, line[0], CODE, line[1], WEIGHT, kit.Select("999999", line, 2)))
+			mdb.Grow(m.Message, m.PrefixKey(), prefix, kit.Dict(TEXT, line[0], CODE, line[1], WEIGHT, kit.Select("999999", line, 2)))
 		}
 
 		// 保存词库
 		m.Conf(m.PrefixKey(), kit.Keys(prefix, kit.Keym(mdb.LIMIT)), 0)
 		m.Conf(m.PrefixKey(), kit.Keys(prefix, kit.Keym(mdb.LEAST)), 0)
-		n := m.Grow(m.PrefixKey(), prefix, kit.Dict(TEXT, "成功", CODE, "z", WEIGHT, "0"))
-		m.Log_IMPORT(m.PrefixKey(), lib, mdb.COUNT, n)
+		n := mdb.Grow(m.Message, m.PrefixKey(), prefix, kit.Dict(TEXT, "成功", CODE, "z", WEIGHT, "0"))
+		m.Logs(mdb.IMPORT, m.PrefixKey(), lib, mdb.COUNT, n)
 		m.Echo("%s: %d", lib, n)
 	}
 }
@@ -73,8 +73,8 @@ func (i input) Save(m *ice.Message, arg ...string) {
 		n := 0
 		m.Option(ice.CACHE_LIMIT, -2)
 		for _, lib := range kit.Split(m.Option(mdb.ZONE)) {
-			m.Richs(m.PrefixKey(), "", lib, func(key string, value ice.Map) {
-				m.Grows(m.PrefixKey(), kit.Keys(mdb.HASH, key), "", "", func(index int, value ice.Map) {
+			mdb.Richs(m.Message, m.PrefixKey(), "", lib, func(key string, value ice.Map) {
+				mdb.Grows(m.Message, m.PrefixKey(), kit.Keys(mdb.HASH, key), "", "", func(index int, value ice.Map) {
 					if value[CODE] != "z" {
 						fmt.Fprintf(f, "%s %s %s\n", value[TEXT], value[CODE], value[WEIGHT])
 						n++
@@ -82,7 +82,7 @@ func (i input) Save(m *ice.Message, arg ...string) {
 				})
 			})
 		}
-		m.Log_EXPORT(nfs.FILE, p, mdb.COUNT, n)
+		m.Logs(mdb.EXPORT, nfs.FILE, p, mdb.COUNT, n)
 		m.Echo("%s: %d", p, n)
 	}
 }

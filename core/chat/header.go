@@ -136,7 +136,7 @@ func init() {
 				m.Option(k, msg.Append(k))
 			}
 			for _, k := range []string{aaa.AVATAR, aaa.BACKGROUND} {
-				m.Option(k, kit.Select(web.SHARE_LOCAL+k, kit.Select("void", msg.Append(k)), m.Right(msg.Append(k))))
+				m.Option(k, kit.Select(web.SHARE_LOCAL+k, kit.Select("void", msg.Append(k)), aaa.Right(m, msg.Append(k))))
 			}
 			if m.Option(aaa.AVATAR) == "" && m.R.Header.Get("Staffname") != "" {
 				m.Option(aaa.AVATAR, kit.Format("https://dayu.oa.com/avatars/%s/profile.jpg", m.R.Header.Get("Staffname")))

@@ -42,11 +42,11 @@ func (item *Item) Dump(m *ice.Message) *ice.Message {
 }
 
 type Group struct {
-	list map[string]*ice.Message
+	list ice.Messages
 }
 
 func NewGroup(m *ice.Message, arg ...string) *Group {
-	g := &Group{list: map[string]*ice.Message{}}
+	g := &Group{list: ice.Messages{}}
 	for _, k := range arg {
 		g.list[k] = m.Spawn()
 	}

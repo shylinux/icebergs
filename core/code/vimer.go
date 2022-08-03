@@ -79,7 +79,7 @@ func _vimer_inputs(m *ice.Message, arg ...string) {
 				m.Push(nfs.FILE, strings.ReplaceAll(file, ice.PT+ext, ice.PT+t))
 			}
 		}
-	case nfs.WEBSITE:
+	case web.WEBSITE:
 		switch arg[0] {
 		case nfs.FILE:
 			name := kit.TrimExt(kit.Select("hi.zml", arg, 1), "")
@@ -181,9 +181,9 @@ func init() {
 				m.Option(mdb.TEXT, strings.TrimSpace(kit.Select(_vimer_defs(m, kit.Ext(m.Option(nfs.FILE))), m.Option(mdb.TEXT))))
 				m.Cmdy(TEMPLATE, nfs.DEFS)
 			}},
-			nfs.WEBSITE: {Name: "website file=hi.zml", Help: "网页", Hand: func(m *ice.Message, arg ...string) {
+			web.WEBSITE: {Name: "website file=hi.zml", Help: "网页", Hand: func(m *ice.Message, arg ...string) {
 				m.Option(mdb.TEXT, strings.TrimSpace(kit.Select(_vimer_defs(m, kit.Ext(m.Option(nfs.FILE))), m.Option(mdb.TEXT))))
-				m.Option(nfs.FILE, path.Join(nfs.WEBSITE, m.Option(nfs.FILE)))
+				m.Option(nfs.FILE, path.Join(web.WEBSITE, m.Option(nfs.FILE)))
 				m.Cmdy(TEMPLATE, nfs.DEFS)
 			}},
 			web.DREAM: {Name: "dream name=hi repos", Help: "空间", Hand: func(m *ice.Message, arg ...string) {
@@ -195,7 +195,7 @@ func init() {
 
 			mdb.SEARCH: {Name: "search type name text", Help: "搜索", Hand: func(m *ice.Message, arg ...string) {
 				if arg[0] == mdb.FOREACH && arg[1] == "" {
-					m.PushSearch(mdb.TYPE, "go", mdb.NAME, "src/main.go", mdb.TEXT, m.MergeCmd(""))
+					m.PushSearch(mdb.TYPE, "go", mdb.NAME, "src/main.go", mdb.TEXT, web.MergeCmd(m, ""))
 				}
 			}},
 			mdb.INPUTS: {Name: "inputs", Help: "补全", Hand: func(m *ice.Message, arg ...string) {
@@ -217,13 +217,13 @@ func init() {
 				m.Cmdy(nfs.CAT, ice.GO_MOD)
 				m.Cmdy(WEBPACK, mdb.REMOVE)
 				m.ProcessInner()
-				m.ToastSuccess()
+				web.ToastSuccess(m)
 			}},
 			BINPACK: {Name: "binpack", Help: "打包模式", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmdy(WEBPACK, mdb.CREATE)
 				m.Cmdy(AUTOGEN, BINPACK)
 				m.ProcessInner()
-				m.ToastSuccess()
+				web.ToastSuccess(m)
 			}},
 		}, Hand: func(m *ice.Message, arg ...string) {
 			m.Cmdy(INNER, arg)

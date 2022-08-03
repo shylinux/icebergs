@@ -3,11 +3,14 @@ package nfs
 import (
 	"bufio"
 	"bytes"
+	"encoding/json"
 	"io"
 	"path"
 	"strings"
 
 	ice "shylinux.com/x/icebergs"
+	"shylinux.com/x/icebergs/base/aaa"
+	"shylinux.com/x/icebergs/base/mdb"
 	kit "shylinux.com/x/toolkits"
 )
 
@@ -34,7 +37,7 @@ func _cat_hash(m *ice.Message, p string) string {
 	return ""
 }
 func _cat_list(m *ice.Message, name string) {
-	if !m.Right(m, name) {
+	if !aaa.Right(m, name) {
 		return // 没有权限
 	}
 	f, e := _cat_find(m, name)
@@ -43,7 +46,7 @@ func _cat_list(m *ice.Message, name string) {
 	}
 	defer f.Close()
 
-	switch cb := m.OptionCB(CAT).(type) {
+	switch cb := m.OptionCB("").(type) {
 	case func(string, int) string:
 		list := []string{}
 		for bio, i := bufio.NewScanner(f), 0; bio.Scan(); i++ {
@@ -69,7 +72,7 @@ func _cat_list(m *ice.Message, name string) {
 		buf, begin := make([]byte, ice.MOD_BUFS), 0
 		for {
 			if n, e := f.Read(buf[begin:]); !m.Warn(e, ice.ErrNotValid, name) {
-				m.Log_IMPORT(FILE, name, SIZE, n)
+				m.Logs(mdb.IMPORT, FILE, name, SIZE, n)
 				if begin += n; begin < len(buf) {
 					buf = buf[:begin]
 					break
@@ -87,21 +90,18 @@ func _cat_list(m *ice.Message, name string) {
 
 const (
 	CAT_CONTENT = "cat_content"
-	TEMPLATE    = "template"
-	WEBSITE     = "website"
 
 	STDIO  = "stdio"
 	SOURCE = "source"
 	SCRIPT = "script"
 	BINARY = "binary"
 	TARGET = "target"
+	TAGS   = "tags"
 
-	MASTER = "master"
-	BRANCH = "branch"
-	REPOS  = "repos"
-
-	LOAD = "load"
-	TAGS = "tags"
+	TEMPLATE = "template"
+	MASTER   = "master"
+	BRANCH   = "branch"
+	REPOS    = "repos"
 )
 const (
 	HTML = ice.HTML
@@ -115,6 +115,7 @@ const (
 	JSON = ice.JSON
 
 	PY  = "py"
+	MD  = "md"
 	TXT = "txt"
 	IML = "iml"
 	XML = "xml"
@@ -124,6 +125,7 @@ const (
 	PNG = "png"
 	JPG = "jpg"
 	MP4 = "mp4"
+	PDF = "pdf"
 
 	PWD = "./"
 	PS  = ice.PS
@@ -137,9 +139,8 @@ func init() {
 		CAT: {Name: CAT, Help: "文件", Value: kit.Data(
 			SOURCE, kit.Dict(
 				HTML, ice.TRUE, CSS, ice.TRUE, JS, ice.TRUE, GO, ice.TRUE, SH, ice.TRUE, CSV, ice.TRUE, JSON, ice.TRUE,
-				"md", ice.TRUE, "shy", ice.TRUE, "makefile", ice.TRUE, "license", ice.TRUE,
-				"conf", ice.TRUE, YML, ice.TRUE, ZML, ice.TRUE, IML, ice.TRUE, "txt", ice.TRUE,
-				"py", ice.TRUE,
+				SHY, ice.TRUE, "conf", ice.TRUE, "makefile", ice.TRUE, "license", ice.TRUE,
+				PY, ice.TRUE, MD, ice.TRUE, TXT, ice.TRUE, IML, ice.TRUE, XML, ice.TRUE, YML, ice.TRUE, ZML, ice.TRUE,
 			),
 		)},
 	}, Commands: ice.Commands{
@@ -149,9 +150,22 @@ func init() {
 				return
 			}
 			if m.Option(DIR_ROOT) != "" {
-				m.Log_SELECT(DIR_ROOT, m.Option(DIR_ROOT))
+				m.Logs(mdb.SELECT, DIR_ROOT, m.Option(DIR_ROOT))
 			}
 			_cat_list(m, arg[0])
 		}},
 	}})
+}
+func OptionLoad(m *ice.Message, file string) *ice.Message {
+	if f, e := OpenFile(m, file); e == nil {
+		defer f.Close()
+
+		var data ice.Any
+		m.Assert(json.NewDecoder(f).Decode(&data))
+
+		kit.Fetch(data, func(key string, value ice.Any) {
+			m.Option(key, kit.Simple(value))
+		})
+	}
+	return m
 }

@@ -17,8 +17,8 @@ func _tail_create(m *ice.Message, arg ...string) {
 		r, w := io.Pipe()
 		m.Go(func() {
 			for bio := bufio.NewScanner(r); bio.Scan(); {
-				m.Log_IMPORT(FILE, file, SIZE, len(bio.Text()))
-				m.Grow(TAIL, kit.Keys(mdb.HASH, h), kit.Dict(
+				m.Logs(mdb.IMPORT, FILE, file, SIZE, len(bio.Text()))
+				mdb.Grow(m, TAIL, kit.Keys(mdb.HASH, h), kit.Dict(
 					FILE, file, SIZE, len(bio.Text()), mdb.TEXT, bio.Text(),
 				))
 			}
@@ -39,7 +39,7 @@ func init() {
 	Index.MergeCommands(ice.Commands{
 		TAIL: {Name: "tail name id auto page filter:text create", Help: "日志流", Actions: ice.MergeAction(ice.Actions{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
-				m.Richs(TAIL, "", mdb.FOREACH, func(key string, value ice.Map) {
+				mdb.Richs(m, TAIL, "", mdb.FOREACH, func(key string, value ice.Map) {
 					value, _ = kit.GetMeta(value), m.Option(mdb.HASH, key)
 					m.Cmd(TAIL, mdb.CREATE, kit.SimpleKV("file,name", value))
 				})
@@ -60,10 +60,10 @@ func init() {
 			}},
 		}, mdb.ZoneAction(mdb.SHORT, mdb.NAME, mdb.FIELD, "time,id,file,text")), Hand: func(m *ice.Message, arg ...string) {
 			m.Fields(len(kit.Slice(arg, 0, 2)), "time,name,count,file", m.Config(mdb.FIELD))
-			m.OptionPage(kit.Slice(arg, 2)...)
+			mdb.OptionPage(m, kit.Slice(arg, 2)...)
 
 			mdb.ZoneSelect(m.Spawn(), arg...).Table(func(index int, value ice.Maps, head []string) {
-				if strings.Contains(value[mdb.TEXT], m.Option(ice.CACHE_FILTER)) {
+				if strings.Contains(value[mdb.TEXT], m.Option(mdb.CACHE_FILTER)) {
 					m.Push("", value, head)
 				}
 			})

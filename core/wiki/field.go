@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	ice "shylinux.com/x/icebergs"
+	"shylinux.com/x/icebergs/base/aaa"
 	"shylinux.com/x/icebergs/base/ctx"
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/nfs"
@@ -40,7 +41,7 @@ func _field_show(m *ice.Message, name, text string, arg ...string) {
 			name = cmd.Help
 		}
 	})
-	if !m.Spawn().Right(cmds[0]) {
+	if !aaa.Right(m.Spawn(), cmds[0]) {
 		return
 	}
 

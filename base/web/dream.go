@@ -7,21 +7,22 @@ import (
 
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/cli"
+	"shylinux.com/x/icebergs/base/ctx"
+	"shylinux.com/x/icebergs/base/gdb"
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/nfs"
 	"shylinux.com/x/icebergs/base/tcp"
 	kit "shylinux.com/x/toolkits"
-	"shylinux.com/x/toolkits/file"
 )
 
 func _dream_list(m *ice.Message) *ice.Message {
 	list := m.CmdMap(SPACE, mdb.NAME)
-	m.Cmdy(nfs.DIR, ice.USR_LOCAL_WORK, "time,size,name").Tables(func(value ice.Maps) {
+	m.Cmdy(nfs.DIR, ice.USR_LOCAL_WORK, "time,size,name", func(value ice.Maps) {
 		if dream, ok := list[value[mdb.NAME]]; ok {
 			m.Push(mdb.TYPE, dream[mdb.TYPE])
 			m.Push(cli.STATUS, cli.START)
 			m.PushButton("vimer", "xterm", cli.OPEN, cli.STOP)
-			m.PushAnchor(strings.Split(m.MergePod(value[mdb.NAME]), "?")[0])
+			m.PushAnchor(strings.Split(MergePod(m, value[mdb.NAME]), "?")[0])
 			text := []string{}
 			for _, line := range kit.Split(m.Cmdx(SPACE, value[mdb.NAME], cli.SYSTEM, "git", "diff", "--shortstat"), ice.FS, ice.FS) {
 				if list := kit.Split(line); strings.Contains(line, "file") {
@@ -41,16 +42,18 @@ func _dream_list(m *ice.Message) *ice.Message {
 			m.Push(mdb.TEXT, "")
 		}
 	})
-	return m.Sort("status,type,name").StatusTimeCount(cli.START, len(list))
+	m.Sort("status,type,name")
+	m.StatusTimeCount(cli.START, len(list))
+	return m
 }
 
 func _dream_show(m *ice.Message, name string) {
 	if !strings.Contains(name, "-") || !strings.HasPrefix(name, "20") {
 		name = m.Time("20060102-") + kit.ReplaceAll(name, "-", "_")
 	}
-	defer m.ProcessOpen(m.MergePod(m.Option(mdb.NAME, name)))
-	defer m.Echo(m.MergePod(m.Option(mdb.NAME, name)))
-	defer m.PushRefresh()
+	defer m.ProcessOpen(MergePod(m, m.Option(mdb.NAME, name)))
+	defer m.Echo(MergePod(m, m.Option(mdb.NAME, name)))
+	// defer m.PushRefresh()
 
 	p := path.Join(ice.USR_LOCAL_WORK, name)
 	if pid := m.Cmdx(nfs.CAT, path.Join(p, ice.Info.PidPath)); pid != "" && kit.FileExists("/proc/"+pid) {
@@ -63,7 +66,7 @@ func _dream_show(m *ice.Message, name string) {
 	if m.Option(nfs.REPOS) != "" { // 下载源码
 		m.Cmd("web.code.git.repos", mdb.CREATE, m.OptionSimple(nfs.REPOS), nfs.PATH, p)
 	} else { // 创建目录
-		file.MkdirAll(p, ice.MOD_DIR)
+		nfs.MkdirAll(m, p)
 	}
 
 	// 目录文件
@@ -72,7 +75,7 @@ func _dream_show(m *ice.Message, name string) {
 			ice.ETC_MISS_SH, ice.SRC_MAIN_SHY, ice.SRC_MAIN_GO,
 			ice.GO_MOD, ice.MAKEFILE, ice.README_MD,
 		} {
-			if kit.FileExists(path.Join(p, file)) {
+			if nfs.ExistsFile(m, path.Join(p, file)) {
 				continue
 			}
 			switch m.Cmdy(nfs.COPY, path.Join(p, file), path.Join(ice.USR_LOCAL_WORK, m.Option(nfs.TEMPLATE), file)); file {
@@ -83,7 +86,7 @@ func _dream_show(m *ice.Message, name string) {
 			}
 		}
 	}
-	m.Cmd(nfs.DEFS, path.Join(p, ice.ETC_MISS_SH), m.Config("miss"))
+	m.Cmd(nfs.DEFS, path.Join(p, ice.ETC_MISS_SH), m.Config(nfs.SCRIPT))
 
 	// 环境变量
 	m.Optionv(cli.CMD_DIR, kit.Path(p))
@@ -95,14 +98,14 @@ func _dream_show(m *ice.Message, name string) {
 	))
 	m.Optionv(cli.CMD_OUTPUT, path.Join(p, ice.BIN_BOOT_LOG))
 
-	defer m.ToastProcess()()
+	defer ToastProcess(m)()
 	bin := kit.Select(os.Args[0], cli.SystemFind(m, ice.ICE_BIN, kit.Path(path.Join(p, ice.BIN)), kit.Path(ice.BIN)))
 	m.Cmd(cli.DAEMON, bin, SPACE, tcp.DIAL, ice.DEV, ice.OPS, m.OptionSimple(mdb.NAME, RIVER))
 
-	m.Sleep3s()
-	m.Option(cli.CMD_ENV, "")
+	defer gdb.Event(m, DREAM_CREATE, m.OptionSimple(mdb.TYPE, mdb.NAME)...)
 	m.Option(cli.CMD_OUTPUT, "")
-	m.Event(DREAM_CREATE, m.OptionSimple(mdb.TYPE, mdb.NAME)...)
+	m.Option(cli.CMD_ENV, "")
+	m.Sleep3s()
 }
 
 const (
@@ -115,12 +118,10 @@ const DREAM = "dream"
 func init() {
 	Index.MergeCommands(ice.Commands{
 		DREAM: {Name: "dream name path auto start", Help: "梦想家", Actions: ice.MergeAction(ice.Actions{
-			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
-				m.Config("miss", _dream_miss)
-			}},
+			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) { m.Config(nfs.SCRIPT, _dream_script) }},
 			mdb.INPUTS: {Name: "inputs", Help: "补全", Hand: func(m *ice.Message, arg ...string) {
 				switch arg[0] {
-				case "repos":
+				case nfs.REPOS:
 				default:
 					_dream_list(m).Cut("name,status,time")
 				}
@@ -129,13 +130,13 @@ func init() {
 				_dream_show(m, m.Option(mdb.NAME, kit.Select(path.Base(m.Option(nfs.REPOS)), m.Option(mdb.NAME))))
 			}},
 			cli.OPEN: {Name: "open", Help: "打开", Hand: func(m *ice.Message, arg ...string) {
-				m.ProcessOpen(m.MergePod(m.Option(mdb.NAME), "", ""))
+				m.ProcessOpen(MergePod(m, m.Option(mdb.NAME), "", ""))
 			}},
 			"vimer": {Name: "vimer", Help: "编辑", Hand: func(m *ice.Message, arg ...string) {
-				m.ProcessOpen(m.MergePod(m.Option(mdb.NAME)+"/cmd/web.code.vimer", "", ""))
+				m.ProcessOpen(MergePod(m, m.Option(mdb.NAME)+"/cmd/web.code.vimer", "", ""))
 			}},
 			"xterm": {Name: "xterm", Help: "命令", Hand: func(m *ice.Message, arg ...string) {
-				m.ProcessOpen(m.MergePod(m.Option(mdb.NAME)+"/cmd/web.code.xterm", "", ""))
+				m.ProcessOpen(MergePod(m, m.Option(mdb.NAME)+"/cmd/web.code.xterm", "", ""))
 			}},
 			cli.STOP: {Name: "stop", Help: "停止", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmd(SPACE, mdb.MODIFY, m.OptionSimple(mdb.NAME), mdb.STATUS, cli.STOP)
@@ -147,26 +148,26 @@ func init() {
 					m.Cmd(mdb.DELETE, m.Prefix(SPACE), "", mdb.HASH, m.OptionSimple(mdb.NAME))
 				} else {
 					m.Cmd(mdb.DELETE, m.Prefix(SPACE), "", mdb.HASH, m.OptionSimple(mdb.NAME))
-					m.Sleep("3s", DREAM, cli.START, m.OptionSimple(mdb.NAME))
+					m.Sleep3s(DREAM, cli.START, m.OptionSimple(mdb.NAME))
 				}
 			}},
 			nfs.TRASH: {Name: "trash", Help: "删除", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmd(nfs.TRASH, mdb.CREATE, path.Join(ice.USR_LOCAL_WORK, m.Option(mdb.NAME)))
 				m.ProcessRefresh30ms()
 			}},
-		}, mdb.HashAction("miss", _dream_miss)), Hand: func(m *ice.Message, arg ...string) {
+		}, mdb.HashAction(nfs.SCRIPT, _dream_script)), Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) == 0 {
 				if _dream_list(m); !m.IsMobileUA() {
-					m.Display("/plugin/table.js?style=card")
+					ctx.DisplayTableCard(m)
 				}
-				return
+			} else {
+				m.Cmdy(nfs.CAT, arg[1:], kit.Dict(nfs.DIR_ROOT, path.Join(ice.USR_LOCAL_WORK, arg[0])))
 			}
-			m.Cmdy(nfs.CAT, arg[1:], kit.Dict(nfs.DIR_ROOT, path.Join(ice.USR_LOCAL_WORK, arg[0])))
 		}},
 	})
 }
 
-var _dream_miss = `#! /bin/sh
+var _dream_script = `#! /bin/sh
 
 require &>/dev/null || if [ -f $PWD/.ish/plug.sh ]; then source $PWD/.ish/plug.sh; elif [ -f $HOME/.ish/plug.sh ]; then source $HOME/.ish/plug.sh; else
 	ctx_temp=$(mktemp); if curl -h &>/dev/null; then curl -o $ctx_temp -fsSL https://shylinux.com; else wget -O $ctx_temp -q http://shylinux.com; fi; source $ctx_temp intshell

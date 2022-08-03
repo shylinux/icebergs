@@ -15,7 +15,7 @@ func init() {
 	Index.MergeCommands(ice.Commands{
 		"/sso": {Name: "/sso", Help: "登录", Hand: func(m *ice.Message, arg ...string) {
 			if m.Option(ice.MSG_USERNAME) == "" {
-				m.RenderIndex(web.SERVE, ice.VOLCANOS)
+				web.RenderIndex(m, web.SERVE, ice.VOLCANOS)
 				return
 			}
 			sessid := m.Cmdx(web.SPACE, m.Option(web.SPACE), aaa.SESS, mdb.CREATE,

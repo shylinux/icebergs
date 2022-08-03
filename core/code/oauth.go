@@ -25,7 +25,9 @@ func init() {
 	Index.MergeCommands(ice.Commands{
 		OAUTH: {Name: "oauth hash auto", Help: "授权", Actions: ice.MergeAction(ice.Actions{
 			ctx.CONFIG: {Name: "config client_id client_secret redirect_uri", Help: "配置", Hand: func(m *ice.Message, arg ...string) {
-				m.ConfigOption(CLIENT_ID, CLIENT_SECRET, REDIRECT_URI)
+				for _, k := range []string{CLIENT_ID, CLIENT_SECRET, REDIRECT_URI} {
+					m.Config(k, kit.Select(m.Config(k), m.Option(k)))
+				}
 			}},
 			mdb.INPUTS: {Name: "inputs", Help: "补全", Hand: func(m *ice.Message, arg ...string) {
 				if arg[0] == mdb.HASH {
@@ -77,7 +79,7 @@ func init() {
 		}},
 		"/oauth": {Name: "/oauth", Help: "授权", Actions: ice.MergeAction(ice.Actions{}, ctx.CmdAction()), Hand: func(m *ice.Message, arg ...string) {
 			if m.Option(CODE) != "" {
-				m.RenderCmd(m.PrefixKey(), m.Cmdx(m.PrefixKey(), mdb.CREATE, m.OptionSimple(CODE)))
+				web.RenderCmd(m, m.PrefixKey(), m.Cmdx(m.PrefixKey(), mdb.CREATE, m.OptionSimple(CODE)))
 			}
 		}},
 	})

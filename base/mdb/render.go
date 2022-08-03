@@ -21,7 +21,7 @@ func RenderAction(args ...ice.Any) ice.Actions {
 		CREATE: {Name: "create type name text", Help: "创建", Hand: func(m *ice.Message, arg ...string) {
 			m.Option(TYPE, kit.Ext(m.Option(TYPE)))
 			m.Option(NAME, kit.Select(m.Option(TYPE), m.Option(NAME)))
-			m.Cmdy(INSERT, m.PrefixKey(), "", HASH, m.OptionSimple("type,name,text"))
+			m.Cmdy(INSERT, m.PrefixKey(), "", HASH, m.OptionSimple(TYPE, NAME, TEXT))
 		}},
 		SELECT: {Name: "select type name text auto", Help: "渲染", Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) > 1 {

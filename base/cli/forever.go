@@ -20,7 +20,7 @@ const FOREVER = "forever"
 func init() {
 	Index.MergeCommands(ice.Commands{
 		FOREVER: {Name: "forever auto", Help: "启动", Actions: ice.Actions{
-			gdb.START: {Name: "start", Help: "服务", Hand: func(m *ice.Message, arg ...string) {
+			START: {Name: "start", Help: "服务", Hand: func(m *ice.Message, arg ...string) {
 				env := []string{PATH, BinPath(), HOME, kit.Select(kit.Path(""), os.Getenv(HOME))}
 				for _, k := range ENV_LIST {
 					if kit.Env(k) != "" {
@@ -40,10 +40,10 @@ func init() {
 				m.Cmdy(FOREVER, kit.Select(os.Args[0], nfs.PWD+ice.BIN_ICE_BIN, kit.FileExists(ice.BIN_ICE_BIN)),
 					"serve", START, ice.DEV, "", aaa.USERNAME, aaa.ROOT, aaa.PASSWORD, aaa.ROOT, arg)
 			}},
-			gdb.RESTART: {Name: "restart", Help: "重启", Hand: func(m *ice.Message, arg ...string) {
+			RESTART: {Name: "restart", Help: "重启", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmd(gdb.SIGNAL, gdb.RESTART)
 			}},
-			gdb.STOP: {Name: "stop", Help: "停止", Hand: func(m *ice.Message, arg ...string) {
+			STOP: {Name: "stop", Help: "停止", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmd(gdb.SIGNAL, gdb.STOP)
 			}},
 		}, Hand: func(m *ice.Message, arg ...string) {
@@ -54,8 +54,8 @@ func init() {
 
 			for {
 				logs.Println("run %s", kit.Join(arg, ice.SP))
-				if m.Sleep("100ms"); IsSuccess(m.Cmd(SYSTEM, arg)) {
-					logs.Println("exit")
+				if m.Sleep300ms(); IsSuccess(m.Cmd(SYSTEM, arg)) {
+					logs.Println(ice.EXIT)
 					break
 				}
 			}

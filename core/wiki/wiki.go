@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	ice "shylinux.com/x/icebergs"
+	"shylinux.com/x/icebergs/base/ctx"
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/nfs"
 	"shylinux.com/x/icebergs/base/web"
@@ -30,7 +31,7 @@ func _option(m *ice.Message, kind, name, text string, arg ...string) {
 }
 
 func _wiki_path(m *ice.Message, cmd string, arg ...string) string {
-	return path.Join(m.Option(ice.MSG_LOCAL), m.Conf(cmd, kit.Keym(nfs.PATH)), path.Join(arg...))
+	return path.Join(m.Conf(cmd, kit.Keym(nfs.PATH)), path.Join(arg...))
 }
 func _wiki_link(m *ice.Message, cmd string, text string) string {
 	if !strings.HasPrefix(text, ice.HTTP) && !strings.HasPrefix(text, ice.PS) {
@@ -62,11 +63,11 @@ func _wiki_save(m *ice.Message, cmd, name, text string, arg ...string) {
 	m.Cmd(nfs.SAVE, name, text)
 }
 func _wiki_upload(m *ice.Message, cmd string, dir string) {
-	m.Upload(_wiki_path(m, cmd, dir))
+	m.Cmdy(web.CACHE, web.UPLOAD_WATCH, _wiki_path(m, cmd, dir))
 }
 func _wiki_template(m *ice.Message, cmd string, name, text string, arg ...string) {
 	_option(m, cmd, name, strings.TrimSpace(text), arg...)
-	m.RenderTemplate(m.Conf(cmd, kit.Keym(nfs.TEMPLATE)))
+	m.RenderTemplate(m.Conf(cmd, kit.Keym(nfs.TEMPLATE)), &Message{m})
 }
 
 const WIKI = "wiki"
@@ -80,4 +81,31 @@ func init() {
 		FIELD, SHELL, LOCAL, PARSE,
 		FEEL, DRAW, WORD, DATA,
 	)
+}
+
+type Message struct {
+	*ice.Message
+}
+
+func (m *Message) OptionTemplate() string {
+	res := []string{`class="story"`}
+	for _, key := range kit.Split(ctx.STYLE) {
+		if m.Option(key) != "" {
+			res = append(res, kit.Format(`s="%s"`, key, m.Option(key)))
+		}
+	}
+	for _, key := range kit.Split("type,name,text") {
+		if key == mdb.TEXT && m.Option(mdb.TYPE) == "spark" {
+			continue
+		}
+		if m.Option(key) != "" {
+			res = append(res, kit.Format(`data-%s="%s"`, key, m.Option(key)))
+		}
+	}
+	kit.Fetch(m.Optionv("extra"), func(key string, value string) {
+		if value != "" {
+			res = append(res, kit.Format(`data-%s="%s"`, key, value))
+		}
+	})
+	return kit.Join(res, ice.SP)
 }

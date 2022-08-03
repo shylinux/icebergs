@@ -1,6 +1,6 @@
 chapter "tcp"
 
-field "主机" tcp.host
-field "端口" tcp.port
-field "客户端" tcp.client
-field "服务器" tcp.server
+field "主机" host
+field "端口" port
+field "客户端" client
+field "服务器" server

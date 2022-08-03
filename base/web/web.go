@@ -7,6 +7,8 @@ import (
 
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/cli"
+	"shylinux.com/x/icebergs/base/ctx"
+	"shylinux.com/x/icebergs/base/gdb"
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/nfs"
 	"shylinux.com/x/icebergs/base/tcp"
@@ -21,7 +23,7 @@ type Frame struct {
 	*http.Server
 	*http.ServeMux
 
-	send map[string]*ice.Message
+	send ice.Messages
 	lock task.Lock
 }
 
@@ -49,7 +51,7 @@ func (frame *Frame) Spawn(m *ice.Message, c *ice.Context, arg ...string) ice.Ser
 	return &Frame{}
 }
 func (frame *Frame) Begin(m *ice.Message, arg ...string) ice.Server {
-	frame.send = map[string]*ice.Message{}
+	frame.send = ice.Messages{}
 	return frame
 }
 func (frame *Frame) Start(m *ice.Message, arg ...string) bool {
@@ -83,7 +85,7 @@ func (frame *Frame) Start(m *ice.Message, arg ...string) bool {
 					return
 				}
 				msg.Log(ROUTE, "%s <- %s", s.Name, k, meta)
-				ice.Info.Route[path.Join(list[s], k)] = ice.FileCmd(kit.FileLine(x.Hand, 300))
+				ice.Info.Route[path.Join(list[s], k)] = ctx.FileCmd(kit.FileLine(x.Hand, 300))
 				frame.HandleFunc(k, func(frame http.ResponseWriter, r *http.Request) {
 					m.TryCatch(msg.Spawn(), true, func(msg *ice.Message) {
 						_serve_handle(k, x, msg, frame, r)
@@ -93,17 +95,17 @@ func (frame *Frame) Start(m *ice.Message, arg ...string) bool {
 		}
 	})
 
-	m.Event(SERVE_START)
-	defer m.Event(SERVE_STOP)
+	gdb.Event(m, SERVE_START)
+	defer gdb.Event(m, SERVE_STOP)
 
 	frame.Message, frame.Server = m, &http.Server{Handler: frame}
-	switch cb := m.OptionCB(SERVE).(type) {
+	switch cb := m.OptionCB("").(type) {
 	case func(http.Handler):
 		cb(frame) // 启动框架
 	default:
 		m.Cmd(tcp.SERVER, tcp.LISTEN, mdb.TYPE, WEB, m.OptionSimple(mdb.NAME, tcp.HOST, tcp.PORT), func(l net.Listener) {
-			m.Cmd(mdb.INSERT, SERVE, "", mdb.HASH, mdb.NAME, WEB, arg, m.OptionSimple(tcp.PROTO, ice.DEV), cli.STATUS, tcp.START, kit.Dict(mdb.TARGET, l))
-			defer m.Cmd(mdb.MODIFY, SERVE, "", mdb.HASH, m.OptionSimple(mdb.NAME), cli.STATUS, tcp.STOP)
+			mdb.HashCreate(m, mdb.NAME, WEB, arg, m.OptionSimple(tcp.PROTO, ice.DEV), cli.STATUS, tcp.START, kit.Dict(mdb.TARGET, l))
+			defer mdb.HashModify(m, m.OptionSimple(mdb.NAME), cli.STATUS, tcp.STOP)
 			m.Warn(frame.Server.Serve(l)) // 启动服务
 		})
 	}
@@ -113,12 +115,10 @@ func (frame *Frame) Close(m *ice.Message, arg ...string) bool {
 	return true
 }
 
-func P(arg ...string) string  { return path.Join(ice.PS, path.Join(arg...)) }
-func PP(arg ...string) string { return path.Join(ice.PS, path.Join(arg...)) + ice.PS }
-
 const (
 	SERVE_START = "serve.start"
 	SERVE_STOP  = "serve.stop"
+	WEBSITE     = "website"
 )
 const WEB = "web"
 
@@ -130,3 +130,6 @@ func init() {
 		SHARE, CACHE, SPIDE, ROUTE,
 	)
 }
+
+func P(arg ...string) string  { return path.Join(ice.PS, path.Join(arg...)) }
+func PP(arg ...string) string { return P(arg...) + ice.PS }

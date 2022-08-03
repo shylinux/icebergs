@@ -28,10 +28,10 @@ func (f *Frame) Begin(m *Message, arg ...string) Server {
 }
 func (f *Frame) Start(m *Message, arg ...string) bool {
 	m.Cap(CTX_STREAM, strings.Split(m.Time(), SP)[1])
-	m.Cmdy("mdb._init")
+	m.Cmdy(kit.Keys(MDB, CTX_INIT))
 	m.Cmdy(INIT, arg)
 
-	for _, k := range kit.Split(Getenv(CTX_DAEMON)) {
+	for _, k := range kit.Split(kit.Select("ctx,log,gdb,ssh", os.Getenv(CTX_DAEMON))) {
 		m.Start(k)
 	}
 	m.Cmd(arg)
@@ -49,9 +49,9 @@ func (f *Frame) Close(m *Message, arg ...string) bool {
 	return true
 }
 
-var Index = &Context{Name: ICE, Help: "冰山模块", Configs: map[string]*Config{
+var Index = &Context{Name: ICE, Help: "冰山模块", Configs: Configs{
 	HELP: {Value: kit.Data(INDEX, Info.Help)},
-}, Commands: map[string]*Command{
+}, Commands: Commands{
 	CTX_INIT: {Hand: func(m *Message, arg ...string) {
 		m.root.Travel(func(p *Context, c *Context) {
 			if cmd, ok := c.Commands[CTX_INIT]; ok && p != nil {
@@ -61,15 +61,18 @@ var Index = &Context{Name: ICE, Help: "冰山模块", Configs: map[string]*Confi
 	}},
 	INIT: {Name: "init", Help: "启动", Hand: func(m *Message, arg ...string) {
 		m.root.Cmd(CTX_INIT)
-		m.Cmd(SOURCE, ETC_INIT_SHY)
+		m.Cmd("source", ETC_INIT_SHY)
 	}},
 	HELP: {Name: "help", Help: "帮助", Hand: func(m *Message, arg ...string) {
 		m.Echo(m.Config(INDEX))
 	}},
-	EXIT: {Name: "exit", Help: "结束", Hand: func(m *Message, arg ...string) {
+	QUIT: {Name: "quit", Help: "结束", Hand: func(m *Message, arg ...string) {
+		os.Exit(0)
+	}},
+	EXIT: {Name: "exit", Help: "退出", Hand: func(m *Message, arg ...string) {
 		defer m.Target().Close(m.root.Spawn(), arg...)
 		m.root.Option(EXIT, kit.Select("0", arg, 0))
-		m.Cmd(SOURCE, ETC_EXIT_SHY)
+		m.Cmd("source", ETC_EXIT_SHY)
 		m.root.Cmd(CTX_EXIT)
 	}},
 	CTX_EXIT: {Hand: func(m *Message, arg ...string) {
@@ -91,16 +94,16 @@ func init() { Index.root, Pulse.root = Index, Pulse }
 
 func Run(arg ...string) string {
 	if len(arg) == 0 { // 进程参数
-		arg = kit.Simple(arg, os.Args[1:], kit.Split(kit.Env("ctx_arg")))
+		arg = kit.Simple(arg, os.Args[1:], kit.Split(os.Getenv(CTX_ARG)))
 	}
 
 	Pulse.meta[MSG_DETAIL] = arg
 	switch Index.Merge(Index).Begin(Pulse.Spawn(), arg...); kit.Select("", arg, 0) {
-	case SERVE, SPACE: // 启动服务
+	case "serve", "space": // 启动服务
 		if Index.Start(Pulse, arg...) {
 			conf.Wait()
-			os.Exit(kit.Int(Pulse.Option(EXIT)))
 			println()
+			os.Exit(kit.Int(Pulse.Option(EXIT)))
 		}
 	default: // 执行命令
 		if logs.Disable(true); len(arg) == 0 {

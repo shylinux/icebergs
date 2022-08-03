@@ -2,6 +2,7 @@ package bash
 
 import (
 	ice "shylinux.com/x/icebergs"
+	"shylinux.com/x/icebergs/base/mdb"
 	kit "shylinux.com/x/toolkits"
 
 	"strings"
@@ -35,7 +36,7 @@ func init() {
 
 				line := []rune(m.Option("line"))
 				if begin := kit.Int(m.Option("point")); begin < len(line) {
-					m.Richs("login", nil, m.Option("sid"), func(key string, value ice.Map) {
+					mdb.Richs(m, "login", nil, m.Option("sid"), func(key string, value ice.Map) {
 						m.Echo(string(line[:begin]))
 						for i := begin; i < len(line); i++ {
 							if i-begin < 3 && i < len(line)-1 {
@@ -60,7 +61,7 @@ func init() {
 				}
 				fallthrough
 			case "end":
-				m.Richs("login", nil, m.Option("sid"), func(key string, value ice.Map) {
+				mdb.Richs(m, "login", nil, m.Option("sid"), func(key string, value ice.Map) {
 					last_text := kit.Format(kit.Value(value, "last.text"))
 					last_list := kit.Simple(kit.Value(value, "last.list"))
 					last_index := kit.Int(kit.Value(value, "last.index"))

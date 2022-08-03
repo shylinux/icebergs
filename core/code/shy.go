@@ -43,7 +43,7 @@ func init() {
 				LoadPlug(m, SHY)
 			}},
 			mdb.RENDER: {Hand: func(m *ice.Message, arg ...string) {
-				m.ProcessCommand("web.wiki.word", kit.Simple(path.Join(arg[2], arg[1])))
+				ctx.ProcessCommand(m, "web.wiki.word", kit.Simple(path.Join(arg[2], arg[1])))
 			}},
 			mdb.ENGINE: {Hand: func(m *ice.Message, arg ...string) {
 				_shy_exec(m, arg...)

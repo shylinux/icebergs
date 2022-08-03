@@ -50,11 +50,11 @@ func _islocalhost(m *ice.Message, ip string) (ok bool) {
 	if ip == "::1" || strings.HasPrefix(ip, "127.") {
 		return true
 	}
-	if m.Richs(HOST, kit.Keym(aaa.BLACK), ip, nil) != nil {
+	if mdb.Richs(m, HOST, kit.Keym(aaa.BLACK), ip, nil) != nil {
 		return false
 	}
-	if m.Richs(HOST, kit.Keym(aaa.WHITE), ip, nil) != nil {
-		m.Log_AUTH(aaa.WHITE, ip)
+	if mdb.Richs(m, HOST, kit.Keym(aaa.WHITE), ip, nil) != nil {
+		m.Logs(ice.LOG_AUTH, aaa.WHITE, ip)
 		return true
 	}
 	return false
@@ -72,12 +72,12 @@ func init() {
 				m.Cmd(HOST).Tables(func(value ice.Maps) { m.Cmd(HOST, aaa.WHITE, value[aaa.IP]) })
 			}},
 			aaa.BLACK: {Name: "black", Help: "黑名单", Hand: func(m *ice.Message, arg ...string) {
-				m.Log_CREATE(aaa.BLACK, arg[0])
-				m.Rich(HOST, kit.Keym(aaa.BLACK), kit.Dict(mdb.TEXT, arg[0]))
+				m.Logs(mdb.CREATE, aaa.BLACK, arg[0])
+				mdb.Rich(m, HOST, kit.Keym(aaa.BLACK), kit.Dict(mdb.TEXT, arg[0]))
 			}},
 			aaa.WHITE: {Name: "white", Help: "白名单", Hand: func(m *ice.Message, arg ...string) {
-				m.Log_CREATE(aaa.WHITE, arg[0])
-				m.Rich(HOST, kit.Keym(aaa.WHITE), kit.Dict(mdb.TEXT, arg[0]))
+				m.Logs(mdb.CREATE, aaa.WHITE, arg[0])
+				mdb.Rich(m, HOST, kit.Keym(aaa.WHITE), kit.Dict(mdb.TEXT, arg[0]))
 			}},
 		}, mdb.HashAction(aaa.BLACK, kit.Data(mdb.SHORT, mdb.TEXT), aaa.WHITE, kit.Data(mdb.SHORT, mdb.TEXT))), Hand: func(m *ice.Message, arg ...string) {
 			_host_list(m, kit.Select("", arg, 0))

@@ -107,7 +107,7 @@ func init() {
 				m.Cmdy(nfs.DIR, arg)
 				return
 			}
-			m.Echo(kit.Format(_split_list(m, arg[0], kit.Split(kit.Join(arg[1:]))...))).DisplayStoryJSON()
+			m.Echo(kit.Format(_split_list(m, arg[0], kit.Split(kit.Join(arg[1:]))...)))
 		}},
 	})
 }

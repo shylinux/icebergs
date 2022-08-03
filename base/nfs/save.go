@@ -6,6 +6,7 @@ import (
 	"path"
 
 	ice "shylinux.com/x/icebergs"
+	"shylinux.com/x/icebergs/base/mdb"
 	kit "shylinux.com/x/toolkits"
 )
 
@@ -25,7 +26,7 @@ func _save_file(m *ice.Message, name string, text ...string) {
 
 		for _, v := range text {
 			if n, e := fmt.Fprint(f, v); m.Assert(e) {
-				m.Log_EXPORT(FILE, p, SIZE, n)
+				m.Logs(mdb.EXPORT, FILE, p, SIZE, n)
 			}
 		}
 		m.Echo(p)
@@ -37,7 +38,7 @@ func _push_file(m *ice.Message, name string, text ...string) {
 
 		for _, k := range text {
 			if n, e := fmt.Fprint(f, k); m.Assert(e) {
-				m.Log_EXPORT(FILE, p, SIZE, n)
+				m.Logs(mdb.EXPORT, FILE, p, SIZE, n)
 			}
 		}
 		m.Echo(p)
@@ -52,8 +53,8 @@ func _copy_file(m *ice.Message, name string, from ...string) {
 				defer s.Close()
 
 				if n, e := io.Copy(f, s); !m.Warn(e, ice.ErrNotFound, name) {
-					m.Log_IMPORT(FILE, v, SIZE, n)
-					m.Log_EXPORT(FILE, p, SIZE, n)
+					m.Logs(mdb.IMPORT, FILE, v, SIZE, n)
+					m.Logs(mdb.EXPORT, FILE, p, SIZE, n)
 				}
 			}
 		}
@@ -76,7 +77,7 @@ func _link_file(m *ice.Message, name string, from string) {
 			return
 		}
 	}
-	m.Log_EXPORT(FILE, name, FROM, from)
+	m.Logs(mdb.CREATE, FILE, name, FROM, from)
 	m.Echo(name)
 }
 
@@ -109,7 +110,7 @@ func init() {
 		}},
 		COPY: {Name: "copy file from...", Help: "复制", Hand: func(m *ice.Message, arg ...string) {
 			for _, file := range arg[1:] {
-				if kit.FileExists(file) {
+				if ExistsFile(m, file) {
 					_copy_file(m, arg[0], arg[1:]...)
 					return
 				}

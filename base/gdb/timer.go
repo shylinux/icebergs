@@ -16,7 +16,7 @@ func _timer_action(m *ice.Message, now time.Time, arg ...string) {
 		if kit.Time(value[mdb.TIME]) > kit.Int64(now) {
 			return
 		}
-		m.Cmd(ROUTINE, mdb.CREATE, mdb.NAME, "some", kit.Keycb(ROUTINE), value[ice.CMD])
+		m.Cmd(ROUTINE, mdb.CREATE, mdb.NAME, value[mdb.NAME], kit.Keycb(ROUTINE), value[ice.CMD])
 		mdb.HashModify(m, mdb.HASH, value[mdb.HASH], mdb.COUNT, kit.Int(value[mdb.COUNT])-1, mdb.TIME, m.Time(value[INTERVAL]))
 	})
 }

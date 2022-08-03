@@ -10,6 +10,7 @@ import (
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/aaa"
 	"shylinux.com/x/icebergs/base/cli"
+	"shylinux.com/x/icebergs/base/gdb"
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/nfs"
 	"shylinux.com/x/icebergs/base/tcp"
@@ -29,7 +30,7 @@ func _publish_file(m *ice.Message, file string, arg ...string) string {
 
 	// 发布文件
 	target := path.Join(m.Config(nfs.PATH), kit.Select(path.Base(file), arg, 0))
-	m.Log_EXPORT(PUBLISH, target, cli.FROM, file)
+	m.Logs(mdb.EXPORT, PUBLISH, target, cli.FROM, file)
 	m.Cmd(nfs.LINK, target, file)
 	return target
 }
@@ -68,7 +69,7 @@ func init() {
 				m.Cmd(aaa.ROLE, aaa.WHITE, aaa.VOID, m.Config(nfs.PATH))
 				m.Cmd(aaa.ROLE, aaa.WHITE, aaa.VOID, m.PrefixKey())
 				m.Config(ice.CONTEXTS, _contexts)
-				m.Watch(web.SERVE_START, m.PrefixKey())
+				gdb.Watch(m, web.SERVE_START, m.PrefixKey())
 			}},
 			web.SERVE_START: {Name: "serve.start", Help: "服务启动", Hand: func(m *ice.Message, arg ...string) {
 				_publish_file(m, ice.ICE_BIN)
@@ -110,7 +111,7 @@ func init() {
 
 					case ice.CORE:
 						if !kit.FileExists(".git") {
-							repos := m.MergeURL2("/x/" + m.Option(ice.MSG_USERPOD))
+							repos := web.MergeURL2(m, "/x/"+m.Option(ice.MSG_USERPOD))
 							m.Cmd(cli.SYSTEM, "git", "init")
 							m.Cmd(cli.SYSTEM, "git", "remote", "add", "origin", repos)
 							m.Cmd("web.code.git.repos", mdb.CREATE, repos, "master", "", nfs.PWD)
@@ -148,10 +149,10 @@ func init() {
 					list = append(list, text)
 				})
 
-				cli.PushStream(m)
+				web.PushStream(m)
 				defer m.ProcessHold()
-				defer m.ToastSuccess()
 				defer m.StatusTimeCount()
+				defer web.ToastSuccess(m)
 				m.Cmd(nfs.TAR, kit.Path(ice.USR_PUBLISH, "contexts.bin.tar.gz"), list)
 				m.Cmd(nfs.TAR, kit.Path(ice.USR_PUBLISH, "contexts.src.tar.gz"), ice.MAKEFILE, ice.ETC_MISS_SH, ice.SRC_MAIN_GO, ice.GO_MOD, ice.GO_SUM)
 				m.Cmd(nfs.TAR, kit.Path(ice.USR_PUBLISH, "contexts.home.tar.gz"), ".vim/plugged", kit.Dict(nfs.DIR_ROOT, kit.Env(cli.HOME)))

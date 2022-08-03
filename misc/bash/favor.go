@@ -3,6 +3,7 @@ package bash
 import (
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/cli"
+	"shylinux.com/x/icebergs/base/ctx"
 	"shylinux.com/x/icebergs/base/mdb"
 	kit "shylinux.com/x/toolkits"
 )
@@ -27,8 +28,8 @@ func init() {
 			mdb.INSERT: {Name: "insert zone=系统命令 type=shell name=1 text=pwd pwd=/home", Help: "添加"},
 			cli.SYSTEM: {Name: "system", Help: "命令", Hand: func(m *ice.Message, arg ...string) {
 				m.Option(cli.CMD_DIR, m.Option(cli.PWD))
-				m.ProcessCommand(cli.SYSTEM, kit.Split(m.Option(mdb.TEXT)), arg...)
-				m.ProcessCommandOpt(arg, cli.PWD)
+				ctx.ProcessCommand(m, cli.SYSTEM, kit.Split(m.Option(mdb.TEXT)), arg...)
+				ctx.ProcessCommandOpt(m, arg, cli.PWD)
 			}},
 		}, mdb.ZoneAction(mdb.SHORT, mdb.ZONE, mdb.FIELD, "time,id,type,name,text,pwd,username,hostname")), Hand: func(m *ice.Message, arg ...string) {
 			if mdb.ZoneSelect(m, arg...); len(arg) == 0 {

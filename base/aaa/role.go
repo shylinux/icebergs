@@ -15,14 +15,14 @@ func _role_chain(arg ...string) string {
 }
 func _role_black(m *ice.Message, userrole, chain string) {
 	mdb.HashSelectUpdate(m, userrole, func(value ice.Map) {
-		m.Log_INSERT(ROLE, userrole, BLACK, chain)
+		m.Logs(mdb.INSERT, ROLE, userrole, BLACK, chain)
 		list := value[BLACK].(ice.Map)
 		list[chain] = true
 	})
 }
 func _role_white(m *ice.Message, userrole, chain string) {
 	mdb.HashSelectUpdate(m, userrole, func(value ice.Map) {
-		m.Log_INSERT(ROLE, userrole, WHITE, chain)
+		m.Logs(mdb.INSERT, ROLE, userrole, WHITE, chain)
 		list := value[WHITE].(ice.Map)
 		list[chain] = true
 	})
@@ -95,8 +95,8 @@ func init() {
 	Index.MergeCommands(ice.Commands{
 		ROLE: {Name: "role role auto insert", Help: "角色", Actions: ice.MergeAction(ice.Actions{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
-				m.Rich(ROLE, nil, kit.Dict(mdb.NAME, TECH, BLACK, kit.Dict(), WHITE, kit.Dict()))
-				m.Rich(ROLE, nil, kit.Dict(mdb.NAME, VOID, WHITE, kit.Dict(), BLACK, kit.Dict()))
+				mdb.Rich(m, ROLE, nil, kit.Dict(mdb.NAME, TECH, BLACK, kit.Dict(), WHITE, kit.Dict()))
+				mdb.Rich(m, ROLE, nil, kit.Dict(mdb.NAME, VOID, WHITE, kit.Dict(), BLACK, kit.Dict()))
 				m.Cmd(ROLE, WHITE, VOID, ice.SRC)
 				m.Cmd(ROLE, WHITE, VOID, ice.BIN)
 				m.Cmd(ROLE, WHITE, VOID, ice.USR)
@@ -105,19 +105,18 @@ func init() {
 			}},
 			mdb.INSERT: {Name: "insert role=void,tech zone=white,black key=", Help: "添加", Hand: func(m *ice.Message, arg ...string) {
 				mdb.HashSelectUpdate(m, m.Option(ROLE), func(key string, value ice.Map) {
-					m.Log_INSERT(ROLE, m.Option(ROLE), m.Option(mdb.ZONE), m.Option(mdb.KEY))
+					m.Logs(mdb.INSERT, ROLE, m.Option(ROLE), m.Option(mdb.ZONE), m.Option(mdb.KEY))
 					list := value[m.Option(mdb.ZONE)].(ice.Map)
 					list[_role_chain(m.Option(mdb.KEY))] = true
 				})
 			}},
 			mdb.DELETE: {Name: "delete", Help: "删除", Hand: func(m *ice.Message, arg ...string) {
 				mdb.HashSelectUpdate(m, m.Option(ROLE), func(key string, value ice.Map) {
-					m.Log_DELETE(ROLE, m.Option(ROLE), m.Option(mdb.ZONE), m.Option(mdb.KEY))
+					m.Logs(mdb.DELETE, ROLE, m.Option(ROLE), m.Option(mdb.ZONE), m.Option(mdb.KEY))
 					list := value[m.Option(mdb.ZONE)].(ice.Map)
 					delete(list, _role_chain(m.Option(mdb.KEY)))
 				})
 			}},
-
 			BLACK: {Name: "black role chain", Help: "黑名单", Hand: func(m *ice.Message, arg ...string) {
 				_role_black(m, arg[0], _role_chain(arg[1:]...))
 			}},

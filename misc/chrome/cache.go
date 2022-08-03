@@ -30,7 +30,7 @@ func (c cache) Create(m *ice.Message, arg ...string) *ice.Message {
 		c.Hash.Modify(m, kit.Simple(mdb.COUNT, count, mdb.TOTAL, total, mdb.VALUE, kit.Format(value))...)
 	})
 	m.Cmdy(nfs.LINK, path.Join(m.Config(nfs.PATH), m.Option(mdb.NAME)), msg.Append(nfs.FILE))
-	m.ToastSuccess()
+	web.ToastSuccess(m.Message)
 	return m
 }
 func (c cache) Prunes(m *ice.Message, arg ...string) {

@@ -7,10 +7,11 @@ import (
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/nfs"
+	"shylinux.com/x/icebergs/base/web"
 )
 
 func _website_url(m *ice.Message, file string) string {
-	return strings.Split(m.MergeWebsite(file), "?")[0]
+	return strings.Split(web.MergeWebsite(m, file), "?")[0]
 }
 
 const ZML = nfs.ZML

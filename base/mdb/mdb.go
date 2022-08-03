@@ -6,23 +6,32 @@ import (
 
 	ice "shylinux.com/x/icebergs"
 	kit "shylinux.com/x/toolkits"
+	"shylinux.com/x/toolkits/task"
 )
 
 type Any = interface{}
 type Map = map[string]Any
 type Maps = map[string]string
 
-func _domain_chain(m *ice.Message, chain string) string {
-	return kit.Keys(m.Option(ice.MSG_DOMAIN), chain)
-}
 func _file_name(m *ice.Message, arg ...string) string {
 	if len(arg) > 3 && strings.Contains(arg[3], ice.PS) {
 		return arg[3]
 	}
-	return path.Join(ice.USR_LOCAL_EXPORT, m.Option(ice.MSG_DOMAIN), path.Join(arg[:2]...), arg[2])
+	return path.Join(ice.USR_LOCAL_EXPORT, path.Join(arg[:2]...), arg[2])
 }
 func _mdb_args(m *ice.Message, field string, arg ...Any) []string {
-	args := kit.Simple(arg...)
+	res := []Any{}
+	for _, v := range arg {
+		switch v := v.(type) {
+		case Map:
+			for k, v := range v {
+				m.Option(k, v)
+			}
+		default:
+			res = append(res, v)
+		}
+	}
+	args := kit.Simple(res...)
 	for i := 0; i < len(args); i += 2 {
 		if !strings.Contains(field, args[i]) && !strings.HasPrefix(args[i], EXTRA) {
 			args[i] = kit.Keys(EXTRA, args[i])
@@ -39,29 +48,29 @@ func _mdb_modify(m *ice.Message, val ice.Map, field string, arg ...string) {
 		kit.Value(val, arg[i], kit.Select("", arg, i+1))
 	}
 }
-func _mdb_select(m *ice.Message, key string, value ice.Map, fields []string, val ice.Map) {
-	switch value = kit.GetMeta(value); cb := m.OptionCB(SELECT).(type) {
-	case func(string, []string, ice.Map, ice.Map):
-		cb(key, fields, value, val)
-	case func([]string, ice.Map):
+func _mdb_select(m *ice.Message, cb Any, key string, value Map, fields []string, val Map) {
+	switch value = kit.GetMeta(value); cb := cb.(type) {
+	case func([]string, Map):
 		cb(fields, value)
-	case func(string, ice.Map, ice.Map):
+	case func(string, []string, Map, Map):
+		cb(key, fields, value, val)
+	case func(string, Map, Map):
 		cb(key, value, val)
-	case func(string, ice.Map):
+	case func(string, Map):
 		cb(key, value)
-	case func(ice.Map):
+	case func(Map):
 		cb(value)
 	case func(Any):
 		cb(value[TARGET])
-	case func(ice.Maps):
-		res := ice.Maps{}
+	case func(Maps):
+		res := Maps{}
 		for k, v := range value {
 			res[k] = kit.Format(v)
 		}
 		cb(res)
 	case nil:
 		if m.FieldsIsDetail() {
-			m.Push(ice.CACHE_DETAIL, value)
+			m.Push(ice.FIELDS_DETAIL, value)
 		} else {
 			m.Push(key, value, fields, val)
 		}
@@ -168,11 +177,11 @@ var Index = &ice.Context{Name: MDB, Help: "数据模块", Commands: ice.Commands
 		default:
 			switch arg[2] {
 			case ZONE: // inputs key sub type zone field value
-				_zone_inputs(m, arg[0], _domain_chain(m, arg[1]), arg[3], kit.Select(NAME, arg, 4), kit.Select("", arg, 5))
+				_zone_inputs(m, arg[0], arg[1], arg[3], kit.Select(NAME, arg, 4), kit.Select("", arg, 5))
 			case HASH:
-				_hash_inputs(m, arg[0], _domain_chain(m, arg[1]), kit.Select(NAME, arg, 3), kit.Select("", arg, 4))
+				_hash_inputs(m, arg[0], arg[1], kit.Select(NAME, arg, 3), kit.Select("", arg, 4))
 			case LIST:
-				_list_inputs(m, arg[0], _domain_chain(m, arg[1]), kit.Select(NAME, arg, 3), kit.Select("", arg, 4))
+				_list_inputs(m, arg[0], arg[1], kit.Select(NAME, arg, 3), kit.Select("", arg, 4))
 			}
 		}
 	}},
@@ -180,11 +189,11 @@ var Index = &ice.Context{Name: MDB, Help: "数据模块", Commands: ice.Commands
 		defer m.ProcessRefresh3ms()
 		switch arg[2] {
 		case ZONE: // insert key sub type zone arg...
-			_zone_insert(m, arg[0], _domain_chain(m, arg[1]), arg[3], arg[4:]...)
+			_zone_insert(m, arg[0], arg[1], arg[3], arg[4:]...)
 		case HASH:
-			_hash_insert(m, arg[0], _domain_chain(m, arg[1]), arg[3:]...)
+			_hash_insert(m, arg[0], arg[1], arg[3:]...)
 		case LIST:
-			_list_insert(m, arg[0], _domain_chain(m, arg[1]), arg[3:]...)
+			_list_insert(m, arg[0], arg[1], arg[3:]...)
 		}
 	}},
 	DELETE: {Name: "delete key sub type field value", Help: "删除", Hand: func(m *ice.Message, arg ...string) {
@@ -193,29 +202,29 @@ var Index = &ice.Context{Name: MDB, Help: "数据模块", Commands: ice.Commands
 		case ZONE: // delete key sub type zone field value
 			// _list_delete(m, arg[0], _domain_chain(m, kit.Keys(arg[1], kit.KeyHash(arg[3]))), arg[4], arg[5])
 		case HASH:
-			_hash_delete(m, arg[0], _domain_chain(m, arg[1]), arg[3], arg[4])
+			_hash_delete(m, arg[0], arg[1], arg[3], arg[4])
 		case LIST:
-			// _list_delete(m, arg[0], _domain_chain(m, arg[1]), arg[3], arg[4])
+			// _list_delete(m, arg[0], arg[1], arg[3], arg[4])
 		}
 	}},
 	MODIFY: {Name: "modify key sub type field value arg...", Help: "编辑", Hand: func(m *ice.Message, arg ...string) {
 		switch arg[2] {
 		case ZONE: // modify key sub type zone id field value
-			_zone_modify(m, arg[0], _domain_chain(m, arg[1]), arg[3], arg[4], arg[5:]...)
+			_zone_modify(m, arg[0], arg[1], arg[3], arg[4], arg[5:]...)
 		case HASH:
-			_hash_modify(m, arg[0], _domain_chain(m, arg[1]), arg[3], arg[4], arg[5:]...)
+			_hash_modify(m, arg[0], arg[1], arg[3], arg[4], arg[5:]...)
 		case LIST:
-			_list_modify(m, arg[0], _domain_chain(m, arg[1]), arg[3], arg[4], arg[5:]...)
+			_list_modify(m, arg[0], arg[1], arg[3], arg[4], arg[5:]...)
 		}
 	}},
 	SELECT: {Name: "select key sub type field value", Help: "查询", Hand: func(m *ice.Message, arg ...string) {
 		switch arg[2] {
 		case ZONE:
-			_zone_select(m, arg[0], _domain_chain(m, arg[1]), kit.Select("", arg, 3), kit.Select("", arg, 4))
+			_zone_select(m, arg[0], arg[1], kit.Select("", arg, 3), kit.Select("", arg, 4))
 		case HASH:
-			_hash_select(m, arg[0], _domain_chain(m, arg[1]), kit.Select("", arg, 3), kit.Select(FOREACH, arg, 4))
+			_hash_select(m, arg[0], arg[1], kit.Select("", arg, 3), kit.Select(FOREACH, arg, 4))
 		case LIST:
-			_list_select(m, arg[0], _domain_chain(m, arg[1]), kit.Select("", arg, 3), kit.Select("", arg, 4))
+			_list_select(m, arg[0], arg[1], kit.Select("", arg, 3), kit.Select("", arg, 4))
 		}
 	}},
 	PRUNES: {Name: "prunes key sub type [field value]...", Help: "清理", Hand: func(m *ice.Message, arg ...string) {
@@ -223,35 +232,35 @@ var Index = &ice.Context{Name: MDB, Help: "数据模块", Commands: ice.Commands
 		case ZONE: // prunes key sub type zone field value
 			// _list_prunes(m, arg[0], _domain_chain(m, kit.Keys(arg[1], kit.KeyHash(arg[3]))), arg[4:]...)
 		case HASH:
-			_hash_prunes(m, arg[0], _domain_chain(m, arg[1]), arg[3:]...)
-			m.Tables(func(value ice.Maps) { _hash_delete(m, arg[0], _domain_chain(m, arg[1]), HASH, value[HASH]) })
+			_hash_prunes(m, arg[0], arg[1], arg[3:]...)
+			m.Tables(func(value ice.Maps) { _hash_delete(m, arg[0], arg[1], HASH, value[HASH]) })
 		case LIST:
-			// _list_prunes(m, arg[0], _domain_chain(m, arg[1]), arg[3:]...)
+			// _list_prunes(m, arg[0], arg[1], arg[3:]...)
 		}
 	}},
 	EXPORT: {Name: "export key sub type file", Help: "导出", Hand: func(m *ice.Message, arg ...string) {
-		if m.Option(ice.CACHE_LIMIT) == "" {
-			m.Option(ice.CACHE_LIMIT, "-1")
+		if m.Option(CACHE_LIMIT) == "" {
+			m.Option(CACHE_LIMIT, "-1")
 		}
 		switch file := _file_name(m, arg...); arg[2] {
 		case ZONE:
 			m.OptionFields(ZoneShort(m), m.Config(FIELD))
-			_zone_export(m, arg[0], _domain_chain(m, arg[1]), file)
+			_zone_export(m, arg[0], arg[1], file)
 		case HASH:
-			_hash_export(m, arg[0], _domain_chain(m, arg[1]), file)
+			_hash_export(m, arg[0], arg[1], file)
 		case LIST:
 			m.OptionFields(m.Config(FIELD))
-			_list_export(m, arg[0], _domain_chain(m, arg[1]), file)
+			_list_export(m, arg[0], arg[1], file)
 		}
 	}},
 	IMPORT: {Name: "import key sub type file", Help: "导入", Hand: func(m *ice.Message, arg ...string) {
 		switch file := _file_name(m, arg...); arg[2] {
 		case ZONE:
-			_zone_import(m, arg[0], _domain_chain(m, arg[1]), file)
+			_zone_import(m, arg[0], arg[1], file)
 		case HASH:
-			_hash_import(m, arg[0], _domain_chain(m, arg[1]), file)
+			_hash_import(m, arg[0], arg[1], file)
 		case LIST:
-			_list_import(m, arg[0], _domain_chain(m, arg[1]), file)
+			_list_import(m, arg[0], arg[1], file)
 		}
 	}},
 }}
@@ -267,7 +276,7 @@ func AutoConfig(args ...ice.Any) *ice.Action {
 	return &ice.Action{Hand: func(m *ice.Message, arg ...string) {
 		if cs := m.Target().Configs; cs[m.CommandKey()] == nil && len(args) > 0 {
 			cs[m.CommandKey()] = &ice.Config{Value: kit.Data(args...)}
-			m.Load(m.CommandKey())
+			ice.Info.Load(m, m.CommandKey())
 		}
 
 		inputs := []ice.Any{}
@@ -294,4 +303,27 @@ func AutoConfig(args ...ice.Any) *ice.Action {
 			}
 		}
 	}}
+}
+
+var _locks = map[string]*task.Lock{}
+var _lock = task.Lock{}
+
+func getLock(m *ice.Message, key string) *task.Lock {
+	if key == "" {
+		key = m.PrefixKey()
+	}
+
+	defer _lock.Lock()()
+	l, ok := _locks[key]
+	if !ok {
+		l = &task.Lock{}
+		_locks[key] = l
+	}
+	return l
+}
+func RLock(m *ice.Message, arg ...ice.Any) func() {
+	return getLock(m, kit.Keys(arg...)).RLock()
+}
+func Lock(m *ice.Message, arg ...ice.Any) func() {
+	return getLock(m, kit.Keys(arg...)).Lock()
 }

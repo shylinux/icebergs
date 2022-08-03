@@ -2,6 +2,7 @@ package mdb
 
 import (
 	"encoding/json"
+	"io"
 	"path"
 
 	ice "shylinux.com/x/icebergs"
@@ -12,22 +13,11 @@ import (
 func _hash_fields(m *ice.Message) []string {
 	return kit.Split(kit.Select(HASH_FIELD, m.OptionFields()))
 }
-func _hash_select_fields(m *ice.Message, prefix, chain string, key string, field string) (value string) {
-	defer m.RLock(prefix, chain)()
-	m.Richs(prefix, chain, key, func(h string, v Map) {
-		if field == HASH {
-			value = h
-		} else {
-			value = kit.Format(v[field])
-		}
-	})
-	return
-}
 func _hash_inputs(m *ice.Message, prefix, chain string, field, value string) {
-	defer m.RLock(prefix, chain)()
+	defer RLock(m, prefix, chain)()
 
 	list := map[string]int{}
-	m.Richs(prefix, chain, FOREACH, func(val Map) {
+	Richs(m, prefix, chain, FOREACH, func(val Map) {
 		val = kit.GetMeta(val)
 		list[kit.Format(val[field])] += kit.Int(kit.Select("1", val[COUNT]))
 	})
@@ -38,7 +28,7 @@ func _hash_inputs(m *ice.Message, prefix, chain string, field, value string) {
 	m.SortIntR(COUNT)
 }
 func _hash_insert(m *ice.Message, prefix, chain string, arg ...string) string {
-	defer m.Lock(prefix, chain)()
+	defer Lock(m, prefix, chain)()
 
 	if value := m.Confm(prefix, kit.Keys(HASH, arg[1])); value != nil && arg[1] != "" {
 		value = kit.GetMeta(value)
@@ -48,58 +38,63 @@ func _hash_insert(m *ice.Message, prefix, chain string, arg ...string) string {
 		return arg[1]
 	}
 
-	m.Log_INSERT(KEY, path.Join(prefix, chain), arg[0], arg[1])
+	m.Logs(INSERT, KEY, path.Join(prefix, chain), arg[0], arg[1])
 	if expire := m.Conf(prefix, kit.Keys(chain, kit.Keym(EXPIRE))); expire != "" {
 		arg = kit.Simple(TIME, m.Time(expire), arg)
 	}
-	if m.Option(ice.MSG_DOMAIN) != "" {
-		m.Conf(prefix, kit.Keys(chain, kit.Keym(SHORT)), m.Conf(prefix, kit.Keym(SHORT)))
-	}
 	if m.Optionv(TARGET) != nil {
-		m.Echo(m.Rich(prefix, chain, kit.Data(arg, TARGET, m.Optionv(TARGET))))
+		m.Echo(Rich(m, prefix, chain, kit.Data(arg, TARGET, m.Optionv(TARGET))))
 	} else {
-		m.Echo(m.Rich(prefix, chain, kit.Data(arg)))
+		m.Echo(Rich(m, prefix, chain, kit.Data(arg)))
 	}
 	return m.Result()
 }
 func _hash_delete(m *ice.Message, prefix, chain, field, value string) {
-	defer m.Lock(prefix, chain)()
+	defer Lock(m, prefix, chain)()
 
-	if field != HASH {
-		field, value = HASH, kit.Select(kit.Hashs(value), m.Option(HASH))
-	}
-	m.Richs(prefix, chain, value, func(key string, val Map) {
-		m.Log_DELETE(KEY, path.Join(prefix, chain), field, value, VALUE, kit.Format(val))
+	Richs(m, prefix, chain, value, func(key string, val Map) {
+		m.Logs(DELETE, KEY, path.Join(prefix, chain), field, value, VALUE, kit.Format(val))
 		m.Conf(prefix, kit.Keys(chain, HASH, key), "")
 	})
 }
 func _hash_modify(m *ice.Message, prefix, chain string, field, value string, arg ...string) {
-	defer m.Lock(prefix, chain)()
+	defer Lock(m, prefix, chain)()
 
-	m.Richs(prefix, chain, value, func(key string, val Map) {
-		m.Log_MODIFY(KEY, path.Join(prefix, chain), field, value, arg)
+	Richs(m, prefix, chain, value, func(key string, val Map) {
+		m.Logs(MODIFY, KEY, path.Join(prefix, chain), field, value, arg)
 		_mdb_modify(m, val, field, arg...)
 	})
 }
 func _hash_select(m *ice.Message, prefix, chain, field, value string) {
-	defer m.RLock(prefix, chain)()
+	defer RLock(m, prefix, chain)()
 
 	if field == HASH && value == RANDOM {
 		value = RANDOMS
 	}
 	fields := _hash_fields(m)
-	m.Richs(prefix, chain, value, func(key string, value Map) {
-		_mdb_select(m, key, value, fields, nil)
+	Richs(m, prefix, chain, value, func(key string, value Map) {
+		_mdb_select(m, m.OptionCB(""), key, value, fields, nil)
 	})
 	if !m.FieldsIsDetail() {
 		m.SortTimeR(TIME)
 	}
 }
+func _hash_select_field(m *ice.Message, prefix, chain string, key string, field string) (value string) {
+	defer RLock(m, prefix, chain)()
+	Richs(m, prefix, chain, key, func(h string, v Map) {
+		if field == HASH {
+			value = h
+		} else {
+			value = kit.Format(v[field])
+		}
+	})
+	return
+}
 func _hash_prunes(m *ice.Message, prefix, chain string, arg ...string) {
-	defer m.RLock(prefix, chain)()
+	defer RLock(m, prefix, chain)()
 
 	fields := _hash_fields(m)
-	m.Richs(prefix, chain, FOREACH, func(key string, val Map) {
+	Richs(m, prefix, chain, FOREACH, func(key string, val Map) {
 		switch val = kit.GetMeta(val); cb := m.OptionCB(PRUNES).(type) {
 		case func(string, Map) bool:
 			if !cb(key, val) {
@@ -116,7 +111,7 @@ func _hash_prunes(m *ice.Message, prefix, chain string, arg ...string) {
 	})
 }
 func _hash_export(m *ice.Message, prefix, chain, file string) {
-	defer m.Lock(prefix, chain)()
+	defer Lock(m, prefix, chain)()
 
 	f, p, e := miss.CreateFile(kit.Keys(file, JSON))
 	m.Assert(e)
@@ -126,12 +121,12 @@ func _hash_export(m *ice.Message, prefix, chain, file string) {
 	en.SetIndent("", "  ")
 	m.Assert(en.Encode(m.Confv(prefix, kit.Keys(chain, HASH))))
 
-	m.Log_EXPORT(KEY, path.Join(prefix, chain), FILE, p)
+	m.Logs(EXPORT, KEY, path.Join(prefix, chain), FILE, p)
 	m.Conf(prefix, kit.Keys(chain, HASH), "")
 	m.Echo(p)
 }
 func _hash_import(m *ice.Message, prefix, chain, file string) {
-	defer m.Lock(prefix, chain)()
+	defer Lock(m, prefix, chain)()
 
 	f, e := miss.OpenFile(kit.Keys(file, JSON))
 	m.Assert(e)
@@ -148,12 +143,12 @@ func _hash_import(m *ice.Message, prefix, chain, file string) {
 		}
 	} else {
 		for _, data := range list {
-			m.Rich(prefix, chain, data)
+			Rich(m, prefix, chain, data)
 			count++
 		}
 	}
 
-	m.Log_IMPORT(KEY, path.Join(prefix, chain), COUNT, count)
+	m.Logs(IMPORT, KEY, path.Join(prefix, chain), COUNT, count)
 	m.Echo("%d", count)
 }
 
@@ -168,23 +163,32 @@ func HashAction(args ...Any) ice.Actions {
 		CREATE: {Name: "create", Help: "创建", Hand: func(m *ice.Message, arg ...string) { HashCreate(m, arg) }},
 		REMOVE: {Name: "remove", Help: "删除", Hand: func(m *ice.Message, arg ...string) { HashRemove(m, arg) }},
 		MODIFY: {Name: "modify", Help: "编辑", Hand: func(m *ice.Message, arg ...string) { HashModify(m, arg) }},
-		SELECT: {Name: "select hash auto", Help: "列表", Hand: func(m *ice.Message, arg ...string) { HashSelect(m, arg...) }},
+		SELECT: {Name: "select", Help: "列表", Hand: func(m *ice.Message, arg ...string) { HashSelect(m, arg...) }},
 		PRUNES: {Name: "prunes before@date", Help: "清理", Hand: func(m *ice.Message, arg ...string) { HashPrunes(m, nil) }},
 		EXPORT: {Name: "export", Help: "导出", Hand: func(m *ice.Message, arg ...string) { HashExport(m, arg) }},
 		IMPORT: {Name: "import", Help: "导入", Hand: func(m *ice.Message, arg ...string) { HashImport(m, arg) }},
 	}
 }
-func HashActionStatus(args ...Any) ice.Actions {
+func HashCloseAction(args ...Any) ice.Actions {
+	return ice.MergeAction(HashAction(args...), ice.Actions{
+		ice.CTX_EXIT: {Hand: func(m *ice.Message, arg ...string) { HashSelectClose(m) }},
+	})
+}
+func HashStatusAction(args ...Any) ice.Actions {
 	list := HashAction(args...)
 	list[PRUNES] = &ice.Action{Name: "prunes", Help: "清理", Hand: func(m *ice.Message, arg ...string) {
 		m.OptionFields(m.Config(FIELD))
-		m.Cmdy(PRUNES, m.PrefixKey(), "", HASH, STATUS, ice.ERROR)
-		m.Cmdy(PRUNES, m.PrefixKey(), "", HASH, STATUS, ice.CLOSE)
-		m.Cmdy(PRUNES, m.PrefixKey(), "", HASH, STATUS, ice.STOP)
-		m.Cmdy(PRUNES, m.PrefixKey(), "", HASH, STATUS, ice.END)
-		m.Tables(func(value ice.Maps) { HashRemove(m, HASH, value[HASH]) })
+		m.Cmdy(PRUNES, m.PrefixKey(), "", HASH, STATUS, "error")
+		m.Cmdy(PRUNES, m.PrefixKey(), "", HASH, STATUS, "close")
+		m.Cmdy(PRUNES, m.PrefixKey(), "", HASH, STATUS, "stop")
+		m.Cmdy(PRUNES, m.PrefixKey(), "", HASH, STATUS, "end")
 	}}
 	return list
+}
+func HashStatusCloseAction(args ...Any) ice.Actions {
+	return ice.MergeAction(HashStatusAction(args...), ice.Actions{
+		ice.CTX_EXIT: {Hand: func(m *ice.Message, arg ...string) { HashSelectClose(m) }},
+	})
 }
 
 func HashShort(m *ice.Message) string {
@@ -211,16 +215,19 @@ func HashSelect(m *ice.Message, arg ...string) *ice.Message {
 	m.Cmdy(SELECT, m.PrefixKey(), "", HASH, HashShort(m), arg)
 	if m.PushAction(m.Config(ACTION), REMOVE); !m.FieldsIsDetail() {
 		return m.StatusTimeCount()
-	} else {
-		return m.StatusTime()
 	}
+	return m.StatusTime()
 }
 func HashPrunes(m *ice.Message, cb func(Maps) bool) *ice.Message {
 	expire := kit.Time(kit.Select(m.Time("-72h"), m.Option(EXPIRE)))
-	m.Cmd(m.CommandKey()).Tables(func(value Maps) {
-		if cb != nil && !cb(value) || kit.Time(value[TIME]) < expire {
-			HashRemove(m, HashShort(m), value[HashShort(m)])
+	m.Cmd("", func(value Maps) {
+		if kit.Time(value[TIME]) > expire {
+			return
 		}
+		if cb != nil && !cb(value) {
+			return
+		}
+		HashRemove(m, HashShort(m), value[HashShort(m)])
 	})
 	return m
 }
@@ -232,7 +239,6 @@ func HashImport(m *ice.Message, arg ...Any) *ice.Message {
 }
 
 func HashTarget(m *ice.Message, h string, add func() Any) (p Any) {
-	m.Assert(h != "")
 	HashSelectUpdate(m, h, func(value ice.Map) {
 		p = value[TARGET]
 		if pp, ok := p.(Map); ok && len(pp) == 0 {
@@ -249,7 +255,7 @@ func HashPrunesValue(m *ice.Message, field, value string) {
 	m.OptionFields(m.Config(FIELD))
 	m.Cmdy(PRUNES, m.PrefixKey(), "", HASH, field, value)
 }
-func HashSelectFields(m *ice.Message, key string, field string) (value string) {
+func HashSelectField(m *ice.Message, key string, field string) (value string) {
 	HashSelectDetail(m, key, func(h string, val ice.Map) {
 		if field == HASH {
 			value = h
@@ -260,45 +266,33 @@ func HashSelectFields(m *ice.Message, key string, field string) (value string) {
 	return
 }
 func HashSelectDetail(m *ice.Message, key string, cb Any) bool {
-	defer m.RLock(m.PrefixKey(), "")()
+	defer RLock(m, m.PrefixKey(), "")()
 	has := false
-	m.Richs(m.PrefixKey(), nil, key, func(key string, value Map) {
-		hashSelect(m, key, value, cb)
+	Richs(m, m.PrefixKey(), nil, key, func(key string, value Map) {
+		_mdb_select(m, cb, key, value, nil, nil)
 		has = true
 	})
 	return has
 }
 func HashSelectUpdate(m *ice.Message, key string, cb Any) *ice.Message {
-	defer m.Lock(m.PrefixKey(), "")()
-	m.Richs(m.PrefixKey(), nil, key, func(key string, value Map) {
-		hashSelect(m, key, value, cb)
+	defer Lock(m, m.PrefixKey(), "")()
+	Richs(m, m.PrefixKey(), nil, key, func(key string, value Map) {
+		_mdb_select(m, cb, key, value, nil, nil)
 	})
 	return m
 }
-func HashSelectSearch(m *ice.Message, args []string, keys ...string) *ice.Message {
-	if len(keys) == 0 {
-		ls := kit.Split(m.Config(FIELD))
-		for _, k := range ls {
-			switch k {
-			case TIME, HASH:
-			default:
-				keys = append(keys, k)
-			}
-		}
-	}
-	if args[0] == m.CommandKey() {
-		HashSelectValue(m, func(value ice.Map) {
-			if args[1] == "" || args[1] == value[keys[1]] {
-				m.PushSearch(kit.SimpleKV("", value[keys[0]], value[keys[1]], value[keys[2]]), value)
-			}
-		})
-	}
+func HashSelectValue(m *ice.Message, cb Any) *ice.Message {
+	defer RLock(m, m.PrefixKey(), "")()
+	Richs(m, m.PrefixKey(), nil, FOREACH, func(key string, value Map) {
+		_mdb_select(m, cb, key, value, nil, nil)
+	})
 	return m
 }
-func HashSelectValue(m *ice.Message, cb Any) *ice.Message {
-	defer m.RLock(m.PrefixKey(), "")()
-	m.Richs(m.PrefixKey(), nil, FOREACH, func(key string, value Map) {
-		hashSelect(m, key, value, cb)
+func HashSelectClose(m *ice.Message) *ice.Message {
+	HashSelectValue(m, func(target ice.Any) {
+		if c, ok := target.(io.Closer); ok {
+			c.Close()
+		}
 	})
 	return m
 }
@@ -306,17 +300,20 @@ func HashSelects(m *ice.Message, arg ...string) *ice.Message {
 	m.OptionFields(m.Config(FIELD))
 	return HashSelect(m, arg...)
 }
-func hashSelect(m *ice.Message, key string, value Map, cb Any) *ice.Message {
-	switch value = kit.GetMeta(value); cb := cb.(type) {
-	case func(string, Map):
-		cb(key, value)
-	case func(Map):
-		cb(value)
-	case func(Any):
-		cb(value[TARGET])
-	case nil:
-	default:
-		m.ErrorNotImplement(cb)
+
+func Richs(m *ice.Message, prefix string, chain Any, raw Any, cb Any) (res Map) {
+	cache := m.Confm(prefix, chain)
+	if cache == nil {
+		return nil
 	}
-	return m
+	return miss.Richs(path.Join(prefix, kit.Keys(chain)), cache, raw, cb)
+
+}
+func Rich(m *ice.Message, prefix string, chain Any, data Any) string {
+	cache := m.Confm(prefix, chain)
+	if cache == nil {
+		cache = kit.Data()
+		m.Confv(prefix, chain, cache)
+	}
+	return miss.Rich(path.Join(prefix, kit.Keys(chain)), cache, data)
 }

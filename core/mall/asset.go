@@ -4,6 +4,7 @@ import (
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/ctx"
 	"shylinux.com/x/icebergs/base/mdb"
+	"shylinux.com/x/icebergs/base/web"
 	kit "shylinux.com/x/toolkits"
 )
 
@@ -89,7 +90,7 @@ func init() {
 				} else {
 					_asset_check(m, m.Option(ACCOUNT))
 				}
-				m.Toast("核算成功")
+				web.Toast(m, "核算成功")
 			}},
 		}, mdb.ZoneAction(), ctx.CmdAction()), Hand: func(m *ice.Message, arg ...string) {
 			m.Fields(len(arg), "time,account,amount,count", m.Config(mdb.FIELD))

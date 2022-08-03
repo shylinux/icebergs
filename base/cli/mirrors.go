@@ -23,23 +23,27 @@ func init() {
 	Index.MergeCommands(ice.Commands{
 		MIRRORS: {Name: "mirrors cli auto", Help: "软件镜像", Actions: ice.MergeAction(ice.Actions{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
-				m.Conf(m.PrefixKey(), kit.Keys(mdb.HASH), "")
-				IsAlpine(m, "curl")
-				IsAlpine(m, "make")
-				IsAlpine(m, "gcc")
-				IsAlpine(m, "vim")
-				IsAlpine(m, "tmux")
+				m.Go(func() {
+					m.Sleep300ms() // after runtime init
+					m.Conf(m.Prefix(MIRRORS), kit.Keys(mdb.HASH), "")
+					IsAlpine(m, "curl")
+					IsAlpine(m, "make")
+					IsAlpine(m, "gcc")
+					IsAlpine(m, "vim")
+					IsAlpine(m, "tmux")
 
-				IsAlpine(m, "git")
-				mdb.ZoneInsert(m, CLI, "go", CMD, kit.Format("install download https://golang.google.cn/dl/go1.15.5.%s-%s.tar.gz usr/local", runtime.GOOS, runtime.GOARCH))
+					if IsAlpine(m, "git"); !IsAlpine(m, "go", "go git") {
+						mdb.ZoneInsert(m, CLI, "go", CMD, kit.Format("install download https://golang.google.cn/dl/go1.15.5.%s-%s.tar.gz usr/local", runtime.GOOS, runtime.GOARCH))
+					}
 
-				IsAlpine(m, "node", "nodejs")
-				IsAlpine(m, "java", "openjdk8")
-				IsAlpine(m, "javac", "openjdk8")
-				IsAlpine(m, "mvn", "openjdk8 maven")
-				IsAlpine(m, "python", "python2")
-				IsAlpine(m, "python2")
-				IsAlpine(m, "python3")
+					IsAlpine(m, "node", "nodejs")
+					IsAlpine(m, "java", "openjdk8")
+					IsAlpine(m, "javac", "openjdk8")
+					IsAlpine(m, "mvn", "maven openjdk8")
+					IsAlpine(m, "python", "python2")
+					IsAlpine(m, "python2")
+					IsAlpine(m, "python3")
+				})
 			}},
 			mdb.INSERT: {Name: "insert cli osid cmd", Help: "添加"},
 			CMD: {Name: "cmd cli osid", Help: "安装", Hand: func(m *ice.Message, arg ...string) {
@@ -60,7 +64,7 @@ func init() {
 func IsAlpine(m *ice.Message, arg ...string) bool {
 	if strings.Contains(m.Conf(RUNTIME, kit.Keys(HOST, OSID)), ALPINE) {
 		if len(arg) > 0 {
-			mdb.ZoneInsert(m, CLI, arg[0], OSID, ALPINE, CMD, "system apk add "+kit.Select(arg[0], arg, 1))
+			m.Cmd(mdb.INSERT, m.Prefix(MIRRORS), "", mdb.ZONE, arg[0], OSID, ALPINE, CMD, "system apk add "+kit.Select(arg[0], arg, 1))
 		}
 		return true
 	}

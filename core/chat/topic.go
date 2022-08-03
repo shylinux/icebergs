@@ -55,7 +55,7 @@ func init() {
 				m.Cmdy(mdb.INPUTS, m.PrefixKey(), "", mdb.ZONE, arg)
 			}},
 			"choose": {Name: "choose", Help: "切换", Hand: func(m *ice.Message, arg ...string) {
-				m.ProcessLocation(m.MergeURL2("", "topic", kit.TrimExt(m.Option(mdb.ZONE), nfs.CSS)))
+				m.ProcessLocation(web.MergeURL2(m, "", "topic", kit.TrimExt(m.Option(mdb.ZONE), nfs.CSS)))
 			}},
 			"create": {Name: "create topic=demo hover=gray float=lightgray color=black background=white", Help: "创建", Hand: func(m *ice.Message, arg ...string) {
 				buf, err := kit.Render(`

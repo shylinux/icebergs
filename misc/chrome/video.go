@@ -2,6 +2,7 @@ package chrome
 
 import (
 	"shylinux.com/x/ice"
+	"shylinux.com/x/icebergs/base/ctx"
 )
 
 type video struct {
@@ -13,7 +14,7 @@ type video struct {
 }
 
 func (v video) List(m *ice.Message, arg ...string) {
-	m.DisplayStory("video.js")
+	ctx.DisplayStory(m.Message, "video.js")
 	m.Echo("hello world")
 }
 

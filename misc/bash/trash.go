@@ -6,6 +6,7 @@ import (
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/aaa"
 	"shylinux.com/x/icebergs/base/cli"
+	"shylinux.com/x/icebergs/base/ctx"
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/nfs"
 	"shylinux.com/x/icebergs/base/tcp"
@@ -39,13 +40,13 @@ func init() {
 			mdb.PRUNES: {Name: "prunes before@date", Help: "清理", Hand: func(m *ice.Message, arg ...string) {
 				mdb.HashPrunes(m, func(value ice.Maps) bool {
 					os.RemoveAll(value[TO])
-					return false
+					return true
 				})
 			}},
 			nfs.CAT: {Name: "cat", Help: "查看", Hand: func(m *ice.Message, arg ...string) {
 				m.Option(nfs.DIR_ROOT, m.Option(TO))
-				m.ProcessCommand(nfs.CAT, []string{}, arg...)
-				m.ProcessCommandOpt(arg, TO)
+				ctx.ProcessCommand(m, nfs.CAT, []string{}, arg...)
+				ctx.ProcessCommandOpt(m, arg, TO)
 			}},
 		}, mdb.HashAction(mdb.FIELD, "time,hash,username,hostname,size,from,to")), Hand: func(m *ice.Message, arg ...string) {
 			mdb.HashSelect(m, arg...)

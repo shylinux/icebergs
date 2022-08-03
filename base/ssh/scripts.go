@@ -13,31 +13,10 @@ import (
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/cli"
 	"shylinux.com/x/icebergs/base/ctx"
-	"shylinux.com/x/icebergs/base/gdb"
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/nfs"
 	kit "shylinux.com/x/toolkits"
 )
-
-func Render(msg *ice.Message, cmd string, arg ...ice.Any) (res string) {
-	switch args := kit.Simple(arg...); cmd {
-	case ice.RENDER_VOID:
-		return res
-	case ice.RENDER_RESULT:
-		if len(args) > 0 {
-			msg.Resultv(args)
-		}
-		res = msg.Result()
-	default:
-		if res = msg.Result(); res == "" {
-			res = msg.Table().Result()
-		}
-	}
-	if fmt.Fprint(msg.O, res); !strings.HasSuffix(res, ice.NL) {
-		fmt.Fprint(msg.O, ice.NL)
-	}
-	return res
-}
 
 type Frame struct {
 	source string
@@ -94,7 +73,7 @@ func (f *Frame) change(m *ice.Message, ls []string) []string {
 			target = ""
 		}
 		m.Spawn(f.target).Search(target+ice.PT, func(p *ice.Context, s *ice.Context, key string) {
-			m.Log_SELECT(ctx.CONTEXT, s.Name)
+			m.Logs(mdb.SELECT, ctx.CONTEXT, s.Name)
 			f.target = s
 		})
 	}
@@ -144,7 +123,6 @@ func (f *Frame) scan(m *ice.Message, h, line string) *Frame {
 		}
 
 		f.count++
-		mdb.ZoneInsert(m.Spawn(), mdb.HASH, h, mdb.TEXT, bio.Text())
 
 		if strings.HasSuffix(bio.Text(), "\\") {
 			line += bio.Text()[:len(bio.Text())-1]
@@ -189,9 +167,6 @@ func (f *Frame) Start(m *ice.Message, arg ...string) bool {
 		f.pipe, f.stdin, f.stdout = w, r, os.Stdout
 
 		m.Option(ice.MSG_OPTS, ice.MSG_USERNAME)
-		m.Conf(SOURCE, kit.Keys(mdb.HASH, STDIO, kit.Keym(mdb.NAME)), STDIO)
-		m.Conf(SOURCE, kit.Keys(mdb.HASH, STDIO, kit.Keym(mdb.TIME)), m.Time())
-		f.count = kit.Int(m.Conf(SOURCE, kit.Keys(mdb.HASH, STDIO, kit.Keym(mdb.COUNT)))) + 1
 		f.scan(m, STDIO, "")
 
 	default: // 脚本文件
@@ -206,7 +181,7 @@ func (f *Frame) Start(m *ice.Message, arg ...string) bool {
 		m.Option(ice.MSG_SCRIPT, f.source)
 		f.target = m.Source()
 
-		if msg := m.Cmd(nfs.CAT, f.source); msg.Result(0) == ice.ErrWarn {
+		if msg := m.Cmd(nfs.CAT, f.source); msg.IsErr() {
 			return true // 查找失败
 		} else {
 			buf := bytes.NewBuffer(make([]byte, 0, ice.MOD_BUFS))
@@ -214,8 +189,7 @@ func (f *Frame) Start(m *ice.Message, arg ...string) bool {
 			defer func() { m.Echo(buf.String()) }()
 		}
 
-		f.count = 1
-		f.scan(m, mdb.HashCreate(m.Spawn(), mdb.NAME, f.source).Result(), "")
+		f.scan(m, "", "")
 	}
 	return true
 }
@@ -251,12 +225,7 @@ func init() {
 			PS2, []ice.Any{mdb.COUNT, " ", TARGET, "> "},
 		)},
 	}, Commands: ice.Commands{
-		SOURCE: {Name: "source file", Help: "脚本解析", Actions: ice.MergeAction(ice.Actions{
-			gdb.RESTART: {Name: "restart", Help: "执行", Hand: func(m *ice.Message, arg ...string) {
-				m.Cmdy(SCREEN, m.Option(mdb.TEXT))
-				m.ProcessInner()
-			}},
-		}, mdb.ZoneAction()), Hand: func(m *ice.Message, arg ...string) {
+		SOURCE: {Name: "source file", Help: "脚本解析", Hand: func(m *ice.Message, arg ...string) {
 			if f, ok := m.Target().Server().(*Frame); ok {
 				f.Spawn(m, m.Target()).Start(m, arg...)
 			}

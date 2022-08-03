@@ -10,46 +10,13 @@ import (
 	"shylinux.com/x/toolkits/logs"
 )
 
-func (m *Message) log(level string, str string, arg ...Any) *Message {
-	_source := logs.FileLineMeta(logs.FileLine(3, 3))
-	if Info.Log != nil {
-		Info.Log(m, m.FormatPrefix(), level, logs.Format(str, append(arg, _source)...)) // 日志分流
-	}
-
-	// 日志颜色
-	prefix, suffix := "", ""
-	if Info.Colors {
-		switch level {
-		case LOG_CREATE, LOG_INSERT, LOG_MODIFY, LOG_EXPORT, LOG_IMPORT:
-			prefix, suffix = "\033[36;44m", "\033[0m"
-		case LOG_CMDS, LOG_START, LOG_SERVE:
-			prefix, suffix = "\033[32m", "\033[0m"
-		case LOG_WARN, LOG_ERROR, LOG_CLOSE:
-			prefix, suffix = "\033[31m", "\033[0m"
-		case LOG_AUTH, LOG_COST:
-			prefix, suffix = "\033[33m", "\033[0m"
-		}
-	}
-
-	// 长度截断
-	switch level {
-	case LOG_INFO, LOG_SEND, LOG_RECV:
-		if len(str) > 4096 {
-			str = str[:4096]
-		}
-	}
-
-	// 输出日志
-	logs.Infof(str, append(arg, logs.PrefixMeta(kit.Format("%02d %4s->%-4s %s%s ", m.code, m.source.Name, m.target.Name, prefix, level)), logs.SuffixMeta(suffix), _source)...)
-	return m
-}
 func (m *Message) join(arg ...Any) (string, []Any) {
 	list, meta := []string{}, []Any{}
 	for i := 0; i < len(arg); i += 2 {
 		switch v := arg[i].(type) {
 		case logs.Meta:
-			i--
 			meta = append(meta, v)
+			i--
 			continue
 		}
 		if key := strings.TrimSpace(kit.Format(arg[i])); i == len(arg)-1 {
@@ -66,9 +33,50 @@ func (m *Message) join(arg ...Any) (string, []Any) {
 	}
 	return kit.Join(list, SP), meta
 }
+func (m *Message) log(level string, str string, arg ...Any) *Message {
+	_source := logs.FileLineMeta(logs.FileLine(3, 3))
+	Info.Log(m, m.FormatPrefix(), level, logs.Format(str, append(arg, _source)...)) // 日志回调
 
+	// 日志颜色
+	prefix, suffix := "", ""
+	if Info.Colors {
+		switch level {
+		case LOG_CMDS:
+			prefix, suffix = "\033[32m", "\033[0m"
+		case LOG_AUTH, LOG_COST:
+			prefix, suffix = "\033[33m", "\033[0m"
+		case LOG_WARN:
+			prefix, suffix = "\033[31m", "\033[0m"
+		}
+	}
+
+	// 长度截断
+	switch level {
+	case LOG_INFO:
+		if len(str) > 4096 {
+			str = str[:4096]
+		}
+	}
+
+	// 输出日志
+	logs.Infof(str, append(arg, logs.PrefixMeta(kit.Format("%02d %4s->%-4s %s%s ", m.code, m.source.Name, m.target.Name, prefix, level)), logs.SuffixMeta(suffix), _source)...)
+	return m
+}
 func (m *Message) Log(level string, str string, arg ...Any) *Message {
 	return m.log(level, str, arg...)
+}
+func (m *Message) Logs(level string, arg ...Any) *Message {
+	str, meta := m.join(arg...)
+	return m.log(level, str, meta...)
+}
+
+func (m *Message) Cost(arg ...Any) *Message {
+	str, meta := m.join(arg...)
+	if len(arg) == 0 {
+		str = kit.Join(m.meta[MSG_DETAIL], SP)
+	}
+	list := []string{m.FormatCost(), str}
+	return m.log(LOG_COST, kit.Join(list, SP), meta...)
 }
 func (m *Message) Info(str string, arg ...Any) *Message {
 	return m.log(LOG_INFO, str, arg...)
@@ -93,17 +101,11 @@ func (m *Message) Warn(err Any, arg ...Any) bool {
 	m.error(arg...)
 	return true
 }
-func (m *Message) error(arg ...Any) {
-	if len(arg) == 0 {
-		arg = append(arg, "", "")
-	} else if len(arg) == 1 {
-		arg = append(arg, "")
+func (m *Message) Debug(str string, arg ...Any) {
+	if str == "" {
+		str = m.FormatMeta()
 	}
-	str, meta := m.join(arg[2:]...)
-	m.meta[MSG_RESULT] = kit.Simple(ErrWarn, arg[0], arg[1], str, meta)
-}
-func (m *Message) ErrorNotImplement(arg ...Any) {
-	m.Error(true, append(kit.List(ErrNotImplement), arg...)...)
+	m.log(LOG_DEBUG, str, arg...)
 }
 func (m *Message) Error(err bool, arg ...Any) bool {
 	if err {
@@ -116,71 +118,26 @@ func (m *Message) Error(err bool, arg ...Any) bool {
 	}
 	return false
 }
-func (m *Message) Debug(str string, arg ...Any) {
-	if str == "" {
-		str = m.FormatMeta()
-	}
-	m.log(LOG_DEBUG, str, arg...)
+func (m *Message) ErrorNotImplement(arg ...Any) {
+	m.Error(true, append(kit.List(ErrNotImplement), arg...)...)
 }
-func (m *Message) Cost(arg ...Any) *Message {
-	str, meta := m.join(arg...)
+func (m *Message) error(arg ...Any) {
 	if len(arg) == 0 {
-		str = kit.Join(m.meta[MSG_DETAIL], SP)
+		arg = append(arg, "", "")
+	} else if len(arg) == 1 {
+		arg = append(arg, "")
 	}
-	list := []string{m.FormatCost(), str}
-	return m.log(LOG_COST, kit.Join(list, SP), meta...)
+	str, meta := m.join(arg[2:]...)
+	m.meta[MSG_RESULT] = kit.Simple(ErrWarn, arg[0], arg[1], str, meta)
 }
 
-func (m *Message) Logs(level string, arg ...Any) *Message {
-	str, meta := m.join(arg...)
-	return m.log(level, str, meta...)
-}
-func (m *Message) Log_AUTH(arg ...Any) *Message {
-	str, meta := m.join(arg...)
-	return m.log(LOG_AUTH, str, meta...)
-}
-func (m *Message) Log_SEND(arg ...Any) *Message {
-	str, meta := m.join(arg...)
-	return m.log(LOG_AUTH, str, meta...)
-}
-func (m *Message) Log_CREATE(arg ...Any) *Message {
-	str, meta := m.join(arg...)
-	return m.log(LOG_CREATE, str, meta...)
-}
-func (m *Message) Log_REMOVE(arg ...Any) *Message {
-	str, meta := m.join(arg...)
-	return m.log(LOG_REMOVE, str, meta...)
-}
-func (m *Message) Log_INSERT(arg ...Any) *Message {
-	str, meta := m.join(arg...)
-	return m.log(LOG_INSERT, str, meta...)
-}
-func (m *Message) Log_DELETE(arg ...Any) *Message {
-	str, meta := m.join(arg...)
-	return m.log(LOG_DELETE, str, meta...)
-}
-func (m *Message) Log_MODIFY(arg ...Any) *Message {
-	str, meta := m.join(arg...)
-	return m.log(LOG_MODIFY, str, meta...)
-}
-func (m *Message) Log_SELECT(arg ...Any) *Message {
-	str, meta := m.join(arg...)
-	return m.log(LOG_SELECT, str, meta...)
-}
-func (m *Message) Log_EXPORT(arg ...Any) *Message {
-	str, meta := m.join(arg...)
-	return m.log(LOG_EXPORT, str, meta...)
-}
-func (m *Message) Log_IMPORT(arg ...Any) *Message {
-	str, meta := m.join(arg...)
-	return m.log(LOG_IMPORT, str, meta...)
+func (m *Message) IsErrNotFound() bool { return m.IsErr(ErrNotFound) }
+func (m *Message) IsErr(arg ...string) bool {
+	return len(arg) > 0 && m.Result(1) == arg[0] || len(arg) == 0 && m.Result(0) == ErrWarn
 }
 
 func (m *Message) FormatPrefix() string {
 	return kit.Format("%s %d %s->%s", logs.FmtTime(logs.Now()), m.code, m.source.Name, m.target.Name)
-}
-func (m *Message) FormatTime() string {
-	return m.Time()
 }
 func (m *Message) FormatShip() string {
 	return kit.Format("%s->%s", m.source.Name, m.target.Name)
@@ -196,35 +153,6 @@ func (m *Message) FormatMeta() string {
 }
 func (m *Message) FormatsMeta() string {
 	return kit.Formats(m.meta)
-}
-func (m *Message) FormatStack(s, n int) string {
-	pc := make([]uintptr, n+10)
-	frames := runtime.CallersFrames(pc[:runtime.Callers(s+1, pc)])
-
-	list := []string{}
-	for {
-		frame, more := frames.Next()
-		file := kit.Slice(kit.Split(frame.File, PS, PS), -1)[0]
-		name := kit.Slice(kit.Split(frame.Function, PS, PS), -1)[0]
-
-		switch ls := kit.Split(name, PT, PT); kit.Select("", ls, 0) {
-		case "reflect", "runtime", "http", "task", "icebergs":
-		default:
-			switch kit.Select("", ls, 1) {
-			// case "(*Frame)":
-			default:
-				list = append(list, kit.Format("%s:%d\t%s", file, frame.Line, name))
-			}
-		}
-
-		if len(list) >= n {
-			break
-		}
-		if !more {
-			break
-		}
-	}
-	return kit.Join(list, NL)
 }
 func (m *Message) FormatChain() string {
 	ms := []*Message{}
@@ -254,8 +182,28 @@ func (m *Message) FormatChain() string {
 	}
 	return kit.Join(meta, NL)
 }
+func (m *Message) FormatStack(s, n int) string {
+	pc := make([]uintptr, n+10)
+	frames := runtime.CallersFrames(pc[:runtime.Callers(s+1, pc)])
 
-func (m *Message) IsErr(arg ...string) bool {
-	return len(arg) > 0 && m.Result(1) == arg[0] || m.Result(0) == ErrWarn
+	list := []string{}
+	for {
+		frame, more := frames.Next()
+		file := kit.Slice(kit.Split(frame.File, PS, PS), -1)[0]
+		name := kit.Slice(kit.Split(frame.Function, PS, PS), -1)[0]
+
+		switch ls := kit.Split(name, PT, PT); kit.Select("", ls, 0) {
+		case "reflect", "runtime", "http", "task", "icebergs":
+		default:
+			list = append(list, kit.Format("%s:%d\t%s", file, frame.Line, name))
+		}
+
+		if len(list) >= n {
+			break
+		}
+		if !more {
+			break
+		}
+	}
+	return kit.Join(list, NL)
 }
-func (m *Message) IsErrNotFound() bool { return m.Result(1) == ErrNotFound }

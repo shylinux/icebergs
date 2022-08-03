@@ -13,11 +13,12 @@ import (
 	"shylinux.com/x/icebergs/base/cli"
 	"shylinux.com/x/icebergs/base/ctx"
 	"shylinux.com/x/icebergs/base/mdb"
+	"shylinux.com/x/icebergs/base/web"
 	kit "shylinux.com/x/toolkits"
 )
 
 func _xterm_socket(m *ice.Message, h, t string) {
-	defer m.RLock()()
+	defer mdb.RLock(m)()
 	m.Option(ice.MSG_DAEMON, m.Conf("", kit.Keys(mdb.HASH, h, mdb.META, mdb.TEXT)))
 	m.Option(mdb.TEXT, t)
 }
@@ -40,12 +41,12 @@ func _xterm_get(m *ice.Message, h string, must bool) (f *os.File) {
 			for {
 				if n, e := tty.Read(buf); !m.Warn(e) {
 					_xterm_socket(m, h, base64.StdEncoding.EncodeToString(buf[:n]))
-					m.PushNoticeGrow("data")
+					web.PushNoticeGrow(m, "data")
 				} else {
 					break
 				}
 			}
-			m.PushNoticeGrow("exit")
+			web.PushNoticeGrow(m, "exit")
 		})
 		return tty
 	}).(*os.File)
@@ -116,7 +117,8 @@ func init() {
 				}
 			}},
 		}, mdb.HashAction(mdb.FIELD, "time,hash,type,name,text,extra"), ctx.CmdAction()), Hand: func(m *ice.Message, arg ...string) {
-			mdb.HashSelect(m, kit.Slice(arg, 0, 1)...).DisplayLocal("")
+			mdb.HashSelect(m, kit.Slice(arg, 0, 1)...)
+			ctx.DisplayLocal(m, "")
 		}},
 	})
 }

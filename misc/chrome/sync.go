@@ -3,6 +3,7 @@ package chrome
 import (
 	"shylinux.com/x/ice"
 	"shylinux.com/x/icebergs/base/mdb"
+	"shylinux.com/x/icebergs/base/web"
 )
 
 type sync struct {
@@ -27,7 +28,7 @@ func (s sync) Insert(m *ice.Message, arg ...string) {
 }
 func (s sync) Favor(m *ice.Message, arg ...string) {
 	m.Cmdy(s.favor.Insert, m.OptionSimple("zone,type,name,link"))
-	m.ToastSuccess()
+	web.ToastSuccess(m.Message)
 }
 func (s sync) List(m *ice.Message, arg ...string) {
 	s.Lists.List(m, arg...)

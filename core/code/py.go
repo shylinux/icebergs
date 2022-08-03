@@ -12,9 +12,11 @@ import (
 
 func _py_main_script(m *ice.Message, arg ...string) {
 	const PYTHON2 = "python2"
-	if kit.FileExists(kit.Path(arg[2], arg[1])) {
-		m.Cmdy(cli.SYSTEM, PYTHON2, kit.Path(arg[2], arg[1]))
-	} else if b, ok := ice.Info.Pack[path.Join(arg[2], arg[1])]; ok && len(b) > 0 {
+
+	if _, e := nfs.DiskFile.StatFile(path.Join(arg[2], arg[1])); e == nil {
+		m.Cmdy(cli.SYSTEM, PYTHON2, path.Join(arg[2], arg[1]))
+
+	} else if b, e := nfs.ReadFile(m, path.Join(arg[2], arg[1])); e == nil {
 		m.Cmdy(cli.SYSTEM, PYTHON2, "-c", string(b))
 	}
 	if m.StatusTime(); cli.IsSuccess(m) {

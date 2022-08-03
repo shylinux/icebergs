@@ -140,12 +140,12 @@ func init() {
 			}},
 		}, ctx.CmdAction()), Hand: func(m *ice.Message, arg ...string) {
 			if !m.IsCliUA() {
-				p := kit.Split(m.MergeURL2("/x/"+path.Join(arg...)), "?")[0]
+				p := kit.Split(web.MergeURL2(m, "/x/"+path.Join(arg...)), "?")[0]
 				m.RenderResult("git clone %v", p)
 				return
 			}
 			if m.Option("go-get") == "1" { // 下载地址
-				p := kit.Split(m.MergeURL2("/x/"+path.Join(arg...)), "?")[0]
+				p := kit.Split(web.MergeURL2(m, "/x/"+path.Join(arg...)), "?")[0]
 				m.RenderResult(kit.Format(`<meta name="%s" content="%s">`, "go-import", kit.Format(`%s git %s`, strings.TrimPrefix(p, "https://"), p)))
 				return
 			}
@@ -153,27 +153,27 @@ func init() {
 			switch repos, service := _server_param(m, arg...); service {
 			case "receive-pack": // 上传代码
 				if err := _server_login(m); err != nil {
-					web.RenderHeader(m, "WWW-Authenticate", `Basic realm="git server"`)
-					web.RenderStatus(m, 401, err.Error())
+					web.RenderHeader(m.W, "WWW-Authenticate", `Basic realm="git server"`)
+					web.RenderStatus(m.W, 401, err.Error())
 					return // 没有权限
 				}
 				if !kit.FileExists(path.Join(repos)) {
 					m.Cmd(cli.SYSTEM, GIT, INIT, "--bare", repos) // 创建仓库
-					m.Log_CREATE(REPOS, repos)
+					m.Logs(mdb.CREATE, REPOS, repos)
 				}
 			case "upload-pack": // 下载代码
 				aaa.UserRoot(m)
 				if kit.Select("", arg, 1) == "info" && m.Cmd(web.DREAM, arg[0]).Length() > 0 {
-					m.Cmd(web.SPACE, arg[0], "web.code.git.status", "submit", m.MergeURL2("/x/")+arg[0])
+					m.Cmd(web.SPACE, arg[0], "web.code.git.status", "submit", web.MergeURL2(m, "/x/")+arg[0])
 				}
 				if !kit.FileExists(path.Join(repos)) {
-					web.RenderStatus(m, 404, kit.Format("not found: %s", arg[0]))
+					web.RenderStatus(m.W, 404, kit.Format("not found: %s", arg[0]))
 					return
 				}
 			}
 
 			if err := _server_repos(m, arg...); err != nil {
-				web.RenderStatus(m, 500, err.Error())
+				web.RenderStatus(m.W, 500, err.Error())
 			}
 		}},
 		SERVER: {Name: "server path auto create import", Help: "服务器", Actions: ice.Actions{
@@ -183,7 +183,7 @@ func init() {
 			}},
 			mdb.IMPORT: {Name: "import", Help: "导入", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmdy(REPOS, ice.OptionFields("time,name,path")).Tables(func(value ice.Maps) {
-					remote := strings.Split(m.MergeURL2("/x/"+value[REPOS]), "?")[0]
+					remote := strings.Split(web.MergeURL2(m, "/x/"+value[REPOS]), "?")[0]
 					m.Option(cli.CMD_DIR, value[nfs.PATH])
 					m.Cmd(cli.SYSTEM, GIT, PUSH, remote, MASTER)
 					m.Cmd(cli.SYSTEM, GIT, PUSH, "--tags", remote, MASTER)
@@ -196,7 +196,7 @@ func init() {
 		}, Hand: func(m *ice.Message, arg ...string) {
 			if m.Option(nfs.DIR_ROOT, ice.USR_LOCAL_REPOS); len(arg) == 0 {
 				m.Cmdy(nfs.DIR, nfs.PWD).Tables(func(value ice.Maps) {
-					m.PushScript("git clone " + m.MergeLink("/x/"+strings.TrimSuffix(value[nfs.PATH], ice.PS)))
+					m.PushScript("git clone " + web.MergeURL2(m, "/x/"+strings.TrimSuffix(value[nfs.PATH], ice.PS)))
 				})
 				m.Cut("time,path,size,script,action")
 				m.StatusTimeCount()

@@ -4,6 +4,7 @@ import (
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/ctx"
 	"shylinux.com/x/icebergs/base/mdb"
+	"shylinux.com/x/icebergs/base/web"
 	kit "shylinux.com/x/toolkits"
 )
 
@@ -47,7 +48,6 @@ func init() {
 				}
 				msg := m.Cmd(STORM, m.Option(mdb.HASH), m.Option(mdb.ID))
 				cmd := kit.Keys(msg.Append(ice.CTX), msg.Append(ice.CMD))
-				_action_domain(m, cmd, m.Option(mdb.HASH))
 				m.Cmdy(cmd, mdb.EXPORT)
 			}},
 			mdb.IMPORT: {Name: "import", Help: "导入", Hand: func(m *ice.Message, arg ...string) {
@@ -56,7 +56,6 @@ func init() {
 				}
 				msg := m.Cmd(STORM, m.Option(mdb.HASH), m.Option(mdb.ID))
 				cmd := kit.Keys(msg.Append(ice.CTX), msg.Append(ice.CMD))
-				_action_domain(m, cmd, m.Option(mdb.HASH))
 				m.Cmdy(cmd, mdb.IMPORT)
 			}},
 			SHARE: {Name: "share", Help: "共享", Hand: func(m *ice.Message, arg ...string) { _header_share(m, arg...) }},
@@ -75,14 +74,14 @@ func init() {
 			}
 
 			if len(arg) > 2 && arg[2] == ice.RUN { // 执行命令
-				m.Cmdy(m.Space(kit.Select(m.Option(ice.POD), msg.Append(ice.POD))), kit.Keys(msg.Append(ice.CTX), msg.Append(ice.CMD)), arg[3:])
+				m.Cmdy(web.Space(m, kit.Select(m.Option(ice.POD), msg.Append(ice.POD))), kit.Keys(msg.Append(ice.CTX), msg.Append(ice.CMD)), arg[3:])
 				return
 			}
 
 			if m.Copy(msg); len(arg) > 1 { // 命令插件
 				m.ProcessField(arg[0], arg[1], ice.RUN)
 				m.Tables(func(value ice.Maps) {
-					m.Cmdy(m.Space(value[ice.POD]), ctx.CONTEXT, value[ice.CTX], ctx.COMMAND, value[ice.CMD])
+					m.Cmdy(web.Space(m, value[ice.POD]), ctx.CONTEXT, value[ice.CTX], ctx.COMMAND, value[ice.CMD])
 				})
 			} else {
 				m.PushAction(mdb.EXPORT, mdb.IMPORT)

@@ -73,13 +73,11 @@ func init() {
 					}
 					defer file.Close()
 
-					m.PushNoticeGrow(kit.Format("%v %v %v\n", header.Name, kit.FmtSize(f.Size()), kit.FmtSize(total)))
 					if _, err = io.Copy(t, file); m.Warn(err) {
 						return
 					}
 
 					count++
-					m.Toast(kit.Format("%v %v %v", count, m.Cost(), kit.FmtSize(total)))
 				})
 			}
 			m.StatusTimeCountTotal(kit.FmtSize(total))

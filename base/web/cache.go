@@ -71,7 +71,7 @@ func _cache_upload(m *ice.Message, r *http.Request) (kind, name, file, size stri
 			// 导入数据
 			b.Seek(0, os.SEEK_SET)
 			if n, e := io.Copy(f, b); m.Assert(e) {
-				m.Log_IMPORT(nfs.FILE, p, nfs.SIZE, kit.FmtSize(int64(n)))
+				m.Logs(mdb.IMPORT, nfs.FILE, p, nfs.SIZE, kit.FmtSize(int64(n)))
 				return h.Header.Get(ContentType), h.Filename, p, kit.Format(n)
 			}
 		}
@@ -100,7 +100,7 @@ func _cache_download(m *ice.Message, r *http.Response) (file, size string) {
 					cb(size, total)
 				default:
 					if s != step && s%10 == 0 {
-						m.Log_IMPORT(nfs.FILE, p, mdb.VALUE, s, mdb.COUNT, kit.FmtSize(int64(size)), mdb.TOTAL, kit.FmtSize(int64(total)))
+						m.Logs(mdb.IMPORT, nfs.FILE, p, mdb.VALUE, s, mdb.COUNT, kit.FmtSize(int64(size)), mdb.TOTAL, kit.FmtSize(int64(total)))
 					}
 				}
 
@@ -119,6 +119,8 @@ const (
 	WRITE    = "write"
 	UPLOAD   = "upload"
 	DOWNLOAD = "download"
+
+	UPLOAD_WATCH = "upload_watch"
 )
 const CACHE = "cache"
 
@@ -146,6 +148,19 @@ func init() {
 					_cache_save(m, arg[0], arg[1], "", file, size)
 				}
 			}},
+			UPLOAD_WATCH: {Name: "upload_watch", Help: "上传", Hand: func(m *ice.Message, arg ...string) {
+				up := kit.Simple(m.Optionv(ice.MSG_UPLOAD))
+				if len(up) < 2 {
+					msg := m.Cmd(CACHE, UPLOAD)
+					up = kit.Simple(msg.Append(mdb.HASH), msg.Append(mdb.NAME), msg.Append(nfs.SIZE))
+				}
+
+				if p := path.Join(arg[0], up[1]); m.Option(ice.MSG_USERPOD) == "" {
+					m.Cmdy(CACHE, WATCH, up[0], p) // 本机文件
+				} else { // 下发文件
+					m.Cmdy(SPIDE, ice.DEV, ice.SAVE, p, SPIDE_GET, MergeURL2(m, path.Join(SHARE_CACHE, up[0])))
+				}
+			}},
 		}, mdb.HashAction(mdb.SHORT, mdb.TEXT, mdb.FIELD, "time,hash,size,type,name,text,file")), Hand: func(m *ice.Message, arg ...string) {
 			if mdb.HashSelect(m, arg...); len(arg) == 0 {
 				return
@@ -153,7 +168,7 @@ func init() {
 			if m.Append(nfs.FILE) == "" {
 				m.PushScript("inner", m.Append(mdb.TEXT))
 			} else {
-				m.PushDownload(m.Append(mdb.NAME), m.MergeURL2(SHARE_CACHE+arg[0]))
+				m.PushDownload(m.Append(mdb.NAME), MergeURL2(m, SHARE_CACHE+arg[0]))
 			}
 		}},
 		PP(CACHE): {Name: "/cache/", Help: "缓存池", Hand: func(m *ice.Message, arg ...string) {

@@ -27,19 +27,19 @@ func init() {
 			}
 
 			if len(arg) == 0 || kit.Select("", arg, 0) == "" { // 节点列表
-				m.RenderCmd(web.ROUTE)
+				web.RenderCmd(m, web.ROUTE)
 
 			} else if len(arg) == 1 { // 节点首页
 				if m.Cmd(web.SPACE, arg[0]).Length() == 0 && !strings.Contains(arg[0], ice.PT) {
 					m.Cmd(web.DREAM, cli.START, mdb.NAME, arg[0])
 				}
 				aaa.UserRoot(m)
-				if m.RenderWebsite(arg[0], "index.iml", "Header", "", "River", "", "Footer", ""); m.Result() == "" {
-					m.RenderIndex(web.SERVE, ice.VOLCANOS)
+				if web.RenderWebsite(m, arg[0], "index.iml", "Header", "", "River", "", "Footer", ""); m.Result() == "" {
+					web.RenderIndex(m, web.SERVE, ice.VOLCANOS)
 				}
 
 			} else if arg[1] == WEBSITE { // 节点网页
-				m.RenderWebsite(arg[0], path.Join(arg[2:]...))
+				web.RenderWebsite(m, arg[0], path.Join(arg[2:]...))
 
 			} else if arg[1] == "cmd" { // 节点命令
 				m.Cmdy(web.SPACE, arg[0], m.Prefix(CMD), path.Join(arg[2:]...))

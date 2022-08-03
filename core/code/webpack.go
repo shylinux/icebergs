@@ -2,6 +2,7 @@ package code
 
 import (
 	"fmt"
+	"os"
 	"path"
 	"strings"
 
@@ -26,7 +27,7 @@ func _webpack_can(m *ice.Message) {
 	m.Cmdy(nfs.DIR, _volcanos(m, PAGE))
 }
 func _webpack_cache(m *ice.Message, dir string, write bool) {
-	if len(ice.Info.Pack) > 0 {
+	if _, e := nfs.DiskFile.StatFile(ice.USR_VOLCANOS); os.IsNotExist(e) {
 		return
 	}
 

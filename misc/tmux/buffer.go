@@ -29,7 +29,7 @@ func init() {
 				m.Config(mdb.COUNT, "0")
 
 				m.Cmd(BUFFER).Table(func(index int, value ice.Maps, head []string) {
-					m.Grow(m.PrefixKey(), "", kit.Dict(
+					mdb.Grow(m, m.PrefixKey(), "", kit.Dict(
 						mdb.NAME, value[head[0]], mdb.TEXT, m.Cmdx(cli.SYSTEM, TMUX, "show-buffer", "-b", value[head[0]]),
 					))
 				})
@@ -39,9 +39,9 @@ func init() {
 				m.Config(mdb.LIST, "")
 				m.Config(mdb.COUNT, "0")
 
-				m.Option(ice.CACHE_LIMIT, "-1")
+				m.Option(mdb.CACHE_LIMIT, "-1")
 				m.Cmdy(mdb.IMPORT, m.PrefixKey(), "", mdb.LIST)
-				m.Grows(m.PrefixKey(), "", "", "", func(index int, value ice.Map) {
+				mdb.Grows(m, m.PrefixKey(), "", "", "", func(index int, value ice.Map) {
 					m.Cmd(cli.SYSTEM, TMUX, "set-buffer", "-b", value[mdb.NAME], value[mdb.TEXT])
 				})
 			}},

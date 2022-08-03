@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	ice "shylinux.com/x/icebergs"
+	"shylinux.com/x/icebergs/base/aaa"
 	"shylinux.com/x/icebergs/base/ctx"
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/nfs"
@@ -86,7 +87,7 @@ func init() {
 				})
 			}},
 			ice.RUN: {Name: "run", Help: "执行", Hand: func(m *ice.Message, arg ...string) {
-				if m.Right(arg) && !m.PodCmd(arg) {
+				if aaa.Right(m, arg) && !ctx.PodCmd(m, arg) {
 					m.Cmdy(arg)
 				}
 				if m.Result() == "" {

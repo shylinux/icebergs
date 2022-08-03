@@ -8,6 +8,7 @@ import (
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/nfs"
 	"shylinux.com/x/icebergs/base/tcp"
+	"shylinux.com/x/icebergs/base/web"
 	kit "shylinux.com/x/toolkits"
 )
 
@@ -52,12 +53,12 @@ func init() {
 			}},
 			INSTALL: {Name: "compile", Help: "安装", Hand: func(m *ice.Message, arg ...string) {
 				if cli.IsAlpine(m) {
-					cli.PushStream(m)
+					web.PushStream(m)
 					m.Cmd(cli.SYSTEM, "apk", "add", GIT, GO)
 					return
 				}
 				if m.Cmdx(cli.SYSTEM, nfs.FIND, GIT) == "" {
-					m.Toast("please install git")
+					web.Toast(m, "please install git")
 					m.Echo(ice.FALSE)
 					return
 				}
@@ -74,7 +75,7 @@ func init() {
 			m.Cmd(cli.SYSTEM, GO, "get", "shylinux.com/x/ice")
 
 			// 执行编译
-			cli.PushStream(m)
+			web.PushStream(m)
 			main, file, goos, arch := _compile_target(m, arg...)
 			m.Optionv(cli.CMD_ENV, kit.Simple(m.Configv(cli.ENV), cli.HOME, kit.Env(cli.HOME), cli.PATH, kit.Env(cli.PATH), cli.GOOS, goos, cli.GOARCH, arch))
 			if msg := m.Cmd(cli.SYSTEM, GO, cli.BUILD, "-o", file, main, ice.SRC_VERSION_GO, ice.SRC_BINPACK_GO); !cli.IsSuccess(msg) {
@@ -84,7 +85,7 @@ func init() {
 			m.Option(cli.CMD_OUTPUT, "")
 
 			// 编译成功
-			m.Log_EXPORT(nfs.SOURCE, main, nfs.TARGET, file)
+			m.Logs(mdb.EXPORT, nfs.SOURCE, main, nfs.TARGET, file)
 			m.Cmdy(nfs.DIR, file, nfs.DIR_WEB_FIELDS)
 			m.Cmdy(PUBLISH, ice.CONTEXTS)
 			m.StatusTimeCount()

@@ -4,6 +4,7 @@ import (
 	"time"
 
 	ice "shylinux.com/x/icebergs"
+	"shylinux.com/x/icebergs/base/ctx"
 	"shylinux.com/x/icebergs/base/mdb"
 	kit "shylinux.com/x/toolkits"
 )
@@ -27,7 +28,8 @@ func init() {
 					))
 				}
 			})
-			m.Sort(mdb.TIME).PushAction(mdb.MODIFY, mdb.REMOVE).DisplayTableCard()
+			m.Sort(mdb.TIME).PushAction(mdb.MODIFY, mdb.REMOVE)
+			ctx.DisplayTableCard(m)
 		}},
 	})
 }

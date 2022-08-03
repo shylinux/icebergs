@@ -10,6 +10,7 @@ import (
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/nfs"
 	"shylinux.com/x/icebergs/base/ssh"
+	"shylinux.com/x/icebergs/base/web"
 	kit "shylinux.com/x/toolkits"
 )
 
@@ -46,7 +47,7 @@ func init() {
 			}},
 			mdb.SEARCH: {Name: "search", Help: "搜索", Hand: func(m *ice.Message, arg ...string) {
 				if arg[0] == mdb.FOREACH && arg[1] == "" {
-					m.PushSearch(mdb.TYPE, "shy", mdb.NAME, "src/main.shy", mdb.TEXT, m.MergeCmd(""))
+					m.PushSearch(mdb.TYPE, "shy", mdb.NAME, "src/main.shy", mdb.TEXT, web.MergeCmd(m, ""))
 				}
 				m.Cmd(mdb.SELECT, m.PrefixKey(), "", mdb.HASH).Tables(func(value ice.Maps) {
 					if arg[1] == "" {
@@ -88,7 +89,7 @@ func init() {
 				if !kit.FileExists(arg[0]) && kit.FileExists(path.Join("src", arg[0])) {
 					arg[0] = path.Join("src/", arg[0])
 				}
-				m.DisplayLocal("")
+				ctx.DisplayLocal(m, "")
 				_word_show(m, arg[0])
 			}
 		}},

@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	ice "shylinux.com/x/icebergs"
+	"shylinux.com/x/icebergs/base/aaa"
 	"shylinux.com/x/icebergs/base/cli"
 	"shylinux.com/x/icebergs/base/ctx"
 	"shylinux.com/x/icebergs/base/mdb"
@@ -14,7 +15,7 @@ import (
 )
 
 func _inner_list(m *ice.Message, ext, file, dir string, arg ...string) {
-	if !m.Right(dir, file) {
+	if !aaa.Right(m, dir, file) {
 		return // 没有权限
 	}
 	if m.Conf(nfs.CAT, kit.Keym(ssh.SOURCE, ext)) == ice.TRUE {
@@ -24,13 +25,13 @@ func _inner_list(m *ice.Message, ext, file, dir string, arg ...string) {
 	}
 }
 func _inner_show(m *ice.Message, ext, file, dir string, arg ...string) {
-	if !m.Right(dir, file) {
+	if !aaa.Right(m, dir, file) {
 		return // 没有权限
 	}
 	m.Cmdy(mdb.RENDER, ext, file, dir, arg)
 }
 func _inner_exec(m *ice.Message, ext, file, dir string, arg ...string) {
-	if !m.Right(dir, file) {
+	if !aaa.Right(m, dir, file) {
 		return // 没有权限
 	}
 	// defer m.StatusTime()

@@ -1,13 +1,5 @@
 package ice
 
-import (
-	"os"
-	"path"
-	"strings"
-
-	kit "shylinux.com/x/toolkits"
-)
-
 type MakeInfo struct {
 	Path     string
 	Time     string
@@ -38,13 +30,13 @@ var Info = struct {
 	PidPath  string
 
 	Help  string
-	cans  string
-	Route Maps              // 路由命令
-	File  Maps              // 文件命令
-	Pack  map[string][]byte // 打包文件
+	Route Maps // 路由命令
+	File  Maps // 文件命令
 	names Map
 
 	render map[string]func(*Message, string, ...Any) string
+	Save   func(m *Message, key ...string) *Message
+	Load   func(m *Message, key ...string) *Message
 	Log    func(m *Message, p, l, s string)
 }{
 	Help: `
@@ -55,87 +47,12 @@ report: shylinuxc@gmail.com
 server: https://shylinux.com
 source: https://shylinux.com/x/icebergs
 `,
-	cans: `<!DOCTYPE html>
-<head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width,initial-scale=0.8,user-scalable=no">
-    <link rel="stylesheet" type="text/css" href="/page/can.css">
-</head>
-<body>
-	<script src="/page/can.js"></script>
-	<script>can(%s)</script>
-</body>
-`,
 	Route: Maps{},
 	File:  Maps{},
-	Pack:  map[string][]byte{},
 	names: Map{},
 
 	render: map[string]func(*Message, string, ...Any) string{},
+	Save:   func(m *Message, key ...string) *Message { return m },
+	Load:   func(m *Message, key ...string) *Message { return m },
 	Log:    func(m *Message, p, l, s string) {},
-}
-
-func FileURI(dir string) string {
-	if strings.Contains(dir, "go/pkg/mod") {
-		return path.Join("/require", strings.Split(dir, "go/pkg/mod")[1])
-	}
-	if Info.Make.Path != "" && strings.HasPrefix(dir, Info.Make.Path+PS) {
-		dir = strings.TrimPrefix(dir, Info.Make.Path+PS)
-	}
-	if strings.HasPrefix(dir, kit.Path("")+PS) {
-		dir = strings.TrimPrefix(dir, kit.Path("")+PS)
-	}
-	if strings.HasPrefix(dir, SRC) {
-		return path.Join("/require", dir)
-	}
-	if strings.HasPrefix(dir, USR) {
-		return path.Join("/require", dir)
-	}
-	if kit.FileExists(path.Join("src", dir)) {
-		return path.Join("/require/src/", dir)
-	}
-	return dir
-}
-func FileCmd(dir string) string {
-	dir = strings.Split(dir, DF)[0]
-	dir = strings.ReplaceAll(dir, ".js", ".go")
-	dir = strings.ReplaceAll(dir, ".sh", ".go")
-	return FileURI(dir)
-}
-func AddFileCmd(dir, key string) {
-	Info.File[FileCmd(dir)] = key
-}
-func GetFileCmd(dir string) string {
-	if strings.HasPrefix(dir, "require/") {
-		dir = "/" + dir
-	}
-	for _, dir := range []string{dir, path.Join("/require/", Info.Make.Module, dir), path.Join("/require/", Info.Make.Module, SRC, dir)} {
-		if cmd, ok := Info.File[FileCmd(dir)]; ok {
-			return cmd
-		}
-		p := path.Dir(dir)
-		if cmd, ok := Info.File[FileCmd(path.Join(p, path.Base(p)+".go"))]; ok {
-			return cmd
-		}
-		for k, v := range Info.File {
-			if strings.HasPrefix(k, p) {
-				return v
-			}
-		}
-	}
-	return ""
-}
-func FileRequire(n int) string {
-	p := kit.Split(kit.FileLine(n, 100), DF)[0]
-	if strings.Contains(p, "go/pkg/mod") {
-		return path.Join("/require", strings.Split(p, "go/pkg/mod")[1])
-	}
-	return path.Join("/require/"+kit.ModPath(n), path.Base(p))
-}
-func Getenv(key string) string {
-	switch key {
-	case "ctx_daemon":
-		return kit.Select("ctx,log,gdb,ssh", os.Getenv(key))
-	}
-	return os.Getenv(key)
 }

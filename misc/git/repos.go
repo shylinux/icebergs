@@ -25,7 +25,7 @@ func _repos_path(name string) string {
 func _repos_insert(m *ice.Message, name string, dir string) {
 	if s, e := os.Stat(m.Option(cli.CMD_DIR, path.Join(dir, ".git"))); e == nil && s.IsDir() {
 		ls := strings.SplitN(strings.Trim(m.Cmdx(cli.SYSTEM, GIT, "log", "-n1", `--pretty=format:"%ad %s"`, "--date=iso"), `"`), ice.SP, 4)
-		m.Rich(REPOS, nil, kit.Data(mdb.NAME, name, nfs.PATH, dir,
+		mdb.Rich(m, REPOS, nil, kit.Data(mdb.NAME, name, nfs.PATH, dir,
 			COMMIT, kit.Select("", ls, 3), mdb.TIME, strings.Join(ls[:2], ice.SP),
 			BRANCH, strings.TrimSpace(m.Cmdx(cli.SYSTEM, GIT, BRANCH)),
 			REMOTE, strings.TrimSpace(m.Cmdx(cli.SYSTEM, GIT, REMOTE, "-v")),

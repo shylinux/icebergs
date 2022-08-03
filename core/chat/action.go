@@ -1,8 +1,6 @@
 package chat
 
 import (
-	"path"
-
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/aaa"
 	"shylinux.com/x/icebergs/base/ctx"
@@ -14,9 +12,9 @@ import (
 
 func _action_right(m *ice.Message, river string, storm string) (ok bool) {
 	if ok = true; m.Option(ice.MSG_USERROLE) == aaa.VOID {
-		m.Richs(RIVER, "", river, func(key string, value ice.Map) {
-			if ok = m.Richs(RIVER, kit.Keys(mdb.HASH, key, OCEAN), m.Option(ice.MSG_USERNAME), nil) != nil; ok {
-				m.Log_AUTH(RIVER, river, STORM, storm)
+		mdb.Richs(m, RIVER, "", river, func(key string, value ice.Map) {
+			if ok = mdb.Richs(m, RIVER, kit.Keys(mdb.HASH, key, OCEAN), m.Option(ice.MSG_USERNAME), nil) != nil; ok {
+				m.Logs(ice.LOG_AUTH, RIVER, river, STORM, storm)
 			}
 		})
 	}
@@ -27,7 +25,7 @@ func _action_key(m *ice.Message, arg ...string) string {
 }
 func _action_list(m *ice.Message, river, storm string) {
 	m.Cmdy(STORM, storm, ice.Option{ice.MSG_RIVER, river}).Tables(func(value ice.Maps) {
-		m.Cmdy(m.Space(kit.Select(m.Option(ice.POD), value[ice.POD])), ctx.COMMAND, kit.Keys(value[ice.CTX], value[ice.CMD]))
+		m.Cmdy(web.Space(m, kit.Select(m.Option(ice.POD), value[ice.POD])), ctx.COMMAND, kit.Keys(value[ice.CTX], value[ice.CMD]))
 	})
 }
 func _action_exec(m *ice.Message, river, storm, index string, arg ...string) {
@@ -35,19 +33,19 @@ func _action_exec(m *ice.Message, river, storm, index string, arg ...string) {
 	m.Option(ice.MSG_STORM, storm)
 
 	cmds := []string{index}
-	if m.Grows(RIVER, _action_key(m, river, storm), mdb.ID, index, func(index int, value ice.Map) {
+	if mdb.Grows(m, RIVER, _action_key(m, river, storm), mdb.ID, index, func(index int, value ice.Map) {
 		if cmds = kit.Simple(kit.Keys(value[ice.CTX], value[ice.CMD])); kit.Format(value[ice.POD]) != "" {
 			m.Option(ice.POD, value[ice.POD]) // 远程节点
 		}
-	}) == nil && m.Option(ice.MSG_USERPOD) == "" && !m.Right(cmds) {
+	}) == nil && m.Option(ice.MSG_USERPOD) == "" && !aaa.Right(m, cmds) {
 		return // 没有授权
 	}
 
-	if _action_domain(m, cmds[0]); m.Option(ice.MSG_UPLOAD) != "" {
+	if m.Option(ice.MSG_UPLOAD) != "" {
 		_action_upload(m) // 上传文件
 	}
 
-	if cmds[0] == "web.chat.node" || !m.PodCmd(cmds, arg) {
+	if cmds[0] == "web.chat.node" || !ctx.PodCmd(m, cmds, arg) {
 		m.Cmdy(cmds, arg) // 执行命令
 	}
 }
@@ -55,7 +53,7 @@ func _action_auth(m, msg *ice.Message) bool {
 	if m.Warn(kit.Time() > kit.Time(msg.Append(mdb.TIME)), ice.ErrNotValid) {
 		return false
 	}
-	m.Log_AUTH(
+	m.Logs(ice.LOG_AUTH,
 		aaa.USERROLE, m.Option(ice.MSG_USERROLE, msg.Append(aaa.USERROLE)),
 		aaa.USERNAME, m.Option(ice.MSG_USERNAME, msg.Append(aaa.USERNAME)),
 		aaa.USERNICK, m.Option(ice.MSG_USERNICK, msg.Append(aaa.USERNICK)),
@@ -92,44 +90,12 @@ func _action_share(m *ice.Message, arg ...string) {
 			break // 命令列表
 		}
 
-		if _action_domain(m, arg[1]); m.Option(ice.MSG_UPLOAD) != "" {
+		if m.Option(ice.MSG_UPLOAD) != "" {
 			_action_upload(m) // 上传文件
 		}
 
 		m.Cmdy(arg[1:]) // 执行命令
 	}
-}
-func _action_domain(m *ice.Message, cmd string, arg ...string) (domain string) {
-	m.Option(ice.MSG_LOCAL, "")
-	m.Option(ice.MSG_DOMAIN, "")
-	if m.Config(kit.Keys(DOMAIN, cmd)) != ice.TRUE {
-		return "" // 公有命令
-	}
-
-	river := kit.Select(m.Option(ice.MSG_RIVER), arg, 0)
-	storm := kit.Select(m.Option(ice.MSG_STORM), arg, 1)
-	m.Richs(RIVER, "", river, func(key string, value ice.Map) {
-		switch kit.Value(kit.GetMeta(value), mdb.TYPE) {
-		case PUBLIC: // 公有群
-			return
-		case PROTECTED: // 共有群
-			m.Richs(RIVER, kit.Keys(mdb.HASH, river, STORM), storm, func(key string, value ice.Map) {
-				switch r := "R" + river; kit.Value(kit.GetMeta(value), mdb.TYPE) {
-				case PUBLIC: // 公有组
-					domain = m.Option(ice.MSG_DOMAIN, kit.Keys(r))
-				case PROTECTED: // 共有组
-					domain = m.Option(ice.MSG_DOMAIN, kit.Keys(r, "S"+storm))
-				case PRIVATE: // 私有组
-					domain = m.Option(ice.MSG_DOMAIN, kit.Keys(r, "U"+m.Option(ice.MSG_USERNAME)))
-				}
-			})
-		case PRIVATE: // 私有群
-			domain = m.Option(ice.MSG_DOMAIN, kit.Keys("U"+m.Option(ice.MSG_USERNAME)))
-		}
-		m.Option(ice.MSG_LOCAL, path.Join(m.Config(nfs.PATH), domain))
-	})
-	m.Log_AUTH(RIVER, river, STORM, storm, DOMAIN, domain)
-	return
 }
 func _action_upload(m *ice.Message) {
 	msg := m.Cmd(web.CACHE, web.UPLOAD)

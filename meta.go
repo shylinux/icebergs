@@ -130,7 +130,7 @@ func (m *Message) Push(key string, value Any, arg ...Any) *Message {
 			var v Any
 			switch k {
 			case KEY, HASH:
-				if key != "" && key != CACHE_DETAIL {
+				if key != "" && key != FIELDS_DETAIL {
 					v = key
 					break
 				}
@@ -142,7 +142,7 @@ func (m *Message) Push(key string, value Any, arg ...Any) *Message {
 				if v = kit.Value(value, k); v != nil {
 					break
 				}
-				if v = kit.Value(value, kit.Keys("extra", k)); v != nil {
+				if v = kit.Value(value, kit.Keys(EXTRA, k)); v != nil {
 					break
 				}
 				if v = val[k]; v != nil {
@@ -151,14 +151,14 @@ func (m *Message) Push(key string, value Any, arg ...Any) *Message {
 				if v = kit.Value(val, k); v != nil {
 					break
 				}
-				if v = kit.Value(val, kit.Keys("extra", k)); v != nil {
+				if v = kit.Value(val, kit.Keys(EXTRA, k)); v != nil {
 					break
 				}
 			}
 
 			// 追加数据
 			switch v := kit.Format(v); key {
-			case CACHE_DETAIL:
+			case FIELDS_DETAIL:
 				m.Add(MSG_APPEND, KEY, k)
 				m.Add(MSG_APPEND, VALUE, v)
 			default:
@@ -261,8 +261,14 @@ func (m *Message) Table(cbs ...func(index int, value Maps, head []string)) *Mess
 		return m
 	}
 
+	const (
+		TABLE_SPACE   = "table.space"
+		TABLE_ROW_SEP = "table.row_sep"
+		TABLE_COL_SEP = "table.col_sep"
+		TABLE_COMPACT = "table.compact"
+	)
 	//计算列宽
-	space := kit.Select(SP, m.Option("table.space"))
+	space := kit.Select(SP, m.Option(TABLE_SPACE))
 	depth, width := 0, map[string]int{}
 	for _, k := range m.meta[MSG_APPEND] {
 		if len(m.meta[k]) > depth {
@@ -277,9 +283,9 @@ func (m *Message) Table(cbs ...func(index int, value Maps, head []string)) *Mess
 	}
 
 	// 回调函数
-	rows := kit.Select(NL, m.Option("table.row_sep"))
-	cols := kit.Select(SP, m.Option("table.col_sep"))
-	compact := m.Option("table.compact") == TRUE
+	rows := kit.Select(NL, m.Option(TABLE_ROW_SEP))
+	cols := kit.Select(SP, m.Option(TABLE_COL_SEP))
+	compact := m.Option(TABLE_COMPACT) == TRUE
 	cb := func(value Maps, field []string, index int) bool {
 		for i, v := range field {
 			if k := m.meta[MSG_APPEND][i]; compact {
@@ -325,16 +331,28 @@ func (m *Message) Sort(key string, arg ...string) *Message {
 	if key = ls[0]; m.FieldsIsDetail() && key != KEY {
 		return m
 	}
+	const (
+		STR  = "str"
+		INT  = "int"
+		TIME = "time"
+
+		TIME_R = "time_r"
+		INT_R  = "int_r"
+		STR_R  = "str_r"
+
+		GT = ">"
+		LT = "<"
+	)
 
 	// 排序方法
-	cmp := "str"
+	cmp := STR
 	if len(arg) > 0 && arg[0] != "" {
 		cmp = arg[0]
 	} else {
-		cmp = "int"
+		cmp = INT
 		for _, v := range m.meta[key] {
 			if _, e := strconv.Atoi(v); e != nil {
-				cmp = "str"
+				cmp = STR
 			}
 		}
 	}
@@ -344,13 +362,13 @@ func (m *Message) Sort(key string, arg ...string) *Message {
 	table := []Maps{}
 	m.Table(func(index int, value Maps, head []string) {
 		switch table = append(table, value); cmp {
-		case "int":
+		case INT:
 			number[index] = kit.Int64(value[key])
-		case "int_r":
+		case INT_R:
 			number[index] = -kit.Int64(value[key])
-		case "time":
+		case TIME:
 			number[index] = int64(kit.Time(value[key]))
-		case "time_r":
+		case TIME_R:
 			number[index] = -int64(kit.Time(value[key]))
 		}
 	})
@@ -362,10 +380,10 @@ func (m *Message) Sort(key string, arg ...string) *Message {
 			if table[i][ls[k]] == table[j][ls[k]] {
 				continue
 			}
-			if op == ">" && table[i][ls[k]] > table[j][ls[k]] {
+			if op == GT && table[i][ls[k]] > table[j][ls[k]] {
 				return true
 			}
-			if op == "<" && table[i][ls[k]] < table[j][ls[k]] {
+			if op == LT && table[i][ls[k]] < table[j][ls[k]] {
 				return true
 			}
 			return false
@@ -378,22 +396,22 @@ func (m *Message) Sort(key string, arg ...string) *Message {
 		for j := i + 1; j < len(table); j++ {
 			swap := false
 			switch cmp {
-			case "", "str":
+			case "", STR:
 				if table[i][key] > table[j][key] {
 					swap = true
-				} else if table[i][key] == table[j][key] && compare(i, j, ">") {
+				} else if table[i][key] == table[j][key] && compare(i, j, GT) {
 					swap = true
 				}
-			case "str_r":
+			case STR_R:
 				if table[i][key] < table[j][key] {
 					swap = true
-				} else if table[i][key] == table[j][key] && compare(i, j, "<") {
+				} else if table[i][key] == table[j][key] && compare(i, j, LT) {
 					swap = true
 				}
 			default:
 				if number[i] > number[j] {
 					swap = true
-				} else if table[i][key] == table[j][key] && compare(i, j, ">") {
+				} else if table[i][key] == table[j][key] && compare(i, j, GT) {
 					swap = true
 				}
 			}

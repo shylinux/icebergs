@@ -18,7 +18,7 @@ var Index = &ice.Context{Name: GIT, Help: "代码库", Configs: ice.Configs{
 }, Commands: ice.Commands{
 	GIT: {Name: "git path auto install order build download", Help: "代码库", Actions: ice.MergeAction(ice.Actions{
 		code.INSTALL: {Name: "install", Help: "安装", Hand: func(m *ice.Message, arg ...string) {
-			cli.PushStream(m)
+			web.PushStream(m)
 			defer m.ProcessInner()
 
 			m.Cmdy(cli.SYSTEM, "yum", "install", "-y", "git")

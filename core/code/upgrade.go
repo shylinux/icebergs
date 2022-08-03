@@ -28,7 +28,7 @@ func init() {
 				m.Sleep("1s").Go(func() { m.Cmd(ice.EXIT, 1) })
 			}},
 		}, Hand: func(m *ice.Message, arg ...string) {
-			m.Grows(m.CommandKey(), kit.Keys(mdb.HASH, kit.Select(cli.SYSTEM, arg, 0)), "", "", func(index int, value ice.Map) {
+			mdb.Grows(m, m.CommandKey(), kit.Keys(mdb.HASH, kit.Select(cli.SYSTEM, arg, 0)), "", "", func(index int, value ice.Map) {
 				if value[nfs.FILE] == ice.ICE_BIN { // 程序文件
 					value[nfs.FILE] = kit.Keys(ice.ICE, runtime.GOOS, runtime.GOARCH)
 					defer m.Cmd(cli.SYSTEM, "mv", value[nfs.FILE], ice.BIN_ICE_BIN)
@@ -45,9 +45,9 @@ func init() {
 					m.Cmd(nfs.TAR, mdb.EXPORT, dir, "-C", path.Dir(dir))
 				}
 			})
-			if m.ToastSuccess(); m.Option(ice.EXIT) == ice.TRUE {
+			if web.ToastSuccess(m); m.Option(ice.EXIT) == ice.TRUE {
 				m.Sleep("1s").Go(func() { m.Cmd(ice.EXIT, 1) })
-				m.ToastRestart()
+				web.ToastRestart(m)
 			}
 		}},
 	}})

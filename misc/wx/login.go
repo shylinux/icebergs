@@ -91,7 +91,7 @@ func init() {
 				m.Cmdy(chat.SCAN, mdb.CREATE, mdb.TYPE, wiki.IMAGE, mdb.NAME, m.Option("Title"), mdb.TEXT, m.Option("URL"))
 
 			case TEXT: // 文本
-				if cmds := kit.Split(m.Option("Content")); m.Right(cmds) {
+				if cmds := kit.Split(m.Option("Content")); aaa.Right(m, cmds) {
 					m.Cmdy(TEXT, cmds)
 					break
 				}

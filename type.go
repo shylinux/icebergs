@@ -5,23 +5,24 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"path"
 	"strings"
 	"sync/atomic"
 	"time"
 
 	kit "shylinux.com/x/toolkits"
-	"shylinux.com/x/toolkits/logs"
 )
 
 type Any = interface{}
 type List = []Any
 type Map = map[string]Any
 type Maps = map[string]string
-type CommandHandler func(m *Message, arg ...string)
+type Handler func(m *Message, arg ...string)
 type Commands = map[string]*Command
 type Actions = map[string]*Action
 type Configs = map[string]*Config
+type Caches = map[string]*Cache
+type Contexts = map[string]*Context
+type Messages = map[string]*Message
 
 type Cache struct {
 	Name  string
@@ -36,32 +37,26 @@ type Config struct {
 type Action struct {
 	Name string
 	Help string
-	Hand CommandHandler
-	List []Any
+	Hand Handler
+	List List
 }
 type Command struct {
 	Name    string
 	Help    string
-	Actions map[string]*Action
-	Hand    CommandHandler
-	List    []Any
+	Actions Actions
+	Hand    Handler
+	List    List
 	Meta    Map
-}
-type Server interface {
-	Spawn(m *Message, c *Context, arg ...string) Server
-	Begin(m *Message, arg ...string) Server
-	Start(m *Message, arg ...string) bool
-	Close(m *Message, arg ...string) bool
 }
 type Context struct {
 	Name string
 	Help string
 
-	Caches   map[string]*Cache
-	Configs  map[string]*Config
-	Commands map[string]*Command
+	Caches   Caches
+	Configs  Configs
+	Commands Commands
 
-	Contexts map[string]*Context
+	Contexts Contexts
 	context  *Context
 	root     *Context
 	server   Server
@@ -70,6 +65,12 @@ type Context struct {
 	start *Message
 
 	id int32
+}
+type Server interface {
+	Spawn(m *Message, c *Context, arg ...string) Server
+	Begin(m *Message, arg ...string) Server
+	Start(m *Message, arg ...string) bool
+	Close(m *Message, arg ...string) bool
 }
 
 func (c *Context) ID() int32 {
@@ -88,9 +89,6 @@ func (c *Context) Server() Server {
 	return c.server
 }
 
-func (c *Context) RoutePath(arg ...string) string {
-	return path.Join(strings.TrimPrefix(strings.ReplaceAll(c.Cap(CTX_FOLLOW), PT, PS), "web"), path.Join(arg...))
-}
 func (c *Context) PrefixKey(arg ...string) string {
 	return kit.Keys(c.Cap(CTX_FOLLOW), arg)
 }
@@ -108,7 +106,7 @@ func (c *Context) Register(s *Context, x Server, n ...string) *Context {
 	}
 
 	if s.Merge(s); c.Contexts == nil {
-		c.Contexts = map[string]*Context{}
+		c.Contexts = Contexts{}
 	}
 	c.Contexts[s.Name] = s
 	s.root = c.root
@@ -121,16 +119,16 @@ func (c *Context) MergeCommands(Commands Commands) *Context {
 }
 func (c *Context) Merge(s *Context) *Context {
 	if c.Commands == nil {
-		c.Commands = map[string]*Command{}
+		c.Commands = Commands{}
 	}
 	if c.Commands[CTX_INIT] == nil {
-		c.Commands[CTX_INIT] = &Command{Hand: func(m *Message, arg ...string) { m.Load() }}
+		c.Commands[CTX_INIT] = &Command{Hand: func(m *Message, arg ...string) { Info.Load(m) }}
 	}
 	if c.Commands[CTX_EXIT] == nil {
-		c.Commands[CTX_EXIT] = &Command{Hand: func(m *Message, arg ...string) { m.Save() }}
+		c.Commands[CTX_EXIT] = &Command{Hand: func(m *Message, arg ...string) { Info.Save(m) }}
 	}
 
-	merge := func(pre *Command, before bool, key string, cmd *Command, cb ...CommandHandler) {
+	merge := func(pre *Command, before bool, key string, cmd *Command, cb ...Handler) {
 		last := pre.Hand
 		pre.Hand = func(m *Message, arg ...string) {
 			if before {
@@ -211,13 +209,13 @@ func (c *Context) Merge(s *Context) *Context {
 	}
 
 	if c.Configs == nil {
-		c.Configs = map[string]*Config{}
+		c.Configs = Configs{}
 	}
 	for k, v := range s.Configs {
 		c.Configs[k] = v
 	}
 	if c.Caches == nil {
-		c.Caches = map[string]*Cache{}
+		c.Caches = Caches{}
 	}
 	for k, v := range s.Caches {
 		c.Caches[k] = v
@@ -242,7 +240,6 @@ func (c *Context) Begin(m *Message, arg ...string) *Context {
 	c.Caches[CTX_FOLLOW] = &Cache{Name: CTX_FOLLOW, Value: follow}
 	c.Caches[CTX_STATUS] = &Cache{Name: CTX_STATUS, Value: CTX_BEGIN}
 	c.Caches[CTX_STREAM] = &Cache{Name: CTX_STREAM, Value: ""}
-	// m.Log(LOG_BEGIN, c.Cap(CTX_FOLLOW))
 
 	if c.begin = m; c.server != nil {
 		c.server.Begin(m, arg...)
@@ -253,24 +250,19 @@ func (c *Context) Start(m *Message, arg ...string) bool {
 	wait := make(chan bool, 1)
 	defer func() { <-wait }()
 
-	_source := m.target.Name
-	if c.server != nil {
-		_source = logs.FileLine(c.server.Start, 3)
-	}
 	m.Go(func() {
-
-		m.Log(LOG_START, c.Cap(CTX_FOLLOW))
+		m.Log(CTX_START, c.Cap(CTX_FOLLOW))
 		c.Cap(CTX_STATUS, CTX_START)
 		wait <- true
 
 		if c.start = m; c.server != nil {
 			c.server.Start(m, arg...)
 		}
-	}, _source)
+	})
 	return true
 }
 func (c *Context) Close(m *Message, arg ...string) bool {
-	m.Log(LOG_CLOSE, c.Cap(CTX_FOLLOW))
+	m.Log(CTX_CLOSE, c.Cap(CTX_FOLLOW))
 	c.Cap(CTX_STATUS, CTX_CLOSE)
 
 	if c.server != nil {
@@ -298,11 +290,10 @@ type Message struct {
 	_key    string
 	_sub    string
 
-	cb func(*Message) *Message
-	W  http.ResponseWriter
-	R  *http.Request
-	O  io.Writer
-	I  io.Reader
+	W http.ResponseWriter
+	R *http.Request
+	O io.Writer
+	I io.Reader
 }
 
 func (m *Message) Time(args ...Any) string { // [duration] [format [args...]]
@@ -336,8 +327,6 @@ func (m *Message) Spawn(arg ...Any) *Message {
 	msg := &Message{
 		time: time.Now(), code: int(m.target.root.ID()),
 		meta: map[string][]string{}, data: Map{},
-
-		_source: m._source,
 		message: m, root: m.root,
 		source: m.target, target: m.target, _cmd: m._cmd, _key: m._key, _sub: m._sub,
 		W: m.W, R: m.R, O: m.O, I: m.I,
@@ -433,7 +422,6 @@ func (m *Message) Search(key string, cb Any) *Message {
 				break
 			}
 		}
-		// if m.Warn(p == nil, ErrNotFound, key) {
 		if p == nil {
 			return m
 		}
@@ -545,7 +533,7 @@ func (m *Message) Confv(arg ...Any) (val Any) { // key sub val
 
 	key := kit.Format(arg[0])
 	if key == "" {
-		key = m.PrefixKey()
+		key = m._key
 	}
 	if conf, ok := m.target.Configs[key]; ok {
 		run(conf)

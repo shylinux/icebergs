@@ -4,6 +4,7 @@ import (
 	"strings"
 
 	ice "shylinux.com/x/icebergs"
+	"shylinux.com/x/icebergs/base/lex"
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/nfs"
 	kit "shylinux.com/x/toolkits"
@@ -29,7 +30,7 @@ func init() {
 			"spide": {Name: "spide", Help: "架构图", Hand: func(m *ice.Message, arg ...string) {
 				if len(arg) == 0 || arg[1] == CONTEXT { // 模块列表
 					m.Cmdy(CONTEXT, kit.Select(ice.ICE, arg, 0), CONTEXT)
-					m.DisplayStorySpide("prefix", m.ActionKey(), nfs.ROOT, kit.Select(ice.ICE, arg, 0), "split", ice.PT)
+					DisplayStorySpide(m, lex.PREFIX, m.ActionKey(), nfs.ROOT, kit.Select(ice.ICE, arg, 0), lex.SPLIT, ice.PT)
 
 				} else if index := kit.Keys(arg[1]); strings.HasSuffix(index, arg[2]) { // 命令列表
 					m.Cmdy(CONTEXT, index, COMMAND).Tables(func(value ice.Maps) {

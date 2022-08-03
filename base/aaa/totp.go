@@ -64,7 +64,7 @@ func init() {
 		}, mdb.HashAction(mdb.SHORT, mdb.NAME, mdb.FIELD, "time,name,secret,period,number", mdb.LINK, "otpauth://totp/%s?secret=%s")), Hand: func(m *ice.Message, arg ...string) {
 			mdb.HashSelect(m.Spawn(), arg...).Tables(func(value ice.Maps) {
 				if len(arg) > 0 {
-					m.OptionFields(mdb.DETAIL)
+					m.OptionFields(ice.FIELDS_DETAIL)
 				}
 				m.Push(mdb.TIME, m.Time())
 				m.Push(mdb.NAME, value[mdb.NAME])

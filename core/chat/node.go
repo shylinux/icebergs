@@ -3,6 +3,7 @@ package chat
 import (
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/aaa"
+	"shylinux.com/x/icebergs/base/gdb"
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/web"
 	"shylinux.com/x/icebergs/core/code"
@@ -15,8 +16,8 @@ func init() {
 	Index.MergeCommands(ice.Commands{
 		NODE: {Name: "node pod ctx cmd auto insert invite", Help: "设备", Actions: ice.Actions{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
-				m.Watch(web.DREAM_START, m.PrefixKey())
-				m.Watch(web.SPACE_START, m.PrefixKey())
+				gdb.Watch(m, web.DREAM_START, m.PrefixKey())
+				gdb.Watch(m, web.SPACE_START, m.PrefixKey())
 			}},
 			web.SPACE_START: {Name: "start type name share river", Help: "启动", Hand: func(m *ice.Message, arg ...string) {
 				if m.Option(ice.MSG_RIVER, m.Option(RIVER)) == "" {
@@ -52,7 +53,7 @@ func init() {
 				m.OptionFields("time,type,name,share")
 				m.Cmdy(mdb.SELECT, RIVER, _river_key(m, NODE), mdb.HASH)
 				m.Tables(func(value ice.Maps) {
-					m.PushAnchor(value[mdb.NAME], m.MergeURL2("/chat/pod/"+kit.Keys(m.Option(ice.POD), value[mdb.NAME])))
+					m.PushAnchor(value[mdb.NAME], web.MergeURL2(m, "/chat/pod/"+kit.Keys(m.Option(ice.POD), value[mdb.NAME])))
 				})
 				m.RenameAppend("name", "pod")
 				m.PushAction(mdb.REMOVE)

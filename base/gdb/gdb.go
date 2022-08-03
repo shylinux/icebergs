@@ -28,7 +28,7 @@ func (f *Frame) Begin(m *ice.Message, arg ...string) ice.Server {
 		delete(ice.Info.File, k)
 	}
 
-	f.s = make(chan os.Signal, ice.MOD_CHAN)
+	f.s = make(chan os.Signal, 3)
 	return f
 }
 func (f *Frame) Start(m *ice.Message, arg ...string) bool {
@@ -59,8 +59,8 @@ func (f *Frame) Close(m *ice.Message, arg ...string) bool {
 const GDB = "gdb"
 
 var Index = &ice.Context{Name: GDB, Help: "事件模块", Commands: ice.Commands{
-	ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) { m.Load(TIMER, ROUTINE) }},
-	ice.CTX_EXIT: {Hand: func(m *ice.Message, arg ...string) { m.Save(TIMER, ROUTINE) }},
+	ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) { ice.Info.Load(m, TIMER, ROUTINE) }},
+	ice.CTX_EXIT: {Hand: func(m *ice.Message, arg ...string) { ice.Info.Save(m, TIMER, ROUTINE) }},
 }}
 
 func init() { ice.Index.Register(Index, &Frame{}, SIGNAL, TIMER, EVENT, ROUTINE) }

@@ -9,6 +9,7 @@ import (
 	"shylinux.com/x/icebergs/base/lex"
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/nfs"
+	"shylinux.com/x/icebergs/base/web"
 	kit "shylinux.com/x/toolkits"
 )
 
@@ -41,7 +42,7 @@ func init() {
 			case nfs.JSON:
 				m.RenderResult(_div_template2, kit.Format(kit.UnMarshal(m.Cmdx(nfs.CAT, p))))
 			default:
-				m.RenderCmd(m.PrefixKey(), p)
+				web.RenderCmd(m, m.PrefixKey(), p)
 			}
 		}},
 		DIV: {Name: "div hash auto import", Help: "定制", Actions: ice.MergeAction(ice.Actions{
@@ -74,11 +75,13 @@ func init() {
 			switch kit.Ext(kit.Select("", arg, 0)) {
 			case nfs.SHY:
 				m.Fields(0)
-				m.Push(mdb.TEXT, _div_parse(m, m.Cmdx(nfs.CAT, arg[0]))).DisplayLocal("")
+				m.Push(mdb.TEXT, _div_parse(m, m.Cmdx(nfs.CAT, arg[0])))
+				ctx.DisplayLocal(m, "")
 			default:
 				if mdb.HashSelect(m, arg...); len(arg) > 0 {
-					m.Action("添加", "保存").DisplayLocal("")
-					m.StatusTime(mdb.LINK, m.MergeLink("/chat/div/"+arg[0]))
+					m.Action("添加", "保存")
+					ctx.DisplayLocal(m, "")
+					m.StatusTime(mdb.LINK, web.MergeURL2(m, "/chat/div/"+arg[0]))
 				} else {
 					m.Action(lex.SPLIT, mdb.CREATE)
 				}

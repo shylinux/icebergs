@@ -18,24 +18,24 @@ func _zone_inputs(m *ice.Message, prefix, chain, zone string, field, value strin
 		_hash_inputs(m, prefix, chain, field, value)
 		return
 	}
-	h := _hash_select_fields(m, prefix, chain, zone, HASH)
-	defer m.RLock(prefix, chain)()
-	_list_inputs(m, prefix, _domain_chain(m, kit.Keys(chain, HASH, h)), field, value)
+	h := _hash_select_field(m, prefix, chain, zone, HASH)
+	defer RLock(m, prefix, chain)()
+	_list_inputs(m, prefix, kit.Keys(chain, HASH, h), field, value)
 }
 func _zone_insert(m *ice.Message, prefix, chain, zone string, arg ...string) {
-	h := _hash_select_fields(m, prefix, chain, zone, HASH)
+	h := _hash_select_field(m, prefix, chain, zone, HASH)
 	if h == "" {
 		h = _hash_insert(m, prefix, chain, m.Conf(prefix, kit.Keys(chain, kit.Keym(SHORT))), zone)
 	}
 	m.Assert(h != "")
-	defer m.Lock(prefix, chain)()
-	_list_insert(m, prefix, _domain_chain(m, kit.Keys(chain, HASH, h)), arg...)
+	defer Lock(m, prefix, chain)()
+	_list_insert(m, prefix, kit.Keys(chain, HASH, h), arg...)
 }
 func _zone_modify(m *ice.Message, prefix, chain, zone, id string, arg ...string) {
-	h := _hash_select_fields(m, prefix, chain, zone, HASH)
+	h := _hash_select_field(m, prefix, chain, zone, HASH)
 	m.Assert(h != "")
-	defer m.RLock(prefix, chain)()
-	_list_modify(m, prefix, _domain_chain(m, kit.Keys(chain, HASH, h)), ID, id, arg...)
+	defer RLock(m, prefix, chain)()
+	_list_modify(m, prefix, kit.Keys(chain, HASH, h), ID, id, arg...)
 }
 func _zone_select(m *ice.Message, prefix, chain, zone string, id string) {
 	if zone == "" {
@@ -47,12 +47,12 @@ func _zone_select(m *ice.Message, prefix, chain, zone string, id string) {
 	}
 
 	fields := _zone_fields(m)
-	defer m.RLock(prefix, chain)()
-	m.Richs(prefix, chain, kit.Select(FOREACH, zone), func(key string, val Map) {
+	defer RLock(m, prefix, chain)()
+	Richs(m, prefix, chain, kit.Select(FOREACH, zone), func(key string, val Map) {
 		chain := kit.Keys(chain, HASH, key)
-		defer m.RLock(prefix, chain)()
-		m.Grows(prefix, chain, ID, id, func(value ice.Map) {
-			_mdb_select(m, key, value, fields, val)
+		defer RLock(m, prefix, chain)()
+		Grows(m, prefix, chain, ID, id, func(value ice.Map) {
+			_mdb_select(m, m.OptionCB(""), key, value, fields, val)
 		})
 	})
 }
@@ -71,18 +71,18 @@ func _zone_export(m *ice.Message, prefix, chain, file string) {
 	w.Write(fields)
 
 	keys := []string{}
-	m.Richs(prefix, chain, FOREACH, func(key string, val ice.Map) { keys = append(keys, key) })
+	Richs(m, prefix, chain, FOREACH, func(key string, val ice.Map) { keys = append(keys, key) })
 	kit.Sort(keys)
 
 	count := 0
-	defer m.Lock(prefix, chain)()
+	defer Lock(m, prefix, chain)()
 	for _, key := range keys {
-		m.Richs(prefix, chain, key, func(key string, val ice.Map) {
+		Richs(m, prefix, chain, key, func(key string, val ice.Map) {
 			val = kit.GetMeta(val)
 
 			chain := kit.Keys(chain, HASH, key)
-			defer m.RLock(prefix, chain)()
-			m.Grows(prefix, chain, "", "", func(value ice.Map) {
+			defer RLock(m, prefix, chain)()
+			Grows(m, prefix, chain, "", "", func(value ice.Map) {
 				value = kit.GetMeta(value)
 
 				list := []string{}
@@ -95,7 +95,7 @@ func _zone_export(m *ice.Message, prefix, chain, file string) {
 		})
 	}
 
-	m.Log_EXPORT(KEY, path.Join(prefix, chain), FILE, p, COUNT, count)
+	m.Logs(EXPORT, KEY, path.Join(prefix, chain), FILE, p, COUNT, count)
 	m.Conf(prefix, kit.Keys(chain, HASH), "")
 	m.Echo(p)
 }
@@ -111,7 +111,7 @@ func _zone_import(m *ice.Message, prefix, chain, file string) {
 	list := ice.Maps{}
 	zkey := kit.Select(head[0], m.OptionFields())
 
-	defer m.Lock(prefix, chain)()
+	defer Lock(m, prefix, chain)()
 	for {
 		line, e := r.Read()
 		if e != nil {
@@ -133,18 +133,18 @@ func _zone_import(m *ice.Message, prefix, chain, file string) {
 			}
 		}
 		if list[zone] == "" {
-			list[zone] = m.Rich(prefix, chain, kit.Data(zkey, zone))
+			list[zone] = Rich(m, prefix, chain, kit.Data(zkey, zone))
 		}
 
 		func() {
 			chain := kit.Keys(chain, HASH, list[zone])
-			defer m.Lock(prefix, chain)()
-			m.Grow(prefix, chain, data)
+			defer Lock(m, prefix, chain)()
+			Grow(m, prefix, chain, data)
 		}()
 		count++
 	}
 
-	m.Log_IMPORT(KEY, path.Join(prefix, chain), COUNT, count)
+	m.Logs(IMPORT, KEY, path.Join(prefix, chain), COUNT, count)
 	m.Echo("%d", count)
 }
 
@@ -155,36 +155,16 @@ const ZONE = "zone"
 
 func ZoneAction(args ...ice.Any) ice.Actions {
 	return ice.Actions{ice.CTX_INIT: AutoConfig(args...),
-		INPUTS: {Name: "inputs", Help: "补全", Hand: func(m *ice.Message, arg ...string) {
-			ZoneInputs(m, arg)
-		}},
-		CREATE: {Name: "create zone", Help: "创建", Hand: func(m *ice.Message, arg ...string) {
-			ZoneCreate(m, arg)
-		}},
-		REMOVE: {Name: "remove", Help: "删除", Hand: func(m *ice.Message, arg ...string) {
-			ZoneRemove(m, arg)
-		}},
-		INSERT: {Name: "insert", Help: "添加", Hand: func(m *ice.Message, arg ...string) {
-			ZoneInsert(m, arg)
-		}},
-		MODIFY: {Name: "modify", Help: "编辑", Hand: func(m *ice.Message, arg ...string) {
-			ZoneModify(m, arg)
-		}},
-		SELECT: {Name: "select", Help: "列表", Hand: func(m *ice.Message, arg ...string) {
-			ZoneSelect(m, arg...)
-		}},
-		EXPORT: {Name: "export", Help: "导出", Hand: func(m *ice.Message, arg ...string) {
-			ZoneExport(m, arg)
-		}},
-		IMPORT: {Name: "import", Help: "导入", Hand: func(m *ice.Message, arg ...string) {
-			ZoneImport(m, arg)
-		}},
-		PREV: {Name: "prev", Help: "上一页", Hand: func(m *ice.Message, arg ...string) {
-			PrevPage(m, arg[0], arg[1:]...)
-		}},
-		NEXT: {Name: "next", Help: "下一页", Hand: func(m *ice.Message, arg ...string) {
-			NextPageLimit(m, arg[0], arg[1:]...)
-		}},
+		INPUTS: {Name: "inputs", Help: "补全", Hand: func(m *ice.Message, arg ...string) { ZoneInputs(m, arg) }},
+		CREATE: {Name: "create zone", Help: "创建", Hand: func(m *ice.Message, arg ...string) { ZoneCreate(m, arg) }},
+		REMOVE: {Name: "remove", Help: "删除", Hand: func(m *ice.Message, arg ...string) { ZoneRemove(m, arg) }},
+		INSERT: {Name: "insert", Help: "添加", Hand: func(m *ice.Message, arg ...string) { ZoneInsert(m, arg) }},
+		MODIFY: {Name: "modify", Help: "编辑", Hand: func(m *ice.Message, arg ...string) { ZoneModify(m, arg) }},
+		SELECT: {Name: "select", Help: "列表", Hand: func(m *ice.Message, arg ...string) { ZoneSelect(m, arg...) }},
+		EXPORT: {Name: "export", Help: "导出", Hand: func(m *ice.Message, arg ...string) { ZoneExport(m, arg) }},
+		IMPORT: {Name: "import", Help: "导入", Hand: func(m *ice.Message, arg ...string) { ZoneImport(m, arg) }},
+		PREV:   {Name: "prev", Help: "上一页", Hand: func(m *ice.Message, arg ...string) { PrevPage(m, arg[0], arg[1:]...) }},
+		NEXT:   {Name: "next", Help: "下一页", Hand: func(m *ice.Message, arg ...string) { NextPageLimit(m, arg[0], arg[1:]...) }},
 	}
 }
 func ZoneShort(m *ice.Message) string {
@@ -221,7 +201,7 @@ func ZoneSelect(m *ice.Message, arg ...string) *ice.Message {
 		m.PushAction(m.Config(ACTION), REMOVE)
 		m.StatusTimeCount()
 	} else if len(arg) == 1 {
-		m.StatusTimeCountTotal(m.Conf("", kit.Keys(HASH, HashSelectFields(m, arg[0], HASH), kit.Keym(COUNT))))
+		m.StatusTimeCountTotal(m.Conf("", kit.Keys(HASH, HashSelectField(m, arg[0], HASH), kit.Keym(COUNT))))
 	}
 	return m
 }
@@ -232,15 +212,15 @@ func ZoneImport(m *ice.Message, arg ...Any) {
 	m.Cmdy(IMPORT, m.PrefixKey(), "", ZONE, arg)
 }
 func ZoneSelectPage(m *ice.Message, arg ...string) *ice.Message {
-	m.OptionPages(kit.Slice(arg, 2)...)
+	OptionPages(m, kit.Slice(arg, 2)...)
 	return ZoneSelect(m, arg...)
 }
 func ZoneSelectAll(m *ice.Message, arg ...string) *ice.Message {
-	m.Option(ice.CACHE_LIMIT, "-1")
+	m.Option(CACHE_LIMIT, "-1")
 	return ZoneSelect(m, arg...)
 }
-func ZoneSelectCB(m *ice.Message, zone string, cb ice.Any) *ice.Message {
+func ZoneSelectCB(m *ice.Message, zone string, cb Any) *ice.Message {
 	m.OptionCB(SELECT, cb)
-	m.Option(ice.CACHE_LIMIT, "-1")
+	m.Option(CACHE_LIMIT, "-1")
 	return ZoneSelect(m, zone)
 }

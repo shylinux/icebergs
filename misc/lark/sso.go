@@ -15,12 +15,12 @@ func init() {
 	Index.MergeCommands(ice.Commands{
 		"/sso": {Name: "/sso", Help: "网页", Hand: func(m *ice.Message, arg ...string) {
 			if m.Option(ice.MSG_USERNAME) != "" { // 默认主页
-				m.RenderIndex(web.SERVE, ice.VOLCANOS)
+				web.RenderIndex(m, web.SERVE, ice.VOLCANOS)
 				return
 			}
 
 			appid := m.Cmd(APP).Append(APPID)
-			home := m.MergeURL2("/chat/lark/sso")
+			home := web.MergeURL2(m, "/chat/lark/sso")
 			if m.Option(cli.CODE) == "" { // 登录页面
 				if back := m.R.Header.Get("Referer"); back != "" {
 					home = kit.MergeURL(home, cli.BACK, back)

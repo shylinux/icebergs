@@ -10,6 +10,7 @@ import (
 
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/cli"
+	"shylinux.com/x/icebergs/base/ctx"
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/nfs"
 	kit "shylinux.com/x/toolkits"
@@ -59,7 +60,7 @@ func _go_grep(m *ice.Message, key string, dir string) {
 	m.Cmd(nfs.GREP, dir, key).Tables(func(value ice.Maps) { m.PushSearch(value) })
 }
 
-var _cache_mods = map[string]*ice.Message{}
+var _cache_mods = ice.Messages{}
 var _cache_lock = sync.Mutex{}
 
 func _go_doc(m *ice.Message, mod string, pkg string) *ice.Message {
@@ -83,7 +84,7 @@ func _go_doc(m *ice.Message, mod string, pkg string) *ice.Message {
 
 func _go_exec(m *ice.Message, arg ...string) {
 	if m.Option("some") == "run" {
-		args := []string{"./bin/ice.bin", ice.GetFileCmd(path.Join(arg[2], arg[1]))}
+		args := []string{"./bin/ice.bin", ctx.GetFileCmd(path.Join(arg[2], arg[1]))}
 		m.Cmdy(cli.SYSTEM, args)
 		m.StatusTime("args", kit.Join(args, " "))
 		m.Debug(m.FormatsMeta())
@@ -160,10 +161,10 @@ func _go_show(m *ice.Message, arg ...string) {
 			}
 		})
 	} else {
-		if key := ice.GetFileCmd(path.Join(arg[2], arg[1])); key != "" {
-			m.ProcessCommand(key, kit.Simple())
+		if key := ctx.GetFileCmd(path.Join(arg[2], arg[1])); key != "" {
+			ctx.ProcessCommand(m, key, kit.Simple())
 		} else {
-			m.ProcessCommand("web.wiki.word", kit.Simple(strings.ReplaceAll(path.Join(arg[2], arg[1]), ".go", ".shy")))
+			ctx.ProcessCommand(m, "web.wiki.word", kit.Simple(strings.ReplaceAll(path.Join(arg[2], arg[1]), ".go", ".shy")))
 		}
 	}
 }

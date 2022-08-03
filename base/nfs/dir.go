@@ -29,7 +29,7 @@ func _dir_hash(m *ice.Message, p string) string {
 	return ""
 }
 func _dir_list(m *ice.Message, root string, name string, level int, deep bool, dir_type string, dir_reg *regexp.Regexp, fields []string) *ice.Message {
-	if !m.Right(m, path.Join(root, name)) {
+	if !aaa.Right(m, path.Join(root, name)) {
 		return m // 没有权限
 	}
 
@@ -55,7 +55,7 @@ func _dir_list(m *ice.Message, root string, name string, level int, deep bool, d
 		p, pp := path.Join(root, name, f.Name()), path.Join(name, f.Name())
 		isDir := f.IsDir() || kit.IsDir(p)
 		if !(dir_type == TYPE_CAT && isDir || dir_type == TYPE_DIR && !isDir) && (dir_reg == nil || dir_reg.MatchString(f.Name())) {
-			switch cb := m.OptionCB(DIR).(type) {
+			switch cb := m.OptionCB("").(type) {
 			case func(f os.FileInfo, p string):
 				cb(f, p)
 				continue
@@ -108,12 +108,11 @@ func _dir_list(m *ice.Message, root string, name string, level int, deep bool, d
 					} else {
 						h = _cat_hash(m, p)
 					}
-					m.Debug("what %v %v", h, p)
 					m.Push(mdb.HASH, kit.Select(h[:6], h[:], field == mdb.HASH))
 				case mdb.LINK:
 					m.PushDownload(mdb.LINK, kit.Select("", f.Name(), !isDir), p)
 				case mdb.SHOW:
-					switch p := m.MergeURL2("/share/local/"+p, ice.POD, m.Option(ice.MSG_USERPOD)); kit.Ext(f.Name()) {
+					switch p := kit.MergeURL("/share/local/"+p, ice.POD, m.Option(ice.MSG_USERPOD)); kit.Ext(f.Name()) {
 					case PNG, JPG:
 						m.PushImages(field, p)
 					case MP4:
@@ -122,7 +121,7 @@ func _dir_list(m *ice.Message, root string, name string, level int, deep bool, d
 						m.Push(field, "")
 					}
 				case mdb.ACTION:
-					if m.IsCliUA() || m.Option(ice.MSG_USERROLE) == aaa.VOID {
+					if m.IsCliUA() || m.Option(ice.MSG_USERROLE) == "void" {
 						break
 					}
 					m.PushButton(TRASH)
@@ -176,14 +175,14 @@ func init() {
 	Index.MergeCommands(ice.Commands{
 		DIR: {Name: "dir path field auto upload", Help: "目录", Actions: ice.Actions{
 			mdb.UPLOAD: {Name: "upload", Help: "上传", Hand: func(m *ice.Message, arg ...string) {
-				m.Upload(m.Option(PATH))
+				m.Cmdy("web.cache", "upload_watch", m.Option(PATH))
 			}},
 			TRASH: {Name: "trash", Help: "删除", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmdy(TRASH, m.Option(PATH))
 			}},
 		}, Hand: func(m *ice.Message, arg ...string) {
 			if m.Option(DIR_ROOT) != "" {
-				m.Log_SELECT(DIR_ROOT, m.Option(DIR_ROOT))
+				m.Logs(mdb.SELECT, DIR_ROOT, m.Option(DIR_ROOT))
 			}
 			_dir_list(m, kit.Select(PWD, m.Option(DIR_ROOT)), kit.Select(PWD, arg, 0),
 				0, m.Option(DIR_DEEP) == ice.TRUE, kit.Select(TYPE_BOTH, m.Option(DIR_TYPE)), kit.Regexp(m.Option(DIR_REG)),
@@ -197,7 +196,6 @@ func init() {
 func Dir(m *ice.Message, sort string) *ice.Message {
 	m.Option(DIR_TYPE, TYPE_DIR)
 	m.Copy(m.Cmd(DIR, PWD).Sort(sort))
-
 	m.Option(DIR_TYPE, TYPE_CAT)
 	m.Copy(m.Cmd(DIR, PWD).Sort(sort))
 	return m

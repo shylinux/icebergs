@@ -5,7 +5,6 @@ import (
 
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/mdb"
-	kit "shylinux.com/x/toolkits"
 )
 
 type Stat struct {
@@ -41,23 +40,11 @@ func _client_dial(m *ice.Message, arg ...string) {
 		defer c.Close()
 	}
 
-	switch cb := m.OptionCB(CLIENT).(type) {
-	case func(net.Conn, error):
-		cb(c, e)
+	switch cb := m.OptionCB("").(type) {
 	case func(net.Conn):
 		if !m.Warn(e) {
 			cb(c)
 		}
-	case func(net.Conn, []byte, error):
-		b := make([]byte, ice.MOD_BUFS)
-		for {
-			n, e := c.Read(b)
-			if cb(c, b[:n], e); e != nil {
-				break
-			}
-		}
-	case nil:
-		c.Write([]byte("hello world\n"))
 	default:
 		m.ErrorNotImplement(cb)
 	}
@@ -80,16 +67,11 @@ const CLIENT = "client"
 func init() {
 	Index.MergeCommands(ice.Commands{
 		CLIENT: {Name: "client hash auto prunes", Help: "客户端", Actions: ice.MergeAction(ice.Actions{
-			ice.CTX_EXIT: {Hand: func(m *ice.Message, arg ...string) {
-				m.Conf(m.PrefixKey(), "", "")
-			}},
+			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) { m.Conf("", mdb.HASH, "") }},
+			ice.CTX_EXIT: {Hand: func(m *ice.Message, arg ...string) {}},
 			DIAL: {Name: "dial type name port=9010 host=", Help: "连接", Hand: func(m *ice.Message, arg ...string) {
 				_client_dial(m, arg...)
 			}},
-		}, mdb.HashActionStatus(mdb.FIELD, "time,hash,status,type,name,host,port,error,nread,nwrite")), Hand: func(m *ice.Message, arg ...string) {
-			mdb.HashSelect(m, arg...).Tables(func(value ice.Maps) {
-				m.PushButton(kit.Select("", mdb.REMOVE, value[STATUS] == OPEN))
-			})
-		}},
+		}, mdb.HashStatusAction(mdb.FIELD, "time,hash,status,type,name,host,port,error,nread,nwrite"))},
 	})
 }

@@ -43,8 +43,8 @@ func _river_list(m *ice.Message) {
 		}
 	}
 
-	m.Richs(RIVER, nil, mdb.FOREACH, func(key string, value ice.Map) {
-		m.Richs(RIVER, kit.Keys(mdb.HASH, key, OCEAN), m.Option(ice.MSG_USERNAME), func(k string, val ice.Map) {
+	mdb.Richs(m, RIVER, nil, mdb.FOREACH, func(key string, value ice.Map) {
+		mdb.Richs(m, RIVER, kit.Keys(mdb.HASH, key, OCEAN), m.Option(ice.MSG_USERNAME), func(k string, val ice.Map) {
 			m.Push(key, kit.GetMeta(value), []string{mdb.HASH, mdb.NAME}, kit.GetMeta(val))
 		})
 	})
@@ -94,7 +94,7 @@ func init() {
 				})
 			}},
 			cli.START: {Name: "start name=hi repos template", Help: "创建空间", Hand: func(m *ice.Message, arg ...string) {
-				m.Cmdy(m.Space(m.Option(ice.POD)), web.DREAM, cli.START, arg)
+				m.Cmdy(web.Space(m, m.Option(ice.POD)), web.DREAM, cli.START, arg)
 			}},
 			aaa.INVITE: {Name: "invite", Help: "添加设备", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmd(code.PUBLISH, mdb.CREATE, nfs.FILE, ice.BIN_ICE_BIN)
@@ -116,7 +116,7 @@ func init() {
 				m.Cmdy(arg[1], arg[2:])
 				return // 应用列表
 			}
-			if !m.Right(RIVER, arg) {
+			if !aaa.Right(m, RIVER, arg) {
 				m.RenderStatusForbidden()
 				return // 没有授权
 			}

@@ -2,6 +2,7 @@ package code
 
 import (
 	ice "shylinux.com/x/icebergs"
+	"shylinux.com/x/icebergs/base/ctx"
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/nfs"
 	kit "shylinux.com/x/toolkits"
@@ -14,7 +15,7 @@ func init() {
 		FAVOR: {Name: "favor zone id auto insert test page", Help: "收藏夹", Actions: ice.MergeAction(ice.Actions{
 			mdb.INSERT: {Name: "insert zone=数据结构 type=go name=hi text=hello path file line", Help: "添加"},
 			INNER: {Name: "inner", Help: "源码", Hand: func(m *ice.Message, arg ...string) {
-				m.ProcessCommand(INNER, m.OptionSplit("path,file,line"), arg...)
+				ctx.ProcessCommand(m, INNER, m.OptionSplit("path,file,line"), arg...)
 			}},
 			"test": {Name: "test zone=hi count=10", Help: "测试", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmd(mdb.INSERT, m.PrefixKey(), "", mdb.HASH, m.OptionSimple(mdb.ZONE))

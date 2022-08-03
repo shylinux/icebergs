@@ -9,6 +9,7 @@ import (
 	"shylinux.com/x/icebergs/base/cli"
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/nfs"
+	"shylinux.com/x/icebergs/core/wiki"
 	kit "shylinux.com/x/toolkits"
 )
 
@@ -43,7 +44,7 @@ func (a alpha) Load(m *ice.Message, arg ...string) {
 	// 保存词库
 	m.Conf(m.PrefixKey(), kit.Keys(name, kit.Keym(mdb.LIMIT)), 0)
 	m.Conf(m.PrefixKey(), kit.Keys(name, kit.Keym(mdb.LEAST)), 0)
-	m.Echo("%s: %d", name, m.Grow(m.PrefixKey(), name, kit.Dict(WORD, ice.SP)))
+	m.Echo("%s: %d", name, mdb.Grow(m.Message, m.PrefixKey(), name, kit.Dict(WORD, ice.SP)))
 }
 func (a alpha) List(m *ice.Message, arg ...string) {
 	if len(arg) < 2 || arg[1] == "" {
@@ -71,7 +72,7 @@ func (a alpha) List(m *ice.Message, arg ...string) {
 
 	// 搜索词汇
 	msg := m.Cmd(cli.SYSTEM, "grep", "-rih", arg[1], m.Config(mdb.STORE))
-	msg.CSV(msg.Result(), kit.Split(m.Config(mdb.FIELD))...).Tables(func(value ice.Maps) {
+	wiki.CSV(msg.Message, msg.Result(), kit.Split(m.Config(mdb.FIELD))...).Tables(func(value ice.Maps) {
 		if m.FieldsIsDetail() {
 			m.Push(mdb.DETAIL, value, kit.Split(m.Config(mdb.FIELD)))
 			m.Push(mdb.TIME, m.Time())

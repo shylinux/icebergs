@@ -4,6 +4,7 @@ import (
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/cli"
 	"shylinux.com/x/icebergs/base/mdb"
+	"shylinux.com/x/icebergs/base/web"
 )
 
 const TODO = "todo"
@@ -23,7 +24,7 @@ func init() {
 		}, mdb.HashAction(mdb.FIELD, "time,hash,zone,name,text")), Hand: func(m *ice.Message, arg ...string) {
 			m.Display("/plugin/table.js", "style", "card")
 			mdb.HashSelect(m, arg...).PushAction(cli.START, mdb.REMOVE)
-			m.PushPodCmd(m.CommandKey(), arg...)
+			web.PushPodCmd(m, m.CommandKey(), arg...)
 		}},
 	})
 }

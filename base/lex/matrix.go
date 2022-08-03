@@ -7,7 +7,6 @@ import (
 	"strings"
 
 	ice "shylinux.com/x/icebergs"
-	"shylinux.com/x/icebergs/base/cli"
 	"shylinux.com/x/icebergs/base/mdb"
 	kit "shylinux.com/x/toolkits"
 )
@@ -346,10 +345,10 @@ func (mat *Matrix) show(m *ice.Message) {
 					value = append(value, "*")
 				}
 				if node.next > 0 {
-					value = append(value, cli.ColorGreen(m, node.next))
+					// value = append(value, cli.ColorGreen(m, node.next))
 				}
 				if node.hash > 0 {
-					value = append(value, cli.ColorRed(m, kit.Select(kit.Format("%d", node.hash), mat.word[node.hash])))
+					// value = append(value, cli.ColorRed(m, kit.Select(kit.Format("%d", node.hash), mat.word[node.hash])))
 				}
 			}
 			m.Push(key, strings.Join(value, ","))
@@ -359,11 +358,11 @@ func (mat *Matrix) show(m *ice.Message) {
 	m.Status(NLANG, mat.nlang, NCELL, mat.ncell, NPAGE, len(mat.page), NHASH, len(mat.hash))
 }
 func _lex_load(m *ice.Message) {
-	m.Richs(m.PrefixKey(), "", mdb.FOREACH, func(key string, value ice.Map) {
+	mdb.Richs(m, m.PrefixKey(), "", mdb.FOREACH, func(key string, value ice.Map) {
 		value = kit.GetMeta(value)
 
 		mat := NewMatrix(m, kit.Int(kit.Select("32", value[NLANG])), kit.Int(kit.Select("256", value[NCELL])))
-		m.Grows(m.PrefixKey(), kit.Keys(mdb.HASH, key), "", "", func(index int, value ice.Map) {
+		mdb.Grows(m, m.PrefixKey(), kit.Keys(mdb.HASH, key), "", "", func(index int, value ice.Map) {
 			mat.Train(m, kit.Format(value[NPAGE]), kit.Format(value[NHASH]), kit.Format(value[mdb.TEXT]))
 		})
 		value[MATRIX] = mat
@@ -392,7 +391,7 @@ func init() {
 			}},
 			mdb.CREATE: {Name: "create nlang=32 ncell=128", Help: "创建", Hand: func(m *ice.Message, arg ...string) {
 				mat := NewMatrix(m, kit.Int(kit.Select("32", m.Option(NLANG))), kit.Int(kit.Select("128", m.Option(NCELL))))
-				h := m.Rich(m.PrefixKey(), "", kit.Data(mdb.TIME, m.Time(), MATRIX, mat, NLANG, mat.nlang, NCELL, mat.ncell))
+				h := mdb.Rich(m, m.PrefixKey(), "", kit.Data(mdb.TIME, m.Time(), MATRIX, mat, NLANG, mat.nlang, NCELL, mat.ncell))
 				switch cb := m.OptionCB(MATRIX).(type) {
 				case func(string, *Matrix):
 					cb(h, mat)
@@ -402,12 +401,12 @@ func init() {
 				m.Echo(h)
 			}},
 			mdb.INSERT: {Name: "insert hash npage=num nhash=num text=123", Help: "添加", Hand: func(m *ice.Message, arg ...string) {
-				m.Richs(m.PrefixKey(), "", m.Option(mdb.HASH), func(key string, value ice.Map) {
+				mdb.Richs(m, m.PrefixKey(), "", m.Option(mdb.HASH), func(key string, value ice.Map) {
 					value = kit.GetMeta(value)
 
 					mat, _ := value[MATRIX].(*Matrix)
 					m.Echo("%d", mat.Train(m, m.Option(NPAGE), m.Option(NHASH), m.Option(mdb.TEXT)))
-					m.Grow(m.PrefixKey(), kit.Keys(mdb.HASH, key), kit.Dict(
+					mdb.Grow(m, m.PrefixKey(), kit.Keys(mdb.HASH, key), kit.Dict(
 						mdb.TIME, m.Time(), NPAGE, m.Option(NPAGE), NHASH, m.Option(NHASH), mdb.TEXT, m.Option(mdb.TEXT),
 					))
 
@@ -419,7 +418,7 @@ func init() {
 				m.Cmdy(mdb.DELETE, m.PrefixKey(), "", mdb.HASH, mdb.HASH, m.Option(mdb.HASH))
 			}},
 			PARSE: {Name: "parse hash npage text=123", Help: "解析", Hand: func(m *ice.Message, arg ...string) {
-				m.Richs(m.PrefixKey(), "", m.Option(mdb.HASH), func(key string, value ice.Map) {
+				mdb.Richs(m, m.PrefixKey(), "", m.Option(mdb.HASH), func(key string, value ice.Map) {
 					value = kit.GetMeta(value)
 					mat, _ := value[MATRIX].(*Matrix)
 
@@ -432,7 +431,7 @@ func init() {
 				m.ProcessInner()
 			}},
 			"show": {Name: "show", Help: "矩阵", Hand: func(m *ice.Message, arg ...string) {
-				m.Richs(m.PrefixKey(), "", kit.Select(m.Option(mdb.HASH), arg, 0), func(key string, value ice.Map) {
+				mdb.Richs(m, m.PrefixKey(), "", kit.Select(m.Option(mdb.HASH), arg, 0), func(key string, value ice.Map) {
 					value = kit.GetMeta(value)
 					value[MATRIX].(*Matrix).show(m)
 				})
@@ -462,9 +461,9 @@ func init() {
 				m.Push("value", 2)
 				m.ProcessDisplay("/plugin/story/pie.js")
 			}},
-			"field": {Hand: func(m *ice.Message, arg ...string) {
-				m.ProcessCommand("cli.system", []string{"pwd"}, arg...)
-			}},
+			// "field": {Hand: func(m *ice.Message, arg ...string) {
+			// 	m.ProcessCommand("cli.system", []string{"pwd"}, arg...)
+			// }},
 			"inner": {Hand: func(m *ice.Message, arg ...string) {
 				m.Push("value", 1)
 				m.Push("value", 2)
@@ -521,7 +520,7 @@ func init() {
 				return
 			}
 
-			m.Richs(m.PrefixKey(), "", arg[0], func(key string, value ice.Map) {
+			mdb.Richs(m, m.PrefixKey(), "", arg[0], func(key string, value ice.Map) {
 				value = kit.GetMeta(value)
 				mat, _ := value[MATRIX].(*Matrix)
 

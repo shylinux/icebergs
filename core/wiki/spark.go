@@ -6,7 +6,6 @@ import (
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/nfs"
 	"shylinux.com/x/icebergs/base/ssh"
-	"shylinux.com/x/icebergs/base/web"
 	kit "shylinux.com/x/toolkits"
 )
 
@@ -31,7 +30,7 @@ func _spark_show(m *ice.Message, name, text string, arg ...string) {
 	}
 
 	for _, l := range strings.Split(text, ice.NL) {
-		m.Echo(web.Format("div", web.Format("label", prompt), web.Format("span", l)))
+		m.Echo(Format("div", Format("label", prompt), Format("span", l)))
 	}
 }
 
@@ -62,11 +61,11 @@ func init() {
 						list = append(list, "<div>")
 						switch arg[0] {
 						case SHELL:
-							list = append(list, web.Format("label", "$ "))
+							list = append(list, Format("label", "$ "))
 						default:
-							list = append(list, web.Format("label", "&gt; "))
+							list = append(list, Format("label", "&gt; "))
 						}
-						list = append(list, web.Format("span", l))
+						list = append(list, Format("span", l))
 						list = append(list, "</div>")
 					}
 					list = append(list, "</div>")
@@ -132,4 +131,7 @@ func init() {
 			ssh.PROMPT, kit.Dict(SHELL, "$ "),
 		)},
 	}})
+}
+func Format(tag string, arg ...ice.Any) string {
+	return kit.Format("<%s>%s</%s>", tag, strings.Join(kit.Simple(arg), ""), tag)
 }

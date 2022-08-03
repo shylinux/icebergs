@@ -6,6 +6,7 @@ import (
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/aaa"
 	"shylinux.com/x/icebergs/base/cli"
+	"shylinux.com/x/icebergs/base/ctx"
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/tcp"
 	kit "shylinux.com/x/toolkits"
@@ -28,8 +29,8 @@ func init() {
 		SYNC: {Name: "sync id auto page export import", Help: "同步流", Actions: ice.MergeAction(ice.Actions{
 			cli.SYSTEM: {Name: "system", Help: "命令", Hand: func(m *ice.Message, arg ...string) {
 				m.Option(cli.CMD_DIR, m.Option(cli.PWD))
-				m.ProcessCommand(cli.SYSTEM, kit.Split(m.Option(mdb.TEXT)), arg...)
-				m.ProcessCommandOpt(arg, cli.PWD)
+				ctx.ProcessCommand(m, cli.SYSTEM, kit.Split(m.Option(mdb.TEXT)), arg...)
+				ctx.ProcessCommandOpt(m, arg, cli.PWD)
 			}},
 			mdb.INPUTS: {Name: "inputs", Help: "补全", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmdy(FAVOR, mdb.INPUTS, arg)
@@ -38,7 +39,7 @@ func init() {
 				m.Cmdy(FAVOR, mdb.INSERT)
 			}},
 		}, mdb.ListAction(mdb.FIELD, "time,id,type,name,text,pwd,username,hostname")), Hand: func(m *ice.Message, arg ...string) {
-			m.OptionPage(kit.Slice(arg, 1)...)
+			mdb.OptionPage(m, kit.Slice(arg, 1)...)
 			mdb.ListSelect(m, kit.Slice(arg, 0, 1)...)
 			m.PushAction(cli.SYSTEM, FAVOR)
 			m.StatusTimeCountTotal(m.Config(mdb.COUNT))

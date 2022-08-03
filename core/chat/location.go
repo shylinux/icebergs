@@ -55,7 +55,7 @@ func init() {
 			}},
 		}, mdb.HashAction(mdb.FIELD, "time,hash,type,name,text,latitude,longitude,extra"), ctx.CmdAction()), Hand: func(m *ice.Message, arg ...string) {
 			mdb.HashSelect(m, kit.Slice(arg, 0, 1)...)
-			m.DisplayLocal("", m.ConfigSimple(aaa.TOKEN))
+			ctx.DisplayLocal(m, "", m.ConfigSimple(aaa.TOKEN))
 			m.Option(LOCATION, get(m, "location/v1/ip", aaa.IP, m.Option(ice.MSG_USERIP)))
 		}},
 	})

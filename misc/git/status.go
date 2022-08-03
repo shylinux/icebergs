@@ -10,6 +10,7 @@ import (
 	"shylinux.com/x/icebergs/base/ctx"
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/nfs"
+	"shylinux.com/x/icebergs/base/web"
 	"shylinux.com/x/icebergs/core/code"
 	kit "shylinux.com/x/toolkits"
 )
@@ -36,10 +37,10 @@ func _status_tags(m *ice.Message, repos string) {
 		}
 	})
 
-	m.GoToast(TAGS, func(toast func(string, int, int)) {
+	web.GoToast(m, TAGS, func(toast func(string, int, int)) {
 		count, total := 0, len(vs)
 		toast(cli.BEGIN, count, total)
-		defer m.PushRefresh()
+		defer web.PushNoticeRefresh(m)
 
 		for k := range vs {
 			if k != repos && repos != "" {
@@ -87,7 +88,7 @@ func _status_tags(m *ice.Message, repos string) {
 	})
 }
 func _status_each(m *ice.Message, title string, cmds ...string) {
-	m.GoToast(title, func(toast func(string, int, int)) {
+	web.GoToast(m, title, func(toast func(string, int, int)) {
 		count, total := 0, len(m.Confm(REPOS, mdb.HASH))
 		toast(cli.BEGIN, count, total)
 
@@ -96,7 +97,7 @@ func _status_each(m *ice.Message, title string, cmds ...string) {
 			toast(value[REPOS], count, total)
 
 			if msg := m.Cmd(cmds, ice.Option{cli.CMD_DIR, value[nfs.PATH]}); !cli.IsSuccess(msg) {
-				m.Toast3s(msg.Append(cli.CMD_ERR), "error: "+value[REPOS])
+				web.Toast3s(m, msg.Append(cli.CMD_ERR), "error: "+value[REPOS])
 				list = append(list, value[REPOS])
 				m.Sleep3s()
 			}
@@ -104,11 +105,11 @@ func _status_each(m *ice.Message, title string, cmds ...string) {
 		})
 
 		if len(list) > 0 {
-			m.Toast30s(strings.Join(list, ice.NL), ice.FAILURE)
+			web.Toast30s(m, strings.Join(list, ice.NL), ice.FAILURE)
 		} else {
 			toast(ice.SUCCESS, count, total)
 		}
-		m.PushRefresh()
+		web.PushNoticeRefresh(m)
 	})
 }
 func _status_stat(m *ice.Message, files, adds, dels int) (int, int, int) {
@@ -236,9 +237,9 @@ func init() {
 				m.ProcessHold()
 			}},
 			MAKE: {Name: "make", Help: "编译", Hand: func(m *ice.Message, arg ...string) {
-				cli.PushStream(m)
+				web.PushStream(m)
 				m.Cmdy(cli.SYSTEM, MAKE)
-				m.ToastSuccess()
+				web.ToastSuccess(m)
 				m.ProcessHold()
 			}},
 			PUSH: {Name: "push", Help: "上传", Hand: func(m *ice.Message, arg ...string) {
@@ -322,7 +323,7 @@ func init() {
 
 				files, adds, dels, last := _status_list(m)
 				m.Status("files", files, "adds", adds, "dels", dels, "last", last.Format(ice.MOD_TIME))
-				m.Toast3s(kit.Format("files: %d, adds: %d, dels: %d", files, adds, dels), ice.CONTEXTS)
+				web.Toast3s(m, kit.Format("files: %d, adds: %d, dels: %d", files, adds, dels), ice.CONTEXTS)
 				return
 			}
 
@@ -332,7 +333,7 @@ func init() {
 
 			files, adds, dels := _status_stat(m, 0, 0, 0)
 			m.Status("files", files, "adds", adds, "dels", dels)
-			m.Toast3s(kit.Format("files: %d, adds: %d, dels: %d", files, adds, dels), arg[0])
+			web.Toast3s(m, kit.Format("files: %d, adds: %d, dels: %d", files, adds, dels), arg[0])
 		}},
 	})
 }

@@ -17,10 +17,10 @@ const (
 	SUCCESS = "success"
 	FAILURE = "failure"
 	PROCESS = "process"
-	OF      = " of "
 
 	INIT = "init"
 	EXIT = "exit"
+	QUIT = "quit"
 	SAVE = "save"
 	LOAD = "load"
 
@@ -56,12 +56,7 @@ const (
 const ( // MOD
 	MOD_DIR  = 0750
 	MOD_FILE = 0640
-
-	MOD_CHAN = 16
-	MOD_TICK = "1s"
 	MOD_BUFS = 4096
-
-	MOD_DATE = "2006-01-02"
 	MOD_TIME = "2006-01-02 15:04:05"
 )
 const ( // REPOS
@@ -94,6 +89,20 @@ const ( // DIR
 	CSV  = "csv"
 	JSON = "json"
 
+	FAVICON   = "favicon.ico"
+	PROTO_JS  = "proto.js"
+	FRAME_JS  = "frame.js"
+	INDEX_JS  = "index.js"
+	INDEX_SH  = "index.sh"
+	INDEX_IML = "index.iml"
+	TUTOR_SHY = "tutor.shy"
+
+	PLUGIN_INPUT = "/plugin/input"
+	PLUGIN_STORY = "/plugin/story"
+	PLUGIN_LOCAL = "/plugin/local"
+	NODE_MODULES = "node_modules"
+	ISH_PLUGED   = ".ish/pluged"
+
 	USR_VOLCANOS = "usr/volcanos"
 	USR_LEARNING = "usr/learning"
 	USR_ICEBERGS = "usr/icebergs"
@@ -102,22 +111,6 @@ const ( // DIR
 	USR_INSTALL  = "usr/install"
 	USR_RELEASE  = "usr/release"
 	USR_PUBLISH  = "usr/publish"
-
-	PLUGIN_INPUT = "/plugin/input"
-	PLUGIN_STORY = "/plugin/story"
-	PLUGIN_LOCAL = "/plugin/local"
-	NODE_MODULES = "node_modules"
-	ISH_PLUGED   = ".ish/pluged"
-
-	FAVICON   = "favicon.ico"
-	PROTO_JS  = "proto.js"
-	FRAME_JS  = "frame.js"
-	INDEX_JS  = "index.js"
-	ORDER_JS  = "order.js"
-	ORDER_SH  = "order.sh"
-	INDEX_SH  = "index.sh"
-	INDEX_IML = "index.iml"
-	TUTOR_SHY = "tutor.shy"
 
 	USR_LOCAL        = "usr/local"
 	USR_LOCAL_GO     = "usr/local/go"
@@ -162,8 +155,6 @@ const ( // DIR
 	ICE_BIN        = "ice.bin"
 	GO_SUM         = "go.sum"
 	GO_MOD         = "go.mod"
-
-	CTX_DAEMON = "ctx_daemon"
 )
 const ( // MSG
 	MSG_DETAIL = "detail"
@@ -174,14 +165,14 @@ const ( // MSG
 	MSG_CMDS   = "cmds"
 	MSG_FIELDS = "fields"
 	MSG_SESSID = "sessid"
-	MSG_DOMAIN = "domain"
-	MSG_OPTS   = "_option"
 
-	MSG_ALIAS  = "_alias"
-	MSG_SCRIPT = "_script"
+	MSG_OPTS   = "_option"
 	MSG_SOURCE = "_source"
 	MSG_TARGET = "_target"
 	MSG_HANDLE = "_handle"
+
+	MSG_ALIAS  = "_alias"
+	MSG_SCRIPT = "_script"
 	MSG_OUTPUT = "_output"
 	MSG_ARGS   = "_args"
 
@@ -190,8 +181,8 @@ const ( // MSG
 	MSG_ACTION = "_action"
 	MSG_STATUS = "_status"
 
-	MSG_DISPLAY = "_display"
 	MSG_PROCESS = "_process"
+	MSG_DISPLAY = "_display"
 
 	MSG_USERIP   = "user.ip"
 	MSG_USERUA   = "user.ua"
@@ -209,28 +200,27 @@ const ( // MSG
 	MSG_TOPIC = "sess.topic"
 	MSG_RIVER = "sess.river"
 	MSG_STORM = "sess.storm"
-	MSG_TOAST = "sess.toast"
-	MSG_LOCAL = "sess.local"
-
 	MSG_FILES = "file.system"
+
+	FIELDS_DETAIL = "detail"
 )
 const ( // RENDER
+	RENDER_TEMPLATE = "_template"
+	RENDER_ANCHOR   = "_anchor"
+	RENDER_BUTTON   = "_button"
+	RENDER_IMAGES   = "_images"
+	RENDER_VIDEOS   = "_videos"
+	RENDER_IFRAME   = "_iframe"
+	RENDER_QRCODE   = "_qrcode"
+	RENDER_SCRIPT   = "_script"
+
 	RENDER_STATUS   = "_status"
 	RENDER_REDIRECT = "_redirect"
 	RENDER_DOWNLOAD = "_download"
-	RENDER_TEMPLATE = "_template"
 	RENDER_RESULT   = "_result"
 	RENDER_JSON     = "_json"
 	RENDER_VOID     = "_void"
 	RENDER_RAW      = "_raw"
-
-	RENDER_ANCHOR = "_anchor"
-	RENDER_BUTTON = "_button"
-	RENDER_SCRIPT = "_script"
-	RENDER_QRCODE = "_qrcode"
-	RENDER_IMAGES = "_images"
-	RENDER_VIDEOS = "_videos"
-	RENDER_IFRAME = "_iframe"
 )
 const ( // PROCESS
 	PROCESS_LOCATION = "_location"
@@ -253,16 +243,6 @@ const ( // PROCESS
 
 	FIELD_PREFIX = "_prefix"
 )
-const ( // CACHE
-	CACHE_LIMIT  = "cache.limit"
-	CACHE_BEGIN  = "cache.begin"
-	CACHE_COUNT  = "cache.count"
-	CACHE_OFFEND = "cache.offend"
-	CACHE_FILTER = "cache.filter"
-	CACHE_VALUE  = "cache.value"
-	CACHE_FIELD  = "cache.field"
-	CACHE_DETAIL = "detail"
-)
 const ( // CTX
 	CTX_FOLLOW = "follow"
 	CTX_STATUS = "status"
@@ -275,37 +255,19 @@ const ( // CTX
 
 	CTX_INIT = "_init"
 	CTX_EXIT = "_exit"
+
+	CTX_ARG    = "ctx_arg"
+	CTX_DAEMON = "ctx_daemon"
 )
 
 const ( // LOG
-	// 通用
-	LOG_INFO  = "info"
+	LOG_CMDS  = "cmds"
+	LOG_AUTH  = "auth"
 	LOG_COST  = "cost"
+	LOG_INFO  = "info"
 	LOG_WARN  = "warn"
-	LOG_ERROR = "error"
 	LOG_DEBUG = "debug"
-
-	// 命令
-	LOG_AUTH = "auth"
-	LOG_CMDS = "cmds"
-	LOG_SEND = "send"
-	LOG_RECV = "recv"
-
-	// 状态
-	LOG_BEGIN = "begin"
-	LOG_START = "start"
-	LOG_SERVE = "serve"
-	LOG_CLOSE = "close"
-
-	// 数据
-	LOG_CREATE = "create"
-	LOG_REMOVE = "remove"
-	LOG_INSERT = "insert"
-	LOG_DELETE = "delete"
-	LOG_MODIFY = "modify"
-	LOG_SELECT = "select"
-	LOG_EXPORT = "export"
-	LOG_IMPORT = "import"
+	LOG_ERROR = "error"
 )
 const ( // Err
 	ErrWarn = "warn: "
@@ -318,72 +280,23 @@ const ( // Err
 	ErrNotImplement = "not implement: "
 )
 
-const ( // ice
-	// CTX = "ctx"
-	CLI = "cli"
-	WEB = "web"
-	AAA = "aaa"
-	LEX = "lex"
-	YAC = "yac"
-	GDB = "gdb"
-	LOG = "log"
-	TCP = "tcp"
-	NFS = "nfs"
-	SSH = "ssh"
-	MDB = "mdb"
-)
 const ( // ctx
 	COMMAND = "command"
 	ACTION  = "action"
-	CONFIG  = "config"
 	STYLE   = "style"
 	INDEX   = "index"
-	ARGS    = "args"
-	INPUTS  = "inputs"
-	FEATURE = "feature"
-)
-const ( // web
-	SERVE = "serve"
-	SPACE = "space"
-	SPIDE = "spide"
-	CACHE = "cache"
-
-	WEBSITE = "website"
-)
-const ( // aaa
-	ROLE     = "role"
-	RIGHT    = "right"
-	USERROLE = "userrole"
-	ROOT     = "root"
 )
 const ( // mdb
+	MDB    = "mdb"
 	KEY    = "key"
 	VALUE  = "value"
+	EXTRA  = "extra"
 	SCRIPT = "script"
+	META   = "meta"
+	HASH   = "hash"
+	TIME   = "time"
+	TYPE   = "type"
+	NAME   = "name"
+	TEXT   = "text"
 	LINK   = "link"
-
-	META = "meta"
-	HASH = "hash"
-	TIME = "time"
-	TYPE = "type"
-	NAME = "name"
-	TEXT = "text"
-)
-const ( // ssh
-	SOURCE = "source"
-)
-const ( // gdb
-	EVENT    = "event"
-	LISTEN   = "listen"
-	HAPPEN   = "happen"
-	FILELINE = "fileline"
-
-	RESTART = "restart"
-	ERROR   = "error"
-	OPEN    = "open"
-	CLOSE   = "close"
-	START   = "start"
-	STOP    = "stop"
-	BEGIN   = "begin"
-	END     = "end"
 )

@@ -8,6 +8,7 @@ import (
 	"shylinux.com/x/icebergs/base/ctx"
 	"shylinux.com/x/icebergs/base/gdb"
 	"shylinux.com/x/icebergs/base/mdb"
+	"shylinux.com/x/icebergs/base/nfs"
 	kit "shylinux.com/x/toolkits"
 )
 
@@ -22,10 +23,9 @@ func _daemon_exec(m *ice.Message, cmd *exec.Cmd) {
 		cmd.Stderr = w
 	}
 
-	h := mdb.HashCreate(m,
-		STATUS, START, ice.CMD, kit.Join(cmd.Args, ice.SP),
-		DIR, cmd.Dir, ENV, kit.Select("", cmd.Env),
-		m.OptionSimple(CMD_OUTPUT, CMD_ERRPUT, mdb.CACHE_CLEAR_ON_EXIT),
+	h := mdb.HashCreate(m, ice.CMD, kit.Join(cmd.Args, ice.SP),
+		STATUS, START, DIR, cmd.Dir, ENV, kit.Select("", cmd.Env),
+		m.OptionSimple(CMD_INPUT, CMD_OUTPUT, CMD_ERRPUT, mdb.CACHE_CLEAR_ON_EXIT),
 	).Result()
 
 	// 启动服务
@@ -48,8 +48,8 @@ func _daemon_exec(m *ice.Message, cmd *exec.Cmd) {
 			})
 		}
 
-		status := mdb.HashSelectFields(m, h, STATUS)
-		switch m.Sleep300ms(); cb := m.OptionCB(DAEMON).(type) {
+		status := mdb.HashSelectField(m, h, STATUS)
+		switch m.Sleep300ms(); cb := m.OptionCB("").(type) {
 		case func(string) bool:
 			if !cb(status) { // 拉起服务
 				m.Cmdy(DAEMON, cmd.Path, cmd.Args)
@@ -62,9 +62,8 @@ func _daemon_exec(m *ice.Message, cmd *exec.Cmd) {
 		default:
 			m.ErrorNotImplement(cb)
 		}
-
 		for _, p := range kit.Simple(CMD_INPUT, CMD_OUTPUT, CMD_ERRPUT) {
-			kit.Close(m.Optionv(p))
+			nfs.CloseFile(m, m.Optionv(p))
 		}
 	})
 }
@@ -113,10 +112,6 @@ func init() {
 			ice.CTX_EXIT: {Hand: func(m *ice.Message, arg ...string) {
 				mdb.HashPrunesValue(m, mdb.CACHE_CLEAR_ON_EXIT, ice.TRUE)
 			}},
-			mdb.PRUNES: {Name: "prunes", Help: "清理", Hand: func(m *ice.Message, arg ...string) {
-				mdb.HashPrunesValue(m, STATUS, ERROR)
-				mdb.HashPrunesValue(m, STATUS, STOP)
-			}},
 			START: {Name: "start cmd env dir", Help: "添加", Hand: func(m *ice.Message, arg ...string) {
 				m.Option(CMD_DIR, m.Option(DIR))
 				m.Option(CMD_ENV, kit.Split(m.Option(ENV), " ="))
@@ -132,7 +127,7 @@ func init() {
 					m.Cmd(gdb.SIGNAL, gdb.KILL, value[PID])
 				})
 			}},
-		}, mdb.HashAction(mdb.FIELD, "time,hash,status,pid,cmd,dir,env")), Hand: func(m *ice.Message, arg ...string) {
+		}, mdb.HashStatusAction(mdb.FIELD, "time,hash,status,pid,cmd,dir,env")), Hand: func(m *ice.Message, arg ...string) {
 			if mdb.HashSelect(m, arg...).Tables(func(value ice.Maps) {
 				switch value[STATUS] {
 				case START:

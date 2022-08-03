@@ -18,7 +18,7 @@ import (
 func _system_cmd(m *ice.Message, arg ...string) *exec.Cmd {
 	if text := kit.ReadFile(ice.ETC_PATH); len(text) > 0 {
 		if file := _system_find(m, arg[0], strings.Split(text, ice.NL)...); file != "" {
-			m.Log_SELECT("etc path cmd", file)
+			m.Logs(mdb.SELECT, "etc path cmd", file)
 			arg[0] = file // 配置目录
 		}
 	}
@@ -26,7 +26,7 @@ func _system_cmd(m *ice.Message, arg ...string) *exec.Cmd {
 	for i := 0; i < len(env)-1; i += 2 {
 		if env[i] == PATH {
 			if file := _system_find(m, arg[0], strings.Split(env[i+1], ice.DF)...); file != "" {
-				m.Log_SELECT("env path cmd", file)
+				m.Logs(mdb.SELECT, "env path cmd", file)
 				arg[0] = file // 环境变量
 			}
 		}
@@ -34,7 +34,7 @@ func _system_cmd(m *ice.Message, arg ...string) *exec.Cmd {
 	if _system_find(m, arg[0]) == "" {
 		m.Cmd(MIRRORS, CMD, arg[0])
 		if file := _system_find(m, arg[0]); file != "" {
-			m.Log_SELECT("mirrors cmd", file)
+			m.Logs(mdb.SELECT, "mirrors cmd", file)
 			arg[0] = file // 软件镜像
 		}
 	}
@@ -42,7 +42,7 @@ func _system_cmd(m *ice.Message, arg ...string) *exec.Cmd {
 
 	// 运行目录
 	if cmd.Dir = m.Option(CMD_DIR); len(cmd.Dir) > 0 {
-		if m.Log_EXPORT(CMD_DIR, cmd.Dir); !kit.FileExists(cmd.Dir) {
+		if m.Logs(mdb.EXPORT, CMD_DIR, cmd.Dir); !kit.FileExists(cmd.Dir) {
 			file.MkdirAll(cmd.Dir, ice.MOD_DIR)
 		}
 	}
@@ -51,7 +51,7 @@ func _system_cmd(m *ice.Message, arg ...string) *exec.Cmd {
 		cmd.Env = append(cmd.Env, kit.Format("%s=%s", env[i], env[i+1]))
 	}
 	if len(cmd.Env) > 0 {
-		m.Log_EXPORT(CMD_ENV, cmd.Env)
+		m.Logs(mdb.EXPORT, CMD_ENV, kit.Format(cmd.Env))
 	}
 	return cmd
 }
@@ -61,7 +61,7 @@ func _system_out(m *ice.Message, out string) io.Writer {
 	} else if m.Option(out) == "" {
 		return nil
 	} else if f, p, e := file.CreateFile(m.Option(out)); m.Assert(e) {
-		m.Log_EXPORT(out, p)
+		m.Logs(mdb.EXPORT, out, p)
 		m.Optionv(out, f)
 		return f
 	}
@@ -152,13 +152,6 @@ func init() {
 			_system_exec(m, _system_cmd(m, arg...))
 		}},
 	})
-}
-
-func PushStream(m *ice.Message) {
-	m.Option(CMD_OUTPUT, file.NewWriteCloser(func(buf []byte) (int, error) {
-		m.PushNoticeGrow(string(buf))
-		return len(buf), nil
-	}, func() error { m.PushNoticeToast("done"); return nil }))
 }
 
 func IsSuccess(m *ice.Message) bool {

@@ -64,7 +64,7 @@ func init() {
 		}, mdb.ZoneAction(mdb.SHORT, mdb.ZONE, mdb.FIELD, "time,id,text,file", PPROF, kit.List(GO, "tool", PPROF))), Hand: func(m *ice.Message, arg ...string) {
 			m.Fields(len(arg), "time,zone,count,binnary,service,seconds", m.Config(mdb.FIELD))
 			if mdb.ZoneSelect(m, arg...); len(arg) == 0 {
-				m.EchoAnchor(m.MergeLink("/code/pprof/"))
+				m.EchoAnchor(web.MergeLink(m, "/code/pprof/"))
 				m.PushAction(ice.RUN, mdb.REMOVE)
 				m.Action(mdb.CREATE)
 				return

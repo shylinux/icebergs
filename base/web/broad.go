@@ -20,7 +20,7 @@ func _broad_send(m *ice.Message, host, port string, remote_host, remote_port str
 	if s, e := net.DialUDP("udp", nil, _broad_addr(m, remote_host, remote_port)); m.Assert(e) {
 		defer s.Close()
 		msg := m.Spawn(kit.Dict(tcp.HOST, host, tcp.PORT, port))
-		m.Log_EXPORT(BROAD, msg.FormatMeta(), "to", remote_host+ice.DF+remote_port)
+		m.Logs(mdb.EXPORT, BROAD, msg.FormatMeta(), "to", remote_host+ice.DF+remote_port)
 		s.Write([]byte(msg.FormatMeta()))
 	}
 }
@@ -28,7 +28,7 @@ func _broad_serve(m *ice.Message, host, port string) {
 	_broad_send(m, host, port, "255.255.255.255", "9020")
 	if s, e := net.ListenUDP("udp", _broad_addr(m, "0.0.0.0", port)); m.Assert(e) {
 		defer s.Close()
-		m.Cmd(BROAD, mdb.CREATE, tcp.HOST, host, tcp.PORT, port, kit.Dict(mdb.TARGET, s))
+		mdb.HashCreate(m, tcp.HOST, host, tcp.PORT, port, kit.Dict(mdb.TARGET, s))
 
 		buf := make([]byte, ice.MOD_BUFS)
 		for {
@@ -36,7 +36,7 @@ func _broad_serve(m *ice.Message, host, port string) {
 			if err != nil {
 				break
 			}
-			m.Log_IMPORT(BROAD, string(buf[:n]), "from", addr)
+			m.Logs(mdb.IMPORT, BROAD, string(buf[:n]), "from", addr)
 
 			msg := m.Spawn(buf[:n])
 			if m.Cmd(BROAD, kit.Format("%s,%s", msg.Option(tcp.HOST), msg.Option(tcp.PORT))).Length() > 0 {
@@ -44,11 +44,11 @@ func _broad_serve(m *ice.Message, host, port string) {
 			}
 
 			if remote, err := net.ResolveUDPAddr("udp4", kit.Format("%s:%s", msg.Option(tcp.HOST), msg.Option(tcp.PORT))); !m.Warn(err) {
-				m.Cmd(BROAD).Tables(func(value ice.Maps) {
-					m.Log_EXPORT(BROAD, kit.Format(value), "to", kit.Format(remote))
+				m.Cmd(BROAD, func(value ice.Maps) {
+					m.Logs(mdb.EXPORT, BROAD, kit.Format(value), "to", kit.Format(remote))
 					s.WriteToUDP([]byte(m.Spawn(value).FormatMeta()), remote)
 				})
-				m.Cmd(BROAD, mdb.CREATE, msg.OptionSimple(tcp.HOST, tcp.PORT))
+				mdb.HashCreate(m, msg.OptionSimple(tcp.HOST, tcp.PORT))
 			}
 		}
 	}
@@ -67,13 +67,6 @@ const BROAD = "broad"
 func init() {
 	Index.MergeCommands(ice.Commands{
 		BROAD: {Name: "broad hash auto serve", Help: "广播", Actions: ice.MergeAction(ice.Actions{
-			ice.CTX_EXIT: {Hand: func(m *ice.Message, arg ...string) {
-				mdb.HashSelectValue(m, func(target ice.Any) {
-					if c, ok := target.(*net.UDPConn); ok {
-						c.Close()
-					}
-				})
-			}},
 			mdb.SEARCH: {Name: "search type name text", Help: "搜索", Hand: func(m *ice.Message, arg ...string) {
 				_broad_search(m, arg[0], arg[1], kit.Select("", arg, 2))
 			}},
@@ -85,6 +78,6 @@ func init() {
 					kit.Format("http://%s:%s", m.Option(tcp.HOST), m.Option(tcp.PORT)))
 				m.Cmd(SPACE, tcp.DIAL, m.OptionSimple(ice.DEV))
 			}},
-		}, mdb.HashAction(mdb.SHORT, "host,port", mdb.FIELD, "time,hash,host,port", mdb.ACTION, "space"))},
+		}, mdb.HashCloseAction(mdb.SHORT, "host,port", mdb.FIELD, "time,hash,host,port", mdb.ACTION, SPACE))},
 	})
 }

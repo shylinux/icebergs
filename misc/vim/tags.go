@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	ice "shylinux.com/x/icebergs"
+	"shylinux.com/x/icebergs/base/ctx"
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/nfs"
 	"shylinux.com/x/icebergs/core/code"
@@ -53,7 +54,7 @@ func init() {
 			}},
 			mdb.INSERT: {Name: "insert zone=core type name=hi text=hello path file line", Help: "添加"},
 			code.INNER: {Name: "inner", Help: "源码", Hand: func(m *ice.Message, arg ...string) {
-				m.ProcessCommand(code.INNER, m.OptionSplit("path,file,line"), arg...)
+				ctx.ProcessCommand(m, code.INNER, m.OptionSplit("path,file,line"), arg...)
 			}},
 			INPUT: {Name: "input name text", Help: "补全", Hand: func(m *ice.Message, arg ...string) {
 				if m.Option(mdb.TEXT) == "" {

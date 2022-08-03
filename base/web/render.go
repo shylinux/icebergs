@@ -10,6 +10,8 @@ import (
 
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/aaa"
+	"shylinux.com/x/icebergs/base/ctx"
+	"shylinux.com/x/icebergs/base/lex"
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/nfs"
 	"shylinux.com/x/icebergs/base/tcp"
@@ -23,7 +25,7 @@ const (
 
 func Render(msg *ice.Message, cmd string, args ...ice.Any) {
 	if cmd != "" {
-		defer func() { msg.Log_EXPORT(cmd, args) }()
+		defer func() { msg.Logs(mdb.EXPORT, cmd, args) }()
 	}
 
 	switch arg := kit.Simple(args...); cmd {
@@ -31,18 +33,18 @@ func Render(msg *ice.Message, cmd string, args ...ice.Any) {
 		RenderCookie(msg, arg[0], arg[1:]...)
 
 	case STATUS, ice.RENDER_STATUS: // [code [text]]
-		RenderStatus(msg, kit.Int(kit.Select("200", arg, 0)), kit.Select("", arg, 1))
+		RenderStatus(msg.W, kit.Int(kit.Select("200", arg, 0)), kit.Select("", arg, 1))
 
 	case ice.RENDER_REDIRECT: // url [arg...]
-		RenderRedirect(msg, arg...)
+		http.Redirect(msg.W, msg.R, kit.MergeURL(arg[0], arg[1:]), http.StatusTemporaryRedirect)
 
 	case ice.RENDER_DOWNLOAD: // file [type [name]]
 		if strings.HasPrefix(arg[0], ice.HTTP) {
-			http.Redirect(msg.W, msg.R, arg[0], http.StatusSeeOther)
+			RenderRedirect(msg, arg[0])
 			break
 		}
-		msg.W.Header().Set("Content-Disposition", fmt.Sprintf("filename=%s", kit.Select(path.Base(kit.Select(arg[0], msg.Option("filename"))), arg, 2)))
 		RenderType(msg.W, arg[0], kit.Select("", arg, 1))
+		RenderHeader(msg.W, "Content-Disposition", fmt.Sprintf("filename=%s", kit.Select(path.Base(kit.Select(arg[0], msg.Option("filename"))), arg, 2)))
 		if _, e := nfs.DiskFile.StatFile(arg[0]); e == nil {
 			http.ServeFile(msg.W, msg.R, kit.Path(arg[0]))
 		} else if f, e := nfs.PackFile.OpenFile(arg[0]); e == nil {
@@ -59,19 +61,16 @@ func Render(msg *ice.Message, cmd string, args ...ice.Any) {
 		}
 
 	case ice.RENDER_JSON:
-		msg.W.Header().Set("Content-Type", "application/json")
+		RenderType(msg.W, nfs.JSON, "")
 		msg.W.Write([]byte(arg[0]))
 
 	case ice.RENDER_VOID:
 		// no output
 
-	case ice.RENDER_RAW:
-		fallthrough
 	default:
 		for _, k := range []string{
-			"_", "_option", "_handle", "_output", "",
-			"cmds", "fields", "sessid", "domain",
-			"river", "storm",
+			"_option", "_handle", "_output",
+			"cmds", "fields", "sessid", "river", "storm",
 		} {
 			msg.Set(k)
 		}
@@ -79,37 +78,37 @@ func Render(msg *ice.Message, cmd string, args ...ice.Any) {
 		if cmd != "" && cmd != ice.RENDER_RAW { // [str [arg...]]
 			msg.Echo(kit.Format(cmd, args...))
 		}
-		msg.W.Header().Set(ContentType, ContentJSON)
+		RenderType(msg.W, nfs.JSON, "")
 		fmt.Fprint(msg.W, msg.FormatMeta())
 	}
 }
-func RenderType(w http.ResponseWriter, name, mime string) {
-	if mime != "" {
-		w.Header().Set(ContentType, mime)
-		return
-	}
 
-	switch kit.Ext(name) {
-	case nfs.CSS:
-		w.Header().Set(ContentType, "text/css; charset=utf-8")
-	case "pdf":
-		w.Header().Set(ContentType, "application/pdf")
+func RenderType(w http.ResponseWriter, name, mime string) {
+	if mime == "" {
+		switch kit.Ext(name) {
+		case nfs.HTML:
+			mime = "text/html"
+		case nfs.CSS:
+			mime = "text/css; charset=utf-8"
+		default:
+			mime = "application/" + kit.Ext(name)
+		}
 	}
+	RenderHeader(w, ContentType, mime)
 }
-func RenderHeader(msg *ice.Message, key, value string) {
-	msg.W.Header().Set(key, value)
+func RenderHeader(w http.ResponseWriter, key, value string) {
+	w.Header().Set(key, value)
 }
 func RenderCookie(msg *ice.Message, value string, arg ...string) { // name path expire
 	expire := time.Now().Add(kit.Duration(kit.Select(msg.Conf(aaa.SESS, kit.Keym(mdb.EXPIRE)), arg, 2)))
 	http.SetCookie(msg.W, &http.Cookie{Value: value,
 		Name: kit.Select(CookieName(msg.Option(ice.MSG_USERWEB)), arg, 0), Path: kit.Select(ice.PS, arg, 1), Expires: expire})
 }
-func RenderStatus(msg *ice.Message, code int, text string) {
-	msg.W.WriteHeader(code)
-	msg.W.Write([]byte(text))
+func RenderStatus(w http.ResponseWriter, code int, text string) {
+	w.WriteHeader(code)
+	w.Write([]byte(text))
 }
 func RenderRefresh(msg *ice.Message, arg ...string) { // url text delay
-	msg.Render(ice.RENDER_VOID)
 	Render(msg, ice.RENDER_RESULT, kit.Format(`
 <html>
 <head>
@@ -120,19 +119,58 @@ func RenderRefresh(msg *ice.Message, arg ...string) { // url text delay
 </body>
 </html>
 `, kit.Select("3", arg, 2), kit.Select(msg.Option(ice.MSG_USERWEB), arg, 0), kit.Select("loading...", arg, 1)))
+	msg.Render(ice.RENDER_VOID)
 }
-func RenderRedirect(msg *ice.Message, arg ...string) {
-	http.Redirect(msg.W, msg.R, kit.MergeURL(arg[0], arg[1:]), http.StatusTemporaryRedirect)
+func RenderRedirect(msg *ice.Message, arg ...ice.Any) {
+	Render(msg, ice.RENDER_REDIRECT, arg...)
+	msg.Render(ice.RENDER_VOID)
 }
 func RenderDownload(msg *ice.Message, arg ...ice.Any) {
 	Render(msg, ice.RENDER_DOWNLOAD, arg...)
+	msg.Render(ice.RENDER_VOID)
 }
 func RenderResult(msg *ice.Message, arg ...ice.Any) {
 	Render(msg, ice.RENDER_RESULT, arg...)
+	msg.Render(ice.RENDER_VOID)
 }
+
 func CookieName(url string) string {
 	return ice.MSG_SESSID + "_" + kit.ReplaceAll(kit.ParseURLMap(url)[tcp.HOST], ".", "_", ":", "_")
+	return ice.MSG_SESSID + "_" + kit.ParseURLMap(url)[tcp.PORT]
 }
-func Format(tag string, arg ...ice.Any) string {
-	return kit.Format("<%s>%s</%s>", tag, strings.Join(kit.Simple(arg), ""), tag)
+
+func RenderIndex(m *ice.Message, serve, repos string, file ...string) *ice.Message {
+	return m.RenderDownload(path.Join(m.Conf(serve, kit.Keym(repos, nfs.PATH)), kit.Select(m.Conf(serve, kit.Keym(repos, INDEX)), path.Join(file...))))
 }
+func RenderWebsite(m *ice.Message, pod string, dir string, arg ...string) *ice.Message {
+	args := []string{}
+	if pod != "" {
+		args = append(args, SPACE, pod)
+	}
+	m.Echo(m.Cmdx(args, "web.chat.website", lex.PARSE, dir, arg))
+	return m.RenderResult()
+}
+func RenderCmd(m *ice.Message, index string, args ...ice.Any) {
+	list := index
+	if index != "" {
+		msg := m.Cmd(ctx.COMMAND, index)
+		list = kit.Format(kit.List(kit.Dict(msg.AppendSimple(mdb.NAME, mdb.HELP),
+			ctx.INDEX, index, ctx.ARGS, kit.Simple(args), ctx.DISPLAY, m.Option(ice.MSG_DISPLAY),
+			mdb.LIST, kit.UnMarshal(msg.Append(mdb.LIST)), mdb.META, kit.UnMarshal(msg.Append(mdb.META)),
+		)))
+	}
+	m.Echo(kit.Format(_cans, list))
+	m.RenderResult()
+}
+
+var _cans = `<!DOCTYPE html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=0.8,user-scalable=no">
+    <link rel="stylesheet" type="text/css" href="/page/can.css">
+</head>
+<body>
+	<script src="/page/can.js"></script>
+	<script>can(%s)</script>
+</body>
+`

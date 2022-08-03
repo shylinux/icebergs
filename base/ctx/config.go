@@ -28,7 +28,6 @@ func _config_save(m *ice.Message, name string, arg ...string) {
 		// 保存配置
 		if s, e := json.MarshalIndent(data, "", "  "); m.Assert(e) {
 			if _, e := f.Write(s); m.Assert(e) {
-				// m.Log_EXPORT(CONFIG, name, nfs.FILE, p, nfs.SIZE, n)
 			}
 		}
 		m.Echo(p)
@@ -46,7 +45,6 @@ func _config_load(m *ice.Message, name string, arg ...string) {
 		// 加载配置
 		for k, v := range data {
 			msg.Search(k, func(p *ice.Context, s *ice.Context, key string) {
-				// m.Log_IMPORT(CONFIG, kit.Keys(s.Name, key), nfs.FILE, name)
 				if s.Configs[key] == nil {
 					s.Configs[key] = &ice.Config{}
 				}
@@ -124,7 +122,33 @@ func init() {
 				return
 			}
 			_config_make(m, arg[0], arg[1:]...)
-			m.DisplayStoryJSON()
+			DisplayStoryJSON(m)
 		}},
 	})
+}
+func init() {
+	ice.Info.Save = Save
+	ice.Info.Load = Load
+}
+func Save(m *ice.Message, arg ...string) *ice.Message {
+	if len(arg) == 0 {
+		for k := range m.Target().Configs {
+			arg = append(arg, k)
+		}
+	}
+	for i, k := range arg {
+		arg[i] = m.Prefix(k)
+	}
+	return m.Cmd(CONFIG, ice.SAVE, m.Prefix(nfs.JSON), arg)
+}
+func Load(m *ice.Message, arg ...string) *ice.Message {
+	if len(arg) == 0 {
+		for k := range m.Target().Configs {
+			arg = append(arg, k)
+		}
+	}
+	for i, k := range arg {
+		arg[i] = m.Prefix(k)
+	}
+	return m.Cmd(CONFIG, ice.LOAD, m.Prefix(nfs.JSON), arg)
 }

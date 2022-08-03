@@ -30,7 +30,7 @@ func _port_right(m *ice.Message, arg ...string) string {
 		}
 
 		nfs.MkdirAll(m, p)
-		m.Log_SELECT(PORT, i)
+		m.Logs(mdb.SELECT, PORT, i)
 		return m.Config(CURRENT, i)
 	}
 	return ""

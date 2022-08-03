@@ -1,6 +1,7 @@
 package oauth
 
 import (
+	"path"
 	"strings"
 	"time"
 
@@ -18,15 +19,15 @@ import (
 func _merge_url(m *ice.Message, domain, key string, arg ...ice.Any) string {
 	if domain == "" {
 		if m.Option(ice.MSG_USERPOD) == "" {
-			domain = m.MergeLink(ice.PS)
+			domain = web.MergeLink(m, ice.PS)
 		} else {
-			domain = m.MergeLink("/chat/pod/" + m.Option(ice.MSG_USERPOD))
+			domain = web.MergeLink(m, "/chat/pod/"+m.Option(ice.MSG_USERPOD))
 		}
 	}
 	if domain = strings.TrimSuffix(domain, ice.PS); strings.Contains(domain, "/chat/pod/") {
 		domain += web.P(strings.TrimPrefix(m.Prefix(web.P(key)), "web.chat."))
 	} else {
-		domain += m.RoutePath(key)
+		domain += path.Join(strings.TrimPrefix(strings.ReplaceAll(m.Target().Cap(ice.CTX_FOLLOW), ice.PT, ice.PS), "web"), path.Join(key))
 	}
 	return kit.MergeURL(domain, arg...)
 }
@@ -61,7 +62,7 @@ var Index = &ice.Context{Name: OAUTH, Help: "认证授权", Commands: ice.Comman
 			m.Echo(_merge_url(m, kit.Select(ice.Info.Make.Domain, m.Option(web.DOMAIN)), APPLY, m.OptionSimple(SCOPE), REDIRECT_URI, _merge_url(m, "", REPLY)))
 		}},
 		APPLY: {Name: "apply scope redirect_uri", Help: "申请", Hand: func(m *ice.Message, arg ...string) {
-			if m.Right(m.Option(SCOPE)) {
+			if aaa.Right(m, m.Option(SCOPE)) {
 				token := m.Cmdx(OFFER, mdb.CREATE, aaa.USERNAME, m.Option(ice.MSG_USERNAME), m.OptionSimple(SCOPE, REDIRECT_URI))
 				m.ProcessReplace(m.Option(REDIRECT_URI), m.OptionSimple(SCOPE), OFFER, _merge_url(m, "", OFFER, ACCESS_TOKEN, token))
 			} else {
@@ -86,7 +87,7 @@ var Index = &ice.Context{Name: OAUTH, Help: "认证授权", Commands: ice.Comman
 			m.RenderStatusBadRequest() // 参数错误
 
 		} else { // 申请
-			m.RenderCmd(m.Prefix(OAUTH), APPLY)
+			web.RenderCmd(m, m.Prefix(OAUTH), APPLY)
 		}
 	}},
 	web.P(REPLY): {Name: "/reply scope offer", Help: "授权", Actions: ctx.CmdAction(), Hand: func(m *ice.Message, arg ...string) {
@@ -94,7 +95,7 @@ var Index = &ice.Context{Name: OAUTH, Help: "认证授权", Commands: ice.Comman
 			m.RenderStatusBadRequest() // 参数错误
 
 		} else { // 授权
-			m.RenderCmd(m.Prefix(OAUTH), REPLY)
+			web.RenderCmd(m, m.Prefix(OAUTH), REPLY)
 		}
 	}},
 	web.P(OFFER): {Name: "/offer access_token", Help: "访问", Hand: func(m *ice.Message, arg ...string) {

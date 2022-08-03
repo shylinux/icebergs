@@ -51,7 +51,7 @@ func init() {
 
 			// 提交统计
 			days, commit, adds, dels, rest := 0, 0, 0, 0, 0
-			m.Richs(REPOS, nil, mdb.FOREACH, func(mu *sync.Mutex, key string, value ice.Map) {
+			Richs(m, REPOS, nil, mdb.FOREACH, func(mu *sync.Mutex, key string, value ice.Map) {
 				value = kit.GetMeta(value)
 				if m.Config(kit.Keys("skip", value[mdb.NAME])) == ice.TRUE {
 					return
@@ -165,4 +165,20 @@ func init() {
 			}
 		}},
 	}})
+}
+
+func Richs(m *ice.Message, prefix string, chain ice.Any, raw ice.Any, cb func(*sync.Mutex, string, ice.Map)) {
+	wg, mu := &sync.WaitGroup{}, &sync.Mutex{}
+	defer wg.Wait()
+	mdb.Richs(m, prefix, chain, raw, func(key string, value ice.Map) {
+		wg.Add(1)
+		val := ice.Map{}
+		for k, v := range value {
+			val[k] = v
+		}
+		m.Go(func() {
+			defer wg.Done()
+			cb(mu, key, val)
+		})
+	})
 }

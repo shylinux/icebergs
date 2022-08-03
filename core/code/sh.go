@@ -5,13 +5,14 @@ import (
 
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/cli"
+	"shylinux.com/x/icebergs/base/ctx"
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/nfs"
 	kit "shylinux.com/x/toolkits"
 )
 
 func _sh_main_script(m *ice.Message, arg ...string) (res []string) {
-	if cmd := ice.GetFileCmd(path.Join(arg[2], arg[1])); cmd != "" {
+	if cmd := ctx.GetFileCmd(path.Join(arg[2], arg[1])); cmd != "" {
 		res = append(res, kit.Format(`#! /bin/sh
 export ctx_dev=%s; ctx_pod=%s ctx_temp=$(mktemp); curl -fsSL $ctx_dev -o $ctx_temp; source $ctx_temp &>/dev/null
 _done=""
@@ -29,9 +30,9 @@ _action() {
 `, "http://localhost:9020", m.Option(ice.MSG_USERPOD), cmd))
 	}
 
-	if kit.FileExists(kit.Path(arg[2], arg[1])) {
+	if _, e := nfs.DiskFile.StatFile(path.Join(arg[2], arg[1])); e == nil {
 		res = append(res, kit.Format("source %s", kit.Path(arg[2], arg[1])))
-	} else if b, ok := ice.Info.Pack[path.Join(arg[2], arg[1])]; ok && len(b) > 0 {
+	} else if b, e := nfs.ReadFile(m, path.Join(arg[2], arg[1])); e == nil {
 		res = append(res, string(b))
 	}
 	m.Cmdy(cli.SYSTEM, SH, "-c", kit.Join(res, ice.NL))

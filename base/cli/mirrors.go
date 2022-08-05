@@ -36,6 +36,7 @@ func init() {
 						mdb.ZoneInsert(m, CLI, "go", CMD, kit.Format("install download https://golang.google.cn/dl/go1.15.5.%s-%s.tar.gz usr/local", runtime.GOOS, runtime.GOARCH))
 					}
 
+					IsAlpine(m, "npm")
 					IsAlpine(m, "node", "nodejs")
 					IsAlpine(m, "java", "openjdk8")
 					IsAlpine(m, "javac", "openjdk8")

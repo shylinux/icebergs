@@ -77,8 +77,6 @@ func _spide_list(m *ice.Message, arg ...string) {
 	})
 
 	// 发送请求
-	m.Debug("what %v", msg.Append(CLIENT_NAME))
-	m.Debug("what %v", msg.FormatsMeta())
 	res, e := _spide_send(m, msg.Append(CLIENT_NAME), req, kit.Format(msg.Append(CLIENT_TIMEOUT)))
 	if m.Warn(e, ice.ErrNotFound, uri) {
 		return

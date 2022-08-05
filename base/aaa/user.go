@@ -29,7 +29,6 @@ func _user_login(m *ice.Message, name, word string) {
 		_user_create(m.Spawn(), name, word)
 	}
 
-	m.Debug("what %v", m.FormatMeta())
 	_source := logs.FileLineMeta(logs.FileLine(-1, 3))
 	mdb.HashSelectDetail(m.Spawn(), name, func(value ice.Map) {
 		if m.Warn(word != "" && word != kit.Format(kit.Value(value, kit.Keys(mdb.EXTRA, PASSWORD))), ice.ErrNotRight) {
@@ -42,7 +41,6 @@ func _user_login(m *ice.Message, name, word string) {
 			_source,
 		)
 	})
-	m.Debug("what %v", m.FormatMeta())
 }
 
 const (

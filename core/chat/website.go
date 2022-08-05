@@ -121,7 +121,6 @@ func _website_parse(m *ice.Message, text string, args ...string) (ice.Map, bool)
 }
 func _website_render(m *ice.Message, w http.ResponseWriter, r *http.Request, kind, text, name string) bool {
 	msg := m.Spawn(w, r)
-	m.Debug("what %v", kind)
 	switch kind {
 	case nfs.ZML:
 		web.RenderCmd(msg, "can.parse", text, name)

@@ -87,13 +87,13 @@ func _webpack_cache(m *ice.Message, dir string, write bool) {
 		p := value[nfs.PATH]
 		switch kit.Ext(p) {
 		case nfs.CSS:
-			_webpack_css(m, css, js, path.Join(ice.REQUIRE, ice.NODE_MODULES, ice.LIB, p))
+			_webpack_css(m, css, js, path.Join(ice.REQUIRE, ice.LIB, ice.NODE_MODULES, p))
 			return
 		case nfs.JS:
 		default:
 			p = p + "/lib/" + p + ".js"
 		}
-		_webpack_node(m, js, path.Join(ice.REQUIRE, ice.NODE_MODULES, ice.LIB, p))
+		_webpack_node(m, js, path.Join(ice.REQUIRE, ice.LIB, ice.NODE_MODULES, p))
 	})
 }
 func _webpack_build(m *ice.Message, file string) {

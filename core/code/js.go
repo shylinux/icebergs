@@ -41,7 +41,6 @@ func _js_exec(m *ice.Message, arg ...string) {
 		args := kit.Simple("node", "-e", kit.Join(_js_main_script(m, arg...), ice.NL))
 		m.Cmdy(cli.SYSTEM, args)
 		m.StatusTime("args", kit.Join([]string{"./bin/ice.bin", "web.code.js.js", "exec", path.Join(arg[2], arg[1])}, " "))
-		m.Debug(m.FormatsMeta())
 		return
 	}
 

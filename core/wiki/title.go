@@ -24,17 +24,17 @@ func _title_show(m *ice.Message, kind, text string, arg ...string) {
 	case NAVMENU: // 导航目录
 		_option(m, kind, "", text, arg...)
 		data := _title_parse(m, path.Dir(m.Option(ice.MSG_SCRIPT)), text)
-		m.RenderTemplate(kit.Format("<div {{.OptionTemplate}} data-data='%s'></div>", data))
+		m.RenderTemplate(kit.Format("<div {{.OptionTemplate}} data-data='%s'></div>", data), &Message{m})
 		return
 
 	case PREMENU: // 前置目录
 		_option(m, kind, "", "", arg...)
-		m.RenderTemplate(m.Config(kind))
+		m.RenderTemplate(m.Config(kind), &Message{m})
 		return
 
 	case ENDMENU: // 后置目录
 		_option(m, kind, "", "", arg...)
-		m.RenderTemplate(m.Config(kind))
+		m.RenderTemplate(m.Config(kind), &Message{m})
 		return
 
 	case SECTION: // 分节标题

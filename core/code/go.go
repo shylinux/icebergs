@@ -87,7 +87,6 @@ func _go_exec(m *ice.Message, arg ...string) {
 		args := []string{"./bin/ice.bin", ctx.GetFileCmd(path.Join(arg[2], arg[1]))}
 		m.Cmdy(cli.SYSTEM, args)
 		m.StatusTime("args", kit.Join(args, " "))
-		m.Debug(m.FormatsMeta())
 		return
 	}
 	if m.Option(mdb.TEXT) == "" {

@@ -38,7 +38,6 @@ func _publish_list(m *ice.Message, arg ...string) {
 	m.Option(nfs.DIR_ROOT, ice.USR_PUBLISH)
 	m.Option(nfs.DIR_REG, kit.Select("", arg, 0))
 	m.Cmdy(nfs.DIR, nfs.PWD, kit.Select(nfs.DIR_WEB_FIELDS, arg, 1))
-	m.Debug("what %v", m.FormatsMeta())
 }
 func _publish_bin_list(m *ice.Message, dir string) {
 	p := m.Option(cli.CMD_DIR, dir)

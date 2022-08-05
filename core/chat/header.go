@@ -60,6 +60,7 @@ const HEADER = "header"
 func init() {
 	Index.MergeCommands(ice.Commands{
 		web.WEB_LOGIN: {Hand: func(m *ice.Message, arg ...string) {
+			m.Debug("what %v", m.FormatStack(1, 100))
 			switch kit.Select("", arg, 0) {
 			case web.P(HEADER):
 				switch kit.Select("", arg, 1) {

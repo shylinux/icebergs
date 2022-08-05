@@ -27,9 +27,7 @@ func init() {
 				}
 			}},
 			RIVER_CREATE: {Name: "river.create river template", Help: "建群", Hand: func(m *ice.Message, arg ...string) {
-				m.Debug("fuck %v", 123)
 				m.Cmd("", m.Option(TEMPLATE)).Tables(func(value ice.Maps) {
-					m.Debug("fuck %v", value)
 					h := m.Cmdx(STORM, mdb.CREATE, mdb.TYPE, "", mdb.NAME, value[STORM], mdb.TEXT, "")
 					m.Cmd("", m.Option(TEMPLATE), value[STORM]).Tables(func(value ice.Maps) {
 						m.Cmd(STORM, mdb.INSERT, mdb.HASH, h, kit.SimpleKV("space,index", value))
@@ -76,10 +74,9 @@ func init() {
 var _river_template = kit.Dict(
 	"base", kit.Dict(
 		"info", kit.List(
-			"web.chat.info",
-			"web.chat.ocean",
 			"web.chat.storm",
-			"web.chat.node",
+			"web.chat.ocean",
+			"web.chat.nodes",
 		),
 		"scan", kit.List(
 			"web.chat.scan",
@@ -100,6 +97,10 @@ var _river_template = kit.Dict(
 			"web.wiki.draw",
 			"web.wiki.data",
 			"web.wiki.word",
+		),
+		"term", kit.List(
+			"web.code.xterm",
+			"web.code.vimer",
 		),
 	),
 )

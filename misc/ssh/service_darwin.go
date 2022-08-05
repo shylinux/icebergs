@@ -42,7 +42,7 @@ func _ssh_handle(m *ice.Message, meta ice.Maps, c net.Conn, channel ssh.Channel,
 	}
 	defer tty.Close()
 
-	h := m.Rich(CHANNEL, "", kit.Data(mdb.STATUS, tcp.OPEN, TTY, tty.Name(), INPUT, pty, OUTPUT, tty, meta))
+	h := mdb.Rich(m, CHANNEL, "", kit.Data(mdb.STATUS, tcp.OPEN, TTY, tty.Name(), INPUT, pty, OUTPUT, tty, meta))
 	meta[CHANNEL] = h
 
 	for request := range requests {

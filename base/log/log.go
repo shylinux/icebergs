@@ -38,7 +38,8 @@ func (f *Frame) Start(m *ice.Message, arg ...string) bool {
 				return true
 			}
 
-			file := kit.Select(BENCH, m.Conf(SHOW, kit.Keys(l.l, FILE)))
+			// file := kit.Select(BENCH, m.Conf(SHOW, kit.Keys(l.l, FILE)))
+			file := BENCH
 			view := m.Confm(VIEW, m.Conf(SHOW, kit.Keys(l.l, VIEW)))
 			bio := m.Confv(FILE, kit.Keys(file, FILE)).(*bufio.Writer)
 			if bio == nil {

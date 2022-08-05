@@ -43,9 +43,9 @@ func _river_list(m *ice.Message) {
 		}
 	}
 
-	mdb.Richs(m, RIVER, nil, mdb.FOREACH, func(key string, value ice.Map) {
-		mdb.Richs(m, RIVER, kit.Keys(mdb.HASH, key, OCEAN), m.Option(ice.MSG_USERNAME), func(k string, val ice.Map) {
-			m.Push(key, kit.GetMeta(value), []string{mdb.HASH, mdb.NAME}, kit.GetMeta(val))
+	m.Cmd(mdb.SELECT, m.PrefixKey(), "", mdb.HASH, ice.OptionFields(mdb.HASH, mdb.NAME)).Tables(func(value ice.Maps) {
+		m.Cmd(mdb.SELECT, m.PrefixKey(), kit.Keys(mdb.HASH, value[mdb.HASH], OCEAN), mdb.HASH, m.Option(ice.MSG_USERNAME)).Tables(func(value ice.Maps) {
+			m.Push("", value, []string{mdb.HASH, mdb.NAME}, value)
 		})
 	})
 }
@@ -58,6 +58,9 @@ const RIVER = "river"
 func init() {
 	Index.MergeCommands(ice.Commands{
 		RIVER: {Name: "river hash auto create", Help: "群组", Actions: ice.MergeActions(ice.Actions{
+			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
+				m.Cmd(aaa.ROLE, aaa.WHITE, aaa.VOID, m.CommandKey())
+			}},
 			mdb.INPUTS: {Name: "inputs", Help: "补全", Hand: func(m *ice.Message, arg ...string) {
 				switch m.Option(ctx.ACTION) {
 				case cli.START, "创建空间":

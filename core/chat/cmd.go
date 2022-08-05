@@ -55,7 +55,7 @@ func init() {
 	Index.MergeCommands(ice.Commands{
 		CMD: {Name: "cmd path auto upload up home", Help: "命令", Actions: ice.MergeActions(ice.Actions{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
-				m.Cmd(aaa.ROLE, aaa.WHITE, CMD)
+				m.Cmd(aaa.ROLE, aaa.WHITE, aaa.VOID, CMD)
 				m.Cmdy(CMD, mdb.CREATE, mdb.TYPE, nfs.SHY, mdb.NAME, "web.wiki.word")
 				m.Cmdy(CMD, mdb.CREATE, mdb.TYPE, nfs.SVG, mdb.NAME, "web.wiki.draw")
 				m.Cmdy(CMD, mdb.CREATE, mdb.TYPE, nfs.CSV, mdb.NAME, "web.wiki.data")

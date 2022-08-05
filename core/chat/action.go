@@ -99,6 +99,9 @@ const ACTION = "action"
 func init() {
 	Index.MergeCommands(ice.Commands{
 		web.P(ACTION): {Name: "/action river storm action arg...", Help: "工作台", Actions: ice.MergeActions(ice.Actions{
+			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
+				m.Cmd(aaa.ROLE, aaa.WHITE, aaa.VOID, m.CommandKey())
+			}},
 			mdb.MODIFY: {Name: "modify", Help: "编辑", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmdy(mdb.MODIFY, RIVER, _action_key(m), mdb.LIST, m.OptionSimple(mdb.ID), arg)
 			}},

@@ -518,7 +518,13 @@ func (m *Message) Appendv(key string, arg ...Any) []string {
 	if len(arg) > 0 {
 		m.meta[key] = kit.Simple(arg...)
 	}
-	return m.meta[key]
+	if v, ok := m.meta[key]; ok {
+		return v
+	}
+	if v, ok := m.meta[kit.Keys(EXTRA, key)]; ok {
+		return v
+	}
+	return nil
 }
 func (m *Message) Resultv(arg ...Any) []string {
 	if len(arg) > 0 {

@@ -159,13 +159,13 @@ func init() {
 		CONNECT: {Name: "connect name auto", Help: "连接", Actions: ice.MergeActions(ice.Actions{
 			tcp.OPEN: {Name: "open authfile username=shy password verfiy host=shylinux.com port=22 private=.ssh/id_rsa", Help: "终端", Hand: func(m *ice.Message, arg ...string) {
 				aaa.UserRoot(m)
-				_ssh_open(m.OptionLoad(m.Option("authfile")), arg...)
+				_ssh_open(nfs.OptionLoad(m, m.Option("authfile")), arg...)
 				m.Echo("exit %v@%v:%v\n", m.Option(aaa.USERNAME), m.Option(tcp.HOST), m.Option(tcp.PORT))
 			}},
 			tcp.DIAL: {Name: "dial name=shylinux username=shy host=shylinux.com port=22 private=.ssh/id_rsa", Help: "添加", Hand: func(m *ice.Message, arg ...string) {
 				m.Go(func() {
 					_ssh_conn(m, func(client *ssh.Client) {
-						m.Rich(CONNECT, "", kit.Dict(
+						mdb.Rich(m, CONNECT, "", kit.Dict(
 							mdb.NAME, m.Option(mdb.NAME),
 							aaa.USERNAME, m.Option(aaa.USERNAME),
 							tcp.HOST, m.Option(tcp.HOST), tcp.PORT, m.Option(tcp.PORT),
@@ -178,11 +178,11 @@ func init() {
 			}},
 			SESSION: {Name: "session name", Help: "会话", Hand: func(m *ice.Message, arg ...string) {
 				var client *ssh.Client
-				m.Richs(CONNECT, "", m.Option(mdb.NAME), func(key string, value ice.Map) {
+				mdb.Richs(m, CONNECT, "", m.Option(mdb.NAME), func(key string, value ice.Map) {
 					client, _ = value[CONNECT].(*ssh.Client)
 				})
 
-				h := m.Rich(SESSION, "", kit.Data(mdb.NAME, m.Option(mdb.NAME), mdb.STATUS, tcp.OPEN, CONNECT, m.Option(mdb.NAME)))
+				h := mdb.Rich(m, SESSION, "", kit.Data(mdb.NAME, m.Option(mdb.NAME), mdb.STATUS, tcp.OPEN, CONNECT, m.Option(mdb.NAME)))
 				if session, e := _ssh_session(m, h, client); m.Assert(e) {
 					session.Shell()
 					session.Wait()
@@ -190,7 +190,7 @@ func init() {
 				m.Echo(h)
 			}},
 			"command": {Name: "command cmd=pwd", Help: "命令", Hand: func(m *ice.Message, arg ...string) {
-				m.Richs(CONNECT, "", m.Option(mdb.NAME), func(key string, value ice.Map) {
+				mdb.Richs(m, CONNECT, "", m.Option(mdb.NAME), func(key string, value ice.Map) {
 					if client, ok := value[CONNECT].(*ssh.Client); ok {
 						if session, e := client.NewSession(); m.Assert(e) {
 							defer session.Close()
@@ -201,7 +201,7 @@ func init() {
 					}
 				})
 			}},
-		}, mdb.HashActionStatus(mdb.SHORT, "name", mdb.FIELD, "time,name,status,username,host,port")), Hand: func(m *ice.Message, arg ...string) {
+		}, mdb.HashStatusAction(mdb.SHORT, "name", mdb.FIELD, "time,name,status,username,host,port")), Hand: func(m *ice.Message, arg ...string) {
 			mdb.HashSelect(m, arg...).Tables(func(value ice.Maps) {
 				m.PushButton(kit.Select("", "command,session", value[mdb.STATUS] == tcp.OPEN), mdb.REMOVE)
 			})

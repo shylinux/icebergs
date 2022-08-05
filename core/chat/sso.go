@@ -14,7 +14,7 @@ const SSO = "sso"
 func init() {
 	Index.MergeCommands(ice.Commands{
 		"/sso": {Name: "/sso", Help: "登录", Actions: ice.Actions{
-			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) { m.Cmd(aaa.ROLE, aaa.WHITE, SSO) }},
+			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) { m.Cmd(aaa.ROLE, aaa.WHITE, aaa.VOID, SSO) }},
 		}, Hand: func(m *ice.Message, arg ...string) {
 			if m.Option(ice.MSG_USERNAME) == "" {
 				web.RenderIndex(m, ice.VOLCANOS)

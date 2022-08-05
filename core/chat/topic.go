@@ -26,7 +26,7 @@ func init() {
 	Index.MergeCommands(ice.Commands{
 		TOPIC: {Name: "topic zone id auto create insert", Help: "主题", Actions: ice.MergeActions(ice.Actions{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
-				m.Cmd(aaa.ROLE, aaa.WHITE, TOPIC)
+				m.Cmd(aaa.ROLE, aaa.WHITE, aaa.VOID, TOPIC)
 			}},
 			mdb.INPUTS: {Name: "inputs", Help: "补全", Hand: func(m *ice.Message, arg ...string) {
 				switch arg[0] {

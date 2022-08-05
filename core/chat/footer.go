@@ -16,6 +16,9 @@ const FOOTER = "footer"
 func init() {
 	Index.MergeCommands(ice.Commands{
 		FOOTER: {Name: "footer", Help: "状态栏", Actions: ice.MergeActions(ice.Actions{
+			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
+				m.Cmd(aaa.ROLE, aaa.WHITE, aaa.VOID, m.CommandKey())
+			}},
 			ice.RUN: {Name: "run", Help: "执行", Hand: func(m *ice.Message, arg ...string) {
 				if aaa.Right(m, arg) {
 					if m.Cmdy(arg); m.IsErrNotFound() {

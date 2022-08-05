@@ -2,6 +2,7 @@ package chat
 
 import (
 	ice "shylinux.com/x/icebergs"
+	"shylinux.com/x/icebergs/base/aaa"
 	"shylinux.com/x/icebergs/base/ctx"
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/web"
@@ -53,17 +54,23 @@ func init() {
 			m.OptionFields("time,id,space,index,args,style,display")
 			msg := m.Cmd(mdb.SELECT, RIVER, _storm_key(m, arg[0]), mdb.LIST, mdb.ID, kit.Select("", arg, 1))
 			if msg.Length() == 0 && len(arg) > 1 { // 虚拟群组
-				msg.Push(ctx.INDEX, arg[1])
+				if aaa.Right(m, arg[1]) {
+					msg.Push(ctx.INDEX, arg[1])
+				}
 			}
 
 			if len(arg) > 2 && arg[2] == ice.RUN { // 执行命令
-				m.Cmdy(web.Space(m, kit.Select(m.Option(ice.POD), msg.Append(web.SPACE))), msg.Append(ctx.INDEX), arg[3:])
+				if !m.Warn(aaa.Right(m, msg.Append(ctx.INDEX))) {
+					m.Cmdy(web.Space(m, kit.Select(m.Option(ice.POD), msg.Append(web.SPACE))), msg.Append(ctx.INDEX), arg[3:])
+				}
 				return
 			}
 
 			if m.Copy(msg); len(arg) > 1 { // 命令插件
 				m.Tables(func(value ice.Maps) { m.Cmdy(web.Space(m, value[web.SPACE]), ctx.COMMAND, value[ctx.INDEX]) })
-				m.ProcessField(arg[0], arg[1], ice.RUN)
+				if m.Length() > 0 {
+					m.ProcessField(arg[0], arg[1], ice.RUN)
+				}
 			}
 		}},
 	})

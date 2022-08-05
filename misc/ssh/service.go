@@ -28,7 +28,7 @@ func _ssh_config(m *ice.Message, h string) *ssh.ServerConfig {
 		PublicKeyCallback: func(conn ssh.ConnMetadata, key ssh.PublicKey) (*ssh.Permissions, error) {
 			meta, err := _ssh_meta(conn), errors.New(ice.ErrNotRight)
 			if tcp.IsLocalHost(m, strings.Split(conn.RemoteAddr().String(), ":")[0]) {
-				m.Log_AUTH(tcp.HOSTPORT, conn.RemoteAddr(), aaa.USERNAME, conn.User())
+				m.Logs(ice.LOG_AUTH, tcp.HOSTPORT, conn.RemoteAddr(), aaa.USERNAME, conn.User())
 				err = nil // 本机用户
 			} else {
 				m.Cmd(mdb.SELECT, SERVICE, kit.Keys(mdb.HASH, h), mdb.LIST).Tables(func(value ice.Maps) {
@@ -39,7 +39,7 @@ func _ssh_config(m *ice.Message, h string) *ssh.ServerConfig {
 						if pub, e := ssh.ParsePublicKey([]byte(s)); !m.Warn(e) {
 
 							if bytes.Compare(pub.Marshal(), key.Marshal()) == 0 {
-								m.Log_AUTH(tcp.HOSTPORT, conn.RemoteAddr(), aaa.USERNAME, conn.User(), tcp.HOSTNAME, value[mdb.NAME])
+								m.Logs(ice.LOG_AUTH, tcp.HOSTPORT, conn.RemoteAddr(), aaa.USERNAME, conn.User(), tcp.HOSTNAME, value[mdb.NAME])
 								meta[tcp.HOSTNAME] = kit.Select("", kit.Split(value[mdb.NAME], "@"), 1)
 								err = nil // 认证成功
 							}
@@ -52,14 +52,14 @@ func _ssh_config(m *ice.Message, h string) *ssh.ServerConfig {
 		PasswordCallback: func(conn ssh.ConnMetadata, password []byte) (*ssh.Permissions, error) {
 			meta, err := _ssh_meta(conn), errors.New(ice.ErrNotRight)
 			if aaa.UserLogin(m, conn.User(), string(password)) {
-				m.Log_AUTH(tcp.HOSTPORT, conn.RemoteAddr(), aaa.USERNAME, conn.User(), aaa.PASSWORD, strings.Repeat("*", len(string(password))))
+				m.Logs(ice.LOG_AUTH, tcp.HOSTPORT, conn.RemoteAddr(), aaa.USERNAME, conn.User(), aaa.PASSWORD, strings.Repeat("*", len(string(password))))
 				err = nil // 密码登录
 			}
 			return &ssh.Permissions{Extensions: meta}, err
 		},
 
 		BannerCallback: func(conn ssh.ConnMetadata) string {
-			m.Log_IMPORT(tcp.HOSTPORT, conn.RemoteAddr(), aaa.USERNAME, conn.User())
+			m.Logs(ice.LOG_AUTH, tcp.HOSTPORT, conn.RemoteAddr(), aaa.USERNAME, conn.User())
 			return m.Conf(SERVICE, kit.Keym(WELCOME))
 		},
 	}
@@ -106,14 +106,14 @@ func init() {
 	}, Commands: ice.Commands{
 		SERVICE: {Name: "service port id auto listen prunes", Help: "服务", Actions: ice.MergeActions(ice.Actions{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
-				m.Richs(SERVICE, "", mdb.FOREACH, func(key string, value ice.Map) {
+				mdb.Richs(m, SERVICE, "", mdb.FOREACH, func(key string, value ice.Map) {
 					if value = kit.GetMeta(value); kit.Value(value, mdb.STATUS) == tcp.OPEN {
 						m.Cmd(SERVICE, tcp.LISTEN, tcp.PORT, value[tcp.PORT], value)
 					}
 				})
 			}},
 			tcp.LISTEN: {Name: "listen port=9030 private=.ssh/id_rsa authkey=.ssh/authorized_keys", Help: "添加", Hand: func(m *ice.Message, arg ...string) {
-				if m.Richs(SERVICE, "", m.Option(tcp.PORT), func(key string, value ice.Map) {
+				if mdb.Richs(m, SERVICE, "", m.Option(tcp.PORT), func(key string, value ice.Map) {
 					kit.Value(value, kit.Keym(mdb.STATUS), tcp.OPEN)
 				}) == nil {
 					m.Cmd(mdb.INSERT, SERVICE, "", mdb.HASH, tcp.PORT, m.Option(tcp.PORT),
@@ -159,7 +159,7 @@ func init() {
 					m.EchoScript(string(buf))
 				}
 			}},
-		}, mdb.HashActionStatus()), Hand: func(m *ice.Message, arg ...string) {
+		}, mdb.HashStatusAction()), Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) == 0 { // 服务列表
 				mdb.HashSelect(m, arg...)
 				m.PushAction(mdb.IMPORT, mdb.INSERT, mdb.EXPORT, aaa.INVITE)

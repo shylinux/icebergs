@@ -17,7 +17,7 @@ import (
 )
 
 func _ssh_exec(m *ice.Message, cmd string, arg []string, env []string, input io.Reader, output io.Writer, done func()) {
-	m.Log_IMPORT(CMD, cmd, ARG, arg, ENV, env)
+	m.Logs(mdb.IMPORT, CMD, cmd, ARG, arg, ENV, env)
 	c := exec.Command(cmd, arg...)
 	// c.Env = env
 
@@ -52,7 +52,7 @@ func _ssh_watch(m *ice.Message, meta ice.Maps, h string, input io.Reader, output
 			switch buf[i] {
 			case '\r', '\n':
 				cmd := strings.TrimSpace(string(buf[:i]))
-				m.Log_IMPORT(tcp.HOSTNAME, meta[tcp.HOSTNAME], aaa.USERNAME, meta[aaa.USERNAME], CMD, cmd)
+				m.Logs(mdb.IMPORT, tcp.HOSTNAME, meta[tcp.HOSTNAME], aaa.USERNAME, meta[aaa.USERNAME], CMD, cmd)
 				m.Cmdy(mdb.INSERT, CHANNEL, kit.Keys(mdb.HASH, h), mdb.LIST, mdb.TYPE, CMD, mdb.TEXT, cmd)
 				i = 0
 			default:
@@ -70,7 +70,7 @@ func init() {
 	psh.Index.MergeCommands(ice.Commands{
 		CHANNEL: {Name: "channel hash id auto", Help: "通道", Actions: ice.MergeActions(ice.Actions{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
-				m.Richs(CHANNEL, "", mdb.FOREACH, func(key string, value ice.Map) {
+				mdb.Richs(m, CHANNEL, "", mdb.FOREACH, func(key string, value ice.Map) {
 					kit.Value(value, kit.Keym(mdb.STATUS), tcp.CLOSE)
 				})
 			}},
@@ -85,7 +85,7 @@ func init() {
 			ctx.COMMAND: {Name: "command cmd=pwd", Help: "命令", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmdy(mdb.INSERT, CHANNEL, kit.Keys(mdb.HASH, m.Option(mdb.HASH)),
 					mdb.LIST, mdb.TYPE, CMD, mdb.TEXT, m.Option(CMD))
-				m.Richs(CHANNEL, "", m.Option(mdb.HASH), func(key string, value ice.Map) {
+				mdb.Richs(m, CHANNEL, "", m.Option(mdb.HASH), func(key string, value ice.Map) {
 					if w, ok := kit.Value(value, kit.Keym(INPUT)).(io.Writer); ok {
 						w.Write([]byte(m.Option(CMD) + ice.NL))
 					}

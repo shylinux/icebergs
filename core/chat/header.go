@@ -60,7 +60,7 @@ const HEADER = "header"
 func init() {
 	Index.MergeCommands(ice.Commands{
 		web.WEB_LOGIN: {Hand: func(m *ice.Message, arg ...string) {
-			switch arg[0] {
+			switch kit.Select("", arg, 0) {
 			case web.P(HEADER):
 				switch kit.Select("", arg, 1) {
 				case "", aaa.LOGIN:
@@ -74,6 +74,9 @@ func init() {
 			m.Warn(m.Option(ice.MSG_USERNAME) == "", ice.ErrNotLogin, arg)
 		}},
 		HEADER: {Name: "header", Help: "标题栏", Actions: ice.MergeActions(ice.Actions{
+			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
+				m.Cmd(aaa.ROLE, aaa.WHITE, aaa.VOID, m.CommandKey())
+			}},
 			aaa.LOGIN: {Name: "login", Help: "密码登录", Hand: func(m *ice.Message, arg ...string) {
 				if aaa.UserLogin(m, arg[0], arg[1]) {
 					web.RenderCookie(m, aaa.SessCreate(m, arg[0]))
@@ -116,7 +119,9 @@ func init() {
 				m.Option(k, msg.Append(k))
 			}
 			for _, k := range []string{aaa.AVATAR, aaa.BACKGROUND} {
-				m.Option(k, kit.Select(web.SHARE_LOCAL+k, kit.Select("void", msg.Append(k)), aaa.Right(m, msg.Append(k))))
+				if msg.Append(k) != "" && aaa.Right(m.Spawn(), msg.Append(k)) {
+					m.Option(k, web.SHARE_LOCAL+k)
+				}
 			}
 			if m.Option(aaa.AVATAR) == "" && m.R.Header.Get("Staffname") != "" {
 				m.Option(aaa.AVATAR, kit.Format("https://dayu.oa.com/avatars/%s/profile.jpg", m.R.Header.Get("Staffname")))

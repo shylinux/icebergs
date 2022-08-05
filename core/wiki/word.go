@@ -43,7 +43,8 @@ func init() {
 	}, Commands: ice.Commands{
 		WORD: {Name: "word path=src/main.shy@key list play", Help: "语言文字", Actions: ice.MergeActions(ice.Actions{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
-				m.Cmd(aaa.ROLE, aaa.WHITE, aaa.VOID, m.PrefixKey("src/main.shy"))
+				m.Cmd(aaa.ROLE, aaa.WHITE, aaa.VOID, m.PrefixKey())
+				m.Cmd(aaa.ROLE, aaa.WHITE, aaa.VOID, "src/main.shy")
 			}},
 			mdb.SEARCH: {Name: "search", Help: "搜索", Hand: func(m *ice.Message, arg ...string) {
 				if arg[0] == mdb.FOREACH && arg[1] == "" {

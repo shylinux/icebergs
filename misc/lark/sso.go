@@ -37,7 +37,7 @@ func init() {
 			m.Option(aaa.USERNAME, msg.Append("data.open_id"))
 			msg = m.Cmd(EMPLOYEE, appid, m.Option(aaa.USERNAME))
 			userrole := kit.Select(aaa.VOID, aaa.TECH, msg.Append("is_tenant_manager") == ice.TRUE)
-			m.Cmd(aaa.USER, mdb.CREATE, userrole, m.Option(aaa.USERNAME))
+			m.Cmd(aaa.USER, mdb.CREATE, m.Option(aaa.USERNAME), "", userrole)
 			m.Cmd(aaa.USER, mdb.MODIFY, aaa.USERROLE, userrole,
 				aaa.USERNICK, msg.Append(mdb.NAME), aaa.USERZONE, LARK,
 				aaa.AVATAR, msg.Append("avatar_url"), aaa.GENDER, kit.Select("女", "男", msg.Append(aaa.GENDER) == "1"),

@@ -66,6 +66,7 @@ func init() {
 			}},
 			CHECK: {Name: "check sessid", Help: "检查", Hand: func(m *ice.Message, arg ...string) {
 				_sess_check(m, m.Option(SESSID))
+				m.Debug("what %v", m.FormatsMeta())
 			}},
 		}, mdb.HashAction(mdb.SHORT, mdb.UNIQ, mdb.FIELD, "time,hash,userrole,username,usernick,ip,ua", mdb.EXPIRE, "720h"))},
 	})

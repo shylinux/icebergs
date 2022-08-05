@@ -57,7 +57,7 @@ const (
 const OAUTH = "oauth"
 
 var Index = &ice.Context{Name: OAUTH, Help: "认证授权", Commands: ice.Commands{
-	OAUTH: {Name: "oauth hash auto prunes", Help: "权限", Actions: ice.MergeAction(ice.Actions{
+	OAUTH: {Name: "oauth hash auto prunes", Help: "权限", Actions: ice.MergeActions(ice.Actions{
 		CHECK: {Name: "check scope domain", Help: "检查", Hand: func(m *ice.Message, arg ...string) {
 			m.Echo(_merge_url(m, kit.Select(ice.Info.Make.Domain, m.Option(web.DOMAIN)), APPLY, m.OptionSimple(SCOPE), REDIRECT_URI, _merge_url(m, "", REPLY)))
 		}},

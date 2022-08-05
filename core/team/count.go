@@ -15,7 +15,7 @@ func init() {
 	Index.MergeCommands(ice.Commands{
 		COUNT: {Name: "count begin_time@date end_time@date auto insert", Help: "倒计时", Meta: kit.Dict(
 			ice.Display(""),
-		), Actions: ice.MergeAction(ice.Actions{
+		), Actions: ice.MergeActions(ice.Actions{
 			mdb.INSERT: {Name: "insert zone type=once,step,week name text begin_time@date close_time@date", Help: "添加", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmdy(TASK, mdb.INSERT, arg)
 			}},

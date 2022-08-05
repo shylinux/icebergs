@@ -78,7 +78,7 @@ func _share_local(m *ice.Message, arg ...string) {
 	}
 
 	// 上传文件
-	if p == "bin/ice.bin" {
+	if p == ice.BIN_ICE_BIN {
 		aaa.UserRoot(m).Cmd(SPACE, m.Option(ice.POD), SPIDE, "submit", MergeURL2(m, SHARE_PROXY, nfs.PATH, ""), m.Option(ice.POD), p, size, cache.Format(ice.MOD_TIME))
 	} else {
 		m.Cmd(SPACE, m.Option(ice.POD), SPIDE, ice.DEV, SPIDE_RAW, MergeURL2(m, SHARE_PROXY, nfs.PATH, ""),
@@ -88,6 +88,10 @@ func _share_local(m *ice.Message, arg ...string) {
 		p = pp
 	}
 
+	if m.Warn(!file.ExistsFile(p)) {
+		m.RenderStatusNotFound()
+		return
+	}
 	m.RenderDownload(p)
 }
 func _share_proxy(m *ice.Message) {
@@ -132,7 +136,7 @@ const SHARE = "share"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
-		SHARE: {Name: "share hash auto prunes", Help: "共享链", Actions: ice.MergeAction(ice.Actions{
+		SHARE: {Name: "share hash auto prunes", Help: "共享链", Actions: ice.MergeActions(ice.Actions{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) { _share_render(m) }},
 			mdb.CREATE: {Name: "create type name text", Help: "创建", Hand: func(m *ice.Message, arg ...string) {
 				mdb.HashCreate(m, aaa.USERROLE, m.Option(ice.MSG_USERROLE), aaa.USERNAME, m.Option(ice.MSG_USERNAME), aaa.USERNICK, m.Option(ice.MSG_USERNICK),
@@ -167,7 +171,7 @@ func init() {
 			case LOGIN:
 				m.RenderRedirect(ice.PS, ice.MSG_SESSID, aaa.SessCreate(m, msg.Append(aaa.USERNAME)))
 			default:
-				RenderIndex(m, SERVE, ice.VOLCANOS)
+				RenderIndex(m, ice.VOLCANOS)
 			}
 		}},
 

@@ -29,7 +29,7 @@ func _cache_save(m *ice.Message, kind, name, text string, arg ...string) { // fi
 	size := kit.Int(kit.Select(kit.Format(len(text)), arg, 1))
 	file := kit.Select("", arg, 0)
 	text = kit.Select(file, text)
-	h := mdb.HashCreate(m, kit.SimpleKV("", kind, name, text), nfs.FILE, file, nfs.SIZE, size).Result()
+	h := mdb.HashCreate(m, kit.SimpleKV("", kind, name, text), nfs.FILE, file, nfs.SIZE, size)
 
 	// 返回结果
 	m.Push(mdb.TIME, m.Time())
@@ -61,7 +61,7 @@ func _cache_catch(m *ice.Message, name string) (file, size string) {
 	return "", "0"
 }
 func _cache_upload(m *ice.Message, r *http.Request) (kind, name, file, size string) {
-	if b, h, e := r.FormFile(UPLOAD); e == nil {
+	if b, h, e := r.FormFile(UPLOAD); m.Assert(e) {
 		defer b.Close()
 
 		// 创建文件
@@ -126,7 +126,7 @@ const CACHE = "cache"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
-		CACHE: {Name: "cache hash auto", Help: "缓存池", Actions: ice.MergeAction(ice.Actions{
+		CACHE: {Name: "cache hash auto", Help: "缓存池", Actions: ice.MergeActions(ice.Actions{
 			WATCH: {Name: "watch key file", Help: "释放", Hand: func(m *ice.Message, arg ...string) {
 				_cache_watch(m, arg[0], arg[1])
 			}},

@@ -70,7 +70,7 @@ func Render(msg *ice.Message, cmd string, args ...ice.Any) {
 	default:
 		for _, k := range []string{
 			"_option", "_handle", "_output",
-			"cmds", "fields", "sessid", "river", "storm",
+			"cmds", "fields", "sessid",
 		} {
 			msg.Set(k)
 		}
@@ -86,7 +86,7 @@ func Render(msg *ice.Message, cmd string, args ...ice.Any) {
 func RenderType(w http.ResponseWriter, name, mime string) {
 	if mime == "" {
 		switch kit.Ext(name) {
-		case nfs.HTML:
+		case "", nfs.HTML:
 			mime = "text/html"
 		case nfs.CSS:
 			mime = "text/css; charset=utf-8"
@@ -139,16 +139,14 @@ func CookieName(url string) string {
 	return ice.MSG_SESSID + "_" + kit.ParseURLMap(url)[tcp.PORT]
 }
 
-func RenderIndex(m *ice.Message, serve, repos string, file ...string) *ice.Message {
-	return m.RenderDownload(path.Join(m.Conf(serve, kit.Keym(repos, nfs.PATH)), kit.Select(m.Conf(serve, kit.Keym(repos, INDEX)), path.Join(file...))))
+func RenderIndex(m *ice.Message, repos string, file ...string) *ice.Message {
+	if repos == "" {
+		repos = kit.Select(ice.VOLCANOS, ice.INTSHELL, m.IsCliUA())
+	}
+	return m.RenderDownload(path.Join(m.Conf(SERVE, kit.Keym(repos, nfs.PATH)), kit.Select(m.Conf(SERVE, kit.Keym(repos, INDEX)), path.Join(file...))))
 }
 func RenderWebsite(m *ice.Message, pod string, dir string, arg ...string) *ice.Message {
-	args := []string{}
-	if pod != "" {
-		args = append(args, SPACE, pod)
-	}
-	m.Echo(m.Cmdx(args, "web.chat.website", lex.PARSE, dir, arg))
-	return m.RenderResult()
+	return m.Echo(m.Cmdx(Space(m, pod), "web.chat.website", lex.PARSE, dir, arg)).RenderResult()
 }
 func RenderCmd(m *ice.Message, index string, args ...ice.Any) {
 	list := index

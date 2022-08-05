@@ -3,8 +3,8 @@ package code
 import (
 	"encoding/base64"
 	"fmt"
+	"io"
 	"io/ioutil"
-	"os"
 	"path"
 	"strings"
 
@@ -14,72 +14,59 @@ import (
 	kit "shylinux.com/x/toolkits"
 )
 
-func _binpack_file(m *ice.Message, arg ...string) string { // file name
-	if f, e := os.Open(arg[0]); e == nil {
+func _binpack_file(m *ice.Message, w io.Writer, arg ...string) { // file name
+	if f, e := nfs.OpenFile(m, arg[0]); e == nil {
 		defer f.Close()
 		if b, e := ioutil.ReadAll(f); e == nil && len(b) > 0 {
-			return fmt.Sprintf("        \"%s\": \"%s\",", kit.Select(arg[0], arg, 1), base64.StdEncoding.EncodeToString(b))
+			fmt.Fprintf(w, "        \"%s\": \"%s\",\n", kit.Select(arg[0], arg, 1), base64.StdEncoding.EncodeToString(b))
+			return
 		}
 	}
-	return fmt.Sprintf("        // \"%s\": \"%s\",", kit.Select(arg[0], arg, 1), "")
+	fmt.Fprintf(w, "        // \"%s\": \"%s\",\n", kit.Select(arg[0], arg, 1), "")
 }
-func _binpack_dir(m *ice.Message, f *os.File, dir string) {
+func _binpack_dir(m *ice.Message, w io.Writer, dir string) {
 	m.Option(nfs.DIR_ROOT, dir)
 	m.Option(nfs.DIR_DEEP, true)
 	m.Option(nfs.DIR_TYPE, nfs.CAT)
 
 	m.Cmd(nfs.DIR, nfs.PWD).Sort(nfs.PATH).Tables(func(value ice.Maps) {
 		switch path.Base(value[nfs.PATH]) {
-		case "go.mod", "go.sum", "binpack.go", "version.go":
+		case ice.GO_MOD, ice.GO_SUM, "binpack.go", "version.go":
 			return
 		}
 		switch strings.Split(value[nfs.PATH], ice.PS)[0] {
-		case "var", "polaris", "website":
+		case ice.BIN, ice.VAR, "website", "polaris":
 			return
 		}
-		fmt.Fprintln(f, _binpack_file(m, path.Join(dir, value[nfs.PATH])))
+		_binpack_file(m, w, path.Join(dir, value[nfs.PATH]))
 	})
-	fmt.Fprintln(f)
+	fmt.Fprintln(w)
 }
 
-func _binpack_can(m *ice.Message, f *os.File, dir string) {
+func _binpack_can(m *ice.Message, w io.Writer, dir string) {
 	m.Option(nfs.DIR_ROOT, dir)
 	m.Option(nfs.DIR_DEEP, true)
 	m.Option(nfs.DIR_TYPE, nfs.CAT)
 
 	for _, k := range []string{ice.FAVICON, ice.PROTO_JS, ice.FRAME_JS} {
-		// fmt.Fprintln(f, _binpack_file(m, path.Join(dir, k), ice.PS+k))
-		fmt.Fprintln(f, _binpack_file(m, path.Join(dir, k), path.Join(ice.USR_VOLCANOS, k)))
+		_binpack_file(m, w, path.Join(dir, k), path.Join(ice.USR_VOLCANOS, k))
 	}
 	for _, k := range []string{LIB, PAGE, PANEL, PLUGIN, "publish/client/nodejs/"} {
 		m.Cmd(nfs.DIR, k).Sort(nfs.PATH).Tables(func(value ice.Maps) {
-			// fmt.Fprintln(f, _binpack_file(m, path.Join(dir, value[nfs.PATH]), ice.PS+value[nfs.PATH]))
-			fmt.Fprintln(f, _binpack_file(m, path.Join(dir, value[nfs.PATH]), path.Join(ice.USR_VOLCANOS, value[nfs.PATH])))
+			_binpack_file(m, w, path.Join(dir, value[nfs.PATH]), path.Join(ice.USR_VOLCANOS, value[nfs.PATH]))
 		})
 	}
-	fmt.Fprintln(f)
+	fmt.Fprintln(w)
 }
-func _binpack_ctx(m *ice.Message, f *os.File) {
-	_binpack_dir(m, f, ice.SRC)
+func _binpack_ctx(m *ice.Message, w io.Writer) {
+	_binpack_dir(m, w, ice.SRC)
 }
+func _binpack_all(m *ice.Message) {
+	if w, p, e := nfs.CreateFile(m, ice.SRC_BINPACK_GO); m.Assert(e) {
+		defer w.Close()
+		defer m.Echo(p)
 
-const BINPACK = "binpack"
-
-func init() {
-	Index.MergeCommands(ice.Commands{
-		BINPACK: {Name: "binpack path auto create remove export", Help: "打包", Actions: ice.MergeAction(ice.Actions{
-			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
-				if kit.FileExists(path.Join(ice.USR_VOLCANOS, ice.PROTO_JS)) {
-					m.Cmd(BINPACK, mdb.REMOVE)
-					return
-				}
-			}},
-			mdb.CREATE: {Name: "create", Help: "创建", Hand: func(m *ice.Message, arg ...string) {
-				if f, p, e := kit.Create(ice.SRC_BINPACK_GO); m.Assert(e) {
-					defer f.Close()
-					defer m.Echo(p)
-
-					fmt.Fprintln(f, `package main
+		fmt.Fprintln(w, `package main
 
 import (
 	"encoding/base64"
@@ -89,9 +76,9 @@ import (
 
 func init() {
 `)
-					defer fmt.Fprintln(f, `}`)
+		defer fmt.Fprintln(w, `}`)
 
-					defer fmt.Fprintln(f, `
+		defer fmt.Fprintln(w, `
 	for k, v := range pack {
 		if b, e := base64.StdEncoding.DecodeString(v); e == nil {
 			nfs.PackFile.WriteFile(k, b)
@@ -99,40 +86,50 @@ func init() {
 	}
 `)
 
-					fmt.Fprintln(f, `	pack := ice.Maps{`)
-					defer fmt.Fprintln(f, `	}`)
+		fmt.Fprintln(w, `	pack := ice.Maps{`)
+		defer fmt.Fprintln(w, `	}`)
 
-					if kit.FileExists(ice.USR_VOLCANOS) && kit.FileExists(ice.USR_INTSHELL) && m.Option(ice.MSG_USERPOD) == "" {
-						_binpack_can(m, f, ice.USR_VOLCANOS)
-						_binpack_dir(m, f, ice.USR_INTSHELL)
-					}
-					_binpack_ctx(m, f)
+		if nfs.ExistsFile(m, ice.USR_VOLCANOS) && nfs.ExistsFile(m, ice.USR_INTSHELL) && m.Option(ice.MSG_USERPOD) == "" {
+			_binpack_can(m, w, ice.USR_VOLCANOS)
+			_binpack_dir(m, w, ice.USR_INTSHELL)
+		}
+		_binpack_ctx(m, w)
 
-					fmt.Fprintln(f, _binpack_file(m, ice.ETC_MISS_SH))
-					fmt.Fprintln(f, _binpack_file(m, ice.ETC_INIT_SHY))
-					fmt.Fprintln(f, _binpack_file(m, ice.ETC_EXIT_SHY))
-					fmt.Fprintln(f)
+		_binpack_file(m, w, ice.ETC_MISS_SH)
+		_binpack_file(m, w, ice.ETC_INIT_SHY)
+		_binpack_file(m, w, ice.ETC_EXIT_SHY)
+		fmt.Fprintln(w)
 
-					fmt.Fprintln(f, _binpack_file(m, ice.LICENSE))
-					fmt.Fprintln(f, _binpack_file(m, ice.MAKEFILE))
-					fmt.Fprintln(f, _binpack_file(m, ice.README_MD))
-					fmt.Fprintln(f)
+		_binpack_file(m, w, ice.LICENSE)
+		_binpack_file(m, w, ice.MAKEFILE)
+		_binpack_file(m, w, ice.README_MD)
+		fmt.Fprintln(w)
 
-					m.Cmd(mdb.SELECT, m.PrefixKey(), "", mdb.HASH, ice.OptionFields(nfs.PATH)).Tables(func(value ice.Maps) {
-						if s, e := os.Stat(value[nfs.PATH]); e == nil {
-							if s.IsDir() {
-								_binpack_dir(m, f, value[nfs.PATH])
-							} else {
-								fmt.Fprintln(f, _binpack_file(m, value[nfs.PATH]))
-							}
-						}
-					})
+		mdb.HashSelects(m).Sort(nfs.PATH).Tables(func(value ice.Maps) {
+			if s, e := nfs.StatFile(m, value[nfs.PATH]); e == nil {
+				if s.IsDir() {
+					_binpack_dir(m, w, value[nfs.PATH])
+				} else {
+					_binpack_file(m, w, value[nfs.PATH])
 				}
+			}
+		})
+	}
+}
+
+const BINPACK = "binpack"
+
+func init() {
+	Index.MergeCommands(ice.Commands{
+		BINPACK: {Name: "binpack path auto create insert", Help: "打包", Actions: ice.MergeActions(ice.Actions{
+			mdb.CREATE: {Name: "create", Help: "创建", Hand: func(m *ice.Message, arg ...string) {
+				_binpack_all(m)
 			}},
-			mdb.INSERT: {Name: "insert", Help: "添加", Hand: func(m *ice.Message, arg ...string) {
-				m.Cmd(mdb.INSERT, m.PrefixKey(), "", mdb.HASH, nfs.PATH, arg[0])
+			mdb.INSERT: {Name: "insert path", Help: "添加", Hand: func(m *ice.Message, arg ...string) {
+				mdb.HashCreate(m, nfs.PATH, m.Option(nfs.PATH))
 			}},
 		}, mdb.HashAction(mdb.SHORT, nfs.PATH)), Hand: func(m *ice.Message, arg ...string) {
+			mdb.HashSelect(m)
 		}},
 	})
 }

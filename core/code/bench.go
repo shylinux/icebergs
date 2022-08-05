@@ -4,12 +4,12 @@ import (
 	"io"
 	"io/ioutil"
 	"net/http"
-	"os"
 	"strings"
 	"sync/atomic"
 
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/mdb"
+	"shylinux.com/x/icebergs/base/nfs"
 	kit "shylinux.com/x/toolkits"
 	"shylinux.com/x/toolkits/util/bench"
 )
@@ -23,7 +23,7 @@ func _bench_http(m *ice.Message, target string, arg ...string) {
 	for _, v := range strings.Split(target, ice.NL) {
 		switch ls := kit.Split(v); ls[0] {
 		case http.MethodPost: // POST,url,file
-			if f, e := os.Open(ls[2]); m.Assert(e) {
+			if f, e := nfs.OpenFile(m, ls[2]); m.Assert(e) {
 				defer f.Close()
 
 				if req, err := http.NewRequest(http.MethodPost, ls[1], f); m.Assert(err) {
@@ -62,7 +62,7 @@ const BENCH = "bench"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
-		BENCH: {Name: "bench zone id auto insert", Help: "性能压测", Actions: ice.MergeAction(ice.Actions{
+		BENCH: {Name: "bench zone id auto insert", Help: "性能压测", Actions: ice.MergeActions(ice.Actions{
 			mdb.INSERT: {Name: "insert zone=some type=http,redis name=demo text='http://localhost:9020' nconn=3 nreqs=10", Help: "添加"},
 			ice.RUN: {Name: "run", Help: "执行", Hand: func(m *ice.Message, arg ...string) {
 				switch m.Option(mdb.TYPE) {

@@ -152,3 +152,6 @@ func Load(m *ice.Message, arg ...string) *ice.Message {
 	}
 	return m.Cmd(CONFIG, ice.LOAD, m.Prefix(nfs.JSON), arg)
 }
+func ConfAction(args ...ice.Any) ice.Actions {
+	return ice.Actions{ice.CTX_INIT: mdb.AutoConfig(args...)}
+}

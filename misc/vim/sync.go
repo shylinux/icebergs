@@ -26,7 +26,7 @@ func init() {
 			m.Cmd(SYNC, mdb.INSERT, mdb.TYPE, VIMRC, mdb.NAME, arg[0], mdb.TEXT, kit.Select(m.Option(ARG), m.Option(SUB)),
 				m.OptionSimple(cli.PWD, BUF, ROW, COL))
 		}},
-		SYNC: {Name: "sync id auto page export import", Help: "同步流", Actions: ice.MergeAction(ice.Actions{
+		SYNC: {Name: "sync id auto page export import", Help: "同步流", Actions: ice.MergeActions(ice.Actions{
 			code.INNER: {Name: "inner", Help: "源码", Hand: func(m *ice.Message, arg ...string) {
 				p := path.Join(m.Option(cli.PWD), m.Option(BUF))
 				ctx.ProcessCommand(m, code.INNER, []string{path.Dir(p) + ice.PS, path.Base(p), m.Option(ROW)}, arg...)

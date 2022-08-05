@@ -71,7 +71,7 @@ const USER = "user"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
-		USER: {Name: "user username auto create", Help: "用户", Actions: ice.MergeAction(ice.Actions{
+		USER: {Name: "user username auto create", Help: "用户", Actions: ice.MergeActions(ice.Actions{
 			mdb.CREATE: {Name: "create username password userrole=void,tech", Help: "创建", Hand: func(m *ice.Message, arg ...string) {
 				_user_create(m, m.Option(USERNAME), m.Option(PASSWORD), m.OptionSimple(USERROLE)...)
 			}},

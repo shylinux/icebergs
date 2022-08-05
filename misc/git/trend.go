@@ -14,7 +14,7 @@ func init() {
 	Index.MergeCommands(ice.Commands{
 		TREND: {Name: "trend repos@key begin_time@date auto", Help: "趋势图", Meta: kit.Dict(
 			ice.DisplayStory("trend.js"),
-		), Actions: ice.MergeAction(ice.Actions{
+		), Actions: ice.MergeActions(ice.Actions{
 			mdb.INPUTS: {Name: "inputs", Help: "补全", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmdy(REPOS, ice.OptionFields("name,time"))
 			}}, code.INNER: {Name: "web.code.inner"},

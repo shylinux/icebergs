@@ -66,7 +66,7 @@ const CLIENT = "client"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
-		CLIENT: {Name: "client hash auto prunes", Help: "客户端", Actions: ice.MergeAction(ice.Actions{
+		CLIENT: {Name: "client hash auto prunes", Help: "客户端", Actions: ice.MergeActions(ice.Actions{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) { m.Conf("", mdb.HASH, "") }},
 			ice.CTX_EXIT: {Hand: func(m *ice.Message, arg ...string) {}},
 			DIAL: {Name: "dial type name port=9010 host=", Help: "连接", Hand: func(m *ice.Message, arg ...string) {

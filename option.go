@@ -20,11 +20,13 @@ func (m *Message) OptionFields(arg ...string) string {
 	}
 	return kit.Join(kit.Simple(m.Optionv(MSG_FIELDS)))
 }
-func (m *Message) OptionDefault(key, value string) string {
-	if m.Option(key) == "" {
-		m.Option(key, value)
+func (m *Message) OptionDefault(arg ...string) string {
+	for i := 0; i < len(arg); i += 2 {
+		if m.Option(arg[i]) == "" {
+			m.Option(arg[i], arg[i+1])
+		}
 	}
-	return m.Option(key)
+	return m.Option(arg[0])
 }
 func (m *Message) OptionSimple(key ...string) (res []string) {
 	for _, k := range kit.Split(kit.Join(key)) {

@@ -30,7 +30,7 @@ func init() {
 					value[nfs.FILE], value[nfs.LINE], "1", value[mdb.NAME], value[mdb.TEXT])
 			})
 		}},
-		FAVOR: {Name: "favor zone id auto", Help: "收藏夹", Actions: ice.MergeAction(ice.Actions{
+		FAVOR: {Name: "favor zone id auto", Help: "收藏夹", Actions: ice.MergeActions(ice.Actions{
 			mdb.INSERT: {Name: "insert zone=数据结构 type name=hi text=hello file line", Help: "添加"},
 			code.INNER: {Name: "inner", Help: "源码", Hand: func(m *ice.Message, arg ...string) {
 				p := path.Join(m.Option(cli.PWD), m.Option(nfs.FILE))

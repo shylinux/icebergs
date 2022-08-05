@@ -26,7 +26,7 @@ func init() {
 				}
 			}},
 		}},
-		SYNC: {Name: "sync id auto page export import", Help: "同步流", Actions: ice.MergeAction(ice.Actions{
+		SYNC: {Name: "sync id auto page export import", Help: "同步流", Actions: ice.MergeActions(ice.Actions{
 			cli.SYSTEM: {Name: "system", Help: "命令", Hand: func(m *ice.Message, arg ...string) {
 				m.Option(cli.CMD_DIR, m.Option(cli.PWD))
 				ctx.ProcessCommand(m, cli.SYSTEM, kit.Split(m.Option(mdb.TEXT)), arg...)

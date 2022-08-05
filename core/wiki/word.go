@@ -10,7 +10,7 @@ import (
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/nfs"
 	"shylinux.com/x/icebergs/base/ssh"
-	"shylinux.com/x/icebergs/base/web"
+	"shylinux.com/x/icebergs/core/chat"
 	kit "shylinux.com/x/toolkits"
 )
 
@@ -41,13 +41,13 @@ func init() {
 			mdb.FIELD, "time,hash,type,name,text",
 		)},
 	}, Commands: ice.Commands{
-		WORD: {Name: "word path=src/main.shy@key list play", Help: "语言文字", Actions: ice.MergeAction(ice.Actions{
+		WORD: {Name: "word path=src/main.shy@key list play", Help: "语言文字", Actions: ice.MergeActions(ice.Actions{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
 				m.Cmd(aaa.ROLE, aaa.WHITE, aaa.VOID, m.PrefixKey("src/main.shy"))
 			}},
 			mdb.SEARCH: {Name: "search", Help: "搜索", Hand: func(m *ice.Message, arg ...string) {
 				if arg[0] == mdb.FOREACH && arg[1] == "" {
-					m.PushSearch(mdb.TYPE, "shy", mdb.NAME, "src/main.shy", mdb.TEXT, web.MergeCmd(m, ""))
+					m.PushSearch(mdb.TYPE, "shy", mdb.NAME, "src/main.shy", mdb.TEXT, chat.MergeCmd(m, ""))
 				}
 				m.Cmd(mdb.SELECT, m.PrefixKey(), "", mdb.HASH).Tables(func(value ice.Maps) {
 					if arg[1] == "" {

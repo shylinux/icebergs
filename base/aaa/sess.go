@@ -12,7 +12,7 @@ func _sess_check(m *ice.Message, sessid string) {
 	m.Option(ice.MSG_USERROLE, VOID)
 	m.Option(ice.MSG_USERNAME, "")
 	m.Option(ice.MSG_USERNICK, "")
-	if m.Warn(sessid == "", ice.ErrNotValid, sessid) {
+	if sessid == "" {
 		return
 	}
 
@@ -34,9 +34,9 @@ func _sess_create(m *ice.Message, username string) (h string) {
 		return
 	}
 	if msg := m.Cmd(USER, username); msg.Length() > 0 {
-		h = mdb.HashCreate(m, msg.AppendSimple(USERROLE, USERNAME, USERNICK), IP, m.Option(ice.MSG_USERIP), UA, m.Option(ice.MSG_USERUA)).Result()
+		h = mdb.HashCreate(m, msg.AppendSimple(USERROLE, USERNAME, USERNICK), IP, m.Option(ice.MSG_USERIP), UA, m.Option(ice.MSG_USERUA))
 	} else {
-		h = mdb.HashCreate(m, m.OptionSimple(USERROLE, USERNAME, USERNICK), IP, m.Option(ice.MSG_USERIP), UA, m.Option(ice.MSG_USERUA)).Result()
+		h = mdb.HashCreate(m, m.OptionSimple(USERROLE, USERNAME, USERNICK), IP, m.Option(ice.MSG_USERIP), UA, m.Option(ice.MSG_USERUA))
 	}
 	gdb.Event(m, SESS_CREATE, SESS, h, USERNAME, username)
 	return h
@@ -60,7 +60,7 @@ const SESS = "sess"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
-		SESS: {Name: "sess hash auto prunes", Help: "会话", Actions: ice.MergeAction(ice.Actions{
+		SESS: {Name: "sess hash auto prunes", Help: "会话", Actions: ice.MergeActions(ice.Actions{
 			mdb.CREATE: {Name: "create username", Help: "创建", Hand: func(m *ice.Message, arg ...string) {
 				_sess_create(m, m.Option(USERNAME))
 			}},
@@ -76,4 +76,7 @@ func SessCreate(m *ice.Message, username string) string {
 }
 func SessCheck(m *ice.Message, sessid string) bool {
 	return m.Cmdy(SESS, CHECK, sessid).Option(ice.MSG_USERNAME) != ""
+}
+func UserLogout(m *ice.Message) {
+	m.Cmd(SESS, mdb.REMOVE, kit.Dict(mdb.HASH, m.Option(ice.MSG_SESSID)))
 }

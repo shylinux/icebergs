@@ -93,7 +93,7 @@ const ROLE = "role"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
-		ROLE: {Name: "role role auto insert", Help: "角色", Actions: ice.MergeAction(ice.Actions{
+		ROLE: {Name: "role role auto insert", Help: "角色", Actions: ice.MergeActions(ice.Actions{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
 				mdb.Rich(m, ROLE, nil, kit.Dict(mdb.NAME, TECH, BLACK, kit.Dict(), WHITE, kit.Dict()))
 				mdb.Rich(m, ROLE, nil, kit.Dict(mdb.NAME, VOID, WHITE, kit.Dict(), BLACK, kit.Dict()))

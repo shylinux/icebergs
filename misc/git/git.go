@@ -16,7 +16,7 @@ var Index = &ice.Context{Name: GIT, Help: "代码库", Configs: ice.Configs{
 		nfs.SOURCE, "http://mirrors.tencent.com/macports/distfiles/git-cinnabar/git-2.31.1.tar.gz",
 	)},
 }, Commands: ice.Commands{
-	GIT: {Name: "git path auto install order build download", Help: "代码库", Actions: ice.MergeAction(ice.Actions{
+	GIT: {Name: "git path auto install order build download", Help: "代码库", Actions: ice.MergeActions(ice.Actions{
 		code.INSTALL: {Name: "install", Help: "安装", Hand: func(m *ice.Message, arg ...string) {
 			web.PushStream(m)
 			defer m.ProcessInner()

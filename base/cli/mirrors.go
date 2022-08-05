@@ -21,7 +21,7 @@ const MIRRORS = "mirrors"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
-		MIRRORS: {Name: "mirrors cli auto", Help: "软件镜像", Actions: ice.MergeAction(ice.Actions{
+		MIRRORS: {Name: "mirrors cli auto", Help: "软件镜像", Actions: ice.MergeActions(ice.Actions{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
 				m.Go(func() {
 					m.Sleep300ms() // after runtime init

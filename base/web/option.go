@@ -2,7 +2,6 @@ package web
 
 import (
 	"net/url"
-	"path"
 	"strings"
 	"time"
 
@@ -10,10 +9,19 @@ import (
 	"shylinux.com/x/icebergs/base/cli"
 	"shylinux.com/x/icebergs/base/gdb"
 	"shylinux.com/x/icebergs/base/mdb"
+	"shylinux.com/x/icebergs/base/nfs"
 	kit "shylinux.com/x/toolkits"
 	"shylinux.com/x/toolkits/file"
 )
 
+func Upload(m *ice.Message) []string { // hash name size
+	up := kit.Simple(m.Optionv(ice.MSG_UPLOAD))
+	if len(up) < 2 {
+		msg := m.Cmdy(CACHE, UPLOAD)
+		up = kit.Simple(msg.Append(mdb.HASH), msg.Append(mdb.NAME), msg.Append(nfs.SIZE))
+	}
+	return up
+}
 func PushNotice(m *ice.Message, arg ...ice.Any) {
 	m.Optionv(ice.MSG_OPTS, m.Optionv(ice.MSG_OPTION))
 	if m.Option(ice.MSG_USERPOD) == "" {
@@ -104,6 +112,14 @@ func PushPodCmd(m *ice.Message, cmd string, arg ...string) {
 	})
 }
 
+func OptionAgentIs(m *ice.Message, arg ...string) bool {
+	for _, k := range arg {
+		if strings.HasPrefix(m.Option(ice.MSG_USERUA), k) {
+			return true
+		}
+	}
+	return false
+}
 func OptionUserWeb(m *ice.Message) *url.URL {
 	return kit.ParseURL(m.Option(ice.MSG_USERWEB))
 }
@@ -115,18 +131,4 @@ func MergeLink(m *ice.Message, url string, arg ...ice.Any) string {
 }
 func MergePod(m *ice.Message, pod string, arg ...ice.Any) string {
 	return kit.MergePOD(kit.Select(ice.Info.Domain, m.Option(ice.MSG_USERWEB)), pod, arg...)
-}
-func MergeCmd(m *ice.Message, cmd string, arg ...ice.Any) string {
-	return mergeurl(m, path.Join(ice.CMD, kit.Select(m.PrefixKey(), cmd)), arg...)
-}
-func MergeWebsite(m *ice.Message, web string, arg ...ice.Any) string {
-	return mergeurl(m, path.Join(WEBSITE, web), arg...)
-}
-func mergeurl(m *ice.Message, p string, arg ...ice.Any) string {
-	if m.Option(ice.MSG_USERPOD) == "" {
-		p = path.Join("/", p)
-	} else {
-		p = path.Join("/chat", ice.POD, m.Option(ice.MSG_USERPOD), p)
-	}
-	return kit.MergeURL2(kit.Select(ice.Info.Domain, m.Option(ice.MSG_USERWEB)), path.Join(p), arg...)
 }

@@ -274,7 +274,7 @@ func init() {
 }
 func AutoConfig(args ...ice.Any) *ice.Action {
 	return &ice.Action{Hand: func(m *ice.Message, arg ...string) {
-		if cs := m.Target().Configs; cs[m.CommandKey()] == nil && len(args) > 0 {
+		if cs := m.Target().Configs; len(args) > 0 {
 			cs[m.CommandKey()] = &ice.Config{Value: kit.Data(args...)}
 			ice.Info.Load(m, m.CommandKey())
 		}

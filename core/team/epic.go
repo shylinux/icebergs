@@ -13,7 +13,7 @@ const EPIC = "epic"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
-		EPIC: {Name: "epic hash list create export import", Help: "史记", Actions: ice.MergeAction(ice.Actions{
+		EPIC: {Name: "epic hash list create export import", Help: "史记", Actions: ice.MergeActions(ice.Actions{
 			mdb.CREATE: {Name: "create time@date type name", Help: "创建"},
 			mdb.MODIFY: {Name: "modify hash time@date type name", Help: "编辑"},
 		}, mdb.HashAction(mdb.FIELD, "time,hash,type,name,text")), Hand: func(m *ice.Message, arg ...string) {

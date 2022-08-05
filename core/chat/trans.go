@@ -12,23 +12,21 @@ import (
 	kit "shylinux.com/x/toolkits"
 )
 
-const (
-	SEND = "send"
-	FROM = "from"
-	TO   = "to"
-)
-
 func init() {
+	const (
+		SEND = "send"
+		FROM = "from"
+		TO   = "to"
+	)
 	Index.MergeCommands(ice.Commands{
-		TRANS: {Name: "trans from to auto", Help: "传输", Actions: ice.MergeAction(ice.Actions{
+		TRANS: {Name: "trans from to auto", Help: "传输", Actions: ice.MergeActions(ice.Actions{
 			SEND: {Name: "send", Help: "发送", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmdy(web.SPACE, m.Option(TO), web.SPIDE, ice.DEV, web.SPIDE_SAVE, kit.Select(nfs.PWD, m.Option("to_path")),
 					web.MergeURL2(m, path.Join(web.SHARE_LOCAL, m.Option("from_path")), ice.POD, m.Option(FROM),
 						web.SHARE, m.Cmdx(web.SHARE, mdb.CREATE, mdb.TYPE, web.LOGIN),
 					),
-				)
-				web.Toast(m, ice.SUCCESS, SEND)
-				m.ProcessHold()
+				).ProcessHold()
+				web.ToastSuccess(m, SEND)
 			}},
 			ice.RUN: {Name: "run", Help: "执行", Hand: func(m *ice.Message, arg ...string) {
 				m.Option(ice.POD, m.Option("_pod"))

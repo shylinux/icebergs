@@ -104,7 +104,7 @@ func init() {
 			mdb.SHORT, tcp.PORT, mdb.FIELD, "time,port,status,private,authkey,count",
 		)},
 	}, Commands: ice.Commands{
-		SERVICE: {Name: "service port id auto listen prunes", Help: "服务", Actions: ice.MergeAction(ice.Actions{
+		SERVICE: {Name: "service port id auto listen prunes", Help: "服务", Actions: ice.MergeActions(ice.Actions{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
 				m.Richs(SERVICE, "", mdb.FOREACH, func(key string, value ice.Map) {
 					if value = kit.GetMeta(value); kit.Value(value, mdb.STATUS) == tcp.OPEN {

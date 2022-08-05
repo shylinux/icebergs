@@ -125,7 +125,7 @@ const FIELD = "field"
 
 func init() {
 	Index.Merge(&ice.Context{Commands: ice.Commands{
-		FIELD: {Name: "field [name] cmd", Help: "插件", Actions: ice.MergeAction(ice.Actions{
+		FIELD: {Name: "field [name] cmd", Help: "插件", Actions: ice.MergeActions(ice.Actions{
 			ice.RUN: {Name: "run", Help: "执行"},
 		}, ctx.CmdAction()), Hand: func(m *ice.Message, arg ...string) {
 			if arg = _name(m, arg); strings.Contains(arg[1], ice.NL) {

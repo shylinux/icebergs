@@ -16,7 +16,7 @@ var Index = &ice.Context{Name: BASH, Help: "命令行", Configs: ice.Configs{
 		nfs.SOURCE, "http://mirrors.tencent.com/macports/distfiles/bash/5.1_1/bash-5.1.tar.gz",
 	)},
 }, Commands: ice.Commands{
-	BASH: {Name: "bash path auto order build download", Help: "命令行", Actions: ice.MergeAction(ice.Actions{
+	BASH: {Name: "bash path auto order build download", Help: "命令行", Actions: ice.MergeActions(ice.Actions{
 		cli.ORDER: {Name: "order", Help: "加载", Hand: func(m *ice.Message, arg ...string) {
 			m.Cmdy(code.INSTALL, cli.ORDER, m.Config(nfs.SOURCE), "_install/bin")
 		}},

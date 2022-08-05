@@ -66,7 +66,7 @@ const BROAD = "broad"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
-		BROAD: {Name: "broad hash auto serve", Help: "广播", Actions: ice.MergeAction(ice.Actions{
+		BROAD: {Name: "broad hash auto serve", Help: "广播", Actions: ice.MergeActions(ice.Actions{
 			mdb.SEARCH: {Name: "search type name text", Help: "搜索", Hand: func(m *ice.Message, arg ...string) {
 				_broad_search(m, arg[0], arg[1], kit.Select("", arg, 2))
 			}},

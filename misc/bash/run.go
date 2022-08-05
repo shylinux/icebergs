@@ -72,7 +72,7 @@ const RUN = "run"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
-		"/run/": {Name: "/run/", Help: "执行", Actions: ice.MergeAction(ice.Actions{
+		"/run/": {Name: "/run/", Help: "执行", Actions: ice.MergeActions(ice.Actions{
 			ctx.COMMAND: {Name: "command", Help: "命令", Hand: func(m *ice.Message, arg ...string) {
 				m.Search(arg[0], func(_ *ice.Context, s *ice.Context, key string, cmd *ice.Command) {
 					if p := strings.ReplaceAll(kit.Select("/app/cat.sh", cmd.Meta["display"]), ".js", ".sh"); strings.HasPrefix(p, ice.PS+ice.REQUIRE) {

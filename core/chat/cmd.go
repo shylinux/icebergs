@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	ice "shylinux.com/x/icebergs"
+	"shylinux.com/x/icebergs/base/aaa"
 	"shylinux.com/x/icebergs/base/ctx"
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/nfs"
@@ -52,67 +53,25 @@ const CMD = "cmd"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
-		CMD: {Name: "cmd path auto upload up home", Help: "命令", Actions: ice.MergeAction(ice.Actions{
-			web.UPLOAD: {Name: "upload", Help: "上传", Hand: func(m *ice.Message, arg ...string) {
-				m.Cmdy(web.CACHE, web.UPLOAD_WATCH, path.Join(m.Config(nfs.PATH), strings.TrimPrefix(path.Dir(m.R.URL.Path), "/cmd")))
-			}},
-
-			"home": {Name: "home", Help: "根目录", Hand: func(m *ice.Message, arg ...string) {
-				m.ProcessLocation("/chat/cmd/")
-			}},
-			"up": {Name: "up", Help: "上一级", Hand: func(m *ice.Message, arg ...string) {
-				if strings.TrimPrefix(m.R.URL.Path, "/cmd") == ice.PS {
-					m.Cmdy(CMD)
-				} else if strings.HasSuffix(m.R.URL.Path, ice.PS) {
-					m.ProcessLocation("../")
-				} else {
-					m.ProcessLocation(nfs.PWD)
-				}
-			}},
-		}, mdb.HashAction(mdb.SHORT, "type", nfs.PATH, nfs.PWD)), Hand: func(m *ice.Message, arg ...string) {
-			if _cmd_file(m, arg...) {
-				return
-			}
-			if msg := m.Cmd(ctx.COMMAND, arg[0]); msg.Length() > 0 {
-				web.RenderCmd(m, arg[0])
-				return
-			}
-
-			if len(arg) > 0 {
-				m.ProcessLocation(arg[0])
-				return
-			}
-			m.Option(nfs.DIR_ROOT, path.Join(m.Config(nfs.PATH), strings.TrimPrefix(path.Dir(m.R.URL.Path), "/cmd")))
-			m.Cmdy(nfs.DIR, arg)
-		}},
-		"/cmd/": {Name: "/cmd/", Help: "命令", Actions: ice.MergeAction(ice.Actions{
-			ice.CTX_INIT: {Name: "_init", Help: "初始化", Hand: func(m *ice.Message, arg ...string) {
-				m.Cmdy(CMD, mdb.CREATE, mdb.TYPE, "shy", mdb.NAME, "web.wiki.word")
-				m.Cmdy(CMD, mdb.CREATE, mdb.TYPE, "svg", mdb.NAME, "web.wiki.draw")
-				m.Cmdy(CMD, mdb.CREATE, mdb.TYPE, "csv", mdb.NAME, "web.wiki.data")
-				m.Cmdy(CMD, mdb.CREATE, mdb.TYPE, "json", mdb.NAME, "web.wiki.json")
-
+		CMD: {Name: "cmd path auto upload up home", Help: "命令", Actions: ice.MergeActions(ice.Actions{
+			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
+				m.Cmd(aaa.ROLE, aaa.WHITE, CMD)
+				m.Cmdy(CMD, mdb.CREATE, mdb.TYPE, nfs.SHY, mdb.NAME, "web.wiki.word")
+				m.Cmdy(CMD, mdb.CREATE, mdb.TYPE, nfs.SVG, mdb.NAME, "web.wiki.draw")
+				m.Cmdy(CMD, mdb.CREATE, mdb.TYPE, nfs.CSV, mdb.NAME, "web.wiki.data")
+				m.Cmdy(CMD, mdb.CREATE, mdb.TYPE, nfs.JSON, mdb.NAME, "web.wiki.json")
 				for _, k := range []string{"mod", "sum"} {
 					m.Cmdy(CMD, mdb.CREATE, mdb.TYPE, k, mdb.NAME, "web.code.inner")
 				}
 			}},
-		}, ctx.CmdAction()), Hand: func(m *ice.Message, arg ...string) {
-			if strings.HasSuffix(m.R.URL.Path, ice.PS) {
-				web.RenderCmd(m, CMD)
-				return // 目录
-			}
+		}, mdb.HashAction(mdb.SHORT, "type", nfs.PATH, nfs.PWD), ctx.CmdAction(), web.ApiAction("/cmd/")), Hand: func(m *ice.Message, arg ...string) {
 			if _cmd_file(m, arg...) {
 				return
 			}
-
-			if ctx.PodCmd(m, ctx.COMMAND, arg[0]) {
-				if !m.IsErr() {
-					web.RenderCmd(m, arg[0], arg[1:]) // 远程命令
-				}
+			if ctx.PodCmd(m, ctx.COMMAND, arg[0]) && !m.IsErr() {
+				web.RenderCmd(m, arg[0], arg[1:]) // 远程命令
 			} else if m.Cmdy(ctx.COMMAND, arg[0]); m.Length() > 0 {
 				web.RenderCmd(m, arg[0], arg[1:]) // 本地命令
-			} else {
-				m.RenderDownload(path.Join(m.Config(nfs.PATH), path.Join(arg...))) // 文件
 			}
 		}},
 	})

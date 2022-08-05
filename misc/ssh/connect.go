@@ -156,7 +156,7 @@ const CONNECT = "connect"
 
 func init() {
 	psh.Index.MergeCommands(ice.Commands{
-		CONNECT: {Name: "connect name auto", Help: "连接", Actions: ice.MergeAction(ice.Actions{
+		CONNECT: {Name: "connect name auto", Help: "连接", Actions: ice.MergeActions(ice.Actions{
 			tcp.OPEN: {Name: "open authfile username=shy password verfiy host=shylinux.com port=22 private=.ssh/id_rsa", Help: "终端", Hand: func(m *ice.Message, arg ...string) {
 				aaa.UserRoot(m)
 				_ssh_open(m.OptionLoad(m.Option("authfile")), arg...)

@@ -34,14 +34,14 @@ func _dir_list(m *ice.Message, root string, name string, level int, deep bool, d
 	}
 
 	list, e := ReadDir(m, path.Join(root, name))
-	if e != nil { // 单个文件
+	if e != nil || len(list) == 0 { // 单个文件
 		ls, _ := ReadDir(m, path.Dir(path.Join(root, name)))
 		for _, s := range ls {
 			if s.Name() == path.Base(name) {
 				list = append(list, s)
 			}
 		}
-		name = path.Dir(name)
+		name, deep = path.Dir(name), false
 	}
 
 	for _, f := range list {
@@ -178,7 +178,7 @@ func init() {
 				m.Cmdy("web.cache", "upload_watch", m.Option(PATH))
 			}},
 			TRASH: {Name: "trash", Help: "删除", Hand: func(m *ice.Message, arg ...string) {
-				m.Cmdy(TRASH, m.Option(PATH))
+				m.Cmdy(TRASH, mdb.CREATE, m.Option(PATH))
 			}},
 		}, Hand: func(m *ice.Message, arg ...string) {
 			if m.Option(DIR_ROOT) != "" {

@@ -34,7 +34,7 @@ const TRASH = "trash"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
-		TRASH: {Name: "trash hash auto prunes", Help: "回收站", Actions: ice.MergeAction(ice.Actions{
+		TRASH: {Name: "trash hash auto prunes", Help: "回收站", Actions: ice.MergeActions(ice.Actions{
 			mdb.REVERT: {Name: "revert", Help: "恢复", Hand: func(m *ice.Message, arg ...string) {
 				Rename(m, m.Option(FILE), m.Option(FROM))
 				mdb.HashRemove(m, m.OptionSimple(mdb.HASH))

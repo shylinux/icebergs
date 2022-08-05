@@ -60,7 +60,7 @@ const SH = nfs.SH
 
 func init() {
 	Index.Register(&ice.Context{Name: SH, Help: "命令", Commands: ice.Commands{
-		SH: {Name: "sh path auto", Help: "命令", Actions: ice.MergeAction(ice.Actions{
+		SH: {Name: "sh path auto", Help: "命令", Actions: ice.MergeActions(ice.Actions{
 			ice.CTX_INIT: {Name: "_init", Help: "初始化", Hand: func(m *ice.Message, arg ...string) {
 				for _, cmd := range []string{mdb.SEARCH, mdb.ENGINE, mdb.RENDER, mdb.PLUGIN} {
 					m.Cmd(cmd, mdb.CREATE, m.CommandKey(), m.PrefixKey())

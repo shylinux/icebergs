@@ -42,7 +42,7 @@ func _hash_insert(m *ice.Message, prefix, chain string, arg ...string) string {
 	if expire := m.Conf(prefix, kit.Keys(chain, kit.Keym(EXPIRE))); expire != "" {
 		arg = kit.Simple(TIME, m.Time(expire), arg)
 	}
-	if m.Optionv(TARGET) != nil {
+	if m.Optionv(TARGET) != nil && m.Option(TARGET) != "" {
 		m.Echo(Rich(m, prefix, chain, kit.Data(arg, TARGET, m.Optionv(TARGET))))
 	} else {
 		m.Echo(Rich(m, prefix, chain, kit.Data(arg)))
@@ -170,7 +170,7 @@ func HashAction(args ...Any) ice.Actions {
 	}
 }
 func HashCloseAction(args ...Any) ice.Actions {
-	return ice.MergeAction(HashAction(args...), ice.Actions{
+	return ice.MergeActions(HashAction(args...), ice.Actions{
 		ice.CTX_EXIT: {Hand: func(m *ice.Message, arg ...string) { HashSelectClose(m) }},
 	})
 }
@@ -186,7 +186,7 @@ func HashStatusAction(args ...Any) ice.Actions {
 	return list
 }
 func HashStatusCloseAction(args ...Any) ice.Actions {
-	return ice.MergeAction(HashStatusAction(args...), ice.Actions{
+	return ice.MergeActions(HashStatusAction(args...), ice.Actions{
 		ice.CTX_EXIT: {Hand: func(m *ice.Message, arg ...string) { HashSelectClose(m) }},
 	})
 }
@@ -201,8 +201,9 @@ func HashArgs(m *ice.Message, arg ...Any) []string {
 func HashInputs(m *ice.Message, arg ...Any) *ice.Message {
 	return m.Cmdy(INPUTS, m.PrefixKey(), "", HASH, HashArgs(m, arg))
 }
-func HashCreate(m *ice.Message, arg ...Any) *ice.Message {
-	return m.Cmdy(INSERT, m.PrefixKey(), "", HASH, HashArgs(m, arg...))
+func HashCreate(m *ice.Message, arg ...Any) string {
+	msg := m.Spawn()
+	return m.Echo(msg.Cmdx(INSERT, m.PrefixKey(), "", HASH, HashArgs(msg, arg...))).Result()
 }
 func HashRemove(m *ice.Message, arg ...Any) *ice.Message {
 	return m.Cmdy(DELETE, m.PrefixKey(), "", HASH, m.OptionSimple(HashShort(m)), arg)
@@ -291,6 +292,7 @@ func HashSelectValue(m *ice.Message, cb Any) *ice.Message {
 func HashSelectClose(m *ice.Message) *ice.Message {
 	HashSelectValue(m, func(target ice.Any) {
 		if c, ok := target.(io.Closer); ok {
+			m.Logs(DELETE, TARGET, m.PrefixKey())
 			c.Close()
 		}
 	})
@@ -314,6 +316,9 @@ func Rich(m *ice.Message, prefix string, chain Any, data Any) string {
 	if cache == nil {
 		cache = kit.Data()
 		m.Confv(prefix, chain, cache)
+	}
+	if m.Option(SHORT) != "" {
+		kit.Value(cache, kit.Keym(SHORT), m.Option(SHORT))
 	}
 	return miss.Rich(path.Join(prefix, kit.Keys(chain)), cache, data)
 }

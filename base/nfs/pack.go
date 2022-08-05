@@ -165,3 +165,6 @@ func NewWriteCloser(w func([]byte) (int, error), c func() error) io.WriteCloser 
 func NewReadCloser(r io.Reader) io.ReadCloser {
 	return file.NewReadCloser(r)
 }
+func NewCloser(c func() error) io.WriteCloser {
+	return file.NewWriteCloser(func(buf []byte) (int, error) { return 0, nil }, c)
+}

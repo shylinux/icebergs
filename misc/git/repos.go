@@ -51,7 +51,7 @@ func init() {
 			REPOS, "https://shylinux.com/x", nfs.PATH, ice.USR_LOCAL,
 		)},
 	}, Commands: ice.Commands{
-		REPOS: {Name: "repos repos path auto create", Help: "代码库", Actions: ice.MergeAction(ice.Actions{
+		REPOS: {Name: "repos repos path auto create", Help: "代码库", Actions: ice.MergeActions(ice.Actions{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
 				m.Conf(REPOS, mdb.HASH, "")
 				_repos_insert(m, path.Base(kit.Pwd()), kit.Pwd())

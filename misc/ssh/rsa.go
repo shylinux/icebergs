@@ -23,7 +23,7 @@ const RSA = "rsa"
 
 func init() {
 	aaa.Index.MergeCommands(ice.Commands{
-		RSA: {Name: "rsa hash auto", Help: "公钥", Actions: ice.MergeAction(ice.Actions{
+		RSA: {Name: "rsa hash auto", Help: "公钥", Actions: ice.MergeActions(ice.Actions{
 			mdb.IMPORT: {Name: "import key=.ssh/id_rsa pub=.ssh/id_rsa.pub", Help: "导入", Hand: func(m *ice.Message, arg ...string) {
 				m.Conf(m.PrefixKey(), kit.Keys(mdb.HASH, path.Base(m.Option("key"))), kit.Data(mdb.TIME, m.Time(),
 					"title", kit.Format("%s@%s", ice.Info.UserName, ice.Info.HostName),

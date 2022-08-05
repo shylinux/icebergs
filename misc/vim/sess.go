@@ -58,7 +58,7 @@ func init() {
 			}
 			m.Echo(m.Option(SID))
 		}},
-		SESS: {Name: "sess hash auto prunes", Help: "会话流", Actions: ice.MergeAction(ice.Actions{
+		SESS: {Name: "sess hash auto prunes", Help: "会话流", Actions: ice.MergeActions(ice.Actions{
 			mdb.PRUNES: {Name: "prunes", Help: "清理", Hand: func(m *ice.Message, arg ...string) {
 				m.OptionFields(m.Config(mdb.FIELD))
 				m.Cmdy(mdb.PRUNES, m.PrefixKey(), "", mdb.HASH, mdb.STATUS, aaa.LOGOUT)

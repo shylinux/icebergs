@@ -242,20 +242,20 @@ func init() {
 				m.Cmd(mdb.PLUGIN, mdb.CREATE, k, m.Prefix(k))
 			}
 		}},
-		GODOC: {Name: "godoc", Help: "文档", Actions: ice.MergeAction(ice.Actions{
+		GODOC: {Name: "godoc", Help: "文档", Actions: ice.MergeActions(ice.Actions{
 			mdb.RENDER: {Hand: func(m *ice.Message, arg ...string) {
 				m.Cmdy(cli.SYSTEM, GO, "doc", strings.TrimSuffix(arg[1], ice.PT+arg[0]), kit.Dict(cli.CMD_DIR, arg[2])).SetAppend()
 			}},
 		}, PlugAction())},
-		SUM: {Name: "sum", Help: "版本", Actions: ice.MergeAction(ice.Actions{
+		SUM: {Name: "sum", Help: "版本", Actions: ice.MergeActions(ice.Actions{
 			mdb.RENDER: {Hand: func(m *ice.Message, arg ...string) { _sum_show(m, path.Join(arg[2], arg[1])) }},
 			mdb.ENGINE: {Hand: func(m *ice.Message, arg ...string) { _sum_show(m, path.Join(arg[2], arg[1])) }},
 		}, PlugAction())},
-		MOD: {Name: "mod", Help: "模块", Actions: ice.MergeAction(ice.Actions{
+		MOD: {Name: "mod", Help: "模块", Actions: ice.MergeActions(ice.Actions{
 			mdb.RENDER: {Hand: func(m *ice.Message, arg ...string) { _mod_show(m, path.Join(arg[2], arg[1])) }},
 			mdb.ENGINE: {Hand: func(m *ice.Message, arg ...string) { _mod_show(m, path.Join(arg[2], arg[1])) }},
 		}, PlugAction())},
-		GO: {Name: "go", Help: "后端", Actions: ice.MergeAction(ice.Actions{
+		GO: {Name: "go", Help: "后端", Actions: ice.MergeActions(ice.Actions{
 			mdb.SEARCH: {Hand: func(m *ice.Message, arg ...string) {
 				if arg[0] == GO {
 					_go_tags(m, kit.Select(cli.MAIN, arg, 1))

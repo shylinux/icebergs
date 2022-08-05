@@ -11,7 +11,7 @@ const TODO = "todo"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
-		TODO: {Name: "todo hash list create export import", Help: "待办", Actions: ice.MergeAction(ice.Actions{
+		TODO: {Name: "todo hash list create export import", Help: "待办", Actions: ice.MergeActions(ice.Actions{
 			mdb.INPUTS: {Name: "inputs", Help: "补全", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmdy(mdb.INPUTS, m.PrefixKey(), "", mdb.HASH, arg)
 				m.Cmdy(TASK, mdb.INPUTS, arg)

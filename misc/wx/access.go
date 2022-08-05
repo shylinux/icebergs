@@ -6,10 +6,12 @@ import (
 	"time"
 
 	ice "shylinux.com/x/icebergs"
+	"shylinux.com/x/icebergs/base/gdb"
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/ssh"
 	"shylinux.com/x/icebergs/base/tcp"
 	"shylinux.com/x/icebergs/base/web"
+	"shylinux.com/x/icebergs/core/chat"
 	kit "shylinux.com/x/toolkits"
 )
 
@@ -57,9 +59,15 @@ const ACCESS = "access"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
-		ACCESS: {Name: "access appid auto config ticket tokens login", Help: "认证", Actions: ice.MergeAction(ice.Actions{
+		ACCESS: {Name: "access appid auto config ticket tokens login", Help: "认证", Actions: ice.MergeActions(ice.Actions{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
 				m.Cmd(web.SPIDE, mdb.CREATE, WX, m.Config(tcp.SERVER))
+				gdb.Watch(m, chat.HEADER_AGENT, m.PrefixKey())
+			}},
+			chat.HEADER_AGENT: {Hand: func(m *ice.Message, arg ...string) {
+				if strings.Index(m.Option(ice.MSG_USERUA), "MicroMessenger") > -1 {
+					_wx_config(m, m.Config(APPID))
+				}
 			}},
 			LOGIN: {Name: "login appid appmm token", Help: "登录", Hand: func(m *ice.Message, arg ...string) {
 				m.Config(APPID, m.Option(APPID))

@@ -12,9 +12,7 @@ const SCAN = "scan"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
-		SCAN: {Name: "scan hash auto scanQRCode scanQRCode0", Help: "扫码", Meta: kit.Dict(
-			ice.Display("scan.js"),
-		), Actions: ice.MergeAction(ice.Actions{
+		SCAN: {Name: "scan hash auto scanQRCode scanQRCode0", Help: "扫码", Meta: kit.Dict(ice.Display("")), Actions: ice.MergeActions(ice.Actions{
 			"scanQRCode0": {Name: "scan create", Help: "本机扫码"},
 			"scanQRCode":  {Name: "scan create", Help: "扫码"},
 			mdb.CREATE:    {Name: "create type=text name=hi text:textarea=hi", Help: "添加"},

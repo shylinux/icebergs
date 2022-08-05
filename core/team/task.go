@@ -57,7 +57,7 @@ const TASK = "task"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
-		TASK: {Name: "task zone id auto insert export import", Help: "任务", Actions: ice.MergeAction(ice.Actions{
+		TASK: {Name: "task zone id auto insert export import", Help: "任务", Actions: ice.MergeActions(ice.Actions{
 			mdb.INSERT: {Name: "insert zone type=once,step,week name text begin_time@date close_time@date", Help: "添加", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmdy(mdb.INSERT, m.Prefix(TASK), "", mdb.HASH, m.OptionSimple(mdb.ZONE))
 				m.Cmdy(mdb.INSERT, m.Prefix(TASK), "", mdb.ZONE, m.Option(mdb.ZONE),

@@ -68,7 +68,7 @@ const NODE = "node"
 
 func init() {
 	Index.Register(&ice.Context{Name: JS, Help: "前端", Commands: ice.Commands{
-		JS: {Name: "js", Help: "前端", Actions: ice.MergeAction(ice.Actions{
+		JS: {Name: "js", Help: "前端", Actions: ice.MergeActions(ice.Actions{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
 				for _, cmd := range []string{mdb.SEARCH, mdb.ENGINE, mdb.RENDER, mdb.PLUGIN} {
 					m.Cmd(cmd, mdb.CREATE, JSON, m.PrefixKey())

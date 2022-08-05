@@ -16,7 +16,7 @@ func SearchAction() ice.Actions {
 	}
 }
 func HashSearchAction(arg ...Any) ice.Actions {
-	return ice.MergeAction(HashAction(arg...), SearchAction())
+	return ice.MergeActions(HashAction(arg...), SearchAction())
 }
 func HashSelectSearch(m *ice.Message, args []string, keys ...string) *ice.Message {
 	if len(keys) == 0 {

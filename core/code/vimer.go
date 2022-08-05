@@ -10,6 +10,7 @@ import (
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/nfs"
 	"shylinux.com/x/icebergs/base/web"
+	"shylinux.com/x/icebergs/core/chat"
 	kit "shylinux.com/x/toolkits"
 )
 
@@ -195,7 +196,7 @@ func init() {
 
 			mdb.SEARCH: {Name: "search type name text", Help: "搜索", Hand: func(m *ice.Message, arg ...string) {
 				if arg[0] == mdb.FOREACH && arg[1] == "" {
-					m.PushSearch(mdb.TYPE, "go", mdb.NAME, "src/main.go", mdb.TEXT, web.MergeCmd(m, ""))
+					m.PushSearch(mdb.TYPE, "go", mdb.NAME, "src/main.go", mdb.TEXT, chat.MergeCmd(m, ""))
 				}
 			}},
 			mdb.INPUTS: {Name: "inputs", Help: "补全", Hand: func(m *ice.Message, arg ...string) {

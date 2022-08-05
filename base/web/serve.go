@@ -300,7 +300,7 @@ func _serve_login(msg *ice.Message, key string, cmds []string, w http.ResponseWr
 
 	if _, ok := msg.Target().Commands[WEB_LOGIN]; ok { // 单点认证
 		msg.Target().Cmd(msg, WEB_LOGIN, kit.Simple(key, cmds)...)
-		return cmds, msg.Result(0) != ice.ErrWarn && msg.Result(0) != ice.FALSE
+		return cmds, !msg.IsErr() && msg.Result(0) != ice.FALSE
 	}
 
 	if aaa.Right(msg, key, cmds) {
@@ -329,7 +329,7 @@ const SERVE = "serve"
 func init() {
 	Index.Merge(&ice.Context{Configs: ice.Configs{
 		SERVE: {Name: SERVE, Help: "服务器", Value: kit.Data(
-			mdb.SHORT, mdb.NAME, mdb.FIELD, "time,status,name,port,dev",
+			mdb.SHORT, mdb.NAME, mdb.FIELD, "time,status,name,proto,host,port,dev",
 			DOMAIN, "", tcp.LOCALHOST, ice.TRUE, LOGHEADERS, ice.FALSE,
 			nfs.PATH, kit.Dict(ice.PS, ice.USR_VOLCANOS),
 			ice.VOLCANOS, kit.Dict(nfs.PATH, ice.USR_VOLCANOS, INDEX, "page/index.html",
@@ -340,7 +340,7 @@ func init() {
 			),
 		)},
 	}, Commands: ice.Commands{
-		SERVE: {Name: "serve name auto start spide", Help: "服务器", Actions: ice.MergeAction(ice.Actions{
+		SERVE: {Name: "serve name auto start spide", Help: "服务器", Actions: ice.MergeActions(ice.Actions{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
 				cli.NodeInfo(m, WORKER, ice.Info.PathName)
 				for _, p := range []string{LOGIN, SHARE, SPACE, ice.VOLCANOS, ice.INTSHELL, ice.PUBLISH, ice.REQUIRE, ice.HELP, ice.CMD} {
@@ -360,13 +360,13 @@ func init() {
 			cli.START: {Name: "start dev proto=http host port=9020 nodename password username userrole staffname", Help: "启动", Hand: func(m *ice.Message, arg ...string) {
 				_serve_start(m)
 			}},
-		}, mdb.HashAction(mdb.SHORT, mdb.NAME, mdb.FIELD, "time,status,name,proto,host,port,dev"))},
+		}, mdb.HashAction())},
 
 		PP(ice.INTSHELL): {Name: "/intshell/", Help: "命令行", Hand: func(m *ice.Message, arg ...string) {
-			RenderIndex(m, SERVE, ice.INTSHELL, arg...)
+			RenderIndex(m, ice.INTSHELL, arg...)
 		}},
 		PP(ice.VOLCANOS): {Name: "/volcanos/", Help: "浏览器", Hand: func(m *ice.Message, arg ...string) {
-			RenderIndex(m, SERVE, ice.VOLCANOS, arg...)
+			RenderIndex(m, ice.VOLCANOS, arg...)
 		}},
 		PP(ice.PUBLISH): {Name: "/publish/", Help: "定制化", Hand: func(m *ice.Message, arg ...string) {
 			_share_local(aaa.UserRoot(m), ice.USR_PUBLISH, path.Join(arg...))
@@ -374,10 +374,10 @@ func init() {
 		PP(ice.REQUIRE): {Name: "/require/shylinux.com/x/volcanos/proto.js", Help: "代码库", Hand: func(m *ice.Message, arg ...string) {
 			_share_repos(m, path.Join(arg[0], arg[1], arg[2]), arg[3:]...)
 		}},
-		PP(ice.REQUIRE, ice.NODE_MODULES): {Name: "/require/node_modules/", Help: "依赖库", Hand: func(m *ice.Message, arg ...string) {
-			p := path.Join(ice.USR_VOLCANOS, ice.NODE_MODULES, path.Join(arg...))
+		PP(ice.REQUIRE, ice.LIB, ice.NODE_MODULES): {Name: "/require/lib/node_modules/", Help: "依赖库", Hand: func(m *ice.Message, arg ...string) {
+			p := path.Join(ice.USR_VOLCANOS, ice.LIB, ice.NODE_MODULES, path.Join(arg...))
 			if !nfs.ExistsFile(m, p) {
-				m.Cmd(cli.SYSTEM, "npm", "install", arg[0], kit.Dict(cli.CMD_DIR, ice.USR_VOLCANOS))
+				m.Cmd(cli.SYSTEM, "npm", "install", arg[0], kit.Dict(cli.CMD_DIR, path.Join(ice.USR_VOLCANOS, ice.LIB)))
 			}
 			m.RenderDownload(p)
 		}},

@@ -11,7 +11,7 @@ const VIMRC = "vimrc"
 
 func init() {
 	Index.Merge(&ice.Context{Commands: ice.Commands{
-		VIMRC: {Name: "vimrc", Help: "收藏夹", Actions: ice.MergeAction(ice.Actions{
+		VIMRC: {Name: "vimrc", Help: "收藏夹", Actions: ice.MergeActions(ice.Actions{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
 				m.Cmd(mdb.PLUGIN, mdb.CREATE, VIMRC, m.PrefixKey())
 				m.Cmd(mdb.RENDER, mdb.CREATE, VIMRC, m.PrefixKey())

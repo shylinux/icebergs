@@ -54,7 +54,7 @@ const TOTP = "totp"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
-		TOTP: {Name: "totp name auto create", Help: "令牌", Actions: ice.MergeAction(ice.Actions{
+		TOTP: {Name: "totp name auto create", Help: "令牌", Actions: ice.MergeActions(ice.Actions{
 			mdb.CREATE: {Name: "create name=hi secret period=30 number=6", Help: "添加", Hand: func(m *ice.Message, arg ...string) {
 				if m.Option(SECRET) == "" { // 创建密钥
 					m.Option(SECRET, _totp_gen(kit.Int64(m.Option(PERIOD))))

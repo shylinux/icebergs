@@ -30,7 +30,7 @@ const TIMER = "timer"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
-		TIMER: {Name: "timer hash auto create prunes", Help: "定时器", Actions: ice.MergeAction(ice.Actions{
+		TIMER: {Name: "timer hash auto create prunes", Help: "定时器", Actions: ice.MergeActions(ice.Actions{
 			mdb.CREATE: {Name: "create name=hi delay=10ms interval=10s count=3 cmd=runtime", Help: "创建"},
 			mdb.PRUNES: {Name: "prunes", Help: "清理", Hand: func(m *ice.Message, arg ...string) {
 				mdb.HashPrunesValue(m, mdb.COUNT, "0")

@@ -26,7 +26,7 @@ const CONTEXT = "context"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
-		CONTEXT: {Name: "context name=web action=context,command,config key auto spide", Help: "模块", Actions: ice.MergeAction(ice.Actions{
+		CONTEXT: {Name: "context name=web action=context,command,config key auto spide", Help: "模块", Actions: ice.MergeActions(ice.Actions{
 			"spide": {Name: "spide", Help: "架构图", Hand: func(m *ice.Message, arg ...string) {
 				if len(arg) == 0 || arg[1] == CONTEXT { // 模块列表
 					m.Cmdy(CONTEXT, kit.Select(ice.ICE, arg, 0), CONTEXT)

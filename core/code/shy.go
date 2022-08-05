@@ -35,7 +35,7 @@ const SHY = "shy"
 
 func init() {
 	Index.Register(&ice.Context{Name: SHY, Help: "脚本", Commands: ice.Commands{
-		SHY: {Name: "shy path auto", Help: "脚本", Actions: ice.MergeAction(ice.Actions{
+		SHY: {Name: "shy path auto", Help: "脚本", Actions: ice.MergeActions(ice.Actions{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
 				for _, cmd := range []string{mdb.SEARCH, mdb.ENGINE, mdb.RENDER, mdb.PLUGIN} {
 					m.Cmd(cmd, mdb.CREATE, SHY, m.PrefixKey())

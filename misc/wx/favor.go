@@ -16,7 +16,7 @@ func init() {
 			mdb.LINK, "https://open.weixin.qq.com/qr/code",
 		)},
 	}, Commands: ice.Commands{
-		FAVOR: {Name: "favor text:text auto create", Help: "收藏", Actions: ice.MergeAction(ice.Actions{
+		FAVOR: {Name: "favor text:text auto create", Help: "收藏", Actions: ice.MergeActions(ice.Actions{
 			mdb.CREATE: {Name: "create type name text", Help: "添加"},
 		}, mdb.HashAction()), Hand: func(m *ice.Message, arg ...string) {
 			mdb.HashSelect(m, arg...).Tables(func(value ice.Maps) {

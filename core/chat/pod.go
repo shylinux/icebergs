@@ -17,32 +17,33 @@ const POD = "pod"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
-		"/pod/": {Name: "/pod/", Help: "节点", Actions: ctx.CmdAction(), Hand: func(m *ice.Message, arg ...string) {
-			if strings.HasPrefix(m.R.Header.Get("User-Agent"), "curl") || strings.HasPrefix(m.R.Header.Get("User-Agent"), "Wget") {
-				m.Option(ice.MSG_USERNAME, "root")
-				m.Option(ice.MSG_USERROLE, "root")
+		POD: {Name: "pod", Help: "节点", Actions: ice.MergeActions(ice.Actions{
+			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) { m.Cmd(aaa.ROLE, aaa.WHITE, POD) }},
+		}, ctx.CmdAction(), web.ApiAction("/pod/")), Hand: func(m *ice.Message, arg ...string) {
+			if web.OptionAgentIs(m, "curl", "Wget") {
+				aaa.UserRoot(m)
 				m.Option(ice.POD, kit.Select("", arg, 0))
-				m.Cmdy(web.SHARE_LOCAL, "bin/ice.bin")
-				return // 下载文件
+				m.Cmdy(web.SHARE_LOCAL, ice.BIN_ICE_BIN)
+				return // 下载程序
 			}
 
-			if len(arg) == 0 || kit.Select("", arg, 0) == "" { // 节点列表
-				web.RenderCmd(m, web.ROUTE)
+			if len(arg) == 0 || kit.Select("", arg, 0) == "" {
+				web.RenderCmd(m, web.ROUTE) // 节点列表
 
-			} else if len(arg) == 1 { // 节点首页
+			} else if len(arg) == 1 {
 				if m.Cmd(web.SPACE, arg[0]).Length() == 0 && !strings.Contains(arg[0], ice.PT) {
-					m.Cmd(web.DREAM, cli.START, mdb.NAME, arg[0])
+					m.Cmd(web.DREAM, cli.START, mdb.NAME, arg[0]) // 启动节点
 				}
 				aaa.UserRoot(m)
-				if web.RenderWebsite(m, arg[0], "index.iml", "Header", "", "River", "", "Footer", ""); m.Result() == "" {
-					web.RenderIndex(m, web.SERVE, ice.VOLCANOS)
+				if web.RenderWebsite(m, arg[0], ice.INDEX_IML, "Header", "", "River", "", "Footer", ""); m.Result() == "" {
+					web.RenderIndex(m, ice.VOLCANOS) // 节点首页
 				}
 
-			} else if arg[1] == WEBSITE { // 节点网页
-				web.RenderWebsite(m, arg[0], path.Join(arg[2:]...))
+			} else if arg[1] == WEBSITE {
+				web.RenderWebsite(m, arg[0], path.Join(arg[2:]...)) // 节点网页
 
-			} else if arg[1] == "cmd" { // 节点命令
-				m.Cmdy(web.SPACE, arg[0], m.Prefix(CMD), path.Join(arg[2:]...))
+			} else if arg[1] == CMD {
+				m.Cmdy(web.SPACE, arg[0], m.Prefix(CMD), path.Join(arg[2:]...)) // 节点命令
 			} else {
 				m.Cmdy(web.SPACE, m.Option(ice.MSG_USERPOD), "web.chat."+strings.TrimPrefix(path.Join(arg[1:]...), "chat/"))
 				// m.Cmdy(web.SPACE, m.Option(ice.MSG_USERPOD), "web.chat."+ice.PS+path.Join(arg[1:]...))

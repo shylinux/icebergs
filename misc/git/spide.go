@@ -61,7 +61,7 @@ const SPIDE = "spide"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
-		SPIDE: {Name: "spide repos auto", Help: "构架图", Actions: ice.MergeAction(ice.Actions{
+		SPIDE: {Name: "spide repos auto", Help: "构架图", Actions: ice.MergeActions(ice.Actions{
 			code.INNER: {Name: "web.code.inner"},
 			"depend": {Name: "depend path=icebergs/base", Help: "依赖", Hand: func(m *ice.Message, arg ...string) {
 				keys := map[string]bool{}

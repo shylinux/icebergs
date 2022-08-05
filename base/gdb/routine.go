@@ -11,11 +11,11 @@ const ROUTINE = "routine"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
-		ROUTINE: {Name: "routine hash auto prunes", Help: "协程池", Actions: ice.MergeAction(ice.Actions{
+		ROUTINE: {Name: "routine hash auto prunes", Help: "协程池", Actions: ice.MergeActions(ice.Actions{
 			mdb.CREATE: {Name: "create name", Help: "创建", Hand: func(m *ice.Message, arg ...string) {
 				m.Go(func() {
 					cb := m.OptionCB("")
-					h := mdb.HashCreate(m, m.OptionSimple(mdb.NAME), mdb.STATUS, START, ice.CMD, logs.FileLine(cb, 100)).Result()
+					h := mdb.HashCreate(m, m.OptionSimple(mdb.NAME), mdb.STATUS, START, ice.CMD, logs.FileLine(cb, 100))
 					defer func() {
 						if e := recover(); e == nil {
 							mdb.HashModify(m, mdb.HASH, h, mdb.STATUS, STOP)

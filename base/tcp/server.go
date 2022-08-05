@@ -28,7 +28,7 @@ func (l Listener) Close() error {
 
 func _server_listen(m *ice.Message, arg ...string) {
 	l, e := net.Listen(TCP, m.Option(HOST)+":"+m.Option(PORT))
-	l = &Listener{m: m, h: mdb.HashCreate(m, arg, kit.Dict(mdb.TARGET, l), STATUS, kit.Select(ERROR, OPEN, e == nil), ERROR, kit.Format(e)).Result(), s: &Stat{}, Listener: l}
+	l = &Listener{m: m, h: mdb.HashCreate(m, arg, kit.Dict(mdb.TARGET, l), STATUS, kit.Select(ERROR, OPEN, e == nil), ERROR, kit.Format(e)), s: &Stat{}, Listener: l}
 	if e == nil {
 		defer l.Close()
 	}
@@ -62,7 +62,7 @@ const SERVER = "server"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
-		SERVER: {Name: "server hash auto prunes", Help: "服务器", Actions: ice.MergeAction(ice.Actions{
+		SERVER: {Name: "server hash auto prunes", Help: "服务器", Actions: ice.MergeActions(ice.Actions{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) { m.Conf("", mdb.HASH, "") }},
 			ice.CTX_EXIT: {Hand: func(m *ice.Message, arg ...string) { mdb.HashSelectClose(m) }},
 			LISTEN: {Name: "listen type name port=9030 host=", Help: "监听", Hand: func(m *ice.Message, arg ...string) {

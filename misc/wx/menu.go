@@ -45,7 +45,7 @@ const MENU = "menu"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
-		MENU: {Name: "menu zone id auto insert", Help: "菜单", Actions: ice.MergeAction(ice.Actions{
+		MENU: {Name: "menu zone id auto insert", Help: "菜单", Actions: ice.MergeActions(ice.Actions{
 			mdb.INSERT: {Name: "insert zone=home title=hi refer=hello image", Help: "添加"},
 		}, mdb.ZoneAction(mdb.SHORT, mdb.ZONE, mdb.FIELD, "time,id,title,refer,image")), Hand: func(m *ice.Message, arg ...string) {
 			if mdb.ZoneSelect(m, arg...); len(arg) > 0 {

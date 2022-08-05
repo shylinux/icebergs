@@ -1,27 +1,33 @@
 chapter "源码"
 
+code.go
+code.shy
+
+install.go
 webpack.go
 binpack.go
 autogen.go
 compile.go
 publish.go
 upgrade.go
-install.go
 
-favor.go
-inner.go
+xterm.shy
+xterm.go
 vimer.go
+inner.go
+favor.go
 bench.go
 pprof.go
-case.go
+oauth.go
 
 c.go
 sh.go
+shy.go
 go.go
 js.go
-shy.go
+py.go
+zml.go
 
-code.go
-code.shy
-sess.go
 template.go
+case.go
+

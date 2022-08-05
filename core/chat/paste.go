@@ -11,7 +11,7 @@ const PASTE = "paste"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
-		PASTE: {Name: "paste hash auto getClipboardData", Help: "粘贴", Actions: ice.MergeAction(ice.Actions{
+		PASTE: {Name: "paste hash auto getClipboardData", Help: "粘贴", Actions: ice.MergeActions(ice.Actions{
 			"getClipboardData": {Name: "getClipboardData", Help: "粘贴", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmdy(PASTE, mdb.CREATE, arg)
 			}},

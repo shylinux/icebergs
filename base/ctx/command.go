@@ -79,6 +79,7 @@ const (
 	STYLE   = "style"
 	DISPLAY = "display"
 	ACTION  = "action"
+	TRANS   = "trans"
 
 	CAN_PLUGIN = "can.plugin"
 )
@@ -117,6 +118,10 @@ func CmdAction(args ...ice.Any) ice.Actions {
 		ice.RUN: {Name: "run", Help: "执行", Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) > 3 && arg[1] == ACTION && arg[2] == CONFIG && arg[3] == "reset" {
 				m.Cmd(CONFIG, "reset", arg[0])
+				return
+			}
+			if len(arg) > 3 && arg[1] == ACTION && arg[2] == CONFIG && arg[3] == "select" {
+				m.Cmdy(CONFIG, arg[0])
 				return
 			}
 			if aaa.Right(m, arg) && !PodCmd(m, arg) {

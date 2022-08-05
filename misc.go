@@ -164,7 +164,7 @@ func (m *Message) _command(arg ...Any) *Message {
 				opts[k] = v
 			}
 		case Map:
-			for k, v := range val {
+			for k, v := range kit.KeyValue(nil, "", val) {
 				opts[k] = v
 			}
 		case Option:
@@ -249,8 +249,13 @@ func (c *Context) _command(m *Message, cmd *Command, key string, arg ...string) 
 	}
 
 	m._target = kit.FileLine(cmd.Hand, 3)
-	m.Log(LOG_CMDS, "%s.%s %d %v", c.Name, key, len(arg), arg,
-		logs.FileLineMeta(kit.Select(m._target, m._source, m.target.Name == MDB)))
+	if key == "select" {
+		m.Log(LOG_CMDS, "%s.%s %d %v %v", c.Name, key, len(arg), arg, m.Optionv(MSG_FIELDS),
+			logs.FileLineMeta(kit.Select(m._target, m._source, m.target.Name == MDB)))
+	} else {
+		m.Log(LOG_CMDS, "%s.%s %d %v", c.Name, key, len(arg), arg,
+			logs.FileLineMeta(kit.Select(m._target, m._source, m.target.Name == MDB)))
+	}
 
 	if cmd.Hand != nil {
 		cmd.Hand(m, arg...)
@@ -293,7 +298,7 @@ func (c *Context) _action(m *Message, cmd *Command, key string, sub string, h *A
 	h.Hand(m, arg...)
 	return m
 }
-func MergeAction(list ...Any) Actions {
+func MergeActions(list ...Any) Actions {
 	if len(list) == 0 {
 		return nil
 	}
@@ -318,7 +323,7 @@ func MergeAction(list ...Any) Actions {
 		case string:
 			base[CTX_INIT] = &Action{Hand: func(m *Message, arg ...string) {
 				m.Search(from, func(p *Context, s *Context, key string, cmd *Command) {
-					MergeAction(base, cmd.Actions)
+					MergeActions(base, cmd.Actions)
 					m.target.Merge(m.target)
 				})
 			}}

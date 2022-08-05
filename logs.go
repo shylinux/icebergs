@@ -35,7 +35,9 @@ func (m *Message) join(arg ...Any) (string, []Any) {
 }
 func (m *Message) log(level string, str string, arg ...Any) *Message {
 	_source := logs.FileLineMeta(logs.FileLine(3, 3))
-	Info.Log(m, m.FormatPrefix(), level, logs.Format(str, append(arg, _source)...)) // 日志回调
+	if Info.Log != nil {
+		Info.Log(m, m.FormatPrefix(), level, logs.Format(str, append(arg, _source)...)) // 日志回调
+	}
 
 	// 日志颜色
 	prefix, suffix := "", ""

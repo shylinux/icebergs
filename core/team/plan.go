@@ -7,6 +7,7 @@ import (
 	"shylinux.com/x/icebergs/base/ctx"
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/web"
+	"shylinux.com/x/icebergs/core/chat"
 	kit "shylinux.com/x/toolkits"
 )
 
@@ -70,7 +71,7 @@ func init() {
 	Index.MergeCommands(ice.Commands{
 		PLAN: {Name: "plan scale=week,day,week,month,year,long begin_time@date list", Help: "计划", Meta: kit.Dict(
 			ice.Display("/plugin/local/team/plan.js"),
-		), Actions: ice.MergeAction(ice.Actions{
+		), Actions: ice.MergeActions(ice.Actions{
 			mdb.INPUTS: {Name: "inputs", Help: "补全", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmdy(TODO, mdb.INPUTS, arg)
 			}},
@@ -79,7 +80,7 @@ func init() {
 			}},
 			mdb.SEARCH: {Name: "search", Help: "搜索", Hand: func(m *ice.Message, arg ...string) {
 				if arg[0] == mdb.FOREACH && arg[1] == "" {
-					m.PushSearch(mdb.TYPE, "plan", mdb.NAME, "", mdb.TEXT, web.MergeCmd(m, ""))
+					m.PushSearch(mdb.TYPE, "plan", mdb.NAME, "", mdb.TEXT, chat.MergeCmd(m, ""))
 				}
 			}},
 			ice.RUN: {Name: "run", Help: "执行", Hand: func(m *ice.Message, arg ...string) {

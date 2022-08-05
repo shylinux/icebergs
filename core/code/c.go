@@ -49,7 +49,7 @@ const C = "c"
 
 func init() {
 	Index.Register(&ice.Context{Name: C, Help: "系统", Commands: ice.Commands{
-		C: {Name: C, Help: "系统", Actions: ice.MergeAction(ice.Actions{
+		C: {Name: C, Help: "系统", Actions: ice.MergeActions(ice.Actions{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
 				for _, cmd := range []string{mdb.SEARCH, mdb.ENGINE, mdb.RENDER, mdb.PLUGIN} {
 					for _, k := range []string{H, C, CC} {
@@ -79,7 +79,7 @@ func init() {
 				// _go_grep(m, kit.Select(cli.MAIN, arg, 1), arg[2])
 			}},
 		}, PlugAction())},
-		MAN: {Name: MAN, Help: "手册", Actions: ice.MergeAction(ice.Actions{
+		MAN: {Name: MAN, Help: "手册", Actions: ice.MergeActions(ice.Actions{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
 				for _, cmd := range []string{mdb.SEARCH, mdb.RENDER, mdb.PLUGIN} {
 					for _, k := range []string{MAN1, MAN2, MAN3, MAN8} {

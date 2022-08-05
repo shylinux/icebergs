@@ -89,6 +89,11 @@ const ( // DIR
 	CSV  = "csv"
 	JSON = "json"
 
+	LIB    = "lib"
+	PAGE   = "page"
+	PANEL  = "panel"
+	PLUGIN = "plugin"
+
 	FAVICON   = "favicon.ico"
 	PROTO_JS  = "proto.js"
 	FRAME_JS  = "frame.js"

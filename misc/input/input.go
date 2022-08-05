@@ -71,7 +71,7 @@ func (i input) Save(m *ice.Message, arg ...string) {
 	if f, p, e := kit.Create(m.Option(nfs.FILE)); m.Assert(e) {
 		defer f.Close()
 		n := 0
-		m.Option(ice.CACHE_LIMIT, -2)
+		m.Option(mdb.CACHE_LIMIT, -2)
 		for _, lib := range kit.Split(m.Option(mdb.ZONE)) {
 			mdb.Richs(m.Message, m.PrefixKey(), "", lib, func(key string, value ice.Map) {
 				mdb.Grows(m.Message, m.PrefixKey(), kit.Keys(mdb.HASH, key), "", "", func(index int, value ice.Map) {

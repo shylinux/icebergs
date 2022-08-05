@@ -63,7 +63,7 @@ const ROUTE = "route"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
-		ROUTE: {Name: "route route ctx cmd auto invite spide", Help: "路由器", Actions: ice.Actions{
+		ROUTE: {Name: "route route index auto invite spide", Help: "路由器", Actions: ice.Actions{
 			aaa.INVITE: {Name: "invite", Help: "添加", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmdy(SPACE, m.Option(ROUTE), SPACE, aaa.INVITE, arg).ProcessInner()
 			}},
@@ -71,7 +71,7 @@ func init() {
 				m.Cmdy(SPACE, m.Option(ROUTE), DREAM, tcp.START, arg).ProcessInner()
 			}},
 			ctx.COMMAND: {Name: "command", Help: "命令", Hand: func(m *ice.Message, arg ...string) {
-				m.Cmdy(SPACE, m.Option(ROUTE), kit.Keys(m.Option(ice.CTX), m.Option(ice.CMD)), arg)
+				m.Cmdy(SPACE, m.Option(ROUTE), m.Option(ctx.INDEX), arg)
 			}},
 			ice.RUN: {Name: "run", Help: "执行", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmdy(SPACE, m.Option(ROUTE), arg)
@@ -99,19 +99,12 @@ func init() {
 				}
 
 			} else if len(arg) == 1 || arg[1] == "" { // 模块列表
-				m.Cmd(SPACE, arg[0], ctx.CONTEXT, ice.ICE).Tables(func(value ice.Maps) {
-					m.Push(ice.CTX, kit.Keys(value["ups"], value[mdb.NAME]))
-					m.Push("", value, kit.List(ice.CTX_STATUS, ice.CTX_STREAM, mdb.HELP))
-				})
-
-			} else if len(arg) == 2 || arg[2] == "" { // 命令列表
-				m.Cmd(SPACE, arg[0], ctx.CONTEXT, arg[1], ctx.COMMAND).Tables(func(value ice.Maps) {
-					m.Push(ice.CMD, value[mdb.KEY])
-					m.Push("", value, kit.List(mdb.NAME, mdb.HELP))
+				m.Cmd(SPACE, arg[0], ctx.COMMAND, mdb.SEARCH, ctx.COMMAND, ice.OptionFields(ctx.INDEX, mdb.NAME, mdb.HELP)).Table(func(index int, value ice.Maps, head []string) {
+					m.Push("", value, head)
 				})
 
 			} else { // 命令详情
-				m.Cmdy(SPACE, arg[0], ctx.CONTEXT, arg[1], ctx.COMMAND, arg[2])
+				m.Cmdy(SPACE, arg[0], ctx.COMMAND, arg[1])
 				m.ProcessField(ctx.ACTION, ctx.COMMAND)
 			}
 		}},

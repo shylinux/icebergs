@@ -12,10 +12,18 @@ func init() {
 }
 
 func RenderAction(args ...ice.Any) ice.Actions {
-	return ice.MergeAction(ice.Actions{
+	return ice.MergeActions(ice.Actions{
 		ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
+			if len(args) == 0 {
+				args = append(args, SHORT, TYPE, FIELD, "time,type,name,text")
+			}
 			if cs := m.Target().Configs; cs[m.CommandKey()] == nil {
-				cs[m.CommandKey()] = &ice.Config{Value: kit.Data(SHORT, TYPE)}
+				cs[m.CommandKey()] = &ice.Config{Value: kit.Data(args...)}
+			} else {
+				ls := kit.Simple(args)
+				for i := 0; i < len(ls); i += 2 {
+					m.Config(ls[i], ls[i+1])
+				}
 			}
 		}},
 		CREATE: {Name: "create type name text", Help: "创建", Hand: func(m *ice.Message, arg ...string) {

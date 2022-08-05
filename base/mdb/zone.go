@@ -215,6 +215,10 @@ func ZoneSelectPage(m *ice.Message, arg ...string) *ice.Message {
 	OptionPages(m, kit.Slice(arg, 2)...)
 	return ZoneSelect(m, arg...)
 }
+func ZoneSelects(m *ice.Message, arg ...string) *ice.Message {
+	m.OptionFields(m.Config(FIELD))
+	return ZoneSelect(m, arg...)
+}
 func ZoneSelectAll(m *ice.Message, arg ...string) *ice.Message {
 	m.Option(CACHE_LIMIT, "-1")
 	return ZoneSelect(m, arg...)

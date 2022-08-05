@@ -24,7 +24,7 @@ var Index = &ice.Context{Name: VIM, Help: "编辑器", Configs: ice.Configs{
 		nfs.SOURCE, "http://mirrors.tencent.com/macports/distfiles/vim/vim-8.2.2681.tar.gz",
 	)},
 }, Commands: ice.Commands{
-	VIM: {Name: "vim path auto order build download", Help: "编辑器", Actions: ice.MergeAction(ice.Actions{
+	VIM: {Name: "vim path auto order build download", Help: "编辑器", Actions: ice.MergeActions(ice.Actions{
 		cli.BUILD: {Name: "build", Help: "构建", Hand: func(m *ice.Message, arg ...string) {
 			m.Cmdy(code.INSTALL, cli.BUILD, _vim_pkg(m, m.Config(nfs.SOURCE)), "--enable-multibyte=yes",
 				"--enable-pythoninterp=yes", "--enable-luainterp=yes", "--enable-cscope=yes")

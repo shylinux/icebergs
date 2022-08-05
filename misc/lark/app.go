@@ -26,7 +26,7 @@ func init() {
 			tcp.SERVER, "https://open.feishu.cn/",
 		)},
 	}, Commands: ice.Commands{
-		APP: {Name: "app appid auto token login", Help: "应用", Actions: ice.MergeAction(ice.Actions{
+		APP: {Name: "app appid auto token login", Help: "应用", Actions: ice.MergeActions(ice.Actions{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
 				m.Cmd(web.SPIDE, mdb.CREATE, LARK, m.Config(tcp.SERVER))
 			}},

@@ -9,6 +9,6 @@ const PAPER = "paper"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
-		PAPER: {Name: "paper", Help: "问卷", Actions: ice.MergeAction(ice.Actions{}, mdb.ZoneAction(mdb.FIELD, "time,id,type,name,text"))},
+		PAPER: {Name: "paper", Help: "问卷", Actions: ice.MergeActions(ice.Actions{}, mdb.ZoneAction(mdb.FIELD, "time,id,type,name,text"))},
 	})
 }

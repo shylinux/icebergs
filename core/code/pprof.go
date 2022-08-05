@@ -25,7 +25,7 @@ const PPROF = "pprof"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
-		PPROF: {Name: "pprof zone id auto", Help: "性能分析", Actions: ice.MergeAction(ice.Actions{
+		PPROF: {Name: "pprof zone id auto", Help: "性能分析", Actions: ice.MergeActions(ice.Actions{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
 				web.AddRewrite(func(w http.ResponseWriter, r *http.Request) bool {
 					if p := r.URL.Path; strings.HasPrefix(p, "/debug") {
@@ -41,7 +41,7 @@ func init() {
 					m.Cmdy(nfs.DIR, ice.BIN, nfs.DIR_CLI_FIELDS).RenameAppend(nfs.PATH, BINNARY)
 				case SERVICE:
 					m.Cmd(web.SPIDE).Tables(func(value ice.Maps) {
-						m.Push(SERVICE, kit.MergeURL2(value["client.url"], "/debug/pprof/profile"))
+						m.Push(SERVICE, kit.MergeURL2(value[web.CLIENT_URL], "/debug/pprof/profile"))
 					})
 				}
 			}},
@@ -52,11 +52,11 @@ func init() {
 				cmd := kit.Simple(m.Configv(PPROF), "-text", m.Option(BINNARY), msg.Append(nfs.FILE))
 				m.Option(mdb.TEXT, strings.Join(kit.Slice(strings.Split(m.Cmdx(cli.SYSTEM, cmd), ice.NL), 0, 20), ice.NL))
 				m.Option(nfs.FILE, msg.Append(nfs.FILE))
-				m.Cmd(mdb.INSERT, PPROF, "", m.OptionSimple("zone,text,file"))
+				mdb.ZoneInsert(m, m.OptionSimple("zone,text,file"))
 				m.Echo(m.Option(mdb.TEXT)).ProcessInner()
 			}},
 			web.SERVE: {Name: "serve", Help: "展示", Hand: func(m *ice.Message, arg ...string) {
-				u := kit.ParseURL(m.Option(ice.MSG_USERWEB))
+				u := web.OptionUserWeb(m)
 				p := u.Hostname() + ":" + m.Cmdx(tcp.PORT, aaa.RIGHT)
 				m.Cmd(cli.DAEMON, m.Configv(PPROF), "-http="+p, m.Option(BINNARY), m.Option(nfs.FILE))
 				m.Echo("http://%s/ui/top", p).ProcessInner()

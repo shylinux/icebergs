@@ -100,7 +100,7 @@ const INNER = "inner"
 
 func init() {
 	Index.Merge(&ice.Context{Commands: ice.Commands{
-		INNER: {Name: "inner path=src/@key file=main.go line=1 auto", Help: "源代码", Meta: kit.Dict(ice.DisplayLocal("")), Actions: ice.MergeAction(ice.Actions{
+		INNER: {Name: "inner path=src/@key file=main.go line=1 auto", Help: "源代码", Meta: kit.Dict(ice.DisplayLocal("")), Actions: ice.MergeActions(ice.Actions{
 			mdb.PLUGIN: {Name: "plugin", Help: "插件", Hand: func(m *ice.Message, arg ...string) {
 				if m.Cmdy(mdb.PLUGIN, arg); m.Result() == "" {
 					m.Echo(kit.Select("{}", m.Config(kit.Keys(PLUG, arg[0]))))

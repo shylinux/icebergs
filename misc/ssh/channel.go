@@ -68,7 +68,7 @@ const CHANNEL = "channel"
 
 func init() {
 	psh.Index.MergeCommands(ice.Commands{
-		CHANNEL: {Name: "channel hash id auto", Help: "通道", Actions: ice.MergeAction(ice.Actions{
+		CHANNEL: {Name: "channel hash id auto", Help: "通道", Actions: ice.MergeActions(ice.Actions{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
 				m.Richs(CHANNEL, "", mdb.FOREACH, func(key string, value ice.Map) {
 					kit.Value(value, kit.Keym(mdb.STATUS), tcp.CLOSE)

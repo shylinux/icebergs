@@ -115,7 +115,11 @@ func (c *Context) Register(s *Context, x Server, n ...string) *Context {
 	return s
 }
 func (c *Context) MergeCommands(Commands Commands) *Context {
-	return c.Merge(&Context{Commands: Commands})
+	configs := Configs{}
+	for k, _ := range Commands {
+		configs[k] = &Config{Value: kit.Data()}
+	}
+	return c.Merge(&Context{Commands: Commands, Configs: configs})
 }
 func (c *Context) Merge(s *Context) *Context {
 	if c.Commands == nil {
@@ -174,6 +178,11 @@ func (c *Context) Merge(s *Context) *Context {
 				case CTX_EXIT:
 					merge(p, false, key, cmd, func(m *Message, arg ...string) { h(m, arg...) })
 				}
+			}
+			if strings.HasPrefix(k, PS) {
+				k = kit.Select(k, PS+key, k == PS)
+				c.Commands[k] = &Command{Name: k, Help: cmd.Help, Hand: func(m *Message, arg ...string) { m.Cmdy(key, arg) }}
+				continue
 			}
 
 			if s != c {
@@ -487,6 +496,12 @@ func (m *Message) Search(key string, cb Any) *Message {
 	return m
 }
 
+func (m *Message) Commands(key string) *Command {
+	return m.Target().Commands[key]
+}
+func (m *Message) Actions(key string) *Action {
+	return m._cmd.Actions[key]
+}
 func (m *Message) CmdAppend(arg ...string) string {
 	field := kit.Slice(arg, -1)[0]
 	return m._command(kit.Slice(arg, 0, -1), OptionFields(field)).Append(field)

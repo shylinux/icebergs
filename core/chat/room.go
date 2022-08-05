@@ -22,7 +22,7 @@ func init() {
 			mdb.SHORT, "space", mdb.FIELD, "time,hash,username,socket",
 		)},
 	}, Commands: ice.Commands{
-		ROOM: {Name: "room zone id auto", Help: "room", Actions: ice.MergeAction(ice.Actions{
+		ROOM: {Name: "room zone id auto", Help: "room", Actions: ice.MergeActions(ice.Actions{
 			mdb.CREATE: {Name: "create zone", Help: "创建", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmdy(mdb.INSERT, m.PrefixKey(), "", mdb.HASH, m.OptionSimple(mdb.ZONE))
 			}},
@@ -50,7 +50,7 @@ func init() {
 				m.Action(mdb.INSERT, JOIN)
 			}
 		}},
-		JOIN: {Name: "join space zone auto", Help: "join", Actions: ice.MergeAction(ice.Actions{
+		JOIN: {Name: "join space zone auto", Help: "join", Actions: ice.MergeActions(ice.Actions{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
 				// m.Watch(web.SPACE_START, m.PrefixKey())
 			}},

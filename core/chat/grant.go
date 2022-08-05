@@ -11,7 +11,7 @@ const GRANT = "grant"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
-		GRANT: {Name: "grant space id auto insert", Help: "授权", Actions: ice.MergeAction(ice.Actions{
+		GRANT: {Name: "grant space id auto insert", Help: "授权", Actions: ice.MergeActions(ice.Actions{
 			mdb.INPUTS: {Name: "inputs", Help: "补全", Hand: func(m *ice.Message, arg ...string) {
 				switch arg[0] {
 				case web.SPACE:

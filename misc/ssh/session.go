@@ -59,7 +59,7 @@ const SESSION = "session"
 
 func init() {
 	psh.Index.MergeCommands(ice.Commands{
-		SESSION: {Name: "session name id auto", Help: "会话", Actions: ice.MergeAction(ice.Actions{
+		SESSION: {Name: "session name id auto", Help: "会话", Actions: ice.MergeActions(ice.Actions{
 			mdb.REPEAT: {Name: "repeat", Help: "执行", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmdy(SESSION, ctx.ACTION, ctx.COMMAND, CMD, m.Option(mdb.TEXT))
 			}},

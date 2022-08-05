@@ -17,7 +17,7 @@ func init() {
 	Index.Merge(&ice.Context{Configs: ice.Configs{
 		DRAW: {Name: DRAW, Help: "思维导图", Value: kit.Data(lex.REGEXP, ".*\\.svg")},
 	}, Commands: ice.Commands{
-		DRAW: {Name: "draw path=src/main.svg pid refresh:button=auto save edit actions", Help: "思维导图", Meta: kit.Dict(ice.DisplayLocal("")), Actions: ice.MergeAction(ice.Actions{
+		DRAW: {Name: "draw path=src/main.svg pid refresh:button=auto save edit actions", Help: "思维导图", Meta: kit.Dict(ice.DisplayLocal("")), Actions: ice.MergeActions(ice.Actions{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
 				m.Cmd(mdb.RENDER, mdb.CREATE, mdb.TYPE, nfs.SVG, mdb.NAME, m.PrefixKey())
 			}},

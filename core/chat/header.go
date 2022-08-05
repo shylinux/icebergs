@@ -1,27 +1,20 @@
 package chat
 
 import (
-	"strings"
-
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/aaa"
 	"shylinux.com/x/icebergs/base/cli"
 	"shylinux.com/x/icebergs/base/ctx"
+	"shylinux.com/x/icebergs/base/gdb"
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/tcp"
 	"shylinux.com/x/icebergs/base/web"
-	"shylinux.com/x/icebergs/core/code"
 	kit "shylinux.com/x/toolkits"
 )
 
-func _header_agent(m *ice.Message, arg ...string) {
-	if strings.Index(m.Option(ice.MSG_USERUA), "MicroMessenger") > -1 {
-		m.Cmdy("web.chat.wx.access", "config")
-	}
-}
 func _header_check(m *ice.Message, arg ...string) bool {
 	if m.Option(web.SHARE) != "" {
-		m.Cmd(web.SHARE, m.Option(web.SHARE), ice.OptionFields("")).Tables(func(value ice.Maps) {
+		m.Cmd(web.SHARE, m.Option(web.SHARE), ice.OptionFields(""), func(value ice.Maps) {
 			switch value[mdb.TYPE] {
 			case web.FIELD, web.STORM:
 				m.Option(ice.MSG_USERNAME, value[aaa.USERNAME])
@@ -33,10 +26,10 @@ func _header_check(m *ice.Message, arg ...string) bool {
 		return true
 	}
 
+	m.Option(web.SSO, m.Config(web.SSO))
 	m.Option(web.LOGIN, m.Config(web.LOGIN))
-	m.Option(web.SSO, m.Conf(web.SERVE, kit.Keym(web.SSO)))
-	if m.Option("login.dev", m.Cmd(web.SPACE, ice.DEV).Append(mdb.TEXT)) == "" {
-		m.Option("login.dev", m.Cmd(web.SPACE, ice.SHY).Append(mdb.TEXT))
+	if m.Option("login.dev", m.CmdAppend(web.SPACE, ice.DEV, mdb.TEXT)) == "" {
+		m.Option("login.dev", m.CmdAppend(web.SPACE, ice.SHY, mdb.TEXT))
 	}
 	return false
 }
@@ -46,63 +39,48 @@ func _header_share(m *ice.Message, arg ...string) {
 	} else {
 		m.Option(mdb.LINK, tcp.ReplaceLocalhost(m, m.Option(mdb.LINK)))
 	}
-
 	m.Option(mdb.LINK, kit.MergeURL(m.Option(mdb.LINK), RIVER, "", STORM, ""))
 	m.PushQRCode(mdb.TEXT, m.Option(mdb.LINK))
 	m.Push(mdb.NAME, m.Option(mdb.LINK))
 }
 func _header_users(m *ice.Message, key string, arg ...string) {
 	m.Option(aaa.USERNAME, m.Option(ice.MSG_USERNAME))
-	m.Cmdy(aaa.USER, ctx.ACTION, mdb.MODIFY, key, m.Option(key, arg[0]))
+	m.Cmdy(aaa.USER, mdb.MODIFY, key, m.Option(key, arg[0]))
 }
 
 const (
 	TITLE = "title"
 	MENUS = "menus"
 	TRANS = "trans"
-	AGENT = "agent"
-	CHECK = "check"
-	SHARE = "share"
+
+	HEADER_AGENT = "header.agent"
 )
 const HEADER = "header"
 
 func init() {
-	Index.Merge(&ice.Context{Configs: ice.Configs{
-		HEADER: {Name: HEADER, Help: "标题栏", Value: kit.Data(aaa.LOGIN, kit.List("登录", "扫码"))},
-	}, Commands: ice.Commands{
+	Index.MergeCommands(ice.Commands{
 		web.WEB_LOGIN: {Hand: func(m *ice.Message, arg ...string) {
 			switch arg[0] {
-			case "/header":
-				if kit.Select("", arg, 1) == "" {
+			case web.P(HEADER):
+				switch kit.Select("", arg, 1) {
+				case "", aaa.LOGIN:
 					return // 免登录
 				}
-				if kit.Select("", arg, 1) == aaa.LOGIN {
+			default:
+				if aaa.Right(m, arg) {
 					return // 免登录
 				}
-			case "/pod/", "/cmd/", "/topic/":
-				return // 免登录
-			case "/sso":
-				return // 免登录
 			}
 			m.Warn(m.Option(ice.MSG_USERNAME) == "", ice.ErrNotLogin, arg)
 		}},
-		web.P(HEADER): {Name: "/header", Help: "标题栏", Actions: ice.Actions{
-			AGENT: {Name: "agent", Help: "宿主应用", Hand: func(m *ice.Message, arg ...string) {
-				_header_agent(m, arg...)
-			}},
-			CHECK: {Name: "check", Help: "登录检查", Hand: func(m *ice.Message, arg ...string) {
-				_header_check(m, arg...)
-			}},
-			SHARE: {Name: "share type", Help: "共享", Hand: func(m *ice.Message, arg ...string) {
-				_header_share(m, arg...)
-			}},
+		HEADER: {Name: "header", Help: "标题栏", Actions: ice.MergeActions(ice.Actions{
 			aaa.LOGIN: {Name: "login", Help: "密码登录", Hand: func(m *ice.Message, arg ...string) {
 				if aaa.UserLogin(m, arg[0], arg[1]) {
 					web.RenderCookie(m, aaa.SessCreate(m, arg[0]))
 				}
 			}},
 			aaa.LOGOUT: {Name: "logout", Help: "退出登录", Hand: func(m *ice.Message, arg ...string) {
-				m.Cmd(aaa.SESS, mdb.REMOVE, kit.Dict(mdb.HASH, m.Option(ice.MSG_SESSID)))
+				aaa.UserLogout(m)
 			}},
 			aaa.PASSWORD: {Name: "password", Help: "修改密码", Hand: func(m *ice.Message, arg ...string) {
 				_header_users(m, m.ActionKey(), arg...)
@@ -120,16 +98,18 @@ func init() {
 				_header_users(m, m.ActionKey(), arg...)
 			}},
 			ctx.CONFIG: {Name: "config scope", Help: "拉取配置", Hand: func(m *ice.Message, arg ...string) {
-				m.Cmdy(web.SPACE, m.Option(ice.MSG_USERPOD), m.Prefix("oauth.oauth"), CHECK, arg)
+				m.Cmdy(web.SPACE, m.Option(ice.MSG_USERPOD), m.Prefix("oauth.oauth"), "check", arg)
 			}},
-			code.WEBPACK: {Name: "webpack", Help: "打包页面", Hand: func(m *ice.Message, arg ...string) {
-				m.Cmdy(code.WEBPACK, cli.BUILD, m.OptionSimple(mdb.NAME))
+			"webpack": {Name: "webpack", Help: "打包页面", Hand: func(m *ice.Message, arg ...string) {
+				m.Cmdy("webpack", cli.BUILD, m.OptionSimple(mdb.NAME))
 			}},
-		}, Hand: func(m *ice.Message, arg ...string) {
+			web.SHARE: {Name: "share type", Help: "共享", Hand: func(m *ice.Message, arg ...string) {
+				_header_share(m, arg...)
+			}},
+		}, ctx.ConfAction(aaa.LOGIN, kit.List("登录", "扫码")), web.ApiAction()), Hand: func(m *ice.Message, arg ...string) {
 			if !_header_check(m, arg...) {
 				return
 			}
-			_header_agent(m, arg...)
 
 			msg := m.Cmd(aaa.USER, m.Option(ice.MSG_USERNAME))
 			for _, k := range []string{aaa.USERNICK, aaa.LANGUAGE} {
@@ -142,10 +122,10 @@ func init() {
 				m.Option(aaa.AVATAR, kit.Format("https://dayu.oa.com/avatars/%s/profile.jpg", m.R.Header.Get("Staffname")))
 			}
 
+			gdb.Event(m, HEADER_AGENT)
 			m.Option(TRANS, kit.Format(kit.Value(m.Target().Commands[web.P(m.CommandKey())].Meta, "_trans")))
 			m.Option(MENUS, m.Config(MENUS))
 			m.Echo(m.Config(TITLE))
-			// m.Cmdy(WEBSITE)
 		}},
-	}})
+	})
 }

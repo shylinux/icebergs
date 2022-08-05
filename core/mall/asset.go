@@ -68,7 +68,7 @@ func init() {
 	}, Commands: ice.Commands{
 		ASSET: {Name: "asset account id auto spend trans bonus", Help: "资产", Meta: kit.Dict(
 			"_trans", kit.Dict(ACCOUNT, "账户", AMOUNT, "金额", FROM, "转出", TO, "转入", "time", "时间", "name", "商家", "text", "备注"),
-		), Actions: ice.MergeAction(ice.Actions{
+		), Actions: ice.MergeActions(ice.Actions{
 			SPEND: {Name: "spend account name amount time@date text", Help: "支出", Hand: func(m *ice.Message, arg ...string) {
 				_sub_amount(m, arg)
 				_asset_insert(m, arg[1], kit.Simple(mdb.TYPE, "支出", arg[2:])...)

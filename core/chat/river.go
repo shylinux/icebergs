@@ -5,10 +5,10 @@ import (
 	"shylinux.com/x/icebergs/base/aaa"
 	"shylinux.com/x/icebergs/base/cli"
 	"shylinux.com/x/icebergs/base/ctx"
+	"shylinux.com/x/icebergs/base/gdb"
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/nfs"
 	"shylinux.com/x/icebergs/base/web"
-	"shylinux.com/x/icebergs/core/code"
 	kit "shylinux.com/x/toolkits"
 )
 
@@ -50,12 +50,14 @@ func _river_list(m *ice.Message) {
 	})
 }
 
+const (
+	RIVER_CREATE = "river.create"
+)
 const RIVER = "river"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
-		RIVER: {Name: "river hash auto create", Help: "群组", Actions: ice.MergeAction(ice.Actions{
-			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) { m.Config(nfs.TEMPLATE, _river_template) }},
+		RIVER: {Name: "river hash auto create", Help: "群组", Actions: ice.MergeActions(ice.Actions{
 			mdb.INPUTS: {Name: "inputs", Help: "补全", Hand: func(m *ice.Message, arg ...string) {
 				switch m.Option(ctx.ACTION) {
 				case cli.START, "创建空间":
@@ -71,38 +73,22 @@ func init() {
 				case aaa.USERNAME:
 					m.Cmdy(aaa.USER).Cut(aaa.USERNAME, aaa.USERNICK, aaa.USERZONE)
 				default:
-					m.Cmdy(mdb.INPUTS, RIVER, "", mdb.HASH, arg)
+					mdb.HashInputs(m, arg)
 				}
 			}},
 			mdb.CREATE: {Name: "create type=public,protected,private name=hi text=hello template=base", Help: "添加", Hand: func(m *ice.Message, arg ...string) {
-				h := m.Cmdx(mdb.INSERT, RIVER, "", mdb.HASH, arg)
-				m.Option(ice.MSG_RIVER, h)
-				m.Echo(h)
-
-				m.Conf(RIVER, kit.Keys(mdb.HASH, h, NODE, kit.Keym(mdb.SHORT)), mdb.NAME)
-				m.Conf(RIVER, kit.Keys(mdb.HASH, h, OCEAN, kit.Keym(mdb.SHORT)), aaa.USERNAME)
-				m.Cmd(OCEAN, mdb.INSERT, aaa.USERNAME, m.Option(ice.MSG_USERNAME))
-
-				kit.Fetch(m.Confv(RIVER, kit.Keym(nfs.TEMPLATE, kit.Select("base", m.Option(nfs.TEMPLATE)))), func(storm string, value ice.Any) {
-					h := m.Cmdx(STORM, mdb.CREATE, mdb.TYPE, PUBLIC, mdb.NAME, storm, mdb.TEXT, storm)
-
-					kit.Fetch(value, func(index int, value string) {
-						m.Search(value, func(p *ice.Context, s *ice.Context, key string, cmd *ice.Command) {
-							m.Cmd(STORM, mdb.INSERT, mdb.HASH, h, ice.CTX, s.Cap(ice.CTX_FOLLOW), ice.CMD, key, mdb.HELP, cmd.Help)
-						})
-					})
-				})
+				h := mdb.HashCreate(m, arg)
+				gdb.Event(m, RIVER_CREATE, RIVER, m.Option(ice.MSG_RIVER, h), arg)
+				m.Result(h)
 			}},
 			cli.START: {Name: "start name=hi repos template", Help: "创建空间", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmdy(web.Space(m, m.Option(ice.POD)), web.DREAM, cli.START, arg)
 			}},
 			aaa.INVITE: {Name: "invite", Help: "添加设备", Hand: func(m *ice.Message, arg ...string) {
-				m.Cmd(code.PUBLISH, mdb.CREATE, nfs.FILE, ice.BIN_ICE_BIN)
-				m.Cmdy(code.PUBLISH, ice.CONTEXTS)
+				m.Cmdy("publish", ice.CONTEXTS)
 			}},
-		}, mdb.HashAction(mdb.FIELD, "time,hash,type,name,text,template"))},
-		web.P(RIVER): {Name: "/river", Help: "群组", Hand: func(m *ice.Message, arg ...string) {
-			if m.Warn(m.Option(ice.MSG_USERNAME) == "", ice.ErrNotLogin, RIVER) {
+		}, mdb.HashAction(mdb.FIELD, "time,hash,type,name,text,template"), web.ApiAction()), Hand: func(m *ice.Message, arg ...string) {
+			if m.Warn(m.Option(ice.MSG_USERNAME) == "", ice.ErrNotLogin) {
 				m.RenderStatusUnauthorized()
 				return // 没有登录
 			}
@@ -121,49 +107,17 @@ func init() {
 				return // 没有授权
 			}
 
-			switch kit.Select("", arg, 1) {
-			case STORM, OCEAN, NODE:
+			if command := m.Commands(kit.Select("", arg, 1)); command != nil {
 				m.Option(ice.MSG_RIVER, arg[0])
 				m.Cmdy(arg[1], arg[2:])
 
-			case ctx.ACTION, aaa.INVITE:
+			} else if action := m.Actions(kit.Select("", arg, 1)); action != nil {
 				m.Option(ice.MSG_RIVER, arg[0])
-				m.Cmdy(RIVER, arg[1:])
+				m.Cmdy("", arg[1:])
 
-			default:
+			} else {
 				m.Cmdy(RIVER, arg)
 			}
 		}},
 	})
 }
-
-var _river_template = kit.Dict(
-	"base", kit.Dict(
-		"info", kit.List(
-			"web.chat.info",
-			"web.chat.ocean",
-			"web.chat.storm",
-			"web.chat.node",
-		),
-		"scan", kit.List(
-			"web.chat.scan",
-			"web.chat.paste",
-			"web.chat.files",
-			"web.chat.location",
-			"web.chat.meet.miss",
-			"web.wiki.feel",
-		),
-		"task", kit.List(
-			"web.team.task",
-			"web.team.plan",
-			"web.mall.asset",
-			"web.mall.salary",
-			"web.wiki.word",
-		),
-		"draw", kit.List(
-			"web.wiki.draw",
-			"web.wiki.data",
-			"web.wiki.word",
-		),
-	),
-)

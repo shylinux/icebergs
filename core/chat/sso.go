@@ -13,9 +13,14 @@ const SSO = "sso"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
-		"/sso": {Name: "/sso", Help: "登录", Hand: func(m *ice.Message, arg ...string) {
+		"/sso": {Name: "/sso", Help: "登录", Actions: ice.Actions{
+			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) { m.Cmd(aaa.ROLE, aaa.WHITE, SSO) }},
+		}, Hand: func(m *ice.Message, arg ...string) {
 			if m.Option(ice.MSG_USERNAME) == "" {
-				web.RenderIndex(m, web.SERVE, ice.VOLCANOS)
+				web.RenderIndex(m, ice.VOLCANOS)
+				return
+			}
+			if m.Warn(m.Option(cli.BACK) == "") {
 				return
 			}
 			sessid := m.Cmdx(web.SPACE, m.Option(web.SPACE), aaa.SESS, mdb.CREATE,
@@ -24,11 +29,6 @@ func init() {
 				aaa.USERNICK, m.Option(ice.MSG_USERNICK),
 			)
 			m.RenderRedirect(kit.MergeURL(m.Option(cli.BACK), ice.MSG_SESSID, sessid))
-
-			// m.Cmdy(GRANT, mdb.INSERT, web.SPACE, m.Option(web.SPACE),
-			// 	aaa.USERNAME, m.Option(ice.MSG_USERNAME), aaa.USERNICK, m.Option(ice.MSG_USERNICK))
-			// web.RenderCookie(m, sessid, web.CookieName(m.Option("back")))
-			// m.RenderRedirect(kit.MergeURL(m.Option("back")))
 		}},
 	})
 }

@@ -11,7 +11,7 @@ const ZSH = "zsh"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
-		ZSH: {Name: "zsh path auto order build download", Help: "命令行", Actions: ice.MergeAction(ice.Actions{
+		ZSH: {Name: "zsh path auto order build download", Help: "命令行", Actions: ice.MergeActions(ice.Actions{
 			cli.ORDER: {Name: "order", Help: "加载", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmdy(code.INSTALL, cli.ORDER, m.Config(nfs.SOURCE), "_install/bin")
 			}},

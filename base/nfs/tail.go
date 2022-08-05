@@ -37,7 +37,7 @@ const TAIL = "tail"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
-		TAIL: {Name: "tail name id auto page filter:text create", Help: "日志流", Actions: ice.MergeAction(ice.Actions{
+		TAIL: {Name: "tail name id auto page filter:text create", Help: "日志流", Actions: ice.MergeActions(ice.Actions{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
 				mdb.Richs(m, TAIL, "", mdb.FOREACH, func(key string, value ice.Map) {
 					value, _ = kit.GetMeta(value), m.Option(mdb.HASH, key)

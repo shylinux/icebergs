@@ -16,7 +16,7 @@ const CASE = "case"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
-		CASE: {Name: "case dev zone id auto", Help: "用例", Actions: ice.MergeAction(ice.Actions{
+		CASE: {Name: "case dev zone id auto", Help: "用例", Actions: ice.MergeActions(ice.Actions{
 			mdb.CREATE: {Name: "create name address", Help: "创建", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmdy(web.SPIDE, mdb.CREATE, arg)
 			}},

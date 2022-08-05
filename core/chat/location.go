@@ -37,7 +37,7 @@ func init() {
 	}
 
 	Index.MergeCommands(ice.Commands{
-		LOCATION: {Name: "location hash auto", Help: "地理位置", Actions: ice.MergeAction(ice.Actions{
+		LOCATION: {Name: "location hash auto", Help: "地理位置", Actions: ice.MergeActions(ice.Actions{
 			"explore": {Name: "explore", Help: "周边", Hand: func(m *ice.Message, arg ...string) {
 				m.Echo(get(m, "place/v1/explore", m.OptionSimple("boundary,page_index")))
 			}},

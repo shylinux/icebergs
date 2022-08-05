@@ -2,17 +2,18 @@ package code
 
 import (
 	"encoding/base64"
+	"io"
 	"os"
 	"os/exec"
 	"path"
 	"strings"
-	"time"
 
 	pty "shylinux.com/x/creackpty"
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/cli"
 	"shylinux.com/x/icebergs/base/ctx"
 	"shylinux.com/x/icebergs/base/mdb"
+	"shylinux.com/x/icebergs/base/nfs"
 	"shylinux.com/x/icebergs/base/web"
 	kit "shylinux.com/x/toolkits"
 )
@@ -22,8 +23,8 @@ func _xterm_socket(m *ice.Message, h, t string) {
 	m.Option(ice.MSG_DAEMON, m.Conf("", kit.Keys(mdb.HASH, h, mdb.META, mdb.TEXT)))
 	m.Option(mdb.TEXT, t)
 }
-func _xterm_get(m *ice.Message, h string, must bool) (f *os.File) {
-	f, _ = mdb.HashTarget(m, h, func() ice.Any {
+func _xterm_get(m *ice.Message, h string, must bool) *os.File {
+	if f, ok := mdb.HashTarget(m, h, func() ice.Any {
 		if !must {
 			return nil
 		}
@@ -36,7 +37,9 @@ func _xterm_get(m *ice.Message, h string, must bool) (f *os.File) {
 		m.Assert(err)
 
 		m.Go(func() {
-			mdb.HashSelectUpdate(m, h, func(value ice.Map) { value["_cmd"] = cmd })
+			mdb.HashSelectUpdate(m, h, func(value ice.Map) {
+				value["_cmd"] = nfs.NewCloser(func() error { return cmd.Process.Kill() })
+			})
 			buf := make([]byte, ice.MOD_BUFS)
 			for {
 				if n, e := tty.Read(buf); !m.Warn(e) {
@@ -49,29 +52,30 @@ func _xterm_get(m *ice.Message, h string, must bool) (f *os.File) {
 			web.PushNoticeGrow(m, "exit")
 		})
 		return tty
-	}).(*os.File)
-	return
+	}).(*os.File); m.Warn(!ok, ice.ErrNotValid, f) {
+		mdb.HashSelectUpdate(m, h, func(value ice.Map) { delete(value, mdb.TARGET) })
+		return nil
+	} else {
+		return f
+	}
 }
 
 const XTERM = "xterm"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
-		XTERM: {Name: "xterm hash refresh", Help: "终端", Actions: ice.MergeAction(ice.Actions{
+		XTERM: {Name: "xterm hash refresh", Help: "终端", Actions: ice.MergeActions(ice.Actions{
 			ice.CTX_EXIT: {Hand: func(m *ice.Message, arg ...string) {
 				mdb.HashSelectValue(m, func(value ice.Map) {
-					if cmd, ok := value["_cmd"].(*exec.Cmd); ok {
-						cmd.Process.Kill()
+					if c, ok := value["_cmd"].(io.Closer); ok {
+						c.Close()
 					}
 				})
 			}},
 			mdb.INPUTS: {Name: "inputs", Help: "补全", Hand: func(m *ice.Message, arg ...string) {
 				switch mdb.HashInputs(m, arg); arg[0] {
 				case mdb.TYPE:
-					m.Push(arg[0], "python")
-					m.Push(arg[0], "node")
-					m.Push(arg[0], "bash")
-					m.Push(arg[0], "sh")
+					m.Push(arg[0], "python", "node", "bash", "sh")
 				case mdb.NAME:
 					m.Push(arg[0], path.Base(m.Option(mdb.TYPE)))
 				}
@@ -90,15 +94,6 @@ func init() {
 				mdb.HashModify(m, m.OptionSimple(mdb.HASH), arg)
 			}},
 			mdb.PRUNES: {Name: "prunes", Help: "清理", Hand: func(m *ice.Message, arg ...string) {
-				mdb.HashSelect(m).Tables(func(value ice.Maps) {
-					if f := _xterm_get(m, value[mdb.HASH], false); f != nil {
-						if kit.Time(m.Time())-kit.Time(value[mdb.TIME]) < int64(time.Hour) {
-							return // 有效终端
-						}
-						f.Close()
-					}
-					m.Cmd("", mdb.REMOVE, kit.Dict(value))
-				})
 			}},
 			"resize": {Name: "resize", Help: "大小", Hand: func(m *ice.Message, arg ...string) {
 				pty.Setsize(_xterm_get(m, m.Option(mdb.HASH), true), &pty.Winsize{Rows: uint16(kit.Int(m.Option("rows"))), Cols: uint16(kit.Int(m.Option("cols")))})

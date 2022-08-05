@@ -26,7 +26,7 @@ func _daemon_exec(m *ice.Message, cmd *exec.Cmd) {
 	h := mdb.HashCreate(m, ice.CMD, kit.Join(cmd.Args, ice.SP),
 		STATUS, START, DIR, cmd.Dir, ENV, kit.Select("", cmd.Env),
 		m.OptionSimple(CMD_INPUT, CMD_OUTPUT, CMD_ERRPUT, mdb.CACHE_CLEAR_ON_EXIT),
-	).Result()
+	)
 
 	// 启动服务
 	if e := cmd.Start(); m.Warn(e, ice.ErrNotStart, cmd.Args) {
@@ -108,7 +108,7 @@ const DAEMON = "daemon"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
-		DAEMON: {Name: "daemon hash auto start prunes", Help: "守护进程", Actions: ice.MergeAction(ice.Actions{
+		DAEMON: {Name: "daemon hash auto start prunes", Help: "守护进程", Actions: ice.MergeActions(ice.Actions{
 			ice.CTX_EXIT: {Hand: func(m *ice.Message, arg ...string) {
 				mdb.HashPrunesValue(m, mdb.CACHE_CLEAR_ON_EXIT, ice.TRUE)
 			}},

@@ -38,6 +38,7 @@ func _spide_create(m *ice.Message, name, address string) {
 	}
 }
 func _spide_list(m *ice.Message, arg ...string) {
+	msg := mdb.HashSelects(m.Spawn(), arg[0])
 	cache, save := "", ""
 	switch arg[1] { // 缓存方法
 	case SPIDE_RAW:
@@ -50,7 +51,6 @@ func _spide_list(m *ice.Message, arg ...string) {
 		cache, arg = arg[1], arg[1:]
 	}
 
-	msg := mdb.HashSelect(m.Spawn(), arg[0])
 	method := kit.Select(SPIDE_POST, msg.Append(CLIENT_METHOD))
 	switch arg = arg[1:]; arg[0] { // 请求方法
 	case SPIDE_GET:
@@ -77,6 +77,8 @@ func _spide_list(m *ice.Message, arg ...string) {
 	})
 
 	// 发送请求
+	m.Debug("what %v", msg.Append(CLIENT_NAME))
+	m.Debug("what %v", msg.FormatsMeta())
 	res, e := _spide_send(m, msg.Append(CLIENT_NAME), req, kit.Format(msg.Append(CLIENT_TIMEOUT)))
 	if m.Warn(e, ice.ErrNotFound, uri) {
 		return
@@ -349,7 +351,7 @@ const SPIDE = "spide"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
-		SPIDE: {Name: "spide client.name action=raw,msg,save,cache method=GET,PUT,POST,DELETE url format=form,part,json,data,file arg run create", Help: "蜘蛛侠", Actions: ice.MergeAction(ice.Actions{
+		SPIDE: {Name: "spide client.name action=raw,msg,save,cache method=GET,PUT,POST,DELETE url format=form,part,json,data,file arg run create", Help: "蜘蛛侠", Actions: ice.MergeActions(ice.Actions{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
 				conf := m.Confm(cli.RUNTIME, cli.CONF)
 				m.Cmd(SPIDE, mdb.CREATE, ice.OPS, kit.Select("http://127.0.0.1:9020", conf[cli.CTX_OPS]))
@@ -386,4 +388,17 @@ func init() {
 			m.Echo(kit.Formats(kit.UnMarshal(m.Cmdx(SPIDE, ice.DEV, SPIDE_RAW, SPIDE_DELETE, arg[0], arg[1:]))))
 		}},
 	})
+}
+
+func SpideGet(m *ice.Message, arg ...ice.Any) ice.Any {
+	return kit.UnMarshal(m.Cmdx(SPIDE_GET, arg))
+}
+func SpidePut(m *ice.Message, arg ...ice.Any) ice.Any {
+	return kit.UnMarshal(m.Cmdx(SPIDE_PUT, arg))
+}
+func SpidePost(m *ice.Message, arg ...ice.Any) ice.Any {
+	return kit.UnMarshal(m.Cmdx(SPIDE_POST, arg))
+}
+func SpideDelete(m *ice.Message, arg ...ice.Any) ice.Any {
+	return kit.UnMarshal(m.Cmdx(SPIDE_DELETE, arg))
 }

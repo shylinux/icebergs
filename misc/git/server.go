@@ -42,6 +42,18 @@ func packetWrite(m *ice.Message, cmd string, str ...string) {
 
 var basicAuthRegex = regexp.MustCompile("^([^:]*):(.*)$")
 
+func _server_rewrite(m *ice.Message, p string, r *http.Request) {
+	if ua := r.Header.Get(web.UserAgent); strings.HasPrefix(ua, "curl") || strings.HasPrefix(ua, "Wget") {
+		r.URL.Path = strings.Replace(r.URL.Path, "/x/", "/chat/pod/", 1)
+		m.Info("rewrite %v -> %v", p, r.URL.Path) // 下载镜像
+	} else if strings.HasPrefix(ua, "git") || strings.HasPrefix(ua, "Go") {
+		r.URL.Path = strings.Replace(r.URL.Path, "/x/", "/code/git/repos/", 1)
+		m.Info("rewrite %v -> %v", p, r.URL.Path) // 下载源码
+	} else {
+		r.URL.Path = strings.Replace(r.URL.Path, "/x/", "/chat/pod/", 1)
+		m.Info("rewrite %v -> %v", p, r.URL.Path) // 访问服务
+	}
+}
 func _server_login(m *ice.Message) error {
 	if m.Conf("web.serve", "meta.localhost") != ice.FALSE {
 		if tcp.IsLocalHost(m, m.Option(ice.MSG_USERIP)) {
@@ -117,23 +129,13 @@ func init() {
 		web.WEB_LOGIN: {Hand: func(m *ice.Message, arg ...string) {
 			m.Render(ice.RENDER_VOID)
 		}},
-		"/repos/": {Name: "/repos/", Help: "代码库", Actions: ice.MergeAction(ice.Actions{
+		"/repos/": {Name: "/repos/", Help: "代码库", Actions: ice.MergeActions(ice.Actions{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
 				web.AddRewrite(func(p string, w http.ResponseWriter, r *http.Request) bool {
-					if strings.HasPrefix(p, "/chat/pod/") {
-						if strings.HasPrefix(r.Header.Get("User-Agent"), "git") || strings.HasPrefix(r.Header.Get("User-Agent"), "Go") {
-							r.URL.Path = strings.Replace(r.URL.Path, "/chat/pod/", "/code/git/repos/", 1)
-							m.Info("rewrite %v -> %v", p, r.URL.Path)
-						} else if strings.HasPrefix(r.Header.Get("User-Agent"), "curl") || strings.HasPrefix(r.Header.Get("User-Agent"), "Wget") {
-							if ls := strings.Split(p, ice.PS); m.Cmd(web.DREAM, ls[3]).Length() > 0 {
-								r.URL.RawQuery += kit.Select("", "&", len(r.URL.RawQuery) > 1) + "pod=" + ls[3]
-							}
-							r.URL.Path = "/publish/ice.bin"
-							m.Info("rewrite %v -> %v", p, r.URL.Path)
-						}
-					} else if strings.HasPrefix(p, "/x/") {
-						r.URL.Path = strings.Replace(r.URL.Path, "/x/", "/code/git/repos/", 1)
-						m.Info("rewrite %v -> %v", p, r.URL.Path)
+					if strings.HasPrefix(p, "/x/") {
+						_server_rewrite(m, p, r)
+					} else if strings.HasPrefix(p, "/chat/pod/") {
+						_server_rewrite(m, p, r)
 					}
 					return false
 				})

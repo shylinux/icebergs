@@ -102,7 +102,7 @@ func _dream_show(m *ice.Message, name string) {
 	bin := kit.Select(os.Args[0], cli.SystemFind(m, ice.ICE_BIN, kit.Path(path.Join(p, ice.BIN)), kit.Path(ice.BIN)))
 	m.Cmd(cli.DAEMON, bin, SPACE, tcp.DIAL, ice.DEV, ice.OPS, m.OptionSimple(mdb.NAME, RIVER))
 
-	defer gdb.Event(m, DREAM_CREATE, m.OptionSimple(mdb.TYPE, mdb.NAME)...)
+	defer gdb.Event(m, DREAM_CREATE, m.OptionSimple(mdb.TYPE, mdb.NAME))
 	m.Option(cli.CMD_OUTPUT, "")
 	m.Option(cli.CMD_ENV, "")
 	m.Sleep3s()
@@ -117,7 +117,7 @@ const DREAM = "dream"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
-		DREAM: {Name: "dream name path auto start", Help: "梦想家", Actions: ice.MergeAction(ice.Actions{
+		DREAM: {Name: "dream name path auto start", Help: "梦想家", Actions: ice.MergeActions(ice.Actions{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) { m.Config(nfs.SCRIPT, _dream_script) }},
 			mdb.INPUTS: {Name: "inputs", Help: "补全", Hand: func(m *ice.Message, arg ...string) {
 				switch arg[0] {

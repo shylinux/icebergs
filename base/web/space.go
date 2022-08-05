@@ -216,8 +216,8 @@ func _space_fork(m *ice.Message) {
 
 			switch kind {
 			case CHROME: // 交互节点
-				gdb.Event(m, SPACE_OPEN, args...)
-				defer gdb.Event(m, SPACE_CLOSE, args...)
+				gdb.Event(m, SPACE_OPEN, args)
+				defer gdb.Event(m, SPACE_CLOSE, args)
 				defer mdb.HashRemove(m, mdb.NAME, name)
 				m.Go(func(msg *ice.Message) {
 					switch m.Option(ice.CMD) {
@@ -234,12 +234,12 @@ func _space_fork(m *ice.Message) {
 					}
 				})
 			case WORKER: // 工作节点
-				gdb.Event(m, DREAM_START, args...)
-				defer gdb.Event(m, DREAM_STOP, args...)
+				gdb.Event(m, DREAM_START, args)
+				defer gdb.Event(m, DREAM_STOP, args)
 				defer m.Cmd(DREAM, DREAM_STOP, args)
 			default: // 服务节点
-				gdb.Event(m, SPACE_START, args...)
-				defer gdb.Event(m, SPACE_STOP, args...)
+				gdb.Event(m, SPACE_START, args)
+				defer gdb.Event(m, SPACE_STOP, args)
 				defer mdb.HashRemove(m, mdb.NAME, name)
 			}
 			_space_handle(m, false, m.Target().Server().(*Frame), s, name)
@@ -297,8 +297,12 @@ func init() {
 			REDIAL, kit.Dict("a", 3000, "b", 1000, "c", 1000), TIMEOUT, kit.Dict("c", "180s"),
 		)},
 	}, Commands: ice.Commands{
-		SPACE: {Name: "space name cmd auto invite", Help: "空间站", Actions: ice.MergeAction(ice.Actions{
+		SPACE: {Name: "space name cmd auto invite", Help: "空间站", Actions: ice.MergeActions(ice.Actions{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) { m.Conf("", mdb.HASH, "") }},
+			ice.CTX_EXIT: {Hand: func(m *ice.Message, arg ...string) {
+				mdb.HashSelectClose(m)
+				m.Conf("", mdb.HASH, "")
+			}},
 			mdb.REMOVE: {Name: "remove", Help: "删除", Hand: func(m *ice.Message, arg ...string) {
 				mdb.HashModify(m, m.OptionSimple(mdb.NAME), mdb.STATUS, cli.STOP)
 				defer mdb.HashRemove(m, m.OptionSimple(mdb.NAME))

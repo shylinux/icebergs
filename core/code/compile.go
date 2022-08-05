@@ -47,21 +47,9 @@ func init() {
 			cli.ENV, kit.Dict("GOPROXY", "https://goproxy.cn,direct", "GOPRIVATE", "shylinux.com,github.com", "CGO_ENABLED", "0"),
 		)},
 	}, Commands: ice.Commands{
-		COMPILE: {Name: "compile arch=amd64,386,arm,arm64,mipsle os=linux,darwin,windows src=src/main.go@key run binpack relay install", Help: "编译", Actions: ice.Actions{
+		COMPILE: {Name: "compile arch=amd64,386,arm,arm64,mipsle os=linux,darwin,windows src=src/main.go@key run binpack relay", Help: "编译", Actions: ice.Actions{
 			mdb.INPUTS: {Name: "inputs", Help: "补全", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmdy(nfs.DIR, ice.SRC, nfs.DIR_CLI_FIELDS, kit.Dict(nfs.DIR_REG, `.*\.go$`)).Sort(nfs.PATH)
-			}},
-			INSTALL: {Name: "compile", Help: "安装", Hand: func(m *ice.Message, arg ...string) {
-				if cli.IsAlpine(m) {
-					web.PushStream(m)
-					m.Cmd(cli.SYSTEM, "apk", "add", GIT, GO)
-					return
-				}
-				if m.Cmdx(cli.SYSTEM, nfs.FIND, GIT) == "" {
-					web.Toast(m, "please install git")
-					m.Echo(ice.FALSE)
-					return
-				}
 			}},
 			BINPACK: {Name: "binpack", Help: "打包", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmdy(AUTOGEN, BINPACK)

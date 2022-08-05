@@ -29,7 +29,7 @@ const PY = nfs.PY
 
 func init() {
 	Index.Merge(&ice.Context{Commands: ice.Commands{
-		PY: {Name: "py path auto", Help: "脚本", Actions: ice.MergeAction(ice.Actions{
+		PY: {Name: "py path auto", Help: "脚本", Actions: ice.MergeActions(ice.Actions{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
 				m.Cmd(mdb.ENGINE, mdb.CREATE, PY, m.PrefixKey())
 				m.Cmd(mdb.RENDER, mdb.CREATE, PY, m.PrefixKey())

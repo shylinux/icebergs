@@ -9,6 +9,7 @@ import (
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/mdb"
 	kit "shylinux.com/x/toolkits"
+	"shylinux.com/x/toolkits/file"
 	"shylinux.com/x/toolkits/logs"
 )
 
@@ -25,7 +26,8 @@ func _signal_action(m *ice.Message, arg ...string) {
 }
 func _signal_process(m *ice.Message, p string, s os.Signal) {
 	if p == "" {
-		p = logs.ReadFile(ice.Info.PidPath)
+		b, _ := file.ReadFile(ice.Info.PidPath)
+		p = string(b)
 	}
 	if p == "" {
 		p = kit.Format(os.Getpid())
@@ -52,7 +54,7 @@ const SIGNAL = "signal"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
-		SIGNAL: {Name: "signal signal auto listen", Help: "信号器", Actions: ice.MergeAction(ice.Actions{
+		SIGNAL: {Name: "signal signal auto listen", Help: "信号器", Actions: ice.MergeActions(ice.Actions{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
 				_signal_listen(m, 2, mdb.NAME, "重启", ice.CMD, "exit 1")
 				_signal_listen(m, 3, mdb.NAME, "退出", ice.CMD, "exit 0")

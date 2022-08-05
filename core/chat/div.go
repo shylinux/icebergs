@@ -31,7 +31,7 @@ func init() {
 			nfs.TEMPLATE, _div_template,
 		)},
 	}, Commands: ice.Commands{
-		"/div/": {Name: "/div/", Help: "定制", Actions: ice.MergeAction(ctx.CmdAction()), Hand: func(m *ice.Message, arg ...string) {
+		"/div/": {Name: "/div/", Help: "定制", Actions: ice.MergeActions(ctx.CmdAction()), Hand: func(m *ice.Message, arg ...string) {
 			switch p := path.Join(arg...); kit.Ext(kit.Select("", p)) {
 			case nfs.HTML:
 				m.RenderDownload(p)
@@ -45,7 +45,7 @@ func init() {
 				web.RenderCmd(m, m.PrefixKey(), p)
 			}
 		}},
-		DIV: {Name: "div hash auto import", Help: "定制", Actions: ice.MergeAction(ice.Actions{
+		DIV: {Name: "div hash auto import", Help: "定制", Actions: ice.MergeActions(ice.Actions{
 			lex.SPLIT: {Name: "split name=hi text", Help: "生成", Hand: func(m *ice.Message, arg ...string) {
 				m.ProcessRewrite(mdb.HASH, m.Cmdx(DIV, mdb.CREATE, m.OptionSimple(mdb.NAME), mdb.TEXT, _div_parse(m, m.Option(mdb.TEXT))))
 			}},

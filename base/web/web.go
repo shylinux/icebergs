@@ -131,5 +131,8 @@ func init() {
 	)
 }
 
+func ApiAction(arg ...string) ice.Actions {
+	return ice.Actions{kit.Select(ice.PS, path.Join(arg...)+ice.PS): {}}
+}
 func P(arg ...string) string  { return path.Join(ice.PS, path.Join(arg...)) }
 func PP(arg ...string) string { return P(arg...) + ice.PS }

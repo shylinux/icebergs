@@ -9,34 +9,23 @@ import (
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/nfs"
 	"shylinux.com/x/icebergs/base/ssh"
-	"shylinux.com/x/icebergs/base/tcp"
 	"shylinux.com/x/icebergs/base/web"
 	kit "shylinux.com/x/toolkits"
 )
 
-func _defs(m *ice.Message, args ...string) string {
-	for i := 0; i < len(args); i += 2 {
-		if m.Option(args[i]) == "" {
-			m.Option(args[i], args[i+1])
-		}
-	}
-	return m.Option(args[0])
-}
 func _defs_list(m *ice.Message) string {
 	list := []string{mdb.LIST}
 	switch m.Option(mdb.TYPE) {
-	case "Hash":
-		list = append(list, "hash auto create")
 	case "Zone":
 		list = append(list, "zone id auto insert")
-	case "Lists":
-		list = append(list, "id auto insert")
+	case "Hash":
+		list = append(list, "hash auto create")
 	case "Data":
 		list = append(list, "path auto")
 	case "Code":
 		list = append(list, "port path auto start order build download")
 	}
-	return _defs(m, mdb.LIST, kit.Join(list, ice.SP))
+	return m.OptionDefault(mdb.LIST, kit.Join(list, ice.SP))
 }
 func _autogen_module(m *ice.Message, dir string) {
 	m.Cmd(nfs.DEFS, dir, `package {{.Option "zone"}}
@@ -97,7 +86,7 @@ func _autogen_source(m *ice.Message, main, file string) {
 	m.Cmd(nfs.PUSH, main, ice.NL, "source "+strings.TrimPrefix(file, ice.SRC+ice.PS))
 }
 func _autogen_mod(m *ice.Message, file string) (mod string) {
-	host := kit.ParseURLMap(m.Option(ice.MSG_USERWEB))[tcp.HOSTNAME]
+	host := web.OptionUserWeb(m).Hostname()
 	if host == "" {
 		host = path.Base(kit.Path(""))
 	} else {
@@ -134,7 +123,7 @@ func _autogen_gits(m *ice.Message, arg ...string) string {
 	return kit.Join(res, ice.NL)
 }
 func _autogen_version(m *ice.Message) {
-	if mod := _autogen_mod(m, ice.GO_MOD); !kit.FileExists(".git") {
+	if mod := _autogen_mod(m, ice.GO_MOD); !nfs.ExistsFile(m, ".git") {
 		m.Cmdy(cli.SYSTEM, GIT, ice.INIT)
 		m.Cmd(cli.SYSTEM, GIT, "remote", "add", "origin", "https://"+mod)
 		m.Cmd("web.code.git.repos", mdb.CREATE, "repos", "https://"+mod, mdb.NAME, path.Base(mod), nfs.PATH, nfs.PWD)
@@ -182,17 +171,17 @@ func init() {
 					m.Cmdy(nfs.DIR, nfs.PWD, nfs.DIR_CLI_FIELDS, kit.Dict(nfs.DIR_REG, `.*\.go`)).RenameAppend(nfs.PATH, arg[0])
 				}
 			}},
-			mdb.CREATE: {Name: "create name=hi help type=Hash,Zone,Lists,Data,Code main=main.go@key zone key", Help: "模块", Hand: func(m *ice.Message, arg ...string) {
-				_defs(m, mdb.ZONE, m.Option(mdb.NAME), mdb.HELP, m.Option(mdb.NAME))
-				_defs(m, mdb.KEY, kit.Keys("web.code", m.Option(mdb.ZONE), m.Option(mdb.NAME)))
+			mdb.CREATE: {Name: "create name=hi help type=Zone,Hash,Data,Code main=main.go@key zone key", Help: "模块", Hand: func(m *ice.Message, arg ...string) {
+				m.OptionDefault(mdb.ZONE, m.Option(mdb.NAME), mdb.HELP, m.Option(mdb.NAME))
+				m.OptionDefault(mdb.KEY, kit.Keys("web.code", m.Option(mdb.ZONE), m.Option(mdb.NAME)))
 				m.Option(mdb.TEXT, kit.Format("`name:\"%s\" help:\"%s\"`", _defs_list(m), m.Option(mdb.HELP)))
 
 				nfs.OptionFiles(m, nfs.DiskFile)
-				if p := path.Join(ice.SRC, m.Option(mdb.ZONE), kit.Keys(m.Option(mdb.NAME), GO)); !kit.FileExists(p) {
+				if p := path.Join(ice.SRC, m.Option(mdb.ZONE), kit.Keys(m.Option(mdb.NAME), GO)); !nfs.ExistsFile(m, p) {
 					_autogen_module(m, p)
 					_autogen_import(m, path.Join(ice.SRC, m.Option(cli.MAIN)), m.Option(mdb.ZONE), _autogen_mod(m, ice.GO_MOD))
 				}
-				if p := path.Join(ice.SRC, m.Option(mdb.ZONE), kit.Keys(m.Option(mdb.NAME), SHY)); !kit.FileExists(p) {
+				if p := path.Join(ice.SRC, m.Option(mdb.ZONE), kit.Keys(m.Option(mdb.NAME), SHY)); !nfs.ExistsFile(m, p) {
 					_autogen_script(m, p)
 					_autogen_source(m, path.Join(ice.SRC, m.Option(cli.MAIN)), p)
 				}
@@ -200,7 +189,7 @@ func init() {
 				_autogen_version(m.Spawn())
 			}},
 			ssh.SCRIPT: {Name: "script", Help: "脚本：生成 etc/miss.sh", Hand: func(m *ice.Message, arg ...string) {
-				m.Cmd(nfs.DEFS, ice.ETC_MISS_SH, m.Conf(web.DREAM, kit.Keym("miss")))
+				m.Cmd(nfs.DEFS, ice.ETC_MISS_SH, m.Conf(web.DREAM, kit.Keym(nfs.SCRIPT)))
 				defer m.Cmdy(nfs.CAT, ice.ETC_MISS_SH)
 
 				m.Cmdy(nfs.DIR, ice.ETC_MISS_SH)
@@ -212,7 +201,7 @@ func init() {
 			}},
 			BINPACK: {Name: "binpack", Help: "打包：生成 src/binpack.go", Hand: func(m *ice.Message, arg ...string) {
 				_autogen_version(m)
-				if m.Cmd(BINPACK, mdb.CREATE); kit.FileExists(ice.USR_RELEASE) && m.Option(ice.MSG_USERPOD) == "" {
+				if m.Cmd(BINPACK, mdb.CREATE); nfs.ExistsFile(m, ice.USR_RELEASE) && m.Option(ice.MSG_USERPOD) == "" {
 					m.Cmd(nfs.COPY, path.Join(ice.USR_RELEASE, "conf.go"), path.Join(ice.USR_ICEBERGS, "conf.go"))
 					m.Cmd(cli.SYSTEM, "sh", "-c", `cat src/binpack.go|sed 's/package main/package ice/g' > usr/release/binpack.go`)
 					m.Cmdy(nfs.DIR, "usr/release/binpack.go")

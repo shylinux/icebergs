@@ -25,7 +25,7 @@ func init() {
 				m.Cmdy(TRASH, mdb.INSERT, arg)
 			}},
 		}},
-		TRASH: {Name: "TRASH hash path auto prunes", Help: "回收站", Actions: ice.MergeAction(ice.Actions{
+		TRASH: {Name: "TRASH hash path auto prunes", Help: "回收站", Actions: ice.MergeActions(ice.Actions{
 			mdb.INSERT: {Name: "insert from to", Help: "添加", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmdy(mdb.INSERT, m.PrefixKey(), "", mdb.HASH, m.OptionSimple(aaa.USERNAME, tcp.HOSTNAME, nfs.SIZE, FROM, TO))
 			}},

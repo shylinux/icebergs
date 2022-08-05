@@ -208,6 +208,12 @@ func (m *Message) Copy(msg *Message, arg ...string) *Message {
 	}
 
 	for _, k := range msg.meta[MSG_OPTION] {
+		switch k {
+		case MSG_CMDS:
+		case MSG_FIELDS:
+		case MSG_SESSID:
+			continue
+		}
 		if v, ok := msg.data[k]; ok {
 			m.data[k] = v
 		} else {

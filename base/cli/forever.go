@@ -55,8 +55,12 @@ func init() {
 			for {
 				logs.Println("run %s", kit.Join(arg, ice.SP))
 				if m.Sleep300ms(); IsSuccess(m.Cmd(SYSTEM, arg)) {
-					logs.Println(ice.EXIT)
+					logs.Println(ice.EXIT) // 正常退出
 					break
+				} else {
+					if logs.Println(); nfs.ExistsFile(m, "var/log/bench.log") {
+						nfs.Rename(m, "var/log/bench.log", kit.Format("var/log/bench.%s.log", logs.Now().Format("20060102-150405")))
+					}
 				}
 			}
 		}},

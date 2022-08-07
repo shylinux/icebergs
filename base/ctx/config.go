@@ -155,3 +155,8 @@ func Load(m *ice.Message, arg ...string) *ice.Message {
 func ConfAction(args ...ice.Any) ice.Actions {
 	return ice.Actions{ice.CTX_INIT: mdb.AutoConfig(args...)}
 }
+func ConfigFromOption(m *ice.Message, arg ...string) {
+	for _, k := range arg {
+		m.Config(k, kit.Select(m.Config(k), m.Option(k)))
+	}
+}

@@ -27,7 +27,7 @@ func init() {
 				}
 			}},
 		}, ctx.CmdAction(EMAIL, `<a href="mailto:shylinuxc@gmail.com">shylinuxc@gmail.com</a>`), web.ApiAction()), Hand: func(m *ice.Message, arg ...string) {
-			m.Echo(m.Config(EMAIL))
+			m.Result(m.Configv(EMAIL))
 		}},
 	})
 }

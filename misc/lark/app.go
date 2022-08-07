@@ -31,7 +31,7 @@ func init() {
 				m.Cmd(web.SPIDE, mdb.CREATE, LARK, m.Config(tcp.SERVER))
 			}},
 			LOGIN: {Name: "login appid appmm duty", Help: "登录", Hand: func(m *ice.Message, arg ...string) {
-				m.Cmdy(mdb.INSERT, m.PrefixKey(), "", mdb.HASH, arg)
+				m.Cmdy(mdb.INSERT, m.PrefixKey(), "", mdb.HASH, m.OptionSimple(APPID, APPMM, DUTY))
 			}},
 			TOKEN: {Name: "token appid", Help: "令牌", Hand: func(m *ice.Message, arg ...string) {
 				msg := m.Cmd(APP, m.Option(APPID))

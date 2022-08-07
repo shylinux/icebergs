@@ -46,12 +46,14 @@ func _server_rewrite(m *ice.Message, p string, r *http.Request) {
 	if ua := r.Header.Get(web.UserAgent); strings.HasPrefix(ua, "curl") || strings.HasPrefix(ua, "Wget") {
 		r.URL.Path = strings.Replace(r.URL.Path, "/x/", "/chat/pod/", 1)
 		m.Info("rewrite %v -> %v", p, r.URL.Path) // 下载镜像
-	} else if strings.HasPrefix(ua, "git") || strings.HasPrefix(ua, "Go") {
-		r.URL.Path = strings.Replace(r.URL.Path, "/x/", "/code/git/repos/", 1)
-		m.Info("rewrite %v -> %v", p, r.URL.Path) // 下载源码
-	} else {
+
+	} else if strings.HasPrefix(ua, "Mozilla") {
 		r.URL.Path = strings.Replace(r.URL.Path, "/x/", "/chat/pod/", 1)
 		m.Info("rewrite %v -> %v", p, r.URL.Path) // 访问服务
+
+	} else {
+		r.URL.Path = strings.Replace(r.URL.Path, "/x/", "/code/git/repos/", 1)
+		m.Info("rewrite %v -> %v", p, r.URL.Path) // 下载源码
 	}
 }
 func _server_login(m *ice.Message) error {

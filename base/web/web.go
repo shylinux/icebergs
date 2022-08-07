@@ -95,7 +95,7 @@ func (frame *Frame) Start(m *ice.Message, arg ...string) bool {
 		}
 	})
 
-	gdb.Event(m, SERVE_START)
+	gdb.Event(m, SERVE_START, arg)
 	defer gdb.Event(m, SERVE_STOP)
 
 	frame.Message, frame.Server = m, &http.Server{Handler: frame}

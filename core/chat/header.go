@@ -60,7 +60,6 @@ const HEADER = "header"
 func init() {
 	Index.MergeCommands(ice.Commands{
 		web.WEB_LOGIN: {Hand: func(m *ice.Message, arg ...string) {
-			m.Debug("what %v", m.FormatStack(1, 100))
 			switch kit.Select("", arg, 0) {
 			case web.P(HEADER):
 				switch kit.Select("", arg, 1) {
@@ -110,7 +109,7 @@ func init() {
 			web.SHARE: {Name: "share type", Help: "共享", Hand: func(m *ice.Message, arg ...string) {
 				_header_share(m, arg...)
 			}},
-		}, ctx.ConfAction(aaa.LOGIN, kit.List("登录", "扫码")), web.ApiAction()), Hand: func(m *ice.Message, arg ...string) {
+		}, ctx.ConfAction(aaa.LOGIN, kit.List("登录", "扫码")), web.ApiAction("/header")), Hand: func(m *ice.Message, arg ...string) {
 			if !_header_check(m, arg...) {
 				return
 			}

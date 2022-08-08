@@ -90,7 +90,7 @@ func init() {
 			aaa.INVITE: {Name: "invite", Help: "添加设备", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmdy("publish", ice.CONTEXTS)
 			}},
-		}, mdb.HashAction(mdb.FIELD, "time,hash,type,name,text,template"), web.ApiAction()), Hand: func(m *ice.Message, arg ...string) {
+		}, mdb.HashAction(mdb.FIELD, "time,hash,type,name,text,template"), web.ApiAction("/river")), Hand: func(m *ice.Message, arg ...string) {
 			if m.Warn(m.Option(ice.MSG_USERNAME) == "", ice.ErrNotLogin) {
 				m.RenderStatusUnauthorized()
 				return // 没有登录

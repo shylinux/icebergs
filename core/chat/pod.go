@@ -19,7 +19,7 @@ func init() {
 	Index.MergeCommands(ice.Commands{
 		POD: {Name: "pod", Help: "节点", Actions: ice.MergeActions(ice.Actions{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) { m.Cmd(aaa.ROLE, aaa.WHITE, aaa.VOID, POD) }},
-		}, ctx.CmdAction(), web.ApiAction("/pod/")), Hand: func(m *ice.Message, arg ...string) {
+		}, ctx.CmdAction(), web.ApiAction()), Hand: func(m *ice.Message, arg ...string) {
 			if web.OptionAgentIs(m, "curl", "Wget") {
 				aaa.UserRoot(m)
 				m.Option(ice.POD, kit.Select("", arg, 0))

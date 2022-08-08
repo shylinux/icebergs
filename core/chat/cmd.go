@@ -64,7 +64,7 @@ func init() {
 					m.Cmdy(CMD, mdb.CREATE, mdb.TYPE, k, mdb.NAME, "web.code.inner")
 				}
 			}},
-		}, mdb.HashAction(mdb.SHORT, "type", nfs.PATH, nfs.PWD), ctx.CmdAction(), web.ApiAction("/cmd/")), Hand: func(m *ice.Message, arg ...string) {
+		}, mdb.HashAction(mdb.SHORT, "type", nfs.PATH, nfs.PWD), ctx.CmdAction(), web.ApiAction()), Hand: func(m *ice.Message, arg ...string) {
 			if _cmd_file(m, arg...) {
 				return
 			}

@@ -124,6 +124,7 @@ const ( // DIR
 	USR_LOCAL_LIB    = "usr/local/lib"
 	USR_LOCAL_WORK   = "usr/local/work"
 	USR_LOCAL_IMAGE  = "usr/local/image"
+	USR_LOCAL_MEDIA  = "usr/local/media"
 	USR_LOCAL_RIVER  = "usr/local/river"
 	USR_LOCAL_DAEMON = "usr/local/daemon"
 	USR_LOCAL_EXPORT = "usr/local/export"

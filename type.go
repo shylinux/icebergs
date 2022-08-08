@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"path"
 	"strings"
 	"sync/atomic"
 	"time"
@@ -180,8 +181,8 @@ func (c *Context) Merge(s *Context) *Context {
 				}
 			}
 			if strings.HasPrefix(k, PS) {
-				k = kit.Select(k, PS+key, k == PS)
-				c.Commands[k] = &Command{Name: k, Help: cmd.Help, Hand: func(m *Message, arg ...string) { m.Cmdy(key, arg) }}
+				k = kit.Select(k, path.Join(PS, key)+PS, k == PS)
+				c.Commands[k] = &Command{Name: k, Help: cmd.Help, Hand: func(m *Message, arg ...string) { m.Cmdy(m.CommandKey(), arg) }}
 				continue
 			}
 

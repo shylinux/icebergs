@@ -23,11 +23,8 @@ func init() {
 			if m.Warn(m.Option(cli.BACK) == "") {
 				return
 			}
-			sessid := m.Cmdx(web.SPACE, m.Option(web.SPACE), aaa.SESS, mdb.CREATE,
-				aaa.USERNAME, m.Option(ice.MSG_USERNAME),
-				aaa.USERROLE, m.Option(ice.MSG_USERROLE),
-				aaa.USERNICK, m.Option(ice.MSG_USERNICK),
-			)
+			args := []string{aaa.USERNAME, m.Option(ice.MSG_USERNAME), aaa.USERROLE, m.Option(ice.MSG_USERROLE), aaa.USERNICK, m.Option(ice.MSG_USERNICK)}
+			sessid := aaa.UserRoot(m).Cmdx(web.SPACE, m.Option(web.SPACE), aaa.SESS, mdb.CREATE, args)
 			m.RenderRedirect(kit.MergeURL(m.Option(cli.BACK), ice.MSG_SESSID, sessid))
 		}},
 	})

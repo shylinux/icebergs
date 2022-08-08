@@ -58,7 +58,7 @@ func init() {
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
 				_signal_listen(m, 2, mdb.NAME, "重启", ice.CMD, "exit 1")
 				_signal_listen(m, 3, mdb.NAME, "退出", ice.CMD, "exit 0")
-				if f, p, e := logs.CreateFile(ice.Info.PidPath); !m.Warn(e) {
+				if f, p, e := logs.CreateFile(ice.Info.PidPath); e == nil {
 					defer f.Close()
 					fmt.Fprint(f, os.Getpid())
 					m.Logs(mdb.CREATE, PID, p)

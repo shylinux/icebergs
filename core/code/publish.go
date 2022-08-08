@@ -159,8 +159,8 @@ func init() {
 
 var _contexts = kit.Dict(
 	ice.MISC, `# 下载命令
-export ctx_dev={{.Option "httphost"}} ctx_pod={{.Option "user.pod"}}; ctx_temp=$(mktemp); curl -o $ctx_temp -fsSL $ctx_dev; source $ctx_temp app
-export ctx_dev={{.Option "httphost"}} ctx_pod={{.Option "user.pod"}}; ctx_temp=$(mktemp); wget -O $ctx_temp -q $ctx_dev; source $ctx_temp app
+export ctx_dev={{.Option "httphost"}} ctx_pod={{.Option "user.pod"}}; ctx_temp=$(mktemp); curl -o $ctx_temp -fsSL $ctx_dev; source $ctx_temp app username {{.Option "user.name"}}
+export ctx_dev={{.Option "httphost"}} ctx_pod={{.Option "user.pod"}}; ctx_temp=$(mktemp); wget -O $ctx_temp -q $ctx_dev; source $ctx_temp app username {{.Option "user.name"}}
 `,
 	ice.CORE, `# 克隆源码
 git clone {{.Option "remote"}}; cd {{.Option "pathname"}} && source etc/miss.sh port 9020

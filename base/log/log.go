@@ -134,7 +134,7 @@ var Index = &ice.Context{Name: "log", Help: "日志模块", Configs: ice.Configs
 				m.Conf(SHOW, kit.Keys(k, FILE), key)
 			})
 			// 日志文件
-			if f, p, e := logs.CreateFile(kit.Format(value[nfs.PATH])); m.Assert(e) {
+			if f, p, e := logs.CreateFile(kit.Format(value[nfs.PATH])); e == nil {
 				m.Cap(ice.CTX_STREAM, path.Base(p))
 				value[FILE] = bufio.NewWriter(f)
 				m.Logs(mdb.CREATE, nfs.FILE, p)

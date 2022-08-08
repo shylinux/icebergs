@@ -100,8 +100,8 @@ func _spide_list(m *ice.Message, arg ...string) {
 	})
 
 	// 处理异常
-	if m.Warn(res.StatusCode != http.StatusOK, ice.ErrNotFound, uri, cli.STATUS, res.Status) {
-		switch m.Set(ice.MSG_RESULT); res.StatusCode {
+	if m.Warn(res.StatusCode != http.StatusOK, ice.ErrNotValid, uri, cli.STATUS, res.Status) {
+		switch m.SetResult(); res.StatusCode {
 		case http.StatusNotFound:
 			m.Warn(true, ice.ErrNotFound, uri)
 			return

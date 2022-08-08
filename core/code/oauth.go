@@ -22,6 +22,11 @@ func init() {
 		LOGIN_OAUTH   = "https://github.com/login/oauth/"
 		API_GITHUB    = "https://api.github.com/"
 	)
+	_oauth_header := func(m *ice.Message, arg ...string) *ice.Message {
+		m.Option(web.SPIDE_HEADER, web.Accept, web.ContentJSON, web.Authorization, "token "+kit.Select(m.Option(ACCESS_TOKEN), arg, 0))
+		return m
+	}
+
 	Index.MergeCommands(ice.Commands{
 		OAUTH: {Name: "oauth hash auto", Help: "授权", Actions: ice.MergeActions(ice.Actions{
 			ctx.CONFIG: {Name: "config client_id client_secret redirect_uri", Help: "配置", Hand: func(m *ice.Message, arg ...string) {
@@ -38,42 +43,39 @@ func init() {
 				mdb.HashCreate(m, m.OptionSimple(CODE))
 			}},
 			ACCESS_TOKEN: {Name: "access_token", Help: "令牌", Hand: func(m *ice.Message, arg ...string) {
-				m.Option(web.SPIDE_HEADER, web.Accept, web.ContentJSON)
-				data := web.SpidePost(m, kit.MergeURL2(LOGIN_OAUTH, ACCESS_TOKEN), m.ConfigSimple(CLIENT_ID, CLIENT_SECRET), m.OptionSimple(CODE))
-				mdb.HashModify(m, m.OptionSimple(mdb.HASH), kit.Simple(data))
-			}},
-			"public": {Name: "public hash", Help: "公钥", Hand: func(m *ice.Message, arg ...string) {
-				m.Option(web.SPIDE_HEADER, web.Accept, web.ContentJSON, web.Authorization, "token "+m.Option(ACCESS_TOKEN))
-				msg := m.Cmd(aaa.RSA, m.Option(mdb.HASH))
-				m.PushDetail(web.SpidePost(m, API_GITHUB+"user/keys", web.SPIDE_JSON, "key", msg.Append("public"), msg.AppendSimple("title")))
-				m.Echo("https://github.com/settings/keys")
+				mdb.HashModify(m, m.OptionSimple(mdb.HASH), kit.Simple(web.SpidePost(_oauth_header(m), kit.MergeURL2(LOGIN_OAUTH, ACCESS_TOKEN), m.ConfigSimple(CLIENT_ID, CLIENT_SECRET), m.OptionSimple(CODE))))
 			}},
 			"user": {Name: "user", Help: "用户", Hand: func(m *ice.Message, arg ...string) {
-				m.Option(web.SPIDE_HEADER, web.Accept, web.ContentJSON, web.Authorization, "token "+m.Option(ACCESS_TOKEN))
-				mdb.HashModify(m, m.OptionSimple(mdb.HASH), kit.Simple(web.SpideGet(m, API_GITHUB+"user")))
+				mdb.HashModify(m, m.OptionSimple(mdb.HASH), kit.Simple(web.SpideGet(_oauth_header(m), API_GITHUB+"user")))
 			}},
-			mdb.DELETE: {Name: "delete", Help: "删除", Hand: func(m *ice.Message, arg ...string) {
-				mdb.HashSelect(m, m.Option(mdb.HASH))
-				m.Option(web.SPIDE_HEADER, web.Accept, web.ContentJSON, web.Authorization, "token "+m.Append(ACCESS_TOKEN))
-				web.SpideDelete(m, API_GITHUB+"user/keys/"+m.Option(mdb.ID))
+			"public": {Name: "public hash", Help: "公钥", Hand: func(m *ice.Message, arg ...string) {
+				msg := m.Cmd(aaa.RSA, m.Option(mdb.HASH))
+				m.PushDetail(web.SpidePost(_oauth_header(m), API_GITHUB+"user/keys", web.SPIDE_JSON, "key", msg.Append("public"), msg.AppendSimple("title")))
+				m.Echo("https://github.com/settings/keys")
 			}},
-		}, mdb.HashAction(mdb.FIELD, "time,hash,code,access_token,scope,token_type")), Hand: func(m *ice.Message, arg ...string) {
-			if mdb.HashSelect(m, arg...).PushAction("user", "public", ACCESS_TOKEN, mdb.REMOVE); len(arg) == 0 {
-				m.Echo(kit.MergeURL2(LOGIN_OAUTH, "authorize", m.ConfigSimple(REDIRECT_URI, CLIENT_ID), SCOPE, "read:user read:public_key write:public_key repo"))
-				m.Action(mdb.CREATE)
-			} else if len(arg) == 1 {
-				m.Option(web.SPIDE_HEADER, web.Accept, web.ContentJSON, web.Authorization, "token "+m.Append(ACCESS_TOKEN))
-				m.SetAppend()
+			"keys": {Name: "keys", Help: "用户密钥", Hand: func(m *ice.Message, arg ...string) {
+				_oauth_header(m).SetAppend()
 				kit.Fetch(web.SpideGet(m, API_GITHUB+"user/keys"), func(index int, value ice.Map) {
 					m.PushRecord(value, "created_at,title,id,key")
 				})
 				m.PushAction(mdb.DELETE)
+			}},
+			mdb.DELETE: {Name: "delete", Help: "删除", Hand: func(m *ice.Message, arg ...string) {
+				mdb.HashSelect(m, m.Option(mdb.HASH))
+				web.SpideDelete(_oauth_header(m), API_GITHUB+"user/keys/"+m.Option(mdb.ID))
+			}},
+		}, mdb.HashAction(mdb.FIELD, "time,hash,code,access_token,scope,token_type")), Hand: func(m *ice.Message, arg ...string) {
+			if mdb.HashSelect(m, arg...).PushAction("public", "user", ACCESS_TOKEN, mdb.REMOVE); len(arg) == 0 {
+				if m.Action(mdb.CREATE); m.Length() == 0 {
+					m.Echo(kit.MergeURL2(LOGIN_OAUTH, "authorize", m.ConfigSimple(REDIRECT_URI, CLIENT_ID), SCOPE, "read:user read:public_key write:public_key repo"))
+				}
 			}
 		}},
 		"/oauth": {Name: "/oauth", Help: "授权", Actions: ice.MergeActions(ice.Actions{}, ctx.CmdAction()), Hand: func(m *ice.Message, arg ...string) {
-			if m.Option(CODE) != "" {
-				web.RenderCmd(m, m.PrefixKey(), m.Cmdx(m.PrefixKey(), mdb.CREATE, m.OptionSimple(CODE)))
+			if m.Warn(m.Option(CODE) == "", ice.ErrNotValid) {
+				return
 			}
+			web.RenderCmd(m, m.PrefixKey(), m.Cmdx(m.PrefixKey(), mdb.CREATE, m.OptionSimple(CODE)))
 		}},
 	})
 }

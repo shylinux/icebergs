@@ -23,6 +23,9 @@ func Upload(m *ice.Message) []string { // hash name size
 	return up
 }
 func PushNotice(m *ice.Message, arg ...ice.Any) {
+	if m.Option(ice.MSG_DAEMON) == "" {
+		return
+	}
 	m.Optionv(ice.MSG_OPTS, m.Optionv(ice.MSG_OPTION))
 	if m.Option(ice.MSG_USERPOD) == "" {
 		m.Cmd(SPACE, m.Option(ice.MSG_DAEMON), arg)

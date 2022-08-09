@@ -500,7 +500,7 @@ func (m *Message) Appendv(key string, arg ...Any) []string {
 
 	if m.FieldsIsDetail() && key != KEY {
 		for i, k := range m.meta[KEY] {
-			if k == key {
+			if k == key || k == kit.Keys(EXTRA, key) {
 				if len(arg) > 0 {
 					m.meta[VALUE][i] = kit.Format(arg[0])
 				}

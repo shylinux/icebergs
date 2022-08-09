@@ -17,7 +17,7 @@ import (
 func _binpack_file(m *ice.Message, w io.Writer, arg ...string) { // file name
 	if f, e := nfs.OpenFile(m, arg[0]); e == nil {
 		defer f.Close()
-		if b, e := ioutil.ReadAll(f); e == nil && len(b) > 0 {
+		if b, _ := ioutil.ReadAll(f); len(b) > 0 {
 			fmt.Fprintf(w, "        \"%s\": \"%s\",\n", kit.Select(arg[0], arg, 1), base64.StdEncoding.EncodeToString(b))
 			return
 		}

@@ -374,10 +374,10 @@ func init() {
 		PP(ice.REQUIRE): {Name: "/require/shylinux.com/x/volcanos/proto.js", Help: "代码库", Hand: func(m *ice.Message, arg ...string) {
 			_share_repos(m, path.Join(arg[0], arg[1], arg[2]), arg[3:]...)
 		}},
-		PP(ice.REQUIRE, ice.LIB, ice.NODE_MODULES): {Name: "/require/lib/node_modules/", Help: "依赖库", Hand: func(m *ice.Message, arg ...string) {
-			p := path.Join(ice.USR_VOLCANOS, ice.LIB, ice.NODE_MODULES, path.Join(arg...))
+		PP(ice.REQUIRE, ice.PAGE, ice.NODE_MODULES): {Name: "/require/page/node_modules/", Help: "依赖库", Hand: func(m *ice.Message, arg ...string) {
+			p := path.Join(ice.USR_VOLCANOS, ice.PAGE, ice.NODE_MODULES, path.Join(arg...))
 			if !nfs.ExistsFile(m, p) {
-				m.Cmd(cli.SYSTEM, "npm", "install", arg[0], kit.Dict(cli.CMD_DIR, path.Join(ice.USR_VOLCANOS, ice.LIB)))
+				m.Cmd(cli.SYSTEM, "npm", "install", arg[0], kit.Dict(cli.CMD_DIR, path.Join(ice.USR_VOLCANOS, ice.PAGE)))
 			}
 			m.RenderDownload(p)
 		}},

@@ -43,11 +43,7 @@ func packetWrite(m *ice.Message, cmd string, str ...string) {
 var basicAuthRegex = regexp.MustCompile("^([^:]*):(.*)$")
 
 func _server_rewrite(m *ice.Message, p string, r *http.Request) {
-	if ua := r.Header.Get(web.UserAgent); strings.HasPrefix(ua, "curl") || strings.HasPrefix(ua, "Wget") {
-		r.URL.Path = strings.Replace(r.URL.Path, "/x/", "/chat/pod/", 1)
-		m.Info("rewrite %v -> %v", p, r.URL.Path) // 下载镜像
-
-	} else if strings.HasPrefix(ua, "Mozilla") {
+	if ua := r.Header.Get(web.UserAgent); strings.HasPrefix(ua, "Mozilla") {
 		r.URL.Path = strings.Replace(r.URL.Path, "/x/", "/chat/pod/", 1)
 		m.Info("rewrite %v -> %v", p, r.URL.Path) // 访问服务
 
@@ -128,9 +124,7 @@ const SERVER = "server"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
-		web.WEB_LOGIN: {Hand: func(m *ice.Message, arg ...string) {
-			m.Render(ice.RENDER_VOID)
-		}},
+		web.WEB_LOGIN: {Hand: func(m *ice.Message, arg ...string) { m.Render(ice.RENDER_VOID) }},
 		"/repos/": {Name: "/repos/", Help: "代码库", Actions: ice.MergeActions(ice.Actions{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
 				web.AddRewrite(func(p string, w http.ResponseWriter, r *http.Request) bool {

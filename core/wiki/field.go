@@ -66,7 +66,7 @@ func _field_show(m *ice.Message, name, text string, arg ...string) {
 			meta[arg[i]] = arg[i+1]
 
 		case SPARK:
-			if arg[i+1][0] == '@' && kit.FileExists(arg[i+1][1:]) {
+			if arg[i+1][0] == '@' && nfs.ExistsFile(m, arg[i+1][1:]) {
 				msg.Cmdy(nfs.CAT, arg[i+1][1:])
 			} else {
 				msg.Echo(strings.TrimSpace(arg[i+1]))

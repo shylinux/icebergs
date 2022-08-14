@@ -35,15 +35,6 @@ func init() {
 					if IsAlpine(m, "git"); !IsAlpine(m, "go", "go git") {
 						mdb.ZoneInsert(m, CLI, "go", CMD, kit.Format("install download https://golang.google.cn/dl/go1.15.5.%s-%s.tar.gz usr/local", runtime.GOOS, runtime.GOARCH))
 					}
-
-					IsAlpine(m, "npm")
-					IsAlpine(m, "node", "nodejs")
-					IsAlpine(m, "java", "openjdk8")
-					IsAlpine(m, "javac", "openjdk8")
-					IsAlpine(m, "mvn", "maven openjdk8")
-					IsAlpine(m, "python", "python2")
-					IsAlpine(m, "python2")
-					IsAlpine(m, "python3")
 				})
 			}},
 			mdb.INSERT: {Name: "insert cli osid cmd", Help: "添加"},
@@ -65,7 +56,16 @@ func init() {
 func IsAlpine(m *ice.Message, arg ...string) bool {
 	if strings.Contains(m.Conf(RUNTIME, kit.Keys(HOST, OSID)), ALPINE) {
 		if len(arg) > 0 {
-			m.Cmd(mdb.INSERT, m.Prefix(MIRRORS), "", mdb.ZONE, arg[0], OSID, ALPINE, CMD, "system apk add "+kit.Select(arg[0], arg, 1))
+			m.Cmd(mdb.INSERT, kit.Keys(CLI, MIRRORS), "", mdb.ZONE, arg[0], OSID, ALPINE, CMD, "system apk add "+kit.Select(arg[0], arg, 1))
+		}
+		return true
+	}
+	return false
+}
+func IsCentos(m *ice.Message, arg ...string) bool {
+	if strings.Contains(m.Conf(RUNTIME, kit.Keys(HOST, OSID)), CENTOS) {
+		if len(arg) > 0 {
+			m.Cmd(mdb.INSERT, kit.Keys(CLI, MIRRORS), "", mdb.ZONE, arg[0], OSID, CENTOS, CMD, "yum install -y "+kit.Select(arg[0], arg, 1))
 		}
 		return true
 	}

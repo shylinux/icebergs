@@ -17,7 +17,7 @@ import (
 )
 
 func _go_tags(m *ice.Message, key string) {
-	if s, e := os.Stat(path.Join(m.Option(cli.CMD_DIR), TAGS)); os.IsNotExist(e) || s.ModTime().Before(time.Now().Add(kit.Duration("-72h"))) {
+	if s, e := nfs.StatFile(m, path.Join(m.Option(cli.CMD_DIR), TAGS)); os.IsNotExist(e) || s.ModTime().Before(time.Now().Add(kit.Duration("-72h"))) {
 		m.Cmd(cli.SYSTEM, "gotags", "-R", "-f", TAGS, nfs.PWD)
 	}
 
@@ -36,7 +36,7 @@ func _go_tags(m *ice.Message, key string) {
 		text := strings.TrimSuffix(strings.TrimPrefix(ls[0], "/^"), "$/")
 		line := kit.Int(text)
 
-		f, e := os.Open(path.Join(m.Option(cli.CMD_DIR), file))
+		f, e := nfs.OpenFile(m, path.Join(m.Option(cli.CMD_DIR), file))
 		m.Assert(e)
 		defer f.Close()
 

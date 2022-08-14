@@ -37,7 +37,7 @@ func init() {
 			m.Cmdy("cli.system", "tar", "zcvf", arg)
 			return
 
-			file, err := os.Create(arg[0])
+			file, _, err := CreateFile(m, arg[0])
 			m.Assert(err)
 			defer file.Close()
 
@@ -67,7 +67,7 @@ func init() {
 						return
 					}
 
-					file, err := os.Open(p)
+					file, err := OpenFile(m, p)
 					if m.Warn(err) {
 						return
 					}

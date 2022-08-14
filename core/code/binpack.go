@@ -62,6 +62,7 @@ func _binpack_ctx(m *ice.Message, w io.Writer) {
 	_binpack_dir(m, w, ice.SRC)
 }
 func _binpack_all(m *ice.Message) {
+	nfs.OptionFiles(m, nfs.DiskFile)
 	if w, p, e := nfs.CreateFile(m, ice.SRC_BINPACK_GO); m.Assert(e) {
 		defer w.Close()
 		defer m.Echo(p)
@@ -79,6 +80,7 @@ func init() {
 		defer fmt.Fprintln(w, `}`)
 
 		defer fmt.Fprintln(w, `
+	nfs.PackFile.RemoveAll(ice.SRC)
 	for k, v := range pack {
 		if b, e := base64.StdEncoding.DecodeString(v); e == nil {
 			nfs.PackFile.WriteFile(k, b)

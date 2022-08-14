@@ -131,7 +131,7 @@ body.{{.Option "topic"}} fieldset.panel.Header>div.output div:hover { background
 				})
 				m.PushAction("choose", "form", mdb.REMOVE)
 			} else {
-				if p := "src/website/topic/" + arg[0]; kit.FileExists(p) {
+				if p := "src/website/topic/" + arg[0]; nfs.ExistsFile(m, p) {
 					m.Cmdy(nfs.CAT, p)
 				} else {
 					m.Tables(func(value ice.Maps) {
@@ -141,7 +141,7 @@ body.{{.Option "topic"}} fieldset.panel.Header>div.output div:hover { background
 			}
 		}},
 		"/topic/": {Name: "/topic/", Help: "主题", Hand: func(m *ice.Message, arg ...string) {
-			if p := "src/website/topic/" + arg[0]; kit.FileExists(p) {
+			if p := "src/website/topic/" + arg[0]; nfs.ExistsFile(m, p) {
 				m.RenderDownload(p)
 				return
 			}

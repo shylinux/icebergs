@@ -1,8 +1,6 @@
 package bash
 
 import (
-	"os"
-
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/aaa"
 	"shylinux.com/x/icebergs/base/cli"
@@ -39,7 +37,7 @@ func init() {
 			}},
 			mdb.PRUNES: {Name: "prunes before@date", Help: "清理", Hand: func(m *ice.Message, arg ...string) {
 				mdb.HashPrunes(m, func(value ice.Maps) bool {
-					os.RemoveAll(value[TO])
+					nfs.RemoveAll(m, value[TO])
 					return true
 				})
 			}},

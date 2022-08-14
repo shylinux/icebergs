@@ -1,7 +1,6 @@
 package git
 
 import (
-	"os"
 	"path"
 	"strings"
 
@@ -23,7 +22,7 @@ func _repos_path(name string) string {
 	return kit.Select(path.Join(ice.USR, name)+ice.PS, nfs.PWD, name == path.Base(kit.Pwd()))
 }
 func _repos_insert(m *ice.Message, name string, dir string) {
-	if s, e := os.Stat(m.Option(cli.CMD_DIR, path.Join(dir, ".git"))); e == nil && s.IsDir() {
+	if s, e := nfs.StatFile(m, m.Option(cli.CMD_DIR, path.Join(dir, ".git"))); e == nil && s.IsDir() {
 		ls := strings.SplitN(strings.Trim(m.Cmdx(cli.SYSTEM, GIT, "log", "-n1", `--pretty=format:"%ad %s"`, "--date=iso"), `"`), ice.SP, 4)
 		mdb.Rich(m, REPOS, nil, kit.Data(mdb.NAME, name, nfs.PATH, dir,
 			COMMIT, kit.Select("", ls, 3), mdb.TIME, strings.Join(ls[:2], ice.SP),
@@ -71,12 +70,12 @@ func init() {
 				// }
 
 				_repos_insert(m, m.Option(mdb.NAME), m.Option(nfs.PATH))
-				if s, e := os.Stat(path.Join(m.Option(nfs.PATH), ".git")); e == nil && s.IsDir() {
+				if s, e := nfs.StatFile(m, path.Join(m.Option(nfs.PATH), ".git")); e == nil && s.IsDir() {
 					return
 				}
 
 				// 下载仓库
-				if s, e := os.Stat(m.Option(nfs.PATH)); e == nil && s.IsDir() {
+				if s, e := nfs.StatFile(m, m.Option(nfs.PATH)); e == nil && s.IsDir() {
 					m.Option(cli.CMD_DIR, m.Option(nfs.PATH))
 					m.Cmd(cli.SYSTEM, GIT, INIT)
 					m.Cmd(cli.SYSTEM, GIT, REMOTE, ADD, ORIGIN, m.Option(REPOS))

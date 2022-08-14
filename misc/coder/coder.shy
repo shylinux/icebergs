@@ -1,15 +1,18 @@
-chapter "codeserver"
+section "code-server"
 refer `
-https://coder.com/
-https://github.com/coder/code-server/
-https://github.com/microsoft/vscode
-https://code.visualstudio.com/
-https://geek-docs.com/vscode/vscode-tutorials/what-is-vscode.html
+官网 https://coder.com/
+源码 https://github.com/coder/code-server/
 `
 
 spark shell `
 wget https://github.com/coder/code-server/releases/download/v4.4.0/code-server-4.4.0-linux-amd64.tar.gz
-tar xvf code-server-4.4.0-linux-amd64.tar.gz
-cd code-server-4.4.0-linux-amd64
+tar xvf code-server-4.4.0-linux-amd64.tar.gz && cd code-server-4.4.0-linux-amd64
 ./bin/code-server
+`
+field web.code.coder.server
+
+refer `
+官网 https://code.visualstudio.com/
+源码 https://github.com/microsoft/vscode
+入门 https://geek-docs.com/vscode/vscode-tutorials/what-is-vscode.html
 `

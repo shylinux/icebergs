@@ -79,18 +79,14 @@ func init() {
 
 				} else { // 创建会话
 					m.Option(cli.CMD_DIR, path.Join(ice.USR_LOCAL_WORK, m.Option(mdb.NAME)))
-					ls := kit.Split(m.Option(mdb.NAME), "-_")
+					ls := kit.Split(strings.TrimSuffix(m.Option(mdb.NAME), "-story"), "-")
 					name := ls[len(ls)-1]
 
 					m.Cmdy(cli.SYSTEM, TMUX, "new-session", "-ds", m.Option(mdb.NAME), "-n", name)
 					name = _tmux_key(m.Option(mdb.NAME), ls[len(ls)-1])
 
-					m.Cmdy(cli.SYSTEM, TMUX, "split-window", "-t", kit.Keys(name, "1"), "-p", "20")
-					m.Cmdy(cli.SYSTEM, TMUX, "split-window", "-t", kit.Keys(name, "2"), "-h")
-
-					m.Cmd(cli.SYSTEM, TMUX, "send-keys", "-t", kit.Keys(name, "3"), "ish_miss_log", "Enter")
-					// m.Cmd(cli.SYSTEM, TMUX, "send-keys", "-t", kit.Keys(name, "2"), "ish_miss_space", "Enter")
-					m.Cmd(cli.SYSTEM, TMUX, "send-keys", "-t", kit.Keys(name, "2"), "ish_miss_space")
+					m.Cmd(cli.SYSTEM, TMUX, "split-window", "-t", kit.Keys(name, "1"), "-p", "40")
+					m.Cmd(cli.SYSTEM, TMUX, "send-keys", "-t", kit.Keys(name, "2"), "ish_miss_log", "Enter")
 					m.Cmd(cli.SYSTEM, TMUX, "send-keys", "-t", kit.Keys(name, "1"), "vi etc/miss.sh", "Enter")
 
 					m.Cmdy(cli.SYSTEM, TMUX, "link-window", "-s", name, "-t", "miss:")

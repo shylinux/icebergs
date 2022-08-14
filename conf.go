@@ -93,6 +93,7 @@ const ( // DIR
 	PAGE   = "page"
 	PANEL  = "panel"
 	PLUGIN = "plugin"
+	STORY  = "story"
 
 	FAVICON   = "favicon.ico"
 	PROTO_JS  = "proto.js"

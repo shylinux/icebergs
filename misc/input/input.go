@@ -5,7 +5,6 @@ import (
 	"bytes"
 	"encoding/csv"
 	"fmt"
-	"os"
 	"path"
 	"strings"
 
@@ -34,12 +33,12 @@ type input struct {
 }
 
 func (i input) Load(m *ice.Message, arg ...string) {
-	if f, e := os.Open(m.Option(nfs.FILE)); m.Assert(e) {
+	if f, e := nfs.OpenFile(m.Message, m.Option(nfs.FILE)); m.Assert(e) {
 		defer f.Close()
 
 		// 清空数据
 		lib := kit.Select(path.Base(m.Option(nfs.FILE)), m.Option(mdb.ZONE))
-		m.Assert(os.RemoveAll(path.Join(m.Config(mdb.STORE), lib)))
+		m.Assert(nfs.RemoveAll(m.Message, path.Join(m.Config(mdb.STORE), lib)))
 		m.Cmd(mdb.DELETE, m.PrefixKey(), "", mdb.HASH, mdb.ZONE, lib)
 		prefix := kit.Keys(mdb.HASH, mdb.Rich(m.Message, m.PrefixKey(), "", kit.Data(
 			mdb.STORE, path.Join(m.Config(mdb.STORE), lib),

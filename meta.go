@@ -159,7 +159,11 @@ func (m *Message) Push(key string, value Any, arg ...Any) *Message {
 			// 追加数据
 			switch v := kit.Format(v); key {
 			case FIELDS_DETAIL:
-				m.Add(MSG_APPEND, KEY, k)
+				switch k {
+				case "_target":
+					continue
+				}
+				m.Add(MSG_APPEND, KEY, strings.TrimPrefix(k, "extra."))
 				m.Add(MSG_APPEND, VALUE, v)
 			default:
 				m.Add(MSG_APPEND, k, v)

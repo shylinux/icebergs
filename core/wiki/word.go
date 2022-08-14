@@ -74,11 +74,12 @@ func init() {
 			}},
 
 			mdb.INPUTS: {Name: "inputs", Help: "补全", Hand: func(m *ice.Message, arg ...string) {
-				m.Cmdy(nfs.DIR, "src/", kit.Dict(nfs.DIR_DEEP, ice.TRUE, nfs.DIR_REG, ".*\\.shy"), nfs.DIR_CLI_FIELDS)
-				m.Cmdy(nfs.DIR, "src/help/", kit.Dict(nfs.DIR_DEEP, ice.TRUE, nfs.DIR_REG, ".*\\.shy"), nfs.DIR_CLI_FIELDS)
+				for _, p := range []string{"src/", "src/help/", "usr/icebergs/"} {
+					m.Cmdy(nfs.DIR, p, kit.Dict(nfs.DIR_DEEP, ice.TRUE, nfs.DIR_REG, ".*\\.shy"), nfs.DIR_CLI_FIELDS)
+				}
 			}},
-			"story": {Name: "story", Help: "运行", Hand: func(m *ice.Message, arg ...string) {
-				m.Cmdy(arg[0], ctx.ACTION, ice.RUN, arg[2:])
+			ice.STORY: {Name: "story", Help: "运行", Hand: func(m *ice.Message, arg ...string) {
+				m.Cmdy(arg[0], ice.RUN, arg[2:])
 			}},
 			ice.PLAY: {Name: "play", Help: "演示"},
 		}, ctx.CmdAction(), mdb.HashAction()), Hand: func(m *ice.Message, arg ...string) {
@@ -87,7 +88,7 @@ func init() {
 				arg = append(arg, "src/")
 			}
 			if m.Option(nfs.DIR_DEEP, ice.TRUE); !_wiki_list(m, m.CommandKey(), arg...) {
-				if !kit.FileExists(arg[0]) && kit.FileExists(path.Join("src", arg[0])) {
+				if !nfs.ExistsFile(m, arg[0]) && nfs.ExistsFile(m, path.Join("src", arg[0])) {
 					arg[0] = path.Join("src/", arg[0])
 				}
 				ctx.DisplayLocal(m, "")

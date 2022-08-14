@@ -37,7 +37,7 @@ func init() {
 				}
 
 				m.Cmd(FOREVER, STOP)
-				m.Cmdy(FOREVER, kit.Select(os.Args[0], nfs.PWD+ice.BIN_ICE_BIN, kit.FileExists(ice.BIN_ICE_BIN)),
+				m.Cmdy(FOREVER, kit.Select(os.Args[0], nfs.PWD+ice.BIN_ICE_BIN, nfs.ExistsFile(m, ice.BIN_ICE_BIN)),
 					"serve", START, ice.DEV, "", aaa.USERNAME, aaa.ROOT, aaa.PASSWORD, aaa.ROOT, arg)
 			}},
 			RESTART: {Name: "restart", Help: "重启", Hand: func(m *ice.Message, arg ...string) {

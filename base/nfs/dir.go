@@ -173,18 +173,12 @@ const DIR = "dir"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
-		DIR: {Name: "dir path field auto upload what", Help: "目录", Actions: ice.Actions{
+		DIR: {Name: "dir path field auto upload", Help: "目录", Actions: ice.Actions{
 			mdb.UPLOAD: {Name: "upload", Help: "上传", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmdy("web.cache", "upload_watch", m.Option(PATH))
 			}},
 			TRASH: {Name: "trash", Help: "删除", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmdy(TRASH, mdb.CREATE, m.Option(PATH))
-			}},
-			"what": {Name: "trash", Help: "what", Hand: func(m *ice.Message, arg ...string) {
-				m.Option(DIR_ROOT, "usr/volcanos/plugin/local/code/inner/")
-				m.Option(DIR_DEEP, "true")
-				m.Cmdy(DIR, PWD)
-				m.Sort("path")
 			}},
 		}, Hand: func(m *ice.Message, arg ...string) {
 			if m.Option(DIR_ROOT) != "" {

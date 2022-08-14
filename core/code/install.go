@@ -32,8 +32,8 @@ func _install_download(m *ice.Message) {
 	file := path.Join(kit.Select(ice.USR_INSTALL, m.Option(nfs.PATH)), name)
 
 	if nfs.ExistsFile(m, file) {
-		web.ToastSuccess(m)
 		m.Cmdy(nfs.DIR, file)
+		web.ToastSuccess(m)
 		return // 文件存在
 	}
 

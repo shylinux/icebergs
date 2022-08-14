@@ -24,7 +24,7 @@ func _publish_file(m *ice.Message, file string, arg ...string) string {
 
 	} else if s, e := nfs.StatFile(m, file); m.Assert(e) && s.IsDir() {
 		file = m.Cmdx(nfs.TAR, mdb.IMPORT, path.Base(file), file)
-		defer func() { os.Remove(file) }()
+		defer func() { nfs.Remove(m, file) }()
 	}
 
 	// 发布文件
@@ -43,7 +43,7 @@ func _publish_bin_list(m *ice.Message, dir string) {
 	p := m.Option(cli.CMD_DIR, dir)
 	for _, ls := range strings.Split(strings.TrimSpace(m.Cmd(cli.SYSTEM, "bash", "-c", "ls |xargs file |grep executable").Append(cli.CMD_OUT)), ice.NL) {
 		if file := strings.TrimSpace(strings.Split(ls, ":")[0]); file != "" {
-			if s, e := os.Stat(path.Join(p, file)); e == nil {
+			if s, e := nfs.StatFile(m, path.Join(p, file)); e == nil {
 				m.Push(mdb.TIME, s.ModTime())
 				m.Push(nfs.SIZE, kit.FmtSize(s.Size()))
 				m.Push(nfs.FILE, file)

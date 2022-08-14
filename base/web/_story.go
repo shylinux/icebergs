@@ -1,7 +1,6 @@
 package web
 
 import (
-	"os"
 	"time"
 
 	ice "shylinux.com/x/icebergs"
@@ -127,7 +126,7 @@ func _story_write(m *ice.Message, scene, name, text string, arg ...string) {
 func _story_catch(m *ice.Message, scene, name string, arg ...string) {
 	if last := m.Richs(STORY, HEAD, name, nil); last != nil {
 		if t, e := time.ParseInLocation(ice.MOD_TIME, kit.Format(last[mdb.TIME]), time.Local); e == nil {
-			if s, e := os.Stat(name); e == nil && s.ModTime().Before(t) {
+			if s, e := nfs.StatFile(m, name); e == nil && s.ModTime().Before(t) {
 				m.Push(name, last, []string{mdb.TIME, mdb.COUNT, mdb.KEY})
 				m.Logs("info", "file", "exists")
 				m.Echo("%s", last[LIST])

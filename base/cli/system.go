@@ -42,7 +42,7 @@ func _system_cmd(m *ice.Message, arg ...string) *exec.Cmd {
 
 	// 运行目录
 	if cmd.Dir = m.Option(CMD_DIR); len(cmd.Dir) > 0 {
-		if m.Logs(mdb.EXPORT, CMD_DIR, cmd.Dir); !kit.FileExists(cmd.Dir) {
+		if m.Logs(mdb.EXPORT, CMD_DIR, cmd.Dir); !nfs.ExistsFile(m, cmd.Dir) {
 			file.MkdirAll(cmd.Dir, ice.MOD_DIR)
 		}
 	}
@@ -81,7 +81,7 @@ func _system_find(m *ice.Message, bin string, dir ...string) string {
 		dir = append(dir, strings.Split(kit.Env(PATH), ice.DF)...)
 	}
 	for _, p := range dir {
-		if kit.FileExists(path.Join(p, bin)) {
+		if nfs.ExistsFile(m, path.Join(p, bin)) {
 			return kit.Path(path.Join(p, bin))
 		}
 	}

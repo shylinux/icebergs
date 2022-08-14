@@ -158,7 +158,7 @@ func FileURI(dir string) string {
 	if strings.HasPrefix(dir, ice.SRC) {
 		return path.Join("/require", dir)
 	}
-	if kit.FileExists(path.Join(ice.SRC, dir)) {
+	if nfs.ExistsFile(ice.Pulse, path.Join(ice.SRC, dir)) {
 		return path.Join("/require/src/", dir)
 	}
 	return dir

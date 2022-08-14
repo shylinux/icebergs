@@ -38,7 +38,7 @@ func _cmd_file(m *ice.Message, arg ...string) bool {
 		web.RenderCmd(m, "can.parse", m.Cmdx(nfs.CAT, p))
 
 	default:
-		if p = strings.TrimPrefix(p, ice.SRC+ice.PS); kit.FileExists(path.Join(ice.SRC, p)) {
+		if p = strings.TrimPrefix(p, ice.SRC+ice.PS); nfs.ExistsFile(m, path.Join(ice.SRC, p)) {
 			if msg := m.Cmd(mdb.RENDER, kit.Ext(p)); msg.Length() > 0 {
 				m.Cmdy(mdb.RENDER, kit.Ext(p), p, ice.SRC+ice.PS).RenderResult()
 				break

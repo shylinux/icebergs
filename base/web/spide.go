@@ -8,7 +8,6 @@ import (
 	"mime/multipart"
 	"net/http"
 	"net/url"
-	"os"
 	"path"
 	"strings"
 	"time"
@@ -141,7 +140,7 @@ func _spide_body(m *ice.Message, method string, arg ...string) (io.Reader, ice.M
 			head[ContentType] = ContentJSON
 
 		case SPIDE_FILE:
-			if f, e := os.Open(arg[1]); m.Assert(e) {
+			if f, e := nfs.OpenFile(m, arg[1]); m.Assert(e) {
 				defer f.Close()
 				body, arg = f, arg[2:]
 			}

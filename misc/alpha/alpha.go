@@ -1,7 +1,6 @@
 package alpha
 
 import (
-	"os"
 	"path"
 	"strings"
 
@@ -34,7 +33,7 @@ func (a alpha) Load(m *ice.Message, arg ...string) {
 	name := m.Option(mdb.NAME)
 	// 清空数据
 	meta := m.Confm(m.PrefixKey(), mdb.META)
-	m.Assert(os.RemoveAll(path.Join(kit.Format(meta[mdb.STORE]), name)))
+	m.Assert(nfs.RemoveAll(m.Message, path.Join(kit.Format(meta[mdb.STORE]), name)))
 	m.Conf(m.PrefixKey(), name, "")
 
 	// 缓存配置

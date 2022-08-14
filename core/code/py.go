@@ -31,6 +31,12 @@ func init() {
 	Index.Merge(&ice.Context{Commands: ice.Commands{
 		PY: {Name: "py path auto", Help: "脚本", Actions: ice.MergeActions(ice.Actions{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
+				m.Go(func() {
+					m.Sleep300ms() // after runtime init
+					cli.IsAlpine(m, "python", "python2")
+					cli.IsAlpine(m, "python2")
+					cli.IsAlpine(m, "python3")
+				})
 				m.Cmd(mdb.ENGINE, mdb.CREATE, PY, m.PrefixKey())
 				m.Cmd(mdb.RENDER, mdb.CREATE, PY, m.PrefixKey())
 			}},

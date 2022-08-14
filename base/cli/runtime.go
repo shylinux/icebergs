@@ -27,6 +27,8 @@ func _runtime_init(m *ice.Message) {
 	m.Conf(RUNTIME, kit.Keys(HOST, PID), os.Getpid())
 	m.Conf(RUNTIME, kit.Keys(HOST, HOME), kit.Env(HOME))
 	m.Conf(RUNTIME, kit.Keys(HOST, MAXPROCS), runtime.GOMAXPROCS(0))
+	m.Conf(RUNTIME, mdb.META, "")
+	m.Conf(RUNTIME, mdb.HASH, "")
 
 	// 启动目录 boot
 	m.Conf(RUNTIME, kit.Keys(BOOT, HOSTNAME), kit.Env("HOSTNAME"))
@@ -47,9 +49,9 @@ func _runtime_init(m *ice.Message) {
 	m.Conf(RUNTIME, kit.Keys(BOOT, mdb.COUNT), kit.Int(m.Conf(RUNTIME, kit.Keys(BOOT, mdb.COUNT)))+1)
 	bin := _system_find(m, os.Args[0])
 	m.Conf(RUNTIME, kit.Keys(BOOT, ice.BIN), bin)
-	if s, e := os.Stat(bin); e == nil {
+	if s, e := nfs.StatFile(m, bin); e == nil {
 		m.Conf(RUNTIME, kit.Keys(BOOT, nfs.SIZE), kit.FmtSize(s.Size()))
-		if f, e := os.Open(bin); e == nil {
+		if f, e := nfs.OpenFile(m, bin); e == nil {
 			defer f.Close()
 			m.Conf(RUNTIME, kit.Keys(BOOT, mdb.HASH), kit.Hashs(f))
 		}

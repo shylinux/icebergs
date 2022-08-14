@@ -1,7 +1,6 @@
 package git
 
 import (
-	"os"
 	"path"
 	"strings"
 	"sync"
@@ -88,10 +87,10 @@ func init() {
 		}},
 		"_sum": {Name: "_sum [path] [total] [count|date] args...", Help: "统计量", Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) > 0 {
-				if s, e := os.Stat(path.Join(arg[0], ".git")); e == nil && s.IsDir() {
+				if s, e := nfs.StatFile(m, path.Join(arg[0], ".git")); e == nil && s.IsDir() {
 					m.Option(cli.CMD_DIR, arg[0])
 					arg = arg[1:]
-				} else if s, e := os.Stat(path.Join(arg[0], "refs")); e == nil && s.IsDir() {
+				} else if s, e := nfs.StatFile(m, path.Join(arg[0], "refs")); e == nil && s.IsDir() {
 					m.Option(cli.CMD_DIR, arg[0])
 					arg = arg[1:]
 				}

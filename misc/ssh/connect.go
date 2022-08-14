@@ -45,17 +45,17 @@ func _ssh_open(m *ice.Message, arg ...string) {
 }
 func _ssh_dial(m *ice.Message, cb func(net.Conn), arg ...string) {
 	p := path.Join(kit.Env(cli.HOME), ".ssh/", fmt.Sprintf("%s@%s:%s", m.Option(aaa.USERNAME), m.Option(tcp.HOST), m.Option(tcp.PORT)))
-	if kit.FileExists(p) {
+	if nfs.FileExists(m, p) {
 		if c, e := net.Dial("unix", p); e == nil {
 			cb(c) // 会话连接
 			return
 		}
-		os.Remove(p)
+		nfs.Remove(m, p)
 	}
 
 	_ssh_conn(m, func(client *ssh.Client) {
 		if l, e := net.Listen("unix", p); m.Assert(e) {
-			defer func() { os.Remove(p) }()
+			defer func() { nfs.Remove(m, p) }()
 			defer l.Close()
 
 			m.Go(func() {

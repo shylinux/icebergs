@@ -12,7 +12,7 @@ import (
 )
 
 func _c_tags(m *ice.Message, key string) {
-	if !kit.FileExists(path.Join(m.Option(cli.CMD_DIR), TAGS)) {
+	if !nfs.ExistsFile(m, path.Join(m.Option(cli.CMD_DIR), TAGS)) {
 		m.Cmd(cli.SYSTEM, "ctags", "-R", "-f", TAGS, nfs.PWD)
 	}
 	_go_tags(m, key)

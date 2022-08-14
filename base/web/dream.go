@@ -49,14 +49,14 @@ func _dream_list(m *ice.Message) *ice.Message {
 
 func _dream_show(m *ice.Message, name string) {
 	if !strings.Contains(name, "-") || !strings.HasPrefix(name, "20") {
-		name = m.Time("20060102-") + kit.ReplaceAll(name, "-", "_")
+		name = m.Time("20060102-") + name
 	}
 	defer m.ProcessOpen(MergePod(m, m.Option(mdb.NAME, name)))
 	defer m.Echo(MergePod(m, m.Option(mdb.NAME, name)))
 	// defer m.PushRefresh()
 
 	p := path.Join(ice.USR_LOCAL_WORK, name)
-	if pid := m.Cmdx(nfs.CAT, path.Join(p, ice.Info.PidPath)); pid != "" && kit.FileExists("/proc/"+pid) {
+	if pid := m.Cmdx(nfs.CAT, path.Join(p, ice.Info.PidPath)); pid != "" && nfs.ExistsFile(m, "/proc/"+pid) {
 		m.Info("already exists %v", pid)
 		return // 已经启动
 	} else if m.Cmd(SPACE, name).Length() > 0 {
@@ -117,17 +117,24 @@ const DREAM = "dream"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
-		DREAM: {Name: "dream name path auto start", Help: "梦想家", Actions: ice.MergeActions(ice.Actions{
+		DREAM: {Name: "dream name path auto create", Help: "梦想家", Actions: ice.MergeActions(ice.Actions{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) { m.Config(nfs.SCRIPT, _dream_script) }},
 			mdb.INPUTS: {Name: "inputs", Help: "补全", Hand: func(m *ice.Message, arg ...string) {
 				switch arg[0] {
 				case nfs.REPOS:
+					m.Cmd("web.code.git.server", func(value ice.Maps) {
+						m.Push(nfs.PATH, MergeLink(m, path.Join("/x/", value[nfs.PATH]+".git")))
+					})
+					m.Sort(nfs.PATH)
 				default:
 					_dream_list(m).Cut("name,status,time")
 				}
 			}},
-			cli.START: {Name: "start name=hi repos", Help: "启动", Hand: func(m *ice.Message, arg ...string) {
+			mdb.CREATE: {Name: "create name=hi repos", Help: "创建", Hand: func(m *ice.Message, arg ...string) {
 				_dream_show(m, m.Option(mdb.NAME, kit.Select(path.Base(m.Option(nfs.REPOS)), m.Option(mdb.NAME))))
+			}},
+			cli.START: {Name: "start", Help: "启动", Hand: func(m *ice.Message, arg ...string) {
+				_dream_show(m, m.Option(mdb.NAME))
 			}},
 			cli.OPEN: {Name: "open", Help: "打开", Hand: func(m *ice.Message, arg ...string) {
 				m.ProcessOpen(MergePod(m, m.Option(mdb.NAME), "", ""))
@@ -141,7 +148,7 @@ func init() {
 			cli.STOP: {Name: "stop", Help: "停止", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmd(SPACE, mdb.MODIFY, m.OptionSimple(mdb.NAME), mdb.STATUS, cli.STOP)
 				m.Cmd(SPACE, m.Option(mdb.NAME), ice.EXIT)
-				m.ProcessRefresh30ms()
+				m.ProcessRefresh3s()
 			}},
 			DREAM_STOP: {Name: "dream.stop type name", Help: "停止", Hand: func(m *ice.Message, arg ...string) {
 				if m.CmdAppend(SPACE, m.Option(mdb.NAME), mdb.STATUS) == cli.STOP {

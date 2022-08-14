@@ -155,7 +155,7 @@ func init() {
 					web.RenderStatus(m.W, 401, err.Error())
 					return // 没有权限
 				}
-				if !kit.FileExists(path.Join(repos)) {
+				if !nfs.ExistsFile(m, path.Join(repos)) {
 					m.Cmd(cli.SYSTEM, GIT, INIT, "--bare", repos) // 创建仓库
 					m.Logs(mdb.CREATE, REPOS, repos)
 				}
@@ -164,7 +164,7 @@ func init() {
 				if kit.Select("", arg, 1) == "info" && m.Cmd(web.DREAM, arg[0]).Length() > 0 {
 					m.Cmd(web.SPACE, arg[0], "web.code.git.status", "submit", web.MergeURL2(m, "/x/")+arg[0])
 				}
-				if !kit.FileExists(path.Join(repos)) {
+				if !nfs.ExistsFile(m, path.Join(repos)) {
 					web.RenderStatus(m.W, 404, kit.Format("not found: %s", arg[0]))
 					return
 				}

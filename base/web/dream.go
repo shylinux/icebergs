@@ -48,6 +48,9 @@ func _dream_list(m *ice.Message) *ice.Message {
 }
 
 func _dream_show(m *ice.Message, name string) {
+	if m.Warn(name == "") {
+		return 
+	}
 	if !strings.Contains(name, "-") || !strings.HasPrefix(name, "20") {
 		name = m.Time("20060102-") + name
 	}
@@ -123,7 +126,7 @@ func init() {
 				switch arg[0] {
 				case nfs.REPOS:
 					m.Cmd("web.code.git.server", func(value ice.Maps) {
-						m.Push(nfs.PATH, MergeLink(m, path.Join("/x/", value[nfs.PATH]+".git")))
+						m.Push(nfs.PATH, MergeLink(m, path.Join("/x/", path.Clean(value[nfs.PATH])+".git")))
 					})
 					m.Sort(nfs.PATH)
 				default:

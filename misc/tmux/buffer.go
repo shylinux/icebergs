@@ -4,7 +4,6 @@ import (
 	"strings"
 
 	ice "shylinux.com/x/icebergs"
-	"shylinux.com/x/icebergs/base/cli"
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/nfs"
 	kit "shylinux.com/x/toolkits"
@@ -14,53 +13,37 @@ const (
 	BUFFER = "buffer"
 	TEXT   = "text"
 )
+const (
+	SET_BUFFER  = "set-buffer"
+	SHOW_BUFFER = "show-buffer"
+	LIST_BUFFER = "list-buffers"
+)
 
 func init() {
 	Index.MergeCommands(ice.Commands{
-		BUFFER: {Name: "buffer name value auto export import", Help: "缓存", Actions: ice.Actions{
+		BUFFER: {Name: "buffer name value auto", Help: "缓存", Actions: ice.Actions{
 			mdb.MODIFY: {Name: "modify", Help: "编辑", Hand: func(m *ice.Message, arg ...string) {
 				switch arg[0] {
 				case mdb.TEXT:
-					m.Cmd(cli.SYSTEM, TMUX, "set-buffer", "-b", m.Option(mdb.NAME), arg[1])
+					_tmux_cmd(m, SET_BUFFER, "-b", m.Option(mdb.NAME), arg[1])
 				}
-			}},
-			mdb.EXPORT: {Name: "export", Help: "导出", Hand: func(m *ice.Message, arg ...string) {
-				m.Config(mdb.LIST, "")
-				m.Config(mdb.COUNT, "0")
-
-				m.Cmd(BUFFER).Table(func(index int, value ice.Maps, head []string) {
-					mdb.Grow(m, m.PrefixKey(), "", kit.Dict(
-						mdb.NAME, value[head[0]], mdb.TEXT, m.Cmdx(cli.SYSTEM, TMUX, "show-buffer", "-b", value[head[0]]),
-					))
-				})
-				m.Cmdy(mdb.EXPORT, m.PrefixKey(), "", mdb.LIST)
-			}},
-			mdb.IMPORT: {Name: "import", Help: "导入", Hand: func(m *ice.Message, arg ...string) {
-				m.Config(mdb.LIST, "")
-				m.Config(mdb.COUNT, "0")
-
-				m.Option(mdb.CACHE_LIMIT, "-1")
-				m.Cmdy(mdb.IMPORT, m.PrefixKey(), "", mdb.LIST)
-				mdb.Grows(m, m.PrefixKey(), "", "", "", func(index int, value ice.Map) {
-					m.Cmd(cli.SYSTEM, TMUX, "set-buffer", "-b", value[mdb.NAME], value[mdb.TEXT])
-				})
 			}},
 		}, Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) > 1 && arg[1] != "" { // 设置缓存
-				m.Cmd(cli.SYSTEM, TMUX, "set-buffer", "-b", arg[0], arg[1])
+				_tmux_cmd(m, SET_BUFFER, "-b", arg[0], arg[1])
 			}
 			if len(arg) > 0 { // 查看缓存
-				m.Echo(m.Cmdx(cli.SYSTEM, TMUX, "show-buffer", "-b", arg[0]))
+				m.Echo(_tmux_cmd(m, SHOW_BUFFER, "-b", arg[0]).Result())
 				return
 			}
 
 			// 缓存列表
-			for i, v := range kit.Split(m.Cmdx(cli.SYSTEM, TMUX, "list-buffers"), ice.NL, ice.NL, ice.NL) {
+			for i, v := range kit.Split(_tmux_cmd(m, LIST_BUFFER).Result(), ice.NL, ice.NL, ice.NL) {
 				ls := strings.SplitN(v, ": ", 3)
 				m.Push(mdb.NAME, ls[0])
 				m.Push(nfs.SIZE, ls[1])
 				if i < 3 {
-					m.Push(mdb.TEXT, m.Cmdx(cli.SYSTEM, TMUX, "show-buffer", "-b", ls[0]))
+					m.Push(mdb.TEXT, _tmux_cmd(m, SHOW_BUFFER, "-b", ls[0]).Result())
 				} else {
 					m.Push(mdb.TEXT, ls[2][1:len(ls[2])-1])
 				}
@@ -69,24 +52,13 @@ func init() {
 		TEXT: {Name: "text auto save text:textarea", Help: "文本", Actions: ice.Actions{
 			nfs.SAVE: {Name: "save", Help: "保存", Hand: func(m *ice.Message, arg ...string) {
 				if len(arg) > 0 && arg[0] != "" {
-					m.Cmd(cli.SYSTEM, TMUX, "set-buffer", arg[0])
+					_tmux_cmd(m, SET_BUFFER, arg[0])
 				}
 				m.Cmdy(TEXT)
 			}},
-			mdb.SEARCH: {Name: "search type name text", Help: "搜索", Hand: func(m *ice.Message, arg ...string) {
-				if arg[0] == mdb.FOREACH && arg[1] == "" {
-					text := m.Cmdx(cli.SYSTEM, TMUX, "show-buffer")
-					if strings.HasPrefix(text, "http") {
-						m.PushSearch(mdb.TEXT, text)
-					} else {
-						m.PushSearch(mdb.TEXT, ice.Render(m, ice.RENDER_SCRIPT, text))
-					}
-				}
-			}},
 		}, Hand: func(m *ice.Message, arg ...string) {
-			text := m.Cmdx(cli.SYSTEM, TMUX, "show-buffer")
-			if m.EchoQRCode(text); strings.HasPrefix(text, ice.HTTP) {
-				m.Echo(ice.NL)
+			text := _tmux_cmd(m, SHOW_BUFFER).Result()
+			if m.EchoQRCode(text).Echo(ice.NL); strings.HasPrefix(text, ice.HTTP) {
 				m.EchoAnchor(text)
 			} else {
 				m.EchoScript(text)

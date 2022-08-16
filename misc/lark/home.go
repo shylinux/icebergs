@@ -21,8 +21,8 @@ func init() {
 
 			text, link, list := kit.Select("", arg, 3), kit.MergeURL2(m.Conf(web.SHARE, kit.Keym("domain")), "/chat/lark/sso"), []string{}
 			if len(arg) == 0 {
-				m.Cmd("web.chat./river").Tables(func(val ice.Maps) {
-					m.Cmd("web.chat./river", val[mdb.HASH], chat.STORM).Tables(func(value ice.Maps) {
+				m.Cmd("web.chat./river", func(val ice.Maps) {
+					m.Cmd("web.chat./river", val[mdb.HASH], chat.STORM, func(value ice.Maps) {
 						list = append(list, kit.Keys(val[mdb.NAME], value[mdb.NAME]),
 							ice.CMD, kit.Format([]string{HOME, val[mdb.HASH], value[mdb.HASH], val[mdb.NAME] + "." + value[mdb.NAME]}))
 					})
@@ -31,7 +31,7 @@ func init() {
 				m.Option(ice.MSG_RIVER, arg[0])
 				m.Option(ice.MSG_STORM, arg[1])
 				link = kit.MergeURL(link, chat.RIVER, arg[0], chat.STORM, arg[1])
-				m.Cmd("web.chat./river", arg[0], chat.STORM, arg[1]).Tables(func(value ice.Maps) {
+				m.Cmd("web.chat./river", arg[0], chat.STORM, arg[1], func(value ice.Maps) {
 					list = append(list, value[ice.CMD], ice.CMD, kit.Keys(value[ice.CTX], value[ice.CMD]))
 				})
 			}

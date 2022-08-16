@@ -16,7 +16,7 @@ func init() {
 			word := list[kit.Int(m.Option("index"))]
 			switch arg[0] {
 			case "shy":
-				m.Cmd("web.code.input.find", word).Tables(func(value ice.Maps) {
+				m.Cmd("web.code.input.find", word, func(value ice.Maps) {
 					m.Echo(value["text"]).Echo(" ")
 				})
 

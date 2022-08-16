@@ -50,7 +50,7 @@ func init() {
 				if arg[0] == mdb.FOREACH && arg[1] == "" {
 					m.PushSearch(mdb.TYPE, nfs.SHY, mdb.NAME, ice.SRC_MAIN_SHY, mdb.TEXT, chat.MergeCmd(m, ""))
 				}
-				m.Cmd(mdb.SELECT, m.PrefixKey(), "", mdb.HASH).Tables(func(value ice.Maps) {
+				m.Cmd(mdb.SELECT, m.PrefixKey(), "", mdb.HASH, func(value ice.Maps) {
 					if arg[1] == "" {
 						if value[mdb.TYPE] == SPARK {
 							value[mdb.TEXT] = ice.Render(m, ice.RENDER_SCRIPT, value[mdb.TEXT])

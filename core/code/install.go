@@ -3,6 +3,7 @@ package code
 import (
 	"path"
 	"strings"
+	"time"
 
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/aaa"
@@ -38,13 +39,19 @@ func _install_download(m *ice.Message) {
 	}
 
 	m.Cmd(nfs.SAVE, file, "")
-	web.GoToast(m, web.DOWNLOAD, func(toast func(string, int, int)) {
-		mdb.HashCreate(m, mdb.NAME, name, nfs.PATH, file, mdb.LINK, link)
+	begin, last := time.Now(), time.Now()
+	mdb.HashCreate(m, mdb.NAME, name, nfs.PATH, file, mdb.LINK, link)
+	web.GoToast(m, name, func(toast func(string, int, int)) {
 		m.Cmd("web.spide", ice.DEV, web.SPIDE_SAVE, file, web.SPIDE_GET, link, func(count int, total int, step int) {
-			mdb.HashSelectUpdate(m, name, func(value ice.Map) {
-				value[mdb.COUNT], value[mdb.TOTAL], value[mdb.VALUE] = count, total, step
-			})
-			toast(name, count, total)
+			mdb.HashSelectUpdate(m, name, func(value ice.Map) { value[mdb.COUNT], value[mdb.TOTAL], value[mdb.VALUE] = count, total, step })
+
+			if now := time.Now(); now.Sub(last) > 500*time.Millisecond {
+				cost := now.Sub(begin)
+				toast(kit.FormatShow("from", begin.Format("15:04:05"), "cost", kit.FmtDuration(cost),
+					"rest", kit.FmtDuration(cost*time.Duration(100)/time.Duration(step+1)-cost),
+				), count, total)
+				last = now
+			}
 		})
 		m.Cmd(nfs.TAR, mdb.EXPORT, name, kit.Dict(cli.CMD_DIR, path.Dir(file)))
 		web.PushNoticeRefresh(m)

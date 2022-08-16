@@ -11,19 +11,15 @@ import (
 
 const TMUX = "tmux"
 
-var Index = &ice.Context{Name: TMUX, Help: "工作台", Configs: ice.Configs{
-	TMUX: {Name: TMUX, Help: "工作台", Value: kit.Data(
-		nfs.SOURCE, "http://mirrors.tencent.com/macports/distfiles/tmux/tmux-3.2.tar.gz",
-	)},
-}, Commands: ice.Commands{
+var Index = &ice.Context{Name: TMUX, Help: "工作台", Commands: ice.Commands{
 	TMUX: {Name: "tmux path auto start order build download", Help: "服务", Actions: ice.MergeActions(ice.Actions{
 		cli.START: {Name: "start", Help: "启动", Hand: func(m *ice.Message, arg ...string) {
 			m.Optionv(code.PREPARE, func(p string) []string {
-				return []string{"-S", kit.Path(m.Option(cli.CMD_DIR, p), "tmux.socket"), "new-session", "-dn", "miss"}
+				return []string{"-S", kit.Path(m.Option(cli.CMD_DIR, p), "tmux.socket"), NEW_SESSION, "-d", "-n", "miss"}
 			})
 			m.Cmdy(code.INSTALL, cli.START, m.Config(nfs.SOURCE), "bin/tmux")
 		}},
-	}, code.InstallAction()), Hand: func(m *ice.Message, arg ...string) {
+	}, code.InstallAction(nfs.SOURCE, "http://mirrors.tencent.com/macports/distfiles/tmux/tmux-3.2.tar.gz")), Hand: func(m *ice.Message, arg ...string) {
 		m.Cmdy(code.INSTALL, nfs.SOURCE, m.Config(nfs.SOURCE), arg)
 	}},
 }}

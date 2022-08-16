@@ -12,14 +12,14 @@ import (
 )
 
 func _route_travel(m *ice.Message, route string) {
-	m.Cmd(SPACE).Tables(func(val ice.Maps) {
+	m.Cmd(SPACE, func(val ice.Maps) {
 		switch val[mdb.TYPE] {
 		case SERVER: // 远程查询
 			if val[mdb.NAME] == ice.Info.NodeName {
 				return // 避免循环
 			}
 
-			m.Cmd(SPACE, val[mdb.NAME], ROUTE).Tables(func(value ice.Maps) {
+			m.Cmd(SPACE, val[mdb.NAME], ROUTE, func(value ice.Maps) {
 				m.Push(mdb.TYPE, value[mdb.TYPE])
 				m.Push(ROUTE, kit.Keys(val[mdb.NAME], value[ROUTE]))
 			})
@@ -44,7 +44,7 @@ func _route_list(m *ice.Message) *ice.Message {
 
 	// 网卡信息
 	u := OptionUserWeb(m)
-	m.Cmd(tcp.HOST).Tables(func(value ice.Maps) {
+	m.Cmd(tcp.HOST, func(value ice.Maps) {
 		m.Push(mdb.TYPE, MYSELF)
 		m.Push(ROUTE, ice.Info.NodeName)
 		m.PushAnchor(value[aaa.IP], kit.Format("%s://%s:%s", u.Scheme, value[aaa.IP], u.Port()))

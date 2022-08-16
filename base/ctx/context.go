@@ -33,7 +33,7 @@ func init() {
 					DisplayStorySpide(m, lex.PREFIX, m.ActionKey(), nfs.ROOT, kit.Select(ice.ICE, arg, 0), lex.SPLIT, ice.PT)
 
 				} else if index := kit.Keys(arg[1]); strings.HasSuffix(index, arg[2]) { // 命令列表
-					m.Cmdy(CONTEXT, index, COMMAND).Tables(func(value ice.Maps) {
+					m.Cmdy(CONTEXT, index, COMMAND, func(value ice.Maps) {
 						m.Push(nfs.FILE, arg[1])
 					})
 

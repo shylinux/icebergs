@@ -43,8 +43,8 @@ func _river_list(m *ice.Message) {
 		}
 	}
 
-	m.Cmd(mdb.SELECT, m.PrefixKey(), "", mdb.HASH, ice.OptionFields(mdb.HASH, mdb.NAME)).Tables(func(value ice.Maps) {
-		m.Cmd(mdb.SELECT, m.PrefixKey(), kit.Keys(mdb.HASH, value[mdb.HASH], OCEAN), mdb.HASH, m.Option(ice.MSG_USERNAME)).Tables(func(val ice.Maps) {
+	m.Cmd(mdb.SELECT, m.PrefixKey(), "", mdb.HASH, ice.OptionFields(mdb.HASH, mdb.NAME), func(value ice.Maps) {
+		m.Cmd(mdb.SELECT, m.PrefixKey(), kit.Keys(mdb.HASH, value[mdb.HASH], OCEAN), mdb.HASH, m.Option(ice.MSG_USERNAME), func(val ice.Maps) {
 			m.Push("", value, []string{mdb.HASH, mdb.NAME}, val)
 		})
 	})

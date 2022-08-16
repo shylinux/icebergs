@@ -54,10 +54,10 @@ func _go_help(m *ice.Message, key string) {
 	}
 }
 func _go_find(m *ice.Message, key string, dir string) {
-	m.Cmd(nfs.FIND, dir, key).Tables(func(value ice.Maps) { m.PushSearch(nfs.LINE, 1, value) })
+	m.Cmd(nfs.FIND, dir, key, func(value ice.Maps) { m.PushSearch(nfs.LINE, 1, value) })
 }
 func _go_grep(m *ice.Message, key string, dir string) {
-	m.Cmd(nfs.GREP, dir, key).Tables(func(value ice.Maps) { m.PushSearch(value) })
+	m.Cmd(nfs.GREP, dir, key, func(value ice.Maps) { m.PushSearch(value) })
 }
 
 var _cache_mods = ice.Messages{}

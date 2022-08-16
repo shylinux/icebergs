@@ -83,7 +83,7 @@ func init() {
 			}},
 			CHECK: {Name: "check", Help: "核算", Hand: func(m *ice.Message, arg ...string) {
 				if m.Option(ACCOUNT) == "" {
-					m.Cmd(ASSET).Tables(func(value ice.Maps) {
+					m.Cmd(ASSET, func(value ice.Maps) {
 						_asset_check(m, value[ACCOUNT])
 					})
 					m.ProcessRefresh30ms()

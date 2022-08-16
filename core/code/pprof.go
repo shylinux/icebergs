@@ -40,7 +40,7 @@ func init() {
 				case BINNARY:
 					m.Cmdy(nfs.DIR, ice.BIN, nfs.DIR_CLI_FIELDS).RenameAppend(nfs.PATH, BINNARY)
 				case SERVICE:
-					m.Cmd(web.SPIDE).Tables(func(value ice.Maps) {
+					m.Cmd(web.SPIDE, func(value ice.Maps) {
 						m.Push(SERVICE, kit.MergeURL2(value[web.CLIENT_URL], "/debug/pprof/profile"))
 					})
 				}

@@ -93,9 +93,9 @@ func _list_import(m *ice.Message, prefix, chain, file string) {
 	defer f.Close()
 
 	r := csv.NewReader(f)
-
-	count := 0
 	head, _ := r.Read()
+	count := 0
+
 	for {
 		line, e := r.Read()
 		if e != nil {

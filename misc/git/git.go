@@ -6,30 +6,25 @@ import (
 	"shylinux.com/x/icebergs/base/nfs"
 	"shylinux.com/x/icebergs/base/web"
 	"shylinux.com/x/icebergs/core/code"
-	kit "shylinux.com/x/toolkits"
 )
+
+func _git_cmd(m *ice.Message, arg ...string) *ice.Message {
+	return m.Cmd(cli.SYSTEM, GIT, arg)
+}
+func _git_cmds(m *ice.Message, arg ...string) string {
+	return _git_cmd(m, arg...).Result()
+}
 
 const GIT = "git"
 
-var Index = &ice.Context{Name: GIT, Help: "代码库", Configs: ice.Configs{
-	GIT: {Name: GIT, Help: "代码库", Value: kit.Data(
-		nfs.SOURCE, "http://mirrors.tencent.com/macports/distfiles/git-cinnabar/git-2.31.1.tar.gz",
-	)},
-}, Commands: ice.Commands{
-	GIT: {Name: "git path auto install order build download", Help: "代码库", Actions: ice.MergeActions(ice.Actions{
-		code.INSTALL: {Name: "install", Help: "安装", Hand: func(m *ice.Message, arg ...string) {
-			web.PushStream(m)
-			defer m.ProcessInner()
-
-			m.Cmdy(cli.SYSTEM, "yum", "install", "-y", "git")
-		}},
+var Index = &ice.Context{Name: GIT, Help: "代码库", Commands: ice.Commands{
+	GIT: {Name: "git path auto order build download", Help: "代码库", Actions: ice.MergeActions(ice.Actions{
 		cli.ORDER: {Name: "order", Help: "加载", Hand: func(m *ice.Message, arg ...string) {
-			m.Cmd(code.INSTALL, cli.ORDER, m.Config(nfs.SOURCE), "_install/bin")
-			m.Cmdy(code.INSTALL, cli.ORDER, m.Config(nfs.SOURCE), "_install/libexec/git-core")
+			m.Cmd(code.INSTALL, cli.ORDER, m.Config(nfs.SOURCE), "_install/libexec/git-core")
+			m.Cmdy(code.INSTALL, cli.ORDER, m.Config(nfs.SOURCE), "_install/bin")
 		}},
-	}, code.InstallAction()), Hand: func(m *ice.Message, arg ...string) {
+	}, code.InstallAction(nfs.SOURCE, "http://mirrors.tencent.com/macports/distfiles/git-cinnabar/git-2.31.1.tar.gz")), Hand: func(m *ice.Message, arg ...string) {
 		m.Cmdy(code.INSTALL, nfs.SOURCE, m.Config(nfs.SOURCE), arg)
-		m.Echo("hello world %v", arg)
 	}},
 }}
 

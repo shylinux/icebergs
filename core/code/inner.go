@@ -122,7 +122,7 @@ func init() {
 				m.Option(nfs.DIR_ROOT, arg[2])
 				m.Option(cli.CMD_DIR, kit.Path(arg[2]))
 				m.Cmdy(mdb.SEARCH, arg[0], arg[1], arg[2])
-				m.Cmd(FAVOR, arg[1], ice.OptionFields("")).Tables(func(value ice.Maps) {
+				m.Cmd(FAVOR, arg[1], ice.OptionFields(""), func(value ice.Maps) {
 					if p := path.Join(value[nfs.PATH], value[nfs.FILE]); strings.HasPrefix(p, m.Option(nfs.PATH)) {
 						m.Push(nfs.FILE, strings.TrimPrefix(p, m.Option(nfs.PATH)))
 						m.Push(nfs.LINE, value[nfs.LINE])

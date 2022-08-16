@@ -26,25 +26,23 @@ const (
 )
 
 type input struct {
+	ice.Zone
 	insert string `name:"insert zone=person text code weight" help:"添加"`
 	load   string `name:"load file=usr/wubi-dict/wubi86 zone=wubi86" help:"加载"`
 	save   string `name:"save file=usr/wubi-dict/person zone=person" help:"保存"`
 	list   string `name:"list method code auto" help:"输入法"`
 }
 
-func (i input) Load(m *ice.Message, arg ...string) {
+func (s input) Load(m *ice.Message, arg ...string) {
 	if f, e := nfs.OpenFile(m.Message, m.Option(nfs.FILE)); m.Assert(e) {
 		defer f.Close()
 
 		// 清空数据
 		lib := kit.Select(path.Base(m.Option(nfs.FILE)), m.Option(mdb.ZONE))
 		m.Assert(nfs.RemoveAll(m.Message, path.Join(m.Config(mdb.STORE), lib)))
-		m.Cmd(mdb.DELETE, m.PrefixKey(), "", mdb.HASH, mdb.ZONE, lib)
-		prefix := kit.Keys(mdb.HASH, mdb.Rich(m.Message, m.PrefixKey(), "", kit.Data(
-			mdb.STORE, path.Join(m.Config(mdb.STORE), lib),
-			m.ConfigSimple(mdb.FSIZE, mdb.LIMIT, mdb.LEAST),
-			mdb.ZONE, lib, mdb.COUNT, 0,
-		)))
+		s.Zone.Remove(m, mdb.ZONE, lib)
+		s.Zone.Create(m, kit.Simple(mdb.ZONE, lib, m.ConfigSimple(mdb.LIMIT, mdb.LEAST, mdb.STORE, mdb.FSIZE))...)
+		prefix := kit.Keys(mdb.HASH, m.Result())
 
 		// 加载词库
 		for bio := bufio.NewScanner(f); bio.Scan(); {
@@ -61,13 +59,11 @@ func (i input) Load(m *ice.Message, arg ...string) {
 		// 保存词库
 		m.Conf(m.PrefixKey(), kit.Keys(prefix, kit.Keym(mdb.LIMIT)), 0)
 		m.Conf(m.PrefixKey(), kit.Keys(prefix, kit.Keym(mdb.LEAST)), 0)
-		n := mdb.Grow(m.Message, m.PrefixKey(), prefix, kit.Dict(TEXT, "成功", CODE, "z", WEIGHT, "0"))
-		m.Logs(mdb.IMPORT, m.PrefixKey(), lib, mdb.COUNT, n)
-		m.Echo("%s: %d", lib, n)
+		m.Echo("%s: %d", lib, mdb.Grow(m.Message, m.PrefixKey(), prefix, kit.Dict(TEXT, "成功", CODE, "z", WEIGHT, "0")))
 	}
 }
-func (i input) Save(m *ice.Message, arg ...string) {
-	if f, p, e := kit.Create(m.Option(nfs.FILE)); m.Assert(e) {
+func (s input) Save(m *ice.Message, arg ...string) {
+	if f, p, e := nfs.CreateFile(m.Message, m.Option(nfs.FILE)); m.Assert(e) {
 		defer f.Close()
 		n := 0
 		m.Option(mdb.CACHE_LIMIT, -2)
@@ -85,7 +81,7 @@ func (i input) Save(m *ice.Message, arg ...string) {
 		m.Echo("%s: %d", p, n)
 	}
 }
-func (i input) List(m *ice.Message, arg ...string) {
+func (s input) List(m *ice.Message, arg ...string) {
 	if len(arg) < 2 || arg[1] == "" {
 		return
 	}

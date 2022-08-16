@@ -25,7 +25,7 @@ func init() {
 			cli.CHECK: {Name: "check", Help: "检查", Hand: func(m *ice.Message, arg ...string) {
 				if m.ProcessInner(); len(arg) > 0 {
 					success := 0
-					m.Cmd(m.PrefixKey(), arg[0]).Tables(func(value ice.Maps) {
+					m.Cmd(m.PrefixKey(), arg[0], func(value ice.Maps) {
 						m.Push(mdb.TIME, m.Time())
 						m.Push(mdb.ID, value[mdb.ID])
 						if err := m.Cmdx(m.PrefixKey(), cli.CHECK, value); err == ice.OK {

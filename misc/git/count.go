@@ -25,13 +25,13 @@ func init() {
 				m.Option(nfs.DIR_DEEP, ice.TRUE)
 				m.Option(nfs.DIR_TYPE, nfs.TYPE_CAT)
 				m.Cmdy(nfs.DIR, arg, func(file string) {
-					if strings.Contains(file, "var/") {
+					if strings.Contains(file, "node_modules/") {
 						return
 					}
 					if strings.Contains(file, "bin/") {
 						return
 					}
-					if !strings.Contains(file, ice.PT) {
+					if strings.Contains(file, "var/") {
 						return
 					}
 					switch kit.Ext(file) {
@@ -63,8 +63,6 @@ func init() {
 				m.SortIntR("lines")
 				m.StatusTime()
 			}},
-		}, Hand: func(m *ice.Message, arg ...string) {
-			m.Cmdy(nfs.DIR, arg)
-		}},
+		}, Hand: func(m *ice.Message, arg ...string) { m.Cmdy(nfs.DIR, arg) }},
 	})
 }

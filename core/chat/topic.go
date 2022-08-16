@@ -108,7 +108,7 @@ body.{{.Option "topic"}} fieldset.panel.Header>div.output div:hover { background
 				m.Cmd(nfs.SAVE, path.Join("src/website/topic/"+m.Option("topic")+".css"), string(buf))
 			}},
 			"form": {Name: "form", Help: "表单", Hand: func(m *ice.Message, arg ...string) {
-				m.Cmd(m.CommandKey(), m.Option(mdb.ZONE)).Tables(func(value ice.Maps) {
+				m.Cmd(m.CommandKey(), m.Option(mdb.ZONE), func(value ice.Maps) {
 					tags, _ := form[value["tags"]]
 					m.Push("tags", value["tags"])
 					m.Push("type", kit.Select(kit.Format(kit.Value(tags, "type")), value["type"]))

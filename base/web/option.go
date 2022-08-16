@@ -101,7 +101,7 @@ func PushPodCmd(m *ice.Message, cmd string, arg ...string) {
 		m.Tables(func(value ice.Maps) { m.Push(ice.POD, m.Option(ice.MSG_USERPOD)) })
 	}
 
-	m.Cmd(SPACE, ice.OptionFields(mdb.TYPE, mdb.NAME)).Tables(func(value ice.Maps) {
+	m.Cmd(SPACE, ice.OptionFields(mdb.TYPE, mdb.NAME), func(value ice.Maps) {
 		switch value[mdb.TYPE] {
 		case SERVER, WORKER:
 			if value[mdb.NAME] == ice.Info.HostName {

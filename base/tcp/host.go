@@ -69,7 +69,7 @@ func init() {
 	Index.MergeCommands(ice.Commands{
 		HOST: {Name: "host name auto", Help: "主机", Actions: ice.MergeActions(ice.Actions{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
-				m.Cmd(HOST).Tables(func(value ice.Maps) { m.Cmd(HOST, aaa.WHITE, value[aaa.IP]) })
+				m.Cmd(HOST, func(value ice.Maps) { m.Cmd(HOST, aaa.WHITE, value[aaa.IP]) })
 			}},
 			aaa.BLACK: {Name: "black", Help: "黑名单", Hand: func(m *ice.Message, arg ...string) {
 				m.Logs(mdb.CREATE, aaa.BLACK, arg[0])

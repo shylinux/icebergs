@@ -27,9 +27,9 @@ func init() {
 				}
 			}},
 			RIVER_CREATE: {Name: "river.create river template", Help: "建群", Hand: func(m *ice.Message, arg ...string) {
-				m.Cmd("", m.Option(TEMPLATE)).Tables(func(value ice.Maps) {
+				m.Cmd("", m.Option(TEMPLATE), func(value ice.Maps) {
 					h := m.Cmdx(STORM, mdb.CREATE, mdb.TYPE, "", mdb.NAME, value[STORM], mdb.TEXT, "")
-					m.Cmd("", m.Option(TEMPLATE), value[STORM]).Tables(func(value ice.Maps) {
+					m.Cmd("", m.Option(TEMPLATE), value[STORM], func(value ice.Maps) {
 						m.Cmd(STORM, mdb.INSERT, mdb.HASH, h, kit.SimpleKV("space,index", value))
 					})
 				})

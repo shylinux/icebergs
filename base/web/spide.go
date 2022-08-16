@@ -258,9 +258,19 @@ func _spide_save(m *ice.Message, cache, save, uri string, res *http.Response) {
 		if f, p, e := nfs.CreateFile(m, save); m.Assert(e) {
 			defer f.Close()
 
-			if n, e := io.Copy(f, res.Body); m.Assert(e) {
-				m.Logs(mdb.EXPORT, nfs.SIZE, n, nfs.FILE, p)
-				m.Echo(p)
+			total := kit.Int(res.Header.Get(ContentLength)) + 1
+			switch cb := m.OptionCB("").(type) {
+			case func(int, int, int):
+				count := 0
+				nfs.CopyFile(m, f, res.Body, func(n int) {
+					count += n
+					cb(count, total, count*100/total)
+				})
+			default:
+				if n, e := io.Copy(f, res.Body); m.Assert(e) {
+					m.Logs(mdb.EXPORT, nfs.SIZE, n, nfs.FILE, p)
+					m.Echo(p)
+				}
 			}
 		}
 

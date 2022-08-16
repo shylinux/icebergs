@@ -92,7 +92,7 @@ func (m *Message) IsMobileUA() bool {
 	return strings.Contains(m.Option(MSG_USERUA), "Mobile")
 }
 func (m *Message) IsCliUA() bool {
-	if m.Option(MSG_USERUA) == "" || !strings.HasPrefix(m.Option(MSG_USERUA), "Mozilla/5.0") {
+	if m.Option(MSG_USERUA) == "" || !strings.HasPrefix(m.Option(MSG_USERUA), "Mozilla") {
 		return true
 	}
 	return false

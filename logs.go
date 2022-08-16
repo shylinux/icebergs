@@ -145,7 +145,7 @@ func (m *Message) FormatShip() string {
 	return kit.Format("%s->%s", m.source.Name, m.target.Name)
 }
 func (m *Message) FormatCost() string {
-	return kit.FmtTime(kit.Int64(time.Since(m.time)))
+	return kit.FmtDuration(time.Since(m.time))
 }
 func (m *Message) FormatSize() string {
 	return kit.Format("%dx%d %v", m.Length(), len(m.meta[MSG_APPEND]), kit.Simple(m.meta[MSG_APPEND]))

@@ -1,4 +1,4 @@
-chapter "input"
+section "input"
 
-field "五笔" web.code.input.wubi
+field web.code.input.wubi
 

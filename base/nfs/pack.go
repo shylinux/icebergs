@@ -148,7 +148,7 @@ func CloseFile(m *ice.Message, p ice.Any) {
 }
 
 func CopyFile(m *ice.Message, to io.WriteCloser, from io.ReadCloser, cb func(int)) {
-	buf := make([]byte, ice.MOD_BUFS)
+	buf := make([]byte, 1024*1024)
 	for {
 		n, e := from.Read(buf)
 		if e != nil {

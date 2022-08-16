@@ -247,7 +247,7 @@ func _space_fork(m *ice.Message) {
 	}
 }
 func _space_search(m *ice.Message, kind, name, text string, arg ...string) {
-	m.Cmd(SPACE, ice.OptionFields("")).Tables(func(value ice.Maps) {
+	m.Cmd(SPACE, ice.OptionFields(""), func(value ice.Maps) {
 		if !strings.Contains(value[mdb.NAME], name) {
 			return
 		}
@@ -262,8 +262,8 @@ func _space_search(m *ice.Message, kind, name, text string, arg ...string) {
 	if name != "" {
 		return
 	}
-	m.Cmd(SERVE, ice.OptionFields("")).Tables(func(val ice.Maps) {
-		m.Cmd(tcp.HOST, ice.OptionFields("")).Tables(func(value ice.Maps) {
+	m.Cmd(SERVE, ice.OptionFields(""), func(val ice.Maps) {
+		m.Cmd(tcp.HOST, ice.OptionFields(""), func(value ice.Maps) {
 			m.PushSearch(kit.SimpleKV("", MYSELF, value[mdb.NAME], kit.Format("http://%s:%s", value[aaa.IP], val[tcp.PORT])))
 		})
 	})

@@ -29,7 +29,7 @@ func _webpack_can(m *ice.Message) {
 }
 func _webpack_css(m *ice.Message, css, js io.Writer, p string) {
 	fmt.Fprintln(css, kit.Format("/* %s */", path.Join(ice.PS, p)))
-	fmt.Fprintln(css, m.Cmdx(nfs.CAT, strings.TrimPrefix(p, ice.REQUIRE+ice.PS)))
+	fmt.Fprintln(css, m.Cmdx(nfs.CAT, strings.Replace(p, "require/node_modules/", "src/node_modules/", 1)))
 	fmt.Fprintln(js, `Volcanos.meta.cache["`+path.Join(ice.PS, p)+`"] = []`)
 }
 func _webpack_js(m *ice.Message, js io.Writer, p string) {
@@ -38,7 +38,7 @@ func _webpack_js(m *ice.Message, js io.Writer, p string) {
 }
 func _webpack_node(m *ice.Message, js io.Writer, p string) {
 	fmt.Fprintln(js, `_can_name = "`+path.Join(ice.PS, p)+`"`)
-	fmt.Fprintln(js, m.Cmdx(nfs.CAT, strings.TrimPrefix(p, ice.REQUIRE+ice.PS)))
+	fmt.Fprintln(js, m.Cmdx(nfs.CAT, strings.Replace(p, "require/node_modules/", "src/node_modules/", 1)))
 	fmt.Fprintln(js, `Volcanos.meta.cache["`+path.Join(ice.PS, p)+`"] = []`)
 }
 func _webpack_cache(m *ice.Message, dir string, write bool) {
@@ -82,18 +82,19 @@ func _webpack_cache(m *ice.Message, dir string, write bool) {
 		_webpack_js(m, js, k)
 	}
 
+	m.Option(nfs.DIR_ROOT, "")
 	mdb.HashSelects(m).Sort(nfs.PATH).Tables(func(value ice.Maps) {
 		defer fmt.Fprintln(js)
 		p := value[nfs.PATH]
 		switch kit.Ext(p) {
 		case nfs.CSS:
-			_webpack_css(m, css, js, path.Join(ice.REQUIRE, ice.PAGE, ice.NODE_MODULES, p))
+			_webpack_css(m, css, js, path.Join(ice.REQUIRE, ice.NODE_MODULES, p))
 			return
 		case nfs.JS:
 		default:
 			p = p + "/lib/" + p + ".js"
 		}
-		_webpack_node(m, js, path.Join(ice.REQUIRE, ice.PAGE, ice.NODE_MODULES, p))
+		_webpack_node(m, js, path.Join(ice.REQUIRE, ice.NODE_MODULES, p))
 	})
 }
 func _webpack_build(m *ice.Message, file string) {

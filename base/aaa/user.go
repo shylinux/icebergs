@@ -92,7 +92,7 @@ func UserRoot(m *ice.Message, arg ...string) *ice.Message { // password username
 	return m
 }
 func UserInfo(m *ice.Message, name ice.Any, key, meta string) (value string) {
-	if m.Cmd(USER, name).Tables(func(val ice.Maps) {
+	if m.Cmd(USER, name, func(val ice.Maps) {
 		value = val[key]
 	}).Length() == 0 && kit.Format(name) == m.Option(ice.MSG_USERNAME) {
 		return m.Option(meta)

@@ -32,7 +32,7 @@ func init() {
 				))
 			}},
 			mdb.EXPORT: {Name: "export key=.ssh/id_rsa pub=.ssh/id_rsa.pub", Help: "导出", Hand: func(m *ice.Message, arg ...string) {
-				m.Cmd(m.PrefixKey(), m.Option(mdb.HASH)).Tables(func(value ice.Maps) {
+				m.Cmd(m.PrefixKey(), m.Option(mdb.HASH), func(value ice.Maps) {
 					m.Cmdx(nfs.SAVE, kit.HomePath(m.Option("key")), value[PRIVATE])
 					m.Cmdx(nfs.SAVE, kit.HomePath(m.Option("pub")), value[PUBLIC])
 				})

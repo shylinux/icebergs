@@ -8,9 +8,11 @@ import (
 
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/cli"
+	"shylinux.com/x/icebergs/base/ctx"
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/nfs"
 	kit "shylinux.com/x/toolkits"
+	"shylinux.com/x/toolkits/task"
 )
 
 const TOTAL = "total"
@@ -20,27 +22,27 @@ func init() {
 		TOTAL: {Name: TOTAL, Help: "统计量", Value: kit.Data(
 			"skip", kit.Dict(
 				"wubi-dict", ice.TRUE, "word-dict", ice.TRUE,
-				"websocket", ice.TRUE, "go-sql-mysql", ice.TRUE,
-				"echarts", ice.TRUE, "go-qrcode", ice.TRUE,
+				"websocket", ice.TRUE, "go-qrcode", ice.TRUE,
+				"go-sql-mysql", ice.TRUE, "echarts", ice.TRUE,
 			),
 		)},
 	}, Commands: ice.Commands{
 		TOTAL: {Name: "total repos auto pie", Help: "统计量", Actions: ice.Actions{
 			PIE: {Name: "pie", Help: "饼图", Hand: func(m *ice.Message, arg ...string) {
-				defer m.Display("/plugin/story/pie.js")
-				m.Cmd(TOTAL).Tables(func(value ice.Maps) {
-					if value[REPOS] == "total" {
-						m.StatusTimeCount(REPOS, "total", "value", "1", "total", value["rest"])
+				defer ctx.DisplayStory(m, "pie.js")
+				m.Cmd(TOTAL, func(value ice.Maps) {
+					if value[REPOS] == mdb.TOTAL {
+						m.StatusTimeCount(REPOS, mdb.TOTAL, mdb.VALUE, "1", mdb.TOTAL, value["rest"])
 						return
 					}
 					m.Push(REPOS, value[REPOS])
-					m.Push("value", value["rest"])
+					m.Push(mdb.VALUE, value["rest"])
 				})
 			}},
 		}, Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) > 0 { // 提交详情
-				arg[0] = kit.Replace(arg[0], "src", "contexts")
-				m.Cmd(REPOS, ice.OptionFields("name,path")).Tables(func(value ice.Maps) {
+				arg[0] = kit.Replace(arg[0], ice.SRC, ice.CONTEXTS)
+				m.Cmd(REPOS, ice.OptionFields("name,path"), func(value ice.Maps) {
 					if value[REPOS] == arg[0] {
 						m.Cmdy("_sum", value[nfs.PATH], arg[1:])
 					}
@@ -49,33 +51,36 @@ func init() {
 			}
 
 			// 提交统计
+			wg, lock := &sync.WaitGroup{}, &task.Lock{}
 			days, commit, adds, dels, rest := 0, 0, 0, 0, 0
-			Richs(m, REPOS, nil, mdb.FOREACH, func(mu *sync.Mutex, key string, value ice.Map) {
-				value = kit.GetMeta(value)
-				if m.Config(kit.Keys("skip", value[mdb.NAME])) == ice.TRUE {
+			m.Cmd(REPOS, ice.OptionFields("name,path"), func(value ice.Maps) {
+				if m.Config(kit.Keys("skip", value[REPOS])) == ice.TRUE {
 					return
 				}
 
-				msg := m.Cmd("_sum", value[nfs.PATH], mdb.TOTAL, "10000")
+				wg.Add(1)
+				m.Go(func() {
+					defer wg.Done()
+					msg := m.Cmd("_sum", value[nfs.PATH], mdb.TOTAL, "10000")
 
-				mu.Lock()
-				defer mu.Unlock()
+					defer lock.Lock()()
+					msg.Tables(func(value ice.Maps) {
+						if kit.Int(value["days"]) > days {
+							days = kit.Int(value["days"])
+						}
+						commit += kit.Int(value["commit"])
+						adds += kit.Int(value["adds"])
+						dels += kit.Int(value["dels"])
+						rest += kit.Int(value["rest"])
+					})
 
-				msg.Tables(func(value ice.Maps) {
-					if kit.Int(value["days"]) > days {
-						days = kit.Int(value["days"])
-					}
-					commit += kit.Int(value["commit"])
-					adds += kit.Int(value["adds"])
-					dels += kit.Int(value["dels"])
-					rest += kit.Int(value["rest"])
+					m.Push(REPOS, value[REPOS])
+					m.Copy(msg)
 				})
-
-				m.Push(REPOS, value[mdb.NAME])
-				m.Copy(msg)
 			})
+			wg.Wait()
 
-			m.Push(REPOS, "total")
+			m.Push(REPOS, mdb.TOTAL)
 			m.Push("tags", "v3.0.0")
 			m.Push("days", days)
 			m.Push("commit", commit)
@@ -114,7 +119,7 @@ func init() {
 
 			var total_day time.Duration
 			count, count_add, count_del := 0, 0, 0
-			for i, v := range strings.Split(m.Cmdx(cli.SYSTEM, GIT, args), "commit: ") {
+			for i, v := range strings.Split(_git_cmds(m, args...), "commit: ") {
 				l := strings.Split(v, ice.NL)
 				hs := strings.Split(l[0], ice.SP)
 				if len(l) < 2 {
@@ -155,7 +160,7 @@ func init() {
 			}
 
 			if total { // 累积求和
-				m.Push("tags", m.Cmdx(cli.SYSTEM, GIT, "describe", "--tags"))
+				m.Push("tags", _git_cmds(m, "describe", "--tags"))
 				m.Push("days", int(total_day.Hours())/24)
 				m.Push("commit", count)
 				m.Push("adds", count_add)
@@ -164,20 +169,4 @@ func init() {
 			}
 		}},
 	}})
-}
-
-func Richs(m *ice.Message, prefix string, chain ice.Any, raw ice.Any, cb func(*sync.Mutex, string, ice.Map)) {
-	wg, mu := &sync.WaitGroup{}, &sync.Mutex{}
-	defer wg.Wait()
-	mdb.Richs(m, prefix, chain, raw, func(key string, value ice.Map) {
-		wg.Add(1)
-		val := ice.Map{}
-		for k, v := range value {
-			val[k] = v
-		}
-		m.Go(func() {
-			defer wg.Done()
-			cb(mu, key, val)
-		})
-	})
 }

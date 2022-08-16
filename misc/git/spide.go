@@ -18,7 +18,6 @@ func _spide_for(text string, cb func([]string)) {
 		if len(line) == 0 || strings.HasPrefix(line, "!_") {
 			continue
 		}
-
 		cb(kit.Split(line, "\t ", "\t ", "\t "))
 	}
 }
@@ -29,17 +28,17 @@ func _spide_go(m *ice.Message, file string) {
 			return
 		case "w", "e":
 			return
-			ls[0] = "-" + ls[0] + ":" + strings.TrimPrefix(ls[len(ls)-1], "type:")
+			ls[0] = "-" + ls[0] + ice.DF + strings.TrimPrefix(ls[len(ls)-1], "type:")
 		case "m":
 			if strings.HasPrefix(ls[6], "ntype") {
 				return
 			} else if strings.HasPrefix(ls[5], "ctype") {
-				ls[0] = strings.TrimPrefix(ls[5], "ctype:") + ":" + ls[0]
+				ls[0] = strings.TrimPrefix(ls[5], "ctype:") + ice.DF + ls[0]
 			} else {
-				ls[0] = ls[3] + ":" + ls[0]
+				ls[0] = ls[3] + ice.DF + ls[0]
 			}
 		default:
-			ls[0] = ls[3] + ":" + ls[0]
+			ls[0] = ls[3] + ice.DF + ls[0]
 		}
 
 		m.Push(mdb.NAME, ls[0])
@@ -62,7 +61,6 @@ const SPIDE = "spide"
 func init() {
 	Index.MergeCommands(ice.Commands{
 		SPIDE: {Name: "spide repos auto", Help: "构架图", Actions: ice.MergeActions(ice.Actions{
-			code.INNER: {Name: "web.code.inner"},
 			"depend": {Name: "depend path=icebergs/base", Help: "依赖", Hand: func(m *ice.Message, arg ...string) {
 				keys := map[string]bool{}
 				list := map[string]map[string]bool{}
@@ -85,11 +83,7 @@ func init() {
 					keys[p], item[p] = true, true
 				})
 
-				item := []string{}
-				for k := range keys {
-					item = append(item, k)
-				}
-				item = kit.Sort(item)
+				item := kit.SortedKey(keys)
 
 				for k, v := range list {
 					m.Push("pkg", k)
@@ -100,19 +94,19 @@ func init() {
 				}
 				m.SortIntR("count")
 				m.ProcessInner()
-			}},
+			}}, code.INNER: {Name: "web.code.inner"},
 		}, ctx.CmdAction()), Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) == 0 { // 仓库列表
 				m.Cmdy(REPOS)
 				return
 			}
 
-			if arg[0] = kit.Replace(arg[0], "src", "contexts"); arg[0] == path.Base(kit.Pwd()) {
+			if arg[0] = kit.Replace(arg[0], ice.SRC, ice.CONTEXTS); arg[0] == path.Base(kit.Pwd()) {
 				m.Option(nfs.DIR_ROOT, path.Join(ice.SRC)+ice.PS)
 			} else {
 				m.Option(nfs.DIR_ROOT, path.Join(ice.USR, arg[0])+ice.PS)
 			}
-			ctx.DisplayStory(m, "spide.js?field=path", "root", arg[0])
+			ctx.DisplayStory(m, "spide.js", "field", "path", "root", arg[0])
 
 			if len(arg) == 1 { // 目录列表
 				m.Option(nfs.DIR_DEEP, ice.TRUE)

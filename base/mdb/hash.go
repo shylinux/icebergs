@@ -14,6 +14,15 @@ func _hash_fields(m *ice.Message) []string {
 	return kit.Split(kit.Select(HASH_FIELD, m.OptionFields()))
 }
 func _hash_inputs(m *ice.Message, prefix, chain string, field, value string) {
+	switch field {
+	case EXPIRE:
+		m.Push(field, "72h")
+		m.Push(field, "24h")
+		m.Push(field, "8h")
+		m.Push(field, "3h")
+		m.Push(field, "1h")
+		return
+	}
 	defer RLock(m, prefix, chain)()
 
 	list := map[string]int{}
@@ -206,7 +215,13 @@ func HashCreate(m *ice.Message, arg ...Any) string {
 	return m.Echo(msg.Cmdx(INSERT, m.PrefixKey(), "", HASH, HashArgs(msg, arg...))).Result()
 }
 func HashRemove(m *ice.Message, arg ...Any) *ice.Message {
-	return m.Cmdy(DELETE, m.PrefixKey(), "", HASH, m.OptionSimple(HashShort(m)), arg)
+	args := kit.Simple(arg)
+	if len(args) == 0 {
+		args = m.OptionSimple(HashShort(m))
+	} else if len(args) == 1 {
+		args = []string{HashShort(m), args[0]}
+	}
+	return m.Cmdy(DELETE, m.PrefixKey(), "", HASH, args)
 }
 func HashModify(m *ice.Message, arg ...Any) *ice.Message {
 	return m.Cmd(MODIFY, m.PrefixKey(), "", HASH, m.OptionSimple(HashShort(m)), HashArgs(m, arg...))

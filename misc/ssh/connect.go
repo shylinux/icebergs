@@ -6,6 +6,7 @@ import (
 	"net"
 	"os"
 	"strings"
+	"syscall"
 
 	"golang.org/x/crypto/ssh"
 	"golang.org/x/crypto/ssh/terminal"
@@ -85,7 +86,7 @@ func _ssh_dial(m *ice.Message, cb func(net.Conn), arg ...string) {
 							s.RequestPty(kit.Env(cli.TERM), h, w, ssh.TerminalModes{ssh.ECHO: 1, ssh.TTY_OP_ISPEED: 14400, ssh.TTY_OP_OSPEED: 14400})
 							defer s.Wait()
 
-							gdb.SignalNotify(m, 28, func() {
+							gdb.SignalNotify(m, syscall.SIGWINCH, func() {
 								w, h, _ := terminal.GetSize(int(os.Stdin.Fd()))
 								s.WindowChange(h, w)
 							})
@@ -132,7 +133,7 @@ func _ssh_conn(m *ice.Message, cb func(*ssh.Client), arg ...string) {
 	}))
 
 	m.Cmdy(tcp.CLIENT, tcp.DIAL, mdb.TYPE, SSH, mdb.NAME, m.Option(tcp.HOST), m.OptionSimple(tcp.HOST, tcp.PORT), arg, func(c net.Conn) {
-		conn, chans, reqs, err := ssh.NewClientConn(c, m.Option(tcp.HOST)+":"+m.Option(tcp.PORT), &ssh.ClientConfig{
+		conn, chans, reqs, err := ssh.NewClientConn(c, m.Option(tcp.HOST)+ice.DF+m.Option(tcp.PORT), &ssh.ClientConfig{
 			User: m.Option(aaa.USERNAME), Auth: methods, BannerCallback: func(message string) error { return nil },
 			HostKeyCallback: func(hostname string, remote net.Addr, key ssh.PublicKey) error { return nil },
 		})
@@ -148,9 +149,8 @@ func init() {
 	psh.Index.MergeCommands(ice.Commands{
 		CONNECT: {Name: "connect name auto", Help: "连接", Actions: ice.MergeActions(ice.Actions{
 			tcp.OPEN: {Name: "open authfile username=shy password verfiy host=shylinux.com port=22 private=.ssh/id_rsa", Help: "终端", Hand: func(m *ice.Message, arg ...string) {
-				aaa.UserRoot(m)
+				defer m.Echo("exit %s@%s:%s\n", m.Option(aaa.USERNAME), m.Option(tcp.HOST), m.Option(tcp.PORT))
 				_ssh_open(nfs.OptionLoad(m, m.Option("authfile")), arg...)
-				m.Echo("exit %s@%s:%s\n", m.Option(aaa.USERNAME), m.Option(tcp.HOST), m.Option(tcp.PORT))
 			}},
 			tcp.DIAL: {Name: "dial name=shylinux host=shylinux.com port=22 username=shy private=.ssh/id_rsa", Help: "添加", Hand: func(m *ice.Message, arg ...string) {
 				m.Go(func() {
@@ -176,7 +176,7 @@ func init() {
 					}
 				}
 			}},
-		}, mdb.HashStatusAction(mdb.SHORT, "name", mdb.FIELD, "time,name,status,username,host,port")), Hand: func(m *ice.Message, arg ...string) {
+		}, mdb.HashStatusAction(mdb.SHORT, mdb.NAME, mdb.FIELD, "time,name,status,username,host,port")), Hand: func(m *ice.Message, arg ...string) {
 			if mdb.HashSelect(m, arg...).Tables(func(value ice.Maps) {
 				m.PushButton(kit.Select("", "command,session", value[mdb.STATUS] == tcp.OPEN), mdb.REMOVE)
 			}); len(arg) == 0 {

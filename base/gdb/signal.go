@@ -85,9 +85,9 @@ func init() {
 	})
 }
 
-func SignalNotify(m *ice.Message, sig int, cb func()) {
+func SignalNotify(m *ice.Message, sig syscall.Signal, cb func()) {
 	ch := make(chan os.Signal)
-	signal.Notify(ch, syscall.Signal(sig))
+	signal.Notify(ch, sig)
 	m.Go(func() {
 		for {
 			if _, ok := <-ch; ok {

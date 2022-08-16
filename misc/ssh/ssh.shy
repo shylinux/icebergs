@@ -6,7 +6,7 @@ refer `
 `
 
 field "连接" ssh.connect
-field "通道" ssh.channel
 field "会话" ssh.session
 field "服务" ssh.service
+field "通道" ssh.channel
 

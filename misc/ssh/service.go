@@ -112,6 +112,7 @@ func _ssh_prepare(m *ice.Message, channel ssh.Channel, requests <-chan *ssh.Requ
 			if err := ssh.Unmarshal(request.Payload, &env); err != nil {
 				continue
 			}
+			m.Debug("what %v", env)
 			list = append(list, env.Name+"="+env.Value)
 
 		case "shell":

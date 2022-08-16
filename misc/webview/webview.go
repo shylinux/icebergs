@@ -8,8 +8,8 @@ import (
 )
 
 type WebView struct {
-	Source  string
-	WebView webview.WebView
+	webview.WebView
+	Source string
 }
 
 func (w WebView) Menu() bool {
@@ -20,31 +20,29 @@ func (w WebView) Menu() bool {
 			w.WebView.Bind(ls[0], func() { w.navigate(ls[1]) })
 		}
 	})
-
 	if len(list) == 0 {
 		return false
 	}
 
-	w.WebView.SetTitle("contexts")
+	w.WebView.SetTitle(ice.CONTEXTS)
 	w.WebView.SetSize(200, 60*len(list), webview.HintNone)
 	w.WebView.Navigate(kit.Format(`data:text/html,
-    <!doctype html>
-    <html>
-	<head>
+<!doctype html>
+<html>
+<head>
 	<style>button { font-size:24px; font-family:monospace; margin:10px; width:-webkit-fill-available; display:block; clear:both; }</style>
-	</head>
-
-	<body>%s</body>
 	<script>
-	document.body.onkeydown = function(event) {
-		if (event.metaKey) {
-			switch (event.key) {
-			case "q": window.terminate(); break
+		document.body.onkeydown = function(event) {
+			if (event.metaKey) {
+				switch (event.key) {
+				case "q": window.terminate(); break
+				}
 			}
 		}
-	}
 	</script>
-    </html>`, kit.Join(list, ice.NL)))
+</head>
+<body>%s</body>
+</html>`, kit.Join(list, ice.NL)))
 	return true
 }
 func (w WebView) Title(text string)  { w.WebView.SetTitle(text) }

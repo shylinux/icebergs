@@ -87,6 +87,7 @@ const (
 )
 const DEFS = "defs"
 const SAVE = "save"
+const LOAD = "load"
 const PUSH = "push"
 const COPY = "copy"
 const LINK = "link"

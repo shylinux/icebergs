@@ -6,7 +6,6 @@ import (
 	"errors"
 	"fmt"
 	"net"
-	"path"
 	"strings"
 
 	"golang.org/x/crypto/ssh"
@@ -17,6 +16,7 @@ import (
 	"shylinux.com/x/icebergs/base/nfs"
 	psh "shylinux.com/x/icebergs/base/ssh"
 	"shylinux.com/x/icebergs/base/tcp"
+	"shylinux.com/x/icebergs/base/web"
 	kit "shylinux.com/x/toolkits"
 )
 
@@ -27,11 +27,11 @@ func _ssh_config(m *ice.Message, h string) *ssh.ServerConfig {
 	config := &ssh.ServerConfig{
 		PublicKeyCallback: func(conn ssh.ConnMetadata, key ssh.PublicKey) (*ssh.Permissions, error) {
 			meta, err := _ssh_meta(conn), errors.New(ice.ErrNotRight)
-			if tcp.IsLocalHost(m, strings.Split(conn.RemoteAddr().String(), ":")[0]) {
+			if tcp.IsLocalHost(m, strings.Split(conn.RemoteAddr().String(), ice.DF)[0]) {
 				m.Logs(ice.LOG_AUTH, tcp.HOSTPORT, conn.RemoteAddr(), aaa.USERNAME, conn.User())
 				err = nil // 本机用户
 			} else {
-				m.Cmd(mdb.SELECT, SERVICE, kit.Keys(mdb.HASH, h), mdb.LIST, func(value ice.Maps) {
+				mdb.ZoneSelectCB(m, h, func(value ice.Maps) {
 					if !strings.HasPrefix(value[mdb.NAME], conn.User()+"@") {
 						return
 					}
@@ -57,14 +57,13 @@ func _ssh_config(m *ice.Message, h string) *ssh.ServerConfig {
 			}
 			return &ssh.Permissions{Extensions: meta}, err
 		},
-
 		BannerCallback: func(conn ssh.ConnMetadata) string {
 			m.Logs(ice.LOG_AUTH, tcp.HOSTPORT, conn.RemoteAddr(), aaa.USERNAME, conn.User())
-			return m.Conf(SERVICE, kit.Keym(WELCOME))
+			return m.Config(WELCOME)
 		},
 	}
 
-	if key, err := ssh.ParsePrivateKey([]byte(m.Cmdx(nfs.CAT, path.Join(kit.Env(cli.HOME), m.Option(PRIVATE))))); m.Assert(err) {
+	if key, err := ssh.ParsePrivateKey([]byte(m.Cmdx(nfs.CAT, kit.HomePath(m.Option(PRIVATE))))); m.Assert(err) {
 		config.AddHostKey(key)
 	}
 	return config
@@ -100,30 +99,30 @@ const SERVICE = "service"
 func init() {
 	psh.Index.Merge(&ice.Context{Configs: ice.Configs{
 		SERVICE: {Name: SERVICE, Help: "服务", Value: kit.Data(
-			WELCOME, "\r\nwelcome to context world\r\n", GOODBYE, "\r\ngoodbye of context world\r\n",
 			mdb.SHORT, tcp.PORT, mdb.FIELD, "time,port,status,private,authkey,count",
+			WELCOME, "\r\nwelcome to contexts world\r\n", GOODBYE, "\r\ngoodbye of contexts world\r\n",
 		)},
 	}, Commands: ice.Commands{
 		SERVICE: {Name: "service port id auto listen prunes", Help: "服务", Actions: ice.MergeActions(ice.Actions{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
-				mdb.Richs(m, SERVICE, "", mdb.FOREACH, func(key string, value ice.Map) {
-					if value = kit.GetMeta(value); kit.Value(value, mdb.STATUS) == tcp.OPEN {
+				mdb.HashSelect(m).Tables(func(value ice.Maps) {
+					if value[mdb.STATUS] == tcp.OPEN {
 						m.Cmd(SERVICE, tcp.LISTEN, tcp.PORT, value[tcp.PORT], value)
 					}
 				})
 			}},
 			tcp.LISTEN: {Name: "listen port=9030 private=.ssh/id_rsa authkey=.ssh/authorized_keys", Help: "添加", Hand: func(m *ice.Message, arg ...string) {
-				if mdb.Richs(m, SERVICE, "", m.Option(tcp.PORT), func(key string, value ice.Map) {
-					kit.Value(value, kit.Keym(mdb.STATUS), tcp.OPEN)
-				}) == nil {
-					m.Cmd(mdb.INSERT, SERVICE, "", mdb.HASH, tcp.PORT, m.Option(tcp.PORT),
-						PRIVATE, m.Option(PRIVATE), AUTHKEY, m.Option(AUTHKEY), mdb.STATUS, tcp.OPEN, arg)
-					m.Cmd(SERVICE, mdb.IMPORT, AUTHKEY, m.Option(AUTHKEY))
+				if mdb.HashSelect(m, m.Option(tcp.PORT)).Length() > 0 {
+					mdb.HashModify(m, m.Option(tcp.PORT), mdb.STATUS, tcp.OPEN)
+				} else {
+					mdb.HashCreate(m, mdb.STATUS, tcp.OPEN, arg)
+					m.Cmd("", nfs.LOAD, m.OptionSimple(AUTHKEY))
 				}
 
-				m.OptionCB(tcp.SERVER, func(c net.Conn) { m.Go(func() { _ssh_accept(m, kit.Hashs(m.Option(tcp.PORT)), c) }) })
 				m.Go(func() {
-					m.Cmdy(tcp.SERVER, tcp.LISTEN, mdb.TYPE, SSH, mdb.NAME, tcp.PORT, tcp.PORT, m.Option(tcp.PORT))
+					m.Cmdy(tcp.SERVER, tcp.LISTEN, mdb.TYPE, SSH, mdb.NAME, tcp.PORT, m.OptionSimple(tcp.PORT), func(c net.Conn) {
+						m.Go(func() { _ssh_accept(m, kit.Hashs(m.Option(tcp.PORT)), c) })
+					})
 				})
 			}},
 
@@ -133,36 +132,29 @@ func init() {
 						mdb.TYPE, ls[0], mdb.NAME, ls[len(ls)-1], mdb.TEXT, strings.Join(ls[1:len(ls)-1], "+"))
 				}
 			}},
-			mdb.EXPORT: {Name: "export authkey=.ssh/authorized_keys", Help: "导出", Hand: func(m *ice.Message, arg ...string) {
+			nfs.LOAD: {Name: "load authkey=.ssh/authorized_keys", Help: "加载", Hand: func(m *ice.Message, arg ...string) {
+				m.Cmd(nfs.CAT, kit.HomePath(m.Option(AUTHKEY)), func(pub string) {
+					m.Cmd(SERVICE, mdb.INSERT, mdb.TEXT, pub)
+				})
+			}},
+			nfs.SAVE: {Name: "save authkey=.ssh/authorized_keys", Help: "保存", Hand: func(m *ice.Message, arg ...string) {
 				list := []string{}
-				m.Cmd(mdb.SELECT, SERVICE, kit.Keys(mdb.HASH, kit.Hashs(m.Option(tcp.PORT))), mdb.LIST, func(value ice.Maps) {
+				mdb.ZoneSelectCB(m, m.Option(tcp.PORT), func(value ice.Maps) {
 					list = append(list, fmt.Sprintf("%s %s %s", value[mdb.TYPE], value[mdb.TEXT], value[mdb.NAME]))
 				})
-
 				if len(list) > 0 {
-					m.Cmdy(nfs.SAVE, path.Join(kit.Env(cli.HOME), m.Option(AUTHKEY)), strings.Join(list, ice.NL)+ice.NL)
+					m.Cmdy(nfs.SAVE, kit.HomePath(m.Option(AUTHKEY)), strings.Join(list, ice.NL)+ice.NL)
 				}
-			}},
-			mdb.IMPORT: {Name: "import authkey=.ssh/authorized_keys", Help: "导入", Hand: func(m *ice.Message, arg ...string) {
-				p := path.Join(kit.Env(cli.HOME), m.Option(AUTHKEY))
-				for _, pub := range strings.Split(strings.TrimSpace(m.Cmdx(nfs.CAT, p)), ice.NL) {
-					m.Cmd(SERVICE, mdb.INSERT, mdb.TEXT, pub)
-				}
-				m.Echo(p)
 			}},
 			aaa.INVITE: {Name: "invite", Help: "邀请", Hand: func(m *ice.Message, arg ...string) {
-				u := kit.ParseURL(m.Option(ice.MSG_USERWEB))
-				m.Option(cli.HOSTNAME, strings.Split(u.Host, ":")[0])
-				m.ProcessInner()
-
+				m.Option(cli.HOSTNAME, web.OptionUserWeb(m).Hostname())
 				if buf, err := kit.Render(`ssh -p {{.Option "port"}} {{.Option "user.name"}}@{{.Option "hostname"}}`, m); err == nil {
 					m.EchoScript(string(buf))
 				}
 			}},
 		}, mdb.HashStatusAction()), Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) == 0 { // 服务列表
-				mdb.HashSelect(m, arg...)
-				m.PushAction(mdb.IMPORT, mdb.INSERT, mdb.EXPORT, aaa.INVITE)
+				mdb.HashSelect(m, arg...).PushAction(aaa.INVITE, mdb.INSERT, nfs.LOAD, nfs.SAVE)
 				return
 			}
 

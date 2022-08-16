@@ -7,8 +7,9 @@ import (
 	"syscall"
 	"unsafe"
 
-	pty "shylinux.com/x/creackpty"
 	"golang.org/x/crypto/ssh"
+	pty "shylinux.com/x/creackpty"
+
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/cli"
 	"shylinux.com/x/icebergs/base/mdb"
@@ -33,7 +34,7 @@ func _ssh_handle(m *ice.Message, meta ice.Maps, c net.Conn, channel ssh.Channel,
 	m.Logs(CHANNEL, tcp.HOSTPORT, c.RemoteAddr(), "->", c.LocalAddr())
 	defer m.Logs("dischan", tcp.HOSTPORT, c.RemoteAddr(), "->", c.LocalAddr())
 
-	shell := kit.Select("bash", kit.Env("SHELL"))
+	shell := kit.Select("bash", kit.Env(cli.SHELL))
 	list := []string{cli.PATH + "=" + kit.Env(cli.PATH)}
 
 	pty, tty, err := pty.Open()

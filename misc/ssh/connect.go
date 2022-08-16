@@ -5,14 +5,15 @@ import (
 	"io"
 	"net"
 	"os"
-	"path"
 	"strings"
 
 	"golang.org/x/crypto/ssh"
 	"golang.org/x/crypto/ssh/terminal"
+
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/aaa"
 	"shylinux.com/x/icebergs/base/cli"
+	"shylinux.com/x/icebergs/base/ctx"
 	"shylinux.com/x/icebergs/base/gdb"
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/nfs"
@@ -44,10 +45,10 @@ func _ssh_open(m *ice.Message, arg ...string) {
 	}, arg...)
 }
 func _ssh_dial(m *ice.Message, cb func(net.Conn), arg ...string) {
-	p := path.Join(kit.Env(cli.HOME), ".ssh/", fmt.Sprintf("%s@%s:%s", m.Option(aaa.USERNAME), m.Option(tcp.HOST), m.Option(tcp.PORT)))
-	if nfs.FileExists(m, p) {
+	p := kit.HomePath(".ssh", fmt.Sprintf("%s@%s:%s", m.Option(aaa.USERNAME), m.Option(tcp.HOST), m.Option(tcp.PORT)))
+	if nfs.ExistsFile(m, p) {
 		if c, e := net.Dial("unix", p); e == nil {
-			cb(c) // 会话连接
+			cb(c) // 会话复用
 			return
 		}
 		nfs.Remove(m, p)
@@ -75,28 +76,21 @@ func _ssh_dial(m *ice.Message, cb func(net.Conn), arg ...string) {
 						m.Go(func() {
 							defer c.Close()
 
-							session, e := client.NewSession()
+							s, e := client.NewSession()
 							if e != nil {
 								return
 							}
 
-							session.Stdin = c
-							session.Stdout = c
-							session.Stderr = c
-
-							session.RequestPty(kit.Env("TERM"), h, w, ssh.TerminalModes{
-								ssh.ECHO:          1,
-								ssh.TTY_OP_ISPEED: 14400,
-								ssh.TTY_OP_OSPEED: 14400,
-							})
+							s.Stdin, s.Stdout, s.Stderr = c, c, c
+							s.RequestPty(kit.Env(cli.TERM), h, w, ssh.TerminalModes{ssh.ECHO: 1, ssh.TTY_OP_ISPEED: 14400, ssh.TTY_OP_OSPEED: 14400})
+							defer s.Wait()
 
 							gdb.SignalNotify(m, 28, func() {
 								w, h, _ := terminal.GetSize(int(os.Stdin.Fd()))
-								session.WindowChange(h, w)
+								s.WindowChange(h, w)
 							})
 
-							session.Shell()
-							session.Wait()
+							s.Shell()
 						})
 					}(c)
 				}
@@ -118,7 +112,6 @@ func _ssh_conn(m *ice.Message, cb func(*ssh.Client), arg ...string) {
 				if verify := m.Option("verify"); verify == "" {
 					fmt.Printf(q)
 					fmt.Scanf("%s\n", &verify)
-
 					res = append(res, verify)
 				} else {
 					res = append(res, aaa.TOTP_GET(verify, 6, 30))
@@ -131,24 +124,21 @@ func _ssh_conn(m *ice.Message, cb func(*ssh.Client), arg ...string) {
 		return
 	}))
 	methods = append(methods, ssh.PublicKeysCallback(func() ([]ssh.Signer, error) {
-		key, err := ssh.ParsePrivateKey([]byte(m.Cmdx(nfs.CAT, path.Join(kit.Env(cli.HOME), m.Option(PRIVATE)))))
+		key, err := ssh.ParsePrivateKey([]byte(m.Cmdx(nfs.CAT, kit.HomePath(m.Option(PRIVATE)))))
 		return []ssh.Signer{key}, err
 	}))
 	methods = append(methods, ssh.PasswordCallback(func() (string, error) {
 		return m.Option(aaa.PASSWORD), nil
 	}))
 
-	m.OptionCB(tcp.CLIENT, func(c net.Conn) {
+	m.Cmdy(tcp.CLIENT, tcp.DIAL, mdb.TYPE, SSH, mdb.NAME, m.Option(tcp.HOST), m.OptionSimple(tcp.HOST, tcp.PORT), arg, func(c net.Conn) {
 		conn, chans, reqs, err := ssh.NewClientConn(c, m.Option(tcp.HOST)+":"+m.Option(tcp.PORT), &ssh.ClientConfig{
 			User: m.Option(aaa.USERNAME), Auth: methods, BannerCallback: func(message string) error { return nil },
 			HostKeyCallback: func(hostname string, remote net.Addr, key ssh.PublicKey) error { return nil },
 		})
-
 		m.Assert(err)
 		cb(ssh.NewClient(conn, chans, reqs))
 	})
-	m.Cmdy(tcp.CLIENT, tcp.DIAL, mdb.TYPE, SSH, mdb.NAME, m.Option(tcp.HOST),
-		tcp.PORT, m.Option(tcp.PORT), tcp.HOST, m.Option(tcp.HOST), arg)
 }
 
 const SSH = "ssh"
@@ -160,52 +150,36 @@ func init() {
 			tcp.OPEN: {Name: "open authfile username=shy password verfiy host=shylinux.com port=22 private=.ssh/id_rsa", Help: "终端", Hand: func(m *ice.Message, arg ...string) {
 				aaa.UserRoot(m)
 				_ssh_open(nfs.OptionLoad(m, m.Option("authfile")), arg...)
-				m.Echo("exit %v@%v:%v\n", m.Option(aaa.USERNAME), m.Option(tcp.HOST), m.Option(tcp.PORT))
+				m.Echo("exit %s@%s:%s\n", m.Option(aaa.USERNAME), m.Option(tcp.HOST), m.Option(tcp.PORT))
 			}},
-			tcp.DIAL: {Name: "dial name=shylinux username=shy host=shylinux.com port=22 private=.ssh/id_rsa", Help: "添加", Hand: func(m *ice.Message, arg ...string) {
+			tcp.DIAL: {Name: "dial name=shylinux host=shylinux.com port=22 username=shy private=.ssh/id_rsa", Help: "添加", Hand: func(m *ice.Message, arg ...string) {
 				m.Go(func() {
 					_ssh_conn(m, func(client *ssh.Client) {
-						mdb.Rich(m, CONNECT, "", kit.Dict(
-							mdb.NAME, m.Option(mdb.NAME),
-							aaa.USERNAME, m.Option(aaa.USERNAME),
-							tcp.HOST, m.Option(tcp.HOST), tcp.PORT, m.Option(tcp.PORT),
-							mdb.STATUS, tcp.OPEN, CONNECT, client,
-						))
-						m.Cmd(CONNECT, SESSION, mdb.NAME, m.Option(mdb.NAME))
+						mdb.HashCreate(m.Spawn(), m.OptionSimple(mdb.NAME, tcp.HOST, tcp.PORT, aaa.USERNAME), mdb.STATUS, tcp.OPEN, kit.Dict(mdb.TARGET, client))
+						m.Cmd("", SESSION, m.OptionSimple(mdb.NAME))
 					}, arg...)
 				})
-				m.ProcessRefresh3s()
+				m.Sleep300ms()
 			}},
-			SESSION: {Name: "session name", Help: "会话", Hand: func(m *ice.Message, arg ...string) {
-				var client *ssh.Client
-				mdb.Richs(m, CONNECT, "", m.Option(mdb.NAME), func(key string, value ice.Map) {
-					client, _ = value[CONNECT].(*ssh.Client)
-				})
-
-				h := mdb.Rich(m, SESSION, "", kit.Data(mdb.NAME, m.Option(mdb.NAME), mdb.STATUS, tcp.OPEN, CONNECT, m.Option(mdb.NAME)))
-				if session, e := _ssh_session(m, h, client); m.Assert(e) {
-					session.Shell()
-					session.Wait()
+			SESSION: {Name: "session", Help: "会话", Hand: func(m *ice.Message, arg ...string) {
+				if c, e := _ssh_session(m, mdb.HashTarget(m, m.Option(mdb.NAME), nil).(*ssh.Client)); m.Assert(e) {
+					defer c.Wait()
+					c.Shell()
 				}
-				m.Echo(h)
 			}},
-			"command": {Name: "command cmd=pwd", Help: "命令", Hand: func(m *ice.Message, arg ...string) {
-				mdb.Richs(m, CONNECT, "", m.Option(mdb.NAME), func(key string, value ice.Map) {
-					if client, ok := value[CONNECT].(*ssh.Client); ok {
-						if session, e := client.NewSession(); m.Assert(e) {
-							defer session.Close()
-							if b, e := session.CombinedOutput(m.Option("cmd")); m.Assert(e) {
-								m.Echo(string(b))
-							}
-						}
+			ctx.COMMAND: {Name: "command cmd=pwd", Help: "命令", Hand: func(m *ice.Message, arg ...string) {
+				client := mdb.HashTarget(m, m.Option(mdb.NAME), nil).(*ssh.Client)
+				if s, e := client.NewSession(); m.Assert(e) {
+					defer s.Close()
+					if b, e := s.CombinedOutput(m.Option(ice.CMD)); m.Assert(e) {
+						m.Echo(string(b))
 					}
-				})
+				}
 			}},
 		}, mdb.HashStatusAction(mdb.SHORT, "name", mdb.FIELD, "time,name,status,username,host,port")), Hand: func(m *ice.Message, arg ...string) {
-			mdb.HashSelect(m, arg...).Tables(func(value ice.Maps) {
+			if mdb.HashSelect(m, arg...).Tables(func(value ice.Maps) {
 				m.PushButton(kit.Select("", "command,session", value[mdb.STATUS] == tcp.OPEN), mdb.REMOVE)
-			})
-			if len(arg) == 0 {
+			}); len(arg) == 0 {
 				m.Action(tcp.DIAL)
 			}
 		}},

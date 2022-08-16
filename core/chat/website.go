@@ -174,6 +174,9 @@ func init() {
 					if r.Method != http.MethodGet {
 						return false
 					}
+					if !strings.HasPrefix(r.Header.Get(web.UserAgent), "Mozilla") {
+						return false
+					}
 					if strings.HasPrefix(r.URL.Path, CHAT_WEBSITE) {
 						_website_render(m, w, r, kit.Ext(r.URL.Path), m.Cmdx(nfs.CAT, strings.Replace(r.URL.Path, CHAT_WEBSITE, SRC_WEBSITE, 1)), path.Base(r.URL.Path))
 						return true

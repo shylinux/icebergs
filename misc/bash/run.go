@@ -13,12 +13,10 @@ import (
 	kit "shylinux.com/x/toolkits"
 )
 
-func _run_action(m *ice.Message, cmd *ice.Command, code string, arg ...string) {
-	m.Set(ice.MSG_RESULT)
-	m.Echo("#/bin/bash\n")
+func _run_action(m *ice.Message, cmd *ice.Command, script string, arg ...string) {
+	m.SetResult().Echo("#/bin/bash\n")
 
-	list := []string{}
-	args := []string{}
+	list, args := []string{}, []string{}
 	kit.Fetch(cmd.Meta["_trans"], func(k string, v string) {
 		list = append(list, k)
 		args = append(args, kit.Format(`			%s)`, k))
@@ -39,6 +37,7 @@ ish_sys_dev_run_source() {
 	done
 }
 `, kit.Join(list, ice.SP), arg[0], kit.Join(args, ice.NL))
+
 	m.Echo(`
 ish_sys_dev_run_action() {
 	select action in %s; do
@@ -52,48 +51,41 @@ ish_sys_dev_run_action() {
 }
 `, kit.Join(list, ice.SP), arg[0], kit.Join(args, ice.NL))
 
-	m.Echo(ice.NL)
-	m.Echo(`ish_sys_dev_run_command() {
+	m.Echo(`
+ish_sys_dev_run_command() {
 	ish_sys_dev_run %s "$@"
 }
 `, arg[0])
-	m.Echo(ice.NL)
 
-	if code == "" {
-		m.Echo("cat $1")
-	} else {
-		m.Echo(code)
-	}
-	m.Echo(ice.NL)
-	m.Debug(m.Result())
+	m.Echo(kit.Select("cat $1", script))
 }
 
 const RUN = "run"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
-		"/run/": {Name: "/run/", Help: "执行", Actions: ice.MergeActions(ice.Actions{
+		"/run/": {Name: "/run/", Help: "执行", Actions: ice.Actions{
 			ctx.COMMAND: {Name: "command", Help: "命令", Hand: func(m *ice.Message, arg ...string) {
 				m.Search(arg[0], func(_ *ice.Context, s *ice.Context, key string, cmd *ice.Command) {
-					if p := strings.ReplaceAll(kit.Select("/app/cat.sh", cmd.Meta["display"]), ".js", ".sh"); strings.HasPrefix(p, ice.PS+ice.REQUIRE) {
+					if p := strings.ReplaceAll(kit.Select("/app/cat.sh", cmd.Meta[ctx.DISPLAY]), ".js", ".sh"); strings.HasPrefix(p, ice.PS+ice.REQUIRE) {
 						m.Cmdy(web.SPIDE, ice.DEV, web.SPIDE_RAW, p)
 					} else {
 						m.Cmdy(nfs.CAT, path.Join(ice.USR_INTSHELL, p))
 					}
-					if m.Result() == "" || m.Result(1) == ice.ErrNotFound {
-						m.Set(ice.MSG_RESULT)
+					if m.IsErrNotFound() {
+						m.SetResult()
 					}
 					_run_action(m, cmd, m.Result(), arg...)
 				})
 			}},
 			ice.RUN: {Name: "run", Help: "执行", Hand: func(m *ice.Message, arg ...string) {
-				if aaa.Right(m, arg) && !ctx.PodCmd(m, arg) {
+				if !ctx.PodCmd(m, arg) && aaa.Right(m, arg) {
 					m.Cmdy(arg)
 				}
 				if m.Result() == "" {
 					m.Table()
 				}
 			}},
-		}, ctx.CmdAction())},
+		}},
 	})
 }

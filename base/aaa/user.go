@@ -100,6 +100,9 @@ func UserInfo(m *ice.Message, name ice.Any, key, meta string) (value string) {
 	return
 }
 func UserRole(m *ice.Message, username ice.Any) (role string) {
+	if username == "" {
+		return VOID
+	}
 	if role = VOID; username == ice.Info.UserName {
 		return ROOT
 	}

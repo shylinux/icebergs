@@ -42,6 +42,7 @@ func init() {
 			m.Option(ice.MSG_USERNAME, msg.Append(GRANT))
 			m.Option(ice.MSG_USERROLE, aaa.UserRole(m, msg.Append(GRANT)))
 			m.Option(tcp.HOSTNAME, msg.Append(tcp.HOSTNAME))
+			m.Auth(aaa.USERROLE, m.Option(ice.MSG_USERROLE), aaa.USERNAME, m.Option(ice.MSG_USERNAME))
 			if arg[0] == "/run/" {
 				return
 			}
@@ -52,23 +53,20 @@ func init() {
 		}},
 		"/sess": {Name: "/sess", Help: "会话", Actions: ice.Actions{
 			aaa.LOGOUT: {Name: "logout", Help: "退出", Hand: func(m *ice.Message, arg ...string) {
-				m.Cmdy(SESS, mdb.MODIFY, mdb.STATUS, aaa.LOGOUT, ice.Option{mdb.HASH, m.Option(SID)})
+				mdb.HashModify(m, mdb.HASH, m.Option(SID), mdb.STATUS, aaa.LOGOUT)
 			}},
 		}, Hand: func(m *ice.Message, arg ...string) {
 			if m.Option(SID) == "" { // 终端登录
-				m.Option(SID, m.Cmdx(SESS, mdb.CREATE, mdb.STATUS, aaa.LOGIN, m.OptionSimple(aaa.USERNAME, tcp.HOSTNAME, cli.PID, cli.PWD)))
+				m.Option(SID, mdb.HashCreate(m, mdb.STATUS, aaa.LOGIN, m.OptionSimple(aaa.USERNAME, tcp.HOSTNAME, cli.PID, cli.PWD)))
 			} else { // 更新状态
-				m.Cmdy(SESS, mdb.MODIFY, mdb.STATUS, aaa.LOGIN, ice.Option{mdb.HASH, m.Option(SID)})
+				mdb.HashModify(m, mdb.HASH, m.Option(SID), mdb.STATUS, aaa.LOGIN)
+				m.Echo(m.Option(SID))
 			}
-			m.Echo(m.Option(SID))
 		}},
 		SESS: {Name: "sess hash auto prunes", Help: "会话流", Actions: ice.MergeActions(ice.Actions{
 			mdb.PRUNES: {Name: "prunes", Help: "清理", Hand: func(m *ice.Message, arg ...string) {
-				m.OptionFields(m.Config(mdb.FIELD))
-				m.Cmdy(mdb.PRUNES, m.PrefixKey(), "", mdb.HASH, mdb.STATUS, aaa.LOGOUT)
+				mdb.HashPrunesValue(m, mdb.STATUS, aaa.LOGOUT)
 			}},
-		}, mdb.HashAction(mdb.FIELD, "time,hash,status,username,hostname,pid,pwd,grant")), Hand: func(m *ice.Message, arg ...string) {
-			mdb.HashSelect(m, arg...)
-		}},
+		}, mdb.HashAction(mdb.FIELD, "time,hash,status,username,hostname,pid,pwd,grant"))},
 	})
 }

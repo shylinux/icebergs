@@ -21,9 +21,7 @@ func init() {
 					}
 				})
 			}},
-		}, Hand: func(m *ice.Message, arg ...string) {
-			m.Cmdy(FAVOR).Table()
-		}},
+		}, Hand: func(m *ice.Message, arg ...string) { m.Cmdy(FAVOR).Table() }},
 		FAVOR: {Name: "favor zone id auto", Help: "收藏夹", Actions: ice.MergeActions(ice.Actions{
 			mdb.INSERT: {Name: "insert zone=系统命令 type=shell name=1 text=pwd pwd=/home", Help: "添加"},
 			cli.SYSTEM: {Name: "system", Help: "命令", Hand: func(m *ice.Message, arg ...string) {

@@ -3,32 +3,26 @@ package bash
 import (
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/mdb"
+	kit "shylinux.com/x/toolkits"
 )
 
 const GRANT = "grant"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
-		"grant": {Name: "grant hash auto", Help: "授权", Actions: ice.MergeActions(ice.Actions{
+		GRANT: {Name: "grant hash auto", Help: "授权", Actions: ice.MergeActions(ice.Actions{
 			"confirm": {Name: "confirm", Help: "同意", Hand: func(m *ice.Message, arg ...string) {
-				m.Cmd(SESS, mdb.MODIFY, GRANT, m.Option(ice.MSG_USERNAME), ice.Option{mdb.HASH, m.Option("hash")})
+				m.Cmd(SESS, mdb.MODIFY, GRANT, m.Option(ice.MSG_USERNAME))
 			}},
-			"revert": {Name: "confirm", Help: "撤销", Hand: func(m *ice.Message, arg ...string) {
-				m.Cmd(SESS, mdb.MODIFY, GRANT, "", ice.Option{mdb.HASH, m.Option("hash")})
-			}},
-			"remove": {Name: "remove", Help: "删除", Hand: func(m *ice.Message, arg ...string) {
-				m.Cmd(SESS, mdb.REMOVE, mdb.HASH, m.Option(mdb.HASH))
+			"revert": {Name: "revert", Help: "撤销", Hand: func(m *ice.Message, arg ...string) {
+				m.Cmd(SESS, mdb.MODIFY, GRANT, "")
 			}},
 		}, mdb.HashAction()), Hand: func(m *ice.Message, arg ...string) {
-			if m.Cmdy(SESS, arg); len(arg) > 0 && m.Append("grant") == "" {
-				m.Process("_confirm", "授权设备")
+			if m.Cmdy(SESS, arg); len(arg) > 0 && m.Append(GRANT) == "" {
+				m.ProcessConfirm("授权设备")
 			}
 			m.Tables(func(value ice.Maps) {
-				if value["grant"] == "" {
-					m.PushButton("confirm", mdb.REMOVE)
-				} else {
-					m.PushButton("revert", mdb.REMOVE)
-				}
+				m.PushButton(kit.Select("revert", "confirm", value[GRANT] == ""), mdb.REMOVE)
 			})
 		}},
 	})

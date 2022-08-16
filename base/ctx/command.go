@@ -124,7 +124,7 @@ func CmdAction(args ...ice.Any) ice.Actions {
 				m.Cmdy(CONFIG, arg[0])
 				return
 			}
-			if aaa.Right(m, arg) && !PodCmd(m, arg) {
+			if !PodCmd(m, arg) && aaa.Right(m, arg) {
 				m.Cmdy(arg)
 			}
 		}},

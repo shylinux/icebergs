@@ -28,9 +28,11 @@ cd ./_install
 `
 
 chapter "应用"
+field "文件夹" web.chat.files
+field "命令行" web.code.bash.bash
 field "会话流" web.code.bash.sess
 field "同步流" web.code.bash.sync
 field "收藏夹" web.code.bash.favor
 field "回收站" web.code.bash.trash
-field "文件夹" web.chat.files
+field "回收站" web.code.bash.grant
 

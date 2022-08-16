@@ -192,6 +192,9 @@ func ZoneRemove(m *ice.Message, arg ...Any) {
 }
 func ZoneInsert(m *ice.Message, arg ...Any) {
 	args := kit.Simple(arg...)
+	if len(args) == 0 {
+		args = m.OptionSimple(ZoneShort(m), m.Config(FIELD))
+	}
 	m.Cmdy(INSERT, m.PrefixKey(), "", ZONE, args[1], ZoneArgs(m, args[2:]))
 }
 func ZoneModify(m *ice.Message, arg ...Any) {

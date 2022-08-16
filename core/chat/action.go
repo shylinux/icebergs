@@ -45,7 +45,7 @@ func _action_auth(m *ice.Message, share string) *ice.Message {
 		msg.Append(mdb.TYPE, "")
 		return msg // 共享过期
 	}
-	m.Logs(ice.LOG_AUTH,
+	m.Auth(
 		aaa.USERROLE, m.Option(ice.MSG_USERROLE, msg.Append(aaa.USERROLE)),
 		aaa.USERNAME, m.Option(ice.MSG_USERNAME, msg.Append(aaa.USERNAME)),
 		aaa.USERNICK, m.Option(ice.MSG_USERNICK, msg.Append(aaa.USERNICK)),

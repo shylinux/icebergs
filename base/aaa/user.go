@@ -34,7 +34,7 @@ func _user_login(m *ice.Message, name, word string) {
 		if m.Warn(word != "" && word != kit.Format(kit.Value(value, kit.Keys(mdb.EXTRA, PASSWORD))), ice.ErrNotRight) {
 			return
 		}
-		m.Logs(ice.LOG_AUTH,
+		m.Auth(
 			USERROLE, m.Option(ice.MSG_USERROLE, value[USERROLE]),
 			USERNAME, m.Option(ice.MSG_USERNAME, value[USERNAME]),
 			USERNICK, m.Option(ice.MSG_USERNICK, value[USERNICK]),

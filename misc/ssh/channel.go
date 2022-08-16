@@ -2,13 +2,9 @@ package ssh
 
 import (
 	"io"
-	"net"
-	"os/exec"
 	"strings"
 
-	"golang.org/x/crypto/ssh"
 	ice "shylinux.com/x/icebergs"
-	"shylinux.com/x/icebergs/base/aaa"
 	"shylinux.com/x/icebergs/base/ctx"
 	"shylinux.com/x/icebergs/base/mdb"
 	psh "shylinux.com/x/icebergs/base/ssh"
@@ -16,27 +12,7 @@ import (
 	kit "shylinux.com/x/toolkits"
 )
 
-func _ssh_exec(m *ice.Message, cmd string, arg []string, env []string, input io.Reader, output io.Writer, done func()) {
-	m.Logs(mdb.IMPORT, CMD, cmd, ARG, arg, ENV, env)
-	c := exec.Command(cmd, arg...)
-	// c.Env = env
-
-	c.Stdin = input
-	c.Stdout = output
-	c.Stderr = output
-
-	m.Assert(c.Start())
-
-	m.Go(func() {
-		defer done()
-		c.Process.Wait()
-	})
-}
-func _ssh_close(m *ice.Message, c net.Conn, channel ssh.Channel) {
-	defer channel.Close()
-	channel.Write([]byte(m.Conf(SERVICE, kit.Keym(GOODBYE))))
-}
-func _ssh_watch(m *ice.Message, meta ice.Maps, h string, input io.Reader, output io.Writer) {
+func _ssh_watch(m *ice.Message, h string, output io.Writer, input io.Reader) io.Closer {
 	r, w := io.Pipe()
 	bio := io.TeeReader(input, w)
 	m.Go(func() { io.Copy(output, r) })
@@ -52,8 +28,7 @@ func _ssh_watch(m *ice.Message, meta ice.Maps, h string, input io.Reader, output
 			switch buf[i] {
 			case '\r', '\n':
 				cmd := strings.TrimSpace(string(buf[:i]))
-				m.Logs(mdb.IMPORT, tcp.HOSTNAME, meta[tcp.HOSTNAME], aaa.USERNAME, meta[aaa.USERNAME], CMD, cmd)
-				m.Cmdy(mdb.INSERT, CHANNEL, kit.Keys(mdb.HASH, h), mdb.LIST, mdb.TYPE, CMD, mdb.TEXT, cmd)
+				m.Cmdy(mdb.INSERT, m.Prefix(CHANNEL), kit.Keys(mdb.HASH, h), mdb.LIST, mdb.TYPE, CMD, mdb.TEXT, cmd)
 				i = 0
 			default:
 				if i += n; i >= ice.MOD_BUFS {
@@ -62,6 +37,7 @@ func _ssh_watch(m *ice.Message, meta ice.Maps, h string, input io.Reader, output
 			}
 		}
 	})
+	return r
 }
 
 const CHANNEL = "channel"
@@ -70,34 +46,24 @@ func init() {
 	psh.Index.MergeCommands(ice.Commands{
 		CHANNEL: {Name: "channel hash id auto", Help: "通道", Actions: ice.MergeActions(ice.Actions{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
-				mdb.Richs(m, CHANNEL, "", mdb.FOREACH, func(key string, value ice.Map) {
-					kit.Value(value, kit.Keym(mdb.STATUS), tcp.CLOSE)
+				mdb.HashSelectUpdate(m, mdb.FOREACH, func(value ice.Map) {
+					kit.Value(value, mdb.STATUS, tcp.CLOSE)
 				})
-			}},
-			mdb.PRUNES: {Name: "prunes", Help: "清理", Hand: func(m *ice.Message, arg ...string) {
-				m.OptionFields(m.Config(mdb.FIELD))
-				m.Cmdy(mdb.PRUNES, SERVICE, "", mdb.HASH, mdb.STATUS, tcp.ERROR)
-				m.Cmdy(mdb.PRUNES, CHANNEL, "", mdb.HASH, mdb.STATUS, tcp.CLOSE)
-			}},
-			mdb.REPEAT: {Name: "repeat", Help: "执行", Hand: func(m *ice.Message, arg ...string) {
-				m.Cmdy(CHANNEL, ctx.ACTION, ctx.COMMAND, CMD, m.Option(mdb.TEXT))
 			}},
 			ctx.COMMAND: {Name: "command cmd=pwd", Help: "命令", Hand: func(m *ice.Message, arg ...string) {
-				m.Cmdy(mdb.INSERT, CHANNEL, kit.Keys(mdb.HASH, m.Option(mdb.HASH)),
-					mdb.LIST, mdb.TYPE, CMD, mdb.TEXT, m.Option(CMD))
-				mdb.Richs(m, CHANNEL, "", m.Option(mdb.HASH), func(key string, value ice.Map) {
-					if w, ok := kit.Value(value, kit.Keym(INPUT)).(io.Writer); ok {
-						w.Write([]byte(m.Option(CMD) + ice.NL))
-					}
-				})
-				m.ProcessRefresh300ms()
+				mdb.ZoneInsert(m, m.OptionSimple(mdb.HASH), mdb.TYPE, CMD, mdb.TEXT, m.Option(CMD))
+				if w, ok := mdb.HashTarget(m, m.Option(mdb.HASH), nil).(io.Writer); ok {
+					w.Write([]byte(m.Option(CMD) + ice.NL))
+					m.Sleep300ms()
+				}
 			}},
-		}, mdb.HashAction(mdb.FIELD, "time,hash,status,username,hostport,tty,count")), Hand: func(m *ice.Message, arg ...string) {
+			mdb.REPEAT: {Name: "repeat", Help: "执行", Hand: func(m *ice.Message, arg ...string) {
+				m.Cmdy("", ctx.COMMAND, CMD, m.Option(mdb.TEXT))
+			}},
+		}, mdb.HashAction(mdb.FIELD, "time,hash,status,tty,count,username,hostport")), Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) == 0 { // 通道列表
 				m.Action(mdb.PRUNES)
-				mdb.HashSelect(m, arg...)
-				m.Set(ice.MSG_APPEND, ctx.ACTION)
-				m.Tables(func(value ice.Maps) {
+				mdb.HashSelect(m, arg...).Tables(func(value ice.Maps) {
 					m.PushButton(kit.Select("", ctx.COMMAND, value[mdb.STATUS] == tcp.OPEN), mdb.REMOVE)
 				})
 				return

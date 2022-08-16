@@ -21,7 +21,7 @@ func _sess_check(m *ice.Message, sessid string) {
 		if m.Warn(kit.Time(kit.Format(value[mdb.TIME])) < kit.Time(m.Time()), ice.ErrNotValid, sessid) {
 			return // 会话超时
 		}
-		m.Logs(ice.LOG_AUTH,
+		m.Auth(
 			USERROLE, m.Option(ice.MSG_USERROLE, value[USERROLE]),
 			USERNAME, m.Option(ice.MSG_USERNAME, value[USERNAME]),
 			USERNICK, m.Option(ice.MSG_USERNICK, value[USERNICK]),

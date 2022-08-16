@@ -54,7 +54,7 @@ func _islocalhost(m *ice.Message, ip string) (ok bool) {
 		return false
 	}
 	if mdb.Richs(m, HOST, kit.Keym(aaa.WHITE), ip, nil) != nil {
-		m.Logs(ice.LOG_AUTH, aaa.WHITE, ip)
+		m.Auth(aaa.WHITE, ip)
 		return true
 	}
 	return false

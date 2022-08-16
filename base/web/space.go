@@ -102,7 +102,7 @@ func _space_handle(m *ice.Message, safe bool, frame *Frame, c *websocket.Conn, n
 				if msg.Option(ice.MSG_USERROLE) == aaa.VOID && ice.Info.UserName == aaa.TECH {
 					msg.Option(ice.MSG_USERROLE, aaa.TECH) // 演示空间
 				}
-				msg.Logs(ice.LOG_AUTH, aaa.USERROLE, msg.Option(ice.MSG_USERROLE), aaa.USERNAME, msg.Option(ice.MSG_USERNAME))
+				msg.Auth(aaa.USERROLE, msg.Option(ice.MSG_USERROLE), aaa.USERNAME, msg.Option(ice.MSG_USERNAME))
 				msg.Go(func() { _space_exec(msg, source, target, c, name) })
 				continue
 			}

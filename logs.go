@@ -18,6 +18,10 @@ func (m *Message) join(arg ...Any) (string, []Any) {
 			meta = append(meta, v)
 			i--
 			continue
+		case []string:
+			list = append(list, v...)
+			i--
+			continue
 		}
 		if key := strings.TrimSpace(kit.Format(arg[i])); i == len(arg)-1 {
 			list = append(list, key)
@@ -72,6 +76,10 @@ func (m *Message) Logs(level string, arg ...Any) *Message {
 	return m.log(level, str, meta...)
 }
 
+func (m *Message) Auth(arg ...Any) *Message {
+	str, meta := m.join(arg...)
+	return m.log(LOG_AUTH, str, meta...)
+}
 func (m *Message) Cost(arg ...Any) *Message {
 	str, meta := m.join(arg...)
 	if len(arg) == 0 {

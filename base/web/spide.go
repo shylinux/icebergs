@@ -85,7 +85,7 @@ func _spide_list(m *ice.Message, arg ...string) {
 	// 请求日志
 	if m.Config(LOGHEADERS) == ice.TRUE {
 		for k, v := range res.Header {
-			m.Debug("%v: %v", k, v)
+			m.Logs(mdb.IMPORT, k, v)
 		}
 	}
 	m.Cost(cli.STATUS, res.Status, nfs.SIZE, res.Header.Get(ContentLength), mdb.TYPE, res.Header.Get(ContentType))

@@ -30,7 +30,6 @@ func _xterm_get(m *ice.Message, h string, must bool) *os.File {
 		}
 
 		ls := kit.Split(kit.Select("sh", m.Option(mdb.TYPE)))
-		m.Debug("what %v", kit.Format(ls))
 		cmd := exec.Command(cli.SystemFind(m, ls[0]), ls[1:]...)
 		cmd.Env = append(os.Environ(), "TERM=xterm")
 		m.Option(mdb.HASH, h)

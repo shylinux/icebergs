@@ -51,7 +51,6 @@ func init() {
 					if value == nil {
 						return
 					}
-					m.Debug("what %v", value)
 					m.Cmd(TAGS, mdb.INSERT, mdb.ZONE, value[mdb.ZONE], kit.Simple(value))
 				})
 				m.ProcessRefresh300ms()

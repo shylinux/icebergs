@@ -27,7 +27,6 @@ func init() {
 				m.Echo("%v\n", m.Option(mdb.ZONE)).Echo("%v:%v:%v:(%v): %v\n",
 					value[nfs.FILE], value[nfs.LINE], "1", value[mdb.NAME], value[mdb.TEXT])
 			})
-			m.Debug("waht %v", m.Result())
 		}},
 		FAVOR: {Name: "favor zone id auto", Help: "收藏夹", Actions: ice.MergeActions(ice.Actions{
 			mdb.INSERT: {Name: "insert zone=数据结构 type name=hi text=hello file line", Help: "添加"},

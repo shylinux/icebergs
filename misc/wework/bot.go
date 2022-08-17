@@ -28,11 +28,9 @@ func init() {
 			}
 
 			aeskey, err := base64.StdEncoding.DecodeString(msg.Append("ekey"))
-			m.Debug("what %v %v", msg.Append("ekey"), aeskey)
 			m.Assert(err)
 
 			en_msg, err := base64.StdEncoding.DecodeString(m.Option("echostr"))
-			m.Debug("what %v", en_msg)
 			m.Assert(err)
 
 			block, err := aes.NewCipher(aeskey)
@@ -40,7 +38,6 @@ func init() {
 
 			mode := cipher.NewCBCDecrypter(block, aeskey[:aes.BlockSize])
 			mode.CryptBlocks(en_msg, en_msg)
-			m.Debug("what %v", en_msg)
 			m.RenderResult(en_msg)
 		}},
 		BOT: {Name: "bot name chat text:textarea auto create", Help: "机器人", Actions: ice.MergeActions(ice.Actions{

@@ -47,6 +47,10 @@ func _host_list(m *ice.Message, name string) {
 }
 
 func _islocalhost(m *ice.Message, ip string) (ok bool) {
+	if strings.HasPrefix(ip, "[") {
+		ip = strings.TrimPrefix(ip, "[")
+		ip = strings.Split(ip, "]")[0]
+	}
 	if ip == "::1" || strings.HasPrefix(ip, "127.") {
 		return true
 	}

@@ -30,7 +30,7 @@ func _ssh_config(m *ice.Message, h string) *ssh.ServerConfig {
 	config := &ssh.ServerConfig{
 		PublicKeyCallback: func(conn ssh.ConnMetadata, key ssh.PublicKey) (*ssh.Permissions, error) {
 			meta, err := _ssh_meta(conn), errors.New(ice.ErrNotRight)
-			if tcp.IsLocalHost(m, strings.Split(meta[tcp.HOSTPORT], ice.DF)[0]) {
+			if tcp.IsLocalHost(m, meta[tcp.HOSTPORT]) {
 				m.Auth(aaa.USERNAME, meta[aaa.USERNAME], tcp.HOSTPORT, meta[tcp.HOSTPORT])
 				err = nil // 本机用户
 			} else {
@@ -112,7 +112,6 @@ func _ssh_prepare(m *ice.Message, channel ssh.Channel, requests <-chan *ssh.Requ
 			if err := ssh.Unmarshal(request.Payload, &env); err != nil {
 				continue
 			}
-			m.Debug("what %v", env)
 			list = append(list, env.Name+"="+env.Value)
 
 		case "shell":
@@ -165,16 +164,16 @@ func init() {
 					}
 				})
 			}},
-			tcp.LISTEN: {Name: "listen port=9030 private=.ssh/id_rsa authkey=.ssh/authorized_keys", Help: "添加", Hand: func(m *ice.Message, arg ...string) {
+			tcp.LISTEN: {Name: "listen port=9022 private=.ssh/id_rsa authkey=.ssh/authorized_keys", Help: "添加", Hand: func(m *ice.Message, arg ...string) {
 				if mdb.HashSelect(m, m.Option(tcp.PORT)).Length() > 0 {
 					mdb.HashModify(m, m.Option(tcp.PORT), mdb.STATUS, tcp.OPEN)
 				} else {
-					mdb.HashCreate(m, mdb.STATUS, tcp.OPEN, arg)
+					mdb.HashCreate(m.Spawn(), mdb.STATUS, tcp.OPEN, arg)
 					m.Cmd("", nfs.LOAD, m.OptionSimple(AUTHKEY))
 				}
 
 				m.Go(func() {
-					m.Cmdy(tcp.SERVER, tcp.LISTEN, mdb.TYPE, SSH, mdb.NAME, tcp.PORT, m.OptionSimple(tcp.PORT), func(c net.Conn) {
+					m.Cmd(tcp.SERVER, tcp.LISTEN, mdb.TYPE, SSH, mdb.NAME, tcp.PORT, m.OptionSimple(tcp.PORT), func(c net.Conn) {
 						m.Go(func() { _ssh_accept(m, kit.Hashs(m.Option(tcp.PORT)), c) })
 					})
 				})

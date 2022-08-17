@@ -18,7 +18,7 @@ func _wx_parse(m *ice.Message) {
 		FromUserName string
 		ToUserName   string
 		CreateTime   int64
-		MsgID        int64
+		MsgId        int64
 		Event        string
 		MsgType      string
 		Content      string
@@ -34,7 +34,9 @@ func _wx_parse(m *ice.Message) {
 
 		PicUrl string
 	}{}
+	defer m.R.Body.Close()
 	buf, _ := ioutil.ReadAll(m.R.Body)
+
 	m.Debug("buf: %+v", string(buf))
 	xml.NewDecoder(bytes.NewBuffer(buf)).Decode(&data)
 	m.Debug("data: %+v", data)
@@ -42,7 +44,7 @@ func _wx_parse(m *ice.Message) {
 	m.Option("FromUserName", data.FromUserName)
 	m.Option("ToUserName", data.ToUserName)
 	m.Option("CreateTime", data.CreateTime)
-	m.Option("MsgID", data.MsgID)
+	m.Option("MsgId", data.MsgId)
 
 	m.Option("Event", data.Event)
 	m.Option("MsgType", data.MsgType)
@@ -100,11 +102,8 @@ func init() {
 		}},
 		LOGIN: {Name: "login", Help: "登录", Actions: ice.Actions{
 			mdb.CREATE: {Name: "create appid appmm token", Help: "创建", Hand: func(m *ice.Message, arg ...string) {
-				m.Conf(ACCESS, kit.Keym(APPID), m.Option(APPID))
-				m.Conf(ACCESS, kit.Keym(APPMM), m.Option(APPMM))
-				m.Conf(ACCESS, kit.Keym(TOKEN), m.Option(TOKEN))
+				m.Cmd(ACCESS, LOGIN, arg)
 			}},
-		}, Hand: func(m *ice.Message, arg ...string) {
 		}},
 	})
 }

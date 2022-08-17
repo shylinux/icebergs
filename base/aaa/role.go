@@ -40,7 +40,7 @@ func _role_right(m *ice.Message, userrole string, keys ...string) (ok bool) {
 				ok = false // 在黑名单
 			}
 		}
-		if m.Warn(!ok, ice.ErrNotRight, keys, USERROLE, userrole) {
+		if !ok {
 			return // 没有权限
 		}
 		if userrole == TECH {
@@ -54,7 +54,7 @@ func _role_right(m *ice.Message, userrole string, keys ...string) (ok bool) {
 				ok = true // 在白名单
 			}
 		}
-		if m.Warn(!ok, ice.ErrNotRight, keys, USERROLE, userrole) {
+		if !ok {
 			return // 没有权限
 		}
 		if userrole == VOID {

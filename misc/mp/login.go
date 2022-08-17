@@ -7,6 +7,7 @@ import (
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/aaa"
 	"shylinux.com/x/icebergs/base/cli"
+	"shylinux.com/x/icebergs/base/ctx"
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/tcp"
 	"shylinux.com/x/icebergs/base/web"
@@ -31,9 +32,7 @@ const LOGIN = "login"
 
 func init() {
 	Index.Merge(&ice.Context{Configs: ice.Configs{
-		LOGIN: {Name: LOGIN, Help: "认证", Value: kit.Data(
-			tcp.SERVER, "https://api.weixin.qq.com",
-		)},
+		LOGIN: {Name: LOGIN, Help: "认证", Value: kit.Data(tcp.SERVER, "https://api.weixin.qq.com")},
 	}, Commands: ice.Commands{
 		"/login/": {Name: "/login/", Help: "认证", Actions: ice.Actions{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
@@ -49,6 +48,9 @@ func init() {
 			}},
 			aaa.USER: {Name: "user", Help: "用户", Hand: func(m *ice.Message, arg ...string) {
 				m.Option(aaa.USERNAME, m.Option(ice.MSG_USERNAME))
+				if m.Cmd(aaa.USER, m.Option(aaa.USERNAME)).Length() == 0 {
+					m.Cmd(aaa.USER, mdb.CREATE, m.OptionSimple(aaa.USERNAME))
+				}
 				m.Cmd(aaa.USER, mdb.MODIFY,
 					aaa.USERNICK, m.Option("nickName"), aaa.USERZONE, MP,
 					aaa.AVATAR, m.Option("avatarUrl"), aaa.GENDER, kit.Select("女", "男", m.Option(aaa.GENDER) == "1"),
@@ -65,8 +67,7 @@ func init() {
 		}},
 		LOGIN: {Name: "login appid auto qrcode tokens create", Help: "认证", Actions: ice.Actions{
 			mdb.CREATE: {Name: "create appid appmm", Help: "登录", Hand: func(m *ice.Message, arg ...string) {
-				m.Config(APPID, m.Option(APPID))
-				m.Config(APPMM, m.Option(APPMM))
+				ctx.ConfigFromOption(m, APPID, APPMM)
 			}},
 			TOKENS: {Name: "tokens", Help: "令牌", Hand: func(m *ice.Message, arg ...string) {
 				if now := time.Now().Unix(); m.Config(TOKENS) == "" || now > kit.Int64(m.Config(EXPIRES)) {

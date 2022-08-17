@@ -9,7 +9,7 @@ import (
 )
 
 func _wx_action(m *ice.Message) {
-	m.Set(ice.MSG_RESULT).RenderResult()
+	m.SetResult().RenderResult()
 
 	m.Echo(`<xml>
 <FromUserName><![CDATA[%s]]></FromUserName>

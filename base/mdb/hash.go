@@ -209,7 +209,7 @@ func HashShort(m *ice.Message) string {
 }
 func HashField(m *ice.Message) string { return kit.Select(HASH_FIELD, m.Config(FIELD)) }
 func HashArgs(m *ice.Message, arg ...Any) []string {
-	return _mdb_args(m, HashField(m), arg...)
+	return _mdb_args(m, "", arg...)
 }
 func HashInputs(m *ice.Message, arg ...Any) *ice.Message {
 	return m.Cmdy(INPUTS, m.PrefixKey(), "", HASH, HashArgs(m, arg))

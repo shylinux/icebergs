@@ -10,7 +10,7 @@ import (
 
 func _wx_reply(m *ice.Message, tmpl string) {
 	if res, err := kit.Render(m.Config(nfs.TEMPLATE), m); err == nil {
-		m.Set(ice.MSG_RESULT).RenderResult(string(res))
+		m.SetResult().RenderResult(string(res))
 	}
 }
 
@@ -25,9 +25,8 @@ func init() {
 				m.Cmdy(MENU, kit.Select("home", m.Option(mdb.NAME)))
 			}},
 		}, Hand: func(m *ice.Message, arg ...string) {
-			if m.Cmdy(arg); m.Length() == 0 && (m.Result() == "" || m.Result(1) == ice.ErrNotFound) {
-				m.Set(ice.MSG_RESULT)
-				m.Cmdy(cli.SYSTEM, arg) // 系统命令
+			if m.Cmdy(arg); m.Length() == 0 && (m.Result() == "" || m.IsErrNotFound()) {
+				m.SetResult().Cmdy(cli.SYSTEM, arg) // 系统命令
 			}
 			if m.Result() == "" {
 				m.Table()

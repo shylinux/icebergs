@@ -32,6 +32,9 @@ func _mdb_args(m *ice.Message, field string, arg ...Any) []string {
 		}
 	}
 	args := kit.Simple(res...)
+	if field == "" {
+		return args
+	}
 	for i := 0; i < len(args); i += 2 {
 		if !strings.Contains(field, args[i]) && !strings.HasPrefix(args[i], EXTRA) {
 			args[i] = kit.Keys(EXTRA, args[i])

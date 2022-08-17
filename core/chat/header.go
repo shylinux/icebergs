@@ -16,9 +16,15 @@ func _header_check(m *ice.Message, arg ...string) bool {
 	if m.Option(web.SHARE) != "" {
 		m.Cmd(web.SHARE, m.Option(web.SHARE), ice.OptionFields(""), func(value ice.Maps) {
 			switch value[mdb.TYPE] {
-			case web.FIELD, web.STORM:
+			case web.LOGIN:
+				if value[aaa.USERNAME] != m.Option(ice.MSG_USERNAME) {
+					web.RenderCookie(m, aaa.SessCreate(m, value[aaa.USERNAME]))
+				}
+				fallthrough
+			case web.STORM, web.FIELD:
 				m.Option(ice.MSG_USERNAME, value[aaa.USERNAME])
 				m.Option(ice.MSG_USERROLE, value[aaa.USERROLE])
+				m.Auth(aaa.USERROLE, value[aaa.USERROLE], aaa.USERNAME, value[aaa.USERNAME])
 			}
 		})
 	}

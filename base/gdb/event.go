@@ -26,8 +26,8 @@ func Watch(m *ice.Message, key string, arg ...string) *ice.Message {
 	if len(arg) == 0 {
 		arg = append(arg, m.PrefixKey())
 	}
-	return m.Cmd(EVENT, LISTEN, EVENT, key, ice.CMD, kit.Join(arg, ice.SP))
+	return m.Cmd("gdb.event", LISTEN, EVENT, key, ice.CMD, kit.Join(arg, ice.SP))
 }
 func Event(m *ice.Message, key string, arg ...ice.Any) *ice.Message {
-	return m.Cmdy(EVENT, HAPPEN, EVENT, key, arg)
+	return m.Cmdy("gdb.event", HAPPEN, EVENT, key, arg)
 }

@@ -115,5 +115,8 @@ func UserZone(m *ice.Message, username ice.Any) (zone string) {
 	return UserInfo(m, username, USERZONE, ice.MSG_USERZONE)
 }
 func UserLogin(m *ice.Message, username, password string) bool {
+	m.Option(ice.MSG_USERROLE, VOID)
+	m.Option(ice.MSG_USERNAME, "")
+	m.Option(ice.MSG_USERNICK, "")
 	return m.Cmdy(USER, LOGIN, username, password).Option(ice.MSG_USERNAME) != ""
 }

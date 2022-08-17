@@ -106,6 +106,7 @@ func _status_each(m *ice.Message, title string, cmds ...string) {
 			web.PushNoticeRefresh(m)
 		}
 	})
+	m.ProcessHold()
 }
 func _status_stat(m *ice.Message, files, adds, dels int) (int, int, int) {
 	for _, v := range kit.Split(_git_cmds(m, DIFF, "--shortstat"), ice.FS) {
@@ -229,7 +230,6 @@ func init() {
 			}},
 			PULL: {Name: "pull", Help: "下载", Hand: func(m *ice.Message, arg ...string) {
 				_status_each(m, PULL, cli.SYSTEM, GIT, PULL)
-				m.ProcessHold()
 			}},
 			MAKE: {Name: "make", Help: "编译", Hand: func(m *ice.Message, arg ...string) {
 				web.PushStream(m)
@@ -239,7 +239,6 @@ func init() {
 			PUSH: {Name: "push", Help: "上传", Hand: func(m *ice.Message, arg ...string) {
 				if m.Option(REPOS) == "" {
 					_status_each(m, PUSH, cli.SYSTEM, GIT, PUSH)
-					m.ProcessHold()
 					return
 				}
 
@@ -259,8 +258,11 @@ func init() {
 				m.Cmdy(TOTAL, PIE)
 			}},
 			STASH: {Name: "stash", Help: "缓存", Hand: func(m *ice.Message, arg ...string) {
-				_status_each(m, STASH, cli.SYSTEM, GIT, STASH)
-				m.ProcessHold()
+				if len(arg) == 0 && m.Option(REPOS) == "" {
+					_status_each(m, STASH, cli.SYSTEM, GIT, STASH)
+				} else {
+					_git_cmd(m, STASH)
+				}
 			}},
 
 			ADD: {Name: "add", Help: "添加", Hand: func(m *ice.Message, arg ...string) {
@@ -323,7 +325,7 @@ func init() {
 			}
 
 			_repos_cmd(m, arg[0], DIFF)
-			m.Action(COMMIT, TAGS, BRANCH)
+			m.Action(COMMIT, TAGS, STASH, BRANCH)
 			files, adds, dels := _status_stat(m, 0, 0, 0)
 			m.Status("files", files, "adds", adds, "dels", dels)
 			web.Toast3s(m, kit.Format("files: %d, adds: %d, dels: %d", files, adds, dels), arg[0])

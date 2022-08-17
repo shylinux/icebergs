@@ -63,7 +63,6 @@ func _hash_delete(m *ice.Message, prefix, chain, field, value string) {
 
 	Richs(m, prefix, chain, value, func(key string, val Map) {
 		if target, ok := kit.GetMeta(val)[TARGET].(io.Closer); ok {
-			m.Logs("close", target)
 			target.Close()
 		}
 		m.Logs(DELETE, KEY, path.Join(prefix, chain), field, value, VALUE, kit.Format(val))

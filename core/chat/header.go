@@ -1,6 +1,8 @@
 package chat
 
 import (
+	"strings"
+
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/aaa"
 	"shylinux.com/x/icebergs/base/cli"
@@ -125,7 +127,7 @@ func init() {
 				m.Option(k, msg.Append(k))
 			}
 			for _, k := range []string{aaa.AVATAR, aaa.BACKGROUND} {
-				if msg.Append(k) != "" && aaa.Right(m.Spawn(), msg.Append(k)) {
+				if msg.Append(k) != "" && !strings.HasPrefix(msg.Append(k), ice.HTTP) && aaa.Right(m.Spawn(), msg.Append(k)) {
 					m.Option(k, web.SHARE_LOCAL+k)
 				}
 			}

@@ -283,6 +283,7 @@ func init() {
 				}
 				_repos_cmd(m, m.Option(REPOS), TAG, m.Option(VERSION))
 				_repos_cmd(m, m.Option(REPOS), PUSH, "--tags")
+				m.ProcessRefresh30ms()
 			}},
 			BRANCH: {Name: "branch", Help: "分支", Hand: func(m *ice.Message, arg ...string) {
 				for _, line := range kit.Split(_repos_cmd(m.Spawn(), arg[0], BRANCH).Result(), ice.NL, ice.NL) {

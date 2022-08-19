@@ -96,7 +96,7 @@ func init() {
 				m.ProcessInner()
 			}}, code.INNER: {Name: "web.code.inner"},
 		}, ctx.CmdAction()), Hand: func(m *ice.Message, arg ...string) {
-			if len(arg) == 0 { // 仓库列表
+			if arg = kit.Slice(arg, 0, 1); len(arg) == 0 { // 仓库列表
 				m.Cmdy(REPOS)
 				return
 			}

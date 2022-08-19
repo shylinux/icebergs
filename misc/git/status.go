@@ -124,6 +124,7 @@ func _status_stat(m *ice.Message, files, adds, dels int) (int, int, int) {
 	return files, adds, dels
 }
 func _status_list(m *ice.Message) (files, adds, dels int, last time.Time) {
+	defer m.Sort(REPOS)
 	m.Cmd(REPOS, ice.OptionFields("name,path")).TableGo(func(value ice.Maps, lock *task.Lock) {
 		msg := m.Spawn(kit.Dict(cli.CMD_DIR, value[nfs.PATH]))
 		diff := _git_cmds(msg, STATUS, "-sb")
@@ -174,7 +175,6 @@ func _status_list(m *ice.Message) (files, adds, dels int, last time.Time) {
 			m.PushButton(list)
 		}
 	})
-	m.Sort(REPOS)
 	return
 }
 
@@ -323,7 +323,7 @@ func init() {
 			if len(arg) == 0 {
 				m.Action(PULL, MAKE, PUSH, TAGS, PIE, code.PUBLISH)
 				files, adds, dels, last := _status_list(m)
-				m.StatusTime("files", files, "adds", adds, "dels", dels, "last", last.Format(ice.MOD_TIME))
+				m.Status("files", files, "adds", adds, "dels", dels, "last", last.Format(ice.MOD_TIME))
 				web.Toast3s(m, kit.Format("files: %d, adds: %d, dels: %d", files, adds, dels), ice.CONTEXTS)
 				return
 			}

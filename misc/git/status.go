@@ -174,6 +174,7 @@ func _status_list(m *ice.Message) (files, adds, dels int, last time.Time) {
 			m.PushButton(list)
 		}
 	})
+	m.Sort(REPOS)
 	return
 }
 

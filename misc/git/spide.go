@@ -87,16 +87,16 @@ func init() {
 
 				for k, v := range list {
 					m.Push("pkg", k)
-					m.Push("count", len(v))
+					m.Push(mdb.COUNT, len(v))
 					for _, i := range item {
-						m.Push(i, kit.Select("", "ok", v[i]))
+						m.Push(i, kit.Select("", ice.OK, v[i]))
 					}
 				}
-				m.SortIntR("count")
+				m.SortIntR(mdb.COUNT)
 				m.ProcessInner()
 			}}, code.INNER: {Name: "web.code.inner"},
 		}, ctx.CmdAction()), Hand: func(m *ice.Message, arg ...string) {
-			if arg = kit.Slice(arg, 0, 1); len(arg) == 0 { // 仓库列表
+			if len(kit.Slice(arg, 0, 1)) == 0 { // 仓库列表
 				m.Cmdy(REPOS)
 				return
 			}
@@ -106,17 +106,14 @@ func init() {
 			} else {
 				m.Option(nfs.DIR_ROOT, path.Join(ice.USR, arg[0])+ice.PS)
 			}
-			ctx.DisplayStory(m, "spide.js", "field", "path", "root", arg[0])
+			ctx.DisplayStory(m, "spide.js", mdb.FIELD, nfs.PATH, "root", arg[0])
 
-			if len(arg) == 1 { // 目录列表
+			if len(arg) == 1 || !strings.HasSuffix(arg[1], arg[2]) { // 目录列表
 				m.Option(nfs.DIR_DEEP, ice.TRUE)
 				color := []string{cli.YELLOW, cli.BLUE, cli.CYAN, cli.RED}
 				nfs.Dir(m, nfs.PATH).Tables(func(value ice.Maps) {
 					m.Push(cli.COLOR, color[strings.Count(value[nfs.PATH], ice.PS)%len(color)])
 				})
-				return
-			}
-			if !strings.HasSuffix(arg[1], arg[2]) {
 				return
 			}
 

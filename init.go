@@ -46,7 +46,7 @@ func (f *Frame) Close(m *Message, arg ...string) bool {
 		}
 	})
 	conf.Close()
-	go func() { m.Sleep("3s"); os.Exit(kit.Int(Pulse.Option(EXIT))) }()
+	go func() { m.Sleep("1s"); os.Exit(kit.Int(Pulse.Option(EXIT))) }()
 	return true
 }
 

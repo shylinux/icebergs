@@ -6,6 +6,7 @@ import (
 	"time"
 
 	ice "shylinux.com/x/icebergs"
+	"shylinux.com/x/icebergs/base/aaa"
 	"shylinux.com/x/icebergs/base/cli"
 	"shylinux.com/x/icebergs/base/ctx"
 	"shylinux.com/x/icebergs/base/mdb"
@@ -61,7 +62,7 @@ func _status_tags(m *ice.Message, repos string) {
 					return text
 				}
 				if v, ok := vs[kit.Slice(strings.Split(ls[0], ice.PS), -1)[0]]; ok && ls[1] != v {
-					m.Logs("upgrade", "repos", ls[0], "from", ls[1], "to", v)
+					m.Logs(mdb.MODIFY, REPOS, ls[0], "from", ls[1], "to", v)
 					text = strings.ReplaceAll(text, ls[1], v)
 					change = true
 				}
@@ -218,15 +219,15 @@ func init() {
 					for _, v := range kit.Split(m.Option(nfs.FILE), " /") {
 						m.Push(mdb.TEXT, v)
 					}
-				case "username":
+				case aaa.USERNAME:
 					m.Push(arg[0], kit.Select(m.Option(ice.MSG_USERNAME), _configs_get(m, "user.name")))
 				case "email":
 					m.Push(arg[0], _configs_get(m, "user.email"))
 				}
 			}},
 			CONFIGS: {Name: "configs email username", Help: "配置", Hand: func(m *ice.Message, arg ...string) {
-				_configs_set(m, "user.name", m.Option("username"))
-				_configs_set(m, "user.email", m.Option("email"))
+				_configs_set(m, "user.name", m.Option(aaa.USERNAME))
+				_configs_set(m, "user.email", m.Option(aaa.EMAIL))
 			}},
 			CLONE: {Name: "clone repos='https://shylinux.com/x/volcanos' path=", Help: "克隆", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmdy(REPOS, mdb.CREATE)

@@ -37,7 +37,7 @@ func _space_domain(m *ice.Message) (link string) {
 		}
 	}
 	if link == "" {
-		link = kit.Format("http://localhost:%s", m.Cmd(SERVE).Append(tcp.PORT))
+		link = kit.Format("http://localhost:%s", kit.Select(m.Option(tcp.PORT), m.Cmd(SERVE).Append(tcp.PORT)))
 	}
 	return tcp.ReplaceLocalhost(m, link)
 }

@@ -13,6 +13,7 @@ import (
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/cli"
 	"shylinux.com/x/icebergs/base/ctx"
+	"shylinux.com/x/icebergs/base/gdb"
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/nfs"
 	kit "shylinux.com/x/toolkits"
@@ -108,14 +109,11 @@ func (f *Frame) scan(m *ice.Message, h, line string) *Frame {
 	f.ps2 = kit.Simple(m.Confv(PROMPT, kit.Keym(PS2)))
 	ps := f.ps1
 
-	if h == STDIO {
-		m.Sleep("800ms")
-		pwd := ice.Render(m, ice.RENDER_QRCODE, m.Cmdx("space", "domain"))
-		m.Sleep("100ms")
-		f.printf(m, pwd+ice.NL)
+	if m.I, m.O = f.stdin, f.stdout; h == STDIO {
+		gdb.Event(m, SOURCE_STDIO)
+		m.Sleep("1.1s")
 	}
 
-	m.I, m.O = f.stdin, f.stdout
 	bio := bufio.NewScanner(f.stdin)
 	for f.prompt(m, ps...); f.stdin != nil && bio.Scan(); f.prompt(m, ps...) {
 		if len(bio.Text()) == 0 && h == STDIO {
@@ -206,6 +204,8 @@ const (
 	STDIO = "stdio"
 	PS1   = "PS1"
 	PS2   = "PS2"
+
+	SOURCE_STDIO = "source.stdio"
 )
 const (
 	SCRIPT = "script"
@@ -237,13 +237,12 @@ func init() {
 		}},
 		PROMPT: {Name: "prompt arg run", Help: "命令提示", Hand: func(m *ice.Message, arg ...string) {
 			if f, ok := m.Optionv(FRAME).(*Frame); ok {
-				f.ps1 = arg
-				f.prompt(m)
+				f.prompt(m, arg...)
 			}
 		}},
 		PRINTF: {Name: "printf run text", Help: "输出显示", Hand: func(m *ice.Message, arg ...string) {
 			if f, ok := m.Optionv(FRAME).(*Frame); ok {
-				f.printf(m, arg[0])
+				f.printf(m, kit.Select(m.Option(nfs.CONTENT), arg, 0))
 			}
 		}},
 		SCREEN: {Name: "screen run text", Help: "输出命令", Hand: func(m *ice.Message, arg ...string) {

@@ -12,9 +12,11 @@ import (
 	"shylinux.com/x/icebergs/base/aaa"
 	"shylinux.com/x/icebergs/base/cli"
 	"shylinux.com/x/icebergs/base/ctx"
+	"shylinux.com/x/icebergs/base/gdb"
 	"shylinux.com/x/icebergs/base/lex"
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/nfs"
+	"shylinux.com/x/icebergs/base/ssh"
 	"shylinux.com/x/icebergs/base/tcp"
 	kit "shylinux.com/x/toolkits"
 	"shylinux.com/x/toolkits/logs"
@@ -347,6 +349,13 @@ func init() {
 					m.Cmd(aaa.ROLE, aaa.WHITE, aaa.VOID, p)
 				}
 				_serve_rewrite(m)
+				gdb.Watch(m, ssh.SOURCE_STDIO)
+			}},
+			ssh.SOURCE_STDIO: {Name: "source.stdio", Help: "终端", Hand: func(m *ice.Message, arg ...string) {
+				m.Go(func() {
+					m.Sleep("1s")
+					m.Cmd(ssh.PRINTF, kit.Dict(nfs.CONTENT, ice.Render(m, ice.RENDER_QRCODE, m.Cmdx(SPACE, DOMAIN))+ice.NL))
+				})
 			}},
 			DOMAIN: {Name: "domain", Help: "域名", Hand: func(m *ice.Message, arg ...string) {
 				ice.Info.Domain = m.Conf(SHARE, kit.Keym(DOMAIN, m.Config(DOMAIN, arg[0])))

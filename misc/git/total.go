@@ -3,7 +3,6 @@ package git
 import (
 	"path"
 	"strings"
-	"sync"
 	"time"
 
 	ice "shylinux.com/x/icebergs"
@@ -51,34 +50,27 @@ func init() {
 			}
 
 			// 提交统计
-			wg, lock := &sync.WaitGroup{}, &task.Lock{}
 			days, commit, adds, dels, rest := 0, 0, 0, 0, 0
-			m.Cmd(REPOS, ice.OptionFields("name,path"), func(value ice.Maps) {
+			m.Cmd(REPOS, ice.OptionFields("name,path")).TableGo(func(value ice.Maps, lock *task.Lock) {
 				if m.Config(kit.Keys("skip", value[REPOS])) == ice.TRUE {
 					return
 				}
+				msg := m.Cmd("_sum", value[nfs.PATH], mdb.TOTAL, "10000")
 
-				wg.Add(1)
-				m.Go(func() {
-					defer wg.Done()
-					msg := m.Cmd("_sum", value[nfs.PATH], mdb.TOTAL, "10000")
-
-					defer lock.Lock()()
-					msg.Tables(func(value ice.Maps) {
-						if kit.Int(value["days"]) > days {
-							days = kit.Int(value["days"])
-						}
-						commit += kit.Int(value["commit"])
-						adds += kit.Int(value["adds"])
-						dels += kit.Int(value["dels"])
-						rest += kit.Int(value["rest"])
-					})
-
-					m.Push(REPOS, value[REPOS])
-					m.Copy(msg)
+				defer lock.Lock()()
+				msg.Tables(func(value ice.Maps) {
+					if kit.Int(value["days"]) > days {
+						days = kit.Int(value["days"])
+					}
+					commit += kit.Int(value["commit"])
+					adds += kit.Int(value["adds"])
+					dels += kit.Int(value["dels"])
+					rest += kit.Int(value["rest"])
 				})
+
+				m.Push(REPOS, value[REPOS])
+				m.Copy(msg)
 			})
-			wg.Wait()
 
 			m.Push(REPOS, mdb.TOTAL)
 			m.Push("tags", "v3.0.0")

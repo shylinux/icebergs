@@ -23,14 +23,12 @@ func _wx_sign(m *ice.Message, nonce, stamp string) string {
 		kit.Format("timestamp=%s", stamp),
 		kit.Format("noncestr=%s", nonce),
 	)), "&")
-	m.Debug("what %v", text)
 	return kit.Format(sha1.Sum([]byte(text)))
 }
 func _wx_config(m *ice.Message, nonce string) {
 	m.Option(APPID, m.Config(APPID))
 	m.Option(ssh.SCRIPT, m.Config(ssh.SCRIPT))
 	m.Option("signature", _wx_sign(m, m.Option("noncestr", nonce), m.Option("timestamp", kit.Format(time.Now().Unix()))))
-	m.Option("debug", "true")
 }
 func _wx_check(m *ice.Message) {
 	check := kit.Sort([]string{m.Config(TOKEN), m.Option("timestamp"), m.Option("nonce")})

@@ -174,6 +174,9 @@ func init() {
 					if r.Method != http.MethodGet {
 						return false
 					}
+					if strings.HasSuffix(r.URL.Path, "/") {
+						return false
+					}
 					if !strings.HasPrefix(r.Header.Get(web.UserAgent), "Mozilla") {
 						return false
 					}

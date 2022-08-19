@@ -1,6 +1,7 @@
 package wiki
 
 import (
+	"net/url"
 	"path"
 	"strings"
 
@@ -14,7 +15,8 @@ func _refer_show(m *ice.Message, text string, arg ...string) {
 	list := [][]string{}
 	for _, v := range kit.Split(strings.TrimSpace(text), ice.NL, ice.NL) {
 		if ls := kit.Split(v, " ", " "); len(ls) == 1 {
-			list = append(list, []string{path.Base(ls[0]), ls[0]})
+			name, _ := url.QueryUnescape(path.Base(ls[0]))
+			list = append(list, []string{kit.Select(ls[0], name), ls[0]})
 		} else {
 			list = append(list, ls)
 		}

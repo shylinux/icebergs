@@ -13,6 +13,7 @@ import (
 	"shylinux.com/x/icebergs/base/web"
 	"shylinux.com/x/icebergs/core/code"
 	kit "shylinux.com/x/toolkits"
+	"shylinux.com/x/toolkits/task"
 )
 
 func _status_tag(m *ice.Message, tags string) string {
@@ -123,10 +124,17 @@ func _status_stat(m *ice.Message, files, adds, dels int) (int, int, int) {
 	return files, adds, dels
 }
 func _status_list(m *ice.Message) (files, adds, dels int, last time.Time) {
-	m.Cmd(REPOS, ice.OptionFields("name,path"), func(value ice.Maps) {
-		m.Option(cli.CMD_DIR, value[nfs.PATH])
-		diff := _git_cmds(m, STATUS, "-sb")
-		tags := _git_cmds(m, "describe", "--tags")
+	m.Cmd(REPOS, ice.OptionFields("name,path")).TableGo(func(value ice.Maps, lock *task.Lock) {
+		msg := m.Spawn(kit.Dict(cli.CMD_DIR, value[nfs.PATH]))
+		diff := _git_cmds(msg, STATUS, "-sb")
+		tags := _git_cmds(msg, "describe", "--tags")
+		_files, _adds, _dels := _status_stat(msg, 0, 0, 0)
+		now, _ := time.Parse("2006-01-02 15:04:05 -0700", strings.TrimSpace(_git_cmds(msg, "log", `--pretty=%cd`, "--date=iso", "-n1")))
+
+		defer lock.Lock()()
+		if files, adds, dels = files+_files, adds+_adds, dels+_dels; now.After(last) {
+			last = now
+		}
 
 		for _, v := range strings.Split(strings.TrimSpace(diff), ice.NL) {
 			if v == "" {
@@ -134,7 +142,7 @@ func _status_list(m *ice.Message) (files, adds, dels int, last time.Time) {
 			}
 			vs := strings.SplitN(strings.TrimSpace(v), ice.SP, 2)
 			switch kit.Ext(vs[1]) {
-			case "swp", "swo", "bin", "var":
+			case "swp", "swo", ice.BIN, ice.VAR:
 				continue
 			}
 
@@ -164,12 +172,6 @@ func _status_list(m *ice.Message) (files, adds, dels int, last time.Time) {
 				}
 			}
 			m.PushButton(list)
-		}
-
-		files, adds, dels = _status_stat(m, files, adds, dels)
-		now, _ := time.Parse("2006-01-02 15:04:05 -0700", strings.TrimSpace(_git_cmds(m, "log", `--pretty=%cd`, "--date=iso", "-n1")))
-		if now.After(last) {
-			last = now
 		}
 	})
 	return
@@ -320,7 +322,7 @@ func init() {
 			if len(arg) == 0 {
 				m.Action(PULL, MAKE, PUSH, TAGS, PIE, code.PUBLISH)
 				files, adds, dels, last := _status_list(m)
-				m.Status("files", files, "adds", adds, "dels", dels, "last", last.Format(ice.MOD_TIME))
+				m.StatusTime("files", files, "adds", adds, "dels", dels, "last", last.Format(ice.MOD_TIME))
 				web.Toast3s(m, kit.Format("files: %d, adds: %d, dels: %d", files, adds, dels), ice.CONTEXTS)
 				return
 			}

@@ -29,13 +29,6 @@ func _space_domain(m *ice.Message) (link string) {
 	if link == "" {
 		link = m.Option(ice.MSG_USERWEB)
 	}
-	if link == "" && m.R != nil && m.R.Host != "" && !tcp.IsLocalHost(m, m.R.Host) {
-		if m.R.TLS == nil {
-			link = kit.Format("http://%s", m.R.Host)
-		} else {
-			link = kit.Format("https://%s", m.R.Host)
-		}
-	}
 	if link == "" {
 		link = kit.Format("http://localhost:%s", kit.Select(m.Option(tcp.PORT), m.Cmd(SERVE).Append(tcp.PORT)))
 	}

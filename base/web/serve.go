@@ -90,7 +90,6 @@ func _serve_spide(m *ice.Message, prefix string, c *ice.Context) {
 	}
 }
 func _serve_start(m *ice.Message) {
-	ice.Info.Domain = kit.Select(kit.Format("%s://%s:%s", m.Option(tcp.PROTO), kit.Select(m.Cmd(tcp.HOST).Append(aaa.IP), m.Option(tcp.HOST)), m.Option(tcp.PORT)), ice.Info.Domain)
 	if cli.NodeInfo(m, SERVER, kit.Select(ice.Info.HostName, m.Option("nodename"))); m.Option(tcp.PORT) == tcp.RANDOM {
 		m.Option(tcp.PORT, m.Cmdx(tcp.PORT, aaa.RIGHT))
 	}

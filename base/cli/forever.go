@@ -37,8 +37,13 @@ func init() {
 				}
 
 				m.Cmd(FOREVER, STOP)
-				m.Cmdy(FOREVER, kit.Select(os.Args[0], nfs.PWD+ice.BIN_ICE_BIN, nfs.ExistsFile(m, ice.BIN_ICE_BIN)),
-					"serve", START, ice.DEV, "", aaa.USERNAME, aaa.ROOT, aaa.PASSWORD, aaa.ROOT, arg)
+				if len(arg) > 0 && arg[0] == "space" {
+					m.Cmdy(FOREVER, kit.Select(os.Args[0], nfs.PWD+ice.BIN_ICE_BIN, nfs.ExistsFile(m, ice.BIN_ICE_BIN)),
+						"space", "dial", ice.DEV, ice.OPS, arg[2:])
+				} else {
+					m.Cmdy(FOREVER, kit.Select(os.Args[0], nfs.PWD+ice.BIN_ICE_BIN, nfs.ExistsFile(m, ice.BIN_ICE_BIN)),
+						"serve", START, ice.DEV, "", aaa.USERNAME, aaa.ROOT, aaa.PASSWORD, aaa.ROOT, arg)
+				}
 			}},
 			RESTART: {Name: "restart", Help: "重启", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmd(gdb.SIGNAL, gdb.RESTART)
@@ -61,6 +66,9 @@ func init() {
 				} else {
 					if logs.Println(); nfs.ExistsFile(m, "var/log/bench.log") {
 						nfs.Rename(m, "var/log/bench.log", kit.Format("var/log/bench.%s.log", logs.Now().Format("20060102-150405")))
+					}
+					if logs.Println(); nfs.ExistsFile(m, "var/log/error.log") {
+						nfs.Rename(m, "var/log/error.log", kit.Format("var/log/error.%s.log", logs.Now().Format("20060102-150405")))
 					}
 				}
 			}

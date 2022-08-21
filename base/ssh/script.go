@@ -111,7 +111,7 @@ func (f *Frame) scan(m *ice.Message, h, line string) *Frame {
 
 	if m.I, m.O = f.stdin, f.stdout; h == STDIO {
 		gdb.Event(m, SOURCE_STDIO)
-		m.Sleep("1.1s")
+		m.Sleep("2.1s")
 	}
 
 	bio := bufio.NewScanner(f.stdin)

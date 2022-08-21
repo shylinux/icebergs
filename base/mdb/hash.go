@@ -26,13 +26,15 @@ func _hash_inputs(m *ice.Message, prefix, chain string, field, value string) {
 	defer RLock(m, prefix, chain)()
 
 	list := map[string]int{}
-	Richs(m, prefix, chain, FOREACH, func(val Map) {
+	Richs(m, prefix, chain, FOREACH, func(key string, val Map) {
 		val = kit.GetMeta(val)
 		list[kit.Format(val[field])] += kit.Int(kit.Select("1", val[COUNT]))
 	})
 	for k, i := range list {
-		m.Push(field, k)
-		m.Push(COUNT, i)
+		if k != "" {
+			m.Push(field, k)
+			m.Push(COUNT, i)
+		}
 	}
 	m.SortIntR(COUNT)
 }
@@ -203,6 +205,12 @@ func HashStatusCloseAction(args ...Any) ice.Actions {
 	})
 }
 
+func HashKey(m *ice.Message) string {
+	if m.Option(HASH) != "" {
+		return HASH
+	}
+	return HashShort(m)
+}
 func HashShort(m *ice.Message) string {
 	return kit.Select(HASH, m.Config(SHORT), m.Config(SHORT) != UNIQ)
 }
@@ -220,14 +228,18 @@ func HashCreate(m *ice.Message, arg ...Any) string {
 func HashRemove(m *ice.Message, arg ...Any) *ice.Message {
 	args := kit.Simple(arg)
 	if len(args) == 0 {
-		args = m.OptionSimple(HashShort(m))
+		args = m.OptionSimple(HashKey(m))
 	} else if len(args) == 1 {
-		args = []string{HashShort(m), args[0]}
+		args = []string{HashKey(m), args[0]}
 	}
 	return m.Cmdy(DELETE, m.PrefixKey(), "", HASH, args)
 }
 func HashModify(m *ice.Message, arg ...Any) *ice.Message {
-	return m.Cmd(MODIFY, m.PrefixKey(), "", HASH, m.OptionSimple(HashShort(m)), HashArgs(m, arg...))
+	args := HashArgs(m, arg...)
+	if args[0] != HashShort(m) && args[0] != HASH {
+		args = append(m.OptionSimple(HashKey(m)), args...)
+	}
+	return m.Cmd(MODIFY, m.PrefixKey(), "", HASH, args)
 }
 func HashSelect(m *ice.Message, arg ...string) *ice.Message {
 	m.Fields(len(kit.Slice(arg, 0, 1)), HashField(m))

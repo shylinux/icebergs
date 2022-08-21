@@ -24,15 +24,17 @@ func _xterm_socket(m *ice.Message, h, t string) {
 	m.Option(mdb.TEXT, t)
 }
 func _xterm_get(m *ice.Message, h string, must bool) *os.File {
+	t := mdb.HashSelectField(m, m.Option(mdb.HASH, h), mdb.TYPE)
 	if f, ok := mdb.HashTarget(m, h, func() ice.Any {
 		if !must {
 			return nil
 		}
 
-		ls := kit.Split(kit.Select("sh", m.Option(mdb.TYPE)))
+		ls := kit.Split(kit.Select("sh", t))
+		m.Logs(cli.DAEMON, ice.CMD, ls)
 		cmd := exec.Command(cli.SystemFind(m, ls[0]), ls[1:]...)
+		m.Logs(cli.DAEMON, ice.CMD, cmd.Path)
 		cmd.Env = append(os.Environ(), "TERM=xterm")
-		m.Option(mdb.HASH, h)
 
 		tty, err := pty.Start(cmd)
 		m.Assert(err)
@@ -76,45 +78,41 @@ func init() {
 			mdb.INPUTS: {Name: "inputs", Help: "补全", Hand: func(m *ice.Message, arg ...string) {
 				switch mdb.HashInputs(m, arg); arg[0] {
 				case mdb.TYPE:
-					m.Push(arg[0], "python", "node", "bash", "sh")
+					m.Push(arg[0], "ice.bin source stdio", "node", "python", "bash", "sh")
 				case mdb.NAME:
 					m.Push(arg[0], path.Base(m.Option(mdb.TYPE)))
 				}
 			}},
 			mdb.CREATE: {Name: "create type name", Help: "创建", Hand: func(m *ice.Message, arg ...string) {
 				mdb.HashCreate(m, arg, mdb.TEXT, m.Option(ice.MSG_DAEMON))
-				_xterm_get(m, m.Result(), true)
 			}},
 			mdb.REMOVE: {Name: "remove", Help: "删除", Hand: func(m *ice.Message, arg ...string) {
-				if f := _xterm_get(m, m.Option(mdb.HASH), false); f != nil {
-					f.Close()
-				}
-				mdb.HashRemove(m, m.OptionSimple(mdb.HASH))
-			}},
-			mdb.MODIFY: {Name: "modify", Help: "编辑", Hand: func(m *ice.Message, arg ...string) {
-				mdb.HashModify(m, m.OptionSimple(mdb.HASH), arg)
-			}},
-			mdb.PRUNES: {Name: "prunes", Help: "清理", Hand: func(m *ice.Message, arg ...string) {
-			}},
-			"resize": {Name: "resize", Help: "大小", Hand: func(m *ice.Message, arg ...string) {
-				pty.Setsize(_xterm_get(m, m.Option(mdb.HASH), true), &pty.Winsize{Rows: uint16(kit.Int(m.Option("rows"))), Cols: uint16(kit.Int(m.Option("cols")))})
+				mdb.HashSelectDetail(m, m.Option(mdb.HASH), func(value ice.Map) {
+					if c, ok := value["_cmd"].(io.Closer); ok {
+						c.Close()
+					}
+				})
+				mdb.HashRemove(m)
 			}},
 			"rename": {Name: "rename", Help: "重命名", Hand: func(m *ice.Message, arg ...string) {
 				mdb.HashModify(m, arg)
 			}},
+			"resize": {Name: "resize", Help: "大小", Hand: func(m *ice.Message, arg ...string) {
+				pty.Setsize(_xterm_get(m, m.Option(mdb.HASH), true), &pty.Winsize{Rows: uint16(kit.Int(m.Option("rows"))), Cols: uint16(kit.Int(m.Option("cols")))})
+			}},
 			"select": {Name: "select", Help: "连接", Hand: func(m *ice.Message, arg ...string) {
 				mdb.HashModify(m, mdb.TEXT, m.Option(ice.MSG_DAEMON))
+				_xterm_get(m, m.Option(mdb.HASH), true)
 				m.Cmd("", "input", arg)
 			}},
 			"input": {Name: "input", Help: "输入", Hand: func(m *ice.Message, arg ...string) {
-				mdb.HashModify(m, mdb.TIME, m.Time())
-				if b, e := base64.StdEncoding.DecodeString(strings.Join(arg, "")); m.Assert(e) {
+				if b, e := base64.StdEncoding.DecodeString(strings.Join(arg, "")); !m.Warn(e) {
 					_xterm_get(m, m.Option(mdb.HASH), true).Write(b)
+					mdb.HashModify(m, mdb.TIME, m.Time())
 				}
 			}},
-		}, mdb.HashAction(mdb.FIELD, "time,hash,type,name,text,extra"), ctx.CmdAction()), Hand: func(m *ice.Message, arg ...string) {
-			mdb.HashSelect(m, kit.Slice(arg, 0, 1)...)
-			ctx.DisplayLocal(m, "")
+		}, mdb.HashAction(mdb.FIELD, "time,hash,type,name,text"), ctx.CmdAction()), Hand: func(m *ice.Message, arg ...string) {
+			ctx.DisplayLocal(mdb.HashSelect(m, kit.Slice(arg, 0, 1)...), "")
 		}},
 	})
 }

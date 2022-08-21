@@ -3,6 +3,7 @@ package tcp
 import (
 	"net"
 	"path"
+	"strings"
 
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/aaa"
@@ -76,7 +77,7 @@ func init() {
 				m.Push(mdb.TIME, value[mdb.TIME])
 				m.Push(PORT, port)
 				m.Push(nfs.SIZE, value[nfs.SIZE])
-				m.Push(ice.BIN, bin)
+				m.Push(ice.BIN, strings.TrimPrefix(bin, value[nfs.PATH]))
 			})
 			m.SortInt(PORT)
 			m.PushAction(nfs.TRASH)

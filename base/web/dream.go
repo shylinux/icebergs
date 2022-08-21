@@ -49,14 +49,12 @@ func _dream_list(m *ice.Message) *ice.Message {
 
 func _dream_show(m *ice.Message, name string) {
 	if m.Warn(name == "") {
-		return 
+		return
 	}
 	if !strings.Contains(name, "-") || !strings.HasPrefix(name, "20") {
 		name = m.Time("20060102-") + name
 	}
 	defer m.ProcessOpen(MergePod(m, m.Option(mdb.NAME, name)))
-	defer m.Echo(MergePod(m, m.Option(mdb.NAME, name)))
-	// defer m.PushRefresh()
 
 	p := path.Join(ice.USR_LOCAL_WORK, name)
 	if pid := m.Cmdx(nfs.CAT, path.Join(p, ice.Info.PidPath)); pid != "" && nfs.ExistsFile(m, "/proc/"+pid) {
@@ -102,8 +100,8 @@ func _dream_show(m *ice.Message, name string) {
 	m.Optionv(cli.CMD_OUTPUT, path.Join(p, ice.BIN_BOOT_LOG))
 
 	defer ToastProcess(m)()
-	bin := kit.Select(os.Args[0], cli.SystemFind(m, ice.ICE_BIN, kit.Path(path.Join(p, ice.BIN)), kit.Path(ice.BIN)))
-	m.Cmd(cli.DAEMON, bin, SPACE, tcp.DIAL, ice.DEV, ice.OPS, m.OptionSimple(mdb.NAME, RIVER))
+	bin := kit.Select(os.Args[0], cli.SystemFind(m, ice.ICE_BIN, nfs.PWD+path.Join(p, ice.BIN), nfs.PWD+ice.BIN))
+	m.Cmd(cli.DAEMON, bin, SPACE, tcp.DIAL, ice.DEV, ice.OPS, m.OptionSimple(mdb.NAME, RIVER), "daemon", "ops")
 
 	defer gdb.Event(m, DREAM_CREATE, m.OptionSimple(mdb.TYPE, mdb.NAME))
 	m.Option(cli.CMD_OUTPUT, "")
@@ -150,8 +148,8 @@ func init() {
 			}},
 			cli.STOP: {Name: "stop", Help: "停止", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmd(SPACE, mdb.MODIFY, m.OptionSimple(mdb.NAME), mdb.STATUS, cli.STOP)
-				m.Cmd(SPACE, m.Option(mdb.NAME), ice.EXIT)
-				m.ProcessRefresh3s()
+				m.Go(func() { m.Cmd(SPACE, m.Option(mdb.NAME), ice.EXIT) })
+				m.Sleep3s()
 			}},
 			DREAM_STOP: {Name: "dream.stop type name", Help: "停止", Hand: func(m *ice.Message, arg ...string) {
 				if m.CmdAppend(SPACE, m.Option(mdb.NAME), mdb.STATUS) == cli.STOP {
@@ -186,7 +184,7 @@ fi
 require miss.sh
 ish_miss_prepare_compile
 ish_miss_prepare_develop
-ish_miss_prepare_install
+ish_miss_prepare_operate
 
-ish_miss_make; if [ -n "$*" ]; then ./bin/ice.bin forever serve "$@"; fi
+ish_miss_make; if [ -n "$*" ]; then ish_miss_serve "$@"; fi
 `

@@ -31,7 +31,7 @@ func _system_cmd(m *ice.Message, arg ...string) *exec.Cmd {
 			}
 		}
 	}
-	if _system_find(m, arg[0]) == "" {
+	if _system_find(m, arg[0]) == "" && !strings.Contains(arg[0], ice.PS) {
 		m.Cmd(MIRRORS, CMD, arg[0])
 		if file := _system_find(m, arg[0]); file != "" {
 			m.Logs(mdb.SELECT, "mirrors cmd", file)
@@ -82,7 +82,7 @@ func _system_find(m *ice.Message, bin string, dir ...string) string {
 	}
 	for _, p := range dir {
 		if nfs.ExistsFile(m, path.Join(p, bin)) {
-			return kit.Path(path.Join(p, bin))
+			return kit.Path(p, bin)
 		}
 	}
 	return ""

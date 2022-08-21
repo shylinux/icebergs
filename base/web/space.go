@@ -17,7 +17,7 @@ import (
 )
 
 func _space_domain(m *ice.Message) (link string) {
-	if link = m.Config(DOMAIN); link == "" {
+	if link = ice.Info.Domain; link == "" {
 		link = m.Cmd(SPACE, ice.OPS, cli.PWD).Append(mdb.LINK)
 	}
 	if link == "" {
@@ -236,7 +236,9 @@ func _space_fork(m *ice.Message) {
 			case WORKER: // 工作节点
 				gdb.Event(m, DREAM_START, args)
 				defer gdb.Event(m, DREAM_STOP, args)
-				defer m.Cmd(DREAM, DREAM_STOP, args)
+				if m.Option("daemon") == "ops" {
+					defer m.Cmd(DREAM, DREAM_STOP, args)
+				}
 			default: // 服务节点
 				gdb.Event(m, SPACE_START, args)
 				defer gdb.Event(m, SPACE_STOP, args)
@@ -321,7 +323,7 @@ func init() {
 				m.EchoQRCode(m.Option(ice.MSG_USERWEB))
 			}},
 			tcp.DIAL: {Name: "dial dev=ops name", Help: "连接", Hand: func(m *ice.Message, arg ...string) {
-				_space_dial(m, m.Option(ice.DEV), kit.Select(ice.Info.NodeName, m.Option(mdb.NAME)))
+				_space_dial(m, m.Option(ice.DEV), kit.Select(ice.Info.NodeName, m.Option(mdb.NAME)), arg...)
 			}},
 			DOMAIN: {Name: "domain", Help: "域名", Hand: func(m *ice.Message, arg ...string) {
 				m.Echo(_space_domain(m))

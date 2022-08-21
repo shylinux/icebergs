@@ -117,8 +117,11 @@ func init() {
 
 					name = _tmux_key(m.Option(mdb.NAME), name)
 					_tmux_cmd(m, SPLIT_WINDOW, "-t", kit.Keys(name, "1"), "-p", "40")
-					_tmux_cmd(m, SEND_KEYS, "-t", kit.Keys(name, "2"), "ish_miss_log", ENTER)
-					_tmux_cmd(m, SEND_KEYS, "-t", kit.Keys(name, "1"), "vi etc/miss.sh", ENTER)
+					m.Go(func() {
+						m.Sleep("1s")
+						_tmux_cmd(m, SEND_KEYS, "-t", kit.Keys(name, "2"), "ish_miss_log", ENTER)
+						_tmux_cmd(m, SEND_KEYS, "-t", kit.Keys(name, "1"), "vi etc/miss.sh", ENTER)
+					})
 
 					_tmux_cmd(m, LINK_WINDOW, "-s", name, "-t", "miss:")
 				}

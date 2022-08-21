@@ -3,6 +3,7 @@ package cli
 import (
 	"io"
 	"os/exec"
+	"strings"
 
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/ctx"
@@ -23,7 +24,7 @@ func _daemon_exec(m *ice.Message, cmd *exec.Cmd) {
 		cmd.Stderr = w
 	}
 
-	h := mdb.HashCreate(m, ice.CMD, kit.Join(cmd.Args, ice.SP),
+	h := mdb.HashCreate(m.Spawn(), ice.CMD, kit.Join(cmd.Args, ice.SP),
 		STATUS, START, DIR, cmd.Dir, ENV, kit.Select("", cmd.Env),
 		m.OptionSimple(CMD_INPUT, CMD_OUTPUT, CMD_ERRPUT, mdb.CACHE_CLEAR_ON_EXIT),
 	)
@@ -128,15 +129,17 @@ func init() {
 				})
 			}},
 		}, mdb.HashStatusAction(mdb.FIELD, "time,hash,status,pid,cmd,dir,env")), Hand: func(m *ice.Message, arg ...string) {
-			if mdb.HashSelect(m, arg...).Tables(func(value ice.Maps) {
-				switch value[STATUS] {
-				case START:
-					m.PushButton(RESTART, STOP)
-				default:
-					m.PushButton(mdb.REMOVE)
+			if len(arg) == 0 || !strings.Contains(arg[0], ice.PS) {
+				if mdb.HashSelect(m, kit.Slice(arg, 0, 1)...).Tables(func(value ice.Maps) {
+					switch value[STATUS] {
+					case START:
+						m.PushButton(RESTART, STOP)
+					default:
+						m.PushButton(mdb.REMOVE)
+					}
+				}); len(arg) == 0 || m.Length() > 0 {
+					return
 				}
-			}); len(arg) == 0 || m.Length() > 0 {
-				return
 			}
 
 			if len(arg) == 1 {

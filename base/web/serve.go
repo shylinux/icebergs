@@ -62,7 +62,7 @@ func _serve_rewrite(m *ice.Message) {
 	})
 }
 func _serve_domain(m *ice.Message) string {
-	if p := m.Config(DOMAIN); p != "" {
+	if p := ice.Info.Domain; p != "" {
 		return p
 	}
 	if p := m.R.Header.Get("X-Host"); p != "" {
@@ -332,7 +332,7 @@ func init() {
 	Index.Merge(&ice.Context{Configs: ice.Configs{
 		SERVE: {Name: SERVE, Help: "服务器", Value: kit.Data(
 			mdb.SHORT, mdb.NAME, mdb.FIELD, "time,status,name,proto,host,port,dev",
-			DOMAIN, "", tcp.LOCALHOST, ice.TRUE, LOGHEADERS, ice.FALSE,
+			tcp.LOCALHOST, ice.TRUE, LOGHEADERS, ice.FALSE,
 			nfs.PATH, kit.Dict(ice.PS, ice.USR_VOLCANOS),
 			ice.VOLCANOS, kit.Dict(nfs.PATH, ice.USR_VOLCANOS, INDEX, "page/index.html",
 				nfs.REPOS, "https://shylinux.com/x/volcanos", nfs.BRANCH, nfs.MASTER,
@@ -353,12 +353,13 @@ func init() {
 			}},
 			ssh.SOURCE_STDIO: {Name: "source.stdio", Help: "终端", Hand: func(m *ice.Message, arg ...string) {
 				m.Go(func() {
-					m.Sleep("1s")
+					m.Sleep("2s")
 					m.Cmd(ssh.PRINTF, kit.Dict(nfs.CONTENT, ice.Render(m, ice.RENDER_QRCODE, m.Cmdx(SPACE, DOMAIN))+ice.NL))
 				})
 			}},
 			DOMAIN: {Name: "domain", Help: "域名", Hand: func(m *ice.Message, arg ...string) {
-				ice.Info.Domain = m.Conf(SHARE, kit.Keym(DOMAIN, m.Config(DOMAIN, arg[0])))
+				m.Config(tcp.LOCALHOST, ice.FALSE)
+				ice.Info.Domain = arg[0]
 			}},
 			SPIDE: {Name: "spide", Help: "架构图", Hand: func(m *ice.Message, arg ...string) {
 				if len(arg) == 0 { // 模块列表

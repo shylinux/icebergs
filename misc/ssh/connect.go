@@ -6,7 +6,6 @@ import (
 	"net"
 	"os"
 	"strings"
-	"syscall"
 
 	"golang.org/x/crypto/ssh"
 	"golang.org/x/crypto/ssh/terminal"
@@ -86,7 +85,7 @@ func _ssh_dial(m *ice.Message, cb func(net.Conn), arg ...string) {
 							s.RequestPty(kit.Env(cli.TERM), h, w, ssh.TerminalModes{ssh.ECHO: 1, ssh.TTY_OP_ISPEED: 14400, ssh.TTY_OP_OSPEED: 14400})
 							defer s.Wait()
 
-							gdb.SignalNotify(m, syscall.SIGWINCH, func() {
+							gdb.SignalNotify(m, 28, func() {
 								w, h, _ := terminal.GetSize(int(os.Stdin.Fd()))
 								s.WindowChange(h, w)
 							})

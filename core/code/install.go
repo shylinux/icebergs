@@ -119,6 +119,8 @@ func _install_start(m *ice.Message, arg ...string) {
 	switch cb := m.Optionv(PREPARE).(type) {
 	case func(string) []string:
 		args = append(args, cb(p)...)
+	case func(string, int):
+		cb(p, kit.Int(path.Base(p)))
 	case func(string):
 		cb(p)
 	case nil:

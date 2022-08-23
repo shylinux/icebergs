@@ -223,7 +223,11 @@ func HashInputs(m *ice.Message, arg ...Any) *ice.Message {
 }
 func HashCreate(m *ice.Message, arg ...Any) string {
 	msg := m.Spawn()
-	return m.Echo(msg.Cmdx(INSERT, m.PrefixKey(), "", HASH, HashArgs(msg, arg...))).Result()
+	args := HashArgs(msg, arg...)
+	if len(args) == 0 {
+		args = m.OptionSimple(m.Config(FIELD))
+	}
+	return m.Echo(msg.Cmdx(INSERT, m.PrefixKey(), "", HASH, args)).Result()
 }
 func HashRemove(m *ice.Message, arg ...Any) *ice.Message {
 	args := kit.Simple(arg)

@@ -41,6 +41,9 @@ func _field_show(m *ice.Message, name, text string, arg ...string) {
 			name = cmd.Help
 		}
 	})
+	if len(meta) == 0 {
+		return
+	}
 	if !aaa.Right(m.Spawn(), cmds[0]) {
 		return
 	}

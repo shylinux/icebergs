@@ -166,7 +166,7 @@ export ctx_dev={{.Option "httphost"}} ctx_pod={{.Option "user.pod"}}; ctx_temp=$
 git clone {{.Option "remote"}}; cd {{.Option "pathname"}} && source etc/miss.sh port 9020
 `,
 	ice.BASE, `# 下载工具
-ctx_temp=$(mktemp); curl -o $ctx_temp -fsSL {{.Cmdx "spide" "shy" "url"}}; source $ctx_temp binary
-ctx_temp=$(mktemp); wget -O $ctx_temp -q {{.Cmdx "spide" "shy" "url"}}; source $ctx_temp binary
+ctx_temp=$(mktemp); curl -o $ctx_temp -fsSL {{.Cmdx "spide" "shy" "client.url"}}; source $ctx_temp binary
+ctx_temp=$(mktemp); wget -O $ctx_temp -q {{.Cmdx "spide" "shy" "client.url"}}; source $ctx_temp binary
 `,
 )

@@ -38,6 +38,13 @@ func _spide_create(m *ice.Message, name, address string) {
 }
 func _spide_list(m *ice.Message, arg ...string) {
 	msg := mdb.HashSelects(m.Spawn(), arg[0])
+	m.Debug("what %v", msg.FormatMeta())
+	m.Debug("what %v", msg.Append(arg[1]))
+	if len(arg) == 2 && msg.Append(arg[1]) != "" {
+		m.Echo(msg.Append(arg[1]))
+		return
+	}
+
 	cache, save := "", ""
 	switch arg[1] { // 缓存方法
 	case SPIDE_RAW:

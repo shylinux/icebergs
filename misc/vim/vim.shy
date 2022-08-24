@@ -11,11 +11,11 @@ field "源码" web.code.inner args `usr/install/vim-vim-12be734/ src/main.c 110`
 
 section "构建"
 spark shell `
-wget http://mirrors.tencent.com/macports/distfiles/vim/vim-8.2.2681.tar.gz
-tar xvf vim-8.2.2681.tar.gz && cd vim-vim-12be734
-
 yum install -y wget make gcc
 yum install -y ncurses-devel.x86_64 bzip2.x86_64
+
+wget http://mirrors.tencent.com/macports/distfiles/vim/vim-8.2.2681.tar.gz
+tar xvf vim-8.2.2681.tar.gz && cd vim-vim-12be734
 
 ./configure --prefix=$PWD/_install --enable-multibyte=yes
 make -j8 && make install

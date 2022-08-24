@@ -125,7 +125,7 @@ func _status_stat(m *ice.Message, files, adds, dels int) (int, int, int) {
 	return files, adds, dels
 }
 func _status_list(m *ice.Message) (files, adds, dels int, last time.Time) {
-	defer m.Sort(REPOS)
+	defer m.Sort("repos,type")
 	m.Cmd(REPOS, ice.OptionFields("name,path")).TableGo(func(value ice.Maps, lock *task.Lock) {
 		msg := m.Spawn(kit.Dict(cli.CMD_DIR, value[nfs.PATH]))
 		diff := _git_cmds(msg, STATUS, "-sb")

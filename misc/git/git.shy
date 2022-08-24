@@ -13,7 +13,7 @@ section "构建"
 spark shell `
 yum install -y wget make gcc
 yum install -y libcurl-devel.x86_64 openssl-devel.x86_64
-yum install perl-ExtUtils-CBuilder perl-ExtUtils-MakeMaker
+yum install -y perl-ExtUtils-CBuilder perl-ExtUtils-MakeMaker
 
 wget http://mirrors.tencent.com/macports/distfiles/git-cinnabar/git-2.31.1.tar.gz
 tar xvf git-2.31.1.tar.gz && cd git-2.31.1

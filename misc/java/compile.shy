@@ -7,7 +7,7 @@ refer `
 `
 field web.code.java.compile
 
-spark shell `
+shell `
 wget https://github.com/Tencent/TencentKona-8/releases/download/8.0.11-GA/TencentKona8.0.11.b2_jdk_linux-x86_64_8u345.tar.gz
 tar xvf TencentKona8.0.11.b2_jdk_linux-x86_64_8u345.tar.gz && cd TencentKona-8.0.11-345/
 

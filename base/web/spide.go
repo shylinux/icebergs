@@ -38,8 +38,6 @@ func _spide_create(m *ice.Message, name, address string) {
 }
 func _spide_list(m *ice.Message, arg ...string) {
 	msg := mdb.HashSelects(m.Spawn(), arg[0])
-	m.Debug("what %v", msg.FormatMeta())
-	m.Debug("what %v", msg.Append(arg[1]))
 	if len(arg) == 2 && msg.Append(arg[1]) != "" {
 		m.Echo(msg.Append(arg[1]))
 		return
@@ -242,6 +240,7 @@ func _spide_send(m *ice.Message, name string, req *http.Request, timeout string)
 	return client.Do(req)
 }
 func _spide_save(m *ice.Message, cache, save, uri string, res *http.Response) {
+	m.Debug("what %v", m.OptionCB(""))
 	switch cache {
 	case SPIDE_RAW:
 		b, _ := ioutil.ReadAll(res.Body)
@@ -266,11 +265,13 @@ func _spide_save(m *ice.Message, cache, save, uri string, res *http.Response) {
 			defer f.Close()
 
 			total := kit.Int(res.Header.Get(ContentLength)) + 1
+			m.Debug("what %v", m.OptionCB(""))
 			switch cb := m.OptionCB("").(type) {
 			case func(int, int, int):
 				count := 0
 				nfs.CopyFile(m, f, res.Body, func(n int) {
 					count += n
+					m.Debug("what %v %v", n, count)
 					cb(count, total, count*100/total)
 				})
 			default:

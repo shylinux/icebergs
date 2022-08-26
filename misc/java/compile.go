@@ -18,7 +18,7 @@ const (
 type compile struct {
 	ice.Code
 	regexp string `data:".*.java"`
-	linux  string `data:"https://github.com/Tencent/TencentKona-8/releases/download/8.0.11-GA/TencentKona8.0.11.b2_jdk_linux-x86_64_8u345.tar.gz"`
+	linux  string `data:"https://mirrors.huaweicloud.com/openjdk/18/openjdk-18_linux-x64_bin.tar.gz"`
 	list   string `name:"list path auto listScript order install" help:"编译器"`
 }
 

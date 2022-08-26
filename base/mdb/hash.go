@@ -273,16 +273,26 @@ func HashImport(m *ice.Message, arg ...Any) *ice.Message {
 	return m.Cmdy(IMPORT, m.PrefixKey(), "", HASH, arg)
 }
 
-func HashTarget(m *ice.Message, h string, add func() Any) (p Any) {
+func HashTarget(m *ice.Message, h string, add Any) (p Any) {
 	HashSelectUpdate(m, h, func(value ice.Map) {
 		p = value[TARGET]
 		if pp, ok := p.(Map); ok && len(pp) == 0 {
 			p = nil
 		}
 		if p == nil && add != nil {
-			p = add()
+			switch add := add.(type) {
+			case func(ice.Map) ice.Any:
+				p = add(value)
+				m.Debug("what %v %T", p, p)
+			case func() ice.Any:
+				p = add()
+			default:
+				m.ErrorNotImplement(p)
+				return
+			}
 			value[TARGET] = p
 		}
+		m.Debug("what %v %T", p, p)
 	})
 	return
 }

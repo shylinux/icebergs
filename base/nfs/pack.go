@@ -149,13 +149,16 @@ func CloseFile(m *ice.Message, p ice.Any) {
 
 func CopyFile(m *ice.Message, to io.WriteCloser, from io.ReadCloser, cb func(int)) {
 	buf := make([]byte, 1024*1024)
+	total := 0
 	for {
 		n, e := from.Read(buf)
+		to.Write(buf[:n])
+		cb(n)
+		total += n
+		m.Debug("what %v %v %v", n, total, e)
 		if e != nil {
 			break
 		}
-		to.Write(buf[:n])
-		cb(n)
 	}
 }
 

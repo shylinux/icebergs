@@ -130,7 +130,7 @@ func (m *Message) Design(action Any, help string, input ...Any) {
 	for _, input := range input {
 		switch input := input.(type) {
 		case string:
-			list = append(list, SplitCmd("action "+input)...)
+			list = append(list, SplitCmd("action "+input, nil)...)
 		case Map:
 			if kit.Format(input[TYPE]) != "" && kit.Format(input[NAME]) != "" {
 				list = append(list, input)
@@ -333,7 +333,7 @@ func MergeActions(list ...Any) Actions {
 	}
 	return base
 }
-func SplitCmd(name string) (list []Any) {
+func SplitCmd(name string, actions Actions) (list []Any) {
 	const (
 		TEXT     = "text"
 		TEXTAREA = "textarea"
@@ -405,7 +405,7 @@ func SplitCmd(name string) (list []Any) {
 			i++
 
 		default:
-			item = kit.Dict(TYPE, kit.Select(TEXT, BUTTON, button), NAME, ls[i])
+			item = kit.Dict(TYPE, kit.Select(TEXT, BUTTON, button || actions != nil && actions[ls[i]] != nil), NAME, ls[i])
 			list = append(list, item)
 		}
 	}

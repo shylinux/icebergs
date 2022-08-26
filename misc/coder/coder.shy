@@ -4,12 +4,12 @@ refer `
 源码 https://github.com/coder/code-server/
 `
 
-spark shell `
+field web.code.coder.server
+shell `
 wget https://github.com/coder/code-server/releases/download/v4.4.0/code-server-4.4.0-linux-amd64.tar.gz
 tar xvf code-server-4.4.0-linux-amd64.tar.gz && cd code-server-4.4.0-linux-amd64
 ./bin/code-server
 `
-field web.code.coder.server
 
 refer `
 官网 https://code.visualstudio.com/

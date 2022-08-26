@@ -57,6 +57,7 @@ func _install_download(m *ice.Message) {
 		web.PushNoticeRefresh(m)
 		web.ToastSuccess(m)
 	})
+	m.SetResult()
 }
 func _install_build(m *ice.Message, arg ...string) string {
 	p := m.Option(cli.CMD_DIR, _install_path(m, ""))
@@ -128,7 +129,8 @@ func _install_start(m *ice.Message, arg ...string) {
 		m.ErrorNotImplement(cb)
 	}
 
-	if m.Cmdy(cli.DAEMON, arg[1:], args); cli.IsSuccess(m) {
+	bin := kit.Split(path.Base(arg[0]), "-.")[0]
+	if m.Cmdy(cli.DAEMON, kit.Select(path.Join(ice.BIN, bin), arg, 1), kit.Slice(arg, 2), args); cli.IsSuccess(m) {
 		m.SetAppend()
 	}
 }
@@ -139,6 +141,14 @@ func _install_stop(m *ice.Message, arg ...string) {
 		}
 	})
 	m.Cmd(gdb.SIGNAL, gdb.KILL, m.Option(cli.PID))
+}
+func _install_trash(m *ice.Message, arg ...string) {
+	m.Cmd(cli.DAEMON, func(value ice.Maps) {
+		if value[cli.PID] == m.Option(cli.PID) {
+			m.Cmd(cli.DAEMON, mdb.REMOVE, kit.Dict(mdb.HASH, value[mdb.HASH]))
+		}
+	})
+	m.Cmd(nfs.TRASH, kit.Path(ice.USR_LOCAL_DAEMON, m.Option(tcp.PORT), m.Option(nfs.PATH)))
 }
 func _install_service(m *ice.Message, arg ...string) {
 	arg = kit.Split(path.Base(arg[0]), "-.")[:1]
@@ -183,6 +193,9 @@ func init() {
 			}},
 			cli.STOP: {Name: "stop", Help: "停止", Hand: func(m *ice.Message, arg ...string) {
 				_install_stop(m, arg...)
+			}},
+			nfs.TRASH: {Name: "trash", Help: "删除", Hand: func(m *ice.Message, arg ...string) {
+				_install_trash(m, arg...)
 			}},
 			nfs.SOURCE: {Name: "source link path", Help: "源码", Hand: func(m *ice.Message, arg ...string) {
 				if m.Option(nfs.DIR_ROOT, path.Join(_install_path(m, ""), _INSTALL)); !nfs.ExistsFile(m, m.Option(nfs.DIR_ROOT)) {

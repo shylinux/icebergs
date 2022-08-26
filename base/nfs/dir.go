@@ -29,10 +29,6 @@ func _dir_hash(m *ice.Message, p string) string {
 	return ""
 }
 func _dir_list(m *ice.Message, root string, name string, level int, deep bool, dir_type string, dir_reg *regexp.Regexp, fields []string) *ice.Message {
-	if !aaa.Right(m, path.Join(root, name)) {
-		return m // 没有权限
-	}
-
 	list, e := ReadDir(m, path.Join(root, name))
 	if e != nil || len(list) == 0 { // 单个文件
 		ls, _ := ReadDir(m, path.Dir(path.Join(root, name)))
@@ -184,9 +180,12 @@ func init() {
 			if m.Option(DIR_ROOT) != "" {
 				m.Logs(mdb.SELECT, DIR_ROOT, m.Option(DIR_ROOT))
 			}
-			_dir_list(m, kit.Select(PWD, m.Option(DIR_ROOT)), kit.Select(PWD, arg, 0),
-				0, m.Option(DIR_DEEP) == ice.TRUE, kit.Select(TYPE_BOTH, m.Option(DIR_TYPE)), kit.Regexp(m.Option(DIR_REG)),
-				kit.Split(kit.Select(kit.Select(DIR_DEF_FIELDS, m.OptionFields()), kit.Join(kit.Slice(arg, 1)))))
+			root, name := kit.Select(PWD, m.Option(DIR_ROOT)), kit.Select(PWD, arg, 0)
+			if !aaa.Right(m, path.Join(root, name)) {
+				return // 没有权限
+			}
+			fields := kit.Split(kit.Select(kit.Select(DIR_DEF_FIELDS, m.OptionFields()), kit.Join(kit.Slice(arg, 1))))
+			_dir_list(m, root, name, 0, m.Option(DIR_DEEP) == ice.TRUE, kit.Select(TYPE_BOTH, m.Option(DIR_TYPE)), kit.Regexp(m.Option(DIR_REG)), fields)
 			m.SortTimeR(mdb.TIME)
 			m.StatusTimeCount()
 		}},

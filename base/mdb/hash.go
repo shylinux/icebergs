@@ -283,7 +283,6 @@ func HashTarget(m *ice.Message, h string, add Any) (p Any) {
 			switch add := add.(type) {
 			case func(ice.Map) ice.Any:
 				p = add(value)
-				m.Debug("what %v %T", p, p)
 			case func() ice.Any:
 				p = add()
 			default:
@@ -292,7 +291,6 @@ func HashTarget(m *ice.Message, h string, add Any) (p Any) {
 			}
 			value[TARGET] = p
 		}
-		m.Debug("what %v %T", p, p)
 	})
 	return
 }

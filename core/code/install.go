@@ -151,7 +151,7 @@ func _install_trash(m *ice.Message, arg ...string) {
 	m.Cmd(nfs.TRASH, kit.Path(ice.USR_LOCAL_DAEMON, m.Option(tcp.PORT), m.Option(nfs.PATH)))
 }
 func _install_service(m *ice.Message, arg ...string) {
-	arg = kit.Split(path.Base(arg[0]), "-.")[:1]
+	arg = kit.Split(path.Base(arg[0]), "_-.")[:1]
 	m.Fields(len(arg[1:]), "time,port,status,pid,cmd,dir")
 	m.Cmd(mdb.SELECT, cli.DAEMON, "", mdb.HASH, func(value ice.Maps) {
 		if strings.Contains(value[ice.CMD], path.Join(ice.BIN, arg[0])) {

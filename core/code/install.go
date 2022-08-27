@@ -89,7 +89,16 @@ func _install_build(m *ice.Message, arg ...string) string {
 	return ""
 }
 func _install_order(m *ice.Message, arg ...string) {
-	m.Cmdy(cli.SYSTEM, nfs.PUSH, path.Join(_install_path(m, ""), m.Option(nfs.PATH)+ice.NL))
+	p := _install_path(m, "")
+	if m.Option(nfs.PATH) == "" {
+		for _, v := range []string{"_install/bin", "bin", ""} {
+			if nfs.ExistsFile(m, path.Join(p, v)) {
+				m.Option(nfs.PATH, v)
+				break
+			}
+		}
+	}
+	m.Cmdy(cli.SYSTEM, nfs.PUSH, path.Join(p, m.Option(nfs.PATH))+ice.NL)
 }
 func _install_spawn(m *ice.Message, arg ...string) {
 	if kit.Int(m.Option(tcp.PORT)) >= 10000 {
@@ -201,8 +210,10 @@ func init() {
 				if m.Option(nfs.DIR_ROOT, path.Join(_install_path(m, ""), _INSTALL)); !nfs.ExistsFile(m, m.Option(nfs.DIR_ROOT)) {
 					m.Option(nfs.DIR_ROOT, path.Join(_install_path(m, "")))
 				}
-				m.Cmdy(nfs.DIR, m.Option(nfs.PATH))
-				m.StatusTimeCount(nfs.PATH, m.Option(nfs.DIR_ROOT))
+				if m.Option(nfs.DIR_ROOT) == "" {
+					return
+				}
+				m.Cmdy(nfs.DIR, m.Option(nfs.PATH)).Sort(nfs.PATH).StatusTimeCount(nfs.PATH, m.Option(nfs.DIR_ROOT))
 			}},
 		}, mdb.HashAction(mdb.SHORT, mdb.NAME, mdb.FIELD, "time,name,path,link")), Hand: func(m *ice.Message, arg ...string) {
 			switch len(arg) {

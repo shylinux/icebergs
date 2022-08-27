@@ -24,14 +24,11 @@ func (s compile) Init(m *ice.Message) {
 		cli.IsAlpine(m.Message, NODE, "nodejs")
 	})
 }
-func (s compile) Order(m *ice.Message) {
-	s.Code.Order(m, "", ice.BIN)
+func (s compile) List(m *ice.Message, arg ...string) {
+	s.Code.Source(m, "", arg...)
 }
 func (s compile) Xterm(m *ice.Message, arg ...string) {
 	s.Code.Xterm(m, NODE, arg...)
-}
-func (s compile) List(m *ice.Message, arg ...string) {
-	s.Code.Source(m, "", arg...)
 }
 
 func init() { ice.CodeCtxCmd(compile{}) }

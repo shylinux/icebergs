@@ -43,6 +43,7 @@ func init() {
 				web.RenderWebsite(m, arg[0], path.Join(arg[2:]...)) // 节点网页
 
 			} else if arg[1] == CMD {
+				m.Option(ice.POD, "")
 				m.Cmdy(web.SPACE, arg[0], m.Prefix(CMD), path.Join(arg[2:]...)) // 节点命令
 			} else {
 				m.Cmdy(web.SPACE, m.Option(ice.MSG_USERPOD), "web.chat."+strings.TrimPrefix(path.Join(arg[1:]...), "chat/"))

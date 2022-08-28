@@ -76,7 +76,7 @@ func main() { print(ice.Run()) }
 func _autogen_script(m *ice.Message, dir string) {
 	m.Cmd(nfs.DEFS, dir, `chapter "{{.Option "name"}}"
 
-field "{{.Option "help"}}" {{.Option "key"}}
+field {{.Option "key"}}
 `)
 }
 func _autogen_source(m *ice.Message, main, file string) {

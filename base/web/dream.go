@@ -21,7 +21,7 @@ func _dream_list(m *ice.Message) *ice.Message {
 		if dream, ok := list[value[mdb.NAME]]; ok {
 			m.Push(mdb.TYPE, dream[mdb.TYPE])
 			m.Push(cli.STATUS, cli.START)
-			m.PushButton("vimer", "xterm", cli.OPEN, cli.STOP)
+			m.PushButton(cli.OPEN, "vimer", "xterm", cli.STOP)
 			m.PushAnchor(strings.Split(MergePod(m, value[mdb.NAME]), "?")[0])
 			text := []string{}
 			for _, line := range kit.Split(m.Cmdx(SPACE, value[mdb.NAME], cli.SYSTEM, "git", "diff", "--shortstat"), ice.FS, ice.FS) {
@@ -177,7 +177,7 @@ func init() {
 
 var _dream_script = `#! /bin/sh
 
-require &>/dev/null || if [ -f $PWD/.ish/plug.sh ]; then source $PWD/.ish/plug.sh; elif [ -f $HOME/.ish/plug.sh ]; then source $HOME/.ish/plug.sh; else
+if [ -f $PWD/.ish/plug.sh ]; then source $PWD/.ish/plug.sh; elif [ -f $HOME/.ish/plug.sh ]; then source $HOME/.ish/plug.sh; else
 	ctx_temp=$(mktemp); if curl -h &>/dev/null; then curl -o $ctx_temp -fsSL https://shylinux.com; else wget -O $ctx_temp -q http://shylinux.com; fi; source $ctx_temp intshell
 fi
 

@@ -34,7 +34,7 @@ type input struct {
 }
 
 func (s input) Load(m *ice.Message, arg ...string) {
-	if f, e := nfs.OpenFile(m.Message, m.Option(nfs.FILE)); m.Assert(e) {
+	if f, e := nfs.OpenFile(m.Message, m.Option(nfs.FILE)); !m.Warn(e) {
 		defer f.Close()
 
 		// 清空数据

@@ -25,7 +25,9 @@ func _xterm_socket(m *ice.Message, h, t string) {
 }
 func _xterm_get(m *ice.Message, h string, must bool) *os.File {
 	t := mdb.HashSelectField(m, m.Option(mdb.HASH, h), mdb.TYPE)
+	m.Debug("what %v", h)
 	if f, ok := mdb.HashTarget(m, h, func() ice.Any {
+		m.Debug("what %v", h)
 		if !must {
 			return nil
 		}

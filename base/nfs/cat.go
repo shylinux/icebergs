@@ -41,7 +41,7 @@ func _cat_list(m *ice.Message, name string) {
 		return // 没有权限
 	}
 	f, e := _cat_find(m, name)
-	if m.Warn(e, ice.ErrNotFound, name) {
+	if m.Warn(e) {
 		return // 没有文件
 	}
 	defer f.Close()

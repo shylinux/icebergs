@@ -71,3 +71,12 @@ func IsCentos(m *ice.Message, arg ...string) bool {
 	}
 	return false
 }
+func IsUbuntu(m *ice.Message, arg ...string) bool {
+	if strings.Contains(m.Conf(RUNTIME, kit.Keys(HOST, OSID)), UBUNTU) {
+		if len(arg) > 0 {
+			m.Cmd(mdb.INSERT, kit.Keys(CLI, MIRRORS), "", mdb.ZONE, arg[0], OSID, UBUNTU, CMD, "yum install -y "+kit.Select(arg[0], arg, 1))
+		}
+		return true
+	}
+	return false
+}

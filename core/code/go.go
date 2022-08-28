@@ -240,6 +240,12 @@ func init() {
 				m.Cmd(mdb.RENDER, mdb.CREATE, k, m.Prefix(k))
 				m.Cmd(mdb.PLUGIN, mdb.CREATE, k, m.Prefix(k))
 			}
+			m.Go(func() {
+				m.Sleep300ms()
+				cli.IsAlpine(m, GO)
+				cli.IsCentos(m, GO)
+				cli.IsUbuntu(m, GO, "golang")
+			})
 		}},
 		GODOC: {Name: "godoc", Help: "文档", Actions: ice.MergeActions(ice.Actions{
 			mdb.RENDER: {Hand: func(m *ice.Message, arg ...string) {

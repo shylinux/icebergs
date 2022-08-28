@@ -13,6 +13,7 @@ import (
 	"shylinux.com/x/icebergs/base/gdb"
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/nfs"
+	"shylinux.com/x/icebergs/base/tcp"
 	"shylinux.com/x/icebergs/base/web"
 	kit "shylinux.com/x/toolkits"
 )
@@ -67,8 +68,8 @@ func init() {
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
 				m.Cmd(aaa.ROLE, aaa.WHITE, aaa.VOID, ice.USR_PUBLISH)
 				m.Cmd(aaa.ROLE, aaa.WHITE, aaa.VOID, m.PrefixKey())
-				m.Config(ice.CONTEXTS, _contexts)
 				gdb.Watch(m, web.SERVE_START, m.PrefixKey())
+				m.Config(ice.CONTEXTS, _contexts)
 			}},
 			web.SERVE_START: {Name: "serve.start", Help: "服务启动", Hand: func(m *ice.Message, arg ...string) {
 				_publish_file(m, ice.ICE_BIN)
@@ -88,8 +89,12 @@ func init() {
 			}},
 			ice.CONTEXTS: {Name: "contexts", Help: "环境", Hand: func(m *ice.Message, arg ...string) {
 				u := web.OptionUserWeb(m)
-				m.Option("httphost", fmt.Sprintf("%s://%s:%s", u.Scheme, strings.Split(u.Host, ice.DF)[0],
-					kit.Select(kit.Select("443", "80", u.Scheme == ice.HTTP), strings.Split(u.Host, ice.DF), 1)))
+				host := strings.Split(u.Host, ice.DF)[0]
+				if host == tcp.LOCALHOST {
+					host = m.Cmd(tcp.HOST).Append(aaa.IP)
+				}
+				m.Option("ctx_env", kit.Select("", " "+kit.JoinKV("=", " ", "ctx_pod", m.Option(ice.MSG_USERPOD)), m.Option(ice.MSG_USERPOD) != ""))
+				m.Option("httphost", fmt.Sprintf("%s://%s:%s", u.Scheme, host, kit.Select(kit.Select("443", "80", u.Scheme == ice.HTTP), strings.Split(u.Host, ice.DF), 1)))
 
 				if len(arg) == 0 {
 					arg = append(arg, ice.MISC, ice.CORE, ice.BASE)
@@ -158,15 +163,15 @@ func init() {
 }
 
 var _contexts = kit.Dict(
-	ice.MISC, `# 下载命令
-export ctx_dev={{.Option "httphost"}} ctx_pod={{.Option "user.pod"}}; ctx_temp=$(mktemp); curl -o $ctx_temp -fsSL $ctx_dev; source $ctx_temp app username {{.Option "user.name"}}
-export ctx_dev={{.Option "httphost"}} ctx_pod={{.Option "user.pod"}}; ctx_temp=$(mktemp); wget -O $ctx_temp -q $ctx_dev; source $ctx_temp app username {{.Option "user.name"}}
+	ice.MISC, `# 下载命令 curl 或 wget
+export ctx_dev={{.Option "httphost"}}{{.Option "ctx_env"}}; ctx_temp=$(mktemp); curl -o $ctx_temp -fsSL $ctx_dev; source $ctx_temp app username {{.Option "user.name"}}
+export ctx_dev={{.Option "httphost"}}{{.Option "ctx_env"}}; ctx_temp=$(mktemp); wget -O $ctx_temp -q $ctx_dev; source $ctx_temp app username {{.Option "user.name"}}
 `,
-	ice.CORE, `# 克隆源码
-git clone {{.Option "remote"}}; cd {{.Option "pathname"}} && source etc/miss.sh port 9020
-`,
-	ice.BASE, `# 下载工具
+	ice.CORE, `# 下载工具 curl 或 wget
 ctx_temp=$(mktemp); curl -o $ctx_temp -fsSL {{.Cmdx "spide" "shy" "client.url"}}; source $ctx_temp binary
 ctx_temp=$(mktemp); wget -O $ctx_temp -q {{.Cmdx "spide" "shy" "client.url"}}; source $ctx_temp binary
+`,
+	ice.BASE, `# 下载源码
+git clone {{.Option "remote"}}; cd {{.Option "pathname"}} && source etc/miss.sh
 `,
 )

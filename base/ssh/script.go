@@ -89,7 +89,7 @@ func (f *Frame) alias(m *ice.Message, ls []string) []string {
 	}
 	return ls
 }
-func (f *Frame) parse(m *ice.Message, line string) string {
+func (f *Frame) parse(m *ice.Message, h, line string) string {
 	msg := m.Spawn(f.target)
 	ls := f.change(msg, f.alias(msg, kit.Split(strings.TrimSpace(line))))
 	if len(ls) == 0 {
@@ -97,7 +97,7 @@ func (f *Frame) parse(m *ice.Message, line string) string {
 	}
 
 	msg.Render("", kit.List())
-	if msg.Cmdy(ls); msg.IsErrNotFound() {
+	if msg.Cmdy(ls); h == STDIO && msg.IsErrNotFound() {
 		msg.SetResult().Cmdy(cli.SYSTEM, ls)
 	}
 
@@ -111,7 +111,7 @@ func (f *Frame) scan(m *ice.Message, h, line string) *Frame {
 
 	if m.I, m.O = f.stdin, f.stdout; h == STDIO {
 		gdb.Event(m, SOURCE_STDIO)
-		m.Sleep("2.1s")
+		m.Sleep("3s")
 	}
 
 	bio := bufio.NewScanner(f.stdin)
@@ -141,7 +141,7 @@ func (f *Frame) scan(m *ice.Message, h, line string) *Frame {
 				f.printf(m, "\033[0m") // 清空格式
 			}
 		}
-		line = f.parse(m, line)
+		line = f.parse(m, h, line)
 	}
 	return f
 }

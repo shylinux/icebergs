@@ -115,7 +115,11 @@ func PushPodCmd(m *ice.Message, cmd string, arg ...string) {
 	})
 }
 
-func OptionAgentIs(m *ice.Message, arg ...string) bool {
+type Message interface {
+	Option(key string, arg ...ice.Any) string
+}
+
+func OptionAgentIs(m Message, arg ...string) bool {
 	for _, k := range arg {
 		if strings.HasPrefix(m.Option(ice.MSG_USERUA), k) {
 			return true
@@ -123,15 +127,15 @@ func OptionAgentIs(m *ice.Message, arg ...string) bool {
 	}
 	return false
 }
-func OptionUserWeb(m *ice.Message) *url.URL {
+func OptionUserWeb(m Message) *url.URL {
 	return kit.ParseURL(m.Option(ice.MSG_USERWEB))
 }
-func MergeURL2(m *ice.Message, url string, arg ...ice.Any) string {
+func MergeURL2(m Message, url string, arg ...ice.Any) string {
 	return kit.MergeURL2(m.Option(ice.MSG_USERWEB), url, arg...)
 }
-func MergeLink(m *ice.Message, url string, arg ...ice.Any) string {
+func MergeLink(m Message, url string, arg ...ice.Any) string {
 	return strings.Split(MergeURL2(m, url, arg...), "?")[0]
 }
-func MergePod(m *ice.Message, pod string, arg ...ice.Any) string {
+func MergePod(m Message, pod string, arg ...ice.Any) string {
 	return kit.MergePOD(kit.Select(ice.Info.Domain, m.Option(ice.MSG_USERWEB)), pod, arg...)
 }

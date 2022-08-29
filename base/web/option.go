@@ -90,11 +90,13 @@ func GoToast(m *ice.Message, title string, cb func(toast func(string, int, int))
 		})
 	})
 }
-func PushStream(m *ice.Message) {
+func PushStream(m *ice.Message, cmds ...ice.Any) *ice.Message {
 	m.Option(cli.CMD_OUTPUT, file.NewWriteCloser(func(buf []byte) (int, error) {
 		PushNoticeGrow(m, string(buf))
 		return len(buf), nil
 	}, func() error { PushNoticeToast(m, "done"); return nil }))
+	m.ProcessHold()
+	return m.Cmd(cmds...)
 }
 func PushPodCmd(m *ice.Message, cmd string, arg ...string) {
 	if m.Length() > 0 && len(m.Appendv(ice.POD)) == 0 {

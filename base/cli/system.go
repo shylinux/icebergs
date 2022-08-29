@@ -113,7 +113,6 @@ func _system_exec(m *ice.Message, cmd *exec.Cmd) {
 	if e := cmd.Run(); !m.Warn(e, ice.ErrNotFound, cmd.Args) {
 		m.Cost(CODE, cmd.ProcessState.ExitCode(), ctx.ARGS, cmd.Args)
 	}
-
 	m.Push(mdb.TIME, m.Time()).Push(CODE, int(cmd.ProcessState.ExitCode()))
 }
 

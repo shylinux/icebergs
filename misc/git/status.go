@@ -236,9 +236,7 @@ func init() {
 				_status_each(m, PULL, cli.SYSTEM, GIT, PULL)
 			}},
 			MAKE: {Name: "make", Help: "编译", Hand: func(m *ice.Message, arg ...string) {
-				web.PushStream(m)
-				m.Cmdy(cli.SYSTEM, MAKE)
-				web.ToastSuccess(m)
+				web.PushStream(m, cli.SYSTEM, MAKE)
 			}},
 			PUSH: {Name: "push", Help: "上传", Hand: func(m *ice.Message, arg ...string) {
 				if m.Option(REPOS) == "" {
@@ -324,7 +322,7 @@ func init() {
 			if len(arg) == 0 {
 				m.Action(PULL, MAKE, PUSH, TAGS, PIE, code.PUBLISH)
 				files, adds, dels, last := _status_list(m)
-				m.Status("files", files, "adds", adds, "dels", dels, "last", last.Format(ice.MOD_TIME))
+				m.Status("repos", m.Length(), "files", files, "adds", adds, "dels", dels, "last", last.Format(ice.MOD_TIME))
 				web.Toast3s(m, kit.Format("files: %d, adds: %d, dels: %d", files, adds, dels), ice.CONTEXTS)
 				return
 			}

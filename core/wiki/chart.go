@@ -151,7 +151,7 @@ func _chart_show(m *ice.Message, kind, text string, arg ...string) {
 	m.Option(HEIGHT, chart.GetHeight())
 
 	// 渲染引擎
-	_wiki_template(m, CHART, "", text)
+	_wiki_template(m, CHART, "", text, arg...)
 	defer m.Echo("</svg>")
 	chart.Draw(m, 0, 0)
 	m.RenderResult()
@@ -191,7 +191,7 @@ func init() {
 	}, Configs: ice.Configs{
 		CHART: {Name: CHART, Help: "图表", Value: kit.Data(
 			nfs.TEMPLATE, `<svg xmlns="http://www.w3.org/2000/svg" vertion="1.1"
-{{.OptionTemplate}} height="{{.Option "height"}}" width="{{.Option "width"}}"
+{{.OptionTemplate}} data-index="{{.Option "index"}}" height="{{.Option "height"}}" width="{{.Option "width"}}"
 stroke-width="{{.Option "stroke-width"}}" stroke="{{.Option "stroke"}}" fill="{{.Option "fill"}}"
 font-size="{{.Option "font-size"}}" font-family="{{.Option "font-family"}}" text-anchor="middle" dominant-baseline="middle">`,
 		)},

@@ -127,6 +127,10 @@ func (m *Message) ProcessDisplay(arg ...Any) {
 	m.Option(MSG_DISPLAY, arg...)
 }
 
+func (m *Message) ProcessStory(arg ...Any) {
+	m.Option(MSG_PROCESS, "_story")
+	m.Option(PROCESS_ARG, arg...)
+}
 func (m *Message) ProcessField(arg ...Any) {
 	m.Process(PROCESS_FIELD)
 	m.Option(FIELD_PREFIX, arg...)

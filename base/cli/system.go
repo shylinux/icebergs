@@ -67,26 +67,6 @@ func _system_out(m *ice.Message, out string) io.Writer {
 	}
 	return nil
 }
-func _system_find(m *ice.Message, bin string, dir ...string) string {
-	if strings.Contains(bin, ice.DF) {
-		return bin
-	}
-	if strings.HasPrefix(bin, ice.PS) {
-		return bin
-	}
-	if strings.HasPrefix(bin, nfs.PWD) {
-		return bin
-	}
-	if len(dir) == 0 {
-		dir = append(dir, strings.Split(kit.Env(PATH), ice.DF)...)
-	}
-	for _, p := range dir {
-		if nfs.ExistsFile(m, path.Join(p, bin)) {
-			return kit.Path(p, bin)
-		}
-	}
-	return ""
-}
 func _system_exec(m *ice.Message, cmd *exec.Cmd) {
 	if r, ok := m.Optionv(CMD_INPUT).(io.Reader); ok {
 		cmd.Stdin = r // 输入流
@@ -114,6 +94,26 @@ func _system_exec(m *ice.Message, cmd *exec.Cmd) {
 		m.Cost(CODE, cmd.ProcessState.ExitCode(), ctx.ARGS, cmd.Args)
 	}
 	m.Push(mdb.TIME, m.Time()).Push(CODE, int(cmd.ProcessState.ExitCode()))
+}
+func _system_find(m Message, bin string, dir ...string) string {
+	if strings.Contains(bin, ice.DF) {
+		return bin
+	}
+	if strings.HasPrefix(bin, ice.PS) {
+		return bin
+	}
+	if strings.HasPrefix(bin, nfs.PWD) {
+		return bin
+	}
+	if len(dir) == 0 {
+		dir = append(dir, strings.Split(kit.Env(PATH), ice.DF)...)
+	}
+	for _, p := range dir {
+		if nfs.ExistsFile(m, path.Join(p, bin)) {
+			return kit.Path(p, bin)
+		}
+	}
+	return ""
 }
 
 const (
@@ -156,10 +156,15 @@ func init() {
 	})
 }
 
-func IsSuccess(m *ice.Message) bool {
+type Message interface {
+	Append(key string, arg ...ice.Any) string
+	Optionv(key string, arg ...ice.Any) ice.Any
+}
+
+func IsSuccess(m Message) bool {
 	return m.Append(CODE) == "0" || m.Append(CODE) == ""
 }
-func SystemFind(m *ice.Message, bin string, dir ...string) string {
+func SystemFind(m Message, bin string, dir ...string) string {
 	if text := kit.ReadFile(ice.ETC_PATH); len(text) > 0 {
 		dir = append(dir, strings.Split(text, ice.NL)...)
 	}

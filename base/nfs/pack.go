@@ -71,7 +71,7 @@ var DiskFile = file.NewDiskFile()
 
 func init() { file.Init(OptionFiles(ice.Pulse, DiskFile, PackFile)) }
 
-func OptionFiles(m *ice.Message, f ...file.File) file.File {
+func OptionFiles(m Message, f ...file.File) file.File {
 	if len(f) > 1 {
 		m.Optionv(ice.MSG_FILES, file.NewMultiFile(f...))
 	} else if len(f) > 0 {
@@ -79,10 +79,10 @@ func OptionFiles(m *ice.Message, f ...file.File) file.File {
 	}
 	return m.Optionv(ice.MSG_FILES).(file.File)
 }
-func StatFile(m *ice.Message, p string) (os.FileInfo, error) {
+func StatFile(m Message, p string) (os.FileInfo, error) {
 	return OptionFiles(m).StatFile(p)
 }
-func OpenFile(m *ice.Message, p string) (io.ReadCloser, error) {
+func OpenFile(m Message, p string) (io.ReadCloser, error) {
 	return OptionFiles(m).OpenFile(p)
 }
 func CreateFile(m *ice.Message, p string) (io.WriteCloser, string, error) {
@@ -127,7 +127,11 @@ func Link(m *ice.Message, oldname string, newname string) error {
 	return OptionFiles(m).Link(oldname, newname)
 }
 
-func ExistsFile(m *ice.Message, p string) bool {
+type Message interface {
+	Optionv(key string, arg ...ice.Any) ice.Any
+}
+
+func ExistsFile(m Message, p string) bool {
 	if _, e := OptionFiles(m).StatFile(p); e == nil {
 		return true
 	}

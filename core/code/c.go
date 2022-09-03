@@ -56,16 +56,18 @@ func init() {
 						m.Cmd(cmd, mdb.CREATE, k, m.PrefixKey())
 					}
 				}
-				LoadPlug(m, C)
+				LoadPlug(m, H, C)
 			}},
 			mdb.ENGINE: {Hand: func(m *ice.Message, arg ...string) {
-				m.Option(cli.CMD_DIR, arg[2])
 				name := strings.TrimSuffix(arg[1], path.Ext(arg[1])) + ".bin"
-				if msg := m.Cmd(cli.SYSTEM, "gcc", arg[1], "-o", name); !cli.IsSuccess(msg) {
+				if msg := m.Cmd(cli.SYSTEM, "gcc", arg[1], "-o", name, kit.Dict(cli.CMD_DIR, arg[2])); !cli.IsSuccess(msg) {
 					m.Copy(msg)
 					return
 				}
-				m.Echo(m.Cmd(cli.SYSTEM, nfs.PWD+name).Append(cli.CMD_OUT))
+				m.Echo(m.Cmd(cli.SYSTEM, path.Join(arg[2], name)).Append(cli.CMD_OUT))
+			}},
+			mdb.RENDER: {Hand: func(m *ice.Message, arg ...string) {
+				TagsList(m, "ctags", "--excmd=number", "--sort=no", "-f", "-", path.Join(m.Option(nfs.PATH), m.Option(nfs.FILE)))
 			}},
 			mdb.SEARCH: {Hand: func(m *ice.Message, arg ...string) {
 				if arg[0] == mdb.FOREACH {
@@ -104,6 +106,7 @@ func init() {
 		}, PlugAction())},
 	}, Configs: ice.Configs{
 		C: {Name: C, Help: "系统", Value: kit.Data(PLUG, kit.Dict(
+			mdb.RENDER, kit.Dict(),
 			SPLIT, kit.Dict("space", " ", "operator", "{[(.,:;!|<>)]}"),
 			PREFIX, kit.Dict("//", COMMENT, "/* ", COMMENT, "* ", COMMENT), PREPARE, kit.Dict(
 				KEYWORD, kit.Simple(
@@ -168,4 +171,22 @@ func init() {
 			), KEYWORD, kit.Dict(),
 		))},
 	}}, nil)
+}
+
+func TagsList(m *ice.Message, cmds ...string) {
+	for _, l := range strings.Split(m.Cmdx(cli.SYSTEM, cmds), ice.NL) {
+		if strings.HasPrefix(l, "!_") {
+			continue
+		}
+		ls := strings.Split(l, ice.TB)
+		if len(ls) < 2 {
+			continue
+		}
+		switch ls[3] {
+		case "w":
+			continue
+		}
+		m.PushRecord(kit.Dict(mdb.TYPE, ls[3], mdb.NAME, ls[0], nfs.LINE, strings.TrimSuffix(ls[2], ";\"")))
+	}
+	m.Sort(nfs.LINE).StatusTimeCount()
 }

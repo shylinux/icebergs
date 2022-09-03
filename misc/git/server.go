@@ -23,7 +23,10 @@ import (
 
 func _server_rewrite(m *ice.Message, p string, r *http.Request) {
 	if ua := r.Header.Get(web.UserAgent); strings.HasPrefix(ua, "Mozilla") {
-		r.URL.Path = strings.Replace(r.URL.Path, "/x/", "/chat/pod/", 1)
+		ls := kit.Split(r.URL.Path, "/")
+		r.URL = kit.ParseURL(kit.MergeURL("/chat/cmd/web.code.inner", "path", "usr/"+ls[1]+"/", "file", path.Join(ls[2:]...)))
+
+		// r.URL.Path = strings.Replace(r.URL.Path, "/x/", "/chat/pod/", 1)
 		m.Info("rewrite %v -> %v", p, r.URL.Path) // 访问服务
 
 	} else {

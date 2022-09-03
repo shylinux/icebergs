@@ -56,6 +56,7 @@ func (f *Frame) Close(m *ice.Message, arg ...string) bool {
 	return true
 }
 
+const DEBUG = "debug"
 const GDB = "gdb"
 
 var Index = &ice.Context{Name: GDB, Help: "事件模块", Commands: ice.Commands{

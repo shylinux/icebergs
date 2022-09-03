@@ -8,6 +8,7 @@ import (
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/aaa"
 	"shylinux.com/x/icebergs/base/cli"
+	"shylinux.com/x/icebergs/base/ctx"
 	"shylinux.com/x/icebergs/base/gdb"
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/nfs"
@@ -202,6 +203,17 @@ func init() {
 			}},
 			cli.STOP: {Name: "stop", Help: "停止", Hand: func(m *ice.Message, arg ...string) {
 				_install_stop(m, arg...)
+			}},
+			gdb.DEBUG: {Name: "debug", Help: "调试", Hand: func(m *ice.Message, arg ...string) {
+				if cmd := "web.code.xterm"; len(arg) > 0 && arg[0] == ice.RUN {
+					if len(arg) > 2 && arg[1] == ctx.ACTION && arg[2] == mdb.CREATE {
+						arg = append(arg, mdb.TYPE, "gdb")
+					}
+					m.Cmdy(cmd, arg[1:])
+				} else {
+					m.Cmdy(ctx.COMMAND, cmd)
+					m.ProcessField(m.ActionKey(), ice.RUN)
+				}
 			}},
 			nfs.TRASH: {Name: "trash", Help: "删除", Hand: func(m *ice.Message, arg ...string) {
 				_install_trash(m, arg...)

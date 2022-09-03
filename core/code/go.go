@@ -162,8 +162,10 @@ func _go_show(m *ice.Message, arg ...string) {
 	} else {
 		if key := ctx.GetFileCmd(path.Join(arg[2], arg[1])); key != "" {
 			ctx.ProcessCommand(m, key, kit.Simple())
+		} else if p := strings.ReplaceAll(path.Join(arg[2], arg[1]), ".go", ".shy"); nfs.ExistsFile(m, p) {
+			ctx.ProcessCommand(m, "web.wiki.word", kit.Simple(p))
 		} else {
-			ctx.ProcessCommand(m, "web.wiki.word", kit.Simple(strings.ReplaceAll(path.Join(arg[2], arg[1]), ".go", ".shy")))
+			TagsList(m, "gotags", path.Join(m.Option(nfs.PATH), m.Option(nfs.FILE)))
 		}
 	}
 }
@@ -279,6 +281,7 @@ func init() {
 			), KEYWORD, kit.Dict(),
 		))},
 		GO: {Name: GO, Help: "后端", Value: kit.Data(PLUG, kit.Dict(
+			mdb.RENDER, kit.Dict(),
 			SPLIT, kit.Dict("space", "\t ", "operator", "{[(&.,:;!|<>)]}"),
 			PREFIX, kit.Dict("// ", COMMENT, "/*", COMMENT, "* ", COMMENT), PREPARE, kit.Dict(
 				KEYWORD, kit.Simple(

@@ -46,6 +46,7 @@ type Command struct {
 	Help    string
 	Actions Actions
 	Hand    Handler
+	RawHand Any
 	List    List
 	Meta    Map
 }

@@ -1,6 +1,7 @@
 package code
 
 import (
+	"bufio"
 	"path"
 	"strings"
 
@@ -57,6 +58,32 @@ func _inner_make(m *ice.Message, msg *ice.Message) {
 		m.Echo(msg.Append(cli.CMD_ERR))
 	}
 	m.StatusTime()
+}
+func _inner_tags(m *ice.Message, path string, value string) {
+	for _, l := range strings.Split(m.Cmdx(cli.SYSTEM, "grep", "^"+value+"\\>", "tags", kit.Dict(cli.CMD_DIR, m.Option(nfs.PATH))), ice.NL) {
+		ls := strings.SplitN(l, ice.TB, 2)
+		if len(ls) < 2 {
+			continue
+		}
+
+		ls = strings.SplitN(ls[1], ice.TB, 2)
+		file := ls[0]
+		ls = strings.SplitN(ls[1], ";\"", 2)
+		text := strings.TrimSuffix(strings.TrimPrefix(ls[0], "/^"), "$/")
+		line := kit.Int(text)
+
+		f, e := nfs.OpenFile(m, kit.Path(path, file))
+		m.Assert(e)
+		defer f.Close()
+
+		bio := bufio.NewScanner(f)
+		for i := 1; bio.Scan(); i++ {
+			if i == line || bio.Text() == text {
+				m.PushRecord(kit.Dict(nfs.PATH, path, nfs.FILE, strings.TrimPrefix(file, nfs.PWD), nfs.LINE, kit.Format(i)))
+				return
+			}
+		}
+	}
 }
 
 func LoadPlug(m *ice.Message, language ...string) {
@@ -164,7 +191,9 @@ func init() {
 				}
 			}},
 
-			nfs.TAGS: {Name: "tags", Help: "索引", Hand: func(m *ice.Message, arg ...string) {}},
+			nfs.TAGS: {Name: "tags", Help: "索引", Hand: func(m *ice.Message, arg ...string) {
+				_inner_tags(m, m.Option(nfs.PATH), arg[0])
+			}},
 			nfs.GREP: {Name: "grep", Help: "搜索", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmdy(nfs.GREP, m.Option(nfs.PATH), arg[0])
 				m.StatusTimeCount(mdb.INDEX, 0)

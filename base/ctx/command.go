@@ -116,12 +116,25 @@ func CmdAction(args ...ice.Any) ice.Actions {
 			}
 		}},
 		ice.RUN: {Name: "run", Help: "执行", Hand: func(m *ice.Message, arg ...string) {
-			if len(arg) > 3 && arg[1] == ACTION && arg[2] == CONFIG && arg[3] == "reset" {
-				m.Cmd(CONFIG, "reset", arg[0])
-				return
-			}
-			if len(arg) > 3 && arg[1] == ACTION && arg[2] == CONFIG && arg[3] == "select" {
-				m.Cmdy(CONFIG, arg[0])
+			if len(arg) > 3 && arg[1] == ACTION && arg[2] == CONFIG {
+				switch arg[3] {
+				case "select":
+					m.Cmdy(CONFIG, arg[0])
+				case "reset":
+					m.Cmd(CONFIG, "reset", arg[0])
+				case "help":
+					if file := strings.ReplaceAll(GetCmdFile(m, arg[0]), ".go", ".shy"); nfs.ExistsFile(m, file) {
+						m.ProcessStory("web.wiki.word", file)
+					}
+				case "script":
+					if file := strings.ReplaceAll(GetCmdFile(m, arg[0]), ".go", ".js"); nfs.ExistsFile(m, file) {
+						m.ProcessStory("web.code.inner", file)
+					}
+				case "source":
+					if file := GetCmdFile(m, arg[0]); nfs.ExistsFile(m, file) {
+						m.ProcessStory("web.code.inner", file)
+					}
+				}
 				return
 			}
 			if !PodCmd(m, arg) && aaa.Right(m, arg) {
@@ -173,6 +186,14 @@ func AddFileCmd(dir, key string) {
 	ice.Info.File[FileCmd(dir)] = key
 }
 func GetFileCmd(dir string) string {
+	if strings.HasPrefix(dir, "usr/") {
+		p := ice.Pulse.Cmdx("cli.system", "git", "config", "remote.origin.url", kit.Dict("cmd_dir", path.Dir(dir)))
+		p = strings.Replace(strings.TrimSpace(p), "https://", "/require/", 1)
+		dir = path.Join(p, strings.Join(strings.Split(dir, "/")[2:], "/"))
+	}
+	if strings.HasPrefix(dir, ".ish/pluged/") {
+		dir = strings.Replace(dir, ".ish/pluged/", "/require/", 1)
+	}
 	if strings.HasPrefix(dir, "require/") {
 		dir = "/" + dir
 	}
@@ -191,4 +212,18 @@ func GetFileCmd(dir string) string {
 		}
 	}
 	return ""
+}
+func GetCmdFile(m *ice.Message, cmds string) (file string) {
+	m.Search(cmds, func(key string, cmd *ice.Command) {
+		if cmd.RawHand == nil {
+			file = kit.Split(kit.FileLine(cmd.Hand, 100), ":")[0]
+		} else {
+			for k, v := range ice.Info.File {
+				if v == cmds {
+					file = strings.Replace(k, "/require/", ".ish/pluged/", 1)
+				}
+			}
+		}
+	})
+	return
 }

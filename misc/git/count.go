@@ -34,6 +34,9 @@ func init() {
 					if strings.Contains(file, "var/") {
 						return
 					}
+					if strings.Contains(file, "tags") {
+						return
+					}
 					switch kit.Ext(file) {
 					case "sum", "log":
 						return

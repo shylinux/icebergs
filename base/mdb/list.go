@@ -31,7 +31,11 @@ func _list_insert(m *ice.Message, prefix, chain string, arg ...string) {
 	defer Lock(m, prefix, chain)()
 
 	m.Logs(INSERT, KEY, path.Join(prefix, chain), arg[0], arg[1])
-	m.Echo("%d", Grow(m, prefix, chain, kit.Dict(arg)))
+	if m.Optionv(TARGET) != nil && m.Option(TARGET) != "" {
+		m.Echo("%d", Grow(m, prefix, chain, kit.Dict(arg, TARGET, m.Optionv(TARGET))))
+	} else {
+		m.Echo("%d", Grow(m, prefix, chain, kit.Dict(arg)))
+	}
 }
 func _list_modify(m *ice.Message, prefix, chain string, field, value string, arg ...string) {
 	defer Lock(m, prefix, chain)()
@@ -262,7 +266,6 @@ func Grows(m *ice.Message, prefix string, chain Any, match string, value string,
 			m.Option(CACHE_OFFEND, -begin-limit)
 		}
 	}
-
 	return miss.Grows(path.Join(prefix, kit.Keys(chain)), cache,
 		kit.Int(kit.Select("0", strings.TrimPrefix(m.Option(CACHE_OFFEND), "-"))),
 		kit.Int(kit.Select("10", m.Option(CACHE_LIMIT))),

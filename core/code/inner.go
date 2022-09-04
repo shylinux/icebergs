@@ -127,7 +127,7 @@ const INNER = "inner"
 
 func init() {
 	Index.Merge(&ice.Context{Commands: ice.Commands{
-		INNER: {Name: "inner path=src/@key file=main.go line=1 auto", Help: "源代码", Meta: kit.Dict(ice.DisplayLocal("")), Actions: ice.MergeActions(ice.Actions{
+		INNER: {Name: "inner path=src/@key file=main.go@key line=1 auto", Help: "源代码", Meta: kit.Dict(ice.DisplayLocal("")), Actions: ice.MergeActions(ice.Actions{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
 				m.Cmd(aaa.ROLE, aaa.WHITE, aaa.VOID, m.PrefixKey())
 				m.Cmd(aaa.ROLE, aaa.WHITE, aaa.VOID, ice.SRC_MAIN_GO)
@@ -203,7 +203,10 @@ func init() {
 			}},
 			FAVOR: {Name: "favor", Help: "收藏"},
 			"man": {Name: "man", Help: "手册", Hand: func(m *ice.Message, arg ...string) {
-				m.Result(kit.Split(arg[0]))
+				m.Cmdy(cli.SYSTEM, "sh", "-c", kit.Format("man %s|col -b", arg[0]))
+			}},
+			"doc": {Name: "man", Help: "手册", Hand: func(m *ice.Message, arg ...string) {
+				m.Cmdy(cli.SYSTEM, "go", "doc", arg[0])
 			}},
 		}, ctx.CmdAction()), Hand: func(m *ice.Message, arg ...string) {
 			if arg[0] = strings.Split(arg[0], ice.FS)[0]; !strings.HasSuffix(arg[0], ice.PS) {

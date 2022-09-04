@@ -183,7 +183,7 @@ func TagsList(m *ice.Message, cmds ...string) {
 			continue
 		}
 		switch ls[3] {
-		case "w":
+		case "w", "m":
 			continue
 		}
 		m.PushRecord(kit.Dict(mdb.TYPE, ls[3], mdb.NAME, ls[0], nfs.LINE, strings.TrimSuffix(ls[2], ";\"")))

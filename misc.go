@@ -249,6 +249,9 @@ func (c *Context) _command(m *Message, cmd *Command, key string, arg ...string) 
 	}
 
 	m._target = kit.FileLine(cmd.Hand, 3)
+	if cmd.RawHand != nil {
+		m._target = kit.FileLine(cmd.RawHand, 3)
+	}
 	if key == "select" {
 		m.Log(LOG_CMDS, "%s.%s %d %v %v", c.Name, key, len(arg), arg, m.Optionv(MSG_FIELDS),
 			logs.FileLineMeta(kit.Select(m._target, m._source, m.target.Name == MDB)))
@@ -292,6 +295,9 @@ func (c *Context) _action(m *Message, cmd *Command, key string, sub string, h *A
 	}
 
 	m._target = kit.FileLine(cmd.Hand, 3)
+	if cmd.RawHand != nil {
+		m._target = kit.FileLine(cmd.RawHand, 3)
+	}
 	m.Log(LOG_CMDS, "%s.%s %s %d %v", c.Name, key, sub, len(arg), arg,
 		logs.FileLineMeta(kit.Select(m._target, m._source, m.target.Name == MDB)))
 

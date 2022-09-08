@@ -16,29 +16,37 @@ import (
 )
 
 func _system_cmd(m *ice.Message, arg ...string) *exec.Cmd {
+	bin := ""
 	if text := kit.ReadFile(ice.ETC_PATH); len(text) > 0 {
 		if file := _system_find(m, arg[0], strings.Split(text, ice.NL)...); file != "" {
 			m.Logs(mdb.SELECT, "etc path cmd", file)
-			arg[0] = file // 配置目录
+			bin = file // 配置目录
 		}
 	}
+
 	env := kit.Simple(m.Optionv(CMD_ENV))
 	for i := 0; i < len(env)-1; i += 2 {
 		if env[i] == PATH {
 			if file := _system_find(m, arg[0], strings.Split(env[i+1], ice.DF)...); file != "" {
 				m.Logs(mdb.SELECT, "env path cmd", file)
-				arg[0] = file // 环境变量
+				bin = file // 环境变量
 			}
 		}
 	}
-	if _system_find(m, arg[0]) == "" && !strings.Contains(arg[0], ice.PS) {
+	// if m.Option(CMD_DIR) != "" {
+	// 	if file := _system_find(m, arg[0], m.Option(CMD_DIR)); file != "" {
+	// 		m.Logs(mdb.SELECT, "dir path cmd", file)
+	// 		bin = file // 当前目录
+	// 	}
+	// }
+	if bin == "" && !strings.Contains(arg[0], ice.PS) {
 		m.Cmd(MIRRORS, CMD, arg[0])
 		if file := _system_find(m, arg[0]); file != "" {
 			m.Logs(mdb.SELECT, "mirrors cmd", file)
-			arg[0] = file // 软件镜像
+			bin = file // 软件镜像
 		}
 	}
-	cmd := exec.Command(arg[0], arg[1:]...)
+	cmd := exec.Command(bin, arg[1:]...)
 
 	// 运行目录
 	if cmd.Dir = m.Option(CMD_DIR); len(cmd.Dir) > 0 {
@@ -83,7 +91,7 @@ func _system_exec(m *ice.Message, cmd *exec.Cmd) {
 		defer func() {
 			m.Push(CMD_OUT, out.String())
 			m.Push(CMD_ERR, err.String())
-			if m.Echo(strings.TrimSpace(kit.Select(out.String(), err.String()))); IsSuccess(m) {
+			if m.Echo(strings.TrimSpace(kit.Select(out.String(), err.String()))); IsSuccess(m) && out.String() == "" {
 				m.SetAppend()
 			}
 		}()

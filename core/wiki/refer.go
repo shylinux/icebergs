@@ -15,10 +15,11 @@ func _refer_show(m *ice.Message, text string, arg ...string) {
 	list := [][]string{}
 	for _, v := range kit.Split(strings.TrimSpace(text), ice.NL, ice.NL) {
 		if ls := kit.Split(v, " ", " "); len(ls) == 1 {
-			name, _ := url.QueryUnescape(path.Base(ls[0]))
-			list = append(list, []string{kit.Select(ls[0], name), ls[0]})
+			p, _ := url.QueryUnescape(ls[0])
+			list = append(list, []string{kit.Select(ls[0], path.Base(p)), ls[0], p})
 		} else {
-			list = append(list, ls)
+			p, _ := url.QueryUnescape(ls[1])
+			list = append(list, append(ls, p))
 		}
 	}
 	m.Optionv(mdb.LIST, list)
@@ -34,7 +35,7 @@ func init() {
 		}},
 	}, Configs: ice.Configs{
 		REFER: {Name: REFER, Help: "参考", Value: kit.Data(
-			nfs.TEMPLATE, `<ul {{.OptionTemplate}}>{{range $index, $value := .Optionv "list"}}<li>{{index $value 0}}: <a href="{{index $value 1}}" data-name="{{index $value 0}}" target="_blank">{{index $value 1}}</a></li>{{end}}</ul>`,
+			nfs.TEMPLATE, `<ul {{.OptionTemplate}}>{{range $index, $value := .Optionv "list"}}<li>{{index $value 0}}: <a href="{{index $value 1}}" data-name="{{index $value 0}}" target="_blank">{{index $value 2}}</a></li>{{end}}</ul>`,
 		)},
 	}})
 }

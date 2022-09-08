@@ -132,8 +132,14 @@ func AddChart(name string, hand func(m *ice.Message) Chart) { chart_list[name] =
 func _chart_show(m *ice.Message, kind, text string, arg ...string) {
 	// 默认参数
 	m.Option(STROKE_WIDTH, "2")
-	m.Option(STROKE, cli.BLUE)
-	m.Option(FILL, cli.YELLOW)
+	switch m.Option("topic") {
+	case "black":
+		m.Option(STROKE, cli.YELLOW)
+		m.Option(FILL, cli.YELLOW)
+	default:
+		m.Option(STROKE, cli.BLUE)
+		m.Option(FILL, cli.YELLOW)
+	}
 	m.Option(FONT_SIZE, "24")
 	m.Option(FONT_FAMILY, "monospace")
 	chart := chart_list[kind](m)

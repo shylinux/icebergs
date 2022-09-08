@@ -103,11 +103,19 @@ const CHAIN = "chain"
 
 func init() {
 	wiki.AddChart(CHAIN, func(m *ice.Message) wiki.Chart {
+		switch m.Option("topic") {
+		case "black":
+			m.Option(wiki.STROKE, cli.YELLOW)
+		default:
+			m.Option(wiki.STROKE, cli.BLUE)
+		}
+		m.Option(wiki.STROKE, "")
+		m.Option(wiki.FILL, "")
 		m.Option(wiki.STROKE_WIDTH, "2")
-		m.Option(wiki.STROKE, cli.BLUE)
 		m.Option(wiki.MARGINX, "40")
 		m.Option(wiki.MARGINY, "10")
-		wiki.AddGroupOption(m, SHIP, wiki.STROKE, cli.RED, wiki.FILL, cli.GLASS)
+		// wiki.AddGroupOption(m, SHIP, wiki.STROKE, cli.RED, wiki.FILL, cli.GLASS)
+		wiki.AddGroupOption(m, SHIP, wiki.FILL, cli.GLASS)
 		return &Chain{}
 	})
 }

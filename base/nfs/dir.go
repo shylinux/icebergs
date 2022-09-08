@@ -178,6 +178,9 @@ func init() {
 			}},
 		}, Hand: func(m *ice.Message, arg ...string) {
 			root, name := kit.Select(PWD, m.Option(DIR_ROOT)), kit.Select(PWD, arg, 0)
+			if strings.HasPrefix(name, ice.PS) {
+				root = ice.PS
+			}
 			if !aaa.Right(m, path.Join(root, name)) {
 				return // 没有权限
 			}

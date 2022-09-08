@@ -218,6 +218,9 @@ func init() {
 			nfs.TRASH: {Name: "trash", Help: "删除", Hand: func(m *ice.Message, arg ...string) {
 				_install_trash(m, arg...)
 			}},
+			nfs.PATH: {Name: "path", Help: "路径", Hand: func(m *ice.Message, arg ...string) {
+				m.Echo(_install_path(m, kit.Select("", arg, 0)))
+			}},
 			nfs.SOURCE: {Name: "source link path", Help: "源码", Hand: func(m *ice.Message, arg ...string) {
 				if m.Option(nfs.DIR_ROOT, path.Join(_install_path(m, ""), _INSTALL)); !nfs.ExistsFile(m, m.Option(nfs.DIR_ROOT)) {
 					m.Option(nfs.DIR_ROOT, path.Join(_install_path(m, "")))

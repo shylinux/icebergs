@@ -108,8 +108,8 @@ const (
 	COMMENT  = "comment"
 	KEYWORD  = "keyword"
 	CONSTANT = "constant"
-	DATATYPE = "datatype"
 	FUNCTION = "function"
+	DATATYPE = "datatype"
 )
 const (
 	SPLIT   = "split"
@@ -145,6 +145,7 @@ func init() {
 				_inner_exec(m, arg[0], arg[1], arg[2])
 			}},
 			mdb.SEARCH: {Name: "search", Help: "搜索", Hand: func(m *ice.Message, arg ...string) {
+				_inner_tags(m, m.Option(nfs.PATH), arg[1])
 				return
 				m.Option(nfs.DIR_ROOT, arg[2])
 				m.Option(cli.CMD_DIR, kit.Path(arg[2]))
@@ -203,7 +204,8 @@ func init() {
 			}},
 			FAVOR: {Name: "favor", Help: "收藏"},
 			"man": {Name: "man", Help: "手册", Hand: func(m *ice.Message, arg ...string) {
-				m.Cmdy(cli.SYSTEM, "sh", "-c", kit.Format("man %s|col -b", arg[0]))
+				m.Option(cli.CMD_ENV, "COLUMNS", kit.Int(kit.Select("1920", m.Option("width")))/12)
+				m.Cmdy(cli.SYSTEM, "sh", "-c", kit.Format("man %s %s|col -b", kit.Select("", arg, 1, arg[1] != "1"), arg[0]))
 			}},
 			"doc": {Name: "man", Help: "手册", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmdy(cli.SYSTEM, "go", "doc", arg[0])

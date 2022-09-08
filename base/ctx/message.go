@@ -10,6 +10,7 @@ import (
 )
 
 const MESSAGE = "message"
+const OPTION = "option"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
@@ -20,6 +21,13 @@ func init() {
 				p := kit.FileLine(method.Func.Interface(), 4)
 				m.Push(mdb.NAME, method.Name)
 				m.Push(mdb.TEXT, strings.Split(p, ice.ICEBERGS+"/")[1])
+			}
+		}},
+		OPTION: {Name: "option", Help: "选项", Hand: func(m *ice.Message, arg ...string) {
+			if len(arg) > 1 {
+				if msg, ok := m.Optionv("message").(*ice.Message); ok {
+					msg.Option(arg[0], arg[1])
+				}
 			}
 		}},
 	})

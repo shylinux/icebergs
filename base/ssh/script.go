@@ -109,6 +109,7 @@ func (f *Frame) scan(m *ice.Message, h, line string) *Frame {
 	f.ps2 = kit.Simple(m.Confv(PROMPT, kit.Keym(PS2)))
 	ps := f.ps1
 
+	m.Optionv("message", m)
 	if m.I, m.O = f.stdin, f.stdout; h == STDIO {
 		gdb.Event(m, SOURCE_STDIO)
 		m.Sleep("3s")

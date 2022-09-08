@@ -485,6 +485,9 @@ func (m *Message) Optionv(key string, arg ...Any) Any {
 	}
 	return nil
 }
+func (m *Message) Message() *Message {
+	return m.message
+}
 func (m *Message) Option(key string, arg ...Any) string {
 	return kit.Select("", kit.Simple(m.Optionv(key, arg...)), 0)
 }

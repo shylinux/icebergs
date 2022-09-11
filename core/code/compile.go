@@ -77,6 +77,7 @@ func init() {
 			m.Cmdy(nfs.DIR, file, nfs.DIR_WEB_FIELDS)
 			m.Cmdy(PUBLISH, ice.CONTEXTS)
 			m.StatusTimeCount()
+			m.Option(ice.MSG_PROCESS, "")
 		}},
 	}})
 }

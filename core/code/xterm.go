@@ -120,12 +120,8 @@ func init() {
 }
 
 func ProcessXterm(m *ice.Message, bin string, arg ...string) {
-	if cmd := "web.code.xterm"; len(arg) > 0 && arg[0] == ice.RUN {
-		if len(arg) > 2 && arg[1] == ctx.ACTION && arg[2] == mdb.CREATE {
-			arg = append(arg, mdb.TYPE, bin)
-		}
-		m.Cmdy(cmd, arg[1:])
-	} else {
-		m.Cmdy(ctx.COMMAND, cmd).ProcessField(m.ActionKey(), ice.RUN)
+	if len(arg) > 2 && arg[0] == ice.RUN && arg[1] == ctx.ACTION && arg[2] == mdb.CREATE {
+		arg = append(arg, mdb.TYPE, bin)
 	}
+	ctx.ProcessField(m, "web.code.xterm", nil, arg...)
 }

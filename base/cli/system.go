@@ -134,6 +134,8 @@ const (
 
 	CMD_ERR = "cmd_err"
 	CMD_OUT = "cmd_out"
+
+	MAN = "man"
 )
 
 const SYSTEM = "system"
@@ -151,6 +153,13 @@ func init() {
 					}
 				}
 				m.Cmdy(nfs.CAT, ice.ETC_PATH)
+			}},
+			MAN: {Name: "man", Help: "文档", Hand: func(m *ice.Message, arg ...string) {
+				m.Option(CMD_ENV, "COLUMNS", kit.Int(kit.Select("1920", m.Option("width")))/12)
+				m.Cmdy(SYSTEM, "sh", "-c", kit.Format("man %s %s|col -b", kit.Select("", arg[1], arg[1] != "1"), arg[0]))
+				if IsSuccess(m) && m.Append(CMD_ERR) == "" {
+					m.SetAppend()
+				}
 			}},
 		}, Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) == 0 {

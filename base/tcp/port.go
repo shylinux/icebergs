@@ -48,6 +48,9 @@ const PORT = "port"
 func init() {
 	Index.MergeCommands(ice.Commands{
 		PORT: {Name: "port port path auto", Help: "端口", Actions: ice.MergeActions(ice.Actions{
+			CURRENT: {Name: "current", Help: "分配", Hand: func(m *ice.Message, arg ...string) {
+				m.Echo(m.Config(CURRENT))
+			}},
 			aaa.RIGHT: {Name: "right", Help: "分配", Hand: func(m *ice.Message, arg ...string) {
 				m.Echo(_port_right(m, arg...))
 			}},

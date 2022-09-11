@@ -124,6 +124,9 @@ func init() {
 			STOP: {Name: "stop", Help: "停止", Hand: func(m *ice.Message, arg ...string) {
 				m.OptionFields(m.Config(mdb.FIELD))
 				mdb.HashSelect(m, m.Option(mdb.HASH)).Tables(func(value ice.Maps) {
+					if m.Option(mdb.HASH) == "" && value[PID] != m.Option(PID) {
+						return
+					}
 					mdb.HashModify(m, m.OptionSimple(mdb.HASH), STATUS, STOP)
 					m.Cmd(gdb.SIGNAL, gdb.KILL, value[PID])
 				})

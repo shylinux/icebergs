@@ -135,13 +135,13 @@ func (m *Message) ProcessField(arg ...Any) {
 	m.Process(PROCESS_FIELD)
 	m.Option(FIELD_PREFIX, arg...)
 }
-func (m *Message) ProcessInner()              { m.Process(PROCESS_INNER) }
-func (m *Message) ProcessAgain()              { m.Process(PROCESS_AGAIN) }
-func (m *Message) ProcessHold(text ...string) { m.Process(PROCESS_HOLD) }
-func (m *Message) ProcessBack()               { m.Process(PROCESS_BACK) }
-func (m *Message) ProcessRich(arg ...Any)     { m.Process(PROCESS_RICH, arg...) }
-func (m *Message) ProcessGrow(arg ...Any)     { m.Process(PROCESS_GROW, arg...) }
-func (m *Message) ProcessOpen(url string)     { m.Process(PROCESS_OPEN, url) }
+func (m *Message) ProcessInner()           { m.Process(PROCESS_INNER) }
+func (m *Message) ProcessAgain()           { m.Process(PROCESS_AGAIN) }
+func (m *Message) ProcessHold(text ...Any) { m.Process(PROCESS_HOLD, text...) }
+func (m *Message) ProcessBack()            { m.Process(PROCESS_BACK) }
+func (m *Message) ProcessRich(arg ...Any)  { m.Process(PROCESS_RICH, arg...) }
+func (m *Message) ProcessGrow(arg ...Any)  { m.Process(PROCESS_GROW, arg...) }
+func (m *Message) ProcessOpen(url string)  { m.Process(PROCESS_OPEN, url) }
 
 func (m *Message) Display(file string, arg ...Any) *Message { // repos local file
 	m.Option(MSG_DISPLAY, kit.MergeURL(displayRequire(2, file)[DISPLAY], arg...))

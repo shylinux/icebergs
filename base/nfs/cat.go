@@ -93,6 +93,7 @@ const (
 
 	STDIO  = "stdio"
 	SOURCE = "source"
+	MODULE = "module"
 	SCRIPT = "script"
 	BINARY = "binary"
 	TARGET = "target"

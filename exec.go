@@ -22,7 +22,7 @@ func (m *Message) TryCatch(msg *Message, silent bool, hand ...func(msg *Message)
 			m.Log(LOG_WARN, "catch: %s %s", e, fileline)
 			m.Log("stack", msg.FormatStack(2, 100))
 			m.Log(LOG_WARN, "catch: %s %s", e, fileline)
-			m.Result(ErrWarn, e)
+			m.Result(ErrWarn, e, " ", fileline)
 			if len(hand) > 1 {
 				m.TryCatch(msg, silent, hand[1:]...)
 			} else if !silent {

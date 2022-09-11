@@ -59,8 +59,8 @@ func _inner_make(m *ice.Message, msg *ice.Message) {
 	}
 	m.StatusTime()
 }
-func _inner_tags(m *ice.Message, path string, value string) {
-	for _, l := range strings.Split(m.Cmdx(cli.SYSTEM, "grep", "^"+value+"\\>", "tags", kit.Dict(cli.CMD_DIR, m.Option(nfs.PATH))), ice.NL) {
+func _inner_tags(m *ice.Message, dir string, value string) {
+	for _, l := range strings.Split(m.Cmdx(cli.SYSTEM, nfs.GREP, "^"+value+"\\>", nfs.TAGS, kit.Dict(cli.CMD_DIR, dir)), ice.NL) {
 		ls := strings.SplitN(l, ice.TB, 2)
 		if len(ls) < 2 {
 			continue
@@ -72,35 +72,21 @@ func _inner_tags(m *ice.Message, path string, value string) {
 		text := strings.TrimSuffix(strings.TrimPrefix(ls[0], "/^"), "$/")
 		line := kit.Int(text)
 
-		f, e := nfs.OpenFile(m, kit.Path(path, file))
+		f, e := nfs.OpenFile(m, kit.Path(dir, file))
 		m.Assert(e)
 		defer f.Close()
 
 		bio := bufio.NewScanner(f)
 		for i := 1; bio.Scan(); i++ {
 			if i == line || bio.Text() == text {
-				m.PushRecord(kit.Dict(nfs.PATH, path, nfs.FILE, strings.TrimPrefix(file, nfs.PWD), nfs.LINE, kit.Format(i)))
+				if dir == "" {
+					m.PushRecord(kit.Dict(nfs.PATH, path.Dir(file), nfs.FILE, path.Base(file), nfs.LINE, kit.Format(i), mdb.TEXT, bio.Text()))
+				} else {
+					m.PushRecord(kit.Dict(nfs.PATH, dir, nfs.FILE, strings.TrimPrefix(file, nfs.PWD), nfs.LINE, kit.Format(i), mdb.TEXT, bio.Text()))
+				}
 				return
 			}
 		}
-	}
-}
-
-func LoadPlug(m *ice.Message, language ...string) {
-	for _, language := range language {
-		m.Conf(nfs.CAT, kit.Keym(nfs.SOURCE, kit.Ext(language)), ice.TRUE)
-		m.Confm(language, kit.Keym(PLUG, PREPARE), func(key string, value interface{}) {
-			for _, v := range kit.Simple(value) {
-				m.Conf(language, kit.Keym(PLUG, KEYWORD, v), key)
-			}
-		})
-	}
-}
-func PlugAction() ice.Actions {
-	return ice.Actions{
-		mdb.PLUGIN: {Hand: func(m *ice.Message, arg ...string) { m.Echo(m.Config(PLUG)) }},
-		mdb.RENDER: {Hand: func(m *ice.Message, arg ...string) { m.Cmdy(nfs.CAT, path.Join(arg[2], arg[1])) }},
-		mdb.ENGINE: {Hand: func(m *ice.Message, arg ...string) { m.Cmdy(nfs.CAT, path.Join(arg[2], arg[1])) }},
 	}
 }
 
@@ -113,10 +99,10 @@ const (
 )
 const (
 	SPLIT   = "split"
-	PREFIX  = "prefix"
-	SUFFIX  = "suffix"
 	SPACE   = "space"
 	OPERATE = "operate"
+	PREFIX  = "prefix"
+	SUFFIX  = "suffix"
 )
 const (
 	PLUG = "plug"
@@ -146,6 +132,9 @@ func init() {
 			}},
 			mdb.SEARCH: {Name: "search", Help: "搜索", Hand: func(m *ice.Message, arg ...string) {
 				_inner_tags(m, m.Option(nfs.PATH), arg[1])
+				if m.Length() == 0 {
+					_inner_tags(m, "", arg[1])
+				}
 				return
 				m.Option(nfs.DIR_ROOT, arg[2])
 				m.Option(cli.CMD_DIR, kit.Path(arg[2]))
@@ -192,24 +181,17 @@ func init() {
 				}
 			}},
 
-			nfs.TAGS: {Name: "tags", Help: "索引", Hand: func(m *ice.Message, arg ...string) {
-				_inner_tags(m, m.Option(nfs.PATH), arg[0])
-			}},
 			nfs.GREP: {Name: "grep", Help: "搜索", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmdy(nfs.GREP, m.Option(nfs.PATH), arg[0])
 				m.StatusTimeCount(mdb.INDEX, 0)
+			}},
+			nfs.TAGS: {Name: "tags", Help: "索引", Hand: func(m *ice.Message, arg ...string) {
+				_inner_tags(m, m.Option(nfs.PATH), arg[0])
 			}},
 			cli.MAKE: {Name: "make", Help: "构建", Hand: func(m *ice.Message, arg ...string) {
 				_inner_make(m, m.Cmd(cli.SYSTEM, cli.MAKE, arg))
 			}},
 			FAVOR: {Name: "favor", Help: "收藏"},
-			"man": {Name: "man", Help: "手册", Hand: func(m *ice.Message, arg ...string) {
-				m.Option(cli.CMD_ENV, "COLUMNS", kit.Int(kit.Select("1920", m.Option("width")))/12)
-				m.Cmdy(cli.SYSTEM, "sh", "-c", kit.Format("man %s %s|col -b", kit.Select("", arg, 1, arg[1] != "1"), arg[0]))
-			}},
-			"doc": {Name: "man", Help: "手册", Hand: func(m *ice.Message, arg ...string) {
-				m.Cmdy(cli.SYSTEM, "go", "doc", arg[0])
-			}},
 		}, ctx.CmdAction()), Hand: func(m *ice.Message, arg ...string) {
 			if arg[0] = strings.Split(arg[0], ice.FS)[0]; !strings.HasSuffix(arg[0], ice.PS) {
 				arg[1] = kit.Slice(strings.Split(arg[0], ice.PS), -1)[0]
@@ -239,6 +221,7 @@ func init() {
 			if _inner_list(m, kit.Ext(arg[1]), arg[1], arg[0]); m.IsErrNotFound() {
 				m.SetResult("")
 			}
+			ctx.DisplayLocal(m, "")
 			m.Set(ice.MSG_STATUS)
 		}},
 	}, Configs: ice.Configs{
@@ -248,7 +231,7 @@ func init() {
 				"S", kit.Dict(PREFIX, kit.Dict("//", COMMENT)),
 				"s", kit.Dict(PREFIX, kit.Dict("//", COMMENT), KEYWORD, kit.Dict("TEXT", KEYWORD, "RET", KEYWORD)),
 				"py", kit.Dict(PREFIX, kit.Dict("#", COMMENT), KEYWORD, kit.Dict("print", KEYWORD)),
-				nfs.HTML, kit.Dict(SPLIT, kit.Dict("space", " ", "operator", "<>"), KEYWORD, kit.Dict("head", KEYWORD, "body", KEYWORD)),
+				nfs.HTML, kit.Dict(SPLIT, kit.Dict(SPACE, " ", OPERATE, "<>"), KEYWORD, kit.Dict("head", KEYWORD, "body", KEYWORD)),
 				nfs.CSS, kit.Dict(SUFFIX, kit.Dict("{", COMMENT)),
 				"yaml", kit.Dict(PREFIX, kit.Dict("#", COMMENT)),
 				"yml", kit.Dict(PREFIX, kit.Dict("#", COMMENT)),
@@ -259,4 +242,22 @@ func init() {
 			),
 		)},
 	}})
+}
+
+func PlugAction() ice.Actions {
+	return ice.Actions{
+		mdb.PLUGIN: {Hand: func(m *ice.Message, arg ...string) { m.Echo(m.Config(PLUG)) }},
+		mdb.RENDER: {Hand: func(m *ice.Message, arg ...string) { m.Cmdy(nfs.CAT, path.Join(arg[2], arg[1])) }},
+		mdb.ENGINE: {Hand: func(m *ice.Message, arg ...string) { m.Cmdy(nfs.CAT, path.Join(arg[2], arg[1])) }},
+	}
+}
+func LoadPlug(m *ice.Message, language ...string) {
+	for _, language := range language {
+		m.Conf(nfs.CAT, kit.Keym(nfs.SOURCE, kit.Ext(language)), ice.TRUE)
+		m.Confm(language, kit.Keym(PLUG, PREPARE), func(key string, value interface{}) {
+			for _, v := range kit.Simple(value) {
+				m.Conf(language, kit.Keym(PLUG, KEYWORD, v), key)
+			}
+		})
+	}
 }

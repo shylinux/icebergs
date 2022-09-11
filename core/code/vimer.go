@@ -231,6 +231,13 @@ func init() {
 			m.Option("plug", m.Config("show.plug"))
 			m.Option("exts", m.Config("show.exts"))
 			m.Option("tabs", m.Config("show.tabs"))
+			if arg[0] != ctx.ACTION {
+				ctx.DisplayLocal(m, "")
+				m.Action(nfs.SAVE, COMPILE, AUTOGEN, nfs.SCRIPT, chat.WEBSITE, web.DREAM)
+			}
 		}},
 	})
+}
+func ProcessVimer(m *ice.Message, path, file, line string, arg ...string) {
+	ctx.ProcessField(m, "web.code.vimer", kit.Simple(path, file, line), arg...)
 }

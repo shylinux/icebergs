@@ -55,9 +55,9 @@ func _install_download(m *ice.Message) {
 			}
 		})
 		m.Cmd(nfs.TAR, mdb.EXPORT, name, kit.Dict(cli.CMD_DIR, path.Dir(file)))
-		web.PushNoticeRefresh(m)
 		web.ToastSuccess(m)
 	})
+	m.Cmdy(nfs.DIR, file)
 	m.SetResult()
 }
 func _install_build(m *ice.Message, arg ...string) string {

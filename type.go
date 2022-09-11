@@ -78,6 +78,20 @@ type Server interface {
 func (c *Context) ID() int32 {
 	return atomic.AddInt32(&c.id, 1)
 }
+func (c *Command) GetFileLine() string {
+	if c.RawHand != nil {
+		switch h := c.RawHand.(type) {
+		case string:
+			return h
+		default:
+			return kit.FileLine(c.RawHand, 100)
+		}
+	} else if c.Hand != nil {
+		return kit.FileLine(c.Hand, 100)
+	} else {
+		return ""
+	}
+}
 func (c *Context) Cap(key string, arg ...Any) string {
 	if len(arg) > 0 {
 		c.Caches[key].Value = kit.Format(arg[0])

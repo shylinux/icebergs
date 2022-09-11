@@ -97,6 +97,36 @@ func init() {
 					_command_search(m, arg[0], kit.Select("", arg, 1), kit.Select("", arg, 2))
 				}
 			}},
+			"tags": {Name: "tags", Help: "索引", Hand: func(m *ice.Message, arg ...string) {
+				m.Travel(func(p *ice.Context, s *ice.Context, key string, cmd *ice.Command) {
+					if key[0] == '/' || key[0] == '_' {
+						return // 内部命令
+					}
+
+					var ls []string
+					if cmd.RawHand != nil {
+						switch h := cmd.RawHand.(type) {
+						case string:
+							ls = kit.Split(h, ":")
+						default:
+							ls = kit.Split(kit.FileLine(cmd.RawHand, 100), ":")
+						}
+					} else if cmd.Hand != nil {
+						return
+						ls = kit.Split(kit.FileLine(cmd.Hand, 100), ":")
+					} else {
+						return
+					}
+					m.Push("name", key)
+					m.Push("file", strings.TrimPrefix(ls[0], kit.Path("")+ice.PS))
+					m.Push("line", ls[1])
+				})
+				m.Sort("name")
+				m.Tables(func(value ice.Maps) {
+					m.Echo("%s\t%s\t%s;\" m\n", value["name"], value["file"], value["line"])
+				})
+				m.Cmd("nfs.save", "tags", m.Result())
+			}},
 		}, Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) == 0 {
 				arg = append(arg, "")
@@ -141,6 +171,15 @@ func CmdAction(args ...ice.Any) ice.Actions {
 				m.Cmdy(arg)
 			}
 		}},
+	}
+}
+func ProcessField(m *ice.Message, cmd string, args []string, arg ...string) {
+	if len(arg) > 0 && arg[0] == ice.RUN {
+		m.Cmdy(cmd, arg[1:])
+	} else {
+		if m.Cmdy(COMMAND, cmd).ProcessField(m.ActionKey(), ice.RUN); len(args) > 0 {
+			m.Push(ARGS, kit.Format(args))
+		}
 	}
 }
 func PodCmd(m *ice.Message, arg ...ice.Any) bool {

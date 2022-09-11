@@ -281,20 +281,17 @@ func HashTarget(m *ice.Message, h string, add Any) (p Any) {
 		if pp, ok := p.(Map); ok && len(pp) == 0 {
 			p = nil
 		}
-		m.Debug("what %v", p)
 		if p == nil && add != nil {
 			switch add := add.(type) {
 			case func(ice.Map) ice.Any:
 				p = add(value)
 			case func() ice.Any:
 				p = add()
-				m.Debug("what %v", p)
 			default:
 				m.ErrorNotImplement(p)
 				return
 			}
 			value[TARGET] = p
-			m.Debug("what %v", p)
 		}
 	})
 	return

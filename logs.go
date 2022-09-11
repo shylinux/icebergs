@@ -203,7 +203,8 @@ func (m *Message) FormatStack(s, n int) string {
 		name := kit.Slice(kit.Split(frame.Function, PS, PS), -1)[0]
 
 		switch ls := kit.Split(name, PT, PT); kit.Select("", ls, 0) {
-		case "reflect", "runtime", "http", "task", "icebergs":
+		// case "reflect", "runtime", "http", "task", "icebergs":
+		case "reflect", "runtime", "http":
 		default:
 			list = append(list, kit.Format("%s:%d\t%s", file, frame.Line, name))
 		}

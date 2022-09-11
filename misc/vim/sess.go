@@ -16,6 +16,8 @@ const (
 	SID = "sid"
 	ARG = "arg"
 	SUB = "sub"
+	PRE = "pre"
+	PWD = "pwd"
 	BUF = "buf"
 	ROW = "row"
 	COL = "col"

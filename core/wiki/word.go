@@ -9,7 +9,6 @@ import (
 	"shylinux.com/x/icebergs/base/lex"
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/nfs"
-	"shylinux.com/x/icebergs/base/ssh"
 	"shylinux.com/x/icebergs/core/chat"
 	kit "shylinux.com/x/toolkits"
 )
@@ -19,7 +18,7 @@ func _word_show(m *ice.Message, name string, arg ...string) {
 	m.Option(TITLE, map[string]int{})
 	m.Option(MENU, kit.Dict(mdb.LIST, kit.List()))
 	m.Option(ice.MSG_ALIAS, m.Configv(mdb.ALIAS))
-	m.Cmdy(ssh.SOURCE, name, kit.Dict(nfs.DIR_ROOT, _wiki_path(m, WORD)))
+	m.Cmdy("ssh.source", name, kit.Dict(nfs.DIR_ROOT, _wiki_path(m, WORD)))
 }
 
 const WORD = "word"

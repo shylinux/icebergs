@@ -23,8 +23,16 @@ func (m *Message) Split(str string, arg ...string) *Message { // field sp nl
 		}
 		if i == 0 && (field == "" || field == INDEX) { // 表头行
 			if fields = kit.Split(l, sp, sp); field == INDEX {
-				for _, v := range fields {
-					indexs = append(indexs, strings.Index(l, v))
+				if strings.HasPrefix(l, SP) || strings.HasPrefix(l, TB) {
+					indexs = append(indexs, 0)
+					for _, v := range fields {
+						indexs = append(indexs, strings.Index(l, v)+len(v))
+					}
+					indexs = indexs[0 : len(indexs)-1]
+				} else {
+					for _, v := range fields {
+						indexs = append(indexs, strings.Index(l, v))
+					}
 				}
 			}
 			continue
@@ -32,6 +40,10 @@ func (m *Message) Split(str string, arg ...string) *Message { // field sp nl
 
 		if len(indexs) > 0 { // 按位切分
 			for i, v := range indexs {
+				if v >= len(l) {
+					m.Push(strings.TrimSpace(kit.Select(SP, fields, i)), "")
+					continue
+				}
 				if i == len(indexs)-1 {
 					m.Push(strings.TrimSpace(kit.Select(SP, fields, i)), strings.TrimSpace(l[v:]))
 				} else {

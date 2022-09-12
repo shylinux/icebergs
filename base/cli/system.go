@@ -91,7 +91,7 @@ func _system_exec(m *ice.Message, cmd *exec.Cmd) {
 		defer func() {
 			m.Push(CMD_OUT, out.String())
 			m.Push(CMD_ERR, err.String())
-			if m.Echo(strings.TrimSpace(kit.Select(out.String(), err.String()))); IsSuccess(m) && out.String() == "" {
+			if m.Echo(kit.Select(out.String(), err.String())); IsSuccess(m) && out.String() == "" {
 				m.SetAppend()
 			}
 		}()

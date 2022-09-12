@@ -183,7 +183,7 @@ const RUNTIME = "runtime"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
-		RUNTIME: {Name: "runtime info=ifconfig,hostinfo,hostname,userinfo,procinfo,diskinfo,bootinfo,api,cli,cmd,env auto", Help: "运行环境", Actions: ice.Actions{
+		RUNTIME: {Name: "runtime info=ifconfig,hostinfo,hostname,userinfo,procinfo,diskinfo,meminfo,bootinfo,api,cli,cmd,env auto", Help: "运行环境", Actions: ice.Actions{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
 				cs := m.Target().Configs
 				if _, ok := cs[RUNTIME]; !ok {
@@ -207,8 +207,9 @@ func init() {
 				m.Split(m.Cmdx(SYSTEM, "who"), "user term time")
 			}},
 			PROCINFO: {Name: "procinfo", Help: "进程信息", Hand: func(m *ice.Message, arg ...string) {
-				m.Split(m.Cmdx(SYSTEM, "ps", "u")).PushAction(PROCKILL)
-				m.StatusTimeCount()
+				msg := m.Cmd("", HOSTINFO)
+				m.Split(m.Cmdx(SYSTEM, "ps", "u")).PushAction(PROCKILL).SortIntR("RSS")
+				m.StatusTimeCount("nCPU", msg.Append("nCPU"), "MemTotal", msg.Append("MemTotal"), "MemFree", msg.Append("MemFree"))
 			}},
 			PROCKILL: {Name: "prockill", Help: "结束进程", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmdy(gdb.SIGNAL, gdb.STOP, m.Option("PID"))
@@ -248,6 +249,16 @@ func init() {
 					m.Push(mdb.VALUE, ls[1])
 				}
 				m.StatusTimeCount()
+			}},
+			"stats": {Name: "stats", Help: "环境变量", Hand: func(m *ice.Message, arg ...string) {
+				var ms runtime.MemStats
+				runtime.ReadMemStats(&ms)
+				m.Echo("what %#v", ms)
+				m.Echo("what %#v", kit.FmtSize(int64(ms.Alloc)))
+				m.Echo("what %#v", kit.FmtSize(int64(ms.TotalAlloc)))
+				m.Echo("what %#v", kit.FmtSize(int64(ms.Sys)))
+				m.Echo("what %#v", kit.FmtSize(int64(ms.HeapAlloc)))
+				m.Echo("what %#v", kit.FmtSize(int64(ms.HeapSys)))
 			}},
 			MAKE_DOMAIN: {Name: "make.domain", Help: "编译主机", Hand: func(m *ice.Message, arg ...string) {
 				if os.Getenv(CTX_DEV) == "" || os.Getenv(CTX_POD) == "" {

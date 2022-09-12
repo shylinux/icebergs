@@ -3,6 +3,7 @@ package web
 import (
 	"math/rand"
 	"net"
+	"strconv"
 	"strings"
 	"time"
 
@@ -320,6 +321,32 @@ func init() {
 			}},
 			DOMAIN: {Name: "domain", Help: "域名", Hand: func(m *ice.Message, arg ...string) {
 				m.Echo(_space_domain(m))
+			}},
+			"hostinfo": {Name: "hostinfo", Help: "域名", Hand: func(m *ice.Message, arg ...string) {
+				ncpu := 0
+				nmem := 0.0
+				m.Cmd("").Tables(func(value ice.Maps) {
+					if value[mdb.TYPE] == SERVER {
+						msg := m.Cmd("", value[mdb.NAME], cli.RUNTIME, cli.HOSTINFO)
+						if msg.Append("nCPU") != "" {
+							ncpu += kit.Int(msg.Append("nCPU"))
+							m.Push("nCPU", msg.Append("nCPU"))
+							m.Push("MemTotal", msg.Append("MemTotal"))
+							m.Push("name", value[mdb.NAME])
+							base, raw := 1.0, ""
+							if strings.HasSuffix(msg.Append("MemTotal"), "M") {
+								raw = strings.TrimSuffix(msg.Append("MemTotal"), "M")
+							} else if strings.HasSuffix(msg.Append("MemTotal"), "G") {
+								base, raw = 1000, strings.TrimSuffix(msg.Append("MemTotal"), "G")
+							}
+							n, e := strconv.ParseFloat(raw, 32)
+							m.Debug("what %v", e)
+							nmem += n * base
+						}
+					}
+				})
+				m.StatusTimeCount("nCPU", ncpu, "nmem", kit.Format("%.2fG", nmem/1000.0))
+				m.Debug("what %v", m.FormatMeta())
 			}},
 		}, mdb.HashCloseAction()), Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) < 2 { // 节点列表

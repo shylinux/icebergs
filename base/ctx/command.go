@@ -98,32 +98,14 @@ func init() {
 				}
 			}},
 			"tags": {Name: "tags", Help: "索引", Hand: func(m *ice.Message, arg ...string) {
-				m.Travel(func(p *ice.Context, s *ice.Context, key string, cmd *ice.Command) {
-					if key[0] == '/' || key[0] == '_' {
-						return // 内部命令
-					}
-
-					var ls []string
-					if cmd.RawHand != nil {
-						switch h := cmd.RawHand.(type) {
-						case string:
-							ls = kit.Split(h, ":")
-						default:
-							ls = kit.Split(kit.FileLine(cmd.RawHand, 100), ":")
-						}
-					} else if cmd.Hand != nil {
-						return
-						ls = kit.Split(kit.FileLine(cmd.Hand, 100), ":")
-					} else {
-						return
-					}
+				TravelCmd(m, func(key, file, line string) {
 					m.Push("name", key)
-					m.Push("file", strings.TrimPrefix(ls[0], kit.Path("")+ice.PS))
-					m.Push("line", ls[1])
+					m.Push("file", file)
+					m.Push("line", line)
 				})
 				m.Sort("name")
 				m.Tables(func(value ice.Maps) {
-					m.Echo("%s\t%s\t%s;\" m\n", value["name"], value["file"], value["line"])
+					m.Echo("%s\t%s\t%s;\" f\n", value["name"], value["file"], value["line"])
 				})
 				m.Cmd("nfs.save", "tags", m.Result())
 			}},
@@ -154,15 +136,15 @@ func CmdAction(args ...ice.Any) ice.Actions {
 					m.Cmd(CONFIG, "reset", arg[0])
 				case "help":
 					if file := strings.ReplaceAll(GetCmdFile(m, arg[0]), ".go", ".shy"); nfs.ExistsFile(m, file) {
-						m.ProcessStory("web.wiki.word", file)
+						ProcessFloat(m, "web.wiki.word", file)
 					}
 				case "script":
 					if file := strings.ReplaceAll(GetCmdFile(m, arg[0]), ".go", ".js"); nfs.ExistsFile(m, file) {
-						m.ProcessStory("web.code.inner", file)
+						ProcessFloat(m, "web.code.inner", file)
 					}
 				case "source":
 					if file := GetCmdFile(m, arg[0]); nfs.ExistsFile(m, file) {
-						m.ProcessStory("web.code.inner", file)
+						ProcessFloat(m, "web.code.inner", file)
 					}
 				}
 				return
@@ -172,6 +154,11 @@ func CmdAction(args ...ice.Any) ice.Actions {
 			}
 		}},
 	}
+}
+func ProcessFloat(m *ice.Message, arg ...string) {
+	m.Option(ice.MSG_PROCESS, "_float")
+	m.Option(ice.PROCESS_ARG, arg)
+	m.Cmdy(COMMAND, arg[0])
 }
 func ProcessField(m *ice.Message, cmd string, args []string, arg ...string) {
 	if len(arg) > 0 && arg[0] == ice.RUN {
@@ -265,4 +252,14 @@ func GetCmdFile(m *ice.Message, cmds string) (file string) {
 		}
 	})
 	return
+}
+func TravelCmd(m *ice.Message, cb func(key, file, line string)) {
+	m.Travel(func(p *ice.Context, s *ice.Context, key string, cmd *ice.Command) {
+		if key[0] == '/' || key[0] == '_' {
+			return // 内部命令
+		}
+
+		ls := kit.Split(cmd.GetFileLine(), ":")
+		cb(key, strings.TrimPrefix(ls[0], kit.Path("")+ice.PS), ls[1])
+	})
 }

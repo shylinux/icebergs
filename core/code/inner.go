@@ -186,7 +186,9 @@ func init() {
 				m.StatusTimeCount(mdb.INDEX, 0)
 			}},
 			nfs.TAGS: {Name: "tags", Help: "索引", Hand: func(m *ice.Message, arg ...string) {
-				_inner_tags(m, m.Option(nfs.PATH), arg[0])
+				if _inner_tags(m, m.Option(nfs.PATH), arg[0]); m.Length() == 0 {
+					_inner_tags(m, "", arg[0])
+				}
 			}},
 			cli.MAKE: {Name: "make", Help: "构建", Hand: func(m *ice.Message, arg ...string) {
 				_inner_make(m, m.Cmd(cli.SYSTEM, cli.MAKE, arg))

@@ -39,6 +39,18 @@ func _system_cmd(m *ice.Message, arg ...string) *exec.Cmd {
 	// 		bin = file // 当前目录
 	// 	}
 	// }
+	if bin == "" {
+		if file := _system_find(m, arg[0], ice.BIN, nfs.PWD); file != "" {
+			m.Logs(mdb.SELECT, "mirrors cmd", file)
+			bin = file // 当前目录
+		}
+	}
+	if bin == "" && !strings.Contains(arg[0], ice.PS) {
+		if file := _system_find(m, arg[0]); file != "" {
+			m.Logs(mdb.SELECT, "systems cmd", file)
+			bin = file // 系统命令
+		}
+	}
 	if bin == "" && !strings.Contains(arg[0], ice.PS) {
 		m.Cmd(MIRRORS, CMD, arg[0])
 		if file := _system_find(m, arg[0]); file != "" {
@@ -46,6 +58,7 @@ func _system_cmd(m *ice.Message, arg ...string) *exec.Cmd {
 			bin = file // 软件镜像
 		}
 	}
+
 	cmd := exec.Command(bin, arg[1:]...)
 
 	// 运行目录
@@ -155,6 +168,9 @@ func init() {
 				m.Cmdy(nfs.CAT, ice.ETC_PATH)
 			}},
 			MAN: {Name: "man", Help: "文档", Hand: func(m *ice.Message, arg ...string) {
+				if len(arg) == 1 {
+					arg = append(arg, "")
+				}
 				m.Option(CMD_ENV, "COLUMNS", kit.Int(kit.Select("1920", m.Option("width")))/12)
 				m.Cmdy(SYSTEM, "sh", "-c", kit.Format("man %s %s|col -b", kit.Select("", arg[1], arg[1] != "1"), arg[0]))
 				if IsSuccess(m) && m.Append(CMD_ERR) == "" {

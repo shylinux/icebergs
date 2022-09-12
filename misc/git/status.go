@@ -111,7 +111,8 @@ func _status_each(m *ice.Message, title string, cmds ...string) {
 	m.ProcessHold()
 }
 func _status_stat(m *ice.Message, files, adds, dels int) (int, int, int) {
-	for _, v := range kit.Split(_git_cmds(m, DIFF, "--shortstat"), ice.FS) {
+	res := _git_cmds(m, DIFF, "--shortstat")
+	for _, v := range kit.Split(res, ice.FS, ice.FS) {
 		n := kit.Int(kit.Split(strings.TrimSpace(v))[0])
 		switch {
 		case strings.Contains(v, "file"):

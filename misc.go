@@ -260,9 +260,7 @@ func (c *Context) _command(m *Message, cmd *Command, key string, arg ...string) 
 		}
 	}
 
-	m._target = kit.FileLine(cmd.Hand, 3)
-	if cmd.RawHand != nil {
-		// m._target = kit.FileLine(cmd.RawHand, 3)
+	if m._target = kit.FileLine(cmd.Hand, 3); cmd.RawHand != nil {
 		m._target = kit.Format(cmd.RawHand)
 	}
 	if key == "select" {
@@ -307,9 +305,7 @@ func (c *Context) _action(m *Message, cmd *Command, key string, sub string, h *A
 		}
 	}
 
-	m._target = kit.FileLine(h.Hand, 3)
-	if cmd.RawHand != nil {
-		// m._target = kit.FileLine(cmd.RawHand, 3)
+	if m._target = kit.FileLine(h.Hand, 3); cmd.RawHand != nil {
 		m._target = kit.Format(cmd.RawHand)
 	}
 	m.Log(LOG_CMDS, "%s.%s %s %d %v", c.Name, key, sub, len(arg), arg,

@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	ice "shylinux.com/x/icebergs"
+	"shylinux.com/x/icebergs/base/ctx"
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/nfs"
 	kit "shylinux.com/x/toolkits"
@@ -115,6 +116,26 @@ func init() {
 					_binpack_file(m, w, value[nfs.PATH])
 				}
 			}
+		})
+
+		list := map[string]bool{}
+		ctx.TravelCmd(m, func(key, file, line string) {
+			dir := path.Dir(file)
+			if strings.HasPrefix(dir, ice.SRC) {
+				return
+			}
+			if list[dir] {
+				return
+			}
+			list[dir] = true
+
+			m.Cmd(nfs.DIR, dir, nfs.PATH, kit.Dict(nfs.DIR_ROOT, nfs.PWD, nfs.DIR_REG, ".*.(shy|js)")).Tables(func(value ice.Maps) {
+				if list[value[nfs.PATH]] {
+					return
+				}
+				list[value[nfs.PATH]] = true
+				_binpack_file(m, w, value[nfs.PATH])
+			})
 		})
 	}
 }

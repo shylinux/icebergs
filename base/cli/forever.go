@@ -59,12 +59,14 @@ func init() {
 
 			for {
 				logs.Println("run %s", kit.Join(arg, ice.SP))
-				if m.Sleep300ms(); IsSuccess(m.Cmd(SYSTEM, arg)) {
+				msg := m.Cmd(SYSTEM, arg)
+				if m.Sleep300ms(); IsSuccess(msg) {
 					logs.Println()
 					logs.Println(ice.EXIT) // 正常退出
 					break
 				} else {
-					logs.Println()
+					m.Sleep("10s")
+					logs.Println("what %v", msg.FormatMeta())
 				}
 			}
 		}},

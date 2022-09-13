@@ -101,6 +101,9 @@ func init() {
 				}
 				for _, k := range arg {
 					switch k {
+					case INSTALL:
+						m.Echo(kit.Renders(`export ctx_dev={{.Option "httphost"}}{{.Option "ctx_env"}}; ctx_temp=$(mktemp); wget -O $ctx_temp -q $ctx_dev; source $ctx_temp app username {{.Option "user.name"}}`, m))
+						return
 					case ice.MISC:
 						if bin := path.Join(ice.USR_PUBLISH, kit.Keys(ice.ICE, runtime.GOOS, runtime.GOARCH)); !nfs.ExistsFile(m, bin) {
 							m.Cmd(nfs.LINK, bin, m.Cmdx(cli.RUNTIME, "boot.bin"))
@@ -129,7 +132,7 @@ func init() {
 				_publish_file(m, m.Option(nfs.FILE))
 			}},
 			nfs.TRASH: {Name: "trash", Help: "删除", Hand: func(m *ice.Message, arg ...string) {
-				m.Cmdy(nfs.TRASH, path.Join(ice.USR_PUBLISH, m.Option(nfs.PATH)))
+				m.Cmd(nfs.TRASH, path.Join(ice.USR_PUBLISH, m.Option(nfs.PATH)))
 			}},
 			mdb.EXPORT: {Name: "export", Help: "工具链", Hand: func(m *ice.Message, arg ...string) {
 				var list = []string{ice.ETC_PATH}

@@ -50,6 +50,7 @@ func _xterm_get(m *ice.Message, h string, must bool) *os.File {
 			for {
 				if n, e := tty.Read(buf); !m.Warn(e) {
 					_xterm_socket(m, h, base64.StdEncoding.EncodeToString(buf[:n]))
+					m.Option("raw", string(buf[:n]))
 					web.PushNoticeGrow(m, "data")
 				} else {
 					break

@@ -88,7 +88,7 @@ func _space_handle(m *ice.Message, safe bool, frame *Frame, c *websocket.Conn, n
 		socket, msg := c, m.Spawn(b)
 		target := kit.Simple(msg.Optionv(ice.MSG_TARGET))
 		source := kit.Simple(msg.Optionv(ice.MSG_SOURCE), name)
-		msg.Log("recv", "%v->%v %s %v", source, target, msg.Detailv(), msg.FormatMeta())
+		msg.Log("recv", "%v<-%v %s %v", target, source, msg.Detailv(), msg.FormatMeta())
 
 		if len(target) == 0 { // 执行命令
 			if msg.Optionv(ice.MSG_HANDLE, ice.TRUE); safe { // 下行命令

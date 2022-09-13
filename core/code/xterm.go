@@ -2,6 +2,7 @@ package code
 
 import (
 	"encoding/base64"
+	"fmt"
 	"io"
 	"os"
 	"os/exec"
@@ -10,10 +11,12 @@ import (
 
 	pty "shylinux.com/x/creackpty"
 	ice "shylinux.com/x/icebergs"
+	"shylinux.com/x/icebergs/base/aaa"
 	"shylinux.com/x/icebergs/base/cli"
 	"shylinux.com/x/icebergs/base/ctx"
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/nfs"
+	"shylinux.com/x/icebergs/base/tcp"
 	"shylinux.com/x/icebergs/base/web"
 	kit "shylinux.com/x/toolkits"
 )
@@ -25,9 +28,7 @@ func _xterm_socket(m *ice.Message, h, t string) {
 }
 func _xterm_get(m *ice.Message, h string, must bool) *os.File {
 	t := mdb.HashSelectField(m, m.Option(mdb.HASH, h), mdb.TYPE)
-	m.Debug("what %v", h)
 	if f, ok := mdb.HashTarget(m, h, func() ice.Any {
-		m.Debug("what %v", h)
 		if !must {
 			return nil
 		}
@@ -76,6 +77,7 @@ func init() {
 						c.Close()
 					}
 				})
+				m.Conf("", mdb.HASH, "")
 			}},
 			mdb.INPUTS: {Name: "inputs", Help: "补全", Hand: func(m *ice.Message, arg ...string) {
 				switch mdb.HashInputs(m, arg); arg[0] {
@@ -95,6 +97,19 @@ func init() {
 					}
 				})
 				mdb.HashRemove(m)
+			}},
+			"install": {Name: "install", Help: "安装", Hand: func(m *ice.Message, arg ...string) {
+				if m.Option(mdb.HASH) != "" {
+					u := web.OptionUserWeb(m)
+					host := strings.Split(u.Host, ice.DF)[0]
+					if host == tcp.LOCALHOST {
+						host = m.Cmd(tcp.HOST).Append(aaa.IP)
+					}
+					m.Option("httphost", fmt.Sprintf("%s://%s:%s", u.Scheme, host, kit.Select(kit.Select("443", "80", u.Scheme == ice.HTTP), strings.Split(u.Host, ice.DF), 1)))
+					cmd := kit.Renders(`export ctx_dev={{.Option "httphost"}}{{.Option "ctx_env"}}; ctx_temp=$(mktemp); wget -O $ctx_temp -q $ctx_dev; source $ctx_temp app username {{.Option "user.name"}}`, m)
+					_xterm_get(m, m.Option(mdb.HASH), true).Write([]byte(cmd + "\n"))
+				}
+				m.ProcessHold()
 			}},
 			"rename": {Name: "rename", Help: "重命名", Hand: func(m *ice.Message, arg ...string) {
 				mdb.HashModify(m, arg)
@@ -119,9 +134,9 @@ func init() {
 	})
 }
 
-func ProcessXterm(m *ice.Message, bin string, arg ...string) {
+func ProcessXterm(m *ice.Message, args []string, arg ...string) {
 	if len(arg) > 2 && arg[0] == ice.RUN && arg[1] == ctx.ACTION && arg[2] == mdb.CREATE {
-		arg = append(arg, mdb.TYPE, bin)
+		arg = append(arg, args...)
 	}
 	ctx.ProcessField(m, "web.code.xterm", nil, arg...)
 }

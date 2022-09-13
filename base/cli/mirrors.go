@@ -10,11 +10,12 @@ import (
 )
 
 const (
-	CMD    = "cmd"
-	OSID   = "osid"
-	ALPINE = "alpine"
-	CENTOS = "centos"
-	UBUNTU = "ubuntu"
+	CMD     = "cmd"
+	OSID    = "osid"
+	UBUNTU  = "ubuntu"
+	CENTOS  = "centos"
+	ALPINE  = "alpine"
+	BUSYBOX = "busybox"
 )
 
 const MIRRORS = "mirrors"

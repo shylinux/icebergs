@@ -263,12 +263,10 @@ func (c *Context) _command(m *Message, cmd *Command, key string, arg ...string) 
 	if m._target = kit.FileLine(cmd.Hand, 3); cmd.RawHand != nil {
 		m._target = kit.Format(cmd.RawHand)
 	}
-	if key == "select" {
-		m.Log(LOG_CMDS, "%s.%s %d %v %v", c.Name, key, len(arg), arg, m.Optionv(MSG_FIELDS),
-			logs.FileLineMeta(kit.Select(m._target, m._source, m.target.Name == MDB)))
+	if fileline := kit.Select(m._target, m._source, m.target.Name == MDB); key == "select" {
+		m.Log(LOG_CMDS, "%s.%s %d %v %v", c.Name, key, len(arg), arg, m.Optionv(MSG_FIELDS), logs.FileLineMeta(fileline))
 	} else {
-		m.Log(LOG_CMDS, "%s.%s %d %v", c.Name, key, len(arg), arg,
-			logs.FileLineMeta(kit.Select(m._target, m._source, m.target.Name == MDB)))
+		m.Log(LOG_CMDS, "%s.%s %d %v", c.Name, key, len(arg), arg, logs.FileLineMeta(fileline))
 	}
 
 	if cmd.Hand != nil {

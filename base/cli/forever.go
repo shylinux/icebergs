@@ -27,8 +27,7 @@ func init() {
 						env = append(env, k, kit.Env(k))
 					}
 				}
-				m.Option(CMD_ENV, env)
-
+				m.Optionv(CMD_ENV, env)
 				m.Optionv(CMD_INPUT, os.Stdin)
 				m.Optionv(CMD_OUTPUT, os.Stdout)
 				m.Optionv(CMD_ERRPUT, os.Stderr)
@@ -37,12 +36,10 @@ func init() {
 				}
 
 				m.Cmd(FOREVER, STOP)
-				if len(arg) > 0 && arg[0] == "space" {
-					m.Cmdy(FOREVER, kit.Select(os.Args[0], ice.BIN_ICE_BIN, nfs.ExistsFile(m, ice.BIN_ICE_BIN)),
-						"space", "dial", ice.DEV, ice.OPS, arg[2:])
+				if bin := kit.Select(os.Args[0], ice.BIN_ICE_BIN, nfs.ExistsFile(m, ice.BIN_ICE_BIN)); len(arg) > 0 && arg[0] == "space" {
+					m.Cmdy(FOREVER, bin, "space", "dial", ice.DEV, ice.OPS, arg[2:])
 				} else {
-					m.Cmdy(FOREVER, kit.Select(os.Args[0], ice.BIN_ICE_BIN, nfs.ExistsFile(m, ice.BIN_ICE_BIN)),
-						"serve", START, ice.DEV, "", aaa.USERNAME, aaa.ROOT, aaa.PASSWORD, aaa.ROOT, arg)
+					m.Cmdy(FOREVER, bin, "serve", START, ice.DEV, "", aaa.USERNAME, aaa.ROOT, aaa.PASSWORD, aaa.ROOT, arg)
 				}
 			}},
 			RESTART: {Name: "restart", Help: "重启", Hand: func(m *ice.Message, arg ...string) {
@@ -59,14 +56,12 @@ func init() {
 
 			for {
 				logs.Println("run %s", kit.Join(arg, ice.SP))
-				msg := m.Cmd(SYSTEM, arg)
-				if m.Sleep300ms(); IsSuccess(msg) {
-					logs.Println()
+				if IsSuccess(m.Cmd(SYSTEM, arg)) {
 					logs.Println(ice.EXIT) // 正常退出
 					break
 				} else {
-					m.Sleep("10s")
-					logs.Println("what %v", msg.FormatMeta())
+					logs.Println()
+					m.Sleep("1s")
 				}
 			}
 		}},

@@ -3,6 +3,7 @@ package node
 import (
 	"shylinux.com/x/ice"
 	"shylinux.com/x/icebergs/base/cli"
+	"shylinux.com/x/icebergs/base/mdb"
 )
 
 const (
@@ -29,7 +30,7 @@ func (s compile) List(m *ice.Message, arg ...string) {
 	s.Code.Source(m, "", arg...)
 }
 func (s compile) Xterm(m *ice.Message, arg ...string) {
-	s.Code.Xterm(m, NODE, arg...)
+	s.Code.Xterm(m, []string{mdb.TYPE, NODE}, arg...)
 }
 
 func init() { ice.CodeCtxCmd(compile{}) }

@@ -185,6 +185,9 @@ func init() {
 				arg = kit.Split(arg[0])
 			}
 			_system_exec(m, _system_cmd(m, arg...))
+			if IsSuccess(m) {
+				m.SetAppend()
+			}
 		}},
 	})
 }

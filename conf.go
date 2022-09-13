@@ -294,6 +294,7 @@ const ( // ctx
 	INDEX   = "index"
 )
 const ( // mdb
+	AAA    = "aaa"
 	MDB    = "mdb"
 	KEY    = "key"
 	VALUE  = "value"

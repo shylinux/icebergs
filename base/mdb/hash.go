@@ -174,7 +174,7 @@ const (
 const HASH = "hash"
 
 func HashAction(args ...Any) ice.Actions {
-	return ice.Actions{ice.CTX_INIT: AutoConfig(args...),
+	return ice.Actions{ice.CTX_INIT: AutoConfig(args...), ice.CTX_EXIT: {Hand: func(m *ice.Message, arg ...string) { HashSelectClose(m) }},
 		INPUTS: {Name: "inputs", Help: "补全", Hand: func(m *ice.Message, arg ...string) { HashInputs(m, arg) }},
 		CREATE: {Name: "create", Help: "创建", Hand: func(m *ice.Message, arg ...string) { HashCreate(m, arg) }},
 		REMOVE: {Name: "remove", Help: "删除", Hand: func(m *ice.Message, arg ...string) { HashRemove(m, arg) }},
@@ -334,11 +334,13 @@ func HashSelectValue(m *ice.Message, cb Any) *ice.Message {
 	return m
 }
 func HashSelectClose(m *ice.Message) *ice.Message {
-	HashSelectValue(m, func(target ice.Any) {
+	HashSelectValue(m, func(value ice.Map) {
+		target := value[TARGET]
 		if c, ok := target.(io.Closer); ok {
 			m.Logs(DELETE, TARGET, m.PrefixKey())
 			c.Close()
 		}
+		delete(value, TARGET)
 	})
 	return m
 }

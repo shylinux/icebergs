@@ -94,8 +94,8 @@ const (
 	COMMENT  = "comment"
 	KEYWORD  = "keyword"
 	CONSTANT = "constant"
-	FUNCTION = "function"
 	DATATYPE = "datatype"
+	FUNCTION = "function"
 )
 const (
 	SPLIT   = "split"

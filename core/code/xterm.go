@@ -2,7 +2,6 @@ package code
 
 import (
 	"encoding/base64"
-	"io"
 	"os"
 	"os/exec"
 	"path"
@@ -18,7 +17,14 @@ import (
 	kit "shylinux.com/x/toolkits"
 )
 
-func _xterm_get(m *ice.Message, h string) *os.File {
+type _xterm struct {
+	*exec.Cmd
+	*os.File
+}
+
+func (s _xterm) Close() error { s.Cmd.Process.Kill(); return nil }
+
+func _xterm_get(m *ice.Message, h string) _xterm {
 	t := mdb.HashSelectField(m, m.Option(mdb.HASH, h), mdb.TYPE)
 	mdb.HashModify(m, mdb.TEXT, m.Option(ice.MSG_DAEMON))
 	return mdb.HashTarget(m, h, func() ice.Any {
@@ -30,20 +36,10 @@ func _xterm_get(m *ice.Message, h string) *os.File {
 		m.Assert(err)
 
 		m.Go(func() {
-			m.Logs(cli.DAEMON, ice.CMD, ls)
-			defer web.PushNoticeGrow(m, ice.EXIT)
-			mdb.HashSelectUpdate(m, h, func(value ice.Map) {
-				value["_cmd"] = nfs.NewCloser(func() error {
-					m.Option(ice.MSG_DAEMON, mdb.HashSelectField(m, h, mdb.TEXT))
-					web.PushNoticeGrow(m, ice.EXIT)
-					return cmd.Process.Kill()
-				})
-			})
-
 			m.Option("log.disable", ice.TRUE)
 			buf := make([]byte, ice.MOD_BUFS)
 			for {
-				if n, e := tty.Read(buf); !m.Warn(e) {
+				if n, e := tty.Read(buf); !m.Warn(e) && e == nil {
 					m.Option(ice.MSG_DAEMON, mdb.HashSelectField(m, h, mdb.TEXT))
 					m.Option(mdb.TEXT, string(buf[:n]))
 					web.PushNoticeGrow(m)
@@ -52,8 +48,8 @@ func _xterm_get(m *ice.Message, h string) *os.File {
 				}
 			}
 		})
-		return tty
-	}).(*os.File)
+		return _xterm{cmd, tty}
+	}).(_xterm)
 }
 
 const XTERM = "xterm"
@@ -61,13 +57,6 @@ const XTERM = "xterm"
 func init() {
 	Index.MergeCommands(ice.Commands{
 		XTERM: {Name: "xterm hash auto", Help: "终端", Actions: ice.MergeActions(ice.Actions{
-			ice.CTX_EXIT: {Hand: func(m *ice.Message, arg ...string) {
-				mdb.HashSelectValue(m, func(value ice.Map) {
-					if c, ok := value["_cmd"].(io.Closer); ok {
-						c.Close()
-					}
-				})
-			}},
 			mdb.INPUTS: {Name: "inputs", Help: "补全", Hand: func(m *ice.Message, arg ...string) {
 				switch mdb.HashInputs(m, arg); arg[0] {
 				case mdb.TYPE:
@@ -76,17 +65,9 @@ func init() {
 					m.Push(arg[0], path.Base(m.Option(mdb.TYPE)))
 				}
 			}},
-			mdb.CREATE: {Name: "create type name background", Help: "创建"},
-			mdb.REMOVE: {Name: "remove", Help: "删除", Hand: func(m *ice.Message, arg ...string) {
-				mdb.HashSelectDetail(m, m.Option(mdb.HASH), func(value ice.Map) {
-					if c, ok := value["_cmd"].(io.Closer); ok {
-						c.Close()
-					}
-				})
-				mdb.HashRemove(m)
-			}},
+			mdb.CREATE: {Name: "create type=sh name=xterm", Help: "创建"},
 			"resize": {Name: "resize", Help: "大小", Hand: func(m *ice.Message, arg ...string) {
-				pty.Setsize(_xterm_get(m, m.Option(mdb.HASH)), &pty.Winsize{Rows: uint16(kit.Int(m.Option("rows"))), Cols: uint16(kit.Int(m.Option("cols")))})
+				pty.Setsize(_xterm_get(m, m.Option(mdb.HASH)).File, &pty.Winsize{Rows: uint16(kit.Int(m.Option("rows"))), Cols: uint16(kit.Int(m.Option("cols")))})
 			}},
 			"input": {Name: "input", Help: "输入", Hand: func(m *ice.Message, arg ...string) {
 				if b, e := base64.StdEncoding.DecodeString(strings.Join(arg, "")); !m.Warn(e) {
@@ -97,7 +78,7 @@ func init() {
 				_xterm_get(m, kit.Select(m.Option(mdb.HASH), arg, 0)).Write([]byte(m.Cmdx(PUBLISH, ice.CONTEXTS, INSTALL) + ice.NL))
 				m.ProcessHold()
 			}},
-		}, mdb.HashAction(mdb.FIELD, "time,hash,type,name,text"), ctx.CmdAction()), Hand: func(m *ice.Message, arg ...string) {
+		}, mdb.HashAction(mdb.FIELD, "time,hash,type,name,text")), Hand: func(m *ice.Message, arg ...string) {
 			if mdb.HashSelect(m, arg...); len(arg) == 0 {
 				m.Action(mdb.CREATE, mdb.PRUNES)
 			} else {

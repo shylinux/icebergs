@@ -27,6 +27,12 @@ func init() {
 						env = append(env, k, kit.Env(k))
 					}
 				}
+				for _, v := range os.Environ() {
+					ls := kit.Split(v, "=", "=")
+					if kit.IndexOf(env, ls[0]) == -1 {
+						env = append(env, ls[0], ls[1])
+					}
+				}
 				m.Optionv(CMD_ENV, env)
 				m.Optionv(CMD_INPUT, os.Stdin)
 				m.Optionv(CMD_OUTPUT, os.Stdout)

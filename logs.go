@@ -42,6 +42,9 @@ func (m *Message) log(level string, str string, arg ...Any) *Message {
 	if Info.Log != nil {
 		Info.Log(m, m.FormatPrefix(), level, logs.Format(str, append(arg, _source)...)) // 日志回调
 	}
+	if m.Option("log.disable") == TRUE {
+		return m
+	}
 
 	// 日志颜色
 	prefix, suffix := "", ""

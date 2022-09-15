@@ -142,6 +142,7 @@ func init() {
 				HTML, ice.TRUE, CSS, ice.TRUE, JS, ice.TRUE, GO, ice.TRUE, SH, ice.TRUE, CSV, ice.TRUE, JSON, ice.TRUE,
 				SHY, ice.TRUE, "conf", ice.TRUE, "makefile", ice.TRUE, "license", ice.TRUE,
 				PY, ice.TRUE, MD, ice.TRUE, TXT, ice.TRUE, IML, ice.TRUE, XML, ice.TRUE, YML, ice.TRUE, ZML, ice.TRUE,
+				"configure", ice.TRUE,
 			),
 		)},
 	}, Commands: ice.Commands{

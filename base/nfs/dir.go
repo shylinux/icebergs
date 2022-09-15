@@ -30,7 +30,7 @@ func _dir_hash(m *ice.Message, p string) string {
 }
 func _dir_list(m *ice.Message, root string, name string, level int, deep bool, dir_type string, dir_reg *regexp.Regexp, fields []string) *ice.Message {
 	list, e := ReadDir(m, path.Join(root, name))
-	if e != nil || len(list) == 0 { // 单个文件
+	if e != nil && len(list) == 0 { // 单个文件
 		ls, _ := ReadDir(m, path.Dir(path.Join(root, name)))
 		for _, s := range ls {
 			if s.Name() == path.Base(name) {

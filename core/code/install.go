@@ -139,9 +139,7 @@ func _install_start(m *ice.Message, arg ...string) {
 	}
 
 	bin := kit.Split(path.Base(arg[0]), "-.")[0]
-	if m.Cmdy(cli.DAEMON, kit.Select(path.Join(ice.BIN, bin), arg, 1), kit.Slice(arg, 2), args); cli.IsSuccess(m) {
-		m.SetAppend()
-	}
+	m.Cmdy(cli.DAEMON, kit.Select(path.Join(ice.BIN, bin), arg, 1), kit.Slice(arg, 2), args)
 }
 func _install_stop(m *ice.Message, arg ...string) {
 	m.Cmd(cli.DAEMON, func(value ice.Maps) {

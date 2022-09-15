@@ -17,7 +17,7 @@ import (
 
 func _dream_list(m *ice.Message) *ice.Message {
 	list := m.CmdMap(SPACE, mdb.NAME)
-	m.Cmdy(nfs.DIR, ice.USR_LOCAL_WORK, "time,size,name", func(value ice.Maps) {
+	m.Cmdy(nfs.DIR, ice.USR_LOCAL_WORK+ice.PS, "time,size,name", func(value ice.Maps) {
 		if dream, ok := list[value[mdb.NAME]]; ok {
 			m.Push(mdb.TYPE, dream[mdb.TYPE])
 			m.Push(cli.STATUS, cli.START)
@@ -144,7 +144,7 @@ func init() {
 				m.ProcessOpen(MergePod(m, m.Option(mdb.NAME)+"/cmd/web.code.vimer", "", ""))
 			}},
 			"xterm": {Name: "xterm", Help: "命令", Hand: func(m *ice.Message, arg ...string) {
-				m.ProcessOpen(MergePod(m, m.Option(mdb.NAME)+"/cmd/web.code.xterm", "", ""))
+				m.ProcessOpen(MergePod(m, m.Option(mdb.NAME)+"/cmd/web.code.xterm", "hash", m.Cmdx(SPACE, m.Option(mdb.NAME), "web.code.xterm", mdb.CREATE, "type", "sh")))
 			}},
 			cli.STOP: {Name: "stop", Help: "停止", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmd(SPACE, mdb.MODIFY, m.OptionSimple(mdb.NAME), mdb.STATUS, cli.STOP)

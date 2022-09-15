@@ -184,8 +184,7 @@ func init() {
 			if len(arg) == 1 {
 				arg = kit.Split(arg[0])
 			}
-			_system_exec(m, _system_cmd(m, arg...))
-			if IsSuccess(m) {
+			if _system_exec(m, _system_cmd(m, arg...)); IsSuccess(m) && m.Append(CMD_ERR) == "" {
 				m.SetAppend()
 			}
 		}},

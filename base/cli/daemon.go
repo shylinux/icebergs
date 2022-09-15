@@ -123,11 +123,12 @@ func init() {
 			}},
 			STOP: {Name: "stop", Help: "停止", Hand: func(m *ice.Message, arg ...string) {
 				m.OptionFields(m.Config(mdb.FIELD))
+				h, pid := m.Option(mdb.HASH), m.Option(PID)
 				mdb.HashSelect(m, m.Option(mdb.HASH)).Tables(func(value ice.Maps) {
-					if m.Option(mdb.HASH) == "" && value[PID] != m.Option(PID) {
+					if h == "" && value[PID] != pid {
 						return
 					}
-					mdb.HashModify(m, m.OptionSimple(mdb.HASH), STATUS, STOP)
+					mdb.HashModify(m, mdb.HASH, value[mdb.HASH], STATUS, STOP)
 					m.Cmd(gdb.SIGNAL, gdb.KILL, value[PID])
 				})
 			}},
@@ -148,7 +149,9 @@ func init() {
 			if len(arg) == 1 {
 				arg = kit.Split(arg[0])
 			}
-			_daemon_exec(m, _system_cmd(m, arg...))
+			if _daemon_exec(m, _system_cmd(m, arg...)); IsSuccess(m) && m.Append(CMD_ERR) == "" {
+				m.SetAppend()
+			}
 		}},
 	})
 }

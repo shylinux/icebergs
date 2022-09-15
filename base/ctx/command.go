@@ -130,10 +130,6 @@ func CmdAction(args ...ice.Any) ice.Actions {
 		ice.RUN: {Name: "run", Help: "执行", Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) > 3 && arg[1] == ACTION && arg[2] == CONFIG {
 				switch arg[3] {
-				case "select":
-					m.Cmdy(CONFIG, arg[0])
-				case "reset":
-					m.Cmd(CONFIG, "reset", arg[0])
 				case "help":
 					if file := strings.ReplaceAll(GetCmdFile(m, arg[0]), ".go", ".shy"); nfs.ExistsFile(m, file) {
 						ProcessFloat(m, "web.wiki.word", file)
@@ -146,6 +142,10 @@ func CmdAction(args ...ice.Any) ice.Actions {
 					if file := GetCmdFile(m, arg[0]); nfs.ExistsFile(m, file) {
 						ProcessFloat(m, "web.code.inner", file)
 					}
+				case "select":
+					m.Cmdy(CONFIG, arg[0])
+				case "reset":
+					m.Cmd(CONFIG, "reset", arg[0])
 				}
 				return
 			}
@@ -260,6 +260,10 @@ func TravelCmd(m *ice.Message, cb func(key, file, line string)) {
 		}
 
 		ls := kit.Split(cmd.GetFileLine(), ":")
-		cb(key, strings.TrimPrefix(ls[0], kit.Path("")+ice.PS), ls[1])
+		if len(ls) > 1 {
+			cb(key, strings.TrimPrefix(ls[0], kit.Path("")+ice.PS), ls[1])
+		} else {
+			m.Warn(true, "not founc", cmd.Name)
+		}
 	})
 }

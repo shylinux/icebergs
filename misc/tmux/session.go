@@ -9,6 +9,7 @@ import (
 	"shylinux.com/x/icebergs/base/ctx"
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/web"
+	"shylinux.com/x/icebergs/core/code"
 	kit "shylinux.com/x/toolkits"
 )
 
@@ -98,7 +99,7 @@ func init() {
 				}
 			}},
 			mdb.CREATE: {Name: "create name", Help: "添加", Hand: func(m *ice.Message, arg ...string) {
-				m.Option(cli.CMD_ENV, TMUX, "")
+				m.Option(cli.CMD_ENV, "TMUX", "")
 				if m.Option(PANE) != "" { // 创建终端
 					_tmux_cmd(m, SPLIT_WINDOW, "-t", _tmux_key(m.Option(SESSION), m.Option(WINDOW), m.Option(PANE)))
 
@@ -156,6 +157,9 @@ func init() {
 				}
 			}},
 
+			code.XTERM: {Name: "xterm", Help: "终端", Hand: func(m *ice.Message, arg ...string) {
+				code.ProcessXterm(m, []string{mdb.TYPE, "tmux attach -t " + m.Option(SESSION)}, arg...)
+			}},
 			SCRIPT: {Name: "script name", Help: "脚本", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmd(SCRIPT, m.Option(mdb.NAME), func(value ice.Maps) {
 					switch value[mdb.TYPE] {
@@ -199,9 +203,9 @@ func init() {
 			m.Tables(func(value ice.Maps) {
 				switch value["tag"] {
 				case "1":
-					m.PushButton("")
+					m.PushButton(code.XTERM, "")
 				default:
-					m.PushButton(mdb.SELECT, mdb.REMOVE)
+					m.PushButton(code.XTERM, mdb.SELECT, mdb.REMOVE)
 				}
 			})
 		}},

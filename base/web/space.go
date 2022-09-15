@@ -221,7 +221,7 @@ func _space_fork(m *ice.Message) {
 					case SSO:
 						link := _space_domain(m)
 						ls := strings.Split(kit.ParseURL(link).Path, ice.PS)
-						link = kit.MergeURL2(_space_domain(m), "/chat/sso", SPACE, kit.Select("", ls, 3), "back", m.Option(ice.MSG_USERWEB))
+						link = kit.MergeURL2(_space_domain(m), "/chat/sso", SPACE, kit.Select("", ls, 3), "back", m.Option("back"))
 						msg.Sleep300ms(SPACE, name, cli.PWD, name, link, msg.Cmdx(cli.QRCODE, link))
 					default:
 						msg.Sleep300ms(SPACE, name, cli.PWD, name)

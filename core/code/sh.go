@@ -95,32 +95,40 @@ func init() {
 		}},
 	}, Configs: ice.Configs{
 		SH: {Name: SH, Help: "命令", Value: kit.Data(PLUG, kit.Dict(
-			SPLIT, kit.Dict(SPACE, " ", OPERATE, "{[(.,;!|<>)]}"),
-			PREFIX, kit.Dict("#!", COMMENT, "# ", COMMENT), SUFFIX, kit.Dict(" {", COMMENT),
+			SPLIT, kit.Dict(OPERATE, "="),
+			PREFIX, kit.Dict("#", COMMENT), SUFFIX, kit.Dict(" {", COMMENT),
+			"regexp", kit.Dict(
+				"[A-Z0-9_]+", CONSTANT,
+			),
 			PREPARE, kit.Dict(
 				KEYWORD, kit.Simple(
-					"require", "source", "return", "local", "export", "env",
+					"local", "export", "require", "source", "return", "exit",
 
-					"if", "then", "else", "fi",
+					"if", "then", "else", "elif", "fi",
 					"for", "while", "do", "done",
 					"esac", "case", "in",
 
 					"shift",
-					"echo",
 					"read",
-					"eval",
 					"kill",
 					"let",
 					"cd",
 				),
 				FUNCTION, kit.Simple(
+					"eval",
+					"test",
+					"echo",
+					"mkdir",
+					"cat",
+					"rm",
+
+					"env",
 					"xargs", "_list",
 					"date", "uptime", "uname", "whoami",
 					"find", "grep", "sed", "awk",
 					"pwd",
 					"ls",
 					"ps",
-					"rm",
 					"go",
 				),
 			), KEYWORD, kit.Dict(),

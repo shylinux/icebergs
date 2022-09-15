@@ -1,6 +1,7 @@
 package git
 
 import (
+	"path"
 	"strings"
 
 	ice "shylinux.com/x/icebergs"
@@ -42,7 +43,7 @@ const COUNT = "count"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
-		COUNT: {Name: "count path auto count order", Help: "代码行", Actions: ice.Actions{
+		COUNT: {Name: "count path auto count order tags", Help: "代码行", Actions: ice.Actions{
 			"order": {Name: "order", Help: "排行", Hand: func(m *ice.Message, arg ...string) {
 				files := map[string]int{}
 				_count_count(m, arg, func(file string) {
@@ -55,6 +56,26 @@ func init() {
 					m.Push("lines", n)
 				}
 				m.StatusTimeCount().SortIntR("lines")
+			}},
+			"tags": {Name: "tags", Help: "索引", Hand: func(m *ice.Message, arg ...string) {
+				count := map[string]int{}
+				m.Cmd(nfs.CAT, path.Join(arg[0], "tags"), func(line string) {
+					ls := strings.SplitN(line, ice.TB, 3)
+					if len(ls) < 3 {
+						return
+					}
+					ls = strings.SplitN(ls[2], ";\"", 2)
+					if len(ls) < 2 {
+						return
+					}
+					ls = kit.Split(ls[1])
+					count[ls[0]]++
+				})
+				for k, v := range count {
+					m.Push("type", k)
+					m.Push("count", v)
+				}
+				m.SortIntR("count")
 			}},
 			COUNT: {Name: "count", Help: "计数", Hand: func(m *ice.Message, arg ...string) {
 				files := map[string]int{}

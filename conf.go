@@ -237,8 +237,9 @@ const ( // PROCESS
 	PROCESS_REFRESH  = "_refresh"
 	PROCESS_REWRITE  = "_rewrite"
 	PROCESS_DISPLAY  = "_display"
-	PROCESS_FIELD    = "_field"
 	PROCESS_INNER    = "_inner"
+	PROCESS_FIELD    = "_field"
+	PROCESS_FLOAT    = "_float"
 	PROCESS_AGAIN    = "_again"
 
 	PROCESS_HOLD = "_hold"
@@ -246,8 +247,8 @@ const ( // PROCESS
 	PROCESS_RICH = "_rich"
 	PROCESS_GROW = "_grow"
 	PROCESS_OPEN = "_open"
-	PROCESS_ARG  = "_arg"
 
+	PROCESS_ARG  = "_arg"
 	FIELD_PREFIX = "_prefix"
 )
 const ( // CTX

@@ -3,6 +3,7 @@ package code
 import (
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/web"
+	kit "shylinux.com/x/toolkits"
 )
 
 const CODE = "code"
@@ -16,3 +17,5 @@ func init() {
 		C, SH, SHY, GO, JS,
 	)
 }
+
+func Prefix(arg ...string) string { return kit.Keys(web.WEB, CODE, arg) }

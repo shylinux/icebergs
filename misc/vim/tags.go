@@ -104,6 +104,15 @@ func init() {
 					})
 				case "qrcode":
 					m.Echo(`!curl "localhost:9020/code/bash/qrcode?text=%s"`, args[1])
+				default:
+					switch kit.Ext(m.Option(BUF)) {
+					case "js":
+						ls := kit.Split(args[len(args)-1], ".", ".")
+						switch ls[0] {
+						case "chat":
+
+						}
+					}
 				}
 			}},
 		}, Hand: func(m *ice.Message, arg ...string) {

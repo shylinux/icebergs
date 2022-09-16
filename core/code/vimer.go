@@ -91,6 +91,8 @@ func _vimer_inputs(m *ice.Message, arg ...string) {
 		m.Cmdy(web.DREAM, mdb.INPUTS, arg)
 	case AUTOGEN:
 		m.Cmdy(AUTOGEN, mdb.INPUTS, arg)
+	case XTERM:
+		m.Cmdy(XTERM, mdb.INPUTS, arg)
 	default:
 		switch arg[0] {
 		case ctx.INDEX:
@@ -105,7 +107,6 @@ func _vimer_inputs(m *ice.Message, arg ...string) {
 		}
 	}
 }
-
 func _vimer_complete(m *ice.Message, arg ...string) {
 	switch left := kit.Select("", kit.Slice(kit.Split(m.Option(mdb.TEXT), "\t \n`"), -1), 0); kit.Ext(m.Option(nfs.FILE)) {
 	case nfs.ZML:
@@ -156,11 +157,27 @@ func _vimer_go_complete(m *ice.Message, name string, arg ...string) *ice.Message
 	return m
 }
 
+const (
+	VIMER_TEMPLATE = "vimer.template"
+	VIMER_COMPLETE = "vimer.complete"
+
+	COMPLETE = "complete"
+	// TEMPLATE = "template"
+)
 const VIMER = "vimer"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
 		VIMER: {Name: "vimer path=src/ file=main.go line=1 list", Help: "编辑器", Meta: kit.Dict(ice.DisplayLocal("", INNER)), Actions: ice.Actions{
+			mdb.SEARCH: {Name: "search type name text", Help: "搜索", Hand: func(m *ice.Message, arg ...string) {
+				if arg[0] == mdb.FOREACH && arg[1] == "" {
+					m.PushSearch(mdb.TYPE, "go", mdb.NAME, "src/main.go", mdb.TEXT, chat.MergeCmd(m, ""))
+				}
+			}},
+			mdb.INPUTS: {Name: "inputs", Help: "补全", Hand: func(m *ice.Message, arg ...string) {
+				_vimer_inputs(m, arg...)
+			}},
+
 			nfs.SAVE: {Name: "save type file path", Help: "保存", Hand: func(m *ice.Message, arg ...string) {
 				m.Option(nfs.CONTENT, kit.Select(_vimer_defs(m, kit.Ext(m.Option(nfs.FILE))), m.Option(nfs.CONTENT)))
 				m.Cmdy(nfs.SAVE, path.Join(m.Option(nfs.PATH), m.Option(nfs.FILE)))
@@ -168,15 +185,16 @@ func init() {
 			nfs.TRASH: {Name: "trash path", Help: "删除", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmdy(nfs.TRASH, arg[0])
 			}},
-			AUTOGEN: {Name: "create name=hi help=示例 type=Zone,Hash,Data,Code main=main.go zone key", Help: "模块", Hand: func(m *ice.Message, arg ...string) {
-				m.Cmdy(AUTOGEN, mdb.CREATE, arg)
-			}},
+
 			COMPILE: {Name: "compile", Help: "编译", Hand: func(m *ice.Message, arg ...string) {
 				if msg := m.Cmd(COMPILE, ice.SRC_MAIN_GO, ice.BIN_ICE_BIN); cli.IsSuccess(msg) {
 					m.Cmd(UPGRADE, cli.RESTART)
 				} else {
 					_inner_make(m, msg)
 				}
+			}},
+			AUTOGEN: {Name: "create name=hi help=示例 type=Zone,Hash,Data,Code main=main.go zone key", Help: "模块", Hand: func(m *ice.Message, arg ...string) {
+				m.Cmdy(AUTOGEN, mdb.CREATE, arg)
 			}},
 			nfs.SCRIPT: {Name: "script file=hi/hi.js", Help: "脚本", Hand: func(m *ice.Message, arg ...string) {
 				m.Option(mdb.TEXT, strings.TrimSpace(kit.Select(_vimer_defs(m, kit.Ext(m.Option(nfs.FILE))), m.Option(mdb.TEXT))))
@@ -190,28 +208,23 @@ func init() {
 			web.DREAM: {Name: "dream name=hi repos", Help: "空间", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmdy(web.DREAM, cli.START, arg)
 			}},
+			XTERM: {Name: "xterm type=sh name", Help: "终端", Hand: func(m *ice.Message, arg ...string) {
+				m.Cmdy(XTERM, mdb.CREATE, arg)
+			}},
 			PUBLISH: {Name: "publish", Help: "发布", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmdy(PUBLISH, ice.CONTEXTS)
 			}},
 
-			mdb.SEARCH: {Name: "search type name text", Help: "搜索", Hand: func(m *ice.Message, arg ...string) {
-				if arg[0] == mdb.FOREACH && arg[1] == "" {
-					m.PushSearch(mdb.TYPE, "go", mdb.NAME, "src/main.go", mdb.TEXT, chat.MergeCmd(m, ""))
-				}
+			TEMPLATE: {Name: "template", Help: "模板", Hand: func(m *ice.Message, arg ...string) {
+				// _vimer_template(m, arg...)
 			}},
-			mdb.INPUTS: {Name: "inputs", Help: "补全", Hand: func(m *ice.Message, arg ...string) {
-				_vimer_inputs(m, arg...)
-			}},
-			"complete": {Name: "complete", Help: "补全", Hand: func(m *ice.Message, arg ...string) {
+			COMPLETE: {Name: "complete", Help: "补全", Hand: func(m *ice.Message, arg ...string) {
 				_vimer_complete(m, arg...)
 			}},
 			"listTags": {Name: "listTags", Help: "索引", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmdy("web.code.vim.tags", "listTags", arg)
 			}},
 
-			"unpack": {Name: "unpack", Help: "导出文件", Hand: func(m *ice.Message, arg ...string) {
-				m.Cmdy(BINPACK, mdb.EXPORT)
-			}},
 			DEVPACK: {Name: "devpack", Help: "开发模式", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmd(nfs.LINK, ice.GO_SUM, path.Join(ice.SRC_DEBUG, ice.GO_SUM))
 				m.Cmd(nfs.LINK, ice.GO_MOD, path.Join(ice.SRC_DEBUG, ice.GO_MOD))
@@ -228,16 +241,17 @@ func init() {
 			}},
 		}, Hand: func(m *ice.Message, arg ...string) {
 			m.Cmdy(INNER, arg)
+			m.Option("tabs", m.Config("show.tabs"))
 			m.Option("plug", m.Config("show.plug"))
 			m.Option("exts", m.Config("show.exts"))
-			m.Option("tabs", m.Config("show.tabs"))
+
 			if arg[0] != ctx.ACTION {
 				ctx.DisplayLocal(m, "")
-				m.Action(nfs.SAVE, COMPILE, AUTOGEN, nfs.SCRIPT, chat.WEBSITE, web.DREAM)
+				m.Action(nfs.SAVE, COMPILE, AUTOGEN, nfs.SCRIPT, chat.WEBSITE, web.DREAM, XTERM)
 			}
 		}},
 	})
 }
 func ProcessVimer(m *ice.Message, path, file, line string, arg ...string) {
-	ctx.ProcessField(m, "web.code.vimer", kit.Simple(path, file, line), arg...)
+	ctx.ProcessField(m, Prefix(VIMER), kit.Simple(path, file, line), arg...)
 }

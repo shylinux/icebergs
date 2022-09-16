@@ -30,7 +30,6 @@ func _xterm_get(m *ice.Message, h string) _xterm {
 	return mdb.HashTarget(m, h, func() ice.Any {
 		ls := kit.Split(kit.Select(nfs.SH, t))
 		cmd := exec.Command(cli.SystemFind(m, ls[0]), ls[1:]...)
-		cmd.Env = append(os.Environ(), "TERM=xterm")
 
 		tty, err := pty.Start(cmd)
 		m.Assert(err)
@@ -66,7 +65,8 @@ func init() {
 				}
 			}},
 			mdb.CREATE: {Name: "create type=sh name", Help: "创建", Hand: func(m *ice.Message, arg ...string) {
-				mdb.HashCreate(m.Spawn(), mdb.NAME, m.Option(mdb.TYPE), m.OptionSimple(mdb.TYPE, mdb.NAME))
+				mdb.HashCreate(m, mdb.NAME, kit.Split(m.Option(mdb.TYPE))[0], m.OptionSimple(mdb.TYPE, mdb.NAME))
+				m.ProcessRefresh3ms()
 			}},
 			"resize": {Name: "resize", Help: "大小", Hand: func(m *ice.Message, arg ...string) {
 				pty.Setsize(_xterm_get(m, m.Option(mdb.HASH)).File, &pty.Winsize{Rows: uint16(kit.Int(m.Option("rows"))), Cols: uint16(kit.Int(m.Option("cols")))})
@@ -97,7 +97,7 @@ func init() {
 
 func ProcessXterm(m *ice.Message, args []string, arg ...string) {
 	if len(arg) == 0 || arg[0] != ice.RUN {
-		args = []string{m.Cmdx("web.code.xterm", mdb.CREATE, args)}
+		args = []string{m.Cmdx(Prefix(XTERM), mdb.CREATE, args)}
 	}
-	ctx.ProcessField(m, "web.code.xterm", args, arg...)
+	ctx.ProcessField(m, Prefix(XTERM), args, arg...)
 }

@@ -12,6 +12,7 @@ import (
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/nfs"
 	"shylinux.com/x/icebergs/base/ssh"
+	"shylinux.com/x/icebergs/base/web"
 	kit "shylinux.com/x/toolkits"
 )
 
@@ -131,27 +132,12 @@ func init() {
 				_inner_exec(m, arg[0], arg[1], arg[2])
 			}},
 			mdb.SEARCH: {Name: "search", Help: "搜索", Hand: func(m *ice.Message, arg ...string) {
-				_inner_tags(m, m.Option(nfs.PATH), arg[1])
-				if m.Length() == 0 {
+				if _inner_tags(m, m.Option(nfs.PATH), arg[1]); m.Length() == 0 {
 					_inner_tags(m, "", arg[1])
-				}
-				return
-				m.Option(nfs.DIR_ROOT, arg[2])
-				m.Option(cli.CMD_DIR, kit.Path(arg[2]))
-				m.Cmdy(mdb.SEARCH, arg[0], arg[1], arg[2])
-				m.Cmd(FAVOR, arg[1], ice.OptionFields(""), func(value ice.Maps) {
-					if p := path.Join(value[nfs.PATH], value[nfs.FILE]); strings.HasPrefix(p, m.Option(nfs.PATH)) {
-						m.Push(nfs.FILE, strings.TrimPrefix(p, m.Option(nfs.PATH)))
-						m.Push(nfs.LINE, value[nfs.LINE])
-						m.Push(mdb.TEXT, value[mdb.TEXT])
-					}
-				})
-				if m.StatusTimeCount(mdb.INDEX, 0); m.Length() == 0 {
-					m.Cmdy(INNER, nfs.GREP, arg[1])
 				}
 			}},
 			mdb.INPUTS: {Name: "inputs", Help: "补全", Hand: func(m *ice.Message, arg ...string) {
-				if m.Option(ctx.ACTION) == "website" {
+				if m.Option(ctx.ACTION) == web.WEBSITE {
 					switch arg[0] {
 					case nfs.FILE:
 						m.Cmdy(nfs.DIR, nfs.PWD, nfs.DIR_CLI_FIELDS, kit.Dict(nfs.DIR_ROOT, "src/website/")).ProcessAgain()
@@ -163,16 +149,13 @@ func init() {
 				case cli.MAIN:
 					m.Cmdy(nfs.DIR, ice.SRC, nfs.DIR_CLI_FIELDS, kit.Dict(nfs.DIR_REG, `.*\.go`)).ProcessAgain()
 				case mdb.ZONE:
-					m.Option(nfs.DIR_ROOT, ice.SRC)
-					m.Option(nfs.DIR_TYPE, nfs.DIR)
-					m.Cmdy(nfs.DIR, nfs.PWD, mdb.NAME).RenameAppend(mdb.NAME, mdb.ZONE)
+					m.Cmdy(nfs.DIR, nfs.PWD, mdb.NAME, kit.Dict(nfs.DIR_ROOT, ice.SRC, nfs.DIR_TYPE, nfs.DIR)).RenameAppend(mdb.NAME, mdb.ZONE)
 				case nfs.PATH:
 					m.Cmdy(nfs.DIR, arg[1:], nfs.DIR_CLI_FIELDS).ProcessAgain()
 				case nfs.FILE:
 					p := kit.Select(nfs.PWD, arg, 1)
 					m.Option(nfs.DIR_ROOT, m.Option(nfs.PATH))
-					m.Cmdy(nfs.DIR, kit.Select(path.Dir(p), p, strings.HasSuffix(p, ice.FS))+ice.PS, nfs.DIR_CLI_FIELDS)
-					m.ProcessAgain()
+					m.Cmdy(nfs.DIR, kit.Select(path.Dir(p), p, strings.HasSuffix(p, ice.FS))+ice.PS, nfs.DIR_CLI_FIELDS).ProcessAgain()
 				case "url":
 					m.Option(nfs.DIR_ROOT, "usr/volcanos/plugin/local/code/")
 					m.Cmdy(nfs.DIR, nfs.PWD, nfs.DIR_CLI_FIELDS, kit.Dict(nfs.DIR_DEEP, ice.TRUE)).ProcessAgain()
@@ -182,8 +165,7 @@ func init() {
 			}},
 
 			nfs.GREP: {Name: "grep", Help: "搜索", Hand: func(m *ice.Message, arg ...string) {
-				m.Cmdy(nfs.GREP, m.Option(nfs.PATH), arg[0])
-				m.StatusTimeCount(mdb.INDEX, 0)
+				m.Cmdy(nfs.GREP, m.Option(nfs.PATH), arg[0]).StatusTimeCount(mdb.INDEX, 0)
 			}},
 			nfs.TAGS: {Name: "tags", Help: "索引", Hand: func(m *ice.Message, arg ...string) {
 				if _inner_tags(m, m.Option(nfs.PATH), arg[0]); m.Length() == 0 {
@@ -215,9 +197,9 @@ func init() {
 			m.Option("keys", list)
 			m.Option("module", ice.Info.Make.Module)
 
+			m.Option("tabs", m.Config("show.tabs"))
 			m.Option("plug", m.Config("show.plug"))
 			m.Option("exts", m.Config("show.exts"))
-			m.Option("tabs", m.Config("show.tabs"))
 
 			arg[1] = strings.Split(arg[1], ice.FS)[0]
 			if _inner_list(m, kit.Ext(arg[1]), arg[1], arg[0]); m.IsErrNotFound() {
@@ -245,7 +227,6 @@ func init() {
 		)},
 	}})
 }
-
 func PlugAction() ice.Actions {
 	return ice.Actions{
 		mdb.PLUGIN: {Hand: func(m *ice.Message, arg ...string) { m.Echo(m.Config(PLUG)) }},

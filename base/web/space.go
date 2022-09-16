@@ -12,6 +12,7 @@ import (
 	"shylinux.com/x/icebergs/base/cli"
 	"shylinux.com/x/icebergs/base/gdb"
 	"shylinux.com/x/icebergs/base/mdb"
+	"shylinux.com/x/icebergs/base/nfs"
 	"shylinux.com/x/icebergs/base/tcp"
 	kit "shylinux.com/x/toolkits"
 	"shylinux.com/x/websocket"
@@ -348,15 +349,25 @@ func init() {
 				m.StatusTimeCount("nCPU", ncpu, "nmem", kit.Format("%.2fG", nmem/1000.0))
 				m.Debug("what %v", m.FormatMeta())
 			}},
+			cli.OPEN: {Name: "open", Help: "打开", Hand: func(m *ice.Message, arg ...string) {
+				m.ProcessOpen(MergePod(m, m.Option(mdb.NAME), "", ""))
+			}},
+			"vimer": {Name: "vimer", Help: "编辑", Hand: func(m *ice.Message, arg ...string) {
+				m.ProcessOpen(MergePod(m, m.Option(mdb.NAME)+"/cmd/web.code.vimer", "", ""))
+			}},
+			"xterm": {Name: "xterm", Help: "命令", Hand: func(m *ice.Message, arg ...string) {
+				m.ProcessOpen(MergePod(m, m.Option(mdb.NAME)+"/cmd/web.code.xterm", mdb.HASH,
+					m.Cmdx(SPACE, m.Option(mdb.NAME), "web.code.xterm", mdb.CREATE, mdb.TYPE, nfs.SH, mdb.NAME, "xterm")))
+			}},
 		}, mdb.HashCloseAction()), Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) < 2 { // 节点列表
 				if mdb.HashSelect(m, arg...); len(arg) == 0 {
 					m.Tables(func(value ice.Maps) {
 						switch value[mdb.TYPE] {
-						case MASTER:
-							m.PushAnchor(value[mdb.NAME], m.CmdAppend(SPIDE, value[mdb.NAME], CLIENT_URL))
+						case SERVER, WORKER:
+							m.PushButton(cli.OPEN, "vimer", "xterm")
 						default:
-							m.PushAnchor(value[mdb.NAME], MergePod(m, value[mdb.NAME]))
+							m.PushButton("")
 						}
 					})
 					m.Sort("type,name,text")

@@ -60,12 +60,14 @@ func init() {
 			mdb.INPUTS: {Name: "inputs", Help: "补全", Hand: func(m *ice.Message, arg ...string) {
 				switch mdb.HashInputs(m, arg); arg[0] {
 				case mdb.TYPE:
-					m.Push(arg[0], "ice.bin source stdio", "tmux attach -t miss", "node", "python", "bash", "sh")
+					m.Push(arg[0], "ice.bin source stdio", "tmux attach -t miss", "docker run -w /root -it alpine", "python", "node", "bash", "sh")
 				case mdb.NAME:
-					m.Push(arg[0], path.Base(m.Option(mdb.TYPE)))
+					m.Push(arg[0], ice.Info.HostName, path.Base(m.Option(mdb.TYPE)))
 				}
 			}},
-			mdb.CREATE: {Name: "create type=sh name=xterm", Help: "创建"},
+			mdb.CREATE: {Name: "create type=sh name", Help: "创建", Hand: func(m *ice.Message, arg ...string) {
+				mdb.HashCreate(m.Spawn(), mdb.NAME, m.Option(mdb.TYPE), m.OptionSimple(mdb.TYPE, mdb.NAME))
+			}},
 			"resize": {Name: "resize", Help: "大小", Hand: func(m *ice.Message, arg ...string) {
 				pty.Setsize(_xterm_get(m, m.Option(mdb.HASH)).File, &pty.Winsize{Rows: uint16(kit.Int(m.Option("rows"))), Cols: uint16(kit.Int(m.Option("cols")))})
 			}},
@@ -78,8 +80,12 @@ func init() {
 				_xterm_get(m, kit.Select(m.Option(mdb.HASH), arg, 0)).Write([]byte(m.Cmdx(PUBLISH, ice.CONTEXTS, INSTALL) + ice.NL))
 				m.ProcessHold()
 			}},
+			web.WEBSITE: {Name: "website", Help: "打开", Hand: func(m *ice.Message, arg ...string) {
+				m.ProcessOpen(web.MergePodCmd(m, "", m.PrefixKey(), mdb.HASH, m.Option(mdb.HASH)))
+			}},
 		}, mdb.HashAction(mdb.FIELD, "time,hash,type,name,text")), Hand: func(m *ice.Message, arg ...string) {
 			if mdb.HashSelect(m, arg...); len(arg) == 0 {
+				m.PushAction(web.WEBSITE, mdb.REMOVE)
 				m.Action(mdb.CREATE, mdb.PRUNES)
 			} else {
 				m.Action("full", INSTALL)

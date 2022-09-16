@@ -133,7 +133,9 @@ func init() {
 				if list[value[nfs.PATH]] {
 					return
 				}
-				list[value[nfs.PATH]] = true
+				if list[value[nfs.PATH]] = true; strings.Contains(value[nfs.PATH], "/go/pkg/mod/") {
+					value[nfs.PATH] = "/require/" + strings.Split(value[nfs.PATH], "/go/pkg/mod/")[1]
+				}
 				_binpack_file(m, w, value[nfs.PATH])
 			})
 		})

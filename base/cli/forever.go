@@ -28,8 +28,7 @@ func init() {
 					}
 				}
 				for _, v := range os.Environ() {
-					ls := kit.Split(v, "=", "=")
-					if kit.IndexOf(env, ls[0]) == -1 {
+					if ls := kit.Split(v, "=", "="); kit.IndexOf(env, ls[0]) == -1 && len(ls) > 1 {
 						env = append(env, ls[0], ls[1])
 					}
 				}

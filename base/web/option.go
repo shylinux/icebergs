@@ -141,3 +141,13 @@ func MergeLink(m Message, url string, arg ...ice.Any) string {
 func MergePod(m Message, pod string, arg ...ice.Any) string {
 	return kit.MergePOD(kit.Select(ice.Info.Domain, m.Option(ice.MSG_USERWEB)), pod, arg...)
 }
+func MergePodCmd(m Message, pod, cmd string, arg ...ice.Any) string {
+	p := "/chat"
+	if pod != "" {
+		p += "/pod/" + kit.Keys(m.Option(ice.MSG_USERPOD), pod)
+	}
+	if cmd != "" {
+		p += "/cmd/" + cmd
+	}
+	return kit.MergeURL2(kit.Select(ice.Info.Domain, m.Option(ice.MSG_USERWEB)), p, arg...)
+}

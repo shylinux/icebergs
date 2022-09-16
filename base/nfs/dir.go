@@ -29,15 +29,18 @@ func _dir_hash(m *ice.Message, p string) string {
 	return ""
 }
 func _dir_list(m *ice.Message, root string, name string, level int, deep bool, dir_type string, dir_reg *regexp.Regexp, fields []string) *ice.Message {
-	list, e := ReadDir(m, path.Join(root, name))
-	if e != nil && len(list) == 0 { // 单个文件
-		ls, _ := ReadDir(m, path.Dir(path.Join(root, name)))
-		for _, s := range ls {
-			if s.Name() == path.Base(name) {
-				list = append(list, s)
+	list, _ := ReadDir(m, path.Join(root, name))
+
+	if len(list) == 0 { // 单个文件
+		if s, e := StatFile(m, path.Join(root, name)); e == nil && !s.IsDir() {
+			ls, _ := ReadDir(m, path.Dir(path.Join(root, name)))
+			for _, s := range ls {
+				if s.Name() == path.Base(name) {
+					list = append(list, s)
+				}
 			}
+			name, deep = path.Dir(name), false
 		}
-		name, deep = path.Dir(name), false
 	}
 
 	for _, f := range list {

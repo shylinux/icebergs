@@ -60,12 +60,12 @@ func init() {
 		}, Hand: func(m *ice.Message, arg ...string) {
 			// 下载依赖
 			_autogen_version(m.Spawn())
-			m.Cmd(cli.SYSTEM, GO, "get", "shylinux.com/x/ice")
 
 			// 执行编译
 			web.PushStream(m)
 			main, file, goos, arch := _compile_target(m, arg...)
 			m.Optionv(cli.CMD_ENV, kit.Simple(m.Configv(cli.ENV), cli.HOME, kit.Env(cli.HOME), cli.PATH, kit.Env(cli.PATH), cli.GOOS, goos, cli.GOARCH, arch))
+			m.Cmd(cli.SYSTEM, GO, "get", "shylinux.com/x/ice")
 			if msg := m.Cmd(cli.SYSTEM, GO, cli.BUILD, "-o", file, main, ice.SRC_VERSION_GO, ice.SRC_BINPACK_GO); !cli.IsSuccess(msg) {
 				m.Copy(msg)
 				return

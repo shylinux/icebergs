@@ -237,6 +237,10 @@ func init() {
 			m.Cmd(mdb.SEARCH, mdb.CREATE, GODOC, m.Prefix(GO))
 			m.Cmd(mdb.ENGINE, mdb.CREATE, GO, m.Prefix(GO))
 
+			m.Cmd(TEMPLATE, mdb.CREATE, GO, m.Prefix(GO))
+			m.Cmd(COMPLETE, mdb.CREATE, GO, m.Prefix(GO))
+			m.Cmd(NAVIGATE, mdb.CREATE, GO, m.Prefix(GO))
+
 			LoadPlug(m, GO, MOD, SUM)
 			for _, k := range []string{GO, MOD, SUM, GODOC} {
 				m.Cmd(mdb.RENDER, mdb.CREATE, k, m.Prefix(k))
@@ -273,6 +277,57 @@ func init() {
 			}},
 			mdb.ENGINE: {Hand: func(m *ice.Message, arg ...string) { _go_exec(m, arg...) }},
 			mdb.RENDER: {Hand: func(m *ice.Message, arg ...string) { _go_show(m, arg...) }},
+			TEMPLATE: {Hand: func(m *ice.Message, arg ...string) {
+				if kit.Ext(m.Option(mdb.FILE)) != m.CommandKey() {
+					return
+				}
+			}},
+			COMPLETE: {Hand: func(m *ice.Message, arg ...string) {
+				if arg[0] == mdb.FOREACH && arg[2] == nfs.SCRIPT {
+					return
+				}
+
+				if m.Option("text") == "" {
+					m.Push(mdb.TEXT, kit.List("package", "import", "const", "type", "func", "var"))
+					return
+				}
+				if strings.HasSuffix(m.Option("text"), ".") {
+					key := kit.Slice(kit.Split(m.Option("text"), "\t ."), -1)[0]
+					switch key {
+					case "m", "msg":
+						key = "icebergs.Message"
+					case "kit":
+						key = "toolkits"
+					case "ice":
+						key = "icebergs"
+					}
+
+					for _, l := range strings.Split(m.Cmdx("cli.system", "go", "doc", key), ice.NL) {
+						ls := kit.Split(l)
+						if len(ls) < 2 {
+							continue
+						}
+						switch ls[0] {
+						case "const", "var", "func":
+							m.Push(mdb.NAME, ls[1])
+							m.Push(mdb.TEXT, l)
+						}
+					}
+					return
+				}
+
+				m.Push(mdb.TEXT, "m")
+				m.Push(mdb.TEXT, "msg")
+				m.Push(mdb.TEXT, "ice")
+				m.Push(mdb.TEXT, "kit")
+				for _, l := range strings.Split(m.Cmdx("cli.system", "go", "list", "std"), ice.NL) {
+					m.Push(mdb.TEXT, kit.Slice(kit.Split(l, ice.PS), -1)[0])
+				}
+			}},
+			NAVIGATE: {Hand: func(m *ice.Message, arg ...string) {
+				m.Option("text", kit.Slice(kit.Split(m.Option("text"), "."), -1)[0])
+				_inner_tags(m, "", m.Option("text"))
+			}},
 		}, PlugAction())},
 	}, Configs: ice.Configs{
 		MOD: {Name: MOD, Help: "模块", Value: kit.Data(PLUG, kit.Dict(

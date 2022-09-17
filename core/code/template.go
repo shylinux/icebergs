@@ -10,9 +10,10 @@ import (
 	kit "shylinux.com/x/toolkits"
 )
 
-const TEMPLATE = "template"
+// const TEMPLATE = "template"
 
 func init() {
+	return
 	Index.MergeCommands(ice.Commands{
 		TEMPLATE: {Name: "template name auto", Help: "模板", Actions: ice.MergeActions(ice.Actions{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {

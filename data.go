@@ -12,8 +12,8 @@ func (m *Message) ActionKey() string {
 func (m *Message) CommandKey() string {
 	return strings.TrimSuffix(strings.TrimPrefix(m._key, PS), PS)
 }
-func (m *Message) PrefixKey(arg ...string) string {
-	return kit.Keys(m.Prefix(m.CommandKey()), arg)
+func (m *Message) PrefixKey(arg ...Any) string {
+	return kit.Keys(m.Prefix(m.CommandKey()), kit.Keys(arg))
 }
 func (m *Message) Prefix(arg ...string) string {
 	return m.Target().PrefixKey(arg...)

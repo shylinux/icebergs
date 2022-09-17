@@ -155,20 +155,6 @@ func CmdAction(args ...ice.Any) ice.Actions {
 		}},
 	}
 }
-func ProcessFloat(m *ice.Message, arg ...string) {
-	m.Option(ice.MSG_PROCESS, "_float")
-	m.Option(ice.PROCESS_ARG, arg)
-	m.Cmdy(COMMAND, arg[0])
-}
-func ProcessField(m *ice.Message, cmd string, args []string, arg ...string) {
-	if len(arg) > 0 && arg[0] == ice.RUN {
-		m.Cmdy(cmd, arg[1:])
-	} else {
-		if m.Cmdy(COMMAND, cmd).ProcessField(m.ActionKey(), ice.RUN); len(args) > 0 {
-			m.Push(ARGS, kit.Format(args))
-		}
-	}
-}
 func PodCmd(m *ice.Message, arg ...ice.Any) bool {
 	if pod := m.Option(ice.POD); pod != "" {
 		if m.Option(ice.POD, ""); m.Option(ice.MSG_UPLOAD) != "" {

@@ -69,11 +69,37 @@ func init() {
 	Index.Register(&ice.Context{Name: JS, Help: "前端", Commands: ice.Commands{
 		JS: {Name: "js", Help: "前端", Actions: ice.MergeActions(ice.Actions{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
-				for _, cmd := range []string{mdb.SEARCH, mdb.ENGINE, mdb.RENDER, mdb.PLUGIN} {
+				for _, cmd := range []string{
+					TEMPLATE, COMPLETE, NAVIGATE,
+					mdb.PLUGIN, mdb.RENDER, mdb.ENGINE, mdb.SEARCH,
+				} {
 					m.Cmd(cmd, mdb.CREATE, JSON, m.PrefixKey())
 					m.Cmd(cmd, mdb.CREATE, JS, m.PrefixKey())
 				}
 				LoadPlug(m, JS)
+			}},
+			TEMPLATE: {Hand: func(m *ice.Message, arg ...string) {
+				if kit.Ext(m.Option(mdb.FILE)) != m.CommandKey() {
+					return
+				}
+				m.Echo(`
+Volcanos(chat.ONIMPORT, {help: "导入数据", _init: function(can, msg) {
+	msg.Echo("hello world")
+	msg.Dump(can)
+}})
+`)
+			}},
+			COMPLETE: {Hand: func(m *ice.Message, arg ...string) {
+				if arg[0] == mdb.FOREACH && arg[2] == nfs.SCRIPT {
+					m.Push(nfs.FILE, strings.ReplaceAll(arg[1], ice.PT+kit.Ext(arg[1]), ice.PT+JS))
+					return
+				}
+				Complete(m, m.Option("text"), kit.Dict(
+					"", kit.List("function", "if"),
+					"msg", kit.List("Push", "Echo"),
+				))
+			}},
+			NAVIGATE: {Hand: func(m *ice.Message, arg ...string) {
 			}},
 			mdb.RENDER: {Hand: func(m *ice.Message, arg ...string) {
 				key := ctx.GetFileCmd(kit.Replace(path.Join(arg[2], arg[1]), ".js", ".go"))

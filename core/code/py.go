@@ -5,6 +5,7 @@ import (
 
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/cli"
+	"shylinux.com/x/icebergs/base/gdb"
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/nfs"
 	kit "shylinux.com/x/toolkits"
@@ -39,6 +40,15 @@ func init() {
 				})
 				m.Cmd(mdb.ENGINE, mdb.CREATE, PY, m.PrefixKey())
 				m.Cmd(mdb.RENDER, mdb.CREATE, PY, m.PrefixKey())
+				gdb.Watch(m, VIMER_TEMPLATE)
+			}},
+			VIMER_TEMPLATE: {Hand: func(m *ice.Message, arg ...string) {
+				if kit.Ext(m.Option(mdb.FILE)) != m.CommandKey() {
+					return
+				}
+				m.Echo(`
+print "hello world"
+`)
 			}},
 			mdb.ENGINE: {Hand: func(m *ice.Message, arg ...string) {
 				_py_main_script(m, arg...)

@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	ice "shylinux.com/x/icebergs"
+	"shylinux.com/x/icebergs/base/mdb"
 	kit "shylinux.com/x/toolkits"
 )
 
@@ -57,4 +58,7 @@ func DisplayBase(m *ice.Message, file string, arg ...ice.Any) *ice.Message {
 	}
 	m.Option(ice.MSG_DISPLAY, kit.MergeURL(ice.DisplayBase(file)[ice.DISPLAY], arg...))
 	return m
+}
+func Toolkit(m *ice.Message, arg ...string) {
+	m.Option(ice.MSG_TOOLKIT, kit.Select(m.Config(mdb.TOOLS), kit.Fields(arg)))
 }

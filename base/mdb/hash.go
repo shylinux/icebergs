@@ -256,7 +256,7 @@ func HashSelect(m *ice.Message, arg ...string) *ice.Message {
 	return m.StatusTime()
 }
 func HashPrunes(m *ice.Message, cb func(Maps) bool) *ice.Message {
-	expire := kit.Time(kit.Select(m.Time("-72h"), m.Option(EXPIRE)))
+	expire := kit.Time(kit.Select(m.Time("-72h"), m.Option("before")))
 	m.Cmd("", func(value Maps) {
 		if kit.Time(value[TIME]) > expire {
 			return

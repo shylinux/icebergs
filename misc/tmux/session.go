@@ -158,7 +158,7 @@ func init() {
 			}},
 
 			code.XTERM: {Name: "xterm", Help: "终端", Hand: func(m *ice.Message, arg ...string) {
-				code.ProcessXterm(m, []string{mdb.TYPE, "tmux attach -t " + m.Option(SESSION)}, arg...)
+				ctx.Process(m, code.XTERM, []string{mdb.TYPE, "tmux attach -t " + m.Option(SESSION)}, arg...)
 			}},
 			SCRIPT: {Name: "script name", Help: "脚本", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmd(SCRIPT, m.Option(mdb.NAME), func(value ice.Maps) {

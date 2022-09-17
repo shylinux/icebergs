@@ -190,6 +190,7 @@ const ( // MSG
 
 	MSG_PROCESS = "_process"
 	MSG_DISPLAY = "_display"
+	MSG_TOOLKIT = "_toolkit"
 
 	MSG_USERIP   = "user.ip"
 	MSG_USERUA   = "user.ua"

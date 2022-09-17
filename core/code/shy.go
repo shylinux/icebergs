@@ -7,6 +7,7 @@ import (
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/cli"
 	"shylinux.com/x/icebergs/base/ctx"
+	"shylinux.com/x/icebergs/base/gdb"
 	"shylinux.com/x/icebergs/base/mdb"
 	kit "shylinux.com/x/toolkits"
 )
@@ -41,6 +42,15 @@ func init() {
 					m.Cmd(cmd, mdb.CREATE, SHY, m.PrefixKey())
 				}
 				LoadPlug(m, SHY)
+				gdb.Watch(m, VIMER_TEMPLATE)
+			}},
+			VIMER_TEMPLATE: {Hand: func(m *ice.Message, arg ...string) {
+				if kit.Ext(m.Option(mdb.FILE)) != m.CommandKey() {
+					return
+				}
+				m.Echo(`
+chapter "hi"
+`)
 			}},
 			mdb.RENDER: {Hand: func(m *ice.Message, arg ...string) {
 				ctx.ProcessCommand(m, "web.wiki.word", kit.Simple(path.Join(arg[2], arg[1])))

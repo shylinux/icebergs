@@ -119,6 +119,7 @@ func PushPodCmd(m *ice.Message, cmd string, arg ...string) {
 
 type Message interface {
 	Option(key string, arg ...ice.Any) string
+	PrefixKey(arg ...ice.Any) string
 }
 
 func OptionAgentIs(m Message, arg ...string) bool {
@@ -143,11 +144,11 @@ func MergePod(m Message, pod string, arg ...ice.Any) string {
 }
 func MergePodCmd(m Message, pod, cmd string, arg ...ice.Any) string {
 	p := "/chat"
-	if pod != "" {
-		p += "/pod/" + kit.Keys(m.Option(ice.MSG_USERPOD), pod)
-	}
-	if cmd != "" {
-		p += "/cmd/" + cmd
-	}
+	p += "/pod/" + kit.Keys(m.Option(ice.MSG_USERPOD), pod)
+	p = kit.Select(p, "/chat/", p == "/chat/pod/")
+	p += "/cmd/" + kit.Select(m.PrefixKey(), cmd)
 	return kit.MergeURL2(kit.Select(ice.Info.Domain, m.Option(ice.MSG_USERWEB)), p, arg...)
+}
+func ProcessWebsite(m *ice.Message, pod, cmd string, arg ...ice.Any) {
+	m.ProcessOpen(MergePodCmd(m, pod, cmd, arg...))
 }

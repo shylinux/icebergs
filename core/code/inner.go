@@ -81,7 +81,7 @@ func _inner_tags(m *ice.Message, dir string, value string) {
 		for i := 1; bio.Scan(); i++ {
 			if i == line || bio.Text() == text {
 				if dir == "" {
-					m.PushRecord(kit.Dict(nfs.PATH, path.Dir(file), nfs.FILE, path.Base(file), nfs.LINE, kit.Format(i), mdb.TEXT, bio.Text()))
+					m.PushRecord(kit.Dict(nfs.PATH, path.Dir(file)+ice.PS, nfs.FILE, path.Base(file), nfs.LINE, kit.Format(i), mdb.TEXT, bio.Text()))
 				} else {
 					m.PushRecord(kit.Dict(nfs.PATH, dir, nfs.FILE, strings.TrimPrefix(file, nfs.PWD), nfs.LINE, kit.Format(i), mdb.TEXT, bio.Text()))
 				}
@@ -176,6 +176,9 @@ func init() {
 				_inner_make(m, m.Cmd(cli.SYSTEM, cli.MAKE, arg))
 			}},
 			FAVOR: {Name: "favor", Help: "收藏"},
+			NAVIGATE: {Name: "navigate", Help: "跳转", Hand: func(m *ice.Message, arg ...string) {
+				m.Cmdy(NAVIGATE, kit.Ext(m.Option(mdb.FILE)), m.Option(nfs.FILE), m.Option(nfs.PATH))
+			}},
 		}, ctx.CmdAction()), Hand: func(m *ice.Message, arg ...string) {
 			if arg[0] = strings.Split(arg[0], ice.FS)[0]; !strings.HasSuffix(arg[0], ice.PS) {
 				arg[1] = kit.Slice(strings.Split(arg[0], ice.PS), -1)[0]

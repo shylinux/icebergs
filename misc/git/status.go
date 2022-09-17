@@ -169,7 +169,7 @@ func _status_list(m *ice.Message) (files, adds, dels int, last time.Time) {
 			default:
 				m.Push(TAGS, "")
 				if strings.Contains(vs[0], "??") {
-					list = append(list, ADD)
+					list = append(list, ADD, nfs.TRASH)
 				} else {
 					list = append(list, COMMIT)
 				}
@@ -304,6 +304,9 @@ func init() {
 			}},
 			code.PUBLISH: {Name: "publish", Help: "发布", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmdy(code.PUBLISH, ice.CONTEXTS, ice.MISC, ice.CORE)
+			}},
+			nfs.TRASH: {Name: "trash", Help: "删除", Hand: func(m *ice.Message, arg ...string) {
+				m.Cmd(nfs.TRASH, path.Join(_repos_path(m.Option(REPOS)), m.Option(nfs.FILE)))
 			}},
 			code.BINPACK: {Name: "binpack", Help: "发布模式", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmd(nfs.LINK, ice.GO_SUM, path.Join(ice.SRC_RELEASE, ice.GO_SUM))

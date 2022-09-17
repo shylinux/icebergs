@@ -7,6 +7,7 @@ import (
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/cli"
 	"shylinux.com/x/icebergs/base/ctx"
+	"shylinux.com/x/icebergs/base/gdb"
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/nfs"
 	"shylinux.com/x/icebergs/base/web"
@@ -14,59 +15,6 @@ import (
 	kit "shylinux.com/x/toolkits"
 )
 
-func _vimer_defs(m *ice.Message, ext string) string {
-	defs := kit.Dict(
-		nfs.SH, `
-_list
-`,
-		nfs.SHY, `
-chapter "hi"
-`,
-		nfs.PY, `
-print "hello world"
-`,
-		nfs.JS, `
-Volcanos(chat.ONIMPORT, {help: "导入数据", _init: function(can, msg) {
-	msg.Echo("hello world")
-	msg.Dump(can)
-}})
-`,
-		nfs.ZML, `
-{
-	username
-	系统
-		命令 index cli.system
-		共享 index cli.qrcode
-	代码
-		趋势 index web.code.git.trend args icebergs action auto 
-		状态 index web.code.git.status args icebergs
-	脚本
-		终端 index hi/hi.sh
-		文档 index hi/hi.shy
-		数据 index hi/hi.py
-		后端 index hi/hi.go
-		前端 index hi/hi.js
-}
-`,
-		nfs.IML, `
-系统
-	命令
-		cli.system
-	环境
-		cli.runtime
-开发
-	模块
-		hi/hi.go
-	脚本
-		hi/hi.sh
-		hi/hi.shy
-		hi/hi.py
-		hi/hi.go
-		hi/hi.js
-`,
-	)
-	return kit.Format(defs[ext])
-}
 func _vimer_list(m *ice.Message, dir string, arg ...string) { // field
 	m.Copy(m.Cmd(nfs.DIR, nfs.PWD, kit.Dict(nfs.DIR_ROOT, dir, nfs.DIR_DEEP, ice.TRUE)).Cut(nfs.PATH).RenameAppend(nfs.PATH, kit.Select(mdb.NAME, arg, 0)))
 }
@@ -107,39 +55,6 @@ func _vimer_inputs(m *ice.Message, arg ...string) {
 		}
 	}
 }
-func _vimer_complete(m *ice.Message, arg ...string) {
-	switch left := kit.Select("", kit.Slice(kit.Split(m.Option(mdb.TEXT), "\t \n`"), -1), 0); kit.Ext(m.Option(nfs.FILE)) {
-	case nfs.ZML:
-		switch left {
-		case mdb.TYPE:
-			m.Push(mdb.NAME, "menu")
-
-		case ctx.INDEX:
-			m.Cmdy(ctx.COMMAND, mdb.SEARCH, ctx.COMMAND, "", "", ice.OptionFields("index,name,text"))
-			_vimer_list(m, ice.SRC, ctx.INDEX)
-
-		case ctx.ACTION:
-			m.Push(mdb.NAME, "auto")
-			m.Push(mdb.NAME, "push")
-			m.Push(mdb.NAME, "open")
-
-		default:
-			if strings.HasSuffix(m.Option(mdb.TEXT), " ") {
-				m.Push(mdb.NAME, "index")
-				m.Push(mdb.NAME, "action")
-				m.Push(mdb.NAME, "args")
-				m.Push(mdb.NAME, "type")
-			} else if m.Option(mdb.TEXT) == "" {
-				m.Push(mdb.NAME, "head")
-				m.Push(mdb.NAME, "left")
-				m.Push(mdb.NAME, "main")
-				m.Push(mdb.NAME, "foot")
-			}
-		}
-	default:
-		m.Cmdy(mdb.ENGINE, kit.Ext(m.Option(nfs.FILE)), m.Option(nfs.FILE), m.Option(nfs.PATH))
-	}
-}
 func _vimer_go_complete(m *ice.Message, name string, arg ...string) *ice.Message {
 	kit.Fetch(kit.Split(m.Cmdx(cli.SYSTEM, GO, "doc", name), ice.NL, ice.NL, ice.NL), func(index int, value string) {
 		if ls := kit.Split(value); len(ls) > 1 {
@@ -160,9 +75,6 @@ func _vimer_go_complete(m *ice.Message, name string, arg ...string) *ice.Message
 const (
 	VIMER_TEMPLATE = "vimer.template"
 	VIMER_COMPLETE = "vimer.complete"
-
-	COMPLETE = "complete"
-	// TEMPLATE = "template"
 )
 const VIMER = "vimer"
 
@@ -174,18 +86,15 @@ func init() {
 					m.PushSearch(mdb.TYPE, "go", mdb.NAME, "src/main.go", mdb.TEXT, chat.MergeCmd(m, ""))
 				}
 			}},
-			mdb.INPUTS: {Name: "inputs", Help: "补全", Hand: func(m *ice.Message, arg ...string) {
-				_vimer_inputs(m, arg...)
-			}},
-
 			nfs.SAVE: {Name: "save type file path", Help: "保存", Hand: func(m *ice.Message, arg ...string) {
-				m.Option(nfs.CONTENT, kit.Select(_vimer_defs(m, kit.Ext(m.Option(nfs.FILE))), m.Option(nfs.CONTENT)))
+				if m.Option(nfs.CONTENT) == "" {
+					m.Option(nfs.CONTENT, gdb.Event(m.Spawn(), VIMER_TEMPLATE).Result())
+				}
 				m.Cmdy(nfs.SAVE, path.Join(m.Option(nfs.PATH), m.Option(nfs.FILE)))
 			}},
 			nfs.TRASH: {Name: "trash path", Help: "删除", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmdy(nfs.TRASH, arg[0])
 			}},
-
 			COMPILE: {Name: "compile", Help: "编译", Hand: func(m *ice.Message, arg ...string) {
 				if msg := m.Cmd(COMPILE, ice.SRC_MAIN_GO, ice.BIN_ICE_BIN); cli.IsSuccess(msg) {
 					m.Cmd(UPGRADE, cli.RESTART)
@@ -197,11 +106,12 @@ func init() {
 				m.Cmdy(AUTOGEN, mdb.CREATE, arg)
 			}},
 			nfs.SCRIPT: {Name: "script file=hi/hi.js", Help: "脚本", Hand: func(m *ice.Message, arg ...string) {
-				m.Option(mdb.TEXT, strings.TrimSpace(kit.Select(_vimer_defs(m, kit.Ext(m.Option(nfs.FILE))), m.Option(mdb.TEXT))))
-				m.Cmdy(TEMPLATE, nfs.DEFS)
+				m.Cmdy(nfs.DEFS, path.Join(m.Option(nfs.PATH), m.Option(nfs.FILE)), m.Cmdx(TEMPLATE, kit.Ext(m.Option(nfs.FILE)), m.Option(nfs.FILE), m.Option(nfs.PATH)))
 			}},
 			web.WEBSITE: {Name: "website file=hi.zml", Help: "网页", Hand: func(m *ice.Message, arg ...string) {
-				m.Option(mdb.TEXT, strings.TrimSpace(kit.Select(_vimer_defs(m, kit.Ext(m.Option(nfs.FILE))), m.Option(mdb.TEXT))))
+				if m.Option(mdb.TEXT) == "" {
+					m.Option(mdb.TEXT, gdb.Event(m.Spawn(), VIMER_TEMPLATE).Result())
+				}
 				m.Option(nfs.FILE, path.Join(web.WEBSITE, m.Option(nfs.FILE)))
 				m.Cmdy(TEMPLATE, nfs.DEFS)
 			}},
@@ -215,12 +125,20 @@ func init() {
 				m.Cmdy(PUBLISH, ice.CONTEXTS)
 			}},
 
+			mdb.INPUTS: {Name: "inputs", Help: "补全", Hand: func(m *ice.Message, arg ...string) {
+				switch arg[0] {
+				case nfs.FILE:
+					m.Cmdy(COMPLETE, mdb.FOREACH, arg[1], m.Option(ctx.ACTION))
+				}
+				_vimer_inputs(m, arg...)
+			}},
 			TEMPLATE: {Name: "template", Help: "模板", Hand: func(m *ice.Message, arg ...string) {
-				// _vimer_template(m, arg...)
+				m.Cmdy(TEMPLATE, kit.Ext(m.Option(mdb.FILE)), m.Option(nfs.FILE), m.Option(nfs.PATH))
 			}},
 			COMPLETE: {Name: "complete", Help: "补全", Hand: func(m *ice.Message, arg ...string) {
-				_vimer_complete(m, arg...)
+				m.Cmdy(COMPLETE, kit.Ext(m.Option(mdb.FILE)), m.Option(nfs.FILE), m.Option(nfs.PATH))
 			}},
+
 			"listTags": {Name: "listTags", Help: "索引", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmdy("web.code.vim.tags", "listTags", arg)
 			}},
@@ -254,4 +172,58 @@ func init() {
 }
 func ProcessVimer(m *ice.Message, path, file, line string, arg ...string) {
 	ctx.ProcessField(m, Prefix(VIMER), kit.Simple(path, file, line), arg...)
+}
+
+const TEMPLATE = "template"
+const COMPLETE = "complete"
+const NAVIGATE = "navigate"
+
+func Complete(m *ice.Message, text string, data ice.Map) {
+	if strings.HasSuffix(text, ".") {
+		key := kit.Slice(kit.Split(text, " ."), -1)[0]
+		m.Push(mdb.TEXT, kit.Simple(data[key]))
+	} else {
+		m.Push(mdb.TEXT, data[""])
+		for k := range data {
+			m.Push(mdb.TEXT, k)
+		}
+	}
+	return
+
+	if strings.TrimSpace(text) == "" {
+		m.Push(mdb.TEXT, kit.Simple(data[""]))
+		return
+	}
+
+	name := kit.Slice(kit.Split(text), -1)[0]
+	if name == "" {
+		m.Push(mdb.TEXT, kit.Simple(data[""]))
+		return
+	}
+
+	key := kit.Slice(kit.Split(name, "."), -1)[0]
+	if strings.HasSuffix(name, ".") {
+		m.Push(mdb.TEXT, kit.Simple(data[key]))
+	} else {
+		for k := range data {
+			if strings.HasPrefix(k, key) {
+				m.Push(mdb.TEXT, key)
+			}
+		}
+		list := kit.Simple(data[key])
+		for i, v := range list {
+			list[i] = "." + v
+		}
+		m.Push(mdb.TEXT, list)
+	}
+}
+
+func init() {
+	Index.MergeCommands(ice.Commands{COMPLETE: {Name: "complete type name text auto", Help: "补全", Actions: mdb.RenderAction()}})
+}
+func init() {
+	Index.MergeCommands(ice.Commands{TEMPLATE: {Name: "template type name text auto", Help: "模板", Actions: mdb.RenderAction()}})
+}
+func init() {
+	Index.MergeCommands(ice.Commands{NAVIGATE: {Name: "navigate type name text auto", Help: "跳转", Actions: mdb.RenderAction()}})
 }

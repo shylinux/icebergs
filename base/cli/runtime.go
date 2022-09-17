@@ -250,16 +250,6 @@ func init() {
 				}
 				m.StatusTimeCount()
 			}},
-			"stats": {Name: "stats", Help: "环境变量", Hand: func(m *ice.Message, arg ...string) {
-				var ms runtime.MemStats
-				runtime.ReadMemStats(&ms)
-				m.Echo("what %#v", ms)
-				m.Echo("what %#v", kit.FmtSize(int64(ms.Alloc)))
-				m.Echo("what %#v", kit.FmtSize(int64(ms.TotalAlloc)))
-				m.Echo("what %#v", kit.FmtSize(int64(ms.Sys)))
-				m.Echo("what %#v", kit.FmtSize(int64(ms.HeapAlloc)))
-				m.Echo("what %#v", kit.FmtSize(int64(ms.HeapSys)))
-			}},
 			MAKE_DOMAIN: {Name: "make.domain", Help: "编译主机", Hand: func(m *ice.Message, arg ...string) {
 				if os.Getenv(CTX_DEV) == "" || os.Getenv(CTX_POD) == "" {
 					m.Echo(m.Conf(RUNTIME, MAKE_DOMAIN))

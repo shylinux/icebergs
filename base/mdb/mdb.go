@@ -151,6 +151,8 @@ const (
 	PAGE   = "page"
 	OFFEND = "offend"
 
+	TOOLS = "tools"
+
 	JSON = "json"
 	CSV  = "csv"
 )

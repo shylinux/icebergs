@@ -51,7 +51,7 @@ func init() {
 	Index.Register(&ice.Context{Name: C, Help: "系统", Commands: ice.Commands{
 		C: {Name: C, Help: "系统", Actions: ice.MergeActions(ice.Actions{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
-				for _, cmd := range []string{mdb.SEARCH, mdb.ENGINE, mdb.RENDER, mdb.PLUGIN} {
+				for _, cmd := range []string{mdb.SEARCH, mdb.ENGINE, mdb.RENDER, mdb.PLUGIN, NAVIGATE} {
 					for _, k := range []string{H, C, CC} {
 						m.Cmd(cmd, mdb.CREATE, k, m.PrefixKey())
 					}
@@ -79,6 +79,12 @@ func init() {
 				_c_tags(m, kit.Select(cli.MAIN, arg, 1))
 				// _go_find(m, kit.Select(cli.MAIN, arg, 1), arg[2])
 				// _go_grep(m, kit.Select(cli.MAIN, arg, 1), arg[2])
+			}},
+			NAVIGATE: {Name: "navigate", Help: "跳转", Hand: func(m *ice.Message, arg ...string) {
+				if !nfs.ExistsFile(m, path.Join(m.Option(nfs.PATH), nfs.TAGS)) {
+					m.Cmd(cli.SYSTEM, "ctags", "-a", "-R", nfs.PWD, kit.Dict(cli.CMD_DIR, m.Option(nfs.PATH)))
+				}
+				_inner_tags(m, m.Option(nfs.PATH), m.Option(mdb.NAME))
 			}},
 		}, PlugAction())},
 		MAN: {Name: MAN, Help: "手册", Actions: ice.MergeActions(ice.Actions{

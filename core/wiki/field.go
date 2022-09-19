@@ -78,6 +78,7 @@ func _field_show(m *ice.Message, name, text string, arg ...string) {
 			kit.Value(meta, kit.Keys(FEATURE, "mode"), "simple")
 			if meta["msg"] = msg.FormatMeta(); text == "web.code.inner" {
 				meta["plug"] = kit.UnMarshal(m.Cmdx(mdb.PLUGIN, kit.Ext(name)))
+				kit.Value(meta, kit.Keys(FEATURE, "display"), "/plugin/local/code/inner.js")
 				kit.Value(meta, ARGS, kit.List(path.Dir(name)+ice.PS, path.Base(name)))
 			}
 

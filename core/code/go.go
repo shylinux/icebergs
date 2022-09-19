@@ -75,16 +75,19 @@ func _go_doc(m *ice.Message, mod string, pkg string) *ice.Message {
 	if mod != "" {
 		m.Cmd(cli.SYSTEM, "go", "get", mod)
 	}
-	if msg := _vimer_go_complete(m.Spawn(), key); msg.Length() > 0 {
-		_cache_mods[key] = msg
-		return msg
-	}
+	// if msg := _vimer_go_complete(m.Spawn(), key); msg.Length() > 0 {
+	// 	_cache_mods[key] = msg
+	// 	return msg
+	// }
 	return nil
 }
 
 func _go_exec(m *ice.Message, arg ...string) {
 	if m.Option("some") == "run" {
-		args := []string{"./bin/ice.bin", ctx.GetFileCmd(path.Join(arg[2], arg[1]))}
+		args := []string{"./bin/ice.bin"}
+		if cmd := ctx.GetFileCmd(path.Join(arg[2], arg[1])); cmd != "" {
+			args = append(args, cmd)
+		}
 		m.Cmdy(cli.SYSTEM, args)
 		m.StatusTime("args", kit.Join(args, " "))
 		return

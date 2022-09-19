@@ -138,14 +138,13 @@ func init() {
 				_dream_show(m, m.Option(mdb.NAME))
 			}},
 			cli.OPEN: {Name: "open", Help: "打开", Hand: func(m *ice.Message, arg ...string) {
-				m.ProcessOpen(MergePod(m, m.Option(mdb.NAME), "", ""))
+				ProcessWebsite(m, m.Option(mdb.NAME), "", "", "")
 			}},
 			"vimer": {Name: "vimer", Help: "编辑", Hand: func(m *ice.Message, arg ...string) {
-				m.ProcessOpen(MergePod(m, m.Option(mdb.NAME)+"/cmd/web.code.vimer", "", ""))
+				ProcessWebsite(m, m.Option(mdb.NAME), "web.code.vimer", "", "")
 			}},
 			"xterm": {Name: "xterm", Help: "命令", Hand: func(m *ice.Message, arg ...string) {
-				m.ProcessOpen(MergePod(m, m.Option(mdb.NAME)+"/cmd/web.code.xterm", mdb.HASH,
-					m.Cmdx(SPACE, m.Option(mdb.NAME), "web.code.xterm", mdb.CREATE, mdb.TYPE, nfs.SH, mdb.NAME, "xterm")))
+				ProcessWebsite(m, m.Option(mdb.NAME), "web.code.xterm", mdb.HASH, m.Cmdx(SPACE, m.Option(mdb.NAME), "web.code.xterm", mdb.CREATE, mdb.TYPE, nfs.SH, mdb.NAME, "xterm"))
 			}},
 			cli.STOP: {Name: "stop", Help: "停止", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmd(SPACE, mdb.MODIFY, m.OptionSimple(mdb.NAME), mdb.STATUS, cli.STOP)

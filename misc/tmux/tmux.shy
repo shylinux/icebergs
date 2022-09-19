@@ -6,10 +6,170 @@ refer `
 `
 
 chapter "源码"
-field "下载" web.code.tmux.tmux
-field "源码" web.code.inner args `usr/install/tmux-3.2/ cmd-bind-key.c`
+field "终端" web.code.tmux.tmux
+field "源码" web.code.ctags.inner args `usr/install/tmux-3.2/ cmd-bind-key.c`
+field "文档" web.code.ctags.nroff args `usr/install/tmux-3.2/ tmux.1`
+field "计数" web.code.git.count args `usr/install/tmux-3.2/`
+
+option ctags.path `usr/install/tmux-3.2/`
+
+web.code.ctags.chain `
+tmux
+	tmux.c
+	tmux.h
+	client.c
+	server.c
+	server-client.c
+	server-fn.c
+	session.c
+	window.c
+	window-buffer.c
+	window-client.c
+	window-clock.c
+	window-copy.c
+	window-customize.c
+	window-tree.c
+	layout.c
+	layout-custom.c
+	layout-set.c
+	status.c
+	popup.c
+	menu.c
+
+	mode-tree.c
+	names.c
+	screen.c
+	screen-redraw.c
+	screen-write.c
+	grid-reader.c
+	grid-view.c
+	attributes.c
+	grid.c
+	resize.c
+	arguments.c
+	environ.c
+	options.c
+	options-table.c
+	control.c
+	control-notify.c
+	notify.c
+	paste.c
+	alerts.c
+
+	input.c
+	input-keys.c
+	key-string.c
+	key-bindings.c
+
+	tty.c
+	tty-acs.c
+	tty-keys.c
+	tty-term.c
+	tty-features.c
+
+	compat
+	compat.h
+
+	cfg.c
+	log.c
+	job.c
+	file.c
+	proc.c
+	spawn.c
+
+	utf8.c
+	regsub.c
+	style.c
+	colour.c
+	format.c
+	format-draw.c
+
+	xmalloc.c
+	xmalloc.h
+
+	osdep-aix.c
+	osdep-cygwin.c
+	osdep-darwin.c
+	osdep-dragonfly.c
+	osdep-freebsd.c
+	osdep-haiku.c
+	osdep-hpux.c
+	osdep-linux.c
+	osdep-netbsd.c
+	osdep-openbsd.c
+	osdep-sunos.c
+	osdep-unknown.c
+
+	cmd.c
+	cmd-attach-session.c
+	cmd-bind-key.c
+	cmd-break-pane.c
+	cmd-capture-pane.c
+	cmd-choose-tree.c
+	cmd-command-prompt.c
+	cmd-confirm-before.c
+	cmd-copy-mode.c
+	cmd-detach-client.c
+	cmd-display-menu.c
+	cmd-display-message.c
+	cmd-display-panes.c
+	cmd-find.c
+	cmd-find-window.c
+	cmd-if-shell.c
+	cmd-join-pane.c
+	cmd-kill-pane.c
+	cmd-kill-server.c
+	cmd-kill-session.c
+	cmd-kill-window.c
+	cmd-list-buffers.c
+	cmd-list-clients.c
+	cmd-list-keys.c
+	cmd-list-panes.c
+	cmd-list-sessions.c
+	cmd-list-windows.c
+	cmd-load-buffer.c
+	cmd-lock-server.c
+	cmd-move-window.c
+	cmd-new-session.c
+	cmd-new-window.c
+	cmd-parse.y
+	cmd-paste-buffer.c
+	cmd-pipe-pane.c
+	cmd-queue.c
+	cmd-refresh-client.c
+	cmd-rename-session.c
+	cmd-rename-window.c
+	cmd-resize-pane.c
+	cmd-resize-window.c
+	cmd-respawn-pane.c
+	cmd-respawn-window.c
+	cmd-rotate-window.c
+	cmd-run-shell.c
+	cmd-save-buffer.c
+	cmd-select-layout.c
+	cmd-select-pane.c
+	cmd-select-window.c
+	cmd-send-keys.c
+	cmd-set-buffer.c
+	cmd-set-environment.c
+	cmd-set-option.c
+	cmd-show-environment.c
+	cmd-show-messages.c
+	cmd-show-options.c
+	cmd-source-file.c
+	cmd-split-window.c
+	cmd-swap-pane.c
+	cmd-swap-window.c
+	cmd-switch-client.c
+	cmd-unbind-key.c
+	cmd-wait-for.c
+`
 
 section "构建"
+refer `
+https://github.com/libevent/libevent
+https://invisible-mirror.net/archives/ncurses/
+`
 shell `
 yum install -y wget make gcc
 yum install -y libevent-devel.x86_64 ncurses-devel.x86_64
@@ -33,4 +193,3 @@ field "文本" web.code.tmux.text
 field "缓存" web.code.tmux.buffer
 field "脚本" web.code.tmux.script
 field "会话" web.code.tmux.session
-

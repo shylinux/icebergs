@@ -173,9 +173,6 @@ func init() {
 				}
 				m.Option(CMD_ENV, "COLUMNS", kit.Int(kit.Select("1920", m.Option("width")))/12)
 				m.Cmdy(SYSTEM, "sh", "-c", kit.Format("man %s %s|col -b", kit.Select("", arg[1], arg[1] != "1"), arg[0]))
-				if IsSuccess(m) && m.Append(CMD_ERR) == "" {
-					m.SetAppend()
-				}
 			}},
 		}, Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) == 0 {

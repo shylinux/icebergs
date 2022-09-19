@@ -11,14 +11,15 @@ compile.go
 publish.go
 upgrade.go
 
-xterm.shy
-xterm.go
-vimer.go
-inner.go
+oauth.go
 favor.go
+xterm.go
+xterm.shy
+inner.go
+vimer.go
 bench.go
 pprof.go
-oauth.go
+case.go
 
 c.go
 sh.go
@@ -27,7 +28,3 @@ go.go
 js.go
 py.go
 zml.go
-
-template.go
-case.go
-

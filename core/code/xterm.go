@@ -103,7 +103,7 @@ func init() {
 			web.WEBSITE: {Name: "website", Help: "打开", Hand: func(m *ice.Message, arg ...string) {
 				web.ProcessWebsite(m, "", "", m.OptionSimple(mdb.HASH))
 			}},
-		}, mdb.HashAction(mdb.FIELD, "time,hash,type,name,text,init", mdb.TOOLS, FAVOR), ctx.CmdAction(), ctx.ProcessAction()), Hand: func(m *ice.Message, arg ...string) {
+		}, mdb.HashAction(mdb.FIELD, "time,hash,type,name,text,init", mdb.TOOLS, FAVOR), ctx.ProcessAction()), Hand: func(m *ice.Message, arg ...string) {
 			if mdb.HashSelect(m, arg...); len(arg) == 0 {
 				m.PushAction(web.WEBSITE, mdb.REMOVE)
 				m.Action(mdb.CREATE, mdb.PRUNES)

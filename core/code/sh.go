@@ -6,7 +6,6 @@ import (
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/cli"
 	"shylinux.com/x/icebergs/base/ctx"
-	"shylinux.com/x/icebergs/base/gdb"
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/nfs"
 	kit "shylinux.com/x/toolkits"
@@ -67,9 +66,9 @@ func init() {
 					m.Cmd(cmd, mdb.CREATE, m.CommandKey(), m.PrefixKey())
 				}
 				LoadPlug(m, m.CommandKey())
-				gdb.Watch(m, VIMER_TEMPLATE)
+				m.Cmd(TEMPLATE, mdb.CREATE, m.CommandKey(), m.PrefixKey())
 			}},
-			VIMER_TEMPLATE: {Hand: func(m *ice.Message, arg ...string) {
+			TEMPLATE: {Hand: func(m *ice.Message, arg ...string) {
 				if kit.Ext(m.Option(mdb.FILE)) != m.CommandKey() {
 					return
 				}

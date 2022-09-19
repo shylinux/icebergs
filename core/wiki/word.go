@@ -2,6 +2,7 @@ package wiki
 
 import (
 	"path"
+	"strings"
 
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/aaa"
@@ -25,7 +26,7 @@ const WORD = "word"
 
 func init() {
 	Index.Merge(&ice.Context{Configs: ice.Configs{
-		WORD: {Name: WORD, Help: "语言文字", Value: kit.Data(
+		WORD: {Name: WORD, Help: "笔记文档", Value: kit.Data(
 			nfs.PATH, "", lex.REGEXP, ".*\\.shy", mdb.ALIAS, kit.Dict(
 				NAVMENU, kit.List(TITLE, NAVMENU),
 				PREMENU, kit.List(TITLE, PREMENU),
@@ -40,7 +41,7 @@ func init() {
 			mdb.FIELD, "time,hash,type,name,text",
 		)},
 	}, Commands: ice.Commands{
-		WORD: {Name: "word path=src/main.shy@key list play", Help: "语言文字", Actions: ice.MergeActions(ice.Actions{
+		WORD: {Name: "word path=src/main.shy@key list play", Help: "笔记文档", Actions: ice.MergeActions(ice.Actions{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
 				m.Cmd(aaa.ROLE, aaa.WHITE, aaa.VOID, m.PrefixKey())
 				m.Cmd(aaa.ROLE, aaa.WHITE, aaa.VOID, ice.SRC_MAIN_SHY)
@@ -55,6 +56,11 @@ func init() {
 							value[mdb.TEXT] = ice.Render(m, ice.RENDER_SCRIPT, value[mdb.TEXT])
 						}
 						m.PushSearch(value)
+					}
+				})
+				m.Cmd("", mdb.INPUTS).Tables(func(value ice.Maps) {
+					if strings.Contains(value[nfs.PATH], arg[1]) {
+						m.PushSearch(mdb.TYPE, "shy", mdb.NAME, value[nfs.PATH], value)
 					}
 				})
 			}},

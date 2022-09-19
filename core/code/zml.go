@@ -6,7 +6,6 @@ import (
 
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/ctx"
-	"shylinux.com/x/icebergs/base/gdb"
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/nfs"
 	"shylinux.com/x/icebergs/core/chat"
@@ -28,10 +27,10 @@ func init() {
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
 				m.Cmd(mdb.RENDER, mdb.CREATE, nfs.ZML, m.PrefixKey())
 				m.Cmd(mdb.ENGINE, mdb.CREATE, nfs.ZML, m.PrefixKey())
-				gdb.Watch(m, VIMER_TEMPLATE)
-				gdb.Watch(m, VIMER_COMPLETE)
+				m.Cmd(TEMPLATE, mdb.CREATE, m.CommandKey(), m.PrefixKey())
+				m.Cmd(COMPLETE, mdb.CREATE, m.CommandKey(), m.PrefixKey())
 			}},
-			VIMER_TEMPLATE: {Hand: func(m *ice.Message, arg ...string) {
+			TEMPLATE: {Hand: func(m *ice.Message, arg ...string) {
 				switch kit.Ext(m.Option(mdb.FILE)) {
 				case ZML:
 					m.Echo(`
@@ -70,7 +69,7 @@ func init() {
 `)
 				}
 			}},
-			VIMER_COMPLETE: {Hand: func(m *ice.Message, arg ...string) {
+			COMPLETE: {Hand: func(m *ice.Message, arg ...string) {
 				switch kit.Select("", kit.Slice(kit.Split(m.Option(mdb.TEXT), "\t \n`"), -1), 0) {
 				case mdb.TYPE:
 					m.Push(mdb.NAME, "menu")

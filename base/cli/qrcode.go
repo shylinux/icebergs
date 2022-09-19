@@ -135,8 +135,8 @@ func init() {
 			}},
 		}, Hand: func(m *ice.Message, arg ...string) {
 			m.Option(SIZE, kit.Select("240", arg, 3))
-			m.Option(BG, kit.Select(WHITE, arg, 2))
-			m.Option(FG, kit.Select(BLUE, arg, 1))
+			m.Option(BG, kit.Select(kit.Select(WHITE, BLACK, m.Option("topic") == BLACK), arg, 2))
+			m.Option(FG, kit.Select(kit.Select(BLUE, CYAN, m.Option("topic") == BLACK), arg, 1))
 			if m.IsCliUA() {
 				_qrcode_cli(m, kit.Select(kit.Select(ice.Info.Make.Domain, ice.Info.Domain), arg, 0))
 			} else {

@@ -51,6 +51,9 @@ func ProcessHold(m *ice.Message, text ...ice.Any) {
 func ProcessRefresh(m *ice.Message) {
 	m.ProcessRefresh("300ms")
 }
+func ProcessRewrite(m *ice.Message, arg ...ice.Any) {
+	m.ProcessRewrite(arg...)
+}
 
 func ProcessAction() ice.Actions {
 	return ice.Actions{

@@ -170,13 +170,15 @@ func ZoneAction(args ...ice.Any) ice.Actions {
 func ZoneShort(m *ice.Message) string {
 	return kit.Select(ZONE, m.Config(SHORT), m.Config(SHORT) != UNIQ)
 }
-func ZoneField(m *ice.Message) string { return kit.Select(ZONE_FIELD, m.Config(FIELD)) }
+func ZoneField(m *ice.Message) string {
+	return kit.Select(ZONE_FIELD, m.Config(FIELD))
+}
 func ZoneArgs(m *ice.Message, arg ...Any) []string {
 	return _mdb_args(m, ZoneField(m), arg...)
 }
 
 func ZoneInputs(m *ice.Message, arg ...Any) {
-	m.Cmdy(INPUTS, m.PrefixKey(), "", ZONE, ZoneArgs(m, arg...))
+	m.Cmdy(INPUTS, m.PrefixKey(), "", ZONE, m.Option(ZoneShort(m)), ZoneArgs(m, arg...))
 }
 func ZoneCreate(m *ice.Message, arg ...Any) {
 	m.Cmdy(INSERT, m.PrefixKey(), "", HASH, arg)

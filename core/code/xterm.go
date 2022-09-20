@@ -37,7 +37,7 @@ func _xterm_get(m *ice.Message, h string) _xterm {
 	m.Assert(h != "")
 
 	t := mdb.HashSelectField(m, m.Option(mdb.HASH, h), mdb.TYPE)
-	mdb.HashModify(m, mdb.TEXT, m.Option(ice.MSG_DAEMON))
+	mdb.HashModify(m, ice.VIEW, m.Option(ice.MSG_DAEMON))
 	return mdb.HashTarget(m, h, func() ice.Any {
 		ls := kit.Split(kit.Select(nfs.SH, t))
 		cmd := exec.Command(cli.SystemFind(m, ls[0]), ls[1:]...)
@@ -53,7 +53,7 @@ func _xterm_get(m *ice.Message, h string) _xterm {
 			buf := make([]byte, ice.MOD_BUFS)
 			for {
 				if n, e := tty.Read(buf); !m.Warn(e) && e == nil {
-					m.Option(ice.MSG_DAEMON, mdb.HashSelectField(m, h, mdb.TEXT))
+					m.Option(ice.MSG_DAEMON, mdb.HashSelectField(m, h, ice.VIEW))
 					m.Option(mdb.TEXT, string(buf[:n]))
 					web.PushNoticeGrow(m)
 				} else {
@@ -79,13 +79,13 @@ func init() {
 			mdb.INPUTS: {Name: "inputs", Help: "补全", Hand: func(m *ice.Message, arg ...string) {
 				switch mdb.HashInputs(m, arg); arg[0] {
 				case mdb.TYPE:
-					m.Push(arg[0], "ice.bin source stdio", "tmux attach -t miss", "docker run -w /root -it alpine", "python", "node", "bash", "sh")
+					m.Cmdy(FAVOR, "_xterm").Cut(mdb.TYPE).Push(arg[0], "bash", "sh")
 				case mdb.NAME:
 					m.Push(arg[0], ice.Info.HostName, path.Base(m.Option(mdb.TYPE)))
 				}
 			}},
-			mdb.CREATE: {Name: "create type=sh name init", Help: "创建", Hand: func(m *ice.Message, arg ...string) {
-				mdb.HashCreate(m, mdb.NAME, kit.Split(m.Option(mdb.TYPE))[0], m.OptionSimple(mdb.TYPE, mdb.NAME, ice.INIT))
+			mdb.CREATE: {Name: "create type=sh name text", Help: "创建", Hand: func(m *ice.Message, arg ...string) {
+				mdb.HashCreate(m, mdb.NAME, kit.Split(m.Option(mdb.TYPE))[0], m.OptionSimple(mdb.TYPE, mdb.NAME, mdb.TEXT))
 				ctx.ProcessRefresh(m)
 			}},
 			"resize": {Name: "resize", Help: "大小", Hand: func(m *ice.Message, arg ...string) {
@@ -103,7 +103,7 @@ func init() {
 			web.WEBSITE: {Name: "website", Help: "打开", Hand: func(m *ice.Message, arg ...string) {
 				web.ProcessWebsite(m, "", "", m.OptionSimple(mdb.HASH))
 			}},
-		}, mdb.HashAction(mdb.FIELD, "time,hash,type,name,text,init", mdb.TOOLS, FAVOR), ctx.ProcessAction()), Hand: func(m *ice.Message, arg ...string) {
+		}, mdb.HashAction(mdb.FIELD, "time,hash,type,name,text,view", mdb.TOOLS, FAVOR), ctx.ProcessAction()), Hand: func(m *ice.Message, arg ...string) {
 			if mdb.HashSelect(m, arg...); len(arg) == 0 {
 				m.PushAction(web.WEBSITE, mdb.REMOVE)
 				m.Action(mdb.CREATE, mdb.PRUNES)

@@ -18,7 +18,7 @@ func init() {
 				ctx.Process(m, m.ActionKey(), m.OptionSplit(nfs.PATH, nfs.FILE, nfs.LINE), arg...)
 			}},
 			XTERM: {Name: "xterm", Help: "命令", Hand: func(m *ice.Message, arg ...string) {
-				ctx.Process(m, m.ActionKey(), append(m.OptionSimple(mdb.TYPE, mdb.NAME), ice.INIT, m.Option(mdb.TEXT)), arg...)
+				ctx.Process(m, m.ActionKey(), m.OptionSimple(mdb.TYPE, mdb.NAME, mdb.TEXT), arg...)
 			}},
 		}, mdb.ZoneAction(mdb.SHORT, mdb.ZONE, mdb.FIELD, "time,id,type,name,text,path,file,line")), Hand: func(m *ice.Message, arg ...string) {
 			if mdb.ZoneSelectPage(m, arg...); len(arg) > 0 && arg[0] != "" {

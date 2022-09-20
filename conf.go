@@ -25,6 +25,7 @@ const (
 	LOAD = "load"
 
 	AUTO = "auto"
+	VIEW = "view"
 	LIST = "list"
 	BACK = "back"
 	EXEC = "exec"

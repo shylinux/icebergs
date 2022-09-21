@@ -9,6 +9,7 @@ import (
 	"shylinux.com/x/icebergs/base/ctx"
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/nfs"
+	"shylinux.com/x/icebergs/base/tcp"
 	"shylinux.com/x/icebergs/base/web"
 	"shylinux.com/x/icebergs/core/chat"
 	kit "shylinux.com/x/toolkits"
@@ -66,6 +67,7 @@ func init() {
 			"keyboard": {Name: "keyboard", Help: "远程控制", Hand: func(m *ice.Message, arg ...string) {
 				hash := m.Cmdx("web.chat.keyboard", mdb.CREATE, "space", m.Option(ice.MSG_DAEMON), "index", m.Option("index"), "input", "")
 				link := web.MergePodCmd(m, "", "web.chat.keyboard", mdb.HASH, hash)
+				link = tcp.ReplaceLocalhost(m, link)
 				m.PushQRCode(mdb.TEXT, link)
 				m.Push(mdb.NAME, link)
 			}},

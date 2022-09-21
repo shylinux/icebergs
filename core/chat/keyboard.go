@@ -17,25 +17,38 @@ func init() {
 				m.Cmd(web.SPACE, m.Option("space"), "refresh")
 			}},
 			"inputs": {Name: "refresh", Help: "刷新", Hand: func(m *ice.Message, arg ...string) {
-				m.Cmd(web.SPACE, m.Option("space"), "refresh")
+			}},
+			"input": {Name: "input", Help: "刷新", Hand: func(m *ice.Message, arg ...string) {
+				m.Cmd(web.SPACE, m.Option("space"), "input", arg)
+				ctx.ProcessHold(m)
 			}},
 		}, mdb.HashAction(mdb.SHORT, "", mdb.FIELD, "time,hash,space,index,input")), Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) > 0 && arg[0] == ctx.ACTION {
 				m.Cmd(web.SPACE, m.Option("space"), arg)
+				ctx.ProcessHold(m)
 				return
 			}
 			mdb.HashSelect(m, arg...)
 			if len(arg) > 0 && arg[0] != "" {
-				meta := kit.UnMarshal(m.Cmd(ctx.COMMAND, m.Append("index")).Append("meta"))
-				list := []string{}
+				msg := m.Cmd(ctx.COMMAND, m.Append("index"))
+				meta := kit.UnMarshal(msg.Append("meta"))
+				list := kit.UnMarshal(msg.Append("list"))
+				keys := []string{}
+				kit.Fetch(list, func(index int, value ice.Any) {
+					if kit.Format(kit.Value(value, mdb.TYPE)) == "button" {
+						return
+					}
+					keys = append(keys, kit.Format(kit.Value(value, mdb.NAME)))
+				})
 				kit.Fetch(meta, func(key string, value ice.Any) {
 					if key == "_trans" {
 						return
 					}
-					list = append(list, key)
+					keys = append(keys, key)
 				})
-				m.PushAction(kit.Join(list))
+				m.PushAction(kit.Join(keys))
 				m.Option("meta", kit.Format(meta))
+				ctx.DisplayLocal(m, "")
 			}
 		}},
 	})

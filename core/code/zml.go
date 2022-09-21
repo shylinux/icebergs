@@ -8,6 +8,7 @@ import (
 	"shylinux.com/x/icebergs/base/ctx"
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/nfs"
+	"shylinux.com/x/icebergs/base/web"
 	"shylinux.com/x/icebergs/core/chat"
 	kit "shylinux.com/x/toolkits"
 )
@@ -29,6 +30,8 @@ func init() {
 				m.Cmd(mdb.ENGINE, mdb.CREATE, nfs.ZML, m.PrefixKey())
 				m.Cmd(TEMPLATE, mdb.CREATE, m.CommandKey(), m.PrefixKey())
 				m.Cmd(COMPLETE, mdb.CREATE, m.CommandKey(), m.PrefixKey())
+			}},
+			mdb.INPUTS: {Hand: func(m *ice.Message, arg ...string) {
 			}},
 			TEMPLATE: {Hand: func(m *ice.Message, arg ...string) {
 				switch kit.Ext(m.Option(mdb.FILE)) {
@@ -70,13 +73,20 @@ func init() {
 				}
 			}},
 			COMPLETE: {Hand: func(m *ice.Message, arg ...string) {
+				if len(arg) > 0 && arg[0] == mdb.FOREACH {
+					switch m.Option(ctx.ACTION) {
+					case web.WEBSITE:
+						m.Cmdy(nfs.DIR, nfs.PWD, kit.Dict(nfs.DIR_ROOT, "src/website/"), nfs.PATH)
+					}
+					return
+				}
+
 				switch kit.Select("", kit.Slice(kit.Split(m.Option(mdb.TEXT), "\t \n`"), -1), 0) {
 				case mdb.TYPE:
 					m.Push(mdb.NAME, "menu")
 
 				case ctx.INDEX:
 					m.Cmdy(ctx.COMMAND, mdb.SEARCH, ctx.COMMAND, "", "", ice.OptionFields("index,name,text"))
-					_vimer_list(m, ice.SRC, ctx.INDEX)
 
 				case ctx.ACTION:
 					m.Push(mdb.NAME, "auto")

@@ -14,23 +14,23 @@ import (
 	kit "shylinux.com/x/toolkits"
 )
 
-func _inner_list(m *ice.Message, ext, file, dir string, arg ...string) {
+func _inner_list(m *ice.Message, ext, file, dir string) {
 	if aaa.Right(m, dir, file) {
 		if nfs.IsSourceFile(m, ext) {
 			m.Cmdy(nfs.CAT, path.Join(dir, file))
 		} else {
-			_inner_show(m, ext, file, dir, arg...)
+			_inner_show(m, ext, file, dir)
 		}
 	}
 }
-func _inner_show(m *ice.Message, ext, file, dir string, arg ...string) {
+func _inner_show(m *ice.Message, ext, file, dir string) {
 	if aaa.Right(m, dir, file) {
-		m.Cmdy(mdb.RENDER, ext, file, dir, arg)
+		m.Cmdy(mdb.RENDER, ext, file, dir)
 	}
 }
-func _inner_exec(m *ice.Message, ext, file, dir string, arg ...string) {
+func _inner_exec(m *ice.Message, ext, file, dir string) {
 	if aaa.Right(m, dir, file) {
-		m.Cmdy(mdb.ENGINE, ext, file, dir, arg)
+		m.Cmdy(mdb.ENGINE, ext, file, dir)
 	}
 }
 func _inner_make(m *ice.Message, dir string, msg *ice.Message) {
@@ -73,7 +73,7 @@ func _inner_tags(m *ice.Message, dir string, value string) {
 				} else {
 					m.PushRecord(kit.Dict(nfs.PATH, dir, nfs.FILE, strings.TrimPrefix(file, nfs.PWD), nfs.LINE, kit.Format(i), mdb.TEXT, bio.Text()))
 				}
-				return
+				break
 			}
 		}
 	}
@@ -167,21 +167,12 @@ func init() {
 				return
 			}
 
-			list := kit.Simple()
-			for k, v := range ice.Info.File {
-				if strings.HasPrefix(k, path.Dir(path.Join(m.Option(nfs.PATH), m.Option(nfs.FILE)))) {
-					list = append(list, v)
-				}
-			}
-			m.Option("keys", list)
-			m.Option("module", ice.Info.Make.Module)
+			arg[1] = strings.Split(arg[1], ice.FS)[0]
+			_inner_list(m, kit.Ext(arg[1]), arg[1], arg[0])
 
 			m.Option("tabs", m.Config("show.tabs"))
 			m.Option("plug", m.Config("show.plug"))
 			m.Option("exts", m.Config("show.exts"))
-
-			arg[1] = strings.Split(arg[1], ice.FS)[0]
-			_inner_list(m, kit.Ext(arg[1]), arg[1], arg[0])
 			ctx.DisplayLocal(m, "")
 		}},
 	}})

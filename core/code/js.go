@@ -90,8 +90,12 @@ Volcanos(chat.ONIMPORT, {help: "导入数据", _init: function(can, msg) {
 `)
 			}},
 			COMPLETE: {Hand: func(m *ice.Message, arg ...string) {
-				if arg[0] == mdb.FOREACH && arg[2] == nfs.SCRIPT {
-					m.Push(nfs.FILE, strings.ReplaceAll(arg[1], ice.PT+kit.Ext(arg[1]), ice.PT+JS))
+				if len(arg) > 0 && arg[0] == mdb.FOREACH {
+					switch m.Option(ctx.ACTION) {
+					case nfs.SCRIPT:
+						m.Push(nfs.PATH, strings.ReplaceAll(arg[1], ice.PT+kit.Ext(arg[1]), ice.PT+JS))
+						m.Cmdy(nfs.DIR, nfs.PWD, kit.Dict(nfs.DIR_ROOT, "src/", nfs.DIR_REG, `.*.(sh|py|shy|js)`, nfs.DIR_DEEP, ice.TRUE), nfs.PATH)
+					}
 					return
 				}
 				Complete(m, m.Option("text"), kit.Dict(

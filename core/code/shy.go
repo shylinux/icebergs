@@ -22,7 +22,6 @@ func _shy_exec(m *ice.Message, arg ...string) {
 		switch kit.Select("", kit.Split(m.Option(mdb.TEXT)), 0) {
 		case "field":
 			m.Cmdy(ctx.COMMAND, mdb.SEARCH, ctx.COMMAND, "", "", ice.OptionFields("index,name,text"))
-			_vimer_list(m, ice.SRC, ctx.INDEX)
 
 		case "chain":
 			m.Push(mdb.NAME, cli.FG)

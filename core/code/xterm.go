@@ -77,9 +77,9 @@ func init() {
 				ctx.ProcessField(m, "", arg, arg...)
 			}},
 			mdb.INPUTS: {Name: "inputs", Help: "补全", Hand: func(m *ice.Message, arg ...string) {
-				switch mdb.HashInputs(m, arg); arg[0] {
+				switch mdb.HashInputs(m, arg).Cmdy(FAVOR, "_xterm").Cut(arg[0]); arg[0] {
 				case mdb.TYPE:
-					m.Cmdy(FAVOR, "_xterm").Cut(mdb.TYPE).Push(arg[0], "bash", "sh")
+					m.Push(arg[0], "bash", "sh")
 				case mdb.NAME:
 					m.Push(arg[0], ice.Info.HostName, path.Base(m.Option(mdb.TYPE)))
 				}
@@ -103,12 +103,12 @@ func init() {
 			web.WEBSITE: {Name: "website", Help: "打开", Hand: func(m *ice.Message, arg ...string) {
 				web.ProcessWebsite(m, "", "", m.OptionSimple(mdb.HASH))
 			}},
-		}, mdb.HashAction(mdb.FIELD, "time,hash,type,name,text,view", mdb.TOOLS, FAVOR), ctx.ProcessAction()), Hand: func(m *ice.Message, arg ...string) {
+		}, mdb.HashAction(mdb.FIELD, "time,hash,type,name,text,view", mdb.TOOLS, FAVOR), ctx.CmdAction(), ctx.ProcessAction()), Hand: func(m *ice.Message, arg ...string) {
 			if mdb.HashSelect(m, arg...); len(arg) == 0 {
 				m.PushAction(web.WEBSITE, mdb.REMOVE)
 				m.Action(mdb.CREATE, mdb.PRUNES)
 			} else {
-				m.Action("full", INSTALL)
+				m.Action("波浪线", "反引号", "refresh", "full", INSTALL)
 				ctx.DisplayLocal(m, "")
 				ctx.Toolkit(m)
 			}

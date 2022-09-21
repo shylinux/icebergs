@@ -286,7 +286,7 @@ func init() {
 				}
 			}},
 			COMPLETE: {Hand: func(m *ice.Message, arg ...string) {
-				if arg[0] == mdb.FOREACH && arg[2] == nfs.SCRIPT {
+				if len(arg) > 0 && arg[0] == mdb.FOREACH {
 					return
 				}
 

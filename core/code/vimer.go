@@ -15,6 +15,24 @@ import (
 	kit "shylinux.com/x/toolkits"
 )
 
+func _vimer_make(m *ice.Message, dir string, msg *ice.Message) {
+	for _, line := range strings.Split(msg.Append(cli.CMD_ERR), ice.NL) {
+		if strings.Contains(line, ice.DF) {
+			if ls := strings.SplitN(line, ice.DF, 4); len(ls) > 3 {
+				m.Push(nfs.PATH, dir)
+				m.Push(nfs.FILE, strings.TrimPrefix(ls[0], dir))
+				m.Push(nfs.LINE, ls[1])
+				m.Push(mdb.TEXT, ls[3])
+			}
+		}
+	}
+	if m.Length() == 0 {
+		m.Echo(msg.Append(cli.CMD_OUT))
+		m.Echo(msg.Append(cli.CMD_ERR))
+	}
+	m.StatusTime()
+}
+
 const VIMER = "vimer"
 
 func init() {
@@ -36,19 +54,19 @@ func init() {
 			}},
 			nfs.SAVE: {Name: "save type file path", Help: "保存", Hand: func(m *ice.Message, arg ...string) {
 				if m.Option(nfs.CONTENT) == "" {
-					m.Option(nfs.CONTENT, m.Cmdx(TEMPLATE, m.Option(mdb.TYPE), m.Option(nfs.FILE), m.Option(nfs.PATH)))
+					m.Option(nfs.CONTENT, m.Cmdx("", TEMPLATE))
 				}
 				m.Cmdy(nfs.SAVE, path.Join(m.Option(nfs.PATH), m.Option(nfs.FILE)))
 			}},
 			nfs.TRASH: {Name: "trash path", Help: "删除", Hand: func(m *ice.Message, arg ...string) {
-				m.Cmdy(nfs.TRASH, arg[0])
+				m.Cmd(nfs.TRASH, arg[0])
 			}},
 			nfs.SCRIPT: {Name: "script file=hi/hi.js", Help: "脚本", Hand: func(m *ice.Message, arg ...string) {
-				m.Cmdy(nfs.DEFS, path.Join(m.Option(nfs.PATH), m.Option(nfs.FILE)), m.Cmdx(TEMPLATE, kit.Ext(m.Option(nfs.FILE)), m.Option(nfs.FILE), m.Option(nfs.PATH)))
+				m.Cmdy(nfs.DEFS, path.Join(m.Option(nfs.PATH), m.Option(nfs.FILE)), m.Cmdx("", TEMPLATE))
 			}},
 			web.WEBSITE: {Name: "website file=hi.zml", Help: "网页", Hand: func(m *ice.Message, arg ...string) {
 				m.Option(nfs.PATH, "src/website/")
-				m.Cmdy(nfs.DEFS, path.Join(m.Option(nfs.PATH), m.Option(nfs.FILE)), m.Cmdx(TEMPLATE, kit.Ext(m.Option(nfs.FILE)), m.Option(nfs.FILE), m.Option(nfs.PATH)))
+				m.Cmdy(nfs.DEFS, path.Join(m.Option(nfs.PATH), m.Option(nfs.FILE)), m.Cmdx("", TEMPLATE))
 			}},
 			web.DREAM: {Name: "dream name=hi repos", Help: "空间", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmdy(web.DREAM, cli.START, arg)
@@ -57,19 +75,24 @@ func init() {
 				m.Cmdy(XTERM, mdb.CREATE, arg)
 			}},
 
+			"keyboard": {Name: "keyboard", Help: "远程控制", Hand: func(m *ice.Message, arg ...string) {
+				hash := m.Cmdx("web.chat.keyboard", mdb.CREATE, web.SPACE, m.Option(ice.MSG_DAEMON), ctx.INDEX, m.Option(ctx.INDEX), "input", "")
+				link := tcp.ReplaceLocalhost(m, web.MergePodCmd(m, "", "web.chat.keyboard", mdb.HASH, hash))
+				m.PushQRCode(mdb.TEXT, link)
+				m.Push(mdb.NAME, link)
+			}},
+			"listTags": {Name: "listTags", Help: "索引", Hand: func(m *ice.Message, arg ...string) {
+				m.Cmdy("web.code.vim.tags", "listTags", arg)
+			}},
+			cli.MAKE: {Name: "make", Help: "构建", Hand: func(m *ice.Message, arg ...string) {
+				_vimer_make(m, m.Option(nfs.PATH), m.Cmd(cli.SYSTEM, cli.MAKE, arg))
+			}},
+
 			TEMPLATE: {Name: "template", Help: "模板", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmdy(TEMPLATE, kit.Ext(m.Option(mdb.FILE)), m.Option(nfs.FILE), m.Option(nfs.PATH))
 			}},
 			COMPLETE: {Name: "complete", Help: "补全", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmdy(COMPLETE, kit.Ext(m.Option(mdb.FILE)), m.Option(nfs.FILE), m.Option(nfs.PATH))
-			}},
-
-			"keyboard": {Name: "keyboard", Help: "远程控制", Hand: func(m *ice.Message, arg ...string) {
-				hash := m.Cmdx("web.chat.keyboard", mdb.CREATE, "space", m.Option(ice.MSG_DAEMON), "index", m.Option("index"), "input", "")
-				link := web.MergePodCmd(m, "", "web.chat.keyboard", mdb.HASH, hash)
-				link = tcp.ReplaceLocalhost(m, link)
-				m.PushQRCode(mdb.TEXT, link)
-				m.Push(mdb.NAME, link)
 			}},
 
 			DEVPACK: {Name: "devpack", Help: "开发模式", Hand: func(m *ice.Message, arg ...string) {
@@ -93,7 +116,7 @@ func init() {
 				if msg := m.Cmd(COMPILE, ice.SRC_MAIN_GO, ice.BIN_ICE_BIN); cli.IsSuccess(msg) {
 					m.Cmd(UPGRADE, cli.RESTART)
 				} else {
-					_inner_make(m, nfs.PWD, msg)
+					_vimer_make(m, nfs.PWD, msg)
 				}
 			}},
 			PUBLISH: {Name: "publish", Help: "发布", Hand: func(m *ice.Message, arg ...string) {
@@ -119,6 +142,18 @@ func init() {
 	Index.MergeCommands(ice.Commands{TEMPLATE: {Name: "template type name text auto", Help: "模板", Actions: mdb.RenderAction()}})
 	Index.MergeCommands(ice.Commands{COMPLETE: {Name: "complete type name text auto", Help: "补全", Actions: mdb.RenderAction()}})
 	Index.MergeCommands(ice.Commands{NAVIGATE: {Name: "navigate type name text auto", Help: "跳转", Actions: mdb.RenderAction()}})
+}
+func LangAction() ice.Actions {
+	return ice.Actions{
+		ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
+			for _, cmd := range []string{TEMPLATE, COMPLETE, NAVIGATE} {
+				m.Cmd(cmd, mdb.CREATE, m.CommandKey(), m.PrefixKey())
+			}
+		}},
+		TEMPLATE: {Hand: func(m *ice.Message, arg ...string) {}},
+		COMPLETE: {Hand: func(m *ice.Message, arg ...string) {}},
+		NAVIGATE: {Hand: func(m *ice.Message, arg ...string) {}},
+	}
 }
 func Complete(m *ice.Message, text string, data ice.Map) {
 	if strings.HasSuffix(text, ".") {

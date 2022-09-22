@@ -11,7 +11,7 @@ import (
 	kit "shylinux.com/x/toolkits"
 )
 
-func _sh_main_script(m *ice.Message, arg ...string) (res []string) {
+func _sh_exec(m *ice.Message, arg ...string) (res []string) {
 	if cmd := ctx.GetFileCmd(path.Join(arg[2], arg[1])); cmd != "" {
 		res = append(res, kit.Format(`#! /bin/sh
 export ctx_dev=%s; ctx_pod=%s ctx_temp=$(mktemp); curl -fsSL $ctx_dev -o $ctx_temp; source $ctx_temp &>/dev/null
@@ -36,111 +36,18 @@ _action() {
 		res = append(res, string(b))
 	}
 	m.Cmdy(cli.SYSTEM, SH, "-c", kit.Join(res, ice.NL))
-	if m.StatusTime(); cli.IsSuccess(m) {
-		m.SetAppend()
-	}
+	m.StatusTime()
 	return
-}
-
-func _sh_exec(m *ice.Message, arg ...string) {
-	if m.Option(mdb.TEXT) == "" {
-		// if _cache_bin != nil {
-		// 	m.Copy(_cache_bin)
-		// 	break
-		// }
-		// _cache_bin = m
-
-		// m.Push(mdb.NAME, "_list")
-		// _vimer_list(m, "/bin")
-		// _vimer_list(m, "/sbin")
-	}
 }
 
 const SH = nfs.SH
 
 func init() {
-	Index.Register(&ice.Context{Name: SH, Help: "命令", Commands: ice.Commands{
+	Index.MergeCommands(ice.Commands{
 		SH: {Name: "sh path auto", Help: "命令", Actions: ice.MergeActions(ice.Actions{
-			ice.CTX_INIT: {Name: "_init", Help: "初始化", Hand: func(m *ice.Message, arg ...string) {
-				for _, cmd := range []string{mdb.SEARCH, mdb.ENGINE, mdb.RENDER, mdb.PLUGIN} {
-					m.Cmd(cmd, mdb.CREATE, m.CommandKey(), m.PrefixKey())
-				}
-				LoadPlug(m, m.CommandKey())
-				m.Cmd(TEMPLATE, mdb.CREATE, m.CommandKey(), m.PrefixKey())
-			}},
-			TEMPLATE: {Hand: func(m *ice.Message, arg ...string) {
-				if kit.Ext(m.Option(mdb.FILE)) != m.CommandKey() {
-					return
-				}
-				m.Echo(`
-_list
-`)
-			}},
-			mdb.SEARCH: {Name: "search", Help: "搜索", Hand: func(m *ice.Message, arg ...string) {
-				if arg[0] == mdb.FOREACH {
-					return
-				}
-				m.Option(cli.CMD_DIR, kit.Select(ice.SRC, arg, 2))
-				m.Cmdy(mdb.SEARCH, MAN1, arg[1:])
-				m.Cmdy(mdb.SEARCH, MAN8, arg[1:])
-				_go_find(m, kit.Select(cli.MAIN, arg, 1), arg[2])
-				_go_grep(m, kit.Select(cli.MAIN, arg, 1), arg[2])
-			}},
-			mdb.ENGINE: {Name: "engine", Help: "引擎", Hand: func(m *ice.Message, arg ...string) {
-				_sh_exec(m, arg...)
-			}},
-			mdb.RENDER: {Name: "render", Help: "渲染", Hand: func(m *ice.Message, arg ...string) {
-				_sh_main_script(m, arg...)
-			}},
-		}, PlugAction()), Hand: func(m *ice.Message, arg ...string) {
-			if len(arg) > 0 && kit.Ext(arg[0]) == SH {
-				_sh_main_script(m, SH, arg[0], ice.SRC)
-				return
-			}
-			m.Option(nfs.DIR_ROOT, ice.SRC)
-			m.Option(nfs.DIR_DEEP, ice.TRUE)
-			m.Option(nfs.DIR_REG, ".*.(sh)$")
-			m.Cmdy(nfs.DIR, arg)
-		}},
-	}, Configs: ice.Configs{
-		SH: {Name: SH, Help: "命令", Value: kit.Data(PLUG, kit.Dict(
-			SPLIT, kit.Dict(OPERATE, "="),
-			PREFIX, kit.Dict("#", COMMENT), SUFFIX, kit.Dict(" {", COMMENT),
-			"regexp", kit.Dict(
-				"[A-Z0-9_]+", CONSTANT,
-			),
-			PREPARE, kit.Dict(
-				KEYWORD, kit.Simple(
-					"local", "export", "require", "source", "return", "exit",
-
-					"if", "then", "else", "elif", "fi",
-					"for", "while", "do", "done",
-					"esac", "case", "in",
-
-					"shift",
-					"read",
-					"kill",
-					"let",
-					"cd",
-				),
-				FUNCTION, kit.Simple(
-					"eval",
-					"test",
-					"echo",
-					"mkdir",
-					"cat",
-					"rm",
-
-					"env",
-					"xargs", "_list",
-					"date", "uptime", "uname", "whoami",
-					"find", "grep", "sed", "awk",
-					"pwd",
-					"ls",
-					"ps",
-					"go",
-				),
-			), KEYWORD, kit.Dict(),
-		))},
-	}}, nil)
+			mdb.RENDER: {Hand: func(m *ice.Message, arg ...string) { _c_show(m, arg...) }},
+			mdb.ENGINE: {Hand: func(m *ice.Message, arg ...string) { _sh_exec(m, arg...) }},
+			NAVIGATE:   {Hand: func(m *ice.Message, arg ...string) { _c_tags(m, MAN, "ctags", "-a", "-R", nfs.PWD) }},
+		}, PlugAction(), LangAction())},
+	})
 }

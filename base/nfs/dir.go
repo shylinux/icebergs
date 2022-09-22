@@ -155,7 +155,7 @@ const (
 	DIR_REG  = "dir_reg"
 
 	DIR_DEF_FIELDS = "time,path,size,action"
-	DIR_WEB_FIELDS = "time,size,path,action,link"
+	DIR_WEB_FIELDS = "time,size,path,link,action"
 	DIR_CLI_FIELDS = "path,size,time"
 )
 const (

@@ -70,15 +70,6 @@ var Index = &Context{Name: ICE, Help: "冰山模块", Configs: Configs{
 	QUIT: {Name: "quit", Help: "结束", Hand: func(m *Message, arg ...string) {
 		os.Exit(0)
 	}},
-	"some": {Name: "quit", Help: "结束", Hand: func(m *Message, arg ...string) {
-		m.OptionFields("detail")
-		m.Push("modpath", kit.ModPath(m.root.Travel))
-		m.Push("modname", kit.ModName(m.root.Travel))
-		m.Push("pathname", kit.PathName(m.root.Travel))
-		m.Push("filename", kit.FileName(m.root.Travel))
-		m.Push("funcname", kit.FuncName(m.root.Travel))
-		m.Push("fileline", kit.FileLine(m.root.Travel, 100))
-	}},
 	EXIT: {Name: "exit", Help: "退出", Hand: func(m *Message, arg ...string) {
 		defer m.Target().Close(m.root.Spawn(), arg...)
 		m.root.Option(EXIT, kit.Select("0", arg, 0))

@@ -89,7 +89,7 @@ func init() {
 				ctx.ProcessRefresh(m)
 			}},
 			"resize": {Name: "resize", Help: "大小", Hand: func(m *ice.Message, arg ...string) {
-				_xterm_get(m, "").Setsize(m.Option("rows"), m.Option("cols"))
+				_xterm_get(m, "").Setsize(m.OptionDefault("rows", "24"), m.OptionDefault("cols", "80"))
 			}},
 			"input": {Name: "input", Help: "输入", Hand: func(m *ice.Message, arg ...string) {
 				if b, e := base64.StdEncoding.DecodeString(strings.Join(arg, "")); !m.Warn(e) {

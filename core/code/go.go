@@ -1,12 +1,8 @@
 package code
 
 import (
-	"bufio"
-	"os"
 	"path"
 	"strings"
-	"sync"
-	"time"
 
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/cli"
@@ -16,169 +12,68 @@ import (
 	kit "shylinux.com/x/toolkits"
 )
 
-func _go_tags(m *ice.Message, key string) {
-	if s, e := nfs.StatFile(m, path.Join(m.Option(cli.CMD_DIR), TAGS)); os.IsNotExist(e) || s.ModTime().Before(time.Now().Add(kit.Duration("-72h"))) {
-		m.Cmd(cli.SYSTEM, "gotags", "-R", "-f", TAGS, nfs.PWD)
+func _go_complete(m *ice.Message, arg ...string) {
+	if m.Option(mdb.TEXT) == "" {
+		m.Push(mdb.TEXT, "package", "import", "const", "type", "func", "var")
+		return
 	}
 
-	ls := strings.Split(key, ice.PT)
-	key = ls[len(ls)-1]
-
-	for _, l := range strings.Split(m.Cmdx(cli.SYSTEM, nfs.GREP, "^"+key+"\\>", TAGS), ice.NL) {
-		ls := strings.SplitN(l, ice.TB, 2)
-		if len(ls) < 2 {
-			continue
+	if strings.HasSuffix(m.Option(mdb.TEXT), ice.PT) {
+		key := kit.Slice(kit.Split(m.Option(mdb.TEXT), "\t ."), -1)[0]
+		switch key {
+		case "m", "msg":
+			key = "icebergs.Message"
+		case "kit":
+			key = "shylinux.com/x/toolkits"
+		case "ice":
+			key = "shylinux.com/x/ice"
+		case "mdb", "cli", "nfs":
+			key = "shylinux.com/x/icebergs/base/" + key
 		}
 
-		ls = strings.SplitN(ls[1], ice.TB, 2)
-		file := ls[0]
-		ls = strings.SplitN(ls[1], ";\"", 2)
-		text := strings.TrimSuffix(strings.TrimPrefix(ls[0], "/^"), "$/")
-		line := kit.Int(text)
-
-		f, e := nfs.OpenFile(m, path.Join(m.Option(cli.CMD_DIR), file))
-		m.Assert(e)
-		defer f.Close()
-
-		bio := bufio.NewScanner(f)
-		for i := 1; bio.Scan(); i++ {
-			if i == line || bio.Text() == text {
-				m.PushSearch(nfs.FILE, strings.TrimPrefix(file, nfs.PWD), nfs.LINE, kit.Format(i), mdb.TEXT, bio.Text())
+		msg := m.Cmd(cli.SYSTEM, GO, "doc", key)
+		for _, l := range strings.Split(kit.Select(msg.Result(), msg.Append(cli.CMD_OUT)), ice.NL) {
+			ls := kit.Split(l, "\t *", "()")
+			if len(ls) < 2 {
+				continue
+			}
+			switch ls[0] {
+			case "const", "type", "func", "var":
+				if ls[1] == "(" {
+					m.Push(mdb.NAME, ls[5])
+				} else {
+					m.Push(mdb.NAME, ls[1])
+				}
+				m.Push(mdb.TEXT, l)
 			}
 		}
-	}
-}
-func _go_help(m *ice.Message, key string) {
-	if p := m.Cmd(cli.SYSTEM, GO, "doc", key).Append(cli.CMD_OUT); strings.TrimSpace(p) != "" {
-		m.PushSearch(nfs.FILE, key+".godoc", nfs.LINE, 1, mdb.TEXT, p)
-	}
-}
-func _go_find(m *ice.Message, key string, dir string) {
-	m.Cmd(nfs.FIND, dir, key, func(value ice.Maps) { m.PushSearch(nfs.LINE, 1, value) })
-}
-func _go_grep(m *ice.Message, key string, dir string) {
-	m.Cmd(nfs.GREP, dir, key, func(value ice.Maps) { m.PushSearch(value) })
-}
-
-var _cache_mods = ice.Messages{}
-var _cache_lock = sync.Mutex{}
-
-func _go_doc(m *ice.Message, mod string, pkg string) *ice.Message {
-	_cache_lock.Lock()
-	defer _cache_lock.Unlock()
-
-	key := kit.Keys(mod, pkg)
-	if msg, ok := _cache_mods[key]; ok && kit.Time(msg.Time("24h")) > kit.Time(m.Time()) {
-		return msg
+		return
 	}
 
-	if mod != "" {
-		m.Cmd(cli.SYSTEM, "go", "get", mod)
+	m.Push(mdb.TEXT, "m", "msg", "arg", "mdb", "cli", "nfs", "ice", "kit")
+	for _, l := range strings.Split(m.Cmdx(cli.SYSTEM, GO, "list", "std"), ice.NL) {
+		m.Push(mdb.TEXT, kit.Slice(kit.Split(l, ice.PS), -1)[0])
 	}
-	// if msg := _vimer_go_complete(m.Spawn(), key); msg.Length() > 0 {
-	// 	_cache_mods[key] = msg
-	// 	return msg
-	// }
-	return nil
 }
-
 func _go_exec(m *ice.Message, arg ...string) {
-	if m.Option("some") == "run" {
-		args := []string{"./bin/ice.bin"}
-		if cmd := ctx.GetFileCmd(path.Join(arg[2], arg[1])); cmd != "" {
-			args = append(args, cmd)
-		}
-		m.Cmdy(cli.SYSTEM, args)
-		m.StatusTime("args", kit.Join(args, " "))
-		return
+	args := []string{"./bin/ice.bin"}
+	if cmd := ctx.GetFileCmd(path.Join(arg[2], arg[1])); cmd != "" {
+		args = append(args, cmd)
 	}
-	if m.Option(mdb.TEXT) == "" {
-		if m.Option(nfs.LINE) == "1" {
-			m.Push(mdb.NAME, "package")
-		} else {
-			m.Push(mdb.NAME, "import")
-			m.Push(mdb.NAME, "const")
-			m.Push(mdb.NAME, "type")
-			m.Push(mdb.NAME, "func")
-		}
-		return
+	if m.Cmdy(cli.SYSTEM, args); cli.IsSuccess(m) {
+		m.Result(m.Append(cli.CMD_ERR), m.Append(cli.CMD_OUT))
+		m.SetAppend()
 	}
-
-	if m.Option(mdb.NAME) == ice.PT {
-		switch m.Option(mdb.TYPE) {
-		case "msg", "m":
-			m.Copy(_go_doc(m, "shylinux.com/x/ice", "Message"))
-			m.Copy(_go_doc(m, "shylinux.com/x/icebergs", "Message"))
-
-		case "ice", "*ice":
-			m.Copy(_go_doc(m, "shylinux.com/x/ice", ""))
-
-		case "kit":
-			m.Copy(_go_doc(m, "shylinux.com/x/toolkits", ""))
-
-		default:
-			m.Copy(_go_doc(m, "", m.Option(mdb.TYPE)))
-		}
-
-	} else {
-		m.Push(mdb.NAME, "msg")
-		m.Push(mdb.NAME, "ice")
-	}
+	m.StatusTime(ctx.ARGS, kit.Join(args, ice.SP))
 }
 func _go_show(m *ice.Message, arg ...string) {
-	if arg[1] == "main.go" {
-		const (
-			PACKAGE = "package"
-			IMPORT  = "import"
-		)
-		index := 0
-		push := func(repos string) {
-			index++
-			m.Push("index", index)
-			m.Push("repos", repos)
-		}
-		block := ""
-		m.Cmd(nfs.CAT, path.Join(arg[2], arg[1]), func(ls []string, line string) {
-			switch {
-			case strings.HasPrefix(line, IMPORT+" ("):
-				block = IMPORT
-			case strings.HasPrefix(line, ")"):
-				block = ""
-			case strings.HasPrefix(line, IMPORT):
-				if len(ls) == 2 {
-					push(ls[1])
-				} else if len(ls) == 3 {
-					push(ls[2])
-				}
-			default:
-				if block == IMPORT {
-					if len(ls) == 0 {
-						push("")
-					} else if len(ls) == 1 {
-						push(ls[0])
-					} else if len(ls) == 2 {
-						push(ls[1])
-					}
-				}
-			}
-		})
+	if key := ctx.GetFileCmd(path.Join(arg[2], arg[1])); key != "" {
+		ctx.ProcessCommand(m, key, kit.Simple())
+	} else if p := strings.ReplaceAll(path.Join(arg[2], arg[1]), ".go", ".shy"); arg[1] != "main.go" && nfs.ExistsFile(m, p) {
+		ctx.ProcessCommand(m, "web.wiki.word", kit.Simple(p))
 	} else {
-		if key := ctx.GetFileCmd(path.Join(arg[2], arg[1])); key != "" {
-			ctx.ProcessCommand(m, key, kit.Simple())
-		} else if p := strings.ReplaceAll(path.Join(arg[2], arg[1]), ".go", ".shy"); nfs.ExistsFile(m, p) {
-			ctx.ProcessCommand(m, "web.wiki.word", kit.Simple(p))
-		} else {
-			TagsList(m, "gotags", path.Join(m.Option(nfs.PATH), m.Option(nfs.FILE)))
-		}
+		TagsList(m, "gotags", path.Join(m.Option(nfs.PATH), m.Option(nfs.FILE)))
 	}
-}
-func _sum_show(m *ice.Message, file string) {
-	m.Cmd(nfs.CAT, file, func(ls []string, line string) {
-		m.Push("repos", ls[0])
-		m.Push("version", ls[1])
-		m.Push("hash", ls[2])
-	})
-	m.StatusTimeCount()
 }
 func _mod_show(m *ice.Message, file string) {
 	const (
@@ -222,149 +117,56 @@ func _mod_show(m *ice.Message, file string) {
 		m.Push(VERSION, v)
 		m.Push(REPLACE, kit.Select("", replace[k]))
 	}
-	m.Sort(REPLACE)
+	m.Sort(REPLACE).StatusTimeCount()
+}
+func _sum_show(m *ice.Message, file string) {
+	m.Cmd(nfs.CAT, file, func(ls []string, line string) {
+		m.Push("repos", ls[0])
+		m.Push("version", ls[1])
+		m.Push("hash", ls[2])
+	})
 	m.StatusTimeCount()
 }
 
-const (
-	TAGS = ".tags"
-)
 const GO = "go"
+const GODOC = "godoc"
 const MOD = "mod"
 const SUM = "sum"
-const GODOC = "godoc"
 
 func init() {
-	Index.Register(&ice.Context{Name: GO, Help: "后端", Commands: ice.Commands{
-		ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
-			m.Cmd(mdb.SEARCH, mdb.CREATE, GODOC, m.Prefix(GO))
-			m.Cmd(mdb.ENGINE, mdb.CREATE, GO, m.Prefix(GO))
-
-			m.Cmd(TEMPLATE, mdb.CREATE, GO, m.Prefix(GO))
-			m.Cmd(COMPLETE, mdb.CREATE, GO, m.Prefix(GO))
-			m.Cmd(NAVIGATE, mdb.CREATE, GO, m.Prefix(GO))
-
-			LoadPlug(m, GO, MOD, SUM)
-			for _, k := range []string{GO, MOD, SUM, GODOC} {
-				m.Cmd(mdb.RENDER, mdb.CREATE, k, m.Prefix(k))
-				m.Cmd(mdb.PLUGIN, mdb.CREATE, k, m.Prefix(k))
-			}
-			m.Go(func() {
-				m.Sleep300ms()
-				cli.IsAlpine(m, GO)
-				cli.IsCentos(m, GO)
-				cli.IsUbuntu(m, GO, "golang")
-			})
-		}},
-		GODOC: {Name: "godoc", Help: "文档", Actions: ice.MergeActions(ice.Actions{
-			mdb.RENDER: {Hand: func(m *ice.Message, arg ...string) {
-				m.Cmdy(cli.SYSTEM, GO, "doc", strings.TrimSuffix(arg[1], ice.PT+arg[0]), kit.Dict(cli.CMD_DIR, arg[2])).SetAppend()
-			}},
-		}, PlugAction())},
-		SUM: {Name: "sum", Help: "版本", Actions: ice.MergeActions(ice.Actions{
-			mdb.RENDER: {Hand: func(m *ice.Message, arg ...string) { _sum_show(m, path.Join(arg[2], arg[1])) }},
-			mdb.ENGINE: {Hand: func(m *ice.Message, arg ...string) { _sum_show(m, path.Join(arg[2], arg[1])) }},
-		}, PlugAction())},
-		MOD: {Name: "mod", Help: "模块", Actions: ice.MergeActions(ice.Actions{
-			mdb.RENDER: {Hand: func(m *ice.Message, arg ...string) { _mod_show(m, path.Join(arg[2], arg[1])) }},
-			mdb.ENGINE: {Hand: func(m *ice.Message, arg ...string) { _mod_show(m, path.Join(arg[2], arg[1])) }},
-		}, PlugAction())},
+	Index.MergeCommands(ice.Commands{
 		GO: {Name: "go", Help: "后端", Actions: ice.MergeActions(ice.Actions{
-			mdb.SEARCH: {Hand: func(m *ice.Message, arg ...string) {
-				if arg[0] == GO {
-					_go_tags(m, kit.Select(cli.MAIN, arg, 1))
-					_go_help(m, kit.Select(cli.MAIN, arg, 1))
-					// _go_find(m, kit.Select(cli.MAIN, arg, 1), arg[2])
-					// _go_grep(m, kit.Select(cli.MAIN, arg, 1), arg[2])
-				}
+			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
+				m.Cmd(NAVIGATE, mdb.CREATE, GODOC, m.PrefixKey())
 			}},
-			mdb.ENGINE: {Hand: func(m *ice.Message, arg ...string) { _go_exec(m, arg...) }},
 			mdb.RENDER: {Hand: func(m *ice.Message, arg ...string) { _go_show(m, arg...) }},
-			TEMPLATE: {Hand: func(m *ice.Message, arg ...string) {
-				if kit.Ext(m.Option(mdb.FILE)) != m.CommandKey() {
-					return
-				}
-			}},
+			mdb.ENGINE: {Hand: func(m *ice.Message, arg ...string) { _go_exec(m, arg...) }},
+
 			COMPLETE: {Hand: func(m *ice.Message, arg ...string) {
 				if len(arg) > 0 && arg[0] == mdb.FOREACH {
 					return
 				}
-
-				if m.Option("text") == "" {
-					m.Push(mdb.TEXT, kit.List("package", "import", "const", "type", "func", "var"))
-					return
-				}
-				if strings.HasSuffix(m.Option("text"), ".") {
-					key := kit.Slice(kit.Split(m.Option("text"), "\t ."), -1)[0]
-					switch key {
-					case "m", "msg":
-						key = "icebergs.Message"
-					case "kit":
-						key = "toolkits"
-					case "ice":
-						key = "icebergs"
-					}
-
-					for _, l := range strings.Split(m.Cmdx("cli.system", "go", "doc", key), ice.NL) {
-						ls := kit.Split(l)
-						if len(ls) < 2 {
-							continue
-						}
-						switch ls[0] {
-						case "const", "var", "func":
-							m.Push(mdb.NAME, ls[1])
-							m.Push(mdb.TEXT, l)
-						}
-					}
-					return
-				}
-
-				m.Push(mdb.TEXT, "m")
-				m.Push(mdb.TEXT, "msg")
-				m.Push(mdb.TEXT, "ice")
-				m.Push(mdb.TEXT, "kit")
-				for _, l := range strings.Split(m.Cmdx("cli.system", "go", "list", "std"), ice.NL) {
-					m.Push(mdb.TEXT, kit.Slice(kit.Split(l, ice.PS), -1)[0])
-				}
+				_go_complete(m, arg...)
 			}},
 			NAVIGATE: {Hand: func(m *ice.Message, arg ...string) {
-				m.Option("text", kit.Slice(kit.Split(m.Option("text"), "."), -1)[0])
-				_inner_tags(m, "", m.Option("text"))
+				_c_tags(m, GODOC, "gotags", "-f", nfs.TAGS, "-R", nfs.PWD)
+			}},
+		}, PlugAction(), LangAction())},
+		GODOC: {Name: "godoc", Help: "文档", Actions: ice.MergeActions(ice.Actions{
+			mdb.RENDER: {Hand: func(m *ice.Message, arg ...string) {
+				arg[1] = strings.Replace(arg[1], "m.", "shylinux.com/x/ice.Message.", 1)
+				arg[1] = strings.Replace(arg[1], "kit.", "shylinux.com/x/toolkits.", 1)
+				m.Cmdy(cli.SYSTEM, GO, "doc", strings.TrimSuffix(arg[1], ".godoc"), kit.Dict(cli.CMD_DIR, arg[2]))
+				if m.Append(cli.CMD_ERR) != "" {
+					m.Result(m.Append(cli.CMD_OUT))
+				}
 			}},
 		}, PlugAction())},
-	}, Configs: ice.Configs{
-		MOD: {Name: MOD, Help: "模块", Value: kit.Data(PLUG, kit.Dict(
-			PREFIX, kit.Dict("//", COMMENT), PREPARE, kit.Dict(
-				KEYWORD, kit.Simple("go", "module", "require", "replace", "=>"),
-			), KEYWORD, kit.Dict(),
-		))},
-		GO: {Name: GO, Help: "后端", Value: kit.Data(PLUG, kit.Dict(
-			mdb.RENDER, kit.Dict(),
-			SPLIT, kit.Dict("space", "\t ", "operator", "{[(&.,:;!|<>)]}"),
-			PREFIX, kit.Dict("// ", COMMENT, "/*", COMMENT, "* ", COMMENT), PREPARE, kit.Dict(
-				KEYWORD, kit.Simple(
-					"package", "import", "type", "struct", "interface", "const", "var", "func",
-					"if", "else", "for", "range", "break", "continue",
-					"switch", "case", "default", "fallthrough",
-					"go", "select", "defer", "return",
-				),
-				CONSTANT, kit.Simple(
-					"false", "true", "nil", "iota", "-1", "0", "1", "2", "3",
-				),
-				DATATYPE, kit.Simple(
-					"int", "int8", "int16", "int32", "int64",
-					"uint", "uint8", "uint16", "uint32", "uint64",
-					"float32", "float64", "complex64", "complex128",
-					"rune", "string", "byte", "uintptr",
-					"bool", "error", "chan", "map",
-				),
-				FUNCTION, kit.Simple(
-					"msg", "m",
-					"init", "main", "print", "println", "panic", "recover",
-					"new", "make", "len", "cap", "copy", "append", "delete", "close",
-					"complex", "real", "imag",
-				),
-			), KEYWORD, kit.Dict(),
-		))},
-	}}, nil)
+		MOD: {Name: "mod", Help: "模块", Actions: ice.MergeActions(ice.Actions{
+			mdb.RENDER: {Hand: func(m *ice.Message, arg ...string) { _mod_show(m, path.Join(arg[2], arg[1])) }},
+		}, PlugAction())},
+		SUM: {Name: "sum", Help: "版本", Actions: ice.MergeActions(ice.Actions{
+			mdb.RENDER: {Hand: func(m *ice.Message, arg ...string) { _sum_show(m, path.Join(arg[2], arg[1])) }},
+		}, PlugAction())},
+	})
 }

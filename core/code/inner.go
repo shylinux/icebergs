@@ -9,6 +9,7 @@ import (
 	"shylinux.com/x/icebergs/base/aaa"
 	"shylinux.com/x/icebergs/base/cli"
 	"shylinux.com/x/icebergs/base/ctx"
+	"shylinux.com/x/icebergs/base/lex"
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/nfs"
 	kit "shylinux.com/x/toolkits"
@@ -18,7 +19,9 @@ func _inner_list(m *ice.Message, ext, file, dir string) {
 	if aaa.Right(m, dir, file) {
 		if nfs.IsSourceFile(m, ext) {
 			m.Cmdy(nfs.CAT, path.Join(dir, file))
-		} else {
+		}
+		if m.IsErrNotFound() {
+			m.SetResult()
 			_inner_show(m, ext, file, dir)
 		}
 	}
@@ -32,23 +35,6 @@ func _inner_exec(m *ice.Message, ext, file, dir string) {
 	if aaa.Right(m, dir, file) {
 		m.Cmdy(mdb.ENGINE, ext, file, dir)
 	}
-}
-func _inner_make(m *ice.Message, dir string, msg *ice.Message) {
-	for _, line := range strings.Split(msg.Append(cli.CMD_ERR), ice.NL) {
-		if strings.Contains(line, ice.DF) {
-			if ls := strings.SplitN(line, ice.DF, 4); len(ls) > 3 {
-				m.Push(nfs.PATH, dir)
-				m.Push(nfs.FILE, strings.TrimPrefix(ls[0], dir))
-				m.Push(nfs.LINE, ls[1])
-				m.Push(mdb.TEXT, ls[3])
-			}
-		}
-	}
-	if m.Length() == 0 {
-		m.Echo(msg.Append(cli.CMD_OUT))
-		m.Echo(msg.Append(cli.CMD_ERR))
-	}
-	m.StatusTime()
 }
 func _inner_tags(m *ice.Message, dir string, value string) {
 	for _, l := range strings.Split(m.Cmdx(cli.SYSTEM, nfs.GREP, "^"+value+"\\>", nfs.TAGS, kit.Dict(cli.CMD_DIR, dir)), ice.NL) {
@@ -87,11 +73,11 @@ const (
 	FUNCTION = "function"
 )
 const (
-	SPLIT   = "split"
+	SPLIT   = lex.SPLIT
 	SPACE   = "space"
 	OPERATE = "operate"
-	PREFIX  = "prefix"
-	SUFFIX  = "suffix"
+	PREFIX  = lex.PREFIX
+	SUFFIX  = lex.SUFFIX
 )
 const (
 	PLUG = "plug"
@@ -130,11 +116,6 @@ func init() {
 			mdb.ENGINE: {Name: "engine", Help: "引擎", Hand: func(m *ice.Message, arg ...string) {
 				_inner_exec(m, arg[0], arg[1], arg[2])
 			}},
-			mdb.SEARCH: {Name: "search", Help: "搜索", Hand: func(m *ice.Message, arg ...string) {
-				if _inner_tags(m, m.Option(nfs.PATH), arg[1]); m.Length() == 0 {
-					_inner_tags(m, "", arg[1])
-				}
-			}},
 
 			nfs.GREP: {Name: "grep", Help: "搜索", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmdy(nfs.GREP, m.Option(nfs.PATH), arg[0]).StatusTimeCount(mdb.INDEX, 0)
@@ -143,13 +124,6 @@ func init() {
 				if _inner_tags(m, m.Option(nfs.PATH), arg[0]); m.Length() == 0 {
 					_inner_tags(m, "", arg[0])
 				}
-			}},
-			cli.MAKE: {Name: "make", Help: "构建", Hand: func(m *ice.Message, arg ...string) {
-				_inner_make(m, m.Option(nfs.PATH), m.Cmd(cli.SYSTEM, cli.MAKE, arg))
-			}},
-
-			"listTags": {Name: "listTags", Help: "索引", Hand: func(m *ice.Message, arg ...string) {
-				m.Cmdy("web.code.vim.tags", "listTags", arg)
 			}},
 			NAVIGATE: {Name: "navigate", Help: "跳转", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmdy(NAVIGATE, kit.Ext(m.Option(mdb.FILE)), m.Option(nfs.FILE), m.Option(nfs.PATH))
@@ -169,7 +143,6 @@ func init() {
 
 			arg[1] = strings.Split(arg[1], ice.FS)[0]
 			_inner_list(m, kit.Ext(arg[1]), arg[1], arg[0])
-
 			m.Option("tabs", m.Config("show.tabs"))
 			m.Option("plug", m.Config("show.plug"))
 			m.Option("exts", m.Config("show.exts"))
@@ -179,18 +152,51 @@ func init() {
 }
 func PlugAction() ice.Actions {
 	return ice.Actions{
+		ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
+			for _, cmd := range []string{mdb.PLUGIN, mdb.RENDER, mdb.ENGINE} {
+				m.Cmd(cmd, mdb.CREATE, m.CommandKey(), m.PrefixKey())
+			}
+			LoadPlug(m, m.CommandKey())
+		}},
 		mdb.PLUGIN: {Hand: func(m *ice.Message, arg ...string) { m.Echo(m.Config(PLUG)) }},
 		mdb.RENDER: {Hand: func(m *ice.Message, arg ...string) { m.Cmdy(nfs.CAT, path.Join(arg[2], arg[1])) }},
 		mdb.ENGINE: {Hand: func(m *ice.Message, arg ...string) { m.Cmdy(nfs.CAT, path.Join(arg[2], arg[1])) }},
+		mdb.SELECT: {Hand: func(m *ice.Message, arg ...string) {
+			if len(arg) > 0 && kit.Ext(arg[0]) == m.CommandKey() {
+				m.Cmdy("", mdb.ENGINE, m.CommandKey(), arg[0], ice.SRC)
+				return
+			}
+			m.Option(nfs.DIR_ROOT, ice.SRC)
+			m.Option(nfs.DIR_DEEP, ice.TRUE)
+			m.Option(nfs.DIR_REG, kit.Format(`.*\.(%s)$`, m.CommandKey()))
+			m.Cmdy(nfs.DIR, arg)
+		}},
 	}
 }
 func LoadPlug(m *ice.Message, language ...string) {
 	for _, language := range language {
 		m.Conf(nfs.CAT, kit.Keym(nfs.SOURCE, kit.Ext(language)), ice.TRUE)
-		m.Confm(language, kit.Keym(PLUG, PREPARE), func(key string, value interface{}) {
+		m.Confm(language, kit.Keym(PLUG, PREPARE), func(key string, value ice.Any) {
 			for _, v := range kit.Simple(value) {
 				m.Conf(language, kit.Keym(PLUG, KEYWORD, v), key)
 			}
 		})
 	}
+}
+func TagsList(m *ice.Message, cmds ...string) {
+	for _, l := range strings.Split(m.Cmdx(cli.SYSTEM, cmds), ice.NL) {
+		if strings.HasPrefix(l, "!_") {
+			continue
+		}
+		ls := strings.Split(l, ice.TB)
+		if len(ls) < 3 {
+			continue
+		}
+		switch ls[3] {
+		case "w", "m":
+			continue
+		}
+		m.PushRecord(kit.Dict(mdb.TYPE, ls[3], mdb.NAME, ls[0], nfs.LINE, strings.TrimSuffix(ls[2], ";\"")))
+	}
+	m.Sort(nfs.LINE).StatusTimeCount()
 }

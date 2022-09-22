@@ -2,18 +2,27 @@ package code
 
 import (
 	ice "shylinux.com/x/icebergs"
+	"shylinux.com/x/icebergs/base/ctx"
+	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/web"
 	kit "shylinux.com/x/toolkits"
 )
 
 const CODE = "code"
 
-var Index = &ice.Context{Name: CODE, Help: "编程中心"}
+var Index = &ice.Context{Name: CODE, Help: "编程中心", Commands: ice.Commands{
+	ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
+		m.Conf(TEMPLATE, kit.Keym(mdb.SHORT), mdb.TYPE)
+		m.Conf(COMPLETE, kit.Keym(mdb.SHORT), mdb.TYPE)
+		m.Conf(NAVIGATE, kit.Keym(mdb.SHORT), mdb.TYPE)
+		ctx.Load(m)
+	}},
+}}
 
 func init() {
 	web.Index.Register(Index, &web.Frame{},
 		INSTALL, WEBPACK, BINPACK, AUTOGEN, COMPILE, PUBLISH, UPGRADE,
-		XTERM, VIMER, INNER, FAVOR, BENCH, PPROF,
+		FAVOR, XTERM, INNER, VIMER, BENCH, PPROF,
 		C, SH, SHY, GO, JS,
 	)
 }

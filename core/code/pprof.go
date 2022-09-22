@@ -28,8 +28,8 @@ func init() {
 		PPROF: {Name: "pprof zone id auto", Help: "性能分析", Actions: ice.MergeActions(ice.Actions{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
 				web.AddRewrite(func(w http.ResponseWriter, r *http.Request) bool {
-					if p := r.URL.Path; strings.HasPrefix(p, "/debug") {
-						r.URL.Path = strings.Replace(r.URL.Path, "/debug", "/code", -1)
+					if p := r.URL.Path; strings.HasPrefix(p, "/debug/") {
+						r.URL.Path = strings.Replace(r.URL.Path, "/debug/", "/code/", -1)
 						m.Debug("rewrite %v -> %v", p, r.URL.Path)
 					}
 					return false
@@ -57,7 +57,7 @@ func init() {
 			}},
 			web.SERVE: {Name: "serve", Help: "展示", Hand: func(m *ice.Message, arg ...string) {
 				u := web.OptionUserWeb(m)
-				p := u.Hostname() + ":" + m.Cmdx(tcp.PORT, aaa.RIGHT)
+				p := u.Hostname() + ice.DF + m.Cmdx(tcp.PORT, aaa.RIGHT)
 				m.Cmd(cli.DAEMON, m.Configv(PPROF), "-http="+p, m.Option(BINNARY), m.Option(nfs.FILE))
 				m.Echo("http://%s/ui/top", p).ProcessInner()
 			}},
@@ -67,15 +67,14 @@ func init() {
 				m.EchoAnchor(web.MergeLink(m, "/code/pprof/"))
 				m.PushAction(ice.RUN, mdb.REMOVE)
 				m.Action(mdb.CREATE)
-				return
+			} else {
+				m.Tables(func(value ice.Maps) {
+					m.PushDownload(mdb.LINK, "pprof.pd.gz", value[nfs.FILE])
+					m.PushButton(web.SERVE)
+				})
 			}
-
-			m.Tables(func(value ice.Maps) {
-				m.PushDownload(mdb.LINK, "pprof.pd.gz", value[nfs.FILE])
-				m.PushButton(web.SERVE)
-			})
 		}},
-		"/pprof/": {Name: "/pprof/", Help: "性能分析", Hand: func(m *ice.Message, arg ...string) {
+		web.PP(PPROF): {Name: "/pprof/", Help: "性能分析", Hand: func(m *ice.Message, arg ...string) {
 			defer m.Render(ice.RENDER_VOID)
 			m.R.URL.Path = "/debug" + m.R.URL.Path
 			http.DefaultServeMux.ServeHTTP(m.W, m.R)

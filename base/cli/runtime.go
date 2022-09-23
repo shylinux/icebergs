@@ -149,6 +149,7 @@ const (
 	CTX_OPS = "ctx_ops"
 	CTX_POD = "ctx_pod"
 	CTX_ARG = "ctx_arg"
+	CTX_ENV = "ctx_env"
 	CTX_PID = "ctx_pid"
 	CTX_LOG = "ctx_log"
 

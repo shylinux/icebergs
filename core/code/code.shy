@@ -1,8 +1,8 @@
 chapter "源码"
-
 code.go
 code.shy
 
+section "开发流程"
 install.go
 webpack.go
 binpack.go
@@ -11,20 +11,23 @@ compile.go
 publish.go
 upgrade.go
 
-oauth.go
+section "编程工具"
 favor.go
 xterm.go
 xterm.shy
 inner.go
 vimer.go
-bench.go
 pprof.go
+bench.go
+oauth.go
 case.go
 
+section "编程语言"
 c.go
 sh.go
 shy.go
+zml.go
+py.go
 go.go
 js.go
-py.go
-zml.go
+

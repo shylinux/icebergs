@@ -128,7 +128,8 @@ func _autogen_version(m *ice.Message) {
 		m.Cmd(cli.SYSTEM, GIT, "remote", "add", "origin", "https://"+mod)
 		m.Cmd("web.code.git.repos", mdb.CREATE, "repos", "https://"+mod, mdb.NAME, path.Base(mod), nfs.PATH, nfs.PWD)
 		m.Cmd(cli.SYSTEM, GIT, "add", ice.GO_MOD, ice.SRC, ice.ETC_MISS_SH)
-		m.Cmd(nfs.DEFS, ".gitignore", kit.Format(`src/binpack.go
+		m.Cmd(nfs.DEFS, ".gitignore", kit.Format(`
+src/binpack.go
 src/version.go
 etc/
 bin/
@@ -143,9 +144,7 @@ usr/
 
 	m.Cmd(nfs.SAVE, ice.SRC_VERSION_GO, kit.Format(`package main
 
-import (
-	ice "shylinux.com/x/icebergs"
-)
+import ice "shylinux.com/x/icebergs"
 
 func init() {
 	ice.Info.Make = ice.MakeInfo{
@@ -167,8 +166,8 @@ func init() {
 			mdb.INPUTS: {Name: "inputs", Help: "补全", Hand: func(m *ice.Message, arg ...string) {
 				switch arg[0] {
 				case cli.MAIN:
-					m.Option(nfs.DIR_ROOT, ice.SRC)
-					m.Cmdy(nfs.DIR, nfs.PWD, nfs.DIR_CLI_FIELDS, kit.Dict(nfs.DIR_REG, `.*\.go`)).RenameAppend(nfs.PATH, arg[0])
+					m.Option(nfs.DIR_ROOT, m.Option(nfs.PATH))
+					m.Cmdy(nfs.DIR, nfs.PWD, nfs.DIR_CLI_FIELDS, kit.Dict(nfs.DIR_REG, `.*\.go$`)).RenameAppend(nfs.PATH, arg[0])
 				}
 			}},
 			mdb.CREATE: {Name: "create name=hi help type=Zone,Hash,Data,Code main=main.go@key zone key", Help: "模块", Hand: func(m *ice.Message, arg ...string) {
@@ -177,27 +176,24 @@ func init() {
 				m.Option(mdb.TEXT, kit.Format("`name:\"%s\" help:\"%s\"`", _defs_list(m), m.Option(mdb.HELP)))
 
 				nfs.OptionFiles(m, nfs.DiskFile)
-				if p := path.Join(ice.SRC, m.Option(mdb.ZONE), kit.Keys(m.Option(mdb.NAME), GO)); !nfs.ExistsFile(m, p) {
+				if p := path.Join(m.Option(nfs.PATH), m.Option(mdb.ZONE), kit.Keys(m.Option(mdb.NAME), GO)); !nfs.ExistsFile(m, p) {
 					_autogen_module(m, p)
-					_autogen_import(m, path.Join(ice.SRC, m.Option(cli.MAIN)), m.Option(mdb.ZONE), _autogen_mod(m, ice.GO_MOD))
+					_autogen_import(m, path.Join(m.Option(nfs.PATH), m.Option(cli.MAIN)), m.Option(mdb.ZONE), _autogen_mod(m, ice.GO_MOD))
 				}
-				if p := path.Join(ice.SRC, m.Option(mdb.ZONE), kit.Keys(m.Option(mdb.NAME), SHY)); !nfs.ExistsFile(m, p) {
+				if p := path.Join(m.Option(nfs.PATH), m.Option(mdb.ZONE), kit.Keys(m.Option(mdb.NAME), SHY)); !nfs.ExistsFile(m, p) {
 					_autogen_script(m, p)
-					_autogen_source(m, path.Join(ice.SRC, m.Option(cli.MAIN)), p)
+					_autogen_source(m, path.Join(m.Option(nfs.PATH), m.Option(cli.MAIN)), p)
 				}
 				m.Option(nfs.FILE, path.Join(m.Option(mdb.ZONE), kit.Keys(m.Option(mdb.NAME), GO)))
 				_autogen_version(m.Spawn())
 			}},
 			ssh.SCRIPT: {Name: "script", Help: "脚本：生成 etc/miss.sh", Hand: func(m *ice.Message, arg ...string) {
-				m.Cmd(nfs.DEFS, ice.ETC_MISS_SH, m.Conf(web.DREAM, kit.Keym(nfs.SCRIPT)))
+				m.Cmd(nfs.DEFS, ice.ETC_MISS_SH, _miss_script)
 				defer m.Cmdy(nfs.CAT, ice.ETC_MISS_SH)
 
 				m.Cmdy(nfs.DIR, ice.ETC_MISS_SH)
 				m.Cmdy(nfs.DIR, ice.GO_MOD)
 				m.Cmdy(nfs.DIR, ice.GO_SUM)
-			}},
-			nfs.TRASH: {Name: "trash", Help: "删除", Hand: func(m *ice.Message, arg ...string) {
-				m.Cmd(nfs.TRASH, path.Join(ice.SRC, m.Option(nfs.PATH)))
 			}},
 			BINPACK: {Name: "binpack", Help: "打包：生成 src/binpack.go", Hand: func(m *ice.Message, arg ...string) {
 				_autogen_version(m)
@@ -207,7 +203,7 @@ func init() {
 					m.Cmdy(nfs.DIR, "usr/release/binpack.go")
 					m.Cmdy(nfs.DIR, "usr/release/conf.go")
 				}
-				m.Cmdy(nfs.CAT, "src/version.go")
+				m.Cmdy(nfs.CAT, ice.SRC_VERSION_GO)
 			}},
 			RELAY: {Name: "relay alias username host port list", Help: "跳板", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmd(COMPILE, RELAY)
@@ -216,7 +212,21 @@ func init() {
 					kit.Formats(kit.Dict(m.OptionSimple("username,host,port,list"))))
 			}},
 		}, Hand: func(m *ice.Message, arg ...string) {
-			m.Cmdy(nfs.CAT, kit.Select("version.go", arg, 0), kit.Dict(nfs.DIR_ROOT, ice.SRC))
+			m.Cmdy(nfs.CAT, kit.Select(path.Base(ice.SRC_VERSION_GO), arg, 0), kit.Dict(nfs.DIR_ROOT, ice.SRC))
 		}},
 	})
 }
+
+var _miss_script = `#! /bin/sh
+
+if [ -f $PWD/.ish/plug.sh ]; then source $PWD/.ish/plug.sh; elif [ -f $HOME/.ish/plug.sh ]; then source $HOME/.ish/plug.sh; else
+	ctx_temp=$(mktemp); if curl -h &>/dev/null; then curl -o $ctx_temp -fsSL https://shylinux.com; else wget -O $ctx_temp -q http://shylinux.com; fi; source $ctx_temp intshell
+fi
+
+require miss.sh
+ish_miss_prepare_compile
+ish_miss_prepare_develop
+ish_miss_prepare_operate
+
+ish_miss_make; if [ -n "$*" ]; then ish_miss_serve "$@"; fi
+`

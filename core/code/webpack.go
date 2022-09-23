@@ -53,6 +53,7 @@ func _webpack_cache(m *ice.Message, dir string, write bool) {
 	js, _, e := nfs.CreateFile(m, path.Join(dir, PAGE_CACHE_JS))
 	m.Assert(e)
 	defer js.Close()
+
 	defer fmt.Fprintln(js, `_can_name = ""`)
 	defer _webpack_can(m)
 	if !write {
@@ -71,6 +72,7 @@ func _webpack_cache(m *ice.Message, dir string, write bool) {
 		})
 	}
 	fmt.Fprintln(js)
+
 	for _, k := range []string{LIB, PANEL, PLUGIN} {
 		m.Cmd(nfs.DIR, k).Sort(nfs.PATH).Tables(func(value ice.Maps) {
 			if kit.Ext(value[nfs.PATH]) == JS {
@@ -141,8 +143,8 @@ const (
 const (
 	PAGE_INDEX_CSS = "page/index.css"
 	PAGE_CACHE_CSS = "page/cache.css"
-	PAGE_CACHE_JS  = "page/cache.js"
 	PAGE_INDEX_JS  = "page/index.js"
+	PAGE_CACHE_JS  = "page/cache.js"
 	PAGE_CAN_CSS   = "page/can.css"
 	PAGE_CAN_JS    = "page/can.js"
 )
@@ -153,10 +155,10 @@ const WEBPACK = "webpack"
 func init() {
 	Index.MergeCommands(ice.Commands{
 		WEBPACK: {Name: "webpack path auto create remove", Help: "打包", Actions: ice.MergeActions(ice.Actions{
-			mdb.CREATE: {Name: "create", Help: "创建", Hand: func(m *ice.Message, arg ...string) {
+			mdb.CREATE: {Name: "create", Help: "发布", Hand: func(m *ice.Message, arg ...string) {
 				_webpack_cache(m.Spawn(), _volcanos(m), true)
 			}},
-			mdb.REMOVE: {Name: "remove", Help: "删除", Hand: func(m *ice.Message, arg ...string) {
+			mdb.REMOVE: {Name: "remove", Help: "调试", Hand: func(m *ice.Message, arg ...string) {
 				_webpack_cache(m.Spawn(), _volcanos(m), false)
 			}},
 			mdb.INSERT: {Name: "insert path", Help: "添加", Hand: func(m *ice.Message, arg ...string) {

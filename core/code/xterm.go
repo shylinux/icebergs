@@ -100,7 +100,7 @@ func init() {
 				_xterm_get(m, kit.Select("", arg, 0)).Write(m.Cmdx(PUBLISH, ice.CONTEXTS, INSTALL) + ice.NL)
 				ctx.ProcessHold(m)
 			}},
-			web.WEBSITE: {Name: "website", Help: "打开", Hand: func(m *ice.Message, arg ...string) {
+			web.WEBSITE: {Name: "website", Help: "网页", Hand: func(m *ice.Message, arg ...string) {
 				web.ProcessWebsite(m, "", "", m.OptionSimple(mdb.HASH))
 			}},
 		}, mdb.HashAction(mdb.FIELD, "time,hash,type,name,text,view", mdb.TOOLS, FAVOR), ctx.CmdAction(), ctx.ProcessAction()), Hand: func(m *ice.Message, arg ...string) {
@@ -108,7 +108,7 @@ func init() {
 				m.PushAction(web.WEBSITE, mdb.REMOVE)
 				m.Action(mdb.CREATE, mdb.PRUNES)
 			} else {
-				m.Action("波浪线", "反引号", "refresh", "full", INSTALL)
+				m.Action(INSTALL, "波浪线", "反引号")
 				ctx.DisplayLocal(m, "")
 				ctx.Toolkit(m)
 			}

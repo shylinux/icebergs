@@ -47,6 +47,11 @@ func init() {
 			mdb.ENGINE: {Hand: func(m *ice.Message, arg ...string) { _c_exec(m, arg...) }},
 			NAVIGATE:   {Hand: func(m *ice.Message, arg ...string) { _c_tags(m, MAN, "ctags", "-a", "-R", nfs.PWD) }},
 		}, PlugAction(), LangAction())},
+		H: {Name: "c path auto", Help: "系统", Actions: ice.MergeActions(ice.Actions{
+			mdb.RENDER: {Hand: func(m *ice.Message, arg ...string) { _c_show(m, arg...) }},
+			mdb.ENGINE: {Hand: func(m *ice.Message, arg ...string) { _c_exec(m, arg...) }},
+			NAVIGATE:   {Hand: func(m *ice.Message, arg ...string) { _c_tags(m, MAN, "ctags", "-a", "-R", nfs.PWD) }},
+		}, PlugAction(), LangAction())},
 		MAN: {Name: MAN, Help: "手册", Actions: ice.MergeActions(ice.Actions{
 			mdb.RENDER: {Hand: func(m *ice.Message, arg ...string) {
 				if len(arg) == 1 {

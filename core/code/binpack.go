@@ -72,6 +72,7 @@ func _binpack_all(m *ice.Message) {
 
 import (
 	"encoding/base64"
+
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/nfs"
 )
@@ -129,7 +130,7 @@ func init() {
 			}
 			list[dir] = true
 
-			m.Cmd(nfs.DIR, dir, nfs.PATH, kit.Dict(nfs.DIR_ROOT, nfs.PWD, nfs.DIR_REG, ".*.(shy|js)")).Tables(func(value ice.Maps) {
+			m.Cmd(nfs.DIR, dir, nfs.PATH, kit.Dict(nfs.DIR_ROOT, nfs.PWD, nfs.DIR_REG, `.*\.(sh|shy|js)$`)).Tables(func(value ice.Maps) {
 				if list[value[nfs.PATH]] {
 					return
 				}
@@ -153,8 +154,6 @@ func init() {
 			mdb.INSERT: {Name: "insert path", Help: "添加", Hand: func(m *ice.Message, arg ...string) {
 				mdb.HashCreate(m, nfs.PATH, m.Option(nfs.PATH))
 			}},
-		}, mdb.HashAction(mdb.SHORT, nfs.PATH)), Hand: func(m *ice.Message, arg ...string) {
-			mdb.HashSelect(m)
-		}},
+		}, mdb.HashAction(mdb.SHORT, nfs.PATH))},
 	})
 }

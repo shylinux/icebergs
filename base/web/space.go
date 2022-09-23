@@ -10,6 +10,7 @@ import (
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/aaa"
 	"shylinux.com/x/icebergs/base/cli"
+	"shylinux.com/x/icebergs/base/ctx"
 	"shylinux.com/x/icebergs/base/gdb"
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/nfs"
@@ -154,7 +155,7 @@ func _space_echo(msg *ice.Message, source, target []string, c *websocket.Conn, n
 	msg.Optionv(ice.MSG_SOURCE, source)
 	msg.Optionv(ice.MSG_TARGET, target)
 	if e := c.WriteMessage(1, []byte(msg.FormatMeta())); msg.Warn(e) { // 回复失败
-		mdb.HashRemove(msg, mdb.NAME, name)
+		msg.Go(func() { mdb.HashRemove(msg, mdb.NAME, name) })
 		c.Close()
 		return
 	}
@@ -349,15 +350,20 @@ func init() {
 				m.StatusTimeCount("nCPU", ncpu, "nmem", kit.Format("%.2fG", nmem/1000.0))
 				m.Debug("what %v", m.FormatMeta())
 			}},
-			cli.OPEN: {Name: "open", Help: "打开", Hand: func(m *ice.Message, arg ...string) {
-				m.ProcessOpen(MergePod(m, m.Option(mdb.NAME), "", ""))
+			cli.OPEN: {Name: "open", Help: "系统", Hand: func(m *ice.Message, arg ...string) {
+				ProcessIframe(m, MergePod(m, m.Option(mdb.NAME), "", ""), arg...)
 			}},
-			"vimer": {Name: "vimer", Help: "编辑", Hand: func(m *ice.Message, arg ...string) {
-				m.ProcessOpen(MergePod(m, m.Option(mdb.NAME)+"/cmd/web.code.vimer", "", ""))
+			"xterm": {Name: "xterm", Help: "终端", Hand: func(m *ice.Message, arg ...string) {
+				ProcessIframe(m, MergePodCmd(m, m.Option(mdb.NAME), "web.code.xterm", mdb.HASH,
+					m.Cmdx(SPACE, m.Option(mdb.NAME), "web.code.xterm", mdb.CREATE, mdb.TYPE, nfs.SH, m.OptionSimple(mdb.NAME), mdb.TEXT, "")), arg...)
 			}},
-			"xterm": {Name: "xterm", Help: "命令", Hand: func(m *ice.Message, arg ...string) {
-				m.ProcessOpen(MergePod(m, m.Option(mdb.NAME)+"/cmd/web.code.xterm", mdb.HASH,
-					m.Cmdx(SPACE, m.Option(mdb.NAME), "web.code.xterm", mdb.CREATE, mdb.TYPE, nfs.SH, mdb.NAME, "xterm")))
+			"vimer": {Name: "vimer", Help: "编程", Hand: func(m *ice.Message, arg ...string) {
+				ProcessIframe(m, MergePodCmd(m, m.Option(mdb.NAME), "web.code.vimer", "", ""), arg...)
+			}},
+			"exit": {Name: "exit", Help: "关闭", Hand: func(m *ice.Message, arg ...string) {
+				m.Cmd("", m.Option(mdb.NAME), "close")
+				m.Cmd("", m.Option(mdb.NAME), "exit")
+				ctx.ProcessRefresh(m)
 			}},
 		}, mdb.HashCloseAction()), Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) < 2 { // 节点列表
@@ -365,7 +371,13 @@ func init() {
 					m.Tables(func(value ice.Maps) {
 						switch value[mdb.TYPE] {
 						case SERVER, WORKER:
-							m.PushButton(cli.OPEN, "vimer", "xterm")
+							m.PushButton(cli.OPEN, "xterm", "vimer")
+						case CHROME:
+							if value[mdb.NAME] == kit.Select("", kit.Split(m.Option(ice.MSG_DAEMON), ice.PT), 0) {
+								m.PushButton("")
+							} else {
+								m.PushButton("exit")
+							}
 						default:
 							m.PushButton("")
 						}

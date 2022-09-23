@@ -7,6 +7,7 @@ import (
 
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/cli"
+	"shylinux.com/x/icebergs/base/ctx"
 	"shylinux.com/x/icebergs/base/gdb"
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/nfs"
@@ -151,4 +152,10 @@ func MergePodCmd(m Message, pod, cmd string, arg ...ice.Any) string {
 }
 func ProcessWebsite(m *ice.Message, pod, cmd string, arg ...ice.Any) {
 	m.ProcessOpen(MergePodCmd(m, pod, cmd, arg...))
+}
+func ProcessIframe(m *ice.Message, link string, arg ...string) {
+	if len(arg) == 0 || arg[0] != ice.RUN {
+		arg = []string{m.Cmdx("web.chat.iframe", mdb.CREATE, mdb.LINK, link)}
+	}
+	ctx.ProcessField(m, "web.chat.iframe", arg, arg...)
 }

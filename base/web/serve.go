@@ -353,7 +353,9 @@ func init() {
 			ssh.SOURCE_STDIO: {Name: "source.stdio", Help: "终端", Hand: func(m *ice.Message, arg ...string) {
 				m.Go(func() {
 					m.Sleep("2s")
-					m.Cmd(ssh.PRINTF, kit.Dict(nfs.CONTENT, ice.Render(m, ice.RENDER_QRCODE, m.Cmdx(SPACE, DOMAIN))+ice.NL))
+					url := m.Cmdx(SPACE, DOMAIN)
+					url2 := kit.MergePOD(m.Cmd(SPIDE, ice.DEV).Append(CLIENT_URL), ice.Info.NodeName)
+					m.Cmd(ssh.PRINTF, kit.Dict(nfs.CONTENT, ice.Render(m, ice.RENDER_QRCODE, url)+ice.NL+kit.Select("", url2+ice.NL, url != url2)))
 				})
 			}},
 			DOMAIN: {Name: "domain", Help: "域名", Hand: func(m *ice.Message, arg ...string) {

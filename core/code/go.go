@@ -135,7 +135,7 @@ const SUM = "sum"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
-		GO: {Name: "go", Help: "后端", Actions: ice.MergeActions(ice.Actions{
+		GO: {Name: "go path auto", Help: "后端", Actions: ice.MergeActions(ice.Actions{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
 				m.Cmd(NAVIGATE, mdb.CREATE, GODOC, m.PrefixKey())
 			}},

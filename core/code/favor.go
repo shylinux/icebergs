@@ -17,7 +17,7 @@ func init() {
 			INNER: {Name: "inner", Help: "源码", Hand: func(m *ice.Message, arg ...string) {
 				ctx.Process(m, m.ActionKey(), m.OptionSplit(nfs.PATH, nfs.FILE, nfs.LINE), arg...)
 			}},
-			XTERM: {Name: "xterm", Help: "命令", Hand: func(m *ice.Message, arg ...string) {
+			XTERM: {Name: "xterm", Help: "终端", Hand: func(m *ice.Message, arg ...string) {
 				ctx.Process(m, m.ActionKey(), m.OptionSimple(mdb.TYPE, mdb.NAME, mdb.TEXT), arg...)
 			}},
 		}, mdb.ZoneAction(mdb.SHORT, mdb.ZONE, mdb.FIELD, "time,id,type,name,text,path,file,line")), Hand: func(m *ice.Message, arg ...string) {

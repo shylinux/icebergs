@@ -48,8 +48,8 @@ func ProcessFloat(m *ice.Message, arg ...string) {
 func ProcessHold(m *ice.Message, text ...ice.Any) {
 	m.Process(ice.PROCESS_HOLD, text...)
 }
-func ProcessRefresh(m *ice.Message) {
-	m.ProcessRefresh("300ms")
+func ProcessRefresh(m *ice.Message, arg ...string) {
+	m.ProcessRefresh(kit.Select("300ms", arg, 0))
 }
 func ProcessRewrite(m *ice.Message, arg ...ice.Any) {
 	m.ProcessRewrite(arg...)

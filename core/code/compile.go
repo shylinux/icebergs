@@ -2,19 +2,18 @@ package code
 
 import (
 	"path"
+	"runtime"
 
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/cli"
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/nfs"
-	"shylinux.com/x/icebergs/base/tcp"
 	"shylinux.com/x/icebergs/base/web"
 	kit "shylinux.com/x/toolkits"
 )
 
 func _compile_target(m *ice.Message, arg ...string) (string, string, string, string) {
-	arch := m.Conf(cli.RUNTIME, kit.Keys(tcp.HOST, cli.GOARCH))
-	goos := m.Conf(cli.RUNTIME, kit.Keys(tcp.HOST, cli.GOOS))
+	arch, goos := runtime.GOARCH, runtime.GOOS
 	main, file := ice.SRC_MAIN_GO, ""
 	for _, k := range arg {
 		switch k {
@@ -43,8 +42,8 @@ const COMPILE = "compile"
 
 func init() {
 	Index.Merge(&ice.Context{Configs: ice.Configs{
-		COMPILE: {Name: COMPILE, Help: "编译", Value: kit.Data(nfs.PATH, ice.USR_PUBLISH,
-			cli.ENV, kit.Dict("GOPROXY", "https://goproxy.cn,direct", "GOPRIVATE", "shylinux.com,github.com", "CGO_ENABLED", "0"),
+		COMPILE: {Value: kit.Data(nfs.PATH, ice.USR_PUBLISH,
+			cli.ENV, kit.Dict("GOPRIVATE", "shylinux.com,github.com", "GOPROXY", "https://goproxy.cn,direct", "CGO_ENABLED", "0"),
 		)},
 	}, Commands: ice.Commands{
 		COMPILE: {Name: "compile arch=amd64,386,arm,arm64,mipsle os=linux,darwin,windows src=src/main.go@key run binpack relay", Help: "编译", Actions: ice.Actions{
@@ -55,7 +54,7 @@ func init() {
 				m.Cmdy(AUTOGEN, BINPACK)
 			}},
 			RELAY: {Name: "relay", Help: "跳板", Hand: func(m *ice.Message, arg ...string) {
-				m.Cmd(COMPILE, ice.SRC_RELAY_GO, path.Join(ice.USR_PUBLISH, RELAY))
+				m.Cmdy(COMPILE, ice.SRC_RELAY_GO, path.Join(ice.USR_PUBLISH, RELAY))
 			}},
 		}, Hand: func(m *ice.Message, arg ...string) {
 			// 下载依赖
@@ -77,7 +76,7 @@ func init() {
 			m.Cmdy(nfs.DIR, file, nfs.DIR_WEB_FIELDS)
 			m.Cmdy(PUBLISH, ice.CONTEXTS)
 			m.StatusTimeCount()
-			m.Option(ice.MSG_PROCESS, "")
+			m.Process("")
 		}},
 	}})
 }

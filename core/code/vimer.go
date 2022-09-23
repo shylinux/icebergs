@@ -62,6 +62,7 @@ func init() {
 				m.Cmd(nfs.TRASH, arg[0])
 			}},
 			nfs.SCRIPT: {Name: "script file=hi/hi.js", Help: "脚本", Hand: func(m *ice.Message, arg ...string) {
+				m.Option(nfs.PATH, "src/")
 				m.Cmdy(nfs.DEFS, path.Join(m.Option(nfs.PATH), m.Option(nfs.FILE)), m.Cmdx("", TEMPLATE))
 			}},
 			web.WEBSITE: {Name: "website file=hi.zml", Help: "网页", Hand: func(m *ice.Message, arg ...string) {
@@ -109,7 +110,8 @@ func init() {
 				web.ToastSuccess(m)
 				m.ProcessInner()
 			}},
-			AUTOGEN: {Name: "create name=hi help=示例 type=Zone,Hash,Data,Code main=main.go zone key", Help: "模块", Hand: func(m *ice.Message, arg ...string) {
+			AUTOGEN: {Name: "create name=h2 help=示例 type=Zone,Hash,Data,Code main=main.go zone key", Help: "模块", Hand: func(m *ice.Message, arg ...string) {
+				m.Option(nfs.PATH, "src/")
 				m.Cmdy(AUTOGEN, mdb.CREATE, arg)
 			}},
 			COMPILE: {Name: "compile", Help: "编译", Hand: func(m *ice.Message, arg ...string) {

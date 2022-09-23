@@ -80,12 +80,12 @@ func _install_build(m *ice.Message, arg ...string) string {
 
 	// 编译
 	if msg := m.Cmd(cli.SYSTEM, cli.MAKE, "-j8"); !cli.IsSuccess(msg) {
-		return msg.Append(cli.CMD_ERR)
+		return msg.Append(cli.CMD_ERR) + msg.Append(cli.CMD_OUT)
 	}
 
 	// 安装
 	if msg := m.Cmd(cli.SYSTEM, cli.MAKE, "PREFIX="+pp, INSTALL); !cli.IsSuccess(msg) {
-		return msg.Append(cli.CMD_ERR)
+		return msg.Append(cli.CMD_ERR) + msg.Append(cli.CMD_OUT)
 	}
 	return ""
 }
@@ -178,7 +178,10 @@ const INSTALL = "install"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
-		INSTALL: {Name: "install name port path:text auto download", Help: "安装", Meta: kit.Dict(), Actions: ice.MergeActions(ice.Actions{
+		INSTALL: {Name: "install name port path:text auto download", Help: "安装", Actions: ice.MergeActions(ice.Actions{
+			nfs.PATH: {Name: "path", Help: "路径", Hand: func(m *ice.Message, arg ...string) {
+				m.Echo(_install_path(m, kit.Select("", arg, 0)))
+			}},
 			web.DOWNLOAD: {Name: "download link path", Help: "下载", Hand: func(m *ice.Message, arg ...string) {
 				_install_download(m)
 			}},
@@ -207,9 +210,6 @@ func init() {
 			}},
 			nfs.TRASH: {Name: "trash", Help: "删除", Hand: func(m *ice.Message, arg ...string) {
 				_install_trash(m, arg...)
-			}},
-			nfs.PATH: {Name: "path", Help: "路径", Hand: func(m *ice.Message, arg ...string) {
-				m.Echo(_install_path(m, kit.Select("", arg, 0)))
 			}},
 			nfs.SOURCE: {Name: "source link path", Help: "源码", Hand: func(m *ice.Message, arg ...string) {
 				if m.Option(nfs.DIR_ROOT, path.Join(_install_path(m, ""), _INSTALL)); !nfs.ExistsFile(m, m.Option(nfs.DIR_ROOT)) {

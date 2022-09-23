@@ -23,16 +23,9 @@ func init() {
 	const (
 		SRC_WEBSITE = "src/website/"
 	)
-	Index.Register(&ice.Context{Name: ZML, Help: "网页", Commands: ice.Commands{
+	Index.MergeCommands(ice.Commands{
 		ZML: {Name: "zml", Help: "网页", Actions: ice.MergeActions(ice.Actions{
-			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
-				m.Cmd(mdb.RENDER, mdb.CREATE, nfs.ZML, m.PrefixKey())
-				m.Cmd(mdb.ENGINE, mdb.CREATE, nfs.ZML, m.PrefixKey())
-				m.Cmd(TEMPLATE, mdb.CREATE, m.CommandKey(), m.PrefixKey())
-				m.Cmd(COMPLETE, mdb.CREATE, m.CommandKey(), m.PrefixKey())
-			}},
-			mdb.INPUTS: {Hand: func(m *ice.Message, arg ...string) {
-			}},
+			mdb.INPUTS: {Hand: func(m *ice.Message, arg ...string) {}},
 			TEMPLATE: {Hand: func(m *ice.Message, arg ...string) {
 				switch kit.Ext(m.Option(mdb.FILE)) {
 				case ZML:
@@ -76,7 +69,7 @@ func init() {
 				if len(arg) > 0 && arg[0] == mdb.FOREACH {
 					switch m.Option(ctx.ACTION) {
 					case web.WEBSITE:
-						m.Cmdy(nfs.DIR, nfs.PWD, kit.Dict(nfs.DIR_ROOT, "src/website/"), nfs.PATH)
+						m.Cmdy(nfs.DIR, nfs.PWD, kit.Dict(nfs.DIR_ROOT, SRC_WEBSITE), nfs.PATH)
 					}
 					return
 				}
@@ -113,6 +106,6 @@ func init() {
 			mdb.ENGINE: {Hand: func(m *ice.Message, arg ...string) {
 				m.Echo(_website_url(m, strings.TrimPrefix(path.Join(arg[2], arg[1]), SRC_WEBSITE)))
 			}},
-		})},
-	}}, nil)
+		}, PlugAction(), LangAction())},
+	})
 }

@@ -42,13 +42,14 @@ func _publish_list(m *ice.Message, arg ...string) {
 }
 func _publish_bin_list(m *ice.Message, dir string) {
 	p := m.Option(cli.CMD_DIR, dir)
-	for _, ls := range strings.Split(strings.TrimSpace(m.Cmd(cli.SYSTEM, "bash", "-c", "ls |xargs file |grep executable").Append(cli.CMD_OUT)), ice.NL) {
+	for _, ls := range strings.Split(strings.TrimSpace(m.Cmdx(cli.SYSTEM, "bash", "-c", "ls |xargs file |grep executable")), ice.NL) {
 		if file := strings.TrimSpace(strings.Split(ls, ":")[0]); file != "" {
 			if s, e := nfs.StatFile(m, path.Join(p, file)); e == nil {
 				m.Push(mdb.TIME, s.ModTime())
 				m.Push(nfs.SIZE, kit.FmtSize(s.Size()))
-				m.Push(nfs.FILE, file)
+				m.Push(nfs.PATH, file)
 				m.PushDownload(mdb.LINK, file, path.Join(p, file))
+				m.PushButton(nfs.TRASH)
 			}
 		}
 	}
@@ -72,19 +73,19 @@ func init() {
 				m.Config(ice.CONTEXTS, _contexts)
 			}},
 			web.SERVE_START: {Name: "serve.start", Help: "服务启动", Hand: func(m *ice.Message, arg ...string) {
-				_publish_file(m, ice.ICE_BIN)
+				// _publish_file(m, ice.ICE_BIN)
 			}},
 			ice.VOLCANOS: {Name: "volcanos", Help: "火山架", Hand: func(m *ice.Message, arg ...string) {
 				defer func() { m.EchoQRCode(m.Option(ice.MSG_USERWEB)) }()
-				defer func() { m.Cmdy(PUBLISH, ice.CONTEXTS) }()
+				defer func() { m.Cmdy(PUBLISH, ice.CONTEXTS, ice.MISC) }()
 				_publish_list(m, `.*\.(html|css|js)$`)
 			}},
 			ice.ICEBERGS: {Name: "icebergs", Help: "冰山架", Hand: func(m *ice.Message, arg ...string) {
-				defer func() { m.Cmdy(PUBLISH, ice.CONTEXTS) }()
+				defer func() { m.Cmdy(PUBLISH, ice.CONTEXTS, ice.CORE) }()
 				_publish_bin_list(m, ice.USR_PUBLISH)
 			}},
 			ice.INTSHELL: {Name: "intshell", Help: "神农架", Hand: func(m *ice.Message, arg ...string) {
-				defer func() { m.Cmdy(PUBLISH, ice.CONTEXTS) }()
+				defer func() { m.Cmdy(PUBLISH, ice.CONTEXTS, ice.BASE) }()
 				_publish_list(m, `.*\.(sh|vim|conf)$`)
 			}},
 			ice.CONTEXTS: {Name: "contexts", Help: "环境", Hand: func(m *ice.Message, arg ...string) {
@@ -93,11 +94,11 @@ func init() {
 				if host == tcp.LOCALHOST {
 					host = m.Cmd(tcp.HOST).Append(aaa.IP)
 				}
-				m.Option("ctx_env", kit.Select("", " "+kit.JoinKV("=", " ", "ctx_pod", m.Option(ice.MSG_USERPOD)), m.Option(ice.MSG_USERPOD) != ""))
+				m.Option(cli.CTX_ENV, kit.Select("", " "+kit.JoinKV("=", " ", cli.CTX_POD, m.Option(ice.MSG_USERPOD)), m.Option(ice.MSG_USERPOD) != ""))
 				m.Option("httphost", fmt.Sprintf("%s://%s:%s", u.Scheme, host, kit.Select(kit.Select("443", "80", u.Scheme == ice.HTTP), strings.Split(u.Host, ice.DF), 1)))
 
 				if len(arg) == 0 {
-					arg = append(arg, ice.MISC, ice.CORE, ice.BASE)
+					arg = append(arg, ice.MISC)
 				}
 				for _, k := range arg {
 					switch k {
@@ -109,7 +110,7 @@ func init() {
 							m.Cmd(nfs.LINK, bin, m.Cmdx(cli.RUNTIME, "boot.bin"))
 						}
 
-					case ice.CORE:
+					case ice.CORE, ice.BASE:
 						if !nfs.ExistsFile(m, ".git") {
 							repos := web.MergeURL2(m, "/x/"+kit.Select(ice.Info.PathName, m.Option(ice.MSG_USERPOD)))
 							m.Cmd(cli.SYSTEM, "git", "init")
@@ -118,7 +119,6 @@ func init() {
 						}
 						m.Option("remote", kit.Select(ice.Info.Make.Remote, strings.TrimSpace(m.Cmdx(cli.SYSTEM, "git", "config", "remote.origin.url"))))
 						m.Option("pathname", strings.TrimSuffix(path.Base(m.Option("remote")), ".git"))
-					case ice.BASE:
 					}
 					if buf, err := kit.Render(m.Config(kit.Keys(ice.CONTEXTS, k)), m); m.Assert(err) {
 						m.EchoScript(strings.TrimSpace(string(buf)))

@@ -21,7 +21,7 @@ func _dream_list(m *ice.Message) *ice.Message {
 		if dream, ok := list[value[mdb.NAME]]; ok {
 			m.Push(mdb.TYPE, dream[mdb.TYPE])
 			m.Push(cli.STATUS, cli.START)
-			m.PushButton(cli.OPEN, "vimer", "xterm", cli.STOP)
+			m.PushButton(cli.OPEN, "xterm", "vimer", cli.STOP)
 			m.PushAnchor(strings.Split(MergePod(m, value[mdb.NAME]), "?")[0])
 			text := []string{}
 			for _, line := range kit.Split(m.Cmdx(SPACE, value[mdb.NAME], cli.SYSTEM, "git", "diff", "--shortstat"), ice.FS, ice.FS) {
@@ -87,7 +87,6 @@ func _dream_show(m *ice.Message, name string) {
 			}
 		}
 	}
-	m.Cmd(nfs.DEFS, path.Join(p, ice.ETC_MISS_SH), m.Config(nfs.SCRIPT))
 
 	// 环境变量
 	m.Optionv(cli.CMD_DIR, kit.Path(p))
@@ -119,7 +118,6 @@ const DREAM = "dream"
 func init() {
 	Index.MergeCommands(ice.Commands{
 		DREAM: {Name: "dream name path auto create", Help: "梦想家", Actions: ice.MergeActions(ice.Actions{
-			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) { m.Config(nfs.SCRIPT, _dream_script) }},
 			mdb.INPUTS: {Name: "inputs", Help: "补全", Hand: func(m *ice.Message, arg ...string) {
 				switch arg[0] {
 				case nfs.REPOS:
@@ -137,19 +135,20 @@ func init() {
 			cli.START: {Name: "start", Help: "启动", Hand: func(m *ice.Message, arg ...string) {
 				_dream_show(m, m.Option(mdb.NAME))
 			}},
-			cli.OPEN: {Name: "open", Help: "打开", Hand: func(m *ice.Message, arg ...string) {
-				ProcessWebsite(m, m.Option(mdb.NAME), "", "", "")
+			cli.OPEN: {Name: "open", Help: "系统", Hand: func(m *ice.Message, arg ...string) {
+				m.ProcessOpen(MergePod(m, m.Option(mdb.NAME), "", ""))
 			}},
-			"vimer": {Name: "vimer", Help: "编辑", Hand: func(m *ice.Message, arg ...string) {
+			"xterm": {Name: "xterm", Help: "终端", Hand: func(m *ice.Message, arg ...string) {
+				ProcessWebsite(m, m.Option(mdb.NAME), "web.code.xterm", mdb.HASH,
+					m.Cmdx(SPACE, m.Option(mdb.NAME), "web.code.xterm", mdb.CREATE, mdb.TYPE, nfs.SH, m.OptionSimple(mdb.NAME), mdb.TEXT, ""))
+			}},
+			"vimer": {Name: "vimer", Help: "编程", Hand: func(m *ice.Message, arg ...string) {
 				ProcessWebsite(m, m.Option(mdb.NAME), "web.code.vimer", "", "")
-			}},
-			"xterm": {Name: "xterm", Help: "命令", Hand: func(m *ice.Message, arg ...string) {
-				ProcessWebsite(m, m.Option(mdb.NAME), "web.code.xterm", mdb.HASH, m.Cmdx(SPACE, m.Option(mdb.NAME), "web.code.xterm", mdb.CREATE, mdb.TYPE, nfs.SH, mdb.NAME, "xterm"))
 			}},
 			cli.STOP: {Name: "stop", Help: "停止", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmd(SPACE, mdb.MODIFY, m.OptionSimple(mdb.NAME), mdb.STATUS, cli.STOP)
 				m.Go(func() { m.Cmd(SPACE, m.Option(mdb.NAME), ice.EXIT) })
-				m.Sleep3s()
+				ctx.ProcessRefresh(m, "1s")
 			}},
 			DREAM_STOP: {Name: "dream.stop type name", Help: "停止", Hand: func(m *ice.Message, arg ...string) {
 				if m.CmdAppend(SPACE, m.Option(mdb.NAME), mdb.STATUS) == cli.STOP {
@@ -161,9 +160,9 @@ func init() {
 			}},
 			nfs.TRASH: {Name: "trash", Help: "删除", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmd(nfs.TRASH, mdb.CREATE, path.Join(ice.USR_LOCAL_WORK, m.Option(mdb.NAME)))
-				m.ProcessRefresh30ms()
+				ctx.ProcessRefresh(m)
 			}},
-		}, mdb.HashAction(nfs.SCRIPT, _dream_script)), Hand: func(m *ice.Message, arg ...string) {
+		}, mdb.HashAction()), Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) == 0 {
 				if _dream_list(m); !m.IsMobileUA() {
 					ctx.DisplayTableCard(m)
@@ -174,17 +173,3 @@ func init() {
 		}},
 	})
 }
-
-var _dream_script = `#! /bin/sh
-
-if [ -f $PWD/.ish/plug.sh ]; then source $PWD/.ish/plug.sh; elif [ -f $HOME/.ish/plug.sh ]; then source $HOME/.ish/plug.sh; else
-	ctx_temp=$(mktemp); if curl -h &>/dev/null; then curl -o $ctx_temp -fsSL https://shylinux.com; else wget -O $ctx_temp -q http://shylinux.com; fi; source $ctx_temp intshell
-fi
-
-require miss.sh
-ish_miss_prepare_compile
-ish_miss_prepare_develop
-ish_miss_prepare_operate
-
-ish_miss_make; if [ -n "$*" ]; then ish_miss_serve "$@"; fi
-`

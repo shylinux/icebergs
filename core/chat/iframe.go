@@ -11,7 +11,7 @@ const IFRAME = "iframe"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
-		IFRAME: {Name: "iframe hash auto", Help: "网页", Actions: ice.MergeActions(ice.Actions{
+		IFRAME: {Name: "iframe hash auto", Help: "浏览器", Actions: ice.MergeActions(ice.Actions{
 			mdb.CREATE: {Name: "create link name type", Help: "创建"},
 		}, mdb.HashAction(mdb.SHORT, mdb.LINK, mdb.FIELD, "time,hash,type,name,link")), Hand: func(m *ice.Message, arg ...string) {
 			if mdb.HashSelect(m, arg...); len(arg) == 0 || arg[0] == "" {

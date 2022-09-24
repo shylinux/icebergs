@@ -366,7 +366,7 @@ func SplitCmd(name string, actions Actions) (list []Any) {
 	)
 
 	item, button := kit.Dict(), false
-	ls := kit.Split(name, SP, ":=@")
+	ls := kit.Split(name, SP, "*:=@")
 	for i := 1; i < len(ls); i++ {
 		switch ls[i] {
 		case REFRESH:
@@ -395,6 +395,8 @@ func SplitCmd(name string, actions Actions) (list []Any) {
 			item = kit.Dict(TYPE, PASSWORD, NAME, ls[i])
 			list = append(list, item)
 
+		case "*":
+			item["need"] = "must"
 		case DF:
 			if item[TYPE] = kit.Select("", ls, i+1); item[TYPE] == BUTTON {
 				button = true

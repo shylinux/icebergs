@@ -24,6 +24,8 @@ func _defs_list(m *ice.Message) string {
 		list = append(list, "path auto")
 	case "Code":
 		list = append(list, "port path auto start order build download")
+	case "Lang":
+		list = append(list, "path auto")
 	}
 	return m.OptionDefault(mdb.LIST, kit.Join(list, ice.SP))
 }
@@ -170,9 +172,9 @@ func init() {
 					m.Cmdy(nfs.DIR, nfs.PWD, nfs.DIR_CLI_FIELDS, kit.Dict(nfs.DIR_REG, `.*\.go$`)).RenameAppend(nfs.PATH, arg[0])
 				}
 			}},
-			mdb.CREATE: {Name: "create name=hi help type=Zone,Hash,Data,Code main=main.go@key zone key", Help: "模块", Hand: func(m *ice.Message, arg ...string) {
+			mdb.CREATE: {Name: "create name*=hi help type=Zone,Hash,Data,Code,Lang main*=main.go@key zone key", Help: "模块", Hand: func(m *ice.Message, arg ...string) {
 				m.OptionDefault(mdb.ZONE, m.Option(mdb.NAME), mdb.HELP, m.Option(mdb.NAME))
-				m.OptionDefault(mdb.KEY, kit.Keys("web.code", m.Option(mdb.ZONE), m.Option(mdb.NAME)))
+				m.OptionDefault(mdb.KEY, Prefix(m.Option(mdb.ZONE), m.Option(mdb.NAME)))
 				m.Option(mdb.TEXT, kit.Format("`name:\"%s\" help:\"%s\"`", _defs_list(m), m.Option(mdb.HELP)))
 
 				nfs.OptionFiles(m, nfs.DiskFile)

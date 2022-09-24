@@ -110,7 +110,7 @@ func init() {
 			} else {
 				m.Action(INSTALL, "波浪线", "反引号")
 				ctx.DisplayLocal(m, "")
-				ctx.Toolkit(m)
+				ctx.Toolkit(m, FAVOR, "web.chat.iframe")
 			}
 		}},
 	})

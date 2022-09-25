@@ -42,8 +42,7 @@ func _bench_http(m *ice.Message, target string, arg ...string) {
 		n, _ := io.Copy(ioutil.Discard, res.Body)
 		atomic.AddInt64(&ndata, n)
 	}); m.Assert(e) {
-		m.Echo("ndata: %s\n", kit.FmtSize(ndata))
-		m.Echo(s.Show())
+		m.Echo("ndata: %s\n", kit.FmtSize(ndata)).Echo(s.Show())
 		m.ProcessInner()
 	}
 }

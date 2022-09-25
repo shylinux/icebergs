@@ -60,12 +60,8 @@ func _webpack_cache(m *ice.Message, dir string, write bool) {
 		return
 	}
 
-	m.Option(nfs.DIR_ROOT, dir)
-	m.Option(nfs.DIR_DEEP, true)
-	m.Option(nfs.DIR_TYPE, nfs.CAT)
-
 	for _, k := range []string{LIB, PANEL, PLUGIN} {
-		m.Cmd(nfs.DIR, k).Sort(nfs.PATH).Tables(func(value ice.Maps) {
+		nfs.DirDeepAll(m, dir, k, func(value ice.Maps) {
 			if kit.Ext(value[nfs.PATH]) == CSS {
 				_webpack_css(m, css, js, value[nfs.PATH])
 			}
@@ -74,7 +70,7 @@ func _webpack_cache(m *ice.Message, dir string, write bool) {
 	fmt.Fprintln(js)
 
 	for _, k := range []string{LIB, PANEL, PLUGIN} {
-		m.Cmd(nfs.DIR, k).Sort(nfs.PATH).Tables(func(value ice.Maps) {
+		nfs.DirDeepAll(m, dir, k, func(value ice.Maps) {
 			if kit.Ext(value[nfs.PATH]) == JS {
 				_webpack_js(m, js, value[nfs.PATH])
 			}
@@ -94,7 +90,7 @@ func _webpack_cache(m *ice.Message, dir string, write bool) {
 			return
 		case nfs.JS:
 		default:
-			p = p + "/lib/" + p + ".js"
+			p = path.Join(p, LIB, p+".js")
 		}
 		_webpack_node(m, js, path.Join(ice.REQUIRE, ice.NODE_MODULES, p))
 	})
@@ -125,11 +121,9 @@ func _webpack_build(m *ice.Message, file string) {
 <script>%s</script>
 </body>
 `,
-			m.Cmdx(nfs.CAT, _volcanos(m, PAGE_INDEX_CSS)),
-			m.Cmdx(nfs.CAT, _volcanos(m, PAGE_CACHE_CSS)),
+			m.Cmdx(nfs.CAT, _volcanos(m, PAGE_INDEX_CSS)), m.Cmdx(nfs.CAT, _volcanos(m, PAGE_CACHE_CSS)),
 			m.Cmdx(nfs.CAT, _volcanos(m, ice.PROTO_JS)), m.Cmdx(nfs.CAT, kit.Keys(file, JS)),
-			m.Cmdx(nfs.CAT, _volcanos(m, PAGE_CACHE_JS)),
-			m.Cmdx(nfs.CAT, _volcanos(m, PAGE_INDEX_JS)),
+			m.Cmdx(nfs.CAT, _volcanos(m, PAGE_CACHE_JS)), m.Cmdx(nfs.CAT, _volcanos(m, PAGE_INDEX_JS)),
 		)
 	}
 }
@@ -174,8 +168,8 @@ func init() {
 				}
 			}},
 		}, mdb.HashAction(mdb.SHORT, nfs.PATH, mdb.FIELD, "time,path")), Hand: func(m *ice.Message, arg ...string) {
-			m.Option(nfs.DIR_DEEP, true)
 			m.Option(nfs.DIR_TYPE, nfs.CAT)
+			m.Option(nfs.DIR_DEEP, ice.TRUE)
 			m.OptionFields(nfs.DIR_WEB_FIELDS)
 			m.Cmdy(nfs.DIR, _volcanos(m, PAGE))
 			m.Cmdy(nfs.DIR, _publish(m, WEBPACK))

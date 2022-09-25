@@ -30,22 +30,12 @@ func init() {
 	Index.MergeCommands(ice.Commands{
 		PY: {Name: "py path auto", Help: "脚本", Actions: ice.MergeActions(ice.Actions{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
-				m.Go(func() {
-					m.Sleep300ms()
-					cli.IsAlpine(m, "python", "python2")
-					cli.IsAlpine(m, "python2")
-					cli.IsAlpine(m, "python3")
-				})
+				cli.IsAlpine(m, "python", "python2")
+				cli.IsAlpine(m, "python2")
+				cli.IsAlpine(m, "python3")
 			}},
-			mdb.RENDER: {Hand: func(m *ice.Message, arg ...string) {
-				// _py_exec(m, arg...)
-			}},
-			mdb.ENGINE: {Hand: func(m *ice.Message, arg ...string) {
-				_py_exec(m, arg...)
-			}},
-			TEMPLATE: {Hand: func(m *ice.Message, arg ...string) {
-				m.Echo(`print "hello world"`)
-			}},
+			mdb.ENGINE: {Hand: func(m *ice.Message, arg ...string) { _py_exec(m, arg...) }},
+			TEMPLATE:   {Hand: func(m *ice.Message, arg ...string) { m.Echo(`print "hello world"`) }},
 		}, PlugAction(), LangAction())},
 	})
 }

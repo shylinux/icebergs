@@ -13,13 +13,12 @@ import (
 )
 
 func _compile_target(m *ice.Message, arg ...string) (string, string, string, string) {
-	arch, goos := runtime.GOARCH, runtime.GOOS
-	main, file := ice.SRC_MAIN_GO, ""
+	main, file, goos, arch := ice.SRC_MAIN_GO, "", runtime.GOOS, runtime.GOARCH
 	for _, k := range arg {
 		switch k {
-		case cli.AMD64, cli.X86, cli.ARM, cli.ARM64, cli.MIPSLE:
+		case cli.AMD64, cli.X86, cli.MIPSLE, cli.ARM, cli.ARM64:
 			arch = k
-		case cli.WINDOWS, cli.DARWIN, cli.LINUX:
+		case cli.LINUX, cli.DARWIN, cli.WINDOWS:
 			goos = k
 		default:
 			if kit.Ext(k) == GO {
@@ -30,7 +29,7 @@ func _compile_target(m *ice.Message, arg ...string) (string, string, string, str
 		}
 	}
 	if file == "" {
-		file = path.Join(m.Config(nfs.PATH), kit.Keys(kit.Select(ice.ICE, kit.TrimExt(main), main != ice.SRC_MAIN_GO), goos, arch))
+		file = path.Join(ice.USR_PUBLISH, kit.Keys(kit.Select(ice.ICE, kit.TrimExt(main), main != ice.SRC_MAIN_GO), goos, arch))
 	}
 	return main, file, goos, arch
 }
@@ -42,11 +41,9 @@ const COMPILE = "compile"
 
 func init() {
 	Index.Merge(&ice.Context{Configs: ice.Configs{
-		COMPILE: {Value: kit.Data(nfs.PATH, ice.USR_PUBLISH,
-			cli.ENV, kit.Dict("GOPRIVATE", "shylinux.com,github.com", "GOPROXY", "https://goproxy.cn,direct", "CGO_ENABLED", "0"),
-		)},
+		COMPILE: {Value: kit.Data(cli.ENV, kit.Dict("GOPRIVATE", "shylinux.com,github.com", "GOPROXY", "https://goproxy.cn,direct", "CGO_ENABLED", "0"))},
 	}, Commands: ice.Commands{
-		COMPILE: {Name: "compile arch=amd64,386,arm,arm64,mipsle os=linux,darwin,windows src=src/main.go@key run binpack relay", Help: "编译", Actions: ice.Actions{
+		COMPILE: {Name: "compile arch=amd64,386,mipsle,arm,arm64 os=linux,darwin,windows src=src/main.go@key run binpack relay", Help: "编译", Actions: ice.Actions{
 			mdb.INPUTS: {Name: "inputs", Help: "补全", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmdy(nfs.DIR, ice.SRC, nfs.DIR_CLI_FIELDS, kit.Dict(nfs.DIR_REG, `.*\.go$`)).Sort(nfs.PATH)
 			}},
@@ -57,7 +54,6 @@ func init() {
 				m.Cmdy(COMPILE, ice.SRC_RELAY_GO, path.Join(ice.USR_PUBLISH, RELAY))
 			}},
 		}, Hand: func(m *ice.Message, arg ...string) {
-			// 下载依赖
 			_autogen_version(m.Spawn())
 
 			// 执行编译

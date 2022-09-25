@@ -108,9 +108,9 @@ func init() {
 				m.PushAction(web.WEBSITE, mdb.REMOVE)
 				m.Action(mdb.CREATE, mdb.PRUNES)
 			} else {
+				ctx.Toolkit(m, FAVOR, "web.chat.iframe")
 				m.Action(INSTALL, "波浪线", "反引号")
 				ctx.DisplayLocal(m, "")
-				ctx.Toolkit(m, FAVOR, "web.chat.iframe")
 			}
 		}},
 	})

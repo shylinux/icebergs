@@ -173,7 +173,7 @@ func init() {
 					arg = append(arg, "")
 				}
 				m.Option(CMD_ENV, "COLUMNS", kit.Int(kit.Select("1920", m.Option("width")))/12)
-				m.Cmdy(SYSTEM, "sh", "-c", kit.Format("man %s %s|col -b", kit.Select("", arg[1], arg[1] != "1"), arg[0]))
+				m.Echo(SystemCmds(m, "man %s %s|col -b", kit.Select("", arg[1], arg[1] != "1"), arg[0]))
 			}},
 		}, Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) == 0 {
@@ -203,4 +203,10 @@ func SystemFind(m Message, bin string, dir ...string) string {
 	}
 	dir = append(dir, strings.Split(kit.Env(PATH), ice.DF)...)
 	return _system_find(m, bin, dir...)
+}
+func SystemExec(m *ice.Message, arg ...string) string {
+	return strings.TrimSpace(m.Cmdx(SYSTEM, arg))
+}
+func SystemCmds(m *ice.Message, cmds string, args ...ice.Any) string {
+	return strings.TrimRight(m.Cmdx(SYSTEM, "sh", "-c", kit.Format(cmds, args...), ice.Option{CMD_OUTPUT, ""}), ice.NL)
 }

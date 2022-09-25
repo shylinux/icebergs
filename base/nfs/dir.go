@@ -205,3 +205,13 @@ func Dir(m *ice.Message, sort string) *ice.Message {
 	m.Copy(m.Cmd(DIR, PWD).Sort(sort))
 	return m
 }
+func DirDeepAll(m *ice.Message, root, dir string, cb func(ice.Maps), arg ...string) *ice.Message {
+	m.Option(DIR_TYPE, CAT)
+	m.Option(DIR_ROOT, root)
+	m.Option(DIR_DEEP, ice.TRUE)
+	if msg := m.Cmd(DIR, dir, arg).Sort(PATH).Tables(cb); cb == nil {
+		return m.Copy(msg)
+	} else {
+		return msg
+	}
+}

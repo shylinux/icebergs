@@ -23,7 +23,7 @@ func _install_path(m *ice.Message, link string) string {
 		return p
 	}
 	if p := path.Join(ice.USR_INSTALL, path.Base(link)); nfs.ExistsFile(m, p) {
-		return path.Join(ice.USR_INSTALL, strings.Split(m.Cmdx(cli.SYSTEM, "sh", "-c", kit.Format("tar tf %s| head -n1", p), ice.Option{cli.CMD_OUTPUT, ""}), ice.PS)[0])
+		return path.Join(ice.USR_INSTALL, strings.Split(cli.SystemCmds(m, "tar tf %s| head -n1", p), ice.PS)[0])
 	}
 	m.Warn(true, ice.ErrNotFound, link)
 	return ""
@@ -43,7 +43,7 @@ func _install_download(m *ice.Message) {
 	begin, last := time.Now(), time.Now()
 	mdb.HashCreate(m, mdb.NAME, name, nfs.PATH, file, mdb.LINK, link)
 	web.GoToast(m, name, func(toast func(string, int, int)) {
-		m.Cmd("web.spide", ice.DEV, web.SPIDE_SAVE, file, web.SPIDE_GET, link, func(count int, total int, step int) {
+		web.SpideSave(m, file, link, func(count int, total int, step int) {
 			mdb.HashSelectUpdate(m, name, func(value ice.Map) { value[mdb.COUNT], value[mdb.TOTAL], value[mdb.VALUE] = count, total, step })
 
 			if now := time.Now(); now.Sub(last) > 500*time.Millisecond {
@@ -57,8 +57,7 @@ func _install_download(m *ice.Message) {
 		m.Cmd(nfs.TAR, mdb.EXPORT, name, kit.Dict(cli.CMD_DIR, path.Dir(file)))
 		web.ToastSuccess(m)
 	})
-	m.Cmdy(nfs.DIR, file)
-	m.SetResult()
+	m.Cmdy(nfs.DIR, file).SetResult()
 }
 func _install_build(m *ice.Message, arg ...string) string {
 	p := m.Option(cli.CMD_DIR, _install_path(m, ""))
@@ -72,14 +71,17 @@ func _install_build(m *ice.Message, arg ...string) string {
 	switch cb := m.Optionv(PREPARE).(type) {
 	case func(string):
 		cb(p)
-	default:
+	case nil:
 		if msg := m.Cmd(cli.SYSTEM, "./configure", "--prefix="+pp, arg[1:]); !cli.IsSuccess(msg) {
 			return msg.Append(cli.CMD_ERR)
 		}
+	default:
+		m.ErrorNotImplement(cb)
+		return m.Result()
 	}
 
 	// 编译
-	if msg := m.Cmd(cli.SYSTEM, cli.MAKE, "-j8"); !cli.IsSuccess(msg) {
+	if msg := m.Cmd(cli.SYSTEM, cli.MAKE, "-j"+m.Cmdx(cli.RUNTIME, cli.MAXPROCS)); !cli.IsSuccess(msg) {
 		return msg.Append(cli.CMD_ERR) + msg.Append(cli.CMD_OUT)
 	}
 
@@ -92,7 +94,7 @@ func _install_build(m *ice.Message, arg ...string) string {
 func _install_order(m *ice.Message, arg ...string) {
 	p := _install_path(m, "")
 	if m.Option(nfs.PATH) == "" {
-		for _, v := range []string{"_install/bin", "bin", ""} {
+		for _, v := range []string{"_install/bin", "bin", "sbin", ""} {
 			if nfs.ExistsFile(m, path.Join(p, v)) {
 				m.Option(nfs.PATH, v)
 				break
@@ -137,6 +139,7 @@ func _install_start(m *ice.Message, arg ...string) {
 	case nil:
 	default:
 		m.ErrorNotImplement(cb)
+		return
 	}
 
 	bin := kit.Split(path.Base(arg[0]), "-.")[0]

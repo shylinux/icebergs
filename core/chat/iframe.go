@@ -5,6 +5,7 @@ import (
 	"shylinux.com/x/icebergs/base/cli"
 	"shylinux.com/x/icebergs/base/ctx"
 	"shylinux.com/x/icebergs/base/mdb"
+	kit "shylinux.com/x/toolkits"
 )
 
 const IFRAME = "iframe"
@@ -12,7 +13,11 @@ const IFRAME = "iframe"
 func init() {
 	Index.MergeCommands(ice.Commands{
 		IFRAME: {Name: "iframe hash auto", Help: "浏览器", Actions: ice.MergeActions(ice.Actions{
-			mdb.CREATE: {Name: "create link name type", Help: "创建"},
+			mdb.CREATE: {Name: "create link name type", Help: "创建", Hand: func(m *ice.Message, arg ...string) {
+				u := kit.ParseURL(m.Option(mdb.LINK))
+				m.OptionDefault(mdb.NAME, u.Host)
+				mdb.HashCreate(m, m.OptionSimple("link,name,type"))
+			}},
 		}, mdb.HashAction(mdb.SHORT, mdb.LINK, mdb.FIELD, "time,hash,type,name,link")), Hand: func(m *ice.Message, arg ...string) {
 			if mdb.HashSelect(m, arg...); len(arg) == 0 || arg[0] == "" {
 				m.Action(mdb.CREATE, mdb.PRUNES)

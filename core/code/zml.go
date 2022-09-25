@@ -87,7 +87,7 @@ func init() {
 					m.Push(mdb.NAME, "open")
 
 				default:
-					if strings.HasSuffix(m.Option(mdb.TEXT), " ") {
+					if strings.HasSuffix(m.Option(mdb.TEXT), ice.SP) {
 						m.Push(mdb.NAME, "index")
 						m.Push(mdb.NAME, "action")
 						m.Push(mdb.NAME, "args")

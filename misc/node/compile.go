@@ -20,11 +20,8 @@ type compile struct {
 }
 
 func (s compile) Init(m *ice.Message) {
-	m.Go(func() {
-		m.Sleep300ms() // after runtime init
-		cli.IsAlpine(m.Message, NPM)
-		cli.IsAlpine(m.Message, NODE, "nodejs")
-	})
+	cli.IsAlpine(m.Message, NPM)
+	cli.IsAlpine(m.Message, NODE, "nodejs")
 }
 func (s compile) List(m *ice.Message, arg ...string) {
 	s.Code.Source(m, "", arg...)

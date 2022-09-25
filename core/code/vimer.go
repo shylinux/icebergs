@@ -45,8 +45,7 @@ func init() {
 				default:
 					switch arg[0] {
 					case ctx.INDEX:
-						m.OptionFields(ctx.INDEX)
-						m.Cmdy(ctx.COMMAND, mdb.SEARCH, ctx.COMMAND, kit.Select("", arg, 1), "")
+						m.Cmdy(ctx.COMMAND, mdb.SEARCH, ctx.COMMAND, ice.OptionFields(ctx.INDEX))
 					default:
 						m.Cmdy(COMPLETE, mdb.FOREACH, arg[1], m.Option(ctx.ACTION))
 					}

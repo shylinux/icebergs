@@ -10,7 +10,6 @@ import (
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/aaa"
 	"shylinux.com/x/icebergs/base/cli"
-	"shylinux.com/x/icebergs/base/gdb"
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/nfs"
 	"shylinux.com/x/icebergs/base/tcp"
@@ -35,15 +34,13 @@ func _publish_file(m *ice.Message, file string, arg ...string) string {
 	return target
 }
 func _publish_list(m *ice.Message, arg ...string) {
-	m.Option(nfs.DIR_DEEP, true)
-	m.Option(nfs.DIR_ROOT, ice.USR_PUBLISH)
 	m.Option(nfs.DIR_REG, kit.Select("", arg, 0))
-	m.Cmdy(nfs.DIR, nfs.PWD, kit.Select(nfs.DIR_WEB_FIELDS, arg, 1))
+	nfs.DirDeepAll(m, ice.USR_PUBLISH, nfs.PWD, nil, kit.Select(nfs.DIR_WEB_FIELDS, arg, 1))
 }
 func _publish_bin_list(m *ice.Message, dir string) {
 	p := m.Option(cli.CMD_DIR, dir)
-	for _, ls := range strings.Split(strings.TrimSpace(m.Cmdx(cli.SYSTEM, "bash", "-c", "ls |xargs file |grep executable")), ice.NL) {
-		if file := strings.TrimSpace(strings.Split(ls, ":")[0]); file != "" {
+	for _, ls := range strings.Split(cli.SystemCmds(m, "ls |xargs file |grep executable"), ice.NL) {
+		if file := strings.TrimSpace(strings.Split(ls, ice.DF)[0]); file != "" {
 			if s, e := nfs.StatFile(m, path.Join(p, file)); e == nil {
 				m.Push(mdb.TIME, s.ModTime())
 				m.Push(nfs.SIZE, kit.FmtSize(s.Size()))
@@ -55,6 +52,37 @@ func _publish_bin_list(m *ice.Message, dir string) {
 	}
 	m.SortTimeR(mdb.TIME)
 }
+func _publish_contexts(m *ice.Message, arg ...string) {
+	u := web.OptionUserWeb(m)
+	host := strings.Split(u.Host, ice.DF)[0]
+	if host == tcp.LOCALHOST {
+		host = m.Cmd(tcp.HOST).Append(aaa.IP)
+	}
+	m.Option(cli.CTX_ENV, kit.Select("", ice.SP+kit.JoinKV(ice.EQ, ice.SP, cli.CTX_POD, m.Option(ice.MSG_USERPOD)), m.Option(ice.MSG_USERPOD) != ""))
+	m.Option("httphost", fmt.Sprintf("%s://%s:%s", u.Scheme, host, kit.Select(kit.Select("443", "80", u.Scheme == ice.HTTP), strings.Split(u.Host, ice.DF), 1)))
+
+	if len(arg) == 0 {
+		arg = append(arg, ice.MISC)
+	}
+	for _, k := range arg {
+		switch k {
+		case INSTALL:
+			m.Echo(kit.Renders(`export ctx_dev={{.Option "httphost"}}{{.Option "ctx_env"}}; ctx_temp=$(mktemp); wget -O $ctx_temp -q $ctx_dev; source $ctx_temp app username {{.Option "user.name"}}`, m))
+			return
+
+		case ice.MISC:
+			_publish_file(m, ice.ICE_BIN)
+
+		case ice.BASE:
+			m.Option("remote", kit.Select(ice.Info.Make.Remote, cli.SystemExec(m, "git", "config", "remote.origin.url")))
+			m.Option("pathname", strings.TrimSuffix(path.Base(m.Option("remote")), ".git"))
+		}
+
+		if buf, err := kit.Render(m.Config(kit.Keys(ice.CONTEXTS, k)), m); m.Assert(err) {
+			m.EchoScript(strings.TrimSpace(string(buf)))
+		}
+	}
+}
 
 const (
 	GIT = "git"
@@ -62,18 +90,14 @@ const (
 const PUBLISH = "publish"
 
 func init() {
-	Index.Merge(&ice.Context{Configs: ice.Configs{
-		PUBLISH: {Name: PUBLISH, Help: "发布", Value: kit.Data(ice.CONTEXTS, _contexts)},
-	}, Commands: ice.Commands{
+	Index.Merge(&ice.Context{Commands: ice.Commands{
 		PUBLISH: {Name: "publish path auto create volcanos icebergs intshell", Help: "发布", Actions: ice.Actions{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
 				m.Cmd(aaa.ROLE, aaa.WHITE, aaa.VOID, ice.USR_PUBLISH)
-				m.Cmd(aaa.ROLE, aaa.WHITE, aaa.VOID, m.PrefixKey())
-				gdb.Watch(m, web.SERVE_START, m.PrefixKey())
 				m.Config(ice.CONTEXTS, _contexts)
 			}},
 			web.SERVE_START: {Name: "serve.start", Help: "服务启动", Hand: func(m *ice.Message, arg ...string) {
-				// _publish_file(m, ice.ICE_BIN)
+				_publish_file(m, ice.ICE_BIN)
 			}},
 			ice.VOLCANOS: {Name: "volcanos", Help: "火山架", Hand: func(m *ice.Message, arg ...string) {
 				defer func() { m.EchoQRCode(m.Option(ice.MSG_USERWEB)) }()
@@ -89,41 +113,7 @@ func init() {
 				_publish_list(m, `.*\.(sh|vim|conf)$`)
 			}},
 			ice.CONTEXTS: {Name: "contexts", Help: "环境", Hand: func(m *ice.Message, arg ...string) {
-				u := web.OptionUserWeb(m)
-				host := strings.Split(u.Host, ice.DF)[0]
-				if host == tcp.LOCALHOST {
-					host = m.Cmd(tcp.HOST).Append(aaa.IP)
-				}
-				m.Option(cli.CTX_ENV, kit.Select("", " "+kit.JoinKV("=", " ", cli.CTX_POD, m.Option(ice.MSG_USERPOD)), m.Option(ice.MSG_USERPOD) != ""))
-				m.Option("httphost", fmt.Sprintf("%s://%s:%s", u.Scheme, host, kit.Select(kit.Select("443", "80", u.Scheme == ice.HTTP), strings.Split(u.Host, ice.DF), 1)))
-
-				if len(arg) == 0 {
-					arg = append(arg, ice.MISC)
-				}
-				for _, k := range arg {
-					switch k {
-					case INSTALL:
-						m.Echo(kit.Renders(`export ctx_dev={{.Option "httphost"}}{{.Option "ctx_env"}}; ctx_temp=$(mktemp); wget -O $ctx_temp -q $ctx_dev; source $ctx_temp app username {{.Option "user.name"}}`, m))
-						return
-					case ice.MISC:
-						if bin := path.Join(ice.USR_PUBLISH, kit.Keys(ice.ICE, runtime.GOOS, runtime.GOARCH)); !nfs.ExistsFile(m, bin) {
-							m.Cmd(nfs.LINK, bin, m.Cmdx(cli.RUNTIME, "boot.bin"))
-						}
-
-					case ice.CORE, ice.BASE:
-						if !nfs.ExistsFile(m, ".git") {
-							repos := web.MergeURL2(m, "/x/"+kit.Select(ice.Info.PathName, m.Option(ice.MSG_USERPOD)))
-							m.Cmd(cli.SYSTEM, "git", "init")
-							m.Cmd(cli.SYSTEM, "git", "remote", "add", "origin", repos)
-							m.Cmd("web.code.git.repos", mdb.CREATE, repos, "master", "", nfs.PWD)
-						}
-						m.Option("remote", kit.Select(ice.Info.Make.Remote, strings.TrimSpace(m.Cmdx(cli.SYSTEM, "git", "config", "remote.origin.url"))))
-						m.Option("pathname", strings.TrimSuffix(path.Base(m.Option("remote")), ".git"))
-					}
-					if buf, err := kit.Render(m.Config(kit.Keys(ice.CONTEXTS, k)), m); m.Assert(err) {
-						m.EchoScript(strings.TrimSpace(string(buf)))
-					}
-				}
+				_publish_contexts(m, arg...)
 			}},
 			mdb.INPUTS: {Name: "inputs", Help: "补全", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmdy(nfs.DIR, kit.Select(nfs.PWD, arg, 1)).ProcessAgain()
@@ -134,35 +124,11 @@ func init() {
 			nfs.TRASH: {Name: "trash", Help: "删除", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmd(nfs.TRASH, path.Join(ice.USR_PUBLISH, m.Option(nfs.PATH)))
 			}},
-			mdb.EXPORT: {Name: "export", Help: "工具链", Hand: func(m *ice.Message, arg ...string) {
-				var list = []string{ice.ETC_PATH}
-				m.Cmd(nfs.CAT, ice.ETC_PATH, func(text string) {
-					if strings.HasPrefix(text, ice.USR_PUBLISH) {
-						return
-					}
-					if strings.HasPrefix(text, ice.BIN) {
-						return
-					}
-					if strings.HasPrefix(text, ice.PS) {
-						return
-					}
-					list = append(list, text)
-				})
-
-				web.PushStream(m)
-				defer m.ProcessHold()
-				defer m.StatusTimeCount()
-				defer web.ToastSuccess(m)
-				m.Cmd(nfs.TAR, kit.Path(ice.USR_PUBLISH, "contexts.bin.tar.gz"), list)
-				m.Cmd(nfs.TAR, kit.Path(ice.USR_PUBLISH, "contexts.src.tar.gz"), ice.MAKEFILE, ice.ETC_MISS_SH, ice.SRC_MAIN_GO, ice.GO_MOD, ice.GO_SUM)
-				m.Cmd(nfs.TAR, kit.Path(ice.USR_PUBLISH, "contexts.home.tar.gz"), ".vim/plugged", kit.Dict(nfs.DIR_ROOT, kit.Env(cli.HOME)))
-				m.Cmd("web.code.git.server", mdb.IMPORT)
-			}},
 		}, Hand: func(m *ice.Message, arg ...string) {
 			m.Option(nfs.DIR_ROOT, ice.USR_PUBLISH)
 			m.Cmdy(nfs.DIR, kit.Select("", arg, 0), nfs.DIR_WEB_FIELDS)
 		}},
-	}})
+	}, Configs: ice.Configs{PUBLISH: {Value: kit.Data(ice.CONTEXTS, _contexts)}}})
 }
 
 var _contexts = kit.Dict(

@@ -414,3 +414,6 @@ func SpidePost(m *ice.Message, arg ...ice.Any) ice.Any {
 func SpideDelete(m *ice.Message, arg ...ice.Any) ice.Any {
 	return kit.UnMarshal(m.Cmdx(SPIDE_DELETE, arg))
 }
+func SpideSave(m *ice.Message, file, link string, cb func(int, int, int)) *ice.Message {
+	return m.Cmd("web.spide", ice.DEV, SPIDE_SAVE, file, SPIDE_GET, link, cb)
+}

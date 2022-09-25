@@ -23,16 +23,13 @@ type compile struct {
 }
 
 func (s compile) Init(m *ice.Message) {
-	m.Go(func() {
-		m.Sleep300ms() // after runtime init
-		cli.IsAlpine(m.Message, JAVA, "openjdk8")
-		cli.IsAlpine(m.Message, JAVAC, "openjdk8")
-		cli.IsAlpine(m.Message, MVN, "maven openjdk8")
+	cli.IsAlpine(m.Message, JAVA, "openjdk8")
+	cli.IsAlpine(m.Message, JAVAC, "openjdk8")
+	cli.IsAlpine(m.Message, MVN, "maven openjdk8")
 
-		cli.IsCentos(m.Message, JAVA, "java-1.8.0-openjdk-devel.x86_64")
-		cli.IsCentos(m.Message, JAVAC, "java-1.8.0-openjdk-devel.x86_64")
-		cli.IsCentos(m.Message, MVN, "maven java-1.8.0-openjdk-devel.x86_64")
-	})
+	cli.IsCentos(m.Message, JAVA, "java-1.8.0-openjdk-devel.x86_64")
+	cli.IsCentos(m.Message, JAVAC, "java-1.8.0-openjdk-devel.x86_64")
+	cli.IsCentos(m.Message, MVN, "maven java-1.8.0-openjdk-devel.x86_64")
 }
 func (s compile) Order(m *ice.Message) {
 	s.Code.Order(m, "", ice.BIN)

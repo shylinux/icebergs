@@ -73,9 +73,9 @@ const (
 	FUNCTION = "function"
 )
 const (
-	SPLIT   = lex.SPLIT
 	SPACE   = "space"
 	OPERATE = "operate"
+	SPLIT   = lex.SPLIT
 	PREFIX  = lex.PREFIX
 	SUFFIX  = lex.SUFFIX
 )
@@ -173,17 +173,20 @@ func PlugAction() ice.Actions {
 		}},
 	}
 }
-func LoadPlug(m *ice.Message, language ...string) {
-	for _, language := range language {
-		m.Conf(nfs.CAT, kit.Keym(nfs.SOURCE, kit.Ext(language)), ice.TRUE)
-		m.Confm(language, kit.Keym(PLUG, PREPARE), func(key string, value ice.Any) {
+func LoadPlug(m *ice.Message, lang ...string) {
+	for _, lang := range lang {
+		m.Conf(nfs.CAT, kit.Keym(nfs.SOURCE, kit.Ext(lang)), ice.TRUE)
+		m.Confm(lang, kit.Keym(PLUG, PREPARE), func(key string, value ice.Any) {
 			for _, v := range kit.Simple(value) {
-				m.Conf(language, kit.Keym(PLUG, KEYWORD, v), key)
+				m.Conf(lang, kit.Keym(PLUG, KEYWORD, v), key)
 			}
 		})
 	}
 }
 func TagsList(m *ice.Message, cmds ...string) {
+	if len(cmds) == 0 {
+		cmds = []string{"ctags", "--excmd=number", "--sort=no", "-f", "-", path.Join(m.Option(nfs.PATH), m.Option(nfs.FILE))}
+	}
 	for _, l := range strings.Split(m.Cmdx(cli.SYSTEM, cmds), ice.NL) {
 		if strings.HasPrefix(l, "!_") {
 			continue

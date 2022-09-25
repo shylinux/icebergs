@@ -49,12 +49,9 @@ func init() {
 				m.Conf(REPOS, mdb.HASH, "")
 				_repos_insert(m, path.Base(kit.Pwd()), kit.Pwd())
 				m.Cmd(nfs.DIR, ice.USR, "name,path", func(value ice.Maps) { _repos_insert(m, value[mdb.NAME], value[nfs.PATH]) })
-				m.Go(func() {
-					m.Sleep300ms()
-					cli.IsAlpine(m, GIT)
-					cli.IsCentos(m, GIT)
-					cli.IsUbuntu(m, GIT)
-				})
+				cli.IsAlpine(m, GIT)
+				cli.IsCentos(m, GIT)
+				cli.IsUbuntu(m, GIT)
 				m.Config(REPOS, "https://shylinux.com/x")
 			}},
 			mdb.CREATE: {Name: "create repos branch name path", Help: "添加", Hand: func(m *ice.Message, arg ...string) {

@@ -11,12 +11,10 @@ import (
 	kit "shylinux.com/x/toolkits"
 )
 
-func _c_show(m *ice.Message, arg ...string) {
-	TagsList(m, "ctags", "--excmd=number", "--sort=no", "-f", "-", path.Join(m.Option(nfs.PATH), m.Option(nfs.FILE)))
-}
+func _c_show(m *ice.Message, arg ...string) { TagsList(m) }
 func _c_exec(m *ice.Message, arg ...string) {
 	name := strings.TrimSuffix(arg[1], path.Ext(arg[1])) + ".bin"
-	if msg := m.Cmd(cli.SYSTEM, "gcc", arg[1], "-o", name, kit.Dict(cli.CMD_DIR, arg[2])); !cli.IsSuccess(msg) {
+	if msg := m.Cmd(cli.SYSTEM, "gcc", "-o", name, arg[1], kit.Dict(cli.CMD_DIR, arg[2])); !cli.IsSuccess(msg) {
 		_vimer_make(m, arg[2], msg)
 		return
 	}
@@ -47,9 +45,8 @@ func init() {
 			mdb.ENGINE: {Hand: func(m *ice.Message, arg ...string) { _c_exec(m, arg...) }},
 			NAVIGATE:   {Hand: func(m *ice.Message, arg ...string) { _c_tags(m, MAN, "ctags", "-a", "-R", nfs.PWD) }},
 		}, PlugAction(), LangAction())},
-		H: {Name: "c path auto", Help: "系统", Actions: ice.MergeActions(ice.Actions{
+		H: {Name: "h path auto", Help: "系统", Actions: ice.MergeActions(ice.Actions{
 			mdb.RENDER: {Hand: func(m *ice.Message, arg ...string) { _c_show(m, arg...) }},
-			mdb.ENGINE: {Hand: func(m *ice.Message, arg ...string) { _c_exec(m, arg...) }},
 			NAVIGATE:   {Hand: func(m *ice.Message, arg ...string) { _c_tags(m, MAN, "ctags", "-a", "-R", nfs.PWD) }},
 		}, PlugAction(), LangAction())},
 		MAN: {Name: MAN, Help: "手册", Actions: ice.MergeActions(ice.Actions{
@@ -59,7 +56,7 @@ func init() {
 				}
 				key := kit.TrimExt(arg[1], arg[0])
 				m.Option(cli.CMD_ENV, "COLUMNS", kit.Int(kit.Select("1920", m.Option("width")))/12)
-				m.Cmdy(cli.SYSTEM, "sh", "-c", kit.Format("man %s %s|col -b", "", key))
+				m.Echo(cli.SystemCmds(m, "man %s %s|col -b", "", key))
 			}},
 		}, PlugAction())},
 	})

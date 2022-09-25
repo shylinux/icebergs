@@ -28,7 +28,8 @@ func (f *Frame) Begin(m *Message, arg ...string) Server {
 }
 func (f *Frame) Start(m *Message, arg ...string) bool {
 	m.Cap(CTX_STREAM, strings.Split(m.Time(), SP)[1])
-	m.Cmdy(kit.Keys(MDB, CTX_INIT))
+	m.Cmd(kit.Keys(MDB, CTX_INIT))
+	m.Cmd("cli.runtime", CTX_INIT)
 	m.Cmdy(INIT, arg)
 
 	for _, k := range kit.Split(kit.Select("ctx,log,gdb,ssh", os.Getenv(CTX_DAEMON))) {

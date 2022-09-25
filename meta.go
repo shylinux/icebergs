@@ -242,7 +242,9 @@ func (m *Message) Length() (max int) {
 func (m *Message) Tables(cbs ...func(value Maps)) *Message {
 	return m.Table(func(index int, value Maps, head []string) {
 		for _, cb := range cbs {
-			cb(value)
+			if cb != nil {
+				cb(value)
+			}
 		}
 	})
 }

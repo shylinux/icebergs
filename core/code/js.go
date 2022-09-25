@@ -36,21 +36,13 @@ func _js_main_script(m *ice.Message, arg ...string) (res []string) {
 }
 
 func _js_show(m *ice.Message, arg ...string) {
-	key := ctx.GetFileCmd(kit.Replace(path.Join(arg[2], arg[1]), ".js", ".go"))
-	if key == "" {
-		for p, k := range ice.Info.File {
-			if strings.HasPrefix(p, path.Dir(path.Join(arg[2], arg[1]))) {
-				key = k
-			}
-		}
-	}
 	m.Display(path.Join("/require", path.Join(arg[2], arg[1])))
+	key := ctx.GetFileCmd(kit.Replace(path.Join(arg[2], arg[1]), ".js", ".go"))
 	ctx.ProcessCommand(m, kit.Select("can.code.inner._plugin", key), kit.Simple())
 }
 func _js_exec(m *ice.Message, arg ...string) {
 	args := kit.Simple("node", "-e", kit.Join(_js_main_script(m, arg...), ice.NL))
-	m.Cmdy(cli.SYSTEM, args)
-	m.StatusTime(ctx.ARGS, kit.Join([]string{"./bin/ice.bin", "web.code.js.js", "exec", path.Join(arg[2], arg[1])}, ice.SP))
+	m.Cmdy(cli.SYSTEM, args).StatusTime(ctx.ARGS, kit.Join(append([]string{ice.ICE_BIN, m.PrefixKey(), m.ActionKey()}, arg...), ice.SP))
 }
 
 const JS = "js"
@@ -64,24 +56,17 @@ func init() {
 			mdb.RENDER: {Hand: func(m *ice.Message, arg ...string) { _js_show(m, arg...) }},
 			mdb.ENGINE: {Hand: func(m *ice.Message, arg ...string) { _js_exec(m, arg...) }},
 
-			TEMPLATE: {Hand: func(m *ice.Message, arg ...string) {
-				m.Echo(`
-Volcanos(chat.ONIMPORT, {help: "导入数据", _init: function(can, msg) {
-	msg.Echo("hello world")
-	msg.Dump(can)
-}})
-`)
-			}},
+			TEMPLATE: {Hand: func(m *ice.Message, arg ...string) { m.Echo(_js_template) }},
 			COMPLETE: {Hand: func(m *ice.Message, arg ...string) {
-				if len(arg) > 0 && arg[0] == mdb.FOREACH {
+				if len(arg) > 0 && arg[0] == mdb.FOREACH { // 文件
 					switch m.Option(ctx.ACTION) {
 					case nfs.SCRIPT:
 						m.Push(nfs.PATH, strings.ReplaceAll(arg[1], ice.PT+kit.Ext(arg[1]), ice.PT+JS))
-						m.Cmdy(nfs.DIR, nfs.PWD, kit.Dict(nfs.DIR_ROOT, "src/", nfs.DIR_REG, `.*\.(sh|shy|py|js)$`, nfs.DIR_DEEP, ice.TRUE), nfs.PATH)
+						m.Option(nfs.DIR_REG, `.*\.(sh|py|shy|js)$`)
+						nfs.DirDeepAll(m, ice.SRC, nfs.PWD, nil).Cut(nfs.PATH)
 					}
-					return
-				}
-				if strings.HasSuffix(m.Option(mdb.TEXT), ice.PT) {
+
+				} else if strings.HasSuffix(m.Option(mdb.TEXT), ice.PT) { // 方法
 					key := kit.Slice(kit.Split(m.Option(mdb.TEXT), "\t ."), -1)[0]
 					switch key {
 					case "msg":
@@ -91,10 +76,17 @@ Volcanos(chat.ONIMPORT, {help: "导入数据", _init: function(can, msg) {
 					default:
 						m.Cmdy("web.code.vim.tags", strings.TrimPrefix(m.Option(mdb.TYPE), "can.")).Cut("name,text")
 					}
-				} else {
+
+				} else { // 类型
 					m.Cmdy("web.code.vim.tags").Cut(mdb.ZONE)
 				}
 			}},
 		}, PlugAction(), LangAction())},
 	})
 }
+
+var _js_template = `
+Volcanos(chat.ONIMPORT, {help: "导入数据", _init: function(can, msg) {
+	msg.Echo("hello world").Dump(can)
+}})
+`

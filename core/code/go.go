@@ -12,6 +12,19 @@ import (
 	kit "shylinux.com/x/toolkits"
 )
 
+func _go_trans(m *ice.Message, key string) string {
+	switch key {
+	case "m", "msg":
+		key = "icebergs.Message"
+	case "kit":
+		key = "shylinux.com/x/toolkits"
+	case "ice":
+		key = "shylinux.com/x/ice"
+	case "mdb", "cli", "nfs":
+		key = "shylinux.com/x/icebergs/base/" + key
+	}
+	return key
+}
 func _go_complete(m *ice.Message, arg ...string) {
 	if m.Option(mdb.TEXT) == "" {
 		m.Push(mdb.TEXT, "package", "import", "const", "type", "func", "var")
@@ -20,16 +33,7 @@ func _go_complete(m *ice.Message, arg ...string) {
 
 	if strings.HasSuffix(m.Option(mdb.TEXT), ice.PT) {
 		key := kit.Slice(kit.Split(m.Option(mdb.TEXT), "\t ."), -1)[0]
-		switch key {
-		case "m", "msg":
-			key = "icebergs.Message"
-		case "kit":
-			key = "shylinux.com/x/toolkits"
-		case "ice":
-			key = "shylinux.com/x/ice"
-		case "mdb", "cli", "nfs":
-			key = "shylinux.com/x/icebergs/base/" + key
-		}
+		key = _go_trans(m, key)
 
 		msg := m.Cmd(cli.SYSTEM, GO, "doc", key)
 		for _, l := range strings.Split(kit.Select(msg.Result(), msg.Append(cli.CMD_OUT)), ice.NL) {
@@ -56,7 +60,7 @@ func _go_complete(m *ice.Message, arg ...string) {
 	}
 }
 func _go_exec(m *ice.Message, arg ...string) {
-	args := []string{"./bin/ice.bin"}
+	args := []string{ice.ICE_BIN}
 	if cmd := ctx.GetFileCmd(path.Join(arg[2], arg[1])); cmd != "" {
 		args = append(args, cmd)
 	}
@@ -88,6 +92,7 @@ func _mod_show(m *ice.Message, file string) {
 	replace := ice.Maps{}
 	m.Cmd(nfs.CAT, file, func(ls []string, line string) {
 		switch {
+		case strings.HasPrefix(line, "//"):
 		case strings.HasPrefix(line, MODULE):
 			require[ls[1]] = m.Cmdx(cli.SYSTEM, GIT, "describe", "--tags")
 			replace[ls[1]] = nfs.PWD
@@ -154,10 +159,9 @@ func init() {
 		}, PlugAction(), LangAction())},
 		GODOC: {Name: "godoc", Help: "文档", Actions: ice.MergeActions(ice.Actions{
 			mdb.RENDER: {Hand: func(m *ice.Message, arg ...string) {
-				arg[1] = strings.Replace(arg[1], "m.", "shylinux.com/x/ice.Message.", 1)
 				arg[1] = strings.Replace(arg[1], "kit.", "shylinux.com/x/toolkits.", 1)
-				m.Cmdy(cli.SYSTEM, GO, "doc", strings.TrimSuffix(arg[1], ".godoc"), kit.Dict(cli.CMD_DIR, arg[2]))
-				if m.Append(cli.CMD_ERR) != "" {
+				arg[1] = strings.Replace(arg[1], "m.", "shylinux.com/x/ice.Message.", 1)
+				if m.Cmdy(cli.SYSTEM, GO, "doc", strings.TrimSuffix(arg[1], ".godoc"), kit.Dict(cli.CMD_DIR, arg[2])); m.Append(cli.CMD_ERR) != "" {
 					m.Result(m.Append(cli.CMD_OUT))
 				}
 			}},

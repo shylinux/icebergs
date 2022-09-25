@@ -8,7 +8,7 @@ import (
 )
 
 func _shell_show(m *ice.Message, name, text string, arg ...string) {
-	m.Option(OUTPUT, m.Cmdx(cli.SYSTEM, "sh", "-c", m.Option(INPUT, text)))
+	m.Option(OUTPUT, cli.SystemCmds(m, m.Option(INPUT, text)))
 	_wiki_template(m, SHELL, name, text, arg...)
 }
 

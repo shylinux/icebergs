@@ -61,6 +61,10 @@ func init() {
 				}
 				gdb.Event(m, RIVER_CREATE, RIVER, m.Option(ice.MSG_RIVER, h), arg)
 			}},
+			RIVER_CREATE: {Name: "river.create", Help: "事件", Hand: func(m *ice.Message, arg ...string) {
+				m.Cmd(mdb.EXPORT, m.Prefix(RIVER), "", mdb.HASH)
+				m.Cmd(mdb.IMPORT, m.Prefix(RIVER), "", mdb.HASH)
+			}},
 		}, mdb.HashAction(mdb.FIELD, "time,hash,type,name,text,template"), web.ApiAction(web.P(RIVER))), Hand: func(m *ice.Message, arg ...string) {
 			if m.Warn(m.Option(ice.MSG_USERNAME) == "", ice.ErrNotLogin) {
 				m.RenderStatusUnauthorized()

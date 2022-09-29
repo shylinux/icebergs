@@ -84,12 +84,11 @@ func init() {
 			}},
 			ice.RUN: {Name: "run", Help: "执行", Hand: func(m *ice.Message, arg ...string) {
 				m.Option(ice.POD, m.Option("task.pod"))
-				m.Option("task.pod", "")
-				if ctx.PodCmd(m, m.PrefixKey(), ice.RUN, arg) {
+				if m.Option("task.pod", ""); ctx.PodCmd(m, m.PrefixKey(), ice.RUN, arg) {
 					return
 				}
-				msg := m.Cmd(TASK, arg[0], arg[1])
-				m.Cmdy(kit.Simple(kit.Keys(msg.Append(kit.KeyExtra(ice.CTX)), msg.Append(kit.KeyExtra(ice.CMD))), arg[2:]))
+				msg := m.Cmd(TASK, arg[0], arg[1], ice.OptionFields(ice.CTX, ice.CMD))
+				m.Cmdy(kit.Simple(kit.Keys(msg.Append(ice.CTX), msg.Append(ice.CMD)), arg[2:]))
 			}},
 		}, TASK), Hand: func(m *ice.Message, arg ...string) {
 			arg = kit.Slice(arg, 0, 2)

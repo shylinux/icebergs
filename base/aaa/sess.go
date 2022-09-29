@@ -64,7 +64,7 @@ func init() {
 			mdb.CREATE: {Name: "create username", Help: "创建", Hand: func(m *ice.Message, arg ...string) {
 				_sess_create(m, m.Option(USERNAME))
 			}},
-			SESS_CREATE: {Name: "sess.create", Help: "检查", Hand: func(m *ice.Message, arg ...string) {
+			SESS_CREATE: {Name: "sess.create", Help: "事件", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmd(mdb.EXPORT, m.Prefix(SESS), "", mdb.HASH)
 				m.Cmd(mdb.IMPORT, m.Prefix(SESS), "", mdb.HASH)
 			}},

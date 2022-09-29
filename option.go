@@ -115,8 +115,8 @@ func (m *Message) ProcessHistory(arg ...Any) {
 func (m *Message) ProcessConfirm(arg ...Any) {
 	m.Process(PROCESS_CONFIRM, arg...)
 }
-func (m *Message) ProcessRefresh(delay string) {
-	if d, e := time.ParseDuration(delay); e == nil {
+func (m *Message) ProcessRefresh(arg ...string) { // delay
+	if d, e := time.ParseDuration(kit.Select("300ms", arg, 0)); e == nil {
 		m.Option("_delay", int(d/time.Millisecond))
 	}
 	m.Process(PROCESS_REFRESH)

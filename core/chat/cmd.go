@@ -26,13 +26,7 @@ func _cmd_file(m *ice.Message, arg ...string) bool {
 		web.RenderCmd(m, "web.wiki.word", p)
 
 	case nfs.IML:
-		if m.Option(ice.MSG_USERPOD) == "" {
-			m.RenderRedirect(path.Join(CHAT_WEBSITE, strings.TrimPrefix(p, SRC_WEBSITE)))
-			m.Option(ice.MSG_ARGS, m.Option(ice.MSG_ARGS))
-		} else {
-			m.RenderRedirect(path.Join("/chat/pod", m.Option(ice.MSG_USERPOD), "website", strings.TrimPrefix(p, SRC_WEBSITE)))
-			m.Option(ice.MSG_ARGS, m.Option(ice.MSG_ARGS))
-		}
+		m.RenderRedirect(web.MergePodWebSite(m, "", strings.TrimPrefix(p, SRC_WEBSITE)))
 
 	case nfs.ZML:
 		web.RenderCmd(m, "can.parse", m.Cmdx(nfs.CAT, p))
@@ -56,7 +50,6 @@ func init() {
 		CMD: {Name: "cmd path auto upload up home", Help: "命令", Actions: ice.MergeActions(ice.Actions{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
 				m.Cmd(aaa.ROLE, aaa.WHITE, aaa.VOID, CMD)
-				m.Cmdy(CMD, mdb.CREATE, mdb.TYPE, nfs.SHY, mdb.NAME, "web.wiki.word")
 				m.Cmdy(CMD, mdb.CREATE, mdb.TYPE, nfs.SVG, mdb.NAME, "web.wiki.draw")
 				m.Cmdy(CMD, mdb.CREATE, mdb.TYPE, nfs.CSV, mdb.NAME, "web.wiki.data")
 				m.Cmdy(CMD, mdb.CREATE, mdb.TYPE, nfs.JSON, mdb.NAME, "web.wiki.json")
@@ -64,14 +57,15 @@ func init() {
 					m.Cmdy(CMD, mdb.CREATE, mdb.TYPE, k, mdb.NAME, "web.code.inner")
 				}
 			}},
-		}, mdb.HashAction(mdb.SHORT, "type", nfs.PATH, nfs.PWD), ctx.CmdAction(), web.ApiAction()), Hand: func(m *ice.Message, arg ...string) {
+		}, mdb.HashAction(mdb.SHORT, mdb.TYPE, nfs.PATH, nfs.PWD), ctx.CmdAction(), web.ApiAction()), Hand: func(m *ice.Message, arg ...string) {
 			if _cmd_file(m, arg...) {
 				return
 			}
-			if ctx.PodCmd(m, ctx.COMMAND, arg[0]) && !m.IsErr() {
-				web.RenderCmd(m, arg[0], arg[1:]) // 远程命令
-			} else if m.Cmdy(ctx.COMMAND, arg[0]); m.Length() > 0 {
-				web.RenderCmd(m, arg[0], arg[1:]) // 本地命令
+			if len(arg[0]) == 0 || arg[0] == "" {
+				return
+			}
+			if m.Cmdy(ctx.COMMAND, arg[0]); m.Length() > 0 {
+				web.RenderCmd(m, arg[0], arg[1:])
 			}
 		}},
 	})

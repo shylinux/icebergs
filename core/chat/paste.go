@@ -20,6 +20,7 @@ func init() {
 			if mdb.HashSelect(m, arg...); len(arg) > 0 {
 				m.PushScript(ssh.SCRIPT, m.Append(mdb.TEXT))
 				m.PushQRCode(cli.QRCODE, m.Append(mdb.TEXT))
+				m.PushAction(mdb.REMOVE)
 			}
 		}},
 	})

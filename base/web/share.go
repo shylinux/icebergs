@@ -60,7 +60,7 @@ func _share_local(m *ice.Message, arg ...string) {
 			return // 没有权限
 		}
 	default:
-		if !aaa.Right(m, ls) {
+		if !aaa.Right(m, ls) && m.Option(ice.POD) == "" {
 			m.Render(STATUS, http.StatusUnauthorized, ice.ErrNotRight)
 			return // 没有权限
 		}

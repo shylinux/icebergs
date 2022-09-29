@@ -22,6 +22,7 @@ func init() {
 				}
 				m.PushScript(ssh.SCRIPT, m.Append(mdb.TEXT))
 				m.PushQRCode(cli.QRCODE, m.Append(mdb.TEXT))
+				m.PushAction(mdb.REMOVE)
 			}
 		}},
 	})

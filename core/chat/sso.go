@@ -13,7 +13,7 @@ const SSO = "sso"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
-		"/sso": {Name: "/sso", Help: "登录", Actions: ice.Actions{
+		web.P(SSO): {Name: "/sso", Help: "登录", Actions: ice.Actions{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) { m.Cmd(aaa.ROLE, aaa.WHITE, aaa.VOID, SSO) }},
 		}, Hand: func(m *ice.Message, arg ...string) {
 			if m.Option(ice.MSG_USERNAME) == "" {
@@ -23,8 +23,8 @@ func init() {
 			if m.Warn(m.Option(cli.BACK) == "") {
 				return
 			}
-			args := []string{aaa.USERNAME, m.Option(ice.MSG_USERNAME), aaa.USERROLE, m.Option(ice.MSG_USERROLE), aaa.USERNICK, m.Option(ice.MSG_USERNICK)}
-			sessid := aaa.UserRoot(m).Cmdx(web.SPACE, m.Option(web.SPACE), aaa.SESS, mdb.CREATE, args)
+			sessid := aaa.UserRoot(m).Cmdx(web.SPACE, m.Option(web.SPACE), aaa.SESS, mdb.CREATE, aaa.USERNAME, m.Option(ice.MSG_USERNAME),
+				aaa.USERROLE, m.Option(ice.MSG_USERROLE), aaa.USERNICK, m.Option(ice.MSG_USERNICK))
 			m.RenderRedirect(kit.MergeURL(m.Option(cli.BACK), ice.MSG_SESSID, sessid))
 		}},
 	})

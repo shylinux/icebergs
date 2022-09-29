@@ -2,6 +2,7 @@ package chat
 
 import (
 	ice "shylinux.com/x/icebergs"
+	"shylinux.com/x/icebergs/base/cli"
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/nfs"
 	"shylinux.com/x/icebergs/base/web"
@@ -23,7 +24,8 @@ func init() {
 				if m.PushDownload(mdb.LINK, value[mdb.NAME], link); len(arg) > 0 && kit.ExtIsImage(value[mdb.NAME]) {
 					m.PushImages("image", link)
 				}
-			})
+				m.PushQRCode(cli.QRCODE, web.MergeURL2(m, link))
+			}).PushAction(mdb.REMOVE)
 		}},
 	})
 }

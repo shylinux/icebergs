@@ -38,11 +38,14 @@ func init() {
 			mdb.REVERT: {Name: "revert", Help: "恢复", Hand: func(m *ice.Message, arg ...string) {
 				Rename(m, m.Option(FILE), m.Option(FROM))
 				mdb.HashRemove(m, m.OptionSimple(mdb.HASH))
+				m.ProcessRefresh()
 			}},
 			mdb.CREATE: {Name: "create path", Help: "删除", Hand: func(m *ice.Message, arg ...string) {
 				p := path.Join(ice.VAR_TRASH, path.Base(m.Option(PATH)))
 				RemoveAll(m, p)
 				if MkdirAll(m, path.Dir(p)); !m.Warn(Rename(m, m.Option(PATH), p)) {
+					mdb.HashCreate(m, FROM, m.Option(PATH), FILE, p)
+					m.ProcessRefresh()
 					m.Echo(p)
 				}
 			}},

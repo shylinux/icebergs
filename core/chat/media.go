@@ -11,8 +11,9 @@ import (
 	kit "shylinux.com/x/toolkits"
 )
 
+const MEDIA = "media"
+
 func init() {
-	const MEDIA = "media"
 	Index.MergeCommands(ice.Commands{
 		MEDIA: {Name: "media path auto", Help: "媒体", Actions: ice.MergeActions(ice.Actions{
 			web.UPLOAD: {Hand: func(m *ice.Message, arg ...string) {

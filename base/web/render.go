@@ -149,6 +149,9 @@ func RenderWebsite(m *ice.Message, pod string, dir string, arg ...string) *ice.M
 	return m.Echo(m.Cmdx(Space(m, pod), "web.chat.website", lex.PARSE, dir, arg)).RenderResult()
 }
 func RenderCmd(m *ice.Message, index string, args ...ice.Any) {
+	if index == "" {
+		return
+	}
 	list := index
 	if index != "" {
 		msg := m.Cmd(ctx.COMMAND, index)

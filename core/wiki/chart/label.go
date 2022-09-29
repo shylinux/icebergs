@@ -86,7 +86,7 @@ func (l *Label) Draw(m *ice.Message, x, y int) wiki.Chart {
 				args = append(args, "stroke", m.Option("order.fg"))
 				args = append(args, "fill", m.Option("order.fg"))
 			}
-			gs.EchoTexts(TEXT, left+item.GetWidths()/2, top+item.GetHeights()/2, item.Text, args...)
+			gs.EchoTexts(TEXT, left+item.GetWidths()/2, top+item.GetHeights()/2+4, item.Text, args...)
 
 			left += item.GetWidths()
 		}

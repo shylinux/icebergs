@@ -64,6 +64,14 @@ func init() {
 			mdb.CREATE: {Name: "create username", Help: "创建", Hand: func(m *ice.Message, arg ...string) {
 				_sess_create(m, m.Option(USERNAME))
 			}},
+			SESS_CREATE: {Name: "sess.create", Help: "检查", Hand: func(m *ice.Message, arg ...string) {
+				m.Cmd(mdb.EXPORT, m.Prefix(SESS), "", mdb.HASH)
+				m.Cmd(mdb.IMPORT, m.Prefix(SESS), "", mdb.HASH)
+			}},
+			USER_CREATE: {Name: "user.create", Help: "检查", Hand: func(m *ice.Message, arg ...string) {
+				m.Cmd(mdb.EXPORT, m.Prefix(USER), "", mdb.HASH)
+				m.Cmd(mdb.IMPORT, m.Prefix(USER), "", mdb.HASH)
+			}},
 			CHECK: {Name: "check sessid", Help: "检查", Hand: func(m *ice.Message, arg ...string) {
 				_sess_check(m, m.Option(SESSID))
 			}},

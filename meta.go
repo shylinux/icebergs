@@ -102,6 +102,9 @@ func (m *Message) Cut(fields ...string) *Message {
 	m.meta[MSG_APPEND] = kit.Split(kit.Join(fields))
 	return m
 }
+func (m *Message) CutTo(key, to string) *Message {
+	return m.Cut(key).RenameAppend(key, to)
+}
 func (m *Message) Push(key string, value Any, arg ...Any) *Message {
 	head := kit.Simple()
 	if len(head) == 0 && len(arg) > 0 {

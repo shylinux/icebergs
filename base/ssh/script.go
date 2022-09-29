@@ -91,8 +91,14 @@ func (f *Frame) alias(m *ice.Message, ls []string) []string {
 }
 func (f *Frame) parse(m *ice.Message, h, line string) string {
 	msg := m.Spawn(f.target)
-	ls := f.change(msg, f.alias(msg, kit.Split(strings.TrimSpace(line))))
-	if len(ls) == 0 {
+	ls := kit.Split(strings.TrimSpace(line))
+	for i, v := range ls {
+		if v == "#" {
+			ls = ls[:i]
+			break
+		}
+	}
+	if ls = f.change(msg, f.alias(msg, ls)); len(ls) == 0 {
 		return ""
 	}
 

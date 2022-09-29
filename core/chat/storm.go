@@ -5,12 +5,11 @@ import (
 	"shylinux.com/x/icebergs/base/aaa"
 	"shylinux.com/x/icebergs/base/ctx"
 	"shylinux.com/x/icebergs/base/mdb"
-	"shylinux.com/x/icebergs/base/web"
 	kit "shylinux.com/x/toolkits"
 )
 
 func _storm_key(m *ice.Message, key ...ice.Any) string {
-	return _river_key(m, STORM, mdb.HASH, kit.Keys(key))
+	return _river_key(m, mdb.HASH, m.Option(ice.MSG_STORM), kit.Keys(key))
 }
 
 const STORM = "storm"
@@ -18,59 +17,34 @@ const STORM = "storm"
 func init() {
 	Index.MergeCommands(ice.Commands{
 		STORM: {Name: "storm hash id auto insert create", Help: "应用", Actions: ice.Actions{
-			mdb.INPUTS: {Name: "inputs", Help: "补全", Hand: func(m *ice.Message, arg ...string) {
-				if ctx.Inputs(m, arg[0]) {
-					return
-				}
-				switch arg[0] {
-				case mdb.HASH:
-					m.Cmdy("", ice.OptionFields("hash,name"))
-				}
-			}},
-			mdb.CREATE: {Name: "create type=public,protected,private name=hi text=hello", Help: "创建", Hand: func(m *ice.Message, arg ...string) {
-				m.Cmdy(mdb.INSERT, RIVER, _river_key(m, STORM), mdb.HASH, arg)
+			mdb.INPUTS: {Name: "inputs", Help: "补全", Hand: func(m *ice.Message, arg ...string) {}},
+			mdb.CREATE: {Name: "create name=hi text=hello", Help: "创建", Hand: func(m *ice.Message, arg ...string) {
+				m.Cmdy(mdb.INSERT, RIVER, _river_key(m), mdb.HASH, arg)
 			}},
 			mdb.REMOVE: {Name: "remove", Help: "删除", Hand: func(m *ice.Message, arg ...string) {
-				m.Cmdy(mdb.DELETE, RIVER, _river_key(m, STORM), mdb.HASH, m.OptionSimple(mdb.HASH))
+				m.Cmdy(mdb.DELETE, RIVER, _river_key(m), mdb.HASH, mdb.HASH, m.Option(ice.MSG_STORM))
 			}},
-			mdb.INSERT: {Name: "insert hash space index", Help: "添加", Hand: func(m *ice.Message, arg ...string) {
-				m.Cmdy(mdb.INSERT, RIVER, _storm_key(m, m.Option(mdb.HASH)), mdb.LIST, arg[2:])
+			mdb.INSERT: {Name: "insert hash space index args style display", Help: "添加", Hand: func(m *ice.Message, arg ...string) {
+				m.Cmdy(mdb.INSERT, RIVER, _storm_key(m), mdb.LIST, arg)
 			}},
 			mdb.MODIFY: {Name: "modify", Help: "编辑", Hand: func(m *ice.Message, arg ...string) {
-				if m.Option(mdb.ID) == "" {
-					m.Cmdy(mdb.MODIFY, RIVER, _river_key(m, STORM), mdb.HASH, m.OptionSimple(mdb.HASH), arg)
+				if len(arg) > 0 && arg[0] == mdb.ID {
+					m.Cmdy(mdb.MODIFY, RIVER, _storm_key(m), mdb.LIST, arg)
 				} else {
-					m.Cmdy(mdb.MODIFY, RIVER, _storm_key(m, m.Option(mdb.HASH)), mdb.LIST, m.OptionSimple(mdb.ID), arg)
+					m.Cmdy(mdb.MODIFY, RIVER, _river_key(m), mdb.HASH, mdb.HASH, m.Option(ice.MSG_STORM), arg)
 				}
 			}},
 		}, Hand: func(m *ice.Message, arg ...string) {
-			if len(arg) == 0 { // 应用列表
-				m.OptionFields("time,hash,type,name,count")
-				m.Cmdy(mdb.SELECT, RIVER, _river_key(m, STORM), mdb.HASH).Sort(mdb.NAME)
-				m.PushAction(mdb.REMOVE)
-				return
-			}
+			if m.Option(ice.MSG_STORM) == "" { // 应用列表
+				m.OptionFields("time,hash,name,text,count")
+				m.Cmdy(mdb.SELECT, RIVER, _river_key(m), mdb.HASH)
 
-			m.OptionFields("time,id,space,index,args,style,display")
-			msg := m.Cmd(mdb.SELECT, RIVER, _storm_key(m, arg[0]), mdb.LIST, mdb.ID, kit.Select("", arg, 1))
-			if msg.Length() == 0 && len(arg) > 1 { // 虚拟群组
-				if aaa.Right(m, arg[1]) {
-					msg.Push(ctx.INDEX, arg[1])
-				}
-			}
+			} else if len(arg) == 0 || kit.Int(arg[0]) > 0 { // 工具列表
+				m.OptionFields("time,id,space,index,args,style,display")
+				m.Cmdy(mdb.SELECT, RIVER, _storm_key(m), mdb.LIST, mdb.ID, arg)
 
-			if len(arg) > 2 && arg[2] == ice.RUN { // 执行命令
-				if !m.Warn(aaa.Right(m, msg.Append(ctx.INDEX))) {
-					m.Cmdy(web.Space(m, kit.Select(m.Option(ice.POD), msg.Append(web.SPACE))), msg.Append(ctx.INDEX), arg[3:])
-				}
-				return
-			}
-
-			if m.Copy(msg); len(arg) > 1 { // 命令插件
-				m.Tables(func(value ice.Maps) { m.Cmdy(web.Space(m, value[web.SPACE]), ctx.COMMAND, value[ctx.INDEX]) })
-				if m.Length() > 0 {
-					m.ProcessField(arg[0], arg[1], ice.RUN)
-				}
+			} else if aaa.Right(m, arg[0]) { // 静态群组
+				m.Push(ctx.INDEX, arg[0])
 			}
 		}},
 	})

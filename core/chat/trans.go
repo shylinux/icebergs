@@ -12,6 +12,8 @@ import (
 	kit "shylinux.com/x/toolkits"
 )
 
+const TRANS = "trans"
+
 func init() {
 	const (
 		SEND = "send"

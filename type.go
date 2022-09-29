@@ -321,6 +321,23 @@ type Message struct {
 	I io.Reader
 }
 
+// func (m *Message) getMeta(key string) []string {
+// 	defer m.lock.RLock()()
+// 	return m.meta[key]
+// }
+// func (m *Message) setMeta(key string, value []string) {
+// 	defer m.lock.Lock()()
+// 	if value == nil {
+// 		delete(m.meta, key)
+// 	} else {
+// 		m.meta[key] = value
+// 	}
+// }
+// func (m *Message) getData(key string) Any {
+// 	defer m.lock.RLock()()
+// 	return m._data[key]
+// }
+//
 func (m *Message) Time(args ...Any) string { // [duration] [format [args...]]
 	t := m.time
 	if len(args) > 0 {

@@ -158,8 +158,12 @@ func _hash_import(m *ice.Message, prefix, chain, file string) {
 			count++
 		}
 	} else {
-		for _, data := range list {
-			Rich(m, prefix, chain, data)
+		for k, data := range list {
+			if m.Confv(prefix, kit.Keys(chain, HASH, k)) == nil {
+				m.Confv(prefix, kit.Keys(chain, HASH, k), data)
+			} else {
+				Rich(m, prefix, chain, data)
+			}
 			count++
 		}
 	}
@@ -248,7 +252,11 @@ func HashModify(m *ice.Message, arg ...Any) *ice.Message {
 	return m.Cmd(MODIFY, m.PrefixKey(), "", HASH, args)
 }
 func HashSelect(m *ice.Message, arg ...string) *ice.Message {
-	m.Fields(len(kit.Slice(arg, 0, 1)), HashField(m))
+	if len(arg) > 0 && arg[0] == FOREACH {
+		m.Fields(0, HashField(m))
+	} else {
+		m.Fields(len(kit.Slice(arg, 0, 1)), HashField(m))
+	}
 	m.Cmdy(SELECT, m.PrefixKey(), "", HASH, HashShort(m), arg)
 	if m.PushAction(m.Config(ACTION), REMOVE); !m.FieldsIsDetail() {
 		return m.StatusTimeCount()

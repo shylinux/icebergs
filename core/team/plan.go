@@ -7,7 +7,6 @@ import (
 	"shylinux.com/x/icebergs/base/ctx"
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/web"
-	"shylinux.com/x/icebergs/core/chat"
 	kit "shylinux.com/x/toolkits"
 )
 
@@ -80,7 +79,7 @@ func init() {
 			}},
 			mdb.SEARCH: {Name: "search", Help: "搜索", Hand: func(m *ice.Message, arg ...string) {
 				if arg[0] == mdb.FOREACH && arg[1] == "" {
-					m.PushSearch(mdb.TYPE, "plan", mdb.NAME, "", mdb.TEXT, chat.MergeCmd(m, ""))
+					m.PushSearch(mdb.TYPE, "plan", mdb.NAME, "", mdb.TEXT, web.MergePodCmd(m, "", ""))
 				}
 			}},
 			ice.RUN: {Name: "run", Help: "执行", Hand: func(m *ice.Message, arg ...string) {

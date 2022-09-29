@@ -2,6 +2,7 @@ package web
 
 import (
 	"net/url"
+	"path"
 	"strings"
 	"time"
 
@@ -145,9 +146,16 @@ func MergePod(m Message, pod string, arg ...ice.Any) string {
 }
 func MergePodCmd(m Message, pod, cmd string, arg ...ice.Any) string {
 	p := "/chat"
+	p += path.Join("/pod/", kit.Keys(m.Option(ice.MSG_USERPOD), pod))
+	p = kit.Select(p, "/chat", p == "/chat/pod")
+	p += path.Join("/cmd/", kit.Select(m.PrefixKey(), cmd))
+	return kit.MergeURL2(kit.Select(ice.Info.Domain, m.Option(ice.MSG_USERWEB)), p, arg...)
+}
+func MergePodWebSite(m Message, pod, web string, arg ...ice.Any) string {
+	p := "/chat"
 	p += "/pod/" + kit.Keys(m.Option(ice.MSG_USERPOD), pod)
 	p = kit.Select(p, "/chat/", p == "/chat/pod/")
-	p += "/cmd/" + kit.Select(m.PrefixKey(), cmd)
+	p += "/website/" + kit.Select("index.iml", web)
 	return kit.MergeURL2(kit.Select(ice.Info.Domain, m.Option(ice.MSG_USERWEB)), p, arg...)
 }
 func ProcessWebsite(m *ice.Message, pod, cmd string, arg ...ice.Any) {

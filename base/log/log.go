@@ -38,31 +38,35 @@ func (f *Frame) Start(m *ice.Message, arg ...string) bool {
 				return true
 			}
 
-			// file := kit.Select(BENCH, m.Conf(SHOW, kit.Keys(l.l, FILE)))
-			file := BENCH
-			view := m.Confm(VIEW, m.Conf(SHOW, kit.Keys(l.l, VIEW)))
-			bio := m.Confv(FILE, kit.Keys(file, FILE)).(*bufio.Writer)
-			if bio == nil {
-				continue
-			}
+			for _, file := range []string{m.Conf(SHOW, kit.Keys(l.l, FILE)), BENCH} {
+				if file == "" {
+					continue
+				}
 
-			bio.WriteString(l.p)
-			bio.WriteString(ice.SP)
-			if ice.Info.Colors == true {
-				if p, ok := view[PREFIX].(string); ok {
-					bio.WriteString(p)
+				view := m.Confm(VIEW, m.Conf(SHOW, kit.Keys(l.l, VIEW)))
+				bio := m.Confv(FILE, kit.Keys(file, FILE)).(*bufio.Writer)
+				if bio == nil {
+					continue
 				}
-			}
-			bio.WriteString(l.l)
-			bio.WriteString(ice.SP)
-			bio.WriteString(l.s)
-			if ice.Info.Colors == true {
-				if p, ok := view[SUFFIX].(string); ok {
-					bio.WriteString(p)
+
+				bio.WriteString(l.p)
+				bio.WriteString(ice.SP)
+				if ice.Info.Colors == true {
+					if p, ok := view[PREFIX].(string); ok {
+						bio.WriteString(p)
+					}
 				}
+				bio.WriteString(l.l)
+				bio.WriteString(ice.SP)
+				bio.WriteString(l.s)
+				if ice.Info.Colors == true {
+					if p, ok := view[SUFFIX].(string); ok {
+						bio.WriteString(p)
+					}
+				}
+				bio.WriteString(ice.NL)
+				bio.Flush()
 			}
-			bio.WriteString(ice.NL)
-			bio.Flush()
 		}
 	}
 	return true

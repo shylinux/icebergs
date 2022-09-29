@@ -17,7 +17,7 @@ import (
 )
 
 func _website_url(m *ice.Message, file string) string {
-	return strings.Split(MergeWebsite(m, file), "?")[0]
+	return strings.Split(web.MergePodWebSite(m, "", file), "?")[0]
 }
 func _website_parse(m *ice.Message, text string, args ...string) (ice.Map, bool) {
 	if text == "" {
@@ -150,7 +150,7 @@ func _website_render(m *ice.Message, w http.ResponseWriter, r *http.Request, kin
 }
 func _website_search(m *ice.Message, kind, name, text string, arg ...string) {
 	m.Cmd(m.PrefixKey(), ice.OptionFields(""), func(value ice.Maps) {
-		m.PushSearch(value, mdb.TEXT, MergeWebsite(m, value[nfs.PATH]))
+		m.PushSearch(value, mdb.TEXT, web.MergePodWebSite(m, "", value[nfs.PATH]))
 	})
 }
 
@@ -243,7 +243,7 @@ func init() {
 				}
 			}},
 		}, mdb.HashAction(mdb.SHORT, nfs.PATH, mdb.FIELD, "time,path,type,name,text"), ctx.CmdAction(), web.ApiAction()), Hand: func(m *ice.Message, arg ...string) {
-			mdb.HashSelect(m, arg...).Tables(func(value ice.Maps) { m.PushAnchor(MergeWebsite(m, value[nfs.PATH])) })
+			mdb.HashSelect(m, arg...).Tables(func(value ice.Maps) { m.PushAnchor(web.MergePodWebSite(m, "", value[nfs.PATH])) })
 			if len(arg) == 0 { // 文件列表
 				m.Cmd(nfs.DIR, SRC_WEBSITE, func(f os.FileInfo, p string) {
 					m.Push("", kit.Dict(

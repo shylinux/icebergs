@@ -10,7 +10,7 @@ import (
 	"shylinux.com/x/icebergs/base/lex"
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/nfs"
-	"shylinux.com/x/icebergs/core/chat"
+	"shylinux.com/x/icebergs/base/web"
 	kit "shylinux.com/x/toolkits"
 )
 
@@ -47,9 +47,13 @@ func init() {
 				m.Cmd(aaa.ROLE, aaa.WHITE, aaa.VOID, ice.SRC_MAIN_SHY)
 			}},
 			mdb.SEARCH: {Name: "search", Help: "搜索", Hand: func(m *ice.Message, arg ...string) {
-				if arg[0] == mdb.FOREACH && arg[1] == "" {
-					m.PushSearch(mdb.TYPE, nfs.SHY, mdb.NAME, ice.SRC_MAIN_SHY, mdb.TEXT, chat.MergeCmd(m, ""))
+				if (arg[0] != mdb.FOREACH && arg[0] != m.CommandKey()) || arg[1] == "" {
+					return
 				}
+				if arg[1] == "" {
+					m.PushSearch(mdb.TYPE, nfs.SHY, mdb.NAME, ice.SRC_MAIN_SHY, mdb.TEXT, web.MergePodCmd(m, "", ""))
+				}
+
 				m.Cmd(mdb.SELECT, m.PrefixKey(), "", mdb.HASH, func(value ice.Maps) {
 					if arg[1] == "" {
 						if value[mdb.TYPE] == SPARK {

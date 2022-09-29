@@ -9,12 +9,11 @@ import (
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/nfs"
 	"shylinux.com/x/icebergs/base/web"
-	"shylinux.com/x/icebergs/core/chat"
 	kit "shylinux.com/x/toolkits"
 )
 
 func _website_url(m *ice.Message, file string) string {
-	return strings.Split(chat.MergeWebsite(m, file), "?")[0]
+	return strings.Split(web.MergePodWebSite(m, "", file), "?")[0]
 }
 
 const ZML = nfs.ZML

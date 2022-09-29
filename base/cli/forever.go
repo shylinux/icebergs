@@ -2,6 +2,7 @@ package cli
 
 import (
 	"os"
+	"path"
 
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/aaa"
@@ -65,6 +66,14 @@ func init() {
 					logs.Println(ice.EXIT) // 正常退出
 					break
 				} else {
+					if m.Config("log.save") == ice.TRUE {
+						back := kit.Format("var/log.%s", logs.Now().Format("20060102_150405"))
+						m.Cmd(SYSTEM, "cp", "-r", "var/log", back, ice.Maps{CMD_OUTPUT: ""})
+						m.Cmd(SYSTEM, "cp", "bin/boot.log", path.Join(back, "boot.log"), ice.Maps{CMD_OUTPUT: ""})
+						// if IsSuccess(m.Cmd(SYSTEM, "grep", "fatal error: concurrent map read and map write", "bin/boot.log", ice.Maps{CMD_OUTPUT: ""})) {
+						// 	m.Cmd(SYSTEM, "cp", "bin/boot.log", path.Join(back, "boot.log"), ice.Maps{CMD_OUTPUT: ""})
+						// }
+					}
 					logs.Println()
 					m.Sleep("1s")
 				}

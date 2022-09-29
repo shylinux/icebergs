@@ -105,6 +105,14 @@ func (m *Message) PushAction(list ...Any) *Message {
 }
 func (m *Message) PushSearch(args ...Any) {
 	data := kit.Dict(args...)
+	for i := 0; i < len(args); i += 2 {
+		switch k := args[i].(type) {
+		case string:
+			if i+1 < len(args) {
+				data[k] = args[i+1]
+			}
+		}
+	}
 	for _, k := range kit.Split(m.OptionFields()) {
 		switch k {
 		case POD:

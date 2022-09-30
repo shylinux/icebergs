@@ -217,11 +217,6 @@ func GetFileCmd(dir string) string {
 		if cmd, ok := ice.Info.File[FileCmd(path.Join(p, path.Base(p)+".go"))]; ok {
 			return cmd
 		}
-		for k, v := range ice.Info.File {
-			if strings.HasPrefix(k, p) {
-				return v
-			}
-		}
 	}
 	return ""
 }

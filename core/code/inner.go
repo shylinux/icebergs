@@ -21,8 +21,7 @@ func _inner_list(m *ice.Message, ext, file, dir string) {
 			m.Cmdy(nfs.CAT, path.Join(dir, file))
 		}
 		if m.IsErrNotFound() {
-			m.SetResult()
-			_inner_show(m, ext, file, dir)
+			_inner_show(m.SetResult(), ext, file, dir)
 		}
 	}
 }
@@ -73,11 +72,11 @@ const (
 	FUNCTION = "function"
 )
 const (
-	SPACE   = "space"
-	OPERATE = "operate"
-	SPLIT   = lex.SPLIT
-	PREFIX  = lex.PREFIX
-	SUFFIX  = lex.SUFFIX
+	SPLIT    = lex.SPLIT
+	SPACE    = lex.SPACE
+	OPERATOR = lex.OPERATOR
+	PREFIX   = lex.PREFIX
+	SUFFIX   = lex.SUFFIX
 )
 const (
 	PLUG = "plug"
@@ -93,29 +92,21 @@ func init() {
 				m.Cmd(aaa.ROLE, aaa.WHITE, aaa.VOID, m.PrefixKey())
 				m.Cmd(aaa.ROLE, aaa.WHITE, aaa.VOID, ice.SRC_MAIN_GO)
 			}},
-			mdb.INPUTS: {Name: "inputs", Help: "补全", Hand: func(m *ice.Message, arg ...string) {
+			mdb.INPUTS: {Hand: func(m *ice.Message, arg ...string) {
 				switch arg[0] {
 				case nfs.PATH:
-					m.Cmdy(nfs.DIR, arg[1:], nfs.DIR_CLI_FIELDS).ProcessAgain()
+					m.Cmdy(nfs.DIR, kit.Select(nfs.PWD, arg, 1), nfs.DIR_CLI_FIELDS).ProcessAgain()
 				case nfs.FILE:
 					p := kit.Select(nfs.PWD, arg, 1)
 					m.Option(nfs.DIR_ROOT, m.Option(nfs.PATH))
-					m.Cmdy(nfs.DIR, kit.Select(path.Dir(p), p, strings.HasSuffix(p, ice.FS))+ice.PS, nfs.DIR_CLI_FIELDS).ProcessAgain()
+					m.Cmdy(nfs.DIR, kit.Select(path.Dir(p), p, strings.HasSuffix(p, ice.PS))+ice.PS, nfs.DIR_CLI_FIELDS).ProcessAgain()
 				default:
 					m.Cmdy(FAVOR, mdb.INPUTS, arg)
 				}
 			}},
-			mdb.PLUGIN: {Name: "plugin", Help: "插件", Hand: func(m *ice.Message, arg ...string) {
-				if m.Cmdy(mdb.PLUGIN, arg); m.Result() == "" {
-					m.Echo(kit.Select("{}", m.Config(kit.Keys(PLUG, arg[0]))))
-				}
-			}},
-			mdb.RENDER: {Name: "render", Help: "渲染", Hand: func(m *ice.Message, arg ...string) {
-				_inner_show(m, arg[0], arg[1], arg[2])
-			}},
-			mdb.ENGINE: {Name: "engine", Help: "引擎", Hand: func(m *ice.Message, arg ...string) {
-				_inner_exec(m, arg[0], arg[1], arg[2])
-			}},
+			mdb.PLUGIN: {Hand: func(m *ice.Message, arg ...string) { m.Cmdy(mdb.PLUGIN, arg) }},
+			mdb.RENDER: {Hand: func(m *ice.Message, arg ...string) { _inner_show(m, arg[0], arg[1], arg[2]) }},
+			mdb.ENGINE: {Hand: func(m *ice.Message, arg ...string) { _inner_exec(m, arg[0], arg[1], arg[2]) }},
 
 			nfs.GREP: {Name: "grep", Help: "搜索", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmdy(nfs.GREP, m.Option(nfs.PATH), arg[0]).StatusTimeCount(mdb.INDEX, 0)

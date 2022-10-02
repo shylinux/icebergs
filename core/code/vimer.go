@@ -17,12 +17,18 @@ import (
 
 func _vimer_make(m *ice.Message, dir string, msg *ice.Message) {
 	for _, line := range strings.Split(msg.Append(cli.CMD_ERR), ice.NL) {
-		if strings.Contains(line, ice.DF) {
-			if ls := strings.SplitN(line, ice.DF, 4); len(ls) > 3 {
-				m.Push(nfs.PATH, dir)
-				m.Push(nfs.FILE, strings.TrimPrefix(ls[0], dir))
-				m.Push(nfs.LINE, ls[1])
-				m.Push(mdb.TEXT, ls[3])
+		if !strings.Contains(line, ice.DF) {
+			continue
+		}
+		if ls := strings.SplitN(line, ice.DF, 4); len(ls) > 3 {
+			for _, p := range kit.Split(dir) {
+				if strings.HasPrefix(ls[0], p) {
+					m.Push(nfs.PATH, p)
+					m.Push(nfs.FILE, strings.TrimPrefix(ls[0], p))
+					m.Push(nfs.LINE, ls[1])
+					m.Push(mdb.TEXT, ls[3])
+					break
+				}
 			}
 		}
 	}
@@ -37,8 +43,8 @@ const VIMER = "vimer"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
-		VIMER: {Name: "vimer path=src/ file=main.go line=1@keyboard list", Help: "编辑器", Actions: ice.Actions{
-			mdb.INPUTS: {Name: "inputs", Help: "补全", Hand: func(m *ice.Message, arg ...string) {
+		VIMER: {Name: "vimer path=src/ file=main.go line=1 list", Help: "编辑器", Actions: ice.Actions{
+			mdb.INPUTS: {Hand: func(m *ice.Message, arg ...string) {
 				switch m.Option(ctx.ACTION) {
 				case AUTOGEN, web.DREAM, XTERM:
 					m.Cmdy(m.Option(ctx.ACTION), mdb.INPUTS, arg)
@@ -58,11 +64,12 @@ func init() {
 					}
 				}
 			}},
-			nfs.SAVE: {Name: "save type file path", Help: "保存", Hand: func(m *ice.Message, arg ...string) {
+			nfs.SAVE: {Name: "save", Help: "保存", Hand: func(m *ice.Message, arg ...string) {
 				if m.Option(nfs.CONTENT) == "" {
 					m.Option(nfs.CONTENT, m.Cmdx("", TEMPLATE))
 				}
 				m.Cmdy(nfs.SAVE, path.Join(m.Option(nfs.PATH), m.Option(nfs.FILE)))
+				web.ToastSuccess(m)
 			}},
 			nfs.TRASH: {Name: "trash path", Help: "删除", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmd(nfs.TRASH, arg[0])
@@ -164,7 +171,7 @@ func LangAction() ice.Actions {
 	}
 }
 func Complete(m *ice.Message, text string, data ice.Map) {
-	if strings.HasSuffix(text, ".") {
+	if strings.HasSuffix(text, ice.PT) {
 		key := kit.Slice(kit.Split(text, " ."), -1)[0]
 		m.Push(mdb.TEXT, kit.Simple(data[key]))
 	} else {

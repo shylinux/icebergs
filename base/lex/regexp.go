@@ -1,6 +1,11 @@
 package lex
 
-const PREFIX = "prefix"
-const SUFFIX = "suffix"
-const REGEXP = "regexp"
-const PATTERN = "pattern"
+const (
+	PATTERN = "pattern"
+	REGEXP = "regexp"
+	PREFIX = "prefix"
+	SUFFIX = "suffix"
+	
+	SPACE = "space"
+	OPERATOR = "operator"
+)

@@ -35,12 +35,49 @@ func _js_main_script(m *ice.Message, arg ...string) (res []string) {
 	return
 }
 
+func _js_parse(m *ice.Message, arg ...string) {
+	
+}
 func _js_show(m *ice.Message, arg ...string) {
-	m.Display(path.Join("/require", path.Join(arg[2], arg[1])))
-	key := ctx.GetFileCmd(kit.Replace(path.Join(arg[2], arg[1]), ".js", ".go"))
-	ctx.ProcessCommand(m, kit.Select("can.code.inner._plugin", key), kit.Simple())
+		kind := ""
+		m.Cmd(nfs.CAT, path.Join(arg[2], arg[1]), func(text string, index int) {
+			ls := kit.Split(text, "\t ", ":,()")
+			if strings.HasPrefix(text, "Volcanos(") {
+				if kind = ls[2]; strings.Contains(text, "_init: ") {
+					m.Push("line", index+1)
+					m.Push("kind", kind)
+					m.Push("name", "_init")
+					m.Push("type", "function")
+				}
+				return
+			}
+			indent := 0
+			for _, c := range text {
+				if c == '\t' {
+					indent++
+				} else if c == ' ' {
+					indent++
+				} else {
+					break
+				}
+			}
+			if len(ls) > 2 && ls[1] == ":" {
+				if indent > 1 {
+					return
+				}
+				m.Push("line", index+1)
+				m.Push("kind", kind)
+				m.Push("name", ls[0])
+				m.Push("type", ls[2])
+			}
+		})
+		m.StatusTimeCount()
 }
 func _js_exec(m *ice.Message, arg ...string) {
+		m.Display(path.Join("/require", path.Join(arg[2], arg[1])))
+		key := ctx.GetFileCmd(kit.Replace(path.Join(arg[2], arg[1]), ".js", ".go"))
+		ctx.ProcessCommand(m, kit.Select("can.code.inner._plugin", key), kit.Simple())
+	return
 	args := kit.Simple("node", "-e", kit.Join(_js_main_script(m, arg...), ice.NL))
 	m.Cmdy(cli.SYSTEM, args).StatusTime(ctx.ARGS, kit.Join(append([]string{ice.ICE_BIN, m.PrefixKey(), m.ActionKey()}, arg...), ice.SP))
 }

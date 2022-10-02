@@ -91,6 +91,11 @@ func init() {
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
 				m.Cmd(aaa.ROLE, aaa.WHITE, aaa.VOID, m.Prefix(COMMAND))
 				m.Cmd(aaa.ROLE, aaa.WHITE, aaa.VOID, COMMAND)
+				TravelCmd(m, func(key, file, line string) {
+					if strings.Contains(file, "icebergs") {
+						AddFileCmd(file, key)
+					}
+				})
 			}},
 			mdb.SEARCH: {Name: "search type name text", Help: "搜索", Hand: func(m *ice.Message, arg ...string) {
 				if arg[0] == m.CommandKey() || len(arg) > 1 && arg[1] != "" {
@@ -199,9 +204,9 @@ func AddFileCmd(dir, key string) {
 }
 func GetFileCmd(dir string) string {
 	if strings.HasPrefix(dir, "usr/") {
-		p := ice.Pulse.Cmdx("cli.system", "git", "config", "remote.origin.url", kit.Dict("cmd_dir", path.Dir(dir)))
-		p = strings.Replace(strings.TrimSpace(p), "https://", "/require/", 1)
-		dir = path.Join(p, strings.Join(strings.Split(dir, "/")[2:], "/"))
+		// p := ice.Pulse.Cmdx("cli.system", "git", "config", "remote.origin.url", kit.Dict("cmd_dir", path.Dir(dir)))
+		// p = strings.Replace(strings.TrimSpace(p), "https://", "/require/", 1)
+		// dir = path.Join(p, strings.Join(strings.Split(dir, "/")[2:], "/"))
 	}
 	if strings.HasPrefix(dir, ".ish/pluged/") {
 		dir = strings.Replace(dir, ".ish/pluged/", "/require/", 1)
@@ -242,7 +247,7 @@ func TravelCmd(m *ice.Message, cb func(key, file, line string)) {
 
 		ls := kit.Split(cmd.GetFileLine(), ":")
 		if len(ls) > 1 {
-			cb(key, strings.TrimPrefix(ls[0], kit.Path("")+ice.PS), ls[1])
+			cb(kit.Keys(s.Cap(ice.CTX_FOLLOW), key), strings.TrimPrefix(ls[0], kit.Path("")+ice.PS), ls[1])
 		} else {
 			m.Warn(true, "not founc", cmd.Name)
 		}

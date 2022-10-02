@@ -188,9 +188,7 @@ func init() {
 				return // 没有权限
 			}
 			fields := kit.Split(kit.Select(kit.Select(DIR_DEF_FIELDS, m.OptionFields()), kit.Join(kit.Slice(arg, 1))))
-			if m.Option(DIR_ROOT) != "" {
-				m.Logs(mdb.SELECT, DIR_ROOT, m.Option(DIR_ROOT), mdb.FIELD, kit.Join(fields, ","))
-			}
+			m.Logs(mdb.SELECT, DIR_ROOT, m.Option(DIR_ROOT), DIR_REG, m.Option(DIR_REG), mdb.FIELD, kit.Join(fields, ","))
 			_dir_list(m, root, name, 0, m.Option(DIR_DEEP) == ice.TRUE, kit.Select(TYPE_BOTH, m.Option(DIR_TYPE)), kit.Regexp(m.Option(DIR_REG)), fields)
 			m.SortTimeR(mdb.TIME)
 			m.StatusTimeCount()

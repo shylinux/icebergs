@@ -47,7 +47,14 @@ func init() {
 					case ctx.INDEX:
 						m.Cmdy(ctx.COMMAND, mdb.SEARCH, ctx.COMMAND, ice.OptionFields(ctx.INDEX))
 					default:
-						m.Cmdy(COMPLETE, mdb.FOREACH, arg[1], m.Option(ctx.ACTION))
+						m.Cmdy(COMPLETE, mdb.FOREACH, kit.Select("", arg, 1), m.Option(ctx.ACTION))
+						m.Cmd(mdb.RENDER, kit.Ext(m.Option(nfs.FILE)), m.Option(nfs.FILE), m.Option(nfs.PATH), ice.Option{nfs.DIR_ROOT, ""}).Tables(func(value ice.Maps) {
+							m.Push(nfs.PATH, kit.Format("line:%s:%s:%s", value[nfs.LINE], value["kind"], value[mdb.NAME]))
+						})
+						m.Option(nfs.DIR_REG, "")
+						for _, p := range kit.Split(kit.Select(m.Option(nfs.PATH), m.Option("paths"))) {
+							nfs.DirDeepAll(m, nfs.PWD, p, nil, nfs.PATH)
+						}
 					}
 				}
 			}},

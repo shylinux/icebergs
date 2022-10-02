@@ -60,19 +60,16 @@ func _go_complete(m *ice.Message, arg ...string) {
 	}
 }
 func _go_exec(m *ice.Message, arg ...string) {
-	args := []string{ice.ICE_BIN}
 	if cmd := ctx.GetFileCmd(path.Join(arg[2], arg[1])); cmd != "" {
-		args = append(args, cmd)
+		ctx.ProcessCommand(m, cmd, kit.Simple())
+		return
 	}
-	if m.Cmdy(cli.SYSTEM, args); cli.IsSuccess(m) {
-		m.Result(m.Append(cli.CMD_ERR), m.Append(cli.CMD_OUT))
-		m.SetAppend()
-	}
-	m.StatusTime(ctx.ARGS, kit.Join(args, ice.SP))
 }
 func _go_show(m *ice.Message, arg ...string) {
-	if key := ctx.GetFileCmd(path.Join(arg[2], arg[1])); key != "" {
-		ctx.ProcessCommand(m, key, kit.Simple())
+	TagsList(m, "gotags", path.Join(m.Option(nfs.PATH), m.Option(nfs.FILE)))
+	return
+	if cmd := ctx.GetFileCmd(path.Join(arg[2], arg[1])); cmd != "" {
+		ctx.ProcessCommand(m, cmd, kit.Simple())
 	} else if p := strings.ReplaceAll(path.Join(arg[2], arg[1]), ".go", ".shy"); arg[1] != "main.go" && nfs.ExistsFile(m, p) {
 		ctx.ProcessCommand(m, "web.wiki.word", kit.Simple(p))
 	} else {

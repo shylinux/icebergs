@@ -324,7 +324,7 @@ func init() {
 			if len(arg) == 0 {
 				m.Action(PULL, MAKE, PUSH, TAGS, PIE, code.PUBLISH)
 				files, adds, dels, last := _status_list(m)
-				m.Status("repos", m.Length(), "files", files, "adds", adds, "dels", dels, "last", last.Format(ice.MOD_TIME))
+				m.Status("cost", m.FormatCost(), "repos", m.Length(), "files", files, "adds", adds, "dels", dels, "last", last.Format(ice.MOD_TIME))
 				web.Toast3s(m, kit.Format("files: %d, adds: %d, dels: %d", files, adds, dels), ice.CONTEXTS)
 				return
 			}

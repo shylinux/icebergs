@@ -50,7 +50,6 @@ func init() {
 					m.Cmdy(m.Option(ctx.ACTION), mdb.INPUTS, arg)
 				case "extension":
 					nfs.DirDeepAll(m, "usr/volcanos/plugin/local/code/", "inner/", nil, nfs.PATH)
-
 				default:
 					switch arg[0] {
 					case ctx.INDEX:
@@ -64,6 +63,15 @@ func init() {
 						for _, p := range kit.Split(kit.Select(m.Option(nfs.PATH), m.Option("paths"))) {
 							nfs.DirDeepAll(m, nfs.PWD, p, nil, nfs.PATH)
 						}
+						m.Cmd(ctx.COMMAND, mdb.SEARCH, ctx.COMMAND, ice.OptionFields(ctx.INDEX)).Tables(func(value ice.Maps) {
+							m.Push(nfs.PATH, "index:"+value[ctx.INDEX])
+						})
+						m.Option(nfs.DIR_TYPE, "")
+						m.Option(nfs.DIR_DEEP, "")
+						m.Option(nfs.DIR_ROOT, "")
+						m.Cmd(web.DREAM).Tables(func(value ice.Maps) {
+							m.Push(nfs.PATH, "dream:"+value[mdb.NAME])
+						})
 					}
 				}
 			}},

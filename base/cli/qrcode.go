@@ -141,6 +141,7 @@ func init() {
 				_qrcode_cli(m, kit.Select(kit.Select(ice.Info.Make.Domain, ice.Info.Domain), arg, 0))
 			} else {
 				_qrcode_web(m, kit.Select(m.Option(ice.MSG_USERWEB), arg, 0))
+				m.StatusTime(mdb.LINK, kit.Select(m.Option(ice.MSG_USERWEB), arg, 0))
 			}
 		}},
 	})

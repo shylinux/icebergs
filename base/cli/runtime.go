@@ -185,7 +185,7 @@ const RUNTIME = "runtime"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
-		RUNTIME: {Name: "runtime info=ifconfig,hostinfo,hostname,userinfo,procinfo,diskinfo,bootinfo,api,cli,cmd,env auto", Help: "运行环境", Actions: ice.Actions{
+		RUNTIME: {Name: "runtime info=ifconfig,hostinfo,hostname,userinfo,procinfo,diskinfo,bootinfo,api,cli,cmd,env auto Terminal Chrome", Help: "运行环境", Actions: ice.Actions{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
 				cs := m.Target().Configs
 				if _, ok := cs[RUNTIME]; !ok {
@@ -219,6 +219,12 @@ func init() {
 			}},
 			DISKINFO: {Name: "diskinfo", Help: "磁盘信息", Hand: func(m *ice.Message, arg ...string) {
 				_runtime_diskinfo(m)
+			}},
+			"Terminal": {Name: "Terminal", Help: "终端", Hand: func(m *ice.Message, arg ...string) {
+				m.Cmd(SYSTEM, "open", "-a", "Terminal")
+			}},
+			"Chrome": {Name: "Chrome", Help: "浏览器", Hand: func(m *ice.Message, arg ...string) {
+				m.Cmd(SYSTEM, "open", "-a", "Google Chrome")
 			}},
 			MAXPROCS: {Name: "maxprocs", Help: "最大并发", Hand: func(m *ice.Message, arg ...string) {
 				if len(arg) > 0 {

@@ -72,6 +72,9 @@ func init() {
 						m.Cmd(web.DREAM).Tables(func(value ice.Maps) {
 							m.Push(nfs.PATH, "dream:"+value[mdb.NAME])
 						})
+						m.Cmd(FAVOR, "_open").Tables(func(value ice.Maps) {
+							m.Push(nfs.PATH, "_open:"+strings.ToLower(value[mdb.NAME]))
+						})
 					}
 				}
 			}},
@@ -105,6 +108,9 @@ func init() {
 				link := tcp.ReplaceLocalhost(m, web.MergePodCmd(m, "", "web.chat.keyboard", mdb.HASH, hash))
 				m.PushQRCode(mdb.TEXT, link)
 				m.Push(mdb.NAME, link)
+			}},
+			"_open": {Name: "_open", Help: "索引", Hand: func(m *ice.Message, arg ...string) {
+				m.Cmd(cli.DAEMON, "open", "-a", kit.Split(arg[0], ".", ".")[0])
 			}},
 			"listTags": {Name: "listTags", Help: "索引", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmdy("web.code.vim.tags", "listTags", arg)

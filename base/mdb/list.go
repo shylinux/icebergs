@@ -219,9 +219,9 @@ func NextPageLimit(m *ice.Message, total string, arg ...string) {
 }
 
 func OptionPages(m *ice.Message, arg ...string) (page int, size int) {
-	m.Option(CACHE_LIMIT, kit.Select("", arg, 0))
-	m.Option(CACHE_OFFEND, kit.Select("", arg, 1))
-	m.Option(CACHE_FILTER, kit.Select("", arg, 2))
+	m.Option(CACHE_LIMIT, kit.Select(m.Option(CACHE_LIMIT), arg, 0))
+	m.Option(CACHE_OFFEND, kit.Select(m.Option(CACHE_OFFEND), arg, 1))
+	m.Option(CACHE_FILTER, kit.Select(m.Option(CACHE_FILTER), arg, 2))
 	m.Option(LIMIT, kit.Select(m.Option(LIMIT), arg, 0))
 	m.Option(OFFEND, kit.Select(m.Option(OFFEND), arg, 1))
 	size = kit.Int(kit.Select("10", m.Option(LIMIT)))
@@ -266,6 +266,8 @@ func Grows(m *ice.Message, prefix string, chain Any, match string, value string,
 			m.Option(CACHE_OFFEND, -begin-limit)
 		}
 	}
+	m.Debug("what %v", m.Option(CACHE_LIMIT))
+	m.Debug("what %v", m.Option(CACHE_OFFEND))
 	return miss.Grows(path.Join(prefix, kit.Keys(chain)), cache,
 		kit.Int(kit.Select("0", strings.TrimPrefix(m.Option(CACHE_OFFEND), "-"))),
 		kit.Int(kit.Select("10", m.Option(CACHE_LIMIT))),

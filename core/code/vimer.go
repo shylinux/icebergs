@@ -48,6 +48,9 @@ func init() {
 				switch m.Option(ctx.ACTION) {
 				case AUTOGEN, web.DREAM, XTERM:
 					m.Cmdy(m.Option(ctx.ACTION), mdb.INPUTS, arg)
+				case "extension":
+					nfs.DirDeepAll(m, "usr/volcanos/plugin/local/code/", "inner/", nil, nfs.PATH)
+
 				default:
 					switch arg[0] {
 					case ctx.INDEX:

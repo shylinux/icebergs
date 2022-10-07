@@ -3,6 +3,7 @@ package webview
 import (
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/nfs"
+	"shylinux.com/x/icebergs/base/cli"
 	kit "shylinux.com/x/toolkits"
 	"shylinux.com/x/webview"
 )
@@ -48,8 +49,12 @@ func (w WebView) Menu() bool {
 func (w WebView) Title(text string)  { w.WebView.SetTitle(text) }
 func (w WebView) Webview(url string) { w.WebView.Navigate(url) }
 func (w WebView) Open(url string)    { w.WebView.Navigate(url) }
-func (w WebView) OutOpen(url string) { ice.Pulse.Cmd("system", "open", url) }
-func (w WebView) Terminal(url string) { ice.Pulse.Cmd("system", "open", "-a", "Terminal") }
+func (w WebView) OpenUrl(url string) { ice.Pulse.Cmd(cli.SYSTEM, "open", url) }
+func (w WebView) OpenApp(app string) { ice.Pulse.Cmd(cli.SYSTEM, "open", "-a", app) }
+func (w WebView) OpenCmd(cmd string) {
+	ice.Pulse.Cmd(nfs.SAVE, kit.HomePath(".bash_temp"), cmd)
+	ice.Pulse.Cmd(cli.SYSTEM, "open", "-a", "Terminal")
+}
 func (w WebView) Terminate()         { w.WebView.Terminate() }
 func (w WebView) Close() {
 	if !w.Menu() {

@@ -120,6 +120,12 @@ func init() {
 				m.Cmdy(NAVIGATE, kit.Ext(m.Option(mdb.FILE)), m.Option(nfs.FILE), m.Option(nfs.PATH))
 			}},
 			FAVOR: {Name: "favor", Help: "收藏"},
+			ctx.COMMAND: {Name: "command", Help: "命令", Hand: func(m *ice.Message, arg ...string) {
+				m.Cmd(FAVOR, mdb.INSERT, mdb.ZONE, "_vimer", nfs.FILE, arg[0])
+				if !ctx.PodCmd(m, ctx.COMMAND, arg) {
+					m.Cmdy(ctx.COMMAND, arg)
+				}
+			}},
 		}, ctx.CmdAction()), Hand: func(m *ice.Message, arg ...string) {
 			if arg[0] = strings.Split(arg[0], ice.FS)[0]; !strings.HasSuffix(arg[0], ice.PS) && len(arg) == 1 {
 				arg[1] = kit.Slice(strings.Split(arg[0], ice.PS), -1)[0]
@@ -138,6 +144,7 @@ func init() {
 			m.Option("plug", m.Config("show.plug"))
 			m.Option("exts", m.Config("show.exts"))
 			ctx.DisplayLocal(m, "")
+			m.Cmd(FAVOR, mdb.INSERT, mdb.ZONE, "_recent", nfs.PATH, arg[0], nfs.FILE, arg[1])
 		}},
 	}})
 }

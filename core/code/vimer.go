@@ -1,6 +1,7 @@
 package code
 
 import (
+	"os"
 	"path"
 	"strings"
 
@@ -102,6 +103,9 @@ func init() {
 			XTERM: {Name: "xterm type=sh name text", Help: "终端", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmdy(XTERM, mdb.CREATE, arg)
 			}},
+			FAVOR: {Name: "favor", Help: "收藏", Hand: func(m *ice.Message, arg ...string) {
+				m.Cmdy(FAVOR, arg)
+			}},
 
 			"keyboard": {Name: "keyboard", Help: "远程控制", Hand: func(m *ice.Message, arg ...string) {
 				hash := m.Cmdx("web.chat.keyboard", mdb.CREATE, web.SPACE, m.Option(ice.MSG_DAEMON), ctx.INDEX, m.Option(ctx.INDEX), "input", "")
@@ -145,7 +149,12 @@ func init() {
 				m.Cmdy(AUTOGEN, mdb.CREATE, arg)
 			}},
 			COMPILE: {Name: "compile", Help: "编译", Hand: func(m *ice.Message, arg ...string) {
-				if msg := m.Cmd(COMPILE, ice.SRC_MAIN_GO, ice.BIN_ICE_BIN); cli.IsSuccess(msg) {
+				cmds := []string{COMPILE, ice.SRC_MAIN_GO, ice.BIN_ICE_BIN}
+				if strings.HasSuffix(os.Args[0], "contexts.app/Contents/MacOS/contexts") {
+					m.Option(cli.CMD_ENV, kit.Path("usr/local/go/bin"))
+					cmds = []string{cli.SYSTEM, "make", "app"}
+				}
+				if msg := m.Cmd(cmds); cli.IsSuccess(msg) {
 					m.Cmd(UPGRADE, cli.RESTART)
 				} else {
 					_vimer_make(m, nfs.PWD, msg)

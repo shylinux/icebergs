@@ -266,8 +266,6 @@ func Grows(m *ice.Message, prefix string, chain Any, match string, value string,
 			m.Option(CACHE_OFFEND, -begin-limit)
 		}
 	}
-	m.Debug("what %v", m.Option(CACHE_LIMIT))
-	m.Debug("what %v", m.Option(CACHE_OFFEND))
 	return miss.Grows(path.Join(prefix, kit.Keys(chain)), cache,
 		kit.Int(kit.Select("0", strings.TrimPrefix(m.Option(CACHE_OFFEND), "-"))),
 		kit.Int(kit.Select("10", m.Option(CACHE_LIMIT))),

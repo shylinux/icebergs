@@ -107,7 +107,6 @@ func _system_exec(m *ice.Message, cmd *exec.Cmd) {
 			if IsSuccess(m) && err.String() == "" {
 				m.SetAppend()
 			}
-			m.Debug("what %v %v", out.String(), err.String())
 			m.Echo(strings.TrimRight(out.String(), ice.NL))
 		}()
 	}

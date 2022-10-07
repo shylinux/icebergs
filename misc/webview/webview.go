@@ -48,6 +48,8 @@ func (w WebView) Menu() bool {
 func (w WebView) Title(text string)  { w.WebView.SetTitle(text) }
 func (w WebView) Webview(url string) { w.WebView.Navigate(url) }
 func (w WebView) Open(url string)    { w.WebView.Navigate(url) }
+func (w WebView) OutOpen(url string) { ice.Pulse.Cmd("system", "open", url) }
+func (w WebView) Terminal(url string) { ice.Pulse.Cmd("system", "open", "-a", "Terminal") }
 func (w WebView) Terminate()         { w.WebView.Terminate() }
 func (w WebView) Close() {
 	if !w.Menu() {

@@ -1,9 +1,6 @@
 package code
 
 import (
-	"strings"
-	"time"
-
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/cli"
 	"shylinux.com/x/icebergs/base/ctx"
@@ -28,36 +25,12 @@ func init() {
 				m.Cmd(cli.DAEMON, m.Option(mdb.TYPE))
 			}},
 		}, mdb.ZoneAction(mdb.SHORT, mdb.ZONE, mdb.FIELD, "time,id,type,name,text,path,file,line")), Hand: func(m *ice.Message, arg ...string) {
-			if len(arg) == 0 || arg[0] == "" {
-				m.Push(mdb.TIME, m.Time())
-				m.Push(mdb.ZONE, "_history")
-				m.Push(mdb.COUNT, "100")
-				m.PushButton("")
-			} else if arg[0] == "_history" {
-				last := ""
-				list := map[string]string{}
-				m.Cmd(nfs.CAT, kit.HomePath(".bash_history"), func(line string) {
-					if strings.HasPrefix(line, "#") {
-						last = time.Unix(kit.Int64(line[1:]), 0).Format(ice.MOD_TIME)
-					} else if last != "" {
-						list[line] = last
-					}
-				})
-				for k, v := range list {
-					m.Push(mdb.TIME, v)
-					m.Push(mdb.TYPE, k)
-				}
-				m.SortTimeR(mdb.TIME)
-				m.StatusTimeCount()
-				return
-			}
 			m.Option(mdb.CACHE_LIMIT, "30")
-			m.Option(mdb.LIMIT, "30")
 			if mdb.ZoneSelectPage(m, arg...); len(arg) > 0 && arg[0] != "" {
-				m.Option(ctx.STYLE, arg[0])
 				m.Tables(func(value ice.Maps) {
 					m.PushButton(kit.Select(INNER, XTERM, value[mdb.TEXT] == "" || value[nfs.FILE] == ""))
 				})
+				m.Option(ctx.STYLE, arg[0])
 			}
 		}},
 	})

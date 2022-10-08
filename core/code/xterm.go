@@ -77,8 +77,12 @@ func init() {
 				ctx.ProcessField(m, "", arg, arg...)
 			}},
 			mdb.INPUTS: {Name: "inputs", Help: "补全", Hand: func(m *ice.Message, arg ...string) {
-				switch mdb.HashInputs(m, arg).Cmdy(FAVOR, "_xterm").Cut(arg[0]); arg[0] {
+				switch mdb.HashInputs(m, arg).Cmdy(FAVOR, "_xterm", ice.OptionFields(arg[0])).Cut(arg[0]); arg[0] {
 				case mdb.TYPE:
+					m.Debug("what %v ", m.FormatsMeta())
+					if m.Option(nfs.LINE) != "" && m.Option(nfs.FILE) != "" {
+						m.Push(arg[0], "vim +"+m.Option(nfs.LINE)+" "+m.Option(nfs.PATH)+m.Option(nfs.FILE))
+					}
 					m.Push(arg[0], "bash", "sh")
 				case mdb.NAME:
 					m.Push(arg[0], ice.Info.HostName, path.Base(m.Option(mdb.TYPE)))

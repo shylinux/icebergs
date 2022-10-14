@@ -12,7 +12,6 @@ import (
 	"shylinux.com/x/icebergs/base/nfs"
 	"shylinux.com/x/icebergs/base/tcp"
 	"shylinux.com/x/icebergs/base/web"
-	"shylinux.com/x/icebergs/core/chat"
 	kit "shylinux.com/x/toolkits"
 )
 
@@ -49,6 +48,8 @@ func init() {
 				switch m.Option(ctx.ACTION) {
 				case AUTOGEN, web.DREAM, XTERM:
 					m.Cmdy(m.Option(ctx.ACTION), mdb.INPUTS, arg)
+				case nfs.SCRIPT, web.WEBSITE:
+					m.Cmdy(COMPLETE, mdb.FOREACH, kit.Select("", arg, 1), m.Option(ctx.ACTION))
 				case "extension":
 					nfs.DirDeepAll(m, "usr/volcanos/plugin/local/code/", "inner/", nil, nfs.PATH)
 				default:
@@ -56,24 +57,19 @@ func init() {
 					case ctx.INDEX:
 						m.Cmdy(ctx.COMMAND, mdb.SEARCH, ctx.COMMAND, ice.OptionFields(ctx.INDEX))
 					default:
-						m.Cmdy(COMPLETE, mdb.FOREACH, kit.Select("", arg, 1), m.Option(ctx.ACTION))
-						m.Cmd(mdb.RENDER, kit.Ext(m.Option(nfs.FILE)), m.Option(nfs.FILE), m.Option(nfs.PATH), ice.Option{nfs.DIR_ROOT, ""}).Tables(func(value ice.Maps) {
+						m.Cmd(mdb.RENDER, kit.Ext(m.Option(nfs.FILE)), m.Option(nfs.FILE), m.Option(nfs.PATH)).Tables(func(value ice.Maps) {
 							m.Push(nfs.PATH, kit.Format("line:%s:%s:%s", value[nfs.LINE], value["kind"], value[mdb.NAME]))
 						})
-						m.Option(nfs.DIR_REG, "")
 						for _, p := range kit.Split(kit.Select(m.Option(nfs.PATH), m.Option("paths"))) {
 							nfs.DirDeepAll(m, nfs.PWD, p, nil, nfs.PATH)
 						}
 						m.Cmd(ctx.COMMAND, mdb.SEARCH, ctx.COMMAND, ice.OptionFields(ctx.INDEX)).Tables(func(value ice.Maps) {
 							m.Push(nfs.PATH, "index:"+value[ctx.INDEX])
 						})
-						m.Option(nfs.DIR_TYPE, "")
-						m.Option(nfs.DIR_DEEP, "")
-						m.Option(nfs.DIR_ROOT, "")
-						m.Cmd(web.DREAM).Tables(func(value ice.Maps) {
+						m.Cmd(web.DREAM, ice.Map{nfs.DIR_TYPE: "", nfs.DIR_DEEP: "", nfs.DIR_ROOT: ""}).Tables(func(value ice.Maps) {
 							m.Push(nfs.PATH, "dream:"+value[mdb.NAME])
 						})
-						m.Cmd(FAVOR, "_open").Tables(func(value ice.Maps) {
+						m.Cmd(FAVOR, "_system_app").Tables(func(value ice.Maps) {
 							m.Push(nfs.PATH, "_open:"+strings.ToLower(value[mdb.NAME]))
 						})
 					}
@@ -84,17 +80,14 @@ func init() {
 					m.Option(nfs.CONTENT, m.Cmdx("", TEMPLATE))
 				}
 				m.Cmdy(nfs.SAVE, path.Join(m.Option(nfs.PATH), m.Option(nfs.FILE)))
-				web.ToastSuccess(m)
 			}},
 			nfs.TRASH: {Name: "trash path", Help: "删除", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmd(nfs.TRASH, arg[0])
 			}},
 			nfs.SCRIPT: {Name: "script file=hi/hi.js", Help: "脚本", Hand: func(m *ice.Message, arg ...string) {
-				m.Option(nfs.PATH, "src/")
 				m.Cmdy(nfs.DEFS, path.Join(m.Option(nfs.PATH), m.Option(nfs.FILE)), m.Cmdx("", TEMPLATE))
 			}},
 			web.WEBSITE: {Name: "website file=hi.zml", Help: "网页", Hand: func(m *ice.Message, arg ...string) {
-				m.Option(nfs.PATH, "src/website/")
 				m.Cmdy(nfs.DEFS, path.Join(m.Option(nfs.PATH), m.Option(nfs.FILE)), m.Cmdx("", TEMPLATE))
 			}},
 			web.DREAM: {Name: "dream name=hi repos", Help: "空间", Hand: func(m *ice.Message, arg ...string) {
@@ -103,9 +96,7 @@ func init() {
 			XTERM: {Name: "xterm type=sh name text", Help: "终端", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmdy(XTERM, mdb.CREATE, arg)
 			}},
-			FAVOR: {Name: "favor", Help: "收藏", Hand: func(m *ice.Message, arg ...string) {
-				m.Cmdy(FAVOR, arg)
-			}},
+			FAVOR: {Name: "favor", Help: "收藏"},
 
 			"keyboard": {Name: "keyboard", Help: "远程控制", Hand: func(m *ice.Message, arg ...string) {
 				hash := m.Cmdx("web.chat.keyboard", mdb.CREATE, web.SPACE, m.Option(ice.MSG_DAEMON), ctx.INDEX, m.Option(ctx.INDEX), "input", "")
@@ -113,11 +104,8 @@ func init() {
 				m.PushQRCode(mdb.TEXT, link)
 				m.Push(mdb.NAME, link)
 			}},
-			"_open": {Name: "_open", Help: "索引", Hand: func(m *ice.Message, arg ...string) {
-				m.Cmd(cli.DAEMON, "open", "-a", kit.Split(arg[0], ".", ".")[0])
-			}},
-			"listTags": {Name: "listTags", Help: "索引", Hand: func(m *ice.Message, arg ...string) {
-				m.Cmdy("web.code.vim.tags", "listTags", arg)
+			"_open": {Name: "_open", Help: "打开", Hand: func(m *ice.Message, arg ...string) {
+				m.Cmd(cli.DAEMON, cli.OPEN, "-a", kit.Split(arg[0], ice.PT, ice.PT)[0])
 			}},
 			cli.MAKE: {Name: "make", Help: "构建", Hand: func(m *ice.Message, arg ...string) {
 				_vimer_make(m, m.Option(nfs.PATH), m.Cmd(cli.SYSTEM, cli.MAKE, arg))
@@ -145,13 +133,12 @@ func init() {
 				m.ProcessInner()
 			}},
 			AUTOGEN: {Name: "create name=h2 help=示例 type=Zone,Hash,Data,Code main=main.go zone key", Help: "模块", Hand: func(m *ice.Message, arg ...string) {
-				m.Option(nfs.PATH, "src/")
 				m.Cmdy(AUTOGEN, mdb.CREATE, arg)
 			}},
 			COMPILE: {Name: "compile", Help: "编译", Hand: func(m *ice.Message, arg ...string) {
 				cmds := []string{COMPILE, ice.SRC_MAIN_GO, ice.BIN_ICE_BIN}
 				if strings.HasSuffix(os.Args[0], "contexts.app/Contents/MacOS/contexts") {
-					m.Option(cli.CMD_ENV, kit.Path("usr/local/go/bin"))
+					m.Option(cli.CMD_ENV, nfs.PATH, kit.Path("usr/local/go/bin"))
 					cmds = []string{cli.SYSTEM, "make", "app"}
 				}
 				if msg := m.Cmd(cmds); cli.IsSuccess(msg) {
@@ -165,7 +152,7 @@ func init() {
 			}},
 		}, Hand: func(m *ice.Message, arg ...string) {
 			if m.Cmdy(INNER, arg); arg[0] != ctx.ACTION {
-				m.Action(nfs.SAVE, COMPILE, AUTOGEN, nfs.SCRIPT, chat.WEBSITE, web.DREAM, XTERM)
+				m.Action(nfs.SAVE, COMPILE, AUTOGEN, nfs.SCRIPT, web.WEBSITE, web.DREAM, XTERM)
 				m.Option("tabs", m.Config("show.tabs"))
 				m.Option("plug", m.Config("show.plug"))
 				m.Option("exts", m.Config("show.exts"))

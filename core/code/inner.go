@@ -1,5 +1,5 @@
 package code
-
+				
 import (
 	"bufio"
 	"path"
@@ -37,6 +37,9 @@ func _inner_exec(m *ice.Message, ext, file, dir string) {
 }
 func _inner_tags(m *ice.Message, dir string, value string) {
 	for _, l := range strings.Split(m.Cmdx(cli.SYSTEM, nfs.GREP, "^"+value+"\\>", nfs.TAGS, kit.Dict(cli.CMD_DIR, dir)), ice.NL) {
+		if strings.HasPrefix(l, "!_") {
+			continue
+		}
 		ls := strings.SplitN(l, ice.TB, 3)
 		if len(ls) < 3 {
 			continue
@@ -44,24 +47,27 @@ func _inner_tags(m *ice.Message, dir string, value string) {
 
 		file, ls := ls[1], strings.SplitN(ls[2], ";\"", 2)
 		text := strings.TrimSuffix(strings.TrimPrefix(ls[0], "/^"), "$/")
-		line := kit.Int(text)
-
-		f, e := nfs.OpenFile(m, kit.Path(dir, file))
-		m.Assert(e)
-		defer f.Close()
-
-		bio := bufio.NewScanner(f)
-		for i := 1; bio.Scan(); i++ {
-			if i == line || bio.Text() == text {
-				if dir == "" {
-					m.PushRecord(kit.Dict(nfs.PATH, path.Dir(file)+ice.PS, nfs.FILE, path.Base(file), nfs.LINE, kit.Format(i), mdb.TEXT, bio.Text()))
-				} else {
-					m.PushRecord(kit.Dict(nfs.PATH, dir, nfs.FILE, strings.TrimPrefix(file, nfs.PWD), nfs.LINE, kit.Format(i), mdb.TEXT, bio.Text()))
-				}
-				break
-			}
+		if text, line := _inner_line(m, kit.Path(dir, file), text); dir == "" {
+			m.PushRecord(kit.Dict(nfs.PATH, path.Dir(file)+ice.PS, nfs.FILE, path.Base(file), nfs.LINE, kit.Format(line), mdb.TEXT, text))
+		} else {
+			m.PushRecord(kit.Dict(nfs.PATH, dir, nfs.FILE, strings.TrimPrefix(file, nfs.PWD), nfs.LINE, kit.Format(line), mdb.TEXT, text))
 		}
 	}
+}
+func _inner_line(m *ice.Message, file, text string) (string, int) {
+	line := kit.Int(text)
+
+	f, e := nfs.OpenFile(m, file)
+	m.Assert(e)
+	defer f.Close()
+
+	bio := bufio.NewScanner(f)
+	for i := 1; bio.Scan(); i++ {
+		if i == line || bio.Text() == text {
+			return bio.Text(), i
+		}
+	}
+	return "", 0
 }
 
 const (
@@ -127,7 +133,7 @@ func init() {
 				if len(arg) == 2 && arg[0] == mdb.SEARCH && arg[1] == ctx.COMMAND {
 					return
 				}
-				m.Cmd(FAVOR, mdb.INSERT, mdb.ZONE, "_vimer", nfs.FILE, arg[0])
+				m.Cmd(FAVOR, mdb.INSERT, mdb.ZONE, "_recent_cmd", nfs.FILE, arg[0])
 			}},
 		}, ctx.CmdAction()), Hand: func(m *ice.Message, arg ...string) {
 			if arg[0] = strings.Split(arg[0], ice.FS)[0]; !strings.HasSuffix(arg[0], ice.PS) && len(arg) == 1 {
@@ -143,11 +149,11 @@ func init() {
 
 			arg[1] = strings.Split(arg[1], ice.FS)[0]
 			_inner_list(m, kit.Ext(arg[1]), arg[1], arg[0])
+			defer m.Cmd(FAVOR, mdb.INSERT, mdb.ZONE, "_recent_file", nfs.PATH, arg[0], nfs.FILE, arg[1])
 			m.Option("tabs", m.Config("show.tabs"))
 			m.Option("plug", m.Config("show.plug"))
 			m.Option("exts", m.Config("show.exts"))
 			ctx.DisplayLocal(m, "")
-			m.Cmd(FAVOR, mdb.INSERT, mdb.ZONE, "_recent", nfs.PATH, arg[0], nfs.FILE, arg[1])
 		}},
 	}})
 }

@@ -322,6 +322,7 @@ func init() {
 				return
 			}
 			if len(arg) == 0 {
+				web.ToastProcess(m)
 				m.Action(PULL, MAKE, PUSH, TAGS, PIE, code.PUBLISH)
 				files, adds, dels, last := _status_list(m)
 				m.Status("cost", m.FormatCost(), "repos", m.Length(), "files", files, "adds", adds, "dels", dels, "last", last.Format(ice.MOD_TIME))

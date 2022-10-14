@@ -22,7 +22,7 @@ var Index = &ice.Context{Name: CODE, Help: "编程中心", Commands: ice.Command
 func init() {
 	web.Index.Register(Index, &web.Frame{},
 		INSTALL, UPGRADE, WEBPACK, BINPACK, AUTOGEN, COMPILE, PUBLISH,
-		FAVOR, XTERM, INNER, VIMER, PPROF, BENCH,
+		VIMER, INNER, FAVOR, XTERM, PPROF, BENCH,
 		C, SH, SHY, GO, JS,
 	)
 }

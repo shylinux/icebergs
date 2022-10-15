@@ -1,9 +1,11 @@
 package webview
 
 import (
+	"strings"
+
 	ice "shylinux.com/x/icebergs"
-	"shylinux.com/x/icebergs/base/nfs"
 	"shylinux.com/x/icebergs/base/cli"
+	"shylinux.com/x/icebergs/base/nfs"
 	kit "shylinux.com/x/toolkits"
 	"shylinux.com/x/webview"
 )
@@ -16,6 +18,9 @@ type WebView struct {
 func (w WebView) Menu() bool {
 	list := []string{}
 	ice.Pulse.Cmd(nfs.CAT, w.Source, func(ls []string, line string) {
+		if strings.HasPrefix(line, "# ") {
+			return
+		}
 		if len(ls) > 1 {
 			list = append(list, kit.Format(`<button onclick=%s()>%s</button>`, ls[0], ls[0]))
 			w.WebView.Bind(ls[0], func() { w.navigate(ls[1]) })
@@ -55,7 +60,7 @@ func (w WebView) OpenCmd(cmd string) {
 	ice.Pulse.Cmd(nfs.SAVE, kit.HomePath(".bash_temp"), cmd)
 	ice.Pulse.Cmd(cli.SYSTEM, "open", "-a", "Terminal")
 }
-func (w WebView) Terminate()         { w.WebView.Terminate() }
+func (w WebView) Terminate() { w.WebView.Terminate() }
 func (w WebView) Close() {
 	if !w.Menu() {
 		w.WebView.Terminate()
@@ -71,7 +76,7 @@ func Run(cb func(*WebView) ice.Any) {
 	defer w.Destroy()
 	defer w.Run()
 
-	view := &WebView{Source: "src/webview.txt", WebView: w}
+	view := &WebView{Source: "etc/webview.txt", WebView: w}
 	kit.Reflect(cb(view), func(name string, value ice.Any) { w.Bind(name, value) })
 
 	if !view.Menu() {

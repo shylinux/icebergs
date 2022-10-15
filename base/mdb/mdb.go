@@ -52,7 +52,7 @@ func _mdb_modify(m *ice.Message, val ice.Map, field string, arg ...string) {
 	}
 }
 func _mdb_select(m *ice.Message, cb Any, key string, value Map, fields []string, val Map) {
-	switch value = kit.GetMeta(value); cb := cb.(type) {
+	switch value, val = kit.GetMeta(value), kit.GetMeta(val); cb := cb.(type) {
 	case func([]string, Map):
 		cb(fields, value)
 	case func(string, []string, Map, Map):
@@ -177,7 +177,7 @@ var Index = &ice.Context{Name: MDB, Help: "数据模块", Commands: ice.Commands
 		case ice.CMD:
 			m.Cmdy("context", kit.Select(m.Option(ice.CTX), m.Option(kit.Keys(EXTRA, ice.CTX))), "command")
 		case "index":
-			m.OptionFields(arg[0])
+			m.OptionFields(arg[3])
 			m.Cmdy("command", SEARCH, "command", kit.Select("", arg, 1))
 		default:
 			switch arg[2] {
@@ -249,12 +249,10 @@ var Index = &ice.Context{Name: MDB, Help: "数据模块", Commands: ice.Commands
 		}
 		switch file := _file_name(m, arg...); arg[2] {
 		case ZONE:
-			m.OptionFields(ZoneShort(m), m.Config(FIELD))
 			_zone_export(m, arg[0], arg[1], file)
 		case HASH:
 			_hash_export(m, arg[0], arg[1], file)
 		case LIST:
-			m.OptionFields(m.Config(FIELD))
 			_list_export(m, arg[0], arg[1], file)
 		}
 	}},

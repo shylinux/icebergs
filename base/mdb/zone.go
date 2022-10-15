@@ -63,7 +63,6 @@ func _zone_export(m *ice.Message, prefix, chain, file string) {
 
 	w := csv.NewWriter(f)
 	defer w.Flush()
-
 	fields := _zone_fields(m)
 	if kit.IndexOf(fields, EXTRA) == -1 {
 		fields = append(fields, EXTRA)
@@ -197,6 +196,13 @@ func ZoneInsert(m *ice.Message, arg ...Any) {
 	if len(args) == 0 {
 		args = m.OptionSimple(ZoneShort(m), m.Config(FIELD))
 	}
+	for i := len(args) - 2; i >= 0; i -= 2 {
+		if args[i+1] == "" {
+			args = args[:i]
+		} else {
+			break
+		}
+	}
 	m.Cmdy(INSERT, m.PrefixKey(), "", ZONE, args[1], ZoneArgs(m, args[2:]))
 }
 func ZoneModify(m *ice.Message, arg ...Any) {
@@ -217,6 +223,11 @@ func ZoneSelect(m *ice.Message, arg ...string) *ice.Message {
 	return m
 }
 func ZoneExport(m *ice.Message, arg ...Any) {
+	m.Debug("what %v", m.OptionFields())
+	if m.OptionFields() == "" {
+		m.OptionFields(m.Config(SHORT), m.Config(FIELD))	
+	}
+	m.Debug("what %v", m.OptionFields())
 	m.Cmdy(EXPORT, m.PrefixKey(), "", ZONE, arg)
 }
 func ZoneImport(m *ice.Message, arg ...Any) {

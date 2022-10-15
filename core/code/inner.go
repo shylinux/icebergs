@@ -71,18 +71,18 @@ func _inner_line(m *ice.Message, file, text string) (string, int) {
 }
 
 const (
-	COMMENT  = "comment"
-	KEYWORD  = "keyword"
-	CONSTANT = "constant"
-	DATATYPE = "datatype"
-	FUNCTION = "function"
-)
-const (
 	SPLIT    = lex.SPLIT
 	SPACE    = lex.SPACE
 	OPERATOR = lex.OPERATOR
 	PREFIX   = lex.PREFIX
 	SUFFIX   = lex.SUFFIX
+)
+const (
+	COMMENT  = "comment"
+	KEYWORD  = "keyword"
+	CONSTANT = "constant"
+	DATATYPE = "datatype"
+	FUNCTION = "function"
 )
 const (
 	PLUG = "plug"
@@ -92,7 +92,7 @@ const (
 const INNER = "inner"
 
 func init() {
-	Index.Merge(&ice.Context{Commands: ice.Commands{
+	Index.MergeCommands(ice.Commands{
 		INNER: {Name: "inner path=src/@key file=main.go@key line=1 auto", Help: "源代码", Actions: ice.MergeActions(ice.Actions{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
 				m.Cmd(aaa.ROLE, aaa.WHITE, aaa.VOID, m.PrefixKey())
@@ -115,7 +115,7 @@ func init() {
 			mdb.ENGINE: {Hand: func(m *ice.Message, arg ...string) { _inner_exec(m, arg[0], arg[1], arg[2]) }},
 
 			nfs.GREP: {Name: "grep", Help: "搜索", Hand: func(m *ice.Message, arg ...string) {
-				m.Cmdy(nfs.GREP, m.Option(nfs.PATH), arg[0]).StatusTimeCount(mdb.INDEX, 0)
+				m.Cmdy(nfs.GREP, arg[0], m.Option(nfs.PATH)).StatusTimeCount(mdb.INDEX, 0)
 			}},
 			nfs.TAGS: {Name: "tags", Help: "索引", Hand: func(m *ice.Message, arg ...string) {
 				if _inner_tags(m, m.Option(nfs.PATH), arg[0]); m.Length() == 0 {
@@ -155,7 +155,7 @@ func init() {
 			m.Option("exts", m.Config("show.exts"))
 			ctx.DisplayLocal(m, "")
 		}},
-	}})
+	})
 }
 func PlugAction() ice.Actions {
 	return ice.Actions{

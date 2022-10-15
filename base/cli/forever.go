@@ -61,22 +61,19 @@ func init() {
 			}
 
 			for {
-				logs.Println("run %s", kit.Join(arg, ice.SP))
-				if IsSuccess(m.Cmd(SYSTEM, arg)) {
+				if logs.Println("run %s", kit.Join(arg, ice.SP)); IsSuccess(m.Cmd(SYSTEM, arg)) {
 					logs.Println(ice.EXIT) // 正常退出
 					break
-				} else {
-					if m.Config("log.save") == ice.TRUE {
-						back := kit.Format("var/log.%s", logs.Now().Format("20060102_150405"))
-						m.Cmd(SYSTEM, "cp", "-r", "var/log", back, ice.Maps{CMD_OUTPUT: ""})
-						m.Cmd(SYSTEM, "cp", "bin/boot.log", path.Join(back, "boot.log"), ice.Maps{CMD_OUTPUT: ""})
-						// if IsSuccess(m.Cmd(SYSTEM, "grep", "fatal error: concurrent map read and map write", "bin/boot.log", ice.Maps{CMD_OUTPUT: ""})) {
-						// 	m.Cmd(SYSTEM, "cp", "bin/boot.log", path.Join(back, "boot.log"), ice.Maps{CMD_OUTPUT: ""})
-						// }
-					}
-					logs.Println()
-					m.Sleep("1s")
 				}
+				if logs.Println(); m.Config("log.save") == ice.TRUE {
+					back := kit.Format("var/log.%s", logs.Now().Format("20060102_150405"))
+					m.Cmd(SYSTEM, "cp", "-r", "var/log", back, ice.Maps{CMD_OUTPUT: ""})
+					m.Cmd(SYSTEM, "cp", "bin/boot.log", path.Join(back, "boot.log"), ice.Maps{CMD_OUTPUT: ""})
+					// if IsSuccess(m.Cmd(SYSTEM, "grep", "fatal error: concurrent map read and map write", "bin/boot.log", ice.Maps{CMD_OUTPUT: ""})) {
+					// 	m.Cmd(SYSTEM, "cp", "bin/boot.log", path.Join(back, "boot.log"), ice.Maps{CMD_OUTPUT: ""})
+					// }
+				}
+				m.Sleep("1s")
 			}
 		}},
 	})

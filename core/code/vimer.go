@@ -138,8 +138,9 @@ func init() {
 			COMPILE: {Name: "compile", Help: "编译", Hand: func(m *ice.Message, arg ...string) {
 				cmds := []string{COMPILE, ice.SRC_MAIN_GO, ice.BIN_ICE_BIN}
 				if strings.HasSuffix(os.Args[0], "contexts.app/Contents/MacOS/contexts") {
-					m.Option(cli.CMD_ENV, nfs.PATH, kit.Path("usr/local/go/bin"))
-					cmds = []string{cli.SYSTEM, "make", "app"}
+					m.Option(cli.ENV, "CGO_ENABLED", "1", cli.HOME, kit.Env(cli.HOME), cli.PATH, kit.Path("usr/local/go/bin")+ice.DF+kit.Env(cli.PATH))
+					cmds = []string{COMPILE, "src/webview.go", "usr/publish/contexts.app/Contents/MacOS/contexts"}
+					// cmds = []string{cli.SYSTEM, cli.MAKE, "app"}
 				}
 				if msg := m.Cmd(cmds); cli.IsSuccess(msg) {
 					m.Cmd(UPGRADE, cli.RESTART)

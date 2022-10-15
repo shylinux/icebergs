@@ -51,7 +51,7 @@ func (m *Message) Assert(expr Any) bool {
 	m.Result(ErrWarn, expr)
 	panic(expr)
 }
-func (m *Message) Sleep(d string, arg ...Any) *Message {
+func (m *Message) Sleep(d Any, arg ...Any) *Message {
 	if time.Sleep(kit.Duration(d)); len(arg) > 0 {
 		m.Cmdy(arg...)
 	}

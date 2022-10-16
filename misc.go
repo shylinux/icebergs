@@ -337,7 +337,19 @@ func MergeActions(list ...Any) Actions {
 		case string:
 			base[CTX_INIT] = &Action{Hand: func(m *Message, arg ...string) {
 				m.Search(from, func(p *Context, s *Context, key string, cmd *Command) {
-					MergeActions(base, cmd.Actions)
+					for k, v := range cmd.Actions {
+						func(k string) {
+						if h, ok := base[k]; !ok {
+							base[k] = &Action{Name: v.Name, Help: v.Help, Hand: func(m *Message, arg ...string) {
+								m.Cmdy(from, k, arg)
+							}}
+						} else if h.Hand == nil {
+							h.Hand = func(m *Message, arg ...string) {
+								m.Cmdy(from, k, arg)
+							}
+						}
+						} (k)
+					}
 					m.target.Merge(m.target)
 				})
 			}}

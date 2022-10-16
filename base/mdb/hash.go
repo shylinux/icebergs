@@ -179,11 +179,11 @@ const HASH = "hash"
 
 func HashAction(args ...Any) ice.Actions {
 	return ice.Actions{ice.CTX_INIT: AutoConfig(args...), ice.CTX_EXIT: {Hand: func(m *ice.Message, arg ...string) { HashSelectClose(m) }},
-		INPUTS: {Name: "inputs", Help: "补全", Hand: func(m *ice.Message, arg ...string) { HashInputs(m, arg) }},
+		INPUTS: {Hand: func(m *ice.Message, arg ...string) { HashInputs(m, arg) }},
 		CREATE: {Name: "create", Help: "创建", Hand: func(m *ice.Message, arg ...string) { HashCreate(m, arg) }},
 		REMOVE: {Name: "remove", Help: "删除", Hand: func(m *ice.Message, arg ...string) { HashRemove(m, arg) }},
-		MODIFY: {Name: "modify", Help: "编辑", Hand: func(m *ice.Message, arg ...string) { HashModify(m, arg) }},
-		SELECT: {Name: "select", Help: "列表", Hand: func(m *ice.Message, arg ...string) { HashSelect(m, arg...) }},
+		MODIFY: {Hand: func(m *ice.Message, arg ...string) { HashModify(m, arg) }},
+		SELECT: {Hand: func(m *ice.Message, arg ...string) { HashSelect(m, arg...) }},
 		PRUNES: {Name: "prunes before@date", Help: "清理", Hand: func(m *ice.Message, arg ...string) { HashPrunes(m, nil) }},
 		EXPORT: {Name: "export", Help: "导出", Hand: func(m *ice.Message, arg ...string) { HashExport(m, arg) }},
 		IMPORT: {Name: "import", Help: "导入", Hand: func(m *ice.Message, arg ...string) { HashImport(m, arg) }},

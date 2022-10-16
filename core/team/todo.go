@@ -2,10 +2,10 @@ package team
 
 import (
 	ice "shylinux.com/x/icebergs"
+	"shylinux.com/x/icebergs/base/cli"
 	"shylinux.com/x/icebergs/base/ctx"
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/web"
-	"shylinux.com/x/icebergs/base/cli"
 )
 
 const TODO = "todo"
@@ -14,7 +14,6 @@ func init() {
 	Index.MergeCommands(ice.Commands{
 		TODO: {Name: "todo hash list create export import", Help: "待办", Actions: ice.MergeActions(ice.Actions{
 			mdb.INPUTS: {Hand: func(m *ice.Message, arg ...string) { mdb.HashInputs(m, arg).Cmdy(TASK, mdb.INPUTS, arg) }},
-			mdb.CREATE: {Name: "create zone name text"},
 			cli.START: {Name: "start type=once,step,week", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmd(TASK, mdb.INSERT, m.OptionSimple("zone,type,name,text"))
 				mdb.HashRemove(m, m.OptionSimple(mdb.HASH))

@@ -535,9 +535,10 @@ func (m *Message) Commands(key string) *Command {
 func (m *Message) Actions(key string) *Action {
 	return m._cmd.Actions[key]
 }
-func (m *Message) CmdAppend(arg ...string) string {
-	field := kit.Slice(arg, -1)[0]
-	return m._command(kit.Slice(arg, 0, -1), OptionFields(field)).Append(field)
+func (m *Message) CmdAppend(arg ...Any) string {
+	args := kit.Simple(arg...)
+	field := kit.Slice(args, -1)[0]
+	return m._command(kit.Slice(args, 0, -1), OptionFields(field)).Append(field)
 }
 func (m *Message) CmdMap(arg ...string) map[string]map[string]string {
 	field, list := kit.Slice(arg, -1)[0], map[string]map[string]string{}

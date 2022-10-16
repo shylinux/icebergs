@@ -14,13 +14,13 @@ const EPIC = "epic"
 func init() {
 	Index.MergeCommands(ice.Commands{
 		EPIC: {Name: "epic hash list create export import", Help: "史记", Actions: ice.MergeActions(ice.Actions{
-			mdb.CREATE: {Name: "create time@date type name", Help: "创建"},
-			mdb.MODIFY: {Name: "modify hash time@date type name", Help: "编辑"},
-		}, mdb.HashAction(mdb.FIELD, "time,hash,type,name,text")), Hand: func(m *ice.Message, arg ...string) {
-			mdb.HashSelect(m, arg...).SetAppend(mdb.TEXT).Tables(func(value ice.Maps) {
+			mdb.CREATE: {Name: "create time@date zone name"},
+			mdb.MODIFY: {Name: "modify hash time@date zone name"},
+		}, mdb.HashAction(mdb.FIELD, "time,hash,zone,name")), Hand: func(m *ice.Message, arg ...string) {
+			mdb.HashSelect(m, arg...).Tables(func(value ice.Maps) {
 				if span := kit.Time(m.Time()) - kit.Time(value[mdb.TIME]); span > 0 {
 					m.Push(mdb.TEXT, kit.Format(`已经 <span style="font-size:24px;color:red">%v</span> 天<br>距 %s<br>`,
-						int(time.Duration(span)/time.Hour/24)+1, kit.Split(value[mdb.TIME])[0],
+						int(time.Duration(span)/time.Hour/24), kit.Split(value[mdb.TIME])[0],
 					))
 				} else {
 					m.Push(mdb.TEXT, kit.Format(`还有 <span style="font-size:24px;color:green">%v</span> 天<br>距 %s<br>`,

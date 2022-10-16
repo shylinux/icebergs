@@ -153,7 +153,7 @@ const (
 const ZONE = "zone"
 
 func ZoneAction(args ...ice.Any) ice.Actions {
-	return ice.Actions{ice.CTX_INIT: AutoConfig(args...),
+	return ice.Actions{ice.CTX_INIT: AutoConfig(append([]ice.Any{SHORT, ZONE}, args)...),
 		INPUTS: {Name: "inputs", Help: "补全", Hand: func(m *ice.Message, arg ...string) { ZoneInputs(m, arg) }},
 		CREATE: {Name: "create zone", Help: "创建", Hand: func(m *ice.Message, arg ...string) { ZoneCreate(m, arg) }},
 		REMOVE: {Name: "remove", Help: "删除", Hand: func(m *ice.Message, arg ...string) { ZoneRemove(m, arg) }},

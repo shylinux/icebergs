@@ -7,6 +7,7 @@ import (
 	"shylinux.com/x/icebergs/base/ctx"
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/web"
+	"shylinux.com/x/icebergs/base/aaa"
 	kit "shylinux.com/x/toolkits"
 )
 
@@ -64,19 +65,25 @@ func init() {
 	Index.MergeCommands(ice.Commands{
 		PLAN: {Name: "plan scale=week,day,week,month,year,long begin_time@date list", Help: "计划", Actions: ice.MergeActions(ice.Actions{
 			mdb.INPUTS: {Hand: func(m *ice.Message, arg ...string) { m.Cmdy(TODO, mdb.INPUTS, arg) }},
-			mdb.INSERT: {Name: "insert zone type=once,step,week name text begin_time@date close_time@date", Help: "添加", Hand: func(m *ice.Message, arg ...string) {
+			mdb.INSERT: {Name: "insert zone type=once,step,week name text begin_time@date close_time@date", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmdy(TASK, mdb.INSERT, arg)
 			}},
-			mdb.PLUGIN: {Hand: func(m *ice.Message, arg ...string) { m.Cmdy(TASK, mdb.MODIFY, arg) }},
-			mdb.EXPORT: {Hand: func(m *ice.Message, arg ...string) { m.Cmdy(TASK, mdb.EXPORT) }},
-			mdb.IMPORT: {Hand: func(m *ice.Message, arg ...string) { m.Cmdy(TASK, mdb.IMPORT) }},
-			ice.RUN: {Name: "run", Help: "执行", Hand: func(m *ice.Message, arg ...string) {
+			mdb.PLUGIN: {Name: "plugin extra.index extra.args", Hand: func(m *ice.Message, arg ...string) {
+				m.Cmdy(TASK, mdb.MODIFY, arg)
+			}},
+			ice.RUN: {Hand: func(m *ice.Message, arg ...string) {
 				m.Option(ice.POD, m.Option("task.pod"))
 				if m.Option("task.pod", ""); ctx.PodCmd(m, m.PrefixKey(), ice.RUN, arg) {
 					return
 				}
-				m.Cmdy(m.CmdAppend(TASK, arg[0], arg[1], ctx.INDEX), arg[2:])
+				if cmd := m.CmdAppend(TASK, kit.Slice(arg, 0, 2), ctx.INDEX); cmd != "" {
+					m.Cmdy(m.CmdAppend(TASK, arg[0], arg[1], ctx.INDEX), arg[2:])
+				} else if aaa.Right(m, arg) {
+					m.Cmdy(arg)
+				}
 			}},
+			mdb.EXPORT: {Hand: func(m *ice.Message, arg ...string) { m.Cmdy(TASK, mdb.EXPORT) }},
+			mdb.IMPORT: {Hand: func(m *ice.Message, arg ...string) { m.Cmdy(TASK, mdb.IMPORT) }},
 		}, ctx.CmdAction()), Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) > 0 && arg[0] == ctx.ACTION {
 				m.Cmdy(TASK, arg)
@@ -84,7 +91,8 @@ func init() {
 			}
 			begin_time, end_time := _plan_scope(m, 8, kit.Slice(arg, 0, 2)...)
 			_plan_list(m, begin_time, end_time)
-			web.PushPodCmd(m, m.CommandKey(), arg...)
+			web.PushPodCmd(m, "", arg...)
+			ctx.Toolkit(m, TODO, TASK, EPIC)
 			ctx.DisplayLocal(m, "")
 		}},
 	})

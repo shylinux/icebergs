@@ -111,7 +111,7 @@ func PushPodCmd(m *ice.Message, cmd string, arg ...string) {
 			if value[mdb.NAME] == ice.Info.HostName {
 				break
 			}
-			m.Cmd(SPACE, value[mdb.NAME], m.Prefix(cmd), arg).Table(func(index int, val ice.Maps, head []string) {
+			m.Cmd(SPACE, value[mdb.NAME], kit.Select(m.PrefixKey(), cmd), arg).Table(func(index int, val ice.Maps, head []string) {
 				val[ice.POD] = kit.Keys(value[mdb.NAME], val[ice.POD])
 				m.Push("", val, head)
 			})

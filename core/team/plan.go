@@ -38,7 +38,7 @@ func _plan_scope(m *ice.Message, tz int, arg ...string) (begin_time, end_time ti
 	return begin_time, end_time
 }
 func _plan_list(m *ice.Message, begin_time, end_time time.Time) *ice.Message {
-	m.Option(mdb.CACHE_LIMIT, "100")
+	m.Option(mdb.CACHE_LIMIT, "-1")
 	m.OptionFields("begin_time,close_time,zone,id,level,status,score,type,name,text,pod,extra")
 	m.Cmd(mdb.SELECT, m.Prefix(TASK), "", mdb.ZONE, mdb.FOREACH, func(key string, fields []string, value, val ice.Map) {
 		begin, _ := time.ParseInLocation(ice.MOD_TIME, kit.Format(value[BEGIN_TIME]), time.Local)
@@ -63,12 +63,13 @@ const PLAN = "plan"
 func init() {
 	Index.MergeCommands(ice.Commands{
 		PLAN: {Name: "plan scale=week,day,week,month,year,long begin_time@date list", Help: "计划", Actions: ice.MergeActions(ice.Actions{
-			mdb.INPUTS: {Name: "inputs", Help: "补全", Hand: func(m *ice.Message, arg ...string) {
-				m.Cmdy(TODO, mdb.INPUTS, arg)
+			mdb.INPUTS: {Hand: func(m *ice.Message, arg ...string) { m.Cmdy(TODO, mdb.INPUTS, arg) }},
+			mdb.INSERT: {Name: "insert zone type=once,step,week name text begin_time@date close_time@date", Help: "添加", Hand: func(m *ice.Message, arg ...string) {
+				m.Cmdy(TASK, mdb.INSERT, arg)
 			}},
-			mdb.PLUGIN: {Name: "plugin extra.index extra.args", Help: "插件", Hand: func(m *ice.Message, arg ...string) {
-				m.Cmdy(TASK, mdb.MODIFY, arg)
-			}},
+			mdb.PLUGIN: {Hand: func(m *ice.Message, arg ...string) { m.Cmdy(TASK, mdb.MODIFY, arg) }},
+			mdb.EXPORT: {Hand: func(m *ice.Message, arg ...string) { m.Cmdy(TASK, mdb.EXPORT) }},
+			mdb.IMPORT: {Hand: func(m *ice.Message, arg ...string) { m.Cmdy(TASK, mdb.IMPORT) }},
 			ice.RUN: {Name: "run", Help: "执行", Hand: func(m *ice.Message, arg ...string) {
 				m.Option(ice.POD, m.Option("task.pod"))
 				if m.Option("task.pod", ""); ctx.PodCmd(m, m.PrefixKey(), ice.RUN, arg) {
@@ -76,11 +77,6 @@ func init() {
 				}
 				m.Cmdy(m.CmdAppend(TASK, arg[0], arg[1], ctx.INDEX), arg[2:])
 			}},
-			mdb.INSERT: {Name: "insert zone type=once,step,week name text begin_time@date close_time@date", Help: "添加", Hand: func(m *ice.Message, arg ...string) {
-				m.Cmdy(TASK, mdb.INSERT, arg)
-			}},
-			mdb.EXPORT: {Hand: func(m *ice.Message, arg ...string) { m.Cmdy(TASK, mdb.EXPORT) }},
-			mdb.IMPORT: {Hand: func(m *ice.Message, arg ...string) { m.Cmdy(TASK, mdb.IMPORT) }},
 		}, ctx.CmdAction()), Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) > 0 && arg[0] == ctx.ACTION {
 				m.Cmdy(TASK, arg)

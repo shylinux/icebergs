@@ -196,6 +196,9 @@ func ZoneInsert(m *ice.Message, arg ...Any) {
 	if len(args) == 0 {
 		args = m.OptionSimple(ZoneShort(m), m.Config(FIELD))
 	}
+	if len(args)%2 == 1 {
+		args = args[:len(args)-1]
+	}
 	for i := len(args) - 2; i >= 0; i -= 2 {
 		if args[i+1] == "" {
 			args = args[:i]

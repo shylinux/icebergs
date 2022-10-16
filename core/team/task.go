@@ -72,7 +72,7 @@ func init() {
 					m.PushButton(_task_action(m, value[STATUS]))
 					status[value[mdb.STATUS]]++
 				})
-				m.Status(status)
+				m.StatusTimeCount(status)
 			}
 		}},
 	})

@@ -29,7 +29,11 @@ func Render(m *Message, cmd string, args ...Any) string {
 		return kit.Join(list, SP)
 
 	case RENDER_IMAGES: // src [height]
-		return kit.Format(`<img src="%s" height=%s>`, arg[0], kit.Select("120", arg, 1))
+		m.Debug("what %v", m.Option(MSG_USERUA))
+		if strings.Contains(m.Option(MSG_USERUA), "Mobile") {
+			return kit.Format(`<img src="%s" width=%d>`, arg[0], kit.Int(kit.Select(kit.Select("120", m.Option("width")), arg, 1))-24)
+		}
+		return kit.Format(`<img src="%s" height=%d>`, arg[0], kit.Int(kit.Select(kit.Select("240", m.Option("height")), arg, 1))/2-24)
 
 	case RENDER_VIDEOS: // src [height]
 		return kit.Format(`<video src="%s" height=%s controls>`, arg[0], kit.Select("120", arg, 1))
@@ -79,6 +83,8 @@ func (m *Message) RenderRedirect(args ...Any) *Message {
 	return m.Render(RENDER_REDIRECT, args...)
 }
 func (m *Message) RenderDownload(args ...Any) *Message {
+	
+	m.Debug("what %v", kit.Format(args))
 	return m.Render(RENDER_DOWNLOAD, args...)
 }
 func (m *Message) RenderResult(args ...Any) *Message { // [fmt arg...]

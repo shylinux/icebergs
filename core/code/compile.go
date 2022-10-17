@@ -8,7 +8,7 @@ import (
 	"shylinux.com/x/icebergs/base/cli"
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/nfs"
-	"shylinux.com/x/icebergs/base/web"
+	// "shylinux.com/x/icebergs/base/web"
 	kit "shylinux.com/x/toolkits"
 )
 
@@ -57,7 +57,7 @@ func init() {
 			_autogen_version(m.Spawn())
 
 			// 执行编译
-			web.PushStream(m)
+			// web.PushStream(m)
 			main, file, goos, arch := _compile_target(m, arg...)
 			m.Optionv(cli.CMD_ENV, kit.Simple(cli.HOME, kit.Env(cli.HOME), cli.PATH, kit.Env(cli.PATH), m.Configv(cli.ENV), m.Optionv(cli.ENV), cli.GOOS, goos, cli.GOARCH, arch))
 			m.Cmd(cli.SYSTEM, GO, "get", "shylinux.com/x/ice")

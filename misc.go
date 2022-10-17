@@ -407,6 +407,10 @@ func SplitCmd(name string, actions Actions) (list []Any) {
 			item = kit.Dict(TYPE, PASSWORD, NAME, ls[i])
 			list = append(list, item)
 
+		case "image":
+			item = kit.Dict(TYPE, TEXT, NAME, ls[i], ACTION, "img")
+			list = append(list, item)
+			
 		case "*":
 			item["need"] = "must"
 		case DF:

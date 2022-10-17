@@ -64,9 +64,7 @@ func init() {
 	Index.MergeCommands(ice.Commands{
 		PLAN: {Name: "plan scale=week,day,week,month,year,long begin_time@date list", Help: "计划", Actions: ice.MergeActions(ice.Actions{
 			mdb.INPUTS: {Hand: func(m *ice.Message, arg ...string) { m.Cmdy(TODO, mdb.INPUTS, arg) }},
-			mdb.PLUGIN: {Name: "plugin extra.index extra.args", Hand: func(m *ice.Message, arg ...string) {
-				m.Cmdy(TASK, mdb.MODIFY, arg)
-			}},
+			mdb.PLUGIN: {Name: "plugin extra.index extra.args", Help: "插件", Hand: func(m *ice.Message, arg ...string) { m.Cmdy(TASK, mdb.MODIFY, arg) }},
 			ice.RUN: {Hand: func(m *ice.Message, arg ...string) {
 				m.Option(ice.POD, m.Option("task.pod"))
 				if m.Option("task.pod", ""); ctx.PodCmd(m, m.PrefixKey(), ice.RUN, arg) {

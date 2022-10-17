@@ -15,7 +15,7 @@ const EPIC = "epic"
 func init() {
 	Index.MergeCommands(ice.Commands{
 		EPIC: {Name: "epic hash list create export import", Help: "史记", Actions: ice.MergeActions(ice.Actions{
-			mdb.CREATE: {Name: "create time@date zone name"}, mdb.MODIFY: {Name: "modify hash time@date zone name"},
+			mdb.CREATE: {Name: "create time@date zone name"}, mdb.MODIFY: {Name: "modify time@date zone name"},
 		}, mdb.HashAction(mdb.FIELD, "time,hash,zone,name")), Hand: func(m *ice.Message, arg ...string) {
 			mdb.HashSelect(m, arg...).Tables(func(value ice.Maps) {
 				if span := kit.Time(m.Time()) - kit.Time(value[mdb.TIME]); span > 0 {

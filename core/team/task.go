@@ -60,6 +60,8 @@ func init() {
 		TASK: {Name: "task zone id auto insert export import", Help: "任务", Actions: ice.MergeActions(ice.Actions{
 			mdb.INPUTS: {Hand: func(m *ice.Message, arg ...string) {
 				switch arg[0] {
+				case mdb.STATUS:
+					m.Push(arg[0], PREPARE, PROCESS, CANCEL, FINISH)
 				case LEVEL, SCORE:
 					m.Push(arg[0], "1", "2", "3", "4", "5")
 				case mdb.TYPE:

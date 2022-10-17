@@ -235,6 +235,8 @@ func init() {
 				_status_each(m, PULL, cli.SYSTEM, GIT, PULL)
 			}},
 			code.COMPILE: {Name: "compile", Help: "编译", Hand: func(m *ice.Message, arg ...string) {
+				web.ToastProcess(m)
+				defer web.ToastSuccess(m)
 				m.Cmdy(code.VIMER, code.COMPILE)
 			}},
 			PUSH: {Name: "push", Help: "上传", Hand: func(m *ice.Message, arg ...string) {

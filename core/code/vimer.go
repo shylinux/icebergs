@@ -66,9 +66,6 @@ func init() {
 						m.Cmd(ctx.COMMAND, mdb.SEARCH, ctx.COMMAND, ice.OptionFields(ctx.INDEX)).Tables(func(value ice.Maps) {
 							m.Push(nfs.PATH, "index:"+value[ctx.INDEX])
 						})
-						m.Cmd(web.DREAM, ice.Map{nfs.DIR_TYPE: "", nfs.DIR_DEEP: "", nfs.DIR_ROOT: ""}).Tables(func(value ice.Maps) {
-							m.Push(nfs.PATH, "dream:"+value[mdb.NAME])
-						})
 						m.Cmd(FAVOR, "_system_app").Tables(func(value ice.Maps) {
 							m.Push(nfs.PATH, "_open:"+strings.ToLower(value[mdb.NAME]))
 						})

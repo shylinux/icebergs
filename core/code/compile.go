@@ -44,13 +44,13 @@ func init() {
 		COMPILE: {Value: kit.Data(cli.ENV, kit.Dict("GOPRIVATE", "shylinux.com,github.com", "GOPROXY", "https://goproxy.cn,direct", "CGO_ENABLED", "0"))},
 	}, Commands: ice.Commands{
 		COMPILE: {Name: "compile arch=amd64,386,mipsle,arm,arm64 os=linux,darwin,windows src=src/main.go@key run binpack relay", Help: "编译", Actions: ice.Actions{
-			mdb.INPUTS: {Name: "inputs", Help: "补全", Hand: func(m *ice.Message, arg ...string) {
+			mdb.INPUTS: {Hand: func(m *ice.Message, arg ...string) {
 				m.Cmdy(nfs.DIR, ice.SRC, nfs.DIR_CLI_FIELDS, kit.Dict(nfs.DIR_REG, `.*\.go$`)).Sort(nfs.PATH)
 			}},
-			BINPACK: {Name: "binpack", Help: "打包", Hand: func(m *ice.Message, arg ...string) {
+			BINPACK: {Help: "打包", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmdy(AUTOGEN, BINPACK)
 			}},
-			RELAY: {Name: "relay", Help: "跳板", Hand: func(m *ice.Message, arg ...string) {
+			RELAY: {Help: "跳板", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmdy(COMPILE, ice.SRC_RELAY_GO, path.Join(ice.USR_PUBLISH, RELAY))
 			}},
 		}, Hand: func(m *ice.Message, arg ...string) {

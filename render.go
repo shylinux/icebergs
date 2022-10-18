@@ -26,7 +26,7 @@ func Render(m *Message, cmd string, args ...Any) string {
 			list = append(list, kit.Format(`<input type="button" name="%s" value="%s">`, k,
 				kit.Select(k, kit.Value(m._cmd.Meta, kit.Keys("_trans", k)), m.Option(MSG_LANGUAGE) != "en")))
 		}
-		return kit.Join(list, SP)
+		return strings.Join(list, "")
 
 	case RENDER_IMAGES: // src [height]
 		m.Debug("what %v", m.Option(MSG_USERUA))

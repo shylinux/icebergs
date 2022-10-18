@@ -137,6 +137,9 @@ func (m *Message) SetResult(arg ...string) *Message {
 	return m.Set(MSG_RESULT, arg...)
 }
 
+func (m *Message) IsMobile() bool {
+	return strings.Contains(m.Option(MSG_USERUA), "Mobile")
+}
 func (m *Message) Design(action Any, help string, input ...Any) {
 	list := kit.List()
 	for _, input := range input {

@@ -14,15 +14,20 @@ func init() {
 		GOODS: {Name: "goods hash auto", Help: "商品", Actions: ice.MergeActions(ice.Actions{
 			mdb.CREATE: {Name: "modify zone type name text price count image"},
 			mdb.MODIFY: {Name: "modify zone type name text price count image"},
+			"copy": {Hand: func(m *ice.Message, arg ...string) {
+				m.Cmd("", mdb.CREATE, m.OptionSimple("zone,type,name,text,price,count,image"))
+			}},
 			web.UPLOAD: {Hand: func(m *ice.Message, arg ...string) { web.Upload(m) }},
 		}, mdb.HashAction(mdb.FIELD, "time,hash,zone,type,name,text,price,count,image")), Hand: func(m *ice.Message, arg ...string) {
 			if mdb.HashSelect(m, arg...); len(arg) == 0 || arg[0] == "" {
-				m.Action(mdb.CREATE, mdb.EXPORT, mdb.IMPORT)
+				if !m.IsMobile() {
+					m.Action(mdb.CREATE, mdb.EXPORT, mdb.IMPORT)
+				}
 				ctx.DisplayLocal(m, "")
 			} else {
 				m.EchoImages(web.MergeURL2(m, "/share/cache/"+m.Append("image")))
 			}
-			m.PushAction(mdb.MODIFY, mdb.REMOVE)
+			m.PushAction("copy", mdb.MODIFY, mdb.REMOVE)
 		}},
 	})	
 }

@@ -17,9 +17,7 @@ func init() {
 		GOODS: {Name: "goods hash auto", Help: "商品", Actions: ice.MergeActions(ice.Actions{
 			mdb.MODIFY: {Name: "modify zone type name text price count image"},
 			web.UPLOAD: {Hand: func(m *ice.Message, arg ...string) { web.Upload(m) }},
-			"copy": {Hand: func(m *ice.Message, arg ...string) {
-				m.Cmd("", mdb.CREATE, m.OptionSimple("zone,type,name,text,price,count,image"))
-			}},
+			"copy": {Hand: func(m *ice.Message, arg ...string) { m.Cmd("", mdb.CREATE, m.OptionSimple("zone,type,name,text,price,count,image")) }},
 		}, mdb.HashAction(mdb.FIELD, "time,hash,zone,type,name,text,price,count,image")), Hand: func(m *ice.Message, arg ...string) {
 			if mdb.HashSelect(m, arg...); len(arg) == 0 || arg[0] == "" {
 				m.Action(mdb.CREATE, mdb.EXPORT, mdb.IMPORT)

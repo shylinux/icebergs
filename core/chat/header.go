@@ -18,6 +18,9 @@ func _header_users(m *ice.Message, key string, arg ...string) {
 	m.Cmdy(aaa.USER, mdb.MODIFY, aaa.USERNAME, m.Option(ice.MSG_USERNAME), key, m.Option(key, arg[0]))
 }
 func _header_share(m *ice.Message, arg ...string) {
+	for i := 0; i < len(arg)-1; i += 2 {
+		m.Option(arg[i], arg[i+1])
+	}
 	if m.Option(mdb.LINK) == "" {
 		m.Cmdy(web.SHARE, mdb.CREATE, mdb.TYPE, web.LOGIN, arg)
 	} else {

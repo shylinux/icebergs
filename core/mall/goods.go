@@ -5,6 +5,7 @@ import (
 	"shylinux.com/x/icebergs/base/ctx"
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/web"
+	kit "shylinux.com/x/toolkits"
 )
 
 const (
@@ -23,7 +24,7 @@ func init() {
 				m.Action(mdb.CREATE, mdb.EXPORT, mdb.IMPORT)
 				ctx.DisplayLocal(m, "")
 			} else {
-				m.EchoImages(web.MergeURL2(m, web.SHARE_CACHE+m.Append("image")))
+				m.EchoImages(web.MergeURL2(m, web.SHARE_CACHE+kit.Split(m.Append("image"))[0]))
 			}
 			m.PushAction("copy", mdb.MODIFY, mdb.REMOVE)
 		}},

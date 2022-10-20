@@ -9,4 +9,4 @@ const TEAM = "team"
 
 var Index = &ice.Context{Name: TEAM, Help: "团队中心"}
 
-func init() { web.Index.Register(Index, nil, TASK, PLAN) }
+func init() { web.Index.Register(Index, nil, TODO, EPIC, TASK, PLAN) }

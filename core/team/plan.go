@@ -38,16 +38,14 @@ func _plan_scope(m *ice.Message, tz int, arg ...string) (begin_time, end_time ti
 	}
 	return begin_time, end_time
 }
-func _plan_list(m *ice.Message, begin_time, end_time time.Time) *ice.Message {
+func _plan_list(m *ice.Message, begin_time, end_time time.Time) {
 	m.Option(mdb.CACHE_LIMIT, "-1")
 	m.OptionFields("begin_time,close_time,zone,id,level,status,score,type,name,text,pod,extra")
 	m.Cmd(mdb.SELECT, m.Prefix(TASK), "", mdb.ZONE, mdb.FOREACH, func(key string, fields []string, value, val ice.Map) {
-		begin, _ := time.ParseInLocation(ice.MOD_TIME, kit.Format(value[BEGIN_TIME]), time.Local)
-		if begin.After(begin_time) && end_time.After(begin) {
+		if begin, _ := time.ParseInLocation(ice.MOD_TIME, kit.Format(value[BEGIN_TIME]), time.Local); begin.After(begin_time) && end_time.After(begin) {
 			m.Push(key, value, fields, val).PushButton(_task_action(m, value[STATUS], mdb.PLUGIN))
 		}
 	})
-	return m
 }
 
 const (

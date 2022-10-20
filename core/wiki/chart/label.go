@@ -1,6 +1,8 @@
 package chart
 
 import (
+	"strings"
+
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/lex"
 	"shylinux.com/x/icebergs/base/mdb"
@@ -86,7 +88,11 @@ func (l *Label) Draw(m *ice.Message, x, y int) wiki.Chart {
 				args = append(args, "stroke", m.Option("order.fg"))
 				args = append(args, "fill", m.Option("order.fg"))
 			}
-			gs.EchoTexts(TEXT, left+item.GetWidths()/2, top+item.GetHeights()/2+4, item.Text, args...)
+			if strings.Contains(m.Option(ice.MSG_USERUA), "Chrome") || strings.Contains(m.Option(ice.MSG_USERUA), "Mobile") {
+				gs.EchoTexts(TEXT, left+item.GetWidths()/2, top+item.GetHeights()/2, item.Text, args...)
+			} else {
+				gs.EchoTexts(TEXT, left+item.GetWidths()/2, top+item.GetHeights()/2+4, item.Text, args...)
+			}
 
 			left += item.GetWidths()
 		}

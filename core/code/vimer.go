@@ -16,27 +16,34 @@ import (
 )
 
 func _vimer_make(m *ice.Message, dir string, msg *ice.Message) {
+	defer m.StatusTime()
 	for _, line := range strings.Split(msg.Append(cli.CMD_ERR), ice.NL) {
 		if !strings.Contains(line, ice.DF) {
 			continue
 		}
 		if ls := strings.SplitN(line, ice.DF, 4); len(ls) > 3 {
-			for _, p := range kit.Split(dir) {
+			for i, p := range kit.Split(dir) {
 				if strings.HasPrefix(ls[0], p) {
 					m.Push(nfs.PATH, p)
 					m.Push(nfs.FILE, strings.TrimPrefix(ls[0], p))
 					m.Push(nfs.LINE, ls[1])
 					m.Push(mdb.TEXT, ls[3])
 					break
+				} else if n := 2; i == strings.Count(dir, ice.FS) {
+					if strings.HasPrefix(ls[0], "src/") {
+						n = 1
+					}
+					m.Push(nfs.PATH, kit.Join(kit.Slice(kit.Split(ls[0], ice.PS, ice.PS), 0, n), ice.PS)+ice.PS)
+					m.Push(nfs.FILE, kit.Join(kit.Slice(kit.Split(ls[0], ice.PS, ice.PS), n), ice.PS))
+					m.Push(nfs.LINE, ls[1])
+					m.Push(mdb.TEXT, ls[3])
 				}
 			}
 		}
 	}
 	if m.Length() == 0 {
-		m.Echo(msg.Append(cli.CMD_OUT))
-		m.Echo(msg.Append(cli.CMD_ERR))
+		m.Echo(msg.Append(cli.CMD_OUT)).Echo(msg.Append(cli.CMD_ERR))
 	}
-	m.StatusTime()
 }
 
 const VIMER = "vimer"
@@ -57,7 +64,15 @@ func init() {
 					case ctx.INDEX:
 						m.Cmdy(ctx.COMMAND, mdb.SEARCH, ctx.COMMAND, ice.OptionFields(ctx.INDEX))
 					default:
-						m.Cmd(mdb.RENDER, kit.Ext(m.Option(nfs.FILE)), m.Option(nfs.FILE), m.Option(nfs.PATH)).Tables(func(value ice.Maps) {
+						p := m.Option(nfs.PATH)
+						list := ice.Map{}
+						m.Cmd(FAVOR, "_recent_file").Tables(func(value ice.Maps) {
+							if p := value[nfs.PATH]+value[nfs.FILE]; list[p] == nil {
+								m.Push(nfs.PATH, p)
+								list[p] = value
+							}
+						})
+						m.Cmd(mdb.RENDER, kit.Ext(m.Option(nfs.FILE)), m.Option(nfs.FILE), p).Tables(func(value ice.Maps) {
 							m.Push(nfs.PATH, kit.Format("line:%s:%s:%s", value[nfs.LINE], value["kind"], value[mdb.NAME]))
 						})
 						for _, p := range kit.Split(kit.Select(m.Option(nfs.PATH), m.Option("paths"))) {

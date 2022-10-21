@@ -63,7 +63,7 @@ func init() {
 					switch arg[0] {
 					case ctx.INDEX:
 						m.Cmdy(ctx.COMMAND, mdb.SEARCH, ctx.COMMAND, ice.OptionFields(ctx.INDEX))
-					default:
+					case nfs.FILE:
 						p := m.Option(nfs.PATH)
 						list := ice.Map{}
 						m.Cmd(FAVOR, "_recent_file").Tables(func(value ice.Maps) {
@@ -84,6 +84,7 @@ func init() {
 						m.Cmd(FAVOR, "_system_app").Tables(func(value ice.Maps) {
 							m.Push(nfs.PATH, "_open:"+strings.ToLower(value[mdb.NAME]))
 						})
+					default:
 					}
 				}
 			}},

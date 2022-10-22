@@ -13,21 +13,33 @@ import (
 type WebView struct {
 	webview.WebView
 	Source string
+	*ice.Message
 }
 
 func (w WebView) Menu() bool {
 	list := []string{}
-	ice.Pulse.Cmd(nfs.CAT, w.Source, func(ls []string, line string) {
+	link := ""
+	w.Cmd(nfs.CAT, w.Source, func(ls []string, line string) {
 		if strings.HasPrefix(line, "# ") {
 			return
 		}
 		if len(ls) > 1 {
 			list = append(list, kit.Format(`<button onclick=%s()>%s</button>`, ls[0], ls[0]))
 			w.WebView.Bind(ls[0], func() { w.navigate(ls[1]) })
+			link = ls[1]
 		}
 	})
 	if len(list) == 0 {
 		return false
+	}
+	if len(list) == 1 {
+		if ls := kit.Split(w.Cmdx(nfs.CAT, "etc/webview.size")); len(ls) > 1 {
+			w.WebView.SetSize(kit.Int(ls[0]), kit.Int(ls[1])+28, webview.HintNone)
+		} else {
+			w.WebView.SetSize(1200, 800, webview.HintNone)
+		}
+		w.WebView.Navigate(link)
+		return true
 	}
 
 	w.WebView.SetTitle(ice.CONTEXTS)
@@ -54,11 +66,14 @@ func (w WebView) Menu() bool {
 func (w WebView) Title(text string)  { w.WebView.SetTitle(text) }
 func (w WebView) Webview(url string) { w.WebView.Navigate(url) }
 func (w WebView) Open(url string)    { w.WebView.Navigate(url) }
-func (w WebView) OpenUrl(url string) { ice.Pulse.Cmd(cli.SYSTEM, "open", url) }
-func (w WebView) OpenApp(app string) { ice.Pulse.Cmd(cli.SYSTEM, "open", "-a", app) }
+func (w WebView) OpenUrl(url string) { w.Cmd(cli.SYSTEM, "open", url) }
+func (w WebView) OpenApp(app string) { w.Cmd(cli.SYSTEM, "open", "-a", app) }
 func (w WebView) OpenCmd(cmd string) {
-	ice.Pulse.Cmd(nfs.SAVE, kit.HomePath(".bash_temp"), cmd)
-	ice.Pulse.Cmd(cli.SYSTEM, "open", "-a", "Terminal")
+	w.Cmd(nfs.SAVE, kit.HomePath(".bash_temp"), cmd)
+	w.Cmd(cli.SYSTEM, "open", "-a", "Terminal")
+}
+func (w WebView) SetSize(width, height int) {
+	w.Cmd(nfs.SAVE, "etc/webview.size", kit.Format("%v,%v", width, height))
 }
 func (w WebView) Terminate() { w.WebView.Terminate() }
 func (w WebView) Close() {
@@ -76,7 +91,7 @@ func Run(cb func(*WebView) ice.Any) {
 	defer w.Destroy()
 	defer w.Run()
 
-	view := &WebView{Source: "etc/webview.txt", WebView: w}
+	view := &WebView{Source: "etc/webview.txt", WebView: w, Message: ice.Pulse}
 	kit.Reflect(cb(view), func(name string, value ice.Any) { w.Bind(name, value) })
 
 	if !view.Menu() {

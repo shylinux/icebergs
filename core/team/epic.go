@@ -14,7 +14,7 @@ const EPIC = "epic"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
-		EPIC: {Name: "epic hash auto", Help: "史记", Actions: ice.MergeActions(ice.Actions{
+		EPIC: {Name: "epic hash list", Help: "史记", Actions: ice.MergeActions(ice.Actions{
 			mdb.CREATE: {Name: "create time@date zone name"}, mdb.MODIFY: {Name: "modify time@date zone name"},
 		}, mdb.HashAction(mdb.FIELD, "time,hash,zone,name")), Hand: func(m *ice.Message, arg ...string) {
 			if mdb.HashSelect(m, arg...).Tables(func(value ice.Maps) {

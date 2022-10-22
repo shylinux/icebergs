@@ -74,9 +74,14 @@ func _js_show(m *ice.Message, arg ...string) {
 		m.StatusTimeCount()
 }
 func _js_exec(m *ice.Message, arg ...string) {
-		m.Display(path.Join("/require", path.Join(arg[2], arg[1])))
-		key := ctx.GetFileCmd(kit.Replace(path.Join(arg[2], arg[1]), ".js", ".go"))
+	if arg[2] == "usr/volcanos/" && strings.HasPrefix(arg[1], "plugin/local/") {
+		key := "web."+strings.ReplaceAll(strings.TrimSuffix(strings.TrimPrefix(arg[1], "plugin/local/"), ".js"), ice.PS, ice.PT)
 		ctx.ProcessCommand(m, kit.Select("can.code.inner._plugin", key), kit.Simple())
+		return
+	}
+	m.Display(path.Join("/require", path.Join(arg[2], arg[1])))
+	key := ctx.GetFileCmd(kit.Replace(path.Join(arg[2], arg[1]), ".js", ".go"))
+	ctx.ProcessCommand(m, kit.Select("can.code.inner._plugin", key), kit.Simple())
 	return
 	args := kit.Simple("node", "-e", kit.Join(_js_main_script(m, arg...), ice.NL))
 	m.Cmdy(cli.SYSTEM, args).StatusTime(ctx.ARGS, kit.Join(append([]string{ice.ICE_BIN, m.PrefixKey(), m.ActionKey()}, arg...), ice.SP))

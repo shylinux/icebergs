@@ -177,8 +177,8 @@ const (
 )
 const HASH = "hash"
 
-func HashAction(args ...Any) ice.Actions {
-	return ice.Actions{ice.CTX_INIT: AutoConfig(args...), ice.CTX_EXIT: {Hand: func(m *ice.Message, arg ...string) { HashSelectClose(m) }},
+func HashAction(arg ...Any) ice.Actions {
+	return ice.Actions{ice.CTX_INIT: AutoConfig(arg...), ice.CTX_EXIT: {Hand: func(m *ice.Message, arg ...string) { HashSelectClose(m) }},
 		INPUTS: {Hand: func(m *ice.Message, arg ...string) { HashInputs(m, arg) }},
 		CREATE: {Name: "create", Help: "创建", Hand: func(m *ice.Message, arg ...string) { HashCreate(m, arg) }},
 		REMOVE: {Name: "remove", Help: "删除", Hand: func(m *ice.Message, arg ...string) { HashRemove(m, arg) }},

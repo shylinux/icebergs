@@ -92,16 +92,17 @@ func init() {
 			}},
 			ice.PLAY: {Name: "play", Help: "演示"},
 		}, ctx.CmdAction(), mdb.HashAction()), Hand: func(m *ice.Message, arg ...string) {
-			m.Option(nfs.DIR_REG, m.Config(lex.REGEXP))
 			if len(arg) == 0 {
 				arg = append(arg, "src/")
 			}
+			m.Option(nfs.DIR_REG, m.Config(lex.REGEXP))
 			if m.Option(nfs.DIR_DEEP, ice.TRUE); !_wiki_list(m, m.CommandKey(), arg...) {
-				if !nfs.ExistsFile(m, arg[0]) && nfs.ExistsFile(m, path.Join("src", arg[0])) {
-					arg[0] = path.Join("src/", arg[0])
+				if !nfs.ExistsFile(m, arg[0]) && nfs.ExistsFile(m, path.Join(ice.SRC, arg[0])) {
+					arg[0] = path.Join(ice.SRC, arg[0])
 				}
 				ctx.DisplayLocal(m, "")
 				_word_show(m, arg[0])
+				m.StatusTime()
 			}
 		}},
 	}})

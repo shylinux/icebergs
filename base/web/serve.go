@@ -250,10 +250,15 @@ func _serve_handle(key string, cmd *ice.Command, msg *ice.Message, w http.Respon
 		msg.Option(ice.MSG_USERPOD, msg.Option(ice.POD))
 	}
 
+	msg.Debug("what %v", msg.FormatMeta())
+	msg.Debug("what %v", msg.FormatMeta())
+	msg.Debug("what %v", msg.Option(CookieName(msg.Option(ice.MSG_USERWEB))))
+	msg.Debug("what %v", CookieName(msg.Option(ice.MSG_USERWEB)))
 	// 会话参数
 	if sessid := msg.Option(CookieName(msg.Option(ice.MSG_USERWEB))); msg.Option(ice.MSG_SESSID) == "" {
 		msg.Option(ice.MSG_SESSID, sessid)
 	}
+	msg.Debug("what %v", msg.FormatMeta())
 
 	// 解析命令
 	if msg.Optionv(ice.MSG_CMDS) == nil {

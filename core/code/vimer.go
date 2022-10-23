@@ -166,7 +166,7 @@ func init() {
 			}},
 		}, Hand: func(m *ice.Message, arg ...string) {
 			if m.Cmdy(INNER, arg); arg[0] != ctx.ACTION {
-				m.Action(AUTOGEN, nfs.SCRIPT, web.WEBSITE, web.DREAM, nfs.SAVE, COMPILE, XTERM)
+				m.Action(AUTOGEN, nfs.SCRIPT, web.WEBSITE, web.DREAM, nfs.SAVE, COMPILE)
 				m.Option("tabs", m.Config("show.tabs"))
 				m.Option("plug", m.Config("show.plug"))
 				m.Option("exts", m.Config("show.exts"))

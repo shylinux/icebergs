@@ -14,6 +14,7 @@ import (
 	"shylinux.com/x/icebergs/base/web"
 	"shylinux.com/x/icebergs/core/code"
 	kit "shylinux.com/x/toolkits"
+	"shylinux.com/x/toolkits/task"
 )
 
 func _status_tag(m *ice.Message, tags string) string {
@@ -126,7 +127,8 @@ func _status_stat(m *ice.Message, files, adds, dels int) (int, int, int) {
 }
 func _status_list(m *ice.Message) (files, adds, dels int, last time.Time) {
 	defer m.Sort("repos,type")
-	m.Cmd(REPOS, ice.OptionFields("name,path")).Tables(func(value ice.Maps) {
+	// m.Cmd(REPOS, ice.OptionFields("name,path")).Tables(func(value ice.Maps) {
+	m.Cmd(REPOS, ice.OptionFields("name,path")).TableGo(func(value ice.Maps, lock *task.Lock) {
 		msg := m.Spawn(kit.Dict(cli.CMD_DIR, value[nfs.PATH]))
 		diff := _git_cmds(msg, STATUS, "-sb")
 		tags := _git_cmds(msg, "describe", "--tags")
@@ -136,7 +138,8 @@ func _status_list(m *ice.Message) (files, adds, dels int, last time.Time) {
 		if files, adds, dels = files+_files, adds+_adds, dels+_dels; now.After(last) {
 			last = now
 		}
-
+		defer lock.Lock()()
+		
 		for _, v := range strings.Split(strings.TrimSpace(diff), ice.NL) {
 			if v == "" {
 				continue

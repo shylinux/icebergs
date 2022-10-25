@@ -72,7 +72,7 @@ func Toast(m *ice.Message, text string, arg ...ice.Any) { // [title [duration [p
 		}
 	}
 
-	PushNoticeToast(m, "", text, arg)
+	PushNoticeToast(m, text, arg)
 }
 func Toast3s(m *ice.Message, text string, arg ...ice.Any) {
 	Toast(m, text, kit.List(kit.Select("", arg, 0), kit.Select("3s", arg, 1))...)

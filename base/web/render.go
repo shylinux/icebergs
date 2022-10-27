@@ -165,13 +165,10 @@ func RenderCmd(m *ice.Message, index string, args ...ice.Any) {
 }
 
 var _cans = `<!DOCTYPE html>
-<head>
-    <meta charset="utf-8">
-		<meta name="viewport" content="width=device-width,initial-scale=0.8,maximum-scale=0.8,user-scalable=no">
-    <link rel="stylesheet" type="text/css" href="/page/can.css">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=0.8,maximum-scale=0.8,user-scalable=no">
+	<link rel="stylesheet" type="text/css" href="/page/can.css">
 </head>
 <body>
-	<script src="/page/can.js"></script>
-	<script>can(%s)</script>
+	<script src="/page/can.js"></script><script>Volcanos(%s)</script>
 </body>
 `

@@ -50,7 +50,7 @@ const VIMER = "vimer"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
-		VIMER: {Name: "vimer path=src/ file=main.go line=1 list", Help: "编辑器", Actions: ice.Actions{
+		VIMER: {Name: "vimer path=src/@key file=main.go line=1 list", Help: "编辑器", Actions: ice.Actions{
 			mdb.INPUTS: {Hand: func(m *ice.Message, arg ...string) {
 				switch m.Option(ctx.ACTION) {
 				case AUTOGEN, web.DREAM, XTERM:
@@ -67,7 +67,7 @@ func init() {
 						p := m.Option(nfs.PATH)
 						list := ice.Map{}
 						m.Cmd(FAVOR, "_recent_file").Tables(func(value ice.Maps) {
-							if p := value[nfs.PATH]+value[nfs.FILE]; list[p] == nil {
+							if p := value[nfs.PATH] + value[nfs.FILE]; list[p] == nil {
 								m.Push(nfs.PATH, p)
 								list[p] = value
 							}
@@ -84,6 +84,9 @@ func init() {
 						m.Cmd(FAVOR, "_system_app").Tables(func(value ice.Maps) {
 							m.Push(nfs.PATH, "_open:"+strings.ToLower(value[mdb.NAME]))
 						})
+					case nfs.PATH:
+						m.Cmdy(nfs.DIR, arg[1:])
+						m.ProcessAgain()
 					default:
 					}
 				}

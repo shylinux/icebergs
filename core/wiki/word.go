@@ -83,6 +83,9 @@ func init() {
 			}},
 
 			mdb.INPUTS: {Name: "inputs", Help: "补全", Hand: func(m *ice.Message, arg ...string) {
+				m.Cmdy(nfs.DIR, arg[1:], kit.Dict(nfs.DIR_REG, ".*\\.shy"))
+				m.ProcessAgain()
+				return
 				for _, p := range []string{"src/", "src/help/", "usr/icebergs/", "usr/linux-story/", "usr/nginx-story/", "usr/golang-story/", "usr/redis-story/", "usr/mysql-story/"} {
 					m.Cmdy(nfs.DIR, p, kit.Dict(nfs.DIR_DEEP, ice.TRUE, nfs.DIR_REG, ".*\\.shy"), nfs.DIR_CLI_FIELDS)
 				}

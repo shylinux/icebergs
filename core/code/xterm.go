@@ -49,12 +49,13 @@ func _xterm_get(m *ice.Message, h string) _xterm {
 			defer mdb.HashSelectUpdate(m, h, func(value ice.Map) { delete(value, mdb.TARGET) })
 			defer tty.Close()
 
-			m.Option("log.disable", ice.TRUE)
+			// m.Option("log.disable", ice.TRUE)
 			buf := make([]byte, ice.MOD_BUFS)
 			for {
 				if n, e := tty.Read(buf); !m.Warn(e) && e == nil {
 					m.Option(ice.MSG_DAEMON, mdb.HashSelectField(m, h, ice.VIEW))
 					m.Option(mdb.TEXT, string(buf[:n]))
+					m.Debug("what %v", m.FormatMeta())
 					web.PushNoticeGrow(m)
 				} else {
 					break

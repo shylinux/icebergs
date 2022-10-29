@@ -96,6 +96,9 @@ func init() {
 					m.Option(nfs.CONTENT, m.Cmdx("", TEMPLATE))
 				}
 				m.Cmdy(nfs.SAVE, path.Join(m.Option(nfs.PATH), m.Option(nfs.FILE)))
+				if m.Option(nfs.FILE) == "proto.js" {
+					m.Cmd("", DEVPACK)
+				}
 			}},
 			nfs.TRASH: {Name: "trash path", Help: "删除", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmd(nfs.TRASH, arg[0])

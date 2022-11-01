@@ -51,6 +51,13 @@ func (f *Frame) Close(m *Message, arg ...string) bool {
 	return true
 }
 
+const (
+	INIT = "init"
+	HELP = "help"
+	EXIT = "exit"
+	QUIT = "quit"
+)
+
 var Index = &Context{Name: ICE, Help: "冰山模块", Configs: Configs{
 	HELP: {Value: kit.Data(INDEX, Info.Help)},
 }, Commands: Commands{

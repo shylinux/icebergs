@@ -139,7 +139,7 @@ func Save(m *ice.Message, arg ...string) *ice.Message {
 	for i, k := range arg {
 		arg[i] = m.Prefix(k)
 	}
-	return m.Cmd(CONFIG, ice.SAVE, m.Prefix(nfs.JSON), arg)
+	return m.Cmd(CONFIG, SAVE, m.Prefix(nfs.JSON), arg)
 }
 func Load(m *ice.Message, arg ...string) *ice.Message {
 	if len(arg) == 0 {
@@ -150,7 +150,7 @@ func Load(m *ice.Message, arg ...string) *ice.Message {
 	for i, k := range arg {
 		arg[i] = m.Prefix(k)
 	}
-	return m.Cmd(CONFIG, ice.LOAD, m.Prefix(nfs.JSON), arg)
+	return m.Cmd(CONFIG, LOAD, m.Prefix(nfs.JSON), arg)
 }
 func ConfAction(args ...ice.Any) ice.Actions {
 	return ice.Actions{ice.CTX_INIT: mdb.AutoConfig(args...)}

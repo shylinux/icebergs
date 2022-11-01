@@ -93,7 +93,7 @@ func init() {
 			ice.STORY: {Name: "story", Help: "运行", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmdy(arg[0], ice.RUN, arg[2:])
 			}},
-			ice.PLAY: {Name: "play", Help: "演示"},
+			"play": {Name: "play", Help: "演示"},
 		}, ctx.CmdAction(), mdb.HashAction()), Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) == 0 {
 				arg = append(arg, "src/")

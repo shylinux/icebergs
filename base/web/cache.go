@@ -158,7 +158,7 @@ func init() {
 				if p := path.Join(arg[0], up[1]); m.Option(ice.MSG_USERPOD) == "" {
 					m.Cmdy(CACHE, WATCH, up[0], p) // 本机文件
 				} else { // 下发文件
-					m.Cmdy(SPIDE, ice.DEV, ice.SAVE, p, SPIDE_GET, MergeURL2(m, path.Join(SHARE_CACHE, up[0])))
+					m.Cmdy(SPIDE, ice.DEV, nfs.SAVE, p, SPIDE_GET, MergeURL2(m, path.Join(SHARE_CACHE, up[0])))
 				}
 			}},
 		}, mdb.HashAction(mdb.SHORT, mdb.TEXT, mdb.FIELD, "time,hash,size,type,name,text,file")), Hand: func(m *ice.Message, arg ...string) {

@@ -17,12 +17,9 @@ func (m *Message) TryCatch(msg *Message, silent bool, hand ...func(msg *Message)
 		case nil:
 		default:
 			fileline := m.FormatStack(2, 1)
-			m.Log(LOG_WARN, "catch: %s %s", e, fileline)
-			m.Log("chain", msg.FormatChain())
-			m.Log(LOG_WARN, "catch: %s %s", e, fileline)
-			m.Log("stack", msg.FormatStack(2, 100))
-			m.Log(LOG_WARN, "catch: %s %s", e, fileline)
-			m.Result(ErrWarn, e, " ", fileline)
+			m.Log(LOG_WARN, "catch: %s %s", e, fileline).Log("chain", msg.FormatChain())
+			m.Log(LOG_WARN, "catch: %s %s", e, fileline).Log("stack", msg.FormatStack(2, 100))
+			m.Log(LOG_WARN, "catch: %s %s", e, fileline).Result(ErrWarn, e, " ", fileline)
 			if len(hand) > 1 {
 				m.TryCatch(msg, silent, hand[1:]...)
 			} else if !silent {
@@ -30,7 +27,6 @@ func (m *Message) TryCatch(msg *Message, silent bool, hand ...func(msg *Message)
 			}
 		}
 	}()
-
 	if len(hand) > 0 {
 		hand[0](msg)
 	}

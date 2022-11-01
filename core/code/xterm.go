@@ -37,7 +37,7 @@ func _xterm_get(m *ice.Message, h string) _xterm {
 	m.Assert(h != "")
 
 	t := mdb.HashSelectField(m, m.Option(mdb.HASH, h), mdb.TYPE)
-	mdb.HashModify(m, ice.VIEW, m.Option(ice.MSG_DAEMON))
+	mdb.HashModify(m, "view", m.Option(ice.MSG_DAEMON))
 	return mdb.HashTarget(m, h, func() ice.Any {
 		ls := kit.Split(kit.Select(nfs.SH, t))
 		cmd := exec.Command(cli.SystemFind(m, ls[0]), ls[1:]...)
@@ -53,7 +53,7 @@ func _xterm_get(m *ice.Message, h string) _xterm {
 			buf := make([]byte, ice.MOD_BUFS)
 			for {
 				if n, e := tty.Read(buf); !m.Warn(e) && e == nil {
-					m.Option(ice.MSG_DAEMON, mdb.HashSelectField(m, h, ice.VIEW))
+					m.Option(ice.MSG_DAEMON, mdb.HashSelectField(m, h, "view"))
 					m.Option(mdb.TEXT, string(buf[:n]))
 					m.Debug("what %v", m.FormatMeta())
 					web.PushNoticeGrow(m)

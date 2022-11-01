@@ -18,22 +18,10 @@ const (
 	FAILURE = "failure"
 	PROCESS = "process"
 
-	INIT = "init"
-	EXIT = "exit"
-	QUIT = "quit"
-	SAVE = "save"
-	LOAD = "load"
-
 	AUTO = "auto"
-	VIEW = "view"
+	HTTP = "http"
 	LIST = "list"
 	BACK = "back"
-	EXEC = "exec"
-
-	SHOW = "show"
-	PLAY = "play"
-	HELP = "help"
-	HTTP = "http"
 
 	BASE = "base"
 	CORE = "core"
@@ -44,15 +32,15 @@ const (
 	OPS = "ops"
 	ICE = "ice"
 
-	ENV = "env"
-	RUN = "run"
-	ERR = "err"
-
 	POD = "pod"
 	CTX = "ctx"
 	CMD = "cmd"
 	ARG = "arg"
+
+	ENV = "env"
+	RUN = "run"
 	RES = "res"
+	ERR = "err"
 )
 const ( // MOD
 	MOD_DIR  = 0750
@@ -178,16 +166,15 @@ const ( // MSG
 	MSG_SOURCE = "_source"
 	MSG_TARGET = "_target"
 	MSG_HANDLE = "_handle"
+	MSG_DAEMON = "_daemon"
+	MSG_UPLOAD = "_upload"
+	MSG_ACTION = "_action"
+	MSG_STATUS = "_status"
 
 	MSG_ALIAS  = "_alias"
 	MSG_SCRIPT = "_script"
 	MSG_OUTPUT = "_output"
 	MSG_ARGS   = "_args"
-
-	MSG_UPLOAD = "_upload"
-	MSG_DAEMON = "_daemon"
-	MSG_ACTION = "_action"
-	MSG_STATUS = "_status"
 
 	MSG_PROCESS = "_process"
 	MSG_DISPLAY = "_display"

@@ -50,7 +50,7 @@ func init() {
 			}
 
 			// 提交统计
-			days, commit, adds, dels, rest := 0, 0, 0, 0, 0
+			from, days, commit, adds, dels, rest := "", 0, 0, 0, 0, 0
 			m.Cmd(REPOS, ice.OptionFields("name,path")).TableGo(func(value ice.Maps, lock *task.Lock) {
 				if m.Config(kit.Keys("skip", value[REPOS])) == ice.TRUE {
 					return
@@ -61,6 +61,7 @@ func init() {
 				msg.Tables(func(value ice.Maps) {
 					if kit.Int(value["days"]) > days {
 						days = kit.Int(value["days"])
+						from = value["from"]
 					}
 					commit += kit.Int(value["commit"])
 					adds += kit.Int(value["adds"])
@@ -80,7 +81,7 @@ func init() {
 			m.Push("dels", dels)
 			m.Push("rest", rest)
 			m.SortIntR("rest")
-			m.StatusTimeCount()
+			m.StatusTimeCount("from", from)
 		}},
 		"_sum": {Name: "_sum [path] [total] [count|date] args...", Help: "统计量", Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) > 0 {
@@ -110,7 +111,7 @@ func init() {
 			}
 
 			var total_day time.Duration
-			count, count_add, count_del := 0, 0, 0
+			from, count, count_add, count_del := "", 0, 0, 0
 			for i, v := range strings.Split(_git_cmds(m, args...), "commit: ") {
 				l := strings.Split(v, ice.NL)
 				hs := strings.Split(l[0], ice.SP)
@@ -142,6 +143,9 @@ func init() {
 					continue
 				}
 
+				if i == 0 {
+					from = hs[0]
+				}
 				m.Push("date", hs[0])
 				m.Push("adds", add)
 				m.Push("dels", del)
@@ -152,6 +156,7 @@ func init() {
 			}
 
 			if total { // 累积求和
+				m.Push("from", from)
 				m.Push("tags", _git_cmds(m, "describe", "--tags"))
 				m.Push("days", int(total_day.Hours())/24)
 				m.Push("commit", count)

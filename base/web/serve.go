@@ -254,7 +254,6 @@ func _serve_handle(key string, cmd *ice.Command, msg *ice.Message, w http.Respon
 	if sessid := msg.Option(CookieName(msg.Option(ice.MSG_USERWEB))); msg.Option(ice.MSG_SESSID) == "" {
 		msg.Option(ice.MSG_SESSID, sessid)
 	}
-	msg.Debug("what %v", msg.FormatMeta())
 
 	// 解析命令
 	if msg.Optionv(ice.MSG_CMDS) == nil {

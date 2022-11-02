@@ -137,7 +137,7 @@ func _hash_export(m *ice.Message, prefix, chain, file string) {
 
 	m.Logs(EXPORT, KEY, path.Join(prefix, chain), FILE, p)
 	m.Conf(prefix, kit.Keys(chain, HASH), "")
-	m.Echo(p)
+	m.Echo(p).StatusTime(LINK, "/share/local/"+p)
 }
 func _hash_import(m *ice.Message, prefix, chain, file string) {
 	defer Lock(m, prefix, chain)()

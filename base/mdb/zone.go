@@ -96,7 +96,7 @@ func _zone_export(m *ice.Message, prefix, chain, file string) {
 
 	m.Logs(EXPORT, KEY, path.Join(prefix, chain), FILE, p, COUNT, count)
 	m.Conf(prefix, kit.Keys(chain, HASH), "")
-	m.Echo(p)
+	m.Echo(p).StatusTime(LINK, "/share/local/"+p)
 }
 func _zone_import(m *ice.Message, prefix, chain, file string) {
 	f, e := miss.OpenFile(kit.Keys(file, CSV))
@@ -226,11 +226,9 @@ func ZoneSelect(m *ice.Message, arg ...string) *ice.Message {
 	return m
 }
 func ZoneExport(m *ice.Message, arg ...Any) {
-	m.Debug("what %v", m.OptionFields())
 	if m.OptionFields() == "" {
-		m.OptionFields(m.Config(SHORT), m.Config(FIELD))	
+		m.OptionFields(m.Config(SHORT), m.Config(FIELD))
 	}
-	m.Debug("what %v", m.OptionFields())
 	m.Cmdy(EXPORT, m.PrefixKey(), "", ZONE, arg)
 }
 func ZoneImport(m *ice.Message, arg ...Any) {

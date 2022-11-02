@@ -84,6 +84,11 @@ func (m *Message) ToLowerAppend(arg ...string) *Message {
 	}
 	return m
 }
+func (m *Message) RenameOption(from, to string) *Message {
+	m.Option(to, m.Option(from))
+	m.Option(from, "")
+	return m
+}
 func (m *Message) RenameAppend(arg ...string) *Message { // [from to]...
 	for i := 0; i < len(arg)-1; i += 2 {
 		if arg[i] == arg[i+1] {
@@ -412,6 +417,10 @@ func SplitCmd(name string, actions Actions) (list []Any) {
 
 		case "image":
 			item = kit.Dict(TYPE, TEXT, NAME, ls[i], ACTION, "img")
+			list = append(list, item)
+			
+		case "time":
+			item = kit.Dict(TYPE, TEXT, NAME, ls[i], ACTION, "date")
 			list = append(list, item)
 			
 		case "*":

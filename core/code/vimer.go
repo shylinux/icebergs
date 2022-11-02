@@ -85,7 +85,7 @@ func init() {
 							m.Push(nfs.PATH, "_open:"+strings.ToLower(value[mdb.NAME]))
 						})
 					case nfs.PATH:
-						m.Cmdy(nfs.DIR, arg[1:])
+						m.Cmdy(nfs.DIR, arg[1:]).Cut("path,size,time")
 						m.ProcessAgain()
 					default:
 					}
@@ -95,8 +95,8 @@ func init() {
 				if m.Option(nfs.CONTENT) == "" {
 					m.Option(nfs.CONTENT, m.Cmdx("", TEMPLATE))
 				}
-				m.Cmdy(nfs.SAVE, path.Join(m.Option(nfs.PATH), m.Option(nfs.FILE)))
-				if m.Option(nfs.FILE) == "proto.js" {
+				switch m.Cmdy(nfs.SAVE, path.Join(m.Option(nfs.PATH), m.Option(nfs.FILE))); m.Option(nfs.FILE) {
+				case "proto.js", "page/index.css":
 					m.Cmd("", DEVPACK)
 				}
 			}},

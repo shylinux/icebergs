@@ -11,12 +11,12 @@ import (
 	kit "shylinux.com/x/toolkits"
 )
 
-func _css_stat(m *ice.Message, stats map[string]int) {
+func _css_stat(m *ice.Message, block string, stats map[string]int) {
 	msg := m.Spawn()
 	for k, v := range stats {
 		msg.Push("name", k)
 		msg.Push("value", v)
-		msg.Push("block", "stats")
+		msg.Push("block", block)
 	}
 	msg.SortIntR("value")
 	m.Copy(msg)
@@ -51,8 +51,8 @@ func _css_show(m *ice.Message, arg ...string) {
 		default:
 		}
 	})
-	_css_stat(m, stats_key)
-	_css_stat(m, stats_value)
+	_css_stat(m, "stats.key", stats_key)
+	_css_stat(m, "stats.value", stats_value)
 	m.StatusTimeCount()
 }
 func _css_exec(m *ice.Message, arg ...string) {

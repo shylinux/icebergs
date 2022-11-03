@@ -23,17 +23,20 @@ func (m *Message) join(arg ...Any) (string, []Any) {
 			i--
 			continue
 		}
-		if key := strings.TrimSpace(kit.Format(arg[i])); i == len(arg)-1 {
+		key := strings.TrimSpace(kit.Format(arg[i]))
+		if i == len(arg)-1 {
 			list = append(list, key)
-		} else {
-			switch v := arg[i+1].(type) {
-			case logs.Meta:
-				list = append(list, key)
-				meta = append(meta, v)
-				continue
-			}
-			list = append(list, key+kit.Select("", DF, !strings.HasSuffix(key, DF)), kit.Format(kit.Select("", kit.Simple(arg[i+1]), 0)))
+			continue
 		}
+		switch v := arg[i+1].(type) {
+		case logs.Meta:
+			list = append(list, key)
+			meta = append(meta, v)
+			continue
+		case time.Time:
+			arg[i+1] = v.Format(MOD_TIME)
+		}
+		list = append(list, key+kit.Select("", DF, !strings.HasSuffix(key, DF)), kit.Format(kit.Select("", kit.Simple(arg[i+1]), 0)))
 	}
 	return kit.Join(list, SP), meta
 }

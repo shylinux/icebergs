@@ -28,7 +28,7 @@ func _plan_scope(m *ice.Message, arg ...string) (begin_time, end_time time.Time)
 		begin_time = begin_time.AddDate(0, 0, -begin_time.YearDay()+1).AddDate(-5, 0, 0)
 		end_time = begin_time.AddDate(10, 0, 0)
 	}
-	m.Logs(mdb.SELECT, "begin_time", begin_time.Format(ice.MOD_TIME), "end_time", end_time.Format(ice.MOD_TIME))
+	m.Logs(mdb.SELECT, "begin_time", begin_time, "end_time", end_time)
 	return begin_time, end_time
 }
 func _plan_list(m *ice.Message, begin_time, end_time string) {

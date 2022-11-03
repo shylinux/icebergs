@@ -36,46 +36,46 @@ func _js_main_script(m *ice.Message, arg ...string) (res []string) {
 }
 
 func _js_parse(m *ice.Message, arg ...string) {
-	
+
 }
 func _js_show(m *ice.Message, arg ...string) {
-		kind := ""
-		m.Cmd(nfs.CAT, path.Join(arg[2], arg[1]), func(text string, index int) {
-			ls := kit.Split(text, "\t ", ":,()")
-			if strings.HasPrefix(text, "Volcanos(") {
-				if kind = ls[2]; strings.Contains(text, "_init: ") {
-					m.Push("line", index+1)
-					m.Push("kind", kind)
-					m.Push("name", "_init")
-					m.Push("type", "function")
-				}
-				return
-			}
-			indent := 0
-			for _, c := range text {
-				if c == '\t' {
-					indent++
-				} else if c == ' ' {
-					indent++
-				} else {
-					break
-				}
-			}
-			if len(ls) > 2 && ls[1] == ":" {
-				if indent > 1 {
-					return
-				}
+	kind := ""
+	m.Cmd(nfs.CAT, path.Join(arg[2], arg[1]), func(text string, index int) {
+		ls := kit.Split(text, "\t ", ":,()")
+		if strings.HasPrefix(text, "Volcanos(") {
+			if kind = ls[2]; strings.Contains(text, "_init: ") {
 				m.Push("line", index+1)
 				m.Push("kind", kind)
-				m.Push("name", ls[0])
-				m.Push("type", ls[2])
+				m.Push("name", "_init")
+				m.Push("type", "function")
 			}
-		})
-		m.StatusTimeCount()
+			return
+		}
+		indent := 0
+		for _, c := range text {
+			if c == '\t' {
+				indent++
+			} else if c == ' ' {
+				indent++
+			} else {
+				break
+			}
+		}
+		if len(ls) > 2 && ls[1] == ":" {
+			if indent > 1 {
+				return
+			}
+			m.Push("line", index+1)
+			m.Push("kind", kind)
+			m.Push("name", ls[0])
+			m.Push("type", ls[2])
+		}
+	})
+	m.StatusTimeCount()
 }
 func _js_exec(m *ice.Message, arg ...string) {
 	if arg[2] == "usr/volcanos/" && strings.HasPrefix(arg[1], "plugin/local/") {
-		key := "web."+strings.ReplaceAll(strings.TrimSuffix(strings.TrimPrefix(arg[1], "plugin/local/"), ".js"), ice.PS, ice.PT)
+		key := "web." + strings.ReplaceAll(strings.TrimSuffix(strings.TrimPrefix(arg[1], "plugin/local/"), ".js"), ice.PS, ice.PT)
 		ctx.ProcessCommand(m, kit.Select("can.plugin", key), kit.Simple())
 		return
 	}
@@ -103,7 +103,7 @@ func init() {
 					switch m.Option(ctx.ACTION) {
 					case nfs.SCRIPT:
 						m.Push(nfs.PATH, strings.ReplaceAll(arg[1], ice.PT+kit.Ext(arg[1]), ice.PT+JS))
-						m.Option(nfs.DIR_REG, `.*\.(sh|py|shy|js)$`)
+						m.Option(nfs.DIR_REG, kit.FileReg(nfs.SH, nfs.PY, nfs.SHY, nfs.JS))
 						nfs.DirDeepAll(m, ice.SRC, nfs.PWD, nil).Cut(nfs.PATH)
 					}
 

@@ -47,7 +47,7 @@ func DisplayLocal(m *ice.Message, file string, arg ...ice.Any) *ice.Message { //
 	if file == "" {
 		file = path.Join(kit.PathName(2), kit.Keys(kit.FileName(2), ice.JS))
 	}
-	if !strings.HasPrefix(file, ice.HTTP) && !strings.HasPrefix(file, ice.PS) {
+	if !strings.HasPrefix(file, ice.PS) && !strings.HasPrefix(file, ice.HTTP) {
 		file = path.Join(ice.PLUGIN_LOCAL, file)
 	}
 	return DisplayBase(m, file, arg...)

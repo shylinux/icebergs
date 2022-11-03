@@ -157,7 +157,7 @@ func _chart_show(m *ice.Message, kind, text string, arg ...string) {
 	m.Option(HEIGHT, chart.GetHeight())
 
 	// 渲染引擎
-	_wiki_template(m, CHART, "", text, arg...)
+	_wiki_template(m, "", text, arg...)
 	defer m.Echo("</svg>")
 	chart.Draw(m, 0, 0)
 	m.RenderResult()

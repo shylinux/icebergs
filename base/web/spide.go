@@ -351,6 +351,7 @@ const (
 	CLIENT_URL     = "client.url"
 	LOGHEADERS     = "logheaders"
 
+	HTTP     = "http"
 	FORM     = "form"
 	ADDRESS  = "address"
 	REQUEST  = "request"

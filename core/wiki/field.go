@@ -14,7 +14,7 @@ import (
 
 func Parse(m *ice.Message, meta string, key string, arg ...string) (data ice.Any) {
 	list := []string{}
-	for _, line := range kit.Split(strings.Join(arg, ice.SP), ice.NL) {
+	for _, line := range kit.SplitLine(strings.Join(arg, ice.SP)) {
 		ls := kit.Split(line)
 		for i := 0; i < len(ls); i++ {
 			if strings.HasPrefix(ls[i], "# ") {
@@ -24,7 +24,6 @@ func Parse(m *ice.Message, meta string, key string, arg ...string) (data ice.Any
 		}
 		list = append(list, ls...)
 	}
-
 	switch data = kit.Parse(nil, "", list...); meta {
 	case ice.MSG_OPTION:
 		m.Option(key, data)
@@ -34,17 +33,13 @@ func Parse(m *ice.Message, meta string, key string, arg ...string) (data ice.Any
 	return data
 }
 func _field_show(m *ice.Message, name, text string, arg ...string) {
-	// 命令参数
 	meta, cmds := kit.Dict(), kit.Split(text)
 	m.Search(cmds[0], func(p *ice.Context, s *ice.Context, key string, cmd *ice.Command) {
 		if meta[FEATURE], meta[INPUTS] = kit.Dict(cmd.Meta), cmd.List; name == "" {
 			name = cmd.Help
 		}
 	})
-	if len(meta) == 0 {
-		return
-	}
-	if !aaa.Right(m.Spawn(), cmds[0]) {
+	if len(meta) == 0 || !aaa.Right(m.Spawn(), cmds[0]) {
 		return
 	}
 
@@ -52,7 +47,6 @@ func _field_show(m *ice.Message, name, text string, arg ...string) {
 	meta[mdb.NAME], meta[mdb.INDEX] = name, text
 	msg := m.Spawn()
 
-	// 扩展参数
 	for i := 0; i < len(arg)-1; i += 2 {
 		if strings.HasPrefix(arg[i], "opts.") {
 			kit.Value(meta, arg[i], m.Option(arg[i], strings.TrimSpace(arg[i+1])))
@@ -65,59 +59,48 @@ func _field_show(m *ice.Message, name, text string, arg ...string) {
 		}
 
 		switch arg[i] {
-		case "content":
-			meta[arg[i]] = arg[i+1]
-
-		case SPARK:
-			if arg[i+1][0] == '@' && nfs.ExistsFile(m, arg[i+1][1:]) {
-				msg.Cmdy(nfs.CAT, arg[i+1][1:])
-			} else {
-				msg.Echo(strings.TrimSpace(arg[i+1]))
-			}
-
-			kit.Value(meta, kit.Keys(FEATURE, "mode"), "simple")
-			if meta["msg"] = msg.FormatMeta(); text == "web.code.inner" {
-				meta["plug"] = kit.UnMarshal(m.Cmdx(mdb.PLUGIN, kit.Ext(name)))
-				kit.Value(meta, kit.Keys(FEATURE, "display"), "/plugin/local/code/inner.js")
-				kit.Value(meta, ARGS, kit.List(path.Dir(name)+ice.PS, path.Base(name)))
-			}
-
-		case TABLE:
-			ls := kit.Split(arg[i+1], ice.NL, ice.NL, ice.NL)
-			head := kit.Split(ls[0])
-			for _, l := range ls[1:] {
-				for i, v := range kit.Split(l) {
-					msg.Push(head[i], v)
-				}
-			}
-			meta["msg"] = msg.FormatMeta()
-			kit.Value(meta, kit.Keys(FEATURE, "mode"), "simple")
-
 		case ARGS:
-			args := kit.Simple(m.Optionv(arg[i]))
-
 			count := 0
 			kit.Fetch(meta[INPUTS], func(index int, value ice.Map) {
 				if value[mdb.TYPE] != "button" {
 					count++
 				}
 			})
-
-			if len(args) > count {
+			if args := kit.Simple(m.Optionv(arg[i])); len(args) > count {
 				list := meta[INPUTS].([]ice.Any)
 				for i := count; i < len(args); i++ {
 					list = append(list, kit.Dict(mdb.TYPE, "text", mdb.NAME, ARGS, mdb.VALUE, args[i]))
 				}
 				meta[INPUTS] = list
 			}
+		case TABLE:
+			ls := kit.SplitLine(arg[i+1])
+			head := kit.SplitWord(ls[0])
+			for _, l := range ls[1:] {
+				for i, v := range kit.SplitWord(l) {
+					msg.Push(head[i], v)
+				}
+			}
+			kit.Value(meta, "msg", msg.FormatMeta(), kit.Keys(FEATURE, "mode"), "simple")
+		case SPARK:
+			if arg[i+1][0] == '@' && nfs.ExistsFile(m, arg[i+1][1:]) {
+				msg.Cmdy(nfs.CAT, arg[i+1][1:])
+			} else {
+				msg.Echo(strings.TrimSpace(arg[i+1]))
+			}
+			kit.Value(meta, "msg", msg.FormatMeta(), kit.Keys(FEATURE, "mode"), "simple")
+
+			if text == "web.code.inner" {
+				kit.Value(meta, kit.Keys(FEATURE, "display"), "/plugin/local/code/inner.js")
+				kit.Value(meta, "plug", kit.UnMarshal(m.Cmdx(mdb.PLUGIN, kit.Ext(name))))
+				kit.Value(meta, ARGS, kit.List(path.Dir(name)+ice.PS, path.Base(name)))
+			}
 		default:
 			kit.Value(meta, kit.Keys(FEATURE, arg[i]), msg.Optionv(arg[i], arg[i+1]))
 		}
 	}
 	m.Option(mdb.META, meta)
-
-	// 渲染引擎
-	_wiki_template(m, FIELD, name, text)
+	_wiki_template(m, name, text)
 }
 
 const (
@@ -128,27 +111,21 @@ const (
 const FIELD = "field"
 
 func init() {
-	Index.Merge(&ice.Context{Commands: ice.Commands{
-		FIELD: {Name: "field [name] cmd", Help: "插件", Actions: ice.MergeActions(ice.Actions{
-			ice.RUN: {Name: "run", Help: "执行"},
-		}, ctx.CmdAction()), Hand: func(m *ice.Message, arg ...string) {
-			if arg = _name(m, arg); strings.Contains(arg[1], ice.NL) {
-				arg = kit.Simple(arg[0], "web.chat.div", "auto.cmd", "split", "opts.text", arg[1], arg[2:])
-			}
-			if arg[1] == "args" {
-				arg = kit.Simple("", arg)
-			}
-			_field_show(m, arg[0], arg[1], arg[2:]...)
-		}},
-	}, Configs: ice.Configs{
-		FIELD: {Name: FIELD, Help: "插件", Value: kit.Data(
-			nfs.TEMPLATE, `<fieldset {{.OptionTemplate}}" data-meta='{{.Optionv "meta"|Format}}'>
+	Index.MergeCommands(ice.Commands{
+		FIELD: {Name: "field [name] cmd", Help: "插件", Actions: ice.MergeActions(WordAction(`<fieldset {{.OptionTemplate}}" data-meta='{{.Optionv "meta"|Format}}'>
 <legend>{{.Option "name"}}</legend>
 <form class="option"></form>
 <div class="action"></div>
 <div class="output"></div>
 <div class="status"></div>
-</fieldset>`,
-		)},
-	}})
+</fieldset>`), ctx.CmdAction()), Hand: func(m *ice.Message, arg ...string) {
+			if arg[1] == "args" {
+				arg = kit.Simple("", arg)
+			}
+			if arg = _name(m, arg); strings.Contains(arg[1], ice.NL) {
+				arg = kit.Simple(arg[0], "web.chat.div", "auto.cmd", "split", "opts.text", arg[1], arg[2:])
+			}
+			_field_show(m, arg[0], arg[1], arg[2:]...)
+		}},
+	})
 }

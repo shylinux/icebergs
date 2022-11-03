@@ -75,6 +75,17 @@ func (w WebView) OpenCmd(cmd string) {
 func (w WebView) SetSize(width, height int) {
 	w.Cmd(nfs.SAVE, "etc/webview.size", kit.Format("%v,%v", width, height))
 }
+func (w WebView) System(arg ...string) string {
+	return w.Cmdx(cli.SYSTEM, arg)
+}
+func (w WebView) Power() string {
+	ls := strings.Split(w.Cmdx(cli.SYSTEM, "pmset", "-g", "ps"), ice.NL)
+	for _, line := range ls[1:] {
+		ls := kit.Split(line, "\t ;", "\t ;")
+		return ls[2]
+	}
+	return ""
+}
 func (w WebView) Terminate() { w.WebView.Terminate() }
 func (w WebView) Close() {
 	if !w.Menu() {

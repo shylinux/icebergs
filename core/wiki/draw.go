@@ -5,7 +5,6 @@ import (
 
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/ctx"
-	"shylinux.com/x/icebergs/base/lex"
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/nfs"
 	kit "shylinux.com/x/toolkits"
@@ -14,10 +13,8 @@ import (
 const DRAW = "draw"
 
 func init() {
-	Index.Merge(&ice.Context{Configs: ice.Configs{
-		DRAW: {Name: DRAW, Help: "思维导图", Value: kit.Data(lex.REGEXP, ".*\\.svg")},
-	}, Commands: ice.Commands{
-		DRAW: {Name: "draw path=src/main.svg pid refresh:button=auto save edit actions", Help: "思维导图", Meta: kit.Dict(ice.DisplayLocal("")), Actions: ice.MergeActions(ice.Actions{
+	Index.MergeCommands(ice.Commands{
+		DRAW: {Name: "draw path=src/main.svg pid refresh:button=auto save edit actions", Help: "思维导图", Actions: ice.MergeActions(ice.Actions{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
 				m.Cmd(mdb.RENDER, mdb.CREATE, mdb.TYPE, nfs.SVG, mdb.NAME, m.PrefixKey())
 			}},
@@ -27,12 +24,12 @@ func init() {
 				m.Cmdy(nfs.CAT, path.Join(arg[2], arg[1]))
 			}},
 			nfs.SAVE: {Name: "save", Help: "保存", Hand: func(m *ice.Message, arg ...string) {
-				_wiki_save(m, DRAW, arg[0], m.Option(nfs.CONTENT))
+				_wiki_save(m, arg[0], m.Option(nfs.CONTENT))
 			}},
-		}, ctx.CmdAction()), Hand: func(m *ice.Message, arg ...string) {
-			if !_wiki_list(m, DRAW, kit.Select(nfs.PWD, arg, 0)) {
-				_wiki_show(m, DRAW, arg[0])
+		}, WikiAction("", nfs.SVG), ctx.CmdAction()), Hand: func(m *ice.Message, arg ...string) {
+			if !_wiki_list(m, kit.Select(nfs.PWD, arg, 0)) {
+				_wiki_show(m, arg[0])
 			}
 		}},
-	}})
+	})
 }

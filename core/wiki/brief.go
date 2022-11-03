@@ -2,18 +2,14 @@ package wiki
 
 import (
 	ice "shylinux.com/x/icebergs"
-	"shylinux.com/x/icebergs/base/nfs"
-	kit "shylinux.com/x/toolkits"
 )
 
 const BRIEF = "brief"
 
 func init() {
-	Index.Merge(&ice.Context{Commands: ice.Commands{
-		BRIEF: {Name: "brief text", Help: "摘要", Hand: func(m *ice.Message, arg ...string) {
-			_wiki_template(m, m.CommandKey(), "", arg[0], arg[1:]...)
-		}},
-	}, Configs: ice.Configs{
-		BRIEF: {Name: BRIEF, Help: "摘要", Value: kit.Data(nfs.TEMPLATE, `<p {{.OptionTemplate}}>{{.Option "text"}}</p>`)},
-	}})
+	Index.MergeCommands(ice.Commands{
+		BRIEF: {Name: "brief text", Help: "摘要", Actions: WordAction(
+			`<p {{.OptionTemplate}}>{{.Option "text"}}</p>`,
+		), Hand: func(m *ice.Message, arg ...string) { _wiki_template(m, "", arg[0], arg[1:]...) }},
+	})
 }

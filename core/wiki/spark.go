@@ -9,41 +9,37 @@ import (
 	kit "shylinux.com/x/toolkits"
 )
 
-func _spark_show(m *ice.Message, name, text string, arg ...string) {
-	for i := 0; i < len(arg); i += 2 {
-		m.Option(arg[i], arg[i+1])
+func _spark_show(m *ice.Message, name, text string, arg ...string) *ice.Message {
+	if _option(m, m.CommandKey(), name, text, arg...); name == "" {
+		return _wiki_template(m, name, text, arg...)
 	}
 
-	if name == "" {
-		_wiki_template(m, SPARK, name, text, arg...)
-		return
-	}
-
-	prompt := kit.Select(name+"> ", m.Config(kit.Keys(ssh.PROMPT, name)))
 	m.Echo(`<div class="story" data-type="spark" data-name="%s" style="%s">`, name, m.Option("style"))
 	defer m.Echo("</div>")
 
 	switch name {
 	case "inner", "field":
-		m.Echo(text)
-		return
+		return m.Echo(text)
 	}
 
-	for _, l := range strings.Split(text, ice.NL) {
+	prompt := kit.Select(name+"> ", m.Config(kit.Keys(ssh.PROMPT, name)))
+	for _, l := range kit.SplitLine(text) {
 		m.Echo(Format("div", Format("label", prompt), Format("span", l)))
 	}
+	return m
 }
 
 const (
 	PROMPT = "prompt"
 	BREAK  = "break"
+	SHELL  = "shell"
 )
 
 const SPARK = "spark"
 
 func init() {
-	Index.Merge(&ice.Context{Commands: ice.Commands{
-		SPARK: {Name: "spark [name] text auto field:text value:text", Help: "段落", Actions: ice.Actions{
+	Index.MergeCommands(ice.Commands{
+		SPARK: {Name: "spark [name] text auto field:text value:text", Help: "段落", Actions: ice.MergeActions(ice.Actions{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
 				ice.AddRender(ice.RENDER_SCRIPT, func(m *ice.Message, cmd string, args ...ice.Any) string {
 					arg := kit.Simple(args...)
@@ -57,19 +53,10 @@ func init() {
 						arg = []string{SHELL, arg[0]}
 					}
 					list := []string{kit.Format(`<div class="story" data-type="spark" data-name="%s">`, arg[0])}
-					for _, l := range strings.Split(strings.Join(arg[1:], ice.NL), ice.NL) {
-						list = append(list, "<div>")
-						switch arg[0] {
-						case SHELL:
-							list = append(list, Format("label", "$ "))
-						default:
-							list = append(list, Format("label", "&gt; "))
-						}
-						list = append(list, Format("span", l))
-						list = append(list, "</div>")
+					for _, l := range kit.SplitLine(strings.Join(arg[1:], ice.NL)) {
+						list = append(list, "<div>", Format("label", kit.Select("&gt; ", "$ ", arg[0] == SHELL)), Format("span", l), "</div>")
 					}
-					list = append(list, "</div>")
-					return strings.Join(list, "")
+					return strings.Join(append(list, "</div>"), "")
 				})
 			}},
 			"md": {Name: "md file", Help: "md", Hand: func(m *ice.Message, arg ...string) {
@@ -102,35 +89,23 @@ func init() {
 						return
 					}
 
-					switch block {
-					case "":
-						code = append(code, line)
-					default:
-						code = append(code, line)
-					}
+					code = append(code, line)
 				})
 				text()
 			}},
-		}, Hand: func(m *ice.Message, arg ...string) {
+		}, WordAction(`<p {{.OptionTemplate}}>{{.Option "text"}}</p>`, ssh.PROMPT, kit.Dict(SHELL, "$ "))), Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) == 0 {
 				m.Echo(`<br class="story" data-type="spark">`)
 				return
 			}
-			switch kit.Ext(arg[0]) {
-			case "md":
+			if kit.Ext(arg[0]) == "md" {
 				m.Cmdy(SPARK, "md", arg)
 				return
 			}
-
 			arg = _name(m, arg)
 			_spark_show(m, arg[0], strings.TrimSpace(arg[1]), arg[2:]...)
 		}},
-	}, Configs: ice.Configs{
-		SPARK: {Name: SPARK, Help: "段落", Value: kit.Data(
-			nfs.TEMPLATE, `<p {{.OptionTemplate}}>{{.Option "text"}}</p>`,
-			ssh.PROMPT, kit.Dict(SHELL, "$ "),
-		)},
-	}})
+	})
 }
 func Format(tag string, arg ...ice.Any) string {
 	return kit.Format("<%s>%s</%s>", tag, strings.Join(kit.Simple(arg), ""), tag)

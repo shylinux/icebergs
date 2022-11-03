@@ -19,48 +19,39 @@ func _title_parse(m *ice.Message, dir string, text string) string {
 	})
 }
 
-func _title_show(m *ice.Message, kind, text string, arg ...string) {
+func _title_show(m *ice.Message, kind, text string, arg ...string) *ice.Message {
 	switch title, _ := m.Optionv(TITLE).(map[string]int); kind {
-	case NAVMENU: // 导航目录
-		_option(m, kind, "", text, arg...)
-		data := _title_parse(m, path.Dir(m.Option(ice.MSG_SCRIPT)), text)
-		m.RenderTemplate(kit.Format("<div {{.OptionTemplate}} data-data='%s'></div>", data), &Message{m})
-		return
-
-	case PREMENU: // 前置目录
-		_option(m, kind, "", "", arg...)
-		m.RenderTemplate(m.Config(kind), &Message{m})
-		return
-
-	case ENDMENU: // 后置目录
-		_option(m, kind, "", "", arg...)
-		m.RenderTemplate(m.Config(kind), &Message{m})
-		return
-
-	case SECTION: // 分节标题
+	case NAVMENU:
+		m.Option(mdb.DATA, _title_parse(m, path.Dir(m.Option(ice.MSG_SCRIPT)), text))
+		return _option(m, kind, "", text, arg...).RenderTemplate(m.Config(kind), &Message{m})
+	case PREMENU:
+		return _option(m, kind, "", "", arg...).RenderTemplate(m.Config(kind), &Message{m})
+	case ENDMENU:
+		return _option(m, kind, "", "", arg...).RenderTemplate(m.Config(kind), &Message{m})
+	case SECTION:
 		title[SECTION]++
 		m.Option(LEVEL, "h3")
 		m.Option(PREFIX, kit.Format("%d.%d ", title[CHAPTER], title[SECTION]))
-
-	case CHAPTER: // 章节标题
+	case CHAPTER:
 		title[CHAPTER]++
 		title[SECTION] = 0
 		m.Option(LEVEL, "h2")
 		m.Option(PREFIX, kit.Format("%d ", title[CHAPTER]))
-
-	default: // 文章标题
+	default:
 		m.Option(LEVEL, "h1")
 		m.Option(PREFIX, "")
 	}
-
-	// 渲染引擎
-	_wiki_template(m, TITLE, "", text, arg...)
-
-	// 添加目录
+	_wiki_template(m, "", text, arg...)
 	menu, _ := m.Optionv(MENU).(ice.Map)
 	menu[mdb.LIST] = append(menu[mdb.LIST].([]ice.Any), kit.Dict(m.OptionSimple("level,prefix,text")))
+	return m
 }
 
+const (
+	PREFIX = "prefix"
+	LEVEL  = "level"
+	MENU   = "menu"
+)
 const (
 	NAVMENU = "navmenu"
 	PREMENU = "premenu"
@@ -68,20 +59,17 @@ const (
 	SECTION = "section"
 	ENDMENU = "endmenu"
 )
-
-const (
-	PREFIX = "prefix"
-	LEVEL  = "level"
-	MENU   = "menu"
-)
 const TITLE = "title"
 
 func init() {
-	Index.Merge(&ice.Context{Commands: ice.Commands{
-		TITLE: {Name: "title [navmenu|premenu|chapter|section|endmenu] text", Help: "标题", Hand: func(m *ice.Message, arg ...string) {
-			if len(arg) == 0 {
-				arg = append(arg, kit.Slice(kit.Split(ice.Info.NodeName, "-"), -1)[0])
-			}
+	Index.MergeCommands(ice.Commands{
+		TITLE: {Name: "title [navmenu|premenu|chapter|section|endmenu] text", Actions: WordAction(
+			`<{{.Option "level"}} {{.OptionTemplate}}>{{.Option "prefix"}} {{.Option "text"}}</{{.Option "level"}}>`,
+			NAVMENU, `<div {{.OptionTemplate}} data-data='{{.Option "data"}}'></div>`,
+			PREMENU, `<ul {{.OptionTemplate}}></ul>`,
+			ENDMENU, `<ul {{.OptionTemplate}}>{{$menu := .Optionv "menu"}}
+{{range $index, $value := Value $menu "list"}}<li>{{Value $value "prefix"}} {{Value $value "text"}}</li>{{end}}
+</ul>`), Help: "标题", Hand: func(m *ice.Message, arg ...string) {
 			switch arg[0] {
 			case NAVMENU:
 				_title_show(m, arg[0], arg[1], arg[2:]...)
@@ -93,13 +81,5 @@ func init() {
 				_title_show(m, "", arg[0], arg[1:]...)
 			}
 		}},
-	}, Configs: ice.Configs{
-		TITLE: {Name: TITLE, Help: "标题", Value: kit.Data(
-			nfs.TEMPLATE, `<{{.Option "level"}} {{.OptionTemplate}}>{{.Option "prefix"}} {{.Option "text"}}</{{.Option "level"}}>`,
-			PREMENU, `<ul {{.OptionTemplate}}></ul>`,
-			ENDMENU, `<ul {{.OptionTemplate}}>{{$menu := .Optionv "menu"}}
-{{range $index, $value := Value $menu "list"}}<li>{{Value $value "prefix"}} {{Value $value "text"}}</li>{{end}}
-</ul>`,
-		)},
-	}})
+	})
 }

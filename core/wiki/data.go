@@ -6,8 +6,6 @@ import (
 	"path"
 
 	ice "shylinux.com/x/icebergs"
-	"shylinux.com/x/icebergs/base/ctx"
-	"shylinux.com/x/icebergs/base/lex"
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/nfs"
 	kit "shylinux.com/x/toolkits"
@@ -30,17 +28,18 @@ func init() {
 			nfs.PUSH: {Name: "push path record", Help: "添加", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmd(nfs.PUSH, path.Join(m.Config(nfs.PATH), arg[0]), kit.Join(arg[1:], ice.FS)+ice.NL)
 			}},
-		}, FileAction(nfs.PATH, ice.USR_LOCAL_EXPORT, lex.REGEXP, ".*\\.csv")), Hand: func(m *ice.Message, arg ...string) {
-			if !_wiki_list(m, m.CommandKey(), kit.Select(nfs.PWD, arg, 0)) {
+		}, WikiAction(ice.USR_LOCAL_EXPORT, nfs.CSV)), Hand: func(m *ice.Message, arg ...string) {
+			if !_wiki_list(m, arg...) {
 				CSV(m, m.Cmd(nfs.CAT, arg[0]).Result()).StatusTimeCount()
-				ctx.DisplayLocal(m, "")
 			}
 		}},
 	})
 }
 func FileAction(arg ...ice.Any) ice.Actions {
 	return ice.Actions{ice.CTX_INIT: mdb.AutoConfig(arg...),
-		nfs.TRASH: {Hand: func(m *ice.Message, arg ...string) { m.Cmd(nfs.TRASH, path.Join(m.Config(nfs.PATH), m.Option(nfs.PATH))) }},
+		nfs.TRASH: {Hand: func(m *ice.Message, arg ...string) {
+			m.Cmd(nfs.TRASH, path.Join(m.Config(nfs.PATH), m.Option(nfs.PATH)))
+		}},
 		nfs.SAVE: {Name: "save path text", Help: "保存", Hand: func(m *ice.Message, arg ...string) {
 			m.Cmd(nfs.SAVE, arg[0], arg[1], kit.Dict(nfs.DIR_ROOT, m.Config(nfs.PATH)))
 		}},

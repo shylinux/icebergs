@@ -220,12 +220,6 @@ func init() {
 			DISKINFO: {Name: "diskinfo", Help: "磁盘信息", Hand: func(m *ice.Message, arg ...string) {
 				_runtime_diskinfo(m)
 			}},
-			"Terminal": {Name: "Terminal", Help: "终端", Hand: func(m *ice.Message, arg ...string) {
-				m.Cmd(SYSTEM, "open", "-a", "Terminal")
-			}},
-			"Chrome": {Name: "Chrome", Help: "浏览器", Hand: func(m *ice.Message, arg ...string) {
-				m.Cmd(SYSTEM, "open", "-a", "Google Chrome")
-			}},
 			MAXPROCS: {Name: "maxprocs", Help: "最大并发", Hand: func(m *ice.Message, arg ...string) {
 				if len(arg) > 0 {
 					runtime.GOMAXPROCS(kit.Int(m.Conf(RUNTIME, kit.Keys(HOST, MAXPROCS), kit.Select("1", arg, 0))))

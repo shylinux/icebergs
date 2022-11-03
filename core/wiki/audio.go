@@ -2,16 +2,15 @@ package wiki
 
 import (
 	ice "shylinux.com/x/icebergs"
+	"shylinux.com/x/icebergs/base/nfs"
 )
+
 const AUDIO = "audio"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
-		AUDIO: {Name: "audio path auto", Help: "音频", Actions: ice.MergeActions(
-		), Hand: func(m *ice.Message, arg ...string) {
-			if len(arg) > 0 {
-				m.Echo("<audio class='story' src='%s'></audio>", arg[0])
-			}
-		}},
+		AUDIO: {Name: "audio url", Help: "音频", Actions: WordAction(
+			`<audio {{.OptionTemplate}} title="{{.Option "text"}}" src="{{.Option "text"}}" controls></audio>`, nfs.PATH, ice.USR_LOCAL_IMAGE,
+		), Hand: func(m *ice.Message, arg ...string) { _image_show(m, arg[0], arg[1:]...) }},
 	})
 }

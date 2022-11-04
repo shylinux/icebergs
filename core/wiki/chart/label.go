@@ -5,88 +5,74 @@ import (
 
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/lex"
-	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/nfs"
 	"shylinux.com/x/icebergs/core/wiki"
 	kit "shylinux.com/x/toolkits"
 )
 
 type Label struct {
-	data [][]string
 	max  map[int]int
+	data [][]string
 	Block
 }
 
-func (l *Label) Init(m *ice.Message, arg ...string) wiki.Chart {
-	(&l.Block).Init(m)
-
-	// 解析数据
-	l.max = map[int]int{}
-	m.Option(lex.SPLIT_BLOCK, ice.SP)
-	m.Cmd(lex.SPLIT, "", kit.Dict(nfs.CAT_CONTENT, arg[0]), func(ls []string, data ice.Map) []string {
-		l.data = append(l.data, ls)
-
+func (s *Label) Init(m *ice.Message, arg ...string) wiki.Chart {
+	(&s.Block).Init(m)
+	s.max = map[int]int{}
+	m.Cmd(lex.SPLIT, "", kit.Dict(lex.SPLIT_BLOCK, ice.SP, nfs.CAT_CONTENT, arg[0]), func(ls []string) {
+		s.data = append(s.data, ls)
 		for i, v := range ls {
-			switch data := kit.Parse(nil, "", kit.Split(v)...).(type) {
-			case ice.Map:
-				v = kit.Select("", data[mdb.TEXT])
-			}
-			if w := l.GetWidth(v); w > l.max[i] {
-				l.max[i] = w
+			if w := s.GetWidth(kit.SplitWord(v)[0]); w > s.max[i] {
+				s.max[i] = w
 			}
 		}
-		return ls
 	})
-
-	// 计算尺寸
-	l.Height = len(l.data) * l.GetHeights()
-	for _, v := range l.max {
-		l.Width += v + l.MarginX
+	s.Height = len(s.data) * s.GetHeights()
+	for _, v := range s.max {
+		s.Width += v + s.MarginX
 	}
-	return l
+	return s
 }
-func (l *Label) Draw(m *ice.Message, x, y int) wiki.Chart {
+func (s *Label) Draw(m *ice.Message, x, y int) wiki.Chart {
 	gs := wiki.NewGroup(m, RECT, TEXT)
 	wiki.AddGroupOption(m, TEXT, wiki.FILL, m.Option(wiki.STROKE))
-	defer func() { gs.Dump(m, RECT).Dump(m, TEXT) }()
+	defer gs.DumpAll(m, RECT, TEXT)
 
-	var item *Block
 	top := y
-	for _, line := range l.data {
-		left := x
+	for _, line := range s.data {
+		left, height := x, 0
 		for i, text := range line {
+			item := s.Fork(m)
 
-			// 数据
-			item = &Block{FontSize: l.FontSize, Padding: l.Padding, MarginX: l.MarginX, MarginY: l.MarginY}
-			switch data := kit.Parse(nil, "", kit.Split(text)...).(type) {
-			case ice.Map:
-				item.Init(m, kit.Select(text, data[mdb.TEXT])).Data(m, data)
-			default:
-				item.Init(m, text)
+			ls := kit.SplitWord(text)
+			if item.Init(m, ls[0]); len(ls) > 1 {
+				data := kit.Dict()
+				for i := 1; i < len(ls)-1; i += 2 {
+					kit.Value(data, ls[i], ls[i+1])
+				}
+				item.Data(m, data)
 			}
 
-			// 尺寸
 			switch m.Option(COMPACT) {
-			case "max":
-				item.Width = l.Width/len(line) - l.MarginX
 			case ice.TRUE:
+			case "max":
+				item.Width = s.Width/len(line) - s.MarginX
 			default:
-				item.Width = l.max[i]
+				item.Width = s.max[i]
 			}
 
-			// 输出
-			if m.Option(SHOW_BLOCK) == ice.TRUE {
+			if m.Option(HIDE_BLOCK) != ice.TRUE {
 				args := []string{"4", "4"}
 				if mod := kit.Int(m.Option("order.mod")); mod != 0 && i%mod == 0 {
-					args = append(args, "fill", m.Option("order.bg"))
+					args = append(args, wiki.FILL, m.Option("order.bg"))
 				}
 				gs.EchoRect(RECT, item.GetHeight(), item.GetWidth(), left+item.MarginX/2, top+item.MarginY/2, args...)
 			}
 
 			args := []string{}
 			if mod := kit.Int(m.Option("order.mod")); mod != 0 && i%mod == 0 {
-				args = append(args, "stroke", m.Option("order.fg"))
-				args = append(args, "fill", m.Option("order.fg"))
+				args = append(args, wiki.STROKE, m.Option("order.fg"))
+				args = append(args, wiki.FILL, m.Option("order.fg"))
 			}
 			if strings.Contains(m.Option(ice.MSG_USERUA), "Chrome") || strings.Contains(m.Option(ice.MSG_USERUA), "Mobile") {
 				gs.EchoTexts(TEXT, left+item.GetWidths()/2, top+item.GetHeights()/2, item.Text, args...)
@@ -94,25 +80,24 @@ func (l *Label) Draw(m *ice.Message, x, y int) wiki.Chart {
 				gs.EchoTexts(TEXT, left+item.GetWidths()/2, top+item.GetHeights()/2+4, item.Text, args...)
 			}
 
-			left += item.GetWidths()
+			if left += item.GetWidths(); item.GetHeights() > height {
+				height = item.GetHeights()
+			}
 		}
-		top += item.GetHeights()
+		top += height
 	}
-	return l
+	return s
 }
 
 const (
-	SHOW_BLOCK = "show-block"
+	HIDE_BLOCK = "hide-block"
 	COMPACT    = "compact"
 )
 const LABEL = "label"
 
 func init() {
 	wiki.AddChart(LABEL, func(m *ice.Message) wiki.Chart {
-		m.Option(SHOW_BLOCK, ice.TRUE)
-		wiki.AddGroupOption(m, TEXT, wiki.FILL, m.Option(wiki.STROKE))
 		wiki.AddGroupOption(m, TEXT, wiki.STROKE_WIDTH, "1")
-		wiki.AddGroupOption(m, TEXT, wiki.FONT_FAMILY, m.Option(wiki.FONT_FAMILY))
 		return &Label{}
 	})
 }

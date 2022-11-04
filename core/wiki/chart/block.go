@@ -10,21 +10,22 @@ import (
 )
 
 type Block struct {
-	Text       string
-	FontSize   int
-	FontColor  string
-	BackGround string
+	Text string
 
 	TextData string
 	RectData string
 
-	Padding int
-	MarginX int
-	MarginY int
+	FontSize int
+	Padding  int
+	MarginX  int
+	MarginY  int
 
 	Height int
 	Width  int
 	x, y   int
+
+	FontColor  string
+	BackGround string
 }
 
 func (b *Block) Init(m *ice.Message, arg ...string) wiki.Chart {
@@ -48,7 +49,7 @@ func (b *Block) Data(m *ice.Message, meta ice.Any) wiki.Chart {
 			b.RectData += kit.Format("%s='%s' ", wiki.FILL, value)
 		}
 	})
-	kit.Fetch(kit.Value(meta, "data"), func(key string, value string) {
+	kit.Fetch(kit.Value(meta, "text"), func(key string, value string) {
 		b.TextData += kit.Format("%s='%s' ", key, value)
 	})
 	kit.Fetch(kit.Value(meta, "rect"), func(key string, value string) {
@@ -58,7 +59,7 @@ func (b *Block) Data(m *ice.Message, meta ice.Any) wiki.Chart {
 }
 func (b *Block) Draw(m *ice.Message, x, y int) wiki.Chart {
 	float := kit.Int(kit.Select("2", "7", strings.Contains(m.Option(ice.MSG_USERUA), "iPhone")))
-	if m.Option(SHOW_BLOCK) == ice.TRUE {
+	if m.Option(HIDE_BLOCK) != ice.TRUE {
 		item := wiki.NewItem([]string{`<rect height="%d" width="%d" rx="4" ry="4" x="%d" y="%d"`}, b.GetHeight(), b.GetWidth(), x+b.MarginX/2, y+b.MarginY/2)
 		item.Push(`fill="%s"`, b.BackGround).Push(`%v`, b.RectData).Echo("/>").Dump(m)
 	}
@@ -67,6 +68,9 @@ func (b *Block) Draw(m *ice.Message, x, y int) wiki.Chart {
 	item.Push(`stroke-width="%d"`, 1)
 	item.Push(`stroke="%s"`, b.FontColor).Push(`fill="%s"`, b.FontColor).Push("%v", b.TextData).Push(`>%v</text>`, b.Text).Dump(m)
 	return b
+}
+func (b *Block) Fork(m *ice.Message, arg ...string) *Block {
+	return &Block{Text: kit.Select("", arg, 0), FontSize: b.FontSize, Padding: b.Padding, MarginX: b.MarginX, MarginY: b.MarginY}
 }
 
 func (b *Block) GetHeight(str ...string) int {

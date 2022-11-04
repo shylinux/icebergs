@@ -23,7 +23,7 @@ func init() {
 				}
 			}},
 			mdb.CREATE: {Name: "create path fields value", Hand: func(m *ice.Message, arg ...string) {
-				m.Cmd("", nfs.SAVE, m.Option(nfs.PATH), kit.Join(kit.Split(m.Option("fields")), ice.FS)+ice.NL+kit.Join(kit.Split(m.Option("value")))+ice.NL)
+				m.Cmd("", nfs.SAVE, m.Option(nfs.PATH), kit.Join(kit.Split(m.Option("fields")), ice.FS)+ice.NL+kit.Join(kit.Split(m.Option(mdb.VALUE)))+ice.NL)
 			}},
 			nfs.PUSH: {Name: "push path record", Help: "添加", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmd(nfs.PUSH, path.Join(m.Config(nfs.PATH), arg[0]), kit.Join(arg[1:], ice.FS)+ice.NL)

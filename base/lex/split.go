@@ -55,6 +55,11 @@ func _split_list(m *ice.Message, file string, arg ...string) ice.Map {
 		switch cb := m.OptionCB(SPLIT).(type) {
 		case func(int, []string) []string:
 			ls = cb(deep, ls)
+		case func(int, []string, ice.Map, ice.List):
+
+		case func(int, []string, ice.Map, ice.Map):
+			root, _ := kit.Value(list[0], "list.0").(ice.Map)
+			cb(deep, ls, data, root)
 		case func(int, []string, ice.Map) []string:
 			ls = cb(deep, ls, data)
 		case func([]string, ice.Map) []string:

@@ -73,7 +73,7 @@ func init() {
 	web.Index.Register(Index, &web.Frame{},
 		TITLE, BRIEF, REFER, SPARK, FIELD, PARSE,
 		ORDER, TABLE, CHART, IMAGE, VIDEO, AUDIO,
-		FEEL, DRAW, WORD, DATA,
+		FEEL, DRAW, DATA, WORD,
 	)
 }
 
@@ -101,10 +101,25 @@ func (m *Message) OptionTemplate() string {
 		add("data-", key)
 	}
 	kit.Fetch(m.Optionv(mdb.EXTRA), func(key string, value string) {
-		add("data-", key)
+		switch key {
+		case PADDING:
+			return
+		}
+		if !strings.Contains(key, "-") {
+			add("data-", key)
+		}
 	})
 	for _, key := range kit.Split(ctx.STYLE) {
 		add("", key)
+	}
+	return kit.Join(res, ice.SP)
+}
+func (m *Message) OptionKV(key ...string) string {
+	res := []string{}
+	for _, k := range kit.Split(kit.Join(key)) {
+		if m.Option(k) != "" {
+			res = append(res, kit.Format("%s='%s'", k, m.Option(k)))
+		}
 	}
 	return kit.Join(res, ice.SP)
 }

@@ -147,11 +147,8 @@ const (
 const (
 	HEAD  = "head"
 	TITLE = "title"
-	LINE  = "line"
-	RECT  = "rect"
 	NEXT  = "next"
 	PREV  = "prev"
-	TEXT  = "text"
 	ECHO  = "echo"
 	ARROW = "arrow"
 )

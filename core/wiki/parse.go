@@ -9,6 +9,7 @@ import (
 	"time"
 
 	ice "shylinux.com/x/icebergs"
+	"shylinux.com/x/icebergs/base/ctx"
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/nfs"
 	"shylinux.com/x/icebergs/base/tcp"
@@ -46,6 +47,7 @@ func init() {
 				}
 			case nfs.JSON:
 				m.Echo(kit.Formats(kit.UnMarshal(arg[1])))
+				ctx.DisplayStoryJSON(m)
 			case web.HTTP:
 				u, _ := url.Parse(arg[1])
 				m.Push(tcp.PROTO, u.Scheme)

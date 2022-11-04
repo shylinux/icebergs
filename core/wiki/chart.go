@@ -4,8 +4,6 @@ import (
 	"strings"
 
 	ice "shylinux.com/x/icebergs"
-	"shylinux.com/x/icebergs/base/cli"
-	"shylinux.com/x/icebergs/base/nfs"
 	kit "shylinux.com/x/toolkits"
 )
 
@@ -36,14 +34,10 @@ func (item *Item) Push(str string, arg ice.Any) *Item {
 	return item
 }
 func (item *Item) Dump(m *ice.Message) *ice.Message {
-	m.Echo(kit.Join(item.list, ice.SP), item.args...)
-	m.Echo(ice.NL)
-	return m
+	return m.Echo(kit.Join(item.list, ice.SP), item.args...).Echo(ice.NL)
 }
 
-type Group struct {
-	list ice.Messages
-}
+type Group struct{ list ice.Messages }
 
 func NewGroup(m *ice.Message, arg ...string) *Group {
 	g := &Group{list: ice.Messages{}}
@@ -75,11 +69,14 @@ func (g *Group) Join(arg ...string) string {
 func (g *Group) Echo(group string, str string, arg ...ice.Any) *ice.Message {
 	return g.Get(group).Echo(str, arg...)
 }
-func (g *Group) EchoRect(group string, height, width, x, y int, arg ...string) *ice.Message { // rx ry
-	return g.Echo(group, `<rect height=%d width=%d rx=%s ry=%s x=%d y=%d %s/>`, height, width, kit.Select("4", arg, 0), kit.Select("4", arg, 1), x, y, g.Join(kit.Slice(arg, 2)...))
+func (g *Group) EchoPath(group string, str string, arg ...ice.Any) *ice.Message {
+	return g.Echo(group, `<path d="%s"></path>`, kit.Format(str, arg...))
 }
 func (g *Group) EchoLine(group string, x1, y1, x2, y2 int) *ice.Message {
 	return g.Echo(group, "<line x1=%d y1=%d x2=%d y2=%d></line>", x1, y1, x2, y2)
+}
+func (g *Group) EchoRect(group string, height, width, x, y int, arg ...string) *ice.Message { // rx ry
+	return g.Echo(group, `<rect height=%d width=%d rx=%s ry=%s x=%d y=%d %s/>`, height, width, kit.Select("4", arg, 0), kit.Select("4", arg, 1), x, y, g.Join(kit.Slice(arg, 2)...))
 }
 func (g *Group) EchoText(group string, x, y int, text string, arg ...string) *ice.Message {
 	if text == "" {
@@ -115,12 +112,17 @@ func (g *Group) Dump(m *ice.Message, group string, arg ...string) *Group {
 	item.Echo(">").Dump(m).Copy(g.Get(group)).Echo("</g>")
 	return g
 }
+func (g *Group) DumpAll(m *ice.Message, group ...string) *Group {
+	for _, grp := range group {
+		g.Dump(m, grp)
+	}
+	return g
+}
 
 type Chart interface {
 	Init(*ice.Message, ...string) Chart
-	Data(*ice.Message, ice.Any) Chart
 	Draw(*ice.Message, int, int) Chart
-
+	Data(*ice.Message, ice.Any) Chart
 	GetHeight(...string) int
 	GetWidth(...string) int
 }
@@ -130,37 +132,23 @@ var chart_list = map[string]func(m *ice.Message) Chart{}
 func AddChart(name string, hand func(m *ice.Message) Chart) { chart_list[name] = hand }
 
 func _chart_show(m *ice.Message, kind, text string, arg ...string) {
-	// 默认参数
-	m.Option(STROKE_WIDTH, "2")
-	switch m.Option("topic") {
-	case "black":
-		m.Option(STROKE, cli.YELLOW)
-		m.Option(FILL, cli.YELLOW)
-	default:
-		m.Option(STROKE, cli.BLUE)
-		m.Option(FILL, cli.YELLOW)
-	}
 	m.Option(FONT_SIZE, "24")
-	m.Option(FONT_FAMILY, "monospace")
+	m.Option(STROKE_WIDTH, "2")
 	chart := chart_list[kind](m)
-
-	// 解析参数
 	for i := 0; i < len(arg)-1; i++ {
 		m.Option(arg[i], arg[i+1])
 	}
 	m.Option(FILL, kit.Select(m.Option(FILL), m.Option(BG)))
 	m.Option(STROKE, kit.Select(m.Option(STROKE), m.Option(FG)))
 
-	// 计算尺寸
 	chart.Init(m, text)
 	m.Option(WIDTH, chart.GetWidth())
 	m.Option(HEIGHT, chart.GetHeight())
 
-	// 渲染引擎
 	_wiki_template(m, "", text, arg...)
 	defer m.Echo("</svg>")
+	defer m.RenderResult()
 	chart.Draw(m, 0, 0)
-	m.RenderResult()
 }
 
 const (
@@ -188,18 +176,15 @@ const (
 const CHART = "chart"
 
 func init() {
-	Index.Merge(&ice.Context{Commands: ice.Commands{
-		CHART: {Name: "chart type=label,chain,sequence auto text", Help: "图表", Hand: func(m *ice.Message, arg ...string) {
+	Index.MergeCommands(ice.Commands{
+		CHART: {Name: "chart type=label,chain,sequence auto text", Help: "图表", Actions: WordAction(
+			`<svg xmlns="http://www.w3.org/2000/svg" vertion="1.1"
+{{.OptionTemplate}} {{.OptionKV "height,width,font-size,font-family,stroke-width,stroke,fill"}}
+text-anchor="middle" dominant-baseline="middle">`,
+		), Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) > 1 {
 				_chart_show(m, arg[0], strings.TrimSpace(arg[1]), arg[2:]...)
 			}
 		}},
-	}, Configs: ice.Configs{
-		CHART: {Name: CHART, Help: "图表", Value: kit.Data(
-			nfs.TEMPLATE, `<svg xmlns="http://www.w3.org/2000/svg" vertion="1.1"
-{{.OptionTemplate}} data-index="{{.Option "index"}}" height="{{.Option "height"}}" width="{{.Option "width"}}"
-stroke-width="{{.Option "stroke-width"}}" stroke="{{.Option "stroke"}}" fill="{{.Option "fill"}}"
-font-size="{{.Option "font-size"}}" font-family="{{.Option "font-family"}}" text-anchor="middle" dominant-baseline="middle">`,
-		)},
-	}})
+	})
 }

@@ -44,12 +44,12 @@ func (b *Block) Data(m *ice.Message, meta ice.Any) wiki.Chart {
 	kit.Fetch(meta, func(key string, value string) {
 		switch key {
 		case wiki.FG:
-			b.TextData += kit.Format("%s='%s' ", wiki.FILL, value)
+			b.TextData += kit.Format("%s='%s' %s='%s'", wiki.FILL, value, wiki.STROKE, value)
 		case wiki.BG:
 			b.RectData += kit.Format("%s='%s' ", wiki.FILL, value)
 		}
 	})
-	kit.Fetch(kit.Value(meta, "text"), func(key string, value string) {
+	kit.Fetch(kit.Value(meta, "data"), func(key string, value string) {
 		b.TextData += kit.Format("%s='%s' ", key, value)
 	})
 	kit.Fetch(kit.Value(meta, "rect"), func(key string, value string) {

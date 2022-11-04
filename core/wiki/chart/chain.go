@@ -57,9 +57,11 @@ func (c *Chain) draw(m *ice.Message, root ice.Map, x, y int, p *Block, gs *wiki.
 	meta := kit.GetMeta(root)
 	item := p.Fork(m, kit.Format(meta[mdb.TEXT]))
 	item.x, item.y = x, y+(kit.Int(meta[wiki.HEIGHT])-1)*c.GetHeights()/2
+	m.Debug("what %#v", meta)
+	item.Data(m, meta)
 
 	if p != nil && p.y != 0 {
-		padding := item.GetHeights() / 2
+		padding := item.GetHeight() / 2
 		if m.Option(SHOW_BLOCK) == ice.TRUE {
 			padding = 0
 		}
@@ -68,11 +70,11 @@ func (c *Chain) draw(m *ice.Message, root ice.Map, x, y int, p *Block, gs *wiki.
 		gs.EchoPath(SHIP, "M %d,%d Q %d,%d %d,%d T %d %d", x1, y1, x1+(x4-x1)/4, y1, x1+(x4-x1)/2, y1+(y4-y1)/2, x4, y4)
 	}
 	if m.Option(SHOW_BLOCK) == ice.TRUE {
-		gs.EchoRect(RECT, item.GetHeight(), item.GetWidth(), item.x+item.MarginX/2, item.y+item.MarginY/2)
+		gs.EchoRect(RECT, item.GetHeight(), item.GetWidth(), item.x+item.MarginX/2, item.y+item.MarginY/2, "4", "4", item.RectData)
 	} else {
-		gs.EchoLine(LINE, item.x+item.MarginX/2, item.y+item.GetHeights(), item.x+item.GetWidths()-item.MarginX/2, item.y+item.GetHeights())
+		gs.EchoLine(LINE, item.x+item.MarginX/2, item.y+item.GetHeights()-item.MarginY/2, item.x+item.GetWidths()-item.MarginX/2, item.y+item.GetHeights()-item.MarginY/2)
 	}
-	gs.EchoTexts(TEXT, item.x+item.GetWidths()/2, item.y+item.GetHeights()/2, item.Text)
+	gs.EchoTexts(TEXT, item.x+item.GetWidths()/2, item.y+item.GetHeights()/2, item.Text, item.TextData)
 
 	h, x := 0, x+item.GetWidths()
 	if kit.Fetch(root[mdb.LIST], func(value ice.Map) { h += c.draw(m, value, x, y+h, item, gs) }); h == 0 {
@@ -94,9 +96,9 @@ const CHAIN = "chain"
 func init() {
 	wiki.AddChart(CHAIN, func(m *ice.Message) wiki.Chart {
 		m.Option(wiki.FONT_SIZE, "16")
-		m.Option(wiki.MARGINX, "40")
-		m.Option(wiki.MARGINY, "4")
-		m.Option(wiki.PADDING, "6")
+		m.Option(wiki.MARGINX, "60")
+		m.Option(wiki.MARGINY, "20")
+		m.Option(wiki.PADDING, "10")
 		wiki.AddGroupOption(m, SHIP, wiki.FILL, cli.GLASS)
 		wiki.AddGroupOption(m, TEXT, wiki.STROKE_WIDTH, "1")
 		return &Chain{}

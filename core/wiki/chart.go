@@ -58,8 +58,12 @@ func (g *Group) Get(group string) *ice.Message { return g.list[group] }
 
 func (g *Group) Join(arg ...string) string {
 	args := []string{}
-	for i := 0; i < len(arg)-1; i += 2 {
+	for i := 0; i < len(arg); i += 2 {
 		if arg[i] == "" {
+			continue
+		}
+		if i == len(arg)-1 {
+			args = append(args, arg[i])
 			continue
 		}
 		args = append(args, kit.Format(`%s="%s"`, arg[i], arg[i+1]))

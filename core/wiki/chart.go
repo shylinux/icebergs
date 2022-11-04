@@ -58,12 +58,8 @@ func (g *Group) Get(group string) *ice.Message { return g.list[group] }
 
 func (g *Group) Join(arg ...string) string {
 	args := []string{}
-	for i := 0; i < len(arg); i += 2 {
+	for i := 0; i < len(arg)-1; i += 2 {
 		if arg[i] == "" {
-			continue
-		}
-		if i == len(arg)-1 {
-			args = append(args, arg[i])
 			continue
 		}
 		args = append(args, kit.Format(`%s="%s"`, arg[i], arg[i+1]))
@@ -91,6 +87,10 @@ func (g *Group) EchoText(group string, x, y int, text string, arg ...string) *ic
 func (g *Group) EchoTexts(group string, x, y int, text string, arg ...string) *ice.Message {
 	m := g.Get(group)
 	float := kit.Int(kit.Select("2", "7", kit.Contains(m.Option(ice.MSG_USERUA), "iPhone")))
+	if strings.Contains(m.Option(ice.MSG_USERUA), "Chrome") || strings.Contains(m.Option(ice.MSG_USERUA), "Mobile") {
+	} else {
+		float += 4
+	}
 	return g.EchoText(group, x, y+float, text, arg...)
 }
 func (g *Group) DefsArrow(group string, height, width int, arg ...string) *ice.Message { // name

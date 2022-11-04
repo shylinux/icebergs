@@ -1,8 +1,6 @@
 package chart
 
 import (
-	"strings"
-
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/lex"
 	"shylinux.com/x/icebergs/base/nfs"
@@ -62,23 +60,9 @@ func (s *Label) Draw(m *ice.Message, x, y int) wiki.Chart {
 			}
 
 			if m.Option(HIDE_BLOCK) != ice.TRUE {
-				args := []string{"4", "4"}
-				if mod := kit.Int(m.Option("order.mod")); mod != 0 && i%mod == 0 {
-					args = append(args, wiki.FILL, m.Option("order.bg"))
-				}
-				gs.EchoRect(RECT, item.GetHeight(), item.GetWidth(), left+item.MarginX/2, top+item.MarginY/2, args...)
+				gs.EchoRect(RECT, item.GetHeight(), item.GetWidth(), left+item.MarginX/2, top+item.MarginY/2)
 			}
-
-			args := []string{}
-			if mod := kit.Int(m.Option("order.mod")); mod != 0 && i%mod == 0 {
-				args = append(args, wiki.STROKE, m.Option("order.fg"))
-				args = append(args, wiki.FILL, m.Option("order.fg"))
-			}
-			if strings.Contains(m.Option(ice.MSG_USERUA), "Chrome") || strings.Contains(m.Option(ice.MSG_USERUA), "Mobile") {
-				gs.EchoTexts(TEXT, left+item.GetWidths()/2, top+item.GetHeights()/2, item.Text, args...)
-			} else {
-				gs.EchoTexts(TEXT, left+item.GetWidths()/2, top+item.GetHeights()/2+4, item.Text, args...)
-			}
+			gs.EchoTexts(TEXT, left+item.GetWidths()/2, top+item.GetHeights()/2, item.Text)
 
 			if left += item.GetWidths(); item.GetHeights() > height {
 				height = item.GetHeights()

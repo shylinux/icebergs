@@ -6,16 +6,14 @@ import (
 	"shylinux.com/x/icebergs/base/ctx"
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/nfs"
+	"shylinux.com/x/icebergs/base/ssh"
+	"shylinux.com/x/icebergs/misc/git"
 	kit "shylinux.com/x/toolkits"
 )
 
 func _word_show(m *ice.Message, name string, arg ...string) {
-	m.SetResult()
-	defer m.StatusTime()
-	m.Option(TITLE, map[string]int{})
-	m.Option(MENU, kit.Dict(mdb.LIST, kit.List()))
-	m.Option(ice.MSG_ALIAS, m.Configv(mdb.ALIAS))
-	m.Cmdy("ssh.source", name, kit.Dict(nfs.DIR_ROOT, _wiki_path(m)))
+	m.OptionMulti(ice.MSG_ALIAS, m.Configv(mdb.ALIAS), TITLE, map[string]int{}, MENU, kit.Dict(mdb.LIST, kit.List()))
+	m.Cmdy(ssh.SOURCE, name, kit.Dict(nfs.DIR_ROOT, _wiki_path(m)))
 }
 
 const WORD = "word"
@@ -36,12 +34,15 @@ func init() {
 				WordAlias(m, SEQUENCE, CHART, SEQUENCE)
 			}},
 			mdb.INPUTS: {Name: "inputs", Help: "补全", Hand: func(m *ice.Message, arg ...string) {
-				m.Option(nfs.DIR_DEEP, ice.TRUE)
-				for _, p := range []string{"src/", "usr/icebergs/", "usr/learning/", "usr/linux-story/", "usr/nginx-story/", "usr/golang-story/", "usr/redis-story/", "usr/mysql-story/"} {
-					_wiki_list(m, p)
-				}
+				m.Cmd(git.REPOS, ice.OptionFields(nfs.PATH)).Tables(func(value ice.Maps) {
+					if m.Option(nfs.DIR_DEEP, ice.TRUE); kit.Path(value[nfs.PATH]) == kit.Path("") {
+						_wiki_list(m, value[nfs.PATH]+"/src/")
+					} else {
+						_wiki_list(m, value[nfs.PATH])
+					}
+				})
 			}}, "play": {Name: "play", Help: "演示"},
-			ice.STORY: {Name: "story", Hand: func(m *ice.Message, arg ...string) { m.Cmdy(arg[0], ice.RUN, arg[2:]) }},
+			ice.STORY: {Hand: func(m *ice.Message, arg ...string) { m.Cmdy(arg[0], ice.RUN, arg[2:]) }},
 		}, WikiAction("", nfs.SHY), ctx.CmdAction()), Hand: func(m *ice.Message, arg ...string) {
 			if m.Option(nfs.DIR_DEEP, ice.TRUE); len(arg) == 0 {
 				arg = append(arg, "src/")
@@ -52,18 +53,9 @@ func init() {
 		}},
 	})
 }
+func WordAction(template string, arg ...ice.Any) ice.Actions {
+	return ice.Actions{ice.CTX_INIT: mdb.AutoConfig(append([]ice.Any{nfs.TEMPLATE, template}, arg...)...)}
+}
 func WordAlias(m *ice.Message, cmd string, cmds ...string) {
 	m.Conf(WORD, kit.Keym(mdb.ALIAS, cmd), cmds)
-}
-func WordAction(template string, arg ...ice.Any) ice.Actions {
-	return ice.Actions{ice.CTX_INIT: &ice.Action{Hand: func(m *ice.Message, args ...string) {
-		if cs := m.Target().Configs; cs[m.CommandKey()] == nil {
-			cs[m.CommandKey()] = &ice.Config{Value: kit.Data()}
-			ice.Info.Load(m, m.CommandKey())
-		}
-		m.Config(nfs.TEMPLATE, template)
-		for i := 0; i < len(arg)-1; i += 2 {
-			m.Config(kit.Format(arg[i]), arg[i+1])
-		}
-	}}}
 }

@@ -54,7 +54,7 @@ func init() {
 					}
 					list := []string{kit.Format(`<div class="story" data-type="spark" data-name="%s">`, arg[0])}
 					for _, l := range kit.SplitLine(strings.Join(arg[1:], ice.NL)) {
-						list = append(list, "<div>", Format("label", kit.Select("&gt; ", "$ ", arg[0] == SHELL)), Format("span", l), "</div>")
+						list = append(list, Format("div", Format("label", kit.Select("&gt; ", "$ ", arg[0] == SHELL)), Format("span", l)))
 					}
 					return strings.Join(append(list, "</div>"), "")
 				})
@@ -77,7 +77,6 @@ func init() {
 							return
 						}
 					}
-
 					if strings.HasPrefix(line, "```") {
 						if block == "" {
 							text()
@@ -88,7 +87,6 @@ func init() {
 						}
 						return
 					}
-
 					code = append(code, line)
 				})
 				text()

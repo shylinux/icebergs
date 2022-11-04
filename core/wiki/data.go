@@ -35,16 +35,6 @@ func init() {
 		}},
 	})
 }
-func FileAction(arg ...ice.Any) ice.Actions {
-	return ice.Actions{ice.CTX_INIT: mdb.AutoConfig(arg...),
-		nfs.TRASH: {Hand: func(m *ice.Message, arg ...string) {
-			m.Cmd(nfs.TRASH, path.Join(m.Config(nfs.PATH), m.Option(nfs.PATH)))
-		}},
-		nfs.SAVE: {Name: "save path text", Help: "保存", Hand: func(m *ice.Message, arg ...string) {
-			m.Cmd(nfs.SAVE, arg[0], arg[1], kit.Dict(nfs.DIR_ROOT, m.Config(nfs.PATH)))
-		}},
-	}
-}
 func CSV(m *ice.Message, text string, head ...string) *ice.Message {
 	bio := bytes.NewBufferString(text)
 	r := csv.NewReader(bio)

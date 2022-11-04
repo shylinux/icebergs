@@ -290,6 +290,9 @@ func AutoConfig(args ...ice.Any) *ice.Action {
 			}
 			inputs = append(inputs, k)
 		})
+		if len(inputs) == 0 {
+			return
+		}
 
 		cs := m.Target().Commands
 		if cs[m.CommandKey()] == nil {
@@ -298,7 +301,7 @@ func AutoConfig(args ...ice.Any) *ice.Action {
 
 		if cs[m.CommandKey()].Actions[INSERT] != nil {
 			if cs[m.CommandKey()].Meta[INSERT] == nil {
-				m.Design(INSERT, "添加", append([]ice.Any{ZONE}, inputs...)...)
+				m.Design(INSERT, "添加", append([]ice.Any{kit.Select(ZONE, m.Config(SHORT))}, inputs...)...)
 			}
 		} else if cs[m.CommandKey()].Actions[CREATE] != nil {
 			if cs[m.CommandKey()].Meta[CREATE] == nil {

@@ -160,3 +160,9 @@ func ConfigFromOption(m *ice.Message, arg ...string) {
 		m.Config(k, kit.Select(m.Config(k), m.Option(k)))
 	}
 }
+func ConfigAuto(m *ice.Message, arg ...string) {
+	if cs := m.Target().Configs; cs[m.CommandKey()] == nil {
+		cs[m.CommandKey()] = &ice.Config{Value: kit.Data()}
+		ice.Info.Load(m, m.CommandKey())
+	}
+}

@@ -78,6 +78,12 @@ func (m *Message) PushDetail(value Any, arg ...string) *Message {
 	return m.Push(FIELDS_DETAIL, value, kit.Split(kit.Join(arg)))
 }
 
+func (m *Message) OptionMulti(arg ...Any) *Message {
+	for i := 0; i < len(arg); i += 2 {
+		m.Option(kit.Format(arg[i]), arg[i+1])
+	}
+	return m
+}
 func (m *Message) ToLowerAppend(arg ...string) *Message {
 	for _, k := range m.meta[MSG_APPEND] {
 		m.RenameAppend(k, strings.ToLower(k))
@@ -347,16 +353,16 @@ func MergeActions(list ...Any) Actions {
 				m.Search(from, func(p *Context, s *Context, key string, cmd *Command) {
 					for k, v := range cmd.Actions {
 						func(k string) {
-						if h, ok := base[k]; !ok {
-							base[k] = &Action{Name: v.Name, Help: v.Help, Hand: func(m *Message, arg ...string) {
-								m.Cmdy(from, k, arg)
-							}}
-						} else if h.Hand == nil {
-							h.Hand = func(m *Message, arg ...string) {
-								m.Cmdy(from, k, arg)
+							if h, ok := base[k]; !ok {
+								base[k] = &Action{Name: v.Name, Help: v.Help, Hand: func(m *Message, arg ...string) {
+									m.Cmdy(from, k, arg)
+								}}
+							} else if h.Hand == nil {
+								h.Hand = func(m *Message, arg ...string) {
+									m.Cmdy(from, k, arg)
+								}
 							}
-						}
-						} (k)
+						}(k)
 					}
 					m.target.Merge(m.target)
 				})
@@ -418,11 +424,11 @@ func SplitCmd(name string, actions Actions) (list []Any) {
 		case "image":
 			item = kit.Dict(TYPE, TEXT, NAME, ls[i], ACTION, "img")
 			list = append(list, item)
-			
+
 		case "time":
 			item = kit.Dict(TYPE, TEXT, NAME, ls[i], ACTION, "date")
 			list = append(list, item)
-			
+
 		case "*":
 			item["need"] = "must"
 		case DF:

@@ -36,13 +36,13 @@ func _wiki_path(m *ice.Message, arg ...string) string {
 	return path.Join(m.Config(nfs.PATH), path.Join(arg...))
 }
 func _wiki_link(m *ice.Message, text string) string {
-	if !strings.HasPrefix(text, ice.PS) && !strings.HasPrefix(text, ice.HTTP) {
+	if !kit.HasPrefix(text, ice.PS, ice.HTTP) {
 		text = path.Join(web.SHARE_LOCAL, _wiki_path(m, text))
 	}
 	return text
 }
 func _wiki_list(m *ice.Message, arg ...string) bool {
-	if m.Option(nfs.DIR_ROOT, _wiki_path(m)); len(arg) == 0 || strings.HasSuffix(arg[0], ice.PS) {
+	if m.Option(nfs.DIR_ROOT, _wiki_path(m)); len(arg) == 0 || kit.HasSuffix(arg[0], ice.PS) {
 		if m.Option(nfs.DIR_DEEP) != ice.TRUE {
 			m.Cmdy(nfs.DIR, kit.Slice(arg, 0, 1), kit.Dict(nfs.DIR_TYPE, nfs.DIR))
 		}
@@ -78,24 +78,10 @@ func init() {
 }
 
 func WikiAction(dir string, ext ...string) ice.Actions {
-	return ice.Actions{
-		ice.CTX_INIT: &ice.Action{Hand: func(m *ice.Message, arg ...string) {
-			if cs := m.Target().Configs; cs[m.CommandKey()] == nil {
-				cs[m.CommandKey()] = &ice.Config{Value: kit.Data()}
-				ice.Info.Load(m, m.CommandKey())
-			}
-			m.Config(nfs.PATH, dir)
-			m.Config(lex.REGEXP, kit.FileReg(ext...))
-		}},
-		nfs.TRASH: {Hand: func(m *ice.Message, arg ...string) {
-			m.Cmd(nfs.TRASH, path.Join(m.Config(nfs.PATH), m.Option(nfs.PATH)))
-		}},
-		nfs.SAVE: {Name: "save path text", Hand: func(m *ice.Message, arg ...string) {
-			m.Cmd(nfs.SAVE, arg[0], arg[1], kit.Dict(nfs.DIR_ROOT, m.Config(nfs.PATH)))
-		}},
-		web.UPLOAD: {Hand: func(m *ice.Message, arg ...string) {
-			_wiki_upload(m, m.Option(nfs.PATH))
-		}},
+	return ice.Actions{ice.CTX_INIT: mdb.AutoConfig(nfs.PATH, dir, lex.REGEXP, kit.FileReg(ext...)),
+		web.UPLOAD: {Hand: func(m *ice.Message, arg ...string) { _wiki_upload(m, m.Option(nfs.PATH)) }},
+		nfs.SAVE:   {Name: "save path text", Hand: func(m *ice.Message, arg ...string) { _wiki_save(m, m.Option(nfs.PATH), m.Option(mdb.TEXT)) }},
+		nfs.TRASH:  {Hand: func(m *ice.Message, arg ...string) { m.Cmd(nfs.TRASH, _wiki_path(m, m.Option(nfs.PATH))) }},
 	}
 }
 

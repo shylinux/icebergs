@@ -18,7 +18,7 @@ func _spark_show(m *ice.Message, name, text string, arg ...string) *ice.Message 
 	defer m.Echo("</div>")
 
 	switch name {
-	case "inner", "field":
+	case "inner", FIELD:
 		return m.Echo(text)
 	}
 
@@ -54,7 +54,7 @@ func init() {
 					}
 					list := []string{kit.Format(`<div class="story" data-type="spark" data-name="%s">`, arg[0])}
 					for _, l := range kit.SplitLine(strings.Join(arg[1:], ice.NL)) {
-						list = append(list, Format("div", Format("label", kit.Select("&gt; ", "$ ", arg[0] == SHELL)), Format("span", l)))
+						list = append(list, Format("div", Format("label", kit.Select("> ", "$ ", arg[0] == SHELL)), Format("span", l)))
 					}
 					return strings.Join(append(list, "</div>"), "")
 				})

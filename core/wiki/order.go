@@ -1,15 +1,13 @@
 package wiki
 
 import (
-	"strings"
-
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/mdb"
 	kit "shylinux.com/x/toolkits"
 )
 
 func _order_show(m *ice.Message, text string, arg ...string) {
-	m.Optionv(mdb.LIST, kit.Split(strings.TrimSpace(text), ice.NL))
+	m.Optionv(mdb.LIST, kit.SplitLine(text))
 	_wiki_template(m, "", text, arg...)
 }
 

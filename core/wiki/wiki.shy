@@ -1,8 +1,8 @@
 wiki.shy
 wiki.go
-feel.go
-draw.go
 data.go
+draw.go
+feel.go
 word.go
 
 title.go
@@ -12,9 +12,9 @@ spark.go
 field.go
 parse.go
 
-image.go
-video.go
-audio.go
 order.go
 table.go
 chart.go
+image.go
+video.go
+audio.go

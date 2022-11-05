@@ -47,6 +47,7 @@ func _wiki_list(m *ice.Message, arg ...string) bool {
 			m.Cmdy(nfs.DIR, kit.Slice(arg, 0, 1), kit.Dict(nfs.DIR_TYPE, nfs.DIR))
 		}
 		m.Cmdy(nfs.DIR, kit.Slice(arg, 0, 1), kit.Dict(nfs.DIR_TYPE, nfs.CAT, nfs.DIR_REG, m.Config(lex.REGEXP)))
+		m.StatusTimeCount()
 		return true
 	}
 	ctx.DisplayLocal(m, path.Join(kit.PathName(2), kit.Keys(kit.FileName(2), ice.JS)))

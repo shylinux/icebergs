@@ -19,7 +19,7 @@ const IMAGE = "image"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
-		IMAGE: {Name: "image url", Help: "图片", Actions: WordAction(
+		IMAGE: {Name: "image url run", Help: "图片", Actions: WordAction(
 			`<img {{.OptionTemplate}} title="{{.Option "text"}}" src="{{.Option "text"}}">`, nfs.PATH, ice.USR_LOCAL_IMAGE,
 		), Hand: func(m *ice.Message, arg ...string) { _image_show(m, arg[0], arg[1:]...) }},
 	})

@@ -14,13 +14,12 @@ const DRAW = "draw"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
-		DRAW: {Name: "draw path=src/main.svg pid refresh:button=auto save edit actions", Help: "思维导图", Actions: ice.MergeActions(ice.Actions{
+		DRAW: {Name: "draw path=src/main.svg pid:text refresh:button=auto save edit actions", Help: "思维导图", Actions: ice.MergeActions(ice.Actions{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
 				m.Cmd(mdb.RENDER, mdb.CREATE, mdb.TYPE, nfs.SVG, mdb.NAME, m.PrefixKey())
 			}},
 			mdb.RENDER: {Hand: func(m *ice.Message, arg ...string) {
-				m.Echo("<html><body>")
-				defer m.Echo("</body></html>")
+				defer m.Echo("<html><body>").Echo("</body></html>")
 				m.Cmdy(nfs.CAT, path.Join(arg[2], arg[1]))
 			}},
 		}, WikiAction("", nfs.SVG), ctx.CmdAction()), Hand: func(m *ice.Message, arg ...string) {

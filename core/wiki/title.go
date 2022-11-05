@@ -11,23 +11,21 @@ import (
 )
 
 func _title_parse(m *ice.Message, dir string, text string) string {
-	return m.Cmdx(lex.SPLIT, "", "name,link", kit.Dict(nfs.CAT_CONTENT, text), func(ls []string, data ice.Map) []string {
+	return m.Cmdx(lex.SPLIT, "", "name,link", kit.Dict(nfs.CAT_CONTENT, text), func(ls []string) []string {
 		if len(ls) > 1 {
 			ls[1] = path.Join(dir, ls[1])
 		}
 		return ls
 	})
 }
-
+func _title_menu(m *ice.Message, kind, text string, arg ...string) *ice.Message {
+	if kind == NAVMENU {
+		m.Option(mdb.DATA, _title_parse(m, path.Dir(m.Option(ice.MSG_SCRIPT)), text))
+	}
+	return _option(m, kind, "", text, arg...).RenderTemplate(m.Config(kind), &Message{m})
+}
 func _title_show(m *ice.Message, kind, text string, arg ...string) *ice.Message {
 	switch title, _ := m.Optionv(TITLE).(map[string]int); kind {
-	case NAVMENU:
-		m.Option(mdb.DATA, _title_parse(m, path.Dir(m.Option(ice.MSG_SCRIPT)), text))
-		return _option(m, kind, "", text, arg...).RenderTemplate(m.Config(kind), &Message{m})
-	case PREMENU:
-		return _option(m, kind, "", "", arg...).RenderTemplate(m.Config(kind), &Message{m})
-	case ENDMENU:
-		return _option(m, kind, "", "", arg...).RenderTemplate(m.Config(kind), &Message{m})
 	case SECTION:
 		title[SECTION]++
 		m.Option(LEVEL, "h3")
@@ -72,9 +70,9 @@ func init() {
 </ul>`), Help: "标题", Hand: func(m *ice.Message, arg ...string) {
 			switch arg[0] {
 			case NAVMENU:
-				_title_show(m, arg[0], arg[1], arg[2:]...)
+				_title_menu(m, arg[0], arg[1], arg[2:]...)
 			case PREMENU, ENDMENU:
-				_title_show(m, arg[0], "", arg[1:]...)
+				_title_menu(m, arg[0], "", arg[1:]...)
 			case CHAPTER, SECTION:
 				_title_show(m, arg[0], arg[1], arg[2:]...)
 			default:

@@ -47,9 +47,6 @@ func Render(m *Message, cmd string, args ...Any) string {
 }
 
 func (m *Message) Render(cmd string, args ...Any) *Message {
-	m.Optionv(MSG_OUTPUT, cmd)
-	m.Optionv(MSG_ARGS, args)
-
 	switch cmd {
 	case RENDER_TEMPLATE: // text [data]
 		if len(args) == 1 {
@@ -58,7 +55,11 @@ func (m *Message) Render(cmd string, args ...Any) *Message {
 		if res, err := kit.Render(args[0].(string), args[1]); m.Assert(err) {
 			m.Echo(string(res))
 		}
+		return m
 	}
+	m.Optionv(MSG_OUTPUT, cmd)
+	m.Optionv(MSG_ARGS, args)
+
 	return m
 }
 func (m *Message) RenderTemplate(args ...Any) *Message {
@@ -83,7 +84,7 @@ func (m *Message) RenderRedirect(args ...Any) *Message {
 	return m.Render(RENDER_REDIRECT, args...)
 }
 func (m *Message) RenderDownload(args ...Any) *Message {
-	
+
 	m.Debug("what %v", kit.Format(args))
 	return m.Render(RENDER_DOWNLOAD, args...)
 }

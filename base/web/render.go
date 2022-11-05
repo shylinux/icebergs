@@ -74,6 +74,7 @@ func Render(msg *ice.Message, cmd string, args ...ice.Any) {
 		} {
 			msg.Set(k)
 		}
+		msg.Debug("what %v %v", cmd, args)
 
 		if cmd != "" && cmd != ice.RENDER_RAW { // [str [arg...]]
 			msg.Echo(kit.Format(cmd, args...))

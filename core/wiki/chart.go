@@ -12,12 +12,8 @@ type Item struct {
 	args []ice.Any
 }
 
-func NewItem(list []string, args ...ice.Any) *Item {
-	return &Item{list, args}
-}
-func (item *Item) Echo(str string, arg ...ice.Any) *Item {
-	item.list = append(item.list, kit.Format(str, arg...))
-	return item
+func NewItem(str string, args ...ice.Any) *Item {
+	return &Item{[]string{str}, args}
 }
 func (item *Item) Push(str string, arg ice.Any) *Item {
 	switch arg := arg.(type) {
@@ -31,6 +27,10 @@ func (item *Item) Push(str string, arg ice.Any) *Item {
 		}
 	}
 	item.list, item.args = append(item.list, str), append(item.args, arg)
+	return item
+}
+func (item *Item) Echo(str string, arg ...ice.Any) *Item {
+	item.list = append(item.list, kit.Format(str, arg...))
 	return item
 }
 func (item *Item) Dump(m *ice.Message) *ice.Message {
@@ -57,14 +57,14 @@ func (g *Group) Option(group string, key string, arg ...ice.Any) string {
 func (g *Group) Get(group string) *ice.Message { return g.list[group] }
 
 func (g *Group) Join(arg ...string) string {
-	args := []string{}
+	res := []string{}
 	for i := 0; i < len(arg)-1; i += 2 {
 		if arg[i] == "" {
 			continue
 		}
-		args = append(args, kit.Format(`%s="%s"`, arg[i], arg[i+1]))
+		res = append(res, kit.Format(`%s="%s"`, arg[i], arg[i+1]))
 	}
-	return kit.Join(args, ice.SP)
+	return kit.Join(res, ice.SP)
 }
 func (g *Group) Echo(group string, str string, arg ...ice.Any) *ice.Message {
 	return g.Get(group).Echo(str, arg...)
@@ -102,7 +102,7 @@ func (g *Group) EchoArrowLine(group string, x1, y1, x2, y2 int, arg ...string) *
 	return g.Echo(group, "<line x1=%d y1=%d x2=%d y2=%d marker-end='url(#%s)'></line>", x1, y1, x2, y2, kit.Select("arrowhead", arg, 0))
 }
 func (g *Group) Dump(m *ice.Message, group string, arg ...string) *Group {
-	item := NewItem([]string{"<g name=%s"}, group)
+	item := NewItem("<g name=%s", group)
 	for _, k := range kit.Simple(STROKE_DASHARRAY, STROKE_WIDTH, STROKE, FILL, FONT_SIZE, FONT_FAMILY, arg) {
 		v := m.Option(kit.Keys(group, k))
 		switch k {

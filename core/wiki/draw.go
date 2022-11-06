@@ -7,14 +7,13 @@ import (
 	"shylinux.com/x/icebergs/base/ctx"
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/nfs"
-	kit "shylinux.com/x/toolkits"
 )
 
 const DRAW = "draw"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
-		DRAW: {Name: "draw path=src/main.svg pid:text refresh:button=auto save edit actions", Help: "思维导图", Actions: ice.MergeActions(ice.Actions{
+		DRAW: {Name: "draw path=src/main.svg@key pid refresh save edit actions", Help: "思维导图", Actions: ice.MergeActions(ice.Actions{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
 				m.Cmd(mdb.RENDER, mdb.CREATE, mdb.TYPE, nfs.SVG, mdb.NAME, m.PrefixKey())
 			}},
@@ -23,7 +22,7 @@ func init() {
 				m.Cmdy(nfs.CAT, path.Join(arg[2], arg[1]))
 			}},
 		}, WikiAction("", nfs.SVG), ctx.CmdAction()), Hand: func(m *ice.Message, arg ...string) {
-			if !_wiki_list(m, kit.Select(nfs.PWD, arg, 0)) {
+			if !_wiki_list(m, arg...) {
 				_wiki_show(m, arg[0])
 			}
 		}},

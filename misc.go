@@ -382,8 +382,8 @@ func SplitCmd(name string, actions Actions) (list []Any) {
 		BUTTON   = "button"
 	)
 	const (
-		REFRESH = "refresh"
 		RUN     = "run"
+		REFRESH = "refresh"
 		LIST    = "list"
 		BACK    = "back"
 		AUTO    = "auto"
@@ -392,43 +392,36 @@ func SplitCmd(name string, actions Actions) (list []Any) {
 	)
 
 	item, button := kit.Dict(), false
+	push := func(arg ...string) {
+		button = kit.Select("", arg, 0) == BUTTON
+		item = kit.Dict(TYPE, kit.Select("", arg, 0), NAME, kit.Select("", arg, 1), ACTION, kit.Select("", arg, 2))
+		list = append(list, item)
+	}
 	ls := kit.Split(name, SP, "*:=@")
 	for i := 1; i < len(ls); i++ {
 		switch ls[i] {
-		case REFRESH:
-			list = append(list, kit.Dict(TYPE, BUTTON, NAME, ls[i], ACTION, AUTO))
-			button = true
 		case RUN:
-			list = append(list, kit.Dict(TYPE, BUTTON, NAME, ls[i]))
-			button = true
+			push(BUTTON, ls[i])
+		case REFRESH:
+			push(BUTTON, ls[i], AUTO)
 		case LIST:
-			list = append(list, kit.Dict(TYPE, BUTTON, NAME, ls[i], ACTION, AUTO))
-			button = true
+			push(BUTTON, ls[i], AUTO)
 		case AUTO:
-			list = append(list, kit.Dict(TYPE, BUTTON, NAME, LIST, ACTION, AUTO))
-			list = append(list, kit.Dict(TYPE, BUTTON, NAME, BACK))
-			button = true
+			push(BUTTON, LIST, AUTO)
+			push(BUTTON, BACK, AUTO)
 		case PAGE:
-			list = append(list, kit.Dict(TYPE, TEXT, NAME, "limit"))
-			list = append(list, kit.Dict(TYPE, TEXT, NAME, "offend"))
-			list = append(list, kit.Dict(TYPE, BUTTON, NAME, "prev"))
-			list = append(list, kit.Dict(TYPE, BUTTON, NAME, "next"))
+			push(TEXT, "limit")
+			push(TEXT, "offend")
+			push(BUTTON, "prev")
+			push(BUTTON, "next")
 		case ARGS, TEXT, TEXTAREA:
-			item = kit.Dict(TYPE, TEXTAREA, NAME, ls[i])
-			list = append(list, item)
-
+			push(TEXTAREA, ls[i])
 		case PASSWORD:
-			item = kit.Dict(TYPE, PASSWORD, NAME, ls[i])
-			list = append(list, item)
-
+			push(PASSWORD, ls[i])
 		case "image":
-			item = kit.Dict(TYPE, TEXT, NAME, ls[i], ACTION, "img")
-			list = append(list, item)
-
+			push(TEXT, ls[i], "img")
 		case "time":
-			item = kit.Dict(TYPE, TEXT, NAME, ls[i], ACTION, "date")
-			list = append(list, item)
-
+			push(TEXT, ls[i], "date")
 		case "*":
 			item["need"] = "must"
 		case DF:
@@ -453,10 +446,8 @@ func SplitCmd(name string, actions Actions) (list []Any) {
 		case AT:
 			item[ACTION] = kit.Select("", ls, i+1)
 			i++
-
 		default:
-			item = kit.Dict(TYPE, kit.Select(TEXT, BUTTON, button || actions != nil && actions[ls[i]] != nil), NAME, ls[i])
-			list = append(list, item)
+			push(kit.Select(TEXT, BUTTON, button || actions != nil && actions[ls[i]] != nil), ls[i])
 		}
 	}
 	return list

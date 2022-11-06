@@ -83,6 +83,13 @@ func WikiAction(dir string, ext ...string) ice.Actions {
 		web.UPLOAD: {Hand: func(m *ice.Message, arg ...string) { _wiki_upload(m, m.Option(nfs.PATH)) }},
 		nfs.SAVE:   {Name: "save path text", Hand: func(m *ice.Message, arg ...string) { _wiki_save(m, m.Option(nfs.PATH), m.Option(mdb.TEXT)) }},
 		nfs.TRASH:  {Hand: func(m *ice.Message, arg ...string) { m.Cmd(nfs.TRASH, _wiki_path(m, m.Option(nfs.PATH))) }},
+		mdb.INPUTS: {Hand: func(m *ice.Message, arg ...string) {
+			switch arg[0] {
+			case nfs.PATH:
+				m.Option(nfs.DIR_REG, m.Config(lex.REGEXP))
+				m.Cmdy(nfs.DIR, path.Join(m.Config(nfs.PATH), kit.Select("", arg, 1)))
+			}
+		}},
 	}
 }
 

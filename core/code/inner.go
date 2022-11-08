@@ -101,7 +101,15 @@ func init() {
 			mdb.INPUTS: {Hand: func(m *ice.Message, arg ...string) {
 				switch arg[0] {
 				case nfs.PATH:
-					m.Cmdy(nfs.DIR, kit.Select(nfs.PWD, arg, 1), nfs.DIR_CLI_FIELDS).ProcessAgain()
+					p := kit.Select(nfs.PWD, arg, 1)
+					m.Cmdy(nfs.DIR, p, nfs.DIR_CLI_FIELDS).Sort(nfs.PATH).ProcessAgain()
+					if strings.HasPrefix(p, "usr/icebergs/core/") && len(kit.Split(p, ice.PS)) > 3 {
+						p = strings.Replace(p, "usr/icebergs/core/", "usr/volcanos/plugin/local/", 1)
+						m.Cmdy(nfs.DIR, p, nfs.DIR_CLI_FIELDS).Sort(nfs.PATH)
+					} else if strings.HasPrefix(p, "usr/volcanos/plugin/local/") && len(kit.Split(p, ice.PS)) > 4 {
+						p = strings.Replace(p, "usr/volcanos/plugin/local/", "usr/icebergs/core/", 1)
+						m.Cmdy(nfs.DIR, p, nfs.DIR_CLI_FIELDS).SortStrR(nfs.PATH)
+					}
 				case nfs.FILE:
 					p := kit.Select(nfs.PWD, arg, 1)
 					m.Option(nfs.DIR_ROOT, m.Option(nfs.PATH))

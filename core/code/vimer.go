@@ -85,8 +85,7 @@ func init() {
 							m.Push(nfs.PATH, "_open:"+strings.ToLower(value[mdb.NAME]))
 						})
 					case nfs.PATH:
-						m.Cmdy(nfs.DIR, arg[1:]).Cut("path,size,time")
-						m.ProcessAgain()
+						m.Cmdy(INNER, mdb.INPUTS, arg).Cut("path,size,time")
 					default:
 					}
 				}

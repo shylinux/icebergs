@@ -89,7 +89,7 @@ func WikiAction(dir string, ext ...string) ice.Actions {
 				m.Option(nfs.DIR_REG, m.Config(lex.REGEXP))
 				m.Cmdy(nfs.DIR, path.Join(m.Config(nfs.PATH), kit.Select("", arg, 1)))
 			case ctx.INDEX:
-				m.Cmdy(ctx.COMMAND, mdb.SEARCH, ctx.COMMAND)
+				m.Cmdy(ctx.COMMAND, mdb.SEARCH, ctx.COMMAND, ice.OptionFields(ctx.INDEX))
 			}
 		}},
 	}

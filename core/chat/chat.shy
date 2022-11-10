@@ -1,34 +1,32 @@
-chapter "组织"
 chat.go
 chat.shy
-
-section "框架"
 header.go
-river.go
-storm.go
 action.go
 search.go
 footer.go
-template.go
 
-section "集群"
+river.go
+storm.go
+template.go
+topic.go
+grant.go
+
 sso.go
 pod.go
 cmd.go
-website.go
 div.go
-oauth
+website.go
 
-section "应用"
-iframe.go
+room.go
+meet.go
+scan.go
 paste.go
+media.go
 files.go
 trans.go
-media.go
-scan.go
-meet.go
-room.go
-topic.go
+
+iframe.go
 keyboard.go
 location.go
 location.shy
+oauth

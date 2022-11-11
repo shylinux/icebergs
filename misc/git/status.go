@@ -201,7 +201,7 @@ const STATUS = "status"
 func init() {
 	Index.MergeCommands(ice.Commands{
 		STATUS: {Name: "status repos auto", Help: "状态机", Actions: ice.Actions{
-			mdb.INPUTS: {Name: "inputs", Help: "补全", Hand: func(m *ice.Message, arg ...string) {
+			mdb.INPUTS: {Hand: func(m *ice.Message, arg ...string) {
 				switch arg[0] {
 				case mdb.NAME, REPOS:
 					m.Cmdy(REPOS).Cut(REPOS)

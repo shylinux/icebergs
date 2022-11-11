@@ -87,10 +87,8 @@ const COMMAND = "command"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
-		COMMAND: {Name: "command key auto", Help: "命令", Actions: ice.Actions{
+		COMMAND: {Name: "command key auto", Help: "命令", Actions: ice.MergeActions(ice.Actions{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
-				m.Cmd(aaa.ROLE, aaa.WHITE, aaa.VOID, m.Prefix(COMMAND))
-				m.Cmd(aaa.ROLE, aaa.WHITE, aaa.VOID, COMMAND)
 				TravelCmd(m, func(key, file, line string) {
 					if strings.Contains(file, "icebergs") {
 						AddFileCmd(file, key)
@@ -114,7 +112,7 @@ func init() {
 				})
 				m.Cmd("nfs.save", "tags", m.Result())
 			}},
-		}, Hand: func(m *ice.Message, arg ...string) {
+		}, aaa.RoleAction()), Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) == 0 {
 				arg = append(arg, "")
 			}

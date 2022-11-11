@@ -85,6 +85,7 @@ func init() {
 func UserRoot(m *ice.Message, arg ...string) *ice.Message { // password username userrole
 	username := m.Option(ice.MSG_USERNAME, kit.Select(ice.Info.UserName, arg, 1))
 	userrole := m.Option(ice.MSG_USERROLE, kit.Select(ROOT, arg, 2))
+	m.Option(ice.MSG_USERNICK, UserNick(m, username))
 	if len(arg) > 0 {
 		m.Cmd(USER, mdb.CREATE, username, kit.Select("", arg, 0), userrole)
 		ice.Info.UserName = username

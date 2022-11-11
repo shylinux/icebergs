@@ -22,8 +22,6 @@ func init() {
 	Index.MergeCommands(ice.Commands{
 		WORD: {Name: "word path=src/main.shy@key list play", Help: "笔记文档", Actions: ice.MergeActions(ice.Actions{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
-				m.Cmd(aaa.ROLE, aaa.WHITE, aaa.VOID, m.PrefixKey())
-				m.Cmd(aaa.ROLE, aaa.WHITE, aaa.VOID, ice.SRC_MAIN_SHY)
 				WordAlias(m, NAVMENU, TITLE, NAVMENU)
 				WordAlias(m, PREMENU, TITLE, PREMENU)
 				WordAlias(m, CHAPTER, TITLE, CHAPTER)
@@ -43,7 +41,7 @@ func init() {
 				})
 			}}, "play": {Name: "play", Help: "演示"},
 			ice.STORY: {Hand: func(m *ice.Message, arg ...string) { m.Cmdy(arg[0], ice.RUN, arg[2:]) }},
-		}, WikiAction("", nfs.SHY), ctx.CmdAction()), Hand: func(m *ice.Message, arg ...string) {
+		}, WikiAction("", nfs.SHY), ctx.CmdAction(), aaa.RoleAction(ice.SRC_MAIN_SHY)), Hand: func(m *ice.Message, arg ...string) {
 			if m.Option(nfs.DIR_DEEP, ice.TRUE); len(arg) == 0 {
 				arg = append(arg, "src/")
 			}

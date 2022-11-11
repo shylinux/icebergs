@@ -5,6 +5,7 @@ import (
 
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/aaa"
+	"shylinux.com/x/icebergs/base/cli"
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/nfs"
 	"shylinux.com/x/icebergs/base/web"
@@ -15,20 +16,12 @@ const TOPIC = "topic"
 
 func init() {
 	form := ice.Map{
-		"body.background": ice.Map{
-			mdb.TYPE: "text", mdb.NAME: "background", mdb.VALUE: "black",
-		},
-		"header.height": ice.Map{
-			"tags":   "panel.Header,panel.Header>div.output",
-			mdb.TYPE: "text", mdb.NAME: "height", mdb.VALUE: "31",
-		},
+		"body.background": ice.Map{mdb.TYPE: "text", mdb.NAME: "background", mdb.VALUE: "black"},
+		"header.height":   ice.Map{"tags": "panel.Header,panel.Header>div.output", mdb.TYPE: "text", mdb.NAME: "height", mdb.VALUE: "31"},
 	}
 	Index.MergeCommands(ice.Commands{
 		TOPIC: {Name: "topic zone id auto create insert", Help: "主题", Actions: ice.MergeActions(ice.Actions{
-			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
-				m.Cmd(aaa.ROLE, aaa.WHITE, aaa.VOID, TOPIC)
-			}},
-			mdb.INPUTS: {Name: "inputs", Help: "补全", Hand: func(m *ice.Message, arg ...string) {
+			mdb.INPUTS: {Hand: func(m *ice.Message, arg ...string) {
 				switch arg[0] {
 				case "tags":
 					for k := range form {
@@ -58,11 +51,56 @@ func init() {
 				}
 				m.Cmdy(mdb.INPUTS, m.PrefixKey(), "", mdb.ZONE, arg)
 			}},
+			"create": {Name: "create topic=demo hover=gray float=lightgray color=black background=white", Hand: func(m *ice.Message, arg ...string) {
+				m.Cmd(nfs.SAVE, path.Join("src/website/topic/"+m.Option("topic")+".css"), kit.Renders(_topic_template, m))
+			}},
+			"form": {Name: "form", Help: "表单", Hand: func(m *ice.Message, arg ...string) {
+				m.Cmd(m.CommandKey(), m.Option(mdb.ZONE), func(value ice.Maps) {
+					tags, _ := form[value["tags"]]
+					m.Push("tags", value["tags"])
+					m.Push("type", kit.Select(kit.Format(kit.Value(tags, "type")), value["type"]))
+					m.Push("name", kit.Select(kit.Format(kit.Value(tags, "name")), value["name"]))
+					m.Push("value", kit.Select(kit.Format(kit.Value(tags, "value")), value["value"]))
+				})
+				kit.Fetch(form, func(k string, v ice.Map) {
+					m.Push("tags", k)
+					m.Push("", v, kit.Split("type,name,value"))
+				})
+				m.EchoButton("submit")
+			}},
+			"submit": {Name: "form zone", Help: "提交", Hand: func(m *ice.Message, arg ...string) {
+				m.Echo("done")
+			}},
 			"choose": {Name: "choose", Help: "切换", Hand: func(m *ice.Message, arg ...string) {
 				m.ProcessLocation(web.MergeURL2(m, "", "topic", kit.TrimExt(m.Option(mdb.ZONE), nfs.CSS)))
 			}},
-			"create": {Name: "create topic=demo hover=gray float=lightgray color=black background=white", Help: "创建", Hand: func(m *ice.Message, arg ...string) {
-				buf, err := kit.Render(`
+		}, mdb.ZoneAction(mdb.FIELD, "time,id,tags,type,name,value"), aaa.RoleAction()), Hand: func(m *ice.Message, arg ...string) {
+			if mdb.ZoneSelect(m, arg...); len(arg) == 0 {
+				m.Cmd(nfs.DIR, nfs.PWD, ice.OptionFields(), kit.Dict(nfs.DIR_ROOT, "src/website/topic/")).RenameAppend(nfs.PATH, mdb.ZONE, nfs.SIZE, mdb.COUNT).Tables(func(values ice.Maps) {
+					m.Push("", values)
+				})
+				m.PushAction("choose", "form", mdb.REMOVE)
+			} else {
+				if p := "src/website/topic/" + arg[0]; nfs.ExistsFile(m, p) {
+					m.Cmdy(nfs.CAT, p)
+				} else {
+					m.Tables(func(value ice.Maps) {
+						m.Echo("body.%s %s { %s:%s }\n", arg[0], value["tag"], value[mdb.NAME], value[mdb.VALUE])
+					})
+				}
+			}
+		}},
+		web.PP(TOPIC): {Name: "/topic/", Help: "主题", Hand: func(m *ice.Message, arg ...string) {
+			if p := "src/website/topic/" + arg[0]; nfs.ExistsFile(m, p) {
+				m.RenderDownload(p)
+				return
+			}
+			m.Cmdy("", kit.TrimExt(kit.Select(cli.BLACK, arg, 0), nfs.CSS)).RenderResult().W.Header()[web.ContentType] = kit.Simple(web.ContentCSS)
+		}},
+	})
+}
+
+var _topic_template = `
 body.{{.Option "topic"}} { background-color:{{.Option "background" }}; color:{{.Option "color" }}; }
 body.{{.Option "topic"}} legend { background-color:{{.Option "hover" }}; color:{{.Option "color" }}; }
 body.{{.Option "topic"}} select { background-color:{{.Option "background" }}; color:{{.Option "color" }}; }
@@ -103,51 +141,4 @@ body.{{.Option "topic"}} table.content td.select { background-color:{{.Option "h
 body.{{.Option "topic"}} fieldset.plugin:hover { box-shadow:12px 12px 12px 6px {{.Option "float" }}; }
 body.{{.Option "topic"}} fieldset.story:hover { box-shadow:12px 12px 12px 6px {{.Option "float" }}; }
 body.{{.Option "topic"}} fieldset.panel.Header>div.output div:hover { background-color:{{.Option "float" }}; }
-`, m)
-				m.Assert(err)
-				m.Cmd(nfs.SAVE, path.Join("src/website/topic/"+m.Option("topic")+".css"), string(buf))
-			}},
-			"form": {Name: "form", Help: "表单", Hand: func(m *ice.Message, arg ...string) {
-				m.Cmd(m.CommandKey(), m.Option(mdb.ZONE), func(value ice.Maps) {
-					tags, _ := form[value["tags"]]
-					m.Push("tags", value["tags"])
-					m.Push("type", kit.Select(kit.Format(kit.Value(tags, "type")), value["type"]))
-					m.Push("name", kit.Select(kit.Format(kit.Value(tags, "name")), value["name"]))
-					m.Push("value", kit.Select(kit.Format(kit.Value(tags, "value")), value["value"]))
-				})
-				kit.Fetch(form, func(k string, v ice.Map) {
-					m.Push("tags", k)
-					m.Push("", v, kit.Split("type,name,value"))
-				})
-				m.EchoButton("submit")
-			}},
-			"submit": {Name: "form zone", Help: "提交", Hand: func(m *ice.Message, arg ...string) {
-				m.Echo("dome")
-			}},
-		}, mdb.ZoneAction(mdb.SHORT, "zone", mdb.FIELD, "time,id,tags,type,name,value")), Hand: func(m *ice.Message, arg ...string) {
-			if mdb.ZoneSelect(m, arg...); len(arg) == 0 {
-				m.Cmd(nfs.DIR, nfs.PWD, ice.OptionFields(), kit.Dict(nfs.DIR_ROOT, "src/website/topic/")).RenameAppend(nfs.PATH, mdb.ZONE, nfs.SIZE, mdb.COUNT).Tables(func(values ice.Maps) {
-					m.Push("", values)
-				})
-				m.PushAction("choose", "form", mdb.REMOVE)
-			} else {
-				if p := "src/website/topic/" + arg[0]; nfs.ExistsFile(m, p) {
-					m.Cmdy(nfs.CAT, p)
-				} else {
-					m.Tables(func(value ice.Maps) {
-						m.Echo("body.%s %s { %s:%s }\n", arg[0], value["tag"], value["name"], value["value"])
-					})
-				}
-			}
-		}},
-		"/topic/": {Name: "/topic/", Help: "主题", Hand: func(m *ice.Message, arg ...string) {
-			if p := "src/website/topic/" + arg[0]; nfs.ExistsFile(m, p) {
-				m.RenderDownload(p)
-				return
-			}
-			m.Cmdy(m.CommandKey(), kit.TrimExt(kit.Select("black", arg, 0), nfs.CSS))
-			m.W.Header()[web.ContentType] = kit.Simple(web.ContentCSS)
-			m.RenderResult()
-		}},
-	})
-}
+`

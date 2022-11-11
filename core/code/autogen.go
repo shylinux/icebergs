@@ -165,7 +165,7 @@ const AUTOGEN = "autogen"
 func init() {
 	Index.MergeCommands(ice.Commands{
 		AUTOGEN: {Name: "autogen path auto create binpack script relay", Help: "生成", Actions: ice.Actions{
-			mdb.INPUTS: {Name: "inputs", Help: "补全", Hand: func(m *ice.Message, arg ...string) {
+			mdb.INPUTS: {Hand: func(m *ice.Message, arg ...string) {
 				switch arg[0] {
 				case cli.MAIN:
 					m.Option(nfs.DIR_ROOT, m.Option(nfs.PATH))

@@ -32,7 +32,7 @@ func init() {
 			ctx.CONFIG: {Name: "config client_id client_secret redirect_uri", Help: "配置", Hand: func(m *ice.Message, arg ...string) {
 				ctx.ConfigFromOption(m, CLIENT_ID, CLIENT_SECRET, REDIRECT_URI)
 			}},
-			mdb.INPUTS: {Name: "inputs", Help: "补全", Hand: func(m *ice.Message, arg ...string) {
+			mdb.INPUTS: {Hand: func(m *ice.Message, arg ...string) {
 				if arg[0] == mdb.HASH {
 					m.Cmdy(aaa.RSA).Cut("hash,title,public")
 					return

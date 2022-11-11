@@ -8,17 +8,12 @@ import (
 	"shylinux.com/x/icebergs/base/web"
 )
 
-const (
-	EMAIL = "email"
-)
 const FOOTER = "footer"
 
 func init() {
+	const EMAIL = "email"
 	Index.MergeCommands(ice.Commands{
-		web.P(FOOTER): {Name: "footer", Help: "状态栏", Actions: ice.MergeActions(ice.Actions{
-			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
-				m.Cmd(aaa.ROLE, aaa.WHITE, aaa.VOID, m.CommandKey())
-			}},
+		web.P(FOOTER): {Name: "/footer", Help: "状态栏", Actions: ice.MergeActions(ice.Actions{
 			ice.RUN: {Hand: func(m *ice.Message, arg ...string) {
 				if aaa.Right(m, arg) {
 					if m.Cmdy(arg); m.IsErrNotFound() {
@@ -26,7 +21,7 @@ func init() {
 					}
 				}
 			}},
-		}, ctx.CmdAction(EMAIL, `<a href="mailto:shylinuxc@gmail.com">shylinuxc@gmail.com</a>`)), Hand: func(m *ice.Message, arg ...string) {
+		}, ctx.CmdAction(EMAIL, `shylinuxc@gmail.com`), aaa.RoleAction()), Hand: func(m *ice.Message, arg ...string) {
 			m.Result(m.Configv(EMAIL))
 		}},
 	})

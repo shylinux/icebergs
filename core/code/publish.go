@@ -91,9 +91,8 @@ const PUBLISH = "publish"
 
 func init() {
 	Index.Merge(&ice.Context{Commands: ice.Commands{
-		PUBLISH: {Name: "publish path auto create volcanos icebergs intshell", Help: "发布", Actions: ice.Actions{
+		PUBLISH: {Name: "publish path auto create volcanos icebergs intshell", Help: "发布", Actions: ice.MergeActions(ice.Actions{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
-				m.Cmd(aaa.ROLE, aaa.WHITE, aaa.VOID, ice.USR_PUBLISH)
 				m.Config(ice.CONTEXTS, _contexts)
 			}},
 			web.SERVE_START: {Name: "serve.start", Help: "服务启动", Hand: func(m *ice.Message, arg ...string) {
@@ -115,7 +114,7 @@ func init() {
 			ice.CONTEXTS: {Name: "contexts", Help: "环境", Hand: func(m *ice.Message, arg ...string) {
 				_publish_contexts(m, arg...)
 			}},
-			mdb.INPUTS: {Name: "inputs", Help: "补全", Hand: func(m *ice.Message, arg ...string) {
+			mdb.INPUTS: {Hand: func(m *ice.Message, arg ...string) {
 				m.Cmdy(nfs.DIR, kit.Select(nfs.PWD, arg, 1)).ProcessAgain()
 			}},
 			mdb.CREATE: {Name: "create file", Help: "添加", Hand: func(m *ice.Message, arg ...string) {
@@ -124,7 +123,7 @@ func init() {
 			nfs.TRASH: {Name: "trash", Help: "删除", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmd(nfs.TRASH, path.Join(ice.USR_PUBLISH, m.Option(nfs.PATH)))
 			}},
-		}, Hand: func(m *ice.Message, arg ...string) {
+		}, aaa.RoleAction(ice.USR_PUBLISH)), Hand: func(m *ice.Message, arg ...string) {
 			m.Option(nfs.DIR_ROOT, ice.USR_PUBLISH)
 			m.Cmdy(nfs.DIR, kit.Select("", arg, 0), nfs.DIR_WEB_FIELDS)
 		}},

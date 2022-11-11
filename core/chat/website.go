@@ -2,7 +2,6 @@ package chat
 
 import (
 	"net/http"
-	"os"
 	"path"
 	"strings"
 
@@ -42,14 +41,14 @@ func _website_parse(m *ice.Message, text string, args ...string) (ice.Map, bool)
 	), kit.Dict(), kit.Dict()
 
 	nriver, nstorm, prefix := 0, 0, ""
-	m.Cmd(lex.SPLIT, "", mdb.KEY, mdb.NAME, kit.Dict(nfs.CAT_CONTENT, text), func(deep int, ls []string) []string {
+	m.Cmd(lex.SPLIT, "", mdb.KEY, mdb.NAME, kit.Dict(nfs.CAT_CONTENT, text), func(deep int, ls []string) {
 		if deep == 1 {
 			switch ls[0] {
 			case HEADER, RIVER, FOOTER:
 				for i := 1; i < len(ls); i += 2 {
 					kit.Value(river, kit.Keys(ls[0], ls[i]), ls[i+1])
 				}
-				return ls
+				return
 			}
 		}
 
@@ -59,10 +58,10 @@ func _website_parse(m *ice.Message, text string, args ...string) (ice.Map, bool)
 			ls[0], data[ctx.DISPLAY] = kit.Select(ctx.CAN_PLUGIN, ctx.GetFileCmd(ls[0])), ctx.FileURI(ls[0])
 		case nfs.GO:
 			ls[0] = ctx.GetFileCmd(ls[0])
-		case nfs.SH:
-			ls[0], data[ctx.ARGS] = "web.code.sh.sh", ls[0]
 		case nfs.SHY:
 			ls[0], data[ctx.ARGS] = "web.wiki.word", ls[0]
+		case nfs.SH:
+			ls[0], data[ctx.ARGS] = "web.code.sh.sh", ls[0]
 		case nfs.PY:
 			ls[0], data[ctx.ARGS] = "web.code.sh.py", ls[0]
 		case "~":
@@ -72,11 +71,11 @@ func _website_parse(m *ice.Message, text string, args ...string) (ice.Map, bool)
 			for _, v := range ls[1:] {
 				last[mdb.LIST] = append(last[mdb.LIST].([]ice.Any), kit.Dict(mdb.INDEX, kit.Keys(prefix, v)))
 			}
-			return ls
+			return
 		}
 
 		if ls[0] == "" {
-			return ls
+			return
 		} else if len(ls) == 1 && deep > 2 {
 			ls = append(ls, m.Cmd(ctx.COMMAND, ls[0]).Append(mdb.HELP))
 		} else if len(ls) == 1 {
@@ -115,7 +114,6 @@ func _website_parse(m *ice.Message, text string, args ...string) (ice.Map, bool)
 		default:
 			last[mdb.LIST] = append(last[mdb.LIST].([]ice.Any), kit.Dict(mdb.NAME, kit.Select(ls[0], data[mdb.NAME]), mdb.HELP, ls[1], mdb.INDEX, ls[0], data))
 		}
-		return ls
 	})
 	return river, true
 }
@@ -123,7 +121,7 @@ func _website_render(m *ice.Message, w http.ResponseWriter, r *http.Request, kin
 	msg := m.Spawn(w, r)
 	switch kind {
 	case nfs.ZML:
-		web.RenderCmd(msg, "can.parse", text, name)
+		web.RenderCmd(msg, CAN_PARSE, text, name)
 	case nfs.IML:
 		res, _ := _website_parse(msg, text)
 		msg.RenderResult(_website_template2, kit.Format(res))
@@ -134,10 +132,10 @@ func _website_render(m *ice.Message, w http.ResponseWriter, r *http.Request, kin
 			r.URL.Path = "/chat/cmd/web.chat.div"
 			return false
 		}
-	case nfs.JSON:
-		msg.RenderResult(_website_template2, kit.Format(kit.UnMarshal(text)))
 	case nfs.JS:
 		msg.RenderResult(_website_template, text)
+	case nfs.JSON:
+		msg.RenderResult(_website_template2, kit.Format(kit.UnMarshal(text)))
 	case nfs.HTML:
 		msg.RenderResult(text)
 	case nfs.SVG:
@@ -148,13 +146,9 @@ func _website_render(m *ice.Message, w http.ResponseWriter, r *http.Request, kin
 	web.Render(msg, msg.Option(ice.MSG_OUTPUT), msg.Optionv(ice.MSG_ARGS).([]ice.Any)...)
 	return true
 }
-func _website_search(m *ice.Message, kind, name, text string, arg ...string) {
-	m.Cmd(m.PrefixKey(), ice.OptionFields(""), func(value ice.Maps) {
-		m.PushSearch(value, mdb.TEXT, web.MergePodWebSite(m, "", value[nfs.PATH]))
-	})
-}
 
 const (
+	CAN_PARSE    = "can.parse"
 	SRC_WEBSITE  = "src/website/"
 	CHAT_WEBSITE = "/chat/website/"
 )
@@ -164,17 +158,14 @@ func init() {
 	Index.MergeCommands(ice.Commands{
 		WEBSITE: {Name: "website path auto create import", Help: "网站", Actions: ice.MergeActions(ice.Actions{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
-				m.Cmd(mdb.RENDER, mdb.CREATE, nfs.TXT, m.PrefixKey())
-				m.Cmd(mdb.ENGINE, mdb.CREATE, nfs.TXT, m.PrefixKey())
 				m.Cmd(mdb.RENDER, mdb.CREATE, nfs.IML, m.PrefixKey())
 				m.Cmd(mdb.ENGINE, mdb.CREATE, nfs.IML, m.PrefixKey())
-				m.Cmd(aaa.ROLE, aaa.WHITE, WEBSITE)
 
 				web.AddRewrite(func(w http.ResponseWriter, r *http.Request) bool {
 					if r.Method != http.MethodGet {
 						return false
 					}
-					if strings.HasSuffix(r.URL.Path, "/") {
+					if strings.HasSuffix(r.URL.Path, ice.PS) {
 						return false
 					}
 					if !strings.HasPrefix(r.Header.Get(web.UserAgent), "Mozilla") {
@@ -194,15 +185,13 @@ func init() {
 			}},
 			lex.PARSE: {Hand: func(m *ice.Message, arg ...string) {
 				switch kit.Ext(arg[0]) {
-				case nfs.ZML: // 前端解析
-					web.RenderCmd(m, "can.parse", m.Cmdx(nfs.CAT, path.Join(SRC_WEBSITE, arg[0])))
-
-				case nfs.IML: // 文件解析
+				case nfs.ZML:
+					web.RenderCmd(m, CAN_PARSE, m.Cmdx(nfs.CAT, path.Join(SRC_WEBSITE, arg[0])))
+				case nfs.IML:
 					if res, ok := _website_parse(m, m.Cmdx(nfs.CAT, path.Join(SRC_WEBSITE, arg[0])), arg[1:]...); ok {
 						m.Echo(_website_template2, kit.Format(res))
 					}
-
-				default: // 缓存解析
+				default:
 					if text := m.CmdAppend("", path.Join(ice.PS, arg[0]), mdb.TEXT); text != "" {
 						if res, ok := _website_parse(m, text, arg[1:]...); ok {
 							m.Echo(_website_template2, kit.Format(res))
@@ -210,7 +199,7 @@ func init() {
 					}
 				}
 			}},
-			mdb.INPUTS: {Name: "inputs", Help: "补全", Hand: func(m *ice.Message, arg ...string) {
+			mdb.INPUTS: {Hand: func(m *ice.Message, arg ...string) {
 				switch m.Option(ctx.ACTION) {
 				case mdb.CREATE:
 					mdb.HashInputs(m, arg)
@@ -221,8 +210,8 @@ func init() {
 					m.Cmdy(nfs.DIR, arg[1:]).ProcessAgain()
 				}
 			}},
-			mdb.CREATE: {Name: "create path type=iml,zml,json,js,html name text", Help: "创建"},
-			mdb.IMPORT: {Name: "import path=src/website/", Help: "导入", Hand: func(m *ice.Message, arg ...string) {
+			mdb.CREATE: {Name: "create path type=zml,iml,json,js,html name text"},
+			mdb.IMPORT: {Name: "import path=src/website/", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmd(nfs.DIR, kit.Dict(nfs.DIR_ROOT, m.Option(nfs.PATH)), func(p string) {
 					switch name := strings.TrimPrefix(p, m.Option(nfs.PATH)); kit.Ext(p) {
 					case nfs.HTML, nfs.JS, nfs.JSON, nfs.ZML, nfs.IML, nfs.TXT:
@@ -242,29 +231,8 @@ func init() {
 					m.Echo(_website_url(m, strings.TrimPrefix(path.Join(arg[2], arg[1]), SRC_WEBSITE)))
 				}
 			}},
-		}, mdb.HashAction(mdb.SHORT, nfs.PATH, mdb.FIELD, "time,path,type,name,text"), ctx.CmdAction(), web.ApiAction()), Hand: func(m *ice.Message, arg ...string) {
+		}, mdb.HashAction(mdb.SHORT, nfs.PATH, mdb.FIELD, "time,path,type,name,text"), ctx.CmdAction(), web.ApiAction(), aaa.RoleAction()), Hand: func(m *ice.Message, arg ...string) {
 			mdb.HashSelect(m, arg...).Tables(func(value ice.Maps) { m.PushAnchor(web.MergePodWebSite(m, "", value[nfs.PATH])) })
-			if len(arg) == 0 { // 文件列表
-				m.Cmd(nfs.DIR, SRC_WEBSITE, func(f os.FileInfo, p string) {
-					m.Push("", kit.Dict(
-						mdb.TIME, f.ModTime().Format(ice.MOD_TIME),
-						nfs.PATH, ice.PS+strings.TrimPrefix(p, SRC_WEBSITE),
-						mdb.TYPE, kit.Ext(p), mdb.NAME, path.Base(p), mdb.TEXT, m.Cmdx(nfs.CAT, p),
-					), kit.Split(m.Config(mdb.FIELD))).PushButton("")
-					m.PushAnchor(web.MergeURL2(m, path.Join(CHAT_WEBSITE, strings.TrimPrefix(p, SRC_WEBSITE))))
-				}).Sort(nfs.PATH)
-			}
-			p := path.Join(SRC_WEBSITE, path.Join(arg...))
-			if m.Length() == 0 && len(arg) > 0 && !strings.HasSuffix(arg[0], ice.PS) && nfs.ExistsFile(m, p) { // 文件详情
-				m.Push(mdb.TYPE, kit.Ext(p))
-				m.Push(mdb.TEXT, m.Cmdx(nfs.CAT, p))
-				m.Push(nfs.PATH, path.Join(CHAT_WEBSITE, path.Join(arg...)))
-				m.PushAnchor(web.MergeLink(m, m.Append(nfs.PATH)))
-			}
-			if m.Length() > 0 && len(arg) > 0 { // 文件预览
-				m.PushQRCode(mdb.SCAN, web.MergeURL2(m, m.Append(nfs.PATH)))
-				m.EchoIFrame(m.Append(nfs.PATH))
-			}
 		}},
 	})
 }
@@ -284,7 +252,6 @@ var _website_template = `<!DOCTYPE html>
 	<script>%s</script>
 </body>
 `
-
 var _website_template2 = `<!DOCTYPE html>
 <head>
 	<meta name="viewport" content="width=device-width,initial-scale=0.8,maximum-scale=0.8,user-scalable=no"/>

@@ -77,7 +77,7 @@ func init() {
 				}
 				ctx.ProcessField(m, "", arg, arg...)
 			}},
-			mdb.INPUTS: {Name: "inputs", Help: "补全", Hand: func(m *ice.Message, arg ...string) {
+			mdb.INPUTS: {Hand: func(m *ice.Message, arg ...string) {
 				switch mdb.HashInputs(m, arg).Cmdy(FAVOR, "_system_term", ice.OptionFields(arg[0])).Cut(arg[0]); arg[0] {
 				case mdb.TYPE:
 					if m.Option(nfs.LINE) != "" && m.Option(nfs.FILE) != "" {

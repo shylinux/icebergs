@@ -118,7 +118,7 @@ const DREAM = "dream"
 func init() {
 	Index.MergeCommands(ice.Commands{
 		DREAM: {Name: "dream name path auto create", Help: "梦想家", Actions: ice.MergeActions(ice.Actions{
-			mdb.INPUTS: {Name: "inputs", Help: "补全", Hand: func(m *ice.Message, arg ...string) {
+			mdb.INPUTS: {Hand: func(m *ice.Message, arg ...string) {
 				switch arg[0] {
 				case nfs.REPOS:
 					m.Cmd("web.code.git.server", func(value ice.Maps) {

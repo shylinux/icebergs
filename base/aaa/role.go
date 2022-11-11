@@ -137,3 +137,12 @@ func init() {
 func RoleRight(m *ice.Message, userrole string, arg ...string) bool {
 	return m.Cmdx(ROLE, RIGHT, userrole, arg) == ice.OK
 }
+func RoleAction(cmds ...string) ice.Actions {
+	return ice.Actions{ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
+		m.Cmd(ROLE, WHITE, VOID, m.CommandKey())
+		m.Cmd(ROLE, WHITE, VOID, m.PrefixKey())
+		for _, cmd := range cmds {
+			m.Cmd(ROLE, WHITE, VOID, cmd)
+		}
+	}}}
+}

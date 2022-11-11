@@ -25,13 +25,8 @@ func _div_parse(m *ice.Message, text string) string {
 const DIV = "div"
 
 func init() {
-	Index.Merge(&ice.Context{Configs: ice.Configs{
-		DIV: {Name: "div", Help: "定制", Value: kit.Data(
-			mdb.FIELD, "time,hash,type,name,text", nfs.PATH, ice.USR_PUBLISH,
-			nfs.TEMPLATE, _div_template,
-		)},
-	}, Commands: ice.Commands{
-		"/div/": {Name: "/div/", Help: "定制", Actions: ice.MergeActions(ctx.CmdAction()), Hand: func(m *ice.Message, arg ...string) {
+	Index.MergeCommands(ice.Commands{
+		web.PP(DIV): {Name: "/div/", Help: "定制", Actions: ice.MergeActions(ctx.CmdAction()), Hand: func(m *ice.Message, arg ...string) {
 			switch p := path.Join(arg...); kit.Ext(kit.Select("", p)) {
 			case nfs.HTML:
 				m.RenderDownload(p)
@@ -46,10 +41,7 @@ func init() {
 			}
 		}},
 		DIV: {Name: "div hash auto import", Help: "定制", Actions: ice.MergeActions(ice.Actions{
-			lex.SPLIT: {Name: "split name=hi text", Help: "生成", Hand: func(m *ice.Message, arg ...string) {
-				m.ProcessRewrite(mdb.HASH, m.Cmdx(DIV, mdb.CREATE, m.OptionSimple(mdb.NAME), mdb.TEXT, _div_parse(m, m.Option(mdb.TEXT))))
-			}},
-			mdb.INPUTS: {Name: "inputs", Help: "补全", Hand: func(m *ice.Message, arg ...string) {
+			mdb.INPUTS: {Hand: func(m *ice.Message, arg ...string) {
 				switch arg[0] {
 				case nfs.PATH:
 					m.Cmdy(nfs.DIR, arg[1:]).ProcessAgain()
@@ -62,16 +54,11 @@ func init() {
 					m.Push(arg[0], "output")
 				}
 			}},
-			mdb.CREATE: {Name: "create type=page name=hi text", Help: "创建"},
-			mdb.IMPORT: {Name: "import path=src/", Help: "导入", Hand: func(m *ice.Message, arg ...string) {
-				m.Cmd(nfs.DIR, kit.Dict(nfs.DIR_ROOT, m.Option(nfs.PATH)), func(p string) {
-					switch kit.Ext(p) {
-					case nfs.SHY:
-						m.Cmd(m.PrefixKey(), lex.SPLIT, mdb.NAME, p, mdb.TEXT, m.Cmdx(nfs.CAT, p))
-					}
-				})
+			mdb.CREATE: {Name: "create type=page name=hi text"},
+			lex.SPLIT: {Name: "split name=hi text", Help: "生成", Hand: func(m *ice.Message, arg ...string) {
+				m.ProcessRewrite(mdb.HASH, m.Cmdx(DIV, mdb.CREATE, m.OptionSimple(mdb.NAME), mdb.TEXT, _div_parse(m, m.Option(mdb.TEXT))))
 			}},
-		}, mdb.HashAction(), ctx.CmdAction()), Hand: func(m *ice.Message, arg ...string) {
+		}, mdb.HashAction(mdb.FIELD, "time,hash,type,name,text", nfs.PATH, ice.USR_PUBLISH, nfs.TEMPLATE, _div_template), ctx.CmdAction()), Hand: func(m *ice.Message, arg ...string) {
 			switch kit.Ext(kit.Select("", arg, 0)) {
 			case nfs.SHY:
 				m.Fields(0)
@@ -79,25 +66,25 @@ func init() {
 				ctx.DisplayLocal(m, "")
 			default:
 				if mdb.HashSelect(m, arg...); len(arg) > 0 {
-					m.Action("添加", "保存")
+					m.StatusTime(mdb.LINK, web.MergeURL2(m, "/chat/div/"+arg[0])).Action("添加", "保存")
 					ctx.DisplayLocal(m, "")
-					m.StatusTime(mdb.LINK, web.MergeURL2(m, "/chat/div/"+arg[0]))
 				} else {
 					m.Action(lex.SPLIT, mdb.CREATE)
 				}
 			}
 		}},
-	}})
+	})
 }
 
 var _div_template = `<!DOCTYPE html>
 <head>
+	<meta name="viewport" content="width=device-width,initial-scale=0.8,maximum-scale=0.8,user-scalable=no"/>
 	<meta charset="utf-8">
 	<title>volcanos</title>
 	<link rel="shortcut icon" type="image/ico" href="/favicon.ico">
 	<link rel="stylesheet" type="text/css" href="/page/cache.css">
 	<link rel="stylesheet" type="text/css" href="/page/index.css">
-    <style type="text/css">%s</style>
+  <style type="text/css">%s</style>
 </head>
 <body>
 	<script src="/proto.js"></script>
@@ -105,9 +92,9 @@ var _div_template = `<!DOCTYPE html>
 	<script>%s</script>
 </body>
 `
-
 var _div_template2 = `<!DOCTYPE html>
 <head>
+	<meta name="viewport" content="width=device-width,initial-scale=0.8,maximum-scale=0.8,user-scalable=no"/>
 	<meta charset="utf-8">
 	<title>volcanos</title>
 	<link rel="shortcut icon" type="image/ico" href="/favicon.ico">
@@ -117,6 +104,6 @@ var _div_template2 = `<!DOCTYPE html>
 <body>
 	<script src="/proto.js"></script>
 	<script src="/page/cache.js"></script>
-	<script>Volcanos({name: "chat", river: JSON.parse('%s')})</script>
+	<script>Volcanos({river: JSON.parse('%s')})</script>
 </body>
 `

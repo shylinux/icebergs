@@ -32,7 +32,7 @@ func init() {
 				ctx.ProcessCommand(m, cli.SYSTEM, kit.Split(m.Option(mdb.TEXT)), arg...)
 				ctx.ProcessCommandOpt(m, arg, cli.PWD)
 			}},
-			mdb.INPUTS: {Name: "inputs", Help: "补全", Hand: func(m *ice.Message, arg ...string) {
+			mdb.INPUTS: {Hand: func(m *ice.Message, arg ...string) {
 				m.Cmdy(FAVOR, mdb.INPUTS, arg)
 			}},
 			FAVOR: {Name: "favor zone=some@key type name text pwd", Help: "收藏", Hand: func(m *ice.Message, arg ...string) {

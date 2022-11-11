@@ -146,7 +146,7 @@ func init() {
 			code.INNER: {Name: "inner", Help: "源码", Hand: func(m *ice.Message, arg ...string) {
 				ctx.ProcessCommand(m, code.INNER, m.OptionSplit("path,file,line"), arg...)
 			}},
-			INPUT: {Name: "input name text", Help: "补全", Hand: func(m *ice.Message, arg ...string) {
+			INPUT: {Name: "input name text", Hand: func(m *ice.Message, arg ...string) {
 				if kit.Ext(m.Option(BUF)) == nfs.SHY && arg[1] == "" {
 					for _, k := range []string{
 						"field",

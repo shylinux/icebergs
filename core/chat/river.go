@@ -41,7 +41,6 @@ func init() {
 	Index.MergeCommands(ice.Commands{
 		web.P(RIVER): {Name: "/river hash auto create", Help: "群组", Actions: ice.MergeActions(ice.Actions{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
-				m.Cmd(aaa.ROLE, aaa.WHITE, aaa.VOID, m.CommandKey())
 				m.Cmd(aaa.ROLE, aaa.BLACK, aaa.VOID, m.CommandKey(), ctx.ACTION)
 			}},
 			mdb.INPUTS: {Hand: func(m *ice.Message, arg ...string) {
@@ -65,7 +64,7 @@ func init() {
 				m.Cmd(mdb.EXPORT, m.Prefix(RIVER), "", mdb.HASH)
 				m.Cmd(mdb.IMPORT, m.Prefix(RIVER), "", mdb.HASH)
 			}},
-		}, mdb.HashAction(mdb.FIELD, "time,hash,type,name,text,template")), Hand: func(m *ice.Message, arg ...string) {
+		}, mdb.HashAction(mdb.FIELD, "time,hash,type,name,text,template"), aaa.RoleAction()), Hand: func(m *ice.Message, arg ...string) {
 			if m.Warn(m.Option(ice.MSG_USERNAME) == "", ice.ErrNotLogin) {
 				m.RenderStatusUnauthorized()
 				return

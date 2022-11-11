@@ -130,7 +130,7 @@ const LIST = "list"
 
 func ListAction(args ...ice.Any) ice.Actions {
 	return ice.Actions{ice.CTX_INIT: AutoConfig(args...),
-		INPUTS: {Name: "inputs", Help: "补全", Hand: func(m *ice.Message, arg ...string) {
+		INPUTS: {Hand: func(m *ice.Message, arg ...string) {
 			m.Cmdy(INPUTS, m.PrefixKey(), "", LIST, ListArgs(m, arg))
 		}},
 		INSERT: {Name: "insert", Help: "添加", Hand: func(m *ice.Message, arg ...string) {

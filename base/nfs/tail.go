@@ -44,7 +44,7 @@ func init() {
 					m.Cmd(TAIL, mdb.CREATE, kit.SimpleKV("file,name", value))
 				})
 			}},
-			mdb.INPUTS: {Name: "inputs", Help: "补全", Hand: func(m *ice.Message, arg ...string) {
+			mdb.INPUTS: {Hand: func(m *ice.Message, arg ...string) {
 				switch arg[0] {
 				case FILE:
 					m.Cmdy(DIR, kit.Select(PWD, arg, 1), PATH).RenameAppend(PATH, FILE)

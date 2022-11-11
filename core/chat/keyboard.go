@@ -16,7 +16,7 @@ func init() {
 			"_refresh": {Name: "refresh", Help: "刷新", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmd(web.SPACE, m.Option(web.SPACE), "refresh")
 			}},
-			"inputs": {Name: "inputs", Help: "补全", Hand: func(m *ice.Message, arg ...string) {}},
+			mdb.INPUTS: {Hand: func(m *ice.Message, arg ...string) {}},
 			"input": {Name: "input", Help: "刷新", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmd(web.SPACE, m.Option(web.SPACE), "input", arg)
 				ctx.ProcessHold(m)

@@ -88,7 +88,7 @@ func init() {
 					m.Cmd("", mdb.CREATE)
 				}
 			}},
-			mdb.INPUTS: {Name: "inputs", Help: "补全", Hand: func(m *ice.Message, arg ...string) {
+			mdb.INPUTS: {Hand: func(m *ice.Message, arg ...string) {
 				if m.Option(ctx.ACTION) == SCRIPT {
 					m.Cmdy(SCRIPT, mdb.INPUTS, arg)
 					return

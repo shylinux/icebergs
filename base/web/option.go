@@ -126,7 +126,7 @@ type Message interface {
 
 func OptionAgentIs(m Message, arg ...string) bool {
 	for _, k := range arg {
-		if strings.HasPrefix(m.Option(ice.MSG_USERUA), k) {
+		if strings.HasPrefix(strings.ToLower(m.Option(ice.MSG_USERUA)), k) {
 			return true
 		}
 	}

@@ -148,7 +148,7 @@ func init() {
 				m.EchoQRCode(msg.Option(mdb.LINK))
 				m.ProcessInner()
 			}},
-		}, mdb.HashAction(mdb.FIELD, "time,hash,userrole,username,river,storm,type,name,text", mdb.EXPIRE, "72h")), Hand: func(m *ice.Message, arg ...string) {
+		}, mdb.HashAction(mdb.FIELD, "time,hash,userrole,username,usernick,river,storm,type,name,text", mdb.EXPIRE, "72h")), Hand: func(m *ice.Message, arg ...string) {
 			if ctx.PodCmd(m, SHARE, arg) && m.Length() > 0 {
 				return
 			}

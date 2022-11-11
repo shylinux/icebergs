@@ -1,5 +1,5 @@
 package code
-				
+
 import (
 	"bufio"
 	"path"
@@ -94,10 +94,6 @@ const INNER = "inner"
 func init() {
 	Index.MergeCommands(ice.Commands{
 		INNER: {Name: "inner path=src/@key file=main.go@key line=1 auto", Help: "源代码", Actions: ice.MergeActions(ice.Actions{
-			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
-				m.Cmd(aaa.ROLE, aaa.WHITE, aaa.VOID, m.PrefixKey())
-				m.Cmd(aaa.ROLE, aaa.WHITE, aaa.VOID, ice.SRC_MAIN_GO)
-			}},
 			mdb.INPUTS: {Hand: func(m *ice.Message, arg ...string) {
 				switch arg[0] {
 				case nfs.PATH:
@@ -143,7 +139,7 @@ func init() {
 				}
 				m.Cmd(FAVOR, mdb.INSERT, mdb.ZONE, "_recent_cmd", nfs.FILE, arg[0])
 			}},
-		}, ctx.CmdAction()), Hand: func(m *ice.Message, arg ...string) {
+		}, ctx.CmdAction(), aaa.RoleAction(ice.SRC_MAIN_GO)), Hand: func(m *ice.Message, arg ...string) {
 			if arg[0] = strings.Split(arg[0], ice.FS)[0]; !strings.HasSuffix(arg[0], ice.PS) && len(arg) == 1 {
 				arg[1] = kit.Slice(strings.Split(arg[0], ice.PS), -1)[0]
 				arg[0] = strings.TrimSuffix(arg[0], arg[1])

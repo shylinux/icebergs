@@ -80,9 +80,6 @@ func init() {
 			m.Warn(m.Option(ice.MSG_USERNAME) == "", ice.ErrNotLogin, arg)
 		}},
 		web.P(HEADER): {Name: "/header", Help: "标题栏", Actions: ice.MergeActions(ice.Actions{
-			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
-				m.Cmd(aaa.ROLE, aaa.WHITE, aaa.VOID, m.CommandKey())
-			}},
 			aaa.LOGIN: {Hand: func(m *ice.Message, arg ...string) {
 				if aaa.UserLogin(m, arg[0], arg[1]) {
 					web.RenderCookie(m, aaa.SessCreate(m, arg[0]))
@@ -95,7 +92,8 @@ func init() {
 			aaa.BACKGROUND: {Hand: func(m *ice.Message, arg ...string) { _header_users(m, arg...) }},
 			aaa.AVATAR:     {Hand: func(m *ice.Message, arg ...string) { _header_users(m, arg...) }},
 			web.SHARE:      {Hand: func(m *ice.Message, arg ...string) { _header_share(m, arg...) }},
-		}, ctx.ConfAction(aaa.LOGIN, kit.List("密码登录", "扫码授权"))), Hand: func(m *ice.Message, arg ...string) {
+			"webpack":      {Hand: func(m *ice.Message, arg ...string) { m.Cmdy("webpack", "build") }},
+		}, ctx.ConfAction(aaa.LOGIN, kit.List("密码登录", "扫码授权")), aaa.RoleAction()), Hand: func(m *ice.Message, arg ...string) {
 			if gdb.Event(m, HEADER_AGENT); !_header_check(m, arg...) {
 				return
 			}

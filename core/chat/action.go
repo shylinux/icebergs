@@ -81,7 +81,6 @@ func init() {
 	Index.MergeCommands(ice.Commands{
 		web.P(ACTION): {Name: "/action river storm action arg...", Help: "工作台", Actions: ice.MergeActions(ice.Actions{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
-				m.Cmd(aaa.ROLE, aaa.WHITE, aaa.VOID, m.CommandKey())
 				m.Cmd(aaa.ROLE, aaa.BLACK, aaa.VOID, m.CommandKey(), ctx.ACTION)
 			}},
 			mdb.MODIFY: {Hand: func(m *ice.Message, arg ...string) {
@@ -90,7 +89,7 @@ func init() {
 			web.SHARE: {Hand: func(m *ice.Message, arg ...string) {
 				_action_share(m, arg...)
 			}},
-		}, ctx.CmdAction(nfs.PATH, ice.USR_LOCAL_RIVER)), Hand: func(m *ice.Message, arg ...string) {
+		}, ctx.CmdAction(nfs.PATH, ice.USR_LOCAL_RIVER), aaa.RoleAction()), Hand: func(m *ice.Message, arg ...string) {
 			if m.Warn(m.Option(ice.MSG_USERNAME) == "", ice.ErrNotLogin, arg) {
 				return
 			}

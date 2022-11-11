@@ -53,6 +53,8 @@ func _split_list(m *ice.Message, file string, arg ...string) ice.Map {
 		// 回调函数
 		ls := kit.Split(text, m.Option(SPLIT_SPACE), m.Option(SPLIT_BLOCK), m.Option(SPLIT_QUOTE), m.Option(SPLIT_TRANS))
 		switch cb := m.OptionCB(SPLIT).(type) {
+		case func(int, []string):
+			cb(deep, ls)
 		case func(int, []string) []string:
 			ls = cb(deep, ls)
 		case func(int, []string, ice.Map, ice.List):

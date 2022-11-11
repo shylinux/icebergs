@@ -14,9 +14,7 @@ func _action_list(m *ice.Message, river, storm string) {
 	m.Cmdy(STORM, kit.Dict(ice.MSG_RIVER, river, ice.MSG_STORM, storm))
 }
 func _action_exec(m *ice.Message, river, storm, index string, arg ...string) {
-	m.Option(ice.MSG_RIVER, river)
-	m.Option(ice.MSG_STORM, storm)
-
+	m.OptionMulti(ice.MSG_RIVER, river, ice.MSG_STORM, storm)
 	if m.Warn(m.Cmd(STORM, index, func(value ice.Maps) {
 		if index = value[ctx.INDEX]; value[web.SPACE] != "" {
 			m.Option(ice.POD, value[web.SPACE])
@@ -24,30 +22,25 @@ func _action_exec(m *ice.Message, river, storm, index string, arg ...string) {
 	}).Length() == 0, ice.ErrNotFound, index) {
 		return
 	}
-
 	if m.Option(ice.MSG_UPLOAD) != "" {
-		_action_upload(m) // 上传文件
+		_action_upload(m)
 	}
 	if !ctx.PodCmd(m, index, arg) {
-		m.Cmdy(index, arg) // 执行命令
+		m.Cmdy(index, arg)
 	}
 }
 func _action_auth(m *ice.Message, share string) *ice.Message {
 	msg := m.Cmd(web.SHARE, share)
-	if m.Warn(kit.Time(msg.Append(mdb.TIME)) < kit.Time(m.Time()), ice.ErrNotValid) {
+	if m.Warn(msg.Append(mdb.TIME) < m.Time(), ice.ErrNotValid) {
 		msg.Append(mdb.TYPE, "")
-		return msg // 共享过期
+		return msg
 	}
-	m.Auth(
-		aaa.USERROLE, m.Option(ice.MSG_USERROLE, msg.Append(aaa.USERROLE)),
-		aaa.USERNAME, m.Option(ice.MSG_USERNAME, msg.Append(aaa.USERNAME)),
-		aaa.USERNICK, m.Option(ice.MSG_USERNICK, msg.Append(aaa.USERNICK)),
-		RIVER, m.Option(ice.MSG_RIVER, msg.Append(RIVER)),
-		STORM, m.Option(ice.MSG_STORM, msg.Append(STORM)),
-	)
+	m.Tables(func(value ice.Maps) {
+		aaa.SessAuth(m, value, RIVER, m.Option(ice.MSG_RIVER, msg.Append(RIVER)), STORM, m.Option(ice.MSG_STORM, msg.Append(STORM)))
+	})
 	if m.Warn(!_river_right(m, msg.Append(web.RIVER)), ice.ErrNotRight) {
 		msg.Append(mdb.TYPE, "")
-		return msg // 没有权限
+		return msg
 	}
 	return msg
 }
@@ -58,10 +51,8 @@ func _action_share(m *ice.Message, arg ...string) {
 			m.Push(TITLE, msg.Append(TITLE))
 			m.Push(TOPIC, msg.Append(TOPIC))
 			_action_list(m, msg.Append(web.RIVER), msg.Append(web.STORM))
-			break // 命令列表
+			break
 		}
-
-		// 执行命令
 		_action_exec(m, msg.Append(web.RIVER), msg.Append(web.STORM), arg[1], arg[2:]...)
 
 	case web.FIELD:
@@ -70,12 +61,12 @@ func _action_share(m *ice.Message, arg ...string) {
 			m.Push(TOPIC, msg.Append(TOPIC))
 			m.Push(ctx.INDEX, msg.Append(mdb.NAME))
 			m.Push(ctx.ARGS, msg.Append(mdb.TEXT))
-			break // 命令列表
+			break
 		}
 		if arg[1] = msg.Append(mdb.NAME); m.Option(ice.MSG_UPLOAD) != "" {
-			_action_upload(m) // 上传文件
+			_action_upload(m)
 		}
-		m.Cmdy(arg[1:]) // 执行命令
+		m.Cmdy(arg[1:])
 	}
 }
 func _action_upload(m *ice.Message) {
@@ -92,27 +83,24 @@ func init() {
 				m.Cmd(aaa.ROLE, aaa.WHITE, aaa.VOID, m.CommandKey())
 				m.Cmd(aaa.ROLE, aaa.BLACK, aaa.VOID, m.CommandKey(), ctx.ACTION)
 			}},
-			mdb.MODIFY: {Name: "modify", Help: "编辑", Hand: func(m *ice.Message, arg ...string) {
+			mdb.MODIFY: {Hand: func(m *ice.Message, arg ...string) {
 				m.Cmdy(mdb.MODIFY, RIVER, _storm_key(m), mdb.LIST, m.OptionSimple(mdb.ID), arg)
 			}},
-			web.SHARE: {Name: "share", Help: "共享", Hand: func(m *ice.Message, arg ...string) {
+			web.SHARE: {Hand: func(m *ice.Message, arg ...string) {
 				_action_share(m, arg...)
 			}},
 		}, ctx.CmdAction(nfs.PATH, ice.USR_LOCAL_RIVER)), Hand: func(m *ice.Message, arg ...string) {
 			if m.Warn(m.Option(ice.MSG_USERNAME) == "", ice.ErrNotLogin, arg) {
-				return // 没有登录
+				return
 			}
 			if m.Option(ice.MSG_USERPOD) == "" && m.Warn(!_river_right(m, arg[0]), ice.ErrNotRight, arg) {
-				return // 没有授权
+				return
 			}
-
 			if len(arg) == 2 {
 				m.OptionFromConfig(MENUS)
 				_action_list(m, arg[0], arg[1])
-				return //命令列表
+				return
 			}
-
-			// 执行命令
 			_action_exec(m, arg[0], arg[1], arg[2], arg[3:]...)
 		}},
 	})

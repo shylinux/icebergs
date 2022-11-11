@@ -13,9 +13,8 @@ import (
 	kit "shylinux.com/x/toolkits"
 )
 
-func _header_users(m *ice.Message, key string, arg ...string) {
-	key = kit.Select(m.ActionKey(), key)
-	m.Cmdy(aaa.USER, mdb.MODIFY, aaa.USERNAME, m.Option(ice.MSG_USERNAME), key, m.Option(key, arg[0]))
+func _header_users(m *ice.Message, arg ...string) {
+	m.Cmdy(aaa.USER, mdb.MODIFY, aaa.USERNAME, m.Option(ice.MSG_USERNAME), m.ActionKey(), m.Option(m.ActionKey(), arg[0]))
 }
 func _header_share(m *ice.Message, arg ...string) {
 	for i := 0; i < len(arg)-1; i += 2 {
@@ -31,7 +30,7 @@ func _header_share(m *ice.Message, arg ...string) {
 func _header_check(m *ice.Message, arg ...string) bool {
 	if m.Option(web.SHARE) != "" {
 		m.Cmd(web.SHARE, m.Option(web.SHARE), ice.OptionFields(""), func(value ice.Maps) {
-			if m.Warn(kit.Time(value[mdb.TIME]) < kit.Time(m.Time()), ice.ErrNotValid, m.Option(web.SHARE)) {
+			if m.Warn(value[mdb.TIME] < m.Time(), ice.ErrNotValid, m.Option(web.SHARE)) {
 				return
 			}
 			switch value[mdb.TYPE] {
@@ -41,10 +40,7 @@ func _header_check(m *ice.Message, arg ...string) bool {
 				}
 				fallthrough
 			case web.STORM, web.FIELD:
-				m.Option(ice.MSG_USERROLE, value[aaa.USERROLE])
-				m.Option(ice.MSG_USERNAME, value[aaa.USERNAME])
-				m.Option(ice.MSG_USERNICK, value[aaa.USERNICK])
-				m.Auth(aaa.USERROLE, value[aaa.USERROLE], aaa.USERNAME, value[aaa.USERNAME], aaa.USERNICK, value[aaa.USERNICK])
+				aaa.SessAuth(m, value)
 			}
 		})
 	}
@@ -93,30 +89,28 @@ func init() {
 				}
 			}},
 			aaa.LOGOUT:     {Hand: func(m *ice.Message, arg ...string) { aaa.UserLogout(m) }},
-			aaa.PASSWORD:   {Hand: func(m *ice.Message, arg ...string) { _header_users(m, "", arg...) }},
-			aaa.USERNICK:   {Hand: func(m *ice.Message, arg ...string) { _header_users(m, "", arg...) }},
-			aaa.LANGUAGE:   {Hand: func(m *ice.Message, arg ...string) { _header_users(m, "", arg...) }},
-			aaa.BACKGROUND: {Hand: func(m *ice.Message, arg ...string) { _header_users(m, "", arg...) }},
-			aaa.AVATAR:     {Hand: func(m *ice.Message, arg ...string) { _header_users(m, "", arg...) }},
+			aaa.PASSWORD:   {Hand: func(m *ice.Message, arg ...string) { _header_users(m, arg...) }},
+			aaa.USERNICK:   {Hand: func(m *ice.Message, arg ...string) { _header_users(m, arg...) }},
+			aaa.LANGUAGE:   {Hand: func(m *ice.Message, arg ...string) { _header_users(m, arg...) }},
+			aaa.BACKGROUND: {Hand: func(m *ice.Message, arg ...string) { _header_users(m, arg...) }},
+			aaa.AVATAR:     {Hand: func(m *ice.Message, arg ...string) { _header_users(m, arg...) }},
 			web.SHARE:      {Hand: func(m *ice.Message, arg ...string) { _header_share(m, arg...) }},
-		}, ctx.ConfAction(aaa.LOGIN, kit.List("登录", "扫码")), web.ApiAction(web.P(HEADER))), Hand: func(m *ice.Message, arg ...string) {
-			if !_header_check(m, arg...) {
+		}, ctx.ConfAction(aaa.LOGIN, kit.List("密码登录", "扫码授权")), web.ApiAction(web.P(HEADER))), Hand: func(m *ice.Message, arg ...string) {
+			if gdb.Event(m, HEADER_AGENT); !_header_check(m, arg...) {
 				return
 			}
-
 			msg := m.Cmd(aaa.USER, m.Option(ice.MSG_USERNAME))
 			for _, k := range []string{aaa.USERNICK, aaa.LANGUAGE} {
 				m.Option(k, msg.Append(k))
 			}
 			for _, k := range []string{aaa.BACKGROUND, aaa.AVATAR} {
-				if msg.Append(k) != "" && !strings.HasPrefix(msg.Append(k), ice.HTTP) && aaa.Right(m.Spawn(), msg.Append(k)) {
+				if strings.HasPrefix(msg.Append(k), ice.HTTP) {
+					m.Option(k, msg.Append(k))
+				} else if msg.Append(k) != "" && aaa.Right(m.Spawn(), msg.Append(k)) {
 					m.Option(k, web.SHARE_LOCAL+k)
 				}
 			}
-
-			gdb.Event(m, HEADER_AGENT)
-			m.OptionFromConfig(MENUS)
-			m.Echo(m.Config(TITLE))
+			m.Echo(m.Config(TITLE)).OptionFromConfig(MENUS)
 		}},
 	})
 }

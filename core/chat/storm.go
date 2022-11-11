@@ -17,17 +17,17 @@ const STORM = "storm"
 func init() {
 	Index.MergeCommands(ice.Commands{
 		STORM: {Name: "storm hash id auto insert create", Help: "应用", Actions: ice.Actions{
-			mdb.INPUTS: {Name: "inputs", Help: "补全", Hand: func(m *ice.Message, arg ...string) {}},
-			mdb.CREATE: {Name: "create name=hi text=hello", Help: "创建", Hand: func(m *ice.Message, arg ...string) {
+			mdb.INPUTS: {Hand: func(m *ice.Message, arg ...string) {}},
+			mdb.CREATE: {Name: "create name=hi text=hello", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmdy(mdb.INSERT, RIVER, _river_key(m), mdb.HASH, arg)
 			}},
-			mdb.REMOVE: {Name: "remove", Help: "删除", Hand: func(m *ice.Message, arg ...string) {
+			mdb.REMOVE: {Hand: func(m *ice.Message, arg ...string) {
 				m.Cmdy(mdb.DELETE, RIVER, _river_key(m), mdb.HASH, mdb.HASH, m.Option(ice.MSG_STORM))
 			}},
-			mdb.INSERT: {Name: "insert hash space index args style display", Help: "添加", Hand: func(m *ice.Message, arg ...string) {
+			mdb.INSERT: {Name: "insert hash space index args style display", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmdy(mdb.INSERT, RIVER, _storm_key(m), mdb.LIST, arg)
 			}},
-			mdb.MODIFY: {Name: "modify", Help: "编辑", Hand: func(m *ice.Message, arg ...string) {
+			mdb.MODIFY: {Hand: func(m *ice.Message, arg ...string) {
 				if len(arg) > 0 && arg[0] == mdb.ID {
 					m.Cmdy(mdb.MODIFY, RIVER, _storm_key(m), mdb.LIST, arg)
 				} else {

@@ -26,7 +26,7 @@ func init() {
 					})
 				}
 			}},
-			RIVER_CREATE: {Name: "river.create river template", Help: "建群", Hand: func(m *ice.Message, arg ...string) {
+			RIVER_CREATE: {Name: "river.create river template", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmd("", m.Option(TEMPLATE), ice.OptionFields(STORM), func(value ice.Maps) {
 					m.Option(ice.MSG_STORM, m.Cmdx(STORM, mdb.CREATE, mdb.NAME, value[STORM]))
 					m.Cmd("", m.Option(TEMPLATE), value[STORM], ice.OptionFields(ctx.INDEX), func(value ice.Maps) {
@@ -34,16 +34,16 @@ func init() {
 					})
 				})
 			}},
-			mdb.CREATE: {Name: "create river", Help: "创建", Hand: func(m *ice.Message, arg ...string) {
+			mdb.CREATE: {Name: "create river", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmd(mdb.INSERT, m.PrefixKey(), "", mdb.HASH, m.OptionSimple(RIVER), kit.Dict(mdb.SHORT, RIVER))
 			}},
-			mdb.INSERT: {Name: "insert river storm", Help: "添加", Hand: func(m *ice.Message, arg ...string) {
+			mdb.INSERT: {Name: "insert river storm", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmd(mdb.INSERT, m.PrefixKey(), kit.KeyHash(m.Option(RIVER)), mdb.HASH, arg[2:], kit.Dict(mdb.SHORT, STORM))
 			}},
-			"add": {Name: "add river storm index", Help: "添加", Hand: func(m *ice.Message, arg ...string) {
+			"add": {Name: "add river storm index", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmd(mdb.INSERT, m.PrefixKey(), kit.KeyHash(m.Option(RIVER), kit.KeyHash(m.Option(STORM))), mdb.LIST, arg[4:])
 			}},
-			mdb.REMOVE: {Name: "remove", Help: "删除", Hand: func(m *ice.Message, arg ...string) {
+			mdb.REMOVE: {Name: "remove", Hand: func(m *ice.Message, arg ...string) {
 				if m.Option(STORM) == "" {
 					m.Cmd(mdb.DELETE, m.PrefixKey(), "", mdb.HASH, m.OptionSimple(RIVER))
 				} else {

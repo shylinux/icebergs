@@ -79,7 +79,7 @@ func init() {
 			}
 			m.Warn(m.Option(ice.MSG_USERNAME) == "", ice.ErrNotLogin, arg)
 		}},
-		HEADER: {Name: "header", Help: "标题栏", Actions: ice.MergeActions(ice.Actions{
+		web.P(HEADER): {Name: "/header", Help: "标题栏", Actions: ice.MergeActions(ice.Actions{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
 				m.Cmd(aaa.ROLE, aaa.WHITE, aaa.VOID, m.CommandKey())
 			}},
@@ -95,7 +95,7 @@ func init() {
 			aaa.BACKGROUND: {Hand: func(m *ice.Message, arg ...string) { _header_users(m, arg...) }},
 			aaa.AVATAR:     {Hand: func(m *ice.Message, arg ...string) { _header_users(m, arg...) }},
 			web.SHARE:      {Hand: func(m *ice.Message, arg ...string) { _header_share(m, arg...) }},
-		}, ctx.ConfAction(aaa.LOGIN, kit.List("密码登录", "扫码授权")), web.ApiAction(web.P(HEADER))), Hand: func(m *ice.Message, arg ...string) {
+		}, ctx.ConfAction(aaa.LOGIN, kit.List("密码登录", "扫码授权"))), Hand: func(m *ice.Message, arg ...string) {
 			if gdb.Event(m, HEADER_AGENT); !_header_check(m, arg...) {
 				return
 			}

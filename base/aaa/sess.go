@@ -92,8 +92,8 @@ func UserLogout(m *ice.Message) {
 	m.Cmd(SESS, mdb.REMOVE, kit.Dict(mdb.HASH, m.Option(ice.MSG_SESSID)))
 }
 func SessAuth(m *ice.Message, value ice.Maps, arg ...string) {
-	m.Option(ice.MSG_USERROLE, value[aaa.USERROLE])
-	m.Option(ice.MSG_USERNAME, value[aaa.USERNAME])
-	m.Option(ice.MSG_USERNICK, value[aaa.USERNICK])
-	m.Auth(aaa.USERROLE, value[aaa.USERROLE], aaa.USERNAME, value[aaa.USERNAME], aaa.USERNICK, value[aaa.USERNICK], arg, logs.FileLineMeta(logs.FileLine(2, 3)))
+	m.Option(ice.MSG_USERROLE, value[USERROLE])
+	m.Option(ice.MSG_USERNAME, value[USERNAME])
+	m.Option(ice.MSG_USERNICK, value[USERNICK])
+	m.Auth(USERROLE, value[USERROLE], USERNAME, value[USERNAME], USERNICK, value[USERNICK], arg, logs.FileLineMeta(logs.FileLine(2, 3)))
 }

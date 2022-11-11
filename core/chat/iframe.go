@@ -13,7 +13,7 @@ const IFRAME = "iframe"
 func init() {
 	Index.MergeCommands(ice.Commands{
 		IFRAME: {Name: "iframe hash auto", Help: "浏览器", Actions: ice.MergeActions(ice.Actions{
-			mdb.CREATE: {Name: "create link name type", Help: "创建", Hand: func(m *ice.Message, arg ...string) {
+			mdb.CREATE: {Name: "create link name type", Hand: func(m *ice.Message, arg ...string) {
 				m.OptionDefault(mdb.NAME, kit.ParseURL(m.Option(mdb.LINK)).Host, mdb.TYPE, mdb.LINK)
 				mdb.HashCreate(m, m.OptionSimple("link,name,type"))
 			}},

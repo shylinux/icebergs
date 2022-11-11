@@ -61,6 +61,7 @@ func _action_share(m *ice.Message, arg ...string) {
 			m.Push(TOPIC, msg.Append(TOPIC))
 			m.Push(ctx.INDEX, msg.Append(mdb.NAME))
 			m.Push(ctx.ARGS, msg.Append(mdb.TEXT))
+			m.Cmdy(ctx.COMMAND, msg.Append(mdb.NAME))
 			break
 		}
 		if arg[1] = msg.Append(mdb.NAME); m.Option(ice.MSG_UPLOAD) != "" {

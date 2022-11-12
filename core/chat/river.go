@@ -40,9 +40,7 @@ const RIVER = "river"
 func init() {
 	Index.MergeCommands(ice.Commands{
 		web.P(RIVER): {Name: "/river hash auto create", Help: "群组", Actions: ice.MergeActions(ice.Actions{
-			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
-				m.Cmd(aaa.ROLE, aaa.BLACK, aaa.VOID, m.CommandKey(), ctx.ACTION)
-			}},
+			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) { m.Cmd(aaa.ROLE, aaa.BLACK, aaa.VOID, m.CommandKey(), ctx.ACTION) }},
 			mdb.INPUTS: {Hand: func(m *ice.Message, arg ...string) {
 				switch arg[0] {
 				case nfs.TEMPLATE:

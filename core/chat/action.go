@@ -54,12 +54,10 @@ func _action_share(m *ice.Message, arg ...string) {
 			break
 		}
 		_action_exec(m, msg.Append(web.RIVER), msg.Append(web.STORM), arg[1], arg[2:]...)
-
 	case web.FIELD:
 		if len(arg) == 1 {
 			m.Push(TITLE, msg.Append(TITLE))
 			m.Push(TOPIC, msg.Append(TOPIC))
-			m.Push(ctx.INDEX, msg.Append(mdb.NAME))
 			m.Push(ctx.ARGS, msg.Append(mdb.TEXT))
 			m.Cmdy(ctx.COMMAND, msg.Append(mdb.NAME))
 			break
@@ -80,15 +78,11 @@ const ACTION = "action"
 func init() {
 	Index.MergeCommands(ice.Commands{
 		web.P(ACTION): {Name: "/action river storm action arg...", Help: "工作台", Actions: ice.MergeActions(ice.Actions{
-			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
-				m.Cmd(aaa.ROLE, aaa.BLACK, aaa.VOID, m.CommandKey(), ctx.ACTION)
-			}},
+			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) { m.Cmd(aaa.ROLE, aaa.BLACK, aaa.VOID, m.CommandKey(), ctx.ACTION) }},
 			mdb.MODIFY: {Hand: func(m *ice.Message, arg ...string) {
 				m.Cmdy(mdb.MODIFY, RIVER, _storm_key(m), mdb.LIST, m.OptionSimple(mdb.ID), arg)
 			}},
-			web.SHARE: {Hand: func(m *ice.Message, arg ...string) {
-				_action_share(m, arg...)
-			}},
+			web.SHARE: {Hand: func(m *ice.Message, arg ...string) { _action_share(m, arg...) }},
 		}, ctx.CmdAction(nfs.PATH, ice.USR_LOCAL_RIVER), aaa.RoleAction()), Hand: func(m *ice.Message, arg ...string) {
 			if m.Warn(m.Option(ice.MSG_USERNAME) == "", ice.ErrNotLogin, arg) {
 				return
@@ -99,9 +93,9 @@ func init() {
 			if len(arg) == 2 {
 				m.OptionFromConfig(MENUS)
 				_action_list(m, arg[0], arg[1])
-				return
+			} else {
+				_action_exec(m, arg[0], arg[1], arg[2], arg[3:]...)
 			}
-			_action_exec(m, arg[0], arg[1], arg[2], arg[3:]...)
 		}},
 	})
 }

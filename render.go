@@ -29,7 +29,6 @@ func Render(m *Message, cmd string, args ...Any) string {
 		return strings.Join(list, "")
 
 	case RENDER_IMAGES: // src [height]
-		m.Debug("what %v", m.Option(MSG_USERUA))
 		if strings.Contains(m.Option(MSG_USERUA), "Mobile") {
 			return kit.Format(`<img src="%s" width=%d>`, arg[0], kit.Int(kit.Select(kit.Select("120", m.Option("width")), arg, 1))-24)
 		}
@@ -84,8 +83,6 @@ func (m *Message) RenderRedirect(args ...Any) *Message {
 	return m.Render(RENDER_REDIRECT, args...)
 }
 func (m *Message) RenderDownload(args ...Any) *Message {
-
-	m.Debug("what %v", kit.Format(args))
 	return m.Render(RENDER_DOWNLOAD, args...)
 }
 func (m *Message) RenderResult(args ...Any) *Message { // [fmt arg...]

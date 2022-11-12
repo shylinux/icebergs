@@ -11,7 +11,6 @@ import (
 const FOOTER = "footer"
 
 func init() {
-	const EMAIL = "email"
 	Index.MergeCommands(ice.Commands{
 		web.P(FOOTER): {Name: "/footer", Help: "状态栏", Actions: ice.MergeActions(ice.Actions{
 			ice.RUN: {Hand: func(m *ice.Message, arg ...string) {
@@ -21,8 +20,8 @@ func init() {
 					}
 				}
 			}},
-		}, ctx.CmdAction(EMAIL, `shylinuxc@gmail.com`), aaa.RoleAction()), Hand: func(m *ice.Message, arg ...string) {
-			m.Result(m.Configv(EMAIL))
+		}, ctx.CmdAction(TITLE, `<a href="mailto:shylinuxc@gmail.com">shylinuxc@gmail.com</a>`), aaa.RoleAction()), Hand: func(m *ice.Message, arg ...string) {
+			m.Result(m.Configv(TITLE))
 		}},
 	})
 }

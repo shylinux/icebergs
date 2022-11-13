@@ -11,7 +11,7 @@ const SEARCH = "search"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
-		web.P(SEARCH): {Name: "/search", Help: "搜索引擎", Actions: ctx.CmdAction(), Hand: func(m *ice.Message, arg ...string) {
+		web.P(SEARCH): {Name: "/search", Help: "搜索框", Actions: ctx.CmdAction(), Hand: func(m *ice.Message, arg ...string) {
 			m.Cmdy(web.Space(m, m.Option(ice.POD)), mdb.SEARCH, arg).StatusTimeCount()
 		}},
 	})

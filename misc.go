@@ -255,6 +255,25 @@ func (m *Message) _command(arg ...Any) *Message {
 	m.Warn(!ok, ErrNotFound, kit.Format(list))
 	return m
 }
+func (m *Message) CmdHand(cmd *Command, key string, arg ...string) *Message {
+	if m._key, m._cmd = key, cmd; cmd == nil {
+		return m
+	}
+	if m._target = kit.FileLine(cmd.Hand, 3); cmd.RawHand != nil {
+		m._target = kit.Format(cmd.RawHand)
+	}
+	if fileline := kit.Select(m._target, m._source, m.target.Name == MDB); key == "select" {
+		m.Log(LOG_CMDS, "%s.%s %d %v %v", m.Target().Name, key, len(arg), arg, m.Optionv(MSG_FIELDS), logs.FileLineMeta(fileline))
+	} else {
+		m.Log(LOG_CMDS, "%s.%s %d %v", m.Target().Name, key, len(arg), arg, logs.FileLineMeta(fileline))
+	}
+	if cmd.Hand != nil {
+		cmd.Hand(m, arg...)
+	} else if cmd.Actions != nil && cmd.Actions["select"] != nil {
+		cmd.Actions["select"].Hand(m, arg...)
+	}
+	return m
+}
 func (c *Context) _command(m *Message, cmd *Command, key string, arg ...string) *Message {
 	key = kit.Slice(strings.Split(key, PT), -1)[0]
 	if m._key, m._cmd = key, cmd; cmd == nil {

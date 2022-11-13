@@ -16,49 +16,39 @@ func _role_chain(arg ...string) string {
 func _role_black(m *ice.Message, userrole, chain string) {
 	mdb.HashSelectUpdate(m, userrole, func(value ice.Map) {
 		m.Logs(mdb.INSERT, ROLE, userrole, BLACK, chain)
-		list := value[BLACK].(ice.Map)
-		list[chain] = true
+		black := value[BLACK].(ice.Map)
+		black[chain] = true
 	})
 }
 func _role_white(m *ice.Message, userrole, chain string) {
 	mdb.HashSelectUpdate(m, userrole, func(value ice.Map) {
 		m.Logs(mdb.INSERT, ROLE, userrole, WHITE, chain)
-		list := value[WHITE].(ice.Map)
-		list[chain] = true
+		white := value[WHITE].(ice.Map)
+		white[chain] = true
 	})
+}
+func _role_check(value ice.Map, keys []string, ok bool) bool {
+	white := value[WHITE].(ice.Map)
+	black := value[BLACK].(ice.Map)
+	for i := 0; i < len(keys); i++ {
+		if v, o := white[kit.Join(keys[:i+1], ice.PT)]; o && v == true {
+			ok = true
+		}
+		if v, o := black[kit.Join(keys[:i+1], ice.PT)]; o && v == true {
+			ok = false
+		}
+	}
+	return ok
 }
 func _role_right(m *ice.Message, userrole string, keys ...string) (ok bool) {
 	if userrole == ROOT {
-		return true // 超级权限
+		return true
 	}
-
 	mdb.HashSelectDetail(m, kit.Select(VOID, userrole), func(value ice.Map) {
-		ok = true
-		list := value[BLACK].(ice.Map)
-		for i := 0; i < len(keys); i++ {
-			if v, o := list[kit.Join(keys[:i+1], ice.PT)]; o && v == true {
-				ok = false // 在黑名单
-			}
-		}
-		if !ok {
-			return // 没有权限
-		}
 		if userrole == TECH {
-			return // 管理权限
-		}
-
-		ok = false
-		list = value[WHITE].(ice.Map)
-		for i := 0; i < len(keys); i++ {
-			if v, o := list[kit.Join(keys[:i+1], ice.PT)]; o && v == true {
-				ok = true // 在白名单
-			}
-		}
-		if !ok {
-			return // 没有权限
-		}
-		if userrole == VOID {
-			return // 用户权限
+			ok = _role_check(value, keys, true)
+		} else {
+			ok = _role_check(value, keys, false)
 		}
 	})
 	return ok
@@ -139,10 +129,27 @@ func RoleRight(m *ice.Message, userrole string, arg ...string) bool {
 }
 func RoleAction(cmds ...string) ice.Actions {
 	return ice.Actions{ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
-		m.Cmd(ROLE, WHITE, VOID, m.CommandKey())
 		m.Cmd(ROLE, WHITE, VOID, m.PrefixKey())
+		m.Cmd(ROLE, BLACK, VOID, m.PrefixKey(), "action")
 		for _, cmd := range cmds {
-			m.Cmd(ROLE, WHITE, VOID, cmd)
+			m.Cmd(ROLE, WHITE, VOID, m.PrefixKey(), "action", cmd)
+		}
+	}}}
+}
+func WhiteAction(cmds ...string) ice.Actions {
+	return ice.Actions{ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
+		m.Cmd(ROLE, WHITE, VOID, m.CommandKey())
+		m.Cmd(ROLE, BLACK, VOID, m.CommandKey(), "action")
+		for _, cmd := range cmds {
+			m.Cmd(ROLE, WHITE, VOID, m.CommandKey(), "action", cmd)
+		}
+	}}}
+}
+func BlackAction(cmds ...string) ice.Actions {
+	return ice.Actions{ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
+		m.Cmd(ROLE, WHITE, VOID, m.CommandKey())
+		for _, cmd := range cmds {
+			m.Cmd(ROLE, BLACK, VOID, m.CommandKey(), "action", cmd)
 		}
 	}}}
 }

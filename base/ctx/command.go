@@ -123,6 +123,9 @@ func init() {
 	})
 }
 
+func CmdHandler(args ...ice.Any) ice.Handler {
+	return func(m *ice.Message, arg ...string) { m.Cmdy(args...) }
+}
 func CmdAction(args ...ice.Any) ice.Actions {
 	return ice.Actions{ice.CTX_INIT: mdb.AutoConfig(args...),
 		COMMAND: {Name: "command", Help: "命令", Hand: func(m *ice.Message, arg ...string) {

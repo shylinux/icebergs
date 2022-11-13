@@ -268,12 +268,11 @@ func _serve_handle(key string, cmd *ice.Command, msg *ice.Message, w http.Respon
 		msg.Option(ice.MSG_OPTS, kit.Filter(kit.Simple(msg.Optionv(ice.MSG_OPTION)), func(k string) bool {
 			return !strings.HasPrefix(k, ice.MSG_SESSID)
 		}))
-		msg.Target().Cmd(msg, key, cmds...)
-		// if len(cmds) > 0 && cmds[0] == ctx.ACTION {
-		// 	msg.Target().Cmd(msg, key, cmds...)
-		// } else {
-		// 	cmd.Hand(msg, cmds...)
-		// }
+		if len(cmds) > 0 && cmds[0] == ctx.ACTION {
+			msg.Target().Cmd(msg, key, cmds...)
+		} else {
+			msg.CmdHand(cmd, key, cmds...)
+		}
 	}
 
 	// 输出响应

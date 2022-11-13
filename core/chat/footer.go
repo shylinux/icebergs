@@ -20,7 +20,7 @@ func init() {
 					}
 				}
 			}},
-		}, ctx.CmdAction(TITLE, `<a href="mailto:shylinuxc@gmail.com">shylinuxc@gmail.com</a>`), aaa.RoleAction()), Hand: func(m *ice.Message, arg ...string) {
+		}, ctx.CmdAction(TITLE, `<a href="mailto:shylinuxc@gmail.com">shylinuxc@gmail.com</a>`), aaa.WhiteAction(ctx.COMMAND, ice.RUN)), Hand: func(m *ice.Message, arg ...string) {
 			m.Result(m.Configv(TITLE))
 		}},
 	})

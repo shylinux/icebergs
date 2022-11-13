@@ -77,14 +77,15 @@ func init() {
 					web.RenderCookie(m, aaa.SessCreate(m, arg[0]))
 				}
 			}},
-			aaa.LOGOUT:     {Hand: func(m *ice.Message, arg ...string) { aaa.UserLogout(m) }},
-			aaa.PASSWORD:   {Hand: func(m *ice.Message, arg ...string) { _header_users(m, arg...) }},
-			aaa.USERNICK:   {Hand: func(m *ice.Message, arg ...string) { _header_users(m, arg...) }},
-			aaa.LANGUAGE:   {Hand: func(m *ice.Message, arg ...string) { _header_users(m, arg...) }},
-			aaa.BACKGROUND: {Hand: func(m *ice.Message, arg ...string) { _header_users(m, arg...) }},
-			aaa.AVATAR:     {Hand: func(m *ice.Message, arg ...string) { _header_users(m, arg...) }},
-			web.SHARE:      {Hand: func(m *ice.Message, arg ...string) { _header_share(m, arg...) }},
-		}, ctx.ConfAction(aaa.LOGIN, kit.List("密码登录", "扫码授权")), aaa.RoleAction()), Hand: func(m *ice.Message, arg ...string) {
+			aaa.LOGOUT:     {Hand: aaa.UserLogout},
+			aaa.PASSWORD:   {Hand: _header_users},
+			aaa.USERNICK:   {Hand: _header_users},
+			aaa.LANGUAGE:   {Hand: _header_users},
+			aaa.BACKGROUND: {Hand: _header_users},
+			aaa.AVATAR:     {Hand: _header_users},
+			web.SHARE:      {Hand: _header_share},
+			"webpack":      {Hand: ctx.CmdHandler("webpack", "build")},
+		}, ctx.ConfAction(aaa.LOGIN, kit.List("密码登录", "扫码授权")), aaa.BlackAction("webpack")), Hand: func(m *ice.Message, arg ...string) {
 			if gdb.Event(m, HEADER_AGENT); !_header_check(m, arg...) {
 				return
 			}

@@ -281,11 +281,7 @@ func _serve_handle(key string, cmd *ice.Command, msg *ice.Message, w http.Respon
 }
 func _serve_login(msg *ice.Message, key string, cmds []string, w http.ResponseWriter, r *http.Request) ([]string, bool) {
 	aaa.SessCheck(msg, msg.Option(ice.MSG_SESSID)) // 会话认证
-
-	if msg.Config("staffname") != "" {
-		aaa.UserLogin(msg, r.Header.Get("Staffname"), "")
-	}
-
+	
 	if msg.Option(ice.MSG_USERNAME) == "" && msg.Config(tcp.LOCALHOST) == ice.TRUE && tcp.IsLocalHost(msg, msg.Option(ice.MSG_USERIP)) {
 		aaa.UserRoot(msg) // 本机认证
 	}

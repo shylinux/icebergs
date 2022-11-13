@@ -25,11 +25,13 @@ func _river_list(m *ice.Message) {
 			return
 		}
 	}
+	m.Debug("what %v", m.FormatsMeta())
 	m.Cmd(mdb.SELECT, m.PrefixKey(), "", mdb.HASH, ice.OptionFields(mdb.HASH, mdb.NAME), func(value ice.Maps) {
 		if _river_right(m, value[mdb.HASH]) {
 			m.PushRecord(value, mdb.HASH, mdb.NAME)
 		}
 	})
+	m.Debug("what %v", m.FormatsMeta())
 }
 
 const (

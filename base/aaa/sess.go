@@ -89,6 +89,9 @@ func SessCheck(m *ice.Message, sessid string) bool {
 	return sessid != "" && m.Cmdy(SESS, CHECK, sessid).Option(ice.MSG_USERNAME) != ""
 }
 func UserLogout(m *ice.Message) {
+	if m.Option(ice.MSG_SESSID) == "" {
+		return
+	}
 	m.Cmd(SESS, mdb.REMOVE, kit.Dict(mdb.HASH, m.Option(ice.MSG_SESSID)))
 }
 func SessAuth(m *ice.Message, value ice.Maps, arg ...string) {

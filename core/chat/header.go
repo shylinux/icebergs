@@ -14,9 +14,15 @@ import (
 )
 
 func _header_users(m *ice.Message, arg ...string) {
+	if m.Warn(m.Option(ice.MSG_USERNAME) == "", ice.ErrNotLogin) {
+		return
+	}
 	m.Cmdy(aaa.USER, mdb.MODIFY, aaa.USERNAME, m.Option(ice.MSG_USERNAME), m.ActionKey(), m.Option(m.ActionKey(), arg[0]))
 }
 func _header_share(m *ice.Message, arg ...string) {
+	if m.Warn(m.Option(ice.MSG_USERNAME) == "", ice.ErrNotLogin) {
+		return
+	}
 	for i := 0; i < len(arg)-1; i += 2 {
 		m.Option(arg[i], arg[i+1])
 	}
@@ -65,23 +71,9 @@ const HEADER = "header"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
-		web.WEB_LOGIN: {Hand: func(m *ice.Message, arg ...string) {
-			switch kit.Select("", arg, 0) {
-			case web.P(HEADER):
-				switch kit.Select("", arg, 1) {
-				case "", aaa.LOGIN:
-					return // 免登录
-				}
-			default:
-				if aaa.Right(m, arg) {
-					return // 免登录
-				}
-			}
-			m.Warn(m.Option(ice.MSG_USERNAME) == "", ice.ErrNotLogin, arg)
-		}},
 		web.P(HEADER): {Name: "/header", Help: "标题栏", Actions: ice.MergeActions(ice.Actions{
 			aaa.LOGIN: {Hand: func(m *ice.Message, arg ...string) {
-				if aaa.UserLogin(m, arg[0], arg[1]) {
+				if len(arg) > 1 && aaa.UserLogin(m, arg[0], arg[1]) {
 					web.RenderCookie(m, aaa.SessCreate(m, arg[0]))
 				}
 			}},
@@ -92,7 +84,6 @@ func init() {
 			aaa.BACKGROUND: {Hand: func(m *ice.Message, arg ...string) { _header_users(m, arg...) }},
 			aaa.AVATAR:     {Hand: func(m *ice.Message, arg ...string) { _header_users(m, arg...) }},
 			web.SHARE:      {Hand: func(m *ice.Message, arg ...string) { _header_share(m, arg...) }},
-			"webpack":      {Hand: func(m *ice.Message, arg ...string) { m.Cmdy("webpack", "build") }},
 		}, ctx.ConfAction(aaa.LOGIN, kit.List("密码登录", "扫码授权")), aaa.RoleAction()), Hand: func(m *ice.Message, arg ...string) {
 			if gdb.Event(m, HEADER_AGENT); !_header_check(m, arg...) {
 				return

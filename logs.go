@@ -111,10 +111,17 @@ func (m *Message) Warn(err Any, arg ...Any) bool {
 	case nil:
 		return false
 	}
-
 	str, meta := m.join(arg...)
 	m.log(LOG_WARN, str, meta...)
 	m.error(arg...)
+	if len(arg) > 0 {
+		switch kit.Format(arg[0]) {
+		case ErrNotLogin:
+			m.RenderStatusUnauthorized()
+		case ErrNotRight:
+			m.RenderStatusForbidden()
+		}
+	}
 	return true
 }
 func (m *Message) Debug(str string, arg ...Any) {

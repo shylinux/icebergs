@@ -23,64 +23,66 @@ const (
 	STATUS = "status"
 )
 
-func Render(msg *ice.Message, cmd string, args ...ice.Any) {
+func Render(m *ice.Message, cmd string, args ...ice.Any) {
 	if cmd != "" {
-		defer func() { msg.Logs(mdb.EXPORT, cmd, args) }()
+		defer func() { m.Logs(mdb.EXPORT, cmd, args) }()
 	}
 
 	switch arg := kit.Simple(args...); cmd {
 	case COOKIE: // value [name [path [expire]]]
-		RenderCookie(msg, arg[0], arg[1:]...)
+		RenderCookie(m, arg[0], arg[1:]...)
 
 	case STATUS, ice.RENDER_STATUS: // [code [text]]
-		RenderStatus(msg.W, kit.Int(kit.Select("200", arg, 0)), kit.Select("", arg, 1))
+		RenderStatus(m.W, kit.Int(kit.Select("200", arg, 0)), kit.Select("", arg, 1))
 
 	case ice.RENDER_REDIRECT: // url [arg...]
-		http.Redirect(msg.W, msg.R, kit.MergeURL(arg[0], arg[1:]), http.StatusTemporaryRedirect)
+		http.Redirect(m.W, m.R, kit.MergeURL(arg[0], arg[1:]), http.StatusTemporaryRedirect)
 
 	case ice.RENDER_DOWNLOAD: // file [type [name]]
 		if strings.HasPrefix(arg[0], ice.HTTP) {
-			RenderRedirect(msg, arg[0])
+			RenderRedirect(m, arg[0])
 			break
 		}
-		RenderType(msg.W, arg[0], kit.Select("", arg, 1))
-		RenderHeader(msg.W, "Content-Disposition", fmt.Sprintf("filename=%s", kit.Select(path.Base(kit.Select(arg[0], msg.Option("filename"))), arg, 2)))
+		RenderType(m.W, arg[0], kit.Select("", arg, 1))
+		RenderHeader(m.W, "Content-Disposition", fmt.Sprintf("filename=%s", kit.Select(path.Base(kit.Select(arg[0], m.Option("filename"))), arg, 2)))
 		if _, e := nfs.DiskFile.StatFile(arg[0]); e == nil {
-			http.ServeFile(msg.W, msg.R, kit.Path(arg[0]))
+			http.ServeFile(m.W, m.R, kit.Path(arg[0]))
 		} else if f, e := nfs.PackFile.OpenFile(arg[0]); e == nil {
 			defer f.Close()
-			io.Copy(msg.W, f)
+			io.Copy(m.W, f)
 		}
 
 	case ice.RENDER_RESULT:
 		if len(arg) > 0 { // [str [arg...]]
-			msg.W.Write([]byte(kit.Format(arg[0], args[1:]...)))
+			m.W.Write([]byte(kit.Format(arg[0], args[1:]...)))
 		} else {
-			args = append(args, nfs.SIZE, len(msg.Result()))
-			msg.W.Write([]byte(msg.Result()))
+			args = append(args, nfs.SIZE, len(m.Result()))
+			m.W.Write([]byte(m.Result()))
 		}
 
 	case ice.RENDER_JSON:
-		RenderType(msg.W, nfs.JSON, "")
-		msg.W.Write([]byte(arg[0]))
+		RenderType(m.W, nfs.JSON, "")
+		m.W.Write([]byte(arg[0]))
 
 	case ice.RENDER_VOID:
 		// no output
 
 	default:
-		for _, k := range []string{
-			"_option", "_handle", "_output",
-			"cmds", "fields", "sessid",
-		} {
-			msg.Set(k)
+		for _, k := range kit.Simple(m.Optionv("option"), m.Optionv("_option")) {
+			if m.Option(k) == "" {
+				m.Set(k)
+			}
 		}
-		msg.Debug("what %v %v", cmd, args)
+		for _, k := range []string{"sessid", "cmds", "fields", "_option", "_handle", "_output"} {
+			m.Set(k)
+		}
 
 		if cmd != "" && cmd != ice.RENDER_RAW { // [str [arg...]]
-			msg.Echo(kit.Format(cmd, args...))
+			m.Echo(kit.Format(cmd, args...))
 		}
-		RenderType(msg.W, nfs.JSON, "")
-		fmt.Fprint(msg.W, msg.FormatMeta())
+		RenderType(m.W, nfs.JSON, "")
+		fmt.Fprint(m.W, m.FormatsMeta())
+		// fmt.Fprint(m.W, m.FormatMeta())
 	}
 }
 
@@ -100,17 +102,17 @@ func RenderType(w http.ResponseWriter, name, mime string) {
 func RenderHeader(w http.ResponseWriter, key, value string) {
 	w.Header().Set(key, value)
 }
-func RenderCookie(msg *ice.Message, value string, arg ...string) { // name path expire
-	expire := time.Now().Add(kit.Duration(kit.Select(msg.Conf(aaa.SESS, kit.Keym(mdb.EXPIRE)), arg, 2)))
-	http.SetCookie(msg.W, &http.Cookie{Value: value,
-		Name: kit.Select(CookieName(msg.Option(ice.MSG_USERWEB)), arg, 0), Path: kit.Select(ice.PS, arg, 1), Expires: expire})
+func RenderCookie(m *ice.Message, value string, arg ...string) { // name path expire
+	expire := time.Now().Add(kit.Duration(kit.Select(m.Conf(aaa.SESS, kit.Keym(mdb.EXPIRE)), arg, 2)))
+	http.SetCookie(m.W, &http.Cookie{Value: value,
+		Name: kit.Select(CookieName(m.Option(ice.MSG_USERWEB)), arg, 0), Path: kit.Select(ice.PS, arg, 1), Expires: expire})
 }
 func RenderStatus(w http.ResponseWriter, code int, text string) {
 	w.WriteHeader(code)
 	w.Write([]byte(text))
 }
-func RenderRefresh(msg *ice.Message, arg ...string) { // url text delay
-	Render(msg, ice.RENDER_RESULT, kit.Format(`
+func RenderRefresh(m *ice.Message, arg ...string) { // url text delay
+	Render(m, ice.RENDER_RESULT, kit.Format(`
 <html>
 <head>
 	<meta http-equiv="refresh" content="%s; url='%s'">
@@ -119,20 +121,20 @@ func RenderRefresh(msg *ice.Message, arg ...string) { // url text delay
 	%s
 </body>
 </html>
-`, kit.Select("3", arg, 2), kit.Select(msg.Option(ice.MSG_USERWEB), arg, 0), kit.Select("loading...", arg, 1)))
-	msg.Render(ice.RENDER_VOID)
+`, kit.Select("3", arg, 2), kit.Select(m.Option(ice.MSG_USERWEB), arg, 0), kit.Select("loading...", arg, 1)))
+	m.Render(ice.RENDER_VOID)
 }
-func RenderRedirect(msg *ice.Message, arg ...ice.Any) {
-	Render(msg, ice.RENDER_REDIRECT, arg...)
-	msg.Render(ice.RENDER_VOID)
+func RenderRedirect(m *ice.Message, arg ...ice.Any) {
+	Render(m, ice.RENDER_REDIRECT, arg...)
+	m.Render(ice.RENDER_VOID)
 }
-func RenderDownload(msg *ice.Message, arg ...ice.Any) {
-	Render(msg, ice.RENDER_DOWNLOAD, arg...)
-	msg.Render(ice.RENDER_VOID)
+func RenderDownload(m *ice.Message, arg ...ice.Any) {
+	Render(m, ice.RENDER_DOWNLOAD, arg...)
+	m.Render(ice.RENDER_VOID)
 }
-func RenderResult(msg *ice.Message, arg ...ice.Any) {
-	Render(msg, ice.RENDER_RESULT, arg...)
-	msg.Render(ice.RENDER_VOID)
+func RenderResult(m *ice.Message, arg ...ice.Any) {
+	Render(m, ice.RENDER_RESULT, arg...)
+	m.Render(ice.RENDER_VOID)
 }
 
 func CookieName(url string) string {

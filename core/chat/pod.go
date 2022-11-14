@@ -17,7 +17,7 @@ const POD = "pod"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
-		web.PP(POD): {Name: "/pod/", Help: "节点", Actions: ice.MergeActions(ctx.CmdAction(), aaa.RoleAction()), Hand: func(m *ice.Message, arg ...string) {
+		web.PP(POD): {Name: "/pod/", Help: "节点", Actions: ice.MergeActions(ctx.CmdAction(), aaa.WhiteAction()), Hand: func(m *ice.Message, arg ...string) {
 			if web.OptionAgentIs(m, "curl", "wget") {
 				aaa.UserRoot(m).Cmdy(web.SHARE_LOCAL, ice.BIN_ICE_BIN, kit.Dict(ice.POD, kit.Select("", arg, 0)))
 				return

@@ -78,6 +78,12 @@ func (m *Message) PushDetail(value Any, arg ...string) *Message {
 	return m.Push(FIELDS_DETAIL, value, kit.Split(kit.Join(arg)))
 }
 
+func (m *Message) Options(arg ...Any) *Message {
+	for i := 0; i < len(arg); i += 2 {
+		m.Option(kit.Format(arg[i]), arg[i+1])
+	}
+	return m
+}
 func (m *Message) OptionMulti(arg ...Any) *Message {
 	for i := 0; i < len(arg); i += 2 {
 		m.Option(kit.Format(arg[i]), arg[i+1])

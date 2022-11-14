@@ -24,13 +24,11 @@ func _river_list(m *ice.Message) {
 			return
 		}
 	}
-	m.Debug("what %v", m.FormatsMeta())
 	m.Cmd(mdb.SELECT, m.PrefixKey(), "", mdb.HASH, ice.OptionFields(mdb.HASH, mdb.NAME), func(value ice.Maps) {
 		if _river_right(m, value[mdb.HASH]) {
 			m.PushRecord(value, mdb.HASH, mdb.NAME)
 		}
 	})
-	m.Debug("what %v", m.FormatsMeta())
 }
 
 const (
@@ -62,7 +60,7 @@ func init() {
 				m.Cmd(mdb.EXPORT, m.Prefix(RIVER), "", mdb.HASH)
 				m.Cmd(mdb.IMPORT, m.Prefix(RIVER), "", mdb.HASH)
 			}},
-		}, mdb.HashAction(mdb.FIELD, "time,hash,type,name,text,template"), aaa.RoleAction()), Hand: func(m *ice.Message, arg ...string) {
+		}, mdb.HashAction(mdb.FIELD, "time,hash,type,name,text,template"), aaa.WhiteAction()), Hand: func(m *ice.Message, arg ...string) {
 			if m.Warn(m.Option(ice.MSG_USERNAME) == "", ice.ErrNotLogin) {
 				m.RenderStatusUnauthorized()
 				return

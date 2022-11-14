@@ -74,7 +74,7 @@ func init() {
 			"choose": {Name: "choose", Help: "切换", Hand: func(m *ice.Message, arg ...string) {
 				m.ProcessLocation(web.MergeURL2(m, "", "topic", kit.TrimExt(m.Option(mdb.ZONE), nfs.CSS)))
 			}},
-		}, mdb.ZoneAction(mdb.FIELD, "time,id,tags,type,name,value"), aaa.RoleAction()), Hand: func(m *ice.Message, arg ...string) {
+		}, mdb.ZoneAction(mdb.FIELD, "time,id,tags,type,name,value"), aaa.WhiteAction()), Hand: func(m *ice.Message, arg ...string) {
 			if mdb.ZoneSelect(m, arg...); len(arg) == 0 {
 				m.Cmd(nfs.DIR, nfs.PWD, ice.OptionFields(), kit.Dict(nfs.DIR_ROOT, "src/website/topic/")).RenameAppend(nfs.PATH, mdb.ZONE, nfs.SIZE, mdb.COUNT).Tables(func(values ice.Maps) {
 					m.Push("", values)

@@ -13,7 +13,7 @@ const SSO = "sso"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
-		web.P(SSO): {Name: "/sso", Help: "授权", Actions: aaa.RoleAction(), Hand: func(m *ice.Message, arg ...string) {
+		web.P(SSO): {Name: "/sso", Help: "授权", Actions: aaa.WhiteAction(), Hand: func(m *ice.Message, arg ...string) {
 			if m.Option(ice.MSG_USERNAME) == "" {
 				web.RenderIndex(m, ice.VOLCANOS)
 				return

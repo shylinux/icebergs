@@ -123,7 +123,7 @@ func init() {
 			nfs.TRASH: {Name: "trash", Help: "删除", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmd(nfs.TRASH, path.Join(ice.USR_PUBLISH, m.Option(nfs.PATH)))
 			}},
-		}, aaa.RoleAction(ice.USR_PUBLISH)), Hand: func(m *ice.Message, arg ...string) {
+		}, aaa.RoleAction()), Hand: func(m *ice.Message, arg ...string) {
 			m.Option(nfs.DIR_ROOT, ice.USR_PUBLISH)
 			m.Cmdy(nfs.DIR, kit.Select("", arg, 0), nfs.DIR_WEB_FIELDS)
 		}},

@@ -36,6 +36,9 @@ func _serve_rewrite(m *ice.Message) {
 		switch r.URL.Path {
 		case ice.PS:
 			if repos == ice.VOLCANOS {
+				if nfs.ExistsFile(ice.SRC_MAIN_JS) {
+					return
+				}
 				if s := msg.Cmdx("web.chat.website", lex.PARSE, ice.INDEX_IML, "Header", "", "River", "", "Footer", ""); s != "" {
 					Render(msg, ice.RENDER_RESULT, s)
 					return true // 定制主页

@@ -146,7 +146,13 @@ func init() {
 			),
 		)},
 	}, Commands: ice.Commands{
-		CAT: {Name: "cat path auto", Help: "文件", Hand: func(m *ice.Message, arg ...string) {
+		CAT: {Name: "cat path auto", Help: "文件", Actions: ice.Actions{
+			ctx.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
+				m.Cmd(aaa.ROLE, aaa.WHITE, aaa.VOID, ice.SRC_MAIN_SHY)
+				m.Cmd(aaa.ROLE, aaa.WHITE, aaa.VOID, ice.SRC_MAIN_GO)
+				m.Cmd(aaa.ROLE, aaa.WHITE, aaa.VOID, ice.USR_PUBLISH)
+			}},
+		}, Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) == 0 || strings.HasSuffix(arg[0], ice.PS) {
 				m.Cmdy(DIR, arg)
 				return

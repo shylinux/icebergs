@@ -43,7 +43,7 @@ const CMD = "cmd"
 func init() {
 	Index.MergeCommands(ice.Commands{
 		CMD: {Name: "cmd path auto upload up home", Help: "命令", Actions: ice.MergeActions(
-			mdb.HashAction(mdb.SHORT, mdb.TYPE, nfs.PATH, nfs.PWD), ctx.CmdAction(), web.ApiAction(), aaa.RoleAction(),
+			mdb.HashAction(mdb.SHORT, mdb.TYPE, nfs.PATH, nfs.PWD), ctx.CmdAction(), web.ApiAction(), aaa.WhiteAction(),
 		), Hand: func(m *ice.Message, arg ...string) {
 			if _cmd_file(m, arg...) {
 				return

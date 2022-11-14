@@ -14,7 +14,7 @@ func _action_list(m *ice.Message, river, storm string) {
 	m.Cmdy(STORM, kit.Dict(ice.MSG_RIVER, river, ice.MSG_STORM, storm))
 }
 func _action_exec(m *ice.Message, river, storm, index string, arg ...string) {
-	m.OptionMulti(ice.MSG_RIVER, river, ice.MSG_STORM, storm)
+	m.Options(ice.MSG_RIVER, river, ice.MSG_STORM, storm)
 	if m.Warn(m.Cmd(STORM, index, func(value ice.Maps) {
 		if index = value[ctx.INDEX]; value[web.SPACE] != "" {
 			m.Option(ice.POD, value[web.SPACE])
@@ -82,7 +82,7 @@ func init() {
 				m.Cmdy(mdb.MODIFY, RIVER, _storm_key(m), mdb.LIST, m.OptionSimple(mdb.ID), arg)
 			}},
 			web.SHARE: {Hand: func(m *ice.Message, arg ...string) { _action_share(m, arg...) }},
-		}, ctx.CmdAction(nfs.PATH, ice.USR_LOCAL_RIVER), aaa.RoleAction()), Hand: func(m *ice.Message, arg ...string) {
+		}, ctx.CmdAction(), aaa.WhiteAction()), Hand: func(m *ice.Message, arg ...string) {
 			if m.Warn(m.Option(ice.MSG_USERNAME) == "", ice.ErrNotLogin, arg) {
 				return
 			}

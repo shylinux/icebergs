@@ -36,16 +36,15 @@ func _serve_rewrite(m *ice.Message) {
 		switch r.URL.Path {
 		case ice.PS:
 			if repos == ice.VOLCANOS {
-				if nfs.ExistsFile(ice.SRC_MAIN_JS) {
-					return
+				if nfs.ExistsFile(m, ice.SRC_MAIN_JS) {
+					RenderMain(msg, ice.SRC_MAIN_JS)
+					return Render(msg, ice.RENDER_RESULT, msg.Result())
 				}
 				if s := msg.Cmdx("web.chat.website", lex.PARSE, ice.INDEX_IML, "Header", "", "River", "", "Footer", ""); s != "" {
-					Render(msg, ice.RENDER_RESULT, s)
-					return true // 定制主页
+					return Render(msg, ice.RENDER_RESULT, s)
 				}
 			}
-			Render(msg, ice.RENDER_DOWNLOAD, path.Join(msg.Config(kit.Keys(repos, nfs.PATH)), msg.Config(kit.Keys(repos, INDEX))))
-			return true // 默认主页
+			return Render(msg, ice.RENDER_DOWNLOAD, path.Join(msg.Config(kit.Keys(repos, nfs.PATH)), msg.Config(kit.Keys(repos, INDEX))))
 
 		case PP(ice.HELP):
 			r.URL.Path = P(ice.HELP, ice.TUTOR_SHY)

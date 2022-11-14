@@ -23,7 +23,7 @@ const (
 	STATUS = "status"
 )
 
-func Render(m *ice.Message, cmd string, args ...ice.Any) {
+func Render(m *ice.Message, cmd string, args ...ice.Any) bool {
 	if cmd != "" {
 		defer func() { m.Logs(mdb.EXPORT, cmd, args) }()
 	}
@@ -84,6 +84,7 @@ func Render(m *ice.Message, cmd string, args ...ice.Any) {
 		fmt.Fprint(m.W, m.FormatsMeta())
 		// fmt.Fprint(m.W, m.FormatMeta())
 	}
+	return true
 }
 
 func RenderType(w http.ResponseWriter, name, mime string) {
@@ -163,15 +164,34 @@ func RenderCmd(m *ice.Message, index string, args ...ice.Any) {
 			mdb.LIST, kit.UnMarshal(msg.Append(mdb.LIST)), mdb.META, kit.UnMarshal(msg.Append(mdb.META)),
 		)))
 	}
-	m.Echo(kit.Format(_cans, list))
-	m.RenderResult()
+	m.Echo(kit.Format(_cmd_template, list)).RenderResult()
+}
+func RenderMain(m *ice.Message, index string, args ...ice.Any) *ice.Message {
+	return m.Echo(kit.Format(_main_template, m.Cmdx(nfs.CAT, index))).RenderResult()
 }
 
-var _cans = `<!DOCTYPE html>
-<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=0.8,maximum-scale=0.8,user-scalable=no">
+var _cmd_template = `<!DOCTYPE html>
+<head>
+	<meta name="viewport" content="width=device-width,initial-scale=0.8,maximum-scale=0.8,user-scalable=no">
+	<meta charset="utf-8">
 	<link rel="stylesheet" type="text/css" href="/page/can.css">
 </head>
 <body>
 	<script src="/page/can.js"></script><script>Volcanos(%s)</script>
+</body>
+`
+var _main_template = `<!DOCTYPE html>
+<head>
+	<meta name="viewport" content="width=device-width,initial-scale=0.8,maximum-scale=0.8,user-scalable=no"/>
+	<meta charset="utf-8">
+	<title>volcanos</title>
+	<link rel="shortcut icon" type="image/ico" href="/favicon.ico">
+	<link rel="stylesheet" type="text/css" href="/page/cache.css">
+	<link rel="stylesheet" type="text/css" href="/page/index.css">
+</head>
+<body>
+	<script src="/proto.js"></script>
+	<script src="/page/cache.js"></script>
+	<script>%s</script>
 </body>
 `

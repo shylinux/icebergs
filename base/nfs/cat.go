@@ -147,7 +147,7 @@ func init() {
 		)},
 	}, Commands: ice.Commands{
 		CAT: {Name: "cat path auto", Help: "文件", Actions: ice.Actions{
-			ctx.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
+			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
 				m.Cmd(aaa.ROLE, aaa.WHITE, aaa.VOID, ice.SRC_MAIN_SHY)
 				m.Cmd(aaa.ROLE, aaa.WHITE, aaa.VOID, ice.SRC_MAIN_GO)
 				m.Cmd(aaa.ROLE, aaa.WHITE, aaa.VOID, ice.USR_PUBLISH)

@@ -15,11 +15,11 @@ func _action_list(m *ice.Message, river, storm string) {
 }
 func _action_exec(m *ice.Message, river, storm, index string, arg ...string) {
 	m.Options(ice.MSG_RIVER, river, ice.MSG_STORM, storm)
-	if m.Warn(m.Cmd(STORM, index, func(value ice.Maps) {
+	if m.Warn(m.Cmd(STORM, index, arg, func(value ice.Maps) {
 		if index = value[ctx.INDEX]; value[web.SPACE] != "" {
 			m.Option(ice.POD, value[web.SPACE])
 		}
-	}).Length() == 0, ice.ErrNotFound, index) {
+	}).Length() == 0, ice.ErrNotRight, index, arg) {
 		return
 	}
 	if m.Option(ice.MSG_UPLOAD) != "" {

@@ -7,11 +7,13 @@ import (
 	"time"
 
 	ice "shylinux.com/x/icebergs"
+	"shylinux.com/x/icebergs/base/aaa"
 	"shylinux.com/x/icebergs/base/cli"
 	"shylinux.com/x/icebergs/base/ctx"
 	"shylinux.com/x/icebergs/base/gdb"
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/nfs"
+	"shylinux.com/x/icebergs/base/tcp"
 	kit "shylinux.com/x/toolkits"
 	"shylinux.com/x/toolkits/file"
 )
@@ -136,6 +138,9 @@ func OptionUserWeb(m Message) *url.URL {
 	return kit.ParseURL(m.Option(ice.MSG_USERWEB))
 }
 func MergeURL2(m Message, url string, arg ...ice.Any) string {
+	if m.Option(ice.MSG_USERWEB) == "" {
+		return kit.MergeURL2(ice.HTTP+"://"+ice.Pulse.Cmd(tcp.HOST).Append(aaa.IP)+":"+ice.Pulse.Cmd(SERVE).Append(tcp.PORT), url, arg...)
+	}
 	return kit.MergeURL2(m.Option(ice.MSG_USERWEB), url, arg...)
 }
 func MergeLink(m Message, url string, arg ...ice.Any) string {

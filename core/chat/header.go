@@ -10,17 +10,22 @@ import (
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/tcp"
 	"shylinux.com/x/icebergs/base/web"
-	kit "shylinux.com/x/toolkits"
 )
 
 func _header_users(m *ice.Message, arg ...string) {
 	if m.Warn(m.Option(ice.MSG_USERNAME) == "", ice.ErrNotLogin) {
 		return
 	}
+	if m.Warn(m.Option(web.SHARE) != "", ice.ErrNotRight, "没有权限") {
+		return
+	}
 	m.Cmdy(aaa.USER, mdb.MODIFY, aaa.USERNAME, m.Option(ice.MSG_USERNAME), m.ActionKey(), m.Option(m.ActionKey(), arg[0]))
 }
 func _header_share(m *ice.Message, arg ...string) {
-	if m.Warn(m.Option(ice.MSG_USERNAME) == "", ice.ErrNotLogin) {
+	if m.Warn(m.Option(ice.MSG_USERNAME) == "", ice.ErrNotLogin, "没有登录") {
+		return
+	}
+	if m.Warn(m.Option(web.SHARE) != "", ice.ErrNotRight, "没有权限") {
 		return
 	}
 	for i := 0; i < len(arg)-1; i += 2 {
@@ -80,7 +85,7 @@ func init() {
 			aaa.AVATAR:     {Hand: _header_users},
 			web.SHARE:      {Hand: _header_share},
 			"webpack":      {Hand: ctx.CmdHandler("webpack", "build")},
-		}, ctx.ConfAction(aaa.LOGIN, kit.List("密码登录", "扫码授权")), aaa.BlackAction("webpack")), Hand: func(m *ice.Message, arg ...string) {
+		}, aaa.BlackAction("webpack")), Hand: func(m *ice.Message, arg ...string) {
 			if gdb.Event(m, HEADER_AGENT); !_header_check(m, arg...) {
 				return
 			}

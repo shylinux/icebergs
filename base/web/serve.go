@@ -300,7 +300,7 @@ func _serve_login(msg *ice.Message, key string, cmds []string, w http.ResponseWr
 		return cmds, !msg.IsErr() && msg.Result(0) != ice.FALSE
 	}
 
-	if aaa.Right(msg, key, cmds) {
+	if aaa.Right(msg.Spawn(), key, cmds) {
 		return cmds, true
 	}
 

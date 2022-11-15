@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	ice "shylinux.com/x/icebergs"
+	"shylinux.com/x/icebergs/base/aaa"
 	"shylinux.com/x/icebergs/base/cli"
 	"shylinux.com/x/icebergs/base/ctx"
 	"shylinux.com/x/icebergs/base/mdb"
@@ -50,7 +51,7 @@ const VIMER = "vimer"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
-		VIMER: {Name: "vimer path=src/@key file=main.go line=1 list", Help: "编辑器", Actions: ice.Actions{
+		VIMER: {Name: "vimer path=src/@key file=main.go line=1 list", Help: "编辑器", Actions: ice.MergeActions(ice.Actions{
 			mdb.INPUTS: {Hand: func(m *ice.Message, arg ...string) {
 				switch m.Option(ctx.ACTION) {
 				case AUTOGEN, web.DREAM, XTERM:
@@ -169,7 +170,7 @@ func init() {
 			PUBLISH: {Name: "publish", Help: "发布", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmdy(PUBLISH, ice.CONTEXTS)
 			}},
-		}, Hand: func(m *ice.Message, arg ...string) {
+		}, aaa.RoleAction(ctx.COMMAND)), Hand: func(m *ice.Message, arg ...string) {
 			if m.Cmdy(INNER, arg); arg[0] != ctx.ACTION {
 				m.Action(AUTOGEN, nfs.SCRIPT, web.WEBSITE, web.DREAM, nfs.SAVE, COMPILE)
 				m.Option("tabs", m.Config("show.tabs"))

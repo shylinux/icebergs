@@ -69,7 +69,7 @@ func init() {
 					m.Cmdy(arg)
 				}
 			}},
-		}, TASK, ctx.CmdAction()), Hand: func(m *ice.Message, arg ...string) {
+		}, TASK, ctx.CmdAction(), aaa.RoleAction(ctx.COMMAND)), Hand: func(m *ice.Message, arg ...string) {
 			begin_time, end_time := _plan_scope(m, kit.Slice(arg, 0, 2)...)
 			_plan_list(m, begin_time.Format(ice.MOD_TIME), end_time.Format(ice.MOD_TIME))
 			web.PushPodCmd(m, "", arg...)

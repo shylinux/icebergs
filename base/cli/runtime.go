@@ -44,6 +44,7 @@ func _runtime_init(m *ice.Message) {
 	ice.Info.HostName = m.Conf(RUNTIME, kit.Keys(BOOT, HOSTNAME))
 	ice.Info.PathName = m.Conf(RUNTIME, kit.Keys(BOOT, PATHNAME))
 	ice.Info.UserName = m.Conf(RUNTIME, kit.Keys(BOOT, USERNAME))
+	m.Cmd(aaa.USER, mdb.CREATE, ice.Info.UserName, "", aaa.ROOT)
 	aaa.UserRoot(ice.Pulse)
 
 	// 启动程序 boot

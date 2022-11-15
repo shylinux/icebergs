@@ -14,11 +14,8 @@ const SSO = "sso"
 func init() {
 	Index.MergeCommands(ice.Commands{
 		web.P(SSO): {Name: "/sso", Help: "授权", Actions: aaa.WhiteAction(), Hand: func(m *ice.Message, arg ...string) {
-			if m.Option(ice.MSG_USERNAME) == "" {
+			if m.Option(ice.MSG_USERNAME) == "" || m.Warn(m.Option(cli.BACK) == "") {
 				web.RenderIndex(m, ice.VOLCANOS)
-				return
-			}
-			if m.Warn(m.Option(cli.BACK) == "") {
 				return
 			}
 			sessid := aaa.UserRoot(m).Cmdx(web.SPACE, m.Option(web.SPACE), aaa.SESS, mdb.CREATE, aaa.USERNAME, m.Option(ice.MSG_USERNAME),

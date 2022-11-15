@@ -37,7 +37,7 @@ func _cat_hash(m *ice.Message, p string) string {
 	return ""
 }
 func _cat_list(m *ice.Message, name string) {
-	if !aaa.Right(m, name) {
+	if m.Option(CAT_CONTENT) == "" && !aaa.Right(m, name) {
 		return // 没有权限
 	}
 	f, e := _cat_find(m, name)

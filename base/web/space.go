@@ -3,6 +3,7 @@ package web
 import (
 	"math/rand"
 	"net"
+	"path"
 	"strings"
 	"time"
 
@@ -217,7 +218,7 @@ func _space_fork(m *ice.Message) {
 				m.Go(func(msg *ice.Message) {
 					switch m.Option(ice.CMD) {
 					case cli.PWD:
-						link := kit.MergeURL(_space_domain(m), aaa.GRANT, name)
+						link := kit.MergeURL2(_space_domain(m), path.Join("/chat/cmd/web.chat.grant", name))
 						msg.Sleep300ms(SPACE, name, cli.PWD, name, link, msg.Cmdx(cli.QRCODE, link))
 					case SSO:
 						link := _space_domain(m)

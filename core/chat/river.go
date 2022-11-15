@@ -58,11 +58,9 @@ func init() {
 			}},
 		}, mdb.HashAction(mdb.FIELD, "time,hash,type,name,text,template"), aaa.WhiteAction()), Hand: func(m *ice.Message, arg ...string) {
 			if m.Warn(m.Option(ice.MSG_USERNAME) == "", ice.ErrNotLogin) {
-				m.RenderStatusUnauthorized()
 				return
 			}
 			if !aaa.Right(m, RIVER, arg) {
-				m.RenderStatusForbidden()
 				return
 			}
 			if len(arg) == 0 {

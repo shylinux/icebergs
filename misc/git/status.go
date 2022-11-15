@@ -200,7 +200,7 @@ const STATUS = "status"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
-		STATUS: {Name: "status repos auto", Help: "状态机", Actions: ice.Actions{
+		STATUS: {Name: "status repos auto", Help: "状态机", Actions: ice.MergeActions(ice.Actions{
 			mdb.INPUTS: {Hand: func(m *ice.Message, arg ...string) {
 				switch arg[0] {
 				case mdb.NAME, REPOS:
@@ -317,7 +317,7 @@ func init() {
 			code.DEVPACK: {Name: "devpack", Help: "开发模式", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmdy(code.VIMER, code.DEVPACK)
 			}},
-		}, Hand: func(m *ice.Message, arg ...string) {
+		}, aaa.RoleAction()), Hand: func(m *ice.Message, arg ...string) {
 			if _configs_get(m, "user.email") == "" {
 				m.Echo("please config user.email")
 				m.Action(CONFIGS)

@@ -16,8 +16,8 @@ import (
 	"shylinux.com/x/icebergs/base/ssh"
 	"shylinux.com/x/icebergs/base/tcp"
 	kit "shylinux.com/x/toolkits"
-	"shylinux.com/x/toolkits/logs"
 	"shylinux.com/x/toolkits/file"
+	"shylinux.com/x/toolkits/logs"
 )
 
 func _share_render(m *ice.Message, arg ...string) {
@@ -37,7 +37,7 @@ func _share_render(m *ice.Message, arg ...string) {
 }
 func _share_link(m *ice.Message, p string, arg ...ice.Any) string {
 	p = kit.Select("", SHARE_LOCAL, !strings.HasPrefix(p, ice.PS)) + p
-	return tcp.ReplaceLocalhost(m, MergeURL2(m, p, arg...))
+	return tcp.ReplaceLocalhost(m, MergeLink(m, p, arg...))
 }
 func _share_cache(m *ice.Message, arg ...string) {
 	if pod := m.Option(ice.POD); ctx.PodCmd(m, CACHE, arg[0]) {

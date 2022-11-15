@@ -70,11 +70,11 @@ func (m *Message) RenderStatus(status int) *Message {
 func (m *Message) RenderStatusBadRequest() *Message {
 	return m.Render(RENDER_STATUS, http.StatusBadRequest)
 }
-func (m *Message) RenderStatusUnauthorized() *Message {
-	return m.Render(RENDER_STATUS, http.StatusUnauthorized)
+func (m *Message) RenderStatusUnauthorized(arg ...string) *Message {
+	return m.Render(RENDER_STATUS, http.StatusUnauthorized, arg)
 }
-func (m *Message) RenderStatusForbidden() *Message {
-	return m.Render(RENDER_STATUS, http.StatusForbidden)
+func (m *Message) RenderStatusForbidden(arg ...string) *Message {
+	return m.Render(RENDER_STATUS, http.StatusForbidden, arg)
 }
 func (m *Message) RenderStatusNotFound() *Message {
 	return m.Render(RENDER_STATUS, http.StatusNotFound)

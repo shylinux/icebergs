@@ -139,8 +139,8 @@ func RenderResult(m *ice.Message, arg ...ice.Any) {
 }
 
 func CookieName(url string) string {
+	return ice.MSG_SESSID + "_" + kit.ReplaceAll(kit.ParseURLMap(url)[tcp.PORT], ".", "_", ":", "_")
 	return ice.MSG_SESSID + "_" + kit.ReplaceAll(kit.ParseURLMap(url)[tcp.HOST], ".", "_", ":", "_")
-	return ice.MSG_SESSID + "_" + kit.ParseURLMap(url)[tcp.PORT]
 }
 
 func RenderIndex(m *ice.Message, repos string, file ...string) *ice.Message {
@@ -152,21 +152,18 @@ func RenderIndex(m *ice.Message, repos string, file ...string) *ice.Message {
 func RenderWebsite(m *ice.Message, pod string, dir string, arg ...string) *ice.Message {
 	return m.Echo(m.Cmdx(Space(m, pod), "web.chat.website", lex.PARSE, dir, arg)).RenderResult()
 }
-func RenderCmd(m *ice.Message, index string, args ...ice.Any) {
-	if index == "" {
-		return
-	}
-	list := index
-	if index != "" {
-		msg := m.Cmd(ctx.COMMAND, index)
-		list = kit.Format(kit.List(kit.Dict(msg.AppendSimple(mdb.NAME, mdb.HELP),
-			ctx.INDEX, index, ctx.ARGS, kit.Simple(args), ctx.DISPLAY, m.Option(ice.MSG_DISPLAY),
-			mdb.LIST, kit.UnMarshal(msg.Append(mdb.LIST)), mdb.META, kit.UnMarshal(msg.Append(mdb.META)),
-		)))
-	}
+func RenderCmd(m *ice.Message, cmd string, arg ...ice.Any) {
+	RenderPodCmd(m, "", cmd, arg...)
+}
+func RenderPodCmd(m *ice.Message, pod, cmd string, arg ...ice.Any) {
+	msg := m.Cmd(Space(m, pod), ctx.COMMAND, kit.Select("web.wiki.word", cmd))
+	list := kit.Format(kit.List(kit.Dict(msg.AppendSimple(mdb.NAME, mdb.HELP),
+		ctx.INDEX, cmd, ctx.ARGS, kit.Simple(arg), ctx.DISPLAY, m.Option(ice.MSG_DISPLAY),
+		mdb.LIST, kit.UnMarshal(msg.Append(mdb.LIST)), mdb.META, kit.UnMarshal(msg.Append(mdb.META)),
+	)))
 	m.Echo(kit.Format(_cmd_template, list)).RenderResult()
 }
-func RenderMain(m *ice.Message, pod, index string, args ...ice.Any) *ice.Message {
+func RenderMain(m *ice.Message, pod, index string, arg ...ice.Any) *ice.Message {
 	if script := m.Cmdx(Space(m, pod), nfs.CAT, kit.Select(ice.SRC_MAIN_JS, index)); script != "" {
 		return m.Echo(kit.Format(_main_template, script)).RenderResult()
 	}

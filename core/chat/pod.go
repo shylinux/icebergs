@@ -23,14 +23,14 @@ func init() {
 				return
 			}
 			if len(arg) == 0 || kit.Select("", arg, 0) == "" {
-				web.RenderCmd(m, web.ROUTE)
+				web.RenderCmd(m, web.SPACE)
 			} else if len(arg) == 1 {
 				if m.Cmd(web.SPACE, arg[0]).Length() == 0 && !strings.Contains(arg[0], ice.PT) {
 					m.Cmd(web.DREAM, cli.START, mdb.NAME, arg[0])
 				}
 				web.RenderMain(aaa.UserRoot(m), arg[0], "")
 			} else if arg[1] == CMD {
-				m.Cmdy(web.SPACE, arg[0], m.Prefix(CMD), path.Join(arg[2:]...))
+				web.RenderPodCmd(m, arg[0], arg[2], arg[3:])
 			} else if arg[1] == WEBSITE {
 				web.RenderWebsite(m, arg[0], path.Join(arg[2:]...))
 			}

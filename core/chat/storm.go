@@ -39,7 +39,7 @@ func init() {
 				m.Cmdy(mdb.SELECT, RIVER, _river_key(m), mdb.HASH, ice.OptionFields("time,hash,name,text,count"))
 			} else if len(arg) == 0 || kit.Int(arg[0]) > 0 {
 				m.Cmdy(mdb.SELECT, RIVER, _storm_key(m), mdb.LIST, mdb.ID, arg, ice.OptionFields("time,id,space,index,args,style,display"))
-			} else if aaa.Right(m, arg[0]) {
+			} else if aaa.Right(m, arg) {
 				m.Push(ctx.INDEX, arg[0])
 			}
 		}},

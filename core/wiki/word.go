@@ -41,7 +41,7 @@ func init() {
 				})
 			}}, "play": {Name: "play", Help: "演示"},
 			ice.STORY: {Hand: func(m *ice.Message, arg ...string) { m.Cmdy(arg[0], ice.RUN, arg[2:]) }},
-		}, WikiAction("", nfs.SHY), ctx.CmdAction(), aaa.RoleAction()), Hand: func(m *ice.Message, arg ...string) {
+		}, WikiAction("", nfs.SHY), ctx.CmdAction(), aaa.RoleAction("story.field")), Hand: func(m *ice.Message, arg ...string) {
 			if m.Option(nfs.DIR_DEEP, ice.TRUE); len(arg) == 0 {
 				arg = append(arg, "src/")
 			}

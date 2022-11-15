@@ -113,13 +113,14 @@ func (m *Message) Warn(err Any, arg ...Any) bool {
 	}
 	str, meta := m.join(arg...)
 	m.log(LOG_WARN, str, meta...)
-	m.error(arg...)
-	if len(arg) > 0 {
-		switch kit.Format(arg[0]) {
-		case ErrNotLogin:
-			m.RenderStatusUnauthorized()
-		case ErrNotRight:
-			m.RenderStatusForbidden()
+	if !m.IsErr() {
+		if m.error(arg...); len(arg) > 0 {
+			switch kit.Format(arg[0]) {
+			case ErrNotLogin:
+				m.RenderStatusUnauthorized(str)
+			case ErrNotRight:
+				m.RenderStatusForbidden(str)
+			}
 		}
 	}
 	return true

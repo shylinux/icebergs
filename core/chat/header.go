@@ -85,7 +85,7 @@ func init() {
 			aaa.AVATAR:     {Hand: _header_users},
 			web.SHARE:      {Hand: _header_share},
 			"webpack":      {Hand: ctx.CmdHandler("webpack", "build")},
-		}, aaa.BlackAction("webpack")), Hand: func(m *ice.Message, arg ...string) {
+		}, ctx.ConfAction(SSO, ""), aaa.BlackAction("webpack")), Hand: func(m *ice.Message, arg ...string) {
 			if gdb.Event(m, HEADER_AGENT); !_header_check(m, arg...) {
 				return
 			}

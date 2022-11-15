@@ -36,15 +36,10 @@ func _header_share(m *ice.Message, arg ...string) {
 func _header_check(m *ice.Message, arg ...string) bool {
 	if m.Option(web.SHARE) != "" {
 		m.Cmd(web.SHARE, m.Option(web.SHARE), ice.OptionFields(""), func(value ice.Maps) {
-			if m.Warn(value[mdb.TIME] < m.Time(), ice.ErrNotValid, m.Option(web.SHARE), value[mdb.TIME], m.Time()) {
+			if web.IsNotValidShare(m, value) {
 				return
 			}
 			switch value[mdb.TYPE] {
-			case web.LOGIN:
-				if value[aaa.USERNAME] != m.Option(ice.MSG_USERNAME) {
-					web.RenderCookie(m, aaa.SessCreate(m, value[aaa.USERNAME]))
-				}
-				fallthrough
 			case web.STORM, web.FIELD:
 				aaa.SessAuth(m, value)
 			}
@@ -53,8 +48,8 @@ func _header_check(m *ice.Message, arg ...string) bool {
 	if m.Option(ice.MSG_USERNAME) != "" {
 		return true
 	}
-	if m.OptionFromConfig(web.SSO) == "" && m.Option("login.dev", m.CmdAppend(web.SPACE, ice.DEV, mdb.TEXT)) == "" {
-		if m.Option("login.dev", m.CmdAppend(web.SPACE, ice.SHY, mdb.TEXT)) == "" {
+	if m.OptionFromConfig(web.SSO) == "" && m.Option(ice.DEV, m.CmdAppend(web.SPACE, ice.DEV, mdb.TEXT)) == "" {
+		if m.Option(ice.DEV, m.CmdAppend(web.SPACE, ice.SHY, mdb.TEXT)) == "" {
 			m.OptionFromConfig(web.LOGIN)
 		}
 	}

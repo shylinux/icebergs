@@ -38,7 +38,7 @@ const RIVER = "river"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
-		web.P(RIVER): {Name: "/river hash auto create", Help: "群组", Actions: ice.MergeActions(ice.Actions{
+		web.P(RIVER): {Name: "/river", Help: "群组", Actions: ice.MergeActions(ice.Actions{
 			mdb.INPUTS: {Hand: func(m *ice.Message, arg ...string) {
 				switch arg[0] {
 				case nfs.TEMPLATE:
@@ -55,10 +55,6 @@ func init() {
 					m.Cmd(aaa.ROLE, aaa.WHITE, aaa.VOID, kit.Keys(RIVER, h))
 				}
 				gdb.Event(m, RIVER_CREATE, RIVER, m.Option(ice.MSG_RIVER, h), arg)
-			}},
-			RIVER_CREATE: {Name: "river.create", Hand: func(m *ice.Message, arg ...string) {
-				m.Cmd(mdb.EXPORT, m.Prefix(RIVER), "", mdb.HASH)
-				m.Cmd(mdb.IMPORT, m.Prefix(RIVER), "", mdb.HASH)
 			}},
 		}, mdb.HashAction(mdb.FIELD, "time,hash,type,name,text,template"), aaa.WhiteAction()), Hand: func(m *ice.Message, arg ...string) {
 			if m.Warn(m.Option(ice.MSG_USERNAME) == "", ice.ErrNotLogin) {

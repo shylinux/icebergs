@@ -28,10 +28,7 @@ func init() {
 				if m.Cmd(web.SPACE, arg[0]).Length() == 0 && !strings.Contains(arg[0], ice.PT) {
 					m.Cmd(web.DREAM, cli.START, mdb.NAME, arg[0])
 				}
-				aaa.UserRoot(m)
-				if web.RenderWebsite(m, arg[0], ice.INDEX_IML, "Header", "", "River", "", "Footer", ""); m.Result() == "" {
-					web.RenderIndex(m, ice.VOLCANOS)
-				}
+				web.RenderMain(aaa.UserRoot(m), arg[0], "")
 			} else if arg[1] == CMD {
 				m.Cmdy(web.SPACE, arg[0], m.Prefix(CMD), path.Join(arg[2:]...))
 			} else if arg[1] == WEBSITE {

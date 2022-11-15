@@ -31,7 +31,7 @@ func _action_exec(m *ice.Message, river, storm, index string, arg ...string) {
 }
 func _action_auth(m *ice.Message, share string) *ice.Message {
 	msg := m.Cmd(web.SHARE, share)
-	if m.Warn(msg.Append(mdb.TIME) < m.Time(), ice.ErrNotValid) {
+	if m.Warn(msg.Append(mdb.TIME) < m.Time(), ice.ErrNotValid, share, msg.Append(mdb.TIME), m.Time()) {
 		msg.Append(mdb.TYPE, "")
 		return msg
 	}
@@ -77,12 +77,12 @@ const ACTION = "action"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
-		web.P(ACTION): {Name: "/action river storm action arg...", Help: "工作台", Actions: ice.MergeActions(ice.Actions{
+		web.P(ACTION): {Name: "/action", Help: "工作台", Actions: ice.MergeActions(ice.Actions{
 			mdb.MODIFY: {Hand: func(m *ice.Message, arg ...string) {
 				m.Cmdy(mdb.MODIFY, RIVER, _storm_key(m), mdb.LIST, m.OptionSimple(mdb.ID), arg)
 			}},
 			web.SHARE: {Hand: func(m *ice.Message, arg ...string) { _action_share(m, arg...) }},
-		}, ctx.CmdAction(), aaa.WhiteAction()), Hand: func(m *ice.Message, arg ...string) {
+		}, ctx.CmdAction(), aaa.WhiteAction(ctx.COMMAND, ice.RUN)), Hand: func(m *ice.Message, arg ...string) {
 			if m.Warn(m.Option(ice.MSG_USERNAME) == "", ice.ErrNotLogin, arg) {
 				return
 			}

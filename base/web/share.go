@@ -16,6 +16,7 @@ import (
 	"shylinux.com/x/icebergs/base/ssh"
 	"shylinux.com/x/icebergs/base/tcp"
 	kit "shylinux.com/x/toolkits"
+	"shylinux.com/x/toolkits/logs"
 	"shylinux.com/x/toolkits/file"
 )
 
@@ -163,8 +164,9 @@ func init() {
 		}},
 		PP(SHARE): {Name: "/share/", Help: "共享链", Hand: func(m *ice.Message, arg ...string) {
 			msg := m.Cmd(SHARE, m.Option(SHARE, kit.Select(m.Option(SHARE), arg, 0)))
-			if kit.Int(msg.Append(mdb.TIME)) < kit.Int(msg.Time()) {
-				m.RenderResult("共享超时")
+			if m.Warn(msg.Append(mdb.TIME) < msg.Time(), ice.ErrNotValid, kit.Select(m.Option(SHARE), arg, 0), msg.Append(mdb.TIME)) {
+				m.RenderResult(kit.Format("共享超时, 请联系 %s(%s), 重新分享 %s %s",
+					msg.Append(aaa.USERNAME), msg.Append(aaa.USERNICK), msg.Append(mdb.TYPE), msg.Append(mdb.NAME)))
 				return
 			}
 			switch msg.Append(mdb.TYPE) {
@@ -197,4 +199,12 @@ func init() {
 			_share_repos(m, path.Join(arg[0], arg[1], arg[2]), arg[3:]...)
 		}},
 	})
+}
+
+func IsNotValidShare(m *ice.Message, value ice.Maps) bool {
+	_source := logs.FileLineMeta(logs.FileLine(2, 3))
+	if m.Warn(value[mdb.TIME] < m.Time(), ice.ErrNotValid, m.Option(SHARE), value[mdb.TIME], m.Time(), _source) {
+		return true
+	}
+	return false
 }

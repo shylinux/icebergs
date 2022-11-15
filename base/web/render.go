@@ -166,8 +166,11 @@ func RenderCmd(m *ice.Message, index string, args ...ice.Any) {
 	}
 	m.Echo(kit.Format(_cmd_template, list)).RenderResult()
 }
-func RenderMain(m *ice.Message, index string, args ...ice.Any) *ice.Message {
-	return m.Echo(kit.Format(_main_template, m.Cmdx(nfs.CAT, index))).RenderResult()
+func RenderMain(m *ice.Message, pod, index string, args ...ice.Any) *ice.Message {
+	if script := m.Cmdx(Space(m, pod), nfs.CAT, kit.Select(ice.SRC_MAIN_JS, index)); script != "" {
+		return m.Echo(kit.Format(_main_template, script)).RenderResult()
+	}
+	return RenderIndex(m, ice.VOLCANOS)
 }
 
 var _cmd_template = `<!DOCTYPE html>

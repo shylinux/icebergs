@@ -55,7 +55,6 @@ func _xterm_get(m *ice.Message, h string) _xterm {
 				if n, e := tty.Read(buf); !m.Warn(e) && e == nil {
 					m.Option(ice.MSG_DAEMON, mdb.HashSelectField(m, h, "view"))
 					m.Option(mdb.TEXT, string(buf[:n]))
-					m.Debug("what %v", m.FormatMeta())
 					web.PushNoticeGrow(m)
 				} else {
 					break

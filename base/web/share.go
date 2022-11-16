@@ -49,7 +49,6 @@ func _share_cache(m *ice.Message, arg ...string) {
 		}
 	} else {
 		msg := m.Cmd(CACHE, arg[0])
-		m.Debug("what %v", msg.FormatMeta())
 		m.RenderDownload(msg.Append(nfs.FILE), msg.Append(mdb.TYPE), msg.Append(mdb.NAME))
 	}
 }

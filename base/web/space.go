@@ -205,7 +205,7 @@ func _space_fork(m *ice.Message) {
 		text := kit.Select(s.RemoteAddr().String(), m.Option(ice.MSG_USERADDR))
 		name := strings.ToLower(m.Option(mdb.NAME, kit.ReplaceAll(kit.Select(text, m.Option(mdb.NAME)), ".", "_", ":", "_")))
 		kind := kit.Select(WORKER, m.Option(mdb.TYPE))
-		args := append([]string{mdb.TYPE, kind, mdb.NAME, name}, m.OptionSimple(SHARE, RIVER)...)
+		args := append([]string{mdb.TYPE, kind, mdb.NAME, name}, m.OptionSimple(SHARE, RIVER, ice.CMD)...)
 
 		m.Go(func() {
 			mdb.HashCreate(m, mdb.TEXT, kit.Select(text, m.Option(mdb.TEXT)), args, kit.Dict(mdb.TARGET, s))

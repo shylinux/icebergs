@@ -347,7 +347,6 @@ func (c *Context) _action(m *Message, cmd *Command, key string, sub string, h *A
 	}
 	m.Log(LOG_CMDS, "%s.%s %s %d %v", c.Name, key, sub, len(arg), arg,
 		logs.FileLineMeta(kit.Select(m._target, m._source, m.target.Name == MDB)))
-
 	h.Hand(m, arg...)
 	return m
 }

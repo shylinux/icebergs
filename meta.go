@@ -225,8 +225,8 @@ func (m *Message) Copy(msg *Message, arg ...string) *Message {
 			m.data[k] = v
 		} else {
 			m.Set(MSG_OPTION, k)
-			m.Add(MSG_OPTION, kit.Simple(k, msg.meta[k])...)
 		}
+		m.Add(MSG_OPTION, kit.Simple(k, msg.meta[k])...)
 	}
 	for _, k := range msg.meta[MSG_APPEND] {
 		m.Add(MSG_APPEND, kit.Simple(k, msg.meta[k])...)

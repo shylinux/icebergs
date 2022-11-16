@@ -58,17 +58,16 @@ func (m *Message) Render(cmd string, args ...Any) *Message {
 	}
 	m.Optionv(MSG_OUTPUT, cmd)
 	m.Optionv(MSG_ARGS, args)
-
 	return m
 }
 func (m *Message) RenderTemplate(args ...Any) *Message {
 	return m.Render(RENDER_TEMPLATE, args...)
 }
-func (m *Message) RenderStatus(status int) *Message {
-	return m.Render(RENDER_STATUS, status)
+func (m *Message) RenderStatus(status int, arg ...string) *Message {
+	return m.Render(RENDER_STATUS, status, arg)
 }
-func (m *Message) RenderStatusBadRequest() *Message {
-	return m.Render(RENDER_STATUS, http.StatusBadRequest)
+func (m *Message) RenderStatusBadRequest(arg ...string) *Message {
+	return m.Render(RENDER_STATUS, http.StatusBadRequest, arg)
 }
 func (m *Message) RenderStatusUnauthorized(arg ...string) *Message {
 	return m.Render(RENDER_STATUS, http.StatusUnauthorized, arg)
@@ -76,8 +75,8 @@ func (m *Message) RenderStatusUnauthorized(arg ...string) *Message {
 func (m *Message) RenderStatusForbidden(arg ...string) *Message {
 	return m.Render(RENDER_STATUS, http.StatusForbidden, arg)
 }
-func (m *Message) RenderStatusNotFound() *Message {
-	return m.Render(RENDER_STATUS, http.StatusNotFound)
+func (m *Message) RenderStatusNotFound(arg ...string) *Message {
+	return m.Render(RENDER_STATUS, http.StatusNotFound, arg)
 }
 func (m *Message) RenderRedirect(args ...Any) *Message {
 	return m.Render(RENDER_REDIRECT, args...)

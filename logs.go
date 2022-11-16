@@ -116,10 +116,14 @@ func (m *Message) Warn(err Any, arg ...Any) bool {
 	if !m.IsErr() {
 		if m.error(arg...); len(arg) > 0 {
 			switch kit.Format(arg[0]) {
+			case ErrNotValid:
+				m.RenderStatusBadRequest(str)
 			case ErrNotLogin:
 				m.RenderStatusUnauthorized(str)
 			case ErrNotRight:
 				m.RenderStatusForbidden(str)
+			case ErrNotFound:
+				m.RenderStatusNotFound(str)
 			}
 		}
 	}

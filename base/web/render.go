@@ -11,7 +11,6 @@ import (
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/aaa"
 	"shylinux.com/x/icebergs/base/ctx"
-	"shylinux.com/x/icebergs/base/lex"
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/nfs"
 	"shylinux.com/x/icebergs/base/tcp"
@@ -76,13 +75,11 @@ func Render(m *ice.Message, cmd string, args ...ice.Any) bool {
 		for _, k := range []string{"sessid", "cmds", "fields", "_option", "_handle", "_output"} {
 			m.Set(k)
 		}
-
-		if cmd != "" && cmd != ice.RENDER_RAW { // [str [arg...]]
+		if cmd != "" && cmd != ice.RENDER_RAW {
 			m.Echo(kit.Format(cmd, args...))
 		}
 		RenderType(m.W, nfs.JSON, "")
-		fmt.Fprint(m.W, m.FormatsMeta())
-		// fmt.Fprint(m.W, m.FormatMeta())
+		fmt.Fprint(m.W, m.FormatMeta())
 	}
 	return true
 }
@@ -149,11 +146,11 @@ func RenderIndex(m *ice.Message, repos string, file ...string) *ice.Message {
 	}
 	return m.RenderDownload(path.Join(m.Conf(SERVE, kit.Keym(repos, nfs.PATH)), kit.Select(m.Conf(SERVE, kit.Keym(repos, INDEX)), path.Join(file...))))
 }
-func RenderWebsite(m *ice.Message, pod string, dir string, arg ...string) *ice.Message {
-	return m.Echo(m.Cmdx(Space(m, pod), "web.chat.website", lex.PARSE, dir, arg)).RenderResult()
-}
-func RenderCmd(m *ice.Message, cmd string, arg ...ice.Any) {
-	RenderPodCmd(m, "", cmd, arg...)
+func RenderMain(m *ice.Message, pod, index string, arg ...ice.Any) *ice.Message {
+	if script := m.Cmdx(Space(m, pod), nfs.CAT, kit.Select(ice.SRC_MAIN_JS, index)); script != "" {
+		return m.Echo(kit.Format(_main_template, script)).RenderResult()
+	}
+	return RenderIndex(m, ice.VOLCANOS)
 }
 func RenderPodCmd(m *ice.Message, pod, cmd string, arg ...ice.Any) {
 	msg := m.Cmd(Space(m, pod), ctx.COMMAND, kit.Select("web.wiki.word", cmd))
@@ -163,35 +160,33 @@ func RenderPodCmd(m *ice.Message, pod, cmd string, arg ...ice.Any) {
 	)))
 	m.Echo(kit.Format(_cmd_template, list)).RenderResult()
 }
-func RenderMain(m *ice.Message, pod, index string, arg ...ice.Any) *ice.Message {
-	if script := m.Cmdx(Space(m, pod), nfs.CAT, kit.Select(ice.SRC_MAIN_JS, index)); script != "" {
-		return m.Echo(kit.Format(_main_template, script)).RenderResult()
-	}
-	return RenderIndex(m, ice.VOLCANOS)
+func RenderCmd(m *ice.Message, cmd string, arg ...ice.Any) {
+	RenderPodCmd(m, "", cmd, arg...)
 }
 
-var _cmd_template = `<!DOCTYPE html>
-<head>
-	<meta name="viewport" content="width=device-width,initial-scale=0.8,maximum-scale=0.8,user-scalable=no">
-	<meta charset="utf-8">
-	<link rel="stylesheet" type="text/css" href="/page/can.css">
-</head>
-<body>
-	<script src="/page/can.js"></script><script>Volcanos(%s)</script>
-</body>
-`
 var _main_template = `<!DOCTYPE html>
 <head>
 	<meta name="viewport" content="width=device-width,initial-scale=0.8,maximum-scale=0.8,user-scalable=no"/>
 	<meta charset="utf-8">
 	<title>volcanos</title>
 	<link rel="shortcut icon" type="image/ico" href="/favicon.ico">
-	<link rel="stylesheet" type="text/css" href="/page/cache.css">
-	<link rel="stylesheet" type="text/css" href="/page/index.css">
+	<link rel="stylesheet" href="/page/cache.css">
+	<link rel="stylesheet" href="/page/index.css">
 </head>
 <body>
 	<script src="/proto.js"></script>
 	<script src="/page/cache.js"></script>
 	<script>%s</script>
+</body>
+`
+
+var _cmd_template = `<!DOCTYPE html>
+<head>
+	<meta name="viewport" content="width=device-width,initial-scale=0.8,maximum-scale=0.8,user-scalable=no">
+	<meta charset="utf-8">
+	<link rel="stylesheet" href="/page/can.css">
+</head>
+<body>
+	<script src="/page/can.js"></script><script>Volcanos(%s)</script>
 </body>
 `

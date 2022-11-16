@@ -9,6 +9,7 @@ import (
 	"shylinux.com/x/icebergs/base/cli"
 	"shylinux.com/x/icebergs/base/ctx"
 	"shylinux.com/x/icebergs/base/mdb"
+	"shylinux.com/x/icebergs/base/lex"
 	"shylinux.com/x/icebergs/base/web"
 	kit "shylinux.com/x/toolkits"
 )
@@ -32,8 +33,12 @@ func init() {
 			} else if arg[1] == CMD {
 				web.RenderPodCmd(m, arg[0], arg[2], arg[3:])
 			} else if arg[1] == WEBSITE {
-				web.RenderWebsite(m, arg[0], path.Join(arg[2:]...))
+				RenderWebsite(m, arg[0], path.Join(arg[2:]...))
 			}
 		}},
 	})
+}
+
+func RenderWebsite(m *ice.Message, pod string, dir string, arg ...string) *ice.Message {
+	return m.Echo(m.Cmdx(web.Space(m, pod), "web.chat.website", lex.PARSE, dir, arg)).RenderResult()
 }

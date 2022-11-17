@@ -1,6 +1,8 @@
 package chat
 
 import (
+	"strings"
+
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/aaa"
 	"shylinux.com/x/icebergs/base/cli"
@@ -14,13 +16,21 @@ const SSO = "sso"
 func init() {
 	Index.MergeCommands(ice.Commands{
 		web.P(SSO): {Name: "/sso", Help: "授权", Actions: aaa.WhiteAction(), Hand: func(m *ice.Message, arg ...string) {
-			if m.Option(ice.MSG_USERNAME) == "" || m.Warn(m.Option(cli.BACK) == "") {
+			if m.Warn(m.Option(ice.MSG_USERNAME) == "", ice.ErrNotLogin) || m.Warn(m.Option(cli.BACK) == "", ice.ErrNotValid) {
 				web.RenderIndex(m, ice.VOLCANOS)
 				return
 			}
-			sessid := aaa.UserRoot(m).Cmdx(web.SPACE, m.Option(web.SPACE), aaa.SESS, mdb.CREATE, aaa.USERNAME, m.Option(ice.MSG_USERNAME),
-				aaa.USERROLE, m.Option(ice.MSG_USERROLE), aaa.USERNICK, m.Option(ice.MSG_USERNICK))
-			m.RenderRedirect(kit.MergeURL(m.Option(cli.BACK), ice.MSG_SESSID, sessid))
+			m.RenderRedirect(kit.MergeURL(m.Option(cli.BACK), ice.MSG_SESSID, aaa.UserRoot(m).Cmdx(web.SPACE, m.Option(web.SPACE), aaa.SESS, mdb.CREATE,
+				aaa.USERNAME, m.Option(ice.MSG_USERNAME), aaa.USERROLE, m.Option(ice.MSG_USERROLE), aaa.USERNICK, m.Option(ice.MSG_USERNICK))))
 		}},
 	})
+}
+
+func GetSSO(m *ice.Message) string {
+	link := m.Cmdx(web.SPACE, web.DOMAIN)
+	if !strings.Contains(link, "/chat/pod/") {
+		return ""
+	}
+	ls := strings.Split(kit.ParseURL(link).Path, ice.PS)
+	return kit.MergeURL2(link, web.P(CHAT, SSO), web.SPACE, kit.Select("", ls, 3), cli.BACK, m.R.Header.Get(web.Referer))
 }

@@ -22,6 +22,15 @@ func init() {
 		}, mdb.ZoneAction(mdb.SHORT, EVENT, mdb.FIELD, "time,id,cmd"))},
 	})
 }
+func EventAction(arg ...string) ice.Actions {
+	return ice.Actions{
+		ice.CTX_INIT: {Hand: func(m *ice.Message, args ...string) {
+			for _, v := range arg {
+				Watch(m, v)
+			}
+		}},
+	}
+}
 func Watch(m *ice.Message, key string, arg ...string) *ice.Message {
 	if len(arg) == 0 {
 		arg = append(arg, m.PrefixKey())

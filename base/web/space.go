@@ -3,7 +3,6 @@ package web
 import (
 	"math/rand"
 	"net"
-	"path"
 	"strings"
 	"time"
 
@@ -21,6 +20,7 @@ import (
 
 func _space_domain(m *ice.Message) (link string) {
 	if link = ice.Info.Domain; link == "" {
+		m.Optionv(ice.MSG_OPTS, ice.MSG_USERNAME)
 		link = m.Cmd(SPACE, ice.OPS, cli.PWD).Append(mdb.LINK)
 	}
 	if link == "" {
@@ -205,40 +205,24 @@ func _space_fork(m *ice.Message) {
 		text := kit.Select(s.RemoteAddr().String(), m.Option(ice.MSG_USERADDR))
 		name := strings.ToLower(m.Option(mdb.NAME, kit.ReplaceAll(kit.Select(text, m.Option(mdb.NAME)), ".", "_", ":", "_")))
 		kind := kit.Select(WORKER, m.Option(mdb.TYPE))
-		args := append([]string{mdb.TYPE, kind, mdb.NAME, name}, m.OptionSimple(SHARE, RIVER, ice.CMD)...)
+		args := append([]string{mdb.TYPE, kind, mdb.NAME, name}, m.OptionSimple(SHARE, RIVER, ice.MSG_USERUA)...)
 
 		m.Go(func() {
 			mdb.HashCreate(m, mdb.TEXT, kit.Select(text, m.Option(mdb.TEXT)), args, kit.Dict(mdb.TARGET, s))
+			defer mdb.HashRemove(m, mdb.NAME, name)
+
+			gdb.Event(m, SPACE_OPEN, args)
+			defer gdb.Event(m, SPACE_CLOSE, args)
 
 			switch kind {
-			case CHROME: // 交互节点
-				gdb.Event(m, SPACE_OPEN, args)
-				defer gdb.Event(m, SPACE_CLOSE, args)
-				defer mdb.HashRemove(m, mdb.NAME, name)
-				m.Go(func(msg *ice.Message) {
-					switch m.Option(ice.CMD) {
-					case cli.PWD:
-						link := kit.MergeURL2(_space_domain(m), path.Join("/chat/cmd/web.chat.grant", name))
-						msg.Sleep300ms(SPACE, name, cli.PWD, name, link, msg.Cmdx(cli.QRCODE, link))
-					case SSO:
-						link := _space_domain(m)
-						ls := strings.Split(kit.ParseURL(link).Path, ice.PS)
-						link = kit.MergeURL2(_space_domain(m), "/chat/sso", SPACE, kit.Select("", ls, 3), "back", m.Option("back"))
-						msg.Sleep300ms(SPACE, name, cli.PWD, name, link, msg.Cmdx(cli.QRCODE, link))
-					default:
-						msg.Sleep300ms(SPACE, name, cli.PWD, name)
-					}
-				})
-			case WORKER: // 工作节点
+			case CHROME:
+				m.Go(func(msg *ice.Message) { msg.Sleep300ms(SPACE, name, cli.PWD, name) })
+			case WORKER:
 				gdb.Event(m, DREAM_START, args)
 				defer gdb.Event(m, DREAM_STOP, args)
 				if m.Option("daemon") == "ops" {
 					defer m.Cmd(DREAM, DREAM_STOP, args)
 				}
-			default: // 服务节点
-				gdb.Event(m, SPACE_START, args)
-				defer gdb.Event(m, SPACE_STOP, args)
-				defer mdb.HashRemove(m, mdb.NAME, name)
 			}
 			_space_handle(m, false, m.Target().Server().(*Frame), s, name)
 		})

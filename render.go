@@ -21,6 +21,9 @@ func Render(m *Message, cmd string, args ...Any) string {
 		return kit.Format(`<a href="%s" target="_blank">%s</a>`, p, arg[0])
 
 	case RENDER_BUTTON: // name...
+		if strings.HasPrefix(kit.Join(arg), "<input") {
+			return kit.Join(arg)
+		}
 		list := []string{}
 		for _, k := range kit.Split(kit.Join(arg)) {
 			list = append(list, kit.Format(`<input type="button" name="%s" value="%s">`, k,
@@ -29,6 +32,9 @@ func Render(m *Message, cmd string, args ...Any) string {
 		return strings.Join(list, "")
 
 	case RENDER_IMAGES: // src [height]
+		if m.Option("height") != "" && m.Option("width") != "" {
+			return kit.Format(`<img src="%s" style="max-height:%spx; max-width:%spx">`, arg[0], m.Option("height"), m.Option("width"))
+		}
 		if strings.Contains(m.Option(MSG_USERUA), "Mobile") {
 			return kit.Format(`<img src="%s" width=%d>`, arg[0], kit.Int(kit.Select(kit.Select("120", m.Option("width")), arg, 1))-24)
 		}

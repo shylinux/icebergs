@@ -87,10 +87,10 @@ func init() {
 					"latitude", m.Option("LocationX"), "longitude", m.Option("LocationY"), "scale", m.Option("Scale"),
 				)
 			case mdb.LINK: // 打卡
-				m.Cmdy(chat.SCAN, mdb.CREATE, mdb.TYPE, mdb.LINK, mdb.NAME, m.Option("Title"), mdb.TEXT, m.Option("URL"))
+				m.Cmdy("scan", mdb.CREATE, mdb.TYPE, mdb.LINK, mdb.NAME, m.Option("Title"), mdb.TEXT, m.Option("URL"))
 
 			case "image": // 文本
-				m.Cmdy(chat.SCAN, mdb.CREATE, mdb.TYPE, wiki.IMAGE, mdb.NAME, m.Option("Title"), mdb.TEXT, m.Option("URL"))
+				m.Cmdy("scan", mdb.CREATE, mdb.TYPE, wiki.IMAGE, mdb.NAME, m.Option("Title"), mdb.TEXT, m.Option("URL"))
 
 			case TEXT: // 文本
 				if cmds := kit.Split(m.Option("Content")); aaa.Right(m, cmds) {

@@ -57,12 +57,12 @@ func init() {
 					m.OptionSimple(aaa.CITY, aaa.COUNTRY, aaa.LANGUAGE, aaa.PROVINCE),
 				)
 			}},
-			chat.SCAN: {Name: "scan", Help: "扫码", Hand: func(m *ice.Message, arg ...string) {
+			"scan": {Name: "scan", Help: "扫码", Hand: func(m *ice.Message, arg ...string) {
 				if m.Option(chat.GRANT) != "" {
 					m.Cmdy(chat.HEADER, chat.GRANT, web.SPACE, m.Option(chat.GRANT))
 					return
 				}
-				m.Cmdy(chat.SCAN, arg)
+				m.Cmdy("scan", arg)
 			}},
 		}},
 		LOGIN: {Name: "login appid auto qrcode tokens create", Help: "认证", Actions: ice.Actions{

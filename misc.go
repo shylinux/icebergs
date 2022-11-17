@@ -282,7 +282,7 @@ func (m *Message) CmdHand(cmd *Command, key string, arg ...string) *Message {
 }
 func (c *Context) _command(m *Message, cmd *Command, key string, arg ...string) *Message {
 	key = kit.Slice(strings.Split(key, PT), -1)[0]
-	if m._key, m._cmd = key, cmd; cmd == nil {
+	if m._key, m._sub, m._cmd = key, "select", cmd; cmd == nil {
 		return m
 	}
 

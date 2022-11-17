@@ -27,10 +27,7 @@ func init() {
 				})
 			}},
 			CONFIRM: {Help: "授权", Hand: func(m *ice.Message, arg ...string) {
-				if m.Warn(m.Option(ice.MSG_USERNAME) == "", ice.ErrNotLogin) {
-					return
-				}
-				if m.Warn(m.Option(web.SPACE) == "", ice.ErrNotValid, web.SPACE) {
+				if m.Warn(m.Option(ice.MSG_USERNAME) == "", ice.ErrNotLogin) || m.Warn(m.Option(web.SPACE) == "", ice.ErrNotValid, web.SPACE) {
 					return
 				}
 				if msg := m.Cmd(web.SPACE, m.Option(web.SPACE)); m.Warn(msg.Append(mdb.TYPE) != aaa.LOGIN, ice.ErrNotFound, m.Option(web.SPACE)) {

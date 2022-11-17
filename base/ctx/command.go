@@ -123,6 +123,32 @@ func init() {
 	})
 }
 
+func Run(m *ice.Message, arg ...string) {
+	if len(arg) > 3 && arg[1] == ACTION && arg[2] == CONFIG {
+		switch arg[3] {
+		case "help":
+			if file := strings.ReplaceAll(GetCmdFile(m, arg[0]), ".go", ".shy"); nfs.ExistsFile(m, file) {
+				ProcessFloat(m, "web.wiki.word", file)
+			}
+		case "script":
+			if file := strings.ReplaceAll(GetCmdFile(m, arg[0]), ".go", ".js"); nfs.ExistsFile(m, file) {
+				ProcessFloat(m, "web.code.inner", file)
+			}
+		case "source":
+			if file := GetCmdFile(m, arg[0]); nfs.ExistsFile(m, file) {
+				ProcessFloat(m, "web.code.inner", file)
+			}
+		case "select":
+			m.Cmdy(CONFIG, arg[0])
+		case "reset":
+			m.Cmd(CONFIG, "reset", arg[0])
+		}
+		return
+	}
+	if !PodCmd(m, arg) && aaa.Right(m, arg) {
+		m.Cmdy(arg)
+	}
+}
 func CmdHandler(args ...ice.Any) ice.Handler {
 	return func(m *ice.Message, arg ...string) { m.Cmdy(args...) }
 }
@@ -133,32 +159,7 @@ func CmdAction(args ...ice.Any) ice.Actions {
 				m.Cmdy(COMMAND, arg)
 			}
 		}},
-		ice.RUN: {Name: "run", Help: "执行", Hand: func(m *ice.Message, arg ...string) {
-			if len(arg) > 3 && arg[1] == ACTION && arg[2] == CONFIG {
-				switch arg[3] {
-				case "help":
-					if file := strings.ReplaceAll(GetCmdFile(m, arg[0]), ".go", ".shy"); nfs.ExistsFile(m, file) {
-						ProcessFloat(m, "web.wiki.word", file)
-					}
-				case "script":
-					if file := strings.ReplaceAll(GetCmdFile(m, arg[0]), ".go", ".js"); nfs.ExistsFile(m, file) {
-						ProcessFloat(m, "web.code.inner", file)
-					}
-				case "source":
-					if file := GetCmdFile(m, arg[0]); nfs.ExistsFile(m, file) {
-						ProcessFloat(m, "web.code.inner", file)
-					}
-				case "select":
-					m.Cmdy(CONFIG, arg[0])
-				case "reset":
-					m.Cmd(CONFIG, "reset", arg[0])
-				}
-				return
-			}
-			if !PodCmd(m, arg) && aaa.Right(m, arg) {
-				m.Cmdy(arg)
-			}
-		}},
+		ice.RUN: {Name: "run", Help: "执行", Hand: Run},
 	}
 }
 func PodCmd(m *ice.Message, arg ...ice.Any) bool {

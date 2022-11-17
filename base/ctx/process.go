@@ -30,7 +30,8 @@ func Process(m *ice.Message, key string, args []string, arg ...string) {
 func ProcessField(m *ice.Message, cmd string, args []string, arg ...string) {
 	cmd = kit.Select(m.PrefixKey(), cmd)
 	if len(arg) == 0 || arg[0] != ice.RUN {
-		if m.Cmdy(COMMAND, cmd).ProcessField(m.ActionKey(), ice.RUN); len(args) > 0 {
+		m.Option("_index", m.PrefixKey())
+		if m.Cmdy(COMMAND, cmd).ProcessField(ACTION, m.ActionKey(), ice.RUN); len(args) > 0 {
 			m.Push(ARGS, kit.Format(args))
 		}
 		return
@@ -47,6 +48,9 @@ func ProcessFloat(m *ice.Message, arg ...string) {
 
 func ProcessHold(m *ice.Message, text ...ice.Any) {
 	m.Process(ice.PROCESS_HOLD, text...)
+}
+func ProcessOpen(m *ice.Message, url string) {
+	m.Process(ice.PROCESS_OPEN, url)
 }
 func ProcessRefresh(m *ice.Message, arg ...string) {
 	m.ProcessRefresh(kit.Select("300ms", arg, 0))

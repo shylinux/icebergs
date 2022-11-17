@@ -15,7 +15,7 @@ func init() {
 				mdb.ZoneInsert(m, m.OptionSimple(EVENT, ice.CMD))
 			}},
 			HAPPEN: {Name: "happen event arg", Help: "触发", Hand: func(m *ice.Message, arg ...string) {
-				mdb.ZoneSelect(m.Spawn(), m.Option(EVENT)).Tables(func(value ice.Maps) {
+				mdb.ZoneSelect(m.Spawn(ice.OptionFields("")), m.Option(EVENT)).Tables(func(value ice.Maps) {
 					m.Cmdy(kit.Split(value[ice.CMD]), m.Option(EVENT), arg[2:], ice.OptionFields("")).Cost()
 				})
 			}},
@@ -38,5 +38,5 @@ func Watch(m *ice.Message, key string, arg ...string) *ice.Message {
 	return m.Cmd("gdb.event", LISTEN, EVENT, key, ice.CMD, kit.Join(arg, ice.SP))
 }
 func Event(m *ice.Message, key string, arg ...ice.Any) *ice.Message {
-	return m.Cmdy("gdb.event", HAPPEN, EVENT, key, arg)
+	return m.Cmdy("gdb.event", HAPPEN, EVENT, kit.Select(kit.Keys(m.CommandKey(), m.ActionKey()), key), arg)
 }

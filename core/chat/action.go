@@ -69,7 +69,7 @@ func _action_share(m *ice.Message, arg ...string) {
 	}
 }
 func _action_upload(m *ice.Message) {
-	msg := m.Cmd(web.CACHE, web.UPLOAD)
+	msg := m.Cmdy(web.CACHE, web.UPLOAD)
 	m.Option(ice.MSG_UPLOAD, msg.Append(mdb.HASH), msg.Append(mdb.NAME), msg.Append(nfs.SIZE))
 }
 

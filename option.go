@@ -35,6 +35,19 @@ func (m *Message) OptionDefault(arg ...string) string {
 	return m.Option(arg[0])
 }
 func (m *Message) OptionSimple(key ...string) (res []string) {
+	if len(key) == 0 {
+		for _, k := range kit.Split(m.Config(FIELD)) {
+			switch k {
+			case "", TIME, HASH:
+				continue
+			}
+			if m.Option(k) == "" {
+				continue
+			}
+			res = append(res, k, m.Option(k))
+		}
+		return
+	}
 	for _, k := range kit.Split(kit.Join(key)) {
 		if k == "" || m.Option(k) == "" {
 			continue

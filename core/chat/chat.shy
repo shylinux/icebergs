@@ -6,28 +6,24 @@ search.go
 action.go
 river.go
 storm.go
-template.go
 
 pod.go
 cmd.go
 grant.go
 sso.go
-oauth
 
-scan.go
-paste.go
+favor.go
 iframe.go
-location.go
-location.shy
-
-files.go
-trans.go
 media.go
-topic.go
 
 div.go
+topic.go
 website.go
+template.go
 keyboard.go
+location.go
+location.shy
+trans.go
 room.go
 meet.go
-
+oauth

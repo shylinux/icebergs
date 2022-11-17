@@ -351,6 +351,9 @@ const (
 	CLIENT_URL     = "client.url"
 	LOGHEADERS     = "logheaders"
 
+	OPEN     = "open"
+	FULL     = "full"
+	LINK     = "link"
 	HTTP     = "http"
 	FORM     = "form"
 	ADDRESS  = "address"

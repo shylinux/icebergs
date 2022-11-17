@@ -119,6 +119,7 @@ const (
 	WRITE    = "write"
 	UPLOAD   = "upload"
 	DOWNLOAD = "download"
+	DISPLAY  = "display"
 
 	UPLOAD_WATCH = "upload_watch"
 )

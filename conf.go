@@ -289,6 +289,7 @@ const ( // mdb
 	MDB    = "mdb"
 	KEY    = "key"
 	VALUE  = "value"
+	FIELD  = "field"
 	EXTRA  = "extra"
 	SCRIPT = "script"
 	META   = "meta"

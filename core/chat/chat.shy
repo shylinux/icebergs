@@ -14,13 +14,12 @@ sso.go
 
 favor.go
 iframe.go
-media.go
+keyboard.go
 
 div.go
 topic.go
 website.go
 template.go
-keyboard.go
 location.go
 location.shy
 trans.go

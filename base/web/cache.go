@@ -31,6 +31,14 @@ func _cache_save(m *ice.Message, kind, name, text string, arg ...string) { // fi
 	text = kit.Select(file, text)
 	h := mdb.HashCreate(m, kit.SimpleKV("", kind, name, text), nfs.FILE, file, nfs.SIZE, size)
 
+	if kind == "application/octet-stream" {
+		if kit.ExtIsImage(name) {
+			kind = "image/"+kit.Ext(name)
+		} else if kit.ExtIsVideo(name) {
+			kind = "video/"+kit.Ext(name)
+		}
+	}
+	
 	// 返回结果
 	m.Push(mdb.TIME, m.Time())
 	m.Push(mdb.TYPE, kind)

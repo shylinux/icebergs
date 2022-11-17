@@ -9,9 +9,20 @@ import (
 	"shylinux.com/x/icebergs/base/gdb"
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/ssh"
+	"shylinux.com/x/icebergs/base/tcp"
 	"shylinux.com/x/icebergs/base/web"
 	kit "shylinux.com/x/toolkits"
 )
+
+func _favor_is_image(m *ice.Message, name, mime string) bool {
+	return strings.HasPrefix(mime, "image/") || kit.ExtIsImage(name)
+}
+func _favor_is_video(m *ice.Message, name, mime string) bool {
+	return strings.HasPrefix(mime, "video/") || kit.ExtIsVideo(name)
+}
+func _favor_is_audio(m *ice.Message, name, mime string) bool {
+	return strings.HasPrefix(mime, "audio/")
+}
 
 const (
 	FAVOR_INPUTS = "favor.inputs"
@@ -22,7 +33,7 @@ const FAVOR = "favor"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
-		FAVOR: {Name: "favor hash auto create getClipboardData getLocation scanQRCode upload", Help: "收藏夹", Actions: ice.MergeActions(ice.Actions{
+		FAVOR: {Name: "favor hash auto create getClipboardData getLocation scanQRCode record1 record2 upload", Help: "收藏夹", Actions: ice.MergeActions(ice.Actions{
 			mdb.INPUTS: {Hand: func(m *ice.Message, arg ...string) {
 				switch mdb.HashInputs(m, arg); arg[0] {
 				case mdb.TYPE:
@@ -31,6 +42,7 @@ func init() {
 					switch m.Option(mdb.TYPE) {
 					case ctx.INDEX:
 						m.Copy(m.Cmd(ctx.COMMAND, mdb.SEARCH, ctx.COMMAND, arg[1:], ice.OptionFields(ctx.INDEX)).RenameAppend(ctx.INDEX, arg[0]))
+						return
 					}
 				}
 				gdb.Event(m, "", arg)
@@ -38,6 +50,8 @@ func init() {
 			"getClipboardData": {Name: "favor create", Help: "粘贴"},
 			"getLocation":      {Name: "favor create", Help: "定位"},
 			"scanQRCode":       {Name: "favor create", Help: "扫码"},
+			"record1":       {Name: "favor upload", Help: "截图"},
+			"record2":       {Name: "favor upload", Help: "录屏"},
 			mdb.CREATE: {Hand: func(m *ice.Message, arg ...string) {
 				m.OptionDefault(mdb.TYPE, mdb.LINK, mdb.NAME, kit.ParseURL(m.Option(mdb.TEXT)).Host)
 				mdb.HashCreate(m, m.OptionSimple())
@@ -49,7 +63,14 @@ func init() {
 				ctx.ProcessOpen(m, web.MergeURL2(m, web.SHARE_LOCAL+m.Option(mdb.TEXT), "filename", m.Option(mdb.NAME)))
 			}},
 			web.DISPLAY: {Help: "预览", Hand: func(m *ice.Message, arg ...string) {
-				m.EchoImages(web.SHARE_LOCAL + m.Option(mdb.TEXT)).ProcessInner()
+				if link := web.SHARE_LOCAL+m.Option(mdb.TEXT); _favor_is_image(m, m.Option(mdb.NAME), m.Option(mdb.TYPE)) {
+					m.EchoImages(link)
+				} else if _favor_is_video(m, m.Option(mdb.NAME), m.Option(mdb.TYPE)) {
+					m.EchoVideos(link)
+				} else {
+					m.Echo("<audio src=%s autoplay controls/>", link)
+				}
+				m.ProcessInner()
 			}},
 			ctx.INDEX: {Help: "命令", Hand: func(m *ice.Message, arg ...string) {
 				ctx.ProcessField(m, m.Cmd("", m.Option(mdb.HASH)).Append(mdb.NAME), kit.Simple(kit.UnMarshal(m.Option(mdb.TEXT))), arg...)
@@ -58,44 +79,47 @@ func init() {
 				m.Option(mdb.TYPE, m.Cmd("", m.Option(mdb.HASH)).Append(mdb.TYPE))
 				ctx.Run(m, arg...)
 			}},
-		}, mdb.HashAction(mdb.FIELD, "time,hash,type,name,text"), ctx.CmdAction()), Hand: func(m *ice.Message, arg ...string) {
+		}, mdb.HashAction(mdb.FIELD, "time,hash,type,name,text"), ctx.CmdAction(), KeyboardAction()), Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) > 0 && arg[0] == ctx.ACTION {
 				m.Option(mdb.TYPE, m.Cmd("", m.Option(mdb.HASH)).Append(mdb.TYPE))
 				gdb.Event(m, FAVOR_ACTION, arg)
 				return
 			}
-			if mdb.HashSelect(m, arg...); len(arg) == 0 {
-				m.Tables(func(value ice.Maps) {
-					if msg := gdb.Event(m.Spawn(), FAVOR_TABLES, mdb.TYPE, value[mdb.TYPE]); msg.Append(ctx.ACTION) != "" {
-						m.PushButton(msg.Append(ctx.ACTION))
-						return
-					}
-					switch value[mdb.TYPE] {
-					case ctx.INDEX:
-						m.PushButton(ctx.INDEX, mdb.REMOVE)
-					default:
-						if strings.HasPrefix(value[mdb.TEXT], ice.VAR_FILE) {
-							if kit.ExtIsImage(value[mdb.NAME]) {
-								m.PushButton(web.DISPLAY, web.DOWNLOAD, mdb.REMOVE)
-							} else {
-								m.PushButton(web.DOWNLOAD, mdb.REMOVE)
-							}
-						} else {
-							m.PushButton(mdb.REMOVE)
-						}
-					}
-				})
-			} else {
+			if mdb.HashSelect(m, arg...); len(arg) > 0 {
+				text := m.Append(mdb.TEXT)
 				if strings.HasPrefix(m.Append(mdb.TEXT), ice.VAR_FILE) {
-					link := web.SHARE_LOCAL + m.Append(mdb.TEXT)
-					if m.PushDownload(mdb.LINK, m.Append(mdb.NAME), link); len(arg) > 0 && kit.ExtIsImage(m.Append(mdb.NAME)) {
-						m.PushImages(web.DISPLAY, link)
+					text = web.SHARE_LOCAL + m.Append(mdb.TEXT)
+					if m.PushDownload(mdb.LINK, m.Append(mdb.NAME), text); len(arg) > 0 && _favor_is_image(m, m.Append(mdb.NAME), m.Append(mdb.TYPE)) {
+						m.PushImages(web.DISPLAY, text)
+					} else if _favor_is_video(m, m.Append(mdb.NAME), m.Append(mdb.TYPE)) {
+						m.PushVideos(web.DISPLAY, text)
+					}
+					text = web.MergeLink(m, text)
+					text = tcp.ReplaceLocalhost(m, text)
+				}
+				m.PushScript(ssh.SCRIPT, text)
+				m.PushQRCode(cli.QRCODE, text)
+			}
+			m.Tables(func(value ice.Maps) {
+				if msg := gdb.Event(m.Spawn(), FAVOR_TABLES, mdb.TYPE, value[mdb.TYPE]); msg.Append(ctx.ACTION) != "" {
+					m.PushButton(msg.Append(ctx.ACTION))
+					return
+				}
+				switch value[mdb.TYPE] {
+				case ctx.INDEX:
+					m.PushButton(ctx.INDEX, mdb.REMOVE)
+				default:
+					if strings.HasPrefix(value[mdb.TEXT], ice.VAR_FILE) {
+						if _favor_is_image(m, value[mdb.NAME], value[mdb.TYPE]) || _favor_is_video(m, value[mdb.NAME], value[mdb.TYPE]) || _favor_is_audio(m, value[mdb.NAME], value[mdb.TYPE]) {
+							m.PushButton(web.DISPLAY, web.DOWNLOAD, mdb.REMOVE)
+						} else {
+							m.PushButton(web.DOWNLOAD, mdb.REMOVE)
+						}
+					} else {
+						m.PushButton(mdb.REMOVE)
 					}
 				}
-				m.PushScript(ssh.SCRIPT, m.Append(mdb.TEXT))
-				m.PushQRCode(cli.QRCODE, m.Append(mdb.TEXT))
-				m.PushAction(mdb.REMOVE)
-			}
+			})
 		}},
 	})
 }

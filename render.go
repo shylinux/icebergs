@@ -41,6 +41,9 @@ func Render(m *Message, cmd string, args ...Any) string {
 		return kit.Format(`<img src="%s" height=%d>`, arg[0], kit.Int(kit.Select(kit.Select("240", m.Option("height")), arg, 1))/2-24)
 
 	case RENDER_VIDEOS: // src [height]
+		if m.Option("height") != "" && m.Option("width") != "" {
+			return kit.Format(`<video src="%s" controls style="max-height:%spx; max-width:%spx">`, arg[0], m.Option("height"), m.Option("width"))
+		}
 		return kit.Format(`<video src="%s" height=%s controls>`, arg[0], kit.Select("120", arg, 1))
 
 	case RENDER_IFRAME: // src

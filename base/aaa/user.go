@@ -72,8 +72,8 @@ const USER = "user"
 func init() {
 	Index.MergeCommands(ice.Commands{
 		USER: {Name: "user username auto create", Help: "用户", Actions: ice.MergeActions(ice.Actions{
-			mdb.CREATE: {Name: "create username password userrole=void,tech", Help: "创建", Hand: func(m *ice.Message, arg ...string) {
-				_user_create(m, m.Option(USERNAME), m.Option(PASSWORD), m.OptionSimple(USERROLE)...)
+			mdb.CREATE: {Name: "create username password userrole=void,tech usernick", Help: "创建", Hand: func(m *ice.Message, arg ...string) {
+				_user_create(m, m.Option(USERNAME), m.Option(PASSWORD), m.OptionSimple(USERROLE, USERNICK)...)
 			}},
 			LOGIN: {Name: "login username password", Help: "登录", Hand: func(m *ice.Message, arg ...string) {
 				_user_login(m, m.Option(USERNAME), m.Option(PASSWORD))
@@ -87,7 +87,7 @@ func UserRoot(m *ice.Message, arg ...string) *ice.Message { // password username
 	userrole := m.Option(ice.MSG_USERROLE, kit.Select(ROOT, arg, 2))
 	m.Option(ice.MSG_USERNICK, UserNick(m, username))
 	if len(arg) > 0 {
-		m.Cmd(USER, mdb.CREATE, username, kit.Select("", arg, 0), userrole)
+		m.Cmd(USER, mdb.CREATE, username, kit.Select("", arg, 0), userrole, kit.Select("", arg, 3))
 		ice.Info.UserName = username
 	}
 	return m

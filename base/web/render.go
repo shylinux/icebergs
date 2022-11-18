@@ -166,9 +166,8 @@ func RenderCmd(m *ice.Message, cmd string, arg ...ice.Any) {
 
 var _main_template = `<!DOCTYPE html>
 <head>
-	<meta name="viewport" content="width=device-width,initial-scale=0.8,maximum-scale=0.8,user-scalable=no"/>
-	<meta charset="utf-8">
-	<title>volcanos</title>
+	<meta name="viewport" content="width=device-width,initial-scale=0.8,maximum-scale=0.8,user-scalable=no">
+	<meta charset="utf-8"><title>volcanos</title>
 	<link rel="shortcut icon" type="image/ico" href="/favicon.ico">
 	<link rel="stylesheet" href="/page/cache.css">
 	<link rel="stylesheet" href="/page/index.css">
@@ -183,7 +182,7 @@ var _main_template = `<!DOCTYPE html>
 var _cmd_template = `<!DOCTYPE html>
 <head>
 	<meta name="viewport" content="width=device-width,initial-scale=0.8,maximum-scale=0.8,user-scalable=no">
-	<meta charset="utf-8">
+	<meta charset="utf-8"><title>volcanos</title>
 	<link rel="stylesheet" href="/page/can.css">
 </head>
 <body>

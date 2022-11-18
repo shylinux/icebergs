@@ -5,7 +5,6 @@ import (
 	"shylinux.com/x/icebergs/base/aaa"
 	"shylinux.com/x/icebergs/base/ctx"
 	"shylinux.com/x/icebergs/base/mdb"
-	"shylinux.com/x/icebergs/base/nfs"
 	"shylinux.com/x/icebergs/base/web"
 	kit "shylinux.com/x/toolkits"
 )
@@ -22,10 +21,7 @@ func _action_exec(m *ice.Message, river, storm, index string, arg ...string) {
 	}).Length() == 0, ice.ErrNotRight, index, arg) {
 		return
 	}
-	if m.Option(ice.MSG_UPLOAD) != "" {
-		_action_upload(m)
-	}
-	if !ctx.PodCmd(m, index, arg) {
+	if web.Upload(m); !ctx.PodCmd(m, index, arg) {
 		m.Cmdy(index, arg)
 	}
 }
@@ -62,15 +58,9 @@ func _action_share(m *ice.Message, arg ...string) {
 			m.Cmdy(ctx.COMMAND, msg.Append(mdb.NAME))
 			break
 		}
-		if arg[1] = msg.Append(mdb.NAME); m.Option(ice.MSG_UPLOAD) != "" {
-			_action_upload(m)
-		}
-		m.Cmdy(arg[1:])
+		web.Upload(m)
+		m.Cmdy(msg.Append(mdb.NAME), arg[2:])
 	}
-}
-func _action_upload(m *ice.Message) {
-	msg := m.Cmdy(web.CACHE, web.UPLOAD)
-	m.Option(ice.MSG_UPLOAD, msg.Append(mdb.HASH), msg.Append(mdb.NAME), msg.Append(nfs.SIZE))
 }
 
 const ACTION = "action"

@@ -50,20 +50,21 @@ func init() {
 			"getClipboardData": {Name: "favor create", Help: "粘贴"},
 			"getLocation":      {Name: "favor create", Help: "定位"},
 			"scanQRCode":       {Name: "favor create", Help: "扫码"},
-			"record1":       {Name: "favor upload", Help: "截图"},
-			"record2":       {Name: "favor upload", Help: "录屏"},
+			"record1":          {Name: "favor upload", Help: "截图"},
+			"record2":          {Name: "favor upload", Help: "录屏"},
 			mdb.CREATE: {Hand: func(m *ice.Message, arg ...string) {
 				m.OptionDefault(mdb.TYPE, mdb.LINK, mdb.NAME, kit.ParseURL(m.Option(mdb.TEXT)).Host)
 				mdb.HashCreate(m, m.OptionSimple())
 			}},
 			web.UPLOAD: {Hand: func(m *ice.Message, arg ...string) {
-				web.Upload(m).Cmd("", mdb.CREATE, m.AppendSimple(mdb.TYPE, mdb.NAME, mdb.TEXT))
+				msg := web.Upload(m)
+				m.Cmd("", mdb.CREATE, msg.AppendSimple(mdb.TYPE, mdb.NAME, mdb.TEXT))
 			}},
 			web.DOWNLOAD: {Hand: func(m *ice.Message, arg ...string) {
 				ctx.ProcessOpen(m, web.MergeURL2(m, web.SHARE_LOCAL+m.Option(mdb.TEXT), "filename", m.Option(mdb.NAME)))
 			}},
 			web.DISPLAY: {Help: "预览", Hand: func(m *ice.Message, arg ...string) {
-				if link := web.SHARE_LOCAL+m.Option(mdb.TEXT); _favor_is_image(m, m.Option(mdb.NAME), m.Option(mdb.TYPE)) {
+				if link := web.SHARE_LOCAL + m.Option(mdb.TEXT); _favor_is_image(m, m.Option(mdb.NAME), m.Option(mdb.TYPE)) {
 					m.EchoImages(link)
 				} else if _favor_is_video(m, m.Option(mdb.NAME), m.Option(mdb.TYPE)) {
 					m.EchoVideos(link)

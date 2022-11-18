@@ -1,6 +1,6 @@
-chapter "团队"
-
-field web.team.todo
-field web.team.epic
-field web.team.task
-field web.team.plan
+team.shy
+team.go
+plan.go
+task.go
+todo.go
+epic.go

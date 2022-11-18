@@ -27,7 +27,7 @@ func init() {
 
 func KeyboardAction() ice.Actions {
 	return ice.Actions{
-		KEYBOARD: {Help: "远程控制", Hand: func(m *ice.Message, arg ...string) {
+		KEYBOARD: {Hand: func(m *ice.Message, arg ...string) {
 			hash := m.Cmdx("web.chat.keyboard", mdb.CREATE, web.SPACE, m.Option(ice.MSG_DAEMON), ctx.INDEX, m.Option(ctx.INDEX), "input", "")
 			link := tcp.ReplaceLocalhost(m, web.MergePodCmd(m, "", "web.chat.keyboard", mdb.HASH, hash))
 			m.Push(mdb.NAME, link).PushQRCode(mdb.TEXT, link)

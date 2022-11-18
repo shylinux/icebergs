@@ -1,8 +1,5 @@
-chapter "源码"
 code.go
 code.shy
-
-section "流程"
 install.go
 upgrade.go
 webpack.go
@@ -11,7 +8,6 @@ autogen.go
 compile.go
 publish.go
 
-section "工具"
 favor.go
 xterm.go
 xterm.shy
@@ -22,7 +18,6 @@ bench.go
 oauth.go
 case.go
 
-section "语言"
 c.go
 sh.go
 py.go

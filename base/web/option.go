@@ -12,16 +12,22 @@ import (
 	"shylinux.com/x/icebergs/base/ctx"
 	"shylinux.com/x/icebergs/base/gdb"
 	"shylinux.com/x/icebergs/base/mdb"
+	"shylinux.com/x/icebergs/base/nfs"
 	"shylinux.com/x/icebergs/base/tcp"
 	kit "shylinux.com/x/toolkits"
 	"shylinux.com/x/toolkits/file"
 )
 
 func Upload(m *ice.Message) *ice.Message {
-	if up := kit.Simple(m.Optionv(ice.MSG_UPLOAD)); len(up) < 2 {
-		m.Cmdy(CACHE, UPLOAD)
+	if up := kit.Simple(m.Optionv(ice.MSG_UPLOAD)); len(up) == 0 {
+		return m
+	} else if len(up) < 2 {
+		msg := m.Cmd(CACHE, UPLOAD)
+		m.Option(ice.MSG_UPLOAD, msg.Append(mdb.HASH), msg.Append(mdb.NAME), msg.Append(nfs.SIZE))
+		return msg
+	} else {
+		return m.Cmd(CACHE, up[0])
 	}
-	return m
 }
 func PushNotice(m *ice.Message, arg ...ice.Any) {
 	if m.Option(ice.MSG_DAEMON) == "" {

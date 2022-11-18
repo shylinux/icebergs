@@ -9,6 +9,7 @@ import (
 	"shylinux.com/x/icebergs/base/aaa"
 	"shylinux.com/x/icebergs/base/cli"
 	"shylinux.com/x/icebergs/base/ctx"
+	"shylinux.com/x/icebergs/base/gdb"
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/nfs"
 	"shylinux.com/x/icebergs/base/web"
@@ -317,7 +318,20 @@ func init() {
 			code.DEVPACK: {Name: "devpack", Help: "开发模式", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmdy(code.VIMER, code.DEVPACK)
 			}},
-		}, aaa.RoleAction()), Hand: func(m *ice.Message, arg ...string) {
+			web.DREAM_TABLES: {Hand: func(m *ice.Message, arg ...string) {
+				text := []string{}
+				for _, line := range kit.Split(m.Cmdx(web.SPACE, m.Option(mdb.NAME), cli.SYSTEM, "git", "diff", "--shortstat"), ice.FS, ice.FS) {
+					if list := kit.Split(line); strings.Contains(line, "file") {
+						text = append(text, list[0]+" file")
+					} else if strings.Contains(line, "ins") {
+						text = append(text, list[0]+" +++")
+					} else if strings.Contains(line, "dele") {
+						text = append(text, list[0]+" ---")
+					}
+				}
+				m.Push(mdb.TEXT, strings.Join(text, ", "))
+			}},
+		}, gdb.EventAction(web.DREAM_TABLES), aaa.RoleAction()), Hand: func(m *ice.Message, arg ...string) {
 			if _configs_get(m, "user.email") == "" {
 				m.Echo("please config user.email")
 				m.Action(CONFIGS)

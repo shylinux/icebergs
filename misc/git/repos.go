@@ -8,6 +8,7 @@ import (
 	"shylinux.com/x/icebergs/base/cli"
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/nfs"
+	"shylinux.com/x/icebergs/base/web"
 	kit "shylinux.com/x/toolkits"
 )
 
@@ -74,6 +75,9 @@ func init() {
 					m.Option(cli.CMD_DIR, "")
 					_git_cmd(m, CLONE, "-b", kit.Select(MASTER, m.Option(BRANCH)), m.Option(REPOS), m.Option(nfs.PATH))
 				}
+			}},
+			web.DREAM_START: {Hand: func(m *ice.Message, arg ...string) {
+				m.Cmd("web.code.git.repos", mdb.CREATE, m.OptionSimple(nfs.REPOS), nfs.PATH, m.Option(nfs.PATH))
 			}},
 		}, mdb.HashAction(mdb.SHORT, mdb.NAME, mdb.FIELD, "time,name,branch,commit,remote")), Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) == 0 { // 仓库列表

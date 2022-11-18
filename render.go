@@ -20,14 +20,28 @@ func Render(m *Message, cmd string, args ...Any) string {
 		p := kit.Select(arg[0], arg, 1)
 		return kit.Format(`<a href="%s" target="_blank">%s</a>`, p, arg[0])
 
-	case RENDER_BUTTON: // name...
-		if strings.HasPrefix(kit.Join(arg), "<input") {
-			return kit.Join(arg)
-		}
+	case RENDER_BUTTON:
 		list := []string{}
-		for _, k := range kit.Split(kit.Join(arg)) {
-			list = append(list, kit.Format(`<input type="button" name="%s" value="%s">`, k,
-				kit.Select(k, kit.Value(m._cmd.Meta, kit.Keys("_trans", k)), m.Option(MSG_LANGUAGE) != "en")))
+		for _, k := range args {
+			switch k := k.(type) {
+			case []string:
+				for _, k := range k {
+					list = append(list, Render(m, RENDER_BUTTON, k))
+				}
+			case string:
+				if strings.HasPrefix(k, "<input") {
+					list = append(list, k)
+					break
+				}
+				for _, k := range kit.Split(k) {
+					list = append(list, kit.Format(`<input type="button" name="%s" value="%s">`, k,
+						kit.Select(k, kit.Value(m._cmd.Meta, kit.Keys("_trans", k)), m.Option(MSG_LANGUAGE) != "en")))
+				}
+			case Map:
+				for k, v := range k {
+					list = append(list, kit.Format(`<input type="button" name="%s" value="%s">`, k, kit.Select(k, v, m.Option(MSG_LANGUAGE) != "en")))
+				}
+			}
 		}
 		return strings.Join(list, "")
 
@@ -46,7 +60,7 @@ func Render(m *Message, cmd string, args ...Any) string {
 		}
 		return kit.Format(`<video src="%s" height=%s controls>`, arg[0], kit.Select("120", arg, 1))
 
-	case RENDER_IFRAME: // src
+	case RENDER_IFRAME:
 		return kit.Format(`<iframe src="%s"></iframe>`, arg[0])
 	default:
 		return arg[0]
@@ -145,13 +159,13 @@ func (m *Message) PushAnchor(arg ...Any) { // [name] link
 		m.Push(LINK, Render(m, RENDER_ANCHOR, arg...))
 	}
 }
-func (m *Message) PushButton(arg ...Any) { // name...
+func (m *Message) PushButton(arg ...Any) *Message { // name...
 	if !m.IsCliUA() {
 		if m.FieldsIsDetail() {
 			for i, k := range m.meta[KEY] {
 				if k == ACTION {
 					m.meta[VALUE][i] = Render(m, RENDER_BUTTON, arg...)
-					return
+					return m
 				}
 			}
 		} else if len(m.meta[ACTION]) >= m.Length() {
@@ -159,6 +173,7 @@ func (m *Message) PushButton(arg ...Any) { // name...
 		}
 		m.Push(ACTION, Render(m, RENDER_BUTTON, arg...))
 	}
+	return m
 }
 func (m *Message) PushImages(key, src string, arg ...string) { // key src [height]
 	if !m.IsCliUA() {

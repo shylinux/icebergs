@@ -12,7 +12,6 @@ import (
 	"shylinux.com/x/icebergs/base/ctx"
 	"shylinux.com/x/icebergs/base/gdb"
 	"shylinux.com/x/icebergs/base/mdb"
-	"shylinux.com/x/icebergs/base/nfs"
 	"shylinux.com/x/icebergs/base/tcp"
 	kit "shylinux.com/x/toolkits"
 	"shylinux.com/x/websocket"
@@ -21,19 +20,19 @@ import (
 func _space_domain(m *ice.Message) (link string) {
 	if link = ice.Info.Domain; link == "" {
 		m.Optionv(ice.MSG_OPTS, ice.MSG_USERNAME)
-		link = m.Cmd(SPACE, ice.OPS, cli.PWD).Append(mdb.LINK)
+		link = m.CmdAppend(SPACE, ice.OPS, cli.PWD, mdb.LINK)
 	}
 	if link == "" {
-		link = m.Cmd(SPACE, ice.DEV, cli.PWD).Append(mdb.LINK)
+		link = m.CmdAppend(SPACE, ice.DEV, cli.PWD, mdb.LINK)
 	}
 	if link == "" {
-		link = m.Cmd(SPACE, ice.SHY, cli.PWD).Append(mdb.LINK)
+		link = m.CmdAppend(SPACE, ice.SHY, cli.PWD, mdb.LINK)
 	}
 	if link == "" {
 		link = m.Option(ice.MSG_USERWEB)
 	}
 	if link == "" {
-		link = kit.Format("http://localhost:%s", kit.Select(m.Option(tcp.PORT), m.Cmd(SERVE).Append(tcp.PORT)))
+		link = kit.Format("http://localhost:%s", kit.Select(m.Option(tcp.PORT), m.CmdAppend(SERVE, tcp.PORT)))
 	}
 	return tcp.ReplaceLocalhost(m, link)
 }
@@ -220,35 +219,13 @@ func _space_fork(m *ice.Message) {
 			case WORKER:
 				gdb.Event(m, DREAM_START, args)
 				defer gdb.Event(m, DREAM_STOP, args)
-				if m.Option("daemon") == "ops" {
+				if m.Option(cli.DAEMON) == ice.OPS {
 					defer m.Cmd(DREAM, DREAM_STOP, args)
 				}
 			}
 			_space_handle(m, false, m.Target().Server().(*Frame), s, name)
 		})
 	}
-}
-func _space_search(m *ice.Message, kind, name, text string, arg ...string) {
-	m.Cmd(SPACE, ice.OptionFields(""), func(value ice.Maps) {
-		if !strings.Contains(value[mdb.NAME], name) {
-			return
-		}
-		switch value[mdb.TYPE] {
-		case CHROME:
-		case MASTER:
-			m.PushSearch(mdb.TEXT, m.CmdAppend(SPIDE, value[mdb.NAME], CLIENT_URL), value)
-		default:
-			m.PushSearch(mdb.TEXT, MergePod(m, value[mdb.NAME]), value)
-		}
-	})
-	if name != "" {
-		return
-	}
-	m.Cmd(SERVE, ice.OptionFields(""), func(val ice.Maps) {
-		m.Cmd(tcp.HOST, ice.OptionFields(""), func(value ice.Maps) {
-			m.PushSearch(kit.SimpleKV("", MYSELF, value[mdb.NAME], kit.Format("http://%s:%s", value[aaa.IP], val[tcp.PORT])))
-		})
-	})
 }
 
 const (
@@ -272,85 +249,68 @@ const (
 const SPACE = "space"
 
 func init() {
-	Index.Merge(&ice.Context{Configs: ice.Configs{
-		SPACE: {Name: SPACE, Help: "空间站", Value: kit.Data(
-			mdb.SHORT, mdb.NAME, mdb.FIELD, "time,type,name,text",
-			BUFFER, kit.Dict("r", ice.MOD_BUFS, "w", ice.MOD_BUFS),
-			REDIAL, kit.Dict("a", 3000, "b", 1000, "c", 1000), TIMEOUT, kit.Dict("c", "180s"),
-		)},
-	}, Commands: ice.Commands{
+	Index.MergeCommands(ice.Commands{
+		PP(SPACE): {Hand: func(m *ice.Message, arg ...string) { _space_fork(m) }},
 		SPACE: {Name: "space name cmd auto invite", Help: "空间站", Actions: ice.MergeActions(ice.Actions{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) { m.Conf("", mdb.HASH, "") }},
-			ice.CTX_EXIT: {Hand: func(m *ice.Message, arg ...string) {
-				mdb.HashSelectClose(m)
-				m.Conf("", mdb.HASH, "")
+			ice.CTX_EXIT: {Hand: func(m *ice.Message, arg ...string) { m.Conf("", mdb.HASH, "") }},
+			tcp.DIAL: {Name: "dial dev=ops name", Hand: func(m *ice.Message, arg ...string) {
+				_space_dial(m, m.Option(ice.DEV), kit.Select(ice.Info.NodeName, m.Option(mdb.NAME)), arg...)
 			}},
-			mdb.REMOVE: {Name: "remove", Help: "删除", Hand: func(m *ice.Message, arg ...string) {
-				mdb.HashModify(m, m.OptionSimple(mdb.NAME), mdb.STATUS, cli.STOP)
-				defer mdb.HashRemove(m, m.OptionSimple(mdb.NAME))
-				m.Cmd(SPACE, m.Option(mdb.NAME), ice.EXIT)
-			}},
-			mdb.SEARCH: {Name: "search type name text", Help: "搜索", Hand: func(m *ice.Message, arg ...string) {
-				_space_search(m, arg[0], arg[1], kit.Select("", arg, 2))
-			}},
-			aaa.INVITE: {Name: "invite", Help: "添加", Hand: func(m *ice.Message, arg ...string) {
+			aaa.INVITE: {Help: "添加", Hand: func(m *ice.Message, arg ...string) {
 				for _, k := range []string{ice.MISC, ice.CORE, ice.BASE} {
 					m.Cmdy("web.code.publish", ice.CONTEXTS, k)
 				}
-
 				m.EchoScript("shell", "# 共享环境", m.Option(ice.MSG_USERWEB))
 				m.EchoAnchor(m.Option(ice.MSG_USERWEB)).Echo(ice.NL)
 				m.EchoQRCode(m.Option(ice.MSG_USERWEB))
 			}},
-			tcp.DIAL: {Name: "dial dev=ops name", Help: "连接", Hand: func(m *ice.Message, arg ...string) {
-				_space_dial(m, m.Option(ice.DEV), kit.Select(ice.Info.NodeName, m.Option(mdb.NAME)), arg...)
+			mdb.REMOVE: {Hand: func(m *ice.Message, arg ...string) {
+				mdb.HashModify(m, m.OptionSimple(mdb.NAME), mdb.STATUS, cli.STOP)
+				defer mdb.HashRemove(m, m.OptionSimple(mdb.NAME))
+				m.Cmd(SPACE, m.Option(mdb.NAME), ice.EXIT)
 			}},
-			DOMAIN: {Name: "domain", Help: "域名", Hand: func(m *ice.Message, arg ...string) {
-				m.Echo(_space_domain(m))
-			}},
-			cli.OPEN: {Name: "open", Help: "系统", Hand: func(m *ice.Message, arg ...string) {
-				ProcessIframe(m, MergePod(m, m.Option(mdb.NAME), "", ""), arg...)
-			}},
-			"xterm": {Name: "xterm", Help: "终端", Hand: func(m *ice.Message, arg ...string) {
-				ProcessIframe(m, MergePodCmd(m, m.Option(mdb.NAME), "web.code.xterm", mdb.HASH,
-					m.Cmdx(SPACE, m.Option(mdb.NAME), "web.code.xterm", mdb.CREATE, mdb.TYPE, nfs.SH, m.OptionSimple(mdb.NAME), mdb.TEXT, "")), arg...)
-			}},
-			"vimer": {Name: "vimer", Help: "编程", Hand: func(m *ice.Message, arg ...string) {
-				ProcessIframe(m, MergePodCmd(m, m.Option(mdb.NAME), "web.code.vimer", "", ""), arg...)
-			}},
-			"exit": {Name: "exit", Help: "关闭", Hand: func(m *ice.Message, arg ...string) {
-				m.Cmd("", m.Option(mdb.NAME), "close")
-				m.Cmd("", m.Option(mdb.NAME), "exit")
-				ctx.ProcessRefresh(m)
-			}},
-		}, mdb.HashCloseAction()), Hand: func(m *ice.Message, arg ...string) {
-			if len(arg) < 2 { // 节点列表
-				if mdb.HashSelect(m, arg...); len(arg) == 0 {
-					m.Tables(func(value ice.Maps) {
-						switch value[mdb.TYPE] {
-						case SERVER, WORKER:
-							m.PushButton(cli.OPEN, "xterm", "vimer")
-						case CHROME:
-							if value[mdb.NAME] == kit.Select("", kit.Split(m.Option(ice.MSG_DAEMON), ice.PT), 0) {
-								m.PushButton("")
-							} else {
-								m.PushButton("exit")
-							}
-						default:
-							m.PushButton("")
-						}
-					})
-					m.Sort("type,name,text")
+			OPEN: {Hand: func(m *ice.Message, arg ...string) { ProcessIframe(m, MergePod(m, m.Option(mdb.NAME)), arg...) }},
+			DREAM_TABLES: {Hand: func(m *ice.Message, arg ...string) {
+				switch m.Option(mdb.TYPE) {
+				case CHROME:
+					if m.Option(mdb.NAME) != kit.Select("", kit.Split(m.Option(ice.MSG_DAEMON), ice.PT), 0) {
+						m.PushButton(mdb.REMOVE)
+					}
+				case WORKER, SERVER:
+					m.PushButton(OPEN)
 				}
+			}},
+			DREAM_ACTION: {Hand: func(m *ice.Message, arg ...string) {
+				if arg[1] == m.CommandKey() {
+					ProcessWebsite(m, m.Option(mdb.NAME), m.PrefixKey())
+				}
+			}},
+			DOMAIN: {Hand: func(m *ice.Message, arg ...string) { m.Echo(_space_domain(m)) }},
+		}, mdb.HashCloseAction(mdb.SHORT, mdb.NAME, mdb.FIELD, "time,type,name,text",
+			REDIAL, kit.Dict("a", 3000, "b", 1000, "c", 1000), TIMEOUT, kit.Dict("c", "180s"),
+			BUFFER, kit.Dict("r", ice.MOD_BUFS, "w", ice.MOD_BUFS),
+		), ctx.CmdAction(), DreamAction()), Hand: func(m *ice.Message, arg ...string) {
+			if len(arg) > 0 && arg[0] == ctx.ACTION {
+				gdb.Event(m, DREAM_ACTION, arg)
 				return
 			}
-			// 下发命令
-			_space_send(m, strings.ToLower(arg[0]), arg[1:]...)
+			if len(arg) > 1 {
+				_space_send(m, strings.ToLower(arg[0]), kit.Simple(kit.Split(arg[1]), arg[2:])...)
+				return
+			}
+			if mdb.HashSelect(m, arg...); len(arg) > 0 {
+				m.Sort("type,name,text")
+			}
+			m.Tables(func(value ice.Maps) {
+				if msg := gdb.Event(m.Spawn(), DREAM_TABLES, mdb.NAME, value[mdb.NAME], mdb.TYPE, value[mdb.TYPE]); len(msg.Appendv(ctx.ACTION)) > 0 {
+					m.PushButton(strings.Join(msg.Appendv(ctx.ACTION), ""))
+				} else {
+					m.PushButton("")
+				}
+			})
 		}},
-		PP(SPACE): {Name: "/space/ type name share river", Help: "空间站", Hand: func(m *ice.Message, arg ...string) {
-			_space_fork(m)
-		}},
-	}})
+	})
 }
 func Space(m *ice.Message, arg ice.Any) []string {
 	if arg == nil || arg == "" || kit.Format(arg) == ice.Info.NodeName {

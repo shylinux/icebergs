@@ -171,7 +171,7 @@ func ProcessWebsite(m *ice.Message, pod, cmd string, arg ...ice.Any) {
 }
 func ProcessIframe(m *ice.Message, link string, arg ...string) {
 	if len(arg) == 0 || arg[0] != ice.RUN {
-		arg = []string{m.Cmdx("web.chat.iframe", mdb.CREATE, mdb.LINK, link)}
+		arg = []string{m.Cmdx("web.chat.iframe", mdb.CREATE, mdb.TYPE, LINK, mdb.NAME, "", LINK, link)}
 	}
 	ctx.ProcessField(m, "web.chat.iframe", arg, arg...)
 }

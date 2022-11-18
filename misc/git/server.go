@@ -14,6 +14,7 @@ import (
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/aaa"
 	"shylinux.com/x/icebergs/base/cli"
+	"shylinux.com/x/icebergs/base/gdb"
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/nfs"
 	"shylinux.com/x/icebergs/base/tcp"
@@ -150,7 +151,7 @@ func init() {
 				web.RenderStatus(m.W, http.StatusInternalServerError, err.Error())
 			}
 		}},
-		SERVER: {Name: "server path auto create import", Help: "服务器", Actions: ice.Actions{
+		SERVER: {Name: "server path auto create import", Help: "服务器", Actions: ice.MergeActions(ice.Actions{
 			mdb.CREATE: {Name: "create name", Help: "创建", Hand: func(m *ice.Message, arg ...string) {
 				m.Option(cli.CMD_DIR, ice.USR_LOCAL_REPOS)
 				_git_cmd(m, INIT, "--bare", m.Option(mdb.NAME))
@@ -167,7 +168,16 @@ func init() {
 				m.Assert(m.Option(nfs.PATH) != "")
 				m.Cmd(nfs.TRASH, path.Join(ice.USR_LOCAL_REPOS, m.Option(nfs.PATH)))
 			}},
-		}, Hand: func(m *ice.Message, arg ...string) {
+			web.DREAM_INPUTS: {Hand: func(m *ice.Message, arg ...string) {
+				switch arg[0] {
+				case nfs.REPOS:
+					m.Cmd("web.code.git.server", func(value ice.Maps) {
+						m.Push(nfs.PATH, web.MergeLink(m, path.Join("/x/", path.Clean(value[nfs.PATH])+".git")))
+					})
+					m.Sort(nfs.PATH)
+				}
+			}},
+		}, gdb.EventAction(web.DREAM_INPUTS)), Hand: func(m *ice.Message, arg ...string) {
 			if m.Option(nfs.DIR_ROOT, ice.USR_LOCAL_REPOS); len(arg) == 0 {
 				m.Cmdy(nfs.DIR, nfs.PWD, func(value ice.Maps) {
 					m.PushScript("git clone " + web.MergeLink(m, "/x/"+path.Clean(value[nfs.PATH])))

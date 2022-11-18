@@ -11,7 +11,6 @@ import (
 	"shylinux.com/x/icebergs/base/ctx"
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/nfs"
-	"shylinux.com/x/icebergs/base/tcp"
 	"shylinux.com/x/icebergs/base/web"
 	kit "shylinux.com/x/toolkits"
 )
@@ -117,12 +116,6 @@ func init() {
 			}},
 			FAVOR: {Name: "favor", Help: "收藏"},
 
-			"keyboard": {Name: "keyboard", Help: "远程控制", Hand: func(m *ice.Message, arg ...string) {
-				hash := m.Cmdx("web.chat.keyboard", mdb.CREATE, web.SPACE, m.Option(ice.MSG_DAEMON), ctx.INDEX, m.Option(ctx.INDEX), "input", "")
-				link := tcp.ReplaceLocalhost(m, web.MergePodCmd(m, "", "web.chat.keyboard", mdb.HASH, hash))
-				m.PushQRCode(mdb.TEXT, link)
-				m.Push(mdb.NAME, link)
-			}},
 			"_open": {Name: "_open", Help: "打开", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmd(cli.DAEMON, cli.OPEN, "-a", kit.Split(arg[0], ice.PT, ice.PT)[0])
 			}},
@@ -170,9 +163,21 @@ func init() {
 			PUBLISH: {Name: "publish", Help: "发布", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmdy(PUBLISH, ice.CONTEXTS)
 			}},
-		}, aaa.RoleAction(ctx.COMMAND)), Hand: func(m *ice.Message, arg ...string) {
+			web.DREAM_TABLES: {Hand: func(m *ice.Message, arg ...string) {
+				switch m.Option(mdb.TYPE) {
+				case web.SERVER, web.WORKER:
+					m.PushButton(kit.Dict(m.CommandKey(), "源码"))
+				}
+			}},
+			web.DREAM_ACTION: {Hand: func(m *ice.Message, arg ...string) {
+				if arg[1] == m.CommandKey() {
+					// web.ProcessIframe(m, web.MergePodCmd(m, m.Option(mdb.NAME), m.PrefixKey()), arg...)
+					web.ProcessWebsite(m, m.Option(mdb.NAME), m.PrefixKey())
+				}
+			}},
+		}, web.DreamAction(), aaa.RoleAction(ctx.COMMAND)), Hand: func(m *ice.Message, arg ...string) {
 			if m.Cmdy(INNER, arg); arg[0] != ctx.ACTION {
-				m.Action(AUTOGEN, nfs.SCRIPT, web.WEBSITE, web.DREAM, nfs.SAVE, COMPILE)
+				m.Action(AUTOGEN, nfs.SCRIPT, web.DREAM, web.WEBSITE, nfs.SAVE, COMPILE)
 				m.Option("tabs", m.Config("show.tabs"))
 				m.Option("plug", m.Config("show.plug"))
 				m.Option("exts", m.Config("show.exts"))

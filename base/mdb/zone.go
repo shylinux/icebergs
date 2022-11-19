@@ -214,7 +214,7 @@ func ZoneModify(m *ice.Message, arg ...Any) {
 func ZoneSelect(m *ice.Message, arg ...string) *ice.Message {
 	arg = kit.Slice(arg, 0, 2)
 	m.Fields(len(arg), kit.Fields(TIME, m.Config(SHORT), COUNT), m.Config(FIELD))
-	if m.Cmdy(SELECT, m.PrefixKey(), "", ZONE, arg, logs.FileLineMeta(logs.FileLine(-1, 3))); len(arg) == 0 {
+	if m.Cmdy(SELECT, m.PrefixKey(), "", ZONE, arg, logs.FileLineMeta(logs.FileLine(-1))); len(arg) == 0 {
 		if m.Config(SHORT) != "" {
 			m.Sort(m.Config(SHORT))
 		}

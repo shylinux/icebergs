@@ -15,7 +15,7 @@ func init() {
 			mdb.CREATE: {Name: "create name", Help: "创建", Hand: func(m *ice.Message, arg ...string) {
 				m.Go(func() {
 					cb := m.OptionCB("")
-					h := mdb.HashCreate(m, m.OptionSimple(mdb.NAME), mdb.STATUS, START, ice.CMD, logs.FileLine(cb, 100))
+					h := mdb.HashCreate(m, m.OptionSimple(mdb.NAME), mdb.STATUS, START, ice.CMD, logs.FileLines(cb))
 					defer func() {
 						if e := recover(); e == nil {
 							mdb.HashModify(m, mdb.HASH, h, mdb.STATUS, STOP)

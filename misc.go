@@ -168,7 +168,7 @@ func (m *Message) CmdHand(cmd *Command, key string, arg ...string) *Message {
 	if m._key, m._cmd = key, cmd; cmd == nil {
 		return m
 	}
-	if m._target = kit.FileLine(cmd.Hand, 3); cmd.RawHand != nil {
+	if m._target = logs.FileLine(cmd.Hand); cmd.RawHand != nil {
 		m._target = kit.Format(cmd.RawHand)
 	}
 	if fileline := kit.Select(m._target, m._source, m.target.Name == MDB); key == SELECT {
@@ -184,7 +184,7 @@ func (m *Message) CmdHand(cmd *Command, key string, arg ...string) *Message {
 	return m
 }
 func (m *Message) _command(arg ...Any) *Message {
-	args, opts, cbs, _source := []Any{}, Map{}, kit.Value(nil), logs.FileLine(3, 3)
+	args, opts, cbs, _source := []Any{}, Map{}, kit.Value(nil), logs.FileLine(3)
 	for _, v := range arg {
 		switch val := v.(type) {
 		case string:
@@ -293,7 +293,7 @@ func (c *Context) _action(m *Message, cmd *Command, key string, sub string, h *A
 			}
 		}
 	}
-	if m._target = kit.FileLine(h.Hand, 3); cmd.RawHand != nil {
+	if m._target = logs.FileLine(h.Hand); cmd.RawHand != nil {
 		m._target = kit.Format(cmd.RawHand)
 	}
 	m.Log(LOG_CMDS, "%s.%s %s %d %v", c.Name, key, sub, len(arg), arg,

@@ -27,11 +27,11 @@ func (s *Frame) Start(m *Message, arg ...string) bool {
 	m.Cap(CTX_STREAM, strings.Split(m.Time(), SP)[1])
 	m.Cmd(kit.Keys(MDB, CTX_INIT))
 	m.Cmd(kit.Keys(CLI, CTX_INIT))
-	m.Cmdy(INIT, arg)
+	m.Cmd(INIT, arg)
 	for _, k := range kit.Split(kit.Select("ctx,log,gdb,ssh", os.Getenv(CTX_DAEMON))) {
 		m.Start(k)
 	}
-	m.Cmdy(arg)
+	m.Cmd(arg)
 	return true
 }
 func (s *Frame) Close(m *Message, arg ...string) bool {
@@ -43,7 +43,10 @@ func (s *Frame) Close(m *Message, arg ...string) bool {
 		}
 	})
 	conf.Close()
-	go func() { m.Sleep3s(); os.Exit(kit.Int(Pulse.Option(EXIT))) }()
+	go func() {
+		m.Sleep3s()
+		os.Exit(kit.Int(Pulse.Option(EXIT)))
+	}()
 	return true
 }
 func (s *Frame) Spawn(m *Message, c *Context, arg ...string) Server { return &Frame{} }
@@ -57,14 +60,10 @@ const (
 
 var Index = &Context{Name: ICE, Help: "冰山模块", Configs: Configs{HELP: {Value: kit.Data(INDEX, Info.Help)}}, Commands: Commands{
 	CTX_INIT: {Hand: func(m *Message, arg ...string) {
-		m.root.Travel(func(p *Context, c *Context) {
-			if cmd, ok := c.Commands[CTX_INIT]; ok && p != nil {
-				c._command(m.Spawn(c), cmd, CTX_INIT, arg...)
-			}
-		})
+		m.Travel(func(p *Context, c *Context) { if p != nil { c._command(m.Spawn(c), c.Commands[CTX_INIT], CTX_INIT, arg...) } })
 	}},
 	INIT: {Hand: func(m *Message, arg ...string) {
-		m.root.Cmd(CTX_INIT)
+		m.Cmd(CTX_INIT)
 		m.Cmd(SOURCE, ETC_INIT_SHY)
 	}},
 	HELP: {Hand: func(m *Message, arg ...string) { m.Echo(m.Config(INDEX)) }},
@@ -72,23 +71,14 @@ var Index = &Context{Name: ICE, Help: "冰山模块", Configs: Configs{HELP: {Va
 	EXIT: {Hand: func(m *Message, arg ...string) {
 		m.root.Option(EXIT, kit.Select("0", arg, 0))
 		m.Cmd(SOURCE, ETC_EXIT_SHY)
-		m.root.Cmd(CTX_EXIT)
+		m.Cmd(CTX_EXIT)
 	}},
 	CTX_EXIT: {Hand: func(m *Message, arg ...string) {
-		defer m.Target().Close(m.root.Spawn(), arg...)
-		m.root.Travel(func(p *Context, c *Context) {
-			if cmd, ok := c.Commands[CTX_EXIT]; ok && p != nil {
-				m.TryCatch(m.Spawn(c), true, func(msg *Message) {
-					c._command(msg, cmd, CTX_EXIT, arg...)
-				})
-			}
-		})
+		defer m.Target().Close(m.Spawn(), arg...)
+		m.Travel(func(p *Context, c *Context) { if p != nil { c._command(m.Spawn(c), c.Commands[CTX_EXIT] , CTX_EXIT, arg...) } })
 	}},
 }, server: &Frame{}}
-var Pulse = &Message{time: time.Now(), code: 0,
-	meta: map[string][]string{}, data: Map{},
-	source: Index, target: Index, Hand: true,
-}
+var Pulse = &Message{time: time.Now(), code: 0, meta: map[string][]string{}, data: Map{}, source: Index, target: Index, Hand: true}
 
 func init() { Index.root, Pulse.root = Index, Pulse }
 

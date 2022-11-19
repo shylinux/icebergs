@@ -29,7 +29,7 @@ func _user_login(m *ice.Message, name, word string) {
 		_user_create(m.Spawn(), name, word)
 	}
 
-	_source := logs.FileLineMeta(logs.FileLine(-1, 3))
+	_source := logs.FileLineMeta(logs.FileLine(-1))
 	mdb.HashSelectDetail(m.Spawn(), name, func(value ice.Map) {
 		if m.Warn(word != "" && word != kit.Format(kit.Value(value, PASSWORD)), ice.ErrNotRight) {
 			return

@@ -6,6 +6,7 @@ import (
 	"time"
 
 	kit "shylinux.com/x/toolkits"
+	"shylinux.com/x/toolkits/logs"
 )
 
 type Option struct {
@@ -169,9 +170,9 @@ func DisplayBase(file string, arg ...string) Maps {
 	return Maps{DISPLAY: file, STYLE: kit.Join(arg, SP)}
 }
 func FileRequire(n int) string {
-	p := kit.Split(kit.FileLine(n, 100), DF)[0]
+	p := kit.Split(logs.FileLines(n), DF)[0]
 	if strings.Contains(p, "go/pkg/mod") {
 		return path.Join("/require", strings.Split(p, "go/pkg/mod")[1])
 	}
-	return path.Join("/require/"+kit.ModPath(n), path.Base(p))
+	return path.Join("/require", kit.ModPath(n), path.Base(p))
 }

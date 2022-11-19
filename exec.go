@@ -11,24 +11,24 @@ import (
 	"shylinux.com/x/toolkits/task"
 )
 
-func (m *Message) TryCatch(msg *Message, silent bool, hand ...func(msg *Message)) *Message {
+func (m *Message) TryCatch(msg *Message, catch bool, cb ...func(msg *Message)) *Message {
 	defer func() {
 		switch e := recover(); e {
 		case nil, io.EOF:
 		default:
-			fileline := m.FormatStack(2, 100)
+			fileline := m.FormatStack(2, 1)
 			m.Log(LOG_WARN, "catch: %s %s", e, fileline).Log("chain", msg.FormatChain())
-			m.Log(LOG_WARN, "catch: %s %s", e, fileline).Log("stack", msg.FormatStack(2, 100))
-			m.Log(LOG_WARN, "catch: %s %s", e, fileline).Result(ErrWarn, e, SP, fileline)
-			if len(hand) > 1 {
-				m.TryCatch(msg, silent, hand[1:]...)
-			} else if !silent {
+			m.Log(LOG_WARN, "catch: %s %s", e, fileline).Log("stack", m.FormatStack(2, 100))
+			m.Log(LOG_WARN, "catch: %s %s", e, fileline).Result(ErrWarn, e, SP, m.FormatStack(2, 5))
+			if len(cb) > 1 {
+				m.TryCatch(msg, catch, cb[1:]...)
+			} else if !catch {
 				m.Assert(e)
 			}
 		}
 	}()
-	if len(hand) > 0 {
-		hand[0](msg)
+	if len(cb) > 0 {
+		cb[0](msg)
 	}
 	return m
 }
@@ -42,9 +42,9 @@ func (m *Message) Assert(expr Any) bool {
 		}
 	case error:
 	default:
-		expr = errors.New(kit.Format("error: %v %s", e, logs.FileLine(2, 3)))
+		expr = errors.New(kit.Format("error: %v", e))
 	}
-	m.Result(ErrWarn, expr)
+	m.Result(ErrWarn, expr, logs.FileLine(2))
 	panic(expr)
 }
 func (m *Message) Sleep(d Any, arg ...Any) *Message {
@@ -61,7 +61,7 @@ func (m *Message) TableGo(cb Any) *Message {
 	defer wg.Wait()
 	m.Tables(func(value Maps) {
 		wg.Add(1)
-		task.Put(kit.FileLine(cb, 3), func(*task.Task) error {
+		task.Put(logs.FileLine(cb), func(*task.Task) error {
 			defer wg.Done()
 			switch cb := cb.(type) {
 			case func(Maps, *task.Lock):
@@ -77,7 +77,7 @@ func (m *Message) TableGo(cb Any) *Message {
 	return m
 }
 func (m *Message) Go(cb Any) *Message {
-	task.Put(kit.FileLine(cb, 3), func(task *task.Task) error {
+	task.Put(logs.FileLine(cb), func(task *task.Task) error {
 		m.TryCatch(m, true, func(m *Message) {
 			switch cb := cb.(type) {
 			case func(*Message):

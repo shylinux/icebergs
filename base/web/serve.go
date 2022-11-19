@@ -140,7 +140,7 @@ func _serve_main(m *ice.Message, w http.ResponseWriter, r *http.Request) bool {
 	// 模块回调
 	for _, h := range rewriteList {
 		if m.Config(LOGHEADERS) == ice.TRUE {
-			m.Info("%s: %v", r.URL.Path, kit.FileLine(h, 3), meta)
+			m.Info("%s: %v", r.URL.Path, logs.FileLine(h), meta)
 		}
 		switch h := h.(type) {
 		case func(w http.ResponseWriter, r *http.Request) func():

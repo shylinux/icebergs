@@ -201,7 +201,7 @@ func init() {
 }
 
 func IsNotValidShare(m *ice.Message, value ice.Maps) bool {
-	_source := logs.FileLineMeta(logs.FileLine(2, 3))
+	_source := logs.FileLineMeta(logs.FileLine(2))
 	if m.Warn(value[mdb.TIME] < m.Time(), ice.ErrNotValid, m.Option(SHARE), value[mdb.TIME], m.Time(), _source) {
 		return true
 	}

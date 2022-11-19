@@ -19,10 +19,7 @@ func (m *Message) Prefix(arg ...string) string {
 	return m.Target().PrefixKey(arg...)
 }
 func (m *Message) Config(key string, arg ...Any) string {
-	if len(arg) > 0 {
-		m.Conf(m.PrefixKey(), kit.Keym(key), arg[0])
-	}
-	return m.Conf(m.PrefixKey(), kit.Keym(key))
+	return kit.Format(m.Configv(key, arg...))
 }
 func (m *Message) Configv(key string, arg ...Any) Any {
 	if len(arg) > 0 {
@@ -30,9 +27,9 @@ func (m *Message) Configv(key string, arg ...Any) Any {
 	}
 	return m.Confv(m.PrefixKey(), kit.Keym(key))
 }
-func (m *Message) ConfigSimple(key ...string) (list []string) {
+func (m *Message) ConfigSimple(key ...string) (res []string) {
 	for _, k := range kit.Split(kit.Join(key)) {
-		list = append(list, k, m.Config(k))
+		res = append(res, k, m.Config(k))
 	}
 	return
 }

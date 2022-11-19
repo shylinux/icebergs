@@ -37,7 +37,7 @@ func (m *Message) join(arg ...Any) (string, []Any) {
 	return kit.Join(list, SP), meta
 }
 func (m *Message) log(level string, str string, arg ...Any) *Message {
-	_source := logs.FileLineMeta(logs.FileLine(3, 3))
+	_source := logs.FileLineMeta(logs.FileLine(3))
 	if Info.Log != nil {
 		Info.Log(m, m.FormatPrefix(), level, logs.Format(str, append(arg, _source)...))
 	}
@@ -103,50 +103,46 @@ func (m *Message) Warn(err Any, arg ...Any) bool {
 	}
 	str, meta := m.join(arg...)
 	m.log(LOG_WARN, str, meta...)
-	if !m.IsErr() {
-		if m.error(arg...); len(arg) > 0 {
-			switch kit.Format(arg[0]) {
-			case ErrNotLogin:
-				m.RenderStatusUnauthorized(str)
-			case ErrNotRight:
-				m.RenderStatusForbidden(str)
-			case ErrNotFound:
-				m.RenderStatusNotFound(str)
-			case ErrNotValid:
-				m.RenderStatusBadRequest(str)
-			}
+	if !m.IsErr() && len(arg) > 0 {
+		switch m.error(arg...); kit.Format(arg[0]) {
+		case ErrNotLogin:
+			m.RenderStatusUnauthorized(str)
+		case ErrNotRight:
+			m.RenderStatusForbidden(str)
+		case ErrNotFound:
+			m.RenderStatusNotFound(str)
+		case ErrNotValid:
+			m.RenderStatusBadRequest(str)
 		}
 	}
 	return true
+}
+func (m *Message) ErrorNotImplement(arg ...Any) {
+	m.Error(true, append(kit.List(ErrNotImplement), arg...)...)
 }
 func (m *Message) Error(err bool, arg ...Any) bool {
 	if err {
 		str, meta := m.join(arg...)
 		m.log(LOG_ERROR, m.FormatChain())
 		m.log(LOG_ERROR, str, meta)
-		m.log(LOG_ERROR, m.FormatStack(1, 100))
+		m.log(LOG_ERROR, m.FormatStack(2, 100))
 		m.error(arg...)
 		return true
 	}
 	return false
 }
-func (m *Message) ErrorNotImplement(arg ...Any) {
-	m.Error(true, append(kit.List(ErrNotImplement), arg...)...)
-}
 func (m *Message) error(arg ...Any) {
-	if len(arg) == 0 {
-		arg = append(arg, "", "")
-	} else if len(arg) == 1 {
-		arg = append(arg, "")
+	if len(arg) > 2 {
+		str, meta := m.join(arg[2:]...)
+		arg = append(arg[0:2], str, meta)
 	}
-	str, meta := m.join(arg[2:]...)
-	m.Resultv(ErrWarn, arg[0], arg[1], str, meta)
-}
-func (m *Message) IsErrNotFound() bool {
-	return m.IsErr(ErrNotFound)
+	m.Resultv(ErrWarn, kit.Simple(arg))
 }
 func (m *Message) IsErr(arg ...string) bool {
 	return len(arg) == 0 && m.Result(0) == ErrWarn || len(arg) > 0 && m.Result(1) == arg[0]
+}
+func (m *Message) IsErrNotFound() bool {
+	return m.IsErr(ErrNotFound)
 }
 func (m *Message) Debug(str string, arg ...Any) {
 	if str == "" {

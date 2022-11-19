@@ -6,7 +6,7 @@ import (
 
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/mdb"
-	kit "shylinux.com/x/toolkits"
+	"shylinux.com/x/toolkits/logs"
 )
 
 const MESSAGE = "message"
@@ -18,7 +18,7 @@ func init() {
 			t := reflect.TypeOf(m)
 			for i := 0; i < t.NumMethod(); i++ {
 				method := t.Method(i)
-				p := kit.FileLine(method.Func.Interface(), 4)
+				p := logs.FileLine(method.Func.Interface())
 				m.Push(mdb.NAME, method.Name)
 				m.Push(mdb.TEXT, strings.Split(p, ice.ICEBERGS+"/")[1])
 			}

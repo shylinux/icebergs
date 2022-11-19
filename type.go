@@ -10,6 +10,7 @@ import (
 	"time"
 
 	kit "shylinux.com/x/toolkits"
+	"shylinux.com/x/toolkits/logs"
 )
 
 type Any = interface{}
@@ -95,10 +96,10 @@ func (c *Command) GetFileLine() string {
 		case string:
 			return h
 		default:
-			return kit.FileLine(c.RawHand, 100)
+			return logs.FileLines(c.RawHand)
 		}
 	} else if c.Hand != nil {
-		return kit.FileLine(c.Hand, 100)
+		return logs.FileLines(c.Hand)
 	} else {
 		return ""
 	}
@@ -215,12 +216,6 @@ func (c *Context) Merge(s *Context) *Context {
 	}
 	for k, v := range s.Configs {
 		c.Configs[k] = v
-	}
-	if c.Caches == nil {
-		c.Caches = Caches{}
-	}
-	for k, v := range s.Caches {
-		c.Caches[k] = v
 	}
 	return c
 }

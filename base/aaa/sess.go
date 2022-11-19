@@ -16,7 +16,7 @@ func _sess_check(m *ice.Message, sessid string) {
 		return
 	}
 
-	_source := logs.FileLineMeta(logs.FileLine(-1, 3))
+	_source := logs.FileLineMeta(logs.FileLine(-1))
 	mdb.HashSelectDetail(m, sessid, func(value ice.Map) {
 		if m.Warn(kit.Time(kit.Format(value[mdb.TIME])) < kit.Time(m.Time()), ice.ErrNotValid, sessid) {
 			return // 会话超时
@@ -98,5 +98,5 @@ func SessAuth(m *ice.Message, value ice.Maps, arg ...string) {
 	m.Option(ice.MSG_USERROLE, value[USERROLE])
 	m.Option(ice.MSG_USERNAME, value[USERNAME])
 	m.Option(ice.MSG_USERNICK, value[USERNICK])
-	m.Auth(USERROLE, value[USERROLE], USERNAME, value[USERNAME], USERNICK, value[USERNICK], arg, logs.FileLineMeta(logs.FileLine(2, 3)))
+	m.Auth(USERROLE, value[USERROLE], USERNAME, value[USERNAME], USERNICK, value[USERNICK], arg, logs.FileLineMeta(logs.FileLine(2)))
 }

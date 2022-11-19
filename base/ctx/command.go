@@ -9,6 +9,7 @@ import (
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/nfs"
 	kit "shylinux.com/x/toolkits"
+	"shylinux.com/x/toolkits/logs"
 )
 
 func _command_list(m *ice.Message, name string) {
@@ -230,7 +231,7 @@ func GetFileCmd(dir string) string {
 func GetCmdFile(m *ice.Message, cmds string) (file string) {
 	m.Search(cmds, func(key string, cmd *ice.Command) {
 		if cmd.RawHand == nil {
-			file = kit.Split(kit.FileLine(cmd.Hand, 100), ":")[0]
+			file = kit.Split(logs.FileLines(cmd.Hand), ":")[0]
 		} else {
 			for k, v := range ice.Info.File {
 				if v == cmds {

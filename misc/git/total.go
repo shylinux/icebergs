@@ -56,6 +56,7 @@ func init() {
 					return
 				}
 				msg := m.Cmd("_sum", value[nfs.PATH], mdb.TOTAL, "10000")
+				// msg := m.Cmd("_sum", value[nfs.PATH], mdb.TOTAL, "2022-01-01")
 
 				defer lock.Lock()()
 				msg.Tables(func(value ice.Maps) {

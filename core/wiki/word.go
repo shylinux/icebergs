@@ -12,7 +12,7 @@ import (
 )
 
 func _word_show(m *ice.Message, name string, arg ...string) {
-	m.OptionMulti(ice.MSG_ALIAS, m.Configv(mdb.ALIAS), TITLE, map[string]int{}, MENU, kit.Dict(mdb.LIST, kit.List()))
+	m.Options(ice.MSG_ALIAS, m.Configv(mdb.ALIAS), TITLE, map[string]int{}, MENU, kit.Dict(mdb.LIST, kit.List()))
 	m.Cmdy(ssh.SOURCE, name, kit.Dict(nfs.DIR_ROOT, _wiki_path(m)))
 }
 

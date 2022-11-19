@@ -7,13 +7,13 @@ import (
 )
 
 func (m *Message) ActionKey() string {
-	return strings.TrimSuffix(strings.TrimPrefix(m._sub, PS), PS)
+	return strings.TrimPrefix(strings.TrimSuffix(m._sub, PS), PS)
 }
 func (m *Message) CommandKey() string {
-	return strings.TrimSuffix(strings.TrimPrefix(m._key, PS), PS)
+	return strings.TrimPrefix(strings.TrimSuffix(m._key, PS), PS)
 }
 func (m *Message) PrefixKey(arg ...Any) string {
-	return kit.Keys(m.Prefix(m.CommandKey()), kit.Keys(arg))
+	return kit.Keys(m.Prefix(m.CommandKey()), kit.Keys(arg...))
 }
 func (m *Message) Prefix(arg ...string) string {
 	return m.Target().PrefixKey(arg...)

@@ -86,7 +86,7 @@ func init() {
 					m.Cmd(ASSET, func(value ice.Maps) {
 						_asset_check(m, value[ACCOUNT])
 					})
-					m.ProcessRefresh30ms()
+					m.ProcessRefresh()
 				} else {
 					_asset_check(m, m.Option(ACCOUNT))
 				}

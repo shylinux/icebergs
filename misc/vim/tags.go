@@ -140,7 +140,7 @@ func init() {
 					}
 					m.Cmd(TAGS, mdb.INSERT, mdb.ZONE, value[mdb.ZONE], kit.Simple(value))
 				})
-				m.ProcessRefresh300ms()
+				m.ProcessRefresh()
 			}},
 			mdb.INSERT: {Name: "insert zone=core type name=hi text=hello path file line", Help: "添加"},
 			code.INNER: {Name: "inner", Help: "源码", Hand: func(m *ice.Message, arg ...string) {

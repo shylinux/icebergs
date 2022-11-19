@@ -9,6 +9,13 @@ const SEARCH = "search"
 
 func init() {
 	Index.MergeCommands(ice.Commands{SEARCH: {Name: "search type name text auto", Help: "搜索", Actions: RenderAction()}})
+	ice.AddMerges(func(c *ice.Context, key string, cmd *ice.Command, sub string, action *ice.Action) (ice.Handler, ice.Handler) {
+		switch sub {
+		case SEARCH:
+			return func(m *ice.Message, arg ...string) { m.Cmd(SEARCH, CREATE, m.CommandKey(), m.PrefixKey()) }, nil
+		}
+		return nil, nil
+	})
 }
 func SearchAction() ice.Actions {
 	return ice.Actions{

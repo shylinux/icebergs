@@ -36,6 +36,9 @@ func (f *Frame) prompt(m *ice.Message, list ...string) *Frame {
 	if f.source != STDIO {
 		return f
 	}
+	if m.Target().Cap(ice.CTX_STATUS) == ice.CTX_CLOSE {
+		return f
+	}
 	if len(list) == 0 {
 		list = append(list, f.ps1...)
 	}
@@ -106,7 +109,6 @@ func (f *Frame) parse(m *ice.Message, h, line string) string {
 	if msg.Cmdy(ls); h == STDIO && msg.IsErrNotFound() {
 		msg.SetResult().Cmdy(cli.SYSTEM, ls)
 	}
-
 	f.res = Render(msg, msg.Option(ice.MSG_OUTPUT), msg.Optionv(ice.MSG_ARGS).([]ice.Any)...)
 	return ""
 }

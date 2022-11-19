@@ -1,13 +1,13 @@
 package ice
 
 type MakeInfo struct {
-	Path     string
 	Time     string
+	Path     string
 	Hash     string
+	Domain   string
 	Module   string
 	Remote   string
 	Branch   string
-	Domain   string
 	Version  string
 	HostName string
 	UserName string
@@ -21,19 +21,20 @@ var Info = struct {
 	UserName string
 	PassWord string
 
-	Colors   bool
 	Domain   string
 	NodeType string
 	NodeName string
 	CtxShare string
 	CtxRiver string
 	PidPath  string
+	Colors   bool
 
 	Help  string
-	Route Maps // 路由命令
-	File  Maps // 文件命令
-	names Map
+	File  Maps
+	Route Maps
+	index Map
 
+	merges []MergeHandler
 	render map[string]func(*Message, string, ...Any) string
 	Save   func(m *Message, key ...string) *Message
 	Load   func(m *Message, key ...string) *Message
@@ -47,12 +48,16 @@ report: shylinuxc@gmail.com
 server: https://shylinux.com
 source: https://shylinux.com/x/icebergs
 `,
-	Route: Maps{},
 	File:  Maps{},
-	names: Map{},
+	Route: Maps{},
+	index: Map{},
 
 	render: map[string]func(*Message, string, ...Any) string{},
 	Save:   func(m *Message, key ...string) *Message { return m },
 	Load:   func(m *Message, key ...string) *Message { return m },
 	Log:    func(m *Message, p, l, s string) {},
 }
+
+type MergeHandler func(*Context, string, *Command, string, *Action) (Handler, Handler)
+
+func AddMerges(h ...MergeHandler) { Info.merges = append(Info.merges, h...) }

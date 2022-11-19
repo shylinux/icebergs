@@ -287,7 +287,7 @@ func init() {
 				}
 				_repos_cmd(m, m.Option(REPOS), TAG, m.Option(VERSION))
 				_repos_cmd(m, m.Option(REPOS), PUSH, "--tags")
-				m.ProcessRefresh30ms()
+				m.ProcessRefresh()
 			}},
 			BRANCH: {Name: "branch", Help: "分支", Hand: func(m *ice.Message, arg ...string) {
 				for _, line := range kit.Split(_repos_cmd(m.Spawn(), arg[0], BRANCH).Result(), ice.NL, ice.NL) {
@@ -319,6 +319,9 @@ func init() {
 				m.Cmdy(code.VIMER, code.DEVPACK)
 			}},
 			web.DREAM_TABLES: {Hand: func(m *ice.Message, arg ...string) {
+				if m.Option(mdb.TYPE) != web.WORKER {
+					return
+				}
 				text := []string{}
 				for _, line := range kit.Split(m.Cmdx(web.SPACE, m.Option(mdb.NAME), cli.SYSTEM, "git", "diff", "--shortstat"), ice.FS, ice.FS) {
 					if list := kit.Split(line); strings.Contains(line, "file") {

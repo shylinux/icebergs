@@ -11,7 +11,7 @@ func _group_list(m *ice.Message, appid string) {
 	_, data := _lark_get(m, appid, "/open-apis/chat/v4/list")
 	kit.Fetch(kit.Value(data, "data.groups"), func(index int, value ice.Map) {
 		m.Push(CHAT_ID, value[CHAT_ID])
-		m.PushImages(aaa.AVATAR, kit.Format(value[aaa.AVATAR]), "72")
+		m.PushImages(aaa.AVATAR, kit.Format(value[aaa.AVATAR]))
 		m.Push(mdb.NAME, value[mdb.NAME])
 		m.Push(mdb.TEXT, value["description"])
 		m.Push(OPEN_ID, value["owner_open_id"])

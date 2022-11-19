@@ -191,7 +191,7 @@ var Index = &ice.Context{Name: MDB, Help: "数据模块", Commands: ice.Commands
 		}
 	}},
 	INSERT: {Name: "insert key sub type arg...", Help: "添加", Hand: func(m *ice.Message, arg ...string) {
-		defer m.ProcessRefresh3ms()
+		defer m.ProcessRefresh()
 		switch arg[2] {
 		case ZONE: // insert key sub type zone arg...
 			_zone_insert(m, arg[0], arg[1], arg[3], arg[4:]...)
@@ -202,7 +202,7 @@ var Index = &ice.Context{Name: MDB, Help: "数据模块", Commands: ice.Commands
 		}
 	}},
 	DELETE: {Name: "delete key sub type field value", Help: "删除", Hand: func(m *ice.Message, arg ...string) {
-		defer m.ProcessRefresh3ms()
+		defer m.ProcessRefresh()
 		switch arg[2] {
 		case ZONE: // delete key sub type zone field value
 			// _list_delete(m, arg[0], _domain_chain(m, kit.Keys(arg[1], kit.KeyHash(arg[3]))), arg[4], arg[5])

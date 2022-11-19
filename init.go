@@ -12,10 +12,7 @@ import (
 
 type Frame struct{}
 
-func (f *Frame) Spawn(m *Message, c *Context, arg ...string) Server {
-	return &Frame{}
-}
-func (f *Frame) Begin(m *Message, arg ...string) Server {
+func (s *Frame) Begin(m *Message, arg ...string) Server {
 	list := map[*Context]*Message{m.target: m}
 	m.Travel(func(p *Context, s *Context) {
 		s.root = m.target
@@ -24,21 +21,20 @@ func (f *Frame) Begin(m *Message, arg ...string) Server {
 			s.Begin(list[s], arg...)
 		}
 	})
-	return f
+	return s
 }
-func (f *Frame) Start(m *Message, arg ...string) bool {
+func (s *Frame) Start(m *Message, arg ...string) bool {
 	m.Cap(CTX_STREAM, strings.Split(m.Time(), SP)[1])
 	m.Cmd(kit.Keys(MDB, CTX_INIT))
-	m.Cmd("cli.runtime", CTX_INIT)
+	m.Cmd(kit.Keys(CLI, CTX_INIT))
 	m.Cmdy(INIT, arg)
-
 	for _, k := range kit.Split(kit.Select("ctx,log,gdb,ssh", os.Getenv(CTX_DAEMON))) {
 		m.Start(k)
 	}
-	m.Cmd(arg)
+	m.Cmdy(arg)
 	return true
 }
-func (f *Frame) Close(m *Message, arg ...string) bool {
+func (s *Frame) Close(m *Message, arg ...string) bool {
 	list := map[*Context]*Message{m.target: m}
 	m.Travel(func(p *Context, s *Context) {
 		if msg, ok := list[p]; ok && msg != nil {
@@ -47,9 +43,10 @@ func (f *Frame) Close(m *Message, arg ...string) bool {
 		}
 	})
 	conf.Close()
-	go func() { m.Sleep("1s"); os.Exit(kit.Int(Pulse.Option(EXIT))) }()
+	go func() { m.Sleep3s(); os.Exit(kit.Int(Pulse.Option(EXIT))) }()
 	return true
 }
+func (s *Frame) Spawn(m *Message, c *Context, arg ...string) Server { return &Frame{} }
 
 const (
 	INIT = "init"
@@ -58,9 +55,7 @@ const (
 	QUIT = "quit"
 )
 
-var Index = &Context{Name: ICE, Help: "冰山模块", Configs: Configs{
-	HELP: {Value: kit.Data(INDEX, Info.Help)},
-}, Commands: Commands{
+var Index = &Context{Name: ICE, Help: "冰山模块", Configs: Configs{HELP: {Value: kit.Data(INDEX, Info.Help)}}, Commands: Commands{
 	CTX_INIT: {Hand: func(m *Message, arg ...string) {
 		m.root.Travel(func(p *Context, c *Context) {
 			if cmd, ok := c.Commands[CTX_INIT]; ok && p != nil {
@@ -68,23 +63,19 @@ var Index = &Context{Name: ICE, Help: "冰山模块", Configs: Configs{
 			}
 		})
 	}},
-	INIT: {Name: "init", Help: "启动", Hand: func(m *Message, arg ...string) {
+	INIT: {Hand: func(m *Message, arg ...string) {
 		m.root.Cmd(CTX_INIT)
-		m.Cmd("source", ETC_INIT_SHY)
+		m.Cmd(SOURCE, ETC_INIT_SHY)
 	}},
-	HELP: {Name: "help", Help: "帮助", Hand: func(m *Message, arg ...string) {
-		m.Echo(m.Config(INDEX))
-	}},
-	QUIT: {Name: "quit", Help: "结束", Hand: func(m *Message, arg ...string) {
-		os.Exit(0)
-	}},
-	EXIT: {Name: "exit", Help: "退出", Hand: func(m *Message, arg ...string) {
-		defer m.Target().Close(m.root.Spawn(), arg...)
+	HELP: {Hand: func(m *Message, arg ...string) { m.Echo(m.Config(INDEX)) }},
+	QUIT: {Hand: func(m *Message, arg ...string) { os.Exit(0) }},
+	EXIT: {Hand: func(m *Message, arg ...string) {
 		m.root.Option(EXIT, kit.Select("0", arg, 0))
-		m.Cmd("source", ETC_EXIT_SHY)
+		m.Cmd(SOURCE, ETC_EXIT_SHY)
 		m.root.Cmd(CTX_EXIT)
 	}},
 	CTX_EXIT: {Hand: func(m *Message, arg ...string) {
+		defer m.Target().Close(m.root.Spawn(), arg...)
 		m.root.Travel(func(p *Context, c *Context) {
 			if cmd, ok := c.Commands[CTX_EXIT]; ok && p != nil {
 				m.TryCatch(m.Spawn(c), true, func(msg *Message) {
@@ -102,30 +93,26 @@ var Pulse = &Message{time: time.Now(), code: 0,
 func init() { Index.root, Pulse.root = Index, Pulse }
 
 func Run(arg ...string) string {
-	if len(arg) == 0 { // 进程参数
-		arg = kit.Simple(arg, os.Args[1:], kit.Split(os.Getenv(CTX_ARG)))
+	if len(arg) == 0 && len(os.Args) > 1 {
+		arg = kit.Simple(os.Args[1:], kit.Split(kit.Env(CTX_ARG)))
 	}
-
 	Pulse.meta[MSG_DETAIL] = arg
-	switch Index.Merge(Index).Begin(Pulse.Spawn(), arg...); kit.Select("", arg, 0) {
-	case "serve", "space": // 启动服务
+	switch Index.Merge(Index).Begin(Pulse, arg...); kit.Select("", arg, 0) {
+	case SERVE, SPACE:
 		if Index.Start(Pulse, arg...) {
 			conf.Wait()
-			println()
 			os.Exit(kit.Int(Pulse.Option(EXIT)))
 		}
-	default: // 执行命令
+	default:
 		if logs.Disable(true); len(arg) == 0 {
 			arg = append(arg, HELP)
 		}
-		Pulse.Cmd(INIT)
-		if Pulse.Cmdy(arg); strings.TrimSpace(Pulse.Result()) == "" {
+		if Pulse.Cmd(INIT).Cmdy(arg); strings.TrimSpace(Pulse.Result()) == "" {
 			Pulse.Table()
 		}
-	}
-
-	if !strings.HasSuffix(Pulse.Result(), NL) {
-		Pulse.Echo(NL)
+		if !strings.HasSuffix(Pulse.Result(), NL) {
+			Pulse.Echo(NL)
+		}
 	}
 	return Pulse.Result()
 }

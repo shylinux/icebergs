@@ -41,7 +41,7 @@ func _serve_rewrite(m *ice.Message) {
 			return Render(msg, ice.RENDER_DOWNLOAD, path.Join(msg.Config(kit.Keys(repos, nfs.PATH)), msg.Config(kit.Keys(repos, INDEX))))
 
 		case PP(ice.HELP):
-			r.URL.Path = P(ice.HELP, ice.TUTOR_SHY)
+			r.URL.Path = P(ice.HELP, "tutor.shy")
 		}
 
 		p := path.Join(ice.USR, repos, r.URL.Path)
@@ -89,11 +89,7 @@ func _serve_start(m *ice.Message) {
 	if cli.NodeInfo(m, SERVER, kit.Select(ice.Info.HostName, m.Option("nodename"))); m.Option(tcp.PORT) == tcp.RANDOM {
 		m.Option(tcp.PORT, m.Cmdx(tcp.PORT, aaa.RIGHT))
 	}
-
-	if m.Option("staffname") != "" {
-		m.Config("staffname", m.Option(aaa.USERNAME, m.Option("staffname")))
-	}
-	aaa.UserRoot(m, m.Option(aaa.PASSWORD), m.Option(aaa.USERNAME), m.Option(aaa.USERROLE), m.Option(aaa.USERNICK))
+	aaa.UserRoot(m, m.Option(aaa.PASSWORD), m.Option(aaa.USERNAME), m.Option(aaa.USERNICK))
 
 	m.Target().Start(m, m.OptionSimple(tcp.HOST, tcp.PORT)...)
 	m.Go(func() { m.Cmd(BROAD, SERVE) })
@@ -364,7 +360,7 @@ func init() {
 					ctx.DisplayStorySpide(m, lex.PREFIX, m.ActionKey(), nfs.ROOT, MergeLink(m, ice.PS))
 				}
 			}},
-			cli.START: {Name: "start dev proto=http host port=9020 nodename password username userrole usernick staffname", Help: "启动", Hand: func(m *ice.Message, arg ...string) {
+			cli.START: {Name: "start dev proto=http host port=9020 nodename password username usernick", Help: "启动", Hand: func(m *ice.Message, arg ...string) {
 				_serve_start(m)
 			}},
 		}, mdb.HashAction())},
@@ -396,7 +392,7 @@ func init() {
 		}},
 		PP(ice.HELP): {Name: "/help/", Help: "帮助", Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) == 0 {
-				arg = append(arg, ice.TUTOR_SHY)
+				arg = append(arg, "tutor.shy")
 			}
 			if len(arg) > 0 && arg[0] != ctx.ACTION {
 				arg[0] = path.Join(ice.SRC_HELP, arg[0])
@@ -404,4 +400,13 @@ func init() {
 			m.Cmdy("web.chat./cmd/", arg)
 		}},
 	}})
+	ice.AddMerges(func(c *ice.Context, key string, cmd *ice.Command, sub string, action *ice.Action) (ice.Handler, ice.Handler) {
+		if strings.HasPrefix(sub, ice.PS) {
+			if sub = kit.Select(sub, PP(key), sub == ice.PS); action.Hand == nil {
+				action.Hand = func(m *ice.Message, arg ...string) { m.Cmdy(key, arg) }
+			}
+			c.Commands[sub] = &ice.Command{Name: sub, Help: cmd.Help, Hand: action.Hand}
+		}
+		return nil, nil
+	})
 }

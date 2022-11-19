@@ -8,7 +8,7 @@ import (
 	"shylinux.com/x/toolkits/logs"
 )
 
-func (m *Message) Split(str string, arg ...string) *Message { // field sp nl
+func (m *Message) Split(str string, arg ...string) *Message {
 	m.Set(MSG_APPEND).Set(MSG_RESULT)
 	field := kit.Select("", arg, 0)
 	sp := kit.Select(SP, arg, 1)
@@ -21,7 +21,7 @@ func (m *Message) Split(str string, arg ...string) *Message { // field sp nl
 		if strings.TrimSpace(l) == "" {
 			continue
 		}
-		if i == 0 && (field == "" || field == INDEX) { // 表头行
+		if i == 0 && (field == "" || field == INDEX) {
 			if fields = kit.Split(l, sp, sp); field == INDEX {
 				if strings.HasPrefix(l, SP) || strings.HasPrefix(l, TB) {
 					indexs = append(indexs, 0)
@@ -37,8 +37,7 @@ func (m *Message) Split(str string, arg ...string) *Message { // field sp nl
 			}
 			continue
 		}
-
-		if len(indexs) > 0 { // 按位切分
+		if len(indexs) > 0 {
 			for i, v := range indexs {
 				if v >= len(l) {
 					m.Push(strings.TrimSpace(kit.Select(SP, fields, i)), "")
@@ -52,7 +51,6 @@ func (m *Message) Split(str string, arg ...string) *Message { // field sp nl
 			}
 			continue
 		}
-
 		ls := kit.Split(l, sp, sp)
 		for i, v := range ls {
 			if i == len(fields)-1 {
@@ -78,18 +76,6 @@ func (m *Message) PushDetail(value Any, arg ...string) *Message {
 	return m.Push(FIELDS_DETAIL, value, kit.Split(kit.Join(arg)))
 }
 
-func (m *Message) Options(arg ...Any) *Message {
-	for i := 0; i < len(arg); i += 2 {
-		m.Option(kit.Format(arg[i]), arg[i+1])
-	}
-	return m
-}
-func (m *Message) OptionMulti(arg ...Any) *Message {
-	for i := 0; i < len(arg); i += 2 {
-		m.Option(kit.Format(arg[i]), arg[i+1])
-	}
-	return m
-}
 func (m *Message) ToLowerAppend(arg ...string) *Message {
 	for _, k := range m.meta[MSG_APPEND] {
 		m.RenameAppend(k, strings.ToLower(k))
@@ -101,7 +87,7 @@ func (m *Message) RenameOption(from, to string) *Message {
 	m.Option(from, "")
 	return m
 }
-func (m *Message) RenameAppend(arg ...string) *Message { // [from to]...
+func (m *Message) RenameAppend(arg ...string) *Message {
 	for i := 0; i < len(arg)-1; i += 2 {
 		if arg[i] == arg[i+1] {
 			continue
@@ -154,9 +140,6 @@ func (m *Message) SetResult(arg ...string) *Message {
 	return m.Set(MSG_RESULT, arg...)
 }
 
-func (m *Message) IsMobile() bool {
-	return strings.Contains(m.Option(MSG_USERUA), "Mobile")
-}
 func (m *Message) Design(action Any, help string, input ...Any) {
 	list := kit.List()
 	for _, input := range input {
@@ -181,12 +164,27 @@ func (m *Message) Design(action Any, help string, input ...Any) {
 		kit.Value(m._cmd.Meta, kit.Keys("_trans", k), help)
 	}
 }
+func (m *Message) CmdHand(cmd *Command, key string, arg ...string) *Message {
+	if m._key, m._cmd = key, cmd; cmd == nil {
+		return m
+	}
+	if m._target = kit.FileLine(cmd.Hand, 3); cmd.RawHand != nil {
+		m._target = kit.Format(cmd.RawHand)
+	}
+	if fileline := kit.Select(m._target, m._source, m.target.Name == MDB); key == SELECT {
+		m.Log(LOG_CMDS, "%s.%s %d %v %v", m.Target().Name, key, len(arg), arg, m.Optionv(MSG_FIELDS), logs.FileLineMeta(fileline))
+	} else {
+		m.Log(LOG_CMDS, "%s.%s %d %v", m.Target().Name, key, len(arg), arg, logs.FileLineMeta(fileline))
+	}
+	if cmd.Hand != nil {
+		cmd.Hand(m, arg...)
+	} else if cmd.Actions != nil && cmd.Actions[SELECT] != nil {
+		cmd.Actions[SELECT].Hand(m, arg...)
+	}
+	return m
+}
 func (m *Message) _command(arg ...Any) *Message {
-	args, opts := []Any{}, Map{}
-	var cbs Any
-
-	// 解析参数
-	_source := logs.FileLine(3, 3)
+	args, opts, cbs, _source := []Any{}, Map{}, kit.Value(nil), logs.FileLine(3, 3)
 	for _, v := range arg {
 		switch val := v.(type) {
 		case string:
@@ -203,12 +201,10 @@ func (m *Message) _command(arg ...Any) *Message {
 			opts[val.Name] = val.Value
 		case *Option:
 			opts[val.Name] = val.Value
-
 		case logs.Meta:
 			if val.Key == "fileline" {
 				_source = val.Value
 			}
-
 		case func(int, Maps, []string):
 			defer func() { m.Table(val) }()
 		case func(Maps):
@@ -221,8 +217,6 @@ func (m *Message) _command(arg ...Any) *Message {
 			}
 		}
 	}
-
-	// 解析命令
 	list := kit.Simple(args...)
 	if len(list) == 0 && !m.Hand {
 		list = m.meta[MSG_DETAIL]
@@ -230,25 +224,20 @@ func (m *Message) _command(arg ...Any) *Message {
 	if len(list) == 0 {
 		return m
 	}
-
 	ok := false
 	run := func(msg *Message, ctx *Context, cmd *Command, key string, arg ...string) {
+		key = kit.Slice(strings.Split(key, PT), -1)[0]
 		if ok = true; cbs != nil {
-			msg.OptionCB(kit.Slice(kit.Split(list[0], PT), -1)[0], cbs)
+			msg.OptionCB(key, cbs)
 		}
 		for k, v := range opts {
 			msg.Option(k, v)
 		}
-
-		// 执行命令
 		msg._source = _source
 		m.TryCatch(msg, true, func(msg *Message) { m = ctx._command(msg, cmd, key, arg...) })
 	}
-
-	// 查找命令
 	if list[0] == "" {
-		list[0] = m._key
-		run(m.Spawn(), m.target, m._cmd, list[0], list[1:]...)
+		run(m.Spawn(), m.target, m._cmd, m._key, list[1:]...)
 	} else if cmd, ok := m.target.Commands[strings.TrimPrefix(list[0], m.target.Cap(CTX_FOLLOW)+PT)]; ok {
 		run(m.Spawn(), m.target, cmd, list[0], list[1:]...)
 	} else if cmd, ok := m.source.Commands[strings.TrimPrefix(list[0], m.source.Cap(CTX_FOLLOW)+PT)]; ok {
@@ -261,32 +250,11 @@ func (m *Message) _command(arg ...Any) *Message {
 	m.Warn(!ok, ErrNotFound, kit.Format(list))
 	return m
 }
-func (m *Message) CmdHand(cmd *Command, key string, arg ...string) *Message {
-	if m._key, m._cmd = key, cmd; cmd == nil {
-		return m
-	}
-	if m._target = kit.FileLine(cmd.Hand, 3); cmd.RawHand != nil {
-		m._target = kit.Format(cmd.RawHand)
-	}
-	if fileline := kit.Select(m._target, m._source, m.target.Name == MDB); key == "select" {
-		m.Log(LOG_CMDS, "%s.%s %d %v %v", m.Target().Name, key, len(arg), arg, m.Optionv(MSG_FIELDS), logs.FileLineMeta(fileline))
-	} else {
-		m.Log(LOG_CMDS, "%s.%s %d %v", m.Target().Name, key, len(arg), arg, logs.FileLineMeta(fileline))
-	}
-	if cmd.Hand != nil {
-		cmd.Hand(m, arg...)
-	} else if cmd.Actions != nil && cmd.Actions["select"] != nil {
-		cmd.Actions["select"].Hand(m, arg...)
-	}
-	return m
-}
 func (c *Context) _command(m *Message, cmd *Command, key string, arg ...string) *Message {
-	key = kit.Slice(strings.Split(key, PT), -1)[0]
-	if m._key, m._sub, m._cmd = key, "select", cmd; cmd == nil {
+	if m._key, m._sub, m._cmd = key, SELECT, cmd; cmd == nil {
 		return m
 	}
-
-	if m.Hand, m.meta[MSG_DETAIL] = true, kit.Simple(key, arg); cmd.Actions != nil {
+	if m.Hand, m.meta[MSG_DETAIL] = true, kit.Simple(m.PrefixKey(), arg); cmd.Actions != nil {
 		if len(arg) > 1 && arg[0] == ACTION {
 			if h, ok := cmd.Actions[arg[1]]; ok {
 				return c._action(m, cmd, key, arg[1], h, arg[2:]...)
@@ -298,30 +266,14 @@ func (c *Context) _command(m *Message, cmd *Command, key string, arg ...string) 
 			}
 		}
 	}
-
-	if m._target = kit.FileLine(cmd.Hand, 3); cmd.RawHand != nil {
-		m._target = kit.Format(cmd.RawHand)
-	}
-	if fileline := kit.Select(m._target, m._source, m.target.Name == MDB); key == "select" {
-		m.Log(LOG_CMDS, "%s.%s %d %v %v", c.Name, key, len(arg), arg, m.Optionv(MSG_FIELDS), logs.FileLineMeta(fileline))
-	} else {
-		m.Log(LOG_CMDS, "%s.%s %d %v", c.Name, key, len(arg), arg, logs.FileLineMeta(fileline))
-	}
-
-	if cmd.Hand != nil {
-		cmd.Hand(m, arg...)
-	} else if cmd.Actions != nil && cmd.Actions["select"] != nil {
-		cmd.Actions["select"].Hand(m, arg...)
-	}
-	return m
+	return m.CmdHand(cmd, key, arg...)
 }
 func (c *Context) _action(m *Message, cmd *Command, key string, sub string, h *Action, arg ...string) *Message {
 	if h.Hand == nil {
 		m.Cmdy(kit.Split(h.Name), arg)
 		return m
 	}
-
-	if m._sub = sub; len(h.List) > 0 && sub != "search" {
+	if m._sub = sub; len(h.List) > 0 && sub != SEARCH {
 		order := false
 		for i, v := range h.List {
 			name := kit.Format(kit.Value(v, NAME))
@@ -331,8 +283,8 @@ func (c *Context) _action(m *Message, cmd *Command, key string, sub string, h *A
 			}
 			if order {
 				m.Option(name, kit.Select(value, arg, i))
-			} else if m.Option(name) == "" && value != "" {
-				m.Option(name, value)
+			} else {
+				m.OptionDefault(name, value)
 			}
 		}
 		if !order {
@@ -341,7 +293,6 @@ func (c *Context) _action(m *Message, cmd *Command, key string, sub string, h *A
 			}
 		}
 	}
-
 	if m._target = kit.FileLine(h.Hand, 3); cmd.RawHand != nil {
 		m._target = kit.Format(cmd.RawHand)
 	}
@@ -350,52 +301,51 @@ func (c *Context) _action(m *Message, cmd *Command, key string, sub string, h *A
 	h.Hand(m, arg...)
 	return m
 }
-func MergeActions(list ...Any) Actions {
-	if len(list) == 0 {
+func MergeActions(arg ...Any) Actions {
+	if len(arg) == 0 {
 		return nil
 	}
-	base := list[0].(Actions)
-	for _, from := range list[1:] {
+	list := arg[0].(Actions)
+	for _, from := range arg[1:] {
 		switch from := from.(type) {
 		case Actions:
 			for k, v := range from {
-				if h, ok := base[k]; !ok {
-					base[k] = v
+				if h, ok := list[k]; !ok {
+					list[k] = v
 				} else if h.Hand == nil {
 					h.Hand = v.Hand
 				} else if k == CTX_INIT {
-					last := base[k].Hand
-					prev := v.Hand
-					base[k].Hand = func(m *Message, arg ...string) {
-						prev(m, arg...)
+					last := h.Hand
+					hand := v.Hand
+					h.Hand = func(m *Message, arg ...string) {
+						hand(m, arg...)
 						last(m, arg...)
 					}
 				}
 			}
 		case string:
-			base[CTX_INIT] = &Action{Hand: func(m *Message, arg ...string) {
+			h := list[CTX_INIT]
+			list[CTX_INIT] = &Action{Hand: func(m *Message, arg ...string) {
 				m.Search(from, func(p *Context, s *Context, key string, cmd *Command) {
 					for k, v := range cmd.Actions {
 						func(k string) {
-							if h, ok := base[k]; !ok {
-								base[k] = &Action{Name: v.Name, Help: v.Help, Hand: func(m *Message, arg ...string) {
-									m.Cmdy(from, k, arg)
-								}}
+							if h, ok := list[k]; !ok {
+								list[k] = &Action{Name: v.Name, Help: v.Help, Hand: func(m *Message, arg ...string) { m.Cmdy(from, k, arg) }}
 							} else if h.Hand == nil {
-								h.Hand = func(m *Message, arg ...string) {
-									m.Cmdy(from, k, arg)
-								}
+								h.Hand = func(m *Message, arg ...string) { m.Cmdy(from, k, arg) }
 							}
 						}(k)
 					}
-					m.target.Merge(m.target)
 				})
+				if h != nil {
+					h.Hand(m, arg...)
+				}
 			}}
 		default:
 			Pulse.ErrorNotImplement(from)
 		}
 	}
-	return base
+	return list
 }
 func SplitCmd(name string, actions Actions) (list []Any) {
 	const (
@@ -414,7 +364,6 @@ func SplitCmd(name string, actions Actions) (list []Any) {
 		PAGE    = "page"
 		ARGS    = "args"
 	)
-
 	item, button := kit.Dict(), false
 	push := func(arg ...string) {
 		button = kit.Select("", arg, 0) == BUTTON
@@ -432,7 +381,7 @@ func SplitCmd(name string, actions Actions) (list []Any) {
 			push(BUTTON, ls[i], AUTO)
 		case AUTO:
 			push(BUTTON, LIST, AUTO)
-			push(BUTTON, BACK, AUTO)
+			push(BUTTON, BACK)
 		case PAGE:
 			push(TEXT, "limit")
 			push(TEXT, "offend")

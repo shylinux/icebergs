@@ -29,27 +29,21 @@ func (m *Message) join(arg ...Any) (string, []Any) {
 			continue
 		}
 		switch v := arg[i+1].(type) {
-		case logs.Meta:
-			list = append(list, key)
-			meta = append(meta, v)
-			continue
 		case time.Time:
 			arg[i+1] = v.Format(MOD_TIME)
 		}
-		list = append(list, key+kit.Select("", DF, !strings.HasSuffix(key, DF)), kit.Format(kit.Select("", kit.Simple(arg[i+1]), 0)))
+		list = append(list, key+kit.Select("", DF, !strings.Contains(key, DF)), kit.Format(arg[i+1]))
 	}
 	return kit.Join(list, SP), meta
 }
 func (m *Message) log(level string, str string, arg ...Any) *Message {
 	_source := logs.FileLineMeta(logs.FileLine(3, 3))
 	if Info.Log != nil {
-		Info.Log(m, m.FormatPrefix(), level, logs.Format(str, append(arg, _source)...)) // 日志回调
+		Info.Log(m, m.FormatPrefix(), level, logs.Format(str, append(arg, _source)...))
 	}
-	if m.Option("log.disable") == TRUE {
+	if m.Option(LOG_DISABLE) == TRUE {
 		return m
 	}
-
-	// 日志颜色
 	prefix, suffix := "", ""
 	if Info.Colors {
 		switch level {
@@ -57,20 +51,16 @@ func (m *Message) log(level string, str string, arg ...Any) *Message {
 			prefix, suffix = "\033[32m", "\033[0m"
 		case LOG_AUTH, LOG_COST:
 			prefix, suffix = "\033[33m", "\033[0m"
-		case LOG_WARN:
+		case LOG_WARN, LOG_ERROR:
 			prefix, suffix = "\033[31m", "\033[0m"
 		}
 	}
-
-	// 长度截断
 	switch level {
 	case LOG_INFO:
 		if len(str) > 4096 {
 			str = str[:4096]
 		}
 	}
-
-	// 输出日志
 	logs.Infof(str, append(arg, logs.PrefixMeta(kit.Format("%02d %4s->%-4s %s%s ", m.code, m.source.Name, m.target.Name, prefix, level)), logs.SuffixMeta(suffix), _source)...)
 	return m
 }
@@ -116,32 +106,26 @@ func (m *Message) Warn(err Any, arg ...Any) bool {
 	if !m.IsErr() {
 		if m.error(arg...); len(arg) > 0 {
 			switch kit.Format(arg[0]) {
-			case ErrNotValid:
-				m.RenderStatusBadRequest(str)
 			case ErrNotLogin:
 				m.RenderStatusUnauthorized(str)
 			case ErrNotRight:
 				m.RenderStatusForbidden(str)
 			case ErrNotFound:
 				m.RenderStatusNotFound(str)
+			case ErrNotValid:
+				m.RenderStatusBadRequest(str)
 			}
 		}
 	}
 	return true
 }
-func (m *Message) Debug(str string, arg ...Any) {
-	if str == "" {
-		str = m.FormatMeta()
-	}
-	m.log(LOG_DEBUG, str, arg...)
-}
 func (m *Message) Error(err bool, arg ...Any) bool {
 	if err {
-		m.error(arg...)
-		m.log(LOG_ERROR, m.FormatStack(1, 100))
 		str, meta := m.join(arg...)
-		m.log(LOG_ERROR, str, meta)
 		m.log(LOG_ERROR, m.FormatChain())
+		m.log(LOG_ERROR, str, meta)
+		m.log(LOG_ERROR, m.FormatStack(1, 100))
+		m.error(arg...)
 		return true
 	}
 	return false
@@ -156,12 +140,19 @@ func (m *Message) error(arg ...Any) {
 		arg = append(arg, "")
 	}
 	str, meta := m.join(arg[2:]...)
-	m.meta[MSG_RESULT] = kit.Simple(ErrWarn, arg[0], arg[1], str, meta)
+	m.Resultv(ErrWarn, arg[0], arg[1], str, meta)
 }
-
-func (m *Message) IsErrNotFound() bool { return m.IsErr(ErrNotFound) }
+func (m *Message) IsErrNotFound() bool {
+	return m.IsErr(ErrNotFound)
+}
 func (m *Message) IsErr(arg ...string) bool {
-	return len(arg) > 0 && m.Result(1) == arg[0] || len(arg) == 0 && m.Result(0) == ErrWarn
+	return len(arg) == 0 && m.Result(0) == ErrWarn || len(arg) > 0 && m.Result(1) == arg[0]
+}
+func (m *Message) Debug(str string, arg ...Any) {
+	if str == "" {
+		str = m.FormatMeta()
+	}
+	m.log(LOG_DEBUG, str, arg...)
 }
 
 func (m *Message) FormatPrefix() string {
@@ -187,7 +178,6 @@ func (m *Message) FormatChain() string {
 	for msg := m; msg != nil; msg = msg.message {
 		ms = append(ms, msg)
 	}
-
 	meta := append([]string{}, NL)
 	for i := len(ms) - 1; i >= 0; i-- {
 		msg := ms[i]
@@ -213,20 +203,16 @@ func (m *Message) FormatChain() string {
 func (m *Message) FormatStack(s, n int) string {
 	pc := make([]uintptr, n+10)
 	frames := runtime.CallersFrames(pc[:runtime.Callers(s+1, pc)])
-
 	list := []string{}
 	for {
 		frame, more := frames.Next()
 		file := kit.Slice(kit.Split(frame.File, PS, PS), -1)[0]
 		name := kit.Slice(kit.Split(frame.Function, PS, PS), -1)[0]
-
 		switch ls := kit.Split(name, PT, PT); kit.Select("", ls, 0) {
-		// case "reflect", "runtime", "http", "task", "icebergs":
 		case "reflect", "runtime", "http":
 		default:
 			list = append(list, kit.Format("%s:%d\t%s", file, frame.Line, name))
 		}
-
 		if len(list) >= n {
 			break
 		}

@@ -216,7 +216,7 @@ func init() {
 			}},
 			PROCKILL: {Name: "prockill", Help: "结束进程", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmdy(gdb.SIGNAL, gdb.STOP, m.Option("PID"))
-				m.ProcessRefresh30ms()
+				m.ProcessRefresh()
 			}},
 			DISKINFO: {Name: "diskinfo", Help: "磁盘信息", Hand: func(m *ice.Message, arg ...string) {
 				_runtime_diskinfo(m)

@@ -7,23 +7,23 @@ import (
 	"time"
 
 	kit "shylinux.com/x/toolkits"
+	"shylinux.com/x/toolkits/logs"
 	"shylinux.com/x/toolkits/task"
 )
 
 func (m *Message) TryCatch(msg *Message, silent bool, hand ...func(msg *Message)) *Message {
 	defer func() {
 		switch e := recover(); e {
-		case io.EOF:
-		case nil:
+		case nil, io.EOF:
 		default:
-			fileline := m.FormatStack(2, 1)
+			fileline := m.FormatStack(2, 100)
 			m.Log(LOG_WARN, "catch: %s %s", e, fileline).Log("chain", msg.FormatChain())
 			m.Log(LOG_WARN, "catch: %s %s", e, fileline).Log("stack", msg.FormatStack(2, 100))
-			m.Log(LOG_WARN, "catch: %s %s", e, fileline).Result(ErrWarn, e, " ", fileline)
+			m.Log(LOG_WARN, "catch: %s %s", e, fileline).Result(ErrWarn, e, SP, fileline)
 			if len(hand) > 1 {
 				m.TryCatch(msg, silent, hand[1:]...)
 			} else if !silent {
-				m.Assert(e) // 抛出异常
+				m.Assert(e)
 			}
 		}
 	}()
@@ -36,13 +36,13 @@ func (m *Message) Assert(expr Any) bool {
 	switch e := expr.(type) {
 	case nil:
 		return true
-	case error:
 	case bool:
 		if e == true {
 			return true
 		}
+	case error:
 	default:
-		expr = errors.New(kit.Format("error: %v", e))
+		expr = errors.New(kit.Format("error: %v %s", e, logs.FileLine(2, 3)))
 	}
 	m.Result(ErrWarn, expr)
 	panic(expr)

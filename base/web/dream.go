@@ -31,7 +31,7 @@ func _dream_list(m *ice.Message) *ice.Message {
 			m.PushButton(cli.START, nfs.TRASH)
 		}
 	})
-	return m.Sort("status,type,name").StatusTimeCount(cli.START, len(list))
+	return m.Sort("status,type,name", ice.STR, ice.STR, ice.STR_R).StatusTimeCount(cli.START, len(list))
 }
 func _dream_show(m *ice.Message, name string) {
 	if m.Warn(name == "", ice.ErrNotValid) {
@@ -61,7 +61,7 @@ func _dream_show(m *ice.Message, name string) {
 		kit.EnvSimple(cli.HOME, cli.TERM, cli.SHELL), m.Configv(cli.ENV),
 	))
 	m.Optionv(cli.CMD_OUTPUT, path.Join(p, ice.BIN_BOOT_LOG))
-	defer m.OptionMulti(cli.CMD_DIR, "", cli.CMD_ENV, "", cli.CMD_OUTPUT, "")
+	defer m.Options(cli.CMD_DIR, "", cli.CMD_ENV, "", cli.CMD_OUTPUT, "")
 	gdb.Event(m, DREAM_CREATE, m.OptionSimple(mdb.NAME, mdb.TYPE))
 
 	defer ToastProcess(m)()

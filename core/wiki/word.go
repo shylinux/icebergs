@@ -7,6 +7,7 @@ import (
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/nfs"
 	"shylinux.com/x/icebergs/base/ssh"
+	"shylinux.com/x/icebergs/base/web"
 	"shylinux.com/x/icebergs/misc/git"
 	kit "shylinux.com/x/toolkits"
 )
@@ -49,6 +50,16 @@ func init() {
 				_word_show(m, arg[0])
 			}
 		}},
+	})
+	ctx.AddRunChecker(func(m *ice.Message, cmd, check string, arg ...string) bool {
+		switch check {
+		case ice.HELP:
+			if file := kit.ExtChange(ctx.GetCmdFile(m, cmd), nfs.SHY); nfs.ExistsFile(m, file) {
+				ctx.ProcessFloat(m, web.WIKI_WORD, file)
+			}
+			return true
+		}
+		return false
 	})
 }
 func WordAction(template string, arg ...ice.Any) ice.Actions {

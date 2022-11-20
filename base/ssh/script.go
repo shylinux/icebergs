@@ -156,6 +156,12 @@ func (f *Frame) scan(m *ice.Message, h, line string) *Frame {
 }
 
 func (f *Frame) Begin(m *ice.Message, arg ...string) ice.Server {
+	switch strings.Split(os.Getenv(cli.TERM), "-")[0] {
+	case "xterm", "screen":
+		ice.Info.Colors = true
+	default:
+		ice.Info.Colors = false
+	}
 	return f
 }
 func (f *Frame) Spawn(m *ice.Message, c *ice.Context, arg ...string) ice.Server {

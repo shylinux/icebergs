@@ -12,6 +12,7 @@ import (
 	"shylinux.com/x/icebergs/base/lex"
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/nfs"
+	"shylinux.com/x/icebergs/base/web"
 	kit "shylinux.com/x/toolkits"
 )
 
@@ -159,6 +160,19 @@ func init() {
 			m.Option("exts", m.Config("show.exts"))
 			ctx.DisplayLocal(m, "")
 		}},
+	})
+	ctx.AddRunChecker(func(m *ice.Message, cmd, check string, arg ...string) bool {
+		switch check {
+		case nfs.SCRIPT:
+			if file := kit.ExtChange(ctx.GetCmdFile(m, cmd), nfs.JS); nfs.ExistsFile(m, file) {
+				ctx.ProcessFloat(m, web.CODE_INNER, file)
+			}
+		case nfs.SOURCE:
+			if file := ctx.GetCmdFile(m, cmd); nfs.ExistsFile(m, file) {
+				ctx.ProcessFloat(m, web.CODE_INNER, file)
+			}
+		}
+		return false
 	})
 }
 func PlugAction() ice.Actions {

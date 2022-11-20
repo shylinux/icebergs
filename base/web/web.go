@@ -120,6 +120,9 @@ const (
 	SERVE_START = "serve.start"
 	SERVE_STOP  = "serve.stop"
 	WEBSITE     = "website"
+	
+	CODE_INNER = "web.code.inner"
+	WIKI_WORD  = "web.wiki.word"
 )
 const WEB = "web"
 

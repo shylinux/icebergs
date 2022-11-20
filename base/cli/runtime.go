@@ -16,12 +16,9 @@ import (
 )
 
 func _runtime_init(m *ice.Message) {
-	// 版本信息 make
 	kit.Fetch(kit.UnMarshal(kit.Format(ice.Info.Make)), func(key string, value ice.Any) {
 		m.Conf(RUNTIME, kit.Keys(MAKE, strings.ToLower(key)), value)
 	})
-
-	// 主机信息 host
 	m.Conf(RUNTIME, kit.Keys(HOST, GOARCH), runtime.GOARCH)
 	m.Conf(RUNTIME, kit.Keys(HOST, GOOS), runtime.GOOS)
 	m.Conf(RUNTIME, kit.Keys(HOST, PID), os.Getpid())
@@ -30,36 +27,16 @@ func _runtime_init(m *ice.Message) {
 	m.Conf(RUNTIME, kit.Keys(HOST, MAXPROCS), runtime.GOMAXPROCS(0))
 	m.Conf(RUNTIME, mdb.META, "")
 	m.Conf(RUNTIME, mdb.HASH, "")
-
-	// 启动目录 boot
-	m.Conf(RUNTIME, kit.Keys(BOOT, HOSTNAME), kit.Env("HOSTNAME"))
-	if name, e := os.Hostname(); e == nil && name != "" {
-		m.Conf(RUNTIME, kit.Keys(BOOT, HOSTNAME), name)
-	}
-	m.Conf(RUNTIME, kit.Keys(BOOT, PATHNAME), path.Base(kit.Env("PWD")))
-	if name, e := os.Getwd(); e == nil && name != "" {
-		m.Conf(RUNTIME, kit.Keys(BOOT, PATHNAME), path.Base(name))
-	}
-	m.Conf(RUNTIME, kit.Keys(BOOT, USERNAME), kit.Select(kit.UserName(), kit.Select(kit.Env("WORKSPACE_GIT_USERNAME"), kit.Env(CTX_USER))))
-	ice.Info.HostName = m.Conf(RUNTIME, kit.Keys(BOOT, HOSTNAME))
-	ice.Info.PathName = m.Conf(RUNTIME, kit.Keys(BOOT, PATHNAME))
-	ice.Info.UserName = m.Conf(RUNTIME, kit.Keys(BOOT, USERNAME))
-	m.Cmd(aaa.USER, mdb.CREATE, ice.Info.UserName, "", aaa.ROOT)
-	aaa.UserRoot(ice.Pulse)
-
-	// 启动程序 boot
-	m.Conf(RUNTIME, kit.Keys(BOOT, mdb.COUNT), kit.Int(m.Conf(RUNTIME, kit.Keys(BOOT, mdb.COUNT)))+1)
-	bin := _system_find(m, os.Args[0])
-	m.Conf(RUNTIME, kit.Keys(BOOT, ice.BIN), bin)
-	if s, e := nfs.StatFile(m, bin); e == nil {
-		m.Conf(RUNTIME, kit.Keys(BOOT, nfs.SIZE), kit.FmtSize(s.Size()))
-		if f, e := nfs.OpenFile(m, bin); e == nil {
-			defer f.Close()
-			m.Conf(RUNTIME, kit.Keys(BOOT, mdb.HASH), kit.Hashs(f))
+	osid := runtime.GOOS
+	m.Cmd(nfs.CAT, "/etc/os-release", func(text string) {
+		if ls := kit.Split(text, "="); len(ls) > 1 {
+			switch ls[0] {
+			case "ID", "ID_LIKE":
+				osid = strings.TrimSpace(ls[1] + ice.SP + osid)
+			}
 		}
-	}
-
-	// 环境变量 conf
+	})
+	m.Conf(RUNTIME, kit.Keys(HOST, OSID), osid)
 	for _, k := range ENV_LIST {
 		switch m.Conf(RUNTIME, kit.Keys(CONF, k), kit.Env(k)); k {
 		case CTX_PID:
@@ -71,25 +48,31 @@ func _runtime_init(m *ice.Message) {
 		}
 	}
 
-	// 系统版本 osid
-	osid := runtime.GOOS
-	m.Cmd(nfs.CAT, "/etc/os-release", func(text string) {
-		if ls := kit.Split(text, "="); len(ls) > 1 {
-			switch ls[0] {
-			case "ID", "ID_LIKE":
-				osid = strings.TrimSpace(ls[1] + ice.SP + osid)
-			}
-		}
-	})
-	m.Conf(RUNTIME, kit.Keys(HOST, OSID), osid)
-
-	switch strings.Split(os.Getenv(TERM), "-")[0] {
-	case "xterm", "screen":
-		ice.Info.Colors = true
-	default:
-		ice.Info.Colors = false
+	m.Conf(RUNTIME, kit.Keys(BOOT, HOSTNAME), kit.Env("HOSTNAME"))
+	if name, e := os.Hostname(); e == nil && name != "" {
+		m.Conf(RUNTIME, kit.Keys(BOOT, HOSTNAME), name)
 	}
+	m.Conf(RUNTIME, kit.Keys(BOOT, PATHNAME), path.Base(kit.Env("PWD")))
+	if name, e := os.Getwd(); e == nil && name != "" {
+		m.Conf(RUNTIME, kit.Keys(BOOT, PATHNAME), path.Base(name))
+	}
+	m.Conf(RUNTIME, kit.Keys(BOOT, USERNAME), kit.Select(kit.UserName(), kit.Env(CTX_USER)))
+	ice.Info.HostName = m.Conf(RUNTIME, kit.Keys(BOOT, HOSTNAME))
+	ice.Info.PathName = m.Conf(RUNTIME, kit.Keys(BOOT, PATHNAME))
+	ice.Info.UserName = m.Conf(RUNTIME, kit.Keys(BOOT, USERNAME))
+	m.Cmd(aaa.USER, mdb.CREATE, ice.Info.UserName, "", aaa.ROOT)
+	aaa.UserRoot(ice.Pulse)
 
+	m.Conf(RUNTIME, kit.Keys(BOOT, mdb.COUNT), kit.Int(m.Conf(RUNTIME, kit.Keys(BOOT, mdb.COUNT)))+1)
+	bin := _system_find(m, os.Args[0])
+	m.Conf(RUNTIME, kit.Keys(BOOT, ice.BIN), bin)
+	if s, e := nfs.StatFile(m, bin); e == nil {
+		m.Conf(RUNTIME, kit.Keys(BOOT, nfs.SIZE), kit.FmtSize(s.Size()))
+		if f, e := nfs.OpenFile(m, bin); e == nil {
+			defer f.Close()
+			m.Conf(RUNTIME, kit.Keys(BOOT, mdb.HASH), kit.Hashs(f))
+		}
+	}
 }
 func _runtime_hostinfo(m *ice.Message) {
 	m.Push("nCPU", strings.Count(m.Cmdx(nfs.CAT, "/proc/cpuinfo"), "processor"))
@@ -121,8 +104,8 @@ const (
 	MAKE = "make"
 	TEST = "test"
 	HOST = "host"
-	BOOT = "boot"
 	CONF = "conf"
+	BOOT = "boot"
 	NODE = "node"
 )
 const (
@@ -147,6 +130,7 @@ const (
 )
 const (
 	CTX_SHY = "ctx_shy"
+	CTX_COM = "ctx_com"
 	CTX_DEV = "ctx_dev"
 	CTX_OPS = "ctx_ops"
 	CTX_POD = "ctx_pod"
@@ -164,7 +148,7 @@ const (
 )
 
 var ENV_LIST = []string{
-	TERM, SHELL, CTX_SHY, CTX_DEV, CTX_OPS, CTX_ARG, CTX_PID, CTX_USER, CTX_SHARE, CTX_RIVER, CTX_DAEMON,
+	TERM, SHELL, CTX_SHY, CTX_COM, CTX_DEV, CTX_OPS, CTX_ARG, CTX_PID, CTX_USER, CTX_SHARE, CTX_RIVER, CTX_DAEMON,
 }
 
 const (
@@ -186,81 +170,61 @@ const RUNTIME = "runtime"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
-		RUNTIME: {Name: "runtime info=ifconfig,hostinfo,hostname,userinfo,procinfo,diskinfo,bootinfo,api,cli,cmd,env auto", Help: "运行环境", Actions: ice.Actions{
-			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
-				cs := m.Target().Configs
-				if _, ok := cs[RUNTIME]; !ok {
-					cs[RUNTIME] = &ice.Config{Value: kit.Dict()}
-				}
-				_runtime_init(m)
-			}},
-			IFCONFIG: {Name: "ifconfig", Help: "网卡配置", Hand: func(m *ice.Message, arg ...string) {
-				m.Cmdy("tcp.host")
-			}},
-			HOSTINFO: {Name: "hostinfo", Help: "主机信息", Hand: func(m *ice.Message, arg ...string) {
-				_runtime_hostinfo(m)
-			}},
-			HOSTNAME: {Name: "hostname", Help: "主机域名", Hand: func(m *ice.Message, arg ...string) {
+		RUNTIME: {Name: "runtime info=ifconfig,hostinfo,hostname,userinfo,procinfo,diskinfo,bootinfo,api,cli,cmd,env auto", Help: "运行环境", Actions: ice.MergeActions(ice.Actions{
+			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) { _runtime_init(m) }},
+			IFCONFIG:     {Hand: func(m *ice.Message, arg ...string) { m.Cmdy("tcp.host") }},
+			HOSTINFO:     {Hand: func(m *ice.Message, arg ...string) { _runtime_hostinfo(m) }},
+			HOSTNAME: {Hand: func(m *ice.Message, arg ...string) {
 				if len(arg) > 0 {
 					ice.Info.HostName = m.Conf(RUNTIME, kit.Keys(BOOT, HOSTNAME), m.Conf(RUNTIME, kit.Keys(NODE, mdb.NAME), arg[0]))
 				}
 				m.Echo(ice.Info.HostName)
 			}},
-			USERINFO: {Name: "userinfo", Help: "用户信息", Hand: func(m *ice.Message, arg ...string) {
-				m.Split(m.Cmdx(SYSTEM, "who"), "user term time")
-			}},
-			PROCINFO: {Name: "procinfo", Help: "进程信息", Hand: func(m *ice.Message, arg ...string) {
+			USERINFO: {Hand: func(m *ice.Message, arg ...string) { m.Split(m.Cmdx(SYSTEM, "who"), "user term time") }},
+			PROCINFO: {Hand: func(m *ice.Message, arg ...string) {
 				msg := m.Cmd("", HOSTINFO)
 				m.Split(m.Cmdx(SYSTEM, "ps", "u")).PushAction(PROCKILL).SortIntR("RSS")
 				m.StatusTimeCount("nCPU", msg.Append("nCPU"), "MemTotal", msg.Append("MemTotal"), "MemFree", msg.Append("MemFree"))
 			}},
-			PROCKILL: {Name: "prockill", Help: "结束进程", Hand: func(m *ice.Message, arg ...string) {
-				m.Cmdy(gdb.SIGNAL, gdb.STOP, m.Option("PID"))
-				m.ProcessRefresh()
-			}},
-			DISKINFO: {Name: "diskinfo", Help: "磁盘信息", Hand: func(m *ice.Message, arg ...string) {
-				_runtime_diskinfo(m)
-			}},
-			MAXPROCS: {Name: "maxprocs", Help: "最大并发", Hand: func(m *ice.Message, arg ...string) {
+			PROCKILL: {Hand: func(m *ice.Message, arg ...string) { m.Cmdy(gdb.SIGNAL, gdb.STOP, m.Option("PID")).ProcessRefresh() }},
+			MAXPROCS: {Hand: func(m *ice.Message, arg ...string) {
 				if len(arg) > 0 {
-					runtime.GOMAXPROCS(kit.Int(m.Conf(RUNTIME, kit.Keys(HOST, MAXPROCS), kit.Select("1", arg, 0))))
+					runtime.GOMAXPROCS(kit.Int(m.Conf(RUNTIME, kit.Keys(HOST, MAXPROCS), arg[0])))
 				}
 				m.Echo("%d", runtime.GOMAXPROCS(0))
 			}},
-			API: {Name: "api", Help: "接口命令", Hand: func(m *ice.Message, arg ...string) {
+			DISKINFO: {Hand: func(m *ice.Message, arg ...string) { _runtime_diskinfo(m) }},
+			API: {Hand: func(m *ice.Message, arg ...string) {
 				for k, v := range ice.Info.Route {
-					m.Push(nfs.PATH, k)
-					m.Push(nfs.FILE, v)
+					m.Push(nfs.PATH, k).Push(nfs.FILE, v)
 				}
 				m.Sort(nfs.PATH).StatusTimeCount()
 			}},
-			CLI: {Name: "cli", Help: "文件模块", Hand: func(m *ice.Message, arg ...string) {
+			CLI: {Hand: func(m *ice.Message, arg ...string) {
 				for k, v := range ice.Info.File {
-					m.Push(nfs.FILE, k)
-					m.Push(mdb.NAME, v)
+					m.Push(nfs.FILE, k).Push(mdb.NAME, v)
 				}
 				m.Sort(nfs.FILE).StatusTimeCount()
 			}},
-			CMD: {Name: "cmd", Help: "模块命令", Hand: func(m *ice.Message, arg ...string) {
+			CMD: {Hand: func(m *ice.Message, arg ...string) {
 				m.OptionFields(ctx.INDEX, mdb.NAME, mdb.HELP)
 				m.Cmdy(ctx.COMMAND, mdb.SEARCH, ctx.COMMAND).StatusTimeCount()
 			}},
-			ENV: {Name: "env", Help: "环境变量", Hand: func(m *ice.Message, arg ...string) {
+			ENV: {Hand: func(m *ice.Message, arg ...string) {
 				for _, v := range os.Environ() {
-					ls := strings.SplitN(v, "=", 2)
-					m.Push(mdb.NAME, ls[0])
-					m.Push(mdb.VALUE, ls[1])
+					ls := strings.SplitN(v, ice.EQ, 2)
+					m.Push(mdb.NAME, ls[0]).Push(mdb.VALUE, ls[1])
 				}
 				m.StatusTimeCount()
 			}},
-			MAKE_DOMAIN: {Name: "make.domain", Help: "编译主机", Hand: func(m *ice.Message, arg ...string) {
+			MAKE_DOMAIN: {Hand: func(m *ice.Message, arg ...string) {
 				if os.Getenv(CTX_DEV) == "" || os.Getenv(CTX_POD) == "" {
 					m.Echo(m.Conf(RUNTIME, MAKE_DOMAIN))
 				} else {
 					m.Echo(kit.MergePOD(os.Getenv(CTX_DEV), os.Getenv(CTX_POD)))
 				}
 			}},
-		}, Hand: func(m *ice.Message, arg ...string) {
+		}, ctx.ConfAction("hi")), Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) > 0 && arg[0] == BOOTINFO {
 				arg = arg[1:]
 			}

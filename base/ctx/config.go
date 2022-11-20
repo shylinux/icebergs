@@ -112,7 +112,7 @@ func init() {
 				}
 				m.Confv(arg[0], arg[1], kit.List(list...))
 			}},
-			"reset": {Name: "reset key sub", Help: "重置", Hand: func(m *ice.Message, arg ...string) {
+			mdb.REMOVE: {Name: "remove key sub", Hand: func(m *ice.Message, arg ...string) {
 				m.Conf(m.Option("key"), m.Option("sub"), "")
 				m.Go(func() { m.Cmd(ice.EXIT, 1) })
 			}},

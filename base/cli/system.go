@@ -16,58 +16,48 @@ import (
 )
 
 func _system_cmd(m *ice.Message, arg ...string) *exec.Cmd {
-	bin := ""
-	if text := kit.ReadFile(ice.ETC_PATH); len(text) > 0 {
-		if file := _system_find(m, arg[0], strings.Split(text, ice.NL)...); file != "" {
-			m.Logs(mdb.SELECT, "etc path cmd", file)
-			bin = file // 配置目录
-		}
-	}
-
-	env := kit.Simple(m.Optionv(CMD_ENV))
+	bin, env := "", kit.Simple(m.Optionv(CMD_ENV))
 	for i := 0; i < len(env)-1; i += 2 {
 		if env[i] == PATH {
 			if file := _system_find(m, arg[0], strings.Split(env[i+1], ice.DF)...); file != "" {
 				m.Logs(mdb.SELECT, "env path cmd", file)
-				bin = file // 环境变量
+				bin = file
 			}
 		}
 	}
-	// if m.Option(CMD_DIR) != "" {
-	// 	if file := _system_find(m, arg[0], m.Option(CMD_DIR)); file != "" {
-	// 		m.Logs(mdb.SELECT, "dir path cmd", file)
-	// 		bin = file // 当前目录
-	// 	}
-	// }
+	if bin == "" {
+		if text := kit.ReadFile(ice.ETC_PATH); len(text) > 0 {
+			if file := _system_find(m, arg[0], strings.Split(text, ice.NL)...); file != "" {
+				m.Logs(mdb.SELECT, "etc path cmd", file)
+				bin = file
+			}
+		}
+	}
 	if bin == "" {
 		if file := _system_find(m, arg[0], ice.BIN, nfs.PWD); file != "" {
-			m.Logs(mdb.SELECT, "mirrors cmd", file)
-			bin = file // 当前目录
+			m.Logs(mdb.SELECT, "contexts cmd", file)
+			bin = file
 		}
 	}
 	if bin == "" && !strings.Contains(arg[0], ice.PS) {
 		if file := _system_find(m, arg[0]); file != "" {
 			m.Logs(mdb.SELECT, "systems cmd", file)
-			bin = file // 系统命令
+			bin = file
 		}
 	}
 	if bin == "" && !strings.Contains(arg[0], ice.PS) {
 		m.Cmd(MIRRORS, CMD, arg[0])
 		if file := _system_find(m, arg[0]); file != "" {
 			m.Logs(mdb.SELECT, "mirrors cmd", file)
-			bin = file // 软件镜像
+			bin = file
 		}
 	}
-
 	cmd := exec.Command(bin, arg[1:]...)
-
-	// 运行目录
 	if cmd.Dir = m.Option(CMD_DIR); len(cmd.Dir) > 0 {
 		if m.Logs(mdb.EXPORT, CMD_DIR, cmd.Dir); !nfs.ExistsFile(m, cmd.Dir) {
 			file.MkdirAll(cmd.Dir, ice.MOD_DIR)
 		}
 	}
-	// 环境变量
 	for i := 0; i < len(env)-1; i += 2 {
 		cmd.Env = append(cmd.Env, kit.Format("%s=%s", env[i], env[i+1]))
 	}
@@ -90,10 +80,10 @@ func _system_out(m *ice.Message, out string) io.Writer {
 }
 func _system_exec(m *ice.Message, cmd *exec.Cmd) {
 	if r, ok := m.Optionv(CMD_INPUT).(io.Reader); ok {
-		cmd.Stdin = r // 输入流
+		cmd.Stdin = r
 	}
 	if w := _system_out(m, CMD_OUTPUT); w != nil {
-		cmd.Stdout, cmd.Stderr = w, w // 输出流
+		cmd.Stdout, cmd.Stderr = w, w
 		if w := _system_out(m, CMD_ERRPUT); w != nil {
 			cmd.Stderr = w
 		}
@@ -110,8 +100,6 @@ func _system_exec(m *ice.Message, cmd *exec.Cmd) {
 			m.Echo(strings.TrimRight(out.String(), ice.NL))
 		}()
 	}
-
-	// 执行命令
 	if e := cmd.Run(); !m.Warn(e, ice.ErrNotFound, cmd.Args) {
 		m.Cost(CODE, cmd.ProcessState.ExitCode(), ctx.ARGS, cmd.Args)
 	}
@@ -157,10 +145,10 @@ const SYSTEM = "system"
 func init() {
 	Index.MergeCommands(ice.Commands{
 		SYSTEM: {Name: "system cmd run", Help: "系统命令", Actions: ice.Actions{
-			nfs.FIND: {Name: "find", Help: "查找", Hand: func(m *ice.Message, arg ...string) {
+			nfs.FIND: {Hand: func(m *ice.Message, arg ...string) {
 				m.Echo(_system_find(m, arg[0], arg[1:]...))
 			}},
-			nfs.PUSH: {Name: "push", Help: "查找", Hand: func(m *ice.Message, arg ...string) {
+			nfs.PUSH: {Hand: func(m *ice.Message, arg ...string) {
 				for _, p := range arg {
 					if !strings.Contains(m.Cmdx(nfs.CAT, ice.ETC_PATH), p) {
 						m.Cmd(nfs.PUSH, ice.ETC_PATH, strings.TrimSpace(p)+ice.NL)
@@ -168,21 +156,18 @@ func init() {
 				}
 				m.Cmdy(nfs.CAT, ice.ETC_PATH)
 			}},
-			MAN: {Name: "man", Help: "文档", Hand: func(m *ice.Message, arg ...string) {
+			MAN: {Hand: func(m *ice.Message, arg ...string) {
 				if len(arg) == 1 {
 					arg = append(arg, "")
 				}
-				m.Option(CMD_ENV, "COLUMNS", kit.Int(kit.Select("1920", m.Option("width")))/12)
+				m.Option(CMD_ENV, "COLUMNS", kit.Int(kit.Select("1920", m.Option(ice.WIDTH)))/12)
 				m.Echo(SystemCmds(m, "man %s %s|col -b", kit.Select("", arg[1], arg[1] != "1"), arg[0]))
 			}},
 		}, Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) == 0 {
 				return
 			}
-			if len(arg) == 1 {
-				arg = kit.Split(arg[0])
-			}
-			if _system_exec(m, _system_cmd(m, arg...)); IsSuccess(m) && m.Append(CMD_ERR) == "" {
+			if _system_exec(m, _system_cmd(m, kit.Simple(kit.Split(arg[0]), arg[1:])...)); IsSuccess(m) && m.Append(CMD_ERR) == "" {
 				m.SetAppend()
 			}
 		}},

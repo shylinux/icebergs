@@ -18,10 +18,8 @@ func _command_list(m *ice.Message, name string) {
 		case nfs.JS:
 			m.Push(DISPLAY, FileURI(name))
 			name = kit.Select(CAN_PLUGIN, GetFileCmd(name))
-
 		case nfs.GO:
 			name = GetFileCmd(name)
-
 		default:
 			if msg := m.Cmd(mdb.RENDER, kit.Ext(name)); msg.Length() > 0 {
 				m.Push(ARGS, kit.Format(kit.List(name)))
@@ -33,12 +31,11 @@ func _command_list(m *ice.Message, name string) {
 		m.Push(mdb.INDEX, name)
 		return
 	}
-	if name == "" { // 命令列表
+	if name == "" {
 		for k, v := range m.Source().Commands {
 			if k[0] == '/' || k[0] == '_' {
-				continue // 内部命令
+				continue
 			}
-
 			m.Push(mdb.KEY, k)
 			m.Push(mdb.NAME, v.Name)
 			m.Push(mdb.HELP, v.Help)
@@ -46,8 +43,6 @@ func _command_list(m *ice.Message, name string) {
 		m.Sort(mdb.KEY)
 		return
 	}
-
-	// 命令详情
 	m.Spawn(m.Source()).Search(name, func(p *ice.Context, s *ice.Context, key string, cmd *ice.Command) {
 		m.Push(mdb.INDEX, kit.Keys(s.Cap(ice.CTX_FOLLOW), key))
 		m.Push(mdb.NAME, kit.Format(cmd.Name))
@@ -59,17 +54,15 @@ func _command_list(m *ice.Message, name string) {
 func _command_search(m *ice.Message, kind, name, text string) {
 	m.Travel(func(p *ice.Context, s *ice.Context, key string, cmd *ice.Command) {
 		if key[0] == '/' || key[0] == '_' {
-			return // 内部命令
+			return
 		}
 		if name != "" && !strings.HasPrefix(key, name) && !strings.Contains(s.Name, name) {
 			return
 		}
-
 		m.PushSearch(ice.CTX, kit.PathName(1), ice.CMD, kit.FileName(1),
 			kit.SimpleKV("", s.Cap(ice.CTX_FOLLOW), cmd.Name, cmd.Help),
-			CONTEXT, s.Cap(ice.CTX_FOLLOW), COMMAND, key,
+			CONTEXT, s.Cap(ice.CTX_FOLLOW), COMMAND, key, mdb.HELP, cmd.Help,
 			INDEX, kit.Keys(s.Cap(ice.CTX_FOLLOW), key),
-			mdb.HELP, cmd.Help,
 		)
 	})
 }
@@ -91,17 +84,17 @@ func init() {
 		COMMAND: {Name: "command key auto", Help: "命令", Actions: ice.MergeActions(ice.Actions{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
 				TravelCmd(m, func(key, file, line string) {
-					if strings.Contains(file, "icebergs") {
+					if strings.Contains(file, ice.ICEBERGS) {
 						AddFileCmd(file, key)
 					}
 				})
 			}},
-			mdb.SEARCH: {Name: "search type name text", Help: "搜索", Hand: func(m *ice.Message, arg ...string) {
+			mdb.SEARCH: {Hand: func(m *ice.Message, arg ...string) {
 				if arg[0] == m.CommandKey() || len(arg) > 1 && arg[1] != "" {
 					_command_search(m, arg[0], kit.Select("", arg, 1), kit.Select("", arg, 2))
 				}
 			}},
-			"tags": {Name: "tags", Help: "索引", Hand: func(m *ice.Message, arg ...string) {
+			"tags": {Hand: func(m *ice.Message, arg ...string) {
 				TravelCmd(m, func(key, file, line string) {
 					m.Push("name", key)
 					m.Push("file", file)
@@ -124,55 +117,59 @@ func init() {
 	})
 }
 
+var runChecker = []func(*ice.Message, string, string, ...string) bool{}
+
+func AddRunChecker(cb func(*ice.Message, string, string, ...string) bool) {
+	runChecker = append(runChecker, cb)
+}
+func init() {
+	AddRunChecker(func(m *ice.Message, cmd, check string, arg ...string) bool {
+		switch check {
+		case mdb.REMOVE:
+			m.Cmd(CONFIG, mdb.REMOVE, cmd)
+			return true
+		case mdb.SELECT:
+			m.Cmdy(CONFIG, cmd)
+			return true
+		default:
+			return false
+		}
+	})
+}
 func Run(m *ice.Message, arg ...string) {
 	if len(arg) > 3 && arg[1] == ACTION && arg[2] == CONFIG {
-		switch arg[3] {
-		case "help":
-			if file := strings.ReplaceAll(GetCmdFile(m, arg[0]), ".go", ".shy"); nfs.ExistsFile(m, file) {
-				ProcessFloat(m, "web.wiki.word", file)
+		for _, check := range runChecker {
+			if check(m, arg[0], arg[3], arg...) {
+				return
 			}
-		case "script":
-			if file := strings.ReplaceAll(GetCmdFile(m, arg[0]), ".go", ".js"); nfs.ExistsFile(m, file) {
-				ProcessFloat(m, "web.code.inner", file)
-			}
-		case "source":
-			if file := GetCmdFile(m, arg[0]); nfs.ExistsFile(m, file) {
-				ProcessFloat(m, "web.code.inner", file)
-			}
-		case "select":
-			m.Cmdy(CONFIG, arg[0])
-		case "reset":
-			m.Cmd(CONFIG, "reset", arg[0])
 		}
-		return
 	}
 	if !PodCmd(m, arg) && aaa.Right(m, arg) {
 		m.Cmdy(arg)
 	}
+}
+func PodCmd(m *ice.Message, arg ...ice.Any) bool {
+	if pod := m.Option(ice.POD); pod != "" {
+		if m.Option(ice.POD, ""); len(kit.Simple(m.Optionv(ice.MSG_UPLOAD))) == 1 {
+			m.Cmdy("cache", "upload").Option(ice.MSG_UPLOAD, m.Append(mdb.HASH), m.Append(mdb.NAME), m.Append(nfs.SIZE))
+		}
+		m.Cmdy(append(kit.List(ice.SPACE, pod), arg...))
+		return true
+	}
+	return false
 }
 func CmdHandler(args ...ice.Any) ice.Handler {
 	return func(m *ice.Message, arg ...string) { m.Cmdy(args...) }
 }
 func CmdAction(args ...ice.Any) ice.Actions {
 	return ice.Actions{ice.CTX_INIT: mdb.AutoConfig(args...),
-		COMMAND: {Name: "command", Help: "命令", Hand: func(m *ice.Message, arg ...string) {
+		COMMAND: {Hand: func(m *ice.Message, arg ...string) {
 			if !PodCmd(m, COMMAND, arg) {
 				m.Cmdy(COMMAND, arg)
 			}
 		}},
-		ice.RUN: {Name: "run", Help: "执行", Hand: Run},
+		ice.RUN: {Hand: Run},
 	}
-}
-func PodCmd(m *ice.Message, arg ...ice.Any) bool {
-	if pod := m.Option(ice.POD); pod != "" {
-		if m.Option(ice.POD, ""); m.Option(ice.MSG_UPLOAD) != "" {
-			msg := m.Cmd("cache", "upload")
-			m.Option(ice.MSG_UPLOAD, msg.Append(mdb.HASH), msg.Append(mdb.NAME), msg.Append(nfs.SIZE))
-		}
-		m.Cmdy(append(kit.List("space", pod), arg...))
-		return true
-	}
-	return false
 }
 
 func FileURI(dir string) string {

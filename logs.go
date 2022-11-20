@@ -87,6 +87,9 @@ func (m *Message) Cost(arg ...Any) *Message {
 func (m *Message) Info(str string, arg ...Any) *Message {
 	return m.log(LOG_INFO, str, arg...)
 }
+func (m *Message) WarnTimeNotValid(time Any, arg ...Any) bool {
+	return m.Warn(kit.Format(time) < m.Time(), ErrNotValid, kit.Simple(arg), time, m.Time(), logs.FileLineMeta(logs.FileLine(2)))
+}
 func (m *Message) Warn(err Any, arg ...Any) bool {
 	switch err := err.(type) {
 	case error:

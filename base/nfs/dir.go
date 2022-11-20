@@ -173,6 +173,13 @@ const DIR = "dir"
 func init() {
 	Index.MergeCommands(ice.Commands{
 		DIR: {Name: "dir path field auto upload", Help: "目录", Actions: ice.Actions{
+			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
+				m.Cmd(aaa.ROLE, aaa.WHITE, aaa.VOID, ice.SRC)
+				m.Cmd(aaa.ROLE, aaa.WHITE, aaa.VOID, ice.BIN)
+				m.Cmd(aaa.ROLE, aaa.WHITE, aaa.VOID, ice.USR)
+				m.Cmd(aaa.ROLE, aaa.BLACK, aaa.VOID, ice.USR_LOCAL)
+				m.Cmd(aaa.ROLE, aaa.WHITE, aaa.VOID, ice.USR_LOCAL_GO)
+			}},
 			mdb.UPLOAD: {Name: "upload", Help: "上传", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmdy("web.cache", "upload_watch", m.Option(PATH))
 			}},

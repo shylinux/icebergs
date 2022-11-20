@@ -10,6 +10,7 @@ import (
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/tcp"
 	"shylinux.com/x/icebergs/base/web"
+	kit "shylinux.com/x/toolkits"
 )
 
 func _header_users(m *ice.Message, arg ...string) {
@@ -46,7 +47,7 @@ func _header_check(m *ice.Message, arg ...string) bool {
 			}
 			switch value[mdb.TYPE] {
 			case web.STORM, web.FIELD:
-				aaa.SessAuth(m, value)
+				aaa.SessAuth(m, kit.Dict(value))
 			}
 		})
 	}
@@ -75,7 +76,7 @@ func init() {
 					web.RenderCookie(m, aaa.SessCreate(m, arg[0]))
 				}
 			}},
-			aaa.LOGOUT:     {Hand: aaa.UserLogout},
+			aaa.LOGOUT:     {Hand: aaa.SessLogout},
 			aaa.PASSWORD:   {Hand: _header_users},
 			aaa.USERNICK:   {Hand: _header_users},
 			aaa.LANGUAGE:   {Hand: _header_users},

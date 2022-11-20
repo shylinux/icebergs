@@ -112,6 +112,7 @@ func (m *Message) Push(key string, value Any, arg ...Any) *Message {
 			var v Any
 			switch k {
 			case "_target":
+				continue
 			case KEY, HASH:
 				if key != "" && key != FIELDS_DETAIL {
 					v = key

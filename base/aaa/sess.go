@@ -9,30 +9,15 @@ import (
 )
 
 func _sess_check(m *ice.Message, sessid string) {
-	m.Option(ice.MSG_USERROLE, VOID)
-	m.Option(ice.MSG_USERNAME, "")
-	m.Option(ice.MSG_USERNICK, "")
-	if sessid == "" {
-		return
-	}
-
-	_source := logs.FileLineMeta(logs.FileLine(-1))
+	m.Assert(sessid != "")
 	mdb.HashSelectDetail(m, sessid, func(value ice.Map) {
-		if m.Warn(kit.Time(kit.Format(value[mdb.TIME])) < kit.Time(m.Time()), ice.ErrNotValid, sessid) {
-			return // 会话超时
+		if !m.WarnTimeNotValid(value[mdb.TIME], sessid) {
+			SessAuth(m, value)
 		}
-		m.Auth(
-			USERROLE, m.Option(ice.MSG_USERROLE, value[USERROLE]),
-			USERNAME, m.Option(ice.MSG_USERNAME, value[USERNAME]),
-			USERNICK, m.Option(ice.MSG_USERNICK, value[USERNICK]),
-			_source,
-		)
 	})
 }
 func _sess_create(m *ice.Message, username string) (h string) {
-	if m.Warn(username == "", ice.ErrNotValid, username) {
-		return
-	}
+	m.Assert(username != "")
 	if msg := m.Cmd(USER, username); msg.Length() > 0 {
 		h = mdb.HashCreate(m, msg.AppendSimple(USERROLE, USERNAME, USERNICK), IP, m.Option(ice.MSG_USERIP), UA, m.Option(ice.MSG_USERUA))
 	} else {
@@ -61,18 +46,10 @@ const SESS = "sess"
 func init() {
 	Index.MergeCommands(ice.Commands{
 		SESS: {Name: "sess hash auto prunes", Help: "会话", Actions: ice.MergeActions(ice.Actions{
-			mdb.CREATE: {Name: "create username", Help: "创建", Hand: func(m *ice.Message, arg ...string) {
+			mdb.CREATE: {Name: "create username", Hand: func(m *ice.Message, arg ...string) {
 				_sess_create(m, m.Option(USERNAME))
 			}},
-			SESS_CREATE: {Name: "sess.create", Help: "事件", Hand: func(m *ice.Message, arg ...string) {
-				m.Cmd(mdb.EXPORT, m.Prefix(SESS), "", mdb.HASH)
-				m.Cmd(mdb.IMPORT, m.Prefix(SESS), "", mdb.HASH)
-			}},
-			USER_CREATE: {Name: "user.create", Help: "检查", Hand: func(m *ice.Message, arg ...string) {
-				m.Cmd(mdb.EXPORT, m.Prefix(USER), "", mdb.HASH)
-				m.Cmd(mdb.IMPORT, m.Prefix(USER), "", mdb.HASH)
-			}},
-			CHECK: {Name: "check sessid", Help: "检查", Hand: func(m *ice.Message, arg ...string) {
+			CHECK: {Name: "check sessid", Hand: func(m *ice.Message, arg ...string) {
 				_sess_check(m, m.Option(SESSID))
 			}},
 		}, mdb.HashAction(mdb.SHORT, mdb.UNIQ, mdb.FIELD, "time,hash,userrole,username,usernick,ip,ua", mdb.EXPIRE, "720h"))},
@@ -80,6 +57,9 @@ func init() {
 }
 
 func SessCreate(m *ice.Message, username string) string {
+	if m.Warn(username == "", ice.ErrNotValid, username) {
+		return ""
+	}
 	return m.Option(ice.MSG_SESSID, m.Cmdx(SESS, mdb.CREATE, username))
 }
 func SessCheck(m *ice.Message, sessid string) bool {
@@ -88,15 +68,17 @@ func SessCheck(m *ice.Message, sessid string) bool {
 	m.Option(ice.MSG_USERNICK, "")
 	return sessid != "" && m.Cmdy(SESS, CHECK, sessid).Option(ice.MSG_USERNAME) != ""
 }
-func UserLogout(m *ice.Message, arg ...string) {
+func SessAuth(m *ice.Message, value ice.Map, arg ...string) {
+	m.Auth(
+		USERROLE, m.Option(ice.MSG_USERROLE, value[USERROLE]),
+		USERNAME, m.Option(ice.MSG_USERNAME, value[USERNAME]),
+		USERNICK, m.Option(ice.MSG_USERNICK, value[USERNICK]),
+		arg, logs.FileLineMeta(logs.FileLine(-1)),
+	)
+}
+func SessLogout(m *ice.Message, arg ...string) {
 	if m.Option(ice.MSG_SESSID) == "" {
 		return
 	}
 	m.Cmd(SESS, mdb.REMOVE, kit.Dict(mdb.HASH, m.Option(ice.MSG_SESSID)))
-}
-func SessAuth(m *ice.Message, value ice.Maps, arg ...string) {
-	m.Option(ice.MSG_USERROLE, value[USERROLE])
-	m.Option(ice.MSG_USERNAME, value[USERNAME])
-	m.Option(ice.MSG_USERNICK, value[USERNICK])
-	m.Auth(USERROLE, value[USERROLE], USERNAME, value[USERNAME], USERNICK, value[USERNICK], arg, logs.FileLineMeta(logs.FileLine(2)))
 }

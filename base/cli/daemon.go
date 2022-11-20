@@ -15,7 +15,7 @@ import (
 
 func _daemon_exec(m *ice.Message, cmd *exec.Cmd) {
 	if r, ok := m.Optionv(CMD_INPUT).(io.Reader); ok {
-		cmd.Stdin = r // 输入流
+		cmd.Stdin = r
 	}
 	if w := _system_out(m, CMD_OUTPUT); w != nil {
 		cmd.Stdout, cmd.Stderr = w, w
@@ -23,21 +23,18 @@ func _daemon_exec(m *ice.Message, cmd *exec.Cmd) {
 	if w := _system_out(m, CMD_ERRPUT); w != nil {
 		cmd.Stderr = w
 	}
-
 	h := mdb.HashCreate(m.Spawn(), ice.CMD, kit.Join(cmd.Args, ice.SP),
 		STATUS, START, DIR, cmd.Dir, ENV, kit.Select("", cmd.Env),
 		m.OptionSimple(CMD_INPUT, CMD_OUTPUT, CMD_ERRPUT, mdb.CACHE_CLEAR_ON_EXIT),
 	)
-
-	// 启动服务
 	if e := cmd.Start(); m.Warn(e, ice.ErrNotStart, cmd.Args) {
 		mdb.HashModify(m, h, STATUS, ERROR, ERROR, e)
-		return // 启动失败
+		return
 	}
 	mdb.HashSelectUpdate(m, h, func(value ice.Map) { value[PID] = cmd.Process.Pid })
 	m.Echo("%d", cmd.Process.Pid)
 
-	m.Go(func() { // 等待结果
+	m.Go(func() {
 		if e := cmd.Wait(); !m.Warn(e, ice.ErrNotStart, cmd.Args) && cmd.ProcessState.ExitCode() == 0 {
 			m.Cost(CODE, cmd.ProcessState.ExitCode(), ctx.ARGS, cmd.Args)
 			mdb.HashModify(m, mdb.HASH, h, STATUS, STOP)
@@ -48,11 +45,10 @@ func _daemon_exec(m *ice.Message, cmd *exec.Cmd) {
 				}
 			})
 		}
-
 		status := mdb.HashSelectField(m, h, STATUS)
 		switch m.Sleep300ms(); cb := m.OptionCB("").(type) {
 		case func(string) bool:
-			if !cb(status) { // 拉起服务
+			if !cb(status) {
 				m.Cmdy(DAEMON, cmd.Path, cmd.Args)
 			}
 		case func(string):
@@ -91,18 +87,18 @@ const (
 	RELOAD  = "reload"
 	RESTART = "restart"
 
+	BEGIN = "begin"
+	START = "start"
 	OPEN  = "open"
 	CLOSE = "close"
-	START = "start"
 	STOP  = "stop"
-	BEGIN = "begin"
 	END   = "end"
 
+	MAIN = "main"
 	CODE = "code"
 	COST = "cost"
 	BACK = "back"
 	FROM = "from"
-	MAIN = "main"
 )
 
 const DAEMON = "daemon"
@@ -113,15 +109,14 @@ func init() {
 			ice.CTX_EXIT: {Hand: func(m *ice.Message, arg ...string) {
 				mdb.HashPrunesValue(m, mdb.CACHE_CLEAR_ON_EXIT, ice.TRUE)
 			}},
-			START: {Name: "start cmd env dir", Help: "添加", Hand: func(m *ice.Message, arg ...string) {
-				m.Option(CMD_DIR, m.Option(DIR))
-				m.Option(CMD_ENV, kit.Split(m.Option(ENV), " ="))
+			START: {Name: "start cmd dir env", Hand: func(m *ice.Message, arg ...string) {
+				m.Options(CMD_DIR, m.Option(DIR), CMD_ENV, kit.Split(m.Option(ENV), " ="))
 				_daemon_exec(m, _system_cmd(m, kit.Split(m.Option(ice.CMD))...))
 			}},
-			RESTART: {Name: "restart", Help: "重启", Hand: func(m *ice.Message, arg ...string) {
+			RESTART: {Hand: func(m *ice.Message, arg ...string) {
 				m.Cmdy("", STOP).Sleep3s().Cmdy("", START)
 			}},
-			STOP: {Name: "stop", Help: "停止", Hand: func(m *ice.Message, arg ...string) {
+			STOP: {Hand: func(m *ice.Message, arg ...string) {
 				m.OptionFields(m.Config(mdb.FIELD))
 				h, pid := m.Option(mdb.HASH), m.Option(PID)
 				mdb.HashSelect(m, m.Option(mdb.HASH)).Tables(func(value ice.Maps) {

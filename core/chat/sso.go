@@ -20,8 +20,8 @@ func init() {
 				web.RenderIndex(m, ice.VOLCANOS)
 				return
 			}
-			m.RenderRedirect(kit.MergeURL(m.Option(cli.BACK), ice.MSG_SESSID, aaa.UserRoot(m).Cmdx(web.SPACE, m.Option(web.SPACE), aaa.SESS, mdb.CREATE,
-				aaa.USERNAME, m.Option(ice.MSG_USERNAME), aaa.USERROLE, m.Option(ice.MSG_USERROLE), aaa.USERNICK, m.Option(ice.MSG_USERNICK))))
+			m.RenderRedirect(kit.MergeURL(m.Option(cli.BACK), ice.MSG_SESSID, m.Cmdx(web.SPACE, m.Option(web.SPACE), aaa.SESS, mdb.CREATE,
+				aaa.USERNAME, m.Option(ice.MSG_USERNAME), aaa.USERROLE, m.Option(ice.MSG_USERROLE), aaa.USERNICK, m.Option(ice.MSG_USERNICK), kit.Dict(ice.MSG_USERROLE, aaa.ROOT))))
 		}},
 	})
 }

@@ -274,7 +274,7 @@ func HashPrunes(m *ice.Message, cb func(Maps) bool) *ice.Message {
 		}
 		HashRemove(m, HashShort(m), value[HashShort(m)])
 	})
-	return m
+	return m.StatusTimeCount()
 }
 func HashExport(m *ice.Message, arg ...Any) *ice.Message {
 	return m.Cmdy(EXPORT, m.PrefixKey(), "", HASH, arg)

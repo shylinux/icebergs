@@ -169,7 +169,7 @@ func (m *Message) CmdHand(cmd *Command, key string, arg ...string) *Message {
 		return m
 	}
 	if m._target = logs.FileLine(cmd.Hand); cmd.RawHand != nil {
-		m._target = kit.Format(cmd.RawHand)
+		m._target = kit.Join(kit.Slice(kit.Split(kit.Format(cmd.RawHand), PS), -3), PS)
 	}
 	if fileline := kit.Select(m._target, m._source, m.target.Name == MDB); key == SELECT {
 		m.Log(LOG_CMDS, "%s.%s %d %v %v", m.Target().Name, key, len(arg), arg, m.Optionv(MSG_FIELDS), logs.FileLineMeta(fileline))
@@ -294,7 +294,7 @@ func (c *Context) _action(m *Message, cmd *Command, key string, sub string, h *A
 		}
 	}
 	if m._target = logs.FileLine(h.Hand); cmd.RawHand != nil {
-		m._target = kit.Format(cmd.RawHand)
+		m._target = kit.Join(kit.Slice(kit.Split(kit.Format(cmd.RawHand), PS), -3), PS)
 	}
 	m.Log(LOG_CMDS, "%s.%s %s %d %v", c.Name, key, sub, len(arg), arg,
 		logs.FileLineMeta(kit.Select(m._target, m._source, m.target.Name == MDB)))

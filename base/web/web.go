@@ -55,41 +55,33 @@ func (frame *Frame) Begin(m *ice.Message, arg ...string) ice.Server {
 	return frame
 }
 func (frame *Frame) Start(m *ice.Message, arg ...string) bool {
+	meta := logs.FileLineMeta("")
 	list := map[*ice.Context]string{}
-	m.Travel(func(p *ice.Context, s *ice.Context) {
-		if frame, ok := s.Server().(*Frame); ok {
-			if frame.ServeMux != nil {
+	m.Travel(func(p *ice.Context, c *ice.Context) {
+		if f, ok := c.Server().(*Frame); ok {
+			if f.ServeMux != nil {
 				return
 			}
-			frame.ServeMux = http.NewServeMux()
-			meta := logs.FileLineMeta("")
-
-			// 级联路由
-			msg := m.Spawn(s)
-			if pframe, ok := p.Server().(*Frame); ok && pframe.ServeMux != nil {
-				route := ice.PS + s.Name + ice.PS
+			f.ServeMux = http.NewServeMux()
+			msg := m.Spawn(c)
+			if pf, ok := p.Server().(*Frame); ok && pf.ServeMux != nil {
+				route := ice.PS + c.Name + ice.PS
 				msg.Log(ROUTE, "%s <= %s", p.Name, route, meta)
-				pframe.Handle(route, http.StripPrefix(path.Dir(route), frame))
-				list[s] = path.Join(list[p], route)
+				pf.Handle(route, http.StripPrefix(path.Dir(route), f))
+				list[c] = path.Join(list[p], route)
 			}
-
-			// 静态路由
 			m.Confm(SERVE, kit.Keym(nfs.PATH), func(key string, value string) {
-				m.Log(ROUTE, "%s <- %s <- %s", s.Name, key, value, meta)
-				frame.Handle(key, http.StripPrefix(key, http.FileServer(http.Dir(value))))
+				m.Log(ROUTE, "%s <- %s <- %s", c.Name, key, value, meta)
+				f.Handle(key, http.StripPrefix(key, http.FileServer(http.Dir(value))))
 			})
-
-			// 命令路由
-			m.Travel(func(p *ice.Context, sub *ice.Context, k string, x *ice.Command) {
-				if s != sub || k[0] != '/' {
+			m.Travel(func(p *ice.Context, _c *ice.Context, key string, cmd *ice.Command) {
+				if c != _c || key[0] != '/' {
 					return
 				}
-				msg.Log(ROUTE, "%s <- %s", s.Name, k, meta)
-				ice.Info.Route[path.Join(list[s], k)] = ctx.FileCmd(logs.FileLines(x.Hand))
-				frame.HandleFunc(k, func(frame http.ResponseWriter, r *http.Request) {
-					m.TryCatch(msg.Spawn(), true, func(msg *ice.Message) {
-						_serve_handle(k, x, msg, frame, r)
-					})
+				msg.Log(ROUTE, "%s <- %s", c.Name, key, meta)
+				ice.Info.Route[path.Join(list[c], key)] = ctx.FileURI(cmd.GetFileLine())
+				f.HandleFunc(key, func(w http.ResponseWriter, r *http.Request) {
+					m.TryCatch(msg.Spawn(), true, func(msg *ice.Message) { _serve_handle(key, cmd, msg, w, r) })
 				})
 			})
 		}
@@ -120,7 +112,7 @@ const (
 	SERVE_START = "serve.start"
 	SERVE_STOP  = "serve.stop"
 	WEBSITE     = "website"
-	
+
 	CODE_INNER = "web.code.inner"
 	WIKI_WORD  = "web.wiki.word"
 )

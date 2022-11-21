@@ -181,13 +181,14 @@ func _serve_params(msg *ice.Message, path string) {
 	}
 }
 func _serve_handle(key string, cmd *ice.Command, msg *ice.Message, w http.ResponseWriter, r *http.Request) {
-	// 地址参数
+	meta := logs.FileLineMeta("")
+	msg.Options(ice.HEIGHT, "480", ice.WIDTH, "320")
 	if u, e := url.Parse(r.Header.Get(Referer)); e == nil {
 		_serve_params(msg, u.Path)
-		for k, v := range u.Query() {
-			msg.Logs("refer", k, v)
-			msg.Option(k, v)
-		}
+		kit.Fetch(u.Query(), func(k string, v []string) {
+			msg.Logs("refer", k, v, meta)
+			msg.Optionv(k, v)
+		})
 	}
 	_serve_params(msg, r.URL.Path)
 
@@ -205,14 +206,13 @@ func _serve_handle(key string, cmd *ice.Command, msg *ice.Message, w http.Respon
 	default:
 		r.ParseMultipartForm(kit.Int64(kit.Select("4096", r.Header.Get(ContentLength))))
 		if r.ParseForm(); len(r.PostForm) > 0 {
-			meta := logs.FileLineMeta("")
-			for k, v := range r.PostForm {
+			kit.Fetch(r.PostForm, func(k string, v []string) {
 				if len(v) > 1 {
 					msg.Logs("form", k, len(v), kit.Join(v, ice.SP), meta)
 				} else {
 					msg.Logs("form", k, v, meta)
 				}
-			}
+			})
 		}
 	}
 
@@ -230,7 +230,7 @@ func _serve_handle(key string, cmd *ice.Command, msg *ice.Message, w http.Respon
 		msg.Optionv(k, v)
 	}
 	for _, v := range r.Cookies() {
-		msg.Option(v.Name, v.Value)
+		msg.Optionv(v.Name, v.Value)
 	}
 
 	// 用户参数

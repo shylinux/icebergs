@@ -1,12 +1,9 @@
 package ice
 
 import (
-	"path"
-	"strings"
 	"time"
 
 	kit "shylinux.com/x/toolkits"
-	"shylinux.com/x/toolkits/logs"
 )
 
 type Option struct {
@@ -152,27 +149,3 @@ func (m *Message) ProcessBack()            { m.Process(PROCESS_BACK) }
 func (m *Message) ProcessRich(arg ...Any)  { m.Process(PROCESS_RICH, arg...) }
 func (m *Message) ProcessGrow(arg ...Any)  { m.Process(PROCESS_GROW, arg...) }
 func (m *Message) ProcessOpen(url string)  { m.Process(PROCESS_OPEN, url) }
-
-func (m *Message) Display(file string, arg ...Any) *Message {
-	m.Option(MSG_DISPLAY, kit.MergeURL(displayRequire(2, file)[DISPLAY], arg...))
-	return m
-}
-func displayRequire(n int, file string, arg ...string) Maps {
-	if file == "" {
-		file = kit.Keys(kit.FileName(n+1), JS)
-	}
-	if !strings.HasPrefix(file, PS) && !strings.HasPrefix(file, HTTP) {
-		file = path.Join(PS, path.Join(path.Dir(FileRequire(n+2)), file))
-	}
-	return DisplayBase(file, arg...)
-}
-func DisplayBase(file string, arg ...string) Maps {
-	return Maps{DISPLAY: file, STYLE: kit.Join(arg, SP)}
-}
-func FileRequire(n int) string {
-	p := kit.Split(logs.FileLines(n), DF)[0]
-	if strings.Contains(p, "go/pkg/mod") {
-		return path.Join("/require", strings.Split(p, "go/pkg/mod")[1])
-	}
-	return path.Join("/require", kit.ModPath(n), path.Base(p))
-}

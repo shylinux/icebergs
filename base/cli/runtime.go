@@ -21,22 +21,13 @@ func _runtime_init(m *ice.Message) {
 	})
 	m.Conf(RUNTIME, kit.Keys(HOST, GOARCH), runtime.GOARCH)
 	m.Conf(RUNTIME, kit.Keys(HOST, GOOS), runtime.GOOS)
+	m.Conf(RUNTIME, kit.Keys(HOST, OSID), release(m))
 	m.Conf(RUNTIME, kit.Keys(HOST, PID), os.Getpid())
 	m.Conf(RUNTIME, kit.Keys(HOST, PWD), kit.Path(""))
 	m.Conf(RUNTIME, kit.Keys(HOST, HOME), kit.Env(HOME))
 	m.Conf(RUNTIME, kit.Keys(HOST, MAXPROCS), runtime.GOMAXPROCS(0))
 	m.Conf(RUNTIME, mdb.META, "")
 	m.Conf(RUNTIME, mdb.HASH, "")
-	osid := runtime.GOOS
-	m.Cmd(nfs.CAT, "/etc/os-release", func(text string) {
-		if ls := kit.Split(text, "="); len(ls) > 1 {
-			switch ls[0] {
-			case "ID", "ID_LIKE":
-				osid = strings.TrimSpace(ls[1] + ice.SP + osid)
-			}
-		}
-	})
-	m.Conf(RUNTIME, kit.Keys(HOST, OSID), osid)
 	for _, k := range ENV_LIST {
 		switch m.Conf(RUNTIME, kit.Keys(CONF, k), kit.Env(k)); k {
 		case CTX_PID:
@@ -47,7 +38,6 @@ func _runtime_init(m *ice.Message) {
 			ice.Info.CtxRiver = kit.Env(k)
 		}
 	}
-
 	m.Conf(RUNTIME, kit.Keys(BOOT, HOSTNAME), kit.Env("HOSTNAME"))
 	if name, e := os.Hostname(); e == nil && name != "" {
 		m.Conf(RUNTIME, kit.Keys(BOOT, HOSTNAME), name)
@@ -60,10 +50,7 @@ func _runtime_init(m *ice.Message) {
 	ice.Info.HostName = m.Conf(RUNTIME, kit.Keys(BOOT, HOSTNAME))
 	ice.Info.PathName = m.Conf(RUNTIME, kit.Keys(BOOT, PATHNAME))
 	ice.Info.UserName = m.Conf(RUNTIME, kit.Keys(BOOT, USERNAME))
-	m.Cmd(aaa.USER, mdb.CREATE, ice.Info.UserName, "", aaa.ROOT)
-	aaa.UserRoot(ice.Pulse)
-
-	m.Conf(RUNTIME, kit.Keys(BOOT, mdb.COUNT), kit.Int(m.Conf(RUNTIME, kit.Keys(BOOT, mdb.COUNT)))+1)
+	aaa.UserRoot(ice.Pulse, ice.Info.UserName)
 	bin := _system_find(m, os.Args[0])
 	m.Conf(RUNTIME, kit.Keys(BOOT, ice.BIN), bin)
 	if s, e := nfs.StatFile(m, bin); e == nil {
@@ -73,6 +60,7 @@ func _runtime_init(m *ice.Message) {
 			m.Conf(RUNTIME, kit.Keys(BOOT, mdb.HASH), kit.Hashs(f))
 		}
 	}
+	m.Conf(RUNTIME, kit.Keys(BOOT, mdb.COUNT), kit.Int(m.Conf(RUNTIME, kit.Keys(BOOT, mdb.COUNT)))+1)
 }
 func _runtime_hostinfo(m *ice.Message) {
 	m.Push("nCPU", strings.Count(m.Cmdx(nfs.CAT, "/proc/cpuinfo"), "processor"))
@@ -92,12 +80,6 @@ func _runtime_diskinfo(m *ice.Message) {
 	})
 	m.RenameAppend("%iused", "piused", "Use%", "Usep")
 	ctx.DisplayStory(m, "pie.js?field=Size")
-}
-
-func NodeInfo(m *ice.Message, kind, name string) {
-	m.Conf(RUNTIME, kit.Keys(NODE, mdb.TIME), m.Time())
-	ice.Info.NodeType = m.Conf(RUNTIME, kit.Keys(NODE, mdb.TYPE), kind)
-	ice.Info.NodeName = m.Conf(RUNTIME, kit.Keys(NODE, mdb.NAME), strings.ReplaceAll(name, ice.PT, "_"))
 }
 
 const (
@@ -207,7 +189,7 @@ func init() {
 				m.Sort(nfs.FILE).StatusTimeCount()
 			}},
 			CMD: {Hand: func(m *ice.Message, arg ...string) {
-				m.OptionFields(ctx.INDEX, mdb.NAME, mdb.HELP)
+				m.OptionFields(ctx.INDEX, mdb.NAME, mdb.HELP, nfs.FILE)
 				m.Cmdy(ctx.COMMAND, mdb.SEARCH, ctx.COMMAND).StatusTimeCount()
 			}},
 			ENV: {Hand: func(m *ice.Message, arg ...string) {
@@ -232,4 +214,9 @@ func init() {
 			ctx.DisplayStoryJSON(m)
 		}},
 	})
+}
+func NodeInfo(m *ice.Message, kind, name string) {
+	m.Conf(RUNTIME, kit.Keys(NODE, mdb.TIME), m.Time())
+	ice.Info.NodeType = m.Conf(RUNTIME, kit.Keys(NODE, mdb.TYPE), kind)
+	ice.Info.NodeName = m.Conf(RUNTIME, kit.Keys(NODE, mdb.NAME), strings.ReplaceAll(name, ice.PT, "_"))
 }

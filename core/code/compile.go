@@ -8,6 +8,7 @@ import (
 	"shylinux.com/x/icebergs/base/cli"
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/nfs"
+
 	// "shylinux.com/x/icebergs/base/web"
 	kit "shylinux.com/x/toolkits"
 )
@@ -44,6 +45,16 @@ func init() {
 		COMPILE: {Value: kit.Data(cli.ENV, kit.Dict("GOPRIVATE", "shylinux.com,github.com", "GOPROXY", "https://goproxy.cn,direct", "CGO_ENABLED", "0"))},
 	}, Commands: ice.Commands{
 		COMPILE: {Name: "compile arch=amd64,386,mipsle,arm,arm64 os=linux,darwin,windows src=src/main.go@key run binpack relay", Help: "编译", Actions: ice.Actions{
+			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
+				cli.IsAlpine(m, "curl")
+				cli.IsAlpine(m, "make")
+				cli.IsAlpine(m, "gcc")
+				cli.IsAlpine(m, "vim")
+				cli.IsAlpine(m, "tmux")
+				if cli.IsAlpine(m, "git"); !cli.IsAlpine(m, "go", "go git") {
+					mdb.ZoneInsert(m, cli.CLI, "go", cli.CMD, kit.Format("install download https://golang.google.cn/dl/go1.15.5.%s-%s.tar.gz usr/local", runtime.GOOS, runtime.GOARCH))
+				}
+			}},
 			mdb.INPUTS: {Hand: func(m *ice.Message, arg ...string) {
 				m.Cmdy(nfs.DIR, ice.SRC, nfs.DIR_CLI_FIELDS, kit.Dict(nfs.DIR_REG, `.*\.go$`)).Sort(nfs.PATH)
 			}},
@@ -60,7 +71,7 @@ func init() {
 			// web.PushStream(m)
 			main, file, goos, arch := _compile_target(m, arg...)
 			m.Optionv(cli.CMD_ENV, kit.Simple(cli.HOME, kit.Env(cli.HOME), cli.PATH, kit.Env(cli.PATH), m.Configv(cli.ENV), m.Optionv(cli.ENV), cli.GOOS, goos, cli.GOARCH, arch))
-			m.Cmd(cli.SYSTEM, GO, "get", "shylinux.com/x/ice")
+			// m.Cmd(cli.SYSTEM, GO, "get", "shylinux.com/x/ice")
 			if msg := m.Cmd(cli.SYSTEM, GO, cli.BUILD, "-o", file, main, ice.SRC_VERSION_GO, ice.SRC_BINPACK_GO); !cli.IsSuccess(msg) {
 				m.Copy(msg)
 				return

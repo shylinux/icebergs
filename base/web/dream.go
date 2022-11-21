@@ -34,7 +34,7 @@ func _dream_list(m *ice.Message) *ice.Message {
 	return m.Sort("status,type,name", ice.STR, ice.STR, ice.STR_R).StatusTimeCount(cli.START, len(list))
 }
 func _dream_show(m *ice.Message, name string) {
-	if m.Warn(name == "", ice.ErrNotValid) {
+	if m.Warn(name == "", ice.ErrNotValid, mdb.NAME) {
 		return
 	}
 	if !strings.Contains(name, "-") || !strings.HasPrefix(name, "20") {

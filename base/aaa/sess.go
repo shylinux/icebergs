@@ -8,14 +8,6 @@ import (
 	"shylinux.com/x/toolkits/logs"
 )
 
-func _sess_check(m *ice.Message, sessid string) {
-	m.Assert(sessid != "")
-	mdb.HashSelectDetail(m, sessid, func(value ice.Map) {
-		if !m.WarnTimeNotValid(value[mdb.TIME], sessid) {
-			SessAuth(m, value)
-		}
-	})
-}
 func _sess_create(m *ice.Message, username string) (h string) {
 	m.Assert(username != "")
 	if msg := m.Cmd(USER, username); msg.Length() > 0 {
@@ -25,6 +17,21 @@ func _sess_create(m *ice.Message, username string) (h string) {
 	}
 	gdb.Event(m, SESS_CREATE, SESS, h, USERNAME, username)
 	return h
+}
+func _sess_check(m *ice.Message, sessid string) {
+	m.Assert(sessid != "")
+
+	val := kit.Dict()
+	mdb.HashSelectDetail(m, sessid, func(value ice.Map) {
+		if !m.WarnTimeNotValid(value[mdb.TIME], sessid) {
+			for k, v := range value {
+				val[k] = v
+			}
+		}
+	})
+	if len(val) > 0 {
+		SessAuth(m, val)
+	}
 }
 
 const (
@@ -63,6 +70,7 @@ func SessCreate(m *ice.Message, username string) string {
 	return m.Option(ice.MSG_SESSID, m.Cmdx(SESS, mdb.CREATE, username))
 }
 func SessCheck(m *ice.Message, sessid string) bool {
+	m.Option("log.caller", logs.FileLine(2))
 	m.Option(ice.MSG_USERROLE, VOID)
 	m.Option(ice.MSG_USERNAME, "")
 	m.Option(ice.MSG_USERNICK, "")
@@ -73,7 +81,7 @@ func SessAuth(m *ice.Message, value ice.Map, arg ...string) {
 		USERROLE, m.Option(ice.MSG_USERROLE, value[USERROLE]),
 		USERNAME, m.Option(ice.MSG_USERNAME, value[USERNAME]),
 		USERNICK, m.Option(ice.MSG_USERNICK, value[USERNICK]),
-		arg, logs.FileLineMeta(logs.FileLine(-1)),
+		arg, logs.FileLineMeta(kit.Select(logs.FileLine(-1), m.Option("log.caller"))),
 	)
 }
 func SessLogout(m *ice.Message, arg ...string) {

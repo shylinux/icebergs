@@ -41,7 +41,7 @@ func init() {
 	Index.MergeCommands(ice.Commands{
 		SPARK: {Name: "spark [name] text auto field:text value:text", Help: "段落", Actions: ice.MergeActions(ice.Actions{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
-				ice.AddRender(ice.RENDER_SCRIPT, func(m *ice.Message, cmd string, args ...ice.Any) string {
+				ice.AddRender(ice.RENDER_SCRIPT, func(m *ice.Message, args ...ice.Any) string {
 					arg := kit.Simple(args...)
 					if m.IsCliUA() {
 						if len(arg) > 1 {

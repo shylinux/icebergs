@@ -107,7 +107,7 @@ func (c *Command) GetFileLine() string {
 
 func (c *Context) Register(s *Context, x Server, n ...string) *Context {
 	for _, n := range n {
-		if s, ok := Info.index[n]; ok {
+		if s, ok := Info.Index[n]; ok {
 			last := ""
 			switch s := s.(type) {
 			case *Context:
@@ -115,7 +115,7 @@ func (c *Context) Register(s *Context, x Server, n ...string) *Context {
 			}
 			panic(kit.Format("%s %s %v", ErrWarn, n, last))
 		}
-		Info.index[n] = s
+		Info.Index[n] = s
 	}
 	if c.Contexts == nil {
 		c.Contexts = Contexts{}
@@ -127,6 +127,11 @@ func (c *Context) Register(s *Context, x Server, n ...string) *Context {
 	return s
 }
 func (c *Context) MergeCommands(Commands Commands) *Context {
+	for _, cmd := range Commands {
+		if cmd.Hand == nil && cmd.RawHand == nil {
+			cmd.RawHand = logs.FileLines(2)
+		}
+	}
 	configs := Configs{}
 	for k, _ := range Commands {
 		configs[k] = &Config{Value: kit.Data()}
@@ -419,7 +424,7 @@ func (m *Message) Search(key string, cb Any) *Message {
 			return m
 		}
 		key = ls[len(ls)-1]
-	} else if ctx, ok := Info.index[key].(*Context); ok {
+	} else if ctx, ok := Info.Index[key].(*Context); ok {
 		p = ctx
 	} else {
 		p = m.target

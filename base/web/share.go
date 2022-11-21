@@ -21,7 +21,7 @@ import (
 )
 
 func _share_render(m *ice.Message, arg ...string) {
-	ice.AddRender(ice.RENDER_DOWNLOAD, func(msg *ice.Message, cmd string, args ...ice.Any) string {
+	ice.AddRender(ice.RENDER_DOWNLOAD, func(msg *ice.Message, args ...ice.Any) string {
 		list := []string{}
 		if msg.Option(ice.MSG_USERPOD) != "" {
 			list = append(list, ice.POD, msg.Option(ice.MSG_USERPOD))

@@ -32,10 +32,10 @@ var Info = struct {
 	Help  string
 	File  Maps
 	Route Maps
-	index Map
+	Index Map
 
 	merges []MergeHandler
-	render map[string]func(*Message, string, ...Any) string
+	render map[string]func(*Message, ...Any) string
 	Save   func(m *Message, key ...string) *Message
 	Load   func(m *Message, key ...string) *Message
 	Log    func(m *Message, p, l, s string)
@@ -50,9 +50,9 @@ source: https://shylinux.com/x/icebergs
 `,
 	File:  Maps{},
 	Route: Maps{},
-	index: Map{},
+	Index: Map{},
 
-	render: map[string]func(*Message, string, ...Any) string{},
+	render: map[string]func(*Message, ...Any) string{},
 	Save:   func(m *Message, key ...string) *Message { return m },
 	Load:   func(m *Message, key ...string) *Message { return m },
 	Log:    func(m *Message, p, l, s string) {},

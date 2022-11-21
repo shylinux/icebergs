@@ -33,7 +33,6 @@ func _daemon_exec(m *ice.Message, cmd *exec.Cmd) {
 	}
 	mdb.HashSelectUpdate(m, h, func(value ice.Map) { value[PID] = cmd.Process.Pid })
 	m.Echo("%d", cmd.Process.Pid)
-
 	m.Go(func() {
 		if e := cmd.Wait(); !m.Warn(e, ice.ErrNotStart, cmd.Args) && cmd.ProcessState.ExitCode() == 0 {
 			m.Cost(CODE, cmd.ProcessState.ExitCode(), ctx.ARGS, cmd.Args)
@@ -105,7 +104,7 @@ const DAEMON = "daemon"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
-		DAEMON: {Name: "daemon hash auto start prunes", Help: "守护进程", Actions: ice.MergeActions(ice.Actions{
+		DAEMON: {Name: "daemon hash auto", Help: "守护进程", Actions: ice.MergeActions(ice.Actions{
 			ice.CTX_EXIT: {Hand: func(m *ice.Message, arg ...string) {
 				mdb.HashPrunesValue(m, mdb.CACHE_CLEAR_ON_EXIT, ice.TRUE)
 			}},
@@ -134,17 +133,16 @@ func init() {
 					case START:
 						m.PushButton(RESTART, STOP)
 					default:
-						m.PushButton(mdb.REMOVE)
+						m.PushButton(START, mdb.REMOVE)
 					}
 				}); len(arg) == 0 || m.Length() > 0 {
+					if len(arg) == 0 {
+						m.Action(START, mdb.PRUNES)
+					}
 					return
 				}
 			}
-
-			if len(arg) == 1 {
-				arg = kit.Split(arg[0])
-			}
-			if _daemon_exec(m, _system_cmd(m, arg...)); IsSuccess(m) && m.Append(CMD_ERR) == "" {
+			if _daemon_exec(m, _system_cmd(m, kit.Simple(kit.Split(arg[0]), arg[1:])...)); IsSuccess(m) && m.Append(CMD_ERR) == "" {
 				m.SetAppend()
 			}
 		}},

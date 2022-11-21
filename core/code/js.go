@@ -79,7 +79,7 @@ func _js_exec(m *ice.Message, arg ...string) {
 		ctx.ProcessCommand(m, kit.Select("can.plugin", key), kit.Simple())
 		return
 	}
-	m.Display(path.Join("/require", path.Join(arg[2], arg[1])))
+	ctx.DisplayBase(m, path.Join("/require", path.Join(arg[2], arg[1])))
 	key := ctx.GetFileCmd(kit.Replace(path.Join(arg[2], arg[1]), ".js", ".go"))
 	ctx.ProcessCommand(m, kit.Select("can.code.inner._plugin", key), kit.Simple())
 	return

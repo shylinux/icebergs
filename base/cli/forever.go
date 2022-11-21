@@ -48,14 +48,14 @@ func init() {
 				}
 			}},
 			RESTART: {Hand: func(m *ice.Message, arg ...string) { m.Cmd(gdb.SIGNAL, gdb.RESTART) }},
-			STOP: {Hand: func(m *ice.Message, arg ...string) { m.Cmd(gdb.SIGNAL, gdb.STOP) }},
+			STOP:    {Hand: func(m *ice.Message, arg ...string) { m.Cmd(gdb.SIGNAL, gdb.STOP) }},
 		}, Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) == 0 {
 				m.Cmdy(RUNTIME, BOOTINFO)
 				return
 			}
 			for {
-				if logs.Println("run %s", kit.Join(arg, ice.SP)); IsSuccess(m.Sleep("1s", SYSTEM, arg)) {
+				if logs.Println("run %s", kit.Join(arg, ice.SP)); IsSuccess(m.Cmd(SYSTEM, arg)) {
 					logs.Println(ice.EXIT)
 					break
 				}

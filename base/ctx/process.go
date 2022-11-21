@@ -27,6 +27,21 @@ func Process(m *ice.Message, key string, args []string, arg ...string) {
 		ProcessField(m, key, args, arg...)
 	}
 }
+func ProcessCommand(m *ice.Message, cmd string, val []string, arg ...string) {
+	if len(arg) > 0 && arg[0] == ice.RUN {
+		m.Cmdy(cmd, arg[1:])
+		return
+	}
+	m.Cmdy(COMMAND, cmd)
+	m.ProcessField(cmd, ice.RUN)
+	m.Push(ice.ARG, kit.Format(val))
+}
+func ProcessCommandOpt(m *ice.Message, arg []string, args ...string) {
+	if len(arg) > 0 && arg[0] == ice.RUN {
+		return
+	}
+	m.Push("opt", kit.Format(m.OptionSimple(args...)))
+}
 func ProcessField(m *ice.Message, cmd string, args []string, arg ...string) {
 	cmd = kit.Select(m.PrefixKey(), cmd)
 	if len(arg) == 0 || arg[0] != ice.RUN {
@@ -46,26 +61,14 @@ func ProcessFloat(m *ice.Message, arg ...string) {
 	m.Cmdy(COMMAND, arg[0])
 }
 
-func ProcessHold(m *ice.Message, text ...ice.Any) {
-	m.Process(ice.PROCESS_HOLD, text...)
-}
-func ProcessOpen(m *ice.Message, url string) {
-	m.Process(ice.PROCESS_OPEN, url)
-}
-func ProcessRefresh(m *ice.Message, arg ...string) {
-	m.ProcessRefresh(kit.Select("300ms", arg, 0))
-}
-func ProcessRewrite(m *ice.Message, arg ...ice.Any) {
-	m.ProcessRewrite(arg...)
-}
+func ProcessRefresh(m *ice.Message, arg ...string) { m.ProcessRefresh(arg...) }
+func ProcessRewrite(m *ice.Message, arg ...ice.Any) { m.ProcessRewrite(arg...) }
+func ProcessHold(m *ice.Message, text ...ice.Any) { m.Process(ice.PROCESS_HOLD, text...) }
+func ProcessOpen(m *ice.Message, url string) { m.Process(ice.PROCESS_OPEN, url) }
 
 func ProcessAction() ice.Actions {
 	return ice.Actions{
-		ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
-			AddProcess(m.CommandKey(), m.PrefixKey())
-		}},
-		PROCESS: {Name: "process", Help: "响应", Hand: func(m *ice.Message, arg ...string) {
-			ProcessField(m, m.PrefixKey(), arg, arg...)
-		}},
+		ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) { AddProcess(m.CommandKey(), m.PrefixKey()) }},
+		PROCESS: {Hand: func(m *ice.Message, arg ...string) { ProcessField(m, m.PrefixKey(), arg, arg...) }},
 	}
 }

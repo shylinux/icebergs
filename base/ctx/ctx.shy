@@ -1,7 +1,0 @@
-chapter "ctx"
-
-field "模块" context
-field "命令" command
-field "配置" config
-field "消息" message
-

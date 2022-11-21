@@ -63,6 +63,7 @@ func _command_search(m *ice.Message, kind, name, text string) {
 			kit.SimpleKV("", s.Cap(ice.CTX_FOLLOW), cmd.Name, cmd.Help),
 			CONTEXT, s.Cap(ice.CTX_FOLLOW), COMMAND, key, mdb.HELP, cmd.Help,
 			INDEX, kit.Keys(s.Cap(ice.CTX_FOLLOW), key),
+			nfs.FILE, FileURI(cmd.GetFileLine()),
 		)
 	})
 }
@@ -123,8 +124,8 @@ func AddRunChecker(cb func(*ice.Message, string, string, ...string) bool) {
 	runChecker = append(runChecker, cb)
 }
 func init() {
-	AddRunChecker(func(m *ice.Message, cmd, check string, arg ...string) bool {
-		switch check {
+	AddRunChecker(func(m *ice.Message, cmd, sub string, arg ...string) bool {
+		switch sub {
 		case mdb.REMOVE:
 			m.Cmd(CONFIG, mdb.REMOVE, cmd)
 			return true
@@ -173,8 +174,11 @@ func CmdAction(args ...ice.Any) ice.Actions {
 }
 
 func FileURI(dir string) string {
-	if strings.Contains(dir, "go/pkg/mod") {
-		return path.Join("/require", strings.Split(dir, "go/pkg/mod")[1])
+	if dir == "" {
+		return ""
+	}
+	if strings.Contains(dir, "/go/pkg/mod/") {
+		return path.Join("/require", strings.Split(dir, "/go/pkg/mod/")[1])
 	}
 	if ice.Info.Make.Path != "" && strings.HasPrefix(dir, ice.Info.Make.Path+ice.PS) {
 		dir = strings.TrimPrefix(dir, ice.Info.Make.Path+ice.PS)
@@ -194,27 +198,19 @@ func FileURI(dir string) string {
 	return dir
 }
 func FileCmd(dir string) string {
-	dir = strings.Split(dir, ice.DF)[0]
-	dir = strings.ReplaceAll(dir, ".js", ".go")
-	dir = strings.ReplaceAll(dir, ".sh", ".go")
-	return FileURI(dir)
+	return FileURI(kit.ExtChange(strings.Split(dir, ice.DF)[0], nfs.GO))
 }
 func AddFileCmd(dir, key string) {
 	ice.Info.File[FileCmd(dir)] = key
 }
 func GetFileCmd(dir string) string {
-	if strings.HasPrefix(dir, "usr/") {
-		// p := ice.Pulse.Cmdx("cli.system", "git", "config", "remote.origin.url", kit.Dict("cmd_dir", path.Dir(dir)))
-		// p = strings.Replace(strings.TrimSpace(p), "https://", "/require/", 1)
-		// dir = path.Join(p, strings.Join(strings.Split(dir, "/")[2:], "/"))
-	}
-	if strings.HasPrefix(dir, ".ish/pluged/") {
-		dir = strings.Replace(dir, ".ish/pluged/", "/require/", 1)
+	if strings.HasPrefix(dir, ice.ISH_PLUGED) {
+		dir = path.Join("/require", strings.TrimPrefix(dir, ice.ISH_PLUGED))
 	}
 	if strings.HasPrefix(dir, "require/") {
-		dir = "/" + dir
+		dir = ice.PS + dir
 	}
-	for _, dir := range []string{dir, path.Join("/require/", ice.Info.Make.Module, dir), path.Join("/require/", ice.Info.Make.Module, ice.SRC, dir)} {
+	for _, dir := range []string{dir, path.Join("/require", ice.Info.Make.Module, dir), path.Join("/require", ice.Info.Make.Module, ice.SRC, dir)} {
 		if cmd, ok := ice.Info.File[FileCmd(dir)]; ok {
 			return cmd
 		}
@@ -228,11 +224,12 @@ func GetFileCmd(dir string) string {
 func GetCmdFile(m *ice.Message, cmds string) (file string) {
 	m.Search(cmds, func(key string, cmd *ice.Command) {
 		if cmd.RawHand == nil {
-			file = kit.Split(logs.FileLines(cmd.Hand), ":")[0]
+			file = kit.Split(logs.FileLines(cmd.Hand), ice.DF)[0]
 		} else {
 			for k, v := range ice.Info.File {
 				if v == cmds {
-					file = strings.Replace(k, "/require/", ".ish/pluged/", 1)
+					file = strings.Replace(k, "/require/", ice.ISH_PLUGED, 1)
+					break
 				}
 			}
 		}
@@ -242,14 +239,13 @@ func GetCmdFile(m *ice.Message, cmds string) (file string) {
 func TravelCmd(m *ice.Message, cb func(key, file, line string)) {
 	m.Travel(func(p *ice.Context, s *ice.Context, key string, cmd *ice.Command) {
 		if key[0] == '/' || key[0] == '_' {
-			return // 内部命令
+			return
 		}
-
-		ls := kit.Split(cmd.GetFileLine(), ":")
+		ls := kit.Split(cmd.GetFileLine(), ice.DF)
 		if len(ls) > 1 {
 			cb(kit.Keys(s.Cap(ice.CTX_FOLLOW), key), strings.TrimPrefix(ls[0], kit.Path("")+ice.PS), ls[1])
 		} else {
-			m.Warn(true, "not founc", cmd.Name)
+			m.Warn(true, "not found", cmd.Name, cmd.GetFileLine())
 		}
 	})
 }

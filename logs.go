@@ -29,8 +29,14 @@ func (m *Message) join(arg ...Any) (string, []Any) {
 			continue
 		}
 		switch v := arg[i+1].(type) {
+		case logs.Meta:
+			list = append(list, key)
+			meta = append(meta, v)
+			continue
 		case time.Time:
 			arg[i+1] = v.Format(MOD_TIME)
+		case []string:
+			arg[i+1] = kit.Join(v, " ")
 		}
 		list = append(list, key+kit.Select("", DF, !strings.Contains(key, DF)), kit.Format(arg[i+1]))
 	}

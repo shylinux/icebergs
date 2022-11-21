@@ -66,12 +66,13 @@ func init() {
 				m.Push(mdb.TIME, m.Time())
 				m.Push(mdb.NAME, value[mdb.NAME])
 				period := kit.Int64(value[PERIOD])
-				m.Push("rest", period-time.Now().Unix()%period)
-				m.Push("code", _totp_get(value[SECRET], kit.Int(value[NUMBER]), period))
+				m.Push(mdb.EXPIRE, period-time.Now().Unix()%period)
+				m.Push(mdb.VALUE, _totp_get(value[SECRET], kit.Int(value[NUMBER]), period))
 				if len(arg) > 0 {
 					m.PushQRCode(mdb.SCAN, kit.Format(m.Config(mdb.LINK), value[mdb.NAME], value[SECRET]))
 					m.Echo(_totp_get(value[SECRET], kit.Int(value[NUMBER]), kit.Int64(value[PERIOD])))
 				}
+				m.StatusTimeCount()
 			})
 		}},
 	})

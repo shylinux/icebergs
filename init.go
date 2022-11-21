@@ -43,10 +43,7 @@ func (s *Frame) Close(m *Message, arg ...string) bool {
 		}
 	})
 	conf.Close()
-	go func() {
-		m.Sleep3s()
-		os.Exit(kit.Int(Pulse.Option(EXIT)))
-	}()
+	go func() { os.Exit(kit.Int(Pulse.Sleep("30ms").Option(EXIT))) }()
 	return true
 }
 func (s *Frame) Spawn(m *Message, c *Context, arg ...string) Server { return &Frame{} }
@@ -60,7 +57,11 @@ const (
 
 var Index = &Context{Name: ICE, Help: "冰山模块", Configs: Configs{HELP: {Value: kit.Data(INDEX, Info.Help)}}, Commands: Commands{
 	CTX_INIT: {Hand: func(m *Message, arg ...string) {
-		m.Travel(func(p *Context, c *Context) { if p != nil { c._command(m.Spawn(c), c.Commands[CTX_INIT], CTX_INIT, arg...) } })
+		m.Travel(func(p *Context, c *Context) {
+			if p != nil {
+				c._command(m.Spawn(c), c.Commands[CTX_INIT], CTX_INIT, arg...)
+			}
+		})
 	}},
 	INIT: {Hand: func(m *Message, arg ...string) {
 		m.Cmd(CTX_INIT)
@@ -75,7 +76,11 @@ var Index = &Context{Name: ICE, Help: "冰山模块", Configs: Configs{HELP: {Va
 	}},
 	CTX_EXIT: {Hand: func(m *Message, arg ...string) {
 		defer m.Target().Close(m.Spawn(), arg...)
-		m.Travel(func(p *Context, c *Context) { if p != nil { c._command(m.Spawn(c), c.Commands[CTX_EXIT] , CTX_EXIT, arg...) } })
+		m.Travel(func(p *Context, c *Context) {
+			if p != nil {
+				c._command(m.Spawn(c), c.Commands[CTX_EXIT], CTX_EXIT, arg...)
+			}
+		})
 	}},
 }, server: &Frame{}}
 var Pulse = &Message{time: time.Now(), code: 0, meta: map[string][]string{}, data: Map{}, source: Index, target: Index, Hand: true}

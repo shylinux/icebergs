@@ -24,7 +24,7 @@ func _cmd_file(m *ice.Message, arg ...string) bool {
 	case nfs.GO:
 		web.RenderCmd(m, ctx.GetFileCmd(p))
 	case nfs.JS:
-		m.Display(ctx.FileURI(p))
+		ctx.DisplayBase(m, ctx.FileURI(p))
 		web.RenderCmd(m, kit.Select(ctx.CAN_PLUGIN, ctx.GetFileCmd(p)))
 	default:
 		if p = strings.TrimPrefix(p, ice.SRC+ice.PS); nfs.ExistsFile(m, path.Join(ice.SRC, p)) {

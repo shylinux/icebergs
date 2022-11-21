@@ -64,7 +64,7 @@ func init() {
 func Inputs(m *ice.Message, field string) bool {
 	switch strings.TrimPrefix(field, "extra.") {
 	case ice.POD:
-		m.Cmdy("route")
+		m.Cmdy(ice.SPACE)
 	case ice.CTX:
 		m.Cmdy(CONTEXT)
 	case ice.CMD:

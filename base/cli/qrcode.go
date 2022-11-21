@@ -14,7 +14,7 @@ import (
 	kit "shylinux.com/x/toolkits"
 )
 
-var _trans_web = map[string]color.Color{
+var _color_map = map[string]color.Color{
 	BLACK:  color.RGBA{0, 0, 0, DARK},
 	RED:    color.RGBA{DARK, 0, 0, DARK},
 	GREEN:  color.RGBA{0, DARK, 0, DARK},
@@ -27,11 +27,7 @@ var _trans_web = map[string]color.Color{
 
 func _parse_color(str string) color.Color {
 	if str == RANDOM {
-		list := []string{}
-		for k := range _trans_web {
-			list = append(list, k)
-		}
-		kit.Sort(list)
+		list := kit.SortedKey(_color_map)
 		str = list[rand.Intn(len(list))]
 	}
 	if strings.HasPrefix(str, "#") {
@@ -47,7 +43,7 @@ func _parse_color(str string) color.Color {
 			}
 		}
 	}
-	return _trans_web[str]
+	return _color_map[str]
 }
 func _parse_cli_color(str string) string {
 	res := 0
@@ -67,7 +63,6 @@ func _qrcode_cli(m *ice.Message, text string) {
 	qr, _ := qrcode.New(text, qrcode.Medium)
 	fg := _parse_cli_color(m.Option(FG))
 	bg := _parse_cli_color(m.Option(BG))
-
 	data := qr.Bitmap()
 	for i, row := range data {
 		if n := len(data); i < 3 || i >= n-3 {
@@ -77,7 +72,6 @@ func _qrcode_cli(m *ice.Message, text string) {
 			if n := len(row); i < 3 || i >= n-3 {
 				continue
 			}
-
 			m.Echo("\033[4%sm  \033[0m", kit.Select(bg, fg, col))
 		}
 		m.Echo(ice.NL)
@@ -88,7 +82,6 @@ func _qrcode_web(m *ice.Message, text string) {
 	qr, _ := qrcode.New(text, qrcode.Medium)
 	qr.ForegroundColor = _parse_color(m.Option(FG))
 	qr.BackgroundColor = _parse_color(m.Option(BG))
-
 	if data, err := qr.PNG(kit.Int(m.Option(SIZE))); m.Assert(err) {
 		m.Echo(`<img src="data:image/png;base64,%s" title='%s'>`, base64.StdEncoding.EncodeToString(data), text)
 	}
@@ -119,27 +112,26 @@ const QRCODE = "qrcode"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
-		QRCODE: {Name: "qrcode text@key fg@key bg@key size auto", Help: "二维码", Actions: ice.Actions{
+		QRCODE: {Name: "qrcode text fg@key bg@key size auto", Help: "二维码", Actions: ice.Actions{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
-				ice.AddRender(ice.RENDER_QRCODE, func(m *ice.Message, cmd string, args ...ice.Any) string {
+				ice.AddRender(ice.RENDER_QRCODE, func(m *ice.Message, args ...ice.Any) string {
 					return m.Cmd(QRCODE, kit.Simple(args...)).Result()
 				})
 			}},
 			mdb.INPUTS: {Hand: func(m *ice.Message, arg ...string) {
 				switch arg[0] {
-				case mdb.TEXT:
-					m.Push(arg[0], "hi", "hello", "world")
 				case FG, BG:
 					m.Push(arg[0], RED, GREEN, BLUE)
 				}
 			}},
 		}, Hand: func(m *ice.Message, arg ...string) {
-			m.Option(SIZE, kit.Select("240", arg, 3))
-			m.Option(BG, kit.Select(kit.Select(WHITE, BLACK, m.Option("topic") == BLACK), arg, 2))
-			m.Option(FG, kit.Select(kit.Select(BLUE, CYAN, m.Option("topic") == BLACK), arg, 1))
+			m.Option(FG, kit.Select(kit.Select(BLUE, CYAN, m.Option(ice.TOPIC) == BLACK), arg, 1))
+			m.Option(BG, kit.Select(kit.Select(WHITE, BLACK, m.Option(ice.TOPIC) == BLACK), arg, 2))
 			if m.IsCliUA() {
 				_qrcode_cli(m, kit.Select(kit.Select(ice.Info.Make.Domain, ice.Info.Domain), arg, 0))
 			} else {
+				m.Option(SIZE, kit.Select(kit.Format(kit.Min(480, kit.Int(m.Option(ice.HEIGHT)), kit.Int(m.Option(ice.WIDTH)))), arg, 3))
+				m.Debug("what %v", m.Option(SIZE))
 				_qrcode_web(m, kit.Select(m.Option(ice.MSG_USERWEB), arg, 0))
 				m.StatusTime(mdb.LINK, kit.Select(m.Option(ice.MSG_USERWEB), arg, 0))
 			}

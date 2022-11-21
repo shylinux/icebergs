@@ -53,7 +53,7 @@ func _system_cmd(m *ice.Message, arg ...string) *exec.Cmd {
 		}
 	}
 	cmd := exec.Command(bin, arg[1:]...)
-	if cmd.Dir = m.Option(CMD_DIR); len(cmd.Dir) > 0 {
+	if cmd.Dir = kit.TrimPath(m.Option(CMD_DIR)); len(cmd.Dir) > 0 {
 		if m.Logs(mdb.EXPORT, CMD_DIR, cmd.Dir); !nfs.ExistsFile(m, cmd.Dir) {
 			file.MkdirAll(cmd.Dir, ice.MOD_DIR)
 		}

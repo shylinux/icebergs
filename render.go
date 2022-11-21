@@ -7,12 +7,12 @@ import (
 	kit "shylinux.com/x/toolkits"
 )
 
-func AddRender(key string, render func(*Message, string, ...Any) string) {
+func AddRender(key string, render func(*Message, ...Any) string) {
 	Info.render[key] = render
 }
 func Render(m *Message, cmd string, args ...Any) string {
 	if render, ok := Info.render[cmd]; ok {
-		return render(m, cmd, args...)
+		return render(m, args...)
 	}
 	switch arg := kit.Simple(args...); cmd {
 	case RENDER_BUTTON:

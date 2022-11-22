@@ -334,7 +334,7 @@ func init() {
 				}
 				m.Push(mdb.TEXT, strings.Join(text, ", "))
 			}},
-		}, gdb.EventAction(web.DREAM_TABLES), aaa.RoleAction()), Hand: func(m *ice.Message, arg ...string) {
+		}, gdb.EventAction(web.DREAM_TABLES), ctx.CmdAction(), aaa.RoleAction()), Hand: func(m *ice.Message, arg ...string) {
 			if _configs_get(m, "user.email") == "" {
 				m.Echo("please config user.email")
 				m.Action(CONFIGS)

@@ -26,12 +26,10 @@ func _runtime_init(m *ice.Message) {
 	m.Conf(RUNTIME, kit.Keys(HOST, PWD), kit.Path(""))
 	m.Conf(RUNTIME, kit.Keys(HOST, HOME), kit.Env(HOME))
 	m.Conf(RUNTIME, kit.Keys(HOST, MAXPROCS), runtime.GOMAXPROCS(0))
-	m.Conf(RUNTIME, mdb.META, "")
-	m.Conf(RUNTIME, mdb.HASH, "")
 	for _, k := range ENV_LIST {
 		switch m.Conf(RUNTIME, kit.Keys(CONF, k), kit.Env(k)); k {
 		case CTX_PID:
-			ice.Info.PidPath = kit.Select("var/run/ice.pid", kit.Env(k))
+			ice.Info.PidPath = kit.Select(path.Join(ice.VAR_RUN, "ice.pid"), kit.Env(k))
 		case CTX_SHARE:
 			ice.Info.CtxShare = kit.Env(k)
 		case CTX_RIVER:
@@ -53,6 +51,7 @@ func _runtime_init(m *ice.Message) {
 	aaa.UserRoot(ice.Pulse, ice.Info.UserName)
 	bin := _system_find(m, os.Args[0])
 	m.Conf(RUNTIME, kit.Keys(BOOT, ice.BIN), bin)
+	m.Conf(RUNTIME, kit.Keys(BOOT, mdb.TIME), m.Time())
 	if s, e := nfs.StatFile(m, bin); e == nil {
 		m.Conf(RUNTIME, kit.Keys(BOOT, nfs.SIZE), kit.FmtSize(s.Size()))
 		if f, e := nfs.OpenFile(m, bin); e == nil {
@@ -60,6 +59,8 @@ func _runtime_init(m *ice.Message) {
 			m.Conf(RUNTIME, kit.Keys(BOOT, mdb.HASH), kit.Hashs(f))
 		}
 	}
+	m.Conf(RUNTIME, mdb.META, "")
+	m.Conf(RUNTIME, mdb.HASH, "")
 	m.Conf(RUNTIME, kit.Keys(BOOT, mdb.COUNT), kit.Int(m.Conf(RUNTIME, kit.Keys(BOOT, mdb.COUNT)))+1)
 }
 func _runtime_hostinfo(m *ice.Message) {

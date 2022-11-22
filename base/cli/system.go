@@ -19,37 +19,32 @@ func _system_cmd(m *ice.Message, arg ...string) *exec.Cmd {
 	bin, env := "", kit.Simple(m.Optionv(CMD_ENV))
 	for i := 0; i < len(env)-1; i += 2 {
 		if env[i] == PATH {
-			if file := _system_find(m, arg[0], strings.Split(env[i+1], ice.DF)...); file != "" {
-				m.Logs(mdb.SELECT, "env path cmd", file)
-				bin = file
+			if bin = _system_find(m, arg[0], strings.Split(env[i+1], ice.DF)...); bin != "" {
+				m.Logs(mdb.SELECT, "env path cmd", bin)
 			}
 		}
 	}
 	if bin == "" {
 		if text := kit.ReadFile(ice.ETC_PATH); len(text) > 0 {
-			if file := _system_find(m, arg[0], strings.Split(text, ice.NL)...); file != "" {
-				m.Logs(mdb.SELECT, "etc path cmd", file)
-				bin = file
+			if bin = _system_find(m, arg[0], strings.Split(text, ice.NL)...); bin != "" {
+				m.Logs(mdb.SELECT, "etc path cmd", bin)
 			}
 		}
 	}
 	if bin == "" {
-		if file := _system_find(m, arg[0], ice.BIN, nfs.PWD); file != "" {
-			m.Logs(mdb.SELECT, "contexts cmd", file)
-			bin = file
+		if bin = _system_find(m, arg[0], ice.BIN, nfs.PWD); bin != "" {
+			m.Logs(mdb.SELECT, "contexts cmd", bin)
 		}
 	}
 	if bin == "" && !strings.Contains(arg[0], ice.PS) {
-		if file := _system_find(m, arg[0]); file != "" {
-			m.Logs(mdb.SELECT, "systems cmd", file)
-			bin = file
+		if bin = _system_find(m, arg[0]); bin != "" {
+			m.Logs(mdb.SELECT, "systems cmd", bin)
 		}
 	}
 	if bin == "" && !strings.Contains(arg[0], ice.PS) {
 		m.Cmd(MIRRORS, CMD, arg[0])
-		if file := _system_find(m, arg[0]); file != "" {
-			m.Logs(mdb.SELECT, "mirrors cmd", file)
-			bin = file
+		if bin = _system_find(m, arg[0]); bin != "" {
+			m.Logs(mdb.SELECT, "mirrors cmd", bin)
 		}
 	}
 	cmd := exec.Command(bin, arg[1:]...)
@@ -92,11 +87,7 @@ func _system_exec(m *ice.Message, cmd *exec.Cmd) {
 		err := bytes.NewBuffer(make([]byte, 0, ice.MOD_BUFS))
 		cmd.Stdout, cmd.Stderr = out, err
 		defer func() {
-			m.Push(CMD_OUT, out.String())
-			m.Push(CMD_ERR, err.String())
-			if IsSuccess(m) && err.String() == "" {
-				m.SetAppend()
-			}
+			m.Push(CMD_OUT, out.String()).Push(CMD_ERR, err.String())
 			m.Echo(strings.TrimRight(out.String(), ice.NL))
 		}()
 	}

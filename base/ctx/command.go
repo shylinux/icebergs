@@ -36,9 +36,7 @@ func _command_list(m *ice.Message, name string) {
 			if k[0] == '/' || k[0] == '_' {
 				continue
 			}
-			m.Push(mdb.KEY, k)
-			m.Push(mdb.NAME, v.Name)
-			m.Push(mdb.HELP, v.Help)
+			m.Push(mdb.KEY, k).Push(mdb.NAME, v.Name).Push(mdb.HELP, v.Help)
 		}
 		m.Sort(mdb.KEY)
 		return
@@ -95,17 +93,12 @@ func init() {
 					_command_search(m, arg[0], kit.Select("", arg, 1), kit.Select("", arg, 2))
 				}
 			}},
-			"tags": {Hand: func(m *ice.Message, arg ...string) {
+			mdb.EXPORT: {Hand: func(m *ice.Message, arg ...string) {
 				TravelCmd(m, func(key, file, line string) {
-					m.Push("name", key)
-					m.Push("file", file)
-					m.Push("line", line)
-				})
-				m.Sort("name")
-				m.Tables(func(value ice.Maps) {
-					m.Echo("%s\t%s\t%s;\" f\n", value["name"], value["file"], value["line"])
-				})
-				m.Cmd("nfs.save", "tags", m.Result())
+					m.Push(mdb.NAME, key).Push(nfs.FILE, file).Push(nfs.LINE, line)
+				}).Sort(mdb.NAME).Tables(func(value ice.Maps) {
+					m.Echo(`%s	%s	%s;" f`+ice.NL, value[mdb.NAME], value[nfs.FILE], value[nfs.LINE])
+				}).Cmd(nfs.SAVE, "tags", m.Result())
 			}},
 		}, aaa.RoleAction()), Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) == 0 {
@@ -130,7 +123,7 @@ func init() {
 			m.Cmd(CONFIG, mdb.REMOVE, cmd)
 			return true
 		case mdb.SELECT:
-			m.Cmdy(CONFIG, cmd)
+			ProcessFloat(m, CONFIG, cmd)
 			return true
 		default:
 			return false
@@ -178,7 +171,7 @@ func FileURI(dir string) string {
 		return ""
 	}
 	if strings.Contains(dir, "/go/pkg/mod/") {
-		return path.Join("/require", strings.Split(dir, "/go/pkg/mod/")[1])
+		return path.Join(ice.PS, ice.REQUIRE, strings.Split(dir, "/go/pkg/mod/")[1])
 	}
 	if ice.Info.Make.Path != "" && strings.HasPrefix(dir, ice.Info.Make.Path+ice.PS) {
 		dir = strings.TrimPrefix(dir, ice.Info.Make.Path+ice.PS)
@@ -187,13 +180,13 @@ func FileURI(dir string) string {
 		dir = strings.TrimPrefix(dir, kit.Path("")+ice.PS)
 	}
 	if strings.HasPrefix(dir, ice.USR) {
-		return path.Join("/require", dir)
+		return path.Join(ice.PS, ice.REQUIRE, dir)
 	}
 	if strings.HasPrefix(dir, ice.SRC) {
-		return path.Join("/require", dir)
+		return path.Join(ice.PS, ice.REQUIRE, dir)
 	}
 	if nfs.ExistsFile(ice.Pulse, path.Join(ice.SRC, dir)) {
-		return path.Join("/require/src/", dir)
+		return path.Join(ice.PS, ice.REQUIRE, ice.SRC, dir)
 	}
 	return dir
 }
@@ -205,17 +198,17 @@ func AddFileCmd(dir, key string) {
 }
 func GetFileCmd(dir string) string {
 	if strings.HasPrefix(dir, ice.ISH_PLUGED) {
-		dir = path.Join("/require", strings.TrimPrefix(dir, ice.ISH_PLUGED))
+		dir = path.Join(ice.PS, ice.REQUIRE, strings.TrimPrefix(dir, ice.ISH_PLUGED))
 	}
-	if strings.HasPrefix(dir, "require/") {
+	if strings.HasPrefix(dir, ice.REQUIRE+ice.PS) {
 		dir = ice.PS + dir
 	}
-	for _, dir := range []string{dir, path.Join("/require", ice.Info.Make.Module, dir), path.Join("/require", ice.Info.Make.Module, ice.SRC, dir)} {
+	for _, dir := range []string{dir, path.Join(ice.PS, ice.REQUIRE, ice.Info.Make.Module, dir), path.Join(ice.PS, ice.REQUIRE, ice.Info.Make.Module, ice.SRC, dir)} {
 		if cmd, ok := ice.Info.File[FileCmd(dir)]; ok {
 			return cmd
 		}
 		p := path.Dir(dir)
-		if cmd, ok := ice.Info.File[FileCmd(path.Join(p, path.Base(p)+".go"))]; ok {
+		if cmd, ok := ice.Info.File[FileCmd(path.Join(p, path.Base(p)+ice.PT+nfs.GO))]; ok {
 			return cmd
 		}
 	}
@@ -225,6 +218,7 @@ func GetCmdFile(m *ice.Message, cmds string) (file string) {
 	m.Search(cmds, func(key string, cmd *ice.Command) {
 		if cmd.RawHand == nil {
 			file = kit.Split(logs.FileLines(cmd.Hand), ice.DF)[0]
+			file = strings.TrimPrefix(file, kit.Path("")+ice.PS)
 		} else {
 			for k, v := range ice.Info.File {
 				if v == cmds {
@@ -236,16 +230,16 @@ func GetCmdFile(m *ice.Message, cmds string) (file string) {
 	})
 	return
 }
-func TravelCmd(m *ice.Message, cb func(key, file, line string)) {
+func TravelCmd(m *ice.Message, cb func(key, file, line string)) *ice.Message {
 	m.Travel(func(p *ice.Context, s *ice.Context, key string, cmd *ice.Command) {
 		if key[0] == '/' || key[0] == '_' {
 			return
 		}
-		ls := kit.Split(cmd.GetFileLine(), ice.DF)
-		if len(ls) > 1 {
+		if ls := kit.Split(cmd.GetFileLine(), ice.DF); len(ls) > 1 {
 			cb(kit.Keys(s.Cap(ice.CTX_FOLLOW), key), strings.TrimPrefix(ls[0], kit.Path("")+ice.PS), ls[1])
 		} else {
 			m.Warn(true, "not found", cmd.Name, cmd.GetFileLine())
 		}
 	})
+	return m
 }

@@ -162,14 +162,25 @@ func init() {
 		}},
 	})
 	ctx.AddRunChecker(func(m *ice.Message, cmd, check string, arg ...string) bool {
+		process := func(m *ice.Message, file string) {
+			ls, n := kit.Split(file, ice.PS), kit.Int(kit.Select("2", "1", strings.HasPrefix(file, ice.SRC+ice.PS)))
+			ctx.ProcessFloat(m, web.CODE_INNER, kit.Join(kit.Slice(ls, 0, n), ice.PS)+ice.PS, kit.Join(kit.Slice(ls, n), ice.PS))
+		}
 		switch check {
 		case nfs.SCRIPT:
 			if file := kit.ExtChange(ctx.GetCmdFile(m, cmd), nfs.JS); nfs.ExistsFile(m, file) {
-				ctx.ProcessFloat(m, web.CODE_INNER, file)
+				process(m, file)
+				return true
+			} else if strings.HasPrefix(file, path.Join(ice.USR_ICEBERGS, ice.CORE)) {
+				if file := strings.Replace(file, path.Join(ice.USR_ICEBERGS, ice.CORE), path.Join(ice.USR_VOLCANOS, "plugin/local"), 1); nfs.ExistsFile(m, file) {
+					process(m, file)
+					return true
+				}
 			}
 		case nfs.SOURCE:
 			if file := ctx.GetCmdFile(m, cmd); nfs.ExistsFile(m, file) {
-				ctx.ProcessFloat(m, web.CODE_INNER, file)
+				process(m, file)
+				return true
 			}
 		}
 		return false

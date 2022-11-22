@@ -48,7 +48,7 @@ func DisplayLocal(m *ice.Message, file string, arg ...ice.Any) *ice.Message {
 	return DisplayBase(m, file, arg...)
 }
 func DisplayBase(m *ice.Message, file string, arg ...ice.Any) *ice.Message {
-	m.Option(ice.MSG_DISPLAY, kit.MergeURL(kit.ExtChange(file, nfs.JS), arg...))
+	m.Option(ice.MSG_DISPLAY, kit.MergeURL(kit.Select(kit.ExtChange(file, nfs.JS), file, strings.Contains(file, "?")), arg...))
 	return m
 }
 func Toolkit(m *ice.Message, arg ...string) {

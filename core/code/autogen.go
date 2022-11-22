@@ -136,7 +136,7 @@ func _autogen_git(m *ice.Message, arg ...string) ice.Map {
 		"Remote", strings.TrimSpace(m.Cmdx(cli.SYSTEM, GIT, "config", "remote.origin.url")),
 		"Branch", strings.TrimSpace(m.Cmdx(cli.SYSTEM, GIT, "rev-parse", "--abbrev-ref", "HEAD")),
 		"Version", strings.TrimSpace(m.Cmdx(cli.SYSTEM, GIT, "describe", "--tags")),
-		"Domain", m.Option(ice.MSG_USERWEB),
+		"Domain", kit.Split(m.Option(ice.MSG_USERWEB), "?")[0],
 	)
 }
 func _autogen_mod(m *ice.Message, file string) (mod string) {

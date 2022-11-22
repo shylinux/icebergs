@@ -12,7 +12,7 @@ import (
 	"shylinux.com/x/toolkits/logs"
 )
 
-func _command_list(m *ice.Message, name string) {
+func _command_list(m *ice.Message, name string) *ice.Message {
 	if nfs.ExistsFile(m, path.Join(ice.SRC, name)) {
 		switch kit.Ext(name) {
 		case nfs.JS:
@@ -28,8 +28,7 @@ func _command_list(m *ice.Message, name string) {
 		}
 	}
 	if strings.HasPrefix(name, "can.") {
-		m.Push(mdb.INDEX, name)
-		return
+		return m.Push(mdb.INDEX, name)
 	}
 	if name == "" {
 		for k, v := range m.Source().Commands {
@@ -38,8 +37,7 @@ func _command_list(m *ice.Message, name string) {
 			}
 			m.Push(mdb.KEY, k).Push(mdb.NAME, v.Name).Push(mdb.HELP, v.Help)
 		}
-		m.Sort(mdb.KEY)
-		return
+		return m.Sort(mdb.KEY)
 	}
 	m.Spawn(m.Source()).Search(name, func(p *ice.Context, s *ice.Context, key string, cmd *ice.Command) {
 		m.Push(mdb.INDEX, kit.Keys(s.Cap(ice.CTX_FOLLOW), key))
@@ -48,6 +46,7 @@ func _command_list(m *ice.Message, name string) {
 		m.Push(mdb.META, kit.Format(cmd.Meta))
 		m.Push(mdb.LIST, kit.Format(cmd.List))
 	})
+	return m
 }
 func _command_search(m *ice.Message, kind, name, text string) {
 	m.Travel(func(p *ice.Context, s *ice.Context, key string, cmd *ice.Command) {
@@ -113,9 +112,7 @@ func init() {
 
 var runChecker = []func(*ice.Message, string, string, ...string) bool{}
 
-func AddRunChecker(cb func(*ice.Message, string, string, ...string) bool) {
-	runChecker = append(runChecker, cb)
-}
+func AddRunChecker(cb func(*ice.Message, string, string, ...string) bool) { runChecker = append(runChecker, cb) }
 func init() {
 	AddRunChecker(func(m *ice.Message, cmd, sub string, arg ...string) bool {
 		switch sub {
@@ -152,9 +149,7 @@ func PodCmd(m *ice.Message, arg ...ice.Any) bool {
 	}
 	return false
 }
-func CmdHandler(args ...ice.Any) ice.Handler {
-	return func(m *ice.Message, arg ...string) { m.Cmdy(args...) }
-}
+func CmdHandler(args ...ice.Any) ice.Handler { return func(m *ice.Message, arg ...string) { m.Cmdy(args...) } }
 func CmdAction(args ...ice.Any) ice.Actions {
 	return ice.Actions{ice.CTX_INIT: mdb.AutoConfig(args...),
 		COMMAND: {Hand: func(m *ice.Message, arg ...string) {
@@ -190,12 +185,9 @@ func FileURI(dir string) string {
 	}
 	return dir
 }
-func FileCmd(dir string) string {
-	return FileURI(kit.ExtChange(strings.Split(dir, ice.DF)[0], nfs.GO))
-}
-func AddFileCmd(dir, key string) {
-	ice.Info.File[FileCmd(dir)] = key
-}
+func FileCmd(dir string) string { return FileURI(kit.ExtChange(strings.Split(dir, ice.DF)[0], nfs.GO)) }
+func AddFileCmd(dir, key string) { ice.Info.File[FileCmd(dir)] = key }
+func IsOrderCmd(key string) { return key[0] == '/' || key[0] == '_' }
 func GetFileCmd(dir string) string {
 	if strings.HasPrefix(dir, ice.ISH_PLUGED) {
 		dir = path.Join(ice.PS, ice.REQUIRE, strings.TrimPrefix(dir, ice.ISH_PLUGED))
@@ -216,23 +208,23 @@ func GetFileCmd(dir string) string {
 }
 func GetCmdFile(m *ice.Message, cmds string) (file string) {
 	m.Search(cmds, func(key string, cmd *ice.Command) {
-		if cmd.RawHand == nil {
-			file = kit.Split(logs.FileLines(cmd.Hand), ice.DF)[0]
-			file = strings.TrimPrefix(file, kit.Path("")+ice.PS)
-		} else {
+		if cmd.RawHand != nil {
 			for k, v := range ice.Info.File {
 				if v == cmds {
 					file = strings.Replace(k, "/require/", ice.ISH_PLUGED, 1)
 					break
 				}
 			}
+		} else {
+			file = kit.Split(logs.FileLines(cmd.Hand), ice.DF)[0]
+			file = strings.TrimPrefix(file, kit.Path("")+ice.PS)
 		}
 	})
 	return
 }
 func TravelCmd(m *ice.Message, cb func(key, file, line string)) *ice.Message {
 	m.Travel(func(p *ice.Context, s *ice.Context, key string, cmd *ice.Command) {
-		if key[0] == '/' || key[0] == '_' {
+		if IsOrderCmd(key) {
 			return
 		}
 		if ls := kit.Split(cmd.GetFileLine(), ice.DF); len(ls) > 1 {

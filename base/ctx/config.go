@@ -64,12 +64,10 @@ func _config_make(m *ice.Message, key string, arg ...string) {
 }
 func _config_list(m *ice.Message) {
 	for k, v := range m.Source().Configs {
-		if k[0] == '/' || k[0] == '_' {
+		if IsOrderCmd(key) {
 			continue
 		}
-		m.Push(mdb.KEY, k)
-		m.Push(mdb.NAME, v.Name)
-		m.Push(mdb.VALUE, kit.Format(v.Value))
+		m.Push(mdb.KEY, k).Push(mdb.NAME, v.Name).Push(mdb.VALUE, kit.Format(v.Value))
 	}
 	m.Sort(mdb.KEY)
 }
@@ -83,18 +81,14 @@ const CONFIG = "config"
 func init() {
 	Index.MergeCommands(ice.Commands{
 		CONFIG: {Name: "config key auto", Help: "配置", Actions: ice.Actions{
-			SAVE: {Hand: func(m *ice.Message, arg ...string) {
-				_config_save(m, arg[0], arg[1:]...)
-			}},
-			LOAD: {Hand: func(m *ice.Message, arg ...string) {
-				_config_load(m, arg[0], arg[1:]...)
-			}},
+			SAVE: {Hand: func(m *ice.Message, arg ...string) { _config_save(m, arg[0], arg[1:]...) }},
+			LOAD: {Hand: func(m *ice.Message, arg ...string) { _config_load(m, arg[0], arg[1:]...) }},
 			"list": {Hand: func(m *ice.Message, arg ...string) {
 				list := []ice.Any{}
 				for _, v := range arg[2:] {
 					list = append(list, v)
 				}
-				m.Confv(arg[0], arg[1], kit.List(list...))
+				m.Confv(arg[0], arg[1], list)
 			}},
 			mdb.REMOVE: {Name: "remove key sub", Hand: func(m *ice.Message, arg ...string) {
 				m.Conf(m.Option("key"), m.Option("sub"), "")
@@ -103,10 +97,10 @@ func init() {
 		}, Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) == 0 {
 				_config_list(m)
-				return
+			} else {
+				_config_make(m, arg[0], arg[1:]...)
+				DisplayStoryJSON(m)
 			}
-			_config_make(m, arg[0], arg[1:]...)
-			DisplayStoryJSON(m)
 		}},
 	})
 }
@@ -139,14 +133,14 @@ func Load(m *ice.Message, arg ...string) *ice.Message {
 func ConfAction(args ...ice.Any) ice.Actions {
 	return ice.Actions{ice.CTX_INIT: mdb.AutoConfig(args...)}
 }
-func ConfigFromOption(m *ice.Message, arg ...string) {
-	for _, k := range arg {
-		m.Config(k, kit.Select(m.Config(k), m.Option(k)))
-	}
-}
 func ConfigAuto(m *ice.Message, arg ...string) {
 	if cs := m.Target().Configs; cs[m.CommandKey()] == nil {
 		cs[m.CommandKey()] = &ice.Config{Value: kit.Data()}
 		ice.Info.Load(m, m.CommandKey())
+	}
+}
+func ConfigFromOption(m *ice.Message, arg ...string) {
+	for _, k := range arg {
+		m.Config(k, kit.Select(m.Config(k), m.Option(k)))
 	}
 }

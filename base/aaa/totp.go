@@ -28,7 +28,7 @@ func _totp_get(key string, num int, per int64) string {
 		buf = append(buf, byte((uint64(now) >> uint64(((7 - i) * 8)))))
 	}
 	if l := len(key) % 8; l != 0 {
-		key += strings.Repeat("=", 8-l)
+		key += strings.Repeat(ice.EQ, 8-l)
 	}
 	s, _ := base32.StdEncoding.DecodeString(strings.ToUpper(key))
 	hm := hmac.New(sha1.New, s)

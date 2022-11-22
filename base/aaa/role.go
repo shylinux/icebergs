@@ -14,19 +14,18 @@ func _role_chain(arg ...string) string {
 	key := path.Join(strings.ReplaceAll(kit.Keys(arg), ice.PT, ice.PS))
 	return strings.TrimPrefix(strings.TrimSuffix(strings.ReplaceAll(key, ice.PS, ice.PT), ice.PT), ice.PT)
 }
-func _role_black(m *ice.Message, userrole, chain string) {
-	m.Logs(mdb.INSERT, ROLE, userrole, BLACK, chain)
+func _role_set(m *ice.Message, userrole, zone, chain string, status bool) {
+	m.Logs(mdb.INSERT, ROLE, userrole, zone, chain)
 	mdb.HashSelectUpdate(m, userrole, func(value ice.Map) {
-		black := value[BLACK].(ice.Map)
-		black[chain] = true
+		black := value[zone].(ice.Map)
+		black[chain] = status
 	})
 }
+func _role_black(m *ice.Message, userrole, chain string) {
+	_role_set(m, userrole, BLACK, chain, true)
+}
 func _role_white(m *ice.Message, userrole, chain string) {
-	m.Logs(mdb.INSERT, ROLE, userrole, WHITE, chain)
-	mdb.HashSelectUpdate(m, userrole, func(value ice.Map) {
-		white := value[WHITE].(ice.Map)
-		white[chain] = true
-	})
+	_role_set(m, userrole, WHITE, chain, true)
 }
 func _role_check(value ice.Map, keys []string, ok bool) bool {
 	white := value[WHITE].(ice.Map)
@@ -48,7 +47,7 @@ func _role_right(m *ice.Message, userrole string, keys ...string) (ok bool) {
 	mdb.HashSelectDetail(m, kit.Select(VOID, userrole), func(value ice.Map) {
 		ok = _role_check(value, keys, userrole == TECH)
 	})
-	return ok
+	return
 }
 func _role_list(m *ice.Message, userrole string) *ice.Message {
 	mdb.HashSelectDetail(m, kit.Select(VOID, userrole), func(value ice.Map) {
@@ -90,18 +89,10 @@ func init() {
 				}
 			}},
 			mdb.INSERT: {Name: "insert role=void,tech zone=white,black key", Hand: func(m *ice.Message, arg ...string) {
-				m.Logs(mdb.INSERT, ROLE, m.Option(ROLE), m.Option(mdb.ZONE), m.Option(mdb.KEY))
-				mdb.HashSelectUpdate(m, m.Option(ROLE), func(key string, value ice.Map) {
-					list := value[m.Option(mdb.ZONE)].(ice.Map)
-					list[_role_chain(m.Option(mdb.KEY))] = true
-				})
+				_role_set(m, m.Option(ROLE), m.Option(mdb.ZONE), m.Option(mdb.KEY), true)
 			}},
 			mdb.DELETE: {Hand: func(m *ice.Message, arg ...string) {
-				m.Logs(mdb.DELETE, ROLE, m.Option(ROLE), m.Option(mdb.ZONE), m.Option(mdb.KEY))
-				mdb.HashSelectUpdate(m, m.Option(ROLE), func(key string, value ice.Map) {
-					list := value[m.Option(mdb.ZONE)].(ice.Map)
-					list[_role_chain(m.Option(mdb.KEY))] = false
-				})
+				_role_set(m, m.Option(ROLE), m.Option(mdb.ZONE), m.Option(mdb.KEY), false)
 			}},
 			BLACK: {Name: "black role chain", Help: "黑名单", Hand: func(m *ice.Message, arg ...string) {
 				_role_black(m, arg[0], _role_chain(arg[1:]...))
@@ -129,7 +120,10 @@ func RoleRight(m *ice.Message, userrole string, arg ...string) bool {
 }
 func RoleAction(cmds ...string) ice.Actions {
 	return ice.Actions{ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
-		m.Cmd(ROLE, WHITE, VOID, m.CommandKey())
+		if c, ok := ice.Info.Index[m.CommandKey()].(*ice.Context); ok && c == m.Target() {
+			m.Cmd(ROLE, WHITE, VOID, m.CommandKey())
+			m.Cmd(ROLE, BLACK, VOID, m.CommandKey(), ice.ACTION)
+		}
 		m.Cmd(ROLE, WHITE, VOID, m.PrefixKey())
 		m.Cmd(ROLE, BLACK, VOID, m.PrefixKey(), ice.ACTION)
 		for _, cmd := range cmds {

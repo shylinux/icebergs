@@ -37,7 +37,6 @@ const (
 	AVATAR = "avatar"
 	GENDER = "gender"
 	MOBILE = "mobile"
-	EMAIL  = "email"
 
 	CITY     = "city"
 	COUNTRY  = "country"

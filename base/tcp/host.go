@@ -83,6 +83,12 @@ func init() {
 				m.Logs(mdb.CREATE, aaa.WHITE, arg[0])
 				mdb.Rich(m, HOST, kit.Keym(aaa.WHITE), kit.Dict(mdb.TEXT, arg[0]))
 			}},
+			"replace": {Name: "replace", Hand: func(m *ice.Message, arg ...string) {
+				if strings.Contains(arg[0], "://"+LOCALHOST) {
+					arg[0] = strings.Replace(arg[0], "://"+LOCALHOST, "://"+m.Cmd("").Append(aaa.IP), 1)
+				}
+				m.Echo(arg[0])
+			}},
 		}, mdb.HashAction(aaa.BLACK, kit.Data(mdb.SHORT, mdb.TEXT), aaa.WHITE, kit.Data(mdb.SHORT, mdb.TEXT))), Hand: func(m *ice.Message, arg ...string) {
 			_host_list(m, kit.Select("", arg, 0))
 		}},

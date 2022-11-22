@@ -76,6 +76,10 @@ func init() {
 			if m.Warn(m.Option(ice.MSG_USERNAME) == "", ice.ErrNotLogin, arg) {
 				return
 			}
+			if len(arg) == 0 {
+				_action_share(m, m.Option("share"))
+				return
+			}
 			if m.Option(ice.MSG_USERPOD) == "" && m.Warn(!_river_right(m, arg[0]), ice.ErrNotRight, arg) {
 				return
 			}

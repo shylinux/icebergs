@@ -20,7 +20,6 @@ func _sess_create(m *ice.Message, username string) (h string) {
 }
 func _sess_check(m *ice.Message, sessid string) {
 	m.Assert(sessid != "")
-
 	val := kit.Dict()
 	mdb.HashSelectDetail(m, sessid, func(value ice.Map) {
 		if !m.WarnTimeNotValid(value[mdb.TIME], sessid) {

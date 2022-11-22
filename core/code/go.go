@@ -150,6 +150,17 @@ func init() {
 				}
 				_go_complete(m, arg...)
 			}},
+			TEMPLATE: {Hand: func(m *ice.Message, arg ...string) {
+				switch arg[0] {
+				case nfs.GO:
+					m.Echo(`package %s
+
+func init() {
+	
+}
+`, path.Base(path.Dir(path.Join(arg[2], arg[1]))))
+				}
+			}},
 			NAVIGATE: {Hand: func(m *ice.Message, arg ...string) {
 				_c_tags(m, GODOC, "gotags", "-f", nfs.TAGS, "-R", nfs.PWD)
 			}},

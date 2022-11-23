@@ -20,19 +20,14 @@ func _signal_listen(m *ice.Message, s int, arg ...string) {
 	}
 }
 func _signal_action(m *ice.Message, arg ...string) {
-	mdb.HashSelect(m.Spawn(), arg...).Tables(func(value ice.Maps) {
-		m.Cmdy(kit.Split(value[ice.CMD]))
-	})
+	mdb.HashSelect(m.Spawn(), arg...).Tables(func(value ice.Maps) { m.Cmdy(kit.Split(value[ice.CMD])) })
 }
 func _signal_process(m *ice.Message, p string, s os.Signal) {
 	if p == "" {
 		b, _ := file.ReadFile(ice.Info.PidPath)
 		p = string(b)
 	}
-	if p == "" {
-		p = kit.Format(os.Getpid())
-	}
-	if p, e := os.FindProcess(kit.Int(p)); e == nil {
+	if p, e := os.FindProcess(kit.Int(kit.Select(kit.Format(os.Getpid()), p))); e == nil {
 		p.Signal(s)
 	}
 }

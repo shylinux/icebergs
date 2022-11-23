@@ -17,7 +17,7 @@ func _split_tab(text string) (tab int) {
 		case ' ':
 			tab++
 		default:
-			return
+			break
 		}
 	}
 	return
@@ -38,27 +38,22 @@ func _split_list(m *ice.Message, file string, arg ...string) ice.Map {
 	list, line := kit.List(kit.Data(DEEP, -1)), ""
 	m.Cmd(nfs.CAT, file, func(text string) {
 		if strings.TrimSpace(text) == "" {
-			return // 空行
+			return
 		}
 		if line += text; strings.Count(text, "`")%2 == 1 {
-			return // 多行
+			return
 		}
 		if strings.HasPrefix(strings.TrimSpace(text), "# ") {
-			return // 注释
+			return
 		}
-
 		stack, deep = _split_deep(stack, text)
 		data := kit.Data(DEEP, deep)
-
-		// 回调函数
 		ls := kit.Split(text, m.Option(SPLIT_SPACE), m.Option(SPLIT_BLOCK), m.Option(SPLIT_QUOTE), m.Option(SPLIT_TRANS))
 		switch cb := m.OptionCB(SPLIT).(type) {
 		case func(int, []string):
 			cb(deep, ls)
 		case func(int, []string) []string:
 			ls = cb(deep, ls)
-		case func(int, []string, ice.Map, ice.List):
-
 		case func(int, []string, ice.Map, ice.Map):
 			root, _ := kit.Value(list[0], "list.0").(ice.Map)
 			cb(deep, ls, data, root)
@@ -66,28 +61,22 @@ func _split_list(m *ice.Message, file string, arg ...string) ice.Map {
 			ls = cb(deep, ls, data)
 		case func([]string, ice.Map) []string:
 			ls = cb(ls, data)
-		case func([]string):
-			cb(ls)
 		case func([]string) []string:
 			ls = cb(ls)
+		case func([]string):
+			cb(ls)
 		case nil:
 		default:
 			m.ErrorNotImplement(cb)
 		}
-
-		// 参数字段
 		for _, k := range arg {
 			if kit.Value(data, kit.Keym(k), kit.Select("", ls, 0)); len(ls) > 0 {
 				ls = ls[1:]
 			}
 		}
-
-		// 属性字段
 		for i := 0; i < len(ls)-1; i += 2 {
 			kit.Value(data, kit.Keym(ls[i]), ls[i+1])
 		}
-
-		// 查找节点
 		for i := len(list) - 1; i >= 0; i-- {
 			if deep > kit.Int(kit.Value(list[i], kit.Keym(DEEP))) {
 				kit.Value(list[i], kit.Keys(mdb.LIST, "-2"), data)
@@ -120,7 +109,6 @@ func init() {
 		}},
 	})
 }
-
 func Split(m *ice.Message, arg ...string) ice.Map {
 	return kit.Value(_split_list(m, arg[0], arg[1:]...), kit.Keys(mdb.LIST, "0")).(ice.Map)
 }

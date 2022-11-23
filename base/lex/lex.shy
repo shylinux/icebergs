@@ -1,4 +1,0 @@
-chapter "lex"
-
-field "分词" lex.split
-

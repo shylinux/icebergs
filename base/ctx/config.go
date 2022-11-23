@@ -64,7 +64,7 @@ func _config_make(m *ice.Message, key string, arg ...string) {
 }
 func _config_list(m *ice.Message) {
 	for k, v := range m.Source().Configs {
-		if IsOrderCmd(key) {
+		if IsOrderCmd(k) {
 			continue
 		}
 		m.Push(mdb.KEY, k).Push(mdb.NAME, v.Name).Push(mdb.VALUE, kit.Format(v.Value))

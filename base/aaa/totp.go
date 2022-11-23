@@ -71,8 +71,9 @@ func init() {
 				if len(arg) > 0 {
 					m.PushQRCode(mdb.SCAN, kit.Format(m.Config(mdb.LINK), value[mdb.NAME], value[SECRET]))
 					m.Echo(_totp_get(value[SECRET], kit.Int(value[NUMBER]), kit.Int64(value[PERIOD])))
+				} else {
+					m.StatusTimeCount()
 				}
-				m.StatusTimeCount()
 			})
 		}},
 	})

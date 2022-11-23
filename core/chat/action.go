@@ -72,12 +72,8 @@ func init() {
 				m.Cmdy(mdb.MODIFY, RIVER, _storm_key(m), mdb.LIST, m.OptionSimple(mdb.ID), arg)
 			}},
 			web.SHARE: {Hand: func(m *ice.Message, arg ...string) { _action_share(m, arg...) }},
-		}, ctx.CmdAction(), aaa.WhiteAction(ctx.COMMAND, ice.RUN)), Hand: func(m *ice.Message, arg ...string) {
+		}, ctx.CmdAction(), aaa.WhiteAction(web.SHARE, ctx.COMMAND, ice.RUN)), Hand: func(m *ice.Message, arg ...string) {
 			if m.Warn(m.Option(ice.MSG_USERNAME) == "", ice.ErrNotLogin, arg) {
-				return
-			}
-			if len(arg) == 0 {
-				_action_share(m, m.Option("share"))
 				return
 			}
 			if m.Option(ice.MSG_USERPOD) == "" && m.Warn(!_river_right(m, arg[0]), ice.ErrNotRight, arg) {

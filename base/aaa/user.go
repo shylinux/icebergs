@@ -24,11 +24,15 @@ func _user_login(m *ice.Message, name, word string) {
 	if m.Warn(name == "", ice.ErrNotValid, name) {
 		return
 	}
-	mdb.HashSelectDetail(m.Spawn(), name, func(value ice.Map) {
+	if val := kit.Dict(); mdb.HashSelectDetail(m.Spawn(), name, func(value ice.Map) {
 		if !m.Warn(word != "" && word != kit.Format(value[PASSWORD]), ice.ErrNotValid) {
-			SessAuth(m, value)
+			for k, v := range value {
+				val[k] = v
+			}
 		}
-	})
+	}) && len(val) > 0 {
+		SessAuth(m, val)
+	}
 }
 
 const (
@@ -51,8 +55,6 @@ const (
 	USERROLE = "userrole"
 
 	USER_CREATE = "user.create"
-
-	INVITE = "invite"
 )
 const USER = "user"
 
@@ -91,17 +93,15 @@ func UserRole(m *ice.Message, username ice.Any) (role string) {
 	return UserInfo(m, username, USERROLE, ice.MSG_USERROLE)
 }
 func UserLogin(m *ice.Message, username, password string) bool {
-	m.Option(ice.MSG_USERROLE, VOID)
-	m.Option(ice.MSG_USERNAME, "")
-	m.Option(ice.MSG_USERNICK, "")
+	m.Options(ice.MSG_USERNAME, "", ice.MSG_USERNICK, "", ice.MSG_USERROLE, VOID)
 	return m.Cmdy(USER, LOGIN, username, password).Option(ice.MSG_USERNAME) != ""
 }
 func UserRoot(m *ice.Message, arg ...string) *ice.Message {
-	username := m.Option(ice.MSG_USERNAME, kit.Select(ice.Info.UserName, arg, 1))
-	usernick := m.Option(ice.MSG_USERNICK, kit.Select(UserNick(m, username), arg, 2))
-	userrole := m.Option(ice.MSG_USERROLE, kit.Select(ROOT, arg, 3))
+	username := m.Option(ice.MSG_USERNAME, kit.Select(ice.Info.UserName, arg, 0))
+	usernick := m.Option(ice.MSG_USERNICK, kit.Select(UserNick(m, username), arg, 1))
+	userrole := m.Option(ice.MSG_USERROLE, kit.Select(ROOT, arg, 2))
 	if len(arg) > 0 {
-		m.Cmd(USER, mdb.CREATE, username, kit.Select("", arg, 0), usernick, "", userrole)
+		m.Cmd(USER, mdb.CREATE, username, "", usernick, "", userrole)
 		ice.Info.UserName = username
 	}
 	return m

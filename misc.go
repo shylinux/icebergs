@@ -350,6 +350,7 @@ func MergeActions(arg ...Any) Actions {
 func SplitCmd(name string, actions Actions) (list []Any) {
 	const (
 		TEXT     = "text"
+		CONTENT  = "content"
 		TEXTAREA = "textarea"
 		PASSWORD = "password"
 		SELECT   = "select"
@@ -387,7 +388,7 @@ func SplitCmd(name string, actions Actions) (list []Any) {
 			push(TEXT, "offend")
 			push(BUTTON, "prev")
 			push(BUTTON, "next")
-		case ARGS, TEXT, TEXTAREA:
+		case ARGS, TEXT, TEXTAREA, CONTENT:
 			push(TEXTAREA, ls[i])
 		case PASSWORD:
 			push(PASSWORD, ls[i])

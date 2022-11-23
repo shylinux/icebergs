@@ -89,7 +89,7 @@ func _serve_start(m *ice.Message) {
 	if cli.NodeInfo(m, SERVER, kit.Select(ice.Info.HostName, m.Option("nodename"))); m.Option(tcp.PORT) == tcp.RANDOM {
 		m.Option(tcp.PORT, m.Cmdx(tcp.PORT, aaa.RIGHT))
 	}
-	aaa.UserRoot(m, m.Option(aaa.PASSWORD), m.Option(aaa.USERNAME), m.Option(aaa.USERNICK))
+	aaa.UserRoot(m, m.Option(aaa.USERNAME), m.Option(aaa.USERNICK))
 
 	m.Target().Start(m, m.OptionSimple(tcp.HOST, tcp.PORT)...)
 	m.Go(func() { m.Cmd(BROAD, SERVE) })
@@ -360,7 +360,7 @@ func init() {
 					ctx.DisplayStorySpide(m, lex.PREFIX, m.ActionKey(), nfs.ROOT, MergeLink(m, ice.PS))
 				}
 			}},
-			cli.START: {Name: "start dev proto=http host port=9020 nodename password username usernick", Help: "启动", Hand: func(m *ice.Message, arg ...string) {
+			cli.START: {Name: "start dev proto=http host port=9020 nodename username usernick", Hand: func(m *ice.Message, arg ...string) {
 				_serve_start(m)
 			}},
 		}, mdb.HashAction())},

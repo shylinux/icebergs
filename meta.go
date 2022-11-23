@@ -393,8 +393,18 @@ func (m *Message) Detailv(arg ...Any) []string {
 	return m.meta[MSG_DETAIL]
 }
 func (m *Message) Options(arg ...Any) Any {
-	for i := 0; i < len(arg)-1; i += 2 {
-		m.Optionv(kit.Format(arg[i]), arg[i+1])
+	for i := 0; i < len(arg); i += 2 {
+		switch val := arg[i].(type) {
+		case []string:
+			for i := 0; i < len(val) - 1; i += 2 {
+				m.Optionv(val[i], val[i+1])
+			}
+			i--
+			continue
+		}
+		if i+1 < len(arg) {
+			m.Optionv(kit.Format(arg[i]), arg[i+1])
+		}
 	}
 	return m.Optionv(kit.Format(arg[0]))
 }

@@ -187,7 +187,7 @@ func FileURI(dir string) string {
 }
 func FileCmd(dir string) string { return FileURI(kit.ExtChange(strings.Split(dir, ice.DF)[0], nfs.GO)) }
 func AddFileCmd(dir, key string) { ice.Info.File[FileCmd(dir)] = key }
-func IsOrderCmd(key string) { return key[0] == '/' || key[0] == '_' }
+func IsOrderCmd(key string) bool { return key[0] == '/' || key[0] == '_' }
 func GetFileCmd(dir string) string {
 	if strings.HasPrefix(dir, ice.ISH_PLUGED) {
 		dir = path.Join(ice.PS, ice.REQUIRE, strings.TrimPrefix(dir, ice.ISH_PLUGED))

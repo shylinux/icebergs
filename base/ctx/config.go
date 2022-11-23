@@ -51,7 +51,7 @@ func _config_load(m *ice.Message, name string, arg ...string) {
 func _config_make(m *ice.Message, key string, arg ...string) {
 	msg := m.Spawn(m.Source())
 	if len(arg) > 1 {
-		if strings.HasPrefix(arg[1], "@") {
+		if strings.HasPrefix(arg[1], ice.AT) {
 			arg[1] = msg.Cmdx(nfs.CAT, arg[1][1:])
 		}
 		msg.Confv(key, arg[0], kit.Parse(nil, "", arg[1:]...))
@@ -83,7 +83,7 @@ func init() {
 		CONFIG: {Name: "config key auto", Help: "配置", Actions: ice.Actions{
 			SAVE: {Hand: func(m *ice.Message, arg ...string) { _config_save(m, arg[0], arg[1:]...) }},
 			LOAD: {Hand: func(m *ice.Message, arg ...string) { _config_load(m, arg[0], arg[1:]...) }},
-			"list": {Hand: func(m *ice.Message, arg ...string) {
+			mdb.LIST: {Hand: func(m *ice.Message, arg ...string) {
 				list := []ice.Any{}
 				for _, v := range arg[2:] {
 					list = append(list, v)
@@ -102,6 +102,19 @@ func init() {
 				DisplayStoryJSON(m)
 			}
 		}},
+	})
+}
+func init() {
+	AddRunChecker(func(m *ice.Message, cmd, sub string, arg ...string) bool {
+		switch sub {
+		case mdb.SELECT:
+			ProcessFloat(m, CONFIG, cmd)
+		case mdb.REMOVE:
+			m.Cmd(CONFIG, mdb.REMOVE, cmd)
+		default:
+			return false
+		}
+		return true
 	})
 }
 func init() {

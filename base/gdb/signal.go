@@ -41,20 +41,17 @@ const (
 	PID = "pid"
 )
 const (
-	LISTEN = "listen"
-	HAPPEN = "happen"
-
+	ERROR   = "error"
 	START   = "start"
 	RESTART = "restart"
 	STOP    = "stop"
-	ERROR   = "error"
 	KILL    = "kill"
 )
 const SIGNAL = "signal"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
-		SIGNAL: {Name: "signal signal auto listen", Help: "信号器", Actions: ice.MergeActions(ice.Actions{
+		SIGNAL: {Name: "signal signal auto listen", Help: "信号量", Actions: ice.MergeActions(ice.Actions{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
 				_signal_listen(m, 2, mdb.NAME, "重启", ice.CMD, "exit 1")
 				_signal_listen(m, 3, mdb.NAME, "退出", ice.CMD, "exit 0")
@@ -70,13 +67,13 @@ func init() {
 			HAPPEN: {Name: "happen signal", Help: "触发", Hand: func(m *ice.Message, arg ...string) {
 				_signal_action(m, m.Option(SIGNAL))
 			}},
-			RESTART: {Name: "restart pid", Help: "触发", Hand: func(m *ice.Message, arg ...string) {
+			RESTART: {Name: "restart pid", Help: "重启", Hand: func(m *ice.Message, arg ...string) {
 				_signal_process(m, m.Option(PID), syscall.SIGINT)
 			}},
-			STOP: {Name: "stop pid", Help: "触发", Hand: func(m *ice.Message, arg ...string) {
+			STOP: {Name: "stop pid", Help: "停止", Hand: func(m *ice.Message, arg ...string) {
 				_signal_process(m, m.Option(PID), syscall.SIGQUIT)
 			}},
-			KILL: {Name: "kill pid signal", Help: "触发", Hand: func(m *ice.Message, arg ...string) {
+			KILL: {Name: "kill pid signal", Help: "结束", Hand: func(m *ice.Message, arg ...string) {
 				_signal_process(m, m.Option(PID), syscall.Signal(kit.Int(kit.Select("9", m.Option(SIGNAL)))))
 			}},
 		}, mdb.HashAction(mdb.SHORT, SIGNAL, mdb.FIELD, "time,signal,name,cmd", mdb.ACTION, HAPPEN)), Hand: func(m *ice.Message, arg ...string) {

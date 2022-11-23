@@ -11,7 +11,6 @@ const PROCESS = "process"
 var _process = map[string]ice.Any{}
 
 func AddProcess(key string, val ice.Any) { _process[key] = val }
-
 func Process(m *ice.Message, key string, args []string, arg ...string) {
 	switch cb := _process[key].(type) {
 	case func(*ice.Message, []string, ...string):
@@ -30,11 +29,10 @@ func Process(m *ice.Message, key string, args []string, arg ...string) {
 func ProcessCommand(m *ice.Message, cmd string, val []string, arg ...string) {
 	if len(arg) > 0 && arg[0] == ice.RUN {
 		m.Cmdy(cmd, arg[1:])
-		return
+	} else {
+		m.Cmdy(COMMAND, cmd).Push(ice.ARG, kit.Format(val))
+		m.ProcessField(cmd, ice.RUN)
 	}
-	m.Cmdy(COMMAND, cmd)
-	m.ProcessField(cmd, ice.RUN)
-	m.Push(ice.ARG, kit.Format(val))
 }
 func ProcessCommandOpt(m *ice.Message, arg []string, args ...string) {
 	if len(arg) > 0 && arg[0] == ice.RUN {
@@ -43,16 +41,15 @@ func ProcessCommandOpt(m *ice.Message, arg []string, args ...string) {
 	m.Push("opt", kit.Format(m.OptionSimple(args...)))
 }
 func ProcessField(m *ice.Message, cmd string, args []string, arg ...string) {
-	cmd = kit.Select(m.PrefixKey(), cmd)
-	if len(arg) == 0 || arg[0] != ice.RUN {
+	if cmd = kit.Select(m.PrefixKey(), cmd); len(arg) == 0 || arg[0] == ice.RUN {
 		m.Option("_index", m.PrefixKey())
 		if m.Cmdy(COMMAND, cmd).ProcessField(ACTION, m.ActionKey(), ice.RUN); len(args) > 0 {
 			m.Push(ARGS, kit.Format(args))
 		}
-		return
-	}
-	if aaa.Right(m, cmd, arg[1:]) {
-		m.Cmdy(cmd, arg[1:])
+	} else {
+		if aaa.Right(m, cmd, arg[1:]) {
+			m.Cmdy(cmd, arg[1:])
+		}
 	}
 }
 func ProcessFloat(m *ice.Message, arg ...string) {

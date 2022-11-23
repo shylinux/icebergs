@@ -102,7 +102,9 @@ func Right(m *ice.Message, key ...ice.Any) bool {
 	return m.Option(ice.MSG_USERROLE) == ROOT || !m.Warn(m.Cmdx(ROLE, RIGHT, m.Option(ice.MSG_USERROLE), key) != ice.OK,
 		ice.ErrNotRight, kit.Keys(key...), USERROLE, m.Option(ice.MSG_USERROLE), logs.FileLineMeta(logs.FileLine(2)))
 }
-func RoleRight(m *ice.Message, role string, key ...string) bool { return m.Cmdx(ROLE, RIGHT, role, key) == ice.OK }
+func RoleRight(m *ice.Message, role string, key ...string) bool {
+	return m.Cmdx(ROLE, RIGHT, role, key) == ice.OK
+}
 func RoleAction(key ...string) ice.Actions {
 	return ice.Actions{ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
 		if c, ok := ice.Info.Index[m.CommandKey()].(*ice.Context); ok && c == m.Target() {

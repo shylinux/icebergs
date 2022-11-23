@@ -66,9 +66,10 @@ func _runtime_init(m *ice.Message) {
 func _runtime_hostinfo(m *ice.Message) {
 	m.Push("nCPU", strings.Count(m.Cmdx(nfs.CAT, "/proc/cpuinfo"), "processor"))
 	for i, ls := range strings.Split(m.Cmdx(nfs.CAT, "/proc/meminfo"), ice.NL) {
-		vs := kit.Split(ls, ": ")
-		if m.Push(strings.TrimSpace(vs[0]), kit.FmtSize(kit.Int64(strings.TrimSpace(vs[1]))*1024)); i > 1 {
-			break
+		if vs := kit.Split(ls, ": "); len(vs) > 1 {
+			if m.Push(strings.TrimSpace(vs[0]), kit.FmtSize(kit.Int64(strings.TrimSpace(vs[1]))*1024)); i > 1 {
+				break
+			}
 		}
 	}
 	m.Push("uptime", kit.Split(m.Cmdx(SYSTEM, "uptime"), ice.FS)[0])
@@ -207,7 +208,7 @@ func init() {
 					m.Echo(kit.MergePOD(os.Getenv(CTX_DEV), os.Getenv(CTX_POD)))
 				}
 			}},
-		}, ctx.ConfAction("hi")), Hand: func(m *ice.Message, arg ...string) {
+		}, ctx.ConfAction("")), Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) > 0 && arg[0] == BOOTINFO {
 				arg = arg[1:]
 			}
@@ -216,8 +217,8 @@ func init() {
 		}},
 	})
 }
-func NodeInfo(m *ice.Message, kind, name string) {
+func NodeInfo(m *ice.Message, arg ...string) {
 	m.Conf(RUNTIME, kit.Keys(NODE, mdb.TIME), m.Time())
-	ice.Info.NodeType = m.Conf(RUNTIME, kit.Keys(NODE, mdb.TYPE), kind)
-	ice.Info.NodeName = m.Conf(RUNTIME, kit.Keys(NODE, mdb.NAME), strings.ReplaceAll(name, ice.PT, "_"))
+	ice.Info.NodeName = m.Conf(RUNTIME, kit.Keys(NODE, mdb.NAME), kit.Select(ice.Info.NodeName, arg, 0))
+	ice.Info.NodeType = m.Conf(RUNTIME, kit.Keys(NODE, mdb.TYPE), kit.Select(ice.Info.NodeType, arg, 1))
 }

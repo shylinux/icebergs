@@ -170,9 +170,6 @@ type Message interface {
 	Optionv(key string, arg ...ice.Any) ice.Any
 }
 
-func IsSuccess(m Message) bool {
-	return m.Append(CODE) == "0" || m.Append(CODE) == ""
-}
 func SystemFind(m Message, bin string, dir ...string) string {
 	if text := kit.ReadFile(ice.ETC_PATH); len(text) > 0 {
 		dir = append(dir, strings.Split(text, ice.NL)...)
@@ -180,9 +177,8 @@ func SystemFind(m Message, bin string, dir ...string) string {
 	dir = append(dir, strings.Split(kit.Env(PATH), ice.DF)...)
 	return _system_find(m, bin, dir...)
 }
-func SystemExec(m *ice.Message, arg ...string) string {
-	return strings.TrimSpace(m.Cmdx(SYSTEM, arg))
-}
+func IsSuccess(m Message) bool                        { return m.Append(CODE) == "" || m.Append(CODE) == "0" }
+func SystemExec(m *ice.Message, arg ...string) string { return strings.TrimSpace(m.Cmdx(SYSTEM, arg)) }
 func SystemCmds(m *ice.Message, cmds string, args ...ice.Any) string {
 	return strings.TrimRight(m.Cmdx(SYSTEM, "sh", "-c", kit.Format(cmds, args...), ice.Option{CMD_OUTPUT, ""}), ice.NL)
 }

@@ -18,8 +18,8 @@ func (m *Message) TryCatch(msg *Message, catch bool, cb ...func(msg *Message)) *
 		default:
 			fileline := m.FormatStack(2, 1)
 			m.Log(LOG_WARN, "catch: %s %s", e, fileline).Log("chain", msg.FormatChain())
-			m.Log(LOG_WARN, "catch: %s %s", e, fileline).Log("stack", m.FormatStack(2, 100))
-			m.Log(LOG_WARN, "catch: %s %s", e, fileline).Result(ErrWarn, e, SP, m.FormatStack(2, 5))
+			m.Log(LOG_WARN, "catch: %s %s", e, fileline).Log("stack", m.FormatStack(1, 100))
+			m.Log(LOG_WARN, "catch: %s %s", e, fileline).Result(ErrWarn, e, SP, m.FormatStack(1, 5))
 			if len(cb) > 1 {
 				m.TryCatch(msg, catch, cb[1:]...)
 			} else if !catch {

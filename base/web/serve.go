@@ -86,7 +86,7 @@ func _serve_spide(m *ice.Message, prefix string, c *ice.Context) {
 	}
 }
 func _serve_start(m *ice.Message) {
-	if cli.NodeInfo(m, SERVER, kit.Select(ice.Info.HostName, m.Option("nodename"))); m.Option(tcp.PORT) == tcp.RANDOM {
+	if cli.NodeInfo(m, kit.Select(ice.Info.HostName, m.Option("nodename")), SERVER); m.Option(tcp.PORT) == tcp.RANDOM {
 		m.Option(tcp.PORT, m.Cmdx(tcp.PORT, aaa.RIGHT))
 	}
 	aaa.UserRoot(m, m.Option(aaa.USERNAME), m.Option(aaa.USERNICK))
@@ -335,7 +335,7 @@ func init() {
 	}, Commands: ice.Commands{
 		SERVE: {Name: "serve name auto start spide", Help: "服务器", Actions: ice.MergeActions(ice.Actions{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
-				cli.NodeInfo(m, WORKER, ice.Info.PathName)
+				cli.NodeInfo(m, ice.Info.PathName, WORKER)
 				for _, p := range []string{LOGIN, SHARE, SPACE, ice.VOLCANOS, ice.INTSHELL, ice.PUBLISH, ice.REQUIRE, ice.HELP, ice.CMD} {
 					m.Cmd(aaa.ROLE, aaa.WHITE, aaa.VOID, p)
 				}

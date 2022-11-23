@@ -131,7 +131,6 @@ func init() {
 				_qrcode_cli(m, kit.Select(kit.Select(ice.Info.Make.Domain, ice.Info.Domain), arg, 0))
 			} else {
 				m.Option(SIZE, kit.Select(kit.Format(kit.Min(480, kit.Int(m.Option(ice.HEIGHT)), kit.Int(m.Option(ice.WIDTH)))), arg, 3))
-				m.Debug("what %v", m.Option(SIZE))
 				_qrcode_web(m, kit.Select(m.Option(ice.MSG_USERWEB), arg, 0))
 				m.StatusTime(mdb.LINK, kit.Select(m.Option(ice.MSG_USERWEB), arg, 0))
 			}

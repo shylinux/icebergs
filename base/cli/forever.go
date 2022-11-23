@@ -5,7 +5,6 @@ import (
 	"path"
 
 	ice "shylinux.com/x/icebergs"
-	"shylinux.com/x/icebergs/base/aaa"
 	"shylinux.com/x/icebergs/base/gdb"
 	"shylinux.com/x/icebergs/base/nfs"
 	kit "shylinux.com/x/toolkits"
@@ -33,18 +32,15 @@ func init() {
 						env = append(env, ls[0], ls[1])
 					}
 				}
-				m.Optionv(CMD_ENV, env)
-				m.Optionv(CMD_INPUT, os.Stdin)
-				m.Optionv(CMD_OUTPUT, os.Stdout)
-				m.Optionv(CMD_ERRPUT, os.Stderr)
+				m.Options(CMD_ENV, env, CMD_INPUT, os.Stdin, CMD_OUTPUT, os.Stdout, CMD_ERRPUT, os.Stderr)
 				if p := kit.Env(CTX_LOG); p != "" {
 					m.Optionv(CMD_ERRPUT, p)
 				}
 				m.Cmd(FOREVER, STOP)
 				if bin := kit.Select(os.Args[0], ice.BIN_ICE_BIN, nfs.ExistsFile(m, ice.BIN_ICE_BIN)); len(arg) > 0 && arg[0] == ice.SPACE {
-					m.Cmdy(FOREVER, bin, ice.SPACE, "dial", ice.DEV, ice.OPS, arg[2:])
+					m.Cmdy(FOREVER, bin, ice.SPACE, "dial", ice.DEV, ice.OPS, arg[1:])
 				} else {
-					m.Cmdy(FOREVER, bin, ice.SERVE, START, ice.DEV, "", aaa.USERNAME, aaa.ROOT, aaa.PASSWORD, aaa.ROOT, arg)
+					m.Cmdy(FOREVER, bin, ice.SERVE, START, ice.DEV, "", arg)
 				}
 			}},
 			RESTART: {Hand: func(m *ice.Message, arg ...string) { m.Cmd(gdb.SIGNAL, gdb.RESTART) }},

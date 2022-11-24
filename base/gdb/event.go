@@ -15,10 +15,10 @@ const EVENT = "event"
 func init() {
 	Index.MergeCommands(ice.Commands{
 		EVENT: {Name: "event event id auto listen happen", Help: "事件流", Actions: ice.MergeActions(ice.Actions{
-			LISTEN: {Name: "listen event cmd", Hand: func(m *ice.Message, arg ...string) {
+			LISTEN: {Name: "listen event cmd", Help: "监听", Hand: func(m *ice.Message, arg ...string) {
 				mdb.ZoneInsert(m, m.OptionSimple(EVENT, ice.CMD))
 			}},
-			HAPPEN: {Name: "happen event arg", Hand: func(m *ice.Message, arg ...string) {
+			HAPPEN: {Name: "happen event", Help: "触发", Hand: func(m *ice.Message, arg ...string) {
 				mdb.ZoneSelect(m.Spawn(ice.OptionFields("")), m.Option(EVENT)).Tables(func(value ice.Maps) {
 					m.Cmdy(kit.Split(value[ice.CMD]), m.Option(EVENT), arg[2:], ice.OptionFields("")).Cost()
 				})

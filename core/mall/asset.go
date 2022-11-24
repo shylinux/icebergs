@@ -31,7 +31,7 @@ func _asset_check(m *ice.Message, account string) {
 	m.OptionCB(mdb.SELECT, func(key string, value ice.Map) {
 		amount += kit.Int(kit.Value(value, AMOUNT))
 	})
-	m.Cmd(mdb.SELECT, m.PrefixKey(), "", mdb.ZONE, account, ice.OptionFields(m.Config(mdb.FIELD)))
+	m.Cmd(mdb.SELECT, m.PrefixKey(), "", mdb.ZONE, account, ice.OptionFields(mdb.ZoneField(m)))
 
 	m.Cmdy(mdb.MODIFY, m.PrefixKey(), "", mdb.HASH, ACCOUNT, account, AMOUNT, amount)
 }
@@ -93,7 +93,7 @@ func init() {
 				web.Toast(m, "核算成功")
 			}},
 		}, mdb.ZoneAction(), ctx.CmdAction()), Hand: func(m *ice.Message, arg ...string) {
-			m.Fields(len(arg), "time,account,amount,count", m.Config(mdb.FIELD))
+			m.Fields(len(arg), "time,account,amount,count", mdb.ZoneField(m))
 			amount, count := 0, 0
 			if mdb.ZoneSelect(m, arg...); len(arg) == 0 {
 				m.PushAction(CHECK)

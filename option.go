@@ -34,7 +34,7 @@ func (m *Message) OptionDefault(arg ...string) string {
 }
 func (m *Message) OptionSimple(key ...string) (res []string) {
 	if len(key) == 0 {
-		for _, k := range kit.Split(m.Config(FIELD)) {
+		for _, k := range kit.Split(kit.Select("type,name,text", m.Config(FIELD))) {
 			switch k {
 			case TIME, HASH:
 				continue

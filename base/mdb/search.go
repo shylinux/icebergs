@@ -17,14 +17,18 @@ func init() {
 		return nil, nil
 	})
 }
-func SearchAction() ice.Actions { return ice.Actions{SEARCH: {Hand: func(m *ice.Message, arg ...string) { HashSelectSearch(m, arg) }}} }
-func HashSearchAction(arg ...Any) ice.Actions { return ice.MergeActions(HashAction(arg...), SearchAction()) }
+func SearchAction() ice.Actions {
+	return ice.Actions{SEARCH: {Hand: func(m *ice.Message, arg ...string) { HashSelectSearch(m, arg) }}}
+}
+func HashSearchAction(arg ...Any) ice.Actions {
+	return ice.MergeActions(HashAction(arg...), SearchAction())
+}
 func HashSelectSearch(m *ice.Message, args []string, keys ...string) *ice.Message {
 	if args[0] != m.CommandKey() {
 		return m
 	}
 	if len(keys) == 0 {
-		keys = kit.Filters(kit.Split(m.Config(FIELD)), TIME, HASH)
+		keys = kit.Filters(kit.Split(HashField(m)), TIME, HASH)
 	}
 	HashSelectValue(m, func(value ice.Map) {
 		if args[1] == "" || args[1] == value[keys[1]] {

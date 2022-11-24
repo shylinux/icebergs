@@ -116,7 +116,7 @@ func init() {
 				m.Cmdy("", STOP).Sleep3s().Cmdy("", START)
 			}},
 			STOP: {Hand: func(m *ice.Message, arg ...string) {
-				m.OptionFields(m.Config(mdb.FIELD))
+				m.OptionFields(mdb.HashField(m))
 				h, pid := m.Option(mdb.HASH), m.Option(PID)
 				mdb.HashSelect(m, m.Option(mdb.HASH)).Tables(func(value ice.Maps) {
 					if h == "" && value[PID] != pid {

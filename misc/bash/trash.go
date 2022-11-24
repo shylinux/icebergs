@@ -35,9 +35,10 @@ func init() {
 				}
 			}},
 			mdb.PRUNES: {Name: "prunes before@date", Help: "清理", Hand: func(m *ice.Message, arg ...string) {
-				mdb.HashPrunes(m, func(value ice.Maps) bool {
-					nfs.RemoveAll(m, value[TO])
+				mdb.HashPrunes(m, func(value ice.Map) bool {
 					return true
+				}).Tables(func(value ice.Maps) {
+					nfs.RemoveAll(m, value[TO])
 				})
 			}},
 			nfs.CAT: {Name: "cat", Help: "查看", Hand: func(m *ice.Message, arg ...string) {

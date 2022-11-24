@@ -80,7 +80,7 @@ func init() {
 				m.Option(mdb.TYPE, m.Cmd("", m.Option(mdb.HASH)).Append(mdb.TYPE))
 				ctx.Run(m, arg...)
 			}},
-		}, mdb.HashAction(mdb.FIELD, "time,hash,type,name,text"), ctx.CmdAction(), KeyboardAction()), Hand: func(m *ice.Message, arg ...string) {
+		}, mdb.HashAction(), ctx.CmdAction(), KeyboardAction()), Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) > 0 && arg[0] == ctx.ACTION {
 				m.Option(mdb.TYPE, m.Cmd("", m.Option(mdb.HASH)).Append(mdb.TYPE))
 				gdb.Event(m, FAVOR_ACTION, arg)

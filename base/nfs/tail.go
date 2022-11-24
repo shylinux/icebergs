@@ -59,7 +59,7 @@ func init() {
 				_tail_create(m, arg...)
 			}},
 		}, mdb.ZoneAction(mdb.SHORT, mdb.NAME, mdb.FIELD, "time,id,file,text")), Hand: func(m *ice.Message, arg ...string) {
-			m.Fields(len(kit.Slice(arg, 0, 2)), "time,name,count,file", m.Config(mdb.FIELD))
+			m.Fields(len(kit.Slice(arg, 0, 2)), "time,name,count,file", mdb.ZoneField(m))
 			mdb.OptionPage(m, kit.Slice(arg, 2)...)
 
 			mdb.ZoneSelect(m.Spawn(), arg...).Table(func(index int, value ice.Maps, head []string) {

@@ -26,7 +26,7 @@ func _config_save(m *ice.Message, name string, arg ...string) {
 		}
 		if s, e := json.MarshalIndent(data, "", "  "); !m.Warn(e) {
 			if _, e := f.Write(s); !m.Warn(e) {
-				
+
 			}
 		}
 	}

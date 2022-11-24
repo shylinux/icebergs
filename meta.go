@@ -187,6 +187,9 @@ func (m *Message) Copy(msg *Message, arg ...string) *Message {
 		case MSG_CMDS, MSG_FIELDS, MSG_SESSID:
 			continue
 		}
+		if kit.IndexOf(m.meta[MSG_APPEND], k) > -1 {
+			continue
+		}
 		if v, ok := msg.data[k]; ok {
 			m.data[k] = v
 		} else {
@@ -396,7 +399,7 @@ func (m *Message) Options(arg ...Any) Any {
 	for i := 0; i < len(arg); i += 2 {
 		switch val := arg[i].(type) {
 		case []string:
-			for i := 0; i < len(val) - 1; i += 2 {
+			for i := 0; i < len(val)-1; i += 2 {
 				m.Optionv(val[i], val[i+1])
 			}
 			i--

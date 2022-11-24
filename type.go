@@ -127,9 +127,15 @@ func (c *Context) Register(s *Context, x Server, n ...string) *Context {
 	return s
 }
 func (c *Context) MergeCommands(Commands Commands) *Context {
-	for _, cmd := range Commands {
+	for key, cmd := range Commands {
 		if cmd.Hand == nil && cmd.RawHand == nil {
 			cmd.RawHand = logs.FileLines(2)
+			if cmd.Actions != nil {
+				if action, ok := cmd.Actions[SELECT]; ok {
+					cmd.Name = kit.Select(strings.Replace(action.Name, SELECT, key, 1), cmd.Name)
+					cmd.Help = kit.Select(action.Help, cmd.Help)
+				}
+			}
 		}
 	}
 	configs := Configs{}

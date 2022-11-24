@@ -7,5 +7,5 @@ import (
 const ENGINE = "engine"
 
 func init() {
-	Index.MergeCommands(ice.Commands{ENGINE: {Name: "engine type name text auto", Help: "引擎", Actions: RenderAction()}})
+	Index.MergeCommands(ice.Commands{ENGINE: {Help: "引擎", Actions: RenderAction()}})
 }

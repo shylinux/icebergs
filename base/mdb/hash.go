@@ -34,9 +34,6 @@ func _hash_insert(m *ice.Message, prefix, chain string, arg ...string) string {
 	if expire := m.Conf(prefix, kit.Keys(chain, kit.Keym(EXPIRE))); expire != "" {
 		arg = kit.Simple(TIME, m.Time(expire), arg)
 	}
-	m.Debug("what %v %v", m.Conf(prefix, chain))
-	m.Debug("what %v %v", kit.Data())
-	m.Debug("what %v %v", m.Conf(prefix, chain))
 	return m.Echo(Rich(m, prefix, chain, kit.Data(arg, TARGET, m.Optionv(TARGET)))).Result()
 }
 func _hash_delete(m *ice.Message, prefix, chain, field, value string) {
@@ -75,8 +72,8 @@ func _hash_select_field(m *ice.Message, prefix, chain string, key string, field 
 	return
 }
 func _hash_prunes(m *ice.Message, prefix, chain string, arg ...string) {
-	defer RLock(m, prefix, chain)()
 	fields := _hash_fields(m)
+	defer RLock(m, prefix, chain)()
 	Richs(m, prefix, chain, FOREACH, func(key string, value Map) {
 		switch value = kit.GetMeta(value); cb := m.OptionCB(PRUNES).(type) {
 		case func(string, Map) bool:
@@ -93,18 +90,19 @@ func _hash_prunes(m *ice.Message, prefix, chain string, arg ...string) {
 	})
 }
 func _hash_export(m *ice.Message, prefix, chain, file string) {
+	defer Lock(m, prefix, chain)()
 	f, p, e := miss.CreateFile(kit.Keys(file, JSON))
 	m.Assert(e)
 	defer f.Close()
 	defer m.Echo(p)
-	m.Logs(EXPORT, KEY, path.Join(prefix, chain), FILE, p)
+	m.Logs(EXPORT, KEY, path.Join(prefix, chain), FILE, p, COUNT, len(m.Confm(prefix, kit.Keys(chain, HASH))))
 	en := json.NewEncoder(f)
-	defer Lock(m, prefix, chain)()
 	if en.SetIndent("", "  "); !m.Warn(en.Encode(m.Confv(prefix, kit.Keys(chain, HASH))), EXPORT, prefix) {
 		m.Conf(prefix, kit.Keys(chain, HASH), "")
 	}
 }
 func _hash_import(m *ice.Message, prefix, chain, file string) {
+	defer Lock(m, prefix, chain)()
 	f, e := miss.OpenFile(kit.Keys(file, JSON))
 	if m.Warn(e) {
 		return
@@ -114,7 +112,6 @@ func _hash_import(m *ice.Message, prefix, chain, file string) {
 	m.Assert(json.NewDecoder(f).Decode(&list))
 	m.Logs(IMPORT, KEY, path.Join(prefix, chain), FILE, kit.Keys(file, JSON), COUNT, len(list))
 	defer m.Echo("%d", len(list))
-	defer Lock(m, prefix, chain)()
 	for k, data := range list {
 		if m.Confv(prefix, kit.Keys(chain, HASH, k)) == nil {
 			m.Confv(prefix, kit.Keys(chain, HASH, k), data)
@@ -155,9 +152,7 @@ func HashKey(m *ice.Message) string {
 	}
 	return HashShort(m)
 }
-func HashShort(m *ice.Message) string {
-	return kit.Select(HASH, m.Config(SHORT), m.Config(SHORT) != UNIQ)
-}
+func HashShort(m *ice.Message) string { return kit.Select(HASH, m.Config(SHORT), m.Config(SHORT) != UNIQ) }
 func HashField(m *ice.Message) string { return kit.Select(HASH_FIELD, m.Config(FIELD)) }
 func HashInputs(m *ice.Message, arg ...Any) *ice.Message {
 	return m.Cmdy(INPUTS, m.PrefixKey(), "", HASH, arg)
@@ -184,7 +179,7 @@ func HashModify(m *ice.Message, arg ...Any) *ice.Message {
 }
 func HashSelect(m *ice.Message, arg ...string) *ice.Message {
 	if len(arg) > 0 && arg[0] == FOREACH {
-		m.Fields(0, HashField(m))
+		m.OptionFields(HashField(m))
 	} else {
 		m.Fields(len(kit.Slice(arg, 0, 1)), HashField(m))
 	}
@@ -200,10 +195,7 @@ func HashPrunes(m *ice.Message, cb func(Map) bool) *ice.Message {
 		if kit.Format(value[TIME]) > expire {
 			return false
 		}
-		if cb != nil && !cb(value) {
-			return false
-		}
-		return true
+		return cb == nil || cb(value)
 	})
 	return m.Cmdy(PRUNES, m.PrefixKey(), "", HASH).StatusTimeCount()
 }
@@ -241,33 +233,34 @@ func HashSelectDetail(m *ice.Message, key string, cb Any) (has bool) {
 	return
 }
 func HashSelectField(m *ice.Message, key string, field string) (value string) {
-	HashSelectDetail(m, key, func(h string, val ice.Map) {
+	HashSelectDetail(m, key, func(key string, val ice.Map) {
 		if field == HASH {
-			value = h
+			value = key
 		} else {
 			value = kit.Format(val[field])
 		}
 	})
 	return
 }
-func HashTarget(m *ice.Message, h string, add Any) (p Any) {
-	HashSelectUpdate(m, h, func(value ice.Map) {
-		p = value[TARGET]
-		if pp, ok := p.(Map); ok && len(pp) == 0 {
-			p = nil
+func HashSelectTarget(m *ice.Message, key string, create Any) (target Any) {
+	HashSelectUpdate(m, key, func(value ice.Map) {
+		target = value[TARGET]
+		if _target, ok := target.(Map); ok && len(_target) == 0 {
+			target = nil
 		}
-		if p == nil && add != nil {
-			switch add := add.(type) {
-			case func(ice.Map) ice.Any:
-				p = add(value)
-			case func() ice.Any:
-				p = add()
-			default:
-				m.ErrorNotImplement(p)
-				return
-			}
-			value[TARGET] = p
+		if target != nil || create == nil {
+			return
 		}
+		switch create := create.(type) {
+		case func(ice.Map) ice.Any:
+			target = create(value)
+		case func() ice.Any:
+			target = create()
+		default:
+			m.ErrorNotImplement(create)
+			return
+		}
+		value[TARGET] = target
 	})
 	return
 }

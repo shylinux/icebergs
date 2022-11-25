@@ -6,6 +6,4 @@ import (
 
 const ENGINE = "engine"
 
-func init() {
-	Index.MergeCommands(ice.Commands{ENGINE: {Help: "引擎", Actions: RenderAction()}})
-}
+func init() { Index.MergeCommands(ice.Commands{ENGINE: {Help: "引擎", Actions: RenderAction()}}) }

@@ -6,6 +6,7 @@ import (
 
 	ice "shylinux.com/x/icebergs"
 	kit "shylinux.com/x/toolkits"
+	"shylinux.com/x/toolkits/logs"
 	"shylinux.com/x/toolkits/task"
 )
 
@@ -248,7 +249,7 @@ var Index = &ice.Context{Name: MDB, Help: "数据模块", Commands: ice.Commands
 }}
 
 func init() {
-	ice.Index.Register(Index, nil, INSERT, DELETE, MODIFY, SELECT, INPUTS, PRUNES, EXPORT, IMPORT, PLUGIN, ENGINE, RENDER, SEARCH)
+	ice.Index.Register(Index, nil, INSERT, DELETE, MODIFY, SELECT, INPUTS, PRUNES, EXPORT, IMPORT, PLUGIN, RENDER, ENGINE, SEARCH)
 }
 func AutoConfig(args ...ice.Any) *ice.Action {
 	return &ice.Action{Hand: func(m *ice.Message, arg ...string) {

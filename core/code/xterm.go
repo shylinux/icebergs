@@ -38,7 +38,7 @@ func _xterm_get(m *ice.Message, h string) _xterm {
 
 	t := mdb.HashSelectField(m, m.Option(mdb.HASH, h), mdb.TYPE)
 	mdb.HashModify(m, "view", m.Option(ice.MSG_DAEMON))
-	return mdb.HashTarget(m, h, func() ice.Any {
+	return mdb.HashSelectTarget(m, h, func() ice.Any {
 		ls := kit.Split(kit.Select(nfs.SH, t))
 		cmd := exec.Command(cli.SystemFind(m, ls[0]), ls[1:]...)
 

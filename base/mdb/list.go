@@ -23,14 +23,13 @@ func _list_inputs(m *ice.Message, prefix, chain string, field, value string) {
 		m.SortIntR(COUNT)
 	}()
 	defer RLock(m, prefix, chain)()
-	m.Debug("what %v %v", prefix, chain)
 	Grows(m, prefix, chain, "", "", func(value ice.Map) {
 		value = kit.GetMeta(value)
 		list[kit.Format(value[field])] += kit.Int(kit.Select("1", value[COUNT]))
 	})
 }
 func _list_insert(m *ice.Message, prefix, chain string, arg ...string) {
-	m.Logs(INSERT, KEY, path.Join(prefix, chain), arg[0], arg[1])
+	m.Logs(INSERT, KEY, path.Join(prefix, chain), arg)
 	defer Lock(m, prefix, chain)()
 	m.Echo("%d", Grow(m, prefix, chain, kit.Dict(arg, TARGET, m.Optionv(TARGET))))
 }
@@ -47,13 +46,13 @@ func _list_select(m *ice.Message, prefix, chain, field, value string) {
 	})
 }
 func _list_export(m *ice.Message, prefix, chain, file string) {
+	defer Lock(m, prefix, chain)()
 	f, p, e := miss.CreateFile(kit.Keys(file, CSV))
 	m.Assert(e)
 	defer f.Close()
 	defer m.Echo(p)
 	w := csv.NewWriter(f)
 	defer w.Flush()
-	defer RLock(m, prefix, chain)()
 	count, head := 0, kit.Split(ListField(m))
 	Grows(m, prefix, chain, "", "", func(index int, value ice.Map) {
 		if value = kit.GetMeta(value); index == 0 {
@@ -62,11 +61,7 @@ func _list_export(m *ice.Message, prefix, chain, file string) {
 			}
 			w.Write(head)
 		}
-		data := []string{}
-		for _, k := range head {
-			data = append(data, kit.Format(value[k]))
-		}
-		w.Write(data)
+		w.Write(kit.Simple(head, func(k string) string { return kit.Format(value[k]) }))
 		count++
 	})
 	m.Logs(EXPORT, KEY, path.Join(prefix, chain), FILE, p, COUNT, count)
@@ -74,13 +69,13 @@ func _list_export(m *ice.Message, prefix, chain, file string) {
 	m.Conf(prefix, kit.Keys(chain, LIST), "")
 }
 func _list_import(m *ice.Message, prefix, chain, file string) {
+	defer Lock(m, prefix, chain)()
 	f, e := miss.OpenFile(kit.Keys(file, CSV))
 	m.Assert(e)
 	defer f.Close()
 	r := csv.NewReader(f)
 	head, _ := r.Read()
 	count := 0
-	defer RLock(m, prefix, chain)()
 	for {
 		line, e := r.Read()
 		if e != nil {
@@ -97,7 +92,7 @@ func _list_import(m *ice.Message, prefix, chain, file string) {
 		Grow(m, prefix, chain, data)
 		count++
 	}
-	m.Logs(IMPORT, KEY, kit.Keys(prefix, chain), COUNT, count)
+	m.Logs(IMPORT, KEY, kit.Keys(prefix, chain), FILE, kit.Keys(file, CSV), COUNT, count)
 	m.Echo("%d", count)
 }
 
@@ -120,30 +115,44 @@ func ListAction(arg ...ice.Any) ice.Actions {
 }
 func PageListAction(arg ...ice.Any) ice.Actions {
 	return ice.MergeActions(ice.Actions{
-		SELECT: {Name: "select id auto insert page", Hand: func(m *ice.Message, arg ...string) { ListSelect(m, arg...) }},
-		NEXT:   {Hand: func(m *ice.Message, arg ...string) { NextPageLimit(m, m.Config(COUNT), kit.Slice(arg, 1)...) }},
-		PREV:   {Hand: func(m *ice.Message, arg ...string) { PrevPage(m, m.Config(COUNT), kit.Slice(arg, 1)...) }},
+		SELECT: {Name: "select id auto insert page", Hand: func(m *ice.Message, arg ...string) { PageListSelect(m, arg...) }},
+		NEXT:   {Hand: func(m *ice.Message, arg ...string) { NextPage(m, m.Config(COUNT), kit.Slice(arg, 1)...) }},
+		PREV:   {Hand: func(m *ice.Message, arg ...string) { PrevPageLimit(m, m.Config(COUNT), kit.Slice(arg, 1)...) }},
 	}, ListAction(arg...))
 }
 func ListField(m *ice.Message) string { return kit.Select(LIST_FIELD, m.Config(FIELD)) }
 func ListSelect(m *ice.Message, arg ...string) *ice.Message {
-	OptionPage(m, kit.Slice(arg, 1)...)
 	m.Fields(len(kit.Slice(arg, 0, 1)), ListField(m))
 	if m.Cmdy(SELECT, m.PrefixKey(), "", LIST, ID, arg); !m.FieldsIsDetail() {
+		m.SortIntR(ID)
 		return m.StatusTimeCountTotal(m.Config(COUNT))
 	}
 	return m.StatusTime()
 }
-func PrevPageLimit(m *ice.Message, total string, arg ...string) {
+func PageListSelect(m *ice.Message, arg ...string) *ice.Message {
+	OptionPage(m, kit.Slice(arg, 1)...)
+	return ListSelect(m, arg...)
+}
+func NextPageLimit(m *ice.Message, total string, arg ...string) {
 	if kit.Int(kit.Select("0", arg, 1)) > 0 {
-		PrevPage(m, total, arg...)
+		NextPage(m, total, arg...)
 	} else {
-		m.ProcessHold("已经最前一页啦!")
+		m.ProcessHold("已经是最后一页啦!")
+	}
+}
+func NextPage(m *ice.Message, total string, arg ...string) {
+	limit, offend := kit.Select("10", arg, 0), kit.Select("0", arg, 1)
+	if offends := kit.Int(offend) - kit.Int(limit); total != "0" && (offends <= -kit.Int(total) || offends >= kit.Int(total)) {
+		m.ProcessHold("已经是最后一页啦!")
+	} else if offends == 0 {
+		m.ProcessRewrite("offend", "")
+	} else {
+		m.ProcessRewrite("offend", offends)
 	}
 }
 func PrevPage(m *ice.Message, total string, arg ...string) {
 	limit, offend := kit.Select("10", arg, 0), kit.Select("0", arg, 1)
-	if offends := kit.Int(offend) - kit.Int(limit); total != "0" && (offends <= -kit.Int(total) || offends >= kit.Int(total)) {
+	if offends := kit.Int(offend) + kit.Int(limit); total != "0" && (offends <= -kit.Int(total) || offends >= kit.Int(total)) {
 		m.ProcessHold("已经是最前一页啦!")
 	} else if offends == 0 {
 		m.ProcessRewrite("offend", "")
@@ -151,21 +160,11 @@ func PrevPage(m *ice.Message, total string, arg ...string) {
 		m.ProcessRewrite("offend", offends)
 	}
 }
-func NextPage(m *ice.Message, total string, arg ...string) {
-	limit, offend := kit.Select("10", arg, 0), kit.Select("0", arg, 1)
-	if offends := kit.Int(offend) + kit.Int(limit); total != "0" && (offends <= -kit.Int(total) || offends >= kit.Int(total)) {
-		m.ProcessHold("已经是最后一页啦!")
-	} else if offends == 0 {
-		m.ProcessRewrite("offend", "")
-	} else {
-		m.ProcessRewrite("offend", offends)
-	}
-}
-func NextPageLimit(m *ice.Message, total string, arg ...string) {
+func PrevPageLimit(m *ice.Message, total string, arg ...string) {
 	if kit.Int(kit.Select("0", arg, 1)) < 0 {
-		NextPage(m, total, arg...)
+		PrevPage(m, total, arg...)
 	} else {
-		m.ProcessHold("已经是最后一页啦!")
+		m.ProcessHold("已经是最前一页啦!")
 	}
 }
 
@@ -194,14 +193,6 @@ const (
 	CACHE_FIELD  = "cache.field"
 )
 
-func Grow(m *ice.Message, prefix string, chain Any, data Any) int {
-	cache := m.Confm(prefix, chain)
-	if cache == nil {
-		cache = kit.Data()
-		m.Confv(prefix, chain, cache)
-	}
-	return miss.Grow(path.Join(prefix, kit.Keys(chain)), cache, data)
-}
 func Grows(m *ice.Message, prefix string, chain Any, match string, value string, cb Any) Map {
 	cache := m.Confm(prefix, chain)
 	if cache == nil {
@@ -220,4 +211,12 @@ func Grows(m *ice.Message, prefix string, chain Any, match string, value string,
 		kit.Int(kit.Select("0", strings.TrimPrefix(m.Option(CACHE_OFFEND), "-"))),
 		kit.Int(kit.Select("10", m.Option(CACHE_LIMIT))),
 		match, value, cb)
+}
+func Grow(m *ice.Message, prefix string, chain Any, data Any) int {
+	cache := m.Confm(prefix, chain)
+	if cache == nil {
+		cache = kit.Data()
+		m.Confv(prefix, chain, cache)
+	}
+	return miss.Grow(path.Join(prefix, kit.Keys(chain)), cache, data)
 }

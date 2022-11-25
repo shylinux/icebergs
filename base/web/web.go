@@ -98,7 +98,7 @@ func (frame *Frame) Start(m *ice.Message, arg ...string) bool {
 		mdb.HashCreate(m, mdb.NAME, WEB, arg, m.OptionSimple(tcp.PROTO, ice.DEV), cli.STATUS, tcp.START)
 		m.Cmd(tcp.SERVER, tcp.LISTEN, mdb.TYPE, WEB, m.OptionSimple(mdb.NAME, tcp.HOST, tcp.PORT), func(l net.Listener) {
 			defer mdb.HashModify(m, m.OptionSimple(mdb.NAME), cli.STATUS, tcp.STOP)
-			mdb.HashTarget(m, m.Option(mdb.NAME), func() ice.Any { return l })
+			mdb.HashSelectTarget(m, m.Option(mdb.NAME), func() ice.Any { return l })
 			m.Warn(frame.Server.Serve(l)) // 启动服务
 		})
 	}

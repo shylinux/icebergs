@@ -126,7 +126,7 @@ func init() {
 					m.Cmd(gdb.SIGNAL, gdb.KILL, value[PID])
 				})
 			}},
-		}, mdb.HashStatusAction(mdb.FIELD, "time,hash,status,pid,cmd,dir,env")), Hand: func(m *ice.Message, arg ...string) {
+		}, mdb.StatusHashAction(mdb.FIELD, "time,hash,status,pid,cmd,dir,env")), Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) == 0 || !strings.Contains(arg[0], ice.PS) {
 				if mdb.HashSelect(m, kit.Slice(arg, 0, 1)...).Tables(func(value ice.Maps) {
 					switch value[STATUS] {

@@ -56,8 +56,8 @@ func _hash_select(m *ice.Message, prefix, chain, field, value string) {
 		value = RANDOMS
 	}
 	defer m.SortTimeR(TIME)
-	defer RLock(m, prefix, chain)()
 	fields := _hash_fields(m)
+	defer RLock(m, prefix, chain)()
 	Richs(m, prefix, chain, value, func(key string, value Map) { _mdb_select(m, m.OptionCB(""), key, value, fields, nil) })
 }
 func _hash_select_field(m *ice.Message, prefix, chain string, key string, field string) (value string) {
@@ -138,22 +138,12 @@ func HashAction(arg ...Any) ice.Actions {
 		IMPORT: {Hand: func(m *ice.Message, arg ...string) { HashImport(m, arg) }},
 	}
 }
-func HashStatusAction(arg ...Any) ice.Actions {
+func StatusHashAction(arg ...Any) ice.Actions {
 	return ice.MergeActions(ice.Actions{
 		PRUNES: &ice.Action{Hand: func(m *ice.Message, arg ...string) {
 			m.Cmdy(PRUNES, m.PrefixKey(), "", HASH, STATUS, "error", STATUS, "close", STATUS, "stop", STATUS, "end", ice.OptionFields(HashField(m)))
 		}},
 	}, HashAction(arg...))
-}
-func HashStatusCloseAction(args ...Any) ice.Actions {
-	return ice.MergeActions(HashStatusAction(args...), ice.Actions{
-		ice.CTX_EXIT: {Hand: func(m *ice.Message, arg ...string) { HashSelectClose(m) }},
-	})
-}
-func HashCloseAction(args ...Any) ice.Actions {
-	return ice.MergeActions(HashAction(args...), ice.Actions{
-		ice.CTX_EXIT: {Hand: func(m *ice.Message, arg ...string) { HashSelectClose(m) }},
-	})
 }
 
 func HashKey(m *ice.Message) string {
@@ -232,18 +222,6 @@ func HashSelectValue(m *ice.Message, cb Any) *ice.Message {
 	})
 	return m
 }
-func HashPrunesValue(m *ice.Message, field, value string) {
-	m.Cmdy(PRUNES, m.PrefixKey(), "", HASH, field, value, ice.OptionFields(HashField(m)))
-}
-func HashSelectClose(m *ice.Message) *ice.Message {
-	HashSelectValue(m, func(value ice.Map) {
-		if c, ok := value[TARGET].(io.Closer); ok {
-			c.Close()
-		}
-		delete(value, TARGET)
-	})
-	return m
-}
 func HashSelectUpdate(m *ice.Message, key string, cb Any) *ice.Message {
 	defer Lock(m, m.PrefixKey(), "")()
 	Richs(m, m.PrefixKey(), nil, key, func(key string, value Map) {
@@ -289,6 +267,18 @@ func HashTarget(m *ice.Message, h string, add Any) (p Any) {
 		}
 	})
 	return
+}
+func HashSelectClose(m *ice.Message) *ice.Message {
+	HashSelectValue(m, func(value ice.Map) {
+		if c, ok := value[TARGET].(io.Closer); ok {
+			c.Close()
+		}
+		delete(value, TARGET)
+	})
+	return m
+}
+func HashPrunesValue(m *ice.Message, field, value string) {
+	m.Cmdy(PRUNES, m.PrefixKey(), "", HASH, field, value, ice.OptionFields(HashField(m)))
 }
 
 func Richs(m *ice.Message, prefix string, chain Any, raw Any, cb Any) (res Map) {

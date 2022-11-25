@@ -78,6 +78,6 @@ func init() {
 					kit.Format("http://%s:%s", m.Option(tcp.HOST), m.Option(tcp.PORT)))
 				m.Cmd(SPACE, tcp.DIAL, m.OptionSimple(ice.DEV))
 			}},
-		}, mdb.HashCloseAction(mdb.SHORT, "host,port", mdb.FIELD, "time,hash,host,port", mdb.ACTION, SPACE))},
+		}, mdb.HashAction(mdb.SHORT, "host,port", mdb.FIELD, "time,hash,host,port", mdb.ACTION, SPACE))},
 	})
 }

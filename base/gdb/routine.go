@@ -35,6 +35,6 @@ func init() {
 					}
 				})
 			}},
-		}, mdb.HashStatusAction(mdb.FIELD, "time,hash,status,name,cmd"))},
+		}, mdb.StatusHashAction(mdb.FIELD, "time,hash,status,name,cmd"))},
 	})
 }

@@ -287,7 +287,7 @@ func init() {
 				}
 			}},
 			DOMAIN: {Hand: func(m *ice.Message, arg ...string) { m.Echo(_space_domain(m)) }},
-		}, mdb.HashCloseAction(mdb.SHORT, mdb.NAME, mdb.FIELD, "time,type,name,text",
+		}, mdb.HashAction(mdb.SHORT, mdb.NAME, mdb.FIELD, "time,type,name,text",
 			REDIAL, kit.Dict("a", 3000, "b", 1000, "c", 1000), TIMEOUT, kit.Dict("c", "180s"),
 			BUFFER, kit.Dict("r", ice.MOD_BUFS, "w", ice.MOD_BUFS),
 		), ctx.CmdAction(), DreamAction()), Hand: func(m *ice.Message, arg ...string) {

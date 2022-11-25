@@ -19,6 +19,10 @@ func _file_name(m *ice.Message, arg ...string) string {
 	}
 	return path.Join(ice.USR_LOCAL_EXPORT, path.Join(arg[:2]...), arg[2])
 }
+func _mdb_getmeta(m *ice.Message, prefix, chain, key string) string {
+	defer RLock(m, prefix, chain)()
+	return m.Conf(prefix, kit.Keys(chain, kit.Keym(key)))
+}
 func _mdb_modify(m *ice.Message, value ice.Map, field string, arg ...string) {
 	value = kit.GetMeta(value)
 	kit.Fetch(arg, func(k, v string) {
@@ -255,9 +259,9 @@ func AutoConfig(args ...ice.Any) *ice.Action {
 		if cs := m.Target().Commands; cs[m.CommandKey()] == nil {
 			return
 		} else if inputs := []ice.Any{}; cs[m.CommandKey()].Actions[INSERT] != nil {
-			kit.Fetch(kit.Filters(kit.Split(ListField(m)), TIME, ID), func(k string) { inputs = append(inputs, k) })
+			kit.Fetch(kit.Filters(kit.Simple(m.Config(SHORT), kit.Split(ListField(m))), "", TIME, ID), func(k string) { inputs = append(inputs, k) })
 			if cs[m.CommandKey()].Meta[INSERT] == nil {
-				m.Design(INSERT, "添加", append(kit.List(kit.Select(ZONE, m.Config(SHORT))), inputs...)...)
+				m.Design(INSERT, "添加", inputs...)
 			}
 		} else if cs[m.CommandKey()].Actions[CREATE] != nil {
 			kit.Fetch(kit.Filters(kit.Split(HashField(m)), TIME, HASH), func(k string) { inputs = append(inputs, k) })

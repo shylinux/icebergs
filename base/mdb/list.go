@@ -16,10 +16,9 @@ func _list_fields(m *ice.Message) []string {
 func _list_inputs(m *ice.Message, prefix, chain string, field, value string) {
 	list := map[string]int{}
 	defer func() {
+		delete(list, "")
 		for k, i := range list {
-			if k != "" {
-				m.Push(field, k).Push(COUNT, i)
-			}
+			m.Push(field, k).Push(COUNT, i)
 		}
 		m.SortIntR(COUNT)
 	}()
@@ -32,11 +31,7 @@ func _list_inputs(m *ice.Message, prefix, chain string, field, value string) {
 func _list_insert(m *ice.Message, prefix, chain string, arg ...string) {
 	m.Logs(INSERT, KEY, path.Join(prefix, chain), arg[0], arg[1])
 	defer Lock(m, prefix, chain)()
-	if m.Optionv(TARGET) != nil && m.Option(TARGET) != "" {
-		m.Echo("%d", Grow(m, prefix, chain, kit.Dict(arg, TARGET, m.Optionv(TARGET))))
-	} else {
-		m.Echo("%d", Grow(m, prefix, chain, kit.Dict(arg)))
-	}
+	m.Echo("%d", Grow(m, prefix, chain, kit.Dict(arg, TARGET, m.Optionv(TARGET))))
 }
 func _list_modify(m *ice.Message, prefix, chain string, field, value string, arg ...string) {
 	m.Logs(MODIFY, KEY, path.Join(prefix, chain), field, value, arg)
@@ -44,8 +39,8 @@ func _list_modify(m *ice.Message, prefix, chain string, field, value string, arg
 	Grows(m, prefix, chain, field, value, func(index int, val ice.Map) { _mdb_modify(m, val, field, arg...) })
 }
 func _list_select(m *ice.Message, prefix, chain, field, value string) {
-	defer RLock(m, prefix, chain)()
 	fields := _list_fields(m)
+	defer RLock(m, prefix, chain)()
 	Grows(m, prefix, chain, kit.Select(m.Option(CACHE_FIELD), field), kit.Select(m.Option(CACHE_VALUE), value), func(value ice.Map) {
 		_mdb_select(m, m.OptionCB(""), "", value, fields, nil)
 	})
@@ -117,12 +112,17 @@ func ListAction(arg ...ice.Any) ice.Actions {
 		DELETE: {Hand: func(m *ice.Message, arg ...string) { m.Cmdy(DELETE, m.PrefixKey(), "", LIST, m.OptionSimple(ID), arg) }},
 		MODIFY: {Hand: func(m *ice.Message, arg ...string) { m.Cmdy(MODIFY, m.PrefixKey(), "", LIST, m.OptionSimple(ID), arg) }},
 		SELECT: {Name: "select id auto insert", Hand: func(m *ice.Message, arg ...string) { ListSelect(m, arg...) }},
-		PREV:   {Hand: func(m *ice.Message, arg ...string) { PrevPage(m, m.Config(COUNT), kit.Slice(arg, 1)...) }},
-		NEXT:   {Hand: func(m *ice.Message, arg ...string) { NextPageLimit(m, m.Config(COUNT), kit.Slice(arg, 1)...) }},
 		PRUNES: {Hand: func(m *ice.Message, arg ...string) { m.Cmdy(PRUNES, m.PrefixKey(), "", LIST, arg) }},
 		EXPORT: {Hand: func(m *ice.Message, arg ...string) { m.Cmdy(EXPORT, m.PrefixKey(), "", LIST, arg) }},
 		IMPORT: {Hand: func(m *ice.Message, arg ...string) { m.Cmdy(IMPORT, m.PrefixKey(), "", LIST, arg) }},
 	}
+}
+func PageListAction(arg ...ice.Any) ice.Actions {
+	return ice.MergeActions(ice.Actions{
+		SELECT: {Name: "select id auto insert page", Hand: func(m *ice.Message, arg ...string) { ListSelect(m, arg...) }},
+		PREV:   {Hand: func(m *ice.Message, arg ...string) { PrevPage(m, m.Config(COUNT), kit.Slice(arg, 1)...) }},
+		NEXT:   {Hand: func(m *ice.Message, arg ...string) { NextPageLimit(m, m.Config(COUNT), kit.Slice(arg, 1)...) }},
+	}, ListAction(arg...))
 }
 func ListField(m *ice.Message) string { return kit.Select(LIST_FIELD, m.Config(FIELD)) }
 func ListSelect(m *ice.Message, arg ...string) *ice.Message {
@@ -152,12 +152,9 @@ func PrevPage(m *ice.Message, total string, arg ...string) {
 }
 func NextPage(m *ice.Message, total string, arg ...string) {
 	limit, offend := kit.Select("10", arg, 0), kit.Select("0", arg, 1)
-	offends := kit.Int(offend) + kit.Int(limit)
-	if total != "0" && (offends <= -kit.Int(total) || offends >= kit.Int(total)) {
+	if offends := kit.Int(offend) + kit.Int(limit); total != "0" && (offends <= -kit.Int(total) || offends >= kit.Int(total)) {
 		m.ProcessHold("已经是最后一页啦!")
-		return
-	}
-	if offends == 0 {
+	} else if offends == 0 {
 		m.ProcessRewrite("offend", "")
 	} else {
 		m.ProcessRewrite("offend", offends)

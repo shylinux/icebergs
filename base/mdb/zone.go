@@ -14,7 +14,7 @@ func _zone_fields(m *ice.Message) []string {
 	return kit.Split(kit.Select(ZONE_FIELD, m.OptionFields()))
 }
 func _zone_inputs(m *ice.Message, prefix, chain, zone string, field, value string) {
-	if field == m.Conf(prefix, kit.Keys(chain, kit.Keym(SHORT))) {
+	if field == _mdb_getmeta(m, prefix, chain, SHORT) {
 		_hash_inputs(m, prefix, chain, field, value)
 		return
 	}
@@ -25,7 +25,7 @@ func _zone_inputs(m *ice.Message, prefix, chain, zone string, field, value strin
 func _zone_insert(m *ice.Message, prefix, chain, zone string, arg ...string) {
 	h := _hash_select_field(m, prefix, chain, zone, HASH)
 	if h == "" {
-		h = _hash_insert(m, prefix, chain, m.Conf(prefix, kit.Keys(chain, kit.Keym(SHORT))), zone)
+		h = _hash_insert(m, prefix, chain, _mdb_getmeta(m, prefix, chain, SHORT), zone)
 	}
 	m.Assert(h != "")
 	defer Lock(m, prefix, chain)()
@@ -59,6 +59,7 @@ func _zone_export(m *ice.Message, prefix, chain, file string) {
 	f, p, e := miss.CreateFile(kit.Keys(file, CSV))
 	m.Assert(e)
 	defer f.Close()
+	m.Echo(p)
 	w := csv.NewWriter(f)
 	defer w.Flush()
 	fields := _zone_fields(m)
@@ -66,14 +67,11 @@ func _zone_export(m *ice.Message, prefix, chain, file string) {
 		fields = append(fields, EXTRA)
 	}
 	w.Write(fields)
+	defer Lock(m, prefix, chain)()
 	keys := []string{}
-	func() {
-		defer RLock(m, prefix, chain)()
-		Richs(m, prefix, chain, FOREACH, func(key string, val ice.Map) { keys = append(keys, key) })
-	}()
+	Richs(m, prefix, chain, FOREACH, func(key string, val ice.Map) { keys = append(keys, key) })
 	kit.Sort(keys)
 	count := 0
-	defer Lock(m, prefix, chain)()
 	for _, key := range keys {
 		Richs(m, prefix, chain, key, func(key string, val ice.Map) {
 			val = kit.GetMeta(val)
@@ -92,7 +90,6 @@ func _zone_export(m *ice.Message, prefix, chain, file string) {
 	}
 	m.Logs(EXPORT, KEY, path.Join(prefix, chain), FILE, p, COUNT, count)
 	m.Conf(prefix, kit.Keys(chain, HASH), "")
-	m.Echo(p).StatusTime(LINK, "/share/local/"+p)
 }
 func _zone_import(m *ice.Message, prefix, chain, file string) {
 	f, e := miss.OpenFile(kit.Keys(file, CSV))
@@ -100,10 +97,10 @@ func _zone_import(m *ice.Message, prefix, chain, file string) {
 	defer f.Close()
 	r := csv.NewReader(f)
 	head, _ := r.Read()
-	count := 0
-	list := ice.Maps{}
 	zkey := kit.Select(head[0], m.OptionFields())
 	defer Lock(m, prefix, chain)()
+	list := ice.Maps{}
+	count := 0
 	for {
 		line, e := r.Read()
 		if e != nil {
@@ -133,7 +130,7 @@ func _zone_import(m *ice.Message, prefix, chain, file string) {
 		}()
 		count++
 	}
-	m.Logs(IMPORT, KEY, path.Join(prefix, chain), COUNT, count)
+	m.Logs(IMPORT, KEY, path.Join(prefix, chain), FILE, p, COUNT, count)
 	m.Echo("%d", count)
 }
 
@@ -145,7 +142,7 @@ const ZONE = "zone"
 func ZoneAction(args ...ice.Any) ice.Actions {
 	return ice.Actions{ice.CTX_INIT: AutoConfig(append([]ice.Any{SHORT, ZONE}, args)...),
 		INPUTS: {Hand: func(m *ice.Message, arg ...string) { ZoneInputs(m, arg) }},
-		CREATE: {Name: "create zone", Hand: func(m *ice.Message, arg ...string) { ZoneCreate(m, arg) }},
+		CREATE: {Hand: func(m *ice.Message, arg ...string) { ZoneCreate(m, arg) }},
 		REMOVE: {Hand: func(m *ice.Message, arg ...string) { ZoneRemove(m, arg) }},
 		INSERT: {Hand: func(m *ice.Message, arg ...string) { ZoneInsert(m, arg) }},
 		MODIFY: {Hand: func(m *ice.Message, arg ...string) { ZoneModify(m, arg) }},

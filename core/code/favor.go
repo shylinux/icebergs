@@ -26,7 +26,7 @@ func init() {
 			}},
 		}, mdb.ZoneAction(mdb.SHORT, mdb.ZONE, mdb.FIELD, "time,id,type,name,text,path,file,line")), Hand: func(m *ice.Message, arg ...string) {
 			m.Option(mdb.CACHE_LIMIT, "30")
-			if mdb.ZoneSelectPage(m, arg...); len(arg) > 0 && arg[0] != "" {
+			if mdb.PageZoneSelect(m, arg...); len(arg) > 0 && arg[0] != "" {
 				if arg[0] == "_recent_file" {
 					m.Sort(nfs.FILE)
 				}

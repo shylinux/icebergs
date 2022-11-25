@@ -23,6 +23,7 @@ func _list_inputs(m *ice.Message, prefix, chain string, field, value string) {
 		m.SortIntR(COUNT)
 	}()
 	defer RLock(m, prefix, chain)()
+	m.Debug("what %v %v", prefix, chain)
 	Grows(m, prefix, chain, "", "", func(value ice.Map) {
 		value = kit.GetMeta(value)
 		list[kit.Format(value[field])] += kit.Int(kit.Select("1", value[COUNT]))
@@ -120,8 +121,8 @@ func ListAction(arg ...ice.Any) ice.Actions {
 func PageListAction(arg ...ice.Any) ice.Actions {
 	return ice.MergeActions(ice.Actions{
 		SELECT: {Name: "select id auto insert page", Hand: func(m *ice.Message, arg ...string) { ListSelect(m, arg...) }},
-		PREV:   {Hand: func(m *ice.Message, arg ...string) { PrevPage(m, m.Config(COUNT), kit.Slice(arg, 1)...) }},
 		NEXT:   {Hand: func(m *ice.Message, arg ...string) { NextPageLimit(m, m.Config(COUNT), kit.Slice(arg, 1)...) }},
+		PREV:   {Hand: func(m *ice.Message, arg ...string) { PrevPage(m, m.Config(COUNT), kit.Slice(arg, 1)...) }},
 	}, ListAction(arg...))
 }
 func ListField(m *ice.Message) string { return kit.Select(LIST_FIELD, m.Config(FIELD)) }

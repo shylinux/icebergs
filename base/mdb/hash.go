@@ -34,6 +34,9 @@ func _hash_insert(m *ice.Message, prefix, chain string, arg ...string) string {
 	if expire := m.Conf(prefix, kit.Keys(chain, kit.Keym(EXPIRE))); expire != "" {
 		arg = kit.Simple(TIME, m.Time(expire), arg)
 	}
+	m.Debug("what %v %v", m.Conf(prefix, chain))
+	m.Debug("what %v %v", kit.Data())
+	m.Debug("what %v %v", m.Conf(prefix, chain))
 	return m.Echo(Rich(m, prefix, chain, kit.Data(arg, TARGET, m.Optionv(TARGET)))).Result()
 }
 func _hash_delete(m *ice.Message, prefix, chain, field, value string) {

@@ -8,10 +8,11 @@ import (
 
 func init() {
 	Index.MergeCommands(ice.Commands{
-		"demo-hash": {Actions: ice.MergeActions(mdb.HashAction(), ctx.CmdAction())},
+		"demo-hash":        {Actions: ice.MergeActions(mdb.HashAction(), ctx.CmdAction())},
 		"demo-status-hash": {Actions: ice.MergeActions(mdb.StatusHashAction(), ctx.CmdAction())},
-		"demo-list": {Actions: ice.MergeActions(mdb.ListAction(), ctx.CmdAction())},
-		"demo-page-list": {Actions: ice.MergeActions(mdb.PageListAction(), ctx.CmdAction())},
-		"demo-zone": {Actions: ice.MergeActions(mdb.ZoneAction(), ctx.CmdAction())},
+		"demo-list":        {Actions: ice.MergeActions(mdb.ListAction(), ctx.CmdAction())},
+		"demo-page-list":   {Actions: ice.MergeActions(mdb.PageListAction(), ctx.CmdAction())},
+		"demo-zone":        {Actions: ice.MergeActions(mdb.ZoneAction(), ctx.CmdAction())},
+		"demo-page-zone":   {Actions: ice.MergeActions(mdb.PageZoneAction(), ctx.CmdAction())},
 	})
 }

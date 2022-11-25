@@ -19,7 +19,7 @@ func _zone_inputs(m *ice.Message, prefix, chain, zone string, field, value strin
 		return
 	}
 	h := _hash_select_field(m, prefix, chain, zone, HASH)
-	defer RLock(m, prefix, chain)()
+	defer Lock(m, prefix, chain)()
 	_list_inputs(m, prefix, kit.Keys(chain, HASH, h), field, value)
 }
 func _zone_insert(m *ice.Message, prefix, chain, zone string, arg ...string) {
@@ -115,7 +115,9 @@ func _zone_import(m *ice.Message, prefix, chain, file string) {
 			case ID:
 				continue
 			case EXTRA:
-				kit.Value(data, k, kit.UnMarshal(line[i]))
+				if line[i] != "" {
+					kit.Value(data, k, kit.UnMarshal(line[i]))
+				}
 			default:
 				kit.Value(data, k, line[i])
 			}
@@ -130,17 +132,17 @@ func _zone_import(m *ice.Message, prefix, chain, file string) {
 		}()
 		count++
 	}
-	m.Logs(IMPORT, KEY, path.Join(prefix, chain), FILE, p, COUNT, count)
+	m.Logs(IMPORT, KEY, path.Join(prefix, chain), FILE, kit.Keys(file, CSV), COUNT, count)
 	m.Echo("%d", count)
 }
 
 const (
-	ZONE_FIELD = "zone,id,time,type,name,text"
+	ZONE_FIELD = "time,id,type,name,text"
 )
 const ZONE = "zone"
 
-func ZoneAction(args ...ice.Any) ice.Actions {
-	return ice.Actions{ice.CTX_INIT: AutoConfig(append([]ice.Any{SHORT, ZONE}, args)...),
+func ZoneAction(arg ...ice.Any) ice.Actions {
+	return ice.Actions{ice.CTX_INIT: AutoConfig(append(kit.List(SHORT, ZONE, FIELD, ZONE_FIELD), arg...)...),
 		INPUTS: {Hand: func(m *ice.Message, arg ...string) { ZoneInputs(m, arg) }},
 		CREATE: {Hand: func(m *ice.Message, arg ...string) { ZoneCreate(m, arg) }},
 		REMOVE: {Hand: func(m *ice.Message, arg ...string) { ZoneRemove(m, arg) }},
@@ -149,9 +151,14 @@ func ZoneAction(args ...ice.Any) ice.Actions {
 		SELECT: {Name: "select zone id auto insert", Hand: func(m *ice.Message, arg ...string) { ZoneSelect(m, arg...) }},
 		EXPORT: {Hand: func(m *ice.Message, arg ...string) { ZoneExport(m, arg) }},
 		IMPORT: {Hand: func(m *ice.Message, arg ...string) { ZoneImport(m, arg) }},
-		PREV:   {Hand: func(m *ice.Message, arg ...string) { PrevPage(m, arg[0], arg[1:]...) }},
-		NEXT:   {Hand: func(m *ice.Message, arg ...string) { NextPageLimit(m, arg[0], arg[1:]...) }},
 	}
+}
+func PageZoneAction(arg ...ice.Any) ice.Actions {
+	return ice.MergeActions(ice.Actions{
+		SELECT: {Name: "select zone id auto insert page", Hand: func(m *ice.Message, arg ...string) { PageZoneSelect(m, arg...) }},
+		NEXT:   {Hand: func(m *ice.Message, arg ...string) { NextPageLimit(m, arg[0], arg[1:]...) }},
+		PREV:   {Hand: func(m *ice.Message, arg ...string) { PrevPage(m, arg[0], arg[1:]...) }},
+	}, ZoneAction(arg...))
 }
 func ZoneShort(m *ice.Message) string {
 	return kit.Select(ZONE, m.Config(SHORT), m.Config(SHORT) != UNIQ)
@@ -172,7 +179,11 @@ func ZoneRemove(m *ice.Message, arg ...Any) {
 	m.Cmdy(DELETE, m.PrefixKey(), "", HASH, arg)
 }
 func ZoneInsert(m *ice.Message, arg ...Any) {
-	m.Cmdy(INSERT, m.PrefixKey(), "", ZONE, arg)
+	if args := kit.Simple(arg...); args[0] == ZoneShort(m) {
+		m.Cmdy(INSERT, m.PrefixKey(), "", ZONE, args[1:])
+	} else {
+		m.Cmdy(INSERT, m.PrefixKey(), "", ZONE, arg)
+	}
 }
 func ZoneModify(m *ice.Message, arg ...Any) {
 	m.Cmdy(MODIFY, m.PrefixKey(), "", ZONE, m.Option(ZoneShort(m)), m.Option(ID), arg)
@@ -200,7 +211,7 @@ func ZoneExport(m *ice.Message, arg ...Any) {
 func ZoneImport(m *ice.Message, arg ...Any) {
 	m.Cmdy(IMPORT, m.PrefixKey(), "", ZONE, arg)
 }
-func ZoneSelectPage(m *ice.Message, arg ...string) *ice.Message {
+func PageZoneSelect(m *ice.Message, arg ...string) *ice.Message {
 	OptionPages(m, kit.Slice(arg, 2)...)
 	return ZoneSelect(m, arg...)
 }

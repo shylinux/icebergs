@@ -10,9 +10,7 @@ import (
 	"shylinux.com/x/toolkits/miss"
 )
 
-func _list_fields(m *ice.Message) []string {
-	return kit.Split(kit.Select(LIST_FIELD, m.OptionFields()))
-}
+func _list_fields(m *ice.Message) []string { return kit.Split(kit.Select(LIST_FIELD, m.OptionFields())) }
 func _list_inputs(m *ice.Message, prefix, chain string, field, value string) {
 	list := map[string]int{}
 	defer func() {
@@ -39,6 +37,7 @@ func _list_modify(m *ice.Message, prefix, chain string, field, value string, arg
 	Grows(m, prefix, chain, field, value, func(index int, val ice.Map) { _mdb_modify(m, val, field, arg...) })
 }
 func _list_select(m *ice.Message, prefix, chain, field, value string) {
+	defer m.SortIntR(ID)
 	fields := _list_fields(m)
 	defer RLock(m, prefix, chain)()
 	Grows(m, prefix, chain, kit.Select(m.Option(CACHE_FIELD), field), kit.Select(m.Option(CACHE_VALUE), value), func(value ice.Map) {
@@ -124,7 +123,6 @@ func ListField(m *ice.Message) string { return kit.Select(LIST_FIELD, m.Config(F
 func ListSelect(m *ice.Message, arg ...string) *ice.Message {
 	m.Fields(len(kit.Slice(arg, 0, 1)), ListField(m))
 	if m.Cmdy(SELECT, m.PrefixKey(), "", LIST, ID, arg); !m.FieldsIsDetail() {
-		m.SortIntR(ID)
 		return m.StatusTimeCountTotal(m.Config(COUNT))
 	}
 	return m.StatusTime()

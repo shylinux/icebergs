@@ -18,6 +18,7 @@ func _zone_inputs(m *ice.Message, prefix, chain, zone string, field, value strin
 		_hash_inputs(m, prefix, chain, field, value)
 		return
 	}
+	defer RLock(m, prefix, chain)()
 	h := _hash_select_field(m, prefix, chain, zone, HASH)
 	_list_inputs(m, prefix, kit.Keys(chain, HASH, h), field, value)
 }
@@ -27,11 +28,13 @@ func _zone_insert(m *ice.Message, prefix, chain, zone string, arg ...string) {
 		h = _hash_insert(m, prefix, chain, _mdb_getmeta(m, prefix, chain, SHORT), zone)
 	}
 	m.Assert(h != "")
+	defer Lock(m, prefix, chain)()
 	_list_insert(m, prefix, kit.Keys(chain, HASH, h), arg...)
 }
 func _zone_modify(m *ice.Message, prefix, chain, zone, id string, arg ...string) {
 	h := _hash_select_field(m, prefix, chain, zone, HASH)
 	m.Assert(h != "")
+	defer Lock(m, prefix, chain)()
 	_list_modify(m, prefix, kit.Keys(chain, HASH, h), ID, id, arg...)
 }
 func _zone_select(m *ice.Message, prefix, chain, zone string, id string) {
@@ -41,6 +44,7 @@ func _zone_select(m *ice.Message, prefix, chain, zone string, id string) {
 	} else if zone == RANDOM {
 		zone = RANDOMS
 	}
+	defer m.SortIntR(ID)
 	fields := _zone_fields(m)
 	defer RLock(m, prefix, chain)()
 	Richs(m, prefix, chain, kit.Select(FOREACH, zone), func(key string, val Map) {
@@ -183,11 +187,10 @@ func ZoneModify(m *ice.Message, arg ...Any) {
 }
 func ZoneSelect(m *ice.Message, arg ...string) *ice.Message {
 	arg = kit.Slice(arg, 0, 2)
-	m.Fields(len(arg), kit.Fields(TIME, m.Config(SHORT), COUNT), ZoneField(m))
+	m.Fields(len(arg), kit.Select(kit.Fields(TIME, m.Config(SHORT), COUNT), m.Config(FIELDS)), ZoneField(m))
 	if m.Cmdy(SELECT, m.PrefixKey(), "", ZONE, arg, logs.FileLineMeta(logs.FileLine(-1))); len(arg) == 0 {
 		m.Sort(ZoneShort(m)).StatusTimeCount().PushAction(m.Config(ACTION), REMOVE)
 	} else if len(arg) == 1 {
-		m.SortIntR(ID)
 		m.StatusTimeCountTotal(_mdb_getmeta(m, "", kit.Keys(HASH, HashSelectField(m, arg[0], HASH)), COUNT))
 	}
 	return m

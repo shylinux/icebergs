@@ -37,7 +37,7 @@ func _inner_exec(m *ice.Message, ext, file, dir string) {
 	}
 }
 func _inner_tags(m *ice.Message, dir string, value string) {
-	for _, l := range strings.Split(m.Cmdx(cli.SYSTEM, nfs.GREP, "^"+value+"\\>", nfs.TAGS, kit.Dict(cli.CMD_DIR, dir)), ice.NL) {
+	for _, l := range strings.Split(m.Cmdx(cli.SYSTEM, cli.GREP, "^"+value+"\\>", nfs.TAGS, kit.Dict(cli.CMD_DIR, dir)), ice.NL) {
 		if strings.HasPrefix(l, "!_") {
 			continue
 		}
@@ -119,8 +119,8 @@ func init() {
 			mdb.RENDER: {Hand: func(m *ice.Message, arg ...string) { _inner_show(m, arg[0], arg[1], arg[2]) }},
 			mdb.ENGINE: {Hand: func(m *ice.Message, arg ...string) { _inner_exec(m, arg[0], arg[1], arg[2]) }},
 
-			nfs.GREP: {Name: "grep", Help: "搜索", Hand: func(m *ice.Message, arg ...string) {
-				m.Cmdy(nfs.GREP, arg[0], m.Option(nfs.PATH)).StatusTimeCount(mdb.INDEX, 0)
+			cli.GREP: {Name: "grep", Help: "搜索", Hand: func(m *ice.Message, arg ...string) {
+				m.Cmdy(cli.GREP, arg[0], m.Option(nfs.PATH)).StatusTimeCount(mdb.INDEX, 0)
 			}},
 			nfs.TAGS: {Name: "tags", Help: "索引", Hand: func(m *ice.Message, arg ...string) {
 				if _inner_tags(m, m.Option(nfs.PATH), arg[0]); m.Length() == 0 {

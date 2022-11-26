@@ -8,25 +8,25 @@ import (
 	kit "shylinux.com/x/toolkits"
 )
 
-func _trash_create(m *ice.Message, name string) {
-	if m.Warn(name == "", ice.ErrNotValid, name) {
+func _trash_create(m *ice.Message, from string) {
+	if m.Warn(from == "", ice.ErrNotValid, FROM) {
 		return
 	}
-	s, e := StatFile(m, name)
-	if m.Warn(e, ice.ErrNotFound, name) {
+	s, e := StatFile(m, from)
+	if m.Warn(e, ice.ErrNotFound, from) {
 		return
 	}
-	p := path.Join(ice.VAR_TRASH, path.Base(name))
+	p := path.Join(ice.VAR_TRASH, path.Base(from))
 	if !s.IsDir() {
-		if f, e := OpenFile(m, name); m.Assert(e) {
+		if f, e := OpenFile(m, from); m.Assert(e) {
 			defer f.Close()
 			p = path.Join(ice.VAR_TRASH, kit.HashsPath(f))
 		}
 	}
-
 	MkdirAll(m, path.Dir(p))
-	if RemoveAll(m, p); !m.Warn(Rename(m, name, p)) {
-		mdb.HashCreate(m, FROM, name, FILE, p)
+	if RemoveAll(m, p); !m.Warn(Rename(m, from, p)) {
+		mdb.HashCreate(m, FROM, from, FILE, p)
+		m.Result(p)
 	}
 }
 
@@ -35,32 +35,22 @@ const TRASH = "trash"
 func init() {
 	Index.MergeCommands(ice.Commands{
 		TRASH: {Name: "trash hash auto prunes", Help: "回收站", Actions: ice.MergeActions(ice.Actions{
-			mdb.REVERT: {Name: "revert", Help: "恢复", Hand: func(m *ice.Message, arg ...string) {
+			mdb.REVERT: {Hand: func(m *ice.Message, arg ...string) {
 				Rename(m, m.Option(FILE), m.Option(FROM))
 				mdb.HashRemove(m, m.OptionSimple(mdb.HASH))
 				m.ProcessRefresh()
 			}},
-			mdb.CREATE: {Name: "create path", Help: "删除", Hand: func(m *ice.Message, arg ...string) {
-				p := path.Join(ice.VAR_TRASH, path.Base(m.Option(PATH)))
-				RemoveAll(m, p)
-				if MkdirAll(m, path.Dir(p)); !m.Warn(Rename(m, m.Option(PATH), p)) {
-					mdb.HashCreate(m, FROM, m.Option(PATH), FILE, p)
-					m.ProcessRefresh()
-					m.Echo(p)
-				}
+			mdb.CREATE: {Name: "create from", Hand: func(m *ice.Message, arg ...string) {
+				_trash_create(m, m.Option(FROM))
 			}},
-			mdb.REMOVE: {Name: "remove", Help: "删除", Hand: func(m *ice.Message, arg ...string) {
+			mdb.REMOVE: {Hand: func(m *ice.Message, arg ...string) {
 				Remove(m, m.Option(FILE))
 				mdb.HashRemove(m, m.OptionSimple(mdb.HASH))
 			}},
-			mdb.PRUNES: {Name: "prunes before@date", Help: "清理", Hand: func(m *ice.Message, arg ...string) {
-				mdb.HashPrunes(m, func(value ice.Map) bool {
-					return true
-				}).Tables(func(value ice.Maps) {
-					Remove(m, value[FILE])
-				})
+			mdb.PRUNES: {Hand: func(m *ice.Message, arg ...string) {
+				mdb.HashPrunes(m, nil).Tables(func(value ice.Maps) { Remove(m, value[FILE]) })
 			}},
-		}, mdb.HashAction(mdb.SHORT, FROM, mdb.FIELD, "time,hash,file,from")), Hand: func(m *ice.Message, arg ...string) {
+		}, mdb.HashAction(mdb.SHORT, FROM, mdb.FIELD, "time,hash,from,file")), Hand: func(m *ice.Message, arg ...string) {
 			if mdb.HashSelect(m, arg...); len(arg) == 0 || !ExistsFile(m, arg[0]) {
 				m.PushAction(mdb.REVERT, mdb.REMOVE)
 				return

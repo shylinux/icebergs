@@ -48,6 +48,7 @@ func _system_cmd(m *ice.Message, arg ...string) *exec.Cmd {
 		}
 	}
 	cmd := exec.Command(bin, arg[1:]...)
+			m.Debug("what %v", m.Option("cmd_dir"))
 	if cmd.Dir = kit.TrimPath(m.Option(CMD_DIR)); len(cmd.Dir) > 0 {
 		if m.Logs(mdb.EXPORT, CMD_DIR, cmd.Dir); !nfs.ExistsFile(m, cmd.Dir) {
 			file.MkdirAll(cmd.Dir, ice.MOD_DIR)
@@ -128,7 +129,8 @@ const (
 	CMD_ERR = "cmd_err"
 	CMD_OUT = "cmd_out"
 
-	MAN = "man"
+	MAN  = "man"
+	GREP = "grep"
 )
 
 const SYSTEM = "system"
@@ -136,7 +138,7 @@ const SYSTEM = "system"
 func init() {
 	Index.MergeCommands(ice.Commands{
 		SYSTEM: {Name: "system cmd run", Help: "系统命令", Actions: ice.Actions{
-			nfs.FIND: {Hand: func(m *ice.Message, arg ...string) {
+			"find": {Hand: func(m *ice.Message, arg ...string) {
 				m.Echo(_system_find(m, arg[0], arg[1:]...))
 			}},
 			nfs.PUSH: {Hand: func(m *ice.Message, arg ...string) {

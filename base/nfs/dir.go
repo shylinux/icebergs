@@ -12,14 +12,14 @@ import (
 	kit "shylinux.com/x/toolkits"
 )
 
-func _dir_size(m *ice.Message, p string) int {
-	if ls, e := ReadDir(m, p); !m.Warn(e) {
+func _dir_size(m *ice.Message, dir string) int {
+	if ls, e := ReadDir(m, dir); !m.Warn(e) {
 		return len(ls)
 	}
 	return 0
 }
-func _dir_hash(m *ice.Message, p string) string {
-	if ls, e := ReadDir(m, p); !m.Warn(e) {
+func _dir_hash(m *ice.Message, dir string) string {
+	if ls, e := ReadDir(m, dir); !m.Warn(e) {
 		meta := []string{}
 		for _, s := range ls {
 			meta = append(meta, kit.Format("%s%d%s", s.Name(), s.Size(), s.ModTime()))
@@ -28,30 +28,27 @@ func _dir_hash(m *ice.Message, p string) string {
 	}
 	return ""
 }
-func _dir_list(m *ice.Message, root string, name string, level int, deep bool, dir_type string, dir_reg *regexp.Regexp, fields []string) *ice.Message {
-	list, _ := ReadDir(m, path.Join(root, name))
-
-	if len(list) == 0 { // 单个文件
-		if s, e := StatFile(m, path.Join(root, name)); e == nil && !s.IsDir() {
-			ls, _ := ReadDir(m, path.Dir(path.Join(root, name)))
-			for _, s := range ls {
-				if s.Name() == path.Base(name) {
-					list = append(list, s)
+func _dir_list(m *ice.Message, root string, dir string, level int, deep bool, dir_type string, dir_reg *regexp.Regexp, fields []string) *ice.Message {
+	ls, _ := ReadDir(m, path.Join(root, dir))
+	if len(ls) == 0 {
+		if s, e := StatFile(m, path.Join(root, dir)); e == nil && !s.IsDir() {
+			_ls, _ := ReadDir(m, path.Dir(path.Join(root, dir)))
+			for _, s := range _ls {
+				if s.Name() == path.Base(dir) {
+					ls = append(ls, s)
 				}
 			}
-			name, deep = path.Dir(name), false
+			dir, deep = path.Dir(dir), false
 		}
 	}
-
-	for _, f := range list {
+	for _, f := range ls {
 		if f.Name() == ice.PT || f.Name() == ".." {
 			continue
 		}
 		if strings.HasPrefix(f.Name(), ice.PT) && dir_type != TYPE_ALL {
 			continue
 		}
-
-		p, pp := path.Join(root, name, f.Name()), path.Join(name, f.Name())
+		p, _dir := path.Join(root, dir, f.Name()), path.Join(dir, f.Name())
 		isDir := f.IsDir() || kit.IsDir(p)
 		if !(dir_type == TYPE_CAT && isDir || dir_type == TYPE_DIR && !isDir) && (dir_reg == nil || dir_reg.MatchString(f.Name())) {
 			switch cb := m.OptionCB("").(type) {
@@ -65,14 +62,12 @@ func _dir_list(m *ice.Message, root string, name string, level int, deep bool, d
 			default:
 				m.ErrorNotImplement(cb)
 			}
-
 			for _, field := range fields {
 				switch field {
 				case mdb.TIME:
 					m.Push(field, f.ModTime().Format(ice.MOD_TIME))
 				case mdb.TYPE:
 					m.Push(field, kit.Select(CAT, DIR, isDir))
-
 				case TREE:
 					if level == 0 {
 						m.Push(field, f.Name())
@@ -82,12 +77,11 @@ func _dir_list(m *ice.Message, root string, name string, level int, deep bool, d
 				case FULL:
 					m.Push(field, p+kit.Select("", ice.PS, isDir))
 				case PATH:
-					m.Push(field, pp+kit.Select("", ice.PS, isDir))
+					m.Push(field, _dir+kit.Select("", ice.PS, isDir))
 				case FILE:
 					m.Push(field, f.Name()+kit.Select("", ice.PS, isDir))
 				case NAME:
 					m.Push(field, f.Name())
-
 				case SIZE:
 					if isDir {
 						m.Push(field, _dir_size(m, p))
@@ -129,14 +123,12 @@ func _dir_list(m *ice.Message, root string, name string, level int, deep bool, d
 				}
 			}
 		}
-
 		if deep && isDir {
 			switch f.Name() {
 			case "node_modules", "pluged", "target", "trash":
-				continue // 禁用递归
+				continue
 			}
-
-			_dir_list(m, root, pp, level+1, deep, dir_type, dir_reg, fields)
+			_dir_list(m, root, _dir, level+1, deep, dir_type, dir_reg, fields)
 		}
 	}
 	return m
@@ -172,33 +164,25 @@ const DIR = "dir"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
-		DIR: {Name: "dir path field auto upload", Help: "目录", Actions: ice.Actions{
+		DIR: {Name: "dir path field auto dir_deep upload", Help: "目录", Actions: ice.Actions{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
-				m.Cmd(aaa.ROLE, aaa.WHITE, aaa.VOID, ice.SRC)
-				m.Cmd(aaa.ROLE, aaa.WHITE, aaa.VOID, ice.BIN)
-				m.Cmd(aaa.ROLE, aaa.WHITE, aaa.VOID, ice.USR)
-				m.Cmd(aaa.ROLE, aaa.BLACK, aaa.VOID, ice.USR_LOCAL)
-				m.Cmd(aaa.ROLE, aaa.WHITE, aaa.VOID, ice.USR_LOCAL_GO)
+				aaa.White(m, ice.SRC, ice.BIN, ice.USR, ice.USR_LOCAL_GO)
+				aaa.Black(m, ice.USR_LOCAL)
 			}},
-			mdb.UPLOAD: {Name: "upload", Help: "上传", Hand: func(m *ice.Message, arg ...string) {
-				m.Cmdy("web.cache", "upload_watch", m.Option(PATH))
-			}},
-			TRASH: {Name: "trash", Help: "删除", Hand: func(m *ice.Message, arg ...string) {
-				m.Cmdy(TRASH, mdb.CREATE, m.Option(PATH))
-			}},
+			mdb.UPLOAD: {Hand: func(m *ice.Message, arg ...string) { m.Cmdy("web.cache", "upload_watch", m.Option(PATH)) }},
+			TRASH: {Hand: func(m *ice.Message, arg ...string) { m.Cmdy(TRASH, mdb.CREATE, m.Option(PATH)) }},
 		}, Hand: func(m *ice.Message, arg ...string) {
-			root, name := kit.Select(PWD, m.Option(DIR_ROOT)), kit.Select(PWD, arg, 0)
-			if strings.HasPrefix(name, ice.PS) {
+			root, dir := kit.Select(PWD, m.Option(DIR_ROOT)), kit.Select(PWD, arg, 0)
+			if strings.HasPrefix(dir, ice.PS) {
 				root = ice.PS
 			}
-			if !aaa.Right(m, path.Join(root, name)) {
-				return // 没有权限
+			if !aaa.Right(m, path.Join(root, dir)) {
+				return
 			}
 			fields := kit.Split(kit.Select(kit.Select(DIR_DEF_FIELDS, m.OptionFields()), kit.Join(kit.Slice(arg, 1))))
-			m.Logs(mdb.SELECT, DIR_ROOT, m.Option(DIR_ROOT), DIR_REG, m.Option(DIR_REG), mdb.FIELD, kit.Join(fields, ","))
-			_dir_list(m, root, name, 0, m.Option(DIR_DEEP) == ice.TRUE, kit.Select(TYPE_BOTH, m.Option(DIR_TYPE)), kit.Regexp(m.Option(DIR_REG)), fields)
-			m.SortTimeR(mdb.TIME)
-			m.StatusTimeCount()
+			m.Logs(mdb.SELECT, DIR_ROOT, m.Option(DIR_ROOT), DIR_REG, m.Option(DIR_REG), mdb.FIELD, kit.Join(fields, ice.FS))
+			_dir_list(m, root, dir, 0, m.Option(DIR_DEEP) == ice.TRUE, kit.Select(TYPE_BOTH, m.Option(DIR_TYPE)), kit.Regexp(m.Option(DIR_REG)), fields)
+			m.Sort(PATH).StatusTimeCount()
 		}},
 	})
 }
@@ -211,10 +195,8 @@ func Dir(m *ice.Message, sort string) *ice.Message {
 	return m
 }
 func DirDeepAll(m *ice.Message, root, dir string, cb func(ice.Maps), arg ...string) *ice.Message {
-	m.Option(DIR_TYPE, CAT)
-	m.Option(DIR_ROOT, root)
-	m.Option(DIR_DEEP, ice.TRUE)
-	if msg := m.Cmd(DIR, dir, arg).Sort(PATH).Tables(cb); cb == nil {
+	m.Options(DIR_TYPE, CAT, DIR_ROOT, root, DIR_DEEP, ice.TRUE)
+	if msg := m.Cmd(DIR, dir, arg).Tables(cb); cb == nil {
 		return m.Copy(msg)
 	} else {
 		return msg

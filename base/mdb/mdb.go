@@ -6,7 +6,6 @@ import (
 
 	ice "shylinux.com/x/icebergs"
 	kit "shylinux.com/x/toolkits"
-	"shylinux.com/x/toolkits/logs"
 	"shylinux.com/x/toolkits/task"
 )
 
@@ -113,6 +112,7 @@ const (
 	DETAIL = "detail"
 	RANDOM = "random"
 	ACTION = "action"
+	FIELDS = "fields"
 
 	INPUTS = "inputs"
 	CREATE = "create"

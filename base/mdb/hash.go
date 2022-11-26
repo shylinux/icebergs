@@ -10,9 +10,7 @@ import (
 	"shylinux.com/x/toolkits/miss"
 )
 
-func _hash_fields(m *ice.Message) []string {
-	return kit.Split(kit.Select(HASH_FIELD, m.OptionFields()))
-}
+func _hash_fields(m *ice.Message) []string { return kit.Split(kit.Select(HASH_FIELD, m.OptionFields())) }
 func _hash_inputs(m *ice.Message, prefix, chain string, field, value string) {
 	list := map[string]int{}
 	defer func() {
@@ -62,11 +60,11 @@ func _hash_select(m *ice.Message, prefix, chain, field, value string) {
 }
 func _hash_select_field(m *ice.Message, prefix, chain string, key string, field string) (value string) {
 	defer RLock(m, prefix, chain)()
-	Richs(m, prefix, chain, key, func(k string, v Map) {
+	Richs(m, prefix, chain, key, func(key string, val Map) {
 		if field == HASH {
-			value = k
+			value = key
 		} else {
-			value = kit.Format(v[field])
+			value = kit.Format(val[field])
 		}
 	})
 	return
@@ -179,7 +177,7 @@ func HashModify(m *ice.Message, arg ...Any) *ice.Message {
 }
 func HashSelect(m *ice.Message, arg ...string) *ice.Message {
 	if len(arg) > 0 && arg[0] == FOREACH {
-		m.OptionFields(HashField(m))
+		m.Fields(0, HashField(m))
 	} else {
 		m.Fields(len(kit.Slice(arg, 0, 1)), HashField(m))
 	}
@@ -190,7 +188,7 @@ func HashSelect(m *ice.Message, arg ...string) *ice.Message {
 	return m.StatusTime()
 }
 func HashPrunes(m *ice.Message, cb func(Map) bool) *ice.Message {
-	expire := kit.Select(m.Time("-72h"), m.Option("before"))
+	expire := kit.Select(m.Time("-"+kit.Select("72h", m.Config(EXPIRE))), m.Option("before"))
 	m.OptionCB(PRUNES, func(key string, value Map) bool {
 		if kit.Format(value[TIME]) > expire {
 			return false
@@ -212,16 +210,12 @@ func HashSelects(m *ice.Message, arg ...string) *ice.Message {
 }
 func HashSelectValue(m *ice.Message, cb Any) *ice.Message {
 	defer RLock(m, m.PrefixKey(), "")()
-	Richs(m, m.PrefixKey(), nil, FOREACH, func(key string, value Map) {
-		_mdb_select(m, cb, key, value, nil, nil)
-	})
+	Richs(m, m.PrefixKey(), nil, FOREACH, func(key string, value Map) { _mdb_select(m, cb, key, value, nil, nil) })
 	return m
 }
 func HashSelectUpdate(m *ice.Message, key string, cb Any) *ice.Message {
 	defer Lock(m, m.PrefixKey(), "")()
-	Richs(m, m.PrefixKey(), nil, key, func(key string, value Map) {
-		_mdb_select(m, cb, key, value, nil, nil)
-	})
+	Richs(m, m.PrefixKey(), nil, key, func(key string, value Map) { _mdb_select(m, cb, key, value, nil, nil) })
 	return m
 }
 func HashSelectDetail(m *ice.Message, key string, cb Any) (has bool) {

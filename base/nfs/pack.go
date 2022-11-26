@@ -19,18 +19,18 @@ func init() {
 	pack := PackFile
 	Index.MergeCommands(ice.Commands{
 		PACK: {Name: "pack path auto upload create", Help: "文件系统", Actions: ice.Actions{
-			mdb.UPLOAD: {Name: "upload", Help: "上传", Hand: func(m *ice.Message, arg ...string) {
-				if b, h, e := m.R.FormFile(mdb.UPLOAD); m.Assert(e) {
-					defer b.Close()
-					if f, p, e := pack.CreateFile(path.Join(m.Option(PATH), h.Filename)); m.Assert(e) {
+			mdb.UPLOAD: {Hand: func(m *ice.Message, arg ...string) {
+				if c, e := DiskFile.OpenFile(m.Option(FILE)); m.Assert(e) {
+					defer c.Close()
+					if f, p, e := pack.CreateFile(path.Join(m.Option(PATH), m.Option(mdb.NAME))); m.Assert(e) {
 						defer f.Close()
-						if n, e := io.Copy(f, b); m.Assert(e) {
+						if n, e := io.Copy(f, c); m.Assert(e) {
 							m.Logs(mdb.EXPORT, FILE, p, SIZE, n)
 						}
 					}
 				}
 			}},
-			mdb.CREATE: {Name: "create path=h1/h2/hi.txt text=hello", Help: "创建", Hand: func(m *ice.Message, arg ...string) {
+			mdb.CREATE: {Name: "create path=src/hi/hi.txt text=hello", Hand: func(m *ice.Message, arg ...string) {
 				if f, p, e := pack.CreateFile(m.Option(PATH)); m.Assert(e) {
 					defer f.Close()
 					if n, e := f.Write([]byte(m.Option(mdb.TEXT))); m.Assert(e) {
@@ -38,9 +38,7 @@ func init() {
 					}
 				}
 			}},
-			mdb.REMOVE: {Name: "remove", Help: "删除", Hand: func(m *ice.Message, arg ...string) {
-				pack.Remove(path.Clean(m.Option(PATH)))
-			}},
+			mdb.REMOVE: {Hand: func(m *ice.Message, arg ...string) { pack.Remove(path.Clean(m.Option(PATH))) }},
 		}, Hand: func(m *ice.Message, arg ...string) {
 			p := kit.Select("", arg, 0)
 			if p != "" && !strings.HasSuffix(p, PS) {
@@ -52,16 +50,13 @@ func init() {
 				}
 				return
 			}
-
 			ls, _ := pack.ReadDir(p)
 			for _, f := range ls {
 				m.Push(mdb.TIME, f.ModTime().Format(ice.MOD_TIME))
 				m.Push(PATH, path.Join(p, f.Name())+kit.Select("", PS, f.IsDir()))
 				m.Push(SIZE, kit.FmtSize(f.Size()))
 			}
-			m.Sort("time,path")
-			m.PushAction(mdb.REMOVE)
-			m.StatusTimeCount()
+			m.Sort(PATH).PushAction(mdb.REMOVE).StatusTimeCount()
 		}},
 	})
 }

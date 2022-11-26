@@ -1,8 +1,0 @@
-chapter "ssh"
-
-field "脚本" source
-field "模块" target
-field "提示" prompt
-field "输出" printf
-field "屏显" screen
-

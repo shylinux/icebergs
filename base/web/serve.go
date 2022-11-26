@@ -311,6 +311,9 @@ func _serve_login(msg *ice.Message, key string, cmds []string, w http.ResponseWr
 }
 
 const (
+	SERVE_START = "serve.start"
+	SERVE_STOP  = "serve.stop"
+
 	WEB_LOGIN = "_login"
 	SSO       = "sso"
 
@@ -320,29 +323,17 @@ const (
 const SERVE = "serve"
 
 func init() {
-	Index.Merge(&ice.Context{Configs: ice.Configs{
-		SERVE: {Name: SERVE, Help: "服务器", Value: kit.Data(
-			mdb.SHORT, mdb.NAME, mdb.FIELD, "time,status,name,proto,host,port,dev",
-			tcp.LOCALHOST, ice.TRUE, LOGHEADERS, ice.FALSE,
-			nfs.PATH, kit.Dict(ice.PS, ice.USR_VOLCANOS),
-			ice.VOLCANOS, kit.Dict(nfs.PATH, ice.USR_VOLCANOS, INDEX, "page/index.html",
-				nfs.REPOS, "https://shylinux.com/x/volcanos", nfs.BRANCH, nfs.MASTER,
-			),
-			ice.INTSHELL, kit.Dict(nfs.PATH, ice.USR_INTSHELL, INDEX, ice.INDEX_SH,
-				nfs.REPOS, "https://shylinux.com/x/intshell", nfs.BRANCH, nfs.MASTER,
-			),
-		)},
-	}, Commands: ice.Commands{
+	Index.MergeCommands(ice.Commands{
 		SERVE: {Name: "serve name auto start spide", Help: "服务器", Actions: ice.MergeActions(ice.Actions{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
 				cli.NodeInfo(m, ice.Info.PathName, WORKER)
 				for _, p := range []string{LOGIN, SHARE, SPACE, ice.VOLCANOS, ice.INTSHELL, ice.PUBLISH, ice.REQUIRE, ice.HELP, ice.CMD} {
 					m.Cmd(aaa.ROLE, aaa.WHITE, aaa.VOID, p)
 				}
+				gdb.Watch(m, SERVE_START)
 				_serve_rewrite(m)
-				gdb.Watch(m, ssh.SOURCE_STDIO)
 			}},
-			ssh.SOURCE_STDIO: {Name: "source.stdio", Help: "终端", Hand: func(m *ice.Message, arg ...string) {
+			SERVE_START: {Name: "source.stdio", Help: "终端", Hand: func(m *ice.Message, arg ...string) {
 				m.Go(func() {
 					m.Sleep("2s")
 					url := m.Cmdx(SPACE, DOMAIN)
@@ -363,7 +354,17 @@ func init() {
 			cli.START: {Name: "start dev proto=http host port=9020 nodename username usernick", Hand: func(m *ice.Message, arg ...string) {
 				_serve_start(m)
 			}},
-		}, mdb.HashAction())},
+		}, mdb.HashAction(
+			mdb.SHORT, mdb.NAME, mdb.FIELD, "time,status,name,proto,host,port,dev",
+			tcp.LOCALHOST, ice.TRUE, LOGHEADERS, ice.FALSE,
+			nfs.PATH, kit.Dict(ice.PS, ice.USR_VOLCANOS),
+			ice.VOLCANOS, kit.Dict(nfs.PATH, ice.USR_VOLCANOS, INDEX, "page/index.html",
+				nfs.REPOS, "https://shylinux.com/x/volcanos", nfs.BRANCH, nfs.MASTER,
+			),
+			ice.INTSHELL, kit.Dict(nfs.PATH, ice.USR_INTSHELL, INDEX, ice.INDEX_SH,
+				nfs.REPOS, "https://shylinux.com/x/intshell", nfs.BRANCH, nfs.MASTER,
+			),
+		))},
 
 		PP(ice.INTSHELL): {Name: "/intshell/", Help: "命令行", Hand: func(m *ice.Message, arg ...string) {
 			RenderIndex(m, ice.INTSHELL, arg...)
@@ -399,7 +400,7 @@ func init() {
 			}
 			m.Cmdy("web.chat./cmd/", arg)
 		}},
-	}})
+	})
 	ice.AddMerges(func(c *ice.Context, key string, cmd *ice.Command, sub string, action *ice.Action) (ice.Handler, ice.Handler) {
 		if strings.HasPrefix(sub, ice.PS) {
 			if sub = kit.Select(sub, PP(key), sub == ice.PS); action.Hand == nil {

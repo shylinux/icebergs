@@ -10,7 +10,9 @@ import (
 	"shylinux.com/x/toolkits/miss"
 )
 
-func _hash_fields(m *ice.Message) []string { return kit.Split(kit.Select(HASH_FIELD, m.OptionFields())) }
+func _hash_fields(m *ice.Message) []string {
+	return kit.Split(kit.Select(HASH_FIELD, m.OptionFields()))
+}
 func _hash_inputs(m *ice.Message, prefix, chain string, field, value string) {
 	list := map[string]int{}
 	defer func() {
@@ -150,7 +152,9 @@ func HashKey(m *ice.Message) string {
 	}
 	return HashShort(m)
 }
-func HashShort(m *ice.Message) string { return kit.Select(HASH, m.Config(SHORT), m.Config(SHORT) != UNIQ) }
+func HashShort(m *ice.Message) string {
+	return kit.Select(HASH, m.Config(SHORT), m.Config(SHORT) != UNIQ)
+}
 func HashField(m *ice.Message) string { return kit.Select(HASH_FIELD, m.Config(FIELD)) }
 func HashInputs(m *ice.Message, arg ...Any) *ice.Message {
 	return m.Cmdy(INPUTS, m.PrefixKey(), "", HASH, arg)
@@ -159,7 +163,7 @@ func HashCreate(m *ice.Message, arg ...Any) string {
 	if len(arg) == 0 {
 		arg = append(arg, m.OptionSimple(HashField(m)))
 	}
-	return m.Echo(m.Cmdx(INSERT, m.PrefixKey(), "", HASH, arg)).Result()
+	return m.Echo(m.Cmdx(append(kit.List(INSERT, m.PrefixKey(), "", HASH), arg...)...)).Result()
 }
 func HashRemove(m *ice.Message, arg ...Any) *ice.Message {
 	if args := kit.Simple(arg); len(args) == 0 {

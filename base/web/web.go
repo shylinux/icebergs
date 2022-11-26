@@ -109,9 +109,7 @@ func (frame *Frame) Close(m *ice.Message, arg ...string) bool {
 }
 
 const (
-	SERVE_START = "serve.start"
-	SERVE_STOP  = "serve.stop"
-	WEBSITE     = "website"
+	WEBSITE = "website"
 
 	CODE_INNER = "web.code.inner"
 	WIKI_WORD  = "web.wiki.word"

@@ -302,6 +302,9 @@ func init() {
 			if mdb.HashSelect(m, arg...); len(arg) > 0 {
 				m.Sort("type,name,text")
 			}
+			if m.IsCliUA() {
+				return
+			}
 			m.Tables(func(value ice.Maps) {
 				if msg := gdb.Event(m.Spawn(), DREAM_TABLES, mdb.NAME, value[mdb.NAME], mdb.TYPE, value[mdb.TYPE]); len(msg.Appendv(ctx.ACTION)) > 0 {
 					m.PushButton(strings.Join(msg.Appendv(ctx.ACTION), ""))

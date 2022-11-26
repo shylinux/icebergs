@@ -9,7 +9,7 @@ import (
 	"shylinux.com/x/icebergs/base/ctx"
 	"shylinux.com/x/icebergs/base/gdb"
 	"shylinux.com/x/icebergs/base/mdb"
-	"shylinux.com/x/icebergs/base/ssh"
+	"shylinux.com/x/icebergs/base/nfs"
 	"shylinux.com/x/icebergs/base/tcp"
 	"shylinux.com/x/icebergs/base/web"
 	"shylinux.com/x/icebergs/core/chat"
@@ -27,7 +27,7 @@ func _wx_sign(m *ice.Message, nonce, stamp string) string {
 }
 func _wx_config(m *ice.Message, nonce string) {
 	m.Option(APPID, m.Config(APPID))
-	m.Option(ssh.SCRIPT, m.Config(ssh.SCRIPT))
+	m.Option(nfs.SCRIPT, m.Config(nfs.SCRIPT))
 	m.Option("signature", _wx_sign(m, m.Option("noncestr", nonce), m.Option("timestamp", kit.Format(time.Now().Unix()))))
 }
 func _wx_check(m *ice.Message) {
@@ -102,7 +102,7 @@ func init() {
 			CHECK: {Name: "check", Help: "检验", Hand: func(m *ice.Message, arg ...string) {
 				_wx_check(m)
 			}},
-		}, mdb.HashAction(tcp.SERVER, "https://api.weixin.qq.com", ssh.SCRIPT, "/plugin/local/chat/wx.js")), Hand: func(m *ice.Message, arg ...string) {
+		}, mdb.HashAction(tcp.SERVER, "https://api.weixin.qq.com", nfs.SCRIPT, "/plugin/local/chat/wx.js")), Hand: func(m *ice.Message, arg ...string) {
 			m.Echo(m.Config(APPID))
 		}},
 	})

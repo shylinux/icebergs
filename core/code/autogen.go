@@ -8,7 +8,6 @@ import (
 	"shylinux.com/x/icebergs/base/cli"
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/nfs"
-	"shylinux.com/x/icebergs/base/ssh"
 	"shylinux.com/x/icebergs/base/web"
 	kit "shylinux.com/x/toolkits"
 )
@@ -189,7 +188,7 @@ func init() {
 				m.Option(nfs.FILE, path.Join(m.Option(mdb.ZONE), kit.Keys(m.Option(mdb.NAME), GO)))
 				_autogen_version(m.Spawn())
 			}},
-			ssh.SCRIPT: {Name: "script", Help: "脚本", Hand: func(m *ice.Message, arg ...string) {
+			nfs.SCRIPT: {Name: "script", Help: "脚本", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmd(nfs.DEFS, ice.ETC_MISS_SH, _miss_script)
 				defer m.Cmdy(nfs.CAT, ice.ETC_MISS_SH)
 

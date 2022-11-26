@@ -8,7 +8,7 @@ import (
 	"shylinux.com/x/icebergs/base/ctx"
 	"shylinux.com/x/icebergs/base/gdb"
 	"shylinux.com/x/icebergs/base/mdb"
-	"shylinux.com/x/icebergs/base/ssh"
+	"shylinux.com/x/icebergs/base/nfs"
 	"shylinux.com/x/icebergs/base/tcp"
 	"shylinux.com/x/icebergs/base/web"
 	kit "shylinux.com/x/toolkits"
@@ -98,7 +98,7 @@ func init() {
 					text = web.MergeLink(m, text)
 					text = tcp.ReplaceLocalhost(m, text)
 				}
-				m.PushScript(ssh.SCRIPT, text)
+				m.PushScript(nfs.SCRIPT, text)
 				m.PushQRCode(cli.QRCODE, text)
 			}
 			m.Tables(func(value ice.Maps) {

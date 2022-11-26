@@ -15,10 +15,8 @@ func Render(msg *ice.Message, cmd string, arg ...ice.Any) (res string) {
 			msg.Resultv(args)
 		}
 		res = msg.Result()
-
 	case ice.RENDER_VOID:
 		return res
-
 	default:
 		if res = msg.Result(); res == "" {
 			res = msg.Table().Result()

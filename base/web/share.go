@@ -13,7 +13,6 @@ import (
 	"shylinux.com/x/icebergs/base/ctx"
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/nfs"
-	"shylinux.com/x/icebergs/base/ssh"
 	"shylinux.com/x/icebergs/base/tcp"
 	kit "shylinux.com/x/toolkits"
 	"shylinux.com/x/toolkits/file"
@@ -155,7 +154,7 @@ func init() {
 			if mdb.HashSelect(m, arg...); len(arg) > 0 {
 				link := _share_link(m, P(SHARE, arg[0]))
 				m.PushQRCode(cli.QRCODE, link)
-				m.PushScript(ssh.SCRIPT, link)
+				m.PushScript(nfs.SCRIPT, link)
 				m.PushAnchor(link)
 			} else {
 				m.Action(LOGIN)

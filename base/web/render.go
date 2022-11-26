@@ -21,6 +21,12 @@ const (
 	COOKIE = "cookie"
 	STATUS = "status"
 )
+const (
+	WEBSITE = "website"
+
+	CODE_INNER = "web.code.inner"
+	WIKI_WORD  = "web.wiki.word"
+)
 
 func Render(m *ice.Message, cmd string, args ...ice.Any) bool {
 	if cmd != "" {

@@ -124,4 +124,4 @@ var Index = &ice.Context{Name: LOG, Help: "日志模块", Configs: ice.Configs{
 	ice.CTX_EXIT: {Hand: func(m *ice.Message, arg ...string) {}},
 }}
 
-func init() { ice.Index.Register(Index, &Frame{}) }
+func init() { ice.Index.Register(Index, &Frame{}, TAIL) }

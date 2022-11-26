@@ -1,4 +1,4 @@
-package nfs
+package log
 
 import (
 	"bufio"
@@ -6,13 +6,14 @@ import (
 
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/mdb"
+	"shylinux.com/x/icebergs/base/nfs"
 	kit "shylinux.com/x/toolkits"
 )
 
 func _tail_create(m *ice.Message, arg ...string) {
 	h := mdb.HashCreate(m, arg)
 	kit.Fetch(kit.Split(m.Option(FILE)), func(file string) {
-		m.Options("cmd_output", Pipe(m, func(text string) { mdb.ZoneInsert(m, h, FILE, file, SIZE, len(text), mdb.TEXT, text) }), mdb.CACHE_CLEAR_ON_EXIT, ice.TRUE)
+		m.Options("cmd_output", Pipe(m, func(text string) { mdb.ZoneInsert(m, h, FILE, file, nfs.SIZE, len(text), mdb.TEXT, text) }), mdb.CACHE_CLEAR_ON_EXIT, ice.TRUE)
 		m.Cmd("cli.daemon", TAIL, "-n", "0", "-f", file)
 	})
 }
@@ -32,7 +33,7 @@ func init() {
 				case mdb.NAME:
 					m.Push(arg[0], kit.Split(m.Option(FILE), ice.PS))
 				case FILE:
-					m.Cmdy(DIR, kit.Select(PWD, arg, 1), PATH).RenameAppend(PATH, FILE).ProcessAgain()
+					m.Cmdy(nfs.DIR, kit.Select(nfs.PWD, arg, 1), nfs.PATH).RenameAppend(nfs.PATH, FILE).ProcessAgain()
 				}
 			}},
 			mdb.CREATE: {Hand: func(m *ice.Message, arg ...string) { _tail_create(m, arg...) }},

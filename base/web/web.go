@@ -47,9 +47,6 @@ func (frame *Frame) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		frame.ServeMux.ServeHTTP(w, r)
 	}
 }
-func (frame *Frame) Spawn(m *ice.Message, c *ice.Context, arg ...string) ice.Server {
-	return &Frame{}
-}
 func (frame *Frame) Begin(m *ice.Message, arg ...string) ice.Server {
 	frame.send = ice.Messages{}
 	return frame
@@ -107,26 +104,16 @@ func (frame *Frame) Start(m *ice.Message, arg ...string) bool {
 func (frame *Frame) Close(m *ice.Message, arg ...string) bool {
 	return true
 }
+func (frame *Frame) Spawn(m *ice.Message, c *ice.Context, arg ...string) ice.Server {
+	return &Frame{}
+}
 
-const (
-	WEBSITE = "website"
-
-	CODE_INNER = "web.code.inner"
-	WIKI_WORD  = "web.wiki.word"
-)
 const WEB = "web"
 
 var Index = &ice.Context{Name: WEB, Help: "网络模块"}
 
-func init() {
-	ice.Index.Register(Index, &Frame{},
-		BROAD, SERVE, SPACE, DREAM,
-		SHARE, CACHE, SPIDE, ROUTE,
-	)
-}
+func init() { ice.Index.Register(Index, &Frame{}, BROAD, SERVE, SPACE, DREAM, SHARE, CACHE, SPIDE, ROUTE) }
 
-func ApiAction(arg ...string) ice.Actions {
-	return ice.Actions{kit.Select(ice.PS, arg, 0): {}}
-}
+func ApiAction(arg ...string) ice.Actions { return ice.Actions{kit.Select(ice.PS, arg, 0): {}} }
 func P(arg ...string) string  { return path.Join(ice.PS, path.Join(arg...)) }
 func PP(arg ...string) string { return P(arg...) + ice.PS }

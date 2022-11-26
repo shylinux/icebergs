@@ -34,7 +34,7 @@ func _space_domain(m *ice.Message) (link string) {
 	if link == "" {
 		link = kit.Format("http://localhost:%s", kit.Select(m.Option(tcp.PORT), m.CmdAppend(SERVE, tcp.PORT)))
 	}
-	return tcp.ReplaceLocalhost(m, link)
+	return tcp.PublishLocalhost(m, link)
 }
 func _space_dial(m *ice.Message, dev, name string, arg ...string) {
 	if strings.HasPrefix(dev, ice.HTTP) {

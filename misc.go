@@ -164,14 +164,20 @@ func (m *Message) Design(action Any, help string, input ...Any) {
 		kit.Value(m._cmd.Meta, kit.Keys("_trans", k), help)
 	}
 }
+func (m *Message) _fileline() string {
+	switch m.target.Name {
+	case MDB, AAA:
+		return m._source
+	default:
+		return m._target
+	}
+}
 func (m *Message) CmdHand(cmd *Command, key string, arg ...string) *Message {
 	if m._key, m._cmd = key, cmd; cmd == nil {
 		return m
 	}
-	if m._target = logs.FileLine(cmd.Hand); cmd.RawHand != nil {
-		m._target = kit.Join(kit.Slice(kit.Split(kit.Format(cmd.RawHand), PS), -3), PS)
-	}
-	if fileline := kit.Select(m._target, m._source, m.target.Name == MDB); key == SELECT {
+	m._target = kit.Join(kit.Slice(kit.Split(cmd.GetFileLine(), PS), -3), PS)
+	if fileline := m._fileline(); key == SELECT {
 		m.Log(LOG_CMDS, "%s.%s %d %v %v", m.Target().Name, key, len(arg), arg, m.Optionv(MSG_FIELDS), logs.FileLineMeta(fileline))
 	} else {
 		m.Log(LOG_CMDS, "%s.%s %d %v", m.Target().Name, key, len(arg), arg, logs.FileLineMeta(fileline))
@@ -297,7 +303,7 @@ func (c *Context) _action(m *Message, cmd *Command, key string, sub string, h *A
 		m._target = kit.Join(kit.Slice(kit.Split(kit.Format(cmd.RawHand), PS), -3), PS)
 	}
 	m.Log(LOG_CMDS, "%s.%s %s %d %v", c.Name, key, sub, len(arg), arg,
-		logs.FileLineMeta(kit.Select(m._target, m._source, m.target.Name == MDB)))
+		logs.FileLineMeta(m._fileline()))
 	h.Hand(m, arg...)
 	return m
 }

@@ -29,9 +29,7 @@ func (c *Conn) Write(b []byte) (int, error) {
 	c.s.nw += n
 	return n, e
 }
-func (c *Conn) Close() error {
-	return c.Conn.Close()
-}
+func (c *Conn) Close() error { return c.Conn.Close() }
 
 func _client_dial(m *ice.Message, arg ...string) {
 	c, e := net.Dial(TCP, m.Option(HOST)+ice.DF+m.Option(PORT))
@@ -39,7 +37,6 @@ func _client_dial(m *ice.Message, arg ...string) {
 	if e == nil {
 		defer c.Close()
 	}
-
 	switch cb := m.OptionCB("").(type) {
 	case func(net.Conn):
 		if !m.Warn(e) {
@@ -54,9 +51,9 @@ const (
 	PROTO  = "proto"
 	STATUS = "status"
 	ERROR  = "error"
+	START  = "start"
 	OPEN   = "open"
 	CLOSE  = "close"
-	START  = "start"
 	STOP   = "stop"
 )
 const (
@@ -68,7 +65,6 @@ func init() {
 	Index.MergeCommands(ice.Commands{
 		CLIENT: {Name: "client hash auto prunes", Help: "客户端", Actions: ice.MergeActions(ice.Actions{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) { m.Conf("", mdb.HASH, "") }},
-			ice.CTX_EXIT: {Hand: func(m *ice.Message, arg ...string) {}},
 			DIAL: {Name: "dial type name port=9010 host=", Help: "连接", Hand: func(m *ice.Message, arg ...string) {
 				_client_dial(m, arg...)
 			}},

@@ -35,7 +35,7 @@ func _header_share(m *ice.Message, arg ...string) {
 	if m.Option(mdb.LINK) == "" {
 		m.Cmdy(web.SHARE, mdb.CREATE, mdb.TYPE, web.LOGIN, arg)
 	} else {
-		m.Option(mdb.LINK, tcp.ReplaceLocalhost(m, m.Option(mdb.LINK)))
+		m.Option(mdb.LINK, tcp.PublishLocalhost(m, m.Option(mdb.LINK)))
 	}
 	m.Push(mdb.NAME, m.Option(mdb.LINK)).PushQRCode(mdb.TEXT, m.Option(mdb.LINK))
 }

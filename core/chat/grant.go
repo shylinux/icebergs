@@ -22,7 +22,7 @@ func init() {
 				}
 				m.Go(func(msg *ice.Message) {
 					link := web.MergePodCmd(m, "", "", web.SPACE, m.Option(mdb.NAME))
-					link = tcp.ReplaceLocalhost(m, link)
+					link = tcp.PublishLocalhost(m, link)
 					msg.Sleep300ms(web.SPACE, m.Option(mdb.NAME), cli.PWD, m.Option(mdb.NAME), link, msg.Cmdx(cli.QRCODE, link))
 				})
 			}},

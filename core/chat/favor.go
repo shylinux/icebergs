@@ -96,7 +96,7 @@ func init() {
 						m.PushVideos(web.DISPLAY, text)
 					}
 					text = web.MergeLink(m, text)
-					text = tcp.ReplaceLocalhost(m, text)
+					text = tcp.PublishLocalhost(m, text)
 				}
 				m.PushScript(nfs.SCRIPT, text)
 				m.PushQRCode(cli.QRCODE, text)

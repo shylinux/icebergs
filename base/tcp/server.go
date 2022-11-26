@@ -32,7 +32,6 @@ func _server_listen(m *ice.Message, arg ...string) {
 	if e == nil {
 		defer l.Close()
 	}
-
 	switch cb := m.OptionCB("").(type) {
 	case func(net.Listener):
 		m.Assert(e)
@@ -64,8 +63,7 @@ func init() {
 	Index.MergeCommands(ice.Commands{
 		SERVER: {Name: "server hash auto prunes", Help: "服务器", Actions: ice.MergeActions(ice.Actions{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) { m.Conf("", mdb.HASH, "") }},
-			ice.CTX_EXIT: {Hand: func(m *ice.Message, arg ...string) { mdb.HashSelectClose(m) }},
-			LISTEN: {Name: "listen type name port=9030 host=", Help: "监听", Hand: func(m *ice.Message, arg ...string) {
+			LISTEN: {Name: "listen type name port=9030 host=", Hand: func(m *ice.Message, arg ...string) {
 				_server_listen(m, arg...)
 			}},
 		}, mdb.StatusHashAction(mdb.FIELD, "time,hash,status,type,name,host,port,error,nconn"))},

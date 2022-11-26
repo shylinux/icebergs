@@ -42,7 +42,6 @@ func (f *Frame) prompt(m *ice.Message, list ...string) *Frame {
 	if len(list) == 0 {
 		list = append(list, f.ps1...)
 	}
-
 	fmt.Fprintf(f.stdout, "\r")
 	for _, v := range list {
 		switch v {
@@ -65,10 +64,9 @@ func (f *Frame) printf(m *ice.Message, str string, arg ...ice.Any) *Frame {
 	return f
 }
 func (f *Frame) change(m *ice.Message, ls []string) []string {
-	if len(ls) == 1 && ls[0] == "~" { // 模块列表
+	if len(ls) == 1 && ls[0] == "~" {
 		ls = []string{ctx.CONTEXT}
-
-	} else if len(ls) > 0 && strings.HasPrefix(ls[0], "~") { // 切换模块
+	} else if len(ls) > 0 && strings.HasPrefix(ls[0], "~") {
 		target := ls[0][1:]
 		if ls = ls[1:]; len(target) == 0 && len(ls) > 0 {
 			target, ls = ls[0], ls[1:]
@@ -76,7 +74,7 @@ func (f *Frame) change(m *ice.Message, ls []string) []string {
 		if target == "~" {
 			target = ""
 		}
-		m.Spawn(f.target).Search(target+ice.PT, func(p *ice.Context, s *ice.Context, key string) {
+		m.Spawn(f.target).Search(target+ice.PT, func(p *ice.Context, s *ice.Context) {
 			m.Logs(mdb.SELECT, ctx.CONTEXT, s.Name)
 			f.target = s
 		})
@@ -86,8 +84,7 @@ func (f *Frame) change(m *ice.Message, ls []string) []string {
 func (f *Frame) alias(m *ice.Message, ls []string) []string {
 	if len(ls) == 0 {
 		return ls
-	}
-	if alias := kit.Simple(kit.Value(m.Optionv(ice.MSG_ALIAS), ls[0])); len(alias) > 0 {
+	} else if alias := kit.Simple(kit.Value(m.Optionv(ice.MSG_ALIAS), ls[0])); len(alias) > 0 {
 		ls = append(alias, ls[1:]...)
 	}
 	return ls
@@ -104,8 +101,6 @@ func (f *Frame) parse(m *ice.Message, h, line string) string {
 	if ls = f.change(msg, f.alias(msg, ls)); len(ls) == 0 {
 		return ""
 	}
-
-	msg.Render("", kit.List())
 	if msg.Cmdy(ls); h == STDIO && msg.IsErrNotFound() {
 		msg.SetResult().Cmdy(cli.SYSTEM, ls)
 	}
@@ -115,40 +110,30 @@ func (f *Frame) parse(m *ice.Message, h, line string) string {
 func (f *Frame) scan(m *ice.Message, h, line string) *Frame {
 	f.ps1 = kit.Simple(m.Confv(PROMPT, kit.Keym(PS1)))
 	f.ps2 = kit.Simple(m.Confv(PROMPT, kit.Keym(PS2)))
-	ps := f.ps1
-
 	m.Optionv("message", m)
-	if m.I, m.O = f.stdin, f.stdout; h == STDIO {
-		gdb.Event(m, SOURCE_STDIO)
-		m.Sleep("3s")
-	}
-
-	bio := bufio.NewScanner(f.stdin)
+	m.I, m.O = f.stdin, f.stdout
+	ps, bio := f.ps1, bufio.NewScanner(f.stdin)
 	for f.prompt(m, ps...); f.stdin != nil && bio.Scan(); f.prompt(m, ps...) {
 		if len(bio.Text()) == 0 && h == STDIO {
-			continue // 空行
+			continue
 		}
-
 		f.count++
-
 		if strings.HasSuffix(bio.Text(), "\\") {
 			line += bio.Text()[:len(bio.Text())-1]
 			ps = f.ps2
-			continue // 续行
+			continue
 		}
 		if line += bio.Text(); strings.Count(line, "`")%2 == 1 {
 			line += ice.NL
 			ps = f.ps2
-			continue // 多行
+			continue
 		}
 		if strings.HasPrefix(strings.TrimSpace(line), "#") {
 			line = ""
-			continue // 注释
+			continue
 		}
-		if ps = f.ps1; f.stdout == os.Stdout {
-			if ice.Info.Colors {
-				f.printf(m, "\033[0m") // 清空格式
-			}
+		if ps = f.ps1; f.stdout == os.Stdout && ice.Info.Colors {
+			f.printf(m, "\033[0m")
 		}
 		line = f.parse(m, h, line)
 	}
@@ -164,22 +149,17 @@ func (f *Frame) Begin(m *ice.Message, arg ...string) ice.Server {
 	}
 	return f
 }
-func (f *Frame) Spawn(m *ice.Message, c *ice.Context, arg ...string) ice.Server {
-	return &Frame{}
-}
 func (f *Frame) Start(m *ice.Message, arg ...string) bool {
 	m.Optionv(FRAME, f)
 	switch f.source = kit.Select(STDIO, arg, 0); f.source {
-	case STDIO: // 终端交互
+	case STDIO:
 		if m.Cap(ice.CTX_STREAM, f.source); f.target == nil {
 			f.target = m.Target()
 		}
-
 		r, w, _ := os.Pipe()
 		go func() { io.Copy(w, os.Stdin) }()
 		f.pipe, f.stdin, f.stdout = w, r, os.Stdout
-
-		m.Option(ice.MSG_OPTS, ice.MSG_USERNAME)
+		m.Option(ice.MSG_OPTS, ice.MSG_USERNAME, ice.MSG_USERROLE)
 		f.scan(m, STDIO, "")
 
 	default: // 脚本文件
@@ -213,6 +193,9 @@ func (f *Frame) Close(m *ice.Message, arg ...string) bool {
 	f.stdin = nil
 	return true
 }
+func (f *Frame) Spawn(m *ice.Message, c *ice.Context, arg ...string) ice.Server {
+	return &Frame{}
+}
 
 const (
 	FRAME = "frame"
@@ -233,24 +216,21 @@ const (
 )
 
 func init() {
-	Index.Merge(&ice.Context{Configs: ice.Configs{
-		SOURCE: {Name: SOURCE, Help: "加载脚本", Value: kit.Data()},
-		PROMPT: {Name: PROMPT, Help: "命令提示", Value: kit.Data(
-			PS1, []ice.Any{"\033[33;44m", mdb.COUNT, "[", mdb.TIME, "]", "\033[5m", TARGET, "\033[0m", "\033[44m", ">", "\033[0m ", "\033[?25h", "\033[32m"},
-			PS2, []ice.Any{mdb.COUNT, " ", TARGET, "> "},
-		)},
-	}, Commands: ice.Commands{
-		SOURCE: {Name: "source file", Help: "脚本解析", Hand: func(m *ice.Message, arg ...string) {
+	Index.MergeCommands(ice.Commands{
+		SOURCE: {Name: "source file", Help: "脚本解析", Actions: mdb.HashAction(), Hand: func(m *ice.Message, arg ...string) {
 			if f, ok := m.Target().Server().(*Frame); ok {
 				f.Spawn(m, m.Target()).Start(m, arg...)
 			}
 		}},
 		TARGET: {Name: "target name run", Help: "当前模块", Hand: func(m *ice.Message, arg ...string) {
 			f := m.Target().Server().(*Frame)
-			m.Search(arg[0]+ice.PT, func(p *ice.Context, s *ice.Context, key string) { f.target = s })
+			m.Search(arg[0]+ice.PT, func(p *ice.Context, s *ice.Context) { f.target = s })
 			f.prompt(m)
 		}},
-		PROMPT: {Name: "prompt arg run", Help: "命令提示", Hand: func(m *ice.Message, arg ...string) {
+		PROMPT: {Name: "prompt arg run", Help: "命令提示", Actions: mdb.AutoConfig(
+			PS1, []ice.Any{"\033[33;44m", mdb.COUNT, "[", mdb.TIME, "]", "\033[5m", TARGET, "\033[0m", "\033[44m", ">", "\033[0m ", "\033[?25h", "\033[32m"},
+			PS2, []ice.Any{mdb.COUNT, " ", TARGET, "> "},
+		), Hand: func(m *ice.Message, arg ...string) {
 			if f, ok := m.Optionv(FRAME).(*Frame); ok {
 				f.prompt(m, arg...)
 			}
@@ -275,5 +255,5 @@ func init() {
 				f.Close(m, arg...)
 			}
 		}},
-	}})
+	})
 }

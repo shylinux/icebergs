@@ -90,8 +90,9 @@ const (
 	VIEW = "view"
 	SHOW = "show"
 )
+const LOG = "log"
 
-var Index = &ice.Context{Name: "log", Help: "日志模块", Configs: ice.Configs{
+var Index = &ice.Context{Name: LOG, Help: "日志模块", Configs: ice.Configs{
 	FILE: {Name: FILE, Help: "日志文件", Value: kit.Dict(
 		BENCH, kit.Dict(nfs.PATH, path.Join(ice.VAR_LOG, "bench.log"), mdb.LIST, []string{}),
 		WATCH, kit.Dict(nfs.PATH, path.Join(ice.VAR_LOG, "watch.log"), mdb.LIST, []string{

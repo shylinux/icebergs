@@ -67,8 +67,7 @@ func _link_file(m *ice.Message, name string, from string) {
 		return
 	}
 	Remove(m, name)
-	MkdirAll(m, path.Dir(name))
-	if m.Warn(Link(m, from, name)) && m.Warn(Symlink(m, from, name), ice.ErrWarn, from) {
+	if MkdirAll(m, path.Dir(name)); m.Warn(Link(m, from, name)) && m.Warn(Symlink(m, from, name), ice.ErrWarn, from) {
 		return
 	}
 	m.Logs(mdb.CREATE, FILE, name, FROM, from)
@@ -77,11 +76,9 @@ func _link_file(m *ice.Message, name string, from string) {
 
 const (
 	CONTENT = "content"
-	FROM    = "from"
 )
 const DEFS = "defs"
 const SAVE = "save"
-const LOAD = "load"
 const PUSH = "push"
 const COPY = "copy"
 const LINK = "link"

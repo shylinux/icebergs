@@ -94,6 +94,7 @@ const (
 	BINARY = "binary"
 	TARGET = "target"
 	TAGS   = "tags"
+	TAR    = "tar"
 
 	TEMPLATE = "template"
 	MASTER   = "master"
@@ -124,7 +125,6 @@ const (
 	MP4 = "mp4"
 	PDF = "pdf"
 
-	TAR = "tar"
 	PWD = "./"
 	PS  = ice.PS
 	PT  = ice.PT
@@ -134,14 +134,14 @@ const CAT = "cat"
 
 func init() {
 	Index.Merge(&ice.Context{Configs: ice.Configs{
-		CAT: {Value: kit.Data(SOURCE, kit.Dict(
-			HTML, ice.TRUE, CSS, ice.TRUE, JS, ice.TRUE, GO, ice.TRUE, SH, ice.TRUE, SHY, ice.TRUE, CSV, ice.TRUE, JSON, ice.TRUE,
-			PY, ice.TRUE, MD, ice.TRUE, TXT, ice.TRUE, IML, ice.TRUE, XML, ice.TRUE, YML, ice.TRUE, ZML, ice.TRUE,
-			"license", ice.TRUE, "makefile", ice.TRUE, "configure", ice.TRUE, "conf", ice.TRUE,
+		CAT: {Value: kit.Data(SOURCE, kit.DictList(
+			HTML, CSS, JS, GO, SH, SHY, CSV, JSON,
+			PY, MD, TXT, XML, YML, ZML, IML,
+			"license", "makefile", "configure", "conf",
 		))},
 	}, Commands: ice.Commands{
 		CAT: {Name: "cat path auto", Help: "文件", Actions: ice.Actions{
-			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) { aaa.White(m, ice.SRC_MAIN_SHY, ice.SRC_MAIN_GO, ice.USR_PUBLISH) }},
+			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) { aaa.White(m, ice.SRC_MAIN_JS, ice.SRC_MAIN_GO, ice.SRC_MAIN_SHY) }},
 		}, Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) == 0 || strings.HasSuffix(arg[0], ice.PS) {
 				m.Cmdy(DIR, arg)

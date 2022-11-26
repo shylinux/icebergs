@@ -36,6 +36,7 @@ const (
 	PID = "pid"
 )
 const (
+	DEBUG   = "debug"
 	ERROR   = "error"
 	START   = "start"
 	RESTART = "restart"

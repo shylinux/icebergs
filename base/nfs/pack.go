@@ -20,6 +20,9 @@ func init() {
 	Index.MergeCommands(ice.Commands{
 		PACK: {Name: "pack path auto upload create", Help: "文件系统", Actions: ice.Actions{
 			mdb.UPLOAD: {Hand: func(m *ice.Message, arg ...string) {
+				if len(kit.Simple(m.Optionv(ice.MSG_UPLOAD))) == 1 {
+					m.Cmdy("web.cache", "upload")
+				}
 				if c, e := DiskFile.OpenFile(m.Option(FILE)); m.Assert(e) {
 					defer c.Close()
 					if f, p, e := pack.CreateFile(path.Join(m.Option(PATH), m.Option(mdb.NAME))); m.Assert(e) {
@@ -113,6 +116,7 @@ func Remove(m *ice.Message, p string) error {
 	return OptionFiles(m).Remove(p)
 }
 func Rename(m *ice.Message, oldname string, newname string) error {
+	MkdirAll(m, path.Dir(newname))
 	return OptionFiles(m).Rename(oldname, newname)
 }
 func Symlink(m *ice.Message, oldname string, newname string) error {

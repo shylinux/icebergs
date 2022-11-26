@@ -23,13 +23,14 @@ func _trash_create(m *ice.Message, from string) {
 			p = path.Join(ice.VAR_TRASH, kit.HashsPath(f))
 		}
 	}
-	MkdirAll(m, path.Dir(p))
 	if RemoveAll(m, p); !m.Warn(Rename(m, from, p)) {
 		mdb.HashCreate(m, FROM, from, FILE, p)
-		m.Result(p)
 	}
 }
 
+const (
+	FROM = "from"
+)
 const TRASH = "trash"
 
 func init() {
@@ -38,9 +39,8 @@ func init() {
 			mdb.REVERT: {Hand: func(m *ice.Message, arg ...string) {
 				Rename(m, m.Option(FILE), m.Option(FROM))
 				mdb.HashRemove(m, m.OptionSimple(mdb.HASH))
-				m.ProcessRefresh()
 			}},
-			mdb.CREATE: {Name: "create from", Hand: func(m *ice.Message, arg ...string) {
+			mdb.CREATE: {Hand: func(m *ice.Message, arg ...string) {
 				_trash_create(m, m.Option(FROM))
 			}},
 			mdb.REMOVE: {Hand: func(m *ice.Message, arg ...string) {
@@ -50,12 +50,6 @@ func init() {
 			mdb.PRUNES: {Hand: func(m *ice.Message, arg ...string) {
 				mdb.HashPrunes(m, nil).Tables(func(value ice.Maps) { Remove(m, value[FILE]) })
 			}},
-		}, mdb.HashAction(mdb.SHORT, FROM, mdb.FIELD, "time,hash,from,file")), Hand: func(m *ice.Message, arg ...string) {
-			if mdb.HashSelect(m, arg...); len(arg) == 0 || !ExistsFile(m, arg[0]) {
-				m.PushAction(mdb.REVERT, mdb.REMOVE)
-				return
-			}
-			_trash_create(m, arg[0])
-		}},
+		}, mdb.HashAction(mdb.SHORT, FROM, mdb.FIELD, "time,hash,from,file", mdb.ACTION, mdb.REVERT))},
 	})
 }

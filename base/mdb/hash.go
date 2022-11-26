@@ -195,7 +195,7 @@ func HashPrunes(m *ice.Message, cb func(Map) bool) *ice.Message {
 		}
 		return cb == nil || cb(value)
 	})
-	return m.Cmdy(PRUNES, m.PrefixKey(), "", HASH).StatusTimeCount()
+	return m.Cmdy(PRUNES, m.PrefixKey(), "", HASH, ice.OptionFields(HashField(m))).StatusTimeCount()
 }
 func HashExport(m *ice.Message, arg ...Any) *ice.Message {
 	return m.Cmdy(EXPORT, m.PrefixKey(), "", HASH, arg)

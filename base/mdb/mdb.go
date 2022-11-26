@@ -137,7 +137,6 @@ const (
 	JSON = "json"
 	CSV  = "csv"
 )
-const ()
 
 const MDB = "mdb"
 
@@ -259,14 +258,18 @@ func AutoConfig(args ...ice.Any) *ice.Action {
 		}
 		if cs := m.Target().Commands; cs[m.CommandKey()] == nil {
 			return
-		} else if inputs := []ice.Any{}; cs[m.CommandKey()].Actions[INSERT] != nil {
-			kit.Fetch(kit.Filters(kit.Simple(m.Config(SHORT), kit.Split(ListField(m))), "", TIME, ID), func(k string) { inputs = append(inputs, k) })
-			if cs[m.CommandKey()].Meta[INSERT] == nil {
+		} else if cs[m.CommandKey()].Actions[INSERT] != nil {
+			if inputs := []ice.Any{}; cs[m.CommandKey()].Meta[INSERT] == nil {
+				kit.Fetch(kit.Filters(kit.Simple(m.Config(SHORT), kit.Split(ListField(m))), "", TIME, ID), func(k string) { inputs = append(inputs, k) })
 				m.Design(INSERT, "添加", inputs...)
 			}
+			if inputs := []ice.Any{}; cs[m.CommandKey()].Meta[CREATE] == nil {
+				kit.Fetch(kit.Filters(kit.Split(kit.Select(m.Config(SHORT), m.Config(FIELDS))), TIME, HASH, COUNT), func(k string) { inputs = append(inputs, k) })
+				m.Design(CREATE, "创建", inputs...)
+			}
 		} else if cs[m.CommandKey()].Actions[CREATE] != nil {
-			kit.Fetch(kit.Filters(kit.Split(HashField(m)), TIME, HASH), func(k string) { inputs = append(inputs, k) })
-			if cs[m.CommandKey()].Meta[CREATE] == nil {
+			if inputs := []ice.Any{}; cs[m.CommandKey()].Meta[CREATE] == nil {
+				kit.Fetch(kit.Filters(kit.Split(HashField(m)), TIME, HASH), func(k string) { inputs = append(inputs, k) })
 				m.Design(CREATE, "创建", inputs...)
 			}
 		}

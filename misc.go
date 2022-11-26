@@ -312,8 +312,6 @@ func MergeActions(arg ...Any) Actions {
 			for k, v := range from {
 				if h, ok := list[k]; !ok {
 					list[k] = v
-				} else if h.Hand == nil {
-					h.Hand = v.Hand
 				} else if k == CTX_INIT {
 					last := h.Hand
 					hand := v.Hand
@@ -321,6 +319,8 @@ func MergeActions(arg ...Any) Actions {
 						hand(m, arg...)
 						last(m, arg...)
 					}
+				} else if h.Name = kit.Select(v.Name, h.Name); h.Hand == nil {
+					h.Hand = v.Hand
 				}
 			}
 		case string:

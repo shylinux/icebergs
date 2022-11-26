@@ -114,7 +114,7 @@ func _dir_list(m *ice.Message, root string, dir string, level int, deep bool, di
 						m.Push(field, "")
 					}
 				case mdb.ACTION:
-					if m.IsCliUA() || m.Option(ice.MSG_USERROLE) == "void" {
+					if m.IsCliUA() || m.Option(ice.MSG_USERROLE) == aaa.VOID {
 						break
 					}
 					m.PushButton(TRASH)
@@ -164,13 +164,13 @@ const DIR = "dir"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
-		DIR: {Name: "dir path field auto dir_deep upload", Help: "目录", Actions: ice.Actions{
+		DIR: {Name: "dir path field auto upload", Help: "目录", Actions: ice.Actions{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
-				aaa.White(m, ice.SRC, ice.BIN, ice.USR, ice.USR_LOCAL_GO)
-				aaa.Black(m, ice.USR_LOCAL)
+				aaa.White(m, ice.SRC, ice.BIN, ice.USR, ice.USR_PUBLISH, ice.USR_LOCAL_GO)
+				aaa.Black(m, ice.BIN_BOOT_LOG, ice.USR_LOCAL)
 			}},
 			mdb.UPLOAD: {Hand: func(m *ice.Message, arg ...string) { m.Cmdy("web.cache", "upload_watch", m.Option(PATH)) }},
-			TRASH: {Hand: func(m *ice.Message, arg ...string) { m.Cmdy(TRASH, mdb.CREATE, m.Option(PATH)) }},
+			TRASH: {Hand: func(m *ice.Message, arg ...string) { m.Cmd(TRASH, mdb.CREATE, m.Option(PATH)) }},
 		}, Hand: func(m *ice.Message, arg ...string) {
 			root, dir := kit.Select(PWD, m.Option(DIR_ROOT)), kit.Select(PWD, arg, 0)
 			if strings.HasPrefix(dir, ice.PS) {
@@ -188,10 +188,8 @@ func init() {
 }
 
 func Dir(m *ice.Message, sort string) *ice.Message {
-	m.Option(DIR_TYPE, TYPE_DIR)
-	m.Copy(m.Cmd(DIR, PWD).Sort(sort))
-	m.Option(DIR_TYPE, TYPE_CAT)
-	m.Copy(m.Cmd(DIR, PWD).Sort(sort))
+	m.Copy(m.Cmd(DIR, PWD, kit.Dict(DIR_TYPE, TYPE_DIR)).Sort(sort))
+	m.Copy(m.Cmd(DIR, PWD, kit.Dict(DIR_TYPE, TYPE_CAT)).Sort(sort))
 	return m
 }
 func DirDeepAll(m *ice.Message, root, dir string, cb func(ice.Maps), arg ...string) *ice.Message {

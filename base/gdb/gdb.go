@@ -40,7 +40,6 @@ func (f *Frame) Spawn(m *ice.Message, c *ice.Context, arg ...string) ice.Server 
 	return &Frame{}
 }
 
-const DEBUG = "debug"
 const GDB = "gdb"
 
 var Index = &ice.Context{Name: GDB, Help: "事件模块", Commands: ice.Commands{

@@ -190,4 +190,20 @@ func init() {
 			})
 		}},
 	})
+	ice.AddMerges(func(c *ice.Context, key string, cmd *ice.Command, sub string, action *ice.Action) (ice.Handler, ice.Handler) {
+		switch sub {
+		case UPLOAD:
+			if key == CACHE {
+				break
+			}
+			hand := action.Hand
+			action.Hand = func(m *ice.Message, arg ...string) {
+				if len(kit.Simple(m.Optionv(ice.MSG_UPLOAD))) == 1 {
+					m.Cmdy(CACHE, UPLOAD)
+				}
+				hand(m, arg...)
+			}
+		}
+		return nil, nil
+	})
 }

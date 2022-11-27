@@ -83,14 +83,13 @@ func (frame *Frame) Start(m *ice.Message, arg ...string) bool {
 			})
 		}
 	})
-
 	gdb.Event(m, SERVE_START, arg)
 	defer gdb.Event(m, SERVE_STOP)
 
 	frame.Message, frame.Server = m, &http.Server{Handler: frame}
 	switch cb := m.OptionCB("").(type) {
 	case func(http.Handler):
-		cb(frame) // 启动框架
+		cb(frame)
 	default:
 		mdb.HashCreate(m, mdb.NAME, WEB, arg, m.OptionSimple(tcp.PROTO, ice.DEV), cli.STATUS, tcp.START)
 		m.Cmd(tcp.SERVER, tcp.LISTEN, mdb.TYPE, WEB, m.OptionSimple(mdb.NAME, tcp.HOST, tcp.PORT), func(l net.Listener) {

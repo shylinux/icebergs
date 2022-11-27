@@ -8,8 +8,8 @@ import (
 	"shylinux.com/x/icebergs/base/aaa"
 	"shylinux.com/x/icebergs/base/cli"
 	"shylinux.com/x/icebergs/base/ctx"
-	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/lex"
+	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/web"
 	kit "shylinux.com/x/toolkits"
 )
@@ -18,7 +18,17 @@ const POD = "pod"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
-		web.PP(POD): {Name: "/pod/", Help: "节点", Actions: ice.MergeActions(ctx.CmdAction(), aaa.WhiteAction()), Hand: func(m *ice.Message, arg ...string) {
+		POD: {Name: "pod", Help: "节点", Actions: ice.MergeActions(ice.Actions{
+			web.SERVE_PARSE: {Hand: func(m *ice.Message, arg ...string) {
+				switch kit.Select("", arg, 0) {
+				case CHAT:
+					for i := 1; i < len(arg)-1; i++ {
+						m.Logs("refer", arg[i], arg[i+1])
+						m.Option(arg[i], arg[i+1])
+					}
+				}
+			}},
+		}, ctx.CmdAction(), web.ServeAction(), web.ApiAction(), aaa.WhiteAction()), Hand: func(m *ice.Message, arg ...string) {
 			if web.OptionAgentIs(m, "curl", "wget") {
 				aaa.UserRoot(m).Cmdy(web.SHARE_LOCAL, ice.BIN_ICE_BIN, kit.Dict(ice.POD, kit.Select("", arg, 0)))
 				return

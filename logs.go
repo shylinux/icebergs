@@ -147,6 +147,7 @@ func (m *Message) error(arg ...Any) {
 	}
 	m.Resultv(ErrWarn, kit.Simple(arg))
 }
+func (m *Message) IsOk() bool { return m.Result() == OK }
 func (m *Message) IsErr(arg ...string) bool {
 	return len(arg) == 0 && m.Result(0) == ErrWarn || len(arg) > 0 && m.Result(1) == arg[0]
 }

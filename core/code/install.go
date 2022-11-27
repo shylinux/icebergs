@@ -159,7 +159,7 @@ func _install_trash(m *ice.Message, arg ...string) {
 			m.Cmd(cli.DAEMON, mdb.REMOVE, kit.Dict(mdb.HASH, value[mdb.HASH]))
 		}
 	})
-	m.Cmd(nfs.TRASH, kit.Path(ice.USR_LOCAL_DAEMON, m.Option(tcp.PORT), m.Option(nfs.PATH)))
+	nfs.Trash(m, kit.Path(ice.USR_LOCAL_DAEMON, m.Option(tcp.PORT), m.Option(nfs.PATH)))
 }
 func _install_service(m *ice.Message, arg ...string) {
 	arg = kit.Split(path.Base(arg[0]), "_-.")[:1]
@@ -211,7 +211,7 @@ func init() {
 			gdb.DEBUG: {Name: "debug", Help: "调试", Hand: func(m *ice.Message, arg ...string) {
 				ctx.Process(m, XTERM, []string{mdb.TYPE, "gdb"}, arg...)
 			}},
-			nfs.TRASH: {Name: "trash", Help: "删除", Hand: func(m *ice.Message, arg ...string) {
+			nfs.TRASH: {Hand: func(m *ice.Message, arg ...string) {
 				_install_trash(m, arg...)
 			}},
 			nfs.SOURCE: {Name: "source link path", Help: "源码", Hand: func(m *ice.Message, arg ...string) {
@@ -250,8 +250,8 @@ func InstallAction(args ...ice.Any) ice.Actions {
 		cli.ORDER: {Name: "order", Help: "加载", Hand: func(m *ice.Message, arg ...string) {
 			m.Cmdy(INSTALL, cli.ORDER, m.Config(nfs.SOURCE), path.Join(_INSTALL, ice.BIN))
 		}},
-		nfs.TRASH: {Name: "trash", Help: "删除", Hand: func(m *ice.Message, arg ...string) {
-			m.Cmd(nfs.TRASH, m.Option(nfs.PATH))
+		nfs.TRASH: {Hand: func(m *ice.Message, arg ...string) {
+			nfs.Trash(m, m.Option(nfs.PATH))
 		}},
 	}
 }

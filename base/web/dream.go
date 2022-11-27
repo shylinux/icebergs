@@ -41,7 +41,6 @@ func _dream_show(m *ice.Message, name string) {
 		name = m.Time("20060102-") + name
 	}
 	defer m.ProcessOpen(MergePod(m, m.Option(mdb.NAME, name)))
-
 	p := path.Join(ice.USR_LOCAL_WORK, name)
 	if pid := m.Cmdx(nfs.CAT, path.Join(p, ice.Info.PidPath)); pid != "" && nfs.ExistsFile(m, "/proc/"+pid) {
 		m.Info("already exists %v", pid)
@@ -50,10 +49,8 @@ func _dream_show(m *ice.Message, name string) {
 		m.Info("already exists %v", name)
 		return
 	}
-
 	nfs.MkdirAll(m, p)
 	_dream_template(m, p)
-
 	m.Optionv(cli.CMD_DIR, kit.Path(p))
 	m.Optionv(cli.CMD_ENV, kit.Simple(
 		cli.CTX_OPS, "http://:"+m.CmdAppend(SERVE, tcp.PORT),
@@ -63,7 +60,6 @@ func _dream_show(m *ice.Message, name string) {
 	m.Optionv(cli.CMD_OUTPUT, path.Join(p, ice.BIN_BOOT_LOG))
 	defer m.Options(cli.CMD_DIR, "", cli.CMD_ENV, "", cli.CMD_OUTPUT, "")
 	gdb.Event(m, DREAM_CREATE, m.OptionSimple(mdb.NAME, mdb.TYPE))
-
 	defer ToastProcess(m)()
 	bin := kit.Select(os.Args[0], cli.SystemFind(m, ice.ICE_BIN, nfs.PWD+path.Join(p, ice.BIN), nfs.PWD+ice.BIN))
 	m.Cmd(cli.DAEMON, bin, SPACE, tcp.DIAL, ice.DEV, ice.OPS, m.OptionSimple(mdb.NAME, RIVER), cli.DAEMON, ice.OPS)
@@ -117,20 +113,20 @@ func init() {
 			cli.START: {Hand: func(m *ice.Message, arg ...string) {
 				_dream_show(m, m.Option(mdb.NAME))
 			}},
-			OPEN: {Hand: func(m *ice.Message, arg ...string) { ProcessIframe(m, MergePod(m, m.Option(mdb.NAME)), arg...) }},
 			cli.STOP: {Hand: func(m *ice.Message, arg ...string) {
 				m.Cmd(SPACE, mdb.MODIFY, m.OptionSimple(mdb.NAME), mdb.STATUS, cli.STOP)
 				m.Go(func() { m.Cmd(SPACE, m.Option(mdb.NAME), ice.EXIT) })
 				ctx.ProcessRefresh(m, "1s")
 			}},
 			nfs.TRASH: {Hand: func(m *ice.Message, arg ...string) {
-				m.Cmd(nfs.TRASH, mdb.CREATE, path.Join(ice.USR_LOCAL_WORK, m.Option(mdb.NAME)))
+				nfs.Trash(m, path.Join(ice.USR_LOCAL_WORK, m.Option(mdb.NAME)))
 			}},
 			DREAM_STOP: {Hand: func(m *ice.Message, arg ...string) {
 				if m.CmdAppend(SPACE, m.Option(mdb.NAME), mdb.STATUS) != cli.STOP {
 					m.Go(func() { m.Sleep3s(DREAM, cli.START, m.OptionSimple(mdb.NAME)) })
 				}
 			}},
+			OPEN: {Hand: func(m *ice.Message, arg ...string) { ProcessIframe(m, MergePod(m, m.Option(mdb.NAME)), arg...) }},
 		}, ctx.CmdAction()), Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) == 0 {
 				_dream_list(m)

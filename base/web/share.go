@@ -147,7 +147,26 @@ func init() {
 				m.EchoQRCode(msg.Option(mdb.LINK))
 				m.ProcessInner()
 			}},
-		}, mdb.HashAction(mdb.FIELD, "time,hash,userrole,username,usernick,river,storm,type,name,text", mdb.EXPIRE, "72h")), Hand: func(m *ice.Message, arg ...string) {
+			SERVE_PARSE: {Hand: func(m *ice.Message, arg ...string) {
+				if kit.Select("", arg, 0) != SHARE {
+					return
+				}
+				switch arg[1] {
+				case "local":
+				default:
+					m.Logs("refer", arg[0], arg[1])
+					m.Option(arg[0], arg[1])
+				}
+			}},
+			SERVE_LOGIN: {Hand: func(m *ice.Message, arg ...string) {
+				if m.Option(ice.MSG_USERNAME) == "" && m.Option(SHARE) != "" {
+					switch msg := m.Cmd(SHARE, m.Option(SHARE)); msg.Append(mdb.TYPE) {
+					case STORM, FIELD:
+						msg.Tables(func(value ice.Maps) { aaa.SessAuth(m, value) })
+					}
+				}
+			}},
+		}, mdb.HashAction(mdb.FIELD, "time,hash,userrole,username,usernick,river,storm,type,name,text", mdb.EXPIRE, "72h"), ServeAction(), aaa.WhiteAction()), Hand: func(m *ice.Message, arg ...string) {
 			if ctx.PodCmd(m, SHARE, arg) && m.Length() > 0 {
 				return
 			}

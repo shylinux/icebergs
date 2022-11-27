@@ -162,9 +162,9 @@ func init() {
 				_webpack_cache(m.Spawn(), _volcanos(m), true)
 				_webpack_build(m, _publish(m, WEBPACK, m.Option(mdb.NAME)))
 			}},
-			nfs.TRASH: {Name: "trash", Help: "删除", Hand: func(m *ice.Message, arg ...string) {
+			nfs.TRASH: {Hand: func(m *ice.Message, arg ...string) {
 				if !strings.Contains(m.Option(nfs.PATH), "page/index") {
-					m.Cmd(nfs.TRASH, m.Option(nfs.PATH))
+					nfs.Trash(m, m.Option(nfs.PATH))
 				}
 			}},
 		}, mdb.HashAction(mdb.SHORT, nfs.PATH, mdb.FIELD, "time,path")), Hand: func(m *ice.Message, arg ...string) {

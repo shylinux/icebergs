@@ -99,8 +99,8 @@ func init() {
 					m.Cmd("", DEVPACK)
 				}
 			}},
-			nfs.TRASH: {Name: "trash path", Help: "删除", Hand: func(m *ice.Message, arg ...string) {
-				m.Cmd(nfs.TRASH, arg[0])
+			nfs.TRASH: {Hand: func(m *ice.Message, arg ...string) {
+				nfs.Trash(m, arg[0])
 			}},
 			nfs.SCRIPT: {Name: "script file=hi/hi.js", Help: "脚本", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmdy(nfs.DEFS, path.Join(m.Option(nfs.PATH), m.Option(nfs.FILE)), m.Cmdx("", TEMPLATE))

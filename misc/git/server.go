@@ -31,7 +31,7 @@ func _server_rewrite(m *ice.Message, p string, r *http.Request) {
 		m.Info("rewrite %v -> %v", p, r.URL.Path) // 访问服务
 
 	} else {
-		r.URL.Path = strings.Replace(r.URL.Path, "/x/", "/code/git/repos/", 1)
+		r.URL.Path = strings.Replace(r.URL.Path, "/x/", "/code/git/repository/", 1)
 		m.Info("rewrite %v -> %v", p, r.URL.Path) // 下载源码
 	}
 }
@@ -113,16 +113,13 @@ const SERVER = "server"
 func init() {
 	Index.MergeCommands(ice.Commands{
 		web.WEB_LOGIN: {Hand: func(m *ice.Message, arg ...string) { m.Render(ice.RENDER_VOID) }},
-		"/repos/": {Name: "/repos/", Help: "代码库", Actions: ice.Actions{
-			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
-				web.AddRewrite(func(p string, w http.ResponseWriter, r *http.Request) bool {
-					if strings.HasPrefix(p, "/x/") {
-						_server_rewrite(m, p, r)
-					}
-					return false
-				})
+		"repository": {Name: "repository", Help: "代码库", Actions: ice.MergeActions(ice.Actions{
+			web.SERVE_REWRITE: {Hand: func(m *ice.Message, arg ...string) {
+				if strings.HasPrefix(arg[1], "/x/") {
+					_server_rewrite(m, arg[1], m.R)
+				}
 			}},
-		}, Hand: func(m *ice.Message, arg ...string) {
+		}, web.ServeAction(), web.ApiAction()), Hand: func(m *ice.Message, arg ...string) {
 			if m.Option("go-get") == "1" { // 下载地址
 				p := web.MergeLink(m, "/x/"+path.Join(arg...))
 				m.RenderResult(kit.Format(`<meta name="%s" content="%s">`, "go-import", kit.Format(`%s git %s`, strings.Split(p, "://")[1], p)))
@@ -164,9 +161,9 @@ func init() {
 					_git_cmd(m, PUSH, "--tags", remote, MASTER)
 				})
 			}},
-			nfs.TRASH: {Name: "trash", Help: "删除", Hand: func(m *ice.Message, arg ...string) {
+			nfs.TRASH: {Hand: func(m *ice.Message, arg ...string) {
 				m.Assert(m.Option(nfs.PATH) != "")
-				m.Cmd(nfs.TRASH, path.Join(ice.USR_LOCAL_REPOS, m.Option(nfs.PATH)))
+				nfs.Trash(m, path.Join(ice.USR_LOCAL_REPOS, m.Option(nfs.PATH)))
 			}},
 			web.DREAM_INPUTS: {Hand: func(m *ice.Message, arg ...string) {
 				switch arg[0] {

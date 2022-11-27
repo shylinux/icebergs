@@ -120,8 +120,8 @@ func init() {
 			mdb.CREATE: {Name: "create file", Help: "添加", Hand: func(m *ice.Message, arg ...string) {
 				_publish_file(m, m.Option(nfs.FILE))
 			}},
-			nfs.TRASH: {Name: "trash", Help: "删除", Hand: func(m *ice.Message, arg ...string) {
-				m.Cmd(nfs.TRASH, path.Join(ice.USR_PUBLISH, m.Option(nfs.PATH)))
+			nfs.TRASH: {Hand: func(m *ice.Message, arg ...string) {
+				nfs.Trash(m, path.Join(ice.USR_PUBLISH, m.Option(nfs.PATH)))
 			}},
 		}, aaa.RoleAction()), Hand: func(m *ice.Message, arg ...string) {
 			m.Option(nfs.DIR_ROOT, ice.USR_PUBLISH)

@@ -160,28 +160,6 @@ func init() {
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
 				m.Cmd(mdb.RENDER, mdb.CREATE, nfs.IML, m.PrefixKey())
 				m.Cmd(mdb.ENGINE, mdb.CREATE, nfs.IML, m.PrefixKey())
-
-				web.AddRewrite(func(w http.ResponseWriter, r *http.Request) bool {
-					if r.Method != http.MethodGet {
-						return false
-					}
-					if strings.HasSuffix(r.URL.Path, ice.PS) {
-						return false
-					}
-					if !strings.HasPrefix(r.Header.Get(web.UserAgent), "Mozilla") {
-						return false
-					}
-					if strings.HasPrefix(r.URL.Path, CHAT_WEBSITE) {
-						_website_render(m, w, r, kit.Ext(r.URL.Path), m.Cmdx(nfs.CAT, strings.Replace(r.URL.Path, CHAT_WEBSITE, SRC_WEBSITE, 1)), path.Base(r.URL.Path))
-						return true
-					}
-					if m.Cmd(WEBSITE, r.URL.Path, func(value ice.Maps) {
-						_website_render(m, w, r, value[mdb.TYPE], value[mdb.TEXT], path.Base(r.URL.Path))
-					}).Length() > 0 {
-						return true
-					}
-					return false
-				})
 			}},
 			lex.PARSE: {Hand: func(m *ice.Message, arg ...string) {
 				switch kit.Ext(arg[0]) {

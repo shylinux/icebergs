@@ -19,7 +19,7 @@ func _port_right(m *ice.Message, arg ...string) string {
 	}
 	for i := current; i < end; i++ {
 		if p := path.Join(ice.USR_LOCAL_DAEMON, kit.Format(i)); nfs.ExistsFile(m, p) {
-			
+
 		} else if c, e := net.Dial(TCP, kit.Format(":%d", i)); e == nil {
 			m.Info("port exists %v", i)
 			c.Close()
@@ -43,11 +43,11 @@ const PORT = "port"
 func init() {
 	Index.MergeCommands(ice.Commands{
 		PORT: {Name: "port port path auto", Help: "端口", Actions: ice.MergeActions(ice.Actions{
-			CURRENT: {Hand: func(m *ice.Message, arg ...string) { m.Echo(m.Config(CURRENT)) }},
+			CURRENT:   {Hand: func(m *ice.Message, arg ...string) { m.Echo(m.Config(CURRENT)) }},
 			aaa.RIGHT: {Hand: func(m *ice.Message, arg ...string) { m.Echo(_port_right(m, arg...)) }},
 			nfs.TRASH: {Hand: func(m *ice.Message, arg ...string) {
 				m.Assert(m.Option(PORT) != "")
-				m.Cmd(nfs.TRASH, path.Join(ice.USR_LOCAL_DAEMON, m.Option(PORT)))
+				nfs.Trash(m, path.Join(ice.USR_LOCAL_DAEMON, m.Option(PORT)))
 			}},
 		}, mdb.HashAction(BEGIN, 10000, CURRENT, 10000, END, 20000)), Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) > 0 {

@@ -53,3 +53,7 @@ func init() {
 		}, mdb.HashAction(mdb.SHORT, FROM, mdb.FIELD, "time,hash,from,file", mdb.ACTION, mdb.REVERT))},
 	})
 }
+
+func Trash(m *ice.Message, p string) *ice.Message {
+	return m.Cmd(TRASH, mdb.CREATE, p)
+}

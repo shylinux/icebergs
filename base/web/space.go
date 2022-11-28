@@ -19,8 +19,7 @@ import (
 
 func _space_dial(m *ice.Message, dev, name string, arg ...string) {
 	msg := m.Cmd(SPIDE, dev)
-	host := msg.Append(kit.Keys(tcp.CLIENT, tcp.HOSTNAME))
-	proto := strings.Replace(msg.Append(kit.Keys(tcp.CLIENT, tcp.PROTOCOL)), ice.HTTP, "ws", 1)
+	proto, host := strings.Replace(msg.Append(kit.Keys(tcp.CLIENT, tcp.PROTOCOL)), ice.HTTP, "ws", 1), msg.Append(kit.Keys(tcp.CLIENT, tcp.HOSTNAME))
 	uri := kit.ParseURL(kit.MergeURL(proto+"://"+host+PP(SPACE), mdb.TYPE, ice.Info.NodeType, mdb.NAME, name, SHARE, ice.Info.CtxShare, RIVER, ice.Info.CtxRiver, arg))
 	m.Go(func() {
 		ls := strings.Split(host, ice.DF)
@@ -40,10 +39,8 @@ func _space_dial(m *ice.Message, dev, name string, arg ...string) {
 				}
 			})
 			sleep := time.Duration(rand.Intn(a*(i+1))+b) * time.Millisecond
-			msg.Cost("order", i, "sleep", sleep, "reconnect", dev)
-			if time.Sleep(sleep); mdb.HashSelect(msg).Length() == 0 {
-				break
-			}
+			msg.Cost("order", i, "sleep", sleep, "redial", dev)
+			time.Sleep(sleep)
 		}
 	})
 }

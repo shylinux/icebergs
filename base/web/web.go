@@ -55,9 +55,9 @@ func (f *Frame) Start(m *ice.Message, arg ...string) bool {
 			func(key string, cmd *ice.Command) {
 				msg.Log(ROUTE, "%s <- %s", c.Name, key)
 				f.HandleFunc(key, func(w http.ResponseWriter, r *http.Request) {
-					msg.TryCatch(msg.Spawn(), true, func(msg *ice.Message) { _serve_handle(key, cmd, msg, w, r) })
+					m.TryCatch(m.Spawn(w, r, c, cmd, key), true, func(msg *ice.Message) { _serve_handle(key, cmd, msg, w, r) })
 				})
-				ice.Info.Route[path.Join(list[c], key)] = ctx.FileURI(cmd.GetFileLine())
+				ice.Info.Route[path.Join(list[c], key)] = ctx.FileURI(cmd.GetFileLines())
 			}(key, cmd)
 		}
 	})
@@ -68,7 +68,7 @@ func (f *Frame) Start(m *ice.Message, arg ...string) bool {
 		cb(f)
 	default:
 		m.Cmd(tcp.SERVER, tcp.LISTEN, mdb.TYPE, WEB, m.OptionSimple(mdb.NAME, tcp.HOST, tcp.PORT), func(l net.Listener) {
-			mdb.HashCreate(m, mdb.NAME, WEB, arg, m.OptionSimple(tcp.PROTO, ice.DEV), cli.STATUS, tcp.START)
+			mdb.HashCreate(m, m.OptionSimple(mdb.NAME, tcp.PROTO), arg, cli.STATUS, tcp.START)
 			defer mdb.HashModify(m, m.OptionSimple(mdb.NAME), cli.STATUS, tcp.STOP)
 			m.Warn(f.Server.Serve(l))
 		})

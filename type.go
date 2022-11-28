@@ -91,7 +91,12 @@ func (c *Context) PrefixKey(arg ...string) string {
 	return kit.Keys(c.Cap(CTX_FOLLOW), arg)
 }
 func (c *Command) GetFileLine() string {
-	if c.RawHand != nil {
+	return kit.Join(kit.Slice(kit.Split(c.GetFileLines(), PS), -3), PS)
+}
+func (c *Command) GetFileLines() string {
+	if c == nil {
+		return ""
+	} else if c.RawHand != nil {
 		switch h := c.RawHand.(type) {
 		case string:
 			return h
@@ -348,11 +353,11 @@ func (m *Message) Spawn(arg ...Any) *Message {
 			json.Unmarshal(val, &msg.meta)
 		case Option:
 			msg.Option(val.Name, val.Value)
-		case Map:
+		case Maps:
 			for k, v := range val {
 				msg.Option(k, v)
 			}
-		case Maps:
+		case Map:
 			for k, v := range val {
 				msg.Option(k, v)
 			}
@@ -362,6 +367,8 @@ func (m *Message) Spawn(arg ...Any) *Message {
 			msg.R = val
 		case *Context:
 			msg.target = val
+		case *Command:
+			msg._cmd = val
 		case string:
 			msg._key = val
 		}

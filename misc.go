@@ -166,17 +166,23 @@ func (m *Message) Design(action Any, help string, input ...Any) {
 }
 func (m *Message) _fileline() string {
 	switch m.target.Name {
-	case MDB, AAA:
+	case MDB, GDB, AAA:
 		return m._source
 	default:
 		return m._target
 	}
 }
+func (m *Message) ActionHand(cmd *Command, key, sub string, arg ...string) *Message {
+	if action, ok := cmd.Actions[sub]; !m.Warn(!ok, ErrNotFound, sub, cmd.GetFileLines()) {
+		return m.Target()._action(m, cmd, key, sub, action, arg...)
+	}
+	return m
+}
 func (m *Message) CmdHand(cmd *Command, key string, arg ...string) *Message {
 	if m._key, m._cmd = key, cmd; cmd == nil {
 		return m
 	}
-	m._target = kit.Join(kit.Slice(kit.Split(cmd.GetFileLine(), PS), -3), PS)
+	m._target = kit.Join(kit.Slice(kit.Split(cmd.GetFileLines(), PS), -3), PS)
 	if fileline := m._fileline(); key == SELECT {
 		m.Log(LOG_CMDS, "%s.%s %d %v %v", m.Target().Name, key, len(arg), arg, m.Optionv(MSG_FIELDS), logs.FileLineMeta(fileline))
 	} else {
@@ -279,7 +285,7 @@ func (c *Context) _action(m *Message, cmd *Command, key string, sub string, h *A
 		m.Cmdy(kit.Split(h.Name), arg)
 		return m
 	}
-	if m._sub = sub; len(h.List) > 0 && sub != SEARCH {
+	if m._key, m._cmd, m._sub = key, cmd, sub; len(h.List) > 0 && sub != SEARCH {
 		order := false
 		for i, v := range h.List {
 			name := kit.Format(kit.Value(v, NAME))
@@ -288,13 +294,17 @@ func (c *Context) _action(m *Message, cmd *Command, key string, sub string, h *A
 				order = true
 			}
 			if order {
-				m.Option(name, kit.Select(value, arg, i))
-			} else {
-				m.OptionDefault(name, value)
+				value = kit.Select(value, arg, i)
+			}
+			if value != "" {
+				m.Option(name, value)
 			}
 		}
 		if !order {
 			for i := 0; i < len(arg)-1; i += 2 {
+				if strings.HasPrefix(arg[i], PS) {
+					break
+				}
 				m.Option(arg[i], arg[i+1])
 			}
 		}

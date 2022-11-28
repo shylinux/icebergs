@@ -97,12 +97,12 @@ func UserLogin(m *ice.Message, username, password string) bool {
 	return m.Cmdy(USER, LOGIN, username, password).Option(ice.MSG_USERNAME) != ""
 }
 func UserRoot(m *ice.Message, arg ...string) *ice.Message {
-	username := m.Option(ice.MSG_USERNAME, kit.Select(ice.Info.UserName, arg, 0))
-	usernick := m.Option(ice.MSG_USERNICK, kit.Select(UserNick(m, username), arg, 1))
-	userrole := m.Option(ice.MSG_USERROLE, kit.Select(ROOT, arg, 2))
+	username := kit.Select(ice.Info.UserName, arg, 0)
+	usernick := kit.Select(UserNick(m, username), arg, 1)
+	userrole := kit.Select(ROOT, arg, 2)
 	if len(arg) > 0 {
-		m.Cmd(USER, mdb.CREATE, username, "", usernick, "", userrole)
 		ice.Info.UserName = username
+		m.Cmd(USER, mdb.CREATE, username, "", usernick, "", userrole)
 	}
-	return m
+	return SessAuth(m, kit.Dict(USERNAME, username, USERNICK, usernick, USERROLE, userrole))
 }

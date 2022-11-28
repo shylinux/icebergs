@@ -99,7 +99,7 @@ func init() {
 				switch args := _tags_split(m.Option(PRE), m.Option(COL)); args[0] {
 				case "field":
 					m.Search(kit.Select(args[1], args, 2), func(key string, cmd *ice.Command) {
-						ls := kit.Split(cmd.GetFileLine(), ":")
+						ls := kit.Split(cmd.GetFileLines(), ":")
 						m.Echo("vi +%s %s", ls[1], ls[0])
 					})
 				case "qrcode":

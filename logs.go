@@ -5,6 +5,7 @@ import (
 	"runtime"
 	"strings"
 	"time"
+	"unicode"
 
 	kit "shylinux.com/x/toolkits"
 	"shylinux.com/x/toolkits/logs"
@@ -75,6 +76,9 @@ func (m *Message) Log(level string, str string, arg ...Any) *Message {
 }
 func (m *Message) Logs(level string, arg ...Any) *Message {
 	str, meta := m.join(arg...)
+	if unicode.IsUpper([]rune(level)[0]) {
+		meta = []Any{logs.FileLineMeta("")}
+	}
 	return m.log(level, str, meta...)
 }
 
@@ -84,8 +88,9 @@ func (m *Message) Auth(arg ...Any) *Message {
 }
 func (m *Message) Cost(arg ...Any) *Message {
 	str, meta := m.join(arg...)
-	if len(arg) == 0 {
+	if str == "" || len(arg) == 0 {
 		str = kit.Join(m.meta[MSG_DETAIL], SP)
+		meta = []Any{logs.FileLineMeta(m._fileline())}
 	}
 	list := []string{m.FormatCost(), str}
 	return m.log(LOG_COST, kit.Join(list, SP), meta...)
@@ -187,11 +192,12 @@ func (m *Message) FormatChain() string {
 	meta := append([]string{}, NL)
 	for i := len(ms) - 1; i >= 0; i-- {
 		msg := ms[i]
-		meta = append(meta, kit.Format("%s %s:%d %v %s:%d %v %s:%d %v %s:%d %v", msg.FormatPrefix(),
+		meta = append(meta, kit.Format("%s %s:%d %v %s:%d %v %s:%d %v %s:%d %v %s", msg.FormatPrefix(),
 			MSG_DETAIL, len(msg.meta[MSG_DETAIL]), msg.meta[MSG_DETAIL],
 			MSG_OPTION, len(msg.meta[MSG_OPTION]), msg.meta[MSG_OPTION],
 			MSG_APPEND, len(msg.meta[MSG_APPEND]), msg.meta[MSG_APPEND],
 			MSG_RESULT, len(msg.meta[MSG_RESULT]), msg.meta[MSG_RESULT],
+			msg._cmd.GetFileLine(),
 		))
 		for _, k := range msg.meta[MSG_OPTION] {
 			if v, ok := msg.meta[k]; ok {

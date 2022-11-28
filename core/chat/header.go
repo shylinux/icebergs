@@ -26,9 +26,6 @@ func _header_share(m *ice.Message, arg ...string) {
 	if m.Warn(m.Option(ice.MSG_USERNAME) == "", ice.ErrNotLogin, "没有登录") {
 		return
 	}
-	if m.Warn(m.Option(web.SHARE) != "", ice.ErrNotRight, "没有权限") {
-		return
-	}
 	for i := 0; i < len(arg)-1; i += 2 {
 		m.Option(arg[i], arg[i+1])
 	}

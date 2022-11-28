@@ -393,6 +393,9 @@ func (m *Message) Detail(arg ...Any) string {
 	return kit.Select("", m.meta[MSG_DETAIL], 0)
 }
 func (m *Message) Detailv(arg ...Any) []string {
+	if len(arg) > 0 {
+		m.meta[MSG_DETAIL] = kit.Simple(arg...)
+	}
 	return m.meta[MSG_DETAIL]
 }
 func (m *Message) Options(arg ...Any) Any {

@@ -81,6 +81,7 @@ func init() {
 				ctx.Run(m, arg...)
 			}},
 		}, mdb.HashAction(), ctx.CmdAction(), KeyboardAction()), Hand: func(m *ice.Message, arg ...string) {
+			m.Debug(m.FormatChain())
 			if len(arg) > 0 && arg[0] == ctx.ACTION {
 				m.Option(mdb.TYPE, m.Cmd("", m.Option(mdb.HASH)).Append(mdb.TYPE))
 				gdb.Event(m, FAVOR_ACTION, arg)

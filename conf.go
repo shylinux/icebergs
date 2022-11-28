@@ -312,6 +312,7 @@ const ( // mdb
 )
 const ( // ice
 	MDB = "mdb"
+	GDB = "gdb"
 	AAA = "aaa"
 	CLI = "cli"
 )

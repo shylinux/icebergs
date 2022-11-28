@@ -57,7 +57,7 @@ func _command_search(m *ice.Message, kind, name, text string) {
 		}
 		m.PushSearch(ice.CTX, kit.PathName(1), ice.CMD, kit.FileName(1), kit.SimpleKV("", s.Cap(ice.CTX_FOLLOW), cmd.Name, cmd.Help),
 			CONTEXT, s.Cap(ice.CTX_FOLLOW), COMMAND, key, INDEX, kit.Keys(s.Cap(ice.CTX_FOLLOW), key),
-			mdb.HELP, cmd.Help, nfs.FILE, FileURI(cmd.GetFileLine()),
+			mdb.HELP, cmd.Help, nfs.FILE, FileURI(cmd.GetFileLines()),
 		)
 	})
 }
@@ -186,7 +186,7 @@ func GetFileCmd(dir string) string {
 }
 func GetCmdFile(m *ice.Message, cmds string) (file string) {
 	m.Search(cmds, func(key string, cmd *ice.Command) {
-		if file = strings.TrimPrefix(FileURI(kit.Split(cmd.GetFileLine(), ice.DF)[0]), "/require/"); !nfs.ExistsFile(m, file) {
+		if file = strings.TrimPrefix(FileURI(kit.Split(cmd.GetFileLines(), ice.DF)[0]), "/require/"); !nfs.ExistsFile(m, file) {
 			file = path.Join(ice.ISH_PLUGED, file)
 		}
 	})
@@ -197,7 +197,7 @@ func TravelCmd(m *ice.Message, cb func(key, file, line string)) *ice.Message {
 		if IsOrderCmd(key) {
 			return
 		}
-		if ls := kit.Split(cmd.GetFileLine(), ice.DF); !m.Warn(len(ls) == 0, ice.ErrNotFound, key) {
+		if ls := kit.Split(cmd.GetFileLines(), ice.DF); !m.Warn(len(ls) == 0, ice.ErrNotFound, key) {
 			cb(kit.Keys(s.Cap(ice.CTX_FOLLOW), key), strings.TrimPrefix(ls[0], kit.Path("")+ice.PS), kit.Select("1", ls, 1))
 		}
 	})

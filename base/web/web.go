@@ -62,7 +62,7 @@ func (f *Frame) Start(m *ice.Message, arg ...string) bool {
 		}
 	})
 	gdb.Event(m, SERVE_START, arg)
-	defer gdb.Event(m, SERVE_STOP)
+	defer gdb.Event(m, SERVE_STOP, arg)
 	switch cb := m.OptionCB("").(type) {
 	case func(http.Handler):
 		cb(f)

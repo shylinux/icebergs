@@ -55,7 +55,7 @@ func (f *Frame) Start(m *ice.Message, arg ...string) bool {
 			func(key string, cmd *ice.Command) {
 				msg.Log(ROUTE, "%s <- %s", c.Name, key)
 				f.HandleFunc(key, func(w http.ResponseWriter, r *http.Request) {
-					m.TryCatch(msg.Spawn(), true, func(msg *ice.Message) { _serve_handle(key, cmd, msg, w, r) })
+					msg.TryCatch(msg.Spawn(), true, func(msg *ice.Message) { _serve_handle(key, cmd, msg, w, r) })
 				})
 				ice.Info.Route[path.Join(list[c], key)] = ctx.FileURI(cmd.GetFileLine())
 			}(key, cmd)

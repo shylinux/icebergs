@@ -44,78 +44,65 @@ func _space_dial(m *ice.Message, dev, name string, arg ...string) {
 		}
 	})
 }
-func _space_handle(m *ice.Message, safe bool, frame *Frame, c *websocket.Conn, name string) bool {
+func _space_handle(m *ice.Message, safe bool, f *Frame, conn *websocket.Conn, name string) bool {
 	for {
-		_, b, e := c.ReadMessage()
+		_, b, e := conn.ReadMessage()
 		if m.Warn(e, SPACE, name) {
 			break
 		}
 		msg := m.Spawn(b)
-		socket, source, target := c, kit.Simple(msg.Optionv(ice.MSG_SOURCE), name), kit.Simple(msg.Optionv(ice.MSG_TARGET))
-		msg.Log("recv", "%v<-%v %s %v", target, source, msg.Detailv(), msg.FormatMeta())
+		source, target := kit.Simple(msg.Optionv(ice.MSG_SOURCE), name), kit.Simple(msg.Optionv(ice.MSG_TARGET))
+		msg.Log("recv", "%v->%v %s %v", source, target, msg.Detailv(), msg.FormatMeta())
 		if len(target) == 0 {
 			if msg.Optionv(ice.MSG_HANDLE, ice.TRUE); safe { // 下行命令
 				gdb.Event(msg, SPACE_LOGIN)
 			} else { // 上行请求
 				msg.Option(ice.MSG_USERROLE, aaa.VOID)
 			}
-			msg.Go(func() { _space_exec(msg, source, target, c, name) })
+			msg.Go(func() { _space_exec(msg, source, target, conn) })
 		} else if mdb.HashSelectDetail(msg, target[0], func(value ice.Map) {
-			if s, ok := value[mdb.TARGET].(*websocket.Conn); !m.Warn(!ok, ice.ErrNotValid, target[0]) { // 转发报文
-				socket, source, target = s, source, target[1:]
-				_space_echo(msg, source, target, socket, kit.Select("", target))
-			} else if msg.Option(ice.MSG_HANDLE) != ice.TRUE { // 下发失败
-				source, target = []string{}, kit.Revert(source)[1:]
+			if conn, ok := value[mdb.TARGET].(*websocket.Conn); !m.Warn(!ok, ice.ErrNotValid, target[0]) {
+				_space_echo(msg, source, target, conn) // 转发报文
 			}
 		}) {
-		} else if res, ok := frame.getSend(msg.Option(ice.MSG_TARGET)); !m.Warn(!ok || len(target) != 1) {
+		} else if res, ok := f.getSend(msg.Option(ice.MSG_TARGET)); !m.Warn(!ok || len(target) != 1) {
 			back(res, msg) // 接收响应
 		}
 	}
 	return false
 }
 func _space_domain(m *ice.Message) (link string) {
-	if link = ice.Info.Domain; link == "" {
-		m.Optionv(ice.MSG_OPTS, ice.MSG_USERNAME)
-		link = m.CmdAppend(SPACE, ice.OPS, cli.PWD, mdb.LINK)
-	}
-	if link == "" {
-		link = m.CmdAppend(SPACE, ice.DEV, cli.PWD, mdb.LINK)
-	}
-	if link == "" {
-		link = m.CmdAppend(SPACE, ice.SHY, cli.PWD, mdb.LINK)
-	}
-	if link == "" {
-		link = m.Option(ice.MSG_USERWEB)
-	}
-	if link == "" {
-		link = kit.Format("http://localhost:%s", kit.Select(m.Option(tcp.PORT), m.CmdAppend(SERVE, tcp.PORT)))
-	}
-	return tcp.PublishLocalhost(m, link)
+	return kit.GetValid(
+		func() string { return ice.Info.Domain },
+		func() string {
+			return m.CmdAppend(SPACE, ice.OPS, cli.PWD, kit.Dict(ice.MSG_OPTS, ice.MSG_USERNAME), mdb.LINK)
+		},
+		func() string { return m.CmdAppend(SPACE, ice.DEV, cli.PWD, mdb.LINK) },
+		func() string { return m.CmdAppend(SPACE, ice.SHY, cli.PWD, mdb.LINK) },
+		func() string { return tcp.PublishLocalhost(m, m.Option(ice.MSG_USERWEB)) },
+		func() string {
+			return kit.Format("http://%s:%s", m.CmdAppend(tcp.HOST, aaa.IP), kit.Select(m.Option(tcp.PORT), m.CmdAppend(SERVE, tcp.PORT)))
+		})
 }
-func _space_exec(msg *ice.Message, source, target []string, c *websocket.Conn, name string) {
-	switch msg.Detailv()[0] {
+func _space_exec(msg *ice.Message, source, target []string, conn *websocket.Conn) {
+	switch kit.Select(msg.Detailv(), 0) {
 	case "pwd":
-		msg.Push(mdb.LINK, kit.MergePOD(_space_domain(msg), name))
+		msg.Push(mdb.LINK, kit.MergePOD(_space_domain(msg), kit.Select("", source, -1)))
 	default:
 		if aaa.Right(msg, msg.Detailv()) {
 			msg = msg.Cmd()
 		}
 	}
-	msg.Set(ice.MSG_OPTS)
-	_space_echo(msg, []string{}, kit.Revert(source)[1:], c, name)
+	_space_echo(msg.Set(ice.MSG_OPTS), []string{}, kit.Revert(kit.Simple(source)), conn)
 	msg.Cost(kit.Format("%v->%v %v %v", source, target, msg.Detailv(), msg.FormatSize()))
 }
-func _space_echo(msg *ice.Message, source, target []string, c *websocket.Conn, name string) {
-	msg.Optionv(ice.MSG_SOURCE, source)
-	msg.Optionv(ice.MSG_TARGET, target)
-	if e := c.WriteMessage(1, []byte(msg.FormatMeta())); msg.Warn(e) { // 回复失败
-		msg.Go(func() { mdb.HashRemove(msg, mdb.NAME, name) })
-		c.Close()
-		return
+func _space_echo(msg *ice.Message, source, target []string, conn *websocket.Conn) {
+	if msg.Optionv(ice.MSG_SOURCE, source, ice.MSG_TARGET, target[1:]); msg.Warn(conn.WriteMessage(1, []byte(msg.FormatMeta()))) {
+		msg.Go(func() { mdb.HashRemove(msg, mdb.NAME, target[0]) })
+		conn.Close()
+	} else {
+		msg.Log("send", "%v->%v %v %v", source, target, msg.Detailv(), msg.FormatMeta())
 	}
-	target = append([]string{name}, target...)
-	msg.Log("send", "%v->%v %v %v", source, target, msg.Detailv(), msg.FormatMeta())
 }
 func _space_send(m *ice.Message, space string, arg ...string) {
 	if space == "" || space == MYSELF || space == ice.Info.NodeName {
@@ -134,9 +121,9 @@ func _space_send(m *ice.Message, space string, arg ...string) {
 	m.Optionv(ice.MSG_OPTION, m.Optionv(ice.MSG_OPTS))
 	target, id, f := kit.Split(space, ice.PT, ice.PT), "", m.Target().Server().(*Frame)
 	if m.Warn(!mdb.HashSelectDetail(m, target[0], func(value ice.Map) {
-		if socket, ok := value[mdb.TARGET].(*websocket.Conn); !m.Warn(!ok, ice.ErrNotFound, mdb.TARGET) {
+		if conn, ok := value[mdb.TARGET].(*websocket.Conn); !m.Warn(!ok, ice.ErrNotFound, mdb.TARGET) {
 			id = f.addSend(kit.Format(m.Target().ID()), m)
-			_space_echo(m, []string{id}, target[1:], socket, target[0])
+			_space_echo(m, []string{id}, target, conn)
 		}
 	}), ice.ErrNotFound, space) {
 		return

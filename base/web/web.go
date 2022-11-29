@@ -44,18 +44,14 @@ func (f *Frame) Start(m *ice.Message, arg ...string) bool {
 			pf.Handle(route, http.StripPrefix(path.Dir(route), f))
 			list[c] = path.Join(list[p], route)
 		}
-		m.Confm(SERVE, kit.Keym(nfs.PATH), func(key string, value string) {
-			msg.Log(ROUTE, "%s <- %s <- %s", c.Name, key, value)
-			f.Handle(key, http.StripPrefix(key, http.FileServer(http.Dir(value))))
-		})
 		for key, cmd := range c.Commands {
-			if key[0] != '/' {
+			if key[:1] != ice.PS {
 				continue
 			}
 			func(key string, cmd *ice.Command) {
 				msg.Log(ROUTE, "%s <- %s", c.Name, key)
 				f.HandleFunc(key, func(w http.ResponseWriter, r *http.Request) {
-					m.TryCatch(m.Spawn(w, r, c, cmd, key), true, func(msg *ice.Message) { _serve_handle(key, cmd, msg, w, r) })
+					m.TryCatch(m.Spawn(key, cmd, c, w, r), true, func(msg *ice.Message) { _serve_handle(key, cmd, msg, w, r) })
 				})
 				ice.Info.Route[path.Join(list[c], key)] = ctx.FileURI(cmd.GetFileLines())
 			}(key, cmd)
@@ -67,8 +63,7 @@ func (f *Frame) Start(m *ice.Message, arg ...string) bool {
 		cb(f)
 	default:
 		m.Cmd(tcp.SERVER, tcp.LISTEN, mdb.TYPE, WEB, m.OptionSimple(mdb.NAME, tcp.HOST, tcp.PORT), func(l net.Listener) {
-			mdb.HashCreate(m, m.OptionSimple(mdb.NAME, tcp.PROTO), arg, cli.STATUS, tcp.START)
-			defer mdb.HashModify(m, m.OptionSimple(mdb.NAME), cli.STATUS, tcp.STOP)
+			defer mdb.HashCreateDeferRemove(m, m.OptionSimple(mdb.NAME, tcp.PROTO), arg, cli.STATUS, tcp.START)()
 			m.Warn(f.Server.Serve(l))
 		})
 	}

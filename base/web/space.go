@@ -76,8 +76,7 @@ func _space_handle(m *ice.Message, safe bool, name string, conn *websocket.Conn)
 		}) {
 		} else if res := getSend(m, next); !m.Warn(res == nil || len(target) != 1, ice.ErrNotFound, next) {
 			res.Cost(kit.Format("[%v]->%v %v %v", next, res.Optionv(ice.MSG_TARGET), res.Detailv(), msg.FormatSize()))
-			m.Sleep("10ms")
-			back(res, msg) // 接收响应
+			back(res, msg.Sleep("10ms")) // 接收响应
 		}
 	}
 }
@@ -131,9 +130,7 @@ func _space_send(m *ice.Message, space string, arg ...string) {
 			_space_echo(m, []string{addSend(m, m)}, target, conn)
 		}
 	}), ice.ErrNotFound, space) {
-		call(m, m.Config(kit.Keys(TIMEOUT, "c")), func(res *ice.Message) {
-			m.Copy(res)
-		})
+		call(m, m.Config(kit.Keys(TIMEOUT, "c")), func(res *ice.Message) { m.Copy(res) })
 	}
 }
 

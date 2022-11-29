@@ -13,13 +13,13 @@ import (
 )
 
 func _broad_addr(m *ice.Message, host, port string) *net.UDPAddr {
-	if addr, e := net.ResolveUDPAddr("udp4", kit.Format("%s:%s", host, port)); !m.Warn(e != nil, e, host, port, logs.FileLineMeta(logs.FileLine(2))) {
+	if addr, e := net.ResolveUDPAddr("udp4", kit.Format("%s:%s", host, port)); !m.Warn(e, ice.ErrNotValid, host, port, logs.FileLineMeta(2)) {
 		return addr
 	}
 	return nil
 }
 func _broad_send(m *ice.Message, host, port string, remote_host, remote_port string) {
-	if s, e := net.DialUDP("udp", nil, _broad_addr(m, remote_host, remote_port)); m.Assert(e) {
+	if s, e := net.DialUDP("udp", nil, _broad_addr(m, remote_host, remote_port)); !m.Warn(e, ice.ErrNotValid) {
 		defer s.Close()
 		msg := m.Spawn(kit.Dict(tcp.HOST, host, tcp.PORT, port))
 		m.Logs(mdb.EXPORT, BROAD, msg.FormatMeta(), "to", remote_host+ice.DF+remote_port)
@@ -42,7 +42,7 @@ func _broad_serve(m *ice.Message, host, port string) {
 			if m.Cmd(BROAD, kit.Format("%s,%s", msg.Option(tcp.HOST), msg.Option(tcp.PORT))).Length() > 0 {
 				continue
 			}
-			if remote := _broad_addr(m, msg.Option(tcp.HOST), msg.Option(tcp.PORT)); !m.Warn(remote == nil) {
+			if remote := _broad_addr(m, msg.Option(tcp.HOST), msg.Option(tcp.PORT)); remote != nil {
 				m.Cmd(BROAD, func(value ice.Maps) {
 					m.Logs(mdb.EXPORT, BROAD, kit.Format(value), "to", kit.Format(remote))
 					s.WriteToUDP([]byte(m.Spawn(value).FormatMeta()), remote)

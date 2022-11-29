@@ -79,6 +79,7 @@ func init() {
 			}},
 		}, mdb.HashAction(mdb.SHORT, mdb.TEXT)), Hand: func(m *ice.Message, arg ...string) {
 			_host_list(m, kit.Select("", arg, 0))
+			m.Debug(m.FormatChain())
 		}},
 	})
 }

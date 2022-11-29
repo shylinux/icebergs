@@ -8,6 +8,7 @@ import (
 	ice "shylinux.com/x/icebergs"
 	kit "shylinux.com/x/toolkits"
 	"shylinux.com/x/toolkits/miss"
+	"shylinux.com/x/toolkits/logs"
 )
 
 func _hash_fields(m *ice.Message) []string {
@@ -145,6 +146,9 @@ func StatusHashAction(arg ...Any) ice.Actions {
 		}},
 	}, HashAction(arg...))
 }
+func ExitClearHashAction() ice.Actions {
+	return ice.MergeActions(ice.Actions{ ice.CTX_EXIT: {Hand: func(m *ice.Message, arg ...string) { m.Conf("", HASH, "") }} })
+}
 
 func HashKey(m *ice.Message) string {
 	if m.Option(HASH) != "" {
@@ -163,7 +167,7 @@ func HashCreate(m *ice.Message, arg ...Any) string {
 	if len(arg) == 0 {
 		arg = append(arg, m.OptionSimple(HashField(m)))
 	}
-	return m.Echo(m.Cmdx(append(kit.List(INSERT, m.PrefixKey(), "", HASH), arg...)...)).Result()
+	return m.Echo(m.Cmdx(append(kit.List(INSERT, m.PrefixKey(), "", HASH, logs.FileLineMeta(logs.FileLine(-1))), arg...)...)).Result()
 }
 func HashRemove(m *ice.Message, arg ...Any) *ice.Message {
 	if args := kit.Simple(arg); len(args) == 0 {

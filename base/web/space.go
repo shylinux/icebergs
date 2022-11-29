@@ -131,6 +131,7 @@ func _space_send(m *ice.Message, space string, arg ...string) {
 			_space_echo(m, []string{addSend(m, m)}, target, conn)
 		}
 	}), ice.ErrNotFound, space) {
+		m.Sleep("30ms")
 		call(m, m.Config(kit.Keys(TIMEOUT, "c")), func(res *ice.Message) { m.Copy(res) })
 	}
 }
@@ -159,7 +160,6 @@ const SPACE = "space"
 func init() {
 	Index.MergeCommands(ice.Commands{
 		SPACE: {Name: "space name cmd auto", Help: "空间站", Actions: ice.MergeActions(ice.Actions{
-			ice.CTX_EXIT: {Hand: func(m *ice.Message, arg ...string) { m.Conf("", mdb.HASH, "") }},
 			tcp.DIAL: {Name: "dial dev=ops name", Hand: func(m *ice.Message, arg ...string) {
 				if strings.HasPrefix(m.Option(ice.DEV), ice.HTTP) {
 					m.Cmd(SPIDE, mdb.CREATE, ice.DEV, m.Option(ice.DEV))
@@ -185,7 +185,7 @@ func init() {
 		}, mdb.HashAction(mdb.SHORT, mdb.NAME, mdb.FIELD, "time,type,name,text",
 			REDIAL, kit.Dict("a", 3000, "b", 1000, "c", 1000), TIMEOUT, kit.Dict("c", "30s"),
 			BUFFER, kit.Dict("r", ice.MOD_BUFS, "w", ice.MOD_BUFS),
-		), SpaceAction(), aaa.WhiteAction()), Hand: func(m *ice.Message, arg ...string) {
+		), mdb.ExitClearHashAction(), SpaceAction(), aaa.WhiteAction()), Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) < 2 {
 				mdb.HashSelect(m, arg...).Sort("type,name,text")
 			} else {

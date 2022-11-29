@@ -152,7 +152,6 @@ func init() {
 	Index.MergeCommands(ice.Commands{
 		SERVE: {Name: "serve name auto start", Help: "服务器", Actions: ice.MergeActions(ice.Actions{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
-				m.Conf("", mdb.HASH, "")
 				cli.NodeInfo(m, ice.Info.PathName, WORKER)
 				aaa.White(m, LOGIN)
 			}},
@@ -195,7 +194,7 @@ func init() {
 			mdb.SHORT, mdb.NAME, mdb.FIELD, "time,status,name,proto,host,port", tcp.LOCALHOST, ice.TRUE, LOGHEADERS, ice.FALSE,
 			ice.INTSHELL, kit.Dict(nfs.PATH, ice.USR_INTSHELL, INDEX, ice.INDEX_SH, nfs.REPOS, "https://shylinux.com/x/intshell", nfs.BRANCH, nfs.MASTER),
 			ice.VOLCANOS, kit.Dict(nfs.PATH, ice.USR_VOLCANOS, INDEX, "page/index.html", nfs.REPOS, "https://shylinux.com/x/volcanos", nfs.BRANCH, nfs.MASTER),
-		), ServeAction())},
+		), mdb.ExitClearHashAction(), ServeAction())},
 		PP(ice.INTSHELL): {Name: "/intshell/", Help: "命令行", Actions: aaa.WhiteAction(), Hand: func(m *ice.Message, arg ...string) {
 			RenderIndex(m, ice.INTSHELL, arg...)
 		}},

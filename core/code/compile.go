@@ -52,7 +52,7 @@ func init() {
 				cli.IsAlpine(m, "vim")
 				cli.IsAlpine(m, "tmux")
 				if cli.IsAlpine(m, "git"); !cli.IsAlpine(m, "go", "go git") {
-					mdb.ZoneInsert(m, cli.CLI, "go", cli.CMD, kit.Format("install download https://golang.google.cn/dl/go1.15.5.%s-%s.tar.gz usr/local", runtime.GOOS, runtime.GOARCH))
+					m.Cmd(mdb.INSERT, cli.CLI, "", mdb.ZONE, cli.CLI, "go", cli.CMD, kit.Format("install download https://golang.google.cn/dl/go1.15.5.%s-%s.tar.gz usr/local", runtime.GOOS, runtime.GOARCH))
 				}
 			}},
 			mdb.INPUTS: {Hand: func(m *ice.Message, arg ...string) {

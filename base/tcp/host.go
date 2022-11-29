@@ -46,9 +46,9 @@ func _host_list(m *ice.Message, name string) {
 
 const (
 	LOCALHOST = "localhost"
-	
-	ISLOCAL   = "islocal"
-	PUBLISH   = "publish"
+
+	ISLOCAL = "islocal"
+	PUBLISH = "publish"
 )
 const HOST = "host"
 
@@ -77,12 +77,11 @@ func init() {
 				}
 				m.Echo(arg[0])
 			}},
-		}, mdb.HashAction(mdb.SHORT, mdb.TEXT)), Hand: func(m *ice.Message, arg ...string) {
+		}, mdb.HashAction(mdb.SHORT, mdb.TEXT), mdb.ClearHashOnExitAction()), Hand: func(m *ice.Message, arg ...string) {
 			_host_list(m, kit.Select("", arg, 0))
-			m.Debug(m.FormatChain())
 		}},
 	})
 }
 
-func IsLocalHost(m *ice.Message, ip string) bool { return m.Cmdx(HOST, ISLOCAL, ip) == ice.OK }
+func IsLocalHost(m *ice.Message, ip string) bool         { return m.Cmdx(HOST, ISLOCAL, ip) == ice.OK }
 func PublishLocalhost(m *ice.Message, url string) string { return m.Cmdx(HOST, PUBLISH, url) }

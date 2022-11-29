@@ -27,8 +27,7 @@ func _space_dial(m *ice.Message, dev, name string, arg ...string) {
 			next := time.Duration(rand.Intn(a*(i+1))+b*i) * time.Millisecond
 			m.Cmd(tcp.CLIENT, tcp.DIAL, args, func(c net.Conn) {
 				if conn, _, e := websocket.NewClient(c, uri, nil, kit.Int(redial["r"]), kit.Int(redial["w"])); !m.Warn(e, tcp.DIAL, dev, SPACE, uri.String()) {
-					mdb.HashCreate(m, kit.SimpleKV("", MASTER, dev, msg.Append(tcp.HOSTNAME)), kit.Dict(mdb.TARGET, conn))
-					defer mdb.HashRemove(m, dev)
+					defer mdb.HashCreateDeferRemove(m, kit.SimpleKV("", MASTER, dev, msg.Append(tcp.HOSTNAME)), kit.Dict(mdb.TARGET, conn))()
 					_space_handle(m, true, dev, conn)
 				}
 			}).Cost("order", i, "sleep", next, "redial", dev).Sleep(next)
@@ -42,11 +41,11 @@ func _space_fork(m *ice.Message) {
 		name := strings.ToLower(kit.ReplaceAll(kit.Select(m.Option(ice.MSG_USERADDR), m.Option(mdb.NAME)), ice.PT, "_", ice.DF, "_"))
 		args := kit.Simple(mdb.TYPE, kit.Select(WORKER, m.Option(mdb.TYPE)), mdb.NAME, name, mdb.TEXT, text, m.OptionSimple(SHARE, RIVER, ice.MSG_USERUA))
 		m.Go(func() {
-			defer kit.BeginEnd(func() { mdb.HashCreate(m, args, kit.Dict(mdb.TARGET, conn)) }, func() { mdb.HashRemove(m, name) })()
-			defer kit.BeginEnd(func() { gdb.Event(m, SPACE_OPEN, args) }, func() { gdb.Event(m, SPACE_CLOSE, args) })()
+			defer mdb.HashCreateDeferRemove(m, args, kit.Dict(mdb.TARGET, conn))()
+			defer gdb.EventDeferEvent(m, SPACE_OPEN, args)(SPACE_CLOSE, args)
 			switch m.Option(mdb.TYPE) {
 			case WORKER:
-				defer kit.BeginEnd(func() { gdb.Event(m, DREAM_OPEN, args) }, func() { gdb.Event(m, DREAM_CLOSE, args) })()
+				defer gdb.EventDeferEvent(m, DREAM_OPEN, args)(DREAM_CLOSE, args)
 			case CHROME:
 				m.Cmd(SPACE, name, cli.PWD, name)
 			}
@@ -77,6 +76,7 @@ func _space_handle(m *ice.Message, safe bool, name string, conn *websocket.Conn)
 		}) {
 		} else if res := getSend(m, next); !m.Warn(res == nil || len(target) != 1, ice.ErrNotFound, next) {
 			res.Cost(kit.Format("[%v]->%v %v %v", next, res.Optionv(ice.MSG_TARGET), res.Detailv(), msg.FormatSize()))
+			m.Sleep("10ms")
 			back(res, msg) // 接收响应
 		}
 	}
@@ -131,8 +131,9 @@ func _space_send(m *ice.Message, space string, arg ...string) {
 			_space_echo(m, []string{addSend(m, m)}, target, conn)
 		}
 	}), ice.ErrNotFound, space) {
-		m.Sleep("30ms")
-		call(m, m.Config(kit.Keys(TIMEOUT, "c")), func(res *ice.Message) { m.Copy(res) })
+		call(m, m.Config(kit.Keys(TIMEOUT, "c")), func(res *ice.Message) {
+			m.Copy(res)
+		})
 	}
 }
 
@@ -168,8 +169,7 @@ func init() {
 				_space_dial(m, m.Option(ice.DEV), kit.Select(ice.Info.NodeName, m.Option(mdb.NAME)), arg...)
 			}},
 			mdb.REMOVE: {Hand: func(m *ice.Message, arg ...string) {
-				mdb.HashModify(m, m.OptionSimple(mdb.NAME), mdb.STATUS, cli.STOP)
-				defer mdb.HashRemove(m, m.OptionSimple(mdb.NAME))
+				defer mdb.HashModifyDeferRemove(m, m.OptionSimple(mdb.NAME), mdb.STATUS, cli.STOP)()
 				m.Cmd(SPACE, m.Option(mdb.NAME), ice.EXIT)
 			}},
 			SPACE_LOGIN: {Hand: func(m *ice.Message, arg ...string) {
@@ -185,7 +185,7 @@ func init() {
 		}, mdb.HashAction(mdb.SHORT, mdb.NAME, mdb.FIELD, "time,type,name,text",
 			REDIAL, kit.Dict("a", 3000, "b", 1000, "c", 1000), TIMEOUT, kit.Dict("c", "30s"),
 			BUFFER, kit.Dict("r", ice.MOD_BUFS, "w", ice.MOD_BUFS),
-		), mdb.ExitClearHashAction(), SpaceAction(), aaa.WhiteAction()), Hand: func(m *ice.Message, arg ...string) {
+		), mdb.ClearHashOnExitAction(), SpaceAction(), aaa.WhiteAction()), Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) < 2 {
 				mdb.HashSelect(m, arg...).Sort("type,name,text")
 			} else {

@@ -42,6 +42,9 @@ func init() {
 
 func release(m *ice.Message) string {
 	osid := runtime.GOOS
+	if osid != "linux" {
+		return osid
+	}
 	m.Cmd(nfs.CAT, "/etc/os-release", kit.Dict(ice.MSG_USERROLE, aaa.ROOT), func(text string) {
 		if ls := kit.Split(text, ice.EQ); len(ls) > 1 {
 			switch ls[0] {

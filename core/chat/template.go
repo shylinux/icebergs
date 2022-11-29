@@ -50,7 +50,7 @@ func init() {
 					m.Cmd(mdb.DELETE, m.PrefixKey(), kit.KeyHash(m.Option(RIVER)), mdb.HASH, m.OptionSimple(STORM))
 				}
 			}},
-		}), Hand: func(m *ice.Message, arg ...string) {
+		}, mdb.ClearHashOnExitAction()), Hand: func(m *ice.Message, arg ...string) {
 			switch len(arg) {
 			case 0:
 				m.Cmdy(mdb.SELECT, m.PrefixKey(), "", mdb.HASH, ice.OptionFields("time,river"))

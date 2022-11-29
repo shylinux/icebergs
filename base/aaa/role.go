@@ -92,7 +92,7 @@ func init() {
 					m.Echo(ice.OK)
 				}
 			}},
-		}, mdb.HashAction(mdb.SHORT, mdb.NAME)), Hand: func(m *ice.Message, arg ...string) {
+		}, mdb.HashAction(mdb.SHORT, mdb.NAME), mdb.ClearHashOnExitAction()), Hand: func(m *ice.Message, arg ...string) {
 			_role_list(m, kit.Select("", arg, 0)).PushAction(mdb.DELETE)
 		}},
 	})

@@ -37,5 +37,6 @@ func RenderAction(args ...ice.Any) ice.Actions {
 				})
 			}
 		}},
+		ice.CTX_EXIT: {Hand: func(m *ice.Message, arg ...string) { m.Conf("", HASH, "") }},
 	})
 }

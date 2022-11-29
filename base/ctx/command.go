@@ -197,7 +197,7 @@ func TravelCmd(m *ice.Message, cb func(key, file, line string)) *ice.Message {
 		if IsOrderCmd(key) {
 			return
 		}
-		if ls := kit.Split(cmd.GetFileLines(), ice.DF); !m.Warn(len(ls) == 0, ice.ErrNotFound, key) {
+		if ls := kit.Split(cmd.GetFileLines(), ice.DF); len(ls) > 0 {
 			cb(kit.Keys(s.Cap(ice.CTX_FOLLOW), key), strings.TrimPrefix(ls[0], kit.Path("")+ice.PS), kit.Select("1", ls, 1))
 		}
 	})

@@ -335,6 +335,13 @@ func MergeActions(arg ...Any) Actions {
 						hand(m, arg...)
 						last(m, arg...)
 					}
+				} else if k == CTX_EXIT {
+					last := h.Hand
+					hand := v.Hand
+					h.Hand = func(m *Message, arg ...string) {
+						hand(m, arg...)
+						last(m, arg...)
+					}
 				} else if h.Name = kit.Select(v.Name, h.Name); h.Hand == nil {
 					h.Hand = v.Hand
 				}

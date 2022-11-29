@@ -23,11 +23,11 @@ func init() {
 			nfs.SOURCE, kit.Dict(mdb.LIST, kit.List(mdb.TYPE, nfs.TAR, nfs.FILE, "contexts.src.tar.gz")),
 		))},
 	}, Commands: ice.Commands{
-		UPGRADE: {Name: "upgrade item=target,binary,source run restart", Help: "升级", Actions: ice.Actions{
+		UPGRADE: {Name: "upgrade item=target,binary,source run restart", Help: "升级", Actions: ice.MergeActions(ice.Actions{
 			cli.RESTART: {Name: "restart", Help: "重启", Hand: func(m *ice.Message, arg ...string) {
 				m.Go(func() { m.Sleep300ms(ice.EXIT, 1) })
 			}},
-		}, Hand: func(m *ice.Message, arg ...string) {
+		}, mdb.ClearHashOnExitAction()), Hand: func(m *ice.Message, arg ...string) {
 			mdb.ZoneSelect(m, kit.Select(nfs.TARGET, arg, 0)).Tables(func(value ice.Maps) {
 				if value[nfs.FILE] == ice.ICE_BIN { // 程序文件
 					value[nfs.FILE] = kit.Keys(ice.ICE, runtime.GOOS, runtime.GOARCH)

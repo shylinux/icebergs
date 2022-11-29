@@ -7,8 +7,8 @@ import (
 
 	ice "shylinux.com/x/icebergs"
 	kit "shylinux.com/x/toolkits"
-	"shylinux.com/x/toolkits/miss"
 	"shylinux.com/x/toolkits/logs"
+	"shylinux.com/x/toolkits/miss"
 )
 
 func _hash_fields(m *ice.Message) []string {
@@ -146,8 +146,10 @@ func StatusHashAction(arg ...Any) ice.Actions {
 		}},
 	}, HashAction(arg...))
 }
-func ExitClearHashAction() ice.Actions {
-	return ice.MergeActions(ice.Actions{ ice.CTX_EXIT: {Hand: func(m *ice.Message, arg ...string) { m.Conf("", HASH, "") }} })
+func ClearHashOnExitAction() ice.Actions {
+	return ice.MergeActions(ice.Actions{ice.CTX_EXIT: {Hand: func(m *ice.Message, arg ...string) {
+		m.Conf("", HASH, "")
+	}}})
 }
 
 func HashKey(m *ice.Message) string {
@@ -277,6 +279,14 @@ func HashSelectClose(m *ice.Message) *ice.Message {
 }
 func HashPrunesValue(m *ice.Message, field, value string) {
 	m.Cmdy(PRUNES, m.PrefixKey(), "", HASH, field, value, ice.OptionFields(HashField(m)))
+}
+func HashCreateDeferRemove(m *ice.Message, arg ...Any) func() {
+	h := HashCreate(m, arg...)
+	return func() { HashRemove(m, HASH, h) }
+}
+func HashModifyDeferRemove(m *ice.Message, arg ...Any) func() {
+	HashModify(m, arg...)
+	return func() { HashRemove(m, arg...) }
 }
 
 func Richs(m *ice.Message, prefix string, chain Any, raw Any, cb Any) (res Map) {

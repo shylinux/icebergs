@@ -12,21 +12,43 @@ import (
 	"shylinux.com/x/toolkits/miss"
 )
 
-func _config_save(m *ice.Message, name string, arg ...string) {
-	name = path.Join(ice.VAR_CONF, name)
-	if f, p, e := miss.CreateFile(name); m.Assert(e) {
-		defer f.Close()
-		defer m.Echo(p)
-		msg := m.Spawn(m.Source())
-		data := ice.Map{}
-		for _, k := range arg {
-			if v := msg.Confv(k); v != "" {
-				data[k] = v
+func _config_only(v ice.Any, arg ...string) bool {
+	switch v := v.(type) {
+	case nil:
+		return true
+	case ice.Map:
+		if len(v) > len(arg) {
+			return false
+		}
+		kit.Sort(arg)
+		for _, k := range kit.SortedKey(v) {
+			if kit.IndexOf(arg, k) == -1 {
+				return false
 			}
 		}
+		return true
+	}
+	return false
+}
+func _config_save(m *ice.Message, name string, arg ...string) {
+	msg := m.Spawn(m.Source())
+	data := ice.Map{}
+	for _, k := range arg {
+		// if v := msg.Confv(k); _config_only(v, mdb.META) && _config_only(kit.Value(v, mdb.META), mdb.FIELD, mdb.SHORT) {
+		if v := msg.Confv(k); _config_only(v, mdb.META) {
+			continue
+		} else {
+			data[k] = v
+		}
+	}
+	if len(data) == 0 {
+		return
+	}
+	if f, p, e := miss.CreateFile(path.Join(ice.VAR_CONF, name)); m.Assert(e) {
+		defer f.Close()
+		defer m.Echo(p)
 		if s, e := json.MarshalIndent(data, "", "  "); !m.Warn(e) {
 			if _, e := f.Write(s); !m.Warn(e) {
-
 			}
 		}
 	}

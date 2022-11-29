@@ -34,7 +34,7 @@ func init() {
 				m.Warn(smtp.SendMail(m.Option(SERVICE), auth, m.Option(USERNAME), kit.Split(m.Option(TO)), content))
 				m.Logs(mdb.EXPORT, EMAIL, auth, string(content))
 			}},
-		}, mdb.HashAction(mdb.SHORT, mdb.NAME, mdb.FIELD, "time,name,service,username,password")), Hand: func(m *ice.Message, arg ...string) {
+		}, mdb.HashAction(mdb.SHORT, mdb.NAME, mdb.FIELD, "time,name,service,username,password"), mdb.ClearHashOnExitAction()), Hand: func(m *ice.Message, arg ...string) {
 			mdb.HashSelect(m, arg...).PushAction(SEND, mdb.REMOVE)
 		}},
 	})

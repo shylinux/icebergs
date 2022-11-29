@@ -167,7 +167,7 @@ func init() {
 					nfs.Trash(m, m.Option(nfs.PATH))
 				}
 			}},
-		}, mdb.HashAction(mdb.SHORT, nfs.PATH, mdb.FIELD, "time,path")), Hand: func(m *ice.Message, arg ...string) {
+		}, mdb.HashAction(mdb.SHORT, nfs.PATH, mdb.FIELD, "time,path"), mdb.ClearHashOnExitAction()), Hand: func(m *ice.Message, arg ...string) {
 			m.Option(nfs.DIR_TYPE, nfs.CAT)
 			m.Option(nfs.DIR_DEEP, ice.TRUE)
 			m.OptionFields(nfs.DIR_WEB_FIELDS)

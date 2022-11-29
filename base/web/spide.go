@@ -22,7 +22,8 @@ import (
 )
 
 func _spide_create(m *ice.Message, name, address string) {
-	if uri, e := url.Parse(address); !m.Warn(e != nil || address == "") {
+	// if uri, e := url.Parse(address); !m.Warn(e != nil || address == "", address) {
+	if uri, e := url.Parse(address); m.Assert(e == nil) {
 		m.Logs(mdb.CREATE, SPIDE, name, ADDRESS, address)
 		dir, file := path.Split(uri.EscapedPath())
 		mdb.HashCreate(m, CLIENT_NAME, name)
@@ -393,7 +394,7 @@ func init() {
 				m.Push(tcp.PROTOCOL, msg.Append("client.protocol"))
 				m.Push(DOMAIN, msg.Append("client.protocol")+"://"+msg.Append("client.hostname")+kit.Select("", arg, 1))
 			}},
-		}, mdb.HashAction(mdb.SHORT, CLIENT_NAME, mdb.FIELD, "time,client.name,client.url", LOGHEADERS, ice.FALSE)), Hand: func(m *ice.Message, arg ...string) {
+		}, mdb.HashAction(mdb.SHORT, CLIENT_NAME, mdb.FIELD, "time,client.name,client.url", LOGHEADERS, ice.FALSE), mdb.ClearHashOnExitAction()), Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) < 2 || arg[0] == "" || (len(arg) > 3 && arg[3] == "") {
 				mdb.HashSelect(m, kit.Slice(arg, 0, 1)...).Sort(CLIENT_NAME)
 			} else {

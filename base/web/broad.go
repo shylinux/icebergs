@@ -9,12 +9,14 @@ import (
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/tcp"
 	kit "shylinux.com/x/toolkits"
+	"shylinux.com/x/toolkits/logs"
 )
 
 func _broad_addr(m *ice.Message, host, port string) *net.UDPAddr {
-	addr, err := net.ResolveUDPAddr("udp4", kit.Format("%s:%s", host, port))
-	m.Assert(err)
-	return addr
+	if addr, e := net.ResolveUDPAddr("udp4", kit.Format("%s:%s", host, port)); !m.Warn(e != nil, e, host, port, logs.FileLineMeta(logs.FileLine(2))) {
+		return addr
+	}
+	return nil
 }
 func _broad_send(m *ice.Message, host, port string, remote_host, remote_port string) {
 	if s, e := net.DialUDP("udp", nil, _broad_addr(m, remote_host, remote_port)); m.Assert(e) {
@@ -26,9 +28,9 @@ func _broad_send(m *ice.Message, host, port string, remote_host, remote_port str
 }
 func _broad_serve(m *ice.Message, host, port string) {
 	_broad_send(m, host, port, "255.255.255.255", "9020")
-	if s, e := net.ListenUDP("udp", _broad_addr(m, "0.0.0.0", port)); m.Assert(e) {
+	if s, e := net.ListenUDP("udp4", _broad_addr(m, "0.0.0.0", port)); m.Assert(e) {
 		defer s.Close()
-		mdb.HashCreate(m, tcp.HOST, host, tcp.PORT, port, kit.Dict(mdb.TARGET, s))
+		defer mdb.HashCreateDeferRemove(m, tcp.HOST, host, tcp.PORT, port, kit.Dict(mdb.TARGET, s))()
 		buf := make([]byte, ice.MOD_BUFS)
 		for {
 			n, addr, err := s.ReadFromUDP(buf[:])
@@ -40,7 +42,7 @@ func _broad_serve(m *ice.Message, host, port string) {
 			if m.Cmd(BROAD, kit.Format("%s,%s", msg.Option(tcp.HOST), msg.Option(tcp.PORT))).Length() > 0 {
 				continue
 			}
-			if remote, err := net.ResolveUDPAddr("udp4", kit.Format("%s:%s", msg.Option(tcp.HOST), msg.Option(tcp.PORT))); !m.Warn(err) {
+			if remote := _broad_addr(m, msg.Option(tcp.HOST), msg.Option(tcp.PORT)); !m.Warn(remote == nil) {
 				m.Cmd(BROAD, func(value ice.Maps) {
 					m.Logs(mdb.EXPORT, BROAD, kit.Format(value), "to", kit.Format(remote))
 					s.WriteToUDP([]byte(m.Spawn(value).FormatMeta()), remote)
@@ -62,6 +64,6 @@ func init() {
 			OPEN: {Hand: func(m *ice.Message, arg ...string) {
 				ctx.ProcessOpen(m, kit.Format("http://%s:%s", m.Option(tcp.HOST), m.Option(tcp.PORT)))
 			}},
-		}, mdb.HashAction(mdb.SHORT, "host,port", mdb.FIELD, "time,hash,host,port", mdb.ACTION, OPEN), mdb.ExitClearHashAction())},
+		}, mdb.HashAction(mdb.SHORT, "host,port", mdb.FIELD, "time,hash,host,port", mdb.ACTION, OPEN), mdb.ClearHashOnExitAction())},
 	})
 }

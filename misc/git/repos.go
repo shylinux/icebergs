@@ -79,7 +79,7 @@ func init() {
 			web.DREAM_OPEN: {Hand: func(m *ice.Message, arg ...string) {
 				m.Cmd("web.code.git.repos", mdb.CREATE, m.OptionSimple(nfs.REPOS), nfs.PATH, m.Option(nfs.PATH))
 			}},
-		}, mdb.HashAction(mdb.SHORT, mdb.NAME, mdb.FIELD, "time,name,branch,commit,remote")), Hand: func(m *ice.Message, arg ...string) {
+		}, mdb.HashAction(mdb.SHORT, mdb.NAME, mdb.FIELD, "time,name,branch,commit,remote"), mdb.ClearHashOnExitAction()), Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) == 0 { // 仓库列表
 				mdb.HashSelect(m, arg...).Sort(mdb.NAME).RenameAppend(mdb.NAME, REPOS)
 			} else { // 文件列表

@@ -51,7 +51,7 @@ func _mdb_select(m *ice.Message, cb Any, key string, value Map, fields []string,
 			res[k] = kit.Format(v)
 		}
 		cb(res)
-	case nil:
+	case string, []string, []ice.Any, nil:
 		if m.FieldsIsDetail() {
 			m.Push(ice.FIELDS_DETAIL, value)
 		} else {

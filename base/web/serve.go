@@ -194,7 +194,7 @@ func init() {
 			mdb.SHORT, mdb.NAME, mdb.FIELD, "time,status,name,proto,host,port", tcp.LOCALHOST, ice.TRUE, LOGHEADERS, ice.FALSE,
 			ice.INTSHELL, kit.Dict(nfs.PATH, ice.USR_INTSHELL, INDEX, ice.INDEX_SH, nfs.REPOS, "https://shylinux.com/x/intshell", nfs.BRANCH, nfs.MASTER),
 			ice.VOLCANOS, kit.Dict(nfs.PATH, ice.USR_VOLCANOS, INDEX, "page/index.html", nfs.REPOS, "https://shylinux.com/x/volcanos", nfs.BRANCH, nfs.MASTER),
-		), mdb.ExitClearHashAction(), ServeAction())},
+		), mdb.ClearHashOnExitAction(), ServeAction())},
 		PP(ice.INTSHELL): {Name: "/intshell/", Help: "命令行", Actions: aaa.WhiteAction(), Hand: func(m *ice.Message, arg ...string) {
 			RenderIndex(m, ice.INTSHELL, arg...)
 		}},

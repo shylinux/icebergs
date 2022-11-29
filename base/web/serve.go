@@ -24,7 +24,7 @@ func _serve_start(m *ice.Message) {
 		m.Option(tcp.PORT, m.Cmdx(tcp.PORT, aaa.RIGHT))
 	}
 	m.Target().Start(m, m.OptionSimple(tcp.HOST, tcp.PORT)...)
-	m.Sleep30ms().Go(func() { m.Cmd(BROAD, SERVE) })
+	m.Sleep30ms().Go(func() { m.Cmd(BROAD, SERVE, m.OptionSimple(tcp.PORT)) })
 	for _, v := range kit.Split(m.Option(ice.DEV)) {
 		m.Cmd(SPACE, tcp.DIAL, ice.DEV, v, mdb.NAME, ice.Info.NodeName)
 	}
@@ -110,15 +110,12 @@ func _serve_handle(key string, cmd *ice.Command, m *ice.Message, w http.Response
 	Render(m, m.Option(ice.MSG_OUTPUT), m.Optionv(ice.MSG_ARGS))
 }
 func _serve_domain(m *ice.Message) string {
-	return kit.GetValid(func() string {
-		return ice.Info.Domain
-	}, func() string {
-		return m.R.Header.Get("X-Host")
-	}, func() string {
-		return kit.Select("", m.R.Header.Get(Referer), m.R.Method == SPIDE_POST)
-	}, func() string {
-		return kit.Format("%s://%s", kit.Select("https", ice.HTTP, m.R.TLS == nil), m.R.Host)
-	})
+	return kit.GetValid(
+		func() string { return ice.Info.Domain },
+		func() string { return m.R.Header.Get("X-Host") },
+		func() string { return kit.Select("", m.R.Header.Get(Referer), m.R.Method == SPIDE_POST) },
+		func() string { return kit.Format("%s://%s", kit.Select("https", ice.HTTP, m.R.TLS == nil), m.R.Host) },
+	)
 }
 func _serve_login(m *ice.Message, key string, cmds []string, w http.ResponseWriter, r *http.Request) ([]string, bool) {
 	if aaa.SessCheck(m, m.Option(ice.MSG_SESSID)); m.Option(ice.MSG_USERNAME) == "" {
@@ -155,6 +152,7 @@ func init() {
 	Index.MergeCommands(ice.Commands{
 		SERVE: {Name: "serve name auto start", Help: "服务器", Actions: ice.MergeActions(ice.Actions{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
+				m.Conf("", mdb.HASH, "")
 				cli.NodeInfo(m, ice.Info.PathName, WORKER)
 				aaa.White(m, LOGIN)
 			}},
@@ -162,9 +160,7 @@ func init() {
 				_serve_start(m)
 			}},
 			SERVE_START: {Hand: func(m *ice.Message, arg ...string) {
-				m.Go(func() {
-					m.Sleep("30ms", ssh.PRINTF, kit.Dict(nfs.CONTENT, "\r"+ice.Render(m, ice.RENDER_QRCODE, m.Cmdx(SPACE, DOMAIN))+ice.NL)).Cmd(ssh.PROMPT)
-				})
+				m.Sleep("30ms", ssh.PRINTF, kit.Dict(nfs.CONTENT, "\r"+ice.Render(m, ice.RENDER_QRCODE, m.Cmdx(SPACE, DOMAIN))+ice.NL))
 			}},
 			SERVE_REWRITE: {Hand: func(m *ice.Message, arg ...string) {
 				if arg[0] != SPIDE_GET {
@@ -182,8 +178,6 @@ func init() {
 						m.RenderDownload(arg[2])
 					}
 				}
-			}},
-			SERVE_PARSE: {Hand: func(m *ice.Message, arg ...string) {
 			}},
 			SERVE_LOGIN: {Hand: func(m *ice.Message, arg ...string) {
 				if m.Option(ice.MSG_USERNAME) == "" && m.Config(tcp.LOCALHOST) == ice.TRUE && tcp.IsLocalHost(m, m.Option(ice.MSG_USERIP)) {

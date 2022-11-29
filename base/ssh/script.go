@@ -109,8 +109,9 @@ func (f *Frame) parse(m *ice.Message, h, line string) string {
 func (f *Frame) scan(m *ice.Message, h, line string) *Frame {
 	f.ps1 = kit.Simple(m.Confv(PROMPT, kit.Keym(PS1)))
 	f.ps2 = kit.Simple(m.Confv(PROMPT, kit.Keym(PS2)))
-	m.Optionv(MESSAGE, m)
 	m.I, m.O = f.stdin, f.stdout
+	m.Optionv(MESSAGE, m)
+	m.Sleep("300ms")
 	ps, bio := f.ps1, bufio.NewScanner(f.stdin)
 	for f.prompt(m, ps...); f.stdin != nil && bio.Scan(); f.prompt(m, ps...) {
 		if len(bio.Text()) == 0 && h == STDIO {

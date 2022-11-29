@@ -38,6 +38,10 @@ func _client_dial(m *ice.Message, arg ...string) {
 		defer c.Close()
 	}
 	switch cb := m.OptionCB("").(type) {
+	case func(*ice.Message, net.Conn):
+		if !m.Warn(e) {
+			cb(m, c)
+		}
 	case func(net.Conn):
 		if !m.Warn(e) {
 			cb(c)

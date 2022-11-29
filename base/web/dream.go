@@ -62,7 +62,7 @@ func _dream_show(m *ice.Message, name string) {
 	gdb.Event(m, DREAM_CREATE, m.OptionSimple(mdb.NAME, mdb.TYPE))
 	defer ToastProcess(m)()
 	bin := kit.Select(os.Args[0], cli.SystemFind(m, ice.ICE_BIN, nfs.PWD+path.Join(p, ice.BIN), nfs.PWD+ice.BIN))
-	m.Cmd(cli.DAEMON, bin, SPACE, tcp.DIAL, ice.DEV, ice.OPS, m.OptionSimple(mdb.NAME, RIVER), cli.DAEMON, ice.OPS)
+	m.Cmd(cli.DAEMON, bin, SPACE, tcp.DIAL, ice.DEV, ice.OPS, mdb.TYPE, WORKER, m.OptionSimple(mdb.NAME, RIVER), cli.DAEMON, ice.OPS)
 	m.Sleep3s()
 }
 func _dream_template(m *ice.Message, p string) {

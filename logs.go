@@ -147,10 +147,11 @@ func (m *Message) Error(err bool, arg ...Any) bool {
 }
 func (m *Message) error(arg ...Any) {
 	if len(arg) > 2 {
-		str, meta := m.join(arg[2:]...)
-		arg = append(arg[0:2], str, meta)
+		str, _ := m.join(arg[2:]...)
+		m.Resultv(ErrWarn, kit.Simple(arg[0], arg[1], SP+str))
+	} else {
+		m.Resultv(ErrWarn, kit.Simple(arg))
 	}
-	m.Resultv(ErrWarn, kit.Simple(arg))
 }
 func (m *Message) IsOk() bool { return m.Result() == OK }
 func (m *Message) IsErr(arg ...string) bool {

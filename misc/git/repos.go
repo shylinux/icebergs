@@ -76,7 +76,7 @@ func init() {
 					_git_cmd(m, CLONE, "-b", kit.Select(MASTER, m.Option(BRANCH)), m.Option(REPOS), m.Option(nfs.PATH))
 				}
 			}},
-			web.DREAM_START: {Hand: func(m *ice.Message, arg ...string) {
+			web.DREAM_OPEN: {Hand: func(m *ice.Message, arg ...string) {
 				m.Cmd("web.code.git.repos", mdb.CREATE, m.OptionSimple(nfs.REPOS), nfs.PATH, m.Option(nfs.PATH))
 			}},
 		}, mdb.HashAction(mdb.SHORT, mdb.NAME, mdb.FIELD, "time,name,branch,commit,remote")), Hand: func(m *ice.Message, arg ...string) {

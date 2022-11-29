@@ -86,20 +86,16 @@ func (f *Frame) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		f.ServeMux.ServeHTTP(w, r)
 	}
 }
-func (f *Frame) getSend(key string) (*ice.Message, bool) {
-	defer f.lock.RLock()()
-	msg, ok := f.send[key]
-	return msg, ok
-}
 func (f *Frame) addSend(key string, msg *ice.Message) string {
 	defer f.lock.Lock()()
 	f.send[key] = msg
 	return key
 }
-func (f *Frame) delSend(key string) string {
-	defer f.lock.Lock()()
+func (f *Frame) getSend(key string) *ice.Message {
+	defer f.lock.RLock()()
+	msg, _ := f.send[key]
 	delete(f.send, key)
-	return key
+	return msg
 }
 
 const WEB = "web"

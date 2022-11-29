@@ -132,7 +132,8 @@ func init() {
 					_tmux_cmd(m, KILL_PANE, "-t", _tmux_key(m.Option(SESSION), m.Option(WINDOW), m.Option(PANE)))
 
 				} else if m.Option(WINDOW) != "" { // 删除窗口
-					_tmux_cmd(m, KILL_WINDOW, "-t", _tmux_key(m.Option(SESSION), m.Option(WINDOW)))
+					// _tmux_cmd(m, KILL_WINDOW, "-t", _tmux_key(m.Option(SESSION), m.Option(WINDOW)))
+					_tmux_cmd(m, KILL_WINDOW, "-t", _tmux_key(m.Option(SESSION), m.Option(mdb.ID)))
 
 				} else if m.Option(SESSION) != "" { // 删除会话
 					_tmux_cmd(m, KILL_SESSION, "-t", m.Option(SESSION))

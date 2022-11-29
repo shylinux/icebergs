@@ -87,8 +87,8 @@ func _dream_template(m *ice.Message, p string) {
 
 const (
 	DREAM_CREATE = "dream.create"
-	DREAM_START  = "dream.start"
-	DREAM_STOP   = "dream.stop"
+	DREAM_OPEN   = "dream.open"
+	DREAM_CLOSE  = "dream.close"
 
 	DREAM_INPUTS = "dream.inputs"
 	DREAM_TABLES = "dream.tables"
@@ -121,13 +121,15 @@ func init() {
 			nfs.TRASH: {Hand: func(m *ice.Message, arg ...string) {
 				nfs.Trash(m, path.Join(ice.USR_LOCAL_WORK, m.Option(mdb.NAME)))
 			}},
-			DREAM_STOP: {Hand: func(m *ice.Message, arg ...string) {
-				if m.CmdAppend(SPACE, m.Option(mdb.NAME), mdb.STATUS) != cli.STOP {
-					m.Go(func() { m.Sleep3s(DREAM, cli.START, m.OptionSimple(mdb.NAME)) })
+			DREAM_OPEN: {Hand: func(m *ice.Message, arg ...string) {
+				if m.Option(cli.DAEMON) == ice.OPS {
+					if m.CmdAppend(SPACE, m.Option(mdb.NAME), mdb.STATUS) != cli.STOP {
+						m.Go(func() { m.Sleep3s(DREAM, cli.START, m.OptionSimple(mdb.NAME)) })
+					}
 				}
 			}},
 			OPEN: {Hand: func(m *ice.Message, arg ...string) { ProcessIframe(m, MergePod(m, m.Option(mdb.NAME)), arg...) }},
-		}, ctx.CmdAction()), Hand: func(m *ice.Message, arg ...string) {
+		}, ctx.CmdAction(), gdb.EventsAction(DREAM_OPEN)), Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) == 0 {
 				_dream_list(m)
 			} else if arg[0] == ctx.ACTION {

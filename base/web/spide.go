@@ -384,6 +384,15 @@ func init() {
 			SUBMIT: {Name: "submit dev pod path size cache", Help: "发布", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmdy(SPIDE, ice.DEV, SPIDE_RAW, m.Option(ice.DEV), SPIDE_PART, m.OptionSimple(ice.POD), nfs.PATH, ice.BIN_ICE_BIN, UPLOAD, "@"+ice.BIN_ICE_BIN)
 			}},
+			"client": {Hand: func(m *ice.Message, arg ...string) {
+				msg := m.Cmd("", kit.Select(ice.DEV, arg, 0))
+				ls := kit.Split(msg.Append("client.hostname"), ice.DF)
+				m.Push(tcp.HOST, ls[0])
+				m.Push(tcp.PORT, kit.Select(kit.Select("443", "80", msg.Append("client.protocol") == ice.HTTP), ls, 1))
+				m.Push(tcp.HOSTNAME, msg.Append("client.hostname"))
+				m.Push(tcp.PROTOCOL, msg.Append("client.protocol"))
+				m.Push(DOMAIN, msg.Append("client.protocol")+"://"+msg.Append("client.hostname")+kit.Select("", arg, 1))
+			}},
 		}, mdb.HashAction(mdb.SHORT, CLIENT_NAME, mdb.FIELD, "time,client.name,client.url", LOGHEADERS, ice.FALSE)), Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) < 2 || arg[0] == "" || (len(arg) > 3 && arg[3] == "") {
 				mdb.HashSelect(m, kit.Slice(arg, 0, 1)...).Sort(CLIENT_NAME)

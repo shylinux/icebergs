@@ -56,8 +56,7 @@ func _dream_show(m *ice.Message, name string) {
 		cli.CTX_OPS, "http://localhost:"+m.CmdAppend(SERVE, tcp.PORT),
 		cli.PATH, cli.BinPath(kit.Path(p, ice.BIN)), cli.USER, ice.Info.UserName,
 		kit.EnvSimple(cli.HOME, cli.TERM, cli.SHELL), m.Configv(cli.ENV),
-	))
-	m.Optionv(cli.CMD_OUTPUT, path.Join(p, ice.BIN_BOOT_LOG))
+	), cli.CMD_OUTPUT, path.Join(p, ice.BIN_BOOT_LOG))
 	defer m.Options(cli.CMD_DIR, "", cli.CMD_ENV, "", cli.CMD_OUTPUT, "")
 	gdb.Event(m, DREAM_CREATE, m.OptionSimple(mdb.NAME, mdb.TYPE))
 	bin := kit.Select(os.Args[0], cli.SystemFind(m, ice.ICE_BIN, nfs.PWD+path.Join(p, ice.BIN), nfs.PWD+ice.BIN))

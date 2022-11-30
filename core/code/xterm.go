@@ -106,19 +106,7 @@ func init() {
 			web.WEBSITE: {Name: "website", Help: "网页", Hand: func(m *ice.Message, arg ...string) {
 				web.ProcessWebsite(m, "", "", m.OptionSimple(mdb.HASH))
 			}},
-			web.DREAM_TABLES: {Hand: func(m *ice.Message, arg ...string) {
-				switch m.Option(mdb.TYPE) {
-				case web.SERVER, web.WORKER:
-					m.PushButton(kit.Dict(m.CommandKey(), "终端"))
-				}
-			}},
-			web.DREAM_ACTION: {Hand: func(m *ice.Message, arg ...string) {
-				if arg[1] == m.CommandKey() {
-					web.ProcessIframe(m, web.MergePodCmd(m, m.Option(mdb.NAME), m.PrefixKey(), mdb.HASH, m.Cmdx(SPACE, m.Option(mdb.NAME), m.PrefixKey(), mdb.CREATE, mdb.TYPE, nfs.SH, m.OptionSimple(mdb.NAME))), arg...)
-					// web.ProcessWebsite(m, m.Option(mdb.NAME), m.PrefixKey(), mdb.HASH, m.Cmdx(SPACE, m.Option(mdb.NAME), m.PrefixKey(), mdb.CREATE, mdb.TYPE, nfs.SH, m.OptionSimple(mdb.NAME)))
-				}
-			}},
-		}, mdb.HashAction(mdb.FIELD, "time,hash,type,name,text,view", mdb.TOOLS, FAVOR), ctx.CmdAction(), ctx.ProcessAction(), web.DreamAction()), Hand: func(m *ice.Message, arg ...string) {
+		}, mdb.HashAction(mdb.FIELD, "time,hash,type,name,text,view", mdb.TOOLS, FAVOR), ctx.CmdAction(), ctx.ProcessAction()), Hand: func(m *ice.Message, arg ...string) {
 			if mdb.HashSelect(m, arg...); len(arg) == 0 {
 				m.PushAction(web.WEBSITE, mdb.REMOVE)
 				m.Action(mdb.CREATE, mdb.PRUNES)

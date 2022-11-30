@@ -128,7 +128,6 @@ func init() {
 				}
 			}},
 			DREAM_TABLES: {Hand: func(m *ice.Message, arg ...string) {
-				m.Debug(m.FormatChain())
 				switch m.Option(mdb.TYPE) {
 				case SERVER, WORKER:
 					m.PushButton(OPEN)

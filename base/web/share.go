@@ -76,24 +76,13 @@ func _share_local(m *ice.Message, arg ...string) {
 }
 func _share_proxy(m *ice.Message) {
 	switch p := path.Join(ice.VAR_PROXY, m.Option(ice.POD), m.Option(nfs.PATH)); m.R.Method {
-	case http.MethodGet: // 下发文件
+	case http.MethodGet:
 		m.RenderDownload(path.Join(p, m.Option(mdb.NAME)))
-
-	case http.MethodPost: // 上传文件
+	case http.MethodPost:
 		m.Cmdy(CACHE, UPLOAD)
 		m.Cmdy(CACHE, WATCH, m.Option(mdb.DATA), p)
 		m.RenderResult(m.Option(nfs.PATH))
 	}
-}
-func _share_repos(m *ice.Message, repos string, arg ...string) {
-	if repos == ice.Info.Make.Module && nfs.ExistsFile(m, path.Join(arg...)) {
-		m.RenderDownload(path.Join(arg...))
-		return
-	}
-	if !nfs.ExistsFile(m, path.Join(ice.ISH_PLUGED, repos)) { // 克隆代码
-		m.Cmd("web.code.git.repos", mdb.CREATE, nfs.REPOS, "https://"+repos, nfs.PATH, path.Join(ice.ISH_PLUGED, repos))
-	}
-	m.RenderDownload(path.Join(ice.ISH_PLUGED, repos, path.Join(arg...)))
 }
 
 const (
@@ -118,14 +107,12 @@ func init() {
 	Index.MergeCommands(ice.Commands{
 		SHARE: {Name: "share hash auto prunes", Help: "共享链", Actions: ice.MergeActions(ice.Actions{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) { _share_render(m) }},
-			mdb.CREATE: {Name: "create type name text", Help: "创建", Hand: func(m *ice.Message, arg ...string) {
-				mdb.HashCreate(m, arg, aaa.USERROLE, m.Option(ice.MSG_USERROLE), aaa.USERNAME, m.Option(ice.MSG_USERNAME), aaa.USERNICK, m.Option(ice.MSG_USERNICK))
+			mdb.CREATE: {Name: "create type name text", Hand: func(m *ice.Message, arg ...string) {
+				mdb.HashCreate(m, arg, aaa.USERNAME, m.Option(ice.MSG_USERNAME), aaa.USERNICK, m.Option(ice.MSG_USERNICK), aaa.USERROLE, m.Option(ice.MSG_USERROLE))
 				m.Option(mdb.LINK, _share_link(m, PP(SHARE)+m.Result()))
 			}},
-			LOGIN: {Name: "login userrole=void,tech username", Help: "登录", Hand: func(m *ice.Message, arg ...string) {
-				msg := m.Cmd(SHARE, mdb.CREATE, mdb.TYPE, LOGIN, m.OptionSimple(aaa.USERROLE, aaa.USERNAME))
-				m.EchoQRCode(msg.Option(mdb.LINK))
-				m.ProcessInner()
+			LOGIN: {Name: "login userrole=void,tech username", Hand: func(m *ice.Message, arg ...string) {
+				m.EchoQRCode(m.Cmd(SHARE, mdb.CREATE, mdb.TYPE, LOGIN).Option(mdb.LINK)).ProcessInner()
 			}},
 			SERVE_PARSE: {Hand: func(m *ice.Message, arg ...string) {
 				if kit.Select("", arg, 0) != SHARE {
@@ -134,7 +121,7 @@ func init() {
 				switch arg[1] {
 				case "local":
 				default:
-					m.Logs("refer", arg[0], arg[1])
+					m.Logs("Refer", arg[0], arg[1])
 					m.Option(arg[0], arg[1])
 				}
 			}},
@@ -173,7 +160,6 @@ func init() {
 				RenderIndex(m, ice.VOLCANOS)
 			}
 		}},
-
 		SHARE_TOAST: {Name: "/share/toast/", Help: "推送流", Hand: func(m *ice.Message, arg ...string) {
 			m.Cmdy(SPACE, m.Option(ice.POD), m.Optionv("cmds"))
 		}},
@@ -184,16 +170,13 @@ func init() {
 			_share_local(m, arg...)
 		}},
 		SHARE_LOCAL_AVATAR: {Name: "avatar", Help: "头像", Hand: func(m *ice.Message, arg ...string) {
-			m.RenderDownload(strings.TrimPrefix(m.Cmd(aaa.USER, m.Option(ice.MSG_USERNAME)).Append(aaa.AVATAR), SHARE_LOCAL))
+			m.RenderDownload(strings.TrimPrefix(m.CmdAppend(aaa.USER, m.Option(ice.MSG_USERNAME), aaa.AVATAR), SHARE_LOCAL))
 		}},
-		SHARE_LOCAL_BACKGROUND: {Name: "background", Help: "壁纸", Hand: func(m *ice.Message, arg ...string) {
-			m.RenderDownload(strings.TrimPrefix(m.Cmd(aaa.USER, m.Option(ice.MSG_USERNAME)).Append(aaa.BACKGROUND), SHARE_LOCAL))
+		SHARE_LOCAL_BACKGROUND: {Name: "background", Help: "背景", Hand: func(m *ice.Message, arg ...string) {
+			m.RenderDownload(strings.TrimPrefix(m.CmdAppend(aaa.USER, m.Option(ice.MSG_USERNAME), aaa.BACKGROUND), SHARE_LOCAL))
 		}},
 		SHARE_PROXY: {Name: "/share/proxy/", Help: "文件流", Hand: func(m *ice.Message, arg ...string) {
 			_share_proxy(m)
-		}},
-		SHARE_REPOS: {Name: "/share/repos/", Help: "代码库", Hand: func(m *ice.Message, arg ...string) {
-			_share_repos(m, path.Join(arg[0], arg[1], arg[2]), arg[3:]...)
 		}},
 	})
 }

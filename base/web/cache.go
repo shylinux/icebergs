@@ -16,21 +16,7 @@ import (
 func _cache_name(m *ice.Message, h string) string {
 	return path.Join(ice.VAR_FILE, h[:2], h)
 }
-func _cache_save(m *ice.Message, kind, name, text string, arg ...string) { // file size
-	if name == "" {
-		return
-	}
-	if len(text) > 512 || kind == nfs.GO { // 存入文件
-		p := m.Cmdx(nfs.SAVE, _cache_name(m, kit.Hashs(text)), text)
-		text, arg = p, kit.Simple(p, len(text))
-	}
-
-	// 添加数据
-	size := kit.Int(kit.Select(kit.Format(len(text)), arg, 1))
-	file := kit.Select("", arg, 0)
-	text = kit.Select(file, text)
-	h := mdb.HashCreate(m, kit.SimpleKV("", kind, name, text), nfs.FILE, file, nfs.SIZE, size)
-
+func _cache_type(m *ice.Message, kind, name string) string {
 	if kind == "application/octet-stream" {
 		if kit.ExtIsImage(name) {
 			kind = "image/"+kit.Ext(name)
@@ -38,14 +24,23 @@ func _cache_save(m *ice.Message, kind, name, text string, arg ...string) { // fi
 			kind = "video/"+kit.Ext(name)
 		}
 	}
-	
-	// 返回结果
+	return kind
+}
+func _cache_save(m *ice.Message, kind, name, text string, arg ...string) {
+	m.Assert(name == "", ice.ErrNotValid, mdb.NAME)
+	if len(text) > 512 || kind == nfs.GO {
+		p := m.Cmdx(nfs.SAVE, _cache_name(m, kit.Hashs(text)), text)
+		text, arg = p, kit.Simple(p, len(text))
+	}
+	file, size := kit.Select("", arg, 0), kit.Int(kit.Select(kit.Format(len(text)), arg, 1))
+	kind, text = _cache_type(kind, name), kit.Select(file, text)
+	h := mdb.HashCreate(m, kit.SimpleKV("", kind, name, text), nfs.FILE, file, nfs.SIZE, size)
 	m.Push(mdb.TIME, m.Time())
 	m.Push(mdb.TYPE, kind)
 	m.Push(mdb.NAME, name)
 	m.Push(mdb.TEXT, text)
-	m.Push(nfs.SIZE, size)
 	m.Push(nfs.FILE, file)
+	m.Push(nfs.SIZE, size)
 	m.Push(mdb.HASH, h)
 	m.Push(mdb.DATA, h)
 }
@@ -59,26 +54,18 @@ func _cache_watch(m *ice.Message, key, file string) {
 	})
 }
 func _cache_catch(m *ice.Message, name string) (file, size string) {
-	if f, e := nfs.OpenFile(m, name); m.Assert(e) {
-		defer f.Close()
-
-		if s, e := nfs.StatFile(m, name); m.Assert(e) {
-			return m.Cmdx(nfs.LINK, _cache_name(m, kit.Hashs(f)), name), kit.Format(s.Size())
-		}
+	if msg := m.Cmd(nfs.DIR, name, "hash,size"); msg.Length() > 0 {
+		return m.Cmdx(nfs.LINK, _cache_name(m, msg.Append(mdb.HASH)), name), mdb.Append(mdb.SIZE)
 	}
 	return "", "0"
 }
 func _cache_upload(m *ice.Message, r *http.Request) (kind, name, file, size string) {
-	if b, h, e := r.FormFile(UPLOAD); m.Assert(e) {
+	if b, h, e := r.FormFile(UPLOAD); !m.Warn(e, ice.ErrNotValid, UPLOAD) {
 		defer b.Close()
-
-		// 创建文件
-		if f, p, e := miss.CreateFile(_cache_name(m, kit.Hashs(b))); m.Assert(e) {
+		if f, p, e := miss.CreateFile(_cache_name(m, kit.Hashs(b))); !m.Warn(e, ice.ErrNotValid, UPLOAD) {
 			defer f.Close()
-
-			// 导入数据
 			b.Seek(0, os.SEEK_SET)
-			if n, e := io.Copy(f, b); m.Assert(e) {
+			if n, e := io.Copy(f, b); !m.Warn(e, ice.ErrNotValid, UPLOAD) {
 				m.Logs(mdb.IMPORT, nfs.FILE, p, nfs.SIZE, kit.FmtSize(int64(n)))
 				return h.Header.Get(ContentType), h.Filename, p, kit.Format(n)
 			}

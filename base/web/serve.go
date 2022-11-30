@@ -159,7 +159,7 @@ func init() {
 				m.Sleep30ms().Cmd(ssh.PRINTF, kit.Dict(nfs.CONTENT, "\r"+ice.Render(m, ice.RENDER_QRCODE, m.Cmdx(SPACE, DOMAIN))+ice.NL))
 			}},
 			SERVE_REWRITE: {Hand: func(m *ice.Message, arg ...string) {
-				if arg[0] != SPIDE_GET {
+				if arg[0] != http.MethodGet {
 					return
 				}
 				switch arg[1] {

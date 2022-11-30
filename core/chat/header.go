@@ -39,7 +39,7 @@ func _header_share(m *ice.Message, arg ...string) {
 func _header_check(m *ice.Message, arg ...string) bool {
 	if m.Option(web.SHARE) != "" {
 		m.Cmd(web.SHARE, m.Option(web.SHARE), ice.OptionFields(""), func(value ice.Maps) {
-			if web.IsNotValidShare(m, value) {
+			if web.IsNotValidShare(m, value[mdb.TIME]) {
 				return
 			}
 			switch value[mdb.TYPE] {

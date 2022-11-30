@@ -151,15 +151,12 @@ const SERVE = "serve"
 func init() {
 	Index.MergeCommands(ice.Commands{
 		SERVE: {Name: "serve name auto start", Help: "服务器", Actions: ice.MergeActions(ice.Actions{
-			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
-				cli.NodeInfo(m, ice.Info.PathName, WORKER)
-				aaa.White(m, LOGIN)
-			}},
+			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) { cli.NodeInfo(m, ice.Info.PathName, WORKER) }},
 			cli.START: {Name: "start dev name=web proto=http host port=9020 nodename username usernick", Hand: func(m *ice.Message, arg ...string) {
 				_serve_start(m)
 			}},
 			SERVE_START: {Hand: func(m *ice.Message, arg ...string) {
-				m.Sleep("30ms", ssh.PRINTF, kit.Dict(nfs.CONTENT, "\r"+ice.Render(m, ice.RENDER_QRCODE, m.Cmdx(SPACE, DOMAIN))+ice.NL))
+				m.Sleep30ms().Cmd(ssh.PRINTF, kit.Dict(nfs.CONTENT, "\r"+ice.Render(m, ice.RENDER_QRCODE, m.Cmdx(SPACE, DOMAIN))+ice.NL))
 			}},
 			SERVE_REWRITE: {Hand: func(m *ice.Message, arg ...string) {
 				if arg[0] != SPIDE_GET {

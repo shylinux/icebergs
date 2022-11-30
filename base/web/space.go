@@ -224,9 +224,5 @@ func back(m *ice.Message, res *ice.Message) bool {
 	}
 	return false
 }
-func addSend(m *ice.Message, msg *ice.Message) string {
-	return m.Target().Server().(*Frame).addSend(kit.Format(m.Target().ID()), msg)
-}
-func getSend(m *ice.Message, key string) *ice.Message {
-	return m.Target().Server().(*Frame).getSend(key)
-}
+func addSend(m *ice.Message, msg *ice.Message) string { return m.Target().Server().(*Frame).addSend(kit.Format(m.Target().ID()), msg) }
+func getSend(m *ice.Message, key string) *ice.Message { return m.Target().Server().(*Frame).getSend(key) }

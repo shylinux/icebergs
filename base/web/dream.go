@@ -19,7 +19,7 @@ func _dream_list(m *ice.Message) *ice.Message {
 	list := m.CmdMap(SPACE, mdb.NAME)
 	m.Cmdy(nfs.DIR, ice.USR_LOCAL_WORK, "time,size,name").Tables(func(value ice.Maps) {
 		if space, ok := list[value[mdb.NAME]]; ok {
-			msg := gdb.Event(m.Spawn(), DREAM_TABLES, mdb.NAME, value[mdb.NAME], mdb.TYPE, space[mdb.TYPE]).Copy(m.Spawn().PushButton(cli.STOP))
+			msg := gdb.Event(m.Spawn(value, space), DREAM_TABLES).Copy(m.Spawn().PushButton(cli.STOP))
 			m.Push(mdb.TYPE, space[mdb.TYPE])
 			m.Push(cli.STATUS, cli.START)
 			m.Push(mdb.TEXT, msg.Append(mdb.TEXT))
@@ -49,23 +49,22 @@ func _dream_show(m *ice.Message, name string) {
 		m.Info("already exists %v", name)
 		return
 	}
-	nfs.MkdirAll(m, p)
 	_dream_template(m, p)
-	m.Optionv(cli.CMD_DIR, kit.Path(p))
-	m.Optionv(cli.CMD_ENV, kit.Simple(
-		cli.CTX_OPS, "http://:"+m.CmdAppend(SERVE, tcp.PORT),
+	defer ToastProcess(m)()
+	defer m.Sleep3s()
+	m.Options(cli.CMD_DIR, kit.Path(p), cli.CMD_ENV, kit.Simple(
+		cli.CTX_OPS, "http://localhost:"+m.CmdAppend(SERVE, tcp.PORT),
 		cli.PATH, cli.BinPath(kit.Path(p, ice.BIN)), cli.USER, ice.Info.UserName,
 		kit.EnvSimple(cli.HOME, cli.TERM, cli.SHELL), m.Configv(cli.ENV),
 	))
 	m.Optionv(cli.CMD_OUTPUT, path.Join(p, ice.BIN_BOOT_LOG))
 	defer m.Options(cli.CMD_DIR, "", cli.CMD_ENV, "", cli.CMD_OUTPUT, "")
 	gdb.Event(m, DREAM_CREATE, m.OptionSimple(mdb.NAME, mdb.TYPE))
-	defer ToastProcess(m)()
 	bin := kit.Select(os.Args[0], cli.SystemFind(m, ice.ICE_BIN, nfs.PWD+path.Join(p, ice.BIN), nfs.PWD+ice.BIN))
 	m.Cmd(cli.DAEMON, bin, SPACE, tcp.DIAL, ice.DEV, ice.OPS, mdb.TYPE, WORKER, m.OptionSimple(mdb.NAME, RIVER), cli.DAEMON, ice.OPS)
-	m.Sleep3s()
 }
 func _dream_template(m *ice.Message, p string) {
+	nfs.MkdirAll(m, p)
 	if m.Option(nfs.TEMPLATE) == "" {
 		return
 	}
@@ -102,7 +101,7 @@ func init() {
 			mdb.INPUTS: {Hand: func(m *ice.Message, arg ...string) {
 				switch arg[0] {
 				case mdb.NAME, nfs.TEMPLATE:
-					_dream_list(m).Cut(arg[0], "status,time")
+					_dream_list(m).Cut("name,status,time")
 				default:
 					gdb.Event(m, "", arg)
 				}
@@ -128,8 +127,15 @@ func init() {
 					}
 				}
 			}},
-			OPEN: {Hand: func(m *ice.Message, arg ...string) { ProcessIframe(m, MergePod(m, m.Option(mdb.NAME)), arg...) }},
-		}, ctx.CmdAction(), gdb.EventsAction(DREAM_OPEN)), Hand: func(m *ice.Message, arg ...string) {
+			DREAM_TABLES: {Hand: func(m *ice.Message, arg ...string) {
+				m.Debug(m.FormatChain())
+				switch m.Option(mdb.TYPE) {
+				case SERVER, WORKER:
+					m.PushButton(OPEN)
+				}
+			}},
+			OPEN: {Hand: func(m *ice.Message, arg ...string) { ctx.ProcessOpen(m, MergePod(m, m.Option(mdb.NAME), arg)) }},
+		}, ctx.CmdAction(), DreamAction()), Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) == 0 {
 				_dream_list(m)
 			} else if arg[0] == ctx.ACTION {
@@ -142,9 +148,5 @@ func init() {
 }
 
 func DreamAction() ice.Actions {
-	return ice.MergeActions(ice.Actions{
-		DREAM_INPUTS: {Hand: func(m *ice.Message, arg ...string) {}},
-		DREAM_TABLES: {Hand: func(m *ice.Message, arg ...string) {}},
-		DREAM_ACTION: {Hand: func(m *ice.Message, arg ...string) {}},
-	}, gdb.EventAction(DREAM_TABLES, DREAM_ACTION))
+	return gdb.EventsAction(DREAM_OPEN, DREAM_INPUTS, DREAM_TABLES, DREAM_ACTION)
 }

@@ -20,6 +20,7 @@ func init() {
 				mdb.ZoneInsert(m, m.OptionSimple(EVENT, ice.CMD))
 			}},
 			HAPPEN: {Name: "happen event", Help: "触发", Hand: func(m *ice.Message, arg ...string) {
+				m.Debug(m.FormatChain())
 				defer m.Cost()
 				m.OptionCB(mdb.SELECT, "")
 				mdb.ZoneSelect(m.Spawn(ice.OptionFields("")), m.Option(EVENT)).Tables(func(value ice.Maps) {

@@ -344,7 +344,7 @@ func (m *Message) Spawn(arg ...Any) *Message {
 		time: time.Now(), code: int(m.target.root.ID()),
 		meta: map[string][]string{}, data: Map{},
 		message: m, root: m.root,
-		source: m.target, target: m.target, _cmd: m._cmd, _key: m._key, _sub: m._sub,
+		source: m.target, target: m.target, _cmd: m._cmd, _key: m._key, _sub: m._sub, _target: logs.FileLine(2),
 		W: m.W, R: m.R, O: m.O, I: m.I,
 	}
 	for _, val := range arg {

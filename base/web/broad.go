@@ -57,7 +57,7 @@ const BROAD = "broad"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
-		BROAD: {Name: "broad hash auto serve", Help: "广播", Actions: ice.MergeActions(ice.Actions{
+		BROAD: {Name: "broad hash auto", Help: "广播", Actions: ice.MergeActions(ice.Actions{
 			SERVE: {Name: "serve port=9020", Hand: func(m *ice.Message, arg ...string) {
 				_broad_serve(m, m.Cmd(tcp.HOST).Append(aaa.IP), m.Option(tcp.PORT))
 			}},

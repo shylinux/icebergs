@@ -150,12 +150,24 @@ func CloseFile(m *ice.Message, p ice.Any) {
 	}
 }
 
-func CopyFile(m *ice.Message, to io.WriteCloser, from io.ReadCloser, cb func(int)) {
-	buf := make([]byte, 1024*1024)
+func CopyFile(m *ice.Message, to io.WriteCloser, from io.ReadCloser, total int, cb ice.Any) {
+	size, buf := 0, make([]byte, ice.MOD_BUFS)
 	for {
 		n, e := from.Read(buf)
-		to.Write(buf[:n])
-		if cb(n); e != nil {
+		to.Write(buf[0:n])
+		if size += n; size > total {
+			total = size
+		}
+		switch step := size * 100 / total; cb := cb.(type) {
+		case func(int, int, int):
+			cb(size, total, step)
+		case func(int, int):
+			cb(size, total)
+		case nil:
+		default:
+			m.ErrorNotImplement(cb)
+		}
+		if m.Warn(e) {
 			break
 		}
 	}

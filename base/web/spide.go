@@ -261,24 +261,7 @@ func _spide_save(m *ice.Message, cache, save, uri string, res *http.Response) {
 		m.Resultv(data[ice.MSG_RESULT])
 
 	case SPIDE_SAVE:
-		if f, p, e := nfs.CreateFile(m, save); m.Assert(e) {
-			defer f.Close()
-
-			total := kit.Int(res.Header.Get(ContentLength)) + 1
-			switch cb := m.OptionCB("").(type) {
-			case func(int, int, int):
-				count := 0
-				nfs.CopyFile(m, f, res.Body, func(n int) {
-					count += n
-					cb(count, total, count*100/total)
-				})
-			default:
-				if n, e := io.Copy(f, res.Body); m.Assert(e) {
-					m.Logs(mdb.EXPORT, nfs.SIZE, n, nfs.FILE, p)
-					m.Echo(p)
-				}
-			}
-		}
+		_cache_download(m, res, save)
 
 	case SPIDE_CACHE:
 		m.Optionv(RESPONSE, res)
@@ -298,6 +281,15 @@ func _spide_save(m *ice.Message, cache, save, uri string, res *http.Response) {
 		data = kit.KeyValue(ice.Map{}, "", data)
 		m.Push("", data)
 	}
+}
+func _cache_download(m *ice.Message, r *http.Response, file string) string {
+	defer r.Body.Close()
+	if f, p, e := miss.CreateFile(file); m.Warn(e, ice.ErrNotValid, DOWNLOAD) {
+		defer f.Close()
+		nfs.CopyFile(m, f, r.Body, kit.Int(kit.Select("100", r.Header.Get(ContentLength))), m.OptionCB(SPIDE))
+		return p
+	}
+	return ""
 }
 
 const (

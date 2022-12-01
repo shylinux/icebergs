@@ -202,7 +202,7 @@ func init() {
 			_share_local(m, ice.USR_PUBLISH, path.Join(arg...))
 		}},
 		PP(ice.REQUIRE): {Name: "/require/shylinux.com/x/volcanos/proto.js", Help: "代码库", Hand: func(m *ice.Message, arg ...string) {
-			_share_repos(m, path.Join(arg[0], arg[1], arg[2]), arg[3:]...)
+			// _share_repos(m, path.Join(arg[0], arg[1], arg[2]), arg[3:]...)
 		}},
 		PP(ice.REQUIRE, ice.NODE_MODULES): {Name: "/require/node_modules/", Help: "依赖库", Hand: func(m *ice.Message, arg ...string) {
 			p := path.Join(ice.SRC, ice.NODE_MODULES, path.Join(arg...))

@@ -27,13 +27,15 @@ func _cache_type(m *ice.Message, kind, name string) string {
 	return kind
 }
 func _cache_save(m *ice.Message, kind, name, text string, arg ...string) {
-	m.Assert(name == "", ice.ErrNotValid, mdb.NAME)
+	if m.Warn(name == "", ice.ErrNotValid, mdb.NAME) {
+		return
+	}
 	if len(text) > 512 || kind == nfs.GO {
 		p := m.Cmdx(nfs.SAVE, _cache_name(m, kit.Hashs(text)), text)
 		text, arg = p, kit.Simple(p, len(text))
 	}
 	file, size := kit.Select("", arg, 0), kit.Int(kit.Select(kit.Format(len(text)), arg, 1))
-	kind, text = _cache_type(kind, name), kit.Select(file, text)
+	kind, text = _cache_type(m, kind, name), kit.Select(file, text)
 	h := mdb.HashCreate(m, kit.SimpleKV("", kind, name, text), nfs.FILE, file, nfs.SIZE, size)
 	m.Push(mdb.TIME, m.Time())
 	m.Push(mdb.TYPE, kind)
@@ -55,7 +57,7 @@ func _cache_watch(m *ice.Message, key, file string) {
 }
 func _cache_catch(m *ice.Message, name string) (file, size string) {
 	if msg := m.Cmd(nfs.DIR, name, "hash,size"); msg.Length() > 0 {
-		return m.Cmdx(nfs.LINK, _cache_name(m, msg.Append(mdb.HASH)), name), mdb.Append(mdb.SIZE)
+		return m.Cmdx(nfs.LINK, _cache_name(m, msg.Append(mdb.HASH)), name), msg.Append(nfs.SIZE)
 	}
 	return "", "0"
 }
@@ -73,39 +75,14 @@ func _cache_upload(m *ice.Message, r *http.Request) (kind, name, file, size stri
 	}
 	return "", "", "", "0"
 }
-func _cache_download(m *ice.Message, r *http.Response) (file, size string) {
+func _cache_download(m *ice.Message, r *http.Response, file string) string {
 	defer r.Body.Close()
-
-	if f, p, e := miss.CreateFile(path.Join(ice.VAR_TMP, kit.Hashs(mdb.UNIQ))); m.Assert(e) {
+	if f, p, e := miss.CreateFile(file); m.Warn(e, ice.ErrNotValid, DOWNLOAD) {
 		defer f.Close()
-
-		step, total := 0, kit.Int(kit.Select("100", r.Header.Get(ContentLength)))
-		size, buf := 0, make([]byte, ice.MOD_BUFS)
-
-		for {
-			if n, e := r.Body.Read(buf); n > 0 && e == nil {
-				size += n
-				f.Write(buf[0:n])
-				s := size * 100 / total
-
-				switch cb := m.OptionCB(SPIDE).(type) {
-				case func(int, int, int):
-					cb(size, total, s)
-				case func(int, int):
-					cb(size, total)
-				default:
-					if s != step && s%10 == 0 {
-						m.Logs(mdb.IMPORT, nfs.FILE, p, mdb.VALUE, s, mdb.COUNT, kit.FmtSize(int64(size)), mdb.TOTAL, kit.FmtSize(int64(total)))
-					}
-				}
-
-				step = s
-				continue
-			}
-			return p, kit.Format(size)
-		}
+		nfs.CopyFile(m, f, r.Body, kit.Int(kit.Select("100", r.Header.Get(ContentLength))), m.OptionCB(SPIDE))
+		return p
 	}
-	return "", "0"
+	return ""
 }
 
 const (
@@ -139,8 +116,7 @@ func init() {
 			}},
 			DOWNLOAD: {Name: "download type name", Help: "下载", Hand: func(m *ice.Message, arg ...string) {
 				if r, ok := m.Optionv(RESPONSE).(*http.Response); ok {
-					file, size := _cache_download(m, r)
-					file, size = _cache_catch(m, file)
+					file, size := _cache_catch(m, _cache_download(m, r, path.Join(ice.VAR_TMP, kit.Hashs(mdb.UNIQ))))
 					_cache_save(m, arg[0], arg[1], "", file, size)
 				}
 			}},
@@ -150,10 +126,9 @@ func init() {
 					msg := m.Cmd(CACHE, UPLOAD)
 					up = kit.Simple(msg.Append(mdb.HASH), msg.Append(mdb.NAME), msg.Append(nfs.SIZE))
 				}
-
 				if p := path.Join(arg[0], up[1]); m.Option(ice.MSG_USERPOD) == "" {
-					m.Cmdy(CACHE, WATCH, up[0], p) // 本机文件
-				} else { // 下发文件
+					m.Cmdy(CACHE, WATCH, up[0], p)
+				} else {
 					m.Cmdy(SPIDE, ice.DEV, nfs.SAVE, p, SPIDE_GET, MergeURL2(m, path.Join(SHARE_CACHE, up[0])))
 				}
 			}},

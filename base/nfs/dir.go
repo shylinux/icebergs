@@ -168,8 +168,7 @@ func init() {
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
 				aaa.White(m, ice.SRC, ice.BIN, ice.USR, ice.USR_PUBLISH, ice.USR_LOCAL_GO)
 				aaa.Black(m, ice.BIN_BOOT_LOG, ice.USR_LOCAL)
-			}},
-			mdb.UPLOAD: {Hand: func(m *ice.Message, arg ...string) { m.Cmdy("web.cache", "upload_watch", m.Option(PATH)) }},
+			}}, mdb.UPLOAD: {},
 			TRASH: {Hand: func(m *ice.Message, arg ...string) { m.Cmd(TRASH, mdb.CREATE, m.Option(PATH)) }},
 		}, Hand: func(m *ice.Message, arg ...string) {
 			root, dir := kit.Select(PWD, m.Option(DIR_ROOT)), kit.Select(PWD, arg, 0)

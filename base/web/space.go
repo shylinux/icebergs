@@ -9,6 +9,7 @@ import (
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/aaa"
 	"shylinux.com/x/icebergs/base/cli"
+	"shylinux.com/x/icebergs/base/ctx"
 	"shylinux.com/x/icebergs/base/gdb"
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/tcp"
@@ -178,8 +179,9 @@ func init() {
 				aaa.SessAuth(m, kit.Dict(aaa.USERNAME, m.Option(ice.MSG_USERNAME), aaa.USERNICK, m.Option(ice.MSG_USERNICK), aaa.USERROLE, m.Option(ice.MSG_USERROLE)))
 			}},
 			DOMAIN: {Hand: func(m *ice.Message, arg ...string) { m.Echo(_space_domain(m)) }},
+			OPEN:   {Hand: func(m *ice.Message, arg ...string) { ctx.ProcessOpen(m, MergePod(m, m.Option(mdb.NAME), arg)) }},
 			ice.PS: {Hand: func(m *ice.Message, arg ...string) { _space_fork(m) }},
-		}, mdb.HashAction(mdb.SHORT, mdb.NAME, mdb.FIELD, "time,type,name,text",
+		}, mdb.HashAction(mdb.SHORT, mdb.NAME, mdb.FIELD, "time,type,name,text", ctx.ACTION, OPEN,
 			REDIAL, kit.Dict("a", 3000, "b", 1000, "c", 1000), TIMEOUT, kit.Dict("c", "30s"),
 			BUFFER, kit.Dict("r", ice.MOD_BUFS, "w", ice.MOD_BUFS),
 		), mdb.ClearHashOnExitAction(), SpaceAction(), aaa.WhiteAction()), Hand: func(m *ice.Message, arg ...string) {
@@ -224,5 +226,9 @@ func back(m *ice.Message, res *ice.Message) bool {
 	}
 	return false
 }
-func addSend(m *ice.Message, msg *ice.Message) string { return m.Target().Server().(*Frame).addSend(kit.Format(m.Target().ID()), msg) }
-func getSend(m *ice.Message, key string) *ice.Message { return m.Target().Server().(*Frame).getSend(key) }
+func addSend(m *ice.Message, msg *ice.Message) string {
+	return m.Target().Server().(*Frame).addSend(kit.Format(m.Target().ID()), msg)
+}
+func getSend(m *ice.Message, key string) *ice.Message {
+	return m.Target().Server().(*Frame).getSend(key)
+}

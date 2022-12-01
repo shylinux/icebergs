@@ -289,23 +289,25 @@ func (c *Context) _action(m *Message, cmd *Command, key string, sub string, h *A
 		order := false
 		for i, v := range h.List {
 			name := kit.Format(kit.Value(v, NAME))
-			value := kit.Format(kit.Value(v, VALUE))
-			if i == 0 && len(arg) > 0 && arg[0] != name {
-				order = true
+			if i == 0 {
+				if len(arg) > 0 && arg[0] == name {
+					for i := 0; i < len(arg)-1; i += 2 {
+						if strings.HasPrefix(arg[i], PS) {
+							break
+						}
+						m.Option(arg[i], arg[i+1])
+					}
+				} else {
+					order = true
+				}
 			}
 			if order {
-				value = kit.Select(value, arg, i)
-			}
-			if value != "" {
-				m.Option(name, value)
-			}
-		}
-		if !order {
-			for i := 0; i < len(arg)-1; i += 2 {
-				if strings.HasPrefix(arg[i], PS) {
-					break
+				if value := kit.Select("", arg, i); value != "" {
+					m.Option(name, value)
 				}
-				m.Option(arg[i], arg[i+1])
+			}
+			if m.Warn(m.OptionDefault(name, kit.Format(kit.Value(v, VALUE))) == "" && kit.Value(v, "need") == "must") {
+				return m
 			}
 		}
 	}
@@ -448,4 +450,19 @@ func SplitCmd(name string, actions Actions) (list []Any) {
 		}
 	}
 	return list
+}
+func MergeHand(hand ...Handler) Handler {
+	if len(hand) == 0 {
+		return nil
+	}
+	if len(hand) == 1 {
+		return hand[0]
+	}
+	return func(m *Message, arg ...string) {
+		for _, h := range hand {
+			if h != nil {
+				h(m, arg...)
+			}
+		}
+	}
 }

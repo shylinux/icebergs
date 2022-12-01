@@ -27,12 +27,13 @@ func RenderAction(args ...ice.Any) ice.Actions {
 			m.Cmdy(INSERT, m.PrefixKey(), "", HASH, m.OptionSimple(TYPE, NAME, TEXT))
 		}},
 		SELECT: {Name: "select type name text auto create", Hand: func(m *ice.Message, arg ...string) {
-			if len(arg) < 2 || arg[0] == "" || arg[1] == "" {
+			if len(arg) < 2 || arg[0] == "" {
 				HashSelect(m, arg...)
 				return
 			}
 			for _, k := range kit.Split(arg[0]) {
 				HashSelect(m.Spawn(ice.OptionFields("")), k).Tables(func(value ice.Maps) {
+					m.Debug("what %v", m.OptionFields())
 					m.Cmdy(kit.Keys(value[TEXT], value[NAME]), m.CommandKey(), k, arg[1], kit.Select("", arg, 2), kit.Slice(arg, 3))
 				})
 			}

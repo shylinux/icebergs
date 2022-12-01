@@ -44,7 +44,7 @@ func (m *Message) join(arg ...Any) (string, []Any) {
 	return kit.Join(list, SP), meta
 }
 func (m *Message) log(level string, str string, arg ...Any) *Message {
-	_source := logs.FileLineMeta(logs.FileLine(3))
+	_source := logs.FileLineMeta(3)
 	if Info.Log != nil {
 		Info.Log(m, m.FormatPrefix(), level, logs.Format(str, append(arg, _source)...))
 	}
@@ -76,7 +76,7 @@ func (m *Message) Log(level string, str string, arg ...Any) *Message {
 }
 func (m *Message) Logs(level string, arg ...Any) *Message {
 	str, meta := m.join(arg...)
-	if unicode.IsUpper([]rune(level)[0]) {
+	if len(level) > 0 && unicode.IsUpper([]rune(level)[0]) {
 		meta = []Any{logs.FileLineMeta("")}
 	}
 	return m.log(level, str, meta...)
@@ -99,7 +99,7 @@ func (m *Message) Info(str string, arg ...Any) *Message {
 	return m.log(LOG_INFO, str, arg...)
 }
 func (m *Message) WarnTimeNotValid(time Any, arg ...Any) bool {
-	return m.Warn(kit.Format(time) < m.Time(), ErrNotValid, kit.Simple(arg), time, m.Time(), logs.FileLineMeta(logs.FileLine(2)))
+	return m.Warn(kit.Format(time) < m.Time(), ErrNotValid, kit.Simple(arg), time, m.Time(), logs.FileLineMeta(2))
 }
 func (m *Message) Warn(err Any, arg ...Any) bool {
 	switch err := err.(type) {

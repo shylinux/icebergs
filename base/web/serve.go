@@ -56,10 +56,12 @@ func _serve_main(m *ice.Message, w http.ResponseWriter, r *http.Request) bool {
 	if m.Logs(r.Method, r.Header.Get(ice.MSG_USERIP), r.URL.String()); m.Config(LOGHEADERS) == ice.TRUE {
 		kit.Fetch(r.Header, func(k string, v []string) { m.Logs("Header", k, v) })
 	}
-	repos := kit.Select(ice.INTSHELL, ice.VOLCANOS, strings.Contains(r.Header.Get(UserAgent), MOZILLA))
-	if msg := gdb.Event(m.Spawn(w, r), SERVE_REWRITE, r.Method, r.URL.Path, path.Join(m.Conf(SERVE, kit.Keym(repos, nfs.PATH)), r.URL.Path), repos); msg.Option(ice.MSG_OUTPUT) != "" {
-		Render(msg, msg.Option(ice.MSG_OUTPUT), kit.List(msg.Optionv(ice.MSG_ARGS))...)
-		return false
+	if r.Method == http.MethodGet {
+		repos := kit.Select(ice.INTSHELL, ice.VOLCANOS, strings.Contains(r.Header.Get(UserAgent), MOZILLA))
+		if msg := gdb.Event(m.Spawn(w, r), SERVE_REWRITE, r.Method, r.URL.Path, path.Join(m.Conf(SERVE, kit.Keym(repos, nfs.PATH)), r.URL.Path), repos); msg.Option(ice.MSG_OUTPUT) != "" {
+			Render(msg, msg.Option(ice.MSG_OUTPUT), kit.List(msg.Optionv(ice.MSG_ARGS))...)
+			return false
+		}
 	}
 	return true
 }
@@ -106,7 +108,6 @@ func _serve_handle(key string, cmd *ice.Command, m *ice.Message, w http.Response
 			m.CmdHand(cmd, key, cmds...)
 		}
 	}
-	gdb.Event(m, SERVE_RENDER, m.Option(ice.MSG_OUTPUT))
 	Render(m, m.Option(ice.MSG_OUTPUT), m.Optionv(ice.MSG_ARGS))
 }
 func _serve_domain(m *ice.Message) string {
@@ -227,12 +228,20 @@ func init() {
 			m.Cmdy("web.chat./cmd/", arg)
 		}},
 	})
-	ice.AddMerges(func(ctx *ice.Context, key string, cmd *ice.Command, sub string, action *ice.Action) (ice.Handler, ice.Handler) {
+	ice.AddMerges(func(c *ice.Context, key string, cmd *ice.Command, sub string, action *ice.Action) (ice.Handler, ice.Handler) {
 		if strings.HasPrefix(sub, ice.PS) {
 			if sub = kit.Select(sub, PP(key), sub == ice.PS); action.Hand == nil {
 				action.Hand = func(m *ice.Message, arg ...string) { m.Cmdy(key, arg) }
 			}
-			ctx.Commands[sub] = &ice.Command{Name: sub, Help: cmd.Help, Actions: cmd.Actions, Hand: action.Hand}
+			// c.Commands[sub] = &ice.Command{Name: sub, Help: cmd.Help, Actions: cmd.Actions, Hand: action.Hand}
+			actions := ice.Actions{}
+			for k, v := range cmd.Actions {
+				switch k {
+				case ctx.COMMAND, ice.RUN:
+					actions[k] = v
+				}
+			}
+			c.Commands[sub] = &ice.Command{Name: sub, Help: cmd.Help, Actions: actions, Hand: action.Hand}
 		}
 		return nil, nil
 	})

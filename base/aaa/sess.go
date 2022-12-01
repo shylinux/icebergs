@@ -67,9 +67,9 @@ func SessCreate(m *ice.Message, username string) string {
 	return m.Option(ice.MSG_SESSID, m.Cmdx(SESS, mdb.CREATE, username))
 }
 func SessCheck(m *ice.Message, sessid string) bool {
-	m.Option("aaa.checker", logs.FileLine(2))
+	m.Option("aaa.checker", logs.FileLine(-1))
 	m.Options(ice.MSG_USERNAME, "", ice.MSG_USERNICK, "", ice.MSG_USERROLE, VOID)
-	return sessid != "" && m.Cmdy(SESS, CHECK, sessid).Option(ice.MSG_USERNAME) != ""
+	return sessid != "" && m.Cmdy(SESS, CHECK, sessid, logs.FileLineMeta(-1)).Option(ice.MSG_USERNAME) != ""
 }
 func SessAuth(m *ice.Message, value ice.Any, arg ...string) *ice.Message {
 	return m.Auth(

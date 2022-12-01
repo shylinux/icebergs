@@ -39,7 +39,7 @@ func (f *Frame) Start(m *ice.Message, arg ...string) bool {
 		msg := m.Spawn(c)
 		if pf, ok := p.Server().(*Frame); ok && pf.ServeMux != nil {
 			route := ice.PS + c.Name + ice.PS
-			msg.Log(ROUTE, "%s <= %s", p.Name, route)
+			msg.Log("route", "%s <= %s", p.Name, route)
 			pf.Handle(route, http.StripPrefix(path.Dir(route), f))
 			list[c] = path.Join(list[p], route)
 		}
@@ -48,7 +48,7 @@ func (f *Frame) Start(m *ice.Message, arg ...string) bool {
 				continue
 			}
 			func(key string, cmd *ice.Command) {
-				msg.Log(ROUTE, "%s <- %s", c.Name, key)
+				msg.Log("route", "%s <- %s", c.Name, key)
 				f.HandleFunc(key, func(w http.ResponseWriter, r *http.Request) {
 					m.TryCatch(m.Spawn(key, cmd, c, w, r), true, func(msg *ice.Message) { _serve_handle(key, cmd, msg, w, r) })
 				})
@@ -96,7 +96,7 @@ const WEB = "web"
 var Index = &ice.Context{Name: WEB, Help: "网络模块"}
 
 func init() {
-	ice.Index.Register(Index, &Frame{}, BROAD, SERVE, SPACE, DREAM, SHARE, CACHE, SPIDE, ROUTE)
+	ice.Index.Register(Index, &Frame{}, BROAD, SERVE, SPACE, DREAM, CACHE, SPIDE, SHARE)
 }
 func ApiAction(arg ...string) ice.Actions { return ice.Actions{kit.Select(ice.PS, arg, 0): {}} }
 

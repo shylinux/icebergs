@@ -111,15 +111,10 @@ func _server_reader(m *ice.Message) (io.ReadCloser, error) {
 const SERVER = "server"
 
 func init() {
+	web.Index.MergeCommands(ice.Commands{"/x/": {Hand: func(m *ice.Message, arg ...string) { m.Cmdy("web.code.git.repository", arg) }}})
 	Index.MergeCommands(ice.Commands{
 		web.WEB_LOGIN: {Hand: func(m *ice.Message, arg ...string) { m.Render(ice.RENDER_VOID) }},
-		"repository": {Name: "repository", Help: "代码库", Actions: ice.MergeActions(ice.Actions{
-			web.SERVE_REWRITE: {Hand: func(m *ice.Message, arg ...string) {
-				if strings.HasPrefix(arg[1], "/x/") {
-					_server_rewrite(m, arg[1], m.R)
-				}
-			}},
-		}, web.ServeAction(), web.ApiAction()), Hand: func(m *ice.Message, arg ...string) {
+		"repository": {Name: "repository", Help: "代码库", Hand: func(m *ice.Message, arg ...string) {
 			if m.Option("go-get") == "1" { // 下载地址
 				p := web.MergeLink(m, "/x/"+path.Join(arg...))
 				m.RenderResult(kit.Format(`<meta name="%s" content="%s">`, "go-import", kit.Format(`%s git %s`, strings.Split(p, "://")[1], p)))
@@ -138,8 +133,7 @@ func init() {
 					m.Logs(mdb.CREATE, REPOS, repos)
 				}
 			case "upload-pack": // 下载代码
-				if !nfs.ExistsFile(m, repos) {
-					web.RenderStatus(m.W, http.StatusNotFound, kit.Format("not found: %s", arg[0]))
+				if m.Warn(!nfs.ExistsFile(m, repos), ice.ErrNotFound, arg[0]) {
 					return
 				}
 			}

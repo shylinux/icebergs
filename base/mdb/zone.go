@@ -73,7 +73,9 @@ func _zone_export(m *ice.Message, prefix, chain, file string) {
 			defer Lock(m, prefix, chain)()
 			Grows(m, prefix, chain, "", "", func(value ice.Map) {
 				value = kit.GetMeta(value)
-				w.Write(kit.Simple(head, func(k string) string { return kit.Select(kit.Format(kit.Value(val, k)), kit.Format(kit.Value(value, k))) }))
+				w.Write(kit.Simple(head, func(k string) string {
+					return kit.Select(kit.Format(kit.Value(val, k)), kit.Format(kit.Value(value, k)))
+				}))
 				count++
 			})
 		})
@@ -155,7 +157,9 @@ func ZoneKey(m *ice.Message) string {
 	}
 	return ZoneShort(m)
 }
-func ZoneShort(m *ice.Message) string { return kit.Select(ZONE, m.Config(SHORT), m.Config(SHORT) != UNIQ) }
+func ZoneShort(m *ice.Message) string {
+	return kit.Select(ZONE, m.Config(SHORT), m.Config(SHORT) != UNIQ)
+}
 func ZoneField(m *ice.Message) string { return kit.Select(ZONE_FIELD, m.Config(FIELD)) }
 func ZoneInputs(m *ice.Message, arg ...Any) {
 	m.Cmdy(INPUTS, m.PrefixKey(), "", ZONE, m.Option(ZoneKey(m)), arg)
@@ -188,7 +192,7 @@ func ZoneModify(m *ice.Message, arg ...Any) {
 func ZoneSelect(m *ice.Message, arg ...string) *ice.Message {
 	arg = kit.Slice(arg, 0, 2)
 	m.Fields(len(arg), kit.Select(kit.Fields(TIME, m.Config(SHORT), COUNT), m.Config(FIELDS)), ZoneField(m))
-	if m.Cmdy(SELECT, m.PrefixKey(), "", ZONE, arg, logs.FileLineMeta(logs.FileLine(-1))); len(arg) == 0 {
+	if m.Cmdy(SELECT, m.PrefixKey(), "", ZONE, arg, logs.FileLineMeta(-1)); len(arg) == 0 {
 		m.Sort(ZoneShort(m)).StatusTimeCount().PushAction(m.Config(ACTION), REMOVE)
 	} else if len(arg) == 1 {
 		m.StatusTimeCountTotal(_mdb_getmeta(m, "", kit.Keys(HASH, HashSelectField(m, arg[0], HASH)), COUNT))

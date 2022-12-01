@@ -57,8 +57,7 @@ func init() {
 				mdb.HashCreate(m, m.OptionSimple())
 			}},
 			web.UPLOAD: {Hand: func(m *ice.Message, arg ...string) {
-				msg := web.Upload(m)
-				m.Cmd("", mdb.CREATE, msg.AppendSimple(mdb.TYPE, mdb.NAME, mdb.TEXT))
+				m.Cmd("", mdb.CREATE, m.OptionSimple(mdb.TYPE, mdb.NAME, mdb.TEXT))
 			}},
 			web.DOWNLOAD: {Hand: func(m *ice.Message, arg ...string) {
 				ctx.ProcessOpen(m, web.MergeURL2(m, web.SHARE_LOCAL+m.Option(mdb.TEXT), "filename", m.Option(mdb.NAME)))

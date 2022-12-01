@@ -169,7 +169,7 @@ func HashCreate(m *ice.Message, arg ...Any) string {
 	if len(arg) == 0 {
 		arg = append(arg, m.OptionSimple(HashField(m)))
 	}
-	return m.Echo(m.Cmdx(append(kit.List(INSERT, m.PrefixKey(), "", HASH, logs.FileLineMeta(logs.FileLine(-1))), arg...)...)).Result()
+	return m.Echo(m.Cmdx(append(kit.List(INSERT, m.PrefixKey(), "", HASH, logs.FileLineMeta(-1)), arg...)...)).Result()
 }
 func HashRemove(m *ice.Message, arg ...Any) *ice.Message {
 	if args := kit.Simple(arg); len(args) == 0 {
@@ -191,7 +191,7 @@ func HashSelect(m *ice.Message, arg ...string) *ice.Message {
 	} else {
 		m.Fields(len(kit.Slice(arg, 0, 1)), HashField(m))
 	}
-	m.Cmdy(SELECT, m.PrefixKey(), "", HASH, HashShort(m), arg)
+	m.Cmdy(SELECT, m.PrefixKey(), "", HASH, HashShort(m), arg, logs.FileLineMeta(-1))
 	if m.PushAction(m.Config(ACTION), REMOVE); !m.FieldsIsDetail() {
 		return m.StatusTimeCount()
 	}

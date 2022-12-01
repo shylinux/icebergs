@@ -42,11 +42,11 @@ func init() {
 			}},
 		}, ctx.CmdAction()), Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) == 0 {
-				m.Cmdy(web.ROUTE).RenameAppend(web.ROUTE, FROM)
+				m.Cmdy(web.SPACE).RenameAppend(mdb.NAME, FROM)
 				return
 			}
 			if len(arg) == 1 {
-				m.Cmdy(web.ROUTE).RenameAppend(web.ROUTE, TO)
+				m.Cmdy(web.SPACE).RenameAppend(mdb.NAME, TO)
 				return
 			}
 			ctx.DisplayLocal(m, "")

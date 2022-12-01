@@ -401,6 +401,12 @@ func (m *Message) Detailv(arg ...Any) []string {
 func (m *Message) Options(arg ...Any) Any {
 	for i := 0; i < len(arg); i += 2 {
 		switch val := arg[i].(type) {
+		case Maps:
+			for k, v := range val {
+				m.Optionv(k, v)
+			}
+			i--
+			continue
 		case []string:
 			for i := 0; i < len(val)-1; i += 2 {
 				m.Optionv(val[i], val[i+1])

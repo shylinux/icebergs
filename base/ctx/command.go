@@ -120,15 +120,16 @@ func Run(m *ice.Message, arg ...string) {
 			}
 		}
 	}
-	if !PodCmd(m, arg) && aaa.Right(m, arg) {
+	if Upload(m); !PodCmd(m, arg) && aaa.Right(m, arg) {
 		m.Cmdy(arg)
 	}
 }
+
+var Upload = func(*ice.Message) {}
+
 func PodCmd(m *ice.Message, arg ...ice.Any) bool {
 	if pod := m.Option(ice.POD); pod != "" {
-		if m.Option(ice.POD, ""); len(kit.Simple(m.Optionv(ice.MSG_UPLOAD))) == 1 {
-			m.Cmdy("cache", "upload").Option(ice.MSG_UPLOAD, m.Append(mdb.HASH), m.Append(mdb.NAME), m.Append(nfs.SIZE))
-		}
+		m.Option(ice.POD, "")
 		m.Cmdy(append(kit.List(ice.SPACE, pod), arg...)...)
 		return true
 	}

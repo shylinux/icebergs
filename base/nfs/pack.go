@@ -150,8 +150,8 @@ func CloseFile(m *ice.Message, p ice.Any) {
 	}
 }
 
-func CopyFile(m *ice.Message, to io.WriteCloser, from io.ReadCloser, total int, cb ice.Any) {
-	size, buf := 0, make([]byte, ice.MOD_BUFS)
+func CopyFile(m *ice.Message, to io.WriteCloser, from io.ReadCloser, bufs, total int, cb ice.Any) {
+	size, buf := 0, make([]byte, bufs)
 	for {
 		n, e := from.Read(buf)
 		to.Write(buf[0:n])
@@ -167,7 +167,7 @@ func CopyFile(m *ice.Message, to io.WriteCloser, from io.ReadCloser, total int, 
 		default:
 			m.ErrorNotImplement(cb)
 		}
-		if m.Warn(e) {
+		if e == io.EOF || m.Warn(e) {
 			break
 		}
 	}

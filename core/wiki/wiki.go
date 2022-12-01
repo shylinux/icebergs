@@ -48,6 +48,7 @@ func _wiki_list(m *ice.Message, arg ...string) bool {
 		}
 		m.Cmdy(nfs.DIR, kit.Slice(arg, 0, 1), kit.Dict(nfs.DIR_TYPE, nfs.CAT, nfs.DIR_REG, m.Config(lex.REGEXP)))
 		m.StatusTimeCount()
+		m.SortTimeR(mdb.TIME)
 		return true
 	}
 	ctx.DisplayLocal(m, path.Join(kit.PathName(2), kit.Keys(kit.FileName(2), ice.JS)))
@@ -60,7 +61,7 @@ func _wiki_save(m *ice.Message, name, text string, arg ...string) {
 	m.Cmd(nfs.SAVE, name, text, kit.Dict(nfs.DIR_ROOT, _wiki_path(m)))
 }
 func _wiki_upload(m *ice.Message, dir string) {
-	m.Cmdy(web.CACHE, web.UPLOAD_WATCH, _wiki_path(m, dir))
+	m.Cmdy(web.CACHE, web.WATCH, m.Option(ice.MSG_UPLOAD), _wiki_path(m, dir, m.Option(mdb.NAME)))
 }
 func _wiki_template(m *ice.Message, name, text string, arg ...string) *ice.Message {
 	return _option(m, m.CommandKey(), name, strings.TrimSpace(text), arg...).RenderTemplate(m.Config(nfs.TEMPLATE), &Message{m})
@@ -81,8 +82,8 @@ func init() {
 func WikiAction(dir string, ext ...string) ice.Actions {
 	return ice.Actions{ice.CTX_INIT: mdb.AutoConfig(nfs.PATH, dir, lex.REGEXP, kit.FileReg(ext...)),
 		web.UPLOAD: {Hand: func(m *ice.Message, arg ...string) { _wiki_upload(m, m.Option(nfs.PATH)) }},
-		nfs.SAVE:   {Name: "save path text", Hand: func(m *ice.Message, arg ...string) { _wiki_save(m, m.Option(nfs.PATH), m.Option(mdb.TEXT)) }},
-		nfs.TRASH:  {Hand: func(m *ice.Message, arg ...string) { nfs.Trash(m, _wiki_path(m, m.Option(nfs.PATH))) }},
+		nfs.TRASH:  {Name: "trash path*", Hand: func(m *ice.Message, arg ...string) { nfs.Trash(m, _wiki_path(m, m.Option(nfs.PATH))) }},
+		nfs.SAVE:   {Name: "save path* text", Hand: func(m *ice.Message, arg ...string) { _wiki_save(m, m.Option(nfs.PATH), m.Option(mdb.TEXT)) }},
 		mdb.INPUTS: {Hand: func(m *ice.Message, arg ...string) {
 			switch arg[0] {
 			case nfs.PATH:

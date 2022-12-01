@@ -10,6 +10,14 @@ import (
 func AddRender(key string, render func(*Message, ...Any) string) {
 	Info.render[key] = render
 }
+func RenderAction(key ...string) Actions {
+	return Actions{CTX_INIT: {Hand: func(m *Message, arg ...string) {
+		cmd := m.CommandKey()
+		for _, key := range key {
+			AddRender(key, func(m *Message, arg ...Any) string { return m.Cmd(cmd, key, arg).Result() })
+		}
+	}}}
+}
 func Render(m *Message, cmd string, args ...Any) string {
 	if render, ok := Info.render[cmd]; ok {
 		return render(m, args...)

@@ -22,7 +22,7 @@ func init() {
 			web.SERVE_PARSE: {Hand: func(m *ice.Message, arg ...string) {
 				switch kit.Select("", arg, 0) {
 				case CHAT:
-					for i := 1; i < len(arg)-1; i++ {
+					for i := 1; i < len(arg)-1; i += 2 {
 						m.Logs("refer", arg[i], arg[i+1])
 						m.Option(arg[i], arg[i+1])
 					}

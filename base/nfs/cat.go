@@ -65,7 +65,7 @@ func _cat_list(m *ice.Message, file string) {
 			cb(kit.Split(bio.Text()), bio.Text())
 		}
 	case nil:
-		buf, size := make([]byte, ice.MOD_BUFS), 0
+		buf, size := make([]byte, 10*ice.MOD_BUFS), 0
 		for {
 			if n, e := f.Read(buf[size:]); !m.Warn(e, ice.ErrNotValid, file) {
 				m.Logs(mdb.IMPORT, FILE, file, SIZE, n)

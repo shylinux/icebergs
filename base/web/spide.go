@@ -25,41 +25,40 @@ func _spide_create(m *ice.Message, name, address string) {
 		m.Logs(mdb.CREATE, SPIDE, name, ADDRESS, address)
 		mdb.HashSelectUpdate(m, mdb.HashCreate(m, CLIENT_NAME, name), func(value ice.Map) {
 			dir, file := path.Split(uri.EscapedPath())
-			value[SPIDE_CLIENT] = kit.Dict(
-				mdb.NAME, name, SPIDE_METHOD, http.MethodPost, "url", address,
-				tcp.PROTOCOL, uri.Scheme, tcp.HOSTNAME, uri.Host,
-				nfs.PATH, dir, nfs.FILE, file, "query", uri.RawQuery,
+			value[SPIDE_CLIENT] = kit.Dict(mdb.NAME, name, SPIDE_METHOD, http.MethodPost, "url", address,
+				tcp.PROTOCOL, uri.Scheme, tcp.HOSTNAME, uri.Host, nfs.PATH, dir, nfs.FILE, file, "query", uri.RawQuery,
 				cli.TIMEOUT, "600s", LOGHEADERS, ice.FALSE,
 			)
 		})
 	}
 }
-func _spide_show(m *ice.Message, arg ...string) {
-	msg := mdb.HashSelects(m.Spawn(), arg[0])
-	if len(arg) == 2 && msg.Append(arg[1]) != "" {
-		m.Echo(msg.Append(arg[1]))
+func _spide_args(m *ice.Message, arg []string, val ...string) (string, []string) {
+	if kit.IndexOf(val, arg[0]) {
+		return arg[0], arg[1:]
+	}
+	return "", arg
+}
+func _spide_show(m *ice.Message, name string, arg ...string) {
+	msg := mdb.HashSelects(m.Spawn(), name)
+	if len(arg) == 1 && msg.Append(arg[0]) != "" {
+		m.Echo(msg.Append(arg[0]))
 		return
 	}
-	cache, save := "", ""
-	switch arg[1] {
-	case SPIDE_RAW, SPIDE_MSG, SPIDE_CACHE:
-		cache, arg = arg[1], arg[1:]
-	case SPIDE_SAVE:
-		cache, save, arg = arg[1], arg[2], arg[2:]
+	format, arg := _spide_args(m, arg, SPIDE_RAW, SPIDE_MSG, SPIDE_CACHE, SPIDE_SAVE)
+	file := ""
+	if format == SPIDE_SAVE {
+		file, arg = arg[0], arg[1:]
 	}
-	method := kit.Select(http.MethodPost, msg.Append(CLIENT_METHOD))
-	switch arg = arg[1:]; arg[0] {
-	case http.MethodGet, http.MethodPut, http.MethodPost, http.MethodDelete:
-		method, arg = arg[0], arg[1:]
-	}
+	method, arg := _spide_args(m, arg, http.MethodGet, http.MethodPut, http.MethodPost, http.MethodDelete)
+	method = kit.Select(http.MethodPost, kit.Select(msg.Append(CLIENT_METHOD), method))
 	uri, arg := arg[0], arg[1:]
 	body, head, arg := _spide_body(m, method, arg...)
 	req, e := http.NewRequest(method, kit.MergeURL2(msg.Append(CLIENT_URL), uri, arg), body)
 	if m.Warn(e, ice.ErrNotValid, uri) {
 		return
 	}
-	mdb.HashSelectDetail(m, msg.Append(CLIENT_NAME), func(value ice.Map) { _spide_head(m, req, head, value) })
-	res, e := _spide_send(m, msg.Append(CLIENT_NAME), req, kit.Format(msg.Append(CLIENT_TIMEOUT)))
+	mdb.HashSelectDetail(m, name, func(value ice.Map) { _spide_head(m, req, head, value) })
+	res, e := _spide_send(m, name, req, kit.Format(msg.Append(CLIENT_TIMEOUT)))
 	if m.Warn(e, ice.ErrNotFound, uri) {
 		return
 	}
@@ -70,23 +69,19 @@ func _spide_show(m *ice.Message, arg ...string) {
 		}
 	}
 	m.Cost(cli.STATUS, res.Status, nfs.SIZE, res.Header.Get(ContentLength), mdb.TYPE, res.Header.Get(ContentType))
-	mdb.HashSelectUpdate(m, msg.Append(CLIENT_NAME), func(value ice.Map) {
+	mdb.HashSelectUpdate(m, name, func(value ice.Map) {
 		for _, v := range res.Cookies() {
 			kit.Value(value, kit.Keys(SPIDE_COOKIE, v.Name), v.Value)
 			m.Logs(mdb.IMPORT, v.Name, v.Value)
 		}
 	})
 	if m.Warn(res.StatusCode != http.StatusOK, ice.ErrNotValid, uri, cli.STATUS, res.Status) {
-		switch m.SetResult(); res.StatusCode {
-		case http.StatusNotFound:
-			m.Warn(true, ice.ErrNotFound, uri)
-			return
-		case http.StatusUnauthorized:
-			m.Warn(true, ice.ErrNotRight, uri)
+		switch res.StatusCode {
+		case http.StatusNotFound, http.StatusUnauthorized:
 			return
 		}
 	}
-	_spide_save(m, cache, save, uri, res)
+	_spide_save(m, format, file, uri, res)
 }
 func _spide_body(m *ice.Message, method string, arg ...string) (io.Reader, ice.Maps, []string) {
 	head := ice.Maps{}
@@ -184,8 +179,8 @@ func _spide_send(m *ice.Message, name string, req *http.Request, timeout string)
 	client := mdb.HashSelectTarget(m, name, func() ice.Any { return &http.Client{Timeout: kit.Duration(timeout)} }).(*http.Client)
 	return client.Do(req)
 }
-func _spide_save(m *ice.Message, cache, save, uri string, res *http.Response) {
-	switch cache {
+func _spide_save(m *ice.Message, format, file, uri string, res *http.Response) {
+	switch format {
 	case SPIDE_RAW:
 		if b, _ := ioutil.ReadAll(res.Body); strings.HasPrefix(res.Header.Get(ContentType), ContentJSON) {
 			m.Echo(kit.Formats(kit.UnMarshal(string(b))))
@@ -198,7 +193,7 @@ func _spide_save(m *ice.Message, cache, save, uri string, res *http.Response) {
 		kit.Fetch(data[ice.MSG_APPEND], func(k string) { kit.Fetch(data[k], func(v string) { m.Push(k, v) }) })
 		m.Resultv(data[ice.MSG_RESULT])
 	case SPIDE_SAVE:
-		_cache_download(m, res, save, m.OptionCB(SPIDE))
+		_cache_download(m, res, file, m.OptionCB(SPIDE))
 	case SPIDE_CACHE:
 		m.Optionv(RESPONSE, res)
 		m.Cmdy(CACHE, DOWNLOAD, res.Header.Get(ContentType), uri)

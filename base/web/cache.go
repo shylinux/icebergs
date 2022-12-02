@@ -74,7 +74,7 @@ func _cache_download(m *ice.Message, r *http.Response, file string, cb ice.Any) 
 	defer r.Body.Close()
 	if f, p, e := miss.CreateFile(file); !m.Warn(e, ice.ErrNotValid, DOWNLOAD) {
 		defer f.Close()
-		last, step, bufs := 0, 10, 40960
+		last, step, bufs := 0, 10, 10*ice.MOD_BUFS
 		if cb == nil {
 			cb = func(size, total, count int) {
 				if count/step != last {

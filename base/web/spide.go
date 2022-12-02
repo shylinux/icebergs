@@ -21,7 +21,7 @@ import (
 )
 
 func _spide_create(m *ice.Message, name, address string) {
-	if uri, e := url.Parse(address); !m.Warn(e != nil || address == "", address) {
+	if uri, e := url.Parse(address); !m.Warn(e != nil || address == "", ice.ErrNotValid, address) {
 		m.Logs(mdb.CREATE, SPIDE, name, ADDRESS, address)
 		dir, file := path.Split(uri.EscapedPath())
 		mdb.HashCreate(m, CLIENT_NAME, name)
@@ -43,25 +43,15 @@ func _spide_show(m *ice.Message, arg ...string) {
 	}
 	cache, save := "", ""
 	switch arg[1] {
-	case SPIDE_RAW:
-		cache, arg = arg[1], arg[1:]
-	case SPIDE_MSG:
+	case SPIDE_RAW, SPIDE_MSG, SPIDE_CACHE:
 		cache, arg = arg[1], arg[1:]
 	case SPIDE_SAVE:
 		cache, save, arg = arg[1], arg[2], arg[2:]
-	case SPIDE_CACHE:
-		cache, arg = arg[1], arg[1:]
 	}
-	method := kit.Select(SPIDE_POST, msg.Append(CLIENT_METHOD))
+	method := kit.Select(http.MethodPost, msg.Append(CLIENT_METHOD))
 	switch arg = arg[1:]; arg[0] {
-	case SPIDE_GET:
-		method, arg = SPIDE_GET, arg[1:]
-	case SPIDE_PUT:
-		method, arg = SPIDE_PUT, arg[1:]
-	case SPIDE_POST:
-		method, arg = SPIDE_POST, arg[1:]
-	case SPIDE_DELETE:
-		method, arg = SPIDE_DELETE, arg[1:]
+	case http.MethodGet, http.MethodPut, http.MethodPost, http.MethodDelete:
+		method, arg = arg[0], arg[1:]
 	}
 	uri, arg := arg[0], arg[1:]
 	body, head, arg := _spide_body(m, method, arg...)

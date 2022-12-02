@@ -2,12 +2,12 @@ package chat
 
 import (
 	"sync"
+	"net/http"
 
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/aaa"
 	"shylinux.com/x/icebergs/base/ctx"
 	"shylinux.com/x/icebergs/base/mdb"
-	"shylinux.com/x/icebergs/base/web"
 	kit "shylinux.com/x/toolkits"
 )
 
@@ -32,7 +32,7 @@ func init() {
 	}
 	get := func(m *ice.Message, api string, arg ...ice.Any) string {
 		return kit.Format(cache(m, kit.Join(kit.Simple(api, arg)), func() string {
-			return m.Cmdx(web.SPIDE_GET, "https://apis.map.qq.com/ws/"+api, mdb.KEY, m.Config(aaa.TOKEN), arg)
+			return m.Cmdx(http.MethodGet, "https://apis.map.qq.com/ws/"+api, mdb.KEY, m.Config(aaa.TOKEN), arg)
 		}))
 	}
 

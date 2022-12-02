@@ -1,6 +1,7 @@
 package mp
 
 import (
+	"net/http"
 	"encoding/base64"
 	"time"
 
@@ -39,7 +40,7 @@ func init() {
 				m.Cmd(web.SPIDE, mdb.CREATE, MP, m.Config(tcp.SERVER))
 			}},
 			aaa.SESS: {Name: "sess code", Help: "会话", Hand: func(m *ice.Message, arg ...string) {
-				msg := m.Cmd(web.SPIDE, MP, web.SPIDE_GET, "/sns/jscode2session?grant_type=authorization_code",
+				msg := m.Cmd(web.SPIDE, MP, http.MethodGet, "/sns/jscode2session?grant_type=authorization_code",
 					"js_code", m.Option(cli.CODE), APPID, m.Config(APPID), "secret", m.Config(APPMM))
 
 				// 用户登录
@@ -71,7 +72,7 @@ func init() {
 			}},
 			TOKENS: {Name: "tokens", Help: "令牌", Hand: func(m *ice.Message, arg ...string) {
 				if now := time.Now().Unix(); m.Config(TOKENS) == "" || now > kit.Int64(m.Config(EXPIRES)) {
-					msg := m.Cmd(web.SPIDE, MP, web.SPIDE_GET, "/cgi-bin/token?grant_type=client_credential",
+					msg := m.Cmd(web.SPIDE, MP, http.MethodGet, "/cgi-bin/token?grant_type=client_credential",
 						APPID, m.Config(APPID), "secret", m.Config(APPMM))
 					if m.Warn(msg.Append(ERRCODE) != "", msg.Append(ERRCODE), msg.Append(ERRMSG)) {
 						return
@@ -83,7 +84,7 @@ func init() {
 				m.Echo(m.Config(TOKENS))
 			}},
 			QRCODE: {Name: "qrcode path scene", Help: "扫码", Hand: func(m *ice.Message, arg ...string) {
-				msg := m.Cmd(web.SPIDE, MP, web.SPIDE_POST, "/wxa/getwxacodeunlimit?access_token="+m.Cmdx(LOGIN, TOKENS),
+				msg := m.Cmd(web.SPIDE, MP, http.MethodPost, "/wxa/getwxacodeunlimit?access_token="+m.Cmdx(LOGIN, TOKENS),
 					m.OptionSimple("path,scene"))
 				m.Echo(kit.Format(`<img src="data:image/png;base64,%s" title='%s'>`, base64.StdEncoding.EncodeToString([]byte(msg.Result())), "some"))
 				m.ProcessInner()

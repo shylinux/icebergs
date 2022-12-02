@@ -2,6 +2,7 @@ package oauth
 
 import (
 	"path"
+	"net/http"
 	"strings"
 	"time"
 
@@ -73,7 +74,7 @@ var Index = &ice.Context{Name: OAUTH, Help: "认证授权", Commands: ice.Comman
 			m.Cmd(REPLY, mdb.CREATE, aaa.USERNAME, m.Option(ice.MSG_USERNAME), m.OptionSimple(SCOPE, OFFER))
 
 			m.Option(web.SPIDE_HEADER, web.UserAgent, m.PrefixKey())
-			m.Cmd(ssh.SOURCE, m.Option(SCOPE), kit.Dict(nfs.CAT_CONTENT, m.Cmdx(web.SPIDE, ice.DEV, web.SPIDE_GET, m.Option(OFFER))))
+			m.Cmd(ssh.SOURCE, m.Option(SCOPE), kit.Dict(nfs.CAT_CONTENT, m.Cmdx(web.SPIDE, ice.DEV, http.MethodGet, m.Option(OFFER))))
 			m.ProcessHistory()
 		}},
 	})},

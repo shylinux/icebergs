@@ -23,11 +23,10 @@ import (
 func _spide_create(m *ice.Message, name, address string) {
 	if uri, e := url.Parse(address); !m.Warn(e != nil || address == "", ice.ErrNotValid, address) {
 		m.Logs(mdb.CREATE, SPIDE, name, ADDRESS, address)
-		dir, file := path.Split(uri.EscapedPath())
-		mdb.HashCreate(m, CLIENT_NAME, name)
-		mdb.HashSelectUpdate(m, name, func(value ice.Map) {
+		mdb.HashSelectUpdate(m, mdb.HashCreate(m, CLIENT_NAME, name), func(value ice.Map) {
+			dir, file := path.Split(uri.EscapedPath())
 			value[SPIDE_CLIENT] = kit.Dict(
-				mdb.NAME, name, SPIDE_METHOD, SPIDE_POST, "url", address,
+				mdb.NAME, name, SPIDE_METHOD, http.MethodPost, "url", address,
 				tcp.PROTOCOL, uri.Scheme, tcp.HOSTNAME, uri.Host,
 				nfs.PATH, dir, nfs.FILE, file, "query", uri.RawQuery,
 				cli.TIMEOUT, "600s", LOGHEADERS, ice.FALSE,
@@ -92,7 +91,7 @@ func _spide_show(m *ice.Message, arg ...string) {
 func _spide_body(m *ice.Message, method string, arg ...string) (io.Reader, ice.Maps, []string) {
 	head := ice.Maps{}
 	body, ok := m.Optionv(SPIDE_BODY).(io.Reader)
-	if !ok && len(arg) > 0 && method != SPIDE_GET {
+	if !ok && len(arg) > 0 && method != http.MethodGet {
 		if len(arg) == 1 {
 			arg = []string{SPIDE_DATA, arg[0]}
 		}
@@ -177,7 +176,7 @@ func _spide_head(m *ice.Message, req *http.Request, head ice.Maps, value ice.Map
 		req.Header.Set(k, v)
 		m.Logs("Header", k, v)
 	})
-	if req.Method == SPIDE_POST {
+	if req.Method == http.MethodPost {
 		m.Logs(kit.Select(ice.AUTO, req.Header.Get(ContentLength)), req.Header.Get(ContentType))
 	}
 }
@@ -221,11 +220,6 @@ const (
 	SPIDE_MSG   = "msg"
 	SPIDE_SAVE  = "save"
 	SPIDE_CACHE = "cache"
-
-	SPIDE_GET    = http.MethodGet
-	SPIDE_PUT    = http.MethodPut
-	SPIDE_POST   = http.MethodPost
-	SPIDE_DELETE = http.MethodDelete
 
 	SPIDE_BODY = "body"
 	SPIDE_FORM = "form"
@@ -302,25 +296,25 @@ func init() {
 				_spide_show(m, arg...)
 			}
 		}},
-		SPIDE_GET: {Name: "GET url key value run", Help: "蜘蛛侠", Hand: func(m *ice.Message, arg ...string) {
-			m.Echo(kit.Formats(kit.UnMarshal(m.Cmdx(SPIDE, ice.DEV, SPIDE_RAW, SPIDE_GET, arg[0], arg[1:]))))
+		http.MethodGet: {Name: "GET url key value run", Help: "蜘蛛侠", Hand: func(m *ice.Message, arg ...string) {
+			m.Echo(kit.Formats(kit.UnMarshal(m.Cmdx(SPIDE, ice.DEV, SPIDE_RAW, http.MethodGet, arg[0], arg[1:]))))
 		}},
-		SPIDE_PUT: {Name: "PUT url key value run", Help: "蜘蛛侠", Hand: func(m *ice.Message, arg ...string) {
-			m.Echo(kit.Formats(kit.UnMarshal(m.Cmdx(SPIDE, ice.DEV, SPIDE_RAW, SPIDE_PUT, arg[0], arg[1:]))))
+		http.MethodPut: {Name: "PUT url key value run", Help: "蜘蛛侠", Hand: func(m *ice.Message, arg ...string) {
+			m.Echo(kit.Formats(kit.UnMarshal(m.Cmdx(SPIDE, ice.DEV, SPIDE_RAW, http.MethodPut, arg[0], arg[1:]))))
 		}},
-		SPIDE_POST: {Name: "POST url key value run", Help: "蜘蛛侠", Hand: func(m *ice.Message, arg ...string) {
-			m.Echo(kit.Formats(kit.UnMarshal(m.Cmdx(SPIDE, ice.DEV, SPIDE_RAW, SPIDE_POST, arg[0], arg[1:]))))
+		http.MethodPost: {Name: "POST url key value run", Help: "蜘蛛侠", Hand: func(m *ice.Message, arg ...string) {
+			m.Echo(kit.Formats(kit.UnMarshal(m.Cmdx(SPIDE, ice.DEV, SPIDE_RAW, http.MethodPost, arg[0], arg[1:]))))
 		}},
-		SPIDE_DELETE: {Name: "DELETE url key value run", Help: "蜘蛛侠", Hand: func(m *ice.Message, arg ...string) {
-			m.Echo(kit.Formats(kit.UnMarshal(m.Cmdx(SPIDE, ice.DEV, SPIDE_RAW, SPIDE_DELETE, arg[0], arg[1:]))))
+		http.MethodDelete: {Name: "DELETE url key value run", Help: "蜘蛛侠", Hand: func(m *ice.Message, arg ...string) {
+			m.Echo(kit.Formats(kit.UnMarshal(m.Cmdx(SPIDE, ice.DEV, SPIDE_RAW, http.MethodDelete, arg[0], arg[1:]))))
 		}},
 	})
 }
 
-func SpideGet(m *ice.Message, arg ...ice.Any) ice.Any { return kit.UnMarshal(m.Cmdx(SPIDE_GET, arg)) }
-func SpidePut(m *ice.Message, arg ...ice.Any) ice.Any { return kit.UnMarshal(m.Cmdx(SPIDE_PUT, arg)) }
-func SpidePost(m *ice.Message, arg ...ice.Any) ice.Any { return kit.UnMarshal(m.Cmdx(SPIDE_POST, arg)) }
-func SpideDelete(m *ice.Message, arg ...ice.Any) ice.Any { return kit.UnMarshal(m.Cmdx(SPIDE_DELETE, arg)) }
+func SpideGet(m *ice.Message, arg ...ice.Any) ice.Any { return kit.UnMarshal(m.Cmdx(http.MethodGet, arg)) }
+func SpidePut(m *ice.Message, arg ...ice.Any) ice.Any { return kit.UnMarshal(m.Cmdx(http.MethodPut, arg)) }
+func SpidePost(m *ice.Message, arg ...ice.Any) ice.Any { return kit.UnMarshal(m.Cmdx(http.MethodPost, arg)) }
+func SpideDelete(m *ice.Message, arg ...ice.Any) ice.Any { return kit.UnMarshal(m.Cmdx(http.MethodDelete, arg)) }
 func SpideSave(m *ice.Message, file, link string, cb func(int, int, int)) *ice.Message {
-	return m.Cmd("web.spide", ice.DEV, SPIDE_SAVE, file, SPIDE_GET, link, cb)
+	return m.Cmd("web.spide", ice.DEV, SPIDE_SAVE, file, http.MethodGet, link, cb)
 }

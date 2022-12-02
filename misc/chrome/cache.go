@@ -2,6 +2,7 @@ package chrome
 
 import (
 	"path"
+	"net/http"
 
 	"shylinux.com/x/ice"
 	"shylinux.com/x/icebergs/base/mdb"
@@ -26,7 +27,7 @@ func (c cache) Create(m *ice.Message, arg ...string) *ice.Message {
 	}
 	// h = c.Hash.Create(m.Spawn(), m.OptionSimple("show,type,name,link")...).Result()
 	// m.Option(mdb.HASH, h)
-	msg := m.Cmd("web.spide", ice.DEV, web.SPIDE_CACHE, web.SPIDE_GET, m.Option(mdb.LINK), func(count, total, value int) {
+	msg := m.Cmd("web.spide", ice.DEV, web.SPIDE_CACHE, http.MethodGet, m.Option(mdb.LINK), func(count, total, value int) {
 		c.Hash.Modify(m, kit.Simple(mdb.COUNT, count, mdb.TOTAL, total, mdb.VALUE, kit.Format(value))...)
 	})
 	m.Cmdy(nfs.LINK, path.Join(m.Config(nfs.PATH), m.Option(mdb.NAME)), msg.Append(nfs.FILE))

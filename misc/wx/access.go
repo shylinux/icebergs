@@ -1,6 +1,7 @@
 package wx
 
 import (
+	"net/http"
 	"crypto/sha1"
 	"strings"
 	"time"
@@ -76,7 +77,7 @@ func init() {
 			}},
 			TOKENS: {Name: "tokens", Help: "令牌", Hand: func(m *ice.Message, arg ...string) {
 				if now := time.Now().Unix(); m.Config(TOKENS) == "" || now > kit.Int64(m.Config(EXPIRES)) {
-					msg := m.Cmd(web.SPIDE, WX, web.SPIDE_GET, "/cgi-bin/token?grant_type=client_credential", APPID, m.Config(APPID), "secret", m.Config(APPMM))
+					msg := m.Cmd(web.SPIDE, WX, http.MethodGet, "/cgi-bin/token?grant_type=client_credential", APPID, m.Config(APPID), "secret", m.Config(APPMM))
 					if m.Warn(msg.Append(ERRCODE) != "", msg.Append(ERRCODE), msg.Append(ERRMSG)) {
 						return
 					}
@@ -87,7 +88,7 @@ func init() {
 			}},
 			TICKET: {Name: "ticket", Help: "票据", Hand: func(m *ice.Message, arg ...string) {
 				if now := time.Now().Unix(); m.Config(TICKET) == "" || now > kit.Int64(m.Config(EXPIRE)) {
-					msg := m.Cmd(web.SPIDE, WX, web.SPIDE_GET, "/cgi-bin/ticket/getticket?type=jsapi", "access_token", m.Cmdx("", TOKENS))
+					msg := m.Cmd(web.SPIDE, WX, http.MethodGet, "/cgi-bin/ticket/getticket?type=jsapi", "access_token", m.Cmdx("", TOKENS))
 					if m.Warn(msg.Append(ERRCODE) != "0", msg.Append(ERRCODE), msg.Append(ERRMSG)) {
 						return
 					}

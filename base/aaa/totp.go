@@ -22,7 +22,7 @@ func _totp_gen(per int64) string {
 	return strings.ToUpper(base32.StdEncoding.EncodeToString(b[:]))
 }
 func _totp_get(key string, per int64, num int) string {
-	buf, now := []byte{}, kit.Int64(time.Now().Unix() / per)
+	buf, now := []byte{}, kit.Int64(time.Now().Unix()/per)
 	for i := 0; i < 8; i++ {
 		buf = append(buf, byte((uint64(now) >> uint64(((7 - i) * 8)))))
 	}

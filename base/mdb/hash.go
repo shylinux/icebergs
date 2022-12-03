@@ -131,7 +131,7 @@ func HashAction(arg ...Any) ice.Actions {
 	return ice.Actions{
 		ice.CTX_INIT: AutoConfig(append(kit.List(FIELD, HASH_FIELD), arg...)...),
 		ice.CTX_EXIT: {Hand: func(m *ice.Message, arg ...string) { HashSelectClose(m) }},
-		
+
 		INPUTS: {Hand: func(m *ice.Message, arg ...string) { HashInputs(m, arg) }},
 		CREATE: {Hand: func(m *ice.Message, arg ...string) { HashCreate(m, arg) }},
 		REMOVE: {Hand: func(m *ice.Message, arg ...string) { HashRemove(m, arg) }},

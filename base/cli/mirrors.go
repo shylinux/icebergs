@@ -25,7 +25,7 @@ const MIRRORS = "mirrors"
 func init() {
 	Index.MergeCommands(ice.Commands{
 		MIRRORS: {Name: "mirrors cli auto", Help: "软件镜像", Actions: ice.MergeActions(ice.Actions{
-			mdb.INSERT:   {Name: "insert cli* osid cmd*"},
+			mdb.INSERT: {Name: "insert cli* osid cmd*"},
 			CMD: {Name: "cmd cli osid", Hand: func(m *ice.Message, arg ...string) {
 				osid := kit.Select(m.Conf(RUNTIME, kit.Keys(HOST, OSID)), m.Option(OSID))
 				mdb.ZoneSelectCB(m, m.Option(CLI), func(value ice.Map) {

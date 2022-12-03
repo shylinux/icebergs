@@ -58,14 +58,14 @@ func ProcessFloat(m *ice.Message, arg ...string) {
 	m.Cmdy(COMMAND, arg[0])
 }
 
-func ProcessRefresh(m *ice.Message, arg ...string) { m.ProcessRefresh(arg...) }
+func ProcessRefresh(m *ice.Message, arg ...string)  { m.ProcessRefresh(arg...) }
 func ProcessRewrite(m *ice.Message, arg ...ice.Any) { m.ProcessRewrite(arg...) }
-func ProcessHold(m *ice.Message, text ...ice.Any) { m.Process(ice.PROCESS_HOLD, text...) }
-func ProcessOpen(m *ice.Message, url string) { m.Process(ice.PROCESS_OPEN, url) }
+func ProcessHold(m *ice.Message, text ...ice.Any)   { m.Process(ice.PROCESS_HOLD, text...) }
+func ProcessOpen(m *ice.Message, url string)        { m.Process(ice.PROCESS_OPEN, url) }
 
 func ProcessAction() ice.Actions {
 	return ice.Actions{
 		ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) { AddProcess(m.CommandKey(), m.PrefixKey()) }},
-		PROCESS: {Hand: func(m *ice.Message, arg ...string) { ProcessField(m, m.PrefixKey(), arg, arg...) }},
+		PROCESS:      {Hand: func(m *ice.Message, arg ...string) { ProcessField(m, m.PrefixKey(), arg, arg...) }},
 	}
 }

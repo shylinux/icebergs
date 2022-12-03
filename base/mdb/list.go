@@ -10,7 +10,9 @@ import (
 	"shylinux.com/x/toolkits/miss"
 )
 
-func _list_fields(m *ice.Message) []string { return kit.Split(kit.Select(LIST_FIELD, m.OptionFields())) }
+func _list_fields(m *ice.Message) []string {
+	return kit.Split(kit.Select(LIST_FIELD, m.OptionFields()))
+}
 func _list_inputs(m *ice.Message, prefix, chain string, field, value string) {
 	list := map[string]int{}
 	defer func() {

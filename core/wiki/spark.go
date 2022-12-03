@@ -13,15 +13,12 @@ func _spark_show(m *ice.Message, name, text string, arg ...string) *ice.Message 
 	if _option(m, m.CommandKey(), name, text, arg...); name == "" {
 		return _wiki_template(m, name, text, arg...)
 	}
-
 	m.Echo(`<div class="story" data-type="spark" data-name="%s" style="%s">`, name, m.Option("style"))
 	defer m.Echo("</div>")
-
 	switch name {
 	case "inner", FIELD:
 		return m.Echo(text)
 	}
-
 	prompt := kit.Select(name+"> ", m.Config(kit.Keys(ssh.PROMPT, name)))
 	for _, l := range kit.SplitLine(text) {
 		m.Echo(Format("div", Format("label", prompt), Format("span", l)))

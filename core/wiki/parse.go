@@ -25,7 +25,6 @@ func init() {
 			if len(arg) < 2 {
 				return
 			}
-
 			if arg[1] = strings.TrimSpace(arg[1]); arg[0] == ice.AUTO {
 				if strings.HasPrefix(arg[1], "{") || strings.HasPrefix(arg[1], "[") {
 					arg[0] = nfs.JSON
@@ -39,7 +38,6 @@ func init() {
 					arg[0] = mdb.LIST
 				}
 			}
-
 			switch m.OptionFields(mdb.DETAIL); arg[0] {
 			case "base64":
 				if buf, err := base64.StdEncoding.DecodeString(arg[1]); err == nil {

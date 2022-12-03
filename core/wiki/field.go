@@ -38,11 +38,9 @@ func _field_show(m *ice.Message, name, text string, arg ...string) {
 	if len(meta) == 0 || !aaa.Right(m.Spawn(), cmds[0]) {
 		return
 	}
-
 	name = strings.ReplaceAll(name, ice.SP, "_")
 	meta[mdb.NAME], meta[mdb.INDEX] = name, text
 	msg := m.Spawn()
-
 	for i := 0; i < len(arg)-1; i += 2 {
 		if strings.HasPrefix(arg[i], ARGS) {
 			kit.Value(meta, arg[i], m.Optionv(arg[i], kit.Split(strings.TrimSuffix(strings.TrimPrefix(arg[i+1], "["), "]"))))

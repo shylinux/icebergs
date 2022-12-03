@@ -14,7 +14,7 @@ const OFFER = "offer"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
-		OFFER: {Name: "offer hash auto", Actions: ice.MergeActions(ice.Actions{
+		OFFER: {Name: "offer hash auto", Help: "邀请", Actions: ice.MergeActions(ice.Actions{
 			INVITE: {Name: "invite email='shylinux@163.com' content", Help: "邀请", Hand: func(m *ice.Message, arg ...string) {
 				h := mdb.HashCreate(m, m.OptionSimple(EMAIL, "content"), "from", m.Option(ice.MSG_USERNAME))
 				msg := m.Cmd("web.share", mdb.CREATE, mdb.TYPE, "field", mdb.NAME, m.PrefixKey(), mdb.TEXT, kit.Format(kit.List(h)),

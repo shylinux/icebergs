@@ -139,7 +139,6 @@ const (
 	SERVE_PARSE   = "serve.parse"
 	SERVE_LOGIN   = "serve.login"
 	SERVE_CHECK   = "serve.check"
-	SERVE_RENDER  = "serve.render"
 	SERVE_STOP    = "serve.stop"
 
 	WEB_LOGIN = "_login"
@@ -233,7 +232,6 @@ func init() {
 			if sub = kit.Select(sub, PP(key), sub == ice.PS); action.Hand == nil {
 				action.Hand = func(m *ice.Message, arg ...string) { m.Cmdy(key, arg) }
 			}
-			// c.Commands[sub] = &ice.Command{Name: sub, Help: cmd.Help, Actions: cmd.Actions, Hand: action.Hand}
 			actions := ice.Actions{}
 			for k, v := range cmd.Actions {
 				switch k {
@@ -247,5 +245,5 @@ func init() {
 	})
 }
 func ServeAction() ice.Actions {
-	return gdb.EventsAction(SERVE_START, SERVE_REWRITE, SERVE_PARSE, SERVE_LOGIN, SERVE_CHECK, SERVE_RENDER, SERVE_STOP)
+	return gdb.EventsAction(SERVE_START, SERVE_REWRITE, SERVE_PARSE, SERVE_LOGIN, SERVE_CHECK, SERVE_STOP)
 }

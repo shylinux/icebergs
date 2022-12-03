@@ -71,7 +71,6 @@ func _cache_upload(m *ice.Message, r *http.Request) (mime, name, file, size stri
 	return "", "", "", "0"
 }
 func _cache_download(m *ice.Message, r *http.Response, file string, cb ice.Any) string {
-	defer r.Body.Close()
 	if f, p, e := miss.CreateFile(file); !m.Warn(e, ice.ErrNotValid, DOWNLOAD) {
 		defer f.Close()
 		last, step, bufs := 0, 10, 10*ice.MOD_BUFS

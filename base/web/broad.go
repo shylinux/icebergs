@@ -19,7 +19,7 @@ func _broad_addr(m *ice.Message, host, port string) *net.UDPAddr {
 	return nil
 }
 func _broad_send(m *ice.Message, host, port string, remote_host, remote_port string) {
-	if s, e := net.DialUDP("udp", nil, _broad_addr(m, remote_host, remote_port)); !m.Warn(e, ice.ErrNotValid) {
+	if s, e := net.DialUDP("udp4", nil, _broad_addr(m, remote_host, remote_port)); !m.Warn(e, ice.ErrNotValid) {
 		defer s.Close()
 		msg := m.Spawn(kit.Dict(tcp.HOST, host, tcp.PORT, port))
 		m.Logs(mdb.EXPORT, BROAD, msg.FormatMeta(), "to", remote_host+ice.DF+remote_port)
@@ -33,11 +33,11 @@ func _broad_serve(m *ice.Message, host, port string) {
 		defer mdb.HashCreateDeferRemove(m, tcp.HOST, host, tcp.PORT, port, kit.Dict(mdb.TARGET, s))()
 		buf := make([]byte, ice.MOD_BUFS)
 		for {
-			n, addr, err := s.ReadFromUDP(buf[:])
-			if err != nil {
+			n, from, e := s.ReadFromUDP(buf[:])
+			if e != nil {
 				break
 			}
-			m.Logs(mdb.IMPORT, BROAD, string(buf[:n]), "from", addr)
+			m.Logs(mdb.IMPORT, BROAD, string(buf[:n]), "from", from)
 			msg := m.Spawn(buf[:n])
 			if m.Cmd(BROAD, kit.Format("%s,%s", msg.Option(tcp.HOST), msg.Option(tcp.PORT))).Length() > 0 {
 				continue

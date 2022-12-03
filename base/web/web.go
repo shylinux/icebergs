@@ -96,7 +96,7 @@ const WEB = "web"
 var Index = &ice.Context{Name: WEB, Help: "网络模块"}
 
 func init() {
-	ice.Index.Register(Index, &Frame{}, BROAD, SERVE, SPACE, DREAM, CACHE, SPIDE, SHARE)
+	ice.Index.Register(Index, &Frame{}, BROAD, SERVE, SPACE, DREAM, SHARE, CACHE, SPIDE)
 }
 func ApiAction(arg ...string) ice.Actions { return ice.Actions{kit.Select(ice.PS, arg, 0): {}} }
 

@@ -13,6 +13,7 @@ import (
 	"time"
 
 	ice "shylinux.com/x/icebergs"
+	"shylinux.com/x/icebergs/base/aaa"
 	"shylinux.com/x/icebergs/base/cli"
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/nfs"
@@ -27,13 +28,13 @@ func _spide_create(m *ice.Message, name, address string) {
 			dir, file := path.Split(uri.EscapedPath())
 			value[SPIDE_CLIENT] = kit.Dict(mdb.NAME, name, SPIDE_METHOD, http.MethodPost, "url", address,
 				tcp.PROTOCOL, uri.Scheme, tcp.HOSTNAME, uri.Host, nfs.PATH, dir, nfs.FILE, file, "query", uri.RawQuery,
-				cli.TIMEOUT, "600s", LOGHEADERS, ice.FALSE,
+				cli.TIMEOUT, "30s", LOGHEADERS, ice.FALSE,
 			)
 		})
 	}
 }
 func _spide_args(m *ice.Message, arg []string, val ...string) (string, []string) {
-	if kit.IndexOf(val, arg[0]) {
+	if kit.IndexOf(val, arg[0]) > -1 {
 		return arg[0], arg[1:]
 	}
 	return "", arg
@@ -53,6 +54,9 @@ func _spide_show(m *ice.Message, name string, arg ...string) {
 	method = kit.Select(http.MethodPost, kit.Select(msg.Append(CLIENT_METHOD), method))
 	uri, arg := arg[0], arg[1:]
 	body, head, arg := _spide_body(m, method, arg...)
+	if c, ok := body.(io.Closer); ok {
+		defer c.Close()
+	}
 	req, e := http.NewRequest(method, kit.MergeURL2(msg.Append(CLIENT_URL), uri, arg), body)
 	if m.Warn(e, ice.ErrNotValid, uri) {
 		return
@@ -100,6 +104,7 @@ func _spide_body(m *ice.Message, method string, arg ...string) (io.Reader, ice.M
 			head[ContentType], body = ContentJSON, bytes.NewBufferString(kit.Select("{}", arg, 1))
 		case SPIDE_FILE:
 			if f, e := nfs.OpenFile(m, arg[1]); m.Assert(e) {
+				m.Logs(mdb.IMPORT, nfs.FILE, arg[1])
 				body = f
 			}
 		case SPIDE_JSON:
@@ -125,11 +130,11 @@ func _spide_part(m *ice.Message, arg ...string) (string, io.Reader) {
 		if arg[i] == nfs.SIZE {
 			size = kit.Int64(arg[i+1])
 		} else if arg[i] == SPIDE_CACHE {
-			if t, e := time.ParseInLocation(ice.MOD_TIME, arg[i+1], time.Local); e == nil {
+			if t, e := time.ParseInLocation(ice.MOD_TIME, arg[i+1], time.Local); !m.Warn(e, ice.ErrNotValid) {
 				cache = t
 			}
 		} else if strings.HasPrefix(arg[i+1], ice.AT) {
-			if s, e := nfs.StatFile(m, arg[i+1][1:]); e == nil {
+			if s, e := nfs.StatFile(m, arg[i+1][1:]); !m.Warn(e, ice.ErrNotValid) {
 				if s.Size() == size && s.ModTime().Before(cache) {
 					continue
 				}
@@ -150,7 +155,7 @@ func _spide_part(m *ice.Message, arg ...string) (string, io.Reader) {
 	return mp.FormDataContentType(), buf
 }
 func _spide_head(m *ice.Message, req *http.Request, head ice.Maps, value ice.Map) {
-	m.Logs(req.Method, req.URL)
+	m.Logs(req.Method, req.URL.String())
 	kit.Fetch(value[SPIDE_HEADER], func(k string, v string) {
 		req.Header.Set(k, v)
 		m.Logs("Header", k, v)
@@ -195,9 +200,8 @@ func _spide_save(m *ice.Message, format, file, uri string, res *http.Response) {
 	case SPIDE_SAVE:
 		_cache_download(m, res, file, m.OptionCB(SPIDE))
 	case SPIDE_CACHE:
-		m.Optionv(RESPONSE, res)
-		m.Cmdy(CACHE, DOWNLOAD, res.Header.Get(ContentType), uri)
-		m.Echo(m.Append(mdb.DATA))
+		m.Cmdy(CACHE, DOWNLOAD, res.Header.Get(ContentType), uri, kit.Dict(RESPONSE, res))
+		m.Echo(m.Append(mdb.HASH))
 	default:
 		var data ice.Any
 		if b, e := ioutil.ReadAll(res.Body); !m.Warn(e) {
@@ -213,8 +217,8 @@ func _spide_save(m *ice.Message, format, file, uri string, res *http.Response) {
 const (
 	SPIDE_RAW   = "raw"
 	SPIDE_MSG   = "msg"
-	SPIDE_SAVE  = "save"
 	SPIDE_CACHE = "cache"
+	SPIDE_SAVE  = "save"
 
 	SPIDE_BODY = "body"
 	SPIDE_FORM = "form"
@@ -246,7 +250,7 @@ const (
 
 	CLIENT_PROTOCOL = "client.protocol"
 	CLIENT_HOSTNAME = "client.hostname"
-	
+
 	CLIENT_NAME    = "client.name"
 	CLIENT_METHOD  = "client.method"
 	CLIENT_TIMEOUT = "client.timeout"
@@ -283,13 +287,19 @@ func init() {
 				m.Push(DOMAIN, msg.Append(CLIENT_PROTOCOL)+"://"+msg.Append(CLIENT_HOSTNAME)+kit.Select("", arg, 1))
 				m.Push(tcp.PROTOCOL, msg.Append(CLIENT_PROTOCOL)).Push(tcp.HOSTNAME, msg.Append(CLIENT_HOSTNAME))
 			}},
-			MERGE: {Hand: func(m *ice.Message, arg ...string) { m.Echo(kit.MergeURL2(m.CmdAppend("", arg[0], CLIENT_URL), arg[1], arg[2:])) }},
+			MERGE: {Hand: func(m *ice.Message, arg ...string) {
+				m.Echo(kit.MergeURL2(m.CmdAppend("", arg[0], CLIENT_URL), arg[1], arg[2:]))
+			}},
 		}, mdb.HashAction(mdb.SHORT, CLIENT_NAME, mdb.FIELD, "time,client.name,client.url", LOGHEADERS, ice.FALSE), mdb.ClearHashOnExitAction()), Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) < 2 || arg[0] == "" || (len(arg) > 3 && arg[3] == "") {
 				mdb.HashSelect(m, kit.Slice(arg, 0, 1)...).Sort(CLIENT_NAME)
 			} else {
-				_spide_show(m, arg...)
+				_spide_show(m, arg[0], arg[1:]...)
 			}
+		}},
+		"/spide-demo/": {Actions: aaa.WhiteAction(), Hand: func(m *ice.Message, arg ...string) {
+			m.Push("hi", "hello")
+			m.Echo("hello world")
 		}},
 		http.MethodGet: {Name: "GET url key value run", Help: "蜘蛛侠", Hand: func(m *ice.Message, arg ...string) {
 			m.Echo(kit.Formats(kit.UnMarshal(m.Cmdx(SPIDE, ice.DEV, SPIDE_RAW, http.MethodGet, arg[0], arg[1:]))))
@@ -306,10 +316,18 @@ func init() {
 	})
 }
 
-func SpideGet(m *ice.Message, arg ...ice.Any) ice.Any { return kit.UnMarshal(m.Cmdx(http.MethodGet, arg)) }
-func SpidePut(m *ice.Message, arg ...ice.Any) ice.Any { return kit.UnMarshal(m.Cmdx(http.MethodPut, arg)) }
-func SpidePost(m *ice.Message, arg ...ice.Any) ice.Any { return kit.UnMarshal(m.Cmdx(http.MethodPost, arg)) }
-func SpideDelete(m *ice.Message, arg ...ice.Any) ice.Any { return kit.UnMarshal(m.Cmdx(http.MethodDelete, arg)) }
+func SpideGet(m *ice.Message, arg ...ice.Any) ice.Any {
+	return kit.UnMarshal(m.Cmdx(http.MethodGet, arg))
+}
+func SpidePut(m *ice.Message, arg ...ice.Any) ice.Any {
+	return kit.UnMarshal(m.Cmdx(http.MethodPut, arg))
+}
+func SpidePost(m *ice.Message, arg ...ice.Any) ice.Any {
+	return kit.UnMarshal(m.Cmdx(http.MethodPost, arg))
+}
+func SpideDelete(m *ice.Message, arg ...ice.Any) ice.Any {
+	return kit.UnMarshal(m.Cmdx(http.MethodDelete, arg))
+}
 func SpideSave(m *ice.Message, file, link string, cb func(int, int, int)) *ice.Message {
 	return m.Cmd("web.spide", ice.DEV, SPIDE_SAVE, file, http.MethodGet, link, cb)
 }

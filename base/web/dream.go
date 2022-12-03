@@ -59,8 +59,8 @@ func _dream_show(m *ice.Message, name string) {
 	), cli.CMD_OUTPUT, path.Join(p, ice.BIN_BOOT_LOG))
 	defer m.Options(cli.CMD_DIR, "", cli.CMD_ENV, "", cli.CMD_OUTPUT, "")
 	gdb.Event(m, DREAM_CREATE, m.OptionSimple(mdb.NAME, mdb.TYPE))
-	bin := kit.Select(os.Args[0], cli.SystemFind(m, ice.ICE_BIN, nfs.PWD+path.Join(p, ice.BIN), nfs.PWD+ice.BIN))
-	m.Cmd(cli.DAEMON, bin, SPACE, tcp.DIAL, ice.DEV, ice.OPS, mdb.TYPE, WORKER, m.OptionSimple(mdb.NAME, RIVER), cli.DAEMON, ice.OPS)
+	m.Cmd(cli.DAEMON, kit.Select(os.Args[0], cli.SystemFind(m, ice.ICE_BIN, nfs.PWD+path.Join(p, ice.BIN), nfs.PWD+ice.BIN)),
+		SPACE, tcp.DIAL, ice.DEV, ice.OPS, mdb.TYPE, WORKER, m.OptionSimple(mdb.NAME, RIVER), cli.DAEMON, ice.OPS)
 }
 func _dream_template(m *ice.Message, p string) {
 	nfs.MkdirAll(m, p)

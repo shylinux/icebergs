@@ -136,11 +136,11 @@ func init() {
 	Index.MergeCommands(ice.Commands{
 		CAT: {Name: "cat path auto", Help: "文件", Actions: ice.MergeActions(ice.Actions{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) { aaa.White(m, ice.SRC_MAIN_JS, ice.SRC_MAIN_GO, ice.SRC_MAIN_SHY) }},
-		}, mdb.AutoConfig(SOURCE, kit.DictList(
+		}, ice.Actions{ice.CTX_INIT: mdb.AutoConfig(SOURCE, kit.DictList(
 			HTML, CSS, JS, GO, SH, SHY, CSV, JSON,
 			PY, MD, TXT, XML, YML, ZML, IML,
 			"license", "makefile", "configure", "conf",
-		))), Hand: func(m *ice.Message, arg ...string) {
+		))}), Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) == 0 || strings.HasSuffix(arg[0], ice.PS) {
 				m.Cmdy(DIR, arg)
 				return

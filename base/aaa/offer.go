@@ -26,7 +26,8 @@ func init() {
 					return
 				}
 				msg := m.Cmd("", m.Option(mdb.HASH))
-				m.Cmd(USER, mdb.CREATE, USERNAME, msg.Option(EMAIL))
+				ls := kit.Split(msg.Option(EMAIL), ice.AT)
+				m.Cmd(USER, mdb.CREATE, USERNAME, msg.Option(EMAIL), USERNICK, ls[0], USERZONE, ls[1])
 				m.ProcessOpen(kit.MergeURL2(m.Option(ice.MSG_USERWEB), ice.PS, ice.MSG_SESSID, SessCreate(m, msg.Option(EMAIL))))
 				mdb.HashModify(m, m.OptionSimple(mdb.HASH), mdb.STATUS, ACCEPT)
 			}},

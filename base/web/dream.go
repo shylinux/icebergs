@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	ice "shylinux.com/x/icebergs"
+	"shylinux.com/x/icebergs/base/aaa"
 	"shylinux.com/x/icebergs/base/cli"
 	"shylinux.com/x/icebergs/base/ctx"
 	"shylinux.com/x/icebergs/base/gdb"
@@ -42,7 +43,7 @@ func _dream_show(m *ice.Message, name string) {
 	}
 	defer m.ProcessOpen(MergePod(m, m.Option(mdb.NAME, name)))
 	p := path.Join(ice.USR_LOCAL_WORK, name)
-	if pid := m.Cmdx(nfs.CAT, path.Join(p, ice.Info.PidPath)); pid != "" && nfs.ExistsFile(m, "/proc/"+pid) {
+	if pid := m.Cmdx(nfs.CAT, path.Join(p, ice.Info.PidPath), kit.Dict(ice.MSG_USERROLE, aaa.TECH)); pid != "" && nfs.ExistsFile(m, "/proc/"+pid) {
 		m.Info("already exists %v", pid)
 		return
 	} else if m.Cmd(SPACE, name).Length() > 0 {

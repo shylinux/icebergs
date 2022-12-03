@@ -20,12 +20,7 @@ const (
 const APP = "app"
 
 func init() {
-	Index.Merge(&ice.Context{Configs: ice.Configs{
-		APP: {Name: APP, Help: "应用", Value: kit.Data(
-			mdb.SHORT, APPID, mdb.FIELD, "time,appid,duty,token,expire",
-			tcp.SERVER, "https://open.feishu.cn/",
-		)},
-	}, Commands: ice.Commands{
+	Index.MergeCommands(ice.Commands{
 		APP: {Name: "app appid auto token login", Help: "应用", Actions: ice.MergeActions(ice.Actions{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
 				m.Cmd(web.SPIDE, mdb.CREATE, LARK, m.Config(tcp.SERVER))
@@ -46,8 +41,11 @@ func init() {
 				}
 				m.Echo(msg.Append(TOKEN))
 			}},
-		}, mdb.HashAction()), Hand: func(m *ice.Message, arg ...string) {
+		}, mdb.HashAction(
+			mdb.SHORT, APPID, mdb.FIELD, "time,appid,duty,token,expire",
+			tcp.SERVER, "https://open.feishu.cn/",
+		)), Hand: func(m *ice.Message, arg ...string) {
 			mdb.HashSelect(m, arg...)
 		}},
-	}})
+	})
 }

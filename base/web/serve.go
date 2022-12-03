@@ -206,7 +206,7 @@ func init() {
 		PP(ice.REQUIRE): {Name: "/require/shylinux.com/x/volcanos/proto.js", Help: "代码库", Hand: func(m *ice.Message, arg ...string) {
 			p := path.Join(ice.ISH_PLUGED, path.Join(arg...))
 			if !nfs.ExistsFile(m, p) {
-				m.Cmd(cli.SYSTEM, "git", "clone", "https://"+path.Join(arg[:3]...), path.Join(ice.ISH_PLUGED, path.Join(arg[:3])))
+				m.Cmd(cli.SYSTEM, "git", "clone", "https://"+path.Join(arg[:3]...), path.Join(ice.ISH_PLUGED, path.Join(arg[:3]...)))
 			}
 			m.RenderDownload(p)
 		}},

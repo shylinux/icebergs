@@ -1,8 +1,8 @@
 package wx
 
 import (
-	"net/http"
 	"crypto/sha1"
+	"net/http"
 	"strings"
 	"time"
 

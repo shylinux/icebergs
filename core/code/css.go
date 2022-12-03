@@ -1,9 +1,9 @@
 package code
 
 import (
-	"strings"
 	"path"
-	
+	"strings"
+
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/ctx"
 	"shylinux.com/x/icebergs/base/mdb"
@@ -57,7 +57,7 @@ func _css_show(m *ice.Message, arg ...string) {
 }
 func _css_exec(m *ice.Message, arg ...string) {
 	if arg[2] == "usr/volcanos/" && strings.HasPrefix(arg[1], "plugin/local/") {
-		key := "web."+strings.ReplaceAll(strings.TrimSuffix(strings.TrimPrefix(arg[1], "plugin/local/"), ".css"), ice.PS, ice.PT)
+		key := "web." + strings.ReplaceAll(strings.TrimSuffix(strings.TrimPrefix(arg[1], "plugin/local/"), ".css"), ice.PS, ice.PT)
 		ctx.ProcessCommand(m, kit.Select("can.plugin", key), kit.Simple())
 		return
 	}

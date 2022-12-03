@@ -74,9 +74,9 @@ func init() {
 				mdb.ZoneInsert(m, arg[:2], BEGIN_TIME, m.Time(), STATUS, PREPARE, LEVEL, 3, SCORE, 3, arg[2:])
 			}},
 			mdb.MODIFY: {Hand: func(m *ice.Message, arg ...string) { _task_modify(m, arg[0], arg[1], arg[2:]...) }},
-			CANCEL: {Name: "cancal", Hand: func(m *ice.Message, arg ...string) { _task_modify(m, STATUS, CANCEL) }},
-			BEGIN: {Name: "begin", Hand: func(m *ice.Message, arg ...string) { _task_modify(m, STATUS, PROCESS) }},
-			END: {Name: "end", Hand: func(m *ice.Message, arg ...string) { _task_modify(m, STATUS, FINISH) }},
+			CANCEL:     {Name: "cancal", Hand: func(m *ice.Message, arg ...string) { _task_modify(m, STATUS, CANCEL) }},
+			BEGIN:      {Name: "begin", Hand: func(m *ice.Message, arg ...string) { _task_modify(m, STATUS, PROCESS) }},
+			END:        {Name: "end", Hand: func(m *ice.Message, arg ...string) { _task_modify(m, STATUS, FINISH) }},
 		}, mdb.ZoneAction(mdb.FIELD, "begin_time,close_time,id,status,level,score,type,name,text")), Hand: func(m *ice.Message, arg ...string) {
 			if mdb.ZoneSelect(m, arg...); len(arg) > 0 && arg[0] != "" {
 				status := map[string]int{}

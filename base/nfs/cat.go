@@ -136,7 +136,7 @@ func init() {
 	Index.MergeCommands(ice.Commands{
 		CAT: {Name: "cat path auto", Help: "文件", Actions: ice.MergeActions(ice.Actions{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) { aaa.White(m, ice.SRC_MAIN_JS, ice.SRC_MAIN_GO, ice.SRC_MAIN_SHY) }},
-		}, ctx.ConfAction(SOURCE, kit.DictList(
+		}, mdb.AutoConfig(SOURCE, kit.DictList(
 			HTML, CSS, JS, GO, SH, SHY, CSV, JSON,
 			PY, MD, TXT, XML, YML, ZML, IML,
 			"license", "makefile", "configure", "conf",

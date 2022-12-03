@@ -1,8 +1,8 @@
 package oauth
 
 import (
-	"path"
 	"net/http"
+	"path"
 	"strings"
 	"time"
 

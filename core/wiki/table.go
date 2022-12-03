@@ -58,6 +58,7 @@ func transArgKey(arg []string) []string {
 	}
 	return arg
 }
+
 const TABLE = "table"
 
 func init() {

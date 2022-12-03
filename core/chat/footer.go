@@ -16,7 +16,7 @@ func init() {
 			ice.RUN: {Hand: func(m *ice.Message, arg ...string) {
 				if aaa.Right(m, arg) {
 					if m.Cmdy(arg); m.IsErrNotFound() {
-						m.SetResult().Cmdy(cli.SYSTEM, arg)
+						m.RenderResult(m.Cmdx(cli.SYSTEM, arg))
 					}
 				}
 			}},

@@ -215,6 +215,10 @@ func init() {
 	})
 }
 
+func RenderWebsite(m *ice.Message, pod string, dir string, arg ...string) *ice.Message {
+	return m.Echo(m.Cmdx(web.Space(m, pod), "web.chat.website", lex.PARSE, dir, arg)).RenderResult()
+}
+
 var _website_template = `<!DOCTYPE html>
 <head>
 	<meta name="viewport" content="width=device-width,initial-scale=0.8,maximum-scale=0.8,user-scalable=no"/>

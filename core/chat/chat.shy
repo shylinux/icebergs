@@ -22,6 +22,4 @@ topic.go
 website.go
 template.go
 trans.go
-meet.go
-room.go
 oauth

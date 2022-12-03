@@ -26,10 +26,7 @@ func _header_share(m *ice.Message, arg ...string) {
 	if m.Warn(m.Option(ice.MSG_USERNAME) == "", ice.ErrNotLogin, "没有登录") {
 		return
 	}
-	for i := 0; i < len(arg)-1; i += 2 {
-		m.Option(arg[i], arg[i+1])
-	}
-	if m.Option(mdb.LINK) == "" {
+	if kit.Fetch(arg, func(k, v string) { m.Option(k, v) }); m.Option(mdb.LINK) == "" {
 		m.Cmdy(web.SHARE, mdb.CREATE, mdb.TYPE, web.LOGIN, arg)
 	} else {
 		m.Option(mdb.LINK, tcp.PublishLocalhost(m, m.Option(mdb.LINK)))
@@ -90,7 +87,7 @@ func init() {
 				m.Option(k, msg.Append(k))
 			}
 			for _, k := range []string{aaa.BACKGROUND, aaa.AVATAR} {
-				if strings.HasPrefix(msg.Append(k), ice.HTTP) {
+				if strings.HasPrefix(msg.Append(k), ice.PS) || strings.HasPrefix(msg.Append(k), ice.HTTP) {
 					m.Option(k, msg.Append(k))
 				} else if msg.Append(k) != "" && aaa.Right(m.Spawn(), msg.Append(k)) {
 					m.Option(k, web.SHARE_LOCAL+k)

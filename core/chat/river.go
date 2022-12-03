@@ -50,33 +50,20 @@ func init() {
 			mdb.CREATE: {Name: "create type=void,tech name=hi text=hello template=base", Hand: func(m *ice.Message, arg ...string) {
 				h := mdb.HashCreate(m, arg)
 				defer m.Result(h)
-
 				if m.Option(mdb.TYPE) == aaa.VOID {
 					m.Cmd(aaa.ROLE, aaa.WHITE, aaa.VOID, kit.Keys(RIVER, h))
 				}
 				gdb.Event(m, RIVER_CREATE, RIVER, m.Option(ice.MSG_RIVER, h), arg)
 			}},
 		}, mdb.HashAction(mdb.FIELD, "time,hash,type,name,text,template"), aaa.WhiteAction()), Hand: func(m *ice.Message, arg ...string) {
-			if m.Warn(m.Option(ice.MSG_USERNAME) == "", ice.ErrNotLogin) {
+			if m.Warn(m.Option(ice.MSG_USERNAME) == "", ice.ErrNotLogin) || if !aaa.Right(m, RIVER, arg) {
 				return
-			}
-			if !aaa.Right(m, RIVER, arg) {
-				return
-			}
-			if len(arg) == 0 {
+			} else if len(arg) == 0 {
 				_river_list(m)
-				return
-			}
-			if len(arg) > 1 && arg[1] == STORM {
-				m.Option(ice.MSG_RIVER, arg[0])
-				m.Cmdy(arg[1], arg[2:])
-				return
-			}
-			if len(arg) > 2 && arg[2] == STORM {
-				m.Option(ice.MSG_RIVER, arg[0])
-				m.Option(ice.MSG_STORM, arg[1])
-				m.Cmdy(arg[2], arg[3:])
-				return
+			} else if len(arg) > 1 && arg[1] == STORM {
+				m.Cmdy(arg[1], arg[2:], kit.Dict(ice.MSG_RIVER, arg[0]))
+			} else if len(arg) > 2 && arg[2] == STORM {
+				m.Cmdy(arg[2], arg[3:], kit.Dict(ice.MSG_RIVER, arg[0], ice.MSG_STORM, arg[1]))
 			}
 		}},
 	})

@@ -21,14 +21,12 @@ func init() {
 		POD: {Name: "pod", Help: "节点", Actions: ice.MergeActions(ice.Actions{
 			web.SERVE_PARSE: {Hand: func(m *ice.Message, arg ...string) {
 				if kit.Select("", arg, 0) == CHAT {
-					for i := 1; i < len(arg)-1; i += 2 {
-						m.Logs("Refer", arg[i], arg[i+1]).Options(arg[i], arg[i+1])
-					}
+					kit.Fetch(arg[1:], func(k, v string) { m.Logs("Refer", k, v).Options(k, v) })
 				}
 			}},
 		}, ctx.CmdAction(), web.ServeAction(), web.ApiAction(), aaa.WhiteAction()), Hand: func(m *ice.Message, arg ...string) {
 			if web.OptionAgentIs(m, "curl", "wget") {
-				aaa.UserRoot(m).Cmdy(web.SHARE_LOCAL, ice.BIN_ICE_BIN, kit.Dict(ice.POD, kit.Select("", arg, 0)))
+				m.Cmdy(web.SHARE_LOCAL, ice.BIN_ICE_BIN, kit.Dict(ice.POD, kit.Select("", arg, 0), ice.MSG_USERROLE, aaa.TECH))
 				return
 			}
 			if len(arg) == 0 || kit.Select("", arg, 0) == "" {
@@ -45,8 +43,4 @@ func init() {
 			}
 		}},
 	})
-}
-
-func RenderWebsite(m *ice.Message, pod string, dir string, arg ...string) *ice.Message {
-	return m.Echo(m.Cmdx(web.Space(m, pod), "web.chat.website", lex.PARSE, dir, arg)).RenderResult()
 }

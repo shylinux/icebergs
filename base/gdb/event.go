@@ -23,10 +23,11 @@ func init() {
 				list[m.Option(EVENT)]++
 			}},
 			HAPPEN: {Name: "happen event*", Help: "触发", Hand: func(m *ice.Message, arg ...string) {
+				defer m.Cost()
 				m.OptionCB(mdb.SELECT, "")
 				mdb.ZoneSelect(m.Spawn(ice.OptionFields("")), m.Option(EVENT)).Tables(func(value ice.Maps) {
 					m.Cmdy(kit.Split(value[ice.CMD]), m.Option(EVENT), arg[2:], ice.OptionFields(""))
-				}).Cost()
+				})
 			}},
 		}, mdb.ZoneAction(mdb.SHORT, EVENT, mdb.FIELD, "time,id,cmd"))},
 	})

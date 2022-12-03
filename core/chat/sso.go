@@ -21,14 +21,14 @@ func init() {
 				return
 			}
 			m.RenderRedirect(kit.MergeURL(m.Option(cli.BACK), ice.MSG_SESSID, m.Cmdx(web.SPACE, m.Option(web.SPACE), aaa.SESS, mdb.CREATE,
-				aaa.USERNAME, m.Option(ice.MSG_USERNAME), aaa.USERROLE, m.Option(ice.MSG_USERROLE), aaa.USERNICK, m.Option(ice.MSG_USERNICK), kit.Dict(ice.MSG_USERROLE, aaa.ROOT))))
+				aaa.USERNAME, m.Option(ice.MSG_USERNAME), aaa.USERROLE, m.Option(ice.MSG_USERROLE), aaa.USERNICK, m.Option(ice.MSG_USERNICK), kit.Dict(ice.MSG_USERROLE, aaa.TECH))))
 		}},
 	})
 }
 
 func GetSSO(m *ice.Message) string {
 	link := m.Cmdx(web.SPACE, web.DOMAIN)
-	if !strings.Contains(link, "/chat/pod/") {
+	if !strings.Contains(link, web.PP(CHAT, SSO)) {
 		return ""
 	}
 	ls := strings.Split(kit.ParseURL(link).Path, ice.PS)

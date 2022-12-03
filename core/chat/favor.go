@@ -73,16 +73,16 @@ func init() {
 				m.ProcessInner()
 			}},
 			ctx.INDEX: {Help: "命令", Hand: func(m *ice.Message, arg ...string) {
-				ctx.ProcessField(m, m.Cmd("", m.Option(mdb.HASH)).Append(mdb.NAME), kit.Simple(kit.UnMarshal(m.Option(mdb.TEXT))), arg...)
+				msg := mdb.HashSelects(m.Spawn(), m.Option(mdb.HASH))
+				ctx.ProcessField(m, msg.Append(mdb.NAME), kit.Simple(kit.UnMarshal(msg.Option(mdb.TEXT))), arg...)
 			}},
 			ice.RUN: {Hand: func(m *ice.Message, arg ...string) {
-				m.Option(mdb.TYPE, m.Cmd("", m.Option(mdb.HASH)).Append(mdb.TYPE))
+				m.Option(mdb.TYPE, mdb.HashSelects(m.Spawn(), m.Option(mdb.HASH)).Append(mdb.TYPE))
 				ctx.Run(m, arg...)
 			}},
 		}, mdb.HashAction(), ctx.CmdAction(), KeyboardAction()), Hand: func(m *ice.Message, arg ...string) {
-			m.Debug(m.FormatChain())
 			if len(arg) > 0 && arg[0] == ctx.ACTION {
-				m.Option(mdb.TYPE, m.Cmd("", m.Option(mdb.HASH)).Append(mdb.TYPE))
+				m.Option(mdb.TYPE, mdb.HashSelects(m.Spawn(), m.Option(mdb.HASH)).Append(mdb.TYPE))
 				gdb.Event(m, FAVOR_ACTION, arg)
 				return
 			}
@@ -95,8 +95,7 @@ func init() {
 					} else if _favor_is_video(m, m.Append(mdb.NAME), m.Append(mdb.TYPE)) {
 						m.PushVideos(web.DISPLAY, text)
 					}
-					text = web.MergeLink(m, text)
-					text = tcp.PublishLocalhost(m, text)
+					text = tcp.PublishLocalhost(m, web.MergeLink(m, text))
 				}
 				m.PushScript(nfs.SCRIPT, text)
 				m.PushQRCode(cli.QRCODE, text)

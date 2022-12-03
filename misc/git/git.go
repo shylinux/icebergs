@@ -8,12 +8,8 @@ import (
 	"shylinux.com/x/icebergs/core/code"
 )
 
-func _git_cmd(m *ice.Message, arg ...string) *ice.Message {
-	return m.Cmd(cli.SYSTEM, GIT, arg)
-}
-func _git_cmds(m *ice.Message, arg ...string) string {
-	return _git_cmd(m, arg...).Result()
-}
+func _git_cmd(m *ice.Message, arg ...string) *ice.Message { return m.Cmd(cli.SYSTEM, GIT, arg) }
+func _git_cmds(m *ice.Message, arg ...string) string { return _git_cmd(m, arg...).Result() }
 
 const GIT = "git"
 

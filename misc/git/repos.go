@@ -47,25 +47,20 @@ func init() {
 	Index.MergeCommands(ice.Commands{
 		REPOS: {Name: "repos repos path auto create", Help: "代码库", Actions: ice.MergeActions(ice.Actions{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
-				m.Conf(REPOS, mdb.HASH, "")
-				_repos_insert(m, path.Base(kit.Pwd()), kit.Pwd())
 				m.Cmd(nfs.DIR, ice.USR, "name,path", func(value ice.Maps) { _repos_insert(m, value[mdb.NAME], value[nfs.PATH]) })
+				_repos_insert(m, path.Base(kit.Pwd()), kit.Pwd())
 				cli.IsAlpine(m, GIT)
 				cli.IsCentos(m, GIT)
 				cli.IsUbuntu(m, GIT)
-				m.Config(REPOS, "https://shylinux.com/x")
 			}},
-			mdb.CREATE: {Name: "create repos branch name path", Help: "添加", Hand: func(m *ice.Message, arg ...string) {
-				m.Option(mdb.NAME, kit.Select(strings.TrimSuffix(path.Base(m.Option(REPOS)), ".git"), m.Option(mdb.NAME)))
-				m.Option(nfs.PATH, kit.Select(path.Join(ice.USR, m.Option(mdb.NAME)), m.Option(nfs.PATH)))
-				m.Option(REPOS, kit.Select(m.Config(REPOS)+ice.PS+m.Option(mdb.NAME), m.Option(REPOS)))
-
+			mdb.CREATE: {Name: "create repos branch name path", Hand: func(m *ice.Message, arg ...string) {
+				m.OptionDefault(mdb.NAME, strings.TrimSuffix(path.Base(m.Option(REPOS)), ".git"))
+				m.OptionDefault(nfs.PATH, path.Join(ice.USR, m.Option(mdb.NAME)))
+				m.OptionDefault(REPOS, m.Config(REPOS)+m.Option(mdb.NAME))
 				_repos_insert(m, m.Option(mdb.NAME), m.Option(nfs.PATH))
 				if s, e := nfs.StatFile(m, path.Join(m.Option(nfs.PATH), ".git")); e == nil && s.IsDir() {
 					return
 				}
-
-				// 下载仓库
 				if s, e := nfs.StatFile(m, m.Option(nfs.PATH)); e == nil && s.IsDir() {
 					m.Option(cli.CMD_DIR, m.Option(nfs.PATH))
 					_git_cmd(m, INIT)
@@ -76,13 +71,10 @@ func init() {
 					_git_cmd(m, CLONE, "-b", kit.Select(MASTER, m.Option(BRANCH)), m.Option(REPOS), m.Option(nfs.PATH))
 				}
 			}},
-			web.DREAM_OPEN: {Hand: func(m *ice.Message, arg ...string) {
-				m.Cmd("web.code.git.repos", mdb.CREATE, m.OptionSimple(nfs.REPOS), nfs.PATH, m.Option(nfs.PATH))
-			}},
-		}, mdb.HashAction(mdb.SHORT, mdb.NAME, mdb.FIELD, "time,name,branch,commit,remote"), mdb.ClearHashOnExitAction()), Hand: func(m *ice.Message, arg ...string) {
-			if len(arg) == 0 { // 仓库列表
+		}, mdb.HashAction(mdb.SHORT, mdb.NAME, mdb.FIELD, "time,name,branch,commit,remote", REPOS, "https://shylinux.com/x/"), mdb.ClearHashOnExitAction()), Hand: func(m *ice.Message, arg ...string) {
+			if len(arg) == 0 {
 				mdb.HashSelect(m, arg...).Sort(mdb.NAME).RenameAppend(mdb.NAME, REPOS)
-			} else { // 文件列表
+			} else {
 				m.Cmdy(nfs.DIR, kit.Select("", arg, 1), "time,line,path", kit.Dict(nfs.DIR_ROOT, _repos_path(arg[0])))
 			}
 		}},

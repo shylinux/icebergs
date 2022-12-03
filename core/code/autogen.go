@@ -13,27 +13,18 @@ import (
 )
 
 func _defs_list(m *ice.Message) string {
-	list := []string{mdb.LIST}
-	switch m.Option(mdb.TYPE) {
-	case "Zone":
-		list = append(list, "zone id auto insert")
-	case "Hash":
-		list = append(list, "hash auto create")
-	case "Data":
-		list = append(list, "path auto")
-	case "Code":
-		list = append(list, "port path auto start order build download")
-	case "Lang":
-		list = append(list, "path auto")
-	}
-	return m.OptionDefault(mdb.LIST, kit.Join(list, ice.SP))
+	return m.OptionDefault(mdb.LIST, kit.Join([]string{mdb.LIST, ice.Maps{
+		"Zone": "zone id auto insert",
+		"Hash": "hash auto create",
+		"Data": "path auto",
+		"Lang": "path auto",
+		"Code": "port path auto start order build download",
+	}[m.Option(mdb.TYPE)]}, ice.SP))
 }
-
 func _autogen_source(m *ice.Message, main, file string) {
-	main = strings.ReplaceAll(main, ice.PT+GO, ice.PT+SHY)
-	m.Cmd(nfs.DEFS, main, `title "{{.Option "name"}}"
-`)
-	m.Cmd(nfs.PUSH, main, ice.NL, "source "+strings.TrimPrefix(file, ice.SRC+ice.PS))
+	main = kit.ExtChange(main, SHY)
+	m.Cmd(nfs.DEFS, main, `title "{{.Option "name"}}"`+ice.NL)
+	m.Cmd(nfs.PUSH, main, ice.NL, ssh.SOURCE+ice.PS+strings.TrimPrefix(file, ice.SRC+ice.PS)+ice.NL)
 }
 func _autogen_script(m *ice.Message, dir string) {
 	m.Cmd(nfs.DEFS, dir, `chapter "{{.Option "name"}}"

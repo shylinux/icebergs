@@ -108,7 +108,7 @@ func init() {
 			ice.CTX_EXIT: {Hand: func(m *ice.Message, arg ...string) {
 				mdb.HashPrunesValue(m, mdb.CACHE_CLEAR_ON_EXIT, ice.TRUE)
 			}},
-			START: {Name: "start cmd dir env", Hand: func(m *ice.Message, arg ...string) {
+			START: {Name: "start cmd* dir env", Hand: func(m *ice.Message, arg ...string) {
 				m.Options(CMD_DIR, m.Option(DIR), CMD_ENV, kit.Split(m.Option(ENV), " ="))
 				_daemon_exec(m, _system_cmd(m, kit.Split(m.Option(ice.CMD))...))
 			}},

@@ -19,7 +19,9 @@ import (
 )
 
 func _serve_start(m *ice.Message) {
-	aaa.UserRoot(m, m.Option(aaa.USERNAME), m.Option(aaa.USERNICK))
+	if m.Option(aaa.USERNAME) != "" {
+		aaa.UserRoot(m, m.Option(aaa.USERNAME), m.Option(aaa.USERNICK))
+	}
 	if cli.NodeInfo(m, kit.Select(ice.Info.HostName, m.Option("nodename")), SERVER); m.Option(tcp.PORT) == tcp.RANDOM {
 		m.Option(tcp.PORT, m.Cmdx(tcp.PORT, aaa.RIGHT))
 	}
@@ -202,7 +204,11 @@ func init() {
 			_share_local(m, ice.USR_PUBLISH, path.Join(arg...))
 		}},
 		PP(ice.REQUIRE): {Name: "/require/shylinux.com/x/volcanos/proto.js", Help: "代码库", Hand: func(m *ice.Message, arg ...string) {
-			// _share_repos(m, path.Join(arg[0], arg[1], arg[2]), arg[3:]...)
+			p := path.Join(ice.ISH_PLUGED, path.Join(arg...))
+			if !nfs.ExistsFile(m, p) {
+				m.Cmd(cli.SYSTEM, "git", "clone", "https://"+path.Join(arg[:3]...), path.Join(ice.ISH_PLUGED, path.Join(arg[:3])))
+			}
+			m.RenderDownload(p)
 		}},
 		PP(ice.REQUIRE, ice.NODE_MODULES): {Name: "/require/node_modules/", Help: "依赖库", Hand: func(m *ice.Message, arg ...string) {
 			p := path.Join(ice.SRC, ice.NODE_MODULES, path.Join(arg...))

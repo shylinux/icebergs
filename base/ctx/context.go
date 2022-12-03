@@ -4,9 +4,7 @@ import (
 	"strings"
 
 	ice "shylinux.com/x/icebergs"
-	"shylinux.com/x/icebergs/base/lex"
 	"shylinux.com/x/icebergs/base/mdb"
-	"shylinux.com/x/icebergs/base/nfs"
 	kit "shylinux.com/x/toolkits"
 )
 
@@ -26,20 +24,7 @@ const CONTEXT = "context"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
-		CONTEXT: {Name: "context name=web action=context,command,config key auto spide", Help: "模块", Actions: ice.MergeActions(ice.Actions{
-			"spide": {Name: "spide", Help: "架构图", Hand: func(m *ice.Message, arg ...string) {
-				if len(arg) == 0 || arg[1] == CONTEXT {
-					m.Cmdy(CONTEXT, kit.Select(ice.ICE, arg, 0), CONTEXT)
-					DisplayStorySpide(m, lex.PREFIX, m.ActionKey(), nfs.ROOT, kit.Select(ice.ICE, arg, 0), lex.SPLIT, ice.PT)
-				} else if index := kit.Keys(arg[1]); strings.HasSuffix(index, arg[2]) {
-					m.Cmdy(CONTEXT, index, COMMAND, func(value ice.Maps) {
-						m.Push(nfs.FILE, arg[1])
-					})
-				} else {
-					m.Cmdy(COMMAND, kit.Keys(index, strings.Split(arg[2], ice.SP)[0]))
-				}
-			}},
-		}, CmdAction()), Hand: func(m *ice.Message, arg ...string) {
+		CONTEXT: {Name: "context name=web action=context,command,config key auto", Help: "模块", Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) == 0 {
 				arg = append(arg, m.Source().Cap(ice.CTX_FOLLOW))
 			}

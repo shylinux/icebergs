@@ -184,7 +184,10 @@ func (m *Message) Copy(msg *Message, arg ...string) *Message {
 	}
 	for _, k := range msg.meta[MSG_OPTION] {
 		switch k {
-		case MSG_CMDS, MSG_FIELDS, MSG_SESSID:
+		case MSG_CMDS, MSG_FIELDS, MSG_SESSID, "event":
+			continue
+		}
+		if strings.HasSuffix(k, ".cb") {
 			continue
 		}
 		if kit.IndexOf(m.meta[MSG_APPEND], k) > -1 {

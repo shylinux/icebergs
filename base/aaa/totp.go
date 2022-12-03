@@ -21,9 +21,8 @@ func _totp_gen(per int64) string {
 	b := hmac.New(sha1.New, buf.Bytes()).Sum(nil)
 	return strings.ToUpper(base32.StdEncoding.EncodeToString(b[:]))
 }
-func _totp_get(key string, num int, per int64) string {
-	now := kit.Int64(time.Now().Unix() / per)
-	buf := []byte{}
+func _totp_get(key string, per int64, num int) string {
+	buf, now := []byte{}, kit.Int64(time.Now().Unix() / per)
 	for i := 0; i < 8; i++ {
 		buf = append(buf, byte((uint64(now) >> uint64(((7 - i) * 8)))))
 	}
@@ -52,7 +51,7 @@ func init() {
 	)
 	Index.MergeCommands(ice.Commands{
 		TOTP: {Name: "totp name auto create", Help: "令牌", Actions: ice.MergeActions(ice.Actions{
-			mdb.CREATE: {Name: "create name=hi secret period=30 number=6", Hand: func(m *ice.Message, arg ...string) {
+			mdb.CREATE: {Name: "create name*=hi secret period*=30 number*=6", Hand: func(m *ice.Message, arg ...string) {
 				if m.Option(SECRET) == "" {
 					m.Option(SECRET, _totp_gen(kit.Int64(m.Option(PERIOD))))
 				}
@@ -67,10 +66,10 @@ func init() {
 				m.Push(mdb.NAME, value[mdb.NAME])
 				period := kit.Int64(value[PERIOD])
 				m.Push(mdb.EXPIRE, period-time.Now().Unix()%period)
-				m.Push(mdb.VALUE, _totp_get(value[SECRET], kit.Int(value[NUMBER]), period))
+				m.Push(mdb.VALUE, _totp_get(value[SECRET], period, kit.Int(value[NUMBER])))
 				if len(arg) > 0 {
 					m.PushQRCode(mdb.SCAN, kit.Format(m.Config(mdb.LINK), value[mdb.NAME], value[SECRET]))
-					m.Echo(_totp_get(value[SECRET], kit.Int(value[NUMBER]), kit.Int64(value[PERIOD])))
+					m.Echo(m.Append(mdb.VALUE))
 				} else {
 					m.StatusTimeCount()
 				}
@@ -79,4 +78,4 @@ func init() {
 	})
 }
 
-func TOTP_GET(key string, num int, per int64) string { return _totp_get(key, num, per) }
+func TOTP_GET(key string, per int64, num int) string { return _totp_get(key, per, num) }

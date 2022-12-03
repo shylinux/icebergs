@@ -62,7 +62,6 @@ const SERVER = "server"
 func init() {
 	Index.MergeCommands(ice.Commands{
 		SERVER: {Name: "server hash auto prunes", Help: "服务器", Actions: ice.MergeActions(ice.Actions{
-			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) { m.Conf("", mdb.HASH, "") }},
 			LISTEN: {Name: "listen type name port=9030 host=", Hand: func(m *ice.Message, arg ...string) {
 				_server_listen(m, arg...)
 			}},

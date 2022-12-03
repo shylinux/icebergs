@@ -293,3 +293,12 @@ func getLock(m *ice.Message, key string) *task.Lock {
 }
 func Lock(m *ice.Message, arg ...ice.Any) func()  { return getLock(m, kit.Keys(arg...)).Lock() }
 func RLock(m *ice.Message, arg ...ice.Any) func() { return getLock(m, kit.Keys(arg...)).RLock() }
+
+func Config(m *ice.Message, key string, arg ...ice.Any) string {
+	if len(arg) > 0 {
+		defer Lock(m, m.PrefixKey(), key)()
+	} else {
+		defer RLock(m, m.PrefixKey(), key)()
+	}
+	return m.Config(key, arg...)
+}

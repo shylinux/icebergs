@@ -9,7 +9,6 @@ import (
 )
 
 func _sess_create(m *ice.Message, username string, arg ...string) (h string) {
-	m.Assert(username != "")
 	if msg := m.Cmd(USER, username); msg.Length() > 0 {
 		h = mdb.HashCreate(m, msg.AppendSimple(USERNAME, USERNICK, USERROLE), arg)
 	} else {
@@ -19,14 +18,7 @@ func _sess_create(m *ice.Message, username string, arg ...string) (h string) {
 	return
 }
 func _sess_check(m *ice.Message, sessid string) {
-	m.Assert(sessid != "")
-	if val := kit.Dict(); mdb.HashSelectDetail(m, sessid, func(value ice.Map) {
-		if !m.WarnTimeNotValid(value[mdb.TIME], sessid) {
-			for k, v := range value {
-				val[k] = v
-			}
-		}
-	}) && len(val) > 0 {
+	if val := mdb.HashSelectDetails(m, sessid, func(value ice.Map) bool { return !m.WarnTimeNotValid(value[mdb.TIME], sessid) }); len(val) > 0 {
 		SessAuth(m, val)
 	}
 }
@@ -50,10 +42,10 @@ const SESS = "sess"
 func init() {
 	Index.MergeCommands(ice.Commands{
 		SESS: {Name: "sess hash auto prunes", Help: "会话", Actions: ice.MergeActions(ice.Actions{
-			mdb.CREATE: {Name: "create username", Hand: func(m *ice.Message, arg ...string) {
+			mdb.CREATE: {Name: "create username*", Hand: func(m *ice.Message, arg ...string) {
 				_sess_create(m, m.Option(USERNAME), UA, m.Option(ice.MSG_USERUA), IP, m.Option(ice.MSG_USERIP))
 			}},
-			CHECK: {Name: "check sessid", Hand: func(m *ice.Message, arg ...string) {
+			CHECK: {Name: "check sessid*", Hand: func(m *ice.Message, arg ...string) {
 				_sess_check(m, m.Option(SESSID))
 			}},
 		}, mdb.HashAction(mdb.SHORT, mdb.UNIQ, mdb.FIELD, "time,hash,username,usernick,userrole,ua,ip", mdb.EXPIRE, "720h"))},
@@ -61,14 +53,10 @@ func init() {
 }
 
 func SessCreate(m *ice.Message, username string) string {
-	if m.Warn(username == "", ice.ErrNotValid, USERNAME) {
-		return ""
-	}
 	return m.Option(ice.MSG_SESSID, m.Cmdx(SESS, mdb.CREATE, username))
 }
 func SessCheck(m *ice.Message, sessid string) bool {
-	m.Option("aaa.checker", logs.FileLine(-1))
-	m.Options(ice.MSG_USERNAME, "", ice.MSG_USERNICK, "", ice.MSG_USERROLE, VOID)
+	m.Options(ice.MSG_USERNAME, "", ice.MSG_USERNICK, "", ice.MSG_USERROLE, VOID, "aaa.checker", logs.FileLine(-1))
 	return sessid != "" && m.Cmdy(SESS, CHECK, sessid, logs.FileLineMeta(-1)).Option(ice.MSG_USERNAME) != ""
 }
 func SessAuth(m *ice.Message, value ice.Any, arg ...string) *ice.Message {

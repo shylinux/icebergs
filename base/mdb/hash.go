@@ -128,7 +128,10 @@ const (
 const HASH = "hash"
 
 func HashAction(arg ...Any) ice.Actions {
-	return ice.Actions{ice.CTX_INIT: AutoConfig(append(kit.List(FIELD, HASH_FIELD), arg...)...), ice.CTX_EXIT: {Hand: func(m *ice.Message, arg ...string) { HashSelectClose(m) }},
+	return ice.Actions{
+		ice.CTX_INIT: AutoConfig(append(kit.List(FIELD, HASH_FIELD), arg...)...),
+		ice.CTX_EXIT: {Hand: func(m *ice.Message, arg ...string) { HashSelectClose(m) }},
+		
 		INPUTS: {Hand: func(m *ice.Message, arg ...string) { HashInputs(m, arg) }},
 		CREATE: {Hand: func(m *ice.Message, arg ...string) { HashCreate(m, arg) }},
 		REMOVE: {Hand: func(m *ice.Message, arg ...string) { HashRemove(m, arg) }},
@@ -147,9 +150,7 @@ func StatusHashAction(arg ...Any) ice.Actions {
 	}, HashAction(arg...))
 }
 func ClearHashOnExitAction() ice.Actions {
-	return ice.MergeActions(ice.Actions{ice.CTX_EXIT: {Hand: func(m *ice.Message, arg ...string) {
-		m.Conf("", HASH, "")
-	}}})
+	return ice.MergeActions(ice.Actions{ice.CTX_EXIT: {Hand: func(m *ice.Message, arg ...string) { m.Conf("", HASH, "") }}})
 }
 
 func HashKey(m *ice.Message) string {
@@ -235,6 +236,17 @@ func HashSelectDetail(m *ice.Message, key string, cb Any) (has bool) {
 		has = true
 	})
 	return
+}
+func HashSelectDetails(m *ice.Message, key string, cb func(ice.Map) bool) ice.Map {
+	val := kit.Dict()
+	HashSelectDetail(m, key, func(value ice.Map) {
+		if cb(value) {
+			for k, v := range value {
+				val[k] = v
+			}
+		}
+	})
+	return val
 }
 func HashSelectField(m *ice.Message, key string, field string) (value string) {
 	HashSelectDetail(m, key, func(key string, val ice.Map) {

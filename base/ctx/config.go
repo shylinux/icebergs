@@ -20,8 +20,7 @@ func _config_only(v ice.Any, arg ...string) bool {
 		if len(v) > len(arg) {
 			return false
 		}
-		kit.Sort(arg)
-		for _, k := range kit.SortedKey(v) {
+		for k := range v {
 			if kit.IndexOf(arg, k) == -1 {
 				return false
 			}
@@ -31,10 +30,8 @@ func _config_only(v ice.Any, arg ...string) bool {
 	return false
 }
 func _config_save(m *ice.Message, name string, arg ...string) {
-	msg := m.Spawn(m.Source())
-	data := ice.Map{}
+	data, msg := ice.Map{}, m.Spawn(m.Source())
 	for _, k := range arg {
-		// if v := msg.Confv(k); _config_only(v, mdb.META) && _config_only(kit.Value(v, mdb.META), mdb.FIELD, mdb.SHORT) {
 		if v := msg.Confv(k); _config_only(v, mdb.META) {
 			continue
 		} else {
@@ -44,9 +41,8 @@ func _config_save(m *ice.Message, name string, arg ...string) {
 	if len(data) == 0 {
 		return
 	}
-	if f, p, e := miss.CreateFile(path.Join(ice.VAR_CONF, name)); m.Assert(e) {
+	if f, _, e := miss.CreateFile(path.Join(ice.VAR_CONF, name)); m.Assert(e) {
 		defer f.Close()
-		defer m.Echo(p)
 		if s, e := json.MarshalIndent(data, "", "  "); !m.Warn(e) {
 			if _, e := f.Write(s); !m.Warn(e) {
 			}
@@ -54,11 +50,9 @@ func _config_save(m *ice.Message, name string, arg ...string) {
 	}
 }
 func _config_load(m *ice.Message, name string, arg ...string) {
-	name = path.Join(ice.VAR_CONF, name)
-	if f, e := miss.OpenFile(name); e == nil {
+	if f, e := miss.OpenFile(path.Join(ice.VAR_CONF, name)); e == nil {
 		defer f.Close()
-		msg := m.Spawn(m.Source())
-		data := ice.Map{}
+		data, msg := ice.Map{}, m.Spawn(m.Source())
 		json.NewDecoder(f).Decode(&data)
 		for k, v := range data {
 			msg.Search(k, func(p *ice.Context, s *ice.Context, key string) {

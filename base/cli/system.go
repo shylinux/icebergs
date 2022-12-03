@@ -137,9 +137,6 @@ const SYSTEM = "system"
 func init() {
 	Index.MergeCommands(ice.Commands{
 		SYSTEM: {Name: "system cmd run", Help: "系统命令", Actions: ice.Actions{
-			"find": {Hand: func(m *ice.Message, arg ...string) {
-				m.Echo(_system_find(m, arg[0], arg[1:]...))
-			}},
 			nfs.PUSH: {Hand: func(m *ice.Message, arg ...string) {
 				for _, p := range arg {
 					if !strings.Contains(m.Cmdx(nfs.CAT, ice.ETC_PATH), p) {
@@ -147,6 +144,9 @@ func init() {
 					}
 				}
 				m.Cmdy(nfs.CAT, ice.ETC_PATH)
+			}},
+			"find": {Hand: func(m *ice.Message, arg ...string) {
+				m.Echo(_system_find(m, arg[0], arg[1:]...))
 			}},
 			MAN: {Hand: func(m *ice.Message, arg ...string) {
 				if len(arg) == 1 {

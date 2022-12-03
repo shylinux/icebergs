@@ -295,7 +295,9 @@ func (c *Context) _action(m *Message, cmd *Command, key string, sub string, h *A
 						if strings.HasPrefix(arg[i], PS) {
 							break
 						}
-						m.Option(arg[i], arg[i+1])
+						if arg[i+1] != "" {
+							m.Option(arg[i], arg[i+1])
+						}
 					}
 				} else {
 					order = true
@@ -306,7 +308,7 @@ func (c *Context) _action(m *Message, cmd *Command, key string, sub string, h *A
 					m.Option(name, value)
 				}
 			}
-			if m.Warn(m.OptionDefault(name, kit.Format(kit.Value(v, VALUE))) == "" && kit.Value(v, "need") == "must") {
+			if m.Warn(m.OptionDefault(name, kit.Format(kit.Value(v, VALUE))) == "" && kit.Value(v, "need") == "must", ErrNotValid, name) {
 				return m
 			}
 		}

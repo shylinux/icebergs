@@ -59,6 +59,12 @@ func (f *Frame) prompt(m *ice.Message, list ...string) *Frame {
 	return f
 }
 func (f *Frame) printf(m *ice.Message, str string, arg ...ice.Any) *Frame {
+	if f.source != STDIO {
+		return f
+	}
+	if m.Target().Cap(ice.CTX_STATUS) == ice.CTX_CLOSE {
+		return f
+	}
 	fmt.Fprint(f.stdout, kit.Format(str, arg...))
 	return f
 }
@@ -159,7 +165,7 @@ func (f *Frame) Start(m *ice.Message, arg ...string) bool {
 		r, w, _ := os.Pipe()
 		go func() { io.Copy(w, os.Stdin) }()
 		f.pipe, f.stdin, f.stdout = w, r, os.Stdout
-		m.Option(ice.MSG_OPTS, ice.MSG_USERNAME, ice.MSG_USERROLE)
+		m.Optionv(ice.MSG_OPTS, ice.MSG_USERNAME, ice.MSG_USERROLE)
 		f.scan(m, STDIO, "")
 	default:
 		if m.Option(ice.MSG_SCRIPT) != "" {

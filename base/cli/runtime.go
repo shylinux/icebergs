@@ -49,19 +49,14 @@ func _runtime_init(m *ice.Message) {
 	ice.Info.PathName = m.Conf(RUNTIME, kit.Keys(BOOT, PATHNAME))
 	ice.Info.UserName = m.Conf(RUNTIME, kit.Keys(BOOT, USERNAME))
 	aaa.UserRoot(ice.Pulse, ice.Info.UserName)
-	bin := _system_find(m, os.Args[0])
-	m.Conf(RUNTIME, kit.Keys(BOOT, ice.BIN), bin)
-	m.Conf(RUNTIME, kit.Keys(BOOT, mdb.TIME), m.Time())
-	if s, e := nfs.StatFile(m, bin); e == nil {
-		m.Conf(RUNTIME, kit.Keys(BOOT, nfs.SIZE), kit.FmtSize(s.Size()))
-		if f, e := nfs.OpenFile(m, bin); e == nil {
-			defer f.Close()
-			m.Conf(RUNTIME, kit.Keys(BOOT, mdb.HASH), kit.Hashs(f))
-		}
-	}
+	msg := m.Cmd(nfs.DIR, _system_find(m, os.Args[0]), "time,path,size,hash")
+	m.Conf(RUNTIME, kit.Keys(BOOT, ice.BIN), msg.Append(nfs.PATH))
+	m.Conf(RUNTIME, kit.Keys(BOOT, nfs.SIZE), msg.Append(nfs.SIZE))
+	m.Conf(RUNTIME, kit.Keys(BOOT, mdb.HASH), msg.Append(mdb.HASH))
+	m.Conf(RUNTIME, kit.Keys(BOOT, mdb.TIME), msg.Append(mdb.TIME))
+	m.Conf(RUNTIME, kit.Keys(BOOT, mdb.COUNT), kit.Int(m.Conf(RUNTIME, kit.Keys(BOOT, mdb.COUNT)))+1)
 	m.Conf(RUNTIME, mdb.META, "")
 	m.Conf(RUNTIME, mdb.HASH, "")
-	m.Conf(RUNTIME, kit.Keys(BOOT, mdb.COUNT), kit.Int(m.Conf(RUNTIME, kit.Keys(BOOT, mdb.COUNT)))+1)
 }
 func _runtime_hostinfo(m *ice.Message) {
 	m.Push("nCPU", strings.Count(m.Cmdx(nfs.CAT, "/proc/cpuinfo"), "processor"))
@@ -107,8 +102,8 @@ const (
 )
 const (
 	PATH  = "PATH"
-	HOME  = "HOME"
 	USER  = "USER"
+	HOME  = "HOME"
 	TERM  = "TERM"
 	SHELL = "SHELL"
 )
@@ -154,7 +149,7 @@ const RUNTIME = "runtime"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
-		RUNTIME: {Name: "runtime info=ifconfig,hostinfo,hostname,userinfo,procinfo,diskinfo,bootinfo,api,cli,cmd,env auto", Help: "运行环境", Actions: ice.MergeActions(ice.Actions{
+		RUNTIME: {Name: "runtime info=ifconfig,hostinfo,hostname,userinfo,procinfo,diskinfo,bootinfo,api,cli,cmd,env,chain auto", Help: "运行环境", Actions: ice.MergeActions(ice.Actions{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) { _runtime_init(m) }},
 			ice.CTX_EXIT: {Hand: func(m *ice.Message, arg ...string) { m.Conf("", "", nil) }},
 			IFCONFIG:     {Hand: func(m *ice.Message, arg ...string) { m.Cmdy("tcp.host") }},
@@ -208,6 +203,9 @@ func init() {
 				} else {
 					m.Echo(kit.MergePOD(os.Getenv(CTX_DEV), os.Getenv(CTX_POD)))
 				}
+			}},
+			"chain": {Hand: func(m *ice.Message, arg ...string) {
+				m.Echo(m.FormatChain())
 			}},
 		}, ctx.ConfAction("")), Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) > 0 && arg[0] == BOOTINFO {

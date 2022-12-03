@@ -79,7 +79,7 @@ func init() {
 					mdb.Rich(m, ROLE, nil, kit.Dict(mdb.NAME, role, BLACK, kit.Dict(), WHITE, kit.Dict()))
 				}
 			}},
-			mdb.INSERT: {Name: "insert role=void,tech zone=white,black key", Hand: func(m *ice.Message, arg ...string) {
+			mdb.INSERT: {Name: "insert role*=void,tech zone*=white,black key*", Hand: func(m *ice.Message, arg ...string) {
 				_role_set(m, m.Option(ROLE), m.Option(mdb.ZONE), m.Option(mdb.KEY), true)
 			}},
 			mdb.DELETE: {Hand: func(m *ice.Message, arg ...string) {
@@ -92,7 +92,7 @@ func init() {
 					m.Echo(ice.OK)
 				}
 			}},
-		}, mdb.HashAction(mdb.SHORT, mdb.NAME), mdb.ClearHashOnExitAction()), Hand: func(m *ice.Message, arg ...string) {
+		}, mdb.HashAction(mdb.SHORT, mdb.NAME)), Hand: func(m *ice.Message, arg ...string) {
 			_role_list(m, kit.Select("", arg, 0)).PushAction(mdb.DELETE)
 		}},
 	})

@@ -25,8 +25,7 @@ const MIRRORS = "mirrors"
 func init() {
 	Index.MergeCommands(ice.Commands{
 		MIRRORS: {Name: "mirrors cli auto", Help: "软件镜像", Actions: ice.MergeActions(ice.Actions{
-			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) { m.Conf("", kit.Keys(mdb.HASH), "") }},
-			mdb.INSERT:   {Name: "insert cli osid cmd"},
+			mdb.INSERT:   {Name: "insert cli* osid cmd*"},
 			CMD: {Name: "cmd cli osid", Hand: func(m *ice.Message, arg ...string) {
 				osid := kit.Select(m.Conf(RUNTIME, kit.Keys(HOST, OSID)), m.Option(OSID))
 				mdb.ZoneSelectCB(m, m.Option(CLI), func(value ice.Map) {
@@ -36,7 +35,7 @@ func init() {
 				})
 			}},
 			ALPINE: {Name: "alpine cli cmd", Hand: func(m *ice.Message, arg ...string) { IsAlpine(m, arg...) }},
-		}, mdb.ZoneAction(mdb.SHORT, CLI, mdb.FIELD, "time,id,osid,cmd"))},
+		}, mdb.ZoneAction(mdb.SHORT, CLI, mdb.FIELD, "time,id,osid,cmd"), mdb.ClearHashOnExitAction())},
 	})
 }
 
@@ -61,8 +60,7 @@ func insert(m *ice.Message, sys, cmd string, arg ...string) bool {
 	}
 	if len(arg) > 0 {
 		m.Go(func() {
-			m.Sleep300ms()
-			m.Cmd(mdb.INSERT, kit.Keys(CLI, MIRRORS), "", mdb.ZONE, arg[0], OSID, sys, CMD, cmd+ice.SP+kit.Select(arg[0], arg, 1))
+			m.Sleep300ms().Cmd(mdb.INSERT, kit.Keys(CLI, MIRRORS), "", mdb.ZONE, arg[0], OSID, sys, CMD, cmd+ice.SP+kit.Select(arg[0], arg, 1))
 		})
 	}
 	return true

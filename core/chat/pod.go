@@ -20,11 +20,9 @@ func init() {
 	Index.MergeCommands(ice.Commands{
 		POD: {Name: "pod", Help: "节点", Actions: ice.MergeActions(ice.Actions{
 			web.SERVE_PARSE: {Hand: func(m *ice.Message, arg ...string) {
-				switch kit.Select("", arg, 0) {
-				case CHAT:
+				if kit.Select("", arg, 0) == CHAT {
 					for i := 1; i < len(arg)-1; i += 2 {
-						m.Logs("refer", arg[i], arg[i+1])
-						m.Option(arg[i], arg[i+1])
+						m.Logs("Refer", arg[i], arg[i+1]).Options(arg[i], arg[i+1])
 					}
 				}
 			}},

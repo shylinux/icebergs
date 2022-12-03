@@ -133,16 +133,14 @@ const (
 const CAT = "cat"
 
 func init() {
-	Index.Merge(&ice.Context{Configs: ice.Configs{
-		CAT: {Value: kit.Data(SOURCE, kit.DictList(
+	Index.MergeCommands(ice.Commands{
+		CAT: {Name: "cat path auto", Help: "文件", Actions: ice.MergeActions(ice.Actions{
+			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) { aaa.White(m, ice.SRC_MAIN_JS, ice.SRC_MAIN_GO, ice.SRC_MAIN_SHY) }},
+		}, ctx.ConfAction(SOURCE, kit.DictList(
 			HTML, CSS, JS, GO, SH, SHY, CSV, JSON,
 			PY, MD, TXT, XML, YML, ZML, IML,
 			"license", "makefile", "configure", "conf",
-		))},
-	}, Commands: ice.Commands{
-		CAT: {Name: "cat path auto", Help: "文件", Actions: ice.Actions{
-			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) { aaa.White(m, ice.SRC_MAIN_JS, ice.SRC_MAIN_GO, ice.SRC_MAIN_SHY) }},
-		}, Hand: func(m *ice.Message, arg ...string) {
+		))), Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) == 0 || strings.HasSuffix(arg[0], ice.PS) {
 				m.Cmdy(DIR, arg)
 				return
@@ -152,7 +150,7 @@ func init() {
 			}
 			_cat_list(m, arg[0])
 		}},
-	}})
+	})
 }
 func IsSourceFile(m *ice.Message, ext string) bool {
 	return m.Conf(CAT, kit.Keym(SOURCE, ext)) == ice.TRUE

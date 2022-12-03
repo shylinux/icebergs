@@ -26,7 +26,7 @@ func (m *Message) OptionFromConfig(arg ...string) string {
 }
 func (m *Message) OptionDefault(arg ...string) string {
 	for i := 0; i < len(arg); i += 2 {
-		if m.Option(arg[i]) == "" {
+		if m.Option(arg[i]) == "" && arg[i+1] != "" {
 			m.Option(arg[i], arg[i+1])
 		}
 	}

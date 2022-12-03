@@ -103,7 +103,7 @@ var Index = &ice.Context{Name: OAUTH, Help: "认证授权", Commands: ice.Comman
 		if m.Option(ACCESS_TOKEN) == "" {
 			m.RenderStatusBadRequest() // 参数错误
 
-		} else if msg := m.Cmd(OFFER, m.Option(ACCESS_TOKEN), ice.OptionFields("time,scope")); kit.Time(msg.Append(mdb.TIME)) < kit.Time(msg.Time()) {
+		} else if msg := m.Cmd(OFFER, m.Option(ACCESS_TOKEN), ice.OptionFields("time,scope")); msg.Append(mdb.TIME) < msg.Time() {
 			m.RenderStatusUnauthorized() // 已过期
 
 		} else { // 访问
@@ -146,7 +146,7 @@ var Index = &ice.Context{Name: OAUTH, Help: "认证授权", Commands: ice.Comman
 		} else if m.Warn(msg.Append(USED) == ice.TRUE, ice.ErrNotRight, CODE) {
 			m.RenderStatusForbidden() // 已使用
 
-		} else if kit.Time(msg.Append(mdb.TIME)) < kit.Time(m.Time()) {
+		} else if msg.Append(mdb.TIME) < m.Time() {
 			m.RenderStatusUnauthorized() // 已过期
 
 		} else { // 授权
@@ -159,7 +159,7 @@ var Index = &ice.Context{Name: OAUTH, Help: "认证授权", Commands: ice.Comman
 		if ls := strings.SplitN(m.R.Header.Get(web.Authorization), ice.SP, 2); m.Warn(len(ls) != 2 || ls[1] == "", ice.ErrNotFound, web.Bearer) {
 			m.RenderStatusBadRequest() // 参数错误
 
-		} else if msg := m.Cmd(ACCESS, ls[1]); kit.Time(msg.Append(mdb.TIME)) < kit.Time(m.Time()) {
+		} else if msg := m.Cmd(ACCESS, ls[1]); msg.Append(mdb.TIME) < m.Time() {
 			m.RenderStatusUnauthorized() // 已过期
 
 		} else { // 访问

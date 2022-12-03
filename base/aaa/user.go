@@ -8,29 +8,17 @@ import (
 )
 
 func _user_create(m *ice.Message, name, word string, arg ...string) {
-	if m.Warn(name == "", ice.ErrNotValid, name) {
-		return
-	}
-	if word == "" {
-		word = m.CmdAppend(USER, name, PASSWORD)
-	}
-	if word == "" {
-		word = kit.Hashs()
-	}
-	mdb.HashCreate(m, USERNAME, name, PASSWORD, word, arg)
+	mdb.HashCreate(m, USERNAME, name, PASSWORD, kit.GetValid(
+		func() string { return word },
+		func() string { return m.CmdAppend(USER, name, PASSWORD) },
+		func() string { return kit.Hashs() },
+	), arg)
 	gdb.Event(m, USER_CREATE, USER, name)
 }
 func _user_login(m *ice.Message, name, word string) {
-	if m.Warn(name == "", ice.ErrNotValid, name) {
-		return
-	}
-	if val := kit.Dict(); mdb.HashSelectDetail(m.Spawn(), name, func(value ice.Map) {
-		if !m.Warn(word != "" && word != kit.Format(value[PASSWORD]), ice.ErrNotValid) {
-			for k, v := range value {
-				val[k] = v
-			}
-		}
-	}) && len(val) > 0 {
+	if val := mdb.HashSelectDetails(m.Spawn(), name, func(value ice.Map) bool {
+		return !m.Warn(word != "" && word != kit.Format(value[PASSWORD]), ice.ErrNotValid)
+	}); len(val) > 0 {
 		SessAuth(m, val)
 	}
 }
@@ -101,8 +89,8 @@ func UserRoot(m *ice.Message, arg ...string) *ice.Message {
 	usernick := kit.Select(UserNick(m, username), arg, 1)
 	userrole := kit.Select(ROOT, arg, 2)
 	if len(arg) > 0 {
-		ice.Info.UserName = username
 		m.Cmd(USER, mdb.CREATE, username, "", usernick, "", userrole)
+		ice.Info.UserName = username
 	}
 	return SessAuth(m, kit.Dict(USERNAME, username, USERNICK, usernick, USERROLE, userrole))
 }

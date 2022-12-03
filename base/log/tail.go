@@ -5,6 +5,7 @@ import (
 	"io"
 
 	ice "shylinux.com/x/icebergs"
+	"shylinux.com/x/icebergs/base/cli"
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/nfs"
 	kit "shylinux.com/x/toolkits"
@@ -13,8 +14,8 @@ import (
 func _tail_create(m *ice.Message, arg ...string) {
 	h := mdb.HashCreate(m, arg)
 	kit.Fetch(kit.Split(m.Option(FILE)), func(file string) {
-		m.Options("cmd_output", Pipe(m, func(text string) { mdb.ZoneInsert(m, h, FILE, file, nfs.SIZE, len(text), mdb.TEXT, text) }), mdb.CACHE_CLEAR_ON_EXIT, ice.TRUE)
-		m.Cmd("cli.daemon", TAIL, "-n", "0", "-f", file)
+		m.Options(cli.CMD_OUTPUT, Pipe(m, func(text string) { mdb.ZoneInsert(m, h, FILE, file, nfs.SIZE, len(text), mdb.TEXT, text) }), mdb.CACHE_CLEAR_ON_EXIT, ice.TRUE)
+		m.Cmd(cli.DAEMON, TAIL, "-n", "0", "-f", file)
 	})
 }
 

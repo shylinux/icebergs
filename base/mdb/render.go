@@ -33,7 +33,6 @@ func RenderAction(args ...ice.Any) ice.Actions {
 			}
 			for _, k := range kit.Split(arg[0]) {
 				HashSelect(m.Spawn(ice.OptionFields("")), k).Tables(func(value ice.Maps) {
-					m.Debug("what %v", m.OptionFields())
 					m.Cmdy(kit.Keys(value[TEXT], value[NAME]), m.CommandKey(), k, arg[1], kit.Select("", arg, 2), kit.Slice(arg, 3))
 				})
 			}

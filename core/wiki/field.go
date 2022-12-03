@@ -113,7 +113,7 @@ func init() {
 <div class="output"></div>
 <div class="status"></div>
 </fieldset>`), ctx.CmdAction()), Hand: func(m *ice.Message, arg ...string) {
-			if arg[1] == ctx.ARGS {
+			if kit.Select("", arg, 1) == ctx.ARGS {
 				arg = kit.Simple("", arg)
 			}
 			if arg = _name(m, arg); strings.Contains(arg[1], ice.NL) {

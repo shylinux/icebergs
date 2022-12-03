@@ -21,13 +21,13 @@ func _action_exec(m *ice.Message, river, storm, index string, arg ...string) {
 	}).Length() == 0, ice.ErrNotRight, index, arg) {
 		return
 	}
-	if web.Upload(m); !ctx.PodCmd(m, index, arg) {
+	if !ctx.PodCmd(m, index, arg) {
 		m.Cmdy(index, arg)
 	}
 }
 func _action_auth(m *ice.Message, share string) *ice.Message {
 	msg := m.Cmd(web.SHARE, share)
-	if m.Warn(msg.Append(mdb.TIME) < m.Time(), ice.ErrNotValid, share, msg.Append(mdb.TIME), m.Time()) {
+	if 	web.IsNotValidShare(m, msg.Append(mdb.TIME)) {
 		msg.Append(mdb.TYPE, "")
 		return msg
 	}
@@ -58,7 +58,6 @@ func _action_share(m *ice.Message, arg ...string) {
 			m.Cmdy(ctx.COMMAND, msg.Append(mdb.NAME))
 			break
 		}
-		web.Upload(m)
 		m.Cmdy(msg.Append(mdb.NAME), arg[2:])
 	}
 }

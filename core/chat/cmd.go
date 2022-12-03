@@ -28,8 +28,8 @@ func _cmd_file(m *ice.Message, arg ...string) bool {
 		web.RenderCmd(m, kit.Select(ctx.CAN_PLUGIN, ctx.GetFileCmd(p)))
 	default:
 		if p = strings.TrimPrefix(p, ice.SRC+ice.PS); nfs.ExistsFile(m, path.Join(ice.SRC, p)) {
-			if msg := m.Cmd(mdb.RENDER, kit.Ext(p)); msg.Length() > 0 {
-				m.Cmdy(mdb.RENDER, kit.Ext(p), p, ice.SRC+ice.PS).RenderResult()
+			if msg := m.Cmd(mdb.ENGINE, kit.Ext(p)); msg.Length() > 0 {
+				m.Cmdy(mdb.ENGINE, kit.Ext(p), p, ice.SRC+ice.PS).RenderResult()
 				break
 			}
 		}

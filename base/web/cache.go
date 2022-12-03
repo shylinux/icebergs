@@ -155,7 +155,7 @@ func init() {
 			}
 			watch := action.Hand == nil
 			action.Hand = ice.MergeHand(func(m *ice.Message, arg ...string) {
-				up := kit.Simple(m.Optionv(ice.MSG_UPLOAD))
+				up := Upload(m)
 				m.Assert(len(up) > 1)
 				m.Cmd(CACHE, m.Option(ice.MSG_UPLOAD)).Tables(func(value ice.Maps) { m.Options(value) })
 				if m.Options(mdb.HASH, up[0], mdb.NAME, up[1]); watch {
@@ -167,11 +167,14 @@ func init() {
 	})
 	ctx.Upload = Upload
 }
-func Upload(m *ice.Message) {
+func Upload(m *ice.Message) []string {
 	if up := kit.Simple(m.Optionv(ice.MSG_UPLOAD)); len(up) == 1 {
 		if m.Cmdy(CACHE, UPLOAD).Optionv(ice.MSG_UPLOAD, kit.Simple(m.Append(mdb.HASH), m.Append(mdb.NAME), m.Append(nfs.SIZE))); m.Option(ice.MSG_USERPOD) != "" {
 			m.Cmd(SPACE, m.Option(ice.MSG_USERPOD), SPIDE, ice.DEV, SPIDE_CACHE, http.MethodGet, MergeURL2(m, path.Join(SHARE_CACHE, m.Append(mdb.HASH))))
 		}
+		return kit.Simple(m.Optionv(ice.MSG_UPLOAD))
+	} else {
+		return up
 	}
 }
 func PushDisplay(m *ice.Message, mime, name, link string) {

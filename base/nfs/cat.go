@@ -97,8 +97,10 @@ const (
 	TAR    = "tar"
 
 	TEMPLATE = "template"
+	VERSION  = "version"
 	MASTER   = "master"
 	BRANCH   = "branch"
+	REMOTE   = "remote"
 	REPOS    = "repos"
 )
 const (

@@ -256,19 +256,19 @@ func AutoConfig(args ...ice.Any) *ice.Action {
 			cs[m.CommandKey()] = &ice.Config{Value: kit.Data(args...)}
 			ice.Info.Load(m, m.CommandKey())
 		}
-		if cs := m.Target().Commands; cs[m.CommandKey()] == nil {
+		if cmd := m.Target().Commands[m.CommandKey()]; cmd == nil {
 			return
-		} else if cs[m.CommandKey()].Actions[INSERT] != nil {
-			if inputs := []ice.Any{}; cs[m.CommandKey()].Meta[INSERT] == nil {
+		} else if cmd.Actions[INSERT] != nil {
+			if inputs := []ice.Any{}; cmd.Meta[INSERT] == nil {
 				kit.Fetch(kit.Filters(kit.Simple(m.Config(SHORT), kit.Split(ListField(m))), "", TIME, ID), func(k string) { inputs = append(inputs, k) })
 				m.Design(INSERT, "添加", inputs...)
 			}
-			if inputs := []ice.Any{}; cs[m.CommandKey()].Meta[CREATE] == nil {
+			if inputs := []ice.Any{}; cmd.Meta[CREATE] == nil {
 				kit.Fetch(kit.Filters(kit.Split(kit.Select(m.Config(SHORT), m.Config(FIELDS))), TIME, HASH, COUNT), func(k string) { inputs = append(inputs, k) })
 				m.Design(CREATE, "创建", inputs...)
 			}
-		} else if cs[m.CommandKey()].Actions[CREATE] != nil {
-			if inputs := []ice.Any{}; cs[m.CommandKey()].Meta[CREATE] == nil {
+		} else if cmd.Actions[CREATE] != nil {
+			if inputs := []ice.Any{}; cmd.Meta[CREATE] == nil {
 				kit.Fetch(kit.Filters(kit.Split(HashField(m)), TIME, HASH), func(k string) { inputs = append(inputs, k) })
 				m.Design(CREATE, "创建", inputs...)
 			}

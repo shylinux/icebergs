@@ -15,6 +15,7 @@ import (
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/aaa"
 	"shylinux.com/x/icebergs/base/cli"
+	"shylinux.com/x/icebergs/base/ctx"
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/nfs"
 	psh "shylinux.com/x/icebergs/base/ssh"
@@ -169,7 +170,7 @@ func init() {
 					mdb.HashModify(m, m.Option(tcp.PORT), mdb.STATUS, tcp.OPEN)
 				} else {
 					mdb.HashCreate(m.Spawn(), mdb.STATUS, tcp.OPEN, arg)
-					m.Cmd("", nfs.LOAD, m.OptionSimple(AUTHKEY))
+					m.Cmd("", ctx.LOAD, m.OptionSimple(AUTHKEY))
 				}
 
 				m.Go(func() {
@@ -185,12 +186,12 @@ func init() {
 						mdb.TYPE, ls[0], mdb.NAME, ls[len(ls)-1], mdb.TEXT, strings.Join(ls[1:len(ls)-1], "+"))
 				}
 			}},
-			nfs.LOAD: {Name: "load authkey=.ssh/authorized_keys", Help: "加载", Hand: func(m *ice.Message, arg ...string) {
+			ctx.LOAD: {Name: "load authkey=.ssh/authorized_keys", Help: "加载", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmd(nfs.CAT, kit.HomePath(m.Option(AUTHKEY)), func(pub string) {
 					m.Cmd(SERVICE, mdb.INSERT, mdb.TEXT, pub)
 				})
 			}},
-			nfs.SAVE: {Name: "save authkey=.ssh/authorized_keys", Help: "保存", Hand: func(m *ice.Message, arg ...string) {
+			ctx.SAVE: {Name: "save authkey=.ssh/authorized_keys", Help: "保存", Hand: func(m *ice.Message, arg ...string) {
 				list := []string{}
 				mdb.ZoneSelectCB(m, m.Option(tcp.PORT), func(value ice.Maps) {
 					list = append(list, fmt.Sprintf("%s %s %s", value[mdb.TYPE], value[mdb.TEXT], value[mdb.NAME]))
@@ -205,9 +206,9 @@ func init() {
 					m.EchoScript(string(buf))
 				}
 			}},
-		}, mdb.HashStatusAction()), Hand: func(m *ice.Message, arg ...string) {
+		}, mdb.StatusHashAction()), Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) == 0 { // 服务列表
-				mdb.HashSelect(m, arg...).PushAction(aaa.INVITE, mdb.INSERT, nfs.LOAD, nfs.SAVE)
+				mdb.HashSelect(m, arg...).PushAction(aaa.INVITE, mdb.INSERT, ctx.LOAD, ctx.SAVE)
 				return
 			}
 

@@ -55,7 +55,7 @@ func _dream_show(m *ice.Message, name string) {
 	defer m.Sleep3s()
 	m.Options(cli.CMD_DIR, kit.Path(p), cli.CMD_ENV, kit.Simple(
 		cli.CTX_OPS, "http://localhost:"+m.CmdAppend(SERVE, tcp.PORT),
-		cli.PATH, cli.BinPath(kit.Path(p, ice.BIN)), cli.USER, ice.Info.UserName,
+		cli.PATH, cli.BinPath(kit.Path(p, ice.BIN)), cli.USER, ice.Info.Username,
 		kit.EnvSimple(cli.HOME, cli.TERM, cli.SHELL), m.Configv(cli.ENV),
 	), cli.CMD_OUTPUT, path.Join(p, ice.BIN_BOOT_LOG))
 	defer m.Options(cli.CMD_DIR, "", cli.CMD_ENV, "", cli.CMD_OUTPUT, "")

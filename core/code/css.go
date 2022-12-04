@@ -22,7 +22,7 @@ func _css_stat(m *ice.Message, block string, stats map[string]int) {
 	m.Copy(msg)
 }
 func _css_show(m *ice.Message, arg ...string) {
-	block := ""
+	// block := ""
 	stats_key := map[string]int{}
 	stats_value := map[string]int{}
 	m.Cmd(nfs.CAT, path.Join(arg[2], arg[1]), func(line string) {
@@ -31,7 +31,7 @@ func _css_show(m *ice.Message, arg ...string) {
 		}
 		switch {
 		case strings.HasSuffix(line, "{"):
-			block = strings.TrimSuffix(line, "{")
+			// block = strings.TrimSuffix(line, "{")
 		case strings.HasSuffix(line, "}"):
 			if line == "}" {
 				break

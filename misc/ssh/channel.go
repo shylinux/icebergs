@@ -52,7 +52,7 @@ func init() {
 			}},
 			ctx.COMMAND: {Name: "command cmd=pwd", Help: "命令", Hand: func(m *ice.Message, arg ...string) {
 				mdb.ZoneInsert(m, m.OptionSimple(mdb.HASH), mdb.TYPE, CMD, mdb.TEXT, m.Option(CMD))
-				if w, ok := mdb.HashTarget(m, m.Option(mdb.HASH), nil).(io.Writer); ok {
+				if w, ok := mdb.HashSelectTarget(m, m.Option(mdb.HASH), nil).(io.Writer); ok {
 					w.Write([]byte(m.Option(CMD) + ice.NL))
 					m.Sleep300ms()
 				}

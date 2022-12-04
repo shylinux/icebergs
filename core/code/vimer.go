@@ -144,8 +144,8 @@ func init() {
 				web.ToastSuccess(m)
 				m.ProcessInner()
 			}},
-			AUTOGEN: {Name: "create name=h2 help=示例 type=Zone,Hash,Data,Code main=main.go zone key", Help: "模块", Hand: func(m *ice.Message, arg ...string) {
-				m.Cmdy(AUTOGEN, mdb.CREATE, arg)
+			AUTOGEN: {Name: "create name*=h2 help=示例 type*=Zone,Hash,Data,Code main*=main.go zone key", Help: "模块", Hand: func(m *ice.Message, arg ...string) {
+				m.Cmdy(AUTOGEN, nfs.MODULE, arg)
 			}},
 			COMPILE: {Name: "compile", Help: "编译", Hand: func(m *ice.Message, arg ...string) {
 				cmds := []string{COMPILE, ice.SRC_MAIN_GO, ice.BIN_ICE_BIN}

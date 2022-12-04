@@ -9,17 +9,17 @@ type MakeInfo struct {
 	Remote   string
 	Branch   string
 	Version  string
-	HostName string
-	UserName string
+	Hostname string
+	Username string
 }
 
 var Info = struct {
 	Make MakeInfo
 
-	HostName string
-	PathName string
-	UserName string
-	PassWord string
+	Hostname string
+	Pathname string
+	Username string
+	Password string
 
 	Domain   string
 	NodeType string

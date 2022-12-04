@@ -75,7 +75,7 @@ func UserRole(m *ice.Message, username ice.Any) (role string) {
 	if username == "" {
 		return VOID
 	}
-	if role = VOID; username == ice.Info.UserName {
+	if role = VOID; username == ice.Info.Username {
 		return ROOT
 	}
 	return UserInfo(m, username, USERROLE, ice.MSG_USERROLE)
@@ -85,12 +85,12 @@ func UserLogin(m *ice.Message, username, password string) bool {
 	return m.Cmdy(USER, LOGIN, username, password).Option(ice.MSG_USERNAME) != ""
 }
 func UserRoot(m *ice.Message, arg ...string) *ice.Message {
-	username := kit.Select(ice.Info.UserName, arg, 0)
+	username := kit.Select(ice.Info.Username, arg, 0)
 	usernick := kit.Select(UserNick(m, username), arg, 1)
 	userrole := kit.Select(ROOT, arg, 2)
 	if len(arg) > 0 {
 		m.Cmd(USER, mdb.CREATE, username, "", usernick, "", userrole)
-		ice.Info.UserName = username
+		ice.Info.Username = username
 	}
 	return SessAuth(m, kit.Dict(USERNAME, username, USERNICK, usernick, USERROLE, userrole))
 }

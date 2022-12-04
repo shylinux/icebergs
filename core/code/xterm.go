@@ -84,7 +84,7 @@ func init() {
 					}
 					m.Push(arg[0], "bash", "sh")
 				case mdb.NAME:
-					m.Push(arg[0], ice.Info.HostName, path.Base(m.Option(mdb.TYPE)))
+					m.Push(arg[0], ice.Info.Hostname, path.Base(m.Option(mdb.TYPE)))
 				}
 			}},
 			mdb.CREATE: {Name: "create type=sh name text", Help: "创建", Hand: func(m *ice.Message, arg ...string) {

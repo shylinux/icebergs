@@ -171,7 +171,7 @@ func init() {
 				m.Cmd(SPACE, m.Option(mdb.NAME), ice.EXIT)
 			}},
 			SPACE_LOGIN: {Hand: func(m *ice.Message, arg ...string) {
-				if ice.Info.UserName == aaa.VOID {
+				if ice.Info.Username == aaa.VOID {
 					m.Option(ice.MSG_USERROLE, aaa.TECH)
 				} else {
 					m.Option(ice.MSG_USERROLE, kit.Select(m.Option(ice.MSG_USERROLE), m.CmdAppend(aaa.USER, m.Option(ice.MSG_USERNAME), aaa.USERROLE)))

@@ -100,7 +100,7 @@ func PushPodCmd(m *ice.Message, cmd string, arg ...string) {
 	m.Cmd(SPACE, ice.OptionFields(mdb.TYPE, mdb.NAME), func(value ice.Maps) {
 		switch value[mdb.TYPE] {
 		case SERVER, WORKER:
-			if value[mdb.NAME] == ice.Info.HostName {
+			if value[mdb.NAME] == ice.Info.Hostname {
 				break
 			}
 			m.Cmd(SPACE, value[mdb.NAME], kit.Select(m.PrefixKey(), cmd), arg).Table(func(index int, val ice.Maps, head []string) {

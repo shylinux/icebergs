@@ -35,7 +35,7 @@ func _ssh_open(m *ice.Message, arg ...string) {
 		c.Write([]byte(fmt.Sprintf("#height:%d,width:%d\n", h, w)))
 
 		// 初始命令
-		for _, item := range kit.Simple(m.Optionv(mdb.LIST)) {
+		for _, item := range kit.Simple(m.Optionv("init")) {
 			m.Sleep300ms()
 			c.Write([]byte(item + ice.NL))
 		}
@@ -161,13 +161,13 @@ func init() {
 				m.Sleep300ms()
 			}},
 			SESSION: {Name: "session", Help: "会话", Hand: func(m *ice.Message, arg ...string) {
-				if c, e := _ssh_session(m, mdb.HashTarget(m, m.Option(mdb.NAME), nil).(*ssh.Client)); m.Assert(e) {
+				if c, e := _ssh_session(m, mdb.HashSelectTarget(m, m.Option(mdb.NAME), nil).(*ssh.Client)); m.Assert(e) {
 					defer c.Wait()
 					c.Shell()
 				}
 			}},
 			ctx.COMMAND: {Name: "command cmd=pwd", Help: "命令", Hand: func(m *ice.Message, arg ...string) {
-				client := mdb.HashTarget(m, m.Option(mdb.NAME), nil).(*ssh.Client)
+				client := mdb.HashSelectTarget(m, m.Option(mdb.NAME), nil).(*ssh.Client)
 				if s, e := client.NewSession(); m.Assert(e) {
 					defer s.Close()
 					if b, e := s.CombinedOutput(m.Option(ice.CMD)); m.Assert(e) {
@@ -175,7 +175,7 @@ func init() {
 					}
 				}
 			}},
-		}, mdb.HashStatusAction(mdb.SHORT, mdb.NAME, mdb.FIELD, "time,name,status,username,host,port")), Hand: func(m *ice.Message, arg ...string) {
+		}, mdb.StatusHashAction(mdb.SHORT, mdb.NAME, mdb.FIELD, "time,name,status,username,host,port")), Hand: func(m *ice.Message, arg ...string) {
 			if mdb.HashSelect(m, arg...).Tables(func(value ice.Maps) {
 				m.PushButton(kit.Select("", "command,session", value[mdb.STATUS] == tcp.OPEN), mdb.REMOVE)
 			}); len(arg) == 0 {

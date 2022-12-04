@@ -22,7 +22,7 @@ func _serve_start(m *ice.Message) {
 	if m.Option(aaa.USERNAME) != "" {
 		aaa.UserRoot(m, m.Option(aaa.USERNAME), m.Option(aaa.USERNICK))
 	}
-	if cli.NodeInfo(m, kit.Select(ice.Info.HostName, m.Option("nodename")), SERVER); m.Option(tcp.PORT) == tcp.RANDOM {
+	if cli.NodeInfo(m, kit.Select(ice.Info.Hostname, m.Option("nodename")), SERVER); m.Option(tcp.PORT) == tcp.RANDOM {
 		m.Option(tcp.PORT, m.Cmdx(tcp.PORT, aaa.RIGHT))
 	}
 	m.Target().Start(m, m.OptionSimple(tcp.HOST, tcp.PORT)...)
@@ -153,7 +153,7 @@ const SERVE = "serve"
 func init() {
 	Index.MergeCommands(ice.Commands{
 		SERVE: {Name: "serve name auto start", Help: "服务器", Actions: ice.MergeActions(ice.Actions{
-			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) { cli.NodeInfo(m, ice.Info.PathName, WORKER) }},
+			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) { cli.NodeInfo(m, ice.Info.Pathname, WORKER) }},
 			cli.START: {Name: "start dev name=web proto=http host port=9020 nodename username usernick", Hand: func(m *ice.Message, arg ...string) {
 				_serve_start(m)
 			}},

@@ -45,10 +45,10 @@ func _runtime_init(m *ice.Message) {
 		m.Conf(RUNTIME, kit.Keys(BOOT, PATHNAME), path.Base(name))
 	}
 	m.Conf(RUNTIME, kit.Keys(BOOT, USERNAME), kit.Select(kit.UserName(), kit.Env(CTX_USER)))
-	ice.Info.HostName = m.Conf(RUNTIME, kit.Keys(BOOT, HOSTNAME))
-	ice.Info.PathName = m.Conf(RUNTIME, kit.Keys(BOOT, PATHNAME))
-	ice.Info.UserName = m.Conf(RUNTIME, kit.Keys(BOOT, USERNAME))
-	aaa.UserRoot(ice.Pulse, ice.Info.UserName)
+	ice.Info.Hostname = m.Conf(RUNTIME, kit.Keys(BOOT, HOSTNAME))
+	ice.Info.Pathname = m.Conf(RUNTIME, kit.Keys(BOOT, PATHNAME))
+	ice.Info.Username = m.Conf(RUNTIME, kit.Keys(BOOT, USERNAME))
+	aaa.UserRoot(ice.Pulse, ice.Info.Username)
 	msg := m.Cmd(nfs.DIR, _system_find(m, os.Args[0]), "time,path,size,hash")
 	m.Conf(RUNTIME, kit.Keys(BOOT, ice.BIN), msg.Append(nfs.PATH))
 	m.Conf(RUNTIME, kit.Keys(BOOT, nfs.SIZE), msg.Append(nfs.SIZE))
@@ -156,9 +156,9 @@ func init() {
 			HOSTINFO:     {Hand: func(m *ice.Message, arg ...string) { _runtime_hostinfo(m) }},
 			HOSTNAME: {Hand: func(m *ice.Message, arg ...string) {
 				if len(arg) > 0 {
-					ice.Info.HostName = m.Conf(RUNTIME, kit.Keys(BOOT, HOSTNAME), m.Conf(RUNTIME, kit.Keys(NODE, mdb.NAME), arg[0]))
+					ice.Info.Hostname = m.Conf(RUNTIME, kit.Keys(BOOT, HOSTNAME), m.Conf(RUNTIME, kit.Keys(NODE, mdb.NAME), arg[0]))
 				}
-				m.Echo(ice.Info.HostName)
+				m.Echo(ice.Info.Hostname)
 			}},
 			USERINFO: {Hand: func(m *ice.Message, arg ...string) { m.Split(m.Cmdx(SYSTEM, "who"), "user term time") }},
 			PROCINFO: {Hand: func(m *ice.Message, arg ...string) {

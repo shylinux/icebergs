@@ -42,7 +42,7 @@ func init() {
 			}},
 			mdb.IMPORT: {Name: "import key=.ssh/id_rsa pub=.ssh/id_rsa.pub", Help: "导入", Hand: func(m *ice.Message, arg ...string) {
 				m.Conf("", kit.Keys(mdb.HASH, path.Base(m.Option("key"))), kit.Data(mdb.TIME, m.Time(),
-					"title", kit.Format("%s@%s", ice.Info.UserName, ice.Info.HostName),
+					"title", kit.Format("%s@%s", ice.Info.Username, ice.Info.Hostname),
 					PRIVATE, m.Cmdx(nfs.CAT, kit.HomePath(m.Option("key"))),
 					PUBLIC, m.Cmdx(nfs.CAT, kit.HomePath(m.Option("pub"))),
 				))

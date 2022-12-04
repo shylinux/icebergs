@@ -58,7 +58,7 @@ func init() {
 			}},
 			ctx.COMMAND: {Name: "command cmd=pwd", Help: "命令", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmd("", mdb.INSERT, m.OptionSimple(mdb.HASH), mdb.TYPE, CMD, mdb.TEXT, m.Option(CMD))
-				w := mdb.HashTarget(m, m.Option(mdb.HASH), nil).(io.Writer)
+				w := mdb.HashSelectTarget(m, m.Option(mdb.HASH), nil).(io.Writer)
 				w.Write([]byte(m.Option(CMD) + ice.NL))
 				m.Sleep300ms()
 			}},

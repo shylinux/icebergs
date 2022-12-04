@@ -38,7 +38,7 @@ func init() {
 				m.ProcessLocation(web.MergeURL2(m, ice.PS))
 			}},
 		}, gdb.EventAction(web.SPACE_OPEN), aaa.RoleAction(CONFIRM)), Hand: func(m *ice.Message, arg ...string) {
-			m.Echo("请授权: %s 访问设备: %s", arg[0], ice.Info.HostName).Echo(ice.NL).EchoButton(CONFIRM)
+			m.Echo("请授权: %s 访问设备: %s", arg[0], ice.Info.Hostname).Echo(ice.NL).EchoButton(CONFIRM)
 		}},
 	})
 }

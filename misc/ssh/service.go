@@ -55,6 +55,7 @@ func _ssh_config(m *ice.Message, h string) *ssh.ServerConfig {
 		},
 		PasswordCallback: func(conn ssh.ConnMetadata, password []byte) (*ssh.Permissions, error) {
 			meta, err := _ssh_meta(conn), errors.New(ice.ErrNotRight)
+			m.Debug("what %v", string(password))
 			if aaa.UserLogin(m, meta[aaa.USERNAME], string(password)) {
 				m.Auth(aaa.USERNAME, meta[aaa.USERNAME], tcp.HOSTPORT, meta[tcp.HOSTPORT], aaa.PASSWORD, strings.Repeat("*", len(string(password))))
 				err = nil // 密码登录
@@ -63,7 +64,7 @@ func _ssh_config(m *ice.Message, h string) *ssh.ServerConfig {
 		},
 	}
 
-	if key, err := ssh.ParsePrivateKey([]byte(m.Cmdx(nfs.CAT, kit.HomePath(m.Option(PRIVATE))))); m.Assert(err) {
+	if key, err := ssh.ParsePrivateKey([]byte(m.Cmdx(nfs.CAT, kit.HomePath(m.Option(PRIVATE))))); !m.Warn(err) {
 		config.AddHostKey(key)
 	}
 	return config
@@ -151,12 +152,7 @@ const (
 const SERVICE = "service"
 
 func init() {
-	psh.Index.Merge(&ice.Context{Configs: ice.Configs{
-		SERVICE: {Name: SERVICE, Help: "服务", Value: kit.Data(
-			mdb.SHORT, tcp.PORT, mdb.FIELD, "time,port,status,private,authkey,count",
-			WELCOME, "welcome to contexts world\r\n", GOODBYE, "goodbye of contexts world\r\n",
-		)},
-	}, Commands: ice.Commands{
+	psh.Index.MergeCommands(ice.Commands{
 		SERVICE: {Name: "service port id auto listen prunes", Help: "服务", Actions: ice.MergeActions(ice.Actions{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
 				mdb.HashSelect(m).Tables(func(value ice.Maps) {
@@ -169,7 +165,7 @@ func init() {
 				if mdb.HashSelect(m, m.Option(tcp.PORT)).Length() > 0 {
 					mdb.HashModify(m, m.Option(tcp.PORT), mdb.STATUS, tcp.OPEN)
 				} else {
-					mdb.HashCreate(m.Spawn(), mdb.STATUS, tcp.OPEN, arg)
+					mdb.HashCreate(m.Spawn(), m.OptionSimple(mdb.HashField(m)), mdb.STATUS, tcp.OPEN)
 					m.Cmd("", ctx.LOAD, m.OptionSimple(AUTHKEY))
 				}
 
@@ -206,7 +202,10 @@ func init() {
 					m.EchoScript(string(buf))
 				}
 			}},
-		}, mdb.StatusHashAction()), Hand: func(m *ice.Message, arg ...string) {
+		}, mdb.StatusHashAction(
+			mdb.SHORT, tcp.PORT, mdb.FIELD, "time,port,status,private,authkey,count",
+			WELCOME, "welcome to contexts world\r\n", GOODBYE, "goodbye of contexts world\r\n",
+		)), Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) == 0 { // 服务列表
 				mdb.HashSelect(m, arg...).PushAction(aaa.INVITE, mdb.INSERT, ctx.LOAD, ctx.SAVE)
 				return
@@ -216,5 +215,5 @@ func init() {
 			m.Fields(len(arg[1:]), "time,id,type,name,text")
 			mdb.ZoneSelect(m, arg...)
 		}},
-	}})
+	})
 }

@@ -182,7 +182,7 @@ func init() {
 			OPEN:   {Hand: func(m *ice.Message, arg ...string) { ctx.ProcessOpen(m, MergePod(m, m.Option(mdb.NAME), arg)) }},
 			ice.PS: {Hand: func(m *ice.Message, arg ...string) { _space_fork(m) }},
 		}, mdb.HashAction(mdb.SHORT, mdb.NAME, mdb.FIELD, "time,type,name,text", ctx.ACTION, OPEN,
-			REDIAL, kit.Dict("a", 3000, "b", 1000, "c", 1000), TIMEOUT, kit.Dict("c", "30s"),
+			REDIAL, kit.Dict("a", 3000, "b", 1000, "c", 1000), TIMEOUT, kit.Dict("c", "10s"),
 			BUFFER, kit.Dict("r", ice.MOD_BUFS, "w", ice.MOD_BUFS),
 		), mdb.ClearHashOnExitAction(), SpaceAction(), aaa.WhiteAction()), Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) < 2 {

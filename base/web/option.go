@@ -64,7 +64,7 @@ func Toast(m *ice.Message, text string, arg ...ice.Any) { // [title [duration [p
 			}
 		}
 	}
-	m.Go(func() { PushNoticeToast(m, text, arg) })
+	PushNoticeToast(m, text, arg)
 }
 func Toast3s(m *ice.Message, text string, arg ...ice.Any) {
 	Toast(m, text, kit.List(kit.Select("", arg, 0), kit.Select("3s", arg, 1))...)
@@ -73,15 +73,13 @@ func Toast30s(m *ice.Message, text string, arg ...ice.Any) {
 	Toast(m, text, kit.List(kit.Select("", arg, 0), kit.Select("30s", arg, 1))...)
 }
 func GoToast(m *ice.Message, title string, cb func(toast func(string, int, int))) {
-	m.Go(func() {
-		cb(func(name string, count, total int) {
-			Toast(m,
-				kit.Format("%s %s/%s", name, strings.TrimSuffix(kit.FmtSize(int64(count)), "B"), strings.TrimSuffix(kit.FmtSize(int64(total)), "B")),
-				kit.Format("%s %d%%", title, count*100/total),
-				kit.Select("3000", "30000", count < total),
-				count*100/total,
-			)
-		})
+	cb(func(name string, count, total int) {
+		Toast(m,
+			kit.Format("%s %s/%s", name, strings.TrimSuffix(kit.FmtSize(int64(count)), "B"), strings.TrimSuffix(kit.FmtSize(int64(total)), "B")),
+			kit.Format("%s %d%%", title, count*100/total),
+			kit.Select("3000", "30000", count < total),
+			count*100/total,
+		)
 	})
 }
 func PushStream(m *ice.Message, cmds ...ice.Any) *ice.Message {

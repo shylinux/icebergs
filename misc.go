@@ -282,8 +282,7 @@ func (c *Context) _command(m *Message, cmd *Command, key string, arg ...string) 
 }
 func (c *Context) _action(m *Message, cmd *Command, key string, sub string, h *Action, arg ...string) *Message {
 	if h.Hand == nil {
-		m.Cmdy(kit.Split(h.Name), arg)
-		return m
+		return m.Cmdy(kit.Split(kit.Select(sub, h.Name)), arg)
 	}
 	if m._key, m._cmd, m._sub = key, cmd, sub; len(h.List) > 0 && sub != SEARCH {
 		order := false

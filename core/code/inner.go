@@ -17,24 +17,16 @@ import (
 )
 
 func _inner_list(m *ice.Message, ext, file, dir string) {
-	if aaa.Right(m, dir, file) {
-		if nfs.IsSourceFile(m, ext) {
-			m.Cmdy(nfs.CAT, path.Join(dir, file))
-		}
-		if m.IsErrNotFound() {
-			_inner_show(m.SetResult(), ext, file, dir)
-		}
-	}
+	kit.If(aaa.Right(m, dir, file), func() {
+		kit.If(nfs.IsSourceFile(m, ext), func() { m.Cmdy(nfs.CAT, path.Join(dir, file)) })
+		kit.If(m.IsErrNotFound(), func() { _inner_show(m.RenderResult().SetResult(), ext, file, dir) })
+	})
 }
 func _inner_show(m *ice.Message, ext, file, dir string) {
-	if aaa.Right(m, dir, file) {
-		m.Cmdy(mdb.RENDER, ext, file, dir)
-	}
+	kit.If(aaa.Right(m, dir, file), func() { m.Cmdy(mdb.RENDER, ext, file, dir) })
 }
 func _inner_exec(m *ice.Message, ext, file, dir string) {
-	if aaa.Right(m, dir, file) {
-		m.Cmdy(mdb.ENGINE, ext, file, dir)
-	}
+	kit.If(aaa.Right(m, dir, file), func() { m.Cmdy(mdb.ENGINE, ext, file, dir) })
 }
 func _inner_tags(m *ice.Message, dir string, value string) {
 	for _, l := range strings.Split(m.Cmdx(cli.SYSTEM, cli.GREP, "^"+value+"\\>", nfs.TAGS, kit.Dict(cli.CMD_DIR, dir)), ice.NL) {
@@ -45,7 +37,6 @@ func _inner_tags(m *ice.Message, dir string, value string) {
 		if len(ls) < 3 {
 			continue
 		}
-
 		file, ls := ls[1], strings.SplitN(ls[2], ";\"", 2)
 		text := strings.TrimSuffix(strings.TrimPrefix(ls[0], "/^"), "$/")
 		if text, line := _inner_line(m, kit.Path(dir, file), text); dir == "" {
@@ -57,11 +48,9 @@ func _inner_tags(m *ice.Message, dir string, value string) {
 }
 func _inner_line(m *ice.Message, file, text string) (string, int) {
 	line := kit.Int(text)
-
 	f, e := nfs.OpenFile(m, file)
 	m.Assert(e)
 	defer f.Close()
-
 	bio := bufio.NewScanner(f)
 	for i := 1; bio.Scan(); i++ {
 		if i == line || bio.Text() == text {
@@ -93,22 +82,16 @@ const (
 const INNER = "inner"
 
 func init() {
+	var bind = []string{"usr/icebergs/core/", "usr/volcanos/plugin/local/"}
 	Index.MergeCommands(ice.Commands{
 		INNER: {Name: "inner path=src/@key file=main.go@key line=1 auto", Help: "源代码", Actions: ice.MergeActions(ice.Actions{
 			mdb.INPUTS: {Hand: func(m *ice.Message, arg ...string) {
-				switch arg[0] {
+				switch p := kit.Select(nfs.PWD, arg, 1); arg[0] {
 				case nfs.PATH:
-					p := kit.Select(nfs.PWD, arg, 1)
-					m.Cmdy(nfs.DIR, p, nfs.DIR_CLI_FIELDS).Sort(nfs.PATH).ProcessAgain()
-					if strings.HasPrefix(p, "usr/icebergs/core/") && len(kit.Split(p, ice.PS)) > 3 {
-						p = strings.Replace(p, "usr/icebergs/core/", "usr/volcanos/plugin/local/", 1)
-						m.Cmdy(nfs.DIR, p, nfs.DIR_CLI_FIELDS).Sort(nfs.PATH)
-					} else if strings.HasPrefix(p, "usr/volcanos/plugin/local/") && len(kit.Split(p, ice.PS)) > 4 {
-						p = strings.Replace(p, "usr/volcanos/plugin/local/", "usr/icebergs/core/", 1)
-						m.Cmdy(nfs.DIR, p, nfs.DIR_CLI_FIELDS).SortStrR(nfs.PATH)
-					}
+					m.Cmdy(nfs.DIR, p, nfs.DIR_CLI_FIELDS).ProcessAgain()
+					kit.If(strings.HasPrefix(p, bind[0]), func() { m.Cmdy(nfs.DIR, strings.Replace(p, bind[0], bind[1], 1), nfs.DIR_CLI_FIELDS) })
+					kit.If(strings.HasPrefix(p, bind[1]), func() { m.Cmdy(nfs.DIR, strings.Replace(p, bind[1], bind[0], 1), nfs.DIR_CLI_FIELDS) })
 				case nfs.FILE:
-					p := kit.Select(nfs.PWD, arg, 1)
 					m.Option(nfs.DIR_ROOT, m.Option(nfs.PATH))
 					m.Cmdy(nfs.DIR, kit.Select(path.Dir(p), p, strings.HasSuffix(p, ice.PS))+ice.PS, nfs.DIR_CLI_FIELDS).ProcessAgain()
 				default:
@@ -118,20 +101,18 @@ func init() {
 			mdb.PLUGIN: {Hand: func(m *ice.Message, arg ...string) { m.Cmdy(mdb.PLUGIN, arg) }},
 			mdb.RENDER: {Hand: func(m *ice.Message, arg ...string) { _inner_show(m, arg[0], arg[1], arg[2]) }},
 			mdb.ENGINE: {Hand: func(m *ice.Message, arg ...string) { _inner_exec(m, arg[0], arg[1], arg[2]) }},
-
-			cli.GREP: {Name: "grep", Help: "搜索", Hand: func(m *ice.Message, arg ...string) {
-				m.Cmdy(cli.GREP, arg[0], m.Option(nfs.PATH)).StatusTimeCount(mdb.INDEX, 0)
+			nfs.GREP: {Name: "grep", Help: "搜索", Hand: func(m *ice.Message, arg ...string) {
+				m.Cmdy(nfs.GREP, arg[0], m.Option(nfs.PATH)).StatusTimeCount(mdb.INDEX, 0)
 			}},
 			nfs.TAGS: {Name: "tags", Help: "索引", Hand: func(m *ice.Message, arg ...string) {
 				if _inner_tags(m, m.Option(nfs.PATH), arg[0]); m.Length() == 0 {
 					_inner_tags(m, "", arg[0])
 				}
 			}},
-			NAVIGATE: {Name: "navigate", Help: "跳转", Hand: func(m *ice.Message, arg ...string) {
+			NAVIGATE: {Hand: func(m *ice.Message, arg ...string) {
 				m.Cmdy(NAVIGATE, kit.Ext(m.Option(mdb.FILE)), m.Option(nfs.FILE), m.Option(nfs.PATH))
-			}},
-			FAVOR: {Name: "favor", Help: "收藏"},
-			ctx.COMMAND: {Name: "command", Help: "命令", Hand: func(m *ice.Message, arg ...string) {
+			}}, FAVOR: {},
+			ctx.COMMAND: {Hand: func(m *ice.Message, arg ...string) {
 				if !ctx.PodCmd(m, ctx.COMMAND, arg) {
 					m.Cmdy(ctx.COMMAND, arg)
 				}
@@ -146,42 +127,39 @@ func init() {
 				arg[0] = strings.TrimSuffix(arg[0], arg[1])
 				ctx.ProcessRewrite(m, nfs.PATH, arg[0], nfs.FILE, arg[1])
 				return
-			}
-			if len(arg) < 2 {
+			} else if len(arg) < 2 {
 				nfs.Dir(m, nfs.PATH)
 				return
 			}
-
 			arg[1] = strings.Split(arg[1], ice.FS)[0]
 			_inner_list(m, kit.Ext(arg[1]), arg[1], arg[0])
-			defer m.Cmd(FAVOR, mdb.INSERT, mdb.ZONE, "_recent_file", nfs.PATH, arg[0], nfs.FILE, arg[1])
-			m.Option("tabs", m.Config("show.tabs"))
-			m.Option("plug", m.Config("show.plug"))
-			m.Option("exts", m.Config("show.exts"))
+			m.Cmd(FAVOR, mdb.INSERT, mdb.ZONE, "_recent_file", nfs.PATH, arg[0], nfs.FILE, arg[1])
+			m.Options("tabs", m.Config("show.tabs"), "plug", m.Config("show.plug"), "exts", m.Config("show.exts"))
 			ctx.DisplayLocal(m, "")
 		}},
 	})
 	ctx.AddRunChecker(func(m *ice.Message, cmd, check string, arg ...string) bool {
-		process := func(m *ice.Message, file string) {
+		process := func(m *ice.Message, file string) bool {
 			ls, n := kit.Split(file, ice.PS), kit.Int(kit.Select("2", "1", strings.HasPrefix(file, ice.SRC+ice.PS)))
 			ctx.ProcessFloat(m, web.CODE_INNER, kit.Join(kit.Slice(ls, 0, n), ice.PS)+ice.PS, kit.Join(kit.Slice(ls, n), ice.PS))
+			return true
 		}
 		switch check {
 		case nfs.SCRIPT:
 			if file := kit.ExtChange(ctx.GetCmdFile(m, cmd), nfs.JS); nfs.ExistsFile(m, file) {
-				process(m, file)
-				return true
-			} else if strings.HasPrefix(file, path.Join(ice.USR_ICEBERGS, ice.CORE)) {
-				if file := strings.Replace(file, path.Join(ice.USR_ICEBERGS, ice.CORE), path.Join(ice.USR_VOLCANOS, "plugin/local"), 1); nfs.ExistsFile(m, file) {
-					process(m, file)
-					return true
+				return process(m, file)
+			} else if strings.HasPrefix(file, bind[0]) {
+				if file := strings.Replace(file, bind[0], bind[1], 1); nfs.ExistsFile(m, file) {
+					return process(m, file)
 				}
 			}
 		case nfs.SOURCE:
+			m.Debug("what %v", cmd)
 			if file := ctx.GetCmdFile(m, cmd); nfs.ExistsFile(m, file) {
-				process(m, file)
-				return true
+			m.Debug("what %v", file)
+				return process(m, file)
 			}
+			m.Debug("what %v", cmd)
 		}
 		return false
 	})
@@ -189,9 +167,7 @@ func init() {
 func PlugAction() ice.Actions {
 	return ice.Actions{
 		ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
-			for _, cmd := range []string{mdb.PLUGIN, mdb.RENDER, mdb.ENGINE} {
-				m.Cmd(cmd, mdb.CREATE, m.CommandKey(), m.PrefixKey())
-			}
+			kit.Fetch([]string{mdb.PLUGIN, mdb.RENDER, mdb.ENGINE}, func(cmd string) { m.Cmd(cmd, mdb.CREATE, m.CommandKey(), m.PrefixKey()) })
 			LoadPlug(m, m.CommandKey())
 		}},
 		mdb.PLUGIN: {Hand: func(m *ice.Message, arg ...string) { m.Echo(m.Config(PLUG)) }},
@@ -200,30 +176,22 @@ func PlugAction() ice.Actions {
 		mdb.SELECT: {Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) > 0 && kit.Ext(arg[0]) == m.CommandKey() {
 				m.Cmdy("", mdb.ENGINE, m.CommandKey(), arg[0], ice.SRC)
-				return
+			} else {
+				m.Cmdy(nfs.DIR, arg, kit.Dict(nfs.DIR_ROOT, ice.SRC, nfs.DIR_DEEP, ice.TRUE, nfs.DIR_REG, kit.ExtReg(m.CommandKey())))
 			}
-			m.Option(nfs.DIR_ROOT, ice.SRC)
-			m.Option(nfs.DIR_DEEP, ice.TRUE)
-			m.Option(nfs.DIR_REG, kit.Format(`.*\.(%s)$`, m.CommandKey()))
-			m.Cmdy(nfs.DIR, arg)
 		}},
 	}
 }
 func LoadPlug(m *ice.Message, lang ...string) {
 	for _, lang := range lang {
 		m.Conf(nfs.CAT, kit.Keym(nfs.SOURCE, kit.Ext(lang)), ice.TRUE)
-		m.Confm(lang, kit.Keym(PLUG, PREPARE), func(key string, value ice.Any) {
-			for _, v := range kit.Simple(value) {
-				m.Conf(lang, kit.Keym(PLUG, KEYWORD, v), key)
-			}
+		m.Confm(lang, kit.Keym(PLUG, PREPARE), func(k string, v ice.Any) {
+			kit.Fetch(kit.Simple(v), func(v string) { m.Conf(lang, kit.Keym(PLUG, KEYWORD, v), k) })
 		})
 	}
 }
 func TagsList(m *ice.Message, cmds ...string) {
-	if len(cmds) == 0 {
-		cmds = []string{"ctags", "--excmd=number", "--sort=no", "-f", "-", path.Join(m.Option(nfs.PATH), m.Option(nfs.FILE))}
-	}
-	for _, l := range strings.Split(m.Cmdx(cli.SYSTEM, cmds), ice.NL) {
+	for _, l := range strings.Split(m.Cmdx(cli.SYSTEM, kit.Default(cmds, "ctags", "--excmd=number", "--sort=no", "-f", "-", path.Join(m.Option(nfs.PATH), m.Option(nfs.FILE)))), ice.NL) {
 		if strings.HasPrefix(l, "!_") {
 			continue
 		}

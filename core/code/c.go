@@ -45,7 +45,7 @@ func init() {
 			mdb.RENDER: {Hand: func(m *ice.Message, arg ...string) { _c_show(m, arg...) }},
 			mdb.ENGINE: {Hand: func(m *ice.Message, arg ...string) { _c_exec(m, arg...) }},
 			NAVIGATE:   {Hand: func(m *ice.Message, arg ...string) { _c_tags(m, MAN, "ctags", "-a", "-R", nfs.PWD) }},
-			TEMPLATE:   {Hand: func(m *ice.Message, arg ...string) { kit.IfElse(arg[0] == C, func() { m.Echo(_c_template) }) }},
+			TEMPLATE:   {Hand: func(m *ice.Message, arg ...string) { kit.If(arg[0] == C, func() { m.Echo(_c_template) }) }},
 		}, PlugAction(), LangAction())},
 	})
 }

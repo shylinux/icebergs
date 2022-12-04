@@ -2,7 +2,6 @@ package code
 
 import (
 	"path"
-	"strings"
 
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/cli"
@@ -13,51 +12,47 @@ import (
 
 func _c_show(m *ice.Message, arg ...string) { TagsList(m) }
 func _c_exec(m *ice.Message, arg ...string) {
-	name := strings.TrimSuffix(arg[1], path.Ext(arg[1])) + ".bin"
-	if msg := m.Cmd(cli.SYSTEM, "gcc", "-o", name, arg[1], kit.Dict(cli.CMD_DIR, arg[2])); !cli.IsSuccess(msg) {
+	target := path.Join(ice.BIN, kit.TrimExt(arg[1], arg[0]))
+	if msg := m.Cmd(cli.SYSTEM, "gcc", "-o", target, path.Join(arg[2], arg[1])); cli.IsSuccess(msg) {
+		m.Cmdy(cli.SYSTEM, target).StatusTime(nfs.PATH, target)
+	} else {
 		_vimer_make(m, arg[2], msg)
-		return
 	}
-	if m.Cmdy(cli.SYSTEM, path.Join(arg[2], name)); m.Append(cli.CMD_ERR) == "" {
-		m.Result(m.Append(cli.CMD_OUT))
-		m.SetAppend()
-	}
-	m.StatusTime()
 }
 func _c_tags(m *ice.Message, man string, cmd ...string) {
 	if !nfs.ExistsFile(m, path.Join(m.Option(nfs.PATH), nfs.TAGS)) {
 		m.Cmd(cli.SYSTEM, cmd, kit.Dict(cli.CMD_DIR, m.Option(nfs.PATH)))
 	}
 	if _inner_tags(m, m.Option(nfs.PATH), m.Option(mdb.NAME)); !cli.IsSuccess(m) || m.Length() == 0 {
-		m.Push(nfs.FILE, kit.Keys(m.Option(mdb.NAME), man))
-		m.Push(nfs.LINE, "1")
+		m.Push(nfs.FILE, kit.Keys(m.Option(mdb.NAME), man)).Push(nfs.LINE, "1")
 	}
 }
 
+const MAN = "man"
 const H = "h"
 const C = "c"
-const MAN = "man"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
-		C: {Name: "c path auto", Help: "系统", Actions: ice.MergeActions(ice.Actions{
+		MAN: {Name: MAN, Help: "系统手册", Actions: ice.MergeActions(ice.Actions{
+			mdb.RENDER: {Hand: func(m *ice.Message, arg ...string) { m.Cmd(cli.SYSTEM, cli.MAN, kit.TrimExt(arg[1], arg[0])) }},
+		}, PlugAction())},
+		H: {Name: "h path auto", Help: "系统编程", Actions: ice.MergeActions(ice.Actions{
+			mdb.RENDER: {Hand: func(m *ice.Message, arg ...string) { _c_show(m, arg...) }},
+			NAVIGATE:   {Hand: func(m *ice.Message, arg ...string) { _c_tags(m, MAN, "ctags", "-a", "-R", nfs.PWD) }},
+		}, PlugAction(), LangAction())},
+		C: {Name: "c path auto", Help: "系统编程", Actions: ice.MergeActions(ice.Actions{
 			mdb.RENDER: {Hand: func(m *ice.Message, arg ...string) { _c_show(m, arg...) }},
 			mdb.ENGINE: {Hand: func(m *ice.Message, arg ...string) { _c_exec(m, arg...) }},
 			NAVIGATE:   {Hand: func(m *ice.Message, arg ...string) { _c_tags(m, MAN, "ctags", "-a", "-R", nfs.PWD) }},
+			TEMPLATE:   {Hand: func(m *ice.Message, arg ...string) { kit.IfElse(arg[0] == C, func() { m.Echo(_c_template) }) }},
 		}, PlugAction(), LangAction())},
-		H: {Name: "h path auto", Help: "系统", Actions: ice.MergeActions(ice.Actions{
-			mdb.RENDER: {Hand: func(m *ice.Message, arg ...string) { _c_show(m, arg...) }},
-			NAVIGATE:   {Hand: func(m *ice.Message, arg ...string) { _c_tags(m, MAN, "ctags", "-a", "-R", nfs.PWD) }},
-		}, PlugAction(), LangAction())},
-		MAN: {Name: MAN, Help: "手册", Actions: ice.MergeActions(ice.Actions{
-			mdb.RENDER: {Hand: func(m *ice.Message, arg ...string) {
-				if len(arg) == 1 {
-					arg = append(arg, "")
-				}
-				key := kit.TrimExt(arg[1], arg[0])
-				m.Option(cli.CMD_ENV, "COLUMNS", kit.Int(kit.Select("1920", m.Option("width")))/12)
-				m.Echo(cli.SystemCmds(m, "man %s %s|col -b", "", key))
-			}},
-		}, PlugAction())},
 	})
 }
+
+var _c_template = `#include <stdio.h>
+
+int main(int argc, char *argv[]) {
+	printf("hello world\n");
+}
+`

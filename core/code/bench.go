@@ -20,7 +20,7 @@ func _bench_http(m *ice.Message, target string, arg ...string) {
 	list := []*http.Request{}
 	for _, v := range strings.Split(target, ice.NL) {
 		switch ls := kit.Split(v); ls[0] {
-		case http.MethodPost: // POST,url,file
+		case http.MethodPost:
 			if f, e := nfs.OpenFile(m, ls[2]); m.Assert(e) {
 				defer f.Close()
 				if req, err := http.NewRequest(http.MethodPost, ls[1], f); m.Assert(err) {

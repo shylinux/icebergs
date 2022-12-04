@@ -27,4 +27,4 @@ func init() {
 	)
 }
 
-func Prefix(arg ...string) string { return kit.Keys(web.WEB, CODE, arg) }
+func Prefix(arg ...string) string { return web.Prefix(CODE, kit.Keys(arg)) }

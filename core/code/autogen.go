@@ -59,6 +59,7 @@ func _autogen_version(m *ice.Message) {
 	}
 	m.Cmd(nfs.DEFS, ice.SRC_BINPACK_GO, `package main`+ice.NL)
 	m.Cmd(nfs.SAVE, ice.SRC_VERSION_GO, kit.Format(_version_template, _autogen_gits(m, nfs.MODULE, _autogen_mod(m, ice.GO_MOD), tcp.HOSTNAME, ice.Info.Hostname, aaa.USERNAME, ice.Info.Username)))
+	m.Cmd(cli.SYSTEM, "gofmt", "-w", ice.SRC_VERSION_GO)
 	m.Cmdy(nfs.DIR, ice.SRC_BINPACK_GO)
 	m.Cmdy(nfs.DIR, ice.SRC_VERSION_GO)
 	m.Cmdy(nfs.DIR, ice.SRC_MAIN_GO)

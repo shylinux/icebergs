@@ -11,27 +11,24 @@ import (
 	kit "shylinux.com/x/toolkits"
 )
 
-func _css_stat(m *ice.Message, block string, stats map[string]int) {
+func _css_stat(m *ice.Message, zone string, stats map[string]int) {
 	msg := m.Spawn()
 	for k, v := range stats {
-		msg.Push("name", k)
-		msg.Push("value", v)
-		msg.Push("block", block)
+		msg.Push(mdb.NAME, k).Push(mdb.VALUE, v).Push(mdb.ZONE, zone)
 	}
-	msg.SortIntR("value")
+	msg.SortIntR(mdb.VALUE)
 	m.Copy(msg)
 }
 func _css_show(m *ice.Message, arg ...string) {
-	// block := ""
-	stats_key := map[string]int{}
-	stats_value := map[string]int{}
+	zone := ""
+	stats_key, stats_value := map[string]int{}, map[string]int{}
 	m.Cmd(nfs.CAT, path.Join(arg[2], arg[1]), func(line string) {
 		if line = strings.TrimSpace(line); line == "" || strings.HasPrefix(line, "//") || strings.HasPrefix(line, "/*") {
 			return
 		}
 		switch {
 		case strings.HasSuffix(line, "{"):
-			// block = strings.TrimSuffix(line, "{")
+			zone = strings.TrimSuffix(line, "{")
 		case strings.HasSuffix(line, "}"):
 			if line == "}" {
 				break
@@ -42,13 +39,17 @@ func _css_show(m *ice.Message, arg ...string) {
 				if len(list) < 2 {
 					continue
 				}
-				m.Push("name", list[0])
-				m.Push("value", list[1])
-				m.Push("block", ls[0])
+				m.Push(mdb.NAME, list[0])
+				m.Push(mdb.VALUE, list[1])
+				m.Push(mdb.ZONE, ls[0])
 				stats_key[list[0]]++
 				stats_value[list[1]]++
 			}
 		default:
+			list := kit.Split(line, "", ":;")
+			m.Push(mdb.NAME, list[0])
+			m.Push(mdb.VALUE, list[1])
+			m.Push(mdb.ZONE, zone)
 		}
 	})
 	_css_stat(m, "stats.key", stats_key)
@@ -56,8 +57,8 @@ func _css_show(m *ice.Message, arg ...string) {
 	m.StatusTimeCount()
 }
 func _css_exec(m *ice.Message, arg ...string) {
-	if arg[2] == "usr/volcanos/" && strings.HasPrefix(arg[1], "plugin/local/") {
-		key := "web." + strings.ReplaceAll(strings.TrimSuffix(strings.TrimPrefix(arg[1], "plugin/local/"), ".css"), ice.PS, ice.PT)
+	if arg[2] == ice.USR_VOLCANOS && strings.HasPrefix(arg[1], ice.PLUGIN_LOCAL) {
+		key := ctx.GetFileCmd("/require/shylinux.com/x/icebergs/core/"+strings.TrimPrefix(arg[1], ice.PLUGIN_LOCAL))
 		ctx.ProcessCommand(m, kit.Select("can.plugin", key), kit.Simple())
 		return
 	}

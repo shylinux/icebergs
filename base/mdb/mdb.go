@@ -113,6 +113,7 @@ const (
 	RANDOM = "random"
 	ACTION = "action"
 	FIELDS = "fields"
+	PARAMS = "params"
 
 	INPUTS = "inputs"
 	CREATE = "create"

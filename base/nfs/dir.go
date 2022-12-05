@@ -179,7 +179,6 @@ func init() {
 				return
 			}
 			fields := kit.Split(kit.Select(kit.Select(DIR_DEF_FIELDS, m.OptionFields()), kit.Join(kit.Slice(arg, 1))))
-			m.Logs(mdb.SELECT, DIR_ROOT, m.Option(DIR_ROOT), DIR_REG, m.Option(DIR_REG), mdb.FIELD, kit.Join(fields, ice.FS))
 			_dir_list(m, root, dir, 0, m.Option(DIR_DEEP) == ice.TRUE, kit.Select(TYPE_BOTH, m.Option(DIR_TYPE)), kit.Regexp(m.Option(DIR_REG)), fields)
 			m.Sort(PATH).StatusTimeCount()
 		}},

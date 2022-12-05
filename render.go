@@ -44,6 +44,8 @@ func Render(m *Message, cmd string, args ...Any) string {
 				for k, v := range k {
 					list = append(list, kit.Format(`<input type="button" name="%s" value="%s">`, k, kit.Select(k, v, m.Option(MSG_LANGUAGE) != "en")))
 				}
+			default:
+				list = append(list, Render(m, RENDER_BUTTON, kit.Format(k)))
 			}
 		}
 		return strings.Join(list, "")

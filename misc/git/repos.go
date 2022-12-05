@@ -4,6 +4,7 @@ import (
 	"path"
 	"strings"
 
+	"shylinux.com/x/gogit"
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/cli"
 	"shylinux.com/x/icebergs/base/mdb"
@@ -22,11 +23,11 @@ func _repos_cmd(m *ice.Message, name string, arg ...string) *ice.Message {
 }
 func _repos_insert(m *ice.Message, name string, dir string) {
 	if s, e := nfs.StatFile(m, m.Option(cli.CMD_DIR, path.Join(dir, ".git"))); e == nil && s.IsDir() {
-		ls := strings.SplitN(strings.Trim(_git_cmds(m, "log", "-n1", `--pretty=format:"%ad %s"`, "--date=iso"), `"`), ice.SP, 4)
+		ci, _ := gogit.OpenRepository(path.Join(dir, ".git")).GetCurrentCommit()
 		mdb.HashCreate(m, mdb.NAME, name, nfs.PATH, dir,
-			COMMIT, kit.Select("", ls, 3), mdb.TIME, strings.Join(ls[:2], ice.SP),
-			REMOTE, strings.TrimSpace(_git_cmds(m, REMOTE, "-v")),
-			BRANCH, strings.TrimSpace(_git_cmds(m, BRANCH)),
+			COMMIT, strings.TrimSpace(ci.CommitMessage), mdb.TIME, ci.Author.When.Format(ice.MOD_TIME),
+			REMOTE, strings.SplitN(nfs.CatFile(m, path.Join(dir, ".git", "FETCH_HEAD")), ice.SP, 2)[1],
+			BRANCH, path.Base(nfs.CatFile(m, path.Join(dir, ".git", "HEAD"))),
 		)
 	}
 }

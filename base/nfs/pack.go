@@ -179,3 +179,8 @@ func NewReadCloser(r io.Reader) io.ReadCloser {
 func NewCloser(c func() error) io.WriteCloser {
 	return file.NewWriteCloser(func(buf []byte) (int, error) { return 0, nil }, c)
 }
+
+func CatFile(m *ice.Message, p string) string {
+	b, _ := ioutil.ReadFile(p)
+	return strings.TrimSpace(string(b))
+}

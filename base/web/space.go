@@ -19,19 +19,20 @@ import (
 
 func _space_dial(m *ice.Message, dev, name string, arg ...string) {
 	msg := m.Cmd(SPIDE, tcp.CLIENT, dev, PP(SPACE))
-	uri := kit.ParseURL(strings.Replace(kit.MergeURL(msg.Append(DOMAIN), mdb.TYPE, ice.Info.NodeType, mdb.NAME, name, SHARE, ice.Info.CtxShare, RIVER, ice.Info.CtxRiver, arg), ice.HTTP, "ws", 1))
+	uri := kit.ParseURL(strings.Replace(kit.MergeURL(msg.Append(DOMAIN), mdb.TYPE, ice.Info.NodeType, mdb.NAME, name, SHARE, ice.Info.CtxShare, RIVER, ice.Info.CtxRiver), ice.HTTP, "ws", 1))
 	args := kit.SimpleKV("type,name,host,port", msg.Append(tcp.PROTOCOL), dev, msg.Append(tcp.HOST), msg.Append(tcp.PORT))
 	m.Go(func() {
 		redial := kit.Dict(m.Configv(REDIAL))
 		a, b, c := kit.Int(redial["a"]), kit.Int(redial["b"]), kit.Int(redial["c"])
-		for i := 0; i < c; i++ {
+		for i := 1; i < c; i++ {
 			next := time.Duration(rand.Intn(a*(i+1))+b*i) * time.Millisecond
 			m.Cmd(tcp.CLIENT, tcp.DIAL, args, func(c net.Conn) {
 				if conn, _, e := websocket.NewClient(c, uri, nil, kit.Int(redial["r"]), kit.Int(redial["w"])); !m.Warn(e, tcp.DIAL, dev, SPACE, uri.String()) {
 					defer mdb.HashCreateDeferRemove(m, kit.SimpleKV("", MASTER, dev, msg.Append(tcp.HOSTNAME)), kit.Dict(mdb.TARGET, conn))()
-					_space_handle(m, true, dev, conn)
+					_space_handle(m.Spawn(), true, dev, conn)
+					i = 0
 				}
-			}).Cost("order", i, "sleep", next, "redial", dev).Sleep(next)
+			}).Cost("order", i, "sleep", next, "redial", dev, "uri", uri.String()).Sleep(next)
 		}
 	})
 }
@@ -48,7 +49,7 @@ func _space_fork(m *ice.Message) {
 			case WORKER:
 				defer gdb.EventDeferEvent(m, DREAM_OPEN, args)(DREAM_CLOSE, args)
 			case CHROME:
-				m.Go(func() { m.Sleep("10ms").Cmd(SPACE, name, cli.PWD, name) })
+				m.Go(func() { m.Sleep30ms().Cmd(SPACE, name, cli.PWD, name) })
 			}
 			_space_handle(m, false, name, conn)
 		})
@@ -58,7 +59,7 @@ func _space_handle(m *ice.Message, safe bool, name string, conn *websocket.Conn)
 	for {
 		_, b, e := conn.ReadMessage()
 		if e != nil {
-			m.Logs("sock", SPACE, name, "error", e)
+			m.Cost(SPACE, name, e)
 			break
 		}
 		msg := m.Spawn(b)

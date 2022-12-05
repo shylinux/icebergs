@@ -20,7 +20,7 @@ func (m *Message) join(arg ...Any) (string, []Any) {
 			i--
 			continue
 		case []string:
-			list = append(list, v...)
+			list = append(list, kit.JoinKV(": ", " ", v...))
 			i--
 			continue
 		}
@@ -131,8 +131,9 @@ func (m *Message) Warn(err Any, arg ...Any) bool {
 	}
 	return true
 }
-func (m *Message) ErrorNotImplement(arg ...Any) {
+func (m *Message) ErrorNotImplement(arg ...Any) *Message {
 	m.Error(true, append(kit.List(ErrNotImplement), arg...)...)
+	return m
 }
 func (m *Message) Error(err bool, arg ...Any) bool {
 	if err {

@@ -21,48 +21,39 @@ func _install_path(m *ice.Message, link string) string {
 	link = kit.Select(m.Option(mdb.LINK), link)
 	if p := path.Join(ice.USR_INSTALL, kit.TrimExt(link)); nfs.ExistsFile(m, p) {
 		return p
-	}
-	if p := path.Join(ice.USR_INSTALL, path.Base(link)); nfs.ExistsFile(m, p) {
+	} else if p := path.Join(ice.USR_INSTALL, path.Base(link)); nfs.ExistsFile(m, p) {
 		return path.Join(ice.USR_INSTALL, strings.Split(m.Cmd(nfs.TAR, p, "", "1").Append(nfs.FILE), ice.PS)[0])
+	} else {
+		m.Assert(true)
+		return ""
 	}
-	m.Warn(true, ice.ErrNotFound, link)
-	return ""
 }
 func _install_download(m *ice.Message) {
 	link := m.Option(mdb.LINK)
 	name := path.Base(strings.Split(link, "?")[0])
 	file := path.Join(kit.Select(ice.USR_INSTALL, m.Option(nfs.PATH)), name)
+	defer web.ToastSuccess(m)
+	defer m.Cmdy(nfs.DIR, file)
 	if nfs.ExistsFile(m, file) {
-		m.Cmdy(nfs.DIR, file)
-		web.ToastSuccess(m)
 		return
 	}
+	defer m.SetResult()
 	m.Cmd(nfs.SAVE, file, "")
-	begin := time.Now()
 	mdb.HashCreate(m, mdb.NAME, name, nfs.PATH, file, mdb.LINK, link)
 	web.GoToast(m, name, func(toast func(string, int, int)) {
-		last, base := 0, 10
-		web.SpideSave(m, file, link, func(count int, total int, step int) {
-			if step/base == last {
-				return
-			}
-			last = step / base
+		defer nfs.TarExport(m, file)
+		begin := time.Now()
+		web.SpideSave(m, file, link, func(count, total, step int) {
 			cost := time.Now().Sub(begin)
 			mdb.HashSelectUpdate(m, name, func(value ice.Map) { value[mdb.COUNT], value[mdb.TOTAL], value[mdb.VALUE] = count, total, step })
-			toast(kit.FormatShow("from", begin.Format("15:04:05"), "cost", kit.FmtDuration(cost),
-				"rest", kit.FmtDuration(cost*time.Duration(101)/time.Duration(step+1)-cost),
-			), count, total)
+			toast(kit.FormatShow("from", begin.Format("15:04:05"), "cost", kit.FmtDuration(cost), "rest", kit.FmtDuration(cost*time.Duration(101)/time.Duration(step+1)-cost)), count, total)
 		})
-		m.Cmd(nfs.TAR, mdb.EXPORT, ice.Maps{nfs.PATH: file, nfs.FILE: ""})
-		web.ToastSuccess(m)
 	})
-	m.Cmdy(nfs.DIR, file).SetResult()
 }
 func _install_build(m *ice.Message, arg ...string) string {
 	p := m.Option(cli.CMD_DIR, _install_path(m, ""))
 	pp := kit.Path(path.Join(p, _INSTALL))
-	defer m.ProcessHold()
-	switch web.PushStream(m); cb := m.Optionv(PREPARE).(type) {
+	switch cb := m.Optionv(PREPARE).(type) {
 	case func(string):
 		cb(p)
 	case nil:
@@ -70,16 +61,15 @@ func _install_build(m *ice.Message, arg ...string) string {
 			return msg.Append(cli.CMD_ERR) + msg.Append(cli.CMD_OUT)
 		}
 	default:
-		m.ErrorNotImplement(cb)
-		return m.Result()
+		return m.ErrorNotImplement(cb).Result()
 	}
 	if msg := m.Cmd(cli.SYSTEM, cli.MAKE, "-j"+m.Cmdx(cli.RUNTIME, cli.MAXPROCS)); !cli.IsSuccess(msg) {
 		return msg.Append(cli.CMD_ERR) + msg.Append(cli.CMD_OUT)
-	}
-	if msg := m.Cmd(cli.SYSTEM, cli.MAKE, "PREFIX="+pp, INSTALL); !cli.IsSuccess(msg) {
+	} else if msg := m.Cmd(cli.SYSTEM, cli.MAKE, "PREFIX="+pp, INSTALL); !cli.IsSuccess(msg) {
 		return msg.Append(cli.CMD_ERR) + msg.Append(cli.CMD_OUT)
+	} else {
+		return ""
 	}
-	return ""
 }
 func _install_order(m *ice.Message, arg ...string) {
 	p := _install_path(m, "")
@@ -91,7 +81,7 @@ func _install_order(m *ice.Message, arg ...string) {
 			}
 		}
 	}
-	m.Cmdy(cli.SYSTEM, nfs.PUSH, path.Join(p, m.Option(nfs.PATH))+ice.NL)
+	m.Cmdy(cli.SYSTEM, nfs.PUSH, path.Join(p, m.Option(nfs.PATH)))
 }
 func _install_spawn(m *ice.Message, arg ...string) {
 	if kit.Int(m.Option(tcp.PORT)) >= 10000 {
@@ -102,20 +92,18 @@ func _install_spawn(m *ice.Message, arg ...string) {
 	} else {
 		m.Option(tcp.PORT, m.Cmdx(tcp.PORT, aaa.RIGHT))
 	}
-	target := path.Join(ice.USR_LOCAL_DAEMON, m.Option(tcp.PORT))
-	source := _install_path(m, "")
+	target, source := path.Join(ice.USR_LOCAL_DAEMON, m.Option(tcp.PORT)), _install_path(m, "")
 	nfs.MkdirAll(m, target)
 	defer m.Echo(target)
 	if m.Option(INSTALL) == "" && nfs.ExistsFile(m, kit.Path(source, _INSTALL)) {
 		m.Option(INSTALL, _INSTALL)
 	}
-	m.Cmd(nfs.DIR, path.Join(source, m.Option(INSTALL)), func(value ice.Maps) {
-		m.Cmd(cli.SYSTEM, "cp", "-r", strings.TrimSuffix(value[nfs.PATH], ice.PS), target+ice.PS)
+	nfs.DirDeepAll(m.Spawn(), path.Join(source, m.Option(INSTALL)), "", func(value ice.Maps) {
+		m.Cmd(nfs.LINK, path.Join(target, value[nfs.PATH]), path.Join(source, m.Option(INSTALL), value[nfs.PATH]))
 	})
 }
 func _install_start(m *ice.Message, arg ...string) {
-	p := m.Option(cli.CMD_DIR, m.Cmdx(INSTALL, cli.SPAWN))
-	args := []string{}
+	args, p := []string{}, m.Option(cli.CMD_DIR, m.Cmdx(INSTALL, cli.SPAWN))
 	switch cb := m.Optionv(PREPARE).(type) {
 	case func(string) []string:
 		args = append(args, cb(p)...)
@@ -128,8 +116,7 @@ func _install_start(m *ice.Message, arg ...string) {
 		m.ErrorNotImplement(cb)
 		return
 	}
-	bin := kit.Split(path.Base(arg[0]), "-.")[0]
-	m.Cmdy(cli.DAEMON, kit.Select(path.Join(ice.BIN, bin), arg, 1), kit.Slice(arg, 2), args)
+	m.Cmdy(cli.DAEMON, kit.Select(path.Join(ice.BIN, kit.Split(path.Base(arg[0]), "-.")[0]), arg, 1), kit.Slice(arg, 2), args)
 }
 func _install_stop(m *ice.Message, arg ...string) {
 	m.Cmd(cli.DAEMON, func(value ice.Maps) {
@@ -138,6 +125,13 @@ func _install_stop(m *ice.Message, arg ...string) {
 		}
 	})
 	m.Cmd(gdb.SIGNAL, gdb.KILL, m.Option(cli.PID))
+}
+func _install_end(m *ice.Message, arg ...string) {
+	m.Cmd(cli.DAEMON, func(value ice.Maps) {
+		if value[cli.PID] == m.Option(cli.PID) {
+			m.Cmd(cli.DAEMON, mdb.REMOVE, kit.Dict(mdb.HASH, value[mdb.HASH]))
+		}
+	})
 }
 func _install_trash(m *ice.Message, arg ...string) {
 	m.Cmd(cli.DAEMON, func(value ice.Maps) {
@@ -153,18 +147,17 @@ func _install_service(m *ice.Message, arg ...string) {
 	m.Cmd(mdb.SELECT, cli.DAEMON, "", mdb.HASH, func(value ice.Maps) {
 		if strings.Contains(value[ice.CMD], path.Join(ice.BIN, arg[0])) {
 			m.Push("", value, kit.Split(m.OptionFields()))
-		}
-		switch value[mdb.STATUS] {
-		case cli.START:
-			m.PushButton(gdb.DEBUG, cli.STOP)
-		case cli.STOP:
-			m.PushButton(cli.START)
-		default:
-			m.PushButton("")
+			switch value[mdb.STATUS] {
+			case cli.START:
+				m.PushButton(gdb.DEBUG, cli.STOP)
+			case cli.STOP:
+				m.PushButton(cli.START, cli.END)
+			default:
+				m.PushButton("")
+			}
 		}
 	})
-	m.Set(tcp.PORT).Tables(func(value ice.Maps) { m.Push(tcp.PORT, path.Base(value[nfs.DIR])) })
-	m.StatusTimeCount()
+	m.Set(tcp.PORT).Tables(func(value ice.Maps) { m.Push(tcp.PORT, path.Base(value[nfs.DIR])) }).StatusTimeCount()
 }
 
 const (
@@ -181,9 +174,10 @@ func init() {
 				_install_download(m)
 			}},
 			cli.BUILD: {Name: "build link*", Help: "构建", Hand: func(m *ice.Message, arg ...string) {
-				if err := _install_build(m, arg...); err != "" {
-					web.ToastFailure(m, cli.BUILD)
-					m.Echo(err)
+				web.PushStream(m)
+				defer m.ProcessHold()
+				if err := _install_build(m, arg...); m.Warn(err != "", err) {
+					web.ToastFailure(m, cli.BUILD, err)
 				} else {
 					web.ToastSuccess(m, cli.BUILD)
 				}
@@ -197,34 +191,36 @@ func init() {
 			cli.START: {Name: "start link* cmd", Help: "启动", Hand: func(m *ice.Message, arg ...string) {
 				_install_start(m, arg...)
 			}},
-			cli.STOP: {Name: "stop", Help: "停止", Hand: func(m *ice.Message, arg ...string) {
+			cli.STOP: {Help: "停止", Hand: func(m *ice.Message, arg ...string) {
 				_install_stop(m, arg...)
 			}},
-			gdb.DEBUG: {Name: "debug", Help: "调试", Hand: func(m *ice.Message, arg ...string) {
+			cli.END: {Help: "清理", Hand: func(m *ice.Message, arg ...string) {
+				_install_end(m, arg...)
+			}},
+			gdb.DEBUG: {Help: "调试", Hand: func(m *ice.Message, arg ...string) {
 				ctx.Process(m, XTERM, []string{mdb.TYPE, "gdb"}, arg...)
 			}},
 			nfs.TRASH: {Hand: func(m *ice.Message, arg ...string) {
 				_install_trash(m, arg...)
 			}},
-			nfs.SOURCE: {Name: "source link path", Help: "源码", Hand: func(m *ice.Message, arg ...string) {
+			nfs.SOURCE: {Name: "source link* path", Help: "源码", Hand: func(m *ice.Message, arg ...string) {
 				if m.Option(nfs.DIR_ROOT, path.Join(_install_path(m, ""), _INSTALL)); !nfs.ExistsFile(m, m.Option(nfs.DIR_ROOT)) {
 					m.Option(nfs.DIR_ROOT, path.Join(_install_path(m, "")))
 				}
-				if m.Option(nfs.DIR_ROOT) == "" {
-					return
-				}
-				m.Cmdy(nfs.DIR, m.Option(nfs.PATH)).Sort(nfs.PATH).StatusTimeCount(nfs.PATH, m.Option(nfs.DIR_ROOT))
+				m.Cmdy(nfs.DIR, m.Option(nfs.PATH)).StatusTimeCount(nfs.PATH, m.Option(nfs.DIR_ROOT))
 			}},
-		}, mdb.HashAction(mdb.SHORT, mdb.NAME, mdb.FIELD, "time,name,path,link")), Hand: func(m *ice.Message, arg ...string) {
+			mdb.REMOVE: {Hand: func(m *ice.Message, arg ...string) {
+				nfs.Trash(m, m.Option(nfs.PATH))
+				mdb.HashRemove(m)
+			}},
+		}, mdb.HashAction(mdb.SHORT, mdb.NAME, mdb.FIELD, "time,count,total,name,path,link")), Hand: func(m *ice.Message, arg ...string) {
 			switch len(arg) {
 			case 0:
-				mdb.HashSelect(m, arg...)
-				m.PushAction(cli.BUILD, cli.ORDER)
+				mdb.HashSelect(m, arg...).PushAction(cli.BUILD, cli.ORDER, mdb.REMOVE)
 			case 1:
 				_install_service(m, arg...)
 			default:
-				m.Option(nfs.DIR_ROOT, path.Join(ice.USR_LOCAL_DAEMON, arg[1]))
-				m.Cmdy(nfs.CAT, kit.Select(nfs.PWD, arg, 2))
+				m.Cmdy(nfs.CAT, kit.Select(nfs.PWD, arg, 2), kit.Dict(nfs.DIR_ROOT, path.Join(ice.USR_LOCAL_DAEMON, arg[1])))
 			}
 		}},
 	})

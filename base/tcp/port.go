@@ -55,7 +55,8 @@ func init() {
 				return
 			}
 			current := kit.Int(m.Config(BEGIN))
-			m.Cmd(nfs.DIR, nfs.PWD, kit.Dict(nfs.DIR_ROOT, ice.USR_LOCAL_DAEMON), func(value ice.Maps) {
+			m.Option(nfs.DIR_ROOT, ice.USR_LOCAL_DAEMON)
+			m.Cmd(nfs.DIR, nfs.PWD, func(value ice.Maps) {
 				bin := m.CmdAppend(nfs.DIR, path.Join(value[nfs.PATH], ice.BIN), nfs.PATH)
 				if bin == "" {
 					bin = m.CmdAppend(nfs.DIR, path.Join(value[nfs.PATH], "sbin"), nfs.PATH)

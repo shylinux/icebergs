@@ -294,7 +294,7 @@ func HashPrunesValue(m *ice.Message, field, value string) {
 }
 func HashCreateDeferRemove(m *ice.Message, arg ...Any) func() {
 	h := HashCreate(m, arg...)
-	return func() { HashRemove(m, HASH, h) }
+	return func() { HashRemove(m.SetResult(), HASH, h) }
 }
 func HashModifyDeferRemove(m *ice.Message, arg ...Any) func() {
 	HashModify(m, arg...)

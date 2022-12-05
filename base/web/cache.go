@@ -73,16 +73,20 @@ func _cache_upload(m *ice.Message, r *http.Request) (mime, name, file, size stri
 func _cache_download(m *ice.Message, r *http.Response, file string, cb ice.Any) string {
 	if f, p, e := miss.CreateFile(file); !m.Warn(e, ice.ErrNotValid, DOWNLOAD) {
 		defer f.Close()
-		last, step, bufs := 0, 10, 10*ice.MOD_BUFS
-		if cb == nil {
-			cb = func(size, total, count int) {
-				if count/step != last {
-					m.Logs(mdb.EXPORT, nfs.FILE, p, nfs.SIZE, size, mdb.TOTAL, total, mdb.COUNT, count)
+		last, base := 0, 10
+		nfs.CopyFile(m, f, r.Body, base*ice.MOD_BUFS, kit.Int(kit.Select("100", r.Header.Get(ContentLength))), func(count, total, step int) {
+			if step/base != last {
+				m.Logs(mdb.EXPORT, nfs.FILE, p, mdb.COUNT, count, mdb.TOTAL, total, mdb.VALUE, step)
+				switch cb := cb.(type) {
+				case func(int, int, int):
+					cb(count, total, step)
+				case nil:
+				default:
+					m.ErrorNotImplement(cb)
 				}
-				last = count / step
 			}
-		}
-		nfs.CopyFile(m, f, r.Body, bufs, kit.Int(kit.Select("100", r.Header.Get(ContentLength))), cb)
+			last = step / base
+		})
 		return p
 	}
 	return ""

@@ -46,7 +46,7 @@ func init() {
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
 				kit.Fetch([]string{"curl", "make", "gcc", "vim", "tmux"}, func(cmd string) { cli.IsSystem(m, cmd) })
 				if cli.IsAlpine(m, "git"); !cli.IsAlpine(m, "go", "go git") {
-					m.Cmd(mdb.INSERT, cli.CLI, "", mdb.ZONE, cli.CLI, "go", cli.CMD, kit.Format("install download https://golang.google.cn/dl/go1.15.5.%s-%s.tar.gz usr/local", runtime.GOOS, runtime.GOARCH))
+					m.Cmd(mdb.INSERT, cli.MIRRORS, "", mdb.ZONE, cli.CLI, "go", cli.CMD, kit.Format("install download https://golang.google.cn/dl/go1.15.5.%s-%s.tar.gz usr/local", runtime.GOOS, runtime.GOARCH))
 				}
 			}},
 			mdb.INPUTS: {Hand: func(m *ice.Message, arg ...string) {

@@ -44,7 +44,6 @@ func _tar_list(m *ice.Message, p string, cb func(*tar.Header, *tar.Reader, int))
 				cb(h, r, i)
 			}
 			m.StatusTimeCount(mdb.TOTAL, i)
-			m.Debug("what %v", i)
 			return m
 		default:
 			return m
@@ -61,7 +60,7 @@ func init() {
 			mdb.NEXT: {Hand: func(m *ice.Message, arg ...string) { mdb.PrevPage(m, arg[0], kit.Slice(arg, 1)...) }},
 			mdb.PREV: {Hand: func(m *ice.Message, arg ...string) { mdb.NextPageLimit(m, arg[0], kit.Slice(arg, 1)...) }},
 			mdb.EXPORT: {Hand: func(m *ice.Message, arg ...string) {
-				list := map[string]bool{}
+				list, size := map[string]bool{}, int64(0)
 				_tar_list(m, m.Option(PATH), func(h *tar.Header, r *tar.Reader, i int) {
 					if h.Name == m.Option(FILE) || m.Option(FILE) == "" {
 						p := path.Join(path.Dir(m.Option(PATH)), h.Name)
@@ -79,9 +78,11 @@ func init() {
 								defer m.Cmdy(DIR, p, "time,path,size")
 								defer m.Cmdy(CAT, p)
 							}
-							n, e := io.Copy(f, r)
-							m.Logs(mdb.EXPORT, FILE, p, SIZE, n).Warn(e)
-							os.Chmod(p, os.FileMode(h.Mode))
+							if n, e := io.Copy(f, r); !m.Warn(e) {
+								size += n
+								m.Logs(mdb.EXPORT, LINE, i, SIZE, kit.FmtSize(size), FILE, p, SIZE, kit.FmtSize(n))
+								os.Chmod(p, os.FileMode(h.Mode))
+							}
 						}
 					}
 				})
@@ -112,4 +113,7 @@ func ReadAll(m *ice.Message, r io.Reader) []byte {
 	} else {
 		return buf
 	}
+}
+func TarExport(m *ice.Message, path string, file ...string) {
+	m.Cmd(TAR, mdb.EXPORT, ice.Maps{PATH: path, FILE: kit.Select("", file, 0)})
 }

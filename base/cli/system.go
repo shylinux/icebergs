@@ -20,14 +20,14 @@ func _system_cmd(m *ice.Message, arg ...string) *exec.Cmd {
 	for i := 0; i < len(env)-1; i += 2 {
 		if env[i] == PATH {
 			if bin = _system_find(m, arg[0], strings.Split(env[i+1], ice.DF)...); bin != "" {
-				m.Logs(mdb.SELECT, "env path cmd", bin)
+				m.Logs(mdb.SELECT, "envpath cmd", bin)
 			}
 		}
 	}
 	if bin == "" {
 		if text := kit.ReadFile(ice.ETC_PATH); len(text) > 0 {
 			if bin = _system_find(m, arg[0], strings.Split(text, ice.NL)...); bin != "" {
-				m.Logs(mdb.SELECT, "etc path cmd", bin)
+				m.Logs(mdb.SELECT, "etcpath cmd", bin)
 			}
 		}
 	}
@@ -54,7 +54,7 @@ func _system_cmd(m *ice.Message, arg ...string) *exec.Cmd {
 	}
 	cmd := exec.Command(bin, arg[1:]...)
 	if cmd.Dir = kit.TrimPath(m.Option(CMD_DIR)); len(cmd.Dir) > 0 {
-		if m.Logs(mdb.EXPORT, CMD_DIR, cmd.Dir); !nfs.ExistsFile(m, cmd.Dir) {
+		if m.Logs(mdb.PARAMS, CMD_DIR, cmd.Dir); !nfs.ExistsFile(m, cmd.Dir) {
 			file.MkdirAll(cmd.Dir, ice.MOD_DIR)
 		}
 	}
@@ -62,7 +62,7 @@ func _system_cmd(m *ice.Message, arg ...string) *exec.Cmd {
 		cmd.Env = append(cmd.Env, kit.Format("%s=%s", env[i], env[i+1]))
 	}
 	if len(cmd.Env) > 0 {
-		m.Logs(mdb.EXPORT, CMD_ENV, kit.Format(cmd.Env))
+		m.Logs(mdb.PARAMS, CMD_ENV, kit.Format(cmd.Env))
 	}
 	return cmd
 }
@@ -141,7 +141,7 @@ const SYSTEM = "system"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
-		SYSTEM: {Name: "system cmd run", Help: "系统命令", Actions: ice.Actions{
+		SYSTEM: {Name: "system cmd auto", Help: "系统命令", Actions: ice.MergeActions(ice.Actions{
 			nfs.PUSH: {Hand: func(m *ice.Message, arg ...string) {
 				for _, p := range arg {
 					if !strings.Contains(m.Cmdx(nfs.CAT, ice.ETC_PATH), p) {
@@ -160,10 +160,12 @@ func init() {
 				m.Option(CMD_ENV, "COLUMNS", kit.Int(kit.Select("1920", m.Option(ice.WIDTH)))/12)
 				m.Echo(SystemCmds(m, "man %s %s|col -b", kit.Select("", arg[1], arg[1] != "1"), arg[0]))
 			}},
-		}, Hand: func(m *ice.Message, arg ...string) {
+		}, mdb.HashAction(mdb.SHORT, "cmd", mdb.FIELD, "time,cmd,arg")), Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) == 0 {
+				mdb.HashSelect(m)
 				return
 			}
+			mdb.HashCreate(m.Spawn(), ice.CMD, arg[0], ice.ARG, kit.Join(arg[1:], ice.SP))
 			if _system_exec(m, _system_cmd(m, kit.Simple(kit.Split(arg[0]), arg[1:])...)); IsSuccess(m) && m.Append(CMD_ERR) == "" {
 				m.SetAppend()
 			}

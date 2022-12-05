@@ -14,7 +14,7 @@ func _role_keys(key ...string) string {
 	return strings.TrimPrefix(strings.TrimSuffix(strings.ReplaceAll(path.Join(strings.ReplaceAll(kit.Keys(key), ice.PT, ice.PS)), ice.PS, ice.PT), ice.PT), ice.PT)
 }
 func _role_set(m *ice.Message, role, zone, key string, status bool) {
-	m.Logs(mdb.INSERT, ROLE, role, zone, key)
+	m.Logs(mdb.INSERT, mdb.KEY, "aaa.role", ROLE, role, zone, key)
 	mdb.HashSelectUpdate(m, role, func(value ice.Map) { value[zone].(ice.Map)[key] = status })
 }
 func _role_white(m *ice.Message, role, key string) { _role_set(m, role, WHITE, key, true) }

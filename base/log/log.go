@@ -81,8 +81,6 @@ const (
 )
 const (
 	BENCH = "bench"
-	WATCH = "watch"
-	ERROR = "error"
 	TRACE = "trace"
 )
 const (

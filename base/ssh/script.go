@@ -79,10 +79,7 @@ func (f *Frame) change(m *ice.Message, ls []string) []string {
 		if target == "~" {
 			target = ""
 		}
-		m.Spawn(f.target).Search(target+ice.PT, func(p *ice.Context, s *ice.Context) {
-			m.Logs(mdb.SELECT, ctx.CONTEXT, s.Name)
-			f.target = s
-		})
+		m.Spawn(f.target).Search(target+ice.PT, func(p *ice.Context, s *ice.Context) { f.target = s })
 	}
 	return ls
 }

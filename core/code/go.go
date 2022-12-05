@@ -61,7 +61,8 @@ func _go_exec(m *ice.Message, arg ...string) {
 	}
 }
 func _go_show(m *ice.Message, arg ...string) {
-	TagsList(m, "gotags", path.Join(m.Option(nfs.PATH), m.Option(nfs.FILE)))
+	// TagsList(m, "gotags", path.Join(m.Option(nfs.PATH), m.Option(nfs.FILE)))
+	TagsList(m, "gotags", path.Join(arg[2], arg[1]))
 }
 func _mod_show(m *ice.Message, file string) {
 	const (
@@ -130,7 +131,7 @@ func init() {
 				kit.If(arg[0] == GO, func() { m.Echo(_go_template, path.Base(path.Dir(path.Join(arg[2], arg[1])))) })
 			}},
 			NAVIGATE: {Hand: func(m *ice.Message, arg ...string) { _c_tags(m, GODOC, "gotags", "-f", nfs.TAGS, "-R", nfs.PWD) }},
-		}, PlugAction(), LangAction())},
+		}, PlugAction())},
 	})
 }
 

@@ -55,7 +55,7 @@ func _serve_main(m *ice.Message, w http.ResponseWriter, r *http.Request) bool {
 	} else {
 		r.Header.Set(ice.MSG_USERIP, strings.Split(r.RemoteAddr, ice.DF)[0])
 	}
-	if m.Logs(r.Method, r.Header.Get(ice.MSG_USERIP), r.URL.String()); m.Config(LOGHEADERS) == ice.TRUE {
+	if m.Logs(r.Header.Get(ice.MSG_USERIP), r.Method, r.URL.String()); m.Config(LOGHEADERS) == ice.TRUE {
 		kit.Fetch(r.Header, func(k string, v []string) { m.Logs("Header", k, v) })
 	}
 	if r.Method == http.MethodGet && r.URL.Path != PP(SPACE) {

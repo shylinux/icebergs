@@ -40,13 +40,13 @@ func init() {
 		H: {Name: "h path auto", Help: "系统编程", Actions: ice.MergeActions(ice.Actions{
 			mdb.RENDER: {Hand: func(m *ice.Message, arg ...string) { _c_show(m, arg...) }},
 			NAVIGATE:   {Hand: func(m *ice.Message, arg ...string) { _c_tags(m, MAN, "ctags", "-a", "-R", nfs.PWD) }},
-		}, PlugAction(), LangAction())},
+		}, PlugAction())},
 		C: {Name: "c path auto", Help: "系统编程", Actions: ice.MergeActions(ice.Actions{
 			mdb.RENDER: {Hand: func(m *ice.Message, arg ...string) { _c_show(m, arg...) }},
 			mdb.ENGINE: {Hand: func(m *ice.Message, arg ...string) { _c_exec(m, arg...) }},
 			NAVIGATE:   {Hand: func(m *ice.Message, arg ...string) { _c_tags(m, MAN, "ctags", "-a", "-R", nfs.PWD) }},
 			TEMPLATE:   {Hand: func(m *ice.Message, arg ...string) { kit.If(arg[0] == C, func() { m.Echo(_c_template) }) }},
-		}, PlugAction(), LangAction())},
+		}, PlugAction())},
 	})
 }
 

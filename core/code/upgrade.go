@@ -17,28 +17,23 @@ const UPGRADE = "upgrade"
 
 func init() {
 	Index.Merge(&ice.Context{Configs: ice.Configs{
-		UPGRADE: {Name: UPGRADE, Help: "升级", Value: kit.Dict(mdb.HASH, kit.Dict(
+		UPGRADE: {Value: kit.Dict(mdb.HASH, kit.Dict(
 			nfs.TARGET, kit.Dict(mdb.LIST, kit.List(mdb.TYPE, ice.BIN, nfs.FILE, ice.ICE_BIN)),
 			nfs.BINARY, kit.Dict(mdb.LIST, kit.List(mdb.TYPE, nfs.TAR, nfs.FILE, "contexts.bin.tar.gz")),
 			nfs.SOURCE, kit.Dict(mdb.LIST, kit.List(mdb.TYPE, nfs.TAR, nfs.FILE, "contexts.src.tar.gz")),
 		))},
 	}, Commands: ice.Commands{
 		UPGRADE: {Name: "upgrade item=target,binary,source run restart", Help: "升级", Actions: ice.MergeActions(ice.Actions{
-			cli.RESTART: {Name: "restart", Help: "重启", Hand: func(m *ice.Message, arg ...string) {
-				m.Go(func() { m.Sleep300ms(ice.EXIT, 1) })
-			}},
+			cli.RESTART: {Hand: func(m *ice.Message, arg ...string) { m.Go(func() { m.Sleep300ms(ice.EXIT, 1) }) }},
 		}, mdb.ClearHashOnExitAction()), Hand: func(m *ice.Message, arg ...string) {
 			mdb.ZoneSelect(m, kit.Select(nfs.TARGET, arg, 0)).Tables(func(value ice.Maps) {
-				if value[nfs.FILE] == ice.ICE_BIN { // 程序文件
+				if value[nfs.FILE] == ice.ICE_BIN {
 					value[nfs.FILE] = kit.Keys(ice.ICE, runtime.GOOS, runtime.GOARCH)
 					defer nfs.Rename(m, value[nfs.FILE], ice.BIN_ICE_BIN)
 					m.Option(ice.EXIT, ice.TRUE)
 				}
-
-				// 下载文件
 				dir := kit.Select(kit.Format(value[nfs.FILE]), value[nfs.PATH])
-				web.SpideSave(m, dir, "/publish/"+kit.Format(value[nfs.FILE]), nil)
-				switch value[mdb.TYPE] {
+				switch web.SpideSave(m, dir, "/publish/"+kit.Format(value[nfs.FILE]), nil); value[mdb.TYPE] {
 				case ice.BIN:
 					os.Chmod(dir, 0755)
 				case nfs.TAR:

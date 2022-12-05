@@ -35,20 +35,16 @@ func (s _xterm) Close() error {
 func _xterm_get(m *ice.Message, h string) _xterm {
 	h = kit.Select(m.Option(mdb.HASH), h)
 	m.Assert(h != "")
-
 	t := mdb.HashSelectField(m, m.Option(mdb.HASH, h), mdb.TYPE)
 	mdb.HashModify(m, "view", m.Option(ice.MSG_DAEMON))
 	return mdb.HashSelectTarget(m, h, func() ice.Any {
 		ls := kit.Split(kit.Select(nfs.SH, t))
 		cmd := exec.Command(cli.SystemFind(m, ls[0]), ls[1:]...)
-
 		tty, err := pty.Start(cmd)
 		m.Assert(err)
-
 		m.Go(func() {
 			defer mdb.HashSelectUpdate(m, h, func(value ice.Map) { delete(value, mdb.TARGET) })
 			defer tty.Close()
-
 			// m.Option("log.disable", ice.TRUE)
 			buf := make([]byte, ice.MOD_BUFS)
 			for {
@@ -70,7 +66,7 @@ const XTERM = "xterm"
 func init() {
 	Index.MergeCommands(ice.Commands{
 		XTERM: {Name: "xterm hash auto", Help: "命令行", Actions: ice.MergeActions(ice.Actions{
-			ctx.PROCESS: {Name: "process", Help: "响应", Hand: func(m *ice.Message, arg ...string) {
+			ctx.PROCESS: {Hand: func(m *ice.Message, arg ...string) {
 				if len(arg) == 0 || arg[0] != ice.RUN {
 					arg = []string{m.Cmdx("", mdb.CREATE, arg)}
 				}
@@ -80,36 +76,32 @@ func init() {
 				switch mdb.HashInputs(m, arg).Cmdy(FAVOR, "_system_term", ice.OptionFields(arg[0])).Cut(arg[0]); arg[0] {
 				case mdb.TYPE:
 					if m.Option(nfs.LINE) != "" && m.Option(nfs.FILE) != "" {
-						m.Push(arg[0], "vim +"+m.Option(nfs.LINE)+" "+m.Option(nfs.PATH)+m.Option(nfs.FILE))
+						m.Push(arg[0], "vim +"+m.Option(nfs.LINE)+ice.SP+m.Option(nfs.PATH)+m.Option(nfs.FILE))
 					}
 					m.Push(arg[0], "bash", "sh")
 				case mdb.NAME:
 					m.Push(arg[0], ice.Info.Hostname, path.Base(m.Option(mdb.TYPE)))
 				}
 			}},
-			mdb.CREATE: {Name: "create type=sh name text", Help: "创建", Hand: func(m *ice.Message, arg ...string) {
+			mdb.CREATE: {Name: "create type=sh name text", Hand: func(m *ice.Message, arg ...string) {
 				mdb.HashCreate(m, mdb.NAME, kit.Split(m.Option(mdb.TYPE))[0], m.OptionSimple(mdb.TYPE, mdb.NAME, mdb.TEXT))
-				ctx.ProcessRefresh(m)
 			}},
-			"resize": {Name: "resize", Help: "大小", Hand: func(m *ice.Message, arg ...string) {
+			"resize": {Hand: func(m *ice.Message, arg ...string) {
 				_xterm_get(m, "").Setsize(m.OptionDefault("rows", "24"), m.OptionDefault("cols", "80"))
 			}},
-			"input": {Name: "input", Help: "输入", Hand: func(m *ice.Message, arg ...string) {
+			"input": {Hand: func(m *ice.Message, arg ...string) {
 				if b, e := base64.StdEncoding.DecodeString(strings.Join(arg, "")); !m.Warn(e) {
 					_xterm_get(m, "").Write(string(b))
 				}
 			}},
-			INSTALL: {Name: "install", Help: "安装", Hand: func(m *ice.Message, arg ...string) {
+			INSTALL: {Help: "安装", Hand: func(m *ice.Message, arg ...string) {
 				_xterm_get(m, kit.Select("", arg, 0)).Write(m.Cmdx(PUBLISH, ice.CONTEXTS, INSTALL) + ice.NL)
 				ctx.ProcessHold(m)
 			}},
-			web.WEBSITE: {Name: "website", Help: "网页", Hand: func(m *ice.Message, arg ...string) {
-				web.ProcessWebsite(m, "", "", m.OptionSimple(mdb.HASH))
-			}},
+			web.WEBSITE: {Help: "网页", Hand: func(m *ice.Message, arg ...string) { web.ProcessWebsite(m, "", "", m.OptionSimple(mdb.HASH)) }},
 		}, mdb.HashAction(mdb.FIELD, "time,hash,type,name,text,view", mdb.TOOLS, FAVOR), ctx.CmdAction(), ctx.ProcessAction()), Hand: func(m *ice.Message, arg ...string) {
 			if mdb.HashSelect(m, arg...); len(arg) == 0 {
-				m.PushAction(web.WEBSITE, mdb.REMOVE)
-				m.Action(mdb.CREATE, mdb.PRUNES)
+				m.PushAction(web.WEBSITE, mdb.REMOVE).Action(mdb.CREATE, mdb.PRUNES)
 			} else {
 				ctx.Toolkit(m, FAVOR, "web.chat.iframe")
 				m.Action(INSTALL, "波浪线", "反引号")

@@ -15,18 +15,16 @@ import (
 	kit "shylinux.com/x/toolkits"
 )
 
-const (
-	BINNARY = "binnary"
-	SERVICE = "service"
-	SECONDS = "seconds"
-)
-
 const PPROF = "pprof"
 
 func init() {
-	web.Index.MergeCommands(ice.Commands{"/debug/": {Hand: func(m *ice.Message, arg ...string) {
+	const (
+		BINNARY = "binnary"
+		SERVICE = "service"
+		SECONDS = "seconds"
+	)
+	web.Index.MergeCommands(ice.Commands{"/debug/": {Actions: aaa.WhiteAction(), Hand: func(m *ice.Message, arg ...string) {
 		defer m.Render(ice.RENDER_VOID)
-		m.R.URL.Path = "/debug" + m.R.URL.Path
 		http.DefaultServeMux.ServeHTTP(m.W, m.R)
 	}}})
 	Index.MergeCommands(ice.Commands{
@@ -36,38 +34,32 @@ func init() {
 				case BINNARY:
 					m.Cmdy(nfs.DIR, ice.BIN, nfs.DIR_CLI_FIELDS).RenameAppend(nfs.PATH, BINNARY)
 				case SERVICE:
-					m.Cmd(web.SPIDE, func(value ice.Maps) {
-						m.Push(SERVICE, kit.MergeURL2(value[web.CLIENT_URL], "/debug/pprof/profile"))
-					})
+					m.Cmd(web.SPIDE, func(value ice.Maps) { m.Push(SERVICE, kit.MergeURL2(value[web.CLIENT_URL], "/debug/pprof/profile")) })
 				}
 			}},
-			mdb.CREATE: {Name: "create zone=some binnary=bin/ice.bin service='http://localhost:9020/debug/pprof/profile' seconds=3", Help: "创建"},
-
-			ice.RUN: {Name: "run", Help: "执行", Hand: func(m *ice.Message, arg ...string) {
-				msg := m.Cmd(web.SPIDE, ice.DEV, web.SPIDE_CACHE, http.MethodGet, m.Option(SERVICE), SECONDS, m.Option(SECONDS))
+			mdb.CREATE: {Name: "create zone*=some binnary*=bin/ice.bin service*='http://localhost:9020/debug/pprof/profile' seconds*=30"},
+			cli.START: {Help: "启动", Hand: func(m *ice.Message, arg ...string) {
+				if m.Option(BINNARY) == "" {
+					return
+				}
+				msg := m.Cmd(web.SPIDE, ice.DEV, web.SPIDE_CACHE, http.MethodGet, m.Option(SERVICE), m.OptionSimple(SECONDS))
 				cmd := kit.Simple(m.Configv(PPROF), "-text", m.Option(BINNARY), msg.Append(nfs.FILE))
 				m.Option(mdb.TEXT, strings.Join(kit.Slice(strings.Split(m.Cmdx(cli.SYSTEM, cmd), ice.NL), 0, 20), ice.NL))
-				m.Option(nfs.FILE, msg.Append(nfs.FILE))
-				mdb.ZoneInsert(m, m.OptionSimple("zone,text,file"))
+				mdb.ZoneInsert(m, m.OptionSimple("zone,text"), msg.AppendSimple(nfs.FILE))
 				m.Echo(m.Option(mdb.TEXT)).ProcessInner()
 			}},
-			web.SERVE: {Name: "serve", Help: "展示", Hand: func(m *ice.Message, arg ...string) {
+			web.SERVE: {Help: "展示", Hand: func(m *ice.Message, arg ...string) {
 				u := web.OptionUserWeb(m)
 				p := u.Hostname() + ice.DF + m.Cmdx(tcp.PORT, aaa.RIGHT)
 				m.Cmd(cli.DAEMON, m.Configv(PPROF), "-http="+p, m.Option(BINNARY), m.Option(nfs.FILE))
 				m.Echo("http://%s/ui/top", p).ProcessInner()
 			}},
-		}, mdb.ZoneAction(mdb.SHORT, mdb.ZONE, mdb.FIELD, "time,id,text,file", PPROF, kit.List(GO, "tool", PPROF))), Hand: func(m *ice.Message, arg ...string) {
-			m.Fields(len(arg), "time,zone,count,binnary,service,seconds", mdb.ZoneField(m))
+		}, mdb.ZoneAction(mdb.FIELDS, "time,zone,count,binnary,service,seconds", mdb.FIELD, "time,id,text,file", PPROF, kit.List(GO, "tool", PPROF))), Hand: func(m *ice.Message, arg ...string) {
 			if mdb.ZoneSelect(m, arg...); len(arg) == 0 {
-				m.EchoAnchor(web.MergeLink(m, "/code/pprof/"))
-				m.PushAction(ice.RUN, mdb.REMOVE)
-				m.Action(mdb.CREATE)
+				m.EchoAnchor(web.MergeLink(m, "/debug/pprof/"))
+				m.PushAction(cli.START, mdb.REMOVE).Action(mdb.CREATE)
 			} else {
-				m.Tables(func(value ice.Maps) {
-					m.PushDownload(mdb.LINK, "pprof.pd.gz", value[nfs.FILE])
-					m.PushButton(web.SERVE)
-				})
+				m.Tables(func(value ice.Maps) { m.PushDownload(mdb.LINK, "pprof.pd.gz", value[nfs.FILE]).PushButton(web.SERVE) })
 			}
 		}},
 	})

@@ -105,6 +105,6 @@ func init() {
 			mdb.ENGINE: {Hand: func(m *ice.Message, arg ...string) {
 				m.Echo(_website_url(m, strings.TrimPrefix(path.Join(arg[2], arg[1]), SRC_WEBSITE)))
 			}},
-		}, PlugAction(), LangAction())},
+		}, PlugAction())},
 	})
 }

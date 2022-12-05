@@ -122,7 +122,7 @@ func init() {
 					m.Cmdy("web.code.vim.tags").Cut(mdb.ZONE)
 				}
 			}},
-		}, PlugAction(), LangAction())},
+		}, PlugAction())},
 	})
 }
 

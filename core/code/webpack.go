@@ -15,12 +15,8 @@ import (
 	kit "shylinux.com/x/toolkits"
 )
 
-func _volcanos(m *ice.Message, file ...string) string {
-	return path.Join(ice.USR_VOLCANOS, path.Join(file...))
-}
-func _publish(m *ice.Message, file ...string) string {
-	return path.Join(ice.USR_PUBLISH, path.Join(file...))
-}
+func _volcanos(m *ice.Message, file ...string) string { return path.Join(ice.USR_VOLCANOS, path.Join(file...)) }
+func _publish(m *ice.Message, file ...string) string { return path.Join(ice.USR_PUBLISH, path.Join(file...)) }
 func _webpack_can(m *ice.Message) {
 	m.Option(nfs.DIR_ROOT, "")
 	m.Cmd(nfs.COPY, _volcanos(m, PAGE_CAN_CSS), _volcanos(m, PAGE_INDEX_CSS), _volcanos(m, PAGE_CACHE_CSS))
@@ -45,21 +41,17 @@ func _webpack_cache(m *ice.Message, dir string, write bool) {
 	if _, e := nfs.DiskFile.StatFile(ice.USR_VOLCANOS); os.IsNotExist(e) {
 		return
 	}
-
 	css, _, e := nfs.CreateFile(m, path.Join(dir, PAGE_CACHE_CSS))
 	m.Assert(e)
 	defer css.Close()
-
 	js, _, e := nfs.CreateFile(m, path.Join(dir, PAGE_CACHE_JS))
 	m.Assert(e)
 	defer js.Close()
-
 	defer fmt.Fprintln(js, `_can_name = ""`)
 	defer _webpack_can(m)
 	if !write {
 		return
 	}
-
 	for _, k := range []string{LIB, PANEL, PLUGIN} {
 		nfs.DirDeepAll(m, dir, k, func(value ice.Maps) {
 			if kit.Ext(value[nfs.PATH]) == CSS {
@@ -68,7 +60,6 @@ func _webpack_cache(m *ice.Message, dir string, write bool) {
 		})
 	}
 	fmt.Fprintln(js)
-
 	for _, k := range []string{LIB, PANEL, PLUGIN} {
 		nfs.DirDeepAll(m, dir, k, func(value ice.Maps) {
 			if kit.Ext(value[nfs.PATH]) == JS {
@@ -79,7 +70,6 @@ func _webpack_cache(m *ice.Message, dir string, write bool) {
 	for _, k := range []string{ice.FRAME_JS} {
 		_webpack_js(m, js, k)
 	}
-
 	m.Option(nfs.DIR_ROOT, "")
 	mdb.HashSelects(m).Sort(nfs.PATH).Tables(func(value ice.Maps) {
 		defer fmt.Fprintln(js)
@@ -102,25 +92,10 @@ func _webpack_build(m *ice.Message, file string) {
 		fmt.Fprintln(f, `Volcanos.meta.pack = `+kit.Formats(kit.UnMarshal(kit.Select("{}", m.Option(nfs.CONTENT)))))
 		fmt.Fprintln(f, `Volcanos.meta.args = `+kit.Formats(kit.Dict(m.OptionSimple(kit.Split(m.Option(ctx.ARGS))...))))
 	}
-
 	if f, p, e := nfs.CreateFile(m, kit.Keys(file, HTML)); m.Assert(e) {
 		defer f.Close()
 		defer m.Echo(p)
-
-		fmt.Fprintf(f, `
-<!DOCTYPE html>
-<head>
-    <meta charset="utf-8">
-    <style type="text/css">%s</style>
-    <style type="text/css">%s</style>
-</head>
-<body>
-<script>%s</script>
-<script>%s</script>
-<script>%s</script>
-<script>%s</script>
-</body>
-`,
+		fmt.Fprintf(f, _webpack_template,
 			m.Cmdx(nfs.CAT, _volcanos(m, PAGE_INDEX_CSS)), m.Cmdx(nfs.CAT, _volcanos(m, PAGE_CACHE_CSS)),
 			m.Cmdx(nfs.CAT, _volcanos(m, ice.PROTO_JS)), m.Cmdx(nfs.CAT, kit.Keys(file, JS)),
 			m.Cmdx(nfs.CAT, _volcanos(m, PAGE_CACHE_JS)), m.Cmdx(nfs.CAT, _volcanos(m, PAGE_INDEX_JS)),
@@ -155,10 +130,10 @@ func init() {
 			mdb.REMOVE: {Name: "remove", Help: "调试", Hand: func(m *ice.Message, arg ...string) {
 				_webpack_cache(m.Spawn(), _volcanos(m), false)
 			}},
-			mdb.INSERT: {Name: "insert path", Help: "添加", Hand: func(m *ice.Message, arg ...string) {
-				mdb.HashCreate(m, nfs.PATH, m.Option(nfs.PATH))
+			mdb.INSERT: {Name: "insert path*", Hand: func(m *ice.Message, arg ...string) {
+				mdb.HashCreate(m, m.OptionSimple(nfs.PATH))
 			}},
-			cli.BUILD: {Name: "build name=hi", Help: "构建", Hand: func(m *ice.Message, arg ...string) {
+			cli.BUILD: {Name: "build name*=hi", Hand: func(m *ice.Message, arg ...string) {
 				_webpack_cache(m.Spawn(), _volcanos(m), true)
 				_webpack_build(m, _publish(m, WEBPACK, m.Option(mdb.NAME)))
 			}},
@@ -168,11 +143,23 @@ func init() {
 				}
 			}},
 		}, mdb.HashAction(mdb.SHORT, nfs.PATH, mdb.FIELD, "time,path"), mdb.ClearHashOnExitAction()), Hand: func(m *ice.Message, arg ...string) {
-			m.Option(nfs.DIR_TYPE, nfs.CAT)
-			m.Option(nfs.DIR_DEEP, ice.TRUE)
-			m.OptionFields(nfs.DIR_WEB_FIELDS)
-			m.Cmdy(nfs.DIR, _volcanos(m, PAGE))
-			m.Cmdy(nfs.DIR, _publish(m, WEBPACK))
+			m.Options(nfs.DIR_TYPE, nfs.CAT, nfs.DIR_DEEP, ice.TRUE)
+			m.Cmdy(nfs.DIR, _volcanos(m, PAGE)).Cmdy(nfs.DIR, _publish(m, WEBPACK))
 		}},
 	})
 }
+
+var _webpack_template = `
+<!DOCTYPE html>
+<head>
+    <meta charset="utf-8">
+    <style type="text/css">%s</style>
+    <style type="text/css">%s</style>
+</head>
+<body>
+<script>%s</script>
+<script>%s</script>
+<script>%s</script>
+<script>%s</script>
+</body>
+`

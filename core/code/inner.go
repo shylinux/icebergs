@@ -101,25 +101,16 @@ func init() {
 			mdb.PLUGIN: {Hand: func(m *ice.Message, arg ...string) { m.Cmdy(mdb.PLUGIN, arg) }},
 			mdb.RENDER: {Hand: func(m *ice.Message, arg ...string) { _inner_show(m, arg[0], arg[1], arg[2]) }},
 			mdb.ENGINE: {Hand: func(m *ice.Message, arg ...string) { _inner_exec(m, arg[0], arg[1], arg[2]) }},
-			nfs.GREP: {Name: "grep", Help: "搜索", Hand: func(m *ice.Message, arg ...string) {
+			nfs.GREP: {Help: "搜索", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmdy(nfs.GREP, arg[0], m.Option(nfs.PATH)).StatusTimeCount(mdb.INDEX, 0)
 			}},
-			nfs.TAGS: {Name: "tags", Help: "索引", Hand: func(m *ice.Message, arg ...string) {
+			nfs.TAGS: {Help: "索引", Hand: func(m *ice.Message, arg ...string) {
 				if _inner_tags(m, m.Option(nfs.PATH), arg[0]); m.Length() == 0 {
 					_inner_tags(m, "", arg[0])
 				}
-			}},
+			}}, FAVOR: {},
 			NAVIGATE: {Hand: func(m *ice.Message, arg ...string) {
 				m.Cmdy(NAVIGATE, kit.Ext(m.Option(mdb.FILE)), m.Option(nfs.FILE), m.Option(nfs.PATH))
-			}}, FAVOR: {},
-			ctx.COMMAND: {Hand: func(m *ice.Message, arg ...string) {
-				if !ctx.PodCmd(m, ctx.COMMAND, arg) {
-					m.Cmdy(ctx.COMMAND, arg)
-				}
-				if len(arg) == 2 && arg[0] == mdb.SEARCH && arg[1] == ctx.COMMAND {
-					return
-				}
-				m.Cmd(FAVOR, mdb.INSERT, mdb.ZONE, "_recent_cmd", nfs.FILE, arg[0])
 			}},
 		}, ctx.CmdAction(), aaa.RoleAction()), Hand: func(m *ice.Message, arg ...string) {
 			if arg[0] = strings.Split(arg[0], ice.FS)[0]; !strings.HasSuffix(arg[0], ice.PS) && len(arg) == 1 {
@@ -154,12 +145,9 @@ func init() {
 				}
 			}
 		case nfs.SOURCE:
-			m.Debug("what %v", cmd)
 			if file := ctx.GetCmdFile(m, cmd); nfs.ExistsFile(m, file) {
-			m.Debug("what %v", file)
 				return process(m, file)
 			}
-			m.Debug("what %v", cmd)
 		}
 		return false
 	})

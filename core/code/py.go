@@ -11,17 +11,12 @@ import (
 
 func _py_exec(m *ice.Message, arg ...string) {
 	const PYTHON2 = "python2"
-
 	if _, e := nfs.DiskFile.StatFile(path.Join(arg[2], arg[1])); e == nil {
 		m.Cmdy(cli.SYSTEM, PYTHON2, path.Join(arg[2], arg[1]))
-
 	} else if b, e := nfs.ReadFile(m, path.Join(arg[2], arg[1])); e == nil {
 		m.Cmdy(cli.SYSTEM, PYTHON2, "-c", string(b))
 	}
-
-	if m.StatusTime(); cli.IsSuccess(m) {
-		m.SetAppend()
-	}
+	m.StatusTime()
 }
 
 const PY = nfs.PY
@@ -36,6 +31,6 @@ func init() {
 			}},
 			mdb.ENGINE: {Hand: func(m *ice.Message, arg ...string) { _py_exec(m, arg...) }},
 			TEMPLATE:   {Hand: func(m *ice.Message, arg ...string) { m.Echo(`print "hello world"`) }},
-		}, PlugAction(), LangAction())},
+		}, PlugAction())},
 	})
 }

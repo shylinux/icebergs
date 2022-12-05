@@ -199,10 +199,11 @@ func (m *Message) PushScript(arg ...string) {
 		m.Push(SCRIPT, Render(m, RENDER_SCRIPT, arg))
 	}
 }
-func (m *Message) PushDownload(key string, arg ...string) {
+func (m *Message) PushDownload(key string, arg ...string) *Message {
 	if !m.IsCliUA() {
 		m.Push(key, Render(m, RENDER_DOWNLOAD, arg))
 	}
+	return m
 }
 
 func (m *Message) EchoButton(arg ...Any) *Message {

@@ -94,7 +94,6 @@ const (
 	BINARY = "binary"
 	TARGET = "target"
 	TAGS   = "tags"
-	TAR    = "tar"
 
 	TEMPLATE = "template"
 	VERSION  = "version"

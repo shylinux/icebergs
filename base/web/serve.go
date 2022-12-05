@@ -58,7 +58,7 @@ func _serve_main(m *ice.Message, w http.ResponseWriter, r *http.Request) bool {
 	if m.Logs(r.Method, r.Header.Get(ice.MSG_USERIP), r.URL.String()); m.Config(LOGHEADERS) == ice.TRUE {
 		kit.Fetch(r.Header, func(k string, v []string) { m.Logs("Header", k, v) })
 	}
-	if r.Method == http.MethodGet {
+	if r.Method == http.MethodGet && r.URL.Path != PP(SPACE) {
 		repos := kit.Select(ice.INTSHELL, ice.VOLCANOS, strings.Contains(r.Header.Get(UserAgent), MOZILLA))
 		if msg := gdb.Event(m.Spawn(w, r), SERVE_REWRITE, r.Method, r.URL.Path, path.Join(m.Conf(SERVE, kit.Keym(repos, nfs.PATH)), r.URL.Path), repos); msg.Option(ice.MSG_OUTPUT) != "" {
 			Render(msg, msg.Option(ice.MSG_OUTPUT), kit.List(msg.Optionv(ice.MSG_ARGS))...)
@@ -68,7 +68,7 @@ func _serve_main(m *ice.Message, w http.ResponseWriter, r *http.Request) bool {
 	return true
 }
 func _serve_handle(key string, cmd *ice.Command, m *ice.Message, w http.ResponseWriter, r *http.Request) {
-	if u, e := url.Parse(r.Header.Get(Referer)); e == nil {
+	if u, e := url.Parse(r.Header.Get(Referer)); e == nil && r.URL.Path != PP(SPACE) {
 		gdb.Event(m, SERVE_PARSE, strings.Split(strings.TrimPrefix(u.Path, ice.PS), ice.PS))
 		kit.Fetch(u.Query(), func(k string, v []string) { m.Logs("Refer", k, v).Optionv(k, v) })
 	}
@@ -121,7 +121,7 @@ func _serve_domain(m *ice.Message) string {
 	)
 }
 func _serve_login(m *ice.Message, key string, cmds []string, w http.ResponseWriter, r *http.Request) ([]string, bool) {
-	if aaa.SessCheck(m, m.Option(ice.MSG_SESSID)); m.Option(ice.MSG_USERNAME) == "" {
+	if aaa.SessCheck(m, m.Option(ice.MSG_SESSID)); m.Option(ice.MSG_USERNAME) == "" && r.URL.Path != PP(SPACE) {
 		gdb.Event(m, SERVE_LOGIN)
 	}
 	if _, ok := m.Target().Commands[WEB_LOGIN]; ok {

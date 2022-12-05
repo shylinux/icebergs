@@ -23,7 +23,7 @@ func _install_path(m *ice.Message, link string) string {
 		return p
 	}
 	if p := path.Join(ice.USR_INSTALL, path.Base(link)); nfs.ExistsFile(m, p) {
-		return path.Join(ice.USR_INSTALL, strings.Split(cli.SystemCmds(m, "tar tf %s| head -n1", p), ice.PS)[0])
+		return path.Join(ice.USR_INSTALL, strings.Split(m.Cmd(nfs.TAR, p, "", "1").Append(nfs.FILE), ice.PS)[0])
 	}
 	m.Warn(true, ice.ErrNotFound, link)
 	return ""
@@ -32,29 +32,28 @@ func _install_download(m *ice.Message) {
 	link := m.Option(mdb.LINK)
 	name := path.Base(strings.Split(link, "?")[0])
 	file := path.Join(kit.Select(ice.USR_INSTALL, m.Option(nfs.PATH)), name)
-
 	if nfs.ExistsFile(m, file) {
 		m.Cmdy(nfs.DIR, file)
 		web.ToastSuccess(m)
-		return // 文件存在
+		return
 	}
-
 	m.Cmd(nfs.SAVE, file, "")
-	begin, last := time.Now(), time.Now()
+	begin := time.Now()
 	mdb.HashCreate(m, mdb.NAME, name, nfs.PATH, file, mdb.LINK, link)
 	web.GoToast(m, name, func(toast func(string, int, int)) {
+		last, base := 0, 10
 		web.SpideSave(m, file, link, func(count int, total int, step int) {
-			mdb.HashSelectUpdate(m, name, func(value ice.Map) { value[mdb.COUNT], value[mdb.TOTAL], value[mdb.VALUE] = count, total, step })
-
-			if now := time.Now(); now.Sub(last) > 500*time.Millisecond {
-				cost := now.Sub(begin)
-				toast(kit.FormatShow("from", begin.Format("15:04:05"), "cost", kit.FmtDuration(cost),
-					"rest", kit.FmtDuration(cost*time.Duration(100)/time.Duration(step+1)-cost),
-				), count, total)
-				last = now
+			if step/base == last {
+				return
 			}
+			last = step / base
+			cost := time.Now().Sub(begin)
+			mdb.HashSelectUpdate(m, name, func(value ice.Map) { value[mdb.COUNT], value[mdb.TOTAL], value[mdb.VALUE] = count, total, step })
+			toast(kit.FormatShow("from", begin.Format("15:04:05"), "cost", kit.FmtDuration(cost),
+				"rest", kit.FmtDuration(cost*time.Duration(101)/time.Duration(step+1)-cost),
+			), count, total)
 		})
-		m.Cmd(nfs.TAR, mdb.EXPORT, name, kit.Dict(cli.CMD_DIR, path.Dir(file)))
+		m.Cmd(nfs.TAR, mdb.EXPORT, ice.Maps{nfs.PATH: file, nfs.FILE: ""})
 		web.ToastSuccess(m)
 	})
 	m.Cmdy(nfs.DIR, file).SetResult()
@@ -62,30 +61,21 @@ func _install_download(m *ice.Message) {
 func _install_build(m *ice.Message, arg ...string) string {
 	p := m.Option(cli.CMD_DIR, _install_path(m, ""))
 	pp := kit.Path(path.Join(p, _INSTALL))
-
-	// 推流
-	web.PushStream(m)
 	defer m.ProcessHold()
-
-	// 配置
-	switch cb := m.Optionv(PREPARE).(type) {
+	switch web.PushStream(m); cb := m.Optionv(PREPARE).(type) {
 	case func(string):
 		cb(p)
 	case nil:
 		if msg := m.Cmd(cli.SYSTEM, "./configure", "--prefix="+pp, arg[1:]); !cli.IsSuccess(msg) {
-			return msg.Append(cli.CMD_ERR)
+			return msg.Append(cli.CMD_ERR) + msg.Append(cli.CMD_OUT)
 		}
 	default:
 		m.ErrorNotImplement(cb)
 		return m.Result()
 	}
-
-	// 编译
 	if msg := m.Cmd(cli.SYSTEM, cli.MAKE, "-j"+m.Cmdx(cli.RUNTIME, cli.MAXPROCS)); !cli.IsSuccess(msg) {
 		return msg.Append(cli.CMD_ERR) + msg.Append(cli.CMD_OUT)
 	}
-
-	// 安装
 	if msg := m.Cmd(cli.SYSTEM, cli.MAKE, "PREFIX="+pp, INSTALL); !cli.IsSuccess(msg) {
 		return msg.Append(cli.CMD_ERR) + msg.Append(cli.CMD_OUT)
 	}
@@ -112,12 +102,10 @@ func _install_spawn(m *ice.Message, arg ...string) {
 	} else {
 		m.Option(tcp.PORT, m.Cmdx(tcp.PORT, aaa.RIGHT))
 	}
-
 	target := path.Join(ice.USR_LOCAL_DAEMON, m.Option(tcp.PORT))
 	source := _install_path(m, "")
 	nfs.MkdirAll(m, target)
 	defer m.Echo(target)
-
 	if m.Option(INSTALL) == "" && nfs.ExistsFile(m, kit.Path(source, _INSTALL)) {
 		m.Option(INSTALL, _INSTALL)
 	}
@@ -127,7 +115,6 @@ func _install_spawn(m *ice.Message, arg ...string) {
 }
 func _install_start(m *ice.Message, arg ...string) {
 	p := m.Option(cli.CMD_DIR, m.Cmdx(INSTALL, cli.SPAWN))
-
 	args := []string{}
 	switch cb := m.Optionv(PREPARE).(type) {
 	case func(string) []string:
@@ -141,7 +128,6 @@ func _install_start(m *ice.Message, arg ...string) {
 		m.ErrorNotImplement(cb)
 		return
 	}
-
 	bin := kit.Split(path.Base(arg[0]), "-.")[0]
 	m.Cmdy(cli.DAEMON, kit.Select(path.Join(ice.BIN, bin), arg, 1), kit.Slice(arg, 2), args)
 }
@@ -168,6 +154,14 @@ func _install_service(m *ice.Message, arg ...string) {
 		if strings.Contains(value[ice.CMD], path.Join(ice.BIN, arg[0])) {
 			m.Push("", value, kit.Split(m.OptionFields()))
 		}
+		switch value[mdb.STATUS] {
+		case cli.START:
+			m.PushButton(gdb.DEBUG, cli.STOP)
+		case cli.STOP:
+			m.PushButton(cli.START)
+		default:
+			m.PushButton("")
+		}
 	})
 	m.Set(tcp.PORT).Tables(func(value ice.Maps) { m.Push(tcp.PORT, path.Base(value[nfs.DIR])) })
 	m.StatusTimeCount()
@@ -182,13 +176,11 @@ const INSTALL = "install"
 func init() {
 	Index.MergeCommands(ice.Commands{
 		INSTALL: {Name: "install name port path:text auto download", Help: "安装", Actions: ice.MergeActions(ice.Actions{
-			nfs.PATH: {Name: "path", Help: "路径", Hand: func(m *ice.Message, arg ...string) {
-				m.Echo(_install_path(m, kit.Select("", arg, 0)))
-			}},
-			web.DOWNLOAD: {Name: "download link path", Help: "下载", Hand: func(m *ice.Message, arg ...string) {
+			nfs.PATH: {Hand: func(m *ice.Message, arg ...string) { m.Echo(_install_path(m, kit.Select("", arg, 0))) }},
+			web.DOWNLOAD: {Name: "download link* path", Help: "下载", Hand: func(m *ice.Message, arg ...string) {
 				_install_download(m)
 			}},
-			cli.BUILD: {Name: "build link", Help: "构建", Hand: func(m *ice.Message, arg ...string) {
+			cli.BUILD: {Name: "build link*", Help: "构建", Hand: func(m *ice.Message, arg ...string) {
 				if err := _install_build(m, arg...); err != "" {
 					web.ToastFailure(m, cli.BUILD)
 					m.Echo(err)
@@ -196,13 +188,13 @@ func init() {
 					web.ToastSuccess(m, cli.BUILD)
 				}
 			}},
-			cli.ORDER: {Name: "order link path", Help: "加载", Hand: func(m *ice.Message, arg ...string) {
+			cli.ORDER: {Name: "order link* path", Help: "加载", Hand: func(m *ice.Message, arg ...string) {
 				_install_order(m, arg...)
 			}},
-			cli.SPAWN: {Name: "spawn link", Help: "新建", Hand: func(m *ice.Message, arg ...string) {
+			cli.SPAWN: {Name: "spawn link*", Help: "新建", Hand: func(m *ice.Message, arg ...string) {
 				_install_spawn(m, arg...)
 			}},
-			cli.START: {Name: "start link cmd", Help: "启动", Hand: func(m *ice.Message, arg ...string) {
+			cli.START: {Name: "start link* cmd", Help: "启动", Hand: func(m *ice.Message, arg ...string) {
 				_install_start(m, arg...)
 			}},
 			cli.STOP: {Name: "stop", Help: "停止", Hand: func(m *ice.Message, arg ...string) {
@@ -225,13 +217,12 @@ func init() {
 			}},
 		}, mdb.HashAction(mdb.SHORT, mdb.NAME, mdb.FIELD, "time,name,path,link")), Hand: func(m *ice.Message, arg ...string) {
 			switch len(arg) {
-			case 0: // 源码列表
+			case 0:
 				mdb.HashSelect(m, arg...)
-
-			case 1: // 服务列表
+				m.PushAction(cli.BUILD, cli.ORDER)
+			case 1:
 				_install_service(m, arg...)
-
-			default: // 目录列表
+			default:
 				m.Option(nfs.DIR_ROOT, path.Join(ice.USR_LOCAL_DAEMON, arg[1]))
 				m.Cmdy(nfs.CAT, kit.Select(nfs.PWD, arg, 2))
 			}

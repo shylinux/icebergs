@@ -48,7 +48,7 @@ func _space_fork(m *ice.Message) {
 			case WORKER:
 				defer gdb.EventDeferEvent(m, DREAM_OPEN, args)(DREAM_CLOSE, args)
 			case CHROME:
-				m.Cmd(SPACE, name, cli.PWD, name)
+				m.Go(func() { m.Sleep("10ms").Cmd(SPACE, name, cli.PWD, name) })
 			}
 			_space_handle(m, false, name, conn)
 		})
@@ -57,7 +57,8 @@ func _space_fork(m *ice.Message) {
 func _space_handle(m *ice.Message, safe bool, name string, conn *websocket.Conn) {
 	for {
 		_, b, e := conn.ReadMessage()
-		if m.Warn(e, SPACE, name) {
+		if e != nil {
+			m.Logs("sock", SPACE, name, "error", e)
 			break
 		}
 		msg := m.Spawn(b)
@@ -126,12 +127,17 @@ func _space_send(m *ice.Message, space string, arg ...string) {
 		}
 	})
 	m.Set(ice.MSG_DETAIL, arg...).Optionv(ice.MSG_OPTION, m.Optionv(ice.MSG_OPTS, m.Optionv(ice.MSG_OPTS)))
-	if target := kit.Split(space, ice.PT, ice.PT); !m.Warn(!mdb.HashSelectDetail(m, target[0], func(value ice.Map) {
+	target := kit.Split(space, ice.PT, ice.PT)
+	if mdb.HashSelectDetail(m, target[0], func(value ice.Map) {
 		if conn, ok := value[mdb.TARGET].(*websocket.Conn); !m.Warn(!ok, ice.ErrNotValid, mdb.TARGET) {
 			_space_echo(m, []string{addSend(m, m)}, target, conn)
 		}
-	}), ice.ErrNotFound, space) {
+	}) {
 		call(m, m.Config(kit.Keys(TIMEOUT, "c")), func(res *ice.Message) { m.Copy(res) })
+	} else if kit.IndexOf([]string{ice.OPS, ice.DEV, ice.SHY}, target[0]) > -1 {
+		return
+	} else {
+		m.Warn(true, ice.ErrNotFound, space)
 	}
 }
 

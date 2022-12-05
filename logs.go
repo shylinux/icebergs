@@ -105,7 +105,7 @@ func (m *Message) Warn(err Any, arg ...Any) bool {
 	switch err := err.(type) {
 	case error:
 		if err == io.EOF {
-			return false
+			return true
 		}
 		arg = append(arg, ERR, err)
 	case bool:

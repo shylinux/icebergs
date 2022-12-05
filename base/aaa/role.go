@@ -132,8 +132,8 @@ func RoleRight(m *ice.Message, role string, key ...string) bool {
 	return m.Cmdx(ROLE, RIGHT, role, key) == ice.OK
 }
 func Right(m *ice.Message, key ...ice.Any) bool {
-	return m.Option(ice.MSG_USERROLE) == ROOT || !m.Warn(m.Cmdx(ROLE, RIGHT, m.Option(ice.MSG_USERROLE), key) != ice.OK,
-		ice.ErrNotRight, kit.Keys(key...), USERROLE, m.Option(ice.MSG_USERROLE), logs.FileLineMeta(2))
+	return m.Option(ice.MSG_USERROLE) == ROOT || !m.Warn(m.Cmdx(ROLE, RIGHT, m.Option(ice.MSG_USERROLE), key, logs.FileLineMeta(-1)) != ice.OK,
+		ice.ErrNotRight, kit.Keys(key...), USERROLE, m.Option(ice.MSG_USERROLE), logs.FileLineMeta(-1))
 }
 func White(m *ice.Message, key ...string) {
 	for _, key := range key {

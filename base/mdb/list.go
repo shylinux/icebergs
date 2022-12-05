@@ -117,8 +117,8 @@ func ListAction(arg ...ice.Any) ice.Actions {
 func PageListAction(arg ...ice.Any) ice.Actions {
 	return ice.MergeActions(ice.Actions{
 		SELECT: {Name: "select id auto insert page", Hand: func(m *ice.Message, arg ...string) { PageListSelect(m, arg...) }},
-		NEXT:   {Hand: func(m *ice.Message, arg ...string) { NextPage(m, m.Config(COUNT), kit.Slice(arg, 1)...) }},
-		PREV:   {Hand: func(m *ice.Message, arg ...string) { PrevPageLimit(m, m.Config(COUNT), kit.Slice(arg, 1)...) }},
+		NEXT:   {Hand: func(m *ice.Message, arg ...string) { NextPage(m, kit.Select(m.Config(COUNT), arg, 0), kit.Slice(arg, 1)...) }},
+		PREV:   {Hand: func(m *ice.Message, arg ...string) { PrevPageLimit(m, kit.Select(m.Config(COUNT), arg, 0), kit.Slice(arg, 1)...) }},
 	}, ListAction(arg...))
 }
 func ListField(m *ice.Message) string { return kit.Select(LIST_FIELD, m.Config(FIELD)) }

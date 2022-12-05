@@ -32,6 +32,11 @@ func _system_cmd(m *ice.Message, arg ...string) *exec.Cmd {
 		}
 	}
 	if bin == "" {
+		if bin = _system_find(m, arg[0], ice.BIN, m.Option(CMD_DIR)); bin != "" {
+			m.Logs(mdb.SELECT, "contexts cmd", bin)
+		}
+	}
+	if bin == "" {
 		if bin = _system_find(m, arg[0], ice.BIN, nfs.PWD); bin != "" {
 			m.Logs(mdb.SELECT, "contexts cmd", bin)
 		}

@@ -165,7 +165,7 @@ func init() {
 				mdb.HashSelect(m)
 				return
 			}
-			mdb.HashCreate(m.Spawn(), ice.CMD, arg[0], ice.ARG, kit.Join(arg[1:], ice.SP))
+			// mdb.HashCreate(m.Spawn(), ice.CMD, arg[0], ice.ARG, kit.Join(arg[1:], ice.SP))
 			if _system_exec(m, _system_cmd(m, kit.Simple(kit.Split(arg[0]), arg[1:])...)); IsSuccess(m) && m.Append(CMD_ERR) == "" {
 				m.SetAppend()
 			}

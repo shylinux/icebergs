@@ -16,9 +16,7 @@ func _count_count(m *ice.Message, arg []string, cb func(string)) {
 		m.Echo("to many file, please choice sub dir")
 		return
 	}
-	m.Option(nfs.DIR_DEEP, ice.TRUE)
-	m.Option(nfs.DIR_TYPE, nfs.TYPE_CAT)
-	m.Cmdy(nfs.DIR, arg, func(file string) {
+	m.Cmdy(nfs.DIR, arg, kit.Dict(nfs.DIR_DEEP, ice.TRUE, nfs.DIR_TYPE, nfs.TYPE_CAT), func(file string) {
 		if strings.Contains(file, "node_modules/") {
 			return
 		}
@@ -44,46 +42,35 @@ const COUNT = "count"
 func init() {
 	Index.MergeCommands(ice.Commands{
 		COUNT: {Name: "count path auto count order tags", Help: "代码行", Actions: ice.Actions{
-			"order": {Name: "order", Help: "排行", Hand: func(m *ice.Message, arg ...string) {
+			"order": {Help: "排行", Hand: func(m *ice.Message, arg ...string) {
 				files := map[string]int{}
 				_count_count(m, arg, func(file string) {
-					m.Cmdy(nfs.CAT, file, func(text string, line int) {
-						files[strings.TrimPrefix(file, arg[0])]++
-					})
+					m.Cmdy(nfs.CAT, file, func(text string) { files[strings.TrimPrefix(file, arg[0])]++ })
 				})
-				for k, n := range files {
-					m.Push("files", k)
-					m.Push("lines", n)
-				}
+				kit.Fetch(files, func(k string, v int) { m.Push("files", k).Push("lines", v) })
 				m.StatusTimeCount().SortIntR("lines")
 			}},
-			"tags": {Name: "tags", Help: "索引", Hand: func(m *ice.Message, arg ...string) {
+			"tags": {Help: "索引", Hand: func(m *ice.Message, arg ...string) {
 				count := map[string]int{}
-				m.Cmd(nfs.CAT, path.Join(arg[0], "tags"), func(line string) {
-					ls := strings.SplitN(line, ice.TB, 3)
-					if len(ls) < 3 {
+				m.Cmd(nfs.CAT, path.Join(arg[0], nfs.TAGS), func(line string) {
+					if ls := strings.SplitN(line, ice.TB, 3); len(ls) < 3 {
 						return
-					}
-					ls = strings.SplitN(ls[2], ";\"", 2)
-					if len(ls) < 2 {
+					} else if ls = strings.SplitN(ls[2], ";\"", 2); len(ls) < 2 {
 						return
+					} else {
+						count[kit.Split(ls[1])[0]]++
 					}
-					ls = kit.Split(ls[1])
-					count[ls[0]]++
 				})
-				for k, v := range count {
-					m.Push("type", k)
-					m.Push("count", v)
-				}
-				m.SortIntR("count")
+				kit.Fetch(count, func(k string, v int) { m.Push(mdb.TYPE, k).Push(mdb.COUNT, v) })
+				m.SortIntR(mdb.COUNT)
 			}},
-			COUNT: {Name: "count", Help: "计数", Hand: func(m *ice.Message, arg ...string) {
+			COUNT: {Help: "计数", Hand: func(m *ice.Message, arg ...string) {
 				files := map[string]int{}
 				lines := map[string]int{}
 				_count_count(m, arg, func(file string) {
 					files[mdb.TOTAL]++
 					files[kit.Ext(file)]++
-					m.Cmdy(nfs.CAT, file, func(text string, line int) {
+					m.Cmdy(nfs.CAT, file, func(text string) {
 						if kit.Ext(file) == code.GO {
 							switch {
 							case strings.HasPrefix(text, "func"):
@@ -92,16 +79,11 @@ func init() {
 								lines["_type"]++
 							}
 						}
-
 						lines[mdb.TOTAL]++
 						lines[kit.Ext(file)]++
 					})
 				})
-				for k := range lines {
-					m.Push(mdb.TYPE, k)
-					m.Push("files", files[k])
-					m.Push("lines", lines[k])
-				}
+				kit.Fetch(lines, func(k string, v int) { m.Push(mdb.TYPE, k).Push("files", files[k]).Push("lines", lines[k]) })
 				m.StatusTime().SortIntR("lines")
 			}},
 		}, Hand: func(m *ice.Message, arg ...string) { m.Cmdy(nfs.DIR, arg) }},

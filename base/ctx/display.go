@@ -27,6 +27,9 @@ func DisplayTableCard(m *ice.Message, arg ...ice.Any) *ice.Message {
 	return DisplayTable(m, "style", "card")
 }
 func DisplayStory(m *ice.Message, file string, arg ...ice.Any) *ice.Message {
+	if file == "" {
+		file = kit.ExtChange(kit.FileName(2), nfs.JS)
+	}
 	if !strings.HasPrefix(file, ice.PS) && !strings.HasPrefix(file, ice.HTTP) {
 		file = path.Join(ice.PLUGIN_STORY, file)
 	}

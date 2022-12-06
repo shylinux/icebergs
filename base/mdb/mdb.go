@@ -3,6 +3,7 @@ package mdb
 import (
 	"path"
 	"strings"
+	"sync"
 
 	ice "shylinux.com/x/icebergs"
 	kit "shylinux.com/x/toolkits"
@@ -302,4 +303,21 @@ func Config(m *ice.Message, key string, arg ...ice.Any) string {
 		defer RLock(m, m.PrefixKey(), key)()
 	}
 	return m.Config(key, arg...)
+}
+
+var cache = sync.Map{}
+
+func Cache(m *ice.Message, key string, add func() ice.Any) ice.Any {
+	if add == nil {
+		cache.Delete(key)
+		return nil
+	}
+	if val, ok := cache.Load(key); ok {
+		return val
+	}
+	if val := add(); val != nil {
+		cache.Store(key, val)
+		return val
+	}
+	return nil
 }

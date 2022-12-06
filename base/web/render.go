@@ -29,7 +29,9 @@ const (
 )
 
 func Render(m *ice.Message, cmd string, args ...ice.Any) bool {
-	if cmd != "" {
+	if cmd == ice.RENDER_VOID {
+		return true
+	} else if cmd != "" {
 		defer func() { m.Logs(mdb.EXPORT, cmd, args) }()
 	}
 
@@ -68,9 +70,6 @@ func Render(m *ice.Message, cmd string, args ...ice.Any) bool {
 	case ice.RENDER_JSON:
 		RenderType(m.W, nfs.JSON, "")
 		m.W.Write([]byte(arg[0]))
-
-	case ice.RENDER_VOID:
-		// no output
 
 	default:
 		for _, k := range kit.Simple(m.Optionv("option"), m.Optionv("_option")) {

@@ -21,9 +21,10 @@ func PushNotice(m *ice.Message, arg ...ice.Any) {
 	if m.Option(ice.MSG_DAEMON) == "" {
 		return
 	}
-	m.Optionv(ice.MSG_OPTS, m.Optionv(ice.MSG_OPTION))
 	if m.Option(ice.MSG_USERPOD) == "" {
-		m.Cmd(SPACE, m.Option(ice.MSG_DAEMON), arg)
+		msg := m.Spawn()
+		msg.Optionv(ice.MSG_OPTS, msg.Optionv(ice.MSG_OPTION, []string{}))
+		msg.Cmd(SPACE, m.Option(ice.MSG_DAEMON), arg)
 	} else {
 		opts := kit.Dict(ice.POD, m.Option(ice.MSG_DAEMON), "cmds", kit.Simple(arg...))
 		for _, k := range kit.Simple(m.Optionv(ice.MSG_OPTS)) {
@@ -66,8 +67,9 @@ func Toast(m *ice.Message, text string, arg ...ice.Any) { // [title [duration [p
 	}
 	PushNoticeToast(m, text, arg)
 }
-func Toast3s(m *ice.Message, text string, arg ...ice.Any) {
+func Toast3s(m *ice.Message, text string, arg ...ice.Any) *ice.Message {
 	Toast(m, text, kit.List(kit.Select("", arg, 0), kit.Select("3s", arg, 1))...)
+	return m
 }
 func Toast30s(m *ice.Message, text string, arg ...ice.Any) {
 	Toast(m, text, kit.List(kit.Select("", arg, 0), kit.Select("30s", arg, 1))...)

@@ -93,6 +93,10 @@ func (m *Message) Action(arg ...Any) *Message {
 func (m *Message) Status(arg ...Any) *Message {
 	list, args := kit.List(), kit.Simple(arg)
 	for i := 0; i < len(args)-1; i += 2 {
+		switch args[i+1] {
+		case "", "0":
+			continue
+		}
 		list = append(list, kit.Dict(NAME, args[i], VALUE, args[i+1]))
 	}
 	m.Option(MSG_STATUS, kit.Format(list))

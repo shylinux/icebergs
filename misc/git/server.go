@@ -140,7 +140,7 @@ func init() {
 			}},
 		}, gdb.EventAction(web.DREAM_INPUTS)), Hand: func(m *ice.Message, arg ...string) {
 			if m.Option(nfs.DIR_ROOT, ice.USR_LOCAL_REPOS); len(arg) == 0 {
-				m.Cmdy(nfs.DIR, nfs.PWD, func(value ice.Maps) { m.PushScript("git clone " + _git_url(m, value[nfs.PATH]) }).Cut("time,path,size,script,action")
+				m.Cmdy(nfs.DIR, nfs.PWD, func(value ice.Maps) { m.PushScript("git clone " + _git_url(m, value[nfs.PATH])) }).Cut("time,path,size,script,action")
 			}
 		}},
 	})

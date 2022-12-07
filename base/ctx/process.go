@@ -40,6 +40,11 @@ func ProcessCommandOpt(m *ice.Message, arg []string, args ...string) {
 	}
 	m.Push("opt", kit.Format(m.OptionSimple(args...)))
 }
+func ProcessFloat(m *ice.Message, arg ...string) {
+	m.Option(ice.MSG_PROCESS, ice.PROCESS_FLOAT)
+	m.Option(ice.PROCESS_ARG, arg)
+	m.Cmdy(COMMAND, arg[0])
+}
 func ProcessField(m *ice.Message, cmd string, args []string, arg ...string) {
 	if cmd = kit.Select(m.PrefixKey(), cmd); len(arg) == 0 || arg[0] != ice.RUN {
 		m.Option("_index", m.PrefixKey())
@@ -51,11 +56,6 @@ func ProcessField(m *ice.Message, cmd string, args []string, arg ...string) {
 			m.Cmdy(cmd, arg[1:])
 		}
 	}
-}
-func ProcessFloat(m *ice.Message, arg ...string) {
-	m.Option(ice.MSG_PROCESS, ice.PROCESS_FLOAT)
-	m.Option(ice.PROCESS_ARG, arg)
-	m.Cmdy(COMMAND, arg[0])
 }
 
 func ProcessRefresh(m *ice.Message, arg ...string)  { m.ProcessRefresh(arg...) }

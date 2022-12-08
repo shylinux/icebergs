@@ -104,7 +104,7 @@ func init() {
 				return
 			} else if !nfs.ExistsFile(m, repos) {
 				m.Logs(mdb.CREATE, REPOS, repos)
-				_repos_init(m, path.Join(ice.USR_LOCAL_REPOS, repos))
+				_repos_init(m, repos)
 			}
 		case "upload-pack":
 			if m.Warn(!nfs.ExistsFile(m, repos), ice.ErrNotFound, arg[0]) {
@@ -114,7 +114,7 @@ func init() {
 		m.Warn(_server_repos(m, arg...), ice.ErrNotValid)
 	}}})
 	Index.MergeCommands(ice.Commands{
-		SERVER: {Name: "server path auto create import", Help: "服务器", Actions: ice.MergeActions(ice.Actions{
+		SERVER: {Name: "server path commit auto create import", Help: "服务器", Actions: ice.MergeActions(ice.Actions{
 			mdb.CREATE: {Name: "create name*", Hand: func(m *ice.Message, arg ...string) {
 				_repos_init(m, path.Join(ice.USR_LOCAL_REPOS, m.Option(mdb.NAME)))
 			}},
@@ -133,9 +133,7 @@ func init() {
 			web.DREAM_INPUTS: {Hand: func(m *ice.Message, arg ...string) {
 				switch arg[0] {
 				case nfs.REPOS:
-					m.Cmd("", func(value ice.Maps) {
-						m.Push(nfs.PATH, _git_url(m, value[nfs.PATH]))
-					})
+					m.Cmd("", func(value ice.Maps) { m.Push(nfs.PATH, _git_url(m, value[nfs.PATH])) })
 				}
 			}},
 		}, gdb.EventAction(web.DREAM_INPUTS)), Hand: func(m *ice.Message, arg ...string) {

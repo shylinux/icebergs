@@ -28,6 +28,7 @@ func init() {
 				WordAlias(m, CHAPTER, TITLE, CHAPTER)
 				WordAlias(m, SECTION, TITLE, SECTION)
 				WordAlias(m, ENDMENU, TITLE, ENDMENU)
+				WordAlias(m, SHELL, SPARK, SHELL)
 				WordAlias(m, LABEL, CHART, LABEL)
 				WordAlias(m, CHAIN, CHART, CHAIN)
 				WordAlias(m, SEQUENCE, CHART, SEQUENCE)
@@ -41,7 +42,12 @@ func init() {
 					}
 				})
 			}}, "play": {Name: "play", Help: "演示"},
-			ice.STORY: {Hand: func(m *ice.Message, arg ...string) { m.Cmdy(arg[0], ice.RUN, arg[2:]) }},
+			ice.STORY: {Hand: func(m *ice.Message, arg ...string) {
+				if kit.Ext(m.Option(nfs.PATH)) == nfs.SHY {
+					m.Option(nfs.PATH, "")
+				}
+				m.Cmdy(arg[0], ice.RUN, arg[2:])
+			}},
 		}, WikiAction("", nfs.SHY), ctx.CmdAction(), aaa.RoleAction("story.field")), Hand: func(m *ice.Message, arg ...string) {
 			if m.Option(nfs.DIR_DEEP, ice.TRUE); len(arg) == 0 {
 				arg = append(arg, "src/")

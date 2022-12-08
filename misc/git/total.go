@@ -20,10 +20,10 @@ func init() {
 	const (
 		FROM   = "from"
 		DAYS   = "days"
-		COMMIT = "commit"
 		ADDS   = "adds"
 		DELS   = "dels"
 		REST   = "rest"
+		COMMIT = "commit"
 	)
 	Index.MergeCommands(ice.Commands{
 		TOTAL: {Name: "total repos auto pie", Help: "统计量", Actions: ice.MergeActions(ice.Actions{
@@ -31,7 +31,7 @@ func init() {
 				defer ctx.DisplayStory(m, "pie.js")
 				m.Cmd("", func(value ice.Maps) {
 					if value[REPOS] != mdb.TOTAL {
-						m.Push(REPOS, value[REPOS]).Push(mdb.VALUE, value[REST]).Push("", value, []string{FROM, DAYS, COMMIT, ADDS, DELS})
+						m.Push(REPOS, value[REPOS]).Push(mdb.VALUE, value[REST]).Push("", value, []string{FROM, DAYS, ADDS, DELS, COMMIT})
 					}
 				})
 			}},
@@ -40,10 +40,10 @@ func init() {
 				ReposList(m).Tables(func(value ice.Maps) {
 					kit.If(value[REPOS] == arg[0], func() { m.Cmdy("_sum", value[nfs.PATH], arg[1:]) })
 				})
-				m.StatusTimeCount(FROM, m.Append(FROM))
+				m.StatusTimeCount(m.AppendSimple(FROM))
 				return
 			}
-			from, days, commit, adds, dels, rest := "", 0, 0, 0, 0, 0
+			from, days, adds, dels, rest, commit := "", 0, 0, 0, 0, 0
 			ReposList(m).TableGo(func(value ice.Maps, lock *task.Lock) {
 				if m.Config(kit.Keys("skip", value[REPOS])) == ice.TRUE {
 					return
@@ -54,19 +54,19 @@ func init() {
 					if kit.Int(value[DAYS]) > days {
 						from, days = value[FROM], kit.Int(value[DAYS])
 					}
-					commit += kit.Int(value[COMMIT])
 					adds += kit.Int(value[ADDS])
 					dels += kit.Int(value[DELS])
 					rest += kit.Int(value[REST])
+					commit += kit.Int(value[COMMIT])
 				})
 				m.Push(REPOS, value[REPOS]).Copy(msg)
 			})
-			m.Push(REPOS, mdb.TOTAL).Push(TAGS, "v3.0.0").Push(FROM, from).Push(DAYS, days).Push(COMMIT, commit).Push(ADDS, adds).Push(DELS, dels).Push(REST, rest)
+			m.Push(REPOS, mdb.TOTAL).Push(TAGS, "v3.0.0").Push(FROM, from).Push(DAYS, days).Push(ADDS, adds).Push(DELS, dels).Push(REST, rest).Push(COMMIT, commit)
 			m.StatusTimeCount().SortIntR(REST)
 		}},
 		"_sum": {Name: "_sum [path] [total] [count|date] args...", Help: "统计量", Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) > 0 {
-				if nfs.ExistsFile(m, _git_dir(arg[0])) || nfs.ExistsFile(m, path.Join(arg[0], "refs/heads")) {
+				if nfs.ExistsFile(m, _git_dir(arg[0])) || nfs.ExistsFile(m, path.Join(arg[0], REFS_HEADS)) {
 					m.Option(cli.CMD_DIR, arg[0])
 					arg = arg[1:]
 				}
@@ -83,12 +83,9 @@ func init() {
 			} else {
 				args = append(args, "-n", "30")
 			}
-			from, days, commit, adds, dels := "", time.Second, 0, 0, 0
-			for i, v := range strings.Split(_git_cmds(m, args...), "commit: ") {
-				ls := strings.Split(strings.TrimSpace(v), ice.NL)
-				if len(ls) < 2 {
-					continue
-				}
+			from, days, adds, dels, commit := "", 0, 0, 0, 0
+			kit.SplitKV(ice.NL, "commit:", _git_cmds(m, args...), func(text string, ls []string) {
+				m.Debug("what %v %v", text, ls)
 				add, del := "0", "0"
 				for _, v := range kit.Split(strings.TrimSpace(kit.Select("", ls, -1)), ice.FS) {
 					switch {
@@ -98,31 +95,31 @@ func init() {
 						del = kit.Split(v)[0]
 					}
 				}
-				hs := strings.Split(ls[0], ice.SP)
 				if total {
-					if commit++; i == 1 {
+					if commit++; from == "" {
+						hs := strings.Split(ls[0], ice.SP)
 						if t, e := time.Parse("2006-01-02", hs[0]); e == nil {
-							from, days = hs[0], time.Now().Sub(t)
+							from, days = hs[0], int(time.Now().Sub(t).Hours())/24
 						}
 					}
 					adds += kit.Int(add)
 					dels += kit.Int(del)
-					continue
+					return
 				}
 				m.Push(FROM, ls[0])
 				m.Push(ADDS, add)
 				m.Push(DELS, del)
 				m.Push(REST, kit.Int(add)-kit.Int(del))
 				m.Push(COMMIT, ls[1])
-			}
+			})
 			if total {
 				m.Push(TAGS, _git_cmds(m, "describe", "--tags"))
 				m.Push(FROM, from)
-				m.Push(DAYS, int(days.Hours())/24)
-				m.Push(COMMIT, commit)
+				m.Push(DAYS, days)
 				m.Push(ADDS, adds)
 				m.Push(DELS, dels)
 				m.Push(REST, adds-dels)
+				m.Push(COMMIT, commit)
 			}
 		}},
 	})

@@ -126,6 +126,7 @@ func init() {
 			_inner_list(m, kit.Ext(arg[1]), arg[1], arg[0])
 			m.Cmd(FAVOR, mdb.INSERT, mdb.ZONE, "_recent_file", nfs.PATH, arg[0], nfs.FILE, arg[1])
 			m.Options("tabs", m.Config("show.tabs"), "plug", m.Config("show.plug"), "exts", m.Config("show.exts"))
+			m.Option("repos", kit.Join(m.Cmd("web.code.git.repos", ice.OptionFields(nfs.PATH)).Sort(nfs.PATH).Appendv(nfs.PATH)))
 			ctx.DisplayLocal(m, "")
 		}},
 	})

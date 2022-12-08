@@ -22,7 +22,7 @@ func init() {
 		SPIDE: {Name: "spide repos auto depend", Help: "构架图", Actions: ice.MergeActions(ice.Actions{
 			"depend": {Name: "depend path*=icebergs/base pkg=shy,all", Help: "依赖", Hand: func(m *ice.Message, arg ...string) {
 				list, keys := map[string]map[string]bool{}, map[string]bool{}
-				kit.SplitKV(ice.TB, ice.NL, m.Cmdx(cli.SYSTEM, "gotags", "-R", path.Join(ice.USR, m.Option(nfs.PATH)) + ice.PS), func(text string, ls []string) {
+				kit.SplitKV(ice.TB, ice.NL, m.Cmdx(cli.SYSTEM, "gotags", "-R", path.Join(ice.USR, m.Option(nfs.PATH))+ice.PS), func(text string, ls []string) {
 					if strings.HasPrefix(text, "!_") {
 						return
 					} else if kit.Select("", ls, 3) != "i" {
@@ -52,7 +52,7 @@ func init() {
 				m.Cmdy(REPOS)
 			} else if len(arg) == 1 {
 				color := []string{cli.YELLOW, cli.BLUE, cli.CYAN, cli.RED}
-				ctx.DisplayStory(m, "spide.js", mdb.FIELD, nfs.PATH, aaa.ROOT, arg[0])
+				ctx.DisplayStory(m, "", mdb.FIELD, nfs.PATH, aaa.ROOT, arg[0])
 				nfs.DirDeepAll(m, _repos_path(arg[0]), "", func(value ice.Maps) {
 					m.Push(cli.COLOR, color[strings.Count(value[nfs.PATH], ice.PS)%len(color)])
 					m.Push("", value, []string{nfs.PATH})

@@ -183,7 +183,7 @@ func init() {
 				m.Logs(mdb.SELECT, DIR_ROOT, root)
 			}
 			_dir_list(m, root, dir, 0, m.Option(DIR_DEEP) == ice.TRUE, kit.Select(TYPE_BOTH, m.Option(DIR_TYPE)), kit.Regexp(m.Option(DIR_REG)), fields)
-			m.Sort(PATH).StatusTimeCount()
+			m.StatusTimeCount()
 		}},
 	})
 }

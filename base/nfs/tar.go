@@ -4,6 +4,7 @@ import (
 	"archive/tar"
 	"compress/gzip"
 	"io"
+	"io/ioutil"
 	"os"
 	"path"
 	"strings"
@@ -108,7 +109,7 @@ func init() {
 	})
 }
 func ReadAll(m *ice.Message, r io.Reader) []byte {
-	if buf, e := io.ReadAll(r); m.Warn(e) {
+	if buf, e := ioutil.ReadAll(r); m.Warn(e) {
 		return buf
 	} else {
 		return buf

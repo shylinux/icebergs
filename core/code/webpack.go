@@ -29,11 +29,11 @@ func _webpack_css(m *ice.Message, css, js io.Writer, p string) {
 	fmt.Fprintln(js, `Volcanos.meta.cache["`+path.Join(ice.PS, p)+`"] = []`)
 }
 func _webpack_js(m *ice.Message, js io.Writer, p string) {
-	fmt.Fprintln(js, `_can_name = "`+path.Join(ice.PS, p)+`"`)
+	fmt.Fprintln(js, `_can_name = "`+path.Join(ice.PS, p)+`";`)
 	fmt.Fprintln(js, m.Cmdx(nfs.CAT, strings.TrimPrefix(p, ice.REQUIRE+ice.PS)))
 }
 func _webpack_node(m *ice.Message, js io.Writer, p string) {
-	fmt.Fprintln(js, `_can_name = "`+path.Join(ice.PS, p)+`"`)
+	fmt.Fprintln(js, `_can_name = "`+path.Join(ice.PS, p)+`";`)
 	fmt.Fprintln(js, m.Cmdx(nfs.CAT, strings.Replace(p, "require/node_modules/", "src/node_modules/", 1)))
 	fmt.Fprintln(js, `Volcanos.meta.cache["`+path.Join(ice.PS, p)+`"] = []`)
 }

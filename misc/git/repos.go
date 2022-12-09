@@ -76,7 +76,10 @@ func _repos_commit(m *ice.Message, dir, branch string, cb func(*gogit.Commit, *g
 					}
 					if p := ci.ParentCommit(0); p != nil {
 						oid = p.Oid
+						m.Debug("what %v %v", ci.Oid.Short(), oid.Short())
 						continue
+					} else {
+						m.Debug("what %v %v", ci.Oid.Short())
 					}
 				}
 				break

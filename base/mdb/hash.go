@@ -220,6 +220,7 @@ func HashSelects(m *ice.Message, arg ...string) *ice.Message {
 	return HashSelect(m, arg...)
 }
 func HashSelectValue(m *ice.Message, cb Any) *ice.Message {
+	m.OptionFields(m.Config(FIELD))
 	defer RLock(m, m.PrefixKey(), "")()
 	Richs(m, m.PrefixKey(), nil, FOREACH, func(key string, value Map) { _mdb_select(m, cb, key, value, nil, nil) })
 	return m

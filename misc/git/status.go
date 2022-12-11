@@ -2,7 +2,6 @@ package git
 
 import (
 	"path"
-	"runtime"
 	"strings"
 	"time"
 
@@ -114,9 +113,8 @@ func _status_stat(m *ice.Message, files, adds, dels int) (int, int, int) {
 }
 func _status_list(m *ice.Message) (files, adds, dels int, last time.Time) {
 	ReposList(m).Tables(func(value ice.Maps) {
-		if m.Option(cli.CMD_DIR, value[nfs.PATH]); runtime.GOOS != cli.DARWIN {
-			files, adds, dels = _status_stat(m, files, adds, dels)
-		}
+		m.Option(cli.CMD_DIR, value[nfs.PATH])
+		files, adds, dels = _status_stat(m, files, adds, dels)
 		if repos, e := gogit.OpenRepository(_git_dir(value[nfs.PATH])); e == nil {
 			if ci, e := repos.GetCommit(); e == nil && ci.Author.When.After(last) {
 				last = ci.Author.When

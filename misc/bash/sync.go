@@ -8,41 +8,45 @@ import (
 	"shylinux.com/x/icebergs/base/cli"
 	"shylinux.com/x/icebergs/base/ctx"
 	"shylinux.com/x/icebergs/base/mdb"
+	"shylinux.com/x/icebergs/base/nfs"
 	"shylinux.com/x/icebergs/base/tcp"
+	"shylinux.com/x/icebergs/base/web"
 	kit "shylinux.com/x/toolkits"
 )
 
 const SYNC = "sync"
 
 func init() {
+	const (
+		HISTORY = "history"
+		SHELL   = "shell"
+	)
 	Index.MergeCommands(ice.Commands{
-		"/sync": {Name: "/sync", Help: "同步", Actions: ice.Actions{
-			"history": {Name: "history", Help: "历史", Hand: func(m *ice.Message, arg ...string) {
-				ls := strings.SplitN(strings.TrimSpace(m.Option(ARG)), ice.SP, 4)
-				if text := strings.TrimSpace(strings.Join(ls[3:], ice.SP)); text != "" {
-					m.Cmd(SYNC, mdb.INSERT, mdb.TIME, ls[1]+ice.SP+ls[2],
-						mdb.TYPE, "shell", mdb.NAME, ls[0], mdb.TEXT, text,
-						m.OptionSimple(cli.PWD, aaa.USERNAME, tcp.HOSTNAME, tcp.HOSTNAME))
+		SYNC: {Name: "sync id auto page export import", Help: "同步流", Actions: ice.MergeActions(ice.Actions{
+			mdb.INPUTS: {Hand: func(m *ice.Message, arg ...string) { m.Cmdy(FAVOR, mdb.INPUTS, arg) }},
+			cli.SYSTEM: {Hand: func(m *ice.Message, arg ...string) {
+				if len(arg) > 0 && arg[0] == ice.RUN {
+					if msg := mdb.ListSelect(m.Spawn(), m.Option(mdb.ID)); nfs.ExistsFile(m, msg.Append(cli.PWD)) {
+						m.Option(cli.CMD_DIR, msg.Append(cli.PWD))
+					}
+					ctx.ProcessField(m, cli.SYSTEM, nil, arg...)
+				} else {
+					ctx.ProcessField(m, cli.SYSTEM, kit.Split(m.Option(mdb.TEXT)))
 				}
 			}},
+			FAVOR: {Name: "favor zone=demo type name text pwd", Help: "收藏", Hand: func(m *ice.Message, arg ...string) {
+				m.Cmdy(FAVOR, mdb.INSERT, arg, m.OptionSimple(aaa.USERNAME, tcp.HOSTNAME))
+			}},
+		}, mdb.PageListAction(mdb.FIELD, "time,id,type,name,text,pwd,username,hostname")), Hand: func(m *ice.Message, arg ...string) {
+			mdb.PageListSelect(m, arg...).PushAction(cli.SYSTEM, FAVOR)
 		}},
-		SYNC: {Name: "sync id auto page export import", Help: "同步流", Actions: ice.MergeActions(ice.Actions{
-			cli.SYSTEM: {Name: "system", Help: "命令", Hand: func(m *ice.Message, arg ...string) {
-				m.Option(cli.CMD_DIR, m.Option(cli.PWD))
-				ctx.ProcessCommand(m, cli.SYSTEM, kit.Split(m.Option(mdb.TEXT)), arg...)
-				ctx.ProcessCommandOpt(m, arg, cli.PWD)
+		web.PP(SYNC): {Actions: ice.Actions{
+			HISTORY: {Hand: func(m *ice.Message, arg ...string) {
+				ls := strings.SplitN(strings.TrimSpace(m.Option(ARG)), ice.SP, 4)
+				if text := strings.TrimSpace(strings.Join(ls[3:], ice.SP)); text != "" {
+					m.Cmd(SYNC, mdb.INSERT, mdb.TIME, ls[1]+ice.SP+ls[2], mdb.TYPE, SHELL, mdb.NAME, ls[0], mdb.TEXT, text, m.OptionSimple(cli.PWD, aaa.USERNAME, tcp.HOSTNAME))
+				}
 			}},
-			mdb.INPUTS: {Hand: func(m *ice.Message, arg ...string) {
-				m.Cmdy(FAVOR, mdb.INPUTS, arg)
-			}},
-			FAVOR: {Name: "favor zone=some@key type name text pwd", Help: "收藏", Hand: func(m *ice.Message, arg ...string) {
-				m.Cmdy(FAVOR, mdb.INSERT)
-			}},
-		}, mdb.ListAction(mdb.FIELD, "time,id,type,name,text,pwd,username,hostname")), Hand: func(m *ice.Message, arg ...string) {
-			mdb.OptionPage(m, kit.Slice(arg, 1)...)
-			mdb.ListSelect(m, kit.Slice(arg, 0, 1)...)
-			m.PushAction(cli.SYSTEM, FAVOR)
-			m.StatusTimeCountTotal(m.Config(mdb.COUNT))
 		}},
 	})
 }

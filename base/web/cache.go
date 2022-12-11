@@ -171,6 +171,13 @@ func init() {
 	})
 	ctx.Upload = Upload
 }
+func RenderCache(m *ice.Message, h string) {
+	if msg := m.Cmd(CACHE, h); msg.Append(nfs.FILE) == "" {
+		m.RenderResult(msg.Append(mdb.TEXT))
+	} else {
+		m.RenderDownload(msg.Append(mdb.FILE), msg.Append(mdb.TYPE), msg.Append(mdb.NAME))
+	}
+}
 func Upload(m *ice.Message) []string {
 	if up := kit.Simple(m.Optionv(ice.MSG_UPLOAD)); len(up) == 1 {
 		if m.Cmdy(CACHE, UPLOAD).Optionv(ice.MSG_UPLOAD, kit.Simple(m.Append(mdb.HASH), m.Append(mdb.NAME), m.Append(nfs.SIZE))); m.Option(ice.MSG_USERPOD) != "" {

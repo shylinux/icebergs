@@ -2,10 +2,11 @@ package log
 
 import (
 	"path"
-	
+
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/nfs"
 )
+
 const ERROR = "error"
 
 func init() {

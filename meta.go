@@ -507,3 +507,6 @@ func (m *Message) Result(arg ...Any) string {
 	}
 	return strings.Join(m.Resultv(arg...), "")
 }
+func (m *Message) Results(arg ...Any) string {
+	return kit.Select("", strings.TrimSpace(m.Result()), !m.IsErr())
+}

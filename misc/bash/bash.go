@@ -12,11 +12,11 @@ const BASH = "bash"
 
 var Index = &ice.Context{Name: BASH, Help: "命令行", Commands: ice.Commands{
 	BASH: {Name: "bash path auto order build download", Help: "命令行", Actions: ice.MergeActions(ice.Actions{
-		cli.ORDER: {Name: "order", Help: "加载", Hand: func(m *ice.Message, arg ...string) {
+		cli.ORDER: {Hand: func(m *ice.Message, arg ...string) {
 			m.Cmdy(code.INSTALL, cli.ORDER, m.Config(nfs.SOURCE), "_install/bin")
 		}},
 	}, code.InstallAction(nfs.SOURCE, "http://mirrors.tencent.com/macports/distfiles/bash/5.1_1/bash-5.1.tar.gz")), Hand: func(m *ice.Message, arg ...string) {
-		m.Cmdy(code.INSTALL, nfs.SOURCE, m.Config(nfs.SOURCE), arg)
+		m.Cmdy(code.INSTALL, m.ConfigSimple(nfs.SOURCE), arg)
 	}},
 }}
 

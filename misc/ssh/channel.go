@@ -16,7 +16,6 @@ func _ssh_watch(m *ice.Message, h string, output io.Writer, input io.Reader) io.
 	r, w := io.Pipe()
 	bio := io.TeeReader(input, w)
 	m.Go(func() { io.Copy(output, r) })
-
 	i, buf := 0, make([]byte, ice.MOD_BUFS)
 	m.Go(func() {
 		for {
@@ -24,7 +23,6 @@ func _ssh_watch(m *ice.Message, h string, output io.Writer, input io.Reader) io.
 			if e != nil {
 				break
 			}
-
 			switch buf[i] {
 			case '\r', '\n':
 				cmd := strings.TrimSpace(string(buf[:i]))
@@ -46,9 +44,7 @@ func init() {
 	psh.Index.MergeCommands(ice.Commands{
 		CHANNEL: {Name: "channel hash id auto", Help: "通道", Actions: ice.MergeActions(ice.Actions{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
-				mdb.HashSelectUpdate(m, mdb.FOREACH, func(value ice.Map) {
-					kit.Value(value, mdb.STATUS, tcp.CLOSE)
-				})
+				mdb.HashSelectUpdate(m, mdb.FOREACH, func(value ice.Map) { kit.Value(value, mdb.STATUS, tcp.CLOSE) })
 			}},
 			ctx.COMMAND: {Name: "command cmd=pwd", Help: "命令", Hand: func(m *ice.Message, arg ...string) {
 				mdb.ZoneInsert(m, m.OptionSimple(mdb.HASH), mdb.TYPE, CMD, mdb.TEXT, m.Option(CMD))
@@ -57,23 +53,15 @@ func init() {
 					m.Sleep300ms()
 				}
 			}},
-			mdb.REPEAT: {Name: "repeat", Help: "执行", Hand: func(m *ice.Message, arg ...string) {
-				m.Cmdy("", ctx.COMMAND, CMD, m.Option(mdb.TEXT))
-			}},
-		}, mdb.HashAction(mdb.FIELD, "time,hash,status,tty,count,username,hostport")), Hand: func(m *ice.Message, arg ...string) {
-			if len(arg) == 0 { // 通道列表
-				m.Action(mdb.PRUNES)
-				mdb.HashSelect(m, arg...).Tables(func(value ice.Maps) {
+			mdb.REPEAT: {Help: "执行", Hand: func(m *ice.Message, arg ...string) { m.Cmdy("", ctx.COMMAND, CMD, m.Option(mdb.TEXT)) }},
+		}, mdb.HashAction(mdb.FIELDS, "time,hash,status,tty,count,username,hostport", mdb.FIELD, "time,id,type,text")), Hand: func(m *ice.Message, arg ...string) {
+			if mdb.ZoneSelect(m, arg...); len(arg) == 0 {
+				m.Tables(func(value ice.Maps) {
 					m.PushButton(kit.Select("", ctx.COMMAND, value[mdb.STATUS] == tcp.OPEN), mdb.REMOVE)
-				})
-				return
+				}).Action(mdb.PRUNES)
+			} else {
+				m.PushAction(mdb.REPEAT).Action(ctx.COMMAND)
 			}
-
-			// 通道命令
-			m.Action(ctx.COMMAND)
-			m.Fields(len(arg[1:]), "time,id,type,text")
-			mdb.ZoneSelect(m, arg...)
-			m.PushAction(mdb.REPEAT)
 		}},
 	})
 }

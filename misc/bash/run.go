@@ -14,8 +14,6 @@ import (
 )
 
 func _run_action(m *ice.Message, cmd *ice.Command, script string, arg ...string) {
-	m.SetResult().Echo("#/bin/bash\n")
-
 	list, args := []string{}, []string{}
 	kit.Fetch(cmd.Meta["_trans"], func(k string, v string) {
 		list = append(list, k)
@@ -25,7 +23,7 @@ func _run_action(m *ice.Message, cmd *ice.Command, script string, arg ...string)
 		})
 		args = append(args, kit.Format(`				;;`))
 	})
-
+	m.SetResult().Echo("#/bin/sh\n")
 	m.Echo(`
 ish_sys_dev_run_source() {
 	select action in %s; do
@@ -37,7 +35,6 @@ ish_sys_dev_run_source() {
 	done
 }
 `, kit.Join(list, ice.SP), arg[0], kit.Join(args, ice.NL))
-
 	m.Echo(`
 ish_sys_dev_run_action() {
 	select action in %s; do
@@ -50,40 +47,73 @@ ish_sys_dev_run_action() {
 	done
 }
 `, kit.Join(list, ice.SP), arg[0], kit.Join(args, ice.NL))
-
 	m.Echo(`
 ish_sys_dev_run_command() {
 	ish_sys_dev_run %s "$@"
 }
 `, arg[0])
-
 	m.Echo(kit.Select("cat $1", script))
+}
+
+func _run_command(m *ice.Message, key string, arg ...string) {
+	m.Search(key, func(p *ice.Context, s *ice.Context, key string, cmd *ice.Command) {
+		m.Echo(kit.Join(m.Cmd(key, arg).Appendv(kit.Format(kit.Value(cmd.List, kit.Keys(len(arg), mdb.NAME)))), ice.SP))
+	})
+}
+func _run_actions(m *ice.Message, key, sub string, arg ...string) (res []string) {
+	m.Search(key, func(p *ice.Context, s *ice.Context, key string, cmd *ice.Command) {
+		if sub == "" {
+			res = kit.SortedKey(cmd.Meta)
+		} else if len(arg)%2 == 0 {
+			kit.Fetch(kit.Value(cmd.Meta, sub), func(value ice.Map) { res = append(res, kit.Format(value[mdb.NAME])) })
+			kit.Fetch(arg, func(k, v string) { res[kit.IndexOf(res, k)] = "" })
+		} else {
+			msg := m.Cmd(key, mdb.INPUTS, kit.Select("", arg, -1), kit.Dict(arg))
+			res = msg.Appendv(kit.Select("", msg.Appendv(ice.MSG_APPEND), 0))
+		}
+		m.Echo(kit.Join(res, ice.SP))
+	})
+	return nil
 }
 
 const RUN = "run"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
-		"/run/": {Name: "/run/", Help: "执行", Actions: ice.Actions{
-			ctx.COMMAND: {Name: "command", Help: "命令", Hand: func(m *ice.Message, arg ...string) {
+		web.PP(RUN): {Actions: ice.Actions{
+			"check": {Name: "check sid*", Hand: func(m *ice.Message, arg ...string) { m.Echo(m.Cmd(SESS, m.Option(SID)).Append(GRANT)) }},
+			"complete": {Hand: func(m *ice.Message, arg ...string) {
+				switch arg = kit.Split(m.Option("line")); m.Option("cword") {
+				case "1":
+					m.Echo("action ")
+					m.Echo(strings.Join(m.Cmd(ctx.COMMAND, mdb.SEARCH, ctx.COMMAND, ice.OptionFields(ctx.INDEX)).Appendv(ctx.INDEX), ice.SP))
+				default:
+					if kit.Int(m.Option("cword"))+1 == len(arg) {
+						arg = kit.Slice(arg, 0, -1)
+					}
+					if kit.Select("", arg, 2) == ctx.ACTION {
+						_run_actions(m, arg[1], kit.Select("", arg, 3), kit.Slice(arg, 4)...)
+					} else {
+						_run_command(m, arg[1], arg[2:]...)
+					}
+				}
+			}},
+			ctx.COMMAND: {Hand: func(m *ice.Message, arg ...string) {
 				m.Search(arg[0], func(_ *ice.Context, s *ice.Context, key string, cmd *ice.Command) {
-					if p := strings.ReplaceAll(kit.Select("/app/cat.sh", cmd.Meta[ctx.DISPLAY]), ".js", ".sh"); strings.HasPrefix(p, ice.PS+ice.REQUIRE) {
+					if p := kit.ExtChange(kit.Select("/app/cat.sh", cmd.Meta[ctx.DISPLAY]), nfs.SH); strings.HasPrefix(p, ice.PS+ice.REQUIRE) {
 						m.Cmdy(web.SPIDE, ice.DEV, web.SPIDE_RAW, p)
 					} else {
 						m.Cmdy(nfs.CAT, path.Join(ice.USR_INTSHELL, p))
 					}
-					if m.IsErrNotFound() {
-						m.SetResult()
-					}
-					_run_action(m, cmd, m.Result(), arg...)
+					_run_action(m, cmd, m.Results(), arg...)
 				})
 			}},
-			ice.RUN: {Name: "run", Help: "执行", Hand: func(m *ice.Message, arg ...string) {
+			ice.RUN: {Hand: func(m *ice.Message, arg ...string) {
 				if !ctx.PodCmd(m, arg) && aaa.Right(m, arg) {
 					m.Cmdy(arg)
 				}
-				if m.Result() == "" {
-					m.Table()
+				if m.Result() != "" && !strings.HasSuffix(m.Result(), ice.NL) {
+					m.Echo(ice.NL)
 				}
 			}},
 		}},

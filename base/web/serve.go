@@ -58,9 +58,12 @@ func _serve_main(m *ice.Message, w http.ResponseWriter, r *http.Request) bool {
 	if m.Logs(r.Header.Get(ice.MSG_USERIP), r.Method, r.URL.String()); m.Config(LOGHEADERS) == ice.TRUE {
 		kit.Fetch(r.Header, func(k string, v []string) { m.Logs("Header", k, v) })
 	}
-	if r.Method == http.MethodGet && r.URL.Path != PP(SPACE) {
+	if r.Method == http.MethodGet && r.URL.Path != PP(SPACE) && !strings.HasPrefix(r.URL.Path, "/code/bash") {
 		repos := kit.Select(ice.INTSHELL, ice.VOLCANOS, strings.Contains(r.Header.Get(UserAgent), MOZILLA))
-		if msg := gdb.Event(m.Spawn(w, r), SERVE_REWRITE, r.Method, r.URL.Path, path.Join(m.Conf(SERVE, kit.Keym(repos, nfs.PATH)), r.URL.Path), repos); msg.Option(ice.MSG_OUTPUT) != "" {
+		if p := path.Join(ice.USR, repos, r.URL.Path); r.URL.Path != ice.PS && nfs.ExistsFile(m, p) {
+			Render(m.Spawn(w, r), ice.RENDER_DOWNLOAD, p)
+			return false
+		} else if msg := gdb.Event(m.Spawn(w, r), SERVE_REWRITE, r.Method, r.URL.Path, path.Join(m.Conf(SERVE, kit.Keym(repos, nfs.PATH)), r.URL.Path), repos); msg.Option(ice.MSG_OUTPUT) != "" {
 			Render(msg, msg.Option(ice.MSG_OUTPUT), kit.List(msg.Optionv(ice.MSG_ARGS))...)
 			return false
 		}
@@ -73,9 +76,7 @@ func _serve_handle(key string, cmd *ice.Command, m *ice.Message, w http.Response
 		kit.Fetch(u.Query(), func(k string, v []string) { m.Logs("Refer", k, v).Optionv(k, v) })
 	}
 	for k, v := range kit.ParseQuery(r.URL.RawQuery) {
-		if m.IsCliUA() {
-			v = kit.Simple(v, func(v string) (string, error) { return url.QueryUnescape(v) })
-		}
+		kit.If(m.IsCliUA(), func() { v = kit.Simple(v, func(v string) (string, error) { return url.QueryUnescape(v) }) })
 		m.Optionv(k, v)
 	}
 	switch r.Header.Get(ContentType) {
@@ -85,7 +86,10 @@ func _serve_handle(key string, cmd *ice.Command, m *ice.Message, w http.Response
 		kit.Fetch(data, func(k string, v ice.Any) { m.Optionv(k, v) })
 	default:
 		r.ParseMultipartForm(kit.Int64(kit.Select("4096", r.Header.Get(ContentLength))))
-		kit.Fetch(r.PostForm, func(k string, v []string) { m.Logs("Form", k, kit.Join(v, ice.SP)).Optionv(k, v) })
+		kit.Fetch(r.PostForm, func(k string, v []string) {
+			kit.If(m.IsCliUA(), func() { v = kit.Simple(v, func(v string) (string, error) { return url.QueryUnescape(v) }) })
+			m.Logs("Form", k, kit.Join(v, ice.SP)).Optionv(k, v)
+		})
 	}
 	kit.Fetch(r.Cookies(), func(k, v string) { m.Optionv(k, v) })
 	m.OptionDefault(ice.HEIGHT, "480", ice.WIDTH, "320")
@@ -95,6 +99,8 @@ func _serve_handle(key string, cmd *ice.Command, m *ice.Message, w http.Response
 	if m.Option(ice.MSG_USERWEB, _serve_domain(m)); m.Option(ice.POD) != "" {
 		m.Option(ice.MSG_USERPOD, m.Option(ice.POD))
 	}
+	u := OptionUserWeb(m)
+	m.Option(ice.MSG_USERHOST, u.Scheme+"//"+u.Host)
 	m.Option(ice.MSG_SESSID, m.Option(CookieName(m.Option(ice.MSG_USERWEB))))
 	if m.Optionv(ice.MSG_CMDS) == nil {
 		if p := strings.TrimPrefix(r.URL.Path, key); p != "" {
@@ -121,7 +127,7 @@ func _serve_domain(m *ice.Message) string {
 	)
 }
 func _serve_login(m *ice.Message, key string, cmds []string, w http.ResponseWriter, r *http.Request) ([]string, bool) {
-	if aaa.SessCheck(m, m.Option(ice.MSG_SESSID)); m.Option(ice.MSG_USERNAME) == "" && r.URL.Path != PP(SPACE) {
+	if aaa.SessCheck(m, m.Option(ice.MSG_SESSID)); m.Option(ice.MSG_USERNAME) == "" && r.URL.Path != PP(SPACE) && !strings.HasPrefix(r.URL.Path, "/sync") {
 		gdb.Event(m, SERVE_LOGIN)
 	}
 	if _, ok := m.Target().Commands[WEB_LOGIN]; ok {

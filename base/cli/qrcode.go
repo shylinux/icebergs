@@ -11,6 +11,7 @@ import (
 	"shylinux.com/x/go-qrcode"
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/mdb"
+	"shylinux.com/x/icebergs/base/nfs"
 	kit "shylinux.com/x/toolkits"
 )
 
@@ -76,7 +77,7 @@ func _qrcode_cli(m *ice.Message, text string) {
 		}
 		m.Echo(ice.NL)
 	}
-	m.Echo(text)
+	m.Echo(text).Echo(ice.NL)
 }
 func _qrcode_web(m *ice.Message, text string) {
 	qr, _ := qrcode.New(text, qrcode.Medium)
@@ -148,3 +149,12 @@ func Color(m *ice.Message, c string, str ice.Any) string {
 func ColorRed(m *ice.Message, str ice.Any) string    { return Color(m, RED, str) }
 func ColorGreen(m *ice.Message, str ice.Any) string  { return Color(m, GREEN, str) }
 func ColorYellow(m *ice.Message, str ice.Any) string { return Color(m, YELLOW, str) }
+
+func PushText(m *ice.Message, text string) {
+	m.OptionFields(ice.MSG_DETAIL)
+	if m.PushScript(nfs.SCRIPT, text); strings.HasPrefix(text, ice.HTTP) {
+		m.PushQRCode(QRCODE, text)
+		m.PushAnchor(text)
+	}
+	m.Echo(text)
+}

@@ -197,9 +197,14 @@ const (
 	CACHE_FIELD  = "cache.field"
 )
 
-func Grows(m *ice.Message, prefix string, chain Any, match string, value string, cb Any) Map {
-	cache := m.Confm(prefix, chain)
-	if cache == nil {
+type Message interface {
+	Confv(arg ...Any) (val Any)
+	Option(key string, arg ...Any) string
+}
+
+func Grows(m Message, prefix string, chain Any, match string, value string, cb Any) Map {
+	cache, ok := m.Confv(prefix, chain).(ice.Map)
+	if cache == nil || !ok {
 		return nil
 	}
 	limit := kit.Int(m.Option(CACHE_LIMIT))
@@ -216,9 +221,9 @@ func Grows(m *ice.Message, prefix string, chain Any, match string, value string,
 		kit.Int(kit.Select("10", m.Option(CACHE_LIMIT))),
 		match, value, cb)
 }
-func Grow(m *ice.Message, prefix string, chain Any, data Any) int {
-	cache := m.Confm(prefix, chain)
-	if cache == nil {
+func Grow(m Message, prefix string, chain Any, data Any) int {
+	cache, ok := m.Confv(prefix, chain).(ice.Map)
+	if cache == nil || !ok {
 		cache = kit.Data()
 		m.Confv(prefix, chain, cache)
 	}

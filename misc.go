@@ -105,7 +105,7 @@ func (m *Message) RenameAppend(arg ...string) *Message {
 func (m *Message) AppendSimple(key ...string) (res []string) {
 	if len(key) == 0 {
 		if m.FieldsIsDetail() {
-			key = append(key, m.Appendv(KEY)...)
+			key = append(key, m.meta[KEY]...)
 		} else {
 			key = append(key, m.Appendv(MSG_APPEND)...)
 		}
@@ -173,7 +173,7 @@ func (m *Message) _fileline() string {
 	}
 }
 func (m *Message) ActionHand(cmd *Command, key, sub string, arg ...string) *Message {
-	if action, ok := cmd.Actions[sub]; !m.Warn(!ok, ErrNotFound, sub, cmd.GetFileLines()) {
+	if action, ok := cmd.Actions[sub]; !m.Warn(!ok, ErrNotFound, sub, cmd.GetFileLine()) {
 		return m.Target()._action(m, cmd, key, sub, action, arg...)
 	}
 	return m

@@ -27,7 +27,7 @@ func _action_exec(m *ice.Message, river, storm, index string, arg ...string) {
 }
 func _action_auth(m *ice.Message, share string) *ice.Message {
 	msg := m.Cmd(web.SHARE, share)
-	if 	web.IsNotValidShare(m, msg.Append(mdb.TIME)) {
+	if web.IsNotValidShare(m, msg.Append(mdb.TIME)) {
 		msg.Append(mdb.TYPE, "")
 		return msg
 	}

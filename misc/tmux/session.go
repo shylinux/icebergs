@@ -9,7 +9,6 @@ import (
 	"shylinux.com/x/icebergs/base/ctx"
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/web"
-	"shylinux.com/x/icebergs/core/code"
 	kit "shylinux.com/x/toolkits"
 )
 
@@ -24,12 +23,8 @@ func _tmux_key(arg ...string) string {
 		return "miss"
 	}
 }
-func _tmux_cmd(m *ice.Message, arg ...string) *ice.Message {
-	return m.Cmd(cli.SYSTEM, TMUX, arg)
-}
-func _tmux_cmds(m *ice.Message, arg ...string) string {
-	return _tmux_cmd(m, arg...).Result()
-}
+func _tmux_cmd(m *ice.Message, arg ...string) *ice.Message { return m.Cmd(cli.SYSTEM, TMUX, arg) }
+func _tmux_cmds(m *ice.Message, arg ...string) string      { return _tmux_cmd(m, arg...).Results() }
 
 const (
 	FORMAT = "format"
@@ -69,24 +64,22 @@ const (
 
 func init() {
 	Index.Merge(&ice.Context{Configs: ice.Configs{
-		SESSION: {Name: SESSION, Help: "会话", Value: kit.Data(
+		SESSION: {Value: kit.Data(
 			FORMAT, "#{session_id},#{session_attached},#{session_name},#{session_windows},#{session_height},#{session_width}",
 			FIELDS, "id,tag,session,windows,height,width",
 		)},
-		WINDOW: {Name: WINDOW, Help: "窗口", Value: kit.Data(
+		WINDOW: {Value: kit.Data(
 			FORMAT, "#{window_id},#{window_active},#{window_name},#{window_panes},#{window_height},#{window_width}",
 			FIELDS, "id,tag,window,panes,height,width",
 		)},
-		PANE: {Name: PANE, Help: "终端", Value: kit.Data(
+		PANE: {Value: kit.Data(
 			FORMAT, "#{pane_id},#{pane_active},#{pane_index},#{pane_tty},#{pane_height},#{pane_width},#{pane_current_command}",
 			FIELDS, "id,tag,pane,tty,height,width,cmd",
 		)},
 	}, Commands: ice.Commands{
-		SESSION: {Name: "session session window pane cmd auto", Help: "会话管理", Actions: ice.Actions{
-			web.DREAM_CREATE: {Name: "dream.create", Help: "梦想", Hand: func(m *ice.Message, arg ...string) {
-				if m.Cmd("", m.Option(mdb.NAME)).Length() == 0 {
-					m.Cmd("", mdb.CREATE)
-				}
+		SESSION: {Name: "session session window pane cmd auto", Help: "会话管理", Actions: ice.MergeActions(ice.Actions{
+			web.DREAM_CREATE: {Hand: func(m *ice.Message, arg ...string) {
+				kit.If(m.Cmd("", m.Option(mdb.NAME)).Length() == 0, func() { m.Cmd("", mdb.CREATE) })
 			}},
 			mdb.INPUTS: {Hand: func(m *ice.Message, arg ...string) {
 				if m.Option(ctx.ACTION) == SCRIPT {
@@ -98,24 +91,18 @@ func init() {
 					m.Cmdy(web.DREAM).Cut("name,size,time")
 				}
 			}},
-			mdb.CREATE: {Name: "create name", Help: "添加", Hand: func(m *ice.Message, arg ...string) {
-				m.Option(cli.CMD_ENV, "TMUX", "")
-				if m.Option(PANE) != "" { // 创建终端
+			mdb.CREATE: {Name: "create name", Hand: func(m *ice.Message, arg ...string) {
+				if m.Option(cli.CMD_ENV, "TMUX", ""); m.Option(PANE) != "" {
 					_tmux_cmd(m, SPLIT_WINDOW, "-t", _tmux_key(m.Option(SESSION), m.Option(WINDOW), m.Option(PANE)))
-
-				} else if m.Option(WINDOW) != "" { // 创建终端
+				} else if m.Option(WINDOW) != "" {
 					_tmux_cmd(m, SPLIT_WINDOW, "-t", _tmux_key(m.Option(SESSION), m.Option(WINDOW)))
-
-				} else if m.Option(SESSION) != "" { // 创建窗口
+				} else if m.Option(SESSION) != "" {
 					_tmux_cmd(m, NEW_WINDOW, "-d", "-t", m.Option(SESSION), "-n", m.Option(mdb.NAME))
-
-				} else { // 创建会话
+				} else {
 					m.Option(cli.CMD_DIR, path.Join(ice.USR_LOCAL_WORK, m.Option(mdb.NAME)))
-
 					ls := kit.Split(m.Option(mdb.NAME), "-")
 					name := kit.Select(ls[0], ls, 1)
 					_tmux_cmd(m, NEW_SESSION, "-d", "-s", m.Option(mdb.NAME), "-n", name)
-
 					name = _tmux_key(m.Option(mdb.NAME), name)
 					_tmux_cmd(m, SPLIT_WINDOW, "-t", kit.Keys(name, "1"), "-p", "40")
 					m.Go(func() {
@@ -123,103 +110,76 @@ func init() {
 						_tmux_cmd(m, SEND_KEYS, "-t", kit.Keys(name, "2"), "ish_miss_log", ENTER)
 						_tmux_cmd(m, SEND_KEYS, "-t", kit.Keys(name, "1"), "vi etc/miss.sh", ENTER)
 					})
-
-					_tmux_cmd(m, LINK_WINDOW, "-s", name, "-t", "miss:")
+					if m.Cmd(PANE, _tmux_key("miss", name)).Length() == 0 {
+						_tmux_cmd(m, LINK_WINDOW, "-s", name, "-t", "miss:")
+					}
 				}
 			}},
-			mdb.REMOVE: {Name: "remove", Help: "删除", Hand: func(m *ice.Message, arg ...string) {
-				if m.Option(PANE) != "" { // 删除终端
-					_tmux_cmd(m, KILL_PANE, "-t", _tmux_key(m.Option(SESSION), m.Option(WINDOW), m.Option(PANE)))
-
-				} else if m.Option(WINDOW) != "" { // 删除窗口
-					// _tmux_cmd(m, KILL_WINDOW, "-t", _tmux_key(m.Option(SESSION), m.Option(WINDOW)))
-					_tmux_cmd(m, KILL_WINDOW, "-t", _tmux_key(m.Option(SESSION), m.Option(mdb.ID)))
-
-				} else if m.Option(SESSION) != "" { // 删除会话
+			mdb.REMOVE: {Hand: func(m *ice.Message, arg ...string) {
+				if m.Option(PANE) != "" {
+					_tmux_cmd(m, KILL_PANE, "-t", kit.Select(_tmux_key(m.Option(SESSION), m.Option(WINDOW), m.Option(PANE)), m.Option(mdb.ID)))
+				} else if m.Option(WINDOW) != "" {
+					_tmux_cmd(m, KILL_WINDOW, "-t", kit.Select(_tmux_key(m.Option(SESSION), m.Option(WINDOW)), m.Option(mdb.ID)))
+				} else if m.Option(SESSION) != "" {
 					_tmux_cmd(m, KILL_SESSION, "-t", m.Option(SESSION))
 				}
 			}},
-			mdb.MODIFY: {Name: "modify", Help: "编辑", Hand: func(m *ice.Message, arg ...string) {
+			mdb.MODIFY: {Hand: func(m *ice.Message, arg ...string) {
 				switch arg[0] {
-				case WINDOW: // 重命名窗口
+				case WINDOW:
 					_tmux_cmd(m, RENAME_WINDOW, "-t", _tmux_key(m.Option(SESSION), m.Option(WINDOW)), arg[1])
-
-				case SESSION: // 重命名会话
+				case SESSION:
 					_tmux_cmd(m, RENAME_SESSION, "-t", m.Option(SESSION), arg[1])
 				}
 			}},
-			mdb.SELECT: {Name: "select", Help: "进入", Hand: func(m *ice.Message, arg ...string) {
-				_tmux_cmd(m, SWITCH_CLIENT, "-t", m.Option(SESSION))
-				if m.Option(WINDOW) != "" { // 切换窗口
-					_tmux_cmd(m, SELECT_WINDOW, "-t", _tmux_key(m.Option(SESSION), m.Option(WINDOW)))
+			mdb.SELECT: {Help: "切入", Hand: func(m *ice.Message, arg ...string) {
+				if _tmux_cmd(m, SWITCH_CLIENT, "-t", m.Option(SESSION)); m.Option(WINDOW) != "" {
+					_tmux_cmd(m, SELECT_WINDOW, "-t", kit.Select(_tmux_key(m.Option(SESSION), m.Option(WINDOW)), m.Option(mdb.ID)))
 				}
-				if m.Option(PANE) != "" { // 切换终端
+				if m.Option(PANE) != "" {
 					_tmux_cmd(m, SELECT_PANE, "-t", _tmux_key(m.Option(SESSION), m.Option(WINDOW), m.Option(PANE)))
 				}
 			}},
-
-			code.XTERM: {Name: "xterm", Help: "终端", Hand: func(m *ice.Message, arg ...string) {
-				ctx.Process(m, code.XTERM, []string{mdb.TYPE, "tmux attach -t " + m.Option(SESSION)}, arg...)
-			}},
 			SCRIPT: {Name: "script name", Help: "脚本", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmd(SCRIPT, m.Option(mdb.NAME), func(value ice.Maps) {
-					switch value[mdb.TYPE] {
-					case "shell":
-						for _, line := range kit.Split(value[mdb.TEXT], ice.NL, ice.NL, ice.NL) {
-							m.Cmd(CMD, _tmux_key(m.Option(SESSION), m.Option(WINDOW), m.Option(PANE)), line)
-						}
-					case "vim":
-						for _, line := range kit.Split(value[mdb.TEXT], ice.NL, ice.NL, ice.NL) {
-							m.Cmd(CMD, _tmux_key(m.Option(SESSION), m.Option(WINDOW), m.Option(PANE)), line)
-						}
-					case "tmux":
-						for _, line := range kit.Split(value[mdb.TEXT], ice.NL, ice.NL, ice.NL) {
-							_tmux_cmd(m, line)
-						}
-					}
-				})
-				m.Sleep30ms()
+					kit.Fetch(kit.SplitLine(value[mdb.TEXT]), func(line string) {
+						kit.Switch(value[mdb.TYPE],
+							"shell", func() { m.Cmd(CMD, _tmux_key(m.Option(SESSION), m.Option(WINDOW), m.Option(PANE)), line) },
+							"vim", func() { m.Cmd(CMD, _tmux_key(m.Option(SESSION), m.Option(WINDOW), m.Option(PANE)), line) },
+							"tmux", func() { _tmux_cmd(m, line) },
+						)
+					})
+				}).Sleep30ms()
 			}},
-		}, Hand: func(m *ice.Message, arg ...string) {
-			m.Action(SCRIPT)
-			if len(arg) > 3 { // 执行命令
+		}, ctx.CmdAction()), Hand: func(m *ice.Message, arg ...string) {
+			if m.Action(SCRIPT); len(arg) > 3 {
 				m.Cmd(CMD, _tmux_key(arg[0], arg[1], arg[2]), arg[3:])
 			}
-			if len(arg) > 2 { // 终端内容
+			if len(arg) > 2 {
 				m.Echo(strings.TrimSpace(m.Cmdx(VIEW, _tmux_key(arg[0], arg[1], arg[2]))))
 				return
 			}
-
-			m.Action(mdb.CREATE)
-			if len(arg) > 1 { // 终端列表
+			if m.Action(mdb.CREATE); len(arg) > 1 {
 				m.Cmdy(PANE, _tmux_key(arg[0], arg[1]))
-
-			} else if len(arg) > 0 { // 窗口列表
+			} else if len(arg) > 0 {
 				m.Cmdy(WINDOW, arg[0])
-
-			} else { // 会话列表
+			} else {
 				m.Split(_tmux_cmd(m, LIST_SESSION, "-F", m.Config(FORMAT)).Result(), m.Config(FIELDS), ice.FS, ice.NL)
 			}
-
 			m.Tables(func(value ice.Maps) {
-				switch value["tag"] {
-				case "1":
-					m.PushButton(code.XTERM, "")
-				default:
-					m.PushButton(code.XTERM, mdb.SELECT, mdb.REMOVE)
-				}
-			})
+				kit.If(value["tag"] == "1", func() { m.PushButton("") }, func() { m.PushButton(mdb.SELECT, mdb.REMOVE) })
+			}).StatusTimeCount()
 		}},
-		WINDOW: {Name: "windows", Help: "窗口", Hand: func(m *ice.Message, arg ...string) {
+		WINDOW: {Hand: func(m *ice.Message, arg ...string) {
 			m.Split(m.Cmdx(cli.SYSTEM, TMUX, LIST_WINDOWS, "-t", kit.Select("", arg, 0), "-F", m.Config(FORMAT)), m.Config(FIELDS), ice.FS, ice.NL)
 		}},
-		PANE: {Name: "panes", Help: "终端", Hand: func(m *ice.Message, arg ...string) {
+		PANE: {Hand: func(m *ice.Message, arg ...string) {
 			m.Split(_tmux_cmds(m, LIST_PANES, "-t", kit.Select("", arg, 0), "-F", m.Config(FORMAT)), m.Config(FIELDS), ice.FS, ice.NL)
 		}},
-		VIEW: {Name: "view", Help: "内容", Hand: func(m *ice.Message, arg ...string) {
+		VIEW: {Hand: func(m *ice.Message, arg ...string) {
 			m.Echo(_tmux_cmds(m, CAPTURE_PANE, "-p", "-t", kit.Select("", arg, 0)))
 		}},
-		CMD: {Name: "cmd", Help: "命令", Hand: func(m *ice.Message, arg ...string) {
+		CMD: {Hand: func(m *ice.Message, arg ...string) {
 			_tmux_cmd(m, SEND_KEYS, "-t", arg[0], strings.Join(arg[1:], ice.SP), ENTER)
 		}},
 	}})

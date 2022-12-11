@@ -4,18 +4,19 @@ import (
 	"strings"
 
 	ice "shylinux.com/x/icebergs"
-	"shylinux.com/x/icebergs/base/mdb"
+	"shylinux.com/x/icebergs/base/cli"
+	"shylinux.com/x/icebergs/base/web"
 )
+
+const CONFIGS = "configs"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
-		"/configs": {Name: "/configs", Help: "配置", Hand: func(m *ice.Message, arg ...string) {
-			m.Cmd("web.code.git.configs", func(value ice.Maps) {
-				if strings.HasPrefix(value[mdb.NAME], "url") {
-					m.Echo(`git config --global "%s" "%s"`, value[mdb.NAME], value[mdb.VALUE])
-					m.Echo(ice.NL)
-				}
-			})
+		web.P(CONFIGS): {Hand: func(m *ice.Message, arg ...string) {
+			if strings.Contains(m.Option(cli.RELEASE), cli.ALPINE) {
+				m.Echo("sed -i 's/dl-cdn.alpinelinux.org/mirrors.tencent.com/g' /etc/apk/repositories && apk update").Echo(ice.NL)
+				m.Echo("TZ=Asia/Shanghai; apk add tzdata && cp /usr/share/zoneinfo/${TZ} /etc/localtime && echo ${TZ} > /etc/timezone").Echo(ice.NL)
+			}
 		}},
 	})
 }

@@ -31,11 +31,15 @@ const (
 func Render(m *ice.Message, cmd string, args ...ice.Any) bool {
 	if cmd == ice.RENDER_VOID {
 		return true
-	} else if cmd != "" {
-		defer func() { m.Logs(mdb.EXPORT, cmd, args) }()
 	}
-
-	switch arg := kit.Simple(args...); cmd {
+	arg := kit.Simple(args...)
+	if len(arg) == 0 {
+		args = nil
+	}
+	if cmd != "" {
+		defer func() { m.Logs("Render", cmd, args) }()
+	}
+	switch cmd {
 	case COOKIE: // value [name [path [expire]]]
 		RenderCookie(m, arg[0], arg[1:]...)
 
@@ -63,7 +67,9 @@ func Render(m *ice.Message, cmd string, args ...ice.Any) bool {
 		if len(arg) > 0 { // [str [arg...]]
 			m.W.Write([]byte(kit.Format(arg[0], args[1:]...)))
 		} else {
-			args = append(args, nfs.SIZE, len(m.Result()))
+			if m.Result() == "" && m.Length() > 0 {
+				m.Table()
+			}
 			m.W.Write([]byte(m.Result()))
 		}
 

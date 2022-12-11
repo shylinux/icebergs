@@ -78,6 +78,7 @@ func init() {
 		FEEL, DRAW, DATA, WORD,
 	)
 }
+func Prefix(arg ...string) string { return web.Prefix(WIKI, kit.Keys(arg)) }
 
 func WikiAction(dir string, ext ...string) ice.Actions {
 	return ice.Actions{ice.CTX_INIT: mdb.AutoConfig(nfs.PATH, dir, lex.REGEXP, kit.FileReg(ext...)),

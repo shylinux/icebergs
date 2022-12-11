@@ -18,6 +18,7 @@ const (
 	CENTOS  = "centos"
 	ALPINE  = "alpine"
 	BUSYBOX = "busybox"
+	RELEASE = "release"
 )
 
 const MIRRORS = "mirrors"
@@ -40,6 +41,7 @@ func init() {
 }
 
 var _release = ""
+
 func release(m *ice.Message) string {
 	osid := runtime.GOOS
 	if osid != "linux" {
@@ -71,4 +73,6 @@ func insert(m *ice.Message, sys, cmd string, arg ...string) bool {
 func IsAlpine(m *ice.Message, arg ...string) bool { return insert(m, ALPINE, "system apk add", arg...) }
 func IsCentos(m *ice.Message, arg ...string) bool { return insert(m, CENTOS, "yum install -y", arg...) }
 func IsUbuntu(m *ice.Message, arg ...string) bool { return insert(m, UBUNTU, "apt get -y", arg...) }
-func IsSystem(m *ice.Message, arg ...string) bool { return IsAlpine(m, arg...) || IsCentos(m, arg...) || IsUbuntu(m, arg...) }
+func IsSystem(m *ice.Message, arg ...string) bool {
+	return IsAlpine(m, arg...) || IsCentos(m, arg...) || IsUbuntu(m, arg...)
+}

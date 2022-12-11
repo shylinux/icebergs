@@ -80,19 +80,19 @@ func StatFile(m Message, p string) (os.FileInfo, error) {
 func OpenFile(m Message, p string) (io.ReadCloser, error) {
 	return OptionFiles(m).OpenFile(p)
 }
-func CreateFile(m *ice.Message, p string) (io.WriteCloser, string, error) {
+func CreateFile(m Message, p string) (io.WriteCloser, string, error) {
 	return OptionFiles(m).CreateFile(p)
 }
-func AppendFile(m *ice.Message, p string) (io.ReadWriteCloser, string, error) {
+func AppendFile(m Message, p string) (io.ReadWriteCloser, string, error) {
 	file := OptionFiles(m)
 	w, e := file.AppendFile(p)
 	return w, p, e
 }
-func WriteFile(m *ice.Message, p string, b []byte) error {
+func WriteFile(m Message, p string, b []byte) error {
 	return OptionFiles(m).WriteFile(p, b)
 }
 
-func ReadDir(m *ice.Message, p string) ([]os.FileInfo, error) {
+func ReadDir(m Message, p string) ([]os.FileInfo, error) {
 	list, e := OptionFiles(m).ReadDir(p)
 	for i := 0; i < len(list)-1; i++ {
 		for j := i + 1; j < len(list); j++ {
@@ -103,23 +103,23 @@ func ReadDir(m *ice.Message, p string) ([]os.FileInfo, error) {
 	}
 	return list, e
 }
-func MkdirAll(m *ice.Message, p string) error {
+func MkdirAll(m Message, p string) error {
 	return OptionFiles(m).MkdirAll(p, ice.MOD_DIR)
 }
-func RemoveAll(m *ice.Message, p string) error {
+func RemoveAll(m Message, p string) error {
 	return OptionFiles(m).RemoveAll(p)
 }
-func Remove(m *ice.Message, p string) error {
+func Remove(m Message, p string) error {
 	return OptionFiles(m).Remove(p)
 }
-func Rename(m *ice.Message, oldname string, newname string) error {
+func Rename(m Message, oldname string, newname string) error {
 	MkdirAll(m, path.Dir(newname))
 	return OptionFiles(m).Rename(oldname, newname)
 }
-func Symlink(m *ice.Message, oldname string, newname string) error {
+func Symlink(m Message, oldname string, newname string) error {
 	return OptionFiles(m).Symlink(oldname, newname)
 }
-func Link(m *ice.Message, oldname string, newname string) error {
+func Link(m Message, oldname string, newname string) error {
 	return OptionFiles(m).Link(oldname, newname)
 }
 
@@ -133,7 +133,7 @@ func ExistsFile(m Message, p string) bool {
 	}
 	return false
 }
-func ReadFile(m *ice.Message, p string) ([]byte, error) {
+func ReadFile(m Message, p string) ([]byte, error) {
 	if f, e := OptionFiles(m).OpenFile(p); e == nil {
 		defer f.Close()
 		return ioutil.ReadAll(f)
@@ -141,7 +141,7 @@ func ReadFile(m *ice.Message, p string) ([]byte, error) {
 		return nil, e
 	}
 }
-func CloseFile(m *ice.Message, p ice.Any) {
+func CloseFile(m Message, p ice.Any) {
 	if w, ok := p.(io.Closer); ok {
 		w.Close()
 	}

@@ -20,9 +20,7 @@ func _ssh_session(m *ice.Message, client *ssh.Client) (*ssh.Session, error) {
 	m.Assert(e)
 	in, e := s.StdinPipe()
 	m.Assert(e)
-
 	h := m.Cmdx(SESSION, mdb.CREATE, mdb.STATUS, tcp.OPEN, CONNECT, m.Option(mdb.NAME), kit.Dict(mdb.TARGET, in))
-
 	m.Go(func() {
 		buf := make([]byte, ice.MOD_BUFS)
 		for {
@@ -53,29 +51,23 @@ const SESSION = "session"
 func init() {
 	psh.Index.MergeCommands(ice.Commands{
 		SESSION: {Name: "session hash id auto", Help: "会话", Actions: ice.MergeActions(ice.Actions{
-			mdb.REPEAT: {Name: "repeat", Help: "执行", Hand: func(m *ice.Message, arg ...string) {
-				m.Cmdy("", ctx.COMMAND, CMD, m.Option(mdb.TEXT))
-			}},
+			mdb.REPEAT: {Help: "执行", Hand: func(m *ice.Message, arg ...string) { m.Cmdy("", ctx.ACTION, ctx.COMMAND, CMD, m.Option(mdb.TEXT)) }},
 			ctx.COMMAND: {Name: "command cmd=pwd", Help: "命令", Hand: func(m *ice.Message, arg ...string) {
-				m.Cmd("", mdb.INSERT, m.OptionSimple(mdb.HASH), mdb.TYPE, CMD, mdb.TEXT, m.Option(CMD))
-				w := mdb.HashSelectTarget(m, m.Option(mdb.HASH), nil).(io.Writer)
-				w.Write([]byte(m.Option(CMD) + ice.NL))
-				m.Sleep300ms()
+				mdb.ZoneInsert(m, m.OptionSimple(mdb.HASH), mdb.TYPE, CMD, mdb.TEXT, m.Option(CMD))
+				if w, ok := mdb.HashSelectTarget(m, m.Option(mdb.HASH), nil).(io.Writer); ok {
+					w.Write([]byte(m.Option(CMD) + ice.NL))
+					m.Sleep300ms()
+				}
 			}},
-		}, mdb.ZoneAction(mdb.FIELD, "time,hash,count,status,connect")), Hand: func(m *ice.Message, arg ...string) {
-			if len(arg) == 0 {
-				mdb.HashSelect(m, arg...).Tables(func(value ice.Maps) {
+		}, mdb.PageZoneAction(mdb.FIELD, "time,hash,count,status,connect", mdb.FIELDS, "time,id,type,text")), Hand: func(m *ice.Message, arg ...string) {
+			m.Fields(len(kit.Slice(arg, 0, 2)), m.Config(mdb.FIELD), m.Config(mdb.FIELDS))
+			if mdb.PageZoneSelect(m, arg...); len(arg) == 0 {
+				m.Tables(func(value ice.Maps) {
 					m.PushButton(kit.Select("", ctx.COMMAND, value[mdb.STATUS] == tcp.OPEN), mdb.REMOVE)
 				})
-				return
+			} else {
+				m.Tables(func(value ice.Maps) { m.PushButton(kit.Select("", mdb.REPEAT, value[mdb.TYPE] == CMD)) }).Action(ctx.COMMAND, mdb.PAGE)
 			}
-
-			m.Action(ctx.COMMAND, mdb.PAGE)
-			mdb.OptionPage(m, kit.Slice(arg, 2)...)
-			m.Fields(len(kit.Slice(arg, 1, 2)), "time,id,type,text")
-			mdb.ZoneSelect(m, kit.Slice(arg, 0, 2)...).Tables(func(value ice.Maps) {
-				m.PushButton(kit.Select("", mdb.REPEAT, value[mdb.TYPE] == CMD))
-			})
 		}},
 	})
 }

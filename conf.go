@@ -189,6 +189,7 @@ const ( // MSG
 	MSG_USERNICK = "user.nick"
 	MSG_USERZONE = "user.zone"
 	MSG_LANGUAGE = "user.lang"
+	MSG_USERHOST = "user.host"
 
 	MSG_TITLE   = "sess.title"
 	MSG_TOPIC   = "sess.topic"

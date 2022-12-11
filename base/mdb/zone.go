@@ -25,7 +25,7 @@ func _zone_inputs(m *ice.Message, prefix, chain, zone string, field, value strin
 func _zone_insert(m *ice.Message, prefix, chain, zone string, arg ...string) {
 	h := _hash_select_field(m, prefix, chain, zone, HASH)
 	if h == "" {
-		h = _hash_insert(m, prefix, chain, _mdb_getmeta(m, prefix, chain, SHORT), zone)
+		h = _hash_insert(m, prefix, chain, kit.Select(ZONE, _mdb_getmeta(m, prefix, chain, SHORT)), zone)
 	}
 	m.Assert(h != "")
 	defer Lock(m, prefix, chain)()
@@ -193,7 +193,7 @@ func ZoneSelect(m *ice.Message, arg ...string) *ice.Message {
 	arg = kit.Slice(arg, 0, 2)
 	m.Fields(len(arg), kit.Select(kit.Fields(TIME, m.Config(SHORT), COUNT), m.Config(FIELDS)), ZoneField(m))
 	if m.Cmdy(SELECT, m.PrefixKey(), "", ZONE, arg, logs.FileLineMeta(-1)); len(arg) == 0 {
-		m.Sort(ZoneShort(m)).StatusTimeCount().PushAction(m.Config(ACTION), REMOVE)
+		m.StatusTimeCount().PushAction(m.Config(ACTION), REMOVE).Sort(ZoneShort(m))
 	} else if len(arg) == 1 {
 		m.StatusTimeCountTotal(_mdb_getmeta(m, "", kit.Keys(HASH, HashSelectField(m, arg[0], HASH)), COUNT))
 	}

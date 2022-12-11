@@ -21,11 +21,10 @@ func _install_path(m *ice.Message, link string) string {
 	link = kit.Select(m.Option(mdb.LINK), link)
 	if p := path.Join(ice.USR_INSTALL, kit.TrimExt(link)); nfs.ExistsFile(m, p) {
 		return p
-	} else if p := path.Join(ice.USR_INSTALL, path.Base(link)); nfs.ExistsFile(m, p) {
-		return path.Join(ice.USR_INSTALL, strings.Split(m.Cmd(nfs.TAR, p, "", "1").Append(nfs.FILE), ice.PS)[0])
+	} else if pp := path.Join(ice.USR_INSTALL, path.Base(link)); nfs.ExistsFile(m, pp) {
+		return path.Join(ice.USR_INSTALL, strings.Split(m.Cmd(nfs.TAR, pp, "", "1").Append(nfs.FILE), ice.PS)[0])
 	} else {
-		m.Assert(true)
-		return ""
+		return p
 	}
 }
 func _install_download(m *ice.Message) {

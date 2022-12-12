@@ -42,6 +42,10 @@ func _tar_list(m *ice.Message, p string, cb func(*tar.Header, *tar.Reader, int))
 				if m.Warn(e) {
 					break
 				}
+				if h.Size == 0 {
+					i--
+					continue
+				}
 				cb(h, r, i)
 			}
 			m.StatusTimeCount(mdb.TOTAL, i)

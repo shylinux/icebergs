@@ -1,18 +1,18 @@
-git
 ssh
+git
 input
 alpha
 tmux
-
-vim
 bash
+vim
+
 coder
 java
 node
 
-mp
-wx
-lark
-wework
-chrome
 webview
+chrome
+wework
+lark
+wx
+mp

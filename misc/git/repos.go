@@ -223,7 +223,7 @@ func init() {
 					}
 					return
 				}
-				ctx.ProcessField(m, web.CODE_INNER, arg, arg...)
+				ctx.ProcessField(m, "", arg, arg...)
 			}},
 		}, mdb.HashAction(mdb.SHORT, REPOS, mdb.FIELD, "time,repos,branch,commit,origin"), mdb.ClearHashOnExitAction()), Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) == 0 || arg[0] == "" {

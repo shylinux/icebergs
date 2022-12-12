@@ -75,6 +75,7 @@ func _serve_handle(key string, cmd *ice.Command, m *ice.Message, w http.Response
 		gdb.Event(m, SERVE_PARSE, strings.Split(strings.TrimPrefix(u.Path, ice.PS), ice.PS))
 		kit.Fetch(u.Query(), func(k string, v []string) { m.Logs("Refer", k, v).Optionv(k, v) })
 	}
+	m.Option(ice.MSG_USERUA, r.Header.Get(UserAgent))
 	for k, v := range kit.ParseQuery(r.URL.RawQuery) {
 		kit.If(m.IsCliUA(), func() { v = kit.Simple(v, func(v string) (string, error) { return url.QueryUnescape(v) }) })
 		m.Optionv(k, v)

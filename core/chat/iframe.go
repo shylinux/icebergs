@@ -43,7 +43,7 @@ func init() {
 				case web.OPEN:
 					ctx.ProcessOpen(m, m.Option(mdb.TEXT))
 				default:
-					ctx.ProcessField(m, "", []string{m.Option(mdb.TEXT)}, arg...)
+					ctx.ProcessField(m, m.PrefixKey(), []string{m.Option(mdb.TEXT)}, arg...)
 				}
 			}},
 			mdb.CREATE: {Hand: func(m *ice.Message, arg ...string) {

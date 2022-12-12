@@ -29,9 +29,9 @@ func init() {
 					if msg := mdb.ListSelect(m.Spawn(), m.Option(mdb.ID)); nfs.ExistsFile(m, msg.Append(cli.PWD)) {
 						m.Option(cli.CMD_DIR, msg.Append(cli.PWD))
 					}
-					ctx.ProcessField(m, cli.SYSTEM, nil, arg...)
+					ctx.ProcessField(m, "", nil, arg...)
 				} else {
-					ctx.ProcessField(m, cli.SYSTEM, kit.Split(m.Option(mdb.TEXT)))
+					ctx.ProcessField(m, "", kit.Split(m.Option(mdb.TEXT)))
 				}
 			}},
 			FAVOR: {Name: "favor zone=demo type name text pwd", Help: "收藏", Hand: func(m *ice.Message, arg ...string) {

@@ -70,7 +70,7 @@ func init() {
 				if len(arg) == 0 || arg[0] != ice.RUN {
 					arg = []string{m.Cmdx("", mdb.CREATE, arg)}
 				}
-				ctx.ProcessField(m, "", arg, arg...)
+				ctx.ProcessField(m, m.PrefixKey(), arg, arg...)
 			}},
 			mdb.INPUTS: {Hand: func(m *ice.Message, arg ...string) {
 				switch mdb.HashInputs(m, arg).Cmdy(FAVOR, "_system_term", ice.OptionFields(arg[0])).Cut(arg[0]); arg[0] {

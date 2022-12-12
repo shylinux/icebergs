@@ -46,7 +46,7 @@ func ProcessFloat(m *ice.Message, arg ...string) {
 	m.Cmdy(COMMAND, arg[0])
 }
 func ProcessField(m *ice.Message, cmd string, args []string, arg ...string) {
-	if cmd = kit.Select(m.PrefixKey(), cmd); len(arg) == 0 || arg[0] != ice.RUN {
+	if cmd = kit.Select(m.ActionKey(), cmd); len(arg) == 0 || arg[0] != ice.RUN {
 		m.Option("_index", m.PrefixKey())
 		if m.Cmdy(COMMAND, cmd).ProcessField(ACTION, m.ActionKey(), ice.RUN); len(args) > 0 {
 			m.Push(ARGS, kit.Format(args))

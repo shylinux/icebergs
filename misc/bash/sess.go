@@ -31,7 +31,7 @@ func init() {
 				}
 			}
 			switch m.RenderResult(); arg[0] {
-			case web.P(cli.QRCODE), web.PP(SESS):
+			case web.P(cli.QRCODE), web.P("input"), web.PP(SESS):
 				return
 			}
 			if m.Warn(m.Option(SID, strings.TrimSpace(m.Option(SID))) == "", ice.ErrNotLogin, arg) {
@@ -43,7 +43,7 @@ func init() {
 			}
 		}},
 		web.P(cli.QRCODE): {Hand: func(m *ice.Message, arg ...string) {
-			m.Cmdy(cli.QRCODE, m.Option(mdb.TEXT), m.Option(cli.FG), m.Option(cli.BG))
+			m.Cmdy(cli.QRCODE, tcp.PublishLocalhost(m, m.Option(mdb.TEXT)), m.Option(cli.FG), m.Option(cli.BG))
 		}},
 		web.PP(SESS): {Actions: ice.Actions{
 			aaa.LOGOUT: {Hand: func(m *ice.Message, arg ...string) {

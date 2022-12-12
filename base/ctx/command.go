@@ -205,3 +205,6 @@ func TravelCmd(m *ice.Message, cb func(key, file, line string)) *ice.Message {
 	})
 	return m
 }
+func CmdList(m *ice.Message) *ice.Message {
+	return m.Cmdy(COMMAND, mdb.SEARCH, COMMAND, ice.OptionFields(INDEX))
+}

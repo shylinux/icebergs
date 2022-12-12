@@ -48,7 +48,7 @@ func init() {
 				if m.Option(mdb.TYPE) != LOCATION {
 					return
 				}
-				ctx.ProcessField(m, "", []string{m.Option(mdb.TEXT)}, arg...)
+				ctx.ProcessField(m, m.PrefixKey(), []string{m.Option(mdb.TEXT)}, arg...)
 			}},
 			FAVOR_TABLES: {Hand: func(m *ice.Message, arg ...string) {
 				switch arg[1] {

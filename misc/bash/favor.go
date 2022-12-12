@@ -21,9 +21,9 @@ func init() {
 					if msg := mdb.ZoneSelect(m.Spawn(), m.Option(mdb.ZONE), m.Option(mdb.ID)); nfs.ExistsFile(m, msg.Append(cli.PWD)) {
 						m.Option(cli.CMD_DIR, msg.Append(cli.PWD))
 					}
-					ctx.ProcessField(m, cli.SYSTEM, nil, arg...)
+					ctx.ProcessField(m, "", nil, arg...)
 				} else {
-					ctx.ProcessField(m, cli.SYSTEM, kit.Split(m.Option(mdb.TEXT)))
+					ctx.ProcessField(m, "", kit.Split(m.Option(mdb.TEXT)))
 				}
 			}},
 			web.DOWNLOAD: {Hand: func(m *ice.Message, arg ...string) { web.RenderCache(m, m.Option(mdb.TEXT)) }},

@@ -9,7 +9,7 @@ const VIMRC = "vimrc"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
-		VIM:   {Name: "vim", Actions: code.PlugAction()},
-		VIMRC: {Name: "vimrc", Actions: code.PlugAction()},
+		VIM:   {Actions: code.PlugAction()},
+		VIMRC: {Actions: code.PlugAction()},
 	})
 }

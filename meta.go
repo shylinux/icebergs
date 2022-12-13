@@ -166,6 +166,9 @@ func (m *Message) Push(key string, value Any, arg ...Any) *Message {
 	}
 	return m
 }
+func (m *Message) EchoLine(str string, arg ...Any) *Message {
+	return m.Echo(str, arg...).Echo(NL)
+}
 func (m *Message) Echo(str string, arg ...Any) *Message {
 	if str == "" {
 		return m

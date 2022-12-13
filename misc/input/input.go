@@ -97,7 +97,7 @@ func (s input) List(m *ice.Message, arg ...string) {
 	for i := 0; i < kit.Int(10); i++ {
 		if line, e := bio.Read(); e != nil {
 			break
-		} else if len(line) > 3 {
+		} else if len(line) > 6 {
 			m.Push(mdb.ID, line[3]).Push(CODE, line[2]).Push(TEXT, line[4]).Push(WEIGHT, line[6])
 		}
 	}

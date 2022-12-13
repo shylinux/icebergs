@@ -74,6 +74,8 @@ func init() {
 			PUBLISH: {Hand: func(m *ice.Message, arg ...string) {
 				if strings.Contains(arg[0], LOCALHOST) {
 					arg[0] = strings.Replace(arg[0], LOCALHOST, m.Cmd("").Append(aaa.IP), 1)
+				} else if strings.Contains(arg[0], "127.0.0.1") {
+					arg[0] = strings.Replace(arg[0], "127.0.0.1", m.Cmd("").Append(aaa.IP), 1)
 				}
 				m.Echo(arg[0])
 			}},

@@ -31,10 +31,12 @@ func init() {
 				}
 			}
 			switch m.RenderResult(); arg[0] {
-			case web.P(cli.QRCODE), web.P("input"), web.PP(SESS):
+			case web.P(cli.QRCODE), web.PP(SESS):
 				return
 			}
-			if m.Warn(m.Option(SID, strings.TrimSpace(m.Option(SID))) == "", ice.ErrNotLogin, arg) {
+			if m.Option(SID, strings.TrimSpace(m.Option(SID))) == "" && m.Option(ice.MSG_USERNAME) != "" {
+				return
+			} else if m.Warn(m.Option(SID) == "", ice.ErrNotLogin, arg) {
 				return
 			} else if msg := m.Cmd(SESS, m.Option(SID)); msg.Append(GRANT) == "" {
 				aaa.SessAuth(m, ice.Maps{aaa.USERNAME: msg.Append(aaa.USERNAME), aaa.USERNICK: msg.Append(aaa.USERNAME), aaa.USERROLE: aaa.VOID}).Options(msg.AppendSimple(aaa.USERNAME, tcp.HOSTNAME, cli.RELEASE))

@@ -34,7 +34,7 @@ func init() {
 					ctx.ProcessField(m, "", kit.Split(m.Option(mdb.TEXT)))
 				}
 			}},
-			FAVOR: {Name: "favor zone=demo type name text pwd", Help: "收藏", Hand: func(m *ice.Message, arg ...string) {
+			FAVOR: {Name: "favor zone*=demo type name text pwd", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmdy(FAVOR, mdb.INSERT, arg, m.OptionSimple(aaa.USERNAME, tcp.HOSTNAME))
 			}},
 		}, mdb.PageListAction(mdb.FIELD, "time,id,type,name,text,pwd,username,hostname")), Hand: func(m *ice.Message, arg ...string) {

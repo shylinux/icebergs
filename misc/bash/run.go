@@ -55,27 +55,6 @@ ish_sys_dev_run_command() {
 	m.Echo(kit.Select("cat $1", script))
 }
 
-func _run_command(m *ice.Message, key string, arg ...string) {
-	m.Search(key, func(p *ice.Context, s *ice.Context, key string, cmd *ice.Command) {
-		m.Echo(kit.Join(m.Cmd(key, arg).Appendv(kit.Format(kit.Value(cmd.List, kit.Keys(len(arg), mdb.NAME)))), ice.SP))
-	})
-}
-func _run_actions(m *ice.Message, key, sub string, arg ...string) (res []string) {
-	m.Search(key, func(p *ice.Context, s *ice.Context, key string, cmd *ice.Command) {
-		if sub == "" {
-			res = kit.SortedKey(cmd.Meta)
-		} else if len(arg)%2 == 0 {
-			kit.Fetch(kit.Value(cmd.Meta, sub), func(value ice.Map) { res = append(res, kit.Format(value[mdb.NAME])) })
-			kit.Fetch(arg, func(k, v string) { res[kit.IndexOf(res, k)] = "" })
-		} else {
-			msg := m.Cmd(key, mdb.INPUTS, kit.Select("", arg, -1), kit.Dict(arg))
-			res = msg.Appendv(kit.Select("", msg.Appendv(ice.MSG_APPEND), 0))
-		}
-		m.Echo(kit.Join(res, ice.SP))
-	})
-	return nil
-}
-
 const RUN = "run"
 
 func init() {
@@ -83,20 +62,11 @@ func init() {
 		web.PP(RUN): {Actions: ice.Actions{
 			"check": {Name: "check sid*", Hand: func(m *ice.Message, arg ...string) { m.Echo(m.Cmd(SESS, m.Option(SID)).Append(GRANT)) }},
 			"complete": {Hand: func(m *ice.Message, arg ...string) {
-				switch arg = kit.Split(m.Option("line")); m.Option("cword") {
-				case "1":
-					m.Echo("action ")
-					m.Echo(strings.Join(m.Cmd(ctx.COMMAND, mdb.SEARCH, ctx.COMMAND, ice.OptionFields(ctx.INDEX)).Appendv(ctx.INDEX), ice.SP))
-				default:
-					if kit.Int(m.Option("cword"))+1 == len(arg) {
-						arg = kit.Slice(arg, 0, -1)
-					}
-					if kit.Select("", arg, 2) == ctx.ACTION {
-						_run_actions(m, arg[1], kit.Select("", arg, 3), kit.Slice(arg, 4)...)
-					} else {
-						_run_command(m, arg[1], arg[2:]...)
-					}
+				list := kit.Split(m.Option("line"))[1:]
+				if len(list) == kit.Int(m.Option("cword")) {
+					list = kit.Slice(list, 0, -1)
 				}
+				m.Echo(strings.Join(Complete(m, false, list...), ice.NL))
 			}},
 			ctx.COMMAND: {Hand: func(m *ice.Message, arg ...string) {
 				m.Search(arg[0], func(_ *ice.Context, s *ice.Context, key string, cmd *ice.Command) {
@@ -118,4 +88,64 @@ func init() {
 			}},
 		}},
 	})
+}
+
+func Complete(m *ice.Message, detail bool, arg ...string) (res []string) {
+	echo := func(arg ...string) { res = append(res, arg...) }
+	if len(arg) < 2 || arg[1] != ctx.ACTION {
+		list := ctx.CmdList(m.Spawn()).Appendv(ctx.INDEX)
+		if len(arg) > 0 {
+			pre := arg[0][0 : strings.LastIndex(arg[0], ice.PT)+1]
+			list = kit.Simple(list, func(cmd string) bool { return strings.HasPrefix(cmd, arg[0]) }, func(cmd string) string { return strings.TrimPrefix(cmd, pre) })
+		}
+		if len(arg) > 1 || (len(list) == 1 && kit.Select("", kit.Split(arg[0], ice.PT), -1) == list[0]) {
+			kit.If(detail, func() { echo("func") })
+			m.Cmdy(arg).Search(arg[0], func(p *ice.Context, s *ice.Context, key string, cmd *ice.Command) {
+				field := kit.Format(kit.Value(cmd.List, kit.Keys(len(arg)-1, mdb.NAME)))
+				m.Table(func(index int, value ice.Maps, head []string) {
+					echo(value[field])
+					if detail {
+						echo(kit.Join(kit.Simple(head, func(key string) string { return key + ": " + value[key] }), ice.SP))
+					}
+				})
+			})
+			kit.If(len(arg) == 1, func() { echo(ctx.ACTION) })
+		} else {
+			echo(list...)
+		}
+	} else {
+		m.Search(arg[0], func(p *ice.Context, s *ice.Context, key string, cmd *ice.Command) {
+			if len(arg) > 2 && cmd.Actions != nil {
+				if _, ok := cmd.Actions[arg[2]]; ok {
+					if len(arg)%2 == 1 {
+						list := map[string]bool{}
+						kit.For(arg[3:], func(k, v string) { list[k] = true })
+						kit.For(cmd.Meta[arg[2]], func(value ice.Map) {
+							if field := kit.Format(value[mdb.NAME]); !list[field] {
+								echo(field)
+							}
+						})
+					} else {
+						m.Options(arg[3:])
+						m.Cmdy(arg[0], mdb.INPUTS, kit.Select("", arg, -1)).Tables(func(value ice.Maps) {
+							v := value[m.Appendv(ice.MSG_APPEND)[0]]
+							kit.If(strings.Contains(v, ice.SP), func() { echo("\"" + v + "\"") }, func() { echo(v) })
+						})
+					}
+					return
+				}
+			}
+			if len(arg) < 4 {
+				kit.If(detail, func() { echo("func") })
+				kit.For(kit.SortedKey(cmd.Actions), func(sub string) {
+					if strings.HasPrefix(sub, kit.Select("", arg, 2)) {
+						if echo(sub); detail {
+							echo(cmd.Actions[sub].Name + ice.SP + cmd.Actions[sub].Help)
+						}
+					}
+				})
+			}
+		})
+	}
+	return
 }

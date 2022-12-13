@@ -153,6 +153,16 @@ func init() {
 		return false
 	})
 }
+func InnerPath(arg ...string) (dir, file string) {
+	p := strings.TrimPrefix(path.Join(arg...), kit.Path("")+ice.PS)
+	if list := strings.Split(p, ice.PS); strings.HasPrefix(p, "usr/") {
+		return path.Join(list[:2]...)+ice.PS, path.Join(list[2:]...)
+	} else if strings.HasPrefix(p, ".ish/pluged/") {
+		return path.Join(list[:5]...)+ice.PS, path.Join(list[5:]...)
+	} else {
+		return list[0]+ice.PS, path.Join(list[1:]...)
+	}
+}
 func PlugAction() ice.Actions {
 	return ice.Actions{
 		ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {

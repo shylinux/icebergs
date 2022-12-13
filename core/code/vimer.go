@@ -109,7 +109,7 @@ func init() {
 			}},
 			XTERM: {Name: "xterm type=sh name text", Help: "终端", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmdy(XTERM, mdb.CREATE, arg)
-			}}, FAVOR: {Help: "收藏"},
+			}}, FAVOR: {Help: "收藏"}, "listTags": {Help: "生成索引", Hand: func(m *ice.Message, arg ...string) { m.Cmd("web.code.vim.tags", nfs.LOAD) }},
 			TEMPLATE: {Hand: func(m *ice.Message, arg ...string) {
 				m.Cmdy(TEMPLATE, kit.Ext(m.Option(mdb.FILE)), m.Option(nfs.FILE), m.Option(nfs.PATH))
 			}},

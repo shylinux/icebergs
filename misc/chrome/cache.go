@@ -13,7 +13,7 @@ import (
 
 type cache struct {
 	ice.Hash
-	operate
+	daemon
 
 	short string `data:"link"`
 	field string `data:"show,count,total,value,hash,type,name,link"`

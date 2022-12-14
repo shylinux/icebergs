@@ -6,7 +6,7 @@ import (
 )
 
 type page struct {
-	operate
+	daemon
 	style
 	field
 
@@ -21,7 +21,7 @@ func (p page) Run(m *ice.Message, arg ...string) {
 	m.Cmdy(p.field.Run, arg)
 }
 func (p page) List(m *ice.Message, arg ...string) {
-	p.operate.Inputs(m, mdb.ZONE)
+	p.daemon.Inputs(m, mdb.ZONE)
 }
 
 func init() { ice.CodeCtxCmd(page{}) }

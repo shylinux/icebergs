@@ -9,7 +9,7 @@ import (
 
 type change struct {
 	ice.Hash
-	operate
+	daemon
 
 	short string `data:"property"`
 	list  string `name:"list wid tid selector:text@key property:textarea@key auto export import" help:"编辑"`

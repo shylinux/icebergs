@@ -6,7 +6,7 @@ import (
 )
 
 type video struct {
-	operate
+	daemon
 
 	play string `name:"play" help:"播放"`
 	next string `name:"next" help:"下一集"`

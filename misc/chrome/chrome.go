@@ -6,7 +6,6 @@ import (
 
 type chrome struct {
 	ice.Code
-
 	source string `data:"https://mirrors.tencent.com/tinycorelinux/4.x/x86/tcz/src/chromium-browser/chromium-22.0.1229.79.tar.xz"`
 	list   string `name:"list path auto order build download" help:"源码"`
 }

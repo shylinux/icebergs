@@ -8,10 +8,10 @@ import (
 
 type sync struct {
 	ice.Lists
-	favor `name:"favor zone=some type name link" help:"收藏"`
+	favor `name:"favor zone=some type name link"`
 
 	field  string `data:"time,id,type,name,link"`
-	insert string `name:"insert type name link" help:"添加" http:"/sync"`
+	insert string `name:"insert type name link" http:"/sync"`
 	list   string `name:"list id auto" help:"同步流"`
 }
 

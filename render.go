@@ -192,6 +192,11 @@ func (m *Message) PushVideos(key, src string) {
 		m.Push(key, Render(m, RENDER_VIDEOS, src))
 	}
 }
+func (m *Message) PushAudios(key, src string) {
+	if !m.IsCliUA() {
+		m.Push(key, Render(m, RENDER_AUDIOS, src))
+	}
+}
 func (m *Message) PushIFrame(key, src string) {
 	if !m.IsCliUA() {
 		m.Push(key, Render(m, RENDER_IFRAME, src))

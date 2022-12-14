@@ -4,42 +4,39 @@ import (
 	"shylinux.com/x/ice"
 	"shylinux.com/x/icebergs/base/ctx"
 	"shylinux.com/x/icebergs/base/mdb"
-	"shylinux.com/x/icebergs/base/tcp"
+	"shylinux.com/x/icebergs/base/web"
 	kit "shylinux.com/x/toolkits"
 )
 
 type field struct {
 	ice.Zone
 	daemon
-
-	short  string `data:"zone"`
+	short  string `data:"domain"`
 	field  string `data:"time,id,index,args,style,left,top,right,bottom,selection"`
-	insert string `name:"insert zone=golang.google.cn index=cli.system args=pwd"`
-	list   string `name:"list zone id auto insert" help:"插件"`
+	insert string `name:"insert domain=golang.google.cn index=cli.system args=pwd"`
+	list   string `name:"list domain id auto insert" help:"插件"`
 }
 
-func (f field) Inputs(m *ice.Message, arg ...string) {
-	f.daemon.Inputs(m, arg...)
+func (s field) Inputs(m *ice.Message, arg ...string) {
+	s.daemon.Inputs(m, arg...)
 }
-func (f field) Command(m *ice.Message, arg ...string) {
-	m.OptionFields("")
-	f.Zone.List(m.Spawn(), kit.Simple(m.Option(tcp.HOST), arg)...).Table(func(index int, value ice.Maps, head []string) {
+func (s field) Command(m *ice.Message, arg ...string) {
+	s.Zone.List(m.Spawn(), kit.Simple(m.Option(web.DOMAIN), arg)...).Table(func(index int, value ice.Maps, head []string) {
 		if len(arg) == 0 {
-			m.Option(ice.MSG_OPTS, head)
-			m.Options(kit.Simple(value))
-			f.send(m.Spawn(), "1", m.Option(TID), m.CommandKey(), value[mdb.ID], value[ctx.ARGS])
+			m.Options(ice.MSG_OPTS, head, kit.Simple(value))
+			s.send(m, "1", m.Option(TID), m.CommandKey(), value[mdb.ID], value[ctx.ARGS])
 		} else {
+			m.OptionFields("")
 			m.Cmdy(ctx.COMMAND, value[mdb.INDEX])
 		}
 	})
 }
-func (f field) Run(m *ice.Message, arg ...string) {
-	f.Zone.List(m.Spawn(), m.Option(tcp.HOST), arg[0]).Tables(func(value ice.Maps) {
+func (s field) Run(m *ice.Message, arg ...string) {
+	s.Zone.List(m.Spawn(), m.Option(web.DOMAIN), arg[0]).Tables(func(value ice.Maps) {
 		m.Cmdy(value[mdb.INDEX], arg[1:])
 	})
 }
-func (f field) List(m *ice.Message, arg ...string) {
-	f.Zone.List(m, arg...)
+func (s field) List(m *ice.Message, arg ...string) {
+	s.Zone.List(m, arg...)
 }
-
 func init() { ice.CodeCtxCmd(field{}) }

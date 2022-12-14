@@ -272,7 +272,8 @@ func (c *Context) _command(m *Message, cmd *Command, key string, arg ...string) 
 				return c._action(m, cmd, key, arg[1], h, arg[2:]...)
 			}
 		}
-		if len(arg) > 0 && arg[0] != COMMAND {
+		// if len(arg) > 0 && arg[0] != COMMAND {
+		if len(arg) > 0 {
 			if h, ok := cmd.Actions[arg[0]]; ok {
 				return c._action(m, cmd, key, arg[0], h, arg[1:]...)
 			}

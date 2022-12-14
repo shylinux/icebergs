@@ -200,7 +200,7 @@ func _spide_save(m *ice.Message, format, file, uri string, res *http.Response) {
 	case SPIDE_SAVE:
 		_cache_download(m, res, file, m.OptionCB(SPIDE))
 	case SPIDE_CACHE:
-		m.Cmdy(CACHE, DOWNLOAD, res.Header.Get(ContentType), uri, kit.Dict(RESPONSE, res))
+		m.Cmdy(CACHE, DOWNLOAD, res.Header.Get(ContentType), uri, kit.Dict(RESPONSE, res), m.OptionCB(SPIDE))
 		m.Echo(m.Append(mdb.HASH))
 	default:
 		var data ice.Any

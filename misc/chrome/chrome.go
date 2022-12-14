@@ -1,8 +1,6 @@
 package chrome
 
-import (
-	"shylinux.com/x/ice"
-)
+import "shylinux.com/x/ice"
 
 type chrome struct {
 	ice.Code
@@ -10,8 +8,7 @@ type chrome struct {
 	list   string `name:"list path auto order build download" help:"源码"`
 }
 
-func (c chrome) List(m *ice.Message, arg ...string) {
-	c.Code.Source(m, "", arg...)
+func (s chrome) List(m *ice.Message, arg ...string) {
+	s.Code.Source(m, "", arg...)
 }
-
 func init() { ice.CodeCtxCmd(chrome{}) }

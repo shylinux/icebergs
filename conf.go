@@ -206,6 +206,7 @@ const ( // RENDER
 	RENDER_QRCODE = "_qrcode"
 	RENDER_IMAGES = "_images"
 	RENDER_VIDEOS = "_videos"
+	RENDER_AUDIOS = "_audios"
 	RENDER_IFRAME = "_iframe"
 	RENDER_SCRIPT = "_script"
 

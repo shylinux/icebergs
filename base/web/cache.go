@@ -121,7 +121,7 @@ func init() {
 			}},
 			DOWNLOAD: {Name: "download type name*", Hand: func(m *ice.Message, arg ...string) {
 				if r, ok := m.Optionv(RESPONSE).(*http.Response); !m.Warn(!ok, ice.ErrNotValid, RESPONSE) {
-					file, size := _cache_catch(m, _cache_download(m, r, path.Join(ice.VAR_TMP, kit.Hashs(mdb.UNIQ)), nil))
+					file, size := _cache_catch(m, _cache_download(m, r, path.Join(ice.VAR_TMP, kit.Hashs(mdb.UNIQ)), m.OptionCB("")))
 					_cache_save(m, m.Option(mdb.TYPE), m.Option(mdb.NAME), "", file, size)
 				}
 			}},
@@ -187,6 +187,9 @@ func Upload(m *ice.Message) []string {
 	} else {
 		return up
 	}
+}
+func Download(m *ice.Message, link string, cb func(count, total, value int)) *ice.Message {
+	return m.Cmdy("web.spide", ice.DEV, SPIDE_CACHE, http.MethodGet, link, cb)
 }
 func PushDisplay(m *ice.Message, mime, name, link string) {
 	if strings.HasPrefix(mime, "image/") || kit.ExtIsImage(name) {

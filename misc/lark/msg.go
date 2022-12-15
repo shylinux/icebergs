@@ -82,16 +82,12 @@ func init() {
 			}
 		}},
 		MSG: {Name: "msg", Help: "聊天消息", Actions: ice.Actions{
-			"location": {Name: "", Help: "", Hand: func(m *ice.Message, arg ...string) {
-			}},
-			"image": {Name: "", Help: "", Hand: func(m *ice.Message, arg ...string) {
-			}},
-			"card": {Name: "", Help: "", Hand: func(m *ice.Message, arg ...string) {
-				data := m.Optionv(ice.MSG_USERDATA)
-				kit.Fetch(kit.Value(data, "action.value"), func(key string, value string) { m.Option(key, value) })
+			"location": {Hand: func(m *ice.Message, arg ...string) {}},
+			"image": {Hand: func(m *ice.Message, arg ...string) {}},
+			"card": {Hand: func(m *ice.Message, arg ...string) {
+				kit.For(kit.Value(m.Optionv(ice.MSG_USERDATA), "action.value"), func(k string, v string) { m.Option(k, v) })
 				m.Cmdy(TALK, kit.Parse(nil, "", kit.Split(m.Option(ice.CMD))...))
-				m.Cmd(SEND, m.Option(APP_ID), CHAT_ID, m.Option(OPEN_CHAT_ID),
-					m.Option(wiki.TITLE)+" "+m.Option(ice.CMD), m.Result())
+				m.Cmd(SEND, m.Option(APP_ID), CHAT_ID, m.Option(OPEN_CHAT_ID), m.Option(wiki.TITLE)+ice.SP+m.Option(ice.CMD), m.Result())
 			}},
 		}, Hand: func(m *ice.Message, arg ...string) {
 			if m.Option(OPEN_CHAT_ID) == "" {

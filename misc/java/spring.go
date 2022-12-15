@@ -1,12 +1,12 @@
 package java
 
 import (
-	"path"
 	"strings"
 
 	"shylinux.com/x/ice"
 	"shylinux.com/x/icebergs/base/cli"
 	"shylinux.com/x/icebergs/base/mdb"
+	"shylinux.com/x/icebergs/base/nfs"
 	kit "shylinux.com/x/toolkits"
 )
 
@@ -14,18 +14,18 @@ type spring struct {
 	ice.Code
 	linux string `data:"https://mirrors.tencent.com/macports/distfiles/spring-boot-cli/spring-boot-cli-2.7.0-bin.tar.gz"`
 	ice.Hash
-	short string `data:"name"`
-	field string `data:"time,name,path"`
+	short  string `data:"name"`
+	field  string `data:"time,name,path"`
 	create string `name:"create name path"`
 	start  string `name:"start server.port"`
-	list string `name:"list name auto create order install" help:"服务框架"`
+	list   string `name:"list name auto create order install" help:"服务框架"`
 }
 
 func (s spring) Build(m *ice.Message) {
 	s.Code.Stream(m, m.Option(nfs.PATH), MVN, "package")
 }
 func (s spring) Start(m *ice.Message, arg ...string) {
-	s.Code.Daemon(m, m.Option(nfs.PATH), kit.Simple(JAVA, kit.Simple(arg, func(k, v string) string { return "-D"+k+ice.EQ+v }),
+	s.Code.Daemon(m, m.Option(nfs.PATH), kit.Simple(JAVA, kit.Simple(arg, func(k, v string) string { return "-D" + k + ice.EQ + v }),
 		"-jar", kit.Format("target/%s-0.0.1-SNAPSHOT.jar", m.Option(mdb.NAME)))...)
 }
 func (s spring) List(m *ice.Message, arg ...string) {

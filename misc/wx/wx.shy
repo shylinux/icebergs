@@ -4,17 +4,12 @@ refer `
 后台 https://mp.weixin.qq.com/
 文档 https://developers.weixin.qq.com/doc/offiaccount/Getting_Started/Overview.html
 `
-
 qrcode `http://weixin.qq.com/r/_B1-Z7TEXOkjrfAE90jq`
 
 chapter "应用"
 field "访问" web.chat.wx.access
 field "收藏" web.chat.wx.favor
 field "菜单" web.chat.wx.menu
-
-field "扫码" web.chat.scan
-field "复制" web.chat.paste
-field "文件" web.chat.files
 field "位置" web.chat.location
 
 chapter "权限"
@@ -29,4 +24,3 @@ chapter "项目"
 field "源代码" web.code.inner args `usr/icebergs/ misc/wx/login.go`
 field "趋势图" web.code.git.trend args `icebergs`
 field "架构图" web.code.git.spide args `icebergs`
-

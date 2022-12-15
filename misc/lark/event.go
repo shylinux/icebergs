@@ -19,22 +19,18 @@ const EVENT = "event"
 func init() {
 	Index.MergeCommands(ice.Commands{
 		EVENT: {Name: "event", Help: "事件", Actions: ice.Actions{
-			P2P_CHAT_CREATE: {Name: "", Help: "", Hand: func(m *ice.Message, arg ...string) {
+			P2P_CHAT_CREATE: {Hand: func(m *ice.Message, arg ...string) {
 				if m.Option(OPEN_CHAT_ID) != "" {
 					m.Cmdy(SEND, m.Option(APP_ID), m.Option(OPEN_CHAT_ID), m.Conf(APP, kit.Keym(nfs.TEMPLATE, m.Option(mdb.TYPE))))
 				}
 			}},
-			MESSAGE_READ: {Name: "", Help: "", Hand: func(m *ice.Message, arg ...string) {
-			}},
-			CHAT_DISBAND: {Name: "", Help: "", Hand: func(m *ice.Message, arg ...string) {
-			}},
-			ADD_BOT: {Name: "", Help: "", Hand: func(m *ice.Message, arg ...string) {
+			MESSAGE_READ: {Hand: func(m *ice.Message, arg ...string) {}},
+			CHAT_DISBAND: {Hand: func(m *ice.Message, arg ...string) {}},
+			ADD_BOT: {Hand: func(m *ice.Message, arg ...string) {
 				if m.Option(OPEN_CHAT_ID) != "" {
 					m.Cmdy(SEND, m.Option(APP_ID), m.Option(OPEN_CHAT_ID), m.Conf(APP, kit.Keym(nfs.TEMPLATE, m.Option(mdb.TYPE))))
 				}
 			}},
-		}, Hand: func(m *ice.Message, arg ...string) {
-			m.Cmdy(MSG, m.Option(MSG_TYPE))
-		}},
+		}, Hand: func(m *ice.Message, arg ...string) { m.Cmdy(MSG, m.Option(MSG_TYPE)) }},
 	})
 }

@@ -12,7 +12,6 @@ import (
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/tcp"
 	"shylinux.com/x/icebergs/base/web"
-	"shylinux.com/x/icebergs/core/chat"
 	kit "shylinux.com/x/toolkits"
 )
 
@@ -32,65 +31,43 @@ const (
 const LOGIN = "login"
 
 func init() {
-	Index.Merge(&ice.Context{Configs: ice.Configs{
-		LOGIN: {Name: LOGIN, Help: "认证", Value: kit.Data(tcp.SERVER, "https://api.weixin.qq.com")},
-	}, Commands: ice.Commands{
-		"/login/": {Name: "/login/", Help: "认证", Actions: ice.Actions{
-			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
-				m.Cmd(web.SPIDE, mdb.CREATE, MP, m.Config(tcp.SERVER))
-			}},
+	Index.MergeCommands(ice.Commands{
+		web.PP(LOGIN): {Actions: ice.MergeActions(ice.Actions{
+			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) { m.Cmd(web.SPIDE, mdb.CREATE, MP, m.Config(tcp.SERVER)) }},
 			aaa.SESS: {Name: "sess code", Help: "会话", Hand: func(m *ice.Message, arg ...string) {
-				msg := m.Cmd(web.SPIDE, MP, http.MethodGet, "/sns/jscode2session?grant_type=authorization_code",
-					"js_code", m.Option(cli.CODE), APPID, m.Config(APPID), "secret", m.Config(APPMM))
-
-				// 用户登录
+				msg := m.Cmd(web.SPIDE, MP, http.MethodGet, "/sns/jscode2session?grant_type=authorization_code", "js_code", m.Option(cli.CODE), APPID, m.Config(APPID), "secret", m.Config(APPMM))
 				m.Option(ice.MSG_USERZONE, MP)
 				m.Echo(aaa.SessCreate(msg, msg.Append(OPENID)))
 			}},
-			aaa.USER: {Name: "user", Help: "用户", Hand: func(m *ice.Message, arg ...string) {
-				m.Option(aaa.USERNAME, m.Option(ice.MSG_USERNAME))
-				if m.Cmd(aaa.USER, m.Option(aaa.USERNAME)).Length() == 0 {
+			aaa.USER: {Help: "用户", Hand: func(m *ice.Message, arg ...string) {
+				if m.Cmd(aaa.USER, m.Option(aaa.USERNAME, m.Option(ice.MSG_USERNAME))).Length() == 0 {
 					m.Cmd(aaa.USER, mdb.CREATE, m.OptionSimple(aaa.USERNAME))
 				}
-				m.Cmd(aaa.USER, mdb.MODIFY,
-					aaa.USERNICK, m.Option("nickName"), aaa.USERZONE, MP,
+				m.Cmd(aaa.USER, mdb.MODIFY, aaa.USERNICK, m.Option("nickName"), aaa.USERZONE, MP,
 					aaa.AVATAR, m.Option("avatarUrl"), aaa.GENDER, kit.Select("女", "男", m.Option(aaa.GENDER) == "1"),
 					m.OptionSimple(aaa.CITY, aaa.COUNTRY, aaa.LANGUAGE, aaa.PROVINCE),
 				)
 			}},
-			"scan": {Name: "scan", Help: "扫码", Hand: func(m *ice.Message, arg ...string) {
-				if m.Option(chat.GRANT) != "" {
-					m.Cmdy(chat.HEADER, chat.GRANT, web.SPACE, m.Option(chat.GRANT))
-					return
-				}
-				m.Cmdy("scan", arg)
-			}},
-		}},
+		}, ctx.ConfAction(tcp.SERVER, "https://api.weixin.qq.com"), aaa.WhiteAction(aaa.SESS, aaa.USER))},
 		LOGIN: {Name: "login appid auto qrcode tokens create", Help: "认证", Actions: ice.Actions{
 			mdb.CREATE: {Name: "create appid appmm", Help: "登录", Hand: func(m *ice.Message, arg ...string) {
 				ctx.ConfigFromOption(m, APPID, APPMM)
 			}},
-			TOKENS: {Name: "tokens", Help: "令牌", Hand: func(m *ice.Message, arg ...string) {
+			TOKENS: {Help: "令牌", Hand: func(m *ice.Message, arg ...string) {
 				if now := time.Now().Unix(); m.Config(TOKENS) == "" || now > kit.Int64(m.Config(EXPIRES)) {
-					msg := m.Cmd(web.SPIDE, MP, http.MethodGet, "/cgi-bin/token?grant_type=client_credential",
-						APPID, m.Config(APPID), "secret", m.Config(APPMM))
+					msg := m.Cmd(web.SPIDE, MP, http.MethodGet, "/cgi-bin/token?grant_type=client_credential", APPID, m.Config(APPID), "secret", m.Config(APPMM))
 					if m.Warn(msg.Append(ERRCODE) != "", msg.Append(ERRCODE), msg.Append(ERRMSG)) {
 						return
 					}
-
 					m.Config(EXPIRES, now+kit.Int64(msg.Append("expires_in")))
 					m.Config(TOKENS, msg.Append("access_token"))
 				}
-				m.Echo(m.Config(TOKENS))
+				m.Echo(m.Config(TOKENS)).Status(EXPIRES, time.Unix(kit.Int64(m.Config(EXPIRES)), 0).Format(ice.MOD_TIME))
 			}},
 			QRCODE: {Name: "qrcode path scene", Help: "扫码", Hand: func(m *ice.Message, arg ...string) {
-				msg := m.Cmd(web.SPIDE, MP, http.MethodPost, "/wxa/getwxacodeunlimit?access_token="+m.Cmdx(LOGIN, TOKENS),
-					m.OptionSimple("path,scene"))
-				m.Echo(kit.Format(`<img src="data:image/png;base64,%s" title='%s'>`, base64.StdEncoding.EncodeToString([]byte(msg.Result())), "some"))
-				m.ProcessInner()
+				msg := m.Cmd(web.SPIDE, MP, http.MethodPost, "/wxa/getwxacodeunlimit?access_token="+m.Cmdx(LOGIN, TOKENS), m.OptionSimple("path,scene"))
+				m.Echo(kit.Format(`<img src="data:image/png;base64,%s" title='%s'>`, base64.StdEncoding.EncodeToString([]byte(msg.Result())), "some")).ProcessInner()
 			}},
-		}, Hand: func(m *ice.Message, arg ...string) {
-			m.Echo(m.Config(APPID))
-		}},
-	}})
+		}, Hand: func(m *ice.Message, arg ...string) { m.Echo(m.Config(APPID)) }},
+	})
 }

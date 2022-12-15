@@ -20,37 +20,28 @@ func init() {
 				if aaa.UserLogin(m, m.Option(OPEN_CHAT_ID), ""); !aaa.Right(m, cmds) {
 					m.Cmd(DUTY, m.Option(OPEN_CHAT_ID), m.Option("text_without_at_bot"))
 					m.Cmd(HOME)
-					return // 没有权限
+					return
 				}
 			}
-
-			// 执行命令
 			if m.Cmdy(cmds); m.Result() != "" && m.Result(1) != ice.ErrNotFound {
 				m.Cmd(SEND, m.Option(APP_ID), m.Option(OPEN_CHAT_ID), m.Result())
 				return
-			}
-			if m.Length() == 0 {
+			} else if m.Length() == 0 {
 				m.Set(ice.MSG_RESULT)
 				m.Cmdy(cli.SYSTEM, cmds)
 				m.Cmd(SEND, m.Option(APP_ID), m.Option(OPEN_CHAT_ID), m.Result())
 				return
 			}
-
 			val := []string{}
 			m.Table(func(index int, value ice.Maps, head []string) {
-				for _, key := range head {
-					val = append(val, kit.Format("%s:\t%s", key, value[key]))
-				}
-				val = append(val, "\n")
+				kit.For(head, func(k string) { val = append(val, kit.Format("%s:\t%s", k, value[k])) })
+				val = append(val, ice.NL)
 			})
-
 			_lark_post(m, m.Option(APP_ID), "/open-apis/message/v4/send/", web.SPIDE_DATA, kit.Formats(
 				kit.Dict("msg_type", "interactive", "chat_id", m.Option(OPEN_CHAT_ID), "card", kit.Dict(
 					"header", kit.Dict("title", kit.Dict("tag", "lark_md", "content", strings.Join(cmds, " "))),
 					"elements", []ice.Any{kit.Dict("tag", "div", "fields", []ice.Any{
-						kit.Dict("is_short", true, "text", kit.Dict(
-							"tag", "lark_md", "content", strings.Join(val, "\n"),
-						)),
+						kit.Dict("is_short", true, "text", kit.Dict("tag", "lark_md", "content", strings.Join(val, ice.NL))),
 					})},
 				)),
 			))

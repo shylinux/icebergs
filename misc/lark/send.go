@@ -33,7 +33,6 @@ func _send_text(m *ice.Message, form ice.Map, arg ...string) bool {
 			line = append(line, ice.Map{"tag": "text", "text": v + " "})
 		}
 		content = append(content, line)
-
 		kit.Value(form, "msg_type", "post")
 		kit.Value(form, "content.post", ice.Map{
 			"zh_cn": ice.Map{"title": arg[0], CONTENT: content},
@@ -58,11 +57,9 @@ func init() {
 			default:
 				form[CHAT_ID], arg = arg[0], arg[1:]
 			}
-
 			if _send_text(m, form, arg...) {
 				msg := _lark_post(m, appid, "/open-apis/message/v4/send/", web.SPIDE_DATA, kit.Format(form))
-				m.Push(mdb.TIME, m.Time())
-				m.Push("message_id", msg.Append("data.message_id"))
+				m.Push(mdb.TIME, m.Time()).Push("message_id", msg.Append("data.message_id"))
 			}
 		}},
 	})

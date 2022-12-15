@@ -12,7 +12,7 @@ type spide struct {
 }
 
 func (s spide) Download(m *ice.Message, arg ...string) {
-	m.Cmdy(s.cache.Create, arg).ProcessHold()
+	m.Cmdy(s.cache, s.Create, arg).ProcessHold()
 }
 func (s spide) List(m *ice.Message, arg ...string) {
 	if len(arg) < 2 || arg[0] == "" || arg[1] == "" {

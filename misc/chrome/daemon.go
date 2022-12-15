@@ -2,6 +2,7 @@ package chrome
 
 import (
 	"shylinux.com/x/ice"
+	"shylinux.com/x/icebergs/base/ctx"
 	"shylinux.com/x/icebergs/base/web"
 	kit "shylinux.com/x/toolkits"
 )
@@ -25,10 +26,12 @@ func (s daemon) Inputs(m *ice.Message, arg ...string) {
 		s.send(m.Spawn()).Tables(func(value ice.Maps) {
 			s.send(m.Spawn(), value[WID]).Tables(func(value ice.Maps) { m.Push(arg[0], kit.ParseURL(value[URL]).Host) })
 		}).Sort(arg[0])
+	case ctx.INDEX:
+		ctx.CmdList(m.Message)
 	}
 }
 func (s daemon) List(m *ice.Message, arg ...string) {
-	if len(arg) < 2 || arg[0] == "" || arg[1] == "" {
+	if len(arg) < 3 || arg[0] == "" || arg[1] == "" {
 		s.send(m, arg).StatusTimeCount()
 	} else {
 		s.send(m, arg[:2], "user.jumps", arg[2])

@@ -12,21 +12,11 @@ field "浏览器" web.code.chrome.chrome
 field "浏览器" web.code.chrome.daemon
 field "蜘蛛侠" web.code.chrome.spide
 field "缓存池" web.code.chrome.cache
-field "相册簿" web.wiki.feel
-return
-
 field "工具箱" web.code.chrome.field
 field "样式表" web.code.chrome.style
-
-field "编辑器" web.code.chrome.change
-
-chapter "应用"
-field "同步流" web.code.chrome.sync
-field "收藏夹" web.code.chrome.favor
-
 field "定制化" web.code.chrome.page
-field "播放器" web.code.chrome.video
-
+field "同步流" web.code.chrome.sync
+field "相册簿" web.wiki.feel
 
 chapter "源码"
 field "源代码" web.code.inner args `usr/icebergs/misc/chrome/ chrome.go`

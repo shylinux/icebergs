@@ -53,9 +53,9 @@ func ToastProcess(m *ice.Message, arg ...ice.Any) func() {
 	Toast(m, ice.PROCESS, arg...)
 	return func() { Toast(m, ice.SUCCESS) }
 }
-func ToastRestart(m *ice.Message, arg ...ice.Any) { Toast(m, gdb.RESTART, arg...) }
-func ToastFailure(m *ice.Message, arg ...ice.Any) { Toast(m, ice.FAILURE, arg...) }
-func ToastSuccess(m *ice.Message, arg ...ice.Any) { Toast(m, ice.SUCCESS, arg...) }
+func ToastRestart(m *ice.Message, arg ...ice.Any)         { Toast(m, gdb.RESTART, arg...) }
+func ToastFailure(m *ice.Message, arg ...ice.Any)         { Toast(m, ice.FAILURE, arg...) }
+func ToastSuccess(m *ice.Message, arg ...ice.Any)         { Toast(m, ice.SUCCESS, arg...) }
 func Toast(m *ice.Message, text string, arg ...ice.Any) { // [title [duration [progress]]]
 	if len(arg) > 1 {
 		switch val := arg[1].(type) {

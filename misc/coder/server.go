@@ -18,8 +18,8 @@ type server struct {
 	darwin   string `data:"https://github.com/coder/code-server/releases/download/v4.4.0/code-server-4.4.0-macos-amd64.tar.gz"`
 	source   string `data:"https://github.com/coder/code-server/archive/refs/tags/v4.4.0.tar.gz"`
 	password string `data:"1234"`
-	start string `name:"start port host password" help:"启动"`
-	list  string `name:"list port path auto start install" help:"编辑器"`
+	start    string `name:"start port host password" help:"启动"`
+	list     string `name:"list port path auto start install" help:"编辑器"`
 }
 
 func (s server) Search(m *ice.Message, arg ...string) {

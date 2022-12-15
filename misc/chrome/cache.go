@@ -33,9 +33,6 @@ func (s cache) Create(m *ice.Message, arg ...string) *ice.Message {
 	web.ToastSuccess(m.Message)
 	return m
 }
-func (s cache) Prunes(m *ice.Message, arg ...string) {
-	s.Hash.Prunes(m, mdb.VALUE, "100")
-}
 func (s cache) List(m *ice.Message, arg ...string) {
 	s.Hash.List(m, arg...)
 }

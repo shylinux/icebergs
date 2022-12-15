@@ -39,7 +39,7 @@ password: %s
 		return []string{"--config=config", kit.Path(nfs.PWD)}
 	})
 }
-func (s server) List(m *ice.Message, arg ...string) *ice.Message {
+func (s server) List(m *ice.Message, arg ...string) {
 	if s.Code.List(m, "", arg...); len(arg) == 0 {
 		m.Tables(func(value ice.Maps) {
 			switch value[cli.STATUS] {
@@ -50,7 +50,5 @@ func (s server) List(m *ice.Message, arg ...string) *ice.Message {
 			}
 		})
 	}
-	return m
 }
-
 func init() { ice.CodeCtxCmd(server{}) }

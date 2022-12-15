@@ -8,9 +8,6 @@ type maven struct {
 	list  string `name:"list path auto order install" help:"打包构建"`
 }
 
-func (s maven) Order(m *ice.Message) {
-	s.Code.Order(m, "", ice.BIN)
-}
 func (s maven) List(m *ice.Message, arg ...string) {
 	s.Code.Source(m, "", arg...)
 }

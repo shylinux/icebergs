@@ -179,9 +179,9 @@ var _main_template = `<!DOCTYPE html>
 <head>
 	<meta name="viewport" content="width=device-width,initial-scale=0.8,maximum-scale=0.8,user-scalable=no">
 	<meta charset="utf-8"><title>volcanos</title>
-	<link rel="shortcut icon" type="image/ico" href="/favicon.ico">
-	<link rel="stylesheet" href="/page/cache.css">
-	<link rel="stylesheet" href="/page/index.css">
+	<link href="/favicon.ico" rel="shortcut icon" type="image/ico">
+	<link href="/page/cache.css" rel="stylesheet">
+	<link href="/page/index.css" rel="stylesheet">
 </head>
 <body>
 	<script src="/proto.js"></script>
@@ -194,7 +194,7 @@ var _cmd_template = `<!DOCTYPE html>
 <head>
 	<meta name="viewport" content="width=device-width,initial-scale=0.8,maximum-scale=0.8,user-scalable=no">
 	<meta charset="utf-8"><title>volcanos</title>
-	<link rel="stylesheet" href="/page/can.css">
+	<link href="/page/can.css" rel="stylesheet">
 </head>
 <body>
 	<script src="/page/can.js"></script><script>Volcanos(%s)</script>

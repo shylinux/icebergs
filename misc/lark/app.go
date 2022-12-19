@@ -29,7 +29,7 @@ func init() {
 			TOKEN: {Name: "token appid*", Help: "令牌", Hand: func(m *ice.Message, arg ...string) {
 				msg := m.Cmd(APP, m.Option(APPID))
 				if now := time.Now().Unix(); msg.Append(TOKEN) == "" || now > kit.Int64(msg.Append(EXPIRE)) {
-					res := m.Cmd(web.SPIDE, LARK, "/open-apis/auth/v3/tenant_access_token/internal/", APP_ID, msg.AppendSimple(APPID), "app_secret", msg.Append(APPMM))
+					res := m.Cmd(web.SPIDE, LARK, "/open-apis/auth/v3/tenant_access_token/internal/", APP_ID, msg.Append(APPID), "app_secret", msg.Append(APPMM))
 					mdb.HashModify(m, m.OptionSimple(APPID), TOKEN, res.Append("tenant_access_token"), EXPIRE, now+kit.Int64(res.Append(EXPIRE)))
 					m.Echo(res.Append("tenant_access_token"))
 				} else {

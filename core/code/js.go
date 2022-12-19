@@ -81,7 +81,7 @@ func _js_exec(m *ice.Message, arg ...string) {
 	}
 	ctx.DisplayBase(m, path.Join("/require", path.Join(arg[2], arg[1])))
 	key := ctx.GetFileCmd(kit.Replace(path.Join(arg[2], arg[1]), ".js", ".go"))
-	ctx.ProcessCommand(m, kit.Select("can.code.inner._plugin", key), kit.Simple())
+	ctx.ProcessCommand(m, kit.Select("can.plugin", key), kit.Simple())
 	return
 	args := kit.Simple("node", "-e", kit.Join(_js_main_script(m, arg...), ice.NL))
 	m.Cmdy(cli.SYSTEM, args).StatusTime(ctx.ARGS, kit.Join(append([]string{ice.ICE_BIN, m.PrefixKey(), m.ActionKey()}, arg...), ice.SP))
@@ -94,7 +94,7 @@ const JSON = "json"
 func init() {
 	Index.MergeCommands(ice.Commands{
 		JS: {Name: "js path auto", Help: "前端", Actions: ice.MergeActions(ice.Actions{
-			mdb.RENDER: {Hand: func(m *ice.Message, arg ...string) { _js_show(m, arg...) }},
+			mdb.RENDER: {Hand: func(m *ice.Message, arg ...string) { _js_exec(m, arg...) }},
 			mdb.ENGINE: {Hand: func(m *ice.Message, arg ...string) { _js_exec(m, arg...) }},
 
 			TEMPLATE: {Hand: func(m *ice.Message, arg ...string) { m.Echo(_js_template) }},
@@ -110,12 +110,12 @@ func init() {
 				} else if strings.HasSuffix(m.Option(mdb.TEXT), ice.PT) { // 方法
 					key := kit.Slice(kit.Split(m.Option(mdb.TEXT), "\t ."), -1)[0]
 					switch key {
-					case "msg":
-						m.Cmdy("web.code.vim.tags", "msg").Cut("name,text")
 					case "can":
 						m.Cmdy("web.code.vim.tags").Cut(mdb.ZONE)
+					case "msg":
+						m.Cmdy("web.code.vim.tags", key).Cut("name,text")
 					default:
-						m.Cmdy("web.code.vim.tags", strings.TrimPrefix(m.Option(mdb.TYPE), "can.")).Cut("name,text")
+						m.Cmdy("web.code.vim.tags", key).Cut("name,text")
 					}
 
 				} else { // 类型

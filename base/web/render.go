@@ -36,7 +36,7 @@ func Render(m *ice.Message, cmd string, args ...ice.Any) bool {
 	if len(arg) == 0 {
 		args = nil
 	}
-	if cmd != "" {
+	if cmd != "" && cmd != ice.RENDER_DOWNLOAD {
 		defer func() { m.Logs("Render", cmd, args) }()
 	}
 	switch cmd {
@@ -159,9 +159,14 @@ func RenderIndex(m *ice.Message, repos string, file ...string) *ice.Message {
 }
 func RenderMain(m *ice.Message, pod, index string, arg ...ice.Any) *ice.Message {
 	if script := m.Cmdx(Space(m, pod), nfs.CAT, kit.Select(ice.SRC_MAIN_JS, index)); script != "" {
-		return m.Echo(kit.Format(_main_template, script)).RenderResult()
+		return m.Echo(kit.Renders(_main_template, ice.Maps{
+			"version": renderVersion(m), "script": script,
+		})).RenderResult()
 	}
 	return RenderIndex(m, ice.VOLCANOS)
+}
+func RenderCmd(m *ice.Message, cmd string, arg ...ice.Any) {
+	RenderPodCmd(m, "", cmd, arg...)
 }
 func RenderPodCmd(m *ice.Message, pod, cmd string, arg ...ice.Any) {
 	msg := m.Cmd(Space(m, pod), ctx.COMMAND, kit.Select("web.wiki.word", cmd))
@@ -169,10 +174,15 @@ func RenderPodCmd(m *ice.Message, pod, cmd string, arg ...ice.Any) {
 		ctx.INDEX, cmd, ctx.ARGS, kit.Simple(arg), ctx.DISPLAY, m.Option(ice.MSG_DISPLAY),
 		mdb.LIST, kit.UnMarshal(msg.Append(mdb.LIST)), mdb.META, kit.UnMarshal(msg.Append(mdb.META)),
 	)))
-	m.Echo(kit.Format(_cmd_template, list)).RenderResult()
+	m.Echo(kit.Renders(_cmd_template, ice.Maps{
+		"version": renderVersion(m), "list": list,
+	})).RenderResult()
 }
-func RenderCmd(m *ice.Message, cmd string, arg ...ice.Any) {
-	RenderPodCmd(m, "", cmd, arg...)
+func renderVersion(m *ice.Message) string {
+	if strings.Contains(m.R.URL.RawQuery, "debug=true") {
+		return kit.Format("?_v=%v&_t=%d", ice.Info.Make.Version, time.Now().Unix())
+	}
+	return ""
 }
 
 var _main_template = `<!DOCTYPE html>
@@ -180,13 +190,14 @@ var _main_template = `<!DOCTYPE html>
 	<meta name="viewport" content="width=device-width,initial-scale=0.8,maximum-scale=0.8,user-scalable=no">
 	<meta charset="utf-8"><title>volcanos</title>
 	<link href="/favicon.ico" rel="shortcut icon" type="image/ico">
-	<link href="/page/cache.css" rel="stylesheet">
-	<link href="/page/index.css" rel="stylesheet">
+	<link href="/page/cache.css{{.version}}" rel="stylesheet">
+	<link href="/page/index.css{{.version}}" rel="stylesheet">
 </head>
 <body>
-	<script src="/proto.js"></script>
-	<script src="/page/cache.js"></script>
-	<script>%s</script>
+	<script src="/proto.js{{.version}}"></script>
+	<script>Volcanos.meta.version = "{{.version}}"</script>
+	<script src="/page/cache.js{{.version}}"></script>
+	<script>{{.script}}</script>
 </body>
 `
 
@@ -194,9 +205,10 @@ var _cmd_template = `<!DOCTYPE html>
 <head>
 	<meta name="viewport" content="width=device-width,initial-scale=0.8,maximum-scale=0.8,user-scalable=no">
 	<meta charset="utf-8"><title>volcanos</title>
-	<link href="/page/can.css" rel="stylesheet">
+	<link href="/page/can.css{{.version}}" rel="stylesheet">
 </head>
 <body>
-	<script src="/page/can.js"></script><script>Volcanos(%s)</script>
+	<script>_version = "{{.version}}"</script>
+	<script src="/page/can.js{{.version}}"></script><script>Volcanos({{.list}})</script>
 </body>
 `

@@ -119,7 +119,7 @@ func init() {
 					}
 
 				} else { // 类型
-					m.Cmdy("web.code.vim.tags").Cut(mdb.ZONE)
+					m.Push(mdb.ZONE, "can", "msg", "cb", "target")
 				}
 			}},
 		}, PlugAction())},

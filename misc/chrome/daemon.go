@@ -24,8 +24,14 @@ func (s daemon) Inputs(m *ice.Message, arg ...string) {
 	switch arg[0] {
 	case web.DOMAIN:
 		s.send(m.Spawn()).Tables(func(value ice.Maps) {
-			s.send(m.Spawn(), value[WID]).Tables(func(value ice.Maps) { m.Push(arg[0], kit.ParseURL(value[URL]).Host) })
+			s.send(m.Spawn(), value[WID]).Tables(func(value ice.Maps) {
+				if value[URL] != "" {
+					m.Push(arg[0], kit.ParseURL(value[URL]).Host)
+				}
+			})
+		m.Debug("what %v", m.FormatsMeta())
 		}).Sort(arg[0])
+		m.Debug("what %v", m.FormatsMeta())
 	case ctx.INDEX:
 		ctx.CmdList(m.Message)
 	}

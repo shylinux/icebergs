@@ -102,7 +102,7 @@ func init() {
 			mdb.RENDER: {Hand: func(m *ice.Message, arg ...string) { _inner_show(m, arg[0], arg[1], arg[2]) }},
 			mdb.ENGINE: {Hand: func(m *ice.Message, arg ...string) { _inner_exec(m, arg[0], arg[1], arg[2]) }},
 			nfs.GREP: {Help: "搜索", Hand: func(m *ice.Message, arg ...string) {
-				m.Cmdy(nfs.GREP, arg[0], m.Option(nfs.PATH)).StatusTimeCount(mdb.INDEX, 0)
+				m.Cmdy(nfs.GREP, arg[0], kit.Select(m.Option(nfs.PATH), arg, 1))
 			}},
 			nfs.TAGS: {Help: "索引", Hand: func(m *ice.Message, arg ...string) {
 				if _inner_tags(m, m.Option(nfs.PATH), arg[0]); m.Length() == 0 {

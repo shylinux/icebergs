@@ -16,7 +16,7 @@ import (
 )
 
 func _vimer_make(m *ice.Message, dir string, msg *ice.Message) {
-	defer m.StatusTime()
+	defer m.StatusTimeCount()
 	for _, line := range strings.Split(msg.Append(cli.CMD_ERR), ice.NL) {
 		if !strings.Contains(line, ice.DF) {
 			continue

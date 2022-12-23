@@ -194,8 +194,8 @@ var _main_template = `<!DOCTYPE html>
 	<link href="/page/index.css{{.version}}" rel="stylesheet">
 </head>
 <body>
+	<script>_version = "{{.version}}"</script>
 	<script src="/proto.js{{.version}}"></script>
-	<script>Volcanos.meta.version = "{{.version}}"</script>
 	<script src="/page/cache.js{{.version}}"></script>
 	<script>{{.script}}</script>
 </body>

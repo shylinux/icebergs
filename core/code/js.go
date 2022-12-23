@@ -117,9 +117,6 @@ func init() {
 					default:
 						m.Cmdy("web.code.vim.tags", key).Cut("name,text")
 					}
-
-				} else { // 类型
-					m.Push(mdb.ZONE, "can", "msg", "cb", "target")
 				}
 			}},
 		}, PlugAction())},

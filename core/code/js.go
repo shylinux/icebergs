@@ -81,7 +81,7 @@ func _js_exec(m *ice.Message, arg ...string) {
 	}
 	ctx.DisplayBase(m, path.Join("/require", path.Join(arg[2], arg[1])))
 	key := ctx.GetFileCmd(kit.Replace(path.Join(arg[2], arg[1]), ".js", ".go"))
-	ctx.ProcessCommand(m, kit.Select("can.plugin", key), kit.Simple())
+	ctx.ProcessCommand(m, kit.Select("can._plugin", key), kit.Simple())
 	return
 	args := kit.Simple("node", "-e", kit.Join(_js_main_script(m, arg...), ice.NL))
 	m.Cmdy(cli.SYSTEM, args).StatusTime(ctx.ARGS, kit.Join(append([]string{ice.ICE_BIN, m.PrefixKey(), m.ActionKey()}, arg...), ice.SP))

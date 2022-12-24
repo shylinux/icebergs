@@ -121,9 +121,9 @@ func _serve_handle(key string, cmd *ice.Command, m *ice.Message, w http.Response
 }
 func _serve_domain(m *ice.Message) string {
 	return kit.GetValid(
-		func() string { return ice.Info.Domain },
-		func() string { return m.R.Header.Get("X-Host") },
 		func() string { return kit.Select("", m.R.Header.Get(Referer), m.R.Method == http.MethodPost) },
+		func() string { return m.R.Header.Get("X-Host") },
+		func() string { return ice.Info.Domain },
 		func() string { return kit.Format("%s://%s", kit.Select("https", ice.HTTP, m.R.TLS == nil), m.R.Host) },
 	)
 }

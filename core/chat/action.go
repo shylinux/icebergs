@@ -21,6 +21,8 @@ func _action_exec(m *ice.Message, river, storm, index string, arg ...string) {
 	}).Length() == 0, ice.ErrNotRight, index, arg) {
 		return
 	}
+	m.Debug("what %v", m.Option(ice.MSG_USERWEB))
+	m.Debug("what %v", m.Option(ice.MSG_USERPOD))
 	if !ctx.PodCmd(m, index, arg) {
 		m.Cmdy(index, arg)
 	}

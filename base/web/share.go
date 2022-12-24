@@ -62,8 +62,10 @@ func _share_local(m *ice.Message, arg ...string) {
 		m.Option(ice.MSG_USERROLE, aaa.TECH)
 	}
 	m.Cmd(SPACE, m.Option(ice.POD), SPIDE, ice.DEV, SPIDE_RAW, MergeLink(m, SHARE_PROXY), SPIDE_PART, m.OptionSimple(ice.POD), nfs.PATH, p, nfs.SIZE, size, CACHE, cache.Format(ice.MOD_TIME), UPLOAD, "@"+p)
-	if !m.Warn(!file.ExistsFile(pp), ice.ErrNotFound, pp) {
+	if file.ExistsFile(pp) {
 		m.RenderDownload(pp)
+	} else {
+		m.RenderDownload(p)
 	}
 }
 func _share_proxy(m *ice.Message) {

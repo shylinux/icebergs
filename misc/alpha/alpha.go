@@ -19,7 +19,7 @@ const (
 
 type alpha struct {
 	ice.Zone
-	field string `data:"word,translation,definition"`
+	field string `data:"word,phonetic,translation,definition"`
 	store string `data:"usr/local/export/"`
 	fsize string `data:"300000"`
 	limit string `data:"50000"`

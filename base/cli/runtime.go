@@ -195,7 +195,7 @@ func init() {
 					ls := strings.SplitN(v, ice.EQ, 2)
 					m.Push(mdb.NAME, ls[0]).Push(mdb.VALUE, ls[1])
 				}
-				m.StatusTimeCount()
+				m.StatusTimeCount().Sort(mdb.NAME)
 			}},
 			MAKE_DOMAIN: {Hand: func(m *ice.Message, arg ...string) {
 				if os.Getenv(CTX_DEV) == "" || os.Getenv(CTX_POD) == "" {

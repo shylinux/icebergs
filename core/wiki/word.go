@@ -41,6 +41,7 @@ func init() {
 						_wiki_list(m, value[nfs.PATH])
 					}
 				})
+				m.Cut("path,size,time")
 			}}, "play": {Name: "play", Help: "演示"},
 			ice.STORY: {Hand: func(m *ice.Message, arg ...string) {
 				if kit.Ext(m.Option(nfs.PATH)) == nfs.SHY {

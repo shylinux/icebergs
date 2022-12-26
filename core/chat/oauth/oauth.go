@@ -28,7 +28,7 @@ func _merge_url(m *ice.Message, domain, key string, arg ...ice.Any) string {
 	if domain = strings.TrimSuffix(domain, ice.PS); strings.Contains(domain, "/chat/pod/") {
 		domain += web.P(strings.TrimPrefix(m.Prefix(web.P(key)), "web.chat."))
 	} else {
-		domain += path.Join(strings.TrimPrefix(strings.ReplaceAll(m.Target().Cap(ice.CTX_FOLLOW), ice.PT, ice.PS), "web"), path.Join(key))
+		domain += path.Join(strings.TrimPrefix(strings.Replace(m.Target().Cap(ice.CTX_FOLLOW), ice.PT, ice.PS, -1), "web"), path.Join(key))
 	}
 	return kit.MergeURL(domain, arg...)
 }

@@ -11,7 +11,7 @@ import (
 )
 
 func _role_keys(key ...string) string {
-	return strings.TrimPrefix(strings.TrimSuffix(strings.ReplaceAll(path.Join(strings.ReplaceAll(kit.Keys(key), ice.PT, ice.PS)), ice.PS, ice.PT), ice.PT), ice.PT)
+	return strings.TrimPrefix(strings.TrimSuffix(strings.Replace(path.Join(strings.Replace(kit.Keys(key), ice.PT, ice.PS, -1)), ice.PS, ice.PT, -1), ice.PT), ice.PT)
 }
 func _role_set(m *ice.Message, role, zone, key string, status bool) {
 	m.Logs(mdb.INSERT, mdb.KEY, "aaa.role", ROLE, role, zone, key)

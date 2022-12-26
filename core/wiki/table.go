@@ -26,7 +26,7 @@ func _table_run(m *ice.Message, arg ...string) {
 func _table_show(m *ice.Message, text string, arg ...string) {
 	head, list := []string{}, [][]string{}
 	for i, line := range kit.SplitLine(text) {
-		if line = strings.ReplaceAll(line, "%", "%%"); i == 0 {
+		if line = strings.Replace(line, "%", "%%", -1); i == 0 {
 			head = kit.SplitWord(line)
 			continue
 		}

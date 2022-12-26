@@ -60,7 +60,7 @@ func _status_tags(m *ice.Message) {
 				}
 				if v, ok := vs[kit.Select("", strings.Split(ls[0], ice.PS), -1)]; ok && ls[1] != v {
 					m.Logs(mdb.MODIFY, REPOS, ls[0], "from", ls[1], "to", v)
-					text, change = strings.ReplaceAll(text, ls[1], v), true
+					text, change = strings.Replace(text, ls[1], v, -1), true
 				}
 				return text
 			})

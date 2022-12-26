@@ -375,7 +375,7 @@ func init() {
 						mat.mat[page] = make([]*State, mat.ncell)
 					}
 
-					m.Option(mdb.TEXT, strings.ReplaceAll(m.Option(mdb.TEXT), "\\", "\\\\"))
+					m.Option(mdb.TEXT, strings.Replace(m.Option(mdb.TEXT), "\\", "\\\\", -1))
 					text := kit.Split(m.Option(mdb.TEXT), " ", " ", " ")
 					mat.train(m, page, hash, text, 1)
 					mdb.Grow(m, m.PrefixKey(), kit.Keys(mdb.HASH, key), kit.Dict(

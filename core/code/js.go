@@ -75,7 +75,7 @@ func _js_show(m *ice.Message, arg ...string) {
 }
 func _js_exec(m *ice.Message, arg ...string) {
 	if arg[2] == "usr/volcanos/" && strings.HasPrefix(arg[1], "plugin/local/") {
-		key := "web." + strings.ReplaceAll(strings.TrimSuffix(strings.TrimPrefix(arg[1], "plugin/local/"), ".js"), ice.PS, ice.PT)
+		key := "web." + strings.Replace(strings.TrimSuffix(strings.TrimPrefix(arg[1], "plugin/local/"), ".js"), ice.PS, ice.PT, -1)
 		ctx.ProcessCommand(m, kit.Select("can.plugin", key), kit.Simple())
 		return
 	}
@@ -102,7 +102,7 @@ func init() {
 				if len(arg) > 0 && arg[0] == mdb.FOREACH { // 文件
 					switch m.Option(ctx.ACTION) {
 					case nfs.SCRIPT:
-						m.Push(nfs.PATH, strings.ReplaceAll(arg[1], ice.PT+kit.Ext(arg[1]), ice.PT+JS))
+						m.Push(nfs.PATH, strings.Replace(arg[1], ice.PT+kit.Ext(arg[1]), ice.PT+JS, -1))
 						m.Option(nfs.DIR_REG, kit.FileReg(nfs.SH, nfs.PY, nfs.SHY, nfs.JS))
 						nfs.DirDeepAll(m, ice.SRC, nfs.PWD, nil).Cut(nfs.PATH)
 					}

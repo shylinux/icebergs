@@ -103,12 +103,12 @@ func init() {
 					m.Option(mdb.TEXT, string(buf))
 				}
 
-				m.Option(mdb.TEXT, strings.ReplaceAll(m.Option(mdb.TEXT), "\\", "\\\\"))
+				m.Option(mdb.TEXT, strings.Replace(m.Option(mdb.TEXT), "\\", "\\\\", -1))
 				for _, line := range kit.Split(m.Option(mdb.TEXT), "\n", "\n", "\n") {
 					if strings.HasPrefix(strings.TrimSpace(line), "#") {
 						continue
 					}
-					line = strings.ReplaceAll(line, "\\", "\\\\")
+					line = strings.Replace(line, "\\", "\\\\", -1)
 					if list := kit.Split(line, " ", " ", " "); len(list) > 2 {
 						m.Cmdx(MATRIX, mdb.INSERT, m.Option(mdb.NAME), list[0], list[1], strings.Join(list[2:], " "))
 					}
@@ -149,7 +149,7 @@ func init() {
 					if e1 == nil && e2 == nil {
 						m.Echo("%d", n1-n2)
 					} else {
-						m.Echo("%s", strings.ReplaceAll(arg[0], arg[2], ""))
+						m.Echo("%s", strings.Replace(arg[0], arg[2], "", -1))
 					}
 				case "*":
 					if e1 == nil && e2 == nil {
@@ -161,7 +161,7 @@ func init() {
 					if e1 == nil && e2 == nil {
 						m.Echo("%d", n1/n2)
 					} else {
-						m.Echo("%s", strings.ReplaceAll(arg[0], arg[2], ""))
+						m.Echo("%s", strings.Replace(arg[0], arg[2], "", -1))
 					}
 				case "%":
 					if e1 == nil && e2 == nil {

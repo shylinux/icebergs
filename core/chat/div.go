@@ -31,9 +31,9 @@ func init() {
 			case nfs.HTML:
 				m.RenderDownload(p)
 			case nfs.CSS:
-				m.RenderResult(_div_template, m.Cmdx(nfs.CAT, p), m.Cmdx(nfs.CAT, strings.ReplaceAll(p, ".css", ".js")))
+				m.RenderResult(_div_template, m.Cmdx(nfs.CAT, p), m.Cmdx(nfs.CAT, strings.Replace(p, ".css", ".js", -1)))
 			case nfs.JS:
-				m.RenderResult(_div_template, m.Cmdx(nfs.CAT, strings.ReplaceAll(p, ".js", ".css")), m.Cmdx(nfs.CAT, p))
+				m.RenderResult(_div_template, m.Cmdx(nfs.CAT, strings.Replace(p, ".js", ".css", -1)), m.Cmdx(nfs.CAT, p))
 			case nfs.JSON:
 				m.RenderResult(_div_template2, kit.Format(kit.UnMarshal(m.Cmdx(nfs.CAT, p))))
 			default:

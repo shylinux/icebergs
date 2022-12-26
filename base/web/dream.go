@@ -120,7 +120,7 @@ func init() {
 			nfs.TRASH: {Hand: func(m *ice.Message, arg ...string) {
 				nfs.Trash(m, path.Join(ice.USR_LOCAL_WORK, m.Option(mdb.NAME)))
 			}},
-			DREAM_OPEN: {Hand: func(m *ice.Message, arg ...string) {
+			DREAM_CLOSE: {Hand: func(m *ice.Message, arg ...string) {
 				if m.Option(cli.DAEMON) == ice.OPS {
 					if m.CmdAppend(SPACE, m.Option(mdb.NAME), mdb.STATUS) != cli.STOP {
 						m.Go(func() { m.Sleep3s(DREAM, cli.START, m.OptionSimple(mdb.NAME)) })
@@ -147,5 +147,5 @@ func init() {
 }
 
 func DreamAction() ice.Actions {
-	return gdb.EventsAction(DREAM_OPEN, DREAM_INPUTS, DREAM_TABLES, DREAM_ACTION)
+	return gdb.EventsAction(DREAM_OPEN, DREAM_CLOSE, DREAM_INPUTS, DREAM_TABLES, DREAM_ACTION)
 }

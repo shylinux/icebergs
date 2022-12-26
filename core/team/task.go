@@ -67,7 +67,7 @@ func init() {
 				case mdb.TYPE:
 					m.Push(arg[0], ONCE, STEP, WEEK)
 				default:
-					mdb.HashInputs(m, arg)
+					mdb.ZoneInputs(m, arg)
 				}
 			}},
 			mdb.INSERT: {Name: "insert zone type=once,step,week name text begin_time@date close_time@date", Hand: func(m *ice.Message, arg ...string) {

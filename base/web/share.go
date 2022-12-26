@@ -134,7 +134,7 @@ func init() {
 				case LOGIN:
 					m.RenderRedirect(ice.PS, ice.MSG_SESSID, aaa.SessCreate(m, msg.Append(aaa.USERNAME)))
 				default:
-					RenderIndex(m, "")
+					RenderMain(m, "", "")
 				}
 			}},
 		}, mdb.HashAction(mdb.FIELD, "time,hash,username,usernick,userrole,river,storm,type,name,text", mdb.EXPIRE, "72h"), ServeAction(), aaa.WhiteAction()), Hand: func(m *ice.Message, arg ...string) {

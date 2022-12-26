@@ -159,9 +159,7 @@ func RenderIndex(m *ice.Message, repos string, file ...string) *ice.Message {
 }
 func RenderMain(m *ice.Message, pod, index string, arg ...ice.Any) *ice.Message {
 	if script := m.Cmdx(Space(m, pod), nfs.CAT, kit.Select(ice.SRC_MAIN_JS, index)); script != "" {
-		return m.Echo(kit.Renders(_main_template, ice.Maps{
-			"version": renderVersion(m), "script": script,
-		})).RenderResult()
+		return m.Echo(kit.Renders(_main_template, ice.Maps{"version": renderVersion(m), "script": script})).RenderResult()
 	}
 	return RenderIndex(m, ice.VOLCANOS)
 }

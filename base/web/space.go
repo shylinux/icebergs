@@ -19,7 +19,7 @@ import (
 
 func _space_dial(m *ice.Message, dev, name string, arg ...string) {
 	msg := m.Cmd(SPIDE, tcp.CLIENT, dev, PP(SPACE))
-	uri := kit.ParseURL(strings.Replace(kit.MergeURL(msg.Append(DOMAIN), mdb.TYPE, ice.Info.NodeType, mdb.NAME, name, SHARE, ice.Info.CtxShare, RIVER, ice.Info.CtxRiver), ice.HTTP, "ws", 1))
+	uri := kit.ParseURL(strings.Replace(kit.MergeURL(msg.Append(DOMAIN), mdb.TYPE, ice.Info.NodeType, mdb.NAME, name, SHARE, ice.Info.CtxShare, RIVER, ice.Info.CtxRiver, arg), ice.HTTP, "ws", 1))
 	args := kit.SimpleKV("type,name,host,port", msg.Append(tcp.PROTOCOL), dev, msg.Append(tcp.HOST), msg.Append(tcp.PORT))
 	m.Go(func() {
 		redial := kit.Dict(m.Configv(REDIAL))
@@ -41,7 +41,7 @@ func _space_fork(m *ice.Message) {
 	if conn, e := websocket.Upgrade(m.W, m.R, nil, kit.Int(buffer["r"]), kit.Int(buffer["w"])); m.Assert(e) {
 		text := kit.Select(m.Option(ice.MSG_USERADDR), m.Option(mdb.TEXT))
 		name := strings.ToLower(kit.ReplaceAll(kit.Select(m.Option(ice.MSG_USERADDR), m.Option(mdb.NAME)), ice.PT, "_", ice.DF, "_"))
-		args := kit.Simple(mdb.TYPE, kit.Select(WORKER, m.Option(mdb.TYPE)), mdb.NAME, name, mdb.TEXT, text, m.OptionSimple(SHARE, RIVER, ice.MSG_USERUA))
+		args := kit.Simple(mdb.TYPE, kit.Select(WORKER, m.Option(mdb.TYPE)), mdb.NAME, name, mdb.TEXT, text, m.OptionSimple(SHARE, RIVER, ice.MSG_USERUA, cli.DAEMON))
 		m.Go(func() {
 			defer mdb.HashCreateDeferRemove(m, args, kit.Dict(mdb.TARGET, conn))()
 			defer gdb.EventDeferEvent(m, SPACE_OPEN, args)(SPACE_CLOSE, args)
@@ -84,11 +84,10 @@ func _space_handle(m *ice.Message, safe bool, name string, conn *websocket.Conn)
 	}
 }
 func _space_domain(m *ice.Message) (link string) {
+	m.Options(ice.MSG_OPTION, ice.MSG_USERNAME, ice.MSG_OPTS, ice.MSG_USERNAME)
 	return kit.GetValid(
 		func() string { return ice.Info.Domain },
-		func() string {
-			return m.CmdAppend(SPACE, ice.OPS, cli.PWD, kit.Dict(ice.MSG_OPTS, ice.MSG_USERNAME), mdb.LINK)
-		},
+		func() string { return m.CmdAppend(SPACE, ice.OPS, cli.PWD, mdb.LINK) },
 		func() string { return m.CmdAppend(SPACE, ice.DEV, cli.PWD, mdb.LINK) },
 		func() string { return m.CmdAppend(SPACE, ice.SHY, cli.PWD, mdb.LINK) },
 		func() string { return tcp.PublishLocalhost(m, m.Option(ice.MSG_USERWEB)) },

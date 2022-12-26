@@ -97,9 +97,12 @@ func _system_exec(m *ice.Message, cmd *exec.Cmd) {
 		}()
 	}
 	if e := cmd.Run(); !m.Warn(e, ice.ErrNotFound, cmd.Args) {
-		m.Cost(CODE, cmd.ProcessState.Success(), ctx.ARGS, cmd.Args)
+		m.Cost(CODE, _system_code(cmd), ctx.ARGS, cmd.Args)
 	}
-	m.Push(mdb.TIME, m.Time()).Push(CODE, kit.Select("1", "0", cmd.ProcessState.Success()))
+	m.Push(mdb.TIME, m.Time()).Push(CODE, _system_code(cmd))
+}
+func _system_code(cmd *exec.Cmd) string {
+	return kit.Select("1", "0", cmd.ProcessState != nil && cmd.ProcessState.Success())
 }
 func _system_find(m Message, bin string, dir ...string) string {
 	if strings.Contains(bin, ice.DF) {

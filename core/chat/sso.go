@@ -28,7 +28,7 @@ func init() {
 
 func GetSSO(m *ice.Message) string {
 	link := m.Cmdx(web.SPACE, web.DOMAIN)
-	if !strings.Contains(link, web.PP(CHAT, SSO)) {
+	if !strings.Contains(link, web.PP(CHAT, POD)) {
 		return ""
 	}
 	ls := strings.Split(kit.ParseURL(link).Path, ice.PS)

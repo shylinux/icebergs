@@ -78,9 +78,7 @@ func init() {
 		)},
 	}, Commands: ice.Commands{
 		SESSION: {Name: "session session window pane cmd auto", Help: "会话管理", Actions: ice.MergeActions(ice.Actions{
-			web.DREAM_CREATE: {Hand: func(m *ice.Message, arg ...string) {
-				kit.If(m.Cmd("", m.Option(mdb.NAME)).Length() == 0, func() { m.Cmd("", mdb.CREATE) })
-			}},
+			web.DREAM_CREATE: {Hand: func(m *ice.Message, arg ...string) { m.Cmd("", mdb.CREATE) }},
 			mdb.INPUTS: {Hand: func(m *ice.Message, arg ...string) {
 				if m.Option(ctx.ACTION) == SCRIPT {
 					m.Cmdy(SCRIPT, mdb.INPUTS, arg)
@@ -102,9 +100,13 @@ func init() {
 					m.Option(cli.CMD_DIR, path.Join(ice.USR_LOCAL_WORK, m.Option(mdb.NAME)))
 					ls := kit.Split(m.Option(mdb.NAME), "-")
 					name := kit.Select(ls[0], ls, 1)
-					_tmux_cmd(m, NEW_SESSION, "-d", "-s", m.Option(mdb.NAME), "-n", name)
+					if !cli.IsSuccess(_tmux_cmd(m, NEW_SESSION, "-d", "-s", m.Option(mdb.NAME), "-n", name)) {
+						return
+					}
 					name = _tmux_key(m.Option(mdb.NAME), name)
-					_tmux_cmd(m, SPLIT_WINDOW, "-t", kit.Keys(name, "1"), "-p", "40")
+					if !cli.IsSuccess(_tmux_cmd(m, SPLIT_WINDOW, "-t", kit.Keys(name, "1"), "-p", "40")) {
+						return
+					}
 					m.Go(func() {
 						m.Sleep("1s")
 						_tmux_cmd(m, SEND_KEYS, "-t", kit.Keys(name, "2"), "ish_miss_log", ENTER)

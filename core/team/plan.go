@@ -59,7 +59,7 @@ func init() {
 		PLAN: {Name: "plan scale=week,day,week,month,year,long begin_time@date list", Help: "计划", Actions: ice.MergeActions(ice.Actions{
 			mdb.INPUTS: {Hand: func(m *ice.Message, arg ...string) { m.Cmdy(TODO, mdb.INPUTS, arg) }},
 			mdb.PLUGIN: {Name: "plugin extra.index extra.args", Hand: func(m *ice.Message, arg ...string) { m.Cmdy(TASK, mdb.MODIFY, arg) }},
-			mdb.INSERT: {Name: "insert zone type=once,step,week name text begin_time@date close_time@date", Hand: func(m *ice.Message, arg ...string) {
+			mdb.INSERT: {Name: "insert zone* type=once,step,week name* text begin_time@date close_time@date", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmdy(TASK, mdb.INSERT, arg)
 			}},
 			ice.RUN: {Hand: func(m *ice.Message, arg ...string) {

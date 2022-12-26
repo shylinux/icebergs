@@ -34,7 +34,7 @@ func _daemon_exec(m *ice.Message, cmd *exec.Cmd) {
 	mdb.HashSelectUpdate(m, h, func(value ice.Map) { value[PID] = cmd.Process.Pid })
 	m.Echo("%d", cmd.Process.Pid)
 	m.Go(func() {
-		if e := cmd.Wait(); !m.Warn(e, ice.ErrNotStart, cmd.Args) && cmd.ProcessState.Success() {
+		if e := cmd.Wait(); !m.Warn(e, ice.ErrNotStart, cmd.Args) && cmd.ProcessState != nil && cmd.ProcessState.Success() {
 			m.Cost(CODE, "0", ctx.ARGS, cmd.Args)
 			mdb.HashModify(m, mdb.HASH, h, STATUS, STOP)
 		} else {

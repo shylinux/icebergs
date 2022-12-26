@@ -16,10 +16,10 @@ func init() {
 	Index.MergeCommands(ice.Commands{
 		OFFER: {Name: "offer hash auto", Help: "邀请", Actions: ice.MergeActions(ice.Actions{
 			INVITE: {Name: "invite email*='shylinux@163.com' content", Help: "邀请", Hand: func(m *ice.Message, arg ...string) {
-				h := mdb.HashCreate(m, m.OptionSimple(EMAIL, "content"), "from", m.Option(ice.MSG_USERNAME), mdb.STATUS, INVITE)
+				h := mdb.HashCreate(m.Spawn(), m.OptionSimple(EMAIL, "content"), "from", m.Option(ice.MSG_USERNAME), mdb.STATUS, INVITE)
 				msg := m.Cmd("web.share", mdb.CREATE, mdb.TYPE, "field", mdb.NAME, m.PrefixKey(), mdb.TEXT, kit.Format(kit.List(h)),
 					kit.Dict(ice.MSG_USERNAME, m.Option(EMAIL), ice.MSG_USERNICK, VOID, ice.MSG_USERROLE, VOID))
-				m.Cmd(EMAIL, SEND, m.Option(EMAIL), "welcome to contents, please continue", ice.Render(m, ice.RENDER_ANCHOR, msg.Option(mdb.LINK)))
+				m.Cmd(EMAIL, SEND, m.Option(EMAIL), "welcome to contents, please continue", ice.Render(m, ice.RENDER_ANCHOR, kit.MergeURL(msg.Option(mdb.LINK), "debug", "true")))
 			}},
 			ACCEPT: {Help: "接受", Hand: func(m *ice.Message, arg ...string) {
 				if m.Warn(m.Option(mdb.HASH) == "", ice.ErrNotValid, mdb.HASH) {

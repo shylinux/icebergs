@@ -102,7 +102,7 @@ func _serve_handle(key string, cmd *ice.Command, m *ice.Message, w http.Response
 	}
 	u := OptionUserWeb(m)
 	m.Option(ice.MSG_USERHOST, u.Scheme+"//"+u.Host)
-	m.Option(ice.MSG_SESSID, m.Option(CookieName(m.Option(ice.MSG_USERWEB))))
+	m.Option(ice.MSG_SESSID, kit.Select(m.Option(ice.MSG_SESSID), m.Option(CookieName(m.Option(ice.MSG_USERWEB)))))
 	if m.Optionv(ice.MSG_CMDS) == nil {
 		if p := strings.TrimPrefix(r.URL.Path, key); p != "" {
 			m.Optionv(ice.MSG_CMDS, strings.Split(p, ice.PS))

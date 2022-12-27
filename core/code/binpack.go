@@ -73,15 +73,6 @@ func _binpack_all(m *ice.Message) {
 		_binpack_file(m, w, ice.MAKEFILE)
 		_binpack_file(m, w, ice.README_MD)
 		fmt.Fprintln(w)
-		mdb.HashSelects(m).Sort(nfs.PATH).Tables(func(value ice.Maps) {
-			if s, e := nfs.StatFile(m, value[nfs.PATH]); e == nil {
-				if s.IsDir() {
-					_binpack_dir(m, w, value[nfs.PATH])
-				} else {
-					_binpack_file(m, w, value[nfs.PATH])
-				}
-			}
-		})
 		list := map[string]bool{}
 		ctx.TravelCmd(m, func(key, file, line string) {
 			dir := path.Dir(file)
@@ -92,7 +83,7 @@ func _binpack_all(m *ice.Message) {
 				return
 			}
 			list[dir] = true
-			m.Cmd(nfs.DIR, dir, nfs.PATH, kit.Dict(nfs.DIR_ROOT, nfs.PWD, nfs.DIR_REG, `.*\.(sh|shy|js)$`)).Tables(func(value ice.Maps) {
+			m.Cmd(nfs.DIR, dir, nfs.PATH, kit.Dict(nfs.DIR_ROOT, nfs.PWD, nfs.DIR_REG, kit.ExtReg("(sh|shy|js)"))).Tables(func(value ice.Maps) {
 				if list[value[nfs.PATH]] {
 					return
 				}
@@ -101,6 +92,15 @@ func _binpack_all(m *ice.Message) {
 				}
 				_binpack_file(m, w, value[nfs.PATH])
 			})
+		})
+		mdb.HashSelects(m).Sort(nfs.PATH).Tables(func(value ice.Maps) {
+			if s, e := nfs.StatFile(m, value[nfs.PATH]); e == nil {
+				if s.IsDir() {
+					_binpack_dir(m, w, value[nfs.PATH])
+				} else {
+					_binpack_file(m, w, value[nfs.PATH])
+				}
+			}
 		})
 	}
 }

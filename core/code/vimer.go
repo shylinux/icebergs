@@ -154,7 +154,7 @@ func init() {
 			}},
 		}, web.DreamAction(), aaa.RoleAction(ctx.COMMAND)), Hand: func(m *ice.Message, arg ...string) {
 			if m.Cmdy(INNER, arg); arg[0] != ctx.ACTION {
-				m.Action(AUTOGEN, nfs.SCRIPT, web.DREAM, web.WEBSITE, nfs.SAVE, COMPILE)
+				m.Action(AUTOGEN, nfs.SCRIPT, nfs.SAVE, COMPILE)
 				m.Options("tabs", m.Config("show.tabs"), "plug", m.Config("show.plug"), "exts", m.Config("show.exts"))
 				ctx.DisplayLocal(m, "")
 			}

@@ -172,10 +172,10 @@ func init() {
 			mdb.INPUTS: {Hand: func(m *ice.Message, arg ...string) {
 				switch arg[0] {
 				case COMMENT:
-					m.Push(mdb.TEXT, m.Option(nfs.FILE))
-					for _, v := range kit.Split(m.Option(nfs.FILE), " /") {
-						m.Push(mdb.TEXT, v)
-					}
+					ls := kit.Split(m.Option(nfs.FILE), " /")
+					m.Push(arg[0], kit.Join(kit.Slice(ls, -1), ice.PS))
+					m.Push(arg[0], kit.Join(kit.Slice(ls, -2), ice.PS))
+					m.Push(arg[0], m.Option(nfs.FILE))
 				case VERSION, TAGS:
 					m.Push(VERSION, _status_tag(m, m.Option(TAGS)))
 				case aaa.EMAIL:

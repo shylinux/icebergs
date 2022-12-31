@@ -64,13 +64,18 @@ func _dream_show(m *ice.Message, name string) {
 		SPACE, tcp.DIAL, ice.DEV, ice.OPS, mdb.TYPE, WORKER, m.OptionSimple(mdb.NAME, RIVER), cli.DAEMON, ice.OPS)
 }
 func _dream_template(m *ice.Message, p string) {
-	nfs.MkdirAll(m, p)
+	if m.Option(nfs.REPOS) != "" {
+		m.Cmd(cli.SYSTEM, "git", "clone", m.Option(nfs.REPOS), p)
+	} else {
+		nfs.MkdirAll(m, p)
+	}
 	if m.Option(nfs.TEMPLATE) == "" {
 		return
 	}
 	for _, file := range []string{
-		ice.ETC_MISS_SH, ice.SRC_MAIN_SHY, ice.SRC_MAIN_GO,
-		ice.GO_MOD, ice.MAKEFILE, ice.README_MD,
+		ice.ETC_MISS_SH, ice.MAKEFILE, ice.GO_MOD, ice.GO_SUM,
+		ice.SRC_MAIN_GO, ice.SRC_MAIN_SHY, ice.SRC_MAIN_JS,
+		ice.README_MD,
 	} {
 		if nfs.ExistsFile(m, path.Join(p, file)) {
 			continue

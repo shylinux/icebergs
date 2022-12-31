@@ -1,8 +1,11 @@
 package git
 
 import (
+	"strings"
+
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/mdb"
+	"shylinux.com/x/icebergs/base/nfs"
 	kit "shylinux.com/x/toolkits"
 )
 
@@ -13,6 +16,18 @@ func _configs_list(m *ice.Message) *ice.Message {
 		m.Push(mdb.NAME, ls[0]).Push(mdb.VALUE, ls[1]).PushButton(mdb.REMOVE)
 	})
 	return mdb.HashSelectValue(m, func(value ice.Maps) { m.Push("", value, kit.Split("name,value")).PushButton(mdb.CREATE) })
+}
+func _configs_read(m *ice.Message, p string) ice.Maps {
+	res, block := ice.Maps{}, ""
+	m.Cmd(nfs.CAT, p, func(text string) {
+		if strings.HasPrefix(text, "[") {
+			block = kit.Join(kit.Split(text, " []"), ".")
+			return
+		}
+		ls := kit.Split(text, " =")
+		res[kit.Keys(block, ls[0])] = ls[1]
+	})
+	return res
 }
 
 const (

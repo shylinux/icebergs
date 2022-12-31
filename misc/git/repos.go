@@ -29,12 +29,16 @@ func _repos_init(m *ice.Message, dir string) string {
 }
 func _repos_insert(m *ice.Message, name string, path string) bool {
 	if repos, e := gogit.OpenRepository(_git_dir(path)); e == nil {
+		origin := kit.Select("", kit.Split(repos.GetOrigin()), -1)
+		if origin == "" {
+			origin = _configs_read(m, _git_dir(path, "config"))["remote.origin.url"]
+		}
 		if ci, e := repos.GetCommit(); e == nil {
 			mdb.HashCreate(m, REPOS, name, nfs.PATH, path, mdb.TIME, ci.Author.When.Format(ice.MOD_TIME), COMMIT, strings.TrimSpace(ci.Message),
-				BRANCH, repos.GetBranch(), ORIGIN, kit.Select("", kit.Split(repos.GetOrigin()), -1))
+				BRANCH, repos.GetBranch(), ORIGIN, origin)
 		} else {
 			mdb.HashCreate(m, REPOS, name, nfs.PATH, path, mdb.TIME, m.Time(),
-				BRANCH, repos.GetBranch(), ORIGIN, kit.Select("", kit.Split(repos.GetOrigin()), -1))
+				BRANCH, repos.GetBranch(), ORIGIN, origin)
 		}
 		return true
 	}

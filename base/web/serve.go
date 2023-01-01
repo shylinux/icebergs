@@ -220,7 +220,7 @@ func init() {
 		PP(ice.REQUIRE, ice.NODE_MODULES): {Name: "/require/node_modules/", Help: "依赖库", Hand: func(m *ice.Message, arg ...string) {
 			p := path.Join(ice.SRC, ice.NODE_MODULES, path.Join(arg...))
 			if !nfs.ExistsFile(m, p) {
-				m.Cmd(cli.SYSTEM, "npm", "install", arg[0], kit.Dict(cli.CMD_DIR, path.Join(ice.SRC)))
+				m.Cmd(cli.SYSTEM, "npm", "install", arg[0], kit.Dict(cli.CMD_DIR, ice.SRC))
 			}
 			m.RenderDownload(p)
 		}},

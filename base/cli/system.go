@@ -144,7 +144,7 @@ const SYSTEM = "system"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
-		SYSTEM: {Name: "system cmd auto", Help: "系统命令", Actions: ice.MergeActions(ice.Actions{
+		SYSTEM: {Name: "system cmd", Help: "系统命令", Actions: ice.MergeActions(ice.Actions{
 			nfs.PUSH: {Hand: func(m *ice.Message, arg ...string) {
 				for _, p := range arg {
 					if !strings.Contains(m.Cmdx(nfs.CAT, ice.ETC_PATH), p) {

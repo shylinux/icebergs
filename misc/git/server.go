@@ -13,6 +13,7 @@ import (
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/aaa"
 	"shylinux.com/x/icebergs/base/cli"
+	"shylinux.com/x/icebergs/base/ctx"
 	"shylinux.com/x/icebergs/base/gdb"
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/nfs"
@@ -114,7 +115,7 @@ func init() {
 		m.Warn(_server_repos(m, arg...), ice.ErrNotValid)
 	}}})
 	Index.MergeCommands(ice.Commands{
-		SERVER: {Name: "server path commit auto create import", Help: "服务器", Actions: ice.MergeActions(ice.Actions{
+		SERVER: {Name: "server repos branch commit path auto create import", Help: "服务器", Actions: ice.MergeActions(ice.Actions{
 			mdb.CREATE: {Name: "create name*", Hand: func(m *ice.Message, arg ...string) {
 				_repos_init(m, path.Join(ice.USR_LOCAL_REPOS, m.Option(mdb.NAME)))
 			}},
@@ -136,10 +137,33 @@ func init() {
 					m.Cmd("", func(value ice.Maps) { m.Push(nfs.PATH, _git_url(m, value[nfs.PATH])) })
 				}
 			}},
+			"inner": {Help: "编辑器", Hand: func(m *ice.Message, arg ...string) {
+				if len(arg) == 0 || arg[0] != ice.RUN {
+					arg = []string{path.Join(ice.USR_LOCAL_REPOS, arg[0]), kit.Select("README.md", arg, 3)}
+				} else if kit.Select("", arg, 1) != ctx.ACTION {
+					if dir := path.Join(ice.USR_LOCAL_REPOS, m.Option(REPOS)); len(arg) < 3 {
+						_repos_dir(m, dir, m.Option(BRANCH), m.Option(COMMIT), kit.Select("", arg, 1), nil)
+					} else {
+						_repos_cat(m, dir, m.Option(BRANCH), m.Option(COMMIT), arg[2])
+						ctx.DisplayLocal(m, "code/inner.js")
+					}
+					return
+				}
+				ctx.ProcessField(m, "", arg, arg...)
+			}},
 		}, gdb.EventAction(web.DREAM_INPUTS)), Hand: func(m *ice.Message, arg ...string) {
 			if m.Option(nfs.DIR_ROOT, ice.USR_LOCAL_REPOS); len(arg) == 0 {
-				m.Cmdy(nfs.DIR, nfs.PWD, func(value ice.Maps) { m.PushScript("git clone " + _git_url(m, value[nfs.PATH])) }).Cut("time,path,size,script,action")
+				m.Cmdy(nfs.DIR, nfs.PWD, func(value ice.Maps) { m.PushScript("git clone " + _git_url(m, value[nfs.PATH])) }).Cut("time,path,size,script,action").RenameAppend("path", "repos")
+			} else if dir := path.Join(m.Option(nfs.DIR_ROOT), arg[0]); len(arg) == 1 {
+				_repos_branch(m, dir)
+			} else if len(arg) == 2 {
+				_repos_commit(m, dir, arg[1], nil)
+			} else if len(arg) == 3 || arg[3] == "" || strings.HasSuffix(arg[3], ice.PS) {
+				_repos_dir(m, dir, arg[1], arg[2], kit.Select("", arg, 3), nil)
+			} else {
+				m.Cmdy("", "inner", arg)
 			}
+			m.StatusTimeCount()
 		}},
 	})
 }

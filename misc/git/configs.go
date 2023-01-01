@@ -21,7 +21,7 @@ func _configs_read(m *ice.Message, p string) ice.Maps {
 	res, block := ice.Maps{}, ""
 	m.Cmd(nfs.CAT, p, func(text string) {
 		if strings.HasPrefix(text, "[") {
-			block = kit.Join(kit.Split(text, " []"), ".")
+			block = kit.Join(kit.Split(text, " []"), ice.PT)
 			return
 		}
 		ls := kit.Split(text, " =")

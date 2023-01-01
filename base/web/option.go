@@ -26,11 +26,7 @@ func PushNotice(m *ice.Message, arg ...ice.Any) {
 		msg.Optionv(ice.MSG_OPTS, msg.Optionv(ice.MSG_OPTION, []string{}))
 		msg.Cmd(SPACE, m.Option(ice.MSG_DAEMON), arg)
 	} else {
-		opts := kit.Dict(ice.POD, m.Option(ice.MSG_DAEMON), "cmds", kit.Simple(arg...))
-		for _, k := range kit.Simple(m.Optionv(ice.MSG_OPTS)) {
-			opts[k] = m.Option(k)
-		}
-		m.Cmd("web.spide", ice.OPS, MergeURL2(m, SHARE_TOAST), kit.Format(opts))
+		m.Cmd("web.spide", ice.OPS, MergeURL2(m, SHARE_TOAST+m.Option(ice.MSG_DAEMON)), "arg", kit.Format(arg))
 	}
 }
 func PushNoticeGrow(m *ice.Message, arg ...ice.Any) {
@@ -53,9 +49,9 @@ func ToastProcess(m *ice.Message, arg ...ice.Any) func() {
 	Toast(m, ice.PROCESS, arg...)
 	return func() { Toast(m, ice.SUCCESS) }
 }
-func ToastRestart(m *ice.Message, arg ...ice.Any)         { Toast(m, gdb.RESTART, arg...) }
-func ToastFailure(m *ice.Message, arg ...ice.Any)         { Toast(m, ice.FAILURE, arg...) }
-func ToastSuccess(m *ice.Message, arg ...ice.Any)         { Toast(m, ice.SUCCESS, arg...) }
+func ToastRestart(m *ice.Message, arg ...ice.Any) { Toast(m, gdb.RESTART, arg...) }
+func ToastFailure(m *ice.Message, arg ...ice.Any) { Toast(m, ice.FAILURE, arg...) }
+func ToastSuccess(m *ice.Message, arg ...ice.Any) { Toast(m, ice.SUCCESS, arg...) }
 func Toast(m *ice.Message, text string, arg ...ice.Any) { // [title [duration [progress]]]
 	if len(arg) > 1 {
 		switch val := arg[1].(type) {
@@ -159,9 +155,9 @@ func MergePodWebSite(m Message, pod, web string, arg ...ice.Any) string {
 func ProcessWebsite(m *ice.Message, pod, cmd string, arg ...ice.Any) {
 	m.ProcessOpen(MergePodCmd(m, pod, cmd, arg...))
 }
-func ProcessIframe(m *ice.Message, link string, arg ...string) {
+func ProcessIframe(m *ice.Message, name, link string, arg ...string) {
 	if len(arg) == 0 || arg[0] != ice.RUN {
-		arg = []string{m.Cmdx("web.chat.iframe", mdb.CREATE, mdb.TYPE, LINK, mdb.NAME, "", LINK, link)}
+		arg = []string{m.Cmdx("web.chat.iframe", mdb.CREATE, mdb.TYPE, LINK, mdb.NAME, name, LINK, link)}
 	}
 	ctx.ProcessField(m, "web.chat.iframe", arg, arg...)
 }

@@ -13,6 +13,7 @@ import (
 type Any = interface{}
 type Map = map[string]Any
 type Maps = map[string]string
+type List = []interface{}
 
 func _file_name(m *ice.Message, arg ...string) string {
 	if len(arg) > 3 && strings.Contains(arg[3], ice.PS) {

@@ -157,7 +157,7 @@ func init() {
 			m.RenderDownload(strings.TrimPrefix(m.CmdAppend(aaa.USER, m.Option(ice.MSG_USERNAME), aaa.BACKGROUND), SHARE_LOCAL))
 		}},
 		SHARE_PROXY: {Hand: func(m *ice.Message, arg ...string) { _share_proxy(m) }},
-		SHARE_TOAST: {Hand: func(m *ice.Message, arg ...string) { m.Cmdy(SPACE, m.Option(ice.POD), m.Optionv("cmds")) }},
+		SHARE_TOAST: {Hand: func(m *ice.Message, arg ...string) { m.Cmdy(SPACE, arg[0], kit.UnMarshal(m.Option("arg"))) }},
 	})
 }
 func IsNotValidShare(m *ice.Message, time string) bool {

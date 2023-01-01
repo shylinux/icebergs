@@ -50,8 +50,7 @@ func _xterm_get(m *ice.Message, h string) _xterm {
 			for {
 				if n, e := tty.Read(buf); !m.Warn(e) && e == nil {
 					m.Option(ice.MSG_DAEMON, mdb.HashSelectField(m, h, "view"))
-					m.Option(mdb.TEXT, string(buf[:n]))
-					web.PushNoticeGrow(m)
+					web.PushNoticeGrow(m, string(buf[:n]))
 				} else {
 					break
 				}
@@ -94,6 +93,10 @@ func init() {
 					_xterm_get(m, "").Write(string(b))
 				}
 			}},
+			"debug": {Help: "日志", Hand: func(m *ice.Message, arg ...string) {
+				_xterm_get(m, kit.Select("", arg, 0)).Write("cd ~/contexts; tail -f var/log/bench.log" + ice.NL)
+				ctx.ProcessHold(m)
+			}},
 			INSTALL: {Help: "安装", Hand: func(m *ice.Message, arg ...string) {
 				_xterm_get(m, kit.Select("", arg, 0)).Write(m.Cmdx(PUBLISH, ice.CONTEXTS, INSTALL) + ice.NL)
 				ctx.ProcessHold(m)
@@ -104,7 +107,7 @@ func init() {
 				m.PushAction(web.WEBSITE, mdb.REMOVE).Action(mdb.CREATE, mdb.PRUNES)
 			} else {
 				ctx.Toolkit(m, FAVOR, "web.chat.iframe")
-				m.Action(INSTALL, "波浪线", "反引号")
+				m.Action(INSTALL, "debug", "波浪线", "反引号")
 				ctx.DisplayLocal(m, "")
 			}
 		}},

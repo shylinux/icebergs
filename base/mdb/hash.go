@@ -262,6 +262,12 @@ func HashSelectField(m *ice.Message, key string, field string) (value string) {
 func HashSelectTarget(m *ice.Message, key string, create Any) (target Any) {
 	HashSelectUpdate(m, key, func(value ice.Map) {
 		target = value[TARGET]
+		if _target, ok := target.([]string); ok && len(_target) == 0 {
+			target = nil
+		}
+		if _target, ok := target.(ice.List); ok && len(_target) == 0 {
+			target = nil
+		}
 		if _target, ok := target.(Map); ok && len(_target) == 0 {
 			target = nil
 		}

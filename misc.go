@@ -221,6 +221,7 @@ func (m *Message) _command(arg ...Any) *Message {
 			defer func() { m.Table(val) }()
 		case func(Maps):
 			defer func() { m.Tables(val) }()
+		case nil:
 		default:
 			if reflect.TypeOf(val).Kind() == reflect.Func {
 				cbs = val

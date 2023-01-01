@@ -12,6 +12,7 @@ import (
 	"shylinux.com/x/icebergs/base/ctx"
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/nfs"
+	"shylinux.com/x/icebergs/base/tcp"
 	kit "shylinux.com/x/toolkits"
 	"shylinux.com/x/toolkits/miss"
 )
@@ -181,7 +182,7 @@ func RenderCache(m *ice.Message, h string) {
 func Upload(m *ice.Message) []string {
 	if up := kit.Simple(m.Optionv(ice.MSG_UPLOAD)); len(up) == 1 {
 		if m.Cmdy(CACHE, UPLOAD).Optionv(ice.MSG_UPLOAD, kit.Simple(m.Append(mdb.HASH), m.Append(mdb.NAME), m.Append(nfs.SIZE))); m.Option(ice.MSG_USERPOD) != "" {
-			m.Cmd(SPACE, m.Option(ice.MSG_USERPOD), SPIDE, ice.DEV, SPIDE_CACHE, http.MethodGet, MergeURL2(m, path.Join(SHARE_CACHE, m.Append(mdb.HASH))))
+			m.Cmd(SPACE, m.Option(ice.MSG_USERPOD), SPIDE, ice.DEV, SPIDE_CACHE, http.MethodGet, tcp.PublishLocalhost(m, MergeURL2(m, path.Join(SHARE_CACHE, m.Append(mdb.HASH)))))
 		}
 		return kit.Simple(m.Optionv(ice.MSG_UPLOAD))
 	} else {

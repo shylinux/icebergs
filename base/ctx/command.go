@@ -55,7 +55,7 @@ func _command_search(m *ice.Message, kind, name, text string) {
 		if name != "" && !strings.HasPrefix(key, name) && !strings.Contains(s.Name, name) {
 			return
 		}
-		m.PushSearch(ice.CTX, kit.PathName(1), ice.CMD, kit.FileName(1), kit.SimpleKV("", s.Cap(ice.CTX_FOLLOW), cmd.Name, cmd.Help),
+		m.PushSearch(ice.CTX, kit.PathName(1), ice.CMD, kit.FileName(1), kit.SimpleKV("", s.Cap(ice.CTX_FOLLOW), kit.Select(key, cmd.Name), kit.Select(key, cmd.Help)),
 			CONTEXT, s.Cap(ice.CTX_FOLLOW), COMMAND, key, INDEX, kit.Keys(s.Cap(ice.CTX_FOLLOW), key),
 			mdb.HELP, cmd.Help, nfs.FILE, FileURI(cmd.GetFileLines()),
 		)

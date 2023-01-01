@@ -32,7 +32,7 @@ func init() {
 				web.RenderCmd(m, web.SPACE)
 			} else if len(arg) == 1 {
 				if m.Cmd(web.SPACE, arg[0]).Length() == 0 && !strings.Contains(arg[0], ice.PT) {
-					m.Cmd(web.DREAM, cli.START, mdb.NAME, arg[0])
+					m.Cmd(web.DREAM, cli.START, kit.Dict(mdb.NAME, arg[0]))
 				}
 				web.RenderMain(aaa.UserRoot(m), arg[0], "")
 			} else if arg[1] == CMD {

@@ -27,7 +27,7 @@ func _defs_list(m *ice.Message) string {
 func _autogen_source(m *ice.Message, main, file string) {
 	main = kit.ExtChange(main, SHY)
 	m.Cmd(nfs.DEFS, main, `title "{{.Option "name"}}"`+ice.NL)
-	m.Cmd(nfs.PUSH, main, ssh.SOURCE+ice.PS+strings.TrimPrefix(file, ice.SRC+ice.PS)+ice.NL)
+	m.Cmd(nfs.PUSH, main, ssh.SOURCE+ice.SP+strings.TrimPrefix(file, ice.SRC+ice.PS)+ice.NL)
 }
 func _autogen_script(m *ice.Message, file string) { m.Cmd(nfs.DEFS, file, _script_template) }
 func _autogen_module(m *ice.Message, file string) { m.Cmd(nfs.DEFS, file, _module_template) }

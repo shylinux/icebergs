@@ -99,10 +99,14 @@ func _webpack_build(m *ice.Message, file string) {
 	if f, p, e := nfs.CreateFile(m, kit.Keys(file, HTML)); m.Assert(e) {
 		defer f.Close()
 		defer m.Echo(p)
+		main_js := _volcanos(m, PAGE_INDEX_JS)
+		if nfs.ExistsFile(m, ice.SRC_MAIN_JS) {
+			main_js = ice.SRC_MAIN_JS
+		}
 		fmt.Fprintf(f, _webpack_template,
 			m.Cmdx(nfs.CAT, _volcanos(m, PAGE_INDEX_CSS)), m.Cmdx(nfs.CAT, _volcanos(m, PAGE_CACHE_CSS)),
 			m.Cmdx(nfs.CAT, _volcanos(m, ice.PROTO_JS)), m.Cmdx(nfs.CAT, kit.Keys(file, JS)),
-			m.Cmdx(nfs.CAT, _volcanos(m, PAGE_CACHE_JS)), m.Cmdx(nfs.CAT, _volcanos(m, PAGE_INDEX_JS)),
+			m.Cmdx(nfs.CAT, _volcanos(m, PAGE_CACHE_JS)), m.Cmdx(nfs.CAT, main_js),
 		)
 	}
 }

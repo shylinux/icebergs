@@ -24,6 +24,7 @@ const (
 const (
 	WEBSITE = "website"
 
+	CODE_VIMER = "web.code.vimer"
 	CODE_INNER = "web.code.inner"
 	WIKI_WORD  = "web.wiki.word"
 )

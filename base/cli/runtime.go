@@ -166,7 +166,7 @@ func init() {
 				m.Split(m.Cmdx(SYSTEM, "ps", "u")).PushAction(PROCKILL).SortIntR("RSS")
 				m.StatusTimeCount("nCPU", msg.Append("nCPU"), "MemTotal", msg.Append("MemTotal"), "MemFree", msg.Append("MemFree"))
 			}},
-			PROCKILL: {Hand: func(m *ice.Message, arg ...string) { m.Cmdy(gdb.SIGNAL, gdb.STOP, m.Option("PID")).ProcessRefresh() }},
+			PROCKILL: {Help: "结束进程", Hand: func(m *ice.Message, arg ...string) { m.Cmdy(gdb.SIGNAL, gdb.STOP, m.Option("PID")).ProcessRefresh() }},
 			MAXPROCS: {Hand: func(m *ice.Message, arg ...string) {
 				if len(arg) > 0 {
 					runtime.GOMAXPROCS(kit.Int(m.Conf(RUNTIME, kit.Keys(HOST, MAXPROCS), arg[0])))
@@ -175,27 +175,23 @@ func init() {
 			}},
 			DISKINFO: {Hand: func(m *ice.Message, arg ...string) { _runtime_diskinfo(m) }},
 			API: {Hand: func(m *ice.Message, arg ...string) {
-				for k, v := range ice.Info.Route {
-					m.Push(nfs.PATH, k).Push(nfs.FILE, v)
-				}
-				m.Sort(nfs.PATH).StatusTimeCount()
+				kit.For(ice.Info.Route, func(k, v string) { m.Push(nfs.PATH, k).Push(nfs.FILE, v) })
+				m.StatusTimeCount().Sort(nfs.PATH)
 			}},
 			CLI: {Hand: func(m *ice.Message, arg ...string) {
-				for k, v := range ice.Info.File {
-					m.Push(nfs.FILE, k).Push(mdb.NAME, v)
-				}
-				m.Sort(nfs.FILE).StatusTimeCount()
+				kit.For(ice.Info.File, func(k, v string) { m.Push(nfs.FILE, k).Push(mdb.NAME, v) })
+				m.StatusTimeCount().Sort(nfs.FILE)
 			}},
 			CMD: {Hand: func(m *ice.Message, arg ...string) {
 				m.OptionFields(ctx.INDEX, mdb.NAME, mdb.HELP, nfs.FILE)
 				m.Cmdy(ctx.COMMAND, mdb.SEARCH, ctx.COMMAND).StatusTimeCount()
 			}},
 			ENV: {Hand: func(m *ice.Message, arg ...string) {
-				for _, v := range os.Environ() {
+				kit.For(os.Environ(), func(v string) {
 					ls := strings.SplitN(v, ice.EQ, 2)
 					m.Push(mdb.NAME, ls[0]).Push(mdb.VALUE, ls[1])
-				}
-				m.StatusTimeCount()
+				})
+				m.StatusTimeCount().Sort(mdb.NAME)
 			}},
 			MAKE_DOMAIN: {Hand: func(m *ice.Message, arg ...string) {
 				if os.Getenv(CTX_DEV) == "" || os.Getenv(CTX_POD) == "" {
@@ -204,9 +200,7 @@ func init() {
 					m.Echo(kit.MergePOD(os.Getenv(CTX_DEV), os.Getenv(CTX_POD)))
 				}
 			}},
-			"chain": {Hand: func(m *ice.Message, arg ...string) {
-				m.Echo(m.FormatChain())
-			}},
+			"chain": {Hand: func(m *ice.Message, arg ...string) { m.Echo(m.FormatChain()) }},
 		}, ctx.ConfAction("")), Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) > 0 && arg[0] == BOOTINFO {
 				arg = arg[1:]

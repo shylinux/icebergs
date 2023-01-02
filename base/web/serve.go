@@ -101,7 +101,7 @@ func _serve_handle(key string, cmd *ice.Command, m *ice.Message, w http.Response
 		m.Option(ice.MSG_USERPOD, m.Option(ice.POD))
 	}
 	u := OptionUserWeb(m)
-	m.Option(ice.MSG_USERHOST, u.Scheme+"//"+u.Host)
+	m.Option(ice.MSG_USERHOST, tcp.PublishLocalhost(m, u.Scheme+"://"+u.Host))
 	m.Option(ice.MSG_SESSID, kit.Select(m.Option(ice.MSG_SESSID), m.Option(CookieName(m.Option(ice.MSG_USERWEB)))))
 	if m.Optionv(ice.MSG_CMDS) == nil {
 		if p := strings.TrimPrefix(r.URL.Path, key); p != "" {
@@ -230,7 +230,7 @@ func init() {
 		PP(ice.REQUIRE, ice.SRC): {Name: "/require/src/", Help: "源代码", Hand: func(m *ice.Message, arg ...string) {
 			_share_local(m, ice.SRC, path.Join(arg...))
 		}},
-		PP(ice.HELP): {Name: "/help/", Help: "帮助", Actions: aaa.WhiteAction(), Hand: func(m *ice.Message, arg ...string) {
+		PP(ice.HELP): {Name: "/help/", Help: "帮助", Actions: ice.MergeActions(ctx.CmdAction(), aaa.WhiteAction()), Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) == 0 {
 				arg = append(arg, "tutor.shy")
 			}

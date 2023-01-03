@@ -95,7 +95,7 @@ func init() {
 	web.Index.MergeCommands(ice.Commands{"/x/": {Actions: aaa.WhiteAction(), Hand: func(m *ice.Message, arg ...string) {
 		if m.RenderVoid(); m.Option("go-get") == "1" {
 			p := _git_url(m, path.Join(arg...))
-			m.RenderResult(kit.Format(`<meta name="go-import" content="%s">`, kit.Format(`%s git %s`, strings.Split(p, "://")[1], p)))
+			m.RenderResult(kit.Format(`<meta name="go-import" content="%s">`, kit.Format(`%s git %s`, strings.TrimSuffix(strings.Split(p, "://")[1], ".git"), p)))
 			return
 		}
 		switch repos, service := _server_param(m, arg...); service {

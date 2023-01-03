@@ -91,14 +91,15 @@ func init() {
 		}, WordAction(`<p {{.OptionTemplate}}>{{.Option "text"}}</p>`, ssh.PROMPT, kit.Dict(SHELL, "$ "))), Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) == 0 {
 				m.Echo(`<br class="story" data-type="spark">`)
-				return
-			}
-			if kit.Ext(arg[0]) == "md" {
+			} else if kit.Ext(arg[0]) == "md" {
 				m.Cmdy(SPARK, "md", arg)
-				return
+			} else {
+				if arg[0] == "shell" && arg[1] == "inner" {
+					 arg = arg[1:]
+				}
+				arg = _name(m, arg)
+				_spark_show(m, arg[0], strings.TrimSpace(arg[1]), arg[2:]...)
 			}
-			arg = _name(m, arg)
-			_spark_show(m, arg[0], strings.TrimSpace(arg[1]), arg[2:]...)
 		}},
 	})
 }

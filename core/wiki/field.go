@@ -42,10 +42,10 @@ func _field_show(m *ice.Message, name, text string, arg ...string) {
 	meta[mdb.NAME], meta[mdb.INDEX] = name, text
 	msg := m.Spawn()
 	for i := 0; i < len(arg)-1; i += 2 {
-		if strings.HasPrefix(arg[i], ARGS) {
-			kit.Value(meta, arg[i], m.Optionv(arg[i], kit.Split(strings.TrimSuffix(strings.TrimPrefix(arg[i+1], "["), "]"))))
-		} else if strings.HasPrefix(arg[i], "args.") {
+		if strings.HasPrefix(arg[i], "args.") {
 			kit.Value(meta, arg[i], m.Option(arg[i], strings.TrimSpace(arg[i+1])))
+		} else if strings.HasPrefix(arg[i], ARGS) {
+			kit.Value(meta, arg[i], m.Optionv(arg[i], kit.Split(strings.TrimSuffix(strings.TrimPrefix(arg[i+1], "["), "]"))))
 		} else {
 			kit.Value(meta, arg[i], Parse(m, ice.MSG_OPTION, arg[i], arg[i+1]))
 		}

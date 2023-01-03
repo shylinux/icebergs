@@ -26,7 +26,7 @@ func _option(m *ice.Message, kind, name, text string, arg ...string) *ice.Messag
 
 	extra := kit.Dict()
 	m.Optionv(mdb.EXTRA, extra)
-	for i := 0; i < len(arg); i += 2 {
+	for i := 0; i < len(arg)-1; i += 2 {
 		extra[arg[i]] = kit.Format(kit.Parse(nil, "", kit.Split(arg[i+1])...))
 	}
 	return m

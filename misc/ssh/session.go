@@ -59,7 +59,7 @@ func init() {
 					m.Sleep300ms()
 				}
 			}},
-		}, mdb.PageZoneAction(mdb.FIELD, "time,hash,count,status,connect", mdb.FIELDS, "time,id,type,text")), Hand: func(m *ice.Message, arg ...string) {
+		}, mdb.PageZoneAction(mdb.SHORT, mdb.UNIQ, mdb.FIELD, "time,hash,count,status,connect", mdb.FIELDS, "time,id,type,text")), Hand: func(m *ice.Message, arg ...string) {
 			m.Fields(len(kit.Slice(arg, 0, 2)), m.Config(mdb.FIELD), m.Config(mdb.FIELDS))
 			if mdb.PageZoneSelect(m, arg...); len(arg) == 0 {
 				m.Tables(func(value ice.Maps) {

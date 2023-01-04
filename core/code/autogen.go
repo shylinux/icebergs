@@ -55,7 +55,7 @@ func _autogen_version(m *ice.Message) {
 		m.Cmd(cli.SYSTEM, GIT, "remote", "add", "origin", "https://"+mod)
 		m.Cmd(cli.SYSTEM, GIT, "add", ice.GO_MOD, ice.SRC, ice.ETC_MISS_SH)
 		m.Cmd(nfs.DEFS, ".gitignore", _git_ignore)
-		m.Cmd("web.code.git.repos", mdb.CREATE, nfs.REPOS, "https://"+mod, mdb.NAME, path.Base(mod), nfs.PATH, nfs.PWD)
+		m.Cmd("web.code.git.repos", mdb.CREATE, nfs.ORIGIN, "https://"+mod, mdb.NAME, path.Base(mod), nfs.PATH, nfs.PWD)
 	}
 	m.Cmd(nfs.DEFS, ice.SRC_BINPACK_GO, `package main`+ice.NL)
 	m.Cmd(nfs.SAVE, ice.SRC_VERSION_GO, kit.Format(_version_template, _autogen_gits(m, nfs.MODULE, _autogen_mod(m, ice.GO_MOD), tcp.HOSTNAME, ice.Info.Hostname, aaa.USERNAME, ice.Info.Username)))

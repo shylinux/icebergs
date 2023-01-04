@@ -38,7 +38,7 @@ func init() {
 			if m.Option(ice.MSG_STORM) == "" {
 				m.Cmdy(mdb.SELECT, RIVER, _river_key(m), mdb.HASH, ice.OptionFields("time,hash,name,text,count"))
 			} else if len(arg) == 0 || kit.Int(arg[0]) > 0 {
-				m.Cmdy(mdb.SELECT, RIVER, _storm_key(m), mdb.LIST, mdb.ID, arg, ice.OptionFields("time,id,space,index,args,style,display"))
+				m.Cmdy(mdb.SELECT, RIVER, _storm_key(m), mdb.LIST, mdb.ID, arg, ice.OptionFields("time,id,space,index,args,style,display")).SortInt(mdb.ID)
 			} else if aaa.Right(m, arg) {
 				m.Push(ctx.INDEX, arg[0])
 			}

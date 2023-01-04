@@ -60,6 +60,7 @@ func _command_search(m *ice.Message, kind, name, text string) {
 			mdb.HELP, cmd.Help, nfs.FILE, FileURI(cmd.GetFileLines()),
 		)
 	})
+	m.Sort(m.OptionFields())
 }
 
 const (

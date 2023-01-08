@@ -2,13 +2,13 @@ package chat
 
 import (
 	"path"
-	"strings"
 
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/aaa"
 	"shylinux.com/x/icebergs/base/cli"
 	"shylinux.com/x/icebergs/base/ctx"
 	"shylinux.com/x/icebergs/base/mdb"
+	"shylinux.com/x/icebergs/base/nfs"
 	"shylinux.com/x/icebergs/base/web"
 	kit "shylinux.com/x/toolkits"
 )
@@ -31,7 +31,7 @@ func init() {
 			if len(arg) == 0 || kit.Select("", arg, 0) == "" {
 				web.RenderCmd(m, web.SPACE)
 			} else if len(arg) == 1 {
-				if m.Cmd(web.SPACE, arg[0]).Length() == 0 && !strings.Contains(arg[0], ice.PT) {
+				if m.Cmd(web.SPACE, arg[0]).Length() == 0 && nfs.ExistsFile(m, path.Join(ice.USR_LOCAL_WORK, arg[0])) {
 					m.Cmd(web.DREAM, cli.START, kit.Dict(mdb.NAME, arg[0]))
 				}
 				web.RenderMain(aaa.UserRoot(m), arg[0], "")

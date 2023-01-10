@@ -89,11 +89,17 @@ func _repos_commit(m *ice.Message, dir, branch string, cb func(*gogit.Commit, *g
 	}
 }
 func _repos_dir(m *ice.Message, dir, branch, commit, file string, cb func(*gogit.TreeEntry, *gogit.Repository) bool) {
-	if commit == cli.PWD {
+	if commit == cli.PWD && strings.HasPrefix(dir, ".git") {
 		nfs.DirDeepAll(m, path.Dir(dir), file, nil, "time,line,path")
 		m.Option(cli.CMD_DIR, path.Dir(dir))
 		m.Echo(_git_cmds(m, DIFF))
 		return
+	} else if commit == cli.PWD {
+		if repos, e := gogit.OpenRepository(dir); !m.Warn(e, ice.ErrNotFound, dir) {
+			if refer, e := repos.LookupReference(REFS_HEADS + branch); !m.Warn(e, ice.ErrNotFound, branch) {
+				commit = refer.Oid.String()
+			}
+		}
 	} else if file == nfs.PWD {
 		file = ""
 	}
@@ -114,10 +120,15 @@ func _repos_dir(m *ice.Message, dir, branch, commit, file string, cb func(*gogit
 		}
 		if tree, e := repos.LookupTree(ci.TreeId()); !m.Warn(e, ice.ErrNotValid, ci.TreeId().String) {
 			m.Logs(mdb.SELECT, REPOS, dir, BRANCH, branch, COMMIT, commit, "tree", tree.Oid.Short())
+			m.Logs("what", file, file)
 			tree.Walk(func(p string, v *gogit.TreeEntry) bool {
 				if pp := path.Join(p, v.Name) + kit.Select("", ice.PS, v.Type == gogit.ObjectTree); strings.HasPrefix(pp, file) {
+					m.Logs("what", file, pp)
 					if cb == nil {
-						if v.Type == gogit.ObjectTree {
+						m.Logs("what", file, pp)
+						if path.Dir(file) != path.Dir(pp) {
+
+						} else if v.Type == gogit.ObjectTree {
 
 						} else if id, ok := prev[pp]; ok && id == v.Oid.String() {
 							if m.Option("_index") == web.CODE_INNER {
@@ -130,13 +141,20 @@ func _repos_dir(m *ice.Message, dir, branch, commit, file string, cb func(*gogit
 						}
 						delete(prev, pp)
 					} else if cb(v, repos) {
+						m.Logs("what", file, pp)
 						return true
 					}
 				}
 				return false
 			})
 		}
-		kit.Fetch(prev, func(pp, id string) { m.Push(mdb.HASH, id[:6]).Push(nfs.PATH, pp).Push(mdb.STATUS, "---") })
+		kit.Fetch(prev, func(pp, id string) {
+			m.Logs("what", path.Dir(file), path.Dir(pp))
+			if path.Dir(file) != path.Dir(pp) {
+				return
+			}
+			m.Push(mdb.HASH, id[:6]).Push(nfs.PATH, pp).Push(mdb.STATUS, "---")
+		})
 		if m.Sort(kit.Fields(mdb.STATUS, nfs.PATH), ice.STR_R, ice.STR); cb == nil {
 			m.Option(cli.CMD_DIR, dir)
 			m.Echo(_git_cmds(m, DIFF, ci.Oid.String()+"^", ci.Oid.String()))
@@ -146,9 +164,15 @@ func _repos_dir(m *ice.Message, dir, branch, commit, file string, cb func(*gogit
 	})
 }
 func _repos_cat(m *ice.Message, dir, branch, commit, file string) {
-	if commit == cli.PWD {
+	if commit == cli.PWD && strings.HasPrefix(dir, ".git") {
 		m.Cmdy(nfs.CAT, path.Join(path.Dir(dir), file))
 		return
+	} else if commit == cli.PWD {
+		if repos, e := gogit.OpenRepository(dir); !m.Warn(e, ice.ErrNotFound, dir) {
+			if refer, e := repos.LookupReference(REFS_HEADS + branch); !m.Warn(e, ice.ErrNotFound, branch) {
+				commit = refer.Oid.String()
+			}
+		}
 	}
 	_repos_dir(m, dir, branch, commit, file, func(v *gogit.TreeEntry, repos *gogit.Repository) bool {
 		if blob, e := repos.LookupBlob(v.Oid); e == nil {

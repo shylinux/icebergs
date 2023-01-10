@@ -92,7 +92,13 @@ const (
 const SERVER = "server"
 
 func init() {
-	web.Index.MergeCommands(ice.Commands{"/x/": {Actions: aaa.WhiteAction(), Hand: func(m *ice.Message, arg ...string) {
+	web.Index.MergeCommands(ice.Commands{"/x/": {Actions: ice.MergeActions(ctx.CmdAction(), aaa.WhiteAction()), Hand: func(m *ice.Message, arg ...string) {
+		if !m.IsCliUA() {
+			web.RenderCmds(m,
+				kit.Dict(ctx.DISPLAY, "/plugin/local/code/repos.js", ctx.INDEX, "web.code.git.inner", ctx.ARGS, kit.List(strings.TrimSuffix(arg[0], ".git"), kit.Select("master", arg, 1), "pwd", kit.Select("README.md", path.Join(kit.Slice(arg, 2)...)))),
+			)
+			return
+		}
 		if m.RenderVoid(); m.Option("go-get") == "1" {
 			p := _git_url(m, path.Join(arg...))
 			m.RenderResult(kit.Format(`<meta name="go-import" content="%s">`, kit.Format(`%s git %s`, strings.TrimSuffix(strings.Split(p, "://")[1], ".git"), p)))
@@ -115,6 +121,17 @@ func init() {
 		m.Warn(_server_repos(m, arg...), ice.ErrNotValid)
 	}}})
 	Index.MergeCommands(ice.Commands{
+		"inner": {Name: "inner repos branch commit path auto", Help: "服务器", Actions: ice.MergeActions(ice.Actions{}), Hand: func(m *ice.Message, arg ...string) {
+			if m.Option(nfs.DIR_ROOT, ice.USR_LOCAL_REPOS); len(arg) == 0 {
+			} else if dir := path.Join(m.Option(nfs.DIR_ROOT), arg[0]); len(arg) == 1 {
+			} else if len(arg) == 2 {
+			} else if len(arg) == 3 || strings.HasSuffix(arg[3], "/") {
+				_repos_dir(m, dir, arg[1], arg[2], kit.Select("", arg, 3), nil)
+			} else {
+				m.Option("file", kit.Select("", arg, 3))
+				_repos_cat(m, dir, arg[1], arg[2], kit.Select("", arg, 3))
+			}
+		}},
 		SERVER: {Name: "server repos branch commit path auto create import", Help: "服务器", Actions: ice.MergeActions(ice.Actions{
 			mdb.CREATE: {Name: "create name*", Hand: func(m *ice.Message, arg ...string) {
 				_repos_init(m, path.Join(ice.USR_LOCAL_REPOS, m.Option(mdb.NAME)))

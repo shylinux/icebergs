@@ -89,9 +89,16 @@ func init() {
 				if m.Option(nfs.CONTENT) == "" {
 					m.Option(nfs.CONTENT, m.Cmdx("", TEMPLATE))
 				}
-				switch m.Cmdy(nfs.SAVE, path.Join(m.Option(nfs.PATH), m.Option(nfs.FILE))); m.Option(nfs.FILE) {
+				p := path.Join(m.Option(nfs.PATH), m.Option(nfs.FILE))
+				switch m.Cmd(nfs.SAVE, p); m.Option(nfs.FILE) {
 				case "proto.js", "page/index.css":
 					m.Cmd("", DEVPACK)
+				}
+				switch arg[0] {
+				case nfs.GO:
+					m.Cmd(cli.SYSTEM, "gofmt", "-w", p)
+					m.Cmd(cli.SYSTEM, "goimports", "-w", p)
+					m.Cmdy(nfs.CAT, p)
 				}
 			}},
 			nfs.TRASH: {Hand: func(m *ice.Message, arg ...string) { nfs.Trash(m, arg[0]) }},

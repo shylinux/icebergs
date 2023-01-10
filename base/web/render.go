@@ -167,15 +167,16 @@ func RenderMain(m *ice.Message, pod, index string, arg ...ice.Any) *ice.Message 
 func RenderCmd(m *ice.Message, cmd string, arg ...ice.Any) {
 	RenderPodCmd(m, "", cmd, arg...)
 }
+func RenderCmds(m *ice.Message, list ...ice.Any) {
+	m.Echo(kit.Renders(_cmd_template, ice.Maps{"version": renderVersion(m), "list": kit.Format(list)})).RenderResult()
+}
 func RenderPodCmd(m *ice.Message, pod, cmd string, arg ...ice.Any) {
 	msg := m.Cmd(Space(m, pod), ctx.COMMAND, kit.Select("web.wiki.word", cmd))
 	list := kit.Format(kit.List(kit.Dict(msg.AppendSimple(mdb.NAME, mdb.HELP),
 		ctx.INDEX, cmd, ctx.ARGS, kit.Simple(arg), ctx.DISPLAY, m.Option(ice.MSG_DISPLAY),
 		mdb.LIST, kit.UnMarshal(msg.Append(mdb.LIST)), mdb.META, kit.UnMarshal(msg.Append(mdb.META)),
 	)))
-	m.Echo(kit.Renders(_cmd_template, ice.Maps{
-		"version": renderVersion(m), "list": list,
-	})).RenderResult()
+	m.Echo(kit.Renders(_cmd_template, ice.Maps{"version": renderVersion(m), "list": list})).RenderResult()
 }
 func renderVersion(m *ice.Message) string {
 	if strings.Contains(m.R.URL.RawQuery, "debug=true") {

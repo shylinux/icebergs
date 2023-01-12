@@ -89,8 +89,8 @@ func _qrcode_web(m *ice.Message, text string) {
 }
 
 const (
-	FG    = "fg"
 	BG    = "bg"
+	FG    = "fg"
 	DARK  = 255
 	LIGHT = 127
 	SIZE  = "size"
@@ -98,16 +98,16 @@ const (
 const (
 	COLOR  = "color"
 	BLACK  = "black"
-	RED    = "red"
-	GREEN  = "green"
-	YELLOW = "yellow"
-	BLUE   = "blue"
-	PURPLE = "purple"
-	CYAN   = "cyan"
 	WHITE  = "white"
+	BLUE   = "blue"
+	RED    = "red"
+	GRAY   = "gray"
+	CYAN   = "cyan"
+	GREEN  = "green"
+	PURPLE = "purple"
+	YELLOW = "yellow"
 	RANDOM = "random"
 	GLASS  = "#0000"
-	GRAY   = "gray"
 )
 const QRCODE = "qrcode"
 
@@ -122,7 +122,7 @@ func init() {
 			mdb.INPUTS: {Hand: func(m *ice.Message, arg ...string) {
 				switch arg[0] {
 				case FG, BG:
-					m.Push(arg[0], RED, GREEN, BLUE)
+					m.Push(arg[0], BLACK, WHITE, BLUE, RED, CYAN, GREEN, PURPLE, YELLOW)
 				}
 			}},
 		}, Hand: func(m *ice.Message, arg ...string) {

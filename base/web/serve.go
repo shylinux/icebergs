@@ -93,7 +93,7 @@ func _serve_handle(key string, cmd *ice.Command, m *ice.Message, w http.Response
 		})
 	}
 	kit.Fetch(r.Cookies(), func(k, v string) { m.Optionv(k, v) })
-	m.OptionDefault(ice.HEIGHT, "480", ice.WIDTH, "320")
+	m.OptionDefault(ice.MSG_HEIGHT, "480", ice.MSG_WIDTH, "320")
 	m.Option(ice.MSG_USERUA, r.Header.Get(UserAgent))
 	m.Option(ice.MSG_USERIP, r.Header.Get(ice.MSG_USERIP))
 	m.Option(ice.MSG_USERADDR, kit.Select(r.RemoteAddr, r.Header.Get(ice.MSG_USERADDR)))

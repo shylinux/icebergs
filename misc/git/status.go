@@ -112,6 +112,7 @@ func _status_stat(m *ice.Message, files, adds, dels int) (int, int, int) {
 	return files, adds, dels
 }
 func _status_list(m *ice.Message) (files, adds, dels int, last time.Time) {
+	onlychange := m.Option("view") == "change"
 	ReposList(m).Tables(func(value ice.Maps) {
 		m.Option(cli.CMD_DIR, value[nfs.PATH])
 		files, adds, dels = _status_stat(m, files, adds, dels)
@@ -124,6 +125,9 @@ func _status_list(m *ice.Message) (files, adds, dels int, last time.Time) {
 		kit.SplitKV(ice.SP, ice.NL, _git_cmds(m, STATUS, "-sb"), func(text string, ls []string) {
 			switch kit.Ext(ls[1]) {
 			case "swp", "swo", ice.BIN, ice.VAR:
+				return
+			}
+			if onlychange && ls[0] == "##" {
 				return
 			}
 			switch m.Push(REPOS, value[REPOS]).Push(mdb.TYPE, ls[0]).Push(nfs.FILE, ls[1]); ls[0] {
@@ -241,6 +245,8 @@ func init() {
 						m.Push(BRANCH, strings.TrimSpace(line)).PushButton("branch_switch")
 					}
 				}
+			}},
+			"change": {Help: "变更", Hand: func(m *ice.Message, arg ...string) {
 			}},
 			"branch_switch": {Help: "切换", Hand: func(m *ice.Message, arg ...string) {
 				_repos_cmd(m, m.Option(REPOS), "checkout", m.Option(BRANCH))

@@ -23,7 +23,7 @@ func _publish(m *ice.Message, file ...string) string {
 }
 func _webpack_can(m *ice.Message) {
 	m.Option(nfs.DIR_ROOT, "")
-	m.Cmd(nfs.COPY, _volcanos(m, PAGE_CAN_CSS), _volcanos(m, PAGE_INDEX_CSS), _volcanos(m, PAGE_CACHE_CSS))
+	m.Cmd(nfs.COPY, _volcanos(m, PAGE_CAN_CSS), _volcanos(m, ice.INDEX_CSS), _volcanos(m, PAGE_CACHE_CSS))
 	m.Cmd(nfs.COPY, _volcanos(m, PAGE_CAN_JS), _volcanos(m, ice.PROTO_JS), _volcanos(m, PAGE_CACHE_JS))
 	m.Cmdy(nfs.DIR, _volcanos(m, PAGE))
 }
@@ -104,7 +104,7 @@ func _webpack_build(m *ice.Message, file string) {
 			main_js = ice.SRC_MAIN_JS
 		}
 		fmt.Fprintf(f, _webpack_template,
-			m.Cmdx(nfs.CAT, _volcanos(m, PAGE_INDEX_CSS)), m.Cmdx(nfs.CAT, _volcanos(m, PAGE_CACHE_CSS)),
+			m.Cmdx(nfs.CAT, _volcanos(m, ice.INDEX_CSS)), m.Cmdx(nfs.CAT, _volcanos(m, PAGE_CACHE_CSS)),
 			m.Cmdx(nfs.CAT, _volcanos(m, ice.PROTO_JS)), m.Cmdx(nfs.CAT, kit.Keys(file, JS)),
 			m.Cmdx(nfs.CAT, _volcanos(m, PAGE_CACHE_JS)), m.Cmdx(nfs.CAT, main_js),
 		)
@@ -118,7 +118,6 @@ const (
 	PLUGIN = "plugin"
 )
 const (
-	PAGE_INDEX_CSS = "page/index.css"
 	PAGE_CACHE_CSS = "page/cache.css"
 	PAGE_INDEX_JS  = "page/index.js"
 	PAGE_CACHE_JS  = "page/cache.js"

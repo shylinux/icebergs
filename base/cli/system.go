@@ -160,7 +160,7 @@ func init() {
 				if len(arg) == 1 {
 					arg = append(arg, "")
 				}
-				m.Option(CMD_ENV, "COLUMNS", kit.Int(kit.Select("1920", m.Option(ice.WIDTH)))/12)
+				m.Option(CMD_ENV, "COLUMNS", kit.Int(kit.Select("1920", m.Option(ice.MSG_WIDTH)))/12)
 				m.Echo(SystemCmds(m, "man %s %s|col -b", kit.Select("", arg[1], arg[1] != "1"), arg[0]))
 			}},
 		}, mdb.HashAction(mdb.SHORT, "cmd", mdb.FIELD, "time,cmd,arg")), Hand: func(m *ice.Message, arg ...string) {

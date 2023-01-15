@@ -91,7 +91,7 @@ func init() {
 				}
 				p := path.Join(m.Option(nfs.PATH), m.Option(nfs.FILE))
 				switch m.Cmd(nfs.SAVE, p); m.Option(nfs.FILE) {
-				case "proto.js", "page/index.css":
+				case "index.css", "proto.js":
 					m.Cmd("", DEVPACK)
 				}
 				switch arg[0] {
@@ -110,6 +110,24 @@ func init() {
 			}},
 			web.DREAM: {Name: "dream name*=hi repos", Help: "空间", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmdy(web.DREAM, cli.START, arg)
+			}},
+			nfs.REPOS: {Name: "repos", Help: "仓库", Hand: func(m *ice.Message, arg ...string) {
+				m.Option("view", "change")
+				m.Cmd("web.code.git.status", func(value ice.Maps) {
+					m.Push(mdb.TYPE, value[mdb.TYPE])
+					if value[nfs.REPOS] == path.Base(kit.Path("")) {
+						if ls := kit.Split(value[nfs.FILE]); len(ls) == 1 {
+							m.Push(nfs.PATH, "./")
+							m.Push(nfs.FILE, ls[0])
+						} else {
+							m.Push(nfs.PATH, ls[0]+ice.PS)
+							m.Push(nfs.FILE, path.Join(ls[1:]...))
+						}
+					} else {
+						m.Push(nfs.PATH, path.Join(ice.USR, value[nfs.REPOS])+ice.PS)
+						m.Push(nfs.FILE, value[nfs.FILE])
+					}
+				})
 			}},
 			"_open": {Help: "打开", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmd(cli.DAEMON, cli.OPEN, "-a", kit.Split(arg[0], ice.PT, ice.PT)[0])

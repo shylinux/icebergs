@@ -81,9 +81,9 @@ var _div_template = `<!DOCTYPE html>
 	<meta name="viewport" content="width=device-width,initial-scale=0.8,maximum-scale=0.8,user-scalable=no"/>
 	<meta charset="utf-8">
 	<title>volcanos</title>
-	<link rel="shortcut icon" type="image/ico" href="/favicon.ico">
+	<link rel="stylesheet" type="text/css" href="/index.css">
 	<link rel="stylesheet" type="text/css" href="/page/cache.css">
-	<link rel="stylesheet" type="text/css" href="/page/index.css">
+	<link rel="shortcut icon" type="image/ico" href="/page/favicon.ico">
   <style type="text/css">%s</style>
 </head>
 <body>
@@ -97,9 +97,9 @@ var _div_template2 = `<!DOCTYPE html>
 	<meta name="viewport" content="width=device-width,initial-scale=0.8,maximum-scale=0.8,user-scalable=no"/>
 	<meta charset="utf-8">
 	<title>volcanos</title>
-	<link rel="shortcut icon" type="image/ico" href="/favicon.ico">
+	<link rel="stylesheet" type="text/css" href="/index.css">
 	<link rel="stylesheet" type="text/css" href="/page/cache.css">
-	<link rel="stylesheet" type="text/css" href="/page/index.css">
+	<link rel="shortcut icon" type="image/ico" href="/page/favicon.ico">
 </head>
 <body>
 	<script src="/proto.js"></script>

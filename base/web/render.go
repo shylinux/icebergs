@@ -189,9 +189,9 @@ var _main_template = `<!DOCTYPE html>
 <head>
 	<meta name="viewport" content="width=device-width,initial-scale=0.8,maximum-scale=0.8,user-scalable=no">
 	<meta charset="utf-8"><title>volcanos</title>
-	<link href="/favicon.ico" rel="shortcut icon" type="image/ico">
+	<link href="/index.css{{.version}}" rel="stylesheet">
 	<link href="/page/cache.css{{.version}}" rel="stylesheet">
-	<link href="/page/index.css{{.version}}" rel="stylesheet">
+	<link href="/page/favicon.ico" rel="shortcut icon" type="image/ico">
 </head>
 <body>
 	<script>_version = "{{.version}}"</script>

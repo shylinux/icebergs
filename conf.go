@@ -85,11 +85,13 @@ const ( // DIR
 	PLUGIN = "plugin"
 	STORY  = "story"
 
-	FAVICON_ICO = "favicon.ico"
-	PROTO_JS    = "proto.js"
-	FRAME_JS    = "frame.js"
-	INDEX_JS    = "index.js"
-	INDEX_SH    = "index.sh"
+	PAGE_FAVICON_ICO = "page/favicon.ico"
+
+	INDEX_CSS = "index.css"
+	PROTO_JS  = "proto.js"
+	FRAME_JS  = "frame.js"
+	INDEX_JS  = "index.js"
+	INDEX_SH  = "index.sh"
 
 	PLUGIN_INPUT = "/plugin/input/"
 	PLUGIN_STORY = "/plugin/story/"
@@ -165,7 +167,6 @@ const ( // MSG
 	MSG_TARGET = "_target"
 	MSG_HANDLE = "_handle"
 	MSG_UPLOAD = "_upload"
-	MSG_DAEMON = "_daemon"
 	MSG_ACTION = "_action"
 	MSG_STATUS = "_status"
 
@@ -195,6 +196,9 @@ const ( // MSG
 	MSG_TOPIC   = "sess.topic"
 	MSG_RIVER   = "sess.river"
 	MSG_STORM   = "sess.storm"
+	MSG_WIDTH   = "sess.width"
+	MSG_HEIGHT  = "sess.height"
+	MSG_DAEMON  = "sess.daemon"
 	MSG_FILES   = "file.system"
 	LOG_DISABLE = "log.disable"
 
@@ -287,10 +291,8 @@ const ( // web
 	SERVE = "serve"
 	SPACE = "space"
 
-	TOPIC  = "topic"
-	TITLE  = "title"
-	WIDTH  = "width"
-	HEIGHT = "height"
+	TOPIC = "topic"
+	TITLE = "title"
 )
 const ( // nfs
 	SOURCE = "source"

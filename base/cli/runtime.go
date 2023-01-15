@@ -149,7 +149,7 @@ const RUNTIME = "runtime"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
-		RUNTIME: {Name: "runtime info=ifconfig,hostinfo,hostname,userinfo,procinfo,diskinfo,bootinfo,api,cli,cmd,env,chain auto", Help: "运行环境", Actions: ice.MergeActions(ice.Actions{
+		RUNTIME: {Name: "runtime info=bootinfo,ifconfig,hostinfo,hostname,userinfo,procinfo,diskinfo,api,cli,cmd,env,chain auto", Help: "运行环境", Actions: ice.MergeActions(ice.Actions{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) { _runtime_init(m) }},
 			ice.CTX_EXIT: {Hand: func(m *ice.Message, arg ...string) { m.Conf("", "", nil) }},
 			IFCONFIG:     {Hand: func(m *ice.Message, arg ...string) { m.Cmdy("tcp.host") }},

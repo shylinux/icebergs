@@ -206,6 +206,7 @@ var _cmd_template = `<!DOCTYPE html>
 	<meta name="viewport" content="width=device-width,initial-scale=0.8,maximum-scale=0.8,user-scalable=no">
 	<meta charset="utf-8"><title>volcanos</title>
 	<link href="/page/can.css{{.version}}" rel="stylesheet">
+	<link href="/page/favicon.ico" rel="shortcut icon" type="image/ico">
 </head>
 <body>
 	<script>_version = "{{.version}}"</script>

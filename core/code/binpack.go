@@ -39,7 +39,7 @@ func _binpack_dir(m *ice.Message, w io.Writer, dir string) {
 }
 
 func _binpack_can(m *ice.Message, w io.Writer, dir string) {
-	for _, k := range []string{ice.PAGE_FAVICON_ICO, ice.PROTO_JS, ice.FRAME_JS} {
+	for _, k := range []string{ice.INDEX_CSS, ice.PROTO_JS, ice.FRAME_JS} {
 		_binpack_file(m, w, path.Join(dir, k))
 	}
 	for _, k := range []string{LIB, PAGE, PANEL, PLUGIN, "publish/client/nodejs/"} {

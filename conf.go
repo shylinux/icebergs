@@ -85,19 +85,19 @@ const ( // DIR
 	PLUGIN = "plugin"
 	STORY  = "story"
 
-	PAGE_FAVICON_ICO = "page/favicon.ico"
-
 	INDEX_CSS = "index.css"
 	PROTO_JS  = "proto.js"
 	FRAME_JS  = "frame.js"
 	INDEX_JS  = "index.js"
 	INDEX_SH  = "index.sh"
 
-	PLUGIN_INPUT = "/plugin/input/"
-	PLUGIN_STORY = "/plugin/story/"
-	PLUGIN_LOCAL = "/plugin/local/"
-	NODE_MODULES = "node_modules/"
-	ISH_PLUGED   = ".ish/pluged/"
+	PAGE_FAVICON_ICO = "page/favicon.ico"
+	PLUGIN_INPUT     = "/plugin/input/"
+	PLUGIN_STORY     = "/plugin/story/"
+	PLUGIN_LOCAL     = "/plugin/local/"
+	NODE_MODULES     = "node_modules/"
+	ISH_PLUGED       = ".ish/pluged/"
+	CAN_PLUGIN       = "can._plugin"
 
 	USR_VOLCANOS = "usr/volcanos/"
 	USR_LEARNING = "usr/learning/"

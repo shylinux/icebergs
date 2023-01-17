@@ -27,7 +27,7 @@ func _command_list(m *ice.Message, name string) *ice.Message {
 			name = GetFileCmd(name)
 		case nfs.JS:
 			m.Push(DISPLAY, FileURI(name))
-			name = kit.Select(CAN_PLUGIN, GetFileCmd(name))
+			name = kit.Select(ice.CAN_PLUGIN, GetFileCmd(name))
 		default:
 			if msg := m.Cmd(mdb.RENDER, kit.Ext(name)); msg.Length() > 0 {
 				m.Push(ARGS, kit.Format(kit.List(name)))
@@ -36,7 +36,7 @@ func _command_list(m *ice.Message, name string) *ice.Message {
 		}
 	}
 	if strings.HasPrefix(name, "can.") {
-		return m.Push(mdb.INDEX, name)
+		return m.Push(mdb.INDEX, name).Push(mdb.NAME, name).Push(mdb.HELP, "").Push(mdb.META, "").Push(mdb.LIST, "")
 	}
 	m.Spawn(m.Source()).Search(name, func(p *ice.Context, s *ice.Context, key string, cmd *ice.Command) {
 		m.Push(mdb.INDEX, kit.Keys(s.Cap(ice.CTX_FOLLOW), key))
@@ -70,8 +70,6 @@ const (
 	DISPLAY = "display"
 	ACTION  = "action"
 	TRANS   = "trans"
-
-	CAN_PLUGIN = "can.plugin"
 )
 const COMMAND = "command"
 

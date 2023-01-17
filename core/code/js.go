@@ -76,7 +76,7 @@ func _js_show(m *ice.Message, arg ...string) {
 func _js_exec(m *ice.Message, arg ...string) {
 	if arg[2] == "usr/volcanos/" && strings.HasPrefix(arg[1], "plugin/local/") {
 		key := "web." + strings.Replace(strings.TrimSuffix(strings.TrimPrefix(arg[1], "plugin/local/"), ".js"), ice.PS, ice.PT, -1)
-		ctx.ProcessCommand(m, kit.Select("can.plugin", key), kit.Simple())
+		ctx.ProcessCommand(m, kit.Select(ice.CAN_PLUGIN, key), kit.Simple())
 		return
 	}
 	ctx.DisplayBase(m, path.Join("/require", path.Join(arg[2], arg[1])))

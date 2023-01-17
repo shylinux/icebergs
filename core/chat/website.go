@@ -55,7 +55,7 @@ func _website_parse(m *ice.Message, text string, args ...string) (ice.Map, bool)
 		data := kit.Dict()
 		switch kit.Ext(ls[0]) {
 		case nfs.JS:
-			ls[0], data[ctx.DISPLAY] = kit.Select(ctx.CAN_PLUGIN, ctx.GetFileCmd(ls[0])), ctx.FileURI(ls[0])
+			ls[0], data[ctx.DISPLAY] = kit.Select(ice.CAN_PLUGIN, ctx.GetFileCmd(ls[0])), ctx.FileURI(ls[0])
 		case nfs.GO:
 			ls[0] = ctx.GetFileCmd(ls[0])
 		case nfs.SHY:

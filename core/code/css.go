@@ -59,7 +59,7 @@ func _css_show(m *ice.Message, arg ...string) {
 func _css_exec(m *ice.Message, arg ...string) {
 	if arg[2] == ice.USR_VOLCANOS && strings.HasPrefix(arg[1], ice.PLUGIN_LOCAL) {
 		key := ctx.GetFileCmd("/require/shylinux.com/x/icebergs/core/" + strings.TrimPrefix(arg[1], ice.PLUGIN_LOCAL))
-		ctx.ProcessCommand(m, kit.Select("can.plugin", key), kit.Simple())
+		ctx.ProcessCommand(m, kit.Select(ice.CAN_PLUGIN, key), kit.Simple())
 		return
 	}
 }

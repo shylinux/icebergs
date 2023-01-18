@@ -50,7 +50,7 @@ const VIMER = "vimer"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
-		VIMER: {Name: "vimer path=src/@key file=main.go line=1 list", Help: "编辑器", Actions: ice.MergeActions(ice.Actions{
+		VIMER: {Name: "vimer path=src/@key file=main.go line=1 list", Help: "编辑器", Meta: kit.Dict(ctx.STYLE, INNER), Actions: ice.MergeActions(ice.Actions{
 			mdb.INPUTS: {Hand: func(m *ice.Message, arg ...string) {
 				switch m.Option(ctx.ACTION) {
 				case web.DREAM, AUTOGEN, XTERM:

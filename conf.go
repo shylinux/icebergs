@@ -192,6 +192,7 @@ const ( // MSG
 	MSG_LANGUAGE = "user.lang"
 	MSG_USERHOST = "user.host"
 
+	MSG_MODE    = "sess.mode"
 	MSG_TITLE   = "sess.title"
 	MSG_TOPIC   = "sess.topic"
 	MSG_RIVER   = "sess.river"

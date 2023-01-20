@@ -40,7 +40,10 @@ func init() {
 				if bin := kit.Select(os.Args[0], ice.BIN_ICE_BIN, nfs.ExistsFile(m, ice.BIN_ICE_BIN)); len(arg) > 0 && arg[0] == ice.SPACE {
 					m.Cmdy(FOREVER, bin, ice.SPACE, "dial", ice.DEV, ice.OPS, arg[1:])
 				} else {
-					m.Cmdy(FOREVER, bin, ice.SERVE, START, ice.DEV, "", arg)
+					if len(arg) == 0 || arg[0] != ice.DEV {
+						arg = append([]string{ice.DEV, ""}, arg...)
+					}
+					m.Cmdy(FOREVER, bin, ice.SERVE, START, arg)
 				}
 			}},
 			RESTART: {Hand: func(m *ice.Message, arg ...string) { m.Cmd(gdb.SIGNAL, gdb.RESTART) }},

@@ -175,6 +175,9 @@ func init() {
 			if strings.HasPrefix(dir, ice.PS) {
 				root = ice.PS
 			}
+			if root == ice.PS && dir == ice.PS {
+				root, dir = PWD, PWD
+			}
 			if !aaa.Right(m, path.Join(root, dir)) {
 				return
 			}

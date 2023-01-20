@@ -163,7 +163,7 @@ func init() {
 			USERINFO: {Hand: func(m *ice.Message, arg ...string) { m.Split(m.Cmdx(SYSTEM, "who"), "user term time") }},
 			PROCINFO: {Hand: func(m *ice.Message, arg ...string) {
 				msg := m.Cmd("", HOSTINFO)
-				m.Split(m.Cmdx(SYSTEM, "ps", "u")).PushAction(PROCKILL).SortIntR("RSS")
+				m.Split(m.Cmdx(SYSTEM, "ps", "u")).PushAction(PROCKILL).Sort("COMMAND")
 				m.StatusTimeCount("nCPU", msg.Append("nCPU"), "MemTotal", msg.Append("MemTotal"), "MemFree", msg.Append("MemFree"))
 			}},
 			PROCKILL: {Help: "结束进程", Hand: func(m *ice.Message, arg ...string) { m.Cmdy(gdb.SIGNAL, gdb.STOP, m.Option("PID")).ProcessRefresh() }},

@@ -80,6 +80,7 @@ const (
 	NAME = kit.MDB_NAME
 	TEXT = kit.MDB_TEXT
 	DATA = kit.MDB_DATA
+	VIEW = kit.MDB_VIEW
 
 	LINK = kit.MDB_LINK
 	FILE = kit.MDB_FILE

@@ -112,7 +112,7 @@ func _status_stat(m *ice.Message, files, adds, dels int) (int, int, int) {
 	return files, adds, dels
 }
 func _status_list(m *ice.Message) (files, adds, dels int, last time.Time) {
-	onlychange := m.Option("view") == "change"
+	onlychange := m.Option(ice.MSG_MODE) == mdb.ZONE || m.Option("view") == "change"
 	ReposList(m).Tables(func(value ice.Maps) {
 		m.Option(cli.CMD_DIR, value[nfs.PATH])
 		files, adds, dels = _status_stat(m, files, adds, dels)
@@ -130,7 +130,11 @@ func _status_list(m *ice.Message) (files, adds, dels int, last time.Time) {
 			if onlychange && ls[0] == "##" {
 				return
 			}
-			switch m.Push(REPOS, value[REPOS]).Push(mdb.TYPE, ls[0]).Push(nfs.FILE, ls[1]); ls[0] {
+			if m.Push(REPOS, value[REPOS]).Push(mdb.TYPE, ls[0]).Push(nfs.FILE, ls[1]); onlychange {
+				m.Push(nfs.PATH, value[nfs.PATH]).Push(mdb.VIEW, kit.Format("%s %s",
+					ls[0]+strings.Repeat(" ", len(ls[0])-9), kit.Select("", ice.USR+ice.PS+value[REPOS]+ice.PS, value[REPOS] != ice.CONTEXTS)+ls[1]))
+			}
+			switch ls[0] {
 			case "##":
 				if m.Push(TAGS, tags); strings.Contains(ls[1], "ahead") || !strings.Contains(ls[1], "...") {
 					m.PushButton(PUSH)

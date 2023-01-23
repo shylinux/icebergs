@@ -63,6 +63,10 @@ func init() {
 					switch arg[0] {
 					case ctx.INDEX:
 						m.Cmdy(ctx.COMMAND, mdb.SEARCH, ctx.COMMAND, ice.OptionFields(ctx.INDEX))
+					case ctx.ARGS:
+						if m.Option(ctx.INDEX) != "" {
+							m.Cmdy(m.Option(ctx.INDEX))
+						}
 					case nfs.PATH:
 						m.Cmdy(INNER, mdb.INPUTS, arg).Cut("path,size,time")
 					case nfs.FILE:
@@ -159,13 +163,18 @@ func init() {
 				m.Cmdy(AUTOGEN, nfs.MODULE, arg)
 			}},
 			COMPILE: {Help: "编译", Hand: func(m *ice.Message, arg ...string) {
+				const app, _app = "usr/publish/contexts.app", "Contents/MacOS/contexts"
+				isWebview := func() bool { return strings.HasSuffix(os.Args[0], _app) }
 				cmds := []string{COMPILE, ice.SRC_MAIN_GO, ice.BIN_ICE_BIN}
-				if strings.HasSuffix(os.Args[0], "contexts.app/Contents/MacOS/contexts") {
-					m.Option(cli.ENV, "CGO_ENABLED", "1", cli.HOME, kit.Env(cli.HOME), cli.PATH, kit.Path("usr/local/go/bin")+ice.DF+kit.Env(cli.PATH))
-					cmds = []string{COMPILE, "src/webview.go", "usr/publish/contexts.app/Contents/MacOS/contexts"}
+				if isWebview() {
+					m.Option(cli.ENV, "CGO_ENABLED", "1", cli.HOME, kit.Env(cli.HOME), cli.PATH, kit.Path(ice.USR_LOCAL_GO_BIN)+ice.DF+kit.Env(cli.PATH))
+					cmds = []string{COMPILE, ice.SRC_WEBVIEW_GO, path.Join(app, _app)}
 				}
 				if msg := m.Cmd(cmds); cli.IsSuccess(msg) {
-					m.Cmd(UPGRADE, cli.RESTART)
+					if isWebview() {
+						m.Go(func() { m.Cmd(cli.SYSTEM, "./bin/ice.bin", cli.FOREVER, cli.DELAY, "300ms", cli.SYSTEM, cli.OPEN, app) })
+					}
+					m.Go(func() { m.Sleep("10ms").Cmd(UPGRADE, cli.RESTART) })
 				} else {
 					_vimer_make(m, nfs.PWD, msg)
 				}

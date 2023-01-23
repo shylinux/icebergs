@@ -86,6 +86,7 @@ const (
 	RELOAD  = "reload"
 	RESTART = "restart"
 
+	DELAY = "delay"
 	BEGIN = "begin"
 	START = "start"
 	OPEN  = "open"

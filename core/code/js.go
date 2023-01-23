@@ -10,6 +10,7 @@ import (
 	"shylinux.com/x/icebergs/base/ctx"
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/nfs"
+	"shylinux.com/x/icebergs/base/web"
 	kit "shylinux.com/x/toolkits"
 )
 
@@ -74,9 +75,13 @@ func _js_show(m *ice.Message, arg ...string) {
 	m.StatusTimeCount()
 }
 func _js_exec(m *ice.Message, arg ...string) {
-	if arg[2] == "usr/volcanos/" && strings.HasPrefix(arg[1], "plugin/local/") {
-		key := "web." + strings.Replace(strings.TrimSuffix(strings.TrimPrefix(arg[1], "plugin/local/"), ".js"), ice.PS, ice.PT, -1)
-		ctx.ProcessCommand(m, kit.Select(ice.CAN_PLUGIN, key), kit.Simple())
+	if arg[2] == ice.USR_VOLCANOS {
+		if strings.HasPrefix(arg[1], "plugin/local/") {
+			key := "web." + strings.Replace(strings.TrimSuffix(strings.TrimPrefix(arg[1], "plugin/local/"), ".js"), ice.PS, ice.PT, -1)
+			ctx.ProcessCommand(m, kit.Select(ice.CAN_PLUGIN, key), kit.Simple())
+		} else {
+			m.EchoIFrame(web.MergeURL2(m, "/chat/cmd/web.code.vimer", "debug", "true"))
+		}
 		return
 	}
 	ctx.DisplayBase(m, path.Join("/require", path.Join(arg[2], arg[1])))

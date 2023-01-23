@@ -144,6 +144,7 @@ const ( // DIR
 	SRC_MAIN_GO    = "src/main.go"
 	SRC_VERSION_GO = "src/version.go"
 	SRC_BINPACK_GO = "src/binpack.go"
+	SRC_WEBVIEW_GO = "src/webview.go"
 	SRC_RELAY_GO   = "src/relay.go"
 	README_MD      = "README.md"
 	MAKEFILE       = "Makefile"

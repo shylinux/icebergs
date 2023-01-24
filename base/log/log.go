@@ -94,7 +94,7 @@ var Index = &ice.Context{Name: LOG, Help: "日志模块", Configs: ice.Configs{
 	FILE: {Name: FILE, Help: "日志文件", Value: kit.Dict(
 		BENCH, kit.Dict(nfs.PATH, path.Join(ice.VAR_LOG, "bench.log"), mdb.LIST, []string{}),
 		WATCH, kit.Dict(nfs.PATH, path.Join(ice.VAR_LOG, "watch.log"), mdb.LIST, []string{
-			mdb.CREATE, mdb.REMOVE, mdb.INSERT, mdb.DELETE, mdb.MODIFY, mdb.SELECT, mdb.EXPORT, mdb.IMPORT,
+			mdb.CREATE, mdb.REMOVE, mdb.INSERT, mdb.DELETE, mdb.MODIFY, mdb.EXPORT, mdb.IMPORT,
 		}),
 		ERROR, kit.Dict(nfs.PATH, path.Join(ice.VAR_LOG, "error.log"), mdb.LIST, []string{ice.LOG_WARN, ice.LOG_ERROR}),
 		TRACE, kit.Dict(nfs.PATH, path.Join(ice.VAR_LOG, "trace.log"), mdb.LIST, []string{ice.LOG_DEBUG}),

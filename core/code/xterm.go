@@ -40,6 +40,8 @@ func _xterm_get(m *ice.Message, h string) _xterm {
 	return mdb.HashSelectTarget(m, h, func() ice.Any {
 		ls := kit.Split(kit.Select(nfs.SH, t))
 		cmd := exec.Command(cli.SystemFind(m, ls[0]), ls[1:]...)
+		cmd.Env = append(cmd.Env, os.Environ()...)
+		cmd.Env = append(cmd.Env, "TERM=xterm")
 		tty, err := pty.Start(cmd)
 		m.Assert(err)
 		m.Go(func() {
@@ -98,7 +100,7 @@ func init() {
 				ctx.ProcessHold(m)
 			}},
 			"proxy": {Help: "代理", Hand: func(m *ice.Message, arg ...string) {
-				_xterm_get(m, kit.Select("", arg, 0)).Write(kit.Format(`git config --global url."%s".insteadOf "https://shylinux.com"`, m.Option(ice.MSG_USERHOST))+ice.NL)
+				_xterm_get(m, kit.Select("", arg, 0)).Write(kit.Format(`git config --global url."%s".insteadOf "https://shylinux.com"`, m.Option(ice.MSG_USERHOST)) + ice.NL)
 				ctx.ProcessHold(m)
 			}},
 			INSTALL: {Help: "安装", Hand: func(m *ice.Message, arg ...string) {
@@ -110,7 +112,6 @@ func init() {
 			if mdb.HashSelect(m, arg...); len(arg) == 0 {
 				m.PushAction(web.WEBSITE, mdb.REMOVE).Action(mdb.CREATE, mdb.PRUNES)
 			} else {
-				ctx.Toolkit(m, FAVOR, "web.chat.iframe")
 				m.Action(INSTALL, "debug", "proxy", "波浪线", "反引号")
 				ctx.DisplayLocal(m, "")
 			}

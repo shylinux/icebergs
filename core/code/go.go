@@ -62,7 +62,8 @@ func _go_exec(m *ice.Message, arg ...string) {
 }
 func _go_show(m *ice.Message, arg ...string) {
 	// TagsList(m, "gotags", path.Join(m.Option(nfs.PATH), m.Option(nfs.FILE)))
-	TagsList(m, "gotags", path.Join(arg[2], arg[1]))
+	// TagsList(m, "gotags", path.Join(arg[2], arg[1]))
+	_go_exec(m, arg...)
 }
 func _mod_show(m *ice.Message, file string) {
 	const (

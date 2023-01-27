@@ -195,7 +195,7 @@ const ( // MSG
 
 	MSG_MODE    = "sess.mode"
 	MSG_TITLE   = "sess.title"
-	MSG_TOPIC   = "sess.topic"
+	MSG_THEME   = "sess.theme"
 	MSG_RIVER   = "sess.river"
 	MSG_STORM   = "sess.storm"
 	MSG_WIDTH   = "sess.width"
@@ -293,7 +293,7 @@ const ( // web
 	SERVE = "serve"
 	SPACE = "space"
 
-	TOPIC = "topic"
+	THEME = "theme"
 	TITLE = "title"
 )
 const ( // nfs

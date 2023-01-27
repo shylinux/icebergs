@@ -81,7 +81,7 @@ func _share_proxy(m *ice.Message) {
 }
 
 const (
-	TOPIC = "topic"
+	THEME = "tospic"
 	LOGIN = "login"
 	RIVER = "river"
 	STORM = "storm"

@@ -45,7 +45,7 @@ func _action_share(m *ice.Message, arg ...string) {
 	case web.STORM:
 		if len(arg) == 1 {
 			m.Push(TITLE, msg.Append(TITLE))
-			m.Push(TOPIC, msg.Append(TOPIC))
+			m.Push(THEME, msg.Append(THEME))
 			_action_list(m, msg.Append(web.RIVER), msg.Append(web.STORM))
 			break
 		}
@@ -53,7 +53,7 @@ func _action_share(m *ice.Message, arg ...string) {
 	case web.FIELD:
 		if len(arg) == 1 {
 			m.Push(TITLE, msg.Append(TITLE))
-			m.Push(TOPIC, msg.Append(TOPIC))
+			m.Push(THEME, msg.Append(THEME))
 			m.Push(ctx.ARGS, msg.Append(mdb.TEXT))
 			m.Cmdy(ctx.COMMAND, msg.Append(mdb.NAME))
 			break

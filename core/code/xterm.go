@@ -84,8 +84,8 @@ func init() {
 					m.Push(arg[0], ice.Info.Hostname, path.Base(m.Option(mdb.TYPE)))
 				}
 			}},
-			mdb.CREATE: {Name: "create type=sh name text", Hand: func(m *ice.Message, arg ...string) {
-				mdb.HashCreate(m, mdb.NAME, kit.Split(m.Option(mdb.TYPE))[0], m.OptionSimple(mdb.TYPE, mdb.NAME, mdb.TEXT))
+			mdb.CREATE: {Name: "create type=sh name text theme:textarea", Hand: func(m *ice.Message, arg ...string) {
+				mdb.HashCreate(m, mdb.NAME, kit.Split(m.Option(mdb.TYPE))[0], m.OptionSimple(mdb.TYPE, mdb.NAME, mdb.TEXT, "theme"))
 			}},
 			"resize": {Hand: func(m *ice.Message, arg ...string) {
 				_xterm_get(m, "").Setsize(m.OptionDefault("rows", "24"), m.OptionDefault("cols", "80"))
@@ -108,7 +108,7 @@ func init() {
 				ctx.ProcessHold(m)
 			}},
 			web.WEBSITE: {Help: "网页", Hand: func(m *ice.Message, arg ...string) { web.ProcessWebsite(m, "", "", m.OptionSimple(mdb.HASH)) }},
-		}, mdb.HashAction(mdb.FIELD, "time,hash,type,name,text,view", mdb.TOOLS, FAVOR), ctx.CmdAction(), ctx.ProcessAction()), Hand: func(m *ice.Message, arg ...string) {
+		}, mdb.HashAction(mdb.FIELD, "time,hash,type,name,text,view,theme", mdb.TOOLS, FAVOR), ctx.CmdAction(), ctx.ProcessAction()), Hand: func(m *ice.Message, arg ...string) {
 			if mdb.HashSelect(m, arg...); len(arg) == 0 {
 				m.PushAction(web.WEBSITE, mdb.REMOVE).Action(mdb.CREATE, mdb.PRUNES)
 			} else {

@@ -65,6 +65,7 @@ const HEADER = "header"
 func init() {
 	Index.MergeCommands(ice.Commands{
 		web.P(HEADER): {Name: "/header", Help: "标题栏", Actions: ice.MergeActions(ice.Actions{
+			mdb.INPUTS: {Hand: func(m *ice.Message, arg ...string) {}},
 			aaa.LOGIN: {Hand: func(m *ice.Message, arg ...string) {
 				if len(arg) > 1 && aaa.UserLogin(m, arg[0], arg[1]) {
 					web.RenderCookie(m, aaa.SessCreate(m, arg[0]))

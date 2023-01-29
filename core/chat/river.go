@@ -20,7 +20,7 @@ func _river_list(m *ice.Message) {
 	if m.Option(web.SHARE) != "" {
 		switch msg := m.Cmd(web.SHARE, m.Option(web.SHARE)); msg.Append(mdb.TYPE) {
 		case web.STORM, web.FIELD:
-			m.Option(ice.MSG_RIVER, "_share")
+			m.Option(ice.MSG_RIVER, web.SHARE)
 			return
 		}
 	}

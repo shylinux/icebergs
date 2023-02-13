@@ -2,6 +2,7 @@ package ice
 
 import (
 	"os"
+	"runtime"
 	"strings"
 	"time"
 
@@ -100,6 +101,9 @@ func Run(arg ...string) string {
 	if Pulse._cmd == nil {
 		Pulse._cmd = &Command{RawHand: logs.FileLines(3)}
 	}
+	if len(arg) == 0 && runtime.GOOS == "windows" {
+		arg = append(arg, "serve", "start")
+	}
 	switch Index.Merge(Index).Begin(Pulse, arg...); kit.Select("", arg, 0) {
 	case SERVE, SPACE:
 		if Index.Start(Pulse, arg...) {
@@ -107,7 +111,9 @@ func Run(arg ...string) string {
 			os.Exit(kit.Int(Pulse.Option(EXIT)))
 		}
 	default:
-		if logs.Disable(true); len(arg) == 0 {
+		if runtime.GOOS == "windows" {
+
+		} else if logs.Disable(true); len(arg) == 0 {
 			arg = append(arg, HELP)
 		}
 		if Pulse.Cmd(INIT).Cmdy(arg); strings.TrimSpace(Pulse.Result()) == "" {

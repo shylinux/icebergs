@@ -41,7 +41,12 @@ func (f *Frame) prompt(m *ice.Message, list ...string) *Frame {
 	if len(list) == 0 {
 		list = append(list, f.ps1...)
 	}
-	fmt.Fprintf(f.stdout, "\r\033[2K")
+	if ice.Info.Colors {
+		fmt.Fprintf(f.stdout, "\r\033[2K")
+	} else {
+		fmt.Fprintf(f.stdout, "\r")
+	}
+
 	for _, v := range list {
 		switch v {
 		case mdb.COUNT:

@@ -103,7 +103,11 @@ func _dir_list(m *ice.Message, root string, dir string, level int, deep bool, di
 					}
 					m.Push(mdb.HASH, kit.Select(h[:6], h[:], field == mdb.HASH))
 				case mdb.LINK:
-					m.PushDownload(mdb.LINK, kit.Select("", f.Name(), !isDir), p)
+					if strings.Contains(p, "ice.windows.") {
+						m.PushDownload(mdb.LINK, kit.Select("", f.Name(), !isDir)+".exe", p)
+					} else {
+						m.PushDownload(mdb.LINK, kit.Select("", f.Name(), !isDir), p)
+					}
 				case mdb.SHOW:
 					switch p := kit.MergeURL("/share/local/"+p, ice.POD, m.Option(ice.MSG_USERPOD)); kit.Ext(f.Name()) {
 					case PNG, JPG:

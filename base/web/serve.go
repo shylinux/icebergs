@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"net/url"
 	"path"
+	"runtime"
 	"strings"
 
 	ice "shylinux.com/x/icebergs"
@@ -165,7 +166,16 @@ func init() {
 				_serve_start(m)
 			}},
 			SERVE_START: {Hand: func(m *ice.Message, arg ...string) {
-				m.Sleep30ms().Cmd(ssh.PRINTF, kit.Dict(nfs.CONTENT, "\r"+ice.Render(m, ice.RENDER_QRCODE, m.Cmdx(SPACE, DOMAIN))+ice.NL)).Cmd(ssh.PROMPT)
+				domain := m.Cmdx(SPACE, DOMAIN)
+				if ice.Info.Colors {
+					m.Sleep30ms().Cmd(ssh.PRINTF, kit.Dict(nfs.CONTENT, "\r"+ice.Render(m, ice.RENDER_QRCODE, domain)+ice.NL)).Cmd(ssh.PROMPT)
+				} else {
+					m.Sleep30ms().Cmd(ssh.PRINTF, kit.Dict(nfs.CONTENT, "\r"+domain+ice.NL)).Cmd(ssh.PROMPT)
+				}
+				switch runtime.GOOS {
+				case cli.WINDOWS:
+					m.Cmd(cli.SYSTEM, "explorer.exe", domain)
+				}
 			}},
 			SERVE_REWRITE: {Hand: func(m *ice.Message, arg ...string) {
 				if arg[0] != http.MethodGet {

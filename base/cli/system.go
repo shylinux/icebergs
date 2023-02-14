@@ -5,6 +5,7 @@ import (
 	"io"
 	"os/exec"
 	"path"
+	"runtime"
 	"strings"
 
 	ice "shylinux.com/x/icebergs"
@@ -51,6 +52,9 @@ func _system_cmd(m *ice.Message, arg ...string) *exec.Cmd {
 		if bin = _system_find(m, arg[0]); bin != "" {
 			m.Logs(mdb.SELECT, "mirrors cmd", bin)
 		}
+	}
+	if bin == "" && runtime.GOOS == WINDOWS {
+		bin = path.Join("C:/Windows", arg[0])
 	}
 	cmd := exec.Command(bin, arg[1:]...)
 	if cmd.Dir = kit.TrimPath(m.Option(CMD_DIR)); len(cmd.Dir) > 0 {

@@ -84,8 +84,13 @@ const PUBLISH = "publish"
 func init() {
 	Index.MergeCommands(ice.Commands{
 		PUBLISH: {Name: "publish path auto create volcanos icebergs intshell", Help: "发布", Actions: ice.MergeActions(ice.Actions{
-			ice.CTX_INIT:    {Hand: func(m *ice.Message, arg ...string) { m.Config(ice.CONTEXTS, _contexts) }},
-			web.SERVE_START: {Hand: func(m *ice.Message, arg ...string) { _publish_file(m, ice.ICE_BIN) }},
+			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) { m.Config(ice.CONTEXTS, _contexts) }},
+			web.SERVE_START: {Hand: func(m *ice.Message, arg ...string) {
+				if runtime.GOOS == cli.WINDOWS {
+					return
+				}
+				_publish_file(m, ice.ICE_BIN)
+			}},
 			ice.VOLCANOS: {Help: "火山架", Hand: func(m *ice.Message, arg ...string) {
 				defer func() { m.EchoQRCode(m.Option(ice.MSG_USERWEB)) }()
 				defer func() { m.Cmdy(PUBLISH, ice.CONTEXTS, ice.MISC) }()

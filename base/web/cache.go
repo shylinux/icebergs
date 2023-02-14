@@ -72,7 +72,8 @@ func _cache_upload(m *ice.Message, r *http.Request) (mime, name, file, size stri
 	return "", "", "", "0"
 }
 func _cache_download(m *ice.Message, r *http.Response, file string, cb ice.Any) string {
-	if f, p, e := miss.CreateFile(file); !m.Warn(e, ice.ErrNotValid, DOWNLOAD) {
+	if f, p, e := nfs.CreateFile(m, file); m.Assert(e) {
+		// if f, p, e := miss.CreateFile(file); !m.Warn(e, ice.ErrNotValid, DOWNLOAD) {
 		defer f.Close()
 		last, base := 0, 10
 		nfs.CopyFile(m, f, r.Body, base*ice.MOD_BUFS, kit.Int(kit.Select("100", r.Header.Get(ContentLength))), func(count, total, step int) {

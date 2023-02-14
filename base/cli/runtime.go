@@ -149,7 +149,7 @@ const RUNTIME = "runtime"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
-		RUNTIME: {Name: "runtime info=bootinfo,ifconfig,hostinfo,hostname,userinfo,procinfo,diskinfo,api,cli,cmd,env,chain auto", Help: "运行环境", Actions: ice.MergeActions(ice.Actions{
+		RUNTIME: {Name: "runtime info=bootinfo,ifconfig,hostinfo,hostname,userinfo,procinfo,diskinfo,api,cli,cmd,env,chain auto upgrade", Help: "运行环境", Actions: ice.MergeActions(ice.Actions{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) { _runtime_init(m) }},
 			ice.CTX_EXIT: {Hand: func(m *ice.Message, arg ...string) { m.Conf("", "", nil) }},
 			IFCONFIG:     {Hand: func(m *ice.Message, arg ...string) { m.Cmdy("tcp.host") }},
@@ -201,6 +201,14 @@ func init() {
 				}
 			}},
 			"chain": {Hand: func(m *ice.Message, arg ...string) { m.Echo(m.FormatChain()) }},
+			"upgrade": {Hand: func(m *ice.Message, arg ...string) {
+				file := kit.Keys("ice", runtime.GOOS, runtime.GOARCH)
+				_file := file
+				if runtime.GOOS == WINDOWS {
+					_file = file + "." + m.Time() + ".exe"
+				}
+				m.Cmd("web.spide", "dev", "save", _file, "GET", ice.Info.Make.Domain+"/publish/"+file)
+			}},
 		}, ctx.ConfAction("")), Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) > 0 && arg[0] == BOOTINFO {
 				arg = arg[1:]

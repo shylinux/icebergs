@@ -41,6 +41,7 @@ func _host_list(m *ice.Message, name string) {
 		m.Push("mask", "255.0.0.0")
 		m.Push("hard", "")
 	}
+	m.SortInt(mdb.INDEX)
 	m.StatusTimeCount()
 }
 

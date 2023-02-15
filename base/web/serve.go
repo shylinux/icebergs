@@ -166,15 +166,12 @@ func init() {
 				_serve_start(m)
 			}},
 			SERVE_START: {Hand: func(m *ice.Message, arg ...string) {
-				domain := m.Cmdx(SPACE, DOMAIN)
-				if ice.Info.Colors {
+				if domain := m.Cmdx(SPACE, DOMAIN); ice.Info.Colors {
 					m.Sleep30ms().Cmd(ssh.PRINTF, kit.Dict(nfs.CONTENT, "\r"+ice.Render(m, ice.RENDER_QRCODE, domain)+ice.NL)).Cmd(ssh.PROMPT)
-				} else {
-					m.Sleep30ms().Cmd(ssh.PRINTF, kit.Dict(nfs.CONTENT, "\r"+domain+ice.NL)).Cmd(ssh.PROMPT)
 				}
 				switch runtime.GOOS {
 				case cli.WINDOWS:
-					m.Cmd(cli.SYSTEM, "explorer.exe", domain)
+					m.Cmd(cli.SYSTEM, "explorer.exe", "http://localhost:"+m.Option(tcp.PORT))
 				}
 			}},
 			SERVE_REWRITE: {Hand: func(m *ice.Message, arg ...string) {

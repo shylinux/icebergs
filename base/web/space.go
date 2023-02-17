@@ -184,6 +184,9 @@ func init() {
 				}
 				aaa.SessAuth(m, kit.Dict(aaa.USERNAME, m.Option(ice.MSG_USERNAME), aaa.USERNICK, m.Option(ice.MSG_USERNICK), aaa.USERROLE, m.Option(ice.MSG_USERROLE)))
 			}},
+			aaa.LOGIN: {Hand: func(m *ice.Message, arg ...string) {
+				m.Cmd(SPACE, arg[0], ice.MSG_SESSID, aaa.SessCreate(m, m.Option(ice.MSG_USERNAME)))
+			}},
 			DOMAIN: {Hand: func(m *ice.Message, arg ...string) { m.Echo(_space_domain(m)) }},
 			OPEN:   {Hand: func(m *ice.Message, arg ...string) { ctx.ProcessOpen(m, MergePod(m, m.Option(mdb.NAME), arg)) }},
 			ice.PS: {Hand: func(m *ice.Message, arg ...string) { _space_fork(m) }},

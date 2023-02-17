@@ -123,6 +123,9 @@ export ctx_dev={{.Option "httphost"}}{{.Option "ctx_env"}}; ctx_temp=$(mktemp); 
 export ctx_dev={{.Option "httphost"}}{{.Option "ctx_env"}}; ctx_temp=$(mktemp); curl -o $ctx_temp -fsSL $ctx_dev; source $ctx_temp app username {{.Option "user.name"}} usernick {{.Option "user.nick"}}
 `,
 	ice.CORE, `
+# 下载命令 wget Busybox
+ctx_temp=$(mktemp); wget -O $ctx_temp -q http://shylinux.com; source $ctx_temp binary
+
 # 下载命令 wget Alpine
 ctx_temp=$(mktemp); wget -O $ctx_temp -q {{.Cmdx "spide" "shy" "client.origin"}}; source $ctx_temp binary
 

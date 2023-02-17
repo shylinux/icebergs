@@ -18,7 +18,7 @@ import (
 func _binpack_file(m *ice.Message, w io.Writer, arg ...string) {
 	if f, e := nfs.OpenFile(m, arg[0]); !m.Warn(e, ice.ErrNotFound, arg[0]) {
 		defer f.Close()
-		if b, e := ioutil.ReadAll(f); !m.Warn(e, ice.ErrNotValid, arg[0]) && len(b) > 0 {
+		if b, e := ioutil.ReadAll(f); !m.Warn(e, ice.ErrNotValid, arg[0]) && len(b) > 0 || strings.Contains(arg[0], "/cache.") {
 			fmt.Fprintf(w, "        \"%s\": \"%s\",\n", kit.Select(arg[0], arg, 1), base64.StdEncoding.EncodeToString(b))
 		}
 	}

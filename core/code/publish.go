@@ -115,15 +115,25 @@ func init() {
 }
 
 var _contexts = kit.Dict(
-	ice.MISC, `# 下载命令 curl 或 wget
-export ctx_dev={{.Option "httphost"}}{{.Option "ctx_env"}}; ctx_temp=$(mktemp); curl -o $ctx_temp -fsSL $ctx_dev; source $ctx_temp app username {{.Option "user.name"}} usernick {{.Option "user.nick"}}
+	ice.MISC, `
+# 下载工具 wget Alpine
 export ctx_dev={{.Option "httphost"}}{{.Option "ctx_env"}}; ctx_temp=$(mktemp); wget -O $ctx_temp -q $ctx_dev; source $ctx_temp app username {{.Option "user.name"}} usernick {{.Option "user.nick"}}
+
+# 下载工具 curl Centos / MacOS
+export ctx_dev={{.Option "httphost"}}{{.Option "ctx_env"}}; ctx_temp=$(mktemp); curl -o $ctx_temp -fsSL $ctx_dev; source $ctx_temp app username {{.Option "user.name"}} usernick {{.Option "user.nick"}}
 `,
-	ice.CORE, `# 下载工具 curl 或 wget
-ctx_temp=$(mktemp); curl -o $ctx_temp -fsSL {{.Cmdx "spide" "shy" "client.url"}}; source $ctx_temp binary
+	ice.CORE, `
+# 下载命令 wget Alpine
 ctx_temp=$(mktemp); wget -O $ctx_temp -q {{.Cmdx "spide" "shy" "client.url"}}; source $ctx_temp binary
+
+# 下载命令 curl Centos / MacOS
+ctx_temp=$(mktemp); curl -o $ctx_temp -fsSL {{.Cmdx "spide" "shy" "client.url"}}; source $ctx_temp binary
 `,
-	ice.BASE, `# 下载源码
-git clone {{.Option "remote"}}; cd {{.Option "pathname"}} && source etc/miss.sh
+	ice.BASE, `
+# 下载源码 wget Alpine
+ctx_temp=$(mktemp); wget -O $ctx_temp -q {{.Cmdx "spide" "shy" "client.url"}}; source $ctx_temp source
+
+# 下载源码 curl Centos / MacOS
+ctx_temp=$(mktemp); curl -o $ctx_temp -fsSL {{.Cmdx "spide" "shy" "client.url"}}; source $ctx_temp source
 `,
 )

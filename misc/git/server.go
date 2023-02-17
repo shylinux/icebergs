@@ -132,7 +132,7 @@ func init() {
 				_repos_cat(m, dir, arg[1], arg[2], kit.Select("", arg, 3))
 			}
 		}},
-		SERVER: {Name: "server repos branch commit path auto create import", Help: "服务器", Actions: ice.MergeActions(ice.Actions{
+		SERVER: {Name: "server repos branch commit path auto clone create import", Help: "服务器", Actions: ice.MergeActions(ice.Actions{
 			mdb.CREATE: {Name: "create name*", Hand: func(m *ice.Message, arg ...string) {
 				_repos_init(m, path.Join(ice.USR_LOCAL_REPOS, m.Option(mdb.NAME)))
 			}},
@@ -153,6 +153,9 @@ func init() {
 				case nfs.REPOS:
 					m.Cmd("", func(value ice.Maps) { m.Push(nfs.PATH, _git_url(m, value[nfs.PATH])) })
 				}
+			}},
+			"clone": {Help: "克隆", Hand: func(m *ice.Message, arg ...string) {
+				m.EchoScript("git clone https://shylinux.com/x/contexts && cd contexts && source etc/miss.sh")
 			}},
 			"inner": {Help: "编辑器", Hand: func(m *ice.Message, arg ...string) {
 				if len(arg) == 0 || arg[0] != ice.RUN {

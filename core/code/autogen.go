@@ -77,7 +77,7 @@ func _autogen_git(m *ice.Message, arg ...string) ice.Map {
 		nfs.REMOTE, m.Cmdx(cli.SYSTEM, GIT, "config", "remote.origin.url"),
 		nfs.BRANCH, m.Cmdx(cli.SYSTEM, GIT, "rev-parse", "--abbrev-ref", "HEAD"),
 		nfs.VERSION, m.Cmdx(cli.SYSTEM, GIT, "describe", "--tags"),
-		web.DOMAIN, kit.Split(m.Option(ice.MSG_USERWEB), "?")[0],
+		web.DOMAIN, tcp.PublishLocalhost(m, kit.Split(m.Option(ice.MSG_USERWEB), "?")[0]),
 	)
 }
 func _autogen_mod(m *ice.Message, file string) (mod string) {

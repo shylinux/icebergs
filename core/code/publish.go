@@ -124,16 +124,16 @@ export ctx_dev={{.Option "httphost"}}{{.Option "ctx_env"}}; ctx_temp=$(mktemp); 
 `,
 	ice.CORE, `
 # 下载命令 wget Alpine
-ctx_temp=$(mktemp); wget -O $ctx_temp -q {{.Cmdx "spide" "shy" "client.url"}}; source $ctx_temp binary
+ctx_temp=$(mktemp); wget -O $ctx_temp -q {{.Cmdx "spide" "shy" "client.origin"}}; source $ctx_temp binary
 
 # 下载命令 curl Centos / MacOS
-ctx_temp=$(mktemp); curl -o $ctx_temp -fsSL {{.Cmdx "spide" "shy" "client.url"}}; source $ctx_temp binary
+ctx_temp=$(mktemp); curl -o $ctx_temp -fsSL {{.Cmdx "spide" "shy" "client.origin"}}; source $ctx_temp binary
 `,
 	ice.BASE, `
 # 下载源码 wget Alpine
-ctx_temp=$(mktemp); wget -O $ctx_temp -q {{.Cmdx "spide" "shy" "client.url"}}; source $ctx_temp source
+ctx_temp=$(mktemp); wget -O $ctx_temp -q {{.Cmdx "spide" "shy" "client.origin"}}; source $ctx_temp source
 
 # 下载源码 curl Centos / MacOS
-ctx_temp=$(mktemp); curl -o $ctx_temp -fsSL {{.Cmdx "spide" "shy" "client.url"}}; source $ctx_temp source
+ctx_temp=$(mktemp); curl -o $ctx_temp -fsSL {{.Cmdx "spide" "shy" "client.origin"}}; source $ctx_temp source
 `,
 )

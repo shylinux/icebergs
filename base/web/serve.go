@@ -73,7 +73,16 @@ func _serve_main(m *ice.Message, w http.ResponseWriter, r *http.Request) bool {
 }
 func _serve_handle(key string, cmd *ice.Command, m *ice.Message, w http.ResponseWriter, r *http.Request) {
 	if u, e := url.Parse(r.Header.Get(Referer)); e == nil && r.URL.Path != PP(SPACE) {
-		gdb.Event(m, SERVE_PARSE, strings.Split(strings.TrimPrefix(u.Path, ice.PS), ice.PS))
+		add := func(k, v string) { m.Logs("path", k, m.Option(k, v)) }
+		switch arg := strings.Split(strings.TrimPrefix(u.Path, ice.PS), ice.PS); arg[0] {
+		case "share":
+			add(arg[0], arg[1])
+		case "chat":
+			for i := 1; i < len(arg); i += 2 {
+				add(arg[i], arg[i+1])
+			}
+		}
+		// gdb.Event(m, SERVE_PARSE, strings.Split(strings.TrimPrefix(u.Path, ice.PS), ice.PS))
 		kit.Fetch(u.Query(), func(k string, v []string) { m.Logs("Refer", k, v).Optionv(k, v) })
 	}
 	m.Option(ice.MSG_USERUA, r.Header.Get(UserAgent))

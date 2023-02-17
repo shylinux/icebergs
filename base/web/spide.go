@@ -290,7 +290,7 @@ func init() {
 			MERGE: {Hand: func(m *ice.Message, arg ...string) {
 				m.Echo(kit.MergeURL2(m.CmdAppend("", arg[0], CLIENT_URL), arg[1], arg[2:]))
 			}},
-		}, mdb.HashAction(mdb.SHORT, CLIENT_NAME, mdb.FIELD, "time,client.name,client.url", LOGHEADERS, ice.FALSE), mdb.ClearHashOnExitAction()), Hand: func(m *ice.Message, arg ...string) {
+		}, mdb.HashAction(mdb.SHORT, CLIENT_NAME, mdb.FIELD, "time,client.name,client.url,client.origin", LOGHEADERS, ice.FALSE), mdb.ClearHashOnExitAction()), Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) < 2 || arg[0] == "" || (len(arg) > 3 && arg[3] == "") {
 				mdb.HashSelect(m, kit.Slice(arg, 0, 1)...).Sort(CLIENT_NAME)
 			} else {

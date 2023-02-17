@@ -63,7 +63,7 @@ func init() {
 		}},
 		SESS: {Name: "sess hash auto invite prunes", Help: "会话流", Actions: ice.MergeActions(ice.Actions{
 			aaa.INVITE: {Hand: func(m *ice.Message, arg ...string) {
-				code.PublishScript(m, `export ctx_dev={{.Option "httphost"}}; ctx_temp=$(mktemp); curl -o $ctx_temp -fsSL $ctx_dev; source $ctx_temp`)
+				code.PublishScript(m, `export ctx_dev={{.Option "domain"}}; ctx_temp=$(mktemp); curl -o $ctx_temp -fsSL $ctx_dev; source $ctx_temp`)
 			}},
 		}, mdb.HashAction(mdb.FIELD, "time,hash,status,username,hostname,release,pid,pwd,grant"))},
 	})

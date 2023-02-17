@@ -32,6 +32,7 @@ const (
 	DEV = "dev"
 	OPS = "ops"
 	ICE = "ice"
+	CAN = "can"
 
 	POD = "pod"
 	CTX = "ctx"

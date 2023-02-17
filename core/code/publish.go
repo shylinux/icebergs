@@ -49,7 +49,7 @@ func PublishScript(m *ice.Message, arg ...string) {
 	u := web.OptionUserWeb(m)
 	host := tcp.PublishLocalhost(m, strings.Split(u.Host, ice.DF)[0])
 	m.Option(cli.CTX_ENV, kit.Select("", ice.SP+kit.JoinKV(ice.EQ, ice.SP, cli.CTX_POD, m.Option(ice.MSG_USERPOD)), m.Option(ice.MSG_USERPOD) != ""))
-	m.Option("httphost", fmt.Sprintf("%s://%s:%s", u.Scheme, host, kit.Select(kit.Select("443", "80", u.Scheme == ice.HTTP), strings.Split(u.Host, ice.DF), 1)))
+	m.Option(web.DOMAIN, fmt.Sprintf("%s://%s:%s", u.Scheme, host, kit.Select(kit.Select("443", "80", u.Scheme == ice.HTTP), strings.Split(u.Host, ice.DF), 1)))
 	for _, v := range arg {
 		m.EchoScript(kit.Renders(v, m))
 	}
@@ -58,17 +58,19 @@ func _publish_contexts(m *ice.Message, arg ...string) {
 	u := web.OptionUserWeb(m)
 	host := tcp.PublishLocalhost(m, strings.Split(u.Host, ice.DF)[0])
 	m.Option(cli.CTX_ENV, kit.Select("", ice.SP+kit.JoinKV(ice.EQ, ice.SP, cli.CTX_POD, m.Option(ice.MSG_USERPOD)), m.Option(ice.MSG_USERPOD) != ""))
-	m.Option("httphost", fmt.Sprintf("%s://%s:%s", u.Scheme, host, kit.Select(kit.Select("443", "80", u.Scheme == ice.HTTP), strings.Split(u.Host, ice.DF), 1)))
+	m.Option(web.DOMAIN, fmt.Sprintf("%s://%s:%s", u.Scheme, host, kit.Select(kit.Select("443", "80", u.Scheme == ice.HTTP), strings.Split(u.Host, ice.DF), 1)))
 	for _, k := range kit.Default(arg, ice.MISC) {
 		switch k {
 		case INSTALL:
-			m.Echo(kit.Renders(`export ctx_dev={{.Option "httphost"}}{{.Option "ctx_env"}}; ctx_temp=$(mktemp); wget -O $ctx_temp -q $ctx_dev; source $ctx_temp app username {{.Option "user.name"}}`, m))
+			m.Echo(kit.Renders(`export ctx_dev={{.Option "domain"}}{{.Option "ctx_env"}}; ctx_temp=$(mktemp); wget -O $ctx_temp -q $ctx_dev; source $ctx_temp app username {{.Option "user.name"}}`, m))
 			return
 		case ice.MISC:
 			_publish_file(m, ice.ICE_BIN)
+		case ice.CORE:
+			m.Option(web.DOMAIN, m.Cmdx(web.SPIDE, ice.SHY, "client.origin"))
 		case ice.BASE:
-			m.Option("remote", kit.Select(ice.Info.Make.Remote, cli.SystemExec(m, "git", "config", "remote.origin.url")))
-			m.Option("pathname", strings.TrimSuffix(path.Base(m.Option("remote")), ".git"))
+			m.Option(web.DOMAIN, m.Cmdx(web.SPIDE, ice.SHY, "client.origin"))
+			m.Option(nfs.REMOTE, kit.Select(ice.Info.Make.Remote, cli.SystemExec(m, "git", "config", "remote.origin.url")))
 		}
 		if buf, err := kit.Render(m.Config(kit.Keys(ice.CONTEXTS, k)), m); m.Assert(err) {
 			m.EchoScript(strings.TrimSpace(string(buf)))
@@ -117,26 +119,26 @@ func init() {
 var _contexts = kit.Dict(
 	ice.MISC, `
 # 下载工具 wget Alpine
-export ctx_dev={{.Option "httphost"}}{{.Option "ctx_env"}}; ctx_temp=$(mktemp); wget -O $ctx_temp -q $ctx_dev; source $ctx_temp app username {{.Option "user.name"}} usernick {{.Option "user.nick"}}
+export ctx_dev={{.Option "domain"}}{{.Option "ctx_env"}}; ctx_temp=$(mktemp); wget -O $ctx_temp -q $ctx_dev; source $ctx_temp app username {{.Option "user.name"}} usernick {{.Option "user.nick"}}
 
 # 下载工具 curl Centos / MacOS
-export ctx_dev={{.Option "httphost"}}{{.Option "ctx_env"}}; ctx_temp=$(mktemp); curl -o $ctx_temp -fsSL $ctx_dev; source $ctx_temp app username {{.Option "user.name"}} usernick {{.Option "user.nick"}}
+export ctx_dev={{.Option "domain"}}{{.Option "ctx_env"}}; ctx_temp=$(mktemp); curl -o $ctx_temp -fsSL $ctx_dev; source $ctx_temp app username {{.Option "user.name"}} usernick {{.Option "user.nick"}}
 `,
 	ice.CORE, `
 # 下载命令 wget Busybox
 ctx_temp=$(mktemp); wget -O $ctx_temp -q http://shylinux.com; source $ctx_temp binary
 
 # 下载命令 wget Alpine
-ctx_temp=$(mktemp); wget -O $ctx_temp -q {{.Cmdx "spide" "shy" "client.origin"}}; source $ctx_temp binary
+ctx_temp=$(mktemp); wget -O $ctx_temp -q {{.Option "domain"}}; source $ctx_temp binary
 
 # 下载命令 curl Centos / MacOS
-ctx_temp=$(mktemp); curl -o $ctx_temp -fsSL {{.Cmdx "spide" "shy" "client.origin"}}; source $ctx_temp binary
+ctx_temp=$(mktemp); curl -o $ctx_temp -fsSL {{.Option "domain"}}; source $ctx_temp binary
 `,
 	ice.BASE, `
 # 下载源码 wget Alpine
-ctx_temp=$(mktemp); wget -O $ctx_temp -q {{.Cmdx "spide" "shy" "client.origin"}}; source $ctx_temp source
+ctx_temp=$(mktemp); wget -O $ctx_temp -q {{.Option "domain"}}; source $ctx_temp source
 
 # 下载源码 curl Centos / MacOS
-ctx_temp=$(mktemp); curl -o $ctx_temp -fsSL {{.Cmdx "spide" "shy" "client.origin"}}; source $ctx_temp source
+ctx_temp=$(mktemp); curl -o $ctx_temp -fsSL {{.Option "domain"}}; source $ctx_temp source
 `,
 )

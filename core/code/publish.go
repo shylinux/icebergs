@@ -67,9 +67,9 @@ func _publish_contexts(m *ice.Message, arg ...string) {
 		case ice.MISC:
 			_publish_file(m, ice.ICE_BIN)
 		case ice.CORE:
-			m.Option(web.DOMAIN, m.Cmdx(web.SPIDE, ice.SHY, "client.origin"))
+			m.Option(web.DOMAIN, m.Cmd(web.SPIDE, ice.SHY).Append("client.origin"))
 		case ice.BASE:
-			m.Option(web.DOMAIN, m.Cmdx(web.SPIDE, ice.SHY, "client.origin"))
+			m.Option(web.DOMAIN, m.Cmd(web.SPIDE, ice.SHY).Append("client.origin"))
 			m.Option(nfs.REMOTE, kit.Select(ice.Info.Make.Remote, cli.SystemExec(m, "git", "config", "remote.origin.url")))
 		}
 		if buf, err := kit.Render(m.Config(kit.Keys(ice.CONTEXTS, k)), m); m.Assert(err) {
@@ -85,8 +85,15 @@ const PUBLISH = "publish"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
-		PUBLISH: {Name: "publish path auto create volcanos icebergs intshell", Help: "发布", Actions: ice.MergeActions(ice.Actions{
+		PUBLISH: {Name: "publish path auto create volcanos icebergs intshell relay", Help: "发布", Actions: ice.MergeActions(ice.Actions{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) { m.Config(ice.CONTEXTS, _contexts) }},
+			mdb.INPUTS: {Hand: func(m *ice.Message, arg ...string) {
+				if m.Option(ctx.ACTION) == RELAY {
+					m.Cmdy(AUTOGEN, mdb.INPUTS, arg)
+					return
+				}
+				m.Cmdy(nfs.DIR, arg[1:]).Cut("path,size,time").ProcessAgain()
+			}},
 			web.SERVE_START: {Hand: func(m *ice.Message, arg ...string) {
 				if runtime.GOOS == cli.WINDOWS {
 					return
@@ -107,9 +114,11 @@ func init() {
 				_publish_list(m, kit.ExtReg(`(sh|vim|conf)`))
 			}},
 			ice.CONTEXTS: {Hand: func(m *ice.Message, arg ...string) { _publish_contexts(m, arg...) }},
-			mdb.INPUTS:   {Hand: func(m *ice.Message, arg ...string) { m.Cmdy(nfs.DIR, arg[1:]).Cut("path,size,time").ProcessAgain() }},
 			mdb.CREATE:   {Name: "create file", Help: "添加", Hand: func(m *ice.Message, arg ...string) { _publish_file(m, m.Option(nfs.FILE)) }},
-			nfs.TRASH:    {Hand: func(m *ice.Message, arg ...string) { nfs.Trash(m, path.Join(ice.USR_PUBLISH, m.Option(nfs.PATH))) }},
+			RELAY: {Name: "relay alias username host port=22 init", Help: "跳板", Hand: func(m *ice.Message, arg ...string) {
+				m.Cmdy(AUTOGEN, RELAY, arg)
+			}},
+			nfs.TRASH: {Hand: func(m *ice.Message, arg ...string) { nfs.Trash(m, path.Join(ice.USR_PUBLISH, m.Option(nfs.PATH))) }},
 		}, ctx.ConfAction(ice.CONTEXTS, _contexts), aaa.RoleAction()), Hand: func(m *ice.Message, arg ...string) {
 			m.Cmdy(nfs.DIR, kit.Select("", arg, 0), nfs.DIR_WEB_FIELDS, kit.Dict(nfs.DIR_ROOT, ice.USR_PUBLISH)).SortTimeR(mdb.TIME)
 		}},

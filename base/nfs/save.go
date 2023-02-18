@@ -76,6 +76,7 @@ func _link_file(m *ice.Message, name string, from string) {
 
 const (
 	CONTENT = "content"
+	ALIAS   = "alias"
 )
 const LOAD = "load"
 const DEFS = "defs"

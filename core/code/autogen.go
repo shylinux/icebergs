@@ -7,6 +7,7 @@ import (
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/aaa"
 	"shylinux.com/x/icebergs/base/cli"
+	"shylinux.com/x/icebergs/base/ctx"
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/nfs"
 	"shylinux.com/x/icebergs/base/ssh"
@@ -105,6 +106,23 @@ func init() {
 	Index.MergeCommands(ice.Commands{
 		AUTOGEN: {Name: "autogen path auto module binpack script relay", Help: "生成", Actions: ice.Actions{
 			mdb.INPUTS: {Hand: func(m *ice.Message, arg ...string) {
+				if m.Option(ctx.ACTION) == RELAY {
+					switch arg[0] {
+					case nfs.ALIAS:
+						m.Cmdy(web.SPIDE).CutTo("client.name", arg[0])
+					case aaa.USERNAME:
+						m.Cmdy(aaa.USER).Cut(aaa.USERNAME)
+						m.Push(arg[0], "shy")
+					case tcp.HOST:
+						m.Option(ice.MSG_FIELDS, "client.hostname")
+						m.Cmdy(web.SPIDE)
+					case tcp.PORT:
+						m.Push(arg[0], "22")
+					case ice.INIT:
+						m.Push(arg[0], "tmux attach -t miss")
+					}
+					return
+				}
 				switch arg[0] {
 				case cli.MAIN:
 					m.Cmdy(nfs.DIR, nfs.PWD, nfs.DIR_CLI_FIELDS, kit.Dict(nfs.DIR_ROOT, m.Option(nfs.PATH), nfs.DIR_REG, `.*\.go$`)).RenameAppend(nfs.PATH, arg[0])
@@ -147,7 +165,7 @@ func init() {
 				_autogen_version(m)
 				m.Cmdy(nfs.CAT, ice.SRC_VERSION_GO)
 			}},
-			RELAY: {Name: "relay alias username host port init", Help: "跳板", Hand: func(m *ice.Message, arg ...string) {
+			RELAY: {Name: "relay alias username host port=22 init", Help: "跳板", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmdy(COMPILE, RELAY)
 				m.Cmdy(nfs.LINK, ice.USR_PUBLISH+m.Option(mdb.ALIAS), ice.USR_PUBLISH+RELAY)
 				m.Cmd(nfs.SAVE, path.Join(kit.Env(cli.HOME), ".ssh/"+m.Option(mdb.ALIAS)+".json"),

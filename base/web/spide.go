@@ -27,7 +27,7 @@ func _spide_create(m *ice.Message, name, address string) {
 		mdb.HashSelectUpdate(m, mdb.HashCreate(m, CLIENT_NAME, name), func(value ice.Map) {
 			dir, file := path.Split(uri.EscapedPath())
 			value[SPIDE_CLIENT] = kit.Dict(mdb.NAME, name, SPIDE_METHOD, http.MethodPost, "url", address, "origin", uri.Scheme+"://"+uri.Host,
-				tcp.PROTOCOL, uri.Scheme, tcp.HOSTNAME, uri.Host, nfs.PATH, dir, nfs.FILE, file, "query", uri.RawQuery,
+				tcp.PROTOCOL, uri.Scheme, tcp.HOSTNAME, uri.Hostname(), tcp.HOST, uri.Host, nfs.PATH, dir, nfs.FILE, file, "query", uri.RawQuery,
 				cli.TIMEOUT, "30s", LOGHEADERS, ice.FALSE,
 			)
 		})

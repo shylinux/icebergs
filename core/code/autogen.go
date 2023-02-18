@@ -167,7 +167,8 @@ func init() {
 			}},
 			RELAY: {Name: "relay alias username host port=22 init", Help: "跳板", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmdy(COMPILE, RELAY)
-				m.Cmdy(nfs.LINK, ice.USR_PUBLISH+m.Option(mdb.ALIAS), ice.USR_PUBLISH+RELAY)
+				// m.Cmdy(nfs.LINK, ice.USR_PUBLISH+m.Option(mdb.ALIAS), ice.USR_PUBLISH+RELAY)
+				m.Cmdy(cli.SYSTEM, "ln", "-s", RELAY, ice.USR_PUBLISH+m.Option(mdb.ALIAS))
 				m.Cmd(nfs.SAVE, path.Join(kit.Env(cli.HOME), ".ssh/"+m.Option(mdb.ALIAS)+".json"),
 					kit.Formats(kit.Dict(m.OptionSimple("username,host,port,init"))))
 			}},

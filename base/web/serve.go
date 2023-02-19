@@ -78,7 +78,7 @@ func _serve_handle(key string, cmd *ice.Command, m *ice.Message, w http.Response
 		case "share":
 			add(arg[0], arg[1])
 		case "chat":
-			for i := 1; i < len(arg); i += 2 {
+			for i := 1; i < len(arg)-1; i += 2 {
 				add(arg[i], arg[i+1])
 			}
 		}

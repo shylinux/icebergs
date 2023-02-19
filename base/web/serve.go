@@ -110,8 +110,11 @@ func _serve_handle(key string, cmd *ice.Command, m *ice.Message, w http.Response
 	if m.Option(ice.MSG_USERWEB, _serve_domain(m)); m.Option(ice.POD) != "" {
 		m.Option(ice.MSG_USERPOD, m.Option(ice.POD))
 	}
-	u := OptionUserWeb(m)
-	m.Option(ice.MSG_USERHOST, tcp.PublishLocalhost(m, u.Scheme+"://"+u.Host))
+	if u := OptionUserWeb(m); strings.Contains(u.Host, tcp.LOCALHOST) {
+		m.Option(ice.MSG_USERHOST, tcp.PublishLocalhost(m, u.Scheme+"://"+u.Host))
+	} else {
+		m.Option(ice.MSG_USERHOST, u.Scheme+"://"+u.Host)
+	}
 	m.Option(ice.MSG_SESSID, kit.Select(m.Option(ice.MSG_SESSID), m.Option(CookieName(m.Option(ice.MSG_USERWEB)))))
 	if m.Optionv(ice.MSG_CMDS) == nil {
 		if p := strings.TrimPrefix(r.URL.Path, key); p != "" {
@@ -234,9 +237,9 @@ func init() {
 			m.RenderDownload(p)
 		}},
 		PP(ice.REQUIRE, ice.NODE_MODULES): {Name: "/require/node_modules/", Help: "依赖库", Hand: func(m *ice.Message, arg ...string) {
-			p := path.Join(ice.SRC, ice.NODE_MODULES, path.Join(arg...))
+			p := path.Join(ice.USR, ice.NODE_MODULES, path.Join(arg...))
 			if !nfs.ExistsFile(m, p) {
-				m.Cmd(cli.SYSTEM, "npm", "install", arg[0], kit.Dict(cli.CMD_DIR, ice.SRC))
+				m.Cmd(cli.SYSTEM, "npm", "install", arg[0], kit.Dict(cli.CMD_DIR, ice.USR))
 			}
 			m.RenderDownload(p)
 		}},

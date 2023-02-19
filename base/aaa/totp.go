@@ -71,6 +71,7 @@ func init() {
 					m.PushQRCode(mdb.SCAN, kit.Format(m.Config(mdb.LINK), value[mdb.NAME], value[SECRET]))
 					m.Echo(m.Append(mdb.VALUE))
 				} else {
+					m.PushAction(mdb.REMOVE)
 					m.StatusTimeCount()
 				}
 			})

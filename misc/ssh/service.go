@@ -192,7 +192,7 @@ func init() {
 		)), Hand: func(m *ice.Message, arg ...string) {
 			m.Fields(len(arg), m.Config(mdb.FIELD), m.Config(mdb.FIELDS))
 			if mdb.ZoneSelect(m, arg...); len(arg) == 0 {
-				m.PushAction(aaa.INVITE, mdb.INSERT, ctx.LOAD, ctx.SAVE)
+				m.PushAction(aaa.INVITE, mdb.INSERT, ctx.LOAD, ctx.SAVE, mdb.REMOVE)
 			}
 		}},
 	})

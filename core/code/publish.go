@@ -61,9 +61,6 @@ func _publish_contexts(m *ice.Message, arg ...string) {
 	m.Option(web.DOMAIN, fmt.Sprintf("%s://%s:%s", u.Scheme, host, kit.Select(kit.Select("443", "80", u.Scheme == ice.HTTP), strings.Split(u.Host, ice.DF), 1)))
 	for _, k := range kit.Default(arg, ice.MISC) {
 		switch k {
-		case INSTALL:
-			m.Echo(kit.Renders(`export ctx_dev={{.Option "domain"}}{{.Option "ctx_env"}}; ctx_temp=$(mktemp); wget -O $ctx_temp -q $ctx_dev; source $ctx_temp app username {{.Option "user.name"}}`, m))
-			return
 		case ice.MISC:
 			_publish_file(m, ice.ICE_BIN)
 		case ice.CORE:
@@ -85,13 +82,9 @@ const PUBLISH = "publish"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
-		PUBLISH: {Name: "publish path auto create volcanos icebergs intshell relay", Help: "发布", Actions: ice.MergeActions(ice.Actions{
+		PUBLISH: {Name: "publish path auto create volcanos icebergs intshell", Help: "发布", Actions: ice.MergeActions(ice.Actions{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) { m.Config(ice.CONTEXTS, _contexts) }},
 			mdb.INPUTS: {Hand: func(m *ice.Message, arg ...string) {
-				if m.Option(ctx.ACTION) == RELAY {
-					m.Cmdy(AUTOGEN, mdb.INPUTS, arg)
-					return
-				}
 				m.Cmdy(nfs.DIR, arg[1:]).Cut("path,size,time").ProcessAgain()
 			}},
 			web.SERVE_START: {Hand: func(m *ice.Message, arg ...string) {
@@ -115,10 +108,7 @@ func init() {
 			}},
 			ice.CONTEXTS: {Hand: func(m *ice.Message, arg ...string) { _publish_contexts(m, arg...) }},
 			mdb.CREATE:   {Name: "create file", Help: "添加", Hand: func(m *ice.Message, arg ...string) { _publish_file(m, m.Option(nfs.FILE)) }},
-			RELAY: {Name: "relay alias username host port=22 init", Help: "跳板", Hand: func(m *ice.Message, arg ...string) {
-				m.Cmdy(AUTOGEN, RELAY, arg)
-			}},
-			nfs.TRASH: {Hand: func(m *ice.Message, arg ...string) { nfs.Trash(m, path.Join(ice.USR_PUBLISH, m.Option(nfs.PATH))) }},
+			nfs.TRASH:    {Hand: func(m *ice.Message, arg ...string) { nfs.Trash(m, path.Join(ice.USR_PUBLISH, m.Option(nfs.PATH))) }},
 		}, ctx.ConfAction(ice.CONTEXTS, _contexts), aaa.RoleAction()), Hand: func(m *ice.Message, arg ...string) {
 			m.Cmdy(nfs.DIR, kit.Select("", arg, 0), nfs.DIR_WEB_FIELDS, kit.Dict(nfs.DIR_ROOT, ice.USR_PUBLISH)).SortTimeR(mdb.TIME)
 		}},
@@ -127,10 +117,10 @@ func init() {
 
 var _contexts = kit.Dict(
 	ice.MISC, `
-# 下载工具 wget Alpine
+# 下载应用 wget Alpine / Busybox
 export ctx_dev={{.Option "domain"}}{{.Option "ctx_env"}}; ctx_temp=$(mktemp); wget -O $ctx_temp -q $ctx_dev; source $ctx_temp app username {{.Option "user.name"}} usernick {{.Option "user.nick"}}
 
-# 下载工具 curl Centos / MacOS
+# 下载应用 curl Centos / MacOS
 export ctx_dev={{.Option "domain"}}{{.Option "ctx_env"}}; ctx_temp=$(mktemp); curl -o $ctx_temp -fsSL $ctx_dev; source $ctx_temp app username {{.Option "user.name"}} usernick {{.Option "user.nick"}}
 `,
 	ice.CORE, `

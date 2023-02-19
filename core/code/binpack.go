@@ -16,38 +16,21 @@ import (
 )
 
 func _binpack_file(m *ice.Message, w io.Writer, arg ...string) {
+	switch arg[0] {
+	case ice.SRC_BINPACK_GO, ice.SRC_VERSION_GO, ice.ETC_LOCAL_SHY:
+		return
+	}
 	if f, e := nfs.OpenFile(m, arg[0]); !m.Warn(e, ice.ErrNotFound, arg[0]) {
 		defer f.Close()
-		if b, e := ioutil.ReadAll(f); !m.Warn(e, ice.ErrNotValid, arg[0]) && len(b) > 0 || strings.Contains(arg[0], "/cache.") {
+		if b, e := ioutil.ReadAll(f); !m.Warn(e, ice.ErrNotValid, arg[0]) {
 			fmt.Fprintf(w, "        \"%s\": \"%s\",\n", kit.Select(arg[0], arg, 1), base64.StdEncoding.EncodeToString(b))
 		}
 	}
 }
 func _binpack_dir(m *ice.Message, w io.Writer, dir string) {
 	nfs.DirDeepAll(m, dir, nfs.PWD, func(value ice.Maps) {
-		switch path.Base(value[nfs.PATH]) {
-		case ice.GO_MOD, ice.GO_SUM, "binpack.go", "version.go":
-			return
-		}
-		switch strings.Split(value[nfs.PATH], ice.PS)[0] {
-		case ice.BIN, ice.VAR, "website", "polaris":
-			return
-		}
 		_binpack_file(m, w, path.Join(dir, value[nfs.PATH]))
 	})
-	fmt.Fprintln(w)
-}
-
-func _binpack_can(m *ice.Message, w io.Writer, dir string) {
-	for _, k := range []string{ice.INDEX_CSS, ice.PROTO_JS, ice.FRAME_JS} {
-		_binpack_file(m, w, path.Join(dir, k))
-	}
-	for _, k := range []string{LIB, PAGE, PANEL, PLUGIN, "publish/client/nodejs/"} {
-		nfs.DirDeepAll(m, dir, k, func(value ice.Maps) {
-			_binpack_file(m, w, path.Join(dir, value[nfs.PATH]))
-		})
-	}
-	fmt.Fprintln(w)
 }
 func _binpack_all(m *ice.Message) {
 	nfs.OptionFiles(m, nfs.DiskFile)
@@ -56,23 +39,15 @@ func _binpack_all(m *ice.Message) {
 		defer m.Echo(p)
 		fmt.Fprintln(w, _binpack_template)
 		defer fmt.Fprintln(w, _binpack_template_end)
-		if m.Option(ice.MSG_USERPOD) == "" {
-			if nfs.ExistsFile(m, ice.USR_VOLCANOS) {
-				_binpack_can(m, w, ice.USR_VOLCANOS)
-			}
-			if nfs.ExistsFile(m, ice.USR_INTSHELL) {
-				_binpack_dir(m, w, ice.USR_INTSHELL)
-			}
-		}
+		_binpack_dir(m, w, ice.USR_VOLCANOS)
+		_binpack_dir(m, w, ice.USR_INTSHELL)
 		_binpack_dir(m, w, ice.SRC)
 		_binpack_file(m, w, ice.ETC_MISS_SH)
 		_binpack_file(m, w, ice.ETC_INIT_SHY)
 		_binpack_file(m, w, ice.ETC_EXIT_SHY)
-		fmt.Fprintln(w)
-		_binpack_file(m, w, ice.LICENSE)
-		_binpack_file(m, w, ice.MAKEFILE)
 		_binpack_file(m, w, ice.README_MD)
-		fmt.Fprintln(w)
+		_binpack_file(m, w, ice.MAKEFILE)
+		_binpack_file(m, w, ice.LICENSE)
 		list := map[string]bool{}
 		ctx.TravelCmd(m, func(key, file, line string) {
 			dir := path.Dir(file)
@@ -126,15 +101,12 @@ import (
 )
 
 func init() {
-	pack := ice.Maps{
-`
-var _binpack_template_end = `
-	}
+	pack := ice.Maps{`
+var _binpack_template_end = `	}
 	nfs.PackFile.RemoveAll(ice.SRC)
 	for k, v := range pack {
 		if b, e := base64.StdEncoding.DecodeString(v); e == nil {
 			nfs.PackFile.WriteFile(k, b)
 		}
 	}
-}
-`
+}`

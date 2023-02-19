@@ -282,7 +282,7 @@ func init() {
 			mdb.CREATE: {Name: "create name address", Hand: func(m *ice.Message, arg ...string) { _spide_create(m, m.Option(mdb.NAME), m.Option(ADDRESS)) }},
 			tcp.CLIENT: {Hand: func(m *ice.Message, arg ...string) {
 				msg := m.Cmd("", kit.Select(ice.DEV, arg, 0))
-				ls := kit.Split(msg.Append(CLIENT_HOSTNAME), ice.DF)
+				ls := kit.Split(msg.Append(kit.Keys(SPIDE_CLIENT, tcp.HOST)), ice.DF)
 				m.Push(tcp.HOST, ls[0]).Push(tcp.PORT, kit.Select(kit.Select("443", "80", msg.Append(CLIENT_PROTOCOL) == ice.HTTP), ls, 1))
 				m.Push(DOMAIN, msg.Append(CLIENT_PROTOCOL)+"://"+msg.Append(CLIENT_HOSTNAME)+kit.Select("", arg, 1))
 				m.Push(tcp.PROTOCOL, msg.Append(CLIENT_PROTOCOL)).Push(tcp.HOSTNAME, msg.Append(CLIENT_HOSTNAME))

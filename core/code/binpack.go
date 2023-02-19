@@ -16,6 +16,9 @@ import (
 )
 
 func _binpack_file(m *ice.Message, w io.Writer, arg ...string) {
+	if strings.HasPrefix(arg[0], "usr/volcanos/publish/") && !strings.HasSuffix(arg[0], "/proto.js") {
+		return
+	}
 	switch arg[0] {
 	case ice.SRC_BINPACK_GO, ice.SRC_VERSION_GO, ice.ETC_LOCAL_SHY:
 		return

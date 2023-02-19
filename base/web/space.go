@@ -164,7 +164,7 @@ const SPACE = "space"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
-		SPACE: {Name: "space name cmd auto", Help: "空间站", Actions: ice.MergeActions(ice.Actions{
+		SPACE: {Name: "space name cmds auto", Help: "空间站", Actions: ice.MergeActions(ice.Actions{
 			tcp.DIAL: {Name: "dial dev=ops name", Hand: func(m *ice.Message, arg ...string) {
 				if strings.HasPrefix(m.Option(ice.DEV), ice.HTTP) {
 					m.Cmd(SPIDE, mdb.CREATE, ice.DEV, m.Option(ice.DEV))

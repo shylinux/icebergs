@@ -11,7 +11,11 @@ import (
 	"shylinux.com/x/toolkits/logs"
 )
 
-func Display(m *ice.Message, file string, arg ...ice.Any) *ice.Message {
+type Message interface {
+	Option(key string, arg ...ice.Any) string
+}
+
+func Display(m Message, file string, arg ...ice.Any) Message {
 	if file == "" {
 		file = kit.Keys(kit.FileName(2), nfs.JS)
 	}
@@ -20,13 +24,13 @@ func Display(m *ice.Message, file string, arg ...ice.Any) *ice.Message {
 	}
 	return DisplayBase(m, file, arg...)
 }
-func DisplayTable(m *ice.Message, arg ...ice.Any) *ice.Message {
+func DisplayTable(m Message, arg ...ice.Any) Message {
 	return DisplayBase(m, "/plugin/table.js", arg...)
 }
-func DisplayTableCard(m *ice.Message, arg ...ice.Any) *ice.Message {
+func DisplayTableCard(m Message, arg ...ice.Any) Message {
 	return DisplayTable(m, "style", "card")
 }
-func DisplayStory(m *ice.Message, file string, arg ...ice.Any) *ice.Message {
+func DisplayStory(m Message, file string, arg ...ice.Any) Message {
 	if file == "" {
 		file = kit.ExtChange(kit.FileName(2), nfs.JS)
 	}
@@ -35,13 +39,13 @@ func DisplayStory(m *ice.Message, file string, arg ...ice.Any) *ice.Message {
 	}
 	return DisplayBase(m, file, arg...)
 }
-func DisplayStoryJSON(m *ice.Message, arg ...ice.Any) *ice.Message {
+func DisplayStoryJSON(m Message, arg ...ice.Any) Message {
 	return DisplayStory(m, "json", arg...)
 }
-func DisplayStorySpide(m *ice.Message, arg ...ice.Any) *ice.Message {
-	return DisplayStory(m, "spide", arg...).StatusTimeCount()
+func DisplayStorySpide(m Message, arg ...ice.Any) Message {
+	return DisplayStory(m, "spide", arg...)
 }
-func DisplayLocal(m *ice.Message, file string, arg ...ice.Any) *ice.Message {
+func DisplayLocal(m Message, file string, arg ...ice.Any) Message {
 	if file == "" {
 		file = path.Join(kit.PathName(2), kit.Keys(kit.FileName(2), ice.JS))
 	}
@@ -50,7 +54,7 @@ func DisplayLocal(m *ice.Message, file string, arg ...ice.Any) *ice.Message {
 	}
 	return DisplayBase(m, file, arg...)
 }
-func DisplayBase(m *ice.Message, file string, arg ...ice.Any) *ice.Message {
+func DisplayBase(m Message, file string, arg ...ice.Any) Message {
 	m.Option(ice.MSG_DISPLAY, kit.MergeURL(kit.Select(kit.ExtChange(file, nfs.JS), file, strings.Contains(file, "?")), arg...))
 	return m
 }

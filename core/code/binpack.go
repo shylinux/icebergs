@@ -9,7 +9,7 @@ import (
 	"strings"
 
 	ice "shylinux.com/x/icebergs"
-	"shylinux.com/x/icebergs/base/ctx"
+	"shylinux.com/x/icebergs/base/cli"
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/nfs"
 	kit "shylinux.com/x/toolkits"
@@ -55,26 +55,28 @@ func _binpack_all(m *ice.Message) {
 		_binpack_file(m, w, ice.README_MD)
 		_binpack_file(m, w, ice.MAKEFILE)
 		_binpack_file(m, w, ice.LICENSE)
+
+		cache := kit.Select(ice.USR_REQUIRE, m.Cmdx(cli.SYSTEM, "go", "env", "GOMODCACHE"))
 		list := map[string]bool{}
-		ctx.TravelCmd(m, func(key, file, line string) {
-			dir := path.Dir(file)
-			if strings.HasPrefix(dir, ice.SRC) {
-				return
+		for k := range ice.Info.File {
+			ls := strings.Split(k, ice.PS)
+			switch ls[2] {
+			case ice.SRC:
+			case ice.USR:
+				list[path.Join(kit.Slice(ls, 2, -1)...)] = true
+			default:
+				list[path.Join(cache, path.Join(kit.Slice(ls, 2, -1)...))] = true
 			}
-			if list[dir] {
-				return
-			}
-			list[dir] = true
-			m.Cmd(nfs.DIR, dir, nfs.PATH, kit.Dict(nfs.DIR_ROOT, nfs.PWD, nfs.DIR_REG, kit.ExtReg("(sh|shy|js)"))).Tables(func(value ice.Maps) {
-				if list[value[nfs.PATH]] {
-					return
+		}
+		for _, p := range kit.SortedKey(list) {
+			m.Cmd(nfs.DIR, p, nfs.PATH, kit.Dict(nfs.DIR_ROOT, nfs.PWD, nfs.DIR_REG, kit.ExtReg("(sh|shy|js)"))).Tables(func(value ice.Maps) {
+				if strings.Contains(value[nfs.PATH], "/go/pkg/mod/") {
+					_binpack_file(m, w, value[nfs.PATH], ice.USR_REQUIRE+strings.Split(value[nfs.PATH], "/go/pkg/mod/")[1])
+				} else {
+					_binpack_file(m, w, value[nfs.PATH])
 				}
-				if list[value[nfs.PATH]] = true; strings.Contains(value[nfs.PATH], "/go/pkg/mod/") {
-					value[nfs.PATH] = "/require/" + strings.Split(value[nfs.PATH], "/go/pkg/mod/")[1]
-				}
-				_binpack_file(m, w, value[nfs.PATH])
 			})
-		})
+		}
 		mdb.HashSelects(m).Sort(nfs.PATH).Tables(func(value ice.Maps) {
 			if s, e := nfs.StatFile(m, value[nfs.PATH]); e == nil {
 				if s.IsDir() {

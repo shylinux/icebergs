@@ -31,6 +31,7 @@ var Info = struct {
 
 	Help  string
 	File  Maps
+	Gomod Maps
 	Route Maps
 	Index Map
 
@@ -49,6 +50,7 @@ server: https://shylinux.com
 source: https://shylinux.com/x/icebergs
 `,
 	File:  Maps{},
+	Gomod: Maps{},
 	Route: Maps{},
 	Index: Map{},
 

@@ -108,6 +108,7 @@ const ( // DIR
 	USR_INSTALL  = "usr/install/"
 	USR_PUBLISH  = "usr/publish/"
 	USR_RELEASE  = "usr/release/"
+	USR_REQUIRE  = "usr/require/"
 
 	USR_LOCAL        = "usr/local/"
 	USR_LOCAL_GO     = "usr/local/go/"

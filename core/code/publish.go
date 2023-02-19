@@ -61,6 +61,9 @@ func _publish_contexts(m *ice.Message, arg ...string) {
 	m.Option(web.DOMAIN, fmt.Sprintf("%s://%s:%s", u.Scheme, host, kit.Select(kit.Select("443", "80", u.Scheme == ice.HTTP), strings.Split(u.Host, ice.DF), 1)))
 	for _, k := range kit.Default(arg, ice.MISC) {
 		switch k {
+		case INSTALL:
+			m.Echo(kit.Renders(`export ctx_dev={{.Option "domain"}}{{.Option "ctx_env"}}; ctx_temp=$(mktemp); wget -O $ctx_temp -q $ctx_dev; source $ctx_temp app username {{.Option "user.name"}} usernick {{.Option "user.nick"}}`, m))
+			return
 		case ice.MISC:
 			_publish_file(m, ice.ICE_BIN)
 		case ice.CORE:

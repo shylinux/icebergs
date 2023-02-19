@@ -112,7 +112,7 @@ func init() {
 				}
 			}},
 			mdb.CREATE: {Name: "create name*=hi repos template", Hand: func(m *ice.Message, arg ...string) {
-				m.Option(nfs.REPOS, kit.Slice(kit.Split(m.Option(nfs.REPOS)), -1)[0])
+				m.Option(nfs.REPOS, kit.Select("", kit.Slice(kit.Split(m.Option(nfs.REPOS)), -1), 0))
 				_dream_show(m, m.OptionDefault(mdb.NAME, path.Base(m.Option(nfs.REPOS))))
 			}},
 			cli.START: {Hand: func(m *ice.Message, arg ...string) {

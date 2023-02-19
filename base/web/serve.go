@@ -230,10 +230,19 @@ func init() {
 			_share_local(m, ice.USR_PUBLISH, path.Join(arg...))
 		}},
 		PP(ice.REQUIRE): {Name: "/require/shylinux.com/x/volcanos/proto.js", Help: "代码库", Hand: func(m *ice.Message, arg ...string) {
-			p := path.Join(ice.ISH_PLUGED, path.Join(arg...))
+			cache := kit.Select(ice.USR_REQUIRE, m.Cmdx(cli.SYSTEM, "go", "env", "GOMODCACHE"))
+			p := path.Join(cache, path.Join(arg...))
 			if !nfs.ExistsFile(m, p) {
-				m.Cmd(cli.SYSTEM, "git", "clone", "https://"+path.Join(arg[:3]...), path.Join(ice.ISH_PLUGED, path.Join(arg[:3]...)))
+				if p = path.Join(ice.USR_REQUIRE, path.Join(arg...)); !nfs.ExistsFile(m, p) {
+					ls := strings.SplitN(path.Join(arg[:3]...), ice.AT, 2)
+					if v := kit.Select(ice.Info.Gomod[ls[0]], ls, 1); v == "" {
+						m.Cmd(cli.SYSTEM, "git", "clone", "https://"+ls[0], path.Join(ice.USR_REQUIRE, path.Join(arg[:3]...)))
+					} else {
+						m.Cmd(cli.SYSTEM, "git", "clone", "-b", v, "https://"+ls[0], path.Join(ice.USR_REQUIRE, path.Join(arg[:3]...)))
+					}
+				}
 			}
+			m.Debug("what %v", p)
 			m.RenderDownload(p)
 		}},
 		PP(ice.REQUIRE, ice.NODE_MODULES): {Name: "/require/node_modules/", Help: "依赖库", Hand: func(m *ice.Message, arg ...string) {

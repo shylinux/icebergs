@@ -173,6 +173,7 @@ func init() {
 			}},
 		}, gdb.EventAction(web.DREAM_INPUTS)), Hand: func(m *ice.Message, arg ...string) {
 			if m.Option(nfs.DIR_ROOT, ice.USR_LOCAL_REPOS); len(arg) == 0 {
+				m.Option(nfs.DIR_TYPE, nfs.TYPE_DIR)
 				m.Cmdy(nfs.DIR, nfs.PWD, func(value ice.Maps) { m.PushScript("git clone " + _git_url(m, value[nfs.PATH])) }).Cut("time,path,size,script,action").RenameAppend("path", "repos")
 			} else if dir := path.Join(m.Option(nfs.DIR_ROOT), arg[0]); len(arg) == 1 {
 				_repos_branch(m, dir)

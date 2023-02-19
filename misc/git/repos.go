@@ -103,6 +103,11 @@ func _repos_dir(m *ice.Message, dir, branch, commit, file string, cb func(*gogit
 	} else if file == nfs.PWD {
 		file = ""
 	}
+	if repos, e := gogit.OpenRepository(dir); !m.Warn(e, ice.ErrNotFound, dir) {
+		if refer, e := repos.LookupReference(REFS_TAGS + commit); !m.Warn(e, ice.ErrNotFound, branch) {
+			commit = refer.Oid.String()
+		}
+	}
 	_repos_commit(m, dir, branch, func(ci *gogit.Commit, repos *gogit.Repository) bool {
 		if !strings.HasPrefix(ci.Oid.String(), commit) {
 			return false
@@ -120,12 +125,9 @@ func _repos_dir(m *ice.Message, dir, branch, commit, file string, cb func(*gogit
 		}
 		if tree, e := repos.LookupTree(ci.TreeId()); !m.Warn(e, ice.ErrNotValid, ci.TreeId().String) {
 			m.Logs(mdb.SELECT, REPOS, dir, BRANCH, branch, COMMIT, commit, "tree", tree.Oid.Short())
-			m.Logs("what", file, file)
 			tree.Walk(func(p string, v *gogit.TreeEntry) bool {
 				if pp := path.Join(p, v.Name) + kit.Select("", ice.PS, v.Type == gogit.ObjectTree); strings.HasPrefix(pp, file) {
-					m.Logs("what", file, pp)
 					if cb == nil {
-						m.Logs("what", file, pp)
 						if path.Dir(file) != path.Dir(pp) {
 
 						} else if v.Type == gogit.ObjectTree {
@@ -141,7 +143,6 @@ func _repos_dir(m *ice.Message, dir, branch, commit, file string, cb func(*gogit
 						}
 						delete(prev, pp)
 					} else if cb(v, repos) {
-						m.Logs("what", file, pp)
 						return true
 					}
 				}
@@ -149,7 +150,6 @@ func _repos_dir(m *ice.Message, dir, branch, commit, file string, cb func(*gogit
 			})
 		}
 		kit.Fetch(prev, func(pp, id string) {
-			m.Logs("what", path.Dir(file), path.Dir(pp))
 			if path.Dir(file) != path.Dir(pp) {
 				return
 			}
@@ -188,6 +188,7 @@ func _repos_cat(m *ice.Message, dir, branch, commit, file string) {
 
 const (
 	REFS_HEADS = "refs/heads/"
+	REFS_TAGS  = "refs/tags/"
 
 	INIT    = "init"
 	CONFIG  = "config"

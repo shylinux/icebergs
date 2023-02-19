@@ -92,11 +92,19 @@ const (
 const SERVER = "server"
 
 func init() {
-	web.Index.MergeCommands(ice.Commands{"/x/": {Actions: ice.MergeActions(ctx.CmdAction(), aaa.WhiteAction()), Hand: func(m *ice.Message, arg ...string) {
+	web.Index.MergeCommands(ice.Commands{"/x/": {Actions: ice.MergeActions(ctx.CmdAction(), aaa.WhiteAction(ctx.COMMAND, ice.RUN)), Hand: func(m *ice.Message, arg ...string) {
 		if !m.IsCliUA() {
-			web.RenderCmds(m,
-				kit.Dict(ctx.DISPLAY, "/plugin/local/code/repos.js", ctx.INDEX, "web.code.git.inner", ctx.ARGS, kit.List(strings.TrimSuffix(arg[0], ".git"), kit.Select("master", arg, 1), "pwd", kit.Select("README.md", path.Join(kit.Slice(arg, 2)...)))),
-			)
+			if strings.Contains(arg[0], ice.AT) {
+				ls := strings.Split(arg[0], ice.AT)
+				_repos_cat(m, path.Join(ice.USR_LOCAL_REPOS, ls[0]), "master", ls[1], path.Join(arg[1:]...))
+				m.RenderResult()
+			} else if strings.HasPrefix(arg[1], "v") && strings.Contains(arg[1], ice.PT) {
+				_repos_cat(m, path.Join(ice.USR_LOCAL_REPOS, arg[0]), "master", arg[1], path.Join(arg[2:]...))
+				m.RenderResult()
+			} else {
+				web.RenderCmds(m, kit.Dict(ctx.DISPLAY, "/plugin/local/code/repos.js", ctx.INDEX, "web.code.git.inner",
+					ctx.ARGS, kit.List(strings.TrimSuffix(arg[0], ".git"), arg[1], "pwd", kit.Select("README.md", path.Join(kit.Slice(arg, 2)...)))))
+			}
 			return
 		}
 		if m.RenderVoid(); m.Option("go-get") == "1" {
@@ -121,7 +129,7 @@ func init() {
 		m.Warn(_server_repos(m, arg...), ice.ErrNotValid)
 	}}})
 	Index.MergeCommands(ice.Commands{
-		"inner": {Name: "inner repos branch commit path auto", Help: "服务器", Actions: ice.MergeActions(ice.Actions{}), Hand: func(m *ice.Message, arg ...string) {
+		"inner": {Name: "inner repos branch commit path auto", Help: "服务器", Actions: ice.MergeActions(ice.Actions{}, aaa.RoleAction()), Hand: func(m *ice.Message, arg ...string) {
 			if m.Option(nfs.DIR_ROOT, ice.USR_LOCAL_REPOS); len(arg) == 0 {
 			} else if dir := path.Join(m.Option(nfs.DIR_ROOT), arg[0]); len(arg) == 1 {
 			} else if len(arg) == 2 {

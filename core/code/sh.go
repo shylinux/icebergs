@@ -23,7 +23,7 @@ func init() {
 			mdb.RENDER: {Hand: func(m *ice.Message, arg ...string) {
 				cmds, text := SH, kit.Format(_sh_template, m.Option(ice.MSG_USERHOST), m.Option(ice.MSG_USERPOD), path.Join(arg[2], arg[1]))
 				if strings.HasPrefix(text, "#!") {
-					cmds = strings.TrimSpace(strings.SplitN(text, ice.NL, 2)[0][2:])
+					// cmds = strings.TrimSpace(strings.SplitN(text, ice.NL, 2)[0][2:])
 				}
 				_xterm_show(m, cmds, text)
 			}},
@@ -37,5 +37,5 @@ func init() {
 
 var _sh_template = `#!/bin/sh
 export ctx_dev=%s ctx_pod=%s ctx_mod=%s
-temp=$(mktemp); if curl -h &>/dev/null; then curl -o $temp -fsSL $ctx_dev; else wget -O $temp -q $ctx_dev; fi && source $temp $ctx_mod
+temp=$(mktemp); if curl -V &>/dev/null; then curl -o $temp -fsSL $ctx_dev; else wget -O $temp -q $ctx_dev; fi && source $temp $ctx_mod
 `

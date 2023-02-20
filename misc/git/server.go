@@ -93,7 +93,7 @@ const SERVER = "server"
 
 func init() {
 	web.Index.MergeCommands(ice.Commands{"/x/": {Actions: ice.MergeActions(ctx.CmdAction(), aaa.WhiteAction(ctx.COMMAND, ice.RUN)), Hand: func(m *ice.Message, arg ...string) {
-		if !m.IsCliUA() {
+		if !m.IsCliUA() || strings.Contains(arg[0], ice.AT) {
 			if strings.Contains(arg[0], ice.AT) {
 				ls := strings.Split(arg[0], ice.AT)
 				_repos_cat(m, path.Join(ice.USR_LOCAL_REPOS, ls[0]), "master", ls[1], path.Join(arg[1:]...))

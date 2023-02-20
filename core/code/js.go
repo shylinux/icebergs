@@ -99,8 +99,13 @@ const JSON = "json"
 func init() {
 	Index.MergeCommands(ice.Commands{
 		JS: {Name: "js path auto", Help: "前端", Actions: ice.MergeActions(ice.Actions{
-			mdb.RENDER: {Hand: func(m *ice.Message, arg ...string) { _js_exec(m, arg...) }},
-			mdb.ENGINE: {Hand: func(m *ice.Message, arg ...string) { _js_exec(m, arg...) }},
+			mdb.RENDER: {Hand: func(m *ice.Message, arg ...string) {
+				cmds, text := "node", kit.Format(`require("./usr/volcanos/proto.js"), require("./usr/volcanos/publish/client/nodejs/proto.js"), Volcanos.meta._main("%s")`, path.Join(ice.PS, arg[2], arg[1]))
+				_xterm_show(m, cmds, text)
+			}},
+			mdb.ENGINE: {Hand: func(m *ice.Message, arg ...string) {
+				_js_exec(m, arg...)
+			}},
 
 			TEMPLATE: {Hand: func(m *ice.Message, arg ...string) { m.Echo(_js_template) }},
 			COMPLETE: {Hand: func(m *ice.Message, arg ...string) {

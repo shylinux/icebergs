@@ -35,7 +35,6 @@ const (
 	CAN = "can"
 
 	POD = "pod"
-	CTX = "ctx"
 	CMD = "cmd"
 	ARG = "arg"
 
@@ -289,17 +288,6 @@ const ( // ctx
 	STYLE   = "style"
 	INDEX   = "index"
 )
-const ( // web
-	SERVE = "serve"
-	SPACE = "space"
-
-	THEME = "theme"
-	TITLE = "title"
-)
-const ( // nfs
-	SOURCE = "source"
-	SCRIPT = "script"
-)
 const ( // mdb
 	SEARCH = "search"
 	SELECT = "select"
@@ -316,9 +304,32 @@ const ( // mdb
 	TEXT  = "text"
 	LINK  = "link"
 )
+const ( // web
+	SERVE = "serve"
+	SPACE = "space"
+
+	THEME = "theme"
+	TITLE = "title"
+)
+const ( // nfs
+	SOURCE = "source"
+	SCRIPT = "script"
+)
+const ( // cli
+	SYSTEM = "system"
+	START  = "start"
+)
 const ( // ice
+	CTX = "ctx"
 	MDB = "mdb"
-	GDB = "gdb"
+	WEB = "web"
 	AAA = "aaa"
+	LEX = "lex"
+	YAC = "yac"
+	SSH = "ssh"
+	GDB = "gdb"
+	TCP = "tcp"
+	NFS = "nfs"
 	CLI = "cli"
+	LOG = "log"
 )

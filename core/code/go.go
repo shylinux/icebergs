@@ -123,8 +123,13 @@ func init() {
 		}, PlugAction())},
 		GO: {Name: "go path auto", Help: "后端编程", Actions: ice.MergeActions(ice.Actions{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) { m.Cmd(NAVIGATE, mdb.CREATE, GODOC, m.PrefixKey()) }},
-			mdb.RENDER:   {Hand: func(m *ice.Message, arg ...string) { _go_show(m, arg...) }},
-			mdb.ENGINE:   {Hand: func(m *ice.Message, arg ...string) { _go_exec(m, arg...) }},
+			mdb.RENDER: {Hand: func(m *ice.Message, arg ...string) {
+				cmds, text := "ice.bin space dial dev ops", ctx.GetFileCmd(path.Join(arg[2], arg[1]))
+				_xterm_show(m, cmds, text)
+			}},
+			mdb.ENGINE: {Hand: func(m *ice.Message, arg ...string) {
+				_go_exec(m, arg...)
+			}},
 			COMPLETE: {Hand: func(m *ice.Message, arg ...string) {
 				kit.If(len(arg) == 0 || arg[0] != mdb.FOREACH, func() { _go_complete(m, arg...) })
 			}},

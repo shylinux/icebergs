@@ -13,7 +13,7 @@ import (
 )
 
 func BinPath(arg ...string) string {
-	return kit.Join(kit.Simple(arg, kit.Path(ice.BIN), kit.Path(ice.USR_LOCAL_BIN), kit.Path(ice.USR_LOCAL_GO_BIN), kit.Env(PATH)), ice.DF)
+	return kit.Join(kit.Simple(arg, kit.Path(ice.BIN), kit.Path(ice.USR_PUBLISH), kit.Path(ice.USR_LOCAL_BIN), kit.Path(ice.USR_LOCAL_GO_BIN), kit.Env(PATH)), ice.DF)
 }
 
 const FOREVER = "forever"

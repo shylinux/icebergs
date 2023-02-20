@@ -92,6 +92,11 @@ func Run(arg ...string) string {
 	if len(arg) == 0 && len(os.Args) > 1 {
 		arg = kit.Simple(os.Args[1:], kit.Split(kit.Env(CTX_ARG)))
 	}
+	if len(arg) == 0 && runtime.GOOS == "windows" {
+		arg = append(arg, SERVE, START, DEV, SHY)
+		logs.Disable(true)
+		os.Stderr.Close()
+	}
 	Pulse.meta[MSG_DETAIL] = arg
 	kit.Fetch(kit.Sort(os.Environ()), func(env string) {
 		if ls := strings.SplitN(env, EQ, 2); strings.ToLower(ls[0]) == ls[0] && ls[0] != "_" {
@@ -100,11 +105,6 @@ func Run(arg ...string) string {
 	})
 	if Pulse._cmd == nil {
 		Pulse._cmd = &Command{RawHand: logs.FileLines(3)}
-	}
-	if len(arg) == 0 && runtime.GOOS == "windows" {
-		arg = append(arg, SERVE, "start", "dev", "shy")
-		logs.Disable(true)
-		os.Stderr.Close()
 	}
 	switch Index.Merge(Index).Begin(Pulse, arg...); kit.Select("", arg, 0) {
 	case SERVE, SPACE:
@@ -116,7 +116,10 @@ func Run(arg ...string) string {
 		if logs.Disable(true); len(arg) == 0 {
 			arg = append(arg, HELP)
 		}
-		if Pulse.Cmd(INIT).Cmdy(arg); strings.TrimSpace(Pulse.Result()) == "" {
+		if Pulse.Cmdy(INIT).Cmdy(arg); Pulse.IsErrNotFound() {
+			Pulse.SetAppend().SetResult().Cmdy(SYSTEM, arg)
+		}
+		if strings.TrimSpace(Pulse.Result()) == "" {
 			Pulse.Table()
 		}
 		if !strings.HasSuffix(Pulse.Result(), NL) {

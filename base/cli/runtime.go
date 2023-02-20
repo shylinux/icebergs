@@ -149,7 +149,7 @@ const RUNTIME = "runtime"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
-		RUNTIME: {Name: "runtime info=bootinfo,ifconfig,hostinfo,hostname,userinfo,procinfo,diskinfo,api,cli,cmd,env,chain auto upgrade", Help: "运行环境", Actions: ice.MergeActions(ice.Actions{
+		RUNTIME: {Name: "runtime info=bootinfo,ifconfig,hostinfo,hostname,userinfo,procinfo,diskinfo,api,cli,cmd,env,path,chain auto upgrade", Help: "运行环境", Actions: ice.MergeActions(ice.Actions{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) { _runtime_init(m) }},
 			ice.CTX_EXIT: {Hand: func(m *ice.Message, arg ...string) { m.Conf("", "", nil) }},
 			IFCONFIG:     {Hand: func(m *ice.Message, arg ...string) { m.Cmdy("tcp.host") }},
@@ -198,6 +198,11 @@ func init() {
 					m.Echo(m.Conf(RUNTIME, MAKE_DOMAIN))
 				} else {
 					m.Echo(kit.MergePOD(os.Getenv(CTX_DEV), os.Getenv(CTX_POD)))
+				}
+			}},
+			nfs.PATH: {Hand: func(m *ice.Message, arg ...string) {
+				for _, p := range strings.Split(os.Getenv(PATH), ice.DF) {
+					m.Push(nfs.PATH, p)
 				}
 			}},
 			"chain": {Hand: func(m *ice.Message, arg ...string) { m.Echo(m.FormatChain()) }},

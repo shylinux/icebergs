@@ -118,3 +118,7 @@ func init() {
 		}},
 	})
 }
+
+func _xterm_show(m *ice.Message, cmds, text string) {
+	m.Cmdy(ctx.COMMAND, XTERM).Push(ctx.ARGS, kit.Format([]string{m.Cmdx(XTERM, mdb.CREATE, mdb.TYPE, cmds, mdb.TEXT, text)})).ProcessField(XTERM)
+}

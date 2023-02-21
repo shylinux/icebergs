@@ -121,26 +121,26 @@ func init() {
 var _contexts = kit.Dict(
 	ice.MISC, `
 # 下载应用 wget Alpine / Busybox
-export ctx_dev={{.Option "domain"}}{{.Option "ctx_env"}}; ctx_temp=$(mktemp); wget -O $ctx_temp -q $ctx_dev; source $ctx_temp app username {{.Option "user.name"}} usernick {{.Option "user.nick"}}
+export ctx_dev={{.Option "domain"}}{{.Option "ctx_env"}}; temp=$(mktemp); wget -O $temp -q $ctx_dev; source $temp app username {{.Option "user.name"}} usernick {{.Option "user.nick"}}
 
 # 下载应用 curl Centos / MacOS
-export ctx_dev={{.Option "domain"}}{{.Option "ctx_env"}}; ctx_temp=$(mktemp); curl -o $ctx_temp -fsSL $ctx_dev; source $ctx_temp app username {{.Option "user.name"}} usernick {{.Option "user.nick"}}
+export ctx_dev={{.Option "domain"}}{{.Option "ctx_env"}}; temp=$(mktemp); curl -o $temp -fsSL $ctx_dev; source $temp app username {{.Option "user.name"}} usernick {{.Option "user.nick"}}
 `,
 	ice.CORE, `
 # 下载命令 wget Busybox
-ctx_temp=$(mktemp); wget -O $ctx_temp -q http://shylinux.com; source $ctx_temp binary
+temp=$(mktemp); wget -O $temp -q http://shylinux.com; source $temp binary
 
 # 下载命令 wget Alpine
-ctx_temp=$(mktemp); wget -O $ctx_temp -q {{.Option "domain"}}; source $ctx_temp binary
+temp=$(mktemp); wget -O $temp -q {{.Option "domain"}}; source $temp binary
 
 # 下载命令 curl Centos / MacOS
-ctx_temp=$(mktemp); curl -o $ctx_temp -fsSL {{.Option "domain"}}; source $ctx_temp binary
+temp=$(mktemp); curl -o $temp -fsSL {{.Option "domain"}}; source $temp binary
 `,
 	ice.BASE, `
 # 下载源码 wget Alpine
-ctx_temp=$(mktemp); wget -O $ctx_temp -q {{.Option "domain"}}; source $ctx_temp source
+temp=$(mktemp); wget -O $temp -q {{.Option "domain"}}; source $temp source
 
 # 下载源码 curl Centos / MacOS
-ctx_temp=$(mktemp); curl -o $ctx_temp -fsSL {{.Option "domain"}}; source $ctx_temp source
+temp=$(mktemp); curl -o $temp -fsSL {{.Option "domain"}}; source $temp source
 `,
 )

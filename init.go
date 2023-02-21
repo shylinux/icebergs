@@ -108,6 +108,9 @@ func Run(arg ...string) string {
 	}
 	switch Index.Merge(Index).Begin(Pulse, arg...); kit.Select("", arg, 0) {
 	case SERVE, SPACE:
+		if os.Getenv("ctx_log") == "" {
+			logs.Disable(true)
+		}
 		if Index.Start(Pulse, arg...) {
 			conf.Wait()
 			os.Exit(kit.Int(Pulse.Option(EXIT)))

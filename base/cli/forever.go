@@ -3,7 +3,6 @@ package cli
 import (
 	"os"
 	"path"
-	"runtime"
 
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/gdb"
@@ -64,10 +63,6 @@ func init() {
 					back := kit.Format("var/log.%s", logs.Now().Format("20060102_150405"))
 					m.Cmd(SYSTEM, "cp", "-r", "var/log", back, ice.Maps{CMD_OUTPUT: ""})
 					m.Cmd(SYSTEM, "cp", "bin/boot.log", path.Join(back, "boot.log"), ice.Maps{CMD_OUTPUT: ""})
-				}
-				if runtime.GOOS == "windows" {
-					m.Sleep("3s")
-					break
 				}
 			}
 		}},

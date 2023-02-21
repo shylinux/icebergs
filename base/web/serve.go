@@ -179,7 +179,7 @@ func init() {
 			}},
 			SERVE_START: {Hand: func(m *ice.Message, arg ...string) {
 				if domain := m.Cmdx(SPACE, DOMAIN); ice.Info.Colors {
-					m.Sleep30ms().Cmd(ssh.PRINTF, kit.Dict(nfs.CONTENT, "\r"+ice.Render(m, ice.RENDER_QRCODE, domain)+ice.NL)).Cmd(ssh.PROMPT)
+					m.Sleep30ms().Cmd(ssh.PRINTF, kit.Dict(nfs.CONTENT, "\r"+ice.Render(m, ice.RENDER_QRCODE, domain))).Cmd(ssh.PROMPT)
 				}
 				switch runtime.GOOS {
 				case cli.WINDOWS:

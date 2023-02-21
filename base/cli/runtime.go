@@ -29,7 +29,7 @@ func _runtime_init(m *ice.Message) {
 	for _, k := range ENV_LIST {
 		switch m.Conf(RUNTIME, kit.Keys(CONF, k), kit.Env(k)); k {
 		case CTX_PID:
-			ice.Info.PidPath = kit.Select(path.Join(ice.VAR_RUN, "ice.pid"), kit.Env(k))
+			ice.Info.PidPath = kit.Select(path.Join(ice.VAR_LOG, ice.ICE_PID), kit.Env(k))
 		case CTX_SHARE:
 			ice.Info.CtxShare = kit.Env(k)
 		case CTX_RIVER:

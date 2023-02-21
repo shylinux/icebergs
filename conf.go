@@ -120,7 +120,6 @@ const ( // DIR
 	USR_LOCAL_EXPORT = "usr/local/export/"
 	USR_LOCAL_REPOS  = "usr/local/repos/"
 
-	VAR_RUN        = "var/run/"
 	VAR_TMP        = "var/tmp/"
 	VAR_LOG        = "var/log/"
 	VAR_CONF       = "var/conf/"
@@ -149,6 +148,7 @@ const ( // DIR
 	MAKEFILE       = "Makefile"
 	LICENSE        = "LICENSE"
 	ICE_BIN        = "ice.bin"
+	ICE_PID        = "ice.pid"
 	GO_SUM         = "go.sum"
 	GO_MOD         = "go.mod"
 )

@@ -54,10 +54,10 @@ func _dream_show(m *ice.Message, name string) {
 	defer ToastProcess(m)()
 	defer m.Sleep3s()
 	m.Options(cli.CMD_DIR, kit.Path(p), cli.CMD_ENV, kit.Simple(
-		cli.CTX_OPS, "http://localhost:"+m.CmdAppend(SERVE, tcp.PORT),
+		cli.CTX_OPS, "http://localhost:"+m.CmdAppend(SERVE, tcp.PORT), cli.CTX_LOG, ice.VAR_LOG_BOOT_LOG,
 		cli.PATH, cli.BinPath(kit.Path(p, ice.BIN)), cli.USER, ice.Info.Username,
 		kit.EnvSimple(cli.HOME, cli.TERM, cli.SHELL), m.Configv(cli.ENV),
-	), cli.CMD_OUTPUT, path.Join(p, ice.BIN_BOOT_LOG))
+	), cli.CMD_OUTPUT, path.Join(p, ice.VAR_LOG_BOOT_LOG))
 	defer m.Options(cli.CMD_DIR, "", cli.CMD_ENV, "", cli.CMD_OUTPUT, "")
 	gdb.Event(m, DREAM_CREATE, m.OptionSimple(mdb.NAME, mdb.TYPE))
 	m.Cmd(cli.DAEMON, kit.Select(os.Args[0], cli.SystemFind(m, ice.ICE_BIN, nfs.PWD+path.Join(p, ice.BIN), nfs.PWD+ice.BIN)),
@@ -107,6 +107,10 @@ func init() {
 				switch arg[0] {
 				case mdb.NAME, nfs.TEMPLATE:
 					_dream_list(m).Cut("name,status,time")
+				case "repos":
+					m.Cmdy(SPIDE, ice.OPS, SPIDE_MSG, "/x/list")
+					// m.Cmdy(SPIDE, ice.DEV, SPIDE_MSG, "/x/list")
+					// m.Cmdy(SPIDE, ice.SHY, SPIDE_MSG, "/x/list")
 				default:
 					gdb.Event(m, "", arg)
 				}

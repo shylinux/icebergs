@@ -12,6 +12,8 @@ import (
 	"shylinux.com/x/icebergs/base/ctx"
 	"shylinux.com/x/icebergs/base/gdb"
 	"shylinux.com/x/icebergs/base/mdb"
+	"shylinux.com/x/icebergs/base/nfs"
+	"shylinux.com/x/icebergs/base/ssh"
 	"shylinux.com/x/icebergs/base/tcp"
 	kit "shylinux.com/x/toolkits"
 	"shylinux.com/x/websocket"
@@ -21,6 +23,7 @@ func _space_dial(m *ice.Message, dev, name string, arg ...string) {
 	msg := m.Cmd(SPIDE, tcp.CLIENT, dev, PP(SPACE))
 	uri := kit.ParseURL(strings.Replace(kit.MergeURL(msg.Append(DOMAIN), mdb.TYPE, ice.Info.NodeType, mdb.NAME, name, SHARE, ice.Info.CtxShare, RIVER, ice.Info.CtxRiver, arg), ice.HTTP, "ws", 1))
 	args := kit.SimpleKV("type,name,host,port", msg.Append(tcp.PROTOCOL), dev, msg.Append(tcp.HOST), msg.Append(tcp.PORT))
+	prints := false
 	m.Go(func() {
 		redial := kit.Dict(m.Configv(REDIAL))
 		a, b, c := kit.Int(redial["a"]), kit.Int(redial["b"]), kit.Int(redial["c"])
@@ -29,6 +32,12 @@ func _space_dial(m *ice.Message, dev, name string, arg ...string) {
 			m.Cmd(tcp.CLIENT, tcp.DIAL, args, func(c net.Conn) {
 				if conn, _, e := websocket.NewClient(c, uri, nil, kit.Int(redial["r"]), kit.Int(redial["w"])); !m.Warn(e, tcp.DIAL, dev, SPACE, uri.String()) {
 					defer mdb.HashCreateDeferRemove(m, kit.SimpleKV("", MASTER, dev, msg.Append(tcp.HOSTNAME)), kit.Dict(mdb.TARGET, conn))()
+					if !prints {
+						m.Go(func() {
+							m.Sleep30ms().Cmd(ssh.PRINTF, kit.Dict(nfs.CONTENT, "\r"+ice.Render(m, ice.RENDER_QRCODE, m.CmdAppend(SPACE, dev, cli.PWD, mdb.LINK)))).Cmd(ssh.PROMPT)
+						})
+						prints = true
+					}
 					_space_handle(m.Spawn(), true, dev, conn)
 					i = 0
 				}

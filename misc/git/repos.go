@@ -104,7 +104,7 @@ func _repos_dir(m *ice.Message, dir, branch, commit, file string, cb func(*gogit
 		file = ""
 	}
 	if repos, e := gogit.OpenRepository(dir); !m.Warn(e, ice.ErrNotFound, dir) {
-		if refer, e := repos.LookupReference(REFS_TAGS + commit); !m.Warn(e, ice.ErrNotFound, branch) {
+		if refer, e := repos.LookupReference(REFS_TAGS + commit); e == nil {
 			commit = refer.Oid.String()
 		}
 	}

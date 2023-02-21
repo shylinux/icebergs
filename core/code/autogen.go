@@ -54,9 +54,9 @@ func _autogen_version(m *ice.Message) {
 		m.Cmdy(cli.SYSTEM, GIT, ice.INIT)
 		m.Cmd(cli.SYSTEM, GIT, "remote", "add", "origin", "https://"+mod)
 		m.Cmd(cli.SYSTEM, GIT, "add", ice.GO_MOD, ice.SRC, ice.ETC_MISS_SH)
-		m.Cmd(nfs.DEFS, ".gitignore", _git_ignore)
 		m.Cmd("web.code.git.repos", mdb.CREATE, nfs.ORIGIN, "https://"+mod, mdb.NAME, path.Base(mod), nfs.PATH, nfs.PWD)
 	}
+	m.Cmd(nfs.DEFS, ".gitignore", _git_ignore)
 	m.Cmd(nfs.DEFS, ice.SRC_BINPACK_GO, `package main`+ice.NL)
 	m.Cmd(nfs.SAVE, ice.SRC_VERSION_GO, kit.Format(_version_template, _autogen_gits(m, nfs.MODULE, _autogen_mod(m, ice.GO_MOD), tcp.HOSTNAME, ice.Info.Hostname, aaa.USERNAME, ice.Info.Username)))
 	m.Cmd(cli.SYSTEM, "gofmt", "-w", ice.SRC_VERSION_GO)
@@ -162,7 +162,7 @@ fi
 require miss.sh
 ish_miss_prepare_compile
 ish_miss_prepare_develop
-ish_miss_prepare_operate
+ish_miss_prepare_project
 
 ish_miss_make; if [ -n "$*" ]; then ish_miss_serve "$@"; fi
 `

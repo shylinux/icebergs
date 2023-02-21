@@ -120,6 +120,8 @@ const ( // DIR
 	USR_LOCAL_EXPORT = "usr/local/export/"
 	USR_LOCAL_REPOS  = "usr/local/repos/"
 
+	VAR_LOG_BOOT_LOG = "var/log/boot.log"
+
 	VAR_TMP        = "var/tmp/"
 	VAR_LOG        = "var/log/"
 	VAR_CONF       = "var/conf/"

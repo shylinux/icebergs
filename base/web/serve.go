@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"net/url"
 	"path"
+	"regexp"
 	"runtime"
 	"strings"
 
@@ -137,7 +138,12 @@ func _serve_domain(m *ice.Message) string {
 		func() string { return kit.Select("", m.R.Header.Get(Referer), m.R.Method == http.MethodPost) },
 		func() string { return m.R.Header.Get("X-Host") },
 		func() string { return ice.Info.Domain },
-		func() string { return kit.Format("%s://%s", kit.Select("https", ice.HTTP, m.R.TLS == nil), m.R.Host) },
+		func() string {
+			if b, e := regexp.MatchString("^[0-9.]+$", m.R.Host); b && e == nil {
+				return kit.Format("%s://%s:%s", kit.Select("https", ice.HTTP, m.R.TLS == nil), m.R.Host, m.Option(tcp.PORT))
+			}
+			return kit.Format("%s://%s", kit.Select("https", ice.HTTP, m.R.TLS == nil), m.R.Host)
+		},
 	)
 }
 func _serve_login(m *ice.Message, key string, cmds []string, w http.ResponseWriter, r *http.Request) ([]string, bool) {
@@ -178,7 +184,7 @@ func init() {
 				_serve_start(m)
 			}},
 			SERVE_START: {Hand: func(m *ice.Message, arg ...string) {
-				if domain := m.Cmdx(SPACE, DOMAIN); ice.Info.Colors {
+				if domain := m.Cmdx(SPACE, DOMAIN); ice.Info.Colors && m.Option(ice.DEV) == "" {
 					m.Sleep30ms().Cmd(ssh.PRINTF, kit.Dict(nfs.CONTENT, "\r"+ice.Render(m, ice.RENDER_QRCODE, domain))).Cmd(ssh.PROMPT)
 				}
 				switch runtime.GOOS {
@@ -242,7 +248,6 @@ func init() {
 					}
 				}
 			}
-			m.Debug("what %v", p)
 			m.RenderDownload(p)
 		}},
 		PP(ice.REQUIRE, ice.NODE_MODULES): {Name: "/require/node_modules/", Help: "依赖库", Hand: func(m *ice.Message, arg ...string) {

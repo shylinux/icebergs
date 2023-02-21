@@ -276,7 +276,7 @@ func init() {
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
 				conf := m.Confm(cli.RUNTIME, cli.CONF)
 				m.Cmd("", mdb.CREATE, ice.OPS, kit.Select("http://127.0.0.1:9020", conf[cli.CTX_OPS]))
-				m.Cmd("", mdb.CREATE, ice.DEV, kit.Select(ice.Info.Make.Domain, conf[cli.CTX_DEV]))
+				m.Cmd("", mdb.CREATE, ice.DEV, kit.Select(kit.Select("https://contexts.com.cn", ice.Info.Make.Domain), conf[cli.CTX_DEV]))
 				m.Cmd("", mdb.CREATE, ice.COM, kit.Select("https://contexts.com.cn", conf[cli.CTX_COM]))
 				m.Cmd("", mdb.CREATE, ice.SHY, kit.Select(kit.Select("https://shylinux.com", ice.Info.Make.Remote), conf[cli.CTX_SHY]))
 			}},

@@ -67,9 +67,9 @@ func _publish_contexts(m *ice.Message, arg ...string) {
 		case ice.MISC:
 			_publish_file(m, ice.ICE_BIN)
 		case ice.CORE:
-			m.Option(web.DOMAIN, m.Cmd(web.SPIDE, ice.SHY).Append("client.origin"))
+			m.Option(web.DOMAIN, m.Cmd(web.SPIDE, ice.COM).Append(web.CLIENT_ORIGIN))
 		case ice.BASE:
-			m.Option(web.DOMAIN, m.Cmd(web.SPIDE, ice.SHY).Append("client.origin"))
+			m.Option(web.DOMAIN, m.Cmd(web.SPIDE, ice.SHY).Append(web.CLIENT_ORIGIN))
 			m.Option(nfs.REMOTE, kit.Select(ice.Info.Make.Remote, cli.SystemExec(m, "git", "config", "remote.origin.url")))
 		}
 		if buf, err := kit.Render(m.Config(kit.Keys(ice.CONTEXTS, k)), m); m.Assert(err) {
@@ -128,7 +128,7 @@ export ctx_dev={{.Option "domain"}}{{.Option "ctx_env"}}; temp=$(mktemp); curl -
 `,
 	ice.CORE, `
 # 下载命令 wget Busybox
-temp=$(mktemp); wget -O $temp -q http://shylinux.com; source $temp binary
+temp=$(mktemp); wget -O $temp -q http://contexts.com.cn; source $temp binary
 
 # 下载命令 wget Alpine
 temp=$(mktemp); wget -O $temp -q {{.Option "domain"}}; source $temp binary

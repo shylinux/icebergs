@@ -13,7 +13,8 @@ import (
 
 func _sh_exec(m *ice.Message, arg ...string) {
 	m.Cmdy(cli.SYSTEM, SH, "-c", kit.Format(_sh_template, m.Option(ice.MSG_USERHOST), m.Option(ice.MSG_USERPOD), path.Join(arg[2], arg[1])))
-	m.StatusTime("script", kit.Renders(kit.Format(`export ctx_dev={{.Option "user.host"}}; temp=$(mktemp); wget -O $temp -q $ctx_dev; source $temp %s`, path.Join(arg[2], arg[1])), m))
+	m.StatusTime("script", kit.Renders(kit.Format(`export ctx_dev={{.Option "user.host"}}%s; temp=$(mktemp); wget -O $temp -q $ctx_dev; source $temp %s`,
+		kit.Select("", " ctx_pod="+m.Option(ice.MSG_USERPOD), m.Option(ice.MSG_USERPOD) != ""), path.Join(arg[2], arg[1])), m))
 }
 
 const SH = nfs.SH

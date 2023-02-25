@@ -104,7 +104,7 @@ func _dir_list(m *ice.Message, root string, dir string, level int, deep bool, di
 					m.Push(mdb.HASH, kit.Select(h[:6], h[:], field == mdb.HASH))
 				case mdb.LINK:
 					if strings.Contains(p, "ice.windows.") {
-						m.PushDownload(mdb.LINK, kit.Select("", f.Name(), !isDir)+".exe", p)
+						m.PushDownload(mdb.LINK, "ice.exe", p)
 					} else {
 						m.PushDownload(mdb.LINK, kit.Select("", f.Name(), !isDir), p)
 					}

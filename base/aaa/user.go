@@ -96,8 +96,9 @@ func UserRoot(m *ice.Message, arg ...string) *ice.Message {
 	username := kit.Select(ice.Info.Username, arg, 0)
 	usernick := kit.Select(UserNick(m, username), arg, 1)
 	userrole := kit.Select(ROOT, arg, 2)
+	userzone := kit.Select("", arg, 3)
 	if len(arg) > 0 {
-		m.Cmd(USER, mdb.CREATE, username, "", usernick, "", userrole)
+		m.Cmd(USER, mdb.CREATE, username, "", usernick, userzone, userrole)
 		ice.Info.Username = username
 	}
 	return SessAuth(m, kit.Dict(USERNAME, username, USERNICK, usernick, USERROLE, userrole))

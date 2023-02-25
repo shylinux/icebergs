@@ -6,6 +6,7 @@ import (
 	"shylinux.com/x/icebergs/base/cli"
 	"shylinux.com/x/icebergs/base/ctx"
 	"shylinux.com/x/icebergs/base/web"
+	kit "shylinux.com/x/toolkits"
 )
 
 const FOOTER = "footer"
@@ -20,8 +21,8 @@ func init() {
 					}
 				}
 			}},
-		}, ctx.CmdAction(TITLE, `<a href="mailto:shylinuxc@gmail.com">shylinuxc@gmail.com</a>`), aaa.WhiteAction(ctx.COMMAND, ice.RUN)), Hand: func(m *ice.Message, arg ...string) {
-			m.Result(m.Configv(TITLE))
+		}, ctx.CmdAction(), aaa.WhiteAction(ctx.COMMAND, ice.RUN)), Hand: func(m *ice.Message, arg ...string) {
+			m.Result(kit.Select(m.Config(TITLE), ice.Info.Make.Email))
 		}},
 	})
 }

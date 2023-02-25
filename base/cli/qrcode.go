@@ -12,6 +12,7 @@ import (
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/nfs"
+	"shylinux.com/x/icebergs/base/tcp"
 	kit "shylinux.com/x/toolkits"
 )
 
@@ -79,13 +80,14 @@ func _qrcode_cli(m *ice.Message, text string) {
 	}
 	m.Echo(text).Echo(ice.NL)
 }
-func _qrcode_web(m *ice.Message, text string) {
+func _qrcode_web(m *ice.Message, text string) string {
 	qr, _ := qrcode.New(text, qrcode.Medium)
 	qr.ForegroundColor = _parse_color(m.Option(FG))
 	qr.BackgroundColor = _parse_color(m.Option(BG))
 	if data, err := qr.PNG(kit.Int(m.Option(SIZE))); m.Assert(err) {
 		m.Echo(`<img src="data:image/png;base64,%s" title='%s'>`, base64.StdEncoding.EncodeToString(data), text)
 	}
+	return text
 }
 
 const (
@@ -133,8 +135,7 @@ func init() {
 				_qrcode_cli(m, kit.Select(kit.Select(ice.Info.Make.Domain, ice.Info.Domain), arg, 0))
 			} else {
 				m.Option(SIZE, kit.Select(kit.Format(kit.Max(240, kit.Min(480, kit.Int(m.Option(ice.MSG_HEIGHT)), kit.Int(m.Option(ice.MSG_WIDTH))))), arg, 3))
-				_qrcode_web(m, kit.Select(m.Option(ice.MSG_USERWEB), arg, 0))
-				m.StatusTime(mdb.LINK, kit.Select(m.Option(ice.MSG_USERWEB), arg, 0))
+				m.StatusTime(mdb.LINK, _qrcode_web(m, tcp.PublishLocalhost(m, kit.Select(m.Option(ice.MSG_USERWEB), arg, 0))))
 			}
 		}},
 	})

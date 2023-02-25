@@ -11,6 +11,7 @@ type MakeInfo struct {
 	Version  string
 	Hostname string
 	Username string
+	Email    string
 }
 
 var Info = struct {

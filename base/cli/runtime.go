@@ -19,6 +19,7 @@ func _runtime_init(m *ice.Message) {
 	kit.Fetch(kit.UnMarshal(kit.Format(ice.Info.Make)), func(key string, value ice.Any) {
 		m.Conf(RUNTIME, kit.Keys(MAKE, strings.ToLower(key)), value)
 	})
+	aaa.UserRoot(ice.Pulse, ice.Info.Make.Username, "", aaa.TECH, ice.DEV)
 	m.Conf(RUNTIME, kit.Keys(HOST, GOARCH), runtime.GOARCH)
 	m.Conf(RUNTIME, kit.Keys(HOST, GOOS), runtime.GOOS)
 	m.Conf(RUNTIME, kit.Keys(HOST, OSID), release(m))
@@ -48,7 +49,7 @@ func _runtime_init(m *ice.Message) {
 	ice.Info.Hostname = m.Conf(RUNTIME, kit.Keys(BOOT, HOSTNAME))
 	ice.Info.Pathname = m.Conf(RUNTIME, kit.Keys(BOOT, PATHNAME))
 	ice.Info.Username = m.Conf(RUNTIME, kit.Keys(BOOT, USERNAME))
-	aaa.UserRoot(ice.Pulse, ice.Info.Username)
+	aaa.UserRoot(ice.Pulse, ice.Info.Username, "", "", ice.OPS)
 	msg := m.Cmd(nfs.DIR, _system_find(m, os.Args[0]), "time,path,size,hash")
 	m.Conf(RUNTIME, kit.Keys(BOOT, ice.BIN), msg.Append(nfs.PATH))
 	m.Conf(RUNTIME, kit.Keys(BOOT, nfs.SIZE), msg.Append(nfs.SIZE))

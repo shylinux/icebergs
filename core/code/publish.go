@@ -62,7 +62,7 @@ func _publish_contexts(m *ice.Message, arg ...string) {
 	for _, k := range kit.Default(arg, ice.MISC) {
 		switch k {
 		case INSTALL:
-			m.Echo(kit.Renders(`export ctx_dev={{.Option "domain"}}{{.Option "ctx_env"}}; ctx_temp=$(mktemp); wget -O $ctx_temp -q $ctx_dev; source $ctx_temp app username {{.Option "user.name"}} usernick {{.Option "user.nick"}}`, m))
+			m.Echo(kit.Renders(strings.TrimSpace(m.Config(kit.Keys(ice.CONTEXTS, ice.MISC))), m))
 			return
 		case ice.MISC:
 			_publish_file(m, ice.ICE_BIN)
@@ -118,27 +118,12 @@ func init() {
 
 var _contexts = kit.Dict(
 	ice.MISC, `
-# 下载应用 wget Alpine / Busybox
-export ctx_dev={{.Option "domain"}}{{.Option "ctx_env"}}; temp=$(mktemp); wget -O $temp -q $ctx_dev; source $temp app username {{.Option "user.name"}} usernick {{.Option "user.nick"}}
-
-# 下载应用 curl Centos / MacOS
-export ctx_dev={{.Option "domain"}}{{.Option "ctx_env"}}; temp=$(mktemp); curl -o $temp -fsSL $ctx_dev; source $temp app username {{.Option "user.name"}} usernick {{.Option "user.nick"}}
+export ctx_dev={{.Option "domain"}}{{.Option "ctx_env"}}; temp=$(mktemp); if curl -h &>/dev/null; then curl -o $temp -fsSL $ctx_dev; else wget -O $temp -q $ctx_dev; fi; source $temp app username {{.Option "user.name"}} usernick {{.Option "user.nick"}}
 `,
 	ice.CORE, `
-# 下载命令 wget Busybox
-temp=$(mktemp); wget -O $temp -q http://contexts.com.cn; source $temp binary
-
-# 下载命令 wget Alpine
-temp=$(mktemp); wget -O $temp -q {{.Option "domain"}}; source $temp binary
-
-# 下载命令 curl Centos / MacOS
-temp=$(mktemp); curl -o $temp -fsSL {{.Option "domain"}}; source $temp binary
+temp=$(mktemp); if curl -h &>/dev/null; then curl -o $temp -fsSL {{.Option "domain"}}; else wget -O $temp -q {{.Option "domain"}}; fi; source $temp binary
 `,
 	ice.BASE, `
-# 下载源码 wget Alpine
-temp=$(mktemp); wget -O $temp -q {{.Option "domain"}}; source $temp source
-
-# 下载源码 curl Centos / MacOS
-temp=$(mktemp); curl -o $temp -fsSL {{.Option "domain"}}; source $temp source
+temp=$(mktemp); if curl -h &>/dev/null; then curl -o $temp -fsSL {{.Option "domain"}}; else wget -O $temp -q {{.Option "domain"}}; fi; source $temp source
 `,
 )

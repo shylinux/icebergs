@@ -58,7 +58,7 @@ func _autogen_version(m *ice.Message) {
 	}
 	m.Cmd(nfs.DEFS, ".gitignore", _git_ignore)
 	m.Cmd(nfs.DEFS, ice.SRC_BINPACK_GO, `package main`+ice.NL)
-	m.Cmd(nfs.SAVE, ice.SRC_VERSION_GO, kit.Format(_version_template, _autogen_gits(m, nfs.MODULE, _autogen_mod(m, ice.GO_MOD), tcp.HOSTNAME, ice.Info.Hostname, aaa.USERNAME, ice.Info.Username)))
+	m.Cmd(nfs.SAVE, ice.SRC_VERSION_GO, kit.Format(_version_template, _autogen_gits(m, nfs.MODULE, _autogen_mod(m, ice.GO_MOD), tcp.HOSTNAME, ice.Info.Hostname)))
 	m.Cmd(cli.SYSTEM, "gofmt", "-w", ice.SRC_VERSION_GO)
 	m.Cmdy(nfs.DIR, ice.SRC_BINPACK_GO)
 	m.Cmdy(nfs.DIR, ice.SRC_VERSION_GO)
@@ -77,7 +77,9 @@ func _autogen_git(m *ice.Message, arg ...string) ice.Map {
 		nfs.REMOTE, m.Cmdx(cli.SYSTEM, GIT, "config", "remote.origin.url"),
 		nfs.BRANCH, m.Cmdx(cli.SYSTEM, GIT, "rev-parse", "--abbrev-ref", "HEAD"),
 		nfs.VERSION, m.Cmdx(cli.SYSTEM, GIT, "describe", "--tags"),
-		web.DOMAIN, tcp.PublishLocalhost(m, kit.Split(m.Option(ice.MSG_USERWEB), "?")[0]),
+		aaa.EMAIL, m.Cmdx(cli.SYSTEM, GIT, "config", "user.email"),
+		aaa.USERNAME, kit.Select(ice.Info.Username, m.Cmdx(cli.SYSTEM, GIT, "config", "user.name")),
+		web.DOMAIN, tcp.PublishLocalhost(m, kit.Split(m.Option(ice.MSG_USERWEB), ice.QS)[0]),
 	)
 }
 func _autogen_mod(m *ice.Message, file string) (mod string) {

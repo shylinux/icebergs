@@ -5,6 +5,7 @@ const (
 	SP = " "
 	DF = ":"
 	EQ = "="
+	QS = "?"
 	AT = "@"
 	PS = "/"
 	PT = "."

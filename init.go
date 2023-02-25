@@ -93,9 +93,7 @@ func Run(arg ...string) string {
 		arg = kit.Simple(os.Args[1:], kit.Split(kit.Env(CTX_ARG)))
 	}
 	if len(arg) == 0 && runtime.GOOS == "windows" {
-		arg = append(arg, SERVE, START, DEV, SHY)
-		logs.Disable(true)
-		os.Stderr.Close()
+		arg = append(arg, SERVE, START, DEV, DEV)
 	}
 	Pulse.meta[MSG_DETAIL] = arg
 	kit.Fetch(kit.Sort(os.Environ()), func(env string) {
@@ -110,6 +108,7 @@ func Run(arg ...string) string {
 	case SERVE, SPACE:
 		if os.Getenv("ctx_log") == "" {
 			logs.Disable(true)
+			os.Stderr.Close()
 		}
 		if Index.Start(Pulse, arg...) {
 			conf.Wait()

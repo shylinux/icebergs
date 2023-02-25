@@ -15,7 +15,6 @@ import (
 	"shylinux.com/x/icebergs/base/gdb"
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/nfs"
-	"shylinux.com/x/icebergs/base/ssh"
 	"shylinux.com/x/icebergs/base/tcp"
 	kit "shylinux.com/x/toolkits"
 )
@@ -184,13 +183,23 @@ func init() {
 				_serve_start(m)
 			}},
 			SERVE_START: {Hand: func(m *ice.Message, arg ...string) {
-				if domain := m.Cmdx(SPACE, DOMAIN); ice.Info.Colors && m.Option(ice.DEV) == "" {
-					m.Sleep30ms().Cmd(ssh.PRINTF, kit.Dict(nfs.CONTENT, "\r"+ice.Render(m, ice.RENDER_QRCODE, domain))).Cmd(ssh.PROMPT)
-				}
-				switch runtime.GOOS {
-				case cli.WINDOWS:
-					m.Cmd(cli.SYSTEM, "explorer.exe", "http://localhost:"+m.Option(tcp.PORT))
-				}
+				m.Go(func() {
+					opened := false
+					m.Sleep("1s").Cmd(SPACE, func(values ice.Maps) {
+						if values[mdb.TYPE] == CHROME {
+							opened = true
+						}
+					})
+					if opened {
+						return
+					}
+					switch host := "http://localhost:" + m.Option(tcp.PORT); runtime.GOOS {
+					case cli.WINDOWS:
+						m.Cmd(cli.SYSTEM, "explorer.exe", host)
+					case cli.DARWIN:
+						m.Cmd(cli.SYSTEM, "open", host)
+					}
+				})
 			}},
 			SERVE_REWRITE: {Hand: func(m *ice.Message, arg ...string) {
 				if arg[0] != http.MethodGet {

@@ -32,7 +32,7 @@ func _space_dial(m *ice.Message, dev, name string, arg ...string) {
 			m.Cmd(tcp.CLIENT, tcp.DIAL, args, func(c net.Conn) {
 				if conn, _, e := websocket.NewClient(c, uri, nil, kit.Int(redial["r"]), kit.Int(redial["w"])); !m.Warn(e, tcp.DIAL, dev, SPACE, uri.String()) {
 					defer mdb.HashCreateDeferRemove(m, kit.SimpleKV("", MASTER, dev, msg.Append(tcp.HOSTNAME)), kit.Dict(mdb.TARGET, conn))()
-					if !prints {
+					if !prints && ice.Info.Colors {
 						m.Go(func() {
 							m.Sleep30ms().Cmd(ssh.PRINTF, kit.Dict(nfs.CONTENT, "\r"+ice.Render(m, ice.RENDER_QRCODE, m.CmdAppend(SPACE, dev, cli.PWD, mdb.LINK)))).Cmd(ssh.PROMPT)
 						})
@@ -197,7 +197,14 @@ func init() {
 				m.Cmd(SPACE, arg[0], ice.MSG_SESSID, aaa.SessCreate(m, m.Option(ice.MSG_USERNAME)))
 			}},
 			DOMAIN: {Hand: func(m *ice.Message, arg ...string) { m.Echo(_space_domain(m)) }},
-			OPEN:   {Hand: func(m *ice.Message, arg ...string) { ctx.ProcessOpen(m, MergePod(m, m.Option(mdb.NAME), arg)) }},
+			OPEN: {Hand: func(m *ice.Message, arg ...string) {
+				switch m.Option(mdb.TYPE) {
+				case MASTER:
+					ctx.ProcessOpen(m, m.Cmd(SPIDE, m.Option(mdb.NAME)).Append(CLIENT_ORIGIN))
+				default:
+					ctx.ProcessOpen(m, MergePod(m, m.Option(mdb.NAME), arg))
+				}
+			}},
 			ice.PS: {Hand: func(m *ice.Message, arg ...string) { _space_fork(m) }},
 		}, mdb.HashAction(mdb.SHORT, mdb.NAME, mdb.FIELD, "time,type,name,text", ctx.ACTION, OPEN,
 			REDIAL, kit.Dict("a", 3000, "b", 1000, "c", 1000), TIMEOUT, kit.Dict("c", "10s"),

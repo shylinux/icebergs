@@ -13,6 +13,7 @@ import (
 	"shylinux.com/x/icebergs/base/gdb"
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/nfs"
+	"shylinux.com/x/icebergs/base/tcp"
 	"shylinux.com/x/icebergs/base/web"
 	"shylinux.com/x/icebergs/core/code"
 	kit "shylinux.com/x/toolkits"
@@ -178,6 +179,18 @@ func init() {
 	Index.MergeCommands(ice.Commands{
 		STATUS: {Name: "status repos:text auto", Help: "代码库", Actions: ice.MergeActions(ice.Actions{
 			mdb.INPUTS: {Hand: func(m *ice.Message, arg ...string) {
+				switch m.Option(ctx.ACTION) {
+				case "insteadof":
+					switch arg[0] {
+					case "from":
+						m.Push(arg[0], kit.MergeURL2(ice.Info.Make.Remote, ice.PS))
+					case "to":
+						m.Cmd(web.BROAD, func(values ice.Maps) {
+							m.Push(arg[0], kit.Format("http://%s:%s/", values[tcp.HOST], values[tcp.PORT]))
+						})
+					}
+					return
+				}
 				switch arg[0] {
 				case COMMENT:
 					ls := kit.Split(m.Option(nfs.FILE), " /")
@@ -252,6 +265,9 @@ func init() {
 			}},
 			"change": {Help: "变更", Hand: func(m *ice.Message, arg ...string) {
 			}},
+			"insteadof": {Name: "insteadof from to", Help: "代理", Hand: func(m *ice.Message, arg ...string) {
+				_git_cmd(m, "config", "--global", "url."+m.Option("to")+".insteadOf", m.Option("from"))
+			}},
 			"branch_switch": {Help: "切换", Hand: func(m *ice.Message, arg ...string) {
 				_repos_cmd(m, m.Option(REPOS), "checkout", m.Option(BRANCH))
 			}},
@@ -298,7 +314,7 @@ func init() {
 				defer web.ToastProcess(m)()
 				files, adds, dels, last := _status_list(m)
 				m.StatusTimeCount("files", files, "adds", adds, "dels", dels, "last", last.Format(ice.MOD_TIME))
-				m.Action(PULL, PUSH, TAGS, PIE, code.COMPILE, code.PUBLISH)
+				m.Action(PULL, PUSH, TAGS, PIE, code.COMPILE, code.PUBLISH, "insteadof")
 				m.Sort("repos,type,file")
 			} else {
 				_repos_cmd(m, arg[0], DIFF)

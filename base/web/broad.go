@@ -40,14 +40,14 @@ func _broad_serve(m *ice.Message, host, port string) {
 			}
 			m.Logs(mdb.IMPORT, BROAD, string(buf[:n]), "from", from)
 			msg := m.Spawn(buf[:n])
-			if msg.Option(mdb.TYPE) == "echo" {
+			if msg.Option(mdb.ZONE) == "echo" {
 				mdb.HashCreate(m, msg.OptionSimple(kit.Simple(msg.Optionv(ice.MSG_OPTION))...))
 				continue
 			}
 			if remote := _broad_addr(m, msg.Option(tcp.HOST), msg.Option(tcp.PORT)); remote != nil {
 				m.Cmd(BROAD, func(value ice.Maps) {
 					m.Logs(mdb.EXPORT, BROAD, kit.Format(value), "to", kit.Format(remote))
-					s.WriteToUDP([]byte(m.Spawn(value, kit.Dict(mdb.TYPE, "echo")).FormatMeta()), remote)
+					s.WriteToUDP([]byte(m.Spawn(value, kit.Dict(mdb.ZONE, "echo")).FormatMeta()), remote)
 				})
 				mdb.HashCreate(m, msg.OptionSimple(kit.Simple(msg.Optionv(ice.MSG_OPTION))...))
 			}

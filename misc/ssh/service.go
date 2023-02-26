@@ -66,6 +66,34 @@ func _ssh_config(m *ice.Message, h string) *ssh.ServerConfig {
 	}
 	return config
 }
+
+type Buf struct {
+	buf []byte
+}
+type Conn struct {
+	net.Conn
+	*Buf
+}
+
+func (s Conn) Read(b []byte) (n int, err error) {
+	if len(s.buf) == 0 {
+		return s.Conn.Read(b)
+	}
+	if len(s.buf) < len(b) {
+		copy(b, s.buf)
+		s.buf = s.buf[:0]
+		return len(s.buf), nil
+	}
+	copy(b, s.buf)
+	s.buf = s.buf[len(b):]
+	return len(b), nil
+}
+func (s Conn) Peek(b []byte) (n int, err error) {
+	n, err = s.Conn.Read(b)
+	s.buf = append(s.buf, b...)
+	return n, err
+}
+
 func _ssh_accept(m *ice.Message, h string, c net.Conn) {
 	conn, chans, reqs, err := ssh.NewServerConn(c, _ssh_config(m, h))
 	if m.Warn(err) {
@@ -158,8 +186,9 @@ func init() {
 					m.Cmd("", ctx.LOAD, m.OptionSimple(AUTHKEY))
 				}
 				m.Go(func() {
+					m.Cmd(web.BROAD, "send", mdb.TYPE, "sshd", mdb.NAME, ice.Info.NodeName, tcp.HOST, m.Cmd(tcp.HOST).Append(aaa.IP), tcp.PORT, m.Option(tcp.PORT))
 					m.Cmd(tcp.SERVER, tcp.LISTEN, mdb.TYPE, SSH, mdb.NAME, m.Option(tcp.PORT), m.OptionSimple(tcp.PORT), func(c net.Conn) {
-						m.Go(func() { _ssh_accept(m, kit.Hashs(m.Option(tcp.PORT)), c) })
+						m.Go(func() { _ssh_accept(m, kit.Hashs(m.Option(tcp.PORT)), Conn{Conn: c, Buf: &Buf{}}) })
 					})
 				})
 			}},

@@ -186,7 +186,7 @@ func init() {
 					m.Cmd("", ice.Maps{ice.MSG_FIELDS: ""}, func(values ice.Maps) {
 						switch values[mdb.TYPE] {
 						case WORKER:
-							m.PushSearch(mdb.TEXT, kit.Format(MergePod(m, values[mdb.NAME])), values)
+							m.PushSearch(mdb.TEXT, kit.Format(tcp.PublishLocalhost(m, MergePod(m, values[mdb.NAME]))), values)
 						case MASTER:
 							m.PushSearch(mdb.TEXT, m.Cmd(SPIDE, values[mdb.NAME], ice.Maps{ice.MSG_FIELDS: ""}).Append(CLIENT_ORIGIN), values)
 						}

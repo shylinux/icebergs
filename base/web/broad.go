@@ -73,6 +73,9 @@ func init() {
 			OPEN: {Hand: func(m *ice.Message, arg ...string) {
 				ctx.ProcessOpen(m, kit.Format("http://%s:%s", m.Option(tcp.HOST), m.Option(tcp.PORT)))
 			}},
+			"send": {Hand: func(m *ice.Message, arg ...string) {
+				_broad_send(m, "", "", "255.255.255.255", "9020", arg...)
+			}},
 		}, mdb.HashAction(mdb.SHORT, "host,port", mdb.FIELD, "time,hash,type,name,host,port", mdb.ACTION, OPEN), mdb.ClearHashOnExitAction())},
 	})
 }

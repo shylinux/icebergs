@@ -41,7 +41,7 @@ func _broad_serve(m *ice.Message, host, port string) {
 			m.Logs(mdb.IMPORT, BROAD, string(buf[:n]), "from", from)
 			msg := m.Spawn(buf[:n])
 			if msg.Option(mdb.TYPE) == "echo" {
-				mdb.HashCreate(m, msg.OptionSimple(tcp.HOST, tcp.PORT))
+				mdb.HashCreate(m, msg.OptionSimple(kit.Simple(msg.Optionv(ice.MSG_OPTION))...))
 				continue
 			}
 			if remote := _broad_addr(m, msg.Option(tcp.HOST), msg.Option(tcp.PORT)); remote != nil {

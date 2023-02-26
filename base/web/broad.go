@@ -27,10 +27,11 @@ func _broad_send(m *ice.Message, host, port string, remote_host, remote_port str
 	}
 }
 func _broad_serve(m *ice.Message, host, port string) {
-	_broad_send(m, host, port, "255.255.255.255", "9020", mdb.TYPE, ice.Info.NodeType, mdb.NAME, ice.Info.NodeName)
+	m.Go(func() {
+		_broad_send(m.Sleep("1s"), host, port, "255.255.255.255", "9020", mdb.TYPE, ice.Info.NodeType, mdb.NAME, ice.Info.NodeName)
+	})
 	if s, e := net.ListenUDP("udp4", _broad_addr(m, "0.0.0.0", port)); m.Assert(e) {
 		defer s.Close()
-		defer mdb.HashCreateDeferRemove(m, tcp.HOST, host, tcp.PORT, port, kit.Dict(mdb.TARGET, s))()
 		buf := make([]byte, ice.MOD_BUFS)
 		for {
 			n, from, e := s.ReadFromUDP(buf[:])
@@ -48,7 +49,7 @@ func _broad_serve(m *ice.Message, host, port string) {
 					m.Logs(mdb.EXPORT, BROAD, kit.Format(value), "to", kit.Format(remote))
 					s.WriteToUDP([]byte(m.Spawn(value, kit.Dict(mdb.TYPE, "echo")).FormatMeta()), remote)
 				})
-				mdb.HashCreate(m, msg.OptionSimple(tcp.HOST, tcp.PORT))
+				mdb.HashCreate(m, msg.OptionSimple(kit.Simple(msg.Optionv(ice.MSG_OPTION))...))
 			}
 		}
 	}

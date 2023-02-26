@@ -110,7 +110,7 @@ func init() {
 				case "repos":
 					m.Cmdy(SPIDE, ice.OPS, SPIDE_MSG, "/x/list")
 					// m.Cmdy(SPIDE, ice.DEV, SPIDE_MSG, "/x/list")
-					// m.Cmdy(SPIDE, ice.SHY, SPIDE_MSG, "/x/list")
+					m.Cmdy(SPIDE, ice.SHY, SPIDE_MSG, "/x/list")
 				default:
 					gdb.Event(m, "", arg)
 				}

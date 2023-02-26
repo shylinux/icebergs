@@ -62,7 +62,12 @@ func init() {
 		BROAD: {Name: "broad hash auto", Help: "广播", Actions: ice.MergeActions(ice.Actions{
 			mdb.SEARCH: {Hand: func(m *ice.Message, arg ...string) {
 				if arg[0] == BROAD || arg[0] == mdb.FOREACH {
+					host := m.Cmd(tcp.HOST).Append(aaa.IP)
+					domain := OptionUserWeb(m).Hostname()
 					m.Cmd("", ice.Maps{ice.MSG_FIELDS: ""}, func(values ice.Maps) {
+						if values[tcp.HOST] == host {
+							values[tcp.HOST] = domain
+						}
 						switch values[mdb.TYPE] {
 						case "sshd":
 							m.PushSearch(mdb.NAME, ice.Render(m, ice.RENDER_SCRIPT, kit.Format("ssh -p %s %s@%s", values[tcp.PORT], m.Option(ice.MSG_USERNAME), values[tcp.HOST])),

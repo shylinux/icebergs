@@ -184,6 +184,7 @@ func init() {
 			}},
 		}, gdb.EventAction(web.DREAM_INPUTS)), Hand: func(m *ice.Message, arg ...string) {
 			if m.Option(nfs.DIR_ROOT, ice.USR_LOCAL_REPOS); len(arg) == 0 {
+				m.Option(ice.MSG_USERROLE, aaa.TECH)
 				m.Cmdy(nfs.DIR, nfs.PWD, "time,name,size,action", kit.Dict(nfs.DIR_TYPE, nfs.TYPE_DIR), func(value ice.Maps) {
 					m.PushScript("git clone " + _git_url(m, value[mdb.NAME]))
 				}).Cut("time,name,size,script,action").RenameAppend(mdb.NAME, nfs.REPOS).SortStrR(mdb.TIME)

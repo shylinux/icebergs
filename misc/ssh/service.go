@@ -162,12 +162,11 @@ func init() {
 				m.Go(func() {
 					m.Cmd(web.BROAD, "send", mdb.TYPE, "sshd", tcp.HOST, m.Cmd(tcp.HOST).Append(aaa.IP), tcp.PORT, m.Option(tcp.PORT))
 					m.Cmd(tcp.SERVER, tcp.LISTEN, mdb.TYPE, SSH, mdb.NAME, m.Option(tcp.PORT), m.OptionSimple(tcp.PORT), func(c net.Conn) {
-						_c := tcp.NewPeekConn(c)
-						if _c.IsHTTP() {
+						if _c := tcp.NewPeekConn(c); _c.IsHTTP() {
 							_c.Redirect(http.StatusTemporaryRedirect, m.Cmdx(web.SPACE, web.DOMAIN))
-							return
+						} else {
+							m.Go(func() { _ssh_accept(m, kit.Hashs(m.Option(tcp.PORT)), _c) })
 						}
-						m.Go(func() { _ssh_accept(m, kit.Hashs(m.Option(tcp.PORT)), _c) })
 					})
 				})
 			}},

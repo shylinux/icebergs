@@ -63,7 +63,13 @@ func init() {
 			mdb.SEARCH: {Hand: func(m *ice.Message, arg ...string) {
 				if arg[0] == BROAD || arg[0] == mdb.FOREACH {
 					m.Cmd("", ice.Maps{ice.MSG_FIELDS: ""}, func(values ice.Maps) {
-						m.PushSearch(mdb.TEXT, kit.Format("http://%s:%s", values[tcp.HOST], values[tcp.PORT]), values)
+						switch values[mdb.TYPE] {
+						case "sshd":
+							m.PushSearch(mdb.NAME, ice.Render(m, ice.RENDER_SCRIPT, kit.Format("ssh -p %s %s@%s", values[tcp.PORT], m.Option(ice.MSG_USERNAME), values[tcp.HOST])),
+								mdb.TEXT, kit.Format("http://%s:%s", values[tcp.HOST], values[tcp.PORT]), values)
+						default:
+							m.PushSearch(mdb.TEXT, kit.Format("http://%s:%s", values[tcp.HOST], values[tcp.PORT]), values)
+						}
 					})
 				}
 			}},

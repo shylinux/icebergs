@@ -244,6 +244,9 @@ func init() {
 		PP(ice.PUBLISH): {Name: "/publish/", Help: "定制化", Actions: aaa.WhiteAction(), Hand: func(m *ice.Message, arg ...string) {
 			_share_local(m, ice.USR_PUBLISH, path.Join(arg...))
 		}},
+		PP(ice.PUBLISH, "demo"): {Name: "/publish/demo", Help: "定制化", Actions: aaa.WhiteAction(), Hand: func(m *ice.Message, arg ...string) {
+			m.RenderRedirect("/")
+		}},
 		PP(ice.REQUIRE): {Name: "/require/shylinux.com/x/volcanos/proto.js", Help: "代码库", Hand: func(m *ice.Message, arg ...string) {
 			cache := kit.Select(ice.USR_REQUIRE, m.Cmdx(cli.SYSTEM, "go", "env", "GOMODCACHE"))
 			p := path.Join(cache, path.Join(arg...))

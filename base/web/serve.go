@@ -27,7 +27,7 @@ func _serve_start(m *ice.Message) {
 		m.Option(tcp.PORT, m.Cmdx(tcp.PORT, aaa.RIGHT))
 	}
 	m.Target().Start(m, m.OptionSimple(tcp.HOST, tcp.PORT)...)
-	m.Sleep30ms().Go(func() { m.Cmd(BROAD, SERVE, m.OptionSimple(tcp.PORT)) })
+	m.Go(func() { m.Sleep("1s").Cmd(BROAD, SERVE, m.OptionSimple(tcp.PORT)) })
 	for _, v := range kit.Split(m.Option(ice.DEV)) {
 		m.Cmd(SPACE, tcp.DIAL, ice.DEV, v, mdb.NAME, ice.Info.NodeName)
 	}

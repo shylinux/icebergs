@@ -266,6 +266,11 @@ func init() {
 			"change": {Help: "变更", Hand: func(m *ice.Message, arg ...string) {
 			}},
 			"insteadof": {Name: "insteadof from to", Help: "代理", Hand: func(m *ice.Message, arg ...string) {
+				m.Cmd("configs", func(values ice.Maps) {
+					if values[mdb.VALUE] == m.Option("from") {
+						_configs_set(m, "--unset", values[mdb.NAME])
+					}
+				})
 				_git_cmd(m, "config", "--global", "url."+m.Option("to")+".insteadOf", m.Option("from"))
 			}},
 			"branch_switch": {Help: "切换", Hand: func(m *ice.Message, arg ...string) {

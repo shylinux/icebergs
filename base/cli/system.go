@@ -14,41 +14,52 @@ import (
 	"shylinux.com/x/icebergs/base/nfs"
 	kit "shylinux.com/x/toolkits"
 	"shylinux.com/x/toolkits/file"
+	"shylinux.com/x/toolkits/logs"
 )
 
+func _path_split(ps string) []string {
+	ps = strings.ReplaceAll(ps, "\\", "/")
+	return kit.Split(ps, "\n"+kit.Select(":", ";", strings.Contains(ps, ";")), "\n")
+}
 func _system_cmd(m *ice.Message, arg ...string) *exec.Cmd {
 	bin, env := "", kit.Simple(m.Optionv(CMD_ENV))
 	for i := 0; i < len(env)-1; i += 2 {
 		if env[i] == PATH {
-			if bin = _system_find(m, arg[0], strings.Split(env[i+1], ice.DF)...); bin != "" {
+			logs.Println("what")
+			if bin = _system_find(m, arg[0], _path_split(env[i+1])...); bin != "" {
 				m.Logs(mdb.SELECT, "envpath cmd", bin)
 			}
 		}
 	}
 	if bin == "" {
 		if text := kit.ReadFile(ice.ETC_PATH); len(text) > 0 {
+			logs.Println("what")
 			if bin = _system_find(m, arg[0], strings.Split(text, ice.NL)...); bin != "" {
 				m.Logs(mdb.SELECT, "etcpath cmd", bin)
 			}
 		}
 	}
 	if bin == "" {
+		logs.Println("what")
 		if bin = _system_find(m, arg[0], ice.BIN, m.Option(CMD_DIR)); bin != "" {
 			m.Logs(mdb.SELECT, "contexts cmd", bin)
 		}
 	}
 	if bin == "" {
+		logs.Println("what")
 		if bin = _system_find(m, arg[0], ice.BIN, nfs.PWD); bin != "" {
 			m.Logs(mdb.SELECT, "contexts cmd", bin)
 		}
 	}
 	if bin == "" && !strings.Contains(arg[0], ice.PS) {
+		logs.Println("what %s", arg[0])
 		if bin = _system_find(m, arg[0]); bin != "" {
 			m.Logs(mdb.SELECT, "systems cmd", bin)
 		}
 	}
 	if bin == "" && !strings.Contains(arg[0], ice.PS) {
 		m.Cmd(MIRRORS, CMD, arg[0])
+		logs.Println("what")
 		if bin = _system_find(m, arg[0]); bin != "" {
 			m.Logs(mdb.SELECT, "mirrors cmd", bin)
 		}
@@ -56,6 +67,7 @@ func _system_cmd(m *ice.Message, arg ...string) *exec.Cmd {
 	if bin == "" && runtime.GOOS == WINDOWS {
 		bin = path.Join("C:/Windows", arg[0])
 	}
+	logs.Println("what %s %s", bin, arg)
 	cmd := exec.Command(bin, arg[1:]...)
 	if cmd.Dir = kit.TrimPath(m.Option(CMD_DIR)); len(cmd.Dir) > 0 {
 		if m.Logs(mdb.PARAMS, CMD_DIR, cmd.Dir); !nfs.ExistsFile(m, cmd.Dir) {
@@ -119,11 +131,16 @@ func _system_find(m Message, bin string, dir ...string) string {
 		return bin
 	}
 	if len(dir) == 0 {
-		dir = append(dir, strings.Split(kit.Env(PATH), ice.DF)...)
+		dir = append(dir, _path_split(kit.Env(PATH))...)
 	}
+	logs.Println("what %s", dir)
 	for _, p := range dir {
+		logs.Println("what %s", path.Join(p, bin))
 		if nfs.ExistsFile(m, path.Join(p, bin)) {
 			return kit.Path(p, bin)
+		}
+		if nfs.ExistsFile(m, path.Join(p, bin)+".exe") {
+			return kit.Path(p, bin) + ".exe"
 		}
 	}
 	return ""

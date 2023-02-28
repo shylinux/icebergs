@@ -95,6 +95,9 @@ func Run(arg ...string) string {
 	if len(arg) == 0 && runtime.GOOS == "windows" {
 		arg = append(arg, SERVE, START, DEV, DEV)
 	}
+	if len(arg) > 0 && arg[0] == "forever" && runtime.GOOS == "windows" {
+		arg[0] = "serve"
+	}
 	Pulse.meta[MSG_DETAIL] = arg
 	kit.Fetch(kit.Sort(os.Environ()), func(env string) {
 		if ls := strings.SplitN(env, EQ, 2); strings.ToLower(ls[0]) == ls[0] && ls[0] != "_" {
@@ -107,8 +110,8 @@ func Run(arg ...string) string {
 	switch Index.Merge(Index).Begin(Pulse, arg...); kit.Select("", arg, 0) {
 	case SERVE, SPACE:
 		if os.Getenv("ctx_log") == "" {
-			logs.Disable(true)
-			os.Stderr.Close()
+			// logs.Disable(true)
+			// os.Stderr.Close()
 		}
 		if Index.Start(Pulse, arg...) {
 			conf.Wait()

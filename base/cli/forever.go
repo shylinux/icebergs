@@ -2,6 +2,7 @@ package cli
 
 import (
 	"os"
+	"strings"
 
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/gdb"
@@ -10,8 +11,11 @@ import (
 	"shylinux.com/x/toolkits/logs"
 )
 
+func _path_sep() string {
+	return kit.Select(":", ";", strings.Contains(os.Getenv(PATH), ";"))
+}
 func BinPath(arg ...string) string {
-	return kit.Join(kit.Simple(arg, kit.Path(ice.BIN), kit.Path(ice.USR_PUBLISH), kit.Path(ice.USR_LOCAL_BIN), kit.Path(ice.USR_LOCAL_GO_BIN), kit.Env(PATH)), ice.DF)
+	return kit.Join(kit.Simple(arg, kit.Path(""), kit.Path(ice.BIN), kit.Path(ice.USR_PUBLISH), kit.Path(ice.USR_LOCAL_BIN), kit.Path(ice.USR_LOCAL_GO_BIN), kit.Env(PATH)), _path_sep())
 }
 
 const FOREVER = "forever"
@@ -55,9 +59,13 @@ func init() {
 			}
 			for {
 				if logs.Println("run %s", kit.Join(arg, ice.SP)); IsSuccess(m.Cmd(SYSTEM, arg)) {
+					logs.Println("what %v", 123)
 					logs.Println(ice.EXIT)
 					break
 				}
+				logs.Println("what %v", 123)
+				m.Debug("what %v", arg)
+				m.Sleep("1s")
 				if logs.Println(); m.Config("log.save") == ice.TRUE {
 					back := kit.Format("var/log.%s", logs.Now().Format("20060102_150405"))
 					m.Cmd(SYSTEM, "cp", "-r", "var/log", back, ice.Maps{CMD_OUTPUT: ""})

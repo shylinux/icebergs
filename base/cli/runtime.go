@@ -202,7 +202,7 @@ func init() {
 				}
 			}},
 			nfs.PATH: {Hand: func(m *ice.Message, arg ...string) {
-				for _, p := range strings.Split(os.Getenv(PATH), ice.DF) {
+				for _, p := range _path_split(os.Getenv(PATH)) {
 					m.Push(nfs.PATH, p)
 				}
 			}},

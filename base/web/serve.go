@@ -179,13 +179,13 @@ func init() {
 	Index.MergeCommands(ice.Commands{
 		SERVE: {Name: "serve name auto start", Help: "服务器", Actions: ice.MergeActions(ice.Actions{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) { cli.NodeInfo(m, ice.Info.Pathname, WORKER) }},
-			cli.START: {Name: "start dev name=web proto=http host port=9020 nodename username usernick", Hand: func(m *ice.Message, arg ...string) {
+			cli.START: {Name: "start dev name proto host port=9020 nodename username usernick", Hand: func(m *ice.Message, arg ...string) {
 				_serve_start(m)
 			}},
 			SERVE_START: {Hand: func(m *ice.Message, arg ...string) {
 				m.Go(func() {
 					opened := false
-					m.Sleep("1s").Cmd(SPACE, func(values ice.Maps) {
+					m.Sleep("2s").Cmd(SPACE, func(values ice.Maps) {
 						if values[mdb.TYPE] == CHROME {
 							opened = true
 						}

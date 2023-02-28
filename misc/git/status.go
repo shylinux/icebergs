@@ -60,7 +60,7 @@ func _status_tags(m *ice.Message) {
 					return text
 				}
 				if v, ok := vs[kit.Select("", strings.Split(ls[0], ice.PS), -1)]; ok && ls[1] != v {
-					m.Logs(mdb.MODIFY, REPOS, ls[0], "from", ls[1], "to", v)
+					m.Logs(mdb.MODIFY, REPOS, ls[0], nfs.FROM, ls[1], nfs.TO, v)
 					text, change = strings.Replace(text, ls[1], v, -1), true
 				}
 				return text
@@ -182,9 +182,9 @@ func init() {
 				switch m.Option(ctx.ACTION) {
 				case "insteadof":
 					switch arg[0] {
-					case "from":
+					case nfs.FROM:
 						m.Push(arg[0], kit.MergeURL2(ice.Info.Make.Remote, ice.PS))
-					case "to":
+					case nfs.TO:
 						m.Cmd(web.BROAD, func(values ice.Maps) {
 							m.Push(arg[0], kit.Format("http://%s:%s/", values[tcp.HOST], values[tcp.PORT]))
 						})
@@ -265,13 +265,15 @@ func init() {
 			}},
 			"change": {Help: "变更", Hand: func(m *ice.Message, arg ...string) {
 			}},
-			"insteadof": {Name: "insteadof from to", Help: "代理", Hand: func(m *ice.Message, arg ...string) {
-				m.Cmd("configs", func(values ice.Maps) {
-					if values[mdb.VALUE] == m.Option("from") {
+			"insteadof": {Name: "insteadof from* to", Help: "代理", Hand: func(m *ice.Message, arg ...string) {
+				m.Cmd(CONFIGS, func(values ice.Maps) {
+					if values[mdb.VALUE] == m.Option(nfs.FROM) {
 						_configs_set(m, "--unset", values[mdb.NAME])
 					}
 				})
-				_git_cmd(m, "config", "--global", "url."+m.Option("to")+".insteadOf", m.Option("from"))
+				if m.Option(nfs.TO) != "" {
+					_git_cmd(m, "config", "--global", "url."+m.Option(nfs.TO)+".insteadof", m.Option(nfs.FROM))
+				}
 			}},
 			"branch_switch": {Help: "切换", Hand: func(m *ice.Message, arg ...string) {
 				_repos_cmd(m, m.Option(REPOS), "checkout", m.Option(BRANCH))

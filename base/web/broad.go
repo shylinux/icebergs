@@ -28,7 +28,7 @@ func _broad_send(m *ice.Message, host, port string, remote_host, remote_port str
 }
 func _broad_serve(m *ice.Message, host, port string) {
 	m.Go(func() {
-		_broad_send(m.Sleep("1s"), host, port, "255.255.255.255", "9020", mdb.TYPE, ice.Info.NodeType, mdb.NAME, ice.Info.NodeName)
+		_broad_send(m.Sleep("100ms"), host, port, "255.255.255.255", "9020", mdb.TYPE, ice.Info.NodeType, mdb.NAME, ice.Info.NodeName)
 	})
 	if s, e := net.ListenUDP("udp4", _broad_addr(m, "0.0.0.0", port)); m.Assert(e) {
 		defer s.Close()

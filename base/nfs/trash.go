@@ -30,9 +30,6 @@ func _trash_create(m *ice.Message, from string) {
 	}
 }
 
-const (
-	FROM = "from"
-)
 const TRASH = "trash"
 
 func init() {

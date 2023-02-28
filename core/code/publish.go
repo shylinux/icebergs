@@ -118,7 +118,7 @@ func init() {
 
 var _contexts = kit.Dict(
 	ice.MISC, `
-export ctx_dev={{.Option "domain"}}{{.Option "ctx_env"}}; temp=$(mktemp); if curl -h &>/dev/null; then curl -o $temp -fsSL $ctx_dev; else wget -O $temp -q $ctx_dev; fi; source $temp app username {{.Option "user.name"}} usernick {{.Option "user.nick"}}
+export ctx_dev={{.Option "domain"}}{{.Option "ctx_env"}}; temp=$(mktemp); if curl -h &>/dev/null; then curl -o $temp -fsSL $ctx_dev; else wget -O $temp -q $ctx_dev; fi; source $temp app username {{.Option "user.name"}} usernick "{{.Option "user.nick"}}"
 `,
 	ice.CORE, `
 temp=$(mktemp); if curl -h &>/dev/null; then curl -o $temp -fsSL {{.Option "domain"}}; else wget -O $temp -q {{.Option "domain"}}; fi; source $temp binary

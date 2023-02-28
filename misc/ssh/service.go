@@ -160,7 +160,7 @@ func init() {
 					m.Cmd("", ctx.LOAD, m.OptionSimple(AUTHKEY))
 				}
 				m.Go(func() {
-					m.Cmd(web.BROAD, "send", mdb.TYPE, "sshd", tcp.HOST, m.Cmd(tcp.HOST).Append(aaa.IP), tcp.PORT, m.Option(tcp.PORT))
+					m.Cmd(web.BROAD, "send", mdb.TYPE, "sshd", mdb.NAME, ice.Info.Hostname, tcp.HOST, m.Cmd(tcp.HOST).Append(aaa.IP), tcp.PORT, m.Option(tcp.PORT))
 					m.Cmd(tcp.SERVER, tcp.LISTEN, mdb.TYPE, SSH, mdb.NAME, m.Option(tcp.PORT), m.OptionSimple(tcp.PORT), func(c net.Conn) {
 						if _c := tcp.NewPeekConn(c); _c.IsHTTP() {
 							_c.Redirect(http.StatusTemporaryRedirect, m.Cmdx(web.SPACE, web.DOMAIN))

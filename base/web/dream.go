@@ -60,7 +60,7 @@ func _dream_show(m *ice.Message, name string) {
 	), cli.CMD_OUTPUT, path.Join(p, ice.VAR_LOG_BOOT_LOG))
 	defer m.Options(cli.CMD_DIR, "", cli.CMD_ENV, "", cli.CMD_OUTPUT, "")
 	gdb.Event(m, DREAM_CREATE, m.OptionSimple(mdb.NAME, mdb.TYPE))
-	m.Cmd(cli.DAEMON, kit.Select(os.Args[0], cli.SystemFind(m, ice.ICE_BIN, nfs.PWD+path.Join(p, ice.BIN), nfs.PWD+ice.BIN)),
+	m.Cmd(cli.DAEMON, kit.Select(kit.Path(os.Args[0]), cli.SystemFind(m, ice.ICE_BIN, nfs.PWD+path.Join(p, ice.BIN), nfs.PWD+ice.BIN)),
 		SPACE, tcp.DIAL, ice.DEV, ice.OPS, mdb.TYPE, WORKER, m.OptionSimple(mdb.NAME, RIVER), cli.DAEMON, ice.OPS)
 }
 func _dream_template(m *ice.Message, p string) {
@@ -107,10 +107,12 @@ func init() {
 				switch arg[0] {
 				case mdb.NAME, nfs.TEMPLATE:
 					_dream_list(m).Cut("name,status,time")
-				case "repos":
-					m.Cmdy(SPIDE, ice.OPS, SPIDE_MSG, "/x/list")
-					m.Cmdy(SPIDE, ice.DEV, SPIDE_MSG, "/x/list")
-					m.Cmdy(SPIDE, ice.SHY, SPIDE_MSG, "/x/list")
+				case nfs.REPOS:
+					for _, dev := range []string{ice.OPS, ice.DEV, ice.SHY} {
+						if msg := m.Cmd(SPIDE, dev, SPIDE_MSG, "/x/list"); !msg.IsErr() {
+							m.Copy(msg)
+						}
+					}
 				default:
 					gdb.Event(m, "", arg)
 				}

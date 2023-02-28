@@ -206,7 +206,7 @@ func init() {
 				aaa.SessAuth(m, kit.Dict(aaa.USERNAME, m.Option(ice.MSG_USERNAME), aaa.USERNICK, m.Option(ice.MSG_USERNICK), aaa.USERROLE, m.Option(ice.MSG_USERROLE)))
 			}},
 			aaa.LOGIN: {Hand: func(m *ice.Message, arg ...string) {
-				m.Cmd(SPACE, arg[0], ice.MSG_SESSID, aaa.SessCreate(m, m.Option(ice.MSG_USERNAME)))
+				m.Cmd(SPACE, kit.Select(m.Option(mdb.NAME), arg, 0), ice.MSG_SESSID, aaa.SessCreate(m, m.Option(ice.MSG_USERNAME)))
 			}},
 			DOMAIN: {Hand: func(m *ice.Message, arg ...string) { m.Echo(_space_domain(m)) }},
 			OPEN: {Hand: func(m *ice.Message, arg ...string) {
@@ -224,6 +224,14 @@ func init() {
 		), mdb.ClearHashOnExitAction(), SpaceAction(), aaa.WhiteAction()), Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) < 2 {
 				mdb.HashSelect(m, arg...).Sort("type,name,text")
+				m.Tables(func(values ice.Maps) {
+					switch values[mdb.TYPE] {
+					case aaa.LOGIN:
+						m.PushButton(aaa.LOGIN, mdb.REMOVE)
+					default:
+						m.PushButton(cli.OPEN, mdb.REMOVE)
+					}
+				})
 			} else {
 				_space_send(m, strings.ToLower(arg[0]), kit.Simple(kit.Split(arg[1]), arg[2:])...)
 			}

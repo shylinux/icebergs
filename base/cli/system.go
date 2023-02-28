@@ -113,18 +113,24 @@ func _system_code(cmd *exec.Cmd) string {
 	return kit.Select("1", "0", cmd.ProcessState != nil && cmd.ProcessState.Success())
 }
 func _system_find(m Message, bin string, dir ...string) string {
+	ice.Pulse.Debug("what %v %v", bin, dir)
 	if strings.Contains(bin, ice.DF) {
+		ice.Pulse.Debug("what %v %v", bin, dir)
 		return bin
 	}
 	if strings.HasPrefix(bin, ice.PS) {
+		ice.Pulse.Debug("what %v %v", bin, dir)
 		return bin
 	}
 	if strings.HasPrefix(bin, nfs.PWD) {
+		ice.Pulse.Debug("what %v %v", bin, dir)
 		return bin
 	}
 	if len(dir) == 0 {
+		ice.Pulse.Debug("what %v %v", bin, dir)
 		dir = append(dir, _path_split(kit.Env(PATH))...)
 	}
+	ice.Pulse.Debug("what %v %v", bin, dir)
 	for _, p := range dir {
 		if nfs.ExistsFile(m, path.Join(p, bin)) {
 			return kit.Path(p, bin)
@@ -195,7 +201,7 @@ func SystemFind(m Message, bin string, dir ...string) string {
 	if text := kit.ReadFile(ice.ETC_PATH); len(text) > 0 {
 		dir = append(dir, strings.Split(text, ice.NL)...)
 	}
-	dir = append(dir, strings.Split(kit.Env(PATH), ice.DF)...)
+	dir = append(dir, _path_split(kit.Env(PATH))...)
 	return _system_find(m, bin, dir...)
 }
 func IsSuccess(m Message) bool                        { return m.Append(CODE) == "" || m.Append(CODE) == "0" }

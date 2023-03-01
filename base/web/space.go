@@ -187,10 +187,10 @@ func init() {
 				if arg[0] == m.CommandKey() || arg[0] == mdb.FOREACH && arg[1] == "" {
 					m.Cmd("", ice.Maps{ice.MSG_FIELDS: ""}, func(values ice.Maps) {
 						switch values[mdb.TYPE] {
-						case SERVER, WORKER:
-							m.PushSearch(mdb.TEXT, kit.Format(tcp.PublishLocalhost(m, strings.Split(MergePod(m, values[mdb.NAME]), ice.QS)[0])), values)
 						case MASTER:
 							m.PushSearch(mdb.TEXT, m.Cmd(SPIDE, values[mdb.NAME], ice.Maps{ice.MSG_FIELDS: ""}).Append(CLIENT_ORIGIN), values)
+						case SERVER, WORKER:
+							m.PushSearch(mdb.TEXT, kit.Format(tcp.PublishLocalhost(m, strings.Split(MergePod(m, values[mdb.NAME]), ice.QS)[0])), values)
 						}
 					})
 				}
@@ -216,7 +216,7 @@ func init() {
 				case MASTER:
 					ctx.ProcessOpen(m, m.Cmd(SPIDE, m.Option(mdb.NAME)).Append(CLIENT_ORIGIN))
 				default:
-					ctx.ProcessOpen(m, MergePod(m, m.Option(mdb.NAME), arg))
+					ctx.ProcessOpen(m, strings.Split(MergePod(m, m.Option(mdb.NAME), arg), ice.QS)[0])
 				}
 			}},
 			ice.PS: {Hand: func(m *ice.Message, arg ...string) { _space_fork(m) }},

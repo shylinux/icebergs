@@ -96,7 +96,7 @@ func Run(arg ...string) string {
 		arg = append(arg, SERVE, START, DEV, DEV)
 	}
 	if len(arg) > 0 && arg[0] == "forever" && runtime.GOOS == "windows" {
-		arg[0] = "serve"
+		// arg[0] = "serve"
 	}
 	Pulse.meta[MSG_DETAIL] = arg
 	kit.Fetch(kit.Sort(os.Environ()), func(env string) {

@@ -33,9 +33,11 @@ func _space_dial(m *ice.Message, dev, name string, arg ...string) {
 				if conn, _, e := websocket.NewClient(c, uri, nil, kit.Int(redial["r"]), kit.Int(redial["w"])); !m.Warn(e, tcp.DIAL, dev, SPACE, uri.String()) {
 					defer mdb.HashCreateDeferRemove(m, kit.SimpleKV("", MASTER, dev, msg.Append(tcp.HOSTNAME)), kit.Dict(mdb.TARGET, conn))()
 					if !prints && ice.Info.Colors {
-						m.Go(func() {
-							m.Sleep30ms().Cmd(ssh.PRINTF, kit.Dict(nfs.CONTENT, "\r"+ice.Render(m, ice.RENDER_QRCODE, m.CmdAppend(SPACE, dev, cli.PWD, mdb.LINK)))).Cmd(ssh.PROMPT)
-						})
+						go func() {
+							m.Sleep("300ms").Cmd(ssh.PRINTF, kit.Dict(nfs.CONTENT, "\r"+ice.Render(m, ice.RENDER_QRCODE, m.CmdAppend(SPACE, dev, cli.PWD, mdb.LINK)))).Cmd(ssh.PROMPT, kit.Dict(
+								ice.LOG_DISABLE, ice.TRUE,
+							))
+						}()
 						prints = true
 					}
 					_space_handle(m.Spawn(), true, dev, conn)
@@ -182,11 +184,11 @@ func init() {
 				_space_dial(m, m.Option(ice.DEV), kit.Select(ice.Info.NodeName, m.Option(mdb.NAME)), arg...)
 			}},
 			mdb.SEARCH: {Hand: func(m *ice.Message, arg ...string) {
-				if arg[0] == SPACE || arg[0] == mdb.FOREACH {
+				if arg[0] == m.CommandKey() || arg[0] == mdb.FOREACH && arg[1] == "" {
 					m.Cmd("", ice.Maps{ice.MSG_FIELDS: ""}, func(values ice.Maps) {
 						switch values[mdb.TYPE] {
-						case WORKER:
-							m.PushSearch(mdb.TEXT, kit.Format(tcp.PublishLocalhost(m, MergePod(m, values[mdb.NAME]))), values)
+						case SERVER, WORKER:
+							m.PushSearch(mdb.TEXT, kit.Format(tcp.PublishLocalhost(m, strings.Split(MergePod(m, values[mdb.NAME]), ice.QS)[0])), values)
 						case MASTER:
 							m.PushSearch(mdb.TEXT, m.Cmd(SPIDE, values[mdb.NAME], ice.Maps{ice.MSG_FIELDS: ""}).Append(CLIENT_ORIGIN), values)
 						}

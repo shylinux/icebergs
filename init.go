@@ -104,6 +104,8 @@ func Run(arg ...string) string {
 			Pulse.Option(ls[0], ls[1])
 		}
 	})
+	time.Local = time.FixedZone("Beijing", 28800)
+	Pulse.time = time.Now()
 	if Pulse._cmd == nil {
 		Pulse._cmd = &Command{RawHand: logs.FileLines(3)}
 	}

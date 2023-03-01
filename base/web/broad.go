@@ -2,6 +2,7 @@ package web
 
 import (
 	"net"
+	"strings"
 
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/aaa"
@@ -30,7 +31,7 @@ func _broad_serve(m *ice.Message, host, port string) {
 	m.Go(func() {
 		_broad_send(m.Sleep("100ms"), host, port, "255.255.255.255", "9020", mdb.TYPE, ice.Info.NodeType, mdb.NAME, ice.Info.NodeName)
 	})
-	if s, e := net.ListenUDP("udp4", _broad_addr(m, "0.0.0.0", port)); m.Assert(e) {
+	if s, e := net.ListenUDP("udp4", _broad_addr(m, host, port)); m.Assert(e) {
 		defer s.Close()
 		buf := make([]byte, ice.MOD_BUFS)
 		for {
@@ -41,7 +42,7 @@ func _broad_serve(m *ice.Message, host, port string) {
 			m.Logs(mdb.IMPORT, BROAD, string(buf[:n]), "from", from)
 			msg := m.Spawn(buf[:n])
 			if msg.Option(mdb.ZONE) == "echo" {
-				mdb.HashCreate(m, msg.OptionSimple(kit.Simple(msg.Optionv(ice.MSG_OPTION))...))
+				_broad_save(m, msg)
 				continue
 			}
 			if remote := _broad_addr(m, msg.Option(tcp.HOST), msg.Option(tcp.PORT)); remote != nil {
@@ -49,9 +50,20 @@ func _broad_serve(m *ice.Message, host, port string) {
 					m.Logs(mdb.EXPORT, BROAD, kit.Format(value), "to", kit.Format(remote))
 					s.WriteToUDP([]byte(m.Spawn(value, kit.Dict(mdb.ZONE, "echo")).FormatMeta()), remote)
 				})
-				mdb.HashCreate(m, msg.OptionSimple(kit.Simple(msg.Optionv(ice.MSG_OPTION))...))
+				_broad_save(m, msg)
 			}
 		}
+	}
+}
+func _broad_save(m, msg *ice.Message) {
+	save := false
+	m.Cmd(tcp.HOST, func(values ice.Maps) {
+		if strings.Split(msg.Option(tcp.HOST), ice.PT)[0] == strings.Split(values[aaa.IP], ice.PT)[0] {
+			save = true
+		}
+	})
+	if save {
+		mdb.HashCreate(m, msg.OptionSimple(kit.Simple(msg.Optionv(ice.MSG_OPTION))...))
 	}
 }
 
@@ -61,7 +73,7 @@ func init() {
 	Index.MergeCommands(ice.Commands{
 		BROAD: {Name: "broad hash auto", Help: "广播", Actions: ice.MergeActions(ice.Actions{
 			mdb.SEARCH: {Hand: func(m *ice.Message, arg ...string) {
-				if arg[0] == BROAD || arg[0] == mdb.FOREACH {
+				if arg[0] == m.CommandKey() || arg[0] == mdb.FOREACH && arg[1] == "" {
 					host := m.Cmd(tcp.HOST).Append(aaa.IP)
 					domain := OptionUserWeb(m).Hostname()
 					m.Cmd("", ice.Maps{ice.MSG_FIELDS: ""}, func(values ice.Maps) {
@@ -79,7 +91,9 @@ func init() {
 				}
 			}},
 			SERVE: {Name: "serve port=9020", Hand: func(m *ice.Message, arg ...string) {
-				_broad_serve(m, m.Cmd(tcp.HOST).Append(aaa.IP), m.Option(tcp.PORT))
+				m.Cmd(tcp.HOST).TableGo(func(values ice.Maps) {
+					_broad_serve(m, values[aaa.IP], m.Option(tcp.PORT))
+				})
 			}},
 			OPEN: {Hand: func(m *ice.Message, arg ...string) {
 				ctx.ProcessOpen(m, kit.Format("http://%s:%s", m.Option(tcp.HOST), m.Option(tcp.PORT)))

@@ -15,6 +15,7 @@ import (
 	"shylinux.com/x/icebergs/base/ctx"
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/nfs"
+	"shylinux.com/x/icebergs/base/tcp"
 	kit "shylinux.com/x/toolkits"
 )
 
@@ -51,6 +52,8 @@ func (f *Frame) prompt(m *ice.Message, list ...string) *Frame {
 		switch v {
 		case mdb.COUNT:
 			fmt.Fprintf(f.stdout, "%d", f.count)
+		case tcp.HOSTNAME:
+			fmt.Fprintf(f.stdout, "%s", kit.Slice(kit.Split(ice.Info.Hostname, " -/."), -1)[0])
 		case mdb.TIME:
 			fmt.Fprintf(f.stdout, time.Now().Format("15:04:05"))
 		case TARGET:
@@ -117,7 +120,7 @@ func (f *Frame) parse(m *ice.Message, h, line string) string {
 func (f *Frame) scan(m *ice.Message, h, line string) *Frame {
 	f.ps1 = kit.Simple(m.Confv(PROMPT, kit.Keym(PS1)))
 	f.ps2 = kit.Simple(m.Confv(PROMPT, kit.Keym(PS2)))
-	// m.Options(MESSAGE, m, ice.LOG_DISABLE, ice.TRUE)
+	m.Options(MESSAGE, m, ice.LOG_DISABLE, ice.TRUE)
 	m.I, m.O = f.stdin, f.stdout
 	ps, bio := f.ps1, bufio.NewScanner(f.stdin)
 	for f.prompt(m, ps...); f.stdin != nil && bio.Scan(); f.prompt(m, ps...) {
@@ -236,7 +239,7 @@ func init() {
 			}
 		}},
 		PROMPT: {Name: "prompt arg run", Help: "命令提示", Actions: ctx.ConfAction(
-			PS1, ice.List{"\033[33;44m", mdb.COUNT, "[", mdb.TIME, "]", "\033[5m", TARGET, "\033[0m", "\033[44m", ">", "\033[0m ", "\033[?25h", "\033[32m"},
+			PS1, ice.List{"\033[33;44m", mdb.COUNT, "@", tcp.HOSTNAME, "[", mdb.TIME, "]", "\033[5m", TARGET, "\033[0m", "\033[44m", ">", "\033[0m ", "\033[?25h", "\033[32m"},
 			PS2, ice.List{mdb.COUNT, " ", TARGET, "> "},
 		), Hand: func(m *ice.Message, arg ...string) {
 			if f, ok := m.Target().Server().(*Frame); ok {

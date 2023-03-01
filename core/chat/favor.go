@@ -53,8 +53,15 @@ func init() {
 			"record1":          {Name: "favor upload", Help: "截图"},
 			"record2":          {Name: "favor upload", Help: "录屏"},
 			mdb.CREATE: {Hand: func(m *ice.Message, arg ...string) {
-				m.OptionDefault(mdb.TYPE, mdb.LINK, mdb.NAME, kit.ParseURL(m.Option(mdb.TEXT)).Host)
+				if strings.HasPrefix(m.Option(mdb.TEXT), ice.HTTP) {
+					m.OptionDefault(mdb.TYPE, mdb.LINK, mdb.NAME, kit.ParseURL(m.Option(mdb.TEXT)).Host)
+				}
 				mdb.HashCreate(m, m.OptionSimple())
+			}},
+			mdb.SEARCH: {Hand: func(m *ice.Message, arg ...string) {
+				if arg[0] == m.CommandKey() || arg[0] == mdb.FOREACH && arg[1] == "" {
+					m.Cmd("", ice.Maps{ice.MSG_FIELDS: ""}, func(values ice.Maps) { m.PushSearch(values) })
+				}
 			}},
 			web.UPLOAD: {Hand: func(m *ice.Message, arg ...string) {
 				m.Cmd("", mdb.CREATE, m.OptionSimple(mdb.TYPE, mdb.NAME, mdb.TEXT))

@@ -26,8 +26,11 @@ func _serve_start(m *ice.Message) {
 	if cli.NodeInfo(m, kit.Select(ice.Info.Hostname, m.Option("nodename")), SERVER); m.Option(tcp.PORT) == tcp.RANDOM {
 		m.Option(tcp.PORT, m.Cmdx(tcp.PORT, aaa.RIGHT))
 	}
+	if runtime.GOOS == cli.WINDOWS {
+		m.Cmd(SPIDE, ice.OPS, kit.Format("http://localhost:%s/exit", m.Option(tcp.PORT))).Sleep("100ms")
+	}
 	m.Target().Start(m, m.OptionSimple(tcp.HOST, tcp.PORT)...)
-	m.Go(func() { m.Cmd(BROAD, SERVE, m.OptionSimple(tcp.PORT)) })
+	defer m.Go(func() { m.Cmd(BROAD, SERVE, m.OptionSimple(tcp.PORT)) })
 	for _, v := range kit.Split(m.Option(ice.DEV)) {
 		m.Cmd(SPACE, tcp.DIAL, ice.DEV, v, mdb.NAME, ice.Info.NodeName)
 	}
@@ -177,19 +180,23 @@ const SERVE = "serve"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
+		"/exit": {Hand: func(m *ice.Message, arg ...string) { m.Cmdy(ice.EXIT) }},
 		SERVE: {Name: "serve name auto start", Help: "服务器", Actions: ice.MergeActions(ice.Actions{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) { cli.NodeInfo(m, ice.Info.Pathname, WORKER) }},
-			cli.START: {Name: "start dev name proto host port=9020 nodename username usernick", Hand: func(m *ice.Message, arg ...string) {
+			cli.START: {Name: "start dev proto host port=9020 nodename username usernick", Hand: func(m *ice.Message, arg ...string) {
 				_serve_start(m)
 			}},
 			SERVE_START: {Hand: func(m *ice.Message, arg ...string) {
-				m.Go(func() {
+				go func() {
+					m.Option(ice.LOG_DISABLE, ice.TRUE)
 					opened := false
-					m.Sleep("2s").Cmd(SPACE, func(values ice.Maps) {
-						if values[mdb.TYPE] == CHROME {
-							opened = true
-						}
-					})
+					for i := 0; i < 3 && !opened; i++ {
+						m.Sleep("1s").Cmd(SPACE, func(values ice.Maps) {
+							if values[mdb.TYPE] == CHROME {
+								opened = true
+							}
+						})
+					}
 					if opened {
 						return
 					}
@@ -199,7 +206,7 @@ func init() {
 					case cli.DARWIN:
 						m.Cmd(cli.SYSTEM, "open", host)
 					}
-				})
+				}()
 			}},
 			SERVE_REWRITE: {Hand: func(m *ice.Message, arg ...string) {
 				if arg[0] != http.MethodGet {

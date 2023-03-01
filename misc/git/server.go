@@ -188,6 +188,7 @@ func init() {
 				m.Cmdy(nfs.DIR, nfs.PWD, "time,name,size,action", kit.Dict(nfs.DIR_TYPE, nfs.TYPE_DIR), func(value ice.Maps) {
 					m.PushScript("git clone " + _git_url(m, value[mdb.NAME]))
 				}).Cut("time,name,size,script,action").RenameAppend(mdb.NAME, nfs.REPOS).SortStrR(mdb.TIME)
+				m.Echo(strings.ReplaceAll(m.Cmdx("web.code.publish", "contexts"), "app username", "dev username"))
 			} else if dir := path.Join(m.Option(nfs.DIR_ROOT), arg[0]); len(arg) == 1 {
 				_repos_branch(m, dir)
 			} else if len(arg) == 2 {

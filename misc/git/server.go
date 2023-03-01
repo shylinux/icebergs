@@ -147,7 +147,7 @@ func init() {
 			}
 		}},
 		SERVER: {Name: "server repos branch commit path auto create import", Help: "源代码", Actions: ice.MergeActions(ice.Actions{
-			mdb.CREATE: {Name: "create name*", Hand: func(m *ice.Message, arg ...string) {
+			mdb.CREATE: {Name: "create name*=demo", Hand: func(m *ice.Message, arg ...string) {
 				_repos_init(m, path.Join(ice.USR_LOCAL_REPOS, m.Option(mdb.NAME)))
 			}},
 			mdb.IMPORT: {Hand: func(m *ice.Message, arg ...string) {

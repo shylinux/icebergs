@@ -200,9 +200,9 @@ func init() {
 				case VERSION, TAGS:
 					m.Push(VERSION, _status_tag(m, m.Option(TAGS)))
 				case aaa.EMAIL:
-					m.Push(arg[0], _configs_get(m, USER_EMAIL))
+					m.Push(arg[0], _configs_get(m, USER_EMAIL), ice.Info.Make.Email)
 				case aaa.USERNAME:
-					m.Push(arg[0], kit.Select(m.Option(ice.MSG_USERNAME), _configs_get(m, USER_NAME)))
+					m.Push(arg[0], kit.Select(m.Option(ice.MSG_USERNAME), _configs_get(m, USER_NAME)), ice.Info.Make.Username)
 				}
 			}},
 			CONFIGS: {Name: "configs email username", Help: "配置", Hand: func(m *ice.Message, arg ...string) {

@@ -2,7 +2,6 @@ package cli
 
 import (
 	"os"
-	"runtime"
 	"strings"
 
 	ice "shylinux.com/x/icebergs"
@@ -25,10 +24,6 @@ func init() {
 	Index.MergeCommands(ice.Commands{
 		FOREVER: {Name: "forever auto", Help: "启动", Actions: ice.Actions{
 			START: {Hand: func(m *ice.Message, arg ...string) {
-				if runtime.GOOS == WINDOWS {
-					m.Cmdy("serve", "start", arg)
-					return
-				}
 				env := []string{PATH, BinPath(), HOME, kit.Select(kit.Path(""), os.Getenv(HOME))}
 				for _, k := range ENV_LIST {
 					if kit.Env(k) != "" {
@@ -54,14 +49,9 @@ func init() {
 					m.Cmdy(FOREVER, bin, ice.SERVE, START, arg)
 				}
 			}},
-			RESTART: {Hand: func(m *ice.Message, arg ...string) {
-				if runtime.GOOS == WINDOWS {
-					return
-				}
-				m.Cmd(gdb.SIGNAL, gdb.RESTART)
-			}},
-			STOP:  {Hand: func(m *ice.Message, arg ...string) { m.Cmd(gdb.SIGNAL, gdb.STOP) }},
-			DELAY: {Hand: func(m *ice.Message, arg ...string) { m.Sleep(arg[0]).Cmdy(arg[1:]) }},
+			RESTART: {Hand: func(m *ice.Message, arg ...string) { m.Cmd(gdb.SIGNAL, gdb.RESTART) }},
+			STOP:    {Hand: func(m *ice.Message, arg ...string) { m.Cmd(gdb.SIGNAL, gdb.STOP) }},
+			DELAY:   {Hand: func(m *ice.Message, arg ...string) { m.Sleep(arg[0]).Cmdy(arg[1:]) }},
 		}, Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) == 0 {
 				m.Cmdy(RUNTIME, BOOTINFO)
@@ -69,12 +59,9 @@ func init() {
 			}
 			for {
 				if logs.Println("run %s", kit.Join(arg, ice.SP)); IsSuccess(m.Cmd(SYSTEM, arg)) {
-					logs.Println("what %v", 123)
-					logs.Println(ice.EXIT)
+					defer logs.Println(ice.EXIT)
 					break
 				}
-				logs.Println("what %v", 123)
-				m.Debug("what %v", arg)
 				m.Sleep("1s")
 				if logs.Println(); m.Config("log.save") == ice.TRUE {
 					back := kit.Format("var/log.%s", logs.Now().Format("20060102_150405"))

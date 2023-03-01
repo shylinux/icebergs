@@ -45,7 +45,9 @@ func Render(m *ice.Message, cmd string, args ...ice.Any) bool {
 		RenderCookie(m, arg[0], arg[1:]...)
 
 	case STATUS, ice.RENDER_STATUS: // [code [text]]
-		RenderStatus(m.W, kit.Int(kit.Select("200", arg, 0)), kit.Select("", arg, 1))
+		m.Debug("what %v", m.FormatStack(1, 10))
+		m.Debug("what %v", arg)
+		RenderStatus(m.W, kit.Int(kit.Select("200", arg, 0)), strings.Join(kit.Slice(arg, 1), " "))
 
 	case ice.RENDER_REDIRECT: // url [arg...]
 		http.Redirect(m.W, m.R, kit.MergeURL(arg[0], arg[1:]), http.StatusTemporaryRedirect)

@@ -30,7 +30,7 @@ func _serve_start(m *ice.Message) {
 		m.Cmd(SPIDE, ice.OPS, kit.Format("http://localhost:%s/exit", m.Option(tcp.PORT))).Sleep("100ms")
 	}
 	m.Target().Start(m, m.OptionSimple(tcp.HOST, tcp.PORT)...)
-	defer m.Go(func() { m.Cmd(BROAD, SERVE, m.OptionSimple(tcp.PORT)) })
+	m.Sleep("300ms")
 	for _, v := range kit.Split(m.Option(ice.DEV)) {
 		m.Cmd(SPACE, tcp.DIAL, ice.DEV, v, mdb.NAME, ice.Info.NodeName)
 	}
@@ -187,11 +187,11 @@ func init() {
 				_serve_start(m)
 			}},
 			SERVE_START: {Hand: func(m *ice.Message, arg ...string) {
+				m.Go(func() { m.Cmd(BROAD, SERVE, m.OptionSimple(tcp.PORT)) })
 				go func() {
-					m.Option(ice.LOG_DISABLE, ice.TRUE)
 					opened := false
 					for i := 0; i < 3 && !opened; i++ {
-						m.Sleep("1s").Cmd(SPACE, func(values ice.Maps) {
+						m.Sleep("1s").Cmd(SPACE, kit.Dict(ice.LOG_DISABLE, ice.TRUE), func(values ice.Maps) {
 							if values[mdb.TYPE] == CHROME {
 								opened = true
 							}
@@ -202,7 +202,7 @@ func init() {
 					}
 					switch host := "http://localhost:" + m.Option(tcp.PORT); runtime.GOOS {
 					case cli.WINDOWS:
-						m.Cmd(cli.SYSTEM, "explorer.exe", host)
+						m.Cmd(cli.SYSTEM, "explorer", host)
 					case cli.DARWIN:
 						m.Cmd(cli.SYSTEM, "open", host)
 					}

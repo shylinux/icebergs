@@ -95,9 +95,6 @@ func Run(arg ...string) string {
 	if len(arg) == 0 && runtime.GOOS == "windows" {
 		arg = append(arg, SERVE, START, DEV, DEV)
 	}
-	if len(arg) > 0 && arg[0] == "forever" && runtime.GOOS == "windows" {
-		// arg[0] = "serve"
-	}
 	Pulse.meta[MSG_DETAIL] = arg
 	kit.Fetch(kit.Sort(os.Environ()), func(env string) {
 		if ls := strings.SplitN(env, EQ, 2); strings.ToLower(ls[0]) == ls[0] && ls[0] != "_" {
@@ -120,9 +117,9 @@ func Run(arg ...string) string {
 			os.Exit(kit.Int(Pulse.Option(EXIT)))
 		}
 	default:
-		if logs.Disable(true); len(arg) == 0 {
-			arg = append(arg, HELP)
-		}
+		// if logs.Disable(true); len(arg) == 0 {
+		// arg = append(arg, HELP)
+		// }
 		if Pulse.Cmdy(INIT).Cmdy(arg); Pulse.IsErrNotFound() {
 			Pulse.SetAppend().SetResult().Cmdy(SYSTEM, arg)
 		}

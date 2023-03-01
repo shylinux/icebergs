@@ -53,7 +53,12 @@ func init() {
 		}, ctx.ConfAction(cli.ENV, kit.Dict("GOPRIVATE", "shylinux.com,github.com", "GOPROXY", "https://goproxy.cn,direct", "CGO_ENABLED", "0"))), Hand: func(m *ice.Message, arg ...string) {
 			_autogen_version(m.Spawn())
 			main, file, goos, arch := _compile_target(m, arg...)
-			m.Optionv(cli.CMD_ENV, kit.Simple(cli.PATH, kit.Env(cli.PATH), cli.HOME, kit.Env(cli.HOME), m.Configv(cli.ENV), m.Optionv(cli.ENV), cli.GOOS, goos, cli.GOARCH, arch))
+			env := kit.Simple(cli.PATH, kit.Env(cli.PATH), cli.HOME, kit.Select(kit.Path(""), kit.Env(cli.HOME)), m.Configv(cli.ENV), m.Optionv(cli.ENV), cli.GOOS, goos, cli.GOARCH, arch)
+			if runtime.GOOS == cli.WINDOWS {
+				env = append(env, "GOPATH", kit.HomePath("go"))
+				env = append(env, "GOCACHE", kit.HomePath("go/go-build"))
+			}
+			m.Optionv(cli.CMD_ENV, env)
 			if !strings.Contains(m.Cmdx(nfs.CAT, ice.GO_MOD), "shylinux.com/x/ice") {
 				m.Cmd(cli.SYSTEM, GO, "get", "shylinux.com/x/ice")
 			}

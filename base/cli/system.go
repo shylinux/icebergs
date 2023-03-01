@@ -3,6 +3,8 @@ package cli
 import (
 	"bytes"
 	"io"
+	"net/http"
+	"os"
 	"os/exec"
 	"path"
 	"runtime"
@@ -58,7 +60,12 @@ func _system_cmd(m *ice.Message, arg ...string) *exec.Cmd {
 		}
 	}
 	if bin == "" && runtime.GOOS == WINDOWS {
-		bin = path.Join("C:/Windows", arg[0])
+		if bin = _system_find(m, arg[0], path.Join(os.Getenv("ProgramFiles"), "Git/bin"), path.Join(os.Getenv("ProgramFiles"), "Go/bin")); bin != "" {
+			m.Logs(mdb.SELECT, "systems cmd", bin)
+		}
+	}
+	if bin == "" {
+		bin = arg[0]
 	}
 	cmd := exec.Command(bin, arg[1:]...)
 	if cmd.Dir = kit.TrimPath(m.Option(CMD_DIR)); len(cmd.Dir) > 0 {
@@ -102,9 +109,14 @@ func _system_exec(m *ice.Message, cmd *exec.Cmd) {
 		defer func() {
 			m.Push(CMD_OUT, out.String()).Push(CMD_ERR, err.String())
 			m.Echo(strings.TrimRight(out.String(), ice.NL))
+			if m.IsErr() {
+				m.Option(ice.MSG_ARGS, kit.Simple(http.StatusBadRequest, cmd.Args, err.String()))
+				m.Echo(strings.TrimRight(err.String(), ice.NL))
+				m.Debug("what %v", m.FormatMeta())
+			}
 		}()
 	}
-	if e := cmd.Run(); !m.Warn(e, ice.ErrNotFound, cmd.Args) {
+	if e := cmd.Run(); !m.Warn(e, ice.ErrNotValid, cmd.Args) {
 		m.Cost(CODE, _system_code(cmd), ctx.ARGS, cmd.Args)
 	}
 	m.Push(mdb.TIME, m.Time()).Push(CODE, _system_code(cmd))

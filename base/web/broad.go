@@ -27,12 +27,14 @@ func _broad_send(m *ice.Message, host, port string, remote_host, remote_port str
 		s.Write([]byte(msg.FormatMeta()))
 	}
 }
-func _broad_serve(m *ice.Message, host, port string) {
-	m.Go(func() {
-		_broad_send(m.Sleep("100ms"), host, port, "255.255.255.255", "9020", mdb.TYPE, ice.Info.NodeType, mdb.NAME, ice.Info.NodeName)
-	})
-	if s, e := net.ListenUDP("udp4", _broad_addr(m, host, port)); m.Assert(e) {
+func _broad_serve(m *ice.Message, port string) {
+	if s, e := net.ListenUDP("udp4", _broad_addr(m, "0.0.0.0", port)); m.Assert(e) {
 		defer s.Close()
+		m.Go(func() {
+			m.Sleep("10ms").Cmd(tcp.HOST, func(values ice.Maps) {
+				_broad_send(m, values[aaa.IP], port, "255.255.255.255", "9020", mdb.TYPE, ice.Info.NodeType, mdb.NAME, ice.Info.NodeName)
+			})
+		})
 		buf := make([]byte, ice.MOD_BUFS)
 		for {
 			n, from, e := s.ReadFromUDP(buf[:])
@@ -91,9 +93,7 @@ func init() {
 				}
 			}},
 			SERVE: {Name: "serve port=9020", Hand: func(m *ice.Message, arg ...string) {
-				m.Cmd(tcp.HOST).TableGo(func(values ice.Maps) {
-					_broad_serve(m, values[aaa.IP], m.Option(tcp.PORT))
-				})
+				_broad_serve(m, m.Option(tcp.PORT))
 			}},
 			OPEN: {Hand: func(m *ice.Message, arg ...string) {
 				ctx.ProcessOpen(m, kit.Format("http://%s:%s", m.Option(tcp.HOST), m.Option(tcp.PORT)))

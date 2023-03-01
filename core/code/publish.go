@@ -87,13 +87,6 @@ func init() {
 	Index.MergeCommands(ice.Commands{
 		PUBLISH: {Name: "publish path auto create volcanos icebergs intshell", Help: "发布", Actions: ice.MergeActions(ice.Actions{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) { m.Config(ice.CONTEXTS, _contexts) }},
-			mdb.INPUTS:   {Hand: func(m *ice.Message, arg ...string) { m.Cmdy(nfs.DIR, arg[1:]).Cut("path,size,time").ProcessAgain() }},
-			web.SERVE_START: {Hand: func(m *ice.Message, arg ...string) {
-				if runtime.GOOS == cli.WINDOWS {
-					return
-				}
-				// _publish_file(m, ice.ICE_BIN)
-			}},
 			ice.VOLCANOS: {Help: "火山架", Hand: func(m *ice.Message, arg ...string) {
 				defer func() { m.EchoQRCode(m.Option(ice.MSG_USERWEB)) }()
 				defer func() { m.Cmdy(PUBLISH, ice.CONTEXTS, ice.MISC) }()
@@ -108,6 +101,7 @@ func init() {
 				_publish_list(m, kit.ExtReg(`(sh|vim|conf)`))
 			}},
 			ice.CONTEXTS: {Hand: func(m *ice.Message, arg ...string) { _publish_contexts(m, arg...) }},
+			mdb.INPUTS:   {Hand: func(m *ice.Message, arg ...string) { m.Cmdy(nfs.DIR, arg[1:]).Cut("path,size,time").ProcessAgain() }},
 			mdb.CREATE:   {Name: "create file", Help: "添加", Hand: func(m *ice.Message, arg ...string) { _publish_file(m, m.Option(nfs.FILE)) }},
 			nfs.TRASH:    {Hand: func(m *ice.Message, arg ...string) { nfs.Trash(m, path.Join(ice.USR_PUBLISH, m.Option(nfs.PATH))) }},
 		}, ctx.ConfAction(ice.CONTEXTS, _contexts), aaa.RoleAction()), Hand: func(m *ice.Message, arg ...string) {

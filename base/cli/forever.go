@@ -54,9 +54,14 @@ func init() {
 					m.Cmdy(FOREVER, bin, ice.SERVE, START, arg)
 				}
 			}},
-			RESTART: {Hand: func(m *ice.Message, arg ...string) { m.Cmd(gdb.SIGNAL, gdb.RESTART) }},
-			STOP:    {Hand: func(m *ice.Message, arg ...string) { m.Cmd(gdb.SIGNAL, gdb.STOP) }},
-			DELAY:   {Hand: func(m *ice.Message, arg ...string) { m.Sleep(arg[0]).Cmdy(arg[1:]) }},
+			RESTART: {Hand: func(m *ice.Message, arg ...string) {
+				if runtime.GOOS == WINDOWS {
+					return
+				}
+				m.Cmd(gdb.SIGNAL, gdb.RESTART)
+			}},
+			STOP:  {Hand: func(m *ice.Message, arg ...string) { m.Cmd(gdb.SIGNAL, gdb.STOP) }},
+			DELAY: {Hand: func(m *ice.Message, arg ...string) { m.Sleep(arg[0]).Cmdy(arg[1:]) }},
 		}, Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) == 0 {
 				m.Cmdy(RUNTIME, BOOTINFO)

@@ -2,6 +2,7 @@ package cli
 
 import (
 	"os"
+	"runtime"
 	"strings"
 
 	ice "shylinux.com/x/icebergs"
@@ -24,6 +25,10 @@ func init() {
 	Index.MergeCommands(ice.Commands{
 		FOREVER: {Name: "forever auto", Help: "启动", Actions: ice.Actions{
 			START: {Hand: func(m *ice.Message, arg ...string) {
+				if runtime.GOOS == WINDOWS {
+					m.Cmdy("serve", "start", arg)
+					return
+				}
 				env := []string{PATH, BinPath(), HOME, kit.Select(kit.Path(""), os.Getenv(HOME))}
 				for _, k := range ENV_LIST {
 					if kit.Env(k) != "" {

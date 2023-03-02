@@ -117,9 +117,9 @@ func Run(arg ...string) string {
 			os.Exit(kit.Int(Pulse.Option(EXIT)))
 		}
 	default:
-		// if logs.Disable(true); len(arg) == 0 {
-		// arg = append(arg, HELP)
-		// }
+		if logs.Disable(true); len(arg) == 0 {
+			arg = append(arg, HELP)
+		}
 		if Pulse.Cmdy(INIT).Cmdy(arg); Pulse.IsErrNotFound() {
 			Pulse.SetAppend().SetResult().Cmdy(SYSTEM, arg)
 		}

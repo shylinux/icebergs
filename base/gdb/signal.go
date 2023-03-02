@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"os/signal"
+	"runtime"
 	"syscall"
 
 	ice "shylinux.com/x/icebergs"
@@ -49,6 +50,9 @@ func init() {
 	Index.MergeCommands(ice.Commands{
 		SIGNAL: {Name: "signal signal auto listen", Help: "信号量", Actions: ice.MergeActions(ice.Actions{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
+				if runtime.GOOS == "windows" {
+					return
+				}
 				_signal_listen(m, 2, mdb.NAME, "重启", ice.CMD, "exit 1")
 				_signal_listen(m, 3, mdb.NAME, "退出", ice.CMD, "exit 0")
 				if f, p, e := logs.CreateFile(ice.Info.PidPath); e == nil {

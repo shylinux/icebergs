@@ -8,6 +8,7 @@ import (
 	"shylinux.com/x/icebergs/base/aaa"
 	"shylinux.com/x/icebergs/base/ctx"
 	"shylinux.com/x/icebergs/base/mdb"
+	"shylinux.com/x/icebergs/base/nfs"
 	"shylinux.com/x/icebergs/base/tcp"
 	kit "shylinux.com/x/toolkits"
 	"shylinux.com/x/toolkits/logs"
@@ -23,7 +24,7 @@ func _broad_send(m *ice.Message, host, port string, remote_host, remote_port str
 	if s, e := net.DialUDP("udp4", nil, _broad_addr(m, remote_host, remote_port)); !m.Warn(e, ice.ErrNotValid) {
 		defer s.Close()
 		msg := m.Spawn(kit.Dict(tcp.HOST, host, tcp.PORT, port), kit.Dict(arg))
-		m.Logs(mdb.EXPORT, BROAD, msg.FormatMeta(), "to", remote_host+ice.DF+remote_port)
+		m.Logs(tcp.SEND, BROAD, msg.FormatMeta(), nfs.TO, remote_host+ice.DF+remote_port)
 		s.Write([]byte(msg.FormatMeta()))
 	}
 }
@@ -41,7 +42,7 @@ func _broad_serve(m *ice.Message, port string) {
 			if e != nil {
 				break
 			}
-			m.Logs(mdb.IMPORT, BROAD, string(buf[:n]), "from", from)
+			m.Logs(tcp.RECV, BROAD, string(buf[:n]), nfs.FROM, from)
 			msg := m.Spawn(buf[:n])
 			if msg.Option(mdb.ZONE) == "echo" {
 				_broad_save(m, msg)
@@ -49,7 +50,7 @@ func _broad_serve(m *ice.Message, port string) {
 			}
 			if remote := _broad_addr(m, msg.Option(tcp.HOST), msg.Option(tcp.PORT)); remote != nil {
 				m.Cmd(BROAD, func(value ice.Maps) {
-					m.Logs(mdb.EXPORT, BROAD, kit.Format(value), "to", kit.Format(remote))
+					m.Logs(tcp.SEND, BROAD, kit.Format(value), nfs.TO, kit.Format(remote))
 					s.WriteToUDP([]byte(m.Spawn(value, kit.Dict(mdb.ZONE, "echo")).FormatMeta()), remote)
 				})
 				_broad_save(m, msg)
@@ -98,7 +99,7 @@ func init() {
 			OPEN: {Hand: func(m *ice.Message, arg ...string) {
 				ctx.ProcessOpen(m, kit.Format("http://%s:%s", m.Option(tcp.HOST), m.Option(tcp.PORT)))
 			}},
-			"send": {Hand: func(m *ice.Message, arg ...string) {
+			tcp.SEND: {Hand: func(m *ice.Message, arg ...string) {
 				_broad_send(m, "", "", "255.255.255.255", "9020", arg...)
 			}},
 		}, mdb.HashAction(mdb.SHORT, "host,port", mdb.FIELD, "time,hash,type,name,host,port", mdb.ACTION, OPEN), mdb.ClearHashOnExitAction())},

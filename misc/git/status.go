@@ -325,7 +325,7 @@ func init() {
 				defer web.ToastProcess(m)()
 				files, adds, dels, last := _status_list(m)
 				m.StatusTimeCount("files", files, "adds", adds, "dels", dels, "last", last.Format(ice.MOD_TIME))
-				m.Action(PULL, PUSH, TAGS, PIE, code.COMPILE, code.PUBLISH, "insteadof")
+				m.Action(PULL, PUSH, "insteadof")
 				m.Sort("repos,type,file")
 			} else {
 				_repos_cmd(m, arg[0], DIFF)

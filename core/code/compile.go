@@ -71,6 +71,7 @@ func init() {
 			if strings.Contains(file, ice.ICE) {
 				m.Cmdy(PUBLISH, ice.CONTEXTS)
 			}
+			m.StatusTime("version", strings.TrimPrefix(m.Cmdx(cli.SYSTEM, GO, "version"), "go version "))
 		}},
 	})
 }

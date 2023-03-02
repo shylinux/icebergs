@@ -23,7 +23,7 @@ import (
 
 func _spide_create(m *ice.Message, name, address string) {
 	if uri, e := url.Parse(address); !m.Warn(e != nil || address == "", ice.ErrNotValid, address) {
-		m.Logs(mdb.CREATE, SPIDE, name, ADDRESS, address)
+		m.Logs(mdb.INSERT, SPIDE, name, ADDRESS, address)
 		mdb.HashSelectUpdate(m, mdb.HashCreate(m, CLIENT_NAME, name), func(value ice.Map) {
 			dir, file := path.Split(uri.EscapedPath())
 			value[SPIDE_CLIENT] = kit.Dict(mdb.NAME, name, SPIDE_METHOD, http.MethodPost, "url", address, "origin", uri.Scheme+"://"+uri.Host,

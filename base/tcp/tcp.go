@@ -10,6 +10,10 @@ import (
 	kit "shylinux.com/x/toolkits"
 )
 
+const (
+	SEND = "send"
+	RECV = "recv"
+)
 const TCP = "tcp"
 
 var Index = &ice.Context{Name: TCP, Help: "通信模块"}

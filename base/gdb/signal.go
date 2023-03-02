@@ -64,7 +64,7 @@ func init() {
 				if f, p, e := logs.CreateFile(ice.Info.PidPath); e == nil {
 					defer f.Close()
 					fmt.Fprint(f, os.Getpid())
-					m.Logs(mdb.CREATE, PID, p)
+					m.Logs("save", PID, p)
 				}
 			}},
 			LISTEN: {Name: "listen signal name cmd", Help: "监听", Hand: func(m *ice.Message, arg ...string) {

@@ -15,12 +15,13 @@ const DEBUG = "debug"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
-		DEBUG: {Name: "debug level=watch,bench,watch,error,trace offset filter auto doc", Help: "后台日志", Actions: ice.Actions{
+		DEBUG: {Name: "debug level=watch,bench,debug,error,watch offset filter auto doc", Help: "后台日志", Actions: ice.Actions{
 			"doc": {Help: "文档", Hand: func(m *ice.Message, arg ...string) { m.ProcessOpen("https://pkg.go.dev/std") }},
 		}, Hand: func(m *ice.Message, arg ...string) {
 			offset := kit.Int(kit.Select("0", arg, 1))
+			stats := map[string]int{}
 			switch arg[0] {
-			case "bench", ERROR, "trace":
+			case BENCH, ERROR, DEBUG:
 				m.Cmd(nfs.CAT, ice.VAR_LOG+arg[0]+".log", func(line string, index int) {
 					if len(arg) > 2 && !strings.Contains(line, arg[2]) || index < offset {
 						return
@@ -29,12 +30,12 @@ func init() {
 					m.Push(mdb.TIME, ls[0]+ice.SP+ls[1])
 					m.Push(mdb.ID, ls[2])
 					i := strings.LastIndex(ls[5], ice.SP)
-					if strings.HasPrefix(ls[5][i+1:], "base") || strings.HasPrefix(ls[5][i+1:], "core") || strings.HasPrefix(ls[5][i+1:], "misc") {
+					if strings.HasPrefix(ls[5][i+1:], ice.BASE) || strings.HasPrefix(ls[5][i+1:], ice.CORE) || strings.HasPrefix(ls[5][i+1:], ice.MISC) {
 						m.Push(nfs.PATH, ice.USR_ICEBERGS)
 						m.Push(nfs.FILE, strings.TrimSpace(strings.Split(ls[5][i:], ice.DF)[0]))
 						m.Push(nfs.LINE, strings.TrimSpace(strings.Split(ls[5][i:], ice.DF)[1]))
 						ls[5] = ls[5][:i]
-					} else if strings.HasPrefix(ls[5][i+1:], "usr/icebergs/") {
+					} else if strings.HasPrefix(ls[5][i+1:], ice.USR_ICEBERGS) {
 						m.Push(nfs.PATH, ice.USR_ICEBERGS)
 						m.Push(nfs.FILE, strings.TrimPrefix(strings.TrimSpace(strings.Split(ls[5][i:], ice.DF)[0]), ice.USR_ICEBERGS))
 						m.Push(nfs.LINE, strings.TrimSpace(strings.Split(ls[5][i:], ice.DF)[1]))
@@ -57,6 +58,7 @@ func init() {
 					m.Push("ship", ls[3])
 					m.Push(ctx.ACTION, ls[4])
 					m.Push(mdb.TEXT, ls[5])
+					stats[ls[4]]++
 				})
 			case WATCH:
 				m.Cmd(nfs.CAT, ice.VAR_LOG+arg[0]+".log", func(line string, index int) {
@@ -75,9 +77,10 @@ func init() {
 
 					m.Push(ctx.ACTION, ls[4])
 					m.Push(mdb.TEXT, ls[5][:i])
+					stats[ls[4]]++
 				})
 			}
-			m.StatusTimeCountTotal(offset + m.Length())
+			m.StatusTimeCountTotal(offset+m.Length(), stats)
 		}},
 	})
 }

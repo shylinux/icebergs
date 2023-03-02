@@ -109,7 +109,7 @@ var Index = &ice.Context{Name: LOG, Help: "日志模块", Configs: ice.Configs{
 			if f, p, e := logs.CreateFile(kit.Format(value[nfs.PATH])); e == nil {
 				m.Cap(ice.CTX_STREAM, path.Base(p))
 				value[FILE] = bufio.NewWriter(f)
-				m.Logs(mdb.CREATE, nfs.FILE, p)
+				m.Logs(nfs.SAVE, nfs.FILE, p)
 			}
 		})
 		m.Confm(VIEW, nil, func(key string, value ice.Map) {

@@ -77,7 +77,7 @@ func init() {
 			FIELDS, "id,tag,pane,tty,height,width,cmd",
 		)},
 	}, Commands: ice.Commands{
-		SESSION: {Name: "session session window pane cmd auto", Help: "会话管理", Actions: ice.MergeActions(ice.Actions{
+		SESSION: {Name: "session session window pane cmds auto", Help: "会话管理", Actions: ice.MergeActions(ice.Actions{
 			web.DREAM_CREATE: {Hand: func(m *ice.Message, arg ...string) { m.Cmd("", mdb.CREATE) }},
 			mdb.INPUTS: {Hand: func(m *ice.Message, arg ...string) {
 				if m.Option(ctx.ACTION) == SCRIPT {

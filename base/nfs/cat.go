@@ -68,7 +68,7 @@ func _cat_list(m *ice.Message, file string) {
 		buf, size := make([]byte, 10*ice.MOD_BUFS), 0
 		for {
 			if n, e := f.Read(buf[size:]); !m.Warn(e, ice.ErrNotValid, file) {
-				m.Logs(mdb.IMPORT, FILE, file, SIZE, n)
+				m.Logs(LOAD, FILE, file, SIZE, n)
 				if size += n; size < len(buf) {
 					buf = buf[:size]
 					break

@@ -37,12 +37,15 @@ func Render(m *Message, cmd string, args ...Any) string {
 					break
 				}
 				for _, k := range kit.Split(k) {
-					list = append(list, kit.Format(`<input type="button" name="%s" value="%s">`, k,
-						kit.Select(k, kit.Value(m._cmd.Meta, kit.Keys("_trans", k)), m.Option(MSG_LANGUAGE) != "en")))
+					list = append(list, kit.Format(`<input type="button" name="%s" value="%s">`,
+						// k, kit.Select(k, kit.Value(m._cmd.Meta, kit.Keys("_trans", k)), m.Option(MSG_LANGUAGE) != "en")))
+						k, k))
 				}
 			case Map:
-				for k, v := range k {
-					list = append(list, kit.Format(`<input type="button" name="%s" value="%s">`, k, kit.Select(k, v, m.Option(MSG_LANGUAGE) != "en")))
+				for k := range k {
+					list = append(list, kit.Format(`<input type="button" name="%s" value="%s">`,
+						k, k))
+					// k, kit.Select(k, v, m.Option(MSG_LANGUAGE) != "en")))
 				}
 			default:
 				list = append(list, Render(m, RENDER_BUTTON, kit.Format(k)))

@@ -111,7 +111,8 @@ func init() {
 					if msg := m.Cmd(SPIDE, ice.OPS, SPIDE_MSG, m.Option(ice.MSG_USERHOST)+"/x/list"); !msg.IsErr() {
 						m.Copy(msg)
 					}
-					for _, dev := range []string{ice.OPS, ice.DEV, ice.SHY} {
+					for _, dev := range []string{ice.OPS, ice.DEV} {
+						// for _, dev := range []string{ice.OPS, ice.DEV, ice.SHY} {
 						if msg := m.Cmd(SPIDE, dev, SPIDE_MSG, "/x/list"); !msg.IsErr() {
 							m.Copy(msg)
 						}

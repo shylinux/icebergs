@@ -81,7 +81,6 @@ const (
 )
 const (
 	BENCH = "bench"
-	TRACE = "trace"
 )
 const (
 	FILE = "file"
@@ -93,11 +92,9 @@ const LOG = "log"
 var Index = &ice.Context{Name: LOG, Help: "日志模块", Configs: ice.Configs{
 	FILE: {Name: FILE, Help: "日志文件", Value: kit.Dict(
 		BENCH, kit.Dict(nfs.PATH, path.Join(ice.VAR_LOG, "bench.log"), mdb.LIST, []string{}),
-		WATCH, kit.Dict(nfs.PATH, path.Join(ice.VAR_LOG, "watch.log"), mdb.LIST, []string{
-			mdb.CREATE, mdb.REMOVE, mdb.INSERT, mdb.DELETE, mdb.MODIFY, mdb.EXPORT, mdb.IMPORT,
-		}),
+		DEBUG, kit.Dict(nfs.PATH, path.Join(ice.VAR_LOG, "debug.log"), mdb.LIST, []string{ice.LOG_DEBUG}),
 		ERROR, kit.Dict(nfs.PATH, path.Join(ice.VAR_LOG, "error.log"), mdb.LIST, []string{ice.LOG_WARN, ice.LOG_ERROR}),
-		TRACE, kit.Dict(nfs.PATH, path.Join(ice.VAR_LOG, "trace.log"), mdb.LIST, []string{ice.LOG_DEBUG}),
+		WATCH, kit.Dict(nfs.PATH, path.Join(ice.VAR_LOG, "watch.log"), mdb.LIST, []string{mdb.CREATE, mdb.REMOVE, mdb.INSERT, mdb.DELETE, mdb.MODIFY, mdb.EXPORT, mdb.IMPORT}),
 	)},
 	VIEW: {Name: VIEW, Help: "日志格式", Value: kit.Dict(
 		GREEN, kit.Dict(PREFIX, "\033[32m", SUFFIX, "\033[0m", mdb.LIST, []string{ice.CTX_START, ice.LOG_CMDS}),
@@ -107,9 +104,6 @@ var Index = &ice.Context{Name: LOG, Help: "日志模块", Configs: ice.Configs{
 	SHOW: {Name: SHOW, Help: "日志分流", Value: kit.Dict()},
 }, Commands: ice.Commands{
 	ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
-		m.Confm(VIEW, nil, func(key string, value ice.Map) {
-			kit.Fetch(value[mdb.LIST], func(index int, k string) { m.Conf(SHOW, kit.Keys(k, VIEW), key) })
-		})
 		m.Confm(FILE, nil, func(key string, value ice.Map) {
 			kit.Fetch(value[mdb.LIST], func(index int, k string) { m.Conf(SHOW, kit.Keys(k, FILE), key) })
 			if f, p, e := logs.CreateFile(kit.Format(value[nfs.PATH])); e == nil {
@@ -117,6 +111,9 @@ var Index = &ice.Context{Name: LOG, Help: "日志模块", Configs: ice.Configs{
 				value[FILE] = bufio.NewWriter(f)
 				m.Logs(mdb.CREATE, nfs.FILE, p)
 			}
+		})
+		m.Confm(VIEW, nil, func(key string, value ice.Map) {
+			kit.Fetch(value[mdb.LIST], func(index int, k string) { m.Conf(SHOW, kit.Keys(k, VIEW), key) })
 		})
 	}},
 	ice.CTX_EXIT: {Hand: func(m *ice.Message, arg ...string) {}},

@@ -27,6 +27,9 @@ func _signal_process(m *ice.Message, p string, s os.Signal) {
 	if p == "" {
 		b, _ := file.ReadFile(ice.Info.PidPath)
 		p = string(b)
+		if runtime.GOOS == "windows" {
+			return
+		}
 	}
 	if p, e := os.FindProcess(kit.Int(kit.Select(kit.Format(os.Getpid()), p))); e == nil {
 		p.Signal(s)
@@ -55,6 +58,9 @@ func init() {
 				}
 				_signal_listen(m, 2, mdb.NAME, "重启", ice.CMD, "exit 1")
 				_signal_listen(m, 3, mdb.NAME, "退出", ice.CMD, "exit 0")
+				if ice.Info.PidPath == "" {
+					return
+				}
 				if f, p, e := logs.CreateFile(ice.Info.PidPath); e == nil {
 					defer f.Close()
 					fmt.Fprint(f, os.Getpid())

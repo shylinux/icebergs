@@ -92,8 +92,12 @@ func Run(arg ...string) string {
 	if len(arg) == 0 && len(os.Args) > 1 {
 		arg = kit.Simple(os.Args[1:], kit.Split(kit.Env(CTX_ARG)))
 	}
-	if len(arg) == 0 && runtime.GOOS == "windows" {
-		arg = append(arg, SERVE, START, DEV, DEV)
+	if len(arg) == 0 {
+		if runtime.GOOS == "windows" {
+			arg = append(arg, SERVE, START, DEV, DEV)
+		} else {
+			arg = append(arg, "forever", START, DEV, DEV)
+		}
 	}
 	Pulse.meta[MSG_DETAIL] = arg
 	kit.Fetch(kit.Sort(os.Environ()), func(env string) {
@@ -102,14 +106,12 @@ func Run(arg ...string) string {
 		}
 	})
 	time.Local = time.FixedZone("Beijing", 28800)
-	Pulse.time = time.Now()
-	if Pulse._cmd == nil {
+	if Pulse.time = time.Now(); Pulse._cmd == nil {
 		Pulse._cmd = &Command{RawHand: logs.FileLines(3)}
 	}
 	switch Index.Merge(Index).Begin(Pulse, arg...); kit.Select("", arg, 0) {
 	case SERVE, SPACE:
 		if os.Getenv("ctx_log") == "" {
-			// logs.Disable(true)
 			// os.Stderr.Close()
 		}
 		if Index.Start(Pulse, arg...) {

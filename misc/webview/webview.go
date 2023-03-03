@@ -50,7 +50,7 @@ func (w WebView) OpenUrl(url string) { w.Cmd(cli.SYSTEM, cli.OPEN, url) }
 func (w WebView) OpenApp(app string) { w.Cmd(cli.SYSTEM, cli.OPEN, "-a", app) }
 func (w WebView) OpenCmd(cmd string) {
 	w.Cmd(nfs.SAVE, kit.HomePath(".bash_temp"), cmd)
-	w.Cmd(cli.SYSTEM, cli.OPEN, "-a", "Terminal")
+	w.Cmd(cli.SYSTEM, cli.OPEN, "-n", "-a", "Terminal")
 }
 func (w WebView) SetSize(width, height int) {
 	w.Cmd(nfs.SAVE, "etc/webview.size", kit.Format("%v,%v", width, height))

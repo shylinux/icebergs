@@ -48,6 +48,7 @@ func _autogen_import(m *ice.Message, main string, ctx string, mod string) {
 		}
 	})
 	m.Cmd(nfs.SAVE, main, kit.Join(list, ice.NL))
+	m.Cmd(cli.SYSTEM, "goimports", "-w", main)
 }
 func _autogen_version(m *ice.Message) {
 	if mod := _autogen_mod(m, ice.GO_MOD); !nfs.ExistsFile(m, ".git") {
@@ -122,9 +123,9 @@ func init() {
 					_autogen_script(m, p)
 				}
 				if p := path.Join(ice.SRC, m.Option(mdb.ZONE), kit.Keys(m.Option(mdb.NAME), GO)); !nfs.ExistsFile(m, p) {
-					_autogen_import(m, path.Join(ice.SRC, m.Option(cli.MAIN)), m.Option(mdb.ZONE), _autogen_mod(m, ice.GO_MOD))
 					_autogen_module(m, p)
 				}
+				_autogen_import(m, path.Join(ice.SRC, m.Option(cli.MAIN)), m.Option(mdb.ZONE), _autogen_mod(m, ice.GO_MOD))
 				m.Option(nfs.FILE, path.Join(m.Option(mdb.ZONE), kit.Keys(m.Option(mdb.NAME), GO)))
 				_autogen_version(m.Spawn())
 			}},

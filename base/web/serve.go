@@ -200,7 +200,7 @@ func init() {
 					if opened {
 						return
 					}
-					switch host := "http://localhost:" + m.Option(tcp.PORT); runtime.GOOS {
+					switch host := kit.Format("http://localhost:%s/?debug=true", m.Option(tcp.PORT)); runtime.GOOS {
 					case cli.WINDOWS:
 						m.Cmd(cli.SYSTEM, "explorer", host)
 					case cli.DARWIN:

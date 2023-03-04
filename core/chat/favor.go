@@ -95,6 +95,12 @@ func init() {
 			"xterm": {Help: "命令", Hand: func(m *ice.Message, arg ...string) {
 				ctx.ProcessField(m, web.CODE_XTERM, []string{m.Option(mdb.TEXT)}, arg...)
 			}},
+			"_open": {Help: "命令", Hand: func(m *ice.Message, arg ...string) {
+				m.Cmdy(cli.DAEMON, cli.OPEN, "-a", m.Option(mdb.TEXT)).ProcessHold(m)
+			}},
+			"_new": {Help: "命令", Hand: func(m *ice.Message, arg ...string) {
+				m.Cmdy(cli.DAEMON, cli.OPEN, "-n", "-a", m.Option(mdb.TEXT)).ProcessHold(m)
+			}},
 			ice.RUN: {Hand: func(m *ice.Message, arg ...string) {
 				m.Option(mdb.TYPE, mdb.HashSelects(m.Spawn(), m.Option(mdb.HASH)).Append(mdb.TYPE))
 				ctx.Run(m, arg...)
@@ -125,6 +131,8 @@ func init() {
 					return
 				}
 				switch value[mdb.TYPE] {
+				case "_open":
+					m.PushButton("_open", "_new", mdb.REMOVE)
 				case ssh.SHELL:
 					m.PushButton("xterm", mdb.REMOVE)
 				case ctx.INDEX:

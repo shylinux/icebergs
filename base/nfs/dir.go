@@ -177,7 +177,7 @@ func init() {
 		}, Hand: func(m *ice.Message, arg ...string) {
 			root, dir := kit.Select(PWD, m.Option(DIR_ROOT)), kit.Select(PWD, arg, 0)
 			if strings.HasPrefix(dir, ice.PS) {
-				root = ice.PS
+				root, dir = ice.PS, strings.TrimPrefix(dir, ice.PS)
 			}
 			if root == ice.PS && dir == ice.PS {
 				root, dir = PWD, PWD
@@ -187,7 +187,7 @@ func init() {
 			}
 			fields := kit.Split(kit.Select(kit.Select(DIR_DEF_FIELDS, m.OptionFields()), kit.Join(kit.Slice(arg, 1))))
 			if root != "" {
-				m.Logs(mdb.SELECT, DIR_ROOT, root)
+				m.Logs(mdb.SELECT, DIR_ROOT, root, dir)
 			}
 			_dir_list(m, root, dir, 0, m.Option(DIR_DEEP) == ice.TRUE, kit.Select(TYPE_BOTH, m.Option(DIR_TYPE)), kit.Regexp(m.Option(DIR_REG)), fields)
 			m.StatusTimeCount()

@@ -11,6 +11,7 @@ import (
 	"shylinux.com/x/icebergs/base/ctx"
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/nfs"
+	"shylinux.com/x/icebergs/base/ssh"
 	"shylinux.com/x/icebergs/base/web"
 	kit "shylinux.com/x/toolkits"
 )
@@ -80,21 +81,37 @@ func init() {
 					case nfs.PATH:
 						m.Cmdy(INNER, mdb.INPUTS, arg).Cut("path,size,time")
 					case nfs.FILE:
-						list, p := ice.Map{}, m.Option(nfs.PATH)
-						m.Cmd(FAVOR, "_recent_file").Tables(func(value ice.Maps) {
-							kit.IfNoKey(list, value[nfs.PATH]+value[nfs.FILE], func(p string) { m.Push(nfs.PATH, p) })
-						})
-						for _, p := range kit.Split(kit.Select(m.Option(nfs.PATH), m.Option("paths"))) {
-							nfs.DirDeepAll(m, nfs.PWD, p, func(value ice.Maps) { kit.IfNoKey(list, value[nfs.PATH], func(p string) { m.Push(nfs.PATH, p) }) }, nfs.PATH)
+						list := ice.Map{}
+						push := func(k, p string) {
+							kit.IfNoKey(list, kit.Select(k, k+ice.DF, k != "")+p, func(p string) { m.Push(nfs.PATH, p) })
 						}
-						m.Cmd(mdb.RENDER, kit.Ext(m.Option(nfs.FILE)), m.Option(nfs.FILE), p).Tables(func(value ice.Maps) {
-							m.Push(nfs.PATH, kit.Format("line:%s:%s:%s", value[nfs.LINE], value["kind"], value[mdb.NAME]))
+						m.Cmd(FAVOR, "_recent_file").Tables(func(value ice.Maps) { push("", value[nfs.PATH]+value[nfs.FILE]) })
+						m.Cmd(web.CHAT_FAVOR, func(value ice.Maps) {
+							switch value[mdb.TYPE] {
+							case web.LINK:
+								push(web.DREAM, value[mdb.TEXT])
+							case nfs.FILE:
+								push("", value[mdb.TEXT])
+							case ctx.INDEX:
+								push(ctx.INDEX, value[mdb.TEXT])
+							case ssh.SHELL:
+								push(ctx.INDEX+ice.DF+web.CODE_XTERM, value[mdb.TEXT])
+							}
 						})
-						m.Cmd(ctx.COMMAND, mdb.SEARCH, ctx.COMMAND, ice.OptionFields(ctx.INDEX)).Tables(func(value ice.Maps) {
-							m.Push(nfs.PATH, "index:"+value[ctx.INDEX])
+						m.Cmd(web.DREAM, ice.Maps{nfs.DIR_DEEP: ice.FALSE}, func(value ice.Maps) { push(web.DREAM, value[mdb.NAME]) })
+						for _, p := range kit.Split(kit.Select(m.Option(nfs.PATH), m.Option("paths"))) {
+							nfs.DirDeepAll(m, nfs.PWD, p, func(value ice.Maps) { push("", value[nfs.PATH]) }, nfs.PATH)
+						}
+						m.Cmd(ctx.COMMAND, mdb.SEARCH, ctx.COMMAND, ice.OptionFields(ctx.INDEX)).Tables(func(value ice.Maps) { push(ctx.INDEX, value[ctx.INDEX]) })
+						m.Cmd(FAVOR, "_system_app").Tables(func(value ice.Maps) { push("_open", strings.ToLower(kit.Select(value[mdb.TEXT], value[mdb.NAME]))) })
+						m.Cmd(nfs.DIR, "/Applications", mdb.NAME, ice.Maps{nfs.DIR_DEEP: ice.FALSE, nfs.DIR_TYPE: ""}, func(value ice.Maps) {
+							push("_open", value[nfs.NAME])
 						})
-						m.Cmd(FAVOR, "_system_app").Tables(func(value ice.Maps) {
-							m.Push(nfs.PATH, "_open:"+strings.ToLower(kit.Select(value[mdb.TEXT], value[mdb.NAME])))
+						m.Cmd(nfs.DIR, "/System/Applications", mdb.NAME, ice.Maps{nfs.DIR_DEEP: ice.FALSE, nfs.DIR_TYPE: ""}, func(value ice.Maps) {
+							push("_open", value[nfs.NAME])
+						})
+						m.Cmd(nfs.DIR, "/System/Applications/Utilities", mdb.NAME, ice.Maps{nfs.DIR_DEEP: ice.FALSE, nfs.DIR_TYPE: ""}, func(value ice.Maps) {
+							push("_open", value[nfs.NAME])
 						})
 					}
 				}
@@ -147,7 +164,7 @@ func init() {
 				})
 			}},
 			"_open": {Help: "打开", Hand: func(m *ice.Message, arg ...string) {
-				m.Cmd(cli.DAEMON, cli.OPEN, "-a", kit.Split(arg[0], ice.PT, ice.PT)[0])
+				m.Cmdy(cli.DAEMON, cli.OPEN, "-a", kit.Split(arg[0], ice.PT, ice.PT)[0]).ProcessHold(m)
 			}},
 			XTERM: {Name: "xterm type=sh name text", Help: "终端", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmdy(XTERM, mdb.CREATE, arg)

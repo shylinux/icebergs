@@ -28,6 +28,7 @@ const (
 	CODE_INNER = "web.code.inner"
 	CODE_XTERM = "web.code.xterm"
 	WIKI_WORD  = "web.wiki.word"
+	CHAT_FAVOR = "web.chat.favor"
 )
 
 func Render(m *ice.Message, cmd string, args ...ice.Any) bool {

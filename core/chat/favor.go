@@ -9,6 +9,7 @@ import (
 	"shylinux.com/x/icebergs/base/gdb"
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/nfs"
+	"shylinux.com/x/icebergs/base/ssh"
 	"shylinux.com/x/icebergs/base/tcp"
 	"shylinux.com/x/icebergs/base/web"
 	kit "shylinux.com/x/toolkits"
@@ -37,7 +38,7 @@ func init() {
 			mdb.INPUTS: {Hand: func(m *ice.Message, arg ...string) {
 				switch mdb.HashInputs(m, arg); arg[0] {
 				case mdb.TYPE:
-					m.Push(arg[0], mdb.TEXT, ctx.INDEX)
+					m.Push(arg[0], web.LINK, nfs.FILE, mdb.TEXT, ctx.INDEX, ssh.SHELL)
 				case mdb.NAME:
 					switch m.Option(mdb.TYPE) {
 					case ctx.INDEX:
@@ -81,7 +82,18 @@ func init() {
 			}},
 			ctx.INDEX: {Help: "命令", Hand: func(m *ice.Message, arg ...string) {
 				msg := mdb.HashSelects(m.Spawn(), m.Option(mdb.HASH))
-				ctx.ProcessField(m, msg.Append(mdb.NAME), kit.Simple(kit.UnMarshal(msg.Option(mdb.TEXT))), arg...)
+				ls := kit.Split(msg.Option(mdb.TEXT))
+				ctx.ProcessField(m, ls[0], ls[1:], arg...)
+			}},
+			"vimer": {Help: "源码", Hand: func(m *ice.Message, arg ...string) {
+				args := []string{}
+				if len(arg) == 0 || arg[0] != ice.RUN {
+					args = nfs.SplitPath(m, m.Option(mdb.TEXT))
+				}
+				ctx.ProcessField(m, web.CODE_VIMER, args, arg...)
+			}},
+			"xterm": {Help: "命令", Hand: func(m *ice.Message, arg ...string) {
+				ctx.ProcessField(m, web.CODE_XTERM, []string{m.Option(mdb.TEXT)}, arg...)
 			}},
 			ice.RUN: {Hand: func(m *ice.Message, arg ...string) {
 				m.Option(mdb.TYPE, mdb.HashSelects(m.Spawn(), m.Option(mdb.HASH)).Append(mdb.TYPE))
@@ -113,8 +125,12 @@ func init() {
 					return
 				}
 				switch value[mdb.TYPE] {
+				case ssh.SHELL:
+					m.PushButton("xterm", mdb.REMOVE)
 				case ctx.INDEX:
 					m.PushButton(ctx.INDEX, mdb.REMOVE)
+				case nfs.FILE:
+					m.PushButton("vimer", mdb.REMOVE)
 				default:
 					if strings.HasPrefix(value[mdb.TEXT], ice.VAR_FILE) {
 						if _favor_is_image(m, value[mdb.NAME], value[mdb.TYPE]) || _favor_is_video(m, value[mdb.NAME], value[mdb.TYPE]) || _favor_is_audio(m, value[mdb.NAME], value[mdb.TYPE]) {

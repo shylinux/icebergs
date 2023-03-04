@@ -55,7 +55,17 @@ func init() {
 				switch m.Option(ctx.ACTION) {
 				case web.DREAM, AUTOGEN, XTERM:
 					m.Cmdy(m.Option(ctx.ACTION), mdb.INPUTS, arg)
-				case web.WEBSITE, nfs.SCRIPT:
+				case nfs.MODULE:
+					m.Cmdy(AUTOGEN, mdb.INPUTS, arg)
+				case nfs.SCRIPT:
+					// p := path.Join(m.Option(nfs.PATH), m.Option(nfs.FILE))
+					p := path.Join(m.Option(nfs.FILE))
+					for _, ext := range []string{"sh", "shy", "py", "js"} {
+						m.Push(nfs.PATH, kit.ExtChange(p, ext))
+					}
+					m.Option(nfs.DIR_REG, kit.FileReg("(sh|shy|py|js)"))
+					nfs.DirDeepAll(m, "src/", "./", nil, nfs.PATH)
+				case web.WEBSITE:
 					m.Cmdy(COMPLETE, mdb.FOREACH, kit.Select("", arg, 1), m.Option(ctx.ACTION))
 				case "extension":
 					nfs.DirDeepAll(m, "usr/volcanos/plugin/local/code/", "inner/", nil, nfs.PATH)
@@ -106,6 +116,9 @@ func init() {
 				}
 			}},
 			nfs.TRASH: {Hand: func(m *ice.Message, arg ...string) { nfs.Trash(m, arg[0]) }},
+			nfs.MODULE: {Name: "create name*=h2 help=示例 type*=Zone,Hash,Data,Code main*=main.go zone key", Help: "模块", Hand: func(m *ice.Message, arg ...string) {
+				m.Cmdy(AUTOGEN, nfs.MODULE, arg)
+			}},
 			nfs.SCRIPT: {Name: "script file*=hi/hi.js", Help: "脚本", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmdy(nfs.DEFS, path.Join(m.Option(nfs.PATH), m.Option(nfs.FILE)), m.Cmdx("", TEMPLATE))
 			}},
@@ -115,7 +128,7 @@ func init() {
 			web.DREAM: {Name: "dream name*=hi repos", Help: "空间", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmdy(web.DREAM, cli.START, arg)
 			}},
-			nfs.REPOS: {Name: "repos", Help: "仓库", Hand: func(m *ice.Message, arg ...string) {
+			nfs.REPOS: {Help: "仓库", Hand: func(m *ice.Message, arg ...string) {
 				m.Option("view", "change")
 				m.Cmd("web.code.git.status", func(value ice.Maps) {
 					m.Push(mdb.TYPE, value[mdb.TYPE])

@@ -8,13 +8,16 @@ import (
 	"shylinux.com/x/icebergs/base/cli"
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/nfs"
+	"shylinux.com/x/icebergs/base/ssh"
 	kit "shylinux.com/x/toolkits"
 )
 
-func _sh_exec(m *ice.Message, arg ...string) {
-	m.Cmdy(cli.SYSTEM, SH, "-c", kit.Format(_sh_template, m.Option(ice.MSG_USERHOST), m.Option(ice.MSG_USERPOD), path.Join(arg[2], arg[1])))
-	m.StatusTime("script", kit.Renders(kit.Format(`export ctx_dev={{.Option "user.host"}}%s; temp=$(mktemp); wget -O $temp -q $ctx_dev; source $temp %s`,
-		kit.Select("", " ctx_pod="+m.Option(ice.MSG_USERPOD), m.Option(ice.MSG_USERPOD) != ""), path.Join(arg[2], arg[1])), m))
+func _sh_cmds(m *ice.Message, arg ...string) (string, string) {
+	cmds, text := kit.Select(SH, m.Config(ssh.SHELL)), kit.Format(strings.TrimSpace(_sh_cmd_template), m.Option(ice.MSG_USERHOST), m.Option(ice.MSG_USERPOD), path.Join(arg[2], arg[1]))
+	if head := kit.Select("", strings.Split(m.Cmdx(nfs.CAT, path.Join(arg[2], arg[1])), ice.NL), 0); strings.HasPrefix(head, "#!") {
+		cmds = strings.TrimSpace(strings.TrimPrefix(head, "#!"))
+	}
+	return cmds, text
 }
 
 const SH = nfs.SH
@@ -23,21 +26,25 @@ func init() {
 	Index.MergeCommands(ice.Commands{
 		SH: {Name: "sh path auto", Help: "命令", Actions: ice.MergeActions(ice.Actions{
 			mdb.RENDER: {Hand: func(m *ice.Message, arg ...string) {
-				cmds, text := SH, kit.Format(_sh_template, m.Option(ice.MSG_USERHOST), m.Option(ice.MSG_USERPOD), path.Join(arg[2], arg[1]))
-				if strings.HasPrefix(text, "#!") {
-					// cmds = strings.TrimSpace(strings.SplitN(text, ice.NL, 2)[0][2:])
-				}
-				_xterm_show(m, cmds, text)
+				cmds, text := _sh_cmds(m, arg...)
+				_xterm_show(m, cmds, text, path.Join(arg[2], arg[1]))
 			}},
 			mdb.ENGINE: {Hand: func(m *ice.Message, arg ...string) {
-				_sh_exec(m, arg...)
+				cmds, text := _sh_cmds(m, arg...)
+				m.Cmdy(cli.SYSTEM, cmds, "-c", text).Status(ssh.SHELL, strings.ReplaceAll(text, ice.NL, "; "))
 			}},
+			TEMPLATE: {Hand: func(m *ice.Message, arg ...string) { m.Echo(_sh_template) }},
 			NAVIGATE: {Hand: func(m *ice.Message, arg ...string) { _c_tags(m, MAN, "ctags", "-a", "-R", nfs.PWD) }},
 		}, PlugAction())},
 	})
 }
 
 var _sh_template = `#!/bin/sh
-export ctx_dev=%s ctx_pod=%s ctx_mod=%s
+		
+demo() {
+	echo "hello world"
+}
+`
+var _sh_cmd_template = `export ctx_dev=%s ctx_pod=%s ctx_mod=%s
 temp=$(mktemp); if curl -V &>/dev/null; then curl -o $temp -fsSL $ctx_dev; else wget -O $temp -q $ctx_dev; fi && source $temp $ctx_mod
 `

@@ -206,6 +206,7 @@ func (f *Frame) Spawn(m *ice.Message, c *ice.Context, arg ...string) ice.Server 
 
 const (
 	MESSAGE = "message"
+	SHELL   = "shell"
 	FRAME   = "frame"
 	STDIO   = "stdio"
 	PS1     = "PS1"

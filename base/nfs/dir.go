@@ -195,6 +195,15 @@ func init() {
 	})
 }
 
+func SplitPath(m *ice.Message, p string) []string {
+	if ls := kit.Split(p, ice.PS); len(ls) == 1 {
+		return []string{PWD, ls[0]}
+	} else if ls[0] == ice.USR {
+		return []string{strings.Join(ls[:2], ice.PS) + ice.PS, strings.Join(ls[2:], ice.PS)}
+	} else {
+		return []string{strings.Join(ls[:1], ice.PS) + ice.PS, strings.Join(ls[1:], ice.PS)}
+	}
+}
 func Dir(m *ice.Message, sort string) *ice.Message {
 	m.Copy(m.Cmd(DIR, PWD, kit.Dict(DIR_TYPE, TYPE_DIR)).Sort(sort))
 	m.Copy(m.Cmd(DIR, PWD, kit.Dict(DIR_TYPE, TYPE_CAT)).Sort(sort))

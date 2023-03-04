@@ -45,7 +45,8 @@ func _xterm_get(m *ice.Message, h string) _xterm {
 		tty, err := pty.Start(cmd)
 		m.Assert(err)
 		m.Go(func() {
-			defer mdb.HashSelectUpdate(m, h, func(value ice.Map) { delete(value, mdb.TARGET) })
+			// defer mdb.HashSelectUpdate(m, h, func(value ice.Map) { delete(value, mdb.TARGET) })
+			defer mdb.HashRemove(m, mdb.HASH, h)
 			defer tty.Close()
 			// m.Option("log.disable", ice.TRUE)
 			buf := make([]byte, ice.MOD_BUFS)
@@ -85,7 +86,8 @@ func init() {
 				}
 			}},
 			mdb.CREATE: {Name: "create type=sh name text theme:textarea", Hand: func(m *ice.Message, arg ...string) {
-				mdb.HashCreate(m, mdb.NAME, kit.Split(m.Option(mdb.TYPE))[0], m.OptionSimple(mdb.TYPE, mdb.NAME, mdb.TEXT, "theme"))
+				m.Debug("what %v", m.FormatChain())
+				mdb.HashCreate(m, mdb.NAME, m.OptionDefault(mdb.NAME, kit.Split(m.Option(mdb.TYPE))[0]), m.OptionSimple(mdb.TYPE, mdb.NAME, mdb.TEXT, web.THEME))
 			}},
 			"resize": {Hand: func(m *ice.Message, arg ...string) {
 				_xterm_get(m, "").Setsize(m.OptionDefault("rows", "24"), m.OptionDefault("cols", "80"))
@@ -112,13 +114,18 @@ func init() {
 			if mdb.HashSelect(m, arg...); len(arg) == 0 {
 				m.PushAction(web.WEBSITE, mdb.REMOVE).Action(mdb.CREATE, mdb.PRUNES)
 			} else {
-				m.Action(INSTALL, "debug", "proxy", "波浪线", "反引号")
+				if m.Length() == 0 {
+					arg[0] = m.Cmdx("", mdb.CREATE, mdb.TYPE, arg[0])
+					mdb.HashSelect(m, arg[0])
+					m.Push(mdb.HASH, arg[0])
+				}
+				m.Action(INSTALL, "debug", "proxy")
 				ctx.DisplayLocal(m, "")
 			}
 		}},
 	})
 }
 
-func _xterm_show(m *ice.Message, cmds, text string) {
-	m.Cmdy(ctx.COMMAND, XTERM).Push(ctx.ARGS, kit.Format([]string{m.Cmdx(XTERM, mdb.CREATE, mdb.TYPE, cmds, mdb.TEXT, text)})).ProcessField(XTERM)
+func _xterm_show(m *ice.Message, cmds, text string, arg ...string) {
+	m.Cmdy(ctx.COMMAND, XTERM).Push(ctx.ARGS, kit.Format([]string{m.Cmdx(XTERM, mdb.CREATE, mdb.TYPE, cmds, mdb.NAME, kit.Select("", arg, 0), mdb.TEXT, text)})).ProcessField(XTERM)
 }

@@ -19,7 +19,7 @@ import (
 func _inner_list(m *ice.Message, ext, file, dir string) {
 	kit.If(aaa.Right(m, dir, file), func() {
 		kit.If(nfs.IsSourceFile(m, ext), func() { m.Cmdy(nfs.CAT, path.Join(dir, file)) })
-		kit.If(m.IsErrNotFound(), func() { _inner_show(m.RenderResult().SetResult(), ext, file, dir) })
+		// kit.If(m.IsErrNotFound(), func() { _inner_show(m.RenderResult().SetResult(), ext, file, dir) })
 	})
 }
 func _inner_show(m *ice.Message, ext, file, dir string) {
@@ -124,7 +124,7 @@ func init() {
 			}
 			arg[1] = strings.Split(arg[1], ice.FS)[0]
 			_inner_list(m, kit.Ext(arg[1]), arg[1], arg[0])
-			m.Cmd(FAVOR, mdb.INSERT, mdb.ZONE, "_recent_file", nfs.PATH, arg[0], nfs.FILE, arg[1])
+			// m.Cmd(FAVOR, mdb.INSERT, mdb.ZONE, "_recent_file", nfs.PATH, arg[0], nfs.FILE, arg[1])
 			m.Option(nfs.REPOS, kit.Join(m.Cmd("web.code.git.repos", ice.OptionFields(nfs.PATH)).Sort(nfs.PATH).Appendv(nfs.PATH)))
 			ctx.DisplayLocal(m, "")
 		}},

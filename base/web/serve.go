@@ -255,6 +255,14 @@ func init() {
 			m.RenderRedirect("/")
 		}},
 		PP(ice.REQUIRE): {Name: "/require/shylinux.com/x/volcanos/proto.js", Help: "代码库", Hand: func(m *ice.Message, arg ...string) {
+			if len(arg) < 4 {
+				m.RenderStatusBadRequest()
+				return
+			}
+			if path.Join(arg[:3]...) == ice.Info.Make.Module && nfs.ExistsFile(m, path.Join(arg[3:]...)) {
+				m.RenderDownload(path.Join(arg[3:]...))
+				return
+			}
 			cache := kit.Select(ice.USR_REQUIRE, m.Cmdx(cli.SYSTEM, "go", "env", "GOMODCACHE"))
 			p := path.Join(cache, path.Join(arg...))
 			if !nfs.ExistsFile(m, p) {

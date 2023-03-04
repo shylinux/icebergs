@@ -99,13 +99,16 @@ func init() {
 			})
 			return
 		}
-		if !m.IsCliUA() || strings.Contains(arg[0], ice.AT) {
+		if !m.IsCliUA() || strings.Contains(arg[0], ice.AT) || arg[1] == "src" {
 			if strings.Contains(arg[0], ice.AT) {
 				ls := strings.Split(arg[0], ice.AT)
 				_repos_cat(m, path.Join(ice.USR_LOCAL_REPOS, ls[0]), "master", ls[1], path.Join(arg[1:]...))
 				m.RenderResult()
 			} else if strings.HasPrefix(arg[1], "v") && strings.Contains(arg[1], ice.PT) {
 				_repos_cat(m, path.Join(ice.USR_LOCAL_REPOS, arg[0]), "master", arg[1], path.Join(arg[2:]...))
+				m.RenderResult()
+			} else if arg[1] == "src" {
+				_repos_cat(m, path.Join(ice.USR_LOCAL_REPOS, arg[0]), "master", "", path.Join(arg[1:]...))
 				m.RenderResult()
 			} else {
 				web.RenderCmds(m, kit.Dict(ctx.DISPLAY, "/plugin/local/code/repos.js", ctx.INDEX, "web.code.git.inner",

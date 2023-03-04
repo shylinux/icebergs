@@ -32,7 +32,7 @@ func init() {
 			FAVOR_TABLES: {Hand: func(m *ice.Message, arg ...string) {
 				switch arg[1] {
 				case web.LINK:
-					m.PushButton(IFRAME, web.OPEN, mdb.REMOVE)
+					m.PushButton(IFRAME, mdb.REMOVE)
 				}
 			}},
 			FAVOR_ACTION: {Hand: func(m *ice.Message, arg ...string) {

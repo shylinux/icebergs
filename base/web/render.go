@@ -26,6 +26,7 @@ const (
 
 	CODE_VIMER = "web.code.vimer"
 	CODE_INNER = "web.code.inner"
+	CODE_XTERM = "web.code.xterm"
 	WIKI_WORD  = "web.wiki.word"
 )
 
@@ -45,8 +46,6 @@ func Render(m *ice.Message, cmd string, args ...ice.Any) bool {
 		RenderCookie(m, arg[0], arg[1:]...)
 
 	case STATUS, ice.RENDER_STATUS: // [code [text]]
-		m.Debug("what %v", m.FormatStack(1, 10))
-		m.Debug("what %v", arg)
 		RenderStatus(m.W, kit.Int(kit.Select("200", arg, 0)), strings.Join(kit.Slice(arg, 1), " "))
 
 	case ice.RENDER_REDIRECT: // url [arg...]

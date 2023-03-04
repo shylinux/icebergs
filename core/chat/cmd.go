@@ -51,6 +51,10 @@ func init() {
 			if len(arg[0]) == 0 || arg[0] == "" {
 				return
 			}
+			if m.IsCliUA() {
+				m.Cmdy(arg, m.Optionv(ice.ARG)).RenderResult()
+				return
+			}
 			if m.Cmdy(ctx.COMMAND, arg[0]); m.Length() > 0 {
 				web.RenderCmd(m, arg[0], arg[1:])
 			}

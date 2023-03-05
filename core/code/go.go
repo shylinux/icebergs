@@ -124,7 +124,9 @@ func init() {
 		GO: {Name: "go path auto", Help: "后端编程", Actions: ice.MergeActions(ice.Actions{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) { m.Cmd(NAVIGATE, mdb.CREATE, GODOC, m.PrefixKey()) }},
 			mdb.RENDER: {Hand: func(m *ice.Message, arg ...string) {
-				cmds, text := "ice.bin space dial dev ops", ctx.GetFileCmd(path.Join(arg[2], arg[1]))
+				cmds, text := "ice.bin source stdio", ctx.GetFileCmd(path.Join(arg[2], arg[1]))
+				ls := strings.Split(text, ice.PT)
+				text = "~" + kit.Join(kit.Slice(ls, 0, -1), ice.PT) + ice.NL + kit.Slice(ls, -1)[0]
 				_xterm_show(m, cmds, text)
 			}},
 			mdb.ENGINE: {Hand: func(m *ice.Message, arg ...string) {

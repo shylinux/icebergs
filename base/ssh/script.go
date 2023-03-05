@@ -223,6 +223,11 @@ const (
 
 func init() {
 	Index.MergeCommands(ice.Commands{
+		SHELL: {Name: "shell", Help: "交互命令", Actions: mdb.HashAction(), Hand: func(m *ice.Message, arg ...string) {
+			if f, ok := m.Target().Server().(*Frame); ok {
+				f.Spawn(m, m.Target()).Start(m, arg...)
+			}
+		}},
 		SOURCE: {Name: "source file run", Help: "脚本解析", Actions: mdb.HashAction(), Hand: func(m *ice.Message, arg ...string) {
 			if f, ok := m.Target().Server().(*Frame); ok {
 				f.Spawn(m, m.Target()).Start(m, arg...)

@@ -226,7 +226,7 @@ var _website_template = `<!DOCTYPE html>
 	<title>volcanos</title>
 	<link rel="stylesheet" type="text/css" href="/index.css">
 	<link rel="stylesheet" type="text/css" href="/page/cache.css">
-	<link rel="shortcut icon" type="image/ico" href="/page/favicon.ico">
+	<link rel="shortcut icon" type="image/ico" href="/favicon.ico">
 </head>
 <body>
 	<script src="/proto.js"></script>
@@ -241,7 +241,7 @@ var _website_template2 = `<!DOCTYPE html>
 	<title>volcanos</title>
 	<link rel="stylesheet" type="text/css" href="/index.css">
 	<link rel="stylesheet" type="text/css" href="/page/cache.css">
-	<link rel="shortcut icon" type="image/ico" href="/page/favicon.ico">
+	<link rel="shortcut icon" type="image/ico" href="/favicon.ico">
 </head>
 <body>
 	<script src="/proto.js"></script>

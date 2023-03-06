@@ -39,7 +39,7 @@ const COMPILE = "compile"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
-		COMPILE: {Name: "compile arch=amd64,386,arm,arm64,mipsle os=linux,darwin,windows src=src/main.go@key run binpack", Help: "编译", Actions: ice.MergeActions(ice.Actions{
+		COMPILE: {Name: "compile arch=amd64,386,arm,arm64,mipsle os=linux,darwin,windows src=src/main.go@key run binpack webpack", Help: "编译", Actions: ice.MergeActions(ice.Actions{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
 				kit.Fetch([]string{"curl", "make", "gcc", "vim", "tmux"}, func(cmd string) { cli.IsSystem(m, cmd) })
 				if cli.IsAlpine(m, "git"); !cli.IsAlpine(m, "go", "go git") {
@@ -50,6 +50,7 @@ func init() {
 				m.Cmdy(nfs.DIR, ice.SRC, nfs.DIR_CLI_FIELDS, kit.Dict(nfs.DIR_REG, kit.ExtReg(GO)))
 			}},
 			BINPACK: {Help: "打包", Hand: func(m *ice.Message, arg ...string) { m.Cmdy(AUTOGEN, BINPACK) }},
+			WEBPACK: {Help: "打包", Hand: func(m *ice.Message, arg ...string) { m.Cmdy(AUTOGEN, WEBPACK) }},
 		}, ctx.ConfAction(cli.ENV, kit.Dict("GOPRIVATE", "shylinux.com,github.com", "GOPROXY", "https://goproxy.cn,direct", "CGO_ENABLED", "0"))), Hand: func(m *ice.Message, arg ...string) {
 			_autogen_version(m.Spawn())
 			main, file, goos, arch := _compile_target(m, arg...)

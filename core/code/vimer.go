@@ -61,11 +61,11 @@ func init() {
 				case nfs.SCRIPT:
 					// p := path.Join(m.Option(nfs.PATH), m.Option(nfs.FILE))
 					p := path.Join(m.Option(nfs.FILE))
-					for _, ext := range []string{"sh", "shy", "py", "js"} {
+					for _, ext := range []string{SH, SHY, PY, JS, CSS, HTML} {
 						m.Push(nfs.PATH, kit.ExtChange(p, ext))
 					}
-					m.Option(nfs.DIR_REG, kit.FileReg("(sh|shy|py|js)"))
-					nfs.DirDeepAll(m, "src/", "./", nil, nfs.PATH)
+					m.Option(nfs.DIR_REG, kit.FileReg("(sh|shy|py|js|css|html)"))
+					nfs.DirDeepAll(m, nfs.SRC, "./", nil, nfs.PATH)
 				case web.WEBSITE:
 					m.Cmdy(COMPLETE, mdb.FOREACH, kit.Select("", arg, 1), m.Option(ctx.ACTION))
 				case "extension":

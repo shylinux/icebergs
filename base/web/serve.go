@@ -287,7 +287,7 @@ func init() {
 		PP(ice.REQUIRE, ice.USR): {Name: "/require/usr/", Help: "代码库", Hand: func(m *ice.Message, arg ...string) {
 			_share_local(m, ice.USR, path.Join(arg...))
 		}},
-		PP(ice.REQUIRE, ice.SRC): {Name: "/require/src/", Help: "源代码", Hand: func(m *ice.Message, arg ...string) {
+		PP(ice.REQUIRE, ice.SRC): {Name: "/require/src/", Help: "源代码", Actions: ice.MergeActions(ice.Actions{}, ctx.CmdAction()), Hand: func(m *ice.Message, arg ...string) {
 			_share_local(m, ice.SRC, path.Join(arg...))
 		}},
 		PP(ice.HELP): {Name: "/help/", Help: "帮助", Actions: ice.MergeActions(ctx.CmdAction(), aaa.WhiteAction()), Hand: func(m *ice.Message, arg ...string) {

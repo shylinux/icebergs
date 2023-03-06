@@ -83,7 +83,7 @@ var _div_template = `<!DOCTYPE html>
 	<title>volcanos</title>
 	<link rel="stylesheet" type="text/css" href="/index.css">
 	<link rel="stylesheet" type="text/css" href="/page/cache.css">
-	<link rel="shortcut icon" type="image/ico" href="/page/favicon.ico">
+	<link rel="shortcut icon" type="image/ico" href="/favicon.ico">
   <style type="text/css">%s</style>
 </head>
 <body>
@@ -99,7 +99,7 @@ var _div_template2 = `<!DOCTYPE html>
 	<title>volcanos</title>
 	<link rel="stylesheet" type="text/css" href="/index.css">
 	<link rel="stylesheet" type="text/css" href="/page/cache.css">
-	<link rel="shortcut icon" type="image/ico" href="/page/favicon.ico">
+	<link rel="shortcut icon" type="image/ico" href="/favicon.ico">
 </head>
 <body>
 	<script src="/proto.js"></script>

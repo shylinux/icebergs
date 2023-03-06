@@ -9,11 +9,11 @@ import (
 	"shylinux.com/x/icebergs/base/nfs"
 )
 
-func _py_exec(m *ice.Message, arg ...string) {
+func _py_exec(m *ice.Message, p string) {
 	const PYTHON2 = "python2"
-	if _, e := nfs.DiskFile.StatFile(path.Join(arg[2], arg[1])); e == nil {
-		m.Cmdy(cli.SYSTEM, PYTHON2, path.Join(arg[2], arg[1]))
-	} else if b, e := nfs.ReadFile(m, path.Join(arg[2], arg[1])); e == nil {
+	if _, e := nfs.DiskFile.StatFile(p); e == nil {
+		m.Cmdy(cli.SYSTEM, PYTHON2, p)
+	} else if b, e := nfs.ReadFile(m, p); e == nil {
 		m.Cmdy(cli.SYSTEM, PYTHON2, "-c", string(b))
 	}
 	m.StatusTime()
@@ -33,8 +33,10 @@ func init() {
 				cmds, text := "python -i "+path.Join(arg[2], arg[1]), ""
 				_xterm_show(m, cmds, text)
 			}},
-			mdb.ENGINE: {Hand: func(m *ice.Message, arg ...string) { _py_exec(m, arg...) }},
-			TEMPLATE:   {Hand: func(m *ice.Message, arg ...string) { m.Echo(`print "hello world"`) }},
+			mdb.ENGINE: {Hand: func(m *ice.Message, arg ...string) {
+				_py_exec(m, path.Join(arg[2], arg[1]))
+			}},
+			TEMPLATE: {Hand: func(m *ice.Message, arg ...string) { m.Echo(`print "hello world"`) }},
 		}, PlugAction())},
 	})
 }

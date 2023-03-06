@@ -136,6 +136,10 @@ func init() {
 				m.Cmdy(nfs.DIR, ice.GO_MOD)
 				m.Cmdy(nfs.DIR, ice.GO_SUM)
 			}},
+			WEBPACK: {Help: "打包", Hand: func(m *ice.Message, arg ...string) {
+				m.Cmdy(WEBPACK, mdb.CREATE)
+				m.Cmdy(nfs.DIR, ice.USR_PUBLISH, kit.Dict(nfs.DIR_REG, "can.*"))
+			}},
 			BINPACK: {Help: "打包", Hand: func(m *ice.Message, arg ...string) {
 				if m.Cmd(BINPACK, mdb.CREATE); nfs.ExistsFile(m, ice.USR_RELEASE) && m.Option(ice.MSG_USERPOD) == "" {
 					const (

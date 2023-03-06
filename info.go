@@ -48,7 +48,7 @@ var Info = struct {
 
 report: shylinuxc@gmail.com
 server: https://shylinux.com
-source: https://shylinux.com/x/icebergs
+source: https://shylinux.com/x/contexts
 `,
 	File:  Maps{},
 	Gomod: Maps{},

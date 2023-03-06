@@ -23,13 +23,13 @@ func _publish(m *ice.Message, file ...string) string {
 }
 func _webpack_can(m *ice.Message) {
 	m.Option(nfs.DIR_ROOT, "")
-	m.Cmd(nfs.COPY, _volcanos(m, PAGE_CAN_CSS), _volcanos(m, ice.INDEX_CSS), _volcanos(m, PAGE_CACHE_CSS))
-	m.Cmd(nfs.COPY, _volcanos(m, PAGE_CAN_JS), _volcanos(m, ice.PROTO_JS), _volcanos(m, PAGE_CACHE_JS))
+	m.Cmd(nfs.COPY, USR_PUBLISH_CAN_CSS, _volcanos(m, ice.INDEX_CSS), _volcanos(m, PAGE_CACHE_CSS))
+	m.Cmd(nfs.COPY, USR_PUBLISH_CAN_JS, _volcanos(m, ice.PROTO_JS), _volcanos(m, PAGE_CACHE_JS))
 	m.Cmdy(nfs.DIR, _volcanos(m, PAGE))
 }
 func _webpack_css(m *ice.Message, css, js io.Writer, p string) {
 	fmt.Fprintln(css, kit.Format("/* %s */", path.Join(ice.PS, p)))
-	fmt.Fprintln(css, m.Cmdx(nfs.CAT, strings.Replace(p, "require/node_modules/", "src/node_modules/", 1)))
+	fmt.Fprintln(css, m.Cmdx(nfs.CAT, strings.Replace(p, "require/node_modules/", "usr/node_modules/", 1)))
 	fmt.Fprintln(js, `Volcanos.meta.cache["`+path.Join(ice.PS, p)+`"] = []`)
 }
 func _webpack_js(m *ice.Message, js io.Writer, p string) {
@@ -38,7 +38,7 @@ func _webpack_js(m *ice.Message, js io.Writer, p string) {
 }
 func _webpack_node(m *ice.Message, js io.Writer, p string) {
 	fmt.Fprintln(js, `_can_name = "`+path.Join(ice.PS, p)+`";`)
-	fmt.Fprintln(js, m.Cmdx(nfs.CAT, strings.Replace(p, "require/node_modules/", "src/node_modules/", 1)))
+	fmt.Fprintln(js, m.Cmdx(nfs.CAT, strings.Replace(p, "require/node_modules/", "usr/node_modules/", 1)))
 	fmt.Fprintln(js, `Volcanos.meta.cache["`+path.Join(ice.PS, p)+`"] = []`)
 }
 func _webpack_cache(m *ice.Message, dir string, write bool) {
@@ -118,11 +118,11 @@ const (
 	PLUGIN = "plugin"
 )
 const (
-	PAGE_CACHE_CSS = "page/cache.css"
-	PAGE_INDEX_JS  = "page/index.js"
-	PAGE_CACHE_JS  = "page/cache.js"
-	PAGE_CAN_CSS   = "page/can.css"
-	PAGE_CAN_JS    = "page/can.js"
+	PAGE_CACHE_CSS      = "page/cache.css"
+	PAGE_INDEX_JS       = "page/index.js"
+	PAGE_CACHE_JS       = "page/cache.js"
+	USR_PUBLISH_CAN_CSS = "usr/publish/can.css"
+	USR_PUBLISH_CAN_JS  = "usr/publish/can.js"
 )
 
 const DEVPACK = "devpack"

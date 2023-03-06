@@ -10,7 +10,14 @@ import (
 	kit "shylinux.com/x/toolkits"
 )
 
-func _c_show(m *ice.Message, arg ...string) { TagsList(m) }
+func _c_show(m *ice.Message, arg ...string) {
+	target := path.Join(ice.BIN, kit.TrimExt(arg[1], arg[0]))
+	if msg := m.Cmd(cli.SYSTEM, "gcc", "-o", target, path.Join(arg[2], arg[1])); cli.IsSuccess(msg) {
+		_xterm_show(m, nfs.SH, target, path.Join(arg[2], arg[1]))
+	} else {
+		_vimer_make(m, arg[2], msg)
+	}
+}
 func _c_exec(m *ice.Message, arg ...string) {
 	target := path.Join(ice.BIN, kit.TrimExt(arg[1], arg[0]))
 	if msg := m.Cmd(cli.SYSTEM, "gcc", "-o", target, path.Join(arg[2], arg[1])); cli.IsSuccess(msg) {
@@ -34,18 +41,14 @@ const C = "c"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
-		MAN: {Name: MAN, Help: "系统手册", Actions: ice.MergeActions(ice.Actions{
-			mdb.RENDER: {Hand: func(m *ice.Message, arg ...string) { m.Cmd(cli.SYSTEM, cli.MAN, kit.TrimExt(arg[1], arg[0])) }},
-		}, PlugAction())},
-		H: {Name: "h path auto", Help: "系统编程", Actions: ice.MergeActions(ice.Actions{
-			mdb.RENDER: {Hand: func(m *ice.Message, arg ...string) { _c_show(m, arg...) }},
-			NAVIGATE:   {Hand: func(m *ice.Message, arg ...string) { _c_tags(m, MAN, "ctags", "-a", "-R", nfs.PWD) }},
-		}, PlugAction())},
-		C: {Name: "c path auto", Help: "系统编程", Actions: ice.MergeActions(ice.Actions{
+		C: {Name: "c path auto", Help: "编程", Actions: ice.MergeActions(ice.Actions{
 			mdb.RENDER: {Hand: func(m *ice.Message, arg ...string) { _c_show(m, arg...) }},
 			mdb.ENGINE: {Hand: func(m *ice.Message, arg ...string) { _c_exec(m, arg...) }},
+			TEMPLATE:   {Hand: func(m *ice.Message, arg ...string) { m.Echo(_c_template) }},
 			NAVIGATE:   {Hand: func(m *ice.Message, arg ...string) { _c_tags(m, MAN, "ctags", "-a", "-R", nfs.PWD) }},
-			TEMPLATE:   {Hand: func(m *ice.Message, arg ...string) { kit.If(arg[0] == C, func() { m.Echo(_c_template) }) }},
+		}, PlugAction())},
+		H: {Name: "h path auto", Help: "编程", Actions: ice.MergeActions(ice.Actions{
+			NAVIGATE: {Hand: func(m *ice.Message, arg ...string) { _c_tags(m, MAN, "ctags", "-a", "-R", nfs.PWD) }},
 		}, PlugAction())},
 	})
 }

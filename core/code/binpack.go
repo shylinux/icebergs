@@ -16,6 +16,10 @@ import (
 )
 
 func _binpack_file(m *ice.Message, w io.Writer, arg ...string) {
+	if strings.HasPrefix(arg[0], "usr/volcanos/page/") && !strings.Contains(arg[0], "/cache.") {
+		fmt.Fprintf(w, "        \"%s\": \"%s\",\n", kit.Select(arg[0], arg, 1), "")
+		return
+	}
 	if strings.HasPrefix(arg[0], "usr/volcanos/publish/") && !strings.HasSuffix(arg[0], "/proto.js") {
 		return
 	}

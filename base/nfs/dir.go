@@ -143,6 +143,8 @@ const (
 	TYPE_CAT  = "cat"
 	TYPE_DIR  = "dir"
 	TYPE_BOTH = "both"
+
+	SRC = "src/"
 )
 const (
 	DIR_ROOT = "dir_root"

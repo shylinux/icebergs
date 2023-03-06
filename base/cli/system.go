@@ -145,6 +145,9 @@ func _system_find(m Message, bin string, dir ...string) string {
 			return kit.Path(p, bin) + ".exe"
 		}
 	}
+	if nfs.ExistsFile(m, bin) {
+		return kit.Path(bin)
+	}
 	return ""
 }
 

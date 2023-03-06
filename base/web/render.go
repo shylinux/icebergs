@@ -193,7 +193,7 @@ var _main_template = `<!DOCTYPE html>
 	<meta charset="utf-8"><title>volcanos</title>
 	<link href="/index.css{{.version}}" rel="stylesheet">
 	<link href="/page/cache.css{{.version}}" rel="stylesheet">
-	<link href="/page/favicon.ico" rel="shortcut icon" type="image/ico">
+	<link href="/favicon.ico" rel="shortcut icon" type="image/ico">
 </head>
 <body>
 	<script>_version = "{{.version}}"</script>
@@ -209,7 +209,7 @@ var _cmd_template = `<!DOCTYPE html>
 	<meta charset="utf-8"><title>volcanos</title>
 	<link href="/index.css{{.version}}" rel="stylesheet">
 	<link href="/page/cache.css{{.version}}" rel="stylesheet">
-	<link href="/page/favicon.ico" rel="shortcut icon" type="image/ico">
+	<link href="/favicon.ico" rel="shortcut icon" type="image/ico">
 </head>
 <body>
 	<script>_version = "{{.version}}"</script>

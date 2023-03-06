@@ -10,7 +10,6 @@ import (
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/tcp"
 	"shylinux.com/x/icebergs/base/web"
-	"shylinux.com/x/icebergs/core/code"
 	kit "shylinux.com/x/toolkits"
 )
 
@@ -63,7 +62,7 @@ func init() {
 		}},
 		SESS: {Name: "sess hash auto invite prunes", Help: "会话流", Actions: ice.MergeActions(ice.Actions{
 			aaa.INVITE: {Hand: func(m *ice.Message, arg ...string) {
-				code.PublishScript(m, `export ctx_dev={{.Option "domain"}}; ctx_temp=$(mktemp); curl -o $ctx_temp -fsSL $ctx_dev; source $ctx_temp`)
+				// code.PublishScript(m, `export ctx_dev={{.Option "domain"}}; ctx_temp=$(mktemp); curl -o $ctx_temp -fsSL $ctx_dev; source $ctx_temp`)
 			}},
 		}, mdb.HashAction(mdb.FIELD, "time,hash,status,username,hostname,release,pid,pwd,grant"))},
 	})

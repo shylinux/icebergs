@@ -44,7 +44,7 @@ func init() {
 		C: {Name: "c path auto", Help: "编程", Actions: ice.MergeActions(ice.Actions{
 			mdb.RENDER: {Hand: func(m *ice.Message, arg ...string) { _c_show(m, arg...) }},
 			mdb.ENGINE: {Hand: func(m *ice.Message, arg ...string) { _c_exec(m, arg...) }},
-			TEMPLATE:   {Hand: func(m *ice.Message, arg ...string) { m.Echo(_c_template) }},
+			TEMPLATE:   {Hand: func(m *ice.Message, arg ...string) { m.Echo(nfs.Template(m, "demo.c")) }},
 			NAVIGATE:   {Hand: func(m *ice.Message, arg ...string) { _c_tags(m, MAN, "ctags", "-a", "-R", nfs.PWD) }},
 		}, PlugAction())},
 		H: {Name: "h path auto", Help: "编程", Actions: ice.MergeActions(ice.Actions{
@@ -52,10 +52,3 @@ func init() {
 		}, PlugAction())},
 	})
 }
-
-var _c_template = `#include <stdio.h>
-
-int main(int argc, char *argv[]) {
-	printf("hello world\n");
-}
-`

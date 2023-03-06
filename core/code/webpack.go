@@ -25,7 +25,6 @@ func _webpack_can(m *ice.Message) {
 	m.Option(nfs.DIR_ROOT, "")
 	m.Cmd(nfs.COPY, USR_PUBLISH_CAN_CSS, _volcanos(m, ice.INDEX_CSS), _volcanos(m, PAGE_CACHE_CSS))
 	m.Cmd(nfs.COPY, USR_PUBLISH_CAN_JS, _volcanos(m, ice.PROTO_JS), _volcanos(m, PAGE_CACHE_JS))
-	m.Cmdy(nfs.DIR, _volcanos(m, PAGE))
 }
 func _webpack_css(m *ice.Message, css, js io.Writer, p string) {
 	fmt.Fprintln(css, kit.Format("/* %s */", path.Join(ice.PS, p)))
@@ -52,6 +51,7 @@ func _webpack_cache(m *ice.Message, dir string, write bool) {
 	m.Assert(e)
 	defer js.Close()
 	defer fmt.Fprintln(js, `_can_name = ""`)
+	defer m.Cmdy(nfs.DIR, _volcanos(m, PAGE))
 	defer _webpack_can(m)
 	if !write {
 		return
@@ -103,7 +103,7 @@ func _webpack_build(m *ice.Message, file string) {
 		if nfs.ExistsFile(m, ice.SRC_MAIN_JS) {
 			main_js = ice.SRC_MAIN_JS
 		}
-		fmt.Fprintf(f, _webpack_template,
+		fmt.Fprintf(f, nfs.Template(m, "index.html"),
 			m.Cmdx(nfs.CAT, _volcanos(m, ice.INDEX_CSS)), m.Cmdx(nfs.CAT, _volcanos(m, PAGE_CACHE_CSS)),
 			m.Cmdx(nfs.CAT, _volcanos(m, ice.PROTO_JS)), m.Cmdx(nfs.CAT, kit.Keys(file, JS)),
 			m.Cmdx(nfs.CAT, _volcanos(m, PAGE_CACHE_JS)), m.Cmdx(nfs.CAT, main_js),
@@ -131,10 +131,10 @@ const WEBPACK = "webpack"
 func init() {
 	Index.MergeCommands(ice.Commands{
 		WEBPACK: {Name: "webpack path auto create remove", Help: "打包", Actions: ice.MergeActions(ice.Actions{
-			mdb.CREATE: {Name: "create", Help: "发布", Hand: func(m *ice.Message, arg ...string) {
+			mdb.CREATE: {Help: "发布", Hand: func(m *ice.Message, arg ...string) {
 				_webpack_cache(m.Spawn(), _volcanos(m), true)
 			}},
-			mdb.REMOVE: {Name: "remove", Help: "调试", Hand: func(m *ice.Message, arg ...string) {
+			mdb.REMOVE: {Help: "调试", Hand: func(m *ice.Message, arg ...string) {
 				_webpack_cache(m.Spawn(), _volcanos(m), false)
 			}},
 			mdb.INSERT: {Name: "insert path*", Hand: func(m *ice.Message, arg ...string) {
@@ -155,18 +155,3 @@ func init() {
 		}},
 	})
 }
-
-var _webpack_template = `
-<!DOCTYPE html>
-<head>
-    <meta charset="utf-8">
-    <style type="text/css">%s</style>
-    <style type="text/css">%s</style>
-</head>
-<body>
-<script>%s</script>
-<script>%s</script>
-<script>%s</script>
-<script>%s</script>
-</body>
-`

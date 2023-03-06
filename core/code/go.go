@@ -120,7 +120,7 @@ func init() {
 				}
 			}},
 			TEMPLATE: {Hand: func(m *ice.Message, arg ...string) {
-				m.Echo(_go_template, path.Base(path.Dir(path.Join(arg[2], arg[1]))))
+				m.Echo(nfs.Template(m, "demo.go"), path.Base(path.Dir(path.Join(arg[2], arg[1]))))
 			}},
 			COMPLETE: {Hand: func(m *ice.Message, arg ...string) { _go_complete(m, arg...) }},
 			NAVIGATE: {Hand: func(m *ice.Message, arg ...string) { _c_tags(m, GODOC, "gotags", "-f", nfs.TAGS, "-R", nfs.PWD) }},
@@ -140,10 +140,3 @@ func init() {
 		}, PlugAction())},
 	})
 }
-
-var _go_template = `package %s
-
-func init() {
-	
-}
-`

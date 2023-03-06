@@ -3,9 +3,9 @@ code.shy
 
 install.go
 upgrade.go
-autogen.go
 webpack.go
 binpack.go
+autogen.go
 compile.go
 publish.go
 

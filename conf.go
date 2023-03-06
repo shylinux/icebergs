@@ -140,6 +140,7 @@ const ( // DIR
 	SRC_HELP       = "src/help/"
 	SRC_DEBUG      = "src/debug/"
 	SRC_RELEASE    = "src/release/"
+	SRC_TEMPLATE   = "src/template/"
 	SRC_MAIN_SHY   = "src/main.shy"
 	SRC_MAIN_SH    = "src/main.sh"
 	SRC_MAIN_JS    = "src/main.js"

@@ -24,7 +24,7 @@ func init() {
 				ctx.ProcessCommand(m, web.WIKI_WORD, kit.Simple(path.Join(arg[2], arg[1])))
 			}},
 			TEMPLATE: {Hand: func(m *ice.Message, arg ...string) {
-				m.Echo(_shy_template, path.Base(path.Dir(path.Join(arg[2], arg[1]))))
+				m.Echo(nfs.Template(m, "demo.shy"), path.Base(path.Dir(path.Join(arg[2], arg[1]))))
 			}},
 		}, PlugAction()), Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) > 0 && kit.Ext(arg[0]) == m.CommandKey() {
@@ -35,5 +35,3 @@ func init() {
 		}},
 	})
 }
-
-var _shy_template = `chapter "%s"`

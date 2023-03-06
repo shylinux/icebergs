@@ -7,6 +7,7 @@ import (
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/ctx"
 	"shylinux.com/x/icebergs/base/mdb"
+	"shylinux.com/x/icebergs/base/nfs"
 	kit "shylinux.com/x/toolkits"
 )
 
@@ -29,13 +30,7 @@ func init() {
 					ctx.ProcessCommand(m, kit.Select("can._plugin", ctx.GetFileCmd(kit.ExtChange(path.Join(arg[2], arg[1]), GO))), kit.Simple())
 				}
 			}},
-			TEMPLATE: {Hand: func(m *ice.Message, arg ...string) { m.Echo(_js_template) }},
+			TEMPLATE: {Hand: func(m *ice.Message, arg ...string) { m.Echo(nfs.Template(m, "demo.js")) }},
 		}, PlugAction())},
 	})
 }
-
-var _js_template = `
-Volcanos(chat.ONIMPORT, {_init: function(can, msg) {
-	msg.Echo("hello world").Dump(can)
-}})
-`

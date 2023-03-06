@@ -80,14 +80,8 @@ func init() {
 				}
 			}},
 			TEMPLATE: {Hand: func(m *ice.Message, arg ...string) {
-				m.Echo(kit.Format(_css_template, kit.Select("plugin", ctx.GetFileCmd(kit.ExtChange(path.Join(arg[2], arg[1]), GO)))))
+				m.Echo(kit.Format(nfs.Template(m, "demo.css"), kit.Select("plugin", ctx.GetFileCmd(kit.ExtChange(path.Join(arg[2], arg[1]), GO)))))
 			}},
 		}, PlugAction())},
 	})
 }
-
-var _css_template = `
-body fieldset.%s div.output {
-	background-color:red;
-}
-`

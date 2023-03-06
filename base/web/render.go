@@ -162,7 +162,7 @@ func RenderIndex(m *ice.Message, repos string, file ...string) *ice.Message {
 }
 func RenderMain(m *ice.Message, pod, index string, arg ...ice.Any) *ice.Message {
 	if script := m.Cmdx(Space(m, pod), nfs.CAT, kit.Select(ice.SRC_MAIN_JS, index)); script != "" {
-		return m.Echo(kit.Renders(_main_template, ice.Maps{"version": renderVersion(m), "script": script})).RenderResult()
+		return m.Echo(kit.Renders(m.Cmdx(nfs.CAT, path.Join(ice.SRC_TEMPLATE, "web/main.html")), ice.Maps{nfs.VERSION: renderVersion(m), nfs.SCRIPT: script})).RenderResult()
 	}
 	return RenderIndex(m, ice.VOLCANOS)
 }
@@ -170,7 +170,7 @@ func RenderCmd(m *ice.Message, cmd string, arg ...ice.Any) {
 	RenderPodCmd(m, "", cmd, arg...)
 }
 func RenderCmds(m *ice.Message, list ...ice.Any) {
-	m.Echo(kit.Renders(_cmd_template, ice.Maps{"version": renderVersion(m), "list": kit.Format(list)})).RenderResult()
+	m.Echo(kit.Renders(m.Cmdx(nfs.CAT, path.Join(ice.SRC_TEMPLATE, "web/cmd.html")), ice.Maps{nfs.VERSION: renderVersion(m), ice.LIST: kit.Format(list)})).RenderResult()
 }
 func RenderPodCmd(m *ice.Message, pod, cmd string, arg ...ice.Any) {
 	msg := m.Cmd(Space(m, pod), ctx.COMMAND, kit.Select("web.wiki.word", cmd))
@@ -178,7 +178,7 @@ func RenderPodCmd(m *ice.Message, pod, cmd string, arg ...ice.Any) {
 		ctx.INDEX, cmd, ctx.ARGS, kit.Simple(arg), ctx.DISPLAY, m.Option(ice.MSG_DISPLAY),
 		mdb.LIST, kit.UnMarshal(msg.Append(mdb.LIST)), mdb.META, kit.UnMarshal(msg.Append(mdb.META)),
 	)))
-	m.Echo(kit.Renders(_cmd_template, ice.Maps{"version": renderVersion(m), "list": list})).RenderResult()
+	m.Echo(kit.Renders(m.Cmdx(nfs.CAT, path.Join(ice.SRC_TEMPLATE, "web/cmd.html")), ice.Maps{nfs.VERSION: renderVersion(m), ice.LIST: list})).RenderResult()
 }
 func renderVersion(m *ice.Message) string {
 	if strings.Contains(m.R.URL.RawQuery, "debug=true") {
@@ -186,35 +186,3 @@ func renderVersion(m *ice.Message) string {
 	}
 	return ""
 }
-
-var _main_template = `<!DOCTYPE html>
-<head>
-	<meta name="viewport" content="width=device-width,initial-scale=0.8,maximum-scale=0.8,user-scalable=no">
-	<meta charset="utf-8"><title>volcanos</title>
-	<link href="/index.css{{.version}}" rel="stylesheet">
-	<link href="/page/cache.css{{.version}}" rel="stylesheet">
-	<link href="/favicon.ico" rel="shortcut icon" type="image/ico">
-</head>
-<body>
-	<script>_version = "{{.version}}"</script>
-	<script src="/proto.js{{.version}}"></script>
-	<script src="/page/cache.js{{.version}}"></script>
-	<script>{{.script}}</script>
-</body>
-`
-
-var _cmd_template = `<!DOCTYPE html>
-<head>
-	<meta name="viewport" content="width=device-width,initial-scale=0.8,maximum-scale=0.8,user-scalable=no">
-	<meta charset="utf-8"><title>volcanos</title>
-	<link href="/index.css{{.version}}" rel="stylesheet">
-	<link href="/page/cache.css{{.version}}" rel="stylesheet">
-	<link href="/favicon.ico" rel="shortcut icon" type="image/ico">
-</head>
-<body>
-	<script>_version = "{{.version}}"</script>
-	<script src="/proto.js{{.version}}"></script>
-	<script src="/page/cache.js{{.version}}"></script>
-	<script>Volcanos({{.list}})</script>
-</body>
-`

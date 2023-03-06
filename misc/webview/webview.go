@@ -1,6 +1,7 @@
 package webview
 
 import (
+	"path"
 	"strings"
 
 	ice "shylinux.com/x/icebergs"
@@ -39,7 +40,7 @@ func (w WebView) Menu() bool {
 	} else {
 		w.WebView.SetTitle(ice.CONTEXTS)
 		w.WebView.SetSize(200, 60*len(list), webview.HintNone)
-		w.WebView.Navigate(kit.Format(_menu_template, kit.Join(list, ice.NL)))
+		w.WebView.Navigate(kit.Format(`data:text/html,`+m.Cmdx(nfs.CAT, path.Join(ice.SRC_TEMPLATE, "webview", "home.html")), kit.Join(list, ice.NL)))
 		return true
 	}
 }
@@ -85,21 +86,3 @@ func Run(cb func(*WebView) ice.Any) {
 		view.navigate("http://localhost:9020")
 	}
 }
-
-var _menu_template = `data:text/html,
-<!doctype html>
-<html>
-<head>
-	<style>button { font-size:24px; font-family:monospace; margin:10px; width:-webkit-fill-available; display:block; clear:both; }</style>
-	<script>
-		document.body.onkeydown = function(event) {
-			if (event.metaKey) {
-				switch (event.key) {
-				case "q": window.terminate(); break
-				}
-			}
-		}
-	</script>
-</head>
-<body>%s</body>
-</html>`

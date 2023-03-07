@@ -43,7 +43,7 @@ const COMPILE = "compile"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
-		COMPILE: {Name: "compile arch=amd64,386,arm,arm64,mipsle os=linux,darwin,windows src=src/main.go@key run binpack webpack devpack", Help: "编译", Actions: ice.MergeActions(ice.Actions{
+		COMPILE: {Name: "compile arch=amd64,386,arm,arm64,mipsle os=linux,darwin,windows src=src/main.go@key run binpack webpack devpack upgrade", Help: "编译", Actions: ice.MergeActions(ice.Actions{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) { cli.IsAlpine(m, GO, "go git") }},
 			mdb.INPUTS: {Hand: func(m *ice.Message, arg ...string) {
 				switch arg[0] {
@@ -56,6 +56,7 @@ func init() {
 			BINPACK: {Help: "版本", Hand: func(m *ice.Message, arg ...string) { m.Cmdy(AUTOGEN, BINPACK) }},
 			WEBPACK: {Help: "打包", Hand: func(m *ice.Message, arg ...string) { m.Cmdy(AUTOGEN, WEBPACK) }},
 			DEVPACK: {Help: "开发", Hand: func(m *ice.Message, arg ...string) { m.Cmdy(AUTOGEN, DEVPACK) }},
+			UPGRADE: {Help: "升级", Hand: func(m *ice.Message, arg ...string) { m.Cmdy(UPGRADE, nfs.TARGET) }},
 			INSTALL: {Name: "install version=1.15.15", Help: "安装", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmdy(INSTALL, web.DOWNLOAD, kit.Format("https://golang.google.cn/dl/go%s.%s-%s.%s", m.Option(VERSION), runtime.GOOS, runtime.GOARCH, kit.Select("tar.gz", "zip", runtime.GOOS == cli.WINDOWS)), ice.USR_LOCAL)
 			}},
@@ -75,8 +76,8 @@ func init() {
 				m.Copy(msg)
 				return
 			}
-			m.Logs(COMPILE, nfs.SOURCE, main, nfs.TARGET, file)
-			if m.Cmdy(nfs.DIR, file, nfs.DIR_WEB_FIELDS); strings.Contains(file, ice.ICE) {
+			m.Logs(COMPILE, nfs.TARGET, file, nfs.SOURCE, main)
+			if m.Cmdy(nfs.DIR, file, "time,path,size,hash,link"); strings.Contains(file, ice.ICE) {
 				m.Cmdy(PUBLISH, ice.CONTEXTS)
 			}
 		}},

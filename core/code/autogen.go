@@ -1,6 +1,7 @@
 package code
 
 import (
+	"bytes"
 	"path"
 	"strings"
 
@@ -93,15 +94,16 @@ func _autogen_mod(m *ice.Message, file string) (mod string) {
 	}
 	m.Cmd(nfs.DEFS, file, kit.Format(nfs.Template(m, ice.GO_MOD), host))
 	m.Cmd(nfs.CAT, file, func(line string) {
-		if strings.HasPrefix(line, nfs.MODULE) {
-			mod = kit.Split(line, ice.SP)[1]
-		}
+		kit.If(strings.HasPrefix(line, nfs.MODULE), func() { mod = kit.Split(line, ice.SP)[1] })
 	})
 	return
 }
 
 const (
 	GIT = "git"
+
+	USR_RELEASE_CONF_GO    = "usr/release/conf.go"
+	USR_RELEASE_BINPACK_GO = "usr/release/binpack.go"
 )
 const AUTOGEN = "autogen"
 
@@ -141,31 +143,21 @@ func init() {
 				m.Cmdy(nfs.DIR, ice.GO_MOD)
 				m.Cmdy(nfs.DIR, ice.GO_SUM)
 			}},
-			DEVPACK: {Help: "开发", Hand: func(m *ice.Message, arg ...string) {
-				m.Cmdy(WEBPACK, mdb.REMOVE)
-				m.Cmdy(nfs.DIR, path.Join(ice.USR_VOLCANOS, PAGE))
-			}},
-			WEBPACK: {Help: "打包", Hand: func(m *ice.Message, arg ...string) {
-				m.Cmdy(WEBPACK, mdb.CREATE)
-				m.Cmdy(nfs.DIR, path.Join(ice.USR_VOLCANOS, PAGE))
-				m.Cmdy(nfs.DIR, ice.USR_PUBLISH, kit.Dict(nfs.DIR_REG, "can.*"))
-			}},
+			DEVPACK: {Help: "开发", Hand: func(m *ice.Message, arg ...string) { m.Cmdy(WEBPACK, mdb.REMOVE) }},
+			WEBPACK: {Help: "打包", Hand: func(m *ice.Message, arg ...string) { m.Cmdy(WEBPACK, mdb.CREATE) }},
 			BINPACK: {Help: "打包", Hand: func(m *ice.Message, arg ...string) {
 				if m.Cmd(BINPACK, mdb.CREATE); nfs.ExistsFile(m, ice.USR_RELEASE) && m.Option(ice.MSG_USERPOD) == "" {
-					const (
-						CONF_GO    = "conf.go"
-						BINPACK_GO = "binpack.go"
-					)
-					m.Cmd(nfs.COPY, ice.USR_RELEASE+CONF_GO, ice.USR_ICEBERGS+CONF_GO)
-					cli.SystemCmds(m, kit.Format(`cat %s|sed 's/package main/package ice/g' > %s`, ice.SRC_BINPACK_GO, ice.USR_RELEASE+BINPACK_GO))
-					m.Cmdy(nfs.DIR, ice.USR_RELEASE+BINPACK_GO)
-					m.Cmdy(nfs.DIR, ice.USR_RELEASE+CONF_GO)
+					nfs.Copy(m, func(buf []byte, offset int) []byte {
+						kit.If(offset == 0, func() { buf = bytes.Replace(buf, []byte("package main"), []byte("package ice"), 1) })
+						return buf
+					}, USR_RELEASE_BINPACK_GO, ice.SRC_BINPACK_GO)
+					m.Cmd(nfs.COPY, USR_RELEASE_CONF_GO, ice.USR_ICEBERGS+"conf.go")
+					m.Cmdy(nfs.DIR, USR_RELEASE_BINPACK_GO)
+					m.Cmdy(nfs.DIR, USR_RELEASE_CONF_GO)
 				}
 				m.Cmdy(nfs.CAT, _autogen_version(m))
 			}},
-			VERSION: {Help: "版本", Hand: func(m *ice.Message, arg ...string) {
-				m.Cmdy(nfs.CAT, _autogen_version(m))
-			}},
+			VERSION: {Help: "版本", Hand: func(m *ice.Message, arg ...string) { m.Cmdy(nfs.CAT, _autogen_version(m)) }},
 		}, Hand: func(m *ice.Message, arg ...string) {
 			m.Cmdy(nfs.CAT, kit.Select(path.Base(ice.SRC_VERSION_GO), arg, 0), kit.Dict(nfs.DIR_ROOT, ice.SRC))
 		}},

@@ -257,8 +257,14 @@ func init() {
 func AutoConfig(args ...ice.Any) *ice.Action {
 	return &ice.Action{Hand: func(m *ice.Message, arg ...string) {
 		if cs := m.Target().Configs; len(args) > 0 {
-			cs[m.CommandKey()] = &ice.Config{Value: kit.Data(args...)}
-			ice.Info.Load(m, m.CommandKey())
+			if cs[m.CommandKey()] == nil {
+				cs[m.CommandKey()] = &ice.Config{Value: kit.Data(args...)}
+				// ice.Info.Load(m, m.CommandKey())
+			} else {
+				for k, v := range kit.Dict(args...) {
+					m.Config(k, v)
+				}
+			}
 		}
 		if cmd := m.Target().Commands[m.CommandKey()]; cmd == nil {
 			return

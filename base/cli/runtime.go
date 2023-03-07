@@ -16,6 +16,7 @@ import (
 )
 
 func _runtime_init(m *ice.Message) {
+	count := kit.Int(m.Conf(RUNTIME, kit.Keys(BOOT, mdb.COUNT)))
 	kit.Fetch(kit.UnMarshal(kit.Format(ice.Info.Make)), func(key string, value ice.Any) {
 		m.Conf(RUNTIME, kit.Keys(MAKE, strings.ToLower(key)), value)
 	})
@@ -30,7 +31,6 @@ func _runtime_init(m *ice.Message) {
 	for _, k := range ENV_LIST {
 		switch m.Conf(RUNTIME, kit.Keys(CONF, k), kit.Env(k)); k {
 		case CTX_PID:
-			// ice.Info.PidPath = kit.Select(path.Join(ice.VAR_LOG, ice.ICE_PID), kit.Env(k))
 			ice.Info.PidPath = kit.Env(k)
 		case CTX_SHARE:
 			ice.Info.CtxShare = kit.Env(k)
@@ -56,7 +56,7 @@ func _runtime_init(m *ice.Message) {
 	m.Conf(RUNTIME, kit.Keys(BOOT, nfs.SIZE), msg.Append(nfs.SIZE))
 	m.Conf(RUNTIME, kit.Keys(BOOT, mdb.HASH), msg.Append(mdb.HASH))
 	m.Conf(RUNTIME, kit.Keys(BOOT, mdb.TIME), msg.Append(mdb.TIME))
-	m.Conf(RUNTIME, kit.Keys(BOOT, mdb.COUNT), kit.Int(m.Conf(RUNTIME, kit.Keys(BOOT, mdb.COUNT)))+1)
+	m.Conf(RUNTIME, kit.Keys(BOOT, mdb.COUNT), count+1)
 	m.Conf(RUNTIME, mdb.META, "")
 	m.Conf(RUNTIME, mdb.HASH, "")
 }
@@ -90,13 +90,12 @@ const (
 	NODE = "node"
 )
 const (
-	GOARCH = "GOARCH"
-	AMD64  = "amd64"
-	X86    = "386"
-	ARM    = "arm"
-	ARM64  = "arm64"
-	MIPSLE = "mipsle"
-
+	GOARCH  = "GOARCH"
+	AMD64   = "amd64"
+	X86     = "386"
+	ARM     = "arm"
+	ARM64   = "arm64"
+	MIPSLE  = "mipsle"
 	GOOS    = "GOOS"
 	LINUX   = "linux"
 	DARWIN  = "darwin"

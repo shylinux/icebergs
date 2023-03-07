@@ -171,6 +171,10 @@ const (
 	SERVE_CHECK   = "serve.check"
 	SERVE_STOP    = "serve.stop"
 
+	REQUIRE_MODULES = "require/modules/"
+	REQUIRE_USR     = "require/usr/"
+	REQUIRE_SRC     = "require/src/"
+
 	WEB_LOGIN = "_login"
 	DOMAIN    = "domain"
 	INDEX     = "index"
@@ -277,17 +281,17 @@ func init() {
 			}
 			m.RenderDownload(p)
 		}},
-		PP(ice.REQUIRE, ice.NODE_MODULES): {Name: "/require/node_modules/", Help: "依赖库", Hand: func(m *ice.Message, arg ...string) {
-			p := path.Join(ice.USR, ice.NODE_MODULES, path.Join(arg...))
+		PP(REQUIRE_MODULES): {Name: "/require/modules/", Help: "依赖库", Hand: func(m *ice.Message, arg ...string) {
+			p := path.Join(ice.USR_NODE_MODULES, path.Join(arg...))
 			if !nfs.ExistsFile(m, p) {
 				m.Cmd(cli.SYSTEM, "npm", "install", arg[0], kit.Dict(cli.CMD_DIR, ice.USR))
 			}
 			m.RenderDownload(p)
 		}},
-		PP(ice.REQUIRE, ice.USR): {Name: "/require/usr/", Help: "代码库", Hand: func(m *ice.Message, arg ...string) {
+		PP(REQUIRE_USR): {Name: "/require/usr/", Help: "代码库", Hand: func(m *ice.Message, arg ...string) {
 			_share_local(m, ice.USR, path.Join(arg...))
 		}},
-		PP(ice.REQUIRE, ice.SRC): {Name: "/require/src/", Help: "源代码", Actions: ice.MergeActions(ice.Actions{}, ctx.CmdAction()), Hand: func(m *ice.Message, arg ...string) {
+		PP(REQUIRE_SRC): {Name: "/require/src/", Help: "源代码", Actions: ice.MergeActions(ice.Actions{}, ctx.CmdAction()), Hand: func(m *ice.Message, arg ...string) {
 			_share_local(m, ice.SRC, path.Join(arg...))
 		}},
 		PP(ice.HELP): {Name: "/help/", Help: "帮助", Actions: ice.MergeActions(ctx.CmdAction(), aaa.WhiteAction()), Hand: func(m *ice.Message, arg ...string) {

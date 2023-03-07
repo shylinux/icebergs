@@ -12,33 +12,30 @@ import (
 	"shylinux.com/x/icebergs/base/ctx"
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/nfs"
+	"shylinux.com/x/icebergs/base/web"
 	kit "shylinux.com/x/toolkits"
 )
 
-func _volcanos(m *ice.Message, file ...string) string {
-	return path.Join(ice.USR_VOLCANOS, path.Join(file...))
-}
-func _publish(m *ice.Message, file ...string) string {
-	return path.Join(ice.USR_PUBLISH, path.Join(file...))
-}
-func _webpack_can(m *ice.Message) {
-	m.Option(nfs.DIR_ROOT, "")
-	m.Cmd(nfs.COPY, USR_PUBLISH_CAN_CSS, _volcanos(m, ice.INDEX_CSS), _volcanos(m, PAGE_CACHE_CSS))
-	m.Cmd(nfs.COPY, USR_PUBLISH_CAN_JS, _volcanos(m, ice.PROTO_JS), _volcanos(m, PAGE_CACHE_JS))
+func _volcanos(m *ice.Message, p ...string) string { return ice.USR_VOLCANOS + path.Join(p...) }
+func _publish(m *ice.Message, p ...string) string  { return ice.USR_PUBLISH + path.Join(p...) }
+func _require(m *ice.Message, p string) string {
+	return path.Join(ice.PS, strings.TrimPrefix(strings.Replace(p, ice.USR_NODE_MODULES, web.REQUIRE_MODULES, 1), ice.USR_VOLCANOS))
 }
 func _webpack_css(m *ice.Message, css, js io.Writer, p string) {
-	fmt.Fprintln(css, kit.Format("/* %s */", path.Join(ice.PS, p)))
-	fmt.Fprintln(css, m.Cmdx(nfs.CAT, strings.Replace(p, "require/node_modules/", "usr/node_modules/", 1)))
-	fmt.Fprintln(js, `Volcanos.meta.cache["`+path.Join(ice.PS, p)+`"] = []`)
+	fmt.Fprintln(css, kit.Format("/* %s */", _require(m, p)))
+	fmt.Fprintln(css, m.Cmdx(nfs.CAT, p))
+	_webpack_end(m, js, p)
 }
 func _webpack_js(m *ice.Message, js io.Writer, p string) {
-	fmt.Fprintln(js, `_can_name = "`+path.Join(ice.PS, p)+`";`)
-	fmt.Fprintln(js, m.Cmdx(nfs.CAT, strings.TrimPrefix(p, ice.REQUIRE+ice.PS)))
+	fmt.Fprintln(js, `_can_name = "`+_require(m, p)+`";`)
+	fmt.Fprintln(js, m.Cmdx(nfs.CAT, p))
 }
 func _webpack_node(m *ice.Message, js io.Writer, p string) {
-	fmt.Fprintln(js, `_can_name = "`+path.Join(ice.PS, p)+`";`)
-	fmt.Fprintln(js, m.Cmdx(nfs.CAT, strings.Replace(p, "require/node_modules/", "usr/node_modules/", 1)))
-	fmt.Fprintln(js, `Volcanos.meta.cache["`+path.Join(ice.PS, p)+`"] = []`)
+	_webpack_js(m, js, p)
+	_webpack_end(m, js, p)
+}
+func _webpack_end(m *ice.Message, js io.Writer, p string) {
+	fmt.Fprintln(js, `Volcanos.meta.cache["`+_require(m, p)+`"] = []`)
 }
 func _webpack_cache(m *ice.Message, dir string, write bool) {
 	if _, e := nfs.DiskFile.StatFile(ice.USR_VOLCANOS); os.IsNotExist(e) {
@@ -50,9 +47,6 @@ func _webpack_cache(m *ice.Message, dir string, write bool) {
 	js, _, e := nfs.CreateFile(m, path.Join(dir, PAGE_CACHE_JS))
 	m.Assert(e)
 	defer js.Close()
-	defer fmt.Fprintln(js, `_can_name = ""`)
-	defer m.Cmdy(nfs.DIR, _volcanos(m, PAGE))
-	defer _webpack_can(m)
 	if !write {
 		return
 	}
@@ -63,7 +57,6 @@ func _webpack_cache(m *ice.Message, dir string, write bool) {
 			}
 		})
 	}
-	fmt.Fprintln(js)
 	for _, k := range []string{LIB, PANEL, PLUGIN} {
 		nfs.DirDeepAll(m, dir, k, func(value ice.Maps) {
 			if kit.Ext(value[nfs.PATH]) == JS {
@@ -72,42 +65,31 @@ func _webpack_cache(m *ice.Message, dir string, write bool) {
 		})
 	}
 	for _, k := range []string{ice.FRAME_JS} {
-		_webpack_js(m, js, k)
+		_webpack_js(m, js, _volcanos(m, k))
 	}
-	m.Option(nfs.DIR_ROOT, "")
 	mdb.HashSelects(m).Sort(nfs.PATH).Tables(func(value ice.Maps) {
-		defer fmt.Fprintln(js)
-		p := value[nfs.PATH]
-		switch kit.Ext(p) {
-		case nfs.CSS:
-			_webpack_css(m, css, js, path.Join(ice.REQUIRE, ice.NODE_MODULES, p))
-			return
-		case nfs.JS:
-		default:
-			p = path.Join(p, LIB, p+".js")
+		defer fmt.Fprintln(js, "")
+		if p := value[nfs.PATH]; kit.Ext(p) == nfs.CSS {
+			_webpack_css(m, css, js, path.Join(ice.USR_NODE_MODULES, p))
+		} else {
+			p = kit.Select(path.Join(p, LIB, kit.Keys(p, JS)), p, kit.Ext(p) == nfs.JS)
+			_webpack_node(m, js, path.Join(ice.USR_NODE_MODULES, p))
 		}
-		_webpack_node(m, js, path.Join(ice.REQUIRE, ice.NODE_MODULES, p))
 	})
 }
-func _webpack_build(m *ice.Message, file string) {
-	if f, _, e := nfs.CreateFile(m, kit.Keys(file, JS)); m.Assert(e) {
-		defer f.Close()
-		fmt.Fprintln(f, `Volcanos.meta.webpack = true`)
-		fmt.Fprintln(f, `Volcanos.meta.pack = `+kit.Formats(kit.UnMarshal(kit.Select("{}", m.Option(nfs.CONTENT)))))
-		fmt.Fprintln(f, `Volcanos.meta.args = `+kit.Formats(kit.Dict(m.OptionSimple(kit.Split(m.Option(ctx.ARGS))...))))
-	}
-	if f, p, e := nfs.CreateFile(m, kit.Keys(file, HTML)); m.Assert(e) {
+func _webpack_can(m *ice.Message) {
+	m.Cmd(nfs.COPY, USR_PUBLISH_CAN_JS, _volcanos(m, ice.PROTO_JS), _volcanos(m, PAGE_CACHE_JS))
+	m.Cmd(nfs.COPY, USR_PUBLISH_CAN_CSS, _volcanos(m, ice.INDEX_CSS), _volcanos(m, PAGE_CACHE_CSS))
+}
+func _webpack_build(m *ice.Message, name string) {
+	if f, p, e := nfs.CreateFile(m, kit.Keys(name, HTML)); m.Assert(e) {
 		defer f.Close()
 		defer m.Echo(p)
-		main_js := _volcanos(m, PAGE_INDEX_JS)
-		if nfs.ExistsFile(m, ice.SRC_MAIN_JS) {
-			main_js = ice.SRC_MAIN_JS
-		}
-		fmt.Fprintf(f, nfs.Template(m, "index.html"),
-			m.Cmdx(nfs.CAT, _volcanos(m, ice.INDEX_CSS)), m.Cmdx(nfs.CAT, _volcanos(m, PAGE_CACHE_CSS)),
-			m.Cmdx(nfs.CAT, _volcanos(m, ice.PROTO_JS)), m.Cmdx(nfs.CAT, kit.Keys(file, JS)),
-			m.Cmdx(nfs.CAT, _volcanos(m, PAGE_CACHE_JS)), m.Cmdx(nfs.CAT, main_js),
-		)
+		fmt.Fprintf(f, nfs.Template(m, ice.INDEX_HTML), m.Cmdx(nfs.CAT, USR_PUBLISH_CAN_CSS), m.Cmdx(nfs.CAT, USR_PUBLISH_CAN_JS), kit.JoinKV(ice.EQ, ice.NL,
+			`Volcanos.meta.args`, kit.Formats(kit.Dict(m.OptionSimple(kit.Split(m.Option(ctx.ARGS))...))),
+			`Volcanos.meta.pack`, kit.Formats(kit.UnMarshal(kit.Select("{}", m.Option(nfs.CONTENT)))),
+			`Volcanos.meta.webpack`, ice.TRUE,
+		)+ice.NL, m.Cmdx(nfs.CAT, ice.SRC_MAIN_JS))
 	}
 }
 
@@ -118,9 +100,8 @@ const (
 	PLUGIN = "plugin"
 )
 const (
-	PAGE_CACHE_CSS      = "page/cache.css"
-	PAGE_INDEX_JS       = "page/index.js"
 	PAGE_CACHE_JS       = "page/cache.js"
+	PAGE_CACHE_CSS      = "page/cache.css"
 	USR_PUBLISH_CAN_CSS = "usr/publish/can.css"
 	USR_PUBLISH_CAN_JS  = "usr/publish/can.js"
 )
@@ -133,25 +114,25 @@ func init() {
 		WEBPACK: {Name: "webpack path auto create remove", Help: "打包", Actions: ice.MergeActions(ice.Actions{
 			mdb.CREATE: {Help: "发布", Hand: func(m *ice.Message, arg ...string) {
 				_webpack_cache(m.Spawn(), _volcanos(m), true)
+				_webpack_can(m)
+				m.Cmdy("")
 			}},
 			mdb.REMOVE: {Help: "调试", Hand: func(m *ice.Message, arg ...string) {
 				_webpack_cache(m.Spawn(), _volcanos(m), false)
+				m.Cmdy(nfs.DIR, _volcanos(m, PAGE))
 			}},
 			mdb.INSERT: {Name: "insert path*", Hand: func(m *ice.Message, arg ...string) {
 				mdb.HashCreate(m, m.OptionSimple(nfs.PATH))
 			}},
 			cli.BUILD: {Name: "build name*=hi", Hand: func(m *ice.Message, arg ...string) {
-				_webpack_cache(m.Spawn(), _volcanos(m), true)
-				_webpack_build(m, _publish(m, WEBPACK, m.Option(mdb.NAME)))
+				kit.If(!nfs.ExistsFile(m, USR_PUBLISH_CAN_JS), func() { m.Cmd("", mdb.CREATE) })
+				_webpack_build(m, _publish(m, m.Option(mdb.NAME)))
 			}},
 			nfs.TRASH: {Hand: func(m *ice.Message, arg ...string) {
-				if !strings.Contains(m.Option(nfs.PATH), "page/index") {
-					nfs.Trash(m, m.Option(nfs.PATH))
-				}
+				kit.If(!strings.Contains(m.Option(nfs.PATH), "/page/"), func() { nfs.Trash(m, m.Option(nfs.PATH)) })
 			}},
-		}, mdb.HashAction(mdb.SHORT, nfs.PATH, mdb.FIELD, "time,path"), mdb.ClearHashOnExitAction()), Hand: func(m *ice.Message, arg ...string) {
-			m.Options(nfs.DIR_TYPE, nfs.CAT, nfs.DIR_DEEP, ice.TRUE)
-			m.Cmdy(nfs.DIR, _volcanos(m, PAGE)).Cmdy(nfs.DIR, _publish(m, WEBPACK))
+		}, mdb.HashAction(mdb.SHORT, nfs.PATH, mdb.FIELD, "time,path")), Hand: func(m *ice.Message, arg ...string) {
+			m.Cmdy(nfs.DIR, ice.USR_PUBLISH, kit.Dict(nfs.DIR_REG, kit.ExtReg(HTML, CSS, JS))).Cmdy(nfs.DIR, _volcanos(m, PAGE))
 		}},
 	})
 }

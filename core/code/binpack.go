@@ -24,11 +24,11 @@ func _binpack_file(m *ice.Message, w io.Writer, arg ...string) {
 		return
 	}
 	switch path.Base(arg[0]) {
-	case "go.mod", "go.sum":
+	case ice.GO_MOD, ice.GO_SUM:
 		return
 	}
 	switch arg[0] {
-	case ice.SRC_BINPACK_GO, ice.SRC_VERSION_GO, ice.ETC_LOCAL_SHY:
+	case ice.SRC_VERSION_GO, ice.SRC_BINPACK_GO, ice.ETC_LOCAL_SHY:
 		return
 	}
 	if f, e := nfs.OpenFile(m, arg[0]); !m.Warn(e, ice.ErrNotFound, arg[0]) {
@@ -46,8 +46,8 @@ func _binpack_all(m *ice.Message) {
 	if w, p, e := nfs.CreateFile(m, ice.SRC_BINPACK_GO); m.Assert(e) {
 		defer w.Close()
 		defer m.Echo(p)
-		fmt.Fprintln(w, nfs.Template(m, ice.SRC_BINPACK_GO))
-		defer fmt.Fprintln(w, nfs.Template(m, "binpack_end.go"))
+		fmt.Fprint(w, nfs.Template(m, ice.SRC_BINPACK_GO))
+		defer fmt.Fprint(w, nfs.Template(m, "binpack_end.go"))
 		for _, p := range []string{ice.USR_VOLCANOS, ice.USR_INTSHELL, ice.SRC} {
 			_binpack_dir(m, w, p)
 		}
@@ -65,7 +65,7 @@ func _binpack_all(m *ice.Message) {
 			}
 		}
 		for _, p := range kit.SortedKey(list) {
-			m.Cmd(nfs.DIR, p, nfs.PATH, kit.Dict(nfs.DIR_ROOT, nfs.PWD, nfs.DIR_REG, kit.ExtReg("(sh|shy|py|js|css|html)"))).Tables(func(value ice.Maps) {
+			m.Cmd(nfs.DIR, p, nfs.PATH, kit.Dict(nfs.DIR_ROOT, nfs.PWD, nfs.DIR_REG, kit.ExtReg(SH, SHY, PY, JS, CSS, HTML))).Tables(func(value ice.Maps) {
 				if strings.Contains(value[nfs.PATH], "/go/pkg/mod/") {
 					_binpack_file(m, w, value[nfs.PATH], ice.USR_REQUIRE+strings.Split(value[nfs.PATH], "/go/pkg/mod/")[1])
 				} else {
@@ -74,12 +74,10 @@ func _binpack_all(m *ice.Message) {
 			})
 		}
 		mdb.HashSelects(m).Sort(nfs.PATH).Tables(func(value ice.Maps) {
-			if s, e := nfs.StatFile(m, value[nfs.PATH]); e == nil {
-				if s.IsDir() {
-					_binpack_dir(m, w, value[nfs.PATH])
-				} else {
-					_binpack_file(m, w, value[nfs.PATH])
-				}
+			if strings.HasSuffix(value[nfs.PATH], ice.PS) {
+				_binpack_dir(m, w, value[nfs.PATH])
+			} else {
+				_binpack_file(m, w, value[nfs.PATH])
 			}
 		})
 	}

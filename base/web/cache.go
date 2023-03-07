@@ -64,7 +64,7 @@ func _cache_upload(m *ice.Message, r *http.Request) (mime, name, file, size stri
 			defer f.Close()
 			b.Seek(0, os.SEEK_SET)
 			if n, e := io.Copy(f, b); !m.Warn(e, ice.ErrNotValid, UPLOAD) {
-				m.Logs(mdb.IMPORT, nfs.FILE, p, nfs.SIZE, kit.FmtSize(int64(n)))
+				m.Logs(nfs.LOAD, nfs.FILE, p, nfs.SIZE, kit.FmtSize(int64(n)))
 				return h.Header.Get(ContentType), h.Filename, p, kit.Format(n)
 			}
 		}
@@ -78,10 +78,12 @@ func _cache_download(m *ice.Message, r *http.Response, file string, cb ice.Any) 
 		last, base := 0, 10
 		nfs.CopyFile(m, f, r.Body, base*ice.MOD_BUFS, kit.Int(kit.Select("100", r.Header.Get(ContentLength))), func(count, total, step int) {
 			if step/base != last {
-				m.Logs(mdb.EXPORT, nfs.FILE, p, mdb.COUNT, count, mdb.TOTAL, total, mdb.VALUE, step)
+				m.Logs(nfs.SAVE, nfs.FILE, p, mdb.COUNT, count, mdb.TOTAL, total, mdb.VALUE, step)
 				switch cb := cb.(type) {
 				case func(int, int, int):
-					cb(count, total, step)
+					if cb != nil {
+						cb(count, total, step)
+					}
 				case nil:
 				default:
 					m.ErrorNotImplement(cb)

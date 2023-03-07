@@ -45,13 +45,16 @@ func _publish_file(m *ice.Message, file string, arg ...string) string {
 }
 func _publish_contexts(m *ice.Message, arg ...string) {
 	for _, k := range kit.Default(arg, ice.MISC) {
+		m.Options(web.DOMAIN, m.Option(ice.MSG_USERHOST), cli.CTX_ENV, kit.Select("", ice.SP+kit.JoinKV(ice.EQ, ice.SP, cli.CTX_POD, m.Option(ice.MSG_USERPOD)), m.Option(ice.MSG_USERPOD) != ""))
 		switch k {
+		case INSTALL:
+			m.Echo(strings.TrimSpace(kit.Renders(m.Config(kit.Keys(ice.CONTEXTS, ice.MISC)), m)))
+			return
 		case ice.BASE:
 			m.Option(web.DOMAIN, m.Cmd(web.SPIDE, ice.SHY).Append(web.CLIENT_ORIGIN))
 		case ice.CORE:
 			m.Option(web.DOMAIN, m.Cmd(web.SPIDE, ice.DEV).Append(web.CLIENT_ORIGIN))
 		default:
-			m.Options(web.DOMAIN, m.Option(ice.MSG_USERHOST), cli.CTX_ENV, kit.Select("", ice.SP+kit.JoinKV(ice.EQ, ice.SP, cli.CTX_POD, m.Option(ice.MSG_USERPOD)), m.Option(ice.MSG_USERPOD) != ""))
 			_publish_file(m, ice.ICE_BIN)
 		}
 		if s := strings.TrimSpace(kit.Renders(m.Config(kit.Keys(ice.CONTEXTS, k)), m)); k == INSTALL {
@@ -69,20 +72,25 @@ func init() {
 		PUBLISH: {Name: "publish path auto create volcanos icebergs intshell", Help: "发布", Actions: ice.MergeActions(ice.Actions{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) { m.Config(ice.CONTEXTS, _contexts) }},
 			ice.VOLCANOS: {Help: "火山架", Hand: func(m *ice.Message, arg ...string) {
-				_publish_list(m, kit.ExtReg(`(html|css|js)`)).Cmdy("", ice.CONTEXTS, ice.MISC).Echo(ice.NL).EchoQRCode(m.Option(ice.MSG_USERWEB))
+				_publish_list(m, kit.ExtReg(HTML, CSS, JS)).Cmdy("", ice.CONTEXTS, ice.MISC).Echo(ice.NL).EchoQRCode(m.Option(ice.MSG_USERWEB))
 			}},
 			ice.ICEBERGS: {Help: "冰山架", Hand: func(m *ice.Message, arg ...string) {
 				_publish_bin_list(m, ice.USR_PUBLISH).Cmdy("", ice.CONTEXTS, ice.CORE)
 			}},
 			ice.INTSHELL: {Help: "神农架", Hand: func(m *ice.Message, arg ...string) {
-				_publish_list(m, kit.ExtReg(`(sh|vim|conf)`)).Cmdy("", ice.CONTEXTS, ice.BASE)
+				_publish_list(m, kit.ExtReg(SH, "vim", "conf")).Cmdy("", ice.CONTEXTS, ice.BASE)
 			}},
 			ice.CONTEXTS: {Hand: func(m *ice.Message, arg ...string) { _publish_contexts(m, arg...) }},
 			mdb.INPUTS:   {Hand: func(m *ice.Message, arg ...string) { m.Cmdy(nfs.DIR, arg[1:]).Cut("path,size,time") }},
 			mdb.CREATE:   {Name: "create file", Hand: func(m *ice.Message, arg ...string) { _publish_file(m, m.Option(nfs.FILE)) }},
 			nfs.TRASH:    {Hand: func(m *ice.Message, arg ...string) { nfs.Trash(m, path.Join(ice.USR_PUBLISH, m.Option(nfs.PATH))) }},
 		}, ctx.ConfAction(ice.CONTEXTS, _contexts), aaa.RoleAction()), Hand: func(m *ice.Message, arg ...string) {
-			m.Cmdy(nfs.DIR, kit.Select("", arg, 0), nfs.DIR_WEB_FIELDS, kit.Dict(nfs.DIR_ROOT, ice.USR_PUBLISH)).SortTimeR(mdb.TIME)
+			if m.Option(nfs.DIR_ROOT, ice.USR_PUBLISH); len(arg) == 0 {
+				m.Cmdy(nfs.DIR, "", nfs.DIR_WEB_FIELDS).SortTimeR(mdb.TIME)
+			} else {
+				m.OptionFields(mdb.DETAIL)
+				m.Cmdy(nfs.DIR, arg[0], "time,path,size,hash,link,action")
+			}
 		}},
 	})
 }

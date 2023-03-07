@@ -172,8 +172,8 @@ func init() {
 	Index.MergeCommands(ice.Commands{
 		DIR: {Name: "dir path field auto upload", Help: "目录", Actions: ice.Actions{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
-				aaa.White(m, ice.SRC, ice.BIN, ice.USR, ice.USR_PUBLISH, ice.USR_LOCAL_GO)
-				aaa.Black(m, ice.BIN_BOOT_LOG, ice.USR_LOCAL)
+				aaa.White(m, ice.SRC, ice.BIN, ice.USR)
+				aaa.Black(m, ice.USR_LOCAL)
 			}}, mdb.UPLOAD: {},
 			TRASH: {Hand: func(m *ice.Message, arg ...string) { m.Cmd(TRASH, mdb.CREATE, m.Option(PATH)) }},
 		}, Hand: func(m *ice.Message, arg ...string) {
@@ -213,6 +213,7 @@ func Dir(m *ice.Message, sort string) *ice.Message {
 }
 func DirDeepAll(m *ice.Message, root, dir string, cb func(ice.Maps), arg ...string) *ice.Message {
 	m.Options(DIR_TYPE, CAT, DIR_ROOT, root, DIR_DEEP, ice.TRUE)
+	defer m.Options(DIR_TYPE, "", DIR_ROOT, "", DIR_DEEP, "")
 	if msg := m.Cmd(DIR, dir, arg).Tables(cb); cb == nil {
 		return m.Copy(msg)
 	} else {

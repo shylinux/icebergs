@@ -15,7 +15,7 @@ const DEBUG = "debug"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
-		DEBUG: {Name: "debug level=watch,bench,debug,error,watch offset filter auto doc", Help: "后台日志", Actions: ice.Actions{
+		DEBUG: {Name: "debug level=error,bench,debug,error,watch offset filter auto doc", Help: "后台日志", Actions: ice.Actions{
 			"doc": {Help: "文档", Hand: func(m *ice.Message, arg ...string) { m.ProcessOpen("https://pkg.go.dev/std") }},
 		}, Hand: func(m *ice.Message, arg ...string) {
 			offset := kit.Int(kit.Select("0", arg, 1))

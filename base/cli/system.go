@@ -14,6 +14,7 @@ import (
 	"shylinux.com/x/icebergs/base/ctx"
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/nfs"
+	"shylinux.com/x/icebergs/base/tcp"
 	kit "shylinux.com/x/toolkits"
 	"shylinux.com/x/toolkits/file"
 )
@@ -161,8 +162,9 @@ const (
 	CMD_ERR = "cmd_err"
 	CMD_OUT = "cmd_out"
 
-	MAN  = "man"
-	GREP = "grep"
+	MAN   = "man"
+	GREP  = "grep"
+	OPENS = "opens"
 )
 
 const SYSTEM = "system"
@@ -170,6 +172,24 @@ const SYSTEM = "system"
 func init() {
 	Index.MergeCommands(ice.Commands{
 		SYSTEM: {Name: "system cmd", Help: "系统命令", Actions: ice.MergeActions(ice.Actions{
+			mdb.SEARCH: {Hand: func(m *ice.Message, arg ...string) {
+				if runtime.GOOS == DARWIN && tcp.IsLocalHost(m, m.Option(ice.MSG_USERIP)) {
+					if arg[0] == mdb.FOREACH && arg[1] == "" {
+						list := map[string]bool{"Terminal.app": true, "Docker.app": true, "Google Chrome.app": true}
+						for _, p := range strings.Split(m.Cmdx("", nfs.SH, "-c", `ps aux|grep /Applications/|grep -v Cache|grep -v Helper|grep -v Widget|grep -v Extension|grep -v Chrome|grep -v com.app|grep -v grep|grep -o "[^/]*.app"|sort|uniq`), ice.NL) {
+							list[p] = true
+						}
+						for p := range list {
+							m.PushSearch(mdb.TYPE, OPENS, mdb.TEXT, p)
+						}
+					}
+					if arg[0] == m.CommandKey() && arg[1] == OPENS {
+						for _, p := range []string{"/Applications", "/System/Applications", "/System/Applications/Utilities"} {
+							m.Cmd(nfs.DIR, p, mdb.NAME, func(value ice.Maps) { m.PushSearch(mdb.TEXT, path.Join(p, value[mdb.NAME]), value) })
+						}
+					}
+				}
+			}},
 			nfs.PUSH: {Hand: func(m *ice.Message, arg ...string) {
 				for _, p := range arg {
 					if !strings.Contains(m.Cmdx(nfs.CAT, ice.ETC_PATH), p) {

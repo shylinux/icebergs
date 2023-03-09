@@ -9,9 +9,11 @@ import (
 	"shylinux.com/x/icebergs/base/aaa"
 	"shylinux.com/x/icebergs/base/cli"
 	"shylinux.com/x/icebergs/base/ctx"
+	"shylinux.com/x/icebergs/base/log"
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/nfs"
 	"shylinux.com/x/icebergs/base/ssh"
+	"shylinux.com/x/icebergs/base/tcp"
 	"shylinux.com/x/icebergs/base/web"
 	kit "shylinux.com/x/toolkits"
 )
@@ -52,6 +54,12 @@ const VIMER = "vimer"
 func init() {
 	Index.MergeCommands(ice.Commands{
 		VIMER: {Name: "vimer path=src/@key file=main.go line=1 list", Help: "编辑器", Meta: kit.Dict(ctx.STYLE, INNER), Actions: ice.MergeActions(ice.Actions{
+			mdb.SEARCH: {Hand: func(m *ice.Message, arg ...string) {
+				if arg[0] == mdb.FOREACH && arg[1] == "" {
+					m.PushSearch(mdb.TYPE, web.LINK, mdb.TEXT, kit.MergeURL(m.Option(ice.MSG_USERHOST)+ice.PS, log.DEBUG, ice.TRUE))
+					m.PushSearch(mdb.TYPE, web.LINK, mdb.TEXT, web.MergePodCmds(m, "", web.CODE_VIMER, log.DEBUG, ice.TRUE))
+				}
+			}},
 			mdb.INPUTS: {Hand: func(m *ice.Message, arg ...string) {
 				switch m.Option(ctx.ACTION) {
 				case web.DREAM, AUTOGEN, XTERM:
@@ -64,8 +72,8 @@ func init() {
 					for _, ext := range []string{SH, SHY, PY, JS, CSS, HTML} {
 						m.Push(nfs.PATH, kit.ExtChange(p, ext))
 					}
-					m.Option(nfs.DIR_REG, kit.FileReg("(sh|shy|py|js|css|html)"))
-					nfs.DirDeepAll(m, nfs.SRC, "./", nil, nfs.PATH)
+					m.Option(nfs.DIR_REG, kit.FileReg(SH, SHY, PY, JS, CSS, HTML))
+					nfs.DirDeepAll(m, nfs.SRC, nfs.PWD, nil, nfs.PATH)
 				case web.WEBSITE:
 					m.Cmdy(COMPLETE, mdb.FOREACH, kit.Select("", arg, 1), m.Option(ctx.ACTION))
 				case "extension":
@@ -79,40 +87,38 @@ func init() {
 							m.Cmdy(m.Option(ctx.INDEX))
 						}
 					case nfs.PATH:
-						m.Cmdy(INNER, mdb.INPUTS, arg).Cut("path,size,time")
+						m.Cmdy(INNER, mdb.INPUTS, arg).Cut(nfs.DIR_CLI_FIELDS)
 					case nfs.FILE:
 						list := ice.Map{}
 						push := func(k, p string) {
 							kit.IfNoKey(list, kit.Select(k, k+ice.DF, k != "")+p, func(p string) { m.Push(nfs.PATH, p) })
 						}
-						m.Cmd(FAVOR, "_recent_file").Tables(func(value ice.Maps) { push("", value[nfs.PATH]+value[nfs.FILE]) })
-						m.Cmd(web.CHAT_FAVOR, func(value ice.Maps) {
+						mdb.HashSelect(m.Spawn()).TablesLimit(10, func(value ice.Maps) { push("", value[nfs.PATH]) })
+						m.Cmd(mdb.SEARCH, mdb.FOREACH, "", ice.OptionFields("type,name,text")).Sort("type,name,text").Tables(func(value ice.Maps) {
 							switch value[mdb.TYPE] {
-							case web.LINK:
-								push(web.DREAM, value[mdb.TEXT])
 							case nfs.FILE:
 								push("", value[mdb.TEXT])
+							case tcp.GATEWAY:
+								push(web.SPACE, value[mdb.TEXT])
+							case web.LINK:
+								push(web.SPACE, value[mdb.TEXT])
+							case web.SERVER:
+								push(web.SPACE, value[mdb.TEXT])
+							case web.WORKER:
+								push(web.SPACE, value[mdb.NAME])
 							case ctx.INDEX:
 								push(ctx.INDEX, value[mdb.TEXT])
 							case ssh.SHELL:
-								push(ctx.INDEX+ice.DF+web.CODE_XTERM, value[mdb.TEXT])
+								push(ssh.SHELL, value[mdb.TEXT])
+							case cli.OPENS:
+								push(cli.OPENS, value[mdb.TEXT])
 							}
 						})
-						m.Cmd(web.DREAM, ice.Maps{nfs.DIR_DEEP: ice.FALSE}, func(value ice.Maps) { push(web.DREAM, value[mdb.NAME]) })
 						for _, p := range kit.Split(kit.Select(m.Option(nfs.PATH), m.Option("paths"))) {
-							nfs.DirDeepAll(m, nfs.PWD, p, func(value ice.Maps) { push("", value[nfs.PATH]) }, nfs.PATH)
+							nfs.DirDeepAll(m.Spawn(), nfs.PWD, p, func(value ice.Maps) { push("", value[nfs.PATH]) }, nfs.PATH)
 						}
 						m.Cmd(ctx.COMMAND, mdb.SEARCH, ctx.COMMAND, ice.OptionFields(ctx.INDEX)).Tables(func(value ice.Maps) { push(ctx.INDEX, value[ctx.INDEX]) })
-						m.Cmd(FAVOR, "_system_app").Tables(func(value ice.Maps) { push("_open", strings.ToLower(kit.Select(value[mdb.TEXT], value[mdb.NAME]))) })
-						m.Cmd(nfs.DIR, "/Applications", mdb.NAME, ice.Maps{nfs.DIR_DEEP: ice.FALSE, nfs.DIR_TYPE: ""}, func(value ice.Maps) {
-							push("_open", value[nfs.NAME])
-						})
-						m.Cmd(nfs.DIR, "/System/Applications", mdb.NAME, ice.Maps{nfs.DIR_DEEP: ice.FALSE, nfs.DIR_TYPE: ""}, func(value ice.Maps) {
-							push("_open", value[nfs.NAME])
-						})
-						m.Cmd(nfs.DIR, "/System/Applications/Utilities", mdb.NAME, ice.Maps{nfs.DIR_DEEP: ice.FALSE, nfs.DIR_TYPE: ""}, func(value ice.Maps) {
-							push("_open", value[nfs.NAME])
-						})
+						m.Cmd(mdb.SEARCH, cli.SYSTEM, cli.OPENS, ice.OptionFields("type,name,text")).Sort("type,name,text").Tables(func(value ice.Maps) { push(cli.OPENS, value[nfs.NAME]) })
 					}
 				}
 			}},
@@ -144,7 +150,7 @@ func init() {
 			}},
 			web.DREAM: {Name: "dream name*=hi repos", Help: "空间", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmdy(web.DREAM, cli.START, arg)
-			}},
+			}}, web.SPACE: {Help: "空间"},
 			nfs.REPOS: {Help: "仓库", Hand: func(m *ice.Message, arg ...string) {
 				m.Option("view", "change")
 				m.Cmd("web.code.git.status", func(value ice.Maps) {
@@ -163,8 +169,12 @@ func init() {
 					}
 				})
 			}},
-			"_open": {Help: "打开", Hand: func(m *ice.Message, arg ...string) {
-				m.Cmdy(cli.DAEMON, cli.OPEN, "-a", kit.Split(arg[0], ice.PT, ice.PT)[0]).ProcessHold(m)
+			cli.OPENS: {Help: "打开", Hand: func(m *ice.Message, arg ...string) {
+				if strings.HasSuffix(arg[0], ".app") {
+					m.Cmd(cli.DAEMON, cli.OPEN, "-a", arg[0])
+				} else {
+					m.Cmd(cli.DAEMON, cli.OPEN, arg[0])
+				}
 			}},
 			XTERM: {Name: "xterm type=sh name text", Help: "终端", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmdy(XTERM, mdb.CREATE, arg)
@@ -216,8 +226,11 @@ func init() {
 			web.DREAM_ACTION: {Hand: func(m *ice.Message, arg ...string) {
 				kit.If(arg[1] == m.CommandKey(), func() { web.ProcessWebsite(m, m.Option(mdb.NAME), m.PrefixKey()) })
 			}},
-		}, web.DreamAction(), aaa.RoleAction(ctx.COMMAND)), Hand: func(m *ice.Message, arg ...string) {
+		}, web.DreamAction(), mdb.HashAction(mdb.SHORT, nfs.PATH, mdb.FIELD, "time,path"), aaa.RoleAction(ctx.COMMAND)), Hand: func(m *ice.Message, arg ...string) {
 			if m.Cmdy(INNER, arg); arg[0] != ctx.ACTION {
+				if len(arg) > 1 {
+					mdb.HashCreate(m.Spawn(), nfs.PATH, path.Join(kit.Slice(arg, 0, 2)...))
+				}
 				m.Action(AUTOGEN, nfs.SCRIPT, nfs.SAVE, COMPILE)
 				m.Options("tabs", m.Config("show.tabs"), "plug", m.Config("show.plug"), "exts", m.Config("show.exts"))
 				ctx.DisplayLocal(m, "")

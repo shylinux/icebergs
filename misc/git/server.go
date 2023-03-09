@@ -149,7 +149,7 @@ func init() {
 				_repos_cat(m, dir, arg[1], arg[2], kit.Select("", arg, 3))
 			}
 		}},
-		SERVER: {Name: "server repos branch commit path auto create import", Help: "源代码", Actions: ice.MergeActions(ice.Actions{
+		SERVER: {Name: "server repos branch commit path auto create import", Help: "代码源", Actions: ice.MergeActions(ice.Actions{
 			mdb.CREATE: {Name: "create name*=demo", Hand: func(m *ice.Message, arg ...string) {
 				_repos_init(m, path.Join(ice.USR_LOCAL_REPOS, m.Option(mdb.NAME)))
 			}},
@@ -191,6 +191,8 @@ func init() {
 				m.Cmdy(nfs.DIR, nfs.PWD, "time,name,size,action", kit.Dict(nfs.DIR_TYPE, nfs.TYPE_DIR), func(value ice.Maps) {
 					m.PushScript("git clone " + _git_url(m, value[mdb.NAME]))
 				}).Cut("time,name,size,script,action").RenameAppend(mdb.NAME, nfs.REPOS).SortStrR(mdb.TIME)
+				m.Debug("what %v", m.Cmdx("web.code.publish", "contexts"))
+				m.Debug("what %v", strings.ReplaceAll(m.Cmdx("web.code.publish", "contexts"), "app username", "dev username"))
 				m.Echo(strings.ReplaceAll(m.Cmdx("web.code.publish", "contexts"), "app username", "dev username"))
 			} else if dir := path.Join(m.Option(nfs.DIR_ROOT), arg[0]); len(arg) == 1 {
 				_repos_branch(m, dir)

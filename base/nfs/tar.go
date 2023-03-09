@@ -85,7 +85,7 @@ func init() {
 							}
 							if n, e := io.Copy(f, r); !m.Warn(e) {
 								size += n
-								m.Logs(mdb.EXPORT, LINE, i, SIZE, kit.FmtSize(size), FILE, p, SIZE, kit.FmtSize(n))
+								// m.Logs(mdb.EXPORT, LINE, i, SIZE, kit.FmtSize(size), FILE, p, SIZE, kit.FmtSize(n))
 								os.Chmod(p, os.FileMode(h.Mode))
 							}
 						}

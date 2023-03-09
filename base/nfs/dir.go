@@ -4,6 +4,7 @@ import (
 	"os"
 	"path"
 	"regexp"
+	"runtime"
 	"strings"
 
 	ice "shylinux.com/x/icebergs"
@@ -152,7 +153,7 @@ const (
 	DIR_DEEP = "dir_deep"
 	DIR_REG  = "dir_reg"
 
-	DIR_DEF_FIELDS = "time,path,size,action"
+	DIR_DEF_FIELDS = "time,size,path,action"
 	DIR_WEB_FIELDS = "time,size,path,link,action"
 	DIR_CLI_FIELDS = "path,size,time"
 )
@@ -165,6 +166,8 @@ const (
 	NAME = "name"
 	SIZE = "size"
 	LINE = "line"
+
+	OPENS = "opens"
 )
 const DIR = "dir"
 
@@ -175,6 +178,22 @@ func init() {
 				aaa.White(m, ice.SRC, ice.BIN, ice.USR)
 				aaa.Black(m, ice.USR_LOCAL)
 			}}, mdb.UPLOAD: {},
+			mdb.SEARCH: {Hand: func(m *ice.Message, arg ...string) {
+				m.Debug("what ")
+				if arg[0] == mdb.FOREACH && arg[1] == "" && runtime.GOOS == "darwin" && m.Cmdx("host", "islocal", m.Option(ice.MSG_USERIP)) == ice.OK {
+					m.Debug("what ")
+					for _, p := range []string{"Desktop", "Documents", "Downloads", "Pictures"} {
+						p := kit.HomePath(p)
+						m.Cmd(DIR, PWD, mdb.NAME, mdb.TIME, kit.Dict(DIR_ROOT, p)).SortTimeR(mdb.TIME).TablesLimit(5, func(value ice.Maps) {
+							name := value[mdb.NAME]
+							if len(kit.TrimExt(name)) > 30 {
+								name = name[:10] + ".." + name[len(name)-10:]
+							}
+							m.PushSearch(mdb.TYPE, OPENS, mdb.NAME, name, mdb.TEXT, path.Join(p, value[mdb.NAME]))
+						})
+					}
+				}
+			}},
 			TRASH: {Hand: func(m *ice.Message, arg ...string) { m.Cmd(TRASH, mdb.CREATE, m.Option(PATH)) }},
 		}, Hand: func(m *ice.Message, arg ...string) {
 			root, dir := kit.Select(PWD, m.Option(DIR_ROOT)), kit.Select(PWD, arg, 0)

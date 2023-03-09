@@ -103,6 +103,13 @@ const DREAM = "dream"
 func init() {
 	Index.MergeCommands(ice.Commands{
 		DREAM: {Name: "dream name path auto create", Help: "梦想家", Actions: ice.MergeActions(ice.Actions{
+			mdb.SEARCH: {Hand: func(m *ice.Message, arg ...string) {
+				if arg[0] == mdb.FOREACH && arg[1] == "" {
+					m.Cmd("", ice.OptionFields(), func(value ice.Maps) {
+						m.PushSearch(mdb.TEXT, MergePods(m, value[mdb.NAME]), value)
+					})
+				}
+			}},
 			mdb.INPUTS: {Hand: func(m *ice.Message, arg ...string) {
 				switch arg[0] {
 				case mdb.NAME, nfs.TEMPLATE:

@@ -8,7 +8,9 @@ import (
 	"shylinux.com/x/icebergs/base/cli"
 	"shylinux.com/x/icebergs/base/ctx"
 	"shylinux.com/x/icebergs/base/mdb"
+	"shylinux.com/x/icebergs/base/ssh"
 	"shylinux.com/x/icebergs/base/web"
+	"shylinux.com/x/icebergs/core/code"
 	kit "shylinux.com/x/toolkits"
 )
 
@@ -77,8 +79,15 @@ func init() {
 			FIELDS, "id,tag,pane,tty,height,width,cmd",
 		)},
 	}, Commands: ice.Commands{
-		SESSION: {Name: "session session window pane cmds auto", Help: "会话管理", Actions: ice.MergeActions(ice.Actions{
+		SESSION: {Name: "session session window pane cmds auto", Help: "会话", Actions: ice.MergeActions(ice.Actions{
 			web.DREAM_CREATE: {Hand: func(m *ice.Message, arg ...string) { m.Cmd("", mdb.CREATE) }},
+			mdb.SEARCH: {Hand: func(m *ice.Message, arg ...string) {
+				if arg[0] == mdb.FOREACH && arg[1] == "" {
+					m.Cmd("", ice.OptionFields(""), func(value ice.Maps) {
+						m.PushSearch(mdb.TYPE, ssh.SHELL, mdb.NAME, value[SESSION], mdb.TEXT, "tmux attach -t "+value[SESSION], value)
+					})
+				}
+			}},
 			mdb.INPUTS: {Hand: func(m *ice.Message, arg ...string) {
 				if m.Option(ctx.ACTION) == SCRIPT {
 					m.Cmdy(SCRIPT, mdb.INPUTS, arg)
@@ -142,6 +151,11 @@ func init() {
 					_tmux_cmd(m, SELECT_PANE, "-t", _tmux_key(m.Option(SESSION), m.Option(WINDOW), m.Option(PANE)))
 				}
 			}},
+			code.XTERM: {Help: "切入", Hand: func(m *ice.Message, arg ...string) {
+				if m.Option(WINDOW) == "" {
+					ctx.ProcessField(m, web.CODE_XTERM, []string{"tmux attach -t " + m.Option(SESSION)}, arg...)
+				}
+			}},
 			SCRIPT: {Name: "script name", Help: "脚本", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmd(SCRIPT, m.Option(mdb.NAME), func(value ice.Maps) {
 					kit.Fetch(kit.SplitLine(value[mdb.TEXT]), func(line string) {
@@ -169,7 +183,7 @@ func init() {
 				m.Split(_tmux_cmd(m, LIST_SESSION, "-F", m.Config(FORMAT)).Result(), m.Config(FIELDS), ice.FS, ice.NL)
 			}
 			m.Tables(func(value ice.Maps) {
-				kit.If(value["tag"] == "1", func() { m.PushButton("") }, func() { m.PushButton(mdb.SELECT, mdb.REMOVE) })
+				kit.If(value["tag"] == "1", func() { m.PushButton("") }, func() { m.PushButton(code.XTERM, mdb.SELECT, mdb.REMOVE) })
 			}).StatusTimeCount()
 		}},
 		WINDOW: {Hand: func(m *ice.Message, arg ...string) {

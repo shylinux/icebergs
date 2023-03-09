@@ -133,10 +133,16 @@ func MergeURL2(m Message, url string, arg ...ice.Any) string {
 	return kit.MergeURL2(m.Option(ice.MSG_USERWEB), url, arg...)
 }
 func MergeLink(m Message, url string, arg ...ice.Any) string {
-	return strings.Split(MergeURL2(m, url, arg...), "?")[0]
+	return strings.Split(MergeURL2(m, url, arg...), ice.QS)[0]
 }
 func MergePod(m Message, pod string, arg ...ice.Any) string {
 	return kit.MergePOD(kit.Select(ice.Info.Domain, m.Option(ice.MSG_USERWEB)), pod, arg...)
+}
+func MergePods(m Message, pod string, arg ...ice.Any) string {
+	return kit.MergeURL(strings.Split(MergePod(m, pod), ice.QS)[0], arg...)
+}
+func MergePodCmds(m Message, pod, cmd string, arg ...ice.Any) string {
+	return kit.MergeURL(strings.Split(MergePodCmd(m, pod, cmd), ice.QS)[0], arg...)
 }
 func MergePodCmd(m Message, pod, cmd string, arg ...ice.Any) string {
 	p := "/chat"

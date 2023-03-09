@@ -35,10 +35,15 @@ const FAVOR = "favor"
 func init() {
 	Index.MergeCommands(ice.Commands{
 		FAVOR: {Name: "favor hash auto create getClipboardData getLocation scanQRCode record1 record2 upload", Help: "收藏夹", Actions: ice.MergeActions(ice.Actions{
+			mdb.SEARCH: {Hand: func(m *ice.Message, arg ...string) {
+				if arg[0] == mdb.FOREACH && arg[1] == "" {
+					m.Cmd("", ice.OptionFields("")).Tables(func(value ice.Maps) { m.PushSearch(value) })
+				}
+			}},
 			mdb.INPUTS: {Hand: func(m *ice.Message, arg ...string) {
 				switch mdb.HashInputs(m, arg); arg[0] {
 				case mdb.TYPE:
-					m.Push(arg[0], web.LINK, nfs.FILE, mdb.TEXT, ctx.INDEX, ssh.SHELL)
+					m.Push(arg[0], web.LINK, nfs.FILE, mdb.TEXT, ctx.INDEX, ssh.SHELL, cli.OPENS)
 				case mdb.NAME:
 					switch m.Option(mdb.TYPE) {
 					case ctx.INDEX:
@@ -58,11 +63,6 @@ func init() {
 					m.OptionDefault(mdb.TYPE, mdb.LINK, mdb.NAME, kit.ParseURL(m.Option(mdb.TEXT)).Host)
 				}
 				mdb.HashCreate(m, m.OptionSimple())
-			}},
-			mdb.SEARCH: {Hand: func(m *ice.Message, arg ...string) {
-				if arg[0] == m.CommandKey() || arg[0] == mdb.FOREACH && arg[1] == "" {
-					m.Cmd("", ice.Maps{ice.MSG_FIELDS: ""}, func(values ice.Maps) { m.PushSearch(values) })
-				}
 			}},
 			web.UPLOAD: {Hand: func(m *ice.Message, arg ...string) {
 				m.Cmd("", mdb.CREATE, m.OptionSimple(mdb.TYPE, mdb.NAME, mdb.TEXT))
@@ -95,7 +95,7 @@ func init() {
 			"xterm": {Help: "命令", Hand: func(m *ice.Message, arg ...string) {
 				ctx.ProcessField(m, web.CODE_XTERM, []string{m.Option(mdb.TEXT)}, arg...)
 			}},
-			"_open": {Help: "命令", Hand: func(m *ice.Message, arg ...string) {
+			cli.OPENS: {Help: "命令", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmdy(cli.DAEMON, cli.OPEN, "-a", m.Option(mdb.TEXT)).ProcessHold(m)
 			}},
 			"_new": {Help: "命令", Hand: func(m *ice.Message, arg ...string) {
@@ -131,8 +131,8 @@ func init() {
 					return
 				}
 				switch value[mdb.TYPE] {
-				case "_open":
-					m.PushButton("_open", "_new", mdb.REMOVE)
+				case cli.OPENS:
+					m.PushButton(cli.OPENS, "_new", mdb.REMOVE)
 				case ssh.SHELL:
 					m.PushButton("xterm", mdb.REMOVE)
 				case ctx.INDEX:

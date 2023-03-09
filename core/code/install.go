@@ -35,8 +35,7 @@ func _install_download(m *ice.Message) {
 		m.Cmdy(nfs.DIR, file)
 		return
 	}
-	m.Cmd(nfs.SAVE, file, "")
-	mdb.HashCreate(m, mdb.NAME, name, nfs.PATH, file, mdb.LINK, link)
+	mdb.HashCreate(m.Cmd(nfs.SAVE, file, ""), mdb.NAME, name, nfs.PATH, file, mdb.LINK, link)
 	web.GoToast(m, name, func(toast func(string, int, int)) {
 		defer nfs.TarExport(m, file)
 		begin := time.Now()

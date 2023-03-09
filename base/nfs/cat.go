@@ -166,7 +166,9 @@ func OptionLoad(m *ice.Message, file string) *ice.Message {
 	return m
 }
 
-func Template(m *ice.Message, file string) string { return kit.Renders(TemplateText(m, file), m) }
+func Template(m *ice.Message, file string, arg ...ice.Any) string {
+	return kit.Renders(kit.Format(TemplateText(m, file), arg...), m)
+}
 func TemplateText(m *ice.Message, file string) string {
 	return m.Cmdx(CAT, path.Join(ice.SRC_TEMPLATE, m.PrefixKey(), path.Base(file)))
 }

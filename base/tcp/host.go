@@ -50,6 +50,7 @@ const (
 
 	ISLOCAL = "islocal"
 	PUBLISH = "publish"
+	GATEWAY = "gateway"
 )
 const HOST = "host"
 
@@ -65,6 +66,12 @@ func init() {
 			aaa.BLACK: {Name: "black name text", Help: "黑名单", Hand: func(m *ice.Message, arg ...string) {
 				mdb.HashCreate(m, mdb.TYPE, m.ActionKey(), m.OptionSimple(mdb.NAME, mdb.TEXT))
 			}},
+			mdb.SEARCH: {Hand: func(m *ice.Message, arg ...string) {
+				if arg[0] == mdb.FOREACH && arg[1] == "" {
+					ip := m.Cmd("", GATEWAY).Append(aaa.IP)
+					m.PushSearch(mdb.TYPE, GATEWAY, mdb.NAME, ip, mdb.TEXT, "http://"+ip)
+				}
+			}},
 			ISLOCAL: {Hand: func(m *ice.Message, arg ...string) {
 				if arg[0] = strings.Split(strings.TrimPrefix(arg[0], "["), "]")[0]; arg[0] == "::1" || strings.HasPrefix(arg[0], "127.") {
 					m.Echo(ice.OK)
@@ -79,6 +86,9 @@ func init() {
 					arg[0] = strings.Replace(arg[0], "127.0.0.1", m.Cmd("").Append(aaa.IP), 1)
 				}
 				m.Echo(arg[0])
+			}},
+			GATEWAY: {Hand: func(m *ice.Message, arg ...string) {
+				m.Push(aaa.IP, kit.Keys(kit.Slice(strings.Split(m.Cmd("").Append(aaa.IP), ice.PT), 0, 3), "1"))
 			}},
 		}, mdb.HashAction(mdb.SHORT, mdb.TEXT), mdb.ClearHashOnExitAction()), Hand: func(m *ice.Message, arg ...string) {
 			_host_list(m, kit.Select("", arg, 0))

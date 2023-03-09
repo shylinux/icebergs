@@ -20,6 +20,10 @@ func _sh_cmds(m *ice.Message, p string) (string, string) {
 	return cmds, text
 }
 
+const (
+	VIM  = "vim"
+	CONF = "conf"
+)
 const SH = nfs.SH
 
 func init() {

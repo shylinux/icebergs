@@ -38,7 +38,7 @@ func _xterm_get(m *ice.Message, h string) _xterm {
 	t := mdb.HashSelectField(m, m.Option(mdb.HASH, h), mdb.TYPE)
 	mdb.HashModify(m, "view", m.Option(ice.MSG_DAEMON))
 	return mdb.HashSelectTarget(m, h, func() ice.Any {
-		ls := kit.Split(kit.Select(nfs.SH, t))
+		ls := kit.Split(kit.Select(nfs.SH, strings.Split(t, " # ")[0]))
 		cmd := exec.Command(cli.SystemFind(m, ls[0]), ls[1:]...)
 		cmd.Env = append(cmd.Env, os.Environ()...)
 		cmd.Env = append(cmd.Env, "TERM=xterm")
@@ -48,7 +48,7 @@ func _xterm_get(m *ice.Message, h string) _xterm {
 			// defer mdb.HashSelectUpdate(m, h, func(value ice.Map) { delete(value, mdb.TARGET) })
 			defer mdb.HashRemove(m, mdb.HASH, h)
 			defer tty.Close()
-			// m.Option("log.disable", ice.TRUE)
+			m.Option(ice.LOG_DISABLE, ice.TRUE)
 			buf := make([]byte, ice.MOD_BUFS)
 			for {
 				if n, e := tty.Read(buf); !m.Warn(e) && e == nil {

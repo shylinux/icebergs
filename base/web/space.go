@@ -75,7 +75,7 @@ func _space_handle(m *ice.Message, safe bool, name string, conn *websocket.Conn)
 		}
 		msg := m.Spawn(b)
 		source, target := kit.Simple(msg.Optionv(ice.MSG_SOURCE), name), kit.Simple(msg.Optionv(ice.MSG_TARGET))
-		msg.Log("recv", "%v->%v %v %v", source, target, msg.Detailv(), msg.FormatMeta())
+		// msg.Log("recv", "%v->%v %v %v", source, target, msg.Detailv(), msg.FormatMeta())
 		if next := msg.Option(ice.MSG_TARGET); next == "" || len(target) == 0 {
 			if msg.Optionv(ice.MSG_HANDLE, ice.TRUE); safe { // 下行命令
 				gdb.Event(msg, SPACE_LOGIN)
@@ -184,13 +184,14 @@ func init() {
 				_space_dial(m, m.Option(ice.DEV), kit.Select(ice.Info.NodeName, m.Option(mdb.NAME)), arg...)
 			}},
 			mdb.SEARCH: {Hand: func(m *ice.Message, arg ...string) {
-				if arg[0] == m.CommandKey() || arg[0] == mdb.FOREACH && arg[1] == "" {
-					m.Cmd("", ice.Maps{ice.MSG_FIELDS: ""}, func(values ice.Maps) {
+				if arg[0] == mdb.FOREACH && arg[1] == "" {
+					m.Cmd("", ice.OptionFields(""), func(values ice.Maps) {
 						switch values[mdb.TYPE] {
 						case MASTER:
 							m.PushSearch(mdb.TEXT, m.Cmd(SPIDE, values[mdb.NAME], ice.Maps{ice.MSG_FIELDS: ""}).Append(CLIENT_ORIGIN), values)
-						case SERVER, WORKER:
+						case SERVER:
 							m.PushSearch(mdb.TEXT, kit.Format(tcp.PublishLocalhost(m, strings.Split(MergePod(m, values[mdb.NAME]), ice.QS)[0])), values)
+						case aaa.LOGIN:
 						}
 					})
 				}

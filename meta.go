@@ -216,6 +216,17 @@ func (m *Message) Length() (max int) {
 	}
 	return max
 }
+func (m *Message) TablesLimit(count int, cbs ...func(value Maps)) *Message {
+	return m.Table(func(index int, value Maps, head []string) {
+		if index < count {
+			for _, cb := range cbs {
+				if cb != nil {
+					cb(value)
+				}
+			}
+		}
+	})
+}
 func (m *Message) Tables(cbs ...func(value Maps)) *Message {
 	return m.Table(func(index int, value Maps, head []string) {
 		for _, cb := range cbs {
@@ -388,12 +399,12 @@ func (m *Message) Sort(key string, arg ...string) *Message {
 	}
 	return m
 }
-func (m *Message) SortInt(key string)   { m.Sort(key, INT) }
-func (m *Message) SortStr(key string)   { m.Sort(key, STR) }
-func (m *Message) SortTime(key string)  { m.Sort(key, TIME) }
-func (m *Message) SortTimeR(key string) { m.Sort(key, TIME_R) }
-func (m *Message) SortStrR(key string)  { m.Sort(key, STR_R) }
-func (m *Message) SortIntR(key string)  { m.Sort(key, INT_R) }
+func (m *Message) SortInt(key string)            { m.Sort(key, INT) }
+func (m *Message) SortStr(key string)            { m.Sort(key, STR) }
+func (m *Message) SortTime(key string)           { m.Sort(key, TIME) }
+func (m *Message) SortTimeR(key string) *Message { return m.Sort(key, TIME_R) }
+func (m *Message) SortStrR(key string)           { m.Sort(key, STR_R) }
+func (m *Message) SortIntR(key string)           { m.Sort(key, INT_R) }
 
 func (m *Message) Detail(arg ...Any) string {
 	return kit.Select("", m.meta[MSG_DETAIL], 0)

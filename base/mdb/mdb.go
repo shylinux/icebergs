@@ -118,6 +118,7 @@ const (
 	FIELDS = "fields"
 	PARAMS = "params"
 
+	RECENT = "recent"
 	INPUTS = "inputs"
 	CREATE = "create"
 	REMOVE = "remove"

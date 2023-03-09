@@ -117,16 +117,13 @@ func init() {
 				arg[1] = kit.Slice(strings.Split(arg[0], ice.PS), -1)[0]
 				arg[0] = strings.TrimSuffix(arg[0], arg[1])
 				ctx.ProcessRewrite(m, nfs.PATH, arg[0], nfs.FILE, arg[1])
-				return
 			} else if len(arg) < 2 {
 				nfs.Dir(m, nfs.PATH)
-				return
+			} else {
+				arg[1] = strings.Split(arg[1], ice.FS)[0]
+				_inner_list(m, kit.Ext(arg[1]), arg[1], arg[0])
+				ctx.DisplayLocal(m, "").Option(nfs.REPOS, kit.Join(m.Cmd("web.code.git.repos", ice.OptionFields(nfs.PATH)).Sort(nfs.PATH).Appendv(nfs.PATH)))
 			}
-			arg[1] = strings.Split(arg[1], ice.FS)[0]
-			_inner_list(m, kit.Ext(arg[1]), arg[1], arg[0])
-			// m.Cmd(FAVOR, mdb.INSERT, mdb.ZONE, "_recent_file", nfs.PATH, arg[0], nfs.FILE, arg[1])
-			m.Option(nfs.REPOS, kit.Join(m.Cmd("web.code.git.repos", ice.OptionFields(nfs.PATH)).Sort(nfs.PATH).Appendv(nfs.PATH)))
-			ctx.DisplayLocal(m, "")
 		}},
 	})
 	ctx.AddRunChecker(func(m *ice.Message, cmd, check string, arg ...string) bool {

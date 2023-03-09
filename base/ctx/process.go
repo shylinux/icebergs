@@ -45,11 +45,22 @@ func ProcessFloat(m *ice.Message, arg ...string) {
 	m.Option(ice.PROCESS_ARG, arg)
 	m.Cmdy(COMMAND, arg[0])
 }
-func ProcessField(m *ice.Message, cmd string, args []string, arg ...string) {
+func ProcessField(m *ice.Message, cmd string, args ice.Any, arg ...string) {
 	if cmd = kit.Select(m.ActionKey(), cmd); len(arg) == 0 || arg[0] != ice.RUN {
 		m.Option("_index", m.PrefixKey())
-		if m.Cmdy(COMMAND, cmd).ProcessField(ACTION, m.ActionKey(), ice.RUN); len(args) > 0 {
-			m.Push(ARGS, kit.Format(args))
+		m.Cmdy(COMMAND, cmd).ProcessField(ACTION, m.ActionKey(), ice.RUN)
+		switch cb := args.(type) {
+		case func() string:
+			m.Push(ARGS, kit.Format([]string{cb()}))
+		case func() []string:
+			m.Push(ARGS, kit.Format(cb()))
+		case []string:
+			m.Push(ARGS, kit.Format(cb))
+		case string:
+			m.Push(ARGS, kit.Format([]string{cb}))
+		case nil:
+		default:
+			m.ErrorNotImplement(args)
 		}
 	} else {
 		if aaa.Right(m, cmd, arg[1:]) {

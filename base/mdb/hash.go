@@ -35,6 +35,10 @@ func _hash_insert(m *ice.Message, prefix, chain string, arg ...string) string {
 	if expire := m.Conf(prefix, kit.Keys(chain, kit.Keym(EXPIRE))); expire != "" {
 		arg = kit.Simple(TIME, m.Time(expire), arg)
 	}
+	if arg[0] == HASH {
+		m.Conf(prefix, kit.Keys(chain, HASH, arg[1]), kit.Data(arg[2:]))
+		return m.Echo(arg[1]).Result()
+	}
 	return m.Echo(Rich(m, prefix, chain, kit.Data(arg, TARGET, m.Optionv(TARGET)))).Result()
 }
 func _hash_delete(m *ice.Message, prefix, chain, field, value string) {
@@ -262,6 +266,7 @@ func HashSelectField(m *ice.Message, key string, field string) (value string) {
 func HashSelectTarget(m *ice.Message, key string, create Any) (target Any) {
 	HashSelectUpdate(m, key, func(value ice.Map) {
 		target = value[TARGET]
+		m.Debug("what %v %v", target, create)
 		if _target, ok := target.([]string); ok && len(_target) == 0 {
 			target = nil
 		}

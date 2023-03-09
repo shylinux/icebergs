@@ -21,6 +21,7 @@ func _sh_cmds(m *ice.Message, p string) (string, string) {
 }
 
 const (
+	BASH = "bash"
 	VIM  = "vim"
 	CONF = "conf"
 )

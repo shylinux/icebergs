@@ -23,6 +23,10 @@ const (
 )
 const (
 	WEBSITE = "website"
+	RESIZE  = "resize"
+	OUTPUT  = "output"
+	INPUT   = "input"
+	VIEW    = "view"
 
 	CODE_VIMER = "web.code.vimer"
 	CODE_INNER = "web.code.inner"

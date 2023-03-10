@@ -94,12 +94,11 @@ const SERVER = "server"
 func init() {
 	web.Index.MergeCommands(ice.Commands{"/x/": {Actions: ice.MergeActions(ctx.CmdAction(), aaa.WhiteAction(ctx.COMMAND, ice.RUN)), Hand: func(m *ice.Message, arg ...string) {
 		if arg[0] == ice.LIST {
-			m.Cmd("web.code.git.server", func(value ice.Maps) {
-				m.Push(nfs.REPOS, web.MergeLink(m, "/x/"+value[nfs.REPOS]+".git"))
-			})
+			m.Cmd("web.code.git.server", func(value ice.Maps) { m.Push(nfs.REPOS, web.MergeLink(m, "/x/"+value[nfs.REPOS]+".git")) })
+			m.Sort(nfs.REPOS)
 			return
 		}
-		if !m.IsCliUA() || strings.Contains(arg[0], ice.AT) || arg[1] == "src" {
+		if !m.IsCliUA() || strings.Contains(arg[0], ice.AT) || arg[1] == ice.SRC {
 			if strings.Contains(arg[0], ice.AT) {
 				ls := strings.Split(arg[0], ice.AT)
 				_repos_cat(m, path.Join(ice.USR_LOCAL_REPOS, ls[0]), "master", ls[1], path.Join(arg[1:]...))
@@ -107,7 +106,7 @@ func init() {
 			} else if strings.HasPrefix(arg[1], "v") && strings.Contains(arg[1], ice.PT) {
 				_repos_cat(m, path.Join(ice.USR_LOCAL_REPOS, arg[0]), "master", arg[1], path.Join(arg[2:]...))
 				m.RenderResult()
-			} else if arg[1] == "src" {
+			} else if arg[1] == ice.SRC {
 				_repos_cat(m, path.Join(ice.USR_LOCAL_REPOS, arg[0]), "master", "", path.Join(arg[1:]...))
 				m.RenderResult()
 			} else {
@@ -142,10 +141,10 @@ func init() {
 			if m.Option(nfs.DIR_ROOT, ice.USR_LOCAL_REPOS); len(arg) == 0 {
 			} else if dir := path.Join(m.Option(nfs.DIR_ROOT), arg[0]); len(arg) == 1 {
 			} else if len(arg) == 2 {
-			} else if len(arg) == 3 || strings.HasSuffix(arg[3], "/") {
+			} else if len(arg) == 3 || strings.HasSuffix(arg[3], nfs.PS) {
 				_repos_dir(m, dir, arg[1], arg[2], kit.Select("", arg, 3), nil)
 			} else {
-				m.Option("file", kit.Select("", arg, 3))
+				m.Option(nfs.FILE, kit.Select("", arg, 3))
 				_repos_cat(m, dir, arg[1], arg[2], kit.Select("", arg, 3))
 			}
 		}},
@@ -190,10 +189,8 @@ func init() {
 				m.Option(ice.MSG_USERROLE, aaa.TECH)
 				m.Cmdy(nfs.DIR, nfs.PWD, "time,name,size,action", kit.Dict(nfs.DIR_TYPE, nfs.TYPE_DIR), func(value ice.Maps) {
 					m.PushScript("git clone " + _git_url(m, value[mdb.NAME]))
-				}).Cut("time,name,size,script,action").RenameAppend(mdb.NAME, nfs.REPOS).SortStrR(mdb.TIME)
-				m.Debug("what %v", m.Cmdx("web.code.publish", "contexts"))
-				m.Debug("what %v", strings.ReplaceAll(m.Cmdx("web.code.publish", "contexts"), "app username", "dev username"))
-				m.Echo(strings.ReplaceAll(m.Cmdx("web.code.publish", "contexts"), "app username", "dev username"))
+				}).Cut("time,name,size,script,action").RenameAppend(mdb.NAME, nfs.REPOS).SortTimeR(mdb.TIME)
+				m.Echo(strings.ReplaceAll(m.Cmdx("web.code.publish", ice.CONTEXTS), "app username", "dev username"))
 			} else if dir := path.Join(m.Option(nfs.DIR_ROOT), arg[0]); len(arg) == 1 {
 				_repos_branch(m, dir)
 			} else if len(arg) == 2 {

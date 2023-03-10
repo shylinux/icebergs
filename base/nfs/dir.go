@@ -4,7 +4,6 @@ import (
 	"os"
 	"path"
 	"regexp"
-	"runtime"
 	"strings"
 
 	ice "shylinux.com/x/icebergs"
@@ -179,9 +178,7 @@ func init() {
 				aaa.Black(m, ice.USR_LOCAL)
 			}}, mdb.UPLOAD: {},
 			mdb.SEARCH: {Hand: func(m *ice.Message, arg ...string) {
-				m.Debug("what ")
-				if arg[0] == mdb.FOREACH && arg[1] == "" && runtime.GOOS == "darwin" && m.Cmdx("host", "islocal", m.Option(ice.MSG_USERIP)) == ice.OK {
-					m.Debug("what ")
+				if arg[0] == mdb.FOREACH && arg[1] == "" && m.Cmdx("host", "islocal", m.Option(ice.MSG_USERIP)) == ice.OK {
 					for _, p := range []string{"Desktop", "Documents", "Downloads", "Pictures"} {
 						p := kit.HomePath(p)
 						m.Cmd(DIR, PWD, mdb.NAME, mdb.TIME, kit.Dict(DIR_ROOT, p)).SortTimeR(mdb.TIME).TablesLimit(5, func(value ice.Maps) {

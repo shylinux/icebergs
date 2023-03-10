@@ -98,15 +98,15 @@ func init() {
 			m.Sort(nfs.REPOS)
 			return
 		}
-		if !m.IsCliUA() || strings.Contains(arg[0], ice.AT) || arg[1] == ice.SRC {
-			if strings.Contains(arg[0], ice.AT) {
+		if !m.IsCliUA() || len(arg) > 0 && strings.Contains(arg[0], ice.AT) || len(arg) > 1 && arg[1] == ice.SRC {
+			if len(arg) > 0 && strings.Contains(arg[0], ice.AT) {
 				ls := strings.Split(arg[0], ice.AT)
 				_repos_cat(m, path.Join(ice.USR_LOCAL_REPOS, ls[0]), "master", ls[1], path.Join(arg[1:]...))
 				m.RenderResult()
-			} else if strings.HasPrefix(arg[1], "v") && strings.Contains(arg[1], ice.PT) {
+			} else if len(arg) > 1 && strings.HasPrefix(arg[1], "v") && strings.Contains(arg[1], ice.PT) {
 				_repos_cat(m, path.Join(ice.USR_LOCAL_REPOS, arg[0]), "master", arg[1], path.Join(arg[2:]...))
 				m.RenderResult()
-			} else if arg[1] == ice.SRC {
+			} else if len(arg) > 1 && arg[1] == ice.SRC {
 				_repos_cat(m, path.Join(ice.USR_LOCAL_REPOS, arg[0]), "master", "", path.Join(arg[1:]...))
 				m.RenderResult()
 			} else {

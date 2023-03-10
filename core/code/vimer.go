@@ -169,13 +169,7 @@ func init() {
 					}
 				})
 			}},
-			cli.OPENS: {Help: "打开", Hand: func(m *ice.Message, arg ...string) {
-				if strings.HasSuffix(arg[0], ".app") {
-					m.Cmd(cli.DAEMON, cli.OPEN, "-a", arg[0])
-				} else {
-					m.Cmd(cli.DAEMON, cli.OPEN, arg[0])
-				}
-			}},
+			cli.OPENS: {Hand: func(m *ice.Message, arg ...string) { cli.Opens(m, arg...) }},
 			XTERM: {Name: "xterm type=sh name text", Help: "终端", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmdy(XTERM, mdb.CREATE, arg)
 			}}, FAVOR: {Help: "收藏"}, "listTags": {Help: "生成索引", Hand: func(m *ice.Message, arg ...string) { m.Cmd("web.code.vim.tags", nfs.LOAD) }},

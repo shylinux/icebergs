@@ -36,6 +36,8 @@ var Info = struct {
 	Route Maps
 	Index Map
 
+	Important bool
+
 	merges []MergeHandler
 	render map[string]func(*Message, ...Any) string
 	Save   func(m *Message, key ...string) *Message

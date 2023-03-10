@@ -1,6 +1,8 @@
 package ice
 
 import (
+	"bufio"
+	"os"
 	"strings"
 
 	kit "shylinux.com/x/toolkits"
@@ -33,3 +35,28 @@ func (m *Message) ConfigSimple(key ...string) (res []string) {
 	}
 	return
 }
+
+func loadImportant(m *Message) {
+	if f, e := os.Open(VAR_DATA_IMPORTANT); e == nil {
+		defer f.Close()
+		for bio := bufio.NewScanner(f); bio.Scan(); {
+			if bio.Text() == "" || strings.HasPrefix(bio.Text(), "# ") {
+				continue
+			}
+			m.Cmd(kit.Split(bio.Text()))
+		}
+	}
+	Info.Important = true
+}
+func SaveImportant(m *Message, arg ...string) {
+	if Info.Important != true {
+		return
+	}
+	for i, v := range arg {
+		if v == "" || strings.Contains(v, SP) {
+			arg[i] = "\"" + v + "\""
+		}
+	}
+	m.Cmd("nfs.push", VAR_DATA_IMPORTANT, kit.Join(arg, SP), NL)
+}
+func removeImportant(m *Message) { os.Remove(VAR_DATA_IMPORTANT) }

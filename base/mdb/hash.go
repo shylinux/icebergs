@@ -37,9 +37,12 @@ func _hash_insert(m *ice.Message, prefix, chain string, arg ...string) string {
 	}
 	if arg[0] == HASH {
 		m.Conf(prefix, kit.Keys(chain, HASH, arg[1]), kit.Data(arg[2:]))
-		return m.Echo(arg[1]).Result()
+		m.Echo(arg[1])
+	} else {
+		m.Echo(Rich(m, prefix, chain, kit.Data(arg, TARGET, m.Optionv(TARGET))))
 	}
-	return m.Echo(Rich(m, prefix, chain, kit.Data(arg, TARGET, m.Optionv(TARGET)))).Result()
+	SaveImportant(m, prefix, chain, kit.Simple(INSERT, prefix, chain, HASH, TIME, m.Time(), HASH, m.Result(), arg)...)
+	return m.Result()
 }
 func _hash_delete(m *ice.Message, prefix, chain, field, value string) {
 	defer Lock(m, prefix, chain)()
@@ -48,13 +51,17 @@ func _hash_delete(m *ice.Message, prefix, chain, field, value string) {
 			target.Close()
 		}
 		m.Logs(DELETE, KEY, path.Join(prefix, chain), field, value, VALUE, kit.Format(val))
+		SaveImportant(m, prefix, chain, kit.Simple(DELETE, prefix, chain, HASH, HASH, key)...)
 		m.Conf(prefix, kit.Keys(chain, HASH, key), "")
 	})
 }
 func _hash_modify(m *ice.Message, prefix, chain string, field, value string, arg ...string) {
 	m.Logs(MODIFY, KEY, path.Join(prefix, chain), field, value, arg)
 	defer Lock(m, prefix, chain)()
-	Richs(m, prefix, chain, value, func(key string, val Map) { _mdb_modify(m, val, field, arg...) })
+	Richs(m, prefix, chain, value, func(key string, val Map) {
+		SaveImportant(m, prefix, chain, kit.Simple(MODIFY, prefix, chain, HASH, HASH, key, arg)...)
+		_mdb_modify(m, val, field, arg...)
+	})
 }
 func _hash_select(m *ice.Message, prefix, chain, field, value string) {
 	if field == HASH && value == RANDOM {

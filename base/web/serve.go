@@ -15,6 +15,7 @@ import (
 	"shylinux.com/x/icebergs/base/gdb"
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/nfs"
+	"shylinux.com/x/icebergs/base/ssh"
 	"shylinux.com/x/icebergs/base/tcp"
 	kit "shylinux.com/x/toolkits"
 )
@@ -162,6 +163,9 @@ func _serve_login(m *ice.Message, key string, cmds []string, w http.ResponseWrit
 		return cmds, aaa.Right(m, key, cmds)
 	}
 }
+func _serve_address(m *ice.Message) string {
+	return kit.Format("http://localhost:%s", m.Option(tcp.PORT))
+}
 
 const (
 	SERVE_START   = "serve.start"
@@ -191,25 +195,20 @@ func init() {
 				_serve_start(m)
 			}},
 			SERVE_START: {Hand: func(m *ice.Message, arg ...string) {
-				m.Go(func() { m.Cmd(BROAD, SERVE, m.OptionSimple(tcp.PORT)) })
+				if m.Go(func() { m.Cmd(BROAD, SERVE, m.OptionSimple(tcp.PORT)) }); m.Option(ice.DEV) == "" {
+					m.Cmd(ssh.PRINTF, kit.Dict(nfs.CONTENT, ice.NL+ice.Render(m, ice.RENDER_QRCODE, tcp.PublishLocalhost(m, _serve_address(m))))).Cmd(ssh.PROMPT, kit.Dict(ice.LOG_DISABLE, ice.TRUE))
+				}
 				go func() {
 					opened := false
 					for i := 0; i < 3 && !opened; i++ {
 						m.Sleep("1s").Cmd(SPACE, kit.Dict(ice.LOG_DISABLE, ice.TRUE), func(values ice.Maps) {
-							if values[mdb.TYPE] == CHROME {
-								opened = true
-							}
+							kit.If(values[mdb.TYPE] == CHROME, func() { opened = true })
 						})
 					}
 					if opened {
 						return
 					}
-					switch host := kit.Format("http://localhost:%s/", m.Option(tcp.PORT)); runtime.GOOS {
-					case cli.DARWIN:
-						m.Cmd(cli.SYSTEM, "open", host+"?debug=true")
-					case cli.WINDOWS:
-						m.Cmd(cli.SYSTEM, "explorer", host)
-					}
+					cli.Opens(m, _serve_address(m))
 				}()
 			}},
 			SERVE_REWRITE: {Hand: func(m *ice.Message, arg ...string) {
@@ -291,7 +290,7 @@ func init() {
 		PP(REQUIRE_USR): {Name: "/require/usr/", Help: "代码库", Hand: func(m *ice.Message, arg ...string) {
 			_share_local(m, ice.USR, path.Join(arg...))
 		}},
-		PP(REQUIRE_SRC): {Name: "/require/src/", Help: "源代码", Actions: ice.MergeActions(ice.Actions{}, ctx.CmdAction()), Hand: func(m *ice.Message, arg ...string) {
+		PP(REQUIRE_SRC): {Name: "/require/src/", Help: "源代码", Actions: ice.MergeActions(ice.Actions{}, ctx.CmdAction(), aaa.RoleAction()), Hand: func(m *ice.Message, arg ...string) {
 			_share_local(m, ice.SRC, path.Join(arg...))
 		}},
 		PP(ice.HELP): {Name: "/help/", Help: "帮助", Actions: ice.MergeActions(ctx.CmdAction(), aaa.WhiteAction()), Hand: func(m *ice.Message, arg ...string) {

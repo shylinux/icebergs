@@ -14,6 +14,7 @@ import (
 	"shylinux.com/x/icebergs/base/log"
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/nfs"
+	"shylinux.com/x/icebergs/base/ssh"
 	"shylinux.com/x/icebergs/base/web"
 	kit "shylinux.com/x/toolkits"
 )
@@ -88,9 +89,9 @@ func init() {
 			mdb.INPUTS: {Hand: func(m *ice.Message, arg ...string) {
 				switch mdb.HashInputs(m, arg); arg[0] {
 				case mdb.TYPE:
-					if m.Option(nfs.LINE) != "" && m.Option(nfs.FILE) != "" {
-						m.Push(arg[0], VIM+" +"+m.Option(nfs.LINE)+ice.SP+m.Option(nfs.PATH)+m.Option(nfs.FILE))
-					}
+					m.Cmd(mdb.SEARCH, mdb.FOREACH, ssh.SHELL, ice.OptionFields("type,name,text"), func(value ice.Maps) {
+						kit.If(value[mdb.TYPE] == ssh.SHELL, func() { m.Push(arg[0], value[mdb.TEXT]) })
+					})
 					m.Push(arg[0], BASH, SH)
 				case mdb.NAME:
 					m.Push(arg[0], path.Base(m.Option(mdb.TYPE)), ice.Info.Hostname)

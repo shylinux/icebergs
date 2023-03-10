@@ -42,12 +42,12 @@ func _binpack_dir(m *ice.Message, w io.Writer, dir string) {
 	nfs.DirDeepAll(m, dir, nfs.PWD, func(value ice.Maps) { _binpack_file(m, w, path.Join(dir, value[nfs.PATH])) })
 }
 func _binpack_all(m *ice.Message) {
-	nfs.OptionFiles(m, nfs.DiskFile)
 	if w, p, e := nfs.CreateFile(m, ice.SRC_BINPACK_GO); m.Assert(e) {
 		defer w.Close()
 		defer m.Echo(p)
 		fmt.Fprint(w, nfs.Template(m, ice.SRC_BINPACK_GO))
 		defer fmt.Fprint(w, nfs.Template(m, "binpack_end.go"))
+		nfs.OptionFiles(m, nfs.DiskFile)
 		for _, p := range []string{ice.USR_VOLCANOS, ice.USR_INTSHELL, ice.SRC} {
 			_binpack_dir(m, w, p)
 		}

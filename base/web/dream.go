@@ -54,9 +54,8 @@ func _dream_show(m *ice.Message, name string) {
 	defer ToastProcess(m)()
 	defer m.Sleep3s()
 	m.Options(cli.CMD_DIR, kit.Path(p), cli.CMD_ENV, kit.Simple(
-		cli.CTX_OPS, "http://localhost:"+m.CmdAppend(SERVE, tcp.PORT), cli.CTX_LOG, ice.VAR_LOG_BOOT_LOG,
-		cli.PATH, cli.BinPath(kit.Path(p, ice.BIN)), cli.USER, ice.Info.Username,
-		kit.EnvSimple(cli.HOME, cli.TERM, cli.SHELL), m.Configv(cli.ENV),
+		cli.CTX_OPS, "http://localhost:"+m.CmdAppend(SERVE, tcp.PORT), cli.CTX_LOG, ice.VAR_LOG_BOOT_LOG, cli.CTX_PID, ice.VAR_LOG_ICE_PID,
+		cli.PATH, cli.BinPath(p, ""), cli.USER, ice.Info.Username, kit.EnvSimple(cli.HOME, cli.TERM, cli.SHELL), m.Configv(cli.ENV),
 	), cli.CMD_OUTPUT, path.Join(p, ice.VAR_LOG_BOOT_LOG))
 	defer m.Options(cli.CMD_DIR, "", cli.CMD_ENV, "", cli.CMD_OUTPUT, "")
 	gdb.Event(m, DREAM_CREATE, m.OptionSimple(mdb.NAME, mdb.TYPE))
@@ -138,7 +137,7 @@ func init() {
 			cli.STOP: {Hand: func(m *ice.Message, arg ...string) {
 				m.Cmd(SPACE, mdb.MODIFY, m.OptionSimple(mdb.NAME), mdb.STATUS, cli.STOP)
 				m.Go(func() { m.Cmd(SPACE, m.Option(mdb.NAME), ice.EXIT) })
-				ctx.ProcessRefresh(m, "1s")
+				m.Sleep("1s")
 			}},
 			nfs.TRASH: {Hand: func(m *ice.Message, arg ...string) {
 				nfs.Trash(m, path.Join(ice.USR_LOCAL_WORK, m.Option(mdb.NAME)))

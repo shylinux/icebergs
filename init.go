@@ -27,6 +27,7 @@ func (s *Frame) Begin(m *Message, arg ...string) Server {
 func (s *Frame) Start(m *Message, arg ...string) bool {
 	m.Cap(CTX_STREAM, strings.Split(m.Time(), SP)[1])
 	m.Cmd(kit.Keys(MDB, CTX_INIT))
+	m.Cmd(kit.Keys(AAA, CTX_INIT))
 	m.Cmd(kit.Keys(CLI, CTX_INIT))
 	m.Cmd(INIT, arg)
 	for _, k := range kit.Split(kit.Select("ctx,log,gdb,ssh", os.Getenv(CTX_DAEMON))) {
@@ -63,6 +64,7 @@ var Index = &Context{Name: ICE, Help: "冰山模块", Configs: Configs{HELP: {Va
 				c._command(m.Spawn(c), c.Commands[CTX_INIT], CTX_INIT, arg...)
 			}
 		})
+		loadImportant(m)
 	}},
 	INIT: {Hand: func(m *Message, arg ...string) {
 		m.Cmd(CTX_INIT)
@@ -82,6 +84,7 @@ var Index = &Context{Name: ICE, Help: "冰山模块", Configs: Configs{HELP: {Va
 				c._command(m.Spawn(c), c.Commands[CTX_EXIT], CTX_EXIT, arg...)
 			}
 		})
+		removeImportant(m)
 	}},
 }, server: &Frame{}}
 var Pulse = &Message{time: time.Now(), code: 0, meta: map[string][]string{}, data: Map{}, source: Index, target: Index, Hand: true}
@@ -125,10 +128,10 @@ func Run(arg ...string) string {
 		if Pulse.Cmdy(INIT).Cmdy(arg); Pulse.IsErrNotFound() {
 			Pulse.SetAppend().SetResult().Cmdy(SYSTEM, arg)
 		}
-		if strings.TrimSpace(Pulse.Result()) == "" {
+		if strings.TrimSpace(Pulse.Result()) == "" && Pulse.Length() > 0 {
 			Pulse.Table()
 		}
-		if !strings.HasSuffix(Pulse.Result(), NL) {
+		if Pulse.Result() != "" && !strings.HasSuffix(Pulse.Result(), NL) {
 			Pulse.Echo(NL)
 		}
 	}

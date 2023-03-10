@@ -330,3 +330,12 @@ func Cache(m *ice.Message, key string, add func() ice.Any) ice.Any {
 	}
 	return nil
 }
+
+func ImportantDataAction() ice.Actions {
+	return ice.Actions{ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) { m.Config("important", ice.TRUE) }}}
+}
+func SaveImportant(m *ice.Message, key, sub string, arg ...string) {
+	if m.Conf(key, kit.Keys(sub, META, "important")) == ice.TRUE {
+		ice.SaveImportant(m, arg...)
+	}
+}

@@ -15,7 +15,16 @@ func _path_sep() string {
 	return kit.Select(":", ";", strings.Contains(os.Getenv(PATH), ";"))
 }
 func BinPath(arg ...string) string {
-	return kit.Join(kit.Simple(arg, kit.Path(""), kit.Path(ice.BIN), kit.Path(ice.USR_PUBLISH), kit.Path(ice.USR_LOCAL_BIN), kit.Path(ice.USR_LOCAL_GO_BIN), kit.Env(PATH)), _path_sep())
+	var list = []string{}
+	push := func(p string) { kit.If(kit.IndexOf(list, p) == -1, func() { list = append(list, p) }) }
+	for _, p := range arg {
+		list = append(list, kit.Path(p, ice.BIN), kit.Path(p, ice.USR_PUBLISH), kit.Path(p, ice.USR_LOCAL_BIN), kit.Path(p, ice.USR_LOCAL_GO_BIN))
+		for _, l := range kit.Revert(strings.Split(ice.Pulse.Cmdx(nfs.CAT, kit.Path(p, ice.ETC_PATH)), ice.NL)) {
+			kit.If(strings.TrimSpace(l) != "" && !strings.HasPrefix(strings.TrimSpace(l), "#"), func() { push(kit.Path(p, l)) })
+		}
+	}
+	kit.Fetch(strings.Split(kit.Env(PATH), _path_sep()), func(p string) { push(p) })
+	return kit.Join(list, _path_sep())
 }
 
 const FOREVER = "forever"
@@ -24,7 +33,7 @@ func init() {
 	Index.MergeCommands(ice.Commands{
 		FOREVER: {Name: "forever auto", Help: "启动", Actions: ice.Actions{
 			START: {Hand: func(m *ice.Message, arg ...string) {
-				env := []string{PATH, BinPath(), HOME, kit.Select(kit.Path(""), os.Getenv(HOME))}
+				env := []string{PATH, BinPath(""), HOME, kit.Select(kit.Path(""), os.Getenv(HOME))}
 				for _, k := range ENV_LIST {
 					if kit.Env(k) != "" {
 						env = append(env, k, kit.Env(k))

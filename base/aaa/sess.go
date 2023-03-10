@@ -48,7 +48,7 @@ func init() {
 			CHECK: {Name: "check sessid*", Hand: func(m *ice.Message, arg ...string) {
 				_sess_check(m, m.Option(SESSID))
 			}},
-		}, mdb.HashAction(mdb.SHORT, mdb.UNIQ, mdb.FIELD, "time,hash,username,usernick,userrole,ua,ip", mdb.EXPIRE, "720h"))},
+		}, mdb.HashAction(mdb.SHORT, mdb.UNIQ, mdb.FIELD, "time,hash,username,usernick,userrole,ua,ip", mdb.EXPIRE, "720h", mdb.ImportantDataAction()))},
 	})
 }
 

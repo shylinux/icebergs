@@ -95,17 +95,12 @@ func init() {
 			"xterm": {Help: "命令", Hand: func(m *ice.Message, arg ...string) {
 				ctx.ProcessField(m, web.CODE_XTERM, []string{m.Option(mdb.TEXT)}, arg...)
 			}},
-			cli.OPENS: {Help: "命令", Hand: func(m *ice.Message, arg ...string) {
-				m.Cmdy(cli.DAEMON, cli.OPEN, "-a", m.Option(mdb.TEXT)).ProcessHold(m)
-			}},
-			"_new": {Help: "命令", Hand: func(m *ice.Message, arg ...string) {
-				m.Cmdy(cli.DAEMON, cli.OPEN, "-n", "-a", m.Option(mdb.TEXT)).ProcessHold(m)
-			}},
+			cli.OPENS: {Hand: func(m *ice.Message, arg ...string) { cli.Opens(m, m.Option(mdb.TEXT)) }},
 			ice.RUN: {Hand: func(m *ice.Message, arg ...string) {
 				m.Option(mdb.TYPE, mdb.HashSelects(m.Spawn(), m.Option(mdb.HASH)).Append(mdb.TYPE))
 				ctx.Run(m, arg...)
 			}},
-		}, mdb.HashAction(), ctx.CmdAction(), KeyboardAction()), Hand: func(m *ice.Message, arg ...string) {
+		}, mdb.HashAction(), ctx.CmdAction(), KeyboardAction(), mdb.ImportantDataAction()), Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) > 0 && arg[0] == ctx.ACTION {
 				m.Option(mdb.TYPE, mdb.HashSelects(m.Spawn(), m.Option(mdb.HASH)).Append(mdb.TYPE))
 				gdb.Event(m, FAVOR_ACTION, arg)
@@ -132,7 +127,7 @@ func init() {
 				}
 				switch value[mdb.TYPE] {
 				case cli.OPENS:
-					m.PushButton(cli.OPENS, "_new", mdb.REMOVE)
+					m.PushButton(cli.OPENS, mdb.REMOVE)
 				case ssh.SHELL:
 					m.PushButton("xterm", mdb.REMOVE)
 				case ctx.INDEX:

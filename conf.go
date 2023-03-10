@@ -127,6 +127,8 @@ const ( // DIR
 	VAR_LOG_BOOT_LOG = "var/log/boot.log"
 	VAR_LOG_ICE_PID  = "var/log/ice.pid"
 
+	VAR_DATA_IMPORTANT = "var/data/.important"
+
 	VAR_LOG        = "var/log/"
 	VAR_TMP        = "var/tmp/"
 	VAR_CONF       = "var/conf/"

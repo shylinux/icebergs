@@ -40,18 +40,18 @@ func (w WebView) Menu() bool {
 	} else {
 		w.WebView.SetTitle(ice.CONTEXTS)
 		w.WebView.SetSize(200, 60*len(list), webview.HintNone)
-		w.WebView.Navigate(kit.Format(`data:text/html,`+m.Cmdx(nfs.CAT, path.Join(ice.SRC_TEMPLATE, "webview", "home.html")), kit.Join(list, ice.NL)))
+		w.WebView.Navigate(kit.Format(`data:text/html,`+ice.Pulse.Cmdx(nfs.CAT, path.Join(ice.SRC_TEMPLATE, "webview", "home.html")), kit.Join(list, ice.NL)))
 		return true
 	}
 }
 func (w WebView) Title(text string)  { w.WebView.SetTitle(text) }
 func (w WebView) Webview(url string) { w.WebView.Navigate(url) }
 func (w WebView) Open(url string)    { w.WebView.Navigate(url) }
-func (w WebView) OpenUrl(url string) { w.Cmd(cli.SYSTEM, cli.OPEN, url) }
-func (w WebView) OpenApp(app string) { w.Cmd(cli.SYSTEM, cli.OPEN, "-a", app) }
+func (w WebView) OpenUrl(url string) { cli.Opens(ice.Pulse, url) }
+func (w WebView) OpenApp(app string) { cli.Opens(ice.Pulse, app) }
 func (w WebView) OpenCmd(cmd string) {
 	w.Cmd(nfs.SAVE, kit.HomePath(".bash_temp"), cmd)
-	w.Cmd(cli.SYSTEM, cli.OPEN, "-n", "-a", "Terminal")
+	cli.Opens(ice.Pulse, "Terminal.app", "-n")
 }
 func (w WebView) SetSize(width, height int) {
 	w.Cmd(nfs.SAVE, "etc/webview.size", kit.Format("%v,%v", width, height))
@@ -81,7 +81,11 @@ func Run(cb func(*WebView) ice.Any) {
 	defer w.Destroy()
 	defer w.Run()
 	view := &WebView{Source: "etc/webview.txt", WebView: w, Message: ice.Pulse}
-	kit.Reflect(cb(view), func(name string, value ice.Any) { w.Bind(name, value) })
+	if cb == nil {
+		kit.Reflect(view, func(name string, value ice.Any) { w.Bind(name, value) })
+	} else {
+		kit.Reflect(cb(view), func(name string, value ice.Any) { w.Bind(name, value) })
+	}
 	if !view.Menu() {
 		view.navigate("http://localhost:9020")
 	}

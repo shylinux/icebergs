@@ -34,9 +34,7 @@ func _space_dial(m *ice.Message, dev, name string, arg ...string) {
 					defer mdb.HashCreateDeferRemove(m, kit.SimpleKV("", MASTER, dev, msg.Append(tcp.HOSTNAME)), kit.Dict(mdb.TARGET, conn))()
 					if !prints && ice.Info.Colors {
 						go func() {
-							m.Sleep("300ms").Cmd(ssh.PRINTF, kit.Dict(nfs.CONTENT, "\r"+ice.Render(m, ice.RENDER_QRCODE, m.CmdAppend(SPACE, dev, cli.PWD, mdb.LINK)))).Cmd(ssh.PROMPT, kit.Dict(
-								ice.LOG_DISABLE, ice.TRUE,
-							))
+							m.Sleep("300ms").Cmd(ssh.PRINTF, kit.Dict(nfs.CONTENT, "\r"+ice.Render(m, ice.RENDER_QRCODE, m.CmdAppend(SPACE, dev, cli.PWD, mdb.LINK)))).Cmd(ssh.PROMPT, kit.Dict(ice.LOG_DISABLE, ice.TRUE))
 						}()
 						prints = true
 					}

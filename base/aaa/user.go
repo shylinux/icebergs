@@ -63,7 +63,7 @@ func init() {
 			LOGIN: {Name: "login username* password", Hand: func(m *ice.Message, arg ...string) {
 				_user_login(m, m.Option(USERNAME), m.Option(PASSWORD))
 			}},
-		}, mdb.HashSearchAction(mdb.SHORT, USERNAME, mdb.FIELD, "time,username,usernick,userzone,userrole"))},
+		}, mdb.HashSearchAction(mdb.SHORT, USERNAME, mdb.FIELD, "time,username,usernick,userzone,userrole"), mdb.ImportantDataAction())},
 	})
 }
 

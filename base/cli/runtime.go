@@ -26,7 +26,7 @@ func _runtime_init(m *ice.Message) {
 	m.Conf(RUNTIME, kit.Keys(HOST, OSID), release(m))
 	m.Conf(RUNTIME, kit.Keys(HOST, PID), os.Getpid())
 	m.Conf(RUNTIME, kit.Keys(HOST, PWD), kit.Path(""))
-	m.Conf(RUNTIME, kit.Keys(HOST, HOME), kit.Env(HOME))
+	m.Conf(RUNTIME, kit.Keys(HOST, HOME), kit.HomePath(""))
 	m.Conf(RUNTIME, kit.Keys(HOST, MAXPROCS), runtime.GOMAXPROCS(0))
 	for _, k := range ENV_LIST {
 		switch m.Conf(RUNTIME, kit.Keys(CONF, k), kit.Env(k)); k {
@@ -42,10 +42,7 @@ func _runtime_init(m *ice.Message) {
 	if name, e := os.Hostname(); e == nil && name != "" {
 		m.Conf(RUNTIME, kit.Keys(BOOT, HOSTNAME), name)
 	}
-	m.Conf(RUNTIME, kit.Keys(BOOT, PATHNAME), path.Base(kit.Env("PWD")))
-	if name, e := os.Getwd(); e == nil && name != "" {
-		m.Conf(RUNTIME, kit.Keys(BOOT, PATHNAME), path.Base(name))
-	}
+	m.Conf(RUNTIME, kit.Keys(BOOT, PATHNAME), path.Base(kit.Path("")))
 	m.Conf(RUNTIME, kit.Keys(BOOT, USERNAME), kit.Select(kit.UserName(), kit.Env(CTX_USER)))
 	ice.Info.Hostname = m.Conf(RUNTIME, kit.Keys(BOOT, HOSTNAME))
 	ice.Info.Pathname = m.Conf(RUNTIME, kit.Keys(BOOT, PATHNAME))

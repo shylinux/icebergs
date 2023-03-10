@@ -266,7 +266,6 @@ func HashSelectField(m *ice.Message, key string, field string) (value string) {
 func HashSelectTarget(m *ice.Message, key string, create Any) (target Any) {
 	HashSelectUpdate(m, key, func(value ice.Map) {
 		target = value[TARGET]
-		m.Debug("what %v %v", target, create)
 		if _target, ok := target.([]string); ok && len(_target) == 0 {
 			target = nil
 		}

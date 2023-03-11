@@ -424,8 +424,6 @@ func SplitCmd(name string, actions Actions) (list []Any) {
 			push(TEXTAREA, ls[i])
 		case PASSWORD:
 			push(PASSWORD, ls[i])
-		case "image":
-			push(TEXT, ls[i], "img")
 		case "time":
 			push(TEXT, ls[i], "date")
 		case "*":

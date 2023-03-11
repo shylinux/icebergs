@@ -134,6 +134,11 @@ func _hash_import(m *ice.Message, prefix, chain, file string) {
 }
 
 const (
+	MONTH = "720h"
+	WEEK  = "24h"
+	HOUR  = "1h"
+)
+const (
 	HASH_FIELD = "time,hash,type,name,text"
 )
 const HASH = "hash"

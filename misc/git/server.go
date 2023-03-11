@@ -185,9 +185,7 @@ func init() {
 				ctx.ProcessField(m, "", arg, arg...)
 			}},
 			TOKEN: {Hand: func(m *ice.Message, arg ...string) {
-				token := kit.Hashs("uniq")
-				m.Cmd(TOKEN, mdb.CREATE, aaa.USERNAME, m.Option(ice.MSG_USERNAME), TOKEN, token)
-				m.EchoScript(kit.Format("echo %s >> ~/.git-credentials", strings.Replace(m.Option(ice.MSG_USERHOST), "://", kit.Format("://%s:%s@", m.Option(ice.MSG_USERNAME), token), 1)))
+				m.Echo(m.Cmdx(TOKEN, mdb.CREATE, aaa.USERNAME, m.Option(ice.MSG_USERNAME), TOKEN, kit.Hashs("uniq")))
 			}},
 		}, gdb.EventAction(web.DREAM_INPUTS)), Hand: func(m *ice.Message, arg ...string) {
 			if m.Option(nfs.DIR_ROOT, ice.USR_LOCAL_REPOS); len(arg) == 0 {
@@ -196,6 +194,7 @@ func init() {
 					m.PushScript("git clone " + _git_url(m, value[mdb.NAME]))
 				}).Cut("time,name,size,script,action").RenameAppend(mdb.NAME, nfs.REPOS).SortTimeR(mdb.TIME)
 				m.Echo(strings.ReplaceAll(m.Cmdx("web.code.publish", ice.CONTEXTS), "app username", "dev username"))
+				m.Echo(m.Cmdx(TOKEN, m.Option(ice.MSG_USERNAME)))
 			} else if dir := path.Join(m.Option(nfs.DIR_ROOT), arg[0]); len(arg) == 1 {
 				_repos_branch(m, dir)
 			} else if len(arg) == 2 {

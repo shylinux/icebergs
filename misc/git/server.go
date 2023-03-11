@@ -34,7 +34,7 @@ func _server_login(m *ice.Message) error {
 	if err != nil {
 		return err
 	}
-	if ls = strings.SplitN(string(data), ice.DF, 2); !aaa.UserLogin(m, ls[0], ls[1]) {
+	if ls = strings.SplitN(string(data), ice.DF, 2); m.Cmd("web.code.git.token", ls[0]).Append(TOKEN) != ls[1] && !aaa.UserLogin(m.Spawn(), ls[0], ls[1]) {
 		return fmt.Errorf("username or password error")
 	}
 	if aaa.UserRole(m, ls[0]) == aaa.VOID {
@@ -137,7 +137,7 @@ func init() {
 		m.Warn(_server_repos(m, arg...), ice.ErrNotValid)
 	}}})
 	Index.MergeCommands(ice.Commands{
-		"inner": {Name: "inner repos branch commit path auto", Help: "服务器", Actions: ice.MergeActions(ice.Actions{}, aaa.RoleAction()), Hand: func(m *ice.Message, arg ...string) {
+		"inner": {Name: "inner repos branch commit path auto token", Help: "服务器", Actions: ice.MergeActions(ice.Actions{}, aaa.RoleAction()), Hand: func(m *ice.Message, arg ...string) {
 			if m.Option(nfs.DIR_ROOT, ice.USR_LOCAL_REPOS); len(arg) == 0 {
 			} else if dir := path.Join(m.Option(nfs.DIR_ROOT), arg[0]); len(arg) == 1 {
 			} else if len(arg) == 2 {
@@ -148,7 +148,7 @@ func init() {
 				_repos_cat(m, dir, arg[1], arg[2], kit.Select("", arg, 3))
 			}
 		}},
-		SERVER: {Name: "server repos branch commit path auto create import", Help: "代码源", Actions: ice.MergeActions(ice.Actions{
+		SERVER: {Name: "server repos branch commit path auto create import token", Help: "代码源", Actions: ice.MergeActions(ice.Actions{
 			mdb.CREATE: {Name: "create name*=demo", Hand: func(m *ice.Message, arg ...string) {
 				_repos_init(m, path.Join(ice.USR_LOCAL_REPOS, m.Option(mdb.NAME)))
 			}},
@@ -183,6 +183,11 @@ func init() {
 					return
 				}
 				ctx.ProcessField(m, "", arg, arg...)
+			}},
+			TOKEN: {Hand: func(m *ice.Message, arg ...string) {
+				token := kit.Hashs("uniq")
+				m.Cmd(TOKEN, mdb.CREATE, aaa.USERNAME, m.Option(ice.MSG_USERNAME), TOKEN, token)
+				m.EchoScript(kit.Format("echo %s >> ~/.git-credentials", strings.Replace(m.Option(ice.MSG_USERHOST), "://", kit.Format("://%s:%s@", m.Option(ice.MSG_USERNAME), token), 1)))
 			}},
 		}, gdb.EventAction(web.DREAM_INPUTS)), Hand: func(m *ice.Message, arg ...string) {
 			if m.Option(nfs.DIR_ROOT, ice.USR_LOCAL_REPOS); len(arg) == 0 {

@@ -170,5 +170,5 @@ func Template(m *ice.Message, file string, arg ...ice.Any) string {
 	return kit.Renders(kit.Format(TemplateText(m, file), arg...), m)
 }
 func TemplateText(m *ice.Message, file string) string {
-	return m.Cmdx(CAT, path.Join(ice.SRC_TEMPLATE, m.PrefixKey(), path.Base(file)))
+	return m.Cmdx(CAT, path.Join(m.PrefixKey(), path.Base(file)), kit.Dict(DIR_ROOT, ice.SRC_TEMPLATE))
 }

@@ -192,6 +192,8 @@ func init() {
 						case aaa.LOGIN:
 						}
 					})
+				} else if arg[0] == mdb.FOREACH && arg[1] == ssh.SHELL {
+					m.PushSearch(mdb.TYPE, ssh.SHELL, mdb.TEXT, "ice.bin space dial dev ops")
 				}
 			}},
 			mdb.REMOVE: {Hand: func(m *ice.Message, arg ...string) {

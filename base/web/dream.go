@@ -160,6 +160,7 @@ func init() {
 			if len(arg) == 0 {
 				_dream_list(m)
 			} else if arg[0] == ctx.ACTION {
+				m.Option(ice.POD, m.Option(nfs.NAME))
 				gdb.Event(m, DREAM_ACTION, arg)
 			} else {
 				m.Cmdy(nfs.CAT, arg[1:], kit.Dict(nfs.DIR_ROOT, path.Join(ice.USR_LOCAL_WORK, arg[0])))

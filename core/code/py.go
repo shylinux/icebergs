@@ -31,7 +31,7 @@ func init() {
 			}},
 			mdb.RENDER: {Hand: func(m *ice.Message, arg ...string) {
 				cmds, text := "python -i "+path.Join(arg[2], arg[1]), ""
-				_xterm_show(m, cmds, text)
+				ProcessXterm(m, cmds, text)
 			}},
 			mdb.ENGINE: {Hand: func(m *ice.Message, arg ...string) {
 				_py_exec(m, path.Join(arg[2], arg[1]))

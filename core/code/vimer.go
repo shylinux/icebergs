@@ -56,8 +56,11 @@ func init() {
 		VIMER: {Name: "vimer path=src/@key file=main.go line=1 list", Help: "编辑器", Meta: kit.Dict(ctx.STYLE, INNER), Actions: ice.MergeActions(ice.Actions{
 			mdb.SEARCH: {Hand: func(m *ice.Message, arg ...string) {
 				if arg[0] == mdb.FOREACH && arg[1] == "" {
-					m.PushSearch(mdb.TYPE, web.LINK, mdb.TEXT, kit.MergeURL(m.Option(ice.MSG_USERHOST)+ice.PS, log.DEBUG, ice.TRUE))
-					m.PushSearch(mdb.TYPE, web.LINK, mdb.TEXT, web.MergePodCmds(m, "", web.CODE_VIMER, log.DEBUG, ice.TRUE))
+					m.PushSearch(mdb.TYPE, nfs.FILE, mdb.NAME, "main", mdb.TEXT, ice.SRC_MAIN_GO)
+					m.PushSearch(mdb.TYPE, nfs.FILE, mdb.NAME, "main", mdb.TEXT, ice.SRC_MAIN_SH)
+					m.PushSearch(mdb.TYPE, nfs.FILE, mdb.NAME, "main", mdb.TEXT, ice.SRC_MAIN_JS)
+					m.PushSearch(mdb.TYPE, web.LINK, mdb.NAME, "admin", mdb.TEXT, kit.MergeURL(m.Option(ice.MSG_USERHOST)+ice.PS, log.DEBUG, ice.TRUE))
+					m.PushSearch(mdb.TYPE, web.LINK, mdb.NAME, VIMER, mdb.TEXT, web.MergePodCmds(m, "", web.CODE_VIMER, log.DEBUG, ice.TRUE))
 				}
 			}},
 			mdb.INPUTS: {Hand: func(m *ice.Message, arg ...string) {
@@ -218,7 +221,8 @@ func init() {
 				kit.Switch(m.Option(mdb.TYPE), kit.Simple(web.SERVER, web.WORKER), func() { m.PushButton(kit.Dict(m.CommandKey(), "源码")) })
 			}},
 			web.DREAM_ACTION: {Hand: func(m *ice.Message, arg ...string) {
-				kit.If(arg[1] == m.CommandKey(), func() { web.ProcessWebsite(m, m.Option(mdb.NAME), m.PrefixKey()) })
+				// kit.If(arg[1] == m.CommandKey(), func() { web.ProcessWebsite(m, m.Option(mdb.NAME), m.PrefixKey()) })
+				kit.If(arg[1] == m.CommandKey(), func() { ctx.ProcessField(m, m.PrefixKey(), []string{}, arg...) })
 			}},
 		}, web.DreamAction(), mdb.HashAction(mdb.SHORT, nfs.PATH, mdb.FIELD, "time,path"), aaa.RoleAction(ctx.COMMAND)), Hand: func(m *ice.Message, arg ...string) {
 			if m.Cmdy(INNER, arg); arg[0] != ctx.ACTION {

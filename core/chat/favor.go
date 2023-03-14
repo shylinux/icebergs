@@ -86,11 +86,7 @@ func init() {
 				ctx.ProcessField(m, ls[0], ls[1:], arg...)
 			}},
 			"vimer": {Help: "源码", Hand: func(m *ice.Message, arg ...string) {
-				args := []string{}
-				if len(arg) == 0 || arg[0] != ice.RUN {
-					args = nfs.SplitPath(m, m.Option(mdb.TEXT))
-				}
-				ctx.ProcessField(m, web.CODE_VIMER, args, arg...)
+				ctx.ProcessField(m, web.CODE_VIMER, []string{m.Option(mdb.TEXT)}, arg...)
 			}},
 			"xterm": {Help: "命令", Hand: func(m *ice.Message, arg ...string) {
 				ctx.ProcessField(m, web.CODE_XTERM, []string{m.Option(mdb.TEXT)}, arg...)

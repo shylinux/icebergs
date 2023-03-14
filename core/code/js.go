@@ -18,7 +18,7 @@ func init() {
 		JS: {Name: "js path auto", Help: "前端", Actions: ice.MergeActions(ice.Actions{
 			mdb.RENDER: {Hand: func(m *ice.Message, arg ...string) {
 				cmds, text := "node", kit.Format(`require("./usr/volcanos/proto.js"), require("./usr/volcanos/publish/client/nodejs/proto.js"), Volcanos.meta._main("%s")`, path.Join(ice.PS, arg[2], arg[1]))
-				_xterm_show(m, cmds, text)
+				ProcessXterm(m, cmds, text)
 			}},
 			mdb.ENGINE: {Hand: func(m *ice.Message, arg ...string) {
 				if arg[2] == ice.USR_VOLCANOS {

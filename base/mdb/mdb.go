@@ -33,6 +33,13 @@ func _mdb_modify(m *ice.Message, value ice.Map, field string, arg ...string) {
 		}
 	})
 }
+func ToMaps(value ice.Map) ice.Maps {
+	res := Maps{}
+	for k, v := range value {
+		res[k] = kit.Format(v)
+	}
+	return res
+}
 func _mdb_select(m *ice.Message, cb Any, key string, value Map, fields []string, val Map) {
 	switch value, val = kit.GetMeta(value), kit.GetMeta(val); cb := cb.(type) {
 	case func([]string, Map):
@@ -48,11 +55,7 @@ func _mdb_select(m *ice.Message, cb Any, key string, value Map, fields []string,
 	case func(Any):
 		cb(value[TARGET])
 	case func(Maps):
-		res := Maps{}
-		for k, v := range value {
-			res[k] = kit.Format(v)
-		}
-		cb(res)
+		cb(ToMaps(value))
 	case string, []string, []ice.Any, nil:
 		if m.FieldsIsDetail() {
 			m.Push(ice.FIELDS_DETAIL, value)

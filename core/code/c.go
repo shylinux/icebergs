@@ -13,7 +13,7 @@ import (
 func _c_show(m *ice.Message, arg ...string) {
 	target := path.Join(ice.BIN, kit.TrimExt(arg[1], arg[0]))
 	if msg := m.Cmd(cli.SYSTEM, "gcc", "-o", target, path.Join(arg[2], arg[1])); cli.IsSuccess(msg) {
-		_xterm_show(m, nfs.SH, target, path.Join(arg[2], arg[1]))
+		ProcessXterm(m, nfs.SH, target, path.Join(arg[2], arg[1]))
 	} else {
 		_vimer_make(m, arg[2], msg)
 	}

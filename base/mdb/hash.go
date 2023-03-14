@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"io"
 	"path"
+	"strings"
 
 	ice "shylinux.com/x/icebergs"
 	kit "shylinux.com/x/toolkits"
@@ -184,7 +185,7 @@ func HashInputs(m *ice.Message, arg ...Any) *ice.Message {
 }
 func HashCreate(m *ice.Message, arg ...Any) string {
 	if len(arg) == 0 {
-		arg = append(arg, m.OptionSimple(HashField(m)))
+		arg = append(arg, m.OptionSimple(strings.Replace(HashField(m), "hash,", "", 1)))
 	}
 	return m.Echo(m.Cmdx(append(kit.List(INSERT, m.PrefixKey(), "", HASH, logs.FileLineMeta(-1)), arg...)...)).Result()
 }
@@ -270,7 +271,7 @@ func HashSelectField(m *ice.Message, key string, field string) (value string) {
 		if field == HASH {
 			value = key
 		} else {
-			value = kit.Format(val[field])
+			value = kit.Format(kit.Value(val, field))
 		}
 	})
 	return
@@ -293,6 +294,8 @@ func HashSelectTarget(m *ice.Message, key string, create Any) (target Any) {
 		switch create := create.(type) {
 		case func(ice.Map) ice.Any:
 			target = create(value)
+		case func(ice.Maps) ice.Any:
+			target = create(ToMaps(value))
 		case func() ice.Any:
 			target = create()
 		default:

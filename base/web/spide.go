@@ -281,6 +281,12 @@ func init() {
 				m.Cmd("", mdb.CREATE, ice.SHY, kit.Select(kit.Select("https://shylinux.com", ice.Info.Make.Remote), conf[cli.CTX_SHY]))
 			}},
 			mdb.CREATE: {Name: "create name address", Hand: func(m *ice.Message, arg ...string) { _spide_create(m, m.Option(mdb.NAME), m.Option(ADDRESS)) }},
+			mdb.SEARCH: {Hand: func(m *ice.Message, arg ...string) {
+				if arg[0] == mdb.FOREACH && arg[1] == "" {
+					m.PushSearch(mdb.TYPE, LINK, mdb.NAME, ice.DEV, mdb.TEXT, mdb.HashSelectField(m, ice.COM, CLIENT_ORIGIN))
+					m.PushSearch(mdb.TYPE, LINK, mdb.NAME, ice.SHY, mdb.TEXT, mdb.HashSelectField(m, ice.SHY, CLIENT_ORIGIN))
+				}
+			}},
 			tcp.CLIENT: {Hand: func(m *ice.Message, arg ...string) {
 				msg := m.Cmd("", kit.Select(ice.DEV, arg, 0))
 				ls := kit.Split(msg.Append(kit.Keys(SPIDE_CLIENT, tcp.HOST)), ice.DF)

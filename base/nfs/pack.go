@@ -103,8 +103,9 @@ func ReadDir(m Message, p string) ([]os.FileInfo, error) {
 	}
 	return list, e
 }
-func MkdirAll(m Message, p string) error {
-	return OptionFiles(m).MkdirAll(p, ice.MOD_DIR)
+func MkdirAll(m Message, p string) string {
+	OptionFiles(m).MkdirAll(p, ice.MOD_DIR)
+	return p
 }
 func RemoveAll(m Message, p string) error {
 	return OptionFiles(m).RemoveAll(p)

@@ -279,13 +279,12 @@ func init() {
 					_git_cmd(m, "config", "--global", "url."+m.Option(nfs.TO)+".insteadof", m.Option(nfs.FROM))
 				}
 			}},
-			"token": {Name: "token token", Help: "切换", Hand: func(m *ice.Message, arg ...string) {
+			"token": {Name: "token token", Help: "令牌", Hand: func(m *ice.Message, arg ...string) {
 				list := []string{m.Option(TOKEN)}
 				m.Cmd(nfs.CAT, kit.HomePath(".git-credentials"), func(line string) { list = append(list, line) })
 				m.Cmd(nfs.SAVE, kit.HomePath(".git-credentials"), strings.Join(list, ice.NL)+ice.NL)
 				ctx.ProcessHold(m)
 			}},
-
 			"branch_switch": {Help: "切换", Hand: func(m *ice.Message, arg ...string) {
 				_repos_cmd(m, m.Option(REPOS), "checkout", m.Option(BRANCH))
 			}},

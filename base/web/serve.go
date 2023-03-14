@@ -151,7 +151,11 @@ func _serve_domain(m *ice.Message) string {
 }
 func _serve_login(m *ice.Message, key string, cmds []string, w http.ResponseWriter, r *http.Request) ([]string, bool) {
 	if aaa.SessCheck(m, m.Option(ice.MSG_SESSID)); m.Option(ice.MSG_USERNAME) == "" && r.URL.Path != PP(SPACE) && !strings.HasPrefix(r.URL.Path, "/sync") {
-		gdb.Event(m, SERVE_LOGIN)
+		if m.Conf(SERVE, kit.Keym(tcp.LOCALHOST)) == ice.TRUE && tcp.IsLocalHost(m, m.Option(ice.MSG_USERIP)) {
+			aaa.UserRoot(m)
+		} else {
+			gdb.Event(m, SERVE_LOGIN)
+		}
 	}
 	if _, ok := m.Target().Commands[WEB_LOGIN]; ok {
 		return cmds, !m.Target().Cmd(m, WEB_LOGIN, kit.Simple(key, cmds)...).IsErr()
@@ -226,11 +230,6 @@ func init() {
 					if nfs.ExistsFile(m, arg[2]) {
 						m.RenderDownload(arg[2])
 					}
-				}
-			}},
-			SERVE_LOGIN: {Hand: func(m *ice.Message, arg ...string) {
-				if m.Option(ice.MSG_USERNAME) == "" && m.Config(tcp.LOCALHOST) == ice.TRUE && tcp.IsLocalHost(m, m.Option(ice.MSG_USERIP)) {
-					aaa.UserRoot(m)
 				}
 			}},
 			DOMAIN: {Hand: func(m *ice.Message, arg ...string) {

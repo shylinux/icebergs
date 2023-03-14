@@ -32,12 +32,10 @@ func _vimer_make(m *ice.Message, dir string, msg *ice.Message) {
 					m.Push(nfs.LINE, ls[1])
 					m.Push(mdb.TEXT, ls[3])
 					break
-				} else if n := 2; i == strings.Count(dir, ice.FS) {
-					if strings.HasPrefix(ls[0], "src/") {
-						n = 1
-					}
-					m.Push(nfs.PATH, kit.Join(kit.Slice(kit.Split(ls[0], ice.PS, ice.PS), 0, n), ice.PS)+ice.PS)
-					m.Push(nfs.FILE, kit.Join(kit.Slice(kit.Split(ls[0], ice.PS, ice.PS), n), ice.PS))
+				} else if i == strings.Count(dir, ice.FS) {
+					ps := nfs.SplitPath(m, ls[0])
+					m.Push(nfs.PATH, ps[0])
+					m.Push(nfs.FILE, ps[1])
 					m.Push(nfs.LINE, ls[1])
 					m.Push(mdb.TEXT, ls[3])
 				}
@@ -65,22 +63,16 @@ func init() {
 			}},
 			mdb.INPUTS: {Hand: func(m *ice.Message, arg ...string) {
 				switch m.Option(ctx.ACTION) {
-				case web.DREAM, AUTOGEN, XTERM:
-					m.Cmdy(m.Option(ctx.ACTION), mdb.INPUTS, arg)
 				case nfs.MODULE:
 					m.Cmdy(AUTOGEN, mdb.INPUTS, arg)
 				case nfs.SCRIPT:
-					// p := path.Join(m.Option(nfs.PATH), m.Option(nfs.FILE))
-					p := path.Join(m.Option(nfs.FILE))
 					for _, ext := range []string{SH, SHY, PY, JS, CSS, HTML} {
-						m.Push(nfs.PATH, kit.ExtChange(p, ext))
+						m.Push(nfs.PATH, kit.ExtChange(m.Option(nfs.FILE), ext))
 					}
 					m.Option(nfs.DIR_REG, kit.FileReg(SH, SHY, PY, JS, CSS, HTML))
 					nfs.DirDeepAll(m, nfs.SRC, nfs.PWD, nil, nfs.PATH)
-				case web.WEBSITE:
-					m.Cmdy(COMPLETE, mdb.FOREACH, kit.Select("", arg, 1), m.Option(ctx.ACTION))
-				case "extension":
-					nfs.DirDeepAll(m, "usr/volcanos/plugin/local/code/", "inner/", nil, nfs.PATH)
+				case web.DREAM, XTERM, AUTOGEN:
+					m.Cmdy(m.Option(ctx.ACTION), mdb.INPUTS, arg)
 				default:
 					switch arg[0] {
 					case ctx.INDEX:
@@ -131,14 +123,14 @@ func init() {
 				}
 				p := path.Join(m.Option(nfs.PATH), m.Option(nfs.FILE))
 				switch m.Cmd(nfs.SAVE, p); m.Option(nfs.FILE) {
-				case "index.css", "proto.js":
+				case ice.INDEX_CSS, ice.PROTO_JS:
 					m.Cmd("", DEVPACK)
 				}
 				switch arg[0] {
 				case nfs.GO:
+					defer m.Cmdy(nfs.CAT, p)
 					m.Cmd(cli.SYSTEM, "gofmt", "-w", p)
 					m.Cmd(cli.SYSTEM, "goimports", "-w", p)
-					m.Cmdy(nfs.CAT, p)
 				}
 			}},
 			nfs.TRASH: {Hand: func(m *ice.Message, arg ...string) { nfs.Trash(m, arg[0]) }},
@@ -148,53 +140,15 @@ func init() {
 			nfs.SCRIPT: {Name: "script file*=hi/hi.js", Help: "脚本", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmdy(nfs.DEFS, path.Join(m.Option(nfs.PATH), m.Option(nfs.FILE)), m.Cmdx("", TEMPLATE))
 			}},
-			web.WEBSITE: {Name: "website file*=hi.zml", Help: "网页", Hand: func(m *ice.Message, arg ...string) {
-				m.Cmdy(nfs.DEFS, path.Join(m.Option(nfs.PATH), m.Option(nfs.FILE)), m.Cmdx("", TEMPLATE))
-			}},
-			web.DREAM: {Name: "dream name*=hi repos", Help: "空间", Hand: func(m *ice.Message, arg ...string) {
-				m.Cmdy(web.DREAM, cli.START, arg)
-			}}, web.SPACE: {Help: "空间"},
-			nfs.REPOS: {Help: "仓库", Hand: func(m *ice.Message, arg ...string) {
-				m.Option("view", "change")
-				m.Cmd("web.code.git.status", func(value ice.Maps) {
-					m.Push(mdb.TYPE, value[mdb.TYPE])
-					if value[nfs.REPOS] == path.Base(kit.Path("")) {
-						if ls := kit.Split(value[nfs.FILE]); len(ls) == 1 {
-							m.Push(nfs.PATH, "./")
-							m.Push(nfs.FILE, ls[0])
-						} else {
-							m.Push(nfs.PATH, ls[0]+ice.PS)
-							m.Push(nfs.FILE, path.Join(ls[1:]...))
-						}
-					} else {
-						m.Push(nfs.PATH, path.Join(ice.USR, value[nfs.REPOS])+ice.PS)
-						m.Push(nfs.FILE, value[nfs.FILE])
-					}
-				})
-			}},
-			cli.OPENS: {Hand: func(m *ice.Message, arg ...string) { cli.Opens(m, arg...) }},
-			XTERM: {Name: "xterm type=sh name text", Help: "终端", Hand: func(m *ice.Message, arg ...string) {
-				m.Cmdy(XTERM, mdb.CREATE, arg)
-			}}, FAVOR: {Help: "收藏"}, "listTags": {Help: "生成索引", Hand: func(m *ice.Message, arg ...string) { m.Cmd("web.code.vim.tags", nfs.LOAD) }},
+			nfs.REPOS: {Help: "仓库"}, FAVOR: {Help: "收藏"}, web.DREAM: {Help: "空间"}, web.SPACE: {Help: "空间"},
+			cli.OPENS:  {Hand: func(m *ice.Message, arg ...string) { cli.Opens(m, arg...) }},
+			"listTags": {Help: "生成索引", Hand: func(m *ice.Message, arg ...string) { m.Cmd("web.code.vim.tags", nfs.LOAD) }},
+
 			TEMPLATE: {Hand: func(m *ice.Message, arg ...string) {
 				m.Cmdy(TEMPLATE, kit.Ext(m.Option(mdb.FILE)), m.Option(nfs.FILE), m.Option(nfs.PATH))
 			}},
 			COMPLETE: {Hand: func(m *ice.Message, arg ...string) {
 				m.Cmdy(COMPLETE, kit.Ext(m.Option(mdb.FILE)), m.Option(nfs.FILE), m.Option(nfs.PATH))
-			}},
-			DEVPACK: {Help: "开发模式", Hand: func(m *ice.Message, arg ...string) {
-				m.Cmd(nfs.LINK, ice.GO_SUM, path.Join(ice.SRC_DEBUG, ice.GO_SUM))
-				m.Cmd(nfs.LINK, ice.GO_MOD, path.Join(ice.SRC_DEBUG, ice.GO_MOD))
-				m.Cmdy(nfs.CAT, ice.GO_MOD)
-				m.Cmdy(WEBPACK, mdb.REMOVE)
-				web.ToastSuccess(m)
-				m.ProcessInner()
-			}},
-			BINPACK: {Help: "打包模式", Hand: func(m *ice.Message, arg ...string) {
-				m.Cmdy(WEBPACK, mdb.CREATE)
-				m.Cmdy(AUTOGEN, BINPACK)
-				web.ToastSuccess(m)
-				m.ProcessInner()
 			}},
 			AUTOGEN: {Name: "create name*=h2 help=示例 type*=Zone,Hash,Data,Code main*=main.go zone key", Help: "模块", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmdy(AUTOGEN, nfs.MODULE, arg)
@@ -216,21 +170,16 @@ func init() {
 					_vimer_make(m, nfs.PWD, msg)
 				}
 			}},
-			PUBLISH: {Help: "发布", Hand: func(m *ice.Message, arg ...string) { m.Cmdy(PUBLISH, ice.CONTEXTS) }},
 			web.DREAM_TABLES: {Hand: func(m *ice.Message, arg ...string) {
 				kit.Switch(m.Option(mdb.TYPE), kit.Simple(web.SERVER, web.WORKER), func() { m.PushButton(kit.Dict(m.CommandKey(), "源码")) })
 			}},
 			web.DREAM_ACTION: {Hand: func(m *ice.Message, arg ...string) {
-				// kit.If(arg[1] == m.CommandKey(), func() { web.ProcessWebsite(m, m.Option(mdb.NAME), m.PrefixKey()) })
 				kit.If(arg[1] == m.CommandKey(), func() { ctx.ProcessField(m, m.PrefixKey(), []string{}, arg...) })
 			}},
-		}, web.DreamAction(), mdb.HashAction(mdb.SHORT, nfs.PATH, mdb.FIELD, "time,path"), aaa.RoleAction(ctx.COMMAND)), Hand: func(m *ice.Message, arg ...string) {
+		}, mdb.HashAction(mdb.SHORT, nfs.PATH, mdb.FIELD, "time,path"), web.DreamAction(), aaa.RoleAction(ctx.COMMAND)), Hand: func(m *ice.Message, arg ...string) {
 			if m.Cmdy(INNER, arg); arg[0] != ctx.ACTION {
-				if len(arg) > 1 {
-					mdb.HashCreate(m.Spawn(), nfs.PATH, path.Join(kit.Slice(arg, 0, 2)...))
-				}
+				kit.If(len(arg) > 1, func() { mdb.HashCreate(m.Spawn(), nfs.PATH, path.Join(kit.Slice(arg, 0, 2)...)) })
 				m.Action(AUTOGEN, nfs.SCRIPT, nfs.SAVE, COMPILE)
-				m.Options("tabs", m.Config("show.tabs"), "plug", m.Config("show.plug"), "exts", m.Config("show.exts"))
 				ctx.DisplayLocal(m, "")
 			}
 		}},
@@ -246,9 +195,6 @@ func init() {
 	Index.MergeCommands(ice.Commands{COMPLETE: {Name: "complete type name text auto", Help: "补全", Actions: mdb.RenderAction()}})
 	Index.MergeCommands(ice.Commands{NAVIGATE: {Name: "navigate type name text auto", Help: "跳转", Actions: mdb.RenderAction()}})
 	ice.AddMerges(func(c *ice.Context, key string, cmd *ice.Command, sub string, action *ice.Action) (ice.Handler, ice.Handler) {
-		if strings.HasPrefix(key, ice.PS) {
-			return nil, nil
-		}
 		switch sub {
 		case TEMPLATE, COMPLETE, NAVIGATE:
 			return func(m *ice.Message, arg ...string) { m.Cmd(sub, mdb.CREATE, key, m.PrefixKey()) }, nil

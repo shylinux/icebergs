@@ -18,8 +18,7 @@ import (
 
 func _inner_list(m *ice.Message, ext, file, dir string) {
 	kit.If(aaa.Right(m, dir, file), func() {
-		kit.If(nfs.IsSourceFile(m, ext), func() { m.Cmdy(nfs.CAT, path.Join(dir, file)) })
-		// kit.If(m.IsErrNotFound(), func() { _inner_show(m.RenderResult().SetResult(), ext, file, dir) })
+		kit.If(nfs.IsSourceFile(m, ext), func() { m.Cmdy(nfs.CAT, path.Join(dir, file)) }, func() { _inner_show(m.RenderResult().SetResult(), ext, file, dir) })
 	})
 }
 func _inner_show(m *ice.Message, ext, file, dir string) {
@@ -88,12 +87,12 @@ func init() {
 			mdb.INPUTS: {Hand: func(m *ice.Message, arg ...string) {
 				switch p := kit.Select(nfs.PWD, arg, 1); arg[0] {
 				case nfs.PATH:
-					m.Cmdy(nfs.DIR, p, nfs.DIR_CLI_FIELDS).ProcessAgain()
+					m.Cmdy(nfs.DIR, p, nfs.DIR_CLI_FIELDS)
 					kit.If(strings.HasPrefix(p, bind[0]), func() { m.Cmdy(nfs.DIR, strings.Replace(p, bind[0], bind[1], 1), nfs.DIR_CLI_FIELDS) })
 					kit.If(strings.HasPrefix(p, bind[1]), func() { m.Cmdy(nfs.DIR, strings.Replace(p, bind[1], bind[0], 1), nfs.DIR_CLI_FIELDS) })
 				case nfs.FILE:
 					m.Option(nfs.DIR_ROOT, m.Option(nfs.PATH))
-					m.Cmdy(nfs.DIR, kit.Select(path.Dir(p), p, strings.HasSuffix(p, ice.PS))+ice.PS, nfs.DIR_CLI_FIELDS).ProcessAgain()
+					m.Cmdy(nfs.DIR, kit.Select(path.Dir(p), p, strings.HasSuffix(p, ice.PS))+ice.PS, nfs.DIR_CLI_FIELDS)
 				default:
 					m.Cmdy(FAVOR, mdb.INPUTS, arg)
 				}
@@ -101,14 +100,8 @@ func init() {
 			mdb.PLUGIN: {Hand: func(m *ice.Message, arg ...string) { m.Cmdy(mdb.PLUGIN, arg) }},
 			mdb.RENDER: {Hand: func(m *ice.Message, arg ...string) { _inner_show(m, arg[0], arg[1], arg[2]) }},
 			mdb.ENGINE: {Hand: func(m *ice.Message, arg ...string) { _inner_exec(m, arg[0], arg[1], arg[2]) }},
-			nfs.GREP: {Help: "搜索", Hand: func(m *ice.Message, arg ...string) {
-				m.Cmdy(nfs.GREP, arg[0], kit.Select(m.Option(nfs.PATH), arg, 1))
-			}},
-			nfs.TAGS: {Help: "索引", Hand: func(m *ice.Message, arg ...string) {
-				if _inner_tags(m, m.Option(nfs.PATH), arg[0]); m.Length() == 0 {
-					_inner_tags(m, "", arg[0])
-				}
-			}}, FAVOR: {},
+			nfs.GREP:   {Hand: func(m *ice.Message, arg ...string) { m.Cmdy(nfs.GREP, arg[0], kit.Select(m.Option(nfs.PATH), arg, 1)) }},
+			nfs.TAGS:   {Hand: func(m *ice.Message, arg ...string) { _inner_tags(m, m.Option(nfs.PATH), arg[0]) }}, FAVOR: {},
 			NAVIGATE: {Hand: func(m *ice.Message, arg ...string) {
 				m.Cmdy(NAVIGATE, kit.Ext(m.Option(mdb.FILE)), m.Option(nfs.FILE), m.Option(nfs.PATH))
 			}},
@@ -122,14 +115,13 @@ func init() {
 			} else {
 				arg[1] = strings.Split(arg[1], ice.FS)[0]
 				_inner_list(m, kit.Ext(arg[1]), arg[1], arg[0])
-				ctx.DisplayLocal(m, "").Option(nfs.REPOS, kit.Join(m.Cmd("web.code.git.repos", ice.OptionFields(nfs.PATH)).Sort(nfs.PATH).Appendv(nfs.PATH)))
+				ctx.DisplayLocal(m, "").Option(REPOS, kit.Join(m.Cmd(REPOS, ice.OptionFields(nfs.PATH)).Sort(nfs.PATH).Appendv(nfs.PATH)))
 			}
 		}},
 	})
 	ctx.AddRunChecker(func(m *ice.Message, cmd, check string, arg ...string) bool {
 		process := func(m *ice.Message, file string) bool {
-			ls, n := kit.Split(file, ice.PS), kit.Int(kit.Select("2", "1", strings.HasPrefix(file, ice.SRC+ice.PS)))
-			ctx.ProcessFloat(m, web.CODE_INNER, kit.Join(kit.Slice(ls, 0, n), ice.PS)+ice.PS, kit.Join(kit.Slice(ls, n), ice.PS))
+			ctx.ProcessFloat(m, kit.Simple(web.CODE_INNER, nfs.SplitPath(m, file))...)
 			return true
 		}
 		switch check {
@@ -151,9 +143,9 @@ func init() {
 }
 func InnerPath(arg ...string) (dir, file string) {
 	p := strings.TrimPrefix(path.Join(arg...), kit.Path("")+ice.PS)
-	if list := strings.Split(p, ice.PS); strings.HasPrefix(p, "usr/") {
+	if list := strings.Split(p, ice.PS); strings.HasPrefix(p, nfs.USR) {
 		return path.Join(list[:2]...) + ice.PS, path.Join(list[2:]...)
-	} else if strings.HasPrefix(p, ".ish/pluged/") {
+	} else if strings.HasPrefix(p, ice.ISH_PLUGED) {
 		return path.Join(list[:5]...) + ice.PS, path.Join(list[5:]...)
 	} else {
 		return list[0] + ice.PS, path.Join(list[1:]...)

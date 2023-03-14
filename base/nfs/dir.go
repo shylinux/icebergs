@@ -145,6 +145,7 @@ const (
 	TYPE_BOTH = "both"
 
 	SRC = "src/"
+	USR = "usr/"
 )
 const (
 	DIR_ROOT = "dir_root"

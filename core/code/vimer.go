@@ -42,9 +42,7 @@ func _vimer_make(m *ice.Message, dir string, msg *ice.Message) {
 			}
 		}
 	}
-	if m.Length() == 0 {
-		m.Echo(msg.Append(cli.CMD_OUT)).Echo(msg.Append(cli.CMD_ERR))
-	}
+	kit.If(m.Length() == 0, func() { m.Echo(msg.Append(cli.CMD_OUT)).Echo(msg.Append(cli.CMD_ERR)) })
 }
 
 const VIMER = "vimer"
@@ -75,14 +73,6 @@ func init() {
 					m.Cmdy(m.Option(ctx.ACTION), mdb.INPUTS, arg)
 				default:
 					switch arg[0] {
-					case ctx.INDEX:
-						m.Cmdy(ctx.COMMAND, mdb.SEARCH, ctx.COMMAND, ice.OptionFields(ctx.INDEX))
-					case ctx.ARGS:
-						if m.Option(ctx.INDEX) != "" {
-							m.Cmdy(m.Option(ctx.INDEX))
-						}
-					case nfs.PATH:
-						m.Cmdy(INNER, mdb.INPUTS, arg).Cut(nfs.DIR_CLI_FIELDS)
 					case nfs.FILE:
 						list := ice.Map{}
 						push := func(k, p string) {
@@ -114,6 +104,8 @@ func init() {
 						}
 						m.Cmd(ctx.COMMAND, mdb.SEARCH, ctx.COMMAND, ice.OptionFields(ctx.INDEX)).Tables(func(value ice.Maps) { push(ctx.INDEX, value[ctx.INDEX]) })
 						m.Cmd(mdb.SEARCH, cli.SYSTEM, cli.OPENS, ice.OptionFields("type,name,text")).Sort("type,name,text").Tables(func(value ice.Maps) { push(cli.OPENS, value[nfs.NAME]) })
+					default:
+						m.Cmdy(INNER, mdb.INPUTS, arg)
 					}
 				}
 			}},
@@ -140,7 +132,7 @@ func init() {
 			nfs.SCRIPT: {Name: "script file*=hi/hi.js", Help: "脚本", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmdy(nfs.DEFS, path.Join(m.Option(nfs.PATH), m.Option(nfs.FILE)), m.Cmdx("", TEMPLATE))
 			}},
-			nfs.REPOS: {Help: "仓库"}, FAVOR: {Help: "收藏"}, web.DREAM: {Help: "空间"}, web.SPACE: {Help: "空间"},
+			nfs.REPOS: {Help: "仓库"}, web.SPACE: {Help: "空间"}, web.DREAM: {Help: "空间"}, FAVOR: {Help: "收藏"},
 			cli.OPENS:  {Hand: func(m *ice.Message, arg ...string) { cli.Opens(m, arg...) }},
 			"listTags": {Help: "生成索引", Hand: func(m *ice.Message, arg ...string) { m.Cmd("web.code.vim.tags", nfs.LOAD) }},
 
@@ -149,9 +141,6 @@ func init() {
 			}},
 			COMPLETE: {Hand: func(m *ice.Message, arg ...string) {
 				m.Cmdy(COMPLETE, kit.Ext(m.Option(mdb.FILE)), m.Option(nfs.FILE), m.Option(nfs.PATH))
-			}},
-			AUTOGEN: {Name: "create name*=h2 help=示例 type*=Zone,Hash,Data,Code main*=main.go zone key", Help: "模块", Hand: func(m *ice.Message, arg ...string) {
-				m.Cmdy(AUTOGEN, nfs.MODULE, arg)
 			}},
 			COMPILE: {Help: "编译", Hand: func(m *ice.Message, arg ...string) {
 				const app, _app = "usr/publish/contexts.app", "Contents/MacOS/contexts"
@@ -179,7 +168,7 @@ func init() {
 		}, mdb.HashAction(mdb.SHORT, nfs.PATH, mdb.FIELD, "time,path"), web.DreamAction(), aaa.RoleAction(ctx.COMMAND)), Hand: func(m *ice.Message, arg ...string) {
 			if m.Cmdy(INNER, arg); arg[0] != ctx.ACTION {
 				kit.If(len(arg) > 1, func() { mdb.HashCreate(m.Spawn(), nfs.PATH, path.Join(kit.Slice(arg, 0, 2)...)) })
-				m.Action(AUTOGEN, nfs.SCRIPT, nfs.SAVE, COMPILE)
+				m.Action(nfs.MODULE, nfs.SCRIPT, nfs.SAVE, COMPILE)
 				ctx.DisplayLocal(m, "")
 			}
 		}},

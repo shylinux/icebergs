@@ -109,7 +109,7 @@ func init() {
 				} else {
 					text = "cli.system go run " + path.Join(arg[2], arg[1])
 				}
-				ProcessXterm(m, cmds, text)
+				ProcessXterm(m, cmds, text, arg[1])
 			}},
 			mdb.ENGINE: {Hand: func(m *ice.Message, arg ...string) {
 				if cmd := ctx.GetFileCmd(path.Join(arg[2], arg[1])); cmd != "" {

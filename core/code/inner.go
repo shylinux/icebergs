@@ -28,7 +28,7 @@ func _inner_exec(m *ice.Message, ext, file, dir string) {
 	kit.If(aaa.Right(m, dir, file), func() { m.Cmdy(mdb.ENGINE, ext, file, dir) })
 }
 func _inner_tags(m *ice.Message, dir string, value string) {
-	for _, l := range strings.Split(m.Cmdx(cli.SYSTEM, cli.GREP, "^"+value+"\\>", nfs.TAGS, kit.Dict(cli.CMD_DIR, dir)), ice.NL) {
+	for _, l := range strings.Split(m.Cmdx(cli.SYSTEM, cli.GREP, "^"+value+"\\>", nfs.TAGS, dir), ice.NL) {
 		if strings.HasPrefix(l, "!_") {
 			continue
 		}
@@ -86,13 +86,26 @@ func init() {
 		INNER: {Name: "inner path=src/@key file=main.go@key line=1 auto", Help: "源代码", Actions: ice.MergeActions(ice.Actions{
 			mdb.INPUTS: {Hand: func(m *ice.Message, arg ...string) {
 				switch p := kit.Select(nfs.PWD, arg, 1); arg[0] {
+				case ice.CMD:
+					m.Cmd(ctx.COMMAND, mdb.SEARCH, ctx.COMMAND, ice.OptionFields(ctx.INDEX), func(value ice.Maps) {
+						if strings.HasPrefix(value[ctx.INDEX], kit.Select("", arg, 1)) {
+							ls := kit.Split(strings.TrimPrefix(value[ctx.INDEX], kit.Select("", arg, 1)), ice.PT)
+							m.Push(arg[0], ls[0]+kit.Select("", ice.PT, len(ls) > 1))
+						}
+					})
+				case ctx.INDEX:
+					m.Cmdy(ctx.COMMAND, mdb.SEARCH, ctx.COMMAND, ice.OptionFields(ctx.INDEX))
+				case ctx.ARGS:
+					if m.Option(ctx.INDEX) != "" {
+						m.Cmdy(m.Option(ctx.INDEX))
+					}
 				case nfs.PATH:
 					m.Cmdy(nfs.DIR, p, nfs.DIR_CLI_FIELDS)
 					kit.If(strings.HasPrefix(p, bind[0]), func() { m.Cmdy(nfs.DIR, strings.Replace(p, bind[0], bind[1], 1), nfs.DIR_CLI_FIELDS) })
 					kit.If(strings.HasPrefix(p, bind[1]), func() { m.Cmdy(nfs.DIR, strings.Replace(p, bind[1], bind[0], 1), nfs.DIR_CLI_FIELDS) })
 				case nfs.FILE:
-					m.Option(nfs.DIR_ROOT, m.Option(nfs.PATH))
-					m.Cmdy(nfs.DIR, kit.Select(path.Dir(p), p, strings.HasSuffix(p, ice.PS))+ice.PS, nfs.DIR_CLI_FIELDS)
+					m.Option(nfs.DIR_DEEP, ice.TRUE)
+					m.Cmdy(nfs.DIR, path.Join(m.Option(nfs.PATH), kit.Select(path.Dir(p), p, strings.HasSuffix(p, ice.PS))+ice.PS), nfs.PATH)
 				default:
 					m.Cmdy(FAVOR, mdb.INPUTS, arg)
 				}
@@ -100,7 +113,7 @@ func init() {
 			mdb.PLUGIN: {Hand: func(m *ice.Message, arg ...string) { m.Cmdy(mdb.PLUGIN, arg) }},
 			mdb.RENDER: {Hand: func(m *ice.Message, arg ...string) { _inner_show(m, arg[0], arg[1], arg[2]) }},
 			mdb.ENGINE: {Hand: func(m *ice.Message, arg ...string) { _inner_exec(m, arg[0], arg[1], arg[2]) }},
-			nfs.GREP:   {Hand: func(m *ice.Message, arg ...string) { m.Cmdy(nfs.GREP, arg[0], kit.Select(m.Option(nfs.PATH), arg, 1)) }},
+			nfs.GREP:   {Hand: func(m *ice.Message, arg ...string) { m.Cmdy(nfs.GREP, arg) }},
 			nfs.TAGS:   {Hand: func(m *ice.Message, arg ...string) { _inner_tags(m, m.Option(nfs.PATH), arg[0]) }}, FAVOR: {},
 			NAVIGATE: {Hand: func(m *ice.Message, arg ...string) {
 				m.Cmdy(NAVIGATE, kit.Ext(m.Option(mdb.FILE)), m.Option(nfs.FILE), m.Option(nfs.PATH))

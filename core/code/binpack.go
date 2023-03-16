@@ -25,7 +25,9 @@ func _binpack_file(m *ice.Message, w io.Writer, arg ...string) {
 	}
 	switch path.Base(arg[0]) {
 	case ice.GO_MOD, ice.GO_SUM:
-		return
+		if !strings.HasPrefix(arg[0], ice.SRC_TEMPLATE) {
+			return
+		}
 	}
 	switch arg[0] {
 	case ice.SRC_VERSION_GO, ice.SRC_BINPACK_GO, ice.ETC_LOCAL_SHY:
@@ -54,23 +56,23 @@ func _binpack_all(m *ice.Message) {
 		for _, p := range []string{ice.ETC_MISS_SH, ice.ETC_INIT_SHY, ice.ETC_EXIT_SHY, ice.README_MD, ice.MAKEFILE, ice.LICENSE} {
 			_binpack_file(m, w, p)
 		}
-		list, cache := map[string]bool{}, kit.Select(ice.USR_REQUIRE, m.Cmdx(cli.SYSTEM, GO, "env", "GOMODCACHE"))
+		list, cache := map[string]string{}, kit.Select(ice.USR_REQUIRE, m.Cmdx(cli.SYSTEM, GO, "env", "GOMODCACHE"))
+		const _mod_ = "/pkg/mod/"
 		for k := range ice.Info.File {
 			switch ls := strings.Split(k, ice.PS); ls[2] {
 			case ice.SRC:
 			case ice.USR:
-				list[path.Join(kit.Slice(ls, 2, -1)...)] = true
+				list[path.Join(kit.Slice(ls, 2, -1)...)] = ""
 			default:
-				list[path.Join(cache, path.Join(kit.Slice(ls, 2, -1)...))] = true
+				p := path.Join(cache, path.Join(kit.Slice(ls, 2, -1)...))
+				_ls := strings.Split(strings.Split(p, _mod_)[1], ice.PS)
+				list[path.Join(nfs.USR, strings.Split(_ls[2], ice.AT)[0], path.Join(kit.Slice(_ls, 3)...))] = p
 			}
 		}
-		for _, p := range kit.SortedKey(list) {
-			m.Cmd(nfs.DIR, p, nfs.PATH, kit.Dict(nfs.DIR_ROOT, nfs.PWD, nfs.DIR_REG, kit.ExtReg(SH, SHY, PY, JS, CSS, HTML))).Tables(func(value ice.Maps) {
-				if strings.Contains(value[nfs.PATH], "/go/pkg/mod/") {
-					_binpack_file(m, w, value[nfs.PATH], ice.USR_REQUIRE+strings.Split(value[nfs.PATH], "/go/pkg/mod/")[1])
-				} else {
-					_binpack_file(m, w, value[nfs.PATH])
-				}
+		for _, k := range kit.SortedKey(list) {
+			v := kit.Select(k, list[k])
+			m.Cmd(nfs.DIR, nfs.PWD, nfs.PATH, kit.Dict(nfs.DIR_ROOT, v, nfs.DIR_REG, kit.ExtReg(SH, SHY, PY, JS, CSS, HTML))).Tables(func(value ice.Maps) {
+				_binpack_file(m, w, kit.Path(v, value[nfs.PATH]), path.Join(k, value[nfs.PATH]))
 			})
 		}
 		mdb.HashSelects(m).Sort(nfs.PATH).Tables(func(value ice.Maps) {

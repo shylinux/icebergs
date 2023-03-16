@@ -65,10 +65,11 @@ func _serve_main(m *ice.Message, w http.ResponseWriter, r *http.Request) bool {
 	}
 	if r.Method == http.MethodGet && r.URL.Path != PP(SPACE) && !strings.HasPrefix(r.URL.Path, "/code/bash") {
 		repos := kit.Select(ice.INTSHELL, ice.VOLCANOS, strings.Contains(r.Header.Get(UserAgent), MOZILLA))
+		dir := kit.Select(ice.USR_INTSHELL, ice.USR_VOLCANOS, strings.Contains(r.Header.Get(UserAgent), MOZILLA))
 		if p := path.Join(ice.USR, repos, r.URL.Path); r.URL.Path != ice.PS && nfs.ExistsFile(m, p) {
 			Render(m.Spawn(w, r), ice.RENDER_DOWNLOAD, p)
 			return false
-		} else if msg := gdb.Event(m.Spawn(w, r), SERVE_REWRITE, r.Method, r.URL.Path, path.Join(m.Conf(SERVE, kit.Keym(repos, nfs.PATH)), r.URL.Path), repos); msg.Option(ice.MSG_OUTPUT) != "" {
+		} else if msg := gdb.Event(m.Spawn(w, r), SERVE_REWRITE, r.Method, r.URL.Path, path.Join(dir, r.URL.Path), repos); msg.Option(ice.MSG_OUTPUT) != "" {
 			Render(msg, msg.Option(ice.MSG_OUTPUT), kit.List(msg.Optionv(ice.MSG_ARGS))...)
 			return false
 		}
@@ -194,7 +195,11 @@ func init() {
 	Index.MergeCommands(ice.Commands{
 		"/exit": {Hand: func(m *ice.Message, arg ...string) { m.Cmdy(ice.EXIT) }},
 		SERVE: {Name: "serve name auto start", Help: "服务器", Actions: ice.MergeActions(ice.Actions{
-			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) { cli.NodeInfo(m, ice.Info.Pathname, WORKER) }},
+			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
+				cli.NodeInfo(m, ice.Info.Pathname, WORKER)
+				ice.Info.Intshell = path.Join(m.Conf(SERVE, kit.Keym(ice.INTSHELL, nfs.PATH)), kit.Select(m.Conf(SERVE, kit.Keym(ice.INTSHELL, INDEX))))
+				ice.Info.Volcanos = path.Join(m.Conf(SERVE, kit.Keym(ice.VOLCANOS, nfs.PATH)), kit.Select(m.Conf(SERVE, kit.Keym(ice.VOLCANOS, INDEX))))
+			}},
 			cli.START: {Name: "start dev proto host port=9020 nodename username usernick", Hand: func(m *ice.Message, arg ...string) {
 				_serve_start(m)
 			}},

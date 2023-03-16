@@ -38,8 +38,7 @@ func _bench_http(m *ice.Message, target string, arg ...string) {
 		n, _ := io.Copy(ioutil.Discard, res.Body)
 		atomic.AddInt64(&ndata, n)
 	}); m.Assert(e) {
-		m.Echo("nconn: %d total: %d ndata: %s\n", nconn, nreqs*nconn, kit.FmtSize(ndata)).Echo(s.Show())
-		m.ProcessInner()
+		m.Echo("nconn: %d total: %d ndata: %s\n", nconn, nreqs*nconn, kit.FmtSize(ndata)).Echo(s.Show()).ProcessInner()
 	}
 }
 func _bench_redis(m *ice.Message, target string, arg ...string) {
@@ -58,8 +57,8 @@ const BENCH = "bench"
 func init() {
 	Index.MergeCommands(ice.Commands{
 		BENCH: {Name: "bench zone id auto insert", Help: "性能压测", Actions: ice.MergeActions(ice.Actions{
-			mdb.INSERT: {Name: "insert zone*=some type*=http,redis name=demo text*='http://localhost:9020' nconn=3 nreqs=10"},
-			ice.RUN: {Name: "run", Help: "执行", Hand: func(m *ice.Message, arg ...string) {
+			mdb.INSERT: {Name: "insert zone*=demo type*=http,redis name=demo text*='http://localhost:9020/chat/cmd/run/web.chat.favor' nconn=10 nreqs=100"},
+			ice.RUN: {Hand: func(m *ice.Message, arg ...string) {
 				switch m.Option(mdb.TYPE) {
 				case HTTP:
 					_bench_http(m, m.Option(mdb.TEXT))
@@ -68,7 +67,7 @@ func init() {
 				}
 			}},
 		}, mdb.ZoneAction(mdb.FIELD, "time,id,type,name,text,nconn,nreqs")), Hand: func(m *ice.Message, arg ...string) {
-			mdb.ZoneSelect(m, arg...).PushAction(kit.Select(mdb.REMOVE, ice.RUN, len(arg) > 0))
+			mdb.ZoneSelect(m, arg...).PushAction(kit.Select(ice.RUN, mdb.REMOVE, len(arg) == 0))
 		}},
 	})
 }

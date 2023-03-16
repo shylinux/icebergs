@@ -153,5 +153,6 @@ func init() {
 }
 
 func ProcessXterm(m *ice.Message, cmds, text string, arg ...string) {
+	m.Option(nfs.PATH, "")
 	m.Cmdy(ctx.COMMAND, XTERM).Push(ctx.ARGS, kit.Format([]string{m.Cmdx(XTERM, mdb.CREATE, mdb.TYPE, cmds, mdb.NAME, kit.Select("", arg, 0), mdb.TEXT, text)})).ProcessField(XTERM)
 }

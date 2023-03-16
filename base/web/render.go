@@ -85,19 +85,11 @@ func Render(m *ice.Message, cmd string, args ...ice.Any) bool {
 		m.W.Write([]byte(arg[0]))
 
 	default:
-		for _, k := range kit.Simple(m.Optionv("option"), m.Optionv("_option")) {
-			if m.Option(k) == "" {
-				m.Set(k)
-			}
-		}
-		for _, k := range []string{"sessid", "cmds", "fields", "_option", "_handle", "_output"} {
-			m.Set(k)
-		}
 		if cmd != "" && cmd != ice.RENDER_RAW {
 			m.Echo(kit.Format(cmd, args...))
 		}
 		RenderType(m.W, nfs.JSON, "")
-		fmt.Fprint(m.W, m.FormatMeta())
+		m.DumpMeta(m.W)
 	}
 	return true
 }
@@ -159,10 +151,19 @@ func CookieName(url string) string {
 }
 
 func RenderIndex(m *ice.Message, repos string, file ...string) *ice.Message {
+	if m.IsCliUA() {
+		return m.RenderDownload(path.Join(ice.USR_INTSHELL, kit.Select(ice.INDEX_SH, path.Join(file...))))
+	}
+	return m.RenderDownload(path.Join(ice.USR_VOLCANOS, kit.Select("page/"+ice.INDEX_HTML, path.Join(file...))))
+
 	if repos == "" {
 		repos = kit.Select(ice.VOLCANOS, ice.INTSHELL, m.IsCliUA())
 	}
-	return m.RenderDownload(path.Join(m.Conf(SERVE, kit.Keym(repos, nfs.PATH)), kit.Select(m.Conf(SERVE, kit.Keym(repos, INDEX)), path.Join(file...))))
+	p := func() string {
+		defer mdb.RLock(m, "web.serve")()
+		return path.Join(m.Conf(SERVE, kit.Keym(repos, nfs.PATH)), kit.Select(m.Conf(SERVE, kit.Keym(repos, INDEX)), path.Join(file...)))
+	}
+	return m.RenderDownload(p())
 }
 func RenderMain(m *ice.Message, pod, index string, arg ...ice.Any) *ice.Message {
 	if script := m.Cmdx(Space(m, pod), nfs.CAT, kit.Select(ice.SRC_MAIN_JS, index)); script != "" {

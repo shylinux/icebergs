@@ -106,19 +106,7 @@ func init() {
 	})
 }
 
-var runChecker = []func(*ice.Message, string, string, ...string) bool{}
-
-func AddRunChecker(cb func(*ice.Message, string, string, ...string) bool) {
-	runChecker = append(runChecker, cb)
-}
 func Run(m *ice.Message, arg ...string) {
-	if len(arg) > 3 && arg[1] == ACTION && arg[2] == CONFIG {
-		for _, check := range runChecker {
-			if check(m, arg[0], arg[3], arg...) {
-				return
-			}
-		}
-	}
 	if !PodCmd(m, arg) && aaa.Right(m, arg) {
 		m.Cmdy(arg)
 	}

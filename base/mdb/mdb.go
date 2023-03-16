@@ -144,6 +144,7 @@ const (
 
 	JSON = "json"
 	CSV  = "csv"
+	SUB  = "sub"
 )
 
 const MDB = "mdb"

@@ -96,7 +96,7 @@ const CONFIG = "config"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
-		CONFIG: {Name: "config key auto", Help: "配置", Actions: ice.Actions{
+		CONFIG: {Name: "config key auto remove", Help: "配置", Actions: ice.Actions{
 			SAVE: {Hand: func(m *ice.Message, arg ...string) { _config_save(m, arg[0], arg[1:]...) }},
 			LOAD: {Hand: func(m *ice.Message, arg ...string) { _config_load(m, arg[0], arg[1:]...) }},
 			mdb.LIST: {Hand: func(m *ice.Message, arg ...string) {
@@ -107,7 +107,8 @@ func init() {
 				m.Confv(arg[0], arg[1], list)
 			}},
 			mdb.REMOVE: {Name: "remove key sub", Hand: func(m *ice.Message, arg ...string) {
-				m.Conf(m.Option("key"), m.Option("sub"), "")
+				m.Cmd(mdb.EXPORT, m.Option(mdb.KEY), m.Option(mdb.SUB), mdb.HASH, path.Join(ice.VAR_TRASH, kit.Keys(m.Option(mdb.KEY), m.Option(mdb.SUB))))
+				nfs.Trash(m, path.Join(ice.VAR_DATA, m.Option(mdb.KEY)))
 				m.Go(func() { m.Cmd(ice.EXIT, 1) })
 			}},
 		}, Hand: func(m *ice.Message, arg ...string) {
@@ -116,21 +117,9 @@ func init() {
 			} else {
 				_config_make(m, arg[0], arg[1:]...)
 				DisplayStoryJSON(m)
+				m.Action(mdb.REMOVE)
 			}
 		}},
-	})
-}
-func init() {
-	AddRunChecker(func(m *ice.Message, cmd, sub string, arg ...string) bool {
-		switch sub {
-		case mdb.SELECT:
-			ProcessFloat(m, CONFIG, cmd)
-		case mdb.REMOVE:
-			m.Cmd(CONFIG, mdb.REMOVE, cmd)
-		default:
-			return false
-		}
-		return true
 	})
 }
 func init() {

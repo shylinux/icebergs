@@ -214,6 +214,18 @@ func init() {
 	})
 }
 
+func Relative(m *ice.Message, p string) string {
+	var bind = []string{
+		"usr/icebergs/core/chat/", "usr/volcanos/panel/",
+		"usr/icebergs/core/", "usr/volcanos/plugin/local/",
+	}
+	for i := 0; i < len(bind); i += 2 {
+		if strings.HasPrefix(p, bind[i]) {
+			return strings.Replace(p, bind[i], bind[i+1], 1)
+		}
+	}
+	return p
+}
 func SplitPath(m *ice.Message, p string) []string {
 	if ls := kit.Split(p, ice.PS); len(ls) == 1 {
 		return []string{PWD, ls[0]}

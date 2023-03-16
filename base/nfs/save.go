@@ -90,6 +90,7 @@ const LINK = "link"
 func init() {
 	Index.MergeCommands(ice.Commands{
 		DEFS: {Name: "defs file text run", Help: "默认", Hand: func(m *ice.Message, arg ...string) {
+			OptionFiles(m, DiskFile)
 			_defs_file(m, arg[0], arg[1:]...)
 		}},
 		SAVE: {Name: "save file text run", Help: "保存", Hand: func(m *ice.Message, arg ...string) {

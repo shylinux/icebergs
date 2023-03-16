@@ -12,7 +12,6 @@ import (
 	"shylinux.com/x/icebergs/base/lex"
 	"shylinux.com/x/icebergs/base/mdb"
 	"shylinux.com/x/icebergs/base/nfs"
-	"shylinux.com/x/icebergs/base/web"
 	kit "shylinux.com/x/toolkits"
 )
 
@@ -131,27 +130,6 @@ func init() {
 				ctx.DisplayLocal(m, "").Option(REPOS, kit.Join(m.Cmd(REPOS, ice.OptionFields(nfs.PATH)).Sort(nfs.PATH).Appendv(nfs.PATH)))
 			}
 		}},
-	})
-	ctx.AddRunChecker(func(m *ice.Message, cmd, check string, arg ...string) bool {
-		process := func(m *ice.Message, file string) bool {
-			ctx.ProcessFloat(m, kit.Simple(web.CODE_INNER, nfs.SplitPath(m, file))...)
-			return true
-		}
-		switch check {
-		case nfs.SCRIPT:
-			if file := kit.ExtChange(ctx.GetCmdFile(m, cmd), nfs.JS); nfs.ExistsFile(m, file) {
-				return process(m, file)
-			} else if strings.HasPrefix(file, bind[0]) {
-				if file := strings.Replace(file, bind[0], bind[1], 1); nfs.ExistsFile(m, file) {
-					return process(m, file)
-				}
-			}
-		case nfs.SOURCE:
-			if file := ctx.GetCmdFile(m, cmd); nfs.ExistsFile(m, file) {
-				return process(m, file)
-			}
-		}
-		return false
 	})
 }
 func InnerPath(arg ...string) (dir, file string) {

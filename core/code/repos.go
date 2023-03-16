@@ -5,6 +5,9 @@ import (
 	"shylinux.com/x/icebergs/base/nfs"
 )
 
+const (
+	GIT = "git"
+)
 const REPOS = nfs.REPOS
 
 func init() {

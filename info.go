@@ -21,6 +21,8 @@ var Info = struct {
 	Pathname string
 	Username string
 	Password string
+	Intshell string
+	Volcanos string
 
 	Domain   string
 	NodeType string

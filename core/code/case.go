@@ -1,9 +1,6 @@
 package code
 
 import (
-	"path"
-	"strings"
-
 	ice "shylinux.com/x/icebergs"
 	"shylinux.com/x/icebergs/base/cli"
 	"shylinux.com/x/icebergs/base/mdb"
@@ -16,19 +13,14 @@ const CASE = "case"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
-		CASE: {Name: "case dev zone id auto", Help: "用例", Actions: ice.MergeActions(ice.Actions{
-			mdb.CREATE: {Name: "create name address", Help: "创建", Hand: func(m *ice.Message, arg ...string) {
-				m.Cmdy(web.SPIDE, mdb.CREATE, arg)
-			}},
-			mdb.INSERT: {Name: "insert zone name=hi cmd=POST,GET api arg:textarea res:textarea", Help: "添加"},
-
+		CASE: {Name: "case dev zone id auto insert", Help: "用例", Actions: ice.MergeActions(ice.Actions{
+			mdb.INSERT: {Name: "insert zone*=demo name=hi cmd=GET,POST api*=/chat/cmd/web.chat.favor arg:textarea res:textarea"},
 			cli.CHECK: {Name: "check", Help: "检查", Hand: func(m *ice.Message, arg ...string) {
-				if m.ProcessInner(); len(arg) > 0 {
+				if m.ProcessInner(); len(arg) > 1 {
 					success := 0
-					m.Cmd(m.PrefixKey(), arg[0], func(value ice.Maps) {
-						m.Push(mdb.TIME, m.Time())
-						m.Push(mdb.ID, value[mdb.ID])
-						if err := m.Cmdx(m.PrefixKey(), cli.CHECK, value); err == ice.OK {
+					m.Cmd("", arg[0], arg[1], func(value ice.Maps) {
+						m.Push(mdb.TIME, m.Time()).Push(mdb.ID, value[mdb.ID])
+						if err := m.Cmdx("", cli.CHECK, value); err == ice.OK {
 							m.Push(ice.ERR, cli.Color(m, cli.GREEN, err))
 							success++
 						} else {
@@ -41,9 +33,7 @@ func init() {
 					m.StatusTimeCount(ice.SUCCESS, success)
 					return
 				}
-
-				res := kit.UnMarshal(m.Cmdx(m.PrefixKey(), ice.RUN))
-				if m.Option(ice.RES) != "" {
+				if res := kit.UnMarshal(m.Cmdx("", ice.RUN)); m.Option(ice.RES) != "" {
 					for k, v := range kit.KeyValue(nil, "", kit.UnMarshal(m.Option(ice.RES))) {
 						if v != kit.Value(res, k) {
 							m.Echo(kit.Formats(res))
@@ -53,74 +43,17 @@ func init() {
 				}
 				m.Echo(ice.OK)
 			}},
-			ice.RUN: {Name: "run", Help: "运行", Hand: func(m *ice.Message, arg ...string) {
-				m.Option(web.SPIDE_HEADER, web.ContentType, web.ContentJSON)
-				m.Echo(kit.Formats(kit.UnMarshal(m.Cmdx(web.SPIDE, m.Option(ice.DEV), web.SPIDE_RAW,
-					m.Option(ice.CMD), m.Option(cli.API), web.SPIDE_DATA, m.Option(ice.ARG)))))
-				m.Info(`curl "` + m.Option(cli.API) + `" -H "Content-Type: application/json"` + ` -d '` + m.Option(ice.ARG) + `'`)
-				m.ProcessDisplay("/plugin/story/json.js")
+			ice.RUN: {Hand: func(m *ice.Message, arg ...string) {
+				m.Option(web.SPIDE_HEADER, web.ContentType, web.ContentJSON, web.UserAgent, "Mozilla/5.0")
+				m.Cmdy(web.SPIDE, m.Option(ice.DEV), web.SPIDE_RAW, m.Option(ice.CMD), m.Option(cli.API), web.SPIDE_DATA, m.Option(ice.ARG)).ProcessInner()
+				m.StatusTime(nfs.SCRIPT, `curl "`+kit.MergeURL2(m.Cmd(web.SPIDE, m.Option(ice.DEV)).Append(web.CLIENT_ORIGIN), m.Option(cli.API))+`" -H "Content-Type: application/json"`+` -d '`+m.Option(ice.ARG)+`'`)
 			}},
-		}, mdb.ZoneAction(mdb.SHORT, mdb.ZONE, mdb.FIELD, "time,id,name,cmd,api,arg,res")), Hand: func(m *ice.Message, arg ...string) {
+		}, mdb.ZoneAction(mdb.FIELD, "time,id,name,cmd,api,arg,res")), Hand: func(m *ice.Message, arg ...string) {
 			if len(arg) == 0 {
-				m.Cmdy(web.SPIDE).RenameAppend("client.name", "dev", "client.url", "address").Action(mdb.CREATE)
-				return
+				m.Cmdy(web.SPIDE).RenameAppend(web.CLIENT_NAME, ice.DEV, web.CLIENT_URL, "address")
+			} else if mdb.ZoneSelect(m, arg[1:]...); len(arg) > 1 {
+				m.PushAction(ice.RUN, cli.CHECK).Action(cli.CHECK)
 			}
-
-			defer m.StatusTimeCount()
-			if mdb.ZoneSelect(m, arg[1:]...); len(arg) == 1 {
-				m.Action(mdb.INSERT, mdb.EXPORT, mdb.IMPORT)
-				m.PushAction(mdb.INSERT, cli.CHECK, mdb.REMOVE)
-			} else {
-				m.Action(mdb.INSERT, cli.CHECK)
-				m.PushAction(ice.RUN, cli.CHECK)
-			}
-		}},
-		"test": {Name: "test path func auto run case", Help: "测试用例", Actions: ice.Actions{
-			"run": {Name: "run", Help: "运行", Hand: func(m *ice.Message, arg ...string) {
-				// cli.Follow(m, "run", func() {
-				m.Option(cli.CMD_DIR, kit.Select(path.Dir(arg[0]), arg[0], strings.HasSuffix(arg[0], "/")))
-				m.Cmdy(cli.SYSTEM, "go", "test", nfs.PWD, "-v", "-run="+arg[1])
-				// })
-			}},
-			"case": {Name: "case", Help: "用例", Hand: func(m *ice.Message, arg ...string) {
-				msg := m.Spawn()
-				if strings.HasSuffix(arg[0], "/") {
-					msg.Option(cli.CMD_DIR, arg[0])
-					msg.Split(msg.Cmdx(cli.SYSTEM, "grep", "-r", "func Test.*(", nfs.PWD), "file:line", ":", "\n")
-					msg.Tables(func(value ice.Maps) {
-						if strings.HasPrefix(strings.TrimSpace(value["line"]), "//") {
-							return
-						}
-						ls := kit.Split(value["line"], " (", " (", " (")
-						m.Push("file", value["file"])
-						m.Push("func", strings.TrimPrefix(ls[1], "Test"))
-					})
-				} else {
-					for _, line := range kit.Split(m.Cmdx(cli.SYSTEM, "grep", "^func Test.*(", arg[0]), "\n", "\n", "\n") {
-						ls := kit.Split(line, " (", " (", " (")
-						m.Push("func", strings.TrimPrefix(ls[1], "Test"))
-					}
-				}
-			}},
-		}, Hand: func(m *ice.Message, arg ...string) {
-			if len(arg) == 0 || arg[0] == "" {
-				m.Cmdy(nfs.DIR, nfs.PWD)
-				return
-			}
-			if len(arg) == 1 {
-				if strings.HasSuffix(arg[0], "/") {
-					m.Cmdy(nfs.DIR, arg[0])
-				} else {
-					for _, line := range kit.Split(m.Cmdx(cli.SYSTEM, "grep", "^func Test.*(", arg[0]), "\n", "\n", "\n") {
-						ls := kit.Split(line, " (", " (", " (")
-						m.Push("func", strings.TrimPrefix(ls[1], "Test"))
-					}
-				}
-				return
-			}
-
-			m.Option(cli.CMD_DIR, kit.Select(path.Dir(arg[0]), arg[0], strings.HasSuffix(arg[0], "/")))
-			m.Cmdy(cli.SYSTEM, "go", "test", nfs.PWD, "-v", "-run="+arg[1])
 		}},
 	})
 }

@@ -1,6 +1,9 @@
 package ice
 
 import (
+	"bufio"
+	"encoding/json"
+	"fmt"
 	"io"
 	"runtime"
 	"strings"
@@ -179,6 +182,32 @@ func (m *Message) FormatCost() string {
 }
 func (m *Message) FormatSize() string {
 	return kit.Format("%dx%d %v", m.Length(), len(m.meta[MSG_APPEND]), kit.Simple(m.meta[MSG_APPEND]))
+}
+func (m *Message) DumpMeta(w io.Writer) {
+	m.meta[MSG_OPTION] = kit.Filters(m.meta[MSG_OPTION], "sessid", "cmds", "fields", "_option", "_handle", "_output", "", "_name", "_index", "log.caller", "aaa.checker")
+	kit.For(m.meta[MSG_OPTION], func(i int, k string) {
+		kit.If(len(m.meta[k]) == 0 || len(m.meta[k]) == 1 && m.meta[k][0] == "", func() { m.meta[MSG_OPTION][i] = "" })
+	})
+	bio := bufio.NewWriter(w)
+	defer bio.Flush()
+	echo := func(k string) {
+		if len(m.meta[k]) == 0 {
+			return
+		}
+		kit.If(k != MSG_DETAIL, func() { fmt.Fprintln(bio, FS) })
+		fmt.Fprint(bio, kit.Format(" %q: ", k))
+		b, _ := json.Marshal(m.meta[k])
+		bio.Write(b)
+	}
+	fmt.Fprintln(bio, "{")
+	defer fmt.Fprintln(bio, "}")
+	echo(MSG_DETAIL)
+	echo(MSG_OPTION)
+	kit.For(m.meta[MSG_OPTION], func(k string) { echo(k) })
+	kit.For(m.meta[MSG_APPEND], func(k string) { echo(k) })
+	echo(MSG_APPEND)
+	echo(MSG_RESULT)
+	fmt.Fprintln(bio)
 }
 func (m *Message) FormatMeta() string {
 	return kit.Format(m.meta)

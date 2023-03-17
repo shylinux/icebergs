@@ -100,6 +100,9 @@ const AUTOGEN = "autogen"
 
 func init() {
 	const (
+		VERSION = "version"
+	)
+	const (
 		USR_RELEASE_CONF_GO    = "usr/release/conf.go"
 		USR_RELEASE_BINPACK_GO = "usr/release/binpack.go"
 	)

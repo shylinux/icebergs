@@ -9,10 +9,9 @@ autogen.go
 compile.go
 publish.go
 
-xterm.shy
-xterm.go
 vimer.go
 inner.go
+xterm.go
 favor.go
 oauth.go
 pprof.go
@@ -20,10 +19,10 @@ bench.go
 case.go
 
 c.go
-go.go
 sh.go
 shy.go
 py.go
+go.go
 js.go
 css.go
 html.go

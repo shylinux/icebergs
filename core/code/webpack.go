@@ -132,7 +132,7 @@ func init() {
 				kit.If(!strings.Contains(m.Option(nfs.PATH), "/page/"), func() { nfs.Trash(m, m.Option(nfs.PATH)) })
 			}},
 		}, mdb.HashAction(mdb.SHORT, nfs.PATH, mdb.FIELD, "time,path")), Hand: func(m *ice.Message, arg ...string) {
-			m.Cmdy(nfs.DIR, ice.USR_PUBLISH, kit.Dict(nfs.DIR_REG, kit.ExtReg(HTML, CSS, JS))).Cmdy(nfs.DIR, _volcanos(m, PAGE))
+			m.Cmdy(nfs.DIR, _volcanos(m, PAGE), kit.Dict(nfs.DIR_REG, kit.ExtReg(HTML, CSS, JS))).Cmdy(nfs.DIR, ice.USR_PUBLISH)
 		}},
 	})
 }

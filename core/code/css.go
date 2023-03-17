@@ -13,11 +13,8 @@ import (
 
 func _css_stat(m *ice.Message, zone string, stats map[string]int) {
 	msg := m.Spawn()
-	for k, v := range stats {
-		msg.Push(mdb.NAME, k).Push(mdb.VALUE, v).Push(mdb.ZONE, zone)
-	}
-	msg.SortIntR(mdb.VALUE)
-	m.Copy(msg)
+	kit.For(stats, func(k string, v int) { msg.Push(mdb.NAME, k).Push(mdb.VALUE, v).Push(mdb.ZONE, zone) })
+	m.Copy(msg.SortIntR(mdb.VALUE))
 }
 func _css_show(m *ice.Message, arg ...string) {
 	zone, stats_key, stats_value := "", map[string]int{}, map[string]int{}
@@ -56,10 +53,13 @@ func _css_show(m *ice.Message, arg ...string) {
 	m.StatusTimeCount()
 }
 func _css_exec(m *ice.Message, arg ...string) {
-	if arg[2] == ice.USR_VOLCANOS && strings.HasPrefix(arg[1], ice.PLUGIN_LOCAL) {
-		key := ctx.GetFileCmd("/require/shylinux.com/x/icebergs/core/" + strings.TrimPrefix(arg[1], ice.PLUGIN_LOCAL))
-		ctx.ProcessCommand(m, kit.Select(ice.CAN_PLUGIN, key), kit.Simple())
-		return
+	if arg[2] == ice.USR_VOLCANOS {
+		if strings.HasPrefix(arg[1], ice.PLUGIN_LOCAL) {
+			ctx.ProcessCommand(m, kit.Select(ice.CAN_PLUGIN, "web."+strings.Replace(kit.TrimExt(strings.TrimPrefix(arg[1], ice.PLUGIN_LOCAL), JS), ice.PS, ice.PT, -1)), kit.Simple())
+		}
+	} else {
+		ctx.ProcessCommand(m, kit.Select(ice.CAN_PLUGIN, ctx.GetFileCmd(kit.ExtChange(path.Join(arg[2], arg[1]), GO))), kit.Simple())
+		m.Push(ctx.STYLE, path.Join("/require", path.Join(arg[2], arg[1])))
 	}
 }
 
@@ -69,18 +69,9 @@ func init() {
 	Index.MergeCommands(ice.Commands{
 		CSS: {Name: "css path auto", Help: "样式表", Actions: ice.MergeActions(ice.Actions{
 			mdb.RENDER: {Hand: func(m *ice.Message, arg ...string) { _css_show(m, arg...) }},
-			mdb.ENGINE: {Hand: func(m *ice.Message, arg ...string) {
-				if arg[2] == ice.USR_VOLCANOS {
-					if strings.HasPrefix(arg[1], "plugin/local/") {
-						ctx.ProcessCommand(m, kit.Select(ice.CAN_PLUGIN, "web."+strings.Replace(kit.TrimExt(strings.TrimPrefix(arg[1], "plugin/local/"), JS), ice.PS, ice.PT, -1)), kit.Simple())
-					}
-				} else {
-					m.Push(ctx.STYLE, path.Join("/require", path.Join(arg[2], arg[1])))
-					ctx.ProcessCommand(m, kit.Select("can._plugin", ctx.GetFileCmd(kit.ExtChange(path.Join(arg[2], arg[1]), GO))), kit.Simple())
-				}
-			}},
+			mdb.ENGINE: {Hand: func(m *ice.Message, arg ...string) { _css_exec(m, arg...) }},
 			TEMPLATE: {Hand: func(m *ice.Message, arg ...string) {
-				m.Echo(kit.Format(nfs.Template(m, "demo.css"), kit.Select("plugin", ctx.GetFileCmd(kit.ExtChange(path.Join(arg[2], arg[1]), GO)))))
+				m.Echo(kit.Format(nfs.Template(m, "demo.css"), kit.Select(mdb.PLUGIN, ctx.GetFileCmd(kit.ExtChange(path.Join(arg[2], arg[1]), GO)))))
 			}},
 		}, PlugAction())},
 	})

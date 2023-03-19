@@ -16,6 +16,7 @@ const TOKEN = "token"
 func init() {
 	Index.MergeCommands(ice.Commands{
 		TOKEN: {Name: "token username auto prunes", Actions: ice.MergeActions(ice.Actions{
+			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) { aaa.White(m, "token.sid") }},
 			web.PP("get"): {Hand: func(m *ice.Message, arg ...string) {
 				m.Cmd(nfs.CAT, kit.HomePath(".git-credentials"), func(text string) {
 					if strings.HasSuffix(text, ice.AT+arg[0]) {

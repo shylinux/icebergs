@@ -289,7 +289,7 @@ func init() {
 				_repos_cmd(m, m.Option(REPOS), "checkout", m.Option(BRANCH))
 			}},
 			"oauth": {Help: "授权", Hand: func(m *ice.Message, arg ...string) {
-				m.ProcessOpen(kit.MergeURL2(ice.Info.Make.Remote, "/chat/cmd/web.code.git.token",
+				m.ProcessOpen(kit.MergeURL2(m.Cmdx(cli.SYSTEM, "git", "remote", "get-url", "origin"), "/chat/cmd/web.code.git.token",
 					aaa.USERNAME, m.Option(ice.MSG_USERNAME),
 					tcp.HOST, m.Option(ice.MSG_USERHOST)))
 			}},
@@ -336,7 +336,7 @@ func init() {
 				defer web.ToastProcess(m)()
 				files, adds, dels, last := _status_list(m)
 				m.StatusTimeCount("files", files, "adds", adds, "dels", dels, "last", last.Format(ice.MOD_TIME))
-				m.Action(PULL, PUSH, "insteadof", TOKEN, "oauth")
+				m.Action(PULL, PUSH, "insteadof", "oauth")
 				m.Sort("repos,type,file")
 			} else {
 				_repos_cmd(m, arg[0], DIFF)

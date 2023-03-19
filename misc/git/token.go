@@ -15,16 +15,25 @@ import (
 const TOKEN = "token"
 
 func init() {
+	const (
+		SET = "set"
+		GET = "get"
+		SID = "sid"
+	)
+	const FILE = ".git-credentials"
 	Index.MergeCommands(ice.Commands{
 		TOKEN: {Name: "token username auto prunes", Actions: ice.MergeActions(ice.Actions{
-			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) { aaa.White(m, "token.sid") }},
-			web.PP("set"): {Hand: func(m *ice.Message, arg ...string) {
+			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) { aaa.White(m, kit.Keys(TOKEN, SID)) }},
+			web.PP(SET): {Hand: func(m *ice.Message, arg ...string) {
 				list := []string{m.Option(TOKEN)}
-				m.Cmd(nfs.CAT, kit.HomePath(".git-credentials"), func(line string) { list = append(list, line) })
-				m.Cmd(nfs.SAVE, kit.HomePath(".git-credentials"), strings.Join(list, ice.NL)+ice.NL)
+				m.Cmd(nfs.CAT, kit.HomePath(FILE), func(line string) {
+					kit.If(line != list[0], func() { list = append(list, line) })
+				})
+				m.Cmd(nfs.SAVE, kit.HomePath(FILE), strings.Join(list, ice.NL)+ice.NL)
+				m.RenderResult(m.Cmdx(nfs.CAT, ice.SRC_TEMPLATE+"web/close.html"))
 			}},
-			web.PP("get"): {Hand: func(m *ice.Message, arg ...string) {
-				m.Cmd(nfs.CAT, kit.HomePath(".git-credentials"), func(text string) {
+			web.PP(GET): {Hand: func(m *ice.Message, arg ...string) {
+				m.Cmd(nfs.CAT, kit.HomePath(FILE), func(text string) {
 					if strings.HasSuffix(text, ice.AT+arg[0]) {
 						u := kit.ParseURL(text)
 						if p, ok := u.User.Password(); ok {
@@ -34,8 +43,8 @@ func init() {
 					}
 				})
 			}},
-			web.PP("sid"): {Hand: func(m *ice.Message, arg ...string) {
-				if m.Cmd(TOKEN, arg[0]).Append(TOKEN) == arg[1] {
+			web.PP(SID): {Hand: func(m *ice.Message, arg ...string) {
+				if len(arg) > 1 && m.Cmd(TOKEN, arg[0]).Append(TOKEN) == arg[1] {
 					web.RenderCookie(m, aaa.SessCreate(m, arg[0]))
 					m.Echo(ice.OK)
 				}

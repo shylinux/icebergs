@@ -15,23 +15,25 @@ const TOKEN = "token"
 
 func init() {
 	Index.MergeCommands(ice.Commands{
-		web.PP(TOKEN, "get"): {Name: "get", Hand: func(m *ice.Message, arg ...string) {
-			m.Cmd(nfs.CAT, kit.HomePath(".git-credentials"), func(text string) {
-				if strings.HasSuffix(text, ice.AT+arg[0]) {
-					u := kit.ParseURL(text).User
-					if p, ok := u.Password(); ok {
-						m.Echo(u.Username()).Echo(p)
+		TOKEN: {Name: "token username auto prunes", Actions: ice.MergeActions(ice.Actions{
+			web.PP("get"): {Hand: func(m *ice.Message, arg ...string) {
+				m.Cmd(nfs.CAT, kit.HomePath(".git-credentials"), func(text string) {
+					if strings.HasSuffix(text, ice.AT+arg[0]) {
+						u := kit.ParseURL(text)
+						if p, ok := u.User.Password(); ok {
+							m.Echo(u.User.Username()).Echo(p)
+							m.W.Header().Add("Access-Control-Allow-Origin", u.Scheme+"://"+arg[0])
+						}
 					}
+				})
+			}},
+			web.PP("sid"): {Hand: func(m *ice.Message, arg ...string) {
+				if m.Cmd(TOKEN, arg[0]).Append(TOKEN) == arg[1] {
+					web.RenderCookie(m, aaa.SessCreate(m, arg[0]))
+					m.Echo(ice.OK)
 				}
-			})
-		}},
-		web.PP(TOKEN, "sid"): {Name: "sid", Hand: func(m *ice.Message, arg ...string) {
-			if m.Cmd(TOKEN, arg[0]).Append(TOKEN) == arg[1] {
-				web.RenderCookie(m, aaa.SessCreate(m, arg[0]))
-				m.Echo(ice.OK)
-			}
-		}},
-		TOKEN: {Name: "token username auto prunes", Actions: mdb.HashAction(mdb.EXPIRE, mdb.MONTH, mdb.SHORT, aaa.USERNAME, mdb.FIELD, "time,username,token"), Hand: func(m *ice.Message, arg ...string) {
+			}},
+		}, mdb.HashAction(mdb.EXPIRE, mdb.MONTH, mdb.SHORT, aaa.USERNAME, mdb.FIELD, "time,username,token")), Hand: func(m *ice.Message, arg ...string) {
 			if mdb.HashSelect(m, arg...); len(arg) > 0 && m.Length() > 0 {
 				m.EchoScript(strings.Replace(m.Option(ice.MSG_USERHOST), "://", kit.Format("://%s:%s@", m.Option(ice.MSG_USERNAME), m.Append(TOKEN)), 1))
 				m.EchoScript(nfs.Template(m, "echo.sh", strings.Replace(m.Option(ice.MSG_USERHOST), "://", kit.Format("://%s:%s@", m.Option(ice.MSG_USERNAME), m.Append(TOKEN)), 1)))

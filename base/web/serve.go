@@ -309,7 +309,7 @@ func init() {
 	})
 	ice.AddMerges(func(c *ice.Context, key string, cmd *ice.Command, sub string, action *ice.Action) (ice.Handler, ice.Handler) {
 		if strings.HasPrefix(sub, ice.PS) {
-			if sub = kit.Select(sub, PP(key), sub == ice.PS); action.Hand == nil {
+			if sub = kit.Select(PP(key, sub), PP(key), sub == ice.PS); action.Hand == nil {
 				action.Hand = func(m *ice.Message, arg ...string) { m.Cmdy(key, arg) }
 			}
 			actions := ice.Actions{}

@@ -321,8 +321,7 @@ func (c *Context) _action(m *Message, cmd *Command, key string, sub string, h *A
 	if m._target = logs.FileLine(h.Hand); cmd.RawHand != nil {
 		m._target = kit.Join(kit.Slice(kit.Split(kit.Format(cmd.RawHand), PS), -3), PS)
 	}
-	m.Log(LOG_CMDS, "%s.%s %s %d %v", c.Name, key, sub, len(arg), arg,
-		logs.FileLineMeta(m._fileline()))
+	m.Log(LOG_CMDS, "%s.%s %s %d %v", c.Name, key, sub, len(arg), arg, logs.FileLineMeta(m._fileline()))
 	h.Hand(m, arg...)
 	return m
 }

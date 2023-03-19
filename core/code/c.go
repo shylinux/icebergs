@@ -26,16 +26,13 @@ func _c_exec(m *ice.Message, arg ...string) {
 		_vimer_make(m, arg[2], msg)
 	}
 }
-func _c_tags(m *ice.Message, man string, cmd ...string) {
+func _c_tags(m *ice.Message, cmd ...string) {
 	if !nfs.ExistsFile(m, path.Join(m.Option(nfs.PATH), nfs.TAGS)) {
 		m.Cmd(cli.SYSTEM, cmd, kit.Dict(cli.CMD_DIR, m.Option(nfs.PATH)))
 	}
-	if _inner_tags(m, m.Option(nfs.PATH), m.Option(mdb.NAME)); !cli.IsSuccess(m) || m.Length() == 0 {
-		m.Push(nfs.FILE, kit.Keys(m.Option(mdb.NAME), man)).Push(nfs.LINE, "1")
-	}
+	_inner_tags(m, m.Option(nfs.PATH), m.Option(mdb.NAME))
 }
 
-const MAN = "man"
 const H = "h"
 const C = "c"
 
@@ -45,10 +42,10 @@ func init() {
 			mdb.RENDER: {Hand: func(m *ice.Message, arg ...string) { _c_show(m, arg...) }},
 			mdb.ENGINE: {Hand: func(m *ice.Message, arg ...string) { _c_exec(m, arg...) }},
 			TEMPLATE:   {Hand: func(m *ice.Message, arg ...string) { m.Echo(nfs.Template(m, "demo.c")) }},
-			NAVIGATE:   {Hand: func(m *ice.Message, arg ...string) { _c_tags(m, MAN, "ctags", "-a", "-R", nfs.PWD) }},
+			NAVIGATE:   {Hand: func(m *ice.Message, arg ...string) { _c_tags(m, "ctags", "-a", "-R", nfs.PWD) }},
 		}, PlugAction())},
 		H: {Name: "h path auto", Help: "编程", Actions: ice.MergeActions(ice.Actions{
-			NAVIGATE: {Hand: func(m *ice.Message, arg ...string) { _c_tags(m, MAN, "ctags", "-a", "-R", nfs.PWD) }},
+			NAVIGATE: {Hand: func(m *ice.Message, arg ...string) { _c_tags(m, "ctags", "-a", "-R", nfs.PWD) }},
 		}, PlugAction())},
 	})
 }

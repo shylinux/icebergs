@@ -83,7 +83,7 @@ func _mod_show(m *ice.Message, file string) {
 			kit.Switch(kit.Select("", block, len(ls) > 1), REQUIRE, func() { require[ls[0]] = ls[1] }, REPLACE, func() { replace[ls[0]] = ls[2] })
 		}
 	})
-	kit.Fetch(require, func(k, v string) { m.Push(REQUIRE, k).Push(VERSION, v).Push(REPLACE, kit.Select("", replace[k])) })
+	kit.For(require, func(k, v string) { m.Push(REQUIRE, k).Push(VERSION, v).Push(REPLACE, kit.Select("", replace[k])) })
 	m.StatusTimeCount()
 }
 func _sum_show(m *ice.Message, file string) {
@@ -92,7 +92,6 @@ func _sum_show(m *ice.Message, file string) {
 	}).StatusTimeCount()
 }
 
-const GODOC = "godoc"
 const SUM = "sum"
 const MOD = "mod"
 const GO = "go"
@@ -100,7 +99,6 @@ const GO = "go"
 func init() {
 	Index.MergeCommands(ice.Commands{
 		GO: {Name: "go path auto", Help: "后端编程", Actions: ice.MergeActions(ice.Actions{
-			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) { m.Cmd(NAVIGATE, mdb.CREATE, GODOC, m.PrefixKey()) }},
 			mdb.RENDER: {Hand: func(m *ice.Message, arg ...string) {
 				cmds, text := "ice.bin source stdio", ctx.GetFileCmd(path.Join(arg[2], arg[1]))
 				if text != "" {
@@ -123,20 +121,15 @@ func init() {
 				m.Echo(nfs.Template(m, "demo.go"), path.Base(path.Dir(path.Join(arg[2], arg[1]))))
 			}},
 			COMPLETE: {Hand: func(m *ice.Message, arg ...string) { _go_complete(m, arg...) }},
-			NAVIGATE: {Hand: func(m *ice.Message, arg ...string) { _c_tags(m, GODOC, "gotags", "-f", nfs.TAGS, "-R", nfs.PWD) }},
+			NAVIGATE: {Hand: func(m *ice.Message, arg ...string) { _c_tags(m, "gotags", "-f", nfs.TAGS, "-R", nfs.PWD) }},
 		}, PlugAction())},
-		MOD: {Help: "模块", Actions: ice.MergeActions(ice.Actions{
+		MOD: {Actions: ice.MergeActions(ice.Actions{
+			mdb.RENDER: {Hand: func(m *ice.Message, arg ...string) { _mod_show(m, path.Join(arg[2], arg[1])) }},
 			mdb.ENGINE: {Hand: func(m *ice.Message, arg ...string) { _mod_show(m, path.Join(arg[2], arg[1])) }},
 		}, PlugAction())},
-		SUM: {Help: "版本", Actions: ice.MergeActions(ice.Actions{
+		SUM: {Actions: ice.MergeActions(ice.Actions{
 			mdb.ENGINE: {Hand: func(m *ice.Message, arg ...string) { _sum_show(m, path.Join(arg[2], arg[1])) }},
-		}, PlugAction())},
-		GODOC: {Help: "文档", Actions: ice.MergeActions(ice.Actions{
-			mdb.RENDER: {Hand: func(m *ice.Message, arg ...string) {
-				arg[1] = strings.Replace(arg[1], "kit.", "shylinux.com/x/toolkits.", 1)
-				arg[1] = strings.Replace(arg[1], "m.", "shylinux.com/x/ice.Message.", 1)
-				m.Cmdy(cli.SYSTEM, GO, "doc", kit.TrimExt(arg[1], GODOC), kit.Dict(cli.CMD_DIR, arg[2]))
-			}},
+			mdb.RENDER: {Hand: func(m *ice.Message, arg ...string) { _sum_show(m, path.Join(arg[2], arg[1])) }},
 		}, PlugAction())},
 	})
 }

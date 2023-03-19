@@ -145,7 +145,7 @@ func InnerPath(arg ...string) (dir, file string) {
 func PlugAction() ice.Actions {
 	return ice.Actions{
 		ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
-			kit.Fetch([]string{mdb.PLUGIN, mdb.RENDER, mdb.ENGINE}, func(cmd string) { m.Cmd(cmd, mdb.CREATE, m.CommandKey(), m.PrefixKey()) })
+			kit.For([]string{mdb.PLUGIN, mdb.RENDER, mdb.ENGINE}, func(cmd string) { m.Cmd(cmd, mdb.CREATE, m.CommandKey(), m.PrefixKey()) })
 			LoadPlug(m, m.CommandKey())
 		}},
 		mdb.PLUGIN: {Hand: func(m *ice.Message, arg ...string) { m.Echo(m.Config(PLUG)) }},
@@ -164,7 +164,7 @@ func LoadPlug(m *ice.Message, lang ...string) {
 	for _, lang := range lang {
 		m.Conf(nfs.CAT, kit.Keym(nfs.SOURCE, kit.Ext(lang)), ice.TRUE)
 		m.Confm(lang, kit.Keym(PLUG, PREPARE), func(k string, v ice.Any) {
-			kit.Fetch(kit.Simple(v), func(v string) { m.Conf(lang, kit.Keym(PLUG, KEYWORD, v), k) })
+			kit.For(kit.Simple(v), func(v string) { m.Conf(lang, kit.Keym(PLUG, KEYWORD, v), k) })
 		})
 	}
 }

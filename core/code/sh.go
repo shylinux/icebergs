@@ -46,7 +46,7 @@ func init() {
 				m.Cmdy(cli.SYSTEM, cmds, "-c", text).Status(ssh.SHELL, strings.ReplaceAll(text, ice.NL, "; "))
 			}},
 			TEMPLATE: {Hand: func(m *ice.Message, arg ...string) { m.Echo(nfs.Template(m, "demo.sh")) }},
-			NAVIGATE: {Hand: func(m *ice.Message, arg ...string) { _c_tags(m, MAN, "ctags", "-a", "-R", nfs.PWD) }},
+			NAVIGATE: {Hand: func(m *ice.Message, arg ...string) { _c_tags(m, "ctags", "-a", "-R", nfs.PWD) }},
 		}, PlugAction())},
 	})
 }

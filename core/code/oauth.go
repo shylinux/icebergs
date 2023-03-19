@@ -55,7 +55,7 @@ func init() {
 			}},
 			"keys": {Name: "keys", Help: "用户密钥", Hand: func(m *ice.Message, arg ...string) {
 				_oauth_header(m).SetAppend()
-				kit.Fetch(web.SpideGet(m, API_GITHUB+"user/keys"), func(index int, value ice.Map) {
+				kit.For(web.SpideGet(m, API_GITHUB+"user/keys"), func(index int, value ice.Map) {
 					m.PushRecord(value, "created_at,title,id,key")
 				})
 				m.PushAction(mdb.DELETE)

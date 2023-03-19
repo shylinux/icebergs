@@ -196,6 +196,6 @@ func Complete(m *ice.Message, text string, data ice.Map) {
 		m.Push(mdb.TEXT, kit.Simple(data[kit.Slice(kit.Split(text, " ."), -1)[0]]))
 	} else {
 		m.Push(mdb.TEXT, data[""])
-		kit.Fetch(data, func(k string, v ice.Any) { m.Push(mdb.TEXT, k) })
+		kit.For(data, func(k string, v ice.Any) { m.Push(mdb.TEXT, k) })
 	}
 }

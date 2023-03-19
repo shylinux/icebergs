@@ -17,6 +17,11 @@ func init() {
 	Index.MergeCommands(ice.Commands{
 		TOKEN: {Name: "token username auto prunes", Actions: ice.MergeActions(ice.Actions{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) { aaa.White(m, "token.sid") }},
+			web.PP("set"): {Hand: func(m *ice.Message, arg ...string) {
+				list := []string{m.Option(TOKEN)}
+				m.Cmd(nfs.CAT, kit.HomePath(".git-credentials"), func(line string) { list = append(list, line) })
+				m.Cmd(nfs.SAVE, kit.HomePath(".git-credentials"), strings.Join(list, ice.NL)+ice.NL)
+			}},
 			web.PP("get"): {Hand: func(m *ice.Message, arg ...string) {
 				m.Cmd(nfs.CAT, kit.HomePath(".git-credentials"), func(text string) {
 					if strings.HasSuffix(text, ice.AT+arg[0]) {

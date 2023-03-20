@@ -268,8 +268,6 @@ func init() {
 					}
 				}
 			}},
-			"change": {Help: "变更", Hand: func(m *ice.Message, arg ...string) {
-			}},
 			"insteadof": {Name: "insteadof from* to", Help: "代理", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmd(CONFIGS, func(values ice.Maps) {
 					if values[mdb.VALUE] == m.Option(nfs.FROM) {
@@ -290,7 +288,7 @@ func init() {
 				_repos_cmd(m, m.Option(REPOS), "checkout", m.Option(BRANCH))
 			}},
 			"oauth": {Help: "授权", Hand: func(m *ice.Message, arg ...string) {
-				m.ProcessOpen(kit.MergeURL2(m.Cmdx(cli.SYSTEM, "git", "remote", "get-url", "origin"), "/chat/cmd/web.code.git.token",
+				m.ProcessOpen(kit.MergeURL2(kit.Select(ice.Info.Make.Remote, m.Cmdx(cli.SYSTEM, "git", "remote", "get-url", "origin")), "/chat/cmd/web.code.git.token",
 					aaa.USERNAME, m.Option(ice.MSG_USERNAME),
 					tcp.HOST, m.Option(ice.MSG_USERHOST)))
 			}},

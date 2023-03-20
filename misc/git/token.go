@@ -27,16 +27,19 @@ func init() {
 			web.PP(SET): {Hand: func(m *ice.Message, arg ...string) {
 				host, list := kit.Dict(), []string{m.Option(TOKEN)}
 				m.Cmd(nfs.CAT, kit.HomePath(FILE), func(line string) {
-					kit.IfNoKey(host, kit.ParseURL(line).Host, func(p string) { list = append(list, line) })
+					kit.If(line != list[0], func() { kit.IfNoKey(host, kit.ParseURL(line).Host, func(p string) { list = append(list, line) }) })
 				})
 				m.Cmd(nfs.SAVE, kit.HomePath(FILE), strings.Join(list, ice.NL)+ice.NL)
 				web.RenderTemplate(m, "close.html")
 			}},
 			web.PP(GET): {Hand: func(m *ice.Message, arg ...string) {
+				m.W.Header().Set("Access-Control-Allow-Origin", "*")
 				m.Cmd(nfs.CAT, kit.HomePath(FILE), func(text string) {
 					if u := kit.ParseURL(text); u.Host == arg[0] {
-						m.Echo(u.User.Username()).Echo(u.User.Password())
-						m.W.Header().Add("Access-Control-Allow-Origin", u.Scheme+"://"+u.Host)
+						if p, ok := u.User.Password(); ok {
+							m.Echo(u.User.Username()).Echo(p)
+							m.W.Header().Set("Access-Control-Allow-Origin", u.Scheme+"://"+u.Host)
+						}
 					}
 				})
 			}},

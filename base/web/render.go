@@ -46,6 +46,7 @@ func Render(m *ice.Message, cmd string, args ...ice.Any) bool {
 	if cmd != "" && cmd != ice.RENDER_DOWNLOAD {
 		defer func() { m.Logs("Render", cmd, args) }()
 	}
+	m.W.Header().Add("Access-Control-Allow-Origin", "http://localhost:9020")
 	switch cmd {
 	case COOKIE: // value [name [path [expire]]]
 		RenderCookie(m, arg[0], arg[1:]...)
@@ -143,6 +144,9 @@ func RenderDownload(m *ice.Message, arg ...ice.Any) {
 func RenderResult(m *ice.Message, arg ...ice.Any) {
 	Render(m, ice.RENDER_RESULT, arg...)
 	m.Render(ice.RENDER_VOID)
+}
+func RenderTemplate(m *ice.Message, file string, arg ...ice.Any) {
+	m.RenderResult(kit.Renders(kit.Format(m.Cmdx(nfs.CAT, path.Join(ice.SRC_TEMPLATE, WEB, file)), arg...), m))
 }
 
 func CookieName(url string) string {

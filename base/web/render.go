@@ -148,6 +148,9 @@ func RenderTemplate(m *ice.Message, file string, arg ...ice.Any) {
 	m.RenderResult(kit.Renders(kit.Format(m.Cmdx(nfs.CAT, path.Join(ice.SRC_TEMPLATE, WEB, file)), arg...), m))
 }
 
+func AllowOrigin(m *ice.Message, origin string) {
+	m.W.Header().Set("Access-Control-Allow-Origin", origin)
+}
 func CookieName(url string) string {
 	return ice.MSG_SESSID + "_" + kit.ReplaceAll(kit.ParseURLMap(url)[tcp.PORT], ".", "_", ":", "_")
 	return ice.MSG_SESSID + "_" + kit.ReplaceAll(kit.ParseURLMap(url)[tcp.HOST], ".", "_", ":", "_")

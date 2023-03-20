@@ -184,9 +184,7 @@ func init() {
 				}
 				ctx.ProcessField(m, "", arg, arg...)
 			}},
-			TOKEN: {Hand: func(m *ice.Message, arg ...string) {
-				m.Echo(m.Cmdx(TOKEN, m.Cmdx(TOKEN, mdb.CREATE, aaa.USERNAME, m.Option(ice.MSG_USERNAME), TOKEN, kit.Hashs("uniq"))))
-			}},
+			TOKEN: {Help: "令牌", Hand: func(m *ice.Message, arg ...string) { m.Cmdy(TOKEN, cli.MAKE) }},
 		}, gdb.EventAction(web.DREAM_INPUTS)), Hand: func(m *ice.Message, arg ...string) {
 			if m.Option(nfs.DIR_ROOT, ice.USR_LOCAL_REPOS); len(arg) == 0 {
 				m.Option(ice.MSG_USERROLE, aaa.TECH)

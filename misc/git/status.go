@@ -278,6 +278,10 @@ func init() {
 					_git_cmd(m, "config", "--global", "url."+m.Option(nfs.TO)+".insteadof", m.Option(nfs.FROM))
 				}
 			}},
+			"oauth": {Help: "授权", Hand: func(m *ice.Message, arg ...string) {
+				m.ProcessOpen(kit.MergeURL2(kit.Select(ice.Info.Make.Remote, m.Cmdx(cli.SYSTEM, "git", "remote", "get-url", "origin")), "/chat/cmd/web.code.git.token",
+					aaa.USERNAME, m.Option(ice.MSG_USERNAME), tcp.HOST, m.Option(ice.MSG_USERHOST)))
+			}},
 			"token": {Name: "token token", Help: "令牌", Hand: func(m *ice.Message, arg ...string) {
 				list := []string{m.Option(TOKEN)}
 				m.Cmd(nfs.CAT, kit.HomePath(".git-credentials"), func(line string) { list = append(list, line) })
@@ -286,11 +290,6 @@ func init() {
 			}},
 			"branch_switch": {Help: "切换", Hand: func(m *ice.Message, arg ...string) {
 				_repos_cmd(m, m.Option(REPOS), "checkout", m.Option(BRANCH))
-			}},
-			"oauth": {Help: "授权", Hand: func(m *ice.Message, arg ...string) {
-				m.ProcessOpen(kit.MergeURL2(kit.Select(ice.Info.Make.Remote, m.Cmdx(cli.SYSTEM, "git", "remote", "get-url", "origin")), "/chat/cmd/web.code.git.token",
-					aaa.USERNAME, m.Option(ice.MSG_USERNAME),
-					tcp.HOST, m.Option(ice.MSG_USERHOST)))
 			}},
 			nfs.TRASH: {Hand: func(m *ice.Message, arg ...string) {
 				m.Assert(m.Option(REPOS) != "" && m.Option(nfs.FILE) != "")

@@ -24,7 +24,7 @@ func init() {
 	Index.MergeCommands(ice.Commands{
 		TOKEN: {Name: "token username auto prunes", Actions: ice.MergeActions(ice.Actions{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) { aaa.White(m, kit.Keys(TOKEN, SID)) }},
-			web.P(SET): {Hand: func(m *ice.Message, arg ...string) {
+			web.PP(SET): {Hand: func(m *ice.Message, arg ...string) {
 				host, list := kit.Dict(), []string{m.Option(TOKEN)}
 				m.Cmd(nfs.CAT, kit.HomePath(FILE), func(line string) {
 					kit.IfNoKey(host, kit.ParseURL(line).Host, func(p string) { list = append(list, line) })

@@ -18,7 +18,7 @@ func (m *Message) PrefixKey(arg ...Any) string {
 	return kit.Keys(m.Prefix(m.CommandKey()), kit.Keys(arg...))
 }
 func (m *Message) PrefixPath(arg ...Any) string {
-	return strings.TrimPrefix(strings.ReplaceAll(kit.Keys(m.Prefix(m.CommandKey()), kit.Keys(arg...)), PT, PS), "web")
+	return strings.TrimPrefix(strings.ReplaceAll(kit.Keys(m.Prefix(m.CommandKey()), kit.Keys(arg...)), PT, PS), "web") + PS
 }
 func (m *Message) Prefix(arg ...string) string {
 	return m.Target().PrefixKey(arg...)

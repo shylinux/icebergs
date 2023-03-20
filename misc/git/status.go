@@ -114,6 +114,7 @@ func _status_stat(m *ice.Message, files, adds, dels int) (int, int, int) {
 }
 func _status_list(m *ice.Message) (files, adds, dels int, last time.Time) {
 	onlychange := m.Option(ice.MSG_MODE) == mdb.ZONE || m.Option("view") == "change"
+	defer m.Option(cli.CMD_DIR, "")
 	ReposList(m).Tables(func(value ice.Maps) {
 		m.Option(cli.CMD_DIR, value[nfs.PATH])
 		files, adds, dels = _status_stat(m, files, adds, dels)
@@ -335,7 +336,7 @@ func init() {
 			} else if len(arg) == 0 {
 				defer web.ToastProcess(m)()
 				files, adds, dels, last := _status_list(m)
-				m.StatusTimeCount("files", files, "adds", adds, "dels", dels, "last", last.Format(ice.MOD_TIME))
+				m.StatusTimeCount("files", files, "adds", adds, "dels", dels, "last", last.Format(ice.MOD_TIME), "origin", _git_cmds(m, "remote", "get-url", "origin"))
 				m.Action(PULL, PUSH, "insteadof", "oauth")
 				m.Sort("repos,type,file")
 			} else {

@@ -158,7 +158,7 @@ func init() {
 			}},
 			SCRIPT: {Name: "script name", Help: "脚本", Hand: func(m *ice.Message, arg ...string) {
 				m.Cmd(SCRIPT, m.Option(mdb.NAME), func(value ice.Maps) {
-					kit.Fetch(kit.SplitLine(value[mdb.TEXT]), func(line string) {
+					kit.For(kit.SplitLine(value[mdb.TEXT]), func(line string) {
 						kit.Switch(value[mdb.TYPE],
 							"shell", func() { m.Cmd(CMD, _tmux_key(m.Option(SESSION), m.Option(WINDOW), m.Option(PANE)), line) },
 							"vim", func() { m.Cmd(CMD, _tmux_key(m.Option(SESSION), m.Option(WINDOW), m.Option(PANE)), line) },

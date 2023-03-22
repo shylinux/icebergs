@@ -132,7 +132,7 @@ func init() {
 					RenderMain(m)
 				}
 			}},
-		}, mdb.HashAction(mdb.FIELD, "time,hash,username,usernick,userrole,river,storm,type,name,text", mdb.EXPIRE, "72h"), ServeAction(), aaa.WhiteAction()), Hand: func(m *ice.Message, arg ...string) {
+		}, mdb.HashAction(mdb.FIELD, "time,hash,username,usernick,userrole,river,storm,type,name,text", mdb.EXPIRE, mdb.DAYS), ServeAction(), aaa.WhiteAction()), Hand: func(m *ice.Message, arg ...string) {
 			if ctx.PodCmd(m, SHARE, arg) {
 				return
 			}

@@ -13,7 +13,7 @@ import (
 
 func _tail_create(m *ice.Message, arg ...string) {
 	h := mdb.HashCreate(m, arg)
-	kit.Fetch(kit.Split(m.Option(FILE)), func(file string) {
+	kit.For(kit.Split(m.Option(FILE)), func(file string) {
 		m.Options(cli.CMD_OUTPUT, Pipe(m, func(text string) { mdb.ZoneInsert(m, h, FILE, file, nfs.SIZE, len(text), mdb.TEXT, text) }), mdb.CACHE_CLEAR_ON_EXIT, ice.TRUE)
 		m.Cmd(cli.DAEMON, TAIL, "-n", "0", "-f", file)
 	})

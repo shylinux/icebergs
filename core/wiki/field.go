@@ -53,7 +53,7 @@ func _field_show(m *ice.Message, name, text string, arg ...string) {
 		switch arg[i] {
 		case ARGS:
 			count := 0
-			kit.Fetch(meta[INPUTS], func(index int, value ice.Map) {
+			kit.For(meta[INPUTS], func(index int, value ice.Map) {
 				if value[mdb.TYPE] != "button" {
 					count++
 				}

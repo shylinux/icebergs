@@ -158,7 +158,7 @@ func OptionLoad(m *ice.Message, file string) *ice.Message {
 		defer f.Close()
 		var data ice.Any
 		m.Assert(json.NewDecoder(f).Decode(&data))
-		kit.Fetch(data, func(key string, value ice.Any) { m.Option(key, kit.Simple(value)) })
+		kit.For(data, func(key string, value ice.Any) { m.Option(key, kit.Simple(value)) })
 	}
 	return m
 }

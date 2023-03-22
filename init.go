@@ -100,7 +100,7 @@ func Run(arg ...string) string {
 		}
 	}
 	Pulse.meta[MSG_DETAIL] = arg
-	kit.Fetch(kit.Sort(os.Environ()), func(env string) {
+	kit.For(kit.Sort(os.Environ()), func(env string) {
 		if ls := strings.SplitN(env, EQ, 2); strings.ToLower(ls[0]) == ls[0] && ls[0] != "_" {
 			Pulse.Option(ls[0], ls[1])
 		}

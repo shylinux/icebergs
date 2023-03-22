@@ -27,7 +27,7 @@ func _serve_address(m *ice.Message) string {
 }
 func _serve_start(m *ice.Message) {
 	defer kit.For(kit.Split(m.Option(ice.DEV)), func(v string) { m.Cmd(SPACE, tcp.DIAL, ice.DEV, v, mdb.NAME, ice.Info.NodeName) })
-	kit.If(m.Option(aaa.USERNAME), func() { aaa.UserRoot(m, m.Option(aaa.USERNAME), m.Option(aaa.USERNICK)) })
+	kit.If(m.Option(aaa.USERNAME), func() { aaa.UserRoot(m, m.Option(aaa.USERNICK), m.Option(aaa.USERNAME)) })
 	kit.If(m.Option(tcp.PORT) == tcp.RANDOM, func() { m.Option(tcp.PORT, m.Cmdx(tcp.PORT, aaa.RIGHT)) })
 	kit.If(runtime.GOOS == cli.WINDOWS, func() { m.Cmd(SPIDE, ice.OPS, _serve_address(m)+"/exit").Sleep("300ms") })
 	cli.NodeInfo(m, kit.Select(ice.Info.Hostname, m.Option(tcp.NODENAME)), SERVER)

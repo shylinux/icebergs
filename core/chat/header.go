@@ -26,7 +26,7 @@ func _header_share(m *ice.Message, arg ...string) {
 	if m.Warn(m.Option(ice.MSG_USERNAME) == "", ice.ErrNotLogin, "没有登录") {
 		return
 	}
-	if kit.Fetch(arg, func(k, v string) { m.Option(k, v) }); m.Option(mdb.LINK) == "" {
+	if kit.For(arg, func(k, v string) { m.Option(k, v) }); m.Option(mdb.LINK) == "" {
 		m.Cmdy(web.SHARE, mdb.CREATE, mdb.TYPE, web.LOGIN, arg)
 	} else {
 		m.Option(mdb.LINK, tcp.PublishLocalhost(m, m.Option(mdb.LINK)))
@@ -65,12 +65,7 @@ const HEADER = "header"
 func init() {
 	Index.MergeCommands(ice.Commands{
 		web.P(HEADER): {Name: "/header", Help: "标题栏", Actions: ice.MergeActions(ice.Actions{
-			mdb.INPUTS: {Hand: func(m *ice.Message, arg ...string) {}},
-			aaa.LOGIN: {Hand: func(m *ice.Message, arg ...string) {
-				if len(arg) > 1 && aaa.UserLogin(m, arg[0], arg[1]) {
-					web.RenderCookie(m, aaa.SessCreate(m, arg[0]))
-				}
-			}},
+			mdb.INPUTS:     {Hand: func(m *ice.Message, arg ...string) {}},
 			aaa.LOGOUT:     {Hand: aaa.SessLogout},
 			aaa.PASSWORD:   {Hand: _header_users},
 			aaa.USERNICK:   {Hand: _header_users},

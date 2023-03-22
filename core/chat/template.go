@@ -15,11 +15,11 @@ func init() {
 		TEMPLATE: {Name: "template river storm index auto 删除配置 查看配置", Help: "模板", Actions: ice.MergeActions(ice.Actions{
 			ice.CTX_INIT: {Hand: func(m *ice.Message, arg ...string) {
 				if gdb.Watch(m, RIVER_CREATE); m.Cmd("").Length() == 0 {
-					kit.Fetch(_river_template, func(river string, value ice.Any) {
+					kit.For(_river_template, func(river string, value ice.Any) {
 						m.Cmd("", mdb.CREATE, RIVER, river)
-						kit.Fetch(value, func(storm string, value ice.Any) {
+						kit.For(value, func(storm string, value ice.Any) {
 							m.Cmd("", mdb.INSERT, RIVER, river, STORM, storm)
-							kit.Fetch(value, func(index int, value ice.Any) {
+							kit.For(value, func(index int, value ice.Any) {
 								m.Cmd("", "add", RIVER, river, STORM, storm, ctx.INDEX, value)
 							})
 						})

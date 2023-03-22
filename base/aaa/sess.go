@@ -10,9 +10,9 @@ import (
 
 func _sess_create(m *ice.Message, username string, arg ...string) (h string) {
 	if msg := m.Cmd(USER, username); msg.Length() > 0 {
-		h = mdb.HashCreate(m, msg.AppendSimple(USERNAME, USERNICK, USERROLE), arg)
+		h = mdb.HashCreate(m, msg.AppendSimple(USERNICK, USERNAME, USERROLE), arg)
 	} else {
-		h = mdb.HashCreate(m, m.OptionSimple(USERNAME, USERNICK, USERROLE), arg)
+		h = mdb.HashCreate(m, m.OptionSimple(USERNICK, USERNAME, USERROLE), arg)
 	}
 	gdb.Event(m, SESS_CREATE, SESS, h, USERNAME, username)
 	return
@@ -48,7 +48,7 @@ func init() {
 			CHECK: {Name: "check sessid*", Hand: func(m *ice.Message, arg ...string) {
 				_sess_check(m, m.Option(SESSID))
 			}},
-		}, mdb.HashAction(mdb.SHORT, mdb.UNIQ, mdb.FIELD, "time,hash,username,usernick,userrole,ua,ip", mdb.EXPIRE, "720h", mdb.ImportantDataAction()))},
+		}, mdb.HashAction(mdb.SHORT, mdb.UNIQ, mdb.FIELD, "time,hash,username,usernick,userrole,ua,ip", mdb.EXPIRE, mdb.MONTH, mdb.ImportantDataAction()))},
 	})
 }
 
@@ -56,7 +56,7 @@ func SessCreate(m *ice.Message, username string) string {
 	return m.Option(ice.MSG_SESSID, m.Cmdx(SESS, mdb.CREATE, username))
 }
 func SessCheck(m *ice.Message, sessid string) bool {
-	m.Options(ice.MSG_USERNAME, "", ice.MSG_USERNICK, "", ice.MSG_USERROLE, VOID, "aaa.checker", logs.FileLine(-1))
+	m.Options(ice.MSG_USERNICK, "", ice.MSG_USERNAME, "", ice.MSG_USERROLE, VOID, "aaa.checker", logs.FileLine(-1))
 	return sessid != "" && m.Cmdy(SESS, CHECK, sessid, logs.FileLineMeta(-1)).Option(ice.MSG_USERNAME) != ""
 }
 func SessAuth(m *ice.Message, value ice.Any, arg ...string) *ice.Message {

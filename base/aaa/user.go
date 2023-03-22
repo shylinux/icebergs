@@ -7,28 +7,16 @@ import (
 	kit "shylinux.com/x/toolkits"
 )
 
-func _user_create(m *ice.Message, name, word string, arg ...string) {
-	mdb.HashCreate(m, USERNAME, name, PASSWORD, kit.GetValid(
-		func() string { return word },
-		func() string { return m.CmdAppend(USER, name, PASSWORD) },
-		func() string { return kit.Hashs() },
-	), arg)
+func _user_create(m *ice.Message, name string, arg ...string) {
+	mdb.HashCreate(m, USERNAME, name, arg)
 	gdb.Event(m, USER_CREATE, USER, name)
-}
-func _user_login(m *ice.Message, name, word string) {
-	if val := mdb.HashSelectDetails(m.Spawn(), name, func(value ice.Map) bool {
-		return !m.Warn(word != "" && word != kit.Format(value[PASSWORD]), ice.ErrNotValid)
-	}); len(val) > 0 {
-		SessAuth(m, val)
-	}
 }
 
 const (
 	BACKGROUND = "background"
-
-	AVATAR = "avatar"
-	GENDER = "gender"
-	MOBILE = "mobile"
+	AVATAR     = "avatar"
+	GENDER     = "gender"
+	MOBILE     = "mobile"
 
 	CITY     = "city"
 	COUNTRY  = "country"
@@ -36,11 +24,11 @@ const (
 	LANGUAGE = "language"
 )
 const (
+	USERNICK = "usernick"
 	USERNAME = "username"
 	PASSWORD = "password"
-	USERNICK = "usernick"
-	USERZONE = "userzone"
 	USERROLE = "userrole"
+	USERZONE = "userzone"
 
 	USER_CREATE = "user.create"
 )
@@ -51,19 +39,16 @@ func init() {
 		USER: {Name: "user username auto create", Help: "用户", Actions: ice.MergeActions(ice.Actions{
 			mdb.INPUTS: {Hand: func(m *ice.Message, arg ...string) {
 				switch mdb.HashInputs(m, arg); arg[0] {
-				case USERNAME:
-					m.Push(arg[0], m.Option(ice.MSG_USERNAME))
 				case USERNICK:
 					m.Push(arg[0], m.Option(ice.MSG_USERNICK))
+				case USERNAME:
+					m.Push(arg[0], m.Option(ice.MSG_USERNAME))
 				}
 			}},
-			mdb.CREATE: {Name: "create username* password usernick userzone userrole=void,tech", Hand: func(m *ice.Message, arg ...string) {
-				_user_create(m, m.Option(USERNAME), m.Option(PASSWORD), m.OptionSimple(USERNICK, USERZONE, USERROLE)...)
+			mdb.CREATE: {Name: "create usernick username* userrole=void,tech userzone", Hand: func(m *ice.Message, arg ...string) {
+				_user_create(m, m.Option(USERNAME), m.OptionSimple(USERNICK, USERROLE, USERZONE)...)
 			}},
-			LOGIN: {Name: "login username* password", Hand: func(m *ice.Message, arg ...string) {
-				_user_login(m, m.Option(USERNAME), m.Option(PASSWORD))
-			}},
-		}, mdb.HashAction(mdb.SHORT, USERNAME, mdb.FIELD, "time,username,usernick,userzone,userrole"), mdb.ImportantDataAction())},
+		}, mdb.HashAction(mdb.SHORT, USERNAME, mdb.FIELD, "time,usernick,username,userrole,userzone"), mdb.ImportantDataAction())},
 	})
 }
 
@@ -76,9 +61,6 @@ func UserInfo(m *ice.Message, name ice.Any, key, meta string) (value string) {
 func UserNick(m *ice.Message, username ice.Any) (nick string) {
 	return UserInfo(m, username, USERNICK, ice.MSG_USERNICK)
 }
-func UserZone(m *ice.Message, username ice.Any) (zone string) {
-	return UserInfo(m, username, USERZONE, ice.MSG_USERZONE)
-}
 func UserRole(m *ice.Message, username ice.Any) (role string) {
 	if username == "" {
 		return VOID
@@ -88,18 +70,17 @@ func UserRole(m *ice.Message, username ice.Any) (role string) {
 	}
 	return UserInfo(m, username, USERROLE, ice.MSG_USERROLE)
 }
-func UserLogin(m *ice.Message, username, password string) bool {
-	m.Options(ice.MSG_USERNAME, "", ice.MSG_USERNICK, "", ice.MSG_USERROLE, VOID)
-	return m.Cmdy(USER, LOGIN, username, password).Option(ice.MSG_USERNAME) != ""
+func UserZone(m *ice.Message, username ice.Any) (zone string) {
+	return UserInfo(m, username, USERZONE, ice.MSG_USERZONE)
 }
 func UserRoot(m *ice.Message, arg ...string) *ice.Message {
-	username := kit.Select(ice.Info.Username, arg, 0)
-	usernick := kit.Select(UserNick(m, username), arg, 1)
-	userrole := kit.Select(ROOT, arg, 2)
 	userzone := kit.Select("", arg, 3)
+	userrole := kit.Select(ROOT, arg, 2)
+	username := kit.Select(ice.Info.Username, arg, 1)
+	usernick := kit.Select(UserNick(m, username), arg, 0)
 	if len(arg) > 0 {
-		m.Cmd(USER, mdb.CREATE, username, "", usernick, userzone, userrole)
+		m.Cmd(USER, mdb.CREATE, usernick, username, userrole, userzone)
 		ice.Info.Username = username
 	}
-	return SessAuth(m, kit.Dict(USERNAME, username, USERNICK, usernick, USERROLE, userrole))
+	return SessAuth(m, kit.Dict(USERNICK, usernick, USERNAME, username, USERROLE, userrole))
 }

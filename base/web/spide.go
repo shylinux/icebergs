@@ -111,7 +111,7 @@ func _spide_body(m *ice.Message, method string, arg ...string) (io.Reader, ice.M
 			fallthrough
 		default:
 			data := ice.Map{}
-			kit.Fetch(arg, func(k, v string) { kit.Value(data, k, v) })
+			kit.For(arg, func(k, v string) { kit.Value(data, k, v) })
 			head[ContentType], body = ContentJSON, bytes.NewBufferString(kit.Format(data))
 		}
 		arg = arg[:0]
@@ -155,23 +155,23 @@ func _spide_part(m *ice.Message, arg ...string) (string, io.Reader) {
 }
 func _spide_head(m *ice.Message, req *http.Request, head ice.Maps, value ice.Map) {
 	m.Logs(req.Method, req.URL.String())
-	kit.Fetch(value[SPIDE_HEADER], func(k string, v string) {
+	kit.For(value[SPIDE_HEADER], func(k string, v string) {
 		req.Header.Set(k, v)
 		m.Logs("Header", k, v)
 	})
-	kit.Fetch(value[SPIDE_COOKIE], func(k string, v string) {
+	kit.For(value[SPIDE_COOKIE], func(k string, v string) {
 		req.AddCookie(&http.Cookie{Name: k, Value: v})
 		m.Logs("Cookie", k, v)
 	})
-	kit.Fetch(kit.Simple(m.Optionv(SPIDE_COOKIE)), func(k, v string) {
+	kit.For(kit.Simple(m.Optionv(SPIDE_COOKIE)), func(k, v string) {
 		req.AddCookie(&http.Cookie{Name: k, Value: v})
 		m.Logs("Cookie", k, v)
 	})
-	kit.Fetch(kit.Simple(m.Optionv(SPIDE_HEADER)), func(k, v string) {
+	kit.For(kit.Simple(m.Optionv(SPIDE_HEADER)), func(k, v string) {
 		req.Header.Set(k, v)
 		m.Logs("Header", k, v)
 	})
-	kit.Fetch(head, func(k, v string) {
+	kit.For(head, func(k, v string) {
 		req.Header.Set(k, v)
 		m.Logs("Header", k, v)
 	})
@@ -194,7 +194,7 @@ func _spide_save(m *ice.Message, format, file, uri string, res *http.Response) {
 	case SPIDE_MSG:
 		var data map[string][]string
 		m.Assert(json.NewDecoder(res.Body).Decode(&data))
-		kit.Fetch(data[ice.MSG_APPEND], func(k string) { kit.Fetch(data[k], func(v string) { m.Push(k, v) }) })
+		kit.For(data[ice.MSG_APPEND], func(k string) { kit.For(data[k], func(v string) { m.Push(k, v) }) })
 		m.Resultv(data[ice.MSG_RESULT])
 	case SPIDE_SAVE:
 		_cache_download(m, res, file, m.OptionCB(SPIDE))

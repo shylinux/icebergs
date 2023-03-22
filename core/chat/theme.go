@@ -62,7 +62,7 @@ func init() {
 					m.Push("name", kit.Select(kit.Format(kit.Value(tags, "name")), value["name"]))
 					m.Push("value", kit.Select(kit.Format(kit.Value(tags, "value")), value["value"]))
 				})
-				kit.Fetch(form, func(k string, v ice.Map) {
+				kit.For(form, func(k string, v ice.Map) {
 					m.Push("tags", k)
 					m.Push("", v, kit.Split("type,name,value"))
 				})

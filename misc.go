@@ -151,7 +151,7 @@ func (m *Message) Design(action Any, help string, input ...Any) {
 				list = append(list, input)
 				continue
 			}
-			kit.Fetch(kit.KeyValue(nil, "", input), func(k string, v Any) {
+			kit.For(kit.KeyValue(nil, "", input), func(k string, v Any) {
 				list = append(list, kit.Dict(NAME, k, TYPE, TEXT, VALUE, v))
 			})
 		default:

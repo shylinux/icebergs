@@ -54,7 +54,7 @@ func init() {
 						lines[kit.Ext(file)]++
 					})
 				})
-				kit.Fetch(lines, func(k string, v int) { m.Push(mdb.TYPE, k).Push("files", files[k]).Push("lines", lines[k]) })
+				kit.For(lines, func(k string, v int) { m.Push(mdb.TYPE, k).Push("files", files[k]).Push("lines", lines[k]) })
 				m.StatusTimeCount().SortIntR("lines")
 			}},
 			"order": {Help: "排行", Hand: func(m *ice.Message, arg ...string) {
@@ -62,7 +62,7 @@ func init() {
 				_count_count(m, arg, func(file string) {
 					m.Cmdy(nfs.CAT, file, func(text string) { files[strings.TrimPrefix(file, arg[0])]++ })
 				})
-				kit.Fetch(files, func(k string, v int) { m.Push("files", k).Push("lines", v) })
+				kit.For(files, func(k string, v int) { m.Push("files", k).Push("lines", v) })
 				m.StatusTimeCount().SortIntR("lines")
 			}},
 			"tags": {Help: "索引", Hand: func(m *ice.Message, arg ...string) {
@@ -76,7 +76,7 @@ func init() {
 						count[kit.Split(ls[1])[0]]++
 					}
 				})
-				kit.Fetch(count, func(k string, v int) { m.Push(mdb.TYPE, k).Push(mdb.COUNT, v) })
+				kit.For(count, func(k string, v int) { m.Push(mdb.TYPE, k).Push(mdb.COUNT, v) })
 				m.StatusTimeCount().SortIntR(mdb.COUNT)
 			}},
 		}, Hand: func(m *ice.Message, arg ...string) { m.Cmdy(nfs.DIR, arg) }},

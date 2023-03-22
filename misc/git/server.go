@@ -34,7 +34,7 @@ func _server_login(m *ice.Message) error {
 	if err != nil {
 		return err
 	}
-	if ls = strings.SplitN(string(data), ice.DF, 2); m.Cmd("web.code.git.token", ls[0]).Append(TOKEN) != ls[1] && !aaa.UserLogin(m.Spawn(), ls[0], ls[1]) {
+	if ls = strings.SplitN(string(data), ice.DF, 2); m.Cmd("web.code.git.token", ls[0]).Append(TOKEN) != ls[1] {
 		return fmt.Errorf("username or password error")
 	}
 	if aaa.UserRole(m, ls[0]) == aaa.VOID {

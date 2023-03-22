@@ -46,7 +46,7 @@ func (c *Chain) Draw(m *ice.Message, x, y int) wiki.Chart {
 func (c *Chain) height(m *ice.Message, root ice.Map) (height int) {
 	meta := kit.GetMeta(root)
 	if list, ok := root[mdb.LIST].([]ice.Any); ok && len(list) > 0 {
-		kit.Fetch(root[mdb.LIST], func(index int, value ice.Map) { height += c.height(m, value) })
+		kit.For(root[mdb.LIST], func(index int, value ice.Map) { height += c.height(m, value) })
 	} else {
 		height = 1
 	}
@@ -76,7 +76,7 @@ func (c *Chain) draw(m *ice.Message, root ice.Map, x, y int, p *Block, gs *wiki.
 	gs.EchoTexts(TEXT, item.x+item.GetWidths()/2, item.y+item.GetHeights()/2, item.Text, item.TextData)
 
 	h, x := 0, x+item.GetWidths()
-	if kit.Fetch(root[mdb.LIST], func(value ice.Map) { h += c.draw(m, value, x, y+h, item, gs) }); h == 0 {
+	if kit.For(root[mdb.LIST], func(value ice.Map) { h += c.draw(m, value, x, y+h, item, gs) }); h == 0 {
 		return item.GetHeights()
 	}
 	return h

@@ -79,9 +79,9 @@ var Index = &ice.Context{Name: OAUTH, Help: "认证授权", Commands: ice.Comman
 		}},
 	})},
 
-	APPLY: {Name: "apply hash auto create prunes", Help: "申请", Actions: mdb.HashAction(mdb.EXPIRE, "72h", mdb.FIELD, "time,hash,username,scope,redirect_uri")},
-	REPLY: {Name: "reply hash auto create prunes", Help: "授权", Actions: mdb.HashAction(mdb.EXPIRE, "720h", mdb.SHORT, mdb.UNIQ, mdb.FIELD, "time,hash,username,scope,offer")},
-	OFFER: {Name: "offer hash auto create prunes", Help: "访问", Actions: mdb.HashAction(mdb.EXPIRE, "720h", mdb.SHORT, mdb.UNIQ, mdb.FIELD, "time,hash,username,scope,redirect_uri")},
+	APPLY: {Name: "apply hash auto create prunes", Help: "申请", Actions: mdb.HashAction(mdb.EXPIRE, mdb.DAYS, mdb.FIELD, "time,hash,username,scope,redirect_uri")},
+	REPLY: {Name: "reply hash auto create prunes", Help: "授权", Actions: mdb.HashAction(mdb.EXPIRE, mdb.MONTH, mdb.SHORT, mdb.UNIQ, mdb.FIELD, "time,hash,username,scope,offer")},
+	OFFER: {Name: "offer hash auto create prunes", Help: "访问", Actions: mdb.HashAction(mdb.EXPIRE, mdb.MONTH, mdb.SHORT, mdb.UNIQ, mdb.FIELD, "time,hash,username,scope,redirect_uri")},
 
 	web.P(APPLY): {Name: "/apply scope redirect_uri", Help: "申请", Actions: ctx.CmdAction(), Hand: func(m *ice.Message, arg ...string) {
 		if m.Option(REDIRECT_URI) == "" {
@@ -112,8 +112,8 @@ var Index = &ice.Context{Name: OAUTH, Help: "认证授权", Commands: ice.Comman
 	}},
 
 	AUTHORIZE: {Name: "authorize hash auto create prunes", Help: "认证", Actions: mdb.HashAction(mdb.SHORT, mdb.UNIQ, mdb.FIELD, "time,hash,redirect_uri")},
-	TOKEN:     {Name: "token hash auto create prunes", Help: "授权", Actions: mdb.HashAction(mdb.EXPIRE, "72h", mdb.FIELD, "time,hash,used,state,scope,redirect_uri")},
-	ACCESS:    {Name: "access hash auto create prunes", Help: "访问", Actions: mdb.HashAction(mdb.EXPIRE, "720h", mdb.SHORT, mdb.UNIQ, mdb.FIELD, "time,hash,username,scope,redirect_uri")},
+	TOKEN:     {Name: "token hash auto create prunes", Help: "授权", Actions: mdb.HashAction(mdb.EXPIRE, mdb.DAYS, mdb.FIELD, "time,hash,used,state,scope,redirect_uri")},
+	ACCESS:    {Name: "access hash auto create prunes", Help: "访问", Actions: mdb.HashAction(mdb.EXPIRE, mdb.MONTH, mdb.SHORT, mdb.UNIQ, mdb.FIELD, "time,hash,username,scope,redirect_uri")},
 
 	web.P(AUTHORIZE): {Name: "/authorize state scope client_id redirect_uri", Help: "认证", Hand: func(m *ice.Message, arg ...string) {
 		if m.Option(CLIENT_ID) == "" || m.Option(REDIRECT_URI) == "" {

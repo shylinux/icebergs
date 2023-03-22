@@ -149,7 +149,7 @@ func _repos_dir(m *ice.Message, dir, branch, commit, file string, cb func(*gogit
 				return false
 			})
 		}
-		kit.Fetch(prev, func(pp, id string) {
+		kit.For(prev, func(pp, id string) {
 			if path.Dir(file) != path.Dir(pp) {
 				return
 			}

@@ -112,7 +112,7 @@ func (m *Message) OptionTemplate() string {
 		}
 		add("data-", key)
 	}
-	kit.Fetch(m.Optionv(mdb.EXTRA), func(key string, value string) {
+	kit.For(m.Optionv(mdb.EXTRA), func(key string, value string) {
 		switch key {
 		case PADDING:
 			return
